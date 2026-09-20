@@ -151,6 +151,9 @@ func _build_ai_context() -> Dictionary:
 		if distance <= AI_SENSE_RADIUS:
 			nearby_count += 1
 
+	if total_count == 0:
+		nearest_distance = 0.0
+
 	return {
 		"nearby_count": nearby_count,
 		"total_count": total_count,
