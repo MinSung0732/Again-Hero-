@@ -105,6 +105,68 @@ static func get_research_points() -> int:
 	var state := load_state()
 	return int(state.get("research_points", 0))
 
+
+static func get_research_level(research_id: String) -> int:
+	var config := ConfigFile.new()
+	if config.load(SAVE_PATH) != OK:
+		return 0
+	return int(config.get_value("research", research_id, 0))
+
+static func get_research_levels(research_ids: Array[String]) -> Dictionary:
+	var levels := {}
+	for research_id in research_ids:
+		levels[research_id] = get_research_level(research_id)
+	return levels
+
+static func try_purchase_research(
+	research_id: String,
+	cost: int,
+	max_level: int
+) -> Dictionary:
+	if research_id.is_empty() or cost < 0 or max_level <= 0:
+		return {
+			"success": false,
+			"reason": "invalid",
+			"level": 0,
+			"research_points": get_research_points(),
+		}
+
+	var config := ConfigFile.new()
+	config.load(SAVE_PATH)
+
+	var current_level := int(config.get_value("research", research_id, 0))
+	var research_points := int(config.get_value("meta", "research_points", 0))
+
+	if current_level >= max_level:
+		return {
+			"success": false,
+			"reason": "max_level",
+			"level": current_level,
+			"research_points": research_points,
+		}
+
+	if research_points < cost:
+		return {
+			"success": false,
+			"reason": "not_enough_points",
+			"level": current_level,
+			"research_points": research_points,
+		}
+
+	current_level += 1
+	research_points -= cost
+
+	config.set_value("research", research_id, current_level)
+	config.set_value("meta", "research_points", research_points)
+	config.save(SAVE_PATH)
+
+	return {
+		"success": true,
+		"reason": "purchased",
+		"level": current_level,
+		"research_points": research_points,
+	}
+
 static func _save_state(state: Dictionary) -> void:
 	var config := ConfigFile.new()
 	config.load(SAVE_PATH)
