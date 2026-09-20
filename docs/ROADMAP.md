@@ -201,3 +201,9 @@
 - [x] 마법탄 4프레임 fly loop
 - [x] 코어 기준 회전/충돌 anchor 정렬
 - [x] Stage 1 투사체 source Hero 적용 순서 버그 수정
+
+
+### Stage 1 마법사 투사체
+- [x] 4프레임 fly 애니메이션 연결
+- [x] Stage 1 투사체 개별 PNG 직접 로드 fallback
+- [x] Android Editor import cache 우회
