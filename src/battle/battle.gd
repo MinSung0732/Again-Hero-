@@ -210,9 +210,10 @@ func _on_monster_died(monster: Node) -> void:
 		return
 
 	if is_instance_valid(monster):
-		var reward := int(monster.get("exp_reward"))
-		var drop_position := (monster as Node2D).global_position
-		_spawn_exp_orb(drop_position, reward)
+		var monster_node := monster as Node2D
+		if monster_node != null:
+			var reward := int(monster.get("exp_reward"))
+			_spawn_exp_orb(monster_node.global_position, reward)
 
 	monsters_alive = maxi(monsters_alive - 1, 0)
 	_emit_stats()
