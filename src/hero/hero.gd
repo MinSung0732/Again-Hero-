@@ -390,7 +390,7 @@ func _fire_projectile(current_target: Node2D) -> void:
 	var projectile := PROJECTILE_SCENE.instantiate() as Area2D
 	get_parent().add_child(projectile)
 	projectile.global_position = global_position + shot_direction * 46.0
-	projectile.call("setup", shot_direction, attack_damage, projectile_speed, attack_range)
+	projectile.call("setup", shot_direction, attack_damage, projectile_speed, attack_range, hero_id)
 
 func gain_exp(amount: int) -> void:
 	if amount <= 0 or current_hp <= 0:
