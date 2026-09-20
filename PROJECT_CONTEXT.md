@@ -329,6 +329,21 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 거미: 제어형, 저체력/고기동, 공격 시 용사 이동속도를 일시적으로 72%로 둔화, EXP 30
 - 오크: 탱커형, HP 140, 느리지만 강한 근접 공격, EXP 40
 
+### Stage 1 게임레디 스프라이트시트 v2
+- 사용자가 제공한 `stage1_mage_game_ready.zip` 기준으로 애니메이션 구조를 다시 정리.
+- 셀 크기 64×64, 6열×4행 스프라이트시트 사용.
+- 실제 연결 프레임:
+  - idle: 4프레임 / 5.5 FPS / loop
+  - move: 6프레임 / 기본 10 FPS / 이동속도에 따라 약 0.72~1.35배 재생속도
+  - attack: 6프레임 / 18 FPS / 1회 재생
+  - hit: 3프레임 / 14 FPS / 1회 재생
+- Hero renderer를 `Sprite2D`에서 `AnimatedSprite2D`로 변경.
+- 이동 중 한 프레임이 미끄러지던 방식 제거.
+- 기존 Stage 1 Base64 PNG / pose-data / RLE 런타임 복원 방식은 완전히 제거.
+- 스프라이트시트 경로: `res://assets/art/heroes/stage1_mage/stage1_mage_spritesheet.png`
+- 바이너리 아트 설치는 Base64를 사용하지 않는 `tools/install_stage1_mage_art.sh`로 지원.
+- 제공된 게임레디 팩에는 death 전용 프레임이 없으므로 현재 사망은 hit 애니메이션 후 짧은 fade/tilt 처리. 추후 death 프레임이 제공되면 교체.
+
 ### Stage 1 도트 상태 애니메이션 v1
 - 사용자가 제공한 Stage 1 마법사 시트의 포즈를 게임 상태와 연결.
 - 별도 바이너리 에셋 의존을 줄이기 위해 32×32 포즈를 RLE + 팔레트 텍스트 데이터로 저장하고 런타임에 ImageTexture로 복원.
