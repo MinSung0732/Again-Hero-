@@ -64,18 +64,6 @@ static func roll_candidates(exclude_ids: Array, count: int = 3) -> Array:
 			continue
 		pool.append(augment.duplicate(true))
 
-	if pool.size() < count:
-		var existing_ids: Array[String] = []
-		for item in pool:
-			existing_ids.append(String(item.get("id", "")))
-
-		for augment in AUGMENTS:
-			var augment_id: String = String(augment.get("id", ""))
-			if augment_id in existing_ids:
-				continue
-			pool.append(augment.duplicate(true))
-			existing_ids.append(augment_id)
-
 	pool.shuffle()
 
 	var result: Array = []
