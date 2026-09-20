@@ -50,7 +50,7 @@ anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 270.0
 grow_horizontal = 2
-mouse_filter = 2
+mouse_filter = 1
 color = Color(0.055, 0.058, 0.078, 0.98)
 
 [node name="Title" type="Label" parent="HUD/TopBar"]
@@ -64,10 +64,18 @@ text = "용사, 또 너야?"
 [node name="Subtitle" type="Label" parent="HUD/TopBar"]
 offset_left = 42.0
 offset_top = 86.0
-offset_right = 1038.0
+offset_right = 805.0
 offset_bottom = 124.0
 theme_override_font_sizes/font_size = 20
 text = "Stage 1 · 첫 번째 침입자 · 견습 마도사"
+
+[node name="StageMenuButton" type="Button" parent="HUD/TopBar"]
+offset_left = 825.0
+offset_top = 78.0
+offset_right = 1040.0
+offset_bottom = 132.0
+theme_override_font_sizes/font_size = 20
+text = "스테이지"
 
 [node name="HeroLevel" type="Label" parent="HUD/TopBar"]
 offset_left = 40.0
@@ -218,6 +226,61 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 25
 text = "오크\n비용 18"
 
+[node name="StageSelectPanel" type="PanelContainer" parent="HUD"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -440.0
+offset_top = -510.0
+offset_right = 440.0
+offset_bottom = 510.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="HUD/StageSelectPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 46
+theme_override_constants/margin_top = 42
+theme_override_constants/margin_right = 46
+theme_override_constants/margin_bottom = 42
+
+[node name="VBox" type="VBoxContainer" parent="HUD/StageSelectPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="Title" type="Label" parent="HUD/StageSelectPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 42
+text = "스테이지 선택"
+horizontal_alignment = 1
+
+[node name="ResearchPoints" type="Label" parent="HUD/StageSelectPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 25
+text = "연구 포인트 0"
+horizontal_alignment = 1
+
+[node name="Stage1Button" type="Button" parent="HUD/StageSelectPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 210)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Stage 1"
+
+[node name="Stage2Button" type="Button" parent="HUD/StageSelectPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 210)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Stage 2"
+
+[node name="CloseButton" type="Button" parent="HUD/StageSelectPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "닫기"
+
 [node name="DemonAugmentPanel" type="PanelContainer" parent="HUD"]
 visible = false
 anchors_preset = 8
@@ -331,6 +394,12 @@ custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "다음 스테이지"
+
+[node name="StageSelectResultButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "스테이지 선택"
 
 [node name="RestartButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 100)
