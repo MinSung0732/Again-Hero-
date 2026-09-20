@@ -545,3 +545,9 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - Hero의 현재 전황 및 최근 공세 기록은 고정된 세 종류 배열이 아니라 동적 Dictionary로 집계한다.
 - 새 몬스터가 Catalog에 추가되고 자신의 `monster_type / monster_role`을 제공하면 현재/최근 공세 분석 구조가 별도 코드 수정 없이 해당 키를 집계할 수 있다.
 - 프로토타입 속도를 해치는 과도한 범용 프레임워크는 만들지 않되, 반복될 가능성이 높은 콘텐츠 정의는 Catalog 중심으로 확장한다.
+
+
+### Hero Missing After Data-Driven AI Refactor — Fix
+- 데이터 중심 AI 리팩터링 과정에서 삭제한 `_role_for_monster_type()` 함수 참조가 최근 공세 메모리 코드에 남아 Hero script 로드가 실패하는 문제가 발생.
+- 해당 fallback을 `MONSTER_CATALOG.get_role(monster_type)`로 교체해 복구.
+- 이후 리팩터링 시 삭제된 helper의 잔여 참조를 반드시 확인한다.
