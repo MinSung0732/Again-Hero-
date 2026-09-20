@@ -4,6 +4,8 @@ signal stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int)
 signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
 signal hero_leveled_up(new_level: int)
 signal hero_augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String)
+signal command_changed(current_value: float, max_value: float)
+signal summon_result(monster_type: String, success: bool, message: String)
 signal battle_finished(message: String, player_won: bool)
 
 const HERO_SCENE := preload("res://src/hero/Hero.tscn")
@@ -11,44 +13,54 @@ const SLIME_SCENE := preload("res://src/monsters/Slime.tscn")
 const SPIDER_SCENE := preload("res://src/monsters/Spider.tscn")
 const ORC_SCENE := preload("res://src/monsters/Orc.tscn")
 
-const FIELD_SIZE := Vector2(1080, 1360)
-const FIELD_CENTER := Vector2(540, 680)
-const SPAWN_POSITIONS: Array[Vector2] = [
-	Vector2(150, 170),
-	Vector2(930, 170),
-	Vector2(150, 1160),
-	Vector2(930, 1160),
-	Vector2(540, 100),
-	Vector2(540, 1260),
-]
+const FIELD_SIZE := Vector2(1080, 1280)
+const FIELD_CENTER := Vector2(540, 640)
 
-const TEST_WAVES = [
-	{
-		"name": "물량형",
-		"types": ["slime", "slime", "slime", "slime", "spider", "orc"],
-	},
-	{
-		"name": "제어형",
-		"types": ["slime", "slime", "spider", "spider", "spider", "orc"],
-	},
-	{
-		"name": "탱커형",
-		"types": ["slime", "slime", "spider", "orc", "orc", "orc"],
-	},
+const MAX_COMMAND := 100.0
+const START_COMMAND := 60.0
+const COMMAND_REGEN_PER_SECOND := 3.0
+
+const MONSTER_COSTS := {
+	"slime": 3.0,
+	"spider": 7.0,
+	"orc": 18.0,
+}
+
+const SPAWN_POSITIONS: Array[Vector2] = [
+	Vector2(150, 150),
+	Vector2(930, 150),
+	Vector2(150, 1110),
+	Vector2(930, 1110),
+	Vector2(540, 90),
+	Vector2(540, 1190),
 ]
 
 var hero: Node2D
 var monsters_alive: int = 0
 var battle_over: bool = false
-var current_wave_summary: String = ""
+var command_power: float = START_COMMAND
+var command_emit_timer: float = 0.0
 
 func _ready() -> void:
 	queue_redraw()
 	_start_battle()
 
+func _process(delta: float) -> void:
+	if battle_over:
+		return
+
+	if command_power < MAX_COMMAND:
+		command_power = minf(command_power + COMMAND_REGEN_PER_SECOND * delta, MAX_COMMAND)
+		command_emit_timer -= delta
+
+		if command_emit_timer <= 0.0 or command_power >= MAX_COMMAND:
+			command_emit_timer = 0.10
+			command_changed.emit(command_power, MAX_COMMAND)
+
 func _start_battle() -> void:
 	battle_over = false
 	monsters_alive = 0
+	command_power = START_COMMAND
 
 	hero = HERO_SCENE.instantiate() as Node2D
 	add_child(hero)
@@ -59,15 +71,51 @@ func _start_battle() -> void:
 	hero.connect("augment_selected", Callable(self, "_on_hero_augment_selected"))
 	hero.connect("died", Callable(self, "_on_hero_died"))
 
-	var wave: Dictionary = TEST_WAVES[randi() % TEST_WAVES.size()]
-	var types: Array = wave.get("types", [])
-	current_wave_summary = _build_wave_summary(String(wave.get("name", "혼합형")), types)
-
-	for index in range(mini(types.size(), SPAWN_POSITIONS.size())):
-		_spawn_monster(String(types[index]), SPAWN_POSITIONS[index])
-
 	_emit_stats()
 	_emit_progression()
+	command_changed.emit(command_power, MAX_COMMAND)
+
+func try_summon(monster_type: String) -> bool:
+	if battle_over:
+		summon_result.emit(monster_type, false, "전투가 종료되어 소환할 수 없습니다.")
+		return false
+
+	var cost: float = get_monster_cost(monster_type)
+	if cost <= 0.0:
+		summon_result.emit(monster_type, false, "알 수 없는 몬스터입니다.")
+		return false
+
+	if command_power + 0.001 < cost:
+		summon_result.emit(
+			monster_type,
+			false,
+			"지휘력이 부족합니다. 필요 %.0f / 현재 %.0f" % [cost, command_power]
+		)
+		return false
+
+	command_power = maxf(command_power - cost, 0.0)
+	_spawn_monster(monster_type, _get_auto_spawn_position())
+	command_changed.emit(command_power, MAX_COMMAND)
+	_emit_stats()
+
+	summon_result.emit(
+		monster_type,
+		true,
+		"%s 소환! 지휘력 %.0f 소모" % [_get_monster_name(monster_type), cost]
+	)
+	return true
+
+func get_monster_cost(monster_type: String) -> float:
+	return float(MONSTER_COSTS.get(monster_type, 0.0))
+
+func _get_auto_spawn_position() -> Vector2:
+	var base_position: Vector2 = SPAWN_POSITIONS[randi() % SPAWN_POSITIONS.size()]
+	var jitter := Vector2(randf_range(-35.0, 35.0), randf_range(-35.0, 35.0))
+
+	return Vector2(
+		clampf(base_position.x + jitter.x, 80.0, FIELD_SIZE.x - 80.0),
+		clampf(base_position.y + jitter.y, 70.0, FIELD_SIZE.y - 70.0)
+	)
 
 func _spawn_monster(monster_type: String, spawn_position: Vector2) -> void:
 	var scene: PackedScene = SLIME_SCENE
@@ -86,21 +134,14 @@ func _spawn_monster(monster_type: String, spawn_position: Vector2) -> void:
 	monster.connect("died", Callable(self, "_on_monster_died").bind(monster))
 	monsters_alive += 1
 
-func _build_wave_summary(wave_name: String, types: Array) -> String:
-	var slime_count := 0
-	var spider_count := 0
-	var orc_count := 0
-
-	for monster_type in types:
-		match String(monster_type):
-			"slime":
-				slime_count += 1
-			"spider":
-				spider_count += 1
-			"orc":
-				orc_count += 1
-
-	return "%s · 슬라임 %d / 거미 %d / 오크 %d" % [wave_name, slime_count, spider_count, orc_count]
+func _get_monster_name(monster_type: String) -> String:
+	match monster_type:
+		"spider":
+			return "거미"
+		"orc":
+			return "오크"
+		_:
+			return "슬라임"
 
 func _on_hero_health_changed(current_hp: int, max_hp_value: int) -> void:
 	stats_changed.emit(current_hp, max_hp_value, monsters_alive)
@@ -124,9 +165,6 @@ func _on_monster_died(monster: Node) -> void:
 
 	monsters_alive = maxi(monsters_alive - 1, 0)
 	_emit_stats()
-
-	if monsters_alive <= 0:
-		_finish_battle("마왕군 전멸!\n이번 실험은 실패했습니다.", false)
 
 func _on_hero_died() -> void:
 	if battle_over:
@@ -195,7 +233,8 @@ func get_snapshot() -> Dictionary:
 		"hero_exp_to_next": exp_to_next_level,
 		"hero_build_summary": build_summary,
 		"monsters_left": monsters_alive,
-		"wave_summary": current_wave_summary,
+		"command_power": command_power,
+		"command_max": MAX_COMMAND,
 		"battle_over": battle_over,
 	}
 
