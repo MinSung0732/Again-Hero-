@@ -27,6 +27,8 @@ var attack_timer: float = 0.0
 var retarget_timer: float = 0.0
 var hit_flash_timer: float = 0.0
 var level_flash_timer: float = 0.0
+var slow_timer: float = 0.0
+var move_multiplier: float = 1.0
 
 func _ready() -> void:
 	add_to_group("hero")
@@ -52,6 +54,12 @@ func _physics_process(delta: float) -> void:
 		level_flash_timer = maxf(level_flash_timer - delta, 0.0)
 		queue_redraw()
 
+	if slow_timer > 0.0:
+		slow_timer = maxf(slow_timer - delta, 0.0)
+		if slow_timer <= 0.0:
+			move_multiplier = 1.0
+			queue_redraw()
+
 	if not is_instance_valid(target) or target.is_queued_for_deletion() or retarget_timer <= 0.0:
 		target = _find_nearest_monster()
 		retarget_timer = 0.15
@@ -62,7 +70,7 @@ func _physics_process(delta: float) -> void:
 
 	var distance := global_position.distance_to(target.global_position)
 	if distance > attack_range:
-		velocity = global_position.direction_to(target.global_position) * move_speed
+		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier
 		move_and_slide()
 	else:
 		velocity = Vector2.ZERO
@@ -131,6 +139,16 @@ func _build_ai_context() -> Dictionary:
 	var nearby_count: int = 0
 	var total_count: int = 0
 	var nearest_distance: float = 9999.0
+	var type_counts: Dictionary = {
+		"slime": 0,
+		"spider": 0,
+		"orc": 0,
+	}
+	var role_counts: Dictionary = {
+		"swarm": 0,
+		"controller": 0,
+		"tank": 0,
+	}
 
 	for node in get_tree().get_nodes_in_group("monsters"):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -151,6 +169,16 @@ func _build_ai_context() -> Dictionary:
 		if distance <= AI_SENSE_RADIUS:
 			nearby_count += 1
 
+		var type_value = monster.get("monster_type")
+		if type_value != null:
+			var monster_type: String = String(type_value)
+			type_counts[monster_type] = int(type_counts.get(monster_type, 0)) + 1
+
+		var role_value = monster.get("monster_role")
+		if role_value != null:
+			var monster_role: String = String(role_value)
+			role_counts[monster_role] = int(role_counts.get(monster_role, 0)) + 1
+
 	if total_count == 0:
 		nearest_distance = 0.0
 
@@ -160,6 +188,8 @@ func _build_ai_context() -> Dictionary:
 		"nearest_distance": nearest_distance,
 		"hp_ratio": float(current_hp) / float(maxi(max_hp, 1)),
 		"level": level,
+		"type_counts": type_counts,
+		"role_counts": role_counts,
 	}
 
 func _apply_augment(augment: Dictionary) -> void:
@@ -183,6 +213,14 @@ func _apply_augment(augment: Dictionary) -> void:
 	if not augment_id.is_empty():
 		var current_stack: int = int(build_counts.get(augment_id, 0))
 		build_counts[augment_id] = current_stack + 1
+
+func apply_slow(multiplier: float, duration: float) -> void:
+	if current_hp <= 0:
+		return
+
+	move_multiplier = minf(move_multiplier, clampf(multiplier, 0.30, 1.0))
+	slow_timer = maxf(slow_timer, duration)
+	queue_redraw()
 
 func get_build_summary() -> String:
 	if build_counts.is_empty():
@@ -225,6 +263,9 @@ func _draw() -> void:
 
 	if level_flash_timer > 0.0:
 		draw_circle(Vector2.ZERO, 54.0, Color(1.0, 0.86, 0.25, 0.35), false, 7.0)
+
+	if slow_timer > 0.0:
+		draw_circle(Vector2.ZERO, 46.0, Color(0.72, 0.38, 0.92, 0.75), false, 4.0)
 
 	draw_circle(Vector2.ZERO, 34.0, body_color)
 	draw_circle(Vector2(0, -4), 21.0, Color(0.82, 0.9, 1.0))
