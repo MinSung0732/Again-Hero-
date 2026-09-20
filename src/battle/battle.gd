@@ -260,6 +260,9 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 	command_power = maxf(command_power - cost, 0.0)
 
 	_spawn_monster(monster_type, spawn_position, cost, false)
+	if is_instance_valid(hero) and hero.has_method("record_offensive_event"):
+		hero.call("record_offensive_event", monster_type)
+
 	command_changed.emit(command_power, max_command)
 	_emit_stats()
 
@@ -711,6 +714,11 @@ func get_snapshot() -> Dictionary:
 		"hero_exp": current_exp,
 		"hero_exp_to_next": exp_to_next_level,
 		"hero_build_summary": build_summary,
+		"hero_recent_offense": (
+			String(hero.call("get_recent_offense_summary"))
+			if is_instance_valid(hero) and hero.has_method("get_recent_offense_summary")
+			else "최근 공세 기록 없음"
+		),
 		"monsters_left": monsters_alive,
 		"command_power": command_power,
 		"command_max": max_command,
