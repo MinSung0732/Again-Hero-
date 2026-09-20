@@ -9,6 +9,7 @@ signal augment_selected(level: int, candidates: Array, chosen_name: String, reas
 const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
 const PROJECTILE_SCENE := preload("res://src/hero/HeroProjectile.tscn")
+const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const STAGE1_FRAME_SIZE := Vector2(64, 64)
 
 const APPROACH_DISTANCE_RATIO := 0.86
@@ -412,23 +413,17 @@ func gain_exp(amount: int) -> void:
 
 	progression_changed.emit(level, current_exp, exp_to_next_level)
 
-func record_offensive_event(monster_type: String) -> void:
-	var role := _role_for_monster_type(monster_type)
+func record_offensive_event(monster_type: String, monster_role: String = "") -> void:
+	var role := monster_role
+	if role.is_empty():
+		role = MONSTER_CATALOG.get_role(monster_type)
+
 	offensive_memory_events.append({
 		"time": ai_memory_clock,
 		"type": monster_type,
 		"role": role,
 	})
 	_prune_offensive_memory()
-
-func _role_for_monster_type(monster_type: String) -> String:
-	match monster_type:
-		"spider":
-			return "controller"
-		"orc":
-			return "tank"
-		_:
-			return "swarm"
 
 func _prune_offensive_memory() -> void:
 	if offensive_memory_events.is_empty():
@@ -444,16 +439,8 @@ func _prune_offensive_memory() -> void:
 func _build_recent_offense_memory() -> Dictionary:
 	_prune_offensive_memory()
 
-	var type_weights := {
-		"slime": 0.0,
-		"spider": 0.0,
-		"orc": 0.0,
-	}
-	var role_weights := {
-		"swarm": 0.0,
-		"controller": 0.0,
-		"tank": 0.0,
-	}
+	var type_weights := {}
+	var role_weights := {}
 	var total_weight := 0.0
 
 	for raw_event in offensive_memory_events:
@@ -484,18 +471,18 @@ func get_recent_offense_summary() -> String:
 
 	var type_weights: Dictionary = memory.get("type_weights", {})
 	var total_weight := maxf(float(memory.get("total_weight", 0.0)), 0.001)
-	var slime_ratio := float(type_weights.get("slime", 0.0)) / total_weight
-	var spider_ratio := float(type_weights.get("spider", 0.0)) / total_weight
-	var orc_ratio := float(type_weights.get("orc", 0.0)) / total_weight
+	var dominant_type := ""
+	var dominant_weight := -1.0
 
-	var dominant_name := "슬라임"
-	var dominant_ratio := slime_ratio
-	if spider_ratio > dominant_ratio:
-		dominant_name = "거미"
-		dominant_ratio = spider_ratio
-	if orc_ratio > dominant_ratio:
-		dominant_name = "오크"
-		dominant_ratio = orc_ratio
+	for raw_type in type_weights.keys():
+		var monster_type := String(raw_type)
+		var weight := float(type_weights.get(monster_type, 0.0))
+		if weight > dominant_weight:
+			dominant_weight = weight
+			dominant_type = monster_type
+
+	var dominant_name := MONSTER_CATALOG.get_name(dominant_type)
+	var dominant_ratio := maxf(dominant_weight, 0.0) / total_weight
 
 	return "최근 %.0f초: %s %.0f%% · 소환 %d회" % [
 		OFFENSE_MEMORY_WINDOW,
@@ -529,16 +516,8 @@ func _build_ai_context() -> Dictionary:
 	var nearby_count: int = 0
 	var total_count: int = 0
 	var nearest_distance: float = 9999.0
-	var type_counts: Dictionary = {
-		"slime": 0,
-		"spider": 0,
-		"orc": 0,
-	}
-	var role_counts: Dictionary = {
-		"swarm": 0,
-		"controller": 0,
-		"tank": 0,
-	}
+	var type_counts: Dictionary = {}
+	var role_counts: Dictionary = {}
 
 	for node in get_tree().get_nodes_in_group("monsters"):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
