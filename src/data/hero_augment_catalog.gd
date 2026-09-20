@@ -3,14 +3,14 @@ class_name HeroAugmentCatalog
 
 const AUGMENTS = [
 	{
-		"id": "sword_mastery",
-		"name": "검술 단련",
-		"description": "공격력 +8",
+		"id": "projectile_power",
+		"name": "탄환 강화",
+		"description": "투사체 공격력 +8",
 		"base_score": 8.0,
 	},
 	{
 		"id": "rapid_strikes",
-		"name": "속공",
+		"name": "연사 강화",
 		"description": "공격속도 +12%",
 		"base_score": 7.5,
 	},
@@ -22,14 +22,14 @@ const AUGMENTS = [
 	},
 	{
 		"id": "pursuit",
-		"name": "추격 본능",
+		"name": "민첩한 발놀림",
 		"description": "이동속도 +25",
 		"base_score": 6.0,
 	},
 	{
 		"id": "long_reach",
-		"name": "긴 사거리",
-		"description": "공격 사거리 +20",
+		"name": "사거리 확장",
+		"description": "공격/투사체 최대 사거리 +35",
 		"base_score": 5.5,
 	},
 	{
