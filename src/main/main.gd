@@ -6,6 +6,7 @@ extends Control
 @onready var monsters_label: Label = $TopBar/Monsters
 @onready var exp_label: Label = $TopBar/ExpLabel
 @onready var exp_bar: ProgressBar = $TopBar/ExpBar
+@onready var build_label: Label = $BottomBar/BuildLabel
 @onready var status_label: Label = $BottomBar/Status
 @onready var result_panel: PanelContainer = $ResultPanel
 @onready var result_title: Label = $ResultPanel/Margin/VBox/ResultTitle
@@ -19,6 +20,7 @@ func _ready() -> void:
 	battle.stats_changed.connect(_on_stats_changed)
 	battle.progression_changed.connect(_on_progression_changed)
 	battle.hero_leveled_up.connect(_on_hero_leveled_up)
+	battle.hero_augment_selected.connect(_on_hero_augment_selected)
 	battle.battle_finished.connect(_on_battle_finished)
 	restart_button.pressed.connect(_on_restart_pressed)
 
@@ -33,9 +35,10 @@ func _ready() -> void:
 		int(snapshot.get("hero_exp", 0)),
 		int(snapshot.get("hero_exp_to_next", 50))
 	)
+	build_label.text = "용사 빌드: %s" % String(snapshot.get("hero_build_summary", "아직 선택 없음"))
 
 	print("Again, Hero? portrait prototype loaded.")
-	print("Hero EXP / level progression enabled.")
+	print("Hero EXP / augment selection prototype enabled.")
 
 func _on_stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int) -> void:
 	hero_hp_label.text = "용사 HP %d / %d" % [hero_hp, hero_max_hp]
@@ -48,7 +51,20 @@ func _on_progression_changed(level: int, current_exp: int, exp_to_next_level: in
 	exp_bar.value = float(current_exp)
 
 func _on_hero_leveled_up(new_level: int) -> void:
-	status_label.text = "용사 Lv.%d 도달!\n다음 단계에서는 레벨업마다 AI가 증강을 선택합니다." % new_level
+	status_label.text = "용사 Lv.%d 도달!\nAI가 증강 후보를 평가합니다." % new_level
+
+func _on_hero_augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String) -> void:
+	var candidate_names: PackedStringArray = []
+	for candidate in candidates:
+		candidate_names.append(String(candidate.get("name", "?")))
+
+	build_label.text = "용사 빌드: %s" % build_summary
+	status_label.text = "Lv.%d 증강 후보: %s\nAI 선택 → %s\n%s" % [
+		level,
+		" / ".join(candidate_names),
+		chosen_name,
+		reason,
+	]
 
 func _on_battle_finished(message: String, player_won: bool) -> void:
 	if player_won:
