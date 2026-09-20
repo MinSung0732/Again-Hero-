@@ -9,6 +9,7 @@ extends Control
 
 @onready var build_label: Label = $BottomBar/BuildLabel
 @onready var status_label: Label = $BottomBar/Status
+@onready var placement_toggle: CheckButton = $BottomBar/PlacementModeToggle
 @onready var command_label: Label = $BottomBar/CommandLabel
 @onready var command_bar: ProgressBar = $BottomBar/CommandBar
 @onready var slime_button: Button = $BottomBar/SummonButtons/SlimeButton
@@ -19,6 +20,9 @@ extends Control
 @onready var result_title: Label = $ResultPanel/Margin/VBox/ResultTitle
 @onready var result_message: Label = $ResultPanel/Margin/VBox/ResultMessage
 @onready var restart_button: Button = $ResultPanel/Margin/VBox/RestartButton
+
+var auto_placement: bool = true
+var selected_monster_type: String = ""
 
 func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
@@ -32,6 +36,7 @@ func _ready() -> void:
 	battle.summon_result.connect(_on_summon_result)
 	battle.battle_finished.connect(_on_battle_finished)
 
+	placement_toggle.toggled.connect(_on_placement_mode_toggled)
 	slime_button.pressed.connect(_on_summon_pressed.bind("slime"))
 	spider_button.pressed.connect(_on_summon_pressed.bind("spider"))
 	orc_button.pressed.connect(_on_summon_pressed.bind("orc"))
@@ -54,10 +59,37 @@ func _ready() -> void:
 	)
 
 	build_label.text = "용사 빌드: %s" % String(snapshot.get("hero_build_summary", "아직 선택 없음"))
-	status_label.text = "지휘력을 사용해 원하는 몬스터를 소환하세요."
+	placement_toggle.button_pressed = true
+	_on_placement_mode_toggled(true)
 
 	print("Again, Hero? portrait prototype loaded.")
-	print("Demon commander summon controls enabled.")
+	print("Auto/manual demon placement enabled.")
+
+func _unhandled_input(event: InputEvent) -> void:
+	if auto_placement or selected_monster_type.is_empty():
+		return
+
+	var pointer_position := Vector2.ZERO
+	var is_pressed := false
+
+	if event is InputEventScreenTouch:
+		var touch_event := event as InputEventScreenTouch
+		is_pressed = touch_event.pressed
+		pointer_position = touch_event.position
+	elif event is InputEventMouseButton:
+		var mouse_event := event as InputEventMouseButton
+		is_pressed = mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT
+		pointer_position = mouse_event.position
+
+	if not is_pressed:
+		return
+
+	var battle_position: Vector2 = battle.to_local(pointer_position)
+	if not battle.is_spawn_position_valid(battle_position):
+		return
+
+	battle.try_summon_at_position(selected_monster_type, battle_position)
+	get_viewport().set_input_as_handled()
 
 func _on_stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int) -> void:
 	hero_hp_label.text = "용사 HP %d / %d" % [hero_hp, hero_max_hp]
@@ -78,14 +110,48 @@ func _on_command_changed(current_value: float, max_value: float) -> void:
 	spider_button.disabled = current_value + 0.001 < battle.get_monster_cost("spider")
 	orc_button.disabled = current_value + 0.001 < battle.get_monster_cost("orc")
 
+func _on_placement_mode_toggled(auto_enabled: bool) -> void:
+	auto_placement = auto_enabled
+
+	if auto_placement:
+		placement_toggle.text = "자동 배치"
+		status_label.text = "자동 배치: 몬스터 버튼을 누르면 가장자리에서 즉시 소환됩니다."
+	else:
+		placement_toggle.text = "수동 배치"
+		if selected_monster_type.is_empty():
+			status_label.text = "수동 배치: 몬스터 버튼을 선택한 뒤 전장을 터치하세요."
+		else:
+			status_label.text = "수동 배치: %s 선택됨 · 전장을 터치하세요." % _get_monster_name(selected_monster_type)
+
 func _on_summon_pressed(monster_type: String) -> void:
-	battle.try_summon(monster_type)
+	if auto_placement:
+		battle.try_summon(monster_type)
+		return
+
+	selected_monster_type = monster_type
+	status_label.text = "수동 배치: %s 선택됨 · 원하는 위치를 계속 터치해 배치하세요." % _get_monster_name(monster_type)
 
 func _on_summon_result(_monster_type: String, success: bool, message: String) -> void:
-	if success:
-		status_label.text = "%s\n스폰 위치는 현재 자동 선택됩니다." % message
-	else:
+	if not success:
 		status_label.text = message
+		return
+
+	if auto_placement:
+		status_label.text = "%s\n자동 배치 모드" % message
+	else:
+		status_label.text = "%s\n%s 선택 유지 · 계속 터치해서 배치 가능" % [
+			message,
+			_get_monster_name(selected_monster_type),
+		]
+
+func _get_monster_name(monster_type: String) -> String:
+	match monster_type:
+		"spider":
+			return "거미"
+		"orc":
+			return "오크"
+		_:
+			return "슬라임"
 
 func _on_hero_leveled_up(new_level: int) -> void:
 	status_label.text = "용사 Lv.%d 도달!\nAI가 증강 후보를 평가합니다." % new_level
@@ -107,6 +173,7 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	slime_button.disabled = true
 	spider_button.disabled = true
 	orc_button.disabled = true
+	placement_toggle.disabled = true
 
 	if player_won:
 		result_title.text = "HERO SLAIN"
