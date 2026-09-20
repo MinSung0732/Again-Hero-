@@ -8,13 +8,21 @@ signal augment_selected(level: int, candidates: Array, chosen_name: String, reas
 
 const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
-const AI_SENSE_RADIUS := 320.0
+const PROJECTILE_SCENE := preload("res://src/hero/HeroProjectile.tscn")
+
+const AI_SENSE_RADIUS := 420.0
+const KITE_DISTANCE := 210.0
+const APPROACH_DISTANCE_RATIO := 0.86
+const FIELD_WIDTH := 1080.0
+const FIELD_HEIGHT := 1280.0
+const FIELD_MARGIN := 72.0
 
 @export var max_hp: int = 300
 @export var move_speed: float = 230.0
 @export var attack_damage: int = 34
-@export var attack_range: float = 78.0
-@export var attack_cooldown: float = 0.48
+@export var attack_range: float = 430.0
+@export var attack_cooldown: float = 0.62
+@export var projectile_speed: float = 680.0
 
 var current_hp: int
 var level: int = 1
@@ -29,11 +37,13 @@ var hit_flash_timer: float = 0.0
 var level_flash_timer: float = 0.0
 var slow_timer: float = 0.0
 var move_multiplier: float = 1.0
+var strafe_sign: float = 1.0
 
 func _ready() -> void:
 	add_to_group("hero")
 	current_hp = max_hp
 	exp_to_next_level = _required_exp_for_level(level)
+	strafe_sign = -1.0 if randf() < 0.5 else 1.0
 	health_changed.emit(current_hp, max_hp)
 	progression_changed.emit(level, current_exp, exp_to_next_level)
 	queue_redraw()
@@ -62,20 +72,64 @@ func _physics_process(delta: float) -> void:
 
 	if not is_instance_valid(target) or target.is_queued_for_deletion() or retarget_timer <= 0.0:
 		target = _find_nearest_monster()
-		retarget_timer = 0.15
+		retarget_timer = 0.12
 
 	if not is_instance_valid(target):
 		velocity = Vector2.ZERO
 		return
 
 	var distance := global_position.distance_to(target.global_position)
-	if distance > attack_range:
-		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier
-		move_and_slide()
-	else:
-		velocity = Vector2.ZERO
-		if attack_timer <= 0.0:
-			_attack_target()
+	var move_direction := _choose_move_direction(target, distance)
+	velocity = move_direction * move_speed * move_multiplier
+	move_and_slide()
+	_clamp_to_battlefield()
+
+	if distance <= attack_range and attack_timer <= 0.0:
+		_fire_projectile(target)
+
+func _choose_move_direction(nearest_target: Node2D, nearest_distance: float) -> Vector2:
+	var avoidance := Vector2.ZERO
+
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+
+		var monster := node as Node2D
+		if monster == null:
+			continue
+
+		var distance := global_position.distance_to(monster.global_position)
+		if distance <= 0.0 or distance > KITE_DISTANCE:
+			continue
+
+		var weight := 1.0 - clampf(distance / KITE_DISTANCE, 0.0, 1.0)
+		avoidance += monster.global_position.direction_to(global_position) * (0.35 + weight)
+
+	if avoidance.length_squared() > 0.01:
+		return avoidance.normalized()
+
+	if nearest_distance > attack_range * APPROACH_DISTANCE_RATIO:
+		return global_position.direction_to(nearest_target.global_position)
+
+	var to_target := global_position.direction_to(nearest_target.global_position)
+	var tangent := Vector2(-to_target.y, to_target.x) * strafe_sign
+	return tangent.normalized()
+
+func _clamp_to_battlefield() -> void:
+	var clamped_position := position
+	var hit_edge := false
+
+	if clamped_position.x < FIELD_MARGIN or clamped_position.x > FIELD_WIDTH - FIELD_MARGIN:
+		hit_edge = true
+	if clamped_position.y < FIELD_MARGIN or clamped_position.y > FIELD_HEIGHT - FIELD_MARGIN:
+		hit_edge = true
+
+	clamped_position.x = clampf(clamped_position.x, FIELD_MARGIN, FIELD_WIDTH - FIELD_MARGIN)
+	clamped_position.y = clampf(clamped_position.y, FIELD_MARGIN, FIELD_HEIGHT - FIELD_MARGIN)
+	position = clamped_position
+
+	if hit_edge:
+		strafe_sign *= -1.0
 
 func _find_nearest_monster() -> Node2D:
 	var nearest: Node2D = null
@@ -94,13 +148,20 @@ func _find_nearest_monster() -> Node2D:
 
 	return nearest
 
-func _attack_target() -> void:
-	if not is_instance_valid(target):
+func _fire_projectile(current_target: Node2D) -> void:
+	if not is_instance_valid(current_target):
+		return
+
+	var shot_direction := global_position.direction_to(current_target.global_position)
+	if shot_direction.length_squared() <= 0.0:
 		return
 
 	attack_timer = attack_cooldown
-	if target.has_method("take_damage"):
-		target.call("take_damage", attack_damage)
+
+	var projectile := PROJECTILE_SCENE.instantiate() as Area2D
+	get_parent().add_child(projectile)
+	projectile.global_position = global_position + shot_direction * 46.0
+	projectile.call("setup", shot_direction, attack_damage, projectile_speed, attack_range)
 
 func gain_exp(amount: int) -> void:
 	if amount <= 0 or current_hp <= 0:
@@ -196,7 +257,7 @@ func _apply_augment(augment: Dictionary) -> void:
 	var augment_id: String = String(augment.get("id", ""))
 
 	match augment_id:
-		"sword_mastery":
+		"projectile_power":
 			attack_damage += 8
 		"rapid_strikes":
 			attack_cooldown = maxf(attack_cooldown * 0.88, 0.18)
@@ -206,7 +267,7 @@ func _apply_augment(augment: Dictionary) -> void:
 		"pursuit":
 			move_speed += 25.0
 		"long_reach":
-			attack_range += 20.0
+			attack_range += 35.0
 		"battle_recovery":
 			current_hp = mini(current_hp + 90, max_hp)
 
@@ -269,8 +330,10 @@ func _draw() -> void:
 
 	draw_circle(Vector2.ZERO, 34.0, body_color)
 	draw_circle(Vector2(0, -4), 21.0, Color(0.82, 0.9, 1.0))
-	draw_line(Vector2(22, 14), Vector2(52, -18), Color(0.95, 0.95, 1.0), 9.0)
-	draw_line(Vector2(17, 10), Vector2(31, 24), Color(0.95, 0.75, 0.25), 7.0)
+
+	# Ranged prototype weapon: small staff + glowing focus.
+	draw_line(Vector2(22, 13), Vector2(44, -12), Color(0.82, 0.72, 0.48), 7.0)
+	draw_circle(Vector2(49, -17), 8.0, Color(0.95, 0.86, 0.32))
 
 	var bar_width := 92.0
 	var hp_ratio := float(current_hp) / float(max_hp)
