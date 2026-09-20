@@ -65,8 +65,8 @@ func _ready() -> void:
 	print("Again, Hero? portrait prototype loaded.")
 	print("Auto/manual demon placement enabled.")
 
-func _unhandled_input(event: InputEvent) -> void:
-	if auto_placement or selected_monster_type.is_empty():
+func _input(event: InputEvent) -> void:
+	if result_panel.visible or auto_placement or selected_monster_type.is_empty():
 		return
 
 	var pointer_position := Vector2.ZERO
