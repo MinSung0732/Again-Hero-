@@ -5,7 +5,7 @@ signal died
 @export var max_hp: int = 60
 @export var move_speed: float = 115.0
 @export var attack_damage: int = 9
-@export var attack_range: float = 54.0
+@export var attack_range: float = 72.0
 @export var attack_cooldown: float = 1.10
 
 var current_hp: int
