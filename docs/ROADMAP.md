@@ -151,11 +151,14 @@
 
 완료 조건: 몬스터 구성 변화 때문에 AI의 빌드가 달라지고, 플레이어가 이를 역이용할 수 있다.
 
+- [x] 최근 20초 공세 기억
+- [x] 최근 공세 타입/역할 비중을 증강 점수에 반영
+- [x] AI 점수 규칙 데이터화
 - [ ] 다수 적 → 광역기 선호
 - [ ] 탱커 비중 → 단일 화력 선호
 - [ ] 둔화 빈도 → 기동/저항 선호
 - [ ] AI 판단에 시간 지연
-- [ ] 기존 빌드 관성
+- [x] 기존 빌드 관성
 - [ ] 전략 전환 타이밍 테스트
 - [ ] 5~10분 Run
 
@@ -220,3 +223,12 @@
 - [x] 4프레임 fly 애니메이션 연결
 - [x] Stage 1 투사체 개별 PNG 직접 로드 fallback
 - [x] Android Editor import cache 우회
+
+
+### 데이터 중심 구조
+- [x] Monster name / role / base cost / scene → `monster_catalog.gd`
+- [x] Hero 증강 AI 반응 규칙 → `hero_augment_catalog.gd`
+- [x] Build AI를 콘텐츠 ID별 match가 아닌 공통 rule evaluator로 전환
+- [x] Hero 전황/최근 공세 type/role 집계를 동적 Dictionary로 전환
+- [ ] Stage별 Hero AI 성향 데이터 분리
+- [ ] 마왕 증강 효과도 장기적으로 데이터 중심 적용 방식 검토
