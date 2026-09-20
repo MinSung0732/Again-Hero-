@@ -1,8 +1,11 @@
 extends Area2D
 
-const STAGE1_PROJECTILE_SHEET_PATH := "res://assets/art/projectiles/stage1_mage/stage1_mage_projectile_sheet.png"
-const STAGE1_PROJECTILE_FRAME_SIZE := Vector2(128, 128)
-const STAGE1_PROJECTILE_FRAME_COUNT := 4
+const STAGE1_PROJECTILE_FRAME_PATHS := [
+	"res://assets/art/projectiles/stage1_mage/projectile_01.png",
+	"res://assets/art/projectiles/stage1_mage/projectile_02.png",
+	"res://assets/art/projectiles/stage1_mage/projectile_03.png",
+	"res://assets/art/projectiles/stage1_mage/projectile_04.png",
+]
 const STAGE1_PROJECTILE_FPS := 12.0
 
 var direction: Vector2 = Vector2.RIGHT
@@ -57,14 +60,6 @@ func _apply_projectile_visual() -> void:
 	if source_hero_id != "ranged_rookie":
 		return
 
-	var sheet := _load_stage1_projectile_sheet()
-	if sheet == null:
-		push_warning(
-			"Stage 1 projectile spritesheet load failed: %s"
-			% STAGE1_PROJECTILE_SHEET_PATH
-		)
-		return
-
 	var frames := SpriteFrames.new()
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
@@ -73,33 +68,51 @@ func _apply_projectile_visual() -> void:
 	frames.set_animation_loop("fly", true)
 	frames.set_animation_speed("fly", STAGE1_PROJECTILE_FPS)
 
-	for column in range(STAGE1_PROJECTILE_FRAME_COUNT):
-		var atlas := AtlasTexture.new()
-		atlas.atlas = sheet
-		atlas.region = Rect2(
-			Vector2(column, 0) * STAGE1_PROJECTILE_FRAME_SIZE,
-			STAGE1_PROJECTILE_FRAME_SIZE
-		)
-		frames.add_frame("fly", atlas)
+	var loaded_count := 0
+	for frame_path in STAGE1_PROJECTILE_FRAME_PATHS:
+		var texture := _load_texture_direct(frame_path)
+		if texture == null:
+			push_warning("Projectile frame load failed: %s" % frame_path)
+			continue
+
+		frames.add_frame("fly", texture)
+		loaded_count += 1
+
+	if loaded_count == 0:
+		push_warning("Stage 1 projectile animation: no PNG frames could be loaded.")
+		return
 
 	projectile_sprite.sprite_frames = frames
 	projectile_sprite.visible = true
 	projectile_sprite.play("fly")
 	queue_redraw()
 
-func _load_stage1_projectile_sheet() -> Texture2D:
-	if ResourceLoader.exists(STAGE1_PROJECTILE_SHEET_PATH):
-		var imported_texture = load(STAGE1_PROJECTILE_SHEET_PATH)
+func _load_texture_direct(path: String) -> Texture2D:
+	# First use Godot's imported resource if it is ready.
+	if ResourceLoader.exists(path):
+		var imported_texture = load(path)
 		if imported_texture is Texture2D:
 			return imported_texture
 
-	if FileAccess.file_exists(STAGE1_PROJECTILE_SHEET_PATH):
-		var image := Image.new()
-		var error := image.load(STAGE1_PROJECTILE_SHEET_PATH)
-		if error == OK:
-			return ImageTexture.create_from_image(image)
+	# Android Editor/Termux workflow: bypass delayed import cache and read
+	# the actual PNG file from res:// directly.
+	if not FileAccess.file_exists(path):
+		return null
 
-	return null
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return null
+
+	var png_bytes := file.get_buffer(file.get_length())
+	if png_bytes.is_empty():
+		return null
+
+	var image := Image.new()
+	var error := image.load_png_from_buffer(png_bytes)
+	if error != OK:
+		return null
+
+	return ImageTexture.create_from_image(image)
 
 func _draw() -> void:
 	if projectile_sprite.visible:
