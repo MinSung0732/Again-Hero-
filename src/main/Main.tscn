@@ -23,13 +23,13 @@ mouse_filter = 2
 color = Color(0.035, 0.038, 0.052, 1)
 
 [node name="Battle" parent="." instance=ExtResource("2_battle")]
-position = Vector2(0, 260)
+position = Vector2(0, 280)
 
 [node name="TopBar" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 250.0
+offset_bottom = 270.0
 grow_horizontal = 2
 mouse_filter = 2
 color = Color(0.055, 0.058, 0.078, 0.98)
@@ -37,41 +37,70 @@ color = Color(0.055, 0.058, 0.078, 0.98)
 [node name="Title" type="Label" parent="TopBar"]
 layout_mode = 0
 offset_left = 40.0
-offset_top = 24.0
+offset_top = 20.0
 offset_right = 1040.0
-offset_bottom = 86.0
+offset_bottom = 80.0
 theme_override_font_sizes/font_size = 48
 text = "용사, 또 너야?"
 
 [node name="Subtitle" type="Label" parent="TopBar"]
 layout_mode = 0
 offset_left = 42.0
-offset_top = 92.0
+offset_top = 86.0
 offset_right = 1038.0
-offset_bottom = 130.0
+offset_bottom = 124.0
 theme_override_font_sizes/font_size = 20
 text = "Again, Hero? · Portrait Prototype"
 
-[node name="HeroHP" type="Label" parent="TopBar"]
+[node name="HeroLevel" type="Label" parent="TopBar"]
 layout_mode = 0
 offset_left = 40.0
-offset_top = 158.0
-offset_right = 535.0
-offset_bottom = 220.0
-theme_override_font_sizes/font_size = 28
+offset_top = 142.0
+offset_right = 240.0
+offset_bottom = 196.0
+theme_override_font_sizes/font_size = 30
+text = "Lv.1"
+vertical_alignment = 1
+
+[node name="HeroHP" type="Label" parent="TopBar"]
+layout_mode = 0
+offset_left = 215.0
+offset_top = 142.0
+offset_right = 690.0
+offset_bottom = 196.0
+theme_override_font_sizes/font_size = 27
 text = "용사 HP 300 / 300"
 vertical_alignment = 1
 
 [node name="Monsters" type="Label" parent="TopBar"]
 layout_mode = 0
-offset_left = 545.0
-offset_top = 158.0
+offset_left = 720.0
+offset_top = 142.0
 offset_right = 1040.0
-offset_bottom = 220.0
-theme_override_font_sizes/font_size = 28
+offset_bottom = 196.0
+theme_override_font_sizes/font_size = 27
 text = "슬라임 6"
 horizontal_alignment = 2
 vertical_alignment = 1
+
+[node name="ExpLabel" type="Label" parent="TopBar"]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 207.0
+offset_right = 260.0
+offset_bottom = 250.0
+theme_override_font_sizes/font_size = 21
+text = "EXP 0 / 50"
+vertical_alignment = 1
+
+[node name="ExpBar" type="ProgressBar" parent="TopBar"]
+layout_mode = 0
+offset_left = 265.0
+offset_top = 216.0
+offset_right = 1040.0
+offset_bottom = 244.0
+max_value = 50.0
+show_percentage = false
 
 [node name="BottomBar" type="ColorRect" parent="."]
 layout_mode = 1
@@ -79,7 +108,7 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -280.0
+offset_top = -270.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
@@ -97,7 +126,7 @@ offset_bottom = -30.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_font_sizes/font_size = 25
-text = "자동 전투 진행 중\n용사는 가장 가까운 슬라임을 공격합니다."
+text = "자동 전투 진행 중\n슬라임을 쓰러뜨리면 용사가 경험치를 얻습니다."
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
