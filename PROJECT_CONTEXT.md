@@ -256,12 +256,12 @@ res://
 
 ## 14. 현재 개발 단계
 
-**Phase 4 진입 — 마왕 직접 소환 v1**
+**Phase 4.5 진입 — Stage / Hero 데이터화 v1**
 
 현재 구현됨:
 - Godot Android Editor에서 프로젝트 열기 확인
 - Battle 씬
-- 기사형 Hero 자동 이동/가장 가까운 몬스터 탐색/자동 공격
+- 원거리 Hero 자동 이동/가장 가까운 몬스터 탐색/자동 투사체 공격
 - Slime 추적/공격
 - HP / 데미지 / 사망
 - Hero HP 및 남은 Slime 수 HUD
@@ -314,6 +314,21 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 거미: 제어형, 저체력/고기동, 공격 시 용사 이동속도를 일시적으로 72%로 둔화, EXP 30
 - 오크: 탱커형, HP 140, 느리지만 강한 근접 공격, EXP 40
 
+현재 Stage / Hero 데이터 v1:
+- `src/data/stage_catalog.gd`에서 Stage 데이터를 관리
+- `src/data/hero_profiles.gd`에서 Hero 기본 스탯/아키타입 데이터를 관리
+- 현재 플레이 Stage는 `stage_1`
+- Stage 1: **첫 번째 침입자**
+  - Hero: **견습 마도사**
+  - archetype: ranged_kiter
+  - HP 300 / 이동 230 / 공격 34 / 사거리 430 / 공격주기 0.62 / 투사체속도 680 / EXP 획득범위 150
+- Stage 2 데이터 placeholder: **빠른 사냥꾼**
+  - Hero: **기동 사냥꾼**
+  - Stage 2는 아직 잠금 상태이며 플레이/해금 로직은 미구현
+- Battle은 Stage의 hero_id를 읽고 해당 Hero profile을 적용해 Hero를 생성
+- 상단 HUD에 Stage 번호 / Stage 이름 / Hero 이름 표시
+- Hero 처치 시 결과창을 `STAGE CLEAR`로 표시
+
 현재 마왕 직접 소환 v1:
 - 최대 지휘력: 100
 - 시작 지휘력: 0
@@ -341,9 +356,10 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 
 다음 작업은 순서를 크게 바꾸지 않는다.
 
-1. Stage / Hero 데이터 구조 분리
-2. Stage 1을 현재 원거리 카이팅형 용사로 고정
-3. Stage 클리어 / 다음 Stage 해금 최소 흐름
+1. Stage 진행 상태 저장 구조
+2. Stage 1 최초 클리어 → Stage 2 해금
+3. Stage 선택/재도전 최소 UI
+4. 최초 클리어 보상 연결
 5. 실제 플레이어 공세의 시간 흐름/최근 기록을 AI 판단에 반영
 6. 증강 간 시너지 점수와 판단 지연 추가
 7. 마왕 증강 3택 + Run당 리롤 3회
