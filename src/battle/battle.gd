@@ -13,9 +13,12 @@ const SLIME_SCENE := preload("res://src/monsters/Slime.tscn")
 const SPIDER_SCENE := preload("res://src/monsters/Spider.tscn")
 const ORC_SCENE := preload("res://src/monsters/Orc.tscn")
 const EXP_ORB_SCENE := preload("res://src/battle/ExpOrb.tscn")
+const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
+const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 
 const FIELD_SIZE := Vector2(1080, 1280)
 const FIELD_CENTER := Vector2(540, 640)
+const CURRENT_STAGE_ID := "stage_1"
 
 const MAX_COMMAND := 100.0
 const START_COMMAND := 0.0
@@ -38,6 +41,8 @@ const SPAWN_POSITIONS: Array[Vector2] = [
 ]
 
 var hero: Node2D
+var current_stage_data: Dictionary = {}
+var current_hero_profile: Dictionary = {}
 var monsters_alive: int = 0
 var battle_over: bool = false
 var command_power: float = START_COMMAND
@@ -64,7 +69,15 @@ func _start_battle() -> void:
 	monsters_alive = 0
 	command_power = START_COMMAND
 
+	current_stage_data = STAGE_CATALOG.get_stage(CURRENT_STAGE_ID)
+	var hero_id: String = String(current_stage_data.get("hero_id", "ranged_rookie"))
+	current_hero_profile = HERO_PROFILES.get_profile(hero_id)
+
 	hero = HERO_SCENE.instantiate() as Node2D
+	if hero.has_method("configure_profile"):
+		hero.call("configure_profile", current_hero_profile)
+	hero.set("level", int(current_stage_data.get("hero_level_start", 1)))
+
 	add_child(hero)
 	hero.position = FIELD_CENTER
 	hero.connect("health_changed", Callable(self, "_on_hero_health_changed"))
@@ -232,7 +245,14 @@ func _on_hero_died() -> void:
 		return
 
 	_emit_stats(0)
-	_finish_battle("용사 처치!\n마왕의 첫 승리입니다.", true)
+
+	var stage_number: int = int(current_stage_data.get("number", 1))
+	var stage_name: String = String(current_stage_data.get("display_name", "스테이지"))
+	var hero_name: String = String(current_hero_profile.get("display_name", "용사"))
+	_finish_battle(
+		"Stage %d 클리어!\n%s · %s 처치 성공." % [stage_number, stage_name, hero_name],
+		true
+	)
 
 func _finish_battle(message: String, player_won: bool) -> void:
 	battle_over = true
@@ -287,6 +307,12 @@ func get_snapshot() -> Dictionary:
 			build_summary = String(hero.call("get_build_summary"))
 
 	return {
+		"stage_id": String(current_stage_data.get("id", CURRENT_STAGE_ID)),
+		"stage_number": int(current_stage_data.get("number", 1)),
+		"stage_name": String(current_stage_data.get("display_name", "첫 번째 침입자")),
+		"hero_id": String(current_hero_profile.get("id", "ranged_rookie")),
+		"hero_name": String(current_hero_profile.get("display_name", "견습 마도사")),
+		"hero_archetype": String(current_hero_profile.get("archetype", "ranged_kiter")),
 		"hero_hp": hp,
 		"hero_max_hp": max_hp_value,
 		"hero_level": level,
