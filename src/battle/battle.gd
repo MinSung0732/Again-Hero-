@@ -8,7 +8,7 @@ const SLIME_SCENE := preload("res://src/monsters/Slime.tscn")
 
 const FIELD_SIZE := Vector2(1920, 780)
 
-var hero: CharacterBody2D
+var hero: Node2D
 var monsters_alive: int = 0
 var battle_over: bool = false
 
@@ -19,11 +19,11 @@ func _ready() -> void:
 func _start_battle() -> void:
 	battle_over = false
 
-	hero = HERO_SCENE.instantiate() as CharacterBody2D
+	hero = HERO_SCENE.instantiate() as Node2D
 	add_child(hero)
 	hero.position = Vector2(960, 390)
-	hero.health_changed.connect(_on_hero_health_changed)
-	hero.died.connect(_on_hero_died)
+	hero.connect("health_changed", Callable(self, "_on_hero_health_changed"))
+	hero.connect("died", Callable(self, "_on_hero_died"))
 
 	var spawn_positions: Array[Vector2] = [
 		Vector2(250, 155),
@@ -40,10 +40,10 @@ func _start_battle() -> void:
 	_emit_stats()
 
 func _spawn_slime(spawn_position: Vector2) -> void:
-	var slime := SLIME_SCENE.instantiate() as CharacterBody2D
+	var slime := SLIME_SCENE.instantiate() as Node2D
 	add_child(slime)
 	slime.position = spawn_position
-	slime.died.connect(_on_slime_died.bind(slime))
+	slime.connect("died", Callable(self, "_on_slime_died").bind(slime))
 	monsters_alive += 1
 
 func _on_hero_health_changed(current_hp: int, max_hp_value: int) -> void:
@@ -83,8 +83,8 @@ func _emit_stats(hero_hp_override: int = -1) -> void:
 	var max_hp_value := 0
 
 	if is_instance_valid(hero):
-		hp = hero.current_hp
-		max_hp_value = hero.max_hp
+		hp = int(hero.get("current_hp"))
+		max_hp_value = int(hero.get("max_hp"))
 
 	if hero_hp_override >= 0:
 		hp = hero_hp_override
@@ -96,8 +96,8 @@ func get_snapshot() -> Dictionary:
 	var max_hp_value := 0
 
 	if is_instance_valid(hero):
-		hp = hero.current_hp
-		max_hp_value = hero.max_hp
+		hp = int(hero.get("current_hp"))
+		max_hp_value = int(hero.get("max_hp"))
 
 	return {
 		"hero_hp": hp,
