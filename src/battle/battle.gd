@@ -212,7 +212,6 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 	command_power = maxf(command_power - cost, 0.0)
 
 	_spawn_monster(monster_type, spawn_position, cost, false)
-	_gain_demon_exp(cost)
 	command_changed.emit(command_power, max_command)
 	_emit_stats()
 
@@ -220,9 +219,15 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 	summon_result.emit(
 		monster_type,
 		true,
-		"%s %s! 지휘력 %.1f 소모" % [_get_monster_name(monster_type), mode_text, cost]
+		"%s %s! 지휘력 %.1f 소모 · 마왕 EXP +%.1f" % [
+			_get_monster_name(monster_type),
+			mode_text,
+			cost,
+			cost,
+		]
 	)
 
+	_gain_demon_exp(cost)
 	return true
 
 func is_spawn_position_valid(spawn_position: Vector2) -> bool:
