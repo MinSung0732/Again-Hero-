@@ -185,6 +185,74 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 25
 text = "오크\n비용 18"
 
+[node name="DemonAugmentPanel" type="PanelContainer" parent="HUD"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -490.0
+offset_top = -410.0
+offset_right = 490.0
+offset_bottom = 410.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="HUD/DemonAugmentPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 42
+theme_override_constants/margin_top = 38
+theme_override_constants/margin_right = 42
+theme_override_constants/margin_bottom = 38
+
+[node name="VBox" type="VBoxContainer" parent="HUD/DemonAugmentPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="Title" type="Label" parent="HUD/DemonAugmentPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 42
+text = "마왕의 개입"
+horizontal_alignment = 1
+
+[node name="Trigger" type="Label" parent="HUD/DemonAugmentPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "증강 선택 1 / 3"
+horizontal_alignment = 1
+
+[node name="Choices" type="HBoxContainer" parent="HUD/DemonAugmentPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Choice0" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices"]
+custom_minimum_size = Vector2(285, 360)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "증강 1"
+
+[node name="Choice1" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices"]
+custom_minimum_size = Vector2(285, 360)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "증강 2"
+
+[node name="Choice2" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices"]
+custom_minimum_size = Vector2(285, 360)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "증강 3"
+
+[node name="RerollButton" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 92)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "↻ 새로고침 3 / 3"
+
 [node name="ResultPanel" type="PanelContainer" parent="HUD"]
 visible = false
 anchors_preset = 8
