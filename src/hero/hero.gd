@@ -28,6 +28,7 @@ const WANDER_MIN_TARGET_DISTANCE := 260.0
 var hero_id: String = "ranged_rookie"
 var hero_display_name: String = "견습 마도사"
 var hero_archetype: String = "ranged_kiter"
+var sprite_texture_path: String = ""
 
 var battlefield_size: Vector2 = Vector2(3200, 3200)
 
@@ -49,6 +50,7 @@ var wander_target: Vector2 = Vector2.ZERO
 var wander_timer: float = 0.0
 
 @onready var follow_camera: Camera2D = $Camera2D
+@onready var hero_sprite: Sprite2D = $HeroSprite
 
 func configure_profile(profile: Dictionary) -> void:
 	if profile.is_empty():
@@ -57,6 +59,7 @@ func configure_profile(profile: Dictionary) -> void:
 	hero_id = String(profile.get("id", hero_id))
 	hero_display_name = String(profile.get("display_name", hero_display_name))
 	hero_archetype = String(profile.get("archetype", hero_archetype))
+	sprite_texture_path = String(profile.get("sprite_path", ""))
 
 	max_hp = int(profile.get("max_hp", max_hp))
 	move_speed = float(profile.get("move_speed", move_speed))
@@ -77,6 +80,7 @@ func configure_battlefield(size: Vector2) -> void:
 func _ready() -> void:
 	add_to_group("hero")
 	_apply_camera_limits()
+	_apply_profile_visual()
 	current_hp = max_hp
 	exp_to_next_level = _required_exp_for_level(level)
 	strafe_sign = -1.0 if randf() < 0.5 else 1.0
@@ -124,6 +128,20 @@ func _physics_process(delta: float) -> void:
 
 	if distance <= attack_range and attack_timer <= 0.0:
 		_fire_projectile(target)
+
+func _apply_profile_visual() -> void:
+	if sprite_texture_path.is_empty():
+		hero_sprite.visible = false
+		return
+
+	if not ResourceLoader.exists(sprite_texture_path):
+		hero_sprite.visible = false
+		return
+
+	var texture = load(sprite_texture_path)
+	if texture is Texture2D:
+		hero_sprite.texture = texture
+		hero_sprite.visible = true
 
 func _apply_camera_limits() -> void:
 	if not is_instance_valid(follow_camera):
@@ -390,24 +408,22 @@ func take_damage(amount: int) -> void:
 		queue_free()
 
 func _draw() -> void:
-	var body_color := Color(0.35, 0.68, 1.0)
-	if hit_flash_timer > 0.0:
-		body_color = Color(1.0, 1.0, 1.0)
-
 	if level_flash_timer > 0.0:
-		draw_circle(Vector2.ZERO, 54.0, Color(1.0, 0.86, 0.25, 0.35), false, 7.0)
+		draw_circle(Vector2.ZERO, 58.0, Color(1.0, 0.86, 0.25, 0.35), false, 7.0)
 
 	if slow_timer > 0.0:
-		draw_circle(Vector2.ZERO, 46.0, Color(0.72, 0.38, 0.92, 0.75), false, 4.0)
+		draw_circle(Vector2.ZERO, 52.0, Color(0.72, 0.38, 0.92, 0.75), false, 4.0)
 
-	draw_circle(Vector2.ZERO, 34.0, body_color)
-	draw_circle(Vector2(0, -4), 21.0, Color(0.82, 0.9, 1.0))
-
-	# Ranged prototype weapon: small staff + glowing focus.
-	draw_line(Vector2(22, 13), Vector2(44, -12), Color(0.82, 0.72, 0.48), 7.0)
-	draw_circle(Vector2(49, -17), 8.0, Color(0.95, 0.86, 0.32))
+	if not hero_sprite.visible:
+		var body_color := Color(0.35, 0.68, 1.0)
+		if hit_flash_timer > 0.0:
+			body_color = Color(1.0, 1.0, 1.0)
+		draw_circle(Vector2.ZERO, 34.0, body_color)
+		draw_circle(Vector2(0, -4), 21.0, Color(0.82, 0.9, 1.0))
+		draw_line(Vector2(22, 13), Vector2(44, -12), Color(0.82, 0.72, 0.48), 7.0)
+		draw_circle(Vector2(49, -17), 8.0, Color(0.95, 0.86, 0.32))
 
 	var bar_width := 92.0
 	var hp_ratio := float(current_hp) / float(max_hp)
-	draw_rect(Rect2(-bar_width / 2.0, -58.0, bar_width, 10.0), Color(0.12, 0.12, 0.14), true)
-	draw_rect(Rect2(-bar_width / 2.0, -58.0, bar_width * hp_ratio, 10.0), Color(0.3, 0.9, 0.45), true)
+	draw_rect(Rect2(-bar_width / 2.0, -64.0, bar_width, 10.0), Color(0.12, 0.12, 0.14), true)
+	draw_rect(Rect2(-bar_width / 2.0, -64.0, bar_width * hp_ratio, 10.0), Color(0.3, 0.9, 0.45), true)
