@@ -125,6 +125,9 @@
 - [x] Stage 1 = 현재 원거리 카이팅 Hero로 고정
 - [x] Stage 1 용사 픽셀 아트 적용
 - [x] Stage 1 도트 상태 애니메이션 v1
+- [x] Stage 1 게임레디 스프라이트시트 다중 프레임 연결
+- [x] idle 4 / move 6 / attack 6 / hit 3 프레임 재생
+- [x] 기존 Base64/RLE 도트 로더 제거
   - 대기
   - 걷기
   - 달리기
