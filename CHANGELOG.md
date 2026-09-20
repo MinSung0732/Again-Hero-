@@ -374,3 +374,23 @@
   - hit
   - death 2단계
 - 아트 디코딩 실패 시 기존 Hero fallback 구조는 유지.
+
+
+### Stage 1 Game-Ready Sprite Sheet v2 — No Base64
+- 사용자 제공 `stage1_mage_game_ready.zip` 구조를 기준으로 Stage 1 마법사 애니메이션을 재구성.
+- 기존 Base64 PNG 문자열, RLE/팔레트 복원, 대표 단일 포즈 방식 전부 제거.
+- Hero visual node를 `Sprite2D` → `AnimatedSprite2D`로 전환.
+- 하나의 384×256 스프라이트시트(64×64 셀, 6×4)에서 `AtlasTexture` 프레임을 런타임에 구성.
+- 실제 애니메이션:
+  - idle: 4프레임 / 5.5 FPS / loop
+  - move: 6프레임 / 10 FPS 기반 / 실제 이동속도 비례 재생속도
+  - attack: 6프레임 / 18 FPS / non-loop
+  - hit: 3프레임 / 14 FPS / non-loop
+- 공격 시 프레임 0부터 다시 재생하고 약 0.34초 동안 공격 모션 우선.
+- 피격 시 3프레임 hit 모션을 프레임 0부터 재생.
+- 이동 방향이 좌측이면 AnimatedSprite2D flip_h 적용.
+- 제공 팩에는 death 전용 프레임이 없어, 사망은 hit 모션 후 0.48초 fade + 약간의 tilt로 처리.
+- Stage 1 Hero profile을 `sprite_sheet_path` 기반으로 변경.
+- 스프라이트시트가 없거나 import 실패해도 전투 로직은 깨지지 않고 기존 코드 드로잉 Hero로 fallback.
+- `tools/install_stage1_mage_art.sh` 추가: 원본 zip에서 PNG spritesheet와 manifest를 프로젝트 경로로 직접 복사. Base64 사용 없음.
+- 이전 `src/data/stage1_mage_pose_data.gd` 및 구형 `stage1_mage_idle.svg` 삭제.
