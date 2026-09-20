@@ -144,7 +144,7 @@ offset_top = 118.0
 offset_right = 300.0
 offset_bottom = 158.0
 theme_override_font_sizes/font_size = 23
-text = "지휘력 60 / 100"
+text = "지휘력 0 / 100"
 vertical_alignment = 1
 
 [node name="CommandBar" type="ProgressBar" parent="BottomBar"]
@@ -154,7 +154,7 @@ offset_top = 126.0
 offset_right = 1040.0
 offset_bottom = 152.0
 max_value = 100.0
-value = 60.0
+value = 0.0
 show_percentage = false
 
 [node name="SummonButtons" type="HBoxContainer" parent="BottomBar"]
