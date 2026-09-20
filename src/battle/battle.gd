@@ -1,13 +1,15 @@
 extends Node2D
 
 signal stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int)
+signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
+signal hero_leveled_up(new_level: int)
 signal battle_finished(message: String, player_won: bool)
 
 const HERO_SCENE := preload("res://src/hero/Hero.tscn")
 const SLIME_SCENE := preload("res://src/monsters/Slime.tscn")
 
-const FIELD_SIZE := Vector2(1080, 1380)
-const FIELD_CENTER := Vector2(540, 690)
+const FIELD_SIZE := Vector2(1080, 1360)
+const FIELD_CENTER := Vector2(540, 680)
 
 var hero: Node2D
 var monsters_alive: int = 0
@@ -24,21 +26,24 @@ func _start_battle() -> void:
 	add_child(hero)
 	hero.position = FIELD_CENTER
 	hero.connect("health_changed", Callable(self, "_on_hero_health_changed"))
+	hero.connect("progression_changed", Callable(self, "_on_hero_progression_changed"))
+	hero.connect("leveled_up", Callable(self, "_on_hero_leveled_up"))
 	hero.connect("died", Callable(self, "_on_hero_died"))
 
 	var spawn_positions: Array[Vector2] = [
 		Vector2(150, 170),
 		Vector2(930, 170),
-		Vector2(150, 1180),
-		Vector2(930, 1180),
+		Vector2(150, 1160),
+		Vector2(930, 1160),
 		Vector2(540, 100),
-		Vector2(540, 1280),
+		Vector2(540, 1260),
 	]
 
 	for spawn_position in spawn_positions:
 		_spawn_slime(spawn_position)
 
 	_emit_stats()
+	_emit_progression()
 
 func _spawn_slime(spawn_position: Vector2) -> void:
 	var slime := SLIME_SCENE.instantiate() as Node2D
@@ -50,9 +55,19 @@ func _spawn_slime(spawn_position: Vector2) -> void:
 func _on_hero_health_changed(current_hp: int, max_hp_value: int) -> void:
 	stats_changed.emit(current_hp, max_hp_value, monsters_alive)
 
-func _on_slime_died(_slime: Node) -> void:
+func _on_hero_progression_changed(level: int, current_exp: int, exp_to_next_level: int) -> void:
+	progression_changed.emit(level, current_exp, exp_to_next_level)
+
+func _on_hero_leveled_up(new_level: int) -> void:
+	hero_leveled_up.emit(new_level)
+
+func _on_slime_died(slime: Node) -> void:
 	if battle_over:
 		return
+
+	if is_instance_valid(hero) and hero.has_method("gain_exp"):
+		var reward := int(slime.get("exp_reward"))
+		hero.call("gain_exp", reward)
 
 	monsters_alive = maxi(monsters_alive - 1, 0)
 	_emit_stats()
@@ -92,17 +107,36 @@ func _emit_stats(hero_hp_override: int = -1) -> void:
 
 	stats_changed.emit(hp, max_hp_value, monsters_alive)
 
+func _emit_progression() -> void:
+	if not is_instance_valid(hero):
+		return
+
+	progression_changed.emit(
+		int(hero.get("level")),
+		int(hero.get("current_exp")),
+		int(hero.get("exp_to_next_level"))
+	)
+
 func get_snapshot() -> Dictionary:
 	var hp := 0
 	var max_hp_value := 0
+	var level := 1
+	var current_exp := 0
+	var exp_to_next_level := 50
 
 	if is_instance_valid(hero):
 		hp = int(hero.get("current_hp"))
 		max_hp_value = int(hero.get("max_hp"))
+		level = int(hero.get("level"))
+		current_exp = int(hero.get("current_exp"))
+		exp_to_next_level = int(hero.get("exp_to_next_level"))
 
 	return {
 		"hero_hp": hp,
 		"hero_max_hp": max_hp_value,
+		"hero_level": level,
+		"hero_exp": current_exp,
+		"hero_exp_to_next": exp_to_next_level,
 		"monsters_left": monsters_alive,
 		"battle_over": battle_over,
 	}
