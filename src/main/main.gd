@@ -1,10 +1,8 @@
 extends Control
 
-const BATTLE_VIEW_TOP := 270.0
-const BATTLE_VIEW_BOTTOM := 1560.0
-const LOGICAL_WIDTH := 1080.0
-
-@onready var battle = $Battle
+@onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
+@onready var battle_viewport: SubViewport = $BattleViewportContainer/BattleViewport
+@onready var battle = $BattleViewportContainer/BattleViewport/Battle
 
 @onready var subtitle_label: Label = $HUD/TopBar/Subtitle
 @onready var hero_level_label: Label = $HUD/TopBar/HeroLevel
@@ -16,6 +14,8 @@ const LOGICAL_WIDTH := 1080.0
 @onready var build_label: Label = $HUD/BottomBar/BuildLabel
 @onready var status_label: Label = $HUD/BottomBar/Status
 @onready var placement_toggle: CheckButton = $HUD/BottomBar/PlacementModeToggle
+@onready var demon_progress_label: Label = $HUD/BottomBar/DemonProgressLabel
+@onready var demon_exp_bar: ProgressBar = $HUD/BottomBar/DemonExpBar
 @onready var command_label: Label = $HUD/BottomBar/CommandLabel
 @onready var command_bar: ProgressBar = $HUD/BottomBar/CommandBar
 @onready var slime_button: Button = $HUD/BottomBar/SummonButtons/SlimeButton
@@ -49,6 +49,7 @@ func _ready() -> void:
 	battle.hero_leveled_up.connect(_on_hero_leveled_up)
 	battle.hero_augment_selected.connect(_on_hero_augment_selected)
 	battle.command_changed.connect(_on_command_changed)
+	battle.demon_progression_changed.connect(_on_demon_progression_changed)
 	battle.summon_result.connect(_on_summon_result)
 	battle.demon_augment_ready.connect(_on_demon_augment_ready)
 	battle.demon_augment_applied.connect(_on_demon_augment_applied)
@@ -81,6 +82,11 @@ func _ready() -> void:
 	_on_command_changed(
 		float(snapshot.get("command_power", 0.0)),
 		float(snapshot.get("command_max", 100.0))
+	)
+	_on_demon_progression_changed(
+		int(snapshot.get("demon_level", 1)),
+		float(snapshot.get("demon_exp", 0.0)),
+		float(snapshot.get("demon_exp_to_next", 30.0))
 	)
 
 	build_label.text = "용사 빌드: %s" % String(snapshot.get("hero_build_summary", "아직 선택 없음"))
@@ -116,16 +122,19 @@ func _input(event: InputEvent) -> void:
 	if not is_pressed:
 		return
 
-	if (
-		pointer_position.x < 0.0
-		or pointer_position.x > LOGICAL_WIDTH
-		or pointer_position.y < BATTLE_VIEW_TOP
-		or pointer_position.y > BATTLE_VIEW_BOTTOM
-	):
+	var viewport_rect: Rect2 = battle_viewport_container.get_global_rect()
+	if not viewport_rect.has_point(pointer_position):
 		return
 
-	var canvas_inverse := get_viewport().get_canvas_transform().affine_inverse()
-	var world_position: Vector2 = canvas_inverse * pointer_position
+	var local_pointer := pointer_position - viewport_rect.position
+	var viewport_size := Vector2(battle_viewport.size)
+	var scale_factor := Vector2(
+		viewport_size.x / maxf(viewport_rect.size.x, 1.0),
+		viewport_size.y / maxf(viewport_rect.size.y, 1.0)
+	)
+	var subviewport_pointer := local_pointer * scale_factor
+	var canvas_inverse := battle_viewport.get_canvas_transform().affine_inverse()
+	var world_position: Vector2 = canvas_inverse * subviewport_pointer
 	var battle_position: Vector2 = battle.to_local(world_position)
 
 	if not battle.is_spawn_position_valid(battle_position):
@@ -143,6 +152,15 @@ func _on_progression_changed(level: int, current_exp: int, exp_to_next_level: in
 	exp_label.text = "EXP %d / %d" % [current_exp, exp_to_next_level]
 	exp_bar.max_value = maxf(float(exp_to_next_level), 1.0)
 	exp_bar.value = float(current_exp)
+
+func _on_demon_progression_changed(level: int, current_exp: float, exp_to_next_level: float) -> void:
+	demon_progress_label.text = "마왕 Lv.%d · EXP %.1f / %.1f" % [
+		level,
+		current_exp,
+		exp_to_next_level,
+	]
+	demon_exp_bar.max_value = maxf(exp_to_next_level, 1.0)
+	demon_exp_bar.value = current_exp
 
 func _on_command_changed(current_value: float, max_value: float) -> void:
 	command_label.text = "지휘력 %d / %d" % [int(round(current_value)), int(round(max_value))]
@@ -195,11 +213,11 @@ func _on_summon_result(_monster_type: String, success: bool, message: String) ->
 			_get_monster_name(selected_monster_type),
 		]
 
-func _on_demon_augment_ready(candidates: Array, rerolls_left: int, selection_index: int) -> void:
+func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: int) -> void:
 	current_demon_candidates = candidates.duplicate(true)
 	demon_augment_panel.show()
 	demon_augment_title.text = "마왕의 개입"
-	demon_augment_trigger.text = "증강 선택 %d / 3 · 누적 지휘력 사용으로 발동" % selection_index
+	demon_augment_trigger.text = "마왕 Lv.%d 도달 · 증강 1개 선택" % demon_level
 
 	var buttons: Array[Button] = [demon_choice_0, demon_choice_1, demon_choice_2]
 	for index in range(buttons.size()):
@@ -216,7 +234,7 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, selection_ind
 
 	demon_reroll_button.text = "↻ 새로고침 %d / 3" % rerolls_left
 	demon_reroll_button.disabled = rerolls_left <= 0
-	status_label.text = "마왕 증강을 선택하세요. 새로고침은 Run 전체에서 3회를 공유합니다."
+	status_label.text = "소환 비용만큼 마왕 EXP를 얻어 레벨업했습니다. 새로고침은 Run 전체 3회 공유."
 
 func _on_demon_choice_pressed(index: int) -> void:
 	if index < 0 or index >= current_demon_candidates.size():
