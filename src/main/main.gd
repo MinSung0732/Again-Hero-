@@ -10,6 +10,9 @@ extends Control
 @onready var restart_button: Button = $ResultPanel/Margin/VBox/RestartButton
 
 func _ready() -> void:
+	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
+		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_PORTRAIT)
+
 	battle.stats_changed.connect(_on_stats_changed)
 	battle.battle_finished.connect(_on_battle_finished)
 	restart_button.pressed.connect(_on_restart_pressed)
@@ -21,7 +24,7 @@ func _ready() -> void:
 		int(snapshot.get("monsters_left", 0))
 	)
 
-	print("Again, Hero? Milestone 1 loaded.")
+	print("Again, Hero? portrait prototype loaded.")
 	print("Hero vs Slime auto battle started.")
 
 func _on_stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int) -> void:
@@ -31,10 +34,10 @@ func _on_stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int) -> vo
 func _on_battle_finished(message: String, player_won: bool) -> void:
 	if player_won:
 		result_title.text = "HERO SLAIN"
-		status_label.text = "용사를 쓰러뜨렸습니다. 첫 번째 전투 시스템 검증 성공!"
+		status_label.text = "용사를 쓰러뜨렸습니다.\n첫 번째 전투 시스템 검증 성공!"
 	else:
 		result_title.text = "EXPERIMENT FAILED"
-		status_label.text = "용사가 슬라임을 전멸시켰습니다. 다음 단계에서는 더 강한 공세를 설계합니다."
+		status_label.text = "용사가 슬라임을 전멸시켰습니다.\n다음 단계에서는 더 강한 공세를 설계합니다."
 
 	result_message.text = message
 	result_panel.show()
