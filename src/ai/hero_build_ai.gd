@@ -40,7 +40,7 @@ static func _score_candidate(candidate: Dictionary, context: Dictionary, build_c
 	var tank_ratio: float = _ratio(int(role_counts.get("tank", 0)), total_count)
 
 	match candidate_id:
-		"sword_mastery":
+		"projectile_power":
 			score += orc_ratio * 4.0
 			score += tank_ratio * 2.0
 			if nearby_count <= 2:
@@ -102,11 +102,11 @@ static func _build_reason(selected: Dictionary, context: Dictionary, build_count
 	var reason := ""
 
 	match candidate_id:
-		"sword_mastery":
+		"projectile_power":
 			if orc_ratio >= 0.30:
-				reason = "오크 비중 %.0f%% → 단일 화력 강화" % (orc_ratio * 100.0)
+				reason = "오크 비중 %.0f%% → 투사체 화력 강화" % (orc_ratio * 100.0)
 			else:
-				reason = "근처 적 %d명 → 안정적인 단일 화력 선호" % nearby_count
+				reason = "근처 적 %d명 → 안정적인 투사체 화력 선호" % nearby_count
 		"rapid_strikes":
 			if slime_ratio >= 0.40:
 				reason = "슬라임 비중 %.0f%% → 빠른 물량 처리 선호" % (slime_ratio * 100.0)
