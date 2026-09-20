@@ -11,8 +11,6 @@ const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
 const PROJECTILE_SCENE := preload("res://src/hero/HeroProjectile.tscn")
 
 const APPROACH_DISTANCE_RATIO := 0.86
-const FIELD_WIDTH := 1080.0
-const FIELD_HEIGHT := 1280.0
 const FIELD_MARGIN := 72.0
 const WANDER_REACHED_DISTANCE := 42.0
 const WANDER_MIN_TARGET_DISTANCE := 260.0
@@ -31,6 +29,8 @@ var hero_id: String = "ranged_rookie"
 var hero_display_name: String = "견습 마도사"
 var hero_archetype: String = "ranged_kiter"
 
+var battlefield_size: Vector2 = Vector2(3200, 3200)
+
 var current_hp: int
 var level: int = 1
 var current_exp: int = 0
@@ -47,6 +47,8 @@ var move_multiplier: float = 1.0
 var strafe_sign: float = 1.0
 var wander_target: Vector2 = Vector2.ZERO
 var wander_timer: float = 0.0
+
+@onready var follow_camera: Camera2D = $Camera2D
 
 func configure_profile(profile: Dictionary) -> void:
 	if profile.is_empty():
@@ -66,8 +68,15 @@ func configure_profile(profile: Dictionary) -> void:
 	ai_sense_radius = float(profile.get("ai_sense_radius", ai_sense_radius))
 	kite_distance = float(profile.get("kite_distance", kite_distance))
 
+func configure_battlefield(size: Vector2) -> void:
+	battlefield_size = Vector2(
+		maxf(size.x, 1080.0),
+		maxf(size.y, 1920.0)
+	)
+
 func _ready() -> void:
 	add_to_group("hero")
+	_apply_camera_limits()
 	current_hp = max_hp
 	exp_to_next_level = _required_exp_for_level(level)
 	strafe_sign = -1.0 if randf() < 0.5 else 1.0
@@ -116,6 +125,17 @@ func _physics_process(delta: float) -> void:
 	if distance <= attack_range and attack_timer <= 0.0:
 		_fire_projectile(target)
 
+func _apply_camera_limits() -> void:
+	if not is_instance_valid(follow_camera):
+		return
+
+	follow_camera.limit_left = 0
+	follow_camera.limit_top = 0
+	follow_camera.limit_right = int(battlefield_size.x)
+	follow_camera.limit_bottom = int(battlefield_size.y)
+	follow_camera.position_smoothing_enabled = true
+	follow_camera.position_smoothing_speed = 7.0
+
 func _move_without_monsters() -> void:
 	if wander_timer <= 0.0 or position.distance_to(wander_target) <= WANDER_REACHED_DISTANCE:
 		_pick_new_wander_target()
@@ -126,12 +146,12 @@ func _move_without_monsters() -> void:
 	_clamp_to_battlefield()
 
 func _pick_new_wander_target() -> void:
-	var candidate := Vector2(FIELD_WIDTH * 0.5, FIELD_HEIGHT * 0.5)
+	var candidate := Vector2(battlefield_size.x * 0.5, battlefield_size.y * 0.5)
 
 	for _attempt in range(6):
 		candidate = Vector2(
-			randf_range(FIELD_MARGIN, FIELD_WIDTH - FIELD_MARGIN),
-			randf_range(FIELD_MARGIN, FIELD_HEIGHT - FIELD_MARGIN)
+			randf_range(FIELD_MARGIN, battlefield_size.x - FIELD_MARGIN),
+			randf_range(FIELD_MARGIN, battlefield_size.y - FIELD_MARGIN)
 		)
 		if position.distance_to(candidate) >= WANDER_MIN_TARGET_DISTANCE:
 			break
@@ -171,13 +191,13 @@ func _clamp_to_battlefield() -> void:
 	var clamped_position := position
 	var hit_edge := false
 
-	if clamped_position.x < FIELD_MARGIN or clamped_position.x > FIELD_WIDTH - FIELD_MARGIN:
+	if clamped_position.x < FIELD_MARGIN or clamped_position.x > battlefield_size.x - FIELD_MARGIN:
 		hit_edge = true
-	if clamped_position.y < FIELD_MARGIN or clamped_position.y > FIELD_HEIGHT - FIELD_MARGIN:
+	if clamped_position.y < FIELD_MARGIN or clamped_position.y > battlefield_size.y - FIELD_MARGIN:
 		hit_edge = true
 
-	clamped_position.x = clampf(clamped_position.x, FIELD_MARGIN, FIELD_WIDTH - FIELD_MARGIN)
-	clamped_position.y = clampf(clamped_position.y, FIELD_MARGIN, FIELD_HEIGHT - FIELD_MARGIN)
+	clamped_position.x = clampf(clamped_position.x, FIELD_MARGIN, battlefield_size.x - FIELD_MARGIN)
+	clamped_position.y = clampf(clamped_position.y, FIELD_MARGIN, battlefield_size.y - FIELD_MARGIN)
 	position = clamped_position
 
 	if hit_edge:
