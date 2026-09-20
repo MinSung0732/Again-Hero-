@@ -394,3 +394,11 @@
 - 스프라이트시트가 없거나 import 실패해도 전투 로직은 깨지지 않고 기존 코드 드로잉 Hero로 fallback.
 - `tools/install_stage1_mage_art.sh` 추가: 원본 zip에서 PNG spritesheet와 manifest를 프로젝트 경로로 직접 복사. Base64 사용 없음.
 - 이전 `src/data/stage1_mage_pose_data.gd` 및 구형 `stage1_mage_idle.svg` 삭제.
+
+
+### Fix — Stage 1 Sprite Falls Back to Placeholder on Android
+- 스프라이트 설치 성공 후에도 Stage 1 Hero가 기존 원형 도형으로 표시되던 문제 수정.
+- 원인: Android Godot Editor에서 Termux가 새 PNG를 프로젝트 폴더에 복사한 직후 import/cache가 갱신되기 전에는 `ResourceLoader.exists()`가 false를 반환할 수 있었고, 코드가 raw 파일을 확인하기도 전에 fallback 처리함.
+- 이제 Stage 1 스프라이트 로더는 imported Texture2D를 먼저 시도하고, 실패 시 실제 `res://` PNG 파일을 `Image.load()`로 직접 읽어 `ImageTexture`로 생성.
+- Base64 사용 없음.
+- `tools/install_stage1_mage_art.sh`에 PNG 추출 파일 크기 검증 추가.
