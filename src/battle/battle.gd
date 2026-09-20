@@ -19,6 +19,7 @@ const FIELD_CENTER := Vector2(540, 640)
 const MAX_COMMAND := 100.0
 const START_COMMAND := 0.0
 const COMMAND_REGEN_PER_SECOND := 3.0
+const MANUAL_SPAWN_MARGIN := 70.0
 
 const MONSTER_COSTS := {
 	"slime": 3.0,
@@ -104,6 +105,54 @@ func try_summon(monster_type: String) -> bool:
 		"%s 소환! 지휘력 %.0f 소모" % [_get_monster_name(monster_type), cost]
 	)
 	return true
+
+func try_summon_at_position(monster_type: String, spawn_position: Vector2) -> bool:
+	if battle_over:
+		summon_result.emit(monster_type, false, "전투가 종료되어 소환할 수 없습니다.")
+		return false
+
+	if not is_spawn_position_valid(spawn_position):
+		summon_result.emit(monster_type, false, "전장 안쪽을 터치해 주세요.")
+		return false
+
+	var cost: float = get_monster_cost(monster_type)
+	if cost <= 0.0:
+		summon_result.emit(monster_type, false, "알 수 없는 몬스터입니다.")
+		return false
+
+	if command_power + 0.001 < cost:
+		summon_result.emit(
+			monster_type,
+			false,
+			"지휘력이 부족합니다. 필요 %.0f / 현재 %.0f" % [cost, command_power]
+		)
+		return false
+
+	command_power = maxf(command_power - cost, 0.0)
+	_spawn_monster(monster_type, _clamp_manual_spawn_position(spawn_position))
+	command_changed.emit(command_power, MAX_COMMAND)
+	_emit_stats()
+
+	summon_result.emit(
+		monster_type,
+		true,
+		"%s 수동 배치! 지휘력 %.0f 소모" % [_get_monster_name(monster_type), cost]
+	)
+	return true
+
+func is_spawn_position_valid(spawn_position: Vector2) -> bool:
+	return (
+		spawn_position.x >= MANUAL_SPAWN_MARGIN
+		and spawn_position.x <= FIELD_SIZE.x - MANUAL_SPAWN_MARGIN
+		and spawn_position.y >= MANUAL_SPAWN_MARGIN
+		and spawn_position.y <= FIELD_SIZE.y - MANUAL_SPAWN_MARGIN
+	)
+
+func _clamp_manual_spawn_position(spawn_position: Vector2) -> Vector2:
+	return Vector2(
+		clampf(spawn_position.x, MANUAL_SPAWN_MARGIN, FIELD_SIZE.x - MANUAL_SPAWN_MARGIN),
+		clampf(spawn_position.y, MANUAL_SPAWN_MARGIN, FIELD_SIZE.y - MANUAL_SPAWN_MARGIN)
+	)
 
 func get_monster_cost(monster_type: String) -> float:
 	return float(MONSTER_COSTS.get(monster_type, 0.0))
