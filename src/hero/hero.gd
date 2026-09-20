@@ -147,11 +147,12 @@ func _apply_profile_visual() -> void:
 	if hero_id != "ranged_rookie":
 		return
 
-	if sprite_sheet_path.is_empty() or not ResourceLoader.exists(sprite_sheet_path):
+	if sprite_sheet_path.is_empty():
 		return
 
-	var sheet = load(sprite_sheet_path)
-	if not sheet is Texture2D:
+	var sheet := _load_stage1_sheet_texture()
+	if sheet == null:
+		push_warning("Stage 1 mage spritesheet load failed: %s" % sprite_sheet_path)
 		return
 
 	var frames := SpriteFrames.new()
@@ -167,6 +168,24 @@ func _apply_profile_visual() -> void:
 	hero_sprite.visible = true
 	hero_sprite.speed_scale = 1.0
 	hero_sprite.play("idle")
+
+func _load_stage1_sheet_texture() -> Texture2D:
+	# Prefer Godot's imported texture when available.
+	if ResourceLoader.exists(sprite_sheet_path):
+		var imported_texture = load(sprite_sheet_path)
+		if imported_texture is Texture2D:
+			return imported_texture
+
+	# Android Editor can have the raw PNG on shared storage before the
+	# importer/cache notices it. Load the PNG bytes directly from res://
+	# so the Hero does not fall back to the placeholder in that case.
+	if FileAccess.file_exists(sprite_sheet_path):
+		var image := Image.new()
+		var error := image.load(sprite_sheet_path)
+		if error == OK:
+			return ImageTexture.create_from_image(image)
+
+	return null
 
 func _add_stage1_sheet_animation(
 	frames: SpriteFrames,
