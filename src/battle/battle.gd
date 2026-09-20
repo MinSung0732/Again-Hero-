@@ -12,15 +12,13 @@ signal demon_augment_applied(augment_name: String, build_summary: String)
 signal battle_finished(message: String, player_won: bool)
 
 const HERO_SCENE := preload("res://src/hero/Hero.tscn")
-const SLIME_SCENE := preload("res://src/monsters/Slime.tscn")
-const SPIDER_SCENE := preload("res://src/monsters/Spider.tscn")
-const ORC_SCENE := preload("res://src/monsters/Orc.tscn")
 const EXP_ORB_SCENE := preload("res://src/battle/ExpOrb.tscn")
 const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
 const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
+const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 
 const DEFAULT_MAP_SIZE := Vector2(3200, 3200)
 const AUTO_SPAWN_MIN_DISTANCE := 560.0
@@ -34,11 +32,6 @@ const DEMON_BASE_EXP_TO_NEXT := 30.0
 const DEMON_EXP_GROWTH_PER_LEVEL := 15.0
 const BASE_DEMON_REROLLS := 3
 
-const MONSTER_COSTS := {
-	"slime": 3.0,
-	"spider": 7.0,
-	"orc": 18.0,
-}
 
 var hero: Node2D
 var current_stage_id: String = "stage_1"
@@ -261,7 +254,11 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 
 	_spawn_monster(monster_type, spawn_position, cost, false)
 	if is_instance_valid(hero) and hero.has_method("record_offensive_event"):
-		hero.call("record_offensive_event", monster_type)
+		hero.call(
+			"record_offensive_event",
+			monster_type,
+			MONSTER_CATALOG.get_role(monster_type)
+		)
 
 	command_changed.emit(command_power, max_command)
 	_emit_stats()
@@ -297,7 +294,7 @@ func _clamp_manual_spawn_position(spawn_position: Vector2) -> Vector2:
 	)
 
 func get_monster_cost(monster_type: String) -> float:
-	var base_cost: float = float(MONSTER_COSTS.get(monster_type, 0.0))
+	var base_cost: float = MONSTER_CATALOG.get_base_cost(monster_type)
 	if base_cost <= 0.0:
 		return 0.0
 
@@ -330,15 +327,10 @@ func _spawn_monster(
 	summon_cost: float = 0.0,
 	split_child: bool = false
 ) -> void:
-	var scene: PackedScene = SLIME_SCENE
-
-	match monster_type:
-		"spider":
-			scene = SPIDER_SCENE
-		"orc":
-			scene = ORC_SCENE
-		_:
-			scene = SLIME_SCENE
+	var scene := MONSTER_CATALOG.get_scene(monster_type)
+	if scene == null:
+		push_warning("Unknown monster id: %s" % monster_type)
+		return
 
 	var monster := scene.instantiate() as Node2D
 
@@ -383,13 +375,7 @@ func _spawn_monster(
 	monsters_alive += 1
 
 func _get_monster_name(monster_type: String) -> String:
-	match monster_type:
-		"spider":
-			return "거미"
-		"orc":
-			return "오크"
-		_:
-			return "슬라임"
+	return MONSTER_CATALOG.get_name(monster_type)
 
 func _on_hero_health_changed(current_hp: int, max_hp_value: int) -> void:
 	stats_changed.emit(current_hp, max_hp_value, monsters_alive)
