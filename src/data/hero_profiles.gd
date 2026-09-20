@@ -15,6 +15,7 @@ const PROFILES = {
 		"exp_pickup_radius": 150.0,
 		"ai_sense_radius": 420.0,
 		"kite_distance": 210.0,
+		"sprite_path": "res://assets/art/heroes/stage1_mage_idle.svg",
 	},
 	"swift_hunter": {
 		"id": "swift_hunter",
