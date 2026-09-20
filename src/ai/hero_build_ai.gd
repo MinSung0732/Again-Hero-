@@ -6,7 +6,8 @@ const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 static func choose_candidate(
 	candidates: Array,
 	context: Dictionary,
-	build_counts: Dictionary
+	build_counts: Dictionary,
+	ai_settings: Dictionary
 ) -> Dictionary:
 	var selected: Dictionary = {}
 	var selected_score := -INF
@@ -14,7 +15,7 @@ static func choose_candidate(
 
 	for candidate in candidates:
 		var candidate_id := String(candidate.get("id", ""))
-		var score := _score_candidate(candidate, context, build_counts)
+		var score := _score_candidate(candidate, context, build_counts, ai_settings)
 		score_debug[candidate_id] = score
 
 		if score > selected_score:
@@ -26,7 +27,8 @@ static func choose_candidate(
 		selected,
 		context,
 		build_counts,
-		selected_score
+		selected_score,
+		ai_settings
 	)
 	selected["candidate_scores"] = score_debug
 	return selected
@@ -34,7 +36,8 @@ static func choose_candidate(
 static func _score_candidate(
 	candidate: Dictionary,
 	context: Dictionary,
-	build_counts: Dictionary
+	build_counts: Dictionary,
+	ai_settings: Dictionary
 ) -> float:
 	var candidate_id := String(candidate.get("id", ""))
 	var score := float(candidate.get("base_score", 0.0))
@@ -44,7 +47,16 @@ static func _score_candidate(
 		score += _evaluate_rule(rule, context)
 
 	var stacks := int(build_counts.get(candidate_id, 0))
-	score += float(stacks) * float(candidate.get("stack_inertia", 0.85))
+	var stack_inertia := float(
+		candidate.get(
+			"stack_inertia",
+			ai_settings.get("stack_inertia", 0.85)
+		)
+	)
+	score += float(stacks) * stack_inertia
+
+	if not build_counts.is_empty() and stacks <= 0:
+		score -= maxf(float(ai_settings.get("new_branch_penalty", 0.0)), 0.0)
 
 	var randomness := float(candidate.get("randomness", 0.35))
 	score += randf_range(-randomness, randomness)
@@ -100,7 +112,8 @@ static func _build_reason(
 	selected: Dictionary,
 	context: Dictionary,
 	build_counts: Dictionary,
-	score: float
+	score: float,
+	ai_settings: Dictionary
 ) -> String:
 	var best_rule: Dictionary = {}
 	var best_contribution := 0.0
@@ -119,10 +132,16 @@ static func _build_reason(
 	var candidate_name := String(selected.get("name", "증강"))
 	reason += " → %s 선호" % candidate_name
 
+	var observation_age := maxf(float(context.get("observation_age", 0.0)), 0.0)
+	if observation_age >= 0.25:
+		reason += " · %.1f초 전 관측" % observation_age
+
 	var candidate_id := String(selected.get("id", ""))
 	var stacks := int(build_counts.get(candidate_id, 0))
 	if stacks > 0:
 		reason += " · 기존 빌드 관성 +%d" % stacks
+	elif not build_counts.is_empty() and float(ai_settings.get("new_branch_penalty", 0.0)) > 0.0:
+		reason += " · 새 갈래 전환 저항"
 
 	reason += " · 점수 %.1f" % score
 	return reason
@@ -137,7 +156,7 @@ static func _describe_rule(rule: Dictionary, context: Dictionary) -> String:
 
 	match source:
 		"current_type_ratio":
-			return "현재 %s 비중 %.0f%%" % [
+			return "관측 전장 %s 비중 %.0f%%" % [
 				MONSTER_CATALOG.get_name(key),
 				_current_ratio(context, "type_counts", key) * 100.0,
 			]
@@ -159,20 +178,20 @@ static func _describe_rule(rule: Dictionary, context: Dictionary) -> String:
 				_recent_ratio(context, "recent_role_weights", key) * 100.0,
 			]
 		"nearby_linear", "nearby_count_max", "nearby_count_eq":
-			return "근처 적 %d명" % int(context.get("nearby_count", 0))
+			return "관측 근처 적 %d명" % int(context.get("nearby_count", 0))
 		"recent_events_linear":
 			return "최근 %.0f초 플레이어 소환 %d회" % [
 				window,
 				int(context.get("recent_event_count", 0)),
 			]
 		"hp_missing", "hp_ratio_min", "hp_ratio_max":
-			return "현재 HP %.0f%%" % (
+			return "관측 HP %.0f%%" % (
 				clampf(float(context.get("hp_ratio", 1.0)), 0.0, 1.0) * 100.0
 			)
 		"distance":
-			return "가장 가까운 적 %.0f 거리" % float(context.get("nearest_distance", 0.0))
+			return "관측 최근접 적 %.0f 거리" % float(context.get("nearest_distance", 0.0))
 		"total_count_min", "total_count_max":
-			return "현재 전체 적 %d명" % int(context.get("total_count", 0))
+			return "관측 전체 적 %d명" % int(context.get("total_count", 0))
 
 	return ""
 
