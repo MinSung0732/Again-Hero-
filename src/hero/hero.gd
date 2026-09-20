@@ -33,6 +33,11 @@ var hero_id: String = "ranged_rookie"
 var hero_display_name: String = "견습 마도사"
 var hero_archetype: String = "ranged_kiter"
 var sprite_sheet_path: String = ""
+var ai_settings: Dictionary = {
+	"observation_interval": 4.0,
+	"stack_inertia": 1.0,
+	"new_branch_penalty": 0.5,
+}
 
 var battlefield_size: Vector2 = Vector2(3200, 3200)
 
@@ -58,6 +63,9 @@ var wander_timer: float = 0.0
 
 var ai_memory_clock: float = 0.0
 var offensive_memory_events: Array = []
+var ai_observation_timer: float = 0.0
+var ai_observed_context: Dictionary = {}
+var ai_observed_context_time: float = 0.0
 
 @onready var follow_camera: Camera2D = $Camera2D
 @onready var hero_sprite: AnimatedSprite2D = $HeroSprite
@@ -70,6 +78,9 @@ func configure_profile(profile: Dictionary) -> void:
 	hero_display_name = String(profile.get("display_name", hero_display_name))
 	hero_archetype = String(profile.get("archetype", hero_archetype))
 	sprite_sheet_path = String(profile.get("sprite_sheet_path", ""))
+	var profile_ai_settings: Dictionary = profile.get("ai_settings", {})
+	if not profile_ai_settings.is_empty():
+		ai_settings = profile_ai_settings.duplicate(true)
 
 	max_hp = int(profile.get("max_hp", max_hp))
 	move_speed = float(profile.get("move_speed", move_speed))
@@ -95,6 +106,7 @@ func _ready() -> void:
 	exp_to_next_level = _required_exp_for_level(level)
 	strafe_sign = -1.0 if randf() < 0.5 else 1.0
 	_pick_new_wander_target()
+	_refresh_ai_observation()
 	health_changed.emit(current_hp, max_hp)
 	progression_changed.emit(level, current_exp, exp_to_next_level)
 	queue_redraw()
@@ -106,6 +118,10 @@ func _physics_process(delta: float) -> void:
 
 	ai_memory_clock += delta
 	_prune_offensive_memory()
+
+	ai_observation_timer = maxf(ai_observation_timer - delta, 0.0)
+	if ai_observation_timer <= 0.0:
+		_refresh_ai_observation()
 
 	attack_timer = maxf(attack_timer - delta, 0.0)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
@@ -497,8 +513,13 @@ func _level_up() -> void:
 	level_flash_timer = 0.45
 
 	var candidates: Array = AUGMENT_CATALOG.roll_candidates(3)
-	var ai_context: Dictionary = _build_ai_context()
-	var chosen: Dictionary = BUILD_AI.choose_candidate(candidates, ai_context, build_counts)
+	var ai_context: Dictionary = _get_ai_decision_context()
+	var chosen: Dictionary = BUILD_AI.choose_candidate(
+		candidates,
+		ai_context,
+		build_counts,
+		ai_settings
+	)
 	_apply_augment(chosen)
 
 	health_changed.emit(current_hp, max_hp)
@@ -511,6 +532,29 @@ func _level_up() -> void:
 		get_build_summary()
 	)
 	queue_redraw()
+
+func _refresh_ai_observation() -> void:
+	var interval := maxf(float(ai_settings.get("observation_interval", 4.0)), 0.25)
+	ai_observed_context = _build_ai_context().duplicate(true)
+	ai_observed_context_time = ai_memory_clock
+	ai_observation_timer = interval
+
+func _get_ai_decision_context() -> Dictionary:
+	if ai_observed_context.is_empty():
+		_refresh_ai_observation()
+
+	var context := ai_observed_context.duplicate(true)
+	context["observation_age"] = maxf(ai_memory_clock - ai_observed_context_time, 0.0)
+	context["observation_interval"] = maxf(
+		float(ai_settings.get("observation_interval", 4.0)),
+		0.25
+	)
+	return context
+
+func get_ai_observation_summary() -> String:
+	var interval := maxf(float(ai_settings.get("observation_interval", 4.0)), 0.25)
+	var age := maxf(ai_memory_clock - ai_observed_context_time, 0.0)
+	return "관측 주기 %.1f초 · 현재 판단 정보 %.1f초 전" % [interval, age]
 
 func _build_ai_context() -> Dictionary:
 	var nearby_count: int = 0
