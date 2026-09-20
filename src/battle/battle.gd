@@ -15,10 +15,11 @@ const ORC_SCENE := preload("res://src/monsters/Orc.tscn")
 const EXP_ORB_SCENE := preload("res://src/battle/ExpOrb.tscn")
 const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
 const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
+const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 
-const FIELD_SIZE := Vector2(1080, 1280)
-const FIELD_CENTER := Vector2(540, 640)
-const CURRENT_STAGE_ID := "stage_1"
+const DEFAULT_MAP_SIZE := Vector2(3200, 3200)
+const AUTO_SPAWN_MIN_DISTANCE := 560.0
+const AUTO_SPAWN_MAX_DISTANCE := 720.0
 
 const MAX_COMMAND := 100.0
 const START_COMMAND := 0.0
@@ -31,18 +32,11 @@ const MONSTER_COSTS := {
 	"orc": 18.0,
 }
 
-const SPAWN_POSITIONS: Array[Vector2] = [
-	Vector2(150, 150),
-	Vector2(930, 150),
-	Vector2(150, 1110),
-	Vector2(930, 1110),
-	Vector2(540, 90),
-	Vector2(540, 1190),
-]
-
 var hero: Node2D
+var current_stage_id: String = "stage_1"
 var current_stage_data: Dictionary = {}
 var current_hero_profile: Dictionary = {}
+var current_map_size: Vector2 = DEFAULT_MAP_SIZE
 var monsters_alive: int = 0
 var battle_over: bool = false
 var command_power: float = START_COMMAND
@@ -69,17 +63,32 @@ func _start_battle() -> void:
 	monsters_alive = 0
 	command_power = START_COMMAND
 
-	current_stage_data = STAGE_CATALOG.get_stage(CURRENT_STAGE_ID)
+	var progress_state: Dictionary = STAGE_PROGRESS.load_state()
+	current_stage_id = String(progress_state.get("current_stage_id", "stage_1"))
+	current_stage_data = STAGE_CATALOG.get_stage(current_stage_id)
+
+	if current_stage_data.is_empty():
+		current_stage_id = "stage_1"
+		current_stage_data = STAGE_CATALOG.get_stage(current_stage_id)
+		STAGE_PROGRESS.set_current_stage(current_stage_id)
+
+	current_map_size = Vector2(
+		float(current_stage_data.get("map_width", int(DEFAULT_MAP_SIZE.x))),
+		float(current_stage_data.get("map_height", int(DEFAULT_MAP_SIZE.y)))
+	)
+
 	var hero_id: String = String(current_stage_data.get("hero_id", "ranged_rookie"))
 	current_hero_profile = HERO_PROFILES.get_profile(hero_id)
 
 	hero = HERO_SCENE.instantiate() as Node2D
 	if hero.has_method("configure_profile"):
 		hero.call("configure_profile", current_hero_profile)
+	if hero.has_method("configure_battlefield"):
+		hero.call("configure_battlefield", current_map_size)
 	hero.set("level", int(current_stage_data.get("hero_level_start", 1)))
 
 	add_child(hero)
-	hero.position = FIELD_CENTER
+	hero.position = current_map_size * 0.5
 	hero.connect("health_changed", Callable(self, "_on_hero_health_changed"))
 	hero.connect("progression_changed", Callable(self, "_on_hero_progression_changed"))
 	hero.connect("leveled_up", Callable(self, "_on_hero_leveled_up"))
@@ -157,27 +166,32 @@ func try_summon_at_position(monster_type: String, spawn_position: Vector2) -> bo
 func is_spawn_position_valid(spawn_position: Vector2) -> bool:
 	return (
 		spawn_position.x >= MANUAL_SPAWN_MARGIN
-		and spawn_position.x <= FIELD_SIZE.x - MANUAL_SPAWN_MARGIN
+		and spawn_position.x <= current_map_size.x - MANUAL_SPAWN_MARGIN
 		and spawn_position.y >= MANUAL_SPAWN_MARGIN
-		and spawn_position.y <= FIELD_SIZE.y - MANUAL_SPAWN_MARGIN
+		and spawn_position.y <= current_map_size.y - MANUAL_SPAWN_MARGIN
 	)
 
 func _clamp_manual_spawn_position(spawn_position: Vector2) -> Vector2:
 	return Vector2(
-		clampf(spawn_position.x, MANUAL_SPAWN_MARGIN, FIELD_SIZE.x - MANUAL_SPAWN_MARGIN),
-		clampf(spawn_position.y, MANUAL_SPAWN_MARGIN, FIELD_SIZE.y - MANUAL_SPAWN_MARGIN)
+		clampf(spawn_position.x, MANUAL_SPAWN_MARGIN, current_map_size.x - MANUAL_SPAWN_MARGIN),
+		clampf(spawn_position.y, MANUAL_SPAWN_MARGIN, current_map_size.y - MANUAL_SPAWN_MARGIN)
 	)
 
 func get_monster_cost(monster_type: String) -> float:
 	return float(MONSTER_COSTS.get(monster_type, 0.0))
 
 func _get_auto_spawn_position() -> Vector2:
-	var base_position: Vector2 = SPAWN_POSITIONS[randi() % SPAWN_POSITIONS.size()]
-	var jitter := Vector2(randf_range(-35.0, 35.0), randf_range(-35.0, 35.0))
+	var origin := current_map_size * 0.5
+	if is_instance_valid(hero):
+		origin = hero.position
+
+	var angle := randf_range(0.0, TAU)
+	var distance := randf_range(AUTO_SPAWN_MIN_DISTANCE, AUTO_SPAWN_MAX_DISTANCE)
+	var candidate := origin + Vector2.from_angle(angle) * distance
 
 	return Vector2(
-		clampf(base_position.x + jitter.x, 80.0, FIELD_SIZE.x - 80.0),
-		clampf(base_position.y + jitter.y, 70.0, FIELD_SIZE.y - 70.0)
+		clampf(candidate.x, MANUAL_SPAWN_MARGIN, current_map_size.x - MANUAL_SPAWN_MARGIN),
+		clampf(candidate.y, MANUAL_SPAWN_MARGIN, current_map_size.y - MANUAL_SPAWN_MARGIN)
 	)
 
 func _spawn_monster(monster_type: String, spawn_position: Vector2) -> void:
@@ -249,6 +263,19 @@ func _on_hero_died() -> void:
 	var stage_number: int = int(current_stage_data.get("number", 1))
 	var stage_name: String = String(current_stage_data.get("display_name", "스테이지"))
 	var hero_name: String = String(current_hero_profile.get("display_name", "용사"))
+	var next_stage_id: String = String(current_stage_data.get("next_stage_id", ""))
+	var next_stage_data: Dictionary = STAGE_CATALOG.get_stage(next_stage_id)
+	var next_stage_number := 0
+	if not next_stage_data.is_empty():
+		next_stage_number = int(next_stage_data.get("number", 0))
+
+	STAGE_PROGRESS.complete_stage(
+		current_stage_id,
+		stage_number,
+		next_stage_id,
+		next_stage_number
+	)
+
 	_finish_battle(
 		"Stage %d 클리어!\n%s · %s 처치 성공." % [stage_number, stage_name, hero_name],
 		true
@@ -307,7 +334,7 @@ func get_snapshot() -> Dictionary:
 			build_summary = String(hero.call("get_build_summary"))
 
 	return {
-		"stage_id": String(current_stage_data.get("id", CURRENT_STAGE_ID)),
+		"stage_id": String(current_stage_data.get("id", current_stage_id)),
 		"stage_number": int(current_stage_data.get("number", 1)),
 		"stage_name": String(current_stage_data.get("display_name", "첫 번째 침입자")),
 		"hero_id": String(current_hero_profile.get("id", "ranged_rookie")),
@@ -322,14 +349,49 @@ func get_snapshot() -> Dictionary:
 		"monsters_left": monsters_alive,
 		"command_power": command_power,
 		"command_max": MAX_COMMAND,
+		"map_width": current_map_size.x,
+		"map_height": current_map_size.y,
+		"next_stage_id": String(current_stage_data.get("next_stage_id", "")),
 		"battle_over": battle_over,
 	}
 
-func _draw() -> void:
-	var field_rect := Rect2(Vector2(24, 12), FIELD_SIZE - Vector2(48, 24))
-	draw_rect(field_rect, Color(0.075, 0.085, 0.105), true)
-	draw_rect(field_rect, Color(0.28, 0.32, 0.4), false, 4.0)
+func can_go_to_next_stage() -> bool:
+	var next_stage_id: String = String(current_stage_data.get("next_stage_id", ""))
+	if next_stage_id.is_empty():
+		return false
 
-	draw_circle(FIELD_CENTER, 92.0, Color(0.1, 0.12, 0.15), false, 3.0)
-	draw_line(FIELD_CENTER + Vector2(0, -110), FIELD_CENTER + Vector2(0, 110), Color(0.15, 0.18, 0.22), 2.0)
-	draw_line(FIELD_CENTER + Vector2(-110, 0), FIELD_CENTER + Vector2(110, 0), Color(0.15, 0.18, 0.22), 2.0)
+	var next_stage_data: Dictionary = STAGE_CATALOG.get_stage(next_stage_id)
+	if next_stage_data.is_empty():
+		return false
+
+	return STAGE_PROGRESS.is_stage_unlocked(int(next_stage_data.get("number", 999)))
+
+func go_to_next_stage() -> bool:
+	if not can_go_to_next_stage():
+		return false
+
+	var next_stage_id: String = String(current_stage_data.get("next_stage_id", ""))
+	STAGE_PROGRESS.set_current_stage(next_stage_id)
+	return true
+
+func _draw() -> void:
+	draw_rect(Rect2(Vector2.ZERO, current_map_size), Color(0.075, 0.085, 0.105), true)
+
+	var grid_spacing := 320.0
+	var grid_color := Color(0.105, 0.12, 0.145)
+	var x := grid_spacing
+	while x < current_map_size.x:
+		draw_line(Vector2(x, 0), Vector2(x, current_map_size.y), grid_color, 2.0)
+		x += grid_spacing
+
+	var y := grid_spacing
+	while y < current_map_size.y:
+		draw_line(Vector2(0, y), Vector2(current_map_size.x, y), grid_color, 2.0)
+		y += grid_spacing
+
+	draw_rect(Rect2(Vector2.ZERO, current_map_size), Color(0.34, 0.39, 0.48), false, 8.0)
+
+	var center := current_map_size * 0.5
+	draw_circle(center, 92.0, Color(0.1, 0.12, 0.15), false, 3.0)
+	draw_line(center + Vector2(0, -110), center + Vector2(0, 110), Color(0.15, 0.18, 0.22), 2.0)
+	draw_line(center + Vector2(-110, 0), center + Vector2(110, 0), Color(0.15, 0.18, 0.22), 2.0)
