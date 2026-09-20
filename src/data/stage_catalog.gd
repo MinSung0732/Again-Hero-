@@ -15,7 +15,7 @@ const STAGES = {
 		"id": "stage_2",
 		"number": 2,
 		"display_name": "빠른 사냥꾼",
-		"hero_id": "ranged_rookie",
+		"hero_id": "swift_hunter",
 		"hero_level_start": 1,
 		"first_clear_reward": 150,
 		"next_stage_id": "stage_3",
