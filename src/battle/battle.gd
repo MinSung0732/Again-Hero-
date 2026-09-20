@@ -12,6 +12,7 @@ const HERO_SCENE := preload("res://src/hero/Hero.tscn")
 const SLIME_SCENE := preload("res://src/monsters/Slime.tscn")
 const SPIDER_SCENE := preload("res://src/monsters/Spider.tscn")
 const ORC_SCENE := preload("res://src/monsters/Orc.tscn")
+const EXP_ORB_SCENE := preload("res://src/battle/ExpOrb.tscn")
 
 const FIELD_SIZE := Vector2(1080, 1280)
 const FIELD_CENTER := Vector2(540, 640)
@@ -208,12 +209,22 @@ func _on_monster_died(monster: Node) -> void:
 	if battle_over:
 		return
 
-	if is_instance_valid(hero) and hero.has_method("gain_exp"):
+	if is_instance_valid(monster):
 		var reward := int(monster.get("exp_reward"))
-		hero.call("gain_exp", reward)
+		var drop_position := (monster as Node2D).global_position
+		_spawn_exp_orb(drop_position, reward)
 
 	monsters_alive = maxi(monsters_alive - 1, 0)
 	_emit_stats()
+
+func _spawn_exp_orb(drop_position: Vector2, exp_value: int) -> void:
+	if exp_value <= 0:
+		return
+
+	var orb := EXP_ORB_SCENE.instantiate() as Node2D
+	add_child(orb)
+	orb.global_position = drop_position
+	orb.call("setup", exp_value)
 
 func _on_hero_died() -> void:
 	if battle_over:
