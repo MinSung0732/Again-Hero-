@@ -213,3 +213,18 @@
 - Hero와 충분히 가까워지면 구슬이 사라지고 그 시점에 EXP가 증가.
 - 경험치 구슬에 청록색 펄스 플레이스홀더 비주얼 추가.
 - 향후 획득 범위 증가 증강, 자석 효과, Hero별 기본 흡수 범위 차이를 추가할 수 있도록 획득 범위를 Hero 스탯으로 분리.
+
+
+### Stage / Hero Data v1
+- Stage와 Hero 스탯을 전투 코드에서 분리하는 데이터 구조 추가.
+- `src/data/stage_catalog.gd` 추가:
+  - Stage id / 번호 / 표시 이름 / hero_id / 시작 레벨 / 최초 클리어 보상 / 다음 Stage id 관리.
+- `src/data/hero_profiles.gd` 추가:
+  - Hero id / 이름 / archetype / HP / 이동속도 / 공격력 / 사거리 / 공격주기 / 투사체속도 / EXP 획득범위 / 감지범위 / 카이팅 거리 관리.
+- Stage 1을 현재 원거리 카이팅형 **견습 마도사**에 고정.
+- Stage 2용 **기동 사냥꾼** profile을 데이터 placeholder로 추가하고 Stage 2는 잠금 상태로 유지.
+- Hero가 고정 하드코딩 값만 사용하는 대신 Battle이 Stage의 `hero_id`를 읽어 Hero profile을 적용하도록 변경.
+- Hero의 AI 감지 범위와 카이팅 거리도 profile에서 바꿀 수 있도록 데이터화.
+- 상단 HUD의 부제에 `Stage 번호 · Stage 이름 · Hero 이름` 표시.
+- Hero 처치 결과를 `STAGE CLEAR`로 변경하고 현재 Stage/용사 이름을 결과 메시지에 표시.
+- 다음 단계는 Stage 진행 상태와 Stage 1 최초 클리어 → Stage 2 해금 흐름.
