@@ -283,3 +283,8 @@
   - 마력 비축: 최대 지휘력 +25 및 즉시 지휘력 +25
 - 소환 비용 감소 증강 적용 시 하단 몬스터 버튼 비용 텍스트도 실시간 갱신.
 - 마왕 증강 선택 팝업과 현재 남은 새로고침 횟수 UI 추가.
+
+
+### Stage 1 Pixel Art Import Patch
+- Stage 1 마법사 도트 SVG를 embedded raster 방식에서 **순수 SVG path 픽셀 데이터**로 변환.
+- Godot Android SVG importer 호환성을 높이고 32×32 픽셀 형태를 그대로 유지.
