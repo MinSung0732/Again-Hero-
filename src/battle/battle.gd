@@ -17,7 +17,7 @@ const FIELD_SIZE := Vector2(1080, 1280)
 const FIELD_CENTER := Vector2(540, 640)
 
 const MAX_COMMAND := 100.0
-const START_COMMAND := 60.0
+const START_COMMAND := 0.0
 const COMMAND_REGEN_PER_SECOND := 3.0
 
 const MONSTER_COSTS := {
