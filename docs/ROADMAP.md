@@ -5,22 +5,28 @@
 - [x] Repository 생성
 - [x] README / 프로젝트 컨텍스트 작성
 - [x] Godot 기본 프로젝트 파일 작성
-- [ ] 로컬에서 Godot 프로젝트 실행 확인
+- [x] Android Godot Editor에서 프로젝트 열기 확인
+- [ ] Android Godot Editor에서 Milestone 1 실제 실행 검증
 - [ ] Android 개발 환경/Export 설정
 
 ## Milestone 1 — 최소 자동전투
 
 완료 조건: 화면 안에서 Hero와 Slime이 실제로 싸우고 한쪽이 죽는다.
 
-- [ ] Battle scene
-- [ ] Hero 기본 스탯
-- [ ] Hero 이동
-- [ ] Hero 타겟 탐색
-- [ ] Hero 자동 공격
-- [ ] Slime 기본 스탯
-- [ ] Slime이 Hero 추적
-- [ ] 데미지/HP
-- [ ] 사망 처리
+코드 구현 완료. Android Godot Editor 실기기 실행 검증 대기.
+
+- [x] Battle scene
+- [x] Hero 기본 스탯
+- [x] Hero 이동
+- [x] Hero 타겟 탐색
+- [x] Hero 자동 공격
+- [x] Slime 기본 스탯
+- [x] Slime이 Hero 추적
+- [x] 데미지/HP
+- [x] 사망 처리
+- [x] 승패 결과 UI
+- [x] 다시 실험하기 버튼
+- [ ] Android Godot Editor에서 실행/밸런스 확인
 
 ## Milestone 2 — 뱀서 성장 구조
 
