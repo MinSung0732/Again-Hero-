@@ -2,6 +2,8 @@ extends CharacterBody2D
 
 signal died
 
+@export var monster_type: String = "slime"
+@export var monster_role: String = "swarm"
 @export var max_hp: int = 60
 @export var move_speed: float = 115.0
 @export var attack_damage: int = 9
