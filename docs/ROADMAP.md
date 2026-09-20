@@ -195,3 +195,9 @@
 - [x] 진행 방향에 따라 투사체 회전
 - [x] Android raw PNG fallback
 - [x] 다른 Hero는 기존 테스트 탄환 유지
+
+
+### Stage 1 투사체 안정화
+- [x] 마법탄 4프레임 fly loop
+- [x] 코어 기준 회전/충돌 anchor 정렬
+- [x] Stage 1 투사체 source Hero 적용 순서 버그 수정
