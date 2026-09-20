@@ -73,7 +73,7 @@ func _attack_target() -> void:
 
 	attack_timer = attack_cooldown
 	if target.has_method("take_damage"):
-		target.take_damage(attack_damage)
+		target.call("take_damage", attack_damage)
 
 func take_damage(amount: int) -> void:
 	if current_hp <= 0:
