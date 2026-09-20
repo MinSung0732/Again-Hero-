@@ -479,3 +479,17 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
   순서로 처리한다.
 - 따라서 파일이 실제 프로젝트 폴더에 있으면 import 캐시가 늦어도 Stage 1 도트가 표시된다.
 - Base64 방식은 사용하지 않는다.
+
+
+### Stage 1 마법사 투사체 애니메이션 v1
+- 사용자가 제공한 마법탄 4프레임을 Stage 1 `ranged_rookie / 견습 마도사` 전용 투사체로 연결.
+- Base64를 사용하지 않고 PNG 스프라이트시트를 직접 로드.
+- 리소스 경로:
+  `res://assets/art/projectiles/stage1_mage/stage1_mage_projectile_sheet.png`
+- 시트: 128×128 셀 × 4프레임, 총 512×128.
+- fly 애니메이션: 4프레임 / 12 FPS / loop.
+- 원본이 오른쪽 진행 기준이므로 projectile Area2D 자체를 발사 방향 각도로 회전.
+- Stage 1이 아닌 Hero는 아직 기존 원형 테스트 탄환 fallback 사용.
+- Android Godot import cache가 늦을 때는 raw PNG를 `Image.load()`로 직접 읽어 표시.
+- 충돌/데미지/속도/최대 사거리 로직은 기존 값을 유지하고 비주얼만 교체.
+- 에셋 설치 도구: `tools/install_stage1_projectile_art.sh`.
