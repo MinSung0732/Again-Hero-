@@ -29,8 +29,14 @@ mkdir -p "$DEST_DIR"
 unzip -p "$ZIP_PATH" stage1_mage_spritesheet.png > "$DEST_DIR/stage1_mage_spritesheet.png"
 unzip -p "$ZIP_PATH" sprite_manifest.json > "$DEST_DIR/sprite_manifest.json"
 
-echo "Stage 1 마법사 스프라이트 설치 완료:"
+SHEET_BYTES="$(wc -c < "$DEST_DIR/stage1_mage_spritesheet.png")"
+if [ "$SHEET_BYTES" -lt 1000 ]; then
+  echo "오류: 스프라이트시트가 정상적으로 추출되지 않았습니다. (${SHEET_BYTES} bytes)"
+  exit 1
+fi
+
+echo "Stage 1 마법사 스프라이트 설치 완료 (${SHEET_BYTES} bytes):"
 echo "  $DEST_DIR/stage1_mage_spritesheet.png"
 echo "  $DEST_DIR/sprite_manifest.json"
 echo
-echo "Godot을 다시 열거나 프로젝트를 다시 스캔하면 자동 import 됩니다."
+echo "최신 코드에서는 Android Godot import 캐시가 늦어도 raw PNG를 직접 읽어 fallback을 방지합니다."
