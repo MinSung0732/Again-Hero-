@@ -88,13 +88,13 @@ static func _build_reason(selected: Dictionary, context: Dictionary, build_count
 		"rapid_strikes":
 			reason = "근처 적 %d명 / 전체 %d명 → 빠른 처리 능력 선호" % [nearby_count, total_count]
 		"iron_body":
-			reason = "현재 HP %.0f%% → 생존력 강화" % [hp_ratio * 100.0]
+			reason = "현재 HP %.0f%% → 생존력 강화" % (hp_ratio * 100.0)
 		"pursuit":
 			reason = "가장 가까운 적 %.0f 거리 → 추격 능력 강화" % nearest_distance
 		"long_reach":
 			reason = "가장 가까운 적 %.0f 거리 → 공격 사거리 강화" % nearest_distance
 		"battle_recovery":
-			reason = "현재 HP %.0f%% → 즉시 회복 필요" % [hp_ratio * 100.0]
+			reason = "현재 HP %.0f%% → 즉시 회복 필요" % (hp_ratio * 100.0)
 		_:
 			reason = "현재 전황과 기본 선호도를 종합"
 
