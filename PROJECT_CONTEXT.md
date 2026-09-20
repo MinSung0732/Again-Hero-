@@ -182,7 +182,7 @@ res://
 
 ## 12. 현재 개발 단계
 
-**Phase 1 — Hero ↔ Slime 최소 자동전투**
+**Phase 2 진입 준비 — Hero EXP / 레벨업**
 
 현재 구현됨:
 - Godot Android Editor에서 프로젝트 열기 확인
@@ -198,7 +198,7 @@ res://
 현재 초기 전투는 Hero 1명과 Slime 6마리가 자동으로 전투한다.
 용사가 죽으면 플레이어(마왕) 승리, Slime이 전멸하면 실험 실패로 처리한다.
 
-실기기에서 Milestone 1 실행 및 밸런스 검증 후 Milestone 2로 이동한다.
+Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 작동함을 확인했다. 이제 Milestone 2(Hero EXP / 레벨업)로 이동한다.
 
 아직 완성되지 않은 것:
 - Hero EXP / 레벨업
