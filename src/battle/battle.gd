@@ -46,6 +46,7 @@ var current_map_size: Vector2 = DEFAULT_MAP_SIZE
 
 var monsters_alive: int = 0
 var battle_over: bool = false
+var external_pause: bool = false
 
 var max_command: float = BASE_MAX_COMMAND
 var command_power: float = START_COMMAND
@@ -78,7 +79,7 @@ func _ready() -> void:
 	_start_battle()
 
 func _process(delta: float) -> void:
-	if battle_over or demon_augment_selection_active:
+	if battle_over or demon_augment_selection_active or external_pause:
 		return
 
 	if command_power < max_command:
@@ -91,6 +92,7 @@ func _process(delta: float) -> void:
 
 func _start_battle() -> void:
 	battle_over = false
+	external_pause = false
 	monsters_alive = 0
 
 	max_command = BASE_MAX_COMMAND
@@ -196,6 +198,10 @@ func try_summon_at_position(monster_type: String, spawn_position: Vector2) -> bo
 func _can_attempt_summon(monster_type: String) -> bool:
 	if battle_over:
 		summon_result.emit(monster_type, false, "전투가 종료되어 소환할 수 없습니다.")
+		return false
+
+	if external_pause:
+		summon_result.emit(monster_type, false, "스테이지 메뉴를 닫은 뒤 소환해 주세요.")
 		return false
 
 	if demon_augment_selection_active:
@@ -506,7 +512,8 @@ func choose_demon_augment(augment_id: String) -> bool:
 	demon_augment_selection_active = false
 	demon_augment_candidates.clear()
 	demon_last_candidate_ids.clear()
-	_set_combat_physics_enabled(true)
+	if not external_pause:
+		_set_combat_physics_enabled(true)
 
 	var augment_name: String = String(augment.get("name", "마왕 증강"))
 	demon_augment_applied.emit(augment_name, get_demon_build_summary())
@@ -572,17 +579,27 @@ func _on_hero_died() -> void:
 	if not next_stage_data.is_empty():
 		next_stage_number = int(next_stage_data.get("number", 0))
 
-	STAGE_PROGRESS.complete_stage(
+	var first_clear_reward: int = int(
+		current_stage_data.get("first_clear_reward", 0)
+	)
+	var clear_result: Dictionary = STAGE_PROGRESS.complete_stage(
 		current_stage_id,
 		stage_number,
 		next_stage_id,
-		next_stage_number
+		next_stage_number,
+		first_clear_reward
 	)
 
-	_finish_battle(
-		"Stage %d 클리어!\n%s · %s 처치 성공." % [stage_number, stage_name, hero_name],
-		true
-	)
+	var result_text := "Stage %d 클리어!\n%s · %s 처치 성공." % [
+		stage_number,
+		stage_name,
+		hero_name,
+	]
+	var granted_reward: int = int(clear_result.get("reward", 0))
+	if granted_reward > 0:
+		result_text += "\n최초 클리어 보상 · 연구 포인트 +%d" % granted_reward
+
+	_finish_battle(result_text, true)
 
 func _finish_battle(message: String, player_won: bool) -> void:
 	battle_over = true
@@ -651,11 +668,25 @@ func get_snapshot() -> Dictionary:
 		"demon_exp_to_next": demon_exp_to_next_level,
 		"demon_rerolls_left": demon_rerolls_left,
 		"demon_build_summary": get_demon_build_summary(),
+		"research_points": STAGE_PROGRESS.get_research_points(),
 		"map_width": current_map_size.x,
 		"map_height": current_map_size.y,
 		"next_stage_id": String(current_stage_data.get("next_stage_id", "")),
 		"battle_over": battle_over,
 	}
+
+func set_external_pause(paused: bool) -> void:
+	external_pause = paused
+
+	if battle_over:
+		return
+
+	if paused:
+		_set_combat_physics_enabled(false)
+		return
+
+	if not demon_augment_selection_active:
+		_set_combat_physics_enabled(true)
 
 func can_go_to_next_stage() -> bool:
 	var next_stage_id: String = String(current_stage_data.get("next_stage_id", ""))
