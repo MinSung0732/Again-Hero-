@@ -187,3 +187,11 @@
 ### Stage 1 스프라이트 Android Editor 안정화
 - [x] Android Editor import/cache 지연 시 raw PNG 직접 로드 fallback
 - [x] 설치 스크립트 PNG 크기 검증
+
+
+### Stage 1 마법사 투사체
+- [x] 기존 원형 테스트 탄환 → Stage 1 전용 마법탄 비주얼 연결
+- [x] 4프레임 fly loop
+- [x] 진행 방향에 따라 투사체 회전
+- [x] Android raw PNG fallback
+- [x] 다른 Hero는 기존 테스트 탄환 유지
