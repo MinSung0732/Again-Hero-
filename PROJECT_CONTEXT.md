@@ -493,3 +493,12 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - Android Godot import cache가 늦을 때는 raw PNG를 `Image.load()`로 직접 읽어 표시.
 - 충돌/데미지/속도/최대 사거리 로직은 기존 값을 유지하고 비주얼만 교체.
 - 에셋 설치 도구: `tools/install_stage1_projectile_art.sh`.
+
+
+### Stage 1 마법사 투사체 적용 안정화
+- Stage 1 마법탄은 오른쪽 진행 기준 4프레임 fly loop를 사용한다.
+- 128×128 공통 셀, 12 FPS loop.
+- 밝은 마법 코어를 실제 projectile origin/collision 중심에 맞추기 위해 sprite offset을 사용한다.
+- **투사체 적용 순서 버그 수정:** `source_hero_id`는 Hero가 projectile을 생성한 뒤 `setup()`에서 전달되므로, 전용 비주얼 적용도 `setup()` 이후에 실행해야 한다.
+- 이 순서를 지켜 Stage 1에서는 전용 AnimatedSprite2D가 뜨고, 다른 Hero/에셋 누락 시에만 기존 원형 fallback을 사용한다.
+- Base64 리소스 방식은 사용하지 않는다.
