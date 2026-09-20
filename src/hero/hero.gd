@@ -450,7 +450,7 @@ func _build_recent_offense_memory() -> Dictionary:
 		var weight := lerpf(OFFENSE_MEMORY_MIN_WEIGHT, 1.0, freshness)
 
 		var monster_type := String(event.get("type", "slime"))
-		var role := String(event.get("role", _role_for_monster_type(monster_type)))
+		var role := String(event.get("role", MONSTER_CATALOG.get_role(monster_type)))
 		type_weights[monster_type] = float(type_weights.get(monster_type, 0.0)) + weight
 		role_weights[role] = float(role_weights.get(role, 0.0)) + weight
 		total_weight += weight
