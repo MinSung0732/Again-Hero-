@@ -1,7 +1,7 @@
 extends RefCounted
 class_name HeroAugmentCatalog
 
-const AUGMENTS: Array[Dictionary] = [
+const AUGMENTS = [
 	{
 		"id": "sword_mastery",
 		"name": "검술 단련",
@@ -40,11 +40,11 @@ const AUGMENTS: Array[Dictionary] = [
 	},
 ]
 
-static func roll_candidates(count: int = 3) -> Array[Dictionary]:
-	var pool: Array[Dictionary] = AUGMENTS.duplicate(true)
+static func roll_candidates(count: int = 3) -> Array:
+	var pool: Array = AUGMENTS.duplicate(true)
 	pool.shuffle()
 
-	var result: Array[Dictionary] = []
+	var result: Array = []
 	var take_count: int = mini(count, pool.size())
 	for index in range(take_count):
 		result.append(pool[index])
