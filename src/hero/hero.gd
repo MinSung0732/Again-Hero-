@@ -15,6 +15,8 @@ const APPROACH_DISTANCE_RATIO := 0.86
 const FIELD_MARGIN := 72.0
 const WANDER_REACHED_DISTANCE := 42.0
 const WANDER_MIN_TARGET_DISTANCE := 260.0
+const OFFENSE_MEMORY_WINDOW := 20.0
+const OFFENSE_MEMORY_MIN_WEIGHT := 0.25
 
 @export var max_hp: int = 300
 @export var move_speed: float = 230.0
@@ -52,6 +54,9 @@ var move_multiplier: float = 1.0
 var strafe_sign: float = 1.0
 var wander_target: Vector2 = Vector2.ZERO
 var wander_timer: float = 0.0
+
+var ai_memory_clock: float = 0.0
+var offensive_memory_events: Array = []
 
 @onready var follow_camera: Camera2D = $Camera2D
 @onready var hero_sprite: AnimatedSprite2D = $HeroSprite
@@ -97,6 +102,9 @@ func _physics_process(delta: float) -> void:
 	if current_hp <= 0:
 		velocity = Vector2.ZERO
 		return
+
+	ai_memory_clock += delta
+	_prune_offensive_memory()
 
 	attack_timer = maxf(attack_timer - delta, 0.0)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
@@ -404,6 +412,98 @@ func gain_exp(amount: int) -> void:
 
 	progression_changed.emit(level, current_exp, exp_to_next_level)
 
+func record_offensive_event(monster_type: String) -> void:
+	var role := _role_for_monster_type(monster_type)
+	offensive_memory_events.append({
+		"time": ai_memory_clock,
+		"type": monster_type,
+		"role": role,
+	})
+	_prune_offensive_memory()
+
+func _role_for_monster_type(monster_type: String) -> String:
+	match monster_type:
+		"spider":
+			return "controller"
+		"orc":
+			return "tank"
+		_:
+			return "swarm"
+
+func _prune_offensive_memory() -> void:
+	if offensive_memory_events.is_empty():
+		return
+
+	var cutoff := ai_memory_clock - OFFENSE_MEMORY_WINDOW
+	while not offensive_memory_events.is_empty():
+		var event: Dictionary = offensive_memory_events[0]
+		if float(event.get("time", 0.0)) >= cutoff:
+			break
+		offensive_memory_events.pop_front()
+
+func _build_recent_offense_memory() -> Dictionary:
+	_prune_offensive_memory()
+
+	var type_weights := {
+		"slime": 0.0,
+		"spider": 0.0,
+		"orc": 0.0,
+	}
+	var role_weights := {
+		"swarm": 0.0,
+		"controller": 0.0,
+		"tank": 0.0,
+	}
+	var total_weight := 0.0
+
+	for raw_event in offensive_memory_events:
+		var event: Dictionary = raw_event
+		var age := maxf(ai_memory_clock - float(event.get("time", ai_memory_clock)), 0.0)
+		var freshness := 1.0 - clampf(age / OFFENSE_MEMORY_WINDOW, 0.0, 1.0)
+		var weight := lerpf(OFFENSE_MEMORY_MIN_WEIGHT, 1.0, freshness)
+
+		var monster_type := String(event.get("type", "slime"))
+		var role := String(event.get("role", _role_for_monster_type(monster_type)))
+		type_weights[monster_type] = float(type_weights.get(monster_type, 0.0)) + weight
+		role_weights[role] = float(role_weights.get(role, 0.0)) + weight
+		total_weight += weight
+
+	return {
+		"window_seconds": OFFENSE_MEMORY_WINDOW,
+		"event_count": offensive_memory_events.size(),
+		"total_weight": total_weight,
+		"type_weights": type_weights,
+		"role_weights": role_weights,
+	}
+
+func get_recent_offense_summary() -> String:
+	var memory := _build_recent_offense_memory()
+	var event_count := int(memory.get("event_count", 0))
+	if event_count <= 0:
+		return "최근 공세 기록 없음"
+
+	var type_weights: Dictionary = memory.get("type_weights", {})
+	var total_weight := maxf(float(memory.get("total_weight", 0.0)), 0.001)
+	var slime_ratio := float(type_weights.get("slime", 0.0)) / total_weight
+	var spider_ratio := float(type_weights.get("spider", 0.0)) / total_weight
+	var orc_ratio := float(type_weights.get("orc", 0.0)) / total_weight
+
+	var dominant_name := "슬라임"
+	var dominant_ratio := slime_ratio
+	if spider_ratio > dominant_ratio:
+		dominant_name = "거미"
+		dominant_ratio = spider_ratio
+	if orc_ratio > dominant_ratio:
+		dominant_name = "오크"
+		dominant_ratio = orc_ratio
+
+	return "최근 %.0f초: %s %.0f%% · 소환 %d회" % [
+		OFFENSE_MEMORY_WINDOW,
+		dominant_name,
+		dominant_ratio * 100.0,
+		event_count,
+	]
+
 func _level_up() -> void:
 	level += 1
 	exp_to_next_level = _required_exp_for_level(level)
@@ -472,6 +572,8 @@ func _build_ai_context() -> Dictionary:
 	if total_count == 0:
 		nearest_distance = 0.0
 
+	var recent_memory := _build_recent_offense_memory()
+
 	return {
 		"nearby_count": nearby_count,
 		"total_count": total_count,
@@ -480,6 +582,11 @@ func _build_ai_context() -> Dictionary:
 		"level": level,
 		"type_counts": type_counts,
 		"role_counts": role_counts,
+		"recent_event_count": int(recent_memory.get("event_count", 0)),
+		"recent_total_weight": float(recent_memory.get("total_weight", 0.0)),
+		"recent_type_weights": recent_memory.get("type_weights", {}),
+		"recent_role_weights": recent_memory.get("role_weights", {}),
+		"recent_window_seconds": float(recent_memory.get("window_seconds", OFFENSE_MEMORY_WINDOW)),
 	}
 
 func _apply_augment(augment: Dictionary) -> void:
