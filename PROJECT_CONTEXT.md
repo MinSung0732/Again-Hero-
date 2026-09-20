@@ -51,7 +51,9 @@ AI 용사는 몬스터를 처치하고 경험치를 얻으며 빌드를 스스�
 - Engine: Godot 4.x
 - Language: GDScript
 - Target: Android 우선, 이후 iOS 고려
-- Mobile orientation: Landscape 우선
+- Mobile orientation: **Portrait(세로) 전용**
+- Base viewport: **1080 x 1920**
+- 가로 회전은 지원하지 않는다.
 - 초기 그래픽: 플레이스홀더로 진행
 - 초기 목표: 완성품보다 핵심 재미 검증
 
@@ -198,7 +200,7 @@ res://
 현재 초기 전투는 Hero 1명과 Slime 6마리가 자동으로 전투한다.
 용사가 죽으면 플레이어(마왕) 승리, Slime이 전멸하면 실험 실패로 처리한다.
 
-Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 작동함을 확인했다. 이제 Milestone 2(Hero EXP / 레벨업)로 이동한다.
+Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 작동함을 확인했다. 이후 프로젝트 방향을 **세로형 전용(1080×1920, Portrait lock)** 으로 확정했고, HUD/전장도 세로 레이아웃으로 전환했다. 이제 Milestone 2(Hero EXP / 레벨업)로 이동한다.
 
 아직 완성되지 않은 것:
 - Hero EXP / 레벨업
