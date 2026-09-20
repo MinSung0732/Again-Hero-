@@ -1,10 +1,15 @@
 extends Control
 
+const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
+const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
+const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
+
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
 @onready var battle_viewport: SubViewport = $BattleViewportContainer/BattleViewport
 @onready var battle = $BattleViewportContainer/BattleViewport/Battle
 
 @onready var subtitle_label: Label = $HUD/TopBar/Subtitle
+@onready var stage_menu_button: Button = $HUD/TopBar/StageMenuButton
 @onready var hero_level_label: Label = $HUD/TopBar/HeroLevel
 @onready var hero_hp_label: Label = $HUD/TopBar/HeroHP
 @onready var monsters_label: Label = $HUD/TopBar/Monsters
@@ -22,6 +27,12 @@ extends Control
 @onready var spider_button: Button = $HUD/BottomBar/SummonButtons/SpiderButton
 @onready var orc_button: Button = $HUD/BottomBar/SummonButtons/OrcButton
 
+@onready var stage_select_panel: PanelContainer = $HUD/StageSelectPanel
+@onready var stage_research_label: Label = $HUD/StageSelectPanel/Margin/VBox/ResearchPoints
+@onready var stage_1_button: Button = $HUD/StageSelectPanel/Margin/VBox/Stage1Button
+@onready var stage_2_button: Button = $HUD/StageSelectPanel/Margin/VBox/Stage2Button
+@onready var stage_close_button: Button = $HUD/StageSelectPanel/Margin/VBox/CloseButton
+
 @onready var demon_augment_panel: PanelContainer = $HUD/DemonAugmentPanel
 @onready var demon_augment_title: Label = $HUD/DemonAugmentPanel/Margin/VBox/Title
 @onready var demon_augment_trigger: Label = $HUD/DemonAugmentPanel/Margin/VBox/Trigger
@@ -34,11 +45,13 @@ extends Control
 @onready var result_title: Label = $HUD/ResultPanel/Margin/VBox/ResultTitle
 @onready var result_message: Label = $HUD/ResultPanel/Margin/VBox/ResultMessage
 @onready var next_stage_button: Button = $HUD/ResultPanel/Margin/VBox/NextStageButton
+@onready var stage_select_result_button: Button = $HUD/ResultPanel/Margin/VBox/StageSelectResultButton
 @onready var restart_button: Button = $HUD/ResultPanel/Margin/VBox/RestartButton
 
 var auto_placement: bool = true
 var selected_monster_type: String = ""
 var current_demon_candidates: Array = []
+var return_to_result_after_stage_menu: bool = false
 
 func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
@@ -55,6 +68,11 @@ func _ready() -> void:
 	battle.demon_augment_applied.connect(_on_demon_augment_applied)
 	battle.battle_finished.connect(_on_battle_finished)
 
+	stage_menu_button.pressed.connect(_on_stage_menu_pressed)
+	stage_1_button.pressed.connect(_on_stage_choice_pressed.bind("stage_1"))
+	stage_2_button.pressed.connect(_on_stage_choice_pressed.bind("stage_2"))
+	stage_close_button.pressed.connect(_on_stage_menu_close_pressed)
+
 	placement_toggle.toggled.connect(_on_placement_mode_toggled)
 	slime_button.pressed.connect(_on_summon_pressed.bind("slime"))
 	spider_button.pressed.connect(_on_summon_pressed.bind("spider"))
@@ -64,6 +82,7 @@ func _ready() -> void:
 	demon_choice_2.pressed.connect(_on_demon_choice_pressed.bind(2))
 	demon_reroll_button.pressed.connect(_on_demon_reroll_pressed)
 	next_stage_button.pressed.connect(_on_next_stage_pressed)
+	stage_select_result_button.pressed.connect(_on_result_stage_menu_pressed)
 	restart_button.pressed.connect(_on_restart_pressed)
 
 	var snapshot: Dictionary = battle.get_snapshot()
@@ -104,7 +123,13 @@ func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 	]
 
 func _input(event: InputEvent) -> void:
-	if result_panel.visible or demon_augment_panel.visible or auto_placement or selected_monster_type.is_empty():
+	if (
+		result_panel.visible
+		or stage_select_panel.visible
+		or demon_augment_panel.visible
+		or auto_placement
+		or selected_monster_type.is_empty()
+	):
 		return
 
 	var pointer_position := Vector2.ZERO
@@ -142,6 +167,88 @@ func _input(event: InputEvent) -> void:
 
 	battle.try_summon_at_position(selected_monster_type, battle_position)
 	get_viewport().set_input_as_handled()
+
+func _on_stage_menu_pressed() -> void:
+	if demon_augment_panel.visible or result_panel.visible:
+		return
+	_open_stage_menu(false)
+
+func _on_result_stage_menu_pressed() -> void:
+	_open_stage_menu(true)
+
+func _open_stage_menu(from_result: bool) -> void:
+	return_to_result_after_stage_menu = from_result
+	_refresh_stage_menu()
+
+	if from_result:
+		result_panel.hide()
+	else:
+		battle.set_external_pause(true)
+
+	stage_select_panel.show()
+
+func _refresh_stage_menu() -> void:
+	var progress: Dictionary = STAGE_PROGRESS.load_state()
+	var research_points: int = int(progress.get("research_points", 0))
+	stage_research_label.text = "연구 포인트 %d" % research_points
+
+	_configure_stage_button(stage_1_button, "stage_1")
+	_configure_stage_button(stage_2_button, "stage_2")
+
+func _configure_stage_button(button: Button, stage_id: String) -> void:
+	var stage: Dictionary = STAGE_CATALOG.get_stage(stage_id)
+	if stage.is_empty():
+		button.disabled = true
+		button.text = "미구현 스테이지"
+		return
+
+	var stage_number: int = int(stage.get("number", 0))
+	var unlocked: bool = STAGE_PROGRESS.is_stage_unlocked(stage_number)
+	var cleared: bool = STAGE_PROGRESS.is_stage_cleared(stage_id)
+	var reward_claimed: bool = STAGE_PROGRESS.is_reward_claimed(stage_id)
+	var reward: int = int(stage.get("first_clear_reward", 0))
+	var hero_profile: Dictionary = HERO_PROFILES.get_profile(
+		String(stage.get("hero_id", ""))
+	)
+	var hero_name: String = String(hero_profile.get("display_name", "용사"))
+
+	var status_text := "해금" if unlocked else "잠김"
+	if cleared:
+		status_text = "클리어 완료"
+
+	var reward_text := "최초 보상: 연구 포인트 +%d" % reward
+	if reward_claimed:
+		reward_text = "최초 보상 획득 완료"
+
+	button.disabled = not unlocked
+	button.text = "Stage %d · %s\n%s · %s\n%s" % [
+		stage_number,
+		String(stage.get("display_name", "스테이지")),
+		hero_name,
+		status_text,
+		reward_text,
+	]
+
+func _on_stage_choice_pressed(stage_id: String) -> void:
+	var stage: Dictionary = STAGE_CATALOG.get_stage(stage_id)
+	if stage.is_empty():
+		return
+
+	if not STAGE_PROGRESS.is_stage_unlocked(int(stage.get("number", 999))):
+		return
+
+	STAGE_PROGRESS.set_current_stage(stage_id)
+	get_tree().reload_current_scene()
+
+func _on_stage_menu_close_pressed() -> void:
+	stage_select_panel.hide()
+
+	if return_to_result_after_stage_menu:
+		result_panel.show()
+	else:
+		battle.set_external_pause(false)
+
+	return_to_result_after_stage_menu = false
 
 func _on_stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int) -> void:
 	hero_hp_label.text = "용사 HP %d / %d" % [hero_hp, hero_max_hp]
@@ -282,6 +389,7 @@ func _on_hero_augment_selected(level: int, candidates: Array, chosen_name: Strin
 	]
 
 func _on_battle_finished(message: String, player_won: bool) -> void:
+	stage_select_panel.hide()
 	demon_augment_panel.hide()
 	slime_button.disabled = true
 	spider_button.disabled = true
