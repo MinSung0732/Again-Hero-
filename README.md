@@ -19,7 +19,7 @@
 
 - Engine: **Godot 4.x**
 - Target: **Mobile (Android 우선)**
-- Orientation: **Landscape**
+- Orientation: **Portrait (1080×1920, 세로 전용)**
 - Genre: Reverse Survivors-like / Roguelite / Strategy
 - Prototype target: 용사 1명 + 몬스터 3종 + 자동 전투 + 레벨업 + AI 빌드 선택
 
