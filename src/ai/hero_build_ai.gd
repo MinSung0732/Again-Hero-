@@ -1,7 +1,7 @@
 extends RefCounted
 class_name HeroBuildAI
 
-static func choose_candidate_v0(candidates: Array[Dictionary]) -> Dictionary:
+static func choose_candidate_v0(candidates: Array) -> Dictionary:
 	var selected: Dictionary = {}
 	var selected_score: float = -INF
 
