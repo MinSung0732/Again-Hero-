@@ -4,12 +4,12 @@ signal died
 
 @export var monster_type: String = "orc"
 @export var monster_role: String = "tank"
-@export var max_hp: int = 160
+@export var max_hp: int = 140
 @export var move_speed: float = 78.0
-@export var attack_damage: int = 22
+@export var attack_damage: int = 18
 @export var attack_range: float = 82.0
 @export var attack_cooldown: float = 1.45
-@export var exp_reward: int = 45
+@export var exp_reward: int = 40
 
 var current_hp: int
 var hero: Node2D
