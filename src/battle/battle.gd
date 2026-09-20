@@ -6,7 +6,8 @@ signal battle_finished(message: String, player_won: bool)
 const HERO_SCENE := preload("res://src/hero/Hero.tscn")
 const SLIME_SCENE := preload("res://src/monsters/Slime.tscn")
 
-const FIELD_SIZE := Vector2(1920, 780)
+const FIELD_SIZE := Vector2(1080, 1380)
+const FIELD_CENTER := Vector2(540, 690)
 
 var hero: Node2D
 var monsters_alive: int = 0
@@ -21,17 +22,17 @@ func _start_battle() -> void:
 
 	hero = HERO_SCENE.instantiate() as Node2D
 	add_child(hero)
-	hero.position = Vector2(960, 390)
+	hero.position = FIELD_CENTER
 	hero.connect("health_changed", Callable(self, "_on_hero_health_changed"))
 	hero.connect("died", Callable(self, "_on_hero_died"))
 
 	var spawn_positions: Array[Vector2] = [
-		Vector2(250, 155),
-		Vector2(1670, 155),
-		Vector2(250, 620),
-		Vector2(1670, 620),
-		Vector2(960, 90),
-		Vector2(960, 700),
+		Vector2(150, 170),
+		Vector2(930, 170),
+		Vector2(150, 1180),
+		Vector2(930, 1180),
+		Vector2(540, 100),
+		Vector2(540, 1280),
 	]
 
 	for spawn_position in spawn_positions:
@@ -111,7 +112,6 @@ func _draw() -> void:
 	draw_rect(field_rect, Color(0.075, 0.085, 0.105), true)
 	draw_rect(field_rect, Color(0.28, 0.32, 0.4), false, 4.0)
 
-	# Center marker makes movement easier to read during early testing.
-	draw_circle(Vector2(960, 390), 92.0, Color(0.1, 0.12, 0.15), false, 3.0)
-	draw_line(Vector2(960, 280), Vector2(960, 500), Color(0.15, 0.18, 0.22), 2.0)
-	draw_line(Vector2(850, 390), Vector2(1070, 390), Color(0.15, 0.18, 0.22), 2.0)
+	draw_circle(FIELD_CENTER, 92.0, Color(0.1, 0.12, 0.15), false, 3.0)
+	draw_line(FIELD_CENTER + Vector2(0, -110), FIELD_CENTER + Vector2(0, 110), Color(0.15, 0.18, 0.22), 2.0)
+	draw_line(FIELD_CENTER + Vector2(-110, 0), FIELD_CENTER + Vector2(110, 0), Color(0.15, 0.18, 0.22), 2.0)
