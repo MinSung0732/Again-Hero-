@@ -431,3 +431,12 @@
   - 이제 `setup()`에서 Hero id를 받은 뒤 Stage 1 projectile visual을 적용.
 - AnimatedSprite2D offset을 조정해 빛나는 코어가 충돌/회전 중심에 오도록 정렬.
 - 기존 데미지/속도/사거리 로직은 유지.
+
+
+### Fix — Stage 1 Projectile Still Showing Yellow Fallback
+- Stage 1 투사체 PNG 설치 후에도 기존 노란 원형탄이 표시되던 문제 수정.
+- 원인 후보였던 합본 spritesheet 로딩/AtlasTexture 프레임 절단 경로를 제거.
+- 이제 `projectile_01.png ~ projectile_04.png` 개별 PNG 4장을 직접 AnimatedSprite2D `fly` 애니메이션에 등록.
+- Android Godot Editor의 import cache가 늦을 경우 `FileAccess`로 PNG 원본 bytes를 읽고 `Image.load_png_from_buffer()`로 Texture2D를 생성.
+- Base64 사용 없음.
+- 4프레임 중 일부만 읽혀도 읽힌 프레임으로 애니메이션을 구성하고, 전부 실패한 경우에만 기존 노란 원형탄 fallback 사용.
