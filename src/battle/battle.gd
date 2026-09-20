@@ -3,6 +3,7 @@ extends Node2D
 signal stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int)
 signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
 signal hero_leveled_up(new_level: int)
+signal hero_augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String)
 signal battle_finished(message: String, player_won: bool)
 
 const HERO_SCENE := preload("res://src/hero/Hero.tscn")
@@ -28,6 +29,7 @@ func _start_battle() -> void:
 	hero.connect("health_changed", Callable(self, "_on_hero_health_changed"))
 	hero.connect("progression_changed", Callable(self, "_on_hero_progression_changed"))
 	hero.connect("leveled_up", Callable(self, "_on_hero_leveled_up"))
+	hero.connect("augment_selected", Callable(self, "_on_hero_augment_selected"))
 	hero.connect("died", Callable(self, "_on_hero_died"))
 
 	var spawn_positions: Array[Vector2] = [
@@ -60,6 +62,9 @@ func _on_hero_progression_changed(level: int, current_exp: int, exp_to_next_leve
 
 func _on_hero_leveled_up(new_level: int) -> void:
 	hero_leveled_up.emit(new_level)
+
+func _on_hero_augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String) -> void:
+	hero_augment_selected.emit(level, candidates, chosen_name, reason, build_summary)
 
 func _on_slime_died(slime: Node) -> void:
 	if battle_over:
@@ -123,6 +128,7 @@ func get_snapshot() -> Dictionary:
 	var level := 1
 	var current_exp := 0
 	var exp_to_next_level := 50
+	var build_summary := "아직 선택 없음"
 
 	if is_instance_valid(hero):
 		hp = int(hero.get("current_hp"))
@@ -130,6 +136,8 @@ func get_snapshot() -> Dictionary:
 		level = int(hero.get("level"))
 		current_exp = int(hero.get("current_exp"))
 		exp_to_next_level = int(hero.get("exp_to_next_level"))
+		if hero.has_method("get_build_summary"):
+			build_summary = String(hero.call("get_build_summary"))
 
 	return {
 		"hero_hp": hp,
@@ -137,6 +145,7 @@ func get_snapshot() -> Dictionary:
 		"hero_level": level,
 		"hero_exp": current_exp,
 		"hero_exp_to_next": exp_to_next_level,
+		"hero_build_summary": build_summary,
 		"monsters_left": monsters_alive,
 		"battle_over": battle_over,
 	}
