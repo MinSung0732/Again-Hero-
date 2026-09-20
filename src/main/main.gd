@@ -218,6 +218,7 @@ func _refresh_stage_menu() -> void:
 
 func _on_research_menu_pressed() -> void:
 	stage_select_panel.hide()
+	research_status_label.text = "연구 항목을 선택하세요."
 	_refresh_research_menu()
 	research_panel.show()
 
@@ -453,7 +454,7 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 	var reroll_max := int(battle.get_snapshot().get("demon_reroll_max", 3))
 	demon_reroll_button.text = "↻ 새로고침 %d / %d" % [rerolls_left, reroll_max]
 	demon_reroll_button.disabled = rerolls_left <= 0
-	status_label.text = "소환 비용만큼 마왕 EXP를 얻어 레벨업했습니다. 새로고침은 Run 전체 3회 공유."
+	status_label.text = "소환으로 마왕 EXP를 얻어 레벨업했습니다. 새로고침은 Run 전체 %d회 공유." % reroll_max
 
 func _on_demon_choice_pressed(index: int) -> void:
 	if index < 0 or index >= current_demon_candidates.size():
