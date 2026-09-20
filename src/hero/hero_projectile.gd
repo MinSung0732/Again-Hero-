@@ -7,6 +7,7 @@ var damage: int = 34
 var traveled_distance: float = 0.0
 
 func _ready() -> void:
+	add_to_group("hero_projectiles")
 	body_entered.connect(_on_body_entered)
 	queue_redraw()
 
