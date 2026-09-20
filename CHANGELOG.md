@@ -479,3 +479,10 @@
 - Build AI는 `current_type_ratio / current_role_ratio / recent_type_ratio / recent_role_ratio / hp_missing / distance / count condition` 등 공통 규칙을 평가하는 방식으로 변경.
 - Hero의 현재 전장/최근 공세 집계 Dictionary에서 Slime/Spider/Orc 고정 초기값 제거. 새 type/role 키를 동적으로 집계.
 - 프로젝트 코딩 원칙으로 **업데이트를 고려한 데이터 중심 설계**를 `AGENTS.md`에 명시.
+
+
+### Critical Fix — Hero Missing After Data-Driven AI Refactor
+- 데이터 중심 리팩터링 직후 Hero가 생성되지 않고 HUD가 `용사 HP 0 / 0`으로 표시되던 문제 수정.
+- 원인: 기존 `_role_for_monster_type()` helper를 제거한 뒤, 최근 공세 메모리 집계 코드에 해당 함수 호출이 1곳 남아 Hero script 컴파일이 실패함.
+- 남아 있던 참조를 `MONSTER_CATALOG.get_role(monster_type)`로 교체.
+- 데이터 중심 구조는 유지하면서 Hero script가 정상 로드되도록 복구.
