@@ -151,7 +151,7 @@ func get_build_summary() -> String:
 	if build_counts.is_empty():
 		return "아직 선택 없음"
 
-	var parts: Array[String] = []
+	var parts: PackedStringArray = []
 	for augment in AUGMENT_CATALOG.AUGMENTS:
 		var augment_id: String = String(augment.get("id", ""))
 		var stacks: int = int(build_counts.get(augment_id, 0))
