@@ -8,6 +8,8 @@
 - [x] Android Godot Editor에서 프로젝트 열기 확인
 - [x] Android Godot Editor에서 Milestone 1 실제 실행 검증
 - [ ] Android 개발 환경/Export 설정
+- [x] Portrait 1080x1920 전용 화면으로 전환
+- [x] Android 회전 방향 Portrait 고정
 
 ## Milestone 1 — 최소 자동전투
 
