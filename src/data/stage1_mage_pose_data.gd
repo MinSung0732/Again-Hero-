@@ -44,7 +44,7 @@ static func build_texture(frame_id: String) -> Texture2D:
 				break
 
 			var x := pixel_index % 32
-			var y := pixel_index / 32
+			var y := int(pixel_index / 32)
 			if palette_index >= 0 and palette_index < PALETTE.size():
 				image.set_pixel(x, y, PALETTE[palette_index])
 			pixel_index += 1
