@@ -6,7 +6,7 @@
 - [x] README / 프로젝트 컨텍스트 작성
 - [x] Godot 기본 프로젝트 파일 작성
 - [x] Android Godot Editor에서 프로젝트 열기 확인
-- [ ] Android Godot Editor에서 Milestone 1 실제 실행 검증
+- [x] Android Godot Editor에서 Milestone 1 실제 실행 검증
 - [ ] Android 개발 환경/Export 설정
 
 ## Milestone 1 — 최소 자동전투
@@ -26,7 +26,7 @@
 - [x] 사망 처리
 - [x] 승패 결과 UI
 - [x] 다시 실험하기 버튼
-- [ ] Android Godot Editor에서 실행/밸런스 확인
+- [x] Android Godot Editor에서 실행/밸런스 확인
 
 ## Milestone 2 — 뱀서 성장 구조
 
