@@ -461,3 +461,21 @@
 - 고속 실험법이 있으면 소환 성공 메시지에 실제 보너스가 포함된 마왕 EXP 획득량을 표시.
 - 영구 연구와 Run 내 마왕 증강을 별도 성장축으로 유지.
 - 다음 기초 개발 우선순위는 최근 공세의 시간 흐름/기록을 Hero AI 판단에 반영하는 것.
+
+
+### Hero AI Offensive Memory v1 + Data-Driven Refactor
+- Hero가 최근 20초 동안 플레이어가 직접 소환한 몬스터 공세를 기억하도록 구현.
+- 최근 기록은 시간이 지날수록 가중치가 감소하며 20초 후 제거.
+- 현재 전장 구성뿐 아니라 최근 type / role 비중도 Hero 레벨업 증강 Utility 점수에 반영.
+- Slime 계열 물량 공세 → 연사 계열, Spider/Controller 공세 → 기동/사거리 계열, Orc/Tank 공세 → 단일 화력/생존 계열 점수에 영향을 주는 v1 데이터 설정 추가.
+- 자동 생성된 분열 몬스터는 플레이어 공세 기억에서 제외.
+- AI 선택 이유 문자열도 최근 공세 데이터가 주요 근거일 경우 해당 내용을 표시.
+- 확장성을 위해 몬스터 ID별 하드코딩을 정리:
+  - `src/data/monster_catalog.gd` 추가
+  - 몬스터 이름 / 역할 / 기본 비용 / PackedScene을 Catalog에서 관리
+  - Battle의 몬스터 Scene 선택, 이름, 기본 비용, AI 기록 역할 조회를 Catalog 기반으로 변경
+- Hero 증강의 AI 가중치를 `hero_augment_catalog.gd`의 `ai_rules` 데이터로 이동.
+- `hero_build_ai.gd`에서 증강 ID별 대형 match문 제거.
+- Build AI는 `current_type_ratio / current_role_ratio / recent_type_ratio / recent_role_ratio / hp_missing / distance / count condition` 등 공통 규칙을 평가하는 방식으로 변경.
+- Hero의 현재 전장/최근 공세 집계 Dictionary에서 Slime/Spider/Orc 고정 초기값 제거. 새 type/role 키를 동적으로 집계.
+- 프로젝트 코딩 원칙으로 **업데이트를 고려한 데이터 중심 설계**를 `AGENTS.md`에 명시.
