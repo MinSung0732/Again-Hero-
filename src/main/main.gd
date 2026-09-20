@@ -22,6 +22,14 @@ const LOGICAL_WIDTH := 1080.0
 @onready var spider_button: Button = $HUD/BottomBar/SummonButtons/SpiderButton
 @onready var orc_button: Button = $HUD/BottomBar/SummonButtons/OrcButton
 
+@onready var demon_augment_panel: PanelContainer = $HUD/DemonAugmentPanel
+@onready var demon_augment_title: Label = $HUD/DemonAugmentPanel/Margin/VBox/Title
+@onready var demon_augment_trigger: Label = $HUD/DemonAugmentPanel/Margin/VBox/Trigger
+@onready var demon_choice_0: Button = $HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice0
+@onready var demon_choice_1: Button = $HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice1
+@onready var demon_choice_2: Button = $HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice2
+@onready var demon_reroll_button: Button = $HUD/DemonAugmentPanel/Margin/VBox/RerollButton
+
 @onready var result_panel: PanelContainer = $HUD/ResultPanel
 @onready var result_title: Label = $HUD/ResultPanel/Margin/VBox/ResultTitle
 @onready var result_message: Label = $HUD/ResultPanel/Margin/VBox/ResultMessage
@@ -30,6 +38,7 @@ const LOGICAL_WIDTH := 1080.0
 
 var auto_placement: bool = true
 var selected_monster_type: String = ""
+var current_demon_candidates: Array = []
 
 func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
@@ -41,12 +50,18 @@ func _ready() -> void:
 	battle.hero_augment_selected.connect(_on_hero_augment_selected)
 	battle.command_changed.connect(_on_command_changed)
 	battle.summon_result.connect(_on_summon_result)
+	battle.demon_augment_ready.connect(_on_demon_augment_ready)
+	battle.demon_augment_applied.connect(_on_demon_augment_applied)
 	battle.battle_finished.connect(_on_battle_finished)
 
 	placement_toggle.toggled.connect(_on_placement_mode_toggled)
 	slime_button.pressed.connect(_on_summon_pressed.bind("slime"))
 	spider_button.pressed.connect(_on_summon_pressed.bind("spider"))
 	orc_button.pressed.connect(_on_summon_pressed.bind("orc"))
+	demon_choice_0.pressed.connect(_on_demon_choice_pressed.bind(0))
+	demon_choice_1.pressed.connect(_on_demon_choice_pressed.bind(1))
+	demon_choice_2.pressed.connect(_on_demon_choice_pressed.bind(2))
+	demon_reroll_button.pressed.connect(_on_demon_reroll_pressed)
 	next_stage_button.pressed.connect(_on_next_stage_pressed)
 	restart_button.pressed.connect(_on_restart_pressed)
 
@@ -83,7 +98,7 @@ func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 	]
 
 func _input(event: InputEvent) -> void:
-	if result_panel.visible or auto_placement or selected_monster_type.is_empty():
+	if result_panel.visible or demon_augment_panel.visible or auto_placement or selected_monster_type.is_empty():
 		return
 
 	var pointer_position := Vector2.ZERO
@@ -134,9 +149,17 @@ func _on_command_changed(current_value: float, max_value: float) -> void:
 	command_bar.max_value = maxf(max_value, 1.0)
 	command_bar.value = current_value
 
-	slime_button.disabled = current_value + 0.001 < battle.get_monster_cost("slime")
-	spider_button.disabled = current_value + 0.001 < battle.get_monster_cost("spider")
-	orc_button.disabled = current_value + 0.001 < battle.get_monster_cost("orc")
+	var slime_cost: float = battle.get_monster_cost("slime")
+	var spider_cost: float = battle.get_monster_cost("spider")
+	var orc_cost: float = battle.get_monster_cost("orc")
+
+	slime_button.text = "슬라임\n비용 %.1f" % slime_cost
+	spider_button.text = "거미\n비용 %.1f" % spider_cost
+	orc_button.text = "오크\n비용 %.1f" % orc_cost
+
+	slime_button.disabled = current_value + 0.001 < slime_cost
+	spider_button.disabled = current_value + 0.001 < spider_cost
+	orc_button.disabled = current_value + 0.001 < orc_cost
 
 func _on_placement_mode_toggled(auto_enabled: bool) -> void:
 	auto_placement = auto_enabled
@@ -172,6 +195,49 @@ func _on_summon_result(_monster_type: String, success: bool, message: String) ->
 			_get_monster_name(selected_monster_type),
 		]
 
+func _on_demon_augment_ready(candidates: Array, rerolls_left: int, selection_index: int) -> void:
+	current_demon_candidates = candidates.duplicate(true)
+	demon_augment_panel.show()
+	demon_augment_title.text = "마왕의 개입"
+	demon_augment_trigger.text = "증강 선택 %d / 3 · 누적 지휘력 사용으로 발동" % selection_index
+
+	var buttons: Array[Button] = [demon_choice_0, demon_choice_1, demon_choice_2]
+	for index in range(buttons.size()):
+		if index >= current_demon_candidates.size():
+			buttons[index].visible = false
+			continue
+
+		buttons[index].visible = true
+		var candidate: Dictionary = current_demon_candidates[index]
+		buttons[index].text = "%s\n\n%s" % [
+			String(candidate.get("name", "증강")),
+			String(candidate.get("description", "")),
+		]
+
+	demon_reroll_button.text = "↻ 새로고침 %d / 3" % rerolls_left
+	demon_reroll_button.disabled = rerolls_left <= 0
+	status_label.text = "마왕 증강을 선택하세요. 새로고침은 Run 전체에서 3회를 공유합니다."
+
+func _on_demon_choice_pressed(index: int) -> void:
+	if index < 0 or index >= current_demon_candidates.size():
+		return
+
+	var candidate: Dictionary = current_demon_candidates[index]
+	var augment_id: String = String(candidate.get("id", ""))
+	if battle.choose_demon_augment(augment_id):
+		demon_augment_panel.hide()
+		current_demon_candidates.clear()
+		_on_command_changed(
+			float(battle.get_snapshot().get("command_power", 0.0)),
+			float(battle.get_snapshot().get("command_max", 100.0))
+		)
+
+func _on_demon_reroll_pressed() -> void:
+	battle.reroll_demon_augments()
+
+func _on_demon_augment_applied(augment_name: String, build_summary: String) -> void:
+	status_label.text = "마왕 증강 획득 → %s\n현재 마왕 빌드: %s" % [augment_name, build_summary]
+
 func _get_monster_name(monster_type: String) -> String:
 	match monster_type:
 		"spider":
@@ -198,6 +264,7 @@ func _on_hero_augment_selected(level: int, candidates: Array, chosen_name: Strin
 	]
 
 func _on_battle_finished(message: String, player_won: bool) -> void:
+	demon_augment_panel.hide()
 	slime_button.disabled = true
 	spider_button.disabled = true
 	orc_button.disabled = true
