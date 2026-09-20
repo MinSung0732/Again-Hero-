@@ -210,9 +210,9 @@ func _can_attempt_summon(monster_type: String) -> bool:
 
 func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float, manual: bool) -> bool:
 	command_power = maxf(command_power - cost, 0.0)
-	_gain_demon_exp(cost)
 
 	_spawn_monster(monster_type, spawn_position, cost, false)
+	_gain_demon_exp(cost)
 	command_changed.emit(command_power, max_command)
 	_emit_stats()
 
@@ -449,6 +449,12 @@ func _roll_demon_augment_candidates(is_reroll: bool) -> Array:
 				exclude_ids.append(old_id)
 
 	var candidates: Array = DEMON_AUGMENTS.roll_candidates(exclude_ids, 3)
+
+	if candidates.is_empty() and is_reroll:
+		var selected_excludes: Array = []
+		for selected_id in demon_selected_ids:
+			selected_excludes.append(selected_id)
+		candidates = DEMON_AUGMENTS.roll_candidates(selected_excludes, 3)
 
 	demon_last_candidate_ids.clear()
 	for candidate in candidates:
