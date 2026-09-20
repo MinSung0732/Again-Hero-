@@ -17,7 +17,6 @@ var source_hero_id: String = ""
 func _ready() -> void:
 	add_to_group("hero_projectiles")
 	body_entered.connect(_on_body_entered)
-	_apply_projectile_visual()
 	queue_redraw()
 
 func setup(
@@ -33,6 +32,7 @@ func setup(
 	max_range = new_max_range
 	source_hero_id = new_source_hero_id
 	rotation = direction.angle()
+	_apply_projectile_visual()
 
 func _physics_process(delta: float) -> void:
 	var step := direction * speed * delta
