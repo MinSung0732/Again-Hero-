@@ -124,6 +124,13 @@
 - [x] Hero archetype/profile 데이터 구조
 - [x] Stage 1 = 현재 원거리 카이팅 Hero로 고정
 - [x] Stage 1 용사 픽셀 아트 적용
+- [x] Stage 1 도트 상태 애니메이션 v1
+  - 대기
+  - 걷기
+  - 달리기
+  - 공격
+  - 피격
+  - 사망
 - [x] 현재 Stage / 최고 해금 Stage 진행 상태 저장
 - [x] Stage 클리어 판정
 - [x] 결과창 다음 스테이지 버튼
