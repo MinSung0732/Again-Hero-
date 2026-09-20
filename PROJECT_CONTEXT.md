@@ -331,7 +331,7 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 
 ### Stage 1 비주얼
 - 사용자가 제공한 Stage 1 마법사 도트 시안을 기반으로 실제 전투 Sprite를 적용.
-- **Stage 1 도트 적용 안정화:** ranged_rookie 프로필은 동적 경로 확인 대신 해당 SVG 텍스처를 직접 preload해서 표시하도록 변경.
+- **Stage 1 도트 적용 안정화 v2:** Android에서 SVG preload 실패가 Hero script 전체를 막는 문제가 확인되어 SVG 직접 preload를 제거. 사용자가 제공한 32×32 PNG를 런타임에 안전하게 디코딩해 표시하며, 실패해도 플레이스홀더 Hero/전투 로직은 유지된다.
 - 현재는 32×32 정지 프레임 1장을 3배 스케일로 표시하는 v1.
 - Stage 1 `견습 마도사` profile에만 sprite_path를 연결.
 - Stage 2 기동 사냥꾼은 아직 플레이스홀더 비주얼을 사용.
