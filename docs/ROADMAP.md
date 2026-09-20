@@ -182,3 +182,8 @@
 - 고급 셰이더
 - 절차 생성 맵
 - 실제 머신러닝 AI
+
+
+### Stage 1 스프라이트 Android Editor 안정화
+- [x] Android Editor import/cache 지연 시 raw PNG 직접 로드 fallback
+- [x] 설치 스크립트 PNG 크기 검증
