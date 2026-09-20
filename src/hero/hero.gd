@@ -10,8 +10,6 @@ const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
 const PROJECTILE_SCENE := preload("res://src/hero/HeroProjectile.tscn")
 
-const AI_SENSE_RADIUS := 420.0
-const KITE_DISTANCE := 210.0
 const APPROACH_DISTANCE_RATIO := 0.86
 const FIELD_WIDTH := 1080.0
 const FIELD_HEIGHT := 1280.0
@@ -26,6 +24,12 @@ const WANDER_MIN_TARGET_DISTANCE := 260.0
 @export var attack_cooldown: float = 0.62
 @export var projectile_speed: float = 680.0
 @export var exp_pickup_radius: float = 150.0
+@export var ai_sense_radius: float = 420.0
+@export var kite_distance: float = 210.0
+
+var hero_id: String = "ranged_rookie"
+var hero_display_name: String = "견습 마도사"
+var hero_archetype: String = "ranged_kiter"
 
 var current_hp: int
 var level: int = 1
@@ -43,6 +47,24 @@ var move_multiplier: float = 1.0
 var strafe_sign: float = 1.0
 var wander_target: Vector2 = Vector2.ZERO
 var wander_timer: float = 0.0
+
+func configure_profile(profile: Dictionary) -> void:
+	if profile.is_empty():
+		return
+
+	hero_id = String(profile.get("id", hero_id))
+	hero_display_name = String(profile.get("display_name", hero_display_name))
+	hero_archetype = String(profile.get("archetype", hero_archetype))
+
+	max_hp = int(profile.get("max_hp", max_hp))
+	move_speed = float(profile.get("move_speed", move_speed))
+	attack_damage = int(profile.get("attack_damage", attack_damage))
+	attack_range = float(profile.get("attack_range", attack_range))
+	attack_cooldown = float(profile.get("attack_cooldown", attack_cooldown))
+	projectile_speed = float(profile.get("projectile_speed", projectile_speed))
+	exp_pickup_radius = float(profile.get("exp_pickup_radius", exp_pickup_radius))
+	ai_sense_radius = float(profile.get("ai_sense_radius", ai_sense_radius))
+	kite_distance = float(profile.get("kite_distance", kite_distance))
 
 func _ready() -> void:
 	add_to_group("hero")
@@ -129,10 +151,10 @@ func _choose_move_direction(nearest_target: Node2D, nearest_distance: float) -> 
 			continue
 
 		var distance := global_position.distance_to(monster.global_position)
-		if distance <= 0.0 or distance > KITE_DISTANCE:
+		if distance <= 0.0 or distance > kite_distance:
 			continue
 
-		var weight := 1.0 - clampf(distance / KITE_DISTANCE, 0.0, 1.0)
+		var weight := 1.0 - clampf(distance / kite_distance, 0.0, 1.0)
 		avoidance += monster.global_position.direction_to(global_position) * (0.35 + weight)
 
 	if avoidance.length_squared() > 0.01:
@@ -257,7 +279,7 @@ func _build_ai_context() -> Dictionary:
 		var distance: float = global_position.distance_to(monster.global_position)
 		nearest_distance = minf(nearest_distance, distance)
 
-		if distance <= AI_SENSE_RADIUS:
+		if distance <= ai_sense_radius:
 			nearby_count += 1
 
 		var type_value = monster.get("monster_type")
