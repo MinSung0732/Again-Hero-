@@ -8,6 +8,7 @@ signal augment_selected(level: int, candidates: Array, chosen_name: String, reas
 
 const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
+const AI_SENSE_RADIUS := 320.0
 
 @export var max_hp: int = 300
 @export var move_speed: float = 230.0
@@ -111,7 +112,8 @@ func _level_up() -> void:
 	level_flash_timer = 0.45
 
 	var candidates: Array = AUGMENT_CATALOG.roll_candidates(3)
-	var chosen: Dictionary = BUILD_AI.choose_candidate_v0(candidates)
+	var ai_context: Dictionary = _build_ai_context()
+	var chosen: Dictionary = BUILD_AI.choose_candidate(candidates, ai_context, build_counts)
 	_apply_augment(chosen)
 
 	health_changed.emit(current_hp, max_hp)
@@ -124,6 +126,38 @@ func _level_up() -> void:
 		get_build_summary()
 	)
 	queue_redraw()
+
+func _build_ai_context() -> Dictionary:
+	var nearby_count: int = 0
+	var total_count: int = 0
+	var nearest_distance: float = 9999.0
+
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+
+		var monster := node as Node2D
+		if monster == null:
+			continue
+
+		var monster_hp = monster.get("current_hp")
+		if monster_hp != null and int(monster_hp) <= 0:
+			continue
+
+		total_count += 1
+		var distance: float = global_position.distance_to(monster.global_position)
+		nearest_distance = minf(nearest_distance, distance)
+
+		if distance <= AI_SENSE_RADIUS:
+			nearby_count += 1
+
+	return {
+		"nearby_count": nearby_count,
+		"total_count": total_count,
+		"nearest_distance": nearest_distance,
+		"hp_ratio": float(current_hp) / float(maxi(max_hp, 1)),
+		"level": level,
+	}
 
 func _apply_augment(augment: Dictionary) -> void:
 	var augment_id: String = String(augment.get("id", ""))
