@@ -4,6 +4,10 @@ signal died
 signal health_changed(current_hp: int, max_hp_value: int)
 signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
 signal leveled_up(new_level: int)
+signal augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String)
+
+const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
+const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
 
 @export var max_hp: int = 300
 @export var move_speed: float = 230.0
@@ -15,6 +19,7 @@ var current_hp: int
 var level: int = 1
 var current_exp: int = 0
 var exp_to_next_level: int = 50
+var build_counts: Dictionary = {}
 
 var target: Node2D
 var attack_timer: float = 0.0
@@ -103,16 +108,62 @@ func gain_exp(amount: int) -> void:
 func _level_up() -> void:
 	level += 1
 	exp_to_next_level = _required_exp_for_level(level)
-
-	# Prototype-only growth. Later this will be replaced/expanded by AI augment choices.
-	attack_damage += 3
-	max_hp += 10
-	current_hp = mini(current_hp + 10, max_hp)
 	level_flash_timer = 0.45
+
+	var candidates: Array = AUGMENT_CATALOG.roll_candidates(3)
+	var chosen: Dictionary = BUILD_AI.choose_candidate_v0(candidates)
+	_apply_augment(chosen)
 
 	health_changed.emit(current_hp, max_hp)
 	leveled_up.emit(level)
+	augment_selected.emit(
+		level,
+		candidates,
+		String(chosen.get("name", "알 수 없는 증강")),
+		String(chosen.get("decision_reason", "기본 판단")),
+		get_build_summary()
+	)
 	queue_redraw()
+
+func _apply_augment(augment: Dictionary) -> void:
+	var augment_id: String = String(augment.get("id", ""))
+
+	match augment_id:
+		"sword_mastery":
+			attack_damage += 8
+		"rapid_strikes":
+			attack_cooldown = maxf(attack_cooldown * 0.88, 0.18)
+		"iron_body":
+			max_hp += 45
+			current_hp = mini(current_hp + 45, max_hp)
+		"pursuit":
+			move_speed += 25.0
+		"long_reach":
+			attack_range += 20.0
+		"battle_recovery":
+			current_hp = mini(current_hp + 90, max_hp)
+
+	if not augment_id.is_empty():
+		var current_stack: int = int(build_counts.get(augment_id, 0))
+		build_counts[augment_id] = current_stack + 1
+
+func get_build_summary() -> String:
+	if build_counts.is_empty():
+		return "아직 선택 없음"
+
+	var parts: Array[String] = []
+	for augment in AUGMENT_CATALOG.AUGMENTS:
+		var augment_id: String = String(augment.get("id", ""))
+		var stacks: int = int(build_counts.get(augment_id, 0))
+		if stacks <= 0:
+			continue
+
+		var label: String = String(augment.get("name", augment_id))
+		if stacks > 1:
+			label += " x%d" % stacks
+		parts.append(label)
+
+	return " · ".join(parts)
 
 func _required_exp_for_level(target_level: int) -> int:
 	return 50 + maxi(target_level - 1, 0) * 25
