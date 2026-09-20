@@ -502,3 +502,10 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - **투사체 적용 순서 버그 수정:** `source_hero_id`는 Hero가 projectile을 생성한 뒤 `setup()`에서 전달되므로, 전용 비주얼 적용도 `setup()` 이후에 실행해야 한다.
 - 이 순서를 지켜 Stage 1에서는 전용 AnimatedSprite2D가 뜨고, 다른 Hero/에셋 누락 시에만 기존 원형 fallback을 사용한다.
 - Base64 리소스 방식은 사용하지 않는다.
+
+
+### Stage 1 투사체 Android 로딩 안정화 v2
+- 합본 시트를 128×128 AtlasTexture로 잘라 쓰던 경로에서 Android Editor 환경의 로딩 실패가 발생해 노란 fallback 탄이 보일 수 있었음.
+- 현재는 `projectile_01.png` ~ `projectile_04.png` **개별 PNG 4장을 직접 읽는 방식**으로 변경.
+- imported texture를 우선 사용하고, import cache가 아직 갱신되지 않았으면 `FileAccess` + `Image.load_png_from_buffer()`로 raw PNG를 직접 읽는다.
+- Base64는 사용하지 않는다.
