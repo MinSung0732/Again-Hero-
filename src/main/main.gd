@@ -36,13 +36,14 @@ func _ready() -> void:
 		int(snapshot.get("hero_exp_to_next", 50))
 	)
 	build_label.text = "용사 빌드: %s" % String(snapshot.get("hero_build_summary", "아직 선택 없음"))
+	status_label.text = "테스트 웨이브: %s\n초록=슬라임 · 보라=거미 · 갈색=오크" % String(snapshot.get("wave_summary", "혼합형"))
 
 	print("Again, Hero? portrait prototype loaded.")
-	print("Hero EXP / augment selection prototype enabled.")
+	print("Mixed monster waves / type-aware build AI enabled.")
 
 func _on_stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int) -> void:
 	hero_hp_label.text = "용사 HP %d / %d" % [hero_hp, hero_max_hp]
-	monsters_label.text = "슬라임 %d" % monsters_left
+	monsters_label.text = "몬스터 %d" % monsters_left
 
 func _on_progression_changed(level: int, current_exp: int, exp_to_next_level: int) -> void:
 	hero_level_label.text = "Lv.%d" % level
@@ -72,7 +73,7 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 		status_label.text = "용사를 쓰러뜨렸습니다.\n첫 번째 전투 시스템 검증 성공!"
 	else:
 		result_title.text = "EXPERIMENT FAILED"
-		status_label.text = "용사가 슬라임을 전멸시켰습니다.\n다음 실험에서는 용사 성장과 증강을 확장합니다."
+		status_label.text = "용사가 마왕군을 전멸시켰습니다.\n다음 실험에서는 직접 공세를 설계하게 됩니다."
 
 	result_message.text = message
 	result_panel.show()
