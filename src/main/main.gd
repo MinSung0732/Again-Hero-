@@ -1,6 +1,7 @@
 extends Control
 
 @onready var battle = $Battle
+@onready var subtitle_label: Label = $TopBar/Subtitle
 @onready var hero_level_label: Label = $TopBar/HeroLevel
 @onready var hero_hp_label: Label = $TopBar/HeroHP
 @onready var monsters_label: Label = $TopBar/Monsters
@@ -43,6 +44,12 @@ func _ready() -> void:
 	restart_button.pressed.connect(_on_restart_pressed)
 
 	var snapshot: Dictionary = battle.get_snapshot()
+	subtitle_label.text = "Stage %d · %s · %s" % [
+		int(snapshot.get("stage_number", 1)),
+		String(snapshot.get("stage_name", "첫 번째 침입자")),
+		String(snapshot.get("hero_name", "견습 마도사")),
+	]
+
 	_on_stats_changed(
 		int(snapshot.get("hero_hp", 0)),
 		int(snapshot.get("hero_max_hp", 0)),
@@ -176,8 +183,8 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	placement_toggle.disabled = true
 
 	if player_won:
-		result_title.text = "HERO SLAIN"
-		status_label.text = "용사를 쓰러뜨렸습니다. 마왕 승리!"
+		result_title.text = "STAGE CLEAR"
+		status_label.text = "용사를 쓰러뜨렸습니다. 스테이지 클리어!"
 	else:
 		result_title.text = "EXPERIMENT FAILED"
 		status_label.text = "이번 실험이 종료되었습니다."
