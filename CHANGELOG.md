@@ -402,3 +402,18 @@
 - 이제 Stage 1 스프라이트 로더는 imported Texture2D를 먼저 시도하고, 실패 시 실제 `res://` PNG 파일을 `Image.load()`로 직접 읽어 `ImageTexture`로 생성.
 - Base64 사용 없음.
 - `tools/install_stage1_mage_art.sh`에 PNG 추출 파일 크기 검증 추가.
+
+
+### Stage 1 Mage Projectile Animation v1
+- Stage 1 견습 마도사의 기존 노란 원형 테스트 투사체를 전용 마법탄 애니메이션으로 교체.
+- 사용자 제공 4프레임을 하나의 PNG 스프라이트시트로 정리해 사용.
+- **Base64 사용 없음.**
+- `HeroProjectile.tscn`에 `AnimatedSprite2D` 추가.
+- fly: 4 frames / 12 FPS / loop.
+- 스프라이트시트 셀 크기: 128×128.
+- 발사 방향에 맞춰 projectile node를 회전시켜 상/하/대각선 발사에도 자연스럽게 진행.
+- `Hero._fire_projectile()`가 source hero id를 투사체에 전달하도록 변경.
+- Stage 1 `ranged_rookie`에서만 전용 마법탄 표시, 다른 Hero는 기존 원형 테스트 탄환 유지.
+- PNG import/cache가 늦는 Android Editor에서는 raw PNG 직접 로드 fallback 지원.
+- 기존 투사체 속도 / 사거리 / 피해 / 충돌 판정 로직 유지.
+- `tools/install_stage1_projectile_art.sh` 추가.
