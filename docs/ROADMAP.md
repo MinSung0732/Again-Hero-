@@ -127,12 +127,14 @@
 - [x] 현재 Stage / 최고 해금 Stage 진행 상태 저장
 - [x] Stage 클리어 판정
 - [x] 결과창 다음 스테이지 버튼
+- [x] 연구 포인트 영구 저장
+- [x] Stage별 최초 클리어 연구 포인트 보상
 - [x] Stage 1 클리어 → Stage 2 해금
-- [ ] 최초 클리어 보상 연결
+- [x] 최초 클리어 보상 연결
 - [x] Stage별 Hero 기본 스탯 보정
 - [ ] Stage별 Hero AI 성향/증강 풀 분리
-- [ ] 전체 Stage 선택 화면
-- [ ] 과거 Stage 재도전 허용
+- [x] 전체 Stage 선택 화면
+- [x] 과거 Stage 재도전 허용
 - [ ] 메타 성장 후 초기 Stage 압도 체감 검증
 
 ## Milestone 5 — 핵심 재미 검증
