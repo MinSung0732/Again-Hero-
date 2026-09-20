@@ -14,7 +14,7 @@ script = ExtResource("1_hero")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_hero")
 
-[node name="HeroSprite" type="Sprite2D" parent="."]
+[node name="HeroSprite" type="AnimatedSprite2D" parent="."]
 visible = false
 z_index = 1
 texture_filter = 1
