@@ -182,38 +182,48 @@ res://
 
 ## 12. 현재 개발 단계
 
-**Phase 0 — Repository / Project Skeleton**
+**Phase 1 — Hero ↔ Slime 최소 자동전투**
 
-현재 목표:
-- Godot 프로젝트가 열리고 실행된다.
-- 기본 전투 화면의 자리만 잡는다.
-- 이후 Hero/Monster 최소 전투를 만든다.
+현재 구현됨:
+- Godot Android Editor에서 프로젝트 열기 확인
+- Battle 씬
+- 기사형 Hero 자동 이동/가장 가까운 몬스터 탐색/자동 공격
+- Slime 추적/공격
+- HP / 데미지 / 사망
+- Hero HP 및 남은 Slime 수 HUD
+- 전투 종료 결과 화면
+- "다시 실험하기" 재시작 버튼
+- 외부 아트 없이 GDScript draw 함수로 테스트용 캐릭터 표시
+
+현재 초기 전투는 Hero 1명과 Slime 6마리가 자동으로 전투한다.
+용사가 죽으면 플레이어(마왕) 승리, Slime이 전멸하면 실험 실패로 처리한다.
+
+실기기에서 Milestone 1 실행 및 밸런스 검증 후 Milestone 2로 이동한다.
 
 아직 완성되지 않은 것:
-- 실제 전투
-- 몬스터 소환
-- AI 빌드
+- Hero EXP / 레벨업
+- AI 빌드 선택
+- 플레이어 몬스터 소환
+- 지휘력
+- Spider / Orc
 - 메타 성장
 - 저장 시스템
-- 아트/사운드
+- 정식 아트/사운드
 
 ## 13. 다음 구현 순서
 
 다음 작업은 순서를 크게 바꾸지 않는다.
 
-1. Godot 프로젝트 실행 확인
-2. Battle 씬 생성
-3. Hero 이동/공격
-4. Slime 한 종류 생성
-5. Hero ↔ Slime 전투
-6. 몬스터 사망 → Hero EXP 획득
-7. Hero 레벨업
-8. BuildAI가 3개 후보 중 하나 선택
-9. 지휘력 + 소환 UI
-10. Spider / Orc 추가
-11. AI가 몬스터 구성에 반응
-12. Run 종료 및 결과 화면
-13. 연구/메타 진행 프로토타입
+1. Milestone 1 Android 실기기 실행 검증
+2. 몬스터 사망 → Hero EXP 획득
+3. Hero 레벨업
+4. 스킬/패시브 후보 3개 생성
+5. BuildAI가 후보 중 하나 선택
+6. 지휘력 + 소환 UI
+7. Spider / Orc 추가
+8. AI가 몬스터 구성에 반응
+9. Run 종료/통계 확장
+10. 연구/메타 진행 프로토타입
 
 ## 14. 새 채팅에서 AI에게 기대하는 작업 방식
 
