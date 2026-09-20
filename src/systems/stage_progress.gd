@@ -8,14 +8,22 @@ static func load_state() -> Dictionary:
 	var state := {
 		"current_stage_id": "stage_1",
 		"highest_unlocked_stage": 1,
+		"research_points": 0,
 	}
 
 	var error := config.load(SAVE_PATH)
 	if error != OK:
 		return state
 
-	state["current_stage_id"] = String(config.get_value("progress", "current_stage_id", "stage_1"))
-	state["highest_unlocked_stage"] = int(config.get_value("progress", "highest_unlocked_stage", 1))
+	state["current_stage_id"] = String(
+		config.get_value("progress", "current_stage_id", "stage_1")
+	)
+	state["highest_unlocked_stage"] = int(
+		config.get_value("progress", "highest_unlocked_stage", 1)
+	)
+	state["research_points"] = int(
+		config.get_value("meta", "research_points", 0)
+	)
 	return state
 
 static func set_current_stage(stage_id: String) -> void:
@@ -23,12 +31,27 @@ static func set_current_stage(stage_id: String) -> void:
 	state["current_stage_id"] = stage_id
 	_save_state(state)
 
-static func complete_stage(stage_id: String, stage_number: int, next_stage_id: String, next_stage_number: int) -> void:
+static func complete_stage(
+	stage_id: String,
+	stage_number: int,
+	next_stage_id: String,
+	next_stage_number: int,
+	first_clear_reward: int
+) -> Dictionary:
 	var state := load_state()
 	var config := ConfigFile.new()
 	config.load(SAVE_PATH)
 
+	var was_cleared := bool(config.get_value("cleared", stage_id, false))
+	var reward_claimed := bool(config.get_value("reward_claimed", stage_id, false))
+	var granted_reward := 0
+
 	config.set_value("cleared", stage_id, true)
+
+	if not reward_claimed and first_clear_reward > 0:
+		granted_reward = first_clear_reward
+		state["research_points"] = int(state.get("research_points", 0)) + granted_reward
+		config.set_value("reward_claimed", stage_id, true)
 
 	if not next_stage_id.is_empty() and next_stage_number > 0:
 		state["highest_unlocked_stage"] = maxi(
@@ -37,9 +60,30 @@ static func complete_stage(stage_id: String, stage_number: int, next_stage_id: S
 		)
 
 	state["current_stage_id"] = stage_id
-	config.set_value("progress", "current_stage_id", String(state["current_stage_id"]))
-	config.set_value("progress", "highest_unlocked_stage", int(state["highest_unlocked_stage"]))
+	config.set_value(
+		"progress",
+		"current_stage_id",
+		String(state["current_stage_id"])
+	)
+	config.set_value(
+		"progress",
+		"highest_unlocked_stage",
+		int(state["highest_unlocked_stage"])
+	)
+	config.set_value(
+		"meta",
+		"research_points",
+		int(state.get("research_points", 0))
+	)
 	config.save(SAVE_PATH)
+
+	return {
+		"was_cleared": was_cleared,
+		"first_clear": not was_cleared,
+		"reward": granted_reward,
+		"research_points": int(state.get("research_points", 0)),
+		"highest_unlocked_stage": int(state.get("highest_unlocked_stage", 1)),
+	}
 
 static func is_stage_unlocked(stage_number: int) -> bool:
 	var state := load_state()
@@ -51,9 +95,32 @@ static func is_stage_cleared(stage_id: String) -> bool:
 		return false
 	return bool(config.get_value("cleared", stage_id, false))
 
+static func is_reward_claimed(stage_id: String) -> bool:
+	var config := ConfigFile.new()
+	if config.load(SAVE_PATH) != OK:
+		return false
+	return bool(config.get_value("reward_claimed", stage_id, false))
+
+static func get_research_points() -> int:
+	var state := load_state()
+	return int(state.get("research_points", 0))
+
 static func _save_state(state: Dictionary) -> void:
 	var config := ConfigFile.new()
 	config.load(SAVE_PATH)
-	config.set_value("progress", "current_stage_id", String(state.get("current_stage_id", "stage_1")))
-	config.set_value("progress", "highest_unlocked_stage", int(state.get("highest_unlocked_stage", 1)))
+	config.set_value(
+		"progress",
+		"current_stage_id",
+		String(state.get("current_stage_id", "stage_1"))
+	)
+	config.set_value(
+		"progress",
+		"highest_unlocked_stage",
+		int(state.get("highest_unlocked_stage", 1))
+	)
+	config.set_value(
+		"meta",
+		"research_points",
+		int(state.get("research_points", 0))
+	)
 	config.save(SAVE_PATH)
