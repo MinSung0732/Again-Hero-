@@ -228,3 +228,27 @@
 - 상단 HUD의 부제에 `Stage 번호 · Stage 이름 · Hero 이름` 표시.
 - Hero 처치 결과를 `STAGE CLEAR`로 변경하고 현재 Stage/용사 이름을 결과 메시지에 표시.
 - 다음 단계는 Stage 진행 상태와 Stage 1 최초 클리어 → Stage 2 해금 흐름.
+
+
+### Finite World Camera + Stage Progress v2
+- 기존 한 화면 고정 전장을 **유한 대형 월드 + Hero 추적 카메라** 구조로 전환.
+- Stage 데이터에 맵 크기를 추가:
+  - Stage 1: 3200×3200
+  - Stage 2: 3600×3600
+- Hero scene에 `Camera2D` 추가.
+- Camera2D가 Hero를 부드럽게 추적하고 Stage 맵 경계를 넘지 않도록 limit 적용.
+- Hero 배회/카이팅 경계도 기존 화면 크기 하드코딩 대신 현재 Stage 맵 크기를 사용하도록 변경.
+- 전투 월드에 320px 간격 테스트 그리드를 추가해 카메라 이동을 시각적으로 확인할 수 있도록 함.
+- HUD를 `CanvasLayer`로 분리해 카메라가 움직여도 상단/하단 UI는 화면에 고정.
+- 수동 배치 입력을 카메라 canvas transform의 역변환으로 실제 월드 좌표에 매핑.
+- 상단/하단 HUD 영역 터치는 수동 배치로 처리하지 않도록 제한.
+- 자동 배치를 맵 고정 스폰 지점에서 **현재 Hero 기준 560~720px 거리의 외곽 스폰**으로 변경.
+- `stage_progress.gd` 추가:
+  - 현재 Stage id
+  - 최고 해금 Stage 번호
+  - Stage 클리어 여부
+  - `user://stage_progress.cfg` 저장
+- Stage 1 클리어 시 Stage 2를 영구 해금하도록 연결.
+- 결과창에 **다음 스테이지** 버튼 추가.
+- Stage 2의 기동 사냥꾼을 실제로 진입 가능한 프로토타입 Stage로 연결.
+- Stage 2는 현재 마지막 프로토타입 Stage라 다음 Stage 버튼이 표시되지 않음.
