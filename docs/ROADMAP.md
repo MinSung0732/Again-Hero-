@@ -96,6 +96,22 @@
 - [x] Orc 소환
 - [x] 모바일 터치 입력
 
+## Milestone 4.5 — Stage / Hero Progression
+
+완료 조건: Stage 1을 클리어하면 Stage 2가 해금되고, 스테이지마다 다른 Hero 데이터/성향을 사용할 수 있다.
+
+- [ ] Stage 데이터 구조
+- [ ] Hero archetype/profile 데이터 구조
+- [ ] Stage 1 = 현재 원거리 카이팅 Hero로 고정
+- [ ] Stage 선택/진행 상태
+- [ ] Stage 클리어 판정
+- [ ] 다음 Stage 해금
+- [ ] 최초 클리어 보상 연결
+- [ ] Stage별 Hero 기본 스탯 보정
+- [ ] Stage별 Hero AI 성향/증강 풀 분리
+- [ ] 과거 Stage 재도전 허용
+- [ ] 메타 성장 후 초기 Stage 압도 체감 검증
+
 ## Milestone 5 — 핵심 재미 검증
 
 완료 조건: 몬스터 구성 변화 때문에 AI의 빌드가 달라지고, 플레이어가 이를 역이용할 수 있다.
