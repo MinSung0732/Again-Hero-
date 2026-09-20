@@ -12,8 +12,10 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_main")
 
-[node name="Background" type="ColorRect" parent="."]
-layout_mode = 1
+[node name="ScreenBackground" type="CanvasLayer" parent="."]
+layer = -10
+
+[node name="Background" type="ColorRect" parent="ScreenBackground"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -23,10 +25,11 @@ mouse_filter = 2
 color = Color(0.035, 0.038, 0.052, 1)
 
 [node name="Battle" parent="." instance=ExtResource("2_battle")]
-position = Vector2(0, 280)
 
-[node name="TopBar" type="ColorRect" parent="."]
-layout_mode = 1
+[node name="HUD" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="TopBar" type="ColorRect" parent="HUD"]
 anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 270.0
@@ -34,8 +37,7 @@ grow_horizontal = 2
 mouse_filter = 2
 color = Color(0.055, 0.058, 0.078, 0.98)
 
-[node name="Title" type="Label" parent="TopBar"]
-layout_mode = 0
+[node name="Title" type="Label" parent="HUD/TopBar"]
 offset_left = 40.0
 offset_top = 20.0
 offset_right = 1040.0
@@ -43,17 +45,15 @@ offset_bottom = 80.0
 theme_override_font_sizes/font_size = 48
 text = "용사, 또 너야?"
 
-[node name="Subtitle" type="Label" parent="TopBar"]
-layout_mode = 0
+[node name="Subtitle" type="Label" parent="HUD/TopBar"]
 offset_left = 42.0
 offset_top = 86.0
 offset_right = 1038.0
 offset_bottom = 124.0
 theme_override_font_sizes/font_size = 20
-text = "Again, Hero? · Demon Commander Prototype"
+text = "Stage 1 · 첫 번째 침입자 · 견습 마도사"
 
-[node name="HeroLevel" type="Label" parent="TopBar"]
-layout_mode = 0
+[node name="HeroLevel" type="Label" parent="HUD/TopBar"]
 offset_left = 40.0
 offset_top = 142.0
 offset_right = 240.0
@@ -62,8 +62,7 @@ theme_override_font_sizes/font_size = 30
 text = "Lv.1"
 vertical_alignment = 1
 
-[node name="HeroHP" type="Label" parent="TopBar"]
-layout_mode = 0
+[node name="HeroHP" type="Label" parent="HUD/TopBar"]
 offset_left = 215.0
 offset_top = 142.0
 offset_right = 690.0
@@ -72,8 +71,7 @@ theme_override_font_sizes/font_size = 27
 text = "용사 HP 300 / 300"
 vertical_alignment = 1
 
-[node name="Monsters" type="Label" parent="TopBar"]
-layout_mode = 0
+[node name="Monsters" type="Label" parent="HUD/TopBar"]
 offset_left = 720.0
 offset_top = 142.0
 offset_right = 1040.0
@@ -83,8 +81,7 @@ text = "몬스터 0"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="ExpLabel" type="Label" parent="TopBar"]
-layout_mode = 0
+[node name="ExpLabel" type="Label" parent="HUD/TopBar"]
 offset_left = 40.0
 offset_top = 207.0
 offset_right = 260.0
@@ -93,8 +90,7 @@ theme_override_font_sizes/font_size = 21
 text = "EXP 0 / 50"
 vertical_alignment = 1
 
-[node name="ExpBar" type="ProgressBar" parent="TopBar"]
-layout_mode = 0
+[node name="ExpBar" type="ProgressBar" parent="HUD/TopBar"]
 offset_left = 265.0
 offset_top = 216.0
 offset_right = 1040.0
@@ -102,8 +98,7 @@ offset_bottom = 244.0
 max_value = 50.0
 show_percentage = false
 
-[node name="BottomBar" type="ColorRect" parent="."]
-layout_mode = 1
+[node name="BottomBar" type="ColorRect" parent="HUD"]
 anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
@@ -113,8 +108,7 @@ grow_horizontal = 2
 grow_vertical = 0
 color = Color(0.055, 0.058, 0.078, 0.98)
 
-[node name="BuildLabel" type="Label" parent="BottomBar"]
-layout_mode = 0
+[node name="BuildLabel" type="Label" parent="HUD/BottomBar"]
 offset_left = 36.0
 offset_top = 10.0
 offset_right = 1044.0
@@ -125,8 +119,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="Status" type="Label" parent="BottomBar"]
-layout_mode = 0
+[node name="Status" type="Label" parent="HUD/BottomBar"]
 offset_left = 36.0
 offset_top = 50.0
 offset_right = 748.0
@@ -137,8 +130,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="PlacementModeToggle" type="CheckButton" parent="BottomBar"]
-layout_mode = 0
+[node name="PlacementModeToggle" type="CheckButton" parent="HUD/BottomBar"]
 offset_left = 770.0
 offset_top = 56.0
 offset_right = 1040.0
@@ -147,8 +139,7 @@ theme_override_font_sizes/font_size = 20
 button_pressed = true
 text = "자동 배치"
 
-[node name="CommandLabel" type="Label" parent="BottomBar"]
-layout_mode = 0
+[node name="CommandLabel" type="Label" parent="HUD/BottomBar"]
 offset_left = 40.0
 offset_top = 118.0
 offset_right = 300.0
@@ -157,8 +148,7 @@ theme_override_font_sizes/font_size = 23
 text = "지휘력 0 / 100"
 vertical_alignment = 1
 
-[node name="CommandBar" type="ProgressBar" parent="BottomBar"]
-layout_mode = 0
+[node name="CommandBar" type="ProgressBar" parent="HUD/BottomBar"]
 offset_left = 300.0
 offset_top = 126.0
 offset_right = 1040.0
@@ -167,77 +157,82 @@ max_value = 100.0
 value = 0.0
 show_percentage = false
 
-[node name="SummonButtons" type="HBoxContainer" parent="BottomBar"]
-layout_mode = 0
+[node name="SummonButtons" type="HBoxContainer" parent="HUD/BottomBar"]
 offset_left = 40.0
 offset_top = 174.0
 offset_right = 1040.0
 offset_bottom = 340.0
 theme_override_constants/separation = 18
 
-[node name="SlimeButton" type="Button" parent="BottomBar/SummonButtons"]
+[node name="SlimeButton" type="Button" parent="HUD/BottomBar/SummonButtons"]
 custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 25
 text = "슬라임\n비용 3"
 
-[node name="SpiderButton" type="Button" parent="BottomBar/SummonButtons"]
+[node name="SpiderButton" type="Button" parent="HUD/BottomBar/SummonButtons"]
 custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 25
 text = "거미\n비용 7"
 
-[node name="OrcButton" type="Button" parent="BottomBar/SummonButtons"]
+[node name="OrcButton" type="Button" parent="HUD/BottomBar/SummonButtons"]
 custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 25
 text = "오크\n비용 18"
 
-[node name="ResultPanel" type="PanelContainer" parent="."]
+[node name="ResultPanel" type="PanelContainer" parent="HUD"]
 visible = false
-layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -420.0
-offset_top = -260.0
+offset_top = -300.0
 offset_right = 420.0
-offset_bottom = 260.0
+offset_bottom = 300.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Margin" type="MarginContainer" parent="ResultPanel"]
+[node name="Margin" type="MarginContainer" parent="HUD/ResultPanel"]
 layout_mode = 2
 theme_override_constants/margin_left = 48
 theme_override_constants/margin_top = 48
 theme_override_constants/margin_right = 48
 theme_override_constants/margin_bottom = 48
 
-[node name="VBox" type="VBoxContainer" parent="ResultPanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="HUD/ResultPanel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 34
+theme_override_constants/separation = 26
 alignment = 1
 
-[node name="ResultTitle" type="Label" parent="ResultPanel/Margin/VBox"]
+[node name="ResultTitle" type="Label" parent="HUD/ResultPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 46
 text = "전투 종료"
 horizontal_alignment = 1
 
-[node name="ResultMessage" type="Label" parent="ResultPanel/Margin/VBox"]
+[node name="ResultMessage" type="Label" parent="HUD/ResultPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "결과"
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="RestartButton" type="Button" parent="ResultPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 110)
+[node name="NextStageButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
+visible = false
+custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "다시 실험하기"
+theme_override_font_sizes/font_size = 28
+text = "다음 스테이지"
+
+[node name="RestartButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "같은 스테이지 다시 도전"
