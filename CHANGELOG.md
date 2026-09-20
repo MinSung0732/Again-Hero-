@@ -311,3 +311,12 @@
 ### Demon EXP Feedback Patch
 - 소환 성공 메시지에 획득한 마왕 EXP를 함께 표시.
 - 소환 성공 UI가 먼저 갱신된 뒤 마왕 레벨업/증강 팝업이 열리도록 신호 순서를 조정해 안내 문구가 덮이는 문제를 방지.
+
+
+### Critical Fix — Hero 0/0 / Stage 1 Sprite Loader
+- SubViewport 전환 이후 Stage 1에서 Hero가 보이지 않고 HUD가 `HP 0 / 0`으로 표시되는 문제 수정.
+- 원인: Stage 1 SVG를 Hero script 상단에서 직접 `preload()`하면서 Android Godot의 리소스 import 실패가 Hero script 로딩 전체에 영향을 줄 수 있었음.
+- Hero script에서 Stage 1 SVG 직접 preload 의존성을 제거.
+- 사용자가 제공한 실제 **32×32 RGBA PNG**를 Base64 데이터로 내장하고 런타임에 `Image.load_png_from_buffer()` → `ImageTexture`로 안전하게 생성하도록 변경.
+- PNG 디코딩/아트 로딩이 실패해도 Hero script와 전투 로직은 정상 유지되며 기존 플레이스홀더 Hero를 표시하도록 fallback 보장.
+- 아트 리소스 실패가 다시 전투 전체 생성 실패로 이어지지 않도록 게임 로직과 비주얼 로딩을 분리.
