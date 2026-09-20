@@ -417,3 +417,17 @@
 - PNG import/cache가 늦는 Android Editor에서는 raw PNG 직접 로드 fallback 지원.
 - 기존 투사체 속도 / 사거리 / 피해 / 충돌 판정 로직 유지.
 - `tools/install_stage1_projectile_art.sh` 추가.
+
+
+### Stage 1 Projectile Animation Apply Fix
+- 사용자가 제공한 마법탄 4프레임을 투명 배경 게임용 리소스로 정리:
+  - projectile_01~04
+  - 128×128 공통 셀
+  - 512×128 sprite sheet
+  - fly 4프레임 / 12 FPS / loop
+- 투사체 코어/진행축을 공통 anchor로 맞춤.
+- 치명적 적용 순서 버그 수정:
+  - 기존에는 `_ready()`에서 비주얼을 먼저 적용해 `source_hero_id`가 비어 있었고 Stage 1 애니메이션이 항상 fallback 됨.
+  - 이제 `setup()`에서 Hero id를 받은 뒤 Stage 1 projectile visual을 적용.
+- AnimatedSprite2D offset을 조정해 빛나는 코어가 충돌/회전 중심에 오도록 정렬.
+- 기존 데미지/속도/사거리 로직은 유지.
