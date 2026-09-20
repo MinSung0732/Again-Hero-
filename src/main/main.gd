@@ -1,26 +1,32 @@
 extends Control
 
+const BATTLE_VIEW_TOP := 270.0
+const BATTLE_VIEW_BOTTOM := 1560.0
+const LOGICAL_WIDTH := 1080.0
+
 @onready var battle = $Battle
-@onready var subtitle_label: Label = $TopBar/Subtitle
-@onready var hero_level_label: Label = $TopBar/HeroLevel
-@onready var hero_hp_label: Label = $TopBar/HeroHP
-@onready var monsters_label: Label = $TopBar/Monsters
-@onready var exp_label: Label = $TopBar/ExpLabel
-@onready var exp_bar: ProgressBar = $TopBar/ExpBar
 
-@onready var build_label: Label = $BottomBar/BuildLabel
-@onready var status_label: Label = $BottomBar/Status
-@onready var placement_toggle: CheckButton = $BottomBar/PlacementModeToggle
-@onready var command_label: Label = $BottomBar/CommandLabel
-@onready var command_bar: ProgressBar = $BottomBar/CommandBar
-@onready var slime_button: Button = $BottomBar/SummonButtons/SlimeButton
-@onready var spider_button: Button = $BottomBar/SummonButtons/SpiderButton
-@onready var orc_button: Button = $BottomBar/SummonButtons/OrcButton
+@onready var subtitle_label: Label = $HUD/TopBar/Subtitle
+@onready var hero_level_label: Label = $HUD/TopBar/HeroLevel
+@onready var hero_hp_label: Label = $HUD/TopBar/HeroHP
+@onready var monsters_label: Label = $HUD/TopBar/Monsters
+@onready var exp_label: Label = $HUD/TopBar/ExpLabel
+@onready var exp_bar: ProgressBar = $HUD/TopBar/ExpBar
 
-@onready var result_panel: PanelContainer = $ResultPanel
-@onready var result_title: Label = $ResultPanel/Margin/VBox/ResultTitle
-@onready var result_message: Label = $ResultPanel/Margin/VBox/ResultMessage
-@onready var restart_button: Button = $ResultPanel/Margin/VBox/RestartButton
+@onready var build_label: Label = $HUD/BottomBar/BuildLabel
+@onready var status_label: Label = $HUD/BottomBar/Status
+@onready var placement_toggle: CheckButton = $HUD/BottomBar/PlacementModeToggle
+@onready var command_label: Label = $HUD/BottomBar/CommandLabel
+@onready var command_bar: ProgressBar = $HUD/BottomBar/CommandBar
+@onready var slime_button: Button = $HUD/BottomBar/SummonButtons/SlimeButton
+@onready var spider_button: Button = $HUD/BottomBar/SummonButtons/SpiderButton
+@onready var orc_button: Button = $HUD/BottomBar/SummonButtons/OrcButton
+
+@onready var result_panel: PanelContainer = $HUD/ResultPanel
+@onready var result_title: Label = $HUD/ResultPanel/Margin/VBox/ResultTitle
+@onready var result_message: Label = $HUD/ResultPanel/Margin/VBox/ResultMessage
+@onready var next_stage_button: Button = $HUD/ResultPanel/Margin/VBox/NextStageButton
+@onready var restart_button: Button = $HUD/ResultPanel/Margin/VBox/RestartButton
 
 var auto_placement: bool = true
 var selected_monster_type: String = ""
@@ -41,14 +47,11 @@ func _ready() -> void:
 	slime_button.pressed.connect(_on_summon_pressed.bind("slime"))
 	spider_button.pressed.connect(_on_summon_pressed.bind("spider"))
 	orc_button.pressed.connect(_on_summon_pressed.bind("orc"))
+	next_stage_button.pressed.connect(_on_next_stage_pressed)
 	restart_button.pressed.connect(_on_restart_pressed)
 
 	var snapshot: Dictionary = battle.get_snapshot()
-	subtitle_label.text = "Stage %d · %s · %s" % [
-		int(snapshot.get("stage_number", 1)),
-		String(snapshot.get("stage_name", "첫 번째 침입자")),
-		String(snapshot.get("hero_name", "견습 마도사")),
-	]
+	_apply_stage_snapshot(snapshot)
 
 	_on_stats_changed(
 		int(snapshot.get("hero_hp", 0)),
@@ -69,8 +72,15 @@ func _ready() -> void:
 	placement_toggle.button_pressed = true
 	_on_placement_mode_toggled(true)
 
-	print("Again, Hero? portrait prototype loaded.")
-	print("Auto/manual demon placement enabled.")
+	print("Again, Hero? stage/camera prototype loaded.")
+	print("Finite world camera + persistent stage progression enabled.")
+
+func _apply_stage_snapshot(snapshot: Dictionary) -> void:
+	subtitle_label.text = "Stage %d · %s · %s" % [
+		int(snapshot.get("stage_number", 1)),
+		String(snapshot.get("stage_name", "첫 번째 침입자")),
+		String(snapshot.get("hero_name", "견습 마도사")),
+	]
 
 func _input(event: InputEvent) -> void:
 	if result_panel.visible or auto_placement or selected_monster_type.is_empty():
@@ -91,7 +101,18 @@ func _input(event: InputEvent) -> void:
 	if not is_pressed:
 		return
 
-	var battle_position: Vector2 = battle.to_local(pointer_position)
+	if (
+		pointer_position.x < 0.0
+		or pointer_position.x > LOGICAL_WIDTH
+		or pointer_position.y < BATTLE_VIEW_TOP
+		or pointer_position.y > BATTLE_VIEW_BOTTOM
+	):
+		return
+
+	var canvas_inverse := get_viewport().get_canvas_transform().affine_inverse()
+	var world_position: Vector2 = canvas_inverse * pointer_position
+	var battle_position: Vector2 = battle.to_local(world_position)
+
 	if not battle.is_spawn_position_valid(battle_position):
 		return
 
@@ -122,13 +143,13 @@ func _on_placement_mode_toggled(auto_enabled: bool) -> void:
 
 	if auto_placement:
 		placement_toggle.text = "자동 배치"
-		status_label.text = "자동 배치: 몬스터 버튼을 누르면 가장자리에서 즉시 소환됩니다."
+		status_label.text = "자동 배치: 용사 주변 바깥쪽에서 몬스터가 소환됩니다."
 	else:
 		placement_toggle.text = "수동 배치"
 		if selected_monster_type.is_empty():
-			status_label.text = "수동 배치: 몬스터 버튼을 선택한 뒤 전장을 터치하세요."
+			status_label.text = "수동 배치: 몬스터 버튼을 선택한 뒤 현재 화면의 전장을 터치하세요."
 		else:
-			status_label.text = "수동 배치: %s 선택됨 · 전장을 터치하세요." % _get_monster_name(selected_monster_type)
+			status_label.text = "수동 배치: %s 선택됨 · 현재 화면을 터치하세요." % _get_monster_name(selected_monster_type)
 
 func _on_summon_pressed(monster_type: String) -> void:
 	if auto_placement:
@@ -136,7 +157,7 @@ func _on_summon_pressed(monster_type: String) -> void:
 		return
 
 	selected_monster_type = monster_type
-	status_label.text = "수동 배치: %s 선택됨 · 원하는 위치를 계속 터치해 배치하세요." % _get_monster_name(monster_type)
+	status_label.text = "수동 배치: %s 선택됨 · 현재 보이는 전장을 터치해 연속 배치하세요." % _get_monster_name(monster_type)
 
 func _on_summon_result(_monster_type: String, success: bool, message: String) -> void:
 	if not success:
@@ -185,12 +206,18 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	if player_won:
 		result_title.text = "STAGE CLEAR"
 		status_label.text = "용사를 쓰러뜨렸습니다. 스테이지 클리어!"
+		next_stage_button.visible = battle.can_go_to_next_stage()
 	else:
 		result_title.text = "EXPERIMENT FAILED"
 		status_label.text = "이번 실험이 종료되었습니다."
+		next_stage_button.visible = false
 
 	result_message.text = message
 	result_panel.show()
+
+func _on_next_stage_pressed() -> void:
+	if battle.go_to_next_stage():
+		get_tree().reload_current_scene()
 
 func _on_restart_pressed() -> void:
 	get_tree().reload_current_scene()
