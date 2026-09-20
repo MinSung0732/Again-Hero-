@@ -45,7 +45,7 @@ func _physics_process(delta: float) -> void:
 		if attack_timer <= 0.0:
 			attack_timer = attack_cooldown
 			if hero.has_method("take_damage"):
-				hero.take_damage(attack_damage)
+				hero.call("take_damage", attack_damage)
 
 func take_damage(amount: int) -> void:
 	if current_hp <= 0:
