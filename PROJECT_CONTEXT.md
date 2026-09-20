@@ -468,3 +468,14 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 > AI 용사의 선택을 관찰하고, 그 선택을 일부러 유도한 뒤 카운터하는 과정이 실제로 재미있는가?
 
 모든 초기 개발은 이 질문을 검증하는 방향으로 진행한다.
+
+
+### Stage 1 스프라이트 Android Editor 로딩 안정화
+- Termux로 PNG를 설치한 직후 Android Godot Editor의 import/cache가 아직 갱신되지 않으면 `ResourceLoader.exists()`가 false가 되어 기존 도형 Hero로 fallback되는 문제가 확인됨.
+- Stage 1 스프라이트시트 로딩은 이제:
+  1. Godot imported Texture2D 로드 시도
+  2. 실패 시 `FileAccess.file_exists(res://...)` 확인
+  3. raw PNG를 `Image.load()`로 직접 읽고 `ImageTexture` 생성
+  순서로 처리한다.
+- 따라서 파일이 실제 프로젝트 폴더에 있으면 import 캐시가 늦어도 Stage 1 도트가 표시된다.
+- Base64 방식은 사용하지 않는다.
