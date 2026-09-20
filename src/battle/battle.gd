@@ -6,7 +6,8 @@ signal hero_leveled_up(new_level: int)
 signal hero_augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String)
 signal command_changed(current_value: float, max_value: float)
 signal summon_result(monster_type: String, success: bool, message: String)
-signal demon_augment_ready(candidates: Array, rerolls_left: int, selection_index: int)
+signal demon_progression_changed(level: int, current_exp: float, exp_to_next_level: float)
+signal demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: int)
 signal demon_augment_applied(augment_name: String, build_summary: String)
 signal battle_finished(message: String, player_won: bool)
 
@@ -28,7 +29,8 @@ const BASE_MAX_COMMAND := 100.0
 const START_COMMAND := 0.0
 const BASE_COMMAND_REGEN_PER_SECOND := 3.0
 const MANUAL_SPAWN_MARGIN := 70.0
-const DEMON_AUGMENT_SPEND_THRESHOLDS = [30.0, 75.0, 130.0]
+const DEMON_BASE_EXP_TO_NEXT := 30.0
+const DEMON_EXP_GROWTH_PER_LEVEL := 15.0
 
 const MONSTER_COSTS := {
 	"slime": 3.0,
@@ -49,7 +51,11 @@ var max_command: float = BASE_MAX_COMMAND
 var command_power: float = START_COMMAND
 var command_regen_per_second: float = BASE_COMMAND_REGEN_PER_SECOND
 var command_emit_timer: float = 0.0
-var total_command_spent: float = 0.0
+
+var demon_level: int = 1
+var demon_exp: float = 0.0
+var demon_exp_to_next_level: float = DEMON_BASE_EXP_TO_NEXT
+var demon_pending_augments: int = 0
 
 var summon_cost_multiplier: float = 1.0
 var monster_speed_multiplier: float = 1.0
@@ -59,7 +65,6 @@ var slime_split_chance: float = 0.0
 var spider_slow_duration_multiplier: float = 1.0
 var orc_hp_multiplier: float = 1.0
 
-var demon_augment_trigger_index: int = 0
 var demon_rerolls_left: int = 3
 var demon_augment_selection_active: bool = false
 var demon_augment_candidates: Array = []
@@ -91,7 +96,11 @@ func _start_battle() -> void:
 	max_command = BASE_MAX_COMMAND
 	command_power = START_COMMAND
 	command_regen_per_second = BASE_COMMAND_REGEN_PER_SECOND
-	total_command_spent = 0.0
+
+	demon_level = 1
+	demon_exp = 0.0
+	demon_exp_to_next_level = _required_demon_exp_for_level(demon_level)
+	demon_pending_augments = 0
 
 	summon_cost_multiplier = 1.0
 	monster_speed_multiplier = 1.0
@@ -101,7 +110,6 @@ func _start_battle() -> void:
 	spider_slow_duration_multiplier = 1.0
 	orc_hp_multiplier = 1.0
 
-	demon_augment_trigger_index = 0
 	demon_rerolls_left = 3
 	demon_augment_selection_active = false
 	demon_augment_candidates.clear()
@@ -144,6 +152,7 @@ func _start_battle() -> void:
 	_emit_stats()
 	_emit_progression()
 	command_changed.emit(command_power, max_command)
+	demon_progression_changed.emit(demon_level, demon_exp, demon_exp_to_next_level)
 
 func try_summon(monster_type: String) -> bool:
 	if not _can_attempt_summon(monster_type):
@@ -201,7 +210,7 @@ func _can_attempt_summon(monster_type: String) -> bool:
 
 func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float, manual: bool) -> bool:
 	command_power = maxf(command_power - cost, 0.0)
-	total_command_spent += cost
+	_gain_demon_exp(cost)
 
 	_spawn_monster(monster_type, spawn_position, cost, false)
 	command_changed.emit(command_power, max_command)
@@ -214,7 +223,6 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 		"%s %s! 지휘력 %.1f 소모" % [_get_monster_name(monster_type), mode_text, cost]
 	)
 
-	_check_demon_augment_trigger()
 	return true
 
 func is_spawn_position_valid(spawn_position: Vector2) -> bool:
@@ -389,27 +397,45 @@ func _spawn_exp_orb(drop_position: Vector2, exp_value: int) -> void:
 	orb.global_position = drop_position
 	orb.call("setup", exp_value)
 
-func _check_demon_augment_trigger() -> void:
-	if battle_over or demon_augment_selection_active:
+func _gain_demon_exp(amount: float) -> void:
+	if amount <= 0.0 or battle_over:
 		return
 
-	if demon_augment_trigger_index >= DEMON_AUGMENT_SPEND_THRESHOLDS.size():
-		return
+	demon_exp += amount
 
-	var threshold: float = float(
-		DEMON_AUGMENT_SPEND_THRESHOLDS[demon_augment_trigger_index]
+	while demon_exp + 0.001 >= demon_exp_to_next_level:
+		demon_exp -= demon_exp_to_next_level
+		demon_level += 1
+		demon_exp_to_next_level = _required_demon_exp_for_level(demon_level)
+		demon_pending_augments += 1
+
+	demon_progression_changed.emit(
+		demon_level,
+		demon_exp,
+		demon_exp_to_next_level
 	)
-	if total_command_spent + 0.001 < threshold:
+
+	_open_next_demon_augment_if_needed()
+
+func _required_demon_exp_for_level(current_level: int) -> float:
+	return DEMON_BASE_EXP_TO_NEXT + float(maxi(current_level - 1, 0)) * DEMON_EXP_GROWTH_PER_LEVEL
+
+func _open_next_demon_augment_if_needed() -> void:
+	if battle_over or demon_augment_selection_active or demon_pending_augments <= 0:
+		return
+
+	demon_augment_candidates = _roll_demon_augment_candidates(false)
+	if demon_augment_candidates.is_empty():
+		demon_pending_augments = 0
 		return
 
 	demon_augment_selection_active = true
-	demon_augment_candidates = _roll_demon_augment_candidates(false)
 	_set_combat_physics_enabled(false)
 
 	demon_augment_ready.emit(
 		demon_augment_candidates,
 		demon_rerolls_left,
-		demon_augment_trigger_index + 1
+		demon_level
 	)
 
 func _roll_demon_augment_candidates(is_reroll: bool) -> Array:
@@ -439,7 +465,7 @@ func reroll_demon_augments() -> bool:
 	demon_augment_ready.emit(
 		demon_augment_candidates,
 		demon_rerolls_left,
-		demon_augment_trigger_index + 1
+		demon_level
 	)
 	return true
 
@@ -465,7 +491,7 @@ func choose_demon_augment(augment_id: String) -> bool:
 	if augment_id not in demon_selected_ids:
 		demon_selected_ids.append(augment_id)
 
-	demon_augment_trigger_index += 1
+	demon_pending_augments = maxi(demon_pending_augments - 1, 0)
 	demon_augment_selection_active = false
 	demon_augment_candidates.clear()
 	demon_last_candidate_ids.clear()
@@ -475,7 +501,7 @@ func choose_demon_augment(augment_id: String) -> bool:
 	demon_augment_applied.emit(augment_name, get_demon_build_summary())
 	command_changed.emit(command_power, max_command)
 
-	_check_demon_augment_trigger()
+	_open_next_demon_augment_if_needed()
 	return true
 
 func _apply_demon_augment(augment_id: String) -> void:
@@ -609,9 +635,11 @@ func get_snapshot() -> Dictionary:
 		"monsters_left": monsters_alive,
 		"command_power": command_power,
 		"command_max": max_command,
+		"demon_level": demon_level,
+		"demon_exp": demon_exp,
+		"demon_exp_to_next": demon_exp_to_next_level,
 		"demon_rerolls_left": demon_rerolls_left,
 		"demon_build_summary": get_demon_build_summary(),
-		"total_command_spent": total_command_spent,
 		"map_width": current_map_size.x,
 		"map_height": current_map_size.y,
 		"next_stage_id": String(current_stage_data.get("next_stage_id", "")),
