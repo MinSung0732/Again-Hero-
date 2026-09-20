@@ -50,7 +50,7 @@ offset_top = 86.0
 offset_right = 1038.0
 offset_bottom = 124.0
 theme_override_font_sizes/font_size = 20
-text = "Again, Hero? · Portrait Prototype"
+text = "Again, Hero? · Demon Commander Prototype"
 
 [node name="HeroLevel" type="Label" parent="TopBar"]
 layout_mode = 0
@@ -79,7 +79,7 @@ offset_top = 142.0
 offset_right = 1040.0
 offset_bottom = 196.0
 theme_override_font_sizes/font_size = 27
-text = "몬스터 6"
+text = "몬스터 0"
 horizontal_alignment = 2
 vertical_alignment = 1
 
@@ -108,43 +108,83 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -270.0
+offset_top = -360.0
 grow_horizontal = 2
 grow_vertical = 0
-mouse_filter = 2
 color = Color(0.055, 0.058, 0.078, 0.98)
 
 [node name="BuildLabel" type="Label" parent="BottomBar"]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_left = 44.0
-offset_top = 24.0
-offset_right = -44.0
-offset_bottom = 76.0
-grow_horizontal = 2
-theme_override_font_sizes/font_size = 22
+layout_mode = 0
+offset_left = 36.0
+offset_top = 10.0
+offset_right = 1044.0
+offset_bottom = 50.0
+theme_override_font_sizes/font_size = 20
 text = "용사 빌드: 아직 선택 없음"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="Status" type="Label" parent="BottomBar"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 44.0
-offset_top = 82.0
-offset_right = -44.0
-offset_bottom = -22.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_font_sizes/font_size = 23
-text = "혼합 테스트 웨이브 진행 중\n초록=슬라임 · 보라=거미 · 갈색=오크"
+layout_mode = 0
+offset_left = 36.0
+offset_top = 50.0
+offset_right = 1044.0
+offset_bottom = 116.0
+theme_override_font_sizes/font_size = 20
+text = "지휘력을 사용해 원하는 몬스터를 소환하세요."
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
+
+[node name="CommandLabel" type="Label" parent="BottomBar"]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 118.0
+offset_right = 300.0
+offset_bottom = 158.0
+theme_override_font_sizes/font_size = 23
+text = "지휘력 60 / 100"
+vertical_alignment = 1
+
+[node name="CommandBar" type="ProgressBar" parent="BottomBar"]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 126.0
+offset_right = 1040.0
+offset_bottom = 152.0
+max_value = 100.0
+value = 60.0
+show_percentage = false
+
+[node name="SummonButtons" type="HBoxContainer" parent="BottomBar"]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 174.0
+offset_right = 1040.0
+offset_bottom = 340.0
+theme_override_constants/separation = 18
+
+[node name="SlimeButton" type="Button" parent="BottomBar/SummonButtons"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
+text = "슬라임\n비용 3"
+
+[node name="SpiderButton" type="Button" parent="BottomBar/SummonButtons"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
+text = "거미\n비용 7"
+
+[node name="OrcButton" type="Button" parent="BottomBar/SummonButtons"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
+text = "오크\n비용 18"
 
 [node name="ResultPanel" type="PanelContainer" parent="."]
 visible = false
