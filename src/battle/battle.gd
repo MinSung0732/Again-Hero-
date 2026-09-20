@@ -20,6 +20,7 @@ const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
 const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
+const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 
 const DEFAULT_MAP_SIZE := Vector2(3200, 3200)
 const AUTO_SPAWN_MIN_DISTANCE := 560.0
@@ -31,6 +32,7 @@ const BASE_COMMAND_REGEN_PER_SECOND := 3.0
 const MANUAL_SPAWN_MARGIN := 70.0
 const DEMON_BASE_EXP_TO_NEXT := 30.0
 const DEMON_EXP_GROWTH_PER_LEVEL := 15.0
+const BASE_DEMON_REROLLS := 3
 
 const MONSTER_COSTS := {
 	"slime": 3.0,
@@ -59,6 +61,8 @@ var demon_exp_to_next_level: float = DEMON_BASE_EXP_TO_NEXT
 var demon_pending_augments: int = 0
 
 var summon_cost_multiplier: float = 1.0
+var slime_research_cost_multiplier: float = 1.0
+var demon_exp_gain_multiplier: float = 1.0
 var monster_speed_multiplier: float = 1.0
 var monster_damage_multiplier: float = 1.0
 var death_refund_ratio: float = 0.0
@@ -66,13 +70,15 @@ var slime_split_chance: float = 0.0
 var spider_slow_duration_multiplier: float = 1.0
 var orc_hp_multiplier: float = 1.0
 
-var demon_rerolls_left: int = 3
+var demon_reroll_max: int = BASE_DEMON_REROLLS
+var demon_rerolls_left: int = BASE_DEMON_REROLLS
 var demon_augment_selection_active: bool = false
 var demon_augment_candidates: Array = []
 var demon_selected_ids: Array[String] = []
 var demon_last_candidate_ids: Array[String] = []
 
 var monster_summon_costs: Dictionary = {}
+var permanent_research_levels: Dictionary = {}
 
 func _ready() -> void:
 	queue_redraw()
@@ -105,6 +111,8 @@ func _start_battle() -> void:
 	demon_pending_augments = 0
 
 	summon_cost_multiplier = 1.0
+	slime_research_cost_multiplier = 1.0
+	demon_exp_gain_multiplier = 1.0
 	monster_speed_multiplier = 1.0
 	monster_damage_multiplier = 1.0
 	death_refund_ratio = 0.0
@@ -112,12 +120,15 @@ func _start_battle() -> void:
 	spider_slow_duration_multiplier = 1.0
 	orc_hp_multiplier = 1.0
 
-	demon_rerolls_left = 3
+	demon_reroll_max = BASE_DEMON_REROLLS
+	demon_rerolls_left = BASE_DEMON_REROLLS
 	demon_augment_selection_active = false
 	demon_augment_candidates.clear()
 	demon_selected_ids.clear()
 	demon_last_candidate_ids.clear()
 	monster_summon_costs.clear()
+
+	_apply_permanent_research()
 
 	var progress_state: Dictionary = STAGE_PROGRESS.load_state()
 	current_stage_id = String(progress_state.get("current_stage_id", "stage_1"))
@@ -155,6 +166,37 @@ func _start_battle() -> void:
 	_emit_progression()
 	command_changed.emit(command_power, max_command)
 	demon_progression_changed.emit(demon_level, demon_exp, demon_exp_to_next_level)
+
+func _apply_permanent_research() -> void:
+	permanent_research_levels.clear()
+	for research_id in RESEARCH_CATALOG.get_ordered_ids():
+		permanent_research_levels[research_id] = STAGE_PROGRESS.get_research_level(research_id)
+
+	var reservoir_level := int(permanent_research_levels.get("mana_reservoir", 0))
+	var cycle_level := int(permanent_research_levels.get("mana_cycle", 0))
+	var slime_level := int(permanent_research_levels.get("slime_logistics", 0))
+	var notebook_level := int(permanent_research_levels.get("tactical_notebook", 0))
+	var experiment_level := int(permanent_research_levels.get("rapid_experiment", 0))
+
+	max_command += 10.0 * reservoir_level
+	command_regen_per_second += 0.25 * cycle_level
+	slime_research_cost_multiplier = maxf(0.5, 1.0 - 0.05 * slime_level)
+	demon_reroll_max += notebook_level
+	demon_rerolls_left = demon_reroll_max
+	demon_exp_gain_multiplier += 0.05 * experiment_level
+
+func get_permanent_research_summary() -> String:
+	var active: PackedStringArray = []
+	for research_id in RESEARCH_CATALOG.get_ordered_ids():
+		var level := int(permanent_research_levels.get(research_id, 0))
+		if level <= 0:
+			continue
+		var data: Dictionary = RESEARCH_CATALOG.get_research(research_id)
+		active.append("%s Lv.%d" % [String(data.get("name", research_id)), level])
+
+	if active.is_empty():
+		return "연구 없음"
+	return " · ".join(active)
 
 func try_summon(monster_type: String) -> bool:
 	if not _can_attempt_summon(monster_type):
@@ -221,6 +263,7 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 	command_changed.emit(command_power, max_command)
 	_emit_stats()
 
+	var gained_exp := cost * demon_exp_gain_multiplier
 	var mode_text := "수동 배치" if manual else "소환"
 	summon_result.emit(
 		monster_type,
@@ -229,11 +272,11 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 			_get_monster_name(monster_type),
 			mode_text,
 			cost,
-			cost,
+			gained_exp,
 		]
 	)
 
-	_gain_demon_exp(cost)
+	_gain_demon_exp(gained_exp)
 	return true
 
 func is_spawn_position_valid(spawn_position: Vector2) -> bool:
@@ -254,7 +297,15 @@ func get_monster_cost(monster_type: String) -> float:
 	var base_cost: float = float(MONSTER_COSTS.get(monster_type, 0.0))
 	if base_cost <= 0.0:
 		return 0.0
-	return snappedf(base_cost * summon_cost_multiplier, 0.1)
+
+	var monster_multiplier := 1.0
+	if monster_type == "slime":
+		monster_multiplier *= slime_research_cost_multiplier
+
+	return snappedf(
+		base_cost * summon_cost_multiplier * monster_multiplier,
+		0.1
+	)
 
 func _get_auto_spawn_position() -> Vector2:
 	var origin := current_map_size * 0.5
@@ -667,7 +718,9 @@ func get_snapshot() -> Dictionary:
 		"demon_exp": demon_exp,
 		"demon_exp_to_next": demon_exp_to_next_level,
 		"demon_rerolls_left": demon_rerolls_left,
+		"demon_reroll_max": demon_reroll_max,
 		"demon_build_summary": get_demon_build_summary(),
+		"permanent_research_summary": get_permanent_research_summary(),
 		"research_points": STAGE_PROGRESS.get_research_points(),
 		"map_width": current_map_size.x,
 		"map_height": current_map_size.y,
