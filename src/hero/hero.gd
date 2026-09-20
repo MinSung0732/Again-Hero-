@@ -16,6 +16,8 @@ const APPROACH_DISTANCE_RATIO := 0.86
 const FIELD_WIDTH := 1080.0
 const FIELD_HEIGHT := 1280.0
 const FIELD_MARGIN := 72.0
+const WANDER_REACHED_DISTANCE := 42.0
+const WANDER_MIN_TARGET_DISTANCE := 260.0
 
 @export var max_hp: int = 300
 @export var move_speed: float = 230.0
@@ -38,12 +40,15 @@ var level_flash_timer: float = 0.0
 var slow_timer: float = 0.0
 var move_multiplier: float = 1.0
 var strafe_sign: float = 1.0
+var wander_target: Vector2 = Vector2.ZERO
+var wander_timer: float = 0.0
 
 func _ready() -> void:
 	add_to_group("hero")
 	current_hp = max_hp
 	exp_to_next_level = _required_exp_for_level(level)
 	strafe_sign = -1.0 if randf() < 0.5 else 1.0
+	_pick_new_wander_target()
 	health_changed.emit(current_hp, max_hp)
 	progression_changed.emit(level, current_exp, exp_to_next_level)
 	queue_redraw()
@@ -55,6 +60,7 @@ func _physics_process(delta: float) -> void:
 
 	attack_timer = maxf(attack_timer - delta, 0.0)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
+	wander_timer = maxf(wander_timer - delta, 0.0)
 
 	if hit_flash_timer > 0.0:
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
@@ -75,7 +81,7 @@ func _physics_process(delta: float) -> void:
 		retarget_timer = 0.12
 
 	if not is_instance_valid(target):
-		velocity = Vector2.ZERO
+		_move_without_monsters()
 		return
 
 	var distance := global_position.distance_to(target.global_position)
@@ -86,6 +92,29 @@ func _physics_process(delta: float) -> void:
 
 	if distance <= attack_range and attack_timer <= 0.0:
 		_fire_projectile(target)
+
+func _move_without_monsters() -> void:
+	if wander_timer <= 0.0 or position.distance_to(wander_target) <= WANDER_REACHED_DISTANCE:
+		_pick_new_wander_target()
+
+	var direction := position.direction_to(wander_target)
+	velocity = direction * move_speed * 0.72 * move_multiplier
+	move_and_slide()
+	_clamp_to_battlefield()
+
+func _pick_new_wander_target() -> void:
+	var candidate := Vector2(FIELD_WIDTH * 0.5, FIELD_HEIGHT * 0.5)
+
+	for _attempt in range(6):
+		candidate = Vector2(
+			randf_range(FIELD_MARGIN, FIELD_WIDTH - FIELD_MARGIN),
+			randf_range(FIELD_MARGIN, FIELD_HEIGHT - FIELD_MARGIN)
+		)
+		if position.distance_to(candidate) >= WANDER_MIN_TARGET_DISTANCE:
+			break
+
+	wander_target = candidate
+	wander_timer = randf_range(2.6, 5.0)
 
 func _choose_move_direction(nearest_target: Node2D, nearest_distance: float) -> Vector2:
 	var avoidance := Vector2.ZERO
