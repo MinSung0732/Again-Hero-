@@ -9,6 +9,7 @@ signal augment_selected(level: int, candidates: Array, chosen_name: String, reas
 const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
 const PROJECTILE_SCENE := preload("res://src/hero/HeroProjectile.tscn")
+const STAGE1_MAGE_TEXTURE := preload("res://assets/art/heroes/stage1_mage_idle.svg")
 
 const APPROACH_DISTANCE_RATIO := 0.86
 const FIELD_MARGIN := 72.0
@@ -130,6 +131,11 @@ func _physics_process(delta: float) -> void:
 		_fire_projectile(target)
 
 func _apply_profile_visual() -> void:
+	if hero_id == "ranged_rookie":
+		hero_sprite.texture = STAGE1_MAGE_TEXTURE
+		hero_sprite.visible = true
+		return
+
 	if sprite_texture_path.is_empty():
 		hero_sprite.visible = false
 		return
@@ -155,6 +161,14 @@ func _apply_camera_limits() -> void:
 	follow_camera.position_smoothing_speed = 7.0
 
 func _move_without_monsters() -> void:
+	var nearest_exp_orb := _find_nearest_exp_orb()
+	if is_instance_valid(nearest_exp_orb):
+		var exp_direction := global_position.direction_to(nearest_exp_orb.global_position)
+		velocity = exp_direction * move_speed * 0.90 * move_multiplier
+		move_and_slide()
+		_clamp_to_battlefield()
+		return
+
 	if wander_timer <= 0.0 or position.distance_to(wander_target) <= WANDER_REACHED_DISTANCE:
 		_pick_new_wander_target()
 
@@ -162,6 +176,25 @@ func _move_without_monsters() -> void:
 	velocity = direction * move_speed * 0.72 * move_multiplier
 	move_and_slide()
 	_clamp_to_battlefield()
+
+func _find_nearest_exp_orb() -> Node2D:
+	var nearest: Node2D = null
+	var nearest_distance := INF
+
+	for node in get_tree().get_nodes_in_group("exp_orbs"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+
+		var orb := node as Node2D
+		if orb == null:
+			continue
+
+		var distance := global_position.distance_squared_to(orb.global_position)
+		if distance < nearest_distance:
+			nearest_distance = distance
+			nearest = orb
+
+	return nearest
 
 func _pick_new_wander_target() -> void:
 	var candidate := Vector2(battlefield_size.x * 0.5, battlefield_size.y * 0.5)
