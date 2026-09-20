@@ -9,6 +9,7 @@ signal augment_selected(level: int, candidates: Array, chosen_name: String, reas
 const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
 const PROJECTILE_SCENE := preload("res://src/hero/HeroProjectile.tscn")
+const STAGE1_MAGE_POSE_DATA := preload("res://src/data/stage1_mage_pose_data.gd")
 const STAGE1_MAGE_PNG_BASE64 := "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAHSElEQVR4nO2XWWyU5xWGn//37DMej8czY48dPPYYMHgjZlHYQoKpQCUJIFKUUErSVhUNJTdUTZUUQmguqjaVekPVSFVBNEsTogIhbKUGQws4NYsNOIB3e7zMeJnN849nn/l7VwnJNoYi9abn+rx6n+98Oud8H/w//schzCTJZp0la9Um0imRDFHcwx0z0j0RgOryWlnQz6W4bBmimEEtx7h3twkhy8s3d64KABpFlhxLpR8LalpRReWzsvWpGpRKMwhaNOocMrJMWhFGTCSYGG2mpfUyUsj32BWZUlhgK5WLCxchCyJZKj0aUyE6Uy7xNJgTA6xbGsSAAW9Kz5v7PnjyAOvq1sodXS7SWVrybKVYtDnkaiXe3zEbrcnJW/tu4BXjKJUCoeAY/a52hsa6HxlkSoFerZJNORb0BgeFOXZ+vlNLgb6YXx2FlDqfSGoQdUJPUhDRCxOE3M2odCmaW2/j8QZmDDJtYn6+XZ5XlMv2l6o5/jcl6lm1iIokBgQEYYL42B327nqer2804PENY9JoGJdkDl/oprPPLWiUBhkhzZyqaupWvcEXH+3B4/c84KmYDkCvEsjVaTl8XoXGOgtlyoM2k2R5DQzd+Qh3TM+NtrnorCvpvd9MR68HQRD51qIV+MNX5JJCO7aytehtK6i/egdn5SLSXXfkUU+/MCOAQkcNfmUBIgoUcpA5ah/leX7uNcdZv/UAxgIrqrSIyWSibu0G9u/bg9moo2/YjVphoLTmVVo6dBw7+CK5yvW8/t1TVJV/RoOn/z8e4lTmeeZCOZNQogDM+mxW5A5Q7kgyLOeyY/de5i+pZdbcBVgLC+hydSKoZTZt2UqXK8A/bnUwIQ1hMFsx5Q1iVyZJBsMoypfgSdU+4DMpgEajkZ3OCvS6IoxZOl5fE+Bc/d+Z89wWtu3aS0ohIkxEQRqjt+0mty43MiGF0cgQVcsM+/1YTDm0nDyAXePj674BDp1qQJt0E5PGH/Ca9AoWlK8iV2lh5eIJVMF7/PWIwIcn6ikoctB09gs0UQmXyojDUUGJRUtLaIjBzi7GwhECXgmFIKLNUrL/nS28/euvuNKSoeFEG06xHtnfOD1ASVGpXFulRJkY4NJxH3WbXuCFbSUoU1Fu11/ks5OdFGp9PPuMA0/HIL+8HGeWHKLA56Pl/n3GRtyQieAOqLhw7ii/3ZzDmb+8RmUqw0jaSCThnR6gb6hXOHtVkM3GfArnOpGiCcKjoySSVQT777L+B7sRowM8VzOBRjRw0BVh786tnD57FbfXh9c7TAYVMlF6Or2onplNjrEbX9DA/Y4BRkcGH96Grr4ewUUPY8MFslEWycuvRU5HKLGKiIZ+RIcDlW6QjMLIjtcWoklfx+MJEA/ESSOTlcqgNhl4usLKlxe6uNgTor3z+qQzZ8ouALBYLJRXV7JsySr6ekY4c62fvpbTzDcMo84ykIj5WK1t4c03dpORczGoUhgtFmS1iA7IpBXcGhynvXPq9T3lHNBq9fL3tn2fwMgYnx45zPbt21C413Deo+DPP3yXQk2aeEpANXsTkrEW59NFSKEq7F0uJsIBXlq1hFvt7bS5Q9OdcWqAaHRCOHb0hCyFUljNucSlIEc//QMm50KyHRvo87bhkQaoTsd472c78YwHaW69S7ZKh9NmJTo+hCsEwcD0q3pKgEpnmSxpSymbt4yomOLwJ02ItnyeqxSIpNppHWhn/3fKMeuCbN35NnKWEWdZNdvXbeDYn36HJVtNwOua9vTTAkRiBZTk1iCQwCqG+VfbTYoKVuAPm6goCWOvFGloaMetrUWns6Ay5lKoD3Dv/MeoxBhV85cTPdv6eADGbLNctXgN6nQHu563c+D3H5OK5SDFh+gZ1dDSJ1FqTHFvIEFG38to7w30eTZKF3+buASr55by+ZcNRDOZhwJM2gXOsgqCksQvfryYhsbL1K1cjibjZduKAuTxa4SGW2m5fR19egJx/C7bN60kJk1wvLGbazdbOXa6nrsjQRKx5EPfBZNWIJ3ORlRouHLmExSJbLzaNJG4hSZXgo2v/IgXF8Y5eOgr3CNuli5/mc8bw5iz+9AbFKgT4Iuo6B4bmtGjZNIKpOJ+7Ho/h061Mr9mEVebuqmoWUhSa+dcyzB7PriIxz/Iy5s309gdQKEtI9uUQTPSRLEYZ2A0MBPvyQHUaOREJsA8QzdhOYf3Dp3EMbuEKpOb9zdqsEn1vFJn5VqbzOlvYLHNwB/fKsaYNU5GyDAYDzPklx4fIE5M6O7qEGzFpWQpDBjNdv7Z1M6l9gA//c0R3nl3L7f7/QyEJFRqA0mDg42v/oSeYZmly1YRjBh5lD/ClIl5ZpNs0Juw2WxkJaMsKLJg0abxhyJccvmJ+YM4i/N4KkeFSpXiSkcKR5GS210hPCPuGQNMuQt8/qDgGugTrt+8JkQjEhkF6PNseJIK7nf2CL0+vxBLiggqA/biKrZuWk27a/yRzJ9IiGq9/N/o/w2j7RPZr4FsogAAAABJRU5ErkJggg=="
 
 const APPROACH_DISTANCE_RATIO := 0.86
@@ -44,6 +45,13 @@ var attack_timer: float = 0.0
 var retarget_timer: float = 0.0
 var hit_flash_timer: float = 0.0
 var level_flash_timer: float = 0.0
+var attack_pose_timer: float = 0.0
+var hit_pose_timer: float = 0.0
+var idle_pose_timer: float = 0.0
+var idle_pose_index: int = 0
+var visual_motion_time: float = 0.0
+var is_dying: bool = false
+var stage1_pose_textures: Dictionary = {}
 var slow_timer: float = 0.0
 var move_multiplier: float = 1.0
 var strafe_sign: float = 1.0
@@ -98,6 +106,10 @@ func _physics_process(delta: float) -> void:
 	attack_timer = maxf(attack_timer - delta, 0.0)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
 	wander_timer = maxf(wander_timer - delta, 0.0)
+	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
+	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
+	idle_pose_timer = maxf(idle_pose_timer - delta, 0.0)
+	visual_motion_time += delta
 
 	if hit_flash_timer > 0.0:
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
@@ -119,6 +131,7 @@ func _physics_process(delta: float) -> void:
 
 	if not is_instance_valid(target):
 		_move_without_monsters()
+		_update_stage1_pose_visual(delta)
 		return
 
 	var distance := global_position.distance_to(target.global_position)
@@ -130,10 +143,18 @@ func _physics_process(delta: float) -> void:
 	if distance <= attack_range and attack_timer <= 0.0:
 		_fire_projectile(target)
 
+	_update_stage1_pose_visual(delta)
+
 func _apply_profile_visual() -> void:
 	hero_sprite.visible = false
 
 	if hero_id == "ranged_rookie":
+		_load_stage1_pose_textures()
+		if not stage1_pose_textures.is_empty():
+			hero_sprite.texture = stage1_pose_textures.get("idle_0")
+			hero_sprite.visible = true
+			return
+
 		var embedded_texture := _load_embedded_stage1_mage_texture()
 		if embedded_texture != null:
 			hero_sprite.texture = embedded_texture
@@ -150,6 +171,55 @@ func _apply_profile_visual() -> void:
 	if texture is Texture2D:
 		hero_sprite.texture = texture
 		hero_sprite.visible = true
+
+func _load_stage1_pose_textures() -> void:
+	stage1_pose_textures.clear()
+
+	for pose_id in [
+		"idle_0", "idle_1", "walk", "run",
+		"attack", "hit", "death_0", "death_1"
+	]:
+		var texture = STAGE1_MAGE_POSE_DATA.build_texture(pose_id)
+		if texture is Texture2D:
+			stage1_pose_textures[pose_id] = texture
+
+func _set_stage1_pose(pose_id: String) -> void:
+	if not hero_sprite.visible or stage1_pose_textures.is_empty():
+		return
+
+	var texture = stage1_pose_textures.get(pose_id)
+	if texture is Texture2D and hero_sprite.texture != texture:
+		hero_sprite.texture = texture
+
+func _update_stage1_pose_visual(_delta: float) -> void:
+	if hero_id != "ranged_rookie" or stage1_pose_textures.is_empty() or is_dying:
+		return
+
+	hero_sprite.flip_h = velocity.x < -4.0
+
+	if hit_pose_timer > 0.0:
+		_set_stage1_pose("hit")
+		hero_sprite.position = Vector2.ZERO
+		return
+
+	if attack_pose_timer > 0.0:
+		_set_stage1_pose("attack")
+		hero_sprite.position = Vector2(0.0, -1.0)
+		return
+
+	var speed := velocity.length()
+	if speed > move_speed * 0.82:
+		_set_stage1_pose("run")
+		hero_sprite.position = Vector2(0.0, round(sin(visual_motion_time * 14.0) * 2.0))
+	elif speed > 4.0:
+		_set_stage1_pose("walk")
+		hero_sprite.position = Vector2(0.0, round(sin(visual_motion_time * 9.0)))
+	else:
+		if idle_pose_timer <= 0.0:
+			idle_pose_index = 1 - idle_pose_index
+			idle_pose_timer = 0.42
+		_set_stage1_pose("idle_%d" % idle_pose_index)
+		hero_sprite.position = Vector2.ZERO
 
 func _load_embedded_stage1_mage_texture() -> Texture2D:
 	var png_bytes: PackedByteArray = Marshalls.base64_to_raw(STAGE1_MAGE_PNG_BASE64)
@@ -294,6 +364,8 @@ func _fire_projectile(current_target: Node2D) -> void:
 		return
 
 	attack_timer = attack_cooldown
+	attack_pose_timer = 0.24
+	_set_stage1_pose("attack")
 
 	var projectile := PROJECTILE_SCENE.instantiate() as Area2D
 	get_parent().add_child(projectile)
@@ -442,17 +514,41 @@ func _required_exp_for_level(target_level: int) -> int:
 	return 50 + maxi(target_level - 1, 0) * 25
 
 func take_damage(amount: int) -> void:
-	if current_hp <= 0:
+	if current_hp <= 0 or is_dying:
 		return
 
 	current_hp = maxi(current_hp - amount, 0)
 	hit_flash_timer = 0.12
+	hit_pose_timer = 0.20
+	_set_stage1_pose("hit")
 	health_changed.emit(current_hp, max_hp)
 	queue_redraw()
 
 	if current_hp <= 0:
-		died.emit()
-		queue_free()
+		_begin_death_sequence()
+
+func _begin_death_sequence() -> void:
+	if is_dying:
+		return
+
+	is_dying = true
+	velocity = Vector2.ZERO
+	collision_layer = 0
+	collision_mask = 0
+	_set_stage1_pose("death_0")
+	hero_sprite.position = Vector2.ZERO
+
+	await get_tree().create_timer(0.26).timeout
+	if not is_inside_tree():
+		return
+
+	_set_stage1_pose("death_1")
+	await get_tree().create_timer(0.42).timeout
+	if not is_inside_tree():
+		return
+
+	died.emit()
+	queue_free()
 
 func _draw() -> void:
 	if level_flash_timer > 0.0:
