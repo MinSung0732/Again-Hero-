@@ -104,14 +104,16 @@
 
 완료 조건: Stage 1을 클리어하면 Stage 2가 해금되고, 스테이지마다 다른 Hero 데이터/성향을 사용할 수 있다.
 
-- [ ] Stage 데이터 구조
-- [ ] Hero archetype/profile 데이터 구조
-- [ ] Stage 1 = 현재 원거리 카이팅 Hero로 고정
+현재 v1은 Stage와 Hero profile을 데이터로 분리했고, Stage 1이 견습 마도사 profile을 로드한다. Stage 2용 기동 사냥꾼 profile은 데이터만 준비된 잠금 상태다.
+
+- [x] Stage 데이터 구조
+- [x] Hero archetype/profile 데이터 구조
+- [x] Stage 1 = 현재 원거리 카이팅 Hero로 고정
 - [ ] Stage 선택/진행 상태
-- [ ] Stage 클리어 판정
+- [x] Stage 클리어 판정
 - [ ] 다음 Stage 해금
 - [ ] 최초 클리어 보상 연결
-- [ ] Stage별 Hero 기본 스탯 보정
+- [x] Stage별 Hero 기본 스탯 보정
 - [ ] Stage별 Hero AI 성향/증강 풀 분리
 - [ ] 과거 Stage 재도전 허용
 - [ ] 메타 성장 후 초기 Stage 압도 체감 검증
