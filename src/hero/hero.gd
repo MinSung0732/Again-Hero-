@@ -25,6 +25,7 @@ const WANDER_MIN_TARGET_DISTANCE := 260.0
 @export var attack_range: float = 430.0
 @export var attack_cooldown: float = 0.62
 @export var projectile_speed: float = 680.0
+@export var exp_pickup_radius: float = 150.0
 
 var current_hp: int
 var level: int = 1
