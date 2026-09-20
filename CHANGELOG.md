@@ -486,3 +486,16 @@
 - 원인: 기존 `_role_for_monster_type()` helper를 제거한 뒤, 최근 공세 메모리 집계 코드에 해당 함수 호출이 1곳 남아 Hero script 컴파일이 실패함.
 - 남아 있던 참조를 `MONSTER_CATALOG.get_role(monster_type)`로 교체.
 - 데이터 중심 구조는 유지하면서 Hero script가 정상 로드되도록 복구.
+
+
+### Hero AI Decision Delay + Build Inertia v1
+- Hero AI가 레벨업 순간의 실시간 전황을 즉시 읽던 구조를 **주기적 관측 스냅샷 방식**으로 변경.
+- Hero는 profile의 `ai_settings.observation_interval`마다 전황/최근 공세 데이터를 관측하고 저장.
+- 레벨업 증강 선택은 가장 최근에 저장된 관측값을 사용하므로 최대 관측 주기만큼 정보 지연이 발생.
+- AI 선택 이유에 `x.x초 전 관측`을 표시해 플레이어가 판단 지연을 이해할 수 있게 함.
+- Build AI의 기존 동일 증강 누적 관성을 Hero profile 데이터 `stack_inertia`로 조절하도록 변경.
+- 이미 하나 이상의 빌드가 쌓인 뒤 처음 고르는 새 증강에는 `new_branch_penalty`를 적용해 무분별한 즉시 전환을 억제.
+- 특정 증강별 분기 없이 모든 후보에 공통 계산으로 적용.
+- Stage 1 견습 마도사: 관측 4.0초 / stack inertia 1.25 / 새 갈래 penalty 0.70.
+- Stage 2 기동 사냥꾼: 관측 2.8초 / stack inertia 0.95 / 새 갈래 penalty 0.40.
+- Stage별 AI 성향을 코드 분기가 아니라 `hero_profiles.gd` 데이터로 확장할 수 있도록 구성.
