@@ -30,6 +30,7 @@ const BASE_MAX_COMMAND := 100.0
 const START_COMMAND := 0.0
 const BASE_COMMAND_REGEN_PER_SECOND := 3.0
 const MANUAL_SPAWN_MARGIN := 70.0
+const MANUAL_SPAWN_HERO_MIN_DISTANCE := 220.0
 const DEMON_BASE_EXP_TO_NEXT := 30.0
 const DEMON_EXP_GROWTH_PER_LEVEL := 15.0
 const BASE_DEMON_REROLLS := 3
@@ -247,8 +248,16 @@ func try_summon_at_position(monster_type: String, spawn_position: Vector2) -> bo
 	if not _can_attempt_summon(monster_type):
 		return false
 
-	if not is_spawn_position_valid(spawn_position):
+	if not _is_spawn_position_inside_bounds(spawn_position):
 		summon_result.emit(monster_type, false, "전장 안쪽을 터치해 주세요.")
+		return false
+
+	if not _is_spawn_position_far_enough_from_hero(spawn_position):
+		summon_result.emit(
+			monster_type,
+			false,
+			"용사와 너무 가깝습니다. 최소 %.0fpx 이상 떨어져 배치해 주세요." % MANUAL_SPAWN_HERO_MIN_DISTANCE
+		)
 		return false
 
 	var cost: float = get_monster_cost(monster_type)
@@ -320,10 +329,25 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 
 func is_spawn_position_valid(spawn_position: Vector2) -> bool:
 	return (
+		_is_spawn_position_inside_bounds(spawn_position)
+		and _is_spawn_position_far_enough_from_hero(spawn_position)
+	)
+
+func _is_spawn_position_inside_bounds(spawn_position: Vector2) -> bool:
+	return (
 		spawn_position.x >= MANUAL_SPAWN_MARGIN
 		and spawn_position.x <= current_map_size.x - MANUAL_SPAWN_MARGIN
 		and spawn_position.y >= MANUAL_SPAWN_MARGIN
 		and spawn_position.y <= current_map_size.y - MANUAL_SPAWN_MARGIN
+	)
+
+func _is_spawn_position_far_enough_from_hero(spawn_position: Vector2) -> bool:
+	if not is_instance_valid(hero):
+		return true
+
+	return (
+		spawn_position.distance_to(hero.position)
+		>= MANUAL_SPAWN_HERO_MIN_DISTANCE
 	)
 
 func _clamp_manual_spawn_position(spawn_position: Vector2) -> Vector2:

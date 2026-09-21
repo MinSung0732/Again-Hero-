@@ -202,9 +202,6 @@ func _input(event: InputEvent) -> void:
 	var world_position: Vector2 = canvas_inverse * subviewport_pointer
 	var battle_position: Vector2 = battle.to_local(world_position)
 
-	if not battle.is_spawn_position_valid(battle_position):
-		return
-
 	battle.try_summon_at_position(selected_monster_type, battle_position)
 	get_viewport().set_input_as_handled()
 
