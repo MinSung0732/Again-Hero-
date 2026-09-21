@@ -1514,3 +1514,12 @@
   - D1.3 MutationDirector.reset() 직후
   - D1.4 이벤트 fallback/거리 정규화 직후
 - 동작 로직은 변경하지 않고 진단 체크포인트만 추가.
+
+### Mutation Spawn Diagnostic Narrowing 2
+- 이전 진단에서 D1.4까지 도달하고 D2 전에 중단되는 것이 확인됨.
+- D1.4~D2 구간을 세분화:
+  - D1.5 event_type 읽기 완료
+  - D1.6 name_prefix 읽기 완료
+  - D1.7 MonsterCatalog 표시명 조회 완료
+  - D1.8 mutation_name 문자열 조합 완료
+- 동작 로직은 변경하지 않고 진단 체크포인트만 추가.

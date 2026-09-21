@@ -1351,11 +1351,32 @@ func spawn_selected_mutation(monster_id: String) -> void:
 	)
 
 	var event_type := String(event.get("type", "elite"))
+	_mutation_spawn_diag(
+		"D1.5",
+		"event_type=%s" % event_type
+	)
+
 	var name_prefix := String(event.get("name_prefix", "돌연변이"))
+	_mutation_spawn_diag(
+		"D1.6",
+		"name_prefix=%s" % name_prefix
+	)
+
+	var catalog_name := MONSTER_CATALOG.get_name(monster_id)
+	_mutation_spawn_diag(
+		"D1.7",
+		"catalog_name=%s" % catalog_name
+	)
+
 	var mutation_name := "%s %s" % [
 		name_prefix,
-		MONSTER_CATALOG.get_name(monster_id),
+		catalog_name,
 	]
+	_mutation_spawn_diag(
+		"D1.8",
+		"mutation_name=%s" % mutation_name
+	)
+
 	event["name"] = mutation_name
 	_mutation_spawn_diag(
 		"D2",
