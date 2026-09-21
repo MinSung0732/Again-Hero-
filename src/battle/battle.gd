@@ -1282,7 +1282,21 @@ func _open_mutation_choice(event: Dictionary) -> void:
 		mutation_director.get_candidates()
 	)
 
+func _mutation_spawn_diag(step: String, detail: String) -> void:
+	var message := "[MUT-DIAG %s] %s" % [step, detail]
+	print(message)
+	mutation_spawn_result.emit(false, message)
+
 func spawn_selected_mutation(monster_id: String) -> void:
+	_mutation_spawn_diag(
+		"D1",
+		"choice id=%s · catalog=%s · hero=%s" % [
+			monster_id,
+			str(MONSTER_CATALOG.MONSTERS.has(monster_id)),
+			str(is_instance_valid(hero)),
+		]
+	)
+
 	# 모달에서 정지시킨 combat physics는 선택 즉시 가장 먼저 복구한다.
 	if not battle_over and not external_pause:
 		_set_combat_physics_enabled(true)
@@ -1315,6 +1329,13 @@ func spawn_selected_mutation(monster_id: String) -> void:
 		MONSTER_CATALOG.get_name(monster_id),
 	]
 	event["name"] = mutation_name
+	_mutation_spawn_diag(
+		"D2",
+		"event ready · type=%s · distance=%.1f" % [
+			event_type,
+			float(event.get("spawn_distance", -1.0)),
+		]
+	)
 
 	var spawned := spawn_special_monster(monster_id, event)
 	if not spawned:
@@ -1338,29 +1359,73 @@ func spawn_special_monster(
 	monster_id: String,
 	special_data: Dictionary
 ) -> bool:
+	_mutation_spawn_diag(
+		"D3",
+		"special enter · id=%s" % monster_id
+	)
+
 	if not is_instance_valid(hero):
+		_mutation_spawn_diag("D3-HERO", "hero invalid")
 		return false
 	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
+		_mutation_spawn_diag(
+			"D3-CATALOG",
+			"catalog missing id=%s" % monster_id
+		)
+		return false
+
+	var scene = MONSTER_CATALOG.get_scene(monster_id)
+	_mutation_spawn_diag(
+		"D4",
+		"scene=%s" % str(scene)
+	)
+	if scene == null:
 		return false
 
 	var spawn_position := _get_stage_event_spawn_position(
 		float(special_data.get("spawn_distance", 720.0))
 	)
+	_mutation_spawn_diag(
+		"D5",
+		"before _spawn_monster · pos=(%.0f, %.0f) · alive=%d" % [
+			spawn_position.x,
+			spawn_position.y,
+			monsters_alive,
+		]
+	)
 
-	# 특수 몬스터도 검증된 일반 소환 경로로 먼저 생성한다.
+	# 공용 소환 구현은 건드리지 않는다. 반환값만 관찰한다.
 	var monster = _spawn_monster(
 		monster_id,
 		spawn_position,
 		0.0,
 		false
 	)
+	_mutation_spawn_diag(
+		"D6",
+		"after _spawn_monster · valid=%s · alive=%d" % [
+			str(is_instance_valid(monster)),
+			monsters_alive,
+		]
+	)
 	if not is_instance_valid(monster):
 		return false
 
+	_mutation_spawn_diag(
+		"D7",
+		"before modifiers · instance=%d · in_tree=%s" % [
+			monster.get_instance_id(),
+			str(monster.is_inside_tree()),
+		]
+	)
 	_apply_special_monster_modifiers(
 		monster,
 		monster_id,
 		special_data
+	)
+	_mutation_spawn_diag(
+		"D8",
+		"after modifiers · instance=%d" % monster.get_instance_id()
 	)
 	_emit_stats()
 	return true

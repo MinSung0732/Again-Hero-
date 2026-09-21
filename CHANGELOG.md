@@ -1491,3 +1491,17 @@
 - `75fff29d`의 특수 스폰 생성/강화 분리 변경 이후 Battle 초기화가 깨져 전투 화면이 회색으로 남고 Run 시간/지휘력이 시작되지 않는 회귀가 발생.
 - `src/battle/battle.gd`, `src/main/main.gd`를 기본 전투가 정상 동작하고 엘리트 소환 문제만 남아 있던 `10c9ba70` 상태로 복구.
 - 이후 엘리트 수정에서는 공용 `_spawn_monster()` 시그니처/초기화 경로를 변경하지 않는 원칙 추가.
+
+### Mutation Spawn Diagnostic Checkpoints
+- 엘리트 선택 시 몬스터가 생성되지 않는 실제 실패 지점을 찾기 위한 진단만 추가.
+- 공용 `_spawn_monster()`, Battle 시간/지휘력, physics, MutationDirector 동작은 변경하지 않음.
+- 상태창/콘솔에 `[MUT-DIAG D1~D8]` 체크포인트 표시:
+  - D1 선택 monster_id / Catalog / Hero 유효성
+  - D2 이벤트 데이터 준비
+  - D3 특수 스폰 함수 진입
+  - D4 PackedScene 조회 결과
+  - D5 공용 _spawn_monster 호출 직전 위치/alive 수
+  - D6 공용 _spawn_monster 반환 및 alive 증가 여부
+  - D7 특수 배율 적용 직전 인스턴스/SceneTree 여부
+  - D8 특수 배율 적용 완료
+- 실행이 중간에서 끊기면 화면에 마지막으로 남은 MUT-DIAG 번호를 기준으로 실패 지점을 특정한다.
