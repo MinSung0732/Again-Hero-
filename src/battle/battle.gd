@@ -9,6 +9,7 @@ signal summon_result(monster_type: String, success: bool, message: String)
 signal demon_progression_changed(level: int, current_exp: float, exp_to_next_level: float)
 signal demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: int)
 signal demon_augment_applied(augment_name: String, build_summary: String)
+signal run_time_changed(elapsed_seconds: float, remaining_seconds: float)
 signal battle_finished(message: String, player_won: bool)
 
 const HERO_SCENE := preload("res://src/hero/Hero.tscn")
@@ -19,6 +20,7 @@ const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
+const RUN_METRICS := preload("res://src/systems/run_metrics.gd")
 
 const DEFAULT_MAP_SIZE := Vector2(3200, 3200)
 const AUTO_SPAWN_MIN_DISTANCE := 560.0
@@ -38,6 +40,9 @@ var current_stage_id: String = "stage_1"
 var current_stage_data: Dictionary = {}
 var current_hero_profile: Dictionary = {}
 var current_map_size: Vector2 = DEFAULT_MAP_SIZE
+var run_time_limit_seconds: float = 0.0
+var run_time_emit_timer: float = 0.0
+var run_metrics = RUN_METRICS.new()
 
 var monsters_alive: int = 0
 var battle_over: bool = false
@@ -81,6 +86,19 @@ func _process(delta: float) -> void:
 	if battle_over or demon_augment_selection_active or external_pause:
 		return
 
+	run_metrics.tick(delta)
+	run_time_emit_timer -= delta
+	if run_time_emit_timer <= 0.0:
+		run_time_emit_timer = 0.25
+		run_time_changed.emit(
+			run_metrics.elapsed_seconds,
+			run_metrics.get_remaining_seconds()
+		)
+
+	if run_metrics.is_time_up():
+		_on_run_time_up()
+		return
+
 	if command_power < max_command:
 		command_power = minf(command_power + command_regen_per_second * delta, max_command)
 		command_emit_timer -= delta
@@ -93,6 +111,7 @@ func _start_battle() -> void:
 	battle_over = false
 	external_pause = false
 	monsters_alive = 0
+	run_time_emit_timer = 0.0
 
 	max_command = BASE_MAX_COMMAND
 	command_power = START_COMMAND
@@ -136,6 +155,10 @@ func _start_battle() -> void:
 		float(current_stage_data.get("map_width", int(DEFAULT_MAP_SIZE.x))),
 		float(current_stage_data.get("map_height", int(DEFAULT_MAP_SIZE.y)))
 	)
+	run_time_limit_seconds = maxf(
+		float(current_stage_data.get("run_duration_seconds", 360.0)),
+		60.0
+	)
 
 	var hero_id: String = String(current_stage_data.get("hero_id", "ranged_rookie"))
 	current_hero_profile = HERO_PROFILES.get_profile(hero_id)
@@ -149,6 +172,12 @@ func _start_battle() -> void:
 
 	add_child(hero)
 	hero.position = current_map_size * 0.5
+
+	run_metrics.reset(
+		run_time_limit_seconds,
+		int(hero.get("current_hp")),
+		int(hero.get("max_hp"))
+	)
 	hero.connect("health_changed", Callable(self, "_on_hero_health_changed"))
 	hero.connect("progression_changed", Callable(self, "_on_hero_progression_changed"))
 	hero.connect("leveled_up", Callable(self, "_on_hero_leveled_up"))
@@ -159,6 +188,10 @@ func _start_battle() -> void:
 	_emit_progression()
 	command_changed.emit(command_power, max_command)
 	demon_progression_changed.emit(demon_level, demon_exp, demon_exp_to_next_level)
+	run_time_changed.emit(
+		run_metrics.elapsed_seconds,
+		run_metrics.get_remaining_seconds()
+	)
 
 func _apply_permanent_research() -> void:
 	permanent_research_levels.clear()
@@ -253,6 +286,8 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 	command_power = maxf(command_power - cost, 0.0)
 
 	_spawn_monster(monster_type, spawn_position, cost, false)
+	run_metrics.record_summon(monster_type, cost)
+
 	if is_instance_valid(hero) and hero.has_method("record_offensive_event"):
 		hero.call(
 			"record_offensive_event",
@@ -378,6 +413,7 @@ func _get_monster_name(monster_type: String) -> String:
 	return MONSTER_CATALOG.get_name(monster_type)
 
 func _on_hero_health_changed(current_hp: int, max_hp_value: int) -> void:
+	run_metrics.record_hero_hp(current_hp, max_hp_value)
 	stats_changed.emit(current_hp, max_hp_value, monsters_alive)
 
 func _on_hero_progression_changed(level: int, current_exp: int, exp_to_next_level: int) -> void:
@@ -387,6 +423,7 @@ func _on_hero_leveled_up(new_level: int) -> void:
 	hero_leveled_up.emit(new_level)
 
 func _on_hero_augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String) -> void:
+	run_metrics.record_hero_augment(level, chosen_name, reason)
 	hero_augment_selected.emit(level, candidates, chosen_name, reason, build_summary)
 
 func _on_monster_died(monster: Node) -> void:
@@ -411,6 +448,8 @@ func _on_monster_died(monster: Node) -> void:
 
 	if reward > 0:
 		_spawn_exp_orb(drop_position, reward)
+
+	run_metrics.record_monster_death(monster_type)
 
 	var original_cost: float = float(monster_summon_costs.get(instance_id, 0.0))
 	monster_summon_costs.erase(instance_id)
@@ -641,6 +680,17 @@ func _on_hero_died() -> void:
 
 	_finish_battle(result_text, true)
 
+func _on_run_time_up() -> void:
+	if battle_over:
+		return
+
+	var hero_name := String(current_hero_profile.get("display_name", "용사"))
+	var result_text := "시간 초과!\n%s가 제한시간을 버텨냈습니다." % hero_name
+	_finish_battle(result_text, false)
+
+func get_run_analysis_summary() -> String:
+	return run_metrics.get_result_summary()
+
 func _finish_battle(message: String, player_won: bool) -> void:
 	battle_over = true
 	demon_augment_selection_active = false
@@ -718,6 +768,10 @@ func get_snapshot() -> Dictionary:
 		"research_points": STAGE_PROGRESS.get_research_points(),
 		"map_width": current_map_size.x,
 		"map_height": current_map_size.y,
+		"run_elapsed_seconds": run_metrics.elapsed_seconds,
+		"run_duration_seconds": run_time_limit_seconds,
+		"run_remaining_seconds": run_metrics.get_remaining_seconds(),
+		"run_metrics": run_metrics.get_snapshot(),
 		"next_stage_id": String(current_stage_data.get("next_stage_id", "")),
 		"battle_over": battle_over,
 	}
