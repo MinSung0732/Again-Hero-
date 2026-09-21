@@ -1343,3 +1343,11 @@
 - 실제 돌연변이 몬스터 생성은 다음 프레임의 deferred 호출로 분리해 UI 버튼 콜백과 스폰 처리를 분리.
 - 후보 검증을 명시적 문자열 비교로 변경해 typed/untyped Array 차이에 따른 비교 실패 가능성 제거.
 - MutationPanel과 3개 선택 버튼이 마우스/터치 입력을 명시적으로 받도록 설정.
+
+### Mutation Choice State Sync Fix
+- 돌연변이 모달 후보와 Battle 내부 일시 상태가 어긋나 선택이 계속 실패하던 구조 수정.
+- 모달이 열릴 때 Stage 이벤트 데이터를 Main UI가 함께 보관하도록 변경.
+- 버튼 클릭 시 보관된 이벤트 데이터 + 선택 monster_id를 `resolve_mutation_choice()`에 직접 전달해 선택 확정.
+- 모달 표시 중 `external_pause`를 함께 사용해 Run 타이머/전투 정지를 UI 상태와 명시적으로 동기화.
+- 선택 성공 후 모달/후보/이벤트 데이터를 정리하고 pause를 해제한 뒤 deferred 스폰.
+- 기존 `choose_mutation()`은 호환용 래퍼로 유지.

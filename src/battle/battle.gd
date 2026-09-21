@@ -1288,18 +1288,35 @@ func _open_mutation_choice(event: Dictionary) -> void:
 	)
 
 func choose_mutation(monster_id: String) -> bool:
-	if not mutation_selection_active:
+	return resolve_mutation_choice(
+		pending_mutation_event.duplicate(true),
+		monster_id
+	)
+
+func resolve_mutation_choice(
+	event: Dictionary,
+	monster_id: String
+) -> bool:
+	if event.is_empty():
+		return false
+	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
 		return false
 
 	var is_valid_candidate := false
-	for raw_id in mutation_candidate_ids:
+	for raw_id in allowed_monster_ids:
 		if String(raw_id) == monster_id:
 			is_valid_candidate = true
 			break
+
+	if not is_valid_candidate:
+		for raw_id in mutation_candidate_ids:
+			if String(raw_id) == monster_id:
+				is_valid_candidate = true
+				break
+
 	if not is_valid_candidate:
 		return false
 
-	var event: Dictionary = pending_mutation_event.duplicate(true)
 	var event_type := String(event.get("type", "elite"))
 	var prefix := "돌연변이"
 	if event_type == "miniboss":
@@ -1315,9 +1332,6 @@ func choose_mutation(monster_id: String) -> bool:
 	mutation_selection_active = false
 	pending_mutation_event.clear()
 	mutation_candidate_ids.clear()
-
-	if not external_pause and not demon_augment_selection_active:
-		_set_combat_physics_enabled(true)
 
 	mutation_selected.emit(event_type, mutation_name)
 	call_deferred(
@@ -1840,7 +1854,7 @@ func set_external_pause(paused: bool) -> void:
 		_set_combat_physics_enabled(false)
 		return
 
-	if not demon_augment_selection_active:
+	if not demon_augment_selection_active and not mutation_selection_active:
 		_set_combat_physics_enabled(true)
 
 func can_go_to_next_stage() -> bool:

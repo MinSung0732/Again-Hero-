@@ -78,6 +78,7 @@ var auto_placement: bool = true
 var selected_monster_type: String = ""
 var current_demon_candidates: Array = []
 var current_mutation_candidates: Array = []
+var current_mutation_event: Dictionary = {}
 var debug_refresh_timer: float = 0.0
 var battle_loadout_ids: Array = []
 var summon_slot_buttons: Array = []
@@ -339,6 +340,8 @@ func _on_mutation_choice_ready(
 	candidates: Array
 ) -> void:
 	current_mutation_candidates = candidates.duplicate()
+	current_mutation_event = event_data.duplicate(true)
+	battle.set_external_pause(true)
 	mutation_panel.show()
 
 	var event_type := String(event_data.get("type", "elite"))
@@ -371,14 +374,19 @@ func _on_mutation_choice_pressed(index: int) -> void:
 		return
 
 	var monster_id := String(current_mutation_candidates[index])
-	mutation_panel.hide()
+	var resolved := battle.resolve_mutation_choice(
+		current_mutation_event.duplicate(true),
+		monster_id
+	)
 
-	if battle.choose_mutation(monster_id):
-		current_mutation_candidates.clear()
+	if not resolved:
+		status_label.text = "돌연변이 선택을 처리하지 못했습니다. 다시 선택하세요."
 		return
 
-	mutation_panel.show()
-	status_label.text = "돌연변이 선택을 처리하지 못했습니다. 다시 선택하세요."
+	mutation_panel.hide()
+	current_mutation_candidates.clear()
+	current_mutation_event.clear()
+	battle.set_external_pause(false)
 
 func _on_mutation_selected(
 	event_type: String,
@@ -749,6 +757,7 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	pause_menu.hide()
 	demon_augment_panel.hide()
 	mutation_panel.hide()
+	current_mutation_event.clear()
 	slime_button.disabled = true
 	spider_button.disabled = true
 	orc_button.disabled = true
