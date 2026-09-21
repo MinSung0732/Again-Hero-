@@ -96,6 +96,9 @@ offset_left = 825.0
 offset_top = 78.0
 offset_right = 1040.0
 offset_bottom = 132.0
+z_index = 20
+mouse_filter = 0
+focus_mode = 0
 theme_override_font_sizes/font_size = 20
 text = "메뉴"
 

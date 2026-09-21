@@ -26,7 +26,7 @@ static func save_ids(monster_ids: Array[String]) -> Array[String]:
 
 	var config := ConfigFile.new()
 	config.load(SAVE_PATH)
-	config.set_value("team", "monster_ids", normalized)
+	config.set_value("team", "monster_ids", PackedStringArray(normalized))
 	config.save(SAVE_PATH)
 	return normalized
 
@@ -43,10 +43,16 @@ static func _default_ids() -> Array[String]:
 
 static func _normalize_ids(raw_value: Variant) -> Array[String]:
 	var result: Array[String] = []
-	if not (raw_value is Array or raw_value is PackedStringArray):
-		return result
+	var raw_ids: Array = []
 
-	for raw_id in raw_value:
+	match typeof(raw_value):
+		TYPE_ARRAY, TYPE_PACKED_STRING_ARRAY:
+			for raw_id in raw_value:
+				raw_ids.append(raw_id)
+		_:
+			return result
+
+	for raw_id in raw_ids:
 		var monster_id := String(raw_id)
 		if monster_id.is_empty():
 			continue

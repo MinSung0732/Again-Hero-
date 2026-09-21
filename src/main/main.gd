@@ -61,6 +61,11 @@ func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
 		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_PORTRAIT)
 
+	stage_menu_button.pressed.connect(_on_stage_menu_pressed)
+	pause_resume_button.pressed.connect(_close_pause_menu)
+	pause_restart_button.pressed.connect(_on_pause_restart_pressed)
+	pause_lobby_button.pressed.connect(_on_lobby_pressed)
+
 	battle.stats_changed.connect(_on_stats_changed)
 	battle.progression_changed.connect(_on_progression_changed)
 	battle.hero_leveled_up.connect(_on_hero_leveled_up)
@@ -72,11 +77,6 @@ func _ready() -> void:
 	battle.demon_augment_applied.connect(_on_demon_augment_applied)
 	battle.run_time_changed.connect(_on_run_time_changed)
 	battle.battle_finished.connect(_on_battle_finished)
-
-	stage_menu_button.pressed.connect(_on_stage_menu_pressed)
-	pause_resume_button.pressed.connect(_close_pause_menu)
-	pause_restart_button.pressed.connect(_on_pause_restart_pressed)
-	pause_lobby_button.pressed.connect(_on_lobby_pressed)
 
 	placement_toggle.toggled.connect(_on_placement_mode_toggled)
 	slime_button.pressed.connect(_on_summon_slot_pressed.bind(0))
@@ -224,25 +224,23 @@ func _open_pause_menu() -> void:
 	if demon_augment_panel.visible or result_panel.visible:
 		return
 
-	var snapshot: Dictionary = battle.get_snapshot()
-	pause_stage_label.text = "Stage %d · %s\n상대: %s" % [
-		int(snapshot.get("stage_number", 1)),
-		String(snapshot.get("stage_name", "스테이지")),
-		String(snapshot.get("hero_name", "용사")),
-	]
-	pause_time_label.text = "남은 시간 %s" % _format_run_time(
-		float(snapshot.get("run_remaining_seconds", 0.0))
-	)
-
-	battle.set_external_pause(true)
+	pause_stage_label.text = subtitle_label.text
+	pause_time_label.text = run_timer_label.text
 	pause_menu.show()
+
+	if is_instance_valid(battle) and battle.has_method("set_external_pause"):
+		battle.set_external_pause(true)
 
 func _close_pause_menu() -> void:
 	if not pause_menu.visible:
 		return
 
 	pause_menu.hide()
-	if not result_panel.visible:
+	if (
+		not result_panel.visible
+		and is_instance_valid(battle)
+		and battle.has_method("set_external_pause")
+	):
 		battle.set_external_pause(false)
 
 func _on_pause_restart_pressed() -> void:

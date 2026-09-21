@@ -753,3 +753,11 @@
 - 전투 하단 3개 소환 버튼을 편성 슬롯 기반으로 동적 구성하고 빈 슬롯은 숨김.
 - 메인 UI의 몬스터 이름 표시도 MonsterCatalog 기반으로 정리해 신규 몬스터 추가 시 하드코딩 수정 범위를 축소.
 
+### Battle Menu Touch Regression Fix
+- 팀 편성 v1 적용 후 Android에서 전투 상단 `메뉴` 버튼이 반응하지 않는 회귀 문제 대응.
+- 메뉴/일시정지 버튼 signal 연결을 Battle signal 초기화보다 먼저 수행해, 전투 초기화 중 오류가 생겨도 메뉴 UI 연결이 끊기지 않도록 변경.
+- 일시정지 메뉴를 열 때 `Battle.get_snapshot()` 호출 의존성을 제거하고 이미 표시 중인 상단 Stage/시간 HUD 값을 재사용.
+- pause/unpause 호출은 Battle method 존재 여부를 확인한 뒤 실행하도록 안전 처리.
+- 전투 `메뉴` 버튼에 높은 z-index와 명시적 touch mouse filter를 적용.
+- TeamLoadout ConfigFile 저장값을 PackedStringArray로 통일하고 Array/PackedStringArray 로드를 `typeof()` 기반으로 정규화해 Android 런타임 호환성을 보강.
+
