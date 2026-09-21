@@ -1392,3 +1392,11 @@
 - UI는 표시된 monster_id만 전달하고 Battle의 `pending_mutation_event`를 직접 사용.
 - pending event가 비어 있어도 1차 돌연변이 기본 배율로 fallback.
 - 기존 `resolve_mutation_from_ui()`와 `choose_mutation()`은 그대로 유지해 다른 경로에 영향 없도록 함.
+
+### Mutation Choice Direct Spawn
+- 돌연변이 선택 경로를 `버튼 → Battle → 즉시 스폰` 한 단계 구조로 단순화.
+- 기존 `force_resolve_mutation()`, `resolve_mutation_from_ui()`, `choose_mutation()`, deferred 완료 함수를 제거.
+- Main이 Stage 이벤트 Dictionary를 별도로 보관하는 상태도 제거.
+- 버튼 클릭 시 `spawn_selected_mutation(monster_id)`가 Battle의 `pending_mutation_event`를 직접 사용해 즉시 강화 개체를 생성.
+- 생성 후 돌연변이 선택 상태를 해제하고 전투 physics를 재개.
+- 시작 시 시간/지휘력/일반 소환 처리 코드는 변경하지 않음.

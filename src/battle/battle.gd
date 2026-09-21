@@ -1287,10 +1287,7 @@ func _open_mutation_choice(event: Dictionary) -> void:
 		mutation_candidate_ids.duplicate()
 	)
 
-func force_resolve_mutation(monster_id: String) -> bool:
-	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
-		return false
-
+func spawn_selected_mutation(monster_id: String) -> void:
 	var event: Dictionary = pending_mutation_event.duplicate(true)
 	if event.is_empty():
 		event = {
@@ -1314,105 +1311,16 @@ func force_resolve_mutation(monster_id: String) -> bool:
 	event["name"] = mutation_name
 	event["spawn_distance"] = 460.0
 
-	mutation_selection_active = false
-	pending_mutation_event.clear()
-	mutation_candidate_ids.clear()
-
-	if not external_pause and not demon_augment_selection_active:
-		_set_combat_physics_enabled(true)
-
-	mutation_selected.emit(event_type, mutation_name)
-	call_deferred(
-		"_complete_mutation_spawn",
-		event,
-		monster_id
-	)
-	return true
-
-func resolve_mutation_from_ui(
-	event: Dictionary,
-	monster_id: String
-) -> bool:
-	if event.is_empty():
-		return false
-	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
-		return false
-
-	var event_copy: Dictionary = event.duplicate(true)
-	var event_type := String(event_copy.get("type", "elite"))
-	var prefix := "돌연변이"
-	if event_type == "miniboss":
-		prefix = "대돌연변이"
-
-	var mutation_name := "%s %s" % [
-		prefix,
-		MONSTER_CATALOG.get_name(monster_id),
-	]
-	event_copy["name"] = mutation_name
-	event_copy["spawn_distance"] = 460.0
-
-	mutation_selection_active = false
-	pending_mutation_event.clear()
-	mutation_candidate_ids.clear()
-
-	if not external_pause and not demon_augment_selection_active:
-		_set_combat_physics_enabled(true)
-
-	mutation_selected.emit(event_type, mutation_name)
-	call_deferred(
-		"_complete_mutation_spawn",
-		event_copy,
-		monster_id
-	)
-	return true
-
-func choose_mutation(monster_id: String) -> bool:
-	if not mutation_selection_active:
-		return false
-
-	var is_valid_candidate := false
-	for raw_id in mutation_candidate_ids:
-		if String(raw_id) == monster_id:
-			is_valid_candidate = true
-			break
-	if not is_valid_candidate:
-		return false
-
-	var event: Dictionary = pending_mutation_event.duplicate(true)
-	var event_type := String(event.get("type", "elite"))
-	var prefix := "돌연변이"
-	if event_type == "miniboss":
-		prefix = "대돌연변이"
-
-	var mutation_name := "%s %s" % [
-		prefix,
-		MONSTER_CATALOG.get_name(monster_id),
-	]
-	event["name"] = mutation_name
-	event["spawn_distance"] = 460.0
-
-	mutation_selection_active = false
-	pending_mutation_event.clear()
-	mutation_candidate_ids.clear()
-
-	if not external_pause and not demon_augment_selection_active:
-		_set_combat_physics_enabled(true)
-
-	mutation_selected.emit(event_type, mutation_name)
-	call_deferred(
-		"_complete_mutation_spawn",
-		event,
-		monster_id
-	)
-	return true
-
-func _complete_mutation_spawn(
-	event: Dictionary,
-	monster_id: String
-) -> void:
-	if battle_over or not is_instance_valid(hero):
-		return
 	_spawn_stage_event_monster(event, monster_id)
+
+	mutation_selection_active = false
+	pending_mutation_event.clear()
+	mutation_candidate_ids.clear()
+
+	if not external_pause and not demon_augment_selection_active:
+		_set_combat_physics_enabled(true)
+
+	mutation_selected.emit(event_type, mutation_name)
 
 func _spawn_stage_event_monster(
 	event: Dictionary,
