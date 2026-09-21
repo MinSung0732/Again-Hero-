@@ -767,3 +767,11 @@
 - 전투 타이머 / 슬라임·거미·오크 소환 / 상단 전투 메뉴 동작 복구를 최우선으로 함.
 - 팀 편성은 ROADMAP에서 미완료 상태로 되돌리고, Android 오류 로그 확인 후 재구현 예정.
 
+### Team Loadout Rebuild Step 1 — Lobby UI Only
+- 롤백 이후 팀 편성을 작은 단계로 재도입.
+- 로비 팀 편성 placeholder를 UI-only 편성 화면으로 교체.
+- 3개 미리보기 슬롯 + MonsterCatalog 기반 몬스터 목록 + 역할/기본 비용 표시 추가.
+- 버튼으로 최소 1종 / 최대 3종 범위의 로컬 미리보기 선택 가능.
+- 선택 상태는 저장하지 않고 전투에도 전달하지 않음.
+- 이번 변경은 `src/lobby/lobby.gd`와 `Lobby.tscn`에만 런타임 기능을 추가하며 Battle/Main 전투 코드는 변경하지 않음.
+

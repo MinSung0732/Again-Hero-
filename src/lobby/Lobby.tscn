@@ -121,18 +121,114 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Placeholder" type="Label" parent="SafeArea/Layout/Content/TeamTab"]
+[node name="TeamLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/TeamTab"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.83, 0.79, 0.87, 1)
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="Title" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.87, 1, 1)
 theme_override_font_sizes/font_size = 34
-text = "팀 편성\n\n몬스터 덱 / 편성 시스템 예정"
+text = "몬스터 편성"
+horizontal_alignment = 1
+
+[node name="Guide" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
+theme_override_font_sizes/font_size = 20
+text = "이번 단계는 UI 미리보기입니다. 아직 전투 편성에는 적용되지 않습니다."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Summary" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
+theme_override_font_sizes/font_size = 22
+text = "미리보기 편성 3 / 3"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="SlotRow" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+custom_minimum_size = Vector2(0, 190)
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Slot1" type="PanelContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot1"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "1\n슬라임\n물량"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Slot2" type="PanelContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot2"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "2\n거미\n제어"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Slot3" type="PanelContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot3"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "3\n오크\n탱커"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ListTitle" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "보유 몬스터"
+horizontal_alignment = 1
+
+[node name="MonsterList" type="VBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Monster1Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList"]
+custom_minimum_size = Vector2(0, 126)
+layout_mode = 2
+theme_override_font_sizes/font_size = 21
+text = "슬라임"
+
+[node name="Monster2Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList"]
+custom_minimum_size = Vector2(0, 126)
+layout_mode = 2
+theme_override_font_sizes/font_size = 21
+text = "거미"
+
+[node name="Monster3Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList"]
+custom_minimum_size = Vector2(0, 126)
+layout_mode = 2
+theme_override_font_sizes/font_size = 21
+text = "오크"
+
+[node name="Status" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+custom_minimum_size = Vector2(0, 78)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
+theme_override_font_sizes/font_size = 19
+text = "선택은 로비 화면에서만 미리보기로 유지됩니다."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="MainTab" type="Control" parent="SafeArea/Layout/Content"]
 layout_mode = 1

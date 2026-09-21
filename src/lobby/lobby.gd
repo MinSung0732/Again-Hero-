@@ -4,6 +4,7 @@ const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
 const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
+const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 
 const BATTLE_SCENE_PATH := "res://src/main/Main.tscn"
 
@@ -22,6 +23,15 @@ const BATTLE_SCENE_PATH := "res://src/main/Main.tscn"
 @onready var main_button: Button = $BottomNav/NavMargin/NavButtons/MainButton
 @onready var research_button: Button = $BottomNav/NavMargin/NavButtons/ResearchButton
 @onready var other_button: Button = $BottomNav/NavMargin/NavButtons/OtherButton
+
+@onready var team_summary_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/Summary
+@onready var team_slot_1_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot1/Label
+@onready var team_slot_2_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot2/Label
+@onready var team_slot_3_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot3/Label
+@onready var team_monster_1_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList/Monster1Button
+@onready var team_monster_2_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList/Monster2Button
+@onready var team_monster_3_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList/Monster3Button
+@onready var team_status_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/Status
 
 @onready var prev_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/PrevButton
 @onready var next_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/NextButton
@@ -44,6 +54,9 @@ var stage_ids: Array[String] = []
 var selected_stage_index: int = 0
 var current_tab: String = "main"
 
+var team_monster_ids: Array[String] = []
+var team_preview_ids: Array[String] = []
+
 var panel_style := StyleBoxFlat.new()
 var header_style := StyleBoxFlat.new()
 var stage_card_style := StyleBoxFlat.new()
@@ -63,6 +76,7 @@ func _ready() -> void:
 	_build_styles()
 	_apply_styles()
 	_connect_navigation()
+	_setup_team_preview()
 
 	stage_ids = STAGE_CATALOG.get_ordered_stage_ids()
 	if stage_ids.is_empty():
@@ -180,6 +194,13 @@ func _apply_styles() -> void:
 	enter_stage_button.add_theme_stylebox_override("hover", primary_button_style)
 	enter_stage_button.add_theme_stylebox_override("pressed", primary_button_style)
 
+	for panel in [
+		$SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot1,
+		$SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot2,
+		$SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot3,
+	]:
+		panel.add_theme_stylebox_override("panel", stage_card_style)
+
 func _connect_navigation() -> void:
 	shop_button.pressed.connect(_switch_tab.bind("shop"))
 	team_button.pressed.connect(_switch_tab.bind("team"))
@@ -190,6 +211,10 @@ func _connect_navigation() -> void:
 	prev_stage_button.pressed.connect(_change_stage.bind(-1))
 	next_stage_button.pressed.connect(_change_stage.bind(1))
 	enter_stage_button.pressed.connect(_enter_selected_stage)
+
+	team_monster_1_button.pressed.connect(_toggle_team_preview_slot.bind(0))
+	team_monster_2_button.pressed.connect(_toggle_team_preview_slot.bind(1))
+	team_monster_3_button.pressed.connect(_toggle_team_preview_slot.bind(2))
 
 func _switch_tab(tab_id: String) -> void:
 	current_tab = tab_id
@@ -206,7 +231,9 @@ func _switch_tab(tab_id: String) -> void:
 	_refresh_nav_button(research_button, tab_id == "research")
 	_refresh_nav_button(other_button, tab_id == "other")
 
-	if tab_id == "research":
+	if tab_id == "team":
+		_refresh_team_preview()
+	elif tab_id == "research":
 		_rebuild_research_list()
 
 func _refresh_nav_button(button: Button, selected: bool) -> void:
@@ -218,6 +245,97 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 		"font_color",
 		Color("ffe29a") if selected else Color("d8cfdf")
 	)
+
+func _setup_team_preview() -> void:
+	team_monster_ids = MONSTER_CATALOG.get_ids()
+	team_monster_ids.sort_custom(
+		func(a: String, b: String) -> bool:
+			return MONSTER_CATALOG.get_base_cost(a) < MONSTER_CATALOG.get_base_cost(b)
+	)
+
+	team_preview_ids.clear()
+	for monster_id in team_monster_ids:
+		if team_preview_ids.size() >= 3:
+			break
+		team_preview_ids.append(monster_id)
+
+	_refresh_team_preview()
+
+func _refresh_team_preview() -> void:
+	var slot_labels: Array[Label] = [
+		team_slot_1_label,
+		team_slot_2_label,
+		team_slot_3_label,
+	]
+	var monster_buttons: Array[Button] = [
+		team_monster_1_button,
+		team_monster_2_button,
+		team_monster_3_button,
+	]
+
+	for slot_index in range(slot_labels.size()):
+		if slot_index < team_preview_ids.size():
+			var monster_id := team_preview_ids[slot_index]
+			slot_labels[slot_index].text = "%d\n%s\n%s" % [
+				slot_index + 1,
+				MONSTER_CATALOG.get_name(monster_id),
+				MONSTER_CATALOG.get_role_label(
+					MONSTER_CATALOG.get_role(monster_id)
+				),
+			]
+		else:
+			slot_labels[slot_index].text = "%d\n빈 슬롯" % (slot_index + 1)
+
+	var selected_names: PackedStringArray = []
+	for monster_id in team_preview_ids:
+		selected_names.append(MONSTER_CATALOG.get_name(monster_id))
+
+	team_summary_label.text = "미리보기 편성 %d / 3 · %s" % [
+		team_preview_ids.size(),
+		" / ".join(selected_names),
+	]
+
+	for index in range(monster_buttons.size()):
+		var button := monster_buttons[index]
+		if index >= team_monster_ids.size():
+			button.visible = false
+			continue
+
+		var monster_id := team_monster_ids[index]
+		var data := MONSTER_CATALOG.get_monster(monster_id)
+		var selected := monster_id in team_preview_ids
+		button.visible = true
+		button.text = "%s  ·  %s  ·  기본 비용 %.0f\n%s" % [
+			String(data.get("name", monster_id)),
+			MONSTER_CATALOG.get_role_label(String(data.get("role", ""))),
+			float(data.get("base_cost", 0.0)),
+			"선택됨 · 탭해서 빼기" if selected else "탭해서 넣기",
+		]
+
+		var style := primary_button_style if selected else secondary_button_style
+		button.add_theme_stylebox_override("normal", style)
+		button.add_theme_stylebox_override("hover", style)
+		button.add_theme_stylebox_override("pressed", style)
+
+func _toggle_team_preview_slot(button_index: int) -> void:
+	if button_index < 0 or button_index >= team_monster_ids.size():
+		return
+
+	var monster_id := team_monster_ids[button_index]
+	if monster_id in team_preview_ids:
+		if team_preview_ids.size() <= 1:
+			team_status_label.text = "미리보기에서도 최소 1종은 남겨둡니다."
+			return
+		team_preview_ids.erase(monster_id)
+		team_status_label.text = "%s 미리보기에서 제외" % MONSTER_CATALOG.get_name(monster_id)
+	else:
+		if team_preview_ids.size() >= 3:
+			team_status_label.text = "미리보기 슬롯은 최대 3칸입니다."
+			return
+		team_preview_ids.append(monster_id)
+		team_status_label.text = "%s 미리보기에 추가" % MONSTER_CATALOG.get_name(monster_id)
+
+	_refresh_team_preview()
 
 func _refresh_header() -> void:
 	var state := STAGE_PROGRESS.load_state()
