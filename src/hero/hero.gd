@@ -59,6 +59,7 @@ var augment_pool_ids: Array[String] = []
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
 var ultimate_flash_timer: float = 0.0
+var ultimate_cooldown_timer: float = 0.0
 
 var shield_skill_config: Dictionary = {}
 var shield_cooldown_timer: float = 0.0
@@ -133,6 +134,10 @@ func configure_profile(profile: Dictionary) -> void:
 		else {}
 	)
 	ultimate_charge = 0.0
+	ultimate_cooldown_timer = maxf(
+		float(ultimate_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
 	var profile_shield = profile.get("shield_skill", {})
 	shield_skill_config = (
 		profile_shield.duplicate(true)
@@ -677,11 +682,6 @@ func _update_channel_skill(delta: float) -> void:
 		return
 
 	channel_cooldown_timer = maxf(channel_cooldown_timer - delta, 0.0)
-	if channel_cooldown_timer > 0.0:
-		return
-
-	if _should_cast_channel_skill():
-		_activate_channel_skill()
 
 func _should_cast_channel_skill() -> bool:
 	var radius := maxf(
@@ -709,6 +709,25 @@ func _should_cast_channel_skill() -> bool:
 			return true
 
 	return false
+
+func _use_channel_as_charged_skill() -> void:
+	if channel_skill_config.is_empty():
+		return
+	if channel_cooldown_timer > 0.0 or channeling:
+		return
+
+	ultimate_charge = 0.0
+	ultimate_flash_timer = 0.28
+	_activate_channel_skill()
+
+	var skill_id := String(
+		channel_skill_config.get("id", "arcane_field")
+	)
+	var skill_name := String(
+		channel_skill_config.get("name", "비전 집중")
+	)
+	ultimate_used.emit(skill_id, skill_name)
+	queue_redraw()
 
 func _activate_channel_skill() -> void:
 	channeling = true
@@ -866,12 +885,19 @@ func _update_ultimate(delta: float) -> void:
 	if ultimate_config.is_empty() or is_dying or current_hp <= 0:
 		return
 
+	ultimate_cooldown_timer = maxf(
+		ultimate_cooldown_timer - delta,
+		0.0
+	)
+
 	var passive_charge := maxf(
 		float(ultimate_config.get("charge_per_second", 0.0)),
 		0.0
 	)
 	if passive_charge > 0.0:
 		_add_ultimate_charge(passive_charge * delta)
+
+	_try_use_charged_skill()
 
 func _add_ultimate_charge(amount: float) -> void:
 	if amount <= 0.0 or ultimate_config.is_empty() or is_dying:
@@ -884,11 +910,31 @@ func _add_ultimate_charge(amount: float) -> void:
 	ultimate_charge = minf(ultimate_charge + amount, charge_max)
 	queue_redraw()
 
-	if ultimate_charge + 0.001 >= charge_max:
+func _try_use_charged_skill() -> void:
+	if ultimate_config.is_empty() or is_dying or current_hp <= 0:
+		return
+	if channeling:
+		return
+
+	var charge_max := maxf(
+		float(ultimate_config.get("charge_max", 100.0)),
+		1.0
+	)
+	if ultimate_charge + 0.001 < charge_max:
+		return
+
+	if channel_cooldown_timer <= 0.0 and _should_cast_channel_skill():
+		_use_channel_as_charged_skill()
+		return
+
+	if ultimate_cooldown_timer <= 0.0:
 		_use_ultimate()
+		return
 
 func _use_ultimate() -> void:
 	if ultimate_config.is_empty() or is_dying or current_hp <= 0:
+		return
+	if ultimate_cooldown_timer > 0.0:
 		return
 
 	var ultimate_type := String(ultimate_config.get("type", ""))
@@ -899,6 +945,10 @@ func _use_ultimate() -> void:
 
 	ultimate_charge = 0.0
 	ultimate_flash_timer = 0.28
+	ultimate_cooldown_timer = maxf(
+		float(ultimate_config.get("cooldown", 14.0)),
+		0.0
+	)
 
 	match ultimate_type:
 		"area_burst":
