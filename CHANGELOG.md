@@ -1091,3 +1091,12 @@
   - 슬라임 비용 -5%→-8%/레벨
   - 마왕 EXP 획득 +5%→+10%/레벨
   - 증강 새로고침 +1/레벨은 유지.
+
+### Bomb Rat Explosion Effect Connected
+- 사용자 제공 `bombrat_effect_spritesheet.png`를 폭탄쥐 자폭 순간에 실제 전투 이펙트로 연결.
+- 시트 규격 2172×724를 724×724 셀 3프레임 가로 애니메이션으로 사용.
+- 기존 Stage 1 Hero/Bomb Rat와 동일한 ResourceLoader 우선 + FileAccess/Image fallback 방식으로 Android import 지연에도 대응.
+- 자폭 완료 순간 이펙트를 재생한 뒤 기존 폭발 피해/사망/EXP 신호 흐름을 그대로 실행.
+- 시각 효과 크기는 기존 폭발 반경 150px에 맞춰 약 300px 지름으로 표시.
+- Hero에게 먼저 처치된 폭탄쥐는 자폭 이펙트를 재생하지 않음.
+- 로비/UI/팀 편성/EXP 시스템은 변경하지 않음.

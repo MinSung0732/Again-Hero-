@@ -4,6 +4,10 @@ const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const BOMBRAT_SHEET_PATH := "res://assets/art/monsters/bombrat/bombrat_spritesheet.png"
 const BOMBRAT_FRAME_SIZE := Vector2(229, 229)
 const BOMBRAT_TARGET_HEIGHT := 78.0
+const BOMBRAT_EFFECT_SHEET_PATH := "res://assets/art/monsters/bombrat/bombrat_effect_spritesheet.png"
+const BOMBRAT_EFFECT_FRAME_SIZE := Vector2(724, 724)
+const BOMBRAT_EFFECT_FRAME_COUNT := 3
+const BOMBRAT_EFFECT_TARGET_DIAMETER := 300.0
 
 signal died
 
@@ -20,6 +24,7 @@ signal died
 @export var explosion_damage: int = 28
 
 @onready var visual: AnimatedSprite2D = $Visual
+@onready var explosion_effect: AnimatedSprite2D = $ExplosionEffect
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 var current_hp: int
@@ -36,6 +41,7 @@ func _ready() -> void:
 	exp_reward = hero_kill_exp_reward
 	hero = get_tree().get_first_node_in_group("hero") as Node2D
 	_apply_bomb_rat_visual()
+	_apply_bomb_rat_explosion_visual()
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
@@ -114,6 +120,7 @@ func _complete_self_destruct() -> void:
 	exp_reward = self_destruct_exp_reward
 	collision_shape.set_deferred("disabled", true)
 
+	_play_explosion_effect()
 	_trigger_death_explosion()
 	died.emit()
 	_play_death_or_free()
@@ -178,6 +185,67 @@ func _apply_bomb_rat_visual() -> void:
 		visual.animation_finished.connect(_on_visual_animation_finished)
 
 	visual.play(&"idle")
+
+func _apply_bomb_rat_explosion_visual() -> void:
+	explosion_effect.visible = false
+	explosion_effect.sprite_frames = null
+	explosion_effect.modulate = Color.WHITE
+	explosion_effect.rotation = 0.0
+	explosion_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+	var sheet := _load_bomb_rat_texture(BOMBRAT_EFFECT_SHEET_PATH)
+	if sheet == null:
+		push_warning("Bomb Rat explosion spritesheet load failed: %s" % BOMBRAT_EFFECT_SHEET_PATH)
+		return
+
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.remove_animation(&"default")
+
+	frames.add_animation(&"explode")
+	frames.set_animation_speed(&"explode", 14.0)
+	frames.set_animation_loop(&"explode", false)
+
+	for column in range(BOMBRAT_EFFECT_FRAME_COUNT):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = sheet
+		atlas.filter_clip = true
+		atlas.region = Rect2(
+			Vector2(float(column) * BOMBRAT_EFFECT_FRAME_SIZE.x, 0.0),
+			BOMBRAT_EFFECT_FRAME_SIZE
+		)
+		frames.add_frame(&"explode", atlas)
+
+	explosion_effect.sprite_frames = frames
+	var uniform_scale := (
+		BOMBRAT_EFFECT_TARGET_DIAMETER / BOMBRAT_EFFECT_FRAME_SIZE.x
+	)
+	explosion_effect.scale = Vector2(uniform_scale, uniform_scale)
+	explosion_effect.speed_scale = 1.0
+
+	if not explosion_effect.animation_finished.is_connected(
+		_on_explosion_effect_finished
+	):
+		explosion_effect.animation_finished.connect(
+			_on_explosion_effect_finished
+		)
+
+func _play_explosion_effect() -> void:
+	if explosion_effect.sprite_frames == null:
+		return
+	if not explosion_effect.sprite_frames.has_animation(&"explode"):
+		return
+
+	explosion_effect.visible = true
+	explosion_effect.stop()
+	explosion_effect.animation = &"explode"
+	explosion_effect.frame = 0
+	explosion_effect.frame_progress = 0.0
+	explosion_effect.play(&"explode")
+
+func _on_explosion_effect_finished() -> void:
+	if explosion_effect.animation == &"explode":
+		explosion_effect.visible = false
 
 func _load_bomb_rat_texture(path: String) -> Texture2D:
 	if path.is_empty():
