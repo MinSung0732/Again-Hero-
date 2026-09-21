@@ -5,6 +5,7 @@ const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
+const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 
 const BATTLE_SCENE_PATH := "res://src/main/Main.tscn"
 
@@ -253,11 +254,16 @@ func _setup_team_preview() -> void:
 			return MONSTER_CATALOG.get_base_cost(a) < MONSTER_CATALOG.get_base_cost(b)
 	)
 
-	team_preview_ids.clear()
+	var default_ids: Array[String] = []
 	for monster_id in team_monster_ids:
-		if team_preview_ids.size() >= 3:
+		if default_ids.size() >= TEAM_LOADOUT_STORE.MAX_SLOTS:
 			break
-		team_preview_ids.append(monster_id)
+		default_ids.append(monster_id)
+
+	team_preview_ids = TEAM_LOADOUT_STORE.load_ids(
+		team_monster_ids,
+		default_ids
+	)
 
 	_refresh_team_preview()
 
@@ -290,8 +296,9 @@ func _refresh_team_preview() -> void:
 	for monster_id in team_preview_ids:
 		selected_names.append(MONSTER_CATALOG.get_name(monster_id))
 
-	team_summary_label.text = "미리보기 편성 %d / 3 · %s" % [
+	team_summary_label.text = "저장된 편성 %d / %d · %s" % [
 		team_preview_ids.size(),
+		TEAM_LOADOUT_STORE.MAX_SLOTS,
 		" / ".join(selected_names),
 	]
 
@@ -324,16 +331,25 @@ func _toggle_team_preview_slot(button_index: int) -> void:
 	var monster_id := team_monster_ids[button_index]
 	if monster_id in team_preview_ids:
 		if team_preview_ids.size() <= 1:
-			team_status_label.text = "미리보기에서도 최소 1종은 남겨둡니다."
+			team_status_label.text = "최소 1종은 편성해야 합니다."
 			return
 		team_preview_ids.erase(monster_id)
-		team_status_label.text = "%s 미리보기에서 제외" % MONSTER_CATALOG.get_name(monster_id)
+		team_status_label.text = "%s 편성 해제" % MONSTER_CATALOG.get_name(monster_id)
 	else:
-		if team_preview_ids.size() >= 3:
-			team_status_label.text = "미리보기 슬롯은 최대 3칸입니다."
+		if team_preview_ids.size() >= TEAM_LOADOUT_STORE.MAX_SLOTS:
+			team_status_label.text = "편성 슬롯은 최대 %d칸입니다." % TEAM_LOADOUT_STORE.MAX_SLOTS
 			return
 		team_preview_ids.append(monster_id)
-		team_status_label.text = "%s 미리보기에 추가" % MONSTER_CATALOG.get_name(monster_id)
+		team_status_label.text = "%s 편성 추가" % MONSTER_CATALOG.get_name(monster_id)
+
+	var saved := TEAM_LOADOUT_STORE.save_ids(
+		team_preview_ids,
+		team_monster_ids
+	)
+	if saved:
+		team_status_label.text += " · 자동 저장 완료"
+	else:
+		team_status_label.text = "편성 저장에 실패했습니다."
 
 	_refresh_team_preview()
 

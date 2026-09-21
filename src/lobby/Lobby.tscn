@@ -142,7 +142,7 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
 theme_override_font_sizes/font_size = 20
-text = "이번 단계는 UI 미리보기입니다. 아직 전투 편성에는 적용되지 않습니다."
+text = "선택한 편성은 자동 저장됩니다. 아직 전투 소환 슬롯에는 적용되지 않습니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
@@ -150,7 +150,7 @@ autowrap_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
 theme_override_font_sizes/font_size = 22
-text = "미리보기 편성 3 / 3"
+text = "저장된 편성 3 / 3"
 horizontal_alignment = 1
 autowrap_mode = 2
 
@@ -225,7 +225,7 @@ custom_minimum_size = Vector2(0, 78)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
 theme_override_font_sizes/font_size = 19
-text = "선택은 로비 화면에서만 미리보기로 유지됩니다."
+text = "선택은 즉시 저장되며 앱을 다시 열어도 유지됩니다."
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2

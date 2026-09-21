@@ -775,3 +775,11 @@
 - 선택 상태는 저장하지 않고 전투에도 전달하지 않음.
 - 이번 변경은 `src/lobby/lobby.gd`와 `Lobby.tscn`에만 런타임 기능을 추가하며 Battle/Main 전투 코드는 변경하지 않음.
 
+### Team Loadout Rebuild Step 2 — Persistence Only
+- Step 1 로비 편성 UI에 영구 저장만 추가.
+- 신규 `team_loadout_store.gd`에서 `user://team_loadout.json` 사용.
+- 저장 데이터는 MonsterCatalog의 현재 ID 목록으로 검증하고 중복/잘못된 ID를 제거.
+- 편성 변경 즉시 자동 저장, 로비 재진입 및 앱 재실행 시 복원.
+- 최소 1종 / 최대 3종 제한 유지.
+- Battle / Main 전투 파일은 수정하지 않았으며 저장된 편성은 아직 실제 전투 소환 슬롯에 적용되지 않음.
+
