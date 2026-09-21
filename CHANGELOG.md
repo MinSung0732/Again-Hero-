@@ -698,3 +698,9 @@
 - `stage1_mage_attack_sheet.png` 전용 에셋과 전용 로더/manifest override를 제거.
 - HeroSprite scale, 64×64 AtlasTexture 셀, 기존 anchor/foot 위치는 변경하지 않아 상태 전환 시 크기 차이가 생기지 않도록 유지.
 
+### Stage 1 Attack Frame Transparent Pixel Fix
+- 통합 시트 복귀 과정에서 PNG 셀을 알파 마스크로 합성하면 투명하게 지운 픽셀이 원본 아래에 남을 수 있는 문제를 수정.
+- 사용자 수정본 `attack_01` / `attack_05`를 **64×64 RGBA 셀 전체 교체** 방식으로 다시 반영.
+- `attack_01`에서 제거한 왼쪽 2px 폭 × 12px 높이의 24개 불투명 픽셀이 실제 통합 시트에서도 완전히 투명해지도록 확인.
+- 통합 시트 전체 크기 384×256, HeroSprite scale, attack row 위치는 그대로 유지.
+
