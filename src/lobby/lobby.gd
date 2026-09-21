@@ -928,4 +928,4 @@ func _purchase_research(research_id: String) -> void:
 		research_status_label.text = "연구 포인트가 부족하거나 이미 완료된 연구입니다."
 
 	_refresh_header()
-	_rebuild_research_list()
+	_rebuild_research_list.call_deferred()
