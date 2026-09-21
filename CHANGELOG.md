@@ -1542,3 +1542,10 @@
 - Bomb Rat 폭발 효과를 기존 통시트 3프레임 방식에서 frames/frame_01~08.png 개별 PNG 8프레임 방식으로 교체.
 - 기존 MUT-DIAG 진단 출력을 제거하고 정상 돌연변이 결과 메시지만 유지.
 - 거미 원거리 투사체 로직과 UI 파츠 적용은 다음 단계로 분리.
+
+### Bomb Rat Spawn Visual Regression Fix + Elite Scale
+- Bomb Rat 몸체 스프라이트 분할을 기존 검증된 229×229 고정 셀 방식으로 복구.
+- 일반 Bomb Rat은 기존 bombrat_spritesheet.png, 엘리트 Bomb Rat은 elitebombrat_spritesheet.png를 같은 셀 규칙으로 사용.
+- 폭발 이펙트는 개별 PNG frame_01~08 방식 유지.
+- 폭발 프레임 로더가 첫 프레임만 추가하던 문제를 수정해 8프레임 전체를 SpriteFrames에 추가.
+- mutation_1 / mutation_2 / greater_mutation의 visual_scale을 모두 1.5로 통일해 엘리트/돌연변이 몬스터를 일반 대비 약 1.5배 크기로 표시.

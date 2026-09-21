@@ -12,7 +12,7 @@ const PROFILES := {
 		"damage_multiplier": 1.45,
 		"speed_multiplier": 1.10,
 		"exp_multiplier": 1.5,
-		"visual_scale": 1.15,
+		"visual_scale": 1.5,
 	},
 	"mutation_2": {
 		"id": "mutation_2",
@@ -24,7 +24,7 @@ const PROFILES := {
 		"damage_multiplier": 1.55,
 		"speed_multiplier": 1.05,
 		"exp_multiplier": 1.6,
-		"visual_scale": 1.18,
+		"visual_scale": 1.5,
 	},
 	"greater_mutation": {
 		"id": "greater_mutation",
@@ -36,7 +36,7 @@ const PROFILES := {
 		"damage_multiplier": 1.9,
 		"speed_multiplier": 1.08,
 		"exp_multiplier": 2.2,
-		"visual_scale": 1.32,
+		"visual_scale": 1.5,
 	},
 }
 

@@ -158,17 +158,17 @@ func apply_visual_profile(profile: Dictionary) -> bool:
 	if String(profile.get("mode", "")) != "sheet":
 		return false
 
+	var sheet_path := String(profile.get("sheet_path", ""))
+	if sheet_path.is_empty():
+		return false
+
 	return _apply_bomb_rat_visual(
-		String(profile.get("sheet_path", "")),
-		maxi(int(profile.get("columns", 6)), 1),
-		maxi(int(profile.get("rows", 5)), 1),
+		sheet_path,
 		float(profile.get("target_height", BOMBRAT_TARGET_HEIGHT))
 	)
 
 func _apply_bomb_rat_visual(
 	sheet_path: String = BOMBRAT_SHEET_PATH,
-	columns: int = SHEET_COLUMNS,
-	rows: int = SHEET_ROWS,
 	profile_height: float = BOMBRAT_TARGET_HEIGHT
 ) -> bool:
 	visual.visible = false
@@ -182,23 +182,18 @@ func _apply_bomb_rat_visual(
 		push_warning("Bomb Rat spritesheet load failed: %s" % sheet_path)
 		return false
 
-	var cell_size := Vector2(
-		float(sheet.get_width()) / float(maxi(columns, 1)),
-		float(sheet.get_height()) / float(maxi(rows, 1))
-	)
-
 	var frames := SpriteFrames.new()
 	if frames.has_animation(&"default"):
 		frames.remove_animation(&"default")
 
-	_add_sheet_animation(frames, &"idle", sheet, cell_size, 0, 4, 6.0, true)
-	_add_sheet_animation(frames, &"move", sheet, cell_size, 1, 6, 11.0, true)
-	_add_sheet_animation(frames, &"attack", sheet, cell_size, 2, 6, 14.0, false)
-	_add_sheet_animation(frames, &"hit", sheet, cell_size, 3, 3, 14.0, false)
-	_add_sheet_animation(frames, &"death", sheet, cell_size, 4, 4, 10.0, false)
+	_add_sheet_animation(frames, &"idle", sheet, 0, 4, 6.0, true)
+	_add_sheet_animation(frames, &"move", sheet, 1, 6, 11.0, true)
+	_add_sheet_animation(frames, &"attack", sheet, 2, 6, 14.0, false)
+	_add_sheet_animation(frames, &"hit", sheet, 3, 3, 14.0, false)
+	_add_sheet_animation(frames, &"death", sheet, 4, 4, 10.0, false)
 
 	visual.sprite_frames = frames
-	var uniform_scale := profile_height / maxf(cell_size.y, 1.0)
+	var uniform_scale := profile_height / BOMBRAT_FRAME_SIZE.y
 	visual.scale = Vector2(uniform_scale, uniform_scale)
 	visual.visible = true
 	visual.speed_scale = 1.0
@@ -295,7 +290,6 @@ func _add_sheet_animation(
 	frames: SpriteFrames,
 	animation_name: StringName,
 	sheet: Texture2D,
-	cell_size: Vector2,
 	row: int,
 	frame_count: int,
 	fps: float,
@@ -310,8 +304,8 @@ func _add_sheet_animation(
 		atlas.atlas = sheet
 		atlas.filter_clip = true
 		atlas.region = Rect2(
-			Vector2(column, row) * cell_size,
-			cell_size
+			Vector2(column, row) * BOMBRAT_FRAME_SIZE,
+			BOMBRAT_FRAME_SIZE
 		)
 		frames.add_frame(animation_name, atlas)
 
