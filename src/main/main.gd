@@ -94,6 +94,7 @@ func _ready() -> void:
 		_on_demon_ultimate_cooldowns_changed
 	)
 	battle.demon_ultimate_used.connect(_on_demon_ultimate_used)
+	battle.stage_event_triggered.connect(_on_stage_event_triggered)
 	battle.run_time_changed.connect(_on_run_time_changed)
 	battle.battle_finished.connect(_on_battle_finished)
 
@@ -309,6 +310,15 @@ func _close_pause_menu() -> void:
 func _on_pause_restart_pressed() -> void:
 	pause_menu.hide()
 	get_tree().reload_current_scene()
+
+func _on_stage_event_triggered(
+	event_type: String,
+	event_name: String,
+	message: String
+) -> void:
+	status_label.text = message
+	if event_type == "boss":
+		run_timer_label.text = "BOSS · %s" % event_name
 
 func _on_run_time_changed(_elapsed_seconds: float, remaining_seconds: float) -> void:
 	run_timer_label.text = "남은 시간 %s" % _format_run_time(remaining_seconds)

@@ -12,6 +12,7 @@ signal demon_augment_applied(augment_name: String, build_summary: String)
 signal demon_ultimate_changed(current_value: float, max_value: float, ready: bool)
 signal demon_ultimate_cooldowns_changed(cooldowns: Dictionary)
 signal demon_ultimate_used(skill_id: String, skill_name: String, message: String)
+signal stage_event_triggered(event_type: String, event_name: String, message: String)
 signal run_time_changed(elapsed_seconds: float, remaining_seconds: float)
 signal battle_finished(message: String, player_won: bool)
 
@@ -26,6 +27,7 @@ const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const RUN_METRICS := preload("res://src/systems/run_metrics.gd")
+const STAGE_DIRECTOR := preload("res://src/systems/stage_director.gd")
 
 const DEFAULT_MAP_SIZE := Vector2(3200, 3200)
 const AUTO_SPAWN_MIN_DISTANCE := 560.0
@@ -55,6 +57,7 @@ var run_time_limit_seconds: float = 0.0
 var run_time_emit_timer: float = 0.0
 var manual_spawn_warning_timer: float = 0.0
 var run_metrics = RUN_METRICS.new()
+var stage_director = STAGE_DIRECTOR.new()
 
 var monsters_alive: int = 0
 var battle_over: bool = false
@@ -121,6 +124,7 @@ func _process(delta: float) -> void:
 	_process_demon_ultimate_spawn_queue(delta)
 	_update_demon_ultimate_cooldowns(delta)
 	run_metrics.tick(delta)
+	_process_stage_director_events()
 
 	if demon_ultimate_charge < DEMON_ULTIMATES.CHARGE_MAX:
 		demon_ultimate_charge = minf(
@@ -218,6 +222,7 @@ func _start_battle() -> void:
 		float(current_stage_data.get("run_duration_seconds", 360.0)),
 		60.0
 	)
+	stage_director.reset(current_stage_data)
 
 	var hero_id: String = String(current_stage_data.get("hero_id", "ranged_rookie"))
 	current_hero_profile = HERO_PROFILES.get_profile(hero_id)
@@ -501,7 +506,8 @@ func _spawn_monster(
 	monster_type: String,
 	spawn_position: Vector2,
 	summon_cost: float = 0.0,
-	split_child: bool = false
+	split_child: bool = false,
+	spawn_modifiers: Dictionary = {}
 ) -> void:
 	var scene := MONSTER_CATALOG.get_scene(monster_type)
 	if scene == null:
@@ -572,9 +578,80 @@ func _spawn_monster(
 		var level_base_hp := float(max_hp_value) * monster_hp_multiplier
 		if monster_type == "orc":
 			level_base_hp *= orc_hp_multiplier
+		level_base_hp *= maxf(
+			float(spawn_modifiers.get("hp_multiplier", 1.0)),
+			0.01
+		)
 		monster.set_meta(
 			"demon_level_base_max_hp",
 			maxf(level_base_hp, 1.0)
+		)
+
+	var base_damage_meta = monster.get_meta(
+		"demon_level_base_attack_damage",
+		null
+	)
+	if base_damage_meta != null:
+		monster.set_meta(
+			"demon_level_base_attack_damage",
+			maxf(
+				float(base_damage_meta)
+				* maxf(
+					float(spawn_modifiers.get("damage_multiplier", 1.0)),
+					0.01
+				),
+				1.0
+			)
+		)
+
+	var base_speed_meta = monster.get_meta(
+		"demon_level_base_move_speed",
+		null
+	)
+	if base_speed_meta != null:
+		monster.set_meta(
+			"demon_level_base_move_speed",
+			maxf(
+				float(base_speed_meta)
+				* maxf(
+					float(spawn_modifiers.get("speed_multiplier", 1.0)),
+					0.01
+				),
+				1.0
+			)
+		)
+
+	var exp_value = monster.get("exp_reward")
+	if exp_value != null and not split_child:
+		monster.set(
+			"exp_reward",
+			maxi(
+				1,
+				int(round(
+					float(exp_value)
+					* maxf(
+						float(spawn_modifiers.get("exp_multiplier", 1.0)),
+						0.0
+					)
+				))
+			)
+		)
+
+	var visual_scale := maxf(
+		float(spawn_modifiers.get("visual_scale", 1.0)),
+		0.1
+	)
+	if absf(visual_scale - 1.0) > 0.001:
+		monster.scale *= visual_scale
+
+	var stage_event_type := String(
+		spawn_modifiers.get("stage_event_type", "")
+	)
+	if not stage_event_type.is_empty():
+		monster.set_meta("stage_event_type", stage_event_type)
+		monster.set_meta(
+			"stage_event_name",
+			String(spawn_modifiers.get("stage_event_name", ""))
 		)
 
 	_apply_demon_level_scaling_to_monster(monster, false)
@@ -1137,6 +1214,87 @@ func _process_demon_ultimate_spawn_queue(delta: float) -> void:
 	else:
 		demon_ultimate_spawn_timer = demon_ultimate_spawn_interval
 
+func _process_stage_director_events() -> void:
+	for event in stage_director.collect_due_events(
+		run_metrics.elapsed_seconds
+	):
+		_trigger_stage_director_event(event)
+
+func _trigger_stage_director_event(event: Dictionary) -> void:
+	if not is_instance_valid(hero):
+		return
+
+	var monster_id := String(event.get("monster_id", ""))
+	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
+		push_warning(
+			"Stage event monster not found: %s" % monster_id
+		)
+		return
+
+	var spawn_position := _get_stage_event_spawn_position()
+	var modifiers := {
+		"hp_multiplier": float(event.get("hp_multiplier", 1.0)),
+		"damage_multiplier": float(
+			event.get("damage_multiplier", 1.0)
+		),
+		"speed_multiplier": float(
+			event.get("speed_multiplier", 1.0)
+		),
+		"exp_multiplier": float(event.get("exp_multiplier", 1.0)),
+		"visual_scale": float(event.get("visual_scale", 1.0)),
+		"stage_event_type": String(event.get("type", "elite")),
+		"stage_event_name": String(
+			event.get("name", MONSTER_CATALOG.get_name(monster_id))
+		),
+	}
+
+	_spawn_monster(
+		monster_id,
+		spawn_position,
+		0.0,
+		false,
+		modifiers
+	)
+
+	var event_type := String(event.get("type", "elite"))
+	var event_name := String(
+		event.get("name", MONSTER_CATALOG.get_name(monster_id))
+	)
+	var message := ""
+	match event_type:
+		"boss":
+			message = "보스 출현! %s이(가) 전장에 난입했습니다." % event_name
+		"miniboss":
+			message = "미니보스 출현! %s을(를) 조심하세요." % event_name
+		_:
+			message = "엘리트 출현! %s이(가) 전장에 등장했습니다." % event_name
+
+	stage_event_triggered.emit(
+		event_type,
+		event_name,
+		message
+	)
+	_emit_stats()
+
+func _get_stage_event_spawn_position() -> Vector2:
+	if not is_instance_valid(hero):
+		return current_map_size * 0.5
+
+	var angle := randf_range(0.0, TAU)
+	var candidate := hero.position + Vector2.from_angle(angle) * 720.0
+	return Vector2(
+		clampf(
+			candidate.x,
+			MANUAL_SPAWN_MARGIN,
+			current_map_size.x - MANUAL_SPAWN_MARGIN
+		),
+		clampf(
+			candidate.y,
+			MANUAL_SPAWN_MARGIN,
+			current_map_size.y - MANUAL_SPAWN_MARGIN
+		)
+	)
+
 func _gain_demon_exp(amount: float) -> void:
 	if amount <= 0.0 or battle_over:
 		return
@@ -1543,6 +1701,7 @@ func get_snapshot() -> Dictionary:
 		"demon_reroll_max": demon_reroll_max,
 		"demon_build_summary": get_demon_build_summary(),
 		"demon_build_counts": demon_build_counts.duplicate(true),
+		"stage_event_fired_ids": stage_director.get_fired_event_ids(),
 		"debug_balance_summary": get_debug_balance_summary(),
 		"permanent_research_summary": get_permanent_research_summary(),
 		"research_points": STAGE_PROGRESS.get_research_points(),
