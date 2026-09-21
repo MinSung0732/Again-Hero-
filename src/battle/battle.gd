@@ -240,17 +240,16 @@ func _apply_permanent_research() -> void:
 	var notebook_level := int(permanent_research_levels.get("tactical_notebook", 0))
 	var experiment_level := int(permanent_research_levels.get("rapid_experiment", 0))
 
-	monster_damage_multiplier *= 1.0 + 0.10 * power_level
-	monster_hp_multiplier *= 1.0 + 0.12 * vitality_level
-	monster_speed_multiplier *= 1.0 + 0.08 * mobility_level
-	monster_attack_speed_multiplier *= maxf(
-		0.65,
-		1.0 - 0.07 * attack_speed_level
+	monster_damage_multiplier *= 1.0 + 0.01 * power_level
+	monster_hp_multiplier *= 1.0 + 0.01 * vitality_level
+	monster_speed_multiplier *= 1.0 + 0.0035 * mobility_level
+	monster_attack_speed_multiplier *= (
+		1.0 / (1.0 + 0.005 * attack_speed_level)
 	)
-	summon_cost_multiplier *= maxf(0.70, 1.0 - 0.05 * summon_level)
-	command_regen_per_second += 0.50 * cycle_level
-	max_command += 20.0 * reservoir_level
-	demon_exp_gain_multiplier += 0.10 * experiment_level
+	summon_cost_multiplier *= maxf(0.80, 1.0 - 0.01 * summon_level)
+	command_regen_per_second += 0.15 * cycle_level
+	max_command += 5.0 * reservoir_level
+	demon_exp_gain_multiplier += 0.03 * experiment_level
 	demon_reroll_max += notebook_level
 	demon_rerolls_left = demon_reroll_max
 
