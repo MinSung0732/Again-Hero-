@@ -708,3 +708,14 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - Stage 1은 기존 신중한 관측/강한 빌드 관성을 유지하고, Stage 2는 더 빠른 관측과 연사·기동 중심의 소폭 성향 보정을 사용.
 - Build AI는 특정 Stage ID를 분기하지 않고 `augment_biases` Dictionary를 공통 계산에 더해 데이터만으로 성향을 확장.
 
+### 메인 로비 / 5탭 메타 구조 v1
+- 앱 기본 시작점을 전투 씬에서 `res://src/lobby/Lobby.tscn`으로 변경.
+- 모바일 하단 네비게이션은 **상점 / 팀 편성 / 메인 / 연구 / 기타** 5탭을 기본 구조로 사용.
+- 메인 탭은 Stage 선택 화면이며, Stage 카드 중앙에 해당 Stage 대표 Hero 초상화를 크게 배치하고 던전/침입자 기록 느낌의 프레임을 사용.
+- Stage 데이터에 `portrait_path`와 `lobby_description`을 추가해 로비가 Stage별 표시 정보를 데이터에서 읽음.
+- Stage 1 초상화 기본 경로는 `res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png`.
+- 초상화 파일이 아직 없거나 import되지 않은 환경에서도 Hero 이름 placeholder가 표시되도록 raw PNG → imported Texture 순서의 안전 로더 사용.
+- Stage 선택 후 `던전 입장`을 누르면 기존 전투 씬 `src/main/Main.tscn`으로 이동하며 현재 Stage 진행 데이터는 그대로 재사용.
+- 연구 탭은 기존 ResearchCatalog / StageProgress 구매 로직을 그대로 사용하고, 상점/팀 편성/기타는 우선 탭 자리만 확보.
+- 전투 종료 결과 화면의 기존 스테이지 선택 버튼은 로비 복귀 버튼으로 전환.
+

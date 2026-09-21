@@ -1,0 +1,441 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/lobby/lobby.gd" id="1_lobby"]
+
+[node name="Lobby" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_lobby")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.035, 0.027, 0.055, 1)
+
+[node name="BackdropGlow" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 0.56
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.115, 0.075, 0.16, 1)
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 36.0
+offset_top = 34.0
+offset_right = -36.0
+offset_bottom = -190.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Layout" type="VBoxContainer" parent="SafeArea"]
+layout_mode = 2
+theme_override_constants/separation = 22
+
+[node name="Header" type="PanelContainer" parent="SafeArea/Layout"]
+custom_minimum_size = Vector2(0, 165)
+layout_mode = 2
+
+[node name="HeaderMargin" type="MarginContainer" parent="SafeArea/Layout/Header"]
+layout_mode = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 20
+
+[node name="HeaderVBox" type="VBoxContainer" parent="SafeArea/Layout/Header/HeaderMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.62, 1)
+theme_override_font_sizes/font_size = 42
+text = "용사, 또 너야?"
+horizontal_alignment = 1
+
+[node name="ResourceRow" type="HBoxContainer" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ResourceLabel" type="Label" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.86, 0.81, 0.9, 1)
+theme_override_font_sizes/font_size = 22
+text = "연구 포인트  0"
+
+[node name="ProgressLabel" type="Label" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.86, 0.81, 0.9, 1)
+theme_override_font_sizes/font_size = 22
+text = "최고 해금  Stage 1"
+horizontal_alignment = 2
+
+[node name="Content" type="Control" parent="SafeArea/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ShopTab" type="Control" parent="SafeArea/Layout/Content"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Placeholder" type="Label" parent="SafeArea/Layout/Content/ShopTab"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.83, 0.79, 0.87, 1)
+theme_override_font_sizes/font_size = 34
+text = "상점\n\n다음 단계에서 구현"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TeamTab" type="Control" parent="SafeArea/Layout/Content"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Placeholder" type="Label" parent="SafeArea/Layout/Content/TeamTab"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.83, 0.79, 0.87, 1)
+theme_override_font_sizes/font_size = 34
+text = "팀 편성\n\n몬스터 덱 / 편성 시스템 예정"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MainTab" type="Control" parent="SafeArea/Layout/Content"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StageLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.86, 0.96, 1)
+theme_override_font_sizes/font_size = 30
+text = "침입자 기록"
+horizontal_alignment = 1
+
+[node name="SectionSubtitle" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.63, 0.57, 0.69, 1)
+theme_override_font_sizes/font_size = 19
+text = "대상 용사를 선택하고 던전에 입장하세요."
+horizontal_alignment = 1
+
+[node name="StagePicker" type="HBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="PrevButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
+custom_minimum_size = Vector2(90, 160)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 38
+text = "‹"
+
+[node name="StageCard" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
+custom_minimum_size = Vector2(760, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CardMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 34
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 34
+theme_override_constants/margin_bottom = 28
+
+[node name="CardVBox" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
+theme_override_font_sizes/font_size = 24
+text = "STAGE 01"
+horizontal_alignment = 1
+
+[node name="StageName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.93, 1, 1)
+theme_override_font_sizes/font_size = 36
+text = "첫 번째 침입자"
+horizontal_alignment = 1
+
+[node name="PortraitFrame" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+custom_minimum_size = Vector2(0, 560)
+layout_mode = 2
+
+[node name="FrameMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 14
+
+[node name="PortraitInner" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame/FrameMargin"]
+layout_mode = 2
+
+[node name="PortraitTexture" type="TextureRect" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame/FrameMargin/PortraitInner"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 18.0
+offset_top = 18.0
+offset_right = -18.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="PortraitPlaceholder" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame/FrameMargin/PortraitInner"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.58, 0.52, 0.64, 1)
+theme_override_font_sizes/font_size = 26
+text = "초상화 준비 중"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PortraitBadge" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame/FrameMargin/PortraitInner"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -62.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 0.89, 0.64, 1)
+theme_override_font_sizes/font_size = 20
+text = "침입자"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HeroName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.87, 0.82, 0.91, 1)
+theme_override_font_sizes/font_size = 28
+text = "견습 마도사"
+horizontal_alignment = 1
+
+[node name="StageDescription" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.65, 0.75, 1)
+theme_override_font_sizes/font_size = 19
+text = "침입자 설명"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="StageStatus" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.69, 0.8, 1)
+theme_override_font_sizes/font_size = 19
+text = "입장 가능 · 제한 6분"
+horizontal_alignment = 1
+
+[node name="StageReward" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
+theme_override_font_sizes/font_size = 19
+text = "최초 클리어 연구 포인트 +100"
+horizontal_alignment = 1
+
+[node name="EnterButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+custom_minimum_size = Vector2(0, 92)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
+theme_override_font_sizes/font_size = 28
+text = "던전 입장"
+
+[node name="NextButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
+custom_minimum_size = Vector2(90, 160)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 38
+text = "›"
+
+[node name="ResearchTab" type="Control" parent="SafeArea/Layout/Content"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ResearchLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.87, 1, 1)
+theme_override_font_sizes/font_size = 34
+text = "마왕 연구실"
+horizontal_alignment = 1
+
+[node name="Points" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
+theme_override_font_sizes/font_size = 23
+text = "보유 연구 포인트  0"
+horizontal_alignment = 1
+
+[node name="ResearchScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ResearchList" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="Status" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.73, 0.67, 0.78, 1)
+theme_override_font_sizes/font_size = 20
+text = "연구 항목을 선택하세요."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="OtherTab" type="Control" parent="SafeArea/Layout/Content"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Placeholder" type="Label" parent="SafeArea/Layout/Content/OtherTab"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.83, 0.79, 0.87, 1)
+theme_override_font_sizes/font_size = 34
+text = "다른 콘텐츠\n\n도감 / 도전 / 이벤트 슬롯 예정"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BottomNav" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -174.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="NavMargin" type="MarginContainer" parent="BottomNav"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 18
+
+[node name="NavButtons" type="HBoxContainer" parent="BottomNav/NavMargin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ShopButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
+custom_minimum_size = Vector2(0, 134)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 21
+text = "상점"
+
+[node name="TeamButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
+custom_minimum_size = Vector2(0, 134)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 21
+text = "팀 편성"
+
+[node name="MainButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
+custom_minimum_size = Vector2(0, 134)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 23
+text = "메인"
+
+[node name="ResearchButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
+custom_minimum_size = Vector2(0, 134)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 21
+text = "연구"
+
+[node name="OtherButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
+custom_minimum_size = Vector2(0, 134)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 21
+text = "기타"

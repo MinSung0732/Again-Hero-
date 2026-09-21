@@ -108,7 +108,7 @@ func _ready() -> void:
 	demon_choice_2.pressed.connect(_on_demon_choice_pressed.bind(2))
 	demon_reroll_button.pressed.connect(_on_demon_reroll_pressed)
 	next_stage_button.pressed.connect(_on_next_stage_pressed)
-	stage_select_result_button.pressed.connect(_on_result_stage_menu_pressed)
+	stage_select_result_button.pressed.connect(_on_lobby_pressed)
 	restart_button.pressed.connect(_on_restart_pressed)
 
 	var snapshot: Dictionary = battle.get_snapshot()
@@ -576,6 +576,9 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 func _on_next_stage_pressed() -> void:
 	if battle.go_to_next_stage():
 		get_tree().reload_current_scene()
+
+func _on_lobby_pressed() -> void:
+	get_tree().change_scene_to_file("res://src/lobby/Lobby.tscn")
 
 func _on_restart_pressed() -> void:
 	get_tree().reload_current_scene()

@@ -522,7 +522,7 @@ text = "다음 스테이지"
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
-text = "스테이지 선택"
+text = "로비로 돌아가기"
 
 [node name="RestartButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 100)

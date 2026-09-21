@@ -712,3 +712,18 @@
 - Build AI에 범용 `augment_biases` 점수 항목을 추가하고 선택 이유에도 성향 보정을 표시.
 - Stage ID별 하드코딩 분기 없이 새 AI 성향 프로필 추가만으로 이후 Stage/Hero 성격을 확장할 수 있도록 구성.
 
+### Main Lobby + Five-tab Meta Hub v1
+- 신규 `src/lobby/Lobby.tscn` / `lobby.gd` 추가, 앱 시작 씬을 로비로 변경.
+- 하단 5탭을 **상점 / 팀 편성 / 메인 / 연구 / 기타** 구조로 구성.
+- 메인 탭에 Stage 카드형 선택 UI 추가:
+  - 좌우 Stage 이동
+  - Stage 이름 / Hero 이름 / 상태 / 제한시간 / 최초 보상
+  - Stage 해금 상태에 따른 입장 버튼 활성화
+  - 선택 Stage 저장 후 기존 전투 씬 진입
+- Stage 데이터에 대표 Hero `portrait_path`와 로비 설명 추가.
+- Stage 1 초상화 슬롯은 `stage1_hero_portrait.png`를 읽도록 연결하고, 파일이 없을 때는 Hero 이름 placeholder 표시.
+- 초상화 주변을 어두운 던전 패널 + 금색 이중 테두리로 구성해 침입자 기록 카드 느낌의 프레임 적용.
+- 연구 탭에서 기존 연구 5종을 직접 구매할 수 있도록 기존 Catalog/Progress 시스템 연결.
+- 상점 / 팀 편성 / 기타 탭은 후속 기능 구현을 위한 placeholder 구성.
+- 전투 결과 화면에서 메인 로비로 복귀 가능하도록 버튼 동작 변경.
+
