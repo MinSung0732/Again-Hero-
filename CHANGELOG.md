@@ -561,3 +561,29 @@
 - slow resistance는 둔화 이동속도 감소 강도와 지속시간을 모두 완화.
 - Hero augment 공통 effect system에 `add_status_resistance` op 추가.
 - 상태이상 종류가 늘어나도 Hero AI/증강 적용 구조를 그대로 재사용할 수 있도록 구성.
+
+
+### Run Timer + Strategy Switch Analysis v1
+- 끝없이 이어지던 프로토타입 Run에 Stage별 제한시간 추가.
+- Stage 1: 6분, Stage 2: 7분.
+- 제한시간 내 Hero 처치 실패 시 시간 초과 패배 처리.
+- 상단 HUD에 `남은 시간 MM:SS` 표시.
+- 마왕 증강 선택 / 스테이지·연구 메뉴 등 전투 pause 상태에서는 Run timer도 정지.
+- `src/systems/run_metrics.gd` 신규 추가. Battle 로직과 분석 로직 분리.
+- RunMetrics가 기록하는 항목:
+  - 직접 소환 타입별 횟수와 지휘력 소비량
+  - 타입별 몬스터 사망 횟수
+  - Hero 최저 HP 및 비율
+  - Hero 레벨업 증강 선택 시각
+  - 주력 공세 전환 시각
+- 전략 전환 판정은 최근 15초 직접 소환을 사용.
+- 싼 Slime과 비싼 Orc를 단순 개체 수로 비교하지 않고 실제 소비 지휘력을 weight로 사용.
+- 최근 지휘력 소비 12 이상 + 60% 이상 점유 시 주력 전략으로 인정.
+- 주력 타입이 달라지면 전환 시각을 기록하며 6초 cooldown 적용.
+- 전투 종료 결과창 확장:
+  - 실제 Run 시간 / 목표 시간
+  - Hero 최저 HP
+  - 직접 소환 구성
+  - 전략 전환 시각
+  - Hero 증강 선택 횟수와 마지막 선택
+- 현재는 검증용 v1이며 5~10분 실기기 플레이 결과로 threshold/window를 조정 예정.
