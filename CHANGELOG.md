@@ -1462,3 +1462,12 @@
 - 스폰 성공/실패와 무관하게 마지막에 combat physics를 재개.
 - 성공 시 Stage 이벤트 알림/돌연변이 선택 결과 시그널을 emit.
 - 시간/지휘력/일반 소환 루프는 변경하지 않음.
+
+### Special Spawn Post-Ready Fix
+- 특수 몬스터가 선택 후 생성되지 않고 Hero physics까지 멈추는 문제 대응.
+- 돌연변이 선택 시 combat physics를 특수 스폰 호출보다 먼저 재개.
+- `spawn_special_monster()`가 더 이상 생성 전 `spawn_modifiers`를 넣지 않고, 검증된 일반 `_spawn_monster()` 경로로 몬스터를 먼저 생성.
+- `_spawn_monster()`가 생성된 몬스터 인스턴스를 반환하도록 확장.
+- 생성 완료 후 `_apply_special_monster_modifiers()`에서 HP/공격/속도/EXP/크기/Stage 이벤트 메타를 후처리.
+- Bomb Rat 특수 개체는 폭발 피해에도 damage multiplier 적용.
+- 특수 HP 배율 적용 후 current_hp를 새 max_hp로 맞춰 실제 강화 체력으로 시작.

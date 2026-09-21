@@ -518,11 +518,11 @@ func _spawn_monster(
 	summon_cost: float = 0.0,
 	split_child: bool = false,
 	spawn_modifiers: Dictionary = {}
-) -> void:
+):
 	var scene := MONSTER_CATALOG.get_scene(monster_type)
 	if scene == null:
 		push_warning("Unknown monster id: %s" % monster_type)
-		return
+		return null
 
 	var monster := scene.instantiate() as Node2D
 
@@ -678,6 +678,7 @@ func _spawn_monster(
 
 	monster_summon_costs[monster.get_instance_id()] = summon_cost
 	monsters_alive += 1
+	return monster
 
 func _get_demon_level_monster_hp_multiplier() -> float:
 	var growth_steps := maxi(demon_level - 1, 0)
@@ -1300,10 +1301,10 @@ func spawn_selected_mutation(monster_id: String) -> void:
 	]
 	event["name"] = mutation_name
 
-	var spawned := spawn_special_monster(monster_id, event)
-
 	if not external_pause and not demon_augment_selection_active:
 		_set_combat_physics_enabled(true)
+
+	var spawned := spawn_special_monster(monster_id, event)
 
 	if not spawned:
 		mutation_spawn_result.emit(
@@ -1331,6 +1332,118 @@ func spawn_special_monster(
 	var spawn_position := _get_stage_event_spawn_position(
 		float(special_data.get("spawn_distance", 720.0))
 	)
+
+	# 특수 몬스터도 검증된 일반 소환 경로로 먼저 생성한다.
+	var monster = _spawn_monster(
+		monster_id,
+		spawn_position,
+		0.0,
+		false
+	)
+	if not is_instance_valid(monster):
+		return false
+
+	_apply_special_monster_modifiers(
+		monster,
+		monster_id,
+		special_data
+	)
+	_emit_stats()
+	return true
+
+func _apply_special_monster_modifiers(
+	monster: Node,
+	monster_id: String,
+	special_data: Dictionary
+) -> void:
+	if not is_instance_valid(monster):
+		return
+
+	var hp_multiplier := maxf(
+		float(special_data.get("hp_multiplier", 1.0)),
+		0.01
+	)
+	var damage_multiplier := maxf(
+		float(special_data.get("damage_multiplier", 1.0)),
+		0.01
+	)
+	var speed_multiplier := maxf(
+		float(special_data.get("speed_multiplier", 1.0)),
+		0.01
+	)
+	var exp_multiplier := maxf(
+		float(special_data.get("exp_multiplier", 1.0)),
+		0.0
+	)
+	var visual_scale := maxf(
+		float(special_data.get("visual_scale", 1.0)),
+		0.1
+	)
+
+	var base_hp_meta = monster.get_meta(
+		"demon_level_base_max_hp",
+		null
+	)
+	if base_hp_meta != null:
+		monster.set_meta(
+			"demon_level_base_max_hp",
+			maxf(float(base_hp_meta) * hp_multiplier, 1.0)
+		)
+
+	var base_damage_meta = monster.get_meta(
+		"demon_level_base_attack_damage",
+		null
+	)
+	if base_damage_meta != null:
+		monster.set_meta(
+			"demon_level_base_attack_damage",
+			maxf(float(base_damage_meta) * damage_multiplier, 1.0)
+		)
+
+	var base_speed_meta = monster.get_meta(
+		"demon_level_base_move_speed",
+		null
+	)
+	if base_speed_meta != null:
+		monster.set_meta(
+			"demon_level_base_move_speed",
+			maxf(float(base_speed_meta) * speed_multiplier, 1.0)
+		)
+
+	_apply_demon_level_scaling_to_monster(monster, false)
+
+	var current_hp_value = monster.get("current_hp")
+	var max_hp_value = monster.get("max_hp")
+	if current_hp_value != null and max_hp_value != null:
+		monster.set("current_hp", int(max_hp_value))
+
+	var exp_value = monster.get("exp_reward")
+	if exp_value != null:
+		monster.set(
+			"exp_reward",
+			maxi(
+				1,
+				int(round(float(exp_value) * exp_multiplier))
+			)
+		)
+
+	if monster_id == "bomb_rat":
+		var explosion_damage_value = monster.get("explosion_damage")
+		if explosion_damage_value != null:
+			monster.set(
+				"explosion_damage",
+				maxi(
+					1,
+					int(round(
+						float(explosion_damage_value)
+						* damage_multiplier
+					))
+				)
+			)
+
+	if absf(visual_scale - 1.0) > 0.001:
+		monster.scale *= visual_scale
+
 	var special_type := String(
 		special_data.get("type", "special")
 	)
@@ -1340,35 +1453,11 @@ func spawn_special_monster(
 			MONSTER_CATALOG.get_name(monster_id)
 		)
 	)
-	var modifiers := {
-		"hp_multiplier": float(
-			special_data.get("hp_multiplier", 1.0)
-		),
-		"damage_multiplier": float(
-			special_data.get("damage_multiplier", 1.0)
-		),
-		"speed_multiplier": float(
-			special_data.get("speed_multiplier", 1.0)
-		),
-		"exp_multiplier": float(
-			special_data.get("exp_multiplier", 1.0)
-		),
-		"visual_scale": float(
-			special_data.get("visual_scale", 1.0)
-		),
-		"stage_event_type": special_type,
-		"stage_event_name": special_name,
-	}
+	monster.set_meta("stage_event_type", special_type)
+	monster.set_meta("stage_event_name", special_name)
 
-	_spawn_monster(
-		monster_id,
-		spawn_position,
-		0.0,
-		false,
-		modifiers
-	)
-	_emit_stats()
-	return true
+	if monster.has_method("queue_redraw"):
+		monster.call("queue_redraw")
 
 func _emit_stage_event_announcement(
 	event: Dictionary,
