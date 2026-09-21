@@ -2,7 +2,6 @@ extends Control
 
 const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
-const MONSTER_COLLECTION_STORE := preload("res://src/systems/monster_collection_store.gd")
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
@@ -58,7 +57,7 @@ var selected_monster_type: String = ""
 var current_demon_candidates: Array = []
 var debug_refresh_timer: float = 0.0
 var battle_loadout_ids: Array = []
-var summon_buttons_by_id: Dictionary = {}
+var summon_slot_buttons: Array = []
 
 func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
@@ -82,16 +81,14 @@ func _ready() -> void:
 	pause_lobby_button.pressed.connect(_on_lobby_pressed)
 
 	placement_toggle.toggled.connect(_on_placement_mode_toggled)
-	slime_button.pressed.connect(_on_summon_pressed.bind("slime"))
-	spider_button.pressed.connect(_on_summon_pressed.bind("spider"))
-	orc_button.pressed.connect(_on_summon_pressed.bind("orc"))
 
-	summon_buttons_by_id = {
-		"slime": slime_button,
-		"spider": spider_button,
-		"orc": orc_button,
-	}
+	summon_slot_buttons = [
+		slime_button,
+		spider_button,
+		orc_button,
+	]
 	_load_battle_loadout()
+	_configure_battle_loadout_buttons()
 	demon_choice_0.pressed.connect(_on_demon_choice_pressed.bind(0))
 	demon_choice_1.pressed.connect(_on_demon_choice_pressed.bind(1))
 	demon_choice_2.pressed.connect(_on_demon_choice_pressed.bind(2))
@@ -291,46 +288,71 @@ func _on_command_changed(current_value: float, max_value: float) -> void:
 	command_bar.max_value = maxf(max_value, 1.0)
 	command_bar.value = current_value
 
-	for raw_id in MONSTER_CATALOG.ORDER:
-		var monster_id := String(raw_id)
-		if not summon_buttons_by_id.has(monster_id):
+	for slot_index in range(summon_slot_buttons.size()):
+		var button = summon_slot_buttons[slot_index]
+		if not (button is Button):
 			continue
 
-		var button := summon_buttons_by_id[monster_id] as Button
-		if button == null:
+		if slot_index >= battle_loadout_ids.size():
+			button.visible = false
+			button.disabled = true
 			continue
 
-		var equipped := monster_id in battle_loadout_ids
+		var monster_id := String(battle_loadout_ids[slot_index])
 		var cost: float = battle.get_monster_cost(monster_id)
+		button.visible = true
 		button.text = "%s\n비용 %.1f" % [
-			MONSTER_CATALOG.get_name(monster_id),
+			_get_catalog_monster_name(monster_id),
 			cost,
 		]
-		button.visible = equipped
-		button.disabled = (
-			not equipped
-			or current_value + 0.001 < cost
-		)
+		button.disabled = current_value + 0.001 < cost
 
 func _load_battle_loadout() -> void:
-	var collection_state := MONSTER_COLLECTION_STORE.load_state()
-	var unlocked_ids := MONSTER_COLLECTION_STORE.get_unlocked_ids(
-		collection_state
-	)
-
-	var fallback_ids: Array = []
+	var valid_ids: Array = []
 	for raw_id in MONSTER_CATALOG.ORDER:
 		var monster_id := String(raw_id)
-		if monster_id not in unlocked_ids:
-			continue
+		if MONSTER_CATALOG.MONSTERS.has(monster_id):
+			valid_ids.append(monster_id)
+
+	var fallback_ids: Array = []
+	for monster_id in valid_ids:
 		fallback_ids.append(monster_id)
 		if fallback_ids.size() >= TEAM_LOADOUT_STORE.MAX_SLOTS:
 			break
 
 	battle_loadout_ids = TEAM_LOADOUT_STORE.load_ids(
-		unlocked_ids,
+		valid_ids,
 		fallback_ids
 	)
+
+func _configure_battle_loadout_buttons() -> void:
+	for slot_index in range(summon_slot_buttons.size()):
+		var button = summon_slot_buttons[slot_index]
+		if not (button is Button):
+			continue
+
+		if slot_index >= battle_loadout_ids.size():
+			button.visible = false
+			button.disabled = true
+			continue
+
+		button.visible = true
+		button.pressed.connect(
+			_on_summon_slot_pressed.bind(slot_index)
+		)
+
+func _on_summon_slot_pressed(slot_index: int) -> void:
+	if slot_index < 0 or slot_index >= battle_loadout_ids.size():
+		return
+
+	var monster_id := String(battle_loadout_ids[slot_index])
+	_on_summon_pressed(monster_id)
+
+func _get_catalog_monster_name(monster_id: String) -> String:
+	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+	if typeof(data) != TYPE_DICTIONARY:
+		return monster_id
+	return String(data.get("name", monster_id))
 
 func _is_monster_equipped(monster_id: String) -> bool:
 	return monster_id in battle_loadout_ids
@@ -350,7 +372,7 @@ func _on_placement_mode_toggled(auto_enabled: bool) -> void:
 
 func _on_summon_pressed(monster_type: String) -> void:
 	if not _is_monster_equipped(monster_type):
-		status_label.text = "%s은(는) 현재 팀에 편성되지 않았습니다." % MONSTER_CATALOG.get_name(monster_type)
+		status_label.text = "%s은(는) 현재 팀에 편성되지 않았습니다." % _get_catalog_monster_name(monster_type)
 		return
 
 	if auto_placement:

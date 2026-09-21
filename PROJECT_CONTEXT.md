@@ -850,3 +850,13 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 자동/수동 배치 모두 `_on_summon_pressed()`에서 편성 여부를 한 번 더 검증한다.
 - 이번 단계에서는 Battle의 소환/시간/메뉴 처리 코드를 변경하지 않고 Main UI에서만 편성 표시/입력 제한을 연결한다.
 - 향후 몬스터 수가 늘면 고정 3버튼 UI를 데이터 기반 동적 카드 UI로 교체한다.
+
+### 팀 편성 → 전투 소환 UI 연결 Step 1
+- 앱 재실행 후에도 로비 편성 저장/복원이 정상인 것을 확인한 뒤 전투 하단 소환 UI에 저장 편성을 연결.
+- 기존 씬의 SlimeButton / SpiderButton / OrcButton 노드는 **콘텐츠 고정 버튼이 아니라 슬롯 1/2/3 UI 컨테이너**로만 재사용.
+- 전투 진입 시 `team_loadout.cfg`를 직접 읽고, 슬롯 순서대로 버튼 텍스트/비용/소환 monster_id를 매핑.
+- 편성이 1~2종이면 남는 소환 버튼은 숨김.
+- 버튼 pressed signal도 기존 slime/spider/orc 고정 bind를 제거하고 slot index → saved monster_id 방식으로 변경.
+- 이번 Step 1에서는 `Battle.gd` 자체의 소환 허용 규칙은 건드리지 않음. UI를 통한 일반 소환만 편성 슬롯을 사용.
+- 다음 Step에서 실기기 회귀가 없는 것을 확인한 뒤 Battle 런타임 guard를 추가.
+

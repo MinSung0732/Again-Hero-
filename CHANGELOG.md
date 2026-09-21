@@ -916,3 +916,13 @@
 - 미편성 몬스터의 기존 고정 버튼은 숨기고, 편성된 몬스터만 비용과 함께 표시.
 - 자동/수동 소환 입력 모두 편성 여부를 추가 검증.
 - Battle 로직은 건드리지 않아 기존 소환/남은 시간/메뉴 동작 경로를 유지.
+
+### Team Loadout → Battle Summon UI Step 1
+- 저장된 팀 편성을 전투 하단 소환 UI에 연결.
+- 기존 3개 버튼의 slime/spider/orc 고정 signal bind 제거.
+- 버튼을 편성 슬롯 1~3으로 재사용해 저장된 monster_id 순서대로 동적 소환.
+- 편성되지 않은 남는 슬롯 버튼은 숨김.
+- 버튼 이름/비용은 실제 편성 monster_id와 Battle의 현재 비용 계산을 사용.
+- 전투 편성 로드는 MonsterCollection을 다시 거치지 않고 Lobby와 동일한 `team_loadout.cfg`를 직접 읽어 이전 로딩 회귀 가능성을 줄임.
+- Battle.gd는 변경하지 않아 타이머/메뉴/소환 핵심 로직 회귀 범위를 제한.
+
