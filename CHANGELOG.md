@@ -1379,3 +1379,8 @@
 - UI는 선택한 `monster_id`만 Battle에 전달하고, Battle은 자신이 이미 보관 중인 `pending_mutation_event`를 직접 사용.
 - pending event가 비정상적으로 비어 있어도 1차 돌연변이 기본 배율로 fallback하여 선택 자체가 막히지 않도록 보호.
 - 시간/지휘력/일반 소환이 정상 동작하는 현재 Battle 루프는 변경하지 않음.
+
+### Revert Mutation Payload Regression
+- `10874409` 돌연변이 payload 수정 이후 전투 시작 직후 시간/지휘력/일반 소환이 다시 멈추는 회귀가 확인되어 런타임 파일을 마지막 정상 확인점 `c120248f` 상태로 복구.
+- `src/battle/battle.gd`와 `src/main/main.gd`만 정상 확인 버전으로 되돌림.
+- 돌연변이 선택 기능 추가 작업은 기본 전투 안정성 확인 후 별도 단계에서 다시 진행.

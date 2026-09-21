@@ -78,6 +78,7 @@ var auto_placement: bool = true
 var selected_monster_type: String = ""
 var current_demon_candidates: Array = []
 var current_mutation_candidates: Array = []
+var current_mutation_event: Dictionary = {}
 var debug_refresh_timer: float = 0.0
 var battle_loadout_ids: Array = []
 var summon_slot_buttons: Array = []
@@ -339,6 +340,7 @@ func _on_mutation_choice_ready(
 	candidates: Array
 ) -> void:
 	current_mutation_candidates = candidates.duplicate()
+	current_mutation_event = event_data.duplicate(true)
 	mutation_panel.show()
 
 	var event_type := String(event_data.get("type", "elite"))
@@ -371,12 +373,16 @@ func _on_mutation_choice_pressed(index: int) -> void:
 		return
 
 	var monster_id := String(current_mutation_candidates[index])
-	if not battle.resolve_mutation_from_ui(monster_id):
+	if not battle.resolve_mutation_from_ui(
+		current_mutation_event,
+		monster_id
+	):
 		status_label.text = "돌연변이 선택을 처리하지 못했습니다. 다시 선택하세요."
 		return
 
 	mutation_panel.hide()
 	current_mutation_candidates.clear()
+	current_mutation_event.clear()
 
 func _on_mutation_selected(
 	event_type: String,
