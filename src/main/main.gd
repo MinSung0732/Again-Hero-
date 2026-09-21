@@ -382,7 +382,7 @@ func _on_mutation_choice_pressed(index: int) -> void:
 
 	var snapshot: Dictionary = battle.get_snapshot()
 	_on_command_changed(
-		float(snapshot.get("command", 0.0)),
+		float(snapshot.get("command_power", 0.0)),
 		float(snapshot.get("command_max", 100.0))
 	)
 
@@ -456,7 +456,10 @@ func _on_command_changed(current_value: float, max_value: float) -> void:
 			_get_catalog_monster_name(monster_id),
 			cost,
 		]
-		button.disabled = current_value + 0.001 < cost
+		button.disabled = (
+			mutation_panel.visible
+			or current_value + 0.001 < cost
+		)
 
 func _load_battle_loadout() -> void:
 	var valid_ids: Array = []

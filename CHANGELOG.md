@@ -1559,3 +1559,10 @@
 - 돌연변이 선택창이 열린 동안 일반 몬스터 소환 버튼을 비활성화하고, 소환 입력 함수에서도 추가 차단.
 - 돌연변이 선택 완료 후 현재 지휘력 기준으로 소환 버튼 활성 상태를 다시 계산.
 - 기존 combat physics 정지/재개 로직은 변경하지 않음.
+
+### Mutation Command UI Resume Fix
+- 돌연변이 선택 완료 후 소환 버튼 복구 시 Battle snapshot의 잘못된 `command` 키를 읽던 문제 수정.
+- 실제 snapshot 키인 `command_power`를 사용해 현재 지휘력 UI와 버튼 상태를 정확히 복구.
+- `_on_command_changed()`에서도 mutation_panel이 열려 있으면 소환 버튼을 계속 비활성화하도록 보강.
+- 선택 완료 후에는 현재 실제 지휘력 기준으로 버튼이 즉시 정상 복구됨.
+- Battle의 지휘력 회복/전투 physics 로직 자체는 변경하지 않음.
