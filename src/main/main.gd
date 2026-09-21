@@ -10,6 +10,7 @@ const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 @onready var battle = $BattleViewportContainer/BattleViewport/Battle
 
 @onready var subtitle_label: Label = $HUD/TopBar/Subtitle
+@onready var run_timer_label: Label = $HUD/TopBar/RunTimer
 @onready var stage_menu_button: Button = $HUD/TopBar/StageMenuButton
 @onready var hero_level_label: Label = $HUD/TopBar/HeroLevel
 @onready var hero_hp_label: Label = $HUD/TopBar/HeroHP
@@ -56,6 +57,7 @@ const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 @onready var result_panel: PanelContainer = $HUD/ResultPanel
 @onready var result_title: Label = $HUD/ResultPanel/Margin/VBox/ResultTitle
 @onready var result_message: Label = $HUD/ResultPanel/Margin/VBox/ResultMessage
+@onready var result_analysis: Label = $HUD/ResultPanel/Margin/VBox/ResultAnalysis
 @onready var next_stage_button: Button = $HUD/ResultPanel/Margin/VBox/NextStageButton
 @onready var stage_select_result_button: Button = $HUD/ResultPanel/Margin/VBox/StageSelectResultButton
 @onready var restart_button: Button = $HUD/ResultPanel/Margin/VBox/RestartButton
@@ -78,6 +80,7 @@ func _ready() -> void:
 	battle.summon_result.connect(_on_summon_result)
 	battle.demon_augment_ready.connect(_on_demon_augment_ready)
 	battle.demon_augment_applied.connect(_on_demon_augment_applied)
+	battle.run_time_changed.connect(_on_run_time_changed)
 	battle.battle_finished.connect(_on_battle_finished)
 
 	stage_menu_button.pressed.connect(_on_stage_menu_pressed)
@@ -126,6 +129,10 @@ func _ready() -> void:
 		int(snapshot.get("demon_level", 1)),
 		float(snapshot.get("demon_exp", 0.0)),
 		float(snapshot.get("demon_exp_to_next", 30.0))
+	)
+	_on_run_time_changed(
+		float(snapshot.get("run_elapsed_seconds", 0.0)),
+		float(snapshot.get("run_remaining_seconds", 0.0))
 	)
 
 	build_label.text = "용사 빌드: %s" % String(snapshot.get("hero_build_summary", "아직 선택 없음"))
@@ -362,6 +369,15 @@ func _on_stage_menu_close_pressed() -> void:
 
 	return_to_result_after_stage_menu = false
 
+func _on_run_time_changed(_elapsed_seconds: float, remaining_seconds: float) -> void:
+	run_timer_label.text = "남은 시간 %s" % _format_run_time(remaining_seconds)
+
+func _format_run_time(seconds: float) -> String:
+	var total := maxi(int(ceil(seconds)), 0)
+	var minutes := int(total / 60)
+	var remaining := total % 60
+	return "%02d:%02d" % [minutes, remaining]
+
 func _on_stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int) -> void:
 	hero_hp_label.text = "용사 HP %d / %d" % [hero_hp, hero_max_hp]
 	monsters_label.text = "몬스터 %d" % monsters_left
@@ -520,6 +536,7 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 		next_stage_button.visible = false
 
 	result_message.text = message
+	result_analysis.text = battle.get_run_analysis_summary()
 	result_panel.show()
 
 func _on_next_stage_pressed() -> void:
