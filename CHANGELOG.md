@@ -1549,3 +1549,13 @@
 - 폭발 이펙트는 개별 PNG frame_01~08 방식 유지.
 - 폭발 프레임 로더가 첫 프레임만 추가하던 문제를 수정해 8프레임 전체를 SpriteFrames에 추가.
 - mutation_1 / mutation_2 / greater_mutation의 visual_scale을 모두 1.5로 통일해 엘리트/돌연변이 몬스터를 일반 대비 약 1.5배 크기로 표시.
+
+### Elite Orc/Bomb Rat Frame Sequences + Mutation Modal Summon Lock
+- 엘리트 Orc 비주얼을 spritesheet 분할 방식에서 elitemonster/orc/frames/frame_01~23 개별 PNG 시퀀스로 교체.
+  - idle 01~04 / move 05~10 / attack 11~16 / hit 17~20 / death 21~23.
+- 엘리트 Bomb Rat 비주얼을 elitemonster/bombrat/frames/frame_01~20 개별 PNG 시퀀스로 교체.
+  - idle 01~04 / move 05~10 / attack 11~16 / death 17~20.
+- Bomb Rat 런타임 비주얼 로더에 numbered sequence 프로필 지원 추가.
+- 돌연변이 선택창이 열린 동안 일반 몬스터 소환 버튼을 비활성화하고, 소환 입력 함수에서도 추가 차단.
+- 돌연변이 선택 완료 후 현재 지휘력 기준으로 소환 버튼 활성 상태를 다시 계산.
+- 기존 combat physics 정지/재개 로직은 변경하지 않음.

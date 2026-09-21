@@ -155,7 +155,11 @@ func _trigger_death_explosion() -> void:
 func apply_visual_profile(profile: Dictionary) -> bool:
 	if profile.is_empty():
 		return false
-	if String(profile.get("mode", "")) != "sheet":
+
+	var mode := String(profile.get("mode", ""))
+	if mode == "sequence":
+		return _apply_bomb_rat_sequence_visual(profile)
+	if mode != "sheet":
 		return false
 
 	var sheet_path := String(profile.get("sheet_path", ""))
@@ -166,6 +170,80 @@ func apply_visual_profile(profile: Dictionary) -> bool:
 		sheet_path,
 		float(profile.get("target_height", BOMBRAT_TARGET_HEIGHT))
 	)
+
+func _apply_bomb_rat_sequence_visual(profile: Dictionary) -> bool:
+	var dir_path := String(profile.get("asset_dir", ""))
+	var animations = profile.get("animations", {})
+	if dir_path.is_empty() or typeof(animations) != TYPE_DICTIONARY:
+		return false
+
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.remove_animation(&"default")
+
+	for raw_name in animations.keys():
+		var animation_name := StringName(String(raw_name))
+		var config: Dictionary = animations[raw_name]
+		var start_index := int(config.get("start", 1))
+		var count := int(config.get("count", 0))
+		if count <= 0:
+			continue
+
+		var textures: Array[Texture2D] = []
+		for offset in range(count):
+			var texture := _load_bomb_rat_texture(
+				"%s/frame_%02d.png" % [
+					dir_path,
+					start_index + offset,
+				]
+			)
+			if texture != null:
+				textures.append(texture)
+
+		if textures.is_empty():
+			continue
+
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(
+			animation_name,
+			float(config.get("fps", 10.0))
+		)
+		frames.set_animation_loop(
+			animation_name,
+			bool(config.get("loop", false))
+		)
+		for texture in textures:
+			frames.add_frame(animation_name, texture)
+
+	if not frames.has_animation(&"idle"):
+		return false
+	if frames.get_frame_count(&"idle") <= 0:
+		return false
+
+	var first_texture := frames.get_frame_texture(&"idle", 0)
+	if first_texture == null:
+		return false
+
+	visual.visible = false
+	visual.sprite_frames = frames
+	visual.modulate = Color.WHITE
+	visual.rotation = 0.0
+	visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+	var target_height := float(
+		profile.get("target_height", BOMBRAT_TARGET_HEIGHT)
+	)
+	var source_height := maxf(float(first_texture.get_height()), 1.0)
+	var uniform_scale := target_height / source_height
+	visual.scale = Vector2(uniform_scale, uniform_scale)
+	visual.visible = true
+	visual.speed_scale = 1.0
+
+	if not visual.animation_finished.is_connected(_on_visual_animation_finished):
+		visual.animation_finished.connect(_on_visual_animation_finished)
+
+	visual.play(&"idle")
+	return true
 
 func _apply_bomb_rat_visual(
 	sheet_path: String = BOMBRAT_SHEET_PATH,

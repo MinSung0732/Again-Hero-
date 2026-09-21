@@ -341,6 +341,9 @@ func _on_mutation_choice_ready(
 ) -> void:
 	current_mutation_candidates = candidates.duplicate()
 	mutation_panel.show()
+	for button in summon_slot_buttons:
+		if button is Button:
+			button.disabled = true
 
 	mutation_title.text = String(
 		event_data.get("ui_title", "돌연변이 선택")
@@ -376,6 +379,12 @@ func _on_mutation_choice_pressed(index: int) -> void:
 	var monster_id := String(current_mutation_candidates[index])
 	mutation_panel.hide()
 	current_mutation_candidates.clear()
+
+	var snapshot: Dictionary = battle.get_snapshot()
+	_on_command_changed(
+		float(snapshot.get("command", 0.0)),
+		float(snapshot.get("command_max", 100.0))
+	)
 
 	battle.spawn_selected_mutation(monster_id)
 
@@ -516,6 +525,10 @@ func _on_placement_mode_toggled(auto_enabled: bool) -> void:
 			status_label.text = "수동 배치: %s 선택됨 · 현재 화면을 터치하세요." % _get_monster_name(selected_monster_type)
 
 func _on_summon_pressed(monster_type: String) -> void:
+	if mutation_panel.visible:
+		status_label.text = "돌연변이 선택 중에는 몬스터를 소환할 수 없습니다."
+		return
+
 	if not _is_monster_equipped(monster_type):
 		status_label.text = "%s은(는) 현재 팀에 편성되지 않았습니다." % _get_catalog_monster_name(monster_type)
 		return
