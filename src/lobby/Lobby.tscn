@@ -106,7 +106,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 18
 
 [node name="Title" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
 layout_mode = 2
@@ -119,32 +119,67 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
 theme_override_font_sizes/font_size = 19
-text = "연구 포인트로 몬스터 조각을 획득합니다. 조각 요구량에 도달하면 자동 해금됩니다."
+text = "상자에서 무작위 몬스터 조각을 획득합니다. 테스트 버전에서는 골드가 차감되지 않습니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="Points" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
+[node name="Gold" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
-theme_override_font_sizes/font_size = 23
-text = "보유 연구 포인트  0"
+theme_override_font_sizes/font_size = 25
+text = "보유 골드  99,999"
 horizontal_alignment = 1
 
-[node name="ShopScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
+[node name="BuyRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="SingleButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopLayout/BuyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 23
+text = "상자 1회\n100 골드"
+
+[node name="MultiButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopLayout/BuyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 23
+text = "상자 10+1회\n1,000 골드"
+
+[node name="Rates" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.7, 0.81, 1)
+theme_override_font_sizes/font_size = 20
+text = "일반 70% · 조각 10~30\n희귀 25% · 조각 3~8\n최고등급 5% · 조각 1"
+horizontal_alignment = 1
+
+[node name="ResultTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "최근 상자 결과"
+horizontal_alignment = 1
+
+[node name="ResultPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
+custom_minimum_size = Vector2(0, 290)
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ShopList" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopLayout/ShopScroll"]
+[node name="Result" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout/ResultPanel"]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 14
+theme_override_colors/font_color = Color(0.9, 0.85, 0.94, 1)
+theme_override_font_sizes/font_size = 21
+text = "상자를 구매하면 결과가 여기에 표시됩니다."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="Status" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
-custom_minimum_size = Vector2(0, 76)
+custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
 theme_override_font_sizes/font_size = 19
-text = "몬스터 조각 상품을 선택하세요."
+text = "테스트 골드 99,999 · 구매 시 골드 차감 없음"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2

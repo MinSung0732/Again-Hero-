@@ -5,6 +5,7 @@ const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
+const SHOP_CATALOG := preload("res://src/data/shop_catalog.gd")
 const MONSTER_COLLECTION_STORE := preload("res://src/systems/monster_collection_store.gd")
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 
@@ -16,8 +17,11 @@ const TEAM_MAX_SLOTS := 3
 @onready var progress_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ProgressLabel
 
 @onready var shop_tab: Control = $SafeArea/Layout/Content/ShopTab
-@onready var shop_points_label: Label = $SafeArea/Layout/Content/ShopTab/ShopLayout/Points
-@onready var shop_list: VBoxContainer = $SafeArea/Layout/Content/ShopTab/ShopLayout/ShopScroll/ShopList
+@onready var shop_gold_label: Label = $SafeArea/Layout/Content/ShopTab/ShopLayout/Gold
+@onready var shop_single_button: Button = $SafeArea/Layout/Content/ShopTab/ShopLayout/BuyRow/SingleButton
+@onready var shop_multi_button: Button = $SafeArea/Layout/Content/ShopTab/ShopLayout/BuyRow/MultiButton
+@onready var shop_rates_label: Label = $SafeArea/Layout/Content/ShopTab/ShopLayout/Rates
+@onready var shop_result_label: Label = $SafeArea/Layout/Content/ShopTab/ShopLayout/ResultPanel/Result
 @onready var shop_status_label: Label = $SafeArea/Layout/Content/ShopTab/ShopLayout/Status
 
 @onready var team_tab: Control = $SafeArea/Layout/Content/TeamTab
@@ -217,6 +221,11 @@ func _connect_navigation() -> void:
 	next_stage_button.pressed.connect(_change_stage.bind(1))
 	enter_stage_button.pressed.connect(_enter_selected_stage)
 
+	shop_single_button.pressed.connect(_open_monster_boxes.bind(1))
+	shop_multi_button.pressed.connect(
+		_open_monster_boxes.bind(SHOP_CATALOG.MULTI_DRAW_COUNT)
+	)
+
 	team_slot_1_button.pressed.connect(_on_team_slot_pressed.bind(0))
 	team_slot_2_button.pressed.connect(_on_team_slot_pressed.bind(1))
 	team_slot_3_button.pressed.connect(_on_team_slot_pressed.bind(2))
@@ -275,117 +284,169 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 	)
 
 func _rebuild_shop_list() -> void:
-	for child in shop_list.get_children():
-		child.queue_free()
+	shop_gold_label.text = "보유 골드  %,d" % SHOP_CATALOG.TEST_GOLD
+	shop_single_button.text = "상자 1회\n%,d 골드" % SHOP_CATALOG.SINGLE_DRAW_COST
+	shop_multi_button.text = "상자 10+1회\n%,d 골드" % SHOP_CATALOG.MULTI_DRAW_COST
 
-	var research_points := STAGE_PROGRESS.get_research_points()
-	shop_points_label.text = "보유 연구 포인트  %d" % research_points
-	monster_collection_state = MONSTER_COLLECTION_STORE.load_state()
+	var rate_lines: PackedStringArray = []
+	for raw_rarity in SHOP_CATALOG.RARITY_ORDER:
+		var rarity_id := String(raw_rarity)
+		var rarity_data := SHOP_CATALOG.get_rarity(rarity_id)
+		if rarity_data.is_empty():
+			continue
 
+		var min_shards := int(rarity_data.get("shard_min", 1))
+		var max_shards := int(rarity_data.get("shard_max", min_shards))
+		var shard_text := (
+			"%d" % min_shards
+			if min_shards == max_shards
+			else "%d~%d" % [min_shards, max_shards]
+		)
+		rate_lines.append(
+			"%s %.0f%% · 조각 %s" % [
+				SHOP_CATALOG.get_rarity_label(rarity_id),
+				float(rarity_data.get("weight", 0.0)),
+				shard_text,
+			]
+		)
+
+	shop_rates_label.text = "\n".join(rate_lines)
+	shop_status_label.text = (
+		"테스트 골드 %,d · 구매 시 골드 차감 없음"
+		% SHOP_CATALOG.TEST_GOLD
+	)
+
+func _open_monster_boxes(draw_count: int) -> void:
+	if draw_count <= 0:
+		return
+
+	var aggregated: Dictionary = {}
+	var rarity_counts: Dictionary = {}
+	var unlock_names: PackedStringArray = []
+
+	for _draw_index in range(draw_count):
+		var roll := _roll_monster_shard()
+		if roll.is_empty():
+			continue
+
+		var monster_id := String(roll.get("monster_id", ""))
+		var rarity_id := String(roll.get("rarity", ""))
+		var shard_amount := int(roll.get("shards", 0))
+		if monster_id.is_empty() or shard_amount <= 0:
+			continue
+
+		var before_state := MONSTER_COLLECTION_STORE.load_state()
+		var was_unlocked := MONSTER_COLLECTION_STORE.is_unlocked(
+			monster_id,
+			before_state
+		)
+		var updated_state := MONSTER_COLLECTION_STORE.add_shards(
+			monster_id,
+			shard_amount
+		)
+		var is_unlocked := MONSTER_COLLECTION_STORE.is_unlocked(
+			monster_id,
+			updated_state
+		)
+
+		aggregated[monster_id] = (
+			int(aggregated.get(monster_id, 0)) + shard_amount
+		)
+		rarity_counts[rarity_id] = (
+			int(rarity_counts.get(rarity_id, 0)) + 1
+		)
+
+		if not was_unlocked and is_unlocked:
+			unlock_names.append(_team_monster_name(monster_id))
+
+		monster_collection_state = updated_state
+
+	var result_lines: PackedStringArray = []
+	result_lines.append(
+		"상자 %d회 결과" % draw_count
+	)
+
+	for raw_id in MONSTER_CATALOG.ORDER:
+		var monster_id := String(raw_id)
+		var total_shards := int(aggregated.get(monster_id, 0))
+		if total_shards <= 0:
+			continue
+
+		var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+		var rarity_id := ""
+		if typeof(data) == TYPE_DICTIONARY:
+			rarity_id = String(data.get("rarity", ""))
+
+		result_lines.append(
+			"%s [%s]  +%d 조각" % [
+				_team_monster_name(monster_id),
+				SHOP_CATALOG.get_rarity_label(rarity_id),
+				total_shards,
+			]
+		)
+
+	if not unlock_names.is_empty():
+		result_lines.append(
+			"해금: %s" % " / ".join(unlock_names)
+		)
+
+	shop_result_label.text = "\n".join(result_lines)
+	shop_status_label.text = (
+		"골드 차감 없음 · 표시 골드 %,d 유지"
+		% SHOP_CATALOG.TEST_GOLD
+	)
+	_refresh_header()
+
+func _roll_monster_shard() -> Dictionary:
+	var rarity_id := _roll_shop_rarity()
+	if rarity_id.is_empty():
+		return {}
+
+	var candidates: Array = []
 	for raw_id in MONSTER_CATALOG.ORDER:
 		var monster_id := String(raw_id)
 		var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
 		if typeof(data) != TYPE_DICTIONARY:
 			continue
+		if String(data.get("rarity", "")) == rarity_id:
+			candidates.append(monster_id)
 
-		var shard_amount := maxi(int(data.get("shop_shard_amount", 0)), 0)
-		var shard_cost := maxi(int(data.get("shop_shard_cost", 0)), 0)
-		if shard_amount <= 0:
-			continue
+	if candidates.is_empty():
+		return {}
 
-		var required := maxi(int(data.get("shards_required", 1)), 1)
-		var current_shards := MONSTER_COLLECTION_STORE.get_shards(
-			monster_id,
-			monster_collection_state
-		)
-		var unlocked := MONSTER_COLLECTION_STORE.is_unlocked(
-			monster_id,
-			monster_collection_state
-		)
-
-		var button := Button.new()
-		button.custom_minimum_size = Vector2(0, 170)
-		button.add_theme_font_size_override("font_size", 21)
-		button.add_theme_stylebox_override("normal", secondary_button_style)
-		button.add_theme_stylebox_override("hover", secondary_button_style)
-		button.add_theme_stylebox_override("pressed", primary_button_style)
-		button.icon = _team_monster_card_icon(monster_id)
-		button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		button.disabled = research_points < shard_cost
-
-		var state_text := ""
-		if unlocked:
-			state_text = "해금 완료 · 보유 조각 %d" % current_shards
-		else:
-			state_text = "해금 진행 %d / %d" % [
-				mini(current_shards, required),
-				required,
-			]
-
-		button.text = "%s 조각 +%d\n%s\n연구 포인트 %d" % [
-			_team_monster_name(monster_id),
-			shard_amount,
-			state_text,
-			shard_cost,
-		]
-		button.pressed.connect(
-			_purchase_monster_shards.bind(monster_id)
-		)
-		shop_list.add_child(button)
-
-func _purchase_monster_shards(monster_id: String) -> void:
-	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
-	if typeof(data) != TYPE_DICTIONARY:
-		return
-
-	var shard_amount := maxi(int(data.get("shop_shard_amount", 0)), 0)
-	var shard_cost := maxi(int(data.get("shop_shard_cost", 0)), 0)
-	if shard_amount <= 0:
-		return
-
-	var before_state := MONSTER_COLLECTION_STORE.load_state()
-	var before_unlocked := MONSTER_COLLECTION_STORE.is_unlocked(
-		monster_id,
-		before_state
+	var selected_id := String(
+		candidates[randi_range(0, candidates.size() - 1)]
 	)
-	var before_shards := MONSTER_COLLECTION_STORE.get_shards(
-		monster_id,
-		before_state
-	)
+	var rarity_data := SHOP_CATALOG.get_rarity(rarity_id)
+	var min_shards := maxi(int(rarity_data.get("shard_min", 1)), 1)
+	var max_shards := maxi(int(rarity_data.get("shard_max", min_shards)), min_shards)
 
-	var spend_result := STAGE_PROGRESS.try_spend_research_points(shard_cost)
-	if not bool(spend_result.get("success", false)):
-		shop_status_label.text = "연구 포인트가 부족합니다."
-		_refresh_header()
-		_rebuild_shop_list()
-		return
+	return {
+		"monster_id": selected_id,
+		"rarity": rarity_id,
+		"shards": randi_range(min_shards, max_shards),
+	}
 
-	var updated_state := MONSTER_COLLECTION_STORE.add_shards(
-		monster_id,
-		shard_amount
-	)
-	var after_unlocked := MONSTER_COLLECTION_STORE.is_unlocked(
-		monster_id,
-		updated_state
-	)
-	var after_shards := MONSTER_COLLECTION_STORE.get_shards(
-		monster_id,
-		updated_state
-	)
+func _roll_shop_rarity() -> String:
+	var total_weight := 0.0
+	for raw_rarity in SHOP_CATALOG.RARITY_ORDER:
+		var rarity_data := SHOP_CATALOG.get_rarity(String(raw_rarity))
+		total_weight += maxf(float(rarity_data.get("weight", 0.0)), 0.0)
 
-	if not before_unlocked and after_unlocked:
-		shop_status_label.text = "%s 해금 완료! 팀 편성에서 사용할 수 있습니다." % _team_monster_name(monster_id)
-	else:
-		shop_status_label.text = "%s 조각 +%d · %d → %d" % [
-			_team_monster_name(monster_id),
-			shard_amount,
-			before_shards,
-			after_shards,
-		]
+	if total_weight <= 0.0:
+		return ""
 
-	monster_collection_state = updated_state
-	_refresh_header()
-	_rebuild_shop_list()
+	var roll := randf_range(0.0, total_weight)
+	var cumulative := 0.0
+
+	for raw_rarity in SHOP_CATALOG.RARITY_ORDER:
+		var rarity_id := String(raw_rarity)
+		var rarity_data := SHOP_CATALOG.get_rarity(rarity_id)
+		cumulative += maxf(float(rarity_data.get("weight", 0.0)), 0.0)
+		if roll <= cumulative:
+			return rarity_id
+
+	return String(SHOP_CATALOG.RARITY_ORDER.back())
 
 func _setup_team_preview() -> void:
 	team_catalog_ids.clear()
@@ -666,9 +727,8 @@ func _team_monster_cost(monster_id: String) -> float:
 func _refresh_header() -> void:
 	var state := STAGE_PROGRESS.load_state()
 	var highest := int(state.get("highest_unlocked_stage", 1))
-	var research_points := int(state.get("research_points", 0))
 	title_label.text = "용사, 또 너야?"
-	resource_label.text = "연구 포인트  %d" % research_points
+	resource_label.text = "골드  %,d" % SHOP_CATALOG.TEST_GOLD
 	progress_label.text = "최고 해금  Stage %d" % highest
 
 func _change_stage(direction: int) -> void:
