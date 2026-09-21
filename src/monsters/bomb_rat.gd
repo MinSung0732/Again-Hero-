@@ -10,11 +10,12 @@ signal died
 @export var monster_type: String = "bomb_rat"
 @export var monster_role: String = "burst"
 @export var max_hp: int = 36
-@export var move_speed: float = 145.0
-@export var attack_damage: int = 6
-@export var attack_range: float = 64.0
-@export var attack_cooldown: float = 0.95
-@export var exp_reward: int = 32
+@export var move_speed: float = 175.0
+@export var self_destruct_range: float = 78.0
+@export var self_destruct_fuse: float = 0.30
+@export var exp_reward: int = 30
+@export var self_destruct_exp_reward: int = 10
+@export var hero_kill_exp_reward: int = 30
 @export var explosion_radius: float = 150.0
 @export var explosion_damage: int = 28
 
@@ -23,14 +24,16 @@ signal died
 
 var current_hp: int
 var hero: Node2D
-var attack_timer: float = 0.0
 var hit_flash_timer: float = 0.0
 var dying: bool = false
+var self_destructing: bool = false
+var self_destruct_timer: float = 0.0
 var desired_locomotion: StringName = &"idle"
 
 func _ready() -> void:
 	add_to_group("monsters")
 	current_hp = max_hp
+	exp_reward = hero_kill_exp_reward
 	hero = get_tree().get_first_node_in_group("hero") as Node2D
 	_apply_bomb_rat_visual()
 	queue_redraw()
@@ -40,11 +43,16 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 
-	attack_timer = maxf(attack_timer - delta, 0.0)
-
 	if hit_flash_timer > 0.0:
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
 		queue_redraw()
+
+	if self_destructing:
+		velocity = Vector2.ZERO
+		self_destruct_timer = maxf(self_destruct_timer - delta, 0.0)
+		if self_destruct_timer <= 0.0:
+			_complete_self_destruct()
+		return
 
 	if not is_instance_valid(hero):
 		hero = get_tree().get_first_node_in_group("hero") as Node2D
@@ -58,18 +66,12 @@ func _physics_process(delta: float) -> void:
 		visual.flip_h = direction_to_hero.x < 0.0
 
 	var distance := global_position.distance_to(hero.global_position)
-	if distance > attack_range:
+	if distance > self_destruct_range:
 		velocity = direction_to_hero * move_speed
 		_play_locomotion(true)
 		move_and_slide()
 	else:
-		velocity = Vector2.ZERO
-		_play_locomotion(false)
-		if attack_timer <= 0.0:
-			attack_timer = attack_cooldown
-			_restart_visual_animation(&"attack")
-			if hero.has_method("take_damage"):
-				hero.call("take_damage", attack_damage)
+		_begin_self_destruct()
 
 func take_damage(amount: int) -> void:
 	if current_hp <= 0 or dying:
@@ -80,23 +82,57 @@ func take_damage(amount: int) -> void:
 	var applied_damage := previous_hp - current_hp
 	DAMAGE_NUMBERS.show(self, applied_damage)
 	hit_flash_timer = 0.10
-	_restart_visual_animation(&"hit")
-	queue_redraw()
 
 	if current_hp <= 0:
-		_begin_death()
+		_die_from_hero()
+		return
 
-func _begin_death() -> void:
+	if not self_destructing:
+		_restart_visual_animation(&"hit")
+	queue_redraw()
+
+func _begin_self_destruct() -> void:
+	if self_destructing or dying:
+		return
+
+	self_destructing = true
+	self_destruct_timer = maxf(self_destruct_fuse, 0.0)
+	velocity = Vector2.ZERO
+	_restart_visual_animation(&"attack")
+
+	if self_destruct_timer <= 0.0:
+		_complete_self_destruct()
+
+func _complete_self_destruct() -> void:
 	if dying:
 		return
 
 	dying = true
+	self_destructing = false
 	velocity = Vector2.ZERO
+	current_hp = 0
+	exp_reward = self_destruct_exp_reward
 	collision_shape.set_deferred("disabled", true)
 
 	_trigger_death_explosion()
 	died.emit()
+	_play_death_or_free()
 
+func _die_from_hero() -> void:
+	if dying:
+		return
+
+	dying = true
+	self_destructing = false
+	velocity = Vector2.ZERO
+	current_hp = 0
+	exp_reward = hero_kill_exp_reward
+	collision_shape.set_deferred("disabled", true)
+
+	died.emit()
+	_play_death_or_free()
+
+func _play_death_or_free() -> void:
 	if visual.visible and visual.sprite_frames != null:
 		_restart_visual_animation(&"death")
 	else:
@@ -186,7 +222,7 @@ func _add_sheet_animation(
 func _play_locomotion(moving: bool) -> void:
 	desired_locomotion = &"move" if moving else &"idle"
 
-	if not visual.visible or visual.sprite_frames == null or dying:
+	if not visual.visible or visual.sprite_frames == null or dying or self_destructing:
 		return
 
 	if visual.animation == &"attack" or visual.animation == &"hit":
@@ -216,7 +252,7 @@ func _on_visual_animation_finished() -> void:
 		queue_free()
 		return
 
-	if visual.animation == &"attack" or visual.animation == &"hit":
+	if visual.animation == &"hit" and not dying and not self_destructing:
 		if visual.sprite_frames.has_animation(desired_locomotion):
 			visual.play(desired_locomotion)
 

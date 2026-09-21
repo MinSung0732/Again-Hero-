@@ -1049,3 +1049,11 @@
 - MonsterCatalog에 optional `card_icon_region` 데이터를 추가해 개별 PNG 없이 통합 시트 일부 영역을 카드 아이콘으로 사용할 수 있도록 확장.
 - 폭탄쥐는 `bombrat_spritesheet.png`의 첫 229×229 셀을 사용.
 - 기존 Slime / Spider / Orc 개별 아이콘 경로와 팀 편성 저장/전투 로직은 변경하지 않음.
+
+### Bomb Rat Self-Destruct Combat Identity v1
+- 폭탄쥐 이동속도를 145 → 175로 상향하고 반복 근접 평타를 제거.
+- Hero와 78px 안으로 접근하면 0.30초 자폭 준비 후 한 번 폭발하고 사망하도록 변경.
+- 자폭 성공 시 기존 반경 150 / 피해 28 폭발을 적용하고 EXP 10 구슬을 드롭.
+- 자폭 준비 중을 포함해 Hero 공격으로 먼저 처치되면 폭발하지 않고 EXP 30 구슬을 드롭.
+- Battle의 기존 사망/EXP Orb 경로는 수정하지 않고, 폭탄쥐가 사망 원인에 따라 `exp_reward`를 설정한 뒤 기존 `died` 신호를 보내는 방식으로 연결.
+- HP 36과 소환 비용 12는 유지.
