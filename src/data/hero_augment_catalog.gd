@@ -21,6 +21,7 @@ const AUGMENTS = [
 		"name": "탄환 강화",
 		"description": "투사체 공격력 +8",
 		"base_score": 8.0,
+		"max_stack": 5,
 		"tags": ["damage", "projectile"],
 		"effects": [
 			{"op": "add_stat", "target": "attack_damage", "value": 8},
@@ -43,6 +44,7 @@ const AUGMENTS = [
 		"name": "연사 강화",
 		"description": "공격속도 +12%",
 		"base_score": 7.5,
+		"max_stack": 5,
 		"tags": ["attack_speed", "projectile"],
 		"effects": [
 			{"op": "multiply_stat", "target": "attack_cooldown", "value": 0.88, "min": 0.18},
@@ -66,6 +68,7 @@ const AUGMENTS = [
 		"name": "강인한 육체",
 		"description": "최대 HP +45, HP +45",
 		"base_score": 7.0,
+		"max_stack": 5,
 		"tags": ["durability", "survival"],
 		"effects": [
 			{"op": "add_stat", "target": "max_hp", "value": 45},
@@ -88,6 +91,7 @@ const AUGMENTS = [
 		"name": "민첩한 발놀림",
 		"description": "이동속도 +25",
 		"base_score": 6.0,
+		"max_stack": 2,
 		"tags": ["mobility", "kite"],
 		"effects": [
 			{"op": "add_stat", "target": "move_speed", "value": 25.0},
@@ -110,6 +114,7 @@ const AUGMENTS = [
 		"name": "둔화 적응",
 		"description": "둔화 강도와 지속시간 감소",
 		"base_score": 4.8,
+		"max_stack": 3,
 		"tags": ["resistance", "mobility", "survival"],
 		"effects": [
 			{"op": "add_status_resistance", "status": "slow", "value": 0.18, "max": 0.65},
@@ -130,6 +135,7 @@ const AUGMENTS = [
 		"name": "사거리 확장",
 		"description": "공격/투사체 최대 사거리 +35",
 		"base_score": 5.5,
+		"max_stack": 3,
 		"tags": ["range", "kite"],
 		"effects": [
 			{"op": "add_stat", "target": "attack_range", "value": 35.0},
@@ -151,6 +157,7 @@ const AUGMENTS = [
 		"name": "폭발 탄환",
 		"description": "투사체 적중 시 주변 적에게 광역 피해",
 		"base_score": 5.8,
+		"max_stack": 4,
 		"tags": ["area", "projectile"],
 		"effects": [
 			{"op": "add_stat", "target": "projectile_splash_radius", "value": 70.0, "max": 180.0},
@@ -175,6 +182,7 @@ const AUGMENTS = [
 		"name": "전투 회복",
 		"description": "즉시 HP 90 회복",
 		"base_score": 5.0,
+		"max_stack": 3,
 		"tags": ["recovery", "survival"],
 		"effects": [
 			{"op": "heal", "value": 90},
@@ -192,8 +200,23 @@ const AUGMENTS = [
 	},
 ]
 
-static func roll_candidates(count: int = 3) -> Array:
-	var pool: Array = AUGMENTS.duplicate(true)
+static func roll_candidates(
+	count: int = 3,
+	build_counts: Dictionary = {}
+) -> Array:
+	var pool: Array = []
+
+	for raw_augment in AUGMENTS:
+		var augment: Dictionary = raw_augment
+		var augment_id := String(augment.get("id", ""))
+		var max_stack := int(augment.get("max_stack", 0))
+		var current_stack := int(build_counts.get(augment_id, 0))
+
+		if max_stack > 0 and current_stack >= max_stack:
+			continue
+
+		pool.append(augment.duplicate(true))
+
 	pool.shuffle()
 
 	var result: Array = []

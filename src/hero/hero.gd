@@ -637,7 +637,20 @@ func _level_up() -> void:
 	exp_to_next_level = _required_exp_for_level(level)
 	level_flash_timer = 0.45
 
-	var candidates: Array = AUGMENT_CATALOG.roll_candidates(3)
+	var candidates: Array = AUGMENT_CATALOG.roll_candidates(3, build_counts)
+	if candidates.is_empty():
+		health_changed.emit(current_hp, max_hp)
+		leveled_up.emit(level)
+		augment_selected.emit(
+			level,
+			candidates,
+			"증강 완료",
+			"모든 Hero 증강이 최대 중첩에 도달",
+			get_build_summary()
+		)
+		queue_redraw()
+		return
+
 	var ai_context: Dictionary = _get_ai_decision_context()
 	var chosen: Dictionary = BUILD_AI.choose_candidate(
 		candidates,
@@ -747,13 +760,17 @@ func _build_ai_context() -> Dictionary:
 
 func _apply_augment(augment: Dictionary) -> void:
 	var augment_id: String = String(augment.get("id", ""))
+	var current_stack: int = int(build_counts.get(augment_id, 0))
+	var max_stack := int(augment.get("max_stack", 0))
+
+	if not augment_id.is_empty() and max_stack > 0 and current_stack >= max_stack:
+		return
 
 	for raw_effect in augment.get("effects", []):
 		var effect: Dictionary = raw_effect
 		_apply_augment_effect(effect)
 
 	if not augment_id.is_empty():
-		var current_stack: int = int(build_counts.get(augment_id, 0))
 		build_counts[augment_id] = current_stack + 1
 
 func _apply_augment_effect(effect: Dictionary) -> void:

@@ -33,6 +33,10 @@ const MANUAL_SPAWN_MARGIN := 70.0
 const DEMON_BASE_EXP_TO_NEXT := 30.0
 const DEMON_EXP_GROWTH_PER_LEVEL := 15.0
 const BASE_DEMON_REROLLS := 3
+const DEMON_LEVEL_MONSTER_HP_GROWTH := 1.05
+const DEMON_LEVEL_MONSTER_DAMAGE_GROWTH := 1.05
+const DEMON_LEVEL_MONSTER_SPEED_GROWTH := 1.02
+const DEMON_LEVEL_MONSTER_SPEED_MAX_MULTIPLIER := 1.25
 
 
 var hero: Node2D
@@ -371,13 +375,16 @@ func _spawn_monster(
 
 	var speed_value = monster.get("move_speed")
 	if speed_value != null:
-		monster.set("move_speed", float(speed_value) * monster_speed_multiplier)
+		monster.set_meta(
+			"demon_level_base_move_speed",
+			float(speed_value) * monster_speed_multiplier
+		)
 
 	var damage_value = monster.get("attack_damage")
 	if damage_value != null:
-		monster.set(
-			"attack_damage",
-			maxi(1, int(round(float(damage_value) * monster_damage_multiplier)))
+		monster.set_meta(
+			"demon_level_base_attack_damage",
+			maxf(1.0, float(damage_value) * monster_damage_multiplier)
 		)
 
 	if monster_type == "spider":
@@ -388,13 +395,17 @@ func _spawn_monster(
 				float(slow_duration_value) * spider_slow_duration_multiplier
 			)
 
-	if monster_type == "orc":
-		var max_hp_value = monster.get("max_hp")
-		if max_hp_value != null:
-			monster.set(
-				"max_hp",
-				maxi(1, int(round(float(max_hp_value) * orc_hp_multiplier)))
-			)
+	var max_hp_value = monster.get("max_hp")
+	if max_hp_value != null:
+		var level_base_hp := float(max_hp_value)
+		if monster_type == "orc":
+			level_base_hp *= orc_hp_multiplier
+		monster.set_meta(
+			"demon_level_base_max_hp",
+			maxf(level_base_hp, 1.0)
+		)
+
+	_apply_demon_level_scaling_to_monster(monster, false)
 
 	if split_child:
 		var exp_value = monster.get("exp_reward")
@@ -408,6 +419,98 @@ func _spawn_monster(
 
 	monster_summon_costs[monster.get_instance_id()] = summon_cost
 	monsters_alive += 1
+
+func _get_demon_level_monster_hp_multiplier() -> float:
+	var growth_steps := maxi(demon_level - 1, 0)
+	return pow(DEMON_LEVEL_MONSTER_HP_GROWTH, float(growth_steps))
+
+func _get_demon_level_monster_damage_multiplier() -> float:
+	var growth_steps := maxi(demon_level - 1, 0)
+	return pow(DEMON_LEVEL_MONSTER_DAMAGE_GROWTH, float(growth_steps))
+
+func _get_demon_level_monster_speed_multiplier() -> float:
+	var growth_steps := maxi(demon_level - 1, 0)
+	return minf(
+		pow(DEMON_LEVEL_MONSTER_SPEED_GROWTH, float(growth_steps)),
+		DEMON_LEVEL_MONSTER_SPEED_MAX_MULTIPLIER
+	)
+
+func _apply_demon_level_scaling_to_monster(
+	monster: Node,
+	preserve_hp_ratio: bool
+) -> void:
+	if not is_instance_valid(monster):
+		return
+
+	var base_hp_value = monster.get_meta("demon_level_base_max_hp", null)
+	if base_hp_value != null:
+		var old_max_hp := maxi(int(monster.get("max_hp")), 1)
+		var current_hp_value = monster.get("current_hp")
+		var hp_ratio := 1.0
+		if preserve_hp_ratio and current_hp_value != null:
+			hp_ratio = clampf(
+				float(current_hp_value) / float(old_max_hp),
+				0.0,
+				1.0
+			)
+
+		var new_max_hp := maxi(
+			1,
+			int(round(
+				float(base_hp_value) * _get_demon_level_monster_hp_multiplier()
+			))
+		)
+		monster.set("max_hp", new_max_hp)
+
+		if preserve_hp_ratio and current_hp_value != null:
+			monster.set(
+				"current_hp",
+				clampi(
+					int(round(float(new_max_hp) * hp_ratio)),
+					1,
+					new_max_hp
+				)
+			)
+
+	var base_damage_value = monster.get_meta(
+		"demon_level_base_attack_damage",
+		null
+	)
+	if base_damage_value != null:
+		monster.set(
+			"attack_damage",
+			maxi(
+				1,
+				int(round(
+					float(base_damage_value)
+					* _get_demon_level_monster_damage_multiplier()
+				))
+			)
+		)
+
+	var base_speed_value = monster.get_meta(
+		"demon_level_base_move_speed",
+		null
+	)
+	if base_speed_value != null:
+		monster.set(
+			"move_speed",
+			float(base_speed_value) * _get_demon_level_monster_speed_multiplier()
+		)
+
+	if preserve_hp_ratio and monster.has_method("queue_redraw"):
+		monster.call("queue_redraw")
+
+func _refresh_alive_monsters_for_demon_level() -> void:
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+
+		var current_hp_value = node.get("current_hp")
+		if current_hp_value != null and int(current_hp_value) <= 0:
+			continue
+
+		_apply_demon_level_scaling_to_monster(node, true)
 
 func _get_monster_name(monster_type: String) -> String:
 	return MONSTER_CATALOG.get_name(monster_type)
@@ -491,6 +594,7 @@ func _gain_demon_exp(amount: float) -> void:
 	if amount <= 0.0 or battle_over:
 		return
 
+	var previous_demon_level := demon_level
 	demon_exp += amount
 
 	while demon_exp + 0.001 >= demon_exp_to_next_level:
@@ -498,6 +602,9 @@ func _gain_demon_exp(amount: float) -> void:
 		demon_level += 1
 		demon_exp_to_next_level = _required_demon_exp_for_level(demon_level)
 		demon_pending_augments += 1
+
+	if demon_level != previous_demon_level:
+		_refresh_alive_monsters_for_demon_level()
 
 	demon_progression_changed.emit(
 		demon_level,
