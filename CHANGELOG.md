@@ -1191,3 +1191,13 @@
 - 초기 수치: 피해 110 / 사거리 900 / 속도 950 / 충돌 크기 116×56.
 - `assets/art/heroes/stage1_mage/effect_01/frame_01~06.png`를 6프레임 반복 애니메이션으로 연결.
 - 기존 일반 Hero 투사체와 Stage 2 `area_burst` 필살기 경로는 변경하지 않음.
+
+### Stage 1 Arcane Barrier v1
+- Stage 1 견습 마도사에 관통포와 별도 쿨다운으로 작동하는 두 번째 스킬 `마력 장벽` 추가.
+- 초기 8초 후 사용 가능, 사용 후 쿨다운 18초.
+- HP 75% 이하 또는 주변 300px 내 몬스터 3마리 이상일 때 자동 발동.
+- 최대 HP의 30%만큼 별도 Shield HP 생성, 최대 8초 유지.
+- 피격 시 Shield HP가 먼저 피해를 흡수하고 남은 피해만 Hero HP에 적용.
+- 보호막 활성 중 HP바 아래에 파란 Shield 게이지 표시.
+- `assets/art/heroes/stage1_mage/effect_02/frame_01~06.png`를 루프 애니메이션으로 연결.
+- 기존 관통포 게이지/일반 공격/Stage 2 필살기 로직은 변경하지 않음.

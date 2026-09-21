@@ -17,6 +17,10 @@ const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const STATUS_EFFECT_CATALOG := preload("res://src/data/status_effect_catalog.gd")
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const STAGE1_FRAME_SIZE := Vector2(64, 64)
+const STAGE1_SHIELD_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/effect_02"
+const STAGE1_SHIELD_EFFECT_FRAME_COUNT := 6
+const STAGE1_SHIELD_EFFECT_FRAME_SIZE := Vector2(512, 512)
+const STAGE1_SHIELD_EFFECT_TARGET_SIZE := 180.0
 
 const APPROACH_DISTANCE_RATIO := 0.86
 const FIELD_MARGIN := 72.0
@@ -51,6 +55,12 @@ var augment_pool_ids: Array[String] = []
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
 var ultimate_flash_timer: float = 0.0
+
+var shield_skill_config: Dictionary = {}
+var shield_cooldown_timer: float = 0.0
+var shield_duration_timer: float = 0.0
+var shield_hp: float = 0.0
+var shield_max_hp: float = 0.0
 var ai_settings: Dictionary = {
 	"id": "default",
 	"display_name": "기본",
@@ -95,6 +105,7 @@ var ai_observed_context_time: float = 0.0
 
 @onready var follow_camera: Camera2D = $Camera2D
 @onready var hero_sprite: AnimatedSprite2D = $HeroSprite
+@onready var shield_effect: AnimatedSprite2D = $ShieldEffect
 
 func configure_profile(profile: Dictionary) -> void:
 	if profile.is_empty():
@@ -111,6 +122,19 @@ func configure_profile(profile: Dictionary) -> void:
 		else {}
 	)
 	ultimate_charge = 0.0
+	var profile_shield = profile.get("shield_skill", {})
+	shield_skill_config = (
+		profile_shield.duplicate(true)
+		if typeof(profile_shield) == TYPE_DICTIONARY
+		else {}
+	)
+	shield_cooldown_timer = maxf(
+		float(shield_skill_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
+	shield_duration_timer = 0.0
+	shield_hp = 0.0
+	shield_max_hp = 0.0
 	augment_pool_ids.clear()
 	for raw_augment_id in profile.get("augment_pool_ids", []):
 		var augment_id := String(raw_augment_id)
@@ -153,6 +177,7 @@ func _ready() -> void:
 	add_to_group("hero")
 	_apply_camera_limits()
 	_apply_profile_visual()
+	_apply_stage1_shield_visual()
 	current_hp = max_hp
 	exp_to_next_level = _required_exp_for_level(level)
 	strafe_sign = -1.0 if randf() < 0.5 else 1.0
@@ -183,6 +208,7 @@ func _physics_process(delta: float) -> void:
 	ultimate_flash_timer = maxf(ultimate_flash_timer - delta, 0.0)
 	_update_invulnerability(delta)
 	_update_ultimate(delta)
+	_update_shield_skill(delta)
 
 	if hit_flash_timer > 0.0:
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
@@ -249,6 +275,41 @@ func _apply_profile_visual() -> void:
 	hero_sprite.visible = true
 	hero_sprite.speed_scale = 1.0
 	hero_sprite.play("idle")
+
+func _apply_stage1_shield_visual() -> void:
+	shield_effect.visible = false
+	shield_effect.sprite_frames = null
+	shield_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+	if hero_id != "ranged_rookie":
+		return
+
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.remove_animation(&"default")
+
+	frames.add_animation(&"shield")
+	frames.set_animation_speed(&"shield", 10.0)
+	frames.set_animation_loop(&"shield", true)
+
+	for index in range(1, STAGE1_SHIELD_EFFECT_FRAME_COUNT + 1):
+		var path := "%s/frame_%02d.png" % [
+			STAGE1_SHIELD_EFFECT_BASE_PATH,
+			index,
+		]
+		var texture := _load_stage1_texture(path)
+		if texture == null:
+			push_warning("Stage 1 shield effect frame load failed: %s" % path)
+			shield_effect.sprite_frames = null
+			return
+		frames.add_frame(&"shield", texture)
+
+	shield_effect.sprite_frames = frames
+	var uniform_scale := (
+		STAGE1_SHIELD_EFFECT_TARGET_SIZE
+		/ STAGE1_SHIELD_EFFECT_FRAME_SIZE.x
+	)
+	shield_effect.scale = Vector2(uniform_scale, uniform_scale)
 
 func _load_stage1_sheet_texture() -> Texture2D:
 	return _load_stage1_texture(sprite_sheet_path)
@@ -527,6 +588,98 @@ func _fire_projectile(current_target: Node2D) -> void:
 	_add_ultimate_charge(
 		float(ultimate_config.get("charge_on_attack", 0.0))
 	)
+
+func _update_shield_skill(delta: float) -> void:
+	if shield_skill_config.is_empty() or is_dying or current_hp <= 0:
+		return
+
+	if shield_duration_timer > 0.0:
+		shield_duration_timer = maxf(shield_duration_timer - delta, 0.0)
+		if shield_duration_timer <= 0.0:
+			_end_shield()
+		return
+
+	shield_cooldown_timer = maxf(shield_cooldown_timer - delta, 0.0)
+	if shield_cooldown_timer > 0.0:
+		return
+
+	if _should_cast_shield():
+		_activate_shield()
+
+func _should_cast_shield() -> bool:
+	var hp_trigger_ratio := clampf(
+		float(shield_skill_config.get("hp_trigger_ratio", 0.75)),
+		0.0,
+		1.0
+	)
+	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
+	if hp_ratio <= hp_trigger_ratio:
+		return true
+
+	var danger_radius := maxf(
+		float(shield_skill_config.get("danger_radius", 300.0)),
+		0.0
+	)
+	var danger_count := maxi(
+		int(shield_skill_config.get("danger_count", 3)),
+		1
+	)
+	if danger_radius <= 0.0:
+		return false
+
+	var nearby := 0
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if global_position.distance_to(monster.global_position) > danger_radius:
+			continue
+		nearby += 1
+		if nearby >= danger_count:
+			return true
+
+	return false
+
+func _activate_shield() -> void:
+	var configured_hp := maxf(
+		float(shield_skill_config.get("shield_hp", 0.0)),
+		0.0
+	)
+	if configured_hp <= 0.0:
+		var hp_ratio := maxf(
+			float(shield_skill_config.get("shield_hp_ratio", 0.30)),
+			0.0
+		)
+		configured_hp = float(max_hp) * hp_ratio
+
+	if configured_hp <= 0.0:
+		return
+
+	shield_max_hp = configured_hp
+	shield_hp = configured_hp
+	shield_duration_timer = maxf(
+		float(shield_skill_config.get("duration", 8.0)),
+		0.01
+	)
+	shield_cooldown_timer = maxf(
+		float(shield_skill_config.get("cooldown", 18.0)),
+		0.0
+	)
+
+	if shield_effect.sprite_frames != null:
+		shield_effect.visible = true
+		shield_effect.play(&"shield")
+
+	queue_redraw()
+
+func _end_shield() -> void:
+	shield_duration_timer = 0.0
+	shield_hp = 0.0
+	shield_max_hp = 0.0
+	shield_effect.visible = false
+	queue_redraw()
 
 func _update_ultimate(delta: float) -> void:
 	if ultimate_config.is_empty() or is_dying or current_hp <= 0:
@@ -1096,19 +1249,34 @@ func take_damage(amount: int) -> bool:
 	):
 		return false
 
+	var remaining_damage := float(amount)
+	var absorbed_damage := 0
+
+	if shield_hp > 0.0:
+		absorbed_damage = mini(
+			int(ceil(remaining_damage)),
+			int(ceil(shield_hp))
+		)
+		var absorbed := minf(shield_hp, remaining_damage)
+		shield_hp = maxf(shield_hp - absorbed, 0.0)
+		remaining_damage = maxf(remaining_damage - absorbed, 0.0)
+		if shield_hp <= 0.0:
+			_end_shield()
+
 	var previous_hp := current_hp
-	current_hp = maxi(current_hp - amount, 0)
+	current_hp = maxi(current_hp - int(ceil(remaining_damage)), 0)
 	var applied_damage := previous_hp - current_hp
-	if applied_damage <= 0:
+	var total_hit := absorbed_damage + applied_damage
+	if total_hit <= 0:
 		return false
 
-	DAMAGE_NUMBERS.show(self, applied_damage)
+	DAMAGE_NUMBERS.show(self, total_hit)
 
 	hit_flash_timer = 0.12
 	hit_pose_timer = 0.23
 	_restart_stage1_animation("hit")
 
-	if current_hp > 0:
+	if current_hp > 0 and applied_damage > 0:
 		_add_ultimate_charge(
 			float(applied_damage)
 			* maxf(
@@ -1232,3 +1400,25 @@ func _draw() -> void:
 	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
 	draw_rect(Rect2(-bar_width / 2.0, -64.0, bar_width, 10.0), Color(0.12, 0.12, 0.14), true)
 	draw_rect(Rect2(-bar_width / 2.0, -64.0, bar_width * hp_ratio, 10.0), Color(0.3, 0.9, 0.45), true)
+
+	if shield_max_hp > 0.0 and shield_hp > 0.0:
+		var shield_ratio := clampf(
+			shield_hp / maxf(shield_max_hp, 1.0),
+			0.0,
+			1.0
+		)
+		draw_rect(
+			Rect2(-bar_width / 2.0, -49.0, bar_width, 8.0),
+			Color(0.10, 0.12, 0.18),
+			true
+		)
+		draw_rect(
+			Rect2(
+				-bar_width / 2.0,
+				-49.0,
+				bar_width * shield_ratio,
+				8.0
+			),
+			Color(0.20, 0.65, 1.0),
+			true
+		)

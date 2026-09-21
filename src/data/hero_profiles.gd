@@ -30,6 +30,17 @@ const PROFILES = {
 			"projectile_speed": 950.0,
 			"damage": 110,
 		},
+		"shield_skill": {
+			"id": "arcane_barrier",
+			"name": "마력 장벽",
+			"cooldown": 18.0,
+			"initial_cooldown": 8.0,
+			"duration": 8.0,
+			"shield_hp_ratio": 0.30,
+			"hp_trigger_ratio": 0.75,
+			"danger_radius": 300.0,
+			"danger_count": 3,
+		},
 		"augment_pool_ids": [
 			"projectile_power",
 			"rapid_strikes",
