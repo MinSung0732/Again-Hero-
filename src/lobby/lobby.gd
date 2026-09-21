@@ -288,7 +288,8 @@ func _setup_team_preview() -> void:
 			team_selected_ids.append(monster_id)
 
 		team_monster_list.add_item(
-			_team_collection_line(monster_id)
+			_team_collection_card_text(monster_id),
+			_team_monster_card_icon(monster_id)
 		)
 
 	team_status_label.text = "Catalog %d종 확인" % team_catalog_ids.size()
@@ -339,7 +340,7 @@ func _restore_saved_team_selection() -> void:
 		team_selected_ids.append(String(raw_id))
 
 	_refresh_team_preview()
-	team_status_label.text = "컬렉션/편성 복원 완료"
+	team_status_label.text = "컬렉션/편성 복원 완료 · 카드를 탭해 변경하세요."
 
 func _refresh_team_preview() -> void:
 	_refresh_team_slot(team_slot_1_button, 0)
@@ -364,14 +365,49 @@ func _refresh_team_preview() -> void:
 			break
 
 		var monster_id := String(team_catalog_ids[item_index])
+		var available := monster_id in team_available_ids
+		var selected := monster_id in team_selected_ids
+
 		team_monster_list.set_item_text(
 			item_index,
-			_team_collection_line(monster_id)
+			_team_collection_card_text(monster_id)
+		)
+		team_monster_list.set_item_icon(
+			item_index,
+			_team_monster_card_icon(monster_id)
 		)
 		team_monster_list.set_item_disabled(
 			item_index,
-			monster_id not in team_available_ids
+			not available
 		)
+
+		if not available:
+			team_monster_list.set_item_custom_bg_color(
+				item_index,
+				Color("17141c")
+			)
+			team_monster_list.set_item_custom_fg_color(
+				item_index,
+				Color("77717d")
+			)
+		elif selected:
+			team_monster_list.set_item_custom_bg_color(
+				item_index,
+				Color("3a2845")
+			)
+			team_monster_list.set_item_custom_fg_color(
+				item_index,
+				Color("ffe29a")
+			)
+		else:
+			team_monster_list.set_item_custom_bg_color(
+				item_index,
+				Color("21182a")
+			)
+			team_monster_list.set_item_custom_fg_color(
+				item_index,
+				Color("ebe4ef")
+			)
 
 func _refresh_team_slot(button: Button, slot_index: int) -> void:
 	if slot_index < team_selected_ids.size():
@@ -400,6 +436,8 @@ func _on_team_item_selected(item_index: int) -> void:
 		_remove_team_monster(monster_id)
 	else:
 		_add_team_monster(monster_id)
+
+	team_monster_list.deselect_all()
 
 func _remove_team_monster(monster_id: String) -> void:
 	if monster_id not in team_selected_ids:
@@ -445,7 +483,7 @@ func _add_team_monster(monster_id: String) -> void:
 	)
 	_refresh_team_preview()
 
-func _team_collection_line(monster_id: String) -> String:
+func _team_collection_card_text(monster_id: String) -> String:
 	if monster_id not in team_available_ids:
 		var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
 		var required := 1
@@ -456,19 +494,36 @@ func _team_collection_line(monster_id: String) -> String:
 			monster_id,
 			monster_collection_state
 		)
-		return "[잠김] %s · 조각 %d / %d" % [
+		return "%s\n[잠김]\n조각 %d / %d" % [
 			_team_monster_name(monster_id),
 			shards,
 			required,
 		]
 
-	var marker := "[편성] " if monster_id in team_selected_ids else ""
-	return "%s%s · %s · 비용 %.0f" % [
-		marker,
+	var state_text := (
+		"[편성 중] · 탭해서 해제"
+		if monster_id in team_selected_ids
+		else "탭해서 편성"
+	)
+	return "%s\n%s · 비용 %.0f\n%s" % [
 		_team_monster_name(monster_id),
 		_team_monster_role_label(monster_id),
 		_team_monster_cost(monster_id),
+		state_text,
 	]
+
+func _team_monster_card_icon(monster_id: String) -> Texture2D:
+	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+	if typeof(data) != TYPE_DICTIONARY:
+		return null
+
+	# Optional future field. When monster art is committed, add:
+	# "card_icon_path": "res://assets/art/monsters/<id>/<file>.png"
+	var icon_path := String(data.get("card_icon_path", ""))
+	if icon_path.is_empty():
+		return null
+
+	return _load_texture(icon_path)
 
 func _team_monster_name(monster_id: String) -> String:
 	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})

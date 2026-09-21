@@ -141,7 +141,7 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
 theme_override_font_sizes/font_size = 19
-text = "해금한 몬스터 중 최대 3종을 편성합니다. 현재는 UI 동작을 먼저 검증합니다."
+text = "몬스터 카드를 탭해 최대 3종을 편성합니다. 편성은 자동 저장됩니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
@@ -188,17 +188,28 @@ text = "몬스터 컬렉션"
 horizontal_alignment = 1
 
 [node name="MonsterList" type="ItemList" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+custom_minimum_size = Vector2(0, 430)
 layout_mode = 2
 size_flags_vertical = 3
 allow_reselect = true
-theme_override_font_sizes/font_size = 22
+max_columns = 3
+same_column_width = true
+fixed_column_width = 300
+icon_mode = 0
+fixed_icon_size = Vector2i(150, 150)
+icon_scale = 1.0
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 18
+theme_override_constants/icon_margin = 12
+theme_override_constants/line_separation = 6
+theme_override_font_sizes/font_size = 20
 
 [node name="Status" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
 theme_override_font_sizes/font_size = 19
-text = "몬스터 목록을 탭해 편성 추가/해제를 테스트하세요."
+text = "몬스터 카드를 탭해 편성 추가/해제 · 도트 이미지는 에셋 연결 예정"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
