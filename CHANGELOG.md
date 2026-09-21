@@ -1017,3 +1017,10 @@
 - AtlasTexture가 원본 시트를 직접 참조하도록 변경해 PNG 디코딩/읽기 실패 시 플레이스홀더로 떨어지던 가능성을 제거.
 - 3~6행 / 2~12열 범위의 일반적인 통합 시트를 지원하고 4행/5행 레이아웃을 우선 선택.
 - 성공 시 실제 감지된 sheet/grid/cell 크기를 로그에 출력해 실기기 확인 가능.
+
+### Bomb Rat Sprite Sheet Exact Grid Fix
+- 실제 원본 `bombrat_spritesheet.png`를 직접 확인해 1374×1145 크기, 229×229 셀, 6열×5행 구조로 확정.
+- 기존 자동 셀 크기 감지를 제거하고 폭탄쥐 시트 전용 정확한 AtlasTexture 좌표를 사용.
+- 애니메이션 프레임 수를 실제 시트에 맞춰 idle 4 / move 6 / attack 6 / hit 3 / death 4로 지정.
+- 잘못된 빈 셀 재생과 Android에서 visual fallback으로 떨어지던 원인을 제거.
+- 시트 크기가 예상 규격과 다를 경우 기존 코드 드로잉 fallback을 유지.

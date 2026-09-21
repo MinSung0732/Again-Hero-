@@ -2,6 +2,16 @@ extends AnimatedSprite2D
 
 signal death_animation_finished
 
+const SHEET_COLUMNS := 6
+const SHEET_ROWS := 5
+const CELL_SIZE := 229
+
+const IDLE_FRAMES := 4
+const MOVE_FRAMES := 6
+const ATTACK_FRAMES := 6
+const HIT_FRAMES := 3
+const DEATH_FRAMES := 4
+
 @export var sheet_path: String = "res://assets/art/monsters/bombrat/bombrat_spritesheet.png"
 @export var target_height: float = 78.0
 @export var idle_fps: float = 6.0
@@ -100,28 +110,29 @@ func _emit_death_finished() -> void:
 	death_animation_finished.emit()
 
 func _setup_sprite_frames() -> void:
-	if sheet_path.is_empty():
-		return
-
 	var loaded = load(sheet_path)
 	if not loaded is Texture2D:
 		push_warning("BombRat visual: sprite sheet load failed: %s" % sheet_path)
 		return
 
 	var source_texture := loaded as Texture2D
-	var width := source_texture.get_width()
-	var height := source_texture.get_height()
-	var layout := _detect_layout(width, height)
+	var expected_width := SHEET_COLUMNS * CELL_SIZE
+	var expected_height := SHEET_ROWS * CELL_SIZE
 
-	if layout.is_empty():
+	if (
+		source_texture.get_width() != expected_width
+		or source_texture.get_height() != expected_height
+	):
 		push_warning(
-			"BombRat visual: unsupported sheet size %dx%d" % [width, height]
+			"BombRat visual: expected %dx%d but got %dx%d"
+			% [
+				expected_width,
+				expected_height,
+				source_texture.get_width(),
+				source_texture.get_height(),
+			]
 		)
 		return
-
-	var columns := int(layout.get("columns", 0))
-	var rows := int(layout.get("rows", 0))
-	var cell_size := int(layout.get("cell_size", 0))
 
 	var frames := SpriteFrames.new()
 	if frames.has_animation(&"default"):
@@ -132,160 +143,83 @@ func _setup_sprite_frames() -> void:
 		source_texture,
 		&"idle",
 		0,
-		columns,
-		cell_size,
+		IDLE_FRAMES,
 		idle_fps,
 		true
 	)
-
-	if rows >= 2:
-		_add_row_animation(
-			frames,
-			source_texture,
-			&"move",
-			1,
-			columns,
-			cell_size,
-			move_fps,
-			true
-		)
-
-	if rows >= 3:
-		_add_row_animation(
-			frames,
-			source_texture,
-			&"attack",
-			2,
-			columns,
-			cell_size,
-			attack_fps,
-			false
-		)
-
-	if rows >= 5:
-		_add_row_animation(
-			frames,
-			source_texture,
-			&"hit",
-			3,
-			columns,
-			cell_size,
-			hit_fps,
-			false
-		)
-		_add_row_animation(
-			frames,
-			source_texture,
-			&"death",
-			4,
-			columns,
-			cell_size,
-			death_fps,
-			false
-		)
-	elif rows >= 4:
-		_add_row_animation(
-			frames,
-			source_texture,
-			&"death",
-			3,
-			columns,
-			cell_size,
-			death_fps,
-			false
-		)
-
-	if not frames.has_animation(&"idle"):
-		return
-	if frames.get_frame_count(&"idle") <= 0:
-		return
+	_add_row_animation(
+		frames,
+		source_texture,
+		&"move",
+		1,
+		MOVE_FRAMES,
+		move_fps,
+		true
+	)
+	_add_row_animation(
+		frames,
+		source_texture,
+		&"attack",
+		2,
+		ATTACK_FRAMES,
+		attack_fps,
+		false
+	)
+	_add_row_animation(
+		frames,
+		source_texture,
+		&"hit",
+		3,
+		HIT_FRAMES,
+		hit_fps,
+		false
+	)
+	_add_row_animation(
+		frames,
+		source_texture,
+		&"death",
+		4,
+		DEATH_FRAMES,
+		death_fps,
+		false
+	)
 
 	sprite_frames = frames
-	var uniform_scale := target_height / float(cell_size)
+	var uniform_scale := target_height / float(CELL_SIZE)
 	scale = Vector2(uniform_scale, uniform_scale)
 	_visual_ready = true
 
 	print(
-		"BombRat visual ready: sheet=%dx%d grid=%dx%d cell=%d"
-		% [width, height, columns, rows, cell_size]
+		"BombRat visual ready: %dx%d / cell %d / grid %dx%d"
+		% [
+			source_texture.get_width(),
+			source_texture.get_height(),
+			CELL_SIZE,
+			SHEET_COLUMNS,
+			SHEET_ROWS,
+		]
 	)
-
-func _detect_layout(width: int, height: int) -> Dictionary:
-	if width <= 0 or height <= 0:
-		return {}
-
-	var best: Dictionary = {}
-	var best_score := -999999
-
-	for cell_size in [32, 48, 64, 80, 96, 128, 160, 192, 256, 320, 384, 512]:
-		if width % cell_size != 0 or height % cell_size != 0:
-			continue
-
-		var columns := int(width / cell_size)
-		var rows := int(height / cell_size)
-
-		if columns < 2 or columns > 12:
-			continue
-		if rows < 3 or rows > 6:
-			continue
-
-		var score := 0
-
-		if rows == 4:
-			score += 100
-		elif rows == 5:
-			score += 90
-		elif rows == 6:
-			score += 45
-		else:
-			score += 25
-
-		if columns >= 4 and columns <= 8:
-			score += 40
-		elif columns >= 3 and columns <= 10:
-			score += 20
-
-		if columns == 6:
-			score += 12
-		elif columns == 4:
-			score += 10
-		elif columns == 8:
-			score += 8
-
-		if score > best_score:
-			best_score = score
-			best = {
-				"columns": columns,
-				"rows": rows,
-				"cell_size": cell_size,
-			}
-
-	return best
 
 func _add_row_animation(
 	frames: SpriteFrames,
 	source_texture: Texture2D,
 	animation_name: StringName,
 	row: int,
-	columns: int,
-	cell_size: int,
+	frame_count: int,
 	fps: float,
 	looping: bool
 ) -> void:
-	if row < 0 or columns <= 0 or cell_size <= 0:
-		return
-
 	frames.add_animation(animation_name)
 	frames.set_animation_loop(animation_name, looping)
 	frames.set_animation_speed(animation_name, fps)
 
-	for column in range(columns):
+	for column in range(frame_count):
 		var atlas_texture := AtlasTexture.new()
 		atlas_texture.atlas = source_texture
 		atlas_texture.region = Rect2(
-			float(column * cell_size),
-			float(row * cell_size),
-			float(cell_size),
-			float(cell_size)
+			float(column * CELL_SIZE),
+			float(row * CELL_SIZE),
+			float(CELL_SIZE),
+			float(CELL_SIZE)
 		)
 		frames.add_frame(animation_name, atlas_texture)
