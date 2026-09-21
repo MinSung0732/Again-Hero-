@@ -10,6 +10,7 @@ signal demon_progression_changed(level: int, current_exp: float, exp_to_next_lev
 signal demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: int)
 signal demon_augment_applied(augment_name: String, build_summary: String)
 signal demon_ultimate_changed(current_value: float, max_value: float, ready: bool)
+signal demon_ultimate_cooldowns_changed(cooldowns: Dictionary)
 signal demon_ultimate_used(skill_id: String, skill_name: String, message: String)
 signal run_time_changed(elapsed_seconds: float, remaining_seconds: float)
 signal battle_finished(message: String, player_won: bool)
@@ -75,6 +76,8 @@ var demon_ultimate_spawn_queue: Array[Dictionary] = []
 var demon_ultimate_spawn_timer: float = 0.0
 var demon_ultimate_spawn_interval: float = 0.04
 var demon_ultimate_spawn_batch_size: int = 2
+var demon_ultimate_cooldowns: Dictionary = {}
+var demon_ultimate_cooldown_emit_timer: float = 0.0
 
 var summon_cost_multiplier: float = 1.0
 var demon_exp_gain_multiplier: float = 1.0
@@ -116,6 +119,7 @@ func _process(delta: float) -> void:
 		return
 
 	_process_demon_ultimate_spawn_queue(delta)
+	_update_demon_ultimate_cooldowns(delta)
 	run_metrics.tick(delta)
 
 	if demon_ultimate_charge < DEMON_ULTIMATES.CHARGE_MAX:
@@ -171,6 +175,10 @@ func _start_battle() -> void:
 	demon_ultimate_spawn_timer = 0.0
 	demon_ultimate_spawn_interval = 0.04
 	demon_ultimate_spawn_batch_size = 2
+	demon_ultimate_cooldowns.clear()
+	for skill_id in DEMON_ULTIMATES.get_ordered_ids():
+		demon_ultimate_cooldowns[String(skill_id)] = 0.0
+	demon_ultimate_cooldown_emit_timer = 0.0
 
 	summon_cost_multiplier = 1.0
 	demon_exp_gain_multiplier = 1.0
@@ -248,6 +256,7 @@ func _start_battle() -> void:
 	command_changed.emit(command_power, max_command)
 	demon_progression_changed.emit(demon_level, demon_exp, demon_exp_to_next_level)
 	_emit_demon_ultimate_changed()
+	_emit_demon_ultimate_cooldowns()
 	run_time_changed.emit(
 		run_metrics.elapsed_seconds,
 		run_metrics.get_remaining_seconds()
@@ -770,6 +779,33 @@ func _emit_demon_ultimate_changed() -> void:
 		demon_ultimate_charge + 0.001 >= charge_max
 	)
 
+func _emit_demon_ultimate_cooldowns() -> void:
+	demon_ultimate_cooldowns_changed.emit(
+		demon_ultimate_cooldowns.duplicate(true)
+	)
+
+func _update_demon_ultimate_cooldowns(delta: float) -> void:
+	var changed := false
+	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
+		var skill_id := String(raw_id)
+		var remaining := maxf(
+			float(demon_ultimate_cooldowns.get(skill_id, 0.0)) - delta,
+			0.0
+		)
+		if absf(
+			remaining - float(demon_ultimate_cooldowns.get(skill_id, 0.0))
+		) > 0.0001:
+			demon_ultimate_cooldowns[skill_id] = remaining
+			changed = true
+
+	if not changed:
+		return
+
+	demon_ultimate_cooldown_emit_timer -= delta
+	if demon_ultimate_cooldown_emit_timer <= 0.0:
+		demon_ultimate_cooldown_emit_timer = 0.10
+		_emit_demon_ultimate_cooldowns()
+
 func _add_demon_ultimate_charge(amount: float) -> void:
 	if amount <= 0.0 or battle_over:
 		return
@@ -788,6 +824,8 @@ func try_use_demon_ultimate(
 		return false
 	if demon_ultimate_charge + 0.001 < DEMON_ULTIMATES.CHARGE_MAX:
 		return false
+	if float(demon_ultimate_cooldowns.get(skill_id, 0.0)) > 0.001:
+		return false
 
 	var skill := DEMON_ULTIMATES.get_skill(skill_id)
 	if skill.is_empty() or not bool(skill.get("implemented", false)):
@@ -804,7 +842,12 @@ func try_use_demon_ultimate(
 		return false
 
 	demon_ultimate_charge = 0.0
+	demon_ultimate_cooldowns[skill_id] = maxf(
+		float(skill.get("cooldown", 0.0)),
+		0.0
+	)
 	_emit_demon_ultimate_changed()
+	_emit_demon_ultimate_cooldowns()
 
 	var skill_name := String(skill.get("name", "마왕 필살기"))
 	var use_message := "%s 발동! 용사 외곽에 군단을 전개했습니다." % skill_name
@@ -1400,6 +1443,7 @@ func get_snapshot() -> Dictionary:
 		"demon_ultimate_ready": (
 			demon_ultimate_charge + 0.001 >= DEMON_ULTIMATES.CHARGE_MAX
 		),
+		"demon_ultimate_cooldowns": demon_ultimate_cooldowns.duplicate(true),
 		"demon_rerolls_left": demon_rerolls_left,
 		"demon_reroll_max": demon_reroll_max,
 		"demon_build_summary": get_demon_build_summary(),

@@ -3,6 +3,12 @@
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://src/battle/Battle.tscn" id="2_battle"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cooldown_bg"]
+bg_color = Color(0.16, 0.16, 0.18, 0.55)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cooldown_fill"]
+bg_color = Color(0.52, 0.52, 0.56, 0.88)
+
 [node name="Main" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -189,6 +195,21 @@ theme_override_font_sizes/font_size = 17
 text = "1 원형 포위\n충전 중"
 disabled = true
 
+[node name="CooldownBar" type="ProgressBar" parent="HUD/DemonUltimatePanel/UltimateButtons/Ultimate1"]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -9.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_cooldown_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_cooldown_fill")
+show_percentage = false
+
 [node name="Ultimate2" type="Button" parent="HUD/DemonUltimatePanel/UltimateButtons"]
 custom_minimum_size = Vector2(0, 66)
 layout_mode = 2
@@ -197,6 +218,21 @@ theme_override_font_sizes/font_size = 17
 text = "2 일직선 공세\n준비중"
 disabled = true
 
+[node name="CooldownBar" type="ProgressBar" parent="HUD/DemonUltimatePanel/UltimateButtons/Ultimate2"]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -9.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_cooldown_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_cooldown_fill")
+show_percentage = false
+
 [node name="Ultimate3" type="Button" parent="HUD/DemonUltimatePanel/UltimateButtons"]
 custom_minimum_size = Vector2(0, 66)
 layout_mode = 2
@@ -204,6 +240,21 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 17
 text = "3 사각 포위\n준비중"
 disabled = true
+
+[node name="CooldownBar" type="ProgressBar" parent="HUD/DemonUltimatePanel/UltimateButtons/Ultimate3"]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -9.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_cooldown_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_cooldown_fill")
+show_percentage = false
 
 [node name="DirectionButtons" type="HBoxContainer" parent="HUD/DemonUltimatePanel"]
 visible = false

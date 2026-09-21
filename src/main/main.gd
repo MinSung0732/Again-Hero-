@@ -31,6 +31,9 @@ const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 @onready var demon_ultimate_1: Button = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate1
 @onready var demon_ultimate_2: Button = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate2
 @onready var demon_ultimate_3: Button = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate3
+@onready var demon_ultimate_1_cooldown: ProgressBar = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate1/CooldownBar
+@onready var demon_ultimate_2_cooldown: ProgressBar = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate2/CooldownBar
+@onready var demon_ultimate_3_cooldown: ProgressBar = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate3/CooldownBar
 @onready var demon_direction_buttons: HBoxContainer = $HUD/DemonUltimatePanel/DirectionButtons
 @onready var demon_direction_east: Button = $HUD/DemonUltimatePanel/DirectionButtons/East
 @onready var demon_direction_west: Button = $HUD/DemonUltimatePanel/DirectionButtons/West
@@ -70,6 +73,8 @@ var current_demon_candidates: Array = []
 var debug_refresh_timer: float = 0.0
 var battle_loadout_ids: Array = []
 var summon_slot_buttons: Array = []
+var demon_ultimate_charge_ready: bool = false
+var demon_ultimate_cooldowns: Dictionary = {}
 
 func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
@@ -85,6 +90,9 @@ func _ready() -> void:
 	battle.demon_augment_ready.connect(_on_demon_augment_ready)
 	battle.demon_augment_applied.connect(_on_demon_augment_applied)
 	battle.demon_ultimate_changed.connect(_on_demon_ultimate_changed)
+	battle.demon_ultimate_cooldowns_changed.connect(
+		_on_demon_ultimate_cooldowns_changed
+	)
 	battle.demon_ultimate_used.connect(_on_demon_ultimate_used)
 	battle.run_time_changed.connect(_on_run_time_changed)
 	battle.battle_finished.connect(_on_battle_finished)
@@ -159,6 +167,12 @@ func _ready() -> void:
 		float(snapshot.get("demon_ultimate_charge", 0.0)),
 		float(snapshot.get("demon_ultimate_max", 100.0)),
 		bool(snapshot.get("demon_ultimate_ready", false))
+	)
+	_on_demon_ultimate_cooldowns_changed(
+		Dictionary(snapshot.get("demon_ultimate_cooldowns", {}))
+	)
+	_on_demon_ultimate_cooldowns_changed(
+		Dictionary(snapshot.get("demon_ultimate_cooldowns", {}))
 	)
 	_on_run_time_changed(
 		float(snapshot.get("run_elapsed_seconds", 0.0)),
@@ -444,34 +458,90 @@ func _on_demon_ultimate_changed(
 	max_value: float,
 	ready: bool
 ) -> void:
+	demon_ultimate_charge_ready = ready
 	demon_ultimate_label.text = "마왕 필살기  %d / %d" % [
 		int(round(current_value)),
 		int(round(max_value)),
 	]
 	demon_ultimate_bar.max_value = maxf(max_value, 1.0)
 	demon_ultimate_bar.value = current_value
+	_refresh_demon_ultimate_buttons()
 
-	demon_ultimate_1.disabled = not ready
-	demon_ultimate_2.disabled = not ready
-	demon_ultimate_3.disabled = true
+func _on_demon_ultimate_cooldowns_changed(cooldowns: Dictionary) -> void:
+	demon_ultimate_cooldowns = cooldowns.duplicate(true)
+	_refresh_demon_ultimate_buttons()
 
-	demon_ultimate_1.text = (
-		"1 원형 포위\n발동 가능"
-		if ready
-		else "1 원형 포위\n충전 중"
-	)
-	demon_ultimate_2.text = (
-		"2 일직선 공세\n방향 선택"
-		if ready
-		else "2 일직선 공세\n충전 중"
-	)
-	demon_ultimate_3.text = "3 사각 포위\n준비중"
+func _refresh_demon_ultimate_buttons() -> void:
+	var ultimate_buttons := {
+		"encirclement": demon_ultimate_1,
+		"line_assault": demon_ultimate_2,
+		"square_siege": demon_ultimate_3,
+	}
+	var cooldown_bars := {
+		"encirclement": demon_ultimate_1_cooldown,
+		"line_assault": demon_ultimate_2_cooldown,
+		"square_siege": demon_ultimate_3_cooldown,
+	}
+
+	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
+		var skill_id := String(raw_id)
+		var skill := DEMON_ULTIMATES.get_skill(skill_id)
+		var button: Button = ultimate_buttons[skill_id]
+		var bar: ProgressBar = cooldown_bars[skill_id]
+		var cooldown_max := maxf(float(skill.get("cooldown", 0.0)), 0.0)
+		var remaining := maxf(
+			float(demon_ultimate_cooldowns.get(skill_id, 0.0)),
+			0.0
+		)
+		var implemented := bool(skill.get("implemented", false))
+
+		bar.max_value = maxf(cooldown_max, 0.1)
+		bar.value = remaining
+		bar.visible = remaining > 0.001
+
+		if not implemented:
+			button.disabled = true
+			button.text = "3 사각 포위\n준비중"
+			continue
+
+		var ready := demon_ultimate_charge_ready and remaining <= 0.001
+		button.disabled = not ready
+
+		if remaining > 0.001:
+			button.text = "%s\n쿨타임 %.1f초" % [
+				(
+					"1 원형 포위"
+					if skill_id == "encirclement"
+					else "2 일직선 공세"
+				),
+				remaining,
+			]
+		elif demon_ultimate_charge_ready:
+			button.text = (
+				"1 원형 포위\n발동 가능"
+				if skill_id == "encirclement"
+				else "2 일직선 공세\n방향 선택"
+			)
+		else:
+			button.text = (
+				"1 원형 포위\n충전 중"
+				if skill_id == "encirclement"
+				else "2 일직선 공세\n충전 중"
+			)
 
 func _on_demon_ultimate_pressed(skill_id: String) -> void:
 	if skill_id == "line_assault":
 		var snapshot: Dictionary = battle.get_snapshot()
 		if not bool(snapshot.get("demon_ultimate_ready", false)):
 			status_label.text = "마왕 필살기 게이지가 아직 준비되지 않았습니다."
+			return
+		var cooldowns: Dictionary = snapshot.get(
+			"demon_ultimate_cooldowns",
+			{}
+		)
+		var remaining := float(cooldowns.get("line_assault", 0.0))
+		if remaining > 0.001:
+			status_label.text = "일직선 공세 쿨타임 %.1f초" % remaining
 			return
 		_open_demon_direction_select()
 		return

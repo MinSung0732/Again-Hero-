@@ -16,6 +16,7 @@ const SKILLS = {
 		"spawn_radius": 700.0,
 		"spawn_batch_size": 2,
 		"spawn_interval": 0.04,
+		"cooldown": 18.0,
 	},
 	"line_assault": {
 		"id": "line_assault",
@@ -27,12 +28,14 @@ const SKILLS = {
 		"line_span": 720.0,
 		"spawn_batch_size": 2,
 		"spawn_interval": 0.04,
+		"cooldown": 16.0,
 	},
 	"square_siege": {
 		"id": "square_siege",
 		"name": "사각 포위",
 		"description": "용사 외곽을 사각형으로 둘러 소환",
 		"implemented": false,
+		"cooldown": 20.0,
 	},
 }
 
