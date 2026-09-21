@@ -657,8 +657,8 @@ func _spawn_monster(
 	_apply_demon_level_scaling_to_monster(monster, false)
 
 	if split_child:
-		var exp_value = monster.get("exp_reward")
-		if exp_value != null:
+		var split_exp_value = monster.get("exp_reward")
+		if split_exp_value != null:
 			monster.set("exp_reward", 0)
 
 	add_child(monster)

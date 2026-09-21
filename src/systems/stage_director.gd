@@ -6,10 +6,6 @@ var fired_event_ids: Dictionary = {}
 
 func reset(stage_data: Dictionary) -> void:
 	timeline = Array(stage_data.get("event_timeline", [])).duplicate(true)
-	timeline.sort_custom(
-		func(a: Dictionary, b: Dictionary) -> bool:
-			return float(a.get("at_seconds", 0.0)) < float(b.get("at_seconds", 0.0))
-	)
 	fired_event_ids.clear()
 
 func collect_due_events(elapsed_seconds: float) -> Array[Dictionary]:
