@@ -13,6 +13,8 @@ signal demon_ultimate_changed(current_value: float, max_value: float, ready: boo
 signal demon_ultimate_cooldowns_changed(cooldowns: Dictionary)
 signal demon_ultimate_used(skill_id: String, skill_name: String, message: String)
 signal stage_event_triggered(event_type: String, event_name: String, message: String)
+signal mutation_choice_ready(event_data: Dictionary, candidates: Array)
+signal mutation_selected(event_type: String, mutation_name: String)
 signal run_time_changed(elapsed_seconds: float, remaining_seconds: float)
 signal battle_finished(message: String, player_won: bool)
 
@@ -100,6 +102,10 @@ var demon_augment_candidates: Array = []
 var demon_build_counts: Dictionary = {}
 var demon_last_candidate_ids: Array[String] = []
 
+var mutation_selection_active: bool = false
+var pending_mutation_event: Dictionary = {}
+var mutation_candidate_ids: Array[String] = []
+
 var monster_summon_costs: Dictionary = {}
 var permanent_research_levels: Dictionary = {}
 
@@ -118,7 +124,12 @@ func _process(delta: float) -> void:
 		)
 		queue_redraw()
 
-	if battle_over or demon_augment_selection_active or external_pause:
+	if (
+		battle_over
+		or demon_augment_selection_active
+		or mutation_selection_active
+		or external_pause
+	):
 		return
 
 	_process_demon_ultimate_spawn_queue(delta)
@@ -201,6 +212,9 @@ func _start_battle() -> void:
 	demon_augment_candidates.clear()
 	demon_build_counts.clear()
 	demon_last_candidate_ids.clear()
+	mutation_selection_active = false
+	pending_mutation_event.clear()
+	mutation_candidate_ids.clear()
 	monster_summon_costs.clear()
 
 	_apply_permanent_research()
@@ -1224,6 +1238,16 @@ func _trigger_stage_director_event(event: Dictionary) -> void:
 	if not is_instance_valid(hero):
 		return
 
+	var event_type := String(event.get("type", "elite"))
+	var selection_mode := String(event.get("selection_mode", ""))
+
+	if (
+		selection_mode == "team"
+		and event_type in ["elite", "miniboss"]
+	):
+		_open_mutation_choice(event)
+		return
+
 	var monster_id := String(event.get("monster_id", ""))
 	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
 		push_warning(
@@ -1231,7 +1255,80 @@ func _trigger_stage_director_event(event: Dictionary) -> void:
 		)
 		return
 
-	var spawn_position := _get_stage_event_spawn_position()
+	_spawn_stage_event_monster(event, monster_id)
+
+func _open_mutation_choice(event: Dictionary) -> void:
+	if mutation_selection_active:
+		return
+
+	mutation_candidate_ids.clear()
+	for raw_id in allowed_monster_ids:
+		var monster_id := String(raw_id)
+		if MONSTER_CATALOG.MONSTERS.has(monster_id):
+			mutation_candidate_ids.append(monster_id)
+
+	if mutation_candidate_ids.is_empty():
+		for raw_id in MONSTER_CATALOG.ORDER:
+			var fallback_id := String(raw_id)
+			if not MONSTER_CATALOG.MONSTERS.has(fallback_id):
+				continue
+			mutation_candidate_ids.append(fallback_id)
+			if mutation_candidate_ids.size() >= 3:
+				break
+
+	if mutation_candidate_ids.is_empty():
+		return
+
+	pending_mutation_event = event.duplicate(true)
+	mutation_selection_active = true
+	_set_combat_physics_enabled(false)
+	mutation_choice_ready.emit(
+		pending_mutation_event.duplicate(true),
+		mutation_candidate_ids.duplicate()
+	)
+
+func choose_mutation(monster_id: String) -> bool:
+	if not mutation_selection_active:
+		return false
+	if monster_id not in mutation_candidate_ids:
+		return false
+
+	var event := pending_mutation_event.duplicate(true)
+	var event_type := String(event.get("type", "elite"))
+	var prefix := "돌연변이"
+	if event_type == "miniboss":
+		prefix = "대돌연변이"
+
+	var mutation_name := "%s %s" % [
+		prefix,
+		MONSTER_CATALOG.get_name(monster_id),
+	]
+	event["name"] = mutation_name
+	event["spawn_distance"] = 460.0
+
+	mutation_selection_active = false
+	pending_mutation_event.clear()
+	mutation_candidate_ids.clear()
+
+	_spawn_stage_event_monster(event, monster_id)
+
+	if not external_pause and not demon_augment_selection_active:
+		_set_combat_physics_enabled(true)
+
+	mutation_selected.emit(event_type, mutation_name)
+	return true
+
+func _spawn_stage_event_monster(
+	event: Dictionary,
+	monster_id: String
+) -> void:
+	var spawn_position := _get_stage_event_spawn_position(
+		float(event.get("spawn_distance", 720.0))
+	)
+	var event_type := String(event.get("type", "elite"))
+	var event_name := String(
+		event.get("name", MONSTER_CATALOG.get_name(monster_id))
+	)
 	var modifiers := {
 		"hp_multiplier": float(event.get("hp_multiplier", 1.0)),
 		"damage_multiplier": float(
@@ -1242,10 +1339,8 @@ func _trigger_stage_director_event(event: Dictionary) -> void:
 		),
 		"exp_multiplier": float(event.get("exp_multiplier", 1.0)),
 		"visual_scale": float(event.get("visual_scale", 1.0)),
-		"stage_event_type": String(event.get("type", "elite")),
-		"stage_event_name": String(
-			event.get("name", MONSTER_CATALOG.get_name(monster_id))
-		),
+		"stage_event_type": event_type,
+		"stage_event_name": event_name,
 	}
 
 	_spawn_monster(
@@ -1256,18 +1351,14 @@ func _trigger_stage_director_event(event: Dictionary) -> void:
 		modifiers
 	)
 
-	var event_type := String(event.get("type", "elite"))
-	var event_name := String(
-		event.get("name", MONSTER_CATALOG.get_name(monster_id))
-	)
 	var message := ""
 	match event_type:
 		"boss":
 			message = "보스 출현! %s이(가) 전장에 난입했습니다." % event_name
 		"miniboss":
-			message = "미니보스 출현! %s을(를) 조심하세요." % event_name
+			message = "대돌연변이 출현! %s" % event_name
 		_:
-			message = "엘리트 출현! %s이(가) 전장에 등장했습니다." % event_name
+			message = "돌연변이 출현! %s" % event_name
 
 	stage_event_triggered.emit(
 		event_type,
@@ -1276,12 +1367,17 @@ func _trigger_stage_director_event(event: Dictionary) -> void:
 	)
 	_emit_stats()
 
-func _get_stage_event_spawn_position() -> Vector2:
+func _get_stage_event_spawn_position(
+	spawn_distance: float = 720.0
+) -> Vector2:
 	if not is_instance_valid(hero):
 		return current_map_size * 0.5
 
 	var angle := randf_range(0.0, TAU)
-	var candidate := hero.position + Vector2.from_angle(angle) * 720.0
+	var candidate := (
+		hero.position
+		+ Vector2.from_angle(angle) * maxf(spawn_distance, 1.0)
+	)
 	return Vector2(
 		clampf(
 			candidate.x,
@@ -1701,6 +1797,8 @@ func get_snapshot() -> Dictionary:
 		"demon_reroll_max": demon_reroll_max,
 		"demon_build_summary": get_demon_build_summary(),
 		"demon_build_counts": demon_build_counts.duplicate(true),
+		"mutation_selection_active": mutation_selection_active,
+		"mutation_candidates": mutation_candidate_ids.duplicate(),
 		"stage_event_fired_ids": stage_director.get_fired_event_ids(),
 		"debug_balance_summary": get_debug_balance_summary(),
 		"permanent_research_summary": get_permanent_research_summary(),

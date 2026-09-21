@@ -59,6 +59,13 @@ const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 @onready var demon_choice_2: Button = $HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice2
 @onready var demon_reroll_button: Button = $HUD/DemonAugmentPanel/Margin/VBox/RerollButton
 
+@onready var mutation_panel: PanelContainer = $HUD/MutationPanel
+@onready var mutation_title: Label = $HUD/MutationPanel/Margin/VBox/Title
+@onready var mutation_trigger: Label = $HUD/MutationPanel/Margin/VBox/Trigger
+@onready var mutation_choice_0: Button = $HUD/MutationPanel/Margin/VBox/Choices/Choice0
+@onready var mutation_choice_1: Button = $HUD/MutationPanel/Margin/VBox/Choices/Choice1
+@onready var mutation_choice_2: Button = $HUD/MutationPanel/Margin/VBox/Choices/Choice2
+
 @onready var result_panel: PanelContainer = $HUD/ResultPanel
 @onready var result_title: Label = $HUD/ResultPanel/Margin/VBox/ResultTitle
 @onready var result_message: Label = $HUD/ResultPanel/Margin/VBox/ResultMessage
@@ -70,6 +77,7 @@ const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 var auto_placement: bool = true
 var selected_monster_type: String = ""
 var current_demon_candidates: Array = []
+var current_mutation_candidates: Array = []
 var debug_refresh_timer: float = 0.0
 var battle_loadout_ids: Array = []
 var summon_slot_buttons: Array = []
@@ -95,6 +103,8 @@ func _ready() -> void:
 	)
 	battle.demon_ultimate_used.connect(_on_demon_ultimate_used)
 	battle.stage_event_triggered.connect(_on_stage_event_triggered)
+	battle.mutation_choice_ready.connect(_on_mutation_choice_ready)
+	battle.mutation_selected.connect(_on_mutation_selected)
 	battle.run_time_changed.connect(_on_run_time_changed)
 	battle.battle_finished.connect(_on_battle_finished)
 
@@ -116,6 +126,9 @@ func _ready() -> void:
 	demon_choice_1.pressed.connect(_on_demon_choice_pressed.bind(1))
 	demon_choice_2.pressed.connect(_on_demon_choice_pressed.bind(2))
 	demon_reroll_button.pressed.connect(_on_demon_reroll_pressed)
+	mutation_choice_0.pressed.connect(_on_mutation_choice_pressed.bind(0))
+	mutation_choice_1.pressed.connect(_on_mutation_choice_pressed.bind(1))
+	mutation_choice_2.pressed.connect(_on_mutation_choice_pressed.bind(2))
 	demon_ultimate_1.pressed.connect(
 		_on_demon_ultimate_pressed.bind("encirclement")
 	)
@@ -217,6 +230,7 @@ func _input(event: InputEvent) -> void:
 		result_panel.visible
 		or pause_menu.visible
 		or demon_augment_panel.visible
+		or mutation_panel.visible
 		or auto_placement
 		or selected_monster_type.is_empty()
 	):
@@ -319,6 +333,56 @@ func _on_stage_event_triggered(
 	status_label.text = message
 	if event_type == "boss":
 		run_timer_label.text = "BOSS · %s" % event_name
+
+func _on_mutation_choice_ready(
+	event_data: Dictionary,
+	candidates: Array
+) -> void:
+	current_mutation_candidates = candidates.duplicate()
+	mutation_panel.show()
+
+	var event_type := String(event_data.get("type", "elite"))
+	if event_type == "miniboss":
+		mutation_title.text = "대돌연변이 선택"
+		mutation_trigger.text = "편성 몬스터 1종을 대돌연변이로 진화시킵니다."
+	else:
+		mutation_title.text = "돌연변이 선택"
+		mutation_trigger.text = "편성 몬스터 1종을 돌연변이로 투입합니다."
+
+	var buttons: Array[Button] = [
+		mutation_choice_0,
+		mutation_choice_1,
+		mutation_choice_2,
+	]
+	for index in range(buttons.size()):
+		var button := buttons[index]
+		if index >= current_mutation_candidates.size():
+			button.hide()
+			continue
+
+		button.show()
+		var monster_id := String(current_mutation_candidates[index])
+		button.text = "%s\n선택" % _get_catalog_monster_name(monster_id)
+
+	status_label.text = "Stage 이벤트: 돌연변이로 투입할 편성 몬스터를 선택하세요."
+
+func _on_mutation_choice_pressed(index: int) -> void:
+	if index < 0 or index >= current_mutation_candidates.size():
+		return
+
+	var monster_id := String(current_mutation_candidates[index])
+	if battle.choose_mutation(monster_id):
+		mutation_panel.hide()
+		current_mutation_candidates.clear()
+
+func _on_mutation_selected(
+	event_type: String,
+	mutation_name: String
+) -> void:
+	if event_type == "miniboss":
+		status_label.text = "%s 출현!" % mutation_name
+	else:
+		status_label.text = "%s 출현!" % mutation_name
 
 func _on_run_time_changed(_elapsed_seconds: float, remaining_seconds: float) -> void:
 	run_timer_label.text = "남은 시간 %s" % _format_run_time(remaining_seconds)
@@ -679,6 +743,7 @@ func _on_hero_augment_selected(level: int, candidates: Array, chosen_name: Strin
 func _on_battle_finished(message: String, player_won: bool) -> void:
 	pause_menu.hide()
 	demon_augment_panel.hide()
+	mutation_panel.hide()
 	slime_button.disabled = true
 	spider_button.disabled = true
 	orc_button.disabled = true
