@@ -499,3 +499,22 @@
 - Stage 1 견습 마도사: 관측 4.0초 / stack inertia 1.25 / 새 갈래 penalty 0.70.
 - Stage 2 기동 사냥꾼: 관측 2.8초 / stack inertia 0.95 / 새 갈래 penalty 0.40.
 - Stage별 AI 성향을 코드 분기가 아니라 `hero_profiles.gd` 데이터로 확장할 수 있도록 구성.
+
+
+### Hero Augment Synergy v1
+- Hero Build AI에 **현재 빌드 시너지 점수** 추가.
+- `hero_augment_catalog.gd`의 각 증강에 `tags`와 `synergy_rules` 데이터를 추가.
+- 기존 build_counts를 태그 스택으로 변환하는 `get_build_tag_counts()` 추가.
+- Build AI에 범용 synergy rule evaluator 추가:
+  - `build_tag_stacks`
+  - `build_tag_present`
+  - `build_augment_stacks`
+  - `build_augment_present`
+- 시너지 수치와 cap은 증강 데이터에서 조정 가능하며 특정 증강 ID별 match문은 추가하지 않음.
+- 초기 시너지 방향:
+  - 탄환 강화 + 연사 강화 = 화력/공속 빌드
+  - 민첩한 발놀림 + 사거리 확장 = 카이팅 빌드
+  - 강인한 육체 + 전투 회복 = 생존 빌드
+- AI 최종 점수는 전황 + 최근 공세 + 시너지 + 동일 증강 관성 - 새 갈래 전환 저항 + 작은 랜덤값으로 구성.
+- AI 선택 이유에 `기존 공격속도 2스택 시너지 +1.8` 같은 설명을 추가해 플레이어가 빌드 연결을 읽을 수 있게 함.
+- 후보별 total score뿐 아니라 synergy score도 내부 debug data에 저장.
