@@ -1454,3 +1454,11 @@
 - `resume_after_mutation_choice()`가 physics 복구 전에 MutationDirector를 reset하여 pending event를 지우던 로직 제거.
 - 이제 Main이 먼저 physics를 복구해도 MutationDirector의 선택 이벤트는 유지되고, 이어지는 `spawn_selected_mutation()`의 `commit_selection()`에서 정상적으로 이벤트를 소비/초기화한다.
 - 특수 스폰 큐 및 기본 전투 루프는 변경하지 않음.
+
+### Mutation Choice Lifecycle Simplification
+- 돌연변이 선택 경로를 마왕 증강과 같은 단일 생명주기로 단순화.
+- `resume_after_mutation_choice()`와 `special_spawn_queue` 제거.
+- 선택 시 MutationDirector의 `commit_selection()`으로 이벤트를 확정/해제한 뒤 같은 함수에서 즉시 `spawn_special_monster()` 실행.
+- 스폰 성공/실패와 무관하게 마지막에 combat physics를 재개.
+- 성공 시 Stage 이벤트 알림/돌연변이 선택 결과 시그널을 emit.
+- 시간/지휘력/일반 소환 루프는 변경하지 않음.

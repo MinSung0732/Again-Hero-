@@ -63,7 +63,6 @@ var manual_spawn_warning_timer: float = 0.0
 var run_metrics = RUN_METRICS.new()
 var stage_director = STAGE_DIRECTOR.new()
 var mutation_director = MUTATION_DIRECTOR.new()
-var special_spawn_queue: Array[Dictionary] = []
 
 var monsters_alive: int = 0
 var battle_over: bool = false
@@ -131,7 +130,6 @@ func _process(delta: float) -> void:
 	):
 		return
 
-	_process_special_spawn_queue()
 	_process_demon_ultimate_spawn_queue(delta)
 	_update_demon_ultimate_cooldowns(delta)
 	run_metrics.tick(delta)
@@ -213,7 +211,6 @@ func _start_battle() -> void:
 	demon_build_counts.clear()
 	demon_last_candidate_ids.clear()
 	mutation_director.reset()
-	special_spawn_queue.clear()
 	monster_summon_costs.clear()
 
 	_apply_permanent_research()
@@ -1284,17 +1281,14 @@ func _open_mutation_choice(event: Dictionary) -> void:
 		mutation_director.get_candidates()
 	)
 
-func resume_after_mutation_choice() -> void:
-	if battle_over or external_pause or demon_augment_selection_active:
-		return
-	_set_combat_physics_enabled(true)
-
 func spawn_selected_mutation(monster_id: String) -> void:
 	var event := mutation_director.commit_selection(monster_id)
 	if event.is_empty():
+		if not external_pause and not demon_augment_selection_active:
+			_set_combat_physics_enabled(true)
 		mutation_spawn_result.emit(
 			false,
-			"돌연변이 이벤트 데이터를 찾지 못했습니다. monster_id=%s" % monster_id
+			"돌연변이 선택 이벤트가 비어 있습니다. monster_id=%s" % monster_id
 		)
 		return
 
@@ -1306,24 +1300,12 @@ func spawn_selected_mutation(monster_id: String) -> void:
 	]
 	event["name"] = mutation_name
 
-	special_spawn_queue.append({
-		"monster_id": monster_id,
-		"event": event,
-		"event_type": event_type,
-		"mutation_name": mutation_name,
-	})
+	var spawned := spawn_special_monster(monster_id, event)
 
-func _process_special_spawn_queue() -> void:
-	if special_spawn_queue.is_empty():
-		return
+	if not external_pause and not demon_augment_selection_active:
+		_set_combat_physics_enabled(true)
 
-	var request: Dictionary = special_spawn_queue.pop_front()
-	var monster_id := String(request.get("monster_id", ""))
-	var event: Dictionary = request.get("event", {})
-	var event_type := String(request.get("event_type", "elite"))
-	var mutation_name := String(request.get("mutation_name", ""))
-
-	if not spawn_special_monster(monster_id, event):
+	if not spawned:
 		mutation_spawn_result.emit(
 			false,
 			"돌연변이 소환 실패 · monster_id=%s" % monster_id

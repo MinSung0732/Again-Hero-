@@ -377,7 +377,6 @@ func _on_mutation_choice_pressed(index: int) -> void:
 	mutation_panel.hide()
 	current_mutation_candidates.clear()
 
-	battle.resume_after_mutation_choice()
 	battle.spawn_selected_mutation(monster_id)
 
 func _on_mutation_spawn_result(
