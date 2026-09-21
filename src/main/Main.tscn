@@ -30,14 +30,14 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = 270.0
-offset_bottom = -360.0
+offset_bottom = -476.0
 grow_horizontal = 2
 grow_vertical = 2
 stretch = true
 mouse_filter = 2
 
 [node name="BattleViewport" type="SubViewport" parent="BattleViewportContainer"]
-size = Vector2i(1080, 1290)
+size = Vector2i(1080, 1174)
 render_target_update_mode = 4
 
 [node name="Battle" parent="BattleViewportContainer/BattleViewport" instance=ExtResource("2_battle")]
