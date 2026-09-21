@@ -22,6 +22,7 @@ const OFFENSE_MEMORY_WINDOW := 20.0
 const OFFENSE_MEMORY_MIN_WEIGHT := 0.25
 const STATUS_MEMORY_WINDOW := 20.0
 const STATUS_MEMORY_MIN_WEIGHT := 0.25
+const INVULNERABILITY_BLINK_INTERVAL := 0.07
 
 @export var max_hp: int = 300
 @export var move_speed: float = 230.0
@@ -34,6 +35,7 @@ const STATUS_MEMORY_MIN_WEIGHT := 0.25
 @export var exp_pickup_radius: float = 150.0
 @export var ai_sense_radius: float = 420.0
 @export var kite_distance: float = 210.0
+@export var invulnerability_duration: float = 0.35
 
 var hero_id: String = "ranged_rookie"
 var hero_display_name: String = "견습 마도사"
@@ -60,6 +62,7 @@ var hit_flash_timer: float = 0.0
 var level_flash_timer: float = 0.0
 var attack_pose_timer: float = 0.0
 var hit_pose_timer: float = 0.0
+var invulnerability_timer: float = 0.0
 var is_dying: bool = false
 var slow_timer: float = 0.0
 var move_multiplier: float = 1.0
@@ -99,6 +102,10 @@ func configure_profile(profile: Dictionary) -> void:
 	exp_pickup_radius = float(profile.get("exp_pickup_radius", exp_pickup_radius))
 	ai_sense_radius = float(profile.get("ai_sense_radius", ai_sense_radius))
 	kite_distance = float(profile.get("kite_distance", kite_distance))
+	invulnerability_duration = maxf(
+		float(profile.get("invulnerability_duration", invulnerability_duration)),
+		0.0
+	)
 
 func configure_battlefield(size: Vector2) -> void:
 	battlefield_size = Vector2(
@@ -137,6 +144,7 @@ func _physics_process(delta: float) -> void:
 	wander_timer = maxf(wander_timer - delta, 0.0)
 	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
 	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
+	_update_invulnerability(delta)
 
 	if hit_flash_timer > 0.0:
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
@@ -872,13 +880,21 @@ func get_build_summary() -> String:
 func _required_exp_for_level(target_level: int) -> int:
 	return 50 + maxi(target_level - 1, 0) * 25
 
-func take_damage(amount: int) -> void:
-	if current_hp <= 0 or is_dying:
-		return
+func take_damage(amount: int) -> bool:
+	if (
+		amount <= 0
+		or current_hp <= 0
+		or is_dying
+		or invulnerability_timer > 0.0
+	):
+		return false
 
 	var previous_hp := current_hp
 	current_hp = maxi(current_hp - amount, 0)
 	var applied_damage := previous_hp - current_hp
+	if applied_damage <= 0:
+		return false
+
 	DAMAGE_NUMBERS.show(self, applied_damage)
 
 	hit_flash_timer = 0.12
@@ -889,12 +905,38 @@ func take_damage(amount: int) -> void:
 
 	if current_hp <= 0:
 		_begin_death_sequence()
+	else:
+		invulnerability_timer = invulnerability_duration
+		_refresh_invulnerability_visual()
+
+	return true
+
+func _update_invulnerability(delta: float) -> void:
+	if invulnerability_timer <= 0.0:
+		if modulate.a < 1.0 and not is_dying:
+			modulate.a = 1.0
+		return
+
+	invulnerability_timer = maxf(invulnerability_timer - delta, 0.0)
+	_refresh_invulnerability_visual()
+
+func _refresh_invulnerability_visual() -> void:
+	if is_dying or invulnerability_timer <= 0.0:
+		modulate.a = 1.0
+		return
+
+	var blink_phase := int(
+		floor(invulnerability_timer / INVULNERABILITY_BLINK_INTERVAL)
+	)
+	modulate.a = 0.35 if blink_phase % 2 == 0 else 1.0
 
 func _begin_death_sequence() -> void:
 	if is_dying:
 		return
 
 	is_dying = true
+	invulnerability_timer = 0.0
+	modulate.a = 1.0
 	velocity = Vector2.ZERO
 	collision_layer = 0
 	collision_mask = 0

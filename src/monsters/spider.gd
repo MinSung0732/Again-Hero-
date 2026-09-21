@@ -51,9 +51,10 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		if attack_timer <= 0.0:
 			attack_timer = attack_cooldown
+			var damage_applied := false
 			if hero.has_method("take_damage"):
-				hero.call("take_damage", attack_damage)
-			if hero.has_method("apply_slow"):
+				damage_applied = bool(hero.call("take_damage", attack_damage))
+			if damage_applied and hero.has_method("apply_slow"):
 				hero.call("apply_slow", slow_multiplier, slow_duration)
 
 func take_damage(amount: int) -> void:

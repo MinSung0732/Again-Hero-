@@ -15,6 +15,7 @@ const PROFILES = {
 		"exp_pickup_radius": 150.0,
 		"ai_sense_radius": 420.0,
 		"kite_distance": 210.0,
+		"invulnerability_duration": 0.35,
 		"ai_settings": {
 			"observation_interval": 4.0,
 			"stack_inertia": 1.25,
@@ -35,6 +36,7 @@ const PROFILES = {
 		"exp_pickup_radius": 160.0,
 		"ai_sense_radius": 450.0,
 		"kite_distance": 235.0,
+		"invulnerability_duration": 0.35,
 		"ai_settings": {
 			"observation_interval": 2.8,
 			"stack_inertia": 0.95,
