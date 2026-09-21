@@ -121,18 +121,76 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Placeholder" type="Label" parent="SafeArea/Layout/Content/TeamTab"]
+[node name="TeamLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/TeamTab"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.83, 0.79, 0.87, 1)
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.87, 1, 1)
 theme_override_font_sizes/font_size = 34
-text = "팀 편성\n\n몬스터 덱 / 편성 시스템 예정"
+text = "몬스터 편성"
+horizontal_alignment = 1
+
+[node name="Guide" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
+theme_override_font_sizes/font_size = 20
+text = "전투에 가져갈 몬스터를 최대 3종 선택하세요."
+horizontal_alignment = 1
+
+[node name="Summary" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
+theme_override_font_sizes/font_size = 22
+text = "현재 편성 3 / 3"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="SlotPanel" type="PanelContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+custom_minimum_size = Vector2(0, 190)
+layout_mode = 2
+
+[node name="SlotMargin" type="MarginContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Slots" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotPanel/SlotMargin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="ListTitle" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "보유 몬스터"
+horizontal_alignment = 1
+
+[node name="MonsterScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MonsterList" type="VBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="Status" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
+theme_override_font_sizes/font_size = 20
+text = "편성은 즉시 저장되며 다음 전투부터 적용됩니다."
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="MainTab" type="Control" parent="SafeArea/Layout/Content"]
 layout_mode = 1

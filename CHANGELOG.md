@@ -740,3 +740,16 @@
 - Stage 선택 / 영구 연구는 메인 로비 전용으로 정리.
 - Stage 1 대표 Hero 초상화 PNG가 저장소에 실제 반영된 상태를 ROADMAP에 완료 처리.
 
+### Monster Team Loadout v1
+- 신규 `team_loadout.gd` 추가, 로비 편성을 별도 ConfigFile로 영구 저장.
+- 로비 팀 편성 placeholder를 실제 편성 화면으로 교체:
+  - 현재 3개 편성 슬롯 표시
+  - MonsterCatalog의 보유 몬스터 목록 표시
+  - 몬스터 탭으로 편성/해제
+  - 최대 3종 / 최소 1종 제한
+  - 이름 / 역할 / 기본 지휘력 비용 표시
+- MonsterCatalog에 고정 ORDER 추가.
+- Battle 시작 시 저장된 편성 로드, 미편성 몬스터 직접 소환 요청 차단.
+- 전투 하단 3개 소환 버튼을 편성 슬롯 기반으로 동적 구성하고 빈 슬롯은 숨김.
+- 메인 UI의 몬스터 이름 표시도 MonsterCatalog 기반으로 정리해 신규 몬스터 추가 시 하드코딩 수정 범위를 축소.
+
