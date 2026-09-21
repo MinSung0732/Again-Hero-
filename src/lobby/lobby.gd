@@ -29,6 +29,9 @@ const BATTLE_SCENE_PATH := "res://src/main/Main.tscn"
 @onready var team_slot_1_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot1/Label
 @onready var team_slot_2_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot2/Label
 @onready var team_slot_3_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot3/Label
+@onready var team_remove_1_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/RemoveRow/Remove1Button
+@onready var team_remove_2_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/RemoveRow/Remove2Button
+@onready var team_remove_3_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/RemoveRow/Remove3Button
 @onready var team_monster_1_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList/Monster1Button
 @onready var team_monster_2_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList/Monster2Button
 @onready var team_monster_3_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList/Monster3Button
@@ -213,6 +216,10 @@ func _connect_navigation() -> void:
 	next_stage_button.pressed.connect(_change_stage.bind(1))
 	enter_stage_button.pressed.connect(_enter_selected_stage)
 
+	team_remove_1_button.pressed.connect(_remove_team_slot.bind(0))
+	team_remove_2_button.pressed.connect(_remove_team_slot.bind(1))
+	team_remove_3_button.pressed.connect(_remove_team_slot.bind(2))
+
 	team_monster_1_button.pressed.connect(_toggle_team_preview_slot.bind(0))
 	team_monster_2_button.pressed.connect(_toggle_team_preview_slot.bind(1))
 	team_monster_3_button.pressed.connect(_toggle_team_preview_slot.bind(2))
@@ -273,6 +280,11 @@ func _refresh_team_preview() -> void:
 		team_slot_2_label,
 		team_slot_3_label,
 	]
+	var remove_buttons: Array[Button] = [
+		team_remove_1_button,
+		team_remove_2_button,
+		team_remove_3_button,
+	]
 	var monster_buttons: Array[Button] = [
 		team_monster_1_button,
 		team_monster_2_button,
@@ -289,8 +301,12 @@ func _refresh_team_preview() -> void:
 					MONSTER_CATALOG.get_role(monster_id)
 				),
 			]
+			remove_buttons[slot_index].visible = true
+			remove_buttons[slot_index].disabled = team_preview_ids.size() <= 1
 		else:
 			slot_labels[slot_index].text = "%d\n빈 슬롯" % (slot_index + 1)
+			remove_buttons[slot_index].visible = false
+			remove_buttons[slot_index].disabled = true
 
 	var selected_names: PackedStringArray = []
 	for monster_id in team_preview_ids:
@@ -323,6 +339,28 @@ func _refresh_team_preview() -> void:
 		button.add_theme_stylebox_override("normal", style)
 		button.add_theme_stylebox_override("hover", style)
 		button.add_theme_stylebox_override("pressed", style)
+
+func _remove_team_slot(slot_index: int) -> void:
+	if slot_index < 0 or slot_index >= team_preview_ids.size():
+		return
+
+	if team_preview_ids.size() <= 1:
+		team_status_label.text = "최소 1종은 편성해야 합니다."
+		return
+
+	var monster_id := team_preview_ids[slot_index]
+	team_preview_ids.remove_at(slot_index)
+
+	var saved := TEAM_LOADOUT_STORE.save_ids(
+		team_preview_ids,
+		team_monster_ids
+	)
+	if saved:
+		team_status_label.text = "%s 편성 해제 · 자동 저장 완료" % MONSTER_CATALOG.get_name(monster_id)
+	else:
+		team_status_label.text = "편성 저장에 실패했습니다."
+
+	_refresh_team_preview()
 
 func _toggle_team_preview_slot(button_index: int) -> void:
 	if button_index < 0 or button_index >= team_monster_ids.size():

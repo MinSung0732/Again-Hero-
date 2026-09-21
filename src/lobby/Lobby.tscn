@@ -192,6 +192,31 @@ text = "3\n오크\n탱커"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="RemoveRow" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Remove1Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/RemoveRow"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 19
+text = "편성 해제"
+
+[node name="Remove2Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/RemoveRow"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 19
+text = "편성 해제"
+
+[node name="Remove3Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/RemoveRow"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 19
+text = "편성 해제"
+
 [node name="ListTitle" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
@@ -225,7 +250,7 @@ custom_minimum_size = Vector2(0, 78)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
 theme_override_font_sizes/font_size = 19
-text = "선택은 즉시 저장되며 앱을 다시 열어도 유지됩니다."
+text = "슬롯 아래 '편성 해제'로 빼거나, 보유 몬스터 목록에서 다시 추가할 수 있습니다."
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
