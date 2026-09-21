@@ -283,10 +283,23 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 		Color("ffe29a") if selected else Color("d8cfdf")
 	)
 
+func _format_shop_number(value: int) -> String:
+	var digits := str(maxi(value, 0))
+	var result := ""
+	var group_count := 0
+
+	for index in range(digits.length() - 1, -1, -1):
+		if group_count > 0 and group_count % 3 == 0:
+			result = "," + result
+		result = digits.substr(index, 1) + result
+		group_count += 1
+
+	return result
+
 func _rebuild_shop_list() -> void:
-	shop_gold_label.text = "보유 골드  %,d" % SHOP_CATALOG.TEST_GOLD
-	shop_single_button.text = "상자 1회\n%,d 골드" % SHOP_CATALOG.SINGLE_DRAW_COST
-	shop_multi_button.text = "상자 10+1회\n%,d 골드" % SHOP_CATALOG.MULTI_DRAW_COST
+	shop_gold_label.text = "보유 골드  %s" % _format_shop_number(SHOP_CATALOG.TEST_GOLD)
+	shop_single_button.text = "상자 1회\n%s 골드" % _format_shop_number(SHOP_CATALOG.SINGLE_DRAW_COST)
+	shop_multi_button.text = "상자 10+1회\n%s 골드" % _format_shop_number(SHOP_CATALOG.MULTI_DRAW_COST)
 
 	var rate_lines: PackedStringArray = []
 	for raw_rarity in SHOP_CATALOG.RARITY_ORDER:
@@ -312,8 +325,8 @@ func _rebuild_shop_list() -> void:
 
 	shop_rates_label.text = "\n".join(rate_lines)
 	shop_status_label.text = (
-		"테스트 골드 %,d · 구매 시 골드 차감 없음"
-		% SHOP_CATALOG.TEST_GOLD
+		"테스트 골드 %s · 구매 시 골드 차감 없음"
+		% _format_shop_number(SHOP_CATALOG.TEST_GOLD)
 	)
 
 func _open_monster_boxes(draw_count: int) -> void:
@@ -392,8 +405,8 @@ func _open_monster_boxes(draw_count: int) -> void:
 
 	shop_result_label.text = "\n".join(result_lines)
 	shop_status_label.text = (
-		"골드 차감 없음 · 표시 골드 %,d 유지"
-		% SHOP_CATALOG.TEST_GOLD
+		"골드 차감 없음 · 표시 골드 %s 유지"
+		% _format_shop_number(SHOP_CATALOG.TEST_GOLD)
 	)
 	_refresh_header()
 
@@ -728,7 +741,7 @@ func _refresh_header() -> void:
 	var state := STAGE_PROGRESS.load_state()
 	var highest := int(state.get("highest_unlocked_stage", 1))
 	title_label.text = "용사, 또 너야?"
-	resource_label.text = "골드  %,d" % SHOP_CATALOG.TEST_GOLD
+	resource_label.text = "골드  %s" % _format_shop_number(SHOP_CATALOG.TEST_GOLD)
 	progress_label.text = "최고 해금  Stage %d" % highest
 
 func _change_stage(direction: int) -> void:
