@@ -41,6 +41,17 @@ const PROFILES = {
 			"danger_radius": 300.0,
 			"danger_count": 3,
 		},
+		"channel_skill": {
+			"id": "arcane_field",
+			"name": "비전 집중",
+			"cooldown": 16.0,
+			"initial_cooldown": 12.0,
+			"duration": 2.5,
+			"tick_interval": 0.25,
+			"radius": 210.0,
+			"tick_damage": 14,
+			"enemy_count_trigger": 4,
+		},
 		"augment_pool_ids": [
 			"projectile_power",
 			"rapid_strikes",

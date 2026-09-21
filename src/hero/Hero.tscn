@@ -21,6 +21,12 @@ texture_filter = 1
 position = Vector2(0, 44)
 scale = Vector2(1, 0.62)
 
+[node name="ChannelEffect" type="AnimatedSprite2D" parent="."]
+visible = false
+z_index = 0
+texture_filter = 1
+position = Vector2(0, 18)
+
 [node name="HeroSprite" type="AnimatedSprite2D" parent="."]
 visible = false
 z_index = 1

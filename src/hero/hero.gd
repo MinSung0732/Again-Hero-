@@ -21,6 +21,10 @@ const STAGE1_SHIELD_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/eff
 const STAGE1_SHIELD_EFFECT_FRAME_COUNT := 6
 const STAGE1_SHIELD_EFFECT_FRAME_SIZE := Vector2(512, 512)
 const STAGE1_SHIELD_EFFECT_TARGET_SIZE := 180.0
+const STAGE1_CHANNEL_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/effect_03"
+const STAGE1_CHANNEL_EFFECT_FRAME_COUNT := 6
+const STAGE1_CHANNEL_EFFECT_FRAME_SIZE := Vector2(512, 512)
+const STAGE1_CHANNEL_EFFECT_TARGET_SIZE := 300.0
 
 const APPROACH_DISTANCE_RATIO := 0.86
 const FIELD_MARGIN := 72.0
@@ -61,6 +65,12 @@ var shield_cooldown_timer: float = 0.0
 var shield_duration_timer: float = 0.0
 var shield_hp: float = 0.0
 var shield_max_hp: float = 0.0
+
+var channel_skill_config: Dictionary = {}
+var channel_cooldown_timer: float = 0.0
+var channel_duration_timer: float = 0.0
+var channel_tick_timer: float = 0.0
+var channeling: bool = false
 var ai_settings: Dictionary = {
 	"id": "default",
 	"display_name": "기본",
@@ -106,6 +116,7 @@ var ai_observed_context_time: float = 0.0
 @onready var follow_camera: Camera2D = $Camera2D
 @onready var hero_sprite: AnimatedSprite2D = $HeroSprite
 @onready var shield_effect: AnimatedSprite2D = $ShieldEffect
+@onready var channel_effect: AnimatedSprite2D = $ChannelEffect
 
 func configure_profile(profile: Dictionary) -> void:
 	if profile.is_empty():
@@ -135,6 +146,21 @@ func configure_profile(profile: Dictionary) -> void:
 	shield_duration_timer = 0.0
 	shield_hp = 0.0
 	shield_max_hp = 0.0
+
+	var profile_channel = profile.get("channel_skill", {})
+	channel_skill_config = (
+		profile_channel.duplicate(true)
+		if typeof(profile_channel) == TYPE_DICTIONARY
+		else {}
+	)
+	channel_cooldown_timer = maxf(
+		float(channel_skill_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
+	channel_duration_timer = 0.0
+	channel_tick_timer = 0.0
+	channeling = false
+
 	augment_pool_ids.clear()
 	for raw_augment_id in profile.get("augment_pool_ids", []):
 		var augment_id := String(raw_augment_id)
@@ -178,6 +204,7 @@ func _ready() -> void:
 	_apply_camera_limits()
 	_apply_profile_visual()
 	_apply_stage1_shield_visual()
+	_apply_stage1_channel_visual()
 	current_hp = max_hp
 	exp_to_next_level = _required_exp_for_level(level)
 	strafe_sign = -1.0 if randf() < 0.5 else 1.0
@@ -209,6 +236,7 @@ func _physics_process(delta: float) -> void:
 	_update_invulnerability(delta)
 	_update_ultimate(delta)
 	_update_shield_skill(delta)
+	_update_channel_skill(delta)
 
 	if hit_flash_timer > 0.0:
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
@@ -223,6 +251,11 @@ func _physics_process(delta: float) -> void:
 		if slow_timer <= 0.0:
 			move_multiplier = 1.0
 			queue_redraw()
+
+	if channeling:
+		velocity = Vector2.ZERO
+		_update_stage1_pose_visual(delta)
+		return
 
 	if not is_instance_valid(target) or target.is_queued_for_deletion() or retarget_timer <= 0.0:
 		target = _find_nearest_monster()
@@ -310,6 +343,41 @@ func _apply_stage1_shield_visual() -> void:
 		/ STAGE1_SHIELD_EFFECT_FRAME_SIZE.x
 	)
 	shield_effect.scale = Vector2(uniform_scale, uniform_scale)
+
+func _apply_stage1_channel_visual() -> void:
+	channel_effect.visible = false
+	channel_effect.sprite_frames = null
+	channel_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+	if hero_id != "ranged_rookie":
+		return
+
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.remove_animation(&"default")
+
+	frames.add_animation(&"channel")
+	frames.set_animation_speed(&"channel", 10.0)
+	frames.set_animation_loop(&"channel", true)
+
+	for index in range(1, STAGE1_CHANNEL_EFFECT_FRAME_COUNT + 1):
+		var path := "%s/frame_%02d.png" % [
+			STAGE1_CHANNEL_EFFECT_BASE_PATH,
+			index,
+		]
+		var texture := _load_stage1_texture(path)
+		if texture == null:
+			push_warning("Stage 1 channel effect frame load failed: %s" % path)
+			channel_effect.sprite_frames = null
+			return
+		frames.add_frame(&"channel", texture)
+
+	channel_effect.sprite_frames = frames
+	var uniform_scale := (
+		STAGE1_CHANNEL_EFFECT_TARGET_SIZE
+		/ STAGE1_CHANNEL_EFFECT_FRAME_SIZE.x
+	)
+	channel_effect.scale = Vector2(uniform_scale, uniform_scale)
 
 func _load_stage1_sheet_texture() -> Texture2D:
 	return _load_stage1_texture(sprite_sheet_path)
@@ -588,6 +656,119 @@ func _fire_projectile(current_target: Node2D) -> void:
 	_add_ultimate_charge(
 		float(ultimate_config.get("charge_on_attack", 0.0))
 	)
+
+func _update_channel_skill(delta: float) -> void:
+	if channel_skill_config.is_empty() or is_dying or current_hp <= 0:
+		return
+
+	if channeling:
+		channel_duration_timer = maxf(channel_duration_timer - delta, 0.0)
+		channel_tick_timer = maxf(channel_tick_timer - delta, 0.0)
+
+		if channel_tick_timer <= 0.0:
+			_apply_channel_damage()
+			channel_tick_timer = maxf(
+				float(channel_skill_config.get("tick_interval", 0.25)),
+				0.05
+			)
+
+		if channel_duration_timer <= 0.0:
+			_end_channel_skill()
+		return
+
+	channel_cooldown_timer = maxf(channel_cooldown_timer - delta, 0.0)
+	if channel_cooldown_timer > 0.0:
+		return
+
+	if _should_cast_channel_skill():
+		_activate_channel_skill()
+
+func _should_cast_channel_skill() -> bool:
+	var radius := maxf(
+		float(channel_skill_config.get("radius", 210.0)),
+		0.0
+	)
+	var required_count := maxi(
+		int(channel_skill_config.get("enemy_count_trigger", 4)),
+		1
+	)
+	if radius <= 0.0:
+		return false
+
+	var nearby := 0
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if global_position.distance_to(monster.global_position) > radius:
+			continue
+		nearby += 1
+		if nearby >= required_count:
+			return true
+
+	return false
+
+func _activate_channel_skill() -> void:
+	channeling = true
+	channel_duration_timer = maxf(
+		float(channel_skill_config.get("duration", 2.5)),
+		0.05
+	)
+	channel_tick_timer = 0.0
+	channel_cooldown_timer = maxf(
+		float(channel_skill_config.get("cooldown", 16.0)),
+		0.0
+	)
+	velocity = Vector2.ZERO
+
+	attack_pose_timer = channel_duration_timer
+	_restart_stage1_animation("attack", 0.75)
+
+	if channel_effect.sprite_frames != null:
+		channel_effect.visible = true
+		channel_effect.play(&"channel")
+
+	_apply_channel_damage()
+	channel_tick_timer = maxf(
+		float(channel_skill_config.get("tick_interval", 0.25)),
+		0.05
+	)
+	queue_redraw()
+
+func _apply_channel_damage() -> void:
+	var radius := maxf(
+		float(channel_skill_config.get("radius", 210.0)),
+		0.0
+	)
+	var damage := maxi(
+		int(channel_skill_config.get("tick_damage", 14)),
+		1
+	)
+	if radius <= 0.0:
+		return
+
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		if not node.has_method("take_damage"):
+			continue
+
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if global_position.distance_to(monster.global_position) > radius:
+			continue
+
+		monster.call("take_damage", damage)
+
+func _end_channel_skill() -> void:
+	channeling = false
+	channel_duration_timer = 0.0
+	channel_tick_timer = 0.0
+	channel_effect.visible = false
+	queue_redraw()
 
 func _update_shield_skill(delta: float) -> void:
 	if shield_skill_config.is_empty() or is_dying or current_hp <= 0:
