@@ -677,3 +677,9 @@
 - 본체/지팡이/마법구처럼 큰 컴포넌트와 idle/move/hit 행은 수정하지 않음.
 - Android Editor import cache 여부와 상관없이 동일 보정이 적용되도록 Stage 1 raw PNG 로드를 imported texture보다 먼저 사용.
 
+### Stage 1 Attack Stray Pixel Cleanup — Video Calibration
+- 실기기 녹화 프레임을 다시 확인한 결과, 남아 있던 세로 잡픽셀은 본체 왼쪽 경계에서 약 1 source-pixel 수준으로 매우 가깝게 분리되어 있었음.
+- 기존 정리 로직의 `3px 이상 이격` 조건 때문에 해당 조각이 제거 대상에서 제외되던 문제 수정.
+- 이제 공격 프레임에서 **본체보다 왼쪽에 분리된 1~2px 폭 / 6px 이하 고립 조각은 이격 거리 없이 제거**.
+- 큰 마법구/지팡이/본체 컴포넌트는 기존 크기·폭 조건으로 계속 보존.
+
