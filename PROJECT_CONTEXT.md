@@ -452,9 +452,10 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 
 다음 작업은 순서를 크게 바꾸지 않는다.
 
-1. 최근 공세 기억 + 판단 지연 + 시너지를 이용한 미끼 → 전환 카운터 플레이테스트
-2. Hero별 AI 성향/증강 풀 차별화 확장
-3. Run 종료/전투 통계/분석 화면 확장
+1. 최근 공세 기억 + 판단 지연 + 시너지 + 상태이상 적응을 이용한 미끼 → 전환 카운터 플레이테스트
+2. 전략 전환 타이밍 / 5~10분 Run 검증
+3. Hero별 AI 성향/증강 풀 차별화 확장
+4. Run 종료/전투 통계/분석 화면 확장
 4. Run 종료/통계/분석 화면 확장
 5. 영구 연구의 정보 해금 / 새로운 전략 옵션 확장
 
@@ -606,3 +607,25 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
   - multiply_stat
   - heal
 - 새 증강은 가능한 한 `effects / ai_rules / tags / synergy_rules` 데이터만 추가해 확장한다.
+
+
+### 실제 상태이상 기억 / 둔화 저항 v1
+- Hero AI가 Spider가 존재했다는 사실만 보는 것이 아니라 **실제로 Hero에게 들어온 상태이상 적중 기록**을 기억한다.
+- 상태이상 기록은 최근 20초 시간창으로 유지되며 시간이 지나면 가중치가 감소한다.
+- `status_effect_catalog.gd` 추가:
+  - 현재 slow(둔화) 등록
+  - 이후 poison / burn / silence 등 추가 가능
+- Hero context에 최근 상태이상:
+  - event count
+  - status별 실제 적중 횟수
+  - 시간 감쇠 weight
+  를 포함한다.
+- Build AI에 범용 `recent_status_weight` rule 추가.
+- 기존 **민첩한 발놀림**도 실제 둔화 적중이 많을수록 점수가 추가 상승한다.
+- Hero 신규 증강 **둔화 적응** 추가:
+  - 둔화 저항 +18% / stack
+  - 최대 65%
+  - 저항 수치만큼 둔화 강도와 지속시간을 모두 완화
+- 상태 저항은 `status_resistances` Dictionary로 관리하며 slow 전용 하드코딩 스탯을 만들지 않는다.
+- 증강 effect op에 `add_status_resistance` 추가.
+- AI 선택 이유에 `최근 20초 둔화 4회`처럼 실제 전투 적중 기록을 표시할 수 있다.
