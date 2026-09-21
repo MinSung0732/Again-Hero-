@@ -813,3 +813,10 @@
 - 전투 코드와 기존 로비 씬은 변경하지 않음.
 - 팀 편성 해제 동작 문제는 별도 로그/원인 확인 후 재수정.
 
+### Team Loadout Android Refresh Fix
+- Android에서 팀 편성 슬롯 터치는 들어오지만 실제 슬롯 표시가 갱신되지 않던 문제 수정.
+- `_refresh_team_preview()`에서 임시 `Array[Button]` typed-array 생성을 제거.
+- 슬롯 1~3 / 보유 몬스터 버튼 1~3을 각각 직접 갱신하는 작은 helper 함수로 교체.
+- 편성 요약 문자열도 PackedStringArray 없이 일반 String 누적으로 단순화.
+- 저장 모듈, Lobby 씬, Battle/Main 전투 코드는 변경하지 않음.
+

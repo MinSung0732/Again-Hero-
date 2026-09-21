@@ -263,64 +263,61 @@ func _setup_team_preview() -> void:
 	_refresh_team_preview()
 
 func _refresh_team_preview() -> void:
-	var slot_buttons: Array[Button] = [
-		team_slot_1_button,
-		team_slot_2_button,
-		team_slot_3_button,
-	]
-	var monster_buttons: Array[Button] = [
-		team_monster_1_button,
-		team_monster_2_button,
-		team_monster_3_button,
-	]
+	_refresh_team_slot_button(team_slot_1_button, 0)
+	_refresh_team_slot_button(team_slot_2_button, 1)
+	_refresh_team_slot_button(team_slot_3_button, 2)
 
-	for slot_index in range(slot_buttons.size()):
-		var slot_button := slot_buttons[slot_index]
-		if slot_index < team_preview_ids.size():
-			var monster_id := team_preview_ids[slot_index]
-			slot_button.text = "%d\n%s\n%s\n\n편성 해제" % [
-				slot_index + 1,
-				MONSTER_CATALOG.get_name(monster_id),
-				MONSTER_CATALOG.get_role_label(
-					MONSTER_CATALOG.get_role(monster_id)
-				),
-			]
-			slot_button.disabled = team_preview_ids.size() <= 1
-		else:
-			slot_button.text = "%d\n빈 슬롯" % (slot_index + 1)
-			slot_button.disabled = true
-
-	var selected_names: PackedStringArray = []
+	var selected_summary := ""
 	for monster_id in team_preview_ids:
-		selected_names.append(MONSTER_CATALOG.get_name(monster_id))
+		if not selected_summary.is_empty():
+			selected_summary += " / "
+		selected_summary += MONSTER_CATALOG.get_name(monster_id)
 
 	team_summary_label.text = "저장된 편성 %d / %d · %s" % [
 		team_preview_ids.size(),
 		TEAM_LOADOUT_STORE.MAX_SLOTS,
-		" / ".join(selected_names),
+		selected_summary,
 	]
 
-	for index in range(monster_buttons.size()):
-		var button := monster_buttons[index]
-		if index >= team_monster_ids.size():
-			button.visible = false
-			continue
+	_refresh_team_monster_button(team_monster_1_button, 0)
+	_refresh_team_monster_button(team_monster_2_button, 1)
+	_refresh_team_monster_button(team_monster_3_button, 2)
 
-		var monster_id := team_monster_ids[index]
-		var data := MONSTER_CATALOG.get_monster(monster_id)
-		var selected := monster_id in team_preview_ids
-		button.visible = true
-		button.text = "%s  ·  %s  ·  기본 비용 %.0f\n%s" % [
-			String(data.get("name", monster_id)),
-			MONSTER_CATALOG.get_role_label(String(data.get("role", ""))),
-			float(data.get("base_cost", 0.0)),
-			"선택됨 · 탭해서 빼기" if selected else "탭해서 넣기",
+func _refresh_team_slot_button(button: Button, slot_index: int) -> void:
+	if slot_index < team_preview_ids.size():
+		var monster_id := team_preview_ids[slot_index]
+		button.text = "%d\n%s\n%s\n\n편성 해제" % [
+			slot_index + 1,
+			MONSTER_CATALOG.get_name(monster_id),
+			MONSTER_CATALOG.get_role_label(
+				MONSTER_CATALOG.get_role(monster_id)
+			),
 		]
+		button.disabled = team_preview_ids.size() <= 1
+	else:
+		button.text = "%d\n빈 슬롯" % (slot_index + 1)
+		button.disabled = true
 
-		var style := primary_button_style if selected else secondary_button_style
-		button.add_theme_stylebox_override("normal", style)
-		button.add_theme_stylebox_override("hover", style)
-		button.add_theme_stylebox_override("pressed", style)
+func _refresh_team_monster_button(button: Button, monster_index: int) -> void:
+	if monster_index < 0 or monster_index >= team_monster_ids.size():
+		button.visible = false
+		return
+
+	var monster_id := team_monster_ids[monster_index]
+	var data := MONSTER_CATALOG.get_monster(monster_id)
+	var selected := monster_id in team_preview_ids
+	button.visible = true
+	button.text = "%s  ·  %s  ·  기본 비용 %.0f\n%s" % [
+		String(data.get("name", monster_id)),
+		MONSTER_CATALOG.get_role_label(String(data.get("role", ""))),
+		float(data.get("base_cost", 0.0)),
+		"선택됨 · 탭해서 빼기" if selected else "탭해서 넣기",
+	]
+
+	var style := primary_button_style if selected else secondary_button_style
+	button.add_theme_stylebox_override("normal", style)
+	button.add_theme_stylebox_override("hover", style)
+	button.add_theme_stylebox_override("pressed", style)
 
 func _on_team_slot_1_pressed() -> void:
 	_remove_team_slot(0)
