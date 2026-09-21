@@ -226,6 +226,7 @@ offset_top = 174.0
 offset_right = 1040.0
 offset_bottom = 340.0
 theme_override_constants/separation = 18
+alignment = 1
 
 [node name="SlimeButton" type="Button" parent="HUD/BottomBar/SummonButtons"]
 custom_minimum_size = Vector2(0, 150)

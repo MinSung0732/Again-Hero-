@@ -1,6 +1,9 @@
 extends Control
 
 const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
+const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
+const MONSTER_COLLECTION_STORE := preload("res://src/systems/monster_collection_store.gd")
+const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
 @onready var battle_viewport: SubViewport = $BattleViewportContainer/BattleViewport
@@ -54,6 +57,8 @@ var auto_placement: bool = true
 var selected_monster_type: String = ""
 var current_demon_candidates: Array = []
 var debug_refresh_timer: float = 0.0
+var battle_loadout_ids: Array = []
+var summon_buttons_by_id: Dictionary = {}
 
 func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
@@ -80,6 +85,13 @@ func _ready() -> void:
 	slime_button.pressed.connect(_on_summon_pressed.bind("slime"))
 	spider_button.pressed.connect(_on_summon_pressed.bind("spider"))
 	orc_button.pressed.connect(_on_summon_pressed.bind("orc"))
+
+	summon_buttons_by_id = {
+		"slime": slime_button,
+		"spider": spider_button,
+		"orc": orc_button,
+	}
+	_load_battle_loadout()
 	demon_choice_0.pressed.connect(_on_demon_choice_pressed.bind(0))
 	demon_choice_1.pressed.connect(_on_demon_choice_pressed.bind(1))
 	demon_choice_2.pressed.connect(_on_demon_choice_pressed.bind(2))
@@ -279,17 +291,49 @@ func _on_command_changed(current_value: float, max_value: float) -> void:
 	command_bar.max_value = maxf(max_value, 1.0)
 	command_bar.value = current_value
 
-	var slime_cost: float = battle.get_monster_cost("slime")
-	var spider_cost: float = battle.get_monster_cost("spider")
-	var orc_cost: float = battle.get_monster_cost("orc")
+	for raw_id in MONSTER_CATALOG.ORDER:
+		var monster_id := String(raw_id)
+		if not summon_buttons_by_id.has(monster_id):
+			continue
 
-	slime_button.text = "슬라임\n비용 %.1f" % slime_cost
-	spider_button.text = "거미\n비용 %.1f" % spider_cost
-	orc_button.text = "오크\n비용 %.1f" % orc_cost
+		var button := summon_buttons_by_id[monster_id] as Button
+		if button == null:
+			continue
 
-	slime_button.disabled = current_value + 0.001 < slime_cost
-	spider_button.disabled = current_value + 0.001 < spider_cost
-	orc_button.disabled = current_value + 0.001 < orc_cost
+		var equipped := monster_id in battle_loadout_ids
+		var cost: float = battle.get_monster_cost(monster_id)
+		button.text = "%s\n비용 %.1f" % [
+			MONSTER_CATALOG.get_name(monster_id),
+			cost,
+		]
+		button.visible = equipped
+		button.disabled = (
+			not equipped
+			or current_value + 0.001 < cost
+		)
+
+func _load_battle_loadout() -> void:
+	var collection_state := MONSTER_COLLECTION_STORE.load_state()
+	var unlocked_ids := MONSTER_COLLECTION_STORE.get_unlocked_ids(
+		collection_state
+	)
+
+	var fallback_ids: Array = []
+	for raw_id in MONSTER_CATALOG.ORDER:
+		var monster_id := String(raw_id)
+		if monster_id not in unlocked_ids:
+			continue
+		fallback_ids.append(monster_id)
+		if fallback_ids.size() >= TEAM_LOADOUT_STORE.MAX_SLOTS:
+			break
+
+	battle_loadout_ids = TEAM_LOADOUT_STORE.load_ids(
+		unlocked_ids,
+		fallback_ids
+	)
+
+func _is_monster_equipped(monster_id: String) -> bool:
+	return monster_id in battle_loadout_ids
 
 func _on_placement_mode_toggled(auto_enabled: bool) -> void:
 	auto_placement = auto_enabled
@@ -305,6 +349,10 @@ func _on_placement_mode_toggled(auto_enabled: bool) -> void:
 			status_label.text = "수동 배치: %s 선택됨 · 현재 화면을 터치하세요." % _get_monster_name(selected_monster_type)
 
 func _on_summon_pressed(monster_type: String) -> void:
+	if not _is_monster_equipped(monster_type):
+		status_label.text = "%s은(는) 현재 팀에 편성되지 않았습니다." % MONSTER_CATALOG.get_name(monster_type)
+		return
+
 	if auto_placement:
 		battle.try_summon(monster_type)
 		return
