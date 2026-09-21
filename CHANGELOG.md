@@ -893,3 +893,11 @@
 - 단계 상태 문구를 `Catalog 원본 데이터 확인 중 → Catalog N종 확인 → 컬렉션 N종 표시 완료`로 세분화.
 - 저장/해금/Supabase/전투 코드는 변경하지 않음.
 
+### Team Loadout Persistence Reconnected
+- 정상 동작이 확인된 Catalog-only 팀 편성 UI 위에 편성 저장만 재연결.
+- 팀 탭은 기존처럼 Catalog 기본 편성을 먼저 즉시 렌더링하고, 다음 프레임에 `team_loadout.cfg` 저장값을 복원.
+- 편성 추가/해제 직후 자동 저장 및 성공/실패 상태 문구 표시.
+- TeamLoadoutStore의 typed Array 반환/내부 배열을 일반 Array로 단순화해 Android 호환 경로 보강.
+- MonsterCollection/조각 해금 및 Battle/Main 전투 편성 연결은 아직 제외.
+- 향후 팀 편성 UI의 바둑판형 몬스터 카드 + 도트 이미지 개편을 ROADMAP에 추가.
+

@@ -5,6 +5,7 @@ const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
+const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 
 const BATTLE_SCENE_PATH := "res://src/main/Main.tscn"
 const TEAM_MAX_SLOTS := 3
@@ -296,7 +297,28 @@ func _setup_team_preview() -> void:
 		return
 
 	_refresh_team_preview()
-	team_status_label.text = "컬렉션 %d종 표시 완료 · 목록을 탭해 편성을 변경하세요." % team_catalog_ids.size()
+	team_status_label.text = "컬렉션 %d종 표시 완료 · 저장 편성 확인 중" % team_catalog_ids.size()
+	call_deferred("_restore_saved_team_selection")
+
+func _restore_saved_team_selection() -> void:
+	var fallback_ids: Array = []
+	for raw_id in team_selected_ids:
+		fallback_ids.append(String(raw_id))
+
+	var saved_ids = TEAM_LOADOUT_STORE.load_ids(
+		team_available_ids,
+		fallback_ids
+	)
+	if saved_ids.is_empty():
+		team_status_label.text = "기본 편성 사용 중"
+		return
+
+	team_selected_ids.clear()
+	for raw_id in saved_ids:
+		team_selected_ids.append(String(raw_id))
+
+	_refresh_team_preview()
+	team_status_label.text = "저장된 편성 복원 완료"
 
 func _refresh_team_preview() -> void:
 	_refresh_team_slot(team_slot_1_button, 0)
@@ -363,7 +385,15 @@ func _remove_team_monster(monster_id: String) -> void:
 		return
 
 	team_selected_ids.erase(monster_id)
-	team_status_label.text = "%s 편성 해제" % _team_monster_name(monster_id)
+	var saved := TEAM_LOADOUT_STORE.save_ids(
+		team_selected_ids,
+		team_available_ids
+	)
+	team_status_label.text = (
+		"%s 편성 해제 · 저장 완료" % _team_monster_name(monster_id)
+		if saved
+		else "%s 편성 해제 · 저장 실패" % _team_monster_name(monster_id)
+	)
 	_refresh_team_preview()
 
 func _add_team_monster(monster_id: String) -> void:
@@ -379,7 +409,15 @@ func _add_team_monster(monster_id: String) -> void:
 		return
 
 	team_selected_ids.append(monster_id)
-	team_status_label.text = "%s 편성 추가" % _team_monster_name(monster_id)
+	var saved := TEAM_LOADOUT_STORE.save_ids(
+		team_selected_ids,
+		team_available_ids
+	)
+	team_status_label.text = (
+		"%s 편성 추가 · 저장 완료" % _team_monster_name(monster_id)
+		if saved
+		else "%s 편성 추가 · 저장 실패" % _team_monster_name(monster_id)
+	)
 	_refresh_team_preview()
 
 func _team_collection_line(monster_id: String) -> String:

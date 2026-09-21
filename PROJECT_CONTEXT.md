@@ -825,3 +825,11 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 데이터 원천은 여전히 MonsterCatalog 하나이며 몬스터 ID/이름/역할/비용을 lobby에 복제하지 않음.
 - 실기기 정상화 후 helper 호출 중단 원인을 별도 정리할 수 있으나 현재는 팀 편성 테스트 가능 상태 확보를 우선.
 
+### 팀 편성 저장 재연결 — 안정화 기준
+- Catalog-only 팀 편성 UI가 PC 실기 테스트에서 컬렉션 3종 표시와 추가/해제가 정상 동작함을 확인.
+- 정상 UI를 먼저 렌더링한 뒤 `call_deferred()`로 `TeamLoadoutStore` 저장값만 복원해 저장 문제와 UI 표시 문제를 분리.
+- 편성 추가/해제 성공 즉시 `user://team_loadout.cfg`에 monster_id 목록 저장.
+- TeamLoadoutStore의 public return/internal result 배열은 untyped Array로 완화해 Android Variant 변환 부담을 줄임.
+- MonsterCollection/조각 해금 상태와 Battle 소환 슬롯 연결은 아직 재연결하지 않음.
+- 향후 팀 편성 UI는 **바둑판형 몬스터 카드 + 몬스터 도트 이미지** 구조로 개편 예정. 현재 ItemList는 기능 검증용.
+

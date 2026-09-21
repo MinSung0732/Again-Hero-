@@ -307,6 +307,7 @@
 - [ ] Google 로그인
 - [ ] Kakao 로그인
 - [ ] 로컬 진행도 ↔ Supabase 동기화
-- [ ] 팀 편성 UI Catalog-only 실기기 재검증 (추가/해제)
-- [ ] 팀 편성 저장 재연결
+- [x] 팀 편성 UI Catalog-only 실기기 재검증 (추가/해제)
+- [x] 팀 편성 저장 재연결
 - [ ] MonsterCollection 해금 상태 재연결
+- [ ] 팀 편성 UI 바둑판형 카드 + 몬스터 도트 이미지 표시

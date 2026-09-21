@@ -4,7 +4,7 @@ class_name TeamLoadoutStore
 const SAVE_PATH := "user://team_loadout.cfg"
 const MAX_SLOTS := 3
 
-static func load_ids(valid_ids: Array, fallback_ids: Array) -> Array[String]:
+static func load_ids(valid_ids: Array, fallback_ids: Array) -> Array:
 	var raw_ids: Array = []
 	var config := ConfigFile.new()
 
@@ -31,14 +31,14 @@ static func save_ids(monster_ids: Array, valid_ids: Array) -> bool:
 	for monster_id in normalized:
 		if not encoded.is_empty():
 			encoded += ","
-		encoded += monster_id
+		encoded += String(monster_id)
 
 	var config := ConfigFile.new()
 	config.set_value("team", "monster_ids", encoded)
 	return config.save(SAVE_PATH) == OK
 
-static func _normalize_ids(raw_ids: Array, valid_ids: Array) -> Array[String]:
-	var result: Array[String] = []
+static func _normalize_ids(raw_ids: Array, valid_ids: Array) -> Array:
+	var result: Array = []
 
 	for raw_id in raw_ids:
 		var monster_id := String(raw_id)
