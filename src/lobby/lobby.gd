@@ -860,12 +860,16 @@ func _enter_selected_stage() -> void:
 
 func _rebuild_research_list() -> void:
 	for child in research_list.get_children():
-		child.queue_free()
+		research_list.remove_child(child)
+		child.free()
 
 	var research_points := STAGE_PROGRESS.get_research_points()
 	research_points_label.text = "보유 연구 포인트  %d" % research_points
 
-	for research_id in RESEARCH_CATALOG.get_ordered_ids():
+	var research_ids: Array[String] = RESEARCH_CATALOG.get_ordered_ids()
+	research_status_label.text = "영구 연구 %d종" % research_ids.size()
+
+	for research_id in research_ids:
 		var data := RESEARCH_CATALOG.get_research(research_id)
 		if data.is_empty():
 			continue

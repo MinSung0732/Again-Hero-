@@ -101,7 +101,7 @@ static func get_ordered_ids() -> Array[String]:
 	return result
 
 static func get_cost(research_id: String, current_level: int) -> int:
-	var data := get_research(research_id)
+	var data: Dictionary = RESEARCH.get(research_id, {})
 	if data.is_empty():
 		return -1
 
@@ -109,11 +109,18 @@ static func get_cost(research_id: String, current_level: int) -> int:
 	if current_level < 0 or current_level >= max_level:
 		return -1
 
-	var base_cost := maxf(float(data.get("base_cost", 0)), 0.0)
-	var growth := maxf(float(data.get("cost_growth", 1.0)), 1.0)
+	var base_cost: float = float(data.get("base_cost", 0))
+	var growth: float = float(data.get("cost_growth", 1.0))
 	if base_cost <= 0.0:
 		return -1
+	if growth < 1.0:
+		growth = 1.0
 
-	var raw_cost := base_cost * pow(growth, float(current_level))
-	var rounded_cost := round(raw_cost / COST_ROUNDING) * COST_ROUNDING
-	return maxi(int(rounded_cost), 1)
+	var raw_cost: float = base_cost
+	for _step in range(current_level):
+		raw_cost *= growth
+
+	var rounded_steps: int = int(
+		(raw_cost + COST_ROUNDING - 0.001) / COST_ROUNDING
+	)
+	return maxi(rounded_steps * int(COST_ROUNDING), 1)
