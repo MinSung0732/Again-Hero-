@@ -549,6 +549,7 @@ func _build_recent_status_memory() -> Dictionary:
 	_prune_status_memory()
 
 	var status_weights := {}
+	var status_counts := {}
 	var total_weight := 0.0
 
 	for raw_event in status_effect_events:
@@ -575,6 +576,7 @@ func _build_recent_status_memory() -> Dictionary:
 		status_weights[status_id] = (
 			float(status_weights.get(status_id, 0.0)) + weight
 		)
+		status_counts[status_id] = int(status_counts.get(status_id, 0)) + 1
 		total_weight += weight
 
 	return {
@@ -582,6 +584,7 @@ func _build_recent_status_memory() -> Dictionary:
 		"event_count": status_effect_events.size(),
 		"total_weight": total_weight,
 		"status_weights": status_weights,
+		"status_counts": status_counts,
 	}
 
 func get_recent_status_summary() -> String:
@@ -736,6 +739,7 @@ func _build_ai_context() -> Dictionary:
 		"recent_status_event_count": int(recent_status_memory.get("event_count", 0)),
 		"recent_status_total_weight": float(recent_status_memory.get("total_weight", 0.0)),
 		"recent_status_weights": recent_status_memory.get("status_weights", {}),
+		"recent_status_counts": recent_status_memory.get("status_counts", {}),
 		"recent_status_window_seconds": float(
 			recent_status_memory.get("window_seconds", STATUS_MEMORY_WINDOW)
 		),
