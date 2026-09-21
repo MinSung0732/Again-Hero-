@@ -36,6 +36,8 @@ const INVULNERABILITY_BLINK_INTERVAL := 0.07
 @export var ai_sense_radius: float = 420.0
 @export var kite_distance: float = 210.0
 @export var invulnerability_duration: float = 0.35
+@export var facing_switch_delay: float = 0.14
+@export var facing_min_horizontal_speed: float = 18.0
 
 var hero_id: String = "ranged_rookie"
 var hero_display_name: String = "견습 마도사"
@@ -69,6 +71,8 @@ var move_multiplier: float = 1.0
 var strafe_sign: float = 1.0
 var wander_target: Vector2 = Vector2.ZERO
 var wander_timer: float = 0.0
+var facing_candidate_sign: int = 0
+var facing_candidate_timer: float = 0.0
 
 var ai_memory_clock: float = 0.0
 var offensive_memory_events: Array = []
@@ -102,6 +106,14 @@ func configure_profile(profile: Dictionary) -> void:
 	exp_pickup_radius = float(profile.get("exp_pickup_radius", exp_pickup_radius))
 	ai_sense_radius = float(profile.get("ai_sense_radius", ai_sense_radius))
 	kite_distance = float(profile.get("kite_distance", kite_distance))
+	facing_switch_delay = maxf(
+		float(profile.get("facing_switch_delay", facing_switch_delay)),
+		0.0
+	)
+	facing_min_horizontal_speed = maxf(
+		float(profile.get("facing_min_horizontal_speed", facing_min_horizontal_speed)),
+		0.0
+	)
 	invulnerability_duration = maxf(
 		float(profile.get("invulnerability_duration", invulnerability_duration)),
 		0.0
@@ -185,6 +197,7 @@ func _apply_profile_visual() -> void:
 	hero_sprite.sprite_frames = null
 	hero_sprite.modulate = Color.WHITE
 	hero_sprite.rotation = 0.0
+	hero_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 	if hero_id != "ranged_rookie":
 		return
@@ -245,6 +258,7 @@ func _add_stage1_sheet_animation(
 	for column in range(frame_count):
 		var atlas := AtlasTexture.new()
 		atlas.atlas = sheet
+		atlas.filter_clip = true
 		atlas.region = Rect2(
 			Vector2(column, row) * STAGE1_FRAME_SIZE,
 			STAGE1_FRAME_SIZE
@@ -274,18 +288,18 @@ func _restart_stage1_animation(animation_name: String, speed_scale: float = 1.0)
 	hero_sprite.speed_scale = speed_scale
 	hero_sprite.play(animation_name)
 
-func _update_stage1_pose_visual(_delta: float) -> void:
+func _update_stage1_pose_visual(delta: float) -> void:
 	if hero_id != "ranged_rookie" or not hero_sprite.visible or is_dying:
 		return
-
-	if absf(velocity.x) > 4.0:
-		hero_sprite.flip_h = velocity.x < 0.0
 
 	if hit_pose_timer > 0.0:
 		return
 
+	# 공격 중에는 발사 순간에 잡은 방향을 유지한다.
 	if attack_pose_timer > 0.0:
 		return
+
+	_update_facing_from_horizontal(velocity.x, delta)
 
 	var speed := velocity.length()
 	if speed > 4.0:
@@ -294,6 +308,41 @@ func _update_stage1_pose_visual(_delta: float) -> void:
 		_play_stage1_animation("move", animation_speed)
 	else:
 		_play_stage1_animation("idle", 1.0)
+
+func _update_facing_from_horizontal(horizontal_speed: float, delta: float) -> void:
+	if absf(horizontal_speed) < facing_min_horizontal_speed:
+		facing_candidate_sign = 0
+		facing_candidate_timer = 0.0
+		return
+
+	var desired_sign := -1 if horizontal_speed < 0.0 else 1
+	var current_sign := -1 if hero_sprite.flip_h else 1
+
+	if desired_sign == current_sign:
+		facing_candidate_sign = 0
+		facing_candidate_timer = 0.0
+		return
+
+	if facing_candidate_sign != desired_sign:
+		facing_candidate_sign = desired_sign
+		facing_candidate_timer = facing_switch_delay
+		return
+
+	facing_candidate_timer = maxf(facing_candidate_timer - delta, 0.0)
+	if facing_candidate_timer > 0.0:
+		return
+
+	hero_sprite.flip_h = desired_sign < 0
+	facing_candidate_sign = 0
+	facing_candidate_timer = 0.0
+
+func _face_attack_direction(horizontal_direction: float) -> void:
+	if not hero_sprite.visible or absf(horizontal_direction) <= 0.001:
+		return
+
+	hero_sprite.flip_h = horizontal_direction < 0.0
+	facing_candidate_sign = 0
+	facing_candidate_timer = 0.0
 
 func _apply_camera_limits() -> void:
 	if not is_instance_valid(follow_camera):
@@ -427,6 +476,7 @@ func _fire_projectile(current_target: Node2D) -> void:
 
 	attack_timer = attack_cooldown
 	attack_pose_timer = 0.34
+	_face_attack_direction(shot_direction.x)
 	_restart_stage1_animation("attack")
 
 	var projectile := PROJECTILE_SCENE.instantiate() as Area2D
