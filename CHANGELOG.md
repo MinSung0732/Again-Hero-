@@ -1002,3 +1002,11 @@
 - 발동 순간 노란 원형 플래시 시각 피드백 추가.
 - Battle/Main 소환 및 타이머 로직은 변경하지 않음.
 
+### Bomb Rat Pixel Sprite Sheet Connected
+- 사용자 제공 `assets/art/monsters/bombrat/bombrat_spritesheet.png`를 전투 폭탄쥐 비주얼에 연결.
+- 전용 `bomb_rat_visual.gd`가 통합 시트의 정사각 셀 그리드를 런타임 감지하고 idle / move / attack / hit / death 행을 AnimatedSprite2D로 구성.
+- 5행 시트는 idle/move/attack/hit/death, 4행 시트는 idle/move/attack/death로 처리하며 hit 행이 없으면 기존 피격 tint를 fallback으로 사용.
+- 폭탄쥐 이동/공격/피격/사망 상태를 애니메이션과 연결.
+- 사망 폭발 피해와 died 신호는 기존 시점에 즉시 처리하고, 노드 제거만 death 애니메이션 종료까지 지연.
+- 시트 로딩/레이아웃 감지 실패 시 기존 코드 드로잉 폭탄쥐가 그대로 표시되는 fail-safe 유지.
+- Battle/Main의 타이머, 소환, 메뉴, 편성 로직과 폭탄쥐 전투 수치는 변경하지 않음.

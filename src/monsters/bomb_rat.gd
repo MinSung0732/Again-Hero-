@@ -15,6 +15,7 @@ signal died
 @export var explosion_radius: float = 150.0
 @export var explosion_damage: int = 28
 
+@onready var visual = get_node_or_null("Visual")
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 var current_hp: int
@@ -44,16 +45,23 @@ func _physics_process(delta: float) -> void:
 		hero = get_tree().get_first_node_in_group("hero") as Node2D
 		if not is_instance_valid(hero):
 			velocity = Vector2.ZERO
+			_visual_call(&"play_locomotion", [false])
 			return
+
+	var direction_to_hero := global_position.direction_to(hero.global_position)
+	_visual_call(&"set_facing_direction", [direction_to_hero.x])
 
 	var distance := global_position.distance_to(hero.global_position)
 	if distance > attack_range:
-		velocity = global_position.direction_to(hero.global_position) * move_speed
+		velocity = direction_to_hero * move_speed
+		_visual_call(&"play_locomotion", [true])
 		move_and_slide()
 	else:
 		velocity = Vector2.ZERO
+		_visual_call(&"play_locomotion", [false])
 		if attack_timer <= 0.0:
 			attack_timer = attack_cooldown
+			_visual_call(&"play_attack")
 			if hero.has_method("take_damage"):
 				hero.call("take_damage", attack_damage)
 
@@ -66,6 +74,7 @@ func take_damage(amount: int) -> void:
 	var applied_damage := previous_hp - current_hp
 	DAMAGE_NUMBERS.show(self, applied_damage)
 	hit_flash_timer = 0.10
+	_visual_call(&"play_hit")
 	queue_redraw()
 
 	if current_hp <= 0:
@@ -81,6 +90,22 @@ func _begin_death() -> void:
 
 	_trigger_death_explosion()
 	died.emit()
+
+	if (
+		is_instance_valid(visual)
+		and visual.has_signal("death_animation_finished")
+		and visual.has_method("play_death")
+	):
+		visual.connect(
+			"death_animation_finished",
+			Callable(self, "_on_death_animation_finished"),
+			Object.CONNECT_ONE_SHOT
+		)
+		visual.call("play_death")
+	else:
+		queue_free()
+
+func _on_death_animation_finished() -> void:
 	queue_free()
 
 func _trigger_death_explosion() -> void:
@@ -91,24 +116,36 @@ func _trigger_death_explosion() -> void:
 	if hero.has_method("take_damage"):
 		hero.call("take_damage", explosion_damage)
 
+func _visual_call(method_name: StringName, args: Array = []) -> void:
+	if not is_instance_valid(visual):
+		return
+	if not visual.has_method(method_name):
+		return
+	visual.callv(method_name, args)
+
 func _draw() -> void:
-	var body_color := Color(0.54, 0.43, 0.34)
-	if hit_flash_timer > 0.0:
-		body_color = Color.WHITE
+	var visual_ready := false
+	if is_instance_valid(visual) and visual.has_method("is_visual_ready"):
+		visual_ready = bool(visual.call("is_visual_ready"))
 
-	draw_circle(Vector2(-3, 3), 22.0, body_color)
-	draw_circle(Vector2(17, -2), 14.0, body_color)
-	draw_circle(Vector2(22, -6), 3.0, Color(0.9, 0.35, 0.25))
-	draw_line(Vector2(-24, 6), Vector2(-40, 16), body_color, 5.0)
+	if not visual_ready:
+		var body_color := Color(0.54, 0.43, 0.34)
+		if hit_flash_timer > 0.0:
+			body_color = Color.WHITE
 
-	draw_circle(Vector2(-7, -18), 12.0, Color(0.16, 0.16, 0.18))
-	draw_line(
-		Vector2(-7, -30),
-		Vector2(3, -42),
-		Color(0.92, 0.62, 0.22),
-		4.0
-	)
-	draw_circle(Vector2(5, -44), 4.0, Color(1.0, 0.4, 0.16))
+		draw_circle(Vector2(-3, 3), 22.0, body_color)
+		draw_circle(Vector2(17, -2), 14.0, body_color)
+		draw_circle(Vector2(22, -6), 3.0, Color(0.9, 0.35, 0.25))
+		draw_line(Vector2(-24, 6), Vector2(-40, 16), body_color, 5.0)
+
+		draw_circle(Vector2(-7, -18), 12.0, Color(0.16, 0.16, 0.18))
+		draw_line(
+			Vector2(-7, -30),
+			Vector2(3, -42),
+			Color(0.92, 0.62, 0.22),
+			4.0
+		)
+		draw_circle(Vector2(5, -44), 4.0, Color(1.0, 0.4, 0.16))
 
 	if dying:
 		return
