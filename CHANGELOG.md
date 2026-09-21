@@ -820,3 +820,19 @@
 - 편성 요약 문자열도 PackedStringArray 없이 일반 String 누적으로 단순화.
 - 저장 모듈, Lobby 씬, Battle/Main 전투 코드는 변경하지 않음.
 
+### Data-driven Monster Collection + Team Loadout UI
+- 기존 Slime / Spider / Orc 고정 팀 편성 버튼 제거.
+- MonsterCatalog에 명시적 ORDER와 `default_unlocked`, `shards_required` 데이터 추가.
+- 신규 `monster_collection_store.gd`:
+  - 몬스터별 해금 상태 / 조각 수 저장
+  - 현재 해금 몬스터 ID 조회
+  - 조각 추가 및 요구량 충족 시 자동 해금
+- 팀 편성 UI를 MonsterCatalog 순회 방식으로 재작성:
+  - 최대 3개 편성 슬롯 동적 생성
+  - 해금 몬스터 카드 동적 생성
+  - 미해금 몬스터는 조각 진행도와 함께 잠금 표시
+  - 슬롯 또는 컬렉션 카드 탭으로 편성 추가/해제
+- TeamLoadoutStore의 public Array 인자를 일반 Array로 완화해 JSON/동적 ID 목록과의 변환 의존을 줄임.
+- 향후 상점 뽑기에서 조각 지급 → 자동 해금 → 팀 편성 반영으로 바로 연결 가능한 구조 확보.
+- Battle / Main 전투 코드는 변경하지 않음.
+

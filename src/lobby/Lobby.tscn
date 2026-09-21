@@ -128,8 +128,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 18
-alignment = 1
+theme_override_constants/separation = 16
 
 [node name="Title" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
@@ -141,8 +140,8 @@ horizontal_alignment = 1
 [node name="Guide" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
-theme_override_font_sizes/font_size = 20
-text = "선택한 편성은 자동 저장됩니다. 아직 전투 소환 슬롯에는 적용되지 않습니다."
+theme_override_font_sizes/font_size = 19
+text = "해금한 몬스터 중 최대 3종을 편성합니다. 편성은 자동 저장됩니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
@@ -150,82 +149,36 @@ autowrap_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
 theme_override_font_sizes/font_size = 22
-text = "저장된 편성 3 / 3"
+text = "편성 불러오는 중…"
 horizontal_alignment = 1
-autowrap_mode = 2
 
-[node name="SlotRow" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
-custom_minimum_size = Vector2(0, 220)
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="Slot1Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+[node name="SlotGrid" type="GridContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 custom_minimum_size = Vector2(0, 210)
 layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-mouse_filter = 0
-theme_override_font_sizes/font_size = 21
-text = "1\n슬라임\n물량\n\n편성 해제"
-
-[node name="Slot2Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
-custom_minimum_size = Vector2(0, 210)
-layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-mouse_filter = 0
-theme_override_font_sizes/font_size = 21
-text = "2\n거미\n제어\n\n편성 해제"
-
-[node name="Slot3Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
-custom_minimum_size = Vector2(0, 210)
-layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-mouse_filter = 0
-theme_override_font_sizes/font_size = 21
-text = "3\n오크\n탱커\n\n편성 해제"
+columns = 3
+theme_override_constants/h_separation = 14
 
 [node name="ListTitle" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "보유 몬스터"
+text = "몬스터 컬렉션"
 horizontal_alignment = 1
 
-[node name="MonsterList" type="VBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+[node name="MonsterScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
-theme_override_constants/separation = 14
+size_flags_vertical = 3
 
-[node name="Monster1Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList"]
-focus_mode = 0
-mouse_filter = 0
-custom_minimum_size = Vector2(0, 126)
+[node name="MonsterList" type="VBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterScroll"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 21
-text = "슬라임"
-
-[node name="Monster2Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList"]
-focus_mode = 0
-mouse_filter = 0
-custom_minimum_size = Vector2(0, 126)
-layout_mode = 2
-theme_override_font_sizes/font_size = 21
-text = "거미"
-
-[node name="Monster3Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList"]
-focus_mode = 0
-mouse_filter = 0
-custom_minimum_size = Vector2(0, 126)
-layout_mode = 2
-theme_override_font_sizes/font_size = 21
-text = "오크"
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
 
 [node name="Status" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
-custom_minimum_size = Vector2(0, 78)
+custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
 theme_override_font_sizes/font_size = 19
-text = "위 편성 슬롯 자체를 누르면 해제됩니다. 아래 보유 몬스터를 누르면 다시 추가됩니다."
+text = "편성 슬롯이나 컬렉션 카드를 탭해 편성을 변경하세요."
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
@@ -536,9 +489,4 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 21
 text = "기타"
 
-[connection signal="pressed" from="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot1Button" to="." method="_on_team_slot_1_pressed"]
-[connection signal="pressed" from="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot2Button" to="." method="_on_team_slot_2_pressed"]
-[connection signal="pressed" from="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot3Button" to="." method="_on_team_slot_3_pressed"]
-[connection signal="pressed" from="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList/Monster1Button" to="." method="_on_team_monster_1_pressed"]
-[connection signal="pressed" from="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList/Monster2Button" to="." method="_on_team_monster_2_pressed"]
-[connection signal="pressed" from="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList/Monster3Button" to="." method="_on_team_monster_3_pressed"]
+

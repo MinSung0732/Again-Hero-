@@ -4,10 +4,7 @@ class_name TeamLoadoutStore
 const SAVE_PATH := "user://team_loadout.json"
 const MAX_SLOTS := 3
 
-static func load_ids(
-	valid_ids: Array[String],
-	fallback_ids: Array[String]
-) -> Array[String]:
+static func load_ids(valid_ids: Array, fallback_ids: Array) -> Array[String]:
 	var saved_value: Variant = null
 
 	if FileAccess.file_exists(SAVE_PATH):
@@ -21,10 +18,7 @@ static func load_ids(
 
 	return normalized
 
-static func save_ids(
-	monster_ids: Array[String],
-	valid_ids: Array[String]
-) -> bool:
+static func save_ids(monster_ids: Array, valid_ids: Array) -> bool:
 	var normalized := _normalize_ids(monster_ids, valid_ids)
 	if normalized.is_empty():
 		return false
@@ -36,10 +30,7 @@ static func save_ids(
 	file.store_string(JSON.stringify(normalized))
 	return true
 
-static func _normalize_ids(
-	raw_value: Variant,
-	valid_ids: Array[String]
-) -> Array[String]:
+static func _normalize_ids(raw_value: Variant, valid_ids: Array) -> Array[String]:
 	var result: Array[String] = []
 	if not (raw_value is Array):
 		return result

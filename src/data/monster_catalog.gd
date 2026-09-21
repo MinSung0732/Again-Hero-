@@ -1,12 +1,16 @@
 extends RefCounted
 class_name MonsterCatalog
 
+const ORDER := ["slime", "spider", "orc"]
+
 const MONSTERS := {
 	"slime": {
 		"id": "slime",
 		"name": "슬라임",
 		"role": "swarm",
 		"base_cost": 3.0,
+		"default_unlocked": true,
+		"shards_required": 20,
 		"scene": preload("res://src/monsters/Slime.tscn"),
 	},
 	"spider": {
@@ -14,6 +18,8 @@ const MONSTERS := {
 		"name": "거미",
 		"role": "controller",
 		"base_cost": 7.0,
+		"default_unlocked": true,
+		"shards_required": 30,
 		"scene": preload("res://src/monsters/Spider.tscn"),
 	},
 	"orc": {
@@ -21,6 +27,8 @@ const MONSTERS := {
 		"name": "오크",
 		"role": "tank",
 		"base_cost": 18.0,
+		"default_unlocked": true,
+		"shards_required": 40,
 		"scene": preload("res://src/monsters/Orc.tscn"),
 	},
 }
@@ -57,6 +65,15 @@ static func get_role_label(role_id: String) -> String:
 
 static func get_ids() -> Array[String]:
 	var result: Array[String] = []
-	for monster_id in MONSTERS.keys():
-		result.append(String(monster_id))
+	for monster_id in ORDER:
+		if MONSTERS.has(monster_id):
+			result.append(String(monster_id))
 	return result
+
+static func is_default_unlocked(monster_id: String) -> bool:
+	var data: Dictionary = MONSTERS.get(monster_id, {})
+	return bool(data.get("default_unlocked", false))
+
+static func get_shards_required(monster_id: String) -> int:
+	var data: Dictionary = MONSTERS.get(monster_id, {})
+	return maxi(int(data.get("shards_required", 1)), 1)

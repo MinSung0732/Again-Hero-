@@ -763,3 +763,15 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - **Battle / Main 전투 코드는 아직 저장값을 읽지 않음.** 따라서 전투 소환/타이머/메뉴 동작에는 영향이 없어야 함.
 - Step 2 실기기 검증 후에만 Step 3에서 전투 소환 슬롯 연결 예정.
 
+### 몬스터 컬렉션 / 조각 해금 기반 팀 편성 구조
+- 향후 상점 뽑기에서 몬스터 조각을 획득하고 일정 수량에 도달하면 몬스터가 해금되는 구조를 전제로 팀 편성을 데이터 기반으로 재설계.
+- `MonsterCatalog`가 표시 이름 / 역할 / 기본 비용뿐 아니라 `default_unlocked`, `shards_required`를 보유.
+- 신규 `MonsterCollectionStore`가 `user://monster_collection.json`에 몬스터별 `unlocked` / `shards` 상태를 저장.
+- 현재 Slime / Spider / Orc는 프로토타입 시작 몬스터이므로 기본 해금 상태.
+- `MonsterCollectionStore.add_shards()`는 향후 상점 보상에서 호출할 수 있으며 요구 조각 이상이면 자동 해금.
+- 팀 편성 UI는 Slime/Spider/Orc 고정 버튼을 제거하고 MonsterCatalog 전체를 순회해 카드 동적 생성.
+- 해금 몬스터는 편성 토글 가능, 미해금 몬스터는 `조각 현재 / 필요량`을 표시한 잠금 카드로 노출.
+- 편성 슬롯도 저장된 monster_id 목록을 기반으로 동적 생성하며 최대 3종 / 최소 1종 규칙 유지.
+- 팀 탭에 들어올 때 Collection 상태를 다시 읽으므로 향후 상점에서 해금한 몬스터가 즉시 편성 목록에 반영 가능.
+- 이 단계에서는 Battle/Main 전투 소환 슬롯과의 연결은 하지 않음.
+
