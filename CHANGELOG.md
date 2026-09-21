@@ -1372,3 +1372,10 @@
 - 돌연변이 모달은 기존 `mutation_selection_active`만으로 전투/타이머를 정지.
 - UI가 모달 오픈 시 Stage 이벤트 데이터를 보관하고, 선택 시 `resolve_mutation_from_ui()`로 직접 전달.
 - 선택 함수는 내부 후보 상태와 재검증하지 않고 카탈로그 유효 monster_id만 확인해 즉시 선택 확정 후 deferred 스폰.
+
+### Mutation Choice Payload Fix
+- 돌연변이 버튼 클릭은 되지만 항상 선택 실패 메시지가 나오던 문제 수정.
+- Main UI가 Stage 이벤트 Dictionary를 별도로 보관/전달하던 경로 제거.
+- UI는 선택한 `monster_id`만 Battle에 전달하고, Battle은 자신이 이미 보관 중인 `pending_mutation_event`를 직접 사용.
+- pending event가 비정상적으로 비어 있어도 1차 돌연변이 기본 배율로 fallback하여 선택 자체가 막히지 않도록 보호.
+- 시간/지휘력/일반 소환이 정상 동작하는 현재 Battle 루프는 변경하지 않음.

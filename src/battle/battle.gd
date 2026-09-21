@@ -1287,16 +1287,21 @@ func _open_mutation_choice(event: Dictionary) -> void:
 		mutation_candidate_ids.duplicate()
 	)
 
-func resolve_mutation_from_ui(
-	event: Dictionary,
-	monster_id: String
-) -> bool:
-	if event.is_empty():
-		return false
+func resolve_mutation_from_ui(monster_id: String) -> bool:
 	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
 		return false
 
-	var event_copy: Dictionary = event.duplicate(true)
+	var event_copy: Dictionary = pending_mutation_event.duplicate(true)
+	if event_copy.is_empty():
+		event_copy = {
+			"type": "elite",
+			"hp_multiplier": 2.2,
+			"damage_multiplier": 1.45,
+			"speed_multiplier": 1.10,
+			"exp_multiplier": 1.5,
+			"visual_scale": 1.15,
+		}
+
 	var event_type := String(event_copy.get("type", "elite"))
 	var prefix := "돌연변이"
 	if event_type == "miniboss":
