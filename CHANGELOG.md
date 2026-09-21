@@ -727,3 +727,16 @@
 - 상점 / 팀 편성 / 기타 탭은 후속 기능 구현을 위한 placeholder 구성.
 - 전투 결과 화면에서 메인 로비로 복귀 가능하도록 버튼 동작 변경.
 
+### Battle Pause Menu + Lobby Role Separation
+- 전투 HUD의 기존 Stage 선택 / 마왕 연구 팝업을 제거.
+- 상단 `스테이지` 버튼을 `메뉴`로 변경.
+- 신규 전투 일시정지 메뉴 추가:
+  - 계속하기
+  - 같은 Stage 다시 도전
+  - 로비로 나가기
+  - 현재 Stage / 상대 Hero / 남은 시간 표시
+- 메뉴가 열린 동안 기존 `Battle.set_external_pause()` 경로로 전투 엔티티와 Run timer를 정지.
+- Android 뒤로가기(`ui_cancel`)로 메뉴를 열거나 닫을 수 있도록 입력 처리 추가.
+- Stage 선택 / 영구 연구는 메인 로비 전용으로 정리.
+- Stage 1 대표 Hero 초상화 PNG가 저장소에 실제 반영된 상태를 ROADMAP에 완료 처리.
+

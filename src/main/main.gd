@@ -1,9 +1,5 @@
 extends Control
 
-const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
-const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
-const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
-const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
 
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
@@ -31,22 +27,12 @@ const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
 @onready var spider_button: Button = $HUD/BottomBar/SummonButtons/SpiderButton
 @onready var orc_button: Button = $HUD/BottomBar/SummonButtons/OrcButton
 
-@onready var stage_select_panel: PanelContainer = $HUD/StageSelectPanel
-@onready var stage_research_label: Label = $HUD/StageSelectPanel/Margin/VBox/ResearchPoints
-@onready var research_menu_button: Button = $HUD/StageSelectPanel/Margin/VBox/ResearchButton
-@onready var stage_1_button: Button = $HUD/StageSelectPanel/Margin/VBox/Stage1Button
-@onready var stage_2_button: Button = $HUD/StageSelectPanel/Margin/VBox/Stage2Button
-@onready var stage_close_button: Button = $HUD/StageSelectPanel/Margin/VBox/CloseButton
-
-@onready var research_panel: PanelContainer = $HUD/ResearchPanel
-@onready var research_points_label: Label = $HUD/ResearchPanel/Margin/VBox/Points
-@onready var research_status_label: Label = $HUD/ResearchPanel/Margin/VBox/Status
-@onready var research_close_button: Button = $HUD/ResearchPanel/Margin/VBox/CloseButton
-@onready var research_mana_reservoir: Button = $HUD/ResearchPanel/Margin/VBox/ManaReservoir
-@onready var research_mana_cycle: Button = $HUD/ResearchPanel/Margin/VBox/ManaCycle
-@onready var research_slime_logistics: Button = $HUD/ResearchPanel/Margin/VBox/SlimeLogistics
-@onready var research_tactical_notebook: Button = $HUD/ResearchPanel/Margin/VBox/TacticalNotebook
-@onready var research_rapid_experiment: Button = $HUD/ResearchPanel/Margin/VBox/RapidExperiment
+@onready var pause_menu: Control = $HUD/PauseMenu
+@onready var pause_stage_label: Label = $HUD/PauseMenu/MenuPanel/Margin/VBox/StageLabel
+@onready var pause_time_label: Label = $HUD/PauseMenu/MenuPanel/Margin/VBox/TimeLabel
+@onready var pause_resume_button: Button = $HUD/PauseMenu/MenuPanel/Margin/VBox/ResumeButton
+@onready var pause_restart_button: Button = $HUD/PauseMenu/MenuPanel/Margin/VBox/RestartButton
+@onready var pause_lobby_button: Button = $HUD/PauseMenu/MenuPanel/Margin/VBox/LobbyButton
 
 @onready var demon_augment_panel: PanelContainer = $HUD/DemonAugmentPanel
 @onready var demon_augment_title: Label = $HUD/DemonAugmentPanel/Margin/VBox/Title
@@ -67,7 +53,6 @@ const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
 var auto_placement: bool = true
 var selected_monster_type: String = ""
 var current_demon_candidates: Array = []
-var return_to_result_after_stage_menu: bool = false
 var debug_refresh_timer: float = 0.0
 
 func _ready() -> void:
@@ -87,17 +72,9 @@ func _ready() -> void:
 	battle.battle_finished.connect(_on_battle_finished)
 
 	stage_menu_button.pressed.connect(_on_stage_menu_pressed)
-	stage_1_button.pressed.connect(_on_stage_choice_pressed.bind("stage_1"))
-	stage_2_button.pressed.connect(_on_stage_choice_pressed.bind("stage_2"))
-	research_menu_button.pressed.connect(_on_research_menu_pressed)
-	stage_close_button.pressed.connect(_on_stage_menu_close_pressed)
-
-	research_mana_reservoir.pressed.connect(_on_research_purchase_pressed.bind("mana_reservoir"))
-	research_mana_cycle.pressed.connect(_on_research_purchase_pressed.bind("mana_cycle"))
-	research_slime_logistics.pressed.connect(_on_research_purchase_pressed.bind("slime_logistics"))
-	research_tactical_notebook.pressed.connect(_on_research_purchase_pressed.bind("tactical_notebook"))
-	research_rapid_experiment.pressed.connect(_on_research_purchase_pressed.bind("rapid_experiment"))
-	research_close_button.pressed.connect(_on_research_close_pressed)
+	pause_resume_button.pressed.connect(_close_pause_menu)
+	pause_restart_button.pressed.connect(_on_pause_restart_pressed)
+	pause_lobby_button.pressed.connect(_on_lobby_pressed)
 
 	placement_toggle.toggled.connect(_on_placement_mode_toggled)
 	slime_button.pressed.connect(_on_summon_pressed.bind("slime"))
@@ -163,10 +140,17 @@ func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 	]
 
 func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		if pause_menu.visible:
+			_close_pause_menu()
+		elif not demon_augment_panel.visible and not result_panel.visible:
+			_open_pause_menu()
+		get_viewport().set_input_as_handled()
+		return
+
 	if (
 		result_panel.visible
-		or stage_select_panel.visible
-		or research_panel.visible
+		or pause_menu.visible
 		or demon_augment_panel.visible
 		or auto_placement
 		or selected_monster_type.is_empty()
@@ -227,175 +211,40 @@ func _input(event: InputEvent) -> void:
 func _on_stage_menu_pressed() -> void:
 	if demon_augment_panel.visible or result_panel.visible:
 		return
-	_open_stage_menu(false)
 
-func _on_result_stage_menu_pressed() -> void:
-	_open_stage_menu(true)
-
-func _open_stage_menu(from_result: bool) -> void:
-	return_to_result_after_stage_menu = from_result
-	_refresh_stage_menu()
-
-	if from_result:
-		result_panel.hide()
+	if pause_menu.visible:
+		_close_pause_menu()
 	else:
-		battle.set_external_pause(true)
+		_open_pause_menu()
 
-	stage_select_panel.show()
-
-func _refresh_stage_menu() -> void:
-	var progress: Dictionary = STAGE_PROGRESS.load_state()
-	var research_points: int = int(progress.get("research_points", 0))
-	stage_research_label.text = "연구 포인트 %d" % research_points
-
-	_configure_stage_button(stage_1_button, "stage_1")
-	_configure_stage_button(stage_2_button, "stage_2")
-
-func _on_research_menu_pressed() -> void:
-	stage_select_panel.hide()
-	research_status_label.text = "연구 항목을 선택하세요."
-	_refresh_research_menu()
-	research_panel.show()
-
-func _refresh_research_menu() -> void:
-	var research_points := STAGE_PROGRESS.get_research_points()
-	research_points_label.text = "연구 포인트 %d" % research_points
-
-	_configure_research_button(research_mana_reservoir, "mana_reservoir", research_points)
-	_configure_research_button(research_mana_cycle, "mana_cycle", research_points)
-	_configure_research_button(research_slime_logistics, "slime_logistics", research_points)
-	_configure_research_button(research_tactical_notebook, "tactical_notebook", research_points)
-	_configure_research_button(research_rapid_experiment, "rapid_experiment", research_points)
-
-func _configure_research_button(
-	button: Button,
-	research_id: String,
-	research_points: int
-) -> void:
-	var data: Dictionary = RESEARCH_CATALOG.get_research(research_id)
-	if data.is_empty():
-		button.disabled = true
-		button.text = "미구현 연구"
+func _open_pause_menu() -> void:
+	if demon_augment_panel.visible or result_panel.visible:
 		return
 
-	var level := STAGE_PROGRESS.get_research_level(research_id)
-	var max_level := int(data.get("max_level", 0))
-	var name := String(data.get("name", research_id))
-	var description := String(data.get("description", ""))
-
-	if level >= max_level:
-		button.disabled = true
-		button.text = "%s · Lv.%d / %d\n%s\n연구 완료" % [
-			name,
-			level,
-			max_level,
-			description,
-		]
-		return
-
-	var cost := RESEARCH_CATALOG.get_cost(research_id, level)
-	button.disabled = research_points < cost
-	button.text = "%s · Lv.%d / %d\n%s\n비용: 연구 포인트 %d" % [
-		name,
-		level,
-		max_level,
-		description,
-		cost,
+	var snapshot: Dictionary = battle.get_snapshot()
+	pause_stage_label.text = "Stage %d · %s\n상대: %s" % [
+		int(snapshot.get("stage_number", 1)),
+		String(snapshot.get("stage_name", "스테이지")),
+		String(snapshot.get("hero_name", "용사")),
 	]
-
-func _on_research_purchase_pressed(research_id: String) -> void:
-	var data: Dictionary = RESEARCH_CATALOG.get_research(research_id)
-	if data.is_empty():
-		return
-
-	var current_level := STAGE_PROGRESS.get_research_level(research_id)
-	var max_level := int(data.get("max_level", 0))
-	var cost := RESEARCH_CATALOG.get_cost(research_id, current_level)
-	if cost < 0:
-		return
-
-	var result: Dictionary = STAGE_PROGRESS.try_purchase_research(
-		research_id,
-		cost,
-		max_level
+	pause_time_label.text = "남은 시간 %s" % _format_run_time(
+		float(snapshot.get("run_remaining_seconds", 0.0))
 	)
 
-	if bool(result.get("success", false)):
-		research_status_label.text = "%s Lv.%d 연구 완료 · 다음 Run부터 적용" % [
-			String(data.get("name", research_id)),
-			int(result.get("level", current_level + 1)),
-		]
-	else:
-		match String(result.get("reason", "")):
-			"not_enough_points":
-				research_status_label.text = "연구 포인트가 부족합니다."
-			"max_level":
-				research_status_label.text = "이미 최대 레벨 연구입니다."
-			_:
-				research_status_label.text = "연구 구매에 실패했습니다."
+	battle.set_external_pause(true)
+	pause_menu.show()
 
-	_refresh_research_menu()
-
-func _on_research_close_pressed() -> void:
-	research_panel.hide()
-	_refresh_stage_menu()
-	stage_select_panel.show()
-
-func _configure_stage_button(button: Button, stage_id: String) -> void:
-	var stage: Dictionary = STAGE_CATALOG.get_stage(stage_id)
-	if stage.is_empty():
-		button.disabled = true
-		button.text = "미구현 스테이지"
+func _close_pause_menu() -> void:
+	if not pause_menu.visible:
 		return
 
-	var stage_number: int = int(stage.get("number", 0))
-	var unlocked: bool = STAGE_PROGRESS.is_stage_unlocked(stage_number)
-	var cleared: bool = STAGE_PROGRESS.is_stage_cleared(stage_id)
-	var reward_claimed: bool = STAGE_PROGRESS.is_reward_claimed(stage_id)
-	var reward: int = int(stage.get("first_clear_reward", 0))
-	var hero_profile: Dictionary = HERO_PROFILES.get_profile(
-		String(stage.get("hero_id", ""))
-	)
-	var hero_name: String = String(hero_profile.get("display_name", "용사"))
-
-	var status_text := "해금" if unlocked else "잠김"
-	if cleared:
-		status_text = "클리어 완료"
-
-	var reward_text := "최초 보상: 연구 포인트 +%d" % reward
-	if reward_claimed:
-		reward_text = "최초 보상 획득 완료"
-
-	button.disabled = not unlocked
-	button.text = "Stage %d · %s\n%s · %s\n%s" % [
-		stage_number,
-		String(stage.get("display_name", "스테이지")),
-		hero_name,
-		status_text,
-		reward_text,
-	]
-
-func _on_stage_choice_pressed(stage_id: String) -> void:
-	var stage: Dictionary = STAGE_CATALOG.get_stage(stage_id)
-	if stage.is_empty():
-		return
-
-	if not STAGE_PROGRESS.is_stage_unlocked(int(stage.get("number", 999))):
-		return
-
-	STAGE_PROGRESS.set_current_stage(stage_id)
-	get_tree().reload_current_scene()
-
-func _on_stage_menu_close_pressed() -> void:
-	research_panel.hide()
-	stage_select_panel.hide()
-
-	if return_to_result_after_stage_menu:
-		result_panel.show()
-	else:
+	pause_menu.hide()
+	if not result_panel.visible:
 		battle.set_external_pause(false)
 
-	return_to_result_after_stage_menu = false
+func _on_pause_restart_pressed() -> void:
+	pause_menu.hide()
+	get_tree().reload_current_scene()
 
 func _on_run_time_changed(_elapsed_seconds: float, remaining_seconds: float) -> void:
 	run_timer_label.text = "남은 시간 %s" % _format_run_time(remaining_seconds)
@@ -552,8 +401,7 @@ func _on_hero_augment_selected(level: int, candidates: Array, chosen_name: Strin
 	]
 
 func _on_battle_finished(message: String, player_won: bool) -> void:
-	stage_select_panel.hide()
-	research_panel.hide()
+	pause_menu.hide()
 	demon_augment_panel.hide()
 	slime_button.disabled = true
 	spider_button.disabled = true
