@@ -1302,21 +1302,6 @@ func resolve_mutation_choice(
 	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
 		return false
 
-	var is_valid_candidate := false
-	for raw_id in allowed_monster_ids:
-		if String(raw_id) == monster_id:
-			is_valid_candidate = true
-			break
-
-	if not is_valid_candidate:
-		for raw_id in mutation_candidate_ids:
-			if String(raw_id) == monster_id:
-				is_valid_candidate = true
-				break
-
-	if not is_valid_candidate:
-		return false
-
 	var event_type := String(event.get("type", "elite"))
 	var prefix := "돌연변이"
 	if event_type == "miniboss":

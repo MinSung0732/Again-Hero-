@@ -1351,3 +1351,10 @@
 - 모달 표시 중 `external_pause`를 함께 사용해 Run 타이머/전투 정지를 UI 상태와 명시적으로 동기화.
 - 선택 성공 후 모달/후보/이벤트 데이터를 정리하고 pause를 해제한 뒤 deferred 스폰.
 - 기존 `choose_mutation()`은 호환용 래퍼로 유지.
+
+### Mutation Pause Regression Hotfix
+- 돌연변이 상태 동기화 수정 이후 전투 시작부터 시간/지휘력/소환 UI가 멈추던 회귀 수정.
+- 돌연변이 모달에서 `external_pause`를 별도로 걸던 이중 pause 구조 제거.
+- 돌연변이 선택 중 정지는 Battle의 기존 `mutation_selection_active`만 사용.
+- 모달에 이미 표시된 monster_id는 카탈로그 존재 여부만 확인하고 직접 선택 확정하도록 단순화.
+- Main 초기화 완료 시 Battle external pause를 false로 명시해 정상 Run 시작 상태 보장.

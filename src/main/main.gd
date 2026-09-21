@@ -198,6 +198,7 @@ func _ready() -> void:
 	debug_balance_label.text = String(snapshot.get("debug_balance_summary", "[DEBUG]"))
 	placement_toggle.button_pressed = true
 	_on_placement_mode_toggled(true)
+	battle.set_external_pause(false)
 
 	print("Again, Hero? stage/camera prototype loaded.")
 	print("Finite world camera + persistent stage progression enabled.")
@@ -341,7 +342,6 @@ func _on_mutation_choice_ready(
 ) -> void:
 	current_mutation_candidates = candidates.duplicate()
 	current_mutation_event = event_data.duplicate(true)
-	battle.set_external_pause(true)
 	mutation_panel.show()
 
 	var event_type := String(event_data.get("type", "elite"))
@@ -386,7 +386,6 @@ func _on_mutation_choice_pressed(index: int) -> void:
 	mutation_panel.hide()
 	current_mutation_candidates.clear()
 	current_mutation_event.clear()
-	battle.set_external_pause(false)
 
 func _on_mutation_selected(
 	event_type: String,
