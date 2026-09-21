@@ -13,6 +13,10 @@ const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const STATUS_EFFECT_CATALOG := preload("res://src/data/status_effect_catalog.gd")
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const STAGE1_FRAME_SIZE := Vector2(64, 64)
+const STAGE1_ATTACK_ROW := 2
+const STAGE1_ATTACK_FRAME_COUNT := 6
+const STAGE1_ATTACK_STRAY_MAX_PIXELS := 6
+const STAGE1_ATTACK_STRAY_LEFT_GAP := 3
 
 const APPROACH_DISTANCE_RATIO := 0.86
 const FIELD_MARGIN := 72.0
@@ -232,22 +236,154 @@ func _apply_profile_visual() -> void:
 	hero_sprite.play("idle")
 
 func _load_stage1_sheet_texture() -> Texture2D:
-	# Prefer Godot's imported texture when available.
+	# Load the raw PNG first so the Stage 1 attack-row cleanup is applied
+	# identically on desktop and Android Editor, independent of import cache.
+	if FileAccess.file_exists(sprite_sheet_path):
+		var image := Image.new()
+		var error := image.load(sprite_sheet_path)
+		if error == OK:
+			_cleanup_stage1_attack_stray_pixels(image)
+			return ImageTexture.create_from_image(image)
+
+	# Fallback for environments where only the imported resource is visible.
 	if ResourceLoader.exists(sprite_sheet_path):
 		var imported_texture = load(sprite_sheet_path)
 		if imported_texture is Texture2D:
 			return imported_texture
 
-	# Android Editor can have the raw PNG on shared storage before the
-	# importer/cache notices it. Load the PNG bytes directly from res://
-	# so the Hero does not fall back to the placeholder in that case.
-	if FileAccess.file_exists(sprite_sheet_path):
-		var image := Image.new()
-		var error := image.load(sprite_sheet_path)
-		if error == OK:
-			return ImageTexture.create_from_image(image)
-
 	return null
+
+func _cleanup_stage1_attack_stray_pixels(image: Image) -> void:
+	var frame_width := int(STAGE1_FRAME_SIZE.x)
+	var frame_height := int(STAGE1_FRAME_SIZE.y)
+	var required_width := frame_width * STAGE1_ATTACK_FRAME_COUNT
+	var required_height := frame_height * (STAGE1_ATTACK_ROW + 1)
+
+	if image.get_width() < required_width or image.get_height() < required_height:
+		return
+
+	for column in range(STAGE1_ATTACK_FRAME_COUNT):
+		_cleanup_stage1_attack_frame(
+			image,
+			Vector2i(
+				column * frame_width,
+				STAGE1_ATTACK_ROW * frame_height
+			)
+		)
+
+func _cleanup_stage1_attack_frame(image: Image, frame_origin: Vector2i) -> void:
+	var frame_width := int(STAGE1_FRAME_SIZE.x)
+	var frame_height := int(STAGE1_FRAME_SIZE.y)
+	var pixel_count := frame_width * frame_height
+	var visited := PackedByteArray()
+	visited.resize(pixel_count)
+	var components: Array = []
+	var neighbor_offsets := [
+		Vector2i(-1, -1),
+		Vector2i(0, -1),
+		Vector2i(1, -1),
+		Vector2i(-1, 0),
+		Vector2i(1, 0),
+		Vector2i(-1, 1),
+		Vector2i(0, 1),
+		Vector2i(1, 1),
+	]
+
+	for local_y in range(frame_height):
+		for local_x in range(frame_width):
+			var start_index := local_y * frame_width + local_x
+			if visited[start_index] != 0:
+				continue
+
+			visited[start_index] = 1
+			var start_color := image.get_pixel(
+				frame_origin.x + local_x,
+				frame_origin.y + local_y
+			)
+			if start_color.a <= 0.0:
+				continue
+
+			var queue: Array[Vector2i] = [Vector2i(local_x, local_y)]
+			var queue_index := 0
+			var pixels: Array[Vector2i] = []
+			var min_x := local_x
+			var max_x := local_x
+
+			while queue_index < queue.size():
+				var pixel := queue[queue_index]
+				queue_index += 1
+				pixels.append(pixel)
+				min_x = mini(min_x, pixel.x)
+				max_x = maxi(max_x, pixel.x)
+
+				for offset in neighbor_offsets:
+					var next_pixel := pixel + offset
+					if (
+						next_pixel.x < 0
+						or next_pixel.x >= frame_width
+						or next_pixel.y < 0
+						or next_pixel.y >= frame_height
+					):
+						continue
+
+					var next_index := (
+						next_pixel.y * frame_width
+						+ next_pixel.x
+					)
+					if visited[next_index] != 0:
+						continue
+
+					visited[next_index] = 1
+					var next_color := image.get_pixel(
+						frame_origin.x + next_pixel.x,
+						frame_origin.y + next_pixel.y
+					)
+					if next_color.a <= 0.0:
+						continue
+
+					queue.append(next_pixel)
+
+			components.append({
+				"pixels": pixels,
+				"min_x": min_x,
+				"max_x": max_x,
+			})
+
+	if components.size() <= 1:
+		return
+
+	var primary_index := 0
+	var primary_size := 0
+	for component_index in range(components.size()):
+		var component: Dictionary = components[component_index]
+		var component_pixels: Array = component.get("pixels", [])
+		if component_pixels.size() > primary_size:
+			primary_size = component_pixels.size()
+			primary_index = component_index
+
+	var primary: Dictionary = components[primary_index]
+	var primary_min_x := int(primary.get("min_x", 0))
+
+	for component_index in range(components.size()):
+		if component_index == primary_index:
+			continue
+
+		var component: Dictionary = components[component_index]
+		var component_pixels: Array = component.get("pixels", [])
+		if component_pixels.size() > STAGE1_ATTACK_STRAY_MAX_PIXELS:
+			continue
+
+		var component_max_x := int(component.get("max_x", frame_width))
+		if component_max_x >= primary_min_x - STAGE1_ATTACK_STRAY_LEFT_GAP:
+			continue
+
+		for raw_pixel in component_pixels:
+			var pixel := raw_pixel as Vector2i
+			image.set_pixel(
+				frame_origin.x + pixel.x,
+				frame_origin.y + pixel.y,
+				Color(0.0, 0.0, 0.0, 0.0)
+			)
 
 func _add_stage1_sheet_animation(
 	frames: SpriteFrames,

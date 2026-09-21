@@ -670,3 +670,10 @@
 - Stage 2에서는 강인한 육체/전투 회복을 후보 풀에서 제외해 Stage 1보다 기동·공격 중심의 빌드 정체성을 강화.
 - 새 Hero를 추가할 때 AI/레벨업 코드를 수정하지 않고 profile의 증강 ID 배열만으로 후보 풀을 구성할 수 있음.
 
+### Stage 1 Attack Stray Pixel Cleanup
+- 사용자 실기기 녹화에서 Stage 1 견습 마도사 공격 모션 왼쪽 위/아래에 떨어져 보이던 1~2px급 고립 잡픽셀을 확인.
+- 단순 Atlas bleed 문제가 아니라 공격 프레임 내부의 초소형 분리 컴포넌트가 보일 수 있는 케이스를 보정.
+- Stage 1 스프라이트 PNG를 raw Image로 읽은 뒤 **attack 6프레임만** 검사하고, 본체보다 왼쪽에 떨어진 6px 이하 고립 컴포넌트만 투명 처리.
+- 본체/지팡이/마법구처럼 큰 컴포넌트와 idle/move/hit 행은 수정하지 않음.
+- Android Editor import cache 여부와 상관없이 동일 보정이 적용되도록 Stage 1 raw PNG 로드를 imported texture보다 먼저 사용.
+
