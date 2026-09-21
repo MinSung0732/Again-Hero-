@@ -77,7 +77,7 @@ offset_left = 40.0
 offset_top = 20.0
 offset_right = 720.0
 offset_bottom = 80.0
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 52
 text = "용사, 또 너야?"
 
 [node name="RunTimer" type="Label" parent="HUD/TopBar"]
@@ -85,7 +85,7 @@ offset_left = 730.0
 offset_top = 24.0
 offset_right = 1040.0
 offset_bottom = 72.0
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 29
 text = "남은 시간 06:00"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -95,7 +95,7 @@ offset_left = 42.0
 offset_top = 86.0
 offset_right = 805.0
 offset_bottom = 124.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 24
 text = "Stage 1 · 첫 번째 침입자 · 견습 마도사"
 
 [node name="StageMenuButton" type="Button" parent="HUD/TopBar"]
@@ -103,7 +103,7 @@ offset_left = 825.0
 offset_top = 78.0
 offset_right = 1040.0
 offset_bottom = 132.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 24
 text = "메뉴"
 
 [node name="HeroLevel" type="Label" parent="HUD/TopBar"]
@@ -111,7 +111,7 @@ offset_left = 40.0
 offset_top = 142.0
 offset_right = 240.0
 offset_bottom = 196.0
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 34
 text = "Lv.1"
 vertical_alignment = 1
 
@@ -120,7 +120,7 @@ offset_left = 215.0
 offset_top = 142.0
 offset_right = 690.0
 offset_bottom = 196.0
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 32
 text = "용사 HP 300 / 300"
 vertical_alignment = 1
 
@@ -129,7 +129,7 @@ offset_left = 720.0
 offset_top = 142.0
 offset_right = 1040.0
 offset_bottom = 196.0
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 32
 text = "몬스터 0"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -139,7 +139,7 @@ offset_left = 40.0
 offset_top = 207.0
 offset_right = 260.0
 offset_bottom = 250.0
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 25
 text = "EXP 0 / 50"
 vertical_alignment = 1
 
@@ -167,15 +167,15 @@ offset_left = 28.0
 offset_top = 6.0
 offset_right = 230.0
 offset_bottom = 34.0
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 22
 text = "마왕 필살기  0 / 100"
 vertical_alignment = 1
 
 [node name="UltimateBar" type="ProgressBar" parent="HUD/DemonUltimatePanel"]
-offset_left = 230.0
-offset_top = 9.0
+offset_left = 250.0
+offset_top = 7.0
 offset_right = 1050.0
-offset_bottom = 31.0
+offset_bottom = 33.0
 max_value = 100.0
 show_percentage = false
 
@@ -191,7 +191,7 @@ alignment = 1
 custom_minimum_size = Vector2(0, 66)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 21
 text = "1 원형 포위\n충전 중"
 disabled = true
 
@@ -202,7 +202,7 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -9.0
+offset_top = -12.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
@@ -214,7 +214,7 @@ show_percentage = false
 custom_minimum_size = Vector2(0, 66)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 21
 text = "2 일직선 공세\n준비중"
 disabled = true
 
@@ -225,7 +225,7 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -9.0
+offset_top = -12.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
@@ -237,7 +237,7 @@ show_percentage = false
 custom_minimum_size = Vector2(0, 66)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 21
 text = "3 사각 포위\n준비중"
 disabled = true
 
@@ -248,7 +248,7 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -9.0
+offset_top = -12.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
@@ -269,35 +269,35 @@ alignment = 1
 custom_minimum_size = Vector2(0, 66)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 22
 text = "동"
 
 [node name="West" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
 custom_minimum_size = Vector2(0, 66)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 22
 text = "서"
 
 [node name="North" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
 custom_minimum_size = Vector2(0, 66)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 22
 text = "북"
 
 [node name="South" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
 custom_minimum_size = Vector2(0, 66)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 22
 text = "남"
 
 [node name="Cancel" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
 custom_minimum_size = Vector2(0, 66)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 20
 text = "취소"
 
 [node name="BottomBar" type="ColorRect" parent="HUD"]
@@ -315,7 +315,7 @@ offset_left = 28.0
 offset_top = 8.0
 offset_right = 1052.0
 offset_bottom = 34.0
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 21
 text = "용사 빌드: 아직 선택 없음"
 horizontal_alignment = 0
 vertical_alignment = 1
@@ -326,7 +326,7 @@ offset_left = 28.0
 offset_top = 36.0
 offset_right = 790.0
 offset_bottom = 64.0
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 20
 text = "지휘력을 사용해 원하는 몬스터를 소환하세요."
 horizontal_alignment = 0
 vertical_alignment = 1
@@ -337,41 +337,41 @@ offset_left = 808.0
 offset_top = 34.0
 offset_right = 1052.0
 offset_bottom = 68.0
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 21
 button_pressed = true
 text = "자동 배치"
 
 [node name="DemonProgressLabel" type="Label" parent="HUD/BottomBar"]
 offset_left = 28.0
-offset_top = 74.0
-offset_right = 286.0
-offset_bottom = 102.0
-theme_override_font_sizes/font_size = 18
+offset_top = 72.0
+offset_right = 350.0
+offset_bottom = 104.0
+theme_override_font_sizes/font_size = 22
 text = "마왕 Lv.1 · EXP 0 / 30"
 vertical_alignment = 1
 
 [node name="DemonExpBar" type="ProgressBar" parent="HUD/BottomBar"]
-offset_left = 286.0
-offset_top = 78.0
+offset_left = 350.0
+offset_top = 77.0
 offset_right = 1052.0
-offset_bottom = 98.0
+offset_bottom = 101.0
 max_value = 30.0
 show_percentage = false
 
 [node name="CommandLabel" type="Label" parent="HUD/BottomBar"]
 offset_left = 28.0
-offset_top = 108.0
-offset_right = 286.0
-offset_bottom = 138.0
-theme_override_font_sizes/font_size = 19
+offset_top = 106.0
+offset_right = 350.0
+offset_bottom = 140.0
+theme_override_font_sizes/font_size = 23
 text = "지휘력 0 / 100"
 vertical_alignment = 1
 
 [node name="CommandBar" type="ProgressBar" parent="HUD/BottomBar"]
-offset_left = 286.0
-offset_top = 113.0
+offset_left = 350.0
+offset_top = 112.0
 offset_right = 1052.0
-offset_bottom = 135.0
+offset_bottom = 138.0
 max_value = 100.0
 value = 0.0
 show_percentage = false
@@ -388,21 +388,21 @@ alignment = 1
 custom_minimum_size = Vector2(0, 184)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 23
+theme_override_font_sizes/font_size = 28
 text = "슬라임\n비용 3"
 
 [node name="SpiderButton" type="Button" parent="HUD/BottomBar/SummonButtons"]
 custom_minimum_size = Vector2(0, 184)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 23
+theme_override_font_sizes/font_size = 28
 text = "거미\n비용 7"
 
 [node name="OrcButton" type="Button" parent="HUD/BottomBar/SummonButtons"]
 custom_minimum_size = Vector2(0, 184)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 23
+theme_override_font_sizes/font_size = 28
 text = "오크\n비용 18"
 
 [node name="PauseMenu" type="Control" parent="HUD"]
