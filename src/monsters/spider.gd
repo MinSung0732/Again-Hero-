@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
+const SPIDER_PROJECTILE_SCENE := preload("res://src/monsters/SpiderProjectile.tscn")
 
 signal died
 
@@ -9,8 +10,10 @@ signal died
 @export var max_hp: int = 45
 @export var move_speed: float = 150.0
 @export var attack_damage: int = 5
-@export var attack_range: float = 70.0
-@export var attack_cooldown: float = 1.15
+@export var attack_range: float = 300.0
+@export var attack_cooldown: float = 1.35
+@export var projectile_speed: float = 320.0
+@export var projectile_range: float = 360.0
 @export var exp_reward: int = 30
 @export var slow_multiplier: float = 0.72
 @export var slow_duration: float = 1.5
@@ -56,17 +59,42 @@ func _physics_process(delta: float) -> void:
 		velocity = direction_to_hero * move_speed
 		_visual_call(&"play_locomotion", [true])
 		move_and_slide()
-	else:
-		velocity = Vector2.ZERO
-		_visual_call(&"play_locomotion", [false])
-		if attack_timer <= 0.0:
-			attack_timer = attack_cooldown
-			_visual_call(&"play_attack")
-			var damage_applied := false
-			if hero.has_method("take_damage"):
-				damage_applied = bool(hero.call("take_damage", attack_damage))
-			if damage_applied and hero.has_method("apply_slow"):
-				hero.call("apply_slow", slow_multiplier, slow_duration)
+		return
+
+	velocity = Vector2.ZERO
+	_visual_call(&"play_locomotion", [false])
+	if attack_timer <= 0.0:
+		attack_timer = attack_cooldown
+		_visual_call(&"play_attack")
+		_fire_projectile(direction_to_hero)
+
+func _fire_projectile(direction_to_hero: Vector2) -> void:
+	if SPIDER_PROJECTILE_SCENE == null:
+		return
+
+	var projectile = SPIDER_PROJECTILE_SCENE.instantiate() as Area2D
+	if projectile == null:
+		return
+
+	var projectile_parent := get_parent()
+	if projectile_parent == null:
+		return
+
+	projectile_parent.add_child(projectile)
+	projectile.global_position = global_position
+
+	var is_elite := String(get_meta("visual_variant", "")) == "elite"
+	if projectile.has_method("setup"):
+		projectile.call(
+			"setup",
+			direction_to_hero,
+			attack_damage,
+			projectile_speed,
+			projectile_range,
+			slow_multiplier,
+			slow_duration,
+			is_elite
+		)
 
 func take_damage(amount: int) -> void:
 	if current_hp <= 0 or dying:
@@ -123,8 +151,7 @@ func _draw() -> void:
 		visual_ready = bool(visual.call("is_visual_ready"))
 
 	if not visual_ready:
-		var body_color := Color(0.44, 0.92, 0.5)
-		body_color = Color(0.72, 0.38, 0.92)
+		var body_color := Color(0.72, 0.38, 0.92)
 		if hit_flash_timer > 0.0:
 			body_color = Color(1.0, 1.0, 1.0)
 

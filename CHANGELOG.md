@@ -1566,3 +1566,15 @@
 - `_on_command_changed()`에서도 mutation_panel이 열려 있으면 소환 버튼을 계속 비활성화하도록 보강.
 - 선택 완료 후에는 현재 실제 지휘력 기준으로 버튼이 즉시 정상 복구됨.
 - Battle의 지휘력 회복/전투 physics 로직 자체는 변경하지 않음.
+
+### Spider Ranged Controller v1
+- Spider 공격 방식을 근접 즉시타격에서 짧은 사거리 원거리 투사체 방식으로 변경.
+- Spider 기본 공격 사거리 70→300, 공격 주기 1.15→1.35초.
+- Spider 투사체 속도 320 / 최대 이동거리 360 추가.
+- src/monsters/SpiderProjectile.tscn 및 spider_projectile.gd 추가.
+- 투사체가 실제로 이동한 뒤 Hero에 충돌해야 피해가 적용되며, 빗나가거나 최대 사거리를 넘으면 소멸.
+- 기존 피해 5와 둔화 72% / 1.5초 효과는 투사체 적중 시 유지.
+- 일반 Spider 투사체에 monsters/spider/frames/effect/frame_01~08.png 연결.
+- 엘리트 Spider 투사체에 elitemonster/spider/frames/effect/frame_01~08.png 연결.
+- monster_projectiles 그룹을 전투 pause 대상에 포함해 돌연변이 선택/일시정지 중 투사체도 함께 정지.
+- Spider 이동 AI는 접근 → 사거리 진입 → 정지 → 발사 구조로 단순 유지.

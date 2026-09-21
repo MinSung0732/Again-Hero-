@@ -1251,3 +1251,12 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - Bomb Rat은 자체 시트 애니메이션 구조를 유지하되 동일한 apply_visual_profile() 인터페이스를 제공한다.
 - MutationCatalog는 돌연변이 배율/규칙, MonsterCatalog는 몬스터별 비주얼을 소유한다.
 - Bomb Rat 폭발은 통합 effect sheet 대신 assets/art/monsters/bombrat/frames/frame_01~08.png 개별 프레임을 사용한다.
+
+### Spider Ranged Controller v1
+- Spider는 더 이상 근접 즉시타격 몬스터가 아니다.
+- Hero와 약 300px 이내까지 접근한 뒤 멈춰 느린 원거리 투사체를 발사한다.
+- 기본 투사체 속도 320 / 최대 이동거리 360 / 공격 주기 1.35초.
+- 투사체 적중 시 기존 제어 정체성을 유지해 Hero에게 72% 이동속도 둔화를 1.5초 적용한다.
+- 일반 Spider 투사체는 assets/art/monsters/spider/frames/effect/frame_01~08.png,
+  엘리트 Spider 투사체는 assets/art/elitemonster/spider/frames/effect/frame_01~08.png를 사용한다.
+- Spider는 복잡한 카이팅을 하지 않고 접근 → 사거리 진입 → 정지 → 발사의 단순 AI를 유지한다.

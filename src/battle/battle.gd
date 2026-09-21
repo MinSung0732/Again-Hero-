@@ -1713,7 +1713,7 @@ func _set_combat_physics_enabled(enabled: bool) -> void:
 	if is_instance_valid(hero):
 		hero.set_physics_process(enabled)
 
-	for group_name in ["monsters", "exp_orbs", "hero_projectiles"]:
+	for group_name in ["monsters", "exp_orbs", "hero_projectiles", "monster_projectiles"]:
 		for node in get_tree().get_nodes_in_group(group_name):
 			if is_instance_valid(node):
 				node.set_physics_process(enabled)
