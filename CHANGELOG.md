@@ -518,3 +518,25 @@
 - AI 최종 점수는 전황 + 최근 공세 + 시너지 + 동일 증강 관성 - 새 갈래 전환 저항 + 작은 랜덤값으로 구성.
 - AI 선택 이유에 `기존 공격속도 2스택 시너지 +1.8` 같은 설명을 추가해 플레이어가 빌드 연결을 읽을 수 있게 함.
 - 후보별 total score뿐 아니라 synergy score도 내부 debug data에 저장.
+
+
+### Hero Area Augment v1 + Data-Driven Effect Application
+- 핵심 재미 검증을 위해 Hero의 실제 광역 대응 증강 **폭발 탄환** 추가.
+- 폭발 탄환 AI 성향:
+  - 현재 Slime/swarm 비중
+  - 최근 20초 Slime/swarm 공세 비중
+  - 근처 적 수
+  - 최근 플레이어 소환 횟수
+  를 데이터 기반 Utility rule로 반영.
+- 폭발 탄환 선택 시 projectile splash 스탯 증가:
+  - 반경 +70 / stack, 최대 180
+  - 주변 피해 비율 +0.28 / stack, 최대 0.70
+- HeroProjectile이 직접 대상 피해 후 splash 반경 내 다른 몬스터에게 광역 피해를 적용하도록 구현.
+- 중복 body_entered 처리 방지를 위해 projectile impact guard 추가.
+- 단일 고체력 Orc/tank 비중은 기존 탄환 강화 점수를 높여 광역 투자와 단일 화력 투자 방향을 구분.
+- Hero 증강 효과를 증강 ID별 match문에서 데이터 기반 `effects`로 리팩터링.
+- 기존 6개 증강도 모두 effects 데이터로 이전:
+  - stat add
+  - stat multiply + min/max clamp
+  - heal
+- 새 Hero 증강 추가 시 Hero 로직 파일을 직접 수정하지 않는 구조를 강화.
