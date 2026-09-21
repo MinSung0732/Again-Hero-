@@ -540,3 +540,24 @@
   - stat multiply + min/max clamp
   - heal
 - 새 Hero 증강 추가 시 Hero 로직 파일을 직접 수정하지 않는 구조를 강화.
+
+
+### Actual Status-Effect Memory + Slow Resistance v1
+- Hero AI가 몬스터 종류뿐 아니라 **실제로 적중한 상태이상**을 최근 전투 기억으로 저장하도록 확장.
+- `src/data/status_effect_catalog.gd` 추가. 현재 slow(둔화) 등록, 이후 다른 상태이상으로 확장 가능.
+- Hero에 최근 20초 status-effect event history 추가.
+- 상태이상별 실제 적중 횟수와 시간 감쇠 weight를 AI context에 포함.
+- Spider 공격으로 `apply_slow()`가 실제 호출될 때만 slow event가 기록됨.
+- Build AI에 범용 `recent_status_weight` rule source 추가.
+- AI 선택 이유가 해당 rule을 주요 근거로 사용하면 `최근 20초 둔화 N회` 형식으로 표시.
+- 기존 민첩한 발놀림에 실제 둔화 적중 기반 가중치 추가.
+- 신규 Hero 증강 **둔화 적응** 추가:
+  - base score 4.8
+  - slow resistance +18% / stack
+  - 최대 slow resistance 65%
+  - 최근 slow 적중 weight가 높을수록 강하게 선호
+  - Spider/controller 공세 정보도 보조 점수로 사용
+- 상태 저항은 `status_resistances` Dictionary로 관리.
+- slow resistance는 둔화 이동속도 감소 강도와 지속시간을 모두 완화.
+- Hero augment 공통 effect system에 `add_status_resistance` op 추가.
+- 상태이상 종류가 늘어나도 Hero AI/증강 적용 구조를 그대로 재사용할 수 있도록 구성.
