@@ -1218,3 +1218,11 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - Battle은 자신이 보관 중인 `pending_mutation_event`에 이름/스폰 거리만 적용한 뒤 즉시 강화 몬스터 1마리를 생성한다.
 - 생성 직후 돌연변이 선택 상태를 해제하고 전투 physics를 재개한다.
 - 기본 전투의 시간/지휘력/일반 소환 루프는 변경하지 않는다.
+
+### MutationDirector v1 — 돌연변이 상태 소유권 분리
+- StageDirector는 시간에 따른 이벤트 발생만 담당한다.
+- 새 `src/systems/mutation_director.gd`가 돌연변이 선택의 활성 상태, 현재 Stage 이벤트 데이터, 후보 monster_id 목록을 단독으로 소유한다.
+- Main UI는 `mutation_choice_ready`로 받은 후보를 표시하고 선택한 monster_id만 Battle에 전달한다.
+- Battle은 MutationDirector가 확정한 이벤트를 받아 실제 강화 몬스터 생성과 combat physics 재개만 담당한다.
+- Battle 내부의 돌연변이 active/pending/candidate 중복 상태를 제거한다.
+- 향후 돌연변이 등급/재선택/특수 규칙은 MutationDirector 또는 데이터 카탈로그 쪽에 확장하고 Main/Battle에 개별 상태를 추가하지 않는다.

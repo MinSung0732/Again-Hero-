@@ -1400,3 +1400,13 @@
 - 버튼 클릭 시 `spawn_selected_mutation(monster_id)`가 Battle의 `pending_mutation_event`를 직접 사용해 즉시 강화 개체를 생성.
 - 생성 후 돌연변이 선택 상태를 해제하고 전투 physics를 재개.
 - 시작 시 시간/지휘력/일반 소환 처리 코드는 변경하지 않음.
+
+### MutationDirector v1 — 구조 정리 1단계
+- `src/systems/mutation_director.gd` 추가.
+- 돌연변이 active / pending event / candidate 상태를 Battle에서 MutationDirector로 이관.
+- Battle 내부의 돌연변이 상태 변수 3개 제거.
+- StageDirector → MutationDirector → Main 선택 UI → Battle 스폰으로 책임 경계를 정리.
+- Main은 후보 표시와 monster_id 전달만 유지.
+- Battle은 실제 몬스터 생성과 전투 physics 정지/재개만 담당.
+- 기존 Stage 1 돌연변이 시간/배율/모달 UI는 변경하지 않음.
+- 시간/지휘력/일반 소환 루프는 변경하지 않음.

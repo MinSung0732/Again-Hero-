@@ -30,6 +30,7 @@ const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const RUN_METRICS := preload("res://src/systems/run_metrics.gd")
 const STAGE_DIRECTOR := preload("res://src/systems/stage_director.gd")
+const MUTATION_DIRECTOR := preload("res://src/systems/mutation_director.gd")
 
 const DEFAULT_MAP_SIZE := Vector2(3200, 3200)
 const AUTO_SPAWN_MIN_DISTANCE := 560.0
@@ -60,6 +61,7 @@ var run_time_emit_timer: float = 0.0
 var manual_spawn_warning_timer: float = 0.0
 var run_metrics = RUN_METRICS.new()
 var stage_director = STAGE_DIRECTOR.new()
+var mutation_director = MUTATION_DIRECTOR.new()
 
 var monsters_alive: int = 0
 var battle_over: bool = false
@@ -102,10 +104,6 @@ var demon_augment_candidates: Array = []
 var demon_build_counts: Dictionary = {}
 var demon_last_candidate_ids: Array[String] = []
 
-var mutation_selection_active: bool = false
-var pending_mutation_event: Dictionary = {}
-var mutation_candidate_ids: Array[String] = []
-
 var monster_summon_costs: Dictionary = {}
 var permanent_research_levels: Dictionary = {}
 
@@ -127,7 +125,7 @@ func _process(delta: float) -> void:
 	if (
 		battle_over
 		or demon_augment_selection_active
-		or mutation_selection_active
+		or mutation_director.is_active()
 		or external_pause
 	):
 		return
@@ -212,9 +210,7 @@ func _start_battle() -> void:
 	demon_augment_candidates.clear()
 	demon_build_counts.clear()
 	demon_last_candidate_ids.clear()
-	mutation_selection_active = false
-	pending_mutation_event.clear()
-	mutation_candidate_ids.clear()
+	mutation_director.reset()
 	monster_summon_costs.clear()
 
 	_apply_permanent_research()
@@ -1258,46 +1254,37 @@ func _trigger_stage_director_event(event: Dictionary) -> void:
 	_spawn_stage_event_monster(event, monster_id)
 
 func _open_mutation_choice(event: Dictionary) -> void:
-	if mutation_selection_active:
+	if mutation_director.is_active():
 		return
 
-	mutation_candidate_ids.clear()
+	var candidates: Array = []
 	for raw_id in allowed_monster_ids:
 		var monster_id := String(raw_id)
 		if MONSTER_CATALOG.MONSTERS.has(monster_id):
-			mutation_candidate_ids.append(monster_id)
+			candidates.append(monster_id)
 
-	if mutation_candidate_ids.is_empty():
+	if candidates.is_empty():
 		for raw_id in MONSTER_CATALOG.ORDER:
 			var fallback_id := String(raw_id)
 			if not MONSTER_CATALOG.MONSTERS.has(fallback_id):
 				continue
-			mutation_candidate_ids.append(fallback_id)
-			if mutation_candidate_ids.size() >= 3:
+			candidates.append(fallback_id)
+			if candidates.size() >= 3:
 				break
 
-	if mutation_candidate_ids.is_empty():
+	if not mutation_director.begin(event, candidates):
 		return
 
-	pending_mutation_event = event.duplicate(true)
-	mutation_selection_active = true
 	_set_combat_physics_enabled(false)
 	mutation_choice_ready.emit(
-		pending_mutation_event.duplicate(true),
-		mutation_candidate_ids.duplicate()
+		mutation_director.get_event(),
+		mutation_director.get_candidates()
 	)
 
 func spawn_selected_mutation(monster_id: String) -> void:
-	var event: Dictionary = pending_mutation_event.duplicate(true)
+	var event := mutation_director.commit_selection(monster_id)
 	if event.is_empty():
-		event = {
-			"type": "elite",
-			"hp_multiplier": 2.2,
-			"damage_multiplier": 1.45,
-			"speed_multiplier": 1.10,
-			"exp_multiplier": 1.5,
-			"visual_scale": 1.15,
-		}
+		return
 
 	var event_type := String(event.get("type", "elite"))
 	var prefix := "돌연변이"
@@ -1312,10 +1299,6 @@ func spawn_selected_mutation(monster_id: String) -> void:
 	event["spawn_distance"] = 460.0
 
 	_spawn_stage_event_monster(event, monster_id)
-
-	mutation_selection_active = false
-	pending_mutation_event.clear()
-	mutation_candidate_ids.clear()
 
 	if not external_pause and not demon_augment_selection_active:
 		_set_combat_physics_enabled(true)
@@ -1801,8 +1784,8 @@ func get_snapshot() -> Dictionary:
 		"demon_reroll_max": demon_reroll_max,
 		"demon_build_summary": get_demon_build_summary(),
 		"demon_build_counts": demon_build_counts.duplicate(true),
-		"mutation_selection_active": mutation_selection_active,
-		"mutation_candidates": mutation_candidate_ids.duplicate(),
+		"mutation_selection_active": mutation_director.is_active(),
+		"mutation_candidates": mutation_director.get_candidates(),
 		"stage_event_fired_ids": stage_director.get_fired_event_ids(),
 		"debug_balance_summary": get_debug_balance_summary(),
 		"permanent_research_summary": get_permanent_research_summary(),
