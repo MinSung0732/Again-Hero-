@@ -1245,13 +1245,13 @@ func _trigger_stage_director_event(event: Dictionary) -> void:
 		return
 
 	var monster_id := String(event.get("monster_id", ""))
-	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
+	if not spawn_special_monster(monster_id, event):
 		push_warning(
 			"Stage event monster not found: %s" % monster_id
 		)
 		return
 
-	_spawn_stage_event_monster(event, monster_id)
+	_emit_stage_event_announcement(event, monster_id)
 
 func _open_mutation_choice(event: Dictionary) -> void:
 	if mutation_director.is_active():
@@ -1294,36 +1294,53 @@ func spawn_selected_mutation(monster_id: String) -> void:
 	]
 	event["name"] = mutation_name
 
-	_spawn_stage_event_monster(event, monster_id)
+	if spawn_special_monster(monster_id, event):
+		_emit_stage_event_announcement(event, monster_id)
 
 	if not external_pause and not demon_augment_selection_active:
 		_set_combat_physics_enabled(true)
 
 	mutation_selected.emit(event_type, mutation_name)
 
-func _spawn_stage_event_monster(
-	event: Dictionary,
-	monster_id: String
-) -> void:
+func spawn_special_monster(
+	monster_id: String,
+	special_data: Dictionary
+) -> bool:
+	if not is_instance_valid(hero):
+		return false
+	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
+		return false
+
 	var spawn_position := _get_stage_event_spawn_position(
-		float(event.get("spawn_distance", 720.0))
+		float(special_data.get("spawn_distance", 720.0))
 	)
-	var event_type := String(event.get("type", "elite"))
-	var event_name := String(
-		event.get("name", MONSTER_CATALOG.get_name(monster_id))
+	var special_type := String(
+		special_data.get("type", "special")
+	)
+	var special_name := String(
+		special_data.get(
+			"name",
+			MONSTER_CATALOG.get_name(monster_id)
+		)
 	)
 	var modifiers := {
-		"hp_multiplier": float(event.get("hp_multiplier", 1.0)),
+		"hp_multiplier": float(
+			special_data.get("hp_multiplier", 1.0)
+		),
 		"damage_multiplier": float(
-			event.get("damage_multiplier", 1.0)
+			special_data.get("damage_multiplier", 1.0)
 		),
 		"speed_multiplier": float(
-			event.get("speed_multiplier", 1.0)
+			special_data.get("speed_multiplier", 1.0)
 		),
-		"exp_multiplier": float(event.get("exp_multiplier", 1.0)),
-		"visual_scale": float(event.get("visual_scale", 1.0)),
-		"stage_event_type": event_type,
-		"stage_event_name": event_name,
+		"exp_multiplier": float(
+			special_data.get("exp_multiplier", 1.0)
+		),
+		"visual_scale": float(
+			special_data.get("visual_scale", 1.0)
+		),
+		"stage_event_type": special_type,
+		"stage_event_name": special_name,
 	}
 
 	_spawn_monster(
@@ -1333,7 +1350,17 @@ func _spawn_stage_event_monster(
 		false,
 		modifiers
 	)
+	_emit_stats()
+	return true
 
+func _emit_stage_event_announcement(
+	event: Dictionary,
+	monster_id: String
+) -> void:
+	var event_type := String(event.get("type", "elite"))
+	var event_name := String(
+		event.get("name", MONSTER_CATALOG.get_name(monster_id))
+	)
 	var message := ""
 	match event_type:
 		"boss":
@@ -1348,7 +1375,6 @@ func _spawn_stage_event_monster(
 		event_name,
 		message
 	)
-	_emit_stats()
 
 func _get_stage_event_spawn_position(
 	spawn_distance: float = 720.0

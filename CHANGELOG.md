@@ -1419,3 +1419,11 @@
 - Battle의 miniboss 이름 분기 및 고정 460px 설정 제거.
 - Main의 elite/miniboss 모달 문구 분기 제거.
 - 시간/지휘력/일반 소환 루프는 변경하지 않음.
+
+### Special Monster Spawn v1 — 구조 정리 3단계
+- Battle의 `_spawn_stage_event_monster()`를 제거하고 범용 `spawn_special_monster(monster_id, special_data)` API로 교체.
+- 90/180/240초 돌연변이와 300초 Stage 고정 보스가 동일한 특수 스폰 경로를 사용하도록 통합.
+- 특수 스폰 API는 배율/스폰 거리/이벤트 메타 설정과 실제 생성만 담당.
+- Stage 이벤트 상태 문구/시그널은 `_emit_stage_event_announcement()`로 분리.
+- 향후 `일반 3 + 보스 1` 편성 보스도 같은 특수 스폰 API를 재사용할 수 있는 기반 마련.
+- 시간/지휘력/일반 소환 루프 및 `_spawn_monster()` 구현은 변경하지 않음.

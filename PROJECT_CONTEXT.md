@@ -1235,3 +1235,11 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - MutationDirector가 Stage 이벤트와 MutationCatalog 프로필을 합쳐 Main/Battle에 전달한다.
 - Battle/Main은 elite/miniboss별 표시/배율 하드코딩을 하지 않는다.
 - 새 돌연변이 등급 추가 시 MutationCatalog 프로필 추가 + Stage의 profile_id 지정만으로 확장하는 것을 원칙으로 한다.
+
+### Special Monster Spawn v1 — 특수 스폰 공통 경로
+- 돌연변이와 Stage 고정 보스가 공통 `Battle.spawn_special_monster(monster_id, special_data)` API를 사용한다.
+- 공통 특수 스폰 API는 monster_id 검증, Hero 기준 스폰 거리 계산, HP/공격력/속도/EXP/크기 배율 적용, 특수 이벤트 메타데이터 설정만 담당한다.
+- Stage 이벤트 알림 문구/시그널은 `_emit_stage_event_announcement()`로 분리해 실제 생성 로직과 UI 알림 책임을 분리한다.
+- 기존 `_spawn_stage_event_monster()`는 제거한다.
+- 향후 편성 보스, 이벤트 보스, 돌연변이 외 특수 몬스터도 같은 API를 재사용하고 일반 소환/지휘력 경로와 분리한다.
+- 일반 몬스터 소환의 `_spawn_monster()`, 지휘력 소비, Run 시간 루프는 변경하지 않는다.
