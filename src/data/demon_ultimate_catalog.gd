@@ -33,8 +33,12 @@ const SKILLS = {
 	"square_siege": {
 		"id": "square_siege",
 		"name": "사각 포위",
-		"description": "용사 외곽을 사각형으로 둘러 소환",
-		"implemented": false,
+		"description": "용사 외곽 최대 범위를 사각형으로 둘러 소환",
+		"implemented": true,
+		"spawn_count": 16,
+		"half_extent": 700.0,
+		"spawn_batch_size": 2,
+		"spawn_interval": 0.04,
 		"cooldown": 20.0,
 	},
 }

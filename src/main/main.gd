@@ -501,33 +501,35 @@ func _refresh_demon_ultimate_buttons() -> void:
 
 		if not implemented:
 			button.disabled = true
-			button.text = "3 사각 포위\n준비중"
+			button.text = "%s\n준비중" % String(
+				skill.get("name", "필살기")
+			)
 			continue
 
 		var ready := demon_ultimate_charge_ready and remaining <= 0.001
 		button.disabled = not ready
 
+		var button_title := "필살기"
+		match skill_id:
+			"encirclement":
+				button_title = "1 원형 포위"
+			"line_assault":
+				button_title = "2 일직선 공세"
+			"square_siege":
+				button_title = "3 사각 포위"
+
 		if remaining > 0.001:
 			button.text = "%s\n쿨타임 %.1f초" % [
-				(
-					"1 원형 포위"
-					if skill_id == "encirclement"
-					else "2 일직선 공세"
-				),
+				button_title,
 				remaining,
 			]
 		elif demon_ultimate_charge_ready:
-			button.text = (
-				"1 원형 포위\n발동 가능"
-				if skill_id == "encirclement"
-				else "2 일직선 공세\n방향 선택"
-			)
+			if skill_id == "line_assault":
+				button.text = "%s\n방향 선택" % button_title
+			else:
+				button.text = "%s\n발동 가능" % button_title
 		else:
-			button.text = (
-				"1 원형 포위\n충전 중"
-				if skill_id == "encirclement"
-				else "2 일직선 공세\n충전 중"
-			)
+			button.text = "%s\n충전 중" % button_title
 
 func _on_demon_ultimate_pressed(skill_id: String) -> void:
 	if skill_id == "line_assault":

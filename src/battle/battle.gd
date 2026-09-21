@@ -837,6 +837,8 @@ func try_use_demon_ultimate(
 			used = _use_demon_encirclement(skill)
 		"line_assault":
 			used = _use_demon_line_assault(skill, direction)
+		"square_siege":
+			used = _use_demon_square_siege(skill)
 
 	if not used:
 		return false
@@ -853,6 +855,8 @@ func try_use_demon_ultimate(
 	var use_message := "%s 발동! 용사 외곽에 군단을 전개했습니다." % skill_name
 	if skill_id == "line_assault":
 		use_message = "%s 발동! 선택한 방향에서 전선을 형성했습니다." % skill_name
+	elif skill_id == "square_siege":
+		use_message = "%s 발동! 용사 외곽을 사각 전선으로 봉쇄했습니다." % skill_name
 	demon_ultimate_used.emit(
 		skill_id,
 		skill_name,
@@ -995,6 +999,97 @@ func _use_demon_line_assault(
 				current_map_size.y - MANUAL_SPAWN_MARGIN
 			)
 		)
+		demon_ultimate_spawn_queue.append({
+			"monster_id": pool[index % pool.size()],
+			"position": spawn_position,
+		})
+
+	return true
+
+func _use_demon_square_siege(skill: Dictionary) -> bool:
+	if not is_instance_valid(hero):
+		return false
+	if not demon_ultimate_spawn_queue.is_empty():
+		return false
+
+	var pool: Array[String] = []
+	for raw_id in allowed_monster_ids:
+		var monster_id := String(raw_id)
+		if MONSTER_CATALOG.MONSTERS.has(monster_id):
+			pool.append(monster_id)
+
+	if pool.is_empty():
+		for raw_id in MONSTER_CATALOG.ORDER:
+			var fallback_id := String(raw_id)
+			if MONSTER_CATALOG.MONSTERS.has(fallback_id):
+				pool.append(fallback_id)
+			if pool.size() >= 3:
+				break
+
+	if pool.is_empty():
+		return false
+
+	var spawn_count := maxi(int(skill.get("spawn_count", 16)), 4)
+	var half_extent := maxf(float(skill.get("half_extent", 700.0)), 1.0)
+
+	demon_ultimate_spawn_batch_size = maxi(
+		int(skill.get("spawn_batch_size", 2)),
+		1
+	)
+	demon_ultimate_spawn_interval = maxf(
+		float(skill.get("spawn_interval", 0.04)),
+		0.01
+	)
+	demon_ultimate_spawn_timer = 0.0
+
+	var hero_position := hero.position
+	var perimeter_length := half_extent * 8.0
+
+	for index in range(spawn_count):
+		var distance_on_perimeter := (
+			perimeter_length
+			* float(index)
+			/ float(spawn_count)
+		)
+		var candidate := hero_position
+
+		if distance_on_perimeter < half_extent * 2.0:
+			candidate = hero_position + Vector2(
+				-half_extent + distance_on_perimeter,
+				-half_extent
+			)
+		elif distance_on_perimeter < half_extent * 4.0:
+			var side_offset := distance_on_perimeter - half_extent * 2.0
+			candidate = hero_position + Vector2(
+				half_extent,
+				-half_extent + side_offset
+			)
+		elif distance_on_perimeter < half_extent * 6.0:
+			var side_offset := distance_on_perimeter - half_extent * 4.0
+			candidate = hero_position + Vector2(
+				half_extent - side_offset,
+				half_extent
+			)
+		else:
+			var side_offset := distance_on_perimeter - half_extent * 6.0
+			candidate = hero_position + Vector2(
+				-half_extent,
+				half_extent - side_offset
+			)
+
+		var spawn_position := Vector2(
+			clampf(
+				candidate.x,
+				MANUAL_SPAWN_MARGIN,
+				current_map_size.x - MANUAL_SPAWN_MARGIN
+			),
+			clampf(
+				candidate.y,
+				MANUAL_SPAWN_MARGIN,
+				current_map_size.y - MANUAL_SPAWN_MARGIN
+			)
+		)
+
 		demon_ultimate_spawn_queue.append({
 			"monster_id": pool[index % pool.size()],
 			"position": spawn_position,
