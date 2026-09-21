@@ -31,6 +31,7 @@ const START_COMMAND := 0.0
 const BASE_COMMAND_REGEN_PER_SECOND := 3.0
 const MANUAL_SPAWN_MARGIN := 70.0
 const MANUAL_SPAWN_HERO_MIN_DISTANCE := 220.0
+const MANUAL_SPAWN_WARNING_DURATION := 0.70
 const DEMON_BASE_EXP_TO_NEXT := 30.0
 const DEMON_EXP_GROWTH_PER_LEVEL := 15.0
 const BASE_DEMON_REROLLS := 3
@@ -47,6 +48,7 @@ var current_hero_profile: Dictionary = {}
 var current_map_size: Vector2 = DEFAULT_MAP_SIZE
 var run_time_limit_seconds: float = 0.0
 var run_time_emit_timer: float = 0.0
+var manual_spawn_warning_timer: float = 0.0
 var run_metrics = RUN_METRICS.new()
 
 var monsters_alive: int = 0
@@ -88,6 +90,13 @@ func _ready() -> void:
 	_start_battle()
 
 func _process(delta: float) -> void:
+	if manual_spawn_warning_timer > 0.0:
+		manual_spawn_warning_timer = maxf(
+			manual_spawn_warning_timer - delta,
+			0.0
+		)
+		queue_redraw()
+
 	if battle_over or demon_augment_selection_active or external_pause:
 		return
 
@@ -117,6 +126,7 @@ func _start_battle() -> void:
 	external_pause = false
 	monsters_alive = 0
 	run_time_emit_timer = 0.0
+	manual_spawn_warning_timer = 0.0
 
 	max_command = BASE_MAX_COMMAND
 	command_power = START_COMMAND
@@ -321,7 +331,7 @@ func get_manual_spawn_error(
 		return "배치 불가\n전장 안쪽을 터치"
 
 	if not _is_spawn_position_far_enough_from_hero(spawn_position):
-		return "용사와 너무 가까움\n%.0fpx 이상 거리 필요" % MANUAL_SPAWN_HERO_MIN_DISTANCE
+		return "용사와 너무 가까움"
 
 	var cost := get_monster_cost(monster_type)
 	if cost <= 0.0:
@@ -331,6 +341,16 @@ func get_manual_spawn_error(
 		return "지휘력 부족\n필요 %.1f" % cost
 
 	return ""
+
+func is_manual_spawn_too_close_to_hero(spawn_position: Vector2) -> bool:
+	return (
+		_is_spawn_position_inside_bounds(spawn_position)
+		and not _is_spawn_position_far_enough_from_hero(spawn_position)
+	)
+
+func show_manual_spawn_restricted_area() -> void:
+	manual_spawn_warning_timer = MANUAL_SPAWN_WARNING_DURATION
+	queue_redraw()
 
 func is_spawn_position_valid(spawn_position: Vector2) -> bool:
 	return (
@@ -1061,3 +1081,24 @@ func _draw() -> void:
 	draw_circle(center, 92.0, Color(0.1, 0.12, 0.15), false, 3.0)
 	draw_line(center + Vector2(0, -110), center + Vector2(0, 110), Color(0.15, 0.18, 0.22), 2.0)
 	draw_line(center + Vector2(-110, 0), center + Vector2(110, 0), Color(0.15, 0.18, 0.22), 2.0)
+
+	if manual_spawn_warning_timer > 0.0 and is_instance_valid(hero):
+		var warning_alpha := clampf(
+			manual_spawn_warning_timer / MANUAL_SPAWN_WARNING_DURATION,
+			0.0,
+			1.0
+		)
+		var warning_center := hero.position
+		draw_circle(
+			warning_center,
+			MANUAL_SPAWN_HERO_MIN_DISTANCE,
+			Color(1.0, 0.18, 0.16, 0.08 * warning_alpha),
+			true
+		)
+		draw_circle(
+			warning_center,
+			MANUAL_SPAWN_HERO_MIN_DISTANCE,
+			Color(1.0, 0.32, 0.24, 0.78 * warning_alpha),
+			false,
+			6.0
+		)

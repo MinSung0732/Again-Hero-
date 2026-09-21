@@ -210,6 +210,9 @@ func _input(event: InputEvent) -> void:
 	)
 
 	if not placement_error.is_empty():
+		if battle.is_manual_spawn_too_close_to_hero(battle_position):
+			battle.show_manual_spawn_restricted_area()
+
 		FLOATING_TEXT.show_text_at(
 			battle,
 			battle.to_global(battle_position),
