@@ -1,6 +1,9 @@
 extends CharacterBody2D
 
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
+const BOMBRAT_SHEET_PATH := "res://assets/art/monsters/bombrat/bombrat_spritesheet.png"
+const BOMBRAT_FRAME_SIZE := Vector2(229, 229)
+const BOMBRAT_TARGET_HEIGHT := 78.0
 
 signal died
 
@@ -15,7 +18,7 @@ signal died
 @export var explosion_radius: float = 150.0
 @export var explosion_damage: int = 28
 
-@onready var visual = get_node_or_null("Visual")
+@onready var visual: AnimatedSprite2D = $Visual
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 var current_hp: int
@@ -23,11 +26,13 @@ var hero: Node2D
 var attack_timer: float = 0.0
 var hit_flash_timer: float = 0.0
 var dying: bool = false
+var desired_locomotion: StringName = &"idle"
 
 func _ready() -> void:
 	add_to_group("monsters")
 	current_hp = max_hp
 	hero = get_tree().get_first_node_in_group("hero") as Node2D
+	_apply_bomb_rat_visual()
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
@@ -45,23 +50,24 @@ func _physics_process(delta: float) -> void:
 		hero = get_tree().get_first_node_in_group("hero") as Node2D
 		if not is_instance_valid(hero):
 			velocity = Vector2.ZERO
-			_visual_call(&"play_locomotion", [false])
+			_play_locomotion(false)
 			return
 
 	var direction_to_hero := global_position.direction_to(hero.global_position)
-	_visual_call(&"set_facing_direction", [direction_to_hero.x])
+	if visual.visible and absf(direction_to_hero.x) > 0.01:
+		visual.flip_h = direction_to_hero.x < 0.0
 
 	var distance := global_position.distance_to(hero.global_position)
 	if distance > attack_range:
 		velocity = direction_to_hero * move_speed
-		_visual_call(&"play_locomotion", [true])
+		_play_locomotion(true)
 		move_and_slide()
 	else:
 		velocity = Vector2.ZERO
-		_visual_call(&"play_locomotion", [false])
+		_play_locomotion(false)
 		if attack_timer <= 0.0:
 			attack_timer = attack_cooldown
-			_visual_call(&"play_attack")
+			_restart_visual_animation(&"attack")
 			if hero.has_method("take_damage"):
 				hero.call("take_damage", attack_damage)
 
@@ -74,7 +80,7 @@ func take_damage(amount: int) -> void:
 	var applied_damage := previous_hp - current_hp
 	DAMAGE_NUMBERS.show(self, applied_damage)
 	hit_flash_timer = 0.10
-	_visual_call(&"play_hit")
+	_restart_visual_animation(&"hit")
 	queue_redraw()
 
 	if current_hp <= 0:
@@ -91,22 +97,10 @@ func _begin_death() -> void:
 	_trigger_death_explosion()
 	died.emit()
 
-	if (
-		is_instance_valid(visual)
-		and visual.has_signal("death_animation_finished")
-		and visual.has_method("play_death")
-	):
-		visual.connect(
-			"death_animation_finished",
-			Callable(self, "_on_death_animation_finished"),
-			Object.CONNECT_ONE_SHOT
-		)
-		visual.call("play_death")
+	if visual.visible and visual.sprite_frames != null:
+		_restart_visual_animation(&"death")
 	else:
 		queue_free()
-
-func _on_death_animation_finished() -> void:
-	queue_free()
 
 func _trigger_death_explosion() -> void:
 	if not is_instance_valid(hero):
@@ -116,19 +110,118 @@ func _trigger_death_explosion() -> void:
 	if hero.has_method("take_damage"):
 		hero.call("take_damage", explosion_damage)
 
-func _visual_call(method_name: StringName, args: Array = []) -> void:
-	if not is_instance_valid(visual):
+func _apply_bomb_rat_visual() -> void:
+	visual.visible = false
+	visual.sprite_frames = null
+	visual.modulate = Color.WHITE
+	visual.rotation = 0.0
+	visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+	var sheet := _load_bomb_rat_texture(BOMBRAT_SHEET_PATH)
+	if sheet == null:
+		push_warning("Bomb Rat spritesheet load failed: %s" % BOMBRAT_SHEET_PATH)
 		return
-	if not visual.has_method(method_name):
+
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.remove_animation(&"default")
+
+	_add_sheet_animation(frames, &"idle", sheet, 0, 4, 6.0, true)
+	_add_sheet_animation(frames, &"move", sheet, 1, 6, 11.0, true)
+	_add_sheet_animation(frames, &"attack", sheet, 2, 6, 14.0, false)
+	_add_sheet_animation(frames, &"hit", sheet, 3, 3, 14.0, false)
+	_add_sheet_animation(frames, &"death", sheet, 4, 4, 10.0, false)
+
+	visual.sprite_frames = frames
+	var uniform_scale := BOMBRAT_TARGET_HEIGHT / BOMBRAT_FRAME_SIZE.y
+	visual.scale = Vector2(uniform_scale, uniform_scale)
+	visual.visible = true
+	visual.speed_scale = 1.0
+
+	if not visual.animation_finished.is_connected(_on_visual_animation_finished):
+		visual.animation_finished.connect(_on_visual_animation_finished)
+
+	visual.play(&"idle")
+
+func _load_bomb_rat_texture(path: String) -> Texture2D:
+	if path.is_empty():
+		return null
+
+	if ResourceLoader.exists(path):
+		var imported_texture = load(path)
+		if imported_texture is Texture2D:
+			return imported_texture
+
+	if FileAccess.file_exists(path):
+		var image := Image.new()
+		var error := image.load(path)
+		if error == OK:
+			return ImageTexture.create_from_image(image)
+
+	return null
+
+func _add_sheet_animation(
+	frames: SpriteFrames,
+	animation_name: StringName,
+	sheet: Texture2D,
+	row: int,
+	frame_count: int,
+	fps: float,
+	loop_animation: bool
+) -> void:
+	frames.add_animation(animation_name)
+	frames.set_animation_speed(animation_name, fps)
+	frames.set_animation_loop(animation_name, loop_animation)
+
+	for column in range(frame_count):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = sheet
+		atlas.filter_clip = true
+		atlas.region = Rect2(
+			Vector2(column, row) * BOMBRAT_FRAME_SIZE,
+			BOMBRAT_FRAME_SIZE
+		)
+		frames.add_frame(animation_name, atlas)
+
+func _play_locomotion(moving: bool) -> void:
+	desired_locomotion = &"move" if moving else &"idle"
+
+	if not visual.visible or visual.sprite_frames == null or dying:
 		return
-	visual.callv(method_name, args)
+
+	if visual.animation == &"attack" or visual.animation == &"hit":
+		return
+
+	if visual.animation != desired_locomotion or not visual.is_playing():
+		visual.play(desired_locomotion)
+
+func _restart_visual_animation(animation_name: StringName) -> void:
+	if not visual.visible or visual.sprite_frames == null:
+		return
+	if not visual.sprite_frames.has_animation(animation_name):
+		return
+
+	visual.stop()
+	visual.animation = animation_name
+	visual.frame = 0
+	visual.frame_progress = 0.0
+	visual.speed_scale = 1.0
+	visual.play(animation_name)
+
+func _on_visual_animation_finished() -> void:
+	if not visual.visible:
+		return
+
+	if visual.animation == &"death":
+		queue_free()
+		return
+
+	if visual.animation == &"attack" or visual.animation == &"hit":
+		if visual.sprite_frames.has_animation(desired_locomotion):
+			visual.play(desired_locomotion)
 
 func _draw() -> void:
-	var visual_ready := false
-	if is_instance_valid(visual) and visual.has_method("is_visual_ready"):
-		visual_ready = bool(visual.call("is_visual_ready"))
-
-	if not visual_ready:
+	if not visual.visible:
 		var body_color := Color(0.54, 0.43, 0.34)
 		if hit_flash_timer > 0.0:
 			body_color = Color.WHITE

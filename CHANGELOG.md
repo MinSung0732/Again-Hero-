@@ -1035,3 +1035,11 @@
 - `e79dd94`의 BombRat.tscn 정적 AtlasTexture/SpriteFrames 연결 후 로비 초기화와 버튼 입력이 깨지는 회귀가 발생해 해당 변경을 롤백.
 - 로비/전투 안정성을 우선해 BombRat.tscn과 bomb_rat.gd를 직전 정상 상태로 복구.
 - 폭탄쥐 도트는 별도 안전한 방식으로 다시 연결 예정.
+
+### Bomb Rat Sprite Sheet — Stage 1 Hero Loader Pattern
+- 폭탄쥐 도트 로딩을 Stage 1 견습 마도사의 검증된 통합 스프라이트시트 방식과 동일하게 재구성.
+- `BombRat.tscn`의 전용 visual script / Texture2D ext_resource 의존을 제거하고 일반 AnimatedSprite2D만 유지.
+- `bomb_rat.gd`가 `ResourceLoader.exists()+load()`를 우선 사용하고, Android Editor import 캐시가 늦을 경우 `FileAccess + Image.load()` fallback을 사용.
+- 통합 PNG를 229×229 고정 셀로 AtlasTexture 분할해 idle 4 / move 6 / attack 6 / hit 3 / death 4 SpriteFrames를 런타임 생성.
+- Base64, 자동 셀 감지, 씬 정적 AtlasTexture는 사용하지 않음.
+- 시트 로딩 실패 시에만 기존 코드 드로잉 폭탄쥐 fallback을 유지하며 전투/로비 로직은 변경하지 않음.
