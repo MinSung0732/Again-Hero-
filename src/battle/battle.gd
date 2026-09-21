@@ -125,7 +125,6 @@ func _process(delta: float) -> void:
 	if (
 		battle_over
 		or demon_augment_selection_active
-		or mutation_director.is_active()
 		or external_pause
 	):
 		return
@@ -1284,6 +1283,9 @@ func _open_mutation_choice(event: Dictionary) -> void:
 func spawn_selected_mutation(monster_id: String) -> void:
 	var event := mutation_director.commit_selection(monster_id)
 	if event.is_empty():
+		mutation_director.reset()
+		if not external_pause and not demon_augment_selection_active:
+			_set_combat_physics_enabled(true)
 		return
 
 	var event_type := String(event.get("type", "elite"))
@@ -1294,8 +1296,8 @@ func spawn_selected_mutation(monster_id: String) -> void:
 	]
 	event["name"] = mutation_name
 
-	# 선택 완료 즉시 전투를 먼저 재개한다.
-	# 이후 특수 스폰에서 문제가 생겨도 전투가 멈춘 채 남지 않게 한다.
+	# 선택 상태는 스폰 성공 여부와 무관하게 여기서 완전히 종료한다.
+	mutation_director.reset()
 	if not external_pause and not demon_augment_selection_active:
 		_set_combat_physics_enabled(true)
 

@@ -1434,3 +1434,10 @@
 - 실제 특수 몬스터 생성은 `call_deferred()`로 다음 프레임에 실행해 UI 버튼 콜백과 월드 노드 생성을 분리.
 - 특수 스폰 실패 시 warning을 남기되 전투 진행은 계속 유지.
 - MutationDirector / MutationCatalog / 공통 `spawn_special_monster()` 구조는 유지.
+
+### Mutation Process Decoupling Hotfix
+- 돌연변이 선택 상태가 Battle의 전체 `_process()`를 막아 특수 스폰 문제 시 시간/지휘력까지 함께 멈추던 결합 제거.
+- `mutation_director.is_active()`를 Battle 전체 process return 조건에서 제거.
+- 돌연변이 모달은 기존처럼 Hero/몬스터 physics만 정지하고 Battle 핵심 시간/지휘력 루프와 분리.
+- 선택 클릭 시 성공/실패와 무관하게 MutationDirector를 명시적으로 reset하고 combat physics를 재개한 뒤 특수 스폰을 deferred 실행.
+- 특수 스폰 문제가 남더라도 기본 Run 루프가 같이 정지하지 않도록 격리.
