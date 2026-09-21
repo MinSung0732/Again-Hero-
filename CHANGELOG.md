@@ -860,3 +860,11 @@
 - 저장/컬렉션 로드 오류가 생겨도 기본 팀 UI가 이미 보이도록 로딩 경로를 분리.
 - Battle/Main 및 Supabase DB 스키마는 변경하지 않음.
 
+### Team Loadout UI Recovery — Catalog Only
+- 팀 편성 탭이 정적 슬롯까지 표시한 뒤 컬렉션/목록이 비어 있는 문제를 격리.
+- 팀 UI 초기화 경로에서 MonsterCollectionStore / TeamLoadoutStore 로드를 임시 제거하고 MonsterCatalog만 순회해 즉시 편성 UI 생성.
+- 현재 Catalog의 몬스터를 최대 3종 기본 편성으로 표시하고 ItemList 탭으로 추가/해제 가능.
+- 고정되는 것은 슬롯 수 3개뿐이며 몬스터 종류는 Catalog 기반이라 신규 몬스터 추가 시 UI 코드 변경 불필요.
+- 저장/조각 해금 데이터 연동은 UI 실기기 동작 확인 후 다시 단계적으로 연결.
+- Battle/Main/Supabase DB는 변경하지 않음.
+

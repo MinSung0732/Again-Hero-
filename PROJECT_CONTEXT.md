@@ -801,3 +801,9 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 향후 상점 조각 해금 몬스터도 ItemList에 Catalog/Collection 상태를 기반으로 자동 반영.
 - Battle/Main 전투 코드는 변경하지 않음.
 
+### 팀 편성 UI 복구 기준점
+- 팀 편성 무한/중단 로딩을 원인 분리하기 위해 UI 표시 경로를 MonsterCatalog 단독으로 축소.
+- MonsterCollection / TeamLoadout 영구 저장 모듈은 파일로 유지하지만 현재 로비 팀 UI 초기화에서는 호출하지 않음.
+- 팀 탭은 Catalog 전체 몬스터를 순회해 ItemList를 만들고 첫 최대 3종을 세션 기본 편성으로 사용.
+- 슬롯/목록 탭을 통한 편성 추가/해제 동작을 실기기에서 먼저 검증한 뒤 저장 → 해금 상태 → 전투 연결 순으로 다시 확장.
+

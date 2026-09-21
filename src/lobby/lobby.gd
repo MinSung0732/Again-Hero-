@@ -249,62 +249,22 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 	)
 
 func _setup_team_preview() -> void:
-	if team_selected_ids.is_empty():
-		_build_default_team_state()
-
-	_refresh_team_preview()
-	team_status_label.text = "기본 편성 표시 완료 · 저장 데이터 확인 중"
-	call_deferred("_load_saved_team_state")
-
-func _build_default_team_state() -> void:
-	monster_collection_state.clear()
 	team_catalog_ids.clear()
 	team_available_ids.clear()
 	team_selected_ids.clear()
+	monster_collection_state.clear()
 
-	for monster_id in MONSTER_CATALOG.get_ids():
+	var monster_ids = MONSTER_CATALOG.get_ids()
+	for raw_id in monster_ids:
+		var monster_id := String(raw_id)
 		team_catalog_ids.append(monster_id)
+		team_available_ids.append(monster_id)
 
-		var unlocked := MONSTER_CATALOG.is_default_unlocked(monster_id)
-		monster_collection_state[monster_id] = {
-			"unlocked": unlocked,
-			"shards": 0,
-		}
-
-		if unlocked:
-			team_available_ids.append(monster_id)
-			if team_selected_ids.size() < TEAM_LOADOUT_STORE.MAX_SLOTS:
-				team_selected_ids.append(monster_id)
-
-func _load_saved_team_state() -> void:
-	var saved_collection := MONSTER_COLLECTION_STORE.load_state()
-	var saved_available := MONSTER_COLLECTION_STORE.get_unlocked_ids(
-		saved_collection
-	)
-
-	if not saved_available.is_empty():
-		monster_collection_state = saved_collection
-		team_available_ids.clear()
-		for monster_id in saved_available:
-			team_available_ids.append(monster_id)
-
-	var fallback_ids: Array = []
-	for monster_id in team_available_ids:
-		if fallback_ids.size() >= TEAM_LOADOUT_STORE.MAX_SLOTS:
-			break
-		fallback_ids.append(monster_id)
-
-	var saved_team := TEAM_LOADOUT_STORE.load_ids(
-		team_available_ids,
-		fallback_ids
-	)
-	if not saved_team.is_empty():
-		team_selected_ids.clear()
-		for monster_id in saved_team:
+		if team_selected_ids.size() < TEAM_LOADOUT_STORE.MAX_SLOTS:
 			team_selected_ids.append(monster_id)
 
 	_refresh_team_preview()
-	team_status_label.text = "저장된 편성 확인 완료"
+	team_status_label.text = "기본 편성 표시 완료 · 저장 연동은 다음 단계에서 다시 연결합니다."
 
 func _refresh_team_preview() -> void:
 	_refresh_team_slot(team_slot_1_button, 0)
@@ -312,10 +272,11 @@ func _refresh_team_preview() -> void:
 	_refresh_team_slot(team_slot_3_button, 2)
 
 	var selected_names := ""
-	for monster_id in team_selected_ids:
+	for raw_id in team_selected_ids:
+		var monster_id := String(raw_id)
 		if not selected_names.is_empty():
 			selected_names += " / "
-		selected_names += MONSTER_CATALOG.get_name(String(monster_id))
+		selected_names += MONSTER_CATALOG.get_name(monster_id)
 
 	team_summary_label.text = "편성 %d / %d · %s" % [
 		team_selected_ids.size(),
@@ -324,37 +285,20 @@ func _refresh_team_preview() -> void:
 	]
 
 	team_monster_list.clear()
-	team_catalog_ids.clear()
 
-	for monster_id in MONSTER_CATALOG.get_ids():
-		team_catalog_ids.append(monster_id)
-
-		var unlocked := monster_id in team_available_ids
-		var line := ""
-		if unlocked:
-			var marker := "✓ " if monster_id in team_selected_ids else ""
-			line = "%s%s · %s · 비용 %.0f" % [
-				marker,
-				MONSTER_CATALOG.get_name(monster_id),
-				MONSTER_CATALOG.get_role_label(
-					MONSTER_CATALOG.get_role(monster_id)
-				),
-				MONSTER_CATALOG.get_base_cost(monster_id),
-			]
-		else:
-			var shards := MONSTER_COLLECTION_STORE.get_shards(
-				monster_id,
-				monster_collection_state
-			)
-			line = "잠김 · %s · 조각 %d / %d" % [
-				MONSTER_CATALOG.get_name(monster_id),
-				shards,
-				MONSTER_CATALOG.get_shards_required(monster_id),
-			]
-
+	for raw_id in team_catalog_ids:
+		var monster_id := String(raw_id)
+		var selected := monster_id in team_selected_ids
+		var marker := "[편성] " if selected else ""
+		var line := "%s%s · %s · 비용 %.0f" % [
+			marker,
+			MONSTER_CATALOG.get_name(monster_id),
+			MONSTER_CATALOG.get_role_label(
+				MONSTER_CATALOG.get_role(monster_id)
+			),
+			MONSTER_CATALOG.get_base_cost(monster_id),
+		]
 		team_monster_list.add_item(line)
-		var item_index := team_monster_list.item_count - 1
-		team_monster_list.set_item_disabled(item_index, not unlocked)
 
 func _refresh_team_slot(button: Button, slot_index: int) -> void:
 	if slot_index < team_selected_ids.size():
@@ -382,10 +326,6 @@ func _on_team_item_selected(item_index: int) -> void:
 		return
 
 	var monster_id := String(team_catalog_ids[item_index])
-	if monster_id not in team_available_ids:
-		team_status_label.text = "아직 해금되지 않은 몬스터입니다."
-		return
-
 	if monster_id in team_selected_ids:
 		_remove_team_monster(monster_id)
 	else:
@@ -400,11 +340,7 @@ func _remove_team_monster(monster_id: String) -> void:
 		return
 
 	team_selected_ids.erase(monster_id)
-	if _save_team_selection():
-		team_status_label.text = "%s 편성 해제 · 저장 완료" % MONSTER_CATALOG.get_name(monster_id)
-	else:
-		team_status_label.text = "편성 저장에 실패했습니다."
-
+	team_status_label.text = "%s 편성 해제" % MONSTER_CATALOG.get_name(monster_id)
 	_refresh_team_preview()
 
 func _add_team_monster(monster_id: String) -> void:
@@ -420,18 +356,8 @@ func _add_team_monster(monster_id: String) -> void:
 		return
 
 	team_selected_ids.append(monster_id)
-	if _save_team_selection():
-		team_status_label.text = "%s 편성 추가 · 저장 완료" % MONSTER_CATALOG.get_name(monster_id)
-	else:
-		team_status_label.text = "편성 저장에 실패했습니다."
-
+	team_status_label.text = "%s 편성 추가" % MONSTER_CATALOG.get_name(monster_id)
 	_refresh_team_preview()
-
-func _save_team_selection() -> bool:
-	return TEAM_LOADOUT_STORE.save_ids(
-		team_selected_ids,
-		team_available_ids
-	)
 
 func _refresh_header() -> void:
 	var state := STAGE_PROGRESS.load_state()

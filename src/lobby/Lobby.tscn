@@ -141,7 +141,7 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
 theme_override_font_sizes/font_size = 19
-text = "해금한 몬스터 중 최대 3종을 편성합니다. 편성은 자동 저장됩니다."
+text = "해금한 몬스터 중 최대 3종을 편성합니다. 현재는 UI 동작을 먼저 검증합니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
@@ -149,7 +149,7 @@ autowrap_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
 theme_override_font_sizes/font_size = 22
-text = "팀 편성 준비 중"
+text = "팀 탭을 열어 편성을 표시합니다."
 horizontal_alignment = 1
 
 [node name="SlotRow" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
@@ -198,7 +198,7 @@ custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
 theme_override_font_sizes/font_size = 19
-text = "팀 탭을 열면 기본 편성을 먼저 표시합니다."
+text = "몬스터 목록을 탭해 편성 추가/해제를 테스트하세요."
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
