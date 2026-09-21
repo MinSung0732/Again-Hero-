@@ -1,11 +1,22 @@
 ; Engine configuration file.
-; Best edited using the Godot editor.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
 config_version=5
 
 [application]
 
 config/name="용사, 또 너야?"
+config/description="“용사, 또 너야? 마왕이 되어 몬스터를 소환하고 던전을 지켜라. 끊임없이 쳐들어오는 용사를 막는 마왕 시점 디펜스 게임!”"
+config/version="0.0.0v"
+config/tags=PackedStringArray("againhero", "rougelite", "vslike")
 run/main_scene="res://src/main/Main.tscn"
+config/features=PackedStringArray("4.7")
+config/icon="uid://bxdb4cg7dutw3"
 
 [display]
 
@@ -13,9 +24,9 @@ window/size/viewport_width=1080
 window/size/viewport_height=1920
 window/size/window_width_override=540
 window/size/window_height_override=960
-window/handheld/orientation=1
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/handheld/orientation=1
 
 [rendering]
 
