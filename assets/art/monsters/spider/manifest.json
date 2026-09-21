@@ -1,0 +1,50 @@
+{
+  "asset": "spider",
+  "cell_size": {
+    "w": 231,
+    "h": 156
+  },
+  "rows": [
+    {
+      "action": "idle",
+      "frames": [
+        "idle_01.png",
+        "idle_02.png",
+        "idle_03.png",
+        "idle_04.png"
+      ]
+    },
+    {
+      "action": "move",
+      "frames": [
+        "move_01.png",
+        "move_02.png",
+        "move_03.png",
+        "move_04.png",
+        "move_05.png",
+        "move_06.png"
+      ]
+    },
+    {
+      "action": "attack",
+      "frames": [
+        "attack_01.png",
+        "attack_02.png",
+        "attack_03.png",
+        "attack_04.png",
+        "attack_05.png",
+        "attack_06.png",
+        "attack_07.png"
+      ]
+    },
+    {
+      "action": "death",
+      "frames": [
+        "death_01.png",
+        "death_02.png",
+        "death_03.png",
+        "death_04.png"
+      ]
+    }
+  ]
+}

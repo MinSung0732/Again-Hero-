@@ -1,0 +1,45 @@
+{
+  "asset": "slime",
+  "cell_size": {
+    "width": 88,
+    "height": 77
+  },
+  "animations": {
+    "idle": [
+      "idle_01.png",
+      "idle_02.png",
+      "idle_03.png",
+      "idle_04.png"
+    ],
+    "move": [
+      "move_01.png",
+      "move_02.png",
+      "move_03.png",
+      "move_04.png"
+    ],
+    "attack": [
+      "attack_01.png",
+      "attack_02.png",
+      "attack_03.png",
+      "attack_04.png"
+    ],
+    "hit": [
+      "hit_01.png",
+      "hit_02.png",
+      "hit_03.png",
+      "hit_04.png"
+    ],
+    "death": [
+      "death_01.png",
+      "death_02.png",
+      "death_03.png",
+      "death_04.png"
+    ],
+    "jump": [
+      "jump_01.png",
+      "jump_02.png",
+      "jump_03.png",
+      "jump_04.png"
+    ]
+  }
+}

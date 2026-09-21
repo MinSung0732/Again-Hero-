@@ -1,0 +1,79 @@
+{
+  "cell_size": [
+    32,
+    32
+  ],
+  "sheet_size": [
+    192,
+    160
+  ],
+  "anchor": {
+    "center_x": 16,
+    "foot_y": 30
+  },
+  "rows": [
+    {
+      "animation": "idle",
+      "row": 0,
+      "frames": 4
+    },
+    {
+      "animation": "move",
+      "row": 1,
+      "frames": 6
+    },
+    {
+      "animation": "attack",
+      "row": 2,
+      "frames": 6
+    },
+    {
+      "animation": "hit",
+      "row": 3,
+      "frames": 4
+    },
+    {
+      "animation": "death",
+      "row": 4,
+      "frames": 6
+    }
+  ],
+  "frame_order": {
+    "idle": [
+      "idle_01.png",
+      "idle_02.png",
+      "idle_03.png",
+      "idle_04.png"
+    ],
+    "move": [
+      "move_01.png",
+      "move_02.png",
+      "move_03.png",
+      "move_04.png",
+      "move_05.png",
+      "move_06.png"
+    ],
+    "attack": [
+      "attack_01.png",
+      "attack_02.png",
+      "attack_03.png",
+      "attack_04.png",
+      "attack_05.png",
+      "attack_06.png"
+    ],
+    "hit": [
+      "hit_01.png",
+      "hit_02.png",
+      "hit_03.png",
+      "hit_04.png"
+    ],
+    "death": [
+      "death_01.png",
+      "death_02.png",
+      "death_03.png",
+      "death_04.png",
+      "death_05.png",
+      "death_06.png"
+    ]
+  }
+}
