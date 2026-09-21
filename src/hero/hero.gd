@@ -278,7 +278,7 @@ func _cleanup_stage1_attack_frame(image: Image, frame_origin: Vector2i) -> void:
 	var visited := PackedByteArray()
 	visited.resize(pixel_count)
 	var components: Array = []
-	var neighbor_offsets := [
+	var neighbor_offsets: Array[Vector2i] = [
 		Vector2i(-1, -1),
 		Vector2i(0, -1),
 		Vector2i(1, -1),
@@ -373,12 +373,18 @@ func _cleanup_stage1_attack_frame(image: Image, frame_origin: Vector2i) -> void:
 		if component_pixels.size() > STAGE1_ATTACK_STRAY_MAX_PIXELS:
 			continue
 
+		var component_min_x := int(component.get("min_x", frame_width))
 		var component_max_x := int(component.get("max_x", frame_width))
 		if component_max_x >= primary_min_x - STAGE1_ATTACK_STRAY_LEFT_GAP:
 			continue
 
+		# The reported artifact is a 1~2px-wide detached vertical sliver.
+		# Preserve wider detached effects even when they are small.
+		if component_max_x - component_min_x + 1 > 2:
+			continue
+
 		for raw_pixel in component_pixels:
-			var pixel := raw_pixel as Vector2i
+			var pixel: Vector2i = raw_pixel
 			image.set_pixel(
 				frame_origin.x + pixel.x,
 				frame_origin.y + pixel.y,
