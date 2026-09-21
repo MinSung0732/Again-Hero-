@@ -1057,3 +1057,10 @@
 - 자폭 준비 중을 포함해 Hero 공격으로 먼저 처치되면 폭발하지 않고 EXP 30 구슬을 드롭.
 - Battle의 기존 사망/EXP Orb 경로는 수정하지 않고, 폭탄쥐가 사망 원인에 따라 `exp_reward`를 설정한 뒤 기존 `died` 신호를 보내는 방식으로 연결.
 - HP 36과 소환 비용 12는 유지.
+
+### Character Collision Radius Pass v1
+- 실제 도트 몸통 크기에 맞춰 Hero / Slime / Spider / Orc / Bomb Rat의 CircleShape2D 반경을 1차 조정.
+- Hero 34→28, Slime 29→22, Spider 25→20, Orc 39→32, Bomb Rat 24→20.
+- 무기, 다리 끝, 꼬리, 폭탄 같은 외곽 장식은 물리 충돌 반경에 포함하지 않는 기준 적용.
+- 폭탄쥐의 자폭 시작 거리 78px 및 폭발 피해 반경 150px은 충돌 반경과 별도 판정으로 유지.
+- 공격 사거리, 이동속도, HP, 피해량, 소환 비용 등 전투 밸런스 값은 변경하지 않음.

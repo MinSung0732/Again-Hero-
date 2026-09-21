@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://src/hero/hero.gd" id="1_hero"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hero"]
-radius = 34.0
+radius = 28.0
 
 [node name="Hero" type="CharacterBody2D"]
 z_index = 3
