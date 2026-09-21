@@ -1226,3 +1226,12 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - Battle은 MutationDirector가 확정한 이벤트를 받아 실제 강화 몬스터 생성과 combat physics 재개만 담당한다.
 - Battle 내부의 돌연변이 active/pending/candidate 중복 상태를 제거한다.
 - 향후 돌연변이 등급/재선택/특수 규칙은 MutationDirector 또는 데이터 카탈로그 쪽에 확장하고 Main/Battle에 개별 상태를 추가하지 않는다.
+
+### MutationCatalog v1 — 돌연변이 규칙 데이터 분리
+- 새 `src/data/mutation_catalog.gd`가 돌연변이 등급별 수치/표시 규칙을 관리한다.
+- 현재 프로필: `mutation_1`, `mutation_2`, `greater_mutation`.
+- 프로필 데이터에는 HP/공격력/속도/EXP/크기 배율, Hero 기준 스폰 거리, 이름 접두사, 모달 제목/설명이 포함된다.
+- Stage의 mutation 이벤트는 구체 배율을 직접 보관하지 않고 `mutation_profile_id`만 참조한다.
+- MutationDirector가 Stage 이벤트와 MutationCatalog 프로필을 합쳐 Main/Battle에 전달한다.
+- Battle/Main은 elite/miniboss별 표시/배율 하드코딩을 하지 않는다.
+- 새 돌연변이 등급 추가 시 MutationCatalog 프로필 추가 + Stage의 profile_id 지정만으로 확장하는 것을 원칙으로 한다.

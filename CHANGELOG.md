@@ -1410,3 +1410,12 @@
 - Battle은 실제 몬스터 생성과 전투 physics 정지/재개만 담당.
 - 기존 Stage 1 돌연변이 시간/배율/모달 UI는 변경하지 않음.
 - 시간/지휘력/일반 소환 루프는 변경하지 않음.
+
+### MutationCatalog v1 — 구조 정리 2단계
+- `src/data/mutation_catalog.gd` 추가.
+- 1차 돌연변이 / 2차 돌연변이 / 대돌연변이의 배율, 이름 접두사, 모달 문구, 스폰 거리를 데이터 프로필로 이동.
+- Stage 1의 90/180/240초 이벤트는 구체 배율 대신 `mutation_profile_id`만 참조하도록 변경.
+- MutationDirector가 이벤트 시작 시 MutationCatalog 프로필을 병합해 완성된 선택 이벤트를 생성.
+- Battle의 miniboss 이름 분기 및 고정 460px 설정 제거.
+- Main의 elite/miniboss 모달 문구 분기 제거.
+- 시간/지휘력/일반 소환 루프는 변경하지 않음.

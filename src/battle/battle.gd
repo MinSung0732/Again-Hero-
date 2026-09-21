@@ -1287,16 +1287,12 @@ func spawn_selected_mutation(monster_id: String) -> void:
 		return
 
 	var event_type := String(event.get("type", "elite"))
-	var prefix := "돌연변이"
-	if event_type == "miniboss":
-		prefix = "대돌연변이"
-
+	var name_prefix := String(event.get("name_prefix", "돌연변이"))
 	var mutation_name := "%s %s" % [
-		prefix,
+		name_prefix,
 		MONSTER_CATALOG.get_name(monster_id),
 	]
 	event["name"] = mutation_name
-	event["spawn_distance"] = 460.0
 
 	_spawn_stage_event_monster(event, monster_id)
 

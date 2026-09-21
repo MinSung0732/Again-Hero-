@@ -341,13 +341,15 @@ func _on_mutation_choice_ready(
 	current_mutation_candidates = candidates.duplicate()
 	mutation_panel.show()
 
-	var event_type := String(event_data.get("type", "elite"))
-	if event_type == "miniboss":
-		mutation_title.text = "대돌연변이 선택"
-		mutation_trigger.text = "편성 몬스터 1종을 대돌연변이로 진화시킵니다."
-	else:
-		mutation_title.text = "돌연변이 선택"
-		mutation_trigger.text = "편성 몬스터 1종을 돌연변이로 투입합니다."
+	mutation_title.text = String(
+		event_data.get("ui_title", "돌연변이 선택")
+	)
+	mutation_trigger.text = String(
+		event_data.get(
+			"ui_description",
+			"편성 몬스터 1종을 돌연변이로 투입합니다."
+		)
+	)
 
 	var buttons: Array[Button] = [
 		mutation_choice_0,

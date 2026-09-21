@@ -1,6 +1,8 @@
 extends RefCounted
 class_name MutationDirector
 
+const MUTATION_CATALOG := preload("res://src/data/mutation_catalog.gd")
+
 var active: bool = false
 var pending_event: Dictionary = {}
 var candidate_ids: Array[String] = []
@@ -24,7 +26,7 @@ func begin(event: Dictionary, candidates: Array) -> bool:
 	if candidate_ids.is_empty():
 		return false
 
-	pending_event = event.duplicate(true)
+	pending_event = MUTATION_CATALOG.resolve_event(event)
 	active = true
 	return true
 
