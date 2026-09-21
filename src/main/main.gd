@@ -325,6 +325,9 @@ func _load_battle_loadout() -> void:
 		fallback_ids
 	)
 
+	if battle.has_method("set_allowed_monster_ids"):
+		battle.call("set_allowed_monster_ids", battle_loadout_ids)
+
 func _configure_battle_loadout_buttons() -> void:
 	for slot_index in range(summon_slot_buttons.size()):
 		var button = summon_slot_buttons[slot_index]

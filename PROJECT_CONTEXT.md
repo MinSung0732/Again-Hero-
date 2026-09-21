@@ -860,3 +860,12 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 이번 Step 1에서는 `Battle.gd` 자체의 소환 허용 규칙은 건드리지 않음. UI를 통한 일반 소환만 편성 슬롯을 사용.
 - 다음 Step에서 실기기 회귀가 없는 것을 확인한 뒤 Battle 런타임 guard를 추가.
 
+### 팀 편성 → Battle 런타임 제한 Step 2
+- 전투 소환 UI가 저장된 팀 편성을 정상 반영하는 실기기 검증 후 Battle 내부 안전장치를 추가.
+- `main.gd`가 이미 정규화한 `battle_loadout_ids`를 `Battle.set_allowed_monster_ids()`로 전달.
+- Battle은 저장 파일 / TeamLoadoutStore를 직접 읽지 않아 전투 초기화와 영구 저장 책임을 분리.
+- `_can_attempt_summon()`에서 편성 제한을 검사하므로 자동 소환 `try_summon()`과 수동 배치 `try_summon_at_position()` 모두 동일하게 적용.
+- 비편성 monster_id 직접 소환 요청은 `현재 팀에 편성되지 않은 몬스터입니다.`로 거부.
+- 전달된 편성이 비어 있으면 제한을 활성화하지 않는 fail-open 방식으로, 저장/전달 오류가 전투 전체를 막는 회귀를 방지.
+- 이 단계로 **로비 편성 → 로컬 저장 → 전투 UI → Battle 런타임 소환 제한** 흐름이 완성됨.
+

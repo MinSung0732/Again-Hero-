@@ -86,6 +86,9 @@ var demon_last_candidate_ids: Array[String] = []
 var monster_summon_costs: Dictionary = {}
 var permanent_research_levels: Dictionary = {}
 
+var allowed_monster_ids: Array = []
+var loadout_restriction_enabled: bool = false
+
 func _ready() -> void:
 	queue_redraw()
 	_start_battle()
@@ -247,6 +250,19 @@ func get_permanent_research_summary() -> String:
 		return "연구 없음"
 	return " · ".join(active)
 
+func set_allowed_monster_ids(monster_ids: Array) -> void:
+	allowed_monster_ids.clear()
+
+	for raw_id in monster_ids:
+		var monster_id := String(raw_id)
+		if monster_id.is_empty():
+			continue
+		if monster_id in allowed_monster_ids:
+			continue
+		allowed_monster_ids.append(monster_id)
+
+	loadout_restriction_enabled = not allowed_monster_ids.is_empty()
+
 func try_summon(monster_type: String) -> bool:
 	if not _can_attempt_summon(monster_type):
 		return false
@@ -291,6 +307,14 @@ func _can_attempt_summon(monster_type: String) -> bool:
 
 	if demon_augment_selection_active:
 		summon_result.emit(monster_type, false, "마왕 증강을 먼저 선택해 주세요.")
+		return false
+
+	if loadout_restriction_enabled and monster_type not in allowed_monster_ids:
+		summon_result.emit(
+			monster_type,
+			false,
+			"현재 팀에 편성되지 않은 몬스터입니다."
+		)
 		return false
 
 	if get_monster_cost(monster_type) <= 0.0:

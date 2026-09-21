@@ -926,3 +926,10 @@
 - 전투 편성 로드는 MonsterCollection을 다시 거치지 않고 Lobby와 동일한 `team_loadout.cfg`를 직접 읽어 이전 로딩 회귀 가능성을 줄임.
 - Battle.gd는 변경하지 않아 타이머/메뉴/소환 핵심 로직 회귀 범위를 제한.
 
+### Battle Runtime Team Loadout Guard
+- 저장 편성에 없는 monster_id가 다른 호출 경로로 Battle에 전달되어도 소환되지 않도록 런타임 guard 추가.
+- Main이 로드한 편성 목록을 `Battle.set_allowed_monster_ids()`로 전달.
+- Battle은 TeamLoadoutStore/ConfigFile을 직접 읽지 않음.
+- 자동 소환과 수동 배치가 공통으로 사용하는 `_can_attempt_summon()`에서 비편성 몬스터 요청을 거부.
+- 편성 전달이 비정상적으로 비어 있으면 guard를 활성화하지 않는 fail-open 구조로 기존 전투 회귀 위험 최소화.
+
