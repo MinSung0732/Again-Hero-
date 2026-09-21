@@ -10,7 +10,7 @@ const RESEARCH = {
 		"description": "모든 몬스터 공격력 +1% / Lv",
 		"max_level": 70,
 		"base_cost": 15,
-		"cost_growth": 1.065,
+		"cost_growth": 1.15,
 	},
 	"monster_vitality": {
 		"id": "monster_vitality",
@@ -18,7 +18,7 @@ const RESEARCH = {
 		"description": "모든 몬스터 최대 HP +1% / Lv",
 		"max_level": 70,
 		"base_cost": 15,
-		"cost_growth": 1.065,
+		"cost_growth": 1.15,
 	},
 	"monster_mobility": {
 		"id": "monster_mobility",
@@ -26,7 +26,7 @@ const RESEARCH = {
 		"description": "모든 몬스터 이동속도 +0.35% / Lv",
 		"max_level": 70,
 		"base_cost": 10,
-		"cost_growth": 1.068,
+		"cost_growth": 1.16,
 	},
 	"monster_attack_speed": {
 		"id": "monster_attack_speed",
@@ -34,7 +34,7 @@ const RESEARCH = {
 		"description": "모든 몬스터 공격속도 +0.5% / Lv",
 		"max_level": 70,
 		"base_cost": 15,
-		"cost_growth": 1.067,
+		"cost_growth": 1.15,
 	},
 	"summon_efficiency": {
 		"id": "summon_efficiency",
@@ -73,8 +73,7 @@ const RESEARCH = {
 		"name": "전술 기록 노트",
 		"description": "Run당 마왕 증강 새로고침 +1회",
 		"max_level": 3,
-		"base_cost": 120,
-		"cost_growth": 2.0,
+		"costs": [1000, 3000, 5000],
 	},
 }
 
@@ -108,6 +107,12 @@ static func get_cost(research_id: String, current_level: int) -> int:
 	var max_level: int = int(data.get("max_level", 0))
 	if current_level < 0 or current_level >= max_level:
 		return -1
+
+	var fixed_costs: Array = data.get("costs", [])
+	if not fixed_costs.is_empty():
+		if current_level >= fixed_costs.size():
+			return -1
+		return int(fixed_costs[current_level])
 
 	var base_cost: float = float(data.get("base_cost", 0))
 	var growth: float = float(data.get("cost_growth", 1.0))
