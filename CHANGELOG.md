@@ -1201,3 +1201,8 @@
 - 보호막 활성 중 HP바 아래에 파란 Shield 게이지 표시.
 - `assets/art/heroes/stage1_mage/effect_02/frame_01~06.png`를 루프 애니메이션으로 연결.
 - 기존 관통포 게이지/일반 공격/Stage 2 필살기 로직은 변경하지 않음.
+
+### Stage 1 Arcane Barrier Ground Placement Fix
+- `effect_02` 보호막 마법진을 Hero 몸 중심에서 발밑으로 이동.
+- ShieldEffect 위치를 아래쪽으로 44px 내리고 Y축 스케일을 0.62로 눌러 바닥에 깔린 원형 마법진처럼 보이도록 조정.
+- 보호막 HP, 지속시간, 쿨다운, 피해 흡수 로직은 변경하지 않음.
