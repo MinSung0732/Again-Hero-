@@ -9,9 +9,18 @@ static func load_state() -> Dictionary:
 	var has_saved_data := config.load(SAVE_PATH) == OK
 	var result: Dictionary = {}
 
-	for monster_id in MONSTER_CATALOG.get_ids():
-		var unlocked := MONSTER_CATALOG.is_default_unlocked(monster_id)
+	for raw_id in MONSTER_CATALOG.ORDER:
+		var monster_id := String(raw_id)
+		if not MONSTER_CATALOG.MONSTERS.has(monster_id):
+			continue
+
+		var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+		if typeof(data) != TYPE_DICTIONARY:
+			continue
+
+		var unlocked := bool(data.get("default_unlocked", false))
 		var shards := 0
+		var required := maxi(int(data.get("shards_required", 1)), 1)
 
 		if has_saved_data:
 			unlocked = bool(
@@ -32,7 +41,7 @@ static func load_state() -> Dictionary:
 				0
 			)
 
-		if shards >= MONSTER_CATALOG.get_shards_required(monster_id):
+		if shards >= required:
 			unlocked = true
 
 		result[monster_id] = {
@@ -45,16 +54,25 @@ static func load_state() -> Dictionary:
 static func save_state(state: Dictionary) -> bool:
 	var config := ConfigFile.new()
 
-	for monster_id in MONSTER_CATALOG.get_ids():
-		var unlocked := MONSTER_CATALOG.is_default_unlocked(monster_id)
+	for raw_id in MONSTER_CATALOG.ORDER:
+		var monster_id := String(raw_id)
+		if not MONSTER_CATALOG.MONSTERS.has(monster_id):
+			continue
+
+		var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+		if typeof(data) != TYPE_DICTIONARY:
+			continue
+
+		var unlocked := bool(data.get("default_unlocked", false))
 		var shards := 0
+		var required := maxi(int(data.get("shards_required", 1)), 1)
 		var entry = state.get(monster_id, {})
 
 		if typeof(entry) == TYPE_DICTIONARY:
 			unlocked = bool(entry.get("unlocked", unlocked))
 			shards = maxi(int(entry.get("shards", 0)), 0)
 
-		if shards >= MONSTER_CATALOG.get_shards_required(monster_id):
+		if shards >= required:
 			unlocked = true
 
 		config.set_value(
@@ -70,13 +88,14 @@ static func save_state(state: Dictionary) -> bool:
 
 	return config.save(SAVE_PATH) == OK
 
-static func get_unlocked_ids(state: Dictionary = {}) -> Array[String]:
+static func get_unlocked_ids(state: Dictionary = {}) -> Array:
 	var source := state
 	if source.is_empty():
 		source = load_state()
 
-	var result: Array[String] = []
-	for monster_id in MONSTER_CATALOG.get_ids():
+	var result: Array = []
+	for raw_id in MONSTER_CATALOG.ORDER:
+		var monster_id := String(raw_id)
 		var entry = source.get(monster_id, {})
 		if typeof(entry) != TYPE_DICTIONARY:
 			continue
@@ -110,10 +129,14 @@ static func add_shards(monster_id: String, amount: int) -> Dictionary:
 	if not state.has(monster_id):
 		return state
 
+	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+	if typeof(data) != TYPE_DICTIONARY:
+		return state
+
 	var entry = state.get(monster_id, {})
 	if typeof(entry) != TYPE_DICTIONARY:
 		entry = {
-			"unlocked": MONSTER_CATALOG.is_default_unlocked(monster_id),
+			"unlocked": bool(data.get("default_unlocked", false)),
 			"shards": 0,
 		}
 
@@ -123,7 +146,8 @@ static func add_shards(monster_id: String, amount: int) -> Dictionary:
 	)
 	entry["shards"] = shards
 
-	if shards >= MONSTER_CATALOG.get_shards_required(monster_id):
+	var required := maxi(int(data.get("shards_required", 1)), 1)
+	if shards >= required:
 		entry["unlocked"] = true
 
 	state[monster_id] = entry

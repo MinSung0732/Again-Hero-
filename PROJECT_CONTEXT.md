@@ -833,3 +833,13 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - MonsterCollection/조각 해금 상태와 Battle 소환 슬롯 연결은 아직 재연결하지 않음.
 - 향후 팀 편성 UI는 **바둑판형 몬스터 카드 + 몬스터 도트 이미지** 구조로 개편 예정. 현재 ItemList는 기능 검증용.
 
+### MonsterCollection 해금/조각 상태 재연결
+- 팀 편성 UI/저장 기능이 PC에서 앱 재실행 후에도 정상 유지되는 것을 확인한 뒤 Collection 상태만 재연결.
+- 팀 탭은 기존 Catalog 기반 기본 UI를 먼저 표시하고, deferred 단계에서 `monster_collection.cfg`와 `team_loadout.cfg`를 순서대로 복원.
+- MonsterCollectionStore는 문제가 있었던 MonsterCatalog static helper를 호출하지 않고 `ORDER / MONSTERS` 상수 데이터만 직접 순회.
+- 기본 해금 몬스터만 `team_available_ids`에 포함하며, 저장된 편성 중 잠긴/삭제된 monster_id는 자동 제외.
+- 미해금 몬스터는 ItemList에 `[잠김] 이름 · 조각 현재 / 필요량`으로 표시하고 선택 불가.
+- 현재 Slime / Spider / Orc는 Catalog의 `default_unlocked = true`이므로 모두 기본 해금.
+- 향후 상점은 `MonsterCollectionStore.add_shards(monster_id, amount)`만 호출하면 조각 누적 및 요구량 도달 시 자동 해금 가능.
+- Battle/Main 전투 편성 연결은 아직 재도입하지 않음.
+

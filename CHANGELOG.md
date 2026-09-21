@@ -901,3 +901,12 @@
 - MonsterCollection/조각 해금 및 Battle/Main 전투 편성 연결은 아직 제외.
 - 향후 팀 편성 UI의 바둑판형 몬스터 카드 + 도트 이미지 개편을 ROADMAP에 추가.
 
+### Monster Collection Unlock / Shards Reconnected
+- 정상 동작이 확인된 팀 편성 UI/저장 위에 MonsterCollection 상태만 재연결.
+- Collection 저장은 `user://monster_collection.cfg`를 사용.
+- MonsterCollectionStore의 Catalog 접근을 static helper 호출 대신 `ORDER / MONSTERS` 직접 순회로 통일.
+- 팀 UI를 먼저 렌더링한 후 deferred 복원 단계에서 해금 몬스터 목록과 저장 편성을 함께 정규화.
+- 미해금 몬스터는 조각 진행도를 표시하고 ItemList 선택을 비활성화.
+- `add_shards()`는 요구량 도달 시 자동 해금하는 상점 연동용 API로 유지.
+- Battle/Main 전투 코드는 변경하지 않음.
+

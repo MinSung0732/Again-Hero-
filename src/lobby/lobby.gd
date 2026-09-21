@@ -5,6 +5,7 @@ const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
+const MONSTER_COLLECTION_STORE := preload("res://src/systems/monster_collection_store.gd")
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 
 const BATTLE_SCENE_PATH := "res://src/main/Main.tscn"
@@ -54,6 +55,7 @@ var stage_ids: Array[String] = []
 var selected_stage_index: int = 0
 var current_tab: String = "main"
 
+var monster_collection_state: Dictionary = {}
 var team_catalog_ids: Array = []
 var team_available_ids: Array = []
 var team_selected_ids: Array = []
@@ -301,24 +303,43 @@ func _setup_team_preview() -> void:
 	call_deferred("_restore_saved_team_selection")
 
 func _restore_saved_team_selection() -> void:
+	var saved_collection := MONSTER_COLLECTION_STORE.load_state()
+	var unlocked_ids := MONSTER_COLLECTION_STORE.get_unlocked_ids(
+		saved_collection
+	)
+
+	if not unlocked_ids.is_empty():
+		monster_collection_state = saved_collection
+		team_available_ids.clear()
+		for raw_id in unlocked_ids:
+			team_available_ids.append(String(raw_id))
+
 	var fallback_ids: Array = []
 	for raw_id in team_selected_ids:
-		fallback_ids.append(String(raw_id))
+		var monster_id := String(raw_id)
+		if monster_id not in team_available_ids:
+			continue
+		fallback_ids.append(monster_id)
+		if fallback_ids.size() >= TEAM_MAX_SLOTS:
+			break
+
+	if fallback_ids.is_empty():
+		for raw_id in team_available_ids:
+			fallback_ids.append(String(raw_id))
+			if fallback_ids.size() >= TEAM_MAX_SLOTS:
+				break
 
 	var saved_ids = TEAM_LOADOUT_STORE.load_ids(
 		team_available_ids,
 		fallback_ids
 	)
-	if saved_ids.is_empty():
-		team_status_label.text = "기본 편성 사용 중"
-		return
 
 	team_selected_ids.clear()
 	for raw_id in saved_ids:
 		team_selected_ids.append(String(raw_id))
 
 	_refresh_team_preview()
-	team_status_label.text = "저장된 편성 복원 완료"
+	team_status_label.text = "컬렉션/편성 복원 완료"
 
 func _refresh_team_preview() -> void:
 	_refresh_team_slot(team_slot_1_button, 0)
@@ -346,6 +367,10 @@ func _refresh_team_preview() -> void:
 		team_monster_list.set_item_text(
 			item_index,
 			_team_collection_line(monster_id)
+		)
+		team_monster_list.set_item_disabled(
+			item_index,
+			monster_id not in team_available_ids
 		)
 
 func _refresh_team_slot(button: Button, slot_index: int) -> void:
@@ -421,6 +446,22 @@ func _add_team_monster(monster_id: String) -> void:
 	_refresh_team_preview()
 
 func _team_collection_line(monster_id: String) -> String:
+	if monster_id not in team_available_ids:
+		var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+		var required := 1
+		if typeof(data) == TYPE_DICTIONARY:
+			required = maxi(int(data.get("shards_required", 1)), 1)
+
+		var shards := MONSTER_COLLECTION_STORE.get_shards(
+			monster_id,
+			monster_collection_state
+		)
+		return "[잠김] %s · 조각 %d / %d" % [
+			_team_monster_name(monster_id),
+			shards,
+			required,
+		]
+
 	var marker := "[편성] " if monster_id in team_selected_ids else ""
 	return "%s%s · %s · 비용 %.0f" % [
 		marker,
