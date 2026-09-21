@@ -1471,3 +1471,10 @@
 - 생성 완료 후 `_apply_special_monster_modifiers()`에서 HP/공격/속도/EXP/크기/Stage 이벤트 메타를 후처리.
 - Bomb Rat 특수 개체는 폭발 피해에도 damage multiplier 적용.
 - 특수 HP 배율 적용 후 current_hp를 새 max_hp로 맞춰 실제 강화 체력으로 시작.
+
+### Mutation Direct Event Read Hotfix
+- 돌연변이 선택 시 `commit_selection()` 상태 소비 단계에 의존하지 않고 MutationDirector의 현재 이벤트를 직접 복사한 뒤 reset하도록 단순화.
+- 선택 함수 진입 즉시 combat physics를 먼저 복구해 이후 로직과 Hero 재개를 완전히 분리.
+- 이벤트 데이터가 비어 있어도 1차 돌연변이 기본 프로필로 fallback하여 선택한 몬스터 소환을 계속 시도.
+- 테스트 가시성을 위해 돌연변이 스폰 거리를 Hero 기준 최대 260px로 제한.
+- 성공 상태 문구에 실제 monster_id를 포함해 생성 경로 확인 가능.

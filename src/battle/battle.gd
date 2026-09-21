@@ -1283,15 +1283,30 @@ func _open_mutation_choice(event: Dictionary) -> void:
 	)
 
 func spawn_selected_mutation(monster_id: String) -> void:
-	var event := mutation_director.commit_selection(monster_id)
+	# 모달에서 정지시킨 combat physics는 선택 즉시 가장 먼저 복구한다.
+	if not battle_over and not external_pause:
+		_set_combat_physics_enabled(true)
+
+	var event := mutation_director.get_event()
+	mutation_director.reset()
+
 	if event.is_empty():
-		if not external_pause and not demon_augment_selection_active:
-			_set_combat_physics_enabled(true)
-		mutation_spawn_result.emit(
-			false,
-			"돌연변이 선택 이벤트가 비어 있습니다. monster_id=%s" % monster_id
+		event = {
+			"type": "elite",
+			"name_prefix": "돌연변이",
+			"spawn_distance": 260.0,
+			"hp_multiplier": 2.2,
+			"damage_multiplier": 1.45,
+			"speed_multiplier": 1.10,
+			"exp_multiplier": 1.5,
+			"visual_scale": 1.15,
+		}
+	else:
+		# 테스트 시 실제 출현을 화면에서 바로 확인할 수 있게 가까이 배치한다.
+		event["spawn_distance"] = minf(
+			float(event.get("spawn_distance", 260.0)),
+			260.0
 		)
-		return
 
 	var event_type := String(event.get("type", "elite"))
 	var name_prefix := String(event.get("name_prefix", "돌연변이"))
@@ -1301,11 +1316,7 @@ func spawn_selected_mutation(monster_id: String) -> void:
 	]
 	event["name"] = mutation_name
 
-	if not external_pause and not demon_augment_selection_active:
-		_set_combat_physics_enabled(true)
-
 	var spawned := spawn_special_monster(monster_id, event)
-
 	if not spawned:
 		mutation_spawn_result.emit(
 			false,
@@ -1317,7 +1328,10 @@ func spawn_selected_mutation(monster_id: String) -> void:
 	mutation_selected.emit(event_type, mutation_name)
 	mutation_spawn_result.emit(
 		true,
-		"%s 소환 완료" % mutation_name
+		"%s 소환 완료 · monster_id=%s" % [
+			mutation_name,
+			monster_id,
+		]
 	)
 
 func spawn_special_monster(
