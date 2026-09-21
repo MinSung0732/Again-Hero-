@@ -14,6 +14,9 @@ var max_range: float = 420.0
 var damage: int = 34
 var traveled_distance: float = 0.0
 var source_hero_id: String = ""
+var splash_radius: float = 0.0
+var splash_damage_ratio: float = 0.0
+var has_impacted: bool = false
 
 @onready var projectile_sprite: AnimatedSprite2D = $ProjectileSprite
 
@@ -27,13 +30,17 @@ func setup(
 	new_damage: int,
 	new_speed: float,
 	new_max_range: float,
-	new_source_hero_id: String = ""
+	new_source_hero_id: String = "",
+	new_splash_radius: float = 0.0,
+	new_splash_damage_ratio: float = 0.0
 ) -> void:
 	direction = new_direction.normalized()
 	damage = new_damage
 	speed = new_speed
 	max_range = new_max_range
 	source_hero_id = new_source_hero_id
+	splash_radius = maxf(new_splash_radius, 0.0)
+	splash_damage_ratio = clampf(new_splash_damage_ratio, 0.0, 1.0)
 	rotation = direction.angle()
 	_apply_projectile_visual()
 
@@ -46,12 +53,42 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 
 func _on_body_entered(body: Node) -> void:
+	if has_impacted:
+		return
 	if body == null or body.is_queued_for_deletion():
 		return
+	if not body.is_in_group("monsters") or not body.has_method("take_damage"):
+		return
 
-	if body.is_in_group("monsters") and body.has_method("take_damage"):
-		body.call("take_damage", damage)
-		queue_free()
+	has_impacted = true
+	body.call("take_damage", damage)
+
+	if splash_radius > 0.0 and splash_damage_ratio > 0.0:
+		_apply_splash_damage(body)
+
+	queue_free()
+
+func _apply_splash_damage(direct_target: Node) -> void:
+	var splash_damage := maxi(
+		1,
+		int(round(float(damage) * splash_damage_ratio))
+	)
+
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		if node == direct_target:
+			continue
+		if not node.has_method("take_damage"):
+			continue
+
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if global_position.distance_to(monster.global_position) > splash_radius:
+			continue
+
+		monster.call("take_damage", splash_damage)
 
 func _apply_projectile_visual() -> void:
 	projectile_sprite.visible = false
