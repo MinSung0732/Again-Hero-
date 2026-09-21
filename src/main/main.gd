@@ -31,6 +31,12 @@ const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 @onready var demon_ultimate_1: Button = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate1
 @onready var demon_ultimate_2: Button = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate2
 @onready var demon_ultimate_3: Button = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate3
+@onready var demon_direction_buttons: HBoxContainer = $HUD/DemonUltimatePanel/DirectionButtons
+@onready var demon_direction_east: Button = $HUD/DemonUltimatePanel/DirectionButtons/East
+@onready var demon_direction_west: Button = $HUD/DemonUltimatePanel/DirectionButtons/West
+@onready var demon_direction_north: Button = $HUD/DemonUltimatePanel/DirectionButtons/North
+@onready var demon_direction_south: Button = $HUD/DemonUltimatePanel/DirectionButtons/South
+@onready var demon_direction_cancel: Button = $HUD/DemonUltimatePanel/DirectionButtons/Cancel
 @onready var slime_button: Button = $HUD/BottomBar/SummonButtons/SlimeButton
 @onready var spider_button: Button = $HUD/BottomBar/SummonButtons/SpiderButton
 @onready var orc_button: Button = $HUD/BottomBar/SummonButtons/OrcButton
@@ -110,6 +116,19 @@ func _ready() -> void:
 	demon_ultimate_3.pressed.connect(
 		_on_demon_ultimate_pressed.bind("square_siege")
 	)
+	demon_direction_east.pressed.connect(
+		_on_demon_line_direction_pressed.bind("east")
+	)
+	demon_direction_west.pressed.connect(
+		_on_demon_line_direction_pressed.bind("west")
+	)
+	demon_direction_north.pressed.connect(
+		_on_demon_line_direction_pressed.bind("north")
+	)
+	demon_direction_south.pressed.connect(
+		_on_demon_line_direction_pressed.bind("south")
+	)
+	demon_direction_cancel.pressed.connect(_close_demon_direction_select)
 	next_stage_button.pressed.connect(_on_next_stage_pressed)
 	stage_select_result_button.pressed.connect(_on_lobby_pressed)
 	restart_button.pressed.connect(_on_restart_pressed)
@@ -433,7 +452,7 @@ func _on_demon_ultimate_changed(
 	demon_ultimate_bar.value = current_value
 
 	demon_ultimate_1.disabled = not ready
-	demon_ultimate_2.disabled = true
+	demon_ultimate_2.disabled = not ready
 	demon_ultimate_3.disabled = true
 
 	demon_ultimate_1.text = (
@@ -441,10 +460,22 @@ func _on_demon_ultimate_changed(
 		if ready
 		else "1 원형 포위\n충전 중"
 	)
-	demon_ultimate_2.text = "2 일직선 공세\n준비중"
+	demon_ultimate_2.text = (
+		"2 일직선 공세\n방향 선택"
+		if ready
+		else "2 일직선 공세\n충전 중"
+	)
 	demon_ultimate_3.text = "3 사각 포위\n준비중"
 
 func _on_demon_ultimate_pressed(skill_id: String) -> void:
+	if skill_id == "line_assault":
+		var snapshot: Dictionary = battle.get_snapshot()
+		if not bool(snapshot.get("demon_ultimate_ready", false)):
+			status_label.text = "마왕 필살기 게이지가 아직 준비되지 않았습니다."
+			return
+		_open_demon_direction_select()
+		return
+
 	if battle.try_use_demon_ultimate(skill_id):
 		return
 
@@ -457,6 +488,29 @@ func _on_demon_ultimate_pressed(skill_id: String) -> void:
 		)
 	else:
 		status_label.text = "마왕 필살기 게이지가 아직 준비되지 않았습니다."
+
+func _open_demon_direction_select() -> void:
+	$HUD/DemonUltimatePanel/UltimateButtons.hide()
+	demon_direction_buttons.show()
+	demon_ultimate_label.text = "2번 일직선 공세 · 방향 선택"
+
+func _close_demon_direction_select() -> void:
+	demon_direction_buttons.hide()
+	$HUD/DemonUltimatePanel/UltimateButtons.show()
+	var snapshot: Dictionary = battle.get_snapshot()
+	_on_demon_ultimate_changed(
+		float(snapshot.get("demon_ultimate_charge", 0.0)),
+		float(snapshot.get("demon_ultimate_max", 100.0)),
+		bool(snapshot.get("demon_ultimate_ready", false))
+	)
+
+func _on_demon_line_direction_pressed(direction: String) -> void:
+	if battle.try_use_demon_ultimate("line_assault", direction):
+		_close_demon_direction_select()
+		return
+
+	status_label.text = "일직선 공세를 발동할 수 없습니다."
+	_close_demon_direction_select()
 
 func _on_demon_ultimate_used(
 	_skill_id: String,
@@ -549,6 +603,7 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	demon_ultimate_1.disabled = true
 	demon_ultimate_2.disabled = true
 	demon_ultimate_3.disabled = true
+	demon_direction_buttons.hide()
 	placement_toggle.disabled = true
 
 	if player_won:

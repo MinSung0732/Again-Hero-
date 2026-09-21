@@ -780,7 +780,10 @@ func _add_demon_ultimate_charge(amount: float) -> void:
 	)
 	_emit_demon_ultimate_changed()
 
-func try_use_demon_ultimate(skill_id: String) -> bool:
+func try_use_demon_ultimate(
+	skill_id: String,
+	direction: String = ""
+) -> bool:
 	if battle_over or external_pause or demon_augment_selection_active:
 		return false
 	if demon_ultimate_charge + 0.001 < DEMON_ULTIMATES.CHARGE_MAX:
@@ -794,6 +797,8 @@ func try_use_demon_ultimate(skill_id: String) -> bool:
 	match skill_id:
 		"encirclement":
 			used = _use_demon_encirclement(skill)
+		"line_assault":
+			used = _use_demon_line_assault(skill, direction)
 
 	if not used:
 		return false
@@ -802,10 +807,13 @@ func try_use_demon_ultimate(skill_id: String) -> bool:
 	_emit_demon_ultimate_changed()
 
 	var skill_name := String(skill.get("name", "마왕 필살기"))
+	var use_message := "%s 발동! 용사 외곽에 군단을 전개했습니다." % skill_name
+	if skill_id == "line_assault":
+		use_message = "%s 발동! 선택한 방향에서 전선을 형성했습니다." % skill_name
 	demon_ultimate_used.emit(
 		skill_id,
 		skill_name,
-		"%s 발동! 용사 외곽에 군단을 전개했습니다." % skill_name
+		use_message
 	)
 	return true
 
@@ -850,6 +858,88 @@ func _use_demon_encirclement(skill: Dictionary) -> bool:
 	for index in range(spawn_count):
 		var angle := angle_offset + TAU * float(index) / float(spawn_count)
 		var candidate := hero_position + Vector2.from_angle(angle) * spawn_radius
+		var spawn_position := Vector2(
+			clampf(
+				candidate.x,
+				MANUAL_SPAWN_MARGIN,
+				current_map_size.x - MANUAL_SPAWN_MARGIN
+			),
+			clampf(
+				candidate.y,
+				MANUAL_SPAWN_MARGIN,
+				current_map_size.y - MANUAL_SPAWN_MARGIN
+			)
+		)
+		demon_ultimate_spawn_queue.append({
+			"monster_id": pool[index % pool.size()],
+			"position": spawn_position,
+		})
+
+	return true
+
+func _use_demon_line_assault(
+	skill: Dictionary,
+	direction: String
+) -> bool:
+	if not is_instance_valid(hero):
+		return false
+	if not demon_ultimate_spawn_queue.is_empty():
+		return false
+	if direction not in ["east", "west", "north", "south"]:
+		return false
+
+	var pool: Array[String] = []
+	for raw_id in allowed_monster_ids:
+		var monster_id := String(raw_id)
+		if MONSTER_CATALOG.MONSTERS.has(monster_id):
+			pool.append(monster_id)
+
+	if pool.is_empty():
+		for raw_id in MONSTER_CATALOG.ORDER:
+			var fallback_id := String(raw_id)
+			if MONSTER_CATALOG.MONSTERS.has(fallback_id):
+				pool.append(fallback_id)
+			if pool.size() >= 3:
+				break
+
+	if pool.is_empty():
+		return false
+
+	var spawn_count := maxi(int(skill.get("spawn_count", 10)), 1)
+	var spawn_distance := maxf(
+		float(skill.get("spawn_distance", 700.0)),
+		1.0
+	)
+	var line_span := maxf(float(skill.get("line_span", 720.0)), 0.0)
+
+	demon_ultimate_spawn_batch_size = maxi(
+		int(skill.get("spawn_batch_size", 2)),
+		1
+	)
+	demon_ultimate_spawn_interval = maxf(
+		float(skill.get("spawn_interval", 0.04)),
+		0.01
+	)
+	demon_ultimate_spawn_timer = 0.0
+
+	var hero_position := hero.position
+	for index in range(spawn_count):
+		var t := 0.5
+		if spawn_count > 1:
+			t = float(index) / float(spawn_count - 1)
+		var line_offset := lerpf(-line_span * 0.5, line_span * 0.5, t)
+		var candidate := hero_position
+
+		match direction:
+			"east":
+				candidate = hero_position + Vector2(spawn_distance, line_offset)
+			"west":
+				candidate = hero_position + Vector2(-spawn_distance, line_offset)
+			"north":
+				candidate = hero_position + Vector2(line_offset, -spawn_distance)
+			"south":
+				candidate = hero_position + Vector2(line_offset, spawn_distance)
+
 		var spawn_position := Vector2(
 			clampf(
 				candidate.x,

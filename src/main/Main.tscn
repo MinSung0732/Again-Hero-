@@ -205,6 +205,50 @@ theme_override_font_sizes/font_size = 17
 text = "3 사각 포위\n준비중"
 disabled = true
 
+[node name="DirectionButtons" type="HBoxContainer" parent="HUD/DemonUltimatePanel"]
+visible = false
+offset_left = 28.0
+offset_top = 38.0
+offset_right = 1052.0
+offset_bottom = 108.0
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="East" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
+custom_minimum_size = Vector2(0, 66)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "동"
+
+[node name="West" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
+custom_minimum_size = Vector2(0, 66)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "서"
+
+[node name="North" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
+custom_minimum_size = Vector2(0, 66)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "북"
+
+[node name="South" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
+custom_minimum_size = Vector2(0, 66)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "남"
+
+[node name="Cancel" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
+custom_minimum_size = Vector2(0, 66)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+text = "취소"
+
 [node name="BottomBar" type="ColorRect" parent="HUD"]
 anchors_preset = 12
 anchor_top = 1.0

@@ -21,7 +21,12 @@ const SKILLS = {
 		"id": "line_assault",
 		"name": "일직선 공세",
 		"description": "동/서/남/북 한 면에서 일직선 소환",
-		"implemented": false,
+		"implemented": true,
+		"spawn_count": 10,
+		"spawn_distance": 700.0,
+		"line_span": 720.0,
+		"spawn_batch_size": 2,
+		"spawn_interval": 0.04,
 	},
 	"square_siege": {
 		"id": "square_siege",
