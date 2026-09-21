@@ -1478,3 +1478,11 @@
 - 이벤트 데이터가 비어 있어도 1차 돌연변이 기본 프로필로 fallback하여 선택한 몬스터 소환을 계속 시도.
 - 테스트 가시성을 위해 돌연변이 스폰 거리를 Hero 기준 최대 260px로 제한.
 - 성공 상태 문구에 실제 monster_id를 포함해 생성 경로 확인 가능.
+
+### Mutation Spawn-First Isolation
+- 돌연변이 선택 시 엘리트가 보이지 않는 문제를 추적하기 위해 생성과 강화 단계를 완전히 분리.
+- `spawn_special_monster()`는 이제 일반 `_spawn_monster()`와 동일하게 기본 몬스터 생성만 수행하고 생성 인스턴스를 반환.
+- 선택 직후 기본 몬스터를 먼저 씬 트리에 생성하고, 다음 프레임 `_finish_special_monster_setup()`에서 엘리트 배율/메타를 적용.
+- 기본 생성 직후 상태창에 monster_id / instance_id / spawn position / monsters_alive를 표시해 실제 생성 여부 확인 가능.
+- 돌연변이 스폰 거리를 Hero 기준 최대 220px로 제한해 화면 내 확인성을 높임.
+- Stage 고정 보스도 공통 특수 스폰 반환 인스턴스에 후처리 배율을 적용하도록 맞춤.
