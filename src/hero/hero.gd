@@ -5,6 +5,7 @@ signal health_changed(current_hp: int, max_hp_value: int)
 signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
 signal leveled_up(new_level: int)
 signal augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String)
+signal ultimate_used(ultimate_id: String, ultimate_name: String)
 
 const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
@@ -44,6 +45,9 @@ var hero_display_name: String = "견습 마도사"
 var hero_archetype: String = "ranged_kiter"
 var sprite_sheet_path: String = ""
 var augment_pool_ids: Array[String] = []
+var ultimate_config: Dictionary = {}
+var ultimate_charge: float = 0.0
+var ultimate_flash_timer: float = 0.0
 var ai_settings: Dictionary = {
 	"id": "default",
 	"display_name": "기본",
@@ -97,6 +101,13 @@ func configure_profile(profile: Dictionary) -> void:
 	hero_display_name = String(profile.get("display_name", hero_display_name))
 	hero_archetype = String(profile.get("archetype", hero_archetype))
 	sprite_sheet_path = String(profile.get("sprite_sheet_path", ""))
+	var profile_ultimate = profile.get("ultimate", {})
+	ultimate_config = (
+		profile_ultimate.duplicate(true)
+		if typeof(profile_ultimate) == TYPE_DICTIONARY
+		else {}
+	)
+	ultimate_charge = 0.0
 	augment_pool_ids.clear()
 	for raw_augment_id in profile.get("augment_pool_ids", []):
 		var augment_id := String(raw_augment_id)
@@ -166,7 +177,9 @@ func _physics_process(delta: float) -> void:
 	wander_timer = maxf(wander_timer - delta, 0.0)
 	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
 	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
+	ultimate_flash_timer = maxf(ultimate_flash_timer - delta, 0.0)
 	_update_invulnerability(delta)
+	_update_ultimate(delta)
 
 	if hit_flash_timer > 0.0:
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
@@ -507,6 +520,84 @@ func _fire_projectile(current_target: Node2D) -> void:
 		projectile_splash_radius,
 		projectile_splash_damage_ratio
 	)
+
+	_add_ultimate_charge(
+		float(ultimate_config.get("charge_on_attack", 0.0))
+	)
+
+func _update_ultimate(delta: float) -> void:
+	if ultimate_config.is_empty() or is_dying or current_hp <= 0:
+		return
+
+	var passive_charge := maxf(
+		float(ultimate_config.get("charge_per_second", 0.0)),
+		0.0
+	)
+	if passive_charge > 0.0:
+		_add_ultimate_charge(passive_charge * delta)
+
+func _add_ultimate_charge(amount: float) -> void:
+	if amount <= 0.0 or ultimate_config.is_empty() or is_dying:
+		return
+
+	var charge_max := maxf(
+		float(ultimate_config.get("charge_max", 100.0)),
+		1.0
+	)
+	ultimate_charge = minf(ultimate_charge + amount, charge_max)
+	queue_redraw()
+
+	if ultimate_charge + 0.001 >= charge_max:
+		_use_ultimate()
+
+func _use_ultimate() -> void:
+	if ultimate_config.is_empty() or is_dying or current_hp <= 0:
+		return
+
+	var ultimate_type := String(ultimate_config.get("type", ""))
+	var ultimate_id := String(ultimate_config.get("id", "ultimate"))
+	var ultimate_name := String(
+		ultimate_config.get("name", "필살기")
+	)
+
+	ultimate_charge = 0.0
+	ultimate_flash_timer = 0.28
+
+	match ultimate_type:
+		"area_burst":
+			_use_area_burst_ultimate()
+		_:
+			push_warning(
+				"Unknown Hero ultimate type: %s" % ultimate_type
+			)
+
+	ultimate_used.emit(ultimate_id, ultimate_name)
+	queue_redraw()
+
+func _use_area_burst_ultimate() -> void:
+	var radius := maxf(
+		float(ultimate_config.get("radius", 0.0)),
+		0.0
+	)
+	var damage := maxi(
+		int(ultimate_config.get("damage", 0)),
+		0
+	)
+	if radius <= 0.0 or damage <= 0:
+		return
+
+	var targets: Array = get_tree().get_nodes_in_group("monsters")
+	for node in targets:
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if global_position.distance_to(monster.global_position) > radius:
+			continue
+		if monster.has_method("take_damage"):
+			monster.call("take_damage", damage)
 
 func gain_exp(amount: int) -> void:
 	if amount <= 0 or current_hp <= 0:
@@ -969,6 +1060,16 @@ func take_damage(amount: int) -> bool:
 	hit_flash_timer = 0.12
 	hit_pose_timer = 0.23
 	_restart_stage1_animation("hit")
+
+	if current_hp > 0:
+		_add_ultimate_charge(
+			float(applied_damage)
+			* maxf(
+				float(ultimate_config.get("charge_per_damage", 0.0)),
+				0.0
+			)
+		)
+
 	health_changed.emit(current_hp, max_hp)
 	queue_redraw()
 
@@ -1025,6 +1126,20 @@ func _begin_death_sequence() -> void:
 	queue_free()
 
 func _draw() -> void:
+	if ultimate_flash_timer > 0.0:
+		var flash_ratio := clampf(
+			ultimate_flash_timer / 0.28,
+			0.0,
+			1.0
+		)
+		draw_circle(
+			Vector2.ZERO,
+			80.0 + (1.0 - flash_ratio) * 55.0,
+			Color(1.0, 0.78, 0.18, flash_ratio * 0.72),
+			false,
+			8.0
+		)
+
 	if level_flash_timer > 0.0:
 		draw_circle(Vector2.ZERO, 58.0, Color(1.0, 0.86, 0.25, 0.35), false, 7.0)
 
@@ -1041,6 +1156,32 @@ func _draw() -> void:
 		draw_circle(Vector2(49, -17), 8.0, Color(0.95, 0.86, 0.32))
 
 	var bar_width := 92.0
-	var hp_ratio := float(current_hp) / float(max_hp)
+	var ultimate_max := maxf(
+		float(ultimate_config.get("charge_max", 100.0)),
+		1.0
+	)
+	var ultimate_ratio := clampf(
+		ultimate_charge / ultimate_max,
+		0.0,
+		1.0
+	)
+
+	draw_rect(
+		Rect2(-bar_width / 2.0, -79.0, bar_width, 8.0),
+		Color(0.12, 0.12, 0.14),
+		true
+	)
+	draw_rect(
+		Rect2(
+			-bar_width / 2.0,
+			-79.0,
+			bar_width * ultimate_ratio,
+			8.0
+		),
+		Color(1.0, 0.77, 0.16),
+		true
+	)
+
+	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
 	draw_rect(Rect2(-bar_width / 2.0, -64.0, bar_width, 10.0), Color(0.12, 0.12, 0.14), true)
 	draw_rect(Rect2(-bar_width / 2.0, -64.0, bar_width * hp_ratio, 10.0), Color(0.3, 0.9, 0.45), true)
