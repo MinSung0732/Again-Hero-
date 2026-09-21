@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
+
 signal died
 
 @export var monster_type: String = "slime"
@@ -54,7 +56,10 @@ func take_damage(amount: int) -> void:
 	if current_hp <= 0:
 		return
 
+	var previous_hp := current_hp
 	current_hp = maxi(current_hp - amount, 0)
+	var applied_damage := previous_hp - current_hp
+	DAMAGE_NUMBERS.show(self, applied_damage)
 	hit_flash_timer = 0.10
 	queue_redraw()
 

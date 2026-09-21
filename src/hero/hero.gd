@@ -11,6 +11,7 @@ const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
 const PROJECTILE_SCENE := preload("res://src/hero/HeroProjectile.tscn")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const STATUS_EFFECT_CATALOG := preload("res://src/data/status_effect_catalog.gd")
+const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const STAGE1_FRAME_SIZE := Vector2(64, 64)
 
 const APPROACH_DISTANCE_RATIO := 0.86
@@ -875,7 +876,11 @@ func take_damage(amount: int) -> void:
 	if current_hp <= 0 or is_dying:
 		return
 
+	var previous_hp := current_hp
 	current_hp = maxi(current_hp - amount, 0)
+	var applied_damage := previous_hp - current_hp
+	DAMAGE_NUMBERS.show(self, applied_damage)
+
 	hit_flash_timer = 0.12
 	hit_pose_timer = 0.23
 	_restart_stage1_animation("hit")
