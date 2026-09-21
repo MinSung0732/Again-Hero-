@@ -45,6 +45,18 @@ render_target_update_mode = 4
 [node name="HUD" type="CanvasLayer" parent="."]
 layer = 10
 
+[node name="DebugBalance" type="Label" parent="HUD"]
+offset_left = 18.0
+offset_top = 278.0
+offset_right = 1062.0
+offset_bottom = 374.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 16
+text = "[DEBUG] 마왕 Lv.1 · 레벨배율 HP x1.000 / ATK x1.000 / SPD x1.000"
+autowrap_mode = 2
+mouse_filter = 2
+
 [node name="TopBar" type="ColorRect" parent="HUD"]
 anchors_preset = 10
 anchor_right = 1.0

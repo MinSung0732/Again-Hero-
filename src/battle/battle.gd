@@ -76,7 +76,7 @@ var demon_reroll_max: int = BASE_DEMON_REROLLS
 var demon_rerolls_left: int = BASE_DEMON_REROLLS
 var demon_augment_selection_active: bool = false
 var demon_augment_candidates: Array = []
-var demon_selected_ids: Array[String] = []
+var demon_build_counts: Dictionary = {}
 var demon_last_candidate_ids: Array[String] = []
 
 var monster_summon_costs: Dictionary = {}
@@ -140,7 +140,7 @@ func _start_battle() -> void:
 	demon_rerolls_left = BASE_DEMON_REROLLS
 	demon_augment_selection_active = false
 	demon_augment_candidates.clear()
-	demon_selected_ids.clear()
+	demon_build_counts.clear()
 	demon_last_candidate_ids.clear()
 	monster_summon_costs.clear()
 
@@ -637,21 +637,24 @@ func _open_next_demon_augment_if_needed() -> void:
 
 func _roll_demon_augment_candidates(is_reroll: bool) -> Array:
 	var exclude_ids: Array = []
-	for selected_id in demon_selected_ids:
-		exclude_ids.append(selected_id)
 
 	if is_reroll:
 		for old_id in demon_last_candidate_ids:
 			if old_id not in exclude_ids:
 				exclude_ids.append(old_id)
 
-	var candidates: Array = DEMON_AUGMENTS.roll_candidates(exclude_ids, 3)
+	var candidates: Array = DEMON_AUGMENTS.roll_candidates(
+		exclude_ids,
+		3,
+		demon_build_counts
+	)
 
 	if candidates.is_empty() and is_reroll:
-		var selected_excludes: Array = []
-		for selected_id in demon_selected_ids:
-			selected_excludes.append(selected_id)
-		candidates = DEMON_AUGMENTS.roll_candidates(selected_excludes, 3)
+		candidates = DEMON_AUGMENTS.roll_candidates(
+			[],
+			3,
+			demon_build_counts
+		)
 
 	demon_last_candidate_ids.clear()
 	for candidate in candidates:
@@ -689,10 +692,13 @@ func choose_demon_augment(augment_id: String) -> bool:
 	if augment.is_empty():
 		return false
 
-	_apply_demon_augment(augment_id)
+	var current_stack := int(demon_build_counts.get(augment_id, 0))
+	var max_stack := int(augment.get("max_stack", 0))
+	if max_stack > 0 and current_stack >= max_stack:
+		return false
 
-	if augment_id not in demon_selected_ids:
-		demon_selected_ids.append(augment_id)
+	_apply_demon_augment(augment)
+	demon_build_counts[augment_id] = current_stack + 1
 
 	demon_pending_augments = maxi(demon_pending_augments - 1, 0)
 	demon_augment_selection_active = false
@@ -708,27 +714,53 @@ func choose_demon_augment(augment_id: String) -> bool:
 	_open_next_demon_augment_if_needed()
 	return true
 
-func _apply_demon_augment(augment_id: String) -> void:
-	match augment_id:
-		"dark_current":
-			command_regen_per_second += 0.8
-		"war_economy":
-			summon_cost_multiplier *= 0.85
-		"legion_drill":
-			monster_speed_multiplier *= 1.15
-		"blood_recycling":
-			death_refund_ratio += 0.25
-		"slime_mitosis":
-			slime_split_chance = minf(slime_split_chance + 0.30, 0.90)
-		"venom_nest":
-			spider_slow_duration_multiplier *= 1.40
-		"orc_fortify":
-			orc_hp_multiplier *= 1.30
-		"cruel_command":
-			monster_damage_multiplier *= 1.12
-		"dark_reservoir":
-			max_command += 25.0
-			command_power = minf(command_power + 25.0, max_command)
+func _apply_demon_augment(augment: Dictionary) -> void:
+	for raw_effect in augment.get("effects", []):
+		var effect: Dictionary = raw_effect
+		_apply_demon_augment_effect(effect)
+
+func _apply_demon_augment_effect(effect: Dictionary) -> void:
+	var op := String(effect.get("op", ""))
+	var target := String(effect.get("target", ""))
+
+	match op:
+		"add_runtime":
+			if target.is_empty():
+				return
+
+			var current_value = get(target)
+			if current_value == null:
+				return
+
+			var next_value := float(current_value) + float(effect.get("value", 0.0))
+			if effect.has("min"):
+				next_value = maxf(next_value, float(effect.get("min", next_value)))
+			if effect.has("max"):
+				next_value = minf(next_value, float(effect.get("max", next_value)))
+			set(target, next_value)
+
+		"multiply_runtime":
+			if target.is_empty():
+				return
+
+			var current_value = get(target)
+			if current_value == null:
+				return
+
+			var next_value := float(current_value) * float(effect.get("value", 1.0))
+			if effect.has("min"):
+				next_value = maxf(next_value, float(effect.get("min", next_value)))
+			if effect.has("max"):
+				next_value = minf(next_value, float(effect.get("max", next_value)))
+			set(target, next_value)
+
+		"add_command_capacity":
+			var amount := float(effect.get("value", 0.0))
+			max_command += amount
+			command_power = minf(command_power + amount, max_command)
+
+		_:
+			push_warning("Unknown Demon augment effect op: %s" % op)
 
 func _set_combat_physics_enabled(enabled: bool) -> void:
 	if is_instance_valid(hero):
@@ -740,15 +772,77 @@ func _set_combat_physics_enabled(enabled: bool) -> void:
 				node.set_physics_process(enabled)
 
 func get_demon_build_summary() -> String:
-	if demon_selected_ids.is_empty():
+	if demon_build_counts.is_empty():
 		return "아직 선택 없음"
 
 	var names: PackedStringArray = []
-	for augment_id in demon_selected_ids:
-		var augment: Dictionary = DEMON_AUGMENTS.get_augment(augment_id)
-		names.append(String(augment.get("name", augment_id)))
+	for augment in DEMON_AUGMENTS.AUGMENTS:
+		var augment_id := String(augment.get("id", ""))
+		var stacks := int(demon_build_counts.get(augment_id, 0))
+		if stacks <= 0:
+			continue
+
+		names.append("%s x%d/%d" % [
+			String(augment.get("name", augment_id)),
+			stacks,
+			int(augment.get("max_stack", stacks)),
+		])
 
 	return " · ".join(names)
+
+func get_debug_balance_summary() -> String:
+	var level_line := "[DEBUG] 마왕 Lv.%d · 레벨배율 HP x%.3f / ATK x%.3f / SPD x%.3f (cap x%.2f)" % [
+		demon_level,
+		_get_demon_level_monster_hp_multiplier(),
+		_get_demon_level_monster_damage_multiplier(),
+		_get_demon_level_monster_speed_multiplier(),
+		DEMON_LEVEL_MONSTER_SPEED_MAX_MULTIPLIER,
+	]
+
+	var augment_line := "신규소환 보정: 비용 x%.3f · SPD x%.3f · ATK x%.3f · OrcHP x%.3f · 거미둔화 x%.3f · 환급 %.0f%% · 분열 %.0f%%" % [
+		summon_cost_multiplier,
+		monster_speed_multiplier,
+		monster_damage_multiplier,
+		orc_hp_multiplier,
+		spider_slow_duration_multiplier,
+		death_refund_ratio * 100.0,
+		slime_split_chance * 100.0,
+	]
+
+	var samples: Dictionary = {}
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+
+		var current_hp_value = node.get("current_hp")
+		if current_hp_value != null and int(current_hp_value) <= 0:
+			continue
+
+		var monster_type := String(node.get("monster_type"))
+		if samples.has(monster_type):
+			continue
+
+		samples[monster_type] = "%s HP %d/%d · A%d · S%.1f" % [
+			MONSTER_CATALOG.get_name(monster_type),
+			int(node.get("current_hp")),
+			int(node.get("max_hp")),
+			int(node.get("attack_damage")),
+			float(node.get("move_speed")),
+		]
+
+		if samples.size() >= MONSTER_CATALOG.get_ids().size():
+			break
+
+	var sample_parts: PackedStringArray = []
+	for monster_id in MONSTER_CATALOG.get_ids():
+		if samples.has(monster_id):
+			sample_parts.append(String(samples[monster_id]))
+
+	var sample_line := "생존 샘플: 없음"
+	if not sample_parts.is_empty():
+		sample_line = "생존 샘플: %s" % " | ".join(sample_parts)
+
+	return "%s\n%s\n%s" % [level_line, augment_line, sample_line]
 
 func _on_hero_died() -> void:
 	if battle_over:
@@ -871,6 +965,8 @@ func get_snapshot() -> Dictionary:
 		"demon_rerolls_left": demon_rerolls_left,
 		"demon_reroll_max": demon_reroll_max,
 		"demon_build_summary": get_demon_build_summary(),
+		"demon_build_counts": demon_build_counts.duplicate(true),
+		"debug_balance_summary": get_debug_balance_summary(),
 		"permanent_research_summary": get_permanent_research_summary(),
 		"research_points": STAGE_PROGRESS.get_research_points(),
 		"map_width": current_map_size.x,

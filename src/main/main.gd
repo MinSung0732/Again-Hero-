@@ -17,6 +17,7 @@ const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 @onready var monsters_label: Label = $HUD/TopBar/Monsters
 @onready var exp_label: Label = $HUD/TopBar/ExpLabel
 @onready var exp_bar: ProgressBar = $HUD/TopBar/ExpBar
+@onready var debug_balance_label: Label = $HUD/DebugBalance
 
 @onready var build_label: Label = $HUD/BottomBar/BuildLabel
 @onready var status_label: Label = $HUD/BottomBar/Status
@@ -66,6 +67,7 @@ var auto_placement: bool = true
 var selected_monster_type: String = ""
 var current_demon_candidates: Array = []
 var return_to_result_after_stage_menu: bool = false
+var debug_refresh_timer: float = 0.0
 
 func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
@@ -136,11 +138,21 @@ func _ready() -> void:
 	)
 
 	build_label.text = "용사 빌드: %s" % String(snapshot.get("hero_build_summary", "아직 선택 없음"))
+	debug_balance_label.text = String(snapshot.get("debug_balance_summary", "[DEBUG]"))
 	placement_toggle.button_pressed = true
 	_on_placement_mode_toggled(true)
 
 	print("Again, Hero? stage/camera prototype loaded.")
 	print("Finite world camera + persistent stage progression enabled.")
+
+func _process(delta: float) -> void:
+	debug_refresh_timer -= delta
+	if debug_refresh_timer > 0.0:
+		return
+
+	debug_refresh_timer = 0.25
+	if is_instance_valid(battle) and battle.has_method("get_debug_balance_summary"):
+		debug_balance_label.text = String(battle.call("get_debug_balance_summary"))
 
 func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 	subtitle_label.text = "Stage %d · %s · %s" % [
@@ -462,8 +474,14 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 
 		buttons[index].visible = true
 		var candidate: Dictionary = current_demon_candidates[index]
-		buttons[index].text = "%s\n\n%s" % [
+		var current_stack := int(candidate.get("current_stack", 0))
+		var max_stack := int(candidate.get("max_stack", 1))
+		var next_stack := mini(current_stack + 1, max_stack)
+		buttons[index].text = "%s\n중첩 %d → %d / %d\n\n%s" % [
 			String(candidate.get("name", "증강")),
+			current_stack,
+			next_stack,
+			max_stack,
 			String(candidate.get("description", "")),
 		]
 
