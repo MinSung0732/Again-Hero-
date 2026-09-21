@@ -238,6 +238,6 @@ func _prune_recent_summons() -> void:
 
 static func _format_time(seconds: float) -> String:
 	var total := maxi(int(round(seconds)), 0)
-	var minutes := total / 60
+	var minutes := int(total / 60)
 	var remaining := total % 60
 	return "%02d:%02d" % [minutes, remaining]
