@@ -1505,3 +1505,12 @@
   - D7 특수 배율 적용 직전 인스턴스/SceneTree 여부
   - D8 특수 배율 적용 완료
 - 실행이 중간에서 끊기면 화면에 마지막으로 남은 MUT-DIAG 번호를 기준으로 실패 지점을 특정한다.
+
+### Mutation Spawn Diagnostic Narrowing
+- 이전 진단에서 D1까지만 표시되고 D2에 도달하지 않는 것이 확인됨.
+- D1~D2 사이를 D1.1~D1.4로 세분화:
+  - D1.1 combat physics 재개 직후
+  - D1.2 MutationDirector.get_event() 직후
+  - D1.3 MutationDirector.reset() 직후
+  - D1.4 이벤트 fallback/거리 정규화 직후
+- 동작 로직은 변경하지 않고 진단 체크포인트만 추가.

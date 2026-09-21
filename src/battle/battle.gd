@@ -1301,8 +1301,29 @@ func spawn_selected_mutation(monster_id: String) -> void:
 	if not battle_over and not external_pause:
 		_set_combat_physics_enabled(true)
 
+	_mutation_spawn_diag(
+		"D1.1",
+		"after physics resume · battle_over=%s · external_pause=%s · demon_augment=%s" % [
+			str(battle_over),
+			str(external_pause),
+			str(demon_augment_selection_active),
+		]
+	)
+
 	var event := mutation_director.get_event()
+	_mutation_spawn_diag(
+		"D1.2",
+		"after get_event · empty=%s · keys=%s" % [
+			str(event.is_empty()),
+			str(event.keys()),
+		]
+	)
+
 	mutation_director.reset()
+	_mutation_spawn_diag(
+		"D1.3",
+		"after director reset · active=%s" % str(mutation_director.is_active())
+	)
 
 	if event.is_empty():
 		event = {
@@ -1321,6 +1342,13 @@ func spawn_selected_mutation(monster_id: String) -> void:
 			float(event.get("spawn_distance", 260.0)),
 			260.0
 		)
+
+	_mutation_spawn_diag(
+		"D1.4",
+		"after event normalize · distance=%.1f" % float(
+			event.get("spawn_distance", -1.0)
+		)
+	)
 
 	var event_type := String(event.get("type", "elite"))
 	var name_prefix := String(event.get("name_prefix", "돌연변이"))
