@@ -836,3 +836,19 @@
 - 향후 상점 뽑기에서 조각 지급 → 자동 해금 → 팀 편성 반영으로 바로 연결 가능한 구조 확보.
 - Battle / Main 전투 코드는 변경하지 않음.
 
+### Supabase DB Foundation + Team Loadout Loading Fix
+- Supabase `Again-Hero-` 프로젝트에 게임 계정/진행도 DB 기본 스키마 생성:
+  - profiles
+  - player_progress
+  - monster_collection
+  - team_loadout
+- 모든 테이블에 RLS 및 자기 데이터 전용 정책 적용.
+- 신규 Auth user profile/progress 자동 생성 trigger 추가, 외부 RPC 실행 권한은 제거.
+- Godot용 Supabase REST client foundation 추가. publishable key만 사용하며 secret/service-role key는 포함하지 않음.
+- 팀 편성 무한 `불러오는 중…` 문제 대응:
+  - MonsterCollectionStore를 ConfigFile 기반으로 단순화
+  - TeamLoadoutStore를 ConfigFile 기반으로 단순화
+  - 팀 데이터 로드를 Lobby 시작 시가 아니라 팀 탭 진입 시로 격리
+  - 동적 버튼 연결을 명시적 Callable.bind 경로로 정리
+- 전투 Battle/Main 코드는 변경하지 않음.
+

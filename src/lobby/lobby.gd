@@ -75,7 +75,6 @@ func _ready() -> void:
 	_build_styles()
 	_apply_styles()
 	_connect_navigation()
-	_setup_team_preview()
 
 	stage_ids = STAGE_CATALOG.get_ordered_stage_ids()
 	if stage_ids.is_empty():
@@ -222,11 +221,7 @@ func _switch_tab(tab_id: String) -> void:
 	_refresh_nav_button(other_button, tab_id == "other")
 
 	if tab_id == "team":
-		monster_collection_state = MONSTER_COLLECTION_STORE.load_state()
-		team_available_ids = MONSTER_COLLECTION_STORE.get_unlocked_ids(
-			monster_collection_state
-		)
-		_refresh_team_preview()
+		_setup_team_preview()
 	elif tab_id == "research":
 		_rebuild_research_list()
 
@@ -241,10 +236,21 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 	)
 
 func _setup_team_preview() -> void:
+	team_summary_label.text = "편성 불러오는 중…"
+	team_status_label.text = "몬스터 컬렉션을 확인하고 있습니다."
+
 	monster_collection_state = MONSTER_COLLECTION_STORE.load_state()
 	team_available_ids = MONSTER_COLLECTION_STORE.get_unlocked_ids(
 		monster_collection_state
 	)
+
+	if team_available_ids.is_empty():
+		team_selected_ids.clear()
+		_clear_children(team_slot_grid)
+		_clear_children(team_monster_list)
+		team_summary_label.text = "해금된 몬스터 없음"
+		team_status_label.text = "몬스터를 먼저 해금해야 편성할 수 있습니다."
+		return
 
 	var default_ids: Array[String] = []
 	for monster_id in team_available_ids:
@@ -256,7 +262,12 @@ func _setup_team_preview() -> void:
 		team_available_ids,
 		default_ids
 	)
+
+	if team_selected_ids.is_empty():
+		team_selected_ids = default_ids.duplicate()
+
 	_refresh_team_preview()
+	team_status_label.text = "편성 슬롯이나 컬렉션 카드를 탭해 편성을 변경하세요."
 
 func _refresh_team_preview() -> void:
 	_clear_children(team_slot_grid)
@@ -266,8 +277,8 @@ func _refresh_team_preview() -> void:
 	for slot_index in range(TEAM_LOADOUT_STORE.MAX_SLOTS):
 		var slot_button := Button.new()
 		slot_button.custom_minimum_size = Vector2(0, 190)
-		slot_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		slot_button.focus_mode = Control.FOCUS_NONE
+		slot_button.size_flags_horizontal = 3
+		slot_button.focus_mode = 0
 		slot_button.add_theme_font_size_override("font_size", 20)
 		slot_button.add_theme_stylebox_override("normal", stage_card_style)
 		slot_button.add_theme_stylebox_override("hover", stage_card_style)
@@ -284,7 +295,7 @@ func _refresh_team_preview() -> void:
 			]
 			slot_button.disabled = team_selected_ids.size() <= 1
 			slot_button.pressed.connect(
-				_on_dynamic_team_slot_pressed.bind(monster_id)
+				Callable(self, "_on_dynamic_team_slot_pressed").bind(monster_id)
 			)
 
 			if not selected_names.is_empty():
@@ -310,8 +321,8 @@ func _refresh_team_preview() -> void:
 		)
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(0, 118)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.focus_mode = Control.FOCUS_NONE
+		button.size_flags_horizontal = 3
+		button.focus_mode = 0
 		button.add_theme_font_size_override("font_size", 20)
 
 		if unlocked:
@@ -329,7 +340,7 @@ func _refresh_team_preview() -> void:
 			button.add_theme_stylebox_override("hover", style)
 			button.add_theme_stylebox_override("pressed", style)
 			button.pressed.connect(
-				_on_dynamic_monster_pressed.bind(monster_id)
+				Callable(self, "_on_dynamic_monster_pressed").bind(monster_id)
 			)
 		else:
 			var shards := MONSTER_COLLECTION_STORE.get_shards(

@@ -1,18 +1,22 @@
 extends RefCounted
 class_name TeamLoadoutStore
 
-const SAVE_PATH := "user://team_loadout.json"
+const SAVE_PATH := "user://team_loadout.cfg"
 const MAX_SLOTS := 3
 
 static func load_ids(valid_ids: Array, fallback_ids: Array) -> Array[String]:
-	var saved_value: Variant = null
+	var raw_ids: Array = []
+	var config := ConfigFile.new()
 
-	if FileAccess.file_exists(SAVE_PATH):
-		var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
-		if file != null:
-			saved_value = JSON.parse_string(file.get_as_text())
+	if config.load(SAVE_PATH) == OK:
+		var encoded := String(
+			config.get_value("team", "monster_ids", "")
+		)
+		if not encoded.is_empty():
+			for raw_id in encoded.split(",", false):
+				raw_ids.append(String(raw_id))
 
-	var normalized := _normalize_ids(saved_value, valid_ids)
+	var normalized := _normalize_ids(raw_ids, valid_ids)
 	if normalized.is_empty():
 		normalized = _normalize_ids(fallback_ids, valid_ids)
 
@@ -23,19 +27,20 @@ static func save_ids(monster_ids: Array, valid_ids: Array) -> bool:
 	if normalized.is_empty():
 		return false
 
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if file == null:
-		return false
+	var encoded := ""
+	for monster_id in normalized:
+		if not encoded.is_empty():
+			encoded += ","
+		encoded += monster_id
 
-	file.store_string(JSON.stringify(normalized))
-	return true
+	var config := ConfigFile.new()
+	config.set_value("team", "monster_ids", encoded)
+	return config.save(SAVE_PATH) == OK
 
-static func _normalize_ids(raw_value: Variant, valid_ids: Array) -> Array[String]:
+static func _normalize_ids(raw_ids: Array, valid_ids: Array) -> Array[String]:
 	var result: Array[String] = []
-	if not (raw_value is Array):
-		return result
 
-	for raw_id in raw_value:
+	for raw_id in raw_ids:
 		var monster_id := String(raw_id)
 		if monster_id.is_empty():
 			continue

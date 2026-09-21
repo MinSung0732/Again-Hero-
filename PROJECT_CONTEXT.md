@@ -775,3 +775,20 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 팀 탭에 들어올 때 Collection 상태를 다시 읽으므로 향후 상점에서 해금한 몬스터가 즉시 편성 목록에 반영 가능.
 - 이 단계에서는 Battle/Main 전투 소환 슬롯과의 연결은 하지 않음.
 
+### Supabase 백엔드 기반 v1
+- Supabase 프로젝트: `xdmqpsyhtnyzzdhgvfep` / Seoul region.
+- DB에 `profiles`, `player_progress`, `monster_collection`, `team_loadout` 테이블 생성.
+- 모든 사용자 데이터 테이블에 RLS 적용. 로그인 사용자는 `auth.uid() = user_id`인 자기 행만 읽기/쓰기 가능.
+- 신규 Auth user 생성 시 profile / player_progress 기본 행을 생성하는 trigger 사용.
+- trigger용 SECURITY DEFINER 함수는 anon/authenticated RPC 실행 권한을 제거해 외부 직접 호출 차단.
+- Godot 저장소에는 Supabase project URL과 **publishable key만** 포함. service_role/secret key는 절대 앱 또는 GitHub에 포함하지 않음.
+- `src/network/supabase_client.gd`는 REST GET / upsert / delete 및 향후 access token 주입을 위한 기반만 제공.
+- Google/Kakao/자체 로그인 UI 및 세션 발급은 후속 단계에서 연결.
+
+### 팀 편성 로딩 안정화
+- 팀/컬렉션 로컬 저장을 JSON Variant 변환 중심 방식에서 Godot 기본 `ConfigFile` 방식으로 단순화.
+- `MonsterCollectionStore`는 Catalog를 순회해 기본 해금/조각 상태를 구성하며, 향후 상점 조각 지급 API는 그대로 `add_shards()`를 사용.
+- `TeamLoadoutStore`는 `user://team_loadout.cfg`에 monster_id 목록을 문자열로 저장해 Android/PC에서 동일 경로로 복원.
+- 팀 편성 초기화를 Lobby `_ready()`에서 제거하고 팀 탭 진입 시에만 수행. 편성 기능 문제가 있어도 메인 로비 전체 초기화를 막지 않음.
+- Battle/Main 전투 코드는 이번 변경에서 수정하지 않음.
+

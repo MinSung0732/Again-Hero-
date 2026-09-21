@@ -300,3 +300,10 @@
 - [ ] 몬스터 해금/보유 목록 확장 + 4종 이상 덱 선택 검증
 - [ ] 기타 콘텐츠 정의 및 구현
 
+### Backend / Account Foundation
+- [x] Supabase DB foundation (profiles / progress / monster collection / team loadout + RLS)
+- [x] Godot Supabase REST client config foundation (publishable key only)
+- [ ] Email/Password 자체 계정 로그인
+- [ ] Google 로그인
+- [ ] Kakao 로그인
+- [ ] 로컬 진행도 ↔ Supabase 동기화
