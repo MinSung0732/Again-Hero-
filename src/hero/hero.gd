@@ -13,7 +13,6 @@ const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const STATUS_EFFECT_CATALOG := preload("res://src/data/status_effect_catalog.gd")
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const STAGE1_FRAME_SIZE := Vector2(64, 64)
-const STAGE1_ATTACK_SHEET_PATH := "res://assets/art/heroes/stage1_mage/stage1_mage_attack_sheet.png"
 
 const APPROACH_DISTANCE_RATIO := 0.86
 const FIELD_MARGIN := 72.0
@@ -218,20 +217,13 @@ func _apply_profile_visual() -> void:
 		push_warning("Stage 1 mage spritesheet load failed: %s" % sprite_sheet_path)
 		return
 
-	var attack_sheet := _load_stage1_attack_sheet_texture()
-	var attack_row := 0
-	if attack_sheet == null:
-		# Keep the old row as a safe fallback if the dedicated asset is missing.
-		attack_sheet = sheet
-		attack_row = 2
-
 	var frames := SpriteFrames.new()
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
 
 	_add_stage1_sheet_animation(frames, "idle", sheet, 0, 4, 5.5, true)
 	_add_stage1_sheet_animation(frames, "move", sheet, 1, 6, 10.0, true)
-	_add_stage1_sheet_animation(frames, "attack", attack_sheet, attack_row, 6, 18.0, false)
+	_add_stage1_sheet_animation(frames, "attack", sheet, 2, 6, 18.0, false)
 	_add_stage1_sheet_animation(frames, "hit", sheet, 3, 3, 14.0, false)
 
 	hero_sprite.sprite_frames = frames
@@ -241,9 +233,6 @@ func _apply_profile_visual() -> void:
 
 func _load_stage1_sheet_texture() -> Texture2D:
 	return _load_stage1_texture(sprite_sheet_path)
-
-func _load_stage1_attack_sheet_texture() -> Texture2D:
-	return _load_stage1_texture(STAGE1_ATTACK_SHEET_PATH)
 
 func _load_stage1_texture(path: String) -> Texture2D:
 	if path.is_empty():

@@ -691,3 +691,10 @@
 - idle / move / hit 프레임과 기존 통합 시트는 그대로 유지.
 - Android Godot Editor의 import cache가 늦을 때도 raw PNG를 직접 읽는 fallback을 전용 공격 시트에도 동일 적용.
 
+### Stage 1 Unified Spritesheet Restore
+- 사용자가 직접 수정한 `attack_01.png` / `attack_05.png`를 원본 **64×64 셀 그대로** Stage 1 384×256 통합 스프라이트시트의 attack row에 교체.
+- 공격 시 캐릭터가 커져 보이던 별도 생성 공격 시트 사용을 중단하고, idle / move / attack / hit 모두 동일 통합 시트에서 재생하도록 복귀.
+- attack 애니메이션은 다시 row 2의 6프레임을 18 FPS non-loop로 사용.
+- `stage1_mage_attack_sheet.png` 전용 에셋과 전용 로더/manifest override를 제거.
+- HeroSprite scale, 64×64 AtlasTexture 셀, 기존 anchor/foot 위치는 변경하지 않아 상태 전환 시 크기 차이가 생기지 않도록 유지.
+

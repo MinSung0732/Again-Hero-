@@ -218,19 +218,5 @@
       "anchor_x": 32,
       "foot_y": 56
     }
-  ],
-  "attack_override": {
-    "path": "res://assets/art/heroes/stage1_mage/stage1_mage_attack_sheet.png",
-    "cell_width": 64,
-    "cell_height": 64,
-    "sheet_columns": 6,
-    "sheet_rows": 1,
-    "fps": 18,
-    "loop": false,
-    "anchor": {
-      "x": 32,
-      "foot_y": 56
-    },
-    "note": "Runtime attack animation source. Original row 2 remains fallback only."
-  }
+  ]
 }
