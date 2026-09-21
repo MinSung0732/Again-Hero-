@@ -14,6 +14,8 @@ const SKILLS = {
 		"implemented": true,
 		"spawn_count": 12,
 		"spawn_radius": 700.0,
+		"spawn_batch_size": 2,
+		"spawn_interval": 0.04,
 	},
 	"line_assault": {
 		"id": "line_assault",

@@ -71,6 +71,10 @@ var demon_pending_augments: int = 0
 var demon_ultimate_charge: float = 0.0
 var demon_ultimate_emit_timer: float = 0.0
 var last_hero_hp_for_ultimate: int = 0
+var demon_ultimate_spawn_queue: Array[Dictionary] = []
+var demon_ultimate_spawn_timer: float = 0.0
+var demon_ultimate_spawn_interval: float = 0.04
+var demon_ultimate_spawn_batch_size: int = 2
 
 var summon_cost_multiplier: float = 1.0
 var demon_exp_gain_multiplier: float = 1.0
@@ -111,6 +115,7 @@ func _process(delta: float) -> void:
 	if battle_over or demon_augment_selection_active or external_pause:
 		return
 
+	_process_demon_ultimate_spawn_queue(delta)
 	run_metrics.tick(delta)
 
 	if demon_ultimate_charge < DEMON_ULTIMATES.CHARGE_MAX:
@@ -162,6 +167,10 @@ func _start_battle() -> void:
 	demon_ultimate_charge = 0.0
 	demon_ultimate_emit_timer = 0.0
 	last_hero_hp_for_ultimate = 0
+	demon_ultimate_spawn_queue.clear()
+	demon_ultimate_spawn_timer = 0.0
+	demon_ultimate_spawn_interval = 0.04
+	demon_ultimate_spawn_batch_size = 2
 
 	summon_cost_multiplier = 1.0
 	demon_exp_gain_multiplier = 1.0
@@ -803,6 +812,8 @@ func try_use_demon_ultimate(skill_id: String) -> bool:
 func _use_demon_encirclement(skill: Dictionary) -> bool:
 	if not is_instance_valid(hero):
 		return false
+	if not demon_ultimate_spawn_queue.is_empty():
+		return false
 
 	var pool: Array[String] = []
 	for raw_id in allowed_monster_ids:
@@ -823,6 +834,16 @@ func _use_demon_encirclement(skill: Dictionary) -> bool:
 
 	var spawn_count := maxi(int(skill.get("spawn_count", 12)), 1)
 	var spawn_radius := maxf(float(skill.get("spawn_radius", 700.0)), 1.0)
+	demon_ultimate_spawn_batch_size = maxi(
+		int(skill.get("spawn_batch_size", 2)),
+		1
+	)
+	demon_ultimate_spawn_interval = maxf(
+		float(skill.get("spawn_interval", 0.04)),
+		0.01
+	)
+	demon_ultimate_spawn_timer = 0.0
+
 	var angle_offset := randf_range(0.0, TAU)
 	var hero_position := hero.position
 
@@ -841,18 +862,52 @@ func _use_demon_encirclement(skill: Dictionary) -> bool:
 				current_map_size.y - MANUAL_SPAWN_MARGIN
 			)
 		)
-		var monster_id := pool[index % pool.size()]
-		_spawn_monster(monster_id, spawn_position, 0.0, false)
+		demon_ultimate_spawn_queue.append({
+			"monster_id": pool[index % pool.size()],
+			"position": spawn_position,
+		})
 
-		if hero.has_method("record_offensive_event"):
-			hero.call(
-				"record_offensive_event",
-				monster_id,
-				MONSTER_CATALOG.get_role(monster_id)
-			)
-
-	_emit_stats()
 	return true
+
+func _process_demon_ultimate_spawn_queue(delta: float) -> void:
+	if demon_ultimate_spawn_queue.is_empty():
+		return
+
+	demon_ultimate_spawn_timer = maxf(
+		demon_ultimate_spawn_timer - delta,
+		0.0
+	)
+	if demon_ultimate_spawn_timer > 0.0:
+		return
+
+	var spawned_this_batch := 0
+	while (
+		spawned_this_batch < demon_ultimate_spawn_batch_size
+		and not demon_ultimate_spawn_queue.is_empty()
+	):
+		var entry: Dictionary = demon_ultimate_spawn_queue.pop_front()
+		var monster_id := String(entry.get("monster_id", ""))
+		var spawn_position: Vector2 = entry.get("position", Vector2.ZERO)
+
+		if MONSTER_CATALOG.MONSTERS.has(monster_id):
+			_spawn_monster(monster_id, spawn_position, 0.0, false)
+
+			if is_instance_valid(hero) and hero.has_method("record_offensive_event"):
+				hero.call(
+					"record_offensive_event",
+					monster_id,
+					MONSTER_CATALOG.get_role(monster_id)
+				)
+
+		spawned_this_batch += 1
+
+	if spawned_this_batch > 0:
+		_emit_stats()
+
+	if demon_ultimate_spawn_queue.is_empty():
+		demon_ultimate_spawn_timer = 0.0
+	else:
+		demon_ultimate_spawn_timer = demon_ultimate_spawn_interval
 
 func _gain_demon_exp(amount: float) -> void:
 	if amount <= 0.0 or battle_over:
