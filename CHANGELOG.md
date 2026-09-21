@@ -761,3 +761,9 @@
 - 전투 `메뉴` 버튼에 높은 z-index와 명시적 touch mouse filter를 적용.
 - TeamLoadout ConfigFile 저장값을 PackedStringArray로 통일하고 Array/PackedStringArray 로드를 `typeof()` 기반으로 정규화해 Android 런타임 호환성을 보강.
 
+### Rollback: Monster Team Loadout v1
+- 팀 편성 v1 이후 Android에서 전투 전체 입력/타이머가 멈추는 회귀가 발생해 해당 기능을 임시 롤백.
+- `monster_catalog.gd`, 로비, Battle, 전투 Main UI를 마지막 정상 전투 상태(`4844cd5`)로 복구.
+- 전투 타이머 / 슬라임·거미·오크 소환 / 상단 전투 메뉴 동작 복구를 최우선으로 함.
+- 팀 편성은 ROADMAP에서 미완료 상태로 되돌리고, Android 오류 로그 확인 후 재구현 예정.
+

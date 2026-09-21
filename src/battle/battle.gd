@@ -22,7 +22,6 @@ const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const RUN_METRICS := preload("res://src/systems/run_metrics.gd")
-const TEAM_LOADOUT := preload("res://src/systems/team_loadout.gd")
 
 const DEFAULT_MAP_SIZE := Vector2(3200, 3200)
 const AUTO_SPAWN_MIN_DISTANCE := 560.0
@@ -86,7 +85,6 @@ var demon_last_candidate_ids: Array[String] = []
 
 var monster_summon_costs: Dictionary = {}
 var permanent_research_levels: Dictionary = {}
-var active_monster_ids: Array[String] = []
 
 func _ready() -> void:
 	queue_redraw()
@@ -157,7 +155,6 @@ func _start_battle() -> void:
 	demon_build_counts.clear()
 	demon_last_candidate_ids.clear()
 	monster_summon_costs.clear()
-	active_monster_ids = TEAM_LOADOUT.load_ids()
 
 	_apply_permanent_research()
 
@@ -294,10 +291,6 @@ func _can_attempt_summon(monster_type: String) -> bool:
 
 	if demon_augment_selection_active:
 		summon_result.emit(monster_type, false, "마왕 증강을 먼저 선택해 주세요.")
-		return false
-
-	if monster_type not in active_monster_ids:
-		summon_result.emit(monster_type, false, "현재 팀에 편성되지 않은 몬스터입니다.")
 		return false
 
 	if get_monster_cost(monster_type) <= 0.0:
@@ -1033,7 +1026,6 @@ func get_snapshot() -> Dictionary:
 		"debug_balance_summary": get_debug_balance_summary(),
 		"permanent_research_summary": get_permanent_research_summary(),
 		"research_points": STAGE_PROGRESS.get_research_points(),
-		"active_monster_ids": active_monster_ids.duplicate(),
 		"map_width": current_map_size.x,
 		"map_height": current_map_size.y,
 		"run_elapsed_seconds": run_metrics.elapsed_seconds,

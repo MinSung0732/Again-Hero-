@@ -1,7 +1,6 @@
 extends Control
 
 const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
-const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
 @onready var battle_viewport: SubViewport = $BattleViewportContainer/BattleViewport
@@ -53,18 +52,12 @@ const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 
 var auto_placement: bool = true
 var selected_monster_type: String = ""
-var active_monster_ids: Array[String] = []
 var current_demon_candidates: Array = []
 var debug_refresh_timer: float = 0.0
 
 func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
 		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_PORTRAIT)
-
-	stage_menu_button.pressed.connect(_on_stage_menu_pressed)
-	pause_resume_button.pressed.connect(_close_pause_menu)
-	pause_restart_button.pressed.connect(_on_pause_restart_pressed)
-	pause_lobby_button.pressed.connect(_on_lobby_pressed)
 
 	battle.stats_changed.connect(_on_stats_changed)
 	battle.progression_changed.connect(_on_progression_changed)
@@ -78,10 +71,15 @@ func _ready() -> void:
 	battle.run_time_changed.connect(_on_run_time_changed)
 	battle.battle_finished.connect(_on_battle_finished)
 
+	stage_menu_button.pressed.connect(_on_stage_menu_pressed)
+	pause_resume_button.pressed.connect(_close_pause_menu)
+	pause_restart_button.pressed.connect(_on_pause_restart_pressed)
+	pause_lobby_button.pressed.connect(_on_lobby_pressed)
+
 	placement_toggle.toggled.connect(_on_placement_mode_toggled)
-	slime_button.pressed.connect(_on_summon_slot_pressed.bind(0))
-	spider_button.pressed.connect(_on_summon_slot_pressed.bind(1))
-	orc_button.pressed.connect(_on_summon_slot_pressed.bind(2))
+	slime_button.pressed.connect(_on_summon_pressed.bind("slime"))
+	spider_button.pressed.connect(_on_summon_pressed.bind("spider"))
+	orc_button.pressed.connect(_on_summon_pressed.bind("orc"))
 	demon_choice_0.pressed.connect(_on_demon_choice_pressed.bind(0))
 	demon_choice_1.pressed.connect(_on_demon_choice_pressed.bind(1))
 	demon_choice_2.pressed.connect(_on_demon_choice_pressed.bind(2))
@@ -92,7 +90,6 @@ func _ready() -> void:
 
 	var snapshot: Dictionary = battle.get_snapshot()
 	_apply_stage_snapshot(snapshot)
-	_configure_summon_loadout(snapshot)
 
 	_on_stats_changed(
 		int(snapshot.get("hero_hp", 0)),
@@ -224,23 +221,25 @@ func _open_pause_menu() -> void:
 	if demon_augment_panel.visible or result_panel.visible:
 		return
 
-	pause_stage_label.text = subtitle_label.text
-	pause_time_label.text = run_timer_label.text
-	pause_menu.show()
+	var snapshot: Dictionary = battle.get_snapshot()
+	pause_stage_label.text = "Stage %d · %s\n상대: %s" % [
+		int(snapshot.get("stage_number", 1)),
+		String(snapshot.get("stage_name", "스테이지")),
+		String(snapshot.get("hero_name", "용사")),
+	]
+	pause_time_label.text = "남은 시간 %s" % _format_run_time(
+		float(snapshot.get("run_remaining_seconds", 0.0))
+	)
 
-	if is_instance_valid(battle) and battle.has_method("set_external_pause"):
-		battle.set_external_pause(true)
+	battle.set_external_pause(true)
+	pause_menu.show()
 
 func _close_pause_menu() -> void:
 	if not pause_menu.visible:
 		return
 
 	pause_menu.hide()
-	if (
-		not result_panel.visible
-		and is_instance_valid(battle)
-		and battle.has_method("set_external_pause")
-	):
+	if not result_panel.visible:
 		battle.set_external_pause(false)
 
 func _on_pause_restart_pressed() -> void:
@@ -275,49 +274,22 @@ func _on_demon_progression_changed(level: int, current_exp: float, exp_to_next_l
 	demon_exp_bar.max_value = maxf(exp_to_next_level, 1.0)
 	demon_exp_bar.value = current_exp
 
-func _configure_summon_loadout(snapshot: Dictionary) -> void:
-	active_monster_ids.clear()
-	for raw_id in snapshot.get("active_monster_ids", []):
-		var monster_id := String(raw_id)
-		if not monster_id.is_empty():
-			active_monster_ids.append(monster_id)
-
-	if selected_monster_type not in active_monster_ids:
-		selected_monster_type = ""
-
-	_refresh_summon_buttons(
-		float(snapshot.get("command_power", 0.0))
-	)
-
 func _on_command_changed(current_value: float, max_value: float) -> void:
 	command_label.text = "지휘력 %d / %d" % [int(round(current_value)), int(round(max_value))]
 	command_bar.max_value = maxf(max_value, 1.0)
 	command_bar.value = current_value
-	_refresh_summon_buttons(current_value)
 
-func _refresh_summon_buttons(current_value: float) -> void:
-	var buttons: Array[Button] = [slime_button, spider_button, orc_button]
+	var slime_cost: float = battle.get_monster_cost("slime")
+	var spider_cost: float = battle.get_monster_cost("spider")
+	var orc_cost: float = battle.get_monster_cost("orc")
 
-	for index in range(buttons.size()):
-		var button := buttons[index]
-		if index >= active_monster_ids.size():
-			button.visible = false
-			button.disabled = true
-			continue
+	slime_button.text = "슬라임\n비용 %.1f" % slime_cost
+	spider_button.text = "거미\n비용 %.1f" % spider_cost
+	orc_button.text = "오크\n비용 %.1f" % orc_cost
 
-		var monster_id := active_monster_ids[index]
-		var cost := battle.get_monster_cost(monster_id)
-		button.visible = true
-		button.text = "%s\n비용 %.1f" % [
-			MONSTER_CATALOG.get_name(monster_id),
-			cost,
-		]
-		button.disabled = current_value + 0.001 < cost
-
-func _on_summon_slot_pressed(slot_index: int) -> void:
-	if slot_index < 0 or slot_index >= active_monster_ids.size():
-		return
-	_on_summon_pressed(active_monster_ids[slot_index])
+	slime_button.disabled = current_value + 0.001 < slime_cost
+	spider_button.disabled = current_value + 0.001 < spider_cost
+	orc_button.disabled = current_value + 0.001 < orc_cost
 
 func _on_placement_mode_toggled(auto_enabled: bool) -> void:
 	auto_placement = auto_enabled
@@ -404,7 +376,13 @@ func _on_demon_augment_applied(augment_name: String, build_summary: String) -> v
 	status_label.text = "마왕 증강 획득 → %s\n현재 마왕 빌드: %s" % [augment_name, build_summary]
 
 func _get_monster_name(monster_type: String) -> String:
-	return MONSTER_CATALOG.get_name(monster_type)
+	match monster_type:
+		"spider":
+			return "거미"
+		"orc":
+			return "오크"
+		_:
+			return "슬라임"
 
 func _on_hero_leveled_up(new_level: int) -> void:
 	status_label.text = "용사 Lv.%d 도달!\nAI가 증강 후보를 평가합니다." % new_level
@@ -425,8 +403,9 @@ func _on_hero_augment_selected(level: int, candidates: Array, chosen_name: Strin
 func _on_battle_finished(message: String, player_won: bool) -> void:
 	pause_menu.hide()
 	demon_augment_panel.hide()
-	for button in [slime_button, spider_button, orc_button]:
-		button.disabled = true
+	slime_button.disabled = true
+	spider_button.disabled = true
+	orc_button.disabled = true
 	placement_toggle.disabled = true
 
 	if player_won:

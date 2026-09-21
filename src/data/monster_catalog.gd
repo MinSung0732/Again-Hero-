@@ -1,8 +1,6 @@
 extends RefCounted
 class_name MonsterCatalog
 
-const ORDER := ["slime", "spider", "orc"]
-
 const MONSTERS := {
 	"slime": {
 		"id": "slime",
@@ -59,7 +57,6 @@ static func get_role_label(role_id: String) -> String:
 
 static func get_ids() -> Array[String]:
 	var result: Array[String] = []
-	for monster_id in ORDER:
-		if MONSTERS.has(monster_id):
-			result.append(String(monster_id))
+	for monster_id in MONSTERS.keys():
+		result.append(String(monster_id))
 	return result
