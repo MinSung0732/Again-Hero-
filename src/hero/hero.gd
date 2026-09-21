@@ -25,6 +25,8 @@ const OFFENSE_MEMORY_MIN_WEIGHT := 0.25
 @export var attack_range: float = 430.0
 @export var attack_cooldown: float = 0.62
 @export var projectile_speed: float = 680.0
+@export var projectile_splash_radius: float = 0.0
+@export var projectile_splash_damage_ratio: float = 0.0
 @export var exp_pickup_radius: float = 150.0
 @export var ai_sense_radius: float = 420.0
 @export var kite_distance: float = 210.0
@@ -415,7 +417,16 @@ func _fire_projectile(current_target: Node2D) -> void:
 	var projectile := PROJECTILE_SCENE.instantiate() as Area2D
 	get_parent().add_child(projectile)
 	projectile.global_position = global_position + shot_direction * 46.0
-	projectile.call("setup", shot_direction, attack_damage, projectile_speed, attack_range, hero_id)
+	projectile.call(
+		"setup",
+		shot_direction,
+		attack_damage,
+		projectile_speed,
+		attack_range,
+		hero_id,
+		projectile_splash_radius,
+		projectile_splash_damage_ratio
+	)
 
 func gain_exp(amount: int) -> void:
 	if amount <= 0 or current_hp <= 0:
@@ -615,24 +626,61 @@ func _build_ai_context() -> Dictionary:
 func _apply_augment(augment: Dictionary) -> void:
 	var augment_id: String = String(augment.get("id", ""))
 
-	match augment_id:
-		"projectile_power":
-			attack_damage += 8
-		"rapid_strikes":
-			attack_cooldown = maxf(attack_cooldown * 0.88, 0.18)
-		"iron_body":
-			max_hp += 45
-			current_hp = mini(current_hp + 45, max_hp)
-		"pursuit":
-			move_speed += 25.0
-		"long_reach":
-			attack_range += 35.0
-		"battle_recovery":
-			current_hp = mini(current_hp + 90, max_hp)
+	for raw_effect in augment.get("effects", []):
+		var effect: Dictionary = raw_effect
+		_apply_augment_effect(effect)
 
 	if not augment_id.is_empty():
 		var current_stack: int = int(build_counts.get(augment_id, 0))
 		build_counts[augment_id] = current_stack + 1
+
+func _apply_augment_effect(effect: Dictionary) -> void:
+	var op := String(effect.get("op", ""))
+	var target := String(effect.get("target", ""))
+
+	match op:
+		"add_stat":
+			if target.is_empty():
+				return
+
+			var current_value = get(target)
+			var next_value: float = float(current_value) + float(effect.get("value", 0.0))
+
+			if effect.has("min"):
+				next_value = maxf(next_value, float(effect.get("min", next_value)))
+			if effect.has("max"):
+				next_value = minf(next_value, float(effect.get("max", next_value)))
+
+			if typeof(current_value) == TYPE_INT:
+				set(target, int(round(next_value)))
+			else:
+				set(target, next_value)
+
+		"multiply_stat":
+			if target.is_empty():
+				return
+
+			var current_value = get(target)
+			var next_value: float = float(current_value) * float(effect.get("value", 1.0))
+
+			if effect.has("min"):
+				next_value = maxf(next_value, float(effect.get("min", next_value)))
+			if effect.has("max"):
+				next_value = minf(next_value, float(effect.get("max", next_value)))
+
+			if typeof(current_value) == TYPE_INT:
+				set(target, int(round(next_value)))
+			else:
+				set(target, next_value)
+
+		"heal":
+			current_hp = mini(
+				current_hp + int(effect.get("value", 0)),
+				max_hp
+			)
+
+		_:
+			push_warning("Unknown Hero augment effect op: %s" % op)
 
 func apply_slow(multiplier: float, duration: float) -> void:
 	if current_hp <= 0:
