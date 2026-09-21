@@ -26,12 +26,9 @@ const BATTLE_SCENE_PATH := "res://src/main/Main.tscn"
 @onready var other_button: Button = $BottomNav/NavMargin/NavButtons/OtherButton
 
 @onready var team_summary_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/Summary
-@onready var team_slot_1_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot1/Label
-@onready var team_slot_2_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot2/Label
-@onready var team_slot_3_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot3/Label
-@onready var team_remove_1_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/RemoveRow/Remove1Button
-@onready var team_remove_2_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/RemoveRow/Remove2Button
-@onready var team_remove_3_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/RemoveRow/Remove3Button
+@onready var team_slot_1_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot1Button
+@onready var team_slot_2_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot2Button
+@onready var team_slot_3_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot3Button
 @onready var team_monster_1_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList/Monster1Button
 @onready var team_monster_2_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList/Monster2Button
 @onready var team_monster_3_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList/Monster3Button
@@ -198,12 +195,10 @@ func _apply_styles() -> void:
 	enter_stage_button.add_theme_stylebox_override("hover", primary_button_style)
 	enter_stage_button.add_theme_stylebox_override("pressed", primary_button_style)
 
-	for panel in [
-		$SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot1,
-		$SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot2,
-		$SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot3,
-	]:
-		panel.add_theme_stylebox_override("panel", stage_card_style)
+	for button in [team_slot_1_button, team_slot_2_button, team_slot_3_button]:
+		button.add_theme_stylebox_override("normal", stage_card_style)
+		button.add_theme_stylebox_override("hover", stage_card_style)
+		button.add_theme_stylebox_override("pressed", primary_button_style)
 
 func _connect_navigation() -> void:
 	shop_button.pressed.connect(_switch_tab.bind("shop"))
@@ -216,13 +211,6 @@ func _connect_navigation() -> void:
 	next_stage_button.pressed.connect(_change_stage.bind(1))
 	enter_stage_button.pressed.connect(_enter_selected_stage)
 
-	team_remove_1_button.pressed.connect(_remove_team_slot.bind(0))
-	team_remove_2_button.pressed.connect(_remove_team_slot.bind(1))
-	team_remove_3_button.pressed.connect(_remove_team_slot.bind(2))
-
-	team_monster_1_button.pressed.connect(_toggle_team_preview_slot.bind(0))
-	team_monster_2_button.pressed.connect(_toggle_team_preview_slot.bind(1))
-	team_monster_3_button.pressed.connect(_toggle_team_preview_slot.bind(2))
 
 func _switch_tab(tab_id: String) -> void:
 	current_tab = tab_id
@@ -275,15 +263,10 @@ func _setup_team_preview() -> void:
 	_refresh_team_preview()
 
 func _refresh_team_preview() -> void:
-	var slot_labels: Array[Label] = [
-		team_slot_1_label,
-		team_slot_2_label,
-		team_slot_3_label,
-	]
-	var remove_buttons: Array[Button] = [
-		team_remove_1_button,
-		team_remove_2_button,
-		team_remove_3_button,
+	var slot_buttons: Array[Button] = [
+		team_slot_1_button,
+		team_slot_2_button,
+		team_slot_3_button,
 	]
 	var monster_buttons: Array[Button] = [
 		team_monster_1_button,
@@ -291,22 +274,21 @@ func _refresh_team_preview() -> void:
 		team_monster_3_button,
 	]
 
-	for slot_index in range(slot_labels.size()):
+	for slot_index in range(slot_buttons.size()):
+		var slot_button := slot_buttons[slot_index]
 		if slot_index < team_preview_ids.size():
 			var monster_id := team_preview_ids[slot_index]
-			slot_labels[slot_index].text = "%d\n%s\n%s" % [
+			slot_button.text = "%d\n%s\n%s\n\n편성 해제" % [
 				slot_index + 1,
 				MONSTER_CATALOG.get_name(monster_id),
 				MONSTER_CATALOG.get_role_label(
 					MONSTER_CATALOG.get_role(monster_id)
 				),
 			]
-			remove_buttons[slot_index].visible = true
-			remove_buttons[slot_index].disabled = team_preview_ids.size() <= 1
+			slot_button.disabled = team_preview_ids.size() <= 1
 		else:
-			slot_labels[slot_index].text = "%d\n빈 슬롯" % (slot_index + 1)
-			remove_buttons[slot_index].visible = false
-			remove_buttons[slot_index].disabled = true
+			slot_button.text = "%d\n빈 슬롯" % (slot_index + 1)
+			slot_button.disabled = true
 
 	var selected_names: PackedStringArray = []
 	for monster_id in team_preview_ids:
@@ -339,6 +321,24 @@ func _refresh_team_preview() -> void:
 		button.add_theme_stylebox_override("normal", style)
 		button.add_theme_stylebox_override("hover", style)
 		button.add_theme_stylebox_override("pressed", style)
+
+func _on_team_slot_1_pressed() -> void:
+	_remove_team_slot(0)
+
+func _on_team_slot_2_pressed() -> void:
+	_remove_team_slot(1)
+
+func _on_team_slot_3_pressed() -> void:
+	_remove_team_slot(2)
+
+func _on_team_monster_1_pressed() -> void:
+	_toggle_team_preview_slot(0)
+
+func _on_team_monster_2_pressed() -> void:
+	_toggle_team_preview_slot(1)
+
+func _on_team_monster_3_pressed() -> void:
+	_toggle_team_preview_slot(2)
 
 func _remove_team_slot(slot_index: int) -> void:
 	if slot_index < 0 or slot_index >= team_preview_ids.size():

@@ -790,3 +790,11 @@
 - 해제 즉시 기존 team_loadout 저장 경로로 자동 저장.
 - Battle / Main 전투 코드는 변경하지 않음.
 
+### Team Loadout Slot Input Reliability Fix
+- Android에서 별도 `편성 해제` 버튼의 pressed 입력이 반응하지 않는 문제 대응.
+- 작은 해제 버튼 행을 제거하고 3개의 큰 편성 슬롯 자체를 Button으로 변경.
+- 슬롯 안에 `편성 해제` 문구를 직접 표시하고 슬롯을 누르면 해당 몬스터를 제거.
+- 팀 편성 관련 6개 버튼 연결을 런타임 `.connect()` 대신 `Lobby.tscn`의 명시적 signal connection으로 변경.
+- 슬롯/몬스터 버튼에 명시적 touch mouse filter를 적용.
+- 저장 로직과 Battle/Main 전투 코드는 변경하지 않음.
+

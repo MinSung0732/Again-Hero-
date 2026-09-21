@@ -155,67 +155,36 @@ horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="SlotRow" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
-custom_minimum_size = Vector2(0, 190)
+custom_minimum_size = Vector2(0, 220)
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="Slot1" type="PanelContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+[node name="Slot1Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+custom_minimum_size = Vector2(0, 210)
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 0
+mouse_filter = 0
+theme_override_font_sizes/font_size = 21
+text = "1\n슬라임\n물량\n\n편성 해제"
 
-[node name="Label" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot1"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "1\n슬라임\n물량"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Slot2" type="PanelContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+[node name="Slot2Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+custom_minimum_size = Vector2(0, 210)
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 0
+mouse_filter = 0
+theme_override_font_sizes/font_size = 21
+text = "2\n거미\n제어\n\n편성 해제"
 
-[node name="Label" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot2"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "2\n거미\n제어"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Slot3" type="PanelContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+[node name="Slot3Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+custom_minimum_size = Vector2(0, 210)
 layout_mode = 2
 size_flags_horizontal = 3
-
-[node name="Label" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot3"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "3\n오크\n탱커"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="RemoveRow" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="Remove1Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/RemoveRow"]
-custom_minimum_size = Vector2(0, 72)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 19
-text = "편성 해제"
-
-[node name="Remove2Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/RemoveRow"]
-custom_minimum_size = Vector2(0, 72)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 19
-text = "편성 해제"
-
-[node name="Remove3Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/RemoveRow"]
-custom_minimum_size = Vector2(0, 72)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 19
-text = "편성 해제"
+focus_mode = 0
+mouse_filter = 0
+theme_override_font_sizes/font_size = 21
+text = "3\n오크\n탱커\n\n편성 해제"
 
 [node name="ListTitle" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
@@ -228,18 +197,24 @@ layout_mode = 2
 theme_override_constants/separation = 14
 
 [node name="Monster1Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList"]
+focus_mode = 0
+mouse_filter = 0
 custom_minimum_size = Vector2(0, 126)
 layout_mode = 2
 theme_override_font_sizes/font_size = 21
 text = "슬라임"
 
 [node name="Monster2Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList"]
+focus_mode = 0
+mouse_filter = 0
 custom_minimum_size = Vector2(0, 126)
 layout_mode = 2
 theme_override_font_sizes/font_size = 21
 text = "거미"
 
 [node name="Monster3Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList"]
+focus_mode = 0
+mouse_filter = 0
 custom_minimum_size = Vector2(0, 126)
 layout_mode = 2
 theme_override_font_sizes/font_size = 21
@@ -250,7 +225,7 @@ custom_minimum_size = Vector2(0, 78)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
 theme_override_font_sizes/font_size = 19
-text = "슬롯 아래 '편성 해제'로 빼거나, 보유 몬스터 목록에서 다시 추가할 수 있습니다."
+text = "위 편성 슬롯 자체를 누르면 해제됩니다. 아래 보유 몬스터를 누르면 다시 추가됩니다."
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
@@ -560,3 +535,10 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 21
 text = "기타"
+
+[connection signal="pressed" from="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot1Button" to="." method="_on_team_slot_1_pressed"]
+[connection signal="pressed" from="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot2Button" to="." method="_on_team_slot_2_pressed"]
+[connection signal="pressed" from="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot3Button" to="." method="_on_team_slot_3_pressed"]
+[connection signal="pressed" from="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList/Monster1Button" to="." method="_on_team_monster_1_pressed"]
+[connection signal="pressed" from="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList/Monster2Button" to="." method="_on_team_monster_2_pressed"]
+[connection signal="pressed" from="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList/Monster3Button" to="." method="_on_team_monster_3_pressed"]
