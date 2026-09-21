@@ -12,7 +12,7 @@ const ATTACK_FRAMES := 6
 const HIT_FRAMES := 3
 const DEATH_FRAMES := 4
 
-@export var sheet_path: String = "res://assets/art/monsters/bombrat/bombrat_spritesheet.png"
+@export var source_sheet: Texture2D
 @export var target_height: float = 78.0
 @export var idle_fps: float = 6.0
 @export var move_fps: float = 10.0
@@ -110,79 +110,19 @@ func _emit_death_finished() -> void:
 	death_animation_finished.emit()
 
 func _setup_sprite_frames() -> void:
-	var loaded = load(sheet_path)
-	if not loaded is Texture2D:
-		push_warning("BombRat visual: sprite sheet load failed: %s" % sheet_path)
-		return
-
-	var source_texture := loaded as Texture2D
-	var expected_width := SHEET_COLUMNS * CELL_SIZE
-	var expected_height := SHEET_ROWS * CELL_SIZE
-
-	if (
-		source_texture.get_width() != expected_width
-		or source_texture.get_height() != expected_height
-	):
-		push_warning(
-			"BombRat visual: expected %dx%d but got %dx%d"
-			% [
-				expected_width,
-				expected_height,
-				source_texture.get_width(),
-				source_texture.get_height(),
-			]
-		)
+	if source_sheet == null:
+		push_warning("BombRat visual: source_sheet is null")
 		return
 
 	var frames := SpriteFrames.new()
 	if frames.has_animation(&"default"):
 		frames.remove_animation(&"default")
 
-	_add_row_animation(
-		frames,
-		source_texture,
-		&"idle",
-		0,
-		IDLE_FRAMES,
-		idle_fps,
-		true
-	)
-	_add_row_animation(
-		frames,
-		source_texture,
-		&"move",
-		1,
-		MOVE_FRAMES,
-		move_fps,
-		true
-	)
-	_add_row_animation(
-		frames,
-		source_texture,
-		&"attack",
-		2,
-		ATTACK_FRAMES,
-		attack_fps,
-		false
-	)
-	_add_row_animation(
-		frames,
-		source_texture,
-		&"hit",
-		3,
-		HIT_FRAMES,
-		hit_fps,
-		false
-	)
-	_add_row_animation(
-		frames,
-		source_texture,
-		&"death",
-		4,
-		DEATH_FRAMES,
-		death_fps,
-		false
-	)
+	_add_row_animation(frames, &"idle", 0, IDLE_FRAMES, idle_fps, true)
+	_add_row_animation(frames, &"move", 1, MOVE_FRAMES, move_fps, true)
+	_add_row_animation(frames, &"attack", 2, ATTACK_FRAMES, attack_fps, false)
+	_add_row_animation(frames, &"hit", 3, HIT_FRAMES, hit_fps, false)
+	_add_row_animation(frames, &"death", 4, DEATH_FRAMES, death_fps, false)
 
 	sprite_frames = frames
 	var uniform_scale := target_height / float(CELL_SIZE)
@@ -190,10 +130,10 @@ func _setup_sprite_frames() -> void:
 	_visual_ready = true
 
 	print(
-		"BombRat visual ready: %dx%d / cell %d / grid %dx%d"
+		"BombRat visual ready: resource=%dx%d / cell %d / grid %dx%d"
 		% [
-			source_texture.get_width(),
-			source_texture.get_height(),
+			source_sheet.get_width(),
+			source_sheet.get_height(),
 			CELL_SIZE,
 			SHEET_COLUMNS,
 			SHEET_ROWS,
@@ -202,7 +142,6 @@ func _setup_sprite_frames() -> void:
 
 func _add_row_animation(
 	frames: SpriteFrames,
-	source_texture: Texture2D,
 	animation_name: StringName,
 	row: int,
 	frame_count: int,
@@ -215,7 +154,7 @@ func _add_row_animation(
 
 	for column in range(frame_count):
 		var atlas_texture := AtlasTexture.new()
-		atlas_texture.atlas = source_texture
+		atlas_texture.atlas = source_sheet
 		atlas_texture.region = Rect2(
 			float(column * CELL_SIZE),
 			float(row * CELL_SIZE),

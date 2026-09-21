@@ -1024,3 +1024,9 @@
 - 애니메이션 프레임 수를 실제 시트에 맞춰 idle 4 / move 6 / attack 6 / hit 3 / death 4로 지정.
 - 잘못된 빈 셀 재생과 Android에서 visual fallback으로 떨어지던 원인을 제거.
 - 시트 크기가 예상 규격과 다를 경우 기존 코드 드로잉 fallback을 유지.
+
+### Bomb Rat Scene-bound Texture Fix
+- 폭탄쥐 PNG를 런타임 경로 문자열로 load하지 않고 `BombRat.tscn`의 Texture2D ext_resource로 직접 참조하도록 변경.
+- `bomb_rat_visual.gd`는 씬에서 주입된 `source_sheet`만 사용해 AtlasTexture 프레임을 구성.
+- Android/PC에서 런타임 ResourceLoader 경로 차이로 `visual_ready=false`가 되어 코드 드로잉 fallback이 표시될 가능성을 제거.
+- 폭탄쥐 시트 규격은 229×229 셀, 6×5 그리드와 실제 프레임 수를 그대로 유지.
