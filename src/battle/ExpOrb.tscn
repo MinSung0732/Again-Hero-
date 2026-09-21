@@ -5,3 +5,7 @@
 [node name="ExpOrb" type="Node2D"]
 z_index = 1
 script = ExtResource("1_exp_orb")
+
+[node name="Visual" type="AnimatedSprite2D" parent="."]
+visible = false
+texture_filter = 1
