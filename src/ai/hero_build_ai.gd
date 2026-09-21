@@ -3,6 +3,7 @@ class_name HeroBuildAI
 
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
+const STATUS_EFFECT_CATALOG := preload("res://src/data/status_effect_catalog.gd")
 
 static func choose_candidate(
 	candidates: Array,
@@ -171,6 +172,14 @@ static func _evaluate_rule(rule: Dictionary, context: Dictionary) -> float:
 				"recent_role_weights",
 				String(rule.get("key", ""))
 			) * float(rule.get("weight", 0.0))
+		"recent_status_weight":
+			var status_weights: Dictionary = context.get("recent_status_weights", {})
+			var status_id := String(rule.get("key", ""))
+			var contribution := (
+				float(status_weights.get(status_id, 0.0))
+				* float(rule.get("weight", 0.0))
+			)
+			return _apply_optional_cap(contribution, rule)
 		"nearby_linear":
 			return minf(
 				float(context.get("nearby_count", 0))
@@ -379,6 +388,16 @@ static func _describe_rule(rule: Dictionary, context: Dictionary) -> String:
 					"recent_role_weights",
 					key
 				) * 100.0,
+			]
+		"recent_status_weight":
+			var status_counts: Dictionary = context.get("recent_status_counts", {})
+			var status_window := float(
+				context.get("recent_status_window_seconds", window)
+			)
+			return "최근 %.0f초 %s %d회" % [
+				status_window,
+				STATUS_EFFECT_CATALOG.get_name(key),
+				int(status_counts.get(key, 0)),
 			]
 		"nearby_linear", "nearby_count_max", "nearby_count_eq":
 			return "관측 근처 적 %d명" % int(
