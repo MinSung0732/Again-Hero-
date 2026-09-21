@@ -100,46 +100,104 @@ func _emit_death_finished() -> void:
 	death_animation_finished.emit()
 
 func _setup_sprite_frames() -> void:
-	if sheet_path.is_empty() or not ResourceLoader.exists(sheet_path):
+	if sheet_path.is_empty():
 		return
 
 	var loaded = load(sheet_path)
 	if not loaded is Texture2D:
+		push_warning("BombRat visual: sprite sheet load failed: %s" % sheet_path)
 		return
 
 	var source_texture := loaded as Texture2D
-	var image := source_texture.get_image()
-	if image == null or image.is_empty():
-		return
+	var width := source_texture.get_width()
+	var height := source_texture.get_height()
+	var layout := _detect_layout(width, height)
 
-	var layout := _detect_layout(image.get_width(), image.get_height())
 	if layout.is_empty():
+		push_warning(
+			"BombRat visual: unsupported sheet size %dx%d" % [width, height]
+		)
 		return
 
 	var columns := int(layout.get("columns", 0))
 	var rows := int(layout.get("rows", 0))
 	var cell_size := int(layout.get("cell_size", 0))
-	if columns <= 0 or rows <= 0 or cell_size <= 0:
-		return
 
 	var frames := SpriteFrames.new()
 	if frames.has_animation(&"default"):
 		frames.remove_animation(&"default")
 
-	_add_row_animation(frames, source_texture, image, &"idle", 0, columns, cell_size, idle_fps, true)
+	_add_row_animation(
+		frames,
+		source_texture,
+		&"idle",
+		0,
+		columns,
+		cell_size,
+		idle_fps,
+		true
+	)
 
 	if rows >= 2:
-		_add_row_animation(frames, source_texture, image, &"move", 1, columns, cell_size, move_fps, true)
+		_add_row_animation(
+			frames,
+			source_texture,
+			&"move",
+			1,
+			columns,
+			cell_size,
+			move_fps,
+			true
+		)
+
 	if rows >= 3:
-		_add_row_animation(frames, source_texture, image, &"attack", 2, columns, cell_size, attack_fps, false)
+		_add_row_animation(
+			frames,
+			source_texture,
+			&"attack",
+			2,
+			columns,
+			cell_size,
+			attack_fps,
+			false
+		)
 
 	if rows >= 5:
-		_add_row_animation(frames, source_texture, image, &"hit", 3, columns, cell_size, hit_fps, false)
-		_add_row_animation(frames, source_texture, image, &"death", 4, columns, cell_size, death_fps, false)
+		_add_row_animation(
+			frames,
+			source_texture,
+			&"hit",
+			3,
+			columns,
+			cell_size,
+			hit_fps,
+			false
+		)
+		_add_row_animation(
+			frames,
+			source_texture,
+			&"death",
+			4,
+			columns,
+			cell_size,
+			death_fps,
+			false
+		)
 	elif rows >= 4:
-		_add_row_animation(frames, source_texture, image, &"death", 3, columns, cell_size, death_fps, false)
+		_add_row_animation(
+			frames,
+			source_texture,
+			&"death",
+			3,
+			columns,
+			cell_size,
+			death_fps,
+			false
+		)
 
-	if not frames.has_animation(&"idle") or frames.get_frame_count(&"idle") <= 0:
+	if not frames.has_animation(&"idle"):
+		return
+	if frames.get_frame_count(&"idle") <= 0:
 		return
 
 	sprite_frames = frames
@@ -147,31 +205,66 @@ func _setup_sprite_frames() -> void:
 	scale = Vector2(uniform_scale, uniform_scale)
 	_visual_ready = true
 
+	print(
+		"BombRat visual ready: sheet=%dx%d grid=%dx%d cell=%d"
+		% [width, height, columns, rows, cell_size]
+	)
+
 func _detect_layout(width: int, height: int) -> Dictionary:
-	for rows in [5, 4, 6, 3]:
-		if rows <= 0 or height % rows != 0:
+	if width <= 0 or height <= 0:
+		return {}
+
+	var best: Dictionary = {}
+	var best_score := -999999
+
+	for cell_size in [32, 48, 64, 80, 96, 128, 160, 192, 256, 320, 384, 512]:
+		if width % cell_size != 0 or height % cell_size != 0:
 			continue
 
-		var cell_size := height / rows
-		if cell_size <= 0 or width % cell_size != 0:
-			continue
+		var columns := int(width / cell_size)
+		var rows := int(height / cell_size)
 
-		var columns := width / cell_size
 		if columns < 2 or columns > 12:
 			continue
+		if rows < 3 or rows > 6:
+			continue
 
-		return {
-			"columns": columns,
-			"rows": rows,
-			"cell_size": cell_size,
-		}
+		var score := 0
 
-	return {}
+		if rows == 4:
+			score += 100
+		elif rows == 5:
+			score += 90
+		elif rows == 6:
+			score += 45
+		else:
+			score += 25
+
+		if columns >= 4 and columns <= 8:
+			score += 40
+		elif columns >= 3 and columns <= 10:
+			score += 20
+
+		if columns == 6:
+			score += 12
+		elif columns == 4:
+			score += 10
+		elif columns == 8:
+			score += 8
+
+		if score > best_score:
+			best_score = score
+			best = {
+				"columns": columns,
+				"rows": rows,
+				"cell_size": cell_size,
+			}
+
+	return best
 
 func _add_row_animation(
 	frames: SpriteFrames,
 	source_texture: Texture2D,
-	image: Image,
 	animation_name: StringName,
 	row: int,
 	columns: int,
@@ -179,44 +272,20 @@ func _add_row_animation(
 	fps: float,
 	looping: bool
 ) -> void:
-	var textures: Array[Texture2D] = []
-
-	for column in range(columns):
-		var cell_region := Rect2i(
-			column * cell_size,
-			row * cell_size,
-			cell_size,
-			cell_size
-		)
-		if not _cell_has_visible_pixel(image, cell_region):
-			continue
-
-		var atlas_texture := AtlasTexture.new()
-		atlas_texture.atlas = source_texture
-		atlas_texture.region = Rect2(
-			cell_region.position,
-			cell_region.size
-		)
-		textures.append(atlas_texture)
-
-	if textures.is_empty():
+	if row < 0 or columns <= 0 or cell_size <= 0:
 		return
 
 	frames.add_animation(animation_name)
 	frames.set_animation_loop(animation_name, looping)
 	frames.set_animation_speed(animation_name, fps)
 
-	for texture in textures:
-		frames.add_frame(animation_name, texture)
-
-func _cell_has_visible_pixel(image: Image, region: Rect2i) -> bool:
-	var sample_step := maxi(region.size.x / 32, 1)
-	var x_end := region.position.x + region.size.x
-	var y_end := region.position.y + region.size.y
-
-	for y in range(region.position.y, y_end, sample_step):
-		for x in range(region.position.x, x_end, sample_step):
-			if image.get_pixel(x, y).a > 0.02:
-				return true
-
-	return false
+	for column in range(columns):
+		var atlas_texture := AtlasTexture.new()
+		atlas_texture.atlas = source_texture
+		atlas_texture.region = Rect2(
+			float(column * cell_size),
+			float(row * cell_size),
+			float(cell_size),
+			float(cell_size)
+		)
+		frames.add_frame(animation_name, atlas_texture)

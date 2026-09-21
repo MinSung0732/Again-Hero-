@@ -1010,3 +1010,10 @@
 - 사망 폭발 피해와 died 신호는 기존 시점에 즉시 처리하고, 노드 제거만 death 애니메이션 종료까지 지연.
 - 시트 로딩/레이아웃 감지 실패 시 기존 코드 드로잉 폭탄쥐가 그대로 표시되는 fail-safe 유지.
 - Battle/Main의 타이머, 소환, 메뉴, 편성 로직과 폭탄쥐 전투 수치는 변경하지 않음.
+
+### Bomb Rat Sprite Sheet Android Loader Fix
+- 폭탄쥐 통합 PNG를 CPU Image로 다시 읽어 알파 픽셀을 검사하던 런타임 경로를 제거.
+- Android에서도 Godot가 이미 import한 Texture2D의 width/height만 사용해 정사각 셀 그리드를 감지하도록 단순화.
+- AtlasTexture가 원본 시트를 직접 참조하도록 변경해 PNG 디코딩/읽기 실패 시 플레이스홀더로 떨어지던 가능성을 제거.
+- 3~6행 / 2~12열 범위의 일반적인 통합 시트를 지원하고 4행/5행 레이아웃을 우선 선택.
+- 성공 시 실제 감지된 sheet/grid/cell 크기를 로그에 출력해 실기기 확인 가능.
