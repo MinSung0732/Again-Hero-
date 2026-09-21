@@ -807,3 +807,9 @@
 - 로비 진입 시 실제 로드된 편성 개수를 상태 문구로 표시해 실기기 확인 가능.
 - Battle / Main 전투 코드는 변경하지 않음.
 
+### Rollback: Team Loadout Android State Sync Attempt
+- `76a51fe` 적용 후 Android에서 lobby.gd가 정상 초기화되지 않아 로비 스타일, 초상화, Stage 진행 표시가 기본 씬 값으로 보이는 회귀 발생.
+- 직전 로비가 정상 표시되던 `fc147871880bccf550a537a50e117789097282ac`의 `lobby.gd`와 `team_loadout_store.gd`로 복구.
+- 전투 코드와 기존 로비 씬은 변경하지 않음.
+- 팀 편성 해제 동작 문제는 별도 로그/원인 확인 후 재수정.
+

@@ -2,28 +2,22 @@ extends RefCounted
 class_name TeamLoadoutStore
 
 const SAVE_PATH := "user://team_loadout.json"
-const FORMAT_VERSION := 2
 const MAX_SLOTS := 3
 
 static func load_ids(
 	valid_ids: Array[String],
 	fallback_ids: Array[String]
 ) -> Array[String]:
-	var saved_ids: Variant = null
+	var saved_value: Variant = null
 
 	if FileAccess.file_exists(SAVE_PATH):
 		var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
 		if file != null:
-			var parsed: Variant = JSON.parse_string(file.get_as_text())
-			if parsed is Dictionary:
-				var data: Dictionary = parsed
-				if int(data.get("version", 0)) == FORMAT_VERSION:
-					saved_ids = data.get("monster_ids", null)
+			saved_value = JSON.parse_string(file.get_as_text())
 
-	var normalized := _normalize_ids(saved_ids, valid_ids)
+	var normalized := _normalize_ids(saved_value, valid_ids)
 	if normalized.is_empty():
 		normalized = _normalize_ids(fallback_ids, valid_ids)
-		save_ids(normalized, valid_ids)
 
 	return normalized
 
@@ -39,11 +33,7 @@ static func save_ids(
 	if file == null:
 		return false
 
-	var payload := {
-		"version": FORMAT_VERSION,
-		"monster_ids": normalized,
-	}
-	file.store_string(JSON.stringify(payload))
+	file.store_string(JSON.stringify(normalized))
 	return true
 
 static func _normalize_ids(
