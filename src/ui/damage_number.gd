@@ -12,8 +12,21 @@ var horizontal_drift: float = 0.0
 
 func setup(amount: int) -> void:
 	value_label.text = str(maxi(amount, 0))
+	value_label.add_theme_font_size_override("font_size", 32)
+	_start_float()
+
+func setup_text(
+	message: String,
+	text_color: Color = Color(1.0, 0.58, 0.42, 1.0)
+) -> void:
+	value_label.text = message
+	value_label.add_theme_font_size_override("font_size", 23)
+	value_label.add_theme_color_override("font_color", text_color)
+	_start_float()
+
+func _start_float() -> void:
 	start_position = position
-	horizontal_drift = randf_range(-18.0, 18.0)
+	horizontal_drift = randf_range(-10.0, 10.0)
 	scale = Vector2(0.85, 0.85)
 
 func _process(delta: float) -> void:

@@ -248,26 +248,12 @@ func try_summon_at_position(monster_type: String, spawn_position: Vector2) -> bo
 	if not _can_attempt_summon(monster_type):
 		return false
 
-	if not _is_spawn_position_inside_bounds(spawn_position):
-		summon_result.emit(monster_type, false, "전장 안쪽을 터치해 주세요.")
-		return false
-
-	if not _is_spawn_position_far_enough_from_hero(spawn_position):
-		summon_result.emit(
-			monster_type,
-			false,
-			"용사와 너무 가깝습니다. 최소 %.0fpx 이상 떨어져 배치해 주세요." % MANUAL_SPAWN_HERO_MIN_DISTANCE
-		)
+	var placement_error := get_manual_spawn_error(monster_type, spawn_position)
+	if not placement_error.is_empty():
+		summon_result.emit(monster_type, false, placement_error)
 		return false
 
 	var cost: float = get_monster_cost(monster_type)
-	if command_power + 0.001 < cost:
-		summon_result.emit(
-			monster_type,
-			false,
-			"지휘력이 부족합니다. 필요 %.1f / 현재 %.0f" % [cost, command_power]
-		)
-		return false
 
 	return _perform_summon(
 		monster_type,
@@ -326,6 +312,25 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 
 	_gain_demon_exp(gained_exp)
 	return true
+
+func get_manual_spawn_error(
+	monster_type: String,
+	spawn_position: Vector2
+) -> String:
+	if not _is_spawn_position_inside_bounds(spawn_position):
+		return "배치 불가\n전장 안쪽을 터치"
+
+	if not _is_spawn_position_far_enough_from_hero(spawn_position):
+		return "용사와 너무 가까움\n%.0fpx 이상 거리 필요" % MANUAL_SPAWN_HERO_MIN_DISTANCE
+
+	var cost := get_monster_cost(monster_type)
+	if cost <= 0.0:
+		return "배치 불가"
+
+	if command_power + 0.001 < cost:
+		return "지휘력 부족\n필요 %.1f" % cost
+
+	return ""
 
 func is_spawn_position_valid(spawn_position: Vector2) -> bool:
 	return (

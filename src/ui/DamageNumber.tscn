@@ -7,10 +7,10 @@ z_index = 100
 script = ExtResource("1_damage")
 
 [node name="Value" type="Label" parent="."]
-offset_left = -72.0
-offset_top = -28.0
-offset_right = 72.0
-offset_bottom = 28.0
+offset_left = -210.0
+offset_top = -38.0
+offset_right = 210.0
+offset_bottom = 54.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.94, 0.72, 1)
 theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.06, 0.95)
@@ -19,3 +19,4 @@ theme_override_font_sizes/font_size = 32
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 2

@@ -4,6 +4,7 @@ const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
 const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
+const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
 
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
 @onready var battle_viewport: SubViewport = $BattleViewportContainer/BattleViewport
@@ -201,6 +202,21 @@ func _input(event: InputEvent) -> void:
 	var canvas_inverse := battle_viewport.get_canvas_transform().affine_inverse()
 	var world_position: Vector2 = canvas_inverse * subviewport_pointer
 	var battle_position: Vector2 = battle.to_local(world_position)
+	var placement_error := String(
+		battle.get_manual_spawn_error(
+			selected_monster_type,
+			battle_position
+		)
+	)
+
+	if not placement_error.is_empty():
+		FLOATING_TEXT.show_text_at(
+			battle,
+			battle.to_global(battle_position),
+			placement_error
+		)
+		get_viewport().set_input_as_handled()
+		return
 
 	battle.try_summon_at_position(selected_monster_type, battle_position)
 	get_viewport().set_input_as_handled()

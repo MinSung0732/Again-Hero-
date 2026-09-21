@@ -20,3 +20,18 @@ static func show(target: Node2D, amount: int) -> void:
 	parent.add_child(popup)
 	popup.global_position = target.global_position + WORLD_OFFSET
 	popup.call("setup", displayed_damage)
+
+static func show_text_at(
+	parent: Node2D,
+	world_position: Vector2,
+	message: String
+) -> void:
+	if parent == null or not is_instance_valid(parent):
+		return
+	if message.is_empty():
+		return
+
+	var popup := DAMAGE_NUMBER_SCENE.instantiate() as Node2D
+	parent.add_child(popup)
+	popup.global_position = world_position
+	popup.call("setup_text", message)
