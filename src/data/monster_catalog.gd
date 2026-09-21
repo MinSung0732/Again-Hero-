@@ -13,6 +13,18 @@ const MONSTERS := {
 		"shards_required": 20,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/slime/frames/idle_01.png",
+		"elite_visual": {
+			"mode": "frames",
+			"asset_dir": "res://assets/art/elitemonster/slime/frames",
+			"target_height": 80.0,
+			"animations": {
+				"idle": {"prefix": "idle", "count": 4, "fps": 6.0, "loop": true},
+				"move": {"prefix": "walk", "count": 4, "fps": 10.0, "loop": true},
+				"attack": {"prefix": "atk", "count": 3, "fps": 14.0, "loop": false},
+				"hit": {"prefix": "hit", "count": 4, "fps": 14.0, "loop": false},
+				"death": {"prefix": "death", "count": 4, "fps": 10.0, "loop": false},
+			},
+		},
 		"scene": preload("res://src/monsters/Slime.tscn"),
 	},
 	"spider": {
@@ -24,6 +36,17 @@ const MONSTERS := {
 		"shards_required": 30,
 		"rarity": "rare",
 		"card_icon_path": "res://assets/art/monsters/spider/frames/idle_01.png",
+		"elite_visual": {
+			"mode": "sequence",
+			"asset_dir": "res://assets/art/elitemonster/spider/frames",
+			"target_height": 88.0,
+			"animations": {
+				"idle": {"start": 1, "count": 4, "fps": 6.0, "loop": true},
+				"move": {"start": 5, "count": 6, "fps": 10.0, "loop": true},
+				"attack": {"start": 11, "count": 8, "fps": 14.0, "loop": false},
+				"death": {"start": 19, "count": 4, "fps": 10.0, "loop": false},
+			},
+		},
 		"scene": preload("res://src/monsters/Spider.tscn"),
 	},
 	"orc": {
@@ -35,6 +58,20 @@ const MONSTERS := {
 		"shards_required": 40,
 		"rarity": "legendary",
 		"card_icon_path": "res://assets/art/monsters/orc/frames/idle_01.png",
+		"elite_visual": {
+			"mode": "sheet",
+			"sheet_path": "res://assets/art/elitemonster/orc/eliteorc_spritesheet.png",
+			"columns": 6,
+			"rows": 5,
+			"target_height": 104.0,
+			"animations": {
+				"idle": {"row": 0, "count": 4, "fps": 6.0, "loop": true},
+				"move": {"row": 1, "count": 6, "fps": 10.0, "loop": true},
+				"attack": {"row": 2, "count": 6, "fps": 14.0, "loop": false},
+				"hit": {"row": 3, "count": 4, "fps": 14.0, "loop": false},
+				"death": {"row": 4, "count": 6, "fps": 10.0, "loop": false},
+			},
+		},
 		"scene": preload("res://src/monsters/Orc.tscn"),
 	},
 	"bomb_rat": {
@@ -47,6 +84,13 @@ const MONSTERS := {
 		"rarity": "rare",
 		"card_icon_path": "res://assets/art/monsters/bombrat/bombrat_spritesheet.png",
 		"card_icon_region": Rect2(0, 0, 229, 229),
+		"elite_visual": {
+			"mode": "sheet",
+			"sheet_path": "res://assets/art/elitemonster/bombrat/elitebombrat_spritesheet.png",
+			"columns": 6,
+			"rows": 5,
+			"target_height": 78.0,
+		},
 		"scene": preload("res://src/monsters/BombRat.tscn"),
 	},
 }
@@ -61,6 +105,13 @@ const ROLE_LABELS := {
 static func get_monster(monster_id: String) -> Dictionary:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
 	return data.duplicate(true)
+
+static func get_elite_visual_profile(monster_id: String) -> Dictionary:
+	var data: Dictionary = MONSTERS.get(monster_id, {})
+	var profile = data.get("elite_visual", {})
+	if typeof(profile) != TYPE_DICTIONARY:
+		return {}
+	return Dictionary(profile).duplicate(true)
 
 static func get_scene(monster_id: String) -> PackedScene:
 	var data: Dictionary = MONSTERS.get(monster_id, {})

@@ -1530,3 +1530,15 @@
 - `_get_catalog_monster_display_name()` 헬퍼가 `MONSTER_CATALOG.MONSTERS[monster_id]["name"]`을 직접 읽도록 변경.
 - 돌연변이 이름 생성, 특수 이벤트 메타 이름, Stage 이벤트 알림, 디버그 요약도 같은 안전 헬퍼 사용.
 - 엘리트 스폰/physics/일반 소환 로직 자체는 변경하지 않음.
+
+### Elite Monster Visuals + Bomb Rat Explosion Frames
+- Slime / Spider / Orc / Bomb Rat에 MonsterCatalog 기반 elite_visual 프로필 추가.
+- 돌연변이 소환 시 동일 monster_id를 유지하면서 비주얼만 엘리트 프로필로 교체.
+- monster_visual.gd에 frames / numbered sequence / spritesheet 기반 런타임 비주얼 프로필 로더 추가.
+- 엘리트 Slime은 elitemonster/slime/frames의 idle/walk/atk/hit/death 프레임 연결.
+- 엘리트 Spider는 elitemonster/spider/frames/frame_01~22 시퀀스를 idle/move/attack/death로 연결.
+- 엘리트 Orc는 eliteorc_spritesheet.png 6×5 동적 셀 분할 연결.
+- 엘리트 Bomb Rat은 elitebombrat_spritesheet.png 6×5 동적 셀 분할 연결.
+- Bomb Rat 폭발 효과를 기존 통시트 3프레임 방식에서 frames/frame_01~08.png 개별 PNG 8프레임 방식으로 교체.
+- 기존 MUT-DIAG 진단 출력을 제거하고 정상 돌연변이 결과 메시지만 유지.
+- 거미 원거리 투사체 로직과 UI 파츠 적용은 다음 단계로 분리.

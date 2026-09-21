@@ -154,6 +154,180 @@ func _setup_sprite_frames() -> void:
 
 	_visual_ready = true
 
+
+func apply_visual_profile(profile: Dictionary) -> bool:
+	if profile.is_empty():
+		return false
+
+	var mode := String(profile.get("mode", ""))
+	var animations = profile.get("animations", {})
+	if typeof(animations) != TYPE_DICTIONARY:
+		return false
+
+	var built := SpriteFrames.new()
+	if built.has_animation(&"default"):
+		built.remove_animation(&"default")
+
+	match mode:
+		"frames":
+			_build_profile_frames(built, profile, animations)
+		"sequence":
+			_build_profile_sequence(built, profile, animations)
+		"sheet":
+			_build_profile_sheet(built, profile, animations)
+		_:
+			return false
+
+	if not built.has_animation(&"idle"):
+		return false
+	if built.get_frame_count(&"idle") <= 0:
+		return false
+
+	sprite_frames = built
+	var first_texture := built.get_frame_texture(&"idle", 0)
+	if first_texture == null:
+		return false
+
+	var profile_height := float(profile.get("target_height", target_height))
+	var source_height := float(first_texture.get_height())
+	if source_height > 0.0:
+		var uniform_scale := profile_height / source_height
+		scale = Vector2(uniform_scale, uniform_scale)
+
+	_visual_ready = true
+	_one_shot_locked = false
+	_death_playing = false
+	_desired_locomotion = &"idle"
+	self_modulate = Color.WHITE
+	play(&"idle")
+	return true
+
+func _build_profile_frames(
+	frames: SpriteFrames,
+	profile: Dictionary,
+	animations: Dictionary
+) -> void:
+	var dir_path := String(profile.get("asset_dir", ""))
+	if dir_path.is_empty():
+		return
+
+	for raw_name in animations.keys():
+		var animation_name := StringName(String(raw_name))
+		var config: Dictionary = animations[raw_name]
+		var prefix := String(config.get("prefix", String(raw_name)))
+		var count := int(config.get("count", 0))
+		if count <= 0:
+			continue
+
+		var textures: Array[Texture2D] = []
+		for frame_index in range(1, count + 1):
+			var texture := _load_texture(
+				"%s/%s_%02d.png" % [dir_path, prefix, frame_index]
+			)
+			if texture != null:
+				textures.append(texture)
+
+		_add_profile_animation(
+			frames,
+			animation_name,
+			textures,
+			float(config.get("fps", 10.0)),
+			bool(config.get("loop", false))
+		)
+
+func _build_profile_sequence(
+	frames: SpriteFrames,
+	profile: Dictionary,
+	animations: Dictionary
+) -> void:
+	var dir_path := String(profile.get("asset_dir", ""))
+	if dir_path.is_empty():
+		return
+
+	for raw_name in animations.keys():
+		var animation_name := StringName(String(raw_name))
+		var config: Dictionary = animations[raw_name]
+		var start_index := int(config.get("start", 1))
+		var count := int(config.get("count", 0))
+		if count <= 0:
+			continue
+
+		var textures: Array[Texture2D] = []
+		for offset in range(count):
+			var texture := _load_texture(
+				"%s/frame_%02d.png" % [dir_path, start_index + offset]
+			)
+			if texture != null:
+				textures.append(texture)
+
+		_add_profile_animation(
+			frames,
+			animation_name,
+			textures,
+			float(config.get("fps", 10.0)),
+			bool(config.get("loop", false))
+		)
+
+func _build_profile_sheet(
+	frames: SpriteFrames,
+	profile: Dictionary,
+	animations: Dictionary
+) -> void:
+	var sheet_path := String(profile.get("sheet_path", ""))
+	var sheet := _load_texture(sheet_path)
+	if sheet == null:
+		return
+
+	var columns := maxi(int(profile.get("columns", 1)), 1)
+	var rows := maxi(int(profile.get("rows", 1)), 1)
+	var cell_size := Vector2(
+		float(sheet.get_width()) / float(columns),
+		float(sheet.get_height()) / float(rows)
+	)
+
+	for raw_name in animations.keys():
+		var animation_name := StringName(String(raw_name))
+		var config: Dictionary = animations[raw_name]
+		var row := int(config.get("row", 0))
+		var count := mini(int(config.get("count", 0)), columns)
+		if count <= 0:
+			continue
+
+		var textures: Array[Texture2D] = []
+		for column in range(count):
+			var atlas := AtlasTexture.new()
+			atlas.atlas = sheet
+			atlas.filter_clip = true
+			atlas.region = Rect2(
+				Vector2(float(column), float(row)) * cell_size,
+				cell_size
+			)
+			textures.append(atlas)
+
+		_add_profile_animation(
+			frames,
+			animation_name,
+			textures,
+			float(config.get("fps", 10.0)),
+			bool(config.get("loop", false))
+		)
+
+func _add_profile_animation(
+	frames: SpriteFrames,
+	animation_name: StringName,
+	textures: Array[Texture2D],
+	fps: float,
+	looping: bool
+) -> void:
+	if textures.is_empty():
+		return
+
+	frames.add_animation(animation_name)
+	frames.set_animation_loop(animation_name, looping)
+	frames.set_animation_speed(animation_name, fps)
+	for texture in textures:
+		frames.add_frame(animation_name, texture)
+
 func _add_animation(
 	frames: SpriteFrames,
 	animation_name: StringName,

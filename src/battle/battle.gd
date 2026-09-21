@@ -1288,48 +1288,12 @@ func _open_mutation_choice(event: Dictionary) -> void:
 		mutation_director.get_candidates()
 	)
 
-func _mutation_spawn_diag(step: String, detail: String) -> void:
-	var message := "[MUT-DIAG %s] %s" % [step, detail]
-	print(message)
-	mutation_spawn_result.emit(false, message)
-
 func spawn_selected_mutation(monster_id: String) -> void:
-	_mutation_spawn_diag(
-		"D1",
-		"choice id=%s · catalog=%s · hero=%s" % [
-			monster_id,
-			str(MONSTER_CATALOG.MONSTERS.has(monster_id)),
-			str(is_instance_valid(hero)),
-		]
-	)
-
-	# 모달에서 정지시킨 combat physics는 선택 즉시 가장 먼저 복구한다.
 	if not battle_over and not external_pause:
 		_set_combat_physics_enabled(true)
 
-	_mutation_spawn_diag(
-		"D1.1",
-		"after physics resume · battle_over=%s · external_pause=%s · demon_augment=%s" % [
-			str(battle_over),
-			str(external_pause),
-			str(demon_augment_selection_active),
-		]
-	)
-
 	var event := mutation_director.get_event()
-	_mutation_spawn_diag(
-		"D1.2",
-		"after get_event · empty=%s · keys=%s" % [
-			str(event.is_empty()),
-			str(event.keys()),
-		]
-	)
-
 	mutation_director.reset()
-	_mutation_spawn_diag(
-		"D1.3",
-		"after director reset · active=%s" % str(mutation_director.is_active())
-	)
 
 	if event.is_empty():
 		event = {
@@ -1343,54 +1307,18 @@ func spawn_selected_mutation(monster_id: String) -> void:
 			"visual_scale": 1.15,
 		}
 	else:
-		# 테스트 시 실제 출현을 화면에서 바로 확인할 수 있게 가까이 배치한다.
 		event["spawn_distance"] = minf(
 			float(event.get("spawn_distance", 260.0)),
 			260.0
 		)
 
-	_mutation_spawn_diag(
-		"D1.4",
-		"after event normalize · distance=%.1f" % float(
-			event.get("spawn_distance", -1.0)
-		)
-	)
-
 	var event_type := String(event.get("type", "elite"))
-	_mutation_spawn_diag(
-		"D1.5",
-		"event_type=%s" % event_type
-	)
-
 	var name_prefix := String(event.get("name_prefix", "돌연변이"))
-	_mutation_spawn_diag(
-		"D1.6",
-		"name_prefix=%s" % name_prefix
-	)
-
-	var catalog_name := _get_catalog_monster_display_name(monster_id)
-	_mutation_spawn_diag(
-		"D1.7",
-		"catalog_name=%s" % catalog_name
-	)
-
 	var mutation_name := "%s %s" % [
 		name_prefix,
-		catalog_name,
+		_get_catalog_monster_display_name(monster_id),
 	]
-	_mutation_spawn_diag(
-		"D1.8",
-		"mutation_name=%s" % mutation_name
-	)
-
 	event["name"] = mutation_name
-	_mutation_spawn_diag(
-		"D2",
-		"event ready · type=%s · distance=%.1f" % [
-			event_type,
-			float(event.get("spawn_distance", -1.0)),
-		]
-	)
 
 	var spawned := spawn_special_monster(monster_id, event)
 	if not spawned:
@@ -1402,85 +1330,33 @@ func spawn_selected_mutation(monster_id: String) -> void:
 
 	_emit_stage_event_announcement(event, monster_id)
 	mutation_selected.emit(event_type, mutation_name)
-	mutation_spawn_result.emit(
-		true,
-		"%s 소환 완료 · monster_id=%s" % [
-			mutation_name,
-			monster_id,
-		]
-	)
+	mutation_spawn_result.emit(true, "%s 소환 완료" % mutation_name)
 
 func spawn_special_monster(
 	monster_id: String,
 	special_data: Dictionary
 ) -> bool:
-	_mutation_spawn_diag(
-		"D3",
-		"special enter · id=%s" % monster_id
-	)
-
 	if not is_instance_valid(hero):
-		_mutation_spawn_diag("D3-HERO", "hero invalid")
 		return false
 	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
-		_mutation_spawn_diag(
-			"D3-CATALOG",
-			"catalog missing id=%s" % monster_id
-		)
-		return false
-
-	var scene = MONSTER_CATALOG.get_scene(monster_id)
-	_mutation_spawn_diag(
-		"D4",
-		"scene=%s" % str(scene)
-	)
-	if scene == null:
 		return false
 
 	var spawn_position := _get_stage_event_spawn_position(
 		float(special_data.get("spawn_distance", 720.0))
 	)
-	_mutation_spawn_diag(
-		"D5",
-		"before _spawn_monster · pos=(%.0f, %.0f) · alive=%d" % [
-			spawn_position.x,
-			spawn_position.y,
-			monsters_alive,
-		]
-	)
-
-	# 공용 소환 구현은 건드리지 않는다. 반환값만 관찰한다.
 	var monster = _spawn_monster(
 		monster_id,
 		spawn_position,
 		0.0,
 		false
 	)
-	_mutation_spawn_diag(
-		"D6",
-		"after _spawn_monster · valid=%s · alive=%d" % [
-			str(is_instance_valid(monster)),
-			monsters_alive,
-		]
-	)
 	if not is_instance_valid(monster):
 		return false
 
-	_mutation_spawn_diag(
-		"D7",
-		"before modifiers · instance=%d · in_tree=%s" % [
-			monster.get_instance_id(),
-			str(monster.is_inside_tree()),
-		]
-	)
 	_apply_special_monster_modifiers(
 		monster,
 		monster_id,
 		special_data
-	)
-	_mutation_spawn_diag(
-		"D8",
-		"after modifiers · instance=%d" % monster.get_instance_id()
 	)
 	_emit_stats()
 	return true
@@ -1589,9 +1465,30 @@ func _apply_special_monster_modifiers(
 	)
 	monster.set_meta("stage_event_type", special_type)
 	monster.set_meta("stage_event_name", special_name)
+	monster.set_meta("visual_variant", "elite")
+	_apply_elite_monster_visual(monster, monster_id)
 
 	if monster.has_method("queue_redraw"):
 		monster.call("queue_redraw")
+
+func _apply_elite_monster_visual(
+	monster: Node,
+	monster_id: String
+) -> void:
+	var profile := MONSTER_CATALOG.get_elite_visual_profile(monster_id)
+	if profile.is_empty():
+		return
+
+	if monster.has_method("apply_visual_profile"):
+		monster.call("apply_visual_profile", profile)
+		return
+
+	var visual_node = monster.get_node_or_null("Visual")
+	if (
+		is_instance_valid(visual_node)
+		and visual_node.has_method("apply_visual_profile")
+	):
+		visual_node.call("apply_visual_profile", profile)
 
 func _emit_stage_event_announcement(
 	event: Dictionary,

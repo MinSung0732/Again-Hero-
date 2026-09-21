@@ -1243,3 +1243,11 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 기존 `_spawn_stage_event_monster()`는 제거한다.
 - 향후 편성 보스, 이벤트 보스, 돌연변이 외 특수 몬스터도 같은 API를 재사용하고 일반 소환/지휘력 경로와 분리한다.
 - 일반 몬스터 소환의 `_spawn_monster()`, 지휘력 소비, Run 시간 루프는 변경하지 않는다.
+
+### Elite Monster Visual Profiles v1
+- 일반 몬스터 ID와 엘리트/돌연변이 ID를 분리하지 않는다. 동일 monster_id에 돌연변이 프로필과 비주얼 variant를 조합한다.
+- MonsterCatalog의 각 몬스터 데이터가 선택적으로 elite_visual 프로필을 가진다.
+- Slime/Spider/Orc는 공통 MonsterVisual.apply_visual_profile()로 런타임 비주얼만 교체한다.
+- Bomb Rat은 자체 시트 애니메이션 구조를 유지하되 동일한 apply_visual_profile() 인터페이스를 제공한다.
+- MutationCatalog는 돌연변이 배율/규칙, MonsterCatalog는 몬스터별 비주얼을 소유한다.
+- Bomb Rat 폭발은 통합 effect sheet 대신 assets/art/monsters/bombrat/frames/frame_01~08.png 개별 프레임을 사용한다.

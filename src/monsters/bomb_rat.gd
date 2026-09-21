@@ -4,9 +4,8 @@ const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const BOMBRAT_SHEET_PATH := "res://assets/art/monsters/bombrat/bombrat_spritesheet.png"
 const BOMBRAT_FRAME_SIZE := Vector2(229, 229)
 const BOMBRAT_TARGET_HEIGHT := 78.0
-const BOMBRAT_EFFECT_SHEET_PATH := "res://assets/art/monsters/bombrat/bombrat_effect_spritesheet.png"
-const BOMBRAT_EFFECT_FRAME_SIZE := Vector2(724, 724)
-const BOMBRAT_EFFECT_FRAME_COUNT := 3
+const BOMBRAT_EFFECT_FRAME_DIR := "res://assets/art/monsters/bombrat/frames"
+const BOMBRAT_EFFECT_FRAME_COUNT := 8
 const BOMBRAT_EFFECT_TARGET_DIAMETER := 300.0
 
 signal died
@@ -153,30 +152,53 @@ func _trigger_death_explosion() -> void:
 	if hero.has_method("take_damage"):
 		hero.call("take_damage", explosion_damage)
 
-func _apply_bomb_rat_visual() -> void:
+func apply_visual_profile(profile: Dictionary) -> bool:
+	if profile.is_empty():
+		return false
+	if String(profile.get("mode", "")) != "sheet":
+		return false
+
+	return _apply_bomb_rat_visual(
+		String(profile.get("sheet_path", "")),
+		maxi(int(profile.get("columns", 6)), 1),
+		maxi(int(profile.get("rows", 5)), 1),
+		float(profile.get("target_height", BOMBRAT_TARGET_HEIGHT))
+	)
+
+func _apply_bomb_rat_visual(
+	sheet_path: String = BOMBRAT_SHEET_PATH,
+	columns: int = SHEET_COLUMNS,
+	rows: int = SHEET_ROWS,
+	profile_height: float = BOMBRAT_TARGET_HEIGHT
+) -> bool:
 	visual.visible = false
 	visual.sprite_frames = null
 	visual.modulate = Color.WHITE
 	visual.rotation = 0.0
 	visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
-	var sheet := _load_bomb_rat_texture(BOMBRAT_SHEET_PATH)
+	var sheet := _load_bomb_rat_texture(sheet_path)
 	if sheet == null:
-		push_warning("Bomb Rat spritesheet load failed: %s" % BOMBRAT_SHEET_PATH)
-		return
+		push_warning("Bomb Rat spritesheet load failed: %s" % sheet_path)
+		return false
+
+	var cell_size := Vector2(
+		float(sheet.get_width()) / float(maxi(columns, 1)),
+		float(sheet.get_height()) / float(maxi(rows, 1))
+	)
 
 	var frames := SpriteFrames.new()
 	if frames.has_animation(&"default"):
 		frames.remove_animation(&"default")
 
-	_add_sheet_animation(frames, &"idle", sheet, 0, 4, 6.0, true)
-	_add_sheet_animation(frames, &"move", sheet, 1, 6, 11.0, true)
-	_add_sheet_animation(frames, &"attack", sheet, 2, 6, 14.0, false)
-	_add_sheet_animation(frames, &"hit", sheet, 3, 3, 14.0, false)
-	_add_sheet_animation(frames, &"death", sheet, 4, 4, 10.0, false)
+	_add_sheet_animation(frames, &"idle", sheet, cell_size, 0, 4, 6.0, true)
+	_add_sheet_animation(frames, &"move", sheet, cell_size, 1, 6, 11.0, true)
+	_add_sheet_animation(frames, &"attack", sheet, cell_size, 2, 6, 14.0, false)
+	_add_sheet_animation(frames, &"hit", sheet, cell_size, 3, 3, 14.0, false)
+	_add_sheet_animation(frames, &"death", sheet, cell_size, 4, 4, 10.0, false)
 
 	visual.sprite_frames = frames
-	var uniform_scale := BOMBRAT_TARGET_HEIGHT / BOMBRAT_FRAME_SIZE.y
+	var uniform_scale := profile_height / maxf(cell_size.y, 1.0)
 	visual.scale = Vector2(uniform_scale, uniform_scale)
 	visual.visible = true
 	visual.speed_scale = 1.0
@@ -185,6 +207,7 @@ func _apply_bomb_rat_visual() -> void:
 		visual.animation_finished.connect(_on_visual_animation_finished)
 
 	visual.play(&"idle")
+	return true
 
 func _apply_bomb_rat_explosion_visual() -> void:
 	explosion_effect.visible = false
@@ -192,11 +215,6 @@ func _apply_bomb_rat_explosion_visual() -> void:
 	explosion_effect.modulate = Color.WHITE
 	explosion_effect.rotation = 0.0
 	explosion_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-
-	var sheet := _load_bomb_rat_texture(BOMBRAT_EFFECT_SHEET_PATH)
-	if sheet == null:
-		push_warning("Bomb Rat explosion spritesheet load failed: %s" % BOMBRAT_EFFECT_SHEET_PATH)
-		return
 
 	var frames := SpriteFrames.new()
 	if frames.has_animation(&"default"):
@@ -206,20 +224,29 @@ func _apply_bomb_rat_explosion_visual() -> void:
 	frames.set_animation_speed(&"explode", 14.0)
 	frames.set_animation_loop(&"explode", false)
 
-	for column in range(BOMBRAT_EFFECT_FRAME_COUNT):
-		var atlas := AtlasTexture.new()
-		atlas.atlas = sheet
-		atlas.filter_clip = true
-		atlas.region = Rect2(
-			Vector2(float(column) * BOMBRAT_EFFECT_FRAME_SIZE.x, 0.0),
-			BOMBRAT_EFFECT_FRAME_SIZE
+	var first_texture: Texture2D = null
+	for frame_index in range(1, BOMBRAT_EFFECT_FRAME_COUNT + 1):
+		var path := "%s/frame_%02d.png" % [
+			BOMBRAT_EFFECT_FRAME_DIR,
+			frame_index,
+		]
+		var texture := _load_bomb_rat_texture(path)
+		if texture == null:
+			continue
+		if first_texture == null:
+			first_texture = texture
+		frames.add_frame(&"explode", texture)
+
+	if first_texture == null:
+		push_warning(
+			"Bomb Rat explosion frames not found: %s"
+			% BOMBRAT_EFFECT_FRAME_DIR
 		)
-		frames.add_frame(&"explode", atlas)
+		return
 
 	explosion_effect.sprite_frames = frames
-	var uniform_scale := (
-		BOMBRAT_EFFECT_TARGET_DIAMETER / BOMBRAT_EFFECT_FRAME_SIZE.x
-	)
+	var source_width := maxf(float(first_texture.get_width()), 1.0)
+	var uniform_scale := BOMBRAT_EFFECT_TARGET_DIAMETER / source_width
 	explosion_effect.scale = Vector2(uniform_scale, uniform_scale)
 	explosion_effect.speed_scale = 1.0
 
@@ -268,6 +295,7 @@ func _add_sheet_animation(
 	frames: SpriteFrames,
 	animation_name: StringName,
 	sheet: Texture2D,
+	cell_size: Vector2,
 	row: int,
 	frame_count: int,
 	fps: float,
@@ -282,8 +310,8 @@ func _add_sheet_animation(
 		atlas.atlas = sheet
 		atlas.filter_clip = true
 		atlas.region = Rect2(
-			Vector2(column, row) * BOMBRAT_FRAME_SIZE,
-			BOMBRAT_FRAME_SIZE
+			Vector2(column, row) * cell_size,
+			cell_size
 		)
 		frames.add_frame(animation_name, atlas)
 
