@@ -1287,13 +1287,7 @@ func _open_mutation_choice(event: Dictionary) -> void:
 		mutation_candidate_ids.duplicate()
 	)
 
-func choose_mutation(monster_id: String) -> bool:
-	return resolve_mutation_choice(
-		pending_mutation_event.duplicate(true),
-		monster_id
-	)
-
-func resolve_mutation_choice(
+func resolve_mutation_from_ui(
 	event: Dictionary,
 	monster_id: String
 ) -> bool:
@@ -1302,6 +1296,47 @@ func resolve_mutation_choice(
 	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
 		return false
 
+	var event_copy: Dictionary = event.duplicate(true)
+	var event_type := String(event_copy.get("type", "elite"))
+	var prefix := "돌연변이"
+	if event_type == "miniboss":
+		prefix = "대돌연변이"
+
+	var mutation_name := "%s %s" % [
+		prefix,
+		MONSTER_CATALOG.get_name(monster_id),
+	]
+	event_copy["name"] = mutation_name
+	event_copy["spawn_distance"] = 460.0
+
+	mutation_selection_active = false
+	pending_mutation_event.clear()
+	mutation_candidate_ids.clear()
+
+	if not external_pause and not demon_augment_selection_active:
+		_set_combat_physics_enabled(true)
+
+	mutation_selected.emit(event_type, mutation_name)
+	call_deferred(
+		"_complete_mutation_spawn",
+		event_copy,
+		monster_id
+	)
+	return true
+
+func choose_mutation(monster_id: String) -> bool:
+	if not mutation_selection_active:
+		return false
+
+	var is_valid_candidate := false
+	for raw_id in mutation_candidate_ids:
+		if String(raw_id) == monster_id:
+			is_valid_candidate = true
+			break
+	if not is_valid_candidate:
+		return false
+
+	var event: Dictionary = pending_mutation_event.duplicate(true)
 	var event_type := String(event.get("type", "elite"))
 	var prefix := "돌연변이"
 	if event_type == "miniboss":
@@ -1317,6 +1352,9 @@ func resolve_mutation_choice(
 	mutation_selection_active = false
 	pending_mutation_event.clear()
 	mutation_candidate_ids.clear()
+
+	if not external_pause and not demon_augment_selection_active:
+		_set_combat_physics_enabled(true)
 
 	mutation_selected.emit(event_type, mutation_name)
 	call_deferred(
@@ -1815,8 +1853,6 @@ func get_snapshot() -> Dictionary:
 		"demon_build_counts": demon_build_counts.duplicate(true),
 		"mutation_selection_active": mutation_selection_active,
 		"mutation_candidates": mutation_candidate_ids.duplicate(),
-		"external_pause": external_pause,
-		"demon_augment_selection_active": demon_augment_selection_active,
 		"stage_event_fired_ids": stage_director.get_fired_event_ids(),
 		"debug_balance_summary": get_debug_balance_summary(),
 		"permanent_research_summary": get_permanent_research_summary(),
@@ -1831,31 +1867,6 @@ func get_snapshot() -> Dictionary:
 		"battle_over": battle_over,
 	}
 
-func ensure_runtime_active() -> void:
-	if battle_over:
-		return
-
-	external_pause = false
-	demon_augment_selection_active = false
-	mutation_selection_active = false
-	pending_mutation_event.clear()
-	mutation_candidate_ids.clear()
-
-	set_process(true)
-	set_physics_process(true)
-	_set_combat_physics_enabled(true)
-
-func get_runtime_pause_debug() -> String:
-	return (
-		"battle_over=%s / external_pause=%s / demon_augment=%s / mutation=%s"
-		% [
-			str(battle_over),
-			str(external_pause),
-			str(demon_augment_selection_active),
-			str(mutation_selection_active),
-		]
-	)
-
 func set_external_pause(paused: bool) -> void:
 	external_pause = paused
 
@@ -1866,7 +1877,7 @@ func set_external_pause(paused: bool) -> void:
 		_set_combat_physics_enabled(false)
 		return
 
-	if not demon_augment_selection_active and not mutation_selection_active:
+	if not demon_augment_selection_active:
 		_set_combat_physics_enabled(true)
 
 func can_go_to_next_stage() -> bool:

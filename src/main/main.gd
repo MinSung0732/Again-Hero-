@@ -89,8 +89,6 @@ func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
 		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_PORTRAIT)
 
-	battle.ensure_runtime_active()
-
 	battle.stats_changed.connect(_on_stats_changed)
 	battle.progression_changed.connect(_on_progression_changed)
 	battle.hero_leveled_up.connect(_on_hero_leveled_up)
@@ -375,12 +373,10 @@ func _on_mutation_choice_pressed(index: int) -> void:
 		return
 
 	var monster_id := String(current_mutation_candidates[index])
-	var resolved := battle.resolve_mutation_choice(
-		current_mutation_event.duplicate(true),
+	if not battle.resolve_mutation_from_ui(
+		current_mutation_event,
 		monster_id
-	)
-
-	if not resolved:
+	):
 		status_label.text = "돌연변이 선택을 처리하지 못했습니다. 다시 선택하세요."
 		return
 

@@ -1365,3 +1365,10 @@
 - Main 진입 직후 external pause / 돌연변이 선택 / 마왕 증강 선택 상태를 초기화하고 Battle process 및 Hero/몬스터 physics를 명시적으로 활성화.
 - 런타임 상태 확인을 위해 snapshot에 external_pause / demon_augment_selection_active를 추가하고 내부 디버그 문자열 제공.
 - 실제 전투 종료 상태에서는 복구 함수가 동작하지 않도록 보호.
+
+### Battle Flow Rollback + Mutation Resolver
+- 시간/지휘력/소환이 시작부터 정지하는 회귀를 제거하기 위해 Battle/Main 런타임 흐름을 정상 동작이 확인된 `4ea474b` 기준으로 복구.
+- 이후 추가했던 mutation용 external pause / startup force recovery 로직을 제거.
+- 돌연변이 모달은 기존 `mutation_selection_active`만으로 전투/타이머를 정지.
+- UI가 모달 오픈 시 Stage 이벤트 데이터를 보관하고, 선택 시 `resolve_mutation_from_ui()`로 직접 전달.
+- 선택 함수는 내부 후보 상태와 재검증하지 않고 카탈로그 유효 monster_id만 확인해 즉시 선택 확정 후 deferred 스폰.
