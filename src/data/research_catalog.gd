@@ -2,26 +2,61 @@ extends RefCounted
 class_name ResearchCatalog
 
 const RESEARCH = {
-	"mana_reservoir": {
-		"id": "mana_reservoir",
-		"name": "마력 저장고",
-		"description": "Run 시작 최대 지휘력 +20",
-		"max_level": 3,
-		"costs": [150, 250, 400],
+	"monster_power": {
+		"id": "monster_power",
+		"name": "군단 화력 연구",
+		"description": "모든 몬스터 공격력 +10%",
+		"max_level": 5,
+		"costs": [150, 220, 300, 400, 520],
+	},
+	"monster_vitality": {
+		"id": "monster_vitality",
+		"name": "군단 생체 강화",
+		"description": "모든 몬스터 최대 HP +12%",
+		"max_level": 5,
+		"costs": [150, 220, 300, 400, 520],
+	},
+	"monster_mobility": {
+		"id": "monster_mobility",
+		"name": "군단 기동 연구",
+		"description": "모든 몬스터 이동속도 +8%",
+		"max_level": 5,
+		"costs": [140, 210, 290, 380, 500],
+	},
+	"monster_attack_speed": {
+		"id": "monster_attack_speed",
+		"name": "군단 공격 훈련",
+		"description": "공격 주기 -7% · 자폭 준비시간도 감소",
+		"max_level": 5,
+		"costs": [160, 230, 320, 420, 550],
+	},
+	"summon_efficiency": {
+		"id": "summon_efficiency",
+		"name": "소환 효율화",
+		"description": "모든 몬스터 소환 비용 -5%",
+		"max_level": 5,
+		"costs": [170, 250, 340, 450, 580],
 	},
 	"mana_cycle": {
 		"id": "mana_cycle",
 		"name": "마력 순환",
 		"description": "지휘력 회복 +0.5 /초",
-		"max_level": 3,
-		"costs": [180, 300, 450],
+		"max_level": 5,
+		"costs": [180, 260, 350, 460, 600],
 	},
-	"slime_logistics": {
-		"id": "slime_logistics",
-		"name": "슬라임 배양 최적화",
-		"description": "슬라임 소환 비용 -8%",
-		"max_level": 3,
-		"costs": [150, 250, 400],
+	"mana_reservoir": {
+		"id": "mana_reservoir",
+		"name": "마력 저장고",
+		"description": "최대 지휘력 +20",
+		"max_level": 5,
+		"costs": [150, 230, 320, 420, 550],
+	},
+	"rapid_experiment": {
+		"id": "rapid_experiment",
+		"name": "고속 실험법",
+		"description": "몬스터 소환 시 마왕 EXP 획득 +10%",
+		"max_level": 5,
+		"costs": [200, 280, 370, 480, 620],
 	},
 	"tactical_notebook": {
 		"id": "tactical_notebook",
@@ -30,21 +65,18 @@ const RESEARCH = {
 		"max_level": 3,
 		"costs": [220, 350, 500],
 	},
-	"rapid_experiment": {
-		"id": "rapid_experiment",
-		"name": "고속 실험법",
-		"description": "몬스터 소환 시 마왕 EXP 획득 +10%",
-		"max_level": 3,
-		"costs": [200, 320, 480],
-	},
 }
 
 const ORDER := [
-	"mana_reservoir",
+	"monster_power",
+	"monster_vitality",
+	"monster_mobility",
+	"monster_attack_speed",
+	"summon_efficiency",
 	"mana_cycle",
-	"slime_logistics",
-	"tactical_notebook",
+	"mana_reservoir",
 	"rapid_experiment",
+	"tactical_notebook",
 ]
 
 static func get_research(research_id: String) -> Dictionary:

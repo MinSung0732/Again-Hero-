@@ -67,10 +67,11 @@ var demon_exp_to_next_level: float = DEMON_BASE_EXP_TO_NEXT
 var demon_pending_augments: int = 0
 
 var summon_cost_multiplier: float = 1.0
-var slime_research_cost_multiplier: float = 1.0
 var demon_exp_gain_multiplier: float = 1.0
 var monster_speed_multiplier: float = 1.0
 var monster_damage_multiplier: float = 1.0
+var monster_hp_multiplier: float = 1.0
+var monster_attack_speed_multiplier: float = 1.0
 var death_refund_ratio: float = 0.0
 var slime_split_chance: float = 0.0
 var spider_slow_duration_multiplier: float = 1.0
@@ -142,10 +143,11 @@ func _start_battle() -> void:
 	demon_pending_augments = 0
 
 	summon_cost_multiplier = 1.0
-	slime_research_cost_multiplier = 1.0
 	demon_exp_gain_multiplier = 1.0
 	monster_speed_multiplier = 1.0
 	monster_damage_multiplier = 1.0
+	monster_hp_multiplier = 1.0
+	monster_attack_speed_multiplier = 1.0
 	death_refund_ratio = 0.0
 	slime_split_chance = 0.0
 	spider_slow_duration_multiplier = 1.0
@@ -224,18 +226,33 @@ func _apply_permanent_research() -> void:
 	for research_id in RESEARCH_CATALOG.get_ordered_ids():
 		permanent_research_levels[research_id] = STAGE_PROGRESS.get_research_level(research_id)
 
+	var power_level := int(permanent_research_levels.get("monster_power", 0))
+	var vitality_level := int(permanent_research_levels.get("monster_vitality", 0))
+	var mobility_level := int(permanent_research_levels.get("monster_mobility", 0))
+	var attack_speed_level := int(
+		permanent_research_levels.get("monster_attack_speed", 0)
+	)
+	var summon_level := int(
+		permanent_research_levels.get("summon_efficiency", 0)
+	)
 	var reservoir_level := int(permanent_research_levels.get("mana_reservoir", 0))
 	var cycle_level := int(permanent_research_levels.get("mana_cycle", 0))
-	var slime_level := int(permanent_research_levels.get("slime_logistics", 0))
 	var notebook_level := int(permanent_research_levels.get("tactical_notebook", 0))
 	var experiment_level := int(permanent_research_levels.get("rapid_experiment", 0))
 
-	max_command += 20.0 * reservoir_level
+	monster_damage_multiplier *= 1.0 + 0.10 * power_level
+	monster_hp_multiplier *= 1.0 + 0.12 * vitality_level
+	monster_speed_multiplier *= 1.0 + 0.08 * mobility_level
+	monster_attack_speed_multiplier *= maxf(
+		0.65,
+		1.0 - 0.07 * attack_speed_level
+	)
+	summon_cost_multiplier *= maxf(0.70, 1.0 - 0.05 * summon_level)
 	command_regen_per_second += 0.50 * cycle_level
-	slime_research_cost_multiplier = maxf(0.70, 1.0 - 0.08 * slime_level)
+	max_command += 20.0 * reservoir_level
+	demon_exp_gain_multiplier += 0.10 * experiment_level
 	demon_reroll_max += notebook_level
 	demon_rerolls_left = demon_reroll_max
-	demon_exp_gain_multiplier += 0.10 * experiment_level
 
 func get_permanent_research_summary() -> String:
 	var active: PackedStringArray = []
@@ -418,12 +435,8 @@ func get_monster_cost(monster_type: String) -> float:
 	if base_cost <= 0.0:
 		return 0.0
 
-	var monster_multiplier := 1.0
-	if monster_type == "slime":
-		monster_multiplier *= slime_research_cost_multiplier
-
 	return snappedf(
-		base_cost * summon_cost_multiplier * monster_multiplier,
+		base_cost * summon_cost_multiplier,
 		0.1
 	)
 
@@ -461,12 +474,47 @@ func _spawn_monster(
 			float(speed_value) * monster_speed_multiplier
 		)
 
+	var attack_cooldown_value = monster.get("attack_cooldown")
+	if attack_cooldown_value != null:
+		monster.set(
+			"attack_cooldown",
+			maxf(
+				0.10,
+				float(attack_cooldown_value) * monster_attack_speed_multiplier
+			)
+		)
+
+	if monster_type == "bomb_rat":
+		var fuse_value = monster.get("self_destruct_fuse")
+		if fuse_value != null:
+			monster.set(
+				"self_destruct_fuse",
+				maxf(
+					0.10,
+					float(fuse_value) * monster_attack_speed_multiplier
+				)
+			)
+
 	var damage_value = monster.get("attack_damage")
 	if damage_value != null:
 		monster.set_meta(
 			"demon_level_base_attack_damage",
 			maxf(1.0, float(damage_value) * monster_damage_multiplier)
 		)
+
+	if monster_type == "bomb_rat":
+		var explosion_damage_value = monster.get("explosion_damage")
+		if explosion_damage_value != null:
+			monster.set(
+				"explosion_damage",
+				maxi(
+					1,
+					int(round(
+						float(explosion_damage_value)
+						* monster_damage_multiplier
+					))
+				)
+			)
 
 	if monster_type == "spider":
 		var slow_duration_value = monster.get("slow_duration")
@@ -478,7 +526,7 @@ func _spawn_monster(
 
 	var max_hp_value = monster.get("max_hp")
 	if max_hp_value != null:
-		var level_base_hp := float(max_hp_value)
+		var level_base_hp := float(max_hp_value) * monster_hp_multiplier
 		if monster_type == "orc":
 			level_base_hp *= orc_hp_multiplier
 		monster.set_meta(
