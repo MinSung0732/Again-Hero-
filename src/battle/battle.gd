@@ -1287,6 +1287,48 @@ func _open_mutation_choice(event: Dictionary) -> void:
 		mutation_candidate_ids.duplicate()
 	)
 
+func force_resolve_mutation(monster_id: String) -> bool:
+	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
+		return false
+
+	var event: Dictionary = pending_mutation_event.duplicate(true)
+	if event.is_empty():
+		event = {
+			"type": "elite",
+			"hp_multiplier": 2.2,
+			"damage_multiplier": 1.45,
+			"speed_multiplier": 1.10,
+			"exp_multiplier": 1.5,
+			"visual_scale": 1.15,
+		}
+
+	var event_type := String(event.get("type", "elite"))
+	var prefix := "돌연변이"
+	if event_type == "miniboss":
+		prefix = "대돌연변이"
+
+	var mutation_name := "%s %s" % [
+		prefix,
+		MONSTER_CATALOG.get_name(monster_id),
+	]
+	event["name"] = mutation_name
+	event["spawn_distance"] = 460.0
+
+	mutation_selection_active = false
+	pending_mutation_event.clear()
+	mutation_candidate_ids.clear()
+
+	if not external_pause and not demon_augment_selection_active:
+		_set_combat_physics_enabled(true)
+
+	mutation_selected.emit(event_type, mutation_name)
+	call_deferred(
+		"_complete_mutation_spawn",
+		event,
+		monster_id
+	)
+	return true
+
 func resolve_mutation_from_ui(
 	event: Dictionary,
 	monster_id: String

@@ -373,10 +373,7 @@ func _on_mutation_choice_pressed(index: int) -> void:
 		return
 
 	var monster_id := String(current_mutation_candidates[index])
-	if not battle.resolve_mutation_from_ui(
-		current_mutation_event,
-		monster_id
-	):
+	if not battle.force_resolve_mutation(monster_id):
 		status_label.text = "돌연변이 선택을 처리하지 못했습니다. 다시 선택하세요."
 		return
 

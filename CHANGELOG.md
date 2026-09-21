@@ -1384,3 +1384,11 @@
 - `10874409` 돌연변이 payload 수정 이후 전투 시작 직후 시간/지휘력/일반 소환이 다시 멈추는 회귀가 확인되어 런타임 파일을 마지막 정상 확인점 `c120248f` 상태로 복구.
 - `src/battle/battle.gd`와 `src/main/main.gd`만 정상 확인 버전으로 되돌림.
 - 돌연변이 선택 기능 추가 작업은 기본 전투 안정성 확인 후 별도 단계에서 다시 진행.
+
+### Mutation Choice Callback Isolation
+- 기본 전투가 정상 동작하는 `48978c67` 런타임 흐름은 유지.
+- 시작 시 실행되는 pause/process/시간/지휘력 코드는 변경하지 않음.
+- 돌연변이 버튼 클릭 전용 `force_resolve_mutation(monster_id)` 추가.
+- UI는 표시된 monster_id만 전달하고 Battle의 `pending_mutation_event`를 직접 사용.
+- pending event가 비어 있어도 1차 돌연변이 기본 배율로 fallback.
+- 기존 `resolve_mutation_from_ui()`와 `choose_mutation()`은 그대로 유지해 다른 경로에 영향 없도록 함.
