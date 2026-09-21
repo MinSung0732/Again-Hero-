@@ -694,23 +694,48 @@ func _should_cast_channel_skill() -> bool:
 		int(channel_skill_config.get("enemy_count_trigger", 4)),
 		1
 	)
+	var close_radius := maxf(
+		float(channel_skill_config.get("close_danger_radius", 135.0)),
+		0.0
+	)
+	var close_required := maxi(
+		int(channel_skill_config.get("close_danger_count", 2)),
+		1
+	)
+	var force_count := maxi(
+		int(channel_skill_config.get("force_enemy_count", 5)),
+		required_count
+	)
 	if radius <= 0.0:
 		return false
 
 	var nearby := 0
+	var very_close := 0
+
 	for node in get_tree().get_nodes_in_group("monsters"):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		if global_position.distance_to(monster.global_position) > radius:
-			continue
-		nearby += 1
-		if nearby >= required_count:
-			return true
 
-	return false
+		var distance := global_position.distance_to(
+			monster.global_position
+		)
+		if distance > radius:
+			continue
+
+		nearby += 1
+		if distance <= close_radius:
+			very_close += 1
+
+	return (
+		nearby >= force_count
+		or (
+			nearby >= required_count
+			and very_close >= close_required
+		)
+	)
 
 func _use_channel_as_charged_skill() -> void:
 	if channel_skill_config.is_empty():
@@ -980,18 +1005,12 @@ func _use_ultimate() -> void:
 	queue_redraw()
 
 func _use_piercing_projectile_ultimate() -> void:
-	var shot_direction := Vector2.RIGHT
-	var current_target := _find_nearest_monster()
-
-	if is_instance_valid(current_target):
-		shot_direction = global_position.direction_to(
-			current_target.global_position
-		)
-	elif hero_sprite.visible and hero_sprite.flip_h:
-		shot_direction = Vector2.LEFT
-
+	var shot_direction := _find_best_piercing_direction()
 	if shot_direction.length_squared() <= 0.0:
-		shot_direction = Vector2.RIGHT
+		if hero_sprite.visible and hero_sprite.flip_h:
+			shot_direction = Vector2.LEFT
+		else:
+			shot_direction = Vector2.RIGHT
 
 	var damage := maxi(
 		int(ultimate_config.get("damage", attack_damage * 3)),
@@ -1020,6 +1039,73 @@ func _use_piercing_projectile_ultimate() -> void:
 		speed,
 		max_range
 	)
+
+func _find_best_piercing_direction() -> Vector2:
+	var max_range := maxf(
+		float(ultimate_config.get("projectile_range", 900.0)),
+		1.0
+	)
+	var corridor_half_width := maxf(
+		float(ultimate_config.get("aim_corridor_half_width", 72.0)),
+		1.0
+	)
+
+	var monsters: Array[Node2D] = []
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var distance := global_position.distance_to(
+			monster.global_position
+		)
+		if distance <= 0.0 or distance > max_range:
+			continue
+		monsters.append(monster)
+
+	if monsters.is_empty():
+		return Vector2.ZERO
+
+	var best_direction := global_position.direction_to(
+		monsters[0].global_position
+	)
+	var best_score := -INF
+
+	for candidate in monsters:
+		var candidate_direction := global_position.direction_to(
+			candidate.global_position
+		)
+		if candidate_direction.length_squared() <= 0.0:
+			continue
+
+		var score := 0.0
+		for target_monster in monsters:
+			var offset := (
+				target_monster.global_position
+				- global_position
+			)
+			var forward := offset.dot(candidate_direction)
+			if forward < 0.0 or forward > max_range:
+				continue
+
+			var perpendicular := absf(
+				offset.cross(candidate_direction)
+			)
+			if perpendicular > corridor_half_width:
+				continue
+
+			score += 1.0
+			score += (
+				1.0
+				- clampf(forward / max_range, 0.0, 1.0)
+			) * 0.12
+
+		if score > best_score:
+			best_score = score
+			best_direction = candidate_direction
+
+	return best_direction.normalized()
 
 func _use_area_burst_ultimate() -> void:
 	var radius := maxf(
