@@ -886,3 +886,10 @@
 - 편성 변경 시 ItemList를 재생성하지 않고 기존 항목 text만 갱신.
 - 저장/해금/Supabase/전투 코드는 변경하지 않음.
 
+### Team Collection Catalog Static-call Bypass
+- 팀 전용 handler가 `컬렉션 생성 중…`까지 실행된 뒤 목록 생성 전 중단되는 증상으로 MonsterCatalog static helper 호출 경로를 격리.
+- 팀 편성 UI에서는 `MonsterCatalog.get_ids/get_name/get_role/get_base_cost` 호출을 사용하지 않고 `ORDER / MONSTERS / ROLE_LABELS` 데이터 상수만 직접 읽도록 변경.
+- 신규 몬스터는 계속 MonsterCatalog 데이터만 추가하면 팀 컬렉션에 자동 포함되므로 콘텐츠 하드코딩은 없음.
+- 단계 상태 문구를 `Catalog 원본 데이터 확인 중 → Catalog N종 확인 → 컬렉션 N종 표시 완료`로 세분화.
+- 저장/해금/Supabase/전투 코드는 변경하지 않음.
+

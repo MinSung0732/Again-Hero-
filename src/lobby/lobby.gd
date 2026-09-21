@@ -271,25 +271,29 @@ func _setup_team_preview() -> void:
 	team_selected_ids.clear()
 	team_monster_list.clear()
 
-	var monster_ids = MONSTER_CATALOG.get_ids()
-	team_status_label.text = "Catalog %d종 확인" % monster_ids.size()
+	team_status_label.text = "Catalog 원본 데이터 확인 중"
 
-	for raw_id in monster_ids:
+	for raw_id in MONSTER_CATALOG.ORDER:
 		var monster_id := String(raw_id)
+		if not MONSTER_CATALOG.MONSTERS.has(monster_id):
+			continue
+
 		team_catalog_ids.append(monster_id)
 		team_available_ids.append(monster_id)
 
 		if team_selected_ids.size() < TEAM_MAX_SLOTS:
 			team_selected_ids.append(monster_id)
 
-		var line := "%s · %s · 비용 %.0f" % [
-			MONSTER_CATALOG.get_name(monster_id),
-			MONSTER_CATALOG.get_role_label(
-				MONSTER_CATALOG.get_role(monster_id)
-			),
-			MONSTER_CATALOG.get_base_cost(monster_id),
-		]
-		team_monster_list.add_item(line)
+		team_monster_list.add_item(
+			_team_collection_line(monster_id)
+		)
+
+	team_status_label.text = "Catalog %d종 확인" % team_catalog_ids.size()
+
+	if team_catalog_ids.is_empty():
+		team_summary_label.text = "등록된 몬스터 없음"
+		team_status_label.text = "MonsterCatalog ORDER/MONSTERS에 등록된 몬스터가 없습니다."
+		return
 
 	_refresh_team_preview()
 	team_status_label.text = "컬렉션 %d종 표시 완료 · 목록을 탭해 편성을 변경하세요." % team_catalog_ids.size()
@@ -304,7 +308,7 @@ func _refresh_team_preview() -> void:
 		var monster_id := String(raw_id)
 		if not selected_names.is_empty():
 			selected_names += " / "
-		selected_names += MONSTER_CATALOG.get_name(monster_id)
+		selected_names += _team_monster_name(monster_id)
 
 	team_summary_label.text = "편성 %d / %d · %s" % [
 		team_selected_ids.size(),
@@ -313,30 +317,22 @@ func _refresh_team_preview() -> void:
 	]
 
 	for item_index in range(team_catalog_ids.size()):
-		var monster_id := String(team_catalog_ids[item_index])
-		var selected := monster_id in team_selected_ids
-		var marker := "[편성] " if selected else ""
-		var line := "%s%s · %s · 비용 %.0f" % [
-			marker,
-			MONSTER_CATALOG.get_name(monster_id),
-			MONSTER_CATALOG.get_role_label(
-				MONSTER_CATALOG.get_role(monster_id)
-			),
-			MONSTER_CATALOG.get_base_cost(monster_id),
-		]
+		if item_index >= team_monster_list.item_count:
+			break
 
-		if item_index < team_monster_list.item_count:
-			team_monster_list.set_item_text(item_index, line)
+		var monster_id := String(team_catalog_ids[item_index])
+		team_monster_list.set_item_text(
+			item_index,
+			_team_collection_line(monster_id)
+		)
 
 func _refresh_team_slot(button: Button, slot_index: int) -> void:
 	if slot_index < team_selected_ids.size():
 		var monster_id := String(team_selected_ids[slot_index])
 		button.text = "%d\n%s\n%s\n\n탭해서 해제" % [
 			slot_index + 1,
-			MONSTER_CATALOG.get_name(monster_id),
-			MONSTER_CATALOG.get_role_label(
-				MONSTER_CATALOG.get_role(monster_id)
-			),
+			_team_monster_name(monster_id),
+			_team_monster_role_label(monster_id),
 		]
 		button.disabled = team_selected_ids.size() <= 1
 	else:
@@ -367,7 +363,7 @@ func _remove_team_monster(monster_id: String) -> void:
 		return
 
 	team_selected_ids.erase(monster_id)
-	team_status_label.text = "%s 편성 해제" % MONSTER_CATALOG.get_name(monster_id)
+	team_status_label.text = "%s 편성 해제" % _team_monster_name(monster_id)
 	_refresh_team_preview()
 
 func _add_team_monster(monster_id: String) -> void:
@@ -383,8 +379,36 @@ func _add_team_monster(monster_id: String) -> void:
 		return
 
 	team_selected_ids.append(monster_id)
-	team_status_label.text = "%s 편성 추가" % MONSTER_CATALOG.get_name(monster_id)
+	team_status_label.text = "%s 편성 추가" % _team_monster_name(monster_id)
 	_refresh_team_preview()
+
+func _team_collection_line(monster_id: String) -> String:
+	var marker := "[편성] " if monster_id in team_selected_ids else ""
+	return "%s%s · %s · 비용 %.0f" % [
+		marker,
+		_team_monster_name(monster_id),
+		_team_monster_role_label(monster_id),
+		_team_monster_cost(monster_id),
+	]
+
+func _team_monster_name(monster_id: String) -> String:
+	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+	if typeof(data) != TYPE_DICTIONARY:
+		return monster_id
+	return String(data.get("name", monster_id))
+
+func _team_monster_role_label(monster_id: String) -> String:
+	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+	if typeof(data) != TYPE_DICTIONARY:
+		return ""
+	var role_id := String(data.get("role", ""))
+	return String(MONSTER_CATALOG.ROLE_LABELS.get(role_id, role_id))
+
+func _team_monster_cost(monster_id: String) -> float:
+	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+	if typeof(data) != TYPE_DICTIONARY:
+		return 0.0
+	return float(data.get("base_cost", 0.0))
 
 func _refresh_header() -> void:
 	var state := STAGE_PROGRESS.load_state()

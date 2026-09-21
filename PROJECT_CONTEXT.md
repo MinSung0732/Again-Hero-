@@ -820,3 +820,8 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 편성 추가/해제 후에는 기존 ItemList의 text만 갱신해 목록 자체가 사라질 가능성을 줄임.
 - 현재는 실기기 UI 검증 단계이므로 저장/해금 상태 연동은 제외.
 
+### 팀 UI의 MonsterCatalog 접근 규칙 (임시 안정화)
+- PC/Android에서 team handler는 실행되지만 MonsterCatalog static helper 호출 직후 UI 갱신이 멈추는 증상을 격리하기 위해 팀 UI는 Catalog의 상수 데이터(`ORDER`, `MONSTERS`, `ROLE_LABELS`)를 직접 읽음.
+- 데이터 원천은 여전히 MonsterCatalog 하나이며 몬스터 ID/이름/역할/비용을 lobby에 복제하지 않음.
+- 실기기 정상화 후 helper 호출 중단 원인을 별도 정리할 수 있으나 현재는 팀 편성 테스트 가능 상태 확보를 우선.
+
