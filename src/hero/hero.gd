@@ -72,6 +72,7 @@ var channel_cooldown_timer: float = 0.0
 var channel_duration_timer: float = 0.0
 var channel_tick_timer: float = 0.0
 var channeling: bool = false
+var channel_hid_hero_sprite: bool = false
 var ai_settings: Dictionary = {
 	"id": "default",
 	"display_name": "기본",
@@ -749,7 +750,10 @@ func _activate_channel_skill() -> void:
 		channel_duration_timer + 0.05
 	)
 	attack_pose_timer = 0.0
-	_play_stage1_animation("idle", 1.0)
+
+	channel_hid_hero_sprite = hero_sprite.visible
+	if channel_hid_hero_sprite:
+		hero_sprite.visible = false
 
 	if channel_effect.sprite_frames != null:
 		channel_effect.visible = true
@@ -793,6 +797,12 @@ func _end_channel_skill() -> void:
 	channel_duration_timer = 0.0
 	channel_tick_timer = 0.0
 	channel_effect.visible = false
+
+	if channel_hid_hero_sprite and hero_sprite.sprite_frames != null:
+		hero_sprite.visible = true
+		_play_stage1_animation("idle", 1.0)
+	channel_hid_hero_sprite = false
+
 	queue_redraw()
 
 func _update_shield_skill(delta: float) -> void:
