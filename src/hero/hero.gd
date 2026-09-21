@@ -10,6 +10,7 @@ const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
 const PROJECTILE_SCENE := preload("res://src/hero/HeroProjectile.tscn")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
+const STATUS_EFFECT_CATALOG := preload("res://src/data/status_effect_catalog.gd")
 const STAGE1_FRAME_SIZE := Vector2(64, 64)
 
 const APPROACH_DISTANCE_RATIO := 0.86
@@ -18,6 +19,8 @@ const WANDER_REACHED_DISTANCE := 42.0
 const WANDER_MIN_TARGET_DISTANCE := 260.0
 const OFFENSE_MEMORY_WINDOW := 20.0
 const OFFENSE_MEMORY_MIN_WEIGHT := 0.25
+const STATUS_MEMORY_WINDOW := 20.0
+const STATUS_MEMORY_MIN_WEIGHT := 0.25
 
 @export var max_hp: int = 300
 @export var move_speed: float = 230.0
@@ -65,6 +68,8 @@ var wander_timer: float = 0.0
 
 var ai_memory_clock: float = 0.0
 var offensive_memory_events: Array = []
+var status_effect_events: Array = []
+var status_resistances: Dictionary = {}
 var ai_observation_timer: float = 0.0
 var ai_observed_context: Dictionary = {}
 var ai_observed_context_time: float = 0.0
@@ -120,6 +125,7 @@ func _physics_process(delta: float) -> void:
 
 	ai_memory_clock += delta
 	_prune_offensive_memory()
+	_prune_status_memory()
 
 	ai_observation_timer = maxf(ai_observation_timer - delta, 0.0)
 	if ai_observation_timer <= 0.0:
@@ -518,6 +524,111 @@ func get_recent_offense_summary() -> String:
 		event_count,
 	]
 
+func record_status_effect_event(status_id: String) -> void:
+	if status_id.is_empty():
+		return
+
+	status_effect_events.append({
+		"time": ai_memory_clock,
+		"status": status_id,
+	})
+	_prune_status_memory()
+
+func _prune_status_memory() -> void:
+	if status_effect_events.is_empty():
+		return
+
+	var cutoff := ai_memory_clock - STATUS_MEMORY_WINDOW
+	while not status_effect_events.is_empty():
+		var event: Dictionary = status_effect_events[0]
+		if float(event.get("time", 0.0)) >= cutoff:
+			break
+		status_effect_events.pop_front()
+
+func _build_recent_status_memory() -> Dictionary:
+	_prune_status_memory()
+
+	var status_weights := {}
+	var total_weight := 0.0
+
+	for raw_event in status_effect_events:
+		var event: Dictionary = raw_event
+		var age := maxf(
+			ai_memory_clock - float(event.get("time", ai_memory_clock)),
+			0.0
+		)
+		var freshness := 1.0 - clampf(
+			age / STATUS_MEMORY_WINDOW,
+			0.0,
+			1.0
+		)
+		var weight := lerpf(
+			STATUS_MEMORY_MIN_WEIGHT,
+			1.0,
+			freshness
+		)
+
+		var status_id := String(event.get("status", ""))
+		if status_id.is_empty():
+			continue
+
+		status_weights[status_id] = (
+			float(status_weights.get(status_id, 0.0)) + weight
+		)
+		total_weight += weight
+
+	return {
+		"window_seconds": STATUS_MEMORY_WINDOW,
+		"event_count": status_effect_events.size(),
+		"total_weight": total_weight,
+		"status_weights": status_weights,
+	}
+
+func get_recent_status_summary() -> String:
+	var memory := _build_recent_status_memory()
+	var event_count := int(memory.get("event_count", 0))
+	if event_count <= 0:
+		return "최근 상태이상 기록 없음"
+
+	var weights: Dictionary = memory.get("status_weights", {})
+	var dominant_status := ""
+	var dominant_weight := -1.0
+
+	for raw_status in weights.keys():
+		var status_id := String(raw_status)
+		var weight := float(weights.get(status_id, 0.0))
+		if weight > dominant_weight:
+			dominant_weight = weight
+			dominant_status = status_id
+
+	return "최근 %.0f초: %s %d회" % [
+		STATUS_MEMORY_WINDOW,
+		STATUS_EFFECT_CATALOG.get_name(dominant_status),
+		event_count,
+	]
+
+func get_status_resistance(status_id: String) -> float:
+	return clampf(
+		float(status_resistances.get(status_id, 0.0)),
+		0.0,
+		0.85
+	)
+
+func _add_status_resistance(
+	status_id: String,
+	amount: float,
+	max_value: float = 0.85
+) -> void:
+	if status_id.is_empty():
+		return
+
+	var current := float(status_resistances.get(status_id, 0.0))
+	status_resistances[status_id] = clampf(
+		current + amount,
+		0.0,
+		max_value
+	)
+
 func _level_up() -> void:
 	level += 1
 	exp_to_next_level = _required_exp_for_level(level)
@@ -607,6 +718,7 @@ func _build_ai_context() -> Dictionary:
 		nearest_distance = 0.0
 
 	var recent_memory := _build_recent_offense_memory()
+	var recent_status_memory := _build_recent_status_memory()
 
 	return {
 		"nearby_count": nearby_count,
@@ -621,6 +733,12 @@ func _build_ai_context() -> Dictionary:
 		"recent_type_weights": recent_memory.get("type_weights", {}),
 		"recent_role_weights": recent_memory.get("role_weights", {}),
 		"recent_window_seconds": float(recent_memory.get("window_seconds", OFFENSE_MEMORY_WINDOW)),
+		"recent_status_event_count": int(recent_status_memory.get("event_count", 0)),
+		"recent_status_total_weight": float(recent_status_memory.get("total_weight", 0.0)),
+		"recent_status_weights": recent_status_memory.get("status_weights", {}),
+		"recent_status_window_seconds": float(
+			recent_status_memory.get("window_seconds", STATUS_MEMORY_WINDOW)
+		),
 	}
 
 func _apply_augment(augment: Dictionary) -> void:
@@ -679,6 +797,13 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 				max_hp
 			)
 
+		"add_status_resistance":
+			_add_status_resistance(
+				String(effect.get("status", "")),
+				float(effect.get("value", 0.0)),
+				float(effect.get("max", 0.85))
+			)
+
 		_:
 			push_warning("Unknown Hero augment effect op: %s" % op)
 
@@ -686,8 +811,22 @@ func apply_slow(multiplier: float, duration: float) -> void:
 	if current_hp <= 0:
 		return
 
-	move_multiplier = minf(move_multiplier, clampf(multiplier, 0.30, 1.0))
-	slow_timer = maxf(slow_timer, duration)
+	record_status_effect_event("slow")
+
+	var resistance := get_status_resistance("slow")
+	var raw_multiplier := clampf(multiplier, 0.30, 1.0)
+	var effective_multiplier := lerpf(
+		raw_multiplier,
+		1.0,
+		resistance
+	)
+	var effective_duration := maxf(
+		duration * (1.0 - resistance),
+		0.05
+	)
+
+	move_multiplier = minf(move_multiplier, effective_multiplier)
+	slow_timer = maxf(slow_timer, effective_duration)
 	queue_redraw()
 
 func get_build_summary() -> String:
