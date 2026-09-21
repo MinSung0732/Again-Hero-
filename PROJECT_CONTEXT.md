@@ -919,3 +919,17 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - Visual script/class 등록 또는 이미지 로딩이 실패해도 부모 CharacterBody2D의 `_ready()`, `add_to_group("monsters")`, `_physics_process()`, 이동/공격/피격 로직은 독립적으로 유지.
 - 전투 핵심 AI가 비주얼 계층보다 우선하는 fail-soft 구조를 기준으로 유지.
 
+### 상점 → 몬스터 조각 → 자동 해금 v1
+- 로비 상점 탭의 플레이스홀더를 실제 몬스터 조각 상점으로 교체.
+- v1에서는 기존 연구 포인트를 임시 상점 재화로 사용.
+- 상품 데이터는 MonsterCatalog의 `shop_shard_amount / shop_shard_cost`에서 읽어 동적 생성:
+  - Slime: 조각 +10 / 연구 포인트 15
+  - Spider: 조각 +10 / 연구 포인트 20
+  - Orc: 조각 +10 / 연구 포인트 25
+- 구매 시 `StageProgress.try_spend_research_points()`로 포인트를 차감하고 `MonsterCollectionStore.add_shards()`로 조각 저장.
+- 조각이 `shards_required`에 도달하면 기존 MonsterCollection 규칙으로 자동 해금.
+- 해금된 몬스터는 다음 팀 편성 탭 진입 시 Collection 상태를 다시 읽어 즉시 선택 가능.
+- 현재 Slime / Spider / Orc는 기존 안정화 상태를 보존하기 위해 `default_unlocked = true`를 유지. 향후 기본 잠금 몬스터를 추가하면 같은 상점 흐름으로 실제 잠금→해금 전환이 작동.
+- 기본 해금 몬스터도 조각은 누적 가능하며, 현재는 해금 이후 조각 소비처(강화)는 후속 시스템 범위.
+- Battle/팀 저장/몬스터 전투 애니메이션 로직은 변경하지 않음.
+

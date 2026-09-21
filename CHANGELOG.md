@@ -966,3 +966,11 @@
 - death animation signal도 동적 존재 확인 후 연결.
 - 이동, 공격, group 등록, 충돌, HP 로직 자체는 기존 CharacterBody2D 경로 유지.
 
+### Monster Shard Shop v1
+- 로비 상점 탭에 실제 몬스터 조각 상품 UI 추가.
+- MonsterCatalog 기반 상품 생성으로 Slime / Spider / Orc 조각 +10 상품 제공.
+- 연구 포인트를 임시 상점 재화로 사용하고 StageProgress에 안전한 포인트 차감 API 추가.
+- 구매 결과를 MonsterCollectionStore.add_shards()에 연결해 조각 저장 및 요구량 도달 시 자동 해금.
+- 상점에서 변경된 Collection 상태는 팀 편성 탭 재진입 시 즉시 반영.
+- 현재 기본 3종의 default unlocked 상태는 기존 사용자 편성 회귀 방지를 위해 유지.
+

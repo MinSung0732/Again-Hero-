@@ -16,6 +16,10 @@ const TEAM_MAX_SLOTS := 3
 @onready var progress_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ProgressLabel
 
 @onready var shop_tab: Control = $SafeArea/Layout/Content/ShopTab
+@onready var shop_points_label: Label = $SafeArea/Layout/Content/ShopTab/ShopLayout/Points
+@onready var shop_list: VBoxContainer = $SafeArea/Layout/Content/ShopTab/ShopLayout/ShopScroll/ShopList
+@onready var shop_status_label: Label = $SafeArea/Layout/Content/ShopTab/ShopLayout/Status
+
 @onready var team_tab: Control = $SafeArea/Layout/Content/TeamTab
 @onready var main_tab: Control = $SafeArea/Layout/Content/MainTab
 @onready var research_tab: Control = $SafeArea/Layout/Content/ResearchTab
@@ -249,7 +253,9 @@ func _switch_tab(tab_id: String) -> void:
 	research_tab.visible = tab_id == "research"
 	other_tab.visible = tab_id == "other"
 
-	if tab_id == "research":
+	if tab_id == "shop":
+		_rebuild_shop_list()
+	elif tab_id == "research":
 		_rebuild_research_list()
 
 	_refresh_nav_button(shop_button, tab_id == "shop")
@@ -267,6 +273,119 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 		"font_color",
 		Color("ffe29a") if selected else Color("d8cfdf")
 	)
+
+func _rebuild_shop_list() -> void:
+	for child in shop_list.get_children():
+		child.queue_free()
+
+	var research_points := STAGE_PROGRESS.get_research_points()
+	shop_points_label.text = "보유 연구 포인트  %d" % research_points
+	monster_collection_state = MONSTER_COLLECTION_STORE.load_state()
+
+	for raw_id in MONSTER_CATALOG.ORDER:
+		var monster_id := String(raw_id)
+		var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+		if typeof(data) != TYPE_DICTIONARY:
+			continue
+
+		var shard_amount := maxi(int(data.get("shop_shard_amount", 0)), 0)
+		var shard_cost := maxi(int(data.get("shop_shard_cost", 0)), 0)
+		if shard_amount <= 0:
+			continue
+
+		var required := maxi(int(data.get("shards_required", 1)), 1)
+		var current_shards := MONSTER_COLLECTION_STORE.get_shards(
+			monster_id,
+			monster_collection_state
+		)
+		var unlocked := MONSTER_COLLECTION_STORE.is_unlocked(
+			monster_id,
+			monster_collection_state
+		)
+
+		var button := Button.new()
+		button.custom_minimum_size = Vector2(0, 170)
+		button.add_theme_font_size_override("font_size", 21)
+		button.add_theme_stylebox_override("normal", secondary_button_style)
+		button.add_theme_stylebox_override("hover", secondary_button_style)
+		button.add_theme_stylebox_override("pressed", primary_button_style)
+		button.icon = _team_monster_card_icon(monster_id)
+		button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		button.disabled = research_points < shard_cost
+
+		var state_text := ""
+		if unlocked:
+			state_text = "해금 완료 · 보유 조각 %d" % current_shards
+		else:
+			state_text = "해금 진행 %d / %d" % [
+				mini(current_shards, required),
+				required,
+			]
+
+		button.text = "%s 조각 +%d\n%s\n연구 포인트 %d" % [
+			_team_monster_name(monster_id),
+			shard_amount,
+			state_text,
+			shard_cost,
+		]
+		button.pressed.connect(
+			_purchase_monster_shards.bind(monster_id)
+		)
+		shop_list.add_child(button)
+
+func _purchase_monster_shards(monster_id: String) -> void:
+	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+	if typeof(data) != TYPE_DICTIONARY:
+		return
+
+	var shard_amount := maxi(int(data.get("shop_shard_amount", 0)), 0)
+	var shard_cost := maxi(int(data.get("shop_shard_cost", 0)), 0)
+	if shard_amount <= 0:
+		return
+
+	var before_state := MONSTER_COLLECTION_STORE.load_state()
+	var before_unlocked := MONSTER_COLLECTION_STORE.is_unlocked(
+		monster_id,
+		before_state
+	)
+	var before_shards := MONSTER_COLLECTION_STORE.get_shards(
+		monster_id,
+		before_state
+	)
+
+	var spend_result := STAGE_PROGRESS.try_spend_research_points(shard_cost)
+	if not bool(spend_result.get("success", false)):
+		shop_status_label.text = "연구 포인트가 부족합니다."
+		_refresh_header()
+		_rebuild_shop_list()
+		return
+
+	var updated_state := MONSTER_COLLECTION_STORE.add_shards(
+		monster_id,
+		shard_amount
+	)
+	var after_unlocked := MONSTER_COLLECTION_STORE.is_unlocked(
+		monster_id,
+		updated_state
+	)
+	var after_shards := MONSTER_COLLECTION_STORE.get_shards(
+		monster_id,
+		updated_state
+	)
+
+	if not before_unlocked and after_unlocked:
+		shop_status_label.text = "%s 해금 완료! 팀 편성에서 사용할 수 있습니다." % _team_monster_name(monster_id)
+	else:
+		shop_status_label.text = "%s 조각 +%d · %d → %d" % [
+			_team_monster_name(monster_id),
+			shard_amount,
+			before_shards,
+			after_shards,
+		]
+
+	monster_collection_state = updated_state
+	_refresh_header()
+	_rebuild_shop_list()
 
 func _setup_team_preview() -> void:
 	team_catalog_ids.clear()
