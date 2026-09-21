@@ -371,9 +371,14 @@ func _on_mutation_choice_pressed(index: int) -> void:
 		return
 
 	var monster_id := String(current_mutation_candidates[index])
+	mutation_panel.hide()
+
 	if battle.choose_mutation(monster_id):
-		mutation_panel.hide()
 		current_mutation_candidates.clear()
+		return
+
+	mutation_panel.show()
+	status_label.text = "돌연변이 선택을 처리하지 못했습니다. 다시 선택하세요."
 
 func _on_mutation_selected(
 	event_type: String,

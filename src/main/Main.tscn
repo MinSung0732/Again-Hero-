@@ -568,6 +568,7 @@ text = "↻ 새로고침 3 / 3"
 
 [node name="MutationPanel" type="PanelContainer" parent="HUD"]
 visible = false
+mouse_filter = 0
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -611,6 +612,7 @@ theme_override_constants/separation = 16
 alignment = 1
 
 [node name="Choice0" type="Button" parent="HUD/MutationPanel/Margin/VBox/Choices"]
+mouse_filter = 0
 custom_minimum_size = Vector2(270, 250)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -618,6 +620,7 @@ theme_override_font_sizes/font_size = 28
 text = "슬라임\n선택"
 
 [node name="Choice1" type="Button" parent="HUD/MutationPanel/Margin/VBox/Choices"]
+mouse_filter = 0
 custom_minimum_size = Vector2(270, 250)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -625,6 +628,7 @@ theme_override_font_sizes/font_size = 28
 text = "거미\n선택"
 
 [node name="Choice2" type="Button" parent="HUD/MutationPanel/Margin/VBox/Choices"]
+mouse_filter = 0
 custom_minimum_size = Vector2(270, 250)
 layout_mode = 2
 size_flags_horizontal = 3

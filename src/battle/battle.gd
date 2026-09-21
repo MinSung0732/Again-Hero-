@@ -1290,10 +1290,16 @@ func _open_mutation_choice(event: Dictionary) -> void:
 func choose_mutation(monster_id: String) -> bool:
 	if not mutation_selection_active:
 		return false
-	if monster_id not in mutation_candidate_ids:
+
+	var is_valid_candidate := false
+	for raw_id in mutation_candidate_ids:
+		if String(raw_id) == monster_id:
+			is_valid_candidate = true
+			break
+	if not is_valid_candidate:
 		return false
 
-	var event := pending_mutation_event.duplicate(true)
+	var event: Dictionary = pending_mutation_event.duplicate(true)
 	var event_type := String(event.get("type", "elite"))
 	var prefix := "돌연변이"
 	if event_type == "miniboss":
@@ -1310,13 +1316,24 @@ func choose_mutation(monster_id: String) -> bool:
 	pending_mutation_event.clear()
 	mutation_candidate_ids.clear()
 
-	_spawn_stage_event_monster(event, monster_id)
-
 	if not external_pause and not demon_augment_selection_active:
 		_set_combat_physics_enabled(true)
 
 	mutation_selected.emit(event_type, mutation_name)
+	call_deferred(
+		"_complete_mutation_spawn",
+		event,
+		monster_id
+	)
 	return true
+
+func _complete_mutation_spawn(
+	event: Dictionary,
+	monster_id: String
+) -> void:
+	if battle_over or not is_instance_valid(hero):
+		return
+	_spawn_stage_event_monster(event, monster_id)
 
 func _spawn_stage_event_monster(
 	event: Dictionary,
