@@ -452,9 +452,9 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 
 다음 작업은 순서를 크게 바꾸지 않는다.
 
-1. 증강 간 시너지 점수 추가
-2. 최근 공세 기억 + 판단 지연을 이용한 미끼 → 전환 카운터 플레이테스트
-3. Hero별 AI 성향/증강 풀 차별화 확장
+1. 최근 공세 기억 + 판단 지연 + 시너지를 이용한 미끼 → 전환 카운터 플레이테스트
+2. Hero별 AI 성향/증강 풀 차별화 확장
+3. Run 종료/전투 통계/분석 화면 확장
 4. Run 종료/통계/분석 화면 확장
 5. 영구 연구의 정보 해금 / 새로운 전략 옵션 확장
 
@@ -570,3 +570,22 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 이미 빌드가 있는 상태에서 전혀 새로운 증강을 고르면 Hero profile의 `new_branch_penalty`만큼 Utility가 감소한다.
 - AI 선택 이유 UI에 사용한 관측 정보가 몇 초 전 데이터인지 표시한다.
 - 이 구조는 특정 증강 ID에 의존하지 않고 공통 계산으로 적용된다.
+
+
+### Hero 증강 시너지 v1
+- Hero AI가 전황/최근 공세/관성뿐 아니라 **현재 빌드와 후보 증강의 시너지**도 Utility 점수에 반영한다.
+- 시너지 로직은 특정 증강 ID를 코드에서 분기하지 않고 `hero_augment_catalog.gd` 데이터로 관리한다.
+- 각 증강은 `tags`와 `synergy_rules`를 가질 수 있다.
+- 현재 태그 예:
+  - damage / projectile / attack_speed
+  - durability / survival / recovery
+  - mobility / kite / range
+- 현재 조합 예:
+  - 탄환 강화 ↔ 연사 강화
+  - 민첩한 발놀림 ↔ 사거리 확장
+  - 강인한 육체 ↔ 전투 회복
+- `HeroAugmentCatalog.get_build_tag_counts()`가 현재 build_counts를 태그 스택으로 변환한다.
+- `HeroBuildAI`는 `build_tag_stacks / build_tag_present / build_augment_stacks / build_augment_present` 공통 synergy rule을 평가할 수 있다.
+- 시너지 보너스는 기존 전황 점수, 최근 공세 점수, 빌드 관성, 새 갈래 전환 저항과 함께 합산된다.
+- 선택 이유 UI에도 가장 큰 시너지 근거와 보너스 점수를 표시한다.
+- 새 증강을 추가할 때 AI 코드를 수정하지 않고 tags/synergy_rules 데이터만 추가하는 방향을 유지한다.
