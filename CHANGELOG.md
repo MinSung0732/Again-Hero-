@@ -959,3 +959,10 @@
 - PNG 로딩 실패 시 기존 draw 비주얼 fallback 유지.
 - Battle/Main의 소환·편성·시간·메뉴 로직은 변경하지 않음.
 
+### Fix Monster AI Stalling After Pixel Animation
+- 실제 도트 애니메이션 연결 후 몬스터가 움직이지 않고 Hero의 `monsters` group 탐색에도 잡히지 않는 회귀를 수정.
+- 몬스터 부모 스크립트에서 `MonsterVisual` custom class 타입 의존을 제거.
+- 비주얼 호출을 `has_method()/callv()` 기반 optional bridge로 분리해 Visual 초기화 실패가 몬스터 AI 전체를 중단시키지 않도록 변경.
+- death animation signal도 동적 존재 확인 후 연결.
+- 이동, 공격, group 등록, 충돌, HP 로직 자체는 기존 CharacterBody2D 경로 유지.
+

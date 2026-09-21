@@ -911,3 +911,11 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 이미지 로딩 실패 시 기존 코드 드로잉 플레이스홀더를 fallback으로 유지.
 - Battle 소환/편성/타이머/메뉴 로직은 변경하지 않음.
 
+### 몬스터 전투 도트 애니메이션 회귀 수정
+- 실제 도트 연결 직후 몬스터가 정지하고 Hero가 몬스터를 인식하지 못하는 회귀가 발생.
+- 몬스터 AI 스크립트가 `MonsterVisual` custom class type에 직접 의존하지 않도록 수정.
+- Slime / Spider / Orc의 `visual` 참조를 untyped child node로 두고, 모든 비주얼 상태 호출을 `has_method() + callv()` 경유로 변경.
+- death signal도 custom signal 존재 여부를 확인한 뒤 동적으로 연결.
+- Visual script/class 등록 또는 이미지 로딩이 실패해도 부모 CharacterBody2D의 `_ready()`, `add_to_group("monsters")`, `_physics_process()`, 이동/공격/피격 로직은 독립적으로 유지.
+- 전투 핵심 AI가 비주얼 계층보다 우선하는 fail-soft 구조를 기준으로 유지.
+

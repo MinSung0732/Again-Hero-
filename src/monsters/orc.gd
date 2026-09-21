@@ -13,7 +13,7 @@ signal died
 @export var attack_cooldown: float = 1.45
 @export var exp_reward: int = 40
 
-@onready var visual: MonsterVisual = $Visual
+@onready var visual = get_node_or_null("Visual")
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 var current_hp: int
@@ -43,23 +43,23 @@ func _physics_process(delta: float) -> void:
 		hero = get_tree().get_first_node_in_group("hero") as Node2D
 		if not is_instance_valid(hero):
 			velocity = Vector2.ZERO
-			visual.play_locomotion(false)
+			_visual_call(&"play_locomotion", [false])
 			return
 
 	var direction_to_hero := global_position.direction_to(hero.global_position)
-	visual.set_facing_direction(direction_to_hero.x)
+	_visual_call(&"set_facing_direction", [direction_to_hero.x])
 
 	var distance := global_position.distance_to(hero.global_position)
 	if distance > attack_range:
 		velocity = direction_to_hero * move_speed
-		visual.play_locomotion(true)
+		_visual_call(&"play_locomotion", [true])
 		move_and_slide()
 	else:
 		velocity = Vector2.ZERO
-		visual.play_locomotion(false)
+		_visual_call(&"play_locomotion", [false])
 		if attack_timer <= 0.0:
 			attack_timer = attack_cooldown
-			visual.play_attack()
+			_visual_call(&"play_attack")
 			if hero.has_method("take_damage"):
 				hero.call("take_damage", attack_damage)
 
@@ -72,7 +72,7 @@ func take_damage(amount: int) -> void:
 	var applied_damage := previous_hp - current_hp
 	DAMAGE_NUMBERS.show(self, applied_damage)
 	hit_flash_timer = 0.12
-	visual.play_hit()
+	_visual_call(&"play_hit")
 	queue_redraw()
 
 	if current_hp <= 0:
@@ -88,23 +88,34 @@ func _begin_death() -> void:
 
 	died.emit()
 
-	if is_instance_valid(visual):
-		visual.death_animation_finished.connect(
-			_on_death_animation_finished,
-			CONNECT_ONE_SHOT
+	if (
+		is_instance_valid(visual)
+		and visual.has_signal("death_animation_finished")
+		and visual.has_method("play_death")
+	):
+		visual.connect(
+			"death_animation_finished",
+			Callable(self, "_on_death_animation_finished"),
+			Object.CONNECT_ONE_SHOT
 		)
-		visual.play_death()
+		visual.call("play_death")
 	else:
 		queue_free()
 
 func _on_death_animation_finished() -> void:
 	queue_free()
 
+func _visual_call(method_name: StringName, args: Array = []) -> void:
+	if not is_instance_valid(visual):
+		return
+	if not visual.has_method(method_name):
+		return
+	visual.callv(method_name, args)
+
 func _draw() -> void:
-	var visual_ready := (
-		is_instance_valid(visual)
-		and visual.is_visual_ready()
-	)
+	var visual_ready := false
+	if is_instance_valid(visual) and visual.has_method("is_visual_ready"):
+		visual_ready = bool(visual.call("is_visual_ready"))
 
 	if not visual_ready:
 		var body_color := Color(0.44, 0.92, 0.5)
