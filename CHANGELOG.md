@@ -1448,3 +1448,9 @@
 - 실제 돌연변이 생성은 `call_deferred()` 대신 Battle의 `special_spawn_queue`에 요청을 넣고 다음 `_process()`에서 처리.
 - 특수 스폰 성공/실패를 `mutation_spawn_result` 시그널로 Main에 전달해 상태창에 실제 결과를 표시.
 - 스폰 실패가 발생해도 선택 UI/physics 복구와 분리되어 전투 진행이 유지되도록 구조 격리.
+
+### Mutation Event Reset Ordering Fix
+- 돌연변이 모달 선택 후 엘리트가 소환되지 않던 직접 원인 수정.
+- `resume_after_mutation_choice()`가 physics 복구 전에 MutationDirector를 reset하여 pending event를 지우던 로직 제거.
+- 이제 Main이 먼저 physics를 복구해도 MutationDirector의 선택 이벤트는 유지되고, 이어지는 `spawn_selected_mutation()`의 `commit_selection()`에서 정상적으로 이벤트를 소비/초기화한다.
+- 특수 스폰 큐 및 기본 전투 루프는 변경하지 않음.

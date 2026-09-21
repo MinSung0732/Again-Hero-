@@ -1285,7 +1285,6 @@ func _open_mutation_choice(event: Dictionary) -> void:
 	)
 
 func resume_after_mutation_choice() -> void:
-	mutation_director.reset()
 	if battle_over or external_pause or demon_augment_selection_active:
 		return
 	_set_combat_physics_enabled(true)
