@@ -814,3 +814,9 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 현재 편성은 세션 전용이며 MonsterCatalog의 등록 순서를 사용해 최대 3종을 자동 선택.
 - 저장/해금 연동은 이 기준점이 PC/Android 양쪽에서 정상 동작한 뒤 재도입.
 
+### 팀 편성 탭 전용 초기화 경로
+- TeamButton은 generic tab handler를 사용하지 않고 전용 handler에서 TeamTab 표시 → MonsterCatalog 컬렉션 생성 → nav style 갱신 순으로 실행.
+- 컬렉션 목록 생성은 편성 슬롯 표시와 분리해 ItemList에 먼저 Catalog 전체 항목을 추가.
+- 편성 추가/해제 후에는 기존 ItemList의 text만 갱신해 목록 자체가 사라질 가능성을 줄임.
+- 현재는 실기기 UI 검증 단계이므로 저장/해금 상태 연동은 제외.
+

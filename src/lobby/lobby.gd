@@ -201,7 +201,7 @@ func _apply_styles() -> void:
 
 func _connect_navigation() -> void:
 	shop_button.pressed.connect(_switch_tab.bind("shop"))
-	team_button.pressed.connect(_switch_tab.bind("team"))
+	team_button.pressed.connect(_on_team_tab_pressed)
 	main_button.pressed.connect(_switch_tab.bind("main"))
 	research_button.pressed.connect(_switch_tab.bind("research"))
 	other_button.pressed.connect(_switch_tab.bind("other"))
@@ -216,6 +216,27 @@ func _connect_navigation() -> void:
 	team_monster_list.item_selected.connect(_on_team_item_selected)
 
 
+func _on_team_tab_pressed() -> void:
+	current_tab = "team"
+
+	shop_tab.hide()
+	team_tab.show()
+	main_tab.hide()
+	research_tab.hide()
+	other_tab.hide()
+
+	# Update this immediately so a device screenshot tells us the handler ran.
+	team_summary_label.text = "컬렉션 생성 중…"
+	team_status_label.text = "MonsterCatalog 목록을 만드는 중입니다."
+
+	_setup_team_preview()
+
+	_refresh_nav_button(shop_button, false)
+	_refresh_nav_button(team_button, true)
+	_refresh_nav_button(main_button, false)
+	_refresh_nav_button(research_button, false)
+	_refresh_nav_button(other_button, false)
+
 func _switch_tab(tab_id: String) -> void:
 	current_tab = tab_id
 
@@ -225,9 +246,7 @@ func _switch_tab(tab_id: String) -> void:
 	research_tab.visible = tab_id == "research"
 	other_tab.visible = tab_id == "other"
 
-	if tab_id == "team":
-		_setup_team_preview()
-	elif tab_id == "research":
+	if tab_id == "research":
 		_rebuild_research_list()
 
 	_refresh_nav_button(shop_button, tab_id == "shop")
@@ -247,22 +266,13 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 	)
 
 func _setup_team_preview() -> void:
-	team_summary_label.text = "편성 초기화 중…"
-	team_status_label.text = "MonsterCatalog를 불러오고 있습니다."
-
 	team_catalog_ids.clear()
 	team_available_ids.clear()
 	team_selected_ids.clear()
+	team_monster_list.clear()
 
 	var monster_ids = MONSTER_CATALOG.get_ids()
-	if monster_ids.is_empty():
-		team_monster_list.clear()
-		team_summary_label.text = "등록된 몬스터 없음"
-		team_status_label.text = "MonsterCatalog에 등록된 몬스터가 없습니다."
-		_refresh_team_slot(team_slot_1_button, 0)
-		_refresh_team_slot(team_slot_2_button, 1)
-		_refresh_team_slot(team_slot_3_button, 2)
-		return
+	team_status_label.text = "Catalog %d종 확인" % monster_ids.size()
 
 	for raw_id in monster_ids:
 		var monster_id := String(raw_id)
@@ -272,8 +282,17 @@ func _setup_team_preview() -> void:
 		if team_selected_ids.size() < TEAM_MAX_SLOTS:
 			team_selected_ids.append(monster_id)
 
+		var line := "%s · %s · 비용 %.0f" % [
+			MONSTER_CATALOG.get_name(monster_id),
+			MONSTER_CATALOG.get_role_label(
+				MONSTER_CATALOG.get_role(monster_id)
+			),
+			MONSTER_CATALOG.get_base_cost(monster_id),
+		]
+		team_monster_list.add_item(line)
+
 	_refresh_team_preview()
-	team_status_label.text = "몬스터 목록을 탭해 편성 추가/해제를 테스트하세요."
+	team_status_label.text = "컬렉션 %d종 표시 완료 · 목록을 탭해 편성을 변경하세요." % team_catalog_ids.size()
 
 func _refresh_team_preview() -> void:
 	_refresh_team_slot(team_slot_1_button, 0)
@@ -293,9 +312,8 @@ func _refresh_team_preview() -> void:
 		selected_names,
 	]
 
-	team_monster_list.clear()
-	for raw_id in team_catalog_ids:
-		var monster_id := String(raw_id)
+	for item_index in range(team_catalog_ids.size()):
+		var monster_id := String(team_catalog_ids[item_index])
 		var selected := monster_id in team_selected_ids
 		var marker := "[편성] " if selected else ""
 		var line := "%s%s · %s · 비용 %.0f" % [
@@ -306,7 +324,9 @@ func _refresh_team_preview() -> void:
 			),
 			MONSTER_CATALOG.get_base_cost(monster_id),
 		]
-		team_monster_list.add_item(line)
+
+		if item_index < team_monster_list.item_count:
+			team_monster_list.set_item_text(item_index, line)
 
 func _refresh_team_slot(button: Button, slot_index: int) -> void:
 	if slot_index < team_selected_ids.size():

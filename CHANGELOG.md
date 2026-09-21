@@ -877,3 +877,12 @@
 - 이 기준점에서 추가/해제 UI 동작을 먼저 실기기 검증한 뒤 저장/해금 상태를 재연결.
 - Battle/Main/Supabase DB는 변경하지 않음.
 
+### Team Collection Explicit Tab Handler Fix
+- 팀 편성 탭은 열리지만 Monster Collection 목록이 생성되지 않아 편성/해제 테스트가 불가능한 문제 수정.
+- TeamButton을 generic `_switch_tab.bind("team")`에서 전용 `_on_team_tab_pressed()` 핸들러로 분리.
+- 전용 핸들러가 TeamTab 표시 직후 MonsterCatalog 기반 컬렉션 생성을 직접 호출.
+- `_setup_team_preview()`에서 ItemList를 먼저 비우고 Catalog 항목을 즉시 추가한 뒤 슬롯/선택 표시만 갱신.
+- 상태 문구에 Catalog 확인 수 / 컬렉션 표시 수를 노출해 PC/Android에서 호출 경로를 화면만으로 검증 가능.
+- 편성 변경 시 ItemList를 재생성하지 않고 기존 항목 text만 갱신.
+- 저장/해금/Supabase/전투 코드는 변경하지 않음.
+
