@@ -1030,3 +1030,11 @@
 - `bomb_rat_visual.gd`는 씬에서 주입된 `source_sheet`만 사용해 AtlasTexture 프레임을 구성.
 - Android/PC에서 런타임 ResourceLoader 경로 차이로 `visual_ready=false`가 되어 코드 드로잉 fallback이 표시될 가능성을 제거.
 - 폭탄쥐 시트 규격은 229×229 셀, 6×5 그리드와 실제 프레임 수를 그대로 유지.
+
+### Bomb Rat Static SpriteFrames Fix
+- 폭탄쥐 런타임 스프라이트 로더/자동감지 경로를 제거.
+- `BombRat.tscn`이 GitHub에 이미 존재하는 `bombrat_spritesheet.png`를 Texture2D로 직접 참조.
+- 실제 229×229 셀 좌표를 AtlasTexture subresource로 정적으로 정의하고 SpriteFrames에 직접 연결.
+- idle 4 / move 6 / attack 6 / hit 3 / death 4 프레임을 씬에서 고정 재생.
+- `bomb_rat.gd`는 AnimatedSprite2D 재생만 담당하도록 단순화하고 임시 코드 드로잉 캐릭터 fallback을 제거.
+- Base64 및 런타임 PNG 디코딩을 사용하지 않음.

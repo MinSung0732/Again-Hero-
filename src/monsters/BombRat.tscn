@@ -1,11 +1,203 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=27 format=3]
 
 [ext_resource type="Script" path="res://src/monsters/bomb_rat.gd" id="1_bomb_rat"]
-[ext_resource type="Script" path="res://src/monsters/bomb_rat_visual.gd" id="2_visual"]
 [ext_resource type="Texture2D" path="res://assets/art/monsters/bombrat/bombrat_spritesheet.png" id="3_sheet"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_bomb_rat"]
 radius = 24.0
+
+[sub_resource type="AtlasTexture" id="Atlas_i0"]
+atlas = ExtResource("3_sheet")
+region = Rect2(0, 0, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_i1"]
+atlas = ExtResource("3_sheet")
+region = Rect2(229, 0, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_i2"]
+atlas = ExtResource("3_sheet")
+region = Rect2(458, 0, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_i3"]
+atlas = ExtResource("3_sheet")
+region = Rect2(687, 0, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_m0"]
+atlas = ExtResource("3_sheet")
+region = Rect2(0, 229, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_m1"]
+atlas = ExtResource("3_sheet")
+region = Rect2(229, 229, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_m2"]
+atlas = ExtResource("3_sheet")
+region = Rect2(458, 229, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_m3"]
+atlas = ExtResource("3_sheet")
+region = Rect2(687, 229, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_m4"]
+atlas = ExtResource("3_sheet")
+region = Rect2(916, 229, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_m5"]
+atlas = ExtResource("3_sheet")
+region = Rect2(1145, 229, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_a0"]
+atlas = ExtResource("3_sheet")
+region = Rect2(0, 458, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_a1"]
+atlas = ExtResource("3_sheet")
+region = Rect2(229, 458, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_a2"]
+atlas = ExtResource("3_sheet")
+region = Rect2(458, 458, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_a3"]
+atlas = ExtResource("3_sheet")
+region = Rect2(687, 458, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_a4"]
+atlas = ExtResource("3_sheet")
+region = Rect2(916, 458, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_a5"]
+atlas = ExtResource("3_sheet")
+region = Rect2(1145, 458, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_h0"]
+atlas = ExtResource("3_sheet")
+region = Rect2(0, 687, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_h1"]
+atlas = ExtResource("3_sheet")
+region = Rect2(229, 687, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_h2"]
+atlas = ExtResource("3_sheet")
+region = Rect2(458, 687, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_d0"]
+atlas = ExtResource("3_sheet")
+region = Rect2(0, 916, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_d1"]
+atlas = ExtResource("3_sheet")
+region = Rect2(229, 916, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_d2"]
+atlas = ExtResource("3_sheet")
+region = Rect2(458, 916, 229, 229)
+
+[sub_resource type="AtlasTexture" id="Atlas_d3"]
+atlas = ExtResource("3_sheet")
+region = Rect2(687, 916, 229, 229)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_bomb_rat"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_i0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_i1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_i2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_i3")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 6.0
+},
+{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_m0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_m1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_m2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_m3")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_m4")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_m5")
+}],
+"loop": true,
+"name": &"move",
+"speed": 11.0
+},
+{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_a0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_a1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_a2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_a3")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_a4")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_a5")
+}],
+"loop": false,
+"name": &"attack",
+"speed": 14.0
+},
+{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_h0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_h1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_h2")
+}],
+"loop": false,
+"name": &"hit",
+"speed": 14.0
+},
+{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_d0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_d1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_d2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_d3")
+}],
+"loop": false,
+"name": &"death",
+"speed": 10.0
+}]
 
 [node name="BombRat" type="CharacterBody2D"]
 z_index = 2
@@ -16,14 +208,10 @@ script = ExtResource("1_bomb_rat")
 [node name="Visual" type="AnimatedSprite2D" parent="."]
 z_index = -1
 texture_filter = 1
-script = ExtResource("2_visual")
-source_sheet = ExtResource("3_sheet")
-target_height = 78.0
-idle_fps = 6.0
-move_fps = 11.0
-attack_fps = 14.0
-hit_fps = 14.0
-death_fps = 10.0
+sprite_frames = SubResource("SpriteFrames_bomb_rat")
+animation = &"idle"
+autoplay = "idle"
+scale = Vector2(0.340611, 0.340611)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_bomb_rat")
