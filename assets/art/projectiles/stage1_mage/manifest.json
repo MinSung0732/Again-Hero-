@@ -1,0 +1,16 @@
+{
+  "resource": "stage1_mage_projectile",
+  "cell_size": [128, 128],
+  "sheet_size": [512, 128],
+  "frame_order": ["projectile_01", "projectile_02", "projectile_03", "projectile_04"],
+  "anchor": [88, 64],
+  "direction": "right",
+  "animation": {
+    "fly": {
+      "frames": [0, 1, 2, 3],
+      "fps": 12.0,
+      "loop": true
+    }
+  },
+  "source_note": "Four user-provided projectile frames; black compositing removed to transparent RGBA."
+}
