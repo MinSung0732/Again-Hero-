@@ -1294,13 +1294,36 @@ func spawn_selected_mutation(monster_id: String) -> void:
 	]
 	event["name"] = mutation_name
 
-	if spawn_special_monster(monster_id, event):
-		_emit_stage_event_announcement(event, monster_id)
-
+	# 선택 완료 즉시 전투를 먼저 재개한다.
+	# 이후 특수 스폰에서 문제가 생겨도 전투가 멈춘 채 남지 않게 한다.
 	if not external_pause and not demon_augment_selection_active:
 		_set_combat_physics_enabled(true)
 
-	mutation_selected.emit(event_type, mutation_name)
+	call_deferred(
+		"_spawn_committed_mutation",
+		monster_id,
+		event,
+		event_type,
+		mutation_name
+	)
+
+func _spawn_committed_mutation(
+	monster_id: String,
+	event: Dictionary,
+	event_type: String,
+	mutation_name: String
+) -> void:
+	if battle_over:
+		return
+
+	if spawn_special_monster(monster_id, event):
+		_emit_stage_event_announcement(event, monster_id)
+		mutation_selected.emit(event_type, mutation_name)
+		return
+
+	push_warning(
+		"Mutation special spawn failed: %s" % monster_id
+	)
 
 func spawn_special_monster(
 	monster_id: String,

@@ -1427,3 +1427,10 @@
 - Stage 이벤트 상태 문구/시그널은 `_emit_stage_event_announcement()`로 분리.
 - 향후 `일반 3 + 보스 1` 편성 보스도 같은 특수 스폰 API를 재사용할 수 있는 기반 마련.
 - 시간/지휘력/일반 소환 루프 및 `_spawn_monster()` 구현은 변경하지 않음.
+
+### Mutation Spawn Resume Hotfix
+- 돌연변이 선택 후 모달은 닫히지만 특수 소환 실패 시 전투 physics가 그대로 멈추던 문제 수정.
+- 선택 확정 직후 combat physics를 먼저 재개하도록 순서 변경.
+- 실제 특수 몬스터 생성은 `call_deferred()`로 다음 프레임에 실행해 UI 버튼 콜백과 월드 노드 생성을 분리.
+- 특수 스폰 실패 시 warning을 남기되 전투 진행은 계속 유지.
+- MutationDirector / MutationCatalog / 공통 `spawn_special_monster()` 구조는 유지.
