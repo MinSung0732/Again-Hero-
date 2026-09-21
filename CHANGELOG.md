@@ -798,3 +798,12 @@
 - 슬롯/몬스터 버튼에 명시적 touch mouse filter를 적용.
 - 저장 로직과 Battle/Main 전투 코드는 변경하지 않음.
 
+### Team Loadout Android State Sync Fix
+- 모바일에서 편성 슬롯 터치는 들어오지만 화면은 3종, 내부 상태는 1종으로 판단되는 상태 불일치 수정.
+- 로비 초기화의 `sort_custom` lambda를 제거해 Android 런타임 경로 단순화.
+- `_refresh_team_preview()`의 임시 `Array[Button]` typed-array를 일반 Array로 변경해 노드 배열 변환 오류 가능성 제거.
+- team loadout 저장 포맷을 version 2 Dictionary(`version`, `monster_ids`)로 변경.
+- 기존 raw JSON Array 저장은 legacy로 간주하고 현재 기본 3종 편성으로 자동 초기화하여 이전 테스트 중 꼬인 저장 상태를 제거.
+- 로비 진입 시 실제 로드된 편성 개수를 상태 문구로 표시해 실기기 확인 가능.
+- Battle / Main 전투 코드는 변경하지 않음.
+

@@ -244,10 +244,6 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 
 func _setup_team_preview() -> void:
 	team_monster_ids = MONSTER_CATALOG.get_ids()
-	team_monster_ids.sort_custom(
-		func(a: String, b: String) -> bool:
-			return MONSTER_CATALOG.get_base_cost(a) < MONSTER_CATALOG.get_base_cost(b)
-	)
 
 	var default_ids: Array[String] = []
 	for monster_id in team_monster_ids:
@@ -260,15 +256,16 @@ func _setup_team_preview() -> void:
 		default_ids
 	)
 
+	team_status_label.text = "편성 데이터 %d종 불러옴" % team_preview_ids.size()
 	_refresh_team_preview()
 
 func _refresh_team_preview() -> void:
-	var slot_buttons: Array[Button] = [
+	var slot_buttons := [
 		team_slot_1_button,
 		team_slot_2_button,
 		team_slot_3_button,
 	]
-	var monster_buttons: Array[Button] = [
+	var monster_buttons := [
 		team_monster_1_button,
 		team_monster_2_button,
 		team_monster_3_button,
