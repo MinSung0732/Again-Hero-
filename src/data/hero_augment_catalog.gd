@@ -12,6 +12,7 @@ const TAG_LABELS := {
 	"range": "사거리",
 	"recovery": "회복",
 	"area": "광역",
+	"resistance": "저항",
 }
 
 const AUGMENTS = [
@@ -97,10 +98,31 @@ const AUGMENTS = [
 			{"source": "current_role_ratio", "key": "controller", "weight": 2.0},
 			{"source": "recent_type_ratio", "key": "spider", "weight": 3.0},
 			{"source": "recent_role_ratio", "key": "controller", "weight": 1.6},
+			{"source": "recent_status_weight", "key": "slow", "weight": 0.45, "cap": 2.7},
 			{"source": "total_count_max", "value": 2, "bonus": 0.5},
 		],
 		"synergy_rules": [
 			{"source": "build_tag_stacks", "key": "range", "weight": 0.70, "cap": 2.10},
+		],
+	},
+	{
+		"id": "slow_resistance",
+		"name": "둔화 적응",
+		"description": "둔화 강도와 지속시간 감소",
+		"base_score": 4.8,
+		"tags": ["resistance", "mobility", "survival"],
+		"effects": [
+			{"op": "add_status_resistance", "status": "slow", "value": 0.18, "max": 0.65},
+		],
+		"ai_rules": [
+			{"source": "recent_status_weight", "key": "slow", "weight": 1.10, "cap": 6.6},
+			{"source": "recent_type_ratio", "key": "spider", "weight": 1.8},
+			{"source": "recent_role_ratio", "key": "controller", "weight": 1.4},
+			{"source": "current_type_ratio", "key": "spider", "weight": 1.2},
+		],
+		"synergy_rules": [
+			{"source": "build_tag_stacks", "key": "mobility", "weight": 0.45, "cap": 1.35},
+			{"source": "build_tag_stacks", "key": "kite", "weight": 0.35, "cap": 1.05},
 		],
 	},
 	{
