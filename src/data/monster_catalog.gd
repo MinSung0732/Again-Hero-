@@ -1,7 +1,7 @@
 extends RefCounted
 class_name MonsterCatalog
 
-const ORDER := ["slime", "spider", "orc"]
+const ORDER := ["slime", "spider", "orc", "bomb_rat"]
 
 const MONSTERS := {
 	"slime": {
@@ -37,12 +37,24 @@ const MONSTERS := {
 		"card_icon_path": "res://assets/art/monsters/orc/frames/idle_01.png",
 		"scene": preload("res://src/monsters/Orc.tscn"),
 	},
+	"bomb_rat": {
+		"id": "bomb_rat",
+		"name": "폭탄쥐",
+		"role": "burst",
+		"base_cost": 12.0,
+		"default_unlocked": false,
+		"shards_required": 30,
+		"rarity": "rare",
+		"card_icon_path": "",
+		"scene": preload("res://src/monsters/BombRat.tscn"),
+	},
 }
 
 const ROLE_LABELS := {
 	"swarm": "물량",
 	"controller": "제어",
 	"tank": "탱커",
+	"burst": "폭발",
 }
 
 static func get_monster(monster_id: String) -> Dictionary:
