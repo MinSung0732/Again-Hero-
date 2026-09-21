@@ -792,3 +792,12 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 팀 편성 초기화를 Lobby `_ready()`에서 제거하고 팀 탭 진입 시에만 수행. 편성 기능 문제가 있어도 메인 로비 전체 초기화를 막지 않음.
 - Battle/Main 전투 코드는 이번 변경에서 수정하지 않음.
 
+### 팀 편성 UI 정적 컨트롤 전환
+- Android/PC에서 동적 Button 생성 기반 팀 편성 UI가 `편성 불러오는 중…` 상태에서 멈추는 문제 때문에 표시 경로를 단순화.
+- 씬에 **편성 슬롯 Button 3개 + ItemList 1개**를 고정 배치. 고정되는 것은 슬롯 수(최대 3)뿐이며 몬스터 종류는 계속 MonsterCatalog 순회로 동적 표시.
+- 팀 탭 진입 시 Catalog의 `default_unlocked`를 사용한 기본 편성을 먼저 즉시 렌더링.
+- 저장된 MonsterCollection / TeamLoadout은 `call_deferred()`에서 다음 프레임에 읽어 덮어씀.
+- 저장 데이터 로드에 문제가 생겨도 기본 편성 UI가 이미 표시되어 무한 로딩 빈 화면으로 남지 않도록 격리.
+- 향후 상점 조각 해금 몬스터도 ItemList에 Catalog/Collection 상태를 기반으로 자동 반영.
+- Battle/Main 전투 코드는 변경하지 않음.
+

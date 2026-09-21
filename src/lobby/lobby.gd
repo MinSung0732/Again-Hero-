@@ -27,8 +27,10 @@ const BATTLE_SCENE_PATH := "res://src/main/Main.tscn"
 @onready var other_button: Button = $BottomNav/NavMargin/NavButtons/OtherButton
 
 @onready var team_summary_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/Summary
-@onready var team_slot_grid: GridContainer = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotGrid
-@onready var team_monster_list: VBoxContainer = $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterScroll/MonsterList
+@onready var team_slot_1_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot1Button
+@onready var team_slot_2_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot2Button
+@onready var team_slot_3_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot3Button
+@onready var team_monster_list: ItemList = $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList
 @onready var team_status_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/Status
 
 @onready var prev_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/PrevButton
@@ -53,8 +55,9 @@ var selected_stage_index: int = 0
 var current_tab: String = "main"
 
 var monster_collection_state: Dictionary = {}
-var team_available_ids: Array[String] = []
-var team_selected_ids: Array[String] = []
+var team_catalog_ids: Array = []
+var team_available_ids: Array = []
+var team_selected_ids: Array = []
 
 var panel_style := StyleBoxFlat.new()
 var header_style := StyleBoxFlat.new()
@@ -192,6 +195,11 @@ func _apply_styles() -> void:
 	enter_stage_button.add_theme_stylebox_override("hover", primary_button_style)
 	enter_stage_button.add_theme_stylebox_override("pressed", primary_button_style)
 
+	for button in [team_slot_1_button, team_slot_2_button, team_slot_3_button]:
+		button.add_theme_stylebox_override("normal", stage_card_style)
+		button.add_theme_stylebox_override("hover", stage_card_style)
+		button.add_theme_stylebox_override("pressed", primary_button_style)
+
 
 func _connect_navigation() -> void:
 	shop_button.pressed.connect(_switch_tab.bind("shop"))
@@ -203,6 +211,11 @@ func _connect_navigation() -> void:
 	prev_stage_button.pressed.connect(_change_stage.bind(-1))
 	next_stage_button.pressed.connect(_change_stage.bind(1))
 	enter_stage_button.pressed.connect(_enter_selected_stage)
+
+	team_slot_1_button.pressed.connect(_on_team_slot_pressed.bind(0))
+	team_slot_2_button.pressed.connect(_on_team_slot_pressed.bind(1))
+	team_slot_3_button.pressed.connect(_on_team_slot_pressed.bind(2))
+	team_monster_list.item_selected.connect(_on_team_item_selected)
 
 
 func _switch_tab(tab_id: String) -> void:
@@ -236,132 +249,143 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 	)
 
 func _setup_team_preview() -> void:
-	team_summary_label.text = "편성 불러오는 중…"
-	team_status_label.text = "몬스터 컬렉션을 확인하고 있습니다."
-
-	monster_collection_state = MONSTER_COLLECTION_STORE.load_state()
-	team_available_ids = MONSTER_COLLECTION_STORE.get_unlocked_ids(
-		monster_collection_state
-	)
-
-	if team_available_ids.is_empty():
-		team_selected_ids.clear()
-		_clear_children(team_slot_grid)
-		_clear_children(team_monster_list)
-		team_summary_label.text = "해금된 몬스터 없음"
-		team_status_label.text = "몬스터를 먼저 해금해야 편성할 수 있습니다."
-		return
-
-	var default_ids: Array[String] = []
-	for monster_id in team_available_ids:
-		if default_ids.size() >= TEAM_LOADOUT_STORE.MAX_SLOTS:
-			break
-		default_ids.append(monster_id)
-
-	team_selected_ids = TEAM_LOADOUT_STORE.load_ids(
-		team_available_ids,
-		default_ids
-	)
-
 	if team_selected_ids.is_empty():
-		team_selected_ids = default_ids.duplicate()
+		_build_default_team_state()
 
 	_refresh_team_preview()
-	team_status_label.text = "편성 슬롯이나 컬렉션 카드를 탭해 편성을 변경하세요."
+	team_status_label.text = "기본 편성 표시 완료 · 저장 데이터 확인 중"
+	call_deferred("_load_saved_team_state")
+
+func _build_default_team_state() -> void:
+	monster_collection_state.clear()
+	team_catalog_ids.clear()
+	team_available_ids.clear()
+	team_selected_ids.clear()
+
+	for monster_id in MONSTER_CATALOG.get_ids():
+		team_catalog_ids.append(monster_id)
+
+		var unlocked := MONSTER_CATALOG.is_default_unlocked(monster_id)
+		monster_collection_state[monster_id] = {
+			"unlocked": unlocked,
+			"shards": 0,
+		}
+
+		if unlocked:
+			team_available_ids.append(monster_id)
+			if team_selected_ids.size() < TEAM_LOADOUT_STORE.MAX_SLOTS:
+				team_selected_ids.append(monster_id)
+
+func _load_saved_team_state() -> void:
+	var saved_collection := MONSTER_COLLECTION_STORE.load_state()
+	var saved_available := MONSTER_COLLECTION_STORE.get_unlocked_ids(
+		saved_collection
+	)
+
+	if not saved_available.is_empty():
+		monster_collection_state = saved_collection
+		team_available_ids.clear()
+		for monster_id in saved_available:
+			team_available_ids.append(monster_id)
+
+	var fallback_ids: Array = []
+	for monster_id in team_available_ids:
+		if fallback_ids.size() >= TEAM_LOADOUT_STORE.MAX_SLOTS:
+			break
+		fallback_ids.append(monster_id)
+
+	var saved_team := TEAM_LOADOUT_STORE.load_ids(
+		team_available_ids,
+		fallback_ids
+	)
+	if not saved_team.is_empty():
+		team_selected_ids.clear()
+		for monster_id in saved_team:
+			team_selected_ids.append(monster_id)
+
+	_refresh_team_preview()
+	team_status_label.text = "저장된 편성 확인 완료"
 
 func _refresh_team_preview() -> void:
-	_clear_children(team_slot_grid)
-	_clear_children(team_monster_list)
+	_refresh_team_slot(team_slot_1_button, 0)
+	_refresh_team_slot(team_slot_2_button, 1)
+	_refresh_team_slot(team_slot_3_button, 2)
 
 	var selected_names := ""
-	for slot_index in range(TEAM_LOADOUT_STORE.MAX_SLOTS):
-		var slot_button := Button.new()
-		slot_button.custom_minimum_size = Vector2(0, 190)
-		slot_button.size_flags_horizontal = 3
-		slot_button.focus_mode = 0
-		slot_button.add_theme_font_size_override("font_size", 20)
-		slot_button.add_theme_stylebox_override("normal", stage_card_style)
-		slot_button.add_theme_stylebox_override("hover", stage_card_style)
-		slot_button.add_theme_stylebox_override("pressed", primary_button_style)
+	for monster_id in team_selected_ids:
+		if not selected_names.is_empty():
+			selected_names += " / "
+		selected_names += MONSTER_CATALOG.get_name(String(monster_id))
 
-		if slot_index < team_selected_ids.size():
-			var monster_id := team_selected_ids[slot_index]
-			slot_button.text = "%d\n%s\n%s\n\n탭해서 해제" % [
-				slot_index + 1,
-				MONSTER_CATALOG.get_name(monster_id),
-				MONSTER_CATALOG.get_role_label(
-					MONSTER_CATALOG.get_role(monster_id)
-				),
-			]
-			slot_button.disabled = team_selected_ids.size() <= 1
-			slot_button.pressed.connect(
-				Callable(self, "_on_dynamic_team_slot_pressed").bind(monster_id)
-			)
-
-			if not selected_names.is_empty():
-				selected_names += " / "
-			selected_names += MONSTER_CATALOG.get_name(monster_id)
-		else:
-			slot_button.text = "%d\n빈 슬롯" % (slot_index + 1)
-			slot_button.disabled = true
-
-		team_slot_grid.add_child(slot_button)
-
-	team_summary_label.text = "저장된 편성 %d / %d · %s" % [
+	team_summary_label.text = "편성 %d / %d · %s" % [
 		team_selected_ids.size(),
 		TEAM_LOADOUT_STORE.MAX_SLOTS,
 		selected_names,
 	]
 
-	for monster_id in MONSTER_CATALOG.get_ids():
-		var data := MONSTER_CATALOG.get_monster(monster_id)
-		var unlocked := MONSTER_COLLECTION_STORE.is_unlocked(
-			monster_id,
-			monster_collection_state
-		)
-		var button := Button.new()
-		button.custom_minimum_size = Vector2(0, 118)
-		button.size_flags_horizontal = 3
-		button.focus_mode = 0
-		button.add_theme_font_size_override("font_size", 20)
+	team_monster_list.clear()
+	team_catalog_ids.clear()
 
+	for monster_id in MONSTER_CATALOG.get_ids():
+		team_catalog_ids.append(monster_id)
+
+		var unlocked := monster_id in team_available_ids
+		var line := ""
 		if unlocked:
-			var selected := monster_id in team_selected_ids
-			button.text = "%s · %s · 기본 비용 %.0f\n%s" % [
-				String(data.get("name", monster_id)),
+			var marker := "✓ " if monster_id in team_selected_ids else ""
+			line = "%s%s · %s · 비용 %.0f" % [
+				marker,
+				MONSTER_CATALOG.get_name(monster_id),
 				MONSTER_CATALOG.get_role_label(
-					String(data.get("role", ""))
+					MONSTER_CATALOG.get_role(monster_id)
 				),
-				float(data.get("base_cost", 0.0)),
-				"편성 중 · 탭해서 해제" if selected else "탭해서 편성",
+				MONSTER_CATALOG.get_base_cost(monster_id),
 			]
-			var style := primary_button_style if selected else secondary_button_style
-			button.add_theme_stylebox_override("normal", style)
-			button.add_theme_stylebox_override("hover", style)
-			button.add_theme_stylebox_override("pressed", style)
-			button.pressed.connect(
-				Callable(self, "_on_dynamic_monster_pressed").bind(monster_id)
-			)
 		else:
 			var shards := MONSTER_COLLECTION_STORE.get_shards(
 				monster_id,
 				monster_collection_state
 			)
-			var required := MONSTER_CATALOG.get_shards_required(monster_id)
-			button.text = "%s · 미해금\n조각 %d / %d" % [
-				String(data.get("name", monster_id)),
+			line = "잠김 · %s · 조각 %d / %d" % [
+				MONSTER_CATALOG.get_name(monster_id),
 				shards,
-				required,
+				MONSTER_CATALOG.get_shards_required(monster_id),
 			]
-			button.disabled = true
-			button.add_theme_stylebox_override("normal", secondary_button_style)
 
-		team_monster_list.add_child(button)
+		team_monster_list.add_item(line)
+		var item_index := team_monster_list.item_count - 1
+		team_monster_list.set_item_disabled(item_index, not unlocked)
 
-func _on_dynamic_team_slot_pressed(monster_id: String) -> void:
-	_remove_team_monster(monster_id)
+func _refresh_team_slot(button: Button, slot_index: int) -> void:
+	if slot_index < team_selected_ids.size():
+		var monster_id := String(team_selected_ids[slot_index])
+		button.text = "%d\n%s\n%s\n\n탭해서 해제" % [
+			slot_index + 1,
+			MONSTER_CATALOG.get_name(monster_id),
+			MONSTER_CATALOG.get_role_label(
+				MONSTER_CATALOG.get_role(monster_id)
+			),
+		]
+		button.disabled = team_selected_ids.size() <= 1
+	else:
+		button.text = "%d\n빈 슬롯" % (slot_index + 1)
+		button.disabled = true
 
-func _on_dynamic_monster_pressed(monster_id: String) -> void:
+func _on_team_slot_pressed(slot_index: int) -> void:
+	if slot_index < 0 or slot_index >= team_selected_ids.size():
+		return
+
+	_remove_team_monster(String(team_selected_ids[slot_index]))
+
+func _on_team_item_selected(item_index: int) -> void:
+	if item_index < 0 or item_index >= team_catalog_ids.size():
+		return
+
+	var monster_id := String(team_catalog_ids[item_index])
+	if monster_id not in team_available_ids:
+		team_status_label.text = "아직 해금되지 않은 몬스터입니다."
+		return
+
 	if monster_id in team_selected_ids:
 		_remove_team_monster(monster_id)
 	else:
@@ -370,6 +394,7 @@ func _on_dynamic_monster_pressed(monster_id: String) -> void:
 func _remove_team_monster(monster_id: String) -> void:
 	if monster_id not in team_selected_ids:
 		return
+
 	if team_selected_ids.size() <= 1:
 		team_status_label.text = "최소 1종은 편성해야 합니다."
 		return
@@ -379,14 +404,17 @@ func _remove_team_monster(monster_id: String) -> void:
 		team_status_label.text = "%s 편성 해제 · 저장 완료" % MONSTER_CATALOG.get_name(monster_id)
 	else:
 		team_status_label.text = "편성 저장에 실패했습니다."
+
 	_refresh_team_preview()
 
 func _add_team_monster(monster_id: String) -> void:
 	if monster_id in team_selected_ids:
 		return
+
 	if monster_id not in team_available_ids:
 		team_status_label.text = "아직 해금되지 않은 몬스터입니다."
 		return
+
 	if team_selected_ids.size() >= TEAM_LOADOUT_STORE.MAX_SLOTS:
 		team_status_label.text = "편성 슬롯은 최대 %d칸입니다." % TEAM_LOADOUT_STORE.MAX_SLOTS
 		return
@@ -396,6 +424,7 @@ func _add_team_monster(monster_id: String) -> void:
 		team_status_label.text = "%s 편성 추가 · 저장 완료" % MONSTER_CATALOG.get_name(monster_id)
 	else:
 		team_status_label.text = "편성 저장에 실패했습니다."
+
 	_refresh_team_preview()
 
 func _save_team_selection() -> bool:
@@ -403,11 +432,6 @@ func _save_team_selection() -> bool:
 		team_selected_ids,
 		team_available_ids
 	)
-
-func _clear_children(parent: Node) -> void:
-	for child in parent.get_children():
-		parent.remove_child(child)
-		child.queue_free()
 
 func _refresh_header() -> void:
 	var state := STAGE_PROGRESS.load_state()

@@ -852,3 +852,11 @@
   - 동적 버튼 연결을 명시적 Callable.bind 경로로 정리
 - 전투 Battle/Main 코드는 변경하지 않음.
 
+### Team Loadout Infinite Loading Fix — Static Controls
+- 팀 편성 탭이 `편성 불러오는 중…`에서 멈추고 슬롯/컬렉션이 표시되지 않는 문제 대응.
+- 런타임 동적 Button 생성 방식을 제거하고 Lobby 씬에 편성 슬롯 3개와 ItemList 1개를 고정 배치.
+- 몬스터 종류는 MonsterCatalog 순회로 계속 동적 생성되므로 신규 몬스터 추가 시 UI 하드코딩 불필요.
+- 팀 탭 진입 즉시 Catalog 기본 해금 몬스터를 먼저 표시한 뒤, 저장 데이터는 다음 프레임에 deferred load.
+- 저장/컬렉션 로드 오류가 생겨도 기본 팀 UI가 이미 보이도록 로딩 경로를 분리.
+- Battle/Main 및 Supabase DB 스키마는 변경하지 않음.
+

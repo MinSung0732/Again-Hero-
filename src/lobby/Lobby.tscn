@@ -149,14 +149,37 @@ autowrap_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
 theme_override_font_sizes/font_size = 22
-text = "편성 불러오는 중…"
+text = "팀 편성 준비 중"
 horizontal_alignment = 1
 
-[node name="SlotGrid" type="GridContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+[node name="SlotRow" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 custom_minimum_size = Vector2(0, 210)
 layout_mode = 2
-columns = 3
-theme_override_constants/h_separation = 14
+theme_override_constants/separation = 14
+
+[node name="Slot1Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 20
+text = "1\n빈 슬롯"
+
+[node name="Slot2Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 20
+text = "2\n빈 슬롯"
+
+[node name="Slot3Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 20
+text = "3\n빈 슬롯"
 
 [node name="ListTitle" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
@@ -164,21 +187,18 @@ theme_override_font_sizes/font_size = 24
 text = "몬스터 컬렉션"
 horizontal_alignment = 1
 
-[node name="MonsterScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+[node name="MonsterList" type="ItemList" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
 size_flags_vertical = 3
-
-[node name="MonsterList" type="VBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterScroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 12
+allow_reselect = true
+theme_override_font_sizes/font_size = 22
 
 [node name="Status" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
 theme_override_font_sizes/font_size = 19
-text = "편성 슬롯이나 컬렉션 카드를 탭해 편성을 변경하세요."
+text = "팀 탭을 열면 기본 편성을 먼저 표시합니다."
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
