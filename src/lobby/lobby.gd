@@ -5,10 +5,9 @@ const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
-const MONSTER_COLLECTION_STORE := preload("res://src/systems/monster_collection_store.gd")
-const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 
 const BATTLE_SCENE_PATH := "res://src/main/Main.tscn"
+const TEAM_MAX_SLOTS := 3
 
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 @onready var resource_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ResourceLabel
@@ -54,7 +53,6 @@ var stage_ids: Array[String] = []
 var selected_stage_index: int = 0
 var current_tab: String = "main"
 
-var monster_collection_state: Dictionary = {}
 var team_catalog_ids: Array = []
 var team_available_ids: Array = []
 var team_selected_ids: Array = []
@@ -227,16 +225,16 @@ func _switch_tab(tab_id: String) -> void:
 	research_tab.visible = tab_id == "research"
 	other_tab.visible = tab_id == "other"
 
+	if tab_id == "team":
+		_setup_team_preview()
+	elif tab_id == "research":
+		_rebuild_research_list()
+
 	_refresh_nav_button(shop_button, tab_id == "shop")
 	_refresh_nav_button(team_button, tab_id == "team")
 	_refresh_nav_button(main_button, tab_id == "main")
 	_refresh_nav_button(research_button, tab_id == "research")
 	_refresh_nav_button(other_button, tab_id == "other")
-
-	if tab_id == "team":
-		_setup_team_preview()
-	elif tab_id == "research":
-		_rebuild_research_list()
 
 func _refresh_nav_button(button: Button, selected: bool) -> void:
 	var style := nav_button_active_style if selected else nav_button_style
@@ -249,22 +247,33 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 	)
 
 func _setup_team_preview() -> void:
+	team_summary_label.text = "편성 초기화 중…"
+	team_status_label.text = "MonsterCatalog를 불러오고 있습니다."
+
 	team_catalog_ids.clear()
 	team_available_ids.clear()
 	team_selected_ids.clear()
-	monster_collection_state.clear()
 
 	var monster_ids = MONSTER_CATALOG.get_ids()
+	if monster_ids.is_empty():
+		team_monster_list.clear()
+		team_summary_label.text = "등록된 몬스터 없음"
+		team_status_label.text = "MonsterCatalog에 등록된 몬스터가 없습니다."
+		_refresh_team_slot(team_slot_1_button, 0)
+		_refresh_team_slot(team_slot_2_button, 1)
+		_refresh_team_slot(team_slot_3_button, 2)
+		return
+
 	for raw_id in monster_ids:
 		var monster_id := String(raw_id)
 		team_catalog_ids.append(monster_id)
 		team_available_ids.append(monster_id)
 
-		if team_selected_ids.size() < TEAM_LOADOUT_STORE.MAX_SLOTS:
+		if team_selected_ids.size() < TEAM_MAX_SLOTS:
 			team_selected_ids.append(monster_id)
 
 	_refresh_team_preview()
-	team_status_label.text = "기본 편성 표시 완료 · 저장 연동은 다음 단계에서 다시 연결합니다."
+	team_status_label.text = "몬스터 목록을 탭해 편성 추가/해제를 테스트하세요."
 
 func _refresh_team_preview() -> void:
 	_refresh_team_slot(team_slot_1_button, 0)
@@ -280,12 +289,11 @@ func _refresh_team_preview() -> void:
 
 	team_summary_label.text = "편성 %d / %d · %s" % [
 		team_selected_ids.size(),
-		TEAM_LOADOUT_STORE.MAX_SLOTS,
+		TEAM_MAX_SLOTS,
 		selected_names,
 	]
 
 	team_monster_list.clear()
-
 	for raw_id in team_catalog_ids:
 		var monster_id := String(raw_id)
 		var selected := monster_id in team_selected_ids
@@ -318,7 +326,6 @@ func _refresh_team_slot(button: Button, slot_index: int) -> void:
 func _on_team_slot_pressed(slot_index: int) -> void:
 	if slot_index < 0 or slot_index >= team_selected_ids.size():
 		return
-
 	_remove_team_monster(String(team_selected_ids[slot_index]))
 
 func _on_team_item_selected(item_index: int) -> void:
@@ -348,11 +355,11 @@ func _add_team_monster(monster_id: String) -> void:
 		return
 
 	if monster_id not in team_available_ids:
-		team_status_label.text = "아직 해금되지 않은 몬스터입니다."
+		team_status_label.text = "아직 사용할 수 없는 몬스터입니다."
 		return
 
-	if team_selected_ids.size() >= TEAM_LOADOUT_STORE.MAX_SLOTS:
-		team_status_label.text = "편성 슬롯은 최대 %d칸입니다." % TEAM_LOADOUT_STORE.MAX_SLOTS
+	if team_selected_ids.size() >= TEAM_MAX_SLOTS:
+		team_status_label.text = "편성 슬롯은 최대 %d칸입니다." % TEAM_MAX_SLOTS
 		return
 
 	team_selected_ids.append(monster_id)

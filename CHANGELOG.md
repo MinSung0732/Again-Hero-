@@ -868,3 +868,12 @@
 - 저장/조각 해금 데이터 연동은 UI 실기기 동작 확인 후 다시 단계적으로 연결.
 - Battle/Main/Supabase DB는 변경하지 않음.
 
+### Team Loadout Catalog-only Hard Isolation
+- 팀 탭은 열리지만 Summary/슬롯/ItemList가 씬 기본값에서 갱신되지 않는 문제를 추가 격리.
+- Lobby 팀 UI에서 MonsterCollectionStore / TeamLoadoutStore preload 및 런타임 참조를 일시 제거.
+- 팀 탭 전환 시 nav 스타일 갱신보다 팀 UI 초기화를 먼저 실행하도록 순서 변경.
+- 팀 UI는 MonsterCatalog 하나만 순회해 즉시 최대 3종 기본 편성과 ItemList를 구성.
+- 슬롯 수 3은 게임 규칙 상수 `TEAM_MAX_SLOTS`로만 유지하며 몬스터 종류는 하드코딩하지 않음.
+- 이 기준점에서 추가/해제 UI 동작을 먼저 실기기 검증한 뒤 저장/해금 상태를 재연결.
+- Battle/Main/Supabase DB는 변경하지 않음.
+
