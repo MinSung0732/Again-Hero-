@@ -89,6 +89,8 @@ func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
 		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_PORTRAIT)
 
+	battle.ensure_runtime_active()
+
 	battle.stats_changed.connect(_on_stats_changed)
 	battle.progression_changed.connect(_on_progression_changed)
 	battle.hero_leveled_up.connect(_on_hero_leveled_up)
@@ -198,7 +200,6 @@ func _ready() -> void:
 	debug_balance_label.text = String(snapshot.get("debug_balance_summary", "[DEBUG]"))
 	placement_toggle.button_pressed = true
 	_on_placement_mode_toggled(true)
-	battle.set_external_pause(false)
 
 	print("Again, Hero? stage/camera prototype loaded.")
 	print("Finite world camera + persistent stage progression enabled.")

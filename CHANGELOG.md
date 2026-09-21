@@ -1358,3 +1358,10 @@
 - 돌연변이 선택 중 정지는 Battle의 기존 `mutation_selection_active`만 사용.
 - 모달에 이미 표시된 monster_id는 카탈로그 존재 여부만 확인하고 직접 선택 확정하도록 단순화.
 - Main 초기화 완료 시 Battle external pause를 false로 명시해 정상 Run 시작 상태 보장.
+
+### Battle Runtime Startup Recovery
+- Stage Director/돌연변이 작업 이후 일부 실행에서 전투 시작 직후 시간, 지휘력 회복, 소환이 모두 정지하던 문제 대응.
+- Battle에 `ensure_runtime_active()` 추가.
+- Main 진입 직후 external pause / 돌연변이 선택 / 마왕 증강 선택 상태를 초기화하고 Battle process 및 Hero/몬스터 physics를 명시적으로 활성화.
+- 런타임 상태 확인을 위해 snapshot에 external_pause / demon_augment_selection_active를 추가하고 내부 디버그 문자열 제공.
+- 실제 전투 종료 상태에서는 복구 함수가 동작하지 않도록 보호.

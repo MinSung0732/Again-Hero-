@@ -1815,6 +1815,8 @@ func get_snapshot() -> Dictionary:
 		"demon_build_counts": demon_build_counts.duplicate(true),
 		"mutation_selection_active": mutation_selection_active,
 		"mutation_candidates": mutation_candidate_ids.duplicate(),
+		"external_pause": external_pause,
+		"demon_augment_selection_active": demon_augment_selection_active,
 		"stage_event_fired_ids": stage_director.get_fired_event_ids(),
 		"debug_balance_summary": get_debug_balance_summary(),
 		"permanent_research_summary": get_permanent_research_summary(),
@@ -1828,6 +1830,31 @@ func get_snapshot() -> Dictionary:
 		"next_stage_id": String(current_stage_data.get("next_stage_id", "")),
 		"battle_over": battle_over,
 	}
+
+func ensure_runtime_active() -> void:
+	if battle_over:
+		return
+
+	external_pause = false
+	demon_augment_selection_active = false
+	mutation_selection_active = false
+	pending_mutation_event.clear()
+	mutation_candidate_ids.clear()
+
+	set_process(true)
+	set_physics_process(true)
+	_set_combat_physics_enabled(true)
+
+func get_runtime_pause_debug() -> String:
+	return (
+		"battle_over=%s / external_pause=%s / demon_augment=%s / mutation=%s"
+		% [
+			str(battle_over),
+			str(external_pause),
+			str(demon_augment_selection_active),
+			str(mutation_selection_active),
+		]
+	)
 
 func set_external_pause(paused: bool) -> void:
 	external_pause = paused
