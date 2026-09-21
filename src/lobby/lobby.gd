@@ -710,13 +710,23 @@ func _team_monster_card_icon(monster_id: String) -> Texture2D:
 	if typeof(data) != TYPE_DICTIONARY:
 		return null
 
-	# Optional future field. When monster art is committed, add:
-	# "card_icon_path": "res://assets/art/monsters/<id>/<file>.png"
 	var icon_path := String(data.get("card_icon_path", ""))
 	if icon_path.is_empty():
 		return null
 
-	return _load_texture(icon_path)
+	var texture := _load_texture(icon_path)
+	if texture == null:
+		return null
+
+	var icon_region = data.get("card_icon_region")
+	if typeof(icon_region) == TYPE_RECT2:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = texture
+		atlas.filter_clip = true
+		atlas.region = icon_region
+		return atlas
+
+	return texture
 
 func _team_monster_name(monster_id: String) -> String:
 	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})

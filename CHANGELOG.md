@@ -1043,3 +1043,9 @@
 - 통합 PNG를 229×229 고정 셀로 AtlasTexture 분할해 idle 4 / move 6 / attack 6 / hit 3 / death 4 SpriteFrames를 런타임 생성.
 - Base64, 자동 셀 감지, 씬 정적 AtlasTexture는 사용하지 않음.
 - 시트 로딩 실패 시에만 기존 코드 드로잉 폭탄쥐 fallback을 유지하며 전투/로비 로직은 변경하지 않음.
+
+### Bomb Rat Team Card Icon
+- 폭탄쥐 팀 편성 카드에 통합 스프라이트시트의 idle 첫 프레임을 대표 아이콘으로 연결.
+- MonsterCatalog에 optional `card_icon_region` 데이터를 추가해 개별 PNG 없이 통합 시트 일부 영역을 카드 아이콘으로 사용할 수 있도록 확장.
+- 폭탄쥐는 `bombrat_spritesheet.png`의 첫 229×229 셀을 사용.
+- 기존 Slime / Spider / Orc 개별 아이콘 경로와 팀 편성 저장/전투 로직은 변경하지 않음.

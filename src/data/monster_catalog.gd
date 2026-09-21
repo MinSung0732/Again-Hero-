@@ -45,7 +45,8 @@ const MONSTERS := {
 		"default_unlocked": false,
 		"shards_required": 30,
 		"rarity": "rare",
-		"card_icon_path": "",
+		"card_icon_path": "res://assets/art/monsters/bombrat/bombrat_spritesheet.png",
+		"card_icon_region": Rect2(0, 0, 229, 229),
 		"scene": preload("res://src/monsters/BombRat.tscn"),
 	},
 }
