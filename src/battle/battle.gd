@@ -1246,18 +1246,12 @@ func _trigger_stage_director_event(event: Dictionary) -> void:
 		return
 
 	var monster_id := String(event.get("monster_id", ""))
-	var special_monster = spawn_special_monster(monster_id, event)
-	if not is_instance_valid(special_monster):
+	if not spawn_special_monster(monster_id, event):
 		push_warning(
 			"Stage event monster not found: %s" % monster_id
 		)
 		return
 
-	_apply_special_monster_modifiers(
-		special_monster,
-		monster_id,
-		event
-	)
 	_emit_stage_event_announcement(event, monster_id)
 
 func _open_mutation_choice(event: Dictionary) -> void:
@@ -1289,7 +1283,7 @@ func _open_mutation_choice(event: Dictionary) -> void:
 	)
 
 func spawn_selected_mutation(monster_id: String) -> void:
-	# 모달 정지 해제는 가장 먼저 처리한다.
+	# 모달에서 정지시킨 combat physics는 선택 즉시 가장 먼저 복구한다.
 	if not battle_over and not external_pause:
 		_set_combat_physics_enabled(true)
 
@@ -1300,13 +1294,19 @@ func spawn_selected_mutation(monster_id: String) -> void:
 		event = {
 			"type": "elite",
 			"name_prefix": "돌연변이",
-			"spawn_distance": 220.0,
+			"spawn_distance": 260.0,
 			"hp_multiplier": 2.2,
 			"damage_multiplier": 1.45,
 			"speed_multiplier": 1.10,
 			"exp_multiplier": 1.5,
 			"visual_scale": 1.15,
 		}
+	else:
+		# 테스트 시 실제 출현을 화면에서 바로 확인할 수 있게 가까이 배치한다.
+		event["spawn_distance"] = minf(
+			float(event.get("spawn_distance", 260.0)),
+			260.0
+		)
 
 	var event_type := String(event.get("type", "elite"))
 	var name_prefix := String(event.get("name_prefix", "돌연변이"))
@@ -1315,94 +1315,55 @@ func spawn_selected_mutation(monster_id: String) -> void:
 		MONSTER_CATALOG.get_name(monster_id),
 	]
 	event["name"] = mutation_name
-	event["spawn_distance"] = minf(
-		float(event.get("spawn_distance", 220.0)),
-		220.0
-	)
 
-	var monster := spawn_special_monster(monster_id, event)
-	if not is_instance_valid(monster):
+	var spawned := spawn_special_monster(monster_id, event)
+	if not spawned:
 		mutation_spawn_result.emit(
 			false,
-			"돌연변이 기본 생성 실패 · monster_id=%s" % monster_id
+			"돌연변이 소환 실패 · monster_id=%s" % monster_id
 		)
 		return
 
-	var monster_node := monster as Node2D
-	var position_text := "?"
-	if monster_node != null:
-		position_text = "(%.0f, %.0f)" % [
-			monster_node.position.x,
-			monster_node.position.y,
-		]
-
-	# 기본 개체가 실제 씬 트리에 들어간 뒤 다음 프레임에 강화값을 적용한다.
-	call_deferred(
-		"_finish_special_monster_setup",
-		monster,
-		monster_id,
-		event,
-		event_type,
-		mutation_name
-	)
-
-	mutation_spawn_result.emit(
-		true,
-		"돌연변이 기본 생성 · id=%s · instance=%d · pos=%s · alive=%d" % [
-			monster_id,
-			monster.get_instance_id(),
-			position_text,
-			monsters_alive,
-		]
-	)
-
-func _finish_special_monster_setup(
-	monster: Node,
-	monster_id: String,
-	event: Dictionary,
-	event_type: String,
-	mutation_name: String
-) -> void:
-	if not is_instance_valid(monster):
-		mutation_spawn_result.emit(
-			false,
-			"돌연변이 강화 전 개체가 사라졌습니다. monster_id=%s" % monster_id
-		)
-		return
-
-	_apply_special_monster_modifiers(
-		monster,
-		monster_id,
-		event
-	)
-	_emit_stats()
 	_emit_stage_event_announcement(event, monster_id)
 	mutation_selected.emit(event_type, mutation_name)
 	mutation_spawn_result.emit(
 		true,
-		"%s 강화 적용 완료" % mutation_name
+		"%s 소환 완료 · monster_id=%s" % [
+			mutation_name,
+			monster_id,
+		]
 	)
 
 func spawn_special_monster(
 	monster_id: String,
 	special_data: Dictionary
-):
+) -> bool:
 	if not is_instance_valid(hero):
-		return null
+		return false
 	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
-		return null
+		return false
 
 	var spawn_position := _get_stage_event_spawn_position(
-		float(special_data.get("spawn_distance", 220.0))
+		float(special_data.get("spawn_distance", 720.0))
 	)
 
-	# 여기서는 강화하지 않는다. 일반 몬스터와 동일한 생성만 수행한다.
-	return _spawn_monster(
+	# 특수 몬스터도 검증된 일반 소환 경로로 먼저 생성한다.
+	var monster = _spawn_monster(
 		monster_id,
 		spawn_position,
 		0.0,
 		false
 	)
+	if not is_instance_valid(monster):
+		return false
+
+	_apply_special_monster_modifiers(
+		monster,
+		monster_id,
+		special_data
+	)
+	_emit_stats()
+	return true
 
 func _apply_special_monster_modifiers(
 	monster: Node,

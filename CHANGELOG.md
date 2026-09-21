@@ -1486,3 +1486,8 @@
 - 기본 생성 직후 상태창에 monster_id / instance_id / spawn position / monsters_alive를 표시해 실제 생성 여부 확인 가능.
 - 돌연변이 스폰 거리를 Hero 기준 최대 220px로 제한해 화면 내 확인성을 높임.
 - Stage 고정 보스도 공통 특수 스폰 반환 인스턴스에 후처리 배율을 적용하도록 맞춤.
+
+### Revert Spawn-First Regression
+- `75fff29d`의 특수 스폰 생성/강화 분리 변경 이후 Battle 초기화가 깨져 전투 화면이 회색으로 남고 Run 시간/지휘력이 시작되지 않는 회귀가 발생.
+- `src/battle/battle.gd`, `src/main/main.gd`를 기본 전투가 정상 동작하고 엘리트 소환 문제만 남아 있던 `10c9ba70` 상태로 복구.
+- 이후 엘리트 수정에서는 공용 `_spawn_monster()` 시그니처/초기화 경로를 변경하지 않는 원칙 추가.
