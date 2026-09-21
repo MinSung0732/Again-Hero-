@@ -18,6 +18,16 @@ const PROFILES = {
 		"invulnerability_duration": 0.35,
 		"facing_switch_delay": 0.14,
 		"facing_min_horizontal_speed": 18.0,
+		"augment_pool_ids": [
+			"projectile_power",
+			"rapid_strikes",
+			"iron_body",
+			"pursuit",
+			"slow_resistance",
+			"long_reach",
+			"arcane_burst",
+			"battle_recovery",
+		],
 		"ai_settings": {
 			"observation_interval": 4.0,
 			"stack_inertia": 1.25,
@@ -41,6 +51,14 @@ const PROFILES = {
 		"invulnerability_duration": 0.35,
 		"facing_switch_delay": 0.10,
 		"facing_min_horizontal_speed": 22.0,
+		"augment_pool_ids": [
+			"projectile_power",
+			"rapid_strikes",
+			"pursuit",
+			"slow_resistance",
+			"long_reach",
+			"arcane_burst",
+		],
 		"ai_settings": {
 			"observation_interval": 2.8,
 			"stack_inertia": 0.95,

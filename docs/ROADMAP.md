@@ -160,7 +160,7 @@
 - [x] Stage 1 클리어 → Stage 2 해금
 - [x] 최초 클리어 보상 연결
 - [x] Stage별 Hero 기본 스탯 보정
-- [ ] Stage별 Hero AI 성향/증강 풀 분리
+- [x] Stage별 Hero AI 성향/증강 풀 분리
 - [x] 전체 Stage 선택 화면
 - [x] 과거 Stage 재도전 허용
 - [ ] 메타 성장 후 초기 Stage 압도 체감 검증

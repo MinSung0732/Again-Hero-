@@ -662,3 +662,11 @@
 - 방향 전환 지연/최소 속도는 `hero_profiles.gd`에서 Hero별 조절 가능.
 - Stage 1 64×64 무패딩 스프라이트시트의 AtlasTexture에 `filter_clip`을 활성화하고 nearest 필터를 명시해 인접 셀 픽셀이 공격 모션 가장자리에 비치는 현상을 방지.
 
+### Stage-specific Hero Augment Pools
+- Hero profile에 `augment_pool_ids`를 추가해 Stage/Hero마다 레벨업 후보로 등장 가능한 증강 풀을 데이터로 분리.
+- `HeroAugmentCatalog.roll_candidates()`가 허용 풀 + 기존 최대 중첩 조건을 함께 적용하도록 확장.
+- Stage 1 견습 마도사는 현재 범용 증강 8종 전체를 사용해 다양한 빌드 유도 실험을 유지.
+- Stage 2 기동 사냥꾼은 캐릭터 성격에 맞춰 탄환 강화 / 연사 강화 / 민첩한 발놀림 / 둔화 적응 / 사거리 확장 / 폭발 탄환 6종을 사용.
+- Stage 2에서는 강인한 육체/전투 회복을 후보 풀에서 제외해 Stage 1보다 기동·공격 중심의 빌드 정체성을 강화.
+- 새 Hero를 추가할 때 AI/레벨업 코드를 수정하지 않고 profile의 증강 ID 배열만으로 후보 풀을 구성할 수 있음.
+

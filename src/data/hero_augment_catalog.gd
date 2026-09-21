@@ -202,7 +202,8 @@ const AUGMENTS = [
 
 static func roll_candidates(
 	count: int = 3,
-	build_counts: Dictionary = {}
+	build_counts: Dictionary = {},
+	allowed_ids: Array = []
 ) -> Array:
 	var pool: Array = []
 
@@ -211,6 +212,9 @@ static func roll_candidates(
 		var augment_id := String(augment.get("id", ""))
 		var max_stack := int(augment.get("max_stack", 0))
 		var current_stack := int(build_counts.get(augment_id, 0))
+
+		if not allowed_ids.is_empty() and augment_id not in allowed_ids:
+			continue
 
 		if max_stack > 0 and current_stack >= max_stack:
 			continue

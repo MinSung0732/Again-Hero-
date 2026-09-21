@@ -43,6 +43,7 @@ var hero_id: String = "ranged_rookie"
 var hero_display_name: String = "견습 마도사"
 var hero_archetype: String = "ranged_kiter"
 var sprite_sheet_path: String = ""
+var augment_pool_ids: Array[String] = []
 var ai_settings: Dictionary = {
 	"observation_interval": 4.0,
 	"stack_inertia": 1.0,
@@ -93,6 +94,12 @@ func configure_profile(profile: Dictionary) -> void:
 	hero_display_name = String(profile.get("display_name", hero_display_name))
 	hero_archetype = String(profile.get("archetype", hero_archetype))
 	sprite_sheet_path = String(profile.get("sprite_sheet_path", ""))
+	augment_pool_ids.clear()
+	for raw_augment_id in profile.get("augment_pool_ids", []):
+		var augment_id := String(raw_augment_id)
+		if not augment_id.is_empty() and augment_id not in augment_pool_ids:
+			augment_pool_ids.append(augment_id)
+
 	var profile_ai_settings: Dictionary = profile.get("ai_settings", {})
 	if not profile_ai_settings.is_empty():
 		ai_settings = profile_ai_settings.duplicate(true)
@@ -696,7 +703,11 @@ func _level_up() -> void:
 	exp_to_next_level = _required_exp_for_level(level)
 	level_flash_timer = 0.45
 
-	var candidates: Array = AUGMENT_CATALOG.roll_candidates(3, build_counts)
+	var candidates: Array = AUGMENT_CATALOG.roll_candidates(
+		3,
+		build_counts,
+		augment_pool_ids
+	)
 	if candidates.is_empty():
 		health_changed.emit(current_hp, max_hp)
 		leveled_up.emit(level)
