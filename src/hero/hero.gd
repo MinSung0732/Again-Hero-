@@ -10,6 +10,9 @@ signal ultimate_used(ultimate_id: String, ultimate_name: String)
 const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
 const PROJECTILE_SCENE := preload("res://src/hero/HeroProjectile.tscn")
+const ULTIMATE_PIERCING_PROJECTILE_SCENE := preload(
+	"res://src/hero/UltimatePiercingProjectile.tscn"
+)
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const STATUS_EFFECT_CATALOG := preload("res://src/data/status_effect_catalog.gd")
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
@@ -566,6 +569,8 @@ func _use_ultimate() -> void:
 	match ultimate_type:
 		"area_burst":
 			_use_area_burst_ultimate()
+		"piercing_projectile":
+			_use_piercing_projectile_ultimate()
 		_:
 			push_warning(
 				"Unknown Hero ultimate type: %s" % ultimate_type
@@ -573,6 +578,48 @@ func _use_ultimate() -> void:
 
 	ultimate_used.emit(ultimate_id, ultimate_name)
 	queue_redraw()
+
+func _use_piercing_projectile_ultimate() -> void:
+	var shot_direction := Vector2.RIGHT
+	var current_target := _find_nearest_monster()
+
+	if is_instance_valid(current_target):
+		shot_direction = global_position.direction_to(
+			current_target.global_position
+		)
+	elif hero_sprite.visible and hero_sprite.flip_h:
+		shot_direction = Vector2.LEFT
+
+	if shot_direction.length_squared() <= 0.0:
+		shot_direction = Vector2.RIGHT
+
+	var damage := maxi(
+		int(ultimate_config.get("damage", attack_damage * 3)),
+		1
+	)
+	var speed := maxf(
+		float(ultimate_config.get("projectile_speed", 950.0)),
+		1.0
+	)
+	var max_range := maxf(
+		float(ultimate_config.get("projectile_range", 900.0)),
+		1.0
+	)
+
+	attack_pose_timer = 0.45
+	_face_attack_direction(shot_direction.x)
+	_restart_stage1_animation("attack")
+
+	var projectile := ULTIMATE_PIERCING_PROJECTILE_SCENE.instantiate() as Area2D
+	get_parent().add_child(projectile)
+	projectile.global_position = global_position + shot_direction * 54.0
+	projectile.call(
+		"setup",
+		shot_direction,
+		damage,
+		speed,
+		max_range
+	)
 
 func _use_area_burst_ultimate() -> void:
 	var radius := maxf(
