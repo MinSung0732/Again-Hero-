@@ -11,6 +11,7 @@ const TAG_LABELS := {
 	"kite": "카이팅",
 	"range": "사거리",
 	"recovery": "회복",
+	"area": "광역",
 }
 
 const AUGMENTS = [
@@ -20,6 +21,9 @@ const AUGMENTS = [
 		"description": "투사체 공격력 +8",
 		"base_score": 8.0,
 		"tags": ["damage", "projectile"],
+		"effects": [
+			{"op": "add_stat", "target": "attack_damage", "value": 8},
+		],
 		"ai_rules": [
 			{"source": "current_type_ratio", "key": "orc", "weight": 4.0},
 			{"source": "current_role_ratio", "key": "tank", "weight": 2.0},
@@ -39,6 +43,9 @@ const AUGMENTS = [
 		"description": "공격속도 +12%",
 		"base_score": 7.5,
 		"tags": ["attack_speed", "projectile"],
+		"effects": [
+			{"op": "multiply_stat", "target": "attack_cooldown", "value": 0.88, "min": 0.18},
+		],
 		"ai_rules": [
 			{"source": "nearby_linear", "weight": 0.55, "cap": 2.8},
 			{"source": "current_type_ratio", "key": "slime", "weight": 3.5},
@@ -59,6 +66,10 @@ const AUGMENTS = [
 		"description": "최대 HP +45, HP +45",
 		"base_score": 7.0,
 		"tags": ["durability", "survival"],
+		"effects": [
+			{"op": "add_stat", "target": "max_hp", "value": 45},
+			{"op": "heal", "value": 45},
+		],
 		"ai_rules": [
 			{"source": "hp_missing", "weight": 5.0},
 			{"source": "current_type_ratio", "key": "orc", "weight": 2.5},
@@ -77,6 +88,9 @@ const AUGMENTS = [
 		"description": "이동속도 +25",
 		"base_score": 6.0,
 		"tags": ["mobility", "kite"],
+		"effects": [
+			{"op": "add_stat", "target": "move_speed", "value": 25.0},
+		],
 		"ai_rules": [
 			{"source": "distance", "divisor": 220.0, "cap": 2.3},
 			{"source": "current_type_ratio", "key": "spider", "weight": 3.5},
@@ -95,6 +109,9 @@ const AUGMENTS = [
 		"description": "공격/투사체 최대 사거리 +35",
 		"base_score": 5.5,
 		"tags": ["range", "kite"],
+		"effects": [
+			{"op": "add_stat", "target": "attack_range", "value": 35.0},
+		],
 		"ai_rules": [
 			{"source": "distance", "divisor": 180.0, "cap": 2.7},
 			{"source": "current_type_ratio", "key": "spider", "weight": 1.8},
@@ -108,11 +125,38 @@ const AUGMENTS = [
 		],
 	},
 	{
+		"id": "arcane_burst",
+		"name": "폭발 탄환",
+		"description": "투사체 적중 시 주변 적에게 광역 피해",
+		"base_score": 5.8,
+		"tags": ["area", "projectile"],
+		"effects": [
+			{"op": "add_stat", "target": "projectile_splash_radius", "value": 70.0, "max": 180.0},
+			{"op": "add_stat", "target": "projectile_splash_damage_ratio", "value": 0.28, "max": 0.70},
+		],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.70, "cap": 3.5},
+			{"source": "current_type_ratio", "key": "slime", "weight": 4.5},
+			{"source": "current_role_ratio", "key": "swarm", "weight": 3.0},
+			{"source": "recent_type_ratio", "key": "slime", "weight": 4.0},
+			{"source": "recent_role_ratio", "key": "swarm", "weight": 2.5},
+			{"source": "recent_events_linear", "weight": 0.14, "cap": 1.4},
+			{"source": "total_count_min", "value": 5, "bonus": 1.2},
+		],
+		"synergy_rules": [
+			{"source": "build_tag_stacks", "key": "attack_speed", "weight": 0.55, "cap": 1.65},
+			{"source": "build_tag_stacks", "key": "damage", "weight": 0.35, "cap": 1.05},
+		],
+	},
+	{
 		"id": "battle_recovery",
 		"name": "전투 회복",
 		"description": "즉시 HP 90 회복",
 		"base_score": 5.0,
 		"tags": ["recovery", "survival"],
+		"effects": [
+			{"op": "heal", "value": 90},
+		],
 		"ai_rules": [
 			{"source": "hp_missing", "weight": 8.0},
 			{"source": "current_role_ratio", "key": "tank", "weight": 0.8},
