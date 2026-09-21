@@ -144,6 +144,66 @@ offset_bottom = 244.0
 max_value = 50.0
 show_percentage = false
 
+[node name="DemonUltimatePanel" type="ColorRect" parent="HUD"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -500.0
+offset_bottom = -360.0
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0.075, 0.055, 0.095, 0.96)
+
+[node name="UltimateLabel" type="Label" parent="HUD/DemonUltimatePanel"]
+offset_left = 28.0
+offset_top = 8.0
+offset_right = 250.0
+offset_bottom = 40.0
+theme_override_font_sizes/font_size = 20
+text = "마왕 필살기  0 / 100"
+vertical_alignment = 1
+
+[node name="UltimateBar" type="ProgressBar" parent="HUD/DemonUltimatePanel"]
+offset_left = 250.0
+offset_top = 12.0
+offset_right = 1050.0
+offset_bottom = 36.0
+max_value = 100.0
+show_percentage = false
+
+[node name="UltimateButtons" type="HBoxContainer" parent="HUD/DemonUltimatePanel"]
+offset_left = 28.0
+offset_top = 45.0
+offset_right = 1052.0
+offset_bottom = 132.0
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Ultimate1" type="Button" parent="HUD/DemonUltimatePanel/UltimateButtons"]
+custom_minimum_size = Vector2(0, 82)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 19
+text = "1 원형 포위\n충전 중"
+disabled = true
+
+[node name="Ultimate2" type="Button" parent="HUD/DemonUltimatePanel/UltimateButtons"]
+custom_minimum_size = Vector2(0, 82)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 19
+text = "2 일직선 공세\n준비중"
+disabled = true
+
+[node name="Ultimate3" type="Button" parent="HUD/DemonUltimatePanel/UltimateButtons"]
+custom_minimum_size = Vector2(0, 82)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 19
+text = "3 사각 포위\n준비중"
+disabled = true
+
 [node name="BottomBar" type="ColorRect" parent="HUD"]
 anchors_preset = 12
 anchor_top = 1.0

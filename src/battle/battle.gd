@@ -9,6 +9,8 @@ signal summon_result(monster_type: String, success: bool, message: String)
 signal demon_progression_changed(level: int, current_exp: float, exp_to_next_level: float)
 signal demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: int)
 signal demon_augment_applied(augment_name: String, build_summary: String)
+signal demon_ultimate_changed(current_value: float, max_value: float, ready: bool)
+signal demon_ultimate_used(skill_id: String, skill_name: String, message: String)
 signal run_time_changed(elapsed_seconds: float, remaining_seconds: float)
 signal battle_finished(message: String, player_won: bool)
 
@@ -19,6 +21,7 @@ const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const HERO_AI_PROFILES := preload("res://src/data/hero_ai_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
+const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const RUN_METRICS := preload("res://src/systems/run_metrics.gd")
@@ -65,6 +68,9 @@ var demon_level: int = 1
 var demon_exp: float = 0.0
 var demon_exp_to_next_level: float = DEMON_BASE_EXP_TO_NEXT
 var demon_pending_augments: int = 0
+var demon_ultimate_charge: float = 0.0
+var demon_ultimate_emit_timer: float = 0.0
+var last_hero_hp_for_ultimate: int = 0
 
 var summon_cost_multiplier: float = 1.0
 var demon_exp_gain_multiplier: float = 1.0
@@ -106,6 +112,18 @@ func _process(delta: float) -> void:
 		return
 
 	run_metrics.tick(delta)
+
+	if demon_ultimate_charge < DEMON_ULTIMATES.CHARGE_MAX:
+		demon_ultimate_charge = minf(
+			demon_ultimate_charge
+			+ DEMON_ULTIMATES.PASSIVE_CHARGE_PER_SECOND * delta,
+			DEMON_ULTIMATES.CHARGE_MAX
+		)
+		demon_ultimate_emit_timer -= delta
+		if demon_ultimate_emit_timer <= 0.0:
+			demon_ultimate_emit_timer = 0.10
+			_emit_demon_ultimate_changed()
+
 	run_time_emit_timer -= delta
 	if run_time_emit_timer <= 0.0:
 		run_time_emit_timer = 0.25
@@ -141,6 +159,9 @@ func _start_battle() -> void:
 	demon_exp = 0.0
 	demon_exp_to_next_level = _required_demon_exp_for_level(demon_level)
 	demon_pending_augments = 0
+	demon_ultimate_charge = 0.0
+	demon_ultimate_emit_timer = 0.0
+	last_hero_hp_for_ultimate = 0
 
 	summon_cost_multiplier = 1.0
 	demon_exp_gain_multiplier = 1.0
@@ -200,6 +221,7 @@ func _start_battle() -> void:
 
 	add_child(hero)
 	hero.position = current_map_size * 0.5
+	last_hero_hp_for_ultimate = int(hero.get("current_hp"))
 
 	run_metrics.reset(
 		run_time_limit_seconds,
@@ -216,6 +238,7 @@ func _start_battle() -> void:
 	_emit_progression()
 	command_changed.emit(command_power, max_command)
 	demon_progression_changed.emit(demon_level, demon_exp, demon_exp_to_next_level)
+	_emit_demon_ultimate_changed()
 	run_time_changed.emit(
 		run_metrics.elapsed_seconds,
 		run_metrics.get_remaining_seconds()
@@ -369,6 +392,9 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 	)
 
 	_gain_demon_exp(gained_exp)
+	_add_demon_ultimate_charge(
+		cost * DEMON_ULTIMATES.SUMMON_COST_CHARGE_MULTIPLIER
+	)
 	return true
 
 func get_manual_spawn_error(
@@ -645,6 +671,15 @@ func _get_monster_name(monster_type: String) -> String:
 
 func _on_hero_health_changed(current_hp: int, max_hp_value: int) -> void:
 	run_metrics.record_hero_hp(current_hp, max_hp_value)
+
+	if last_hero_hp_for_ultimate > current_hp:
+		var dealt_damage := last_hero_hp_for_ultimate - current_hp
+		_add_demon_ultimate_charge(
+			float(dealt_damage)
+			* DEMON_ULTIMATES.HERO_DAMAGE_CHARGE_MULTIPLIER
+		)
+	last_hero_hp_for_ultimate = current_hp
+
 	stats_changed.emit(current_hp, max_hp_value, monsters_alive)
 
 func _on_hero_progression_changed(level: int, current_exp: int, exp_to_next_level: int) -> void:
@@ -717,6 +752,107 @@ func _spawn_exp_orb(drop_position: Vector2, exp_value: int) -> void:
 	add_child(orb)
 	orb.global_position = drop_position
 	orb.call("setup", exp_value)
+
+func _emit_demon_ultimate_changed() -> void:
+	var charge_max := maxf(DEMON_ULTIMATES.CHARGE_MAX, 1.0)
+	demon_ultimate_changed.emit(
+		demon_ultimate_charge,
+		charge_max,
+		demon_ultimate_charge + 0.001 >= charge_max
+	)
+
+func _add_demon_ultimate_charge(amount: float) -> void:
+	if amount <= 0.0 or battle_over:
+		return
+
+	demon_ultimate_charge = minf(
+		demon_ultimate_charge + amount,
+		DEMON_ULTIMATES.CHARGE_MAX
+	)
+	_emit_demon_ultimate_changed()
+
+func try_use_demon_ultimate(skill_id: String) -> bool:
+	if battle_over or external_pause or demon_augment_selection_active:
+		return false
+	if demon_ultimate_charge + 0.001 < DEMON_ULTIMATES.CHARGE_MAX:
+		return false
+
+	var skill := DEMON_ULTIMATES.get_skill(skill_id)
+	if skill.is_empty() or not bool(skill.get("implemented", false)):
+		return false
+
+	var used := false
+	match skill_id:
+		"encirclement":
+			used = _use_demon_encirclement(skill)
+
+	if not used:
+		return false
+
+	demon_ultimate_charge = 0.0
+	_emit_demon_ultimate_changed()
+
+	var skill_name := String(skill.get("name", "마왕 필살기"))
+	demon_ultimate_used.emit(
+		skill_id,
+		skill_name,
+		"%s 발동! 용사 외곽에 군단을 전개했습니다." % skill_name
+	)
+	return true
+
+func _use_demon_encirclement(skill: Dictionary) -> bool:
+	if not is_instance_valid(hero):
+		return false
+
+	var pool: Array[String] = []
+	for raw_id in allowed_monster_ids:
+		var monster_id := String(raw_id)
+		if MONSTER_CATALOG.MONSTERS.has(monster_id):
+			pool.append(monster_id)
+
+	if pool.is_empty():
+		for raw_id in MONSTER_CATALOG.ORDER:
+			var fallback_id := String(raw_id)
+			if MONSTER_CATALOG.MONSTERS.has(fallback_id):
+				pool.append(fallback_id)
+			if pool.size() >= 3:
+				break
+
+	if pool.is_empty():
+		return false
+
+	var spawn_count := maxi(int(skill.get("spawn_count", 12)), 1)
+	var spawn_radius := maxf(float(skill.get("spawn_radius", 700.0)), 1.0)
+	var angle_offset := randf_range(0.0, TAU)
+	var hero_position := hero.position
+
+	for index in range(spawn_count):
+		var angle := angle_offset + TAU * float(index) / float(spawn_count)
+		var candidate := hero_position + Vector2.from_angle(angle) * spawn_radius
+		var spawn_position := Vector2(
+			clampf(
+				candidate.x,
+				MANUAL_SPAWN_MARGIN,
+				current_map_size.x - MANUAL_SPAWN_MARGIN
+			),
+			clampf(
+				candidate.y,
+				MANUAL_SPAWN_MARGIN,
+				current_map_size.y - MANUAL_SPAWN_MARGIN
+			)
+		)
+		var monster_id := pool[index % pool.size()]
+		_spawn_monster(monster_id, spawn_position, 0.0, false)
+
+		if hero.has_method("record_offensive_event"):
+			hero.call(
+				"record_offensive_event",
+				monster_id,
+				MONSTER_CATALOG.get_role(monster_id)
+			)
+
+	_emit_stats()
+	return true
 
 func _gain_demon_exp(amount: float) -> void:
 	if amount <= 0.0 or battle_over:
@@ -1114,6 +1250,11 @@ func get_snapshot() -> Dictionary:
 		"demon_level": demon_level,
 		"demon_exp": demon_exp,
 		"demon_exp_to_next": demon_exp_to_next_level,
+		"demon_ultimate_charge": demon_ultimate_charge,
+		"demon_ultimate_max": DEMON_ULTIMATES.CHARGE_MAX,
+		"demon_ultimate_ready": (
+			demon_ultimate_charge + 0.001 >= DEMON_ULTIMATES.CHARGE_MAX
+		),
 		"demon_rerolls_left": demon_rerolls_left,
 		"demon_reroll_max": demon_reroll_max,
 		"demon_build_summary": get_demon_build_summary(),

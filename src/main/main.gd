@@ -3,6 +3,7 @@ extends Control
 const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
+const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
 @onready var battle_viewport: SubViewport = $BattleViewportContainer/BattleViewport
@@ -25,6 +26,11 @@ const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 @onready var demon_exp_bar: ProgressBar = $HUD/BottomBar/DemonExpBar
 @onready var command_label: Label = $HUD/BottomBar/CommandLabel
 @onready var command_bar: ProgressBar = $HUD/BottomBar/CommandBar
+@onready var demon_ultimate_label: Label = $HUD/DemonUltimatePanel/UltimateLabel
+@onready var demon_ultimate_bar: ProgressBar = $HUD/DemonUltimatePanel/UltimateBar
+@onready var demon_ultimate_1: Button = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate1
+@onready var demon_ultimate_2: Button = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate2
+@onready var demon_ultimate_3: Button = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate3
 @onready var slime_button: Button = $HUD/BottomBar/SummonButtons/SlimeButton
 @onready var spider_button: Button = $HUD/BottomBar/SummonButtons/SpiderButton
 @onready var orc_button: Button = $HUD/BottomBar/SummonButtons/OrcButton
@@ -72,6 +78,8 @@ func _ready() -> void:
 	battle.summon_result.connect(_on_summon_result)
 	battle.demon_augment_ready.connect(_on_demon_augment_ready)
 	battle.demon_augment_applied.connect(_on_demon_augment_applied)
+	battle.demon_ultimate_changed.connect(_on_demon_ultimate_changed)
+	battle.demon_ultimate_used.connect(_on_demon_ultimate_used)
 	battle.run_time_changed.connect(_on_run_time_changed)
 	battle.battle_finished.connect(_on_battle_finished)
 
@@ -93,6 +101,15 @@ func _ready() -> void:
 	demon_choice_1.pressed.connect(_on_demon_choice_pressed.bind(1))
 	demon_choice_2.pressed.connect(_on_demon_choice_pressed.bind(2))
 	demon_reroll_button.pressed.connect(_on_demon_reroll_pressed)
+	demon_ultimate_1.pressed.connect(
+		_on_demon_ultimate_pressed.bind("encirclement")
+	)
+	demon_ultimate_2.pressed.connect(
+		_on_demon_ultimate_pressed.bind("line_assault")
+	)
+	demon_ultimate_3.pressed.connect(
+		_on_demon_ultimate_pressed.bind("square_siege")
+	)
 	next_stage_button.pressed.connect(_on_next_stage_pressed)
 	stage_select_result_button.pressed.connect(_on_lobby_pressed)
 	restart_button.pressed.connect(_on_restart_pressed)
@@ -118,6 +135,11 @@ func _ready() -> void:
 		int(snapshot.get("demon_level", 1)),
 		float(snapshot.get("demon_exp", 0.0)),
 		float(snapshot.get("demon_exp_to_next", 30.0))
+	)
+	_on_demon_ultimate_changed(
+		float(snapshot.get("demon_ultimate_charge", 0.0)),
+		float(snapshot.get("demon_ultimate_max", 100.0)),
+		bool(snapshot.get("demon_ultimate_ready", false))
 	)
 	_on_run_time_changed(
 		float(snapshot.get("run_elapsed_seconds", 0.0)),
@@ -398,6 +420,51 @@ func _on_summon_result(_monster_type: String, success: bool, message: String) ->
 			_get_monster_name(selected_monster_type),
 		]
 
+func _on_demon_ultimate_changed(
+	current_value: float,
+	max_value: float,
+	ready: bool
+) -> void:
+	demon_ultimate_label.text = "마왕 필살기  %d / %d" % [
+		int(round(current_value)),
+		int(round(max_value)),
+	]
+	demon_ultimate_bar.max_value = maxf(max_value, 1.0)
+	demon_ultimate_bar.value = current_value
+
+	demon_ultimate_1.disabled = not ready
+	demon_ultimate_2.disabled = true
+	demon_ultimate_3.disabled = true
+
+	demon_ultimate_1.text = (
+		"1 원형 포위\n발동 가능"
+		if ready
+		else "1 원형 포위\n충전 중"
+	)
+	demon_ultimate_2.text = "2 일직선 공세\n준비중"
+	demon_ultimate_3.text = "3 사각 포위\n준비중"
+
+func _on_demon_ultimate_pressed(skill_id: String) -> void:
+	if battle.try_use_demon_ultimate(skill_id):
+		return
+
+	var skill := DEMON_ULTIMATES.get_skill(skill_id)
+	if skill.is_empty():
+		return
+	if not bool(skill.get("implemented", false)):
+		status_label.text = "%s은(는) 다음 단계에서 구현합니다." % String(
+			skill.get("name", "필살기")
+		)
+	else:
+		status_label.text = "마왕 필살기 게이지가 아직 준비되지 않았습니다."
+
+func _on_demon_ultimate_used(
+	_skill_id: String,
+	skill_name: String,
+	message: String
+) -> void:
+	status_label.text = "%s\n게이지를 모두 소모했습니다." % message
+
 func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: int) -> void:
 	current_demon_candidates = candidates.duplicate(true)
 	demon_augment_panel.show()
@@ -479,6 +546,9 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	slime_button.disabled = true
 	spider_button.disabled = true
 	orc_button.disabled = true
+	demon_ultimate_1.disabled = true
+	demon_ultimate_2.disabled = true
+	demon_ultimate_3.disabled = true
 	placement_toggle.disabled = true
 
 	if player_won:
