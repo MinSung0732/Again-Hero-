@@ -949,3 +949,13 @@
 - 팀 편성 ItemList에 nearest texture filter를 적용해 픽셀아트 확대 시 블러를 방지.
 - 전투 애니메이션 자체는 아직 변경하지 않음.
 
+### Monster Battle Pixel Animations v1
+- Slime / Spider / Orc 전투 비주얼을 임시 draw 도형에서 실제 사용자 제공 PNG 프레임 기반 AnimatedSprite2D로 전환.
+- 공통 `monster_visual.gd`가 idle / move / attack / hit / death 프레임을 런타임 SpriteFrames로 구성하고 캐시.
+- 몬스터 행동 상태에 따라 이동/공격/피격/사망 애니메이션 연결.
+- Spider는 hit 전용 프레임이 없어 짧은 피격 tint 사용.
+- death 판정/보상 신호는 즉시 유지하고 visual queue_free만 death 애니메이션 종료까지 지연.
+- 프레임 원본 크기 차이는 몬스터별 target height로 정규화.
+- PNG 로딩 실패 시 기존 draw 비주얼 fallback 유지.
+- Battle/Main의 소환·편성·시간·메뉴 로직은 변경하지 않음.
+

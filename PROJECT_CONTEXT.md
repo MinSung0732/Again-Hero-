@@ -891,3 +891,23 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 각 manifest의 animation frame 목록은 추후 실제 전투 idle/move/attack/hit/death 애니메이션 연결 때 사용 예정.
 - 편성 저장 / 해금 / 전투 소환 / Battle guard 로직은 변경하지 않음.
 
+### 몬스터 실제 전투 도트 애니메이션 v1
+- 사용자가 제공한 개별 PNG 프레임을 전투 Slime / Spider / Orc에 연결.
+- 공통 `MonsterVisual` AnimatedSprite2D 컴포넌트가 `frames/<animation>_NN.png` 규칙으로 프레임을 읽어 SpriteFrames를 런타임 구성.
+- 프레임 리소스는 static cache로 공유해 몬스터 인스턴스마다 PNG 전체를 다시 구성하지 않도록 함.
+- ResourceLoader 우선 + raw PNG Image fallback을 사용해 Android Editor import/cache 지연에도 비주얼 실패가 전투 스크립트 전체를 막지 않도록 함.
+- 상태 연결:
+  - 이동 중 → move loop
+  - 정지/공격 대기 → idle loop
+  - 공격 발생 → attack one-shot
+  - 피격 → hit one-shot
+  - 사망 → death one-shot 후 노드 제거
+- Spider 에셋에는 hit 프레임이 없으므로 짧은 색상 플래시로 피격 피드백을 대체.
+- 사망 신호는 기존처럼 HP 0 시 즉시 emit하여 EXP/사망 카운트/전투 판정 타이밍을 유지하고, 시각 노드 queue_free만 death 애니메이션 종료까지 지연.
+- 원본 프레임 크기 차이는 target height 기준 자동 uniform scale로 보정:
+  - Slime 80px
+  - Spider 88px
+  - Orc 104px
+- 이미지 로딩 실패 시 기존 코드 드로잉 플레이스홀더를 fallback으로 유지.
+- Battle 소환/편성/타이머/메뉴 로직은 변경하지 않음.
+

@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/monsters/spider.gd" id="1_spider"]
+[ext_resource type="Script" path="res://src/monsters/monster_visual.gd" id="2_visual"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_spider"]
 radius = 25.0
@@ -10,6 +11,22 @@ z_index = 2
 collision_layer = 2
 collision_mask = 1
 script = ExtResource("1_spider")
+
+[node name="Visual" type="AnimatedSprite2D" parent="."]
+z_index = -1
+texture_filter = 1
+script = ExtResource("2_visual")
+asset_dir = "res://assets/art/monsters/spider/frames"
+target_height = 88.0
+idle_count = 4
+move_count = 6
+attack_count = 7
+hit_count = 0
+death_count = 4
+idle_fps = 6.0
+move_fps = 10.0
+attack_fps = 14.0
+death_fps = 10.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_spider")
