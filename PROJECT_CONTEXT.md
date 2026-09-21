@@ -589,3 +589,20 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 시너지 보너스는 기존 전황 점수, 최근 공세 점수, 빌드 관성, 새 갈래 전환 저항과 함께 합산된다.
 - 선택 이유 UI에도 가장 큰 시너지 근거와 보너스 점수를 표시한다.
 - 새 증강을 추가할 때 AI 코드를 수정하지 않고 tags/synergy_rules 데이터만 추가하는 방향을 유지한다.
+
+
+### Hero 광역 대응 / 미끼 카운터 기반 v1
+- Hero 증강에 **폭발 탄환** 추가.
+- 투사체 적중 시 직접 대상은 기존 전체 피해를 받고, 주변 몬스터는 현재 splash 비율만큼 광역 피해를 받는다.
+- 폭발 탄환은 반복 선택 시:
+  - projectile_splash_radius +70 / stack, 최대 180
+  - projectile_splash_damage_ratio +0.28 / stack, 최대 0.70
+- AI는 현재/최근 Slime·swarm 비중, 근처 적 수, 최근 소환 횟수가 높을수록 폭발 탄환을 선호한다.
+- Orc/tank 비중은 기존 projectile_power(탄환 강화) 쪽 Utility를 높이므로 물량 미끼 후 고체력 단일 압박으로 전환하는 카운터 실험이 가능해졌다.
+- 폭발 탄환 투자는 단일 대상 직접 피해를 올리지 않기 때문에, Slime을 미끼로 광역 빌드를 유도한 뒤 Orc 중심으로 전환하면 투자 기회비용이 발생한다.
+- Hero 증강 효과 적용도 `hero.gd`의 증강 ID별 match에서 제거하고 `hero_augment_catalog.gd > effects` 데이터 기반 공통 적용기로 전환.
+- 현재 공통 effect op:
+  - add_stat
+  - multiply_stat
+  - heal
+- 새 증강은 가능한 한 `effects / ai_rules / tags / synergy_rules` 데이터만 추가해 확장한다.
