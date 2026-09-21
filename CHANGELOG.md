@@ -1523,3 +1523,10 @@
   - D1.7 MonsterCatalog 표시명 조회 완료
   - D1.8 mutation_name 문자열 조합 완료
 - 동작 로직은 변경하지 않고 진단 체크포인트만 추가.
+
+### Monster Catalog Name Collision Fix
+- MUT-DIAG에서 D1.6까지만 도달하고 D1.7의 `MONSTER_CATALOG.get_name(monster_id)` 호출 구간에서 중단되는 것이 확인됨.
+- Battle 내부에서 `MONSTER_CATALOG.get_name()` 호출을 제거.
+- `_get_catalog_monster_display_name()` 헬퍼가 `MONSTER_CATALOG.MONSTERS[monster_id]["name"]`을 직접 읽도록 변경.
+- 돌연변이 이름 생성, 특수 이벤트 메타 이름, Stage 이벤트 알림, 디버그 요약도 같은 안전 헬퍼 사용.
+- 엘리트 스폰/physics/일반 소환 로직 자체는 변경하지 않음.

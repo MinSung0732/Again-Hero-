@@ -772,8 +772,14 @@ func _refresh_alive_monsters_for_demon_level() -> void:
 
 		_apply_demon_level_scaling_to_monster(node, true)
 
+func _get_catalog_monster_display_name(monster_id: String) -> String:
+	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+	if typeof(data) != TYPE_DICTIONARY:
+		return monster_id
+	return String(data.get("name", monster_id))
+
 func _get_monster_name(monster_type: String) -> String:
-	return MONSTER_CATALOG.get_name(monster_type)
+	return _get_catalog_monster_display_name(monster_type)
 
 func _on_hero_health_changed(current_hp: int, max_hp_value: int) -> void:
 	run_metrics.record_hero_hp(current_hp, max_hp_value)
@@ -1362,7 +1368,7 @@ func spawn_selected_mutation(monster_id: String) -> void:
 		"name_prefix=%s" % name_prefix
 	)
 
-	var catalog_name := MONSTER_CATALOG.get_name(monster_id)
+	var catalog_name := _get_catalog_monster_display_name(monster_id)
 	_mutation_spawn_diag(
 		"D1.7",
 		"catalog_name=%s" % catalog_name
@@ -1578,7 +1584,7 @@ func _apply_special_monster_modifiers(
 	var special_name := String(
 		special_data.get(
 			"name",
-			MONSTER_CATALOG.get_name(monster_id)
+			_get_catalog_monster_display_name(monster_id)
 		)
 	)
 	monster.set_meta("stage_event_type", special_type)
@@ -1593,7 +1599,7 @@ func _emit_stage_event_announcement(
 ) -> void:
 	var event_type := String(event.get("type", "elite"))
 	var event_name := String(
-		event.get("name", MONSTER_CATALOG.get_name(monster_id))
+		event.get("name", _get_catalog_monster_display_name(monster_id))
 	)
 	var message := ""
 	match event_type:
@@ -1867,7 +1873,7 @@ func get_debug_balance_summary() -> String:
 			continue
 
 		samples[monster_type] = "%s HP %d/%d · A%d · S%.1f" % [
-			MONSTER_CATALOG.get_name(monster_type),
+			_get_catalog_monster_display_name(monster_type),
 			int(node.get("current_hp")),
 			int(node.get("max_hp")),
 			int(node.get("attack_damage")),
