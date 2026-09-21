@@ -1441,3 +1441,10 @@
 - 돌연변이 모달은 기존처럼 Hero/몬스터 physics만 정지하고 Battle 핵심 시간/지휘력 루프와 분리.
 - 선택 클릭 시 성공/실패와 무관하게 MutationDirector를 명시적으로 reset하고 combat physics를 재개한 뒤 특수 스폰을 deferred 실행.
 - 특수 스폰 문제가 남더라도 기본 Run 루프가 같이 정지하지 않도록 격리.
+
+### Mutation Spawn Queue + Physics Recovery
+- 돌연변이 선택 후 Hero physics가 멈춘 채 남는 문제를 UI 선택 처리와 특수 스폰 경로로 분리.
+- Main은 모달을 닫은 직후 `resume_after_mutation_choice()`를 먼저 호출해 Hero/몬스터 physics를 복구.
+- 실제 돌연변이 생성은 `call_deferred()` 대신 Battle의 `special_spawn_queue`에 요청을 넣고 다음 `_process()`에서 처리.
+- 특수 스폰 성공/실패를 `mutation_spawn_result` 시그널로 Main에 전달해 상태창에 실제 결과를 표시.
+- 스폰 실패가 발생해도 선택 UI/physics 복구와 분리되어 전투 진행이 유지되도록 구조 격리.

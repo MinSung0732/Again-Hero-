@@ -105,6 +105,7 @@ func _ready() -> void:
 	battle.stage_event_triggered.connect(_on_stage_event_triggered)
 	battle.mutation_choice_ready.connect(_on_mutation_choice_ready)
 	battle.mutation_selected.connect(_on_mutation_selected)
+	battle.mutation_spawn_result.connect(_on_mutation_spawn_result)
 	battle.run_time_changed.connect(_on_run_time_changed)
 	battle.battle_finished.connect(_on_battle_finished)
 
@@ -373,9 +374,20 @@ func _on_mutation_choice_pressed(index: int) -> void:
 		return
 
 	var monster_id := String(current_mutation_candidates[index])
-	battle.spawn_selected_mutation(monster_id)
 	mutation_panel.hide()
 	current_mutation_candidates.clear()
+
+	battle.resume_after_mutation_choice()
+	battle.spawn_selected_mutation(monster_id)
+
+func _on_mutation_spawn_result(
+	success: bool,
+	message: String
+) -> void:
+	if not success:
+		status_label.text = message
+		return
+	status_label.text = message
 
 func _on_mutation_selected(
 	event_type: String,
