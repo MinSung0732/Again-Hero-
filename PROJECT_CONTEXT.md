@@ -879,3 +879,15 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 현재 저장소에는 monster art 폴더가 없으므로 v1은 텍스트 카드로 동작하고, 사용자가 몬스터 스프라이트를 커밋한 뒤 실제 파일을 확인해 카드 프레임을 연결.
 - 편성 저장 / MonsterCollection / 전투 소환 슬롯 / Battle 런타임 제한 로직은 변경하지 않음.
 
+### 팀 편성 카드 실제 몬스터 도트 연결
+- 사용자가 커밋한 `assets/art/monsters/{slime,spider,orc}/frames/` 프레임 에셋을 팀 편성 카드 대표 이미지로 연결.
+- 각 몬스터의 `idle_01.png`를 카드 대표 프레임으로 사용.
+- MonsterCatalog의 각 몬스터 데이터에 `card_icon_path`를 추가:
+  - Slime → `res://assets/art/monsters/slime/frames/idle_01.png`
+  - Spider → `res://assets/art/monsters/spider/frames/idle_01.png`
+  - Orc → `res://assets/art/monsters/orc/frames/idle_01.png`
+- Lobby 카드 UI는 기존 `_team_monster_card_icon()` 훅으로 경로를 읽으므로 별도 monster_id 하드코딩 없이 표시.
+- ItemList에 nearest texture filter를 적용해 확대 시 픽셀아트가 흐려지지 않도록 설정.
+- 각 manifest의 animation frame 목록은 추후 실제 전투 idle/move/attack/hit/death 애니메이션 연결 때 사용 예정.
+- 편성 저장 / 해금 / 전투 소환 / Battle guard 로직은 변경하지 않음.
+

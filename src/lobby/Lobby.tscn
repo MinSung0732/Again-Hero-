@@ -198,6 +198,7 @@ fixed_column_width = 300
 icon_mode = 0
 fixed_icon_size = Vector2i(150, 150)
 icon_scale = 1.0
+texture_filter = 1
 theme_override_constants/h_separation = 14
 theme_override_constants/v_separation = 18
 theme_override_constants/icon_margin = 12

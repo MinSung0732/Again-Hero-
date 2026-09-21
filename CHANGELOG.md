@@ -942,3 +942,10 @@
 - 현재 monster sprite asset이 저장소에 아직 없으므로 실제 도트 이미지는 후속 에셋 커밋 후 연결.
 - 팀 편성 저장 및 Battle 연결 로직은 변경하지 않음.
 
+### Monster Dot Icons Connected to Team Cards
+- 새로 추가된 Slime / Spider / Orc 프레임 에셋을 팀 편성 카드에 실제 도트 이미지로 연결.
+- 각 몬스터의 `frames/idle_01.png`를 카드 대표 이미지로 사용.
+- `MonsterCatalog`에 optional `card_icon_path` 실제 값을 추가해 기존 데이터 기반 카드 로더가 자동 표시.
+- 팀 편성 ItemList에 nearest texture filter를 적용해 픽셀아트 확대 시 블러를 방지.
+- 전투 애니메이션 자체는 아직 변경하지 않음.
+

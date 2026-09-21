@@ -11,6 +11,7 @@ const MONSTERS := {
 		"base_cost": 3.0,
 		"default_unlocked": true,
 		"shards_required": 20,
+		"card_icon_path": "res://assets/art/monsters/slime/frames/idle_01.png",
 		"scene": preload("res://src/monsters/Slime.tscn"),
 	},
 	"spider": {
@@ -20,6 +21,7 @@ const MONSTERS := {
 		"base_cost": 7.0,
 		"default_unlocked": true,
 		"shards_required": 30,
+		"card_icon_path": "res://assets/art/monsters/spider/frames/idle_01.png",
 		"scene": preload("res://src/monsters/Spider.tscn"),
 	},
 	"orc": {
@@ -29,6 +31,7 @@ const MONSTERS := {
 		"base_cost": 18.0,
 		"default_unlocked": true,
 		"shards_required": 40,
+		"card_icon_path": "res://assets/art/monsters/orc/frames/idle_01.png",
 		"scene": preload("res://src/monsters/Orc.tscn"),
 	},
 }
