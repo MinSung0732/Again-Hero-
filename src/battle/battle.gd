@@ -230,12 +230,12 @@ func _apply_permanent_research() -> void:
 	var notebook_level := int(permanent_research_levels.get("tactical_notebook", 0))
 	var experiment_level := int(permanent_research_levels.get("rapid_experiment", 0))
 
-	max_command += 10.0 * reservoir_level
-	command_regen_per_second += 0.25 * cycle_level
-	slime_research_cost_multiplier = maxf(0.5, 1.0 - 0.05 * slime_level)
+	max_command += 20.0 * reservoir_level
+	command_regen_per_second += 0.50 * cycle_level
+	slime_research_cost_multiplier = maxf(0.70, 1.0 - 0.08 * slime_level)
 	demon_reroll_max += notebook_level
 	demon_rerolls_left = demon_reroll_max
-	demon_exp_gain_multiplier += 0.05 * experiment_level
+	demon_exp_gain_multiplier += 0.10 * experiment_level
 
 func get_permanent_research_summary() -> String:
 	var active: PackedStringArray = []

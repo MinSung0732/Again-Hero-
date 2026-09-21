@@ -8,15 +8,16 @@ const STRATEGY_MIN_SPEND := 12.0
 const STRATEGY_DOMINANCE_RATIO := 0.60
 const STRATEGY_SWITCH_COOLDOWN := 6.0
 
-const RESEARCH_BASE_REWARD := 5
+const RESEARCH_BASE_REWARD := 80
 const RESEARCH_DAMAGE_STEP_RATIO := 0.10
-const RESEARCH_DAMAGE_STEP_REWARD := 2
-const RESEARCH_DAMAGE_MAX := 20
+const RESEARCH_DAMAGE_STEP_REWARD := 6
+const RESEARCH_DAMAGE_MAX := 60
 const RESEARCH_TIME_STEP_SECONDS := 60.0
-const RESEARCH_TIME_STEP_REWARD := 1
-const RESEARCH_TIME_MAX := 10
-const RESEARCH_OBSERVATION_REWARD := 1
-const RESEARCH_OBSERVATION_MAX := 5
+const RESEARCH_TIME_STEP_REWARD := 5
+const RESEARCH_TIME_MAX := 30
+const RESEARCH_OBSERVATION_REWARD := 4
+const RESEARCH_OBSERVATION_MAX := 20
+const RESEARCH_TOTAL_MAX := 160
 
 var elapsed_seconds: float = 0.0
 var duration_seconds: float = 0.0
@@ -137,11 +138,12 @@ func get_research_reward_breakdown() -> Dictionary:
 		RESEARCH_OBSERVATION_MAX
 	)
 
-	var total := (
+	var total := mini(
 		RESEARCH_BASE_REWARD
 		+ damage_reward
 		+ time_reward
-		+ observation_reward
+		+ observation_reward,
+		RESEARCH_TOTAL_MAX
 	)
 
 	return {

@@ -16,7 +16,7 @@ const STAGES = {
 		"map_width": 3200,
 		"map_height": 3200,
 		"run_duration_seconds": 360.0,
-		"first_clear_reward": 100,
+		"first_clear_reward": 500,
 		"next_stage_id": "stage_2",
 	},
 	"stage_2": {
@@ -31,7 +31,7 @@ const STAGES = {
 		"map_width": 3600,
 		"map_height": 3600,
 		"run_duration_seconds": 420.0,
-		"first_clear_reward": 150,
+		"first_clear_reward": 750,
 		"next_stage_id": "",
 	},
 }
