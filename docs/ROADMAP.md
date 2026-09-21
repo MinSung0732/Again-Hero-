@@ -257,7 +257,7 @@
 - [x] Hero 증강 AI 반응 규칙 → `hero_augment_catalog.gd`
 - [x] Build AI를 콘텐츠 ID별 match가 아닌 공통 rule evaluator로 전환
 - [x] Hero 전황/최근 공세 type/role 집계를 동적 Dictionary로 전환
-- [ ] Stage별 Hero AI 성향 데이터 분리
+- [x] Stage별 Hero AI 성향 데이터 분리
 - [ ] 마왕 증강 효과도 장기적으로 데이터 중심 적용 방식 검토
 
 

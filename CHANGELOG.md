@@ -704,3 +704,11 @@
 - `attack_01`에서 제거한 왼쪽 2px 폭 × 12px 높이의 24개 불투명 픽셀이 실제 통합 시트에서도 완전히 투명해지도록 확인.
 - 통합 시트 전체 크기 384×256, HeroSprite scale, attack row 위치는 그대로 유지.
 
+### Stage-specific Hero AI Personality Data v1
+- Hero 기본 스탯 데이터에서 AI 성향 설정을 분리하고 신규 `hero_ai_profiles.gd` Catalog 추가.
+- Stage 데이터에 `hero_ai_profile_id`를 추가해 Stage가 Hero와 AI 성격을 독립적으로 선택하도록 변경.
+- Stage 1은 기존 4.0초 관측 / 높은 빌드 관성 / 높은 새 갈래 저항을 유지.
+- Stage 2는 2.8초 관측 / 낮은 전환 저항과 함께 연사·기동 증강에 소폭 성향 보정을 적용.
+- Build AI에 범용 `augment_biases` 점수 항목을 추가하고 선택 이유에도 성향 보정을 표시.
+- Stage ID별 하드코딩 분기 없이 새 AI 성향 프로필 추가만으로 이후 Stage/Hero 성격을 확장할 수 있도록 구성.
+

@@ -69,6 +69,8 @@ static func _score_candidate(
 ) -> float:
 	var candidate_id := String(candidate.get("id", ""))
 	var score := float(candidate.get("base_score", 0.0))
+	var augment_biases: Dictionary = ai_settings.get("augment_biases", {})
+	score += float(augment_biases.get(candidate_id, 0.0))
 
 	for raw_rule in candidate.get("ai_rules", []):
 		var rule: Dictionary = raw_rule
@@ -284,6 +286,13 @@ static func _build_reason(
 
 	var candidate_name := String(selected.get("name", "증강"))
 	reason += " → %s 선호" % candidate_name
+
+	var augment_biases: Dictionary = ai_settings.get("augment_biases", {})
+	var personality_bias := float(
+		augment_biases.get(String(selected.get("id", "")), 0.0)
+	)
+	if absf(personality_bias) >= 0.05:
+		reason += " · 성향 보정 %.1f" % personality_bias
 
 	var observation_age := maxf(
 		float(context.get("observation_age", 0.0)),

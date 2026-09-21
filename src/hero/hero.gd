@@ -45,9 +45,12 @@ var hero_archetype: String = "ranged_kiter"
 var sprite_sheet_path: String = ""
 var augment_pool_ids: Array[String] = []
 var ai_settings: Dictionary = {
+	"id": "default",
+	"display_name": "기본",
 	"observation_interval": 4.0,
 	"stack_inertia": 1.0,
 	"new_branch_penalty": 0.5,
+	"augment_biases": {},
 }
 
 var battlefield_size: Vector2 = Vector2(3200, 3200)

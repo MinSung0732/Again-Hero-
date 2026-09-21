@@ -700,3 +700,11 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 공격만 별도 크기의 시트로 분리하지 않아 상태 전환 시 캐릭터 체급/크기가 달라 보이지 않게 한다.
 - 공격 아트 수정도 가능한 한 기존 64×64 셀과 anchor(x=32, foot_y=56)를 유지한 채 통합 시트에 반영한다.
 
+### Stage별 Hero AI 성향 데이터 분리 v1
+- Hero의 기본 전투 스탯/증강 풀과 Stage가 선택하는 AI 성향 데이터를 분리.
+- `src/data/hero_ai_profiles.gd`에서 관측 주기, 기존 빌드 관성, 새 갈래 전환 저항, 증강별 성향 보정을 관리.
+- `stage_catalog.gd`의 `hero_ai_profile_id`가 Stage별 AI 성향을 선택하며 Battle이 Hero 생성 전에 해당 데이터를 주입.
+- 같은 Hero를 다른 Stage에서 재사용하더라도 Hero 스탯 파일을 복제하지 않고 AI 성격만 교체할 수 있는 구조.
+- Stage 1은 기존 신중한 관측/강한 빌드 관성을 유지하고, Stage 2는 더 빠른 관측과 연사·기동 중심의 소폭 성향 보정을 사용.
+- Build AI는 특정 Stage ID를 분기하지 않고 `augment_biases` Dictionary를 공통 계산에 더해 데이터만으로 성향을 확장.
+

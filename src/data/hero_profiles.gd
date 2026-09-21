@@ -28,11 +28,6 @@ const PROFILES = {
 			"arcane_burst",
 			"battle_recovery",
 		],
-		"ai_settings": {
-			"observation_interval": 4.0,
-			"stack_inertia": 1.25,
-			"new_branch_penalty": 0.70,
-		},
 		"sprite_sheet_path": "res://assets/art/heroes/stage1_mage/stage1_mage_spritesheet.png",
 	},
 	"swift_hunter": {
@@ -59,11 +54,6 @@ const PROFILES = {
 			"long_reach",
 			"arcane_burst",
 		],
-		"ai_settings": {
-			"observation_interval": 2.8,
-			"stack_inertia": 0.95,
-			"new_branch_penalty": 0.40,
-		},
 	},
 }
 

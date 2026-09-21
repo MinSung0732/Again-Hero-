@@ -16,6 +16,7 @@ const HERO_SCENE := preload("res://src/hero/Hero.tscn")
 const EXP_ORB_SCENE := preload("res://src/battle/ExpOrb.tscn")
 const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
 const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
+const HERO_AI_PROFILES := preload("res://src/data/hero_ai_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
@@ -177,6 +178,13 @@ func _start_battle() -> void:
 
 	var hero_id: String = String(current_stage_data.get("hero_id", "ranged_rookie"))
 	current_hero_profile = HERO_PROFILES.get_profile(hero_id)
+
+	var hero_ai_profile_id := String(
+		current_stage_data.get("hero_ai_profile_id", "")
+	)
+	var hero_ai_settings := HERO_AI_PROFILES.get_profile(hero_ai_profile_id)
+	if not hero_ai_settings.is_empty():
+		current_hero_profile["ai_settings"] = hero_ai_settings
 
 	hero = HERO_SCENE.instantiate() as Node2D
 	if hero.has_method("configure_profile"):
