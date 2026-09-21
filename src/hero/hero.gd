@@ -259,7 +259,6 @@ func _physics_process(delta: float) -> void:
 
 	if channeling:
 		velocity = Vector2.ZERO
-		_update_stage1_pose_visual(delta)
 		return
 
 	if not is_instance_valid(target) or target.is_queued_for_deletion() or retarget_timer <= 0.0:
@@ -632,6 +631,8 @@ func _find_nearest_monster() -> Node2D:
 	return nearest
 
 func _fire_projectile(current_target: Node2D) -> void:
+	if channeling:
+		return
 	if not is_instance_valid(current_target):
 		return
 
@@ -742,8 +743,13 @@ func _activate_channel_skill() -> void:
 	)
 	velocity = Vector2.ZERO
 
-	attack_pose_timer = channel_duration_timer
-	_restart_stage1_animation("attack", 0.75)
+	# 3스 채널링 중에는 평타 발사/공격 모션이 끼어들지 않도록 잠근다.
+	attack_timer = maxf(
+		attack_timer,
+		channel_duration_timer + 0.05
+	)
+	attack_pose_timer = 0.0
+	_play_stage1_animation("idle", 1.0)
 
 	if channel_effect.sprite_frames != null:
 		channel_effect.visible = true
