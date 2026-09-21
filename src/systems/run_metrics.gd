@@ -8,6 +8,16 @@ const STRATEGY_MIN_SPEND := 12.0
 const STRATEGY_DOMINANCE_RATIO := 0.60
 const STRATEGY_SWITCH_COOLDOWN := 6.0
 
+const RESEARCH_BASE_REWARD := 5
+const RESEARCH_DAMAGE_STEP_RATIO := 0.10
+const RESEARCH_DAMAGE_STEP_REWARD := 2
+const RESEARCH_DAMAGE_MAX := 20
+const RESEARCH_TIME_STEP_SECONDS := 60.0
+const RESEARCH_TIME_STEP_REWARD := 1
+const RESEARCH_TIME_MAX := 10
+const RESEARCH_OBSERVATION_REWARD := 1
+const RESEARCH_OBSERVATION_MAX := 5
+
 var elapsed_seconds: float = 0.0
 var duration_seconds: float = 0.0
 
@@ -103,6 +113,45 @@ func record_hero_augment(
 		"name": chosen_name,
 		"reason": reason,
 	})
+
+func get_research_reward_breakdown() -> Dictionary:
+	var damage_ratio := clampf(1.0 - lowest_hero_hp_ratio, 0.0, 1.0)
+	var damage_steps := int(floor(
+		(damage_ratio + 0.0001) / RESEARCH_DAMAGE_STEP_RATIO
+	))
+	var damage_reward := mini(
+		damage_steps * RESEARCH_DAMAGE_STEP_REWARD,
+		RESEARCH_DAMAGE_MAX
+	)
+
+	var time_steps := int(floor(
+		maxf(elapsed_seconds, 0.0) / RESEARCH_TIME_STEP_SECONDS
+	))
+	var time_reward := mini(
+		time_steps * RESEARCH_TIME_STEP_REWARD,
+		RESEARCH_TIME_MAX
+	)
+
+	var observation_reward := mini(
+		hero_augment_events.size() * RESEARCH_OBSERVATION_REWARD,
+		RESEARCH_OBSERVATION_MAX
+	)
+
+	var total := (
+		RESEARCH_BASE_REWARD
+		+ damage_reward
+		+ time_reward
+		+ observation_reward
+	)
+
+	return {
+		"base": RESEARCH_BASE_REWARD,
+		"damage": damage_reward,
+		"time": time_reward,
+		"observation": observation_reward,
+		"total": total,
+		"damage_ratio": damage_ratio,
+	}
 
 func get_snapshot() -> Dictionary:
 	return {

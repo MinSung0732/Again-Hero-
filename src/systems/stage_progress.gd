@@ -105,6 +105,42 @@ static func get_research_points() -> int:
 	var state := load_state()
 	return int(state.get("research_points", 0))
 
+static func add_research_points(amount: int) -> Dictionary:
+	if amount <= 0:
+		return {
+			"success": false,
+			"granted": 0,
+			"research_points": get_research_points(),
+		}
+
+	var config := ConfigFile.new()
+	config.load(SAVE_PATH)
+
+	var state := load_state()
+	var research_points := int(state.get("research_points", 0)) + amount
+	config.set_value(
+		"progress",
+		"current_stage_id",
+		String(state.get("current_stage_id", "stage_1"))
+	)
+	config.set_value(
+		"progress",
+		"highest_unlocked_stage",
+		int(state.get("highest_unlocked_stage", 1))
+	)
+	config.set_value("meta", "research_points", research_points)
+	var save_error := config.save(SAVE_PATH)
+
+	return {
+		"success": save_error == OK,
+		"granted": amount if save_error == OK else 0,
+		"research_points": (
+			research_points
+			if save_error == OK
+			else int(state.get("research_points", 0))
+		),
+	}
+
 static func try_spend_research_points(cost: int) -> Dictionary:
 	if cost < 0:
 		return {

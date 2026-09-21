@@ -960,6 +960,7 @@ func _on_hero_died() -> void:
 	if granted_reward > 0:
 		result_text += "\n최초 클리어 보상 · 연구 포인트 +%d" % granted_reward
 
+	result_text += _grant_run_research_reward()
 	_finish_battle(result_text, true)
 
 func _on_run_time_up() -> void:
@@ -968,7 +969,30 @@ func _on_run_time_up() -> void:
 
 	var hero_name := String(current_hero_profile.get("display_name", "용사"))
 	var result_text := "시간 초과!\n%s가 제한시간을 버텨냈습니다." % hero_name
+	result_text += _grant_run_research_reward()
 	_finish_battle(result_text, false)
+
+func _grant_run_research_reward() -> String:
+	var breakdown: Dictionary = run_metrics.get_research_reward_breakdown()
+	var requested := int(breakdown.get("total", 0))
+	if requested <= 0:
+		return ""
+
+	var grant_result: Dictionary = STAGE_PROGRESS.add_research_points(requested)
+	var granted := int(grant_result.get("granted", 0))
+	if granted <= 0:
+		return "\nRun 연구 보상 저장 실패"
+
+	return (
+		"\nRun 연구 +%d · 기본 %d / 피해 %d / 시간 %d / 관찰 %d"
+		% [
+			granted,
+			int(breakdown.get("base", 0)),
+			int(breakdown.get("damage", 0)),
+			int(breakdown.get("time", 0)),
+			int(breakdown.get("observation", 0)),
+		]
+	)
 
 func get_run_analysis_summary() -> String:
 	return run_metrics.get_result_summary()
