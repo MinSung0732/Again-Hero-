@@ -349,23 +349,33 @@ func _apply_styles() -> void:
 
 
 func _apply_asset_frames() -> void:
-	# 상단/하단은 모바일에서 장식보다 정보가 우선이라 얇게 유지한다.
-	for target in [
+	# 헤더는 정보 가독성이 우선이라 장식 프레임을 한 단계 가볍게 사용한다.
+	_add_asset_frame(
 		$SafeArea/Layout/Header,
+		UI_FRAME_MEDIUM_DIR,
+		Vector2(28.0, 27.0),
+		Vector2(28.0, 27.0),
+		Vector2(28.0, 27.0),
+		Vector2(28.0, 27.0),
+		15.0,
+		15.0,
+		13.0,
+		13.0
+	)
+
+	# 하단 네비게이션은 별도 패스에서 조정할 수 있도록 헤더와 분리한다.
+	_add_asset_frame(
 		$BottomNav,
-	]:
-		_add_asset_frame(
-			target,
-			UI_FRAME_MEDIUM_DIR,
-			Vector2(34.0, 33.0),
-			Vector2(34.0, 33.0),
-			Vector2(34.0, 33.0),
-			Vector2(34.0, 33.0),
-			18.0,
-			18.0,
-			16.0,
-			16.0
-		)
+		UI_FRAME_MEDIUM_DIR,
+		Vector2(34.0, 33.0),
+		Vector2(34.0, 33.0),
+		Vector2(34.0, 33.0),
+		Vector2(34.0, 33.0),
+		18.0,
+		18.0,
+		16.0,
+		16.0
+	)
 
 	# 콘텐츠 프레임은 화면 가장자리 장식 역할만 한다.
 	_add_asset_frame(
@@ -597,10 +607,10 @@ func _apply_new_ui_assets() -> void:
 		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		logo.set_anchors_preset(Control.PRESET_TOP_WIDE)
-		logo.offset_left = 92.0
-		logo.offset_top = 12.0
-		logo.offset_right = -92.0
-		logo.offset_bottom = 126.0
+		logo.offset_left = 120.0
+		logo.offset_top = 20.0
+		logo.offset_right = -120.0
+		logo.offset_bottom = 134.0
 		header.add_child(logo)
 		header.move_child(logo, 0)
 
