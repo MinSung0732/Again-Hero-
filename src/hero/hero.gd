@@ -599,7 +599,7 @@ func _physics_process_gunner(delta: float) -> void:
 	move_and_slide()
 	_clamp_to_battlefield()
 
-	if not gunner_reloading and gunner_deadeye_cooldown <= 0.0 and gunner_ammo >= 3 and _count_monsters_near(global_position, attack_range) >= 4:
+	if _gunner_should_start_deadeye():
 		_start_gunner_deadeye()
 		return
 
@@ -811,15 +811,86 @@ func _use_gunner_cylinder_strike() -> void:
 		monster.set_meta("gunner_slow_until", Time.get_ticks_msec() + int(slow_duration * 1000.0))
 
 
+func _gunner_deadeye_best_direction() -> Dictionary:
+	var sample_count := maxi(int(gunner_config.get("deadeye_cluster_samples", 36)), 8)
+	var max_range := maxf(float(gunner_config.get("deadeye_cluster_range", 620.0)), 1.0)
+	var half_width := maxf(float(gunner_config.get("deadeye_corridor_half_width", 105.0)), 1.0)
+	var best_direction := Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+	var best_score := 0.0
+	var best_hits := 0
+
+	for index in range(sample_count):
+		var direction := Vector2.from_angle(TAU * float(index) / float(sample_count))
+		var side := Vector2(-direction.y, direction.x)
+		var score := 0.0
+		var hits := 0
+		for node in get_tree().get_nodes_in_group("monsters"):
+			if not is_instance_valid(node) or node.is_queued_for_deletion():
+				continue
+			var monster := node as Node2D
+			if monster == null:
+				continue
+			var offset := monster.global_position - global_position
+			var forward := offset.dot(direction)
+			if forward <= 0.0 or forward > max_range:
+				continue
+			var lateral := absf(offset.dot(side))
+			if lateral > half_width:
+				continue
+			hits += 1
+			var distance_weight := 1.0 - clampf(forward / max_range, 0.0, 1.0) * 0.35
+			var center_weight := 1.0 - clampf(lateral / half_width, 0.0, 1.0) * 0.45
+			score += maxf(distance_weight * center_weight, 0.1)
+		if score > best_score:
+			best_score = score
+			best_hits = hits
+			best_direction = direction
+
+	return {
+		"direction": best_direction.normalized(),
+		"score": best_score,
+		"hits": best_hits,
+	}
+
+
+func _gunner_should_start_deadeye() -> bool:
+	if gunner_reloading or gunner_deadeye_cooldown > 0.0:
+		return false
+	var min_ammo := maxi(int(gunner_config.get("deadeye_min_ammo", 3)), 1)
+	if gunner_ammo < min_ammo:
+		return false
+
+	var aim := _gunner_deadeye_best_direction()
+	var score := float(aim.get("score", 0.0))
+	var min_score := maxf(float(gunner_config.get("deadeye_min_cluster_score", 3.0)), 0.0)
+	if score < min_score:
+		return false
+	var force_score := maxf(float(gunner_config.get("deadeye_force_cluster_score", 5.5)), min_score)
+	if score >= force_score:
+		return true
+
+	# 밀집도가 높을수록 발동 확률 증가. 최소 문턱에서는 낮게, 강한 밀집에서는 거의 확정.
+	var t := clampf((score - min_score) / maxf(force_score - min_score, 0.001), 0.0, 1.0)
+	return randf() <= lerpf(0.28, 0.82, t)
+
+
 func _start_gunner_deadeye() -> void:
 	if gunner_ammo <= 0:
 		return
+	var aim := _gunner_deadeye_best_direction()
+	var aim_direction: Vector2 = aim.get(
+		"direction",
+		Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+	)
+	if aim_direction.length_squared() <= 0.0:
+		aim_direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	gunner_deadeye_cooldown = maxf(float(gunner_config.get("deadeye_cooldown", 20.0)), 0.1)
 	gunner_deadeye_active = true
 	gunner_deadeye_shots_left = gunner_ammo * 2
 	gunner_ammo = 0
 	gunner_deadeye_shot_timer = 0.0
-	gunner_deadeye_direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+	gunner_deadeye_direction = aim_direction.normalized()
+	_face_attack_direction(gunner_deadeye_direction.x)
 	queue_redraw()
 
 
