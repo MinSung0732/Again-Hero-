@@ -13,6 +13,11 @@ const MONSTERS := {
 		"shards_required": 20,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/slime/frames/idle_01.png",
+		"special_augment_ids": [
+			"slime_cell_division",
+			"slime_residual_mucus",
+			"slime_pack_instinct",
+		],
 		"elite_visual": {
 			"mode": "frames",
 			"asset_dir": "res://assets/art/elitemonster/slime/frames",
@@ -36,6 +41,11 @@ const MONSTERS := {
 		"shards_required": 30,
 		"rarity": "rare",
 		"card_icon_path": "res://assets/art/monsters/spider/frames/idle_01.png",
+		"special_augment_ids": [
+			"spider_triple_web",
+			"spider_sticky_web",
+			"spider_binding",
+		],
 		"elite_visual": {
 			"mode": "sequence",
 			"asset_dir": "res://assets/art/elitemonster/spider/frames",
@@ -58,6 +68,11 @@ const MONSTERS := {
 		"shards_required": 40,
 		"rarity": "legendary",
 		"card_icon_path": "res://assets/art/monsters/orc/frames/idle_01.png",
+		"special_augment_ids": [
+			"orc_berserk",
+			"orc_rage_stacks",
+			"orc_last_charge",
+		],
 		"elite_visual": {
 			"mode": "sequence",
 			"asset_dir": "res://assets/art/elitemonster/orc/frames",
@@ -82,6 +97,11 @@ const MONSTERS := {
 		"rarity": "rare",
 		"card_icon_path": "res://assets/art/monsters/bombrat/bombrat_spritesheet.png",
 		"card_icon_region": Rect2(0, 0, 229, 229),
+		"special_augment_ids": [
+			"bomb_rat_litter",
+			"bomb_rat_powder_overload",
+			"bomb_rat_unstable_powder",
+		],
 		"elite_visual": {
 			"mode": "sequence",
 			"asset_dir": "res://assets/art/elitemonster/bombrat/frames",
