@@ -3545,6 +3545,117 @@ func _build_recent_offense_memory() -> Dictionary:
 		"role_weights": role_weights,
 	}
 
+func get_skill_cooldown_hud() -> Array:
+	var skills: Array = []
+
+	match hero_archetype:
+		"ranged_kiter":
+			_append_skill_cooldown_hud(
+				skills,
+				ultimate_config,
+				ultimate_cooldown_timer,
+				"res://assets/art/heroes/stage1_mage/frames/effect_01/frame_01.png"
+			)
+			_append_skill_cooldown_hud(
+				skills,
+				shield_skill_config,
+				shield_cooldown_timer,
+				"res://assets/art/heroes/stage1_mage/frames/effect_02/frame_01.png"
+			)
+			_append_skill_cooldown_hud(
+				skills,
+				channel_skill_config,
+				channel_cooldown_timer,
+				"res://assets/art/heroes/stage1_mage/frames/effect_03/frame_01.png"
+			)
+		"rogue_combo":
+			_append_skill_cooldown_hud(
+				skills,
+				rogue_slash_config,
+				rogue_slash_cooldown_timer,
+				"res://assets/art/heroes/stage2_rogue/frames/effect_01/frame_01.png"
+			)
+			_append_skill_cooldown_hud(
+				skills,
+				ultimate_config,
+				ultimate_cooldown_timer,
+				"res://assets/art/heroes/stage2_rogue/frames/effect_03/frame_01.png"
+			)
+		"sword_shield":
+			_append_skill_cooldown_hud(
+				skills,
+				fighter_charge_config,
+				fighter_charge_cooldown_timer,
+				"res://assets/art/heroes/stage3_fighter/frames/effect5/ground_effect_01.png"
+			)
+		"pistol_gunner":
+			_append_gunner_cooldown_hud(
+				skills,
+				"gunner_backstep",
+				"백스텝",
+				float(gunner_config.get("backstep_cooldown", 0.0)),
+				gunner_backstep_cooldown,
+				"res://assets/art/heroes/stage4_gunner/frames/walk_01.png"
+			)
+			_append_gunner_cooldown_hud(
+				skills,
+				"gunner_cylinder",
+				"실린더타격",
+				float(gunner_config.get("cylinder_cooldown", 0.0)),
+				gunner_cylinder_cooldown,
+				"res://assets/art/heroes/stage4_gunner/frames/effect/effect_explosion_01.png"
+			)
+			_append_gunner_cooldown_hud(
+				skills,
+				"gunner_deadeye",
+				"데드아이",
+				float(gunner_config.get("deadeye_cooldown", 0.0)),
+				gunner_deadeye_cooldown,
+				"res://assets/art/heroes/stage4_gunner/frames/effect/effect_projectile_01.png"
+			)
+
+	return skills
+
+
+func _append_skill_cooldown_hud(
+	skills: Array,
+	config: Dictionary,
+	remaining: float,
+	icon_path: String
+) -> void:
+	if config.is_empty():
+		return
+	var cooldown_total := maxf(float(config.get("cooldown", 0.0)), 0.0)
+	if cooldown_total <= 0.0:
+		return
+	skills.append({
+		"id": String(config.get("id", "skill")),
+		"name": String(config.get("name", "기술")),
+		"cooldown_total": cooldown_total,
+		"cooldown_remaining": maxf(remaining, 0.0),
+		"icon_path": icon_path,
+	})
+
+
+func _append_gunner_cooldown_hud(
+	skills: Array,
+	skill_id: String,
+	skill_name: String,
+	cooldown_total: float,
+	remaining: float,
+	icon_path: String
+) -> void:
+	if cooldown_total <= 0.0:
+		return
+	skills.append({
+		"id": skill_id,
+		"name": skill_name,
+		"cooldown_total": cooldown_total,
+		"cooldown_remaining": maxf(remaining, 0.0),
+		"icon_path": icon_path,
+	})
+
+
 func get_recent_offense_summary() -> String:
 	var memory := _build_recent_offense_memory()
 	var event_count := int(memory.get("event_count", 0))
