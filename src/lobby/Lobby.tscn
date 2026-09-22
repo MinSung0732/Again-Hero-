@@ -401,8 +401,9 @@ custom_minimum_size = Vector2(0, 290)
 layout_mode = 2
 
 [node name="PortraitFrame" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
-custom_minimum_size = Vector2(0, 360)
+custom_minimum_size = Vector2(650, 360)
 layout_mode = 2
+size_flags_horizontal = 4
 
 [node name="FrameMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame"]
 layout_mode = 2
