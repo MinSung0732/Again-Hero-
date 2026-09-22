@@ -99,8 +99,7 @@ const MONSTERS := {
 		"default_unlocked": false,
 		"shards_required": 30,
 		"rarity": "rare",
-		"card_icon_path": "res://assets/art/monsters/bombrat/bombrat_spritesheet.png",
-		"card_icon_region": Rect2(0, 0, 229, 229),
+		"card_icon_path": "res://assets/art/monsters/bombrat/frames/frame_01.png",
 		"special_augment_ids": [
 			"bomb_rat_litter",
 			"bomb_rat_powder_overload",
