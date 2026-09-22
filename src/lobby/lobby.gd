@@ -604,8 +604,12 @@ func _apply_header_card_skin(header: Control) -> void:
 		return
 
 	var texture_size := texture.get_size()
-	var margin_x := maxi(1, int(round(texture_size.x * 0.10)))
-	var margin_y := maxi(1, int(round(texture_size.y * 0.22)))
+	# ui1 원본은 2172x724의 가로형 프레임이다.
+	# 이전 10% / 22% 마진은 158px 높이의 실제 Header보다 상하 고정 영역이
+	# 커져 9-slice가 중앙에서 눌리며 가로 금색 띠처럼 보였다.
+	# 실제 Header 높이 안에 top+bottom 고정 영역이 충분히 들어오도록 축소한다.
+	var margin_x := maxi(1, int(round(texture_size.x * 0.045)))
+	var margin_y := maxi(1, int(round(texture_size.y * 0.075)))
 
 	var header_skin := StyleBoxTexture.new()
 	header_skin.texture = texture
