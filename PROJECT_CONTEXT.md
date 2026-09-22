@@ -1645,3 +1645,18 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 넉백은 방사형이 아니라 도적의 진행 방향으로 적용해 군세를 밀어내는 느낌을 강화한다.
 - 공격 중 0.28초 동안 collision_mask를 0으로 내려 몬스터 물리 충돌을 무시하고, 종료 후 원래 mask를 복구한다.
 - 3타 종료 후 다음 콤보 시작 때 새 방향을 다시 잡는다.
+
+
+### 로비 UI 테두리 스타일 v1
+- 로비 UI 외곽선은 이미지 장식이 아니라 Godot StyleBoxFlat 기반 공통 스타일로 유지한다.
+- SafeArea/Layout/Content에는 비상호작용 ContentFrame을 두어 모든 탭이 같은 외곽 프레임을 공유한다.
+- Header / StageCard / PortraitFrame / Shop Result / BottomNav / Team Card / Research Button / Monster Detail은 공통 색상·테두리 계열을 사용한다.
+- ContentFrame은 mouse_filter=IGNORE이므로 탭 입력을 가로채지 않는다.
+- 목적은 모바일 해상도 및 이후 로비 구성 변경에도 테두리가 깨지지 않도록 하는 것이다.
+
+### 앱 시작 화면 흐름 예정
+- 최종 진입 흐름은 `Fake Loading -> Login -> Touch to Start -> Lobby` 순서로 구성한다.
+- 로그인 화면에는 카카오 로그인과 구글 로그인을 지원할 예정이다.
+- 실제 카카오/구글 SDK 연동 전에는 인증 로직과 UI를 분리한다.
+- Lobby.tscn 자체에 로그인/로딩 상태를 억지로 합치지 않고, 별도 Boot/Entry 씬이 Lobby로 전환하는 구조를 우선한다.
+- Touch to Start 화면은 로그인 성공 후 로비 진입 전 대기 화면으로 둔다.
