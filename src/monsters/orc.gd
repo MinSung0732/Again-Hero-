@@ -21,6 +21,10 @@ var hero: Node2D
 var attack_timer: float = 0.0
 var hit_flash_timer: float = 0.0
 var dying: bool = false
+var special_augment_configs: Dictionary = {}
+var rage_stacks: int = 0
+var last_charge_triggered: bool = false
+var last_charge_timer: float = 0.0
 
 func _ready() -> void:
 	add_to_group("monsters")
@@ -34,6 +38,16 @@ func _physics_process(delta: float) -> void:
 		return
 
 	attack_timer = maxf(attack_timer - delta, 0.0)
+	last_charge_timer = maxf(last_charge_timer - delta, 0.0)
+
+	var combat_bonuses := _get_combat_bonuses()
+	var effective_move_speed := move_speed * float(
+		combat_bonuses.get("move_speed_multiplier", 1.0)
+	)
+	var effective_attack_cooldown := attack_cooldown / maxf(
+		float(combat_bonuses.get("attack_speed_multiplier", 1.0)),
+		0.01
+	)
 
 	if hit_flash_timer > 0.0:
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
@@ -51,14 +65,14 @@ func _physics_process(delta: float) -> void:
 
 	var distance := global_position.distance_to(hero.global_position)
 	if distance > attack_range:
-		velocity = direction_to_hero * move_speed
+		velocity = direction_to_hero * effective_move_speed
 		_visual_call(&"play_locomotion", [true])
 		move_and_slide()
 	else:
 		velocity = Vector2.ZERO
 		_visual_call(&"play_locomotion", [false])
 		if attack_timer <= 0.0:
-			attack_timer = attack_cooldown
+			attack_timer = effective_attack_cooldown
 			_visual_call(&"play_attack")
 			if hero.has_method("take_damage"):
 				hero.call("take_damage", attack_damage)
@@ -69,6 +83,8 @@ func take_damage(amount: int) -> void:
 
 	var previous_hp := current_hp
 	current_hp = maxi(current_hp - amount, 0)
+	_add_rage_stack()
+	_try_trigger_last_charge()
 	var applied_damage := previous_hp - current_hp
 	DAMAGE_NUMBERS.show(self, applied_damage)
 	hit_flash_timer = 0.12
@@ -77,6 +93,79 @@ func take_damage(amount: int) -> void:
 
 	if current_hp <= 0:
 		_begin_death()
+
+func configure_special_augments(configs: Dictionary) -> void:
+	special_augment_configs = configs.duplicate(true)
+
+func _add_rage_stack() -> void:
+	var config: Dictionary = special_augment_configs.get(
+		"orc_rage_stacks",
+		{}
+	)
+	if config.is_empty():
+		return
+	rage_stacks = mini(
+		rage_stacks + 1,
+		maxi(int(config.get("max_stacks", 0)), 0)
+	)
+
+func _try_trigger_last_charge() -> void:
+	if last_charge_triggered or current_hp <= 0:
+		return
+	var config: Dictionary = special_augment_configs.get(
+		"orc_last_charge",
+		{}
+	)
+	if config.is_empty():
+		return
+	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
+	if hp_ratio > float(config.get("hp_ratio", 0.30)):
+		return
+	last_charge_triggered = true
+	last_charge_timer = maxf(float(config.get("duration", 0.75)), 0.0)
+
+func _get_combat_bonuses() -> Dictionary:
+	var move_multiplier := 1.0
+	var attack_speed_multiplier := 1.0
+
+	var berserk: Dictionary = special_augment_configs.get(
+		"orc_berserk",
+		{}
+	)
+	if not berserk.is_empty():
+		var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
+		if hp_ratio <= float(berserk.get("hp_ratio", 0.50)):
+			move_multiplier *= float(
+				berserk.get("move_speed_multiplier", 1.0)
+			)
+			attack_speed_multiplier *= float(
+				berserk.get("attack_speed_multiplier", 1.0)
+			)
+
+	var rage: Dictionary = special_augment_configs.get(
+		"orc_rage_stacks",
+		{}
+	)
+	if not rage.is_empty() and rage_stacks > 0:
+		attack_speed_multiplier *= (
+			1.0
+			+ float(rage.get("attack_speed_per_stack", 0.0))
+			* float(rage_stacks)
+		)
+
+	var charge: Dictionary = special_augment_configs.get(
+		"orc_last_charge",
+		{}
+	)
+	if last_charge_timer > 0.0 and not charge.is_empty():
+		move_multiplier *= float(
+			charge.get("speed_multiplier", 1.0)
+		)
+
+	return {
+		"move_speed_multiplier": move_multiplier,
+		"attack_speed_multiplier": attack_speed_multiplier,
+	}
 
 func _begin_death() -> void:
 	if dying:
