@@ -201,34 +201,34 @@ const AUGMENTS = [
 	{
 		"id": "rogue_edge",
 		"name": "예리한 연격",
-		"description": "3단 찌르기 피해 +10%",
+		"description": "연격 피해 +10% (최대 +50%)",
 		"base_score": 7.8,
 		"max_stack": 5,
 		"tags": ["damage"],
 		"effects": [
-			{"op": "multiply_stat", "target": "rogue_combo_damage_multiplier", "value": 1.10},
+			{"op": "add_stat", "target": "rogue_combo_damage_multiplier", "value": 0.10, "max": 1.50},
 		],
 	},
 	{
 		"id": "rogue_tempo",
 		"name": "연격 가속",
-		"description": "3타 후 후딜 -8%",
+		"description": "연격 마무리 후딜 -3%",
 		"base_score": 7.2,
 		"max_stack": 4,
 		"tags": ["attack_speed", "mobility"],
 		"effects": [
-			{"op": "multiply_stat", "target": "rogue_combo_recovery_multiplier", "value": 0.92, "min": 0.68},
+			{"op": "add_stat", "target": "rogue_combo_recovery_multiplier", "value": -0.03, "min": 0.88},
 		],
 	},
 	{
 		"id": "rogue_guard",
 		"name": "난도질 방어",
-		"description": "난도질 쉴드량 +4% 최대 HP",
+		"description": "난도질 쉴드량 +2% 최대 HP",
 		"base_score": 6.8,
 		"max_stack": 4,
 		"tags": ["durability", "survival", "area"],
 		"effects": [
-			{"op": "add_stat", "target": "rogue_slash_shield_ratio_bonus", "value": 0.04, "max": 0.16},
+			{"op": "add_stat", "target": "rogue_slash_shield_ratio_bonus", "value": 0.02, "max": 0.08},
 		],
 	},
 	{
@@ -236,10 +236,10 @@ const AUGMENTS = [
 		"name": "끈질긴 급습",
 		"description": "급습-암살 공격 횟수 +1",
 		"base_score": 6.6,
-		"max_stack": 2,
+		"max_stack": 4,
 		"tags": ["damage", "mobility"],
 		"effects": [
-			{"op": "add_stat", "target": "rogue_assassination_hit_bonus", "value": 1, "max": 2},
+			{"op": "add_stat", "target": "rogue_assassination_hit_bonus", "value": 1, "max": 4},
 		],
 	},
 	{
@@ -247,21 +247,32 @@ const AUGMENTS = [
 		"name": "처형 감각",
 		"description": "일반 몬스터 처형 기준 +2%",
 		"base_score": 6.2,
-		"max_stack": 2,
+		"max_stack": 3,
 		"tags": ["damage"],
 		"effects": [
-			{"op": "add_stat", "target": "rogue_execute_threshold_bonus", "value": 0.02, "max": 0.04},
+			{"op": "add_stat", "target": "rogue_execute_threshold_bonus", "value": 0.02, "max": 0.06},
 		],
 	},
 	{
 		"id": "rogue_bloodthirst",
 		"name": "피의 갈증",
-		"description": "직접 피해의 3%/5%/7%만큼 HP 회복",
+		"description": "직접 피해의 3%/5%만큼 HP 회복",
 		"base_score": 6.9,
-		"max_stack": 3,
+		"max_stack": 2,
 		"tags": ["recovery", "survival", "damage"],
 		"effects": [
 			{"op": "advance_rogue_lifesteal"},
+		],
+	},
+	{
+		"id": "rogue_ruthless_strike",
+		"name": "무자비한 일격",
+		"description": "기본 연격 돌진 횟수 +1 (3타 → 4타)",
+		"base_score": 8.1,
+		"max_stack": 1,
+		"tags": ["damage", "mobility"],
+		"effects": [
+			{"op": "add_stat", "target": "rogue_bonus_combo_hits", "value": 1, "max": 1},
 		],
 	}
 
