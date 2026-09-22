@@ -670,7 +670,7 @@ func _apply_new_ui_assets() -> void:
 		logo.offset_left = 104.0
 		logo.offset_top = 0.0
 		logo.offset_right = -104.0
-		logo.offset_bottom = 92.0
+		logo.offset_bottom = 102.0
 		header.add_child(logo)
 		header.move_child(logo, 0)
 
