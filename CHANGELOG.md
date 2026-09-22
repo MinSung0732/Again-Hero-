@@ -1698,3 +1698,10 @@
 - 원인: 2172x724 원본에 10%/22% 9-slice 고정 마진을 사용해 158px Header 높이보다 상하 고정 영역 합이 커졌음.
 - 헤더 slice margin을 X 4.5% / Y 7.5%로 축소해 실제 Header 높이 안에서 모서리/상하선이 정상적으로 보이도록 조정.
 - 중앙 ContentFrame(ui9), StageCard(ui10), 하단 네비 및 모든 레이아웃 크기는 변경하지 않음.
+
+### Lobby Vertical Space Rebalance
+- 중앙 StageCard 내부 배치는 유지하고 화면 세로 공간 배분만 재조정.
+- Header 최소 높이를 158→192로 확대해 ui1 헤더 프레임이 세로로 눌리지 않고 로고/좌우 정보가 숨 쉴 공간을 확보하도록 변경.
+- BottomNav 높이를 150→180으로 확대해 향후 uicard 하단 프레임/선택 탭 장식을 넣을 공간을 확보.
+- SafeArea 하단 여백을 -166→-196으로 맞춰 늘어난 BottomNav와 겹치지 않도록 조정.
+- 결과적으로 중앙 Content 영역에서 약 64px를 헤더/하단에 재배분하며, StageCard 자체 크기와 내부 위치 값은 변경하지 않음.
