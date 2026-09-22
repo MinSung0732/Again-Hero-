@@ -93,8 +93,11 @@ const PROFILES = {
 		"rogue_combo": {
 			"hit_intervals": [0.20, 0.22, 0.90],
 			"damage_multipliers": [0.85, 1.00, 1.35],
+			"aoe_radii": [95.0, 110.0, 130.0],
+			"aoe_forward_offsets": [48.0, 54.0, 62.0],
 			"lunge_distance": 70.0,
 			"knockback_distance": 30.0,
+			"secondary_lifesteal_efficiency": 0.50,
 		},
 		"rogue_slash_skill": {
 			"id": "blade_storm",
@@ -126,6 +129,9 @@ const PROFILES = {
 			"damage_ratio": 1.05,
 			"execute_hp_ratio": 0.30,
 			"elite_damage_multiplier": 1.90,
+			"aoe_radius": 120.0,
+			"secondary_damage_ratio": 0.78,
+			"secondary_lifesteal_efficiency": 0.50,
 			"behind_offset": 54.0,
 		},
 		"augment_pool_ids": [
