@@ -73,7 +73,7 @@ offset_right = 1062.0
 offset_bottom = 374.0
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
 theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 24
 text = "[DEBUG] 마왕 Lv.1 · 레벨배율 HP x1.000 / ATK x1.000 / SPD x1.000"
 autowrap_mode = 2
 mouse_filter = 2
@@ -91,7 +91,7 @@ offset_left = 40.0
 offset_top = 20.0
 offset_right = 720.0
 offset_bottom = 80.0
-theme_override_font_sizes/font_size = 65
+theme_override_font_sizes/font_size = 66
 text = "용사, 또 너야?"
 
 [node name="RunTimer" type="Label" parent="HUD/TopBar"]
@@ -125,7 +125,7 @@ offset_left = 40.0
 offset_top = 142.0
 offset_right = 240.0
 offset_bottom = 196.0
-theme_override_font_sizes/font_size = 43
+theme_override_font_sizes/font_size = 42
 text = "Lv.1"
 vertical_alignment = 1
 
@@ -134,7 +134,7 @@ offset_left = 215.0
 offset_top = 142.0
 offset_right = 690.0
 offset_bottom = 196.0
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 42
 text = "용사 HP 300 / 300"
 vertical_alignment = 1
 
@@ -143,7 +143,7 @@ offset_left = 720.0
 offset_top = 142.0
 offset_right = 1040.0
 offset_bottom = 196.0
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 42
 text = "몬스터 0"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -153,7 +153,7 @@ offset_left = 40.0
 offset_top = 207.0
 offset_right = 260.0
 offset_bottom = 250.0
-theme_override_font_sizes/font_size = 31
+theme_override_font_sizes/font_size = 30
 text = "EXP 0 / 50"
 vertical_alignment = 1
 
@@ -181,7 +181,7 @@ offset_left = 28.0
 offset_top = 6.0
 offset_right = 230.0
 offset_bottom = 34.0
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "마왕 필살기  0 / 100"
 vertical_alignment = 1
 
@@ -205,7 +205,7 @@ alignment = 1
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 24
 text = "1 원형 포위\n충전 중"
 disabled = true
 
@@ -228,7 +228,7 @@ show_percentage = false
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 24
 text = "2 일직선 공세\n준비중"
 disabled = true
 
@@ -251,7 +251,7 @@ show_percentage = false
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 24
 text = "3 사각 포위\n준비중"
 disabled = true
 
@@ -283,35 +283,35 @@ alignment = 1
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "동"
 
 [node name="West" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "서"
 
 [node name="North" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "북"
 
 [node name="South" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "남"
 
 [node name="Cancel" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 25
+theme_override_font_sizes/font_size = 24
 text = "취소"
 
 [node name="BottomBar" type="ColorRect" parent="HUD"]
@@ -329,7 +329,7 @@ offset_left = 28.0
 offset_top = 8.0
 offset_right = 1052.0
 offset_bottom = 34.0
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 24
 text = "용사 빌드: 아직 선택 없음"
 horizontal_alignment = 0
 vertical_alignment = 1
@@ -340,7 +340,7 @@ offset_left = 28.0
 offset_top = 36.0
 offset_right = 790.0
 offset_bottom = 64.0
-theme_override_font_sizes/font_size = 25
+theme_override_font_sizes/font_size = 24
 text = "지휘력을 사용해 원하는 몬스터를 소환하세요."
 horizontal_alignment = 0
 vertical_alignment = 1
@@ -351,7 +351,7 @@ offset_left = 808.0
 offset_top = 34.0
 offset_right = 1052.0
 offset_bottom = 68.0
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 24
 button_pressed = true
 text = "자동 배치"
 
@@ -360,7 +360,7 @@ offset_left = 28.0
 offset_top = 72.0
 offset_right = 350.0
 offset_bottom = 104.0
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "마왕 Lv.1 · EXP 0 / 30"
 vertical_alignment = 1
 
@@ -377,7 +377,7 @@ offset_left = 28.0
 offset_top = 106.0
 offset_right = 350.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 29
+theme_override_font_sizes/font_size = 30
 text = "지휘력 0 / 100"
 vertical_alignment = 1
 
@@ -402,21 +402,21 @@ alignment = 1
 custom_minimum_size = Vector2(0, 212)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 35
+theme_override_font_sizes/font_size = 36
 text = "슬라임\n비용 3"
 
 [node name="SpiderButton" type="Button" parent="HUD/BottomBar/SummonButtons"]
 custom_minimum_size = Vector2(0, 212)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 35
+theme_override_font_sizes/font_size = 36
 text = "거미\n비용 7"
 
 [node name="OrcButton" type="Button" parent="HUD/BottomBar/SummonButtons"]
 custom_minimum_size = Vector2(0, 212)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 35
+theme_override_font_sizes/font_size = 36
 text = "오크\n비용 18"
 
 [node name="MonsterInfoBookmark" type="Button" parent="HUD"]
@@ -429,7 +429,7 @@ offset_top = 330.0
 offset_right = -8.0
 offset_bottom = 456.0
 grow_horizontal = 0
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 30
 text = "◀ 상세정보"
 focus_mode = 0
 mouse_filter = 0
@@ -470,7 +470,7 @@ text = "몬스터 상세정보"
 [node name="Close" type="Button" parent="HUD/MonsterInfoPanel/Margin/VBox/Header"]
 custom_minimum_size = Vector2(82, 64)
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "닫기"
 
 [node name="Tabs" type="HBoxContainer" parent="HUD/MonsterInfoPanel/Margin/VBox"]
@@ -481,21 +481,21 @@ theme_override_constants/separation = 8
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "1"
 
 [node name="Tab2" type="Button" parent="HUD/MonsterInfoPanel/Margin/VBox/Tabs"]
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "2"
 
 [node name="Tab3" type="Button" parent="HUD/MonsterInfoPanel/Margin/VBox/Tabs"]
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "3"
 
 [node name="Portrait" type="TextureRect" parent="HUD/MonsterInfoPanel/Margin/VBox"]
@@ -514,31 +514,31 @@ horizontal_alignment = 1
 
 [node name="Stats" type="Label" parent="HUD/MonsterInfoPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "현재 스탯"
 autowrap_mode = 2
 
 [node name="NormalTitle" type="Label" parent="HUD/MonsterInfoPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.9, 1, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "현재 일반증강"
 
 [node name="NormalAugments" type="Label" parent="HUD/MonsterInfoPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "없음"
 autowrap_mode = 2
 
 [node name="SpecialTitle" type="Label" parent="HUD/MonsterInfoPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "현재 특수증강"
 
 [node name="SpecialAugments" type="Label" parent="HUD/MonsterInfoPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "없음"
 autowrap_mode = 2
 
@@ -598,13 +598,13 @@ alignment = 1
 [node name="Title" type="Label" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
-theme_override_font_sizes/font_size = 55
+theme_override_font_sizes/font_size = 54
 text = "전투 메뉴"
 horizontal_alignment = 1
 
 [node name="StageLabel" type="Label" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 33
+theme_override_font_sizes/font_size = 36
 text = "Stage 1 · 첫 번째 침입자\n상대: 견습 마도사"
 horizontal_alignment = 1
 autowrap_mode = 2
@@ -612,14 +612,14 @@ autowrap_mode = 2
 [node name="TimeLabel" type="Label" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.78, 0.72, 0.82, 1)
-theme_override_font_sizes/font_size = 29
+theme_override_font_sizes/font_size = 30
 text = "남은 시간 06:00"
 horizontal_alignment = 1
 
 [node name="Guide" type="Label" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.62, 0.58, 0.67, 1)
-theme_override_font_sizes/font_size = 23
+theme_override_font_sizes/font_size = 24
 text = "메뉴가 열린 동안 전투와 타이머가 정지합니다."
 horizontal_alignment = 1
 autowrap_mode = 2
@@ -627,19 +627,19 @@ autowrap_mode = 2
 [node name="ResumeButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 124)
 layout_mode = 2
-theme_override_font_sizes/font_size = 35
+theme_override_font_sizes/font_size = 36
 text = "계속하기"
 
 [node name="RestartButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 115)
 layout_mode = 2
-theme_override_font_sizes/font_size = 33
+theme_override_font_sizes/font_size = 36
 text = "이 스테이지 다시 도전"
 
 [node name="LobbyButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 115)
 layout_mode = 2
-theme_override_font_sizes/font_size = 33
+theme_override_font_sizes/font_size = 36
 text = "로비로 나가기"
 
 [node name="DemonAugmentPanel" type="PanelContainer" parent="HUD"]
@@ -669,13 +669,13 @@ theme_override_constants/separation = 24
 
 [node name="Title" type="Label" parent="HUD/DemonAugmentPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 53
+theme_override_font_sizes/font_size = 54
 text = "마왕의 개입"
 horizontal_alignment = 1
 
 [node name="Trigger" type="Label" parent="HUD/DemonAugmentPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "증강 선택 1 / 3"
 horizontal_alignment = 1
 
@@ -687,21 +687,21 @@ theme_override_constants/separation = 16
 custom_minimum_size = Vector2(0, 414)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "증강 1"
 
 [node name="Choice1" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices"]
 custom_minimum_size = Vector2(0, 414)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "증강 2"
 
 [node name="Choice2" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices"]
 custom_minimum_size = Vector2(0, 414)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "증강 3"
 
 [node name="RerollButton" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox"]
@@ -739,7 +739,7 @@ alignment = 1
 
 [node name="Title" type="Label" parent="HUD/MutationPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 53
+theme_override_font_sizes/font_size = 54
 text = "돌연변이 선택"
 horizontal_alignment = 1
 
@@ -760,7 +760,7 @@ mouse_filter = 0
 custom_minimum_size = Vector2(270, 288)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 35
+theme_override_font_sizes/font_size = 36
 text = "슬라임\n선택"
 
 [node name="Choice1" type="Button" parent="HUD/MutationPanel/Margin/VBox/Choices"]
@@ -768,7 +768,7 @@ mouse_filter = 0
 custom_minimum_size = Vector2(270, 288)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 35
+theme_override_font_sizes/font_size = 36
 text = "거미\n선택"
 
 [node name="Choice2" type="Button" parent="HUD/MutationPanel/Margin/VBox/Choices"]
@@ -776,7 +776,7 @@ mouse_filter = 0
 custom_minimum_size = Vector2(270, 288)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 35
+theme_override_font_sizes/font_size = 36
 text = "오크\n선택"
 
 [node name="ResultPanel" type="PanelContainer" parent="HUD"]
@@ -807,13 +807,13 @@ alignment = 1
 
 [node name="ResultTitle" type="Label" parent="HUD/ResultPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 58
+theme_override_font_sizes/font_size = 60
 text = "전투 종료"
 horizontal_alignment = 1
 
 [node name="ResultMessage" type="Label" parent="HUD/ResultPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 36
 text = "결과"
 horizontal_alignment = 1
 autowrap_mode = 2
@@ -821,7 +821,7 @@ autowrap_mode = 2
 [node name="ResultAnalysis" type="Label" parent="HUD/ResultPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 260)
 layout_mode = 2
-theme_override_font_sizes/font_size = 25
+theme_override_font_sizes/font_size = 24
 text = "Run 분석"
 horizontal_alignment = 0
 vertical_alignment = 1
@@ -831,17 +831,17 @@ autowrap_mode = 2
 visible = false
 custom_minimum_size = Vector2(0, 115)
 layout_mode = 2
-theme_override_font_sizes/font_size = 35
+theme_override_font_sizes/font_size = 36
 text = "다음 스테이지"
 
 [node name="StageSelectResultButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 103)
 layout_mode = 2
-theme_override_font_sizes/font_size = 33
+theme_override_font_sizes/font_size = 36
 text = "로비로 돌아가기"
 
 [node name="RestartButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 115)
 layout_mode = 2
-theme_override_font_sizes/font_size = 35
+theme_override_font_sizes/font_size = 36
 text = "같은 스테이지 다시 도전"
