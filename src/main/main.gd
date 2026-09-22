@@ -689,12 +689,8 @@ func _refresh_monster_info_panel() -> void:
 	)
 
 func _build_monster_info_fallback(monster_id: String) -> Dictionary:
-	var scene := MONSTER_CATALOG.get_scene(monster_id)
-	if scene == null:
-		return {}
-
-	var monster := scene.instantiate()
-	if monster == null:
+	var base_stats := MONSTER_CATALOG.get_base_stats(monster_id)
+	if base_stats.is_empty():
 		return {}
 
 	var detail := {
@@ -707,9 +703,16 @@ func _build_monster_info_fallback(monster_id: String) -> Dictionary:
 		"special_augments": [],
 	}
 
-	var raw_hp = monster.get("max_hp")
-	if raw_hp != null:
-		var hp_multiplier := float(battle.get("monster_hp_multiplier"))
+	var hp_multiplier := float(battle.get("monster_hp_multiplier"))
+	var damage_multiplier := float(
+		battle.get("monster_damage_multiplier")
+	)
+	var speed_multiplier := float(battle.get("monster_speed_multiplier"))
+	var attack_speed_multiplier := float(
+		battle.get("monster_attack_speed_multiplier")
+	)
+
+	if base_stats.has("max_hp"):
 		var monster_hp_multiplier := 1.0
 		if battle.has_method("_get_monster_augment_multiplier"):
 			monster_hp_multiplier = float(
@@ -727,18 +730,14 @@ func _build_monster_info_fallback(monster_id: String) -> Dictionary:
 		detail["max_hp"] = maxi(
 			1,
 			int(round(
-				float(raw_hp)
+				float(base_stats["max_hp"])
 				* hp_multiplier
 				* monster_hp_multiplier
 				* level_hp_multiplier
 			))
 		)
 
-	var raw_damage = monster.get("attack_damage")
-	if raw_damage != null:
-		var damage_multiplier := float(
-			battle.get("monster_damage_multiplier")
-		)
+	if base_stats.has("attack_damage"):
 		var monster_damage_multiplier := 1.0
 		if battle.has_method("_get_monster_augment_multiplier"):
 			monster_damage_multiplier = float(
@@ -760,18 +759,14 @@ func _build_monster_info_fallback(monster_id: String) -> Dictionary:
 		detail["attack_damage"] = maxi(
 			1,
 			int(round(
-				float(raw_damage)
+				float(base_stats["attack_damage"])
 				* damage_multiplier
 				* monster_damage_multiplier
 				* level_damage_multiplier
 			))
 		)
 
-	var raw_speed = monster.get("move_speed")
-	if raw_speed != null:
-		var speed_multiplier := float(
-			battle.get("monster_speed_multiplier")
-		)
+	if base_stats.has("move_speed"):
 		var monster_speed_multiplier := 1.0
 		if battle.has_method("_get_monster_augment_multiplier"):
 			monster_speed_multiplier = float(
@@ -791,17 +786,13 @@ func _build_monster_info_fallback(monster_id: String) -> Dictionary:
 				)
 			)
 		detail["move_speed"] = (
-			float(raw_speed)
+			float(base_stats["move_speed"])
 			* speed_multiplier
 			* monster_speed_multiplier
 			* level_speed_multiplier
 		)
 
-	var raw_cooldown = monster.get("attack_cooldown")
-	if raw_cooldown != null:
-		var attack_speed_multiplier := float(
-			battle.get("monster_attack_speed_multiplier")
-		)
+	if base_stats.has("attack_cooldown"):
 		var monster_cooldown_multiplier := 1.0
 		if battle.has_method("_get_monster_augment_multiplier"):
 			monster_cooldown_multiplier = float(
@@ -813,24 +804,28 @@ func _build_monster_info_fallback(monster_id: String) -> Dictionary:
 			)
 		detail["attack_cooldown"] = maxf(
 			0.10,
-			float(raw_cooldown)
+			float(base_stats["attack_cooldown"])
 			* attack_speed_multiplier
 			* monster_cooldown_multiplier
 		)
 
-	var raw_explosion_damage = monster.get("explosion_damage")
-	if raw_explosion_damage != null:
-		detail["explosion_damage"] = int(raw_explosion_damage)
+	if base_stats.has("explosion_damage"):
+		detail["explosion_damage"] = int(round(
+			float(base_stats["explosion_damage"])
+			* damage_multiplier
+		))
 
-	var raw_explosion_radius = monster.get("explosion_radius")
-	if raw_explosion_radius != null:
-		detail["explosion_radius"] = float(raw_explosion_radius)
+	if base_stats.has("explosion_radius"):
+		detail["explosion_radius"] = float(
+			base_stats["explosion_radius"]
+		)
 
-	var raw_fuse = monster.get("self_destruct_fuse")
-	if raw_fuse != null:
-		detail["self_destruct_fuse"] = float(raw_fuse)
-
-	monster.free()
+	if base_stats.has("self_destruct_fuse"):
+		detail["self_destruct_fuse"] = maxf(
+			0.10,
+			float(base_stats["self_destruct_fuse"])
+			* attack_speed_multiplier
+		)
 
 	var build_counts = battle.get("demon_build_counts")
 	if typeof(build_counts) == TYPE_DICTIONARY:
