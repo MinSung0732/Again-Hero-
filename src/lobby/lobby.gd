@@ -553,7 +553,7 @@ func _restore_saved_team_selection() -> void:
 		team_selected_ids.append(String(raw_id))
 
 	_refresh_team_preview()
-	team_status_label.text = "컬렉션/편성 복원 완료 · 카드를 탭해 변경하세요."
+	team_status_label.text = "컬렉션/편성 복원 완료 · 각 카드의 버튼으로 편성 또는 상세정보를 확인하세요."
 
 func _refresh_team_preview() -> void:
 	_refresh_team_slot(team_slot_1_button, 0)
@@ -577,6 +577,7 @@ func _refresh_team_preview() -> void:
 
 func _clear_team_monster_cards() -> void:
 	for child in team_monster_grid.get_children():
+		team_monster_grid.remove_child(child)
 		child.queue_free()
 
 func _rebuild_team_monster_cards() -> void:
