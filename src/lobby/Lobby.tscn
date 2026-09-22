@@ -363,9 +363,9 @@ size_flags_vertical = 4
 [node name="CardMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard"]
 layout_mode = 2
 theme_override_constants/margin_left = 46
-theme_override_constants/margin_top = 28
+theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 46
-theme_override_constants/margin_bottom = 32
+theme_override_constants/margin_bottom = 60
 
 [node name="CardVBox" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin"]
 layout_mode = 2
