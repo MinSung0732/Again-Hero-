@@ -8,6 +8,9 @@ const PROFILES = {
 		"observation_interval": 4.0,
 		"stack_inertia": 1.25,
 		"new_branch_penalty": 0.70,
+		"heal_item_desire": 0.95,
+		"heal_risk_tolerance": 0.35,
+		"heal_detour_weight": 1.15,
 		"augment_biases": {},
 	},
 	"stage_2_aggressive": {
@@ -16,6 +19,9 @@ const PROFILES = {
 		"observation_interval": 2.8,
 		"stack_inertia": 0.95,
 		"new_branch_penalty": 0.40,
+		"heal_item_desire": 1.10,
+		"heal_risk_tolerance": 0.60,
+		"heal_detour_weight": 1.20,
 		"augment_biases": {
 			"rogue_edge": 0.75,
 			"rogue_tempo": 0.65,
@@ -33,6 +39,9 @@ const PROFILES = {
 		"observation_interval": 3.2,
 		"stack_inertia": 1.05,
 		"new_branch_penalty": 0.45,
+		"heal_item_desire": 1.18,
+		"heal_risk_tolerance": 0.76,
+		"heal_detour_weight": 0.90,
 		"augment_biases": {
 			"fighter_guard_wall": 0.45,
 			"fighter_revenge": 0.35,
