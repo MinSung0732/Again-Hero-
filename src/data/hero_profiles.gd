@@ -59,6 +59,7 @@ const PROFILES = {
 			"force_enemy_count": 5,
 		},
 		"augment_pool_ids": [
+			"common_attack_training",
 			"projectile_power",
 			"rapid_strikes",
 			"iron_body",
@@ -138,6 +139,8 @@ const PROFILES = {
 			"behind_offset": 54.0,
 		},
 		"augment_pool_ids": [
+			"common_attack_training",
+			"rapid_strikes",
 			"rogue_edge",
 			"rogue_tempo",
 			"rogue_guard",
@@ -215,13 +218,15 @@ const PROFILES = {
 			"activation_enemy_count": 1,
 		},
 		"augment_pool_ids": [
+			"common_attack_training",
+			"rapid_strikes",
 			"fighter_guard_wall",
 			"fighter_revenge",
 			"fighter_thorns",
 			"fighter_guard_mastery",
-			"fighter_guard_march",
 			"fighter_charge",
 			"fighter_sword_mastery",
+			"fighter_slash_mastery",
 			"fighter_slash_width",
 			"fighter_thrust_training",
 			"fighter_courage",
