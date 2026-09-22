@@ -374,7 +374,7 @@ layout_mode = 2
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 408.0
+offset_bottom = 700.0
 grow_horizontal = 2
 theme_override_constants/separation = 8
 
@@ -396,8 +396,12 @@ text = "첫 번째 침입자"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="UpperFrameGap" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
+custom_minimum_size = Vector2(0, 190)
+layout_mode = 2
+
 [node name="PortraitFrame" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
-custom_minimum_size = Vector2(0, 240)
+custom_minimum_size = Vector2(0, 360)
 layout_mode = 2
 
 [node name="FrameMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame"]
