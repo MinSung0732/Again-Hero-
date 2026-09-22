@@ -21,6 +21,7 @@ signal battle_finished(message: String, player_won: bool)
 
 const HERO_SCENE := preload("res://src/hero/Hero.tscn")
 const EXP_ORB_SCENE := preload("res://src/battle/ExpOrb.tscn")
+const HEAL_ITEM_SCENE := preload("res://src/battle/HealItem.tscn")
 const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
 const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const HERO_AI_PROFILES := preload("res://src/data/hero_ai_profiles.gd")
@@ -106,6 +107,7 @@ var stage_reinforcement_queue: Array[Dictionary] = []
 var stage_reinforcement_timer: float = 0.0
 var stage_reinforcement_interval: float = 0.12
 var stage_reinforcement_batch_size: int = 2
+var hero_kills_toward_heal_item: int = 0
 
 var summon_cost_multiplier: float = 1.0
 var demon_exp_gain_multiplier: float = 1.0
@@ -247,6 +249,7 @@ func _start_battle() -> void:
 	stage_reinforcement_timer = 0.0
 	stage_reinforcement_interval = 0.12
 	stage_reinforcement_batch_size = 2
+	hero_kills_toward_heal_item = 0
 
 	summon_cost_multiplier = 1.0
 	demon_exp_gain_multiplier = 1.0
@@ -1107,6 +1110,12 @@ func _on_monster_died(monster: Node) -> void:
 
 	run_metrics.record_monster_death(monster_type)
 
+	if death_type != "self_destruct":
+		hero_kills_toward_heal_item += 1
+		while hero_kills_toward_heal_item >= 30:
+			hero_kills_toward_heal_item -= 30
+			_spawn_random_heal_item()
+
 	var original_cost: float = float(monster_summon_costs.get(instance_id, 0.0))
 	monster_summon_costs.erase(instance_id)
 
@@ -1197,6 +1206,24 @@ func _process_special_death_spawn(
 					),
 				}
 			)
+
+func _spawn_random_heal_item() -> void:
+	if not is_instance_valid(hero):
+		return
+
+	var margin := 150.0
+	var min_x := margin
+	var max_x := maxf(current_map_size.x - margin, min_x)
+	var min_y := margin
+	var max_y := maxf(current_map_size.y - margin, min_y)
+	var spawn_position := Vector2(
+		randf_range(min_x, max_x),
+		randf_range(min_y, max_y)
+	)
+
+	var item := HEAL_ITEM_SCENE.instantiate() as Node2D
+	add_child(item)
+	item.global_position = spawn_position
 
 func _spawn_exp_orb(drop_position: Vector2, exp_value: int) -> void:
 	if exp_value <= 0:
@@ -2466,7 +2493,7 @@ func _set_combat_physics_enabled(enabled: bool) -> void:
 	if is_instance_valid(hero):
 		hero.set_physics_process(enabled)
 
-	for group_name in ["monsters", "exp_orbs", "hero_projectiles", "monster_projectiles"]:
+	for group_name in ["monsters", "exp_orbs", "heal_items", "hero_projectiles", "monster_projectiles"]:
 		for node in get_tree().get_nodes_in_group(group_name):
 			if is_instance_valid(node):
 				node.set_physics_process(enabled)
