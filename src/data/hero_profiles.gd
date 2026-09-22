@@ -69,6 +69,7 @@ const PROFILES = {
 			"battle_recovery",
 		],
 		"sprite_sheet_path": "res://assets/art/heroes/stage1_mage/stage1_mage_spritesheet.png",
+		"sprite_frame_dir": "res://assets/art/heroes/stage1_mage/frames",
 	},
 	"swift_hunter": {
 		"id": "swift_hunter",
