@@ -36,6 +36,10 @@ const STAGE2_EFFECT3_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_
 const HERO_REFERENCE_SHEET_PATH := "res://assets/art/heroes/stage1_mage/stage1_mage_spritesheet.png"
 const HERO_REFERENCE_FRAME_SIZE := Vector2i(64, 64)
 const HERO_REFERENCE_RENDER_SCALE := 3.0
+# Stage 1 is now built from 256x256 standalone frames, so do not fall back to
+# scale=3 when the legacy sheet reference cannot provide a valid used rect.
+# Keep the on-screen body height close to the old in-battle mage size instead.
+const STAGE1_TARGET_VISIBLE_HEIGHT := 108.0
 
 const APPROACH_DISTANCE_RATIO := 0.86
 const FIELD_MARGIN := 72.0
@@ -1308,15 +1312,6 @@ func _apply_normalized_hero_visual_scale() -> void:
 	if hero_sprite.sprite_frames.get_frame_count("idle") <= 0:
 		return
 
-	var reference_height := _get_stage1_reference_render_height()
-	if reference_height <= 0.0:
-		# 기준 리소스를 읽지 못한 경우 기존 Stage 1 크기를 안전값으로 유지.
-		hero_sprite.scale = Vector2(
-			HERO_REFERENCE_RENDER_SCALE,
-			HERO_REFERENCE_RENDER_SCALE
-		)
-		return
-
 	var texture := hero_sprite.sprite_frames.get_frame_texture(
 		"idle",
 		0
@@ -1332,7 +1327,16 @@ func _apply_normalized_hero_visual_scale() -> void:
 	if used_rect.size.y <= 0:
 		return
 
-	var normalized_scale := reference_height / float(
+	var target_height := _get_stage1_reference_render_height()
+	if hero_id == "ranged_rookie":
+		# The remade Stage 1 mage uses standalone 256x256 frames. The legacy
+		# sheet can be empty/invalid for the old 64x64 reference crop, which
+		# previously triggered scale=3 and made the new mage enormous.
+		target_height = STAGE1_TARGET_VISIBLE_HEIGHT
+	elif target_height <= 0.0:
+		target_height = STAGE1_TARGET_VISIBLE_HEIGHT
+
+	var normalized_scale := target_height / float(
 		used_rect.size.y
 	)
 	hero_sprite.scale = Vector2(
