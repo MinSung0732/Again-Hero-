@@ -14,6 +14,12 @@ const TAG_LABELS := {
 	"area": "광역",
 	"resistance": "저항",
 	"growth": "성장",
+	"ammo": "장탄",
+	"reload": "장전",
+	"headshot": "헤드샷",
+	"deadeye": "데드아이",
+	"evasion": "회피",
+	"gunner": "권총",
 }
 
 const AUGMENTS = [
@@ -501,6 +507,211 @@ const AUGMENTS = [
 		"effects": [
 			{"op": "add_stat", "target": "rogue_bonus_combo_hits", "value": 1, "max": 1},
 		],
+	}
+,
+	{
+		"id": "gunner_fast_reload",
+		"name": "속사 실린더",
+		"description": "재장전 시간 -8% (최대 5중첩)",
+		"base_score": 6.7,
+		"max_stack": 5,
+		"tags": ["gunner", "reload", "ammo"],
+		"effects": [{"op": "gunner_fast_reload"}],
+		"ai_rules": [
+			{"source": "context_linear", "key": "gunner_ammo_empty_pressure", "weight": 3.4, "cap": 3.4},
+			{"source": "context_min", "key": "gunner_reload_state", "value": 0.5, "bonus": 1.5},
+			{"source": "recent_role_ratio", "key": "swarm", "weight": 1.4}
+		],
+		"synergy_rules": [{"source": "build_tag_stacks", "key": "ammo", "weight": 0.35, "cap": 1.4}]
+	},
+	{
+		"id": "gunner_extended_cylinder",
+		"name": "확장 실린더",
+		"description": "최대 장탄 +1 (최대 6중첩)",
+		"base_score": 6.9,
+		"max_stack": 6,
+		"tags": ["gunner", "ammo", "deadeye"],
+		"effects": [{"op": "gunner_expand_magazine"}],
+		"ai_rules": [
+			{"source": "context_linear", "key": "gunner_ammo_empty_pressure", "weight": 2.8, "cap": 2.8},
+			{"source": "recent_events_linear", "weight": 0.05, "cap": 0.8}
+		],
+		"synergy_rules": [{"source": "build_tag_stacks", "key": "deadeye", "weight": 0.45, "cap": 1.8}]
+	},
+	{
+		"id": "gunner_fanning",
+		"name": "패닝",
+		"description": "랜덤 탄환 확산각 감소 (최대 5중첩)",
+		"base_score": 6.5,
+		"max_stack": 5,
+		"tags": ["gunner", "damage", "projectile"],
+		"effects": [{"op": "gunner_tighten_spread"}],
+		"ai_rules": [
+			{"source": "current_role_ratio", "key": "tank", "weight": 1.8},
+			{"source": "total_count_max", "value": 5, "bonus": 0.8}
+		],
+		"synergy_rules": [{"source": "build_tag_stacks", "key": "headshot", "weight": 0.30, "cap": 1.2}]
+	},
+	{
+		"id": "gunner_ricochet_pressure",
+		"name": "도탄 사격",
+		"description": "관통 후 다음 적 명중 피해가 점점 증가 (최대 5중첩)",
+		"base_score": 6.8,
+		"max_stack": 5,
+		"tags": ["gunner", "projectile", "area"],
+		"effects": [{"op": "gunner_penetration_ramp"}],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.45, "cap": 2.7},
+			{"source": "current_role_ratio", "key": "swarm", "weight": 2.4},
+			{"source": "recent_role_ratio", "key": "swarm", "weight": 1.8}
+		],
+		"synergy_rules": [{"source": "build_tag_stacks", "key": "attack_speed", "weight": 0.30, "cap": 1.2}]
+	},
+	{
+		"id": "gunner_deadly_aim",
+		"name": "치명적 조준",
+		"description": "헤드샷 확률 +3% (최대 8중첩)",
+		"base_score": 6.9,
+		"max_stack": 8,
+		"tags": ["gunner", "headshot", "damage"],
+		"effects": [{"op": "gunner_headshot_chance"}],
+		"ai_rules": [
+			{"source": "hp_ratio_min", "value": 0.55, "bonus": 0.6},
+			{"source": "current_role_ratio", "key": "tank", "weight": 1.6}
+		],
+		"synergy_rules": [{"source": "build_tag_stacks", "key": "headshot", "weight": 0.50, "cap": 2.0}]
+	},
+	{
+		"id": "gunner_large_caliber",
+		"name": "대구경 탄환",
+		"description": "헤드샷 피해 배율 +0.05 (최대 6중첩)",
+		"base_score": 6.4,
+		"max_stack": 6,
+		"tags": ["gunner", "headshot", "damage"],
+		"effects": [{"op": "gunner_headshot_damage"}],
+		"ai_rules": [{"source": "current_role_ratio", "key": "tank", "weight": 2.2}],
+		"synergy_rules": [{"source": "build_augment_stacks", "key": "gunner_deadly_aim", "weight": 0.65, "cap": 2.6}]
+	},
+	{
+		"id": "gunner_snap_reload",
+		"name": "속전속결",
+		"description": "퀵드로 확률 +1% (최대 7중첩)",
+		"base_score": 6.1,
+		"max_stack": 7,
+		"tags": ["gunner", "reload", "ammo"],
+		"effects": [{"op": "gunner_quickdraw_chance"}],
+		"ai_rules": [
+			{"source": "context_linear", "key": "gunner_ammo_empty_pressure", "weight": 2.5, "cap": 2.5},
+			{"source": "context_min", "key": "gunner_reload_state", "value": 0.5, "bonus": 1.0}
+		],
+		"synergy_rules": [{"source": "build_tag_stacks", "key": "reload", "weight": 0.35, "cap": 1.4}]
+	},
+	{
+		"id": "gunner_tactical_retreat",
+		"name": "전술 후퇴",
+		"description": "백스텝 쿨타임 -0.5초, 거리 +10 (최대 6중첩)",
+		"base_score": 6.5,
+		"max_stack": 6,
+		"tags": ["gunner", "evasion", "mobility", "survival"],
+		"effects": [{"op": "gunner_tactical_retreat"}],
+		"ai_rules": [
+			{"source": "context_linear", "key": "gunner_surround_pressure", "weight": 3.2, "cap": 4.2},
+			{"source": "hp_missing", "weight": 2.5}
+		],
+		"synergy_rules": [{"source": "build_tag_stacks", "key": "evasion", "weight": 0.40, "cap": 1.6}]
+	},
+	{
+		"id": "gunner_afterimage_shot",
+		"name": "잔상 사격",
+		"description": "백스텝 시 이전 위치에서 자동 사격, 중첩당 2발 추가 (최대 3중첩)",
+		"base_score": 6.8,
+		"max_stack": 3,
+		"tags": ["gunner", "evasion", "damage"],
+		"effects": [{"op": "gunner_afterimage_shot"}],
+		"ai_rules": [{"source": "context_linear", "key": "gunner_surround_pressure", "weight": 2.8, "cap": 3.6}],
+		"synergy_rules": [{"source": "build_augment_stacks", "key": "gunner_tactical_retreat", "weight": 0.75, "cap": 2.25}]
+	},
+	{
+		"id": "gunner_forced_ejection",
+		"name": "강제 배출",
+		"description": "실린더 타격 넉백 +15, 슬로우 지속 +0.3초 (최대 5중첩)",
+		"base_score": 6.6,
+		"max_stack": 5,
+		"tags": ["gunner", "reload", "survival", "area"],
+		"effects": [{"op": "gunner_cylinder_control"}],
+		"ai_rules": [
+			{"source": "context_linear", "key": "gunner_surround_pressure", "weight": 3.0, "cap": 4.0},
+			{"source": "context_min", "key": "gunner_reload_state", "value": 0.5, "bonus": 1.2}
+		],
+		"synergy_rules": [{"source": "build_tag_stacks", "key": "reload", "weight": 0.35, "cap": 1.4}]
+	},
+	{
+		"id": "gunner_impact_cylinder",
+		"name": "충격 실린더",
+		"description": "실린더 타격에 공격력 비례 피해 추가 (최대 5중첩)",
+		"base_score": 6.4,
+		"max_stack": 5,
+		"tags": ["gunner", "reload", "damage", "area"],
+		"effects": [{"op": "gunner_cylinder_damage"}],
+		"ai_rules": [
+			{"source": "context_linear", "key": "gunner_surround_pressure", "weight": 2.7, "cap": 3.5},
+			{"source": "nearby_linear", "weight": 0.30, "cap": 1.8}
+		],
+		"synergy_rules": [{"source": "build_augment_stacks", "key": "gunner_forced_ejection", "weight": 0.55, "cap": 2.2}]
+	},
+	{
+		"id": "gunner_deadeye_focus",
+		"name": "데드아이 - 집중 사격",
+		"description": "데드아이 발사 간격 -7% (최대 5중첩)",
+		"base_score": 6.6,
+		"max_stack": 5,
+		"tags": ["gunner", "deadeye", "attack_speed"],
+		"effects": [{"op": "gunner_deadeye_focus"}],
+		"ai_rules": [{"source": "context_linear", "key": "gunner_deadeye_cluster_score", "weight": 0.55, "cap": 3.3}],
+		"synergy_rules": [{"source": "build_tag_stacks", "key": "ammo", "weight": 0.35, "cap": 1.4}]
+	},
+	{
+		"id": "gunner_deadeye_storm",
+		"name": "데드아이 - 탄환 폭풍",
+		"description": "데드아이 장탄당 발사 수 +0.25 (최대 4중첩)",
+		"base_score": 6.9,
+		"max_stack": 4,
+		"tags": ["gunner", "deadeye", "ammo", "area"],
+		"effects": [{"op": "gunner_deadeye_storm"}],
+		"ai_rules": [
+			{"source": "context_linear", "key": "gunner_deadeye_cluster_score", "weight": 0.65, "cap": 3.9},
+			{"source": "current_role_ratio", "key": "swarm", "weight": 1.5}
+		],
+		"synergy_rules": [{"source": "build_augment_stacks", "key": "gunner_extended_cylinder", "weight": 0.55, "cap": 2.2}]
+	},
+	{
+		"id": "gunner_fugitive_instinct",
+		"name": "도망자의 본능",
+		"description": "HP 40% 이하 백스텝 발동 확률 +8% (최대 5중첩)",
+		"base_score": 6.3,
+		"max_stack": 5,
+		"tags": ["gunner", "evasion", "survival"],
+		"effects": [{"op": "gunner_low_hp_backstep"}],
+		"ai_rules": [
+			{"source": "hp_missing", "weight": 4.2},
+			{"source": "hp_ratio_max", "value": 0.40, "bonus": 2.0},
+			{"source": "context_linear", "key": "gunner_surround_pressure", "weight": 1.8, "cap": 2.4}
+		],
+		"synergy_rules": [{"source": "build_tag_stacks", "key": "evasion", "weight": 0.45, "cap": 1.8}]
+	},
+	{
+		"id": "gunner_reload_cover",
+		"name": "장전 엄호",
+		"description": "재장전 중 이동속도 +6% (최대 5중첩)",
+		"base_score": 6.2,
+		"max_stack": 5,
+		"tags": ["gunner", "reload", "mobility", "survival"],
+		"effects": [{"op": "gunner_reload_cover"}],
+		"ai_rules": [
+			{"source": "context_min", "key": "gunner_reload_state", "value": 0.5, "bonus": 1.5},
+			{"source": "context_linear", "key": "gunner_surround_pressure", "weight": 2.2, "cap": 3.0}
+		],
+		"synergy_rules": [{"source": "build_tag_stacks", "key": "reload", "weight": 0.40, "cap": 1.6}]
 	}
 
 ]
