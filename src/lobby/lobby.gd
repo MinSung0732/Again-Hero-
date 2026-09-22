@@ -638,6 +638,14 @@ func _apply_header_card_skin(header: Control) -> void:
 	header_skin.content_margin_top = 0.0
 	header_skin.content_margin_right = 0.0
 	header_skin.content_margin_bottom = 0.0
+
+	# PC 마감: Header 레이아웃 크기는 그대로 두고 프레임 그림만 살짝
+	# 바깥으로 확장한다. Content/StageCard의 Y 좌표에는 영향이 없다.
+	header_skin.expand_margin_left = 6.0
+	header_skin.expand_margin_top = 4.0
+	header_skin.expand_margin_right = 6.0
+	header_skin.expand_margin_bottom = 14.0
+
 	header.add_theme_stylebox_override("panel", header_skin)
 
 
