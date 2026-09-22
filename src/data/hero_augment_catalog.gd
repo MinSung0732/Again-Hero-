@@ -13,6 +13,7 @@ const TAG_LABELS := {
 	"recovery": "회복",
 	"area": "광역",
 	"resistance": "저항",
+	"growth": "성장",
 }
 
 const AUGMENTS = [
@@ -196,6 +197,28 @@ const AUGMENTS = [
 		],
 		"synergy_rules": [
 			{"source": "build_tag_stacks", "key": "durability", "weight": 0.80, "cap": 2.40},
+		],
+	},
+	{
+		"id": "exp_training",
+		"name": "경험 축적",
+		"description": "경험치 획득량 +10%",
+		"base_score": 6.4,
+		"max_stack": 5,
+		"tags": ["growth"],
+		"effects": [
+			{"op": "add_stat", "target": "exp_gain_multiplier", "value": 0.10, "max": 1.50},
+		],
+	},
+	{
+		"id": "exp_magnet",
+		"name": "경험 흡수",
+		"description": "경험치 획득 범위 +40",
+		"base_score": 5.8,
+		"max_stack": 4,
+		"tags": ["growth", "range"],
+		"effects": [
+			{"op": "add_stat", "target": "exp_pickup_radius", "value": 40.0},
 		],
 	},
 	{
