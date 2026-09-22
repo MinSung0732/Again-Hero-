@@ -440,7 +440,7 @@ const AUGMENTS = [
 	{
 		"id": "fighter_courage",
 		"name": "용기백배",
-		"description": "검방 돌격 피해 +15%, 이후 중첩당 +3% (최대 +36%)",
+		"description": "기본 3연속 돌진 후 추가 돌진 확률 15%, 이후 중첩당 +3% (최대 36%). 최대 6회까지 돌진하며 돌진 처치 시 HP 8 회복",
 		"base_score": 7.5,
 		"max_stack": 8,
 		"tags": ["damage", "mobility", "area"],
