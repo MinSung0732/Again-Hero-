@@ -10,9 +10,10 @@ var elapsed: float = 0.0
 var start_position: Vector2 = Vector2.ZERO
 var horizontal_drift: float = 0.0
 
-func setup(amount: int) -> void:
+func setup(amount: int, text_color: Color = Color.WHITE) -> void:
 	value_label.text = str(maxi(amount, 0))
 	value_label.add_theme_font_size_override("font_size", 32)
+	value_label.add_theme_color_override("font_color", text_color)
 	_start_float()
 
 func setup_text(
