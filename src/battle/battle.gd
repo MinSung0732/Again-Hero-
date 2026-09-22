@@ -745,7 +745,12 @@ func _spawn_monster(
 				"self_destruct_fuse",
 				maxf(
 					0.10,
-					float(fuse_value) * monster_attack_speed_multiplier
+					float(fuse_value)
+					* monster_attack_speed_multiplier
+					* _get_monster_augment_multiplier(
+						monster_type,
+						"attack_cooldown"
+					)
 				)
 			)
 
@@ -771,6 +776,11 @@ func _spawn_monster(
 					int(round(
 						float(explosion_damage_value)
 						* monster_damage_multiplier
+						* _get_monster_augment_multiplier(
+							monster_type,
+							"damage"
+						)
+						* _get_demon_level_monster_damage_multiplier()
 					))
 				)
 			)
