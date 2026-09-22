@@ -1868,3 +1868,9 @@
 - STAGE 번호/침입자 제목이 계속 위쪽에 붙어 보이던 실제 원인 확인: 화면에서 크게 보이는 아래 여백은 StageMetaBox가 아니라 다음 StagePicker의 확장 영역 상단 여백이었음.
 - StageMetaBox/StagePicker/StageCard 크기와 위치는 유지하고, StageNumber/StageName만 기존 92px 박스를 넘어 StagePicker의 사용되지 않는 상단 여백으로 34px 내려 표시.
 - VBox 레이아웃 크기를 바꾸지 않으므로 ui10 카드, 스와이프/드래그 및 scale/fade 전환 애니메이션 위치에는 영향 없음.
+
+### Section Header Gap Alignment
+- STAGE 메타는 아래 여백으로 내려갔지만 '침입자 기록 / 대상 용사를 선택...'이 외곽 상단선에 붙어 보이던 문제 수정.
+- VBoxContainer가 라벨 위치를 강제로 잡던 구조를 SectionHeaderBox 고정 높이 Control로 감싸고, 두 텍스트만 박스 안에서 아래쪽으로 재배치.
+- SectionHeaderBox 전체 높이를 기존 두 라벨+간격과 비슷하게 유지해 StageMetaBox/StageCard 위치는 바꾸지 않음.
+- 스와이프/드래그, 카드 전환 애니메이션, 좌우 버튼 규칙은 변경하지 않음.
