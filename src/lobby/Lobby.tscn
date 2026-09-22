@@ -355,10 +355,10 @@ theme_override_font_sizes/font_size = 42
 text = "‹"
 
 [node name="StageCard" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
-custom_minimum_size = Vector2(0, 820)
+custom_minimum_size = Vector2(780, 1115)
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 1
+size_flags_horizontal = 4
+size_flags_vertical = 4
 
 [node name="CardMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard"]
 layout_mode = 2
