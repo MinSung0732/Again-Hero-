@@ -3,7 +3,7 @@ extends Area2D
 const NORMAL_EFFECT_DIR := "res://assets/art/monsters/spider/frames/effect"
 const ELITE_EFFECT_DIR := "res://assets/art/elitemonster/spider/frames/effect"
 const EFFECT_FRAME_COUNT := 8
-const EFFECT_FPS := 12.0
+const EFFECT_FPS_FALLBACK := 8.0
 const EFFECT_TARGET_HEIGHT := 64.0
 
 var direction: Vector2 = Vector2.RIGHT
@@ -85,8 +85,7 @@ func _apply_projectile_visual() -> void:
 		frames.remove_animation(&"default")
 
 	frames.add_animation(&"fly")
-	frames.set_animation_loop(&"fly", true)
-	frames.set_animation_speed(&"fly", EFFECT_FPS)
+	frames.set_animation_loop(&"fly", false)
 
 	var first_texture: Texture2D = null
 	for frame_index in range(1, EFFECT_FRAME_COUNT + 1):
@@ -103,6 +102,12 @@ func _apply_projectile_visual() -> void:
 		return
 
 	projectile_sprite.sprite_frames = frames
+	var flight_duration := max_range / maxf(speed, 1.0)
+	var one_take_fps := EFFECT_FPS_FALLBACK
+	if flight_duration > 0.001:
+		one_take_fps = float(frames.get_frame_count(&"fly")) / flight_duration
+	frames.set_animation_speed(&"fly", maxf(one_take_fps, 1.0))
+
 	var source_height := maxf(float(first_texture.get_height()), 1.0)
 	var uniform_scale := EFFECT_TARGET_HEIGHT / source_height
 	projectile_sprite.scale = Vector2(uniform_scale, uniform_scale)

@@ -1578,3 +1578,9 @@
 - 엘리트 Spider 투사체에 elitemonster/spider/frames/effect/frame_01~08.png 연결.
 - monster_projectiles 그룹을 전투 pause 대상에 포함해 돌연변이 선택/일시정지 중 투사체도 함께 정지.
 - Spider 이동 AI는 접근 → 사거리 진입 → 정지 → 발사 구조로 단순 유지.
+
+### Spider Projectile One-Take Animation
+- Spider 거미줄 투사체의 fly 애니메이션 loop를 제거.
+- 일반/엘리트 모두 frame_01~08을 1회만 재생.
+- 투사체의 최대 이동시간(max_range / speed)에 맞춰 8프레임 재생속도를 계산해, 비행 중 애니메이션이 반복되지 않도록 조정.
+- 투사체가 더 빨리 Hero에 적중하면 기존처럼 즉시 소멸하며, 빗나가 최대 사거리까지 가는 경우 1→8 프레임을 한 번만 재생.
