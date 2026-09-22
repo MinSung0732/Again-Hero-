@@ -149,6 +149,7 @@ var gunner_backstep_cooldown: float = 0.0
 var gunner_collision_ignore_timer: float = 0.0
 var gunner_saved_collision_mask: int = -1
 var gunner_cylinder_cooldown: float = 0.0
+var gunner_cylinder_decision_timer: float = 0.0
 var gunner_deadeye_cooldown: float = 0.0
 var gunner_deadeye_active: bool = false
 var gunner_deadeye_shots_left: int = 0
@@ -298,6 +299,7 @@ func configure_profile(profile: Dictionary) -> void:
 	gunner_collision_ignore_timer = 0.0
 	gunner_saved_collision_mask = -1
 	gunner_cylinder_cooldown = 0.0
+	gunner_cylinder_decision_timer = 0.0
 	gunner_deadeye_cooldown = 0.0
 	gunner_deadeye_active = false
 	gunner_deadeye_shots_left = 0
@@ -555,6 +557,7 @@ func _physics_process_gunner(delta: float) -> void:
 	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
 	gunner_backstep_cooldown = maxf(gunner_backstep_cooldown - delta, 0.0)
 	gunner_cylinder_cooldown = maxf(gunner_cylinder_cooldown - delta, 0.0)
+	gunner_cylinder_decision_timer = maxf(gunner_cylinder_decision_timer - delta, 0.0)
 	gunner_deadeye_cooldown = maxf(gunner_deadeye_cooldown - delta, 0.0)
 	_update_invulnerability(delta)
 	_update_gunner_collision_ignore(delta)
@@ -572,8 +575,10 @@ func _physics_process_gunner(delta: float) -> void:
 	if gunner_reloading:
 		gunner_reload_timer = maxf(gunner_reload_timer - delta, 0.0)
 		queue_redraw()
-		if _gunner_should_use_cylinder():
-			_use_gunner_cylinder_strike()
+		if gunner_cylinder_decision_timer <= 0.0:
+			gunner_cylinder_decision_timer = 0.35
+			if _gunner_should_use_cylinder():
+				_use_gunner_cylinder_strike()
 		if gunner_reload_timer <= 0.0:
 			_finish_gunner_reload()
 
@@ -1718,6 +1723,14 @@ func _on_fighter_guard_release_effect_finished() -> void:
 	if hero_archetype == "sword_shield":
 		channel_effect.visible = false
 		channel_effect.position = Vector2.ZERO
+	elif (
+		hero_archetype == "pistol_gunner"
+		and channel_effect.animation == &"cylinder_dust"
+	):
+		channel_effect.visible = false
+		channel_effect.position = Vector2.ZERO
+		channel_effect.modulate = Color.WHITE
+
 
 func _apply_profile_visual() -> void:
 	hero_sprite.visible = false
@@ -4439,16 +4452,23 @@ func _apply_stage4_gunner_effect_visuals() -> void:
 		dust_frames.remove_animation(&"default")
 	dust_frames.add_animation(&"cylinder_dust")
 	dust_frames.set_animation_loop(&"cylinder_dust", false)
-	dust_frames.set_animation_speed(&"cylinder_dust", 18.0)
+	dust_frames.set_animation_speed(&"cylinder_dust", 20.0)
 
 	for index in range(1, 8):
 		var path := "res://assets/art/heroes/stage4_gunner/frames/effect/effect_explosion_%02d.png" % index
 		var texture := _load_stage1_texture(path)
 		if texture == null:
-			push_warning("Stage 4 effect frame load failed: %s" % path)
+			push_warning("Stage 4 muzzle frame load failed: %s" % path)
 			continue
 		frames.add_frame(&"muzzle", texture)
-		dust_frames.add_frame(&"cylinder_dust", texture)
+
+	for index in range(1, 9):
+		var dust_path := "%s/ground_effect_%02d.png" % [STAGE3_CHARGE_EFFECT_DIR, index]
+		var dust_texture := _load_stage1_texture(dust_path)
+		if dust_texture == null:
+			push_warning("Cylinder dust frame load failed: %s" % dust_path)
+			continue
+		dust_frames.add_frame(&"cylinder_dust", dust_texture)
 
 	if frames.get_frame_count(&"muzzle") > 0:
 		rogue_attack_effect.sprite_frames = frames
@@ -4459,10 +4479,10 @@ func _apply_stage4_gunner_effect_visuals() -> void:
 		channel_effect.visible = false
 		channel_effect.sprite_frames = dust_frames
 		channel_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		channel_effect.scale = Vector2(0.78, 0.78)
+		channel_effect.scale = Vector2(0.92, 0.92)
 		channel_effect.position = Vector2.ZERO
 		channel_effect.z_index = 2
-		channel_effect.modulate = Color(0.78, 0.70, 0.58, 0.92)
+		channel_effect.modulate = Color(0.76, 0.68, 0.55, 0.88)
 
 
 func _play_gunner_muzzle_flash(direction: Vector2) -> void:
