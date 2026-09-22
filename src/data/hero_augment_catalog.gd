@@ -279,12 +279,12 @@ const AUGMENTS = [
 	{
 		"id": "rogue_bloodthirst",
 		"name": "피의 갈증",
-		"description": "직접 피해의 3%/5%만큼 HP 회복",
+		"description": "직접 피해 흡혈 +2% (최대 20%)",
 		"base_score": 6.9,
-		"max_stack": 2,
+		"max_stack": 10,
 		"tags": ["recovery", "survival", "damage"],
 		"effects": [
-			{"op": "advance_rogue_lifesteal"},
+			{"op": "add_stat", "target": "rogue_lifesteal_ratio", "value": 0.02, "max": 0.20},
 		],
 	},
 	{
