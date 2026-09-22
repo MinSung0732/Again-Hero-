@@ -500,9 +500,13 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 	var current_distance := global_position.distance_to(
 		current_target.global_position
 	)
+	var lunge_stop_distance := maxf(
+		float(rogue_combo_config.get("lunge_stop_distance", 38.0)),
+		0.0
+	)
 	var usable_lunge := minf(
 		lunge_distance,
-		maxf(current_distance - 38.0, 0.0)
+		maxf(current_distance - lunge_stop_distance, 0.0)
 	)
 	global_position += direction * usable_lunge
 	_clamp_to_battlefield()
