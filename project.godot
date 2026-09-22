@@ -18,6 +18,10 @@ run/main_scene="res://src/lobby/Lobby.tscn"
 config/features=PackedStringArray("4.7")
 config/icon="uid://bxdb4cg7dutw3"
 
+[autoload]
+
+GameFontManager="*res://src/ui/game_font_manager.gd"
+
 [display]
 
 window/size/viewport_width=1080
