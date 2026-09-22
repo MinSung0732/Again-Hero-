@@ -608,7 +608,7 @@ func _apply_new_ui_assets() -> void:
 	# Only the upper main-card region belongs on the StageCard.
 	var stage_texture := _load_png_texture_top_region(
 		UI_CARD_FRAME_DIR + "/ui10.png",
-		0.70
+		0.58
 	)
 	if stage_card != null and stage_texture != null:
 		var old_stage_skin := stage_card.get_node_or_null("StageCardSkin")
@@ -624,9 +624,9 @@ func _apply_new_ui_assets() -> void:
 		stage_skin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		stage_skin.set_anchors_preset(Control.PRESET_FULL_RECT)
 		stage_skin.offset_left = 18.0
-		stage_skin.offset_top = 8.0
+		stage_skin.offset_top = 84.0
 		stage_skin.offset_right = -18.0
-		stage_skin.offset_bottom = -8.0
+		stage_skin.offset_bottom = -18.0
 		stage_card.add_child(stage_skin)
 		stage_card.move_child(stage_skin, 0)
 
