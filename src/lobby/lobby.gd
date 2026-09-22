@@ -622,7 +622,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	var title := Label.new()
 	title.text = _team_monster_name(monster_id)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_font_size_override("font_size", 30)
 	title.add_theme_color_override(
 		"font_color",
 		Color("ffe29a") if selected else Color("f0e9f3")
@@ -631,7 +631,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 
 	var info := Label.new()
 	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	info.add_theme_font_size_override("font_size", 21)
+	info.add_theme_font_size_override("font_size", 24)
 	if available:
 		info.text = "%s · 비용 %.1f%s" % [
 			_team_monster_role_label(monster_id),
@@ -655,7 +655,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	var team_button := Button.new()
 	team_button.custom_minimum_size = Vector2(0.0, 72.0)
 	team_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	team_button.add_theme_font_size_override("font_size", 22)
+	team_button.add_theme_font_size_override("font_size", 24)
 	team_button.text = "편성 해제" if selected else "팀 편성"
 	team_button.disabled = (
 		not available
@@ -674,7 +674,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	var detail_button := Button.new()
 	detail_button.custom_minimum_size = Vector2(0.0, 72.0)
 	detail_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	detail_button.add_theme_font_size_override("font_size", 22)
+	detail_button.add_theme_font_size_override("font_size", 24)
 	detail_button.text = "상세정보"
 	detail_button.add_theme_stylebox_override("normal", secondary_button_style)
 	detail_button.add_theme_stylebox_override("hover", primary_button_style)
@@ -1180,7 +1180,7 @@ func _rebuild_research_list() -> void:
 		var max_level := int(data.get("max_level", 0))
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(0, 150)
-		button.add_theme_font_size_override("font_size", 22)
+		button.add_theme_font_size_override("font_size", 24)
 		button.add_theme_stylebox_override("normal", secondary_button_style)
 		button.add_theme_stylebox_override("hover", secondary_button_style)
 		button.add_theme_stylebox_override("pressed", secondary_button_style)
