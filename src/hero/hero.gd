@@ -118,6 +118,13 @@ var fighter_basic_damage_multiplier: float = 1.0
 var fighter_slash_half_width_bonus: float = 0.0
 var fighter_thrust_length_bonus: float = 0.0
 var fighter_thrust_damage_bonus: float = 0.0
+var fighter_slash_mastery_stacks: int = 0
+var fighter_slash_bonus_hits_remaining: int = 0
+var fighter_slash_combo_timer: float = 0.0
+var fighter_slash_combo_direction: Vector2 = Vector2.ZERO
+var fighter_slash_combo_swing_index: int = 0
+var common_attack_speed_bonus: float = 0.0
+var projectile_count_bonus: int = 0
 var fighter_charge_config: Dictionary = {}
 var fighter_charge_cooldown_timer: float = 0.0
 var fighter_charge_active: bool = false
@@ -244,6 +251,13 @@ func configure_profile(profile: Dictionary) -> void:
 	fighter_charge_afterimage_timer = 0.0
 	fighter_courage_bonus = 0.0
 	fighter_charge_kill_heal = 0.0
+	fighter_slash_mastery_stacks = 0
+	fighter_slash_bonus_hits_remaining = 0
+	fighter_slash_combo_timer = 0.0
+	fighter_slash_combo_direction = Vector2.ZERO
+	fighter_slash_combo_swing_index = 0
+	common_attack_speed_bonus = 0.0
+	projectile_count_bonus = 0
 	heal_item_target = null
 	heal_item_retarget_timer = 0.0
 	heal_item_steering_direction = Vector2.ZERO
@@ -295,6 +309,11 @@ func configure_profile(profile: Dictionary) -> void:
 	fighter_slash_half_width_bonus = 0.0
 	fighter_thrust_length_bonus = 0.0
 	fighter_thrust_damage_bonus = 0.0
+	fighter_slash_mastery_stacks = 0
+	fighter_slash_bonus_hits_remaining = 0
+	fighter_slash_combo_timer = 0.0
+	fighter_slash_combo_direction = Vector2.ZERO
+	fighter_slash_combo_swing_index = 0
 	var profile_ultimate = profile.get("ultimate", {})
 	ultimate_config = (
 		profile_ultimate.duplicate(true)
@@ -796,6 +815,7 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 		)
 		interval *= rogue_combo_recovery_multiplier
 
+	interval = _get_common_attack_interval(interval)
 	attack_timer = maxf(interval, 0.08)
 	rogue_combo_index = (rogue_combo_index + 1) % combo_length
 	if rogue_combo_index == 0:
@@ -2150,28 +2170,42 @@ func _fire_projectile(current_target: Node2D) -> void:
 	if shot_direction.length_squared() <= 0.0:
 		return
 
-	attack_timer = attack_cooldown
+	attack_timer = _get_common_attack_interval(attack_cooldown)
 	attack_pose_timer = 0.34
 	_face_attack_direction(shot_direction.x)
 	_restart_stage1_animation("attack")
 
-	var projectile := PROJECTILE_SCENE.instantiate() as Area2D
-	get_parent().add_child(projectile)
-	projectile.global_position = global_position + shot_direction * 46.0
-	projectile.call(
-		"setup",
-		shot_direction,
-		attack_damage,
-		projectile_speed,
-		attack_range,
-		hero_id,
-		projectile_splash_radius,
-		projectile_splash_damage_ratio
-	)
+	var projectile_count := 1 + clampi(projectile_count_bonus, 0, 4)
+	var spread_step := deg_to_rad(12.0)
+	var center_index := float(projectile_count - 1) * 0.5
+	for index in range(projectile_count):
+		var angle_offset := (float(index) - center_index) * spread_step
+		var projectile_direction := shot_direction.rotated(angle_offset).normalized()
+		var projectile := PROJECTILE_SCENE.instantiate() as Area2D
+		get_parent().add_child(projectile)
+		projectile.global_position = global_position + projectile_direction * 46.0
+		projectile.call(
+			"setup",
+			projectile_direction,
+			attack_damage,
+			projectile_speed,
+			attack_range,
+			hero_id,
+			projectile_splash_radius,
+			projectile_splash_damage_ratio
+		)
 
 	_add_ultimate_charge(
 		float(ultimate_config.get("charge_on_attack", 0.0))
 	)
+
+
+func _get_common_attack_interval(base_interval: float) -> float:
+	return maxf(
+		base_interval / (1.0 + maxf(common_attack_speed_bonus, 0.0)),
+		0.06
+	)
+
 
 func _update_channel_skill(delta: float) -> void:
 	if channel_skill_config.is_empty() or is_dying or current_hp <= 0:
@@ -3087,6 +3121,21 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 			else:
 				set(target, next_value)
 
+		"advance_projectile_fan":
+			projectile_count_bonus = mini(projectile_count_bonus + 1, 4)
+
+		"advance_common_attack_speed":
+			common_attack_speed_bonus = minf(
+				common_attack_speed_bonus + 0.02,
+				0.40
+			)
+
+		"advance_fighter_slash_mastery":
+			fighter_slash_mastery_stacks = mini(
+				fighter_slash_mastery_stacks + 1,
+				2
+			)
+
 		"advance_fighter_courage":
 			# Base charge is always 3 hits. Courage only unlocks extra-chain chance.
 			if fighter_courage_bonus <= 0.0:
@@ -3183,6 +3232,11 @@ func _physics_process_fighter(delta: float) -> void:
 	fighter_charge_cooldown_timer = maxf(fighter_charge_cooldown_timer - delta, 0.0)
 	if fighter_charge_active:
 		_update_fighter_charge(delta)
+		return
+
+	if _update_fighter_slash_combo(delta):
+		velocity = Vector2.ZERO
+		_update_fighter_pose_visual(delta)
 		return
 
 	if hit_flash_timer > 0.0:
@@ -3555,17 +3609,73 @@ func _fighter_basic_attack(current_target: Node2D) -> void:
 		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	direction = direction.normalized()
 
-	attack_timer = attack_cooldown
+	attack_timer = _get_common_attack_interval(attack_cooldown)
 	attack_pose_timer = 0.42
 	_face_attack_direction(direction.x)
-	_restart_stage1_animation("attack", 1.0)
+	_restart_fighter_attack_animation(false)
 
 	if _fighter_should_use_slash():
-		_fighter_apply_slash(direction)
-		_play_fighter_attack_effect("slash", direction)
+		_fighter_apply_slash(direction, false)
+		_play_fighter_attack_effect("slash", direction, false)
+		if fighter_slash_mastery_stacks > 0:
+			fighter_slash_bonus_hits_remaining = fighter_slash_mastery_stacks
+			fighter_slash_combo_direction = direction
+			fighter_slash_combo_swing_index = 1
+			fighter_slash_combo_timer = _get_common_attack_interval(0.18)
 	else:
 		_fighter_apply_thrust(direction)
-		_play_fighter_attack_effect("thrust", direction)
+		_play_fighter_attack_effect("thrust", direction, false)
+
+
+func _update_fighter_slash_combo(delta: float) -> bool:
+	if fighter_slash_bonus_hits_remaining <= 0:
+		return false
+
+	fighter_slash_combo_timer = maxf(fighter_slash_combo_timer - delta, 0.0)
+	if fighter_slash_combo_timer > 0.0:
+		return true
+
+	fighter_slash_combo_swing_index += 1
+	var reverse_frames := fighter_slash_combo_swing_index % 2 == 0
+	var direction := fighter_slash_combo_direction
+	if direction.length_squared() <= 0.0:
+		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+	direction = direction.normalized()
+
+	attack_pose_timer = 0.24
+	_face_attack_direction(direction.x)
+	_restart_fighter_attack_animation(reverse_frames)
+	_fighter_apply_slash(direction, true)
+	_play_fighter_attack_effect("slash", direction, reverse_frames)
+
+	fighter_slash_bonus_hits_remaining -= 1
+	if fighter_slash_bonus_hits_remaining > 0:
+		fighter_slash_combo_timer = _get_common_attack_interval(0.18)
+	else:
+		fighter_slash_combo_timer = 0.0
+		fighter_slash_combo_direction = Vector2.ZERO
+	return true
+
+
+func _restart_fighter_attack_animation(reverse_frames: bool) -> void:
+	if not hero_sprite.visible or hero_sprite.sprite_frames == null:
+		return
+	if not hero_sprite.sprite_frames.has_animation("attack"):
+		return
+
+	hero_sprite.stop()
+	hero_sprite.animation = &"attack"
+	hero_sprite.speed_scale = 1.0
+	if reverse_frames:
+		var frame_count := hero_sprite.sprite_frames.get_frame_count(&"attack")
+		hero_sprite.frame = maxi(frame_count - 1, 0)
+		hero_sprite.frame_progress = 0.0
+		hero_sprite.play_backwards(&"attack")
+	else:
+		hero_sprite.frame = 0
+		hero_sprite.frame_progress = 0.0
+		hero_sprite.play(&"attack")
+
 
 func _fighter_should_use_slash() -> bool:
 	var trigger_count := maxi(
@@ -3590,7 +3700,7 @@ func _fighter_should_use_slash() -> bool:
 				return true
 	return false
 
-func _fighter_apply_slash(direction: Vector2) -> void:
+func _fighter_apply_slash(direction: Vector2, bonus_hit: bool = false) -> int:
 	var reach := maxf(float(fighter_basic_config.get("slash_reach", 135.0)), 1.0)
 	var half_width := maxf(
 		float(fighter_basic_config.get("slash_half_width", 88.0))
@@ -3606,6 +3716,7 @@ func _fighter_apply_slash(direction: Vector2) -> void:
 		))
 	)
 	var side := Vector2(-direction.y, direction.x)
+	var bonus_kills := 0
 
 	for node in get_tree().get_nodes_in_group("monsters"):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -3618,8 +3729,27 @@ func _fighter_apply_slash(direction: Vector2) -> void:
 		var lateral := absf(offset.dot(side))
 		if forward < -24.0 or forward > reach or lateral > half_width:
 			continue
-		if monster.has_method("take_damage"):
-			monster.call("take_damage", damage)
+		if not monster.has_method("take_damage"):
+			continue
+
+		var hp_before_value = monster.get("current_hp")
+		var hp_before := int(hp_before_value) if hp_before_value != null else -1
+		monster.call("take_damage", damage)
+		if not bonus_hit or hp_before <= 0:
+			continue
+		var hp_after_value = monster.get("current_hp")
+		if hp_after_value != null and int(hp_after_value) <= 0:
+			bonus_kills += 1
+
+	if bonus_kills > 0 and current_hp > 0:
+		var previous_hp := current_hp
+		current_hp = mini(current_hp + bonus_kills * 10, max_hp)
+		if current_hp > previous_hp:
+			health_changed.emit(current_hp, max_hp)
+			queue_redraw()
+
+	return bonus_kills
+
 
 func _fighter_apply_thrust(direction: Vector2) -> void:
 	var length := maxf(
@@ -3807,7 +3937,11 @@ func _fighter_reflect_damage(raw_damage: float, source: Node) -> void:
 	if is_instance_valid(nearest) and nearest.has_method("take_damage"):
 		nearest.call("take_damage", reflected)
 
-func _play_fighter_attack_effect(animation_name: String, direction: Vector2) -> void:
+func _play_fighter_attack_effect(
+	animation_name: String,
+	direction: Vector2,
+	reverse_frames: bool = false
+) -> void:
 	if rogue_attack_effect.sprite_frames == null:
 		return
 	if not rogue_attack_effect.sprite_frames.has_animation(animation_name):
@@ -3816,9 +3950,17 @@ func _play_fighter_attack_effect(animation_name: String, direction: Vector2) -> 
 	rogue_attack_effect.visible = true
 	rogue_attack_effect.stop()
 	rogue_attack_effect.animation = animation_name
-	rogue_attack_effect.frame = 0
 	rogue_attack_effect.rotation = direction.angle()
-	rogue_attack_effect.play(animation_name)
+	if reverse_frames:
+		var frame_count := rogue_attack_effect.sprite_frames.get_frame_count(animation_name)
+		rogue_attack_effect.frame = maxi(frame_count - 1, 0)
+		rogue_attack_effect.frame_progress = 0.0
+		rogue_attack_effect.play_backwards(animation_name)
+	else:
+		rogue_attack_effect.frame = 0
+		rogue_attack_effect.frame_progress = 0.0
+		rogue_attack_effect.play(animation_name)
+
 
 func _play_fighter_guard_release_effect() -> void:
 	if channel_effect.sprite_frames == null:
