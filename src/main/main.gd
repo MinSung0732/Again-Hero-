@@ -4,6 +4,7 @@ const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
+const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
 @onready var battle_viewport: SubViewport = $BattleViewportContainer/BattleViewport
@@ -541,6 +542,7 @@ func _open_monster_info() -> void:
 		battle_loadout_ids.size() - 1
 	)
 	_refresh_monster_info_panel()
+	monster_info_bookmark.hide()
 	monster_info_panel.show()
 
 	var target_position := monster_info_panel.position
@@ -579,6 +581,7 @@ func _close_monster_info() -> void:
 		func() -> void:
 			monster_info_panel.hide()
 			monster_info_panel.position -= Vector2(430.0, 0.0)
+			monster_info_bookmark.show()
 			monster_info_animating = false
 	)
 
@@ -612,7 +615,13 @@ func _refresh_monster_info_panel() -> void:
 	var detail: Dictionary = {}
 	if battle.has_method("get_monster_run_detail"):
 		detail = battle.call("get_monster_run_detail", monster_id)
+
 	if detail.is_empty():
+		detail = _build_monster_info_fallback(monster_id)
+
+	if detail.is_empty():
+		monster_info_name.text = _get_catalog_monster_name(monster_id)
+		monster_info_stats.text = "현재 정보를 불러오지 못했습니다."
 		return
 
 	monster_info_name.text = String(
@@ -678,6 +687,180 @@ func _refresh_monster_info_panel() -> void:
 		if special_lines.is_empty()
 		else "\n".join(special_lines)
 	)
+
+func _build_monster_info_fallback(monster_id: String) -> Dictionary:
+	var scene := MONSTER_CATALOG.get_scene(monster_id)
+	if scene == null:
+		return {}
+
+	var monster := scene.instantiate()
+	if monster == null:
+		return {}
+
+	var detail := {
+		"monster_id": monster_id,
+		"name": MONSTER_CATALOG.get_name(monster_id),
+		"cost": battle.get_monster_cost(monster_id),
+		"summon_exp": MONSTER_CATALOG.get_summon_exp(monster_id),
+		"demon_level": int(battle.get("demon_level")),
+		"normal_augments": [],
+		"special_augments": [],
+	}
+
+	var raw_hp = monster.get("max_hp")
+	if raw_hp != null:
+		var hp_multiplier := float(battle.get("monster_hp_multiplier"))
+		var monster_hp_multiplier := 1.0
+		if battle.has_method("_get_monster_augment_multiplier"):
+			monster_hp_multiplier = float(
+				battle.call(
+					"_get_monster_augment_multiplier",
+					monster_id,
+					"hp"
+				)
+			)
+		var level_hp_multiplier := 1.0
+		if battle.has_method("_get_demon_level_monster_hp_multiplier"):
+			level_hp_multiplier = float(
+				battle.call("_get_demon_level_monster_hp_multiplier")
+			)
+		detail["max_hp"] = maxi(
+			1,
+			int(round(
+				float(raw_hp)
+				* hp_multiplier
+				* monster_hp_multiplier
+				* level_hp_multiplier
+			))
+		)
+
+	var raw_damage = monster.get("attack_damage")
+	if raw_damage != null:
+		var damage_multiplier := float(
+			battle.get("monster_damage_multiplier")
+		)
+		var monster_damage_multiplier := 1.0
+		if battle.has_method("_get_monster_augment_multiplier"):
+			monster_damage_multiplier = float(
+				battle.call(
+					"_get_monster_augment_multiplier",
+					monster_id,
+					"damage"
+				)
+			)
+		var level_damage_multiplier := 1.0
+		if battle.has_method(
+			"_get_demon_level_monster_damage_multiplier"
+		):
+			level_damage_multiplier = float(
+				battle.call(
+					"_get_demon_level_monster_damage_multiplier"
+				)
+			)
+		detail["attack_damage"] = maxi(
+			1,
+			int(round(
+				float(raw_damage)
+				* damage_multiplier
+				* monster_damage_multiplier
+				* level_damage_multiplier
+			))
+		)
+
+	var raw_speed = monster.get("move_speed")
+	if raw_speed != null:
+		var speed_multiplier := float(
+			battle.get("monster_speed_multiplier")
+		)
+		var monster_speed_multiplier := 1.0
+		if battle.has_method("_get_monster_augment_multiplier"):
+			monster_speed_multiplier = float(
+				battle.call(
+					"_get_monster_augment_multiplier",
+					monster_id,
+					"speed"
+				)
+			)
+		var level_speed_multiplier := 1.0
+		if battle.has_method(
+			"_get_demon_level_monster_speed_multiplier"
+		):
+			level_speed_multiplier = float(
+				battle.call(
+					"_get_demon_level_monster_speed_multiplier"
+				)
+			)
+		detail["move_speed"] = (
+			float(raw_speed)
+			* speed_multiplier
+			* monster_speed_multiplier
+			* level_speed_multiplier
+		)
+
+	var raw_cooldown = monster.get("attack_cooldown")
+	if raw_cooldown != null:
+		var attack_speed_multiplier := float(
+			battle.get("monster_attack_speed_multiplier")
+		)
+		var monster_cooldown_multiplier := 1.0
+		if battle.has_method("_get_monster_augment_multiplier"):
+			monster_cooldown_multiplier = float(
+				battle.call(
+					"_get_monster_augment_multiplier",
+					monster_id,
+					"attack_cooldown"
+				)
+			)
+		detail["attack_cooldown"] = maxf(
+			0.10,
+			float(raw_cooldown)
+			* attack_speed_multiplier
+			* monster_cooldown_multiplier
+		)
+
+	var raw_explosion_damage = monster.get("explosion_damage")
+	if raw_explosion_damage != null:
+		detail["explosion_damage"] = int(raw_explosion_damage)
+
+	var raw_explosion_radius = monster.get("explosion_radius")
+	if raw_explosion_radius != null:
+		detail["explosion_radius"] = float(raw_explosion_radius)
+
+	var raw_fuse = monster.get("self_destruct_fuse")
+	if raw_fuse != null:
+		detail["self_destruct_fuse"] = float(raw_fuse)
+
+	monster.free()
+
+	var build_counts = battle.get("demon_build_counts")
+	if typeof(build_counts) == TYPE_DICTIONARY:
+		for raw_augment in DEMON_AUGMENTS.get_monster_normal_augments(
+			monster_id,
+			MONSTER_CATALOG.get_name(monster_id)
+		):
+			var augment: Dictionary = raw_augment
+			var augment_id := String(augment.get("id", ""))
+			var level := int(build_counts.get(augment_id, 0))
+			if level <= 0:
+				continue
+			detail["normal_augments"].append({
+				"name": String(augment.get("name", augment_id)),
+				"level": level,
+			})
+
+	var special_ids = battle.get("demon_special_augments")
+	if typeof(special_ids) == TYPE_ARRAY:
+		for raw_id in special_ids:
+			var augment_id := String(raw_id)
+			var augment := DEMON_AUGMENTS.get_augment(augment_id)
+			if String(augment.get("monster_id", "")) != monster_id:
+				continue
+			detail["special_augments"].append({
+				"id": augment_id,
+				"name": String(augment.get("name", augment_id)),
+			})
+
+	return detail
 
 func _load_monster_info_icon(monster_id: String) -> Texture2D:
 	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
