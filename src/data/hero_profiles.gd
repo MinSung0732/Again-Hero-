@@ -78,9 +78,7 @@ const PROFILES = {
 		"move_speed": 270.0,
 		"attack_damage": 38,
 		"level_growth": {
-			"max_hp_per_level": 30,
 			"attack_damage_per_level": 3,
-			"heal_ratio_on_level": 0.18,
 		},
 		"attack_range": 105.0,
 		"attack_cooldown": 1.05,
