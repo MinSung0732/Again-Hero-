@@ -1173,8 +1173,9 @@ func _apply_stage2_rogue_effect_visuals() -> void:
 
 	if slash_frames != null:
 		shield_effect.sprite_frames = slash_frames
-		shield_effect.scale = Vector2(0.82, 0.82)
+		shield_effect.scale = Vector2(0.52, 0.52)
 		shield_effect.position = Vector2.ZERO
+		shield_effect.z_index = 3
 
 func _apply_stage1_shield_visual() -> void:
 	shield_effect.visible = false
