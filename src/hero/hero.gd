@@ -34,6 +34,7 @@ const STAGE3_BLOCK_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/
 const STAGE3_SLASH_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect2"
 const STAGE3_THRUST_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect3"
 const STAGE3_AURA_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect4"
+const STAGE3_CHARGE_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect5"
 
 # 모든 용사 도트의 화면상 체급 기준은 Stage 1 견습 마법용사다.
 # 원본 PNG 캔버스 크기가 아니라 투명 여백을 제외한 실제 도트 높이를
@@ -116,6 +117,17 @@ var fighter_basic_damage_multiplier: float = 1.0
 var fighter_slash_half_width_bonus: float = 0.0
 var fighter_thrust_length_bonus: float = 0.0
 var fighter_thrust_damage_bonus: float = 0.0
+var fighter_charge_config: Dictionary = {}
+var fighter_charge_cooldown_timer: float = 0.0
+var fighter_charge_active: bool = false
+var fighter_charge_target: Node2D
+var fighter_charge_start: Vector2 = Vector2.ZERO
+var fighter_charge_end: Vector2 = Vector2.ZERO
+var fighter_charge_duration: float = 0.0
+var fighter_charge_elapsed: float = 0.0
+var fighter_charge_chain_count: int = 0
+var fighter_charge_afterimage_timer: float = 0.0
+var fighter_courage_bonus: float = 0.0
 
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
@@ -203,6 +215,25 @@ func configure_profile(profile: Dictionary) -> void:
 		if typeof(profile_combo) == TYPE_DICTIONARY
 		else {}
 	)
+	var profile_fighter_charge = profile.get("fighter_charge_skill", {})
+	fighter_charge_config = (
+		profile_fighter_charge.duplicate(true)
+		if typeof(profile_fighter_charge) == TYPE_DICTIONARY
+		else {}
+	)
+	fighter_charge_cooldown_timer = maxf(
+		float(fighter_charge_config.get("initial_cooldown", 6.0)),
+		0.0
+	)
+	fighter_charge_active = false
+	fighter_charge_target = null
+	fighter_charge_start = Vector2.ZERO
+	fighter_charge_end = Vector2.ZERO
+	fighter_charge_duration = 0.0
+	fighter_charge_elapsed = 0.0
+	fighter_charge_chain_count = 0
+	fighter_charge_afterimage_timer = 0.0
+	fighter_courage_bonus = 0.0
 	var profile_fighter_basic = profile.get("fighter_basic", {})
 	fighter_basic_config = (
 		profile_fighter_basic.duplicate(true)
@@ -1304,6 +1335,7 @@ func _update_rogue_pose_visual(delta: float) -> void:
 func _on_fighter_guard_release_effect_finished() -> void:
 	if hero_archetype == "sword_shield":
 		channel_effect.visible = false
+		channel_effect.position = Vector2.ZERO
 
 func _apply_profile_visual() -> void:
 	hero_sprite.visible = false
@@ -2856,6 +2888,15 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 			else:
 				set(target, next_value)
 
+		"advance_fighter_courage":
+			if fighter_courage_bonus <= 0.0:
+				fighter_courage_bonus = 0.15
+			else:
+				fighter_courage_bonus = minf(
+					fighter_courage_bonus + 0.03,
+					0.36
+				)
+
 		"heal":
 			current_hp = mini(
 				current_hp + int(effect.get("value", 0)),
@@ -2929,6 +2970,10 @@ func _physics_process_fighter(delta: float) -> void:
 	ultimate_flash_timer = maxf(ultimate_flash_timer - delta, 0.0)
 	_update_invulnerability(delta)
 	_update_fighter_guard(delta)
+	fighter_charge_cooldown_timer = maxf(fighter_charge_cooldown_timer - delta, 0.0)
+	if fighter_charge_active:
+		_update_fighter_charge(delta)
+		return
 
 	if hit_flash_timer > 0.0:
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
@@ -2980,10 +3025,226 @@ func _physics_process_fighter(delta: float) -> void:
 	else:
 		velocity = Vector2.ZERO
 
+	if (
+		fighter_charge_cooldown_timer <= 0.0
+		and _fighter_should_start_charge()
+	):
+		_start_fighter_charge()
+		return
+
 	if distance <= attack_range and attack_timer <= 0.0:
 		_fighter_basic_attack(target)
 
 	_update_fighter_pose_visual(delta)
+
+func _fighter_should_start_charge() -> bool:
+	if fighter_charge_config.is_empty() or fighter_guard_active:
+		return false
+	var radius := maxf(float(fighter_charge_config.get("trigger_radius", 245.0)), 1.0)
+	var required := maxi(int(fighter_charge_config.get("trigger_enemy_count", 4)), 1)
+	var nearby := 0
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if global_position.distance_to(monster.global_position) <= radius:
+			nearby += 1
+			if nearby >= required:
+				return true
+	return false
+
+func _start_fighter_charge() -> void:
+	var charge_target := _find_fighter_charge_target()
+	if not is_instance_valid(charge_target):
+		return
+	fighter_charge_chain_count = 0
+	_begin_fighter_charge_dash(charge_target)
+
+func _find_fighter_charge_target(exclude: Node = null) -> Node2D:
+	var max_distance := maxf(float(fighter_charge_config.get("max_target_distance", 560.0)), 1.0)
+	var farthest: Node2D = null
+	var farthest_distance := -1.0
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion() or node == exclude:
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var distance := global_position.distance_to(monster.global_position)
+		if distance <= max_distance and distance > farthest_distance:
+			farthest = monster
+			farthest_distance = distance
+	return farthest
+
+func _begin_fighter_charge_dash(charge_target: Node2D) -> void:
+	if not is_instance_valid(charge_target):
+		_finish_fighter_charge()
+		return
+
+	fighter_charge_active = true
+	fighter_charge_target = charge_target
+	fighter_charge_start = global_position
+	var direction := global_position.direction_to(charge_target.global_position)
+	if direction.length_squared() <= 0.0:
+		direction = Vector2.RIGHT
+	var stop_distance := maxf(float(fighter_charge_config.get("stop_distance", 46.0)), 0.0)
+	fighter_charge_end = charge_target.global_position - direction * stop_distance
+	var distance := fighter_charge_start.distance_to(fighter_charge_end)
+	var dash_speed := maxf(float(fighter_charge_config.get("dash_speed", 1450.0)), 1.0)
+	fighter_charge_duration = maxf(distance / dash_speed, 0.06)
+	fighter_charge_elapsed = 0.0
+	fighter_charge_afterimage_timer = 0.0
+	velocity = Vector2.ZERO
+	_face_attack_direction(direction.x)
+	_restart_stage1_animation("attack", 1.65)
+	_play_fighter_attack_effect("thrust", direction)
+	_spawn_fighter_afterimage(0.62)
+
+func _update_fighter_charge(delta: float) -> void:
+	if not fighter_charge_active:
+		return
+
+	fighter_charge_elapsed = minf(
+		fighter_charge_elapsed + delta,
+		fighter_charge_duration
+	)
+	var t := clampf(
+		fighter_charge_elapsed / maxf(fighter_charge_duration, 0.001),
+		0.0,
+		1.0
+	)
+	var eased_t := 1.0 - pow(1.0 - t, 2.5)
+	global_position = fighter_charge_start.lerp(fighter_charge_end, eased_t)
+	_clamp_to_battlefield()
+
+	fighter_charge_afterimage_timer -= delta
+	if fighter_charge_afterimage_timer <= 0.0:
+		_spawn_fighter_afterimage(0.48)
+		fighter_charge_afterimage_timer = maxf(
+			float(fighter_charge_config.get("afterimage_interval", 0.035)),
+			0.015
+		)
+
+	if t >= 1.0:
+		_complete_fighter_charge_dash()
+
+func _complete_fighter_charge_dash() -> void:
+	var direction := fighter_charge_start.direction_to(global_position)
+	if direction.length_squared() <= 0.0:
+		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+
+	var courage_multiplier := 1.0 + fighter_courage_bonus
+	var dash_damage := maxi(
+		1,
+		int(round(
+			float(attack_damage)
+			* float(fighter_charge_config.get("dash_damage_ratio", 1.20))
+			* courage_multiplier
+		))
+	)
+	if is_instance_valid(fighter_charge_target) and fighter_charge_target.has_method("take_damage"):
+		fighter_charge_target.call("take_damage", dash_damage)
+
+	var impact_damage := maxi(
+		1,
+		int(round(
+			float(attack_damage)
+			* float(fighter_charge_config.get("impact_damage_ratio", 1.70))
+			* courage_multiplier
+		))
+	)
+	var radius := maxf(float(fighter_charge_config.get("impact_radius", 175.0)), 1.0)
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if global_position.distance_to(monster.global_position) <= radius and monster.has_method("take_damage"):
+			monster.call("take_damage", impact_damage)
+
+	_play_fighter_charge_impact_effect()
+	fighter_charge_chain_count += 1
+
+	var max_chains := clampi(
+		int(fighter_charge_config.get("max_chains", 3)),
+		1,
+		3
+	)
+	if fighter_charge_chain_count < max_chains:
+		var next_target := _find_fighter_charge_target(fighter_charge_target)
+		if is_instance_valid(next_target):
+			fighter_charge_active = false
+			var delay := maxf(float(fighter_charge_config.get("chain_delay", 0.16)), 0.0)
+			get_tree().create_timer(delay).timeout.connect(
+				func():
+					if is_inside_tree() and current_hp > 0 and not is_dying:
+						_begin_fighter_charge_dash(next_target)
+			)
+			return
+
+	_finish_fighter_charge()
+
+func _finish_fighter_charge() -> void:
+	fighter_charge_active = false
+	fighter_charge_target = null
+	fighter_charge_elapsed = 0.0
+	fighter_charge_duration = 0.0
+	fighter_charge_cooldown_timer = maxf(
+		float(fighter_charge_config.get("cooldown", 17.0)),
+		0.0
+	)
+	attack_pose_timer = 0.24
+	velocity = Vector2.ZERO
+
+func _spawn_fighter_afterimage(alpha: float) -> void:
+	if not hero_sprite.visible or hero_sprite.sprite_frames == null:
+		return
+	if not hero_sprite.sprite_frames.has_animation(hero_sprite.animation):
+		return
+	var frame_texture := hero_sprite.sprite_frames.get_frame_texture(
+		hero_sprite.animation,
+		hero_sprite.frame
+	)
+	if frame_texture == null:
+		return
+
+	var ghost := Sprite2D.new()
+	ghost.texture = frame_texture
+	ghost.centered = hero_sprite.centered
+	ghost.flip_h = hero_sprite.flip_h
+	ghost.flip_v = hero_sprite.flip_v
+	ghost.offset = hero_sprite.offset
+	ghost.scale = hero_sprite.scale
+	ghost.rotation = hero_sprite.rotation
+	ghost.global_position = global_position
+	ghost.z_index = hero_sprite.z_index - 1
+	ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	ghost.modulate = Color(1.0, 1.0, 1.0, clampf(alpha, 0.05, 0.85))
+	get_parent().add_child(ghost)
+
+	var fade_time := maxf(
+		float(fighter_charge_config.get("afterimage_fade_time", 0.30)),
+		0.05
+	)
+	var tween := ghost.create_tween()
+	tween.tween_property(ghost, "modulate:a", 0.0, fade_time)
+	tween.finished.connect(Callable(ghost, "queue_free"))
+
+func _play_fighter_charge_impact_effect() -> void:
+	if channel_effect.sprite_frames == null:
+		return
+	if not channel_effect.sprite_frames.has_animation("charge_impact"):
+		return
+	channel_effect.visible = true
+	channel_effect.stop()
+	channel_effect.animation = "charge_impact"
+	channel_effect.frame = 0
+	channel_effect.rotation = 0.0
+	channel_effect.position = Vector2(0, 34)
+	channel_effect.play("charge_impact")
 
 func _fighter_move_without_monsters(speed_scale: float) -> void:
 	var nearest_exp_orb := _find_nearest_exp_orb()
@@ -3333,6 +3594,15 @@ func _apply_stage3_fighter_effect_visuals() -> void:
 		"hero_effect_block",
 		6,
 		15.0,
+		false
+	)
+	_add_prefixed_effect_animation(
+		release_frames,
+		"charge_impact",
+		STAGE3_CHARGE_EFFECT_DIR,
+		"ground_effect",
+		8,
+		20.0,
 		false
 	)
 	channel_effect.sprite_frames = release_frames
