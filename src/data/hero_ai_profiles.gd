@@ -24,7 +24,7 @@ const PROFILES = {
 			"rogue_execution": 0.30,
 			"pursuit": 0.45,
 			"slow_resistance": 0.20,
-			"battle_recovery": 0.15,
+			"rogue_bloodthirst": 0.55,
 		},
 	},
 }
