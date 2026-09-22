@@ -1582,11 +1582,12 @@ func spawn_selected_mutation(monster_id: String) -> void:
 			"type": "elite",
 			"name_prefix": "돌연변이",
 			"spawn_distance": 260.0,
-			"hp_multiplier": 2.2,
-			"damage_multiplier": 1.45,
-			"speed_multiplier": 1.10,
+			"hp_multiplier": 2.8,
+			"damage_multiplier": 1.65,
+			"speed_multiplier": 1.12,
+			"attack_speed_multiplier": 1.12,
 			"exp_multiplier": 1.5,
-			"visual_scale": 1.15,
+			"visual_scale": 1.5,
 		}
 	else:
 		event["spawn_distance"] = minf(
@@ -1663,6 +1664,10 @@ func _apply_special_monster_modifiers(
 		float(special_data.get("speed_multiplier", 1.0)),
 		0.01
 	)
+	var attack_speed_multiplier := maxf(
+		float(special_data.get("attack_speed_multiplier", 1.0)),
+		0.01
+	)
 	var exp_multiplier := maxf(
 		float(special_data.get("exp_multiplier", 1.0)),
 		0.0
@@ -1701,6 +1706,29 @@ func _apply_special_monster_modifiers(
 			"demon_level_base_move_speed",
 			maxf(float(base_speed_meta) * speed_multiplier, 1.0)
 		)
+
+	var attack_cooldown_value = monster.get("attack_cooldown")
+	if attack_cooldown_value != null:
+		monster.set(
+			"attack_cooldown",
+			maxf(
+				0.10,
+				float(attack_cooldown_value)
+				/ attack_speed_multiplier
+			)
+		)
+
+	if monster_id == "bomb_rat":
+		var fuse_value = monster.get("self_destruct_fuse")
+		if fuse_value != null:
+			monster.set(
+				"self_destruct_fuse",
+				maxf(
+					0.10,
+					float(fuse_value)
+					/ attack_speed_multiplier
+				)
+			)
 
 	_apply_demon_level_scaling_to_monster(monster, false)
 
