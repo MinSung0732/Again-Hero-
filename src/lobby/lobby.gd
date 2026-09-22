@@ -221,14 +221,42 @@ func _make_style(
 	return style
 
 func _apply_styles() -> void:
-	$SafeArea/Layout/Header.add_theme_stylebox_override("panel", header_style)
+	var header_backing := _make_style(
+		Color("130f1c"),
+		Color(0, 0, 0, 0),
+		0,
+		22
+	)
+	var content_backing := _make_style(
+		Color("0f0c16"),
+		Color(0, 0, 0, 0),
+		0,
+		26
+	)
+	var card_backing := _make_style(
+		Color("21182a"),
+		Color(0, 0, 0, 0),
+		0,
+		30
+	)
+	var dark_backing := _make_style(
+		Color("12162a"),
+		Color(0, 0, 0, 0),
+		0,
+		18
+	)
+
+	$SafeArea/Layout/Header.add_theme_stylebox_override(
+		"panel",
+		header_backing
+	)
 	$SafeArea/Layout/Content/ContentFrame.add_theme_stylebox_override(
 		"panel",
-		content_frame_style
+		content_backing
 	)
 	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard.add_theme_stylebox_override(
 		"panel",
-		stage_card_style
+		card_backing
 	)
 	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame.add_theme_stylebox_override(
 		"panel",
@@ -240,9 +268,9 @@ func _apply_styles() -> void:
 	)
 	$SafeArea/Layout/Content/ShopTab/ShopLayout/ResultPanel.add_theme_stylebox_override(
 		"panel",
-		panel_style
+		dark_backing
 	)
-	$BottomNav.add_theme_stylebox_override("panel", nav_style)
+	$BottomNav.add_theme_stylebox_override("panel", content_backing)
 
 	for button in [prev_stage_button, next_stage_button]:
 		button.add_theme_stylebox_override("normal", secondary_button_style)
@@ -263,9 +291,9 @@ func _apply_styles() -> void:
 		button.add_theme_stylebox_override("hover", stage_card_style)
 		button.add_theme_stylebox_override("pressed", primary_button_style)
 
-	monster_detail_panel.add_theme_stylebox_override("panel", header_style)
-	monster_detail_normal_panel.add_theme_stylebox_override("panel", stage_card_style)
-	monster_detail_elite_panel.add_theme_stylebox_override("panel", portrait_inner_style)
+	monster_detail_panel.add_theme_stylebox_override("panel", header_backing)
+	monster_detail_normal_panel.add_theme_stylebox_override("panel", card_backing)
+	monster_detail_elite_panel.add_theme_stylebox_override("panel", dark_backing)
 	monster_detail_close_button.add_theme_stylebox_override("normal", secondary_button_style)
 	monster_detail_close_button.add_theme_stylebox_override("hover", primary_button_style)
 	monster_detail_close_button.add_theme_stylebox_override("pressed", primary_button_style)
