@@ -155,6 +155,11 @@ var gunner_deadeye_active: bool = false
 var gunner_deadeye_shots_left: int = 0
 var gunner_deadeye_shot_timer: float = 0.0
 var gunner_deadeye_direction: Vector2 = Vector2.RIGHT
+var gunner_penetration_damage_bonus_per_hit: float = 0.0
+var gunner_afterimage_shot_stacks: int = 0
+var gunner_reload_move_speed_bonus: float = 0.0
+var gunner_deadeye_shot_multiplier: float = 2.0
+var gunner_low_hp_backstep_bonus: float = 0.0
 
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
@@ -311,6 +316,11 @@ func configure_profile(profile: Dictionary) -> void:
 	gunner_deadeye_shots_left = 0
 	gunner_deadeye_shot_timer = 0.0
 	gunner_deadeye_direction = Vector2.RIGHT
+	gunner_penetration_damage_bonus_per_hit = 0.0
+	gunner_afterimage_shot_stacks = 0
+	gunner_reload_move_speed_bonus = 0.0
+	gunner_deadeye_shot_multiplier = 2.0
+	gunner_low_hp_backstep_bonus = 0.0
 	var profile_rogue_slash = profile.get("rogue_slash_skill", {})
 	rogue_slash_config = (
 		profile_rogue_slash.duplicate(true)
@@ -605,7 +615,8 @@ func _physics_process_gunner(delta: float) -> void:
 	var move_direction := _choose_move_direction(target, distance)
 	move_direction = _apply_heal_item_steering(move_direction, delta)
 	move_direction = _apply_chest_steering(move_direction, delta)
-	velocity = move_direction * move_speed * move_multiplier
+	var gunner_speed_scale := 1.0 + (gunner_reload_move_speed_bonus if gunner_reloading else 0.0)
+	velocity = move_direction * move_speed * move_multiplier * gunner_speed_scale
 	move_and_slide()
 	_clamp_to_battlefield()
 
@@ -669,7 +680,34 @@ func _spawn_gunner_bullet(direction: Vector2) -> void:
 	var projectile := GUNNER_PROJECTILE_SCENE.instantiate() as Area2D
 	get_parent().add_child(projectile)
 	projectile.global_position = global_position + direction.normalized() * 42.0
-	projectile.call("setup", direction, damage, projectile_speed, attack_range, headshot)
+	projectile.call(
+		"setup",
+		direction,
+		damage,
+		projectile_speed,
+		attack_range,
+		headshot,
+		gunner_penetration_damage_bonus_per_hit
+	)
+
+
+func _spawn_gunner_bullet_from(origin: Vector2, direction: Vector2) -> void:
+	var headshot := randf() <= clampf(float(gunner_config.get("headshot_chance", 0.10)), 0.0, 1.0)
+	var damage := attack_damage
+	if headshot:
+		damage = maxi(1, int(round(float(damage) * float(gunner_config.get("headshot_multiplier", 1.20)))))
+	var projectile := GUNNER_PROJECTILE_SCENE.instantiate() as Area2D
+	get_parent().add_child(projectile)
+	projectile.global_position = origin + direction.normalized() * 42.0
+	projectile.call(
+		"setup",
+		direction,
+		damage,
+		projectile_speed,
+		attack_range,
+		headshot,
+		gunner_penetration_damage_bonus_per_hit
+	)
 
 
 func _start_gunner_reload() -> void:
@@ -700,7 +738,11 @@ func _gunner_should_backstep_on_hit() -> bool:
 	var pressure := _gunner_surround_pressure()
 	var base_chance := clampf(float(gunner_config.get("backstep_base_chance", 0.30)), 0.0, 1.0)
 	var surround_bonus := maxf(float(gunner_config.get("surrounded_backstep_bonus", 0.55)), 0.0)
-	var chance := clampf(base_chance + minf(pressure, 1.0) * surround_bonus, 0.0, 1.0)
+	var chance := base_chance + minf(pressure, 1.0) * surround_bonus
+	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
+	if hp_ratio <= 0.40:
+		chance += gunner_low_hp_backstep_bonus
+	chance = clampf(chance, 0.0, 1.0)
 	return randf() <= chance
 
 
@@ -740,6 +782,11 @@ func _start_gunner_backstep() -> void:
 	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.25, 0.72, 0.46, 1.08)
 	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.50, 0.58, 0.40, 1.06)
 	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.75, 0.42, 0.34, 1.04)
+	if gunner_afterimage_shot_stacks > 0:
+		var counter_direction := -escape_direction
+		for shot_index in range(gunner_afterimage_shot_stacks * 2):
+			var spread := deg_to_rad(randf_range(-10.0, 10.0))
+			_spawn_gunner_bullet_from(start_position, counter_direction.rotated(spread))
 	global_position += escape_direction * distance
 	_clamp_to_battlefield()
 	if gunner_saved_collision_mask < 0:
@@ -859,6 +906,9 @@ func _use_gunner_cylinder_strike() -> void:
 		if dir.length_squared() <= 0.0:
 			dir = Vector2.RIGHT
 		monster.global_position += dir.normalized() * knockback
+		var damage_ratio := maxf(float(gunner_config.get("cylinder_damage_ratio", 0.0)), 0.0)
+		if damage_ratio > 0.0 and monster.has_method("take_damage"):
+			monster.call("take_damage", maxi(1, int(round(float(attack_damage) * damage_ratio))))
 		monster.set_meta("gunner_slow_multiplier", slow_multiplier)
 		monster.set_meta("gunner_slow_until", Time.get_ticks_msec() + int(slow_duration * 1000.0))
 
@@ -938,7 +988,10 @@ func _start_gunner_deadeye() -> void:
 		aim_direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	gunner_deadeye_cooldown = maxf(float(gunner_config.get("deadeye_cooldown", 20.0)), 0.1)
 	gunner_deadeye_active = true
-	gunner_deadeye_shots_left = gunner_ammo * 2
+	gunner_deadeye_shots_left = maxi(
+		1,
+		int(round(float(gunner_ammo) * gunner_deadeye_shot_multiplier))
+	)
 	gunner_ammo = 0
 	gunner_deadeye_shot_timer = 0.0
 	gunner_deadeye_direction = aim_direction.normalized()
@@ -3608,6 +3661,17 @@ func _build_ai_context() -> Dictionary:
 
 	var recent_memory := _build_recent_offense_memory()
 	var recent_status_memory := _build_recent_status_memory()
+	var gunner_ammo_ratio := 1.0
+	var gunner_reload_state := 0.0
+	var gunner_surround_pressure := 0.0
+	var gunner_deadeye_cluster_score := 0.0
+	if hero_archetype == "pistol_gunner":
+		gunner_ammo_ratio = float(gunner_ammo) / float(maxi(gunner_magazine_size, 1))
+		gunner_reload_state = 1.0 if gunner_reloading else 0.0
+		gunner_surround_pressure = _gunner_surround_pressure()
+		gunner_deadeye_cluster_score = float(
+			_gunner_deadeye_best_direction().get("score", 0.0)
+		)
 
 	return {
 		"nearby_count": nearby_count,
@@ -3629,6 +3693,11 @@ func _build_ai_context() -> Dictionary:
 		"recent_status_window_seconds": float(
 			recent_status_memory.get("window_seconds", STATUS_MEMORY_WINDOW)
 		),
+		"gunner_ammo_ratio": gunner_ammo_ratio,
+		"gunner_ammo_empty_pressure": 1.0 - gunner_ammo_ratio,
+		"gunner_reload_state": gunner_reload_state,
+		"gunner_surround_pressure": gunner_surround_pressure,
+		"gunner_deadeye_cluster_score": gunner_deadeye_cluster_score,
 	}
 
 func _apply_augment(augment: Dictionary) -> void:
@@ -3719,6 +3788,94 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 					fighter_charge_kill_heal + 2.0,
 					26.0
 				)
+
+		"gunner_fast_reload":
+			gunner_config["reload_seconds"] = maxf(
+				float(gunner_config.get("reload_seconds", 2.4)) * 0.92,
+				1.55
+			)
+
+		"gunner_expand_magazine":
+			gunner_magazine_size = mini(gunner_magazine_size + 1, 18)
+			gunner_ammo = mini(gunner_ammo + 1, gunner_magazine_size)
+			gunner_config["magazine_size"] = gunner_magazine_size
+
+		"gunner_tighten_spread":
+			gunner_config["random_shot_angle_degrees"] = maxf(
+				float(gunner_config.get("random_shot_angle_degrees", 28.0)) - 3.6,
+				10.0
+			)
+
+		"gunner_penetration_ramp":
+			if gunner_penetration_damage_bonus_per_hit <= 0.0:
+				gunner_penetration_damage_bonus_per_hit = 0.08
+			else:
+				gunner_penetration_damage_bonus_per_hit = minf(
+					gunner_penetration_damage_bonus_per_hit + 0.04,
+					0.24
+				)
+
+		"gunner_headshot_chance":
+			gunner_config["headshot_chance"] = minf(
+				float(gunner_config.get("headshot_chance", 0.10)) + 0.03,
+				0.34
+			)
+
+		"gunner_headshot_damage":
+			gunner_config["headshot_multiplier"] = minf(
+				float(gunner_config.get("headshot_multiplier", 1.20)) + 0.05,
+				1.50
+			)
+
+		"gunner_quickdraw_chance":
+			gunner_config["quickdraw_chance"] = minf(
+				float(gunner_config.get("quickdraw_chance", 0.03)) + 0.01,
+				0.10
+			)
+
+		"gunner_tactical_retreat":
+			gunner_config["backstep_cooldown"] = maxf(
+				float(gunner_config.get("backstep_cooldown", 7.0)) - 0.5,
+				4.0
+			)
+			gunner_config["backstep_distance"] = minf(
+				float(gunner_config.get("backstep_distance", 260.0)) + 10.0,
+				320.0
+			)
+
+		"gunner_afterimage_shot":
+			gunner_afterimage_shot_stacks = mini(gunner_afterimage_shot_stacks + 1, 3)
+
+		"gunner_cylinder_control":
+			gunner_config["cylinder_knockback"] = minf(
+				float(gunner_config.get("cylinder_knockback", 145.0)) + 15.0,
+				220.0
+			)
+			gunner_config["cylinder_slow_duration"] = minf(
+				float(gunner_config.get("cylinder_slow_duration", 2.0)) + 0.30,
+				3.50
+			)
+
+		"gunner_cylinder_damage":
+			var cylinder_ratio := float(gunner_config.get("cylinder_damage_ratio", 0.0))
+			gunner_config["cylinder_damage_ratio"] = (
+				0.80 if cylinder_ratio <= 0.0 else minf(cylinder_ratio + 0.20, 1.60)
+			)
+
+		"gunner_deadeye_focus":
+			gunner_config["deadeye_shot_interval"] = maxf(
+				float(gunner_config.get("deadeye_shot_interval", 0.08)) * 0.93,
+				0.052
+			)
+
+		"gunner_deadeye_storm":
+			gunner_deadeye_shot_multiplier = minf(gunner_deadeye_shot_multiplier + 0.25, 3.0)
+
+		"gunner_low_hp_backstep":
+			gunner_low_hp_backstep_bonus = minf(gunner_low_hp_backstep_bonus + 0.08, 0.40)
+
+		"gunner_reload_cover":
+			gunner_reload_move_speed_bonus = minf(gunner_reload_move_speed_bonus + 0.06, 0.30)
 
 		"heal":
 			current_hp = mini(
