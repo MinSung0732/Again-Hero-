@@ -197,7 +197,63 @@ const AUGMENTS = [
 		"synergy_rules": [
 			{"source": "build_tag_stacks", "key": "durability", "weight": 0.80, "cap": 2.40},
 		],
+	},,
+	{
+		"id": "rogue_edge",
+		"name": "예리한 연격",
+		"description": "3단 찌르기 피해 +10%",
+		"base_score": 7.8,
+		"max_stack": 5,
+		"tags": ["damage"],
+		"effects": [
+			{"op": "multiply_stat", "target": "rogue_combo_damage_multiplier", "value": 1.10},
+		],
 	},
+	{
+		"id": "rogue_tempo",
+		"name": "연격 가속",
+		"description": "3타 후 후딜 -8%",
+		"base_score": 7.2,
+		"max_stack": 4,
+		"tags": ["attack_speed", "mobility"],
+		"effects": [
+			{"op": "multiply_stat", "target": "rogue_combo_recovery_multiplier", "value": 0.92, "min": 0.68},
+		],
+	},
+	{
+		"id": "rogue_guard",
+		"name": "난도질 방어",
+		"description": "난도질 쉴드량 +4% 최대 HP",
+		"base_score": 6.8,
+		"max_stack": 4,
+		"tags": ["durability", "survival", "area"],
+		"effects": [
+			{"op": "add_stat", "target": "rogue_slash_shield_ratio_bonus", "value": 0.04, "max": 0.16},
+		],
+	},
+	{
+		"id": "rogue_hunt",
+		"name": "끈질긴 급습",
+		"description": "급습-암살 공격 횟수 +1",
+		"base_score": 6.6,
+		"max_stack": 2,
+		"tags": ["damage", "mobility"],
+		"effects": [
+			{"op": "add_stat", "target": "rogue_assassination_hit_bonus", "value": 1, "max": 2},
+		],
+	},
+	{
+		"id": "rogue_execution",
+		"name": "처형 감각",
+		"description": "일반 몬스터 처형 기준 +2%",
+		"base_score": 6.2,
+		"max_stack": 2,
+		"tags": ["damage"],
+		"effects": [
+			{"op": "add_stat", "target": "rogue_execute_threshold_bonus", "value": 0.02, "max": 0.04},
+		],
+	}
+
 ]
 
 static func roll_candidates(
