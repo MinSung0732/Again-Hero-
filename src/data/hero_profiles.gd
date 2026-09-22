@@ -4,7 +4,7 @@ class_name HeroProfiles
 const PROFILES = {
 	"ranged_rookie": {
 		"id": "ranged_rookie",
-		"display_name": "견습 마도사",
+		"display_name": "견습 마법용사",
 		"archetype": "ranged_kiter",
 		"max_hp": 300,
 		"move_speed": 230.0,
@@ -75,7 +75,7 @@ const PROFILES = {
 	},
 	"swift_hunter": {
 		"id": "swift_hunter",
-		"display_name": "그림자 도적",
+		"display_name": "날렵한 용사",
 		"archetype": "rogue_combo",
 		"max_hp": 460,
 		"move_speed": 275.0,
