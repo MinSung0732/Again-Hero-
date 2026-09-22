@@ -338,7 +338,7 @@ text = "대상 용사를 선택하고 던전에 입장하세요."
 horizontal_alignment = 1
 
 [node name="StageTopSpacer" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
 [node name="StagePicker" type="HBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
