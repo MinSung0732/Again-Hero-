@@ -1846,3 +1846,13 @@
 - 미리보기 가능한 다음 스테이지는 기존 is_stage_unlocked 규칙에 따라 입장 버튼은 잠긴 상태 유지.
 - 이전/다음으로 이동할 수 없는 방향의 화살표는 Button disabled 처리와 함께 회색/반투명으로 표시.
 - 향후 StageCatalog에 stage_3 이상이 추가되어도 동일 규칙이 자동 적용됨.
+
+### Smooth Scale/Fade Stage Transition + Portrait Cache
+- 스테이지 전환 영상에서 카드 교체 순간이 끊겨 보이는 현상을 완화.
+- 기존 단순 좌우 slide/fade를 '작아지며 사라짐 → 새 카드가 작은 크기에서 커지며 들어옴' 방식으로 변경.
+- 카드 pivot을 중앙으로 설정하고 out 시 94%, in 시작 시 91% 크기를 사용해 자연스러운 축소/확대 감각 추가.
+- 이동 거리를 150→118px로 줄이고 out 0.16초 / in 0.24초로 조정, cubic/quint/back easing 적용.
+- STAGE 번호/침입자 제목도 카드와 함께 약하게 scale/fade되어 데이터 교체 순간이 덜 튀도록 보정.
+- 전환 중 끊김의 주요 원인이 될 수 있는 초상화 alpha-visible-rect 스캔/리사이즈를 매번 반복하지 않도록 normalized portrait texture 캐시 추가.
+- 현재 탐색 가능한 스테이지 초상화는 로비 초기화 시 한 번 미리 캐시하고, 이후 전환에서는 캐시된 Texture2D를 즉시 사용.
+- 스와이프/드래그, 좌우 버튼, 탐색 제한(highest_unlocked + 1), 비활성 화살표 규칙은 유지.
