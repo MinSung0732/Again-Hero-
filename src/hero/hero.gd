@@ -24,7 +24,6 @@ const STAGE1_SHIELD_EFFECT_FRAME_SIZE := Vector2(512, 512)
 const STAGE1_SHIELD_EFFECT_TARGET_SIZE := 180.0
 const STAGE1_CHANNEL_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_03"
 const STAGE1_CHANNEL_EFFECT_FRAME_COUNT := 6
-const STAGE1_CHANNEL_EFFECT_FRAME_SIZE := Vector2(512, 512)
 const STAGE1_CHANNEL_EFFECT_TARGET_SIZE := 300.0
 const STAGE2_FRAME_DIR := "res://assets/art/heroes/stage2_rogue/frames"
 const STAGE2_EFFECT1_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_01"
@@ -1530,6 +1529,7 @@ func _apply_stage1_channel_visual() -> void:
 	frames.set_animation_speed(&"channel", 10.0)
 	frames.set_animation_loop(&"channel", true)
 
+	var source_extent := 0.0
 	for index in range(1, STAGE1_CHANNEL_EFFECT_FRAME_COUNT + 1):
 		var path := "%s/frame_%02d.png" % [
 			STAGE1_CHANNEL_EFFECT_BASE_PATH,
@@ -1540,12 +1540,23 @@ func _apply_stage1_channel_visual() -> void:
 			push_warning("Stage 1 channel effect frame load failed: %s" % path)
 			channel_effect.sprite_frames = null
 			return
+
+		var texture_size := texture.get_size()
+		source_extent = maxf(
+			source_extent,
+			maxf(texture_size.x, texture_size.y)
+		)
 		frames.add_frame(&"channel", texture)
+
+	if source_extent <= 0.0:
+		push_warning("Stage 1 channel effect: invalid source frame size.")
+		channel_effect.sprite_frames = null
+		return
 
 	channel_effect.sprite_frames = frames
 	var uniform_scale := (
 		STAGE1_CHANNEL_EFFECT_TARGET_SIZE
-		/ STAGE1_CHANNEL_EFFECT_FRAME_SIZE.x
+		/ source_extent
 	)
 	channel_effect.scale = Vector2(uniform_scale, uniform_scale)
 
