@@ -72,6 +72,11 @@ const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 @onready var demon_choice_0: Button = $HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice0
 @onready var demon_choice_1: Button = $HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice1
 @onready var demon_choice_2: Button = $HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice2
+@onready var demon_choice_icons: Array[TextureRect] = [
+	$HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice0/Icon,
+	$HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice1/Icon,
+	$HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice2/Icon,
+]
 @onready var demon_reroll_button: Button = $HUD/DemonAugmentPanel/Margin/VBox/RerollButton
 
 @onready var mutation_panel: PanelContainer = $HUD/MutationPanel
@@ -1132,19 +1137,13 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 			candidate.get("augment_type", "normal")
 		)
 
-		buttons[index].icon = null
-		buttons[index].expand_icon = true
-		buttons[index].icon_max_width = 72
-		buttons[index].icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		buttons[index].add_theme_constant_override(
-			"icon_max_width",
-			72
-		)
+		demon_choice_icons[index].texture = null
+		demon_choice_icons[index].visible = false
 
 		if candidate_type == "special":
 			var monster_id := String(candidate.get("monster_id", ""))
 			_apply_augment_monster_icon(
-				buttons[index],
+				demon_choice_icons[index],
 				monster_id
 			)
 			buttons[index].add_theme_font_size_override("font_size", 24)
@@ -1165,7 +1164,7 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 			)
 			if not target_monster_id.is_empty():
 				_apply_augment_monster_icon(
-					buttons[index],
+					demon_choice_icons[index],
 					target_monster_id
 				)
 
@@ -1197,22 +1196,21 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 	)
 
 func _apply_augment_monster_icon(
-	button: Button,
+	icon_rect: TextureRect,
 	monster_id: String
 ) -> void:
+	icon_rect.texture = null
+	icon_rect.visible = false
+
 	if monster_id.is_empty():
-		button.icon = null
 		return
 
 	var texture := _load_monster_info_icon(monster_id)
 	if texture == null:
-		button.icon = null
 		return
 
-	button.icon = texture
-	button.expand_icon = true
-	button.icon_max_width = 72
-	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon_rect.texture = texture
+	icon_rect.visible = true
 
 func _wrap_augment_card_text(
 	value: String,
