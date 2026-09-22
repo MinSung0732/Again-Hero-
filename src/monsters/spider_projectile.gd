@@ -15,6 +15,7 @@ var slow_duration: float = 1.5
 var traveled_distance: float = 0.0
 var has_impacted: bool = false
 var elite_visual: bool = false
+var binding_config: Dictionary = {}
 
 @onready var projectile_sprite: AnimatedSprite2D = $ProjectileSprite
 
@@ -29,7 +30,8 @@ func setup(
 	new_max_range: float,
 	new_slow_multiplier: float,
 	new_slow_duration: float,
-	use_elite_visual: bool
+	use_elite_visual: bool,
+	new_binding_config: Dictionary = {}
 ) -> void:
 	direction = new_direction.normalized()
 	if direction == Vector2.ZERO:
@@ -41,6 +43,7 @@ func setup(
 	slow_multiplier = clampf(new_slow_multiplier, 0.0, 1.0)
 	slow_duration = maxf(new_slow_duration, 0.0)
 	elite_visual = use_elite_visual
+	binding_config = new_binding_config.duplicate(true)
 	rotation = direction.angle()
 	_apply_projectile_visual()
 
@@ -71,8 +74,50 @@ func _on_body_entered(body: Node) -> void:
 
 	if damage_applied and body.has_method("apply_slow"):
 		body.call("apply_slow", slow_multiplier, slow_duration)
+		_apply_binding_hit(body)
 
 	queue_free()
+
+func _apply_binding_hit(body: Node) -> void:
+	if binding_config.is_empty():
+		return
+	if not body.has_method("apply_slow"):
+		return
+
+	var required_hits := maxi(
+		int(binding_config.get("required_hits", 0)),
+		1
+	)
+	var cooldown_ms := int(
+		maxf(float(binding_config.get("cooldown", 0.0)), 0.0)
+		* 1000.0
+	)
+	var now_ms := Time.get_ticks_msec()
+	var cooldown_until := int(
+		body.get_meta("spider_binding_cooldown_until_ms", 0)
+	)
+	if now_ms < cooldown_until:
+		return
+
+	var hit_count := int(body.get_meta("spider_binding_hit_count", 0)) + 1
+	if hit_count < required_hits:
+		body.set_meta("spider_binding_hit_count", hit_count)
+		return
+
+	body.set_meta("spider_binding_hit_count", 0)
+	body.set_meta(
+		"spider_binding_cooldown_until_ms",
+		now_ms + cooldown_ms
+	)
+	body.call(
+		"apply_slow",
+		clampf(
+			float(binding_config.get("slow_multiplier", 0.38)),
+			0.0,
+			1.0
+		),
+		maxf(float(binding_config.get("duration", 1.0)), 0.05)
+	)
 
 func _apply_projectile_visual() -> void:
 	projectile_sprite.visible = false
