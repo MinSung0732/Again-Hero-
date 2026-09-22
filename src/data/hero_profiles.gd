@@ -176,6 +176,7 @@ const PROFILES = {
 		"gunner": {
 			"magazine_size": 12,
 			"reload_seconds": 2.4,
+			"empty_mag_shield_ratio": 0.10,
 			"random_shot_angle_degrees": 28.0,
 			"quickdraw_chance": 0.03,
 			"headshot_chance": 0.10,
