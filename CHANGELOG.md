@@ -1863,3 +1863,8 @@
 - 1스테이지에서는 이전 목적지가 없으므로 왼쪽 화살표 이미지만 완전히 숨김.
 - 왼쪽 Button의 레이아웃 슬롯 자체는 유지해 1스테이지에서도 중앙 카드가 좌우로 움직이지 않도록 처리.
 - 2스테이지 이후에는 왼쪽 화살표가 정상 표시되며, 오른쪽 탐색 한계 화살표는 기존처럼 회색 비활성 상태를 유지.
+
+### StageMeta Gap-Center Alignment
+- STAGE 번호/침입자 제목이 계속 위쪽에 붙어 보이던 실제 원인 확인: 화면에서 크게 보이는 아래 여백은 StageMetaBox가 아니라 다음 StagePicker의 확장 영역 상단 여백이었음.
+- StageMetaBox/StagePicker/StageCard 크기와 위치는 유지하고, StageNumber/StageName만 기존 92px 박스를 넘어 StagePicker의 사용되지 않는 상단 여백으로 34px 내려 표시.
+- VBox 레이아웃 크기를 바꾸지 않으므로 ui10 카드, 스와이프/드래그 및 scale/fade 전환 애니메이션 위치에는 영향 없음.
