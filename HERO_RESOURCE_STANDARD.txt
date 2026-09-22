@@ -59,7 +59,7 @@ Again-Hero- 프로젝트 공통 기준
 - Hero display name:
   그림자 도적
 - 로비 초상화:
-  res://assets/art/heroes/stage2_rogue/stage2_hero_portrait2.png
+  res://assets/art/heroes/stage2_rogue/stage2_hero_portrait.png
 - 인게임 본체:
   res://assets/art/heroes/stage2_rogue/frames/
 - 인게임 도트 크기는 Stage 1 기준 자동 정규화
