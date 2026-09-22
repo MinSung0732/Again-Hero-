@@ -160,6 +160,8 @@ var gunner_afterimage_shot_stacks: int = 0
 var gunner_reload_move_speed_bonus: float = 0.0
 var gunner_deadeye_shot_multiplier: float = 2.0
 var gunner_low_hp_backstep_bonus: float = 0.0
+var gunner_powder_bonus_per_ammo: float = 0.0
+var gunner_powder_consumed_stacks: int = 0
 
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
@@ -321,6 +323,8 @@ func configure_profile(profile: Dictionary) -> void:
 	gunner_reload_move_speed_bonus = 0.0
 	gunner_deadeye_shot_multiplier = 2.0
 	gunner_low_hp_backstep_bonus = 0.0
+	gunner_powder_bonus_per_ammo = 0.0
+	gunner_powder_consumed_stacks = 0
 	var profile_rogue_slash = profile.get("rogue_slash_skill", {})
 	rogue_slash_config = (
 		profile_rogue_slash.duplicate(true)
@@ -661,6 +665,7 @@ func _gunner_attack(current_target: Node2D) -> void:
 	if direction.length_squared() <= 0.0:
 		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	gunner_ammo -= 1
+	_gunner_register_ammo_consumed(1)
 	attack_timer = _get_common_attack_interval(attack_cooldown)
 	attack_pose_timer = 0.30
 	_face_attack_direction(direction.x)
@@ -677,9 +682,12 @@ func _gunner_attack(current_target: Node2D) -> void:
 	queue_redraw()
 
 
-func _spawn_gunner_bullet(direction: Vector2) -> void:
+func _spawn_gunner_bullet(direction: Vector2, is_deadeye_shot: bool = false) -> void:
 	var headshot := randf() <= clampf(float(gunner_config.get("headshot_chance", 0.10)), 0.0, 1.0)
-	var damage := attack_damage
+	var damage := maxi(
+		1,
+		int(round(float(attack_damage) * _gunner_powder_damage_multiplier()))
+	)
 	if headshot:
 		damage = maxi(1, int(round(float(damage) * float(gunner_config.get("headshot_multiplier", 1.20)))))
 	var projectile := GUNNER_PROJECTILE_SCENE.instantiate() as Area2D
@@ -692,13 +700,17 @@ func _spawn_gunner_bullet(direction: Vector2) -> void:
 		projectile_speed,
 		attack_range,
 		headshot,
-		gunner_ricochet_stacks
+		gunner_ricochet_stacks,
+		is_deadeye_shot
 	)
 
 
 func _spawn_gunner_bullet_from(origin: Vector2, direction: Vector2) -> void:
 	var headshot := randf() <= clampf(float(gunner_config.get("headshot_chance", 0.10)), 0.0, 1.0)
-	var damage := attack_damage
+	var damage := maxi(
+		1,
+		int(round(float(attack_damage) * _gunner_powder_damage_multiplier()))
+	)
 	if headshot:
 		damage = maxi(1, int(round(float(damage) * float(gunner_config.get("headshot_multiplier", 1.20)))))
 	var projectile := GUNNER_PROJECTILE_SCENE.instantiate() as Area2D
@@ -711,11 +723,25 @@ func _spawn_gunner_bullet_from(origin: Vector2, direction: Vector2) -> void:
 		projectile_speed,
 		attack_range,
 		headshot,
-		gunner_ricochet_stacks
+		gunner_ricochet_stacks,
+		false
 	)
 
 
+func _gunner_register_ammo_consumed(amount: int) -> void:
+	if amount <= 0 or gunner_powder_bonus_per_ammo <= 0.0:
+		return
+	gunner_powder_consumed_stacks += amount
+
+
+func _gunner_powder_damage_multiplier() -> float:
+	if gunner_powder_bonus_per_ammo <= 0.0 or gunner_powder_consumed_stacks <= 0:
+		return 1.0
+	return 1.0 + gunner_powder_bonus_per_ammo * float(gunner_powder_consumed_stacks)
+
+
 func _start_gunner_reload() -> void:
+	gunner_powder_consumed_stacks = 0
 	gunner_reloading = true
 	gunner_reload_timer = maxf(float(gunner_config.get("reload_seconds", 2.4)), 0.1)
 	attack_timer = maxf(attack_timer, gunner_reload_timer)
@@ -993,10 +1019,12 @@ func _start_gunner_deadeye() -> void:
 		aim_direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	gunner_deadeye_cooldown = maxf(float(gunner_config.get("deadeye_cooldown", 20.0)), 0.1)
 	gunner_deadeye_active = true
+	var deadeye_consumed_ammo := gunner_ammo
 	gunner_deadeye_shots_left = maxi(
 		1,
-		int(round(float(gunner_ammo) * gunner_deadeye_shot_multiplier))
+		int(round(float(deadeye_consumed_ammo) * gunner_deadeye_shot_multiplier))
 	)
+	_gunner_register_ammo_consumed(deadeye_consumed_ammo)
 	gunner_ammo = 0
 	gunner_deadeye_shot_timer = 0.0
 	gunner_deadeye_direction = aim_direction.normalized()
@@ -1012,7 +1040,7 @@ func _update_gunner_deadeye(delta: float) -> void:
 	gunner_deadeye_shot_timer = maxf(gunner_deadeye_shot_timer - delta, 0.0)
 	if gunner_deadeye_shot_timer <= 0.0 and gunner_deadeye_shots_left > 0:
 		_play_gunner_muzzle_flash(gunner_deadeye_direction)
-		_spawn_gunner_bullet(gunner_deadeye_direction)
+		_spawn_gunner_bullet(gunner_deadeye_direction, true)
 		gunner_deadeye_shots_left -= 1
 		gunner_deadeye_shot_timer = maxf(float(gunner_config.get("deadeye_shot_interval", 0.08)), 0.03)
 	if gunner_deadeye_shots_left <= 0:
@@ -3890,6 +3918,15 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 
 		"gunner_reload_cover":
 			gunner_reload_move_speed_bonus = minf(gunner_reload_move_speed_bonus + 0.06, 0.30)
+
+		"gunner_powder_acceleration":
+			if gunner_powder_bonus_per_ammo <= 0.0:
+				gunner_powder_bonus_per_ammo = 0.03
+			else:
+				gunner_powder_bonus_per_ammo = minf(
+					gunner_powder_bonus_per_ammo + 0.01,
+					0.06
+				)
 
 		"heal":
 			current_hp = mini(
