@@ -2642,7 +2642,15 @@ func _on_run_time_up() -> void:
 
 func _grant_run_research_reward() -> String:
 	var breakdown: Dictionary = run_metrics.get_research_reward_breakdown()
-	var requested := int(breakdown.get("total", 0))
+	var base_total := int(breakdown.get("total", 0))
+	if base_total <= 0:
+		return ""
+
+	var stage_multiplier := maxf(
+		float(current_stage_data.get("run_reward_multiplier", 1.0)),
+		0.0
+	)
+	var requested := maxi(int(round(float(base_total) * stage_multiplier)), 0)
 	if requested <= 0:
 		return ""
 
@@ -2652,13 +2660,11 @@ func _grant_run_research_reward() -> String:
 		return "\nRun 연구 보상 저장 실패"
 
 	return (
-		"\nRun 연구 +%d · 기본 %d / 피해 %d / 시간 %d / 관찰 %d"
+		"\nRun 연구 +%d · 기본 산정 %d × Stage %.2f"
 		% [
 			granted,
-			int(breakdown.get("base", 0)),
-			int(breakdown.get("damage", 0)),
-			int(breakdown.get("time", 0)),
-			int(breakdown.get("observation", 0)),
+			base_total,
+			stage_multiplier,
 		]
 	)
 
