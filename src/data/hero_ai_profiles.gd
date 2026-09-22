@@ -47,7 +47,7 @@ const PROFILES = {
 			"fighter_revenge": 0.35,
 			"fighter_thorns": 0.20,
 			"fighter_guard_mastery": 0.45,
-			"fighter_guard_march": 0.20,
+			"fighter_slash_mastery": 0.35,
 			"fighter_charge": 0.30,
 			"fighter_sword_mastery": 0.35,
 			"fighter_slash_width": 0.25,
