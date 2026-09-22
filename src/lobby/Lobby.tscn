@@ -63,7 +63,7 @@ theme_override_constants/separation = 12
 [node name="Title" type="Label" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.88, 0.62, 1)
-theme_override_font_sizes/font_size = 42
+theme_override_font_sizes/font_size = 53
 text = "용사, 또 너야?"
 horizontal_alignment = 1
 
@@ -75,14 +75,14 @@ theme_override_constants/separation = 20
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.86, 0.81, 0.9, 1)
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 28
 text = "연구 포인트  0"
 
 [node name="ProgressLabel" type="Label" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.86, 0.81, 0.9, 1)
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 28
 text = "최고 해금  Stage 1"
 horizontal_alignment = 2
 
@@ -111,14 +111,14 @@ theme_override_constants/separation = 18
 [node name="Title" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.87, 1, 1)
-theme_override_font_sizes/font_size = 34
+theme_override_font_sizes/font_size = 43
 text = "마왕 상점"
 horizontal_alignment = 1
 
 [node name="Guide" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 24
 text = "상자에서 무작위 몬스터 조각을 획득합니다. 테스트 버전에서는 골드가 차감되지 않습니다."
 horizontal_alignment = 1
 autowrap_mode = 2
@@ -126,7 +126,7 @@ autowrap_mode = 2
 [node name="Gold" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
-theme_override_font_sizes/font_size = 25
+theme_override_font_sizes/font_size = 31
 text = "보유 골드  99,999"
 horizontal_alignment = 1
 
@@ -138,25 +138,25 @@ theme_override_constants/separation = 18
 [node name="SingleButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopLayout/BuyRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 23
+theme_override_font_sizes/font_size = 29
 text = "상자 1회\n100 골드"
 
 [node name="MultiButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopLayout/BuyRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 23
+theme_override_font_sizes/font_size = 29
 text = "상자 10+1회\n1,000 골드"
 
 [node name="Rates" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.76, 0.7, 0.81, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 25
 text = "일반 70% · 조각 10~30\n희귀 25% · 조각 3~8\n최고등급 5% · 조각 1"
 horizontal_alignment = 1
 
 [node name="ResultTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 30
 text = "최근 상자 결과"
 horizontal_alignment = 1
 
@@ -168,7 +168,7 @@ size_flags_vertical = 3
 [node name="Result" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout/ResultPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.85, 0.94, 1)
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 26
 text = "상자를 구매하면 결과가 여기에 표시됩니다."
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -178,7 +178,7 @@ autowrap_mode = 2
 custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 24
 text = "테스트 골드 99,999 · 구매 시 골드 차감 없음"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -205,14 +205,14 @@ theme_override_constants/separation = 16
 [node name="Title" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.87, 1, 1)
-theme_override_font_sizes/font_size = 34
+theme_override_font_sizes/font_size = 43
 text = "몬스터 편성"
 horizontal_alignment = 1
 
 [node name="Guide" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 24
 text = "몬스터 카드를 탭해 최대 3종을 편성합니다. 편성은 자동 저장됩니다."
 horizontal_alignment = 1
 autowrap_mode = 2
@@ -220,7 +220,7 @@ autowrap_mode = 2
 [node name="Summary" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 28
 text = "팀 탭을 열어 편성을 표시합니다."
 horizontal_alignment = 1
 
@@ -230,32 +230,32 @@ layout_mode = 2
 theme_override_constants/separation = 14
 
 [node name="Slot1Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
-custom_minimum_size = Vector2(0, 200)
+custom_minimum_size = Vector2(0, 230)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 25
 text = "1\n빈 슬롯"
 
 [node name="Slot2Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
-custom_minimum_size = Vector2(0, 200)
+custom_minimum_size = Vector2(0, 230)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 25
 text = "2\n빈 슬롯"
 
 [node name="Slot3Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
-custom_minimum_size = Vector2(0, 200)
+custom_minimum_size = Vector2(0, 230)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 25
 text = "3\n빈 슬롯"
 
 [node name="ListTitle" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 30
 text = "몬스터 컬렉션"
 horizontal_alignment = 1
 
@@ -275,13 +275,13 @@ theme_override_constants/h_separation = 14
 theme_override_constants/v_separation = 18
 theme_override_constants/icon_margin = 12
 theme_override_constants/line_separation = 6
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 25
 
 
 [node name="DetailButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 83)
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 28
 text = "몬스터 상세보기"
 disabled = true
 
@@ -289,7 +289,7 @@ disabled = true
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 24
 text = "몬스터 카드를 탭해 편성 추가/해제 · 도트 이미지는 에셋 연결 예정"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -316,14 +316,14 @@ alignment = 1
 [node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.92, 0.86, 0.96, 1)
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 38
 text = "침입자 기록"
 horizontal_alignment = 1
 
 [node name="SectionSubtitle" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.63, 0.57, 0.69, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 24
 text = "대상 용사를 선택하고 던전에 입장하세요."
 horizontal_alignment = 1
 
@@ -334,10 +334,10 @@ theme_override_constants/separation = 18
 alignment = 1
 
 [node name="PrevButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
-custom_minimum_size = Vector2(90, 160)
+custom_minimum_size = Vector2(90, 184)
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 48
 text = "‹"
 
 [node name="StageCard" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
@@ -361,14 +361,14 @@ alignment = 1
 [node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 30
 text = "STAGE 01"
 horizontal_alignment = 1
 
 [node name="StageName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.98, 0.93, 1, 1)
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 45
 text = "첫 번째 침입자"
 horizontal_alignment = 1
 
@@ -409,7 +409,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.58, 0.52, 0.64, 1)
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 33
 text = "초상화 준비 중"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -424,7 +424,7 @@ offset_top = -62.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_color = Color(1, 0.89, 0.64, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 25
 text = "침입자"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -432,14 +432,14 @@ vertical_alignment = 1
 [node name="HeroName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.87, 0.82, 0.91, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 35
 text = "견습 마도사"
 horizontal_alignment = 1
 
 [node name="StageDescription" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.65, 0.75, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 24
 text = "침입자 설명"
 horizontal_alignment = 1
 autowrap_mode = 2
@@ -447,29 +447,29 @@ autowrap_mode = 2
 [node name="StageStatus" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.75, 0.69, 0.8, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 24
 text = "입장 가능 · 제한 6분"
 horizontal_alignment = 1
 
 [node name="StageReward" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 24
 text = "최초 클리어 연구 포인트 +100"
 horizontal_alignment = 1
 
 [node name="EnterButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
-custom_minimum_size = Vector2(0, 92)
+custom_minimum_size = Vector2(0, 106)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 35
 text = "던전 입장"
 
 [node name="NextButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
-custom_minimum_size = Vector2(90, 160)
+custom_minimum_size = Vector2(90, 184)
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 48
 text = "›"
 
 [node name="ResearchTab" type="Control" parent="SafeArea/Layout/Content"]
@@ -493,14 +493,14 @@ theme_override_constants/separation = 16
 [node name="Title" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.87, 1, 1)
-theme_override_font_sizes/font_size = 34
+theme_override_font_sizes/font_size = 43
 text = "마왕 연구실"
 horizontal_alignment = 1
 
 [node name="Points" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
-theme_override_font_sizes/font_size = 23
+theme_override_font_sizes/font_size = 29
 text = "보유 연구 포인트  0"
 horizontal_alignment = 1
 
@@ -517,7 +517,7 @@ theme_override_constants/separation = 14
 custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.73, 0.67, 0.78, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 25
 text = "연구 항목을 선택하세요."
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -540,7 +540,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.83, 0.79, 0.87, 1)
-theme_override_font_sizes/font_size = 34
+theme_override_font_sizes/font_size = 43
 text = "다른 콘텐츠\n\n도감 / 도전 / 이벤트 슬롯 예정"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -569,24 +569,28 @@ mouse_filter = 0
 
 [node name="Panel" type="PanelContainer" parent="MonsterDetailOverlay"]
 layout_mode = 1
-anchors_preset = 15
-anchor_left = 0.04
-anchor_top = 0.055
-anchor_right = 0.96
-anchor_bottom = 0.94
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -480.0
+offset_top = -650.0
+offset_right = 480.0
+offset_bottom = 650.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Margin" type="MarginContainer" parent="MonsterDetailOverlay/Panel"]
 layout_mode = 2
-theme_override_constants/margin_left = 34
-theme_override_constants/margin_top = 30
-theme_override_constants/margin_right = 34
-theme_override_constants/margin_bottom = 28
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 24
 
 [node name="VBox" type="VBoxContainer" parent="MonsterDetailOverlay/Panel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 14
 
 [node name="Header" type="HBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox"]
 layout_mode = 2
@@ -595,20 +599,20 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.88, 0.62, 1)
-theme_override_font_sizes/font_size = 34
+theme_override_font_sizes/font_size = 43
 text = "몬스터 상세"
 vertical_alignment = 1
 
 [node name="CloseButton" type="Button" parent="MonsterDetailOverlay/Panel/Margin/VBox/Header"]
-custom_minimum_size = Vector2(120, 64)
+custom_minimum_size = Vector2(120, 74)
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 28
 text = "닫기"
 
 [node name="Guide" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.65, 0.75, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 23
 text = "왼쪽은 기본 몬스터, 오른쪽은 기본 돌연변이 기준입니다."
 horizontal_alignment = 1
 autowrap_mode = 2
@@ -636,12 +640,12 @@ theme_override_constants/separation = 12
 [node name="Badge" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.9, 1, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 25
 text = "일반"
 horizontal_alignment = 1
 
 [node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 230)
+custom_minimum_size = Vector2(0, 180)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
@@ -649,7 +653,7 @@ texture_filter = 1
 
 [node name="Name" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 35
 text = "몬스터"
 horizontal_alignment = 1
 
@@ -657,20 +661,20 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.9, 0.86, 0.93, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 24
 text = "기본 스탯"
 autowrap_mode = 2
 
 [node name="SpecialTitle" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 25
 text = "획득 가능한 특수증강"
 
 [node name="Specials" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.82, 0.77, 0.86, 1)
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 21
 text = "특수증강"
 autowrap_mode = 2
 
@@ -692,12 +696,12 @@ theme_override_constants/separation = 12
 [node name="Badge" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.7, 0.36, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 25
 text = "엘리트 · 기본 돌연변이"
 horizontal_alignment = 1
 
 [node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 230)
+custom_minimum_size = Vector2(0, 180)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
@@ -705,7 +709,7 @@ texture_filter = 1
 
 [node name="Name" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 35
 text = "돌연변이 몬스터"
 horizontal_alignment = 1
 
@@ -713,14 +717,14 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.92, 0.86, 0.76, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 24
 text = "엘리트 스탯"
 autowrap_mode = 2
 
 [node name="Note" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.6, 0.69, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 20
 text = "실제 돌연변이/대돌연변이/보스 이벤트에 따라 배율은 달라질 수 있습니다."
 autowrap_mode = 2
 
@@ -746,38 +750,38 @@ layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="ShopButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
-custom_minimum_size = Vector2(0, 134)
+custom_minimum_size = Vector2(0, 154)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 26
 text = "상점"
 
 [node name="TeamButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
-custom_minimum_size = Vector2(0, 134)
+custom_minimum_size = Vector2(0, 154)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 26
 text = "팀 편성"
 
 [node name="MainButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
-custom_minimum_size = Vector2(0, 134)
+custom_minimum_size = Vector2(0, 154)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 23
+theme_override_font_sizes/font_size = 29
 text = "메인"
 
 [node name="ResearchButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
-custom_minimum_size = Vector2(0, 134)
+custom_minimum_size = Vector2(0, 154)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 26
 text = "연구"
 
 [node name="OtherButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
-custom_minimum_size = Vector2(0, 134)
+custom_minimum_size = Vector2(0, 154)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 26
 text = "기타"
 
 
