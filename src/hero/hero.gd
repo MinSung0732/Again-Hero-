@@ -88,6 +88,9 @@ var rogue_assassination_hit_bonus: int = 0
 var rogue_execute_threshold_bonus: float = 0.0
 var rogue_lifesteal_ratio: float = 0.0
 var rogue_lifesteal_buffer: float = 0.0
+var rogue_combo_direction: Vector2 = Vector2.RIGHT
+var rogue_attack_collision_ignore_timer: float = 0.0
+var rogue_saved_collision_mask: int = -1
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
 var ultimate_flash_timer: float = 0.0
@@ -199,6 +202,9 @@ func configure_profile(profile: Dictionary) -> void:
 	rogue_execute_threshold_bonus = 0.0
 	rogue_lifesteal_ratio = 0.0
 	rogue_lifesteal_buffer = 0.0
+	rogue_combo_direction = Vector2.RIGHT
+	rogue_attack_collision_ignore_timer = 0.0
+	rogue_saved_collision_mask = -1
 	var profile_ultimate = profile.get("ultimate", {})
 	ultimate_config = (
 		profile_ultimate.duplicate(true)
@@ -389,6 +395,7 @@ func _physics_process_rogue(delta: float) -> void:
 		rogue_slash_cooldown_timer - delta,
 		0.0
 	)
+	_update_rogue_attack_collision_ignore(delta)
 
 	_update_invulnerability(delta)
 	_update_rogue_slash(delta)
@@ -439,6 +446,7 @@ func _physics_process_rogue(delta: float) -> void:
 
 	if not is_instance_valid(target):
 		rogue_combo_index = 0
+		rogue_combo_direction = Vector2.RIGHT
 		_move_without_monsters()
 		_update_rogue_pose_visual(delta)
 		return
@@ -485,31 +493,44 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 	if not is_instance_valid(current_target):
 		return
 
-	var direction := global_position.direction_to(
+	var target_direction := global_position.direction_to(
 		current_target.global_position
 	)
-	if direction.length_squared() <= 0.0:
-		direction = Vector2.RIGHT
+	if target_direction.length_squared() <= 0.0:
+		target_direction = (
+			Vector2.LEFT
+			if hero_sprite.flip_h
+			else Vector2.RIGHT
+		)
 
+	if rogue_combo_index == 0:
+		rogue_combo_direction = target_direction.normalized()
+	elif rogue_combo_direction.length_squared() <= 0.0:
+		rogue_combo_direction = target_direction.normalized()
+
+	var direction := rogue_combo_direction.normalized()
 	_face_attack_direction(direction.x)
 
 	var lunge_distance := maxf(
-		float(rogue_combo_config.get("lunge_distance", 62.0)),
+		float(rogue_combo_config.get("lunge_distance", 85.0)),
 		0.0
 	)
-	var current_distance := global_position.distance_to(
-		current_target.global_position
-	)
-	var lunge_stop_distance := maxf(
-		float(rogue_combo_config.get("lunge_stop_distance", 38.0)),
-		0.0
-	)
-	var usable_lunge := minf(
-		lunge_distance,
-		maxf(current_distance - lunge_stop_distance, 0.0)
-	)
-	global_position += direction * usable_lunge
+	var lunge_start := global_position
+	global_position += direction * lunge_distance
 	_clamp_to_battlefield()
+	var lunge_end := global_position
+
+	_start_rogue_attack_collision_ignore(
+		maxf(
+			float(
+				rogue_combo_config.get(
+					"collision_ignore_duration",
+					0.28
+				)
+			),
+			0.0
+		)
+	)
 
 	var damage_multipliers = rogue_combo_config.get(
 		"damage_multipliers",
@@ -552,7 +573,9 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 	):
 		aoe_offset = float(aoe_offsets[rogue_combo_index])
 
-	var impact_center := global_position + direction * aoe_offset
+	var corridor_end := lunge_end + direction * aoe_offset
+	var corridor_vector := corridor_end - lunge_start
+	var corridor_length_squared := corridor_vector.length_squared()
 	var main_id := current_target.get_instance_id()
 	var knockback_distance := float(
 		rogue_combo_config.get(
@@ -577,7 +600,26 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		if impact_center.distance_to(monster.global_position) > aoe_radius:
+
+		var nearest_point := lunge_start
+		if corridor_length_squared > 0.001:
+			var projection := clampf(
+				(
+					(monster.global_position - lunge_start)
+					.dot(corridor_vector)
+					/ corridor_length_squared
+				),
+				0.0,
+				1.0
+			)
+			nearest_point = (
+				lunge_start
+				+ corridor_vector * projection
+			)
+		if (
+			nearest_point.distance_squared_to(monster.global_position)
+			> aoe_radius * aoe_radius
+		):
 			continue
 
 		var is_main_target := monster.get_instance_id() == main_id
@@ -589,14 +631,9 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 		if actual_damage <= 0 or not is_instance_valid(monster):
 			continue
 
-		var knock_direction := impact_center.direction_to(
-			monster.global_position
-		)
-		if knock_direction.length_squared() <= 0.0:
-			knock_direction = direction
 		_rogue_apply_knockback(
 			monster,
-			knock_direction,
+			direction,
 			knockback_distance
 		)
 
@@ -628,6 +665,39 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 
 	attack_timer = maxf(interval, 0.08)
 	rogue_combo_index = (rogue_combo_index + 1) % 3
+	if rogue_combo_index == 0:
+		rogue_combo_direction = Vector2.ZERO
+
+func _start_rogue_attack_collision_ignore(duration: float) -> void:
+	if duration <= 0.0 or is_dying:
+		return
+
+	if rogue_saved_collision_mask < 0:
+		rogue_saved_collision_mask = collision_mask
+	collision_mask = 0
+	rogue_attack_collision_ignore_timer = maxf(
+		rogue_attack_collision_ignore_timer,
+		duration
+	)
+
+func _update_rogue_attack_collision_ignore(delta: float) -> void:
+	if rogue_attack_collision_ignore_timer <= 0.0:
+		if rogue_saved_collision_mask >= 0 and not is_dying:
+			collision_mask = rogue_saved_collision_mask
+			rogue_saved_collision_mask = -1
+		return
+
+	rogue_attack_collision_ignore_timer = maxf(
+		rogue_attack_collision_ignore_timer - delta,
+		0.0
+	)
+	if (
+		rogue_attack_collision_ignore_timer <= 0.0
+		and rogue_saved_collision_mask >= 0
+		and not is_dying
+	):
+		collision_mask = rogue_saved_collision_mask
+		rogue_saved_collision_mask = -1
 
 func _rogue_damage_target(
 	current_target: Node2D,
