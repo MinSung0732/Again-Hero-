@@ -5,6 +5,8 @@ const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
+const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
+const MUTATION_CATALOG := preload("res://src/data/mutation_catalog.gd")
 const SHOP_CATALOG := preload("res://src/data/shop_catalog.gd")
 const MONSTER_COLLECTION_STORE := preload("res://src/systems/monster_collection_store.gd")
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
@@ -40,7 +42,22 @@ const TEAM_MAX_SLOTS := 3
 @onready var team_slot_2_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot2Button
 @onready var team_slot_3_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot3Button
 @onready var team_monster_list: ItemList = $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList
+@onready var team_detail_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/DetailButton
 @onready var team_status_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/Status
+
+@onready var monster_detail_overlay: Control = $MonsterDetailOverlay
+@onready var monster_detail_panel: PanelContainer = $MonsterDetailOverlay/Panel
+@onready var monster_detail_title: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Header/Title
+@onready var monster_detail_close_button: Button = $MonsterDetailOverlay/Panel/Margin/VBox/Header/CloseButton
+@onready var monster_detail_normal_panel: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel
+@onready var monster_detail_normal_portrait: TextureRect = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Portrait
+@onready var monster_detail_normal_name: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Name
+@onready var monster_detail_normal_stats: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Stats
+@onready var monster_detail_specials: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Specials
+@onready var monster_detail_elite_panel: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel
+@onready var monster_detail_elite_portrait: TextureRect = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Portrait
+@onready var monster_detail_elite_name: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Name
+@onready var monster_detail_elite_stats: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Stats
 
 @onready var prev_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/PrevButton
 @onready var next_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/NextButton
@@ -67,6 +84,7 @@ var monster_collection_state: Dictionary = {}
 var team_catalog_ids: Array = []
 var team_available_ids: Array = []
 var team_selected_ids: Array = []
+var selected_team_monster_id: String = ""
 
 var panel_style := StyleBoxFlat.new()
 var header_style := StyleBoxFlat.new()
@@ -209,6 +227,16 @@ func _apply_styles() -> void:
 		button.add_theme_stylebox_override("hover", stage_card_style)
 		button.add_theme_stylebox_override("pressed", primary_button_style)
 
+	team_detail_button.add_theme_stylebox_override("normal", secondary_button_style)
+	team_detail_button.add_theme_stylebox_override("hover", primary_button_style)
+	team_detail_button.add_theme_stylebox_override("pressed", primary_button_style)
+	monster_detail_panel.add_theme_stylebox_override("panel", header_style)
+	monster_detail_normal_panel.add_theme_stylebox_override("panel", stage_card_style)
+	monster_detail_elite_panel.add_theme_stylebox_override("panel", portrait_inner_style)
+	monster_detail_close_button.add_theme_stylebox_override("normal", secondary_button_style)
+	monster_detail_close_button.add_theme_stylebox_override("hover", primary_button_style)
+	monster_detail_close_button.add_theme_stylebox_override("pressed", primary_button_style)
+
 
 func _connect_navigation() -> void:
 	shop_button.pressed.connect(_switch_tab.bind("shop"))
@@ -230,6 +258,9 @@ func _connect_navigation() -> void:
 	team_slot_2_button.pressed.connect(_on_team_slot_pressed.bind(1))
 	team_slot_3_button.pressed.connect(_on_team_slot_pressed.bind(2))
 	team_monster_list.item_selected.connect(_on_team_item_selected)
+	team_detail_button.pressed.connect(_open_selected_monster_detail)
+	monster_detail_close_button.pressed.connect(_close_monster_detail)
+	$MonsterDetailOverlay/Dim.gui_input.connect(_on_monster_detail_dim_input)
 
 
 func _on_team_tab_pressed() -> void:
@@ -625,12 +656,260 @@ func _on_team_item_selected(item_index: int) -> void:
 		return
 
 	var monster_id := String(team_catalog_ids[item_index])
+	selected_team_monster_id = monster_id
+	team_detail_button.disabled = false
+	team_detail_button.text = "%s 상세보기" % _team_monster_name(monster_id)
+
 	if monster_id in team_selected_ids:
 		_remove_team_monster(monster_id)
 	else:
 		_add_team_monster(monster_id)
 
-	team_monster_list.deselect_all()
+func _open_selected_monster_detail() -> void:
+	if selected_team_monster_id.is_empty():
+		return
+	if not MONSTER_CATALOG.MONSTERS.has(selected_team_monster_id):
+		return
+
+	_populate_monster_detail(selected_team_monster_id)
+	monster_detail_overlay.show()
+	monster_detail_overlay.move_to_front()
+
+func _close_monster_detail() -> void:
+	monster_detail_overlay.hide()
+
+func _on_monster_detail_dim_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		_close_monster_detail()
+	elif event is InputEventScreenTouch and event.pressed:
+		_close_monster_detail()
+
+func _populate_monster_detail(monster_id: String) -> void:
+	var data := MONSTER_CATALOG.get_monster(monster_id)
+	if data.is_empty():
+		return
+
+	var monster_name := String(data.get("name", monster_id))
+	var role_label := MONSTER_CATALOG.get_role_label(
+		String(data.get("role", ""))
+	)
+	var base_stats := _read_monster_base_stats(monster_id)
+	var mutation := MUTATION_CATALOG.get_profile("mutation_1")
+
+	monster_detail_title.text = "%s 상세 정보" % monster_name
+	monster_detail_normal_name.text = monster_name
+	monster_detail_elite_name.text = "돌연변이 %s" % monster_name
+	monster_detail_normal_portrait.texture = _team_monster_card_icon(monster_id)
+	monster_detail_elite_portrait.texture = _load_elite_preview(monster_id)
+
+	monster_detail_normal_stats.text = _build_normal_detail_text(
+		monster_id,
+		role_label,
+		data,
+		base_stats
+	)
+	monster_detail_specials.text = _build_special_augment_text(monster_id)
+	monster_detail_elite_stats.text = _build_elite_detail_text(
+		monster_id,
+		base_stats,
+		mutation
+	)
+
+func _read_monster_base_stats(monster_id: String) -> Dictionary:
+	var scene := MONSTER_CATALOG.get_scene(monster_id)
+	if scene == null:
+		return {}
+
+	var monster := scene.instantiate()
+	if monster == null:
+		return {}
+
+	var stats := {
+		"max_hp": monster.get("max_hp"),
+		"move_speed": monster.get("move_speed"),
+		"attack_damage": monster.get("attack_damage"),
+		"attack_range": monster.get("attack_range"),
+		"attack_cooldown": monster.get("attack_cooldown"),
+		"explosion_damage": monster.get("explosion_damage"),
+		"explosion_radius": monster.get("explosion_radius"),
+		"self_destruct_fuse": monster.get("self_destruct_fuse"),
+		"slow_multiplier": monster.get("slow_multiplier"),
+		"slow_duration": monster.get("slow_duration"),
+	}
+	monster.free()
+	return stats
+
+func _build_normal_detail_text(
+	monster_id: String,
+	role_label: String,
+	data: Dictionary,
+	stats: Dictionary
+) -> String:
+	var lines: PackedStringArray = []
+	lines.append("기본 스탯")
+	lines.append("역할  %s" % role_label)
+	lines.append("소환 비용  %.1f" % float(data.get("base_cost", 0.0)))
+	lines.append("마왕 EXP  %.1f" % float(data.get("summon_exp", 0.0)))
+
+	var hp_value = stats.get("max_hp")
+	if hp_value != null:
+		lines.append("최대 HP  %d" % int(hp_value))
+
+	var damage_value = stats.get("attack_damage")
+	if damage_value != null:
+		lines.append("공격력  %d" % int(damage_value))
+
+	var explosion_damage = stats.get("explosion_damage")
+	if explosion_damage != null:
+		lines.append("자폭 피해  %d" % int(explosion_damage))
+
+	var speed_value = stats.get("move_speed")
+	if speed_value != null:
+		lines.append("이동속도  %.0f" % float(speed_value))
+
+	var cooldown_value = stats.get("attack_cooldown")
+	if cooldown_value != null:
+		lines.append("공격 간격  %.2f초" % float(cooldown_value))
+
+	var fuse_value = stats.get("self_destruct_fuse")
+	if fuse_value != null:
+		lines.append("자폭 준비  %.2f초" % float(fuse_value))
+
+	var range_value = stats.get("attack_range")
+	if range_value != null and monster_id != "bomb_rat":
+		lines.append("공격 사거리  %.0f" % float(range_value))
+
+	var explosion_radius = stats.get("explosion_radius")
+	if explosion_radius != null:
+		lines.append("폭발 반경  %.0f" % float(explosion_radius))
+
+	var slow_value = stats.get("slow_multiplier")
+	var slow_duration = stats.get("slow_duration")
+	if slow_value != null and slow_duration != null:
+		lines.append(
+			"거미줄 둔화  %.0f%% · %.1f초" % [
+				(1.0 - float(slow_value)) * 100.0,
+				float(slow_duration),
+			]
+		)
+
+	return "\n".join(lines)
+
+func _build_special_augment_text(monster_id: String) -> String:
+	var lines: PackedStringArray = []
+	for raw_augment in DEMON_AUGMENTS.get_special_augments_for_monster(
+		monster_id
+	):
+		var augment: Dictionary = raw_augment
+		lines.append("◆ %s" % String(augment.get("name", "특수증강")))
+		lines.append("  %s" % String(augment.get("description", "")))
+
+	if lines.is_empty():
+		return "등록된 특수증강이 없습니다."
+	return "\n".join(lines)
+
+func _build_elite_detail_text(
+	monster_id: String,
+	stats: Dictionary,
+	mutation: Dictionary
+) -> String:
+	var hp_multiplier := float(mutation.get("hp_multiplier", 1.0))
+	var damage_multiplier := float(
+		mutation.get("damage_multiplier", 1.0)
+	)
+	var speed_multiplier := float(mutation.get("speed_multiplier", 1.0))
+	var visual_scale := float(mutation.get("visual_scale", 1.0))
+
+	var lines: PackedStringArray = []
+	lines.append("기본 돌연변이 기준")
+	lines.append("HP 배율  ×%.2f" % hp_multiplier)
+	lines.append("공격력 배율  ×%.2f" % damage_multiplier)
+	lines.append("이동속도 배율  ×%.2f" % speed_multiplier)
+	lines.append("크기 배율  ×%.2f" % visual_scale)
+	lines.append("")
+
+	var hp_value = stats.get("max_hp")
+	if hp_value != null:
+		lines.append(
+			"기본 HP  %d → %d" % [
+				int(hp_value),
+				int(round(float(hp_value) * hp_multiplier)),
+			]
+		)
+
+	var damage_value = stats.get("attack_damage")
+	if damage_value != null:
+		lines.append(
+			"공격력  %d → %d" % [
+				int(damage_value),
+				int(round(float(damage_value) * damage_multiplier)),
+			]
+		)
+
+	var explosion_damage = stats.get("explosion_damage")
+	if explosion_damage != null:
+		lines.append(
+			"자폭 피해  %d → %d" % [
+				int(explosion_damage),
+				int(round(
+					float(explosion_damage) * damage_multiplier
+				)),
+			]
+		)
+
+	var speed_value = stats.get("move_speed")
+	if speed_value != null:
+		lines.append(
+			"이동속도  %.0f → %.0f" % [
+				float(speed_value),
+				float(speed_value) * speed_multiplier,
+			]
+		)
+
+	var cooldown_value = stats.get("attack_cooldown")
+	if cooldown_value != null:
+		lines.append(
+			"공격 간격  %.2f초 · 변화 없음" % float(cooldown_value)
+		)
+
+	if monster_id == "bomb_rat":
+		var fuse_value = stats.get("self_destruct_fuse")
+		if fuse_value != null:
+			lines.append(
+				"자폭 준비  %.2f초 · 변화 없음" % float(fuse_value)
+			)
+
+	lines.append("")
+	lines.append("※ 마왕 레벨/연구/Run 증강은 제외한 기준치")
+	return "\n".join(lines)
+
+func _load_elite_preview(monster_id: String) -> Texture2D:
+	var profile := MONSTER_CATALOG.get_elite_visual_profile(monster_id)
+	if profile.is_empty():
+		return _team_monster_card_icon(monster_id)
+
+	var asset_dir := String(profile.get("asset_dir", ""))
+	var animations = profile.get("animations", {})
+	if asset_dir.is_empty() or typeof(animations) != TYPE_DICTIONARY:
+		return _team_monster_card_icon(monster_id)
+
+	var idle = animations.get("idle", {})
+	if typeof(idle) != TYPE_DICTIONARY:
+		return _team_monster_card_icon(monster_id)
+
+	var path := ""
+	var mode := String(profile.get("mode", ""))
+	if mode == "frames":
+		var prefix := String(idle.get("prefix", "idle"))
+		path = "%s/%s_%02d.png" % [asset_dir, prefix, 1]
+	elif mode == "sequence":
+		var start_index := int(idle.get("start", 1))
+		path = "%s/frame_%02d.png" % [asset_dir, start_index]
+
+	var texture := _load_texture(path)
+	if texture != null:
+		return texture
+	return _team_monster_card_icon(monster_id)
 
 func _remove_team_monster(monster_id: String) -> void:
 	if monster_id not in team_selected_ids:
