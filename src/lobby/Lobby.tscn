@@ -337,6 +337,10 @@ theme_override_font_sizes/font_size = 24
 text = "대상 용사를 선택하고 던전에 입장하세요."
 horizontal_alignment = 1
 
+[node name="StageTopSpacer" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
+custom_minimum_size = Vector2(0, 92)
+layout_mode = 2
+
 [node name="StagePicker" type="HBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -346,44 +350,44 @@ alignment = 1
 [node name="PrevButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
 custom_minimum_size = Vector2(64, 124)
 layout_mode = 2
-size_flags_vertical = 4
+size_flags_vertical = 1
 theme_override_font_sizes/font_size = 42
 text = "‹"
 
 [node name="StageCard" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
-custom_minimum_size = Vector2(0, 0)
+custom_minimum_size = Vector2(0, 548)
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 4
+size_flags_vertical = 1
 
 [node name="CardMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard"]
 layout_mode = 2
-theme_override_constants/margin_left = 26
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 26
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 22
 
 [node name="CardVBox" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 alignment = 0
 
 [node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
 text = "STAGE 01"
 horizontal_alignment = 1
 
 [node name="StageName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.98, 0.93, 1, 1)
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 40
 text = "첫 번째 침입자"
 horizontal_alignment = 1
 
 [node name="PortraitFrame" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
-custom_minimum_size = Vector2(0, 400)
+custom_minimum_size = Vector2(0, 292)
 layout_mode = 2
 
 [node name="FrameMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame"]
@@ -479,7 +483,7 @@ text = "던전 입장"
 [node name="NextButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
 custom_minimum_size = Vector2(64, 124)
 layout_mode = 2
-size_flags_vertical = 4
+size_flags_vertical = 1
 theme_override_font_sizes/font_size = 42
 text = "›"
 
