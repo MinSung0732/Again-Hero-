@@ -17,6 +17,9 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 
 const UI_FRAME_LARGE_DIR := "res://assets/art/UI/01_large_left_panel"
 const UI_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
+const UI_NEW_HEADER_FRAME: Texture2D = preload(
+	"res://assets/art/UI/newUI_frame/frame_06.png"
+)
 
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 @onready var resource_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ResourceLabel
@@ -248,9 +251,19 @@ func _apply_styles() -> void:
 		18
 	)
 
+	var new_header_style := StyleBoxTexture.new()
+	new_header_style.texture = UI_NEW_HEADER_FRAME
+	new_header_style.texture_margin_left = 38.0
+	new_header_style.texture_margin_top = 32.0
+	new_header_style.texture_margin_right = 38.0
+	new_header_style.texture_margin_bottom = 32.0
+	new_header_style.content_margin_left = 24.0
+	new_header_style.content_margin_top = 12.0
+	new_header_style.content_margin_right = 24.0
+	new_header_style.content_margin_bottom = 12.0
 	$SafeArea/Layout/Header.add_theme_stylebox_override(
 		"panel",
-		header_backing
+		new_header_style
 	)
 	$SafeArea/Layout/Content/ContentFrame.add_theme_stylebox_override(
 		"panel",
@@ -344,7 +357,6 @@ func _apply_styles() -> void:
 func _apply_asset_frames() -> void:
 	# 상단/하단은 모바일에서 장식보다 정보가 우선이라 얇게 유지한다.
 	for target in [
-		$SafeArea/Layout/Header,
 		$BottomNav,
 	]:
 		_add_asset_frame(
