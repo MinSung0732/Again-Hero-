@@ -288,6 +288,136 @@ const AUGMENTS = [
 		],
 	},
 	{
+		"id": "fighter_guard_wall",
+		"name": "견고한 방패",
+		"description": "막기 쉴드 +최대 HP 3%",
+		"base_score": 7.2,
+		"max_stack": 10,
+		"tags": ["durability", "survival"],
+		"effects": [
+			{"op": "add_stat", "target": "fighter_guard_shield_ratio_bonus", "value": 0.03, "max": 0.30},
+		],
+		"ai_rules": [
+			{"source": "hp_missing", "weight": 5.0},
+			{"source": "nearby_linear", "weight": 0.35, "cap": 2.5},
+		],
+	},
+	{
+		"id": "fighter_revenge",
+		"name": "복수의 방패",
+		"description": "막기 종료 반격 피해 +5%",
+		"base_score": 6.8,
+		"max_stack": 5,
+		"tags": ["damage", "area"],
+		"effects": [
+			{"op": "add_stat", "target": "fighter_guard_release_ratio_bonus", "value": 0.05, "max": 0.25},
+		],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.45, "cap": 3.0},
+			{"source": "recent_events_linear", "weight": 0.08, "cap": 1.0},
+		],
+	},
+	{
+		"id": "fighter_thorns",
+		"name": "가시 방패",
+		"description": "막기 중 받은 원본 피해의 3% 반사",
+		"base_score": 6.4,
+		"max_stack": 5,
+		"tags": ["damage", "survival"],
+		"effects": [
+			{"op": "add_stat", "target": "fighter_reflect_ratio", "value": 0.03, "max": 0.15},
+		],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.55, "cap": 3.3},
+			{"source": "hp_missing", "weight": 2.5},
+		],
+	},
+	{
+		"id": "fighter_guard_mastery",
+		"name": "수호 숙련",
+		"description": "막기 피해 감소 +3%",
+		"base_score": 7.0,
+		"max_stack": 5,
+		"tags": ["durability", "survival"],
+		"effects": [
+			{"op": "add_stat", "target": "fighter_guard_damage_reduction_bonus", "value": 0.03, "max": 0.15},
+		],
+		"ai_rules": [
+			{"source": "hp_missing", "weight": 5.5},
+			{"source": "current_role_ratio", "key": "tank", "weight": 1.6},
+		],
+	},
+	{
+		"id": "fighter_guard_march",
+		"name": "방패 행군",
+		"description": "막기 중 이동속도 페널티 완화 +5%",
+		"base_score": 5.7,
+		"max_stack": 4,
+		"tags": ["mobility", "survival"],
+		"effects": [
+			{"op": "add_stat", "target": "fighter_guard_move_multiplier_bonus", "value": 0.05, "max": 0.20},
+		],
+		"ai_rules": [
+			{"source": "distance", "divisor": 220.0, "cap": 2.0},
+		],
+	},
+	{
+		"id": "fighter_charge",
+		"name": "방패 충전",
+		"description": "막기 충전시간 -0.5초",
+		"base_score": 6.3,
+		"max_stack": 5,
+		"tags": ["survival", "growth"],
+		"effects": [
+			{"op": "add_stat", "target": "fighter_guard_charge_seconds", "value": -0.5, "min": 17.5},
+		],
+	},
+	{
+		"id": "fighter_sword_mastery",
+		"name": "숙련된 검사",
+		"description": "베기/찌르기 피해 +6%",
+		"base_score": 7.3,
+		"max_stack": 10,
+		"tags": ["damage"],
+		"effects": [
+			{"op": "add_stat", "target": "fighter_basic_damage_multiplier", "value": 0.06, "max": 1.60},
+		],
+		"ai_rules": [
+			{"source": "hp_ratio_min", "value": 0.60, "bonus": 0.7},
+		],
+	},
+	{
+		"id": "fighter_slash_width",
+		"name": "넓은 베기",
+		"description": "베기 좌우 범위 +10",
+		"base_score": 6.0,
+		"max_stack": 5,
+		"tags": ["area", "damage"],
+		"effects": [
+			{"op": "add_stat", "target": "fighter_slash_half_width_bonus", "value": 10.0, "max": 50.0},
+		],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.60, "cap": 3.6},
+			{"source": "current_role_ratio", "key": "swarm", "weight": 2.2},
+		],
+	},
+	{
+		"id": "fighter_thrust_training",
+		"name": "관통 찌르기",
+		"description": "찌르기 사거리 +15, 피해 +3%",
+		"base_score": 6.1,
+		"max_stack": 5,
+		"tags": ["range", "damage"],
+		"effects": [
+			{"op": "add_stat", "target": "fighter_thrust_length_bonus", "value": 15.0, "max": 75.0},
+			{"op": "add_stat", "target": "fighter_thrust_damage_bonus", "value": 0.03, "max": 0.15},
+		],
+		"ai_rules": [
+			{"source": "distance", "divisor": 170.0, "cap": 2.4},
+			{"source": "nearby_count_max", "value": 2, "bonus": 0.8},
+		],
+	},
+	{
 		"id": "rogue_ruthless_strike",
 		"name": "무자비한 일격",
 		"description": "기본 연격 돌진 횟수 +1 (3타 → 4타)",
