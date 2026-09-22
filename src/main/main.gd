@@ -734,21 +734,35 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 
 		if candidate_type == "special":
 			var monster_id := String(candidate.get("monster_id", ""))
+			buttons[index].add_theme_font_size_override("font_size", 19)
 			buttons[index].text = "★ [%s]\n%s\n\n%s" % [
 				_get_catalog_monster_name(monster_id),
-				String(candidate.get("name", "특수증강")),
-				String(candidate.get("description", "")),
+				_wrap_augment_card_text(
+					String(candidate.get("name", "특수증강")),
+					11
+				),
+				_wrap_augment_card_text(
+					String(candidate.get("description", "")),
+					13
+				),
 			]
 		else:
 			var current_stack := int(candidate.get("current_stack", 0))
 			var max_stack := int(candidate.get("max_stack", 1))
 			var next_stack := mini(current_stack + 1, max_stack)
+			buttons[index].add_theme_font_size_override("font_size", 20)
 			buttons[index].text = "%s\nLv.%d → Lv.%d / %d\n\n%s" % [
-				String(candidate.get("name", "증강")),
+				_wrap_augment_card_text(
+					String(candidate.get("name", "증강")),
+					12
+				),
 				current_stack,
 				next_stack,
 				max_stack,
-				String(candidate.get("description", "")),
+				_wrap_augment_card_text(
+					String(candidate.get("description", "")),
+					14
+				),
 			]
 
 	var reroll_max := int(battle.get_snapshot().get("demon_reroll_max", 3))
@@ -759,6 +773,45 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 		if is_special
 		else "일반증강 레벨입니다. 마왕 운영 또는 편성 몬스터를 강화하세요."
 	)
+
+func _wrap_augment_card_text(
+	value: String,
+	max_chars_per_line: int
+) -> String:
+	var max_chars := maxi(max_chars_per_line, 4)
+	var words := value.split(" ", false)
+	var lines: PackedStringArray = []
+	var current_line := ""
+
+	for raw_word in words:
+		var word := String(raw_word)
+		if word.length() > max_chars:
+			if not current_line.is_empty():
+				lines.append(current_line)
+				current_line = ""
+			var start := 0
+			while start < word.length():
+				lines.append(
+					word.substr(start, mini(max_chars, word.length() - start))
+				)
+				start += max_chars
+			continue
+
+		var candidate := word
+		if not current_line.is_empty():
+			candidate = "%s %s" % [current_line, word]
+
+		if candidate.length() > max_chars:
+			if not current_line.is_empty():
+				lines.append(current_line)
+			current_line = word
+		else:
+			current_line = candidate
+
+	if not current_line.is_empty():
+		lines.append(current_line)
+
+	return "\n".join(lines)
 
 func _on_demon_choice_pressed(index: int) -> void:
 	if index < 0 or index >= current_demon_candidates.size():
