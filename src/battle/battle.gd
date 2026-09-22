@@ -1252,10 +1252,16 @@ func _spawn_exp_orb(drop_position: Vector2, exp_value: int) -> void:
 
 func _emit_demon_ultimate_changed() -> void:
 	var charge_max := maxf(DEMON_ULTIMATES.CHARGE_MAX, 1.0)
+	var cheapest_cost := charge_max
+	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
+		var skill := DEMON_ULTIMATES.get_skill(String(raw_id))
+		if skill.is_empty() or not bool(skill.get("implemented", false)):
+			continue
+		cheapest_cost = minf(cheapest_cost, maxf(float(skill.get("mana_cost", charge_max)), 0.0))
 	demon_ultimate_changed.emit(
 		demon_ultimate_charge,
 		charge_max,
-		demon_ultimate_charge + 0.001 >= charge_max
+		demon_ultimate_charge + 0.001 >= cheapest_cost
 	)
 
 func _emit_demon_ultimate_cooldowns() -> void:
@@ -1309,13 +1315,14 @@ func try_use_demon_ultimate(
 ) -> bool:
 	if battle_over or external_pause or demon_augment_selection_active:
 		return false
-	if demon_ultimate_charge + 0.001 < DEMON_ULTIMATES.CHARGE_MAX:
-		return false
 	if float(demon_ultimate_cooldowns.get(skill_id, 0.0)) > 0.001:
 		return false
 
 	var skill := DEMON_ULTIMATES.get_skill(skill_id)
 	if skill.is_empty() or not bool(skill.get("implemented", false)):
+		return false
+	var mana_cost := maxf(float(skill.get("mana_cost", DEMON_ULTIMATES.CHARGE_MAX)), 0.0)
+	if demon_ultimate_charge + 0.001 < mana_cost:
 		return false
 
 	var used := false
@@ -1330,7 +1337,7 @@ func try_use_demon_ultimate(
 	if not used:
 		return false
 
-	demon_ultimate_charge = 0.0
+	demon_ultimate_charge = maxf(demon_ultimate_charge - mana_cost, 0.0)
 	demon_ultimate_cooldowns[skill_id] = maxf(
 		float(skill.get("cooldown", 0.0)),
 		0.0
@@ -2828,9 +2835,7 @@ func get_snapshot() -> Dictionary:
 		"demon_exp_to_next": demon_exp_to_next_level,
 		"demon_ultimate_charge": demon_ultimate_charge,
 		"demon_ultimate_max": DEMON_ULTIMATES.CHARGE_MAX,
-		"demon_ultimate_ready": (
-			demon_ultimate_charge + 0.001 >= DEMON_ULTIMATES.CHARGE_MAX
-		),
+		"demon_ultimate_ready": demon_ultimate_charge + 0.001 >= 40.0,
 		"demon_ultimate_cooldowns": demon_ultimate_cooldowns.duplicate(true),
 		"demon_rerolls_left": demon_rerolls_left,
 		"demon_reroll_max": demon_reroll_max,
