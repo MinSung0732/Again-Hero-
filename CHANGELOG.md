@@ -1828,3 +1828,11 @@
 - 좌/우 버튼 클릭 영역을 64×124→82×160으로 확대.
 - 스와이프/PC 마우스 드래그는 애니메이션 없이 먼저 단독 구현: StageCard 내부에서 시작해 수평 72px 이상 이동 시 이전/다음 스테이지 선택.
 - Tween/await 전환 애니메이션은 이번 패스에서 제외해 런타임 안정성을 우선 검증.
+
+### Stage Slide-In Animation + Meta Nudge
+- 정상 동작 중인 StageMetaBox/스와이프 구조는 유지하고 STAGE 번호/침입자 제목만 같은 92px 슬롯 안에서 약 4~6px 아래로 이동.
+- 좌우 버튼과 스와이프가 공통으로 호출하는 _change_stage()에 런타임 안정성이 높은 slide-in 전환 추가.
+- await/동적 minimum-size/노드 재배치 없이 create_tween()만 사용해 새 StageCard가 진행 방향 쪽에서 92px 이동하며 0.18초 동안 자연스럽게 들어오도록 구현.
+- StageMetaBox도 카드 이동량의 45%만큼 함께 이동/페이드해 제목과 카드가 따로 노는 느낌을 줄임.
+- 전환 중 중복 입력은 _stage_transition_running으로 차단하고 tween.finished 시 자동 해제.
+- 스와이프 판정 로직, 좌우 버튼 연결, 초상화 로딩 경로 및 ui10 내부 배치는 변경하지 않음.
