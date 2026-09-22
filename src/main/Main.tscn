@@ -407,6 +407,124 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 35
 text = "오크\n비용 18"
 
+[node name="MonsterInfoBookmark" type="Button" parent="HUD"]
+offset_left = 942.0
+offset_top = 340.0
+offset_right = 1080.0
+offset_bottom = 452.0
+theme_override_font_sizes/font_size = 27
+text = "도감"
+focus_mode = 0
+
+[node name="MonsterInfoPanel" type="PanelContainer" parent="HUD"]
+visible = false
+offset_left = 650.0
+offset_top = 300.0
+offset_right = 1065.0
+offset_bottom = 1425.0
+
+[node name="Margin" type="MarginContainer" parent="HUD/MonsterInfoPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 22
+
+[node name="VBox" type="VBoxContainer" parent="HUD/MonsterInfoPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="HUD/MonsterInfoPanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="HUD/MonsterInfoPanel/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+text = "현재 몬스터"
+
+[node name="Close" type="Button" parent="HUD/MonsterInfoPanel/Margin/VBox/Header"]
+custom_minimum_size = Vector2(82, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "닫기"
+
+[node name="Tabs" type="HBoxContainer" parent="HUD/MonsterInfoPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Tab1" type="Button" parent="HUD/MonsterInfoPanel/Margin/VBox/Tabs"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "1"
+
+[node name="Tab2" type="Button" parent="HUD/MonsterInfoPanel/Margin/VBox/Tabs"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "2"
+
+[node name="Tab3" type="Button" parent="HUD/MonsterInfoPanel/Margin/VBox/Tabs"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "3"
+
+[node name="Portrait" type="TextureRect" parent="HUD/MonsterInfoPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 180)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="Name" type="Label" parent="HUD/MonsterInfoPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
+theme_override_font_sizes/font_size = 32
+text = "몬스터"
+horizontal_alignment = 1
+
+[node name="Stats" type="Label" parent="HUD/MonsterInfoPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "현재 스탯"
+autowrap_mode = 2
+
+[node name="NormalTitle" type="Label" parent="HUD/MonsterInfoPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "현재 일반증강"
+
+[node name="NormalAugments" type="Label" parent="HUD/MonsterInfoPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 21
+text = "없음"
+autowrap_mode = 2
+
+[node name="SpecialTitle" type="Label" parent="HUD/MonsterInfoPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
+theme_override_font_sizes/font_size = 24
+text = "현재 특수증강"
+
+[node name="SpecialAugments" type="Label" parent="HUD/MonsterInfoPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 21
+text = "없음"
+autowrap_mode = 2
+
+[node name="Guide" type="Label" parent="HUD/MonsterInfoPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.66, 0.62, 0.7, 1)
+theme_override_font_sizes/font_size = 18
+text = "이 창을 열어도 전투는 계속 진행됩니다."
+autowrap_mode = 2
+
 [node name="PauseMenu" type="Control" parent="HUD"]
 visible = false
 layout_mode = 3
