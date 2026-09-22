@@ -230,12 +230,16 @@ const SPECIAL_AUGMENTS := [
 		"id": "spider_triple_web",
 		"monster_id": "spider",
 		"name": "삼중 거미줄",
-		"description": "기본 공격 시 같은 용사를 향해 거미줄을 3회 연속 발사합니다.",
+		"description": "기본 공격 시 용사를 향해 부채꼴 3갈래 거미줄을 동시에 발사합니다.",
 		"augment_type": TYPE_SPECIAL,
 		"max_stack": SPECIAL_MAX_LEVEL,
 		"icon": "",
 		"effect_type": "spider_triple_web",
-		"effect_values": {"shot_count": 3, "damage_multiplier": 0.55, "shot_interval": 0.12},
+		"effect_values": {
+			"shot_count": 3,
+			"damage_multiplier": 1.0,
+			"spread_degrees": 18.0,
+		},
 	},
 	{
 		"id": "spider_sticky_web",
