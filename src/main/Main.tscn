@@ -73,7 +73,7 @@ offset_right = 1062.0
 offset_bottom = 374.0
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
 theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 22
 text = "[DEBUG] 마왕 Lv.1 · 레벨배율 HP x1.000 / ATK x1.000 / SPD x1.000"
 autowrap_mode = 2
 mouse_filter = 2
@@ -429,7 +429,7 @@ offset_top = 330.0
 offset_right = -8.0
 offset_bottom = 456.0
 grow_horizontal = 0
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 32
 text = "◀ 상세정보"
 focus_mode = 0
 mouse_filter = 0
@@ -499,7 +499,7 @@ theme_override_font_sizes/font_size = 28
 text = "3"
 
 [node name="Portrait" type="TextureRect" parent="HUD/MonsterInfoPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 180)
+custom_minimum_size = Vector2(0, 160)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
@@ -619,7 +619,7 @@ horizontal_alignment = 1
 [node name="Guide" type="Label" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.62, 0.58, 0.67, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 23
 text = "메뉴가 열린 동안 전투와 타이머가 정지합니다."
 horizontal_alignment = 1
 autowrap_mode = 2
