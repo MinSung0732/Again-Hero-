@@ -726,9 +726,10 @@ func _start_gunner_backstep() -> void:
 	var escape_direction := _find_gunner_escape_direction()
 	var start_position := global_position
 	var distance := maxf(float(gunner_config.get("backstep_distance", 260.0)), 0.0)
-	_spawn_gunner_afterimage(start_position, 0.62, 0.34)
-	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.34, 0.46, 0.30)
-	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.68, 0.30, 0.26)
+	_spawn_gunner_afterimage(start_position, 0.88, 0.52, 1.10)
+	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.25, 0.72, 0.46, 1.08)
+	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.50, 0.58, 0.40, 1.06)
+	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.75, 0.42, 0.34, 1.04)
 	global_position += escape_direction * distance
 	_clamp_to_battlefield()
 	if gunner_saved_collision_mask < 0:
@@ -737,7 +738,12 @@ func _start_gunner_backstep() -> void:
 	gunner_collision_ignore_timer = 0.22
 
 
-func _spawn_gunner_afterimage(world_position: Vector2, alpha: float, fade_time: float) -> void:
+func _spawn_gunner_afterimage(
+	world_position: Vector2,
+	alpha: float,
+	fade_time: float,
+	scale_multiplier: float = 1.0
+) -> void:
 	if not hero_sprite.visible or hero_sprite.sprite_frames == null:
 		return
 	if not hero_sprite.sprite_frames.has_animation(hero_sprite.animation):
@@ -755,29 +761,65 @@ func _spawn_gunner_afterimage(world_position: Vector2, alpha: float, fade_time: 
 	ghost.flip_h = hero_sprite.flip_h
 	ghost.flip_v = hero_sprite.flip_v
 	ghost.offset = hero_sprite.offset
-	ghost.scale = hero_sprite.scale
+	ghost.scale = hero_sprite.scale * maxf(scale_multiplier, 1.0)
 	ghost.rotation = hero_sprite.rotation
 	ghost.global_position = world_position
-	ghost.z_index = hero_sprite.z_index - 1
+	ghost.z_index = hero_sprite.z_index
 	ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	ghost.modulate = Color(0.72, 0.88, 1.0, clampf(alpha, 0.05, 0.85))
+	ghost.modulate = Color(0.82, 0.94, 1.0, clampf(alpha, 0.08, 0.95))
 	get_parent().add_child(ghost)
 
 	var tween := ghost.create_tween()
+	tween.set_parallel(true)
 	tween.tween_property(ghost, "modulate:a", 0.0, maxf(fade_time, 0.05))
+	tween.tween_property(
+		ghost,
+		"scale",
+		ghost.scale * 1.04,
+		maxf(fade_time, 0.05)
+	)
 	tween.finished.connect(Callable(ghost, "queue_free"))
 
 
 func _find_gunner_escape_direction() -> Vector2:
 	var best := Vector2.RIGHT
 	var best_score := INF
-	for i in range(8):
-		var dir := Vector2.from_angle(TAU * float(i) / 8.0)
-		var sample := global_position + dir * 240.0
-		var score := _estimate_monster_danger(sample, 260.0)
+	var sample_count := 16
+	var dash_distance := maxf(float(gunner_config.get("backstep_distance", 260.0)), 1.0)
+
+	for i in range(sample_count):
+		var dir := Vector2.from_angle(TAU * float(i) / float(sample_count))
+		var sample := global_position + dir * dash_distance
+		var endpoint_danger := _estimate_monster_danger(sample, 260.0)
+
+		var forward_density := 0.0
+		var side := Vector2(-dir.y, dir.x)
+		for node in get_tree().get_nodes_in_group("monsters"):
+			if not is_instance_valid(node) or node.is_queued_for_deletion():
+				continue
+			var monster := node as Node2D
+			if monster == null:
+				continue
+			var offset := monster.global_position - global_position
+			var forward := offset.dot(dir)
+			if forward <= 0.0 or forward > dash_distance + 180.0:
+				continue
+			var lateral := absf(offset.dot(side))
+			if lateral > 150.0:
+				continue
+			var forward_weight := 1.0 - clampf(
+				forward / (dash_distance + 180.0),
+				0.0,
+				1.0
+			) * 0.45
+			var center_weight := 1.0 - clampf(lateral / 150.0, 0.0, 1.0) * 0.50
+			forward_density += maxf(forward_weight * center_weight, 0.10)
+
+		var score := endpoint_danger * 0.65 + forward_density * 2.35
 		if score < best_score:
 			best_score = score
 			best = dir
+
 	return best.normalized()
 
 
