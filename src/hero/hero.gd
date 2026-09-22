@@ -568,6 +568,11 @@ func _physics_process_gunner(delta: float) -> void:
 	ai_memory_clock += delta
 	_prune_offensive_memory()
 	_prune_status_memory()
+
+	ai_observation_timer = maxf(ai_observation_timer - delta, 0.0)
+	if ai_observation_timer <= 0.0:
+		_refresh_ai_observation()
+
 	attack_timer = maxf(attack_timer - delta, 0.0)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
 	wander_timer = maxf(wander_timer - delta, 0.0)
