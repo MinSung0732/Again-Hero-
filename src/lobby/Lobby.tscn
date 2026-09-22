@@ -348,8 +348,8 @@ layout_mode = 2
 [node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
 layout_mode = 1
 anchor_right = 1.0
-offset_top = 22.0
-offset_bottom = 48.0
+offset_top = 26.0
+offset_bottom = 50.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
 theme_override_font_sizes/font_size = 24
@@ -360,8 +360,8 @@ vertical_alignment = 1
 [node name="StageName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
 layout_mode = 1
 anchor_right = 1.0
-offset_top = 48.0
-offset_bottom = 92.0
+offset_top = 50.0
+offset_bottom = 86.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.98, 0.93, 1, 1)
 theme_override_font_sizes/font_size = 38
@@ -382,23 +382,14 @@ size_flags_vertical = 4
 theme_override_font_sizes/font_size = 42
 text = "‹"
 
-[node name="StageCard" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
+[node name="StageCardSlot" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
 custom_minimum_size = Vector2(780, 1115)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
+clip_contents = true
 
-[node name="CardMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard"]
-layout_mode = 2
-theme_override_constants/margin_left = 46
-theme_override_constants/margin_top = 0
-theme_override_constants/margin_right = 46
-theme_override_constants/margin_bottom = 60
-
-[node name="CardVBox" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin"]
-layout_mode = 2
-
-[node name="TopPanel" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+[node name="StageCard" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -406,12 +397,30 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="UpperFrameGap" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
+[node name="CardMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 46
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 46
+theme_override_constants/margin_bottom = 60
+
+[node name="CardVBox" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin"]
+layout_mode = 2
+
+[node name="TopPanel" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="UpperFrameGap" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel"]
 visible = false
 layout_mode = 1
 anchors_preset = 0
 
-[node name="PortraitFrame" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
+[node name="PortraitFrame" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel"]
 layout_mode = 1
 anchor_left = 0.04
 anchor_top = 0.225
@@ -420,17 +429,17 @@ anchor_bottom = 0.565
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="FrameMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame"]
+[node name="FrameMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame"]
 layout_mode = 2
 theme_override_constants/margin_left = 4
 theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 4
 theme_override_constants/margin_bottom = 4
 
-[node name="PortraitInner" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin"]
+[node name="PortraitInner" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin"]
 layout_mode = 2
 
-[node name="PortraitTexture" type="TextureRect" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner"]
+[node name="PortraitTexture" type="TextureRect" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -445,7 +454,7 @@ expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 
-[node name="PortraitPlaceholder" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner"]
+[node name="PortraitPlaceholder" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -458,7 +467,7 @@ text = "초상화 준비 중"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="PortraitBadge" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner"]
+[node name="PortraitBadge" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner"]
 visible = false
 layout_mode = 1
 anchors_preset = 12
@@ -474,7 +483,7 @@ text = "침입자"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="HeroName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
+[node name="HeroName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel"]
 layout_mode = 1
 anchor_left = 0.0
 anchor_top = 0.575
@@ -488,7 +497,7 @@ text = "견습 마도사"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="BottomPanel" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+[node name="BottomPanel" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox"]
 layout_mode = 1
 anchor_left = 0.08
 anchor_top = 0.715
@@ -497,7 +506,7 @@ anchor_bottom = 0.925
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="StageDescription" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel"]
+[node name="StageDescription" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel"]
 layout_mode = 1
 anchor_left = 0.0
 anchor_top = 0.0
@@ -512,7 +521,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="StageStatus" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel"]
+[node name="StageStatus" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel"]
 layout_mode = 1
 anchor_left = 0.0
 anchor_top = 0.29
@@ -526,7 +535,7 @@ text = "입장 가능 · 제한 6분"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="StageReward" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel"]
+[node name="StageReward" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel"]
 layout_mode = 1
 anchor_left = 0.0
 anchor_top = 0.43
@@ -540,12 +549,12 @@ text = "최초 클리어 연구 포인트 +100"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ActionSpacer" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel"]
+[node name="ActionSpacer" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel"]
 visible = false
 layout_mode = 1
 anchors_preset = 0
 
-[node name="EnterButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel"]
+[node name="EnterButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel"]
 layout_mode = 1
 anchor_left = 0.08
 anchor_top = 0.68
