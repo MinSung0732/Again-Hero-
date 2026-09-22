@@ -759,28 +759,8 @@ func _populate_monster_detail(monster_id: String) -> void:
 	)
 
 func _read_monster_base_stats(monster_id: String) -> Dictionary:
-	var scene := MONSTER_CATALOG.get_scene(monster_id)
-	if scene == null:
-		return {}
+	return MONSTER_CATALOG.get_base_stats(monster_id)
 
-	var monster := scene.instantiate()
-	if monster == null:
-		return {}
-
-	var stats := {
-		"max_hp": monster.get("max_hp"),
-		"move_speed": monster.get("move_speed"),
-		"attack_damage": monster.get("attack_damage"),
-		"attack_range": monster.get("attack_range"),
-		"attack_cooldown": monster.get("attack_cooldown"),
-		"explosion_damage": monster.get("explosion_damage"),
-		"explosion_radius": monster.get("explosion_radius"),
-		"self_destruct_fuse": monster.get("self_destruct_fuse"),
-		"slow_multiplier": monster.get("slow_multiplier"),
-		"slow_duration": monster.get("slow_duration"),
-	}
-	monster.free()
-	return stats
 
 func _build_normal_detail_text(
 	monster_id: String,
