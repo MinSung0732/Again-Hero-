@@ -1820,3 +1820,11 @@
 - 그 결과 @onready StageMetaBox 경로 해석 실패로 로비 스크립트 초기화가 중단되어 좌우 버튼 연결 및 초상화 로딩이 실행되지 않는 문제 발생.
 - lobby.gd를 Lobby.tscn과 동일한 96f0e654 시점 파일로 복구해 씬/스크립트 버전을 다시 일치시킴.
 - 버튼/초상화 기능 정상화 후 StageMetaBox 이동은 이후 한 단계로 다시 적용 예정.
+
+### StageMeta Fix + Safe Swipe Input
+- 카드 상단 테두리와 겹치던 STAGE 번호/침입자 제목을 StageCard 내부에서 제거하고 StageLayout의 별도 StageMetaBox로 이동.
+- StageMetaBox는 안내문 아래와 ui10 카드 사이 92px 공간을 사용하며 텍스트를 아래쪽으로 내려 프레임 사이 여백 안에 배치.
+- lobby.gd onready 경로를 새 StageMetaBox 경로와 동시에 갱신해 씬/스크립트 버전 불일치를 방지.
+- 좌/우 버튼 클릭 영역을 64×124→82×160으로 확대.
+- 스와이프/PC 마우스 드래그는 애니메이션 없이 먼저 단독 구현: StageCard 내부에서 시작해 수평 72px 이상 이동 시 이전/다음 스테이지 선택.
+- Tween/await 전환 애니메이션은 이번 패스에서 제외해 런타임 안정성을 우선 검증.
