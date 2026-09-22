@@ -19,6 +19,20 @@ const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 @onready var exp_bar: ProgressBar = $HUD/TopBar/ExpBar
 @onready var debug_balance_label: Label = $HUD/DebugBalance
 
+@onready var monster_info_bookmark: Button = $HUD/MonsterInfoBookmark
+@onready var monster_info_panel: PanelContainer = $HUD/MonsterInfoPanel
+@onready var monster_info_close: Button = $HUD/MonsterInfoPanel/Margin/VBox/Header/Close
+@onready var monster_info_tabs: Array[Button] = [
+	$HUD/MonsterInfoPanel/Margin/VBox/Tabs/Tab1,
+	$HUD/MonsterInfoPanel/Margin/VBox/Tabs/Tab2,
+	$HUD/MonsterInfoPanel/Margin/VBox/Tabs/Tab3,
+]
+@onready var monster_info_portrait: TextureRect = $HUD/MonsterInfoPanel/Margin/VBox/Portrait
+@onready var monster_info_name: Label = $HUD/MonsterInfoPanel/Margin/VBox/Name
+@onready var monster_info_stats: Label = $HUD/MonsterInfoPanel/Margin/VBox/Stats
+@onready var monster_info_normal: Label = $HUD/MonsterInfoPanel/Margin/VBox/NormalAugments
+@onready var monster_info_special: Label = $HUD/MonsterInfoPanel/Margin/VBox/SpecialAugments
+
 @onready var build_label: Label = $HUD/BottomBar/BuildLabel
 @onready var status_label: Label = $HUD/BottomBar/Status
 @onready var placement_toggle: CheckButton = $HUD/BottomBar/PlacementModeToggle
@@ -83,6 +97,8 @@ var battle_loadout_ids: Array = []
 var summon_slot_buttons: Array = []
 var demon_ultimate_charge_ready: bool = false
 var demon_ultimate_cooldowns: Dictionary = {}
+var monster_info_selected_index: int = 0
+var monster_info_animating: bool = false
 
 func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
@@ -110,6 +126,12 @@ func _ready() -> void:
 	battle.battle_finished.connect(_on_battle_finished)
 
 	stage_menu_button.pressed.connect(_on_stage_menu_pressed)
+	monster_info_bookmark.pressed.connect(_toggle_monster_info)
+	monster_info_close.pressed.connect(_close_monster_info)
+	for tab_index in range(monster_info_tabs.size()):
+		monster_info_tabs[tab_index].pressed.connect(
+			_on_monster_info_tab_pressed.bind(tab_index)
+		)
 	pause_resume_button.pressed.connect(_close_pause_menu)
 	pause_restart_button.pressed.connect(_on_pause_restart_pressed)
 	pause_lobby_button.pressed.connect(_on_lobby_pressed)
@@ -497,6 +519,174 @@ func _configure_battle_loadout_buttons() -> void:
 		button.pressed.connect(
 			_on_summon_slot_pressed.bind(slot_index)
 		)
+
+func _toggle_monster_info() -> void:
+	if monster_info_panel.visible:
+		_close_monster_info()
+	else:
+		_open_monster_info()
+
+func _open_monster_info() -> void:
+	if monster_info_animating:
+		return
+	if battle_loadout_ids.is_empty():
+		return
+
+	monster_info_selected_index = clampi(
+		monster_info_selected_index,
+		0,
+		battle_loadout_ids.size() - 1
+	)
+	_refresh_monster_info_panel()
+	monster_info_panel.show()
+
+	var target_position := monster_info_panel.position
+	monster_info_panel.position = target_position + Vector2(430.0, 0.0)
+	monster_info_animating = true
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(
+		monster_info_panel,
+		"position",
+		target_position,
+		0.22
+	)
+	tween.finished.connect(
+		func() -> void:
+			monster_info_animating = false
+	)
+
+func _close_monster_info() -> void:
+	if not monster_info_panel.visible or monster_info_animating:
+		return
+
+	monster_info_animating = true
+	var target_position := monster_info_panel.position + Vector2(430.0, 0.0)
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.set_ease(Tween.EASE_IN)
+	tween.tween_property(
+		monster_info_panel,
+		"position",
+		target_position,
+		0.18
+	)
+	tween.finished.connect(
+		func() -> void:
+			monster_info_panel.hide()
+			monster_info_panel.position -= Vector2(430.0, 0.0)
+			monster_info_animating = false
+	)
+
+func _on_monster_info_tab_pressed(tab_index: int) -> void:
+	if tab_index < 0 or tab_index >= battle_loadout_ids.size():
+		return
+	monster_info_selected_index = tab_index
+	_refresh_monster_info_panel()
+
+func _refresh_monster_info_panel() -> void:
+	for index in range(monster_info_tabs.size()):
+		var tab := monster_info_tabs[index]
+		if index >= battle_loadout_ids.size():
+			tab.hide()
+			continue
+
+		tab.show()
+		var monster_id := String(battle_loadout_ids[index])
+		tab.text = _get_catalog_monster_name(monster_id)
+		tab.disabled = index == monster_info_selected_index
+
+	if (
+		monster_info_selected_index < 0
+		or monster_info_selected_index >= battle_loadout_ids.size()
+	):
+		return
+
+	var monster_id := String(
+		battle_loadout_ids[monster_info_selected_index]
+	)
+	var detail: Dictionary = {}
+	if battle.has_method("get_monster_run_detail"):
+		detail = battle.call("get_monster_run_detail", monster_id)
+	if detail.is_empty():
+		return
+
+	monster_info_name.text = String(
+		detail.get("name", _get_catalog_monster_name(monster_id))
+	)
+	monster_info_portrait.texture = _load_monster_info_icon(monster_id)
+
+	var stat_lines: PackedStringArray = []
+	stat_lines.append("현재 스탯 · 마왕 Lv.%d" % int(detail.get("demon_level", 1)))
+	stat_lines.append("생산비용  %.1f" % float(detail.get("cost", 0.0)))
+	stat_lines.append("마왕 EXP  %.1f" % float(detail.get("summon_exp", 0.0)))
+
+	if detail.has("max_hp"):
+		stat_lines.append("최대 HP  %d" % int(detail["max_hp"]))
+	if detail.has("attack_damage"):
+		stat_lines.append("공격력  %d" % int(detail["attack_damage"]))
+	if detail.has("explosion_damage"):
+		stat_lines.append("자폭 피해  %d" % int(detail["explosion_damage"]))
+	if detail.has("move_speed"):
+		stat_lines.append("이동속도  %.0f" % float(detail["move_speed"]))
+	if detail.has("attack_cooldown"):
+		stat_lines.append(
+			"공격 간격  %.2f초" % float(detail["attack_cooldown"])
+		)
+	if detail.has("self_destruct_fuse"):
+		stat_lines.append(
+			"자폭 준비  %.2f초" % float(detail["self_destruct_fuse"])
+		)
+	if detail.has("explosion_radius"):
+		stat_lines.append(
+			"폭발 반경  %.0f" % float(detail["explosion_radius"])
+		)
+
+	monster_info_stats.text = "\n".join(stat_lines)
+
+	var normal_lines: PackedStringArray = []
+	for raw_entry in detail.get("normal_augments", []):
+		var entry: Dictionary = raw_entry
+		var augment_name := String(entry.get("name", "일반증강"))
+		var prefix := "%s " % _get_catalog_monster_name(monster_id)
+		if augment_name.begins_with(prefix):
+			augment_name = augment_name.trim_prefix(prefix)
+		normal_lines.append(
+			"%s Lv.%d" % [
+				augment_name,
+				int(entry.get("level", 0)),
+			]
+		)
+	monster_info_normal.text = (
+		"아직 획득한 몬스터 일반증강 없음"
+		if normal_lines.is_empty()
+		else "\n".join(normal_lines)
+	)
+
+	var special_lines: PackedStringArray = []
+	for raw_entry in detail.get("special_augments", []):
+		var entry: Dictionary = raw_entry
+		special_lines.append(
+			"★ %s" % String(entry.get("name", "특수증강"))
+		)
+	monster_info_special.text = (
+		"아직 획득한 특수증강 없음"
+		if special_lines.is_empty()
+		else "\n".join(special_lines)
+	)
+
+func _load_monster_info_icon(monster_id: String) -> Texture2D:
+	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+	if typeof(data) != TYPE_DICTIONARY:
+		return null
+
+	var path := String(data.get("card_icon_path", ""))
+	if path.is_empty() or not ResourceLoader.exists(path):
+		return null
+
+	var resource = load(path)
+	return resource as Texture2D
 
 func _on_summon_slot_pressed(slot_index: int) -> void:
 	if slot_index < 0 or slot_index >= battle_loadout_ids.size():
