@@ -20,48 +20,59 @@ const AUGMENTS = [
 	{
 		"id": "projectile_power",
 		"name": "탄환 강화",
-		"description": "투사체 공격력 +8",
+		"description": "기본 공격 투사체 +1, 부채꼴 확산 (최대 4중첩)",
 		"base_score": 8.0,
-		"max_stack": 5,
-		"tags": ["damage", "projectile"],
+		"max_stack": 4,
+		"tags": ["projectile", "area"],
 		"effects": [
-			{"op": "add_stat", "target": "attack_damage", "value": 8},
+			{"op": "advance_projectile_fan"},
 		],
 		"ai_rules": [
-			{"source": "current_type_ratio", "key": "orc", "weight": 4.0},
-			{"source": "current_role_ratio", "key": "tank", "weight": 2.0},
-			{"source": "recent_type_ratio", "key": "orc", "weight": 2.6},
-			{"source": "recent_role_ratio", "key": "tank", "weight": 1.4},
-			{"source": "nearby_count_max", "value": 2, "bonus": 1.0},
-			{"source": "hp_ratio_min", "value": 0.65, "bonus": 0.6},
+			{"source": "nearby_linear", "weight": 0.55, "cap": 3.3},
+			{"source": "current_type_ratio", "key": "slime", "weight": 3.0},
+			{"source": "current_role_ratio", "key": "swarm", "weight": 2.2},
+			{"source": "recent_type_ratio", "key": "slime", "weight": 2.4},
+			{"source": "recent_role_ratio", "key": "swarm", "weight": 1.8},
 		],
 		"synergy_rules": [
-			{"source": "build_tag_stacks", "key": "attack_speed", "weight": 0.90, "cap": 2.70},
-			{"source": "build_tag_stacks", "key": "range", "weight": 0.45, "cap": 1.35},
+			{"source": "build_tag_stacks", "key": "attack_speed", "weight": 0.55, "cap": 2.20},
+			{"source": "build_tag_stacks", "key": "range", "weight": 0.35, "cap": 1.40},
+		],
+	},
+	{
+		"id": "common_attack_training",
+		"name": "공격 단련",
+		"description": "공격력 +2 (최대 20중첩)",
+		"base_score": 6.9,
+		"max_stack": 20,
+		"tags": ["damage"],
+		"effects": [
+			{"op": "add_stat", "target": "attack_damage", "value": 2},
+		],
+		"ai_rules": [
+			{"source": "hp_ratio_min", "value": 0.50, "bonus": 0.35},
+			{"source": "recent_events_linear", "weight": 0.05, "cap": 0.8},
+		],
+		"synergy_rules": [
+			{"source": "build_tag_stacks", "key": "attack_speed", "weight": 0.35, "cap": 1.40},
 		],
 	},
 	{
 		"id": "rapid_strikes",
-		"name": "연사 강화",
-		"description": "공격속도 +12%",
-		"base_score": 7.5,
-		"max_stack": 5,
-		"tags": ["attack_speed", "projectile"],
+		"name": "속공 훈련",
+		"description": "공격속도 +2% (최대 20중첩)",
+		"base_score": 6.8,
+		"max_stack": 20,
+		"tags": ["attack_speed", "damage"],
 		"effects": [
-			{"op": "multiply_stat", "target": "attack_cooldown", "value": 0.88, "min": 0.18},
+			{"op": "advance_common_attack_speed"},
 		],
 		"ai_rules": [
-			{"source": "nearby_linear", "weight": 0.55, "cap": 2.8},
-			{"source": "current_type_ratio", "key": "slime", "weight": 3.5},
-			{"source": "current_role_ratio", "key": "swarm", "weight": 2.0},
-			{"source": "recent_type_ratio", "key": "slime", "weight": 3.2},
-			{"source": "recent_role_ratio", "key": "swarm", "weight": 1.8},
-			{"source": "recent_events_linear", "weight": 0.10, "cap": 0.8},
-			{"source": "total_count_min", "value": 4, "bonus": 0.6},
+			{"source": "nearby_linear", "weight": 0.35, "cap": 2.1},
+			{"source": "recent_events_linear", "weight": 0.06, "cap": 0.9},
 		],
 		"synergy_rules": [
-			{"source": "build_tag_stacks", "key": "damage", "weight": 0.90, "cap": 2.70},
-			{"source": "build_tag_stacks", "key": "range", "weight": 0.35, "cap": 1.05},
+			{"source": "build_tag_stacks", "key": "damage", "weight": 0.35, "cap": 1.40},
 		],
 	},
 	{
@@ -367,20 +378,7 @@ const AUGMENTS = [
 			{"source": "current_role_ratio", "key": "tank", "weight": 1.6},
 		],
 	},
-	{
-		"id": "fighter_guard_march",
-		"name": "방패 행군",
-		"description": "막기 중 이동속도 페널티 완화 +5%",
-		"base_score": 5.7,
-		"max_stack": 4,
-		"tags": ["mobility", "survival"],
-		"effects": [
-			{"op": "add_stat", "target": "fighter_guard_move_multiplier_bonus", "value": 0.05, "max": 0.20},
-		],
-		"ai_rules": [
-			{"source": "distance", "divisor": 220.0, "cap": 2.0},
-		],
-	},
+
 	{
 		"id": "fighter_charge",
 		"name": "방패 충전",
@@ -404,6 +402,22 @@ const AUGMENTS = [
 		],
 		"ai_rules": [
 			{"source": "hp_ratio_min", "value": 0.60, "bonus": 0.7},
+		],
+	},
+	{
+		"id": "fighter_slash_mastery",
+		"name": "베기 숙련",
+		"description": "베기 발생 시 추가 베기 +1타. 최대 2중첩(총 3연격), 추가타 처치 시 적 1마리당 HP 10 회복",
+		"base_score": 7.6,
+		"max_stack": 2,
+		"tags": ["damage", "area", "recovery"],
+		"effects": [
+			{"op": "advance_fighter_slash_mastery"},
+		],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.70, "cap": 4.2},
+			{"source": "current_role_ratio", "key": "swarm", "weight": 2.0},
+			{"source": "hp_missing", "weight": 1.3},
 		],
 	},
 	{
