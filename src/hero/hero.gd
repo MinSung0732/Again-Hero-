@@ -17,11 +17,12 @@ const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const STATUS_EFFECT_CATALOG := preload("res://src/data/status_effect_catalog.gd")
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const STAGE1_FRAME_SIZE := Vector2(64, 64)
-const STAGE1_SHIELD_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/effect_02"
+const STAGE1_FRAME_DIR := "res://assets/art/heroes/stage1_mage/frames"
+const STAGE1_SHIELD_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_02"
 const STAGE1_SHIELD_EFFECT_FRAME_COUNT := 6
 const STAGE1_SHIELD_EFFECT_FRAME_SIZE := Vector2(512, 512)
 const STAGE1_SHIELD_EFFECT_TARGET_SIZE := 180.0
-const STAGE1_CHANNEL_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/effect_03"
+const STAGE1_CHANNEL_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_03"
 const STAGE1_CHANNEL_EFFECT_FRAME_COUNT := 6
 const STAGE1_CHANNEL_EFFECT_FRAME_SIZE := Vector2(512, 512)
 const STAGE1_CHANNEL_EFFECT_TARGET_SIZE := 300.0
@@ -1227,33 +1228,36 @@ func _apply_profile_visual() -> void:
 	hero_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 	if hero_id == "ranged_rookie":
-		if sprite_sheet_path.is_empty():
-			return
-
-		var sheet := _load_stage1_sheet_texture()
-		if sheet == null:
-			push_warning(
-				"Stage 1 mage spritesheet load failed: %s"
-				% sprite_sheet_path
-			)
-			return
+		var frame_dir := (
+			sprite_frame_dir
+			if not sprite_frame_dir.is_empty()
+			else STAGE1_FRAME_DIR
+		)
 
 		var frames := SpriteFrames.new()
 		if frames.has_animation("default"):
 			frames.remove_animation("default")
 
-		_add_stage1_sheet_animation(
-			frames, "idle", sheet, 0, 4, 5.5, true
-		)
-		_add_stage1_sheet_animation(
-			frames, "move", sheet, 1, 6, 10.0, true
-		)
-		_add_stage1_sheet_animation(
-			frames, "attack", sheet, 2, 6, 18.0, false
-		)
-		_add_stage1_sheet_animation(
-			frames, "hit", sheet, 3, 3, 14.0, false
-		)
+		if not _add_named_sequence_animation(
+			frames, "idle", frame_dir, "idle", 4, 5.5, true
+		):
+			return
+		if not _add_named_sequence_animation(
+			frames, "move", frame_dir, "walk", 7, 10.0, true
+		):
+			return
+		if not _add_named_sequence_animation(
+			frames, "attack", frame_dir, "atk", 7, 18.0, false
+		):
+			return
+		if not _add_named_sequence_animation(
+			frames, "hit", frame_dir, "hit", 3, 14.0, false
+		):
+			return
+		if not _add_named_sequence_animation(
+			frames, "death", frame_dir, "dead", 4, 10.0, false
+		):
+			return
 
 		hero_sprite.sprite_frames = frames
 		hero_sprite.visible = true
@@ -1364,6 +1368,34 @@ func _get_stage1_reference_render_height() -> float:
 		float(used_rect.size.y)
 		* HERO_REFERENCE_RENDER_SCALE
 	)
+
+func _add_named_sequence_animation(
+	frames: SpriteFrames,
+	animation_name: String,
+	base_dir: String,
+	file_prefix: String,
+	frame_count: int,
+	fps: float,
+	loop_animation: bool
+) -> bool:
+	frames.add_animation(animation_name)
+	frames.set_animation_speed(animation_name, fps)
+	frames.set_animation_loop(animation_name, loop_animation)
+
+	for index in range(1, frame_count + 1):
+		var path := "%s/%s_%02d.png" % [
+			base_dir,
+			file_prefix,
+			index,
+		]
+		var texture := _load_stage1_texture(path)
+		if texture == null:
+			push_warning("Hero named frame load failed: %s" % path)
+			return false
+		frames.add_frame(animation_name, texture)
+
+	return true
+
 
 func _add_sequence_animation(
 	frames: SpriteFrames,
@@ -2846,7 +2878,10 @@ func _begin_death_sequence() -> void:
 	collision_mask = 0
 
 	if hero_sprite.visible:
-		if hero_archetype == "rogue_combo":
+		if (
+			hero_sprite.sprite_frames != null
+			and hero_sprite.sprite_frames.has_animation("death")
+		):
 			_restart_stage1_animation("death", 1.0)
 		else:
 			_restart_stage1_animation("hit", 0.85)
