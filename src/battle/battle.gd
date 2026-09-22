@@ -1832,6 +1832,14 @@ func _trigger_stage_director_event(event: Dictionary) -> void:
 		return
 
 	var monster_id := String(event.get("monster_id", ""))
+	if selection_mode == "team_random":
+		monster_id = _get_random_stage_event_team_monster_id()
+		if monster_id.is_empty():
+			push_warning("Stage event team random monster not found.")
+			return
+		if event_type == "boss":
+			event["name"] = "%s 보스" % _get_catalog_monster_display_name(monster_id)
+
 	if not spawn_special_monster(monster_id, event):
 		push_warning(
 			"Stage event monster not found: %s" % monster_id
@@ -1840,6 +1848,25 @@ func _trigger_stage_director_event(event: Dictionary) -> void:
 
 	_emit_stage_event_announcement(event, monster_id)
 	_queue_stage_event_reinforcements(event)
+
+func _get_random_stage_event_team_monster_id() -> String:
+	var candidates: Array[String] = []
+	for raw_id in allowed_monster_ids:
+		var monster_id := String(raw_id)
+		if MONSTER_CATALOG.MONSTERS.has(monster_id):
+			candidates.append(monster_id)
+
+	if candidates.is_empty():
+		for raw_id in MONSTER_CATALOG.ORDER:
+			var fallback_id := String(raw_id)
+			if MONSTER_CATALOG.MONSTERS.has(fallback_id):
+				candidates.append(fallback_id)
+
+	if candidates.is_empty():
+		return ""
+
+	return candidates[randi_range(0, candidates.size() - 1)]
+
 
 func _open_mutation_choice(event: Dictionary) -> void:
 	if mutation_director.is_active():
