@@ -1135,7 +1135,7 @@ func _refresh_stage_card() -> void:
 	prev_stage_button.disabled = selected_stage_index <= 0
 	next_stage_button.disabled = selected_stage_index >= stage_ids.size() - 1
 
-	portrait_badge.text = "침입자 · %s" % hero_name
+	portrait_badge.visible = false
 	_apply_portrait(String(stage.get("portrait_path", "")), hero_name)
 
 func _apply_portrait(path: String, hero_name: String) -> void:
@@ -1166,8 +1166,8 @@ func _normalize_hero_portrait_texture(
 	if reference_image == null or reference_image.is_empty():
 		return source_texture
 
-	var source_rect := source_image.get_used_rect()
-	var reference_rect := reference_image.get_used_rect()
+	var source_rect := _get_alpha_visible_rect(source_image)
+	var reference_rect := _get_alpha_visible_rect(reference_image)
 	if (
 		source_rect.size.x <= 0
 		or source_rect.size.y <= 0
@@ -1224,6 +1224,37 @@ func _normalize_hero_portrait_texture(
 	)
 
 	return ImageTexture.create_from_image(canvas)
+
+func _get_alpha_visible_rect(
+	image: Image,
+	alpha_threshold: float = 0.05
+) -> Rect2i:
+	if image == null or image.is_empty():
+		return Rect2i()
+
+	var min_x := image.get_width()
+	var min_y := image.get_height()
+	var max_x := -1
+	var max_y := -1
+
+	for y in range(image.get_height()):
+		for x in range(image.get_width()):
+			if image.get_pixel(x, y).a <= alpha_threshold:
+				continue
+			min_x = mini(min_x, x)
+			min_y = mini(min_y, y)
+			max_x = maxi(max_x, x)
+			max_y = maxi(max_y, y)
+
+	if max_x < min_x or max_y < min_y:
+		return Rect2i()
+
+	return Rect2i(
+		min_x,
+		min_y,
+		max_x - min_x + 1,
+		max_y - min_y + 1
+	)
 
 func _load_texture(path: String) -> Texture2D:
 	if path.is_empty():
