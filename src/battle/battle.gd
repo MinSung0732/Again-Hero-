@@ -22,6 +22,7 @@ signal battle_finished(message: String, player_won: bool)
 const HERO_SCENE := preload("res://src/hero/Hero.tscn")
 const EXP_ORB_SCENE := preload("res://src/battle/ExpOrb.tscn")
 const HEAL_ITEM_SCENE := preload("res://src/battle/HealItem.tscn")
+const TREASURE_CHEST_SCENE := preload("res://src/battle/TreasureChest.tscn")
 const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
 const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const HERO_AI_PROFILES := preload("res://src/data/hero_ai_profiles.gd")
@@ -54,6 +55,12 @@ const DEMON_LEVEL_MONSTER_SPEED_GROWTH := 1.02
 const DEMON_LEVEL_MONSTER_SPEED_MAX_MULTIPLIER := 1.25
 const HEAL_ITEM_KILLS_REQUIRED := 30
 const MAX_ACTIVE_HEAL_ITEMS := 2
+const CHEST_KILLS_REQUIRED := 50
+const MAX_ACTIVE_CHESTS := 2
+const CHEST_EXP_BUNDLE_MIN := 6
+const CHEST_EXP_BUNDLE_MAX := 10
+const CHEST_EXP_VALUE_MIN := 10
+const CHEST_EXP_VALUE_MAX := 30
 
 
 var hero: Node2D
@@ -110,6 +117,7 @@ var stage_reinforcement_timer: float = 0.0
 var stage_reinforcement_interval: float = 0.12
 var stage_reinforcement_batch_size: int = 2
 var hero_kills_toward_heal_item: int = 0
+var hero_kills_toward_chest: int = 0
 
 var summon_cost_multiplier: float = 1.0
 var demon_exp_gain_multiplier: float = 1.0
@@ -1118,6 +1126,11 @@ func _on_monster_died(monster: Node) -> void:
 			HEAL_ITEM_KILLS_REQUIRED
 		)
 		_try_spawn_heal_item_from_kills()
+		hero_kills_toward_chest = mini(
+			hero_kills_toward_chest + 1,
+			CHEST_KILLS_REQUIRED
+		)
+		_try_spawn_chest_from_kills()
 
 	var original_cost: float = float(monster_summon_costs.get(instance_id, 0.0))
 	monster_summon_costs.erase(instance_id)
@@ -1209,6 +1222,46 @@ func _process_special_death_spawn(
 					),
 				}
 			)
+
+func _try_spawn_chest_from_kills() -> void:
+	if hero_kills_toward_chest < CHEST_KILLS_REQUIRED:
+		return
+	if get_tree().get_nodes_in_group("treasure_chests").size() >= MAX_ACTIVE_CHESTS:
+		return
+
+	hero_kills_toward_chest = 0
+	_spawn_random_treasure_chest()
+
+
+func _spawn_random_treasure_chest() -> void:
+	if get_tree().get_nodes_in_group("treasure_chests").size() >= MAX_ACTIVE_CHESTS:
+		return
+	var margin := 180.0
+	var spawn_position := Vector2(
+		randf_range(margin, maxf(current_map_size.x - margin, margin)),
+		randf_range(margin, maxf(current_map_size.y - margin, margin))
+	)
+	var chest := TREASURE_CHEST_SCENE.instantiate() as Node2D
+	add_child(chest)
+	chest.global_position = spawn_position
+	if chest.has_signal("destroyed"):
+		chest.connect("destroyed", Callable(self, "_on_treasure_chest_destroyed"))
+
+
+func _on_treasure_chest_destroyed(drop_position: Vector2) -> void:
+	var bundle_count := randi_range(CHEST_EXP_BUNDLE_MIN, CHEST_EXP_BUNDLE_MAX)
+	for index in range(bundle_count):
+		var angle := TAU * float(index) / float(maxi(bundle_count, 1))
+		angle += randf_range(-0.22, 0.22)
+		var radius := randf_range(38.0, 105.0)
+		var orb_position := _clamp_manual_spawn_position(
+			drop_position + Vector2.from_angle(angle) * radius
+		)
+		_spawn_exp_orb(
+			orb_position,
+			randi_range(CHEST_EXP_VALUE_MIN, CHEST_EXP_VALUE_MAX)
+		)
+
 
 func _try_spawn_heal_item_from_kills() -> void:
 	if hero_kills_toward_heal_item < HEAL_ITEM_KILLS_REQUIRED:
