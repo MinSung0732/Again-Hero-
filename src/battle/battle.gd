@@ -1821,7 +1821,7 @@ func reroll_demon_augments() -> bool:
 	demon_augment_ready.emit(
 		demon_augment_candidates,
 		demon_rerolls_left,
-		demon_level
+		demon_active_augment_level
 	)
 	return true
 
