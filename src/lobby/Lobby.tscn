@@ -48,15 +48,15 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="Header" type="PanelContainer" parent="SafeArea/Layout"]
-custom_minimum_size = Vector2(0, 192)
+custom_minimum_size = Vector2(0, 216)
 layout_mode = 2
 
 [node name="HeaderMargin" type="MarginContainer" parent="SafeArea/Layout/Header"]
 layout_mode = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 86
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 42
+theme_override_constants/margin_top = 82
+theme_override_constants/margin_right = 42
+theme_override_constants/margin_bottom = 18
 
 [node name="HeaderVBox" type="VBoxContainer" parent="SafeArea/Layout/Header/HeaderMargin"]
 layout_mode = 2
