@@ -89,9 +89,12 @@ var selected_stage_index: int = 0
 var current_tab: String = "main"
 
 const STAGE_SWIPE_THRESHOLD := 72.0
+const STAGE_SLIDE_DISTANCE := 92.0
+const STAGE_SLIDE_DURATION := 0.18
 
 var _stage_swipe_active := false
 var _stage_swipe_start := Vector2.ZERO
+var _stage_transition_running := false
 
 var monster_collection_state: Dictionary = {}
 var team_catalog_ids: Array = []
@@ -1599,15 +1602,89 @@ func _refresh_header() -> void:
 	progress_label.text = "최고 해금  Stage %d" % highest
 
 func _change_stage(direction: int) -> void:
-	if stage_ids.is_empty():
+	if stage_ids.is_empty() or _stage_transition_running:
 		return
 
-	selected_stage_index = clampi(
+	var target_index := clampi(
 		selected_stage_index + direction,
 		0,
 		stage_ids.size() - 1
 	)
+	if target_index == selected_stage_index:
+		return
+
+	selected_stage_index = target_index
 	_refresh_stage_card()
+	_play_stage_slide_in(direction)
+
+
+func _play_stage_slide_in(direction: int) -> void:
+	if stage_card == null:
+		return
+
+	_stage_transition_running = true
+
+	var card_origin := stage_card.position
+	var card_base_modulate := stage_card.modulate
+	var card_start_modulate := card_base_modulate
+	card_start_modulate.a = 0.22
+
+	var meta_box := stage_number_label.get_parent() as Control
+	var meta_origin := Vector2.ZERO
+	var meta_base_modulate := Color.WHITE
+	var meta_start_modulate := Color.WHITE
+
+	var slide_offset := Vector2(
+		float(direction) * STAGE_SLIDE_DISTANCE,
+		0.0
+	)
+
+	stage_card.position = card_origin + slide_offset
+	stage_card.modulate = card_start_modulate
+
+	if meta_box != null:
+		meta_origin = meta_box.position
+		meta_base_modulate = meta_box.modulate
+		meta_start_modulate = meta_base_modulate
+		meta_start_modulate.a = 0.22
+		meta_box.position = meta_origin + slide_offset * 0.45
+		meta_box.modulate = meta_start_modulate
+
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(
+		stage_card,
+		"position",
+		card_origin,
+		STAGE_SLIDE_DURATION
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(
+		stage_card,
+		"modulate",
+		card_base_modulate,
+		STAGE_SLIDE_DURATION
+	)
+
+	if meta_box != null:
+		tween.tween_property(
+			meta_box,
+			"position",
+			meta_origin,
+			STAGE_SLIDE_DURATION
+		).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tween.tween_property(
+			meta_box,
+			"modulate",
+			meta_base_modulate,
+			STAGE_SLIDE_DURATION
+		)
+
+	tween.finished.connect(_on_stage_slide_finished)
+
+
+func _on_stage_slide_finished() -> void:
+	_stage_transition_running = false
+
 
 func _refresh_stage_card() -> void:
 	if stage_ids.is_empty():
