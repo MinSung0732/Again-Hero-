@@ -189,7 +189,7 @@ func _trigger_death_explosion() -> void:
 		)
 
 	if hero.has_method("take_damage"):
-		hero.call("take_damage", maxi(int(round(effective_damage)), 1))
+		hero.call("take_damage", maxi(int(round(effective_damage)), 1), self)
 
 func configure_special_augments(configs: Dictionary) -> void:
 	special_augment_configs = configs.duplicate(true)
