@@ -3478,6 +3478,30 @@ func _end_fighter_guard() -> void:
 				monster.call("take_damage", release_damage)
 
 	_play_fighter_guard_release_effect()
+
+	var recovery_ratio := maxf(
+		float(ultimate_config.get("recovery_from_stored_damage_ratio", 0.12)),
+		0.0
+	)
+	var recovery_cap := maxi(
+		int(round(
+			float(max_hp)
+			* clampf(
+				float(ultimate_config.get("recovery_max_hp_ratio", 0.08)),
+				0.0,
+				1.0
+			)
+		)),
+		0
+	)
+	var recovery_amount := mini(
+		maxi(int(round(fighter_guard_stored_damage * recovery_ratio)), 0),
+		recovery_cap
+	)
+	if recovery_amount > 0 and current_hp > 0:
+		current_hp = mini(current_hp + recovery_amount, max_hp)
+		health_changed.emit(current_hp, max_hp)
+
 	fighter_guard_stored_damage = 0.0
 	shield_hp = 0.0
 	shield_max_hp = 0.0
