@@ -68,6 +68,7 @@ var hero_archetype: String = "ranged_kiter"
 var sprite_sheet_path: String = ""
 var sprite_frame_dir: String = ""
 var augment_pool_ids: Array[String] = []
+var level_growth_config: Dictionary = {}
 
 var rogue_combo_config: Dictionary = {}
 var rogue_slash_config: Dictionary = {}
@@ -161,6 +162,12 @@ func configure_profile(profile: Dictionary) -> void:
 	hero_archetype = String(profile.get("archetype", hero_archetype))
 	sprite_sheet_path = String(profile.get("sprite_sheet_path", ""))
 	sprite_frame_dir = String(profile.get("sprite_frame_dir", ""))
+	var profile_level_growth = profile.get("level_growth", {})
+	level_growth_config = (
+		profile_level_growth.duplicate(true)
+		if typeof(profile_level_growth) == TYPE_DICTIONARY
+		else {}
+	)
 	var profile_combo = profile.get("rogue_combo", {})
 	rogue_combo_config = (
 		profile_combo.duplicate(true)
@@ -2280,6 +2287,7 @@ func _level_up() -> void:
 	level += 1
 	exp_to_next_level = _required_exp_for_level(level)
 	level_flash_timer = 0.45
+	_apply_level_growth()
 
 	var candidates: Array = AUGMENT_CATALOG.roll_candidates(
 		3,
@@ -2318,6 +2326,49 @@ func _level_up() -> void:
 		get_build_summary()
 	)
 	queue_redraw()
+
+func _apply_level_growth() -> void:
+	if level_growth_config.is_empty():
+		return
+
+	var hp_gain := maxi(
+		int(level_growth_config.get("max_hp_per_level", 0)),
+		0
+	)
+	if hp_gain > 0:
+		max_hp += hp_gain
+
+	var damage_gain := maxi(
+		int(
+			level_growth_config.get(
+				"attack_damage_per_level",
+				0
+			)
+		),
+		0
+	)
+	if damage_gain > 0:
+		attack_damage += damage_gain
+
+	var heal_ratio := clampf(
+		float(
+			level_growth_config.get(
+				"heal_ratio_on_level",
+				0.0
+			)
+		),
+		0.0,
+		1.0
+	)
+	if heal_ratio > 0.0 and current_hp > 0:
+		current_hp = mini(
+			current_hp
+			+ maxi(
+				int(round(float(max_hp) * heal_ratio)),
+				1
+			),
+			max_hp
+		)
 
 func _refresh_ai_observation() -> void:
 	var interval := maxf(float(ai_settings.get("observation_interval", 4.0)), 0.25)
