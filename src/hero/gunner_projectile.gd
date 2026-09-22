@@ -3,6 +3,7 @@ extends Area2D
 const FRAME_DIR := "res://assets/art/heroes/stage4_gunner/frames/effect"
 const FRAME_COUNT := 13
 const FPS := 22.0
+const DEAD_EYE_RICOCHET_FX := preload("res://src/hero/deadeye_ricochet_fx.gd")
 
 var direction := Vector2.RIGHT
 var speed := 920.0
@@ -12,6 +13,7 @@ var traveled := 0.0
 var headshot := false
 var ricochet_bounces_left: int = 0
 var ricochet_radius: float = 260.0
+var is_deadeye_shot: bool = false
 var hit_ids: Dictionary = {}
 
 @onready var visual: AnimatedSprite2D = $Visual
@@ -27,7 +29,8 @@ func setup(
 	new_speed: float,
 	new_range: float,
 	is_headshot: bool = false,
-	new_ricochet_bounces: int = 0
+	new_ricochet_bounces: int = 0,
+	new_is_deadeye_shot: bool = false
 ) -> void:
 	direction = new_direction.normalized()
 	damage = maxi(new_damage, 1)
@@ -35,6 +38,7 @@ func setup(
 	max_range = maxf(new_range, 1.0)
 	headshot = is_headshot
 	ricochet_bounces_left = maxi(new_ricochet_bounces, 0)
+	is_deadeye_shot = new_is_deadeye_shot
 	rotation = direction.angle()
 
 func _physics_process(delta: float) -> void:
@@ -60,10 +64,21 @@ func _on_body_entered(body: Node) -> void:
 	if body.is_in_group("monsters") and ricochet_bounces_left > 0:
 		var next_target := _find_ricochet_target()
 		if is_instance_valid(next_target):
-			ricochet_bounces_left -= 1
-			direction = global_position.direction_to(next_target.global_position).normalized()
-			if direction.length_squared() > 0.0:
+			var next_direction := global_position.direction_to(next_target.global_position).normalized()
+			if next_direction.length_squared() > 0.0:
+				if is_deadeye_shot:
+					_spawn_deadeye_ricochet_fx(next_direction)
+				ricochet_bounces_left -= 1
+				direction = next_direction
 				rotation = direction.angle()
+
+func _spawn_deadeye_ricochet_fx(next_direction: Vector2) -> void:
+	var fx := Node2D.new()
+	fx.set_script(DEAD_EYE_RICOCHET_FX)
+	get_parent().add_child(fx)
+	fx.global_position = global_position
+	fx.call("setup", next_direction)
+
 
 func _find_ricochet_target() -> Node2D:
 	var nearest: Node2D = null
