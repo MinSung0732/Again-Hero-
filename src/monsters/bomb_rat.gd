@@ -35,6 +35,7 @@ var self_destruct_timer: float = 0.0
 var desired_locomotion: StringName = &"idle"
 var special_augment_configs: Dictionary = {}
 var survival_time: float = 0.0
+var self_destruct_hp_ratio: float = 1.0
 
 func _ready() -> void:
 	add_to_group("monsters")
@@ -119,6 +120,11 @@ func _complete_self_destruct() -> void:
 	dying = true
 	self_destructing = false
 	set_meta("death_type", "self_destruct")
+	self_destruct_hp_ratio = clampf(
+		float(current_hp) / float(maxi(max_hp, 1)),
+		0.0,
+		1.0
+	)
 	velocity = Vector2.ZERO
 	current_hp = 0
 	exp_reward = self_destruct_exp_reward
@@ -176,11 +182,7 @@ func _trigger_death_explosion() -> void:
 		{}
 	)
 	if not unstable.is_empty():
-		var hp_ratio := clampf(
-			float(current_hp) / float(maxi(max_hp, 1)),
-			0.0,
-			1.0
-		)
+		var hp_ratio := self_destruct_hp_ratio
 		effective_damage *= (
 			1.0
 			+ (1.0 - hp_ratio)
