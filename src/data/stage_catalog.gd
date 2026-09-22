@@ -1,7 +1,7 @@
 extends RefCounted
 class_name StageCatalog
 
-const ORDER := ["stage_1", "stage_2"]
+const ORDER := ["stage_1", "stage_2", "stage_3"]
 
 const STAGES = {
 	"stage_1": {
@@ -117,6 +117,71 @@ const STAGES = {
 			},
 		],
 		"first_clear_reward": 750,
+		"next_stage_id": "stage_3",
+	},
+	"stage_3": {
+		"id": "stage_3",
+		"number": 3,
+		"display_name": "세 번째 침입자",
+		"hero_id": "sword_shield_hero",
+		"hero_ai_profile_id": "stage_3_guardian",
+		"portrait_path": "res://assets/art/heroes/stage3_fighter/stage3_hero_portrait.png",
+		"lobby_description": "느리지만 단단한 검과 방패의 용사. 막기로 피해를 받아내고 축적한 힘을 반격으로 되돌린다.",
+		"hero_level_start": 1,
+		"map_width": 3800,
+		"map_height": 3800,
+		"run_duration_seconds": 480.0,
+		"event_timeline": [
+			{
+				"id": "stage3_elite_01",
+				"at_seconds": 120.0,
+				"type": "elite",
+				"name": "1차 철벽 돌연변이",
+				"selection_mode": "team",
+				"mutation_profile_id": "mutation_1",
+				"reinforcement_count": 7,
+				"reinforcement_batch_size": 2,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage3_elite_02",
+				"at_seconds": 240.0,
+				"type": "elite",
+				"name": "2차 철벽 돌연변이",
+				"selection_mode": "team",
+				"mutation_profile_id": "mutation_2",
+				"reinforcement_count": 9,
+				"reinforcement_batch_size": 3,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage3_miniboss_01",
+				"at_seconds": 360.0,
+				"type": "miniboss",
+				"name": "대돌연변이 파쇄자",
+				"selection_mode": "team",
+				"mutation_profile_id": "greater_mutation",
+				"reinforcement_count": 12,
+				"reinforcement_batch_size": 3,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage3_boss_01",
+				"at_seconds": 420.0,
+				"type": "boss",
+				"name": "철벽 분쇄 대장",
+				"monster_id": "orc",
+				"hp_multiplier": 7.5,
+				"damage_multiplier": 2.55,
+				"speed_multiplier": 1.18,
+				"exp_multiplier": 3.5,
+				"visual_scale": 1.50,
+				"reinforcement_count": 14,
+				"reinforcement_batch_size": 3,
+				"reinforcement_interval": 0.12,
+			},
+		],
+		"first_clear_reward": 1000,
 		"next_stage_id": "",
 	},
 }
