@@ -1692,3 +1692,9 @@
 - 기존 01_large_left_panel part 조립식 외곽 프레임은 ContentFrame에서만 제거.
 - ui9는 child Control이 아닌 StyleBoxTexture로 적용해 Content 높이/StageCard 위치/하단 네비 위치 계산에 참여하지 않도록 분리.
 - StageCard(ui10), 초상화, 설명/보상/입장 버튼, 헤더, 하단 네비게이션의 크기와 위치는 변경하지 않음.
+
+### Header ui1 9-Slice Margin Fix
+- 실기기에서 ui1 헤더가 완전한 사각 프레임 대신 중앙 금색 띠처럼 찌그러지는 문제 수정.
+- 원인: 2172x724 원본에 10%/22% 9-slice 고정 마진을 사용해 158px Header 높이보다 상하 고정 영역 합이 커졌음.
+- 헤더 slice margin을 X 4.5% / Y 7.5%로 축소해 실제 Header 높이 안에서 모서리/상하선이 정상적으로 보이도록 조정.
+- 중앙 ContentFrame(ui9), StageCard(ui10), 하단 네비 및 모든 레이아웃 크기는 변경하지 않음.
