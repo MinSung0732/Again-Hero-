@@ -1719,3 +1719,10 @@
 - BottomNav ui3 StyleBox 실험에서 외곽 테두리가 사라지는 문제가 있어 해당 적용을 제거.
 - BottomNav는 마지막 정상 상태의 legacy 조립 프레임으로 복구.
 - ContentFrame ui9, Header ui1, StageCard ui10은 유지.
+
+### Lobby Header Interior Safe Pass
+- PC 작업 기준점에서 중앙 StageCard/Content/BottomNav 레이아웃을 잠그고 헤더 내부 요소만 조정.
+- Header 높이, SafeArea, Content 높이는 변경하지 않음.
+- 골드/최고 해금 정보가 ui1 모서리 장식 바깥으로 튀어나오지 않도록 HeaderMargin 좌우를 24→54로 확대.
+- 좌우 상태 텍스트 폰트를 26→24로 소폭 축소.
+- 로고 가로 점유 폭을 줄여 좌우 상태 정보와 겹침을 완화.
