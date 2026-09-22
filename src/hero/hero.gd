@@ -666,6 +666,8 @@ func _gunner_attack(current_target: Node2D) -> void:
 		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	gunner_ammo -= 1
 	_gunner_register_ammo_consumed(1)
+	if gunner_ammo <= 0:
+		_refresh_gunner_empty_magazine_shield()
 	attack_timer = _get_common_attack_interval(attack_cooldown)
 	attack_pose_timer = 0.30
 	_face_attack_direction(direction.x)
@@ -726,6 +728,22 @@ func _spawn_gunner_bullet_from(origin: Vector2, direction: Vector2) -> void:
 		gunner_ricochet_stacks,
 		false
 	)
+
+
+func _refresh_gunner_empty_magazine_shield() -> void:
+	var shield_ratio := clampf(
+		float(gunner_config.get("empty_mag_shield_ratio", 0.10)),
+		0.0,
+		1.0
+	)
+	var refreshed_shield := float(max_hp) * shield_ratio
+	if refreshed_shield <= 0.0:
+		return
+
+	# 갱신형: 기존 실드에 더하지 않고 항상 새 10% 값으로 덮어쓴다.
+	shield_max_hp = refreshed_shield
+	shield_hp = refreshed_shield
+	queue_redraw()
 
 
 func _gunner_register_ammo_consumed(amount: int) -> void:
@@ -1093,6 +1111,7 @@ func _start_gunner_deadeye() -> void:
 	)
 	_gunner_register_ammo_consumed(deadeye_consumed_ammo)
 	gunner_ammo = 0
+	_refresh_gunner_empty_magazine_shield()
 	gunner_deadeye_shot_timer = 0.0
 	gunner_deadeye_direction = aim_direction.normalized()
 	_face_attack_direction(gunner_deadeye_direction.x)
