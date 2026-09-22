@@ -229,6 +229,7 @@ const PROFILES = {
 			"gunner_deadeye_storm",
 			"gunner_fugitive_instinct",
 			"gunner_reload_cover",
+			"gunner_powder_acceleration",
 		],
 	},
 	"sword_shield_hero": {
