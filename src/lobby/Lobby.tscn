@@ -115,13 +115,13 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 18.0
-offset_top = 22.0
-offset_right = -18.0
-offset_bottom = -18.0
+offset_left = 20.0
+offset_top = 38.0
+offset_right = -20.0
+offset_bottom = -34.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
 layout_mode = 2
@@ -190,7 +190,7 @@ vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="Status" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
-custom_minimum_size = Vector2(0, 70)
+custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
 theme_override_font_sizes/font_size = 24
@@ -213,13 +213,13 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 18.0
-offset_top = 22.0
-offset_right = -18.0
-offset_bottom = -18.0
+offset_left = 20.0
+offset_top = 38.0
+offset_right = -20.0
+offset_bottom = -34.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
@@ -292,7 +292,7 @@ theme_override_constants/h_separation = 18
 theme_override_constants/v_separation = 18
 
 [node name="Status" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
-custom_minimum_size = Vector2(0, 76)
+custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
 theme_override_font_sizes/font_size = 24
@@ -314,14 +314,14 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 18.0
-offset_top = 22.0
-offset_right = -18.0
-offset_bottom = -18.0
+offset_left = 20.0
+offset_top = 38.0
+offset_right = -20.0
+offset_bottom = -34.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 20
-alignment = 1
+theme_override_constants/separation = 12
+alignment = 0
 
 [node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
 layout_mode = 2
@@ -358,15 +358,15 @@ size_flags_vertical = 3
 
 [node name="CardMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard"]
 layout_mode = 2
-theme_override_constants/margin_left = 34
-theme_override_constants/margin_top = 28
-theme_override_constants/margin_right = 34
-theme_override_constants/margin_bottom = 28
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 22
 
 [node name="CardVBox" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin"]
 layout_mode = 2
-theme_override_constants/separation = 14
-alignment = 1
+theme_override_constants/separation = 10
+alignment = 0
 
 [node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
 layout_mode = 2
@@ -497,13 +497,13 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 18.0
-offset_top = 22.0
-offset_right = -18.0
-offset_bottom = -18.0
+offset_left = 20.0
+offset_top = 38.0
+offset_right = -20.0
+offset_bottom = -34.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
 layout_mode = 2
@@ -529,7 +529,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 14
 
 [node name="Status" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
-custom_minimum_size = Vector2(0, 70)
+custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.73, 0.67, 0.78, 1)
 theme_override_font_sizes/font_size = 24
