@@ -2815,6 +2815,7 @@ func get_snapshot() -> Dictionary:
 	var hero_lifesteal_ratio := 0.0
 	var hero_execute_ratio := 0.0
 	var hero_slash_shield_ratio := 0.0
+	var hero_skill_cooldowns: Array = []
 
 	if is_instance_valid(hero):
 		hp = int(hero.get("current_hp"))
@@ -2849,6 +2850,10 @@ func get_snapshot() -> Dictionary:
 			hero_build_counts = Dictionary(raw_build_counts).duplicate(true)
 		if hero.has_method("get_build_summary"):
 			build_summary = String(hero.call("get_build_summary"))
+		if hero.has_method("get_skill_cooldown_hud"):
+			var raw_skill_cooldowns = hero.call("get_skill_cooldown_hud")
+			if typeof(raw_skill_cooldowns) == TYPE_ARRAY:
+				hero_skill_cooldowns = Array(raw_skill_cooldowns).duplicate(true)
 
 	return {
 		"stage_id": String(current_stage_data.get("id", current_stage_id)),
@@ -2872,6 +2877,7 @@ func get_snapshot() -> Dictionary:
 		"hero_lifesteal_ratio": hero_lifesteal_ratio,
 		"hero_execute_ratio": hero_execute_ratio,
 		"hero_slash_shield_ratio": hero_slash_shield_ratio,
+		"hero_skill_cooldowns": hero_skill_cooldowns,
 		"hero_portrait_path": String(
 			current_stage_data.get("portrait_path", "")
 		),
