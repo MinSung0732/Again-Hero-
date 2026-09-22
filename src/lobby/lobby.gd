@@ -274,10 +274,22 @@ func _apply_styles() -> void:
 	)
 	$BottomNav.add_theme_stylebox_override("panel", content_backing)
 
+	var stage_nav_style := _make_style(
+		Color("171321"),
+		Color("6f5a7b"),
+		2,
+		18
+	)
+	stage_nav_style.content_margin_left = 8.0
+	stage_nav_style.content_margin_right = 8.0
+	stage_nav_style.content_margin_top = 8.0
+	stage_nav_style.content_margin_bottom = 8.0
+
 	for button in [prev_stage_button, next_stage_button]:
-		button.add_theme_stylebox_override("normal", secondary_button_style)
+		button.add_theme_stylebox_override("normal", stage_nav_style)
 		button.add_theme_stylebox_override("hover", secondary_button_style)
-		button.add_theme_stylebox_override("pressed", secondary_button_style)
+		button.add_theme_stylebox_override("pressed", primary_button_style)
+		button.add_theme_color_override("font_color", Color("f1e8f4"))
 
 	shop_single_button.add_theme_stylebox_override(
 		"normal",
@@ -304,7 +316,15 @@ func _apply_styles() -> void:
 		primary_button_style
 	)
 
-	enter_stage_button.add_theme_stylebox_override("normal", primary_button_style)
+	var enter_style := _make_style(
+		Color("71348c"),
+		Color("efc44f"),
+		3,
+		18
+	)
+	enter_style.content_margin_top = 10.0
+	enter_style.content_margin_bottom = 10.0
+	enter_stage_button.add_theme_stylebox_override("normal", enter_style)
 	enter_stage_button.add_theme_stylebox_override("hover", primary_button_style)
 	enter_stage_button.add_theme_stylebox_override("pressed", primary_button_style)
 
