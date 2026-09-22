@@ -3176,13 +3176,7 @@ func _complete_fighter_charge_dash() -> void:
 	if fighter_charge_chain_count < max_chains:
 		var next_target := _find_fighter_charge_target(fighter_charge_target)
 		if is_instance_valid(next_target):
-			fighter_charge_active = false
-			var delay := maxf(float(fighter_charge_config.get("chain_delay", 0.16)), 0.0)
-			get_tree().create_timer(delay).timeout.connect(
-				func():
-					if is_inside_tree() and current_hp > 0 and not is_dying:
-						_begin_fighter_charge_dash(next_target)
-			)
+			_begin_fighter_charge_dash(next_target)
 			return
 
 	_finish_fighter_charge()
