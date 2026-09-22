@@ -1674,3 +1674,10 @@
 - src/lobby/Lobby.tscn을 StageCard가 실기기에서 정상 확인된 116dbb5 시점으로 복구.
 - src/lobby/lobby.gd를 초상화 내부 중첩 테두리 제거가 완료된 c8882cf 시점으로 복구.
 - 중앙 카드의 검증된 초상화/이름/설명/보상/입장 버튼 배치를 우선 보존하고, 외곽 UI는 이후 Header / Content outer / BottomNav 순으로 한 영역씩 별도 수정하기로 함.
+
+### Lobby Header UICard-Only Frame Pass
+- 검증된 중앙 StageCard 레이아웃을 유지하기 위해 Lobby.tscn 및 Content/BottomNav 크기는 변경하지 않음.
+- 메인 로비 헤더의 legacy 03_middle_right_panel 조립 프레임만 제거하고 uicardframes/ui1.png로 교체.
+- ui1은 NinePatchRect로 적용해 모서리 장식을 보존하면서 기존 Header 크기에 맞게 늘어나도록 처리.
+- HeaderMargin, 로고 위치, 골드/최고 해금 텍스트 위치는 이번 패스에서 변경하지 않음.
+- 중앙 외곽 프레임과 하단 네비게이션은 기존 검증 상태를 그대로 유지하고 다음 패스에서 각각 별도로 수정.
