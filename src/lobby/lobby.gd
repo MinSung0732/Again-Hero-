@@ -89,9 +89,11 @@ var selected_stage_index: int = 0
 var current_tab: String = "main"
 
 const STAGE_SWIPE_THRESHOLD := 72.0
-const STAGE_SLIDE_DISTANCE := 150.0
-const STAGE_SLIDE_OUT_DURATION := 0.12
-const STAGE_SLIDE_IN_DURATION := 0.20
+const STAGE_SLIDE_DISTANCE := 118.0
+const STAGE_SLIDE_OUT_DURATION := 0.16
+const STAGE_SLIDE_IN_DURATION := 0.24
+const STAGE_SCALE_OUT := Vector2(0.94, 0.94)
+const STAGE_SCALE_IN_START := Vector2(0.91, 0.91)
 
 var _stage_swipe_active := false
 var _stage_swipe_start := Vector2.ZERO
@@ -100,6 +102,7 @@ var _stage_pending_index := -1
 var _stage_pending_direction := 0
 var _stage_card_origin := Vector2.ZERO
 var _stage_card_base_modulate := Color.WHITE
+var _portrait_texture_cache: Dictionary = {}
 
 var monster_collection_state: Dictionary = {}
 var team_catalog_ids: Array = []
@@ -141,6 +144,7 @@ func _ready() -> void:
 
 	_switch_tab("main")
 	_refresh_header()
+	_precache_stage_portraits()
 	_refresh_stage_card()
 	_rebuild_research_list()
 
@@ -1626,8 +1630,14 @@ func _change_stage(direction: int) -> void:
 	_stage_card_origin = stage_card.position
 	_stage_card_base_modulate = stage_card.modulate
 
+	stage_card.pivot_offset = stage_card.size * 0.5
+
+	var meta_box := stage_number_label.get_parent() as Control
+	if meta_box != null:
+		meta_box.pivot_offset = meta_box.size * 0.5
+
 	var fade_out := _stage_card_base_modulate
-	fade_out.a = 0.18
+	fade_out.a = 0.0
 
 	var tween_out := create_tween()
 	tween_out.set_parallel(true)
@@ -1636,13 +1646,34 @@ func _change_stage(direction: int) -> void:
 		"position",
 		_stage_card_origin + Vector2(-float(direction) * STAGE_SLIDE_DISTANCE, 0.0),
 		STAGE_SLIDE_OUT_DURATION
-	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tween_out.tween_property(
+		stage_card,
+		"scale",
+		STAGE_SCALE_OUT,
+		STAGE_SLIDE_OUT_DURATION
+	).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	tween_out.tween_property(
 		stage_card,
 		"modulate",
 		fade_out,
 		STAGE_SLIDE_OUT_DURATION
-	)
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+	if meta_box != null:
+		tween_out.tween_property(
+			meta_box,
+			"scale",
+			Vector2(0.96, 0.96),
+			STAGE_SLIDE_OUT_DURATION
+		).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+		tween_out.tween_property(
+			meta_box,
+			"modulate:a",
+			0.0,
+			STAGE_SLIDE_OUT_DURATION
+		)
+
 	tween_out.finished.connect(_on_stage_slide_out_finished)
 
 
@@ -1651,12 +1682,20 @@ func _on_stage_slide_out_finished() -> void:
 	_refresh_stage_card()
 
 	var start_modulate := _stage_card_base_modulate
-	start_modulate.a = 0.18
+	start_modulate.a = 0.0
 	stage_card.position = _stage_card_origin + Vector2(
 		float(_stage_pending_direction) * STAGE_SLIDE_DISTANCE,
 		0.0
 	)
+	stage_card.scale = STAGE_SCALE_IN_START
 	stage_card.modulate = start_modulate
+	stage_card.pivot_offset = stage_card.size * 0.5
+
+	var meta_box := stage_number_label.get_parent() as Control
+	if meta_box != null:
+		meta_box.pivot_offset = meta_box.size * 0.5
+		meta_box.scale = Vector2(0.96, 0.96)
+		meta_box.modulate.a = 0.0
 
 	var tween_in := create_tween()
 	tween_in.set_parallel(true)
@@ -1665,19 +1704,47 @@ func _on_stage_slide_out_finished() -> void:
 		"position",
 		_stage_card_origin,
 		STAGE_SLIDE_IN_DURATION
-	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+	tween_in.tween_property(
+		stage_card,
+		"scale",
+		Vector2.ONE,
+		STAGE_SLIDE_IN_DURATION
+	).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween_in.tween_property(
 		stage_card,
 		"modulate",
 		_stage_card_base_modulate,
 		STAGE_SLIDE_IN_DURATION
-	)
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	if meta_box != null:
+		tween_in.tween_property(
+			meta_box,
+			"scale",
+			Vector2.ONE,
+			STAGE_SLIDE_IN_DURATION
+		).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tween_in.tween_property(
+			meta_box,
+			"modulate:a",
+			1.0,
+			STAGE_SLIDE_IN_DURATION
+		)
+
 	tween_in.finished.connect(_on_stage_slide_finished)
 
 
 func _on_stage_slide_finished() -> void:
 	stage_card.position = _stage_card_origin
+	stage_card.scale = Vector2.ONE
 	stage_card.modulate = _stage_card_base_modulate
+
+	var meta_box := stage_number_label.get_parent() as Control
+	if meta_box != null:
+		meta_box.scale = Vector2.ONE
+		meta_box.modulate.a = 1.0
+
 	_stage_transition_running = false
 	_stage_pending_index = -1
 	_stage_pending_direction = 0
@@ -1691,8 +1758,6 @@ func _get_max_browsable_stage_index() -> int:
 	var highest_unlocked := int(
 		progress_state.get("highest_unlocked_stage", 1)
 	)
-	# One stage ahead can be previewed, but remains locked until the previous
-	# stage is cleared. Everything beyond that is not browsable.
 	var preview_stage_number := highest_unlocked + 1
 	var max_index := 0
 
@@ -1786,13 +1851,42 @@ func _refresh_stage_card() -> void:
 	portrait_badge.visible = false
 	_apply_portrait(String(stage.get("portrait_path", "")), hero_name)
 
+func _precache_stage_portraits() -> void:
+	if stage_ids.is_empty():
+		return
+
+	var max_index := _get_max_browsable_stage_index()
+	for index in range(max_index + 1):
+		var stage := STAGE_CATALOG.get_stage(stage_ids[index])
+		var portrait_path := String(stage.get("portrait_path", ""))
+		if portrait_path.is_empty() or _portrait_texture_cache.has(portrait_path):
+			continue
+
+		var texture := _load_texture(portrait_path)
+		if texture == null:
+			continue
+
+		_portrait_texture_cache[portrait_path] = _normalize_hero_portrait_texture(
+			texture
+		)
+
+
 func _apply_portrait(path: String, hero_name: String) -> void:
-	var texture := _load_texture(path)
-	var normalized_texture := _normalize_hero_portrait_texture(texture)
+	var normalized_texture: Texture2D = null
+
+	if not path.is_empty() and _portrait_texture_cache.has(path):
+		normalized_texture = _portrait_texture_cache[path] as Texture2D
+	else:
+		var texture := _load_texture(path)
+		normalized_texture = _normalize_hero_portrait_texture(texture)
+		if not path.is_empty() and normalized_texture != null:
+			_portrait_texture_cache[path] = normalized_texture
+
 	portrait_texture.texture = normalized_texture
 	portrait_texture.visible = normalized_texture != null
 	portrait_placeholder.visible = normalized_texture == null
 	portrait_placeholder.text = "%s\n\n초상화 준비 중" % hero_name
+
 
 func _normalize_hero_portrait_texture(
 	source_texture: Texture2D
