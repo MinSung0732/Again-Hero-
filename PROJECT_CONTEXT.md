@@ -1660,3 +1660,20 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 실제 카카오/구글 SDK 연동 전에는 인증 로직과 UI를 분리한다.
 - Lobby.tscn 자체에 로그인/로딩 상태를 억지로 합치지 않고, 별도 Boot/Entry 씬이 Lobby로 전환하는 구조를 우선한다.
 - Touch to Start 화면은 로그인 성공 후 로비 진입 전 대기 화면으로 둔다.
+
+
+### 로비 UI PNG 프레임 적용 v1
+- 실제 UI 프레임 원본은 `res://assets/art/UI/`를 사용한다.
+- `01_large_left_panel`은 8개 테두리 조각(좌상/우상/상단/좌측/우측/좌하/우하/하단)을 조립해 큰 고정 패널에 적용한다.
+- `03_middle_right_panel`은 같은 방식으로 중형 카드/팝업에 적용한다.
+- 적용 대상:
+  - 로비 헤더
+  - 공통 ContentFrame
+  - 하단 내비게이션
+  - StageCard
+  - 상점 ResultPanel
+  - 몬스터 상세 팝업 및 일반/엘리트 비교 패널
+- PNG 조각은 `TEXTURE_FILTER_NEAREST`로 렌더링한다.
+- 프레임 오버레이는 `MOUSE_FILTER_IGNORE`라 모바일 터치 입력을 가로채지 않는다.
+- 기존 StyleBox는 배경 채움 역할만 하고, 위 대상의 실제 외곽선은 PNG 프레임이 담당한다.
+- 동적 몬스터 카드 전체에 프레임 노드를 무분별하게 추가하지 않아 모바일 노드/드로우콜 증가를 제한한다.
