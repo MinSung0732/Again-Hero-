@@ -17,6 +17,7 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 
 const UI_FRAME_LARGE_DIR := "res://assets/art/UI/01_large_left_panel"
 const UI_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
+const UI_CARD_FRAME_DIR := "res://assets/art/UI/uicardframes"
 
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 @onready var resource_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ResourceLabel
@@ -108,7 +109,7 @@ func _ready() -> void:
 	_build_styles()
 	_apply_styles()
 	_apply_asset_frames()
-	_build_uicardframe_preview()
+	_apply_new_ui_assets()
 	_connect_navigation()
 
 	stage_ids = STAGE_CATALOG.get_ordered_stage_ids()
@@ -345,7 +346,6 @@ func _apply_styles() -> void:
 func _apply_asset_frames() -> void:
 	# 상단/하단은 모바일에서 장식보다 정보가 우선이라 얇게 유지한다.
 	for target in [
-		$SafeArea/Layout/Header,
 		$BottomNav,
 	]:
 		_add_asset_frame(
@@ -528,67 +528,43 @@ func _add_frame_piece_stretched(
 	piece.offset_bottom = offset_end.y
 	parent.add_child(piece)
 
-func _build_uicardframe_preview() -> void:
-	var other_tab := $SafeArea/Layout/Content/OtherTab
-	if other_tab == null:
-		return
+func _load_png_texture_direct(path: String) -> Texture2D:
+	var image := Image.new()
+	var load_error := image.load(path)
+	if load_error != OK or image.is_empty():
+		push_warning("UI PNG load failed: %s / error=%s" % [path, load_error])
+		return null
+	return ImageTexture.create_from_image(image)
 
-	var old := other_tab.get_node_or_null("UICardFramePreview")
-	if old != null:
-		old.queue_free()
 
-	for child in other_tab.get_children():
-		if child is Label:
-			child.visible = false
+func _make_texture_style(texture: Texture2D, left: float, top: float, right: float, bottom: float) -> StyleBoxTexture:
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.texture_margin_left = left
+	style.texture_margin_top = top
+	style.texture_margin_right = right
+	style.texture_margin_bottom = bottom
+	style.content_margin_left = left
+	style.content_margin_top = top
+	style.content_margin_right = right
+	style.content_margin_bottom = bottom
+	style.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	style.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	return style
 
-	var scroll := ScrollContainer.new()
-	scroll.name = "UICardFramePreview"
-	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	scroll.offset_left = 20.0
-	scroll.offset_top = 20.0
-	scroll.offset_right = -20.0
-	scroll.offset_bottom = -20.0
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	other_tab.add_child(scroll)
 
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	grid.add_theme_constant_override("h_separation", 14)
-	grid.add_theme_constant_override("v_separation", 18)
-	scroll.add_child(grid)
+func _apply_new_ui_assets() -> void:
+	var header_texture := _load_png_texture_direct(UI_CARD_FRAME_DIR + "/ui1.png")
+	if header_texture != null:
+		var header_style := _make_texture_style(header_texture, 30.0, 18.0, 30.0, 18.0)
+		$SafeArea/Layout/Header.add_theme_stylebox_override("panel", header_style)
 
-	for frame_id in [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12]:
-		var cell := VBoxContainer.new()
-		cell.custom_minimum_size = Vector2(210.0, 250.0)
-		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		cell.add_theme_constant_override("separation", 6)
-		grid.add_child(cell)
-
-		var label := Label.new()
-		label.text = "ui%d" % frame_id
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.add_theme_font_size_override("font_size", 22)
-		cell.add_child(label)
-
-		var preview := TextureRect.new()
-		preview.custom_minimum_size = Vector2(200.0, 210.0)
-		preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-		var path := "res://assets/art/UI/uicardframes/ui%d.png" % frame_id
-		var image := Image.new()
-		var load_error := image.load(path)
-		if load_error == OK and not image.is_empty():
-			preview.texture = ImageTexture.create_from_image(image)
-		else:
-			label.text += " (LOAD FAIL)"
-			push_warning("UI card preview load failed: %s / error=%s" % [path, load_error])
-		cell.add_child(preview)
+	var enter_texture := _load_png_texture_direct(UI_CARD_FRAME_DIR + "/ui6.png")
+	if enter_texture != null:
+		var enter_style := _make_texture_style(enter_texture, 24.0, 16.0, 24.0, 16.0)
+		enter_stage_button.add_theme_stylebox_override("normal", enter_style)
+		enter_stage_button.add_theme_stylebox_override("hover", enter_style)
+		enter_stage_button.add_theme_stylebox_override("pressed", enter_style)
 
 
 func _connect_navigation() -> void:
