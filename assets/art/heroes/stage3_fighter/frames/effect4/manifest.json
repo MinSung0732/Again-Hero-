@@ -1,0 +1,86 @@
+{
+  "source": "stage3_hero_effect2_spritesheet.png",
+  "animation": "aura",
+  "frame_count": 8,
+  "cell_size": {
+    "width": 384,
+    "height": 384
+  },
+  "sheet_size": {
+    "width": 1536,
+    "height": 768
+  },
+  "sheet_columns": 4,
+  "sheet_rows": 2,
+  "anchor": {
+    "x": 192,
+    "y": 192
+  },
+  "edit": "12 o'clock ornament removed to create an open U-shaped aura",
+  "frames": [
+    {
+      "file": "aura_01.png",
+      "index": 0,
+      "anchor": {
+        "x": 192,
+        "y": 192
+      }
+    },
+    {
+      "file": "aura_02.png",
+      "index": 1,
+      "anchor": {
+        "x": 192,
+        "y": 192
+      }
+    },
+    {
+      "file": "aura_03.png",
+      "index": 2,
+      "anchor": {
+        "x": 192,
+        "y": 192
+      }
+    },
+    {
+      "file": "aura_04.png",
+      "index": 3,
+      "anchor": {
+        "x": 192,
+        "y": 192
+      }
+    },
+    {
+      "file": "aura_05.png",
+      "index": 4,
+      "anchor": {
+        "x": 192,
+        "y": 192
+      }
+    },
+    {
+      "file": "aura_06.png",
+      "index": 5,
+      "anchor": {
+        "x": 192,
+        "y": 192
+      }
+    },
+    {
+      "file": "aura_07.png",
+      "index": 6,
+      "anchor": {
+        "x": 192,
+        "y": 192
+      }
+    },
+    {
+      "file": "aura_08.png",
+      "index": 7,
+      "anchor": {
+        "x": 192,
+        "y": 192
+      }
+    }
+  ]
+}
