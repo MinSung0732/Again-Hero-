@@ -24,7 +24,9 @@ var duration_seconds: float = 0.0
 
 var summon_counts: Dictionary = {}
 var summon_spend: Dictionary = {}
+var summon_demon_exp: Dictionary = {}
 var monster_death_counts: Dictionary = {}
+var first_special_augment_time: float = -1.0
 
 var lowest_hero_hp: int = 0
 var lowest_hero_hp_ratio: float = 1.0
@@ -46,7 +48,9 @@ func reset(
 
 	summon_counts.clear()
 	summon_spend.clear()
+	summon_demon_exp.clear()
 	monster_death_counts.clear()
+	first_special_augment_time = -1.0
 	hero_augment_events.clear()
 	recent_summons.clear()
 	strategy_switches.clear()
@@ -86,6 +90,22 @@ func record_summon(monster_type: String, cost: float) -> void:
 		"weight": maxf(cost, 0.0),
 	})
 	_update_strategy_state()
+
+func record_summon_demon_exp(
+	monster_type: String,
+	amount: float
+) -> void:
+	if monster_type.is_empty() or amount <= 0.0:
+		return
+	summon_demon_exp[monster_type] = (
+		float(summon_demon_exp.get(monster_type, 0.0))
+		+ amount
+	)
+
+func record_special_augment_acquired() -> void:
+	if first_special_augment_time >= 0.0:
+		return
+	first_special_augment_time = elapsed_seconds
 
 func record_monster_death(monster_type: String) -> void:
 	if monster_type.is_empty():
@@ -162,7 +182,9 @@ func get_snapshot() -> Dictionary:
 		"remaining_seconds": get_remaining_seconds(),
 		"summon_counts": summon_counts.duplicate(true),
 		"summon_spend": summon_spend.duplicate(true),
+		"summon_demon_exp": summon_demon_exp.duplicate(true),
 		"monster_death_counts": monster_death_counts.duplicate(true),
+		"first_special_augment_time": first_special_augment_time,
 		"lowest_hero_hp": lowest_hero_hp,
 		"lowest_hero_hp_ratio": lowest_hero_hp_ratio,
 		"hero_augment_events": hero_augment_events.duplicate(true),
@@ -194,6 +216,26 @@ func get_result_summary() -> String:
 		lines.append("직접 소환: 없음")
 	else:
 		lines.append("직접 소환: %s" % " · ".join(summon_parts))
+
+	var exp_parts: PackedStringArray = []
+	for monster_type in MONSTER_CATALOG.get_ids():
+		var exp_value := float(
+			summon_demon_exp.get(monster_type, 0.0)
+		)
+		if exp_value <= 0.0:
+			continue
+		exp_parts.append("%s %.1f" % [
+			MONSTER_CATALOG.get_name(monster_type),
+			exp_value,
+		])
+	if not exp_parts.is_empty():
+		lines.append("마왕 EXP 기여: %s" % " · ".join(exp_parts))
+
+	if first_special_augment_time >= 0.0:
+		lines.append(
+			"첫 특수증강: %s"
+			% _format_time(first_special_augment_time)
+		)
 
 	if strategy_switches.is_empty():
 		if current_strategy_type.is_empty():
