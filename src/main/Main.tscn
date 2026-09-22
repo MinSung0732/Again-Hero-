@@ -825,13 +825,20 @@ text = "결과"
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="ResultAnalysis" type="Label" parent="HUD/ResultPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 260)
+[node name="ResultAnalysisScroll" type="ScrollContainer" parent="HUD/ResultPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 320)
 layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 1
+
+[node name="ResultAnalysis" type="Label" parent="HUD/ResultPanel/Margin/VBox/ResultAnalysisScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
 text = "Run 분석"
 horizontal_alignment = 0
-vertical_alignment = 1
+vertical_alignment = 0
 autowrap_mode = 2
 
 [node name="NextStageButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
