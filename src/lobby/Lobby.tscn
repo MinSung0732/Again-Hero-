@@ -367,14 +367,15 @@ theme_override_constants/margin_top = 28
 theme_override_constants/margin_right = 46
 theme_override_constants/margin_bottom = 32
 
-[node name="CardVBox" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin"]
+[node name="CardVBox" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin"]
 layout_mode = 2
-theme_override_constants/separation = 18
-alignment = 0
 
 [node name="TopPanel" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
-custom_minimum_size = Vector2(0, 408)
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 408.0
+grow_horizontal = 2
 theme_override_constants/separation = 8
 
 [node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
@@ -454,7 +455,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="HeroName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.87, 0.82, 0.91, 1)
 theme_override_font_sizes/font_size = 32
@@ -462,13 +463,16 @@ text = "견습 마도사"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SectionGap" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
-custom_minimum_size = Vector2(0, 170)
-layout_mode = 2
-
 [node name="BottomPanel" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
-custom_minimum_size = Vector2(0, 145)
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -168.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
 theme_override_constants/separation = 3
 alignment = 1
 
