@@ -490,109 +490,115 @@ offset_bottom = 1424.0
 grow_horizontal = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_monster_info")
 
-[node name="Scroll" type="ScrollContainer" parent="HUD/MonsterInfoPanel"]
+[node name="Root" type="VBoxContainer" parent="HUD/MonsterInfoPanel"]
 layout_mode = 2
-horizontal_scroll_mode = 0
-vertical_scroll_mode = 1
+theme_override_constants/separation = 8
 
-[node name="Margin" type="MarginContainer" parent="HUD/MonsterInfoPanel/Scroll"]
+[node name="Header" type="HBoxContainer" parent="HUD/MonsterInfoPanel/Root"]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 22
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 22
+custom_minimum_size = Vector2(0, 76)
 
-[node name="VBox" type="VBoxContainer" parent="HUD/MonsterInfoPanel/Scroll/Margin"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 14
-
-[node name="Header" type="HBoxContainer" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox"]
-layout_mode = 2
-
-[node name="Title" type="Label" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox/Header"]
+[node name="Title" type="Label" parent="HUD/MonsterInfoPanel/Root/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 36
 text = "몬스터 상세정보"
 
-[node name="Close" type="Button" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox/Header"]
+[node name="Close" type="Button" parent="HUD/MonsterInfoPanel/Root/Header"]
 custom_minimum_size = Vector2(82, 64)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "닫기"
 
-[node name="Tabs" type="HBoxContainer" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox"]
+[node name="Scroll" type="ScrollContainer" parent="HUD/MonsterInfoPanel/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 1
+
+[node name="Margin" type="MarginContainer" parent="HUD/MonsterInfoPanel/Root/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 22
+
+[node name="VBox" type="VBoxContainer" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="Tabs" type="HBoxContainer" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Tab1" type="Button" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox/Tabs"]
+[node name="Tab1" type="Button" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox/Tabs"]
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
 text = "1"
 
-[node name="Tab2" type="Button" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox/Tabs"]
+[node name="Tab2" type="Button" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox/Tabs"]
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
 text = "2"
 
-[node name="Tab3" type="Button" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox/Tabs"]
+[node name="Tab3" type="Button" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox/Tabs"]
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
 text = "3"
 
-[node name="Portrait" type="TextureRect" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox"]
+[node name="Portrait" type="TextureRect" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox"]
 custom_minimum_size = Vector2(0, 140)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 
-[node name="Name" type="Label" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox"]
+[node name="Name" type="Label" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
 theme_override_font_sizes/font_size = 36
 text = "몬스터"
 horizontal_alignment = 1
 
-[node name="Stats" type="Label" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox"]
+[node name="Stats" type="Label" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "현재 스탯"
 autowrap_mode = 2
 
-[node name="NormalTitle" type="Label" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox"]
+[node name="NormalTitle" type="Label" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.9, 1, 1)
 theme_override_font_sizes/font_size = 30
 text = "현재 일반증강"
 
-[node name="NormalAugments" type="Label" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox"]
+[node name="NormalAugments" type="Label" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "없음"
 autowrap_mode = 2
 
-[node name="SpecialTitle" type="Label" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox"]
+[node name="SpecialTitle" type="Label" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
 theme_override_font_sizes/font_size = 30
 text = "현재 특수증강"
 
-[node name="SpecialAugments" type="Label" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox"]
+[node name="SpecialAugments" type="Label" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "없음"
 autowrap_mode = 2
 
-[node name="Guide" type="Label" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox"]
+[node name="Guide" type="Label" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.66, 0.62, 0.7, 1)
 theme_override_font_sizes/font_size = 24
@@ -612,98 +618,104 @@ offset_bottom = 1424.0
 grow_horizontal = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_hero_info")
 
-[node name="Scroll" type="ScrollContainer" parent="HUD/HeroInfoPanel"]
+[node name="Root" type="VBoxContainer" parent="HUD/HeroInfoPanel"]
 layout_mode = 2
-horizontal_scroll_mode = 0
-vertical_scroll_mode = 1
+theme_override_constants/separation = 8
 
-[node name="Margin" type="MarginContainer" parent="HUD/HeroInfoPanel/Scroll"]
+[node name="Header" type="HBoxContainer" parent="HUD/HeroInfoPanel/Root"]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 22
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 22
+custom_minimum_size = Vector2(0, 76)
 
-[node name="VBox" type="VBoxContainer" parent="HUD/HeroInfoPanel/Scroll/Margin"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 14
-
-[node name="Header" type="HBoxContainer" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
-layout_mode = 2
-
-[node name="Title" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox/Header"]
+[node name="Title" type="Label" parent="HUD/HeroInfoPanel/Root/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.55, 0.58, 1)
 theme_override_font_sizes/font_size = 36
 text = "용사 정보"
 
-[node name="Close" type="Button" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox/Header"]
+[node name="Close" type="Button" parent="HUD/HeroInfoPanel/Root/Header"]
 custom_minimum_size = Vector2(82, 64)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "닫기"
 
-[node name="Portrait" type="TextureRect" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+[node name="Scroll" type="ScrollContainer" parent="HUD/HeroInfoPanel/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 1
+
+[node name="Margin" type="MarginContainer" parent="HUD/HeroInfoPanel/Root/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 22
+
+[node name="VBox" type="VBoxContainer" parent="HUD/HeroInfoPanel/Root/Scroll/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="Portrait" type="TextureRect" parent="HUD/HeroInfoPanel/Root/Scroll/Margin/VBox"]
 custom_minimum_size = Vector2(0, 250)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 
-[node name="Name" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+[node name="Name" type="Label" parent="HUD/HeroInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.72, 0.72, 1)
 theme_override_font_sizes/font_size = 36
 text = "용사"
 horizontal_alignment = 1
 
-[node name="StatsTitle" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+[node name="StatsTitle" type="Label" parent="HUD/HeroInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.55, 0.58, 1)
 theme_override_font_sizes/font_size = 30
 text = "현재 능력치"
 
-[node name="Stats" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+[node name="Stats" type="Label" parent="HUD/HeroInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "현재 능력치"
 autowrap_mode = 2
 
-[node name="AbilityTitle" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+[node name="AbilityTitle" type="Label" parent="HUD/HeroInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.68, 0.48, 1)
 theme_override_font_sizes/font_size = 30
 text = "전투 능력"
 
-[node name="Abilities" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+[node name="Abilities" type="Label" parent="HUD/HeroInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "능력 정보"
 autowrap_mode = 2
 
-[node name="BuildTitle" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+[node name="BuildTitle" type="Label" parent="HUD/HeroInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.78, 0.68, 1, 1)
 theme_override_font_sizes/font_size = 30
 text = "현재 용사 빌드"
 
-[node name="Build" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+[node name="Build" type="Label" parent="HUD/HeroInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "아직 선택 없음"
 autowrap_mode = 2
 
-[node name="AI" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+[node name="AI" type="Label" parent="HUD/HeroInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.68, 0.74, 1)
 theme_override_font_sizes/font_size = 24
 text = "AI 판단 정보"
 autowrap_mode = 2
 
-[node name="Guide" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+[node name="Guide" type="Label" parent="HUD/HeroInfoPanel/Root/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.66, 0.62, 0.7, 1)
 theme_override_font_sizes/font_size = 24
