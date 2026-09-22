@@ -585,7 +585,7 @@ func _apply_new_ui_assets() -> void:
 		header.move_child(logo, 0)
 
 	var stage_card := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard
-	var stage_texture := _load_png_texture_cropped(UI_CARD_FRAME_DIR + "/ui12.png")
+	var stage_texture := _load_png_texture_cropped(UI_CARD_FRAME_DIR + "/ui10.png")
 	if stage_card != null and stage_texture != null:
 		var old_stage_skin := stage_card.get_node_or_null("StageCardSkin")
 		if old_stage_skin != null:
@@ -599,10 +599,10 @@ func _apply_new_ui_assets() -> void:
 		stage_skin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		stage_skin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		stage_skin.set_anchors_preset(Control.PRESET_FULL_RECT)
-		stage_skin.offset_left = 22.0
-		stage_skin.offset_top = 12.0
-		stage_skin.offset_right = -22.0
-		stage_skin.offset_bottom = -12.0
+		stage_skin.offset_left = 18.0
+		stage_skin.offset_top = 8.0
+		stage_skin.offset_right = -18.0
+		stage_skin.offset_bottom = -8.0
 		stage_card.add_child(stage_skin)
 		stage_card.move_child(stage_skin, 0)
 
