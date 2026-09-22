@@ -279,6 +279,10 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 
+	if hero_archetype == "rogue_combo":
+		_physics_process_rogue(delta)
+		return
+
 	ai_memory_clock += delta
 	_prune_offensive_memory()
 	_prune_status_memory()
@@ -335,6 +339,593 @@ func _physics_process(delta: float) -> void:
 		_fire_projectile(target)
 
 	_update_stage1_pose_visual(delta)
+
+func _physics_process_rogue(delta: float) -> void:
+	ai_memory_clock += delta
+	_prune_offensive_memory()
+	_prune_status_memory()
+
+	ai_observation_timer = maxf(ai_observation_timer - delta, 0.0)
+	if ai_observation_timer <= 0.0:
+		_refresh_ai_observation()
+
+	attack_timer = maxf(attack_timer - delta, 0.0)
+	retarget_timer = maxf(retarget_timer - delta, 0.0)
+	wander_timer = maxf(wander_timer - delta, 0.0)
+	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
+	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
+	ultimate_flash_timer = maxf(ultimate_flash_timer - delta, 0.0)
+	ultimate_cooldown_timer = maxf(
+		ultimate_cooldown_timer - delta,
+		0.0
+	)
+	rogue_slash_cooldown_timer = maxf(
+		rogue_slash_cooldown_timer - delta,
+		0.0
+	)
+
+	_update_invulnerability(delta)
+	_update_rogue_slash(delta)
+
+	var passive_charge := maxf(
+		float(ultimate_config.get("charge_per_second", 0.0)),
+		0.0
+	)
+	if passive_charge > 0.0 and not rogue_assassination_active:
+		_add_ultimate_charge(passive_charge * delta)
+
+	if hit_flash_timer > 0.0:
+		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
+		queue_redraw()
+
+	if level_flash_timer > 0.0:
+		level_flash_timer = maxf(level_flash_timer - delta, 0.0)
+		queue_redraw()
+
+	if slow_timer > 0.0:
+		slow_timer = maxf(slow_timer - delta, 0.0)
+		if slow_timer <= 0.0:
+			move_multiplier = 1.0
+			queue_redraw()
+
+	if rogue_assassination_active:
+		_update_rogue_assassination(delta)
+		return
+
+	if _rogue_can_start_assassination():
+		_start_rogue_assassination()
+		return
+
+	if (
+		not rogue_slash_active
+		and rogue_slash_cooldown_timer <= 0.0
+		and _rogue_should_use_slash()
+	):
+		_start_rogue_slash()
+
+	if (
+		not is_instance_valid(target)
+		or target.is_queued_for_deletion()
+		or retarget_timer <= 0.0
+	):
+		target = _find_nearest_monster()
+		retarget_timer = 0.10
+
+	if not is_instance_valid(target):
+		_move_without_monsters()
+		_update_rogue_pose_visual(delta)
+		return
+
+	var distance := global_position.distance_to(target.global_position)
+	var speed_scale := 1.0
+	if rogue_slash_active:
+		speed_scale = clampf(
+			float(
+				rogue_slash_config.get(
+					"move_speed_multiplier",
+					0.48
+				)
+			),
+			0.1,
+			1.0
+		)
+
+	if distance > attack_range * 0.88:
+		var move_direction := global_position.direction_to(
+			target.global_position
+		)
+		velocity = (
+			move_direction
+			* move_speed
+			* move_multiplier
+			* speed_scale
+		)
+		move_and_slide()
+		_clamp_to_battlefield()
+	else:
+		velocity = Vector2.ZERO
+
+	if (
+		not rogue_slash_active
+		and distance <= attack_range
+		and attack_timer <= 0.0
+	):
+		_rogue_combo_attack(target)
+
+	_update_rogue_pose_visual(delta)
+
+func _rogue_combo_attack(current_target: Node2D) -> void:
+	if not is_instance_valid(current_target):
+		return
+
+	var direction := global_position.direction_to(
+		current_target.global_position
+	)
+	if direction.length_squared() <= 0.0:
+		direction = Vector2.RIGHT
+
+	_face_attack_direction(direction.x)
+
+	var lunge_distance := maxf(
+		float(rogue_combo_config.get("lunge_distance", 62.0)),
+		0.0
+	)
+	var current_distance := global_position.distance_to(
+		current_target.global_position
+	)
+	var usable_lunge := minf(
+		lunge_distance,
+		maxf(current_distance - 38.0, 0.0)
+	)
+	global_position += direction * usable_lunge
+	_clamp_to_battlefield()
+
+	var damage_multipliers = rogue_combo_config.get(
+		"damage_multipliers",
+		[0.75, 0.85, 1.10]
+	)
+	var damage_ratio := 1.0
+	if (
+		typeof(damage_multipliers) == TYPE_ARRAY
+		and rogue_combo_index < damage_multipliers.size()
+	):
+		damage_ratio = float(damage_multipliers[rogue_combo_index])
+
+	var damage := maxi(
+		1,
+		int(round(
+			float(attack_damage)
+			* damage_ratio
+			* rogue_combo_damage_multiplier
+		))
+	)
+	if current_target.has_method("take_damage"):
+		current_target.call("take_damage", damage)
+
+	if is_instance_valid(current_target):
+		_rogue_apply_knockback(
+			current_target,
+			direction,
+			float(
+				rogue_combo_config.get(
+					"knockback_distance",
+					42.0
+				)
+			)
+		)
+
+	attack_pose_timer = 0.26
+	_restart_stage1_animation("attack", 1.0)
+	_play_rogue_effect(
+		rogue_attack_effect,
+		"stab",
+		direction
+	)
+
+	_add_ultimate_charge(
+		float(ultimate_config.get("charge_on_attack", 0.0))
+	)
+
+	var hit_intervals = rogue_combo_config.get(
+		"hit_intervals",
+		[0.22, 0.24, 1.05]
+	)
+	var interval := attack_cooldown
+	if (
+		typeof(hit_intervals) == TYPE_ARRAY
+		and rogue_combo_index < hit_intervals.size()
+	):
+		interval = float(hit_intervals[rogue_combo_index])
+
+	if rogue_combo_index >= 2:
+		interval *= rogue_combo_recovery_multiplier
+
+	attack_timer = maxf(interval, 0.08)
+	rogue_combo_index = (rogue_combo_index + 1) % 3
+
+func _rogue_apply_knockback(
+	current_target: Node2D,
+	direction: Vector2,
+	distance: float
+) -> void:
+	if not is_instance_valid(current_target) or distance <= 0.0:
+		return
+	if bool(current_target.get("dying")):
+		return
+
+	current_target.global_position += direction.normalized() * distance
+
+func _rogue_should_use_slash() -> bool:
+	if rogue_slash_config.is_empty():
+		return false
+
+	var radius := maxf(
+		float(rogue_slash_config.get("radius", 205.0)),
+		0.0
+	)
+	var required := maxi(
+		int(
+			rogue_slash_config.get(
+				"enemy_count_trigger",
+				3
+			)
+		),
+		1
+	)
+	var nearby := 0
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if global_position.distance_to(monster.global_position) > radius:
+			continue
+		nearby += 1
+		if nearby >= required:
+			return true
+	return false
+
+func _start_rogue_slash() -> void:
+	rogue_slash_active = true
+	rogue_slash_duration_timer = maxf(
+		float(rogue_slash_config.get("duration", 1.20)),
+		0.1
+	)
+	rogue_slash_tick_timer = 0.0
+	rogue_slash_cooldown_timer = maxf(
+		float(rogue_slash_config.get("cooldown", 14.0)),
+		0.0
+	)
+
+	var shield_ratio := maxf(
+		float(
+			rogue_slash_config.get(
+				"shield_hp_ratio",
+				0.18
+			)
+		)
+		+ rogue_slash_shield_ratio_bonus,
+		0.0
+	)
+	shield_max_hp = float(max_hp) * shield_ratio
+	shield_hp = shield_max_hp
+
+	_apply_rogue_slash_tick()
+	queue_redraw()
+
+func _update_rogue_slash(delta: float) -> void:
+	if not rogue_slash_active:
+		return
+
+	rogue_slash_duration_timer = maxf(
+		rogue_slash_duration_timer - delta,
+		0.0
+	)
+	rogue_slash_tick_timer = maxf(
+		rogue_slash_tick_timer - delta,
+		0.0
+	)
+
+	if rogue_slash_tick_timer <= 0.0:
+		_apply_rogue_slash_tick()
+		rogue_slash_tick_timer = maxf(
+			float(
+				rogue_slash_config.get(
+					"tick_interval",
+					0.24
+				)
+			),
+			0.08
+		)
+
+	if rogue_slash_duration_timer <= 0.0:
+		rogue_slash_active = false
+		shield_effect.visible = false
+
+func _apply_rogue_slash_tick() -> void:
+	var radius := maxf(
+		float(rogue_slash_config.get("radius", 205.0)),
+		0.0
+	)
+	var damage := maxi(
+		1,
+		int(round(
+			float(attack_damage)
+			* maxf(
+				float(
+					rogue_slash_config.get(
+						"damage_ratio",
+						0.50
+					)
+				),
+				0.0
+			)
+		))
+	)
+
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if global_position.distance_to(monster.global_position) > radius:
+			continue
+		if monster.has_method("take_damage"):
+			monster.call("take_damage", damage)
+
+	if shield_effect.sprite_frames != null:
+		shield_effect.visible = true
+		shield_effect.stop()
+		shield_effect.animation = &"slash"
+		shield_effect.frame = 0
+		shield_effect.play(&"slash")
+
+func _rogue_can_start_assassination() -> bool:
+	if ultimate_config.is_empty():
+		return false
+	if ultimate_cooldown_timer > 0.0:
+		return false
+
+	var charge_max := maxf(
+		float(ultimate_config.get("charge_max", 100.0)),
+		1.0
+	)
+	if ultimate_charge + 0.001 < charge_max:
+		return false
+
+	return _find_rogue_assassination_target() != null
+
+func _start_rogue_assassination() -> void:
+	rogue_assassination_active = true
+	rogue_assassination_hits_left = maxi(
+		int(ultimate_config.get("hit_count", 5))
+		+ rogue_assassination_hit_bonus,
+		1
+	)
+	rogue_assassination_cast_timer = maxf(
+		float(ultimate_config.get("cast_time", 0.35)),
+		0.0
+	)
+	rogue_assassination_timer = 0.0
+	ultimate_charge = 0.0
+	ultimate_cooldown_timer = maxf(
+		float(ultimate_config.get("cooldown", 8.0)),
+		0.0
+	)
+	velocity = Vector2.ZERO
+	modulate.a = 0.18
+	ultimate_used.emit(
+		String(ultimate_config.get("id", "shadow_assassination")),
+		String(ultimate_config.get("name", "급습-암살"))
+	)
+	queue_redraw()
+
+func _update_rogue_assassination(delta: float) -> void:
+	velocity = Vector2.ZERO
+
+	if rogue_assassination_cast_timer > 0.0:
+		rogue_assassination_cast_timer = maxf(
+			rogue_assassination_cast_timer - delta,
+			0.0
+		)
+		return
+
+	rogue_assassination_timer = maxf(
+		rogue_assassination_timer - delta,
+		0.0
+	)
+	if rogue_assassination_timer > 0.0:
+		return
+
+	var current_target := _find_rogue_assassination_target()
+	if current_target == null:
+		_end_rogue_assassination()
+		return
+
+	var approach_direction := global_position.direction_to(
+		current_target.global_position
+	)
+	if approach_direction.length_squared() <= 0.0:
+		approach_direction = Vector2.RIGHT
+
+	var behind_offset := maxf(
+		float(ultimate_config.get("behind_offset", 54.0)),
+		0.0
+	)
+	global_position = (
+		current_target.global_position
+		+ approach_direction * behind_offset
+	)
+	_clamp_to_battlefield()
+	_face_attack_direction(-approach_direction.x)
+
+	var base_damage := maxi(
+		1,
+		int(round(
+			float(attack_damage)
+			* maxf(
+				float(
+					ultimate_config.get(
+						"damage_ratio",
+						0.85
+					)
+				),
+				0.0
+			)
+		))
+	)
+	var damage := base_damage
+	var stage_event_type := String(
+		current_target.get_meta(
+			"stage_event_type",
+			""
+		)
+	)
+	var current_target_hp = current_target.get("current_hp")
+	var max_target_hp = current_target.get("max_hp")
+	var is_special_target := not stage_event_type.is_empty()
+
+	if (
+		not is_special_target
+		and current_target_hp != null
+		and max_target_hp != null
+	):
+		var execute_ratio := clampf(
+			float(
+				ultimate_config.get(
+					"execute_hp_ratio",
+					0.30
+				)
+			)
+			+ rogue_execute_threshold_bonus,
+			0.0,
+			0.35
+		)
+		var hp_ratio := (
+			float(current_target_hp)
+			/ float(maxi(int(max_target_hp), 1))
+		)
+		if hp_ratio <= execute_ratio:
+			damage = maxi(int(current_target_hp), damage)
+	elif is_special_target:
+		damage = maxi(
+			1,
+			int(round(
+				float(damage)
+				* maxf(
+					float(
+						ultimate_config.get(
+							"elite_damage_multiplier",
+							1.75
+						)
+					),
+					1.0
+				)
+			))
+		)
+
+	if current_target.has_method("take_damage"):
+		current_target.call("take_damage", damage)
+
+	attack_pose_timer = 0.20
+	_restart_stage1_animation("attack", 1.35)
+	_play_rogue_effect(
+		channel_effect,
+		"assassinate",
+		-approach_direction
+	)
+
+	rogue_assassination_hits_left -= 1
+	if rogue_assassination_hits_left <= 0:
+		_end_rogue_assassination()
+		return
+
+	rogue_assassination_timer = maxf(
+		float(ultimate_config.get("hit_interval", 0.18)),
+		0.08
+	)
+
+func _find_rogue_assassination_target() -> Node2D:
+	var radius := maxf(
+		float(ultimate_config.get("target_radius", 520.0)),
+		1.0
+	)
+	var best: Node2D = null
+	var best_score := INF
+
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+
+		var hp_value = monster.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+
+		var distance := global_position.distance_to(
+			monster.global_position
+		)
+		if distance > radius:
+			continue
+
+		var hp_ratio := 1.0
+		var max_hp_value = monster.get("max_hp")
+		if hp_value != null and max_hp_value != null:
+			hp_ratio = (
+				float(hp_value)
+				/ float(maxi(int(max_hp_value), 1))
+			)
+
+		var score := distance + hp_ratio * 120.0
+		if score < best_score:
+			best_score = score
+			best = monster
+
+	return best
+
+func _end_rogue_assassination() -> void:
+	rogue_assassination_active = false
+	rogue_assassination_hits_left = 0
+	rogue_assassination_timer = 0.0
+	rogue_assassination_cast_timer = 0.0
+	modulate.a = 1.0
+	channel_effect.visible = false
+	queue_redraw()
+
+func _play_rogue_effect(
+	effect_sprite: AnimatedSprite2D,
+	animation_name: String,
+	direction: Vector2
+) -> void:
+	if effect_sprite.sprite_frames == null:
+		return
+	if not effect_sprite.sprite_frames.has_animation(animation_name):
+		return
+
+	effect_sprite.visible = true
+	effect_sprite.position = direction.normalized() * 28.0
+	effect_sprite.rotation = direction.angle()
+	effect_sprite.stop()
+	effect_sprite.animation = animation_name
+	effect_sprite.frame = 0
+	effect_sprite.play(animation_name)
+
+func _update_rogue_pose_visual(delta: float) -> void:
+	if not hero_sprite.visible or is_dying:
+		return
+	if hit_pose_timer > 0.0 or attack_pose_timer > 0.0:
+		return
+
+	_update_facing_from_horizontal(velocity.x, delta)
+
+	if velocity.length() > 4.0:
+		_play_stage1_animation("move", 1.0)
+	else:
+		_play_stage1_animation("idle", 1.0)
 
 func _apply_profile_visual() -> void:
 	hero_sprite.visible = false
