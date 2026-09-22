@@ -22,6 +22,30 @@ corner_radius_top_right = 16
 corner_radius_bottom_right = 16
 corner_radius_bottom_left = 16
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hero_bookmark"]
+bg_color = Color(0.28, 0.055, 0.07, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.22, 0.25, 0.98)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hero_info"]
+bg_color = Color(0.05, 0.04, 0.055, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.78, 0.18, 0.22, 0.98)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
 [node name="Main" type="Control"]
 theme = ExtResource("3_game_theme")
 layout_mode = 3
@@ -325,6 +349,7 @@ grow_vertical = 0
 color = Color(0.055, 0.058, 0.078, 0.98)
 
 [node name="BuildLabel" type="Label" parent="HUD/BottomBar"]
+visible = false
 offset_left = 28.0
 offset_top = 8.0
 offset_right = 1052.0
@@ -337,7 +362,7 @@ clip_text = true
 
 [node name="Status" type="Label" parent="HUD/BottomBar"]
 offset_left = 28.0
-offset_top = 36.0
+offset_top = 8.0
 offset_right = 790.0
 offset_bottom = 64.0
 theme_override_font_sizes/font_size = 24
@@ -431,6 +456,24 @@ offset_bottom = 456.0
 grow_horizontal = 0
 theme_override_font_sizes/font_size = 30
 text = "◀ 상세정보"
+focus_mode = 0
+mouse_filter = 0
+
+[node name="HeroInfoBookmark" type="Button" parent="HUD"]
+z_index = 200
+anchors_preset = 4
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -200.0
+offset_top = 470.0
+offset_right = -8.0
+offset_bottom = 596.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("StyleBoxFlat_hero_bookmark")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hero_bookmark")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_hero_bookmark")
+text = "◀ 용사정보"
 focus_mode = 0
 mouse_filter = 0
 
@@ -550,6 +593,117 @@ text = "없음"
 autowrap_mode = 2
 
 [node name="Guide" type="Label" parent="HUD/MonsterInfoPanel/Scroll/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.66, 0.62, 0.7, 1)
+theme_override_font_sizes/font_size = 24
+text = "이 창을 열어도 전투는 계속 진행됩니다."
+autowrap_mode = 2
+
+[node name="HeroInfoPanel" type="PanelContainer" parent="HUD"]
+visible = false
+z_index = 210
+anchors_preset = 4
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -500.0
+offset_top = 290.0
+offset_right = -15.0
+offset_bottom = 1424.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_hero_info")
+
+[node name="Scroll" type="ScrollContainer" parent="HUD/HeroInfoPanel"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 1
+
+[node name="Margin" type="MarginContainer" parent="HUD/HeroInfoPanel/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 22
+
+[node name="VBox" type="VBoxContainer" parent="HUD/HeroInfoPanel/Scroll/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="Header" type="HBoxContainer" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.55, 0.58, 1)
+theme_override_font_sizes/font_size = 36
+text = "용사 정보"
+
+[node name="Close" type="Button" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox/Header"]
+custom_minimum_size = Vector2(82, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "닫기"
+
+[node name="Portrait" type="TextureRect" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+custom_minimum_size = Vector2(0, 250)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="Name" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.72, 0.72, 1)
+theme_override_font_sizes/font_size = 36
+text = "용사"
+horizontal_alignment = 1
+
+[node name="StatsTitle" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.55, 0.58, 1)
+theme_override_font_sizes/font_size = 30
+text = "현재 능력치"
+
+[node name="Stats" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "현재 능력치"
+autowrap_mode = 2
+
+[node name="AbilityTitle" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.68, 0.48, 1)
+theme_override_font_sizes/font_size = 30
+text = "전투 능력"
+
+[node name="Abilities" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "능력 정보"
+autowrap_mode = 2
+
+[node name="BuildTitle" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.68, 1, 1)
+theme_override_font_sizes/font_size = 30
+text = "현재 용사 빌드"
+
+[node name="Build" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "아직 선택 없음"
+autowrap_mode = 2
+
+[node name="AI" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.68, 0.74, 1)
+theme_override_font_sizes/font_size = 24
+text = "AI 판단 정보"
+autowrap_mode = 2
+
+[node name="Guide" type="Label" parent="HUD/HeroInfoPanel/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.66, 0.62, 0.7, 1)
 theme_override_font_sizes/font_size = 24
