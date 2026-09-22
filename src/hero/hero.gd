@@ -441,6 +441,7 @@ func _ready() -> void:
 	_apply_stage1_channel_visual()
 	_apply_stage2_rogue_effect_visuals()
 	_apply_stage3_fighter_effect_visuals()
+	_apply_stage4_gunner_effect_visuals()
 	if (
 		not rogue_attack_effect.animation_finished.is_connected(
 			Callable(self, "_on_rogue_attack_effect_finished")
@@ -613,6 +614,7 @@ func _gunner_attack(current_target: Node2D) -> void:
 	attack_pose_timer = 0.30
 	_face_attack_direction(direction.x)
 	_restart_stage1_animation("attack", 1.0)
+	_play_gunner_muzzle_flash(direction)
 	_spawn_gunner_bullet(direction)
 	var random_angle := deg_to_rad(randf_range(-float(gunner_config.get("random_shot_angle_degrees", 28.0)), float(gunner_config.get("random_shot_angle_degrees", 28.0))))
 	_spawn_gunner_bullet(direction.rotated(random_angle))
@@ -723,6 +725,7 @@ func _update_gunner_deadeye(delta: float) -> void:
 	_clamp_to_battlefield()
 	gunner_deadeye_shot_timer = maxf(gunner_deadeye_shot_timer - delta, 0.0)
 	if gunner_deadeye_shot_timer <= 0.0 and gunner_deadeye_shots_left > 0:
+		_play_gunner_muzzle_flash(gunner_deadeye_direction)
 		_spawn_gunner_bullet(gunner_deadeye_direction)
 		gunner_deadeye_shots_left -= 1
 		gunner_deadeye_shot_timer = maxf(float(gunner_config.get("deadeye_shot_interval", 0.08)), 0.03)
@@ -4315,6 +4318,55 @@ func _apply_stage3_fighter_effect_visuals() -> void:
 	shield_effect.scale = Vector2(0.60, 0.60)
 	shield_effect.position = Vector2.ZERO
 	shield_effect.z_index = 3
+
+
+func _apply_stage4_gunner_effect_visuals() -> void:
+	if hero_archetype != "pistol_gunner":
+		return
+
+	rogue_attack_effect.visible = false
+	rogue_attack_effect.sprite_frames = null
+	rogue_attack_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.remove_animation(&"default")
+	frames.add_animation(&"muzzle")
+	frames.set_animation_loop(&"muzzle", false)
+	frames.set_animation_speed(&"muzzle", 28.0)
+
+	for index in range(1, 8):
+		var path := "res://assets/art/heroes/stage4_gunner/frames/effect/effect_explosion_%02d.png" % index
+		var texture := _load_stage1_texture(path)
+		if texture == null:
+			push_warning("Stage 4 muzzle flash frame load failed: %s" % path)
+			continue
+		frames.add_frame(&"muzzle", texture)
+
+	if frames.get_frame_count(&"muzzle") <= 0:
+		return
+
+	rogue_attack_effect.sprite_frames = frames
+	rogue_attack_effect.scale = Vector2(0.30, 0.30)
+	rogue_attack_effect.z_index = 4
+
+
+func _play_gunner_muzzle_flash(direction: Vector2) -> void:
+	if rogue_attack_effect.sprite_frames == null:
+		return
+	if not rogue_attack_effect.sprite_frames.has_animation(&"muzzle"):
+		return
+	var dir := direction.normalized()
+	if dir.length_squared() <= 0.0:
+		dir = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+	rogue_attack_effect.position = dir * 48.0 + Vector2(0.0, -6.0)
+	rogue_attack_effect.rotation = dir.angle()
+	rogue_attack_effect.visible = true
+	rogue_attack_effect.stop()
+	rogue_attack_effect.animation = &"muzzle"
+	rogue_attack_effect.frame = 0
+	rogue_attack_effect.frame_progress = 0.0
+	rogue_attack_effect.play(&"muzzle")
+
 
 func _add_prefixed_effect_animation(
 	frames: SpriteFrames,
