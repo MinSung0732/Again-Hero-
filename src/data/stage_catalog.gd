@@ -57,7 +57,7 @@ const STAGES = {
 	"stage_2": {
 		"id": "stage_2",
 		"number": 2,
-		"display_name": "그림자 도적",
+		"display_name": "두 번째 침입자",
 		"hero_id": "swift_hunter",
 		"hero_ai_profile_id": "stage_2_aggressive",
 		"portrait_path": "res://assets/art/heroes/stage2_rogue/stage2_hero_portrait2.png",
