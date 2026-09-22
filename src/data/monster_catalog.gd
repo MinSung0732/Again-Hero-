@@ -9,6 +9,7 @@ const MONSTERS := {
 		"name": "슬라임",
 		"role": "swarm",
 		"base_cost": 3.0,
+		"summon_exp": 3.0,
 		"default_unlocked": true,
 		"shards_required": 20,
 		"rarity": "common",
@@ -37,6 +38,7 @@ const MONSTERS := {
 		"name": "거미",
 		"role": "controller",
 		"base_cost": 7.0,
+		"summon_exp": 7.0,
 		"default_unlocked": true,
 		"shards_required": 30,
 		"rarity": "rare",
@@ -64,6 +66,7 @@ const MONSTERS := {
 		"name": "오크",
 		"role": "tank",
 		"base_cost": 18.0,
+		"summon_exp": 18.0,
 		"default_unlocked": true,
 		"shards_required": 40,
 		"rarity": "legendary",
@@ -92,6 +95,7 @@ const MONSTERS := {
 		"name": "폭탄쥐",
 		"role": "burst",
 		"base_cost": 12.0,
+		"summon_exp": 12.0,
 		"default_unlocked": false,
 		"shards_required": 30,
 		"rarity": "rare",
@@ -151,6 +155,10 @@ static func get_role(monster_id: String) -> String:
 static func get_base_cost(monster_id: String) -> float:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
 	return float(data.get("base_cost", 0.0))
+
+static func get_summon_exp(monster_id: String) -> float:
+	var data: Dictionary = MONSTERS.get(monster_id, {})
+	return maxf(float(data.get("summon_exp", 0.0)), 0.0)
 
 static func get_role_label(role_id: String) -> String:
 	return String(ROLE_LABELS.get(role_id, role_id))
