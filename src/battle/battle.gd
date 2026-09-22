@@ -353,16 +353,49 @@ func _apply_permanent_research() -> void:
 	var notebook_level := int(permanent_research_levels.get("tactical_notebook", 0))
 	var experiment_level := int(permanent_research_levels.get("rapid_experiment", 0))
 
-	monster_damage_multiplier *= 1.0 + 0.01 * power_level
-	monster_hp_multiplier *= 1.0 + 0.01 * vitality_level
-	monster_speed_multiplier *= 1.0 + 0.0035 * mobility_level
-	monster_attack_speed_multiplier *= (
-		1.0 / (1.0 + 0.005 * attack_speed_level)
+	var power_points := RESEARCH_CATALOG.get_effective_level_points(
+		"monster_power",
+		power_level
 	)
-	summon_cost_multiplier *= maxf(0.80, 1.0 - 0.01 * summon_level)
-	command_regen_per_second += 0.15 * cycle_level
-	max_command += 5.0 * reservoir_level
-	demon_exp_gain_multiplier += 0.03 * experiment_level
+	var vitality_points := RESEARCH_CATALOG.get_effective_level_points(
+		"monster_vitality",
+		vitality_level
+	)
+	var mobility_points := RESEARCH_CATALOG.get_effective_level_points(
+		"monster_mobility",
+		mobility_level
+	)
+	var attack_speed_points := RESEARCH_CATALOG.get_effective_level_points(
+		"monster_attack_speed",
+		attack_speed_level
+	)
+	var summon_points := RESEARCH_CATALOG.get_effective_level_points(
+		"summon_efficiency",
+		summon_level
+	)
+	var cycle_points := RESEARCH_CATALOG.get_effective_level_points(
+		"mana_cycle",
+		cycle_level
+	)
+	var reservoir_points := RESEARCH_CATALOG.get_effective_level_points(
+		"mana_reservoir",
+		reservoir_level
+	)
+	var experiment_points := RESEARCH_CATALOG.get_effective_level_points(
+		"rapid_experiment",
+		experiment_level
+	)
+
+	monster_damage_multiplier *= 1.0 + 0.01 * power_points
+	monster_hp_multiplier *= 1.0 + 0.01 * vitality_points
+	monster_speed_multiplier *= 1.0 + 0.0035 * mobility_points
+	monster_attack_speed_multiplier *= (
+		1.0 / (1.0 + 0.005 * attack_speed_points)
+	)
+	summon_cost_multiplier *= maxf(0.80, 1.0 - 0.01 * summon_points)
+	command_regen_per_second += 0.15 * cycle_points
+	max_command += 5.0 * reservoir_points
+	demon_exp_gain_multiplier += 0.03 * experiment_points
 	demon_reroll_max += notebook_level
 	demon_rerolls_left = demon_reroll_max
 
