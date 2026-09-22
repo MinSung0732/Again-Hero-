@@ -197,7 +197,7 @@ const AUGMENTS = [
 		"synergy_rules": [
 			{"source": "build_tag_stacks", "key": "durability", "weight": 0.80, "cap": 2.40},
 		],
-	},,
+	},
 	{
 		"id": "rogue_edge",
 		"name": "예리한 연격",
