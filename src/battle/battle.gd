@@ -52,6 +52,8 @@ const DEMON_LEVEL_MONSTER_HP_GROWTH := 1.05
 const DEMON_LEVEL_MONSTER_DAMAGE_GROWTH := 1.05
 const DEMON_LEVEL_MONSTER_SPEED_GROWTH := 1.02
 const DEMON_LEVEL_MONSTER_SPEED_MAX_MULTIPLIER := 1.25
+const HEAL_ITEM_KILLS_REQUIRED := 30
+const MAX_ACTIVE_HEAL_ITEMS := 2
 
 
 var hero: Node2D
@@ -1111,10 +1113,11 @@ func _on_monster_died(monster: Node) -> void:
 	run_metrics.record_monster_death(monster_type)
 
 	if death_type != "self_destruct":
-		hero_kills_toward_heal_item += 1
-		while hero_kills_toward_heal_item >= 30:
-			hero_kills_toward_heal_item -= 30
-			_spawn_random_heal_item()
+		hero_kills_toward_heal_item = mini(
+			hero_kills_toward_heal_item + 1,
+			HEAL_ITEM_KILLS_REQUIRED
+		)
+		_try_spawn_heal_item_from_kills()
 
 	var original_cost: float = float(monster_summon_costs.get(instance_id, 0.0))
 	monster_summon_costs.erase(instance_id)
@@ -1207,8 +1210,21 @@ func _process_special_death_spawn(
 				}
 			)
 
+func _try_spawn_heal_item_from_kills() -> void:
+	if hero_kills_toward_heal_item < HEAL_ITEM_KILLS_REQUIRED:
+		return
+	if get_tree().get_nodes_in_group("heal_items").size() >= MAX_ACTIVE_HEAL_ITEMS:
+		# Keep the trigger armed instead of consuming kills while the field is full.
+		return
+
+	hero_kills_toward_heal_item = 0
+	_spawn_random_heal_item()
+
+
 func _spawn_random_heal_item() -> void:
 	if not is_instance_valid(hero):
+		return
+	if get_tree().get_nodes_in_group("heal_items").size() >= MAX_ACTIVE_HEAL_ITEMS:
 		return
 
 	var margin := 150.0
