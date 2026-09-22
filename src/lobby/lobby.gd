@@ -15,6 +15,9 @@ const BATTLE_SCENE_PATH := "res://src/main/Main.tscn"
 const TEAM_MAX_SLOTS := 3
 const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png"
 
+const UI_FRAME_LARGE_DIR := "res://assets/art/UI/01_large_left_panel"
+const UI_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
+
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 @onready var resource_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ResourceLabel
 @onready var progress_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ProgressLabel
@@ -104,6 +107,7 @@ func _ready() -> void:
 
 	_build_styles()
 	_apply_styles()
+	_apply_asset_frames()
 	_connect_navigation()
 
 	stage_ids = STAGE_CATALOG.get_ordered_stage_ids()
@@ -266,6 +270,205 @@ func _apply_styles() -> void:
 	monster_detail_close_button.add_theme_stylebox_override("hover", primary_button_style)
 	monster_detail_close_button.add_theme_stylebox_override("pressed", primary_button_style)
 
+
+func _apply_asset_frames() -> void:
+	# 큰 고정 영역에는 원본 large frame을 사용한다.
+	_add_asset_frame(
+		$SafeArea/Layout/Header,
+		UI_FRAME_LARGE_DIR,
+		Vector2(82.0, 80.0),
+		Vector2(81.0, 80.0),
+		Vector2(81.0, 79.0),
+		Vector2(81.0, 79.0),
+		61.0,
+		59.0,
+		54.0,
+		54.0
+	)
+	_add_asset_frame(
+		$SafeArea/Layout/Content/ContentFrame,
+		UI_FRAME_LARGE_DIR,
+		Vector2(82.0, 80.0),
+		Vector2(81.0, 80.0),
+		Vector2(81.0, 79.0),
+		Vector2(81.0, 79.0),
+		61.0,
+		59.0,
+		54.0,
+		54.0
+	)
+	_add_asset_frame(
+		$BottomNav,
+		UI_FRAME_LARGE_DIR,
+		Vector2(82.0, 80.0),
+		Vector2(81.0, 80.0),
+		Vector2(81.0, 79.0),
+		Vector2(81.0, 79.0),
+		61.0,
+		59.0,
+		54.0,
+		54.0
+	)
+
+	# 카드/팝업은 더 작은 middle frame을 사용한다.
+	for target in [
+		$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard,
+		$SafeArea/Layout/Content/ShopTab/ShopLayout/ResultPanel,
+		monster_detail_panel,
+		monster_detail_normal_panel,
+		monster_detail_elite_panel,
+	]:
+		_add_asset_frame(
+			target,
+			UI_FRAME_MEDIUM_DIR,
+			Vector2(77.0, 76.0),
+			Vector2(77.0, 76.0),
+			Vector2(77.0, 75.0),
+			Vector2(77.0, 75.0),
+			47.0,
+			46.0,
+			42.0,
+			43.0
+		)
+
+func _add_asset_frame(
+	target: Control,
+	frame_dir: String,
+	top_left_size: Vector2,
+	top_right_size: Vector2,
+	bottom_left_size: Vector2,
+	bottom_right_size: Vector2,
+	top_height: float,
+	bottom_height: float,
+	left_width: float,
+	right_width: float
+) -> void:
+	if target == null:
+		return
+
+	var overlay := Control.new()
+	overlay.name = "AssetFrame"
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.z_index = 30
+	target.add_child(overlay)
+
+	_add_frame_piece(
+		overlay,
+		frame_dir + "/part_01.png",
+		Vector2.ZERO,
+		top_left_size,
+		Vector2.ZERO,
+		Vector2.ZERO
+	)
+	_add_frame_piece(
+		overlay,
+		frame_dir + "/part_02.png",
+		Vector2(1.0, 0.0),
+		top_right_size,
+		Vector2(-top_right_size.x, 0.0),
+		Vector2.ZERO
+	)
+	_add_frame_piece_stretched(
+		overlay,
+		frame_dir + "/part_03.png",
+		Vector2(0.0, 0.0),
+		Vector2(1.0, 0.0),
+		Vector2(top_left_size.x, 0.0),
+		Vector2(-top_right_size.x, top_height)
+	)
+	_add_frame_piece_stretched(
+		overlay,
+		frame_dir + "/part_05.png",
+		Vector2(0.0, 0.0),
+		Vector2(0.0, 1.0),
+		Vector2(0.0, top_left_size.y),
+		Vector2(left_width, -bottom_left_size.y)
+	)
+	_add_frame_piece_stretched(
+		overlay,
+		frame_dir + "/part_06.png",
+		Vector2(1.0, 0.0),
+		Vector2(1.0, 1.0),
+		Vector2(-right_width, top_right_size.y),
+		Vector2(0.0, -bottom_right_size.y)
+	)
+	_add_frame_piece(
+		overlay,
+		frame_dir + "/part_07.png",
+		Vector2(0.0, 1.0),
+		bottom_left_size,
+		Vector2(0.0, -bottom_left_size.y),
+		Vector2.ZERO
+	)
+	_add_frame_piece(
+		overlay,
+		frame_dir + "/part_08.png",
+		Vector2(1.0, 1.0),
+		bottom_right_size,
+		Vector2(-bottom_right_size.x, -bottom_right_size.y),
+		Vector2.ZERO
+	)
+	_add_frame_piece_stretched(
+		overlay,
+		frame_dir + "/part_09.png",
+		Vector2(0.0, 1.0),
+		Vector2(1.0, 1.0),
+		Vector2(bottom_left_size.x, -bottom_height),
+		Vector2(-bottom_right_size.x, 0.0)
+	)
+
+func _add_frame_piece(
+	parent: Control,
+	texture_path: String,
+	anchor: Vector2,
+	piece_size: Vector2,
+	offset: Vector2,
+	extra_offset: Vector2
+) -> void:
+	if not ResourceLoader.exists(texture_path):
+		return
+	var piece := TextureRect.new()
+	piece.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	piece.texture = load(texture_path)
+	piece.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	piece.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	piece.stretch_mode = TextureRect.STRETCH_KEEP
+	piece.anchor_left = anchor.x
+	piece.anchor_top = anchor.y
+	piece.anchor_right = anchor.x
+	piece.anchor_bottom = anchor.y
+	piece.offset_left = offset.x + extra_offset.x
+	piece.offset_top = offset.y + extra_offset.y
+	piece.offset_right = piece.offset_left + piece_size.x
+	piece.offset_bottom = piece.offset_top + piece_size.y
+	parent.add_child(piece)
+
+func _add_frame_piece_stretched(
+	parent: Control,
+	texture_path: String,
+	anchor_start: Vector2,
+	anchor_end: Vector2,
+	offset_start: Vector2,
+	offset_end: Vector2
+) -> void:
+	if not ResourceLoader.exists(texture_path):
+		return
+	var piece := TextureRect.new()
+	piece.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	piece.texture = load(texture_path)
+	piece.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	piece.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	piece.stretch_mode = TextureRect.STRETCH_SCALE
+	piece.anchor_left = anchor_start.x
+	piece.anchor_top = anchor_start.y
+	piece.anchor_right = anchor_end.x
+	piece.anchor_bottom = anchor_end.y
+	piece.offset_left = offset_start.x
+	piece.offset_top = offset_start.y
+	piece.offset_right = offset_end.x
+	piece.offset_bottom = offset_end.y
+	parent.add_child(piece)
 
 func _connect_navigation() -> void:
 	shop_button.pressed.connect(_switch_tab.bind("shop"))
