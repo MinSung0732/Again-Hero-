@@ -78,7 +78,6 @@ const NORMAL_AUGMENTS := [
 				"op": "add_runtime",
 				"target": "demon_exp_gain_multiplier",
 				"value": 0.05,
-				"max": 2.0,
 			},
 		],
 	},
