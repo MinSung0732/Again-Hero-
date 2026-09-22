@@ -17,6 +17,7 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 
 const UI_FRAME_LARGE_DIR := "res://assets/art/UI/01_large_left_panel"
 const UI_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
+const UI_NEW_HEADER_PATH := "res://assets/art/UI/newUI_frame/frame_06.png"
 
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 @onready var resource_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ResourceLabel
@@ -108,6 +109,7 @@ func _ready() -> void:
 	_build_styles()
 	_apply_styles()
 	_apply_asset_frames()
+	_apply_new_header_texture()
 	_connect_navigation()
 
 	stage_ids = STAGE_CATALOG.get_ordered_stage_ids()
@@ -344,7 +346,6 @@ func _apply_styles() -> void:
 func _apply_asset_frames() -> void:
 	# 상단/하단은 모바일에서 장식보다 정보가 우선이라 얇게 유지한다.
 	for target in [
-		$SafeArea/Layout/Header,
 		$BottomNav,
 	]:
 		_add_asset_frame(
@@ -526,6 +527,33 @@ func _add_frame_piece_stretched(
 	piece.offset_right = offset_end.x
 	piece.offset_bottom = offset_end.y
 	parent.add_child(piece)
+
+func _apply_new_header_texture() -> void:
+	var header := $SafeArea/Layout/Header
+	if header == null:
+		return
+
+	var texture := load(UI_NEW_HEADER_PATH) as Texture2D
+	if texture == null:
+		push_warning("newUI header texture failed to load: %s" % UI_NEW_HEADER_PATH)
+		return
+
+	var old := header.get_node_or_null("NewHeaderFrame")
+	if old != null:
+		old.queue_free()
+
+	var frame := TextureRect.new()
+	frame.name = "NewHeaderFrame"
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.texture = texture
+	frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	frame.stretch_mode = TextureRect.STRETCH_SCALE
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	frame.z_index = -1
+	header.add_child(frame)
+	header.move_child(frame, 0)
+
 
 func _connect_navigation() -> void:
 	shop_button.pressed.connect(_switch_tab.bind("shop"))
