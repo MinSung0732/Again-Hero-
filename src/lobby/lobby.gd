@@ -15,21 +15,41 @@ const BATTLE_SCENE_PATH := "res://src/main/Main.tscn"
 const TEAM_MAX_SLOTS := 3
 const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png"
 
-const NEW_UI_FRAME_DIR := "res://assets/art/UI/newUI_frame"
+const UI_FRAME_CONTENT: Texture2D = preload(
+	"res://assets/art/UI/newUI_frame/frame_01.png"
+)
+const UI_FRAME_STAGE_CARD: Texture2D = preload(
+	"res://assets/art/UI/newUI_frame/frame_02.png"
+)
+const UI_FRAME_POPUP: Texture2D = preload(
+	"res://assets/art/UI/newUI_frame/frame_03.png"
+)
+const UI_FRAME_SMALL_CARD: Texture2D = preload(
+	"res://assets/art/UI/newUI_frame/frame_04.png"
+)
+const UI_FRAME_COLLECTION: Texture2D = preload(
+	"res://assets/art/UI/newUI_frame/frame_05.png"
+)
 
-const UI_FRAME_CONTENT := NEW_UI_FRAME_DIR + "/frame_01.png"
-const UI_FRAME_STAGE_CARD := NEW_UI_FRAME_DIR + "/frame_02.png"
-const UI_FRAME_POPUP := NEW_UI_FRAME_DIR + "/frame_03.png"
-const UI_FRAME_SMALL_CARD := NEW_UI_FRAME_DIR + "/frame_04.png"
-const UI_FRAME_COLLECTION := NEW_UI_FRAME_DIR + "/frame_05.png"
+const UI_FRAME_HEADER: Texture2D = preload(
+	"res://assets/art/UI/newUI_frame/frame_06.png"
+)
+const UI_FRAME_BOTTOM_NAV: Texture2D = preload(
+	"res://assets/art/UI/newUI_frame/frame_07.png"
+)
+const UI_FRAME_PRIMARY: Texture2D = preload(
+	"res://assets/art/UI/newUI_frame/frame_08.png"
+)
+const UI_FRAME_SECONDARY: Texture2D = preload(
+	"res://assets/art/UI/newUI_frame/frame_09.png"
+)
 
-const UI_FRAME_HEADER := NEW_UI_FRAME_DIR + "/frame_06.png"
-const UI_FRAME_BOTTOM_NAV := NEW_UI_FRAME_DIR + "/frame_07.png"
-const UI_FRAME_PRIMARY := NEW_UI_FRAME_DIR + "/frame_08.png"
-const UI_FRAME_SECONDARY := NEW_UI_FRAME_DIR + "/frame_09.png"
-
-const UI_FRAME_ARROW := NEW_UI_FRAME_DIR + "/frame_10.png"
-const UI_FRAME_SLOT := NEW_UI_FRAME_DIR + "/frame_11.png"
+const UI_FRAME_ARROW: Texture2D = preload(
+	"res://assets/art/UI/newUI_frame/frame_10.png"
+)
+const UI_FRAME_SLOT: Texture2D = preload(
+	"res://assets/art/UI/newUI_frame/frame_11.png"
+)
 
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 @onready var resource_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ResourceLabel
@@ -421,15 +441,10 @@ func _apply_asset_frames() -> void:
 
 func _apply_nine_patch_frame(
 	target: Control,
-	texture_path: String,
+	texture: Texture2D,
 	patch_margin: int
 ) -> void:
-	if target == null:
-		return
-
-	var texture := load(texture_path) as Texture2D
-	if texture == null:
-		push_warning("UI frame load failed: %s" % texture_path)
+	if target == null or texture == null:
 		return
 
 	var existing := target.get_node_or_null("AssetFrame")
@@ -455,14 +470,9 @@ func _apply_nine_patch_frame(
 
 func _apply_texture_button_frame(
 	button: Button,
-	texture_path: String
+	texture: Texture2D
 ) -> void:
-	if button == null:
-		return
-
-	var texture := load(texture_path) as Texture2D
-	if texture == null:
-		push_warning("UI button frame load failed: %s" % texture_path)
+	if button == null or texture == null:
 		return
 
 	var normal := StyleBoxTexture.new()
