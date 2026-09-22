@@ -599,8 +599,8 @@ func _refresh_monster_info_panel() -> void:
 			continue
 
 		tab.show()
-		var monster_id := String(battle_loadout_ids[index])
-		tab.text = _get_catalog_monster_name(monster_id)
+		var tab_monster_id := String(battle_loadout_ids[index])
+		tab.text = _get_catalog_monster_name(tab_monster_id)
 		tab.disabled = index == monster_info_selected_index
 
 	if (
@@ -612,17 +612,7 @@ func _refresh_monster_info_panel() -> void:
 	var monster_id := String(
 		battle_loadout_ids[monster_info_selected_index]
 	)
-	var detail: Dictionary = {}
-	if battle.has_method("get_monster_run_detail"):
-		detail = battle.call("get_monster_run_detail", monster_id)
-
-	if detail.is_empty():
-		detail = _build_monster_info_fallback(monster_id)
-
-	if detail.is_empty():
-		monster_info_name.text = _get_catalog_monster_name(monster_id)
-		monster_info_stats.text = "현재 정보를 불러오지 못했습니다."
-		return
+	var detail := _build_monster_info_direct(monster_id)
 
 	monster_info_name.text = String(
 		detail.get("name", _get_catalog_monster_name(monster_id))
@@ -630,9 +620,16 @@ func _refresh_monster_info_panel() -> void:
 	monster_info_portrait.texture = _load_monster_info_icon(monster_id)
 
 	var stat_lines: PackedStringArray = []
-	stat_lines.append("현재 스탯 · 마왕 Lv.%d" % int(detail.get("demon_level", 1)))
-	stat_lines.append("생산비용  %.1f" % float(detail.get("cost", 0.0)))
-	stat_lines.append("마왕 EXP  %.1f" % float(detail.get("summon_exp", 0.0)))
+	stat_lines.append(
+		"현재 스탯 · 마왕 Lv.%d"
+		% int(detail.get("demon_level", 1))
+	)
+	stat_lines.append(
+		"생산비용  %.1f" % float(detail.get("cost", 0.0))
+	)
+	stat_lines.append(
+		"마왕 EXP  %.1f" % float(detail.get("summon_exp", 0.0))
+	)
 
 	if detail.has("max_hp"):
 		stat_lines.append("최대 HP  %d" % int(detail["max_hp"]))
@@ -688,132 +685,139 @@ func _refresh_monster_info_panel() -> void:
 		else "\n".join(special_lines)
 	)
 
-func _build_monster_info_fallback(monster_id: String) -> Dictionary:
-	var base_stats := MONSTER_CATALOG.get_base_stats(monster_id)
-	if base_stats.is_empty():
-		return {}
+func _build_monster_info_direct(monster_id: String) -> Dictionary:
+	var catalog_entry = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+	if typeof(catalog_entry) != TYPE_DICTIONARY:
+		return {
+			"name": _get_catalog_monster_name(monster_id),
+			"cost": 0.0,
+			"summon_exp": 0.0,
+			"demon_level": 1,
+			"normal_augments": [],
+			"special_augments": [],
+		}
+
+	var base_stats = catalog_entry.get("base_stats", {})
+	if typeof(base_stats) != TYPE_DICTIONARY:
+		base_stats = {}
 
 	var detail := {
-		"monster_id": monster_id,
-		"name": MONSTER_CATALOG.get_name(monster_id),
-		"cost": battle.get_monster_cost(monster_id),
-		"summon_exp": MONSTER_CATALOG.get_summon_exp(monster_id),
-		"demon_level": int(battle.get("demon_level")),
+		"name": String(catalog_entry.get("name", monster_id)),
+		"cost": float(catalog_entry.get("base_cost", 0.0)),
+		"summon_exp": float(catalog_entry.get("summon_exp", 0.0)),
+		"demon_level": 1,
 		"normal_augments": [],
 		"special_augments": [],
 	}
 
-	var hp_multiplier := float(battle.get("monster_hp_multiplier"))
-	var damage_multiplier := float(
-		battle.get("monster_damage_multiplier")
-	)
-	var speed_multiplier := float(battle.get("monster_speed_multiplier"))
-	var attack_speed_multiplier := float(
-		battle.get("monster_attack_speed_multiplier")
-	)
+	var global_hp := 1.0
+	var global_damage := 1.0
+	var global_speed := 1.0
+	var global_attack_speed := 1.0
+	var level_hp := 1.0
+	var level_damage := 1.0
+	var level_speed := 1.0
 
-	if base_stats.has("max_hp"):
-		var monster_hp_multiplier := 1.0
-		if battle.has_method("_get_monster_augment_multiplier"):
-			monster_hp_multiplier = float(
-				battle.call(
-					"_get_monster_augment_multiplier",
-					monster_id,
-					"hp"
-				)
-			)
-		var level_hp_multiplier := 1.0
+	if is_instance_valid(battle):
+		detail["demon_level"] = int(battle.get("demon_level"))
+		detail["cost"] = battle.get_monster_cost(monster_id)
+
+		var value = battle.get("monster_hp_multiplier")
+		if value != null:
+			global_hp = float(value)
+
+		value = battle.get("monster_damage_multiplier")
+		if value != null:
+			global_damage = float(value)
+
+		value = battle.get("monster_speed_multiplier")
+		if value != null:
+			global_speed = float(value)
+
+		value = battle.get("monster_attack_speed_multiplier")
+		if value != null:
+			global_attack_speed = float(value)
+
 		if battle.has_method("_get_demon_level_monster_hp_multiplier"):
-			level_hp_multiplier = float(
+			level_hp = float(
 				battle.call("_get_demon_level_monster_hp_multiplier")
 			)
-		detail["max_hp"] = maxi(
-			1,
-			int(round(
-				float(base_stats["max_hp"])
-				* hp_multiplier
-				* monster_hp_multiplier
-				* level_hp_multiplier
-			))
-		)
-
-	if base_stats.has("attack_damage"):
-		var monster_damage_multiplier := 1.0
-		if battle.has_method("_get_monster_augment_multiplier"):
-			monster_damage_multiplier = float(
-				battle.call(
-					"_get_monster_augment_multiplier",
-					monster_id,
-					"damage"
-				)
-			)
-		var level_damage_multiplier := 1.0
 		if battle.has_method(
 			"_get_demon_level_monster_damage_multiplier"
 		):
-			level_damage_multiplier = float(
+			level_damage = float(
 				battle.call(
 					"_get_demon_level_monster_damage_multiplier"
 				)
 			)
-		detail["attack_damage"] = maxi(
-			1,
-			int(round(
-				float(base_stats["attack_damage"])
-				* damage_multiplier
-				* monster_damage_multiplier
-				* level_damage_multiplier
-			))
-		)
-
-	if base_stats.has("move_speed"):
-		var monster_speed_multiplier := 1.0
-		if battle.has_method("_get_monster_augment_multiplier"):
-			monster_speed_multiplier = float(
-				battle.call(
-					"_get_monster_augment_multiplier",
-					monster_id,
-					"speed"
-				)
-			)
-		var level_speed_multiplier := 1.0
 		if battle.has_method(
 			"_get_demon_level_monster_speed_multiplier"
 		):
-			level_speed_multiplier = float(
+			level_speed = float(
 				battle.call(
 					"_get_demon_level_monster_speed_multiplier"
 				)
 			)
+
+	var hp_aug := _get_battle_monster_multiplier(monster_id, "hp")
+	var damage_aug := _get_battle_monster_multiplier(
+		monster_id,
+		"damage"
+	)
+	var speed_aug := _get_battle_monster_multiplier(monster_id, "speed")
+	var cooldown_aug := _get_battle_monster_multiplier(
+		monster_id,
+		"attack_cooldown"
+	)
+
+	if base_stats.has("max_hp"):
+		detail["max_hp"] = maxi(
+			1,
+			int(round(
+				float(base_stats["max_hp"])
+				* global_hp
+				* hp_aug
+				* level_hp
+			))
+		)
+
+	if base_stats.has("attack_damage"):
+		detail["attack_damage"] = maxi(
+			1,
+			int(round(
+				float(base_stats["attack_damage"])
+				* global_damage
+				* damage_aug
+				* level_damage
+			))
+		)
+
+	if base_stats.has("move_speed"):
 		detail["move_speed"] = (
 			float(base_stats["move_speed"])
-			* speed_multiplier
-			* monster_speed_multiplier
-			* level_speed_multiplier
+			* global_speed
+			* speed_aug
+			* level_speed
 		)
 
 	if base_stats.has("attack_cooldown"):
-		var monster_cooldown_multiplier := 1.0
-		if battle.has_method("_get_monster_augment_multiplier"):
-			monster_cooldown_multiplier = float(
-				battle.call(
-					"_get_monster_augment_multiplier",
-					monster_id,
-					"attack_cooldown"
-				)
-			)
 		detail["attack_cooldown"] = maxf(
 			0.10,
 			float(base_stats["attack_cooldown"])
-			* attack_speed_multiplier
-			* monster_cooldown_multiplier
+			* global_attack_speed
+			* cooldown_aug
 		)
 
 	if base_stats.has("explosion_damage"):
-		detail["explosion_damage"] = int(round(
-			float(base_stats["explosion_damage"])
-			* damage_multiplier
-		))
+		detail["explosion_damage"] = maxi(
+			1,
+			int(round(
+				float(base_stats["explosion_damage"])
+				* global_damage
+				* damage_aug
+				* level_damage
+			))
+		)
 
 	if base_stats.has("explosion_radius"):
 		detail["explosion_radius"] = float(
@@ -824,38 +828,63 @@ func _build_monster_info_fallback(monster_id: String) -> Dictionary:
 		detail["self_destruct_fuse"] = maxf(
 			0.10,
 			float(base_stats["self_destruct_fuse"])
-			* attack_speed_multiplier
+			* global_attack_speed
 		)
 
-	var build_counts = battle.get("demon_build_counts")
-	if typeof(build_counts) == TYPE_DICTIONARY:
-		for raw_augment in DEMON_AUGMENTS.get_monster_normal_augments(
-			monster_id,
-			MONSTER_CATALOG.get_name(monster_id)
-		):
-			var augment: Dictionary = raw_augment
-			var augment_id := String(augment.get("id", ""))
-			var level := int(build_counts.get(augment_id, 0))
-			if level <= 0:
-				continue
-			detail["normal_augments"].append({
-				"name": String(augment.get("name", augment_id)),
-				"level": level,
-			})
+	if is_instance_valid(battle):
+		var build_counts = battle.get("demon_build_counts")
+		if typeof(build_counts) == TYPE_DICTIONARY:
+			for raw_augment in DEMON_AUGMENTS.get_monster_normal_augments(
+				monster_id,
+				String(catalog_entry.get("name", monster_id))
+			):
+				var augment: Dictionary = raw_augment
+				var augment_id := String(augment.get("id", ""))
+				var augment_level := int(
+					build_counts.get(augment_id, 0)
+				)
+				if augment_level <= 0:
+					continue
+				detail["normal_augments"].append({
+					"name": String(
+						augment.get("name", augment_id)
+					),
+					"level": augment_level,
+				})
 
-	var special_ids = battle.get("demon_special_augments")
-	if typeof(special_ids) == TYPE_ARRAY:
-		for raw_id in special_ids:
-			var augment_id := String(raw_id)
-			var augment := DEMON_AUGMENTS.get_augment(augment_id)
-			if String(augment.get("monster_id", "")) != monster_id:
-				continue
-			detail["special_augments"].append({
-				"id": augment_id,
-				"name": String(augment.get("name", augment_id)),
-			})
+		var special_ids = battle.get("demon_special_augments")
+		if typeof(special_ids) == TYPE_ARRAY:
+			for raw_id in special_ids:
+				var augment_id := String(raw_id)
+				var augment := DEMON_AUGMENTS.get_augment(augment_id)
+				if String(augment.get("monster_id", "")) != monster_id:
+					continue
+				detail["special_augments"].append({
+					"id": augment_id,
+					"name": String(
+						augment.get("name", augment_id)
+					),
+				})
 
 	return detail
+
+func _get_battle_monster_multiplier(
+	monster_id: String,
+	stat_name: String
+) -> float:
+	if (
+		not is_instance_valid(battle)
+		or not battle.has_method("_get_monster_augment_multiplier")
+	):
+		return 1.0
+
+	return float(
+		battle.call(
+			"_get_monster_augment_multiplier",
+			monster_id,
+			stat_name
+		)
+	)
 
 func _load_monster_info_icon(monster_id: String) -> Texture2D:
 	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
