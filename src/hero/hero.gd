@@ -566,11 +566,12 @@ func _physics_process_gunner(delta: float) -> void:
 
 	if gunner_deadeye_active:
 		_update_gunner_deadeye(delta)
-		_update_stage1_pose_visual(delta)
+		_update_gunner_pose_visual(delta)
 		return
 
 	if gunner_reloading:
 		gunner_reload_timer = maxf(gunner_reload_timer - delta, 0.0)
+		queue_redraw()
 		if gunner_cylinder_cooldown <= 0.0 and _count_monsters_near(global_position, float(gunner_config.get("cylinder_radius", 190.0))) > 0:
 			_use_gunner_cylinder_strike()
 		if gunner_reload_timer <= 0.0:
@@ -583,7 +584,7 @@ func _physics_process_gunner(delta: float) -> void:
 
 	if not is_instance_valid(target):
 		_move_without_monsters()
-		_update_stage1_pose_visual(delta)
+		_update_gunner_pose_visual(delta)
 		return
 
 	var distance := global_position.distance_to(target.global_position)
@@ -600,7 +601,26 @@ func _physics_process_gunner(delta: float) -> void:
 	if not gunner_reloading and distance <= attack_range and attack_timer <= 0.0:
 		_gunner_attack(target)
 
-	_update_stage1_pose_visual(delta)
+	_update_gunner_pose_visual(delta)
+
+
+func _update_gunner_pose_visual(delta: float) -> void:
+	if hero_archetype != "pistol_gunner" or not hero_sprite.visible or is_dying:
+		return
+	if hit_pose_timer > 0.0:
+		return
+	# 공격 중에는 발사 방향을 유지한다. 그 외에는 실제 이동 방향을 따른다.
+	if attack_pose_timer > 0.0:
+		return
+
+	_update_facing_from_horizontal(velocity.x, delta)
+	var speed := velocity.length()
+	if speed > 4.0:
+		var movement_ratio := speed / maxf(move_speed, 1.0)
+		var animation_speed := clampf(movement_ratio, 0.78, 1.45)
+		_play_stage1_animation("move", animation_speed)
+	else:
+		_play_stage1_animation("idle", 1.0)
 
 
 func _gunner_attack(current_target: Node2D) -> void:
@@ -4556,10 +4576,15 @@ func _draw() -> void:
 	if hero_archetype == "pistol_gunner":
 		var gap := 2.0
 		var cell_width := (bar_width - gap * float(gunner_magazine_size - 1)) / float(gunner_magazine_size)
+		var displayed_cells := gunner_ammo
+		if gunner_reloading:
+			var reload_duration := maxf(float(gunner_config.get("reload_seconds", 2.4)), 0.1)
+			var reload_progress := clampf(1.0 - gunner_reload_timer / reload_duration, 0.0, 1.0)
+			displayed_cells = clampi(int(floor(reload_progress * float(gunner_magazine_size))), 0, gunner_magazine_size)
 		for index in range(gunner_magazine_size):
 			var x := -bar_width / 2.0 + float(index) * (cell_width + gap)
 			draw_rect(Rect2(x, -79.0, cell_width, 8.0), Color(0.12, 0.12, 0.14), true)
-			if index < gunner_ammo:
+			if index < displayed_cells:
 				draw_rect(Rect2(x, -79.0, cell_width, 8.0), Color(1.0, 0.77, 0.16), true)
 	else:
 		var ultimate_max := maxf(float(ultimate_config.get("charge_max", 100.0)), 1.0)
