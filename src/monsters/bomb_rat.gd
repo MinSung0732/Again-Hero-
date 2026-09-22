@@ -1,10 +1,9 @@
 extends CharacterBody2D
 
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
-const BOMBRAT_SHEET_PATH := "res://assets/art/monsters/bombrat/bombrat_spritesheet.png"
-const BOMBRAT_FRAME_SIZE := Vector2(229, 229)
+const BOMBRAT_FRAME_DIR := "res://assets/art/monsters/bombrat/frames"
 const BOMBRAT_TARGET_HEIGHT := 78.0
-const BOMBRAT_EFFECT_FRAME_DIR := "res://assets/art/monsters/bombrat/frames"
+const BOMBRAT_EFFECT_FRAME_DIR := "res://assets/art/monsters/bombrat/frames/effect"
 const BOMBRAT_EFFECT_FRAME_COUNT := 8
 const BOMBRAT_EFFECT_TARGET_DIAMETER := 300.0
 
@@ -202,17 +201,12 @@ func apply_visual_profile(profile: Dictionary) -> bool:
 	var mode := String(profile.get("mode", ""))
 	if mode == "sequence":
 		return _apply_bomb_rat_sequence_visual(profile)
-	if mode != "sheet":
-		return false
-
-	var sheet_path := String(profile.get("sheet_path", ""))
-	if sheet_path.is_empty():
-		return false
-
-	return _apply_bomb_rat_visual(
-		sheet_path,
-		float(profile.get("target_height", BOMBRAT_TARGET_HEIGHT))
-	)
+	if mode == "sheet":
+		return _apply_bomb_rat_visual(
+			BOMBRAT_FRAME_DIR,
+			float(profile.get("target_height", BOMBRAT_TARGET_HEIGHT))
+		)
+	return false
 
 func _apply_bomb_rat_sequence_visual(profile: Dictionary) -> bool:
 	var dir_path := String(profile.get("asset_dir", ""))
@@ -289,41 +283,22 @@ func _apply_bomb_rat_sequence_visual(profile: Dictionary) -> bool:
 	return true
 
 func _apply_bomb_rat_visual(
-	sheet_path: String = BOMBRAT_SHEET_PATH,
+	_frame_dir: String = BOMBRAT_FRAME_DIR,
 	profile_height: float = BOMBRAT_TARGET_HEIGHT
 ) -> bool:
-	visual.visible = false
-	visual.sprite_frames = null
-	visual.modulate = Color.WHITE
-	visual.rotation = 0.0
-	visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-
-	var sheet := _load_bomb_rat_texture(sheet_path)
-	if sheet == null:
-		push_warning("Bomb Rat spritesheet load failed: %s" % sheet_path)
-		return false
-
-	var frames := SpriteFrames.new()
-	if frames.has_animation(&"default"):
-		frames.remove_animation(&"default")
-
-	_add_sheet_animation(frames, &"idle", sheet, 0, 4, 6.0, true)
-	_add_sheet_animation(frames, &"move", sheet, 1, 6, 11.0, true)
-	_add_sheet_animation(frames, &"attack", sheet, 2, 6, 14.0, false)
-	_add_sheet_animation(frames, &"hit", sheet, 3, 3, 14.0, false)
-	_add_sheet_animation(frames, &"death", sheet, 4, 4, 10.0, false)
-
-	visual.sprite_frames = frames
-	var uniform_scale := profile_height / BOMBRAT_FRAME_SIZE.y
-	visual.scale = Vector2(uniform_scale, uniform_scale)
-	visual.visible = true
-	visual.speed_scale = 1.0
-
-	if not visual.animation_finished.is_connected(_on_visual_animation_finished):
-		visual.animation_finished.connect(_on_visual_animation_finished)
-
-	visual.play(&"idle")
-	return true
+	var profile := {
+		"mode": "sequence",
+		"asset_dir": BOMBRAT_FRAME_DIR,
+		"target_height": profile_height,
+		"animations": {
+			"idle": {"start": 1, "count": 4, "fps": 6.0, "loop": true},
+			"move": {"start": 5, "count": 6, "fps": 11.0, "loop": true},
+			"attack": {"start": 11, "count": 6, "fps": 14.0, "loop": false},
+			"hit": {"start": 17, "count": 3, "fps": 14.0, "loop": false},
+			"death": {"start": 20, "count": 4, "fps": 10.0, "loop": false},
+		},
+	}
+	return _apply_bomb_rat_sequence_visual(profile)
 
 func _apply_bomb_rat_explosion_visual() -> void:
 	explosion_effect.visible = false
@@ -406,29 +381,6 @@ func _load_bomb_rat_texture(path: String) -> Texture2D:
 			return ImageTexture.create_from_image(image)
 
 	return null
-
-func _add_sheet_animation(
-	frames: SpriteFrames,
-	animation_name: StringName,
-	sheet: Texture2D,
-	row: int,
-	frame_count: int,
-	fps: float,
-	loop_animation: bool
-) -> void:
-	frames.add_animation(animation_name)
-	frames.set_animation_speed(animation_name, fps)
-	frames.set_animation_loop(animation_name, loop_animation)
-
-	for column in range(frame_count):
-		var atlas := AtlasTexture.new()
-		atlas.atlas = sheet
-		atlas.filter_clip = true
-		atlas.region = Rect2(
-			Vector2(column, row) * BOMBRAT_FRAME_SIZE,
-			BOMBRAT_FRAME_SIZE
-		)
-		frames.add_frame(animation_name, atlas)
 
 func _play_locomotion(moving: bool) -> void:
 	desired_locomotion = &"move" if moving else &"idle"
