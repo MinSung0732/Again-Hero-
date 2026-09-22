@@ -41,8 +41,7 @@ const TEAM_MAX_SLOTS := 3
 @onready var team_slot_1_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot1Button
 @onready var team_slot_2_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot2Button
 @onready var team_slot_3_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot3Button
-@onready var team_monster_list: ItemList = $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterList
-@onready var team_detail_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/DetailButton
+@onready var team_monster_grid: GridContainer = $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterScroll/MonsterGrid
 @onready var team_status_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/Status
 
 @onready var monster_detail_overlay: Control = $MonsterDetailOverlay
@@ -84,7 +83,6 @@ var monster_collection_state: Dictionary = {}
 var team_catalog_ids: Array = []
 var team_available_ids: Array = []
 var team_selected_ids: Array = []
-var selected_team_monster_id: String = ""
 
 var panel_style := StyleBoxFlat.new()
 var header_style := StyleBoxFlat.new()
@@ -227,9 +225,6 @@ func _apply_styles() -> void:
 		button.add_theme_stylebox_override("hover", stage_card_style)
 		button.add_theme_stylebox_override("pressed", primary_button_style)
 
-	team_detail_button.add_theme_stylebox_override("normal", secondary_button_style)
-	team_detail_button.add_theme_stylebox_override("hover", primary_button_style)
-	team_detail_button.add_theme_stylebox_override("pressed", primary_button_style)
 	monster_detail_panel.add_theme_stylebox_override("panel", header_style)
 	monster_detail_normal_panel.add_theme_stylebox_override("panel", stage_card_style)
 	monster_detail_elite_panel.add_theme_stylebox_override("panel", portrait_inner_style)
@@ -257,8 +252,6 @@ func _connect_navigation() -> void:
 	team_slot_1_button.pressed.connect(_on_team_slot_pressed.bind(0))
 	team_slot_2_button.pressed.connect(_on_team_slot_pressed.bind(1))
 	team_slot_3_button.pressed.connect(_on_team_slot_pressed.bind(2))
-	team_monster_list.item_selected.connect(_on_team_item_selected)
-	team_detail_button.pressed.connect(_open_selected_monster_detail)
 	monster_detail_close_button.pressed.connect(_close_monster_detail)
 	$MonsterDetailOverlay/Dim.gui_input.connect(_on_monster_detail_dim_input)
 
@@ -266,9 +259,6 @@ func _connect_navigation() -> void:
 func _on_team_tab_pressed() -> void:
 	current_tab = "team"
 	_close_monster_detail()
-	selected_team_monster_id = ""
-	team_detail_button.disabled = true
-	team_detail_button.text = "몬스터 상세보기"
 
 	shop_tab.hide()
 	team_tab.show()
@@ -500,7 +490,7 @@ func _setup_team_preview() -> void:
 	team_catalog_ids.clear()
 	team_available_ids.clear()
 	team_selected_ids.clear()
-	team_monster_list.clear()
+	_clear_team_monster_cards()
 
 	team_status_label.text = "Catalog 원본 데이터 확인 중"
 
@@ -514,11 +504,6 @@ func _setup_team_preview() -> void:
 
 		if team_selected_ids.size() < TEAM_MAX_SLOTS:
 			team_selected_ids.append(monster_id)
-
-		team_monster_list.add_item(
-			_team_collection_card_text(monster_id),
-			_team_monster_card_icon(monster_id)
-		)
 
 	team_status_label.text = "Catalog %d종 확인" % team_catalog_ids.size()
 
@@ -588,54 +573,115 @@ func _refresh_team_preview() -> void:
 		selected_names,
 	]
 
-	for item_index in range(team_catalog_ids.size()):
-		if item_index >= team_monster_list.item_count:
-			break
+	_rebuild_team_monster_cards()
 
-		var monster_id := String(team_catalog_ids[item_index])
-		var available := monster_id in team_available_ids
-		var selected := monster_id in team_selected_ids
+func _clear_team_monster_cards() -> void:
+	for child in team_monster_grid.get_children():
+		child.queue_free()
 
-		team_monster_list.set_item_text(
-			item_index,
-			_team_collection_card_text(monster_id)
-		)
-		team_monster_list.set_item_icon(
-			item_index,
-			_team_monster_card_icon(monster_id)
-		)
-		team_monster_list.set_item_disabled(
-			item_index,
-			not available
-		)
+func _rebuild_team_monster_cards() -> void:
+	_clear_team_monster_cards()
 
-		if not available:
-			team_monster_list.set_item_custom_bg_color(
-				item_index,
-				Color("17141c")
-			)
-			team_monster_list.set_item_custom_fg_color(
-				item_index,
-				Color("77717d")
-			)
-		elif selected:
-			team_monster_list.set_item_custom_bg_color(
-				item_index,
-				Color("3a2845")
-			)
-			team_monster_list.set_item_custom_fg_color(
-				item_index,
-				Color("ffe29a")
-			)
-		else:
-			team_monster_list.set_item_custom_bg_color(
-				item_index,
-				Color("21182a")
-			)
-			team_monster_list.set_item_custom_fg_color(
-				item_index,
-				Color("ebe4ef")
-			)
+	for raw_id in team_catalog_ids:
+		var monster_id := String(raw_id)
+		team_monster_grid.add_child(_create_team_monster_card(monster_id))
+
+func _create_team_monster_card(monster_id: String) -> Control:
+	var available := monster_id in team_available_ids
+	var selected := monster_id in team_selected_ids
+	var data := MONSTER_CATALOG.get_monster(monster_id)
+
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(430.0, 390.0)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_theme_stylebox_override(
+		"panel",
+		primary_button_style if selected else stage_card_style
+	)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 18)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_right", 18)
+	margin.add_theme_constant_override("margin_bottom", 16)
+	card.add_child(margin)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	margin.add_child(vbox)
+
+	var portrait := TextureRect.new()
+	portrait.custom_minimum_size = Vector2(0.0, 150.0)
+	portrait.texture = _team_monster_card_icon(monster_id)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	vbox.add_child(portrait)
+
+	var title := Label.new()
+	title.text = _team_monster_name(monster_id)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_color_override(
+		"font_color",
+		Color("ffe29a") if selected else Color("f0e9f3")
+	)
+	vbox.add_child(title)
+
+	var info := Label.new()
+	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	info.add_theme_font_size_override("font_size", 21)
+	if available:
+		info.text = "%s · 비용 %.1f%s" % [
+			_team_monster_role_label(monster_id),
+			float(data.get("base_cost", 0.0)),
+			" · 편성 중" if selected else "",
+		]
+	else:
+		var required := maxi(int(data.get("shards_required", 1)), 1)
+		var shards := MONSTER_COLLECTION_STORE.get_shards(
+			monster_id,
+			monster_collection_state
+		)
+		info.text = "[잠김] · 조각 %d / %d" % [shards, required]
+		info.add_theme_color_override("font_color", Color("8c8590"))
+	vbox.add_child(info)
+
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 10)
+	vbox.add_child(actions)
+
+	var team_button := Button.new()
+	team_button.custom_minimum_size = Vector2(0.0, 72.0)
+	team_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	team_button.add_theme_font_size_override("font_size", 22)
+	team_button.text = "편성 해제" if selected else "팀 편성"
+	team_button.disabled = (
+		not available
+		or (selected and team_selected_ids.size() <= 1)
+		or (not selected and team_selected_ids.size() >= TEAM_MAX_SLOTS)
+	)
+	team_button.add_theme_stylebox_override(
+		"normal",
+		primary_button_style if selected else secondary_button_style
+	)
+	team_button.add_theme_stylebox_override("hover", primary_button_style)
+	team_button.add_theme_stylebox_override("pressed", primary_button_style)
+	team_button.pressed.connect(_toggle_team_monster.bind(monster_id))
+	actions.add_child(team_button)
+
+	var detail_button := Button.new()
+	detail_button.custom_minimum_size = Vector2(0.0, 72.0)
+	detail_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_button.add_theme_font_size_override("font_size", 22)
+	detail_button.text = "상세정보"
+	detail_button.add_theme_stylebox_override("normal", secondary_button_style)
+	detail_button.add_theme_stylebox_override("hover", primary_button_style)
+	detail_button.add_theme_stylebox_override("pressed", primary_button_style)
+	detail_button.pressed.connect(_open_monster_detail.bind(monster_id))
+	actions.add_child(detail_button)
+
+	return card
 
 func _refresh_team_slot(button: Button, slot_index: int) -> void:
 	if slot_index < team_selected_ids.size():
@@ -655,27 +701,19 @@ func _on_team_slot_pressed(slot_index: int) -> void:
 		return
 	_remove_team_monster(String(team_selected_ids[slot_index]))
 
-func _on_team_item_selected(item_index: int) -> void:
-	if item_index < 0 or item_index >= team_catalog_ids.size():
-		return
-
-	var monster_id := String(team_catalog_ids[item_index])
-	selected_team_monster_id = monster_id
-	team_detail_button.disabled = false
-	team_detail_button.text = "%s 상세보기" % _team_monster_name(monster_id)
-
+func _toggle_team_monster(monster_id: String) -> void:
 	if monster_id in team_selected_ids:
 		_remove_team_monster(monster_id)
 	else:
 		_add_team_monster(monster_id)
 
-func _open_selected_monster_detail() -> void:
-	if selected_team_monster_id.is_empty():
+func _open_monster_detail(monster_id: String) -> void:
+	if monster_id.is_empty():
 		return
-	if not MONSTER_CATALOG.MONSTERS.has(selected_team_monster_id):
+	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
 		return
 
-	_populate_monster_detail(selected_team_monster_id)
+	_populate_monster_detail(monster_id)
 	monster_detail_overlay.show()
 	monster_detail_overlay.move_to_front()
 
