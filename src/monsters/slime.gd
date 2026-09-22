@@ -21,6 +21,7 @@ var hero: Node2D
 var attack_timer: float = 0.0
 var hit_flash_timer: float = 0.0
 var dying: bool = false
+var special_augment_configs: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("monsters")
@@ -34,6 +35,14 @@ func _physics_process(delta: float) -> void:
 		return
 
 	attack_timer = maxf(attack_timer - delta, 0.0)
+	var pack_bonuses := _get_pack_bonuses()
+	var effective_move_speed := move_speed * float(
+		pack_bonuses.get("move_speed_multiplier", 1.0)
+	)
+	var effective_attack_cooldown := attack_cooldown / maxf(
+		float(pack_bonuses.get("attack_speed_multiplier", 1.0)),
+		0.01
+	)
 
 	if hit_flash_timer > 0.0:
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
@@ -51,17 +60,55 @@ func _physics_process(delta: float) -> void:
 
 	var distance := global_position.distance_to(hero.global_position)
 	if distance > attack_range:
-		velocity = direction_to_hero * move_speed
+		velocity = direction_to_hero * effective_move_speed
 		_visual_call(&"play_locomotion", [true])
 		move_and_slide()
 	else:
 		velocity = Vector2.ZERO
 		_visual_call(&"play_locomotion", [false])
 		if attack_timer <= 0.0:
-			attack_timer = attack_cooldown
+			attack_timer = effective_attack_cooldown
 			_visual_call(&"play_attack")
 			if hero.has_method("take_damage"):
 				hero.call("take_damage", attack_damage)
+
+func configure_special_augments(configs: Dictionary) -> void:
+	special_augment_configs = configs.duplicate(true)
+
+func _get_pack_bonuses() -> Dictionary:
+	var config: Dictionary = special_augment_configs.get(
+		"slime_pack_instinct",
+		{}
+	)
+	if config.is_empty():
+		return {}
+
+	var radius := maxf(float(config.get("radius", 0.0)), 0.0)
+	var required_nearby := maxi(int(config.get("required_nearby", 0)), 0)
+	if radius <= 0.0 or required_nearby <= 0:
+		return {}
+
+	var nearby := 0
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if node == self or not is_instance_valid(node):
+			continue
+		if String(node.get("monster_type")) != "slime":
+			continue
+		var other := node as Node2D
+		if other == null:
+			continue
+		if global_position.distance_to(other.global_position) <= radius:
+			nearby += 1
+			if nearby >= required_nearby:
+				return {
+					"move_speed_multiplier": float(
+						config.get("move_speed_multiplier", 1.0)
+					),
+					"attack_speed_multiplier": float(
+						config.get("attack_speed_multiplier", 1.0)
+					),
+				}
+	return {}
 
 func take_damage(amount: int) -> void:
 	if current_hp <= 0 or dying:
