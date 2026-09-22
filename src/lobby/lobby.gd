@@ -19,6 +19,7 @@ const UI_FRAME_LARGE_DIR := "res://assets/art/UI/01_large_left_panel"
 const UI_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
 const UI_CARD_FRAME_DIR := "res://assets/art/UI/uicardframes"
 const UI_HEADER_CARD_PATH := UI_CARD_FRAME_DIR + "/ui1.png"
+const UI_CONTENT_CARD_PATH := UI_CARD_FRAME_DIR + "/ui9.png"
 const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
@@ -365,20 +366,6 @@ func _apply_asset_frames() -> void:
 		12.0
 	)
 
-	# 콘텐츠 프레임은 화면 가장자리 장식 역할만 한다.
-	_add_asset_frame(
-		$SafeArea/Layout/Content/ContentFrame,
-		UI_FRAME_LARGE_DIR,
-		Vector2(34.0, 33.0),
-		Vector2(34.0, 33.0),
-		Vector2(34.0, 33.0),
-		Vector2(34.0, 33.0),
-		18.0,
-		18.0,
-		14.0,
-		14.0
-	)
-
 	# 팝업만 별도 프레임을 사용한다. 카드 내부 중첩 장식은 피한다.
 	_add_asset_frame(
 		monster_detail_panel,
@@ -575,6 +562,32 @@ func _load_png_texture_top_region(path: String, height_ratio: float) -> Texture2
 	return ImageTexture.create_from_image(top_region)
 
 
+func _apply_content_card_skin(content_frame: PanelContainer) -> void:
+	if content_frame == null:
+		return
+
+	var texture := _load_png_texture_cropped(UI_CONTENT_CARD_PATH)
+	if texture == null:
+		return
+
+	var texture_size := texture.get_size()
+	var margin_x := maxi(1, int(round(texture_size.x * 0.13)))
+	var margin_y := maxi(1, int(round(texture_size.y * 0.075)))
+
+	var content_skin := StyleBoxTexture.new()
+	content_skin.texture = texture
+	content_skin.texture_margin_left = margin_x
+	content_skin.texture_margin_top = margin_y
+	content_skin.texture_margin_right = margin_x
+	content_skin.texture_margin_bottom = margin_y
+	# 0 margin keeps this decorative skin out of layout/minimum-size calculations.
+	content_skin.content_margin_left = 0.0
+	content_skin.content_margin_top = 0.0
+	content_skin.content_margin_right = 0.0
+	content_skin.content_margin_bottom = 0.0
+	content_frame.add_theme_stylebox_override("panel", content_skin)
+
+
 func _apply_header_card_skin(header: Control) -> void:
 	if header == null:
 		return
@@ -608,6 +621,10 @@ func _apply_header_card_skin(header: Control) -> void:
 
 
 func _apply_new_ui_assets() -> void:
+	# Decorative frame skins are applied as StyleBoxTexture so they never resize
+	# the verified StageCard/content layout.
+	_apply_content_card_skin($SafeArea/Layout/Content/ContentFrame)
+
 	var title_label := $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 	if title_label != null:
 		title_label.visible = false
