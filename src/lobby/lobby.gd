@@ -17,6 +17,7 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 
 const UI_FRAME_LARGE_DIR := "res://assets/art/UI/01_large_left_panel"
 const UI_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
+const UI_CARD_STAGE_FRAME := "res://assets/art/UI/uicardframes/ui8.png"
 
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 @onready var resource_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ResourceLabel
@@ -108,6 +109,7 @@ func _ready() -> void:
 	_build_styles()
 	_apply_styles()
 	_apply_asset_frames()
+	_apply_stage_card_frame()
 	_connect_navigation()
 
 	stage_ids = STAGE_CATALOG.get_ordered_stage_ids()
@@ -526,6 +528,33 @@ func _add_frame_piece_stretched(
 	piece.offset_right = offset_end.x
 	piece.offset_bottom = offset_end.y
 	parent.add_child(piece)
+
+func _apply_stage_card_frame() -> void:
+	var stage_card := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard
+	if stage_card == null:
+		return
+
+	var texture := load(UI_CARD_STAGE_FRAME) as Texture2D
+	if texture == null:
+		push_warning("Stage card frame failed to load: %s" % UI_CARD_STAGE_FRAME)
+		return
+
+	var old_frame := stage_card.get_node_or_null("UICardFrame")
+	if old_frame != null:
+		old_frame.queue_free()
+
+	var frame := TextureRect.new()
+	frame.name = "UICardFrame"
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.texture = texture
+	frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	frame.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	stage_card.add_child(frame)
+	stage_card.move_child(frame, 0)
+
 
 func _connect_navigation() -> void:
 	shop_button.pressed.connect(_switch_tab.bind("shop"))
