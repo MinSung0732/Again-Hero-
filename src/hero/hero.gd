@@ -264,6 +264,7 @@ func _ready() -> void:
 	_apply_profile_visual()
 	_apply_stage1_shield_visual()
 	_apply_stage1_channel_visual()
+	_apply_stage2_rogue_effect_visuals()
 	current_hp = max_hp
 	exp_to_next_level = _required_exp_for_level(level)
 	strafe_sign = -1.0 if randf() < 0.5 else 1.0
@@ -342,30 +343,156 @@ func _apply_profile_visual() -> void:
 	hero_sprite.rotation = 0.0
 	hero_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
-	if hero_id != "ranged_rookie":
+	if hero_id == "ranged_rookie":
+		if sprite_sheet_path.is_empty():
+			return
+
+		var sheet := _load_stage1_sheet_texture()
+		if sheet == null:
+			push_warning(
+				"Stage 1 mage spritesheet load failed: %s"
+				% sprite_sheet_path
+			)
+			return
+
+		var frames := SpriteFrames.new()
+		if frames.has_animation("default"):
+			frames.remove_animation("default")
+
+		_add_stage1_sheet_animation(
+			frames, "idle", sheet, 0, 4, 5.5, true
+		)
+		_add_stage1_sheet_animation(
+			frames, "move", sheet, 1, 6, 10.0, true
+		)
+		_add_stage1_sheet_animation(
+			frames, "attack", sheet, 2, 6, 18.0, false
+		)
+		_add_stage1_sheet_animation(
+			frames, "hit", sheet, 3, 3, 14.0, false
+		)
+
+		hero_sprite.sprite_frames = frames
+		hero_sprite.visible = true
+		hero_sprite.speed_scale = 1.0
+		hero_sprite.play("idle")
 		return
 
-	if sprite_sheet_path.is_empty():
+	if hero_archetype != "rogue_combo":
 		return
 
-	var sheet := _load_stage1_sheet_texture()
-	if sheet == null:
-		push_warning("Stage 1 mage spritesheet load failed: %s" % sprite_sheet_path)
-		return
+	var frame_dir := (
+		sprite_frame_dir
+		if not sprite_frame_dir.is_empty()
+		else STAGE2_FRAME_DIR
+	)
+	var rogue_frames := SpriteFrames.new()
+	if rogue_frames.has_animation("default"):
+		rogue_frames.remove_animation("default")
 
+	if not _add_sequence_animation(
+		rogue_frames, "idle", frame_dir, 1, 4, 6.0, true
+	):
+		return
+	_add_sequence_animation(
+		rogue_frames, "move", frame_dir, 5, 6, 11.0, true
+	)
+	_add_sequence_animation(
+		rogue_frames, "attack", frame_dir, 11, 6, 18.0, false
+	)
+	_add_sequence_animation(
+		rogue_frames, "hit", frame_dir, 17, 3, 14.0, false
+	)
+	_add_sequence_animation(
+		rogue_frames, "death", frame_dir, 20, 4, 10.0, false
+	)
+
+	hero_sprite.sprite_frames = rogue_frames
+	hero_sprite.visible = true
+	hero_sprite.scale = Vector2(1.0, 1.0)
+	hero_sprite.speed_scale = 1.0
+	hero_sprite.play("idle")
+
+func _add_sequence_animation(
+	frames: SpriteFrames,
+	animation_name: String,
+	base_dir: String,
+	start_index: int,
+	frame_count: int,
+	fps: float,
+	loop_animation: bool
+) -> bool:
+	frames.add_animation(animation_name)
+	frames.set_animation_speed(animation_name, fps)
+	frames.set_animation_loop(animation_name, loop_animation)
+
+	for offset in range(frame_count):
+		var frame_index := start_index + offset
+		var path := "%s/frame_%02d.png" % [base_dir, frame_index]
+		var texture := _load_stage1_texture(path)
+		if texture == null:
+			push_warning("Hero frame load failed: %s" % path)
+			return false
+		frames.add_frame(animation_name, texture)
+	return true
+
+func _build_stage2_effect_frames(
+	base_dir: String,
+	animation_name: String,
+	fps: float = 18.0
+) -> SpriteFrames:
 	var frames := SpriteFrames.new()
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
+	frames.add_animation(animation_name)
+	frames.set_animation_speed(animation_name, fps)
+	frames.set_animation_loop(animation_name, false)
 
-	_add_stage1_sheet_animation(frames, "idle", sheet, 0, 4, 5.5, true)
-	_add_stage1_sheet_animation(frames, "move", sheet, 1, 6, 10.0, true)
-	_add_stage1_sheet_animation(frames, "attack", sheet, 2, 6, 18.0, false)
-	_add_stage1_sheet_animation(frames, "hit", sheet, 3, 3, 14.0, false)
+	for index in range(1, 7):
+		var path := "%s/frame_%02d.png" % [base_dir, index]
+		var texture := _load_stage1_texture(path)
+		if texture == null:
+			push_warning("Stage 2 rogue effect frame load failed: %s" % path)
+			return null
+		frames.add_frame(animation_name, texture)
+	return frames
 
-	hero_sprite.sprite_frames = frames
-	hero_sprite.visible = true
-	hero_sprite.speed_scale = 1.0
-	hero_sprite.play("idle")
+func _apply_stage2_rogue_effect_visuals() -> void:
+	rogue_attack_effect.visible = false
+	rogue_attack_effect.sprite_frames = null
+
+	if hero_archetype != "rogue_combo":
+		return
+
+	var attack_frames := _build_stage2_effect_frames(
+		STAGE2_EFFECT1_DIR,
+		"stab",
+		20.0
+	)
+	var assassination_frames := _build_stage2_effect_frames(
+		STAGE2_EFFECT2_DIR,
+		"assassinate",
+		22.0
+	)
+	var slash_frames := _build_stage2_effect_frames(
+		STAGE2_EFFECT3_DIR,
+		"slash",
+		18.0
+	)
+
+	if attack_frames != null:
+		rogue_attack_effect.sprite_frames = attack_frames
+		rogue_attack_effect.scale = Vector2(0.65, 0.65)
+
+	if assassination_frames != null:
+		channel_effect.sprite_frames = assassination_frames
+		channel_effect.scale = Vector2(0.72, 0.72)
+		channel_effect.position = Vector2.ZERO
+
+	if slash_frames != null:
+		shield_effect.sprite_frames = slash_frames
+		shield_effect.scale = Vector2(0.82, 0.82)
+		shield_effect.position = Vector2.ZERO
 
 func _apply_stage1_shield_visual() -> void:
 	shield_effect.visible = false
