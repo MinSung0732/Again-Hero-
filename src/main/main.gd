@@ -697,8 +697,28 @@ func _on_demon_ultimate_used(
 func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: int) -> void:
 	current_demon_candidates = candidates.duplicate(true)
 	demon_augment_panel.show()
-	demon_augment_title.text = "마왕의 개입"
-	demon_augment_trigger.text = "마왕 Lv.%d 도달 · 증강 1개 선택" % demon_level
+
+	var is_special := false
+	if not current_demon_candidates.is_empty():
+		is_special = (
+			String(
+				current_demon_candidates[0].get("augment_type", "normal")
+			)
+			== "special"
+		)
+
+	if is_special:
+		demon_augment_title.text = "마왕의 특수증강"
+		demon_augment_trigger.text = (
+			"마왕 Lv.%d · 편성 몬스터 특수증강 1개 선택"
+			% demon_level
+		)
+	else:
+		demon_augment_title.text = "마왕의 개입"
+		demon_augment_trigger.text = (
+			"마왕 Lv.%d · 일반증강 1개 선택"
+			% demon_level
+		)
 
 	var buttons: Array[Button] = [demon_choice_0, demon_choice_1, demon_choice_2]
 	for index in range(buttons.size()):
@@ -708,21 +728,37 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 
 		buttons[index].visible = true
 		var candidate: Dictionary = current_demon_candidates[index]
-		var current_stack := int(candidate.get("current_stack", 0))
-		var max_stack := int(candidate.get("max_stack", 1))
-		var next_stack := mini(current_stack + 1, max_stack)
-		buttons[index].text = "%s\n중첩 %d → %d / %d\n\n%s" % [
-			String(candidate.get("name", "증강")),
-			current_stack,
-			next_stack,
-			max_stack,
-			String(candidate.get("description", "")),
-		]
+		var candidate_type := String(
+			candidate.get("augment_type", "normal")
+		)
+
+		if candidate_type == "special":
+			var monster_id := String(candidate.get("monster_id", ""))
+			buttons[index].text = "★ [%s]\n%s\n\n%s" % [
+				_get_catalog_monster_name(monster_id),
+				String(candidate.get("name", "특수증강")),
+				String(candidate.get("description", "")),
+			]
+		else:
+			var current_stack := int(candidate.get("current_stack", 0))
+			var max_stack := int(candidate.get("max_stack", 1))
+			var next_stack := mini(current_stack + 1, max_stack)
+			buttons[index].text = "%s\nLv.%d → Lv.%d / %d\n\n%s" % [
+				String(candidate.get("name", "증강")),
+				current_stack,
+				next_stack,
+				max_stack,
+				String(candidate.get("description", "")),
+			]
 
 	var reroll_max := int(battle.get_snapshot().get("demon_reroll_max", 3))
 	demon_reroll_button.text = "↻ 새로고침 %d / %d" % [rerolls_left, reroll_max]
 	demon_reroll_button.disabled = rerolls_left <= 0
-	status_label.text = "소환으로 마왕 EXP를 얻어 레벨업했습니다. 새로고침은 Run 전체 %d회 공유." % reroll_max
+	status_label.text = (
+		"특수증강 레벨입니다. 편성 몬스터의 전투 방식을 강화하세요."
+		if is_special
+		else "일반증강 레벨입니다. 마왕 운영 또는 편성 몬스터를 강화하세요."
+	)
 
 func _on_demon_choice_pressed(index: int) -> void:
 	if index < 0 or index >= current_demon_candidates.size():
