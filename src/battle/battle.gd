@@ -449,7 +449,8 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 	command_changed.emit(command_power, max_command)
 	_emit_stats()
 
-	var gained_exp := cost * demon_exp_gain_multiplier
+	var base_summon_exp := MONSTER_CATALOG.get_summon_exp(monster_type)
+	var gained_exp := base_summon_exp * demon_exp_gain_multiplier
 	var mode_text := "수동 배치" if manual else "소환"
 	summon_result.emit(
 		monster_type,
