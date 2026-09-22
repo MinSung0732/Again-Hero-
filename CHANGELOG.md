@@ -1736,3 +1736,8 @@
 - PortraitFrame 가로 670px 고정을 제거하고 카드 내부 폭에 맞춰 확장하도록 변경.
 - PC 창 크기/viewport 크기 변경 시 StageCard aspect를 다시 계산하도록 resized/viewport size_changed 동기화 추가.
 - 목표: 9:16 PC와 19.5:9~20:9 모바일에서 ui10 내부의 이름/초상화/설명/보상/입장 버튼이 동일한 프레임 구획을 유지.
+
+### Revert Broken Responsive StageCard v1
+- Responsive StageCard v1 적용 후 lobby.gd가 정상 실행되지 않아 헤더 로고/프레임, ui10 카드 스킨, 초상화 로딩 등 런타임 UI 초기화가 전부 빠지는 회귀 발생.
+- Lobby.tscn / lobby.gd를 PC 실행 직전 마지막 정상 기준점(719b01e / 99bcaf6)으로 즉시 복구.
+- 다음 반응형 작업은 런타임 스크립트에 resize signal/동적 minimum size를 한 번에 추가하지 않고, 검증 가능한 단계별 구조 변경으로 진행.
