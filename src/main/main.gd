@@ -118,6 +118,8 @@ var demon_ultimate_cooldowns: Dictionary = {}
 var monster_info_selected_index: int = 0
 var monster_info_animating: bool = false
 var hero_info_animating: bool = false
+var hero_info_portrait_cache_path: String = ""
+var hero_info_portrait_cache: Texture2D = null
 
 func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
@@ -253,8 +255,6 @@ func _process(delta: float) -> void:
 	debug_refresh_timer = 0.25
 	if is_instance_valid(battle) and battle.has_method("get_debug_balance_summary"):
 		debug_balance_label.text = String(battle.call("get_debug_balance_summary"))
-	if hero_info_panel.visible:
-		_refresh_hero_info_panel()
 
 func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 	subtitle_label.text = "Stage %d · %s · %s" % [
@@ -463,12 +463,16 @@ func _format_run_time(seconds: float) -> String:
 func _on_stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int) -> void:
 	hero_hp_label.text = "용사 HP %d / %d" % [hero_hp, hero_max_hp]
 	monsters_label.text = "몬스터 %d" % monsters_left
+	if hero_info_panel.visible:
+		_refresh_hero_info_panel()
 
 func _on_progression_changed(level: int, current_exp: int, exp_to_next_level: int) -> void:
 	hero_level_label.text = "Lv.%d" % level
 	exp_label.text = "EXP %d / %d" % [current_exp, exp_to_next_level]
 	exp_bar.max_value = maxf(float(exp_to_next_level), 1.0)
 	exp_bar.value = float(current_exp)
+	if hero_info_panel.visible:
+		_refresh_hero_info_panel()
 
 func _on_demon_progression_changed(level: int, current_exp: float, exp_to_next_level: float) -> void:
 	demon_progress_label.text = "마왕 Lv.%d · EXP %.1f / %.1f" % [
@@ -775,6 +779,13 @@ func _refresh_hero_info_panel() -> void:
 	]
 
 func _load_normalized_hero_portrait(path: String) -> Texture2D:
+	if (
+		not path.is_empty()
+		and path == hero_info_portrait_cache_path
+		and hero_info_portrait_cache != null
+	):
+		return hero_info_portrait_cache
+
 	var source := _load_ui_texture(path)
 	if source == null:
 		return null
@@ -782,6 +793,8 @@ func _load_normalized_hero_portrait(path: String) -> Texture2D:
 		HERO_PORTRAIT_REFERENCE_PATH
 	)
 	if reference == null:
+		hero_info_portrait_cache_path = path
+		hero_info_portrait_cache = source
 		return source
 
 	var source_image := source.get_image()
@@ -792,11 +805,15 @@ func _load_normalized_hero_portrait(path: String) -> Texture2D:
 		or reference_image == null
 		or reference_image.is_empty()
 	):
+		hero_info_portrait_cache_path = path
+		hero_info_portrait_cache = source
 		return source
 
 	var source_rect := _get_visible_alpha_rect(source_image)
 	var reference_rect := _get_visible_alpha_rect(reference_image)
 	if source_rect.size.y <= 0 or reference_rect.size.y <= 0:
+		hero_info_portrait_cache_path = path
+		hero_info_portrait_cache = source
 		return source
 
 	var cropped := source_image.get_region(source_rect)
@@ -835,7 +852,10 @@ func _load_normalized_hero_portrait(path: String) -> Texture2D:
 		Rect2i(Vector2i.ZERO, cropped.get_size()),
 		paste
 	)
-	return ImageTexture.create_from_image(canvas)
+	var normalized := ImageTexture.create_from_image(canvas)
+	hero_info_portrait_cache_path = path
+	hero_info_portrait_cache = normalized
+	return normalized
 
 func _get_visible_alpha_rect(
 	image: Image,
