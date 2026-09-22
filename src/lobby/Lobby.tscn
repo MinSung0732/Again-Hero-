@@ -663,7 +663,7 @@ text = "획득 가능한 특수증강"
 [node name="Specials" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.82, 0.77, 0.86, 1)
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 23
 text = "특수증강"
 autowrap_mode = 2
 
@@ -713,7 +713,7 @@ autowrap_mode = 2
 [node name="Note" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.6, 0.69, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 22
 text = "실제 돌연변이/대돌연변이/보스 이벤트에 따라 배율은 달라질 수 있습니다."
 autowrap_mode = 2
 
