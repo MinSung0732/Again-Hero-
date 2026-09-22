@@ -546,12 +546,8 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
 		return {}
 
-	var scene := MONSTER_CATALOG.get_scene(monster_id)
-	if scene == null:
-		return {}
-
-	var monster := scene.instantiate()
-	if monster == null:
+	var base_stats := MONSTER_CATALOG.get_base_stats(monster_id)
+	if base_stats.is_empty():
 		return {}
 
 	var detail := {
@@ -564,44 +560,45 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 		"special_augments": [],
 	}
 
-	var raw_hp = monster.get("max_hp")
-	if raw_hp != null:
+	if base_stats.has("max_hp"):
+		var hp_value := (
+			float(base_stats["max_hp"])
+			* monster_hp_multiplier
+			* _get_monster_augment_multiplier(monster_id, "hp")
+		)
+		if monster_id == "orc":
+			hp_value *= orc_hp_multiplier
 		detail["max_hp"] = maxi(
 			1,
 			int(round(
-				float(raw_hp)
-				* monster_hp_multiplier
-				* _get_monster_augment_multiplier(monster_id, "hp")
+				hp_value
 				* _get_demon_level_monster_hp_multiplier()
 			))
 		)
 
-	var raw_damage = monster.get("attack_damage")
-	if raw_damage != null:
+	if base_stats.has("attack_damage"):
 		detail["attack_damage"] = maxi(
 			1,
 			int(round(
-				float(raw_damage)
+				float(base_stats["attack_damage"])
 				* monster_damage_multiplier
 				* _get_monster_augment_multiplier(monster_id, "damage")
 				* _get_demon_level_monster_damage_multiplier()
 			))
 		)
 
-	var raw_speed = monster.get("move_speed")
-	if raw_speed != null:
+	if base_stats.has("move_speed"):
 		detail["move_speed"] = (
-			float(raw_speed)
+			float(base_stats["move_speed"])
 			* monster_speed_multiplier
 			* _get_monster_augment_multiplier(monster_id, "speed")
 			* _get_demon_level_monster_speed_multiplier()
 		)
 
-	var raw_cooldown = monster.get("attack_cooldown")
-	if raw_cooldown != null:
+	if base_stats.has("attack_cooldown"):
 		detail["attack_cooldown"] = maxf(
 			0.10,
-			float(raw_cooldown)
+			float(base_stats["attack_cooldown"])
 			* monster_attack_speed_multiplier
 			* _get_monster_augment_multiplier(
 				monster_id,
@@ -609,30 +606,26 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 			)
 		)
 
-	var raw_explosion_damage = monster.get("explosion_damage")
-	if raw_explosion_damage != null:
+	if base_stats.has("explosion_damage"):
 		detail["explosion_damage"] = maxi(
 			1,
 			int(round(
-				float(raw_explosion_damage)
+				float(base_stats["explosion_damage"])
 				* monster_damage_multiplier
 				* _get_monster_augment_multiplier(monster_id, "damage")
 				* _get_demon_level_monster_damage_multiplier()
 			))
 		)
 
-	var raw_explosion_radius = monster.get("explosion_radius")
-	if raw_explosion_radius != null:
-		detail["explosion_radius"] = float(raw_explosion_radius)
+	if base_stats.has("explosion_radius"):
+		detail["explosion_radius"] = float(base_stats["explosion_radius"])
 
-	var raw_fuse = monster.get("self_destruct_fuse")
-	if raw_fuse != null:
+	if base_stats.has("self_destruct_fuse"):
 		detail["self_destruct_fuse"] = maxf(
 			0.10,
-			float(raw_fuse) * monster_attack_speed_multiplier
+			float(base_stats["self_destruct_fuse"])
+			* monster_attack_speed_multiplier
 		)
-
-	monster.free()
 
 	var normal_augments: Array = []
 	for raw_augment in DEMON_AUGMENTS.get_monster_normal_augments(
