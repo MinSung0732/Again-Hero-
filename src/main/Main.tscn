@@ -540,21 +540,21 @@ layout_mode = 2
 theme_override_constants/separation = 16
 
 [node name="Choice0" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices"]
-custom_minimum_size = Vector2(285, 360)
+custom_minimum_size = Vector2(0, 360)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 22
 text = "증강 1"
 
 [node name="Choice1" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices"]
-custom_minimum_size = Vector2(285, 360)
+custom_minimum_size = Vector2(0, 360)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 22
 text = "증강 2"
 
 [node name="Choice2" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices"]
-custom_minimum_size = Vector2(285, 360)
+custom_minimum_size = Vector2(0, 360)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 22
