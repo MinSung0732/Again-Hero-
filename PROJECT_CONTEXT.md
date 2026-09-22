@@ -1725,3 +1725,20 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 하단 상태 라벨 높이는 약 54px로 통일한다.
 - BottomNav 선택 탭은 더 강한 금색 테두리와 밝은 글자색으로 강조한다.
 - 상점에서는 10+1회 버튼을 primary action으로 강조한다.
+
+
+### 메인 로비 StageCard 디테일 정리 v3
+- StageCard의 `size_flags_vertical`을 EXPAND_FILL에서 SHRINK_CENTER로 바꿔 내용보다 큰 빈 보라색 영역이 생기지 않게 한다.
+- StagePicker는 남는 세로 공간을 유지하되, 카드/화살표 자체는 내용 높이만큼 중앙 정렬한다.
+- 좌우 스테이지 이동 버튼:
+  - 72x144 -> 64x124
+  - 폰트 48 -> 42
+  - CTA보다 시각적으로 약한 전용 스타일 사용
+- StageCard 내부:
+  - 좌우 여백 30 -> 26
+  - 상단 20 -> 18
+  - 하단 22 -> 20
+  - 내부 separation 10 -> 8
+  - PortraitFrame 430 -> 400
+- 던전 입장 버튼 높이 92 -> 84.
+- 던전 입장 버튼은 금색 테두리와 보라색 배경의 전용 primary 스타일로 강조한다.
