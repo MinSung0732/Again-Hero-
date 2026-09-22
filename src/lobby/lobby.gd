@@ -265,6 +265,10 @@ func _connect_navigation() -> void:
 
 func _on_team_tab_pressed() -> void:
 	current_tab = "team"
+	_close_monster_detail()
+	selected_team_monster_id = ""
+	team_detail_button.disabled = true
+	team_detail_button.text = "몬스터 상세보기"
 
 	shop_tab.hide()
 	team_tab.show()
