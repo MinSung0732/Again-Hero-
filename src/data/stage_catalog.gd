@@ -51,7 +51,8 @@ const STAGES = {
 				"visual_scale": 1.50,
 			},
 		],
-		"first_clear_reward": 500,
+		"first_clear_reward": 250,
+		"run_reward_multiplier": 1.00,
 		"next_stage_id": "stage_2",
 	},
 	"stage_2": {
@@ -116,7 +117,8 @@ const STAGES = {
 				"reinforcement_interval": 0.12,
 			},
 		],
-		"first_clear_reward": 750,
+		"first_clear_reward": 400,
+		"run_reward_multiplier": 1.35,
 		"next_stage_id": "stage_3",
 	},
 	"stage_3": {
@@ -181,7 +183,8 @@ const STAGES = {
 				"reinforcement_interval": 0.12,
 			},
 		],
-		"first_clear_reward": 1000,
+		"first_clear_reward": 600,
+		"run_reward_multiplier": 1.70,
 		"next_stage_id": "",
 	},
 }
