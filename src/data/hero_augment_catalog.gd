@@ -713,7 +713,25 @@ const AUGMENTS = [
 		],
 		"synergy_rules": [{"source": "build_tag_stacks", "key": "reload", "weight": 0.40, "cap": 1.6}]
 	}
-
+,
+	{
+		"id": "gunner_powder_acceleration",
+		"name": "화약 가속",
+		"description": "탄약 1칸 소비마다 공격력 누적 증가. 1중첩 3%, 이후 중첩당 +1%로 최대 6%. 실제 재장전 시 누적 초기화, 퀵드로는 유지.",
+		"base_score": 6.8,
+		"max_stack": 4,
+		"tags": ["gunner", "ammo", "damage", "reload"],
+		"effects": [{"op": "gunner_powder_acceleration"}],
+		"ai_rules": [
+			{"source": "context_linear", "key": "gunner_ammo_empty_pressure", "weight": 2.2, "cap": 2.2},
+			{"source": "recent_events_linear", "weight": 0.05, "cap": 0.8}
+		],
+		"synergy_rules": [
+			{"source": "build_augment_stacks", "key": "gunner_snap_reload", "weight": 0.85, "cap": 3.4},
+			{"source": "build_tag_stacks", "key": "attack_speed", "weight": 0.30, "cap": 1.2},
+			{"source": "build_tag_stacks", "key": "ammo", "weight": 0.25, "cap": 1.0}
+		]
+	}
 ]
 
 static func roll_candidates(
