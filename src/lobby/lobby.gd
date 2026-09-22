@@ -550,7 +550,7 @@ func _apply_new_header_texture() -> void:
 	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	frame.stretch_mode = TextureRect.STRETCH_SCALE
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	frame.z_index = -1
+	frame.z_index = 0
 	header.add_child(frame)
 	header.move_child(frame, 0)
 
