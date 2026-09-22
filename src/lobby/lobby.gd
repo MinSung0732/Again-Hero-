@@ -66,8 +66,6 @@ const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 @onready var monster_detail_elite_name: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Name
 @onready var monster_detail_elite_stats: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Stats
 
-@onready var stage_meta_box: Control = $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox
-@onready var stage_card: PanelContainer = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard
 @onready var prev_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/PrevButton
 @onready var next_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/NextButton
 @onready var stage_number_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox/StageNumber
@@ -88,14 +86,6 @@ const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 var stage_ids: Array[String] = []
 var selected_stage_index: int = 0
 var current_tab: String = "main"
-
-const STAGE_SWIPE_THRESHOLD := 90.0
-const STAGE_SLIDE_DURATION_OUT := 0.12
-const STAGE_SLIDE_DURATION_IN := 0.18
-
-var _stage_swipe_active := false
-var _stage_swipe_start := Vector2.ZERO
-var _stage_transition_running := false
 
 var monster_collection_state: Dictionary = {}
 var team_catalog_ids: Array = []
@@ -692,7 +682,7 @@ func _apply_new_ui_assets() -> void:
 		stage_card.add_child(stage_skin)
 		stage_card.move_child(stage_skin, 0)
 
-	var arrow_texture := _load_png_texture_cropped(UI_CARD_FRAME_DIR + "/ui8.png")
+	var arrow_texture := _load_png_texture_direct(UI_CARD_FRAME_DIR + "/ui8.png")
 	if arrow_texture != null:
 		_apply_arrow_texture(prev_stage_button, arrow_texture, false)
 		_apply_arrow_texture(next_stage_button, arrow_texture, true)
@@ -721,61 +711,6 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 	skin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	skin.flip_h = flip_h
 	button.add_child(skin)
-
-
-func _input(event: InputEvent) -> void:
-	if current_tab != "main":
-		_stage_swipe_active = false
-		return
-
-	if event is InputEventScreenTouch:
-		if event.pressed:
-			if _is_stage_swipe_point(event.position):
-				_stage_swipe_active = true
-				_stage_swipe_start = event.position
-		else:
-			if _stage_swipe_active:
-				_finish_stage_swipe(event.position)
-			_stage_swipe_active = false
-		return
-
-	if event is InputEventScreenDrag:
-		if _stage_swipe_active:
-			var drag_delta := event.position - _stage_swipe_start
-			if (
-				absf(drag_delta.x) > 18.0
-				and absf(drag_delta.x) > absf(drag_delta.y)
-			):
-				get_viewport().set_input_as_handled()
-		return
-
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed:
-			if _is_stage_swipe_point(event.position):
-				_stage_swipe_active = true
-				_stage_swipe_start = event.position
-		else:
-			if _stage_swipe_active:
-				_finish_stage_swipe(event.position)
-			_stage_swipe_active = false
-
-
-func _is_stage_swipe_point(point: Vector2) -> bool:
-	if stage_card == null or not stage_card.is_visible_in_tree():
-		return false
-	return stage_card.get_global_rect().grow(18.0).has_point(point)
-
-
-func _finish_stage_swipe(end_position: Vector2) -> void:
-	var swipe_delta := end_position - _stage_swipe_start
-	if (
-		absf(swipe_delta.x) < STAGE_SWIPE_THRESHOLD
-		or absf(swipe_delta.x) <= absf(swipe_delta.y) * 1.15
-	):
-		return
-
-	get_viewport().set_input_as_handled()
-	_change_stage(1 if swipe_delta.x < 0.0 else -1)
 
 
 func _connect_navigation() -> void:
@@ -1622,97 +1557,15 @@ func _refresh_header() -> void:
 	progress_label.text = "최고 해금  Stage %d" % highest
 
 func _change_stage(direction: int) -> void:
-	if stage_ids.is_empty() or _stage_transition_running:
+	if stage_ids.is_empty():
 		return
 
-	var target_index := clampi(
+	selected_stage_index = clampi(
 		selected_stage_index + direction,
 		0,
 		stage_ids.size() - 1
 	)
-	if target_index == selected_stage_index:
-		return
-
-	_stage_transition_running = true
-
-	var card_origin := stage_card.position
-	var meta_origin := stage_meta_box.position
-	var slide_distance := minf(140.0, stage_card.size.x * 0.18)
-	var outgoing_offset := Vector2(-float(direction) * slide_distance, 0.0)
-
-	var tween_out := create_tween()
-	tween_out.set_trans(Tween.TRANS_QUAD)
-	tween_out.set_ease(Tween.EASE_IN)
-	tween_out.tween_property(
-		stage_card,
-		"position",
-		card_origin + outgoing_offset,
-		STAGE_SLIDE_DURATION_OUT
-	)
-	tween_out.parallel().tween_property(
-		stage_card,
-		"modulate:a",
-		0.0,
-		STAGE_SLIDE_DURATION_OUT
-	)
-	tween_out.parallel().tween_property(
-		stage_meta_box,
-		"position",
-		meta_origin + outgoing_offset,
-		STAGE_SLIDE_DURATION_OUT
-	)
-	tween_out.parallel().tween_property(
-		stage_meta_box,
-		"modulate:a",
-		0.0,
-		STAGE_SLIDE_DURATION_OUT
-	)
-	await tween_out.finished
-
-	selected_stage_index = target_index
 	_refresh_stage_card()
-
-	var incoming_offset := Vector2(float(direction) * slide_distance, 0.0)
-	stage_card.position = card_origin + incoming_offset
-	stage_meta_box.position = meta_origin + incoming_offset
-	stage_card.modulate.a = 0.0
-	stage_meta_box.modulate.a = 0.0
-
-	var tween_in := create_tween()
-	tween_in.set_trans(Tween.TRANS_QUAD)
-	tween_in.set_ease(Tween.EASE_OUT)
-	tween_in.tween_property(
-		stage_card,
-		"position",
-		card_origin,
-		STAGE_SLIDE_DURATION_IN
-	)
-	tween_in.parallel().tween_property(
-		stage_card,
-		"modulate:a",
-		1.0,
-		STAGE_SLIDE_DURATION_IN
-	)
-	tween_in.parallel().tween_property(
-		stage_meta_box,
-		"position",
-		meta_origin,
-		STAGE_SLIDE_DURATION_IN
-	)
-	tween_in.parallel().tween_property(
-		stage_meta_box,
-		"modulate:a",
-		1.0,
-		STAGE_SLIDE_DURATION_IN
-	)
-	await tween_in.finished
-
-	stage_card.position = card_origin
-	stage_meta_box.position = meta_origin
-	stage_card.modulate.a = 1.0
-	stage_meta_box.modulate.a = 1.0
-	_stage_transition_running = false
-
 
 func _refresh_stage_card() -> void:
 	if stage_ids.is_empty():
