@@ -1305,3 +1305,11 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 편성 상태 변경 후 카드를 즉시 다시 그려 버튼 문구와 편성 상태 표시가 동기화된다.
 - 잠긴 몬스터는 팀 편성 버튼만 비활성화하고 상세정보는 확인할 수 있다.
 - 편성 슬롯 최대 3종, 최소 1종 유지 규칙은 기존과 동일하다.
+
+
+### 공용 게임 폰트 v1
+- 전체 UI 기본 폰트는 `Galmuri11.ttf`를 사용한다.
+- 기대 경로: `res://assets/fonts/Galmuri11.ttf`.
+- `GameFontManager`를 Autoload로 등록해 Lobby/Main/CanvasLayer HUD 및 런타임 생성 Control까지 같은 폰트를 적용한다.
+- 폰트 파일이 아직 없으면 경고만 남기고 기존 Godot 기본 폰트로 안전하게 fallback한다.
+- 개별 Label/Button마다 폰트 파일을 직접 지정하지 않고 공용 매니저를 통해 일괄 적용한다.
