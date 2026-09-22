@@ -1,7 +1,7 @@
 extends RefCounted
 class_name StageCatalog
 
-const ORDER := ["stage_1", "stage_2", "stage_3"]
+const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4"]
 
 const STAGES = {
 	"stage_1": {
@@ -185,6 +185,23 @@ const STAGES = {
 		],
 		"first_clear_reward": 600,
 		"run_reward_multiplier": 1.70,
+		"next_stage_id": "stage_4",
+	},
+	"stage_4": {
+		"id": "stage_4",
+		"number": 4,
+		"display_name": "네 번째 침입자",
+		"hero_id": "pistol_hero",
+		"hero_ai_profile_id": "stage_4_gunner",
+		"portrait_path": "res://assets/art/heroes/stage4_gunner/stage4_hero_portrait.png",
+		"lobby_description": "12발 장탄을 관리하며 관통탄과 회피 기술로 전장을 누비는 권총의 용사.",
+		"hero_level_start": 1,
+		"map_width": 4000,
+		"map_height": 4000,
+		"run_duration_seconds": 540.0,
+		"event_timeline": [],
+		"first_clear_reward": 800,
+		"run_reward_multiplier": 2.00,
 		"next_stage_id": "",
 	},
 }
