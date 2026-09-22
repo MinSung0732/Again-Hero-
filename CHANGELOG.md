@@ -1814,3 +1814,9 @@
 - lobby.gd를 StageMetaBox 경로 갱신까지만 포함된 마지막 정상 상태(54dc8709)로 복구.
 - 좌우 버튼 확대, ui8 crop, 스와이프 입력, tween 전환 코드는 모두 제거.
 - 다음 단계에서는 버튼 크기 조정과 스와이프/애니메이션을 분리해서 한 기능씩 검증 후 적용.
+
+### Fix TSCN/Script Version Mismatch After Rollback
+- 이전 롤백에서 Lobby.tscn은 96f0e654 시점으로 복구했지만 lobby.gd는 이후 StageMetaBox 경로를 사용하는 54dc8709 시점으로 복구되어 노드 경로가 불일치했음.
+- 그 결과 @onready StageMetaBox 경로 해석 실패로 로비 스크립트 초기화가 중단되어 좌우 버튼 연결 및 초상화 로딩이 실행되지 않는 문제 발생.
+- lobby.gd를 Lobby.tscn과 동일한 96f0e654 시점 파일로 복구해 씬/스크립트 버전을 다시 일치시킴.
+- 버튼/초상화 기능 정상화 후 StageMetaBox 이동은 이후 한 단계로 다시 적용 예정.
