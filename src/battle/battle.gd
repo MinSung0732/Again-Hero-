@@ -2581,6 +2581,11 @@ func get_snapshot() -> Dictionary:
 			if is_instance_valid(hero) and hero.has_method("get_recent_offense_summary")
 			else "최근 공세 기록 없음"
 		),
+		"hero_ai_observation": (
+			String(hero.call("get_ai_observation_summary"))
+			if is_instance_valid(hero) and hero.has_method("get_ai_observation_summary")
+			else "AI 관측 정보 없음"
+		),
 		"monsters_left": monsters_alive,
 		"command_power": command_power,
 		"command_max": max_command,
