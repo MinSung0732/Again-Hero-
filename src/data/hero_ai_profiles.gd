@@ -27,6 +27,25 @@ const PROFILES = {
 			"rogue_bloodthirst": 0.55,
 		},
 	},
+	"stage_3_guardian": {
+		"id": "stage_3_guardian",
+		"display_name": "전선을 지키는 수호자",
+		"observation_interval": 3.2,
+		"stack_inertia": 1.05,
+		"new_branch_penalty": 0.45,
+		"augment_biases": {
+			"fighter_guard_wall": 0.45,
+			"fighter_revenge": 0.35,
+			"fighter_thorns": 0.20,
+			"fighter_guard_mastery": 0.45,
+			"fighter_guard_march": 0.20,
+			"fighter_charge": 0.30,
+			"fighter_sword_mastery": 0.35,
+			"fighter_slash_width": 0.25,
+			"fighter_thrust_training": 0.20,
+			"iron_body": 0.35,
+		},
+	},
 }
 
 static func get_profile(profile_id: String) -> Dictionary:
