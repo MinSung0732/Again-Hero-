@@ -1209,7 +1209,20 @@ func _apply_augment_monster_icon(
 	if texture == null:
 		return
 
-	icon_rect.texture = texture
+	var display_texture: Texture2D = texture
+	var image := texture.get_image()
+	if image != null and not image.is_empty():
+		var used_rect := image.get_used_rect()
+		if used_rect.size.x > 0 and used_rect.size.y > 0:
+			var atlas := AtlasTexture.new()
+			atlas.atlas = texture
+			atlas.region = Rect2(
+				used_rect.position,
+				used_rect.size
+			)
+			display_texture = atlas
+
+	icon_rect.texture = display_texture
 	icon_rect.visible = true
 
 func _wrap_augment_card_text(
