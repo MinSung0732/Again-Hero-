@@ -86,6 +86,7 @@ var rogue_slash_shield_ratio_bonus: float = 0.0
 var rogue_assassination_hit_bonus: int = 0
 var rogue_execute_threshold_bonus: float = 0.0
 var rogue_lifesteal_ratio: float = 0.0
+var rogue_lifesteal_buffer: float = 0.0
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
 var ultimate_flash_timer: float = 0.0
@@ -190,6 +191,7 @@ func configure_profile(profile: Dictionary) -> void:
 	rogue_assassination_hit_bonus = 0
 	rogue_execute_threshold_bonus = 0.0
 	rogue_lifesteal_ratio = 0.0
+	rogue_lifesteal_buffer = 0.0
 	var profile_ultimate = profile.get("ultimate", {})
 	ultimate_config = (
 		profile_ultimate.duplicate(true)
@@ -612,14 +614,16 @@ func _apply_rogue_lifesteal(
 	):
 		return
 
-	var heal_amount := int(floor(
+	rogue_lifesteal_buffer += (
 		float(actual_damage)
 		* rogue_lifesteal_ratio
 		* clampf(efficiency, 0.0, 1.0)
-	))
+	)
+	var heal_amount := int(floor(rogue_lifesteal_buffer))
 	if heal_amount <= 0:
 		return
 
+	rogue_lifesteal_buffer -= float(heal_amount)
 	var previous_hp := current_hp
 	current_hp = mini(
 		current_hp + heal_amount,
