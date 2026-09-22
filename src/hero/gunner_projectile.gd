@@ -43,10 +43,9 @@ func _on_body_entered(body: Node) -> void:
 	if hit_ids.has(id):
 		return
 	hit_ids[id] = true
-	if headshot and body.has_method("take_damage_colored"):
-		body.call("take_damage_colored", damage, Color(1.0, 0.18, 0.12, 1.0))
-	else:
-		body.call("take_damage", damage)
+	if headshot:
+		body.set_meta("damage_number_color_once", Color(1.0, 0.18, 0.12, 1.0))
+	body.call("take_damage", damage)
 
 func _apply_visual() -> void:
 	var frames := SpriteFrames.new()
