@@ -51,6 +51,8 @@ var exp_value: int = 0
 var hero: Node2D
 var magnetized: bool = false
 var pulse_time: float = 0.0
+var burst_velocity: Vector2 = Vector2.ZERO
+var burst_time: float = 0.0
 
 func _ready() -> void:
 	add_to_group("exp_orbs")
@@ -59,13 +61,19 @@ func _ready() -> void:
 	visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	queue_redraw()
 
-func setup(value: int) -> void:
+func setup(value: int, initial_velocity: Vector2 = Vector2.ZERO) -> void:
 	exp_value = maxi(value, 0)
+	burst_velocity = initial_velocity
+	burst_time = 0.30 if initial_velocity.length_squared() > 0.01 else 0.0
 	_apply_exp_stone_visual()
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
 	pulse_time += delta
+	if burst_time > 0.0:
+		global_position += burst_velocity * delta
+		burst_velocity = burst_velocity.lerp(Vector2.ZERO, clampf(delta * 8.0, 0.0, 1.0))
+		burst_time = maxf(burst_time - delta, 0.0)
 	if not visual.visible:
 		queue_redraw()
 
