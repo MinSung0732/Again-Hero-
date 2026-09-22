@@ -1936,3 +1936,10 @@
 - STAGE1_CHANNEL_EFFECT_FRAME_SIZE 고정값을 제거하고 실제 로드된 Texture2D 크기에서 최대 변 길이를 계산해 스케일을 자동 산출하도록 변경.
 - 표시 목표 크기 300px과 10fps 루프는 유지.
 - 앞으로 effect_03 프레임 해상도가 다시 변경되어도 코드 수정 없이 동일한 화면 체급으로 표시되도록 처리.
+
+### Stage 1 Effect Stale Import Cache Bypass
+- 법사 3스킬 effect_03 PNG는 새 이미지로 교체됐지만 런타임에서 교체 전 프레임이 보이는 원인 확인.
+- effect_01/02/03의 기존 .png.import 일부가 이동 전 경로(res://assets/art/heroes/stage1_mage/effect_XX/...)를 source_file로 계속 가리키고 있어 ResourceLoader가 이전 .ctex 캐시를 우선 반환할 수 있었음.
+- Stage 1 텍스처 로더를 raw PNG 우선 -> imported resource fallback 순서로 변경.
+- 따라서 PNG만 교체해도 실행 시 최신 원본 프레임을 즉시 읽으며, 로컬 .godot/imported 캐시가 오래되어도 이전 이펙트가 표시되지 않도록 처리.
+- 관통 궁극기(effect_01) 로더도 동일하게 raw PNG 우선으로 변경.
