@@ -1874,3 +1874,8 @@
 - VBoxContainer가 라벨 위치를 강제로 잡던 구조를 SectionHeaderBox 고정 높이 Control로 감싸고, 두 텍스트만 박스 안에서 아래쪽으로 재배치.
 - SectionHeaderBox 전체 높이를 기존 두 라벨+간격과 비슷하게 유지해 StageMetaBox/StageCard 위치는 바꾸지 않음.
 - 스와이프/드래그, 카드 전환 애니메이션, 좌우 버튼 규칙은 변경하지 않음.
+
+### Header/Stage Meta Final Downward Nudge
+- PC 화면 기준 외곽 상단 테두리에 아직 가까워 보이던 '침입자 기록/안내문'과 STAGE 번호/침입자 제목을 각각 8px 추가 하향.
+- SectionHeaderBox와 StageMetaBox의 컨테이너 크기 및 StageCard 위치는 변경하지 않고 텍스트 offset만 이동.
+- 카드/초상화/하단 설명/스와이프/드래그/전환 애니메이션/탐색 제한 로직은 모두 그대로 유지.
