@@ -1836,6 +1836,7 @@ func _refresh_stage_card() -> void:
 	var cleared := STAGE_PROGRESS.is_stage_cleared(stage_id)
 	var reward_claimed := STAGE_PROGRESS.is_reward_claimed(stage_id)
 	var reward := int(stage.get("first_clear_reward", 0))
+	var run_reward_multiplier := float(stage.get("run_reward_multiplier", 1.0))
 	var duration_seconds := float(stage.get("run_duration_seconds", 0.0))
 	var minutes := int(round(duration_seconds / 60.0))
 
@@ -1856,9 +1857,12 @@ func _refresh_stage_card() -> void:
 	stage_status_label.text = " · ".join(status_parts)
 
 	if reward_claimed:
-		stage_reward_label.text = "최초 클리어 보상 획득 완료"
+		stage_reward_label.text = "반복 클리어 연구 보상  ×%.2f" % run_reward_multiplier
 	else:
-		stage_reward_label.text = "최초 클리어  연구 포인트 +%d" % reward
+		stage_reward_label.text = (
+			"최초 클리어 +%d · 반복 클리어 ×%.2f"
+			% [reward, run_reward_multiplier]
+		)
 
 	enter_stage_button.disabled = not unlocked
 	enter_stage_button.text = "던전 입장" if unlocked else "스테이지 잠김"
