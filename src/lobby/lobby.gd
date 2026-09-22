@@ -346,6 +346,7 @@ func _apply_styles() -> void:
 func _apply_asset_frames() -> void:
 	# 상단/하단은 모바일에서 장식보다 정보가 우선이라 얇게 유지한다.
 	for target in [
+		$SafeArea/Layout/Header,
 		$BottomNav,
 	]:
 		_add_asset_frame(
@@ -537,34 +538,33 @@ func _load_png_texture_direct(path: String) -> Texture2D:
 	return ImageTexture.create_from_image(image)
 
 
-func _make_texture_style(texture: Texture2D, left: float, top: float, right: float, bottom: float) -> StyleBoxTexture:
-	var style := StyleBoxTexture.new()
-	style.texture = texture
-	style.texture_margin_left = left
-	style.texture_margin_top = top
-	style.texture_margin_right = right
-	style.texture_margin_bottom = bottom
-	style.content_margin_left = left
-	style.content_margin_top = top
-	style.content_margin_right = right
-	style.content_margin_bottom = bottom
-	style.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-	style.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-	return style
-
-
 func _apply_new_ui_assets() -> void:
-	var header_texture := _load_png_texture_direct(UI_CARD_FRAME_DIR + "/ui1.png")
-	if header_texture != null:
-		var header_style := _make_texture_style(header_texture, 30.0, 18.0, 30.0, 18.0)
-		$SafeArea/Layout/Header.add_theme_stylebox_override("panel", header_style)
+	var title_label := $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
+	if title_label == null:
+		return
 
-	var enter_texture := _load_png_texture_direct(UI_CARD_FRAME_DIR + "/ui6.png")
-	if enter_texture != null:
-		var enter_style := _make_texture_style(enter_texture, 24.0, 16.0, 24.0, 16.0)
-		enter_stage_button.add_theme_stylebox_override("normal", enter_style)
-		enter_stage_button.add_theme_stylebox_override("hover", enter_style)
-		enter_stage_button.add_theme_stylebox_override("pressed", enter_style)
+	var old_banner := title_label.get_node_or_null("TitleBanner")
+	if old_banner != null:
+		old_banner.queue_free()
+
+	var title_texture := _load_png_texture_direct(UI_CARD_FRAME_DIR + "/ui1.png")
+	if title_texture == null:
+		return
+
+	var banner := TextureRect.new()
+	banner.name = "TitleBanner"
+	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	banner.texture = title_texture
+	banner.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	banner.set_anchors_preset(Control.PRESET_CENTER)
+	banner.offset_left = -150.0
+	banner.offset_top = -50.0
+	banner.offset_right = 150.0
+	banner.offset_bottom = 50.0
+	banner.show_behind_parent = true
+	title_label.add_child(banner)
 
 
 func _connect_navigation() -> void:
