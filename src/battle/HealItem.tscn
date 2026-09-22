@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/battle/heal_item.gd" id="1_heal"]
+
+[node name="HealItem" type="Node2D"]
+z_index = 2
+script = ExtResource("1_heal")
+
+[node name="Visual" type="AnimatedSprite2D" parent="."]
+visible = false
+texture_filter = 1
