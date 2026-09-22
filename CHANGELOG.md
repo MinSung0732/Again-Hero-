@@ -1712,3 +1712,10 @@
 - Header 좌우 내부 여백을 24→42로 늘려 상태 텍스트가 모서리 장식과 겹치지 않도록 조정.
 - BottomNav의 분할된 legacy part 조립 프레임을 제거하고 uicardframes/ui3.png 단일 프레임으로 교체.
 - BottomNav ui3도 StyleBoxTexture로 적용해 높이/버튼/중앙 Content 레이아웃 계산에는 영향을 주지 않도록 유지.
+
+### Revert Header/BottomNav Regression
+- Header 216px 확대가 중앙 Content를 아래로 밀어 StageCard 내부 텍스트 정렬이 깨지는 문제를 확인하고 Header를 검증된 192px로 복구.
+- HeaderMargin도 마지막 정상 상태(24/86/24/10)로 복구.
+- BottomNav ui3 StyleBox 실험에서 외곽 테두리가 사라지는 문제가 있어 해당 적용을 제거.
+- BottomNav는 마지막 정상 상태의 legacy 조립 프레임으로 복구.
+- ContentFrame ui9, Header ui1, StageCard ui10은 유지.
