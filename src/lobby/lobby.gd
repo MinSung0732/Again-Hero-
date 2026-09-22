@@ -562,10 +562,10 @@ func _apply_new_ui_assets() -> void:
 	banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	banner.set_anchors_preset(Control.PRESET_CENTER)
-	banner.offset_left = -126.0
-	banner.offset_top = -32.0
-	banner.offset_right = 126.0
-	banner.offset_bottom = 32.0
+	banner.offset_left = -170.0
+	banner.offset_top = -46.0
+	banner.offset_right = 170.0
+	banner.offset_bottom = 46.0
 	banner.show_behind_parent = true
 	title_label.add_child(banner)
 
