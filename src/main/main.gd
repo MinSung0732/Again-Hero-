@@ -6,6 +6,7 @@ const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const HERO_AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
+const HERO_SKILL_COOLDOWN_BADGE := preload("res://src/ui/hero_skill_cooldown_badge.gd")
 const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png"
 
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
@@ -21,6 +22,7 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 @onready var exp_label: Label = $HUD/TopBar/ExpLabel
 @onready var exp_bar: ProgressBar = $HUD/TopBar/ExpBar
 @onready var debug_balance_label: Label = $HUD/DebugBalance
+@onready var hero_skill_cooldown_bar: HBoxContainer = $HUD/HeroSkillCooldownBar
 
 @onready var monster_info_bookmark: Button = $HUD/MonsterInfoBookmark
 @onready var monster_info_panel: PanelContainer = $HUD/MonsterInfoPanel
@@ -121,6 +123,8 @@ var monster_info_animating: bool = false
 var hero_info_animating: bool = false
 var hero_info_portrait_cache_path: String = ""
 var hero_info_portrait_cache: Texture2D = null
+var hero_skill_badges: Dictionary = {}
+var hero_skill_hud_refresh_timer: float = 0.0
 
 func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
@@ -239,6 +243,7 @@ func _ready() -> void:
 		float(snapshot.get("run_elapsed_seconds", 0.0)),
 		float(snapshot.get("run_remaining_seconds", 0.0))
 	)
+	_refresh_hero_skill_cooldown_hud()
 
 	build_label.text = ""
 	debug_balance_label.text = String(snapshot.get("debug_balance_summary", "[DEBUG]"))
@@ -249,13 +254,16 @@ func _ready() -> void:
 	print("Finite world camera + persistent stage progression enabled.")
 
 func _process(delta: float) -> void:
-	debug_refresh_timer -= delta
-	if debug_refresh_timer > 0.0:
-		return
+	hero_skill_hud_refresh_timer -= delta
+	if hero_skill_hud_refresh_timer <= 0.0:
+		hero_skill_hud_refresh_timer = 0.05
+		_refresh_hero_skill_cooldown_hud()
 
-	debug_refresh_timer = 0.25
-	if is_instance_valid(battle) and battle.has_method("get_debug_balance_summary"):
-		debug_balance_label.text = String(battle.call("get_debug_balance_summary"))
+	debug_refresh_timer -= delta
+	if debug_refresh_timer <= 0.0:
+		debug_refresh_timer = 0.25
+		if is_instance_valid(battle) and battle.has_method("get_debug_balance_summary"):
+			debug_balance_label.text = String(battle.call("get_debug_balance_summary"))
 
 func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 	subtitle_label.text = "Stage %d · %s · %s" % [
@@ -716,6 +724,54 @@ func _hide_monster_info_immediate() -> void:
 		monster_info_panel.hide()
 	monster_info_bookmark.show()
 	monster_info_animating = false
+
+func _refresh_hero_skill_cooldown_hud() -> void:
+	if not is_instance_valid(hero_skill_cooldown_bar):
+		return
+	if not is_instance_valid(battle):
+		hero_skill_cooldown_bar.hide()
+		return
+
+	var hero_node = battle.get("hero")
+	if not is_instance_valid(hero_node) or not hero_node.has_method("get_skill_cooldown_hud"):
+		hero_skill_cooldown_bar.hide()
+		return
+
+	var raw_skills = hero_node.call("get_skill_cooldown_hud")
+	if typeof(raw_skills) != TYPE_ARRAY:
+		hero_skill_cooldown_bar.hide()
+		return
+
+	var seen: Dictionary = {}
+	for raw_skill in raw_skills:
+		if typeof(raw_skill) != TYPE_DICTIONARY:
+			continue
+		var skill: Dictionary = raw_skill
+		var skill_id := String(skill.get("id", ""))
+		if skill_id.is_empty():
+			continue
+		seen[skill_id] = true
+
+		var badge: Control = hero_skill_badges.get(skill_id)
+		if not is_instance_valid(badge):
+			badge = HERO_SKILL_COOLDOWN_BADGE.new()
+			hero_skill_badges[skill_id] = badge
+			hero_skill_cooldown_bar.add_child(badge)
+			badge.call("configure", skill)
+		else:
+			badge.call("update_state", skill)
+
+	for raw_id in hero_skill_badges.keys():
+		var skill_id := String(raw_id)
+		if seen.has(skill_id):
+			continue
+		var stale_badge = hero_skill_badges.get(skill_id)
+		if is_instance_valid(stale_badge):
+			stale_badge.queue_free()
+		hero_skill_badges.erase(skill_id)
+
+	hero_skill_cooldown_bar.visible = not seen.is_empty()
+
 
 func _refresh_hero_info_panel() -> void:
 	if battle == null or not battle.has_method("get_snapshot"):
@@ -1664,6 +1720,7 @@ func _on_hero_augment_selected(
 
 func _on_battle_finished(message: String, player_won: bool) -> void:
 	pause_menu.hide()
+	hero_skill_cooldown_bar.hide()
 	demon_augment_panel.hide()
 	mutation_panel.hide()
 	monster_info_panel.hide()
