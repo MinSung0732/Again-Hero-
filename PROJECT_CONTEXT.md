@@ -1677,3 +1677,17 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 프레임 오버레이는 `MOUSE_FILTER_IGNORE`라 모바일 터치 입력을 가로채지 않는다.
 - 기존 StyleBox는 배경 채움 역할만 하고, 위 대상의 실제 외곽선은 PNG 프레임이 담당한다.
 - 동적 몬스터 카드 전체에 프레임 노드를 무분별하게 추가하지 않아 모바일 노드/드로우콜 증가를 제한한다.
+
+
+### 로비 UI PNG 프레임 스케일 조정 v2
+- 원본 PNG 프레임의 장식 크기가 로비 콘텐츠를 침범하므로 적용 범위를 축소한다.
+- Header / BottomNav:
+  - 03_middle_right_panel 사용
+  - 모서리 약 31px, 상하 18px, 좌우 16px 수준으로 축소
+- ContentFrame:
+  - 01_large_left_panel 유지
+  - 모서리 약 41px, 상하 24px, 좌우 20px 수준으로 축소
+- StageCard / Shop ResultPanel / Normal/Elite 비교 카드에는 PNG 프레임을 제거한다.
+  - 내부 카드까지 장식 프레임을 중첩하면 화면이 답답해지고 콘텐츠를 가리기 때문.
+- MonsterDetail 전체 팝업에만 중형 PNG 프레임 유지.
+- AssetFrame z_index는 30 -> 8로 낮춰 장식이 콘텐츠보다 과하게 튀지 않게 한다.
