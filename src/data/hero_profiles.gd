@@ -93,8 +93,8 @@ const PROFILES = {
 			"aoe_radii": [95.0, 110.0, 130.0],
 			"aoe_forward_offsets": [48.0, 54.0, 62.0],
 			"lunge_distance": 85.0,
-			"lunge_stop_distance": 24.0,
 			"knockback_distance": 30.0,
+			"collision_ignore_duration": 0.28,
 			"secondary_lifesteal_efficiency": 0.50,
 		},
 		"rogue_slash_skill": {
