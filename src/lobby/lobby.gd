@@ -18,6 +18,7 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 const UI_FRAME_LARGE_DIR := "res://assets/art/UI/01_large_left_panel"
 const UI_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
 const UI_CARD_FRAME_DIR := "res://assets/art/UI/uicardframes"
+const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 @onready var resource_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ResourceLabel
@@ -543,31 +544,60 @@ func _load_png_texture_direct(path: String) -> Texture2D:
 
 func _apply_new_ui_assets() -> void:
 	var title_label := $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
-	if title_label == null:
+	if title_label != null:
+		title_label.visible = false
+
+	var header := $SafeArea/Layout/Header
+	var old_logo := header.get_node_or_null("HeaderLogo")
+	if old_logo != null:
+		old_logo.queue_free()
+
+	var logo_texture := _load_png_texture_direct(UI_LOGO_PATH)
+	if logo_texture != null:
+		var logo := TextureRect.new()
+		logo.name = "HeaderLogo"
+		logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		logo.texture = logo_texture
+		logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		logo.set_anchors_preset(Control.PRESET_TOP_WIDE)
+		logo.offset_left = 112.0
+		logo.offset_top = 2.0
+		logo.offset_right = -112.0
+		logo.offset_bottom = 72.0
+		header.add_child(logo)
+		header.move_child(logo, 0)
+
+	var arrow_texture := _load_png_texture_direct(UI_CARD_FRAME_DIR + "/ui8.png")
+	if arrow_texture != null:
+		_apply_arrow_texture(prev_stage_button, arrow_texture, false)
+		_apply_arrow_texture(next_stage_button, arrow_texture, true)
+
+
+func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> void:
+	if button == null:
 		return
 
-	var old_banner := title_label.get_node_or_null("TitleBanner")
-	if old_banner != null:
-		old_banner.queue_free()
+	button.text = ""
+	button.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
+	button.add_theme_stylebox_override("hover", StyleBoxEmpty.new())
+	button.add_theme_stylebox_override("pressed", StyleBoxEmpty.new())
 
-	var title_texture := _load_png_texture_direct(UI_CARD_FRAME_DIR + "/ui1.png")
-	if title_texture == null:
-		return
+	var old := button.get_node_or_null("ArrowSkin")
+	if old != null:
+		old.queue_free()
 
-	var banner := TextureRect.new()
-	banner.name = "TitleBanner"
-	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	banner.texture = title_texture
-	banner.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	banner.set_anchors_preset(Control.PRESET_CENTER)
-	banner.offset_left = -170.0
-	banner.offset_top = -46.0
-	banner.offset_right = 170.0
-	banner.offset_bottom = 46.0
-	banner.show_behind_parent = true
-	title_label.add_child(banner)
+	var skin := TextureRect.new()
+	skin.name = "ArrowSkin"
+	skin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	skin.texture = texture
+	skin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	skin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	skin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	skin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	skin.flip_h = flip_h
+	button.add_child(skin)
 
 
 func _connect_navigation() -> void:
