@@ -154,6 +154,9 @@ var ai_settings: Dictionary = {
 	"observation_interval": 4.0,
 	"stack_inertia": 1.0,
 	"new_branch_penalty": 0.5,
+	"heal_item_desire": 1.0,
+	"heal_risk_tolerance": 0.50,
+	"heal_detour_weight": 1.0,
 	"augment_biases": {},
 }
 
@@ -189,6 +192,10 @@ var status_resistances: Dictionary = {}
 var ai_observation_timer: float = 0.0
 var ai_observed_context: Dictionary = {}
 var ai_observed_context_time: float = 0.0
+
+var heal_item_target: Node2D
+var heal_item_retarget_timer: float = 0.0
+var heal_item_steering_direction: Vector2 = Vector2.ZERO
 
 @onready var follow_camera: Camera2D = $Camera2D
 @onready var hero_sprite: AnimatedSprite2D = $HeroSprite
@@ -237,6 +244,9 @@ func configure_profile(profile: Dictionary) -> void:
 	fighter_charge_afterimage_timer = 0.0
 	fighter_courage_bonus = 0.0
 	fighter_charge_kill_heal = 0.0
+	heal_item_target = null
+	heal_item_retarget_timer = 0.0
+	heal_item_steering_direction = Vector2.ZERO
 	var profile_fighter_basic = profile.get("fighter_basic", {})
 	fighter_basic_config = (
 		profile_fighter_basic.duplicate(true)
@@ -451,6 +461,8 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 
+	_update_heal_item_goal(delta)
+
 	if not is_instance_valid(target) or target.is_queued_for_deletion() or retarget_timer <= 0.0:
 		target = _find_nearest_monster()
 		retarget_timer = 0.12
@@ -462,6 +474,7 @@ func _physics_process(delta: float) -> void:
 
 	var distance := global_position.distance_to(target.global_position)
 	var move_direction := _choose_move_direction(target, distance)
+	move_direction = _apply_heal_item_steering(move_direction, delta)
 	velocity = move_direction * move_speed * move_multiplier
 	move_and_slide()
 	_clamp_to_battlefield()
@@ -535,6 +548,8 @@ func _physics_process_rogue(delta: float) -> void:
 	):
 		_start_rogue_slash()
 
+	_update_heal_item_goal(delta)
+
 	if (
 		not is_instance_valid(target)
 		or target.is_queued_for_deletion()
@@ -564,10 +579,11 @@ func _physics_process_rogue(delta: float) -> void:
 			1.0
 		)
 
+	var move_direction := Vector2.ZERO
 	if distance > attack_range * 0.88:
-		var move_direction := global_position.direction_to(
-			target.global_position
-		)
+		move_direction = global_position.direction_to(target.global_position)
+	move_direction = _apply_heal_item_steering(move_direction, delta)
+	if move_direction.length_squared() > 0.01:
 		velocity = (
 			move_direction
 			* move_speed
@@ -1851,6 +1867,14 @@ func _apply_camera_limits() -> void:
 	follow_camera.position_smoothing_speed = 7.0
 
 func _move_without_monsters() -> void:
+	if is_instance_valid(heal_item_target):
+		var heal_direction := _apply_heal_item_steering(Vector2.ZERO, 0.016)
+		if heal_direction.length_squared() > 0.01:
+			velocity = heal_direction * move_speed * 0.90 * move_multiplier
+			move_and_slide()
+			_clamp_to_battlefield()
+			return
+
 	var nearest_exp_orb := _find_nearest_exp_orb()
 	if is_instance_valid(nearest_exp_orb):
 		var exp_direction := global_position.direction_to(nearest_exp_orb.global_position)
@@ -1943,6 +1967,161 @@ func _clamp_to_battlefield() -> void:
 
 	if hit_edge:
 		strafe_sign *= -1.0
+
+func _update_heal_item_goal(delta: float) -> void:
+	heal_item_retarget_timer = maxf(heal_item_retarget_timer - delta, 0.0)
+	if current_hp <= 0 or max_hp <= 0:
+		heal_item_target = null
+		heal_item_steering_direction = Vector2.ZERO
+		return
+
+	var hp_ratio := clampf(float(current_hp) / float(max_hp), 0.0, 1.0)
+	if hp_ratio >= 0.60:
+		heal_item_target = null
+		heal_item_steering_direction = Vector2.ZERO
+		return
+
+	if (
+		heal_item_retarget_timer > 0.0
+		and is_instance_valid(heal_item_target)
+		and not heal_item_target.is_queued_for_deletion()
+	):
+		return
+
+	heal_item_retarget_timer = randf_range(0.15, 0.30)
+	heal_item_target = null
+
+	var desire := _heal_item_desire_for_hp(hp_ratio)
+	desire *= maxf(float(ai_settings.get("heal_item_desire", 1.0)), 0.0)
+	if desire <= 0.0:
+		return
+
+	var risk_tolerance := clampf(
+		float(ai_settings.get("heal_risk_tolerance", 0.50)),
+		0.0,
+		1.0
+	)
+	var best_score := -INF
+	for node in get_tree().get_nodes_in_group("heal_items"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var item := node as Node2D
+		if item == null:
+			continue
+
+		var distance := global_position.distance_to(item.global_position)
+		# At moderate HP, behave like a player preserving position: only detour for nearby heals.
+		if hp_ratio > 0.40 and distance > 480.0:
+			continue
+
+		var path_midpoint := global_position.lerp(item.global_position, 0.5)
+		var path_danger := _estimate_monster_danger(path_midpoint, 260.0)
+		var item_danger := _estimate_monster_danger(item.global_position, 220.0)
+		var distance_penalty := clampf(distance / 900.0, 0.0, 2.5)
+		var danger_penalty := (
+			(path_danger * 0.75 + item_danger)
+			* lerpf(1.45, 0.45, risk_tolerance)
+		)
+		var score := desire * 3.2 - distance_penalty - danger_penalty
+
+		if score > best_score and score > 0.20:
+			best_score = score
+			heal_item_target = item
+
+	if not is_instance_valid(heal_item_target):
+		heal_item_steering_direction = Vector2.ZERO
+
+
+func _heal_item_desire_for_hp(hp_ratio: float) -> float:
+	if hp_ratio >= 0.60:
+		return 0.0
+	if hp_ratio >= 0.40:
+		return lerpf(0.12, 0.30, (0.60 - hp_ratio) / 0.20)
+	if hp_ratio >= 0.25:
+		return lerpf(0.48, 0.68, (0.40 - hp_ratio) / 0.15)
+	if hp_ratio >= 0.10:
+		return lerpf(0.78, 0.94, (0.25 - hp_ratio) / 0.15)
+	return 1.0
+
+
+func _estimate_monster_danger(at_position: Vector2, radius: float) -> float:
+	var danger := 0.0
+	var safe_radius := maxf(radius, 1.0)
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var distance := at_position.distance_to(monster.global_position)
+		if distance >= safe_radius:
+			continue
+		danger += 1.0 - clampf(distance / safe_radius, 0.0, 1.0)
+	return danger
+
+
+func _get_crowd_avoidance_direction(radius: float = 230.0) -> Vector2:
+	var avoidance := Vector2.ZERO
+	var safe_radius := maxf(radius, 1.0)
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var distance := global_position.distance_to(monster.global_position)
+		if distance <= 0.0 or distance >= safe_radius:
+			continue
+		var weight := 1.0 - clampf(distance / safe_radius, 0.0, 1.0)
+		avoidance += monster.global_position.direction_to(global_position) * (0.35 + weight)
+	return avoidance.normalized() if avoidance.length_squared() > 0.01 else Vector2.ZERO
+
+
+func _apply_heal_item_steering(base_direction: Vector2, delta: float) -> Vector2:
+	if not is_instance_valid(heal_item_target) or heal_item_target.is_queued_for_deletion():
+		heal_item_target = null
+		heal_item_steering_direction = Vector2.ZERO
+		return base_direction.normalized() if base_direction.length_squared() > 0.01 else Vector2.ZERO
+
+	var hp_ratio := clampf(float(current_hp) / float(max_hp), 0.0, 1.0)
+	var desire := _heal_item_desire_for_hp(hp_ratio)
+	desire *= maxf(float(ai_settings.get("heal_item_desire", 1.0)), 0.0)
+	var risk_tolerance := clampf(
+		float(ai_settings.get("heal_risk_tolerance", 0.50)),
+		0.0,
+		1.0
+	)
+	var detour_weight := maxf(float(ai_settings.get("heal_detour_weight", 1.0)), 0.0)
+
+	var heal_direction := global_position.direction_to(heal_item_target.global_position)
+	var avoidance := _get_crowd_avoidance_direction(240.0)
+	var local_danger := _estimate_monster_danger(global_position, 210.0)
+	var heal_weight := clampf(desire, 0.0, 1.15)
+	var combat_weight := maxf(0.35, 1.0 - heal_weight * 0.55)
+	var avoidance_weight := (
+		(0.60 + local_danger * 0.34)
+		* lerpf(1.25, 0.70, risk_tolerance)
+		* detour_weight
+	)
+
+	var desired := base_direction * combat_weight + heal_direction * heal_weight
+	if avoidance.length_squared() > 0.01:
+		desired += avoidance * avoidance_weight
+	if desired.length_squared() <= 0.01:
+		desired = heal_direction
+	desired = desired.normalized()
+
+	if heal_item_steering_direction.length_squared() <= 0.01:
+		heal_item_steering_direction = desired
+	else:
+		var turn_speed := lerpf(3.8, 7.5, heal_weight)
+		heal_item_steering_direction = heal_item_steering_direction.lerp(
+			desired,
+			clampf(delta * turn_speed, 0.0, 1.0)
+		).normalized()
+
+	return heal_item_steering_direction
+
 
 func _find_nearest_monster() -> Node2D:
 	var nearest: Node2D = null
@@ -2918,6 +3097,16 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 					0.36
 				)
 
+		"advance_fighter_charge_recovery":
+			# Victory Breath: first stack heals 8 on charge kill, then +2 per stack.
+			if fighter_charge_kill_heal <= 0.0:
+				fighter_charge_kill_heal = 8.0
+			else:
+				fighter_charge_kill_heal = minf(
+					fighter_charge_kill_heal + 2.0,
+					26.0
+				)
+
 		"heal":
 			current_hp = mini(
 				current_hp + int(effect.get("value", 0)),
@@ -3010,6 +3199,8 @@ func _physics_process_fighter(delta: float) -> void:
 			move_multiplier = 1.0
 			queue_redraw()
 
+	_update_heal_item_goal(delta)
+
 	if (
 		not is_instance_valid(target)
 		or target.is_queued_for_deletion()
@@ -3033,10 +3224,13 @@ func _physics_process_fighter(delta: float) -> void:
 		return
 
 	var distance := global_position.distance_to(target.global_position)
+	var move_direction := Vector2.ZERO
 	if distance > attack_range * 0.90:
-		var direction := global_position.direction_to(target.global_position)
+		move_direction = global_position.direction_to(target.global_position)
+	move_direction = _apply_heal_item_steering(move_direction, delta)
+	if move_direction.length_squared() > 0.01:
 		velocity = (
-			direction
+			move_direction
 			* move_speed
 			* move_multiplier
 			* guard_move_scale
@@ -3298,6 +3492,20 @@ func _play_fighter_charge_impact_effect() -> void:
 	channel_effect.play("charge_impact")
 
 func _fighter_move_without_monsters(speed_scale: float) -> void:
+	if is_instance_valid(heal_item_target):
+		var heal_direction := _apply_heal_item_steering(Vector2.ZERO, 0.016)
+		if heal_direction.length_squared() > 0.01:
+			velocity = (
+				heal_direction
+				* move_speed
+				* 0.90
+				* move_multiplier
+				* speed_scale
+			)
+			move_and_slide()
+			_clamp_to_battlefield()
+			return
+
 	var nearest_exp_orb := _find_nearest_exp_orb()
 	if is_instance_valid(nearest_exp_orb):
 		var exp_direction := global_position.direction_to(nearest_exp_orb.global_position)
