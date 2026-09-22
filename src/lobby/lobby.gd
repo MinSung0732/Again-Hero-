@@ -22,6 +22,8 @@ const UI_HEADER_CARD_PATH := UI_CARD_FRAME_DIR + "/ui1.png"
 const UI_CONTENT_CARD_PATH := UI_CARD_FRAME_DIR + "/ui9.png"
 const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 
+const STAGE_CARD_TEXTURE_ASPECT := 1499.0 / 1049.0
+
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 @onready var resource_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ResourceLabel
 @onready var progress_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ProgressLabel
@@ -66,6 +68,8 @@ const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 @onready var monster_detail_elite_name: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Name
 @onready var monster_detail_elite_stats: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Stats
 
+@onready var stage_picker: HBoxContainer = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker
+@onready var stage_card: PanelContainer = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard
 @onready var prev_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/PrevButton
 @onready var next_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/NextButton
 @onready var stage_number_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/StageNumber
@@ -86,6 +90,7 @@ const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 var stage_ids: Array[String] = []
 var selected_stage_index: int = 0
 var current_tab: String = "main"
+var _stage_card_layout_sync_pending := false
 
 var monster_collection_state: Dictionary = {}
 var team_catalog_ids: Array = []
@@ -114,6 +119,8 @@ func _ready() -> void:
 	_apply_asset_frames()
 	_apply_new_ui_assets()
 	_connect_navigation()
+	_connect_stage_card_responsive_layout()
+	_queue_stage_card_layout_sync()
 
 	stage_ids = STAGE_CATALOG.get_ordered_stage_ids()
 	if stage_ids.is_empty():
@@ -711,6 +718,36 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 	skin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	skin.flip_h = flip_h
 	button.add_child(skin)
+
+
+func _connect_stage_card_responsive_layout() -> void:
+	if stage_picker != null and not stage_picker.resized.is_connected(_queue_stage_card_layout_sync):
+		stage_picker.resized.connect(_queue_stage_card_layout_sync)
+
+	var viewport := get_viewport()
+	if viewport != null and not viewport.size_changed.is_connected(_queue_stage_card_layout_sync):
+		viewport.size_changed.connect(_queue_stage_card_layout_sync)
+
+
+func _queue_stage_card_layout_sync() -> void:
+	if _stage_card_layout_sync_pending:
+		return
+	_stage_card_layout_sync_pending = true
+	call_deferred("_sync_stage_card_layout")
+
+
+func _sync_stage_card_layout() -> void:
+	_stage_card_layout_sync_pending = false
+	if stage_card == null:
+		return
+
+	var card_width := stage_card.size.x
+	if card_width <= 1.0:
+		return
+
+	var target_height := round(card_width * STAGE_CARD_TEXTURE_ASPECT)
+	if abs(stage_card.custom_minimum_size.y - target_height) > 1.0:
+		stage_card.custom_minimum_size.y = target_height
 
 
 func _connect_navigation() -> void:
