@@ -1567,19 +1567,22 @@ func _load_stage1_texture(path: String) -> Texture2D:
 	if path.is_empty():
 		return null
 
-	# Prefer the imported resource when Godot has already refreshed it.
-	if ResourceLoader.exists(path):
-		var imported_texture = load(path)
-		if imported_texture is Texture2D:
-			return imported_texture
-
-	# Android Editor/Termux workflow can see the raw PNG before import cache
-	# refreshes, so keep the direct Image fallback for both sheets.
+	# Stage 1 art is intentionally loaded from the source PNG first.
+	# Some moved effect PNGs still carry stale .import metadata pointing at
+	# their pre-frames/ paths, which can make ResourceLoader return the old
+	# cached .ctex even after the PNG itself was replaced.
 	if FileAccess.file_exists(path):
 		var image := Image.new()
 		var error := image.load(path)
 		if error == OK:
 			return ImageTexture.create_from_image(image)
+
+	# Fallback to Godot's imported resource only when the raw source cannot
+	# be read (for example, on a packaged platform).
+	if ResourceLoader.exists(path):
+		var imported_texture = load(path)
+		if imported_texture is Texture2D:
+			return imported_texture
 
 	return null
 
