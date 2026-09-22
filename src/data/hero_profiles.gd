@@ -197,6 +197,12 @@ const PROFILES = {
 			"deadeye_cooldown": 20.0,
 			"deadeye_move_speed_multiplier": 1.30,
 			"deadeye_shot_interval": 0.08,
+			"deadeye_min_ammo": 3,
+			"deadeye_min_cluster_score": 3.0,
+			"deadeye_force_cluster_score": 5.5,
+			"deadeye_cluster_range": 620.0,
+			"deadeye_corridor_half_width": 105.0,
+			"deadeye_cluster_samples": 36,
 		},
 		"augment_pool_ids": [
 			"common_attack_training",
