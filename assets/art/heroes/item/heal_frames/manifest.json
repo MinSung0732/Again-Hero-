@@ -1,0 +1,61 @@
+{
+  "source": "hero_heal_item.png",
+  "animation": "float",
+  "loop": true,
+  "frame_count": 4,
+  "frame_order": [
+    "float_01.png",
+    "float_02.png",
+    "float_03.png",
+    "float_04.png"
+  ],
+  "cell_size": {
+    "width": 512,
+    "height": 512
+  },
+  "sheet_size": {
+    "width": 2048,
+    "height": 512
+  },
+  "sheet_columns": 4,
+  "sheet_rows": 1,
+  "anchor": {
+    "x": 256,
+    "y": 256
+  },
+  "alignment_note": "Original vertical bobbing offsets are preserved in a shared cell.",
+  "frames": [
+    {
+      "file": "float_01.png",
+      "index": 0,
+      "anchor": {
+        "x": 256,
+        "y": 256
+      }
+    },
+    {
+      "file": "float_02.png",
+      "index": 1,
+      "anchor": {
+        "x": 256,
+        "y": 256
+      }
+    },
+    {
+      "file": "float_03.png",
+      "index": 2,
+      "anchor": {
+        "x": 256,
+        "y": 256
+      }
+    },
+    {
+      "file": "float_04.png",
+      "index": 3,
+      "anchor": {
+        "x": 256,
+        "y": 256
+      }
+    }
+  ]
+}
