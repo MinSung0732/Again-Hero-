@@ -2907,6 +2907,7 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 				set(target, next_value)
 
 		"advance_fighter_courage":
+			# Base charge is always 3 hits. Courage only unlocks extra-chain chance.
 			if fighter_courage_bonus <= 0.0:
 				fighter_courage_bonus = 0.15
 			else:
@@ -3153,24 +3154,21 @@ func _complete_fighter_charge_dash() -> void:
 	if direction.length_squared() <= 0.0:
 		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 
-	var courage_multiplier := 1.0 + fighter_courage_bonus
 	var dash_damage := maxi(
 		1,
 		int(round(
 			float(attack_damage)
 			* float(fighter_charge_config.get("dash_damage_ratio", 1.20))
-			* courage_multiplier
 		))
 	)
-	if is_instance_valid(fighter_charge_target) and fighter_charge_target.has_method("take_damage"):
-		fighter_charge_target.call("take_damage", dash_damage)
+	if is_instance_valid(fighter_charge_target):
+		_fighter_charge_damage_target(fighter_charge_target, dash_damage)
 
 	var impact_damage := maxi(
 		1,
 		int(round(
 			float(attack_damage)
 			* float(fighter_charge_config.get("impact_damage_ratio", 1.70))
-			* courage_multiplier
 		))
 	)
 	var radius := maxf(float(fighter_charge_config.get("impact_radius", 175.0)), 1.0)
@@ -3180,24 +3178,66 @@ func _complete_fighter_charge_dash() -> void:
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		if global_position.distance_to(monster.global_position) <= radius and monster.has_method("take_damage"):
-			monster.call("take_damage", impact_damage)
+		if global_position.distance_to(monster.global_position) <= radius:
+			_fighter_charge_damage_target(monster, impact_damage)
 
 	_play_fighter_charge_impact_effect()
 	fighter_charge_chain_count += 1
 
-	var max_chains := clampi(
+	var base_chains := clampi(
 		int(fighter_charge_config.get("max_chains", 3)),
 		1,
 		3
 	)
-	if fighter_charge_chain_count < max_chains:
+	var courage_max_chains := clampi(
+		int(fighter_charge_config.get("courage_max_chains", 6)),
+		base_chains,
+		6
+	)
+	var should_continue := fighter_charge_chain_count < base_chains
+	if (
+		not should_continue
+		and fighter_courage_bonus > 0.0
+		and fighter_charge_chain_count < courage_max_chains
+	):
+		should_continue = randf() <= fighter_courage_bonus
+
+	if should_continue:
 		var next_target := _find_fighter_charge_target(fighter_charge_target)
 		if is_instance_valid(next_target):
 			_begin_fighter_charge_dash(next_target)
 			return
 
 	_finish_fighter_charge()
+
+func _fighter_charge_damage_target(monster: Node2D, damage: int) -> void:
+	if not is_instance_valid(monster) or monster.is_queued_for_deletion():
+		return
+	if not monster.has_method("take_damage"):
+		return
+
+	var hp_before_value = monster.get("current_hp")
+	var hp_before := int(hp_before_value) if hp_before_value != null else -1
+	monster.call("take_damage", maxi(damage, 1))
+
+	if fighter_courage_bonus <= 0.0 or hp_before <= 0:
+		return
+	var hp_after_value = monster.get("current_hp")
+	if hp_after_value == null or int(hp_after_value) > 0:
+		return
+
+	var heal_amount := maxi(
+		int(fighter_charge_config.get("courage_kill_heal", 8)),
+		0
+	)
+	if heal_amount <= 0 or current_hp <= 0:
+		return
+
+	var previous_hp := current_hp
+	current_hp = mini(current_hp + heal_amount, max_hp)
+	if current_hp > previous_hp:
+		health_changed.emit(current_hp, max_hp)
+		queue_redraw()
 
 func _finish_fighter_charge() -> void:
 	fighter_charge_active = false
@@ -3496,29 +3536,6 @@ func _end_fighter_guard() -> void:
 				monster.call("take_damage", release_damage)
 
 	_play_fighter_guard_release_effect()
-
-	var recovery_ratio := maxf(
-		float(ultimate_config.get("recovery_from_stored_damage_ratio", 0.12)),
-		0.0
-	)
-	var recovery_cap := maxi(
-		int(round(
-			float(max_hp)
-			* clampf(
-				float(ultimate_config.get("recovery_max_hp_ratio", 0.08)),
-				0.0,
-				1.0
-			)
-		)),
-		0
-	)
-	var recovery_amount := mini(
-		maxi(int(round(fighter_guard_stored_damage * recovery_ratio)), 0),
-		recovery_cap
-	)
-	if recovery_amount > 0 and current_hp > 0:
-		current_hp = mini(current_hp + recovery_amount, max_hp)
-		health_changed.emit(current_hp, max_hp)
 
 	fighter_guard_stored_damage = 0.0
 	shield_hp = 0.0
