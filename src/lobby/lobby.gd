@@ -20,6 +20,7 @@ const UI_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
 const UI_CARD_FRAME_DIR := "res://assets/art/UI/uicardframes"
 const UI_HEADER_CARD_PATH := UI_CARD_FRAME_DIR + "/ui1.png"
 const UI_CONTENT_CARD_PATH := UI_CARD_FRAME_DIR + "/ui9.png"
+const UI_BOTTOM_NAV_CARD_PATH := UI_CARD_FRAME_DIR + "/ui3.png"
 const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
@@ -351,21 +352,6 @@ func _apply_styles() -> void:
 
 
 func _apply_asset_frames() -> void:
-	# 하단 네비는 아직 검증된 legacy 프레임을 유지한다.
-	# 헤더만 uicardframes 완성형 리소스로 교체한다.
-	_add_asset_frame(
-		$BottomNav,
-		UI_FRAME_MEDIUM_DIR,
-		Vector2(26.0, 25.0),
-		Vector2(26.0, 25.0),
-		Vector2(26.0, 25.0),
-		Vector2(26.0, 25.0),
-		14.0,
-		14.0,
-		12.0,
-		12.0
-	)
-
 	# 팝업만 별도 프레임을 사용한다. 카드 내부 중첩 장식은 피한다.
 	_add_asset_frame(
 		monster_detail_panel,
@@ -562,6 +548,31 @@ func _load_png_texture_top_region(path: String, height_ratio: float) -> Texture2
 	return ImageTexture.create_from_image(top_region)
 
 
+func _apply_bottom_nav_card_skin(bottom_nav: PanelContainer) -> void:
+	if bottom_nav == null:
+		return
+
+	var texture := _load_png_texture_cropped(UI_BOTTOM_NAV_CARD_PATH)
+	if texture == null:
+		return
+
+	var texture_size := texture.get_size()
+	var margin_x := maxi(1, int(round(texture_size.x * 0.045)))
+	var margin_y := maxi(1, int(round(texture_size.y * 0.075)))
+
+	var nav_skin := StyleBoxTexture.new()
+	nav_skin.texture = texture
+	nav_skin.texture_margin_left = margin_x
+	nav_skin.texture_margin_top = margin_y
+	nav_skin.texture_margin_right = margin_x
+	nav_skin.texture_margin_bottom = margin_y
+	nav_skin.content_margin_left = 0.0
+	nav_skin.content_margin_top = 0.0
+	nav_skin.content_margin_right = 0.0
+	nav_skin.content_margin_bottom = 0.0
+	bottom_nav.add_theme_stylebox_override("panel", nav_skin)
+
+
 func _apply_content_card_skin(content_frame: PanelContainer) -> void:
 	if content_frame == null:
 		return
@@ -628,6 +639,7 @@ func _apply_new_ui_assets() -> void:
 	# Decorative frame skins are applied as StyleBoxTexture so they never resize
 	# the verified StageCard/content layout.
 	_apply_content_card_skin($SafeArea/Layout/Content/ContentFrame)
+	_apply_bottom_nav_card_skin($BottomNav)
 
 	var title_label := $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 	if title_label != null:
