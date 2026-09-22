@@ -66,19 +66,19 @@ const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 @onready var monster_detail_elite_name: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Name
 @onready var monster_detail_elite_stats: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Stats
 
-@onready var stage_card: PanelContainer = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard
+@onready var stage_card: PanelContainer = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard
 @onready var prev_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/PrevButton
 @onready var next_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/NextButton
 @onready var stage_number_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox/StageNumber
 @onready var stage_name_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox/StageName
-@onready var portrait_texture: TextureRect = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner/PortraitTexture
-@onready var portrait_placeholder: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner/PortraitPlaceholder
-@onready var portrait_badge: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner/PortraitBadge
-@onready var hero_name_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/HeroName
-@onready var stage_description_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel/StageDescription
-@onready var stage_status_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel/StageStatus
-@onready var stage_reward_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel/StageReward
-@onready var enter_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel/EnterButton
+@onready var portrait_texture: TextureRect = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner/PortraitTexture
+@onready var portrait_placeholder: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner/PortraitPlaceholder
+@onready var portrait_badge: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner/PortraitBadge
+@onready var hero_name_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/HeroName
+@onready var stage_description_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel/StageDescription
+@onready var stage_status_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel/StageStatus
+@onready var stage_reward_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel/StageReward
+@onready var enter_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel/EnterButton
 
 @onready var research_points_label: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/Points
 @onready var research_status_label: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/Status
@@ -89,12 +89,17 @@ var selected_stage_index: int = 0
 var current_tab: String = "main"
 
 const STAGE_SWIPE_THRESHOLD := 72.0
-const STAGE_SLIDE_DISTANCE := 92.0
-const STAGE_SLIDE_DURATION := 0.18
+const STAGE_SLIDE_DISTANCE := 150.0
+const STAGE_SLIDE_OUT_DURATION := 0.12
+const STAGE_SLIDE_IN_DURATION := 0.20
 
 var _stage_swipe_active := false
 var _stage_swipe_start := Vector2.ZERO
 var _stage_transition_running := false
+var _stage_pending_index := -1
+var _stage_pending_direction := 0
+var _stage_card_origin := Vector2.ZERO
+var _stage_card_base_modulate := Color.WHITE
 
 var monster_collection_state: Dictionary = {}
 var team_catalog_ids: Array = []
@@ -270,17 +275,17 @@ func _apply_styles() -> void:
 		"panel",
 		content_backing
 	)
-	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard.add_theme_stylebox_override(
+	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard.add_theme_stylebox_override(
 		"panel",
 		card_backing
 	)
 	# ui10 자체의 상단 사각 프레임을 테두리로 사용한다.
 	# 초상화 컨테이너에는 추가 금색/내부 테두리를 그리지 않는다.
-	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame.add_theme_stylebox_override(
+	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame.add_theme_stylebox_override(
 		"panel",
 		StyleBoxEmpty.new()
 	)
-	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner.add_theme_stylebox_override(
+	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner.add_theme_stylebox_override(
 		"panel",
 		StyleBoxEmpty.new()
 	)
@@ -665,7 +670,7 @@ func _apply_new_ui_assets() -> void:
 		header.add_child(logo)
 		header.move_child(logo, 0)
 
-	var stage_card := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard
+	var stage_card := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard
 	# ui10 is a complete two-section stage card.
 	# Upper panel = stage/portrait, lower panel = description/reward/action.
 	var stage_texture := _load_png_texture_cropped(
@@ -695,6 +700,7 @@ func _apply_new_ui_assets() -> void:
 	if arrow_texture != null:
 		_apply_arrow_texture(prev_stage_button, arrow_texture, false)
 		_apply_arrow_texture(next_stage_button, arrow_texture, true)
+		_refresh_stage_nav_buttons()
 
 
 func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> void:
@@ -1605,85 +1611,126 @@ func _change_stage(direction: int) -> void:
 	if stage_ids.is_empty() or _stage_transition_running:
 		return
 
+	var max_browsable_index := _get_max_browsable_stage_index()
 	var target_index := clampi(
 		selected_stage_index + direction,
 		0,
-		stage_ids.size() - 1
+		max_browsable_index
 	)
 	if target_index == selected_stage_index:
 		return
 
-	selected_stage_index = target_index
-	_refresh_stage_card()
-	_play_stage_slide_in(direction)
-
-
-func _play_stage_slide_in(direction: int) -> void:
-	if stage_card == null:
-		return
-
 	_stage_transition_running = true
+	_stage_pending_index = target_index
+	_stage_pending_direction = direction
+	_stage_card_origin = stage_card.position
+	_stage_card_base_modulate = stage_card.modulate
 
-	var card_origin := stage_card.position
-	var card_base_modulate := stage_card.modulate
-	var card_start_modulate := card_base_modulate
-	card_start_modulate.a = 0.22
+	var fade_out := _stage_card_base_modulate
+	fade_out.a = 0.18
 
-	var meta_box := stage_number_label.get_parent() as Control
-	var meta_origin := Vector2.ZERO
-	var meta_base_modulate := Color.WHITE
-	var meta_start_modulate := Color.WHITE
-
-	var slide_offset := Vector2(
-		float(direction) * STAGE_SLIDE_DISTANCE,
-		0.0
-	)
-
-	stage_card.position = card_origin + slide_offset
-	stage_card.modulate = card_start_modulate
-
-	if meta_box != null:
-		meta_origin = meta_box.position
-		meta_base_modulate = meta_box.modulate
-		meta_start_modulate = meta_base_modulate
-		meta_start_modulate.a = 0.22
-		meta_box.position = meta_origin + slide_offset * 0.45
-		meta_box.modulate = meta_start_modulate
-
-	var tween := create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(
+	var tween_out := create_tween()
+	tween_out.set_parallel(true)
+	tween_out.tween_property(
 		stage_card,
 		"position",
-		card_origin,
-		STAGE_SLIDE_DURATION
-	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.tween_property(
+		_stage_card_origin + Vector2(-float(direction) * STAGE_SLIDE_DISTANCE, 0.0),
+		STAGE_SLIDE_OUT_DURATION
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween_out.tween_property(
 		stage_card,
 		"modulate",
-		card_base_modulate,
-		STAGE_SLIDE_DURATION
+		fade_out,
+		STAGE_SLIDE_OUT_DURATION
 	)
+	tween_out.finished.connect(_on_stage_slide_out_finished)
 
-	if meta_box != null:
-		tween.tween_property(
-			meta_box,
-			"position",
-			meta_origin,
-			STAGE_SLIDE_DURATION
-		).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		tween.tween_property(
-			meta_box,
-			"modulate",
-			meta_base_modulate,
-			STAGE_SLIDE_DURATION
-		)
 
-	tween.finished.connect(_on_stage_slide_finished)
+func _on_stage_slide_out_finished() -> void:
+	selected_stage_index = _stage_pending_index
+	_refresh_stage_card()
+
+	var start_modulate := _stage_card_base_modulate
+	start_modulate.a = 0.18
+	stage_card.position = _stage_card_origin + Vector2(
+		float(_stage_pending_direction) * STAGE_SLIDE_DISTANCE,
+		0.0
+	)
+	stage_card.modulate = start_modulate
+
+	var tween_in := create_tween()
+	tween_in.set_parallel(true)
+	tween_in.tween_property(
+		stage_card,
+		"position",
+		_stage_card_origin,
+		STAGE_SLIDE_IN_DURATION
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween_in.tween_property(
+		stage_card,
+		"modulate",
+		_stage_card_base_modulate,
+		STAGE_SLIDE_IN_DURATION
+	)
+	tween_in.finished.connect(_on_stage_slide_finished)
 
 
 func _on_stage_slide_finished() -> void:
+	stage_card.position = _stage_card_origin
+	stage_card.modulate = _stage_card_base_modulate
 	_stage_transition_running = false
+	_stage_pending_index = -1
+	_stage_pending_direction = 0
+
+
+func _get_max_browsable_stage_index() -> int:
+	if stage_ids.is_empty():
+		return 0
+
+	var progress_state := STAGE_PROGRESS.load_state()
+	var highest_unlocked := int(
+		progress_state.get("highest_unlocked_stage", 1)
+	)
+	# One stage ahead can be previewed, but remains locked until the previous
+	# stage is cleared. Everything beyond that is not browsable.
+	var preview_stage_number := highest_unlocked + 1
+	var max_index := 0
+
+	for index in range(stage_ids.size()):
+		var stage := STAGE_CATALOG.get_stage(stage_ids[index])
+		var stage_number := int(stage.get("number", index + 1))
+		if stage_number <= preview_stage_number:
+			max_index = index
+		else:
+			break
+
+	return mini(max_index, stage_ids.size() - 1)
+
+
+func _refresh_stage_nav_buttons() -> void:
+	var max_browsable_index := _get_max_browsable_stage_index()
+	var can_go_prev := selected_stage_index > 0
+	var can_go_next := selected_stage_index < max_browsable_index
+
+	prev_stage_button.disabled = not can_go_prev
+	next_stage_button.disabled = not can_go_next
+	_set_stage_arrow_visual(prev_stage_button, can_go_prev)
+	_set_stage_arrow_visual(next_stage_button, can_go_next)
+
+
+func _set_stage_arrow_visual(button: Button, enabled: bool) -> void:
+	if button == null:
+		return
+
+	var arrow_skin := button.get_node_or_null("ArrowSkin") as CanvasItem
+	if arrow_skin == null:
+		return
+
+	arrow_skin.modulate = (
+		Color.WHITE
+		if enabled
+		else Color(0.42, 0.42, 0.48, 0.58)
+	)
 
 
 func _refresh_stage_card() -> void:
@@ -1693,7 +1740,7 @@ func _refresh_stage_card() -> void:
 	selected_stage_index = clampi(
 		selected_stage_index,
 		0,
-		stage_ids.size() - 1
+		_get_max_browsable_stage_index()
 	)
 
 	var stage_id := stage_ids[selected_stage_index]
@@ -1734,8 +1781,7 @@ func _refresh_stage_card() -> void:
 	enter_stage_button.disabled = not unlocked
 	enter_stage_button.text = "던전 입장" if unlocked else "스테이지 잠김"
 
-	prev_stage_button.disabled = selected_stage_index <= 0
-	next_stage_button.disabled = selected_stage_index >= stage_ids.size() - 1
+	_refresh_stage_nav_buttons()
 
 	portrait_badge.visible = false
 	_apply_portrait(String(stage.get("portrait_path", "")), hero_name)
