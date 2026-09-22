@@ -32,6 +32,7 @@ const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const RUN_METRICS := preload("res://src/systems/run_metrics.gd")
 const STAGE_DIRECTOR := preload("res://src/systems/stage_director.gd")
 const MUTATION_DIRECTOR := preload("res://src/systems/mutation_director.gd")
+const FLOW_PAUSE_MANAGER := preload("res://src/systems/flow_pause_manager.gd")
 
 const DEFAULT_MAP_SIZE := Vector2(3200, 3200)
 const AUTO_SPAWN_MIN_DISTANCE := 560.0
@@ -63,6 +64,18 @@ var manual_spawn_warning_timer: float = 0.0
 var run_metrics = RUN_METRICS.new()
 var stage_director = STAGE_DIRECTOR.new()
 var mutation_director = MUTATION_DIRECTOR.new()
+var flow_pause_manager = FLOW_PAUSE_MANAGER.new()
+
+const PAUSE_REASON_EXTERNAL := "external_pause"
+const PAUSE_REASON_DEMON_AUGMENT := "demon_augment"
+const PAUSE_REASON_MUTATION_CHOICE := "mutation_choice"
+const FULL_MODAL_PAUSE_DOMAINS := [
+	FLOW_PAUSE_MANAGER.DOMAIN_COMBAT,
+	FLOW_PAUSE_MANAGER.DOMAIN_RUN_TIMER,
+	FLOW_PAUSE_MANAGER.DOMAIN_COMMAND_REGEN,
+	FLOW_PAUSE_MANAGER.DOMAIN_STAGE_EVENTS,
+	FLOW_PAUSE_MANAGER.DOMAIN_DEMON_RUNTIME,
+]
 
 var monsters_alive: int = 0
 var battle_over: bool = false
@@ -123,43 +136,58 @@ func _process(delta: float) -> void:
 		)
 		queue_redraw()
 
-	if (
-		battle_over
-		or demon_augment_selection_active
-		or external_pause
+	if battle_over:
+		return
+
+	if not flow_pause_manager.is_paused(
+		FLOW_PAUSE_MANAGER.DOMAIN_DEMON_RUNTIME
 	):
-		return
+		_process_demon_ultimate_spawn_queue(delta)
+		_update_demon_ultimate_cooldowns(delta)
 
-	_process_demon_ultimate_spawn_queue(delta)
-	_update_demon_ultimate_cooldowns(delta)
-	run_metrics.tick(delta)
-	_process_stage_director_events()
+		if demon_ultimate_charge < DEMON_ULTIMATES.CHARGE_MAX:
+			demon_ultimate_charge = minf(
+				demon_ultimate_charge
+				+ DEMON_ULTIMATES.PASSIVE_CHARGE_PER_SECOND * delta,
+				DEMON_ULTIMATES.CHARGE_MAX
+			)
+			demon_ultimate_emit_timer -= delta
+			if demon_ultimate_emit_timer <= 0.0:
+				demon_ultimate_emit_timer = 0.10
+				_emit_demon_ultimate_changed()
 
-	if demon_ultimate_charge < DEMON_ULTIMATES.CHARGE_MAX:
-		demon_ultimate_charge = minf(
-			demon_ultimate_charge
-			+ DEMON_ULTIMATES.PASSIVE_CHARGE_PER_SECOND * delta,
-			DEMON_ULTIMATES.CHARGE_MAX
+	if not flow_pause_manager.is_paused(
+		FLOW_PAUSE_MANAGER.DOMAIN_RUN_TIMER
+	):
+		run_metrics.tick(delta)
+
+		if not flow_pause_manager.is_paused(
+			FLOW_PAUSE_MANAGER.DOMAIN_STAGE_EVENTS
+		):
+			_process_stage_director_events()
+
+		run_time_emit_timer -= delta
+		if run_time_emit_timer <= 0.0:
+			run_time_emit_timer = 0.25
+			run_time_changed.emit(
+				run_metrics.elapsed_seconds,
+				run_metrics.get_remaining_seconds()
+			)
+
+		if run_metrics.is_time_up():
+			_on_run_time_up()
+			return
+
+	if (
+		not flow_pause_manager.is_paused(
+			FLOW_PAUSE_MANAGER.DOMAIN_COMMAND_REGEN
 		)
-		demon_ultimate_emit_timer -= delta
-		if demon_ultimate_emit_timer <= 0.0:
-			demon_ultimate_emit_timer = 0.10
-			_emit_demon_ultimate_changed()
-
-	run_time_emit_timer -= delta
-	if run_time_emit_timer <= 0.0:
-		run_time_emit_timer = 0.25
-		run_time_changed.emit(
-			run_metrics.elapsed_seconds,
-			run_metrics.get_remaining_seconds()
+		and command_power < max_command
+	):
+		command_power = minf(
+			command_power + command_regen_per_second * delta,
+			max_command
 		)
-
-	if run_metrics.is_time_up():
-		_on_run_time_up()
-		return
-
-	if command_power < max_command:
-		command_power = minf(command_power + command_regen_per_second * delta, max_command)
 		command_emit_timer -= delta
 
 		if command_emit_timer <= 0.0 or command_power >= max_command:
@@ -169,6 +197,7 @@ func _process(delta: float) -> void:
 func _start_battle() -> void:
 	battle_over = false
 	external_pause = false
+	flow_pause_manager.reset()
 	monsters_alive = 0
 	run_time_emit_timer = 0.0
 	manual_spawn_warning_timer = 0.0
@@ -1282,18 +1311,21 @@ func _open_mutation_choice(event: Dictionary) -> void:
 	if not mutation_director.begin(event, candidates):
 		return
 
-	_set_combat_physics_enabled(false)
+	flow_pause_manager.request_pause(
+		PAUSE_REASON_MUTATION_CHOICE,
+		FULL_MODAL_PAUSE_DOMAINS
+	)
+	_sync_combat_pause_state()
 	mutation_choice_ready.emit(
 		mutation_director.get_event(),
 		mutation_director.get_candidates()
 	)
 
 func spawn_selected_mutation(monster_id: String) -> void:
-	if not battle_over and not external_pause:
-		_set_combat_physics_enabled(true)
-
 	var event := mutation_director.get_event()
 	mutation_director.reset()
+	flow_pause_manager.release_pause(PAUSE_REASON_MUTATION_CHOICE)
+	_sync_combat_pause_state()
 
 	if event.is_empty():
 		event = {
@@ -1574,7 +1606,11 @@ func _open_next_demon_augment_if_needed() -> void:
 		return
 
 	demon_augment_selection_active = true
-	_set_combat_physics_enabled(false)
+	flow_pause_manager.request_pause(
+		PAUSE_REASON_DEMON_AUGMENT,
+		FULL_MODAL_PAUSE_DOMAINS
+	)
+	_sync_combat_pause_state()
 
 	demon_augment_ready.emit(
 		demon_augment_candidates,
@@ -1651,8 +1687,8 @@ func choose_demon_augment(augment_id: String) -> bool:
 	demon_augment_selection_active = false
 	demon_augment_candidates.clear()
 	demon_last_candidate_ids.clear()
-	if not external_pause:
-		_set_combat_physics_enabled(true)
+	flow_pause_manager.release_pause(PAUSE_REASON_DEMON_AUGMENT)
+	_sync_combat_pause_state()
 
 	var augment_name: String = String(augment.get("name", "마왕 증강"))
 	demon_augment_applied.emit(augment_name, get_demon_build_summary())
@@ -1708,6 +1744,15 @@ func _apply_demon_augment_effect(effect: Dictionary) -> void:
 
 		_:
 			push_warning("Unknown Demon augment effect op: %s" % op)
+
+func _sync_combat_pause_state() -> void:
+	var should_enable := (
+		not battle_over
+		and not flow_pause_manager.is_paused(
+			FLOW_PAUSE_MANAGER.DOMAIN_COMBAT
+		)
+	)
+	_set_combat_physics_enabled(should_enable)
 
 func _set_combat_physics_enabled(enabled: bool) -> void:
 	if is_instance_valid(hero):
@@ -1866,7 +1911,8 @@ func get_run_analysis_summary() -> String:
 func _finish_battle(message: String, player_won: bool) -> void:
 	battle_over = true
 	demon_augment_selection_active = false
-	_set_combat_physics_enabled(false)
+	flow_pause_manager.reset()
+	_sync_combat_pause_state()
 	battle_finished.emit(message, player_won)
 
 func _emit_stats(hero_hp_override: int = -1) -> void:
@@ -1945,6 +1991,10 @@ func get_snapshot() -> Dictionary:
 		"demon_build_counts": demon_build_counts.duplicate(true),
 		"mutation_selection_active": mutation_director.is_active(),
 		"mutation_candidates": mutation_director.get_candidates(),
+		"flow_pause_requests": flow_pause_manager.get_snapshot(),
+		"run_timer_paused": flow_pause_manager.is_paused(
+			FLOW_PAUSE_MANAGER.DOMAIN_RUN_TIMER
+		),
 		"stage_event_fired_ids": stage_director.get_fired_event_ids(),
 		"debug_balance_summary": get_debug_balance_summary(),
 		"permanent_research_summary": get_permanent_research_summary(),
@@ -1962,15 +2012,15 @@ func get_snapshot() -> Dictionary:
 func set_external_pause(paused: bool) -> void:
 	external_pause = paused
 
-	if battle_over:
-		return
-
 	if paused:
-		_set_combat_physics_enabled(false)
-		return
+		flow_pause_manager.request_pause(
+			PAUSE_REASON_EXTERNAL,
+			FULL_MODAL_PAUSE_DOMAINS
+		)
+	else:
+		flow_pause_manager.release_pause(PAUSE_REASON_EXTERNAL)
 
-	if not demon_augment_selection_active:
-		_set_combat_physics_enabled(true)
+	_sync_combat_pause_state()
 
 func can_go_to_next_stage() -> bool:
 	var next_stage_id: String = String(current_stage_data.get("next_stage_id", ""))
