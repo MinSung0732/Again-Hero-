@@ -48,15 +48,15 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="Header" type="PanelContainer" parent="SafeArea/Layout"]
-custom_minimum_size = Vector2(0, 158)
+custom_minimum_size = Vector2(0, 154)
 layout_mode = 2
 
 [node name="HeaderMargin" type="MarginContainer" parent="SafeArea/Layout/Header"]
 layout_mode = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 86
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 34
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 34
+theme_override_constants/margin_bottom = 18
 
 [node name="HeaderVBox" type="VBoxContainer" parent="SafeArea/Layout/Header/HeaderMargin"]
 layout_mode = 2
@@ -70,23 +70,27 @@ text = "용사, 또 너야?"
 horizontal_alignment = 1
 
 [node name="ResourceRow" type="HBoxContainer" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox"]
+custom_minimum_size = Vector2(0, 118)
 layout_mode = 2
 theme_override_constants/separation = 20
+alignment = 1
 
 [node name="ResourceLabel" type="Label" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.86, 0.81, 0.9, 1)
-theme_override_font_sizes/font_size = 26
-text = "연구 포인트  0"
+theme_override_font_sizes/font_size = 25
+text = "골드\n99,999"
+vertical_alignment = 1
 
 [node name="ProgressLabel" type="Label" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.86, 0.81, 0.9, 1)
 theme_override_font_sizes/font_size = 26
-text = "최고 해금  Stage 1"
+text = "최고 해금\nStage 1"
 horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="Content" type="Control" parent="SafeArea/Layout"]
 layout_mode = 2
@@ -348,7 +352,7 @@ theme_override_constants/separation = 12
 alignment = 1
 
 [node name="PrevButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
-custom_minimum_size = Vector2(64, 124)
+custom_minimum_size = Vector2(76, 136)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 42
@@ -521,7 +525,7 @@ theme_override_font_sizes/font_size = 36
 text = "던전 입장"
 
 [node name="NextButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
-custom_minimum_size = Vector2(64, 124)
+custom_minimum_size = Vector2(76, 136)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 42
@@ -799,45 +803,45 @@ grow_vertical = 0
 
 [node name="NavMargin" type="MarginContainer" parent="BottomNav"]
 layout_mode = 2
-theme_override_constants/margin_left = 14
+theme_override_constants/margin_left = 18
 theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 14
+theme_override_constants/margin_right = 18
 theme_override_constants/margin_bottom = 12
 
 [node name="NavButtons" type="HBoxContainer" parent="BottomNav/NavMargin"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 2
 
 [node name="ShopButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
-custom_minimum_size = Vector2(0, 124)
+custom_minimum_size = Vector2(0, 118)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
 text = "상점"
 
 [node name="TeamButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
-custom_minimum_size = Vector2(0, 124)
+custom_minimum_size = Vector2(0, 118)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
 text = "팀 편성"
 
 [node name="MainButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
-custom_minimum_size = Vector2(0, 124)
+custom_minimum_size = Vector2(0, 118)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
 text = "메인"
 
 [node name="ResearchButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
-custom_minimum_size = Vector2(0, 124)
+custom_minimum_size = Vector2(0, 118)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
 text = "연구"
 
 [node name="OtherButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
-custom_minimum_size = Vector2(0, 124)
+custom_minimum_size = Vector2(0, 118)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
