@@ -70,7 +70,7 @@ func _physics_process(delta: float) -> void:
 			attack_timer = effective_attack_cooldown
 			_visual_call(&"play_attack")
 			if hero.has_method("take_damage"):
-				hero.call("take_damage", attack_damage)
+				hero.call("take_damage", attack_damage, self)
 
 func configure_special_augments(configs: Dictionary) -> void:
 	special_augment_configs = configs.duplicate(true)
