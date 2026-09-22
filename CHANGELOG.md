@@ -1686,3 +1686,9 @@
 - ui1 헤더 프레임을 NinePatchRect child로 추가하던 방식이 PanelContainer 최소 크기 계산에 참여해 중앙 Content를 아래로 미는 문제 수정.
 - 헤더 프레임을 child Control이 아닌 StyleBoxTexture panel override로 변경해 시각 프레임과 레이아웃 크기를 분리.
 - Header의 기존 높이/내부 Margin/중앙 StageCard 및 Content 배치는 변경하지 않음.
+
+### Lobby Central Outer Frame UICard Pass
+- 헤더/중앙 StageCard가 정상인 기준 상태를 유지한 채 중앙 바깥 ContentFrame만 uicardframes/ui9.png로 교체.
+- 기존 01_large_left_panel part 조립식 외곽 프레임은 ContentFrame에서만 제거.
+- ui9는 child Control이 아닌 StyleBoxTexture로 적용해 Content 높이/StageCard 위치/하단 네비 위치 계산에 참여하지 않도록 분리.
+- StageCard(ui10), 초상화, 설명/보상/입장 버튼, 헤더, 하단 네비게이션의 크기와 위치는 변경하지 않음.
