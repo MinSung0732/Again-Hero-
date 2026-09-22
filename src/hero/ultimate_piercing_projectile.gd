@@ -4,7 +4,7 @@ const EFFECT_FRAME_COUNT := 6
 const EFFECT_TARGET_HEIGHT := 128.0
 const EFFECT_FRAME_SIZE := Vector2(512, 512)
 const EFFECT_FPS := 12.0
-const EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/effect_01"
+const EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_01"
 
 var direction: Vector2 = Vector2.RIGHT
 var speed: float = 950.0
