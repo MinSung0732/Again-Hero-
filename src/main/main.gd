@@ -22,17 +22,17 @@ const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 
 @onready var monster_info_bookmark: Button = $HUD/MonsterInfoBookmark
 @onready var monster_info_panel: PanelContainer = $HUD/MonsterInfoPanel
-@onready var monster_info_close: Button = $HUD/MonsterInfoPanel/Margin/VBox/Header/Close
+@onready var monster_info_close: Button = $HUD/MonsterInfoPanel/Scroll/Margin/VBox/Header/Close
 @onready var monster_info_tabs: Array[Button] = [
-	$HUD/MonsterInfoPanel/Margin/VBox/Tabs/Tab1,
-	$HUD/MonsterInfoPanel/Margin/VBox/Tabs/Tab2,
-	$HUD/MonsterInfoPanel/Margin/VBox/Tabs/Tab3,
+	$HUD/MonsterInfoPanel/Scroll/Margin/VBox/Tabs/Tab1,
+	$HUD/MonsterInfoPanel/Scroll/Margin/VBox/Tabs/Tab2,
+	$HUD/MonsterInfoPanel/Scroll/Margin/VBox/Tabs/Tab3,
 ]
-@onready var monster_info_portrait: TextureRect = $HUD/MonsterInfoPanel/Margin/VBox/Portrait
-@onready var monster_info_name: Label = $HUD/MonsterInfoPanel/Margin/VBox/Name
-@onready var monster_info_stats: Label = $HUD/MonsterInfoPanel/Margin/VBox/Stats
-@onready var monster_info_normal: Label = $HUD/MonsterInfoPanel/Margin/VBox/NormalAugments
-@onready var monster_info_special: Label = $HUD/MonsterInfoPanel/Margin/VBox/SpecialAugments
+@onready var monster_info_portrait: TextureRect = $HUD/MonsterInfoPanel/Scroll/Margin/VBox/Portrait
+@onready var monster_info_name: Label = $HUD/MonsterInfoPanel/Scroll/Margin/VBox/Name
+@onready var monster_info_stats: Label = $HUD/MonsterInfoPanel/Scroll/Margin/VBox/Stats
+@onready var monster_info_normal: Label = $HUD/MonsterInfoPanel/Scroll/Margin/VBox/NormalAugments
+@onready var monster_info_special: Label = $HUD/MonsterInfoPanel/Scroll/Margin/VBox/SpecialAugments
 
 @onready var build_label: Label = $HUD/BottomBar/BuildLabel
 @onready var status_label: Label = $HUD/BottomBar/Status
