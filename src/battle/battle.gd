@@ -451,6 +451,7 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 
 	var base_summon_exp := MONSTER_CATALOG.get_summon_exp(monster_type)
 	var gained_exp := base_summon_exp * demon_exp_gain_multiplier
+	run_metrics.record_summon_demon_exp(monster_type, gained_exp)
 	var mode_text := "수동 배치" if manual else "소환"
 	summon_result.emit(
 		monster_type,
@@ -1966,6 +1967,7 @@ func choose_demon_augment(augment_id: String) -> bool:
 		if augment_id in demon_special_augments:
 			return false
 		demon_special_augments.append(augment_id)
+		run_metrics.record_special_augment_acquired()
 		_refresh_alive_monsters_for_augments()
 	else:
 		var current_stack := int(demon_build_counts.get(augment_id, 0))
@@ -2395,7 +2397,40 @@ func _grant_run_research_reward() -> String:
 	)
 
 func get_run_analysis_summary() -> String:
-	return run_metrics.get_result_summary()
+	var lines: PackedStringArray = []
+	lines.append(run_metrics.get_result_summary())
+	lines.append("")
+	lines.append("마왕 최종 Lv.%d" % demon_level)
+
+	var normal_parts: PackedStringArray = []
+	for raw_id in demon_build_counts.keys():
+		var augment_id := String(raw_id)
+		var level := int(demon_build_counts.get(augment_id, 0))
+		if level <= 0:
+			continue
+		var augment := DEMON_AUGMENTS.get_augment(augment_id)
+		normal_parts.append("%s Lv.%d" % [
+			String(augment.get("name", augment_id)),
+			level,
+		])
+	if normal_parts.is_empty():
+		lines.append("일반증강: 없음")
+	else:
+		lines.append("일반증강: %s" % " · ".join(normal_parts))
+
+	var special_parts: PackedStringArray = []
+	for raw_id in demon_special_augments:
+		var augment_id := String(raw_id)
+		var augment := DEMON_AUGMENTS.get_augment(augment_id)
+		special_parts.append(
+			String(augment.get("name", augment_id))
+		)
+	if special_parts.is_empty():
+		lines.append("특수증강: 없음")
+	else:
+		lines.append("특수증강: %s" % " · ".join(special_parts))
+
+	return "\n".join(lines)
 
 func _finish_battle(message: String, player_won: bool) -> void:
 	battle_over = true
