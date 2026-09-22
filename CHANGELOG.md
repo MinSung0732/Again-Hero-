@@ -1900,3 +1900,9 @@
 - StyleBoxTexture expand margin을 좌/우 6px, 위 4px, 아래 14px 적용해 골드/최고 해금 텍스트가 프레임 안쪽에 더 자연스럽게 들어오도록 조정.
 - Header Control의 실제 높이, SafeArea, Content 시작 위치는 변경하지 않으므로 중앙 UI는 밀리지 않음.
 - 하단 네비게이션은 다음 패스에서 별도 조정.
+
+### Header Side Info Final Alignment
+- PC 기준 헤더 프레임/로고/중앙 Content는 그대로 유지하고 좌우 상태 정보만 미세 조정.
+- HeaderMargin 좌우를 54→66으로 늘려 골드 정보는 오른쪽, 최고 해금 정보는 왼쪽으로 각각 약 12px 안쪽 이동.
+- HeaderMargin 상단을 96→101로 조정해 두 상태 정보 묶음을 약 5px 아래로 이동.
+- Header 높이, 로고 크기, Content/StageCard 위치는 변경하지 않음.
