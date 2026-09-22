@@ -300,7 +300,7 @@ func _apply_styles() -> void:
 
 
 func _apply_asset_frames() -> void:
-	# 헤더/하단은 장식이 작은 middle frame을 축소 적용한다.
+	# 상단/하단은 모바일에서 장식보다 정보가 우선이라 얇게 유지한다.
 	for target in [
 		$SafeArea/Layout/Header,
 		$BottomNav,
@@ -308,28 +308,28 @@ func _apply_asset_frames() -> void:
 		_add_asset_frame(
 			target,
 			UI_FRAME_MEDIUM_DIR,
-			Vector2(31.0, 30.0),
-			Vector2(31.0, 30.0),
-			Vector2(31.0, 30.0),
-			Vector2(31.0, 30.0),
-			18.0,
-			18.0,
-			16.0,
-			16.0
+			Vector2(26.0, 25.0),
+			Vector2(26.0, 25.0),
+			Vector2(26.0, 25.0),
+			Vector2(26.0, 25.0),
+			14.0,
+			14.0,
+			12.0,
+			12.0
 		)
 
-	# 메인 콘텐츠는 large frame의 분위기만 남기고 폭을 크게 줄인다.
+	# 콘텐츠 프레임은 화면 가장자리 장식 역할만 한다.
 	_add_asset_frame(
 		$SafeArea/Layout/Content/ContentFrame,
 		UI_FRAME_LARGE_DIR,
-		Vector2(41.0, 40.0),
-		Vector2(41.0, 40.0),
-		Vector2(41.0, 40.0),
-		Vector2(41.0, 40.0),
-		24.0,
-		24.0,
-		20.0,
-		20.0
+		Vector2(34.0, 33.0),
+		Vector2(34.0, 33.0),
+		Vector2(34.0, 33.0),
+		Vector2(34.0, 33.0),
+		18.0,
+		18.0,
+		14.0,
+		14.0
 	)
 
 	# 팝업만 별도 프레임을 사용한다. 카드 내부 중첩 장식은 피한다.
@@ -845,7 +845,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	var data := MONSTER_CATALOG.get_monster(monster_id)
 
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(430.0, 390.0)
+	card.custom_minimum_size = Vector2(0.0, 338.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.add_theme_stylebox_override(
 		"panel",
@@ -864,7 +864,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	margin.add_child(vbox)
 
 	var portrait := TextureRect.new()
-	portrait.custom_minimum_size = Vector2(0.0, 150.0)
+	portrait.custom_minimum_size = Vector2(0.0, 124.0)
 	portrait.texture = _team_monster_card_icon(monster_id)
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -905,7 +905,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	vbox.add_child(actions)
 
 	var team_button := Button.new()
-	team_button.custom_minimum_size = Vector2(0.0, 72.0)
+	team_button.custom_minimum_size = Vector2(0.0, 64.0)
 	team_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	team_button.add_theme_font_size_override("font_size", 24)
 	team_button.text = "편성 해제" if selected else "팀 편성"
@@ -924,7 +924,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	actions.add_child(team_button)
 
 	var detail_button := Button.new()
-	detail_button.custom_minimum_size = Vector2(0.0, 72.0)
+	detail_button.custom_minimum_size = Vector2(0.0, 64.0)
 	detail_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_button.add_theme_font_size_override("font_size", 24)
 	detail_button.text = "상세정보"
@@ -1558,7 +1558,7 @@ func _rebuild_research_list() -> void:
 		var level := STAGE_PROGRESS.get_research_level(research_id)
 		var max_level := int(data.get("max_level", 0))
 		var button := Button.new()
-		button.custom_minimum_size = Vector2(0, 150)
+		button.custom_minimum_size = Vector2(0, 124)
 		button.add_theme_font_size_override("font_size", 24)
 		button.add_theme_stylebox_override("normal", secondary_button_style)
 		button.add_theme_stylebox_override("hover", secondary_button_style)
