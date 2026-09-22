@@ -221,6 +221,9 @@ var ai_observed_context_time: float = 0.0
 var heal_item_target: Node2D
 var heal_item_retarget_timer: float = 0.0
 var heal_item_steering_direction: Vector2 = Vector2.ZERO
+var chest_target: Node2D
+var chest_retarget_timer: float = 0.0
+var chest_steering_direction: Vector2 = Vector2.ZERO
 
 @onready var follow_camera: Camera2D = $Camera2D
 @onready var hero_sprite: AnimatedSprite2D = $HeroSprite
@@ -279,6 +282,9 @@ func configure_profile(profile: Dictionary) -> void:
 	heal_item_target = null
 	heal_item_retarget_timer = 0.0
 	heal_item_steering_direction = Vector2.ZERO
+	chest_target = null
+	chest_retarget_timer = 0.0
+	chest_steering_direction = Vector2.ZERO
 	var profile_fighter_basic = profile.get("fighter_basic", {})
 	fighter_basic_config = (
 		profile_fighter_basic.duplicate(true)
@@ -524,6 +530,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_update_heal_item_goal(delta)
+	_update_chest_goal(delta)
 
 	if not is_instance_valid(target) or target.is_queued_for_deletion() or retarget_timer <= 0.0:
 		target = _find_nearest_monster()
@@ -537,6 +544,7 @@ func _physics_process(delta: float) -> void:
 	var distance := global_position.distance_to(target.global_position)
 	var move_direction := _choose_move_direction(target, distance)
 	move_direction = _apply_heal_item_steering(move_direction, delta)
+	move_direction = _apply_chest_steering(move_direction, delta)
 	velocity = move_direction * move_speed * move_multiplier
 	move_and_slide()
 	_clamp_to_battlefield()
@@ -583,6 +591,7 @@ func _physics_process_gunner(delta: float) -> void:
 			_finish_gunner_reload()
 
 	_update_heal_item_goal(delta)
+	_update_chest_goal(delta)
 	if not is_instance_valid(target) or target.is_queued_for_deletion() or retarget_timer <= 0.0:
 		target = _find_nearest_monster()
 		retarget_timer = 0.10
@@ -595,6 +604,7 @@ func _physics_process_gunner(delta: float) -> void:
 	var distance := global_position.distance_to(target.global_position)
 	var move_direction := _choose_move_direction(target, distance)
 	move_direction = _apply_heal_item_steering(move_direction, delta)
+	move_direction = _apply_chest_steering(move_direction, delta)
 	velocity = move_direction * move_speed * move_multiplier
 	move_and_slide()
 	_clamp_to_battlefield()
@@ -1028,6 +1038,7 @@ func _physics_process_rogue(delta: float) -> void:
 		_start_rogue_slash()
 
 	_update_heal_item_goal(delta)
+	_update_chest_goal(delta)
 
 	if (
 		not is_instance_valid(target)
@@ -1062,6 +1073,7 @@ func _physics_process_rogue(delta: float) -> void:
 	if distance > attack_range * 0.88:
 		move_direction = global_position.direction_to(target.global_position)
 	move_direction = _apply_heal_item_steering(move_direction, delta)
+	move_direction = _apply_chest_steering(move_direction, delta)
 	if move_direction.length_squared() > 0.01:
 		velocity = (
 			move_direction
@@ -1237,6 +1249,7 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 			knockback_distance
 		)
 
+	_damage_treasure_chests(corridor_end, aoe_radius, damage)
 	attack_pose_timer = 0.26
 	_restart_stage1_animation("attack", 1.0)
 	_play_rogue_effect(
@@ -2587,6 +2600,67 @@ func _get_crowd_avoidance_direction(radius: float = 230.0) -> Vector2:
 	return avoidance.normalized() if avoidance.length_squared() > 0.01 else Vector2.ZERO
 
 
+func _update_chest_goal(delta: float) -> void:
+	chest_retarget_timer = maxf(chest_retarget_timer - delta, 0.0)
+	if (
+		is_instance_valid(chest_target)
+		and not chest_target.is_queued_for_deletion()
+		and chest_retarget_timer > 0.0
+	):
+		return
+
+	chest_target = null
+	chest_retarget_timer = 0.45
+	var best_distance := INF
+	for node in get_tree().get_nodes_in_group("treasure_chests"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var chest := node as Node2D
+		if chest == null:
+			continue
+		var distance_sq := global_position.distance_squared_to(chest.global_position)
+		if distance_sq < best_distance:
+			best_distance = distance_sq
+			chest_target = chest
+
+
+func _apply_chest_steering(base_direction: Vector2, delta: float) -> Vector2:
+	if not is_instance_valid(chest_target) or chest_target.is_queued_for_deletion():
+		chest_target = null
+		chest_steering_direction = Vector2.ZERO
+		return base_direction.normalized() if base_direction.length_squared() > 0.01 else Vector2.ZERO
+
+	var distance := global_position.distance_to(chest_target.global_position)
+	var chest_direction := global_position.direction_to(chest_target.global_position)
+	# 상자는 행동을 취소하는 목표가 아니라 장기적인 이동 편향이다.
+	var chest_weight := lerpf(0.22, 0.42, clampf(1.0 - distance / 1100.0, 0.0, 1.0))
+	var combat_weight := 1.0
+	var desired := base_direction * combat_weight + chest_direction * chest_weight
+	if desired.length_squared() <= 0.01:
+		desired = chest_direction
+	desired = desired.normalized()
+
+	if chest_steering_direction.length_squared() <= 0.01:
+		chest_steering_direction = desired
+	else:
+		chest_steering_direction = chest_steering_direction.lerp(
+			desired,
+			clampf(delta * 2.4, 0.0, 1.0)
+		).normalized()
+	return chest_steering_direction
+
+
+func _damage_treasure_chests(origin: Vector2, radius: float, damage: int) -> void:
+	for node in get_tree().get_nodes_in_group("treasure_chests"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var chest := node as Node2D
+		if chest == null or origin.distance_to(chest.global_position) > radius:
+			continue
+		if chest.has_method("take_damage"):
+			chest.call("take_damage", maxi(damage, 1))
+
+
 func _apply_heal_item_steering(base_direction: Vector2, delta: float) -> Vector2:
 	if not is_instance_valid(heal_item_target) or heal_item_target.is_queued_for_deletion():
 		heal_item_target = null
@@ -3744,6 +3818,7 @@ func _physics_process_fighter(delta: float) -> void:
 			queue_redraw()
 
 	_update_heal_item_goal(delta)
+	_update_chest_goal(delta)
 
 	if (
 		not is_instance_valid(target)
@@ -3772,6 +3847,7 @@ func _physics_process_fighter(delta: float) -> void:
 	if distance > attack_range * 0.90:
 		move_direction = global_position.direction_to(target.global_position)
 	move_direction = _apply_heal_item_steering(move_direction, delta)
+	move_direction = _apply_chest_steering(move_direction, delta)
 	if move_direction.length_squared() > 0.01:
 		velocity = (
 			move_direction
@@ -4115,6 +4191,11 @@ func _fighter_basic_attack(current_target: Node2D) -> void:
 	else:
 		_fighter_apply_thrust(direction)
 		_play_fighter_attack_effect("thrust", direction, false)
+	_damage_treasure_chests(
+		global_position + direction * 85.0,
+		145.0,
+		attack_damage
+	)
 
 
 func _update_fighter_slash_combo(delta: float) -> bool:
