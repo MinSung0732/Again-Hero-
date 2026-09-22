@@ -265,6 +265,14 @@ func _ready() -> void:
 	_apply_stage1_shield_visual()
 	_apply_stage1_channel_visual()
 	_apply_stage2_rogue_effect_visuals()
+	if (
+		not rogue_attack_effect.animation_finished.is_connected(
+			Callable(self, "_on_rogue_attack_effect_finished")
+		)
+	):
+		rogue_attack_effect.animation_finished.connect(
+			Callable(self, "_on_rogue_attack_effect_finished")
+		)
 	current_hp = max_hp
 	exp_to_next_level = _required_exp_for_level(level)
 	strafe_sign = -1.0 if randf() < 0.5 else 1.0
@@ -550,7 +558,8 @@ func _rogue_apply_knockback(
 ) -> void:
 	if not is_instance_valid(current_target) or distance <= 0.0:
 		return
-	if bool(current_target.get("dying")):
+	var hp_value = current_target.get("current_hp")
+	if hp_value != null and int(hp_value) <= 0:
 		return
 
 	current_target.global_position += direction.normalized() * distance
@@ -913,6 +922,9 @@ func _play_rogue_effect(
 	effect_sprite.animation = animation_name
 	effect_sprite.frame = 0
 	effect_sprite.play(animation_name)
+
+func _on_rogue_attack_effect_finished() -> void:
+	rogue_attack_effect.visible = false
 
 func _update_rogue_pose_visual(delta: float) -> void:
 	if not hero_sprite.visible or is_dying:
@@ -2431,7 +2443,10 @@ func _begin_death_sequence() -> void:
 	collision_mask = 0
 
 	if hero_sprite.visible:
-		_restart_stage1_animation("hit", 0.85)
+		if hero_archetype == "rogue_combo":
+			_restart_stage1_animation("death", 1.0)
+		else:
+			_restart_stage1_animation("hit", 0.85)
 		var tween := create_tween()
 		tween.set_parallel(true)
 		tween.tween_property(hero_sprite, "modulate:a", 0.0, 0.48)
