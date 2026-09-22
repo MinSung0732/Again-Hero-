@@ -330,8 +330,8 @@ layout_mode = 2
 [node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox"]
 layout_mode = 1
 anchor_right = 1.0
-offset_top = 26.0
-offset_bottom = 66.0
+offset_top = 34.0
+offset_bottom = 74.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.92, 0.86, 0.96, 1)
 theme_override_font_sizes/font_size = 36
@@ -342,8 +342,8 @@ vertical_alignment = 1
 [node name="SectionSubtitle" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox"]
 layout_mode = 1
 anchor_right = 1.0
-offset_top = 66.0
-offset_bottom = 100.0
+offset_top = 74.0
+offset_bottom = 108.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.63, 0.57, 0.69, 1)
 theme_override_font_sizes/font_size = 24
