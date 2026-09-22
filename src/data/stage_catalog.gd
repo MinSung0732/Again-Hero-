@@ -238,7 +238,7 @@ const STAGES = {
 				"at_seconds": 480.0,
 				"type": "boss",
 				"name": "최종 침공 대장",
-				"monster_id": "orc",
+				"selection_mode": "team_random",
 				"hp_multiplier": 8.5,
 				"damage_multiplier": 2.80,
 				"speed_multiplier": 1.20,
