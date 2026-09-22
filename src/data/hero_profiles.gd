@@ -206,6 +206,8 @@ const PROFILES = {
 			"damage_reduction": 0.30,
 			"move_speed_multiplier": 0.62,
 			"stored_damage_release_ratio": 0.50,
+			"recovery_from_stored_damage_ratio": 0.12,
+			"recovery_max_hp_ratio": 0.08,
 			"release_radius": 250.0,
 			"reflect_radius": 175.0,
 		},
