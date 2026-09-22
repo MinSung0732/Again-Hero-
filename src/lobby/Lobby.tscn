@@ -370,17 +370,22 @@ theme_override_constants/margin_bottom = 32
 [node name="CardVBox" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin"]
 layout_mode = 2
 
-[node name="TopPanel" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+[node name="TopPanel" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
 layout_mode = 1
-anchors_preset = 10
+anchors_preset = 15
 anchor_right = 1.0
-offset_bottom = 800.0
+anchor_bottom = 1.0
 grow_horizontal = 2
-theme_override_constants/separation = 8
+grow_vertical = 2
 
 [node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
-custom_minimum_size = Vector2(0, 34)
-layout_mode = 2
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.025
+anchor_right = 1.0
+anchor_bottom = 0.065
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
 theme_override_font_sizes/font_size = 24
 text = "STAGE 01"
@@ -388,8 +393,13 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="StageName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
-custom_minimum_size = Vector2(0, 54)
-layout_mode = 2
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.065
+anchor_right = 1.0
+anchor_bottom = 0.125
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_colors/font_color = Color(0.98, 0.93, 1, 1)
 theme_override_font_sizes/font_size = 38
 text = "첫 번째 침입자"
@@ -397,13 +407,18 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="UpperFrameGap" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
-custom_minimum_size = Vector2(0, 210)
-layout_mode = 2
+visible = false
+layout_mode = 1
+anchors_preset = 0
 
 [node name="PortraitFrame" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
-custom_minimum_size = Vector2(670, 530)
-layout_mode = 2
-size_flags_horizontal = 4
+layout_mode = 1
+anchor_left = 0.04
+anchor_top = 0.245
+anchor_right = 0.96
+anchor_bottom = 0.615
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="FrameMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame"]
 layout_mode = 2
@@ -460,30 +475,36 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="HeroName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.615
+anchor_right = 1.0
+anchor_bottom = 0.665
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_colors/font_color = Color(0.87, 0.82, 0.91, 1)
 theme_override_font_sizes/font_size = 32
 text = "견습 마도사"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="BottomPanel" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+[node name="BottomPanel" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
 layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -530.0
-offset_bottom = -370.0
+anchor_left = 0.08
+anchor_top = 0.785
+anchor_right = 0.92
+anchor_bottom = 0.965
 grow_horizontal = 2
-grow_vertical = 0
-theme_override_constants/separation = 3
-alignment = 1
+grow_vertical = 2
 
 [node name="StageDescription" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel"]
-custom_minimum_size = Vector2(0, 34)
-layout_mode = 2
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.27
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
 theme_override_font_sizes/font_size = 17
 text = "침입자 설명"
@@ -492,8 +513,13 @@ vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="StageStatus" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel"]
-custom_minimum_size = Vector2(0, 20)
-layout_mode = 2
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.28
+anchor_right = 1.0
+anchor_bottom = 0.43
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_colors/font_color = Color(0.75, 0.69, 0.8, 1)
 theme_override_font_sizes/font_size = 17
 text = "입장 가능 · 제한 6분"
@@ -501,8 +527,13 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="StageReward" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel"]
-custom_minimum_size = Vector2(0, 22)
-layout_mode = 2
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.43
+anchor_right = 1.0
+anchor_bottom = 0.58
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
 theme_override_font_sizes/font_size = 18
 text = "최초 클리어 연구 포인트 +100"
@@ -510,12 +541,18 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="ActionSpacer" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel"]
-custom_minimum_size = Vector2(0, 2)
-layout_mode = 2
+visible = false
+layout_mode = 1
+anchors_preset = 0
 
 [node name="EnterButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel"]
-custom_minimum_size = Vector2(0, 56)
-layout_mode = 2
+layout_mode = 1
+anchor_left = 0.08
+anchor_top = 0.63
+anchor_right = 0.92
+anchor_bottom = 0.98
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
 theme_override_font_sizes/font_size = 36
 text = "던전 입장"
