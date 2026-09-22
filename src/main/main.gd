@@ -456,6 +456,9 @@ func _on_demon_progression_changed(level: int, current_exp: float, exp_to_next_l
 	demon_exp_bar.max_value = maxf(exp_to_next_level, 1.0)
 	demon_exp_bar.value = current_exp
 
+	if monster_info_panel.visible:
+		_refresh_monster_info_panel()
+
 func _on_command_changed(current_value: float, max_value: float) -> void:
 	command_label.text = "지휘력 %d / %d" % [int(round(current_value)), int(round(max_value))]
 	command_bar.max_value = maxf(max_value, 1.0)
@@ -1022,6 +1025,8 @@ func _on_demon_reroll_pressed() -> void:
 
 func _on_demon_augment_applied(augment_name: String, build_summary: String) -> void:
 	status_label.text = "마왕 증강 획득 → %s\n현재 마왕 빌드: %s" % [augment_name, build_summary]
+	if monster_info_panel.visible:
+		_refresh_monster_info_panel()
 
 func _get_monster_name(monster_type: String) -> String:
 	match monster_type:
