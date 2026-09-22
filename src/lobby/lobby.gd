@@ -13,6 +13,7 @@ const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 
 const BATTLE_SCENE_PATH := "res://src/main/Main.tscn"
 const TEAM_MAX_SLOTS := 3
+const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png"
 
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 @onready var resource_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ResourceLabel
@@ -1139,10 +1140,90 @@ func _refresh_stage_card() -> void:
 
 func _apply_portrait(path: String, hero_name: String) -> void:
 	var texture := _load_texture(path)
-	portrait_texture.texture = texture
-	portrait_texture.visible = texture != null
-	portrait_placeholder.visible = texture == null
+	var normalized_texture := _normalize_hero_portrait_texture(texture)
+	portrait_texture.texture = normalized_texture
+	portrait_texture.visible = normalized_texture != null
+	portrait_placeholder.visible = normalized_texture == null
 	portrait_placeholder.text = "%s\n\n초상화 준비 중" % hero_name
+
+func _normalize_hero_portrait_texture(
+	source_texture: Texture2D
+) -> Texture2D:
+	if source_texture == null:
+		return null
+
+	var source_image := source_texture.get_image()
+	if source_image == null or source_image.is_empty():
+		return source_texture
+
+	var reference_texture := _load_texture(
+		HERO_PORTRAIT_REFERENCE_PATH
+	)
+	if reference_texture == null:
+		return source_texture
+
+	var reference_image := reference_texture.get_image()
+	if reference_image == null or reference_image.is_empty():
+		return source_texture
+
+	var source_rect := source_image.get_used_rect()
+	var reference_rect := reference_image.get_used_rect()
+	if (
+		source_rect.size.x <= 0
+		or source_rect.size.y <= 0
+		or reference_rect.size.x <= 0
+		or reference_rect.size.y <= 0
+	):
+		return source_texture
+
+	var cropped := source_image.get_region(source_rect)
+	if cropped == null or cropped.is_empty():
+		return source_texture
+
+	var target_height := reference_rect.size.y
+	var scale_ratio := (
+		float(target_height)
+		/ float(maxi(source_rect.size.y, 1))
+	)
+	var target_width := maxi(
+		1,
+		int(round(
+			float(source_rect.size.x)
+			* scale_ratio
+		))
+	)
+
+	cropped.resize(
+		target_width,
+		target_height,
+		Image.INTERPOLATE_NEAREST
+	)
+
+	var canvas := Image.create(
+		reference_image.get_width(),
+		reference_image.get_height(),
+		false,
+		Image.FORMAT_RGBA8
+	)
+	canvas.fill(Color(0, 0, 0, 0))
+
+	var target_center := Vector2i(
+		reference_rect.position.x
+			+ reference_rect.size.x / 2,
+		reference_rect.position.y
+			+ reference_rect.size.y / 2
+	)
+	var paste_position := Vector2i(
+		target_center.x - target_width / 2,
+		target_center.y - target_height / 2
+	)
+	canvas.blit_rect(
+		cropped,
+		Rect2i(Vector2i.ZERO, cropped.get_size()),
+		paste_position
+	)
+
+	return ImageTexture.create_from_image(canvas)
 
 func _load_texture(path: String) -> Texture2D:
 	if path.is_empty():
