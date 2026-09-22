@@ -1345,7 +1345,7 @@ func try_use_demon_ultimate(
 	_emit_demon_ultimate_changed()
 	_emit_demon_ultimate_cooldowns()
 
-	var skill_name := String(skill.get("name", "마왕 필살기"))
+	var skill_name := String(skill.get("name", "마력 기술"))
 	var use_message := "%s 발동! 용사 외곽에 군단을 전개했습니다." % skill_name
 	if skill_id == "line_assault":
 		use_message = "%s 발동! 선택한 방향에서 전선을 형성했습니다." % skill_name
