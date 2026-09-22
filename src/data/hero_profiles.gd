@@ -157,7 +157,7 @@ const PROFILES = {
 		"id": "sword_shield_hero",
 		"display_name": "검과 방패의 용사",
 		"archetype": "sword_shield",
-		"max_hp": 650,
+		"max_hp": 1100,
 		"move_speed": 200.0,
 		"attack_damage": 48,
 		"attack_range": 130.0,
@@ -211,6 +211,8 @@ const PROFILES = {
 			"stored_damage_release_ratio": 0.50,
 			"release_radius": 250.0,
 			"reflect_radius": 175.0,
+			"activation_enemy_radius": 320.0,
+			"activation_enemy_count": 1,
 		},
 		"augment_pool_ids": [
 			"fighter_guard_wall",
