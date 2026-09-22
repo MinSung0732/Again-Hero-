@@ -66,10 +66,11 @@ const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 @onready var monster_detail_elite_name: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Name
 @onready var monster_detail_elite_stats: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Stats
 
+@onready var stage_card: PanelContainer = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard
 @onready var prev_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/PrevButton
 @onready var next_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/NextButton
-@onready var stage_number_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/StageNumber
-@onready var stage_name_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/StageName
+@onready var stage_number_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox/StageNumber
+@onready var stage_name_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox/StageName
 @onready var portrait_texture: TextureRect = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner/PortraitTexture
 @onready var portrait_placeholder: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner/PortraitPlaceholder
 @onready var portrait_badge: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner/PortraitBadge
@@ -86,6 +87,11 @@ const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 var stage_ids: Array[String] = []
 var selected_stage_index: int = 0
 var current_tab: String = "main"
+
+const STAGE_SWIPE_THRESHOLD := 72.0
+
+var _stage_swipe_active := false
+var _stage_swipe_start := Vector2.ZERO
 
 var monster_collection_state: Dictionary = {}
 var team_catalog_ids: Array = []
@@ -711,6 +717,42 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 	skin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	skin.flip_h = flip_h
 	button.add_child(skin)
+
+
+func _input(event: InputEvent) -> void:
+	if current_tab != "main" or stage_card == null:
+		_stage_swipe_active = false
+		return
+
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			if stage_card.get_global_rect().has_point(event.position):
+				_stage_swipe_active = true
+				_stage_swipe_start = event.position
+		elif _stage_swipe_active:
+			_try_stage_swipe(event.position)
+			_stage_swipe_active = false
+		return
+
+	if event is InputEventMouseButton:
+		if event.button_index != MOUSE_BUTTON_LEFT:
+			return
+		if event.pressed:
+			if stage_card.get_global_rect().has_point(event.position):
+				_stage_swipe_active = true
+				_stage_swipe_start = event.position
+		elif _stage_swipe_active:
+			_try_stage_swipe(event.position)
+			_stage_swipe_active = false
+
+
+func _try_stage_swipe(end_position: Vector2) -> void:
+	var delta := end_position - _stage_swipe_start
+	if absf(delta.x) < STAGE_SWIPE_THRESHOLD:
+		return
+	if absf(delta.x) <= absf(delta.y):
+		return
+	_change_stage(1 if delta.x < 0.0 else -1)
 
 
 func _connect_navigation() -> void:
