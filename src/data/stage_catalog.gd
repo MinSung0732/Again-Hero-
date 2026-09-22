@@ -60,7 +60,7 @@ const STAGES = {
 		"display_name": "그림자 도적",
 		"hero_id": "swift_hunter",
 		"hero_ai_profile_id": "stage_2_aggressive",
-		"portrait_path": "res://assets/art/heroes/stage2_rogue/stage2_hero_portrait.png",
+		"portrait_path": "res://assets/art/heroes/stage2_rogue/stage2_hero_portrait2.png",
 		"lobby_description": "빠르게 파고들어 3단 찌르기를 연계하고, 난도질과 급습-암살로 전장을 휘젓는 근접 도적.",
 		"hero_level_start": 1,
 		"map_width": 3600,
