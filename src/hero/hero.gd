@@ -129,6 +129,7 @@ var fighter_charge_elapsed: float = 0.0
 var fighter_charge_chain_count: int = 0
 var fighter_charge_afterimage_timer: float = 0.0
 var fighter_courage_bonus: float = 0.0
+var fighter_charge_kill_heal: float = 0.0
 
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
@@ -235,6 +236,7 @@ func configure_profile(profile: Dictionary) -> void:
 	fighter_charge_chain_count = 0
 	fighter_charge_afterimage_timer = 0.0
 	fighter_courage_bonus = 0.0
+	fighter_charge_kill_heal = 0.0
 	var profile_fighter_basic = profile.get("fighter_basic", {})
 	fighter_basic_config = (
 		profile_fighter_basic.duplicate(true)
@@ -3220,16 +3222,13 @@ func _fighter_charge_damage_target(monster: Node2D, damage: int) -> void:
 	var hp_before := int(hp_before_value) if hp_before_value != null else -1
 	monster.call("take_damage", maxi(damage, 1))
 
-	if fighter_courage_bonus <= 0.0 or hp_before <= 0:
+	if fighter_charge_kill_heal <= 0.0 or hp_before <= 0:
 		return
 	var hp_after_value = monster.get("current_hp")
 	if hp_after_value == null or int(hp_after_value) > 0:
 		return
 
-	var heal_amount := maxi(
-		int(fighter_charge_config.get("courage_kill_heal", 8)),
-		0
-	)
+	var heal_amount := maxi(int(round(fighter_charge_kill_heal)), 0)
 	if heal_amount <= 0 or current_hp <= 0:
 		return
 
