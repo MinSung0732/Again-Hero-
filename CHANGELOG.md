@@ -1836,3 +1836,13 @@
 - StageMetaBox도 카드 이동량의 45%만큼 함께 이동/페이드해 제목과 카드가 따로 노는 느낌을 줄임.
 - 전환 중 중복 입력은 _stage_transition_running으로 차단하고 tween.finished 시 자동 해제.
 - 스와이프 판정 로직, 좌우 버튼 연결, 초상화 로딩 경로 및 ui10 내부 배치는 변경하지 않음.
+
+### Stage Browser Lock Rule + Real Slide Transition
+- STAGE 번호/침입자 제목을 기존 92px StageMetaBox 안에서 조금 더 아래로 배치하고, 하단에는 여백을 남겨 카드 상단 테두리와 겹치지 않도록 조정.
+- StagePicker의 HBoxContainer가 StageCard 위치 tween을 덮어써 애니메이션이 보이지 않던 원인을 수정: HBox에는 StageCardSlot만 배치하고 실제 StageCard는 plain Control 슬롯 내부 자식으로 이동.
+- StageCard 전환을 2단계 slide-out → 데이터 교체 → slide-in 방식으로 변경. 버튼/스와이프 모두 동일 전환 사용.
+- 진행 방향 기준 150px 슬라이드와 페이드를 적용하고 전환 중 중복 입력 차단.
+- 스테이지 탐색 한계를 highest_unlocked_stage + 1로 제한: 현재 최고 해금이 2면 3까지만 미리보기 가능, 4부터 탐색 불가. 최고 해금이 3이면 4까지만 가능.
+- 미리보기 가능한 다음 스테이지는 기존 is_stage_unlocked 규칙에 따라 입장 버튼은 잠긴 상태 유지.
+- 이전/다음으로 이동할 수 없는 방향의 화살표는 Button disabled 처리와 함께 회색/반투명으로 표시.
+- 향후 StageCatalog에 stage_3 이상이 추가되어도 동일 규칙이 자동 적용됨.
