@@ -213,7 +213,7 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
 theme_override_font_sizes/font_size = 24
-text = "몬스터 카드를 탭해 최대 3종을 편성합니다. 편성은 자동 저장됩니다."
+text = "각 몬스터 카드의 팀 편성/해제 버튼으로 최대 3종을 구성하고, 상세정보 버튼으로 능력치를 확인합니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
@@ -277,7 +277,7 @@ custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
 theme_override_font_sizes/font_size = 24
-text = "몬스터 카드를 탭해 편성 추가/해제 · 도트 이미지는 에셋 연결 예정"
+text = "팀 편성/해제와 상세정보가 분리되어 있습니다."
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
