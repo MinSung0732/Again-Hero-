@@ -30,6 +30,13 @@ const STAGE2_EFFECT1_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_
 const STAGE2_EFFECT2_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_02"
 const STAGE2_EFFECT3_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_03"
 
+# 모든 용사 도트의 화면상 체급 기준은 Stage 1 견습 마도사다.
+# 원본 PNG 캔버스 크기가 아니라 투명 여백을 제외한 실제 도트 높이를
+# 기준으로 자동 정규화한다.
+const HERO_REFERENCE_SHEET_PATH := "res://assets/art/heroes/stage1_mage/stage1_mage_spritesheet.png"
+const HERO_REFERENCE_FRAME_SIZE := Vector2i(64, 64)
+const HERO_REFERENCE_RENDER_SCALE := 3.0
+
 const APPROACH_DISTANCE_RATIO := 0.86
 const FIELD_MARGIN := 72.0
 const WANDER_REACHED_DISTANCE := 42.0
@@ -980,6 +987,7 @@ func _apply_profile_visual() -> void:
 
 		hero_sprite.sprite_frames = frames
 		hero_sprite.visible = true
+		_apply_normalized_hero_visual_scale()
 		hero_sprite.speed_scale = 1.0
 		hero_sprite.play("idle")
 		return
@@ -1015,9 +1023,77 @@ func _apply_profile_visual() -> void:
 
 	hero_sprite.sprite_frames = rogue_frames
 	hero_sprite.visible = true
-	hero_sprite.scale = Vector2(1.0, 1.0)
+	_apply_normalized_hero_visual_scale()
 	hero_sprite.speed_scale = 1.0
 	hero_sprite.play("idle")
+
+func _apply_normalized_hero_visual_scale() -> void:
+	if hero_sprite.sprite_frames == null:
+		return
+	if not hero_sprite.sprite_frames.has_animation("idle"):
+		return
+	if hero_sprite.sprite_frames.get_frame_count("idle") <= 0:
+		return
+
+	var reference_height := _get_stage1_reference_render_height()
+	if reference_height <= 0.0:
+		# 기준 리소스를 읽지 못한 경우 기존 Stage 1 크기를 안전값으로 유지.
+		hero_sprite.scale = Vector2(
+			HERO_REFERENCE_RENDER_SCALE,
+			HERO_REFERENCE_RENDER_SCALE
+		)
+		return
+
+	var texture := hero_sprite.sprite_frames.get_frame_texture(
+		"idle",
+		0
+	)
+	if texture == null:
+		return
+
+	var image := texture.get_image()
+	if image == null or image.is_empty():
+		return
+
+	var used_rect := image.get_used_rect()
+	if used_rect.size.y <= 0:
+		return
+
+	var normalized_scale := reference_height / float(
+		used_rect.size.y
+	)
+	hero_sprite.scale = Vector2(
+		normalized_scale,
+		normalized_scale
+	)
+
+func _get_stage1_reference_render_height() -> float:
+	var reference_texture := _load_stage1_texture(
+		HERO_REFERENCE_SHEET_PATH
+	)
+	if reference_texture == null:
+		return 0.0
+
+	var image := reference_texture.get_image()
+	if image == null or image.is_empty():
+		return 0.0
+
+	var frame_rect := Rect2i(
+		Vector2i.ZERO,
+		HERO_REFERENCE_FRAME_SIZE
+	)
+	var frame_image := image.get_region(frame_rect)
+	if frame_image == null or frame_image.is_empty():
+		return 0.0
+
+	var used_rect := frame_image.get_used_rect()
+	if used_rect.size.y <= 0:
+		return 0.0
+
+	return (
+		float(used_rect.size.y)
+		* HERO_REFERENCE_RENDER_SCALE
+	)
 
 func _add_sequence_animation(
 	frames: SpriteFrames,
