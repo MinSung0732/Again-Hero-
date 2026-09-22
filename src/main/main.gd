@@ -5,6 +5,8 @@ const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
+const HERO_AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
+const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png"
 
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
 @onready var battle_viewport: SubViewport = $BattleViewportContainer/BattleViewport
@@ -33,6 +35,16 @@ const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 @onready var monster_info_stats: Label = $HUD/MonsterInfoPanel/Scroll/Margin/VBox/Stats
 @onready var monster_info_normal: Label = $HUD/MonsterInfoPanel/Scroll/Margin/VBox/NormalAugments
 @onready var monster_info_special: Label = $HUD/MonsterInfoPanel/Scroll/Margin/VBox/SpecialAugments
+
+@onready var hero_info_bookmark: Button = $HUD/HeroInfoBookmark
+@onready var hero_info_panel: PanelContainer = $HUD/HeroInfoPanel
+@onready var hero_info_close: Button = $HUD/HeroInfoPanel/Scroll/Margin/VBox/Header/Close
+@onready var hero_info_portrait: TextureRect = $HUD/HeroInfoPanel/Scroll/Margin/VBox/Portrait
+@onready var hero_info_name: Label = $HUD/HeroInfoPanel/Scroll/Margin/VBox/Name
+@onready var hero_info_stats: Label = $HUD/HeroInfoPanel/Scroll/Margin/VBox/Stats
+@onready var hero_info_abilities: Label = $HUD/HeroInfoPanel/Scroll/Margin/VBox/Abilities
+@onready var hero_info_build: Label = $HUD/HeroInfoPanel/Scroll/Margin/VBox/Build
+@onready var hero_info_ai: Label = $HUD/HeroInfoPanel/Scroll/Margin/VBox/AI
 
 @onready var build_label: Label = $HUD/BottomBar/BuildLabel
 @onready var status_label: Label = $HUD/BottomBar/Status
@@ -105,6 +117,7 @@ var demon_ultimate_charge_ready: bool = false
 var demon_ultimate_cooldowns: Dictionary = {}
 var monster_info_selected_index: int = 0
 var monster_info_animating: bool = false
+var hero_info_animating: bool = false
 
 func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
@@ -134,6 +147,8 @@ func _ready() -> void:
 	stage_menu_button.pressed.connect(_on_stage_menu_pressed)
 	monster_info_bookmark.pressed.connect(_toggle_monster_info)
 	monster_info_close.pressed.connect(_close_monster_info)
+	hero_info_bookmark.pressed.connect(_toggle_hero_info)
+	hero_info_close.pressed.connect(_close_hero_info)
 	for tab_index in range(monster_info_tabs.size()):
 		monster_info_tabs[tab_index].pressed.connect(
 			_on_monster_info_tab_pressed.bind(tab_index)
@@ -222,7 +237,7 @@ func _ready() -> void:
 		float(snapshot.get("run_remaining_seconds", 0.0))
 	)
 
-	build_label.text = "용사 빌드: %s" % String(snapshot.get("hero_build_summary", "아직 선택 없음"))
+	build_label.text = ""
 	debug_balance_label.text = String(snapshot.get("debug_balance_summary", "[DEBUG]"))
 	placement_toggle.button_pressed = true
 	_on_placement_mode_toggled(true)
@@ -238,6 +253,8 @@ func _process(delta: float) -> void:
 	debug_refresh_timer = 0.25
 	if is_instance_valid(battle) and battle.has_method("get_debug_balance_summary"):
 		debug_balance_label.text = String(battle.call("get_debug_balance_summary"))
+	if hero_info_panel.visible:
+		_refresh_hero_info_panel()
 
 func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 	subtitle_label.text = "Stage %d · %s · %s" % [
@@ -538,6 +555,7 @@ func _toggle_monster_info() -> void:
 func _open_monster_info() -> void:
 	if monster_info_animating:
 		return
+	_hide_hero_info_immediate()
 	if battle_loadout_ids.is_empty():
 		return
 
@@ -589,6 +607,273 @@ func _close_monster_info() -> void:
 			monster_info_bookmark.show()
 			monster_info_animating = false
 	)
+
+func _toggle_hero_info() -> void:
+	if hero_info_panel.visible:
+		_close_hero_info()
+	else:
+		_open_hero_info()
+
+func _open_hero_info() -> void:
+	if hero_info_animating:
+		return
+	_hide_monster_info_immediate()
+	_refresh_hero_info_panel()
+	hero_info_bookmark.hide()
+	hero_info_panel.show()
+
+	var target_position := hero_info_panel.position
+	hero_info_panel.position = target_position + Vector2(500.0, 0.0)
+	hero_info_animating = true
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(
+		hero_info_panel,
+		"position",
+		target_position,
+		0.22
+	)
+	tween.finished.connect(
+		func() -> void:
+			hero_info_animating = false
+	)
+
+func _close_hero_info() -> void:
+	if not hero_info_panel.visible or hero_info_animating:
+		return
+
+	hero_info_animating = true
+	var target_position := hero_info_panel.position + Vector2(500.0, 0.0)
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.set_ease(Tween.EASE_IN)
+	tween.tween_property(
+		hero_info_panel,
+		"position",
+		target_position,
+		0.18
+	)
+	tween.finished.connect(
+		func() -> void:
+			hero_info_panel.hide()
+			hero_info_panel.position -= Vector2(500.0, 0.0)
+			hero_info_bookmark.show()
+			hero_info_animating = false
+	)
+
+func _hide_hero_info_immediate() -> void:
+	if hero_info_panel.visible:
+		hero_info_panel.hide()
+	hero_info_bookmark.show()
+	hero_info_animating = false
+
+func _hide_monster_info_immediate() -> void:
+	if monster_info_panel.visible:
+		monster_info_panel.hide()
+	monster_info_bookmark.show()
+	monster_info_animating = false
+
+func _refresh_hero_info_panel() -> void:
+	if battle == null or not battle.has_method("get_snapshot"):
+		return
+
+	var snapshot: Dictionary = battle.get_snapshot()
+	var hero_name := String(snapshot.get("hero_name", "용사"))
+	var hero_archetype := String(
+		snapshot.get("hero_archetype", "")
+	)
+
+	hero_info_name.text = "%s · Lv.%d" % [
+		hero_name,
+		int(snapshot.get("hero_level", 1)),
+	]
+	hero_info_portrait.texture = _load_normalized_hero_portrait(
+		String(snapshot.get("hero_portrait_path", ""))
+	)
+
+	var stat_lines: PackedStringArray = []
+	stat_lines.append(
+		"HP  %d / %d" % [
+			int(snapshot.get("hero_hp", 0)),
+			int(snapshot.get("hero_max_hp", 0)),
+		]
+	)
+	stat_lines.append(
+		"공격력  %d" % int(snapshot.get("hero_attack_damage", 0))
+	)
+	stat_lines.append(
+		"이동속도  %.0f" % float(snapshot.get("hero_move_speed", 0.0))
+	)
+	stat_lines.append(
+		"공격 간격  %.2f초"
+		% float(snapshot.get("hero_attack_cooldown", 0.0))
+	)
+	stat_lines.append(
+		"공격 사거리  %.0f"
+		% float(snapshot.get("hero_attack_range", 0.0))
+	)
+	hero_info_stats.text = "\n".join(stat_lines)
+
+	var ability_lines: PackedStringArray = []
+	if hero_archetype == "rogue_combo":
+		ability_lines.append("3단 찌르기 · 약진/넉백 연계")
+		ability_lines.append(
+			"난도질 쉴드  최대 HP %.0f%%"
+			% (
+				float(snapshot.get("hero_slash_shield_ratio", 0.0))
+				* 100.0
+			)
+		)
+		ability_lines.append(
+			"피흡  실제 피해의 %.0f%%"
+			% (
+				float(snapshot.get("hero_lifesteal_ratio", 0.0))
+				* 100.0
+			)
+		)
+		ability_lines.append(
+			"급습-암살 처형선  일반 몬스터 HP %.0f%%"
+			% (
+				float(snapshot.get("hero_execute_ratio", 0.0))
+				* 100.0
+			)
+		)
+	else:
+		ability_lines.append(
+			"원거리 투사체 속도  %.0f"
+			% float(snapshot.get("hero_projectile_speed", 0.0))
+		)
+		ability_lines.append("거리 유지형 전투 AI")
+	hero_info_abilities.text = "\n".join(ability_lines)
+
+	var build_counts: Dictionary = Dictionary(
+		snapshot.get("hero_build_counts", {})
+	)
+	var build_lines: PackedStringArray = []
+	for raw_id in build_counts.keys():
+		var augment_id := String(raw_id)
+		var stacks := int(build_counts.get(augment_id, 0))
+		if stacks <= 0:
+			continue
+		var augment := HERO_AUGMENTS.get_augment(augment_id)
+		build_lines.append(
+			"%s x%d" % [
+				String(augment.get("name", augment_id)),
+				stacks,
+			]
+		)
+	hero_info_build.text = (
+		"아직 선택한 용사 증강 없음"
+		if build_lines.is_empty()
+		else "\n".join(build_lines)
+	)
+
+	hero_info_ai.text = "%s\n%s" % [
+		String(snapshot.get("hero_ai_observation", "AI 관측 정보 없음")),
+		String(snapshot.get("hero_recent_offense", "최근 공세 기록 없음")),
+	]
+
+func _load_normalized_hero_portrait(path: String) -> Texture2D:
+	var source := _load_ui_texture(path)
+	if source == null:
+		return null
+	var reference := _load_ui_texture(
+		HERO_PORTRAIT_REFERENCE_PATH
+	)
+	if reference == null:
+		return source
+
+	var source_image := source.get_image()
+	var reference_image := reference.get_image()
+	if (
+		source_image == null
+		or source_image.is_empty()
+		or reference_image == null
+		or reference_image.is_empty()
+	):
+		return source
+
+	var source_rect := _get_visible_alpha_rect(source_image)
+	var reference_rect := _get_visible_alpha_rect(reference_image)
+	if source_rect.size.y <= 0 or reference_rect.size.y <= 0:
+		return source
+
+	var cropped := source_image.get_region(source_rect)
+	var scale_ratio := (
+		float(reference_rect.size.y)
+		/ float(maxi(source_rect.size.y, 1))
+	)
+	var target_width := maxi(
+		1,
+		int(round(float(source_rect.size.x) * scale_ratio))
+	)
+	var target_height := reference_rect.size.y
+	cropped.resize(
+		target_width,
+		target_height,
+		Image.INTERPOLATE_NEAREST
+	)
+
+	var canvas := Image.create(
+		reference_image.get_width(),
+		reference_image.get_height(),
+		false,
+		Image.FORMAT_RGBA8
+	)
+	canvas.fill(Color(0, 0, 0, 0))
+	var center := Vector2i(
+		reference_rect.position.x + reference_rect.size.x / 2,
+		reference_rect.position.y + reference_rect.size.y / 2
+	)
+	var paste := Vector2i(
+		center.x - target_width / 2,
+		center.y - target_height / 2
+	)
+	canvas.blit_rect(
+		cropped,
+		Rect2i(Vector2i.ZERO, cropped.get_size()),
+		paste
+	)
+	return ImageTexture.create_from_image(canvas)
+
+func _get_visible_alpha_rect(
+	image: Image,
+	alpha_threshold: float = 0.05
+) -> Rect2i:
+	var min_x := image.get_width()
+	var min_y := image.get_height()
+	var max_x := -1
+	var max_y := -1
+	for y in range(image.get_height()):
+		for x in range(image.get_width()):
+			if image.get_pixel(x, y).a <= alpha_threshold:
+				continue
+			min_x = mini(min_x, x)
+			min_y = mini(min_y, y)
+			max_x = maxi(max_x, x)
+			max_y = maxi(max_y, y)
+	if max_x < min_x or max_y < min_y:
+		return Rect2i()
+	return Rect2i(
+		min_x,
+		min_y,
+		max_x - min_x + 1,
+		max_y - min_y + 1
+	)
+
+func _load_ui_texture(path: String) -> Texture2D:
+	if path.is_empty():
+		return null
+	if FileAccess.file_exists(path):
+		var image := Image.new()
+		if image.load(path) == OK:
+			return ImageTexture.create_from_image(image)
+	if ResourceLoader.exists(path):
+		var resource = load(path)
+		if resource is Texture2D:
+			return resource
+	return null
 
 func _on_monster_info_tab_pressed(tab_index: int) -> void:
 	if tab_index < 0 or tab_index >= battle_loadout_ids.size():
@@ -1303,7 +1588,9 @@ func _on_hero_augment_selected(level: int, candidates: Array, chosen_name: Strin
 	for candidate in candidates:
 		candidate_names.append(String(candidate.get("name", "?")))
 
-	build_label.text = "용사 빌드: %s" % build_summary
+	build_label.text = ""
+	if hero_info_panel.visible:
+		_refresh_hero_info_panel()
 	status_label.text = "Lv.%d 후보: %s\nAI → %s · %s" % [
 		level,
 		" / ".join(candidate_names),
@@ -1318,6 +1605,9 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	monster_info_panel.hide()
 	monster_info_bookmark.hide()
 	monster_info_animating = false
+	hero_info_panel.hide()
+	hero_info_bookmark.hide()
+	hero_info_animating = false
 	slime_button.disabled = true
 	spider_button.disabled = true
 	orc_button.disabled = true
