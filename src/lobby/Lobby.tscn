@@ -53,9 +53,9 @@ layout_mode = 2
 
 [node name="HeaderMargin" type="MarginContainer" parent="SafeArea/Layout/Header"]
 layout_mode = 2
-theme_override_constants/margin_left = 34
+theme_override_constants/margin_left = 72
 theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 34
+theme_override_constants/margin_right = 72
 theme_override_constants/margin_bottom = 18
 
 [node name="HeaderVBox" type="VBoxContainer" parent="SafeArea/Layout/Header/HeaderMargin"]
@@ -72,14 +72,14 @@ horizontal_alignment = 1
 [node name="ResourceRow" type="HBoxContainer" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox"]
 custom_minimum_size = Vector2(0, 118)
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 40
 alignment = 1
 
 [node name="ResourceLabel" type="Label" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.86, 0.81, 0.9, 1)
-theme_override_font_sizes/font_size = 25
+theme_override_font_sizes/font_size = 23
 text = "골드\n99,999"
 vertical_alignment = 1
 
@@ -87,7 +87,7 @@ vertical_alignment = 1
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.86, 0.81, 0.9, 1)
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 23
 text = "최고 해금\nStage 1"
 horizontal_alignment = 2
 vertical_alignment = 1
