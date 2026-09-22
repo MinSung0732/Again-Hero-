@@ -182,16 +182,16 @@ func _build_styles() -> void:
 		0
 	)
 	nav_button_style = _make_style(
-		Color("17131f"),
-		Color("3a3045"),
-		2,
-		18
+		Color("12101a"),
+		Color("34283f"),
+		1,
+		8
 	)
 	nav_button_active_style = _make_style(
-		Color("402848"),
-		Color("e0b64f"),
+		Color("6b2f82"),
+		Color("e5b94e"),
 		4,
-		18
+		10
 	)
 	nav_button_active_style.content_margin_top = 10.0
 	nav_button_active_style.content_margin_bottom = 10.0
@@ -357,28 +357,28 @@ func _apply_asset_frames() -> void:
 		_add_asset_frame(
 			target,
 			UI_FRAME_MEDIUM_DIR,
-			Vector2(26.0, 25.0),
-			Vector2(26.0, 25.0),
-			Vector2(26.0, 25.0),
-			Vector2(26.0, 25.0),
-			14.0,
-			14.0,
-			12.0,
-			12.0
+			Vector2(34.0, 33.0),
+			Vector2(34.0, 33.0),
+			Vector2(34.0, 33.0),
+			Vector2(34.0, 33.0),
+			18.0,
+			18.0,
+			16.0,
+			16.0
 		)
 
 	# 콘텐츠 프레임은 화면 가장자리 장식 역할만 한다.
 	_add_asset_frame(
 		$SafeArea/Layout/Content/ContentFrame,
 		UI_FRAME_LARGE_DIR,
-		Vector2(34.0, 33.0),
-		Vector2(34.0, 33.0),
-		Vector2(34.0, 33.0),
-		Vector2(34.0, 33.0),
+		Vector2(40.0, 39.0),
+		Vector2(40.0, 39.0),
+		Vector2(40.0, 39.0),
+		Vector2(40.0, 39.0),
+		20.0,
+		20.0,
 		18.0,
-		18.0,
-		14.0,
-		14.0
+		18.0
 	)
 
 	# 팝업만 별도 프레임을 사용한다. 카드 내부 중첩 장식은 피한다.
@@ -597,10 +597,10 @@ func _apply_new_ui_assets() -> void:
 		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		logo.set_anchors_preset(Control.PRESET_TOP_WIDE)
-		logo.offset_left = 72.0
-		logo.offset_top = 0.0
-		logo.offset_right = -72.0
-		logo.offset_bottom = 92.0
+		logo.offset_left = 92.0
+		logo.offset_top = 12.0
+		logo.offset_right = -92.0
+		logo.offset_bottom = 126.0
 		header.add_child(logo)
 		header.move_child(logo, 0)
 
@@ -630,7 +630,7 @@ func _apply_new_ui_assets() -> void:
 		stage_card.add_child(stage_skin)
 		stage_card.move_child(stage_skin, 0)
 
-	var arrow_texture := _load_png_texture_direct(UI_CARD_FRAME_DIR + "/ui8.png")
+	var arrow_texture := _load_png_texture_cropped(UI_CARD_FRAME_DIR + "/ui8.png")
 	if arrow_texture != null:
 		_apply_arrow_texture(prev_stage_button, arrow_texture, false)
 		_apply_arrow_texture(next_stage_button, arrow_texture, true)
@@ -657,6 +657,10 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 	skin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	skin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	skin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	skin.offset_left = 4.0
+	skin.offset_top = 4.0
+	skin.offset_right = -4.0
+	skin.offset_bottom = -4.0
 	skin.flip_h = flip_h
 	button.add_child(skin)
 
@@ -1501,8 +1505,8 @@ func _refresh_header() -> void:
 	var state := STAGE_PROGRESS.load_state()
 	var highest := int(state.get("highest_unlocked_stage", 1))
 	title_label.text = "용사, 또 너야?"
-	resource_label.text = "골드  %s" % _format_shop_number(SHOP_CATALOG.TEST_GOLD)
-	progress_label.text = "최고 해금  Stage %d" % highest
+	resource_label.text = "골드\n%s" % _format_shop_number(SHOP_CATALOG.TEST_GOLD)
+	progress_label.text = "최고 해금\nStage %d" % highest
 
 func _change_stage(direction: int) -> void:
 	if stage_ids.is_empty():
