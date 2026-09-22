@@ -60,7 +60,7 @@ const STAGES = {
 		"display_name": "두 번째 침입자",
 		"hero_id": "swift_hunter",
 		"hero_ai_profile_id": "stage_2_aggressive",
-		"portrait_path": "res://assets/art/heroes/stage2_rogue/stage2_hero_portrait2.png",
+		"portrait_path": "res://assets/art/heroes/stage2_rogue/stage2_hero_portrait.png",
 		"lobby_description": "3단 찌르기와 급습에 특화된 근접 도적. 그림자처럼 파고들어 전장을 흔든다.",
 		"hero_level_start": 1,
 		"map_width": 3600,
