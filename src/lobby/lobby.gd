@@ -649,9 +649,9 @@ func _apply_new_ui_assets() -> void:
 		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		logo.set_anchors_preset(Control.PRESET_TOP_WIDE)
-		logo.offset_left = 72.0
+		logo.offset_left = 104.0
 		logo.offset_top = 0.0
-		logo.offset_right = -72.0
+		logo.offset_right = -104.0
 		logo.offset_bottom = 92.0
 		header.add_child(logo)
 		header.move_child(logo, 0)
