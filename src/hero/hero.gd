@@ -624,6 +624,7 @@ func _physics_process_gunner(delta: float) -> void:
 	var move_direction := _choose_move_direction(target, distance)
 	move_direction = _apply_heal_item_steering(move_direction, delta)
 	move_direction = _apply_chest_steering(move_direction, delta)
+	move_direction = _apply_gunner_boundary_steering(move_direction)
 	var gunner_speed_scale := 1.0 + (gunner_reload_move_speed_bonus if gunner_reloading else 0.0)
 	velocity = move_direction * move_speed * move_multiplier * gunner_speed_scale
 	move_and_slide()
@@ -656,6 +657,41 @@ func _update_gunner_pose_visual(delta: float) -> void:
 		_play_stage1_animation("move", animation_speed)
 	else:
 		_play_stage1_animation("idle", 1.0)
+
+
+func _apply_gunner_boundary_steering(base_direction: Vector2) -> Vector2:
+	if base_direction.length_squared() <= 0.01:
+		return Vector2.ZERO
+
+	# 회복 아이템/상자를 직접 향하는 동안에는 목적지 접근을 방해하지 않는다.
+	if is_instance_valid(heal_item_target) or is_instance_valid(chest_target):
+		return base_direction.normalized()
+
+	var soft_margin := 360.0
+	var left_space := global_position.x - FIELD_MARGIN
+	var right_space := battlefield_size.x - FIELD_MARGIN - global_position.x
+	var top_space := global_position.y - FIELD_MARGIN
+	var bottom_space := battlefield_size.y - FIELD_MARGIN - global_position.y
+
+	var inward := Vector2.ZERO
+	if left_space < soft_margin:
+		inward.x += 1.0 - clampf(left_space / soft_margin, 0.0, 1.0)
+	if right_space < soft_margin:
+		inward.x -= 1.0 - clampf(right_space / soft_margin, 0.0, 1.0)
+	if top_space < soft_margin:
+		inward.y += 1.0 - clampf(top_space / soft_margin, 0.0, 1.0)
+	if bottom_space < soft_margin:
+		inward.y -= 1.0 - clampf(bottom_space / soft_margin, 0.0, 1.0)
+
+	if inward.length_squared() <= 0.001:
+		return base_direction.normalized()
+
+	var pressure := clampf(inward.length(), 0.0, 1.35)
+	var inward_weight := lerpf(0.75, 2.35, clampf(pressure, 0.0, 1.0))
+	var desired := base_direction.normalized() + inward.normalized() * inward_weight
+	if desired.length_squared() <= 0.01:
+		return inward.normalized()
+	return desired.normalized()
 
 
 func _gunner_attack(current_target: Node2D) -> void:
@@ -1120,7 +1156,8 @@ func _start_gunner_deadeye() -> void:
 
 func _update_gunner_deadeye(delta: float) -> void:
 	var speed_bonus := maxf(float(gunner_config.get("deadeye_move_speed_multiplier", 1.30)), 1.0)
-	velocity = gunner_deadeye_direction * move_speed * move_multiplier * speed_bonus * 0.35
+	var deadeye_move_direction := _apply_gunner_boundary_steering(gunner_deadeye_direction)
+	velocity = deadeye_move_direction * move_speed * move_multiplier * speed_bonus * 0.35
 	move_and_slide()
 	_clamp_to_battlefield()
 	gunner_deadeye_shot_timer = maxf(gunner_deadeye_shot_timer - delta, 0.0)
