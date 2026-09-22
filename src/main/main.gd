@@ -546,7 +546,7 @@ func _open_monster_info() -> void:
 	monster_info_panel.show()
 
 	var target_position := monster_info_panel.position
-	monster_info_panel.position = target_position + Vector2(430.0, 0.0)
+	monster_info_panel.position = target_position + Vector2(500.0, 0.0)
 	monster_info_animating = true
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_QUAD)
@@ -567,7 +567,7 @@ func _close_monster_info() -> void:
 		return
 
 	monster_info_animating = true
-	var target_position := monster_info_panel.position + Vector2(430.0, 0.0)
+	var target_position := monster_info_panel.position + Vector2(500.0, 0.0)
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_QUAD)
 	tween.set_ease(Tween.EASE_IN)
@@ -580,7 +580,7 @@ func _close_monster_info() -> void:
 	tween.finished.connect(
 		func() -> void:
 			monster_info_panel.hide()
-			monster_info_panel.position -= Vector2(430.0, 0.0)
+			monster_info_panel.position -= Vector2(500.0, 0.0)
 			monster_info_bookmark.show()
 			monster_info_animating = false
 	)
@@ -1134,7 +1134,7 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 
 		if candidate_type == "special":
 			var monster_id := String(candidate.get("monster_id", ""))
-			buttons[index].add_theme_font_size_override("font_size", 19)
+			buttons[index].add_theme_font_size_override("font_size", 24)
 			buttons[index].text = "★ [%s]\n%s\n\n%s" % [
 				_get_catalog_monster_name(monster_id),
 				_wrap_augment_card_text(
@@ -1150,7 +1150,7 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 			var current_stack := int(candidate.get("current_stack", 0))
 			var max_stack := int(candidate.get("max_stack", 1))
 			var next_stack := mini(current_stack + 1, max_stack)
-			buttons[index].add_theme_font_size_override("font_size", 20)
+			buttons[index].add_theme_font_size_override("font_size", 24)
 			buttons[index].text = "%s\nLv.%d → Lv.%d / %d\n\n%s" % [
 				_wrap_augment_card_text(
 					String(candidate.get("name", "증강")),
