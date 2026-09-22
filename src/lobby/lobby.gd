@@ -579,6 +579,9 @@ func _apply_header_card_skin(header: Control) -> void:
 	if header == null:
 		return
 
+	# PanelContainer에 NinePatchRect를 자식으로 넣으면 해당 텍스처의 최소 크기가
+	# Header의 최소 크기 계산에 참여해 Content 전체를 아래로 밀 수 있다.
+	# 프레임 이미지는 child Control이 아니라 panel StyleBox로 적용해 레이아웃과 분리한다.
 	var old_skin := header.get_node_or_null("HeaderCardSkin")
 	if old_skin != null:
 		old_skin.queue_free()
@@ -591,20 +594,17 @@ func _apply_header_card_skin(header: Control) -> void:
 	var margin_x := maxi(1, int(round(texture_size.x * 0.10)))
 	var margin_y := maxi(1, int(round(texture_size.y * 0.22)))
 
-	var skin := NinePatchRect.new()
-	skin.name = "HeaderCardSkin"
-	skin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	skin.texture = texture
-	skin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	skin.draw_center = true
-	skin.patch_margin_left = margin_x
-	skin.patch_margin_top = margin_y
-	skin.patch_margin_right = margin_x
-	skin.patch_margin_bottom = margin_y
-	skin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	header.add_child(skin)
-	header.move_child(skin, 0)
+	var header_skin := StyleBoxTexture.new()
+	header_skin.texture = texture
+	header_skin.texture_margin_left = margin_x
+	header_skin.texture_margin_top = margin_y
+	header_skin.texture_margin_right = margin_x
+	header_skin.texture_margin_bottom = margin_y
+	header_skin.content_margin_left = 0.0
+	header_skin.content_margin_top = 0.0
+	header_skin.content_margin_right = 0.0
+	header_skin.content_margin_bottom = 0.0
+	header.add_theme_stylebox_override("panel", header_skin)
 
 
 func _apply_new_ui_assets() -> void:
