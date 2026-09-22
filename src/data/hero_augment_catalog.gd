@@ -88,6 +88,26 @@ const AUGMENTS = [
 		],
 	},
 	{
+		"id": "healing_efficiency",
+		"name": "회복 증폭",
+		"description": "회복 아이템 회복량 +3% (최대 20중첩)",
+		"base_score": 5.8,
+		"max_stack": 20,
+		"tags": ["recovery", "survival"],
+		"effects": [
+			{"op": "add_stat", "target": "heal_item_multiplier", "value": 0.03, "max": 1.60},
+		],
+		"ai_rules": [
+			{"source": "hp_missing", "weight": 5.5},
+			{"source": "hp_ratio_max", "value": 0.50, "bonus": 1.2},
+			{"source": "recent_events_linear", "weight": 0.06, "cap": 0.8},
+		],
+		"synergy_rules": [
+			{"source": "build_tag_stacks", "key": "durability", "weight": 0.35, "cap": 1.4},
+			{"source": "build_tag_stacks", "key": "recovery", "weight": 0.30, "cap": 1.2},
+		],
+	},
+	{
 		"id": "pursuit",
 		"name": "민첩한 발놀림",
 		"description": "이동속도 +8",
