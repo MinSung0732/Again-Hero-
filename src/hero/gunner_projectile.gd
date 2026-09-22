@@ -37,7 +37,7 @@ func _physics_process(delta: float) -> void:
 func _on_body_entered(body: Node) -> void:
 	if body == null or body.is_queued_for_deletion():
 		return
-	if not body.is_in_group("monsters") or not body.has_method("take_damage"):
+	if not (body.is_in_group("monsters") or body.is_in_group("treasure_chests")) or not body.has_method("take_damage"):
 		return
 	var id := body.get_instance_id()
 	if hit_ids.has(id):
