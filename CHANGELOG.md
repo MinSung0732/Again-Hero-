@@ -1726,3 +1726,13 @@
 - 골드/최고 해금 정보가 ui1 모서리 장식 바깥으로 튀어나오지 않도록 HeaderMargin 좌우를 24→54로 확대.
 - 좌우 상태 텍스트 폰트를 26→24로 소폭 축소.
 - 로고 가로 점유 폭을 줄여 좌우 상태 정보와 겹침을 완화.
+
+### Responsive StageCard Layout v1
+- 모바일 긴 화면에서 맞춘 StageCard 내부가 9:16 PC 창에서 겹치던 원인을 수정.
+- ui10 원본 비율(1049×1499)을 기준으로 StageCard 높이를 현재 카드 폭에서 계산해 aspect ratio를 고정.
+- StageCard를 StagePicker 내부 세로 중앙 정렬로 전환해 긴 모바일 화면의 추가 세로 공간이 카드 내부 좌표계에 영향을 주지 않도록 변경.
+- TopPanel의 고정 800px 높이와 UpperFrameGap 210px 하드코딩을 제거하고, 상단 79% 영역 + 가변 Spacer로 변경.
+- BottomPanel의 -530/-370 픽셀 오프셋을 제거하고 카드 내부 80%~98% 비율 영역에 고정.
+- PortraitFrame 가로 670px 고정을 제거하고 카드 내부 폭에 맞춰 확장하도록 변경.
+- PC 창 크기/viewport 크기 변경 시 StageCard aspect를 다시 계산하도록 resized/viewport size_changed 동기화 추가.
+- 목표: 9:16 PC와 19.5:9~20:9 모바일에서 ui10 내부의 이름/초상화/설명/보상/입장 버튼이 동일한 프레임 구획을 유지.
