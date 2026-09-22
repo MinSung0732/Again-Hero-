@@ -1157,7 +1157,7 @@ func _start_gunner_deadeye() -> void:
 func _update_gunner_deadeye(delta: float) -> void:
 	var speed_bonus := maxf(float(gunner_config.get("deadeye_move_speed_multiplier", 1.30)), 1.0)
 	var deadeye_move_direction := _apply_gunner_boundary_steering(gunner_deadeye_direction)
-	velocity = deadeye_move_direction * move_speed * move_multiplier * speed_bonus * 0.35
+	velocity = deadeye_move_direction * move_speed * move_multiplier * speed_bonus
 	move_and_slide()
 	_clamp_to_battlefield()
 	gunner_deadeye_shot_timer = maxf(gunner_deadeye_shot_timer - delta, 0.0)
@@ -5165,6 +5165,7 @@ func _play_gunner_cylinder_dust() -> void:
 	channel_effect.stop()
 	channel_effect.position = Vector2.ZERO
 	channel_effect.rotation = randf_range(-0.10, 0.10)
+	channel_effect.modulate = Color(0.76, 0.68, 0.55, 0.88)
 	channel_effect.animation = &"cylinder_dust"
 	channel_effect.frame = 0
 	channel_effect.frame_progress = 0.0
