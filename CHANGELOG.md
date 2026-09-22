@@ -1894,3 +1894,9 @@
 - 따라서 이미 완성된 중앙 UI는 아래로 밀리지 않음.
 - Header 내부 상태 텍스트 기준점을 10px 아래로 이동하고 로고 표시 높이를 92→102로 소폭 확장해 늘어난 프레임 세로 공간을 사용.
 - 하단 네비게이션은 이번 패스에서 건드리지 않음.
+
+### PC Header Visual Frame Expansion
+- 중앙 Content/StageCard 레이아웃은 잠근 상태로 Header 배경 프레임 그림만 확대.
+- StyleBoxTexture expand margin을 좌/우 6px, 위 4px, 아래 14px 적용해 골드/최고 해금 텍스트가 프레임 안쪽에 더 자연스럽게 들어오도록 조정.
+- Header Control의 실제 높이, SafeArea, Content 시작 위치는 변경하지 않으므로 중앙 UI는 밀리지 않음.
+- 하단 네비게이션은 다음 패스에서 별도 조정.
