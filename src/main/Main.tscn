@@ -697,6 +697,17 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
 text = "증강 1"
 
+
+[node name="Icon" type="TextureRect" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice0"]
+mouse_filter = 2
+layout_mode = 0
+offset_left = 88.0
+offset_top = 26.0
+offset_right = 160.0
+offset_bottom = 98.0
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
 [node name="Choice1" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices"]
 custom_minimum_size = Vector2(0, 414)
 layout_mode = 2
@@ -704,6 +715,17 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
 text = "증강 2"
 
+
+[node name="Icon" type="TextureRect" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice1"]
+mouse_filter = 2
+layout_mode = 0
+offset_left = 88.0
+offset_top = 26.0
+offset_right = 160.0
+offset_bottom = 98.0
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
 [node name="Choice2" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices"]
 custom_minimum_size = Vector2(0, 414)
 layout_mode = 2
@@ -711,6 +733,17 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
 text = "증강 3"
 
+
+[node name="Icon" type="TextureRect" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice2"]
+mouse_filter = 2
+layout_mode = 0
+offset_left = 88.0
+offset_top = 26.0
+offset_right = 160.0
+offset_bottom = 98.0
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
 [node name="RerollButton" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 106)
 layout_mode = 2
