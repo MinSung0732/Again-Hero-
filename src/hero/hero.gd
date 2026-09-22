@@ -4266,7 +4266,7 @@ func _draw() -> void:
 
 	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
 	draw_rect(Rect2(-bar_width / 2.0, -64.0, bar_width, 10.0), Color(0.12, 0.12, 0.14), true)
-	draw_rect(Rect2(-bar_width / 2.0, -64.0, bar_width * hp_ratio, 10.0), Color(0.3, 0.9, 0.45), true)
+	draw_rect(Rect2(-bar_width / 2.0, -64.0, bar_width * hp_ratio, 10.0), Color(0.95, 0.38, 0.32), true)
 
 	if shield_max_hp > 0.0 and shield_hp > 0.0:
 		var shield_ratio := clampf(
