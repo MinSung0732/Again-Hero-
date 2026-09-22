@@ -555,11 +555,11 @@ const AUGMENTS = [
 	{
 		"id": "gunner_ricochet_pressure",
 		"name": "도탄 사격",
-		"description": "관통 후 다음 적 명중 피해가 점점 증가 (최대 5중첩)",
+		"description": "명중 시 주변의 아직 맞지 않은 적에게 도탄, 중첩당 도탄 +1 (최대 5중첩)",
 		"base_score": 6.8,
 		"max_stack": 5,
 		"tags": ["gunner", "projectile", "area"],
-		"effects": [{"op": "gunner_penetration_ramp"}],
+		"effects": [{"op": "gunner_ricochet"}],
 		"ai_rules": [
 			{"source": "nearby_linear", "weight": 0.45, "cap": 2.7},
 			{"source": "current_role_ratio", "key": "swarm", "weight": 2.4},
