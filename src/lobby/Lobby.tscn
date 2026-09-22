@@ -369,10 +369,15 @@ theme_override_constants/margin_bottom = 30
 
 [node name="CardVBox" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 14
 alignment = 0
 
-[node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+[node name="TopPanel" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+custom_minimum_size = Vector2(0, 330)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
@@ -381,7 +386,7 @@ text = "STAGE 01"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="StageName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+[node name="StageName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.98, 0.93, 1, 1)
@@ -390,21 +395,21 @@ text = "첫 번째 침입자"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="PortraitFrame" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+[node name="PortraitFrame" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
 custom_minimum_size = Vector2(0, 220)
 layout_mode = 2
 
-[node name="FrameMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame"]
+[node name="FrameMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame"]
 layout_mode = 2
 theme_override_constants/margin_left = 14
 theme_override_constants/margin_top = 14
 theme_override_constants/margin_right = 14
 theme_override_constants/margin_bottom = 14
 
-[node name="PortraitInner" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame/FrameMargin"]
+[node name="PortraitInner" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin"]
 layout_mode = 2
 
-[node name="PortraitTexture" type="TextureRect" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame/FrameMargin/PortraitInner"]
+[node name="PortraitTexture" type="TextureRect" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -419,7 +424,7 @@ expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 
-[node name="PortraitPlaceholder" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame/FrameMargin/PortraitInner"]
+[node name="PortraitPlaceholder" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -432,7 +437,7 @@ text = "초상화 준비 중"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="PortraitBadge" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame/FrameMargin/PortraitInner"]
+[node name="PortraitBadge" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner"]
 visible = false
 layout_mode = 1
 anchors_preset = 12
@@ -448,11 +453,7 @@ text = "침입자"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="PanelGap" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
-custom_minimum_size = Vector2(0, 54)
-layout_mode = 2
-
-[node name="HeroName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+[node name="HeroName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.87, 0.82, 0.91, 1)
@@ -461,8 +462,14 @@ text = "견습 마도사"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="StageDescription" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
-custom_minimum_size = Vector2(0, 60)
+[node name="BottomPanel" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+custom_minimum_size = Vector2(0, 210)
+layout_mode = 2
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="StageDescription" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel"]
+custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.65, 0.75, 1)
 theme_override_font_sizes/font_size = 21
@@ -471,7 +478,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="StageStatus" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+[node name="StageStatus" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.75, 0.69, 0.8, 1)
@@ -480,7 +487,7 @@ text = "입장 가능 · 제한 6분"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="StageReward" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+[node name="StageReward" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel"]
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
@@ -489,11 +496,11 @@ text = "최초 클리어 연구 포인트 +100"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ActionSpacer" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
-custom_minimum_size = Vector2(0, 8)
+[node name="ActionSpacer" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel"]
+custom_minimum_size = Vector2(0, 2)
 layout_mode = 2
 
-[node name="EnterButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
+[node name="EnterButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/BottomPanel"]
 custom_minimum_size = Vector2(0, 84)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
