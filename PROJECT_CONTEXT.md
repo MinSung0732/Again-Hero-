@@ -1260,3 +1260,14 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 일반 Spider 투사체는 assets/art/monsters/spider/frames/effect/frame_01~08.png,
   엘리트 Spider 투사체는 assets/art/elitemonster/spider/frames/effect/frame_01~08.png를 사용한다.
 - Spider는 복잡한 카이팅을 하지 않고 접근 → 사거리 진입 → 정지 → 발사의 단순 AI를 유지한다.
+
+
+### 마왕 성장/증강 밸런스 v2
+- 몬스터 소환 지휘력 비용과 마왕 EXP를 분리해 MonsterCatalog의 `summon_exp`를 성장 기준으로 사용한다.
+- 마왕 레벨 요구 EXP 곡선은 `15 + (레벨 - 1) * 4`로 완화해 첫 특수증강(Lv.10)과 후속 Lv.15/Lv.20 특수증강이 실제 Run 안에서 더 자주 등장하도록 조정한다.
+- 일반증강에 `침략 학습` 추가:
+  - 최대 Lv.20
+  - 레벨당 몬스터 소환 마왕 EXP 획득 +5%p
+  - 최대 Lv.20에서 기본 대비 +100%
+- 비용 감소는 지휘력 경제만 개선하고, 마왕 EXP 효율을 직접 낮추지 않는다.
+- 마왕 증강 선택 카드는 모바일 세로 화면에서 긴 설명이 화면 밖으로 밀려나지 않도록 카드 폭을 균등 분배하고 코드 기반 줄바꿈을 적용한다.
