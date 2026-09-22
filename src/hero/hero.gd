@@ -2780,15 +2780,6 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 				float(effect.get("max", 0.85))
 			)
 
-		"advance_rogue_lifesteal":
-			if rogue_lifesteal_ratio < 0.03:
-				rogue_lifesteal_ratio = 0.03
-			else:
-				rogue_lifesteal_ratio = minf(
-					rogue_lifesteal_ratio + 0.02,
-					0.05
-				)
-
 		_:
 			push_warning("Unknown Hero augment effect op: %s" % op)
 
