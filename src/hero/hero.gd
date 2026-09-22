@@ -872,41 +872,108 @@ func _spawn_gunner_afterimage(
 func _find_gunner_escape_direction() -> Vector2:
 	var best := Vector2.RIGHT
 	var best_score := INF
-	var sample_count := 16
+	var sample_count := 32
 	var dash_distance := maxf(float(gunner_config.get("backstep_distance", 260.0)), 1.0)
+	var threat_radius := maxf(dash_distance + 360.0, 560.0)
+	var repulsion := Vector2.ZERO
+
+	# 가까운 몬스터일수록 더 강하게 반대 방향을 선호한다.
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var hp_value = monster.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		var offset := monster.global_position - global_position
+		var distance := offset.length()
+		if distance <= 0.001 or distance > threat_radius:
+			continue
+		var proximity := 1.0 - clampf(distance / threat_radius, 0.0, 1.0)
+		repulsion -= offset.normalized() * (0.35 + proximity * proximity * 2.65)
+
+	var preferred_away := (
+		repulsion.normalized()
+		if repulsion.length_squared() > 0.001
+		else Vector2.ZERO
+	)
 
 	for i in range(sample_count):
 		var dir := Vector2.from_angle(TAU * float(i) / float(sample_count))
-		var sample := global_position + dir * dash_distance
-		var endpoint_danger := _estimate_monster_danger(sample, 260.0)
+		var raw_endpoint := global_position + dir * dash_distance
+		var endpoint := Vector2(
+			clampf(raw_endpoint.x, FIELD_MARGIN, battlefield_size.x - FIELD_MARGIN),
+			clampf(raw_endpoint.y, FIELD_MARGIN, battlefield_size.y - FIELD_MARGIN)
+		)
+		var actual_dash_distance := global_position.distance_to(endpoint)
+		if actual_dash_distance <= 1.0:
+			continue
 
-		var forward_density := 0.0
+		var endpoint_danger := _estimate_monster_danger(endpoint, 320.0)
+		var endpoint_close_count := 0
+		var endpoint_near_count := 0
+		var corridor_density := 0.0
+		var corridor_count := 0
 		var side := Vector2(-dir.y, dir.x)
+
 		for node in get_tree().get_nodes_in_group("monsters"):
 			if not is_instance_valid(node) or node.is_queued_for_deletion():
 				continue
 			var monster := node as Node2D
 			if monster == null:
 				continue
+			var hp_value = monster.get("current_hp")
+			if hp_value != null and int(hp_value) <= 0:
+				continue
+
+			var endpoint_distance := endpoint.distance_to(monster.global_position)
+			if endpoint_distance <= 115.0:
+				endpoint_close_count += 1
+			if endpoint_distance <= 220.0:
+				endpoint_near_count += 1
+
 			var offset := monster.global_position - global_position
 			var forward := offset.dot(dir)
-			if forward <= 0.0 or forward > dash_distance + 180.0:
+			if forward <= 0.0 or forward > actual_dash_distance + 120.0:
 				continue
 			var lateral := absf(offset.dot(side))
-			if lateral > 150.0:
+			if lateral > 185.0:
 				continue
+
+			corridor_count += 1
 			var forward_weight := 1.0 - clampf(
-				forward / (dash_distance + 180.0),
+				forward / maxf(actual_dash_distance + 120.0, 1.0),
 				0.0,
 				1.0
-			) * 0.45
-			var center_weight := 1.0 - clampf(lateral / 150.0, 0.0, 1.0) * 0.50
-			forward_density += maxf(forward_weight * center_weight, 0.10)
+			) * 0.35
+			var center_weight := 1.0 - clampf(lateral / 185.0, 0.0, 1.0) * 0.60
+			corridor_density += maxf(forward_weight * center_weight, 0.15)
 
-		var score := endpoint_danger * 0.65 + forward_density * 2.35
+		# 맵 바깥 후보가 가짜 안전지대로 평가되지 않게 실제 이동 손실에 패널티.
+		var boundary_loss := clampf(
+			(dash_distance - actual_dash_distance) / dash_distance,
+			0.0,
+			1.0
+		)
+		var away_alignment_penalty := 0.0
+		if preferred_away.length_squared() > 0.001:
+			away_alignment_penalty = (1.0 - dir.dot(preferred_away)) * 7.0
+
+		# 빈 통로/빈 도착지를 최우선. 가까운 몬스터가 있는 도착점은 사실상 탈락시킨다.
+		var score := (
+			float(endpoint_close_count) * 90.0
+			+ float(endpoint_near_count) * 16.0
+			+ float(corridor_count) * 11.0
+			+ corridor_density * 13.0
+			+ endpoint_danger * 18.0
+			+ away_alignment_penalty
+			+ boundary_loss * 28.0
+		)
 		if score < best_score:
 			best_score = score
-			best = dir
+			best = global_position.direction_to(endpoint)
 
 	return best.normalized()
 
