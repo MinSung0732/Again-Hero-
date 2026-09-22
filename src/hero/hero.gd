@@ -87,6 +87,7 @@ var rogue_assassination_timer: float = 0.0
 var rogue_assassination_cast_timer: float = 0.0
 var rogue_combo_damage_multiplier: float = 1.0
 var rogue_combo_recovery_multiplier: float = 1.0
+var rogue_bonus_combo_hits: int = 0
 var rogue_slash_shield_ratio_bonus: float = 0.0
 var rogue_assassination_hit_bonus: int = 0
 var rogue_execute_threshold_bonus: float = 0.0
@@ -201,6 +202,7 @@ func configure_profile(profile: Dictionary) -> void:
 	rogue_combo_index = 0
 	rogue_combo_damage_multiplier = 1.0
 	rogue_combo_recovery_multiplier = 1.0
+	rogue_bonus_combo_hits = 0
 	rogue_slash_shield_ratio_bonus = 0.0
 	rogue_assassination_hit_bonus = 0
 	rogue_execute_threshold_bonus = 0.0
@@ -543,9 +545,13 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 	var damage_ratio := 1.0
 	if (
 		typeof(damage_multipliers) == TYPE_ARRAY
-		and rogue_combo_index < damage_multipliers.size()
+		and not damage_multipliers.is_empty()
 	):
-		damage_ratio = float(damage_multipliers[rogue_combo_index])
+		var damage_index := mini(
+			rogue_combo_index,
+			damage_multipliers.size() - 1
+		)
+		damage_ratio = float(damage_multipliers[damage_index])
 
 	var damage := maxi(
 		1,
@@ -566,16 +572,18 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 	)
 	var aoe_radius := 95.0
 	var aoe_offset := 48.0
-	if (
-		typeof(aoe_radii) == TYPE_ARRAY
-		and rogue_combo_index < aoe_radii.size()
-	):
-		aoe_radius = float(aoe_radii[rogue_combo_index])
-	if (
-		typeof(aoe_offsets) == TYPE_ARRAY
-		and rogue_combo_index < aoe_offsets.size()
-	):
-		aoe_offset = float(aoe_offsets[rogue_combo_index])
+	if typeof(aoe_radii) == TYPE_ARRAY and not aoe_radii.is_empty():
+		var radius_index := mini(
+			rogue_combo_index,
+			aoe_radii.size() - 1
+		)
+		aoe_radius = float(aoe_radii[radius_index])
+	if typeof(aoe_offsets) == TYPE_ARRAY and not aoe_offsets.is_empty():
+		var offset_index := mini(
+			rogue_combo_index,
+			aoe_offsets.size() - 1
+		)
+		aoe_offset = float(aoe_offsets[offset_index])
 
 	var corridor_end := lunge_end + direction * aoe_offset
 	var corridor_vector := corridor_end - lunge_start
@@ -653,22 +661,34 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 		float(ultimate_config.get("charge_on_attack", 0.0))
 	)
 
+	var combo_length := 3 + maxi(rogue_bonus_combo_hits, 0)
 	var hit_intervals = rogue_combo_config.get(
 		"hit_intervals",
-		[0.22, 0.24, 1.05]
+		[0.24, 0.26, 0.28, 0.30]
 	)
 	var interval := attack_cooldown
-	if (
-		typeof(hit_intervals) == TYPE_ARRAY
-		and rogue_combo_index < hit_intervals.size()
-	):
-		interval = float(hit_intervals[rogue_combo_index])
+	if typeof(hit_intervals) == TYPE_ARRAY and not hit_intervals.is_empty():
+		var interval_index := mini(
+			rogue_combo_index,
+			hit_intervals.size() - 1
+		)
+		interval = float(hit_intervals[interval_index])
 
-	if rogue_combo_index >= 2:
+	var is_finisher := rogue_combo_index >= combo_length - 1
+	if is_finisher:
+		interval = maxf(
+			float(
+				rogue_combo_config.get(
+					"finisher_recovery",
+					1.05
+				)
+			),
+			0.08
+		)
 		interval *= rogue_combo_recovery_multiplier
 
 	attack_timer = maxf(interval, 0.08)
-	rogue_combo_index = (rogue_combo_index + 1) % 3
+	rogue_combo_index = (rogue_combo_index + 1) % combo_length
 	if rogue_combo_index == 0:
 		rogue_combo_direction = Vector2.ZERO
 
@@ -1037,7 +1057,7 @@ func _update_rogue_assassination(delta: float) -> void:
 			)
 			+ rogue_execute_threshold_bonus,
 			0.0,
-			0.35
+			0.20
 		)
 		var hp_ratio := (
 			float(current_target_hp)
@@ -2760,7 +2780,7 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 			else:
 				rogue_lifesteal_ratio = minf(
 					rogue_lifesteal_ratio + 0.02,
-					0.07
+					0.05
 				)
 
 		_:
