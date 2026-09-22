@@ -418,6 +418,26 @@ const AUGMENTS = [
 		],
 	},
 	{
+		"id": "fighter_courage",
+		"name": "용기백배",
+		"description": "검방 돌격 피해 +15%, 이후 중첩당 +3% (최대 +36%)",
+		"base_score": 7.5,
+		"max_stack": 8,
+		"tags": ["damage", "mobility", "area"],
+		"effects": [
+			{"op": "advance_fighter_courage"},
+		],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.55, "cap": 3.3},
+			{"source": "current_role_ratio", "key": "swarm", "weight": 1.8},
+			{"source": "hp_missing", "weight": 1.5},
+		],
+		"synergy_rules": [
+			{"source": "build_tag_stacks", "key": "mobility", "weight": 0.35, "cap": 1.4},
+			{"source": "build_tag_stacks", "key": "damage", "weight": 0.25, "cap": 1.0},
+		],
+	},
+	{
 		"id": "rogue_ruthless_strike",
 		"name": "무자비한 일격",
 		"description": "기본 연격 돌진 횟수 +1 (3타 → 4타)",
