@@ -27,11 +27,6 @@ var attack_timer: float = 0.0
 var hit_flash_timer: float = 0.0
 var dying: bool = false
 var special_augment_configs: Dictionary = {}
-var burst_remaining: int = 0
-var burst_timer: float = 0.0
-var burst_direction: Vector2 = Vector2.RIGHT
-var burst_damage_multiplier: float = 1.0
-var burst_interval: float = 0.0
 
 func _ready() -> void:
 	add_to_group("monsters")
@@ -45,7 +40,6 @@ func _physics_process(delta: float) -> void:
 		return
 
 	attack_timer = maxf(attack_timer - delta, 0.0)
-	_process_projectile_burst(delta)
 
 	if hit_flash_timer > 0.0:
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
@@ -87,27 +81,32 @@ func _begin_projectile_attack(direction_to_hero: Vector2) -> void:
 		_fire_projectile(direction_to_hero, 1.0)
 		return
 
-	burst_remaining = maxi(int(triple.get("shot_count", 3)), 1)
-	burst_direction = direction_to_hero
-	burst_damage_multiplier = maxf(
+	var shot_count := maxi(int(triple.get("shot_count", 3)), 1)
+	var damage_multiplier := maxf(
 		float(triple.get("damage_multiplier", 1.0)),
 		0.0
 	)
-	burst_interval = maxf(float(triple.get("shot_interval", 0.12)), 0.01)
-	burst_timer = 0.0
-	_process_projectile_burst(0.0)
+	var spread_degrees := maxf(
+		float(triple.get("spread_degrees", 18.0)),
+		0.0
+	)
+	var spread_radians := deg_to_rad(spread_degrees)
 
-func _process_projectile_burst(delta: float) -> void:
-	if burst_remaining <= 0:
-		return
-	burst_timer = maxf(burst_timer - delta, 0.0)
-	if burst_timer > 0.0:
-		return
-
-	_fire_projectile(burst_direction, burst_damage_multiplier)
-	burst_remaining -= 1
-	if burst_remaining > 0:
-		burst_timer = burst_interval
+	for shot_index in range(shot_count):
+		var t := (
+			0.5
+			if shot_count <= 1
+			else float(shot_index) / float(shot_count - 1)
+		)
+		var angle_offset := lerpf(
+			-spread_radians,
+			spread_radians,
+			t
+		)
+		_fire_projectile(
+			direction_to_hero.rotated(angle_offset),
+			damage_multiplier
+		)
 
 func _fire_projectile(
 	direction_to_hero: Vector2,
