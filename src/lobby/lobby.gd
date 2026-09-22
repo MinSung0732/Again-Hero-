@@ -300,64 +300,51 @@ func _apply_styles() -> void:
 
 
 func _apply_asset_frames() -> void:
-	# 큰 고정 영역에는 원본 large frame을 사용한다.
-	_add_asset_frame(
-		$SafeArea/Layout/Header,
-		UI_FRAME_LARGE_DIR,
-		Vector2(82.0, 80.0),
-		Vector2(81.0, 80.0),
-		Vector2(81.0, 79.0),
-		Vector2(81.0, 79.0),
-		61.0,
-		59.0,
-		54.0,
-		54.0
-	)
-	_add_asset_frame(
-		$SafeArea/Layout/Content/ContentFrame,
-		UI_FRAME_LARGE_DIR,
-		Vector2(82.0, 80.0),
-		Vector2(81.0, 80.0),
-		Vector2(81.0, 79.0),
-		Vector2(81.0, 79.0),
-		61.0,
-		59.0,
-		54.0,
-		54.0
-	)
-	_add_asset_frame(
-		$BottomNav,
-		UI_FRAME_LARGE_DIR,
-		Vector2(82.0, 80.0),
-		Vector2(81.0, 80.0),
-		Vector2(81.0, 79.0),
-		Vector2(81.0, 79.0),
-		61.0,
-		59.0,
-		54.0,
-		54.0
-	)
-
-	# 카드/팝업은 더 작은 middle frame을 사용한다.
+	# 헤더/하단은 장식이 작은 middle frame을 축소 적용한다.
 	for target in [
-		$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard,
-		$SafeArea/Layout/Content/ShopTab/ShopLayout/ResultPanel,
-		monster_detail_panel,
-		monster_detail_normal_panel,
-		monster_detail_elite_panel,
+		$SafeArea/Layout/Header,
+		$BottomNav,
 	]:
 		_add_asset_frame(
 			target,
 			UI_FRAME_MEDIUM_DIR,
-			Vector2(77.0, 76.0),
-			Vector2(77.0, 76.0),
-			Vector2(77.0, 75.0),
-			Vector2(77.0, 75.0),
-			47.0,
-			46.0,
-			42.0,
-			43.0
+			Vector2(31.0, 30.0),
+			Vector2(31.0, 30.0),
+			Vector2(31.0, 30.0),
+			Vector2(31.0, 30.0),
+			18.0,
+			18.0,
+			16.0,
+			16.0
 		)
+
+	# 메인 콘텐츠는 large frame의 분위기만 남기고 폭을 크게 줄인다.
+	_add_asset_frame(
+		$SafeArea/Layout/Content/ContentFrame,
+		UI_FRAME_LARGE_DIR,
+		Vector2(41.0, 40.0),
+		Vector2(41.0, 40.0),
+		Vector2(41.0, 40.0),
+		Vector2(41.0, 40.0),
+		24.0,
+		24.0,
+		20.0,
+		20.0
+	)
+
+	# 팝업만 별도 프레임을 사용한다. 카드 내부 중첩 장식은 피한다.
+	_add_asset_frame(
+		monster_detail_panel,
+		UI_FRAME_MEDIUM_DIR,
+		Vector2(31.0, 30.0),
+		Vector2(31.0, 30.0),
+		Vector2(31.0, 30.0),
+		Vector2(31.0, 30.0),
+		18.0,
+		18.0,
+		16.0,
+		16.0
+	)
 
 func _add_asset_frame(
 	target: Control,
@@ -378,7 +365,7 @@ func _add_asset_frame(
 	overlay.name = "AssetFrame"
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	overlay.z_index = 30
+	overlay.z_index = 8
 	target.add_child(overlay)
 
 	_add_frame_piece(
