@@ -460,12 +460,12 @@ const AUGMENTS = [
 	{
 		"id": "fighter_charge_recovery",
 		"name": "승전의 호흡",
-		"description": "검방 돌격으로 적 처치 시 HP 8 회복",
+		"description": "검방 돌격 처치 시 HP 8 회복, 중첩당 +2 (최대 26)",
 		"base_score": 6.6,
-		"max_stack": 1,
+		"max_stack": 10,
 		"tags": ["recovery", "survival", "mobility"],
 		"effects": [
-			{"op": "add_stat", "target": "fighter_charge_kill_heal", "value": 8.0, "max": 8.0},
+			{"op": "advance_fighter_charge_recovery"},
 		],
 		"ai_rules": [
 			{"source": "hp_missing", "weight": 5.0},
