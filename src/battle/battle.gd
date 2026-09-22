@@ -874,6 +874,8 @@ func _on_monster_died(monster: Node) -> void:
 	var drop_position := Vector2.ZERO
 	var monster_type := "slime"
 	var is_split_child := false
+	var allow_special_death_split := false
+	var death_type := "normal"
 	var reward := 0
 	var instance_id := 0
 
@@ -885,6 +887,10 @@ func _on_monster_died(monster: Node) -> void:
 		instance_id = monster.get_instance_id()
 		monster_type = String(monster.get("monster_type"))
 		is_split_child = bool(monster.get_meta("split_child", false))
+		allow_special_death_split = bool(
+			monster.get_meta("allow_special_death_split", false)
+		)
+		death_type = String(monster.get_meta("death_type", "normal"))
 		reward = int(monster.get("exp_reward"))
 
 	if reward > 0:
@@ -916,8 +922,72 @@ func _on_monster_died(monster: Node) -> void:
 			true
 		)
 
+	_process_special_death_spawn(
+		monster_type,
+		drop_position,
+		is_split_child,
+		allow_special_death_split,
+		death_type
+	)
+
 	monsters_alive = maxi(monsters_alive - 1, 0)
 	_emit_stats()
+
+func _process_special_death_spawn(
+	monster_type: String,
+	drop_position: Vector2,
+	is_split_child: bool,
+	allow_special_death_split: bool,
+	death_type: String
+) -> void:
+	var can_split := not is_split_child or allow_special_death_split
+
+	if monster_type == "slime" and can_split:
+		var slime_config: Dictionary = _get_special_augment_config(
+			"slime"
+		).get("slime_residual_mucus", {})
+		var count := maxi(int(slime_config.get("count", 0)), 0)
+		for index in range(count):
+			var angle := TAU * float(index + 1) / float(count + 1)
+			var offset := Vector2.from_angle(angle) * 34.0
+			_spawn_monster(
+				"slime",
+				_clamp_manual_spawn_position(drop_position + offset),
+				0.0,
+				true,
+				{
+					"hp_multiplier": float(
+						slime_config.get("hp_multiplier", 0.50)
+					),
+					"damage_multiplier": float(
+						slime_config.get("damage_multiplier", 0.50)
+					),
+				}
+			)
+
+	if (
+		monster_type == "bomb_rat"
+		and can_split
+		and death_type != "self_destruct"
+	):
+		var rat_config: Dictionary = _get_special_augment_config(
+			"bomb_rat"
+		).get("bomb_rat_litter", {})
+		var rat_count := maxi(int(rat_config.get("count", 0)), 0)
+		for index in range(rat_count):
+			var angle := TAU * float(index + 1) / float(rat_count + 1)
+			var offset := Vector2.from_angle(angle) * 38.0
+			_spawn_monster(
+				"bomb_rat",
+				_clamp_manual_spawn_position(drop_position + offset),
+				0.0,
+				true,
+				{
+					"hp_multiplier": float(
+						rat_config.get("hp_multiplier", 0.50)
+					),
+				}
+			)
 
 func _spawn_exp_orb(drop_position: Vector2, exp_value: int) -> void:
 	if exp_value <= 0:
@@ -1906,12 +1976,14 @@ func _spawn_extra_normal_summon_monsters(
 	for index in range(extra_count):
 		var angle := TAU * float(index + 1) / float(extra_count + 1)
 		var offset := Vector2.from_angle(angle) * 36.0
-		_spawn_monster(
+		var extra_slime = _spawn_monster(
 			"slime",
 			_clamp_manual_spawn_position(spawn_position + offset),
 			0.0,
 			true
 		)
+		if is_instance_valid(extra_slime):
+			extra_slime.set_meta("allow_special_death_split", true)
 
 func _sync_combat_pause_state() -> void:
 	var should_enable := (
