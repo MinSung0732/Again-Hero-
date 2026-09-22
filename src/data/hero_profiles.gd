@@ -64,6 +64,8 @@ const PROFILES = {
 			"iron_body",
 			"pursuit",
 			"slow_resistance",
+			"exp_training",
+			"exp_magnet",
 			"long_reach",
 			"arcane_burst",
 			"battle_recovery",
@@ -144,6 +146,8 @@ const PROFILES = {
 			"rogue_ruthless_strike",
 			"pursuit",
 			"slow_resistance",
+			"exp_training",
+			"exp_magnet",
 		],
 	},
 }
