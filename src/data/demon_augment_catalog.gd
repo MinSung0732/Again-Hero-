@@ -334,12 +334,136 @@ static func roll_normal_candidates(
 		if monster_id.is_empty():
 			continue
 		var monster_name := String(monster_names.get(monster_id, monster_id))
-		for raw_augment in get_monster_normal_augments(monster_id, monster_name):
+		for raw_augment in get_monster_normal_augments(
+			monster_id,
+			monster_name
+		):
 			var augment: Dictionary = raw_augment
-			_append_normal_candidate(pool, augment, build_counts, exclude_ids)
+			_append_normal_candidate(
+				pool,
+				augment,
+				build_counts,
+				exclude_ids
+			)
 
-	pool.shuffle()
-	return pool.slice(0, mini(count, pool.size()))
+	var result: Array = []
+	var selected_monster_counts: Dictionary = {}
+	while not pool.is_empty() and result.size() < count:
+		var eligible_indices: Array[int] = []
+		for index in range(pool.size()):
+			var candidate: Dictionary = pool[index]
+			var target_monster_id := String(
+				candidate.get("target_monster_id", "")
+			)
+			if target_monster_id.is_empty():
+				eligible_indices.append(index)
+				continue
+
+			var selected_count := int(
+				selected_monster_counts.get(
+					target_monster_id,
+					0
+				)
+			)
+			if selected_count < 2:
+				eligible_indices.append(index)
+
+		# If the only remaining candidates belong to a monster already
+		# selected twice, allow them rather than returning fewer cards.
+		if eligible_indices.is_empty():
+			for index in range(pool.size()):
+				eligible_indices.append(index)
+
+		var selected_index := _weighted_candidate_index(
+			pool,
+			eligible_indices,
+			build_counts
+		)
+		if selected_index < 0:
+			break
+
+		var selected: Dictionary = pool[selected_index]
+		result.append(selected)
+		var selected_monster_id := String(
+			selected.get("target_monster_id", "")
+		)
+		if not selected_monster_id.is_empty():
+			selected_monster_counts[selected_monster_id] = (
+				int(
+					selected_monster_counts.get(
+						selected_monster_id,
+						0
+					)
+				)
+				+ 1
+			)
+		pool.remove_at(selected_index)
+
+	return result
+
+static func _weighted_candidate_index(
+	pool: Array,
+	eligible_indices: Array[int],
+	build_counts: Dictionary
+) -> int:
+	if eligible_indices.is_empty():
+		return -1
+
+	var total_weight := 0.0
+	var weights: Array[float] = []
+	for pool_index in eligible_indices:
+		var candidate: Dictionary = pool[pool_index]
+		var weight := _normal_candidate_weight(
+			candidate,
+			build_counts
+		)
+		weights.append(weight)
+		total_weight += weight
+
+	if total_weight <= 0.0:
+		return int(eligible_indices.pick_random())
+
+	var roll := randf() * total_weight
+	var cursor := 0.0
+	for weight_index in range(weights.size()):
+		cursor += weights[weight_index]
+		if roll <= cursor:
+			return int(eligible_indices[weight_index])
+
+	return int(eligible_indices.back())
+
+static func _normal_candidate_weight(
+	candidate: Dictionary,
+	build_counts: Dictionary
+) -> float:
+	var augment_id := String(candidate.get("id", ""))
+	var current_stack := int(build_counts.get(augment_id, 0))
+	var weight := 1.0
+
+	if current_stack >= 8:
+		weight *= 1.30
+	elif current_stack >= 4:
+		weight *= 1.20
+	elif current_stack >= 1:
+		weight *= 1.10
+
+	var monster_id := String(
+		candidate.get("target_monster_id", "")
+	)
+	if not monster_id.is_empty():
+		var monster_investment := 0
+		var prefix := "%s_" % monster_id
+		for raw_id in build_counts.keys():
+			var build_id := String(raw_id)
+			if not build_id.begins_with(prefix):
+				continue
+			monster_investment += int(
+				build_counts.get(build_id, 0)
+			)
+		if monster_investment > 0:
+			weight *= 1.10
+
+	return weight
 
 static func roll_special_candidates(
 	loadout_ids: Array,
