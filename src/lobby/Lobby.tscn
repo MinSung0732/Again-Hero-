@@ -259,31 +259,18 @@ theme_override_font_sizes/font_size = 30
 text = "몬스터 컬렉션"
 horizontal_alignment = 1
 
-[node name="MonsterList" type="ItemList" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
-custom_minimum_size = Vector2(0, 430)
+[node name="MonsterScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+custom_minimum_size = Vector2(0, 500)
 layout_mode = 2
 size_flags_vertical = 3
-allow_reselect = true
-max_columns = 3
-same_column_width = true
-fixed_column_width = 300
-icon_mode = 0
-fixed_icon_size = Vector2i(150, 150)
-icon_scale = 1.0
-texture_filter = 1
-theme_override_constants/h_separation = 14
-theme_override_constants/v_separation = 18
-theme_override_constants/icon_margin = 12
-theme_override_constants/line_separation = 6
-theme_override_font_sizes/font_size = 25
+horizontal_scroll_mode = 0
 
-
-[node name="DetailButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
-custom_minimum_size = Vector2(0, 83)
+[node name="MonsterGrid" type="GridContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterScroll"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "몬스터 상세보기"
-disabled = true
+size_flags_horizontal = 3
+columns = 2
+theme_override_constants/h_separation = 18
+theme_override_constants/v_separation = 18
 
 [node name="Status" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 custom_minimum_size = Vector2(0, 76)
