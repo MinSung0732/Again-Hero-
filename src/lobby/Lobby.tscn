@@ -375,7 +375,6 @@ alignment = 0
 [node name="TopPanel" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
 custom_minimum_size = Vector2(0, 500)
 layout_mode = 2
-size_flags_vertical = 3
 theme_override_constants/separation = 8
 
 [node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
@@ -399,7 +398,6 @@ vertical_alignment = 1
 [node name="PortraitFrame" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
 custom_minimum_size = Vector2(0, 330)
 layout_mode = 2
-size_flags_vertical = 3
 
 [node name="FrameMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame"]
 layout_mode = 2
