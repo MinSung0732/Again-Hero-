@@ -25,6 +25,10 @@ const STAGE1_CHANNEL_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/ef
 const STAGE1_CHANNEL_EFFECT_FRAME_COUNT := 6
 const STAGE1_CHANNEL_EFFECT_FRAME_SIZE := Vector2(512, 512)
 const STAGE1_CHANNEL_EFFECT_TARGET_SIZE := 300.0
+const STAGE2_FRAME_DIR := "res://assets/art/heroes/stage2_rogue/frames"
+const STAGE2_EFFECT1_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_01"
+const STAGE2_EFFECT2_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_02"
+const STAGE2_EFFECT3_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_03"
 
 const APPROACH_DISTANCE_RATIO := 0.86
 const FIELD_MARGIN := 72.0
@@ -55,7 +59,25 @@ var hero_id: String = "ranged_rookie"
 var hero_display_name: String = "견습 마도사"
 var hero_archetype: String = "ranged_kiter"
 var sprite_sheet_path: String = ""
+var sprite_frame_dir: String = ""
 var augment_pool_ids: Array[String] = []
+
+var rogue_combo_config: Dictionary = {}
+var rogue_slash_config: Dictionary = {}
+var rogue_combo_index: int = 0
+var rogue_slash_cooldown_timer: float = 0.0
+var rogue_slash_duration_timer: float = 0.0
+var rogue_slash_tick_timer: float = 0.0
+var rogue_slash_active: bool = false
+var rogue_assassination_active: bool = false
+var rogue_assassination_hits_left: int = 0
+var rogue_assassination_timer: float = 0.0
+var rogue_assassination_cast_timer: float = 0.0
+var rogue_combo_damage_multiplier: float = 1.0
+var rogue_combo_recovery_multiplier: float = 1.0
+var rogue_slash_shield_ratio_bonus: float = 0.0
+var rogue_assassination_hit_bonus: int = 0
+var rogue_execute_threshold_bonus: float = 0.0
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
 var ultimate_flash_timer: float = 0.0
@@ -119,6 +141,7 @@ var ai_observed_context_time: float = 0.0
 @onready var hero_sprite: AnimatedSprite2D = $HeroSprite
 @onready var shield_effect: AnimatedSprite2D = $ShieldEffect
 @onready var channel_effect: AnimatedSprite2D = $ChannelEffect
+@onready var rogue_attack_effect: AnimatedSprite2D = $RogueAttackEffect
 
 func configure_profile(profile: Dictionary) -> void:
 	if profile.is_empty():
@@ -128,6 +151,36 @@ func configure_profile(profile: Dictionary) -> void:
 	hero_display_name = String(profile.get("display_name", hero_display_name))
 	hero_archetype = String(profile.get("archetype", hero_archetype))
 	sprite_sheet_path = String(profile.get("sprite_sheet_path", ""))
+	sprite_frame_dir = String(profile.get("sprite_frame_dir", ""))
+	var profile_combo = profile.get("rogue_combo", {})
+	rogue_combo_config = (
+		profile_combo.duplicate(true)
+		if typeof(profile_combo) == TYPE_DICTIONARY
+		else {}
+	)
+	var profile_rogue_slash = profile.get("rogue_slash_skill", {})
+	rogue_slash_config = (
+		profile_rogue_slash.duplicate(true)
+		if typeof(profile_rogue_slash) == TYPE_DICTIONARY
+		else {}
+	)
+	rogue_slash_cooldown_timer = maxf(
+		float(rogue_slash_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
+	rogue_slash_duration_timer = 0.0
+	rogue_slash_tick_timer = 0.0
+	rogue_slash_active = false
+	rogue_assassination_active = false
+	rogue_assassination_hits_left = 0
+	rogue_assassination_timer = 0.0
+	rogue_assassination_cast_timer = 0.0
+	rogue_combo_index = 0
+	rogue_combo_damage_multiplier = 1.0
+	rogue_combo_recovery_multiplier = 1.0
+	rogue_slash_shield_ratio_bonus = 0.0
+	rogue_assassination_hit_bonus = 0
+	rogue_execute_threshold_bonus = 0.0
 	var profile_ultimate = profile.get("ultimate", {})
 	ultimate_config = (
 		profile_ultimate.duplicate(true)
