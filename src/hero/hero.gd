@@ -2451,6 +2451,17 @@ func _move_without_monsters() -> void:
 			_clamp_to_battlefield()
 			return
 
+	if is_instance_valid(chest_target):
+		var chest_direction := _apply_chest_steering(Vector2.ZERO, 0.016)
+		if chest_direction.length_squared() > 0.01:
+			velocity = chest_direction * move_speed * 0.72 * move_multiplier
+			move_and_slide()
+			_clamp_to_battlefield()
+			if global_position.distance_to(chest_target.global_position) <= 90.0 and attack_timer <= 0.0:
+				chest_target.call("take_damage", attack_damage)
+				attack_timer = _get_common_attack_interval(attack_cooldown)
+			return
+
 	var nearest_exp_orb := _find_nearest_exp_orb()
 	if is_instance_valid(nearest_exp_orb):
 		var exp_direction := global_position.direction_to(nearest_exp_orb.global_position)
@@ -4281,6 +4292,23 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 			)
 			move_and_slide()
 			_clamp_to_battlefield()
+			return
+
+	if is_instance_valid(chest_target):
+		var chest_direction := _apply_chest_steering(Vector2.ZERO, 0.016)
+		if chest_direction.length_squared() > 0.01:
+			velocity = (
+				chest_direction
+				* move_speed
+				* 0.72
+				* move_multiplier
+				* speed_scale
+			)
+			move_and_slide()
+			_clamp_to_battlefield()
+			if global_position.distance_to(chest_target.global_position) <= 105.0 and attack_timer <= 0.0:
+				chest_target.call("take_damage", attack_damage)
+				attack_timer = _get_common_attack_interval(attack_cooldown)
 			return
 
 	var nearest_exp_orb := _find_nearest_exp_orb()
