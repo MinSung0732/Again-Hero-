@@ -144,6 +144,7 @@ const PROFILES = {
 			"rogue_execution",
 			"rogue_bloodthirst",
 			"rogue_ruthless_strike",
+			"iron_body",
 			"pursuit",
 			"slow_resistance",
 			"exp_training",
