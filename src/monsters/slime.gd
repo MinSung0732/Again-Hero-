@@ -36,9 +36,12 @@ func _physics_process(delta: float) -> void:
 
 	attack_timer = maxf(attack_timer - delta, 0.0)
 	var pack_bonuses := _get_pack_bonuses()
+	var external_slow := 1.0
+	if int(get_meta("gunner_slow_until", 0)) > Time.get_ticks_msec():
+		external_slow = clampf(float(get_meta("gunner_slow_multiplier", 1.0)), 0.1, 1.0)
 	var effective_move_speed := move_speed * float(
 		pack_bonuses.get("move_speed_multiplier", 1.0)
-	)
+	) * external_slow
 	var effective_attack_cooldown := attack_cooldown / maxf(
 		float(pack_bonuses.get("attack_speed_multiplier", 1.0)),
 		0.01
