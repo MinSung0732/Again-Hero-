@@ -1,0 +1,298 @@
+{
+  "source": "stage1_hero_spritesheet.png",
+  "stage": "stage1",
+  "frame_count": 25,
+  "cell_size": [
+    256,
+    256
+  ],
+  "anchor": {
+    "x": 128,
+    "y": 224,
+    "basis": "body_center_x_and_ground_y"
+  },
+  "actions": {
+    "idle": 4,
+    "walk": 7,
+    "atk": 7,
+    "hit": 3,
+    "dead": 4
+  },
+  "frames": [
+    {
+      "file": "idle_01.png",
+      "action": "idle",
+      "order": 1,
+      "source_bbox": [
+        63,
+        35,
+        220,
+        192
+      ]
+    },
+    {
+      "file": "idle_02.png",
+      "action": "idle",
+      "order": 2,
+      "source_bbox": [
+        305,
+        35,
+        458,
+        192
+      ]
+    },
+    {
+      "file": "idle_03.png",
+      "action": "idle",
+      "order": 3,
+      "source_bbox": [
+        545,
+        35,
+        703,
+        192
+      ]
+    },
+    {
+      "file": "idle_04.png",
+      "action": "idle",
+      "order": 4,
+      "source_bbox": [
+        784,
+        35,
+        939,
+        192
+      ]
+    },
+    {
+      "file": "walk_01.png",
+      "action": "walk",
+      "order": 1,
+      "source_bbox": [
+        46,
+        238,
+        208,
+        394
+      ]
+    },
+    {
+      "file": "walk_02.png",
+      "action": "walk",
+      "order": 2,
+      "source_bbox": [
+        269,
+        238,
+        425,
+        394
+      ]
+    },
+    {
+      "file": "walk_03.png",
+      "action": "walk",
+      "order": 3,
+      "source_bbox": [
+        477,
+        238,
+        642,
+        394
+      ]
+    },
+    {
+      "file": "walk_04.png",
+      "action": "walk",
+      "order": 4,
+      "source_bbox": [
+        691,
+        238,
+        854,
+        394
+      ]
+    },
+    {
+      "file": "walk_05.png",
+      "action": "walk",
+      "order": 5,
+      "source_bbox": [
+        897,
+        238,
+        1063,
+        394
+      ]
+    },
+    {
+      "file": "walk_06.png",
+      "action": "walk",
+      "order": 6,
+      "source_bbox": [
+        1115,
+        238,
+        1277,
+        394
+      ]
+    },
+    {
+      "file": "walk_07.png",
+      "action": "walk",
+      "order": 7,
+      "source_bbox": [
+        1328,
+        238,
+        1492,
+        394
+      ]
+    },
+    {
+      "file": "atk_01.png",
+      "action": "atk",
+      "order": 1,
+      "source_bbox": [
+        48,
+        442,
+        212,
+        599
+      ]
+    },
+    {
+      "file": "atk_02.png",
+      "action": "atk",
+      "order": 2,
+      "source_bbox": [
+        268,
+        442,
+        455,
+        599
+      ]
+    },
+    {
+      "file": "atk_03.png",
+      "action": "atk",
+      "order": 3,
+      "source_bbox": [
+        492,
+        442,
+        676,
+        599
+      ]
+    },
+    {
+      "file": "atk_04.png",
+      "action": "atk",
+      "order": 4,
+      "source_bbox": [
+        697,
+        442,
+        884,
+        599
+      ]
+    },
+    {
+      "file": "atk_05.png",
+      "action": "atk",
+      "order": 5,
+      "source_bbox": [
+        902,
+        442,
+        1090,
+        599
+      ]
+    },
+    {
+      "file": "atk_06.png",
+      "action": "atk",
+      "order": 6,
+      "source_bbox": [
+        1115,
+        442,
+        1301,
+        599
+      ]
+    },
+    {
+      "file": "atk_07.png",
+      "action": "atk",
+      "order": 7,
+      "source_bbox": [
+        1326,
+        442,
+        1504,
+        599
+      ]
+    },
+    {
+      "file": "hit_01.png",
+      "action": "hit",
+      "order": 1,
+      "source_bbox": [
+        52,
+        649,
+        182,
+        801
+      ]
+    },
+    {
+      "file": "hit_02.png",
+      "action": "hit",
+      "order": 2,
+      "source_bbox": [
+        273,
+        649,
+        405,
+        801
+      ]
+    },
+    {
+      "file": "hit_03.png",
+      "action": "hit",
+      "order": 3,
+      "source_bbox": [
+        497,
+        649,
+        632,
+        801
+      ]
+    },
+    {
+      "file": "dead_01.png",
+      "action": "dead",
+      "order": 1,
+      "source_bbox": [
+        52,
+        848,
+        230,
+        973
+      ]
+    },
+    {
+      "file": "dead_02.png",
+      "action": "dead",
+      "order": 2,
+      "source_bbox": [
+        279,
+        848,
+        459,
+        973
+      ]
+    },
+    {
+      "file": "dead_03.png",
+      "action": "dead",
+      "order": 3,
+      "source_bbox": [
+        503,
+        848,
+        687,
+        973
+      ]
+    },
+    {
+      "file": "dead_04.png",
+      "action": "dead",
+      "order": 4,
+      "source_bbox": [
+        730,
+        848,
+        906,
+        973
+      ]
+    }
+  ]
+}

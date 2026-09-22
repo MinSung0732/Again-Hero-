@@ -1,0 +1,238 @@
+{
+  "source": "4stage_hero_effect_spritesheet.png",
+  "type": "hero",
+  "cell_size": [
+    208,
+    224
+  ],
+  "anchor": {
+    "x": 104,
+    "y": 208,
+    "basis": "body_center_x_and_ground_y"
+  },
+  "actions": {
+    "atk": 9,
+    "idle": 9,
+    "walk": 9,
+    "hit": 3,
+    "dead": 6
+  },
+  "frames": [
+    {
+      "file": "idle_01.png",
+      "action": "idle",
+      "order": 1,
+      "source_column": 1
+    },
+    {
+      "file": "idle_02.png",
+      "action": "idle",
+      "order": 2,
+      "source_column": 2
+    },
+    {
+      "file": "idle_03.png",
+      "action": "idle",
+      "order": 3,
+      "source_column": 3
+    },
+    {
+      "file": "idle_04.png",
+      "action": "idle",
+      "order": 4,
+      "source_column": 4
+    },
+    {
+      "file": "idle_05.png",
+      "action": "idle",
+      "order": 5,
+      "source_column": 5
+    },
+    {
+      "file": "idle_06.png",
+      "action": "idle",
+      "order": 6,
+      "source_column": 6
+    },
+    {
+      "file": "idle_07.png",
+      "action": "idle",
+      "order": 7,
+      "source_column": 7
+    },
+    {
+      "file": "idle_08.png",
+      "action": "idle",
+      "order": 8,
+      "source_column": 8
+    },
+    {
+      "file": "idle_09.png",
+      "action": "idle",
+      "order": 9,
+      "source_column": 9
+    },
+    {
+      "file": "walk_01.png",
+      "action": "walk",
+      "order": 1,
+      "source_column": 1
+    },
+    {
+      "file": "walk_02.png",
+      "action": "walk",
+      "order": 2,
+      "source_column": 2
+    },
+    {
+      "file": "walk_03.png",
+      "action": "walk",
+      "order": 3,
+      "source_column": 3
+    },
+    {
+      "file": "walk_04.png",
+      "action": "walk",
+      "order": 4,
+      "source_column": 4
+    },
+    {
+      "file": "walk_05.png",
+      "action": "walk",
+      "order": 5,
+      "source_column": 5
+    },
+    {
+      "file": "walk_06.png",
+      "action": "walk",
+      "order": 6,
+      "source_column": 6
+    },
+    {
+      "file": "walk_07.png",
+      "action": "walk",
+      "order": 7,
+      "source_column": 7
+    },
+    {
+      "file": "walk_08.png",
+      "action": "walk",
+      "order": 8,
+      "source_column": 8
+    },
+    {
+      "file": "walk_09.png",
+      "action": "walk",
+      "order": 9,
+      "source_column": 9
+    },
+    {
+      "file": "atk_01.png",
+      "action": "atk",
+      "order": 1,
+      "source_column": 1
+    },
+    {
+      "file": "atk_02.png",
+      "action": "atk",
+      "order": 2,
+      "source_column": 2
+    },
+    {
+      "file": "atk_03.png",
+      "action": "atk",
+      "order": 3,
+      "source_column": 3
+    },
+    {
+      "file": "atk_04.png",
+      "action": "atk",
+      "order": 4,
+      "source_column": 4
+    },
+    {
+      "file": "atk_05.png",
+      "action": "atk",
+      "order": 5,
+      "source_column": 5
+    },
+    {
+      "file": "atk_06.png",
+      "action": "atk",
+      "order": 6,
+      "source_column": 6
+    },
+    {
+      "file": "atk_07.png",
+      "action": "atk",
+      "order": 7,
+      "source_column": 7
+    },
+    {
+      "file": "atk_08.png",
+      "action": "atk",
+      "order": 8,
+      "source_column": 8
+    },
+    {
+      "file": "atk_09.png",
+      "action": "atk",
+      "order": 9,
+      "source_column": 9
+    },
+    {
+      "file": "hit_01.png",
+      "action": "hit",
+      "order": 1,
+      "source_column": 1
+    },
+    {
+      "file": "hit_02.png",
+      "action": "hit",
+      "order": 2,
+      "source_column": 2
+    },
+    {
+      "file": "hit_03.png",
+      "action": "hit",
+      "order": 3,
+      "source_column": 3
+    },
+    {
+      "file": "dead_01.png",
+      "action": "dead",
+      "order": 1,
+      "source_column": 4
+    },
+    {
+      "file": "dead_02.png",
+      "action": "dead",
+      "order": 2,
+      "source_column": 5
+    },
+    {
+      "file": "dead_03.png",
+      "action": "dead",
+      "order": 3,
+      "source_column": 6
+    },
+    {
+      "file": "dead_04.png",
+      "action": "dead",
+      "order": 4,
+      "source_column": 7
+    },
+    {
+      "file": "dead_05.png",
+      "action": "dead",
+      "order": 5,
+      "source_column": 8
+    },
+    {
+      "file": "dead_06.png",
+      "action": "dead",
+      "order": 6,
+      "source_column": 9
+    }
+  ]
+}

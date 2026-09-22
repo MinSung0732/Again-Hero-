@@ -1,0 +1,23 @@
+{
+  "resource": "3stage_hero",
+  "frame_count": 24,
+  "cell_size": [256, 256],
+  "sheet_size": [1536, 1024],
+  "grid": [6, 4],
+  "order": "left_to_right_then_top_to_bottom",
+  "anchor": [128, 240],
+  "anchor_basis": "body_center_x_and_foot_baseline_y",
+  "background": "transparent",
+  "alignment_offsets_y": {
+    "idle": -15,
+    "move": -10,
+    "attack": 10,
+    "hit": 35
+  },
+  "animations": {
+    "idle": ["hero_idle_01.png", "hero_idle_02.png", "hero_idle_03.png", "hero_idle_04.png", "hero_idle_05.png", "hero_idle_06.png"],
+    "move": ["hero_move_01.png", "hero_move_02.png", "hero_move_03.png", "hero_move_04.png", "hero_move_05.png", "hero_move_06.png"],
+    "attack": ["hero_attack_01.png", "hero_attack_02.png", "hero_attack_03.png", "hero_attack_04.png", "hero_attack_05.png", "hero_attack_06.png"],
+    "hit": ["hero_hit_01.png", "hero_hit_02.png", "hero_hit_03.png", "hero_hit_04.png", "hero_hit_05.png", "hero_hit_06.png"]
+  }
+}

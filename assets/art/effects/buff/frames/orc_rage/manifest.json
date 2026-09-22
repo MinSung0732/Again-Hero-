@@ -1,0 +1,29 @@
+{
+  "animation": "rage",
+  "format": "RGBA PNG",
+  "frame_count": 8,
+  "frame_width": 256,
+  "frame_height": 682,
+  "sheet_width": 2048,
+  "sheet_height": 682,
+  "layout": {
+    "columns": 8,
+    "rows": 1,
+    "order": "left_to_right"
+  },
+  "anchor": {
+    "x": 128,
+    "y": 682,
+    "note": "bottom-center of each source cell"
+  },
+  "frames": [
+    "rage_01.png",
+    "rage_02.png",
+    "rage_03.png",
+    "rage_04.png",
+    "rage_05.png",
+    "rage_06.png",
+    "rage_07.png",
+    "rage_08.png"
+  ]
+}

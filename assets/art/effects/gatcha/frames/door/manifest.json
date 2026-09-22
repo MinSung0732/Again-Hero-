@@ -1,0 +1,10 @@
+{
+  "animation": "gatcha_monster",
+  "frame_count": 20,
+  "cell_size": [280, 280],
+  "source_sheet_size": [1402, 1122],
+  "source_grid": [5, 4],
+  "order": "left_to_right_then_top_to_bottom",
+  "anchor": [140, 280],
+  "background": "transparent"
+}

@@ -1,0 +1,16 @@
+{
+  "resource": "3stage_hero_effect",
+  "frame_count": 18,
+  "cell_size": [296, 296],
+  "source_sheet_size": [1774, 887],
+  "aligned_sheet_size": [1776, 888],
+  "grid": [6, 3],
+  "order": "left_to_right_then_top_to_bottom",
+  "anchor": [148, 148],
+  "background": "transparent",
+  "animations": {
+    "slash": ["hero_effect_slash_01.png", "hero_effect_slash_02.png", "hero_effect_slash_03.png", "hero_effect_slash_04.png", "hero_effect_slash_05.png", "hero_effect_slash_06.png"],
+    "thrust": ["hero_effect_thrust_01.png", "hero_effect_thrust_02.png", "hero_effect_thrust_03.png", "hero_effect_thrust_04.png", "hero_effect_thrust_05.png", "hero_effect_thrust_06.png"],
+    "block": ["hero_effect_block_01.png", "hero_effect_block_02.png", "hero_effect_block_03.png", "hero_effect_block_04.png", "hero_effect_block_05.png", "hero_effect_block_06.png"]
+  }
+}

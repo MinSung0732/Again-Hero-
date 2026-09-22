@@ -1,0 +1,414 @@
+{
+  "source": "stage5_hero_effects_spritesheet.png",
+  "frame_count": 78,
+  "cell_size": [
+    384,
+    192
+  ],
+  "anchor": {
+    "x": 192,
+    "y": 96,
+    "basis": "fixed_source_core_and_progress_axis"
+  },
+  "actions": {
+    "fire": 12,
+    "ice": 11,
+    "light": 11,
+    "wind": 9,
+    "earth": 11,
+    "holy": 12,
+    "orb": 12
+  },
+  "frames": [
+    {
+      "file": "fire_01.png",
+      "action": "fire",
+      "order": 1
+    },
+    {
+      "file": "fire_02.png",
+      "action": "fire",
+      "order": 2
+    },
+    {
+      "file": "fire_03.png",
+      "action": "fire",
+      "order": 3
+    },
+    {
+      "file": "fire_04.png",
+      "action": "fire",
+      "order": 4
+    },
+    {
+      "file": "fire_05.png",
+      "action": "fire",
+      "order": 5
+    },
+    {
+      "file": "fire_06.png",
+      "action": "fire",
+      "order": 6
+    },
+    {
+      "file": "fire_07.png",
+      "action": "fire",
+      "order": 7
+    },
+    {
+      "file": "fire_08.png",
+      "action": "fire",
+      "order": 8
+    },
+    {
+      "file": "fire_09.png",
+      "action": "fire",
+      "order": 9
+    },
+    {
+      "file": "fire_10.png",
+      "action": "fire",
+      "order": 10
+    },
+    {
+      "file": "fire_11.png",
+      "action": "fire",
+      "order": 11
+    },
+    {
+      "file": "fire_12.png",
+      "action": "fire",
+      "order": 12
+    },
+    {
+      "file": "ice_01.png",
+      "action": "ice",
+      "order": 1
+    },
+    {
+      "file": "ice_02.png",
+      "action": "ice",
+      "order": 2
+    },
+    {
+      "file": "ice_03.png",
+      "action": "ice",
+      "order": 3
+    },
+    {
+      "file": "ice_04.png",
+      "action": "ice",
+      "order": 4
+    },
+    {
+      "file": "ice_05.png",
+      "action": "ice",
+      "order": 5
+    },
+    {
+      "file": "ice_06.png",
+      "action": "ice",
+      "order": 6
+    },
+    {
+      "file": "ice_07.png",
+      "action": "ice",
+      "order": 7
+    },
+    {
+      "file": "ice_08.png",
+      "action": "ice",
+      "order": 8
+    },
+    {
+      "file": "ice_09.png",
+      "action": "ice",
+      "order": 9
+    },
+    {
+      "file": "ice_10.png",
+      "action": "ice",
+      "order": 10
+    },
+    {
+      "file": "ice_11.png",
+      "action": "ice",
+      "order": 11
+    },
+    {
+      "file": "light_01.png",
+      "action": "light",
+      "order": 1
+    },
+    {
+      "file": "light_02.png",
+      "action": "light",
+      "order": 2
+    },
+    {
+      "file": "light_03.png",
+      "action": "light",
+      "order": 3
+    },
+    {
+      "file": "light_04.png",
+      "action": "light",
+      "order": 4
+    },
+    {
+      "file": "light_05.png",
+      "action": "light",
+      "order": 5
+    },
+    {
+      "file": "light_06.png",
+      "action": "light",
+      "order": 6
+    },
+    {
+      "file": "light_07.png",
+      "action": "light",
+      "order": 7
+    },
+    {
+      "file": "light_08.png",
+      "action": "light",
+      "order": 8
+    },
+    {
+      "file": "light_09.png",
+      "action": "light",
+      "order": 9
+    },
+    {
+      "file": "light_10.png",
+      "action": "light",
+      "order": 10
+    },
+    {
+      "file": "light_11.png",
+      "action": "light",
+      "order": 11
+    },
+    {
+      "file": "wind_01.png",
+      "action": "wind",
+      "order": 1
+    },
+    {
+      "file": "wind_02.png",
+      "action": "wind",
+      "order": 2
+    },
+    {
+      "file": "wind_03.png",
+      "action": "wind",
+      "order": 3
+    },
+    {
+      "file": "wind_04.png",
+      "action": "wind",
+      "order": 4
+    },
+    {
+      "file": "wind_05.png",
+      "action": "wind",
+      "order": 5
+    },
+    {
+      "file": "wind_06.png",
+      "action": "wind",
+      "order": 6
+    },
+    {
+      "file": "wind_07.png",
+      "action": "wind",
+      "order": 7
+    },
+    {
+      "file": "wind_08.png",
+      "action": "wind",
+      "order": 8
+    },
+    {
+      "file": "wind_09.png",
+      "action": "wind",
+      "order": 9
+    },
+    {
+      "file": "earth_01.png",
+      "action": "earth",
+      "order": 1
+    },
+    {
+      "file": "earth_02.png",
+      "action": "earth",
+      "order": 2
+    },
+    {
+      "file": "earth_03.png",
+      "action": "earth",
+      "order": 3
+    },
+    {
+      "file": "earth_04.png",
+      "action": "earth",
+      "order": 4
+    },
+    {
+      "file": "earth_05.png",
+      "action": "earth",
+      "order": 5
+    },
+    {
+      "file": "earth_06.png",
+      "action": "earth",
+      "order": 6
+    },
+    {
+      "file": "earth_07.png",
+      "action": "earth",
+      "order": 7
+    },
+    {
+      "file": "earth_08.png",
+      "action": "earth",
+      "order": 8
+    },
+    {
+      "file": "earth_09.png",
+      "action": "earth",
+      "order": 9
+    },
+    {
+      "file": "earth_10.png",
+      "action": "earth",
+      "order": 10
+    },
+    {
+      "file": "earth_11.png",
+      "action": "earth",
+      "order": 11
+    },
+    {
+      "file": "holy_01.png",
+      "action": "holy",
+      "order": 1
+    },
+    {
+      "file": "holy_02.png",
+      "action": "holy",
+      "order": 2
+    },
+    {
+      "file": "holy_03.png",
+      "action": "holy",
+      "order": 3
+    },
+    {
+      "file": "holy_04.png",
+      "action": "holy",
+      "order": 4
+    },
+    {
+      "file": "holy_05.png",
+      "action": "holy",
+      "order": 5
+    },
+    {
+      "file": "holy_06.png",
+      "action": "holy",
+      "order": 6
+    },
+    {
+      "file": "holy_07.png",
+      "action": "holy",
+      "order": 7
+    },
+    {
+      "file": "holy_08.png",
+      "action": "holy",
+      "order": 8
+    },
+    {
+      "file": "holy_09.png",
+      "action": "holy",
+      "order": 9
+    },
+    {
+      "file": "holy_10.png",
+      "action": "holy",
+      "order": 10
+    },
+    {
+      "file": "holy_11.png",
+      "action": "holy",
+      "order": 11
+    },
+    {
+      "file": "holy_12.png",
+      "action": "holy",
+      "order": 12
+    },
+    {
+      "file": "orb_01.png",
+      "action": "orb",
+      "order": 1
+    },
+    {
+      "file": "orb_02.png",
+      "action": "orb",
+      "order": 2
+    },
+    {
+      "file": "orb_03.png",
+      "action": "orb",
+      "order": 3
+    },
+    {
+      "file": "orb_04.png",
+      "action": "orb",
+      "order": 4
+    },
+    {
+      "file": "orb_05.png",
+      "action": "orb",
+      "order": 5
+    },
+    {
+      "file": "orb_06.png",
+      "action": "orb",
+      "order": 6
+    },
+    {
+      "file": "orb_07.png",
+      "action": "orb",
+      "order": 7
+    },
+    {
+      "file": "orb_08.png",
+      "action": "orb",
+      "order": 8
+    },
+    {
+      "file": "orb_09.png",
+      "action": "orb",
+      "order": 9
+    },
+    {
+      "file": "orb_10.png",
+      "action": "orb",
+      "order": 10
+    },
+    {
+      "file": "orb_11.png",
+      "action": "orb",
+      "order": 11
+    },
+    {
+      "file": "orb_12.png",
+      "action": "orb",
+      "order": 12
+    }
+  ]
+}

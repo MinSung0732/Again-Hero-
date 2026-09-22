@@ -1,0 +1,460 @@
+{
+  "source": "stage6_hero_effects_spritesheet.png",
+  "frame_count": 86,
+  "cell_size": [
+    192,
+    128
+  ],
+  "anchor": {
+    "x": 96,
+    "y": 64,
+    "basis": "fixed_original_cell_center"
+  },
+  "removed": [
+    "header_text",
+    "row_labels",
+    "frame_borders"
+  ],
+  "actions": {
+    "basic_slash": 13,
+    "heavy_slash": 11,
+    "spin_slash": 10,
+    "hit_effect": 9,
+    "rage_aura": 12,
+    "blood_effect": 10,
+    "ground_slam": 11,
+    "special": 10
+  },
+  "frames": [
+    {
+      "file": "basic_slash_01.png",
+      "action": "basic_slash",
+      "order": 1
+    },
+    {
+      "file": "basic_slash_02.png",
+      "action": "basic_slash",
+      "order": 2
+    },
+    {
+      "file": "basic_slash_03.png",
+      "action": "basic_slash",
+      "order": 3
+    },
+    {
+      "file": "basic_slash_04.png",
+      "action": "basic_slash",
+      "order": 4
+    },
+    {
+      "file": "basic_slash_05.png",
+      "action": "basic_slash",
+      "order": 5
+    },
+    {
+      "file": "basic_slash_06.png",
+      "action": "basic_slash",
+      "order": 6
+    },
+    {
+      "file": "basic_slash_07.png",
+      "action": "basic_slash",
+      "order": 7
+    },
+    {
+      "file": "basic_slash_08.png",
+      "action": "basic_slash",
+      "order": 8
+    },
+    {
+      "file": "basic_slash_09.png",
+      "action": "basic_slash",
+      "order": 9
+    },
+    {
+      "file": "basic_slash_10.png",
+      "action": "basic_slash",
+      "order": 10
+    },
+    {
+      "file": "basic_slash_11.png",
+      "action": "basic_slash",
+      "order": 11
+    },
+    {
+      "file": "basic_slash_12.png",
+      "action": "basic_slash",
+      "order": 12
+    },
+    {
+      "file": "basic_slash_13.png",
+      "action": "basic_slash",
+      "order": 13
+    },
+    {
+      "file": "heavy_slash_01.png",
+      "action": "heavy_slash",
+      "order": 1
+    },
+    {
+      "file": "heavy_slash_02.png",
+      "action": "heavy_slash",
+      "order": 2
+    },
+    {
+      "file": "heavy_slash_03.png",
+      "action": "heavy_slash",
+      "order": 3
+    },
+    {
+      "file": "heavy_slash_04.png",
+      "action": "heavy_slash",
+      "order": 4
+    },
+    {
+      "file": "heavy_slash_05.png",
+      "action": "heavy_slash",
+      "order": 5
+    },
+    {
+      "file": "heavy_slash_06.png",
+      "action": "heavy_slash",
+      "order": 6
+    },
+    {
+      "file": "heavy_slash_07.png",
+      "action": "heavy_slash",
+      "order": 7
+    },
+    {
+      "file": "heavy_slash_08.png",
+      "action": "heavy_slash",
+      "order": 8
+    },
+    {
+      "file": "heavy_slash_09.png",
+      "action": "heavy_slash",
+      "order": 9
+    },
+    {
+      "file": "heavy_slash_10.png",
+      "action": "heavy_slash",
+      "order": 10
+    },
+    {
+      "file": "heavy_slash_11.png",
+      "action": "heavy_slash",
+      "order": 11
+    },
+    {
+      "file": "spin_slash_01.png",
+      "action": "spin_slash",
+      "order": 1
+    },
+    {
+      "file": "spin_slash_02.png",
+      "action": "spin_slash",
+      "order": 2
+    },
+    {
+      "file": "spin_slash_03.png",
+      "action": "spin_slash",
+      "order": 3
+    },
+    {
+      "file": "spin_slash_04.png",
+      "action": "spin_slash",
+      "order": 4
+    },
+    {
+      "file": "spin_slash_05.png",
+      "action": "spin_slash",
+      "order": 5
+    },
+    {
+      "file": "spin_slash_06.png",
+      "action": "spin_slash",
+      "order": 6
+    },
+    {
+      "file": "spin_slash_07.png",
+      "action": "spin_slash",
+      "order": 7
+    },
+    {
+      "file": "spin_slash_08.png",
+      "action": "spin_slash",
+      "order": 8
+    },
+    {
+      "file": "spin_slash_09.png",
+      "action": "spin_slash",
+      "order": 9
+    },
+    {
+      "file": "spin_slash_10.png",
+      "action": "spin_slash",
+      "order": 10
+    },
+    {
+      "file": "hit_effect_01.png",
+      "action": "hit_effect",
+      "order": 1
+    },
+    {
+      "file": "hit_effect_02.png",
+      "action": "hit_effect",
+      "order": 2
+    },
+    {
+      "file": "hit_effect_03.png",
+      "action": "hit_effect",
+      "order": 3
+    },
+    {
+      "file": "hit_effect_04.png",
+      "action": "hit_effect",
+      "order": 4
+    },
+    {
+      "file": "hit_effect_05.png",
+      "action": "hit_effect",
+      "order": 5
+    },
+    {
+      "file": "hit_effect_06.png",
+      "action": "hit_effect",
+      "order": 6
+    },
+    {
+      "file": "hit_effect_07.png",
+      "action": "hit_effect",
+      "order": 7
+    },
+    {
+      "file": "hit_effect_08.png",
+      "action": "hit_effect",
+      "order": 8
+    },
+    {
+      "file": "hit_effect_09.png",
+      "action": "hit_effect",
+      "order": 9
+    },
+    {
+      "file": "rage_aura_01.png",
+      "action": "rage_aura",
+      "order": 1
+    },
+    {
+      "file": "rage_aura_02.png",
+      "action": "rage_aura",
+      "order": 2
+    },
+    {
+      "file": "rage_aura_03.png",
+      "action": "rage_aura",
+      "order": 3
+    },
+    {
+      "file": "rage_aura_04.png",
+      "action": "rage_aura",
+      "order": 4
+    },
+    {
+      "file": "rage_aura_05.png",
+      "action": "rage_aura",
+      "order": 5
+    },
+    {
+      "file": "rage_aura_06.png",
+      "action": "rage_aura",
+      "order": 6
+    },
+    {
+      "file": "rage_aura_07.png",
+      "action": "rage_aura",
+      "order": 7
+    },
+    {
+      "file": "rage_aura_08.png",
+      "action": "rage_aura",
+      "order": 8
+    },
+    {
+      "file": "rage_aura_09.png",
+      "action": "rage_aura",
+      "order": 9
+    },
+    {
+      "file": "rage_aura_10.png",
+      "action": "rage_aura",
+      "order": 10
+    },
+    {
+      "file": "rage_aura_11.png",
+      "action": "rage_aura",
+      "order": 11
+    },
+    {
+      "file": "rage_aura_12.png",
+      "action": "rage_aura",
+      "order": 12
+    },
+    {
+      "file": "blood_effect_01.png",
+      "action": "blood_effect",
+      "order": 1
+    },
+    {
+      "file": "blood_effect_02.png",
+      "action": "blood_effect",
+      "order": 2
+    },
+    {
+      "file": "blood_effect_03.png",
+      "action": "blood_effect",
+      "order": 3
+    },
+    {
+      "file": "blood_effect_04.png",
+      "action": "blood_effect",
+      "order": 4
+    },
+    {
+      "file": "blood_effect_05.png",
+      "action": "blood_effect",
+      "order": 5
+    },
+    {
+      "file": "blood_effect_06.png",
+      "action": "blood_effect",
+      "order": 6
+    },
+    {
+      "file": "blood_effect_07.png",
+      "action": "blood_effect",
+      "order": 7
+    },
+    {
+      "file": "blood_effect_08.png",
+      "action": "blood_effect",
+      "order": 8
+    },
+    {
+      "file": "blood_effect_09.png",
+      "action": "blood_effect",
+      "order": 9
+    },
+    {
+      "file": "blood_effect_10.png",
+      "action": "blood_effect",
+      "order": 10
+    },
+    {
+      "file": "ground_slam_01.png",
+      "action": "ground_slam",
+      "order": 1
+    },
+    {
+      "file": "ground_slam_02.png",
+      "action": "ground_slam",
+      "order": 2
+    },
+    {
+      "file": "ground_slam_03.png",
+      "action": "ground_slam",
+      "order": 3
+    },
+    {
+      "file": "ground_slam_04.png",
+      "action": "ground_slam",
+      "order": 4
+    },
+    {
+      "file": "ground_slam_05.png",
+      "action": "ground_slam",
+      "order": 5
+    },
+    {
+      "file": "ground_slam_06.png",
+      "action": "ground_slam",
+      "order": 6
+    },
+    {
+      "file": "ground_slam_07.png",
+      "action": "ground_slam",
+      "order": 7
+    },
+    {
+      "file": "ground_slam_08.png",
+      "action": "ground_slam",
+      "order": 8
+    },
+    {
+      "file": "ground_slam_09.png",
+      "action": "ground_slam",
+      "order": 9
+    },
+    {
+      "file": "ground_slam_10.png",
+      "action": "ground_slam",
+      "order": 10
+    },
+    {
+      "file": "ground_slam_11.png",
+      "action": "ground_slam",
+      "order": 11
+    },
+    {
+      "file": "special_01.png",
+      "action": "special",
+      "order": 1
+    },
+    {
+      "file": "special_02.png",
+      "action": "special",
+      "order": 2
+    },
+    {
+      "file": "special_03.png",
+      "action": "special",
+      "order": 3
+    },
+    {
+      "file": "special_04.png",
+      "action": "special",
+      "order": 4
+    },
+    {
+      "file": "special_05.png",
+      "action": "special",
+      "order": 5
+    },
+    {
+      "file": "special_06.png",
+      "action": "special",
+      "order": 6
+    },
+    {
+      "file": "special_07.png",
+      "action": "special",
+      "order": 7
+    },
+    {
+      "file": "special_08.png",
+      "action": "special",
+      "order": 8
+    },
+    {
+      "file": "special_09.png",
+      "action": "special",
+      "order": 9
+    },
+    {
+      "file": "special_10.png",
+      "action": "special",
+      "order": 10
+    }
+  ]
+}

@@ -1,0 +1,271 @@
+{
+  "source": "4stage_hero_effect_spritesheet.png",
+  "type": "effect",
+  "actions": {
+    "effect_projectile": 13,
+    "effect_explosion": 7
+  },
+  "anchor_basis": "effect_core_center",
+  "frames": [
+    {
+      "file": "effect_projectile_01.png",
+      "action": "effect_projectile",
+      "order": 1,
+      "cell_size": [
+        112,
+        112
+      ],
+      "anchor": [
+        56,
+        56
+      ]
+    },
+    {
+      "file": "effect_projectile_02.png",
+      "action": "effect_projectile",
+      "order": 2,
+      "cell_size": [
+        112,
+        112
+      ],
+      "anchor": [
+        56,
+        56
+      ]
+    },
+    {
+      "file": "effect_projectile_03.png",
+      "action": "effect_projectile",
+      "order": 3,
+      "cell_size": [
+        112,
+        112
+      ],
+      "anchor": [
+        56,
+        56
+      ]
+    },
+    {
+      "file": "effect_projectile_04.png",
+      "action": "effect_projectile",
+      "order": 4,
+      "cell_size": [
+        112,
+        112
+      ],
+      "anchor": [
+        56,
+        56
+      ]
+    },
+    {
+      "file": "effect_projectile_05.png",
+      "action": "effect_projectile",
+      "order": 5,
+      "cell_size": [
+        112,
+        112
+      ],
+      "anchor": [
+        56,
+        56
+      ]
+    },
+    {
+      "file": "effect_projectile_06.png",
+      "action": "effect_projectile",
+      "order": 6,
+      "cell_size": [
+        112,
+        112
+      ],
+      "anchor": [
+        56,
+        56
+      ]
+    },
+    {
+      "file": "effect_projectile_07.png",
+      "action": "effect_projectile",
+      "order": 7,
+      "cell_size": [
+        112,
+        112
+      ],
+      "anchor": [
+        56,
+        56
+      ]
+    },
+    {
+      "file": "effect_projectile_08.png",
+      "action": "effect_projectile",
+      "order": 8,
+      "cell_size": [
+        112,
+        112
+      ],
+      "anchor": [
+        56,
+        56
+      ]
+    },
+    {
+      "file": "effect_projectile_09.png",
+      "action": "effect_projectile",
+      "order": 9,
+      "cell_size": [
+        112,
+        112
+      ],
+      "anchor": [
+        56,
+        56
+      ]
+    },
+    {
+      "file": "effect_projectile_10.png",
+      "action": "effect_projectile",
+      "order": 10,
+      "cell_size": [
+        112,
+        112
+      ],
+      "anchor": [
+        56,
+        56
+      ]
+    },
+    {
+      "file": "effect_projectile_11.png",
+      "action": "effect_projectile",
+      "order": 11,
+      "cell_size": [
+        112,
+        112
+      ],
+      "anchor": [
+        56,
+        56
+      ]
+    },
+    {
+      "file": "effect_projectile_12.png",
+      "action": "effect_projectile",
+      "order": 12,
+      "cell_size": [
+        112,
+        112
+      ],
+      "anchor": [
+        56,
+        56
+      ]
+    },
+    {
+      "file": "effect_projectile_13.png",
+      "action": "effect_projectile",
+      "order": 13,
+      "cell_size": [
+        112,
+        112
+      ],
+      "anchor": [
+        56,
+        56
+      ]
+    },
+    {
+      "file": "effect_explosion_01.png",
+      "action": "effect_explosion",
+      "order": 1,
+      "cell_size": [
+        160,
+        160
+      ],
+      "anchor": [
+        80,
+        80
+      ]
+    },
+    {
+      "file": "effect_explosion_02.png",
+      "action": "effect_explosion",
+      "order": 2,
+      "cell_size": [
+        160,
+        160
+      ],
+      "anchor": [
+        80,
+        80
+      ]
+    },
+    {
+      "file": "effect_explosion_03.png",
+      "action": "effect_explosion",
+      "order": 3,
+      "cell_size": [
+        160,
+        160
+      ],
+      "anchor": [
+        80,
+        80
+      ]
+    },
+    {
+      "file": "effect_explosion_04.png",
+      "action": "effect_explosion",
+      "order": 4,
+      "cell_size": [
+        160,
+        160
+      ],
+      "anchor": [
+        80,
+        80
+      ]
+    },
+    {
+      "file": "effect_explosion_05.png",
+      "action": "effect_explosion",
+      "order": 5,
+      "cell_size": [
+        160,
+        160
+      ],
+      "anchor": [
+        80,
+        80
+      ]
+    },
+    {
+      "file": "effect_explosion_06.png",
+      "action": "effect_explosion",
+      "order": 6,
+      "cell_size": [
+        160,
+        160
+      ],
+      "anchor": [
+        80,
+        80
+      ]
+    },
+    {
+      "file": "effect_explosion_07.png",
+      "action": "effect_explosion",
+      "order": 7,
+      "cell_size": [
+        160,
+        160
+      ],
+      "anchor": [
+        80,
+        80
+      ]
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "source": "loading_logo_spritesheet.png",
+  "frame_count": 8,
+  "layout": {
+    "columns": 4,
+    "rows": 2
+  },
+  "cell_size": [
+    444,
+    444
+  ],
+  "anchor": {
+    "x": 222,
+    "y": 222,
+    "basis": "center"
+  },
+  "playback_order": [
+    "loading_logo_01.png",
+    "loading_logo_02.png",
+    "loading_logo_03.png",
+    "loading_logo_04.png",
+    "loading_logo_05.png",
+    "loading_logo_06.png",
+    "loading_logo_07.png",
+    "loading_logo_08.png"
+  ],
+  "frames": [
+    {
+      "file": "loading_logo_01.png",
+      "order": 1,
+      "row": 1,
+      "column": 1
+    },
+    {
+      "file": "loading_logo_02.png",
+      "order": 2,
+      "row": 1,
+      "column": 2
+    },
+    {
+      "file": "loading_logo_03.png",
+      "order": 3,
+      "row": 1,
+      "column": 3
+    },
+    {
+      "file": "loading_logo_04.png",
+      "order": 4,
+      "row": 1,
+      "column": 4
+    },
+    {
+      "file": "loading_logo_05.png",
+      "order": 5,
+      "row": 2,
+      "column": 1
+    },
+    {
+      "file": "loading_logo_06.png",
+      "order": 6,
+      "row": 2,
+      "column": 2
+    },
+    {
+      "file": "loading_logo_07.png",
+      "order": 7,
+      "row": 2,
+      "column": 3
+    },
+    {
+      "file": "loading_logo_08.png",
+      "order": 8,
+      "row": 2,
+      "column": 4
+    }
+  ]
+}
