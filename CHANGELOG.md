@@ -1929,3 +1929,10 @@
 - Stage 1 death 프레임이 존재하므로 사망 시 hit 재생 대신 death 애니메이션을 우선 사용.
 - Hero profile에 Stage 1 sprite_frame_dir를 추가하되 기존 sprite_sheet_path는 기준/레거시 데이터로 유지.
 - HERO_RESOURCE_STANDARD의 Stage 2 초상화 경로도 실제 파일명과 동기화.
+
+### Stage 1 Mage Skill 3 Frame Refresh
+- 새로 교체된 Stage 1 법사 3스킬(effect_03) 프레임을 확인: 6프레임 구성은 유지되며 새 캔버스는 1254x1254 기준.
+- 기존 코드는 512x512 캔버스를 하드코딩하고 있어 새 프레임 적용 시 화면상 약 2.45배 크게 렌더될 수 있는 문제 수정.
+- STAGE1_CHANNEL_EFFECT_FRAME_SIZE 고정값을 제거하고 실제 로드된 Texture2D 크기에서 최대 변 길이를 계산해 스케일을 자동 산출하도록 변경.
+- 표시 목표 크기 300px과 10fps 루프는 유지.
+- 앞으로 effect_03 프레임 해상도가 다시 변경되어도 코드 수정 없이 동일한 화면 체급으로 표시되도록 처리.
