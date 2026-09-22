@@ -29,6 +29,11 @@ const STAGE2_FRAME_DIR := "res://assets/art/heroes/stage2_rogue/frames"
 const STAGE2_EFFECT1_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_01"
 const STAGE2_EFFECT2_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_02"
 const STAGE2_EFFECT3_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_03"
+const STAGE3_FRAME_DIR := "res://assets/art/heroes/stage3_fighter/frames"
+const STAGE3_BLOCK_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect1"
+const STAGE3_SLASH_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect2"
+const STAGE3_THRUST_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect3"
+const STAGE3_AURA_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect4"
 
 # 모든 용사 도트의 화면상 체급 기준은 Stage 1 견습 마법용사다.
 # 원본 PNG 캔버스 크기가 아니라 투명 여백을 제외한 실제 도트 높이를
@@ -97,6 +102,21 @@ var rogue_lifesteal_buffer: float = 0.0
 var rogue_combo_direction: Vector2 = Vector2.RIGHT
 var rogue_attack_collision_ignore_timer: float = 0.0
 var rogue_saved_collision_mask: int = -1
+var fighter_basic_config: Dictionary = {}
+var fighter_guard_active: bool = false
+var fighter_guard_duration_timer: float = 0.0
+var fighter_guard_stored_damage: float = 0.0
+var fighter_guard_charge_seconds: float = 20.0
+var fighter_guard_shield_ratio_bonus: float = 0.0
+var fighter_guard_release_ratio_bonus: float = 0.0
+var fighter_guard_damage_reduction_bonus: float = 0.0
+var fighter_guard_move_multiplier_bonus: float = 0.0
+var fighter_reflect_ratio: float = 0.0
+var fighter_basic_damage_multiplier: float = 1.0
+var fighter_slash_half_width_bonus: float = 0.0
+var fighter_thrust_length_bonus: float = 0.0
+var fighter_thrust_damage_bonus: float = 0.0
+
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
 var ultimate_flash_timer: float = 0.0
@@ -183,6 +203,12 @@ func configure_profile(profile: Dictionary) -> void:
 		if typeof(profile_combo) == TYPE_DICTIONARY
 		else {}
 	)
+	var profile_fighter_basic = profile.get("fighter_basic", {})
+	fighter_basic_config = (
+		profile_fighter_basic.duplicate(true)
+		if typeof(profile_fighter_basic) == TYPE_DICTIONARY
+		else {}
+	)
 	var profile_rogue_slash = profile.get("rogue_slash_skill", {})
 	rogue_slash_config = (
 		profile_rogue_slash.duplicate(true)
@@ -212,11 +238,28 @@ func configure_profile(profile: Dictionary) -> void:
 	rogue_combo_direction = Vector2.RIGHT
 	rogue_attack_collision_ignore_timer = 0.0
 	rogue_saved_collision_mask = -1
+	fighter_guard_active = false
+	fighter_guard_duration_timer = 0.0
+	fighter_guard_stored_damage = 0.0
+	fighter_guard_charge_seconds = 20.0
+	fighter_guard_shield_ratio_bonus = 0.0
+	fighter_guard_release_ratio_bonus = 0.0
+	fighter_guard_damage_reduction_bonus = 0.0
+	fighter_guard_move_multiplier_bonus = 0.0
+	fighter_reflect_ratio = 0.0
+	fighter_basic_damage_multiplier = 1.0
+	fighter_slash_half_width_bonus = 0.0
+	fighter_thrust_length_bonus = 0.0
+	fighter_thrust_damage_bonus = 0.0
 	var profile_ultimate = profile.get("ultimate", {})
 	ultimate_config = (
 		profile_ultimate.duplicate(true)
 		if typeof(profile_ultimate) == TYPE_DICTIONARY
 		else {}
+	)
+	fighter_guard_charge_seconds = maxf(
+		float(ultimate_config.get("charge_seconds", fighter_guard_charge_seconds)),
+		1.0
 	)
 	ultimate_charge = 0.0
 	ultimate_cooldown_timer = maxf(
@@ -297,6 +340,7 @@ func _ready() -> void:
 	_apply_stage1_shield_visual()
 	_apply_stage1_channel_visual()
 	_apply_stage2_rogue_effect_visuals()
+	_apply_stage3_fighter_effect_visuals()
 	if (
 		not rogue_attack_effect.animation_finished.is_connected(
 			Callable(self, "_on_rogue_attack_effect_finished")
@@ -304,6 +348,14 @@ func _ready() -> void:
 	):
 		rogue_attack_effect.animation_finished.connect(
 			Callable(self, "_on_rogue_attack_effect_finished")
+		)
+	if (
+		not channel_effect.animation_finished.is_connected(
+			Callable(self, "_on_fighter_guard_release_effect_finished")
+		)
+	):
+		channel_effect.animation_finished.connect(
+			Callable(self, "_on_fighter_guard_release_effect_finished")
 		)
 	current_hp = max_hp
 	exp_to_next_level = _required_exp_for_level(level)
@@ -321,6 +373,10 @@ func _physics_process(delta: float) -> void:
 
 	if hero_archetype == "rogue_combo":
 		_physics_process_rogue(delta)
+		return
+
+	if hero_archetype == "sword_shield":
+		_physics_process_fighter(delta)
 		return
 
 	ai_memory_clock += delta
@@ -1245,6 +1301,10 @@ func _update_rogue_pose_visual(delta: float) -> void:
 	else:
 		_play_stage1_animation("idle", 1.0)
 
+func _on_fighter_guard_release_effect_finished() -> void:
+	if hero_archetype == "sword_shield":
+		channel_effect.visible = false
+
 func _apply_profile_visual() -> void:
 	hero_sprite.visible = false
 	hero_sprite.sprite_frames = null
@@ -1285,6 +1345,35 @@ func _apply_profile_visual() -> void:
 			return
 
 		hero_sprite.sprite_frames = frames
+		hero_sprite.visible = true
+		_apply_normalized_hero_visual_scale()
+		hero_sprite.speed_scale = 1.0
+		hero_sprite.play("idle")
+		return
+
+	if hero_archetype == "sword_shield":
+		var fighter_dir := (
+			sprite_frame_dir
+			if not sprite_frame_dir.is_empty()
+			else STAGE3_FRAME_DIR
+		)
+		var fighter_frames := SpriteFrames.new()
+		if fighter_frames.has_animation("default"):
+			fighter_frames.remove_animation("default")
+		if not _add_named_sequence_animation(
+			fighter_frames, "idle", fighter_dir, "hero_idle", 6, 6.0, true
+		):
+			return
+		_add_named_sequence_animation(
+			fighter_frames, "move", fighter_dir, "hero_move", 6, 9.0, true
+		)
+		_add_named_sequence_animation(
+			fighter_frames, "attack", fighter_dir, "hero_attack", 6, 13.0, false
+		)
+		_add_named_sequence_animation(
+			fighter_frames, "hit", fighter_dir, "hero_hit", 6, 12.0, false
+		)
+		hero_sprite.sprite_frames = fighter_frames
 		hero_sprite.visible = true
 		_apply_normalized_hero_visual_scale()
 		hero_sprite.speed_scale = 1.0
@@ -2823,10 +2912,455 @@ func get_build_summary() -> String:
 
 	return " · ".join(parts)
 
+func _physics_process_fighter(delta: float) -> void:
+	ai_memory_clock += delta
+	_prune_offensive_memory()
+	_prune_status_memory()
+
+	ai_observation_timer = maxf(ai_observation_timer - delta, 0.0)
+	if ai_observation_timer <= 0.0:
+		_refresh_ai_observation()
+
+	attack_timer = maxf(attack_timer - delta, 0.0)
+	retarget_timer = maxf(retarget_timer - delta, 0.0)
+	wander_timer = maxf(wander_timer - delta, 0.0)
+	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
+	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
+	ultimate_flash_timer = maxf(ultimate_flash_timer - delta, 0.0)
+	_update_invulnerability(delta)
+	_update_fighter_guard(delta)
+
+	if hit_flash_timer > 0.0:
+		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
+		queue_redraw()
+
+	if level_flash_timer > 0.0:
+		level_flash_timer = maxf(level_flash_timer - delta, 0.0)
+		queue_redraw()
+
+	if slow_timer > 0.0:
+		slow_timer = maxf(slow_timer - delta, 0.0)
+		if slow_timer <= 0.0:
+			move_multiplier = 1.0
+			queue_redraw()
+
+	if (
+		not is_instance_valid(target)
+		or target.is_queued_for_deletion()
+		or retarget_timer <= 0.0
+	):
+		target = _find_nearest_monster()
+		retarget_timer = 0.12
+
+	var guard_move_scale := 1.0
+	if fighter_guard_active:
+		guard_move_scale = clampf(
+			float(ultimate_config.get("move_speed_multiplier", 0.62))
+			+ fighter_guard_move_multiplier_bonus,
+			0.25,
+			1.0
+		)
+
+	if not is_instance_valid(target):
+		_move_without_monsters()
+		if fighter_guard_active:
+			velocity *= guard_move_scale
+		_update_fighter_pose_visual(delta)
+		return
+
+	var distance := global_position.distance_to(target.global_position)
+	if distance > attack_range * 0.90:
+		var direction := global_position.direction_to(target.global_position)
+		velocity = (
+			direction
+			* move_speed
+			* move_multiplier
+			* guard_move_scale
+		)
+		move_and_slide()
+		_clamp_to_battlefield()
+	else:
+		velocity = Vector2.ZERO
+
+	if distance <= attack_range and attack_timer <= 0.0:
+		_fighter_basic_attack(target)
+
+	_update_fighter_pose_visual(delta)
+
+func _update_fighter_pose_visual(delta: float) -> void:
+	if hero_archetype != "sword_shield" or not hero_sprite.visible or is_dying:
+		return
+	if hit_pose_timer > 0.0 or attack_pose_timer > 0.0:
+		return
+
+	_update_facing_from_horizontal(velocity.x, delta)
+	if velocity.length() > 4.0:
+		_play_stage1_animation("move", 1.0)
+	else:
+		_play_stage1_animation("idle", 1.0)
+
+func _fighter_basic_attack(current_target: Node2D) -> void:
+	if not is_instance_valid(current_target):
+		return
+
+	var direction := global_position.direction_to(current_target.global_position)
+	if direction.length_squared() <= 0.0:
+		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+	direction = direction.normalized()
+
+	attack_timer = attack_cooldown
+	attack_pose_timer = 0.42
+	_face_attack_direction(direction.x)
+	_restart_stage1_animation("attack", 1.0)
+
+	if _fighter_should_use_slash():
+		_fighter_apply_slash(direction)
+		_play_fighter_attack_effect("slash", direction)
+	else:
+		_fighter_apply_thrust(direction)
+		_play_fighter_attack_effect("thrust", direction)
+
+func _fighter_should_use_slash() -> bool:
+	var trigger_count := maxi(
+		int(fighter_basic_config.get("slash_enemy_trigger", 2)),
+		1
+	)
+	var radius := maxf(
+		float(fighter_basic_config.get("slash_reach", 135.0))
+		+ fighter_slash_half_width_bonus,
+		1.0
+	)
+	var nearby := 0
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if global_position.distance_to(monster.global_position) <= radius:
+			nearby += 1
+			if nearby >= trigger_count:
+				return true
+	return false
+
+func _fighter_apply_slash(direction: Vector2) -> void:
+	var reach := maxf(float(fighter_basic_config.get("slash_reach", 135.0)), 1.0)
+	var half_width := maxf(
+		float(fighter_basic_config.get("slash_half_width", 88.0))
+		+ fighter_slash_half_width_bonus,
+		1.0
+	)
+	var damage := maxi(
+		1,
+		int(round(
+			float(attack_damage)
+			* float(fighter_basic_config.get("slash_damage_ratio", 1.0))
+			* fighter_basic_damage_multiplier
+		))
+	)
+	var side := Vector2(-direction.y, direction.x)
+
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var offset := monster.global_position - global_position
+		var forward := offset.dot(direction)
+		var lateral := absf(offset.dot(side))
+		if forward < -24.0 or forward > reach or lateral > half_width:
+			continue
+		if monster.has_method("take_damage"):
+			monster.call("take_damage", damage)
+
+func _fighter_apply_thrust(direction: Vector2) -> void:
+	var length := maxf(
+		float(fighter_basic_config.get("thrust_length", 190.0))
+		+ fighter_thrust_length_bonus,
+		1.0
+	)
+	var half_width := maxf(
+		float(fighter_basic_config.get("thrust_half_width", 34.0)),
+		1.0
+	)
+	var damage := maxi(
+		1,
+		int(round(
+			float(attack_damage)
+			* (
+				float(fighter_basic_config.get("thrust_damage_ratio", 1.05))
+				+ fighter_thrust_damage_bonus
+			)
+			* fighter_basic_damage_multiplier
+		))
+	)
+	var side := Vector2(-direction.y, direction.x)
+
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var offset := monster.global_position - global_position
+		var forward := offset.dot(direction)
+		var lateral := absf(offset.dot(side))
+		if forward < 0.0 or forward > length or lateral > half_width:
+			continue
+		if monster.has_method("take_damage"):
+			monster.call("take_damage", damage)
+
+func _update_fighter_guard(delta: float) -> void:
+	if fighter_guard_active:
+		fighter_guard_duration_timer = maxf(
+			fighter_guard_duration_timer - delta,
+			0.0
+		)
+		if fighter_guard_duration_timer <= 0.0:
+			_end_fighter_guard()
+		return
+
+	var charge_max := maxf(float(ultimate_config.get("charge_max", 100.0)), 1.0)
+	var charge_seconds := maxf(fighter_guard_charge_seconds, 1.0)
+	ultimate_charge = minf(
+		ultimate_charge + (charge_max / charge_seconds) * delta,
+		charge_max
+	)
+	if ultimate_charge + 0.001 >= charge_max:
+		_start_fighter_guard()
+	queue_redraw()
+
+func _start_fighter_guard() -> void:
+	if fighter_guard_active:
+		return
+
+	fighter_guard_active = true
+	fighter_guard_duration_timer = maxf(
+		float(ultimate_config.get("duration", 10.0)),
+		0.1
+	)
+	fighter_guard_stored_damage = 0.0
+	ultimate_charge = 0.0
+
+	var shield_ratio := maxf(
+		float(ultimate_config.get("shield_hp_ratio", 0.60))
+		+ fighter_guard_shield_ratio_bonus,
+		0.0
+	)
+	shield_max_hp = float(max_hp) * shield_ratio
+	shield_hp = shield_max_hp
+
+	if shield_effect.sprite_frames != null and shield_effect.sprite_frames.has_animation("guard_aura"):
+		shield_effect.visible = true
+		shield_effect.play("guard_aura")
+
+	ultimate_used.emit(
+		String(ultimate_config.get("id", "shield_guard")),
+		String(ultimate_config.get("name", "막기"))
+	)
+	queue_redraw()
+
+func _end_fighter_guard() -> void:
+	if not fighter_guard_active:
+		return
+
+	fighter_guard_active = false
+	fighter_guard_duration_timer = 0.0
+	shield_effect.visible = false
+
+	var release_ratio := maxf(
+		float(ultimate_config.get("stored_damage_release_ratio", 0.50))
+		+ fighter_guard_release_ratio_bonus,
+		0.0
+	)
+	var release_damage := maxi(
+		int(round(fighter_guard_stored_damage * release_ratio)),
+		0
+	)
+	var release_radius := maxf(
+		float(ultimate_config.get("release_radius", 250.0)),
+		0.0
+	)
+
+	if release_damage > 0 and release_radius > 0.0:
+		for node in get_tree().get_nodes_in_group("monsters"):
+			if not is_instance_valid(node) or node.is_queued_for_deletion():
+				continue
+			var monster := node as Node2D
+			if monster == null:
+				continue
+			if global_position.distance_to(monster.global_position) > release_radius:
+				continue
+			if monster.has_method("take_damage"):
+				monster.call("take_damage", release_damage)
+
+	_play_fighter_guard_release_effect()
+	fighter_guard_stored_damage = 0.0
+	shield_hp = 0.0
+	shield_max_hp = 0.0
+	queue_redraw()
+
+func _fighter_reflect_damage(raw_damage: float, source: Node) -> void:
+	if fighter_reflect_ratio <= 0.0:
+		return
+	var reflected := maxi(
+		1,
+		int(round(raw_damage * fighter_reflect_ratio))
+	)
+
+	if (
+		is_instance_valid(source)
+		and source.is_in_group("monsters")
+		and source.has_method("take_damage")
+	):
+		source.call("take_damage", reflected)
+		return
+
+	var reflect_radius := maxf(
+		float(ultimate_config.get("reflect_radius", 175.0)),
+		1.0
+	)
+	var nearest: Node2D = null
+	var nearest_distance := INF
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var distance := global_position.distance_to(monster.global_position)
+		if distance <= reflect_radius and distance < nearest_distance:
+			nearest = monster
+			nearest_distance = distance
+	if is_instance_valid(nearest) and nearest.has_method("take_damage"):
+		nearest.call("take_damage", reflected)
+
+func _play_fighter_attack_effect(animation_name: String, direction: Vector2) -> void:
+	if rogue_attack_effect.sprite_frames == null:
+		return
+	if not rogue_attack_effect.sprite_frames.has_animation(animation_name):
+		return
+
+	rogue_attack_effect.visible = true
+	rogue_attack_effect.stop()
+	rogue_attack_effect.animation = animation_name
+	rogue_attack_effect.frame = 0
+	rogue_attack_effect.rotation = direction.angle()
+	rogue_attack_effect.play(animation_name)
+
+func _play_fighter_guard_release_effect() -> void:
+	if channel_effect.sprite_frames == null:
+		return
+	if not channel_effect.sprite_frames.has_animation("guard_release"):
+		return
+
+	channel_effect.visible = true
+	channel_effect.stop()
+	channel_effect.animation = "guard_release"
+	channel_effect.frame = 0
+	channel_effect.rotation = 0.0
+	channel_effect.play("guard_release")
+
+func _apply_stage3_fighter_effect_visuals() -> void:
+	if hero_archetype != "sword_shield":
+		return
+
+	rogue_attack_effect.visible = false
+	channel_effect.visible = false
+	shield_effect.visible = false
+
+	var attack_frames := SpriteFrames.new()
+	if attack_frames.has_animation("default"):
+		attack_frames.remove_animation("default")
+	_add_prefixed_effect_animation(
+		attack_frames,
+		"slash",
+		STAGE3_SLASH_EFFECT_DIR,
+		"hero_effect_slash",
+		6,
+		18.0,
+		false
+	)
+	_add_prefixed_effect_animation(
+		attack_frames,
+		"thrust",
+		STAGE3_THRUST_EFFECT_DIR,
+		"hero_effect_thrust",
+		6,
+		18.0,
+		false
+	)
+	rogue_attack_effect.sprite_frames = attack_frames
+	rogue_attack_effect.scale = Vector2(0.74, 0.74)
+	rogue_attack_effect.position = Vector2.ZERO
+	rogue_attack_effect.z_index = 2
+
+	var release_frames := SpriteFrames.new()
+	if release_frames.has_animation("default"):
+		release_frames.remove_animation("default")
+	_add_prefixed_effect_animation(
+		release_frames,
+		"guard_release",
+		STAGE3_BLOCK_EFFECT_DIR,
+		"hero_effect_block",
+		6,
+		15.0,
+		false
+	)
+	channel_effect.sprite_frames = release_frames
+	channel_effect.scale = Vector2(0.76, 0.76)
+	channel_effect.position = Vector2.ZERO
+	channel_effect.z_index = 3
+
+	var aura_frames := SpriteFrames.new()
+	if aura_frames.has_animation("default"):
+		aura_frames.remove_animation("default")
+	_add_prefixed_effect_animation(
+		aura_frames,
+		"guard_aura",
+		STAGE3_AURA_EFFECT_DIR,
+		"aura",
+		8,
+		10.0,
+		true
+	)
+	shield_effect.sprite_frames = aura_frames
+	shield_effect.scale = Vector2(0.60, 0.60)
+	shield_effect.position = Vector2.ZERO
+	shield_effect.z_index = 3
+
+func _add_prefixed_effect_animation(
+	frames: SpriteFrames,
+	animation_name: String,
+	base_dir: String,
+	file_prefix: String,
+	frame_count: int,
+	fps: float,
+	loop_animation: bool
+) -> bool:
+	frames.add_animation(animation_name)
+	frames.set_animation_speed(animation_name, fps)
+	frames.set_animation_loop(animation_name, loop_animation)
+
+	for index in range(1, frame_count + 1):
+		var path := "%s/%s_%02d.png" % [
+			base_dir,
+			file_prefix,
+			index,
+		]
+		var texture := _load_stage1_texture(path)
+		if texture == null:
+			push_warning("Stage 3 fighter effect frame load failed: %s" % path)
+			return false
+		frames.add_frame(animation_name, texture)
+
+	return true
+
 func _required_exp_for_level(target_level: int) -> int:
 	return 50 + maxi(target_level - 1, 0) * 25
 
-func take_damage(amount: int) -> bool:
+func take_damage(amount: int, source: Node = null) -> bool:
 	if (
 		amount <= 0
 		or current_hp <= 0
@@ -2835,8 +3369,21 @@ func take_damage(amount: int) -> bool:
 	):
 		return false
 
-	var remaining_damage := float(amount)
+	var raw_damage := float(amount)
+	var remaining_damage := raw_damage
 	var absorbed_damage := 0
+
+	if hero_archetype == "sword_shield" and fighter_guard_active:
+		fighter_guard_stored_damage += raw_damage
+		var damage_reduction := clampf(
+			float(ultimate_config.get("damage_reduction", 0.30))
+			+ fighter_guard_damage_reduction_bonus,
+			0.0,
+			0.75
+		)
+		remaining_damage *= 1.0 - damage_reduction
+		if fighter_reflect_ratio > 0.0:
+			_fighter_reflect_damage(raw_damage, source)
 
 	if shield_hp > 0.0:
 		absorbed_damage = mini(
@@ -2847,7 +3394,10 @@ func take_damage(amount: int) -> bool:
 		shield_hp = maxf(shield_hp - absorbed, 0.0)
 		remaining_damage = maxf(remaining_damage - absorbed, 0.0)
 		if shield_hp <= 0.0:
-			_end_shield()
+			if hero_archetype == "sword_shield" and fighter_guard_active:
+				shield_hp = 0.0
+			else:
+				_end_shield()
 
 	var previous_hp := current_hp
 	current_hp = maxi(current_hp - int(ceil(remaining_damage)), 0)
