@@ -87,16 +87,17 @@ func _apply_visual() -> void:
 	visual.play(&"fly")
 
 func _load_texture(path: String) -> Texture2D:
-	if ResourceLoader.exists(path):
-		var imported_texture = load(path)
-		if imported_texture is Texture2D:
-			return imported_texture
-
+	# Prefer the current source PNG over a possibly stale imported .ctex.
 	if FileAccess.file_exists(path):
 		var image := Image.new()
 		var error := image.load(path)
 		if error == OK:
 			return ImageTexture.create_from_image(image)
+
+	if ResourceLoader.exists(path):
+		var imported_texture = load(path)
+		if imported_texture is Texture2D:
+			return imported_texture
 
 	return null
 
