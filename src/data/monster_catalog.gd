@@ -10,6 +10,13 @@ const MONSTERS := {
 		"role": "swarm",
 		"base_cost": 3.0,
 		"summon_exp": 3.0,
+		"base_stats": {
+			"max_hp": 60,
+			"move_speed": 115.0,
+			"attack_damage": 9,
+			"attack_range": 72.0,
+			"attack_cooldown": 1.10,
+		},
 		"default_unlocked": true,
 		"shards_required": 20,
 		"rarity": "common",
@@ -39,6 +46,15 @@ const MONSTERS := {
 		"role": "controller",
 		"base_cost": 7.0,
 		"summon_exp": 7.0,
+		"base_stats": {
+			"max_hp": 45,
+			"move_speed": 150.0,
+			"attack_damage": 5,
+			"attack_range": 300.0,
+			"attack_cooldown": 1.35,
+			"slow_multiplier": 0.72,
+			"slow_duration": 1.5,
+		},
 		"default_unlocked": true,
 		"shards_required": 30,
 		"rarity": "rare",
@@ -67,6 +83,13 @@ const MONSTERS := {
 		"role": "tank",
 		"base_cost": 18.0,
 		"summon_exp": 18.0,
+		"base_stats": {
+			"max_hp": 140,
+			"move_speed": 78.0,
+			"attack_damage": 18,
+			"attack_range": 82.0,
+			"attack_cooldown": 1.45,
+		},
 		"default_unlocked": true,
 		"shards_required": 40,
 		"rarity": "legendary",
@@ -96,6 +119,14 @@ const MONSTERS := {
 		"role": "burst",
 		"base_cost": 12.0,
 		"summon_exp": 12.0,
+		"base_stats": {
+			"max_hp": 36,
+			"move_speed": 175.0,
+			"self_destruct_range": 78.0,
+			"self_destruct_fuse": 0.30,
+			"explosion_radius": 150.0,
+			"explosion_damage": 28,
+		},
 		"default_unlocked": false,
 		"shards_required": 30,
 		"rarity": "rare",
@@ -158,6 +189,13 @@ static func get_base_cost(monster_id: String) -> float:
 static func get_summon_exp(monster_id: String) -> float:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
 	return maxf(float(data.get("summon_exp", 0.0)), 0.0)
+
+static func get_base_stats(monster_id: String) -> Dictionary:
+	var data: Dictionary = MONSTERS.get(monster_id, {})
+	var stats = data.get("base_stats", {})
+	if typeof(stats) != TYPE_DICTIONARY:
+		return {}
+	return Dictionary(stats).duplicate(true)
 
 static func get_role_label(role_id: String) -> String:
 	return String(ROLE_LABELS.get(role_id, role_id))
