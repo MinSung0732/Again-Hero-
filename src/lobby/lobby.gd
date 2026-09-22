@@ -581,11 +581,13 @@ func _build_uicardframe_preview() -> void:
 		preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 		var path := "res://assets/art/UI/uicardframes/ui%d.png" % frame_id
-		var texture := load(path) as Texture2D
-		if texture != null:
-			preview.texture = texture
+		var image := Image.new()
+		var load_error := image.load(path)
+		if load_error == OK and not image.is_empty():
+			preview.texture = ImageTexture.create_from_image(image)
 		else:
 			label.text += " (LOAD FAIL)"
+			push_warning("UI card preview load failed: %s / error=%s" % [path, load_error])
 		cell.add_child(preview)
 
 
