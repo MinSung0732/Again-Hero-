@@ -17,7 +17,6 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 
 const UI_FRAME_LARGE_DIR := "res://assets/art/UI/01_large_left_panel"
 const UI_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
-const UI_CARD_STAGE_FRAME := "res://assets/art/UI/uicardframes/ui8.png"
 
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 @onready var resource_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ResourceLabel
@@ -109,7 +108,7 @@ func _ready() -> void:
 	_build_styles()
 	_apply_styles()
 	_apply_asset_frames()
-	_apply_stage_card_frame()
+	_build_uicardframe_preview()
 	_connect_navigation()
 
 	stage_ids = STAGE_CATALOG.get_ordered_stage_ids()
@@ -529,31 +528,65 @@ func _add_frame_piece_stretched(
 	piece.offset_bottom = offset_end.y
 	parent.add_child(piece)
 
-func _apply_stage_card_frame() -> void:
-	var stage_card := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard
-	if stage_card == null:
+func _build_uicardframe_preview() -> void:
+	var other_tab := $SafeArea/Layout/Content/OtherTab
+	if other_tab == null:
 		return
 
-	var texture := load(UI_CARD_STAGE_FRAME) as Texture2D
-	if texture == null:
-		push_warning("Stage card frame failed to load: %s" % UI_CARD_STAGE_FRAME)
-		return
+	var old := other_tab.get_node_or_null("UICardFramePreview")
+	if old != null:
+		old.queue_free()
 
-	var old_frame := stage_card.get_node_or_null("UICardFrame")
-	if old_frame != null:
-		old_frame.queue_free()
+	for child in other_tab.get_children():
+		if child is Label:
+			child.visible = false
 
-	var frame := TextureRect.new()
-	frame.name = "UICardFrame"
-	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	frame.texture = texture
-	frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	frame.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var scroll := ScrollContainer.new()
+	scroll.name = "UICardFramePreview"
+	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	scroll.offset_left = 20.0
+	scroll.offset_top = 20.0
+	scroll.offset_right = -20.0
+	scroll.offset_bottom = -20.0
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	other_tab.add_child(scroll)
 
-	stage_card.add_child(frame)
-	stage_card.move_child(frame, 0)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", 14)
+	grid.add_theme_constant_override("v_separation", 18)
+	scroll.add_child(grid)
+
+	for frame_id in [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12]:
+		var cell := VBoxContainer.new()
+		cell.custom_minimum_size = Vector2(210.0, 250.0)
+		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		cell.add_theme_constant_override("separation", 6)
+		grid.add_child(cell)
+
+		var label := Label.new()
+		label.text = "ui%d" % frame_id
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.add_theme_font_size_override("font_size", 22)
+		cell.add_child(label)
+
+		var preview := TextureRect.new()
+		preview.custom_minimum_size = Vector2(200.0, 210.0)
+		preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+		var path := "res://assets/art/UI/uicardframes/ui%d.png" % frame_id
+		var texture := load(path) as Texture2D
+		if texture != null:
+			preview.texture = texture
+		else:
+			label.text += " (LOAD FAIL)"
+		cell.add_child(preview)
 
 
 func _connect_navigation() -> void:
