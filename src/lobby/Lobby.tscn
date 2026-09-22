@@ -381,9 +381,9 @@ grow_vertical = 2
 [node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
 layout_mode = 1
 anchor_left = 0.0
-anchor_top = 0.025
+anchor_top = 0.005
 anchor_right = 1.0
-anchor_bottom = 0.065
+anchor_bottom = 0.035
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
@@ -395,9 +395,9 @@ vertical_alignment = 1
 [node name="StageName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
 layout_mode = 1
 anchor_left = 0.0
-anchor_top = 0.065
+anchor_top = 0.035
 anchor_right = 1.0
-anchor_bottom = 0.125
+anchor_bottom = 0.085
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.98, 0.93, 1, 1)
@@ -477,9 +477,9 @@ vertical_alignment = 1
 [node name="HeroName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
 layout_mode = 1
 anchor_left = 0.0
-anchor_top = 0.615
+anchor_top = 0.585
 anchor_right = 1.0
-anchor_bottom = 0.665
+anchor_bottom = 0.625
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.87, 0.82, 0.91, 1)
