@@ -236,6 +236,6 @@ func _draw() -> void:
 			bar_width * hp_ratio,
 			8.0
 		),
-		Color(0.95, 0.38, 0.32),
+		Color(0.3, 0.9, 0.45),
 		true
 	)
