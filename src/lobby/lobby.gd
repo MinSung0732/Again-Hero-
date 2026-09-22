@@ -599,10 +599,10 @@ func _apply_new_ui_assets() -> void:
 		stage_skin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		stage_skin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		stage_skin.set_anchors_preset(Control.PRESET_FULL_RECT)
-		stage_skin.offset_left = 34.0
-		stage_skin.offset_top = 18.0
-		stage_skin.offset_right = -34.0
-		stage_skin.offset_bottom = -18.0
+		stage_skin.offset_left = 22.0
+		stage_skin.offset_top = 12.0
+		stage_skin.offset_right = -22.0
+		stage_skin.offset_bottom = -12.0
 		stage_card.add_child(stage_skin)
 		stage_card.move_child(stage_skin, 0)
 
