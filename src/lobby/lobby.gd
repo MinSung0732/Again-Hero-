@@ -329,6 +329,9 @@ func _apply_styles() -> void:
 	enter_stage_button.add_theme_stylebox_override("normal", enter_style)
 	enter_stage_button.add_theme_stylebox_override("hover", primary_button_style)
 	enter_stage_button.add_theme_stylebox_override("pressed", primary_button_style)
+	enter_stage_button.custom_minimum_size = Vector2(0.0, 84.0)
+	enter_stage_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	enter_stage_button.custom_minimum_size.x = 360.0
 
 	for button in [team_slot_1_button, team_slot_2_button, team_slot_3_button]:
 		button.add_theme_stylebox_override("normal", stage_card_style)
@@ -559,10 +562,10 @@ func _apply_new_ui_assets() -> void:
 	banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	banner.set_anchors_preset(Control.PRESET_CENTER)
-	banner.offset_left = -150.0
-	banner.offset_top = -50.0
-	banner.offset_right = 150.0
-	banner.offset_bottom = 50.0
+	banner.offset_left = -126.0
+	banner.offset_top = -32.0
+	banner.offset_right = 126.0
+	banner.offset_bottom = 32.0
 	banner.show_behind_parent = true
 	title_label.add_child(banner)
 
