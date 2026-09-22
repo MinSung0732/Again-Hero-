@@ -45,12 +45,40 @@ func setup(
 	_apply_projectile_visual()
 
 func _physics_process(delta: float) -> void:
+	var previous_position := global_position
 	var step := direction * speed * delta
 	global_position += step
 	traveled_distance += step.length()
+	_check_chest_sweep(previous_position, global_position)
 
 	if traveled_distance >= max_range:
 		queue_free()
+
+func _check_chest_sweep(from_position: Vector2, to_position: Vector2) -> void:
+	if has_impacted:
+		return
+	for node in get_tree().get_nodes_in_group("treasure_chests"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var chest := node as Node2D
+		if chest == null or not chest.has_method("take_damage"):
+			continue
+		if _distance_to_segment(chest.global_position, from_position, to_position) > 36.0:
+			continue
+		has_impacted = true
+		chest.call("take_damage", damage)
+		queue_free()
+		return
+
+
+func _distance_to_segment(point: Vector2, a: Vector2, b: Vector2) -> float:
+	var segment := b - a
+	var length_sq := segment.length_squared()
+	if length_sq <= 0.001:
+		return point.distance_to(a)
+	var t := clampf((point - a).dot(segment) / length_sq, 0.0, 1.0)
+	return point.distance_to(a + segment * t)
+
 
 func _on_body_entered(body: Node) -> void:
 	if has_impacted:
