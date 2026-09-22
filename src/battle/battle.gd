@@ -1253,13 +1253,14 @@ func _on_treasure_chest_destroyed(drop_position: Vector2) -> void:
 	for index in range(bundle_count):
 		var angle := TAU * float(index) / float(maxi(bundle_count, 1))
 		angle += randf_range(-0.22, 0.22)
-		var radius := randf_range(38.0, 105.0)
+		var direction := Vector2.from_angle(angle)
 		var orb_position := _clamp_manual_spawn_position(
-			drop_position + Vector2.from_angle(angle) * radius
+			drop_position + direction * randf_range(8.0, 20.0)
 		)
 		_spawn_exp_orb(
 			orb_position,
-			randi_range(CHEST_EXP_VALUE_MIN, CHEST_EXP_VALUE_MAX)
+			randi_range(CHEST_EXP_VALUE_MIN, CHEST_EXP_VALUE_MAX),
+			direction * randf_range(220.0, 420.0)
 		)
 
 
@@ -1294,14 +1295,18 @@ func _spawn_random_heal_item() -> void:
 	add_child(item)
 	item.global_position = spawn_position
 
-func _spawn_exp_orb(drop_position: Vector2, exp_value: int) -> void:
+func _spawn_exp_orb(
+	drop_position: Vector2,
+	exp_value: int,
+	initial_velocity: Vector2 = Vector2.ZERO
+) -> void:
 	if exp_value <= 0:
 		return
 
 	var orb := EXP_ORB_SCENE.instantiate() as Node2D
 	add_child(orb)
 	orb.global_position = drop_position
-	orb.call("setup", exp_value)
+	orb.call("setup", exp_value, initial_velocity)
 
 func _emit_demon_ultimate_changed() -> void:
 	var charge_max := maxf(DEMON_ULTIMATES.CHARGE_MAX, 1.0)
