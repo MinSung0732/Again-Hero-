@@ -11,8 +11,8 @@ const MONSTERS := {
 		"base_cost": 3.0,
 		"summon_exp": 3.0,
 		"base_stats": {
-			"max_hp": 60,
-			"move_speed": 115.0,
+			"max_hp": 72,
+			"move_speed": 122.0,
 			"attack_damage": 9,
 			"attack_range": 72.0,
 			"attack_cooldown": 1.10,
