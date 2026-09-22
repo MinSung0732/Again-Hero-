@@ -33,6 +33,22 @@ const PROFILES = {
 			"rogue_bloodthirst": 0.55,
 		},
 	},
+	"stage_4_gunner": {
+		"id": "stage_4_gunner",
+		"display_name": "기민한 사수",
+		"observation_interval": 2.6,
+		"stack_inertia": 0.90,
+		"new_branch_penalty": 0.35,
+		"heal_item_desire": 1.08,
+		"heal_risk_tolerance": 0.42,
+		"heal_detour_weight": 1.18,
+		"augment_biases": {
+			"common_attack_training": 0.45,
+			"rapid_strikes": 0.55,
+			"pursuit": 0.35,
+			"long_reach": 0.20,
+		},
+	},
 	"stage_3_guardian": {
 		"id": "stage_3_guardian",
 		"display_name": "전선을 지키는 수호자",
