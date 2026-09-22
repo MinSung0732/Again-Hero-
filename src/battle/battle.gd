@@ -102,6 +102,11 @@ var demon_ultimate_spawn_batch_size: int = 2
 var demon_ultimate_cooldowns: Dictionary = {}
 var demon_ultimate_cooldown_emit_timer: float = 0.0
 
+var stage_reinforcement_queue: Array[Dictionary] = []
+var stage_reinforcement_timer: float = 0.0
+var stage_reinforcement_interval: float = 0.12
+var stage_reinforcement_batch_size: int = 2
+
 var summon_cost_multiplier: float = 1.0
 var demon_exp_gain_multiplier: float = 1.0
 var monster_speed_multiplier: float = 1.0
@@ -147,6 +152,7 @@ func _process(delta: float) -> void:
 		FLOW_PAUSE_MANAGER.DOMAIN_DEMON_RUNTIME
 	):
 		_process_demon_ultimate_spawn_queue(delta)
+		_process_stage_reinforcement_queue(delta)
 		_update_demon_ultimate_cooldowns(delta)
 
 		if demon_ultimate_charge < DEMON_ULTIMATES.CHARGE_MAX:
@@ -237,6 +243,10 @@ func _start_battle() -> void:
 	for skill_id in DEMON_ULTIMATES.get_ordered_ids():
 		demon_ultimate_cooldowns[String(skill_id)] = 0.0
 	demon_ultimate_cooldown_emit_timer = 0.0
+	stage_reinforcement_queue.clear()
+	stage_reinforcement_timer = 0.0
+	stage_reinforcement_interval = 0.12
+	stage_reinforcement_batch_size = 2
 
 	summon_cost_multiplier = 1.0
 	demon_exp_gain_multiplier = 1.0
@@ -1538,6 +1548,128 @@ func _process_demon_ultimate_spawn_queue(delta: float) -> void:
 	else:
 		demon_ultimate_spawn_timer = demon_ultimate_spawn_interval
 
+func _queue_stage_event_reinforcements(event: Dictionary) -> void:
+	var count := maxi(int(event.get("reinforcement_count", 0)), 0)
+	if count <= 0:
+		return
+
+	var pool: Array[String] = []
+	for raw_id in allowed_monster_ids:
+		var monster_id := String(raw_id)
+		if MONSTER_CATALOG.MONSTERS.has(monster_id):
+			pool.append(monster_id)
+
+	if pool.is_empty():
+		for raw_id in MONSTER_CATALOG.ORDER:
+			var fallback_id := String(raw_id)
+			if not MONSTER_CATALOG.MONSTERS.has(fallback_id):
+				continue
+			pool.append(fallback_id)
+			if pool.size() >= 3:
+				break
+
+	if pool.is_empty():
+		return
+
+	stage_reinforcement_batch_size = maxi(
+		int(event.get("reinforcement_batch_size", 2)),
+		1
+	)
+	stage_reinforcement_interval = maxf(
+		float(event.get("reinforcement_interval", 0.12)),
+		0.04
+	)
+	stage_reinforcement_timer = 0.0
+
+	var spawn_min := maxf(
+		float(event.get("reinforcement_spawn_min", 330.0)),
+		220.0
+	)
+	var spawn_max := maxf(
+		float(event.get("reinforcement_spawn_max", 470.0)),
+		spawn_min
+	)
+	var center := (
+		hero.position
+		if is_instance_valid(hero)
+		else current_map_size * 0.5
+	)
+
+	for index in range(count):
+		var monster_id := pool[index % pool.size()]
+		var angle := (
+			TAU * float(index) / float(maxi(count, 1))
+			+ randf_range(-0.18, 0.18)
+		)
+		var distance := randf_range(spawn_min, spawn_max)
+		var candidate := center + Vector2.from_angle(angle) * distance
+		var spawn_position := Vector2(
+			clampf(
+				candidate.x,
+				MANUAL_SPAWN_MARGIN,
+				current_map_size.x - MANUAL_SPAWN_MARGIN
+			),
+			clampf(
+				candidate.y,
+				MANUAL_SPAWN_MARGIN,
+				current_map_size.y - MANUAL_SPAWN_MARGIN
+			)
+		)
+		stage_reinforcement_queue.append({
+			"monster_id": monster_id,
+			"position": spawn_position,
+		})
+
+func _process_stage_reinforcement_queue(delta: float) -> void:
+	if stage_reinforcement_queue.is_empty():
+		return
+
+	stage_reinforcement_timer = maxf(
+		stage_reinforcement_timer - delta,
+		0.0
+	)
+	if stage_reinforcement_timer > 0.0:
+		return
+
+	var spawned_this_batch := 0
+	while (
+		spawned_this_batch < stage_reinforcement_batch_size
+		and not stage_reinforcement_queue.is_empty()
+	):
+		var entry: Dictionary = stage_reinforcement_queue.pop_front()
+		var monster_id := String(entry.get("monster_id", ""))
+		var spawn_position: Vector2 = entry.get(
+			"position",
+			Vector2.ZERO
+		)
+
+		if MONSTER_CATALOG.MONSTERS.has(monster_id):
+			_spawn_monster(
+				monster_id,
+				spawn_position,
+				0.0,
+				false
+			)
+			if (
+				is_instance_valid(hero)
+				and hero.has_method("record_offensive_event")
+			):
+				hero.call(
+					"record_offensive_event",
+					monster_id,
+					MONSTER_CATALOG.get_role(monster_id)
+				)
+
+		spawned_this_batch += 1
+
+	if spawned_this_batch > 0:
+		_emit_stats()
+
+	if stage_reinforcement_queue.is_empty():
+		stage_reinforcement_timer = 0.0
+	else:
+		stage_reinforcement_timer = stage_reinforcement_interval
+
 func _process_stage_director_events() -> void:
 	for event in stage_director.collect_due_events(
 		run_metrics.elapsed_seconds
@@ -1566,6 +1698,7 @@ func _trigger_stage_director_event(event: Dictionary) -> void:
 		return
 
 	_emit_stage_event_announcement(event, monster_id)
+	_queue_stage_event_reinforcements(event)
 
 func _open_mutation_choice(event: Dictionary) -> void:
 	if mutation_director.is_active():
@@ -1640,6 +1773,7 @@ func spawn_selected_mutation(monster_id: String) -> void:
 		return
 
 	_emit_stage_event_announcement(event, monster_id)
+	_queue_stage_event_reinforcements(event)
 	mutation_selected.emit(event_type, mutation_name)
 	mutation_spawn_result.emit(true, "%s 소환 완료" % mutation_name)
 
