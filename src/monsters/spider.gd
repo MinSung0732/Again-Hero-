@@ -26,6 +26,12 @@ var hero: Node2D
 var attack_timer: float = 0.0
 var hit_flash_timer: float = 0.0
 var dying: bool = false
+var special_augment_configs: Dictionary = {}
+var burst_remaining: int = 0
+var burst_timer: float = 0.0
+var burst_direction: Vector2 = Vector2.RIGHT
+var burst_damage_multiplier: float = 1.0
+var burst_interval: float = 0.0
 
 func _ready() -> void:
 	add_to_group("monsters")
@@ -39,6 +45,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	attack_timer = maxf(attack_timer - delta, 0.0)
+	_process_projectile_burst(delta)
 
 	if hit_flash_timer > 0.0:
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
@@ -66,9 +73,46 @@ func _physics_process(delta: float) -> void:
 	if attack_timer <= 0.0:
 		attack_timer = attack_cooldown
 		_visual_call(&"play_attack")
-		_fire_projectile(direction_to_hero)
+		_begin_projectile_attack(direction_to_hero)
 
-func _fire_projectile(direction_to_hero: Vector2) -> void:
+func configure_special_augments(configs: Dictionary) -> void:
+	special_augment_configs = configs.duplicate(true)
+
+func _begin_projectile_attack(direction_to_hero: Vector2) -> void:
+	var triple: Dictionary = special_augment_configs.get(
+		"spider_triple_web",
+		{}
+	)
+	if triple.is_empty():
+		_fire_projectile(direction_to_hero, 1.0)
+		return
+
+	burst_remaining = maxi(int(triple.get("shot_count", 3)), 1)
+	burst_direction = direction_to_hero
+	burst_damage_multiplier = maxf(
+		float(triple.get("damage_multiplier", 1.0)),
+		0.0
+	)
+	burst_interval = maxf(float(triple.get("shot_interval", 0.12)), 0.01)
+	burst_timer = 0.0
+	_process_projectile_burst(0.0)
+
+func _process_projectile_burst(delta: float) -> void:
+	if burst_remaining <= 0:
+		return
+	burst_timer = maxf(burst_timer - delta, 0.0)
+	if burst_timer > 0.0:
+		return
+
+	_fire_projectile(burst_direction, burst_damage_multiplier)
+	burst_remaining -= 1
+	if burst_remaining > 0:
+		burst_timer = burst_interval
+
+func _fire_projectile(
+	direction_to_hero: Vector2,
+	damage_multiplier: float = 1.0
+) -> void:
 	if SPIDER_PROJECTILE_SCENE == null:
 		return
 
@@ -83,17 +127,39 @@ func _fire_projectile(direction_to_hero: Vector2) -> void:
 	projectile_parent.add_child(projectile)
 	projectile.global_position = global_position
 
+	var sticky: Dictionary = special_augment_configs.get(
+		"spider_sticky_web",
+		{}
+	)
+	var projectile_slow_multiplier := slow_multiplier
+	var projectile_slow_duration := slow_duration
+	if not sticky.is_empty():
+		projectile_slow_multiplier = clampf(
+			projectile_slow_multiplier
+			* float(sticky.get("slow_multiplier_factor", 1.0)),
+			0.0,
+			1.0
+		)
+		projectile_slow_duration *= float(
+			sticky.get("duration_multiplier", 1.0)
+		)
+
+	var binding: Dictionary = special_augment_configs.get(
+		"spider_binding",
+		{}
+	)
 	var is_elite := String(get_meta("visual_variant", "")) == "elite"
 	if projectile.has_method("setup"):
 		projectile.call(
 			"setup",
 			direction_to_hero,
-			attack_damage,
+			maxi(int(round(float(attack_damage) * damage_multiplier)), 1),
 			projectile_speed,
 			projectile_range,
-			slow_multiplier,
-			slow_duration,
-			is_elite
+			projectile_slow_multiplier,
+			projectile_slow_duration,
+			is_elite,
+			binding
 		)
 
 func take_damage(amount: int) -> void:
