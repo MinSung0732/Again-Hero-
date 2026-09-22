@@ -85,6 +85,7 @@ var rogue_combo_recovery_multiplier: float = 1.0
 var rogue_slash_shield_ratio_bonus: float = 0.0
 var rogue_assassination_hit_bonus: int = 0
 var rogue_execute_threshold_bonus: float = 0.0
+var rogue_lifesteal_ratio: float = 0.0
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
 var ultimate_flash_timer: float = 0.0
@@ -188,6 +189,7 @@ func configure_profile(profile: Dictionary) -> void:
 	rogue_slash_shield_ratio_bonus = 0.0
 	rogue_assassination_hit_bonus = 0
 	rogue_execute_threshold_bonus = 0.0
+	rogue_lifesteal_ratio = 0.0
 	var profile_ultimate = profile.get("ultimate", {})
 	ultimate_config = (
 		profile_ultimate.duplicate(true)
@@ -515,10 +517,13 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 			* rogue_combo_damage_multiplier
 		))
 	)
-	if current_target.has_method("take_damage"):
-		current_target.call("take_damage", damage)
+	var actual_damage := _rogue_damage_target(
+		current_target,
+		damage,
+		1.0
+	)
 
-	if is_instance_valid(current_target):
+	if actual_damage > 0 and is_instance_valid(current_target):
 		_rogue_apply_knockback(
 			current_target,
 			direction,
@@ -558,6 +563,73 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 
 	attack_timer = maxf(interval, 0.08)
 	rogue_combo_index = (rogue_combo_index + 1) % 3
+
+func _rogue_damage_target(
+	current_target: Node2D,
+	damage: int,
+	lifesteal_efficiency: float = 1.0
+) -> int:
+	if (
+		not is_instance_valid(current_target)
+		or damage <= 0
+		or not current_target.has_method("take_damage")
+	):
+		return 0
+
+	var hp_before_value = current_target.get("current_hp")
+	var hp_before := 0
+	var can_measure := hp_before_value != null
+	if can_measure:
+		hp_before = maxi(int(hp_before_value), 0)
+
+	current_target.call("take_damage", damage)
+
+	if not can_measure:
+		return 0
+
+	var hp_after := 0
+	if is_instance_valid(current_target):
+		var hp_after_value = current_target.get("current_hp")
+		if hp_after_value != null:
+			hp_after = maxi(int(hp_after_value), 0)
+
+	var actual_damage := maxi(hp_before - hp_after, 0)
+	_apply_rogue_lifesteal(
+		actual_damage,
+		lifesteal_efficiency
+	)
+	return actual_damage
+
+func _apply_rogue_lifesteal(
+	actual_damage: int,
+	efficiency: float
+) -> void:
+	if (
+		actual_damage <= 0
+		or rogue_lifesteal_ratio <= 0.0
+		or current_hp <= 0
+		or current_hp >= max_hp
+	):
+		return
+
+	var heal_amount := int(floor(
+		float(actual_damage)
+		* rogue_lifesteal_ratio
+		* clampf(efficiency, 0.0, 1.0)
+	))
+	if heal_amount <= 0:
+		return
+
+	var previous_hp := current_hp
+	current_hp = mini(
+		current_hp + heal_amount,
+		max_hp
+	)
+	if current_hp == previous_hp:
+		return
+
+	health_changed.emit(current_hp, max_hp)
+	queue_redraw()
 
 func _rogue_apply_knockback(
 	current_target: Node2D,
@@ -691,7 +763,11 @@ func _apply_rogue_slash_tick() -> void:
 		if global_position.distance_to(monster.global_position) > radius:
 			continue
 		if monster.has_method("take_damage"):
-			monster.call("take_damage", damage)
+			_rogue_damage_target(
+				monster,
+				damage,
+				0.50
+			)
 
 	if shield_effect.sprite_frames != null:
 		shield_effect.visible = true
@@ -845,8 +921,11 @@ func _update_rogue_assassination(delta: float) -> void:
 			))
 		)
 
-	if current_target.has_method("take_damage"):
-		current_target.call("take_damage", damage)
+	_rogue_damage_target(
+		current_target,
+		damage,
+		1.0
+	)
 
 	attack_pose_timer = 0.20
 	_restart_stage1_animation("attack", 1.35)
@@ -2389,6 +2468,15 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 				float(effect.get("value", 0.0)),
 				float(effect.get("max", 0.85))
 			)
+
+		"advance_rogue_lifesteal":
+			if rogue_lifesteal_ratio < 0.03:
+				rogue_lifesteal_ratio = 0.03
+			else:
+				rogue_lifesteal_ratio = minf(
+					rogue_lifesteal_ratio + 0.02,
+					0.07
+				)
 
 		_:
 			push_warning("Unknown Hero augment effect op: %s" % op)
