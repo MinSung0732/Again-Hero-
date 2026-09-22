@@ -60,6 +60,7 @@ const INVULNERABILITY_BLINK_INTERVAL := 0.07
 @export var projectile_splash_radius: float = 0.0
 @export var projectile_splash_damage_ratio: float = 0.0
 @export var exp_pickup_radius: float = 150.0
+@export var exp_gain_multiplier: float = 1.0
 @export var ai_sense_radius: float = 420.0
 @export var kite_distance: float = 210.0
 @export var invulnerability_duration: float = 0.35
@@ -267,6 +268,7 @@ func configure_profile(profile: Dictionary) -> void:
 	attack_cooldown = float(profile.get("attack_cooldown", attack_cooldown))
 	projectile_speed = float(profile.get("projectile_speed", projectile_speed))
 	exp_pickup_radius = float(profile.get("exp_pickup_radius", exp_pickup_radius))
+	exp_gain_multiplier = 1.0
 	ai_sense_radius = float(profile.get("ai_sense_radius", ai_sense_radius))
 	kite_distance = float(profile.get("kite_distance", kite_distance))
 	facing_switch_delay = maxf(
@@ -2339,7 +2341,11 @@ func gain_exp(amount: int) -> void:
 	if amount <= 0 or current_hp <= 0:
 		return
 
-	current_exp += amount
+	var gained_exp := maxi(
+		1,
+		int(round(float(amount) * maxf(exp_gain_multiplier, 0.0)))
+	)
+	current_exp += gained_exp
 
 	while current_exp >= exp_to_next_level:
 		current_exp -= exp_to_next_level
