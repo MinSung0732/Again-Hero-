@@ -249,6 +249,24 @@ static func _evaluate_rule(rule: Dictionary, context: Dictionary) -> float:
 				<= float(rule.get("value", 1.0))
 				else 0.0
 			)
+		"context_linear":
+			var value := float(context.get(String(rule.get("key", "")), 0.0))
+			var contribution := value * float(rule.get("weight", 0.0))
+			return _apply_optional_cap(contribution, rule)
+		"context_min":
+			return (
+				float(rule.get("bonus", 0.0))
+				if float(context.get(String(rule.get("key", "")), 0.0))
+				>= float(rule.get("value", 0.0))
+				else 0.0
+			)
+		"context_max":
+			return (
+				float(rule.get("bonus", 0.0))
+				if float(context.get(String(rule.get("key", "")), 0.0))
+				<= float(rule.get("value", 0.0))
+				else 0.0
+			)
 
 	return 0.0
 
@@ -433,6 +451,12 @@ static func _describe_rule(rule: Dictionary, context: Dictionary) -> String:
 			return "관측 전체 적 %d명" % int(
 				context.get("total_count", 0)
 			)
+		"context_linear", "context_min", "context_max":
+			var context_key := String(rule.get("key", "상황"))
+			return "전용 상황 %s %.2f" % [
+				context_key,
+				float(context.get(context_key, 0.0)),
+			]
 
 	return ""
 
