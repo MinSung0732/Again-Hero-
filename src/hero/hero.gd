@@ -526,22 +526,74 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 			* rogue_combo_damage_multiplier
 		))
 	)
-	var actual_damage := _rogue_damage_target(
-		current_target,
-		damage,
+
+	var aoe_radii = rogue_combo_config.get(
+		"aoe_radii",
+		[95.0, 110.0, 130.0]
+	)
+	var aoe_offsets = rogue_combo_config.get(
+		"aoe_forward_offsets",
+		[48.0, 54.0, 62.0]
+	)
+	var aoe_radius := 95.0
+	var aoe_offset := 48.0
+	if (
+		typeof(aoe_radii) == TYPE_ARRAY
+		and rogue_combo_index < aoe_radii.size()
+	):
+		aoe_radius = float(aoe_radii[rogue_combo_index])
+	if (
+		typeof(aoe_offsets) == TYPE_ARRAY
+		and rogue_combo_index < aoe_offsets.size()
+	):
+		aoe_offset = float(aoe_offsets[rogue_combo_index])
+
+	var impact_center := global_position + direction * aoe_offset
+	var main_id := current_target.get_instance_id()
+	var knockback_distance := float(
+		rogue_combo_config.get(
+			"knockback_distance",
+			30.0
+		)
+	)
+	var secondary_lifesteal := clampf(
+		float(
+			rogue_combo_config.get(
+				"secondary_lifesteal_efficiency",
+				0.50
+			)
+		),
+		0.0,
 		1.0
 	)
 
-	if actual_damage > 0 and is_instance_valid(current_target):
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if impact_center.distance_to(monster.global_position) > aoe_radius:
+			continue
+
+		var is_main_target := monster.get_instance_id() == main_id
+		var actual_damage := _rogue_damage_target(
+			monster,
+			damage,
+			1.0 if is_main_target else secondary_lifesteal
+		)
+		if actual_damage <= 0 or not is_instance_valid(monster):
+			continue
+
+		var knock_direction := impact_center.direction_to(
+			monster.global_position
+		)
+		if knock_direction.length_squared() <= 0.0:
+			knock_direction = direction
 		_rogue_apply_knockback(
-			current_target,
-			direction,
-			float(
-				rogue_combo_config.get(
-					"knockback_distance",
-					42.0
-				)
-			)
+			monster,
+			knock_direction,
+			knockback_distance
 		)
 
 	attack_pose_timer = 0.26
@@ -932,11 +984,65 @@ func _update_rogue_assassination(delta: float) -> void:
 			))
 		)
 
+	var main_target_id := current_target.get_instance_id()
 	_rogue_damage_target(
 		current_target,
 		damage,
 		1.0
 	)
+
+	var assassination_aoe_radius := maxf(
+		float(ultimate_config.get("aoe_radius", 120.0)),
+		0.0
+	)
+	var secondary_damage := maxi(
+		1,
+		int(round(
+			float(base_damage)
+			* clampf(
+				float(
+					ultimate_config.get(
+						"secondary_damage_ratio",
+						0.78
+					)
+				),
+				0.0,
+				2.0
+			)
+		))
+	)
+	var secondary_lifesteal := clampf(
+		float(
+			ultimate_config.get(
+				"secondary_lifesteal_efficiency",
+				0.50
+			)
+		),
+		0.0,
+		1.0
+	)
+
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if monster.get_instance_id() == main_target_id:
+			continue
+		if (
+			current_target.global_position.distance_to(
+				monster.global_position
+			)
+			> assassination_aoe_radius
+		):
+			continue
+
+		_rogue_damage_target(
+			monster,
+			secondary_damage,
+			secondary_lifesteal
+		)
 
 	attack_pose_timer = 0.20
 	_restart_stage1_animation("attack", 1.35)
