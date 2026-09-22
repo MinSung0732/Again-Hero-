@@ -11,6 +11,7 @@ const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
 const PROJECTILE_SCENE := preload("res://src/hero/HeroProjectile.tscn")
 const GUNNER_PROJECTILE_SCENE := preload("res://src/hero/GunnerProjectile.tscn")
+const ARCHMAGE_PROJECTILE_SCENE := preload("res://src/hero/ArchmageProjectile.tscn")
 const ULTIMATE_PIERCING_PROJECTILE_SCENE := preload(
 	"res://src/hero/UltimatePiercingProjectile.tscn"
 )
@@ -37,6 +38,7 @@ const STAGE3_THRUST_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames
 const STAGE3_AURA_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect4"
 const STAGE3_CHARGE_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect5"
 const STAGE4_FRAME_DIR := "res://assets/art/heroes/stage4_gunner/frames"
+const STAGE5_FRAME_DIR := "res://assets/art/heroes/stage5_archmage/frames"
 
 # 모든 용사 도트의 화면상 체급 기준은 Stage 1 견습 마법용사다.
 # 원본 PNG 캔버스 크기가 아니라 투명 여백을 제외한 실제 도트 높이를
@@ -162,6 +164,9 @@ var gunner_deadeye_shot_multiplier: float = 2.0
 var gunner_low_hp_backstep_bonus: float = 0.0
 var gunner_powder_bonus_per_ammo: float = 0.0
 var gunner_powder_consumed_stacks: int = 0
+
+var archmage_element_config: Dictionary = {}
+var archmage_last_element: String = ""
 
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
@@ -325,6 +330,13 @@ func configure_profile(profile: Dictionary) -> void:
 	gunner_low_hp_backstep_bonus = 0.0
 	gunner_powder_bonus_per_ammo = 0.0
 	gunner_powder_consumed_stacks = 0
+	var profile_archmage_elements = profile.get("archmage_elements", {})
+	archmage_element_config = (
+		profile_archmage_elements.duplicate(true)
+		if typeof(profile_archmage_elements) == TYPE_DICTIONARY
+		else {}
+	)
+	archmage_last_element = ""
 	var profile_rogue_slash = profile.get("rogue_slash_skill", {})
 	rogue_slash_config = (
 		profile_rogue_slash.duplicate(true)
@@ -2074,6 +2086,38 @@ func _apply_profile_visual() -> void:
 	hero_sprite.rotation = 0.0
 	hero_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
+	if hero_archetype == "archmage_elementalist":
+		var archmage_dir := (
+			sprite_frame_dir
+			if not sprite_frame_dir.is_empty()
+			else STAGE5_FRAME_DIR
+		)
+		var archmage_frames := SpriteFrames.new()
+		if archmage_frames.has_animation("default"):
+			archmage_frames.remove_animation("default")
+		if not _add_named_sequence_animation(
+			archmage_frames, "idle", archmage_dir, "idle", 4, 6.0, true
+		):
+			return
+		_add_named_sequence_animation(
+			archmage_frames, "move", archmage_dir, "walk", 7, 10.0, true
+		)
+		_add_named_sequence_animation(
+			archmage_frames, "attack", archmage_dir, "atk", 7, 17.0, false
+		)
+		_add_named_sequence_animation(
+			archmage_frames, "hit", archmage_dir, "hit", 3, 14.0, false
+		)
+		_add_named_sequence_animation(
+			archmage_frames, "death", archmage_dir, "dead", 4, 10.0, false
+		)
+		hero_sprite.sprite_frames = archmage_frames
+		hero_sprite.visible = true
+		_apply_normalized_hero_visual_scale()
+		hero_sprite.speed_scale = 1.0
+		hero_sprite.play("idle")
+		return
+
 	if hero_id == "ranged_rookie":
 		var frame_dir := (
 			sprite_frame_dir
@@ -2532,7 +2576,7 @@ func _restart_stage1_animation(animation_name: String, speed_scale: float = 1.0)
 	hero_sprite.play(animation_name)
 
 func _update_stage1_pose_visual(delta: float) -> void:
-	if hero_id != "ranged_rookie" or not hero_sprite.visible or is_dying:
+	if hero_id not in ["ranged_rookie", "archmage_hero"] or not hero_sprite.visible or is_dying:
 		return
 
 	if hit_pose_timer > 0.0:
@@ -2953,6 +2997,9 @@ func _fire_projectile(current_target: Node2D) -> void:
 		return
 	if not is_instance_valid(current_target):
 		return
+	if hero_archetype == "archmage_elementalist":
+		_fire_archmage_projectile(current_target)
+		return
 
 	var shot_direction := global_position.direction_to(current_target.global_position)
 	if shot_direction.length_squared() <= 0.0:
@@ -2986,6 +3033,68 @@ func _fire_projectile(current_target: Node2D) -> void:
 	_add_ultimate_charge(
 		float(ultimate_config.get("charge_on_attack", 0.0))
 	)
+
+
+func _fire_archmage_projectile(current_target: Node2D) -> void:
+	var shot_direction := global_position.direction_to(current_target.global_position)
+	if shot_direction.length_squared() <= 0.0:
+		return
+
+	attack_timer = _get_common_attack_interval(attack_cooldown)
+	attack_pose_timer = 0.34
+	_face_attack_direction(shot_direction.x)
+	_restart_stage1_animation("attack")
+
+	var element := _roll_next_archmage_element()
+	var projectile := ARCHMAGE_PROJECTILE_SCENE.instantiate() as Area2D
+	get_parent().add_child(projectile)
+	projectile.global_position = global_position + shot_direction * 52.0
+	projectile.call(
+		"setup",
+		shot_direction,
+		attack_damage,
+		projectile_speed,
+		attack_range,
+		element,
+		archmage_element_config,
+		self
+	)
+
+
+func _roll_next_archmage_element() -> String:
+	var configured = archmage_element_config.get(
+		"elements",
+		["earth", "fire", "ice", "light", "wind", "holy"]
+	)
+	var elements: Array[String] = []
+	if typeof(configured) == TYPE_ARRAY:
+		for raw_element in configured:
+			var element := String(raw_element)
+			if not element.is_empty() and element not in elements:
+				elements.append(element)
+
+	if elements.is_empty():
+		elements = ["earth", "fire", "ice", "light", "wind", "holy"]
+
+	var candidates := elements.duplicate()
+	if candidates.size() > 1 and not archmage_last_element.is_empty():
+		candidates.erase(archmage_last_element)
+
+	var chosen := String(candidates[randi_range(0, candidates.size() - 1)])
+	archmage_last_element = chosen
+	return chosen
+
+
+func heal_direct(amount: int) -> int:
+	if amount <= 0 or current_hp <= 0 or is_dying:
+		return 0
+	var previous_hp := current_hp
+	current_hp = mini(current_hp + amount, max_hp)
+	var recovered := current_hp - previous_hp
+	if recovered > 0:
+		health_changed.emit(current_hp, max_hp)
+		queue_redraw()
+	return recovered
 
 
 func _get_common_attack_interval(base_interval: float) -> float:
