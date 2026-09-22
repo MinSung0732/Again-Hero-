@@ -3737,6 +3737,9 @@ func _fighter_apply_slash(direction: Vector2, bonus_hit: bool = false) -> int:
 		monster.call("take_damage", damage)
 		if not bonus_hit or hp_before <= 0:
 			continue
+		if not is_instance_valid(monster):
+			bonus_kills += 1
+			continue
 		var hp_after_value = monster.get("current_hp")
 		if hp_after_value != null and int(hp_after_value) <= 0:
 			bonus_kills += 1
