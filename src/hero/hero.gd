@@ -67,6 +67,7 @@ const INVULNERABILITY_BLINK_INTERVAL := 0.07
 @export var projectile_splash_damage_ratio: float = 0.0
 @export var exp_pickup_radius: float = 150.0
 @export var exp_gain_multiplier: float = 1.0
+var heal_item_multiplier: float = 1.0
 @export var ai_sense_radius: float = 420.0
 @export var kite_distance: float = 210.0
 @export var invulnerability_duration: float = 0.35
@@ -343,6 +344,7 @@ func configure_profile(profile: Dictionary) -> void:
 	projectile_speed = float(profile.get("projectile_speed", projectile_speed))
 	exp_pickup_radius = float(profile.get("exp_pickup_radius", exp_pickup_radius))
 	exp_gain_multiplier = 1.0
+	heal_item_multiplier = 1.0
 	ai_sense_radius = float(profile.get("ai_sense_radius", ai_sense_radius))
 	kite_distance = float(profile.get("kite_distance", kite_distance))
 	facing_switch_delay = maxf(
@@ -2457,6 +2459,22 @@ func _use_area_burst_ultimate() -> void:
 			continue
 		if monster.has_method("take_damage"):
 			monster.call("take_damage", damage)
+
+func collect_heal_item(base_amount: int) -> int:
+	if base_amount <= 0 or current_hp <= 0 or is_dying:
+		return 0
+
+	var heal_amount := maxi(
+		int(round(float(base_amount) * maxf(heal_item_multiplier, 0.0))),
+		1
+	)
+	var previous_hp := current_hp
+	current_hp = mini(current_hp + heal_amount, max_hp)
+	var recovered := current_hp - previous_hp
+	if recovered > 0:
+		health_changed.emit(current_hp, max_hp)
+		queue_redraw()
+	return recovered
 
 func gain_exp(amount: int) -> void:
 	if amount <= 0 or current_hp <= 0:
