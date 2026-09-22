@@ -1741,3 +1741,9 @@
 - Responsive StageCard v1 적용 후 lobby.gd가 정상 실행되지 않아 헤더 로고/프레임, ui10 카드 스킨, 초상화 로딩 등 런타임 UI 초기화가 전부 빠지는 회귀 발생.
 - Lobby.tscn / lobby.gd를 PC 실행 직전 마지막 정상 기준점(719b01e / 99bcaf6)으로 즉시 복구.
 - 다음 반응형 작업은 런타임 스크립트에 resize signal/동적 minimum size를 한 번에 추가하지 않고, 검증 가능한 단계별 구조 변경으로 진행.
+
+### StageCard Aspect Lock - Declarative Step 1
+- 이전 런타임 반응형 패치 회귀를 피하기 위해 스크립트 변경 없이 TSCN 레이아웃만 단계적으로 수정.
+- StageCard를 ui10 원본 비율(1049×1499)에 가까운 780×1115 논리 크기로 고정.
+- StagePicker 안에서는 가로/세로 모두 SHRINK_CENTER로 두어 9:16 PC와 세로가 긴 모바일에서 남는 공간만 달라지고 StageCard 자체 좌표계는 동일하게 유지.
+- 이번 단계에서는 TopPanel/BottomPanel/초상화/설명/버튼 내부 배치 값은 변경하지 않음.
