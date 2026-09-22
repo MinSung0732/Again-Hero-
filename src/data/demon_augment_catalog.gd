@@ -7,6 +7,13 @@ const TYPE_SPECIAL := "special"
 const NORMAL_MAX_LEVEL := 10
 const SPECIAL_MAX_LEVEL := 1
 
+const MONSTER_NAMES := {
+	"slime": "슬라임",
+	"spider": "거미",
+	"orc": "오크",
+	"bomb_rat": "폭탄쥐",
+}
+
 const NORMAL_AUGMENTS := [
 	{
 		"id": "command_capacity",
@@ -267,7 +274,11 @@ static func get_monster_normal_augments(
 	if monster_id.is_empty():
 		return []
 
-	var display_name := monster_name if not monster_name.is_empty() else monster_id
+	var display_name := (
+		monster_name
+		if not monster_name.is_empty()
+		else String(MONSTER_NAMES.get(monster_id, monster_id))
+	)
 	var result: Array = []
 	for raw_template in MONSTER_NORMAL_TEMPLATES:
 		var template: Dictionary = raw_template
