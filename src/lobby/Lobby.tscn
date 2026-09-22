@@ -37,7 +37,7 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 24.0
-offset_top = 20.0
+offset_top = 0.0
 offset_right = -24.0
 offset_bottom = -196.0
 grow_horizontal = 2
@@ -48,13 +48,13 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="Header" type="PanelContainer" parent="SafeArea/Layout"]
-custom_minimum_size = Vector2(0, 192)
+custom_minimum_size = Vector2(0, 212)
 layout_mode = 2
 
 [node name="HeaderMargin" type="MarginContainer" parent="SafeArea/Layout/Header"]
 layout_mode = 2
 theme_override_constants/margin_left = 54
-theme_override_constants/margin_top = 86
+theme_override_constants/margin_top = 96
 theme_override_constants/margin_right = 54
 theme_override_constants/margin_bottom = 10
 
