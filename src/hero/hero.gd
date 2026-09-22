@@ -155,7 +155,7 @@ var gunner_deadeye_active: bool = false
 var gunner_deadeye_shots_left: int = 0
 var gunner_deadeye_shot_timer: float = 0.0
 var gunner_deadeye_direction: Vector2 = Vector2.RIGHT
-var gunner_penetration_damage_bonus_per_hit: float = 0.0
+var gunner_ricochet_stacks: int = 0
 var gunner_afterimage_shot_stacks: int = 0
 var gunner_reload_move_speed_bonus: float = 0.0
 var gunner_deadeye_shot_multiplier: float = 2.0
@@ -316,7 +316,7 @@ func configure_profile(profile: Dictionary) -> void:
 	gunner_deadeye_shots_left = 0
 	gunner_deadeye_shot_timer = 0.0
 	gunner_deadeye_direction = Vector2.RIGHT
-	gunner_penetration_damage_bonus_per_hit = 0.0
+	gunner_ricochet_stacks = 0
 	gunner_afterimage_shot_stacks = 0
 	gunner_reload_move_speed_bonus = 0.0
 	gunner_deadeye_shot_multiplier = 2.0
@@ -692,7 +692,7 @@ func _spawn_gunner_bullet(direction: Vector2) -> void:
 		projectile_speed,
 		attack_range,
 		headshot,
-		gunner_penetration_damage_bonus_per_hit
+		gunner_ricochet_stacks
 	)
 
 
@@ -711,7 +711,7 @@ func _spawn_gunner_bullet_from(origin: Vector2, direction: Vector2) -> void:
 		projectile_speed,
 		attack_range,
 		headshot,
-		gunner_penetration_damage_bonus_per_hit
+		gunner_ricochet_stacks
 	)
 
 
@@ -3822,14 +3822,8 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 				10.0
 			)
 
-		"gunner_penetration_ramp":
-			if gunner_penetration_damage_bonus_per_hit <= 0.0:
-				gunner_penetration_damage_bonus_per_hit = 0.08
-			else:
-				gunner_penetration_damage_bonus_per_hit = minf(
-					gunner_penetration_damage_bonus_per_hit + 0.04,
-					0.24
-				)
+		"gunner_ricochet":
+			gunner_ricochet_stacks = mini(gunner_ricochet_stacks + 1, 5)
 
 		"gunner_headshot_chance":
 			gunner_config["headshot_chance"] = minf(
