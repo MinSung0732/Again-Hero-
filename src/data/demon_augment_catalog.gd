@@ -63,6 +63,25 @@ const NORMAL_AUGMENTS := [
 		"icon": "",
 		"effects": [{"op": "multiply_runtime", "target": "summon_cost_multiplier", "value": 0.97, "min": 0.60}],
 	},
+	{
+		"id": "demon_exp_gain",
+		"name": "침략 학습",
+		"description": "몬스터 소환으로 얻는 마왕 EXP +5%",
+		"category": "growth",
+		"target_type": "demon",
+		"target_monster_id": "",
+		"max_stack": 20,
+		"augment_type": TYPE_NORMAL,
+		"icon": "",
+		"effects": [
+			{
+				"op": "add_runtime",
+				"target": "demon_exp_gain_multiplier",
+				"value": 0.05,
+				"max": 2.0,
+			},
+		],
+	},
 ]
 
 const MONSTER_NORMAL_TEMPLATES := [
