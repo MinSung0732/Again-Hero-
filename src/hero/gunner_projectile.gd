@@ -10,7 +10,8 @@ var max_range := 760.0
 var damage := 28
 var traveled := 0.0
 var headshot := false
-var penetration_bonus_per_hit := 0.0
+var ricochet_bounces_left: int = 0
+var ricochet_radius: float = 260.0
 var hit_ids: Dictionary = {}
 
 @onready var visual: AnimatedSprite2D = $Visual
@@ -26,14 +27,14 @@ func setup(
 	new_speed: float,
 	new_range: float,
 	is_headshot: bool = false,
-	new_penetration_bonus_per_hit: float = 0.0
+	new_ricochet_bounces: int = 0
 ) -> void:
 	direction = new_direction.normalized()
 	damage = maxi(new_damage, 1)
 	speed = maxf(new_speed, 1.0)
 	max_range = maxf(new_range, 1.0)
 	headshot = is_headshot
-	penetration_bonus_per_hit = maxf(new_penetration_bonus_per_hit, 0.0)
+	ricochet_bounces_left = maxi(new_ricochet_bounces, 0)
 	rotation = direction.angle()
 
 func _physics_process(delta: float) -> void:
@@ -51,15 +52,43 @@ func _on_body_entered(body: Node) -> void:
 	var id := body.get_instance_id()
 	if hit_ids.has(id):
 		return
-	var prior_hits := hit_ids.size()
 	hit_ids[id] = true
-	var applied_damage := maxi(
-		1,
-		int(round(float(damage) * (1.0 + penetration_bonus_per_hit * float(prior_hits))))
-	)
 	if headshot and body.is_in_group("monsters"):
 		body.set_meta("damage_number_color_once", Color(1.0, 0.18, 0.12, 1.0))
-	body.call("take_damage", applied_damage)
+	body.call("take_damage", damage)
+
+	if body.is_in_group("monsters") and ricochet_bounces_left > 0:
+		var next_target := _find_ricochet_target()
+		if is_instance_valid(next_target):
+			ricochet_bounces_left -= 1
+			direction = global_position.direction_to(next_target.global_position).normalized()
+			if direction.length_squared() > 0.0:
+				rotation = direction.angle()
+
+func _find_ricochet_target() -> Node2D:
+	var nearest: Node2D = null
+	var nearest_distance := INF
+	var max_distance_sq := ricochet_radius * ricochet_radius
+
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if hit_ids.has(monster.get_instance_id()):
+			continue
+		var hp_value = monster.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		var distance_sq := global_position.distance_squared_to(monster.global_position)
+		if distance_sq > max_distance_sq or distance_sq >= nearest_distance:
+			continue
+		nearest_distance = distance_sq
+		nearest = monster
+
+	return nearest
+
 
 func _apply_visual() -> void:
 	var frames := SpriteFrames.new()
