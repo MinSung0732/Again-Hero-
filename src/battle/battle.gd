@@ -568,6 +568,34 @@ func _spawn_monster(
 
 	var monster := scene.instantiate() as Node2D
 
+	var raw_speed_value = monster.get("move_speed")
+	if raw_speed_value != null:
+		monster.set_meta("augment_raw_move_speed", float(raw_speed_value))
+	var raw_attack_cooldown = monster.get("attack_cooldown")
+	if raw_attack_cooldown != null:
+		monster.set_meta(
+			"augment_raw_attack_cooldown",
+			float(raw_attack_cooldown)
+		)
+	var raw_damage_value = monster.get("attack_damage")
+	if raw_damage_value != null:
+		monster.set_meta("augment_raw_attack_damage", float(raw_damage_value))
+	var raw_hp_value = monster.get("max_hp")
+	if raw_hp_value != null:
+		monster.set_meta("augment_raw_max_hp", float(raw_hp_value))
+	var raw_fuse_value = monster.get("self_destruct_fuse")
+	if raw_fuse_value != null:
+		monster.set_meta(
+			"augment_raw_self_destruct_fuse",
+			float(raw_fuse_value)
+		)
+	var raw_explosion_damage = monster.get("explosion_damage")
+	if raw_explosion_damage != null:
+		monster.set_meta(
+			"augment_raw_explosion_damage",
+			float(raw_explosion_damage)
+		)
+
 	var speed_value = monster.get("move_speed")
 	if speed_value != null:
 		monster.set_meta(
@@ -1729,7 +1757,7 @@ func _open_next_demon_augment_if_needed() -> void:
 	demon_augment_ready.emit(
 		demon_augment_candidates,
 		demon_rerolls_left,
-		demon_level
+		demon_active_augment_level
 	)
 
 func _roll_demon_augment_candidates(is_reroll: bool) -> Array:
@@ -1960,7 +1988,105 @@ func _refresh_alive_monsters_for_augments() -> void:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster_id := String(node.get("monster_type"))
+		_apply_normal_augments_to_existing_monster(node, monster_id)
 		_apply_special_augments_to_monster(node, monster_id)
+
+func _apply_normal_augments_to_existing_monster(
+	monster: Node,
+	monster_id: String
+) -> void:
+	var raw_speed = monster.get_meta("augment_raw_move_speed", null)
+	if raw_speed != null:
+		monster.set_meta(
+			"demon_level_base_move_speed",
+			float(raw_speed)
+			* monster_speed_multiplier
+			* _get_monster_augment_multiplier(monster_id, "speed")
+		)
+
+	var raw_damage = monster.get_meta("augment_raw_attack_damage", null)
+	if raw_damage != null:
+		monster.set_meta(
+			"demon_level_base_attack_damage",
+			maxf(
+				float(raw_damage)
+				* monster_damage_multiplier
+				* _get_monster_augment_multiplier(monster_id, "damage"),
+				1.0
+			)
+		)
+
+	var raw_hp = monster.get_meta("augment_raw_max_hp", null)
+	if raw_hp != null:
+		var base_hp := (
+			float(raw_hp)
+			* monster_hp_multiplier
+			* _get_monster_augment_multiplier(monster_id, "hp")
+		)
+		if monster_id == "orc":
+			base_hp *= orc_hp_multiplier
+		monster.set_meta(
+			"demon_level_base_max_hp",
+			maxf(base_hp, 1.0)
+		)
+
+	var raw_cooldown = monster.get_meta(
+		"augment_raw_attack_cooldown",
+		null
+	)
+	if raw_cooldown != null:
+		monster.set(
+			"attack_cooldown",
+			maxf(
+				0.10,
+				float(raw_cooldown)
+				* monster_attack_speed_multiplier
+				* _get_monster_augment_multiplier(
+					monster_id,
+					"attack_cooldown"
+				)
+			)
+		)
+
+	if monster_id == "bomb_rat":
+		var raw_fuse = monster.get_meta(
+			"augment_raw_self_destruct_fuse",
+			null
+		)
+		if raw_fuse != null:
+			monster.set(
+				"self_destruct_fuse",
+				maxf(
+					0.10,
+					float(raw_fuse)
+					* monster_attack_speed_multiplier
+					* _get_monster_augment_multiplier(
+						monster_id,
+						"attack_cooldown"
+					)
+				)
+			)
+		var raw_explosion = monster.get_meta(
+			"augment_raw_explosion_damage",
+			null
+		)
+		if raw_explosion != null:
+			monster.set(
+				"explosion_damage",
+				maxi(
+					1,
+					int(round(
+						float(raw_explosion)
+						* monster_damage_multiplier
+						* _get_monster_augment_multiplier(
+							monster_id,
+							"damage"
+						)
+					))
+				)
+			)
+
+	_apply_demon_level_scaling_to_monster(monster, true)
 
 func _spawn_extra_normal_summon_monsters(
 	monster_type: String,
@@ -2004,21 +2130,27 @@ func _set_combat_physics_enabled(enabled: bool) -> void:
 				node.set_physics_process(enabled)
 
 func get_demon_build_summary() -> String:
-	if demon_build_counts.is_empty():
+	if demon_build_counts.is_empty() and demon_special_augments.is_empty():
 		return "아직 선택 없음"
 
 	var names: PackedStringArray = []
-	for augment in DEMON_AUGMENTS.AUGMENTS:
-		var augment_id := String(augment.get("id", ""))
+	for raw_id in demon_build_counts.keys():
+		var augment_id := String(raw_id)
 		var stacks := int(demon_build_counts.get(augment_id, 0))
 		if stacks <= 0:
 			continue
-
-		names.append("%s x%d/%d" % [
+		var augment := DEMON_AUGMENTS.get_augment(augment_id)
+		names.append("%s Lv.%d" % [
 			String(augment.get("name", augment_id)),
 			stacks,
-			int(augment.get("max_stack", stacks)),
 		])
+
+	for raw_id in demon_special_augments:
+		var augment_id := String(raw_id)
+		var augment := DEMON_AUGMENTS.get_augment(augment_id)
+		names.append("★ %s" % String(
+			augment.get("name", augment_id)
+		))
 
 	return " · ".join(names)
 
