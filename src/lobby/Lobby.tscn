@@ -348,8 +348,8 @@ layout_mode = 2
 [node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
 layout_mode = 1
 anchor_right = 1.0
-offset_top = 30.0
-offset_bottom = 54.0
+offset_top = 64.0
+offset_bottom = 88.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
 theme_override_font_sizes/font_size = 24
@@ -360,8 +360,8 @@ vertical_alignment = 1
 [node name="StageName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
 layout_mode = 1
 anchor_right = 1.0
-offset_top = 54.0
-offset_bottom = 90.0
+offset_top = 88.0
+offset_bottom = 124.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.98, 0.93, 1, 1)
 theme_override_font_sizes/font_size = 38
