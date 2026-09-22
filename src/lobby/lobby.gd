@@ -15,41 +15,8 @@ const BATTLE_SCENE_PATH := "res://src/main/Main.tscn"
 const TEAM_MAX_SLOTS := 3
 const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png"
 
-const UI_FRAME_CONTENT: Texture2D = preload(
-	"res://assets/art/UI/newUI_frame/frame_01.png"
-)
-const UI_FRAME_STAGE_CARD: Texture2D = preload(
-	"res://assets/art/UI/newUI_frame/frame_02.png"
-)
-const UI_FRAME_POPUP: Texture2D = preload(
-	"res://assets/art/UI/newUI_frame/frame_03.png"
-)
-const UI_FRAME_SMALL_CARD: Texture2D = preload(
-	"res://assets/art/UI/newUI_frame/frame_04.png"
-)
-const UI_FRAME_COLLECTION: Texture2D = preload(
-	"res://assets/art/UI/newUI_frame/frame_05.png"
-)
-
-const UI_FRAME_HEADER: Texture2D = preload(
-	"res://assets/art/UI/newUI_frame/frame_06.png"
-)
-const UI_FRAME_BOTTOM_NAV: Texture2D = preload(
-	"res://assets/art/UI/newUI_frame/frame_07.png"
-)
-const UI_FRAME_PRIMARY: Texture2D = preload(
-	"res://assets/art/UI/newUI_frame/frame_08.png"
-)
-const UI_FRAME_SECONDARY: Texture2D = preload(
-	"res://assets/art/UI/newUI_frame/frame_09.png"
-)
-
-const UI_FRAME_ARROW: Texture2D = preload(
-	"res://assets/art/UI/newUI_frame/frame_10.png"
-)
-const UI_FRAME_SLOT: Texture2D = preload(
-	"res://assets/art/UI/newUI_frame/frame_11.png"
-)
+const UI_FRAME_LARGE_DIR := "res://assets/art/UI/01_large_left_panel"
+const UI_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
 
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 @onready var resource_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ResourceLabel
@@ -375,124 +342,190 @@ func _apply_styles() -> void:
 
 
 func _apply_asset_frames() -> void:
-	# 새 UI 에셋은 조각 조립 대신 NinePatchRect 한 장으로 사용한다.
-	_apply_nine_patch_frame(
+	# 상단/하단은 모바일에서 장식보다 정보가 우선이라 얇게 유지한다.
+	for target in [
 		$SafeArea/Layout/Header,
-		UI_FRAME_HEADER,
-		36
-	)
-	_apply_nine_patch_frame(
-		$SafeArea/Layout/Content/ContentFrame,
-		UI_FRAME_CONTENT,
-		44
-	)
-	_apply_nine_patch_frame(
 		$BottomNav,
-		UI_FRAME_BOTTOM_NAV,
-		36
+	]:
+		_add_asset_frame(
+			target,
+			UI_FRAME_MEDIUM_DIR,
+			Vector2(26.0, 25.0),
+			Vector2(26.0, 25.0),
+			Vector2(26.0, 25.0),
+			Vector2(26.0, 25.0),
+			14.0,
+			14.0,
+			12.0,
+			12.0
+		)
+
+	# 콘텐츠 프레임은 화면 가장자리 장식 역할만 한다.
+	_add_asset_frame(
+		$SafeArea/Layout/Content/ContentFrame,
+		UI_FRAME_LARGE_DIR,
+		Vector2(34.0, 33.0),
+		Vector2(34.0, 33.0),
+		Vector2(34.0, 33.0),
+		Vector2(34.0, 33.0),
+		18.0,
+		18.0,
+		14.0,
+		14.0
 	)
-	_apply_nine_patch_frame(
-		$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard,
-		UI_FRAME_STAGE_CARD,
-		42
-	)
-	_apply_nine_patch_frame(
+
+	# 팝업만 별도 프레임을 사용한다. 카드 내부 중첩 장식은 피한다.
+	_add_asset_frame(
 		monster_detail_panel,
-		UI_FRAME_POPUP,
-		42
+		UI_FRAME_MEDIUM_DIR,
+		Vector2(31.0, 30.0),
+		Vector2(31.0, 30.0),
+		Vector2(31.0, 30.0),
+		Vector2(31.0, 30.0),
+		18.0,
+		18.0,
+		16.0,
+		16.0
 	)
 
-	_apply_texture_button_frame(
-		enter_stage_button,
-		UI_FRAME_PRIMARY
-	)
-	_apply_texture_button_frame(
-		shop_multi_button,
-		UI_FRAME_PRIMARY
-	)
-
-	for button in [
-		shop_single_button,
-		monster_detail_close_button,
-	]:
-		_apply_texture_button_frame(
-			button,
-			UI_FRAME_SECONDARY
-		)
-
-	for button in [
-		prev_stage_button,
-		next_stage_button,
-	]:
-		_apply_texture_button_frame(
-			button,
-			UI_FRAME_ARROW
-		)
-
-	for button in [
-		team_slot_1_button,
-		team_slot_2_button,
-		team_slot_3_button,
-	]:
-		_apply_texture_button_frame(
-			button,
-			UI_FRAME_SLOT
-		)
-
-func _apply_nine_patch_frame(
+func _add_asset_frame(
 	target: Control,
-	texture: Texture2D,
-	patch_margin: int
+	frame_dir: String,
+	top_left_size: Vector2,
+	top_right_size: Vector2,
+	bottom_left_size: Vector2,
+	bottom_right_size: Vector2,
+	top_height: float,
+	bottom_height: float,
+	left_width: float,
+	right_width: float
 ) -> void:
-	if target == null or texture == null:
+	if target == null:
 		return
 
-	var existing := target.get_node_or_null("AssetFrame")
-	if existing != null:
-		existing.queue_free()
+	var overlay := Control.new()
+	overlay.name = "AssetFrame"
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.z_index = 8
+	target.add_child(overlay)
 
-	var frame := NinePatchRect.new()
-	frame.name = "AssetFrame"
-	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	frame.texture = texture
-	frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	frame.draw_center = true
-	frame.patch_margin_left = patch_margin
-	frame.patch_margin_top = patch_margin
-	frame.patch_margin_right = patch_margin
-	frame.patch_margin_bottom = patch_margin
-	frame.axis_stretch_horizontal = NinePatchRect.AXIS_STRETCH_MODE_STRETCH
-	frame.axis_stretch_vertical = NinePatchRect.AXIS_STRETCH_MODE_STRETCH
-	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	frame.z_index = 8
-	target.add_child(frame)
-	target.move_child(frame, 0)
+	_add_frame_piece(
+		overlay,
+		frame_dir + "/part_01.png",
+		Vector2.ZERO,
+		top_left_size,
+		Vector2.ZERO,
+		Vector2.ZERO
+	)
+	_add_frame_piece(
+		overlay,
+		frame_dir + "/part_02.png",
+		Vector2(1.0, 0.0),
+		top_right_size,
+		Vector2(-top_right_size.x, 0.0),
+		Vector2.ZERO
+	)
+	_add_frame_piece_stretched(
+		overlay,
+		frame_dir + "/part_03.png",
+		Vector2(0.0, 0.0),
+		Vector2(1.0, 0.0),
+		Vector2(top_left_size.x, 0.0),
+		Vector2(-top_right_size.x, top_height)
+	)
+	_add_frame_piece_stretched(
+		overlay,
+		frame_dir + "/part_05.png",
+		Vector2(0.0, 0.0),
+		Vector2(0.0, 1.0),
+		Vector2(0.0, top_left_size.y),
+		Vector2(left_width, -bottom_left_size.y)
+	)
+	_add_frame_piece_stretched(
+		overlay,
+		frame_dir + "/part_06.png",
+		Vector2(1.0, 0.0),
+		Vector2(1.0, 1.0),
+		Vector2(-right_width, top_right_size.y),
+		Vector2(0.0, -bottom_right_size.y)
+	)
+	_add_frame_piece(
+		overlay,
+		frame_dir + "/part_07.png",
+		Vector2(0.0, 1.0),
+		bottom_left_size,
+		Vector2(0.0, -bottom_left_size.y),
+		Vector2.ZERO
+	)
+	_add_frame_piece(
+		overlay,
+		frame_dir + "/part_08.png",
+		Vector2(1.0, 1.0),
+		bottom_right_size,
+		Vector2(-bottom_right_size.x, -bottom_right_size.y),
+		Vector2.ZERO
+	)
+	_add_frame_piece_stretched(
+		overlay,
+		frame_dir + "/part_09.png",
+		Vector2(0.0, 1.0),
+		Vector2(1.0, 1.0),
+		Vector2(bottom_left_size.x, -bottom_height),
+		Vector2(-bottom_right_size.x, 0.0)
+	)
 
-func _apply_texture_button_frame(
-	button: Button,
-	texture: Texture2D
+func _add_frame_piece(
+	parent: Control,
+	texture_path: String,
+	anchor: Vector2,
+	piece_size: Vector2,
+	offset: Vector2,
+	extra_offset: Vector2
 ) -> void:
-	if button == null or texture == null:
+	if not ResourceLoader.exists(texture_path):
 		return
+	var piece := TextureRect.new()
+	piece.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	piece.texture = load(texture_path)
+	piece.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	piece.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	piece.stretch_mode = TextureRect.STRETCH_KEEP
+	piece.anchor_left = anchor.x
+	piece.anchor_top = anchor.y
+	piece.anchor_right = anchor.x
+	piece.anchor_bottom = anchor.y
+	piece.offset_left = offset.x + extra_offset.x
+	piece.offset_top = offset.y + extra_offset.y
+	piece.offset_right = piece.offset_left + piece_size.x
+	piece.offset_bottom = piece.offset_top + piece_size.y
+	parent.add_child(piece)
 
-	var normal := StyleBoxTexture.new()
-	normal.texture = texture
-	normal.texture_margin_left = 36.0
-	normal.texture_margin_top = 30.0
-	normal.texture_margin_right = 36.0
-	normal.texture_margin_bottom = 30.0
-	normal.content_margin_left = 14.0
-	normal.content_margin_top = 10.0
-	normal.content_margin_right = 14.0
-	normal.content_margin_bottom = 10.0
-
-	var hover := normal.duplicate()
-	var pressed := normal.duplicate()
-
-	button.add_theme_stylebox_override("normal", normal)
-	button.add_theme_stylebox_override("hover", hover)
-	button.add_theme_stylebox_override("pressed", pressed)
-	button.add_theme_stylebox_override("focus", normal)
+func _add_frame_piece_stretched(
+	parent: Control,
+	texture_path: String,
+	anchor_start: Vector2,
+	anchor_end: Vector2,
+	offset_start: Vector2,
+	offset_end: Vector2
+) -> void:
+	if not ResourceLoader.exists(texture_path):
+		return
+	var piece := TextureRect.new()
+	piece.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	piece.texture = load(texture_path)
+	piece.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	piece.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	piece.stretch_mode = TextureRect.STRETCH_SCALE
+	piece.anchor_left = anchor_start.x
+	piece.anchor_top = anchor_start.y
+	piece.anchor_right = anchor_end.x
+	piece.anchor_bottom = anchor_end.y
+	piece.offset_left = offset_start.x
+	piece.offset_top = offset_start.y
+	piece.offset_right = offset_end.x
+	piece.offset_bottom = offset_end.y
+	parent.add_child(piece)
 
 func _connect_navigation() -> void:
 	shop_button.pressed.connect(_switch_tab.bind("shop"))
@@ -860,17 +893,9 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	var card := PanelContainer.new()
 	card.custom_minimum_size = Vector2(0.0, 338.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var card_backing := _make_style(
-		Color("21182a") if selected else Color("17131f"),
-		Color(0, 0, 0, 0),
-		0,
-		18
-	)
-	card.add_theme_stylebox_override("panel", card_backing)
-	_apply_nine_patch_frame(
-		card,
-		UI_FRAME_SMALL_CARD,
-		40
+	card.add_theme_stylebox_override(
+		"panel",
+		primary_button_style if selected else stage_card_style
 	)
 
 	var margin := MarginContainer.new()
@@ -935,10 +960,12 @@ func _create_team_monster_card(monster_id: String) -> Control:
 		or (selected and team_selected_ids.size() <= 1)
 		or (not selected and team_selected_ids.size() >= TEAM_MAX_SLOTS)
 	)
-	_apply_texture_button_frame(
-		team_button,
-		UI_FRAME_PRIMARY if selected else UI_FRAME_SECONDARY
+	team_button.add_theme_stylebox_override(
+		"normal",
+		primary_button_style if selected else secondary_button_style
 	)
+	team_button.add_theme_stylebox_override("hover", primary_button_style)
+	team_button.add_theme_stylebox_override("pressed", primary_button_style)
 	team_button.pressed.connect(_toggle_team_monster.bind(monster_id))
 	actions.add_child(team_button)
 
@@ -947,10 +974,9 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	detail_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_button.add_theme_font_size_override("font_size", 24)
 	detail_button.text = "상세정보"
-	_apply_texture_button_frame(
-		detail_button,
-		UI_FRAME_SECONDARY
-	)
+	detail_button.add_theme_stylebox_override("normal", secondary_button_style)
+	detail_button.add_theme_stylebox_override("hover", primary_button_style)
+	detail_button.add_theme_stylebox_override("pressed", primary_button_style)
 	detail_button.pressed.connect(_open_monster_detail.bind(monster_id))
 	actions.add_child(detail_button)
 
@@ -1580,6 +1606,10 @@ func _rebuild_research_list() -> void:
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(0, 124)
 		button.add_theme_font_size_override("font_size", 24)
+		button.add_theme_stylebox_override("normal", secondary_button_style)
+		button.add_theme_stylebox_override("hover", secondary_button_style)
+		button.add_theme_stylebox_override("pressed", secondary_button_style)
+
 		if level >= max_level:
 			button.disabled = true
 			button.text = "%s  Lv.%d / %d\n%s\n연구 완료" % [
@@ -1600,12 +1630,6 @@ func _rebuild_research_list() -> void:
 			]
 			button.pressed.connect(_purchase_research.bind(research_id))
 
-		_apply_texture_button_frame(
-			button,
-			UI_FRAME_PRIMARY
-			if not button.disabled
-			else UI_FRAME_SECONDARY
-		)
 		research_list.add_child(button)
 
 func _purchase_research(research_id: String) -> void:
