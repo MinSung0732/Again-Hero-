@@ -1,0 +1,96 @@
+{
+  "source": "stage3_hero_effect3_spritesheet.png",
+  "animation": "ground_effect",
+  "frame_count": 8,
+  "frame_order": [
+    "ground_effect_01.png",
+    "ground_effect_02.png",
+    "ground_effect_03.png",
+    "ground_effect_04.png",
+    "ground_effect_05.png",
+    "ground_effect_06.png",
+    "ground_effect_07.png",
+    "ground_effect_08.png"
+  ],
+  "cell_size": {
+    "width": 384,
+    "height": 288
+  },
+  "sheet_size": {
+    "width": 1536,
+    "height": 576
+  },
+  "sheet_columns": 4,
+  "sheet_rows": 2,
+  "anchor": {
+    "x": 192,
+    "y": 256
+  },
+  "anchor_description": "horizontal source-column center and shared ground baseline",
+  "frames": [
+    {
+      "file": "ground_effect_01.png",
+      "index": 0,
+      "anchor": {
+        "x": 192,
+        "y": 256
+      }
+    },
+    {
+      "file": "ground_effect_02.png",
+      "index": 1,
+      "anchor": {
+        "x": 192,
+        "y": 256
+      }
+    },
+    {
+      "file": "ground_effect_03.png",
+      "index": 2,
+      "anchor": {
+        "x": 192,
+        "y": 256
+      }
+    },
+    {
+      "file": "ground_effect_04.png",
+      "index": 3,
+      "anchor": {
+        "x": 192,
+        "y": 256
+      }
+    },
+    {
+      "file": "ground_effect_05.png",
+      "index": 4,
+      "anchor": {
+        "x": 192,
+        "y": 256
+      }
+    },
+    {
+      "file": "ground_effect_06.png",
+      "index": 5,
+      "anchor": {
+        "x": 192,
+        "y": 256
+      }
+    },
+    {
+      "file": "ground_effect_07.png",
+      "index": 6,
+      "anchor": {
+        "x": 192,
+        "y": 256
+      }
+    },
+    {
+      "file": "ground_effect_08.png",
+      "index": 7,
+      "anchor": {
+        "x": 192,
+        "y": 256
+      }
+    }
+  ]
+}
