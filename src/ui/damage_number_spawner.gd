@@ -16,6 +16,10 @@ static func show(target: Node2D, amount: int, text_color: Color = Color.WHITE) -
 	if parent == null:
 		return
 
+	if target.has_meta("damage_number_color_once"):
+		text_color = target.get_meta("damage_number_color_once", text_color)
+		target.remove_meta("damage_number_color_once")
+
 	var popup := DAMAGE_NUMBER_SCENE.instantiate() as Node2D
 	parent.add_child(popup)
 	popup.global_position = target.global_position + WORLD_OFFSET
