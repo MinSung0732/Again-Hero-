@@ -618,7 +618,7 @@ func _gunner_attack(current_target: Node2D) -> void:
 	_spawn_gunner_bullet(direction)
 	var random_angle := deg_to_rad(randf_range(-float(gunner_config.get("random_shot_angle_degrees", 28.0)), float(gunner_config.get("random_shot_angle_degrees", 28.0))))
 	_spawn_gunner_bullet(direction.rotated(random_angle))
-	if randf() <= clampf(float(gunner_config.get("quickdraw_chance", 0.12)), 0.0, 1.0):
+	if randf() <= clampf(float(gunner_config.get("quickdraw_chance", 0.03)), 0.0, 1.0):
 		gunner_ammo = gunner_magazine_size
 		gunner_reloading = false
 	elif gunner_ammo <= 0:
