@@ -162,7 +162,7 @@ const PROFILES = {
 		"archetype": "pistol_gunner",
 		"max_hp": 920,
 		"move_speed": 267.0,
-		"attack_damage": 19,
+		"attack_damage": 24,
 		"attack_range": 520.0,
 		"attack_cooldown": 0.48,
 		"projectile_speed": 920.0,
