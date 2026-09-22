@@ -424,7 +424,12 @@ func _apply_nine_patch_frame(
 	texture_path: String,
 	patch_margin: int
 ) -> void:
-	if target == null or not ResourceLoader.exists(texture_path):
+	if target == null:
+		return
+
+	var texture := load(texture_path) as Texture2D
+	if texture == null:
+		push_warning("UI frame load failed: %s" % texture_path)
 		return
 
 	var existing := target.get_node_or_null("AssetFrame")
@@ -434,7 +439,7 @@ func _apply_nine_patch_frame(
 	var frame := NinePatchRect.new()
 	frame.name = "AssetFrame"
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	frame.texture = load(texture_path)
+	frame.texture = texture
 	frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	frame.draw_center = true
 	frame.patch_margin_left = patch_margin
@@ -452,10 +457,14 @@ func _apply_texture_button_frame(
 	button: Button,
 	texture_path: String
 ) -> void:
-	if button == null or not ResourceLoader.exists(texture_path):
+	if button == null:
 		return
 
-	var texture := load(texture_path)
+	var texture := load(texture_path) as Texture2D
+	if texture == null:
+		push_warning("UI button frame load failed: %s" % texture_path)
+		return
+
 	var normal := StyleBoxTexture.new()
 	normal.texture = texture
 	normal.texture_margin_left = 36.0
