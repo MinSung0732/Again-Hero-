@@ -1705,3 +1705,10 @@
 - BottomNav 높이를 150→180으로 확대해 향후 uicard 하단 프레임/선택 탭 장식을 넣을 공간을 확보.
 - SafeArea 하단 여백을 -166→-196으로 맞춰 늘어난 BottomNav와 겹치지 않도록 조정.
 - 결과적으로 중앙 Content 영역에서 약 64px를 헤더/하단에 재배분하며, StageCard 자체 크기와 내부 위치 값은 변경하지 않음.
+
+### Lobby Header Height + Bottom Border Join Pass
+- 중앙 StageCard/Content 내부 배치는 유지하고 Header와 BottomNav 외곽만 조정.
+- Header 높이를 192→216으로 늘려 ui1 프레임의 세로 공간을 확보하고 골드/최고 해금 텍스트가 프레임 안쪽에 들어올 여유를 추가.
+- Header 좌우 내부 여백을 24→42로 늘려 상태 텍스트가 모서리 장식과 겹치지 않도록 조정.
+- BottomNav의 분할된 legacy part 조립 프레임을 제거하고 uicardframes/ui3.png 단일 프레임으로 교체.
+- BottomNav ui3도 StyleBoxTexture로 적용해 높이/버튼/중앙 Content 레이아웃 계산에는 영향을 주지 않도록 유지.
