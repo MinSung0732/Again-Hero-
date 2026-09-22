@@ -76,10 +76,7 @@ const PROFILES = {
 		"archetype": "rogue_combo",
 		"max_hp": 440,
 		"move_speed": 270.0,
-		"attack_damage": 38,
-		"level_growth": {
-			"attack_damage_per_level": 3,
-		},
+		"attack_damage": 32,
 		"attack_range": 105.0,
 		"attack_cooldown": 1.05,
 		"projectile_speed": 0.0,
