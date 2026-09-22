@@ -1668,3 +1668,9 @@
 - uicard 완성형 프레임을 NinePatchRect로 적용해 모서리 장식을 보존하면서 화면 크기에 맞춰 늘어나도록 구성.
 - 중앙 StageCard 내부의 초상화/설명/보상/던전 입장 배치는 변경하지 않음.
 - legacy 프레임 조립 함수는 몬스터 상세 팝업에만 남김.
+
+### Lobby Outer UI Rollback to Verified StageCard Baseline
+- uicard 외곽 프레임 실험 과정에서 헤더/하단 높이와 Content 영역이 변하면서 완성된 StageCard 내부 정렬까지 간접적으로 깨진 문제 확인.
+- src/lobby/Lobby.tscn을 StageCard가 실기기에서 정상 확인된 116dbb5 시점으로 복구.
+- src/lobby/lobby.gd를 초상화 내부 중첩 테두리 제거가 완료된 c8882cf 시점으로 복구.
+- 중앙 카드의 검증된 초상화/이름/설명/보상/입장 버튼 배치를 우선 보존하고, 외곽 UI는 이후 Header / Content outer / BottomNav 순으로 한 영역씩 별도 수정하기로 함.
