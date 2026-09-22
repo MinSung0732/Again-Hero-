@@ -1283,8 +1283,23 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 		next_stage_button.visible = false
 
 	result_message.text = message
-	result_analysis.text = battle.get_run_analysis_summary()
+	result_analysis.text = "Run 분석 불러오는 중..."
 	result_panel.show()
+	result_panel.move_to_front()
+
+	call_deferred("_populate_run_result_analysis")
+
+func _populate_run_result_analysis() -> void:
+	if not is_instance_valid(result_analysis):
+		return
+
+	if battle != null and battle.has_method("get_run_analysis_summary"):
+		var summary = battle.call("get_run_analysis_summary")
+		if summary != null:
+			result_analysis.text = String(summary)
+			return
+
+	result_analysis.text = "Run 분석을 불러오지 못했습니다."
 
 func _on_next_stage_pressed() -> void:
 	if battle.go_to_next_stage():
