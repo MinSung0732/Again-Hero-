@@ -18,6 +18,7 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 const UI_FRAME_LARGE_DIR := "res://assets/art/UI/01_large_left_panel"
 const UI_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
 const UI_CARD_FRAME_DIR := "res://assets/art/UI/uicardframes"
+const UI_HEADER_CARD_PATH := UI_CARD_FRAME_DIR + "/ui1.png"
 const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
@@ -349,23 +350,20 @@ func _apply_styles() -> void:
 
 
 func _apply_asset_frames() -> void:
-	# 상단/하단은 모바일에서 장식보다 정보가 우선이라 얇게 유지한다.
-	for target in [
-		$SafeArea/Layout/Header,
+	# 하단 네비는 아직 검증된 legacy 프레임을 유지한다.
+	# 헤더만 uicardframes 완성형 리소스로 교체한다.
+	_add_asset_frame(
 		$BottomNav,
-	]:
-		_add_asset_frame(
-			target,
-			UI_FRAME_MEDIUM_DIR,
-			Vector2(26.0, 25.0),
-			Vector2(26.0, 25.0),
-			Vector2(26.0, 25.0),
-			Vector2(26.0, 25.0),
-			14.0,
-			14.0,
-			12.0,
-			12.0
-		)
+		UI_FRAME_MEDIUM_DIR,
+		Vector2(26.0, 25.0),
+		Vector2(26.0, 25.0),
+		Vector2(26.0, 25.0),
+		Vector2(26.0, 25.0),
+		14.0,
+		14.0,
+		12.0,
+		12.0
+	)
 
 	# 콘텐츠 프레임은 화면 가장자리 장식 역할만 한다.
 	_add_asset_frame(
@@ -577,12 +575,46 @@ func _load_png_texture_top_region(path: String, height_ratio: float) -> Texture2
 	return ImageTexture.create_from_image(top_region)
 
 
+func _apply_header_card_skin(header: Control) -> void:
+	if header == null:
+		return
+
+	var old_skin := header.get_node_or_null("HeaderCardSkin")
+	if old_skin != null:
+		old_skin.queue_free()
+
+	var texture := _load_png_texture_cropped(UI_HEADER_CARD_PATH)
+	if texture == null:
+		return
+
+	var texture_size := texture.get_size()
+	var margin_x := maxi(1, int(round(texture_size.x * 0.10)))
+	var margin_y := maxi(1, int(round(texture_size.y * 0.22)))
+
+	var skin := NinePatchRect.new()
+	skin.name = "HeaderCardSkin"
+	skin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	skin.texture = texture
+	skin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	skin.draw_center = true
+	skin.patch_margin_left = margin_x
+	skin.patch_margin_top = margin_y
+	skin.patch_margin_right = margin_x
+	skin.patch_margin_bottom = margin_y
+	skin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	header.add_child(skin)
+	header.move_child(skin, 0)
+
+
 func _apply_new_ui_assets() -> void:
 	var title_label := $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 	if title_label != null:
 		title_label.visible = false
 
 	var header := $SafeArea/Layout/Header
+	_apply_header_card_skin(header)
+
 	var old_logo := header.get_node_or_null("HeaderLogo")
 	if old_logo != null:
 		old_logo.queue_free()
