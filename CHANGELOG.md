@@ -1791,3 +1791,10 @@
 - BottomPanel 상단을 74.5%→71.5%로 확장해 하단 정보 영역의 세로 공간을 확보.
 - 설명/상태/보상 행의 높이를 재분배하고 던전 입장 버튼을 더 아래에 배치해 보상 문구와 버튼 겹침 제거.
 - ui10 프레임, StageCard 크기, 외곽 헤더/하단 네비 및 lobby.gd는 변경하지 않음.
+
+### Stage Metadata Moved Outside Card
+- PC 9:16 기준으로 카드 상단 테두리와 겹치던 STAGE 번호/침입자 제목을 StageCard 내부에서 분리.
+- StageLayout에 StageMetaBox를 추가해 침입자 기록/설명과 StageCard 사이의 외부 여백에 STAGE 번호와 침입자 제목을 배치.
+- 기존 TopPanel 내부 StageNumber/StageName 노드는 제거하고, lobby.gd의 onready 경로만 새 StageMetaBox 경로로 갱신.
+- _refresh_stage_card() 데이터 갱신 로직은 그대로 유지.
+- ui10 카드/초상화/용사 이름/하단 설명·상태·보상·던전 입장 버튼의 내부 배치는 변경하지 않음.
