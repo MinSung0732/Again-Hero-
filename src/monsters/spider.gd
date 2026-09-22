@@ -57,7 +57,10 @@ func _physics_process(delta: float) -> void:
 
 	var distance := global_position.distance_to(hero.global_position)
 	if distance > attack_range:
-		velocity = direction_to_hero * move_speed
+		var external_slow := 1.0
+		if int(get_meta("gunner_slow_until", 0)) > Time.get_ticks_msec():
+			external_slow = clampf(float(get_meta("gunner_slow_multiplier", 1.0)), 0.1, 1.0)
+		velocity = direction_to_hero * move_speed * external_slow
 		_visual_call(&"play_locomotion", [true])
 		move_and_slide()
 		return
