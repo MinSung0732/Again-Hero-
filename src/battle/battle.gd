@@ -2507,6 +2507,15 @@ func get_snapshot() -> Dictionary:
 	var current_exp := 0
 	var exp_to_next_level := 50
 	var build_summary := "아직 선택 없음"
+	var hero_build_counts: Dictionary = {}
+	var hero_attack_damage := 0
+	var hero_move_speed := 0.0
+	var hero_attack_cooldown := 0.0
+	var hero_attack_range := 0.0
+	var hero_projectile_speed := 0.0
+	var hero_lifesteal_ratio := 0.0
+	var hero_execute_ratio := 0.0
+	var hero_slash_shield_ratio := 0.0
 
 	if is_instance_valid(hero):
 		hp = int(hero.get("current_hp"))
@@ -2514,6 +2523,31 @@ func get_snapshot() -> Dictionary:
 		level = int(hero.get("level"))
 		current_exp = int(hero.get("current_exp"))
 		exp_to_next_level = int(hero.get("exp_to_next_level"))
+		hero_attack_damage = int(hero.get("attack_damage"))
+		hero_move_speed = float(hero.get("move_speed"))
+		hero_attack_cooldown = float(hero.get("attack_cooldown"))
+		hero_attack_range = float(hero.get("attack_range"))
+		hero_projectile_speed = float(hero.get("projectile_speed"))
+		hero_lifesteal_ratio = float(hero.get("rogue_lifesteal_ratio"))
+		hero_execute_ratio = (
+			float(
+				Dictionary(
+					current_hero_profile.get("ultimate", {})
+				).get("execute_hp_ratio", 0.0)
+			)
+			+ float(hero.get("rogue_execute_threshold_bonus"))
+		)
+		hero_slash_shield_ratio = (
+			float(
+				Dictionary(
+					current_hero_profile.get("rogue_slash_skill", {})
+				).get("shield_hp_ratio", 0.0)
+			)
+			+ float(hero.get("rogue_slash_shield_ratio_bonus"))
+		)
+		var raw_build_counts = hero.get("build_counts")
+		if typeof(raw_build_counts) == TYPE_DICTIONARY:
+			hero_build_counts = Dictionary(raw_build_counts).duplicate(true)
 		if hero.has_method("get_build_summary"):
 			build_summary = String(hero.call("get_build_summary"))
 
@@ -2530,6 +2564,18 @@ func get_snapshot() -> Dictionary:
 		"hero_exp": current_exp,
 		"hero_exp_to_next": exp_to_next_level,
 		"hero_build_summary": build_summary,
+		"hero_build_counts": hero_build_counts,
+		"hero_attack_damage": hero_attack_damage,
+		"hero_move_speed": hero_move_speed,
+		"hero_attack_cooldown": hero_attack_cooldown,
+		"hero_attack_range": hero_attack_range,
+		"hero_projectile_speed": hero_projectile_speed,
+		"hero_lifesteal_ratio": hero_lifesteal_ratio,
+		"hero_execute_ratio": hero_execute_ratio,
+		"hero_slash_shield_ratio": hero_slash_shield_ratio,
+		"hero_portrait_path": String(
+			current_stage_data.get("portrait_path", "")
+		),
 		"hero_recent_offense": (
 			String(hero.call("get_recent_offense_summary"))
 			if is_instance_valid(hero) and hero.has_method("get_recent_offense_summary")
