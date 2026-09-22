@@ -24,27 +24,27 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 
 @onready var monster_info_bookmark: Button = $HUD/MonsterInfoBookmark
 @onready var monster_info_panel: PanelContainer = $HUD/MonsterInfoPanel
-@onready var monster_info_close: Button = $HUD/MonsterInfoPanel/Scroll/Margin/VBox/Header/Close
+@onready var monster_info_close: Button = $HUD/MonsterInfoPanel/Root/Header/Close
 @onready var monster_info_tabs: Array[Button] = [
-	$HUD/MonsterInfoPanel/Scroll/Margin/VBox/Tabs/Tab1,
-	$HUD/MonsterInfoPanel/Scroll/Margin/VBox/Tabs/Tab2,
-	$HUD/MonsterInfoPanel/Scroll/Margin/VBox/Tabs/Tab3,
+	$HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox/Tabs/Tab1,
+	$HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox/Tabs/Tab2,
+	$HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox/Tabs/Tab3,
 ]
-@onready var monster_info_portrait: TextureRect = $HUD/MonsterInfoPanel/Scroll/Margin/VBox/Portrait
-@onready var monster_info_name: Label = $HUD/MonsterInfoPanel/Scroll/Margin/VBox/Name
-@onready var monster_info_stats: Label = $HUD/MonsterInfoPanel/Scroll/Margin/VBox/Stats
-@onready var monster_info_normal: Label = $HUD/MonsterInfoPanel/Scroll/Margin/VBox/NormalAugments
-@onready var monster_info_special: Label = $HUD/MonsterInfoPanel/Scroll/Margin/VBox/SpecialAugments
+@onready var monster_info_portrait: TextureRect = $HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox/Portrait
+@onready var monster_info_name: Label = $HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox/Name
+@onready var monster_info_stats: Label = $HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox/Stats
+@onready var monster_info_normal: Label = $HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox/NormalAugments
+@onready var monster_info_special: Label = $HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox/SpecialAugments
 
 @onready var hero_info_bookmark: Button = $HUD/HeroInfoBookmark
 @onready var hero_info_panel: PanelContainer = $HUD/HeroInfoPanel
-@onready var hero_info_close: Button = $HUD/HeroInfoPanel/Scroll/Margin/VBox/Header/Close
-@onready var hero_info_portrait: TextureRect = $HUD/HeroInfoPanel/Scroll/Margin/VBox/Portrait
-@onready var hero_info_name: Label = $HUD/HeroInfoPanel/Scroll/Margin/VBox/Name
-@onready var hero_info_stats: Label = $HUD/HeroInfoPanel/Scroll/Margin/VBox/Stats
-@onready var hero_info_abilities: Label = $HUD/HeroInfoPanel/Scroll/Margin/VBox/Abilities
-@onready var hero_info_build: Label = $HUD/HeroInfoPanel/Scroll/Margin/VBox/Build
-@onready var hero_info_ai: Label = $HUD/HeroInfoPanel/Scroll/Margin/VBox/AI
+@onready var hero_info_close: Button = $HUD/HeroInfoPanel/Root/Header/Close
+@onready var hero_info_portrait: TextureRect = $HUD/HeroInfoPanel/Root/Scroll/Margin/VBox/Portrait
+@onready var hero_info_name: Label = $HUD/HeroInfoPanel/Root/Scroll/Margin/VBox/Name
+@onready var hero_info_stats: Label = $HUD/HeroInfoPanel/Root/Scroll/Margin/VBox/Stats
+@onready var hero_info_abilities: Label = $HUD/HeroInfoPanel/Root/Scroll/Margin/VBox/Abilities
+@onready var hero_info_build: Label = $HUD/HeroInfoPanel/Root/Scroll/Margin/VBox/Build
+@onready var hero_info_ai: Label = $HUD/HeroInfoPanel/Root/Scroll/Margin/VBox/AI
 
 @onready var build_label: Label = $HUD/BottomBar/BuildLabel
 @onready var status_label: Label = $HUD/BottomBar/Status
@@ -265,12 +265,50 @@ func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		if pause_menu.visible:
+		if monster_info_panel.visible:
+			_close_monster_info()
+		elif hero_info_panel.visible:
+			_close_hero_info()
+		elif pause_menu.visible:
 			_close_pause_menu()
 		elif not demon_augment_panel.visible and not result_panel.visible:
 			_open_pause_menu()
 		get_viewport().set_input_as_handled()
 		return
+
+	var detail_pointer := Vector2.ZERO
+	var detail_pressed := false
+	if event is InputEventScreenTouch:
+		var detail_touch := event as InputEventScreenTouch
+		detail_pressed = detail_touch.pressed
+		detail_pointer = detail_touch.position
+	elif event is InputEventMouseButton:
+		var detail_mouse := event as InputEventMouseButton
+		detail_pressed = (
+			detail_mouse.pressed
+			and detail_mouse.button_index == MOUSE_BUTTON_LEFT
+		)
+		detail_pointer = detail_mouse.position
+
+	if detail_pressed:
+		if (
+			monster_info_panel.visible
+			and not monster_info_panel.get_global_rect().has_point(
+				detail_pointer
+			)
+		):
+			_close_monster_info()
+			get_viewport().set_input_as_handled()
+			return
+		if (
+			hero_info_panel.visible
+			and not hero_info_panel.get_global_rect().has_point(
+				detail_pointer
+			)
+		):
+			_close_hero_info()
+			get_viewport().set_input_as_handled()
+			return
 
 	if (
 		result_panel.visible
