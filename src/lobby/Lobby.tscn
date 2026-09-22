@@ -53,9 +53,9 @@ layout_mode = 2
 
 [node name="HeaderMargin" type="MarginContainer" parent="SafeArea/Layout/Header"]
 layout_mode = 2
-theme_override_constants/margin_left = 54
-theme_override_constants/margin_top = 96
-theme_override_constants/margin_right = 54
+theme_override_constants/margin_left = 66
+theme_override_constants/margin_top = 101
+theme_override_constants/margin_right = 66
 theme_override_constants/margin_bottom = 10
 
 [node name="HeaderVBox" type="VBoxContainer" parent="SafeArea/Layout/Header/HeaderMargin"]
