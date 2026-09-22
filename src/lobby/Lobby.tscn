@@ -355,10 +355,10 @@ theme_override_font_sizes/font_size = 42
 text = "‹"
 
 [node name="StageCard" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
-custom_minimum_size = Vector2(0, 820)
+custom_minimum_size = Vector2(0, 1120)
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 1
+size_flags_vertical = 4
 
 [node name="CardMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard"]
 layout_mode = 2
@@ -372,10 +372,10 @@ layout_mode = 2
 
 [node name="TopPanel" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
 layout_mode = 1
-anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 800.0
+anchor_bottom = 0.79
 grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 8
 
 [node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
@@ -397,13 +397,13 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="UpperFrameGap" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
-custom_minimum_size = Vector2(0, 210)
 layout_mode = 2
+size_flags_vertical = 3
 
 [node name="PortraitFrame" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel"]
-custom_minimum_size = Vector2(670, 530)
+custom_minimum_size = Vector2(0, 530)
 layout_mode = 2
-size_flags_horizontal = 4
+size_flags_horizontal = 3
 
 [node name="FrameMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame"]
 layout_mode = 2
@@ -470,14 +470,11 @@ vertical_alignment = 1
 
 [node name="BottomPanel" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox"]
 layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
+anchor_top = 0.80
 anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -530.0
-offset_bottom = -370.0
+anchor_bottom = 0.98
 grow_horizontal = 2
-grow_vertical = 0
+grow_vertical = 2
 theme_override_constants/separation = 3
 alignment = 1
 
