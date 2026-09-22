@@ -1681,3 +1681,8 @@
 - ui1은 NinePatchRect로 적용해 모서리 장식을 보존하면서 기존 Header 크기에 맞게 늘어나도록 처리.
 - HeaderMargin, 로고 위치, 골드/최고 해금 텍스트 위치는 이번 패스에서 변경하지 않음.
 - 중앙 외곽 프레임과 하단 네비게이션은 기존 검증 상태를 그대로 유지하고 다음 패스에서 각각 별도로 수정.
+
+### Header Frame Layout Isolation Fix
+- ui1 헤더 프레임을 NinePatchRect child로 추가하던 방식이 PanelContainer 최소 크기 계산에 참여해 중앙 Content를 아래로 미는 문제 수정.
+- 헤더 프레임을 child Control이 아닌 StyleBoxTexture panel override로 변경해 시각 프레임과 레이아웃 크기를 분리.
+- Header의 기존 높이/내부 Margin/중앙 StageCard 및 Content 배치는 변경하지 않음.
