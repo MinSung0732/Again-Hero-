@@ -10,6 +10,7 @@ signal ultimate_used(ultimate_id: String, ultimate_name: String)
 const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
 const PROJECTILE_SCENE := preload("res://src/hero/HeroProjectile.tscn")
+const GUNNER_PROJECTILE_SCENE := preload("res://src/hero/GunnerProjectile.tscn")
 const ULTIMATE_PIERCING_PROJECTILE_SCENE := preload(
 	"res://src/hero/UltimatePiercingProjectile.tscn"
 )
@@ -35,6 +36,7 @@ const STAGE3_SLASH_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/
 const STAGE3_THRUST_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect3"
 const STAGE3_AURA_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect4"
 const STAGE3_CHARGE_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect5"
+const STAGE4_FRAME_DIR := "res://assets/art/heroes/stage4_gunner/frames"
 
 # 모든 용사 도트의 화면상 체급 기준은 Stage 1 견습 마법용사다.
 # 원본 PNG 캔버스 크기가 아니라 투명 여백을 제외한 실제 도트 높이를
@@ -137,6 +139,21 @@ var fighter_charge_chain_count: int = 0
 var fighter_charge_afterimage_timer: float = 0.0
 var fighter_courage_bonus: float = 0.0
 var fighter_charge_kill_heal: float = 0.0
+
+var gunner_config: Dictionary = {}
+var gunner_ammo: int = 12
+var gunner_magazine_size: int = 12
+var gunner_reloading: bool = false
+var gunner_reload_timer: float = 0.0
+var gunner_backstep_cooldown: float = 0.0
+var gunner_collision_ignore_timer: float = 0.0
+var gunner_saved_collision_mask: int = -1
+var gunner_cylinder_cooldown: float = 0.0
+var gunner_deadeye_cooldown: float = 0.0
+var gunner_deadeye_active: bool = false
+var gunner_deadeye_shots_left: int = 0
+var gunner_deadeye_shot_timer: float = 0.0
+var gunner_deadeye_direction: Vector2 = Vector2.RIGHT
 
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
@@ -267,6 +284,25 @@ func configure_profile(profile: Dictionary) -> void:
 		if typeof(profile_fighter_basic) == TYPE_DICTIONARY
 		else {}
 	)
+	var profile_gunner = profile.get("gunner", {})
+	gunner_config = (
+		profile_gunner.duplicate(true)
+		if typeof(profile_gunner) == TYPE_DICTIONARY
+		else {}
+	)
+	gunner_magazine_size = maxi(int(gunner_config.get("magazine_size", 12)), 1)
+	gunner_ammo = gunner_magazine_size
+	gunner_reloading = false
+	gunner_reload_timer = 0.0
+	gunner_backstep_cooldown = 0.0
+	gunner_collision_ignore_timer = 0.0
+	gunner_saved_collision_mask = -1
+	gunner_cylinder_cooldown = 0.0
+	gunner_deadeye_cooldown = 0.0
+	gunner_deadeye_active = false
+	gunner_deadeye_shots_left = 0
+	gunner_deadeye_shot_timer = 0.0
+	gunner_deadeye_direction = Vector2.RIGHT
 	var profile_rogue_slash = profile.get("rogue_slash_skill", {})
 	rogue_slash_config = (
 		profile_rogue_slash.duplicate(true)
@@ -443,6 +479,10 @@ func _physics_process(delta: float) -> void:
 		_physics_process_fighter(delta)
 		return
 
+	if hero_archetype == "pistol_gunner":
+		_physics_process_gunner(delta)
+		return
+
 	ai_memory_clock += delta
 	_prune_offensive_memory()
 	_prune_status_memory()
@@ -502,6 +542,205 @@ func _physics_process(delta: float) -> void:
 		_fire_projectile(target)
 
 	_update_stage1_pose_visual(delta)
+
+func _physics_process_gunner(delta: float) -> void:
+	ai_memory_clock += delta
+	_prune_offensive_memory()
+	_prune_status_memory()
+	attack_timer = maxf(attack_timer - delta, 0.0)
+	retarget_timer = maxf(retarget_timer - delta, 0.0)
+	wander_timer = maxf(wander_timer - delta, 0.0)
+	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
+	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
+	gunner_backstep_cooldown = maxf(gunner_backstep_cooldown - delta, 0.0)
+	gunner_cylinder_cooldown = maxf(gunner_cylinder_cooldown - delta, 0.0)
+	gunner_deadeye_cooldown = maxf(gunner_deadeye_cooldown - delta, 0.0)
+	_update_invulnerability(delta)
+	_update_gunner_collision_ignore(delta)
+
+	if slow_timer > 0.0:
+		slow_timer = maxf(slow_timer - delta, 0.0)
+		if slow_timer <= 0.0:
+			move_multiplier = 1.0
+
+	if gunner_deadeye_active:
+		_update_gunner_deadeye(delta)
+		_update_stage1_pose_visual(delta)
+		return
+
+	if gunner_reloading:
+		gunner_reload_timer = maxf(gunner_reload_timer - delta, 0.0)
+		if gunner_cylinder_cooldown <= 0.0 and _count_monsters_near(global_position, float(gunner_config.get("cylinder_radius", 190.0))) > 0:
+			_use_gunner_cylinder_strike()
+		if gunner_reload_timer <= 0.0:
+			_finish_gunner_reload()
+
+	_update_heal_item_goal(delta)
+	if not is_instance_valid(target) or target.is_queued_for_deletion() or retarget_timer <= 0.0:
+		target = _find_nearest_monster()
+		retarget_timer = 0.10
+
+	if not is_instance_valid(target):
+		_move_without_monsters()
+		_update_stage1_pose_visual(delta)
+		return
+
+	var distance := global_position.distance_to(target.global_position)
+	var move_direction := _choose_move_direction(target, distance)
+	move_direction = _apply_heal_item_steering(move_direction, delta)
+	velocity = move_direction * move_speed * move_multiplier
+	move_and_slide()
+	_clamp_to_battlefield()
+
+	if not gunner_reloading and gunner_deadeye_cooldown <= 0.0 and gunner_ammo >= 3 and _count_monsters_near(global_position, attack_range) >= 4:
+		_start_gunner_deadeye()
+		return
+
+	if not gunner_reloading and distance <= attack_range and attack_timer <= 0.0:
+		_gunner_attack(target)
+
+	_update_stage1_pose_visual(delta)
+
+
+func _gunner_attack(current_target: Node2D) -> void:
+	if gunner_reloading or gunner_ammo <= 0 or not is_instance_valid(current_target):
+		return
+	var direction := global_position.direction_to(current_target.global_position).normalized()
+	if direction.length_squared() <= 0.0:
+		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+	gunner_ammo -= 1
+	attack_timer = _get_common_attack_interval(attack_cooldown)
+	attack_pose_timer = 0.30
+	_face_attack_direction(direction.x)
+	_restart_stage1_animation("attack", 1.0)
+	_spawn_gunner_bullet(direction)
+	var random_angle := deg_to_rad(randf_range(-float(gunner_config.get("random_shot_angle_degrees", 28.0)), float(gunner_config.get("random_shot_angle_degrees", 28.0))))
+	_spawn_gunner_bullet(direction.rotated(random_angle))
+	if randf() <= clampf(float(gunner_config.get("quickdraw_chance", 0.12)), 0.0, 1.0):
+		gunner_ammo = gunner_magazine_size
+		gunner_reloading = false
+	elif gunner_ammo <= 0:
+		_start_gunner_reload()
+	queue_redraw()
+
+
+func _spawn_gunner_bullet(direction: Vector2) -> void:
+	var headshot := randf() <= clampf(float(gunner_config.get("headshot_chance", 0.10)), 0.0, 1.0)
+	var damage := attack_damage
+	if headshot:
+		damage = maxi(1, int(round(float(damage) * float(gunner_config.get("headshot_multiplier", 1.20)))))
+	var projectile := GUNNER_PROJECTILE_SCENE.instantiate() as Area2D
+	get_parent().add_child(projectile)
+	projectile.global_position = global_position + direction.normalized() * 42.0
+	projectile.call("setup", direction, damage, projectile_speed, attack_range, headshot)
+
+
+func _start_gunner_reload() -> void:
+	gunner_reloading = true
+	gunner_reload_timer = maxf(float(gunner_config.get("reload_seconds", 2.4)), 0.1)
+	attack_timer = maxf(attack_timer, gunner_reload_timer)
+	queue_redraw()
+
+
+func _finish_gunner_reload() -> void:
+	gunner_reloading = false
+	gunner_reload_timer = 0.0
+	gunner_ammo = gunner_magazine_size
+	attack_timer = 0.05
+	queue_redraw()
+
+
+func _start_gunner_backstep() -> void:
+	gunner_backstep_cooldown = maxf(float(gunner_config.get("backstep_cooldown", 7.0)), 0.1)
+	invulnerability_timer = maxf(invulnerability_timer, float(gunner_config.get("backstep_invulnerability", 0.75)))
+	var escape_direction := _find_gunner_escape_direction()
+	global_position += escape_direction * maxf(float(gunner_config.get("backstep_distance", 260.0)), 0.0)
+	_clamp_to_battlefield()
+	if gunner_saved_collision_mask < 0:
+		gunner_saved_collision_mask = collision_mask
+	collision_mask = 0
+	gunner_collision_ignore_timer = 0.22
+
+
+func _find_gunner_escape_direction() -> Vector2:
+	var best := Vector2.RIGHT
+	var best_score := INF
+	for i in range(8):
+		var dir := Vector2.from_angle(TAU * float(i) / 8.0)
+		var sample := global_position + dir * 240.0
+		var score := _estimate_monster_danger(sample, 260.0)
+		if score < best_score:
+			best_score = score
+			best = dir
+	return best.normalized()
+
+
+func _update_gunner_collision_ignore(delta: float) -> void:
+	if gunner_collision_ignore_timer <= 0.0:
+		return
+	gunner_collision_ignore_timer = maxf(gunner_collision_ignore_timer - delta, 0.0)
+	if gunner_collision_ignore_timer <= 0.0 and gunner_saved_collision_mask >= 0:
+		collision_mask = gunner_saved_collision_mask
+		gunner_saved_collision_mask = -1
+
+
+func _use_gunner_cylinder_strike() -> void:
+	gunner_cylinder_cooldown = maxf(float(gunner_config.get("cylinder_cooldown", 10.0)), 0.1)
+	var radius := maxf(float(gunner_config.get("cylinder_radius", 190.0)), 1.0)
+	var knockback := maxf(float(gunner_config.get("cylinder_knockback", 145.0)), 0.0)
+	var slow_multiplier := clampf(float(gunner_config.get("cylinder_slow_multiplier", 0.50)), 0.1, 1.0)
+	var slow_duration := maxf(float(gunner_config.get("cylinder_slow_duration", 2.0)), 0.1)
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null or global_position.distance_to(monster.global_position) > radius:
+			continue
+		var dir := global_position.direction_to(monster.global_position)
+		if dir.length_squared() <= 0.0:
+			dir = Vector2.RIGHT
+		monster.global_position += dir.normalized() * knockback
+		monster.set_meta("gunner_slow_multiplier", slow_multiplier)
+		monster.set_meta("gunner_slow_until", Time.get_ticks_msec() + int(slow_duration * 1000.0))
+
+
+func _start_gunner_deadeye() -> void:
+	if gunner_ammo <= 0:
+		return
+	gunner_deadeye_cooldown = maxf(float(gunner_config.get("deadeye_cooldown", 20.0)), 0.1)
+	gunner_deadeye_active = true
+	gunner_deadeye_shots_left = gunner_ammo * 2
+	gunner_ammo = 0
+	gunner_deadeye_shot_timer = 0.0
+	gunner_deadeye_direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+	queue_redraw()
+
+
+func _update_gunner_deadeye(delta: float) -> void:
+	var speed_bonus := maxf(float(gunner_config.get("deadeye_move_speed_multiplier", 1.30)), 1.0)
+	velocity = gunner_deadeye_direction * move_speed * move_multiplier * speed_bonus * 0.35
+	move_and_slide()
+	_clamp_to_battlefield()
+	gunner_deadeye_shot_timer = maxf(gunner_deadeye_shot_timer - delta, 0.0)
+	if gunner_deadeye_shot_timer <= 0.0 and gunner_deadeye_shots_left > 0:
+		_spawn_gunner_bullet(gunner_deadeye_direction)
+		gunner_deadeye_shots_left -= 1
+		gunner_deadeye_shot_timer = maxf(float(gunner_config.get("deadeye_shot_interval", 0.08)), 0.03)
+	if gunner_deadeye_shots_left <= 0:
+		gunner_deadeye_active = false
+		_start_gunner_reload()
+
+
+func _count_monsters_near(origin: Vector2, radius: float) -> int:
+	var count := 0
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster != null and origin.distance_to(monster.global_position) <= radius:
+			count += 1
+	return count
+
 
 func _physics_process_rogue(delta: float) -> void:
 	ai_memory_clock += delta
@@ -1417,6 +1656,28 @@ func _apply_profile_visual() -> void:
 			return
 
 		hero_sprite.sprite_frames = frames
+		hero_sprite.visible = true
+		_apply_normalized_hero_visual_scale()
+		hero_sprite.speed_scale = 1.0
+		hero_sprite.play("idle")
+		return
+
+	if hero_archetype == "pistol_gunner":
+		var gunner_dir := (
+			sprite_frame_dir
+			if not sprite_frame_dir.is_empty()
+			else STAGE4_FRAME_DIR
+		)
+		var gunner_frames := SpriteFrames.new()
+		if gunner_frames.has_animation("default"):
+			gunner_frames.remove_animation("default")
+		if not _add_named_sequence_animation(gunner_frames, "idle", gunner_dir, "idle", 9, 8.0, true):
+			return
+		_add_named_sequence_animation(gunner_frames, "move", gunner_dir, "walk", 9, 12.0, true)
+		_add_named_sequence_animation(gunner_frames, "attack", gunner_dir, "atk", 9, 20.0, false)
+		_add_named_sequence_animation(gunner_frames, "hit", gunner_dir, "hit", 3, 15.0, false)
+		_add_named_sequence_animation(gunner_frames, "death", gunner_dir, "dead", 6, 10.0, false)
+		hero_sprite.sprite_frames = gunner_frames
 		hero_sprite.visible = true
 		_apply_normalized_hero_visual_scale()
 		hero_sprite.speed_scale = 1.0
@@ -4153,6 +4414,8 @@ func take_damage(amount: int, source: Node = null) -> bool:
 		_begin_death_sequence()
 	else:
 		invulnerability_timer = invulnerability_duration
+		if hero_archetype == "pistol_gunner" and gunner_backstep_cooldown <= 0.0:
+			_start_gunner_backstep()
 		_refresh_invulnerability_visual()
 
 	return true
@@ -4238,31 +4501,19 @@ func _draw() -> void:
 		draw_circle(Vector2(49, -17), 8.0, Color(0.95, 0.86, 0.32))
 
 	var bar_width := 92.0
-	var ultimate_max := maxf(
-		float(ultimate_config.get("charge_max", 100.0)),
-		1.0
-	)
-	var ultimate_ratio := clampf(
-		ultimate_charge / ultimate_max,
-		0.0,
-		1.0
-	)
-
-	draw_rect(
-		Rect2(-bar_width / 2.0, -79.0, bar_width, 8.0),
-		Color(0.12, 0.12, 0.14),
-		true
-	)
-	draw_rect(
-		Rect2(
-			-bar_width / 2.0,
-			-79.0,
-			bar_width * ultimate_ratio,
-			8.0
-		),
-		Color(1.0, 0.77, 0.16),
-		true
-	)
+	if hero_archetype == "pistol_gunner":
+		var gap := 2.0
+		var cell_width := (bar_width - gap * float(gunner_magazine_size - 1)) / float(gunner_magazine_size)
+		for index in range(gunner_magazine_size):
+			var x := -bar_width / 2.0 + float(index) * (cell_width + gap)
+			draw_rect(Rect2(x, -79.0, cell_width, 8.0), Color(0.12, 0.12, 0.14), true)
+			if index < gunner_ammo:
+				draw_rect(Rect2(x, -79.0, cell_width, 8.0), Color(1.0, 0.77, 0.16), true)
+	else:
+		var ultimate_max := maxf(float(ultimate_config.get("charge_max", 100.0)), 1.0)
+		var ultimate_ratio := clampf(ultimate_charge / ultimate_max, 0.0, 1.0)
+		draw_rect(Rect2(-bar_width / 2.0, -79.0, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
+		draw_rect(Rect2(-bar_width / 2.0, -79.0, bar_width * ultimate_ratio, 8.0), Color(1.0, 0.77, 0.16), true)
 
 	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
 	draw_rect(Rect2(-bar_width / 2.0, -64.0, bar_width, 10.0), Color(0.12, 0.12, 0.14), true)
