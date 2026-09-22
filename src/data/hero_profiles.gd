@@ -131,9 +131,9 @@ const PROFILES = {
 			"rogue_guard",
 			"rogue_hunt",
 			"rogue_execution",
+			"rogue_bloodthirst",
 			"pursuit",
 			"slow_resistance",
-			"battle_recovery",
 		],
 	},
 }
