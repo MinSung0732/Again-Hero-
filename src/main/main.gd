@@ -1600,23 +1600,23 @@ func _get_monster_name(monster_type: String) -> String:
 		_:
 			return "슬라임"
 
-func _on_hero_leveled_up(new_level: int) -> void:
-	status_label.text = "용사 Lv.%d 도달!\nAI가 증강 후보를 평가합니다." % new_level
+func _on_hero_leveled_up(_new_level: int) -> void:
+	# 용사 레벨은 상단 HUD와 용사정보 패널에서만 확인한다.
+	if hero_info_panel.visible:
+		_refresh_hero_info_panel()
 
-func _on_hero_augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String) -> void:
-	var candidate_names: PackedStringArray = []
-	for candidate in candidates:
-		candidate_names.append(String(candidate.get("name", "?")))
-
+func _on_hero_augment_selected(
+	_level: int,
+	_candidates: Array,
+	_chosen_name: String,
+	_reason: String,
+	_build_summary: String
+) -> void:
+	# 용사 증강 선택은 AI가 백그라운드에서 처리한다.
+	# 마왕의 소환/스킬 상태 영역에는 후보나 선택 이유를 출력하지 않는다.
 	build_label.text = ""
 	if hero_info_panel.visible:
 		_refresh_hero_info_panel()
-	status_label.text = "Lv.%d 후보: %s\nAI → %s · %s" % [
-		level,
-		" / ".join(candidate_names),
-		chosen_name,
-		reason,
-	]
 
 func _on_battle_finished(message: String, player_won: bool) -> void:
 	pause_menu.hide()
