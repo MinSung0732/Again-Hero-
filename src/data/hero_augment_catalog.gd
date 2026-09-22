@@ -67,13 +67,13 @@ const AUGMENTS = [
 	{
 		"id": "iron_body",
 		"name": "강인한 육체",
-		"description": "최대 HP +45, HP +45",
+		"description": "최대 HP +20, HP +20",
 		"base_score": 7.0,
-		"max_stack": 5,
+		"max_stack": 10,
 		"tags": ["durability", "survival"],
 		"effects": [
-			{"op": "add_stat", "target": "max_hp", "value": 45},
-			{"op": "heal", "value": 45},
+			{"op": "add_stat", "target": "max_hp", "value": 20},
+			{"op": "heal", "value": 20},
 		],
 		"ai_rules": [
 			{"source": "hp_missing", "weight": 5.0},
@@ -90,12 +90,12 @@ const AUGMENTS = [
 	{
 		"id": "pursuit",
 		"name": "민첩한 발놀림",
-		"description": "이동속도 +25",
+		"description": "이동속도 +8",
 		"base_score": 6.0,
-		"max_stack": 2,
+		"max_stack": 10,
 		"tags": ["mobility", "kite"],
 		"effects": [
-			{"op": "add_stat", "target": "move_speed", "value": 25.0},
+			{"op": "add_stat", "target": "move_speed", "value": 8.0},
 		],
 		"ai_rules": [
 			{"source": "distance", "divisor": 220.0, "cap": 2.3},
@@ -113,12 +113,12 @@ const AUGMENTS = [
 	{
 		"id": "slow_resistance",
 		"name": "둔화 적응",
-		"description": "둔화 강도와 지속시간 감소",
+		"description": "둔화 저항 +5%",
 		"base_score": 4.8,
-		"max_stack": 3,
+		"max_stack": 10,
 		"tags": ["resistance", "mobility", "survival"],
 		"effects": [
-			{"op": "add_status_resistance", "status": "slow", "value": 0.18, "max": 0.65},
+			{"op": "add_status_resistance", "status": "slow", "value": 0.05, "max": 0.50},
 		],
 		"ai_rules": [
 			{"source": "recent_status_weight", "key": "slow", "weight": 1.10, "cap": 6.6},
@@ -202,23 +202,23 @@ const AUGMENTS = [
 	{
 		"id": "exp_training",
 		"name": "경험 축적",
-		"description": "경험치 획득량 +10%",
+		"description": "경험치 획득량 +4%",
 		"base_score": 6.4,
-		"max_stack": 5,
+		"max_stack": 10,
 		"tags": ["growth"],
 		"effects": [
-			{"op": "add_stat", "target": "exp_gain_multiplier", "value": 0.10, "max": 1.50},
+			{"op": "add_stat", "target": "exp_gain_multiplier", "value": 0.04, "max": 1.40},
 		],
 	},
 	{
 		"id": "exp_magnet",
 		"name": "경험 흡수",
-		"description": "경험치 획득 범위 +40",
+		"description": "경험치 획득 범위 +15",
 		"base_score": 5.8,
-		"max_stack": 4,
+		"max_stack": 10,
 		"tags": ["growth", "range"],
 		"effects": [
-			{"op": "add_stat", "target": "exp_pickup_radius", "value": 40.0},
+			{"op": "add_stat", "target": "exp_pickup_radius", "value": 15.0},
 		],
 	},
 	{
