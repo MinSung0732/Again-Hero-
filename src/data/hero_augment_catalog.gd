@@ -440,7 +440,7 @@ const AUGMENTS = [
 	{
 		"id": "fighter_courage",
 		"name": "용기백배",
-		"description": "기본 3연속 돌진 후 추가 돌진 확률 15%, 이후 중첩당 +3% (최대 36%). 최대 6회까지 돌진하며 돌진 처치 시 HP 8 회복",
+		"description": "기본 3연속 돌진 후 추가 돌진 확률 15%, 이후 중첩당 +3% (최대 36%). 최대 6회까지 돌진",
 		"base_score": 7.5,
 		"max_stack": 8,
 		"tags": ["damage", "mobility", "area"],
@@ -455,6 +455,26 @@ const AUGMENTS = [
 		"synergy_rules": [
 			{"source": "build_tag_stacks", "key": "mobility", "weight": 0.35, "cap": 1.4},
 			{"source": "build_tag_stacks", "key": "damage", "weight": 0.25, "cap": 1.0},
+		],
+	},
+	{
+		"id": "fighter_charge_recovery",
+		"name": "승전의 호흡",
+		"description": "검방 돌격으로 적 처치 시 HP 8 회복",
+		"base_score": 6.6,
+		"max_stack": 1,
+		"tags": ["recovery", "survival", "mobility"],
+		"effects": [
+			{"op": "add_stat", "target": "fighter_charge_kill_heal", "value": 8.0, "max": 8.0},
+		],
+		"ai_rules": [
+			{"source": "hp_missing", "weight": 5.0},
+			{"source": "nearby_linear", "weight": 0.45, "cap": 2.7},
+			{"source": "current_role_ratio", "key": "swarm", "weight": 1.8},
+		],
+		"synergy_rules": [
+			{"source": "build_tag_stacks", "key": "mobility", "weight": 0.45, "cap": 1.35},
+			{"source": "build_tag_stacks", "key": "recovery", "weight": 0.35, "cap": 1.05},
 		],
 	},
 	{
