@@ -87,6 +87,7 @@ var team_selected_ids: Array = []
 
 var panel_style := StyleBoxFlat.new()
 var header_style := StyleBoxFlat.new()
+var content_frame_style := StyleBoxFlat.new()
 var stage_card_style := StyleBoxFlat.new()
 var portrait_outer_style := StyleBoxFlat.new()
 var portrait_inner_style := StyleBoxFlat.new()
@@ -130,9 +131,19 @@ func _build_styles() -> void:
 	header_style = _make_style(
 		Color("130f1c"),
 		Color("6d557b"),
-		2,
+		3,
 		22
 	)
+	content_frame_style = _make_style(
+		Color("0f0c16"),
+		Color("5b486b"),
+		3,
+		26
+	)
+	content_frame_style.content_margin_left = 22.0
+	content_frame_style.content_margin_top = 22.0
+	content_frame_style.content_margin_right = 22.0
+	content_frame_style.content_margin_bottom = 22.0
 	stage_card_style = _make_style(
 		Color("21182a"),
 		Color("a57938"),
@@ -207,15 +218,37 @@ func _make_style(
 
 func _apply_styles() -> void:
 	$SafeArea/Layout/Header.add_theme_stylebox_override("panel", header_style)
-	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard.add_theme_stylebox_override("panel", stage_card_style)
-	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame.add_theme_stylebox_override("panel", portrait_outer_style)
-	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame/FrameMargin/PortraitInner.add_theme_stylebox_override("panel", portrait_inner_style)
+	$SafeArea/Layout/Content/ContentFrame.add_theme_stylebox_override(
+		"panel",
+		content_frame_style
+	)
+	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard.add_theme_stylebox_override(
+		"panel",
+		stage_card_style
+	)
+	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame.add_theme_stylebox_override(
+		"panel",
+		portrait_outer_style
+	)
+	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/PortraitFrame/FrameMargin/PortraitInner.add_theme_stylebox_override(
+		"panel",
+		portrait_inner_style
+	)
+	$SafeArea/Layout/Content/ShopTab/ShopLayout/ResultPanel.add_theme_stylebox_override(
+		"panel",
+		panel_style
+	)
 	$BottomNav.add_theme_stylebox_override("panel", nav_style)
 
 	for button in [prev_stage_button, next_stage_button]:
 		button.add_theme_stylebox_override("normal", secondary_button_style)
 		button.add_theme_stylebox_override("hover", secondary_button_style)
 		button.add_theme_stylebox_override("pressed", secondary_button_style)
+
+	for button in [shop_single_button, shop_multi_button]:
+		button.add_theme_stylebox_override("normal", secondary_button_style)
+		button.add_theme_stylebox_override("hover", primary_button_style)
+		button.add_theme_stylebox_override("pressed", primary_button_style)
 
 	enter_stage_button.add_theme_stylebox_override("normal", primary_button_style)
 	enter_stage_button.add_theme_stylebox_override("hover", primary_button_style)
