@@ -10,6 +10,7 @@ var max_range := 760.0
 var damage := 28
 var traveled := 0.0
 var headshot := false
+var penetration_bonus_per_hit := 0.0
 var hit_ids: Dictionary = {}
 
 @onready var visual: AnimatedSprite2D = $Visual
@@ -19,12 +20,20 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	_apply_visual()
 
-func setup(new_direction: Vector2, new_damage: int, new_speed: float, new_range: float, is_headshot: bool = false) -> void:
+func setup(
+	new_direction: Vector2,
+	new_damage: int,
+	new_speed: float,
+	new_range: float,
+	is_headshot: bool = false,
+	new_penetration_bonus_per_hit: float = 0.0
+) -> void:
 	direction = new_direction.normalized()
 	damage = maxi(new_damage, 1)
 	speed = maxf(new_speed, 1.0)
 	max_range = maxf(new_range, 1.0)
 	headshot = is_headshot
+	penetration_bonus_per_hit = maxf(new_penetration_bonus_per_hit, 0.0)
 	rotation = direction.angle()
 
 func _physics_process(delta: float) -> void:
@@ -42,10 +51,15 @@ func _on_body_entered(body: Node) -> void:
 	var id := body.get_instance_id()
 	if hit_ids.has(id):
 		return
+	var prior_hits := hit_ids.size()
 	hit_ids[id] = true
-	if headshot:
+	var applied_damage := maxi(
+		1,
+		int(round(float(damage) * (1.0 + penetration_bonus_per_hit * float(prior_hits))))
+	)
+	if headshot and body.is_in_group("monsters"):
 		body.set_meta("damage_number_color_once", Color(1.0, 0.18, 0.12, 1.0))
-	body.call("take_damage", damage)
+	body.call("take_damage", applied_damage)
 
 func _apply_visual() -> void:
 	var frames := SpriteFrames.new()
