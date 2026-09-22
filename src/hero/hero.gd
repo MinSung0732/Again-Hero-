@@ -420,6 +420,7 @@ func _physics_process_rogue(delta: float) -> void:
 		retarget_timer = 0.10
 
 	if not is_instance_valid(target):
+		rogue_combo_index = 0
 		_move_without_monsters()
 		_update_rogue_pose_visual(delta)
 		return
@@ -596,6 +597,7 @@ func _rogue_should_use_slash() -> bool:
 	return false
 
 func _start_rogue_slash() -> void:
+	rogue_combo_index = 0
 	rogue_slash_active = true
 	rogue_slash_duration_timer = maxf(
 		float(rogue_slash_config.get("duration", 1.20)),
@@ -707,6 +709,7 @@ func _rogue_can_start_assassination() -> bool:
 	return _find_rogue_assassination_target() != null
 
 func _start_rogue_assassination() -> void:
+	rogue_combo_index = 0
 	rogue_assassination_active = true
 	rogue_assassination_hits_left = maxi(
 		int(ultimate_config.get("hit_count", 5))
