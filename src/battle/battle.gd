@@ -90,6 +90,8 @@ var demon_level: int = 1
 var demon_exp: float = 0.0
 var demon_exp_to_next_level: float = DEMON_BASE_EXP_TO_NEXT
 var demon_pending_augments: int = 0
+var demon_pending_augment_levels: Array[int] = []
+var demon_active_augment_level: int = 0
 var demon_ultimate_charge: float = 0.0
 var demon_ultimate_emit_timer: float = 0.0
 var last_hero_hp_for_ultimate: int = 0
@@ -117,6 +119,8 @@ var demon_augment_selection_active: bool = false
 var demon_augment_candidates: Array = []
 var demon_build_counts: Dictionary = {}
 var demon_last_candidate_ids: Array[String] = []
+var demon_special_augments: Array[String] = []
+var monster_augment_modifiers: Dictionary = {}
 
 var monster_summon_costs: Dictionary = {}
 var permanent_research_levels: Dictionary = {}
@@ -210,6 +214,8 @@ func _start_battle() -> void:
 	demon_exp = 0.0
 	demon_exp_to_next_level = _required_demon_exp_for_level(demon_level)
 	demon_pending_augments = 0
+	demon_pending_augment_levels.clear()
+	demon_active_augment_level = 0
 	demon_ultimate_charge = 0.0
 	demon_ultimate_emit_timer = 0.0
 	last_hero_hp_for_ultimate = 0
@@ -239,6 +245,8 @@ func _start_battle() -> void:
 	demon_augment_candidates.clear()
 	demon_build_counts.clear()
 	demon_last_candidate_ids.clear()
+	demon_special_augments.clear()
+	monster_augment_modifiers.clear()
 	mutation_director.reset()
 	monster_summon_costs.clear()
 
@@ -428,6 +436,7 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 	command_power = maxf(command_power - cost, 0.0)
 
 	_spawn_monster(monster_type, spawn_position, cost, false)
+	_spawn_extra_normal_summon_monsters(monster_type, spawn_position)
 	run_metrics.record_summon(monster_type, cost)
 
 	if is_instance_valid(hero) and hero.has_method("record_offensive_event"):
@@ -522,8 +531,12 @@ func get_monster_cost(monster_type: String) -> float:
 	if base_cost <= 0.0:
 		return 0.0
 
+	var monster_cost_multiplier := _get_monster_augment_multiplier(
+		monster_type,
+		"cost"
+	)
 	return snappedf(
-		base_cost * summon_cost_multiplier,
+		base_cost * summon_cost_multiplier * monster_cost_multiplier,
 		0.1
 	)
 
@@ -559,7 +572,9 @@ func _spawn_monster(
 	if speed_value != null:
 		monster.set_meta(
 			"demon_level_base_move_speed",
-			float(speed_value) * monster_speed_multiplier
+			float(speed_value)
+			* monster_speed_multiplier
+			* _get_monster_augment_multiplier(monster_type, "speed")
 		)
 
 	var attack_cooldown_value = monster.get("attack_cooldown")
@@ -568,7 +583,12 @@ func _spawn_monster(
 			"attack_cooldown",
 			maxf(
 				0.10,
-				float(attack_cooldown_value) * monster_attack_speed_multiplier
+				float(attack_cooldown_value)
+				* monster_attack_speed_multiplier
+				* _get_monster_augment_multiplier(
+					monster_type,
+					"attack_cooldown"
+				)
 			)
 		)
 
@@ -587,7 +607,12 @@ func _spawn_monster(
 	if damage_value != null:
 		monster.set_meta(
 			"demon_level_base_attack_damage",
-			maxf(1.0, float(damage_value) * monster_damage_multiplier)
+			maxf(
+				1.0,
+				float(damage_value)
+				* monster_damage_multiplier
+				* _get_monster_augment_multiplier(monster_type, "damage")
+			)
 		)
 
 	if monster_type == "bomb_rat":
@@ -614,7 +639,11 @@ func _spawn_monster(
 
 	var max_hp_value = monster.get("max_hp")
 	if max_hp_value != null:
-		var level_base_hp := float(max_hp_value) * monster_hp_multiplier
+		var level_base_hp := (
+			float(max_hp_value)
+			* monster_hp_multiplier
+			* _get_monster_augment_multiplier(monster_type, "hp")
+		)
 		if monster_type == "orc":
 			level_base_hp *= orc_hp_multiplier
 		level_base_hp *= maxf(
@@ -703,6 +732,11 @@ func _spawn_monster(
 	add_child(monster)
 	monster.position = spawn_position
 	monster.set_meta("split_child", split_child)
+	monster.set_meta(
+		"spawn_source",
+		"augment" if split_child else "normal"
+	)
+	_apply_special_augments_to_monster(monster, monster_type)
 	monster.connect("died", Callable(self, "_on_monster_died").bind(monster))
 
 	monster_summon_costs[monster.get_instance_id()] = summon_cost
@@ -1581,6 +1615,7 @@ func _gain_demon_exp(amount: float) -> void:
 		demon_level += 1
 		demon_exp_to_next_level = _required_demon_exp_for_level(demon_level)
 		demon_pending_augments += 1
+		demon_pending_augment_levels.append(demon_level)
 
 	if demon_level != previous_demon_level:
 		_refresh_alive_monsters_for_demon_level()
@@ -1600,9 +1635,18 @@ func _open_next_demon_augment_if_needed() -> void:
 	if battle_over or demon_augment_selection_active or demon_pending_augments <= 0:
 		return
 
+	demon_active_augment_level = (
+		demon_pending_augment_levels[0]
+		if not demon_pending_augment_levels.is_empty()
+		else demon_level
+	)
 	demon_augment_candidates = _roll_demon_augment_candidates(false)
 	if demon_augment_candidates.is_empty():
-		demon_pending_augments = 0
+		demon_pending_augments = maxi(demon_pending_augments - 1, 0)
+		if not demon_pending_augment_levels.is_empty():
+			demon_pending_augment_levels.pop_front()
+		demon_active_augment_level = 0
+		_open_next_demon_augment_if_needed()
 		return
 
 	demon_augment_selection_active = true
@@ -1626,18 +1670,43 @@ func _roll_demon_augment_candidates(is_reroll: bool) -> Array:
 			if old_id not in exclude_ids:
 				exclude_ids.append(old_id)
 
-	var candidates: Array = DEMON_AUGMENTS.roll_candidates(
-		exclude_ids,
-		3,
-		demon_build_counts
-	)
-
-	if candidates.is_empty() and is_reroll:
-		candidates = DEMON_AUGMENTS.roll_candidates(
-			[],
-			3,
-			demon_build_counts
+	var candidates: Array = []
+	if DEMON_AUGMENTS.is_special_level(demon_active_augment_level):
+		candidates = DEMON_AUGMENTS.roll_special_candidates(
+			allowed_monster_ids,
+			demon_special_augments,
+			exclude_ids,
+			3
 		)
+		if candidates.is_empty() and is_reroll:
+			candidates = DEMON_AUGMENTS.roll_special_candidates(
+				allowed_monster_ids,
+				demon_special_augments,
+				[],
+				3
+			)
+	else:
+		var monster_names: Dictionary = {}
+		for raw_id in allowed_monster_ids:
+			var monster_id := String(raw_id)
+			monster_names[monster_id] = _get_catalog_monster_display_name(
+				monster_id
+			)
+		candidates = DEMON_AUGMENTS.roll_normal_candidates(
+			allowed_monster_ids,
+			monster_names,
+			demon_build_counts,
+			exclude_ids,
+			3
+		)
+		if candidates.is_empty() and is_reroll:
+			candidates = DEMON_AUGMENTS.roll_normal_candidates(
+				allowed_monster_ids,
+				monster_names,
+				demon_build_counts,
+				[],
+				3
+			)
 
 	demon_last_candidate_ids.clear()
 	for candidate in candidates:
@@ -1675,15 +1744,28 @@ func choose_demon_augment(augment_id: String) -> bool:
 	if augment.is_empty():
 		return false
 
-	var current_stack := int(demon_build_counts.get(augment_id, 0))
-	var max_stack := int(augment.get("max_stack", 0))
-	if max_stack > 0 and current_stack >= max_stack:
-		return false
+	var augment_type := String(
+		augment.get("augment_type", DEMON_AUGMENTS.TYPE_NORMAL)
+	)
+	if augment_type == DEMON_AUGMENTS.TYPE_SPECIAL:
+		if augment_id in demon_special_augments:
+			return false
+		demon_special_augments.append(augment_id)
+		_refresh_alive_monsters_for_augments()
+	else:
+		var current_stack := int(demon_build_counts.get(augment_id, 0))
+		var max_stack := int(augment.get("max_stack", 0))
+		if max_stack > 0 and current_stack >= max_stack:
+			return false
 
-	_apply_demon_augment(augment)
-	demon_build_counts[augment_id] = current_stack + 1
+		_apply_demon_augment(augment)
+		demon_build_counts[augment_id] = current_stack + 1
+		_refresh_alive_monsters_for_augments()
 
 	demon_pending_augments = maxi(demon_pending_augments - 1, 0)
+	if not demon_pending_augment_levels.is_empty():
+		demon_pending_augment_levels.pop_front()
+	demon_active_augment_level = 0
 	demon_augment_selection_active = false
 	demon_augment_candidates.clear()
 	demon_last_candidate_ids.clear()
@@ -1742,8 +1824,94 @@ func _apply_demon_augment_effect(effect: Dictionary) -> void:
 			max_command += amount
 			command_power = minf(command_power + amount, max_command)
 
+		"monster_multiplier":
+			var monster_id := String(effect.get("monster_id", ""))
+			var stat := String(effect.get("stat", ""))
+			if monster_id.is_empty() or stat.is_empty():
+				return
+			var modifiers: Dictionary = monster_augment_modifiers.get(
+				monster_id,
+				{}
+			)
+			var current := float(modifiers.get(stat, 1.0))
+			var next_value := current * float(effect.get("value", 1.0))
+			if effect.has("min"):
+				next_value = maxf(
+					next_value,
+					float(effect.get("min", next_value))
+				)
+			if effect.has("max"):
+				next_value = minf(
+					next_value,
+					float(effect.get("max", next_value))
+				)
+			modifiers[stat] = next_value
+			monster_augment_modifiers[monster_id] = modifiers
+
 		_:
 			push_warning("Unknown Demon augment effect op: %s" % op)
+
+func _get_monster_augment_multiplier(
+	monster_id: String,
+	stat: String
+) -> float:
+	var modifiers: Dictionary = monster_augment_modifiers.get(monster_id, {})
+	return maxf(float(modifiers.get(stat, 1.0)), 0.01)
+
+func _get_special_augment_config(
+	monster_id: String
+) -> Dictionary:
+	var result: Dictionary = {}
+	for augment_id in demon_special_augments:
+		var augment := DEMON_AUGMENTS.get_augment(String(augment_id))
+		if String(augment.get("monster_id", "")) != monster_id:
+			continue
+		var effect_type := String(augment.get("effect_type", ""))
+		if effect_type.is_empty():
+			continue
+		result[effect_type] = Dictionary(
+			augment.get("effect_values", {})
+		).duplicate(true)
+	return result
+
+func _apply_special_augments_to_monster(
+	monster: Node,
+	monster_id: String
+) -> void:
+	if not is_instance_valid(monster):
+		return
+	var configs := _get_special_augment_config(monster_id)
+	monster.set_meta("special_augment_configs", configs)
+	if monster.has_method("configure_special_augments"):
+		monster.call("configure_special_augments", configs)
+
+func _refresh_alive_monsters_for_augments() -> void:
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster_id := String(node.get("monster_type"))
+		_apply_special_augments_to_monster(node, monster_id)
+
+func _spawn_extra_normal_summon_monsters(
+	monster_type: String,
+	spawn_position: Vector2
+) -> void:
+	if monster_type != "slime":
+		return
+	var config: Dictionary = _get_special_augment_config("slime").get(
+		"slime_cell_division",
+		{}
+	)
+	var extra_count := maxi(int(config.get("extra_count", 0)), 0)
+	for index in range(extra_count):
+		var angle := TAU * float(index + 1) / float(extra_count + 1)
+		var offset := Vector2.from_angle(angle) * 36.0
+		_spawn_monster(
+			"slime",
+			_clamp_manual_spawn_position(spawn_position + offset),
+			0.0,
+			true
+		)
 
 func _sync_combat_pause_state() -> void:
 	var should_enable := (
@@ -1989,6 +2157,8 @@ func get_snapshot() -> Dictionary:
 		"demon_reroll_max": demon_reroll_max,
 		"demon_build_summary": get_demon_build_summary(),
 		"demon_build_counts": demon_build_counts.duplicate(true),
+		"demon_special_augments": demon_special_augments.duplicate(),
+		"demon_active_augment_level": demon_active_augment_level,
 		"mutation_selection_active": mutation_director.is_active(),
 		"mutation_candidates": mutation_director.get_candidates(),
 		"flow_pause_requests": flow_pause_manager.get_snapshot(),
