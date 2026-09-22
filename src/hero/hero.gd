@@ -30,7 +30,7 @@ const STAGE2_EFFECT1_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_
 const STAGE2_EFFECT2_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_02"
 const STAGE2_EFFECT3_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_03"
 
-# 모든 용사 도트의 화면상 체급 기준은 Stage 1 견습 마도사다.
+# 모든 용사 도트의 화면상 체급 기준은 Stage 1 견습 마법용사다.
 # 원본 PNG 캔버스 크기가 아니라 투명 여백을 제외한 실제 도트 높이를
 # 기준으로 자동 정규화한다.
 const HERO_REFERENCE_SHEET_PATH := "res://assets/art/heroes/stage1_mage/stage1_mage_spritesheet.png"
@@ -68,7 +68,7 @@ const INVULNERABILITY_BLINK_INTERVAL := 0.07
 @export var facing_min_horizontal_speed: float = 18.0
 
 var hero_id: String = "ranged_rookie"
-var hero_display_name: String = "견습 마도사"
+var hero_display_name: String = "견습 마법용사"
 var hero_archetype: String = "ranged_kiter"
 var sprite_sheet_path: String = ""
 var sprite_frame_dir: String = ""
