@@ -557,6 +557,25 @@ func _load_png_texture_cropped(path: String) -> Texture2D:
 	return ImageTexture.create_from_image(cropped)
 
 
+func _load_png_texture_top_region(path: String, height_ratio: float) -> Texture2D:
+	var image := Image.new()
+	var load_error := image.load(path)
+	if load_error != OK or image.is_empty():
+		push_warning("UI PNG region load failed: %s / error=%s" % [path, load_error])
+		return null
+
+	var used_rect := image.get_used_rect()
+	if used_rect.size.x <= 0 or used_rect.size.y <= 0:
+		return ImageTexture.create_from_image(image)
+
+	var cropped_used := image.get_region(used_rect)
+	var region_height := maxi(1, int(round(cropped_used.get_height() * clampf(height_ratio, 0.1, 1.0))))
+	var top_region := cropped_used.get_region(
+		Rect2i(0, 0, cropped_used.get_width(), region_height)
+	)
+	return ImageTexture.create_from_image(top_region)
+
+
 func _apply_new_ui_assets() -> void:
 	var title_label := $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 	if title_label != null:
@@ -585,7 +604,12 @@ func _apply_new_ui_assets() -> void:
 		header.move_child(logo, 0)
 
 	var stage_card := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard
-	var stage_texture := _load_png_texture_cropped(UI_CARD_FRAME_DIR + "/ui10.png")
+	# ui10 contains a main vertical card plus a secondary lower panel.
+	# Only the upper main-card region belongs on the StageCard.
+	var stage_texture := _load_png_texture_top_region(
+		UI_CARD_FRAME_DIR + "/ui10.png",
+		0.70
+	)
 	if stage_card != null and stage_texture != null:
 		var old_stage_skin := stage_card.get_node_or_null("StageCardSkin")
 		if old_stage_skin != null:
