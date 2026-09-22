@@ -185,11 +185,13 @@ func _build_styles() -> void:
 		18
 	)
 	nav_button_active_style = _make_style(
-		Color("35233c"),
-		Color("d0a64a"),
+		Color("402848"),
+		Color("e0b64f"),
 		4,
 		18
 	)
+	nav_button_active_style.content_margin_top = 10.0
+	nav_button_active_style.content_margin_bottom = 10.0
 	primary_button_style = _make_style(
 		Color("6c3b87"),
 		Color("d4af52"),
@@ -277,10 +279,30 @@ func _apply_styles() -> void:
 		button.add_theme_stylebox_override("hover", secondary_button_style)
 		button.add_theme_stylebox_override("pressed", secondary_button_style)
 
-	for button in [shop_single_button, shop_multi_button]:
-		button.add_theme_stylebox_override("normal", secondary_button_style)
-		button.add_theme_stylebox_override("hover", primary_button_style)
-		button.add_theme_stylebox_override("pressed", primary_button_style)
+	shop_single_button.add_theme_stylebox_override(
+		"normal",
+		secondary_button_style
+	)
+	shop_single_button.add_theme_stylebox_override(
+		"hover",
+		primary_button_style
+	)
+	shop_single_button.add_theme_stylebox_override(
+		"pressed",
+		primary_button_style
+	)
+	shop_multi_button.add_theme_stylebox_override(
+		"normal",
+		primary_button_style
+	)
+	shop_multi_button.add_theme_stylebox_override(
+		"hover",
+		primary_button_style
+	)
+	shop_multi_button.add_theme_stylebox_override(
+		"pressed",
+		primary_button_style
+	)
 
 	enter_stage_button.add_theme_stylebox_override("normal", primary_button_style)
 	enter_stage_button.add_theme_stylebox_override("hover", primary_button_style)
@@ -557,7 +579,11 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 	button.add_theme_stylebox_override("pressed", style)
 	button.add_theme_color_override(
 		"font_color",
-		Color("ffe29a") if selected else Color("d8cfdf")
+		Color("ffe7a8") if selected else Color("d8cfdf")
+	)
+	button.add_theme_color_override(
+		"font_hover_color",
+		Color("fff1c7") if selected else Color("eee7f2")
 	)
 
 func _format_shop_number(value: int) -> String:
