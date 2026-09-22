@@ -788,6 +788,7 @@ text = "오크\n선택"
 
 [node name="ResultPanel" type="PanelContainer" parent="HUD"]
 visible = false
+z_index = 300
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
