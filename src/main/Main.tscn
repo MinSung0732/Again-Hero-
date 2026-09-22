@@ -206,7 +206,7 @@ offset_top = 6.0
 offset_right = 230.0
 offset_bottom = 34.0
 theme_override_font_sizes/font_size = 30
-text = "마왕 필살기  0 / 100"
+text = "마력  0 / 100"
 vertical_alignment = 1
 
 [node name="UltimateBar" type="ProgressBar" parent="HUD/DemonUltimatePanel"]
@@ -230,7 +230,7 @@ custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
-text = "1 원형 포위\n충전 중"
+text = "1 원형 포위\n마력 70 필요"
 disabled = true
 
 [node name="CooldownBar" type="ProgressBar" parent="HUD/DemonUltimatePanel/UltimateButtons/Ultimate1"]
@@ -253,7 +253,7 @@ custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
-text = "2 일직선 공세\n준비중"
+text = "2 일직선 공세\n마력 40 필요"
 disabled = true
 
 [node name="CooldownBar" type="ProgressBar" parent="HUD/DemonUltimatePanel/UltimateButtons/Ultimate2"]
@@ -276,7 +276,7 @@ custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
-text = "3 사각 포위\n준비중"
+text = "3 사각 포위\n마력 100 필요"
 disabled = true
 
 [node name="CooldownBar" type="ProgressBar" parent="HUD/DemonUltimatePanel/UltimateButtons/Ultimate3"]
