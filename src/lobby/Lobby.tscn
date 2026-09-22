@@ -330,8 +330,8 @@ layout_mode = 2
 [node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox"]
 layout_mode = 1
 anchor_right = 1.0
-offset_top = 18.0
-offset_bottom = 58.0
+offset_top = 26.0
+offset_bottom = 66.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.92, 0.86, 0.96, 1)
 theme_override_font_sizes/font_size = 36
@@ -342,8 +342,8 @@ vertical_alignment = 1
 [node name="SectionSubtitle" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox"]
 layout_mode = 1
 anchor_right = 1.0
-offset_top = 58.0
-offset_bottom = 92.0
+offset_top = 66.0
+offset_bottom = 100.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.63, 0.57, 0.69, 1)
 theme_override_font_sizes/font_size = 24
@@ -362,8 +362,8 @@ layout_mode = 2
 [node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
 layout_mode = 1
 anchor_right = 1.0
-offset_top = 64.0
-offset_bottom = 88.0
+offset_top = 72.0
+offset_bottom = 96.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
 theme_override_font_sizes/font_size = 24
@@ -374,8 +374,8 @@ vertical_alignment = 1
 [node name="StageName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
 layout_mode = 1
 anchor_right = 1.0
-offset_top = 88.0
-offset_bottom = 124.0
+offset_top = 96.0
+offset_bottom = 132.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.98, 0.93, 1, 1)
 theme_override_font_sizes/font_size = 38
