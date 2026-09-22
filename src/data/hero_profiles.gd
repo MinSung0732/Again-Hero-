@@ -177,7 +177,7 @@ const PROFILES = {
 			"magazine_size": 12,
 			"reload_seconds": 2.4,
 			"random_shot_angle_degrees": 28.0,
-			"quickdraw_chance": 0.12,
+			"quickdraw_chance": 0.03,
 			"headshot_chance": 0.10,
 			"headshot_multiplier": 1.20,
 			"backstep_invulnerability": 0.75,
