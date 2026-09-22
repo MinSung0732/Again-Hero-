@@ -277,6 +277,14 @@ theme_override_constants/icon_margin = 12
 theme_override_constants/line_separation = 6
 theme_override_font_sizes/font_size = 20
 
+
+[node name="DetailButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "몬스터 상세보기"
+disabled = true
+
 [node name="Status" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
@@ -536,6 +544,184 @@ theme_override_font_sizes/font_size = 34
 text = "다른 콘텐츠\n\n도감 / 도전 / 이벤트 슬롯 예정"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+
+[node name="MonsterDetailOverlay" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Dim" type="ColorRect" parent="MonsterDetailOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.01, 0.008, 0.015, 0.88)
+mouse_filter = 0
+
+[node name="Panel" type="PanelContainer" parent="MonsterDetailOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_left = 0.04
+anchor_top = 0.055
+anchor_right = 0.96
+anchor_bottom = 0.94
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="MonsterDetailOverlay/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 34
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 34
+theme_override_constants/margin_bottom = 28
+
+[node name="VBox" type="VBoxContainer" parent="MonsterDetailOverlay/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Header" type="HBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.88, 0.62, 1)
+theme_override_font_sizes/font_size = 34
+text = "몬스터 상세"
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="MonsterDetailOverlay/Panel/Margin/VBox/Header"]
+custom_minimum_size = Vector2(120, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "닫기"
+
+[node name="Guide" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.65, 0.75, 1)
+theme_override_font_sizes/font_size = 18
+text = "왼쪽은 기본 몬스터, 오른쪽은 기본 돌연변이 기준입니다."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Compare" type="HBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 18
+
+[node name="NormalPanel" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Margin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 22
+
+[node name="VBox" type="VBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Badge" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "일반"
+horizontal_alignment = 1
+
+[node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 230)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="Name" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "몬스터"
+horizontal_alignment = 1
+
+[node name="Stats" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.9, 0.86, 0.93, 1)
+theme_override_font_sizes/font_size = 19
+text = "기본 스탯"
+autowrap_mode = 2
+
+[node name="SpecialTitle" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
+theme_override_font_sizes/font_size = 20
+text = "획득 가능한 특수증강"
+
+[node name="Specials" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.77, 0.86, 1)
+theme_override_font_sizes/font_size = 17
+text = "특수증강"
+autowrap_mode = 2
+
+[node name="ElitePanel" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Margin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 22
+
+[node name="VBox" type="VBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Badge" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.7, 0.36, 1)
+theme_override_font_sizes/font_size = 20
+text = "엘리트 · 기본 돌연변이"
+horizontal_alignment = 1
+
+[node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 230)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="Name" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "돌연변이 몬스터"
+horizontal_alignment = 1
+
+[node name="Stats" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.92, 0.86, 0.76, 1)
+theme_override_font_sizes/font_size = 19
+text = "엘리트 스탯"
+autowrap_mode = 2
+
+[node name="Note" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.6, 0.69, 1)
+theme_override_font_sizes/font_size = 16
+text = "실제 돌연변이/대돌연변이/보스 이벤트에 따라 배율은 달라질 수 있습니다."
+autowrap_mode = 2
 
 [node name="BottomNav" type="PanelContainer" parent="."]
 layout_mode = 1
