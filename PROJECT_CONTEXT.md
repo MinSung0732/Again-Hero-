@@ -1742,3 +1742,25 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
   - PortraitFrame 430 -> 400
 - 던전 입장 버튼 높이 92 -> 84.
 - 던전 입장 버튼은 금색 테두리와 보라색 배경의 전용 primary 스타일로 강조한다.
+
+
+### newUI_frame 로비 교체 v1
+- 새 UI 에셋 경로: `res://assets/art/UI/newUI_frame/`.
+- 기존 `01_large_left_panel` / `03_middle_right_panel` 조각 조립 방식은 로비 적용에서 제거한다.
+- 새 프레임은 단일 PNG + NinePatchRect / StyleBoxTexture 방식으로 사용한다.
+- 프레임 역할:
+  - frame_01: ContentFrame
+  - frame_02: StageCard
+  - frame_03: 상세 팝업
+  - frame_04: 팀 몬스터 카드
+  - frame_05: 컬렉션/보조 패널 예약
+  - frame_06: Header
+  - frame_07: BottomNav
+  - frame_08: Primary 버튼
+  - frame_09: Secondary 버튼
+  - frame_10: 좌우 화살표
+  - frame_11: 팀 슬롯
+- Header / Content / BottomNav / StageCard / 상세 팝업은 NinePatchRect로 적용한다.
+- 던전 입장 / 10+1 / 팀편성 / 상세정보 / 연구 버튼은 StyleBoxTexture로 새 프레임을 사용한다.
+- 동적 팀 카드와 연구 카드도 newUI 프레임 세트로 통일한다.
+- 모든 PNG는 Nearest 필터를 사용하고, 프레임은 입력을 가로채지 않는다.
