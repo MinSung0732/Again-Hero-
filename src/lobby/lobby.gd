@@ -263,13 +263,15 @@ func _apply_styles() -> void:
 		"panel",
 		card_backing
 	)
+	# ui10 자체의 상단 사각 프레임을 테두리로 사용한다.
+	# 초상화 컨테이너에는 추가 금색/내부 테두리를 그리지 않는다.
 	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame.add_theme_stylebox_override(
 		"panel",
-		portrait_outer_style
+		StyleBoxEmpty.new()
 	)
 	$SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner.add_theme_stylebox_override(
 		"panel",
-		portrait_inner_style
+		StyleBoxEmpty.new()
 	)
 	$SafeArea/Layout/Content/ShopTab/ShopLayout/ResultPanel.add_theme_stylebox_override(
 		"panel",
