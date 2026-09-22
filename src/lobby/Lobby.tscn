@@ -341,15 +341,16 @@ horizontal_alignment = 1
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 
-[node name="StageMetaBox" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
+[node name="StageMetaBox" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
 custom_minimum_size = Vector2(0, 86)
 layout_mode = 2
-theme_override_constants/separation = 0
-alignment = 1
 
 [node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
-custom_minimum_size = Vector2(0, 30)
-layout_mode = 2
+layout_mode = 1
+anchor_right = 1.0
+offset_top = 10.0
+offset_bottom = 38.0
+grow_horizontal = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
 theme_override_font_sizes/font_size = 24
 text = "STAGE 01"
@@ -357,8 +358,11 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="StageName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
+layout_mode = 1
+anchor_right = 1.0
+offset_top = 38.0
+offset_bottom = 86.0
+grow_horizontal = 2
 theme_override_colors/font_color = Color(0.98, 0.93, 1, 1)
 theme_override_font_sizes/font_size = 38
 text = "첫 번째 침입자"
@@ -372,7 +376,7 @@ theme_override_constants/separation = 12
 alignment = 1
 
 [node name="PrevButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
-custom_minimum_size = Vector2(64, 124)
+custom_minimum_size = Vector2(84, 168)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 42
@@ -554,7 +558,7 @@ theme_override_font_sizes/font_size = 36
 text = "던전 입장"
 
 [node name="NextButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
-custom_minimum_size = Vector2(64, 124)
+custom_minimum_size = Vector2(84, 168)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 42
