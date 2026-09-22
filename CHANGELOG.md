@@ -1912,3 +1912,20 @@
 - HeaderMargin을 마지막 정상값인 좌우 54 / 상단 96으로 복구.
 - 직전의 Header 배경 프레임 시각 확장(expand margin)과 중앙 Content/StageCard 위치는 그대로 유지.
 - 다음 헤더 미세조정은 좌우 정보를 함께 밀지 않고 각 라벨 단위로 소폭 조정 예정.
+
+### Hero Art Refresh Path Repair
+- 사용자 에셋 갱신 커밋 dca1f92 이후 깨진 용사 리소스 경로를 현재 디렉터리 구조에 맞게 복구.
+- Stage 2 로비 초상화 경로를 삭제된 stage2_hero_portrait2.png에서 새 stage2_hero_portrait.png로 변경.
+- Stage 1 견습 마도사 본체를 기존 통합 spritesheet 슬라이싱 대신 frames/의 개별 PNG 시퀀스로 전환.
+  - idle_01~04 -> idle
+  - walk_01~07 -> move
+  - atk_01~07 -> attack
+  - hit_01~03 -> hit
+  - dead_01~04 -> death
+- Stage 1 effect_01/02/03 경로를 모두 stage1_mage/frames/effect_01~03으로 변경.
+  - effect_01: 관통 궁극기 투사체
+  - effect_02: 실드
+  - effect_03: 채널링 필드
+- Stage 1 death 프레임이 존재하므로 사망 시 hit 재생 대신 death 애니메이션을 우선 사용.
+- Hero profile에 Stage 1 sprite_frame_dir를 추가하되 기존 sprite_sheet_path는 기준/레거시 데이터로 유지.
+- HERO_RESOURCE_STANDARD의 Stage 2 초상화 경로도 실제 파일명과 동기화.
