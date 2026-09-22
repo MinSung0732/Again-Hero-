@@ -33,6 +33,8 @@ var dying: bool = false
 var self_destructing: bool = false
 var self_destruct_timer: float = 0.0
 var desired_locomotion: StringName = &"idle"
+var special_augment_configs: Dictionary = {}
+var survival_time: float = 0.0
 
 func _ready() -> void:
 	add_to_group("monsters")
@@ -47,6 +49,8 @@ func _physics_process(delta: float) -> void:
 	if current_hp <= 0 or dying:
 		velocity = Vector2.ZERO
 		return
+
+	survival_time += delta
 
 	if hit_flash_timer > 0.0:
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
@@ -114,6 +118,7 @@ func _complete_self_destruct() -> void:
 
 	dying = true
 	self_destructing = false
+	set_meta("death_type", "self_destruct")
 	velocity = Vector2.ZERO
 	current_hp = 0
 	exp_reward = self_destruct_exp_reward
@@ -130,6 +135,7 @@ func _die_from_hero() -> void:
 
 	dying = true
 	self_destructing = false
+	set_meta("death_type", "normal")
 	velocity = Vector2.ZERO
 	current_hp = 0
 	exp_reward = hero_kill_exp_reward
@@ -147,10 +153,45 @@ func _play_death_or_free() -> void:
 func _trigger_death_explosion() -> void:
 	if not is_instance_valid(hero):
 		return
-	if global_position.distance_to(hero.global_position) > explosion_radius:
+
+	var effective_radius := explosion_radius
+	var overload: Dictionary = special_augment_configs.get(
+		"bomb_rat_powder_overload",
+		{}
+	)
+	if not overload.is_empty():
+		var interval := maxf(float(overload.get("interval", 1.0)), 0.01)
+		var steps := floori(survival_time / interval)
+		effective_radius += minf(
+			float(steps) * float(overload.get("radius_per_interval", 0.0)),
+			float(overload.get("max_bonus_radius", 0.0))
+		)
+
+	if global_position.distance_to(hero.global_position) > effective_radius:
 		return
+
+	var effective_damage := float(explosion_damage)
+	var unstable: Dictionary = special_augment_configs.get(
+		"bomb_rat_unstable_powder",
+		{}
+	)
+	if not unstable.is_empty():
+		var hp_ratio := clampf(
+			float(current_hp) / float(maxi(max_hp, 1)),
+			0.0,
+			1.0
+		)
+		effective_damage *= (
+			1.0
+			+ (1.0 - hp_ratio)
+			* float(unstable.get("max_damage_bonus", 0.0))
+		)
+
 	if hero.has_method("take_damage"):
-		hero.call("take_damage", explosion_damage)
+		hero.call("take_damage", maxi(int(round(effective_damage)), 1))
+
+func configure_special_augments(configs: Dictionary) -> void:
+	special_augment_configs = configs.duplicate(true)
 
 func apply_visual_profile(profile: Dictionary) -> bool:
 	if profile.is_empty():
