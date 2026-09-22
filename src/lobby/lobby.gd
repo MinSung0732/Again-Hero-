@@ -841,6 +841,9 @@ func _build_elite_detail_text(
 		mutation.get("damage_multiplier", 1.0)
 	)
 	var speed_multiplier := float(mutation.get("speed_multiplier", 1.0))
+	var attack_speed_multiplier := float(
+		mutation.get("attack_speed_multiplier", 1.0)
+	)
 	var visual_scale := float(mutation.get("visual_scale", 1.0))
 
 	var lines: PackedStringArray = []
@@ -848,6 +851,7 @@ func _build_elite_detail_text(
 	lines.append("HP 배율  ×%.2f" % hp_multiplier)
 	lines.append("공격력 배율  ×%.2f" % damage_multiplier)
 	lines.append("이동속도 배율  ×%.2f" % speed_multiplier)
+	lines.append("공격속도 배율  ×%.2f" % attack_speed_multiplier)
 	lines.append("크기 배율  ×%.2f" % visual_scale)
 	lines.append("")
 
@@ -892,14 +896,26 @@ func _build_elite_detail_text(
 	var cooldown_value = stats.get("attack_cooldown")
 	if cooldown_value != null:
 		lines.append(
-			"공격 간격  %.2f초 · 변화 없음" % float(cooldown_value)
+			"공격 간격  %.2f초 → %.2f초" % [
+				float(cooldown_value),
+				float(cooldown_value) / maxf(
+					attack_speed_multiplier,
+					0.01
+				),
+			]
 		)
 
 	if monster_id == "bomb_rat":
 		var fuse_value = stats.get("self_destruct_fuse")
 		if fuse_value != null:
 			lines.append(
-				"자폭 준비  %.2f초 · 변화 없음" % float(fuse_value)
+				"자폭 준비  %.2f초 → %.2f초" % [
+					float(fuse_value),
+					float(fuse_value) / maxf(
+						attack_speed_multiplier,
+						0.01
+					),
+				]
 			)
 
 	lines.append("")
