@@ -18,6 +18,10 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 const UI_FRAME_LARGE_DIR := "res://assets/art/UI/01_large_left_panel"
 const UI_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
 const UI_CARD_FRAME_DIR := "res://assets/art/UI/uicardframes"
+const UI_HEADER_FRAME_PATH := UI_CARD_FRAME_DIR + "/ui1.png"
+const UI_BOTTOM_NAV_FRAME_PATH := UI_CARD_FRAME_DIR + "/ui3.png"
+const UI_NAV_ACTIVE_FRAME_PATH := UI_CARD_FRAME_DIR + "/ui5.png"
+const UI_CONTENT_FRAME_PATH := UI_CARD_FRAME_DIR + "/ui9.png"
 const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
@@ -188,10 +192,10 @@ func _build_styles() -> void:
 		8
 	)
 	nav_button_active_style = _make_style(
-		Color("6b2f82"),
-		Color("e5b94e"),
-		4,
-		10
+		Color(0.12, 0.07, 0.16, 0.18),
+		Color(0, 0, 0, 0),
+		0,
+		8
 	)
 	nav_button_active_style.content_margin_top = 10.0
 	nav_button_active_style.content_margin_bottom = 10.0
@@ -349,49 +353,8 @@ func _apply_styles() -> void:
 
 
 func _apply_asset_frames() -> void:
-	# 헤더는 정보 가독성이 우선이라 장식 프레임을 한 단계 가볍게 사용한다.
-	_add_asset_frame(
-		$SafeArea/Layout/Header,
-		UI_FRAME_MEDIUM_DIR,
-		Vector2(28.0, 27.0),
-		Vector2(28.0, 27.0),
-		Vector2(28.0, 27.0),
-		Vector2(28.0, 27.0),
-		15.0,
-		15.0,
-		13.0,
-		13.0
-	)
-
-	# 하단 네비게이션은 별도 패스에서 조정할 수 있도록 헤더와 분리한다.
-	_add_asset_frame(
-		$BottomNav,
-		UI_FRAME_MEDIUM_DIR,
-		Vector2(34.0, 33.0),
-		Vector2(34.0, 33.0),
-		Vector2(34.0, 33.0),
-		Vector2(34.0, 33.0),
-		18.0,
-		18.0,
-		16.0,
-		16.0
-	)
-
-	# 콘텐츠 프레임은 화면 가장자리 장식 역할만 한다.
-	_add_asset_frame(
-		$SafeArea/Layout/Content/ContentFrame,
-		UI_FRAME_LARGE_DIR,
-		Vector2(40.0, 39.0),
-		Vector2(40.0, 39.0),
-		Vector2(40.0, 39.0),
-		Vector2(40.0, 39.0),
-		20.0,
-		20.0,
-		18.0,
-		18.0
-	)
-
-	# 팝업만 별도 프레임을 사용한다. 카드 내부 중첩 장식은 피한다.
+	# 메인 로비 외곽은 uicardframes 완성형 리소스로 통일한다.
+	# legacy part_01~09 조립 프레임은 팝업에서만 유지한다.
 	_add_asset_frame(
 		monster_detail_panel,
 		UI_FRAME_MEDIUM_DIR,
@@ -587,7 +550,110 @@ func _load_png_texture_top_region(path: String, height_ratio: float) -> Texture2
 	return ImageTexture.create_from_image(top_region)
 
 
+
+func _apply_uicard_skin(
+	target: Control,
+	texture_path: String,
+	skin_name: String,
+	patch_x_ratio: float,
+	patch_y_ratio: float,
+	inset: float = 0.0
+) -> void:
+	if target == null:
+		return
+
+	var old_skin := target.get_node_or_null(skin_name)
+	if old_skin != null:
+		old_skin.queue_free()
+
+	var texture := _load_png_texture_cropped(texture_path)
+	if texture == null:
+		return
+
+	var texture_size := texture.get_size()
+	var patch_x := maxi(1, int(round(texture_size.x * patch_x_ratio)))
+	var patch_y := maxi(1, int(round(texture_size.y * patch_y_ratio)))
+
+	var skin := NinePatchRect.new()
+	skin.name = skin_name
+	skin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	skin.texture = texture
+	skin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	skin.draw_center = true
+	skin.patch_margin_left = patch_x
+	skin.patch_margin_top = patch_y
+	skin.patch_margin_right = patch_x
+	skin.patch_margin_bottom = patch_y
+	skin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	skin.offset_left = inset
+	skin.offset_top = inset
+	skin.offset_right = -inset
+	skin.offset_bottom = -inset
+	skin.show_behind_parent = true
+	target.add_child(skin)
+	target.move_child(skin, 0)
+
+
+func _apply_nav_active_texture(button: Button, selected: bool) -> void:
+	if button == null:
+		return
+
+	var old_skin := button.get_node_or_null("ActiveCardSkin")
+	if old_skin != null:
+		old_skin.queue_free()
+
+	if not selected:
+		return
+
+	var texture := _load_png_texture_cropped(UI_NAV_ACTIVE_FRAME_PATH)
+	if texture == null:
+		return
+
+	var skin := TextureRect.new()
+	skin.name = "ActiveCardSkin"
+	skin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	skin.texture = texture
+	skin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	skin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	skin.stretch_mode = TextureRect.STRETCH_SCALE
+	skin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	skin.offset_left = 2.0
+	skin.offset_top = 2.0
+	skin.offset_right = -2.0
+	skin.offset_bottom = -2.0
+	skin.show_behind_parent = true
+	button.add_child(skin)
+	button.move_child(skin, 0)
+
+
 func _apply_new_ui_assets() -> void:
+	# 메인 로비 외곽 3단 프레임을 uicardframes 세트로 통일.
+	# 중앙 StageCard(ui10) 내부 레이아웃은 그대로 유지한다.
+	_apply_uicard_skin(
+		$SafeArea/Layout/Header,
+		UI_HEADER_FRAME_PATH,
+		"HeaderCardSkin",
+		0.11,
+		0.24,
+		2.0
+	)
+	_apply_uicard_skin(
+		$SafeArea/Layout/Content/ContentFrame,
+		UI_CONTENT_FRAME_PATH,
+		"ContentCardSkin",
+		0.12,
+		0.08,
+		0.0
+	)
+	_apply_uicard_skin(
+		$BottomNav,
+		UI_BOTTOM_NAV_FRAME_PATH,
+		"BottomNavCardSkin",
+		0.11,
+		0.24,
+		2.0
+	)
+
 	var title_label := $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 	if title_label != null:
 		title_label.visible = false
@@ -753,6 +819,7 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 		"font_hover_color",
 		Color("fff1c7") if selected else Color("eee7f2")
 	)
+	_apply_nav_active_texture(button, selected)
 
 func _format_shop_number(value: int) -> String:
 	var digits := str(maxi(value, 0))
