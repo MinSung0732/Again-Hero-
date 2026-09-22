@@ -541,6 +541,129 @@ func get_monster_cost(monster_type: String) -> float:
 		0.1
 	)
 
+
+func get_monster_run_detail(monster_id: String) -> Dictionary:
+	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
+		return {}
+
+	var scene := MONSTER_CATALOG.get_scene(monster_id)
+	if scene == null:
+		return {}
+
+	var monster := scene.instantiate()
+	if monster == null:
+		return {}
+
+	var detail := {
+		"monster_id": monster_id,
+		"name": MONSTER_CATALOG.get_name(monster_id),
+		"cost": get_monster_cost(monster_id),
+		"summon_exp": MONSTER_CATALOG.get_summon_exp(monster_id),
+		"demon_level": demon_level,
+		"normal_augments": [],
+		"special_augments": [],
+	}
+
+	var raw_hp = monster.get("max_hp")
+	if raw_hp != null:
+		detail["max_hp"] = maxi(
+			1,
+			int(round(
+				float(raw_hp)
+				* monster_hp_multiplier
+				* _get_monster_augment_multiplier(monster_id, "hp")
+				* _get_demon_level_monster_hp_multiplier()
+			))
+		)
+
+	var raw_damage = monster.get("attack_damage")
+	if raw_damage != null:
+		detail["attack_damage"] = maxi(
+			1,
+			int(round(
+				float(raw_damage)
+				* monster_damage_multiplier
+				* _get_monster_augment_multiplier(monster_id, "damage")
+				* _get_demon_level_monster_damage_multiplier()
+			))
+		)
+
+	var raw_speed = monster.get("move_speed")
+	if raw_speed != null:
+		detail["move_speed"] = (
+			float(raw_speed)
+			* monster_speed_multiplier
+			* _get_monster_augment_multiplier(monster_id, "speed")
+			* _get_demon_level_monster_speed_multiplier()
+		)
+
+	var raw_cooldown = monster.get("attack_cooldown")
+	if raw_cooldown != null:
+		detail["attack_cooldown"] = maxf(
+			0.10,
+			float(raw_cooldown)
+			* monster_attack_speed_multiplier
+			* _get_monster_augment_multiplier(
+				monster_id,
+				"attack_cooldown"
+			)
+		)
+
+	var raw_explosion_damage = monster.get("explosion_damage")
+	if raw_explosion_damage != null:
+		detail["explosion_damage"] = maxi(
+			1,
+			int(round(
+				float(raw_explosion_damage)
+				* monster_damage_multiplier
+				* _get_monster_augment_multiplier(monster_id, "damage")
+				* _get_demon_level_monster_damage_multiplier()
+			))
+		)
+
+	var raw_explosion_radius = monster.get("explosion_radius")
+	if raw_explosion_radius != null:
+		detail["explosion_radius"] = float(raw_explosion_radius)
+
+	var raw_fuse = monster.get("self_destruct_fuse")
+	if raw_fuse != null:
+		detail["self_destruct_fuse"] = maxf(
+			0.10,
+			float(raw_fuse) * monster_attack_speed_multiplier
+		)
+
+	monster.free()
+
+	var normal_augments: Array = []
+	for raw_augment in DEMON_AUGMENTS.get_monster_normal_augments(
+		monster_id,
+		MONSTER_CATALOG.get_name(monster_id)
+	):
+		var augment: Dictionary = raw_augment
+		var augment_id := String(augment.get("id", ""))
+		var level := int(demon_build_counts.get(augment_id, 0))
+		if level <= 0:
+			continue
+		normal_augments.append({
+			"name": String(augment.get("name", augment_id)),
+			"level": level,
+		})
+	detail["normal_augments"] = normal_augments
+
+	var special_augments: Array = []
+	for raw_id in demon_special_augments:
+		var augment_id := String(raw_id)
+		var augment := DEMON_AUGMENTS.get_augment(augment_id)
+		if String(augment.get("monster_id", "")) != monster_id:
+			continue
+		special_augments.append({
+			"id": augment_id,
+			"name": String(augment.get("name", augment_id)),
+		})
+	detail["special_augments"] = special_augments
+
+	return detail
+
 func _get_auto_spawn_position() -> Vector2:
 	var origin := current_map_size * 0.5
 	if is_instance_valid(hero):
