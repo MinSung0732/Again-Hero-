@@ -572,7 +572,7 @@ func _physics_process_gunner(delta: float) -> void:
 	if gunner_reloading:
 		gunner_reload_timer = maxf(gunner_reload_timer - delta, 0.0)
 		queue_redraw()
-		if gunner_cylinder_cooldown <= 0.0 and _count_monsters_near(global_position, float(gunner_config.get("cylinder_radius", 190.0))) > 0:
+		if _gunner_should_use_cylinder():
 			_use_gunner_cylinder_strike()
 		if gunner_reload_timer <= 0.0:
 			_finish_gunner_reload()
@@ -672,16 +672,95 @@ func _finish_gunner_reload() -> void:
 	queue_redraw()
 
 
+func _gunner_surround_pressure() -> float:
+	var radius := maxf(float(gunner_config.get("surrounded_radius", 220.0)), 1.0)
+	var required := maxi(int(gunner_config.get("surrounded_enemy_count", 4)), 1)
+	var nearby := _count_monsters_near(global_position, radius)
+	return clampf(float(nearby) / float(required), 0.0, 1.5)
+
+
+func _gunner_should_backstep_on_hit() -> bool:
+	if gunner_backstep_cooldown > 0.0:
+		return false
+	var pressure := _gunner_surround_pressure()
+	var base_chance := clampf(float(gunner_config.get("backstep_base_chance", 0.30)), 0.0, 1.0)
+	var surround_bonus := maxf(float(gunner_config.get("surrounded_backstep_bonus", 0.55)), 0.0)
+	var chance := clampf(base_chance + minf(pressure, 1.0) * surround_bonus, 0.0, 1.0)
+	return randf() <= chance
+
+
+func _gunner_should_use_cylinder() -> bool:
+	if not gunner_reloading or gunner_cylinder_cooldown > 0.0:
+		return false
+	var nearby := _count_monsters_near(
+		global_position,
+		maxf(float(gunner_config.get("cylinder_radius", 190.0)), 1.0)
+	)
+	var base_required := maxi(int(gunner_config.get("cylinder_base_enemy_count", 2)), 1)
+	var surrounded_required := maxi(
+		int(gunner_config.get("cylinder_surrounded_enemy_count", 4)),
+		base_required
+	)
+	if nearby >= surrounded_required:
+		return true
+	if nearby < base_required:
+		return false
+	# 포위 상태에 가까울수록 장전 중 방어 행동의 우선도가 올라간다.
+	var weight := clampf(
+		float(nearby - base_required + 1)
+		/ float(maxi(surrounded_required - base_required + 1, 1)),
+		0.0,
+		1.0
+	)
+	return randf() <= 0.30 + weight * 0.45
+
+
 func _start_gunner_backstep() -> void:
 	gunner_backstep_cooldown = maxf(float(gunner_config.get("backstep_cooldown", 7.0)), 0.1)
 	invulnerability_timer = maxf(invulnerability_timer, float(gunner_config.get("backstep_invulnerability", 0.75)))
 	var escape_direction := _find_gunner_escape_direction()
-	global_position += escape_direction * maxf(float(gunner_config.get("backstep_distance", 260.0)), 0.0)
+	var start_position := global_position
+	var distance := maxf(float(gunner_config.get("backstep_distance", 260.0)), 0.0)
+	_spawn_gunner_afterimage(start_position, 0.62, 0.34)
+	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.34, 0.46, 0.30)
+	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.68, 0.30, 0.26)
+	global_position += escape_direction * distance
 	_clamp_to_battlefield()
 	if gunner_saved_collision_mask < 0:
 		gunner_saved_collision_mask = collision_mask
 	collision_mask = 0
 	gunner_collision_ignore_timer = 0.22
+
+
+func _spawn_gunner_afterimage(world_position: Vector2, alpha: float, fade_time: float) -> void:
+	if not hero_sprite.visible or hero_sprite.sprite_frames == null:
+		return
+	if not hero_sprite.sprite_frames.has_animation(hero_sprite.animation):
+		return
+	var frame_texture := hero_sprite.sprite_frames.get_frame_texture(
+		hero_sprite.animation,
+		hero_sprite.frame
+	)
+	if frame_texture == null:
+		return
+
+	var ghost := Sprite2D.new()
+	ghost.texture = frame_texture
+	ghost.centered = hero_sprite.centered
+	ghost.flip_h = hero_sprite.flip_h
+	ghost.flip_v = hero_sprite.flip_v
+	ghost.offset = hero_sprite.offset
+	ghost.scale = hero_sprite.scale
+	ghost.rotation = hero_sprite.rotation
+	ghost.global_position = world_position
+	ghost.z_index = hero_sprite.z_index - 1
+	ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	ghost.modulate = Color(0.72, 0.88, 1.0, clampf(alpha, 0.05, 0.85))
+	get_parent().add_child(ghost)
+
+	var tween := ghost.create_tween()
+	tween.tween_property(ghost, "modulate:a", 0.0, maxf(fade_time, 0.05))
+	tween.finished.connect(Callable(ghost, "queue_free"))
 
 
 func _find_gunner_escape_direction() -> Vector2:
@@ -708,6 +787,7 @@ func _update_gunner_collision_ignore(delta: float) -> void:
 
 func _use_gunner_cylinder_strike() -> void:
 	gunner_cylinder_cooldown = maxf(float(gunner_config.get("cylinder_cooldown", 10.0)), 0.1)
+	_play_gunner_cylinder_dust()
 	var radius := maxf(float(gunner_config.get("cylinder_radius", 190.0)), 1.0)
 	var knockback := maxf(float(gunner_config.get("cylinder_knockback", 145.0)), 0.0)
 	var slow_multiplier := clampf(float(gunner_config.get("cylinder_slow_multiplier", 0.50)), 0.1, 1.0)
@@ -4354,20 +4434,35 @@ func _apply_stage4_gunner_effect_visuals() -> void:
 	frames.set_animation_loop(&"muzzle", false)
 	frames.set_animation_speed(&"muzzle", 28.0)
 
+	var dust_frames := SpriteFrames.new()
+	if dust_frames.has_animation(&"default"):
+		dust_frames.remove_animation(&"default")
+	dust_frames.add_animation(&"cylinder_dust")
+	dust_frames.set_animation_loop(&"cylinder_dust", false)
+	dust_frames.set_animation_speed(&"cylinder_dust", 18.0)
+
 	for index in range(1, 8):
 		var path := "res://assets/art/heroes/stage4_gunner/frames/effect/effect_explosion_%02d.png" % index
 		var texture := _load_stage1_texture(path)
 		if texture == null:
-			push_warning("Stage 4 muzzle flash frame load failed: %s" % path)
+			push_warning("Stage 4 effect frame load failed: %s" % path)
 			continue
 		frames.add_frame(&"muzzle", texture)
+		dust_frames.add_frame(&"cylinder_dust", texture)
 
-	if frames.get_frame_count(&"muzzle") <= 0:
-		return
+	if frames.get_frame_count(&"muzzle") > 0:
+		rogue_attack_effect.sprite_frames = frames
+		rogue_attack_effect.scale = Vector2(0.30, 0.30)
+		rogue_attack_effect.z_index = 4
 
-	rogue_attack_effect.sprite_frames = frames
-	rogue_attack_effect.scale = Vector2(0.30, 0.30)
-	rogue_attack_effect.z_index = 4
+	if dust_frames.get_frame_count(&"cylinder_dust") > 0:
+		channel_effect.visible = false
+		channel_effect.sprite_frames = dust_frames
+		channel_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		channel_effect.scale = Vector2(0.78, 0.78)
+		channel_effect.position = Vector2.ZERO
+		channel_effect.z_index = 2
+		channel_effect.modulate = Color(0.78, 0.70, 0.58, 0.92)
 
 
 func _play_gunner_muzzle_flash(direction: Vector2) -> void:
@@ -4386,6 +4481,21 @@ func _play_gunner_muzzle_flash(direction: Vector2) -> void:
 	rogue_attack_effect.frame = 0
 	rogue_attack_effect.frame_progress = 0.0
 	rogue_attack_effect.play(&"muzzle")
+
+
+func _play_gunner_cylinder_dust() -> void:
+	if channel_effect.sprite_frames == null:
+		return
+	if not channel_effect.sprite_frames.has_animation(&"cylinder_dust"):
+		return
+	channel_effect.visible = true
+	channel_effect.stop()
+	channel_effect.position = Vector2.ZERO
+	channel_effect.rotation = randf_range(-0.10, 0.10)
+	channel_effect.animation = &"cylinder_dust"
+	channel_effect.frame = 0
+	channel_effect.frame_progress = 0.0
+	channel_effect.play(&"cylinder_dust")
 
 
 func _add_prefixed_effect_animation(
@@ -4486,7 +4596,7 @@ func take_damage(amount: int, source: Node = null) -> bool:
 		_begin_death_sequence()
 	else:
 		invulnerability_timer = invulnerability_duration
-		if hero_archetype == "pistol_gunner" and gunner_backstep_cooldown <= 0.0:
+		if hero_archetype == "pistol_gunner" and _gunner_should_backstep_on_hit():
 			_start_gunner_backstep()
 		_refresh_invulnerability_visual()
 
