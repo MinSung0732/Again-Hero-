@@ -43,6 +43,7 @@ const PROFILES = {
 			"fighter_sword_mastery": 0.35,
 			"fighter_slash_width": 0.25,
 			"fighter_thrust_training": 0.20,
+			"fighter_charge_recovery": 0.25,
 			"iron_body": 0.35,
 		},
 	},
