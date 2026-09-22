@@ -150,13 +150,23 @@ func _process(delta: float) -> void:
 		_update_demon_ultimate_cooldowns(delta)
 
 		if demon_ultimate_charge < DEMON_ULTIMATES.CHARGE_MAX:
+			var previous_charge := demon_ultimate_charge
 			demon_ultimate_charge = minf(
 				demon_ultimate_charge
 				+ DEMON_ULTIMATES.PASSIVE_CHARGE_PER_SECOND * delta,
 				DEMON_ULTIMATES.CHARGE_MAX
 			)
 			demon_ultimate_emit_timer -= delta
-			if demon_ultimate_emit_timer <= 0.0:
+
+			var reached_full_charge := (
+				previous_charge + 0.001 < DEMON_ULTIMATES.CHARGE_MAX
+				and demon_ultimate_charge + 0.001
+				>= DEMON_ULTIMATES.CHARGE_MAX
+			)
+			if reached_full_charge:
+				demon_ultimate_emit_timer = 0.10
+				_emit_demon_ultimate_changed()
+			elif demon_ultimate_emit_timer <= 0.0:
 				demon_ultimate_emit_timer = 0.10
 				_emit_demon_ultimate_changed()
 
@@ -1169,23 +1179,31 @@ func _emit_demon_ultimate_cooldowns() -> void:
 
 func _update_demon_ultimate_cooldowns(delta: float) -> void:
 	var changed := false
+	var reached_ready := false
 	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
 		var skill_id := String(raw_id)
-		var remaining := maxf(
-			float(demon_ultimate_cooldowns.get(skill_id, 0.0)) - delta,
+		var previous_remaining := maxf(
+			float(demon_ultimate_cooldowns.get(skill_id, 0.0)),
 			0.0
 		)
-		if absf(
-			remaining - float(demon_ultimate_cooldowns.get(skill_id, 0.0))
-		) > 0.0001:
+		var remaining := maxf(
+			previous_remaining - delta,
+			0.0
+		)
+		if absf(remaining - previous_remaining) > 0.0001:
 			demon_ultimate_cooldowns[skill_id] = remaining
 			changed = true
+			if previous_remaining > 0.001 and remaining <= 0.001:
+				reached_ready = true
 
 	if not changed:
 		return
 
 	demon_ultimate_cooldown_emit_timer -= delta
-	if demon_ultimate_cooldown_emit_timer <= 0.0:
+	if reached_ready:
+		demon_ultimate_cooldown_emit_timer = 0.10
+		_emit_demon_ultimate_cooldowns()
+	elif demon_ultimate_cooldown_emit_timer <= 0.0:
 		demon_ultimate_cooldown_emit_timer = 0.10
 		_emit_demon_ultimate_cooldowns()
 
