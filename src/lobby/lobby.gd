@@ -841,9 +841,17 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	var card := PanelContainer.new()
 	card.custom_minimum_size = Vector2(0.0, 338.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.add_theme_stylebox_override(
-		"panel",
-		primary_button_style if selected else stage_card_style
+	var card_backing := _make_style(
+		Color("21182a") if selected else Color("17131f"),
+		Color(0, 0, 0, 0),
+		0,
+		18
+	)
+	card.add_theme_stylebox_override("panel", card_backing)
+	_apply_nine_patch_frame(
+		card,
+		UI_FRAME_SMALL_CARD,
+		40
 	)
 
 	var margin := MarginContainer.new()
@@ -908,12 +916,10 @@ func _create_team_monster_card(monster_id: String) -> Control:
 		or (selected and team_selected_ids.size() <= 1)
 		or (not selected and team_selected_ids.size() >= TEAM_MAX_SLOTS)
 	)
-	team_button.add_theme_stylebox_override(
-		"normal",
-		primary_button_style if selected else secondary_button_style
+	_apply_texture_button_frame(
+		team_button,
+		UI_FRAME_PRIMARY if selected else UI_FRAME_SECONDARY
 	)
-	team_button.add_theme_stylebox_override("hover", primary_button_style)
-	team_button.add_theme_stylebox_override("pressed", primary_button_style)
 	team_button.pressed.connect(_toggle_team_monster.bind(monster_id))
 	actions.add_child(team_button)
 
@@ -922,9 +928,10 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	detail_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_button.add_theme_font_size_override("font_size", 24)
 	detail_button.text = "상세정보"
-	detail_button.add_theme_stylebox_override("normal", secondary_button_style)
-	detail_button.add_theme_stylebox_override("hover", primary_button_style)
-	detail_button.add_theme_stylebox_override("pressed", primary_button_style)
+	_apply_texture_button_frame(
+		detail_button,
+		UI_FRAME_SECONDARY
+	)
 	detail_button.pressed.connect(_open_monster_detail.bind(monster_id))
 	actions.add_child(detail_button)
 
@@ -1554,10 +1561,6 @@ func _rebuild_research_list() -> void:
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(0, 124)
 		button.add_theme_font_size_override("font_size", 24)
-		button.add_theme_stylebox_override("normal", secondary_button_style)
-		button.add_theme_stylebox_override("hover", secondary_button_style)
-		button.add_theme_stylebox_override("pressed", secondary_button_style)
-
 		if level >= max_level:
 			button.disabled = true
 			button.text = "%s  Lv.%d / %d\n%s\n연구 완료" % [
@@ -1578,6 +1581,12 @@ func _rebuild_research_list() -> void:
 			]
 			button.pressed.connect(_purchase_research.bind(research_id))
 
+		_apply_texture_button_frame(
+			button,
+			UI_FRAME_PRIMARY
+			if not button.disabled
+			else UI_FRAME_SECONDARY
+		)
 		research_list.add_child(button)
 
 func _purchase_research(research_id: String) -> void:
