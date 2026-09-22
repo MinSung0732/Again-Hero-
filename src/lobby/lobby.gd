@@ -542,6 +542,21 @@ func _load_png_texture_direct(path: String) -> Texture2D:
 	return ImageTexture.create_from_image(image)
 
 
+func _load_png_texture_cropped(path: String) -> Texture2D:
+	var image := Image.new()
+	var load_error := image.load(path)
+	if load_error != OK or image.is_empty():
+		push_warning("UI PNG crop load failed: %s / error=%s" % [path, load_error])
+		return null
+
+	var used_rect := image.get_used_rect()
+	if used_rect.size.x <= 0 or used_rect.size.y <= 0:
+		return ImageTexture.create_from_image(image)
+
+	var cropped := image.get_region(used_rect)
+	return ImageTexture.create_from_image(cropped)
+
+
 func _apply_new_ui_assets() -> void:
 	var title_label := $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 	if title_label != null:
@@ -568,6 +583,24 @@ func _apply_new_ui_assets() -> void:
 		logo.offset_bottom = 92.0
 		header.add_child(logo)
 		header.move_child(logo, 0)
+
+	var stage_card := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCard
+	var stage_texture := _load_png_texture_cropped(UI_CARD_FRAME_DIR + "/ui12.png")
+	if stage_card != null and stage_texture != null:
+		var old_stage_skin := stage_card.get_node_or_null("StageCardSkin")
+		if old_stage_skin != null:
+			old_stage_skin.queue_free()
+
+		var stage_skin := TextureRect.new()
+		stage_skin.name = "StageCardSkin"
+		stage_skin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		stage_skin.texture = stage_texture
+		stage_skin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		stage_skin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		stage_skin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		stage_skin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		stage_card.add_child(stage_skin)
+		stage_card.move_child(stage_skin, 0)
 
 	var arrow_texture := _load_png_texture_direct(UI_CARD_FRAME_DIR + "/ui8.png")
 	if arrow_texture != null:
