@@ -1906,3 +1906,9 @@
 - HeaderMargin 좌우를 54→66으로 늘려 골드 정보는 오른쪽, 최고 해금 정보는 왼쪽으로 각각 약 12px 안쪽 이동.
 - HeaderMargin 상단을 96→101로 조정해 두 상태 정보 묶음을 약 5px 아래로 이동.
 - Header 높이, 로고 크기, Content/StageCard 위치는 변경하지 않음.
+
+### Revert Header Side Info Over-Adjustment
+- PC 화면에서 골드/최고 해금 정보가 로고 쪽으로 과하게 몰려 보인 HeaderMargin 66/101 조정을 롤백.
+- HeaderMargin을 마지막 정상값인 좌우 54 / 상단 96으로 복구.
+- 직전의 Header 배경 프레임 시각 확장(expand margin)과 중앙 Content/StageCard 위치는 그대로 유지.
+- 다음 헤더 미세조정은 좌우 정보를 함께 밀지 않고 각 라벨 단위로 소폭 조정 예정.
