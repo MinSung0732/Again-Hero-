@@ -1747,3 +1747,13 @@
 - StageCard를 ui10 원본 비율(1049×1499)에 가까운 780×1115 논리 크기로 고정.
 - StagePicker 안에서는 가로/세로 모두 SHRINK_CENTER로 두어 9:16 PC와 세로가 긴 모바일에서 남는 공간만 달라지고 StageCard 자체 좌표계는 동일하게 유지.
 - 이번 단계에서는 TopPanel/BottomPanel/초상화/설명/버튼 내부 배치 값은 변경하지 않음.
+
+### StageCard Responsive Anchors - Declarative Step 2
+- StageCard 780×1115 고정 비율은 유지하고 내부 배치만 TSCN anchor 비율 기반으로 전환.
+- TopPanel을 VBoxContainer에서 Control로 변경해 Stage 번호/침입자 제목/초상화/용사 이름이 카드 높이에 종속되지 않도록 고정 비율 배치.
+- 기존 UpperFrameGap 210px 하드코딩 제거(노드는 호환을 위해 숨김 유지).
+- PortraitFrame은 카드 내부 4%~96% 가로, 24.5%~61.5% 세로 영역에 배치.
+- HeroName은 61.5%~66.5% 영역에 고정.
+- BottomPanel을 VBoxContainer에서 Control로 변경하고 카드 내부 78.5%~96.5% 하단 영역에 고정.
+- 설명/상태/보상/입장 버튼도 BottomPanel 내부 anchor 비율로 배치해 -530/-370 오프셋과 컨테이너 흐름 의존성 제거.
+- lobby.gd 경로와 노드 이름은 유지해 런타임 데이터/초상화 로딩 코드는 변경하지 않음.
