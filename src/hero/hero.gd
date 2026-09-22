@@ -2780,16 +2780,20 @@ func _find_nearest_monster() -> Node2D:
 	var nearest: Node2D = null
 	var nearest_distance := INF
 
-	for node in get_tree().get_nodes_in_group("monsters"):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		var distance := global_position.distance_squared_to(monster.global_position)
-		if distance < nearest_distance:
-			nearest_distance = distance
-			nearest = monster
+	for group_name in ["monsters", "treasure_chests"]:
+		for node in get_tree().get_nodes_in_group(group_name):
+			if not is_instance_valid(node) or node.is_queued_for_deletion():
+				continue
+			var combat_target := node as Node2D
+			if combat_target == null:
+				continue
+			var hp_value = combat_target.get("current_hp")
+			if hp_value != null and int(hp_value) <= 0:
+				continue
+			var distance := global_position.distance_squared_to(combat_target.global_position)
+			if distance < nearest_distance:
+				nearest_distance = distance
+				nearest = combat_target
 
 	return nearest
 
