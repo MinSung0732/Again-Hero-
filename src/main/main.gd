@@ -1264,6 +1264,9 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	pause_menu.hide()
 	demon_augment_panel.hide()
 	mutation_panel.hide()
+	monster_info_panel.hide()
+	monster_info_bookmark.hide()
+	monster_info_animating = false
 	slime_button.disabled = true
 	spider_button.disabled = true
 	orc_button.disabled = true
