@@ -114,6 +114,7 @@ var debug_refresh_timer: float = 0.0
 var battle_loadout_ids: Array = []
 var summon_slot_buttons: Array = []
 var demon_ultimate_charge_ready: bool = false
+var demon_mana_current: float = 0.0
 var demon_ultimate_cooldowns: Dictionary = {}
 var monster_info_selected_index: int = 0
 var monster_info_animating: bool = false
@@ -1310,7 +1311,8 @@ func _on_demon_ultimate_changed(
 	ready: bool
 ) -> void:
 	demon_ultimate_charge_ready = ready
-	demon_ultimate_label.text = "마왕 필살기  %d / %d" % [
+	demon_mana_current = current_value
+	demon_ultimate_label.text = "마력  %d / %d" % [
 		int(round(current_value)),
 		int(round(max_value)),
 	]
@@ -1353,14 +1355,15 @@ func _refresh_demon_ultimate_buttons() -> void:
 		if not implemented:
 			button.disabled = true
 			button.text = "%s\n준비중" % String(
-				skill.get("name", "필살기")
+				skill.get("name", "마력 기술")
 			)
 			continue
 
-		var ready := demon_ultimate_charge_ready and remaining <= 0.001
+		var mana_cost := maxf(float(skill.get("mana_cost", 100.0)), 0.0)
+		var ready := demon_mana_current + 0.001 >= mana_cost and remaining <= 0.001
 		button.disabled = not ready
 
-		var button_title := "필살기"
+		var button_title := "마력 기술"
 		match skill_id:
 			"encirclement":
 				button_title = "1 원형 포위"
@@ -1374,19 +1377,21 @@ func _refresh_demon_ultimate_buttons() -> void:
 				button_title,
 				remaining,
 			]
-		elif demon_ultimate_charge_ready:
+		elif ready:
 			if skill_id == "line_assault":
-				button.text = "%s\n방향 선택" % button_title
+				button.text = "%s\n마력 %d · 방향 선택" % [button_title, int(round(mana_cost))]
 			else:
-				button.text = "%s\n발동 가능" % button_title
+				button.text = "%s\n마력 %d · 발동 가능" % [button_title, int(round(mana_cost))]
 		else:
-			button.text = "%s\n충전 중" % button_title
+			button.text = "%s\n마력 %d 필요" % [button_title, int(round(mana_cost))]
 
 func _on_demon_ultimate_pressed(skill_id: String) -> void:
 	if skill_id == "line_assault":
 		var snapshot: Dictionary = battle.get_snapshot()
-		if not bool(snapshot.get("demon_ultimate_ready", false)):
-			status_label.text = "마왕 필살기 게이지가 아직 준비되지 않았습니다."
+		var skill := DEMON_ULTIMATES.get_skill("line_assault")
+		var mana_cost := maxf(float(skill.get("mana_cost", 40.0)), 0.0)
+		if float(snapshot.get("demon_ultimate_charge", 0.0)) + 0.001 < mana_cost:
+			status_label.text = "마력이 부족합니다. 일직선 공세는 마력 %d가 필요합니다." % int(round(mana_cost))
 			return
 		var cooldowns: Dictionary = snapshot.get(
 			"demon_ultimate_cooldowns",
@@ -1407,15 +1412,16 @@ func _on_demon_ultimate_pressed(skill_id: String) -> void:
 		return
 	if not bool(skill.get("implemented", false)):
 		status_label.text = "%s은(는) 다음 단계에서 구현합니다." % String(
-			skill.get("name", "필살기")
+			skill.get("name", "마력 기술")
 		)
 	else:
-		status_label.text = "마왕 필살기 게이지가 아직 준비되지 않았습니다."
+		var mana_cost := maxf(float(skill.get("mana_cost", 100.0)), 0.0)
+		status_label.text = "마력이 부족합니다. %s은(는) 마력 %d가 필요합니다." % [String(skill.get("name", "마력 기술")), int(round(mana_cost))]
 
 func _open_demon_direction_select() -> void:
 	$HUD/DemonUltimatePanel/UltimateButtons.hide()
 	demon_direction_buttons.show()
-	demon_ultimate_label.text = "2번 일직선 공세 · 방향 선택"
+	demon_ultimate_label.text = "마력 · 2번 일직선 공세 방향 선택"
 
 func _close_demon_direction_select() -> void:
 	demon_direction_buttons.hide()
@@ -1440,7 +1446,7 @@ func _on_demon_ultimate_used(
 	skill_name: String,
 	message: String
 ) -> void:
-	status_label.text = "%s\n게이지를 모두 소모했습니다." % message
+	status_label.text = message
 
 func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: int) -> void:
 	current_demon_candidates = candidates.duplicate(true)
