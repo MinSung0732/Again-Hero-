@@ -2962,9 +2962,7 @@ func _physics_process_fighter(delta: float) -> void:
 		)
 
 	if not is_instance_valid(target):
-		_move_without_monsters()
-		if fighter_guard_active:
-			velocity *= guard_move_scale
+		_fighter_move_without_monsters(guard_move_scale)
 		_update_fighter_pose_visual(delta)
 		return
 
@@ -2986,6 +2984,35 @@ func _physics_process_fighter(delta: float) -> void:
 		_fighter_basic_attack(target)
 
 	_update_fighter_pose_visual(delta)
+
+func _fighter_move_without_monsters(speed_scale: float) -> void:
+	var nearest_exp_orb := _find_nearest_exp_orb()
+	if is_instance_valid(nearest_exp_orb):
+		var exp_direction := global_position.direction_to(nearest_exp_orb.global_position)
+		velocity = (
+			exp_direction
+			* move_speed
+			* 0.90
+			* move_multiplier
+			* speed_scale
+		)
+		move_and_slide()
+		_clamp_to_battlefield()
+		return
+
+	if wander_timer <= 0.0 or position.distance_to(wander_target) <= WANDER_REACHED_DISTANCE:
+		_pick_new_wander_target()
+
+	var direction := position.direction_to(wander_target)
+	velocity = (
+		direction
+		* move_speed
+		* 0.72
+		* move_multiplier
+		* speed_scale
+	)
+	move_and_slide()
+	_clamp_to_battlefield()
 
 func _update_fighter_pose_visual(delta: float) -> void:
 	if hero_archetype != "sword_shield" or not hero_sprite.visible or is_dying:
