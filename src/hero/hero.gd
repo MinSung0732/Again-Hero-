@@ -3674,9 +3674,32 @@ func _update_fighter_guard(delta: float) -> void:
 		ultimate_charge + (charge_max / charge_seconds) * delta,
 		charge_max
 	)
-	if ultimate_charge + 0.001 >= charge_max:
+	if ultimate_charge + 0.001 >= charge_max and _fighter_can_activate_guard():
 		_start_fighter_guard()
 	queue_redraw()
+
+func _fighter_can_activate_guard() -> bool:
+	var radius := maxf(
+		float(ultimate_config.get("activation_enemy_radius", 320.0)),
+		1.0
+	)
+	var required := maxi(
+		int(ultimate_config.get("activation_enemy_count", 1)),
+		1
+	)
+	var nearby := 0
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if global_position.distance_to(monster.global_position) <= radius:
+			nearby += 1
+			if nearby >= required:
+				return true
+	return false
+
 
 func _start_fighter_guard() -> void:
 	if fighter_guard_active:
