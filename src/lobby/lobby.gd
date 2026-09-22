@@ -1779,7 +1779,15 @@ func _refresh_stage_nav_buttons() -> void:
 
 	prev_stage_button.disabled = not can_go_prev
 	next_stage_button.disabled = not can_go_next
-	_set_stage_arrow_visual(prev_stage_button, can_go_prev)
+
+	var prev_arrow := prev_stage_button.get_node_or_null("ArrowSkin") as CanvasItem
+	if prev_arrow != null:
+		# Stage 1 has no previous destination: keep the button slot for layout
+		# symmetry, but hide the arrow completely.
+		prev_arrow.visible = can_go_prev
+		if can_go_prev:
+			prev_arrow.modulate = Color.WHITE
+
 	_set_stage_arrow_visual(next_stage_button, can_go_next)
 
 
@@ -1791,6 +1799,7 @@ func _set_stage_arrow_visual(button: Button, enabled: bool) -> void:
 	if arrow_skin == null:
 		return
 
+	arrow_skin.visible = true
 	arrow_skin.modulate = (
 		Color.WHITE
 		if enabled
