@@ -14,6 +14,8 @@ var empowered := false
 var hit_ids: Dictionary = {}
 var bounce_count := 0
 var current_target: Node2D
+var previous_chain_hit_position := Vector2.ZERO
+var has_previous_chain_hit := false
 
 @onready var sprite: AnimatedSprite2D = $Sprite
 @onready var tail: AnimatedSprite2D = $Tail
@@ -41,6 +43,8 @@ func setup(
 	source_hero = new_source_hero
 	empowered = is_empowered
 	current_target = initial_target
+	previous_chain_hit_position = Vector2.ZERO
+	has_previous_chain_hit = false
 	_apply_visual()
 
 func _physics_process(delta: float) -> void:
@@ -78,29 +82,86 @@ func _on_body_entered(body: Node) -> void:
 				source_hero.call("resolve_archmage_ice_bolt_hit", monster, global_position, empowered)
 			_finish()
 		"chain_dagger":
-			var growth := maxf(float(config.get("damage_growth_per_bounce", 0.16)), 0.0)
-			var hit_damage := maxi(1, int(round(float(damage) * (1.0 + growth * float(bounce_count)))))
+			var growth := maxf(
+				float(config.get("damage_growth_per_bounce", 0.16)),
+				0.0
+			)
+			var hit_damage := maxi(
+				1,
+				int(
+					round(
+						float(damage)
+						* (1.0 + growth * float(bounce_count))
+					)
+				)
+			)
 			if empowered:
-				hit_damage = maxi(1, int(round(float(hit_damage) * float(config.get("empowered_damage_multiplier", 1.50)))))
+				hit_damage = maxi(
+					1,
+					int(
+						round(
+							float(hit_damage)
+							* float(
+								config.get(
+									"empowered_damage_multiplier",
+									1.50
+								)
+							)
+						)
+					)
+				)
 			monster.call("take_damage", hit_damage)
-			_spawn_hit_animation("res://assets/art/heroes/stage5_archmage/frames/effect5", "light", 1, 6, 24.0, global_position)
+			_spawn_hit_animation(
+				"res://assets/art/heroes/stage5_archmage/frames/effect5",
+				"light",
+				1,
+				6,
+				24.0,
+				global_position
+			)
+
+			# A chain link belongs to the bounce that has actually arrived.
+			# Do not preview the next link before the dagger reaches its target.
+			if has_previous_chain_hit:
+				_spawn_chain_current(
+					previous_chain_hit_position,
+					global_position
+				)
+			previous_chain_hit_position = global_position
+			has_previous_chain_hit = true
+
 			bounce_count += 1
-			var max_bounces := maxi(int(config.get("max_bounces", 7)), 0)
+			var max_bounces := maxi(
+				int(config.get("max_bounces", 7)),
+				0
+			)
 			if bounce_count > max_bounces:
-				_finish()
+				if bounce_count > 1:
+					_finish_after_chain_ticks()
+				else:
+					_finish()
 				return
+
 			current_target = _find_nearest_unhit(
 				monster.global_position,
 				float(config.get("bounce_range", 600.0))
 			)
 			if not is_instance_valid(current_target):
-				_finish()
+				if bounce_count > 1:
+					_finish_after_chain_ticks()
+				else:
+					_finish()
 				return
-			_spawn_chain_current(monster.global_position, current_target.global_position)
-			direction = global_position.direction_to(current_target.global_position).normalized()
+
+			direction = global_position.direction_to(
+				current_target.global_position
+			).normalized()
 			rotation = direction.angle()
 			traveled = 0.0
-			max_range = maxf(float(config.get("bounce_range", 600.0)), 1.0)
+			max_range = maxf(
+				float(config.get("bounce_range", 600.0)),
+				1.0
+			)
 		"storm":
 			var hit_damage := damage
 			if empowered:
@@ -113,53 +174,107 @@ func _on_body_entered(body: Node) -> void:
 			if is_instance_valid(source_hero) and source_hero.has_method("restore_archmage_gauge"):
 				source_hero.call("restore_archmage_gauge", maxf(float(config.get("gauge_restore_per_hit", 4.0)), 0.0))
 
-func _spawn_chain_current(from_position: Vector2, to_position: Vector2) -> void:
+func _spawn_chain_current(
+	from_position: Vector2,
+	to_position: Vector2
+) -> void:
 	var parent := get_parent()
 	if not is_instance_valid(parent):
 		return
 
-	var line: Line2D = null
-	if parent.has_method("acquire_transient_fx"):
-		line = parent.call(
-			"acquire_transient_fx",
-			"archmage_chain_dagger_line",
-			"line"
-		) as Line2D
-	if line == null:
-		line = Line2D.new()
-		parent.add_child(line)
+	var segment := to_position - from_position
+	var distance := segment.length()
+	if distance <= 1.0:
+		return
 
-	line.clear_points()
-	line.width = 6.0
-	line.default_color = Color(0.95, 0.88, 0.30, 0.95)
-	line.modulate = Color.WHITE
-	line.scale = Vector2.ONE
-	line.position = Vector2.ZERO
-	line.z_index = 8
-	line.add_point(parent.to_local(from_position))
-	line.add_point(parent.to_local(to_position))
-	line.visible = true
+	var frames := _build_frames(
+		"res://assets/art/heroes/stage5_archmage/frames/effect5",
+		"chain",
+		1,
+		41,
+		44.0,
+		false
+	)
+	if frames != null:
+		var fx: AnimatedSprite2D = null
+		if parent.has_method("acquire_transient_fx"):
+			fx = parent.call(
+				"acquire_transient_fx",
+				"archmage_chain_current_fx",
+				"animated_sprite"
+			) as AnimatedSprite2D
+		if fx == null:
+			fx = AnimatedSprite2D.new()
+			parent.add_child(fx)
 
-	var tick_count := maxi(int(config.get("chain_tick_count", 4)), 1)
-	var tick_interval := maxf(float(config.get("chain_tick_interval", 0.18)), 0.01)
-	var visible_lifetime := tick_interval * float(maxi(tick_count - 1, 0)) + 0.16
-	var cleanup_tween := line.create_tween()
-	cleanup_tween.tween_interval(visible_lifetime)
-	cleanup_tween.tween_property(line, "modulate:a", 0.0, 0.12)
-	if parent.has_method("recycle_transient_fx"):
-		cleanup_tween.finished.connect(
-			Callable(parent, "recycle_transient_fx").bind(
-				line,
-				"archmage_chain_dagger_line"
-			),
-			Object.CONNECT_ONE_SHOT
+		fx.stop()
+		fx.sprite_frames = frames
+		fx.animation = &"fx"
+		fx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		fx.z_index = 8
+		fx.global_position = from_position.lerp(
+			to_position,
+			0.5
 		)
-	else:
-		cleanup_tween.finished.connect(line.queue_free)
+		fx.rotation = segment.angle()
+		# Source chain frames use a 320 px wide aligned canvas.
+		# Stretch only along the link axis to bridge the two impacts.
+		fx.scale = Vector2(
+			maxf(distance / 320.0, 0.35),
+			0.72
+		)
+		fx.modulate = Color.WHITE
+		fx.frame = 0
+		fx.frame_progress = 0.0
+		fx.visible = true
 
-	# Damage timing is intentionally independent from the pooled visual.
-	_apply_chain_current_ticks(from_position, to_position)
+		if parent.has_method("recycle_transient_fx"):
+			fx.animation_finished.connect(
+				Callable(
+					parent,
+					"recycle_transient_fx"
+				).bind(
+					fx,
+					"archmage_chain_current_fx"
+				),
+				Object.CONNECT_ONE_SHOT
+			)
+		else:
+			fx.animation_finished.connect(
+				Callable(fx, "queue_free"),
+				Object.CONNECT_ONE_SHOT
+			)
+		fx.play(&"fx")
 
+	# Multi-hit damage starts at the same moment the arrived bounce
+	# creates the visible link between the previous and current target.
+	_apply_chain_current_ticks(
+		from_position,
+		to_position
+	)
+
+
+func _finish_after_chain_ticks() -> void:
+	set_physics_process(false)
+	set_deferred("monitoring", false)
+	sprite.visible = false
+	tail.visible = false
+	var tick_count := maxi(
+		int(config.get("chain_tick_count", 4)),
+		1
+	)
+	var tick_interval := maxf(
+		float(config.get("chain_tick_interval", 0.18)),
+		0.01
+	)
+	var wait_time := (
+		tick_interval
+		* float(maxi(tick_count - 1, 0))
+		+ 0.04
+	)
+	await get_tree().create_timer(wait_time).timeout
+	if is_inside_tree():
+		_finish()
 
 func _apply_chain_current_ticks(
 	from_position: Vector2,
@@ -309,8 +424,8 @@ func _apply_visual() -> void:
 		"storm":
 			dir = "res://assets/art/heroes/stage5_archmage/frames/effect8"
 			prefix = "wind"
-			start = 1
-			count = 6
+			start = 5
+			count = 2
 
 	var frames := _build_frames(dir, prefix, start, count, 22.0, true)
 	if frames != null:
@@ -319,7 +434,7 @@ func _apply_visual() -> void:
 		sprite.play("fx")
 
 	if skill_type == "storm":
-		sprite.scale *= 1.28
+		sprite.scale *= 2.176
 		var tail_frames := _build_frames(
 			"res://assets/art/heroes/stage5_archmage/frames/effect8",
 			"wind",
@@ -331,7 +446,7 @@ func _apply_visual() -> void:
 		if tail_frames != null:
 			tail.sprite_frames = tail_frames
 			tail.visible = true
-			tail.scale *= 0.68
+			tail.scale *= 0.408
 			tail.position = Vector2(-38.0, 0.0)
 			tail.play("fx")
 
