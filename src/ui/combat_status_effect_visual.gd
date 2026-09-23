@@ -71,6 +71,15 @@ func _process(delta: float) -> void:
 		return
 	_visibility_check_timer = VISIBILITY_CHECK_INTERVAL
 
+	var lod_suspended := bool(
+		target.get_meta("visual_lod_suspended", false)
+	)
+	if lod_suspended:
+		if visible or is_playing():
+			visible = false
+			stop()
+		return
+
 	var active := false
 	match effect_type:
 		"slow":
