@@ -29,6 +29,8 @@ var pack_bonus_refresh_timer: float = 0.0
 
 func _ready() -> void:
 	add_to_group("monsters")
+	add_to_group("slimes")
+	pack_bonus_refresh_timer = randf_range(0.0, 0.25)
 	current_hp = max_hp
 	hero = get_tree().get_first_node_in_group("hero") as Node2D
 	_attach_status_effect_visual("slow")
@@ -109,10 +111,8 @@ func _get_pack_bonuses() -> Dictionary:
 		return {}
 
 	var nearby := 0
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in get_tree().get_nodes_in_group("slimes"):
 		if node == self or not is_instance_valid(node):
-			continue
-		if String(node.get("monster_type")) != "slime":
 			continue
 		var other := node as Node2D
 		if other == null:
