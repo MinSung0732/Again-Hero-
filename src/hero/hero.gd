@@ -4119,23 +4119,34 @@ func _should_cast_channel_skill() -> bool:
 
 	var nearby := 0
 	var very_close := 0
+	var radius_sq := radius * radius
+	var close_radius_sq := close_radius * close_radius
 
-	for node in _get_monster_nodes_cached():
+	for node in _get_monster_nodes_near(global_position, radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
 		if monster == null:
 			continue
 
-		var distance := global_position.distance_to(
+		var distance_sq := global_position.distance_squared_to(
 			monster.global_position
 		)
-		if distance > radius:
+		if distance_sq > radius_sq:
 			continue
 
 		nearby += 1
-		if distance <= close_radius:
+		if distance_sq <= close_radius_sq:
 			very_close += 1
+
+		if (
+			nearby >= force_count
+			or (
+				nearby >= required_count
+				and very_close >= close_required
+			)
+		):
+			return true
 
 	return (
 		nearby >= force_count
