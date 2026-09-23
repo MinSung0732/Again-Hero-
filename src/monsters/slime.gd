@@ -27,6 +27,8 @@ var hit_flash_timer: float = 0.0
 var dying: bool = false
 var visual_moving_state: int = -1
 var visual_facing_sign: int = 0
+var far_ai_tick_timer: float = 0.0
+var cached_direction_to_hero: Vector2 = Vector2.ZERO
 var special_augment_configs: Dictionary = {}
 var pack_bonus_cache: Dictionary = {}
 var pack_bonus_refresh_timer: float = 0.0
@@ -35,6 +37,7 @@ func _ready() -> void:
 	add_to_group("monsters")
 	add_to_group("slimes")
 	pack_bonus_refresh_timer = randf_range(0.0, 0.25)
+	far_ai_tick_timer = randf_range(0.0, 0.16)
 	current_hp = max_hp
 	hero = get_tree().get_first_node_in_group("hero") as Node2D
 	_attach_status_effect_visual("slow")
@@ -81,17 +84,32 @@ func _physics_process(delta: float) -> void:
 			_update_visual_motion(0.0, false)
 			return
 
-	var direction_to_hero := global_position.direction_to(hero.global_position)
+	var offset_to_hero := hero.global_position - global_position
+	var distance_sq := offset_to_hero.length_squared()
+	var far_nav_sq := FAR_NAV_DISTANCE * FAR_NAV_DISTANCE
+	var attack_range_sq := attack_range * attack_range
+	far_ai_tick_timer = maxf(far_ai_tick_timer - delta, 0.0)
 
-	var distance := global_position.distance_to(hero.global_position)
-	if distance > attack_range:
+	if distance_sq > attack_range_sq:
+		var direction_to_hero := cached_direction_to_hero
+		if distance_sq <= far_nav_sq or far_ai_tick_timer <= 0.0:
+			direction_to_hero = offset_to_hero.normalized()
+			cached_direction_to_hero = direction_to_hero
+			far_ai_tick_timer = randf_range(0.10, 0.16)
+
 		velocity = direction_to_hero * effective_move_speed
 		_update_visual_motion(direction_to_hero.x, true)
-		if distance > FAR_NAV_DISTANCE:
+		if distance_sq > far_nav_sq:
 			global_position += velocity * delta
 		else:
 			move_and_slide()
 	else:
+		var direction_to_hero := (
+			offset_to_hero.normalized()
+			if distance_sq > 0.001
+			else cached_direction_to_hero
+		)
+		cached_direction_to_hero = direction_to_hero
 		velocity = Vector2.ZERO
 		_update_visual_motion(direction_to_hero.x, false)
 		if attack_timer <= 0.0:
