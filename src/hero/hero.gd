@@ -5500,17 +5500,45 @@ func _apply_level_growth() -> void:
 	# Every hero gets a small additive damage floor independent of augment rolls.
 	# It is based on the profile's starting attack damage, never current damage,
 	# so it cannot snowball exponentially with damage augments.
+	var passive_growth_ratio := maxf(
+		float(
+			level_growth_config.get(
+				"base_attack_growth_ratio",
+				HERO_BASE_ATTACK_GROWTH_PER_LEVEL
+			)
+		),
+		0.0
+	)
+	var milestone_interval := maxi(
+		int(
+			level_growth_config.get(
+				"attack_milestone_interval",
+				HERO_ATTACK_MILESTONE_INTERVAL
+			)
+		),
+		0
+	)
+	var milestone_bonus := maxf(
+		float(
+			level_growth_config.get(
+				"attack_milestone_bonus",
+				HERO_ATTACK_MILESTONE_BONUS
+			)
+		),
+		0.0
+	)
+
 	var passive_damage_gain := (
 		base_attack_damage_for_level_growth
-		* HERO_BASE_ATTACK_GROWTH_PER_LEVEL
+		* passive_growth_ratio
 	)
 	if (
-		HERO_ATTACK_MILESTONE_INTERVAL > 0
-		and level % HERO_ATTACK_MILESTONE_INTERVAL == 0
+		milestone_interval > 0
+		and level % milestone_interval == 0
 	):
 		passive_damage_gain += (
 			base_attack_damage_for_level_growth
-			* HERO_ATTACK_MILESTONE_BONUS
+			* milestone_bonus
 		)
 
 	passive_attack_growth_accumulator += passive_damage_gain
