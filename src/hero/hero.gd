@@ -765,8 +765,6 @@ func _update_gunner_pose_visual(delta: float) -> void:
 
 func _apply_archmage_boundary_steering(base_direction: Vector2) -> Vector2:
 	var center_direction := global_position.direction_to(battlefield_size * 0.5)
-	if base_direction.length_squared() <= 0.01:
-		base_direction = center_direction
 
 	var soft_margin := 440.0
 	var hard_margin := 150.0
@@ -788,12 +786,23 @@ func _apply_archmage_boundary_steering(base_direction: Vector2) -> Vector2:
 	var near_horizontal_edge := minf(left_space, right_space) < hard_margin
 	var near_vertical_edge := minf(top_space, bottom_space) < hard_margin
 	if near_horizontal_edge and near_vertical_edge:
-		var corner_escape := center_direction * 2.8 + inward.normalized() * 2.2
+		var corner_escape := center_direction * 2.8
+		if inward.length_squared() > 0.001:
+			corner_escape += inward.normalized() * 2.2
 		if corner_escape.length_squared() > 0.01:
 			return corner_escape.normalized()
 
+	# Do not invent movement while the archmage is comfortably inside the field.
+	# This lets the new combat spacing logic actually stand and cast.
 	if inward.length_squared() <= 0.001:
-		return base_direction.normalized()
+		return (
+			base_direction.normalized()
+			if base_direction.length_squared() > 0.01
+			else Vector2.ZERO
+		)
+
+	if base_direction.length_squared() <= 0.01:
+		return inward.normalized()
 
 	var edge_pressure := clampf(inward.length(), 0.0, 1.5)
 	var inward_weight := lerpf(0.95, 2.8, clampf(edge_pressure, 0.0, 1.0))
@@ -801,7 +810,6 @@ func _apply_archmage_boundary_steering(base_direction: Vector2) -> Vector2:
 	if desired.length_squared() <= 0.01:
 		return center_direction.normalized()
 	return desired.normalized()
-
 
 func _apply_gunner_boundary_steering(base_direction: Vector2) -> Vector2:
 	if base_direction.length_squared() <= 0.01:
