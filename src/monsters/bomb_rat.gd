@@ -170,6 +170,17 @@ func take_damage(amount: int) -> void:
 		_restart_visual_animation(&"hit")
 	queue_redraw()
 
+func heal_direct(amount: int) -> int:
+	if amount <= 0 or current_hp <= 0 or dying:
+		return 0
+	var previous_hp: int = current_hp
+	current_hp = mini(current_hp + amount, max_hp)
+	var recovered: int = current_hp - previous_hp
+	if recovered > 0:
+		DAMAGE_NUMBERS.show_heal(self, recovered)
+		queue_redraw()
+	return recovered
+
 func _begin_self_destruct() -> void:
 	if self_destructing or dying:
 		return
