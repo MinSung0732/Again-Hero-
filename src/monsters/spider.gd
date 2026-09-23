@@ -6,6 +6,7 @@ const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const SPIDER_PROJECTILE_SCENE := preload("res://src/monsters/SpiderProjectile.tscn")
 
 const FAR_NAV_DISTANCE := 900.0
+const VISUAL_LOD_DISTANCE := 1400.0
 
 signal died
 
@@ -34,6 +35,7 @@ var visual_moving_state: int = -1
 var visual_facing_sign: int = 0
 var far_ai_tick_timer: float = 0.0
 var cached_direction_to_hero: Vector2 = Vector2.ZERO
+var visual_lod_suspended: bool = false
 var special_augment_configs: Dictionary = {}
 
 func _ready() -> void:
@@ -70,6 +72,7 @@ func _physics_process(delta: float) -> void:
 
 	var offset_to_hero := hero.global_position - global_position
 	var distance_sq := offset_to_hero.length_squared()
+	_update_visual_lod(distance_sq)
 	var far_nav_sq := FAR_NAV_DISTANCE * FAR_NAV_DISTANCE
 	var attack_range_sq := attack_range * attack_range
 	far_ai_tick_timer = maxf(far_ai_tick_timer - delta, 0.0)
@@ -105,6 +108,19 @@ func _physics_process(delta: float) -> void:
 		attack_timer = attack_cooldown
 		_visual_call(&"play_attack")
 		_begin_projectile_attack(direction_to_hero)
+
+func _update_visual_lod(distance_sq: float) -> void:
+	var should_suspend := (
+		distance_sq > VISUAL_LOD_DISTANCE * VISUAL_LOD_DISTANCE
+	)
+	if should_suspend == visual_lod_suspended:
+		return
+
+	visual_lod_suspended = should_suspend
+	set_meta("visual_lod_suspended", should_suspend)
+	if is_instance_valid(visual) and visual.has_method("set_lod_suspended"):
+		visual.call("set_lod_suspended", should_suspend)
+
 
 func _update_visual_motion(direction_x: float, moving: bool) -> void:
 	var facing_sign := 0
@@ -235,6 +251,10 @@ func _begin_death() -> void:
 		return
 
 	dying = true
+	visual_lod_suspended = false
+	set_meta("visual_lod_suspended", false)
+	if is_instance_valid(visual) and visual.has_method("set_lod_suspended"):
+		visual.call("set_lod_suspended", false)
 	velocity = Vector2.ZERO
 	collision_shape.set_deferred("disabled", true)
 
