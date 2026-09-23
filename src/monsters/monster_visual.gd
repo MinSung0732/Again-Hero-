@@ -28,6 +28,7 @@ var _flash_timer: float = 0.0
 func _ready() -> void:
 	animation_finished.connect(_on_animation_finished)
 	_setup_sprite_frames()
+	set_process(false)
 
 	if _visual_ready:
 		play(&"idle")
@@ -39,6 +40,7 @@ func _process(delta: float) -> void:
 	_flash_timer = maxf(_flash_timer - delta, 0.0)
 	if _flash_timer <= 0.0:
 		self_modulate = Color.WHITE
+		set_process(false)
 
 func is_visual_ready() -> bool:
 	return _visual_ready
@@ -67,6 +69,7 @@ func play_hit() -> void:
 
 	_flash_timer = 0.12
 	self_modulate = Color(1.0, 0.58, 0.58, 1.0)
+	set_process(true)
 
 func play_death() -> void:
 	if _death_playing:
