@@ -1,7 +1,7 @@
 extends RefCounted
 class_name StageCatalog
 
-const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4"]
+const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4", "stage_5"]
 
 const STAGES = {
 	"stage_1": {
@@ -250,6 +250,23 @@ const STAGES = {
 			},
 		],
 		"first_clear_reward": 800,
+		"run_reward_multiplier": 2.00,
+		"next_stage_id": "stage_5",
+	},
+	"stage_5": {
+		"id": "stage_5",
+		"number": 5,
+		"display_name": "다섯 번째 침입자",
+		"hero_id": "archmage_hero",
+		"hero_ai_profile_id": "stage_5_archmage",
+		"portrait_path": "res://assets/art/heroes/stage5_archmage/stage5_hero_portrait.png",
+		"lobby_description": "첫 번째 침입자가 수많은 전투를 거쳐 대마법 용사로 돌아왔다. 매 공격마다 새로운 원소 마법을 다룬다.",
+		"hero_level_start": 1,
+		"map_width": 4000,
+		"map_height": 4000,
+		"run_duration_seconds": 540.0,
+		"event_timeline": [],
+		"first_clear_reward": 0,
 		"run_reward_multiplier": 2.00,
 		"next_stage_id": "",
 	},
