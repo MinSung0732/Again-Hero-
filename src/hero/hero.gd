@@ -188,6 +188,7 @@ var berserker_skill1_wave_index: int = 0
 var berserker_skill1_wave_timer: float = 0.0
 var berserker_skill1_direction: Vector2 = Vector2.RIGHT
 var berserker_skill2_cooldown: float = 0.0
+var berserker_skill_global_cooldown: float = 0.0
 
 var archmage_element_config: Dictionary = {}
 var archmage_last_element: String = ""
@@ -440,6 +441,7 @@ func configure_profile(profile: Dictionary) -> void:
 	berserker_skill1_wave_timer = 0.0
 	berserker_skill1_direction = Vector2.RIGHT
 	berserker_skill2_cooldown = 0.0
+	berserker_skill_global_cooldown = 0.0
 
 	var profile_gunner = profile.get("gunner", {})
 	gunner_config = (
@@ -792,6 +794,10 @@ func _physics_process_gunner(delta: float) -> void:
 	attack_timer = maxf(attack_timer - delta, 0.0)
 	berserker_skill2_cooldown = maxf(
 		berserker_skill2_cooldown - delta,
+		0.0
+	)
+	berserker_skill_global_cooldown = maxf(
+		berserker_skill_global_cooldown - delta,
 		0.0
 	)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
@@ -6487,7 +6493,8 @@ func _physics_process_berserker(delta: float) -> void:
 			attack_range
 		)
 	if (
-		berserker_skill1_cooldown <= 0.0
+		berserker_skill_global_cooldown <= 0.0
+		and berserker_skill1_cooldown <= 0.0
 		and distance <= maxf(
 			float(
 				berserker_config.get(
@@ -6499,7 +6506,11 @@ func _physics_process_berserker(delta: float) -> void:
 		)
 	):
 		_start_berserker_skill1(target)
-	elif berserker_skill2_cooldown <= 0.0 and distance <= 320.0:
+	elif (
+		berserker_skill_global_cooldown <= 0.0
+		and berserker_skill2_cooldown <= 0.0
+		and distance <= 320.0
+	):
 		_start_berserker_skill2(target)
 	elif distance <= attack_trigger_range and attack_timer <= 0.0:
 		_berserker_basic_attack(target)
@@ -6545,6 +6556,10 @@ func _start_berserker_skill1(current_target: Node2D) -> void:
 	berserker_skill1_cooldown = maxf(
 		float(skill_config.get("cooldown", 15.0)),
 		0.0
+	)
+	berserker_skill_global_cooldown = maxf(
+		berserker_skill_global_cooldown,
+		2.40
 	)
 	attack_timer = maxf(attack_timer, 2.35)
 	attack_pose_timer = 0.0
@@ -6727,6 +6742,10 @@ func _start_berserker_skill2(current_target: Node2D) -> void:
 		float(skill_config.get("cooldown", 19.0)),
 		0.0
 	)
+	berserker_skill_global_cooldown = maxf(
+		berserker_skill_global_cooldown,
+		1.35
+	)
 	attack_timer = maxf(attack_timer, 0.72)
 	attack_pose_timer = 0.58
 	_face_attack_direction(
@@ -6789,8 +6808,16 @@ func _run_berserker_skill2_wave(
 		1
 	)
 	var branch_angle: float = deg_to_rad(
-		maxf(float(skill_config.get("branch_angle_degrees", 34.0)), 0.0)
+		maxf(float(skill_config.get("branch_angle_degrees", 68.0)), 0.0)
 	)
+	var branch_min_angle: float = deg_to_rad(
+		clampf(
+			float(skill_config.get("branch_min_angle_degrees", 28.0)),
+			0.0,
+			rad_to_deg(branch_angle)
+		)
+	)
+	var turn_sign: float = -1.0 if randf() < 0.5 else 1.0
 	var wave_speed: float = maxf(
 		float(skill_config.get("wave_speed", 620.0)),
 		1.0
@@ -6811,8 +6838,15 @@ func _run_berserker_skill2_wave(
 		if not is_inside_tree():
 			return
 
-		var turn: float = randf_range(-branch_angle, branch_angle)
+		var turn_amount: float = randf_range(
+			branch_min_angle,
+			branch_angle
+		)
+		if randf() < 0.22:
+			turn_sign *= -1.0
+		var turn: float = turn_amount * turn_sign
 		current_direction = current_direction.rotated(turn).normalized()
+		turn_sign *= -1.0
 		var next_position: Vector2 = (
 			current_position + current_direction * cell_length
 		)
