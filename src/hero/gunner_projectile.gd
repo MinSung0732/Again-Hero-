@@ -145,10 +145,8 @@ func _apply_visual() -> void:
 		frames.set_animation_speed(&"fly", FPS)
 		for i in range(1, FRAME_COUNT + 1):
 			var path := "%s/effect_projectile_%02d.png" % [FRAME_DIR, i]
-			if not ResourceLoader.exists(path):
-				continue
-			var tex = load(path)
-			if tex is Texture2D:
+			var tex := _load_projectile_texture(path)
+			if tex != null:
 				frames.add_frame(&"fly", tex)
 		_projectile_frames_cache = frames
 
@@ -160,6 +158,20 @@ func _apply_visual() -> void:
 	else:
 		visual.visible = false
 		queue_redraw()
+
+func _load_projectile_texture(path: String) -> Texture2D:
+	if ResourceLoader.exists(path):
+		var loaded = load(path)
+		if loaded is Texture2D:
+			return loaded
+
+	if FileAccess.file_exists(path):
+		var image := Image.new()
+		if image.load(path) == OK:
+			return ImageTexture.create_from_image(image)
+
+	return null
+
 
 func _draw() -> void:
 	if not visual.visible:
