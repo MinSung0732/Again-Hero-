@@ -21,12 +21,27 @@ func configure(data: Dictionary) -> void:
 	skill_name = String(data.get("name", skill_id))
 	icon_path = String(data.get("icon_path", ""))
 	tooltip_text = skill_name
-	icon_texture = null
-	if not icon_path.is_empty() and ResourceLoader.exists(icon_path):
-		var loaded = load(icon_path)
-		if loaded is Texture2D:
-			icon_texture = loaded
+	icon_texture = _load_icon_texture(icon_path)
 	update_state(data)
+
+func _load_icon_texture(path: String) -> Texture2D:
+	if path.is_empty():
+		return null
+
+	if ResourceLoader.exists(path):
+		var loaded = load(path)
+		if loaded is Texture2D:
+			return loaded
+
+	# Editor/PC pull 직후 import cache가 아직 준비되지 않은 경우에도
+	# 원본 PNG를 직접 읽어 HUD 아이콘이 비지 않게 한다.
+	if FileAccess.file_exists(path):
+		var image := Image.new()
+		if image.load(path) == OK:
+			return ImageTexture.create_from_image(image)
+
+	return null
+
 
 func update_state(data: Dictionary) -> void:
 	cooldown_total = maxf(float(data.get("cooldown_total", 0.0)), 0.0)
