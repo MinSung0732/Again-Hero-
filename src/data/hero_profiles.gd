@@ -584,6 +584,7 @@ const PROFILES = {
 			"exp_magnet",
 			"long_reach",
 		],
+	},
 }
 
 static func get_profile(hero_id: String) -> Dictionary:
