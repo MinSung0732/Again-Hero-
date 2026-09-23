@@ -180,7 +180,7 @@ const PROFILES = {
 				"projectile_speed": 700.0,
 				"projectile_range": 900.0,
 				"bounce_range": 600.0,
-				"max_bounces": 7,
+				"max_bounces": 14,
 				"damage_growth_per_bounce": 0.20,
 				"chain_tick_damage_ratio": 0.11,
 				"chain_tick_count": 4,
