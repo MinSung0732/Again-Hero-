@@ -6557,16 +6557,20 @@ func _berserker_basic_attack(current_target: Node2D) -> void:
 	_restart_stage1_animation("attack")
 
 	if berserker_madness_active:
-		_spawn_archmage_fx(
+		var slash_fx: AnimatedSprite2D = _spawn_archmage_fx(
 			"%s/effect1" % STAGE6_FRAME_DIR,
 			"basic_slash",
 			1,
 			13,
 			24.0,
 			false,
-			global_position + direction * 62.0,
-			Vector2(0.62, 0.62)
+			global_position + direction * 82.0,
+			Vector2(1.08, 1.08)
 		)
+		if is_instance_valid(slash_fx):
+			slash_fx.flip_h = direction.x < 0.0
+			slash_fx.rotation = direction.angle() if direction.x >= 0.0 else direction.angle() - PI
+			slash_fx.z_index = 8
 
 	var reach: float = maxf(
 		float(berserker_config.get("basic_reach", 190.0)),
@@ -6733,23 +6737,12 @@ func _berserker_madness_blink_to(blink_target: Node2D) -> void:
 	if direction.length_squared() <= 0.0:
 		return
 
-	_spawn_archmage_fx(
-		"%s/effect2" % STAGE6_FRAME_DIR,
-		"blood_effect",
-		1,
-		10,
-		26.0,
-		false,
-		start_position,
-		Vector2(0.58, 0.58)
-	)
-
-	var stop_distance: float = 82.0
+	var stop_distance: float = 48.0
 	var destination: Vector2 = (
 		blink_target.global_position
 		- direction.normalized() * stop_distance
 	)
-	global_position = Vector2(
+	destination = Vector2(
 		clampf(
 			destination.x,
 			FIELD_MARGIN,
@@ -6761,7 +6754,102 @@ func _berserker_madness_blink_to(blink_target: Node2D) -> void:
 			battlefield_size.y - FIELD_MARGIN
 		)
 	)
+
+	_spawn_berserker_blood_dash_trail(
+		start_position,
+		destination
+	)
+	global_position = destination
 	velocity = Vector2.ZERO
+
+
+func _spawn_berserker_blood_dash_trail(
+	start_position: Vector2,
+	end_position: Vector2
+) -> void:
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return
+
+	var parent_2d := parent as Node2D
+	var trail := Line2D.new()
+	parent.add_child(trail)
+	trail.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	trail.z_index = 6
+	trail.width = 30.0
+	trail.default_color = Color(0.82, 0.05, 0.03, 0.82)
+	trail.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	trail.end_cap_mode = Line2D.LINE_CAP_ROUND
+	trail.joint_mode = Line2D.LINE_JOINT_ROUND
+
+	if parent_2d != null:
+		trail.add_point(parent_2d.to_local(start_position))
+		trail.add_point(parent_2d.to_local(end_position))
+	else:
+		trail.add_point(start_position)
+		trail.add_point(end_position)
+
+	var trail_tween := trail.create_tween()
+	trail_tween.set_parallel(true)
+	trail_tween.tween_property(
+		trail,
+		"modulate:a",
+		0.0,
+		0.34
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	trail_tween.tween_property(
+		trail,
+		"width",
+		6.0,
+		0.34
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	trail_tween.finished.connect(
+		Callable(trail, "queue_free"),
+		Object.CONNECT_ONE_SHOT
+	)
+
+	var segment: Vector2 = end_position - start_position
+	var segment_length: float = segment.length()
+	if segment_length <= 1.0:
+		return
+
+	var effect_count: int = clampi(
+		int(ceil(segment_length / 68.0)) + 1,
+		3,
+		8
+	)
+	var effect_direction: Vector2 = segment.normalized()
+	for index in range(effect_count):
+		var progress: float = (
+			float(index)
+			/ float(maxi(effect_count - 1, 1))
+		)
+		var effect_position: Vector2 = start_position.lerp(
+			end_position,
+			progress
+		)
+		var blood_fx: AnimatedSprite2D = _spawn_archmage_fx(
+			"%s/effect2" % STAGE6_FRAME_DIR,
+			"blood_effect",
+			1,
+			10,
+			28.0,
+			false,
+			effect_position,
+			Vector2(0.82, 0.82)
+		)
+		if not is_instance_valid(blood_fx):
+			continue
+		blood_fx.rotation = effect_direction.angle()
+		blood_fx.modulate = Color(1.0, 0.72, 0.72, 0.92)
+		blood_fx.z_index = 7
+		var fade_tween := blood_fx.create_tween()
+		fade_tween.tween_property(
+			blood_fx,
+			"modulate:a",
+			0.0,
+			0.30
+		).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 
 func _update_berserker_hp_visual() -> void:
