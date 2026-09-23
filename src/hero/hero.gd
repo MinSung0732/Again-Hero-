@@ -7268,7 +7268,7 @@ func _spawn_berserker_blood_orb(
 	skill_config: Dictionary
 ) -> void:
 	var orb_scale: float = maxf(
-		float(skill_config.get("orb_visual_scale", 0.62)),
+		float(skill_config.get("orb_visual_scale", 1.18)),
 		0.1
 	)
 	var orb_fx: AnimatedSprite2D = _spawn_archmage_fx(
@@ -7276,35 +7276,54 @@ func _spawn_berserker_blood_orb(
 		"hit_effect",
 		1,
 		9,
-		22.0,
+		18.0,
 		true,
 		start_position,
-		Vector2(orb_scale, orb_scale)
+		Vector2(orb_scale * 0.82, orb_scale * 0.82)
 	)
 	if not is_instance_valid(orb_fx):
 		return
 
-	orb_fx.z_index = 9
-	orb_fx.modulate = Color(1.0, 0.64, 0.64, 1.0)
+	orb_fx.z_index = 12
+	orb_fx.modulate = Color(1.0, 0.45, 0.45, 1.0)
+
 	var pickup_duration: float = maxf(
-		float(skill_config.get("orb_pickup_duration", 0.42)),
+		float(skill_config.get("orb_pickup_duration", 0.55)),
 		0.08
 	)
-	var destination: Vector2 = global_position
+	var destination: Vector2 = global_position + Vector2(0.0, -12.0)
+
 	var orb_tween := orb_fx.create_tween()
-	orb_tween.set_parallel(true)
+	orb_tween.set_parallel(false)
+
+	orb_tween.tween_property(
+		orb_fx,
+		"scale",
+		Vector2(orb_scale * 1.12, orb_scale * 1.12),
+		0.08
+	).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
 	orb_tween.tween_property(
 		orb_fx,
 		"global_position",
 		destination,
 		pickup_duration
 	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	orb_tween.tween_property(
+
+	orb_tween.parallel().tween_property(
 		orb_fx,
 		"scale",
 		Vector2(0.18, 0.18),
 		pickup_duration
 	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+	orb_tween.parallel().tween_property(
+		orb_fx,
+		"modulate:a",
+		0.78,
+		pickup_duration * 0.65
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
 	orb_tween.finished.connect(
 		Callable(self, "_finish_berserker_blood_orb").bind(
 			orb_fx,
