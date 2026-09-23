@@ -13,6 +13,7 @@ static var _default_visual_frames_cache: SpriteFrames
 static var _explosion_frames_cache: SpriteFrames
 
 const FAR_NAV_DISTANCE := 900.0
+const VISUAL_LOD_DISTANCE := 1400.0
 
 signal died
 
@@ -43,6 +44,7 @@ var special_augment_configs: Dictionary = {}
 var survival_time: float = 0.0
 var far_ai_tick_timer: float = 0.0
 var cached_direction_to_hero: Vector2 = Vector2.ZERO
+var visual_lod_suspended: bool = false
 var self_destruct_hp_ratio: float = 1.0
 
 func _ready() -> void:
@@ -89,6 +91,7 @@ func _physics_process(delta: float) -> void:
 
 	var offset_to_hero := hero.global_position - global_position
 	var distance_sq := offset_to_hero.length_squared()
+	_update_visual_lod(distance_sq)
 	var far_nav_sq := FAR_NAV_DISTANCE * FAR_NAV_DISTANCE
 	var self_destruct_range_sq := self_destruct_range * self_destruct_range
 	far_ai_tick_timer = maxf(far_ai_tick_timer - delta, 0.0)
@@ -115,6 +118,38 @@ func _physics_process(delta: float) -> void:
 	else:
 		_begin_self_destruct()
 
+func _update_visual_lod(distance_sq: float) -> void:
+	if dying or self_destructing:
+		return
+
+	var should_suspend := (
+		distance_sq > VISUAL_LOD_DISTANCE * VISUAL_LOD_DISTANCE
+	)
+	if should_suspend == visual_lod_suspended:
+		return
+
+	visual_lod_suspended = should_suspend
+	set_meta("visual_lod_suspended", should_suspend)
+	if should_suspend:
+		if visual.is_playing():
+			visual.pause()
+	else:
+		if (
+			visual.sprite_frames != null
+			and visual.sprite_frames.has_animation(desired_locomotion)
+		):
+			visual.play(desired_locomotion)
+
+
+func _resume_visual_from_lod() -> void:
+	if not visual_lod_suspended:
+		return
+	visual_lod_suspended = false
+	set_meta("visual_lod_suspended", false)
+	if visual.sprite_frames != null and visual.sprite_frames.has_animation(desired_locomotion):
+		visual.play(desired_locomotion)
+
+
 func take_damage(amount: int) -> void:
 	if current_hp <= 0 or dying:
 		return
@@ -137,6 +172,7 @@ func _begin_self_destruct() -> void:
 	if self_destructing or dying:
 		return
 
+	_resume_visual_from_lod()
 	self_destructing = true
 	self_destruct_timer = maxf(self_destruct_fuse, 0.0)
 	velocity = Vector2.ZERO
@@ -149,6 +185,7 @@ func _complete_self_destruct() -> void:
 	if dying:
 		return
 
+	_resume_visual_from_lod()
 	dying = true
 	self_destructing = false
 	set_meta("death_type", "self_destruct")
@@ -171,6 +208,7 @@ func _die_from_hero() -> void:
 	if dying:
 		return
 
+	_resume_visual_from_lod()
 	dying = true
 	self_destructing = false
 	set_meta("death_type", "normal")
@@ -432,6 +470,8 @@ func _load_bomb_rat_texture(path: String) -> Texture2D:
 func _play_locomotion(moving: bool) -> void:
 	desired_locomotion = &"move" if moving else &"idle"
 
+	if visual_lod_suspended:
+		return
 	if not visual.visible or visual.sprite_frames == null or dying or self_destructing:
 		return
 
@@ -442,6 +482,8 @@ func _play_locomotion(moving: bool) -> void:
 		visual.play(desired_locomotion)
 
 func _restart_visual_animation(animation_name: StringName) -> void:
+	if visual_lod_suspended and animation_name != &"death":
+		return
 	if not visual.visible or visual.sprite_frames == null:
 		return
 	if not visual.sprite_frames.has_animation(animation_name):
