@@ -860,7 +860,6 @@ func _gunner_attack(current_target: Node2D) -> void:
 	attack_pose_timer = 0.30
 	_face_attack_direction(direction.x)
 	_restart_stage1_animation("attack", 1.0)
-	_play_gunner_muzzle_flash(direction)
 	_spawn_gunner_bullet(direction)
 	var random_angle := deg_to_rad(randf_range(-float(gunner_config.get("random_shot_angle_degrees", 28.0)), float(gunner_config.get("random_shot_angle_degrees", 28.0))))
 	_spawn_gunner_bullet(direction.rotated(random_angle))
@@ -1320,12 +1319,13 @@ func _update_gunner_deadeye(delta: float) -> void:
 	_clamp_to_battlefield()
 	gunner_deadeye_shot_timer = maxf(gunner_deadeye_shot_timer - delta, 0.0)
 	if gunner_deadeye_shot_timer <= 0.0 and gunner_deadeye_shots_left > 0:
-		_play_gunner_muzzle_flash(gunner_deadeye_direction)
+		_play_gunner_deadeye_flame(gunner_deadeye_direction)
 		_spawn_gunner_bullet(gunner_deadeye_direction, true)
 		gunner_deadeye_shots_left -= 1
 		gunner_deadeye_shot_timer = maxf(float(gunner_config.get("deadeye_shot_interval", 0.08)), 0.03)
 	if gunner_deadeye_shots_left <= 0:
 		gunner_deadeye_active = false
+		_play_gunner_deadeye_smoke(gunner_deadeye_direction)
 		_start_gunner_reload()
 
 
@@ -4547,7 +4547,7 @@ func get_skill_cooldown_hud() -> Array:
 				"데드아이",
 				float(gunner_config.get("deadeye_cooldown", 0.0)),
 				gunner_deadeye_cooldown,
-				"res://assets/art/heroes/stage4_gunner/frames/effect/effect_projectile_01.png"
+				"res://assets/art/heroes/stage4_gunner/frames/effect/effect_projectile_05.png"
 			)
 
 	return skills
@@ -6051,12 +6051,32 @@ func _apply_stage4_gunner_effect_visuals() -> void:
 	rogue_attack_effect.visible = false
 	rogue_attack_effect.sprite_frames = null
 	rogue_attack_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
 	var frames := SpriteFrames.new()
 	if frames.has_animation(&"default"):
 		frames.remove_animation(&"default")
-	frames.add_animation(&"muzzle")
-	frames.set_animation_loop(&"muzzle", false)
-	frames.set_animation_speed(&"muzzle", 28.0)
+
+	frames.add_animation(&"deadeye_flame")
+	frames.set_animation_loop(&"deadeye_flame", true)
+	frames.set_animation_speed(&"deadeye_flame", 28.0)
+	for index in range(5, 7):
+		var flame_path := "res://assets/art/heroes/stage4_gunner/frames/effect/effect_projectile_%02d.png" % index
+		var flame_texture := _load_stage1_texture(flame_path)
+		if flame_texture == null:
+			push_warning("Stage 4 deadeye flame frame load failed: %s" % flame_path)
+			continue
+		frames.add_frame(&"deadeye_flame", flame_texture)
+
+	frames.add_animation(&"deadeye_smoke")
+	frames.set_animation_loop(&"deadeye_smoke", false)
+	frames.set_animation_speed(&"deadeye_smoke", 20.0)
+	for index in range(7, 13):
+		var smoke_path := "res://assets/art/heroes/stage4_gunner/frames/effect/effect_projectile_%02d.png" % index
+		var smoke_texture := _load_stage1_texture(smoke_path)
+		if smoke_texture == null:
+			push_warning("Stage 4 deadeye smoke frame load failed: %s" % smoke_path)
+			continue
+		frames.add_frame(&"deadeye_smoke", smoke_texture)
 
 	var dust_frames := SpriteFrames.new()
 	if dust_frames.has_animation(&"default"):
@@ -6064,14 +6084,6 @@ func _apply_stage4_gunner_effect_visuals() -> void:
 	dust_frames.add_animation(&"cylinder_dust")
 	dust_frames.set_animation_loop(&"cylinder_dust", false)
 	dust_frames.set_animation_speed(&"cylinder_dust", 20.0)
-
-	for index in range(1, 8):
-		var path := "res://assets/art/heroes/stage4_gunner/frames/effect/effect_explosion_%02d.png" % index
-		var texture := _load_stage1_texture(path)
-		if texture == null:
-			push_warning("Stage 4 muzzle frame load failed: %s" % path)
-			continue
-		frames.add_frame(&"muzzle", texture)
 
 	for index in range(1, 9):
 		var dust_path := "%s/ground_effect_%02d.png" % [STAGE3_CHARGE_EFFECT_DIR, index]
@@ -6081,7 +6093,10 @@ func _apply_stage4_gunner_effect_visuals() -> void:
 			continue
 		dust_frames.add_frame(&"cylinder_dust", dust_texture)
 
-	if frames.get_frame_count(&"muzzle") > 0:
+	if (
+		frames.get_frame_count(&"deadeye_flame") > 0
+		or frames.get_frame_count(&"deadeye_smoke") > 0
+	):
 		rogue_attack_effect.sprite_frames = frames
 		rogue_attack_effect.scale = Vector2(0.30, 0.30)
 		rogue_attack_effect.z_index = 4
@@ -6096,22 +6111,55 @@ func _apply_stage4_gunner_effect_visuals() -> void:
 		channel_effect.modulate = Color(0.76, 0.68, 0.55, 0.88)
 
 
-func _play_gunner_muzzle_flash(direction: Vector2) -> void:
-	if rogue_attack_effect.sprite_frames == null:
-		return
-	if not rogue_attack_effect.sprite_frames.has_animation(&"muzzle"):
-		return
+func _set_gunner_muzzle_transform(direction: Vector2) -> void:
 	var dir := direction.normalized()
 	if dir.length_squared() <= 0.0:
 		dir = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	rogue_attack_effect.position = dir * 48.0 + Vector2(0.0, -6.0)
 	rogue_attack_effect.rotation = dir.angle()
+
+
+func _play_gunner_deadeye_flame(direction: Vector2) -> void:
+	if rogue_attack_effect.sprite_frames == null:
+		return
+	if not rogue_attack_effect.sprite_frames.has_animation(&"deadeye_flame"):
+		return
+	if rogue_attack_effect.sprite_frames.get_frame_count(&"deadeye_flame") <= 0:
+		return
+
+	_set_gunner_muzzle_transform(direction)
 	rogue_attack_effect.visible = true
+
+	if (
+		rogue_attack_effect.animation == &"deadeye_flame"
+		and rogue_attack_effect.is_playing()
+	):
+		return
+
 	rogue_attack_effect.stop()
-	rogue_attack_effect.animation = &"muzzle"
+	rogue_attack_effect.animation = &"deadeye_flame"
 	rogue_attack_effect.frame = 0
 	rogue_attack_effect.frame_progress = 0.0
-	rogue_attack_effect.play(&"muzzle")
+	rogue_attack_effect.play(&"deadeye_flame")
+
+
+func _play_gunner_deadeye_smoke(direction: Vector2) -> void:
+	if rogue_attack_effect.sprite_frames == null:
+		return
+	if not rogue_attack_effect.sprite_frames.has_animation(&"deadeye_smoke"):
+		rogue_attack_effect.visible = false
+		return
+	if rogue_attack_effect.sprite_frames.get_frame_count(&"deadeye_smoke") <= 0:
+		rogue_attack_effect.visible = false
+		return
+
+	_set_gunner_muzzle_transform(direction)
+	rogue_attack_effect.visible = true
+	rogue_attack_effect.stop()
+	rogue_attack_effect.animation = &"deadeye_smoke"
+	rogue_attack_effect.frame = 0
+	rogue_attack_effect.frame_progress = 0.0
+	rogue_attack_effect.play(&"deadeye_smoke")
 
 
 func _play_gunner_cylinder_dust() -> void:
