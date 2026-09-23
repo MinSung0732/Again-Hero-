@@ -3507,26 +3507,40 @@ func _apply_heal_item_steering(base_direction: Vector2, delta: float) -> Vector2
 	if heal_direction.length_squared() <= 0.01:
 		return Vector2.ZERO
 
-	# At critical HP the potion becomes a hard movement objective. This
-	# prevents combat strafing / avoidance from making the hero orbit the item.
-	if hp_ratio <= 0.30:
-		heal_item_steering_direction = heal_direction
-		return heal_direction
-
+	var distance_to_heal: float = global_position.distance_to(
+		heal_item_target.global_position
+	)
 	var avoidance: Vector2 = _get_crowd_avoidance_direction(240.0)
 	var local_danger: float = _estimate_monster_danger(global_position, 210.0)
 	var critical_factor: float = clampf((0.50 - hp_ratio) / 0.20, 0.0, 1.0)
-	var heal_weight: float = clampf(desire * lerpf(1.25, 2.10, critical_factor), 0.0, 2.60)
+
+	# Human-like potion behavior:
+	# from far away, drift toward the potion while still fighting / avoiding;
+	# once close enough, progressively commit so the hero actually finishes
+	# the pickup instead of circling just outside the collection radius.
+	var close_commit: float = clampf(
+		(220.0 - distance_to_heal) / 150.0,
+		0.0,
+		1.0
+	)
+	var heal_weight: float = clampf(
+		desire
+		* lerpf(1.10, 1.75, critical_factor)
+		* lerpf(1.0, 1.65, close_commit),
+		0.0,
+		2.60
+	)
 	var combat_weight: float = lerpf(
-		maxf(0.30, 1.0 - heal_weight * 0.55),
-		0.12,
-		critical_factor
+		maxf(0.38, 1.0 - heal_weight * 0.45),
+		0.16,
+		close_commit * lerpf(0.55, 1.0, critical_factor)
 	)
 	var avoidance_weight: float = (
-		(0.52 + local_danger * 0.26)
-		* lerpf(1.10, 0.62, risk_tolerance)
+		(0.55 + local_danger * 0.28)
+		* lerpf(1.12, 0.68, risk_tolerance)
 		* detour_weight
-		* lerpf(1.0, 0.20, critical_factor)
+		* lerpf(1.0, 0.35, critical_factor)
+		* lerpf(1.0, 0.18, close_commit)
 	)
 
 	var desired: Vector2 = (
@@ -3535,6 +3549,15 @@ func _apply_heal_item_steering(base_direction: Vector2, delta: float) -> Vector2
 	)
 	if avoidance.length_squared() > 0.01:
 		desired += avoidance * avoidance_weight
+
+	# Inside the final approach, keep a small amount of natural movement but
+	# bias strongly enough toward the potion to cross the pickup threshold.
+	if distance_to_heal <= 95.0:
+		desired = (
+			desired * 0.28
+			+ heal_direction * 1.45
+		)
+
 	if desired.length_squared() <= 0.01:
 		desired = heal_direction
 	desired = desired.normalized()
@@ -3542,7 +3565,11 @@ func _apply_heal_item_steering(base_direction: Vector2, delta: float) -> Vector2
 	if heal_item_steering_direction.length_squared() <= 0.01:
 		heal_item_steering_direction = desired
 	else:
-		var turn_speed: float = lerpf(5.0, 11.0, critical_factor)
+		var turn_speed: float = lerpf(
+			4.2,
+			8.5,
+			maxf(critical_factor, close_commit)
+		)
 		heal_item_steering_direction = heal_item_steering_direction.lerp(
 			desired,
 			clampf(delta * turn_speed, 0.0, 1.0)
