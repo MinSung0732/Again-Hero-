@@ -521,7 +521,7 @@ const PROFILES = {
 			"gauge_max": 100.0,
 			"gauge_per_kill": 20.0,
 			"madness_drain_per_second": 10.0,
-			"madness_attack_speed_multiplier": 1.50,
+			"madness_attack_speed_multiplier": 3.00,
 			"madness_target_radius": 375.0,
 			"skill_1": {
 				"id": "blood_sword_first",
