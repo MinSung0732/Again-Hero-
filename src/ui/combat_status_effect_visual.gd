@@ -3,8 +3,12 @@ class_name CombatStatusEffectVisual
 
 static var _frames_cache: Dictionary = {}
 
+const VISIBILITY_CHECK_INTERVAL := 0.10
+
 var target: Node
 var effect_type: String = ""
+var _visibility_check_timer: float = 0.0
+var _last_active: bool = false
 
 func setup(new_target: Node, new_effect_type: String) -> void:
 	target = new_target
@@ -54,19 +58,36 @@ func setup(new_target: Node, new_effect_type: String) -> void:
 
 	sprite_frames = frames
 	visible = false
-	if frames.get_frame_count("fx") > 0:
-		play("fx")
+	stop()
+	_visibility_check_timer = randf_range(0.0, VISIBILITY_CHECK_INTERVAL)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not is_instance_valid(target) or target.is_queued_for_deletion():
 		queue_free()
 		return
 
+	_visibility_check_timer -= delta
+	if _visibility_check_timer > 0.0:
+		return
+	_visibility_check_timer = VISIBILITY_CHECK_INTERVAL
+
+	var active := false
 	match effect_type:
 		"slow":
-			visible = _is_slow_active()
+			active = _is_slow_active()
 		"orc_rage":
-			visible = bool(target.get_meta("orc_berserk_visual_active", false))
+			active = bool(target.get_meta("orc_berserk_visual_active", false))
+
+	if active == _last_active:
+		return
+
+	_last_active = active
+	visible = active
+	if active:
+		if sprite_frames != null and sprite_frames.get_frame_count("fx") > 0:
+			play("fx")
+	else:
+		stop()
 
 func _is_slow_active() -> bool:
 	var slow_value = target.get("slow_timer")
