@@ -68,7 +68,7 @@ func setup(
 	speed = maxf(new_speed, 1.0)
 	max_range = maxf(new_max_range, 1.0)
 	element = new_element
-	config = new_config.duplicate(true)
+	config = new_config
 	source_hero = new_source_hero
 
 	if element == "earth":
@@ -104,7 +104,7 @@ func deactivate_for_pool() -> void:
 	active = false
 	traveled_distance = 0.0
 	hit_ids.clear()
-	config.clear()
+	config = {}
 	source_hero = null
 	element = "earth"
 	if is_in_group("hero_projectiles"):
