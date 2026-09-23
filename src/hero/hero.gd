@@ -216,6 +216,9 @@ var battlefield_size: Vector2 = Vector2(3200, 3200)
 var _monster_nodes_cache: Array = []
 var _monster_nodes_cache_process_frame: int = -1
 var _monster_nodes_cache_physics_frame: int = -1
+var _aux_group_nodes_cache: Dictionary = {}
+var _aux_group_nodes_cache_process_frame: int = -1
+var _aux_group_nodes_cache_physics_frame: int = -1
 
 
 func _get_monster_nodes_cached() -> Array:
@@ -229,6 +232,25 @@ func _get_monster_nodes_cached() -> Array:
 		_monster_nodes_cache_process_frame = process_frame
 		_monster_nodes_cache_physics_frame = physics_frame
 	return _monster_nodes_cache
+
+
+func _get_aux_group_nodes_cached(group_name: StringName) -> Array:
+	var process_frame := Engine.get_process_frames()
+	var physics_frame := Engine.get_physics_frames()
+	if (
+		process_frame != _aux_group_nodes_cache_process_frame
+		or physics_frame != _aux_group_nodes_cache_physics_frame
+	):
+		_aux_group_nodes_cache.clear()
+		_aux_group_nodes_cache_process_frame = process_frame
+		_aux_group_nodes_cache_physics_frame = physics_frame
+
+	if not _aux_group_nodes_cache.has(group_name):
+		_aux_group_nodes_cache[group_name] = get_tree().get_nodes_in_group(
+			group_name
+		)
+	var cached = _aux_group_nodes_cache.get(group_name, [])
+	return cached if cached is Array else []
 
 
 func _get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
@@ -294,6 +316,8 @@ var heal_item_steering_direction: Vector2 = Vector2.ZERO
 var chest_target: Node2D
 var chest_retarget_timer: float = 0.0
 var chest_steering_direction: Vector2 = Vector2.ZERO
+var exp_orb_target: Node2D
+var exp_orb_retarget_timer: float = 0.0
 
 @onready var follow_camera: Camera2D = $Camera2D
 @onready var hero_sprite: AnimatedSprite2D = $HeroSprite
@@ -355,6 +379,8 @@ func configure_profile(profile: Dictionary) -> void:
 	chest_target = null
 	chest_retarget_timer = 0.0
 	chest_steering_direction = Vector2.ZERO
+	exp_orb_target = null
+	exp_orb_retarget_timer = 0.0
 	var profile_fighter_basic = profile.get("fighter_basic", {})
 	fighter_basic_config = (
 		profile_fighter_basic.duplicate(true)
@@ -2856,10 +2882,23 @@ func _move_without_monsters() -> void:
 	_clamp_to_battlefield()
 
 func _find_nearest_exp_orb() -> Node2D:
-	var nearest: Node2D = null
+	exp_orb_retarget_timer = maxf(
+		exp_orb_retarget_timer - 0.016,
+		0.0
+	)
+	if (
+		exp_orb_retarget_timer > 0.0
+		and is_instance_valid(exp_orb_target)
+		and not exp_orb_target.is_queued_for_deletion()
+		and exp_orb_target.is_in_group("exp_orbs")
+	):
+		return exp_orb_target
+
+	exp_orb_retarget_timer = 0.12
+	exp_orb_target = null
 	var nearest_distance := INF
 
-	for node in get_tree().get_nodes_in_group("exp_orbs"):
+	for node in _get_aux_group_nodes_cached(&"exp_orbs"):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 
@@ -2867,12 +2906,15 @@ func _find_nearest_exp_orb() -> Node2D:
 		if orb == null:
 			continue
 
-		var distance := global_position.distance_squared_to(orb.global_position)
+		var distance := global_position.distance_squared_to(
+			orb.global_position
+		)
 		if distance < nearest_distance:
 			nearest_distance = distance
-			nearest = orb
+			exp_orb_target = orb
 
-	return nearest
+	return exp_orb_target
+
 
 func _pick_new_wander_target() -> void:
 	var candidate := Vector2(battlefield_size.x * 0.5, battlefield_size.y * 0.5)
@@ -3040,7 +3082,7 @@ func _update_heal_item_goal(delta: float) -> void:
 		1.0
 	)
 	var best_score := -INF
-	for node in get_tree().get_nodes_in_group("heal_items"):
+	for node in _get_aux_group_nodes_cached(&"heal_items"):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var item := node as Node2D
@@ -3130,7 +3172,7 @@ func _update_chest_goal(delta: float) -> void:
 	chest_target = null
 	chest_retarget_timer = 0.45
 	var best_distance := INF
-	for node in get_tree().get_nodes_in_group("treasure_chests"):
+	for node in _get_aux_group_nodes_cached(&"treasure_chests"):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var chest := node as Node2D
@@ -3169,7 +3211,7 @@ func _apply_chest_steering(base_direction: Vector2, delta: float) -> Vector2:
 
 
 func _damage_treasure_chests(origin: Vector2, radius: float, damage: int) -> void:
-	for node in get_tree().get_nodes_in_group("treasure_chests"):
+	for node in _get_aux_group_nodes_cached(&"treasure_chests"):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var chest := node as Node2D
