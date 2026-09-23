@@ -267,10 +267,12 @@ func _process(delta: float) -> void:
 			status_label.text = "화면 전환에 실패했습니다."
 			if is_instance_valid(battle):
 				battle.set_external_pause(false)
-		elif (
-			load_status == ResourceLoader.THREAD_LOAD_FAILED
-			or load_status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE
-		):
+		elif load_status == ResourceLoader.THREAD_LOAD_FAILED:
+			_scene_load_pending = false
+			status_label.text = "화면 전환에 실패했습니다."
+			if is_instance_valid(battle):
+				battle.set_external_pause(false)
+		elif load_status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
 			_scene_load_pending = false
 			status_label.text = "화면 전환에 실패했습니다."
 			if is_instance_valid(battle):
