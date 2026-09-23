@@ -589,8 +589,8 @@ const PROFILES = {
 				"target_radius": 560.0,
 				"projectile_speed": 200.0,
 				"channel_effect_scale": 2.625,
-				"projectile_effect_scale": 1.95,
-				"impact_effect_scale": 2.20,
+				"projectile_effect_scale": 1.15,
+				"impact_effect_scale": 1.78,
 			},
 		},
 		"augment_pool_ids": [
