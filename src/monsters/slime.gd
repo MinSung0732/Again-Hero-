@@ -170,13 +170,32 @@ func _get_pack_bonuses() -> Dictionary:
 		return {}
 
 	var nearby := 0
-	for node in get_tree().get_nodes_in_group("slimes"):
+	var candidates: Array = []
+	var battle := get_parent()
+	if (
+		is_instance_valid(battle)
+		and battle.has_method("query_monsters_near")
+	):
+		var queried = battle.call(
+			"query_monsters_near",
+			global_position,
+			radius
+		)
+		if queried is Array:
+			candidates = queried
+	if candidates.is_empty():
+		candidates = get_tree().get_nodes_in_group("slimes")
+
+	var radius_sq := radius * radius
+	for node in candidates:
 		if node == self or not is_instance_valid(node):
+			continue
+		if not node.is_in_group("slimes"):
 			continue
 		var other := node as Node2D
 		if other == null:
 			continue
-		if global_position.distance_to(other.global_position) <= radius:
+		if global_position.distance_squared_to(other.global_position) <= radius_sq:
 			nearby += 1
 			if nearby >= required_nearby:
 				return {
