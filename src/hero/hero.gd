@@ -1046,8 +1046,8 @@ func _find_gunner_escape_direction() -> Vector2:
 	var dash_distance := maxf(float(gunner_config.get("backstep_distance", 260.0)), 1.0)
 	var threat_radius := maxf(dash_distance + 360.0, 560.0)
 	var repulsion := Vector2.ZERO
+	var monster_positions: Array[Vector2] = []
 
-	# 가까운 몬스터일수록 더 강하게 반대 방향을 선호한다.
 	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
@@ -1057,7 +1057,11 @@ func _find_gunner_escape_direction() -> Vector2:
 		var hp_value = monster.get("current_hp")
 		if hp_value != null and int(hp_value) <= 0:
 			continue
-		var offset := monster.global_position - global_position
+
+		var monster_position := monster.global_position
+		monster_positions.append(monster_position)
+
+		var offset := monster_position - global_position
 		var distance := offset.length()
 		if distance <= 0.001 or distance > threat_radius:
 			continue
@@ -1081,30 +1085,28 @@ func _find_gunner_escape_direction() -> Vector2:
 		if actual_dash_distance <= 1.0:
 			continue
 
-		var endpoint_danger := _estimate_monster_danger(endpoint, 320.0)
+		var endpoint_danger := 0.0
 		var endpoint_close_count := 0
 		var endpoint_near_count := 0
 		var corridor_density := 0.0
 		var corridor_count := 0
 		var side := Vector2(-dir.y, dir.x)
+		var danger_radius := 320.0
 
-		for node in _get_monster_nodes_cached():
-			if not is_instance_valid(node) or node.is_queued_for_deletion():
-				continue
-			var monster := node as Node2D
-			if monster == null:
-				continue
-			var hp_value = monster.get("current_hp")
-			if hp_value != null and int(hp_value) <= 0:
-				continue
-
-			var endpoint_distance := endpoint.distance_to(monster.global_position)
+		for monster_position in monster_positions:
+			var endpoint_distance := endpoint.distance_to(monster_position)
+			if endpoint_distance < danger_radius:
+				endpoint_danger += 1.0 - clampf(
+					endpoint_distance / danger_radius,
+					0.0,
+					1.0
+				)
 			if endpoint_distance <= 115.0:
 				endpoint_close_count += 1
 			if endpoint_distance <= 220.0:
 				endpoint_near_count += 1
 
-			var offset := monster.global_position - global_position
+			var offset := monster_position - global_position
 			var forward := offset.dot(dir)
 			if forward <= 0.0 or forward > actual_dash_distance + 120.0:
 				continue
@@ -1121,7 +1123,6 @@ func _find_gunner_escape_direction() -> Vector2:
 			var center_weight := 1.0 - clampf(lateral / 185.0, 0.0, 1.0) * 0.60
 			corridor_density += maxf(forward_weight * center_weight, 0.15)
 
-		# 맵 바깥 후보가 가짜 안전지대로 평가되지 않게 실제 이동 손실에 패널티.
 		var boundary_loss := clampf(
 			(dash_distance - actual_dash_distance) / dash_distance,
 			0.0,
@@ -1131,7 +1132,6 @@ func _find_gunner_escape_direction() -> Vector2:
 		if preferred_away.length_squared() > 0.001:
 			away_alignment_penalty = (1.0 - dir.dot(preferred_away)) * 7.0
 
-		# 빈 통로/빈 도착지를 최우선. 가까운 몬스터가 있는 도착점은 사실상 탈락시킨다.
 		var score := (
 			float(endpoint_close_count) * 90.0
 			+ float(endpoint_near_count) * 16.0
@@ -1146,7 +1146,6 @@ func _find_gunner_escape_direction() -> Vector2:
 			best = global_position.direction_to(endpoint)
 
 	return best.normalized()
-
 
 func _update_gunner_collision_ignore(delta: float) -> void:
 	if gunner_collision_ignore_timer <= 0.0:
@@ -1188,19 +1187,27 @@ func _gunner_deadeye_best_direction() -> Dictionary:
 	var best_direction := Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	var best_score := 0.0
 	var best_hits := 0
+	var monster_offsets: Array[Vector2] = []
+
+	for node in _get_monster_nodes_cached():
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var hp_value = monster.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		var offset := monster.global_position - global_position
+		if offset.length_squared() <= max_range * max_range:
+			monster_offsets.append(offset)
 
 	for index in range(sample_count):
 		var direction := Vector2.from_angle(TAU * float(index) / float(sample_count))
 		var side := Vector2(-direction.y, direction.x)
 		var score := 0.0
 		var hits := 0
-		for node in _get_monster_nodes_cached():
-			if not is_instance_valid(node) or node.is_queued_for_deletion():
-				continue
-			var monster := node as Node2D
-			if monster == null:
-				continue
-			var offset := monster.global_position - global_position
+		for offset in monster_offsets:
 			var forward := offset.dot(direction)
 			if forward <= 0.0 or forward > max_range:
 				continue
@@ -1221,7 +1228,6 @@ func _gunner_deadeye_best_direction() -> Dictionary:
 		"score": best_score,
 		"hits": best_hits,
 	}
-
 
 func _gunner_should_start_deadeye() -> bool:
 	if gunner_reloading or gunner_deadeye_cooldown > 0.0:
@@ -1289,14 +1295,14 @@ func _update_gunner_deadeye(delta: float) -> void:
 
 func _count_monsters_near(origin: Vector2, radius: float) -> int:
 	var count := 0
+	var radius_sq := radius * radius
 	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
-		if monster != null and origin.distance_to(monster.global_position) <= radius:
+		if monster != null and origin.distance_squared_to(monster.global_position) <= radius_sq:
 			count += 1
 	return count
-
 
 func _physics_process_rogue(delta: float) -> void:
 	ai_memory_clock += delta
@@ -3680,15 +3686,15 @@ func _spawn_archmage_fx(
 
 
 func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int) -> void:
+	var radius_sq := radius * radius
 	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
 		if monster == null or not monster.has_method("take_damage"):
 			continue
-		if origin.distance_to(monster.global_position) <= radius:
+		if origin.distance_squared_to(monster.global_position) <= radius_sq:
 			monster.call("take_damage", damage)
-
 
 func _damage_monsters_in_radius_once(
 	origin: Vector2,
@@ -3696,6 +3702,7 @@ func _damage_monsters_in_radius_once(
 	damage: int,
 	hit_ids: Dictionary
 ) -> void:
+	var radius_sq := radius * radius
 	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
@@ -3705,10 +3712,9 @@ func _damage_monsters_in_radius_once(
 		var iid := monster.get_instance_id()
 		if hit_ids.has(iid):
 			continue
-		if origin.distance_to(monster.global_position) <= radius:
+		if origin.distance_squared_to(monster.global_position) <= radius_sq:
 			hit_ids[iid] = true
 			monster.call("take_damage", damage)
-
 
 func _damage_monsters_in_corridor(
 	start: Vector2,
