@@ -144,6 +144,8 @@ const PROFILES = {
 				"damage_ratio": 1.15,
 				"projectile_speed": 700.0,
 				"projectile_range": 1100.0,
+				"impact_damage_ratio": 1.50,
+				"impact_radius": 125.0,
 				"pillar_count": 10,
 				"pillar_spawn_radius": 210.0,
 				"pillar_hit_radius": 72.0,
