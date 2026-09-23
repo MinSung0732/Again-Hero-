@@ -37,7 +37,7 @@ func setup(
 	damage = maxi(new_damage, 1)
 	speed = maxf(new_speed, 1.0)
 	max_range = maxf(new_range, 1.0)
-	config = new_config.duplicate(true)
+	config = new_config
 	source_hero = new_source_hero
 	empowered = is_empowered
 	current_target = initial_target
