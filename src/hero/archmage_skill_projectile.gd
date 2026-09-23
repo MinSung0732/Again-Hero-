@@ -120,13 +120,11 @@ func _damage_storm_area(returning: bool) -> void:
 		1.0
 	)
 	var radius_sq := radius * radius
-	var damaged_ids := (
-		storm_return_hit_ids
-		if returning
-		else hit_ids
-	)
-	var damage_multiplier := (
-		maxf(
+	var damaged_ids: Dictionary = hit_ids
+	var damage_multiplier := 1.0
+	if returning:
+		damaged_ids = storm_return_hit_ids
+		damage_multiplier = maxf(
 			float(
 				config.get(
 					"return_damage_multiplier",
@@ -135,9 +133,6 @@ func _damage_storm_area(returning: bool) -> void:
 			),
 			0.0
 		)
-		if returning
-		else 1.0
-	)
 	var hit_damage := maxi(
 		1,
 		int(round(float(damage) * damage_multiplier))
