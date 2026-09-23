@@ -63,6 +63,7 @@ const CHEST_EXP_VALUE_MIN := 10
 const CHEST_EXP_VALUE_MAX := 30
 const MAX_EXP_ORB_POOL := 128
 const MAX_PROJECTILE_POOL_PER_TYPE := 96
+const MAX_TRANSIENT_FX_POOL_PER_TYPE := 48
 
 
 var hero: Node2D
@@ -97,6 +98,7 @@ var monster_spatial_grid: Dictionary = {}
 var monster_spatial_grid_physics_frame: int = -1
 var exp_orb_pool: Array[Node2D] = []
 var projectile_pools: Dictionary = {}
+var transient_fx_pools: Dictionary = {}
 var battle_over: bool = false
 var external_pause: bool = false
 
@@ -1444,6 +1446,73 @@ func _spawn_exp_orb(
 
 	orb.global_position = drop_position
 	orb.call("setup", exp_value, initial_velocity)
+
+
+func acquire_transient_fx(pool_key: String, fx_type: String) -> Node:
+	if pool_key.is_empty():
+		return null
+
+	var pool = transient_fx_pools.get(pool_key, [])
+	if typeof(pool) != TYPE_ARRAY:
+		pool = []
+
+	var fx: Node = null
+	while not pool.is_empty() and fx == null:
+		var pooled = pool.pop_back()
+		if is_instance_valid(pooled) and not pooled.is_queued_for_deletion():
+			fx = pooled
+	transient_fx_pools[pool_key] = pool
+
+	if fx == null:
+		match fx_type:
+			"animated_sprite":
+				fx = AnimatedSprite2D.new()
+			"line":
+				fx = Line2D.new()
+			"node2d":
+				fx = Node2D.new()
+			_:
+				return null
+		add_child(fx)
+
+	fx.visible = true
+	fx.process_mode = Node.PROCESS_MODE_INHERIT
+	return fx
+
+
+func recycle_transient_fx(fx: Node, pool_key: String) -> void:
+	if (
+		not is_instance_valid(fx)
+		or fx.is_queued_for_deletion()
+		or pool_key.is_empty()
+	):
+		return
+
+	if fx.has_method("deactivate_for_pool"):
+		fx.call("deactivate_for_pool")
+	else:
+		fx.visible = false
+		fx.set_process(false)
+		fx.set_physics_process(false)
+		if fx is AnimatedSprite2D:
+			(fx as AnimatedSprite2D).stop()
+		elif fx is Line2D:
+			var line := fx as Line2D
+			line.clear_points()
+			line.modulate = Color.WHITE
+			line.scale = Vector2.ONE
+			line.position = Vector2.ZERO
+
+	var pool = transient_fx_pools.get(pool_key, [])
+	if typeof(pool) != TYPE_ARRAY:
+		pool = []
+
+	if pool.size() >= MAX_TRANSIENT_FX_POOL_PER_TYPE:
+		fx.queue_free()
+		return
+
+	pool.append(fx)
+	transient_fx_pools[pool_key] = pool
 
 
 func acquire_projectile(scene: PackedScene, pool_key: String) -> Node:
