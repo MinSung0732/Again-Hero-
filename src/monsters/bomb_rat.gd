@@ -41,10 +41,13 @@ var self_destruct_timer: float = 0.0
 var desired_locomotion: StringName = &"idle"
 var special_augment_configs: Dictionary = {}
 var survival_time: float = 0.0
+var far_ai_tick_timer: float = 0.0
+var cached_direction_to_hero: Vector2 = Vector2.ZERO
 var self_destruct_hp_ratio: float = 1.0
 
 func _ready() -> void:
 	add_to_group("monsters")
+	far_ai_tick_timer = randf_range(0.0, 0.16)
 	current_hp = max_hp
 	exp_reward = hero_kill_exp_reward
 	hero = get_tree().get_first_node_in_group("hero") as Node2D
@@ -84,12 +87,20 @@ func _physics_process(delta: float) -> void:
 			_play_locomotion(false)
 			return
 
-	var direction_to_hero := global_position.direction_to(hero.global_position)
-	if visual.visible and absf(direction_to_hero.x) > 0.01:
-		visual.flip_h = direction_to_hero.x < 0.0
+	var offset_to_hero := hero.global_position - global_position
+	var distance_sq := offset_to_hero.length_squared()
+	var far_nav_sq := FAR_NAV_DISTANCE * FAR_NAV_DISTANCE
+	var self_destruct_range_sq := self_destruct_range * self_destruct_range
+	far_ai_tick_timer = maxf(far_ai_tick_timer - delta, 0.0)
 
-	var distance := global_position.distance_to(hero.global_position)
-	if distance > self_destruct_range:
+	if distance_sq > self_destruct_range_sq:
+		var direction_to_hero := cached_direction_to_hero
+		if distance_sq <= far_nav_sq or far_ai_tick_timer <= 0.0:
+			direction_to_hero = offset_to_hero.normalized()
+			cached_direction_to_hero = direction_to_hero
+			far_ai_tick_timer = randf_range(0.10, 0.16)
+		if visual.visible and absf(direction_to_hero.x) > 0.01:
+			visual.flip_h = direction_to_hero.x < 0.0
 		var external_slow := 1.0
 		if int(get_meta("gunner_slow_until", 0)) > Time.get_ticks_msec():
 			external_slow = clampf(float(get_meta("gunner_slow_multiplier", 1.0)), 0.1, 1.0)
@@ -97,7 +108,7 @@ func _physics_process(delta: float) -> void:
 			external_slow = 0.0
 		velocity = direction_to_hero * move_speed * external_slow
 		_play_locomotion(true)
-		if distance > FAR_NAV_DISTANCE:
+		if distance_sq > far_nav_sq:
 			global_position += velocity * delta
 		else:
 			move_and_slide()
