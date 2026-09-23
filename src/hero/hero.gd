@@ -188,6 +188,8 @@ var berserker_skill1_wave_index: int = 0
 var berserker_skill1_wave_timer: float = 0.0
 var berserker_skill1_direction: Vector2 = Vector2.RIGHT
 var berserker_skill2_cooldown: float = 0.0
+var berserker_skill3_cooldown: float = 0.0
+var berserker_skill3_active: bool = false
 var berserker_skill_global_cooldown: float = 0.0
 
 var archmage_element_config: Dictionary = {}
@@ -441,6 +443,8 @@ func configure_profile(profile: Dictionary) -> void:
 	berserker_skill1_wave_timer = 0.0
 	berserker_skill1_direction = Vector2.RIGHT
 	berserker_skill2_cooldown = 0.0
+	berserker_skill3_cooldown = 0.0
+	berserker_skill3_active = false
 	berserker_skill_global_cooldown = 0.0
 
 	var profile_gunner = profile.get("gunner", {})
@@ -2465,6 +2469,43 @@ func _apply_profile_visual() -> void:
 				)
 				return
 			berserker_frames.add_frame("attack", attack_texture)
+
+		for dash_animation_data in [
+			["dash_start", 1],
+			["dash_finish", 2],
+		]:
+			var dash_animation_name: String = String(
+				dash_animation_data[0]
+			)
+			var dash_frame_index: int = int(
+				dash_animation_data[1]
+			)
+			var dash_texture := _load_stage1_texture(
+				"%s/atk_%02d.png" % [
+					berserker_dir,
+					dash_frame_index,
+				]
+			)
+			if dash_texture == null:
+				push_warning(
+					"Stage 6 dash frame load failed: %s/atk_%02d.png"
+					% [berserker_dir, dash_frame_index]
+				)
+				return
+			berserker_frames.add_animation(dash_animation_name)
+			berserker_frames.set_animation_speed(
+				dash_animation_name,
+				1.0
+			)
+			berserker_frames.set_animation_loop(
+				dash_animation_name,
+				true
+			)
+			berserker_frames.add_frame(
+				dash_animation_name,
+				dash_texture
+			)
+
 		_add_named_sequence_animation(
 			berserker_frames, "hit", berserker_dir, "hit", 3, 13.0, false
 		)
@@ -6416,6 +6457,10 @@ func _physics_process_berserker(delta: float) -> void:
 		berserker_skill2_cooldown - delta,
 		0.0
 	)
+	berserker_skill3_cooldown = maxf(
+		berserker_skill3_cooldown - delta,
+		0.0
+	)
 	berserker_skill_global_cooldown = maxf(
 		berserker_skill_global_cooldown - delta,
 		0.0
@@ -6444,6 +6489,10 @@ func _physics_process_berserker(delta: float) -> void:
 			queue_redraw()
 
 	if berserker_reviving:
+		velocity = Vector2.ZERO
+		return
+
+	if berserker_skill3_active:
 		velocity = Vector2.ZERO
 		return
 
@@ -6493,6 +6542,12 @@ func _physics_process_berserker(delta: float) -> void:
 			attack_range
 		)
 	if (
+		berserker_skill_global_cooldown <= 0.0
+		and berserker_skill3_cooldown <= 0.0
+		and distance <= 500.0
+	):
+		_start_berserker_skill3(target)
+	elif (
 		berserker_skill_global_cooldown <= 0.0
 		and berserker_skill1_cooldown <= 0.0
 		and distance <= maxf(
@@ -7055,6 +7110,218 @@ func _heal_berserker_from_blood_path(
 
 			healed_ids[iid] = true
 			heal_direct(heal_per_touch)
+
+
+func _start_berserker_skill3(current_target: Node2D) -> void:
+	if berserker_skill3_active or not is_instance_valid(current_target):
+		return
+
+	var skill_config_value = berserker_config.get("skill_3", {})
+	if typeof(skill_config_value) != TYPE_DICTIONARY:
+		return
+	var skill_config: Dictionary = skill_config_value
+	if skill_config.is_empty():
+		return
+
+	var hp_cost_ratio: float = clampf(
+		float(skill_config.get("hp_cost_ratio", 0.05)),
+		0.0,
+		0.95
+	)
+	var hp_cost: int = maxi(
+		int(round(float(current_hp) * hp_cost_ratio)),
+		1
+	)
+	current_hp = maxi(current_hp - hp_cost, 1)
+	health_changed.emit(current_hp, max_hp)
+
+	var dash_direction: Vector2 = global_position.direction_to(
+		current_target.global_position
+	)
+	if dash_direction.length_squared() <= 0.0:
+		dash_direction = (
+			Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+		)
+	dash_direction = dash_direction.normalized()
+	_face_attack_direction(dash_direction.x)
+
+	berserker_skill3_active = true
+	berserker_skill3_cooldown = maxf(
+		float(skill_config.get("cooldown", 30.0)),
+		0.0
+	)
+	berserker_skill_global_cooldown = maxf(
+		berserker_skill_global_cooldown,
+		1.75
+	)
+	attack_timer = maxf(attack_timer, 1.55)
+	attack_pose_timer = 1.55
+	_execute_berserker_skill3(
+		dash_direction,
+		skill_config
+	)
+	queue_redraw()
+
+
+func _execute_berserker_skill3(
+	dash_direction: Vector2,
+	skill_config: Dictionary
+) -> void:
+	var start_position: Vector2 = global_position
+	var dash_distance: float = maxf(
+		float(skill_config.get("dash_distance", 500.0)),
+		1.0
+	)
+	var destination: Vector2 = (
+		start_position + dash_direction * dash_distance
+	)
+	destination = Vector2(
+		clampf(
+			destination.x,
+			FIELD_MARGIN,
+			battlefield_size.x - FIELD_MARGIN
+		),
+		clampf(
+			destination.y,
+			FIELD_MARGIN,
+			battlefield_size.y - FIELD_MARGIN
+		)
+	)
+
+	var saved_collision_layer: int = collision_layer
+	var saved_collision_mask: int = collision_mask
+	collision_layer = 0
+	collision_mask = 0
+	velocity = Vector2.ZERO
+	_restart_stage1_animation("dash_start")
+
+	_spawn_berserker_blood_dash_trail(
+		start_position,
+		destination
+	)
+
+	var dash_duration: float = maxf(
+		float(skill_config.get("dash_duration", 0.20)),
+		0.05
+	)
+	var dash_tween := create_tween()
+	dash_tween.tween_property(
+		self,
+		"global_position",
+		destination,
+		dash_duration
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	await dash_tween.finished
+
+	if not is_inside_tree() or is_dying:
+		return
+
+	collision_layer = saved_collision_layer
+	collision_mask = saved_collision_mask
+	global_position = destination
+	velocity = Vector2.ZERO
+	_restart_stage1_animation("dash_finish")
+
+	var orb_radius: float = maxf(
+		float(skill_config.get("blood_orb_radius", 330.0)),
+		1.0
+	)
+	var orb_radius_sq: float = orb_radius * orb_radius
+	var orb_count: int = 0
+	for node in _get_monster_nodes_near(global_position, orb_radius):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if (
+			global_position.distance_squared_to(monster.global_position)
+			> orb_radius_sq
+		):
+			continue
+		_spawn_berserker_blood_orb(
+			monster.global_position,
+			skill_config
+		)
+		orb_count += 1
+
+	var pickup_duration: float = maxf(
+		float(skill_config.get("orb_pickup_duration", 0.42)),
+		0.08
+	)
+	if orb_count > 0:
+		await get_tree().create_timer(
+			pickup_duration + 0.10
+		).timeout
+	else:
+		await get_tree().create_timer(0.16).timeout
+
+	if not is_inside_tree():
+		return
+	berserker_skill3_active = false
+	attack_pose_timer = 0.0
+	_play_stage1_animation("idle", 1.0)
+
+
+func _spawn_berserker_blood_orb(
+	start_position: Vector2,
+	skill_config: Dictionary
+) -> void:
+	var orb_scale: float = maxf(
+		float(skill_config.get("orb_visual_scale", 0.62)),
+		0.1
+	)
+	var orb_fx: AnimatedSprite2D = _spawn_archmage_fx(
+		"%s/effect5" % STAGE6_FRAME_DIR,
+		"hit_effect",
+		1,
+		9,
+		22.0,
+		true,
+		start_position,
+		Vector2(orb_scale, orb_scale)
+	)
+	if not is_instance_valid(orb_fx):
+		return
+
+	orb_fx.z_index = 9
+	orb_fx.modulate = Color(1.0, 0.64, 0.64, 1.0)
+	var pickup_duration: float = maxf(
+		float(skill_config.get("orb_pickup_duration", 0.42)),
+		0.08
+	)
+	var destination: Vector2 = global_position
+	var orb_tween := orb_fx.create_tween()
+	orb_tween.set_parallel(true)
+	orb_tween.tween_property(
+		orb_fx,
+		"global_position",
+		destination,
+		pickup_duration
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	orb_tween.tween_property(
+		orb_fx,
+		"scale",
+		Vector2(0.18, 0.18),
+		pickup_duration
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	orb_tween.finished.connect(
+		Callable(self, "_finish_berserker_blood_orb").bind(
+			orb_fx,
+			maxi(int(skill_config.get("heal_per_orb", 70)), 1)
+		),
+		Object.CONNECT_ONE_SHOT
+	)
+
+
+func _finish_berserker_blood_orb(
+	orb_fx: AnimatedSprite2D,
+	heal_amount: int
+) -> void:
+	if is_instance_valid(orb_fx):
+		_recycle_archmage_fx(orb_fx)
+	if current_hp > 0 and not is_dying:
+		heal_direct(heal_amount)
 
 
 func notify_berserker_skill_kill() -> void:
