@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
+
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 
 signal died
@@ -30,7 +32,15 @@ func _ready() -> void:
 	add_to_group("monsters")
 	current_hp = max_hp
 	hero = get_tree().get_first_node_in_group("hero") as Node2D
+	_attach_status_effect_visual("slow")
+	_attach_status_effect_visual("orc_rage")
 	queue_redraw()
+
+func _attach_status_effect_visual(effect_type: String) -> void:
+	var effect := COMBAT_STATUS_EFFECT_VISUAL.new()
+	add_child(effect)
+	effect.setup(self, effect_type)
+
 
 func _physics_process(delta: float) -> void:
 	if current_hp <= 0 or dying:
@@ -41,6 +51,7 @@ func _physics_process(delta: float) -> void:
 	last_charge_timer = maxf(last_charge_timer - delta, 0.0)
 
 	var combat_bonuses := _get_combat_bonuses()
+	set_meta("orc_berserk_visual_active", bool(combat_bonuses.get("berserk_active", false)))
 	var external_slow := 1.0
 	if int(get_meta("gunner_slow_until", 0)) > Time.get_ticks_msec():
 		external_slow = clampf(float(get_meta("gunner_slow_multiplier", 1.0)), 0.1, 1.0)
@@ -170,6 +181,11 @@ func _get_combat_bonuses() -> Dictionary:
 	return {
 		"move_speed_multiplier": move_multiplier,
 		"attack_speed_multiplier": attack_speed_multiplier,
+		"berserk_active": (
+			not berserk.is_empty()
+			and float(current_hp) / float(maxi(max_hp, 1))
+			<= float(berserk.get("hp_ratio", 0.50))
+		),
 	}
 
 func _begin_death() -> void:
