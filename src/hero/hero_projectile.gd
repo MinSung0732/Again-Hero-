@@ -7,6 +7,7 @@ const STAGE1_PROJECTILE_FRAME_PATHS := [
 	"res://assets/art/projectiles/stage1_mage/projectile_04.png",
 ]
 const STAGE1_PROJECTILE_FPS := 12.0
+const POOL_KEY := "hero_basic_projectile"
 
 static var _stage1_frames_cache: SpriteFrames
 static var _chest_nodes_cache: Array = []
@@ -22,6 +23,7 @@ var splash_radius: float = 0.0
 var splash_damage_ratio: float = 0.0
 var has_impacted: bool = false
 var source_hero: Node
+var active: bool = true
 
 @onready var projectile_sprite: AnimatedSprite2D = $ProjectileSprite
 
@@ -40,6 +42,14 @@ func setup(
 	new_splash_radius: float = 0.0,
 	new_splash_damage_ratio: float = 0.0
 ) -> void:
+	active = true
+	visible = true
+	set_physics_process(true)
+	if not is_in_group("hero_projectiles"):
+		add_to_group("hero_projectiles")
+	traveled_distance = 0.0
+	has_impacted = false
+	source_hero = get_tree().get_first_node_in_group("hero")
 	direction = new_direction.normalized()
 	damage = new_damage
 	speed = new_speed
@@ -51,6 +61,8 @@ func setup(
 	_apply_projectile_visual()
 
 func _physics_process(delta: float) -> void:
+	if not active:
+		return
 	var previous_position := global_position
 	var step := direction * speed * delta
 	global_position += step
@@ -89,7 +101,7 @@ func _check_chest_sweep(from_position: Vector2, to_position: Vector2) -> void:
 			continue
 		has_impacted = true
 		chest.call("take_damage", damage)
-		queue_free()
+		_finish_projectile()
 		return
 
 
@@ -103,7 +115,7 @@ func _distance_squared_to_segment(point: Vector2, a: Vector2, b: Vector2) -> flo
 
 
 func _on_body_entered(body: Node) -> void:
-	if has_impacted:
+	if not active or has_impacted:
 		return
 	if body == null or body.is_queued_for_deletion():
 		return
@@ -116,7 +128,30 @@ func _on_body_entered(body: Node) -> void:
 	if splash_radius > 0.0 and splash_damage_ratio > 0.0:
 		_apply_splash_damage(body)
 
-	queue_free()
+	_finish_projectile()
+
+func _finish_projectile() -> void:
+	if not active:
+		return
+	active = false
+	var parent := get_parent()
+	if is_instance_valid(parent) and parent.has_method("recycle_projectile"):
+		parent.call("recycle_projectile", self, POOL_KEY)
+	else:
+		queue_free()
+
+
+func deactivate_for_pool() -> void:
+	active = false
+	traveled_distance = 0.0
+	has_impacted = false
+	direction = Vector2.RIGHT
+	if is_in_group("hero_projectiles"):
+		remove_from_group("hero_projectiles")
+	set_physics_process(false)
+	visible = false
+	projectile_sprite.stop()
+
 
 func _apply_splash_damage(direct_target: Node) -> void:
 	var splash_damage := maxi(
