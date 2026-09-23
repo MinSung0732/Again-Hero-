@@ -5,7 +5,7 @@ const PROJECTILE_FRAME_COUNT := 4
 const PROJECTILE_FPS := 22.0
 const IMPACT_FRAME_COUNT := 4
 const IMPACT_FPS := 24.0
-const IMPACT_SCALE := Vector2(0.30, 0.30)
+const IMPACT_SCALE := Vector2(0.45, 0.45)
 const MAX_ACTIVE_IMPACT_FX := 24
 const DEAD_EYE_RICOCHET_FX := preload("res://src/hero/deadeye_ricochet_fx.gd")
 
