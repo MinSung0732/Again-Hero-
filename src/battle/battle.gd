@@ -242,7 +242,12 @@ func _ensure_monster_spatial_grid() -> void:
 		_rebuild_monster_spatial_grid()
 
 
-func query_monsters_near(origin: Vector2, radius: float) -> Array:
+func fill_monsters_near(
+	origin: Vector2,
+	radius: float,
+	result: Array
+) -> void:
+	result.clear()
 	_ensure_monster_spatial_grid()
 
 	var safe_radius := maxf(radius, 0.0)
@@ -258,7 +263,6 @@ func query_monsters_near(origin: Vector2, radius: float) -> Array:
 	min_cell -= Vector2i.ONE
 	max_cell += Vector2i.ONE
 
-	var result: Array = []
 	for cell_x in range(min_cell.x, max_cell.x + 1):
 		for cell_y in range(min_cell.y, max_cell.y + 1):
 			var cell := Vector2i(cell_x, cell_y)
@@ -268,6 +272,11 @@ func query_monsters_near(origin: Vector2, radius: float) -> Array:
 			for node in bucket:
 				if is_instance_valid(node) and not node.is_queued_for_deletion():
 					result.append(node)
+
+
+func query_monsters_near(origin: Vector2, radius: float) -> Array:
+	var result: Array = []
+	fill_monsters_near(origin, radius, result)
 	return result
 
 
