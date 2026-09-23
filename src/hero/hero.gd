@@ -3539,7 +3539,7 @@ func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
 		await get_tree().create_timer(tick_interval).timeout
 		elapsed += tick_interval
 	if is_instance_valid(charge_fx):
-		charge_fx.queue_free()
+		_recycle_archmage_fx(charge_fx)
 	if not is_inside_tree() or current_hp <= 0:
 		archmage_casting_sequence = false
 		return
@@ -3672,7 +3672,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 			var monster := node as Node2D
 			if monster == null or not monster.has_method("take_damage"):
 				continue
-			if position.distance_to(monster.global_position) > hit_radius:
+			if position.distance_squared_to(monster.global_position) > hit_radius * hit_radius:
 				continue
 			var dealt := base_damage
 			if bool(monster.get_meta("undead", false)) or bool(monster.get_meta("is_undead", false)):
@@ -3809,12 +3809,6 @@ func _spawn_archmage_fx(
 	world_position: Vector2,
 	fx_scale: Vector2
 ) -> AnimatedSprite2D:
-	var fx := AnimatedSprite2D.new()
-	fx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	fx.z_index = 7
-	fx.global_position = world_position
-	fx.scale = fx_scale
-
 	var cache_key := "%s|%s|%d|%d|%.3f|%s" % [
 		dir,
 		prefix,
@@ -3835,19 +3829,71 @@ func _spawn_archmage_fx(
 		frames.set_animation_speed("fx", fps)
 		frames.set_animation_loop("fx", looped)
 		for index in range(start, start + count):
-			var texture := _load_stage1_texture("%s/%s_%02d.png" % [dir, prefix, index])
+			var texture := _load_stage1_texture(
+				"%s/%s_%02d.png" % [dir, prefix, index]
+			)
 			if texture != null:
 				frames.add_frame("fx", texture)
 		_archmage_fx_frames_cache[cache_key] = frames
 
 	if frames.get_frame_count("fx") <= 0:
 		return null
+
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return null
+
+	var fx: AnimatedSprite2D = null
+	if parent.has_method("acquire_transient_fx"):
+		fx = parent.call(
+			"acquire_transient_fx",
+			"archmage_cast_fx",
+			"animated_sprite"
+		) as AnimatedSprite2D
+	if fx == null:
+		fx = AnimatedSprite2D.new()
+		parent.add_child(fx)
+
+	fx.stop()
 	fx.sprite_frames = frames
-	get_parent().add_child(fx)
+	fx.animation = &"fx"
+	fx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	fx.z_index = 7
+	fx.global_position = world_position
+	fx.scale = fx_scale
+	fx.rotation = 0.0
+	fx.modulate = Color.WHITE
+	fx.frame = 0
+	fx.frame_progress = 0.0
+	fx.visible = true
+
 	if not looped:
-		fx.animation_finished.connect(fx.queue_free)
-	fx.play("fx")
+		if parent.has_method("recycle_transient_fx"):
+			fx.animation_finished.connect(
+				Callable(parent, "recycle_transient_fx").bind(
+					fx,
+					"archmage_cast_fx"
+				),
+				Object.CONNECT_ONE_SHOT
+			)
+		else:
+			fx.animation_finished.connect(
+				Callable(fx, "queue_free"),
+				Object.CONNECT_ONE_SHOT
+			)
+
+	fx.play(&"fx")
 	return fx
+
+
+func _recycle_archmage_fx(fx: AnimatedSprite2D) -> void:
+	if not is_instance_valid(fx):
+		return
+	var parent := get_parent()
+	if is_instance_valid(parent) and parent.has_method("recycle_transient_fx"):
+		parent.call("recycle_transient_fx", fx, "archmage_cast_fx")
+	else:
+		fx.queue_free()
 
 
 func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int) -> void:
