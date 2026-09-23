@@ -574,7 +574,7 @@ const PROFILES = {
 				"radius": 245.0,
 				"damage_ratio": 0.65,
 				"knockback_distance": 150.0,
-				"effect_scale": 1.05,
+				"effect_scale": 1.575,
 			},
 			"skill_5": {
 				"id": "blood_sword_secret",
