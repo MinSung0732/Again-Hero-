@@ -534,8 +534,8 @@ const PROFILES = {
 				"repeat_hit_multipliers": [1.0, 0.667, 0.334],
 				"size_growth_per_wave": 0.25,
 				"projectile_speed": 760.0,
-				"base_range": 560.0,
-				"base_half_width": 64.0,
+				"base_range": 300.0,
+				"base_half_width": 83.2,
 			},
 			"skill_2": {
 				"id": "blood_sword_second",
