@@ -75,6 +75,9 @@ func _process(delta: float) -> void:
 		target.get_meta("visual_lod_suspended", false)
 	)
 	if lod_suspended:
+		# Reset the remembered state so an effect that stays active while
+		# offscreen starts again immediately when the monster returns.
+		_last_active = false
 		if visible or is_playing():
 			visible = false
 			stop()
