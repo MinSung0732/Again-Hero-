@@ -7502,7 +7502,8 @@ func _start_berserker_skill5() -> void:
 	)
 	velocity = Vector2.ZERO
 	modulate.a = 1.0
-	hero_sprite.visible = false
+	hero_sprite.visible = true
+	hero_sprite.modulate.a = 0.0
 	_execute_berserker_skill5(skill_config)
 	queue_redraw()
 
@@ -7572,6 +7573,7 @@ func _execute_berserker_skill5(skill_config: Dictionary) -> void:
 	invulnerability_timer = 0.0
 	modulate.a = 1.0
 	hero_sprite.visible = true
+	_update_berserker_hp_visual()
 	attack_pose_timer = 0.0
 	_play_stage1_animation("idle", 1.0)
 	queue_redraw()
@@ -8164,11 +8166,12 @@ func _update_berserker_hp_visual() -> void:
 		1.0
 	)
 	var missing_ratio: float = 1.0 - hp_ratio
+	var sprite_alpha: float = 0.0 if berserker_skill5_active else 1.0
 	hero_sprite.modulate = Color(
 		1.0,
 		lerpf(1.0, 0.36, missing_ratio),
 		lerpf(1.0, 0.36, missing_ratio),
-		1.0
+		sprite_alpha
 	)
 
 
@@ -9373,7 +9376,8 @@ func _refresh_invulnerability_visual() -> void:
 	if berserker_skill5_active:
 		modulate.a = 1.0
 		if hero_sprite != null:
-			hero_sprite.visible = false
+			hero_sprite.visible = true
+			hero_sprite.modulate.a = 0.0
 		return
 	if is_dying or invulnerability_timer <= 0.0:
 		modulate.a = 1.0
