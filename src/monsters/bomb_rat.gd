@@ -245,7 +245,10 @@ func _trigger_death_explosion() -> void:
 			float(overload.get("max_bonus_radius", 0.0))
 		)
 
-	if global_position.distance_to(hero.global_position) > effective_radius:
+	if (
+		global_position.distance_squared_to(hero.global_position)
+		> effective_radius * effective_radius
+	):
 		return
 
 	var effective_damage := float(explosion_damage)
