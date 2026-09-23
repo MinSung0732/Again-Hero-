@@ -4023,11 +4023,9 @@ func _cast_archmage_earth_spikes(
 ) -> void:
 	_begin_archmage_casting_sequence()
 
-	var direction := (
-		Vector2.LEFT
-		if hero_sprite.flip_h
-		else Vector2.RIGHT
-	)
+	var direction := Vector2.RIGHT
+	if hero_sprite.flip_h:
+		direction = Vector2.LEFT
 	if is_instance_valid(target):
 		direction = global_position.direction_to(
 			target.global_position
@@ -4113,7 +4111,7 @@ func _cast_archmage_earth_spikes(
 				+ direction * original_distance
 			)
 			var branch_count := maxi(
-				int(ceil(branch_distance / spacing)),
+				ceili(branch_distance / spacing),
 				1
 			)
 			var branch_directions := [
@@ -4360,8 +4358,8 @@ func _cast_archmage_holy_power(
 func _get_archmage_chain_dagger_targets(
 	max_count: int,
 	search_radius: float
-) -> Array[Node2D]:
-	var candidates: Array[Node2D] = []
+) -> Array:
+	var candidates: Array = []
 	var radius_sq := search_radius * search_radius
 	for node in _get_monster_nodes_near(global_position, search_radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -4379,7 +4377,7 @@ func _get_archmage_chain_dagger_targets(
 	if candidates.is_empty():
 		return []
 
-	var result: Array[Node2D] = []
+	var result: Array = []
 	if (
 		is_instance_valid(target)
 		and target.is_in_group("monsters")
