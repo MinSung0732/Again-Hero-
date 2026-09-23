@@ -1378,13 +1378,30 @@ func _update_gunner_deadeye(delta: float) -> void:
 
 
 func _count_monsters_near(origin: Vector2, radius: float) -> int:
+	var battle := get_parent()
+	if (
+		is_instance_valid(battle)
+		and battle.has_method("count_monsters_near")
+	):
+		return int(
+			battle.call(
+				"count_monsters_near",
+				origin,
+				radius
+			)
+		)
+
 	var count := 0
 	var radius_sq := radius * radius
-	for node in _get_monster_nodes_near(origin, radius):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
-		if monster != null and origin.distance_squared_to(monster.global_position) <= radius_sq:
+		if (
+			monster != null
+			and origin.distance_squared_to(monster.global_position)
+			<= radius_sq
+		):
 			count += 1
 	return count
 
