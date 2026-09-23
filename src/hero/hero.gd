@@ -3909,7 +3909,7 @@ func _cast_archmage_chain_dagger(config: Dictionary, empowered: bool) -> void:
 	projectile.call(
 		"setup", "chain_dagger", direction,
 		maxi(1, int(round(float(attack_damage) * float(config.get("damage_ratio", 1.0))))),
-		float(config.get("projectile_speed", 1200.0)),
+		float(config.get("projectile_speed", 700.0)),
 		float(config.get("projectile_range", 900.0)),
 		config, self, empowered, current_target
 	)
@@ -4054,7 +4054,7 @@ func _cast_archmage_storm(config: Dictionary, empowered: bool) -> void:
 		projectile.call(
 			"setup", "storm", direction,
 			maxi(1, int(round(float(attack_damage) * float(config.get("damage_ratio", 0.75))))),
-			float(config.get("projectile_speed", 900.0)),
+			float(config.get("projectile_speed", 350.0)),
 			float(config.get("projectile_range", 950.0)),
 			config, self, empowered, null
 		)
