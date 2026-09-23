@@ -5,7 +5,7 @@ const HEAL_AMOUNT := 70
 const FRAME_COUNT := 4
 
 static var _frames_cache: SpriteFrames
-static var _uniform_scale_cache: float = 0.0
+static var _visible_height_cache: float = 0.0
 
 @export var pickup_distance: float = 38.0
 @export var target_visible_height: float = 54.0
@@ -67,14 +67,16 @@ func _apply_visual() -> void:
 			frames.add_frame("float", texture)
 
 		_frames_cache = frames
-		if visible_height > 0.0:
-			_uniform_scale_cache = target_visible_height / visible_height
+		_visible_height_cache = visible_height
 
 	visual.sprite_frames = frames
-	if _uniform_scale_cache > 0.0:
+	if _visible_height_cache > 0.0:
+		var uniform_scale := (
+			target_visible_height / _visible_height_cache
+		)
 		visual.scale = Vector2(
-			_uniform_scale_cache,
-			_uniform_scale_cache
+			uniform_scale,
+			uniform_scale
 		)
 	visual.visible = true
 	visual.play("float")
