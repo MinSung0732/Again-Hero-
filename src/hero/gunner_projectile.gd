@@ -8,6 +8,7 @@ const IMPACT_FPS := 24.0
 const IMPACT_SCALE := Vector2(0.45, 0.45)
 const MAX_ACTIVE_IMPACT_FX := 24
 const DEAD_EYE_RICOCHET_FX := preload("res://src/hero/deadeye_ricochet_fx.gd")
+const POOL_KEY := "gunner_projectile"
 
 static var _projectile_frames_cache: SpriteFrames
 static var _impact_frames_cache: SpriteFrames
@@ -26,6 +27,7 @@ var ricochet_radius: float = 260.0
 var is_deadeye_shot: bool = false
 var hit_ids: Dictionary = {}
 var source_hero: Node
+var active: bool = true
 
 @onready var visual: AnimatedSprite2D = $Visual
 
@@ -44,6 +46,14 @@ func setup(
 	new_ricochet_bounces: int = 0,
 	new_is_deadeye_shot: bool = false
 ) -> void:
+	active = true
+	visible = true
+	set_physics_process(true)
+	if not is_in_group("hero_projectiles"):
+		add_to_group("hero_projectiles")
+	traveled = 0.0
+	hit_ids.clear()
+	source_hero = get_tree().get_first_node_in_group("hero")
 	direction = new_direction.normalized()
 	damage = maxi(new_damage, 1)
 	speed = maxf(new_speed, 1.0)
@@ -52,15 +62,22 @@ func setup(
 	ricochet_bounces_left = maxi(new_ricochet_bounces, 0)
 	is_deadeye_shot = new_is_deadeye_shot
 	rotation = direction.angle()
+	if visual.sprite_frames != null:
+		visual.visible = true
+		visual.frame = 0
+		visual.frame_progress = 0.0
+		visual.play(&"fly")
 
 func _physics_process(delta: float) -> void:
+	if not active:
+		return
 	var previous_position := global_position
 	var step := direction * speed * delta
 	global_position += step
 	traveled += step.length()
 	_check_chest_sweep(previous_position, global_position)
 	if traveled >= max_range:
-		queue_free()
+		_finish_projectile()
 
 func _get_chest_nodes_cached() -> Array:
 	var physics_frame := Engine.get_physics_frames()
@@ -104,6 +121,8 @@ func _distance_squared_to_segment(point: Vector2, a: Vector2, b: Vector2) -> flo
 
 
 func _on_body_entered(body: Node) -> void:
+	if not active:
+		return
 	if body == null or body.is_queued_for_deletion():
 		return
 	if not (body.is_in_group("monsters") or body.is_in_group("treasure_chests")) or not body.has_method("take_damage"):
@@ -129,6 +148,31 @@ func _on_body_entered(body: Node) -> void:
 				ricochet_bounces_left -= 1
 				direction = next_direction
 				rotation = direction.angle()
+
+func _finish_projectile() -> void:
+	if not active:
+		return
+	active = false
+	var parent := get_parent()
+	if is_instance_valid(parent) and parent.has_method("recycle_projectile"):
+		parent.call("recycle_projectile", self, POOL_KEY)
+	else:
+		queue_free()
+
+
+func deactivate_for_pool() -> void:
+	active = false
+	traveled = 0.0
+	hit_ids.clear()
+	ricochet_bounces_left = 0
+	is_deadeye_shot = false
+	headshot = false
+	if is_in_group("hero_projectiles"):
+		remove_from_group("hero_projectiles")
+	set_physics_process(false)
+	visible = false
+	visual.stop()
+
 
 func _spawn_deadeye_ricochet_fx(next_direction: Vector2) -> void:
 	var fx := Node2D.new()
