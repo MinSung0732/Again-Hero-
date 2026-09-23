@@ -76,6 +76,14 @@ func _physics_process(delta: float) -> void:
 	if traveled_distance >= max_range:
 		queue_free()
 
+func _get_monster_nodes() -> Array:
+	if is_instance_valid(source_hero) and source_hero.has_method("_get_monster_nodes_cached"):
+		var cached = source_hero.call("_get_monster_nodes_cached")
+		if cached is Array:
+			return cached
+	return get_tree().get_nodes_in_group("monsters")
+
+
 func _check_chest_sweep(from_position: Vector2, to_position: Vector2) -> void:
 	for node in get_tree().get_nodes_in_group("treasure_chests"):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -143,13 +151,13 @@ func _apply_earth(body: Node2D) -> void:
 	var splash_radius := maxf(float(config.get("earth_splash_radius", 150.0)), 0.0)
 	body.call("take_damage", maxi(1, int(round(float(base_damage) * direct_multiplier))))
 
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes():
 		if not is_instance_valid(node) or node == body or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
 		if monster == null or not monster.has_method("take_damage"):
 			continue
-		if global_position.distance_to(monster.global_position) > splash_radius:
+		if global_position.distance_squared_to(monster.global_position) > splash_radius * splash_radius:
 			continue
 		monster.call("take_damage", maxi(1, int(round(float(base_damage) * splash_ratio))))
 
@@ -178,14 +186,14 @@ func _apply_light(body: Node2D) -> void:
 	var chain_ratio := maxf(float(config.get("light_chain_damage_ratio", 0.72)), 0.0)
 	var nearest: Node2D = null
 	var nearest_distance := INF
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes():
 		if not is_instance_valid(node) or node == body or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
 		if monster == null or not monster.has_method("take_damage"):
 			continue
-		var distance := body.global_position.distance_to(monster.global_position)
-		if distance <= chain_range and distance < nearest_distance:
+		var distance := body.global_position.distance_squared_to(monster.global_position)
+		if distance <= chain_range * chain_range and distance < nearest_distance:
 			nearest_distance = distance
 			nearest = monster
 
