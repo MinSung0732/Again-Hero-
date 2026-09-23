@@ -613,6 +613,8 @@ func _physics_process(delta: float) -> void:
 	var move_direction := _choose_move_direction(target, distance)
 	move_direction = _apply_heal_item_steering(move_direction, delta)
 	move_direction = _apply_chest_steering(move_direction, delta)
+	if hero_archetype == "archmage_elementalist":
+		move_direction = _apply_archmage_boundary_steering(move_direction)
 	velocity = move_direction * move_speed * move_multiplier
 	move_and_slide()
 	_clamp_to_battlefield()
@@ -711,6 +713,46 @@ func _update_gunner_pose_visual(delta: float) -> void:
 		_play_stage1_animation("move", animation_speed)
 	else:
 		_play_stage1_animation("idle", 1.0)
+
+
+func _apply_archmage_boundary_steering(base_direction: Vector2) -> Vector2:
+	var center_direction := global_position.direction_to(battlefield_size * 0.5)
+	if base_direction.length_squared() <= 0.01:
+		base_direction = center_direction
+
+	var soft_margin := 440.0
+	var hard_margin := 150.0
+	var left_space := global_position.x - FIELD_MARGIN
+	var right_space := battlefield_size.x - FIELD_MARGIN - global_position.x
+	var top_space := global_position.y - FIELD_MARGIN
+	var bottom_space := battlefield_size.y - FIELD_MARGIN - global_position.y
+
+	var inward := Vector2.ZERO
+	if left_space < soft_margin:
+		inward.x += 1.0 - clampf(left_space / soft_margin, 0.0, 1.0)
+	if right_space < soft_margin:
+		inward.x -= 1.0 - clampf(right_space / soft_margin, 0.0, 1.0)
+	if top_space < soft_margin:
+		inward.y += 1.0 - clampf(top_space / soft_margin, 0.0, 1.0)
+	if bottom_space < soft_margin:
+		inward.y -= 1.0 - clampf(bottom_space / soft_margin, 0.0, 1.0)
+
+	var near_horizontal_edge := minf(left_space, right_space) < hard_margin
+	var near_vertical_edge := minf(top_space, bottom_space) < hard_margin
+	if near_horizontal_edge and near_vertical_edge:
+		var corner_escape := center_direction * 2.8 + inward.normalized() * 2.2
+		if corner_escape.length_squared() > 0.01:
+			return corner_escape.normalized()
+
+	if inward.length_squared() <= 0.001:
+		return base_direction.normalized()
+
+	var edge_pressure := clampf(inward.length(), 0.0, 1.5)
+	var inward_weight := lerpf(0.95, 2.8, clampf(edge_pressure, 0.0, 1.0))
+	var desired := base_direction.normalized() + inward.normalized() * inward_weight
+	if desired.length_squared() <= 0.01:
+		return center_direction.normalized()
+	return desired.normalized()
 
 
 func _apply_gunner_boundary_steering(base_direction: Vector2) -> Vector2:
