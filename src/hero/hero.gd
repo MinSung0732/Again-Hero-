@@ -1927,16 +1927,7 @@ func _apply_rogue_lifesteal(
 		return
 
 	rogue_lifesteal_buffer -= float(heal_amount)
-	var previous_hp := current_hp
-	current_hp = mini(
-		current_hp + heal_amount,
-		max_hp
-	)
-	if current_hp == previous_hp:
-		return
-
-	health_changed.emit(current_hp, max_hp)
-	queue_redraw()
+	heal_direct(heal_amount)
 
 func _rogue_apply_knockback(
 	current_target: Node2D,
@@ -5033,6 +5024,7 @@ func heal_direct(amount: int) -> int:
 	current_hp = mini(current_hp + amount, max_hp)
 	var recovered := current_hp - previous_hp
 	if recovered > 0:
+		DAMAGE_NUMBERS.show_heal(self, recovered)
 		health_changed.emit(current_hp, max_hp)
 		queue_redraw()
 	return recovered
@@ -5515,13 +5507,7 @@ func collect_heal_item(base_amount: int) -> int:
 		)),
 		1
 	)
-	var previous_hp: int = current_hp
-	current_hp = mini(current_hp + heal_amount, max_hp)
-	var recovered: int = current_hp - previous_hp
-	if recovered > 0:
-		health_changed.emit(current_hp, max_hp)
-		queue_redraw()
-	return recovered
+	return heal_direct(heal_amount)
 
 func gain_exp(amount: int) -> void:
 	if amount <= 0 or current_hp <= 0:
@@ -5999,13 +5985,11 @@ func _apply_level_growth() -> void:
 		1.0
 	)
 	if heal_ratio > 0.0 and current_hp > 0:
-		current_hp = mini(
-			current_hp
-			+ maxi(
+		heal_direct(
+			maxi(
 				int(round(float(max_hp) * heal_ratio)),
 				1
-			),
-			max_hp
+			)
 		)
 
 func _refresh_ai_observation() -> void:
@@ -6384,10 +6368,7 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 				)
 
 		"heal":
-			current_hp = mini(
-				current_hp + int(effect.get("value", 0)),
-				max_hp
-			)
+			heal_direct(int(effect.get("value", 0)))
 
 		"add_status_resistance":
 			_add_status_resistance(
@@ -8078,11 +8059,7 @@ func _fighter_charge_damage_target(monster: Node2D, damage: int) -> void:
 	if heal_amount <= 0 or current_hp <= 0:
 		return
 
-	var previous_hp := current_hp
-	current_hp = mini(current_hp + heal_amount, max_hp)
-	if current_hp > previous_hp:
-		health_changed.emit(current_hp, max_hp)
-		queue_redraw()
+	heal_direct(heal_amount)
 
 func _finish_fighter_charge() -> void:
 	fighter_charge_active = false
@@ -8393,11 +8370,7 @@ func _fighter_apply_slash(direction: Vector2, bonus_hit: bool = false) -> int:
 			bonus_kills += 1
 
 	if bonus_kills > 0 and current_hp > 0:
-		var previous_hp := current_hp
-		current_hp = mini(current_hp + bonus_kills * 10, max_hp)
-		if current_hp > previous_hp:
-			health_changed.emit(current_hp, max_hp)
-			queue_redraw()
+		heal_direct(bonus_kills * 10)
 
 	return bonus_kills
 
