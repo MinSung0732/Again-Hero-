@@ -317,7 +317,7 @@ var chest_target: Node2D
 var chest_retarget_timer: float = 0.0
 var chest_steering_direction: Vector2 = Vector2.ZERO
 var exp_orb_target: Node2D
-var exp_orb_retarget_timer: float = 0.0
+var exp_orb_retarget_until_msec: int = 0
 
 @onready var follow_camera: Camera2D = $Camera2D
 @onready var hero_sprite: AnimatedSprite2D = $HeroSprite
@@ -380,7 +380,7 @@ func configure_profile(profile: Dictionary) -> void:
 	chest_retarget_timer = 0.0
 	chest_steering_direction = Vector2.ZERO
 	exp_orb_target = null
-	exp_orb_retarget_timer = 0.0
+	exp_orb_retarget_until_msec = 0
 	var profile_fighter_basic = profile.get("fighter_basic", {})
 	fighter_basic_config = (
 		profile_fighter_basic.duplicate(true)
@@ -2882,19 +2882,16 @@ func _move_without_monsters() -> void:
 	_clamp_to_battlefield()
 
 func _find_nearest_exp_orb() -> Node2D:
-	exp_orb_retarget_timer = maxf(
-		exp_orb_retarget_timer - 0.016,
-		0.0
-	)
+	var now_msec := Time.get_ticks_msec()
 	if (
-		exp_orb_retarget_timer > 0.0
+		now_msec < exp_orb_retarget_until_msec
 		and is_instance_valid(exp_orb_target)
 		and not exp_orb_target.is_queued_for_deletion()
 		and exp_orb_target.is_in_group("exp_orbs")
 	):
 		return exp_orb_target
 
-	exp_orb_retarget_timer = 0.12
+	exp_orb_retarget_until_msec = now_msec + 120
 	exp_orb_target = null
 	var nearest_distance := INF
 
