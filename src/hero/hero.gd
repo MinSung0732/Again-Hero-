@@ -5005,8 +5005,13 @@ func _apply_level_growth() -> void:
 		)
 
 func _refresh_ai_observation() -> void:
-	var interval := maxf(float(ai_settings.get("observation_interval", 4.0)), 0.25)
-	ai_observed_context = _build_ai_context().duplicate(true)
+	var interval := maxf(
+		float(ai_settings.get("observation_interval", 4.0)),
+		0.25
+	)
+	# _build_ai_context() already returns a fresh snapshot.
+	# Avoid a redundant deep copy of all nested AI memory dictionaries.
+	ai_observed_context = _build_ai_context()
 	ai_observed_context_time = ai_memory_clock
 	ai_observation_timer = interval
 
@@ -5014,7 +5019,10 @@ func _get_ai_decision_context() -> Dictionary:
 	if ai_observed_context.is_empty():
 		_refresh_ai_observation()
 
-	var context := ai_observed_context.duplicate(true)
+	# The build AI only reads nested context dictionaries. We only need a
+	# shallow copy so observation_age/interval can be added without mutating
+	# the stored snapshot.
+	var context := ai_observed_context.duplicate()
 	context["observation_age"] = maxf(ai_memory_clock - ai_observed_context_time, 0.0)
 	context["observation_interval"] = maxf(
 		float(ai_settings.get("observation_interval", 4.0)),
@@ -5030,7 +5038,7 @@ func get_ai_observation_summary() -> String:
 func _build_ai_context() -> Dictionary:
 	var nearby_count: int = 0
 	var total_count: int = 0
-	var nearest_distance: float = 9999.0
+	var nearest_distance_sq: float = INF
 	var type_counts: Dictionary = {}
 	var role_counts: Dictionary = {}
 
@@ -5047,10 +5055,12 @@ func _build_ai_context() -> Dictionary:
 			continue
 
 		total_count += 1
-		var distance: float = global_position.distance_to(monster.global_position)
-		nearest_distance = minf(nearest_distance, distance)
+		var distance_sq := global_position.distance_squared_to(
+			monster.global_position
+		)
+		nearest_distance_sq = minf(nearest_distance_sq, distance_sq)
 
-		if distance <= ai_sense_radius:
+		if distance_sq <= ai_sense_radius * ai_sense_radius:
 			nearby_count += 1
 
 		var type_value = monster.get("monster_type")
@@ -5063,8 +5073,11 @@ func _build_ai_context() -> Dictionary:
 			var monster_role: String = String(role_value)
 			role_counts[monster_role] = int(role_counts.get(monster_role, 0)) + 1
 
-	if total_count == 0:
-		nearest_distance = 0.0
+	var nearest_distance := (
+		sqrt(nearest_distance_sq)
+		if total_count > 0
+		else 0.0
+	)
 
 	var recent_memory := _build_recent_offense_memory()
 	var recent_status_memory := _build_recent_status_memory()
