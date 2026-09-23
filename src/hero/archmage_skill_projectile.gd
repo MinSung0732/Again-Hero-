@@ -225,6 +225,15 @@ func _damage_berserker_wave_sweep(
 			else -1
 		)
 		monster.call("take_damage", damage)
+		if (
+			is_instance_valid(source_hero)
+			and source_hero.has_method(
+				"notify_berserker_blood_art_hit"
+			)
+		):
+			source_hero.call(
+				"notify_berserker_blood_art_hit"
+			)
 
 		if hp_before <= 0:
 			continue
