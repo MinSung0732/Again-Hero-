@@ -118,8 +118,8 @@ const PROFILES = {
 			"combustion": {
 				"id": "archmage_combustion",
 				"name": "연소",
-				"cooldown": 18.0,
-				"charge_duration": 0.90,
+				"cooldown": 22.5,
+				"charge_duration": 1.80,
 				"charge_tick_interval": 0.18,
 				"charge_radius": 95.0,
 				"charge_tick_damage_ratio": 0.22,
@@ -130,7 +130,7 @@ const PROFILES = {
 			"ice_bolt": {
 				"id": "archmage_ice_bolt",
 				"name": "아이스볼트",
-				"cooldown": 20.0,
+				"cooldown": 25.0,
 				"damage_ratio": 1.15,
 				"projectile_speed": 1050.0,
 				"projectile_range": 850.0,
@@ -142,7 +142,7 @@ const PROFILES = {
 			"earth_spikes": {
 				"id": "archmage_earth_spikes",
 				"name": "땅의 가시",
-				"cooldown": 22.0,
+				"cooldown": 27.5,
 				"spike_count": 7,
 				"spike_spacing": 88.0,
 				"spike_delay": 0.07,
@@ -152,7 +152,7 @@ const PROFILES = {
 			"holy_power": {
 				"id": "archmage_holy_power",
 				"name": "신성력",
-				"cooldown": 24.0,
+				"cooldown": 30.0,
 				"burst_count": 7,
 				"burst_spawn_radius": 330.0,
 				"burst_hit_radius": 86.0,
@@ -165,7 +165,7 @@ const PROFILES = {
 			"chain_dagger": {
 				"id": "archmage_chain_dagger",
 				"name": "체인대거",
-				"cooldown": 20.0,
+				"cooldown": 25.0,
 				"damage_ratio": 1.00,
 				"projectile_speed": 1200.0,
 				"projectile_range": 900.0,
@@ -182,7 +182,7 @@ const PROFILES = {
 			"storm": {
 				"id": "archmage_storm",
 				"name": "폭풍",
-				"cooldown": 26.0,
+				"cooldown": 32.5,
 				"damage_ratio": 0.75,
 				"projectile_speed": 900.0,
 				"projectile_range": 950.0,
