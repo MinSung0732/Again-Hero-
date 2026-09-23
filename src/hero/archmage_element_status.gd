@@ -30,7 +30,7 @@ func apply_freeze(duration: float) -> void:
 		restore_physics_processing = target.is_physics_processing()
 		target.set_physics_process(false)
 		var velocity_value = target.get("velocity")
-		if velocity_value is Vector2:
+		if typeof(velocity_value) == TYPE_VECTOR2:
 			target.set("velocity", Vector2.ZERO)
 	freeze_remaining = maxf(freeze_remaining, duration)
 
