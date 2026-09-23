@@ -71,6 +71,12 @@ func _ready() -> void:
 	queue_redraw()
 
 func setup(value: int, initial_velocity: Vector2 = Vector2.ZERO) -> void:
+	if not is_in_group("exp_orbs"):
+		add_to_group("exp_orbs")
+	visible = true
+	set_physics_process(true)
+	hero = get_tree().get_first_node_in_group("hero") as Node2D
+	pulse_time = 0.0
 	exp_value = maxi(value, 0)
 	burst_velocity = initial_velocity
 	burst_time = 0.30 if initial_velocity.length_squared() > 0.01 else 0.0
@@ -129,7 +135,11 @@ func _physics_process(delta: float) -> void:
 	if distance_sq <= collect_distance_sq:
 		if hero.has_method("gain_exp"):
 			hero.call("gain_exp", exp_value)
-		queue_free()
+		var parent := get_parent()
+		if is_instance_valid(parent) and parent.has_method("recycle_exp_orb"):
+			parent.call("recycle_exp_orb", self)
+		else:
+			queue_free()
 		return
 
 	var distance := sqrt(distance_sq)
@@ -148,6 +158,19 @@ func _physics_process(delta: float) -> void:
 			* speed_scale
 			* delta
 		)
+
+
+func deactivate_for_pool() -> void:
+	magnetized = false
+	burst_velocity = Vector2.ZERO
+	burst_time = 0.0
+	idle_sense_timer = 0.0
+	exp_value = 0
+	if is_in_group("exp_orbs"):
+		remove_from_group("exp_orbs")
+	set_physics_process(false)
+	visible = false
+	visual.stop()
 
 
 func _apply_exp_stone_visual() -> void:
