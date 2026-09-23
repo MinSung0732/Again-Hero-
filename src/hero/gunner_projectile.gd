@@ -1,11 +1,17 @@
 extends Area2D
 
 const FRAME_DIR := "res://assets/art/heroes/stage4_gunner/frames/effect"
-const FRAME_COUNT := 13
-const FPS := 22.0
+const PROJECTILE_FRAME_COUNT := 4
+const PROJECTILE_FPS := 22.0
+const IMPACT_FRAME_COUNT := 4
+const IMPACT_FPS := 24.0
+const IMPACT_SCALE := Vector2(0.30, 0.30)
+const MAX_ACTIVE_IMPACT_FX := 24
 const DEAD_EYE_RICOCHET_FX := preload("res://src/hero/deadeye_ricochet_fx.gd")
 
 static var _projectile_frames_cache: SpriteFrames
+static var _impact_frames_cache: SpriteFrames
+static var _active_impact_fx_count: int = 0
 
 var direction := Vector2.RIGHT
 var speed := 920.0
@@ -90,6 +96,9 @@ func _on_body_entered(body: Node) -> void:
 		body.set_meta("damage_number_color_once", Color(1.0, 0.18, 0.12, 1.0))
 	body.call("take_damage", damage)
 
+	if body.is_in_group("monsters"):
+		_spawn_hit_impact()
+
 	if body.is_in_group("monsters") and ricochet_bounces_left > 0:
 		var next_target := _find_ricochet_target()
 		if is_instance_valid(next_target):
@@ -135,22 +144,8 @@ func _find_ricochet_target() -> Node2D:
 
 
 func _apply_visual() -> void:
-	var frames := _projectile_frames_cache
-	if frames == null:
-		frames = SpriteFrames.new()
-		if frames.has_animation(&"default"):
-			frames.remove_animation(&"default")
-		frames.add_animation(&"fly")
-		frames.set_animation_loop(&"fly", true)
-		frames.set_animation_speed(&"fly", FPS)
-		for i in range(1, FRAME_COUNT + 1):
-			var path := "%s/effect_projectile_%02d.png" % [FRAME_DIR, i]
-			var tex := _load_projectile_texture(path)
-			if tex != null:
-				frames.add_frame(&"fly", tex)
-		_projectile_frames_cache = frames
-
-	if frames.get_frame_count(&"fly") > 0:
+	var frames := _get_projectile_frames()
+	if frames != null and frames.get_frame_count(&"fly") > 0:
 		visual.sprite_frames = frames
 		visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		visual.visible = true
@@ -158,6 +153,79 @@ func _apply_visual() -> void:
 	else:
 		visual.visible = false
 		queue_redraw()
+
+
+func _get_projectile_frames() -> SpriteFrames:
+	if _projectile_frames_cache != null:
+		return _projectile_frames_cache
+
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.remove_animation(&"default")
+	frames.add_animation(&"fly")
+	frames.set_animation_loop(&"fly", true)
+	frames.set_animation_speed(&"fly", PROJECTILE_FPS)
+
+	for i in range(1, PROJECTILE_FRAME_COUNT + 1):
+		var path := "%s/effect_projectile_%02d.png" % [FRAME_DIR, i]
+		var tex := _load_projectile_texture(path)
+		if tex != null:
+			frames.add_frame(&"fly", tex)
+
+	_projectile_frames_cache = frames
+	return _projectile_frames_cache
+
+
+func _get_impact_frames() -> SpriteFrames:
+	if _impact_frames_cache != null:
+		return _impact_frames_cache
+
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.remove_animation(&"default")
+	frames.add_animation(&"impact")
+	frames.set_animation_loop(&"impact", false)
+	frames.set_animation_speed(&"impact", IMPACT_FPS)
+
+	for i in range(1, IMPACT_FRAME_COUNT + 1):
+		var path := "%s/effect_explosion_%02d.png" % [FRAME_DIR, i]
+		var tex := _load_projectile_texture(path)
+		if tex != null:
+			frames.add_frame(&"impact", tex)
+
+	_impact_frames_cache = frames
+	return _impact_frames_cache
+
+
+func _spawn_hit_impact() -> void:
+	if _active_impact_fx_count >= MAX_ACTIVE_IMPACT_FX:
+		return
+
+	var frames := _get_impact_frames()
+	if frames == null or frames.get_frame_count(&"impact") <= 0:
+		return
+
+	var parent := get_parent()
+	if parent == null:
+		return
+
+	var fx := AnimatedSprite2D.new()
+	fx.sprite_frames = frames
+	fx.animation = &"impact"
+	fx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	fx.scale = IMPACT_SCALE
+	fx.z_index = 5
+	parent.add_child(fx)
+	fx.global_position = global_position
+	_active_impact_fx_count += 1
+	fx.tree_exited.connect(_on_impact_fx_tree_exited, Object.CONNECT_ONE_SHOT)
+	fx.animation_finished.connect(Callable(fx, "queue_free"), Object.CONNECT_ONE_SHOT)
+	fx.play(&"impact")
+
+
+static func _on_impact_fx_tree_exited() -> void:
+	_active_impact_fx_count = maxi(_active_impact_fx_count - 1, 0)
+
 
 func _load_projectile_texture(path: String) -> Texture2D:
 	if ResourceLoader.exists(path):
