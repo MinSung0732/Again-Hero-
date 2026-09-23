@@ -171,6 +171,7 @@ func _get_pack_bonuses() -> Dictionary:
 
 	var nearby := 0
 	var candidates: Array = []
+	var used_spatial_query := false
 	var battle := get_parent()
 	if (
 		is_instance_valid(battle)
@@ -183,7 +184,8 @@ func _get_pack_bonuses() -> Dictionary:
 		)
 		if queried is Array:
 			candidates = queried
-	if candidates.is_empty():
+			used_spatial_query = true
+	if not used_spatial_query:
 		candidates = get_tree().get_nodes_in_group("slimes")
 
 	var radius_sq := radius * radius
