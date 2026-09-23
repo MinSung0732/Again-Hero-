@@ -3966,6 +3966,29 @@ func resolve_archmage_ice_bolt_hit(
 	hit_position: Vector2,
 	empowered: bool
 ) -> void:
+	var config: Dictionary = archmage_skill_config.get(
+		"ice_bolt",
+		{}
+	)
+	var impact_radius := maxf(
+		float(config.get("impact_radius", 125.0)),
+		1.0
+	)
+	var impact_damage := maxi(
+		1,
+		int(
+			round(
+				float(attack_damage)
+				* float(config.get("impact_damage_ratio", 1.50))
+				* _skill_damage_multiplier(empowered)
+			)
+		)
+	)
+	_damage_monsters_in_radius(
+		hit_position,
+		impact_radius,
+		impact_damage
+	)
 	_resolve_archmage_ice_pillars(hit_position, empowered)
 
 
