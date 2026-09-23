@@ -4,6 +4,8 @@ const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_
 
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 
+const FAR_NAV_DISTANCE := 900.0
+
 signal died
 
 @export var monster_type: String = "orc"
@@ -83,7 +85,10 @@ func _physics_process(delta: float) -> void:
 	if distance > attack_range:
 		velocity = direction_to_hero * effective_move_speed
 		_visual_call(&"play_locomotion", [true])
-		move_and_slide()
+		if distance > FAR_NAV_DISTANCE:
+			global_position += velocity * delta
+		else:
+			move_and_slide()
 	else:
 		velocity = Vector2.ZERO
 		_visual_call(&"play_locomotion", [false])
