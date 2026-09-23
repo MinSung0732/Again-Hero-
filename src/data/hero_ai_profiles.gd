@@ -49,6 +49,23 @@ const PROFILES = {
 			"long_reach": 0.20,
 		},
 	},
+	"stage_5_archmage": {
+		"id": "stage_5_archmage",
+		"display_name": "숙련된 대마법사",
+		"observation_interval": 2.7,
+		"stack_inertia": 0.90,
+		"new_branch_penalty": 0.35,
+		"heal_item_desire": 1.10,
+		"heal_risk_tolerance": 0.46,
+		"heal_detour_weight": 1.10,
+		"augment_biases": {
+			"common_attack_training": 0.55,
+			"rapid_strikes": 0.45,
+			"iron_body": 0.25,
+			"pursuit": 0.30,
+			"long_reach": 0.35,
+		},
+	},
 	"stage_3_guardian": {
 		"id": "stage_3_guardian",
 		"display_name": "전선을 지키는 수호자",
