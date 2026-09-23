@@ -58,6 +58,8 @@ var pulse_time: float = 0.0
 var burst_velocity: Vector2 = Vector2.ZERO
 var burst_time: float = 0.0
 var idle_sense_timer: float = 0.0
+var global_magnet_time_left: float = 0.0
+var global_magnet_elapsed: float = 0.0
 
 func _ready() -> void:
 	add_to_group("exp_orbs")
@@ -81,6 +83,8 @@ func setup(value: int, initial_velocity: Vector2 = Vector2.ZERO) -> void:
 	burst_velocity = initial_velocity
 	burst_time = 0.30 if initial_velocity.length_squared() > 0.01 else 0.0
 	magnetized = false
+	global_magnet_time_left = 0.0
+	global_magnet_elapsed = 0.0
 	idle_sense_timer = randf_range(
 		IDLE_SENSE_MIN_INTERVAL,
 		IDLE_SENSE_MAX_INTERVAL
@@ -110,6 +114,52 @@ func _physics_process(delta: float) -> void:
 	var radius_value = hero.get("exp_pickup_radius")
 	if radius_value != null:
 		pickup_radius = maxf(float(radius_value), 1.0)
+
+	if global_magnet_time_left > 0.0:
+		global_magnet_time_left = maxf(
+			global_magnet_time_left - delta,
+			0.0
+		)
+		global_magnet_elapsed += delta
+		var global_offset := hero.global_position - global_position
+		var global_distance_sq := global_offset.length_squared()
+		var collect_distance_sq := collect_distance * collect_distance
+		if global_distance_sq <= collect_distance_sq:
+			if hero.has_method("gain_exp"):
+				hero.call("gain_exp", exp_value)
+			var parent := get_parent()
+			if (
+				is_instance_valid(parent)
+				and parent.has_method("recycle_exp_orb")
+			):
+				parent.call("recycle_exp_orb", self)
+			else:
+				queue_free()
+			return
+
+		if global_distance_sq > 0.001:
+			var global_distance := sqrt(global_distance_sq)
+			var t := global_magnet_elapsed
+			var global_speed := minf(
+				750.0 + t * 900.0 + t * t * 450.0,
+				4350.0
+			)
+			global_position += (
+				global_offset / global_distance
+				* global_speed
+				* delta
+			)
+
+		if global_magnet_time_left <= 0.0:
+			global_magnet_elapsed = 0.0
+			magnetized = false
+			burst_velocity = Vector2.ZERO
+			burst_time = 0.0
+			idle_sense_timer = randf_range(
+				IDLE_SENSE_MIN_INTERVAL,
+				IDLE_SENSE_MAX_INTERVAL
+			)
+		return
 
 	# Once the initial drop burst is over, dormant orbs only need to check
 	# whether the hero entered pickup range at ~6-10 Hz.
@@ -160,8 +210,24 @@ func _physics_process(delta: float) -> void:
 		)
 
 
+func activate_global_magnet(
+	target_hero: Node2D,
+	duration: float
+) -> void:
+	if is_instance_valid(target_hero):
+		hero = target_hero
+	global_magnet_time_left = maxf(duration, 0.0)
+	global_magnet_elapsed = 0.0
+	magnetized = false
+	burst_velocity = Vector2.ZERO
+	burst_time = 0.0
+	set_physics_process(true)
+
+
 func deactivate_for_pool() -> void:
 	magnetized = false
+	global_magnet_time_left = 0.0
+	global_magnet_elapsed = 0.0
 	burst_velocity = Vector2.ZERO
 	burst_time = 0.0
 	idle_sense_timer = 0.0
