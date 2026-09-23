@@ -210,6 +210,26 @@ var ai_settings: Dictionary = {
 
 var battlefield_size: Vector2 = Vector2(3200, 3200)
 
+# Same-frame monster queries are common across targeting, AI and AoE skills.
+# Cache only for the current process/physics frame pair so combat semantics do not change.
+var _monster_nodes_cache: Array = []
+var _monster_nodes_cache_process_frame: int = -1
+var _monster_nodes_cache_physics_frame: int = -1
+
+
+func _get_monster_nodes_cached() -> Array:
+	var process_frame := Engine.get_process_frames()
+	var physics_frame := Engine.get_physics_frames()
+	if (
+		process_frame != _monster_nodes_cache_process_frame
+		or physics_frame != _monster_nodes_cache_physics_frame
+	):
+		_monster_nodes_cache = get_tree().get_nodes_in_group("monsters")
+		_monster_nodes_cache_process_frame = process_frame
+		_monster_nodes_cache_physics_frame = physics_frame
+	return _monster_nodes_cache
+
+
 var current_hp: int
 var level: int = 1
 var current_exp: int = 0
@@ -1028,7 +1048,7 @@ func _find_gunner_escape_direction() -> Vector2:
 	var repulsion := Vector2.ZERO
 
 	# 가까운 몬스터일수록 더 강하게 반대 방향을 선호한다.
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -1068,7 +1088,7 @@ func _find_gunner_escape_direction() -> Vector2:
 		var corridor_count := 0
 		var side := Vector2(-dir.y, dir.x)
 
-		for node in get_tree().get_nodes_in_group("monsters"):
+		for node in _get_monster_nodes_cached():
 			if not is_instance_valid(node) or node.is_queued_for_deletion():
 				continue
 			var monster := node as Node2D
@@ -1144,7 +1164,7 @@ func _use_gunner_cylinder_strike() -> void:
 	var knockback := maxf(float(gunner_config.get("cylinder_knockback", 145.0)), 0.0)
 	var slow_multiplier := clampf(float(gunner_config.get("cylinder_slow_multiplier", 0.50)), 0.1, 1.0)
 	var slow_duration := maxf(float(gunner_config.get("cylinder_slow_duration", 2.0)), 0.1)
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -1174,7 +1194,7 @@ func _gunner_deadeye_best_direction() -> Dictionary:
 		var side := Vector2(-direction.y, direction.x)
 		var score := 0.0
 		var hits := 0
-		for node in get_tree().get_nodes_in_group("monsters"):
+		for node in _get_monster_nodes_cached():
 			if not is_instance_valid(node) or node.is_queued_for_deletion():
 				continue
 			var monster := node as Node2D
@@ -1269,7 +1289,7 @@ func _update_gunner_deadeye(delta: float) -> void:
 
 func _count_monsters_near(origin: Vector2, radius: float) -> int:
 	var count := 0
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -1511,7 +1531,7 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 		1.0
 	)
 
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -1730,7 +1750,7 @@ func _rogue_should_use_slash() -> bool:
 		1
 	)
 	var nearby := 0
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -1822,7 +1842,7 @@ func _apply_rogue_slash_tick() -> void:
 		))
 	)
 
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -2027,7 +2047,7 @@ func _update_rogue_assassination(delta: float) -> void:
 		1.0
 	)
 
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -2075,7 +2095,7 @@ func _find_rogue_assassination_target() -> Node2D:
 	var best: Node2D = null
 	var best_score := INF
 
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -2798,7 +2818,7 @@ func _pick_new_wander_target() -> void:
 func _choose_move_direction(nearest_target: Node2D, nearest_distance: float) -> Vector2:
 	var avoidance := Vector2.ZERO
 
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 
@@ -2918,7 +2938,7 @@ func _heal_item_desire_for_hp(hp_ratio: float) -> float:
 func _estimate_monster_danger(at_position: Vector2, radius: float) -> float:
 	var danger := 0.0
 	var safe_radius := maxf(radius, 1.0)
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -2934,7 +2954,7 @@ func _estimate_monster_danger(at_position: Vector2, radius: float) -> float:
 func _get_crowd_avoidance_direction(radius: float = 230.0) -> Vector2:
 	var avoidance := Vector2.ZERO
 	var safe_radius := maxf(radius, 1.0)
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3216,7 +3236,7 @@ func _choose_archmage_skill() -> String:
 	var scores: Dictionary = {}
 	var nearby_220 := _count_monsters_near(global_position, 220.0)
 	var nearby_360 := _count_monsters_near(global_position, 360.0)
-	var total_monsters := get_tree().get_nodes_in_group("monsters").size()
+	var total_monsters := _get_monster_nodes_cached().size()
 
 	if _archmage_skill_ready("combustion"):
 		scores["combustion"] = 1.2 + float(nearby_220) * 0.65
@@ -3475,7 +3495,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 			"res://assets/art/heroes/stage5_archmage/frames/effect3",
 			"holy", 1, 5, 20.0, false, position, Vector2(0.94, 0.94)
 		)
-		for node in get_tree().get_nodes_in_group("monsters"):
+		for node in _get_monster_nodes_cached():
 			if not is_instance_valid(node) or node.is_queued_for_deletion():
 				continue
 			var monster := node as Node2D
@@ -3660,7 +3680,7 @@ func _spawn_archmage_fx(
 
 
 func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int) -> void:
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3676,7 +3696,7 @@ func _damage_monsters_in_radius_once(
 	damage: int,
 	hit_ids: Dictionary
 ) -> void:
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3698,7 +3718,7 @@ func _damage_monsters_in_corridor(
 ) -> void:
 	var segment := end - start
 	var length_sq := maxf(segment.length_squared(), 0.001)
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3713,7 +3733,7 @@ func _damage_monsters_in_corridor(
 func _find_farthest_monster_from_point(origin: Vector2) -> Node2D:
 	var best: Node2D = null
 	var best_distance := -1.0
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3729,7 +3749,7 @@ func _find_farthest_monster_from_point(origin: Vector2) -> Node2D:
 func _find_nearest_monster_from_point(origin: Vector2) -> Node2D:
 	var best: Node2D = null
 	var best_distance := INF
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3809,7 +3829,7 @@ func _should_cast_channel_skill() -> bool:
 	var nearby := 0
 	var very_close := 0
 
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3900,7 +3920,7 @@ func _apply_channel_damage() -> void:
 	if radius <= 0.0:
 		return
 
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		if not node.has_method("take_damage"):
@@ -3966,7 +3986,7 @@ func _should_cast_shield() -> bool:
 		return false
 
 	var nearby := 0
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -4148,7 +4168,7 @@ func _find_best_piercing_direction() -> Vector2:
 	)
 
 	var monsters: Array[Node2D] = []
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -4216,7 +4236,7 @@ func _use_area_burst_ultimate() -> void:
 	if radius <= 0.0 or damage <= 0:
 		return
 
-	var targets: Array = get_tree().get_nodes_in_group("monsters")
+	var targets: Array = _get_monster_nodes_cached()
 	for node in targets:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
@@ -4703,7 +4723,7 @@ func _build_ai_context() -> Dictionary:
 	var type_counts: Dictionary = {}
 	var role_counts: Dictionary = {}
 
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 
@@ -5114,7 +5134,7 @@ func _fighter_should_start_charge() -> bool:
 	var radius := maxf(float(fighter_charge_config.get("trigger_radius", 245.0)), 1.0)
 	var required := maxi(int(fighter_charge_config.get("trigger_enemy_count", 4)), 1)
 	var nearby := 0
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -5137,7 +5157,7 @@ func _find_fighter_charge_target(exclude: Node = null) -> Node2D:
 	var max_distance := maxf(float(fighter_charge_config.get("max_target_distance", 560.0)), 1.0)
 	var farthest: Node2D = null
 	var farthest_distance := -1.0
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion() or node == exclude:
 			continue
 		var monster := node as Node2D
@@ -5224,7 +5244,7 @@ func _complete_fighter_charge_dash() -> void:
 		))
 	)
 	var radius := maxf(float(fighter_charge_config.get("impact_radius", 175.0)), 1.0)
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -5512,7 +5532,7 @@ func _fighter_should_use_slash() -> bool:
 		1.0
 	)
 	var nearby := 0
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -5542,7 +5562,7 @@ func _fighter_apply_slash(direction: Vector2, bonus_hit: bool = false) -> int:
 	var side := Vector2(-direction.y, direction.x)
 	var bonus_kills := 0
 
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -5601,7 +5621,7 @@ func _fighter_apply_thrust(direction: Vector2) -> void:
 	)
 	var side := Vector2(-direction.y, direction.x)
 
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -5645,7 +5665,7 @@ func _fighter_can_activate_guard() -> bool:
 		1
 	)
 	var nearby := 0
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -5711,7 +5731,7 @@ func _end_fighter_guard() -> void:
 	)
 
 	if release_damage > 0 and release_radius > 0.0:
-		for node in get_tree().get_nodes_in_group("monsters"):
+		for node in _get_monster_nodes_cached():
 			if not is_instance_valid(node) or node.is_queued_for_deletion():
 				continue
 			var monster := node as Node2D
@@ -5751,7 +5771,7 @@ func _fighter_reflect_damage(raw_damage: float, source: Node) -> void:
 	)
 	var nearest: Node2D = null
 	var nearest_distance := INF
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
