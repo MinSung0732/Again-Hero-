@@ -6,6 +6,9 @@ const EFFECT_FRAME_COUNT := 8
 const EFFECT_FPS_FALLBACK := 8.0
 const EFFECT_TARGET_HEIGHT := 64.0
 
+static var _normal_frames_cache: SpriteFrames
+static var _elite_frames_cache: SpriteFrames
+
 var direction: Vector2 = Vector2.RIGHT
 var speed: float = 320.0
 var max_range: float = 360.0
@@ -124,27 +127,38 @@ func _apply_projectile_visual() -> void:
 	projectile_sprite.sprite_frames = null
 	projectile_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
-	var effect_dir := ELITE_EFFECT_DIR if elite_visual else NORMAL_EFFECT_DIR
-	var frames := SpriteFrames.new()
-	if frames.has_animation(&"default"):
-		frames.remove_animation(&"default")
+	var cached_frames := _elite_frames_cache if elite_visual else _normal_frames_cache
+	var frames := cached_frames
+	if frames == null:
+		var effect_dir := ELITE_EFFECT_DIR if elite_visual else NORMAL_EFFECT_DIR
+		frames = SpriteFrames.new()
+		if frames.has_animation(&"default"):
+			frames.remove_animation(&"default")
+		frames.add_animation(&"fly")
+		frames.set_animation_loop(&"fly", false)
 
-	frames.add_animation(&"fly")
-	frames.set_animation_loop(&"fly", false)
+		var first_texture: Texture2D = null
+		for frame_index in range(1, EFFECT_FRAME_COUNT + 1):
+			var path := "%s/frame_%02d.png" % [effect_dir, frame_index]
+			var texture := _load_texture(path)
+			if texture == null:
+				continue
+			if first_texture == null:
+				first_texture = texture
+			frames.add_frame(&"fly", texture)
 
-	var first_texture: Texture2D = null
-	for frame_index in range(1, EFFECT_FRAME_COUNT + 1):
-		var path := "%s/frame_%02d.png" % [effect_dir, frame_index]
-		var texture := _load_texture(path)
-		if texture == null:
-			continue
 		if first_texture == null:
-			first_texture = texture
-		frames.add_frame(&"fly", texture)
+			push_warning("Spider projectile frames not found: %s" % effect_dir)
+			return
 
-	if first_texture == null:
-		push_warning("Spider projectile frames not found: %s" % effect_dir)
-		return
+		var source_height := maxf(float(first_texture.get_height()), 1.0)
+		var uniform_scale := EFFECT_TARGET_HEIGHT / source_height
+		frames.set_meta("visual_scale", uniform_scale)
+
+		if elite_visual:
+			_elite_frames_cache = frames
+		else:
+			_normal_frames_cache = frames
 
 	projectile_sprite.sprite_frames = frames
 	var flight_duration := max_range / maxf(speed, 1.0)
@@ -153,8 +167,7 @@ func _apply_projectile_visual() -> void:
 		one_take_fps = float(frames.get_frame_count(&"fly")) / flight_duration
 	frames.set_animation_speed(&"fly", maxf(one_take_fps, 1.0))
 
-	var source_height := maxf(float(first_texture.get_height()), 1.0)
-	var uniform_scale := EFFECT_TARGET_HEIGHT / source_height
+	var uniform_scale := float(frames.get_meta("visual_scale", 1.0))
 	projectile_sprite.scale = Vector2(uniform_scale, uniform_scale)
 	projectile_sprite.visible = true
 	projectile_sprite.play(&"fly")
