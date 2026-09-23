@@ -41,6 +41,7 @@ const STAGE3_AURA_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/e
 const STAGE3_CHARGE_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect5"
 const STAGE4_FRAME_DIR := "res://assets/art/heroes/stage4_gunner/frames"
 const STAGE5_FRAME_DIR := "res://assets/art/heroes/stage5_archmage/frames"
+const STAGE6_FRAME_DIR := "res://assets/art/heroes/stage6_berserker/frames"
 
 # 모든 용사 도트의 화면상 체급 기준은 Stage 1 견습 마법용사다.
 # 원본 PNG 캔버스 크기가 아니라 투명 여백을 제외한 실제 도트 높이를
@@ -174,6 +175,12 @@ var gunner_deadeye_shot_multiplier: float = 2.0
 var gunner_low_hp_backstep_bonus: float = 0.0
 var gunner_powder_bonus_per_ammo: float = 0.0
 var gunner_powder_consumed_stacks: int = 0
+
+var berserker_config: Dictionary = {}
+var berserker_revive_used: bool = false
+var berserker_reviving: bool = false
+var berserker_saved_collision_layer: int = 0
+var berserker_saved_collision_mask: int = 0
 
 var archmage_element_config: Dictionary = {}
 var archmage_last_element: String = ""
@@ -409,6 +416,17 @@ func configure_profile(profile: Dictionary) -> void:
 		if typeof(profile_fighter_basic) == TYPE_DICTIONARY
 		else {}
 	)
+	var profile_berserker = profile.get("berserker", {})
+	berserker_config = (
+		profile_berserker.duplicate(true)
+		if typeof(profile_berserker) == TYPE_DICTIONARY
+		else {}
+	)
+	berserker_revive_used = false
+	berserker_reviving = false
+	berserker_saved_collision_layer = collision_layer
+	berserker_saved_collision_mask = collision_mask
+
 	var profile_gunner = profile.get("gunner", {})
 	gunner_config = (
 		profile_gunner.duplicate(true)
@@ -669,6 +687,10 @@ func _physics_process(delta: float) -> void:
 
 	if hero_archetype == "pistol_gunner":
 		_physics_process_gunner(delta)
+		return
+
+	if hero_archetype == "berserker_madness":
+		_physics_process_berserker(delta)
 		return
 
 	ai_memory_clock += delta
@@ -2362,6 +2384,38 @@ func _apply_profile_visual() -> void:
 	hero_sprite.modulate = Color.WHITE
 	hero_sprite.rotation = 0.0
 	hero_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+	if hero_archetype == "berserker_madness":
+		var berserker_dir := (
+			sprite_frame_dir
+			if not sprite_frame_dir.is_empty()
+			else STAGE6_FRAME_DIR
+		)
+		var berserker_frames := SpriteFrames.new()
+		if berserker_frames.has_animation("default"):
+			berserker_frames.remove_animation("default")
+		if not _add_named_sequence_animation(
+			berserker_frames, "idle", berserker_dir, "idle", 4, 6.0, true
+		):
+			return
+		_add_named_sequence_animation(
+			berserker_frames, "move", berserker_dir, "walk", 6, 9.0, true
+		)
+		_add_named_sequence_animation(
+			berserker_frames, "attack", berserker_dir, "atk", 6, 10.0, false
+		)
+		_add_named_sequence_animation(
+			berserker_frames, "hit", berserker_dir, "hit", 3, 13.0, false
+		)
+		_add_named_sequence_animation(
+			berserker_frames, "death", berserker_dir, "dead", 4, 8.0, false
+		)
+		hero_sprite.sprite_frames = berserker_frames
+		hero_sprite.visible = true
+		_apply_normalized_hero_visual_scale()
+		hero_sprite.speed_scale = 1.0
+		hero_sprite.play("idle")
+		return
 
 	if hero_archetype == "archmage_elementalist":
 		var archmage_dir := (
@@ -6283,6 +6337,275 @@ func get_build_summary() -> String:
 
 	return " · ".join(parts)
 
+func _physics_process_berserker(delta: float) -> void:
+	ai_memory_clock += delta
+	_prune_offensive_memory()
+	_prune_status_memory()
+
+	ai_observation_timer = maxf(ai_observation_timer - delta, 0.0)
+	if ai_observation_timer <= 0.0:
+		_refresh_ai_observation()
+
+	attack_timer = maxf(attack_timer - delta, 0.0)
+	retarget_timer = maxf(retarget_timer - delta, 0.0)
+	wander_timer = maxf(wander_timer - delta, 0.0)
+	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
+	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
+	ultimate_flash_timer = maxf(ultimate_flash_timer - delta, 0.0)
+	_update_invulnerability(delta)
+	_update_berserker_hp_visual()
+
+	if hit_flash_timer > 0.0:
+		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
+		queue_redraw()
+
+	if level_flash_timer > 0.0:
+		level_flash_timer = maxf(level_flash_timer - delta, 0.0)
+		queue_redraw()
+
+	if slow_timer > 0.0:
+		slow_timer = maxf(slow_timer - delta, 0.0)
+		if slow_timer <= 0.0:
+			move_multiplier = 1.0
+			queue_redraw()
+
+	if berserker_reviving:
+		velocity = Vector2.ZERO
+		return
+
+	_update_heal_item_goal(delta)
+	_update_chest_goal(delta)
+	_update_magnet_item_goal(delta)
+
+	if (
+		not is_instance_valid(target)
+		or target.is_queued_for_deletion()
+		or retarget_timer <= 0.0
+	):
+		target = _find_nearest_monster()
+		retarget_timer = 0.12
+
+	if not is_instance_valid(target):
+		_fighter_move_without_monsters(1.0)
+		_update_berserker_pose_visual(delta)
+		return
+
+	var distance: float = global_position.distance_to(target.global_position)
+	var move_direction: Vector2 = _choose_melee_spacing_direction(
+		target,
+		distance,
+		0.88
+	)
+	move_direction = _apply_heal_item_steering(move_direction, delta)
+	move_direction = _apply_chest_steering(move_direction, delta)
+	move_direction = _apply_magnet_item_steering(move_direction, delta)
+
+	if move_direction.length_squared() > 0.01:
+		velocity = move_direction * move_speed * move_multiplier
+		move_and_slide()
+		_clamp_to_battlefield()
+	else:
+		velocity = Vector2.ZERO
+
+	if distance <= attack_range and attack_timer <= 0.0:
+		_berserker_basic_attack(target)
+
+	_update_berserker_pose_visual(delta)
+
+
+func _update_berserker_pose_visual(delta: float) -> void:
+	if (
+		hero_archetype != "berserker_madness"
+		or not hero_sprite.visible
+		or is_dying
+		or berserker_reviving
+	):
+		return
+	if hit_pose_timer > 0.0 or attack_pose_timer > 0.0:
+		return
+
+	_update_facing_from_horizontal(velocity.x, delta)
+	if velocity.length() > 4.0:
+		_play_stage1_animation("move", 1.0)
+	else:
+		_play_stage1_animation("idle", 1.0)
+
+
+func _get_berserker_effective_attack_damage() -> int:
+	if max_hp <= 0:
+		return maxi(attack_damage, 1)
+
+	var missing_ratio: float = clampf(
+		float(max_hp - current_hp) / float(max_hp),
+		0.0,
+		1.0
+	)
+	var missing_percent: float = missing_ratio * 100.0
+	var bonus_per_percent: float = maxf(
+		float(
+			berserker_config.get(
+				"missing_hp_attack_bonus_per_percent",
+				0.02
+			)
+		),
+		0.0
+	)
+	var passive_bonus: float = (
+		base_attack_damage_for_level_growth
+		* missing_percent
+		* bonus_per_percent
+	)
+	return maxi(
+		int(round(float(attack_damage) + passive_bonus)),
+		1
+	)
+
+
+func _berserker_basic_attack(current_target: Node2D) -> void:
+	if not is_instance_valid(current_target):
+		return
+
+	var direction: Vector2 = global_position.direction_to(
+		current_target.global_position
+	)
+	if direction.length_squared() <= 0.0:
+		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+	direction = direction.normalized()
+
+	attack_timer = _get_common_attack_interval(attack_cooldown)
+	attack_pose_timer = 0.52
+	_face_attack_direction(direction.x)
+	_restart_stage1_animation("attack")
+
+	var reach: float = maxf(
+		float(berserker_config.get("basic_reach", 190.0)),
+		1.0
+	)
+	var half_width: float = maxf(
+		float(berserker_config.get("basic_half_width", 118.0)),
+		1.0
+	)
+	var damage: int = _get_berserker_effective_attack_damage()
+	var side: Vector2 = Vector2(-direction.y, direction.x)
+
+	for node in _get_monster_nodes_near(
+		global_position,
+		reach + half_width
+	):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null or not monster.has_method("take_damage"):
+			continue
+
+		var offset: Vector2 = monster.global_position - global_position
+		var forward: float = offset.dot(direction)
+		var lateral: float = absf(offset.dot(side))
+		if forward < -32.0 or forward > reach or lateral > half_width:
+			continue
+
+		var hp_before_value = monster.get("current_hp")
+		var hp_before: int = (
+			int(hp_before_value)
+			if hp_before_value != null
+			else -1
+		)
+		monster.call("take_damage", damage)
+
+		if hp_before <= 0:
+			continue
+		var killed: bool = false
+		if not is_instance_valid(monster):
+			killed = true
+		else:
+			var hp_after_value = monster.get("current_hp")
+			if hp_after_value != null and int(hp_after_value) <= 0:
+				killed = true
+		if killed:
+			_add_berserker_gauge(
+				maxf(
+					float(berserker_config.get("gauge_per_kill", 1.0)),
+					0.0
+				)
+			)
+
+	_damage_treasure_chests(
+		global_position + direction * (reach * 0.55),
+		maxf(half_width, 80.0),
+		damage
+	)
+
+
+func _add_berserker_gauge(amount: float) -> void:
+	if amount <= 0.0 or hero_archetype != "berserker_madness":
+		return
+	var gauge_max: float = maxf(
+		float(berserker_config.get("gauge_max", 100.0)),
+		1.0
+	)
+	ultimate_charge = minf(ultimate_charge + amount, gauge_max)
+	queue_redraw()
+
+
+func _update_berserker_hp_visual() -> void:
+	if hero_archetype != "berserker_madness" or not hero_sprite.visible:
+		return
+	var hp_ratio: float = clampf(
+		float(current_hp) / float(maxi(max_hp, 1)),
+		0.0,
+		1.0
+	)
+	var missing_ratio: float = 1.0 - hp_ratio
+	hero_sprite.modulate = Color(
+		1.0,
+		lerpf(1.0, 0.36, missing_ratio),
+		lerpf(1.0, 0.36, missing_ratio),
+		1.0
+	)
+
+
+func _begin_berserker_revive() -> void:
+	if berserker_revive_used or berserker_reviving:
+		return
+
+	berserker_revive_used = true
+	berserker_reviving = true
+	berserker_saved_collision_layer = collision_layer
+	berserker_saved_collision_mask = collision_mask
+	collision_layer = 0
+	collision_mask = 0
+	velocity = Vector2.ZERO
+	invulnerability_timer = 0.0
+	modulate.a = 0.45
+	_restart_stage1_animation("death", 0.72)
+	queue_redraw()
+
+	var revive_delay: float = maxf(
+		float(berserker_config.get("revive_delay", 3.0)),
+		0.1
+	)
+	await get_tree().create_timer(revive_delay).timeout
+	if not is_inside_tree() or is_dying:
+		return
+
+	var revive_ratio: float = clampf(
+		float(berserker_config.get("revive_hp_ratio", 0.50)),
+		0.01,
+		1.0
+	)
+	current_hp = maxi(int(round(float(max_hp) * revive_ratio)), 1)
+	collision_layer = berserker_saved_collision_layer
+	collision_mask = berserker_saved_collision_mask
+	berserker_reviving = false
+	modulate.a = 1.0
+	hit_pose_timer = 0.0
+	attack_pose_timer = 0.0
+	_restart_stage1_animation("idle")
+	_update_berserker_hp_visual()
+	health_changed.emit(current_hp, max_hp)
+	queue_redraw()
+
+
 func _physics_process_fighter(delta: float) -> void:
 	ai_memory_clock += delta
 	_prune_offensive_memory()
@@ -7421,7 +7744,14 @@ func take_damage(amount: int, source: Node = null) -> bool:
 	queue_redraw()
 
 	if current_hp <= 0:
-		_begin_death_sequence()
+		if (
+			hero_archetype == "berserker_madness"
+			and not berserker_revive_used
+			and not berserker_reviving
+		):
+			_begin_berserker_revive()
+		else:
+			_begin_death_sequence()
 	else:
 		invulnerability_timer = invulnerability_duration
 		if hero_archetype == "pistol_gunner" and _gunner_should_backstep_on_hit():
@@ -7521,6 +7851,31 @@ func _draw() -> void:
 			draw_rect(Rect2(x, -79.0, cell_width, 8.0), Color(0.12, 0.12, 0.14), true)
 			if index < displayed_cells:
 				draw_rect(Rect2(x, -79.0, cell_width, 8.0), Color(1.0, 0.77, 0.16), true)
+	elif hero_archetype == "berserker_madness":
+		var madness_max: float = maxf(
+			float(berserker_config.get("gauge_max", 100.0)),
+			1.0
+		)
+		var madness_ratio: float = clampf(
+			ultimate_charge / madness_max,
+			0.0,
+			1.0
+		)
+		draw_rect(
+			Rect2(-bar_width / 2.0, -79.0, bar_width, 8.0),
+			Color(0.12, 0.12, 0.14),
+			true
+		)
+		draw_rect(
+			Rect2(
+				-bar_width / 2.0,
+				-79.0,
+				bar_width * madness_ratio,
+				8.0
+			),
+			Color(1.0, 0.30, 0.08),
+			true
+		)
 	else:
 		var ultimate_max := maxf(float(ultimate_config.get("charge_max", 100.0)), 1.0)
 		var ultimate_ratio := clampf(ultimate_charge / ultimate_max, 0.0, 1.0)
