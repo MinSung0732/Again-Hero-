@@ -191,9 +191,6 @@ var berserker_skill2_cooldown: float = 0.0
 var berserker_skill3_cooldown: float = 0.0
 var berserker_skill3_active: bool = false
 var berserker_skill4_cooldown: float = 0.0
-var berserker_skill5_cooldown: float = 0.0
-var berserker_skill5_active: bool = false
-var berserker_skill5_hide_hud: bool = false
 var berserker_skill_global_cooldown: float = 0.0
 
 var archmage_element_config: Dictionary = {}
@@ -450,9 +447,6 @@ func configure_profile(profile: Dictionary) -> void:
 	berserker_skill3_cooldown = 0.0
 	berserker_skill3_active = false
 	berserker_skill4_cooldown = 0.0
-	berserker_skill5_cooldown = 0.0
-	berserker_skill5_active = false
-	berserker_skill5_hide_hud = false
 	berserker_skill_global_cooldown = 0.0
 
 	var profile_gunner = profile.get("gunner", {})
@@ -5659,6 +5653,31 @@ func get_skill_cooldown_hud() -> Array:
 				gunner_deadeye_cooldown,
 				"res://assets/art/heroes/stage4_gunner/frames/effect/effect_projectile_05.png"
 			)
+		"berserker_madness":
+			_append_skill_cooldown_hud(
+				skills,
+				Dictionary(berserker_config.get("skill_1", {})),
+				berserker_skill1_cooldown,
+				"res://assets/art/heroes/stage6_berserker/frames/effect4/heavy_slash_01.png"
+			)
+			_append_skill_cooldown_hud(
+				skills,
+				Dictionary(berserker_config.get("skill_2", {})),
+				berserker_skill2_cooldown,
+				"res://assets/art/heroes/stage6_berserker/frames/effect3/ground_slam_07.png"
+			)
+			_append_skill_cooldown_hud(
+				skills,
+				Dictionary(berserker_config.get("skill_3", {})),
+				berserker_skill3_cooldown,
+				"res://assets/art/heroes/stage6_berserker/frames/effect5/hit_effect_01.png"
+			)
+			_append_skill_cooldown_hud(
+				skills,
+				Dictionary(berserker_config.get("skill_4", {})),
+				berserker_skill4_cooldown,
+				"res://assets/art/heroes/stage6_berserker/frames/effect8/spin_slash_01.png"
+			)
 
 	return skills
 
@@ -6454,10 +6473,6 @@ func _physics_process_berserker(delta: float) -> void:
 		berserker_skill4_cooldown - delta,
 		0.0
 	)
-	berserker_skill5_cooldown = maxf(
-		berserker_skill5_cooldown - delta,
-		0.0
-	)
 	berserker_skill_global_cooldown = maxf(
 		berserker_skill_global_cooldown - delta,
 		0.0
@@ -6486,10 +6501,6 @@ func _physics_process_berserker(delta: float) -> void:
 			queue_redraw()
 
 	if berserker_reviving:
-		velocity = Vector2.ZERO
-		return
-
-	if berserker_skill5_active:
 		velocity = Vector2.ZERO
 		return
 
@@ -6542,13 +6553,38 @@ func _physics_process_berserker(delta: float) -> void:
 			float(berserker_config.get("madness_target_radius", 375.0)),
 			attack_range
 		)
-	# Stage 6 secret-art test mode: skills 1~4 are temporarily sealed.
 	if (
 		berserker_skill_global_cooldown <= 0.0
-		and berserker_skill5_cooldown <= 0.0
-		and distance <= 560.0
+		and berserker_skill3_cooldown <= 0.0
+		and distance <= 500.0
 	):
-		_start_berserker_skill5()
+		_start_berserker_skill3(target)
+	elif (
+		berserker_skill_global_cooldown <= 0.0
+		and berserker_skill1_cooldown <= 0.0
+		and distance <= maxf(
+			float(
+				berserker_config.get(
+					"skill_1",
+					{}
+				).get("base_range", 430.0)
+			),
+			attack_range
+		)
+	):
+		_start_berserker_skill1(target)
+	elif (
+		berserker_skill_global_cooldown <= 0.0
+		and berserker_skill2_cooldown <= 0.0
+		and distance <= 320.0
+	):
+		_start_berserker_skill2(target)
+	elif (
+		berserker_skill_global_cooldown <= 0.0
+		and berserker_skill4_cooldown <= 0.0
+		and _count_monsters_near(global_position, 245.0, 1) >= 1
+	):
+		_start_berserker_skill4()
 	elif distance <= attack_trigger_range and attack_timer <= 0.0:
 		_berserker_basic_attack(target)
 
@@ -7452,392 +7488,6 @@ func _start_berserker_skill4() -> void:
 	queue_redraw()
 
 
-func _start_berserker_skill5() -> void:
-	if berserker_skill5_active:
-		return
-
-	var skill_config_value = berserker_config.get("skill_5", {})
-	if typeof(skill_config_value) != TYPE_DICTIONARY:
-		return
-	var skill_config: Dictionary = skill_config_value
-	if skill_config.is_empty():
-		return
-
-	var hp_cost_ratio: float = clampf(
-		float(skill_config.get("hp_cost_ratio", 0.20)),
-		0.0,
-		0.95
-	)
-	var hp_cost: int = maxi(
-		int(round(float(current_hp) * hp_cost_ratio)),
-		1
-	)
-	current_hp = maxi(current_hp - hp_cost, 1)
-	health_changed.emit(current_hp, max_hp)
-
-	var cast_time: float = maxf(
-		float(skill_config.get("cast_time", 1.0)),
-		0.05
-	)
-	var channel_duration: float = maxf(
-		float(skill_config.get("channel_duration", 3.0)),
-		0.05
-	)
-
-	berserker_skill5_active = true
-	berserker_skill5_cooldown = maxf(
-		float(skill_config.get("cooldown", 5.0)),
-		0.0
-	)
-	berserker_skill_global_cooldown = maxf(
-		berserker_skill_global_cooldown,
-		cast_time + channel_duration + 0.25
-	)
-	attack_timer = maxf(
-		attack_timer,
-		cast_time + channel_duration + 0.25
-	)
-	attack_pose_timer = cast_time + channel_duration + 0.25
-	invulnerability_timer = maxf(
-		invulnerability_timer,
-		cast_time + channel_duration + 0.10
-	)
-	velocity = Vector2.ZERO
-	modulate.a = 1.0
-	hero_sprite.visible = true
-	hero_sprite.modulate.a = 1.0
-	berserker_skill5_hide_hud = false
-	var fade_tween := create_tween()
-	fade_tween.tween_property(
-		hero_sprite,
-		"modulate:a",
-		0.0,
-		cast_time
-	).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN_OUT)
-	_execute_berserker_skill5(skill_config)
-	queue_redraw()
-
-
-func _execute_berserker_skill5(skill_config: Dictionary) -> void:
-	var cast_time: float = maxf(
-		float(skill_config.get("cast_time", 1.0)),
-		0.05
-	)
-	await get_tree().create_timer(cast_time).timeout
-	if not is_inside_tree() or is_dying or not berserker_skill5_active:
-		return
-
-	hero_sprite.modulate.a = 0.0
-	berserker_skill5_hide_hud = true
-	queue_redraw()
-
-	var aura_scale: float = maxf(
-		float(skill_config.get("channel_effect_scale", 1.05)),
-		0.1
-	)
-	var aura_fx: AnimatedSprite2D = _spawn_archmage_fx(
-		"%s/effect6" % STAGE6_FRAME_DIR,
-		"rage_aura",
-		1,
-		12,
-		18.0,
-		true,
-		global_position,
-		Vector2(aura_scale, aura_scale)
-	)
-	var aura_frame_align_callable := Callable()
-	if is_instance_valid(aura_fx):
-		aura_fx.z_index = 6
-		aura_fx.centered = true
-		aura_fx.offset = Vector2.ZERO
-		var aura_reference_height: float = 0.0
-		if (
-			aura_fx.sprite_frames != null
-			and aura_fx.sprite_frames.get_frame_count("fx") > 0
-		):
-			var aura_reference_texture := (
-				aura_fx.sprite_frames.get_frame_texture("fx", 0)
-			)
-			if aura_reference_texture != null:
-				aura_reference_height = float(
-					aura_reference_texture.get_height()
-				)
-		if aura_reference_height > 0.0:
-			aura_frame_align_callable = Callable(
-				self,
-				"_align_berserker_skill5_aura_frame"
-			).bind(
-				aura_fx,
-				aura_reference_height
-			)
-			aura_fx.frame_changed.connect(
-				aura_frame_align_callable
-			)
-			_align_berserker_skill5_aura_frame(
-				aura_fx,
-				aura_reference_height
-			)
-
-	var channel_duration: float = maxf(
-		float(skill_config.get("channel_duration", 3.0)),
-		0.05
-	)
-	var shot_interval: float = maxf(
-		float(skill_config.get("shot_interval", 0.34)),
-		0.05
-	)
-	var elapsed: float = 0.0
-	while (
-		elapsed < channel_duration
-		and is_inside_tree()
-		and not is_dying
-		and berserker_skill5_active
-	):
-		var skill_target: Node2D = _find_berserker_skill5_random_target(
-			maxf(
-				float(skill_config.get("target_radius", 560.0)),
-				1.0
-			)
-		)
-		if is_instance_valid(skill_target):
-			_spawn_berserker_skill5_projectile(
-				skill_target,
-				skill_config
-			)
-
-		await get_tree().create_timer(shot_interval).timeout
-		elapsed += shot_interval
-
-	if (
-		is_instance_valid(aura_fx)
-		and aura_frame_align_callable.is_valid()
-		and aura_fx.frame_changed.is_connected(
-			aura_frame_align_callable
-		)
-	):
-		aura_fx.frame_changed.disconnect(
-			aura_frame_align_callable
-		)
-	if is_instance_valid(aura_fx):
-		aura_fx.offset = Vector2.ZERO
-		_recycle_archmage_fx(aura_fx)
-
-	if not is_inside_tree():
-		return
-	berserker_skill5_active = false
-	berserker_skill5_hide_hud = false
-	invulnerability_timer = 0.0
-	modulate.a = 1.0
-	hero_sprite.visible = true
-	_update_berserker_hp_visual()
-	attack_pose_timer = 0.0
-	_play_stage1_animation("idle", 1.0)
-	queue_redraw()
-
-
-func _align_berserker_skill5_aura_frame(
-	aura_fx: AnimatedSprite2D,
-	reference_height: float
-) -> void:
-	if not is_instance_valid(aura_fx) or aura_fx.sprite_frames == null:
-		return
-	var current_texture := aura_fx.sprite_frames.get_frame_texture(
-		"fx",
-		aura_fx.frame
-	)
-	if current_texture == null:
-		return
-	var current_height: float = float(current_texture.get_height())
-	aura_fx.offset = Vector2(
-		0.0,
-		(reference_height - current_height) * 0.5
-	)
-
-
-func _find_berserker_skill5_random_target(radius: float) -> Node2D:
-	var radius_sq: float = radius * radius
-	var candidates: Array = []
-	for node in _get_monster_nodes_near(global_position, radius):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		var hp_value = monster.get("current_hp")
-		if hp_value != null and int(hp_value) <= 0:
-			continue
-		if (
-			global_position.distance_squared_to(monster.global_position)
-			> radius_sq
-		):
-			continue
-		candidates.append(monster)
-
-	if candidates.is_empty():
-		return null
-
-	var selected_index: int = randi_range(0, candidates.size() - 1)
-	return candidates[selected_index] as Node2D
-
-
-func _spawn_berserker_skill5_projectile(
-	skill_target: Node2D,
-	skill_config: Dictionary
-) -> void:
-	if not is_instance_valid(skill_target):
-		return
-
-	var start_position: Vector2 = global_position + Vector2(0.0, -22.0)
-	var target_position: Vector2 = skill_target.global_position
-	var direction: Vector2 = start_position.direction_to(target_position)
-	if direction.length_squared() <= 0.0:
-		direction = Vector2.RIGHT
-
-	var projectile_scale: float = maxf(
-		float(skill_config.get("projectile_effect_scale", 0.78)),
-		0.1
-	)
-	var projectile_fx: AnimatedSprite2D = _spawn_archmage_fx(
-		"%s/effect7" % STAGE6_FRAME_DIR,
-		"special",
-		1,
-		2,
-		20.0,
-		true,
-		start_position,
-		Vector2(projectile_scale, projectile_scale)
-	)
-	if not is_instance_valid(projectile_fx):
-		return
-
-	projectile_fx.z_index = 10
-	projectile_fx.rotation = direction.angle()
-	var projectile_speed: float = maxf(
-		float(skill_config.get("projectile_speed", 200.0)),
-		1.0
-	)
-	var travel_distance: float = start_position.distance_to(target_position)
-	var travel_time: float = maxf(
-		travel_distance / projectile_speed,
-		0.04
-	)
-	var projectile_tween := projectile_fx.create_tween()
-	projectile_tween.tween_property(
-		projectile_fx,
-		"global_position",
-		target_position,
-		travel_time
-	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	projectile_tween.finished.connect(
-		Callable(self, "_resolve_berserker_skill5_impact").bind(
-			projectile_fx,
-			target_position,
-			skill_config
-		),
-		Object.CONNECT_ONE_SHOT
-	)
-
-
-func _resolve_berserker_skill5_impact(
-	projectile_fx: AnimatedSprite2D,
-	impact_position: Vector2,
-	skill_config: Dictionary
-) -> void:
-	if is_instance_valid(projectile_fx):
-		_recycle_archmage_fx(projectile_fx)
-	if not is_inside_tree() or is_dying:
-		return
-
-	var impact_radius: float = maxf(
-		float(skill_config.get("impact_radius", 125.0)),
-		1.0
-	)
-	var damage: int = maxi(
-		int(round(
-			float(_get_berserker_effective_attack_damage())
-			* float(skill_config.get("damage_ratio", 0.75))
-		)),
-		1
-	)
-	var impact_radius_sq: float = impact_radius * impact_radius
-	var total_damage_dealt: int = 0
-
-	for node in _get_monster_nodes_near(
-		impact_position,
-		impact_radius
-	):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var monster := node as Node2D
-		if monster == null or not monster.has_method("take_damage"):
-			continue
-		if (
-			impact_position.distance_squared_to(monster.global_position)
-			> impact_radius_sq
-		):
-			continue
-
-		var hp_before_value = monster.get("current_hp")
-		var hp_before: int = (
-			int(hp_before_value)
-			if hp_before_value != null
-			else -1
-		)
-		monster.call("take_damage", damage)
-
-		var hp_after: int = hp_before
-		if is_instance_valid(monster):
-			var hp_after_value = monster.get("current_hp")
-			if hp_after_value != null:
-				hp_after = int(hp_after_value)
-		if hp_before >= 0:
-			total_damage_dealt += maxi(hp_before - maxi(hp_after, 0), 0)
-
-		if hp_before <= 0:
-			continue
-		var killed: bool = false
-		if not is_instance_valid(monster):
-			killed = true
-		elif hp_after <= 0:
-			killed = true
-		if killed:
-			notify_berserker_skill_kill()
-
-	var impact_scale: float = maxf(
-		float(skill_config.get("impact_effect_scale", 2.20)),
-		0.1
-	)
-	_play_berserker_skill5_impact_sequence(
-		impact_position,
-		impact_scale
-	)
-
-	if total_damage_dealt > 0:
-		heal_direct(total_damage_dealt)
-
-
-func _play_berserker_skill5_impact_sequence(
-	impact_position: Vector2,
-	effect_scale: float
-) -> void:
-	for frame_index in [7, 10, 9]:
-		var impact_fx: AnimatedSprite2D = _spawn_archmage_fx(
-			"%s/effect7" % STAGE6_FRAME_DIR,
-			"special",
-			frame_index,
-			1,
-			1.0,
-			true,
-			impact_position,
-			Vector2(effect_scale, effect_scale)
-		)
-		if is_instance_valid(impact_fx):
-			impact_fx.z_index = 11
-			await get_tree().create_timer(0.085).timeout
-			if is_instance_valid(impact_fx):
-				_recycle_archmage_fx(impact_fx)
-
-
 func notify_berserker_skill_kill() -> void:
 	_add_berserker_gauge(
 		maxf(
@@ -8241,16 +7891,11 @@ func _update_berserker_hp_visual() -> void:
 		1.0
 	)
 	var missing_ratio: float = 1.0 - hp_ratio
-	var sprite_alpha: float = (
-		hero_sprite.modulate.a
-		if berserker_skill5_active
-		else 1.0
-	)
 	hero_sprite.modulate = Color(
 		1.0,
 		lerpf(1.0, 0.36, missing_ratio),
 		lerpf(1.0, 0.36, missing_ratio),
-		sprite_alpha
+		1.0
 	)
 
 
@@ -9452,11 +9097,6 @@ func _update_invulnerability(delta: float) -> void:
 	_refresh_invulnerability_visual()
 
 func _refresh_invulnerability_visual() -> void:
-	if berserker_skill5_active:
-		modulate.a = 1.0
-		if hero_sprite != null:
-			hero_sprite.visible = true
-		return
 	if is_dying or invulnerability_timer <= 0.0:
 		modulate.a = 1.0
 		return
@@ -9539,57 +9179,52 @@ func _draw() -> void:
 			if index < displayed_cells:
 				draw_rect(Rect2(x, -79.0, cell_width, 8.0), Color(1.0, 0.77, 0.16), true)
 	elif hero_archetype == "berserker_madness":
-		if not berserker_skill5_hide_hud:
-			var madness_max: float = maxf(
-				float(berserker_config.get("gauge_max", 100.0)),
-				1.0
-			)
-			var madness_ratio: float = clampf(
-				ultimate_charge / madness_max,
-				0.0,
-				1.0
-			)
-			draw_rect(
-				Rect2(-bar_width / 2.0, -79.0, bar_width, 8.0),
-				Color(0.12, 0.12, 0.14),
-				true
-			)
-			draw_rect(
-				Rect2(
-					-bar_width / 2.0,
-					-79.0,
-					bar_width * madness_ratio,
-					8.0
-				),
-				Color(1.0, 0.30, 0.08),
-				true
-			)
-	else:
-		var ultimate_max := maxf(float(ultimate_config.get("charge_max", 100.0)), 1.0)
-		var ultimate_ratio := clampf(ultimate_charge / ultimate_max, 0.0, 1.0)
-		draw_rect(Rect2(-bar_width / 2.0, -79.0, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
-		draw_rect(Rect2(-bar_width / 2.0, -79.0, bar_width * ultimate_ratio, 8.0), Color(1.0, 0.77, 0.16), true)
-
-	if not (
-		hero_archetype == "berserker_madness"
-		and berserker_skill5_hide_hud
-	):
-		var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
+		var madness_max: float = maxf(
+			float(berserker_config.get("gauge_max", 100.0)),
+			1.0
+		)
+		var madness_ratio: float = clampf(
+			ultimate_charge / madness_max,
+			0.0,
+			1.0
+		)
 		draw_rect(
-			Rect2(-bar_width / 2.0, -64.0, bar_width, 10.0),
+			Rect2(-bar_width / 2.0, -79.0, bar_width, 8.0),
 			Color(0.12, 0.12, 0.14),
 			true
 		)
 		draw_rect(
 			Rect2(
 				-bar_width / 2.0,
-				-64.0,
-				bar_width * hp_ratio,
-				10.0
+				-79.0,
+				bar_width * madness_ratio,
+				8.0
 			),
-			Color(0.95, 0.38, 0.32),
+			Color(1.0, 0.30, 0.08),
 			true
 		)
+	else:
+		var ultimate_max := maxf(float(ultimate_config.get("charge_max", 100.0)), 1.0)
+		var ultimate_ratio := clampf(ultimate_charge / ultimate_max, 0.0, 1.0)
+		draw_rect(Rect2(-bar_width / 2.0, -79.0, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
+		draw_rect(Rect2(-bar_width / 2.0, -79.0, bar_width * ultimate_ratio, 8.0), Color(1.0, 0.77, 0.16), true)
+
+	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
+	draw_rect(
+		Rect2(-bar_width / 2.0, -64.0, bar_width, 10.0),
+		Color(0.12, 0.12, 0.14),
+		true
+	)
+	draw_rect(
+		Rect2(
+			-bar_width / 2.0,
+			-64.0,
+			bar_width * hp_ratio,
+			10.0
+		),
+		Color(0.95, 0.38, 0.32),
+		true
+	)
 
 	if shield_max_hp > 0.0 and shield_hp > 0.0:
 		var shield_ratio := clampf(
