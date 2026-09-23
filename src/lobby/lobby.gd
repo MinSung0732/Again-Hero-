@@ -2047,15 +2047,18 @@ func _load_texture(path: String) -> Texture2D:
 	if path.is_empty():
 		return null
 
-	if ResourceLoader.exists(path):
-		var resource = load(path)
-		if resource is Texture2D:
-			return resource
-
+	# Lobby portraits are loaded only a handful of times and then cached.
+	# Prefer the source image so a fresh git pull cannot show a stale
+	# .godot/imported texture from another machine/project state.
 	if FileAccess.file_exists(path):
 		var image := Image.new()
 		if image.load(path) == OK:
 			return ImageTexture.create_from_image(image)
+
+	if ResourceLoader.exists(path):
+		var resource = load(path)
+		if resource is Texture2D:
+			return resource
 
 	return null
 
