@@ -30,6 +30,8 @@ var hero: Node2D
 var attack_timer: float = 0.0
 var hit_flash_timer: float = 0.0
 var dying: bool = false
+var visual_moving_state: int = -1
+var visual_facing_sign: int = 0
 var special_augment_configs: Dictionary = {}
 
 func _ready() -> void:
@@ -60,11 +62,10 @@ func _physics_process(delta: float) -> void:
 		hero = get_tree().get_first_node_in_group("hero") as Node2D
 		if not is_instance_valid(hero):
 			velocity = Vector2.ZERO
-			_visual_call(&"play_locomotion", [false])
+			_update_visual_motion(direction_to_hero.x, false)
 			return
 
 	var direction_to_hero := global_position.direction_to(hero.global_position)
-	_visual_call(&"set_facing_direction", [direction_to_hero.x])
 
 	var distance := global_position.distance_to(hero.global_position)
 	if distance > attack_range:
@@ -74,7 +75,7 @@ func _physics_process(delta: float) -> void:
 		if int(get_meta("archmage_root_until", 0)) > Time.get_ticks_msec():
 			external_slow = 0.0
 		velocity = direction_to_hero * move_speed * external_slow
-		_visual_call(&"play_locomotion", [true])
+		_update_visual_motion(direction_to_hero.x, true)
 		if distance > FAR_NAV_DISTANCE:
 			global_position += velocity * delta
 		else:
@@ -87,6 +88,23 @@ func _physics_process(delta: float) -> void:
 		attack_timer = attack_cooldown
 		_visual_call(&"play_attack")
 		_begin_projectile_attack(direction_to_hero)
+
+func _update_visual_motion(direction_x: float, moving: bool) -> void:
+	var facing_sign := 0
+	if direction_x > 0.01:
+		facing_sign = 1
+	elif direction_x < -0.01:
+		facing_sign = -1
+
+	if facing_sign != 0 and facing_sign != visual_facing_sign:
+		visual_facing_sign = facing_sign
+		_visual_call(&"set_facing_direction", [direction_x])
+
+	var moving_state := 1 if moving else 0
+	if moving_state != visual_moving_state:
+		visual_moving_state = moving_state
+		_visual_call(&"play_locomotion", [moving])
+
 
 func configure_special_augments(configs: Dictionary) -> void:
 	special_augment_configs = configs.duplicate(true)
