@@ -6635,6 +6635,37 @@ func _berserker_emit_skill1_wave(
 		1
 	)
 
+	var back_direction: Vector2 = -direction
+	var blood_recoil_fx: AnimatedSprite2D = _spawn_archmage_fx(
+		"%s/effect2" % STAGE6_FRAME_DIR,
+		"blood_effect",
+		1,
+		10,
+		30.0,
+		false,
+		global_position + back_direction * 38.0,
+		Vector2(
+			0.84 * scale_multiplier,
+			0.84 * scale_multiplier
+		)
+	)
+	if is_instance_valid(blood_recoil_fx):
+		blood_recoil_fx.flip_h = back_direction.x < 0.0
+		blood_recoil_fx.rotation = (
+			back_direction.angle()
+			if back_direction.x >= 0.0
+			else back_direction.angle() - PI
+		)
+		blood_recoil_fx.modulate = Color(1.0, 0.72, 0.72, 0.95)
+		blood_recoil_fx.z_index = 7
+		var recoil_fade := blood_recoil_fx.create_tween()
+		recoil_fade.tween_property(
+			blood_recoil_fx,
+			"modulate:a",
+			0.0,
+			0.24
+		).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
 	var projectile_config: Dictionary = {
 		"hit_radius": half_width,
 		"visual_scale": 0.936 * scale_multiplier,
