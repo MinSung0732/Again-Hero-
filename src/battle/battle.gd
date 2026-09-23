@@ -88,7 +88,11 @@ const FULL_MODAL_PAUSE_DOMAINS := [
 ]
 
 var monsters_alive: int = 0
+const MONSTER_SPATIAL_CELL_SIZE := 256.0
+
 var active_monsters: Dictionary = {}
+var monster_spatial_grid: Dictionary = {}
+var monster_spatial_grid_physics_frame: int = -1
 var battle_over: bool = false
 var external_pause: bool = false
 
@@ -145,6 +149,99 @@ var permanent_research_levels: Dictionary = {}
 
 var allowed_monster_ids: Array = []
 var loadout_restriction_enabled: bool = false
+
+func _spatial_cell_for_position(world_position: Vector2) -> Vector2i:
+	return Vector2i(
+		floori(world_position.x / MONSTER_SPATIAL_CELL_SIZE),
+		floori(world_position.y / MONSTER_SPATIAL_CELL_SIZE)
+	)
+
+
+func _rebuild_monster_spatial_grid() -> void:
+	monster_spatial_grid.clear()
+	var stale_ids: Array = []
+
+	for raw_id in active_monsters.keys():
+		var node = active_monsters.get(raw_id)
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			stale_ids.append(raw_id)
+			continue
+
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var hp_value = monster.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+
+		var cell := _spatial_cell_for_position(monster.global_position)
+		if not monster_spatial_grid.has(cell):
+			monster_spatial_grid[cell] = []
+		var bucket: Array = monster_spatial_grid[cell]
+		bucket.append(monster)
+		monster_spatial_grid[cell] = bucket
+
+	for raw_id in stale_ids:
+		active_monsters.erase(raw_id)
+
+	monster_spatial_grid_physics_frame = Engine.get_physics_frames()
+
+
+func _ensure_monster_spatial_grid() -> void:
+	var physics_frame := Engine.get_physics_frames()
+	if monster_spatial_grid_physics_frame != physics_frame:
+		_rebuild_monster_spatial_grid()
+
+
+func query_monsters_near(origin: Vector2, radius: float) -> Array:
+	_ensure_monster_spatial_grid()
+
+	var safe_radius := maxf(radius, 0.0)
+	var min_cell := _spatial_cell_for_position(
+		origin - Vector2(safe_radius, safe_radius)
+	)
+	var max_cell := _spatial_cell_for_position(
+		origin + Vector2(safe_radius, safe_radius)
+	)
+
+	# One-cell padding prevents misses if a monster crossed a cell boundary
+	# after the grid snapshot earlier in the same physics frame.
+	min_cell -= Vector2i.ONE
+	max_cell += Vector2i.ONE
+
+	var result: Array = []
+	for cell_x in range(min_cell.x, max_cell.x + 1):
+		for cell_y in range(min_cell.y, max_cell.y + 1):
+			var cell := Vector2i(cell_x, cell_y)
+			var bucket = monster_spatial_grid.get(cell, [])
+			if typeof(bucket) != TYPE_ARRAY:
+				continue
+			for node in bucket:
+				if is_instance_valid(node) and not node.is_queued_for_deletion():
+					result.append(node)
+	return result
+
+
+func query_monsters_in_rect(world_rect: Rect2) -> Array:
+	_ensure_monster_spatial_grid()
+
+	var min_cell := _spatial_cell_for_position(world_rect.position)
+	var max_cell := _spatial_cell_for_position(world_rect.end)
+	min_cell -= Vector2i.ONE
+	max_cell += Vector2i.ONE
+
+	var result: Array = []
+	for cell_x in range(min_cell.x, max_cell.x + 1):
+		for cell_y in range(min_cell.y, max_cell.y + 1):
+			var cell := Vector2i(cell_x, cell_y)
+			var bucket = monster_spatial_grid.get(cell, [])
+			if typeof(bucket) != TYPE_ARRAY:
+				continue
+			for node in bucket:
+				if is_instance_valid(node) and not node.is_queued_for_deletion():
+					result.append(node)
+	return result
+
 
 func _ready() -> void:
 	queue_redraw()
@@ -230,6 +327,8 @@ func _process(delta: float) -> void:
 func _start_battle() -> void:
 	battle_over = false
 	active_monsters.clear()
+	monster_spatial_grid.clear()
+	monster_spatial_grid_physics_frame = -1
 	external_pause = false
 	flow_pause_manager.reset()
 	monsters_alive = 0
@@ -966,6 +1065,7 @@ func _spawn_monster(
 	var monster_instance_id := monster.get_instance_id()
 	monster_summon_costs[monster_instance_id] = summon_cost
 	active_monsters[monster_instance_id] = monster
+	monster_spatial_grid_physics_frame = -1
 	monsters_alive += 1
 	return monster
 
@@ -1153,6 +1253,7 @@ func _on_monster_died(monster: Node) -> void:
 	var original_cost: float = float(monster_summon_costs.get(instance_id, 0.0))
 	monster_summon_costs.erase(instance_id)
 	active_monsters.erase(instance_id)
+	monster_spatial_grid_physics_frame = -1
 
 	if death_refund_ratio > 0.0 and original_cost > 0.0:
 		command_power = minf(
