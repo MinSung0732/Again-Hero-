@@ -151,6 +151,7 @@ var gunner_ammo: int = 12
 var gunner_magazine_size: int = 12
 var gunner_reloading: bool = false
 var gunner_reload_timer: float = 0.0
+var gunner_reload_redraw_timer: float = 0.0
 var gunner_backstep_cooldown: float = 0.0
 var gunner_collision_ignore_timer: float = 0.0
 var gunner_saved_collision_mask: int = -1
@@ -370,6 +371,7 @@ func configure_profile(profile: Dictionary) -> void:
 	gunner_ammo = gunner_magazine_size
 	gunner_reloading = false
 	gunner_reload_timer = 0.0
+	gunner_reload_redraw_timer = 0.0
 	gunner_backstep_cooldown = 0.0
 	gunner_collision_ignore_timer = 0.0
 	gunner_saved_collision_mask = -1
@@ -705,7 +707,13 @@ func _physics_process_gunner(delta: float) -> void:
 
 	if gunner_reloading:
 		gunner_reload_timer = maxf(gunner_reload_timer - delta, 0.0)
-		queue_redraw()
+		gunner_reload_redraw_timer = maxf(
+			gunner_reload_redraw_timer - delta,
+			0.0
+		)
+		if gunner_reload_redraw_timer <= 0.0:
+			gunner_reload_redraw_timer = 0.08
+			queue_redraw()
 		if gunner_cylinder_decision_timer <= 0.0:
 			gunner_cylinder_decision_timer = 0.35
 			if _gunner_should_use_cylinder():
@@ -949,6 +957,7 @@ func _start_gunner_reload() -> void:
 	gunner_powder_consumed_stacks = 0
 	gunner_reloading = true
 	gunner_reload_timer = maxf(float(gunner_config.get("reload_seconds", 2.4)), 0.1)
+	gunner_reload_redraw_timer = 0.0
 	attack_timer = maxf(attack_timer, gunner_reload_timer)
 	queue_redraw()
 
@@ -956,6 +965,7 @@ func _start_gunner_reload() -> void:
 func _finish_gunner_reload() -> void:
 	gunner_reloading = false
 	gunner_reload_timer = 0.0
+	gunner_reload_redraw_timer = 0.0
 	gunner_ammo = gunner_magazine_size
 	attack_timer = 0.05
 	queue_redraw()
