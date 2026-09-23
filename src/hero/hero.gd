@@ -325,6 +325,9 @@ var heal_item_steering_direction: Vector2 = Vector2.ZERO
 var chest_target: Node2D
 var chest_retarget_timer: float = 0.0
 var chest_steering_direction: Vector2 = Vector2.ZERO
+var magnet_item_target: Node2D
+var magnet_item_retarget_timer: float = 0.0
+var magnet_item_steering_direction: Vector2 = Vector2.ZERO
 var exp_orb_target: Node2D
 var exp_orb_retarget_until_msec: int = 0
 
@@ -388,6 +391,9 @@ func configure_profile(profile: Dictionary) -> void:
 	chest_target = null
 	chest_retarget_timer = 0.0
 	chest_steering_direction = Vector2.ZERO
+	magnet_item_target = null
+	magnet_item_retarget_timer = 0.0
+	magnet_item_steering_direction = Vector2.ZERO
 	exp_orb_target = null
 	exp_orb_retarget_until_msec = 0
 	var profile_fighter_basic = profile.get("fighter_basic", {})
@@ -692,6 +698,7 @@ func _physics_process(delta: float) -> void:
 
 	_update_heal_item_goal(delta)
 	_update_chest_goal(delta)
+	_update_magnet_item_goal(delta)
 
 	if not is_instance_valid(target) or target.is_queued_for_deletion() or retarget_timer <= 0.0:
 		target = _find_nearest_monster()
@@ -706,6 +713,7 @@ func _physics_process(delta: float) -> void:
 	var move_direction := _choose_move_direction(target, distance)
 	move_direction = _apply_heal_item_steering(move_direction, delta)
 	move_direction = _apply_chest_steering(move_direction, delta)
+	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	if hero_archetype == "archmage_elementalist":
 		move_direction = _apply_archmage_boundary_steering(move_direction)
 	velocity = move_direction * move_speed * move_multiplier
@@ -766,6 +774,7 @@ func _physics_process_gunner(delta: float) -> void:
 
 	_update_heal_item_goal(delta)
 	_update_chest_goal(delta)
+	_update_magnet_item_goal(delta)
 	if not is_instance_valid(target) or target.is_queued_for_deletion() or retarget_timer <= 0.0:
 		target = _find_nearest_monster()
 		retarget_timer = 0.10
@@ -779,6 +788,7 @@ func _physics_process_gunner(delta: float) -> void:
 	var move_direction := _choose_move_direction(target, distance)
 	move_direction = _apply_heal_item_steering(move_direction, delta)
 	move_direction = _apply_chest_steering(move_direction, delta)
+	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	move_direction = _apply_gunner_boundary_steering(move_direction)
 	var gunner_speed_scale := 1.0 + (gunner_reload_move_speed_bonus if gunner_reloading else 0.0)
 	velocity = move_direction * move_speed * move_multiplier * gunner_speed_scale
@@ -1495,6 +1505,7 @@ func _physics_process_rogue(delta: float) -> void:
 
 	_update_heal_item_goal(delta)
 	_update_chest_goal(delta)
+	_update_magnet_item_goal(delta)
 
 	if (
 		not is_instance_valid(target)
@@ -1532,6 +1543,7 @@ func _physics_process_rogue(delta: float) -> void:
 	)
 	move_direction = _apply_heal_item_steering(move_direction, delta)
 	move_direction = _apply_chest_steering(move_direction, delta)
+	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	if move_direction.length_squared() > 0.01:
 		velocity = (
 			move_direction
@@ -2896,6 +2908,22 @@ func _move_without_monsters() -> void:
 			_clamp_to_battlefield()
 			return
 
+	if is_instance_valid(magnet_item_target):
+		var magnet_direction := _apply_magnet_item_steering(
+			Vector2.ZERO,
+			0.016
+		)
+		if magnet_direction.length_squared() > 0.01:
+			velocity = (
+				magnet_direction
+				* move_speed
+				* 0.82
+				* move_multiplier
+			)
+			move_and_slide()
+			_clamp_to_battlefield()
+			return
+
 	if is_instance_valid(chest_target):
 		var chest_direction := _apply_chest_steering(Vector2.ZERO, 0.016)
 		if chest_direction.length_squared() > 0.01:
@@ -3274,6 +3302,120 @@ func _apply_chest_steering(base_direction: Vector2, delta: float) -> Vector2:
 			clampf(delta * 2.4, 0.0, 1.0)
 		).normalized()
 	return chest_steering_direction
+
+
+func _is_world_position_visible(world_position: Vector2) -> bool:
+	if not is_instance_valid(follow_camera):
+		return false
+	var viewport_size := get_viewport_rect().size
+	var zoom := follow_camera.zoom
+	var half_width := viewport_size.x * 0.5 / maxf(zoom.x, 0.01)
+	var half_height := viewport_size.y * 0.5 / maxf(zoom.y, 0.01)
+	var offset := world_position - global_position
+	var margin := 52.0
+	return (
+		absf(offset.x) <= half_width + margin
+		and absf(offset.y) <= half_height + margin
+	)
+
+
+func _update_magnet_item_goal(delta: float) -> void:
+	magnet_item_retarget_timer = maxf(
+		magnet_item_retarget_timer - delta,
+		0.0
+	)
+	if (
+		is_instance_valid(magnet_item_target)
+		and not magnet_item_target.is_queued_for_deletion()
+		and _is_world_position_visible(
+			magnet_item_target.global_position
+		)
+		and magnet_item_retarget_timer > 0.0
+	):
+		return
+
+	magnet_item_target = null
+	magnet_item_retarget_timer = 0.30
+	var best_distance := INF
+	for node in _get_aux_group_nodes_cached(&"magnet_items"):
+		if (
+			not is_instance_valid(node)
+			or node.is_queued_for_deletion()
+		):
+			continue
+		var item := node as Node2D
+		if (
+			item == null
+			or not _is_world_position_visible(item.global_position)
+		):
+			continue
+		var distance_sq := global_position.distance_squared_to(
+			item.global_position
+		)
+		if distance_sq < best_distance:
+			best_distance = distance_sq
+			magnet_item_target = item
+
+	if not is_instance_valid(magnet_item_target):
+		magnet_item_steering_direction = Vector2.ZERO
+
+
+func _apply_magnet_item_steering(
+	base_direction: Vector2,
+	delta: float
+) -> Vector2:
+	if (
+		not is_instance_valid(magnet_item_target)
+		or magnet_item_target.is_queued_for_deletion()
+		or not _is_world_position_visible(
+			magnet_item_target.global_position
+		)
+	):
+		magnet_item_target = null
+		magnet_item_steering_direction = Vector2.ZERO
+		return (
+			base_direction.normalized()
+			if base_direction.length_squared() > 0.01
+			else Vector2.ZERO
+		)
+
+	var distance := global_position.distance_to(
+		magnet_item_target.global_position
+	)
+	var item_direction := global_position.direction_to(
+		magnet_item_target.global_position
+	)
+
+	# Visible magnets are tempting, but combat movement remains dominant.
+	var magnet_weight := lerpf(
+		0.24,
+		0.38,
+		clampf(1.0 - distance / 720.0, 0.0, 1.0)
+	)
+	var local_danger := _estimate_monster_danger(
+		global_position,
+		210.0
+	)
+	magnet_weight /= 1.0 + local_danger * 0.22
+
+	var desired := (
+		base_direction
+		+ item_direction * magnet_weight
+	)
+	if desired.length_squared() <= 0.01:
+		desired = item_direction
+	desired = desired.normalized()
+
+	if magnet_item_steering_direction.length_squared() <= 0.01:
+		magnet_item_steering_direction = desired
+	else:
+		magnet_item_steering_direction = (
+			magnet_item_steering_direction.lerp(
+				desired,
+				clampf(delta * 3.2, 0.0, 1.0)
+			).normalized()
+		)
+	return magnet_item_steering_direction
 
 
 func _damage_treasure_chests(origin: Vector2, radius: float, damage: int) -> void:
@@ -5708,6 +5850,7 @@ func _physics_process_fighter(delta: float) -> void:
 
 	_update_heal_item_goal(delta)
 	_update_chest_goal(delta)
+	_update_magnet_item_goal(delta)
 
 	if (
 		not is_instance_valid(target)
@@ -5739,6 +5882,7 @@ func _physics_process_fighter(delta: float) -> void:
 	)
 	move_direction = _apply_heal_item_steering(move_direction, delta)
 	move_direction = _apply_chest_steering(move_direction, delta)
+	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	if move_direction.length_squared() > 0.01:
 		velocity = (
 			move_direction
@@ -6018,6 +6162,23 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 				heal_direction
 				* move_speed
 				* 0.90
+				* move_multiplier
+				* speed_scale
+			)
+			move_and_slide()
+			_clamp_to_battlefield()
+			return
+
+	if is_instance_valid(magnet_item_target):
+		var magnet_direction := _apply_magnet_item_steering(
+			Vector2.ZERO,
+			0.016
+		)
+		if magnet_direction.length_squared() > 0.01:
+			velocity = (
+				magnet_direction
+				* move_speed
+				* 0.82
 				* move_multiplier
 				* speed_scale
 			)
