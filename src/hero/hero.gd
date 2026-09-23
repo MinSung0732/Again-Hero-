@@ -2434,9 +2434,23 @@ func _apply_profile_visual() -> void:
 		_add_named_sequence_animation(
 			berserker_frames, "move", berserker_dir, "walk", 6, 9.0, true
 		)
-		_add_named_sequence_animation(
-			berserker_frames, "attack", berserker_dir, "atk", 2, 10.0, false
-		)
+		berserker_frames.add_animation("attack")
+		berserker_frames.set_animation_speed("attack", 10.0)
+		berserker_frames.set_animation_loop("attack", false)
+		for attack_frame_index in [1, 5, 2, 6]:
+			var attack_texture := _load_stage1_texture(
+				"%s/atk_%02d.png" % [
+					berserker_dir,
+					attack_frame_index,
+				]
+			)
+			if attack_texture == null:
+				push_warning(
+					"Stage 6 attack frame load failed: %s/atk_%02d.png"
+					% [berserker_dir, attack_frame_index]
+				)
+				return
+			berserker_frames.add_frame("attack", attack_texture)
 		_add_named_sequence_animation(
 			berserker_frames, "hit", berserker_dir, "hit", 3, 13.0, false
 		)
