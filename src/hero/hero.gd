@@ -6063,9 +6063,6 @@ func _draw() -> void:
 	if level_flash_timer > 0.0:
 		draw_circle(Vector2.ZERO, 58.0, Color(1.0, 0.86, 0.25, 0.35), false, 7.0)
 
-	if slow_timer > 0.0:
-		draw_circle(Vector2.ZERO, 52.0, Color(0.72, 0.38, 0.92, 0.75), false, 4.0)
-
 	if not hero_sprite.visible:
 		var body_color := Color(0.35, 0.68, 1.0)
 		if hit_flash_timer > 0.0:
