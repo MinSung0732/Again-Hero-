@@ -9,6 +9,9 @@ const BOMBRAT_EFFECT_FRAME_DIR := "res://assets/art/monsters/bombrat/frames/effe
 const BOMBRAT_EFFECT_FRAME_COUNT := 8
 const BOMBRAT_EFFECT_TARGET_DIAMETER := 300.0
 
+static var _default_visual_frames_cache: SpriteFrames
+static var _explosion_frames_cache: SpriteFrames
+
 const FAR_NAV_DISTANCE := 900.0
 
 signal died
@@ -233,43 +236,49 @@ func _apply_bomb_rat_sequence_visual(profile: Dictionary) -> bool:
 	if dir_path.is_empty() or typeof(animations) != TYPE_DICTIONARY:
 		return false
 
-	var frames := SpriteFrames.new()
-	if frames.has_animation(&"default"):
-		frames.remove_animation(&"default")
+	var use_default_cache := dir_path == BOMBRAT_FRAME_DIR
+	var frames := _default_visual_frames_cache if use_default_cache else null
+	if frames == null:
+		frames = SpriteFrames.new()
+		if frames.has_animation(&"default"):
+			frames.remove_animation(&"default")
 
-	for raw_name in animations.keys():
-		var animation_name := StringName(String(raw_name))
-		var config: Dictionary = animations[raw_name]
-		var start_index := int(config.get("start", 1))
-		var count := int(config.get("count", 0))
-		if count <= 0:
-			continue
+		for raw_name in animations.keys():
+			var animation_name := StringName(String(raw_name))
+			var config: Dictionary = animations[raw_name]
+			var start_index := int(config.get("start", 1))
+			var count := int(config.get("count", 0))
+			if count <= 0:
+				continue
 
-		var textures: Array[Texture2D] = []
-		for offset in range(count):
-			var texture := _load_bomb_rat_texture(
-				"%s/frame_%02d.png" % [
-					dir_path,
-					start_index + offset,
-				]
+			var textures: Array[Texture2D] = []
+			for offset in range(count):
+				var texture := _load_bomb_rat_texture(
+					"%s/frame_%02d.png" % [
+						dir_path,
+						start_index + offset,
+					]
+				)
+				if texture != null:
+					textures.append(texture)
+
+			if textures.is_empty():
+				continue
+
+			frames.add_animation(animation_name)
+			frames.set_animation_speed(
+				animation_name,
+				float(config.get("fps", 10.0))
 			)
-			if texture != null:
-				textures.append(texture)
+			frames.set_animation_loop(
+				animation_name,
+				bool(config.get("loop", false))
+			)
+			for texture in textures:
+				frames.add_frame(animation_name, texture)
 
-		if textures.is_empty():
-			continue
-
-		frames.add_animation(animation_name)
-		frames.set_animation_speed(
-			animation_name,
-			float(config.get("fps", 10.0))
-		)
-		frames.set_animation_loop(
-			animation_name,
-			bool(config.get("loop", false))
-		)
-		for texture in textures:
-			frames.add_frame(animation_name, texture)
+		if use_default_cache:
+			_default_visual_frames_cache = frames
 
 	if not frames.has_animation(&"idle"):
 		return false
@@ -326,37 +335,45 @@ func _apply_bomb_rat_explosion_visual() -> void:
 	explosion_effect.rotation = 0.0
 	explosion_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
-	var frames := SpriteFrames.new()
-	if frames.has_animation(&"default"):
-		frames.remove_animation(&"default")
+	var frames := _explosion_frames_cache
+	if frames == null:
+		frames = SpriteFrames.new()
+		if frames.has_animation(&"default"):
+			frames.remove_animation(&"default")
 
-	frames.add_animation(&"explode")
-	frames.set_animation_speed(&"explode", 14.0)
-	frames.set_animation_loop(&"explode", false)
+		frames.add_animation(&"explode")
+		frames.set_animation_speed(&"explode", 14.0)
+		frames.set_animation_loop(&"explode", false)
 
-	var first_texture: Texture2D = null
-	for frame_index in range(1, BOMBRAT_EFFECT_FRAME_COUNT + 1):
-		var path := "%s/frame_%02d.png" % [
-			BOMBRAT_EFFECT_FRAME_DIR,
-			frame_index,
-		]
-		var texture := _load_bomb_rat_texture(path)
-		if texture == null:
-			continue
+		var first_texture: Texture2D = null
+		for frame_index in range(1, BOMBRAT_EFFECT_FRAME_COUNT + 1):
+			var path := "%s/frame_%02d.png" % [
+				BOMBRAT_EFFECT_FRAME_DIR,
+				frame_index,
+			]
+			var texture := _load_bomb_rat_texture(path)
+			if texture == null:
+				continue
+			if first_texture == null:
+				first_texture = texture
+			frames.add_frame(&"explode", texture)
+
 		if first_texture == null:
-			first_texture = texture
-		frames.add_frame(&"explode", texture)
+			push_warning(
+				"Bomb Rat explosion frames not found: %s"
+				% BOMBRAT_EFFECT_FRAME_DIR
+			)
+			return
 
-	if first_texture == null:
-		push_warning(
-			"Bomb Rat explosion frames not found: %s"
-			% BOMBRAT_EFFECT_FRAME_DIR
+		var source_width := maxf(float(first_texture.get_width()), 1.0)
+		frames.set_meta(
+			"visual_scale",
+			BOMBRAT_EFFECT_TARGET_DIAMETER / source_width
 		)
-		return
+		_explosion_frames_cache = frames
 
 	explosion_effect.sprite_frames = frames
-	var source_width := maxf(float(first_texture.get_width()), 1.0)
-	var uniform_scale := BOMBRAT_EFFECT_TARGET_DIAMETER / source_width
+	var uniform_scale := float(frames.get_meta("visual_scale", 1.0))
 	explosion_effect.scale = Vector2(uniform_scale, uniform_scale)
 	explosion_effect.speed_scale = 1.0
 
