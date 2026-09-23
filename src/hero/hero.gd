@@ -6637,7 +6637,7 @@ func _berserker_emit_skill1_wave(
 
 	var projectile_config: Dictionary = {
 		"hit_radius": half_width,
-		"visual_scale": 0.72 * scale_multiplier,
+		"visual_scale": 0.936 * scale_multiplier,
 	}
 	var projectile := _acquire_projectile(
 		ARCHMAGE_SKILL_PROJECTILE_SCENE,
