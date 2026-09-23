@@ -62,6 +62,7 @@ const CHEST_EXP_BUNDLE_MAX := 20
 const CHEST_EXP_VALUE_MIN := 10
 const CHEST_EXP_VALUE_MAX := 30
 const MAX_EXP_ORB_POOL := 128
+const MAX_PROJECTILE_POOL_PER_TYPE := 96
 
 
 var hero: Node2D
@@ -95,6 +96,7 @@ var active_monsters: Dictionary = {}
 var monster_spatial_grid: Dictionary = {}
 var monster_spatial_grid_physics_frame: int = -1
 var exp_orb_pool: Array[Node2D] = []
+var projectile_pools: Dictionary = {}
 var battle_over: bool = false
 var external_pause: bool = false
 
@@ -1442,6 +1444,51 @@ func _spawn_exp_orb(
 
 	orb.global_position = drop_position
 	orb.call("setup", exp_value, initial_velocity)
+
+
+func acquire_projectile(scene: PackedScene, pool_key: String) -> Node:
+	if scene == null or pool_key.is_empty():
+		return null
+
+	var pool = projectile_pools.get(pool_key, [])
+	if typeof(pool) != TYPE_ARRAY:
+		pool = []
+
+	var projectile: Node = null
+	while not pool.is_empty() and projectile == null:
+		var pooled = pool.pop_back()
+		if is_instance_valid(pooled) and not pooled.is_queued_for_deletion():
+			projectile = pooled
+	projectile_pools[pool_key] = pool
+
+	if projectile == null:
+		projectile = scene.instantiate()
+		add_child(projectile)
+
+	return projectile
+
+
+func recycle_projectile(projectile: Node, pool_key: String) -> void:
+	if (
+		not is_instance_valid(projectile)
+		or projectile.is_queued_for_deletion()
+		or pool_key.is_empty()
+	):
+		return
+
+	if projectile.has_method("deactivate_for_pool"):
+		projectile.call("deactivate_for_pool")
+
+	var pool = projectile_pools.get(pool_key, [])
+	if typeof(pool) != TYPE_ARRAY:
+		pool = []
+
+	if pool.size() >= MAX_PROJECTILE_POOL_PER_TYPE:
+		projectile.queue_free()
+		return
+
+	pool.append(projectile)
+	projectile_pools[pool_key] = pool
 
 
 func recycle_exp_orb(orb: Node) -> void:
