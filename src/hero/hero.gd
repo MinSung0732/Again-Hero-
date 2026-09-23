@@ -183,6 +183,8 @@ var archmage_element_orbs: Dictionary = {}
 var archmage_orbit_sprites: Dictionary = {}
 var archmage_orbit_angle: float = 0.0
 var archmage_chain_dagger_active: bool = false
+var archmage_chain_dagger_active_count: int = 0
+var archmage_chain_multithrow_stacks: int = 0
 var archmage_casting_sequence: bool = false
 var archmage_casting_sequence_count: int = 0
 var archmage_multicast_stacks: int = 0
@@ -463,6 +465,8 @@ func configure_profile(profile: Dictionary) -> void:
 	archmage_orbit_sprites.clear()
 	archmage_orbit_angle = 0.0
 	archmage_chain_dagger_active = false
+	archmage_chain_dagger_active_count = 0
+	archmage_chain_multithrow_stacks = 0
 	archmage_casting_sequence = false
 	archmage_casting_sequence_count = 0
 	archmage_multicast_stacks = 0
@@ -4052,29 +4056,150 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 	_end_archmage_casting_sequence()
 
 
+func _get_archmage_chain_dagger_targets(
+	max_count: int,
+	search_radius: float
+) -> Array[Node2D]:
+	var candidates: Array[Node2D] = []
+	var radius_sq := search_radius * search_radius
+	for node in _get_monster_nodes_near(global_position, search_radius):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if (
+			monster == null
+			or not monster.is_in_group("monsters")
+			or global_position.distance_squared_to(monster.global_position)
+			> radius_sq
+		):
+			continue
+		candidates.append(monster)
+
+	if candidates.is_empty():
+		return []
+
+	var result: Array[Node2D] = []
+	if (
+		is_instance_valid(target)
+		and target.is_in_group("monsters")
+		and global_position.distance_squared_to(target.global_position)
+		<= radius_sq
+	):
+		result.append(target)
+
+	while result.size() < max_count and result.size() < candidates.size():
+		var best: Node2D = null
+		var best_score := -INF
+		for candidate in candidates:
+			if candidate in result:
+				continue
+			var direction := global_position.direction_to(
+				candidate.global_position
+			)
+			if direction.length_squared() <= 0.001:
+				continue
+
+			var min_angle := PI
+			if not result.is_empty():
+				for chosen in result:
+					var chosen_direction := global_position.direction_to(
+						chosen.global_position
+					)
+					min_angle = minf(
+						min_angle,
+						absf(direction.angle_to(chosen_direction))
+					)
+
+			var distance_ratio := clampf(
+				global_position.distance_to(candidate.global_position)
+				/ maxf(search_radius, 1.0),
+				0.0,
+				1.0
+			)
+			# Prefer a wide fan first, then slightly favor nearer targets.
+			var score := min_angle * 3.0 + (1.0 - distance_ratio) * 0.35
+			if score > best_score:
+				best_score = score
+				best = candidate
+
+		if not is_instance_valid(best):
+			break
+		result.append(best)
+
+	if result.is_empty():
+		result.append(candidates[0])
+	return result
+
+
 func _cast_archmage_chain_dagger(config: Dictionary, empowered: bool) -> void:
-	var current_target := target
-	if not is_instance_valid(current_target):
-		current_target = _find_nearest_monster()
-	if not is_instance_valid(current_target):
-		return
-	archmage_chain_dagger_active = true
-	var direction := global_position.direction_to(current_target.global_position)
-	var projectile := ARCHMAGE_SKILL_PROJECTILE_SCENE.instantiate() as Area2D
-	get_parent().add_child(projectile)
-	projectile.add_to_group("archmage_chain_dagger_projectile")
-	projectile.global_position = global_position + direction * 58.0
-	projectile.call(
-		"setup", "chain_dagger", direction,
-		maxi(1, int(round(float(attack_damage) * float(config.get("damage_ratio", 1.0))))),
-		float(config.get("projectile_speed", 700.0)),
+	var projectile_range := maxf(
 		float(config.get("projectile_range", 900.0)),
-		config, self, empowered, current_target
+		1.0
 	)
+	var projectile_count := 1 + archmage_chain_multithrow_stacks
+	var targets := _get_archmage_chain_dagger_targets(
+		projectile_count,
+		projectile_range
+	)
+	if targets.is_empty():
+		return
+
+	archmage_chain_dagger_active_count += targets.size()
+	archmage_chain_dagger_active = (
+		archmage_chain_dagger_active_count > 0
+	)
+
+	for current_target in targets:
+		if not is_instance_valid(current_target):
+			notify_archmage_chain_dagger_finished()
+			continue
+		var direction := global_position.direction_to(
+			current_target.global_position
+		)
+		if direction.length_squared() <= 0.001:
+			direction = Vector2.RIGHT
+
+		var projectile := (
+			ARCHMAGE_SKILL_PROJECTILE_SCENE.instantiate()
+			as Area2D
+		)
+		get_parent().add_child(projectile)
+		projectile.add_to_group(
+			"archmage_chain_dagger_projectile"
+		)
+		projectile.global_position = (
+			global_position + direction.normalized() * 58.0
+		)
+		projectile.call(
+			"setup",
+			"chain_dagger",
+			direction,
+			maxi(
+				1,
+				int(
+					round(
+						float(attack_damage)
+						* float(config.get("damage_ratio", 1.0))
+					)
+				)
+			),
+			float(config.get("projectile_speed", 700.0)),
+			projectile_range,
+			config,
+			self,
+			empowered,
+			current_target
+		)
 
 
 func notify_archmage_chain_dagger_finished() -> void:
-	archmage_chain_dagger_active = false
+	archmage_chain_dagger_active_count = maxi(
+		archmage_chain_dagger_active_count - 1,
+		0
+	)
+	archmage_chain_dagger_active = (
+		archmage_chain_dagger_active_count > 0
+	)
 
 
 func _archmage_is_surrounded_for_blink() -> bool:
@@ -5795,6 +5920,28 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 				archmage_element_cycle_stacks + 1,
 				3
 			)
+
+		"archmage_chain_multithrow":
+			archmage_chain_multithrow_stacks = mini(
+				archmage_chain_multithrow_stacks + 1,
+				3
+			)
+
+		"archmage_chain_persistence":
+			var chain_config: Dictionary = archmage_skill_config.get(
+				"chain_dagger",
+				{}
+			)
+			if not chain_config.is_empty():
+				chain_config["chain_duration_bonus"] = minf(
+					float(
+						chain_config.get(
+							"chain_duration_bonus",
+							0.0
+						)
+					) + 0.35,
+					1.05
+				)
 
 		"heal":
 			current_hp = mini(
