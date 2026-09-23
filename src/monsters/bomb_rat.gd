@@ -9,6 +9,8 @@ const BOMBRAT_EFFECT_FRAME_DIR := "res://assets/art/monsters/bombrat/frames/effe
 const BOMBRAT_EFFECT_FRAME_COUNT := 8
 const BOMBRAT_EFFECT_TARGET_DIAMETER := 300.0
 
+const FAR_NAV_DISTANCE := 900.0
+
 signal died
 
 @export var monster_type: String = "bomb_rat"
@@ -92,7 +94,10 @@ func _physics_process(delta: float) -> void:
 			external_slow = 0.0
 		velocity = direction_to_hero * move_speed * external_slow
 		_play_locomotion(true)
-		move_and_slide()
+		if distance > FAR_NAV_DISTANCE:
+			global_position += velocity * delta
+		else:
+			move_and_slide()
 	else:
 		_begin_self_destruct()
 
