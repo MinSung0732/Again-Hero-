@@ -27,6 +27,11 @@ var hit_flash_timer: float = 0.0
 var dying: bool = false
 var visual_moving_state: int = -1
 var visual_facing_sign: int = 0
+var far_ai_tick_timer: float = 0.0
+var cached_direction_to_hero: Vector2 = Vector2.ZERO
+var combat_bonus_refresh_timer: float = 0.0
+var combat_bonus_cache: Dictionary = {}
+var cached_berserk_visual_active: bool = false
 var special_augment_configs: Dictionary = {}
 var rage_stacks: int = 0
 var last_charge_triggered: bool = false
@@ -34,6 +39,8 @@ var last_charge_timer: float = 0.0
 
 func _ready() -> void:
 	add_to_group("monsters")
+	far_ai_tick_timer = randf_range(0.0, 0.16)
+	combat_bonus_refresh_timer = randf_range(0.0, 0.10)
 	current_hp = max_hp
 	hero = get_tree().get_first_node_in_group("hero") as Node2D
 	_attach_status_effect_visual("slow")
@@ -54,8 +61,17 @@ func _physics_process(delta: float) -> void:
 	attack_timer = maxf(attack_timer - delta, 0.0)
 	last_charge_timer = maxf(last_charge_timer - delta, 0.0)
 
-	var combat_bonuses := _get_combat_bonuses()
-	set_meta("orc_berserk_visual_active", bool(combat_bonuses.get("berserk_active", false)))
+	combat_bonus_refresh_timer = maxf(combat_bonus_refresh_timer - delta, 0.0)
+	if combat_bonus_refresh_timer <= 0.0 or combat_bonus_cache.is_empty():
+		combat_bonus_refresh_timer = 0.10
+		combat_bonus_cache = _get_combat_bonuses()
+		var berserk_active := bool(
+			combat_bonus_cache.get("berserk_active", false)
+		)
+		if berserk_active != cached_berserk_visual_active:
+			cached_berserk_visual_active = berserk_active
+			set_meta("orc_berserk_visual_active", berserk_active)
+	var combat_bonuses := combat_bonus_cache
 	var external_slow := 1.0
 	if int(get_meta("gunner_slow_until", 0)) > Time.get_ticks_msec():
 		external_slow = clampf(float(get_meta("gunner_slow_multiplier", 1.0)), 0.1, 1.0)
@@ -80,17 +96,31 @@ func _physics_process(delta: float) -> void:
 			_update_visual_motion(0.0, false)
 			return
 
-	var direction_to_hero := global_position.direction_to(hero.global_position)
+	var offset_to_hero := hero.global_position - global_position
+	var distance_sq := offset_to_hero.length_squared()
+	var far_nav_sq := FAR_NAV_DISTANCE * FAR_NAV_DISTANCE
+	var attack_range_sq := attack_range * attack_range
+	far_ai_tick_timer = maxf(far_ai_tick_timer - delta, 0.0)
 
-	var distance := global_position.distance_to(hero.global_position)
-	if distance > attack_range:
+	if distance_sq > attack_range_sq:
+		var direction_to_hero := cached_direction_to_hero
+		if distance_sq <= far_nav_sq or far_ai_tick_timer <= 0.0:
+			direction_to_hero = offset_to_hero.normalized()
+			cached_direction_to_hero = direction_to_hero
+			far_ai_tick_timer = randf_range(0.10, 0.16)
 		velocity = direction_to_hero * effective_move_speed
 		_update_visual_motion(direction_to_hero.x, true)
-		if distance > FAR_NAV_DISTANCE:
+		if distance_sq > far_nav_sq:
 			global_position += velocity * delta
 		else:
 			move_and_slide()
 	else:
+		var direction_to_hero := (
+			offset_to_hero.normalized()
+			if distance_sq > 0.001
+			else cached_direction_to_hero
+		)
+		cached_direction_to_hero = direction_to_hero
 		velocity = Vector2.ZERO
 		_update_visual_motion(direction_to_hero.x, false)
 		if attack_timer <= 0.0:
