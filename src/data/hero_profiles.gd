@@ -500,7 +500,7 @@ const PROFILES = {
 		"level_growth": {
 			"base_attack_growth_ratio": 0.015,
 			"attack_milestone_interval": 10,
-			"attack_milestone_bonus": 0.04,
+			"attack_milestone_bonus": 0.035,
 		},
 		"attack_range": 145.0,
 		"attack_cooldown": 1.10,
@@ -586,6 +586,10 @@ const PROFILES = {
 			"slow_resistance",
 			"exp_training",
 			"exp_magnet",
+			"berserker_unconscious",
+			"berserker_different_dream",
+			"berserker_blood_art_eighth",
+			"berserker_double_edged_sword",
 		],
 	},
 }
