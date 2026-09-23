@@ -1072,7 +1072,7 @@ func _find_gunner_escape_direction() -> Vector2:
 	var repulsion := Vector2.ZERO
 	var monster_positions: Array[Vector2] = []
 
-	for node in _get_monster_nodes_near(global_position, max_range):
+	for node in _get_monster_nodes_near(global_position, threat_radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -4029,7 +4029,7 @@ func _should_cast_shield() -> bool:
 		return false
 
 	var nearby := 0
-	for node in _get_monster_nodes_near(global_position, radius):
+	for node in _get_monster_nodes_near(global_position, danger_radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
