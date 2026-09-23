@@ -24,6 +24,7 @@ var _one_shot_locked: bool = false
 var _death_playing: bool = false
 var _desired_locomotion: StringName = &"idle"
 var _flash_timer: float = 0.0
+var _lod_suspended: bool = false
 
 func _ready() -> void:
 	animation_finished.connect(_on_animation_finished)
@@ -47,6 +48,8 @@ func is_visual_ready() -> bool:
 
 func play_locomotion(moving: bool) -> void:
 	_desired_locomotion = &"move" if moving else &"idle"
+	if _lod_suspended:
+		return
 	if not _visual_ready or _one_shot_locked or _death_playing:
 		return
 
@@ -55,12 +58,12 @@ func play_locomotion(moving: bool) -> void:
 			play(_desired_locomotion)
 
 func play_attack() -> void:
-	if _death_playing:
+	if _death_playing or _lod_suspended:
 		return
 	_play_one_shot(&"attack")
 
 func play_hit() -> void:
-	if _death_playing:
+	if _death_playing or _lod_suspended:
 		return
 
 	if _visual_ready and sprite_frames.has_animation(&"hit"):
@@ -75,6 +78,7 @@ func play_death() -> void:
 	if _death_playing:
 		return
 
+	set_lod_suspended(false)
 	_death_playing = true
 	_one_shot_locked = true
 	self_modulate = Color.WHITE
@@ -83,6 +87,22 @@ func play_death() -> void:
 		play(&"death")
 	else:
 		call_deferred("_emit_death_finished")
+
+func set_lod_suspended(suspended: bool) -> void:
+	if suspended == _lod_suspended:
+		return
+
+	_lod_suspended = suspended
+	if suspended:
+		if _visual_ready and is_playing():
+			pause()
+		return
+
+	if not _visual_ready or _death_playing or _one_shot_locked:
+		return
+	if sprite_frames.has_animation(_desired_locomotion):
+		play(_desired_locomotion)
+
 
 func set_facing_direction(horizontal_direction: float) -> void:
 	if absf(horizontal_direction) < 0.01:
