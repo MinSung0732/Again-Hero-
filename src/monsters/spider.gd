@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
+
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const SPIDER_PROJECTILE_SCENE := preload("res://src/monsters/SpiderProjectile.tscn")
 
@@ -32,7 +34,14 @@ func _ready() -> void:
 	add_to_group("monsters")
 	current_hp = max_hp
 	hero = get_tree().get_first_node_in_group("hero") as Node2D
+	_attach_status_effect_visual("slow")
 	queue_redraw()
+
+func _attach_status_effect_visual(effect_type: String) -> void:
+	var effect := COMBAT_STATUS_EFFECT_VISUAL.new()
+	add_child(effect)
+	effect.setup(self, effect_type)
+
 
 func _physics_process(delta: float) -> void:
 	if current_hp <= 0 or dying:
