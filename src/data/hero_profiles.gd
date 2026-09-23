@@ -160,6 +160,7 @@ const PROFILES = {
 				"spike_delay": 0.07,
 				"spike_radius": 70.0,
 				"damage_ratio": 1.40,
+				"branch_distance_ratio": 0.50,
 			},
 			"holy_power": {
 				"id": "archmage_holy_power",
