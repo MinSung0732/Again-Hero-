@@ -78,7 +78,7 @@ func _physics_process(delta: float) -> void:
 		hero = get_tree().get_first_node_in_group("hero") as Node2D
 		if not is_instance_valid(hero):
 			velocity = Vector2.ZERO
-			_update_visual_motion(direction_to_hero.x, false)
+			_update_visual_motion(0.0, false)
 			return
 
 	var direction_to_hero := global_position.direction_to(hero.global_position)
@@ -93,7 +93,7 @@ func _physics_process(delta: float) -> void:
 			move_and_slide()
 	else:
 		velocity = Vector2.ZERO
-		_visual_call(&"play_locomotion", [false])
+		_update_visual_motion(direction_to_hero.x, false)
 		if attack_timer <= 0.0:
 			attack_timer = effective_attack_cooldown
 			_visual_call(&"play_attack")
