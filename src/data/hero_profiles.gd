@@ -560,8 +560,11 @@ const PROFILES = {
 				"cooldown": 30.0,
 				"hp_cost_ratio": 0.05,
 				"dash_distance": 500.0,
+				"dash_duration": 0.20,
 				"blood_orb_radius": 330.0,
 				"heal_per_orb": 70,
+				"orb_pickup_duration": 0.42,
+				"orb_visual_scale": 0.62,
 			},
 			"skill_4": {
 				"id": "blood_sword_fourth",
