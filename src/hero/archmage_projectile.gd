@@ -83,6 +83,10 @@ func _check_chest_sweep(from_position: Vector2, to_position: Vector2) -> void:
 			continue
 		if _distance_to_segment(chest.global_position, from_position, to_position) > 38.0:
 			continue
+		var chest_id := chest.get_instance_id()
+		if hit_ids.has(chest_id):
+			continue
+		hit_ids[chest_id] = true
 		chest.call("take_damage", base_damage)
 		if element != "wind":
 			queue_free()
@@ -238,11 +242,11 @@ func _spawn_impact_feedback(world_position: Vector2) -> void:
 	ring.width = 4.0
 	ring.default_color = ELEMENT_COLORS.get(element, Color.WHITE)
 	ring.z_index = 7
-	var local_center := parent.to_local(world_position)
+	ring.position = parent.to_local(world_position)
 	var radius := 22.0 if element != "earth" else 34.0
 	for index in range(17):
 		var angle := TAU * float(index) / 16.0
-		ring.add_point(local_center + Vector2.from_angle(angle) * radius)
+		ring.add_point(Vector2.from_angle(angle) * radius)
 	parent.add_child(ring)
 	var tween := ring.create_tween()
 	tween.set_parallel(true)
