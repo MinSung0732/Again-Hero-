@@ -54,7 +54,7 @@ func _physics_process(delta: float) -> void:
 
 	var step := direction * speed * delta
 	global_position += step
-	traveled += step.length()
+	traveled += speed * delta
 	if traveled >= max_range:
 		if skill_type == "storm":
 			_explode_storm_endpoint()
@@ -118,13 +118,27 @@ func _spawn_chain_current(from_position: Vector2, to_position: Vector2) -> void:
 	if not is_instance_valid(parent):
 		return
 
-	var line := Line2D.new()
+	var line: Line2D = null
+	if parent.has_method("acquire_transient_fx"):
+		line = parent.call(
+			"acquire_transient_fx",
+			"archmage_chain_dagger_line",
+			"line"
+		) as Line2D
+	if line == null:
+		line = Line2D.new()
+		parent.add_child(line)
+
+	line.clear_points()
 	line.width = 6.0
 	line.default_color = Color(0.95, 0.88, 0.30, 0.95)
+	line.modulate = Color.WHITE
+	line.scale = Vector2.ONE
+	line.position = Vector2.ZERO
 	line.z_index = 8
 	line.add_point(parent.to_local(from_position))
 	line.add_point(parent.to_local(to_position))
-	parent.add_child(line)
+	line.visible = true
 
 	var tick_count := maxi(int(config.get("chain_tick_count", 4)), 1)
 	var tick_interval := maxf(float(config.get("chain_tick_interval", 0.18)), 0.01)
@@ -132,15 +146,24 @@ func _spawn_chain_current(from_position: Vector2, to_position: Vector2) -> void:
 	var cleanup_tween := line.create_tween()
 	cleanup_tween.tween_interval(visible_lifetime)
 	cleanup_tween.tween_property(line, "modulate:a", 0.0, 0.12)
-	cleanup_tween.finished.connect(line.queue_free)
+	if parent.has_method("recycle_transient_fx"):
+		cleanup_tween.finished.connect(
+			Callable(parent, "recycle_transient_fx").bind(
+				line,
+				"archmage_chain_dagger_line"
+			),
+			Object.CONNECT_ONE_SHOT
+		)
+	else:
+		cleanup_tween.finished.connect(line.queue_free)
 
-	_apply_chain_current_ticks(from_position, to_position, line)
+	# Damage timing is intentionally independent from the pooled visual.
+	_apply_chain_current_ticks(from_position, to_position)
 
 
 func _apply_chain_current_ticks(
 	from_position: Vector2,
-	to_position: Vector2,
-	line: Line2D
+	to_position: Vector2
 ) -> void:
 	var tick_count := maxi(int(config.get("chain_tick_count", 4)), 1)
 	var tick_interval := maxf(float(config.get("chain_tick_interval", 0.18)), 0.01)
@@ -325,18 +348,49 @@ func _spawn_hit_animation(
 	var parent := get_parent()
 	if not is_instance_valid(parent):
 		return
-	var fx := AnimatedSprite2D.new()
+
+	var frames := _build_frames(dir, prefix, start, count, fps, false)
+	if frames == null:
+		return
+
+	var fx: AnimatedSprite2D = null
+	if parent.has_method("acquire_transient_fx"):
+		fx = parent.call(
+			"acquire_transient_fx",
+			"archmage_skill_hit_fx",
+			"animated_sprite"
+		) as AnimatedSprite2D
+	if fx == null:
+		fx = AnimatedSprite2D.new()
+		parent.add_child(fx)
+
+	fx.stop()
+	fx.sprite_frames = frames
+	fx.animation = &"fx"
 	fx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	fx.z_index = 7
 	fx.global_position = world_position
 	fx.scale = Vector2(0.52, 0.52)
-	var frames := _build_frames(dir, prefix, start, count, fps, false)
-	if frames == null:
-		return
-	fx.sprite_frames = frames
-	parent.add_child(fx)
-	fx.animation_finished.connect(fx.queue_free)
-	fx.play("fx")
+	fx.modulate = Color.WHITE
+	fx.rotation = 0.0
+	fx.frame = 0
+	fx.frame_progress = 0.0
+	fx.visible = true
+
+	if parent.has_method("recycle_transient_fx"):
+		fx.animation_finished.connect(
+			Callable(parent, "recycle_transient_fx").bind(
+				fx,
+				"archmage_skill_hit_fx"
+			),
+			Object.CONNECT_ONE_SHOT
+		)
+	else:
+		fx.animation_finished.connect(
+			Callable(fx, "queue_free"),
+			Object.CONNECT_ONE_SHOT
+		)
+	fx.play(&"fx")
 
 func _build_frames(
 	dir: String,
