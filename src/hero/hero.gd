@@ -3169,10 +3169,19 @@ func _update_heal_item_goal(delta: float) -> void:
 		heal_item_steering_direction = Vector2.ZERO
 		return
 
-	var hp_ratio := clampf(float(current_hp) / float(max_hp), 0.0, 1.0)
+	var hp_ratio: float = clampf(float(current_hp) / float(max_hp), 0.0, 1.0)
 	if hp_ratio >= 0.60:
 		heal_item_target = null
 		heal_item_steering_direction = Vector2.ZERO
+		return
+
+	# Low-HP heroes commit to a valid potion instead of periodically
+	# retargeting and oscillating around it.
+	if (
+		hp_ratio <= 0.40
+		and is_instance_valid(heal_item_target)
+		and not heal_item_target.is_queued_for_deletion()
+	):
 		return
 
 	if (
@@ -3182,20 +3191,21 @@ func _update_heal_item_goal(delta: float) -> void:
 	):
 		return
 
-	heal_item_retarget_timer = randf_range(0.15, 0.30)
+	heal_item_retarget_timer = randf_range(0.22, 0.38)
 	heal_item_target = null
 
-	var desire := _heal_item_desire_for_hp(hp_ratio)
+	var desire: float = _heal_item_desire_for_hp(hp_ratio)
 	desire *= maxf(float(ai_settings.get("heal_item_desire", 1.0)), 0.0)
 	if desire <= 0.0:
 		return
 
-	var risk_tolerance := clampf(
+	var risk_tolerance: float = clampf(
 		float(ai_settings.get("heal_risk_tolerance", 0.50)),
 		0.0,
 		1.0
 	)
-	var best_score := -INF
+	var critical_factor: float = clampf((0.45 - hp_ratio) / 0.35, 0.0, 1.0)
+	var best_score: float = -INF
 	for node in _get_aux_group_nodes_cached(&"heal_items"):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
@@ -3203,22 +3213,27 @@ func _update_heal_item_goal(delta: float) -> void:
 		if item == null:
 			continue
 
-		var distance := global_position.distance_to(item.global_position)
-		# At moderate HP, behave like a player preserving position: only detour for nearby heals.
-		if hp_ratio > 0.40 and distance > 480.0:
+		var distance: float = global_position.distance_to(item.global_position)
+		# Moderate HP only justifies a nearby detour. Critical HP may cross
+		# the field to secure healing.
+		if hp_ratio > 0.40 and distance > 520.0:
 			continue
 
-		var path_midpoint := global_position.lerp(item.global_position, 0.5)
-		var path_danger := _estimate_monster_danger(path_midpoint, 260.0)
-		var item_danger := _estimate_monster_danger(item.global_position, 220.0)
-		var distance_penalty := clampf(distance / 900.0, 0.0, 2.5)
-		var danger_penalty := (
-			(path_danger * 0.75 + item_danger)
-			* lerpf(1.45, 0.45, risk_tolerance)
+		var path_midpoint: Vector2 = global_position.lerp(item.global_position, 0.5)
+		var path_danger: float = _estimate_monster_danger(path_midpoint, 260.0)
+		var item_danger: float = _estimate_monster_danger(item.global_position, 220.0)
+		var distance_penalty: float = clampf(distance / 1050.0, 0.0, 2.2)
+		var danger_scale: float = lerpf(1.0, 0.22, critical_factor)
+		var danger_penalty: float = (
+			(path_danger * 0.70 + item_danger)
+			* lerpf(1.30, 0.50, risk_tolerance)
+			* danger_scale
 		)
-		var score := desire * 3.2 - distance_penalty - danger_penalty
+		var score: float = desire * lerpf(4.2, 7.2, critical_factor)
+		score -= distance_penalty
+		score -= danger_penalty
 
-		if score > best_score and score > 0.20:
+		if score > best_score and score > 0.05:
 			best_score = score
 			heal_item_target = item
 
@@ -3229,13 +3244,13 @@ func _update_heal_item_goal(delta: float) -> void:
 func _heal_item_desire_for_hp(hp_ratio: float) -> float:
 	if hp_ratio >= 0.60:
 		return 0.0
-	if hp_ratio >= 0.40:
-		return lerpf(0.12, 0.30, (0.60 - hp_ratio) / 0.20)
-	if hp_ratio >= 0.25:
-		return lerpf(0.48, 0.68, (0.40 - hp_ratio) / 0.15)
-	if hp_ratio >= 0.10:
-		return lerpf(0.78, 0.94, (0.25 - hp_ratio) / 0.15)
-	return 1.0
+	if hp_ratio >= 0.45:
+		return lerpf(0.20, 0.48, (0.60 - hp_ratio) / 0.15)
+	if hp_ratio >= 0.30:
+		return lerpf(0.62, 0.88, (0.45 - hp_ratio) / 0.15)
+	if hp_ratio >= 0.15:
+		return lerpf(1.00, 1.18, (0.30 - hp_ratio) / 0.15)
+	return 1.30
 
 
 func _estimate_monster_danger(at_position: Vector2, radius: float) -> float:
@@ -3299,6 +3314,13 @@ func _update_chest_goal(delta: float) -> void:
 
 
 func _apply_chest_steering(base_direction: Vector2, delta: float) -> Vector2:
+	if (
+		is_instance_valid(heal_item_target)
+		and max_hp > 0
+		and float(current_hp) / float(max_hp) <= 0.45
+	):
+		return base_direction.normalized() if base_direction.length_squared() > 0.01 else Vector2.ZERO
+
 	if not is_instance_valid(chest_target) or chest_target.is_queued_for_deletion():
 		chest_target = null
 		chest_steering_direction = Vector2.ZERO
@@ -3385,6 +3407,13 @@ func _apply_magnet_item_steering(
 	delta: float
 ) -> Vector2:
 	if (
+		is_instance_valid(heal_item_target)
+		and max_hp > 0
+		and float(current_hp) / float(max_hp) <= 0.45
+	):
+		return base_direction.normalized() if base_direction.length_squared() > 0.01 else Vector2.ZERO
+
+	if (
 		not is_instance_valid(magnet_item_target)
 		or magnet_item_target.is_queued_for_deletion()
 		or not _is_world_position_visible(
@@ -3459,28 +3488,51 @@ func _apply_heal_item_steering(base_direction: Vector2, delta: float) -> Vector2
 		heal_item_steering_direction = Vector2.ZERO
 		return base_direction.normalized() if base_direction.length_squared() > 0.01 else Vector2.ZERO
 
-	var hp_ratio := clampf(float(current_hp) / float(max_hp), 0.0, 1.0)
-	var desire := _heal_item_desire_for_hp(hp_ratio)
+	var hp_ratio: float = clampf(float(current_hp) / float(max_hp), 0.0, 1.0)
+	var desire: float = _heal_item_desire_for_hp(hp_ratio)
 	desire *= maxf(float(ai_settings.get("heal_item_desire", 1.0)), 0.0)
-	var risk_tolerance := clampf(
+	var risk_tolerance: float = clampf(
 		float(ai_settings.get("heal_risk_tolerance", 0.50)),
 		0.0,
 		1.0
 	)
-	var detour_weight := maxf(float(ai_settings.get("heal_detour_weight", 1.0)), 0.0)
-
-	var heal_direction := global_position.direction_to(heal_item_target.global_position)
-	var avoidance := _get_crowd_avoidance_direction(240.0)
-	var local_danger := _estimate_monster_danger(global_position, 210.0)
-	var heal_weight := clampf(desire, 0.0, 1.15)
-	var combat_weight := maxf(0.35, 1.0 - heal_weight * 0.55)
-	var avoidance_weight := (
-		(0.60 + local_danger * 0.34)
-		* lerpf(1.25, 0.70, risk_tolerance)
-		* detour_weight
+	var detour_weight: float = maxf(
+		float(ai_settings.get("heal_detour_weight", 1.0)),
+		0.0
 	)
 
-	var desired := base_direction * combat_weight + heal_direction * heal_weight
+	var heal_direction: Vector2 = global_position.direction_to(
+		heal_item_target.global_position
+	)
+	if heal_direction.length_squared() <= 0.01:
+		return Vector2.ZERO
+
+	# At critical HP the potion becomes a hard movement objective. This
+	# prevents combat strafing / avoidance from making the hero orbit the item.
+	if hp_ratio <= 0.30:
+		heal_item_steering_direction = heal_direction
+		return heal_direction
+
+	var avoidance: Vector2 = _get_crowd_avoidance_direction(240.0)
+	var local_danger: float = _estimate_monster_danger(global_position, 210.0)
+	var critical_factor: float = clampf((0.50 - hp_ratio) / 0.20, 0.0, 1.0)
+	var heal_weight: float = clampf(desire * lerpf(1.25, 2.10, critical_factor), 0.0, 2.60)
+	var combat_weight: float = lerpf(
+		maxf(0.30, 1.0 - heal_weight * 0.55),
+		0.12,
+		critical_factor
+	)
+	var avoidance_weight: float = (
+		(0.52 + local_danger * 0.26)
+		* lerpf(1.10, 0.62, risk_tolerance)
+		* detour_weight
+		* lerpf(1.0, 0.20, critical_factor)
+	)
+
+	var desired: Vector2 = (
+		base_direction * combat_weight
+		+ heal_direction * heal_weight
+	)
 	if avoidance.length_squared() > 0.01:
 		desired += avoidance * avoidance_weight
 	if desired.length_squared() <= 0.01:
@@ -3490,7 +3542,7 @@ func _apply_heal_item_steering(base_direction: Vector2, delta: float) -> Vector2
 	if heal_item_steering_direction.length_squared() <= 0.01:
 		heal_item_steering_direction = desired
 	else:
-		var turn_speed := lerpf(3.8, 7.5, heal_weight)
+		var turn_speed: float = lerpf(5.0, 11.0, critical_factor)
 		heal_item_steering_direction = heal_item_steering_direction.lerp(
 			desired,
 			clampf(delta * turn_speed, 0.0, 1.0)
@@ -5267,13 +5319,22 @@ func collect_heal_item(base_amount: int) -> int:
 	if base_amount <= 0 or current_hp <= 0 or is_dying:
 		return 0
 
-	var heal_amount := maxi(
-		int(round(float(base_amount) * maxf(heal_item_multiplier, 0.0))),
+	var missing_hp: int = maxi(max_hp - current_hp, 0)
+	var missing_hp_bonus: int = maxi(
+		int(round(float(missing_hp) * 0.10)),
+		0
+	)
+	var raw_heal_amount: int = base_amount + missing_hp_bonus
+	var heal_amount: int = maxi(
+		int(round(
+			float(raw_heal_amount)
+			* maxf(heal_item_multiplier, 0.0)
+		)),
 		1
 	)
-	var previous_hp := current_hp
+	var previous_hp: int = current_hp
 	current_hp = mini(current_hp + heal_amount, max_hp)
-	var recovered := current_hp - previous_hp
+	var recovered: int = current_hp - previous_hp
 	if recovered > 0:
 		health_changed.emit(current_hp, max_hp)
 		queue_redraw()
