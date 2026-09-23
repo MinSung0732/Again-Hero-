@@ -1,5 +1,7 @@
 extends Area2D
 
+static var _frames_cache: Dictionary = {}
+
 var skill_type: String = ""
 var direction := Vector2.RIGHT
 var speed := 900.0
@@ -200,6 +202,18 @@ func _build_frames(
 	fps: float,
 	looped: bool
 ) -> SpriteFrames:
+	var cache_key := "%s|%s|%d|%d|%.3f|%s" % [
+		dir,
+		prefix,
+		start,
+		count,
+		fps,
+		str(looped),
+	]
+	var cached = _frames_cache.get(cache_key)
+	if cached is SpriteFrames:
+		return cached
+
 	var frames := SpriteFrames.new()
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
@@ -213,15 +227,16 @@ func _build_frames(
 			frames.add_frame("fx", texture)
 	if frames.get_frame_count("fx") <= 0:
 		return null
+	_frames_cache[cache_key] = frames
 	return frames
 
 func _load_texture(path: String) -> Texture2D:
-	if FileAccess.file_exists(path):
-		var image := Image.new()
-		if image.load(path) == OK:
-			return ImageTexture.create_from_image(image)
 	if ResourceLoader.exists(path):
 		var loaded = load(path)
 		if loaded is Texture2D:
 			return loaded
+	if FileAccess.file_exists(path):
+		var image := Image.new()
+		if image.load(path) == OK:
+			return ImageTexture.create_from_image(image)
 	return null
