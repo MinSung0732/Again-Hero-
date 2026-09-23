@@ -564,7 +564,7 @@ const PROFILES = {
 				"blood_orb_radius": 330.0,
 				"heal_per_orb": 70,
 				"orb_pickup_duration": 0.55,
-				"orb_visual_scale": 1.18,
+				"orb_visual_scale": 1.70,
 			},
 			"skill_4": {
 				"id": "blood_sword_fourth",
