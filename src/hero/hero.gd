@@ -1730,7 +1730,13 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 			knockback_distance
 		)
 
-	_damage_treasure_chests(corridor_end, aoe_radius, damage)
+	# Stage 2 rogue deals +200% bonus damage to treasure chests
+	# (300% total) so the fast combo can realistically break them.
+	_damage_treasure_chests(
+		corridor_end,
+		aoe_radius,
+		maxi(1, damage * 3)
+	)
 	attack_pose_timer = 0.26
 	_restart_stage1_animation("attack", 1.0)
 	_play_rogue_effect(
