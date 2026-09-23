@@ -44,6 +44,47 @@ static func show(target: Node2D, amount: int, text_color: Color = Color.WHITE) -
 	target.set_meta("damage_number_popup", popup)
 
 
+static func show_heal(target: Node2D, amount: int) -> void:
+	if target == null or not is_instance_valid(target):
+		return
+
+	var displayed_heal := maxi(amount, 0)
+	if displayed_heal <= 0:
+		return
+
+	if target.has_meta("heal_number_popup"):
+		var existing = target.get_meta("heal_number_popup")
+		if is_instance_valid(existing) and existing.has_method("can_merge_heal"):
+			if bool(existing.call("can_merge_heal")):
+				existing.call(
+					"add_heal",
+					displayed_heal,
+					Color(0.32, 1.0, 0.42, 1.0)
+				)
+				return
+		else:
+			target.remove_meta("heal_number_popup")
+
+	if active_popup_count >= MAX_ACTIVE_POPUPS:
+		return
+
+	var parent := target.get_parent()
+	if parent == null:
+		return
+
+	var popup := DAMAGE_NUMBER_SCENE.instantiate() as Node2D
+	parent.add_child(popup)
+	active_popup_count += 1
+	popup.tree_exited.connect(_on_popup_tree_exited, Object.CONNECT_ONE_SHOT)
+	popup.global_position = target.global_position + WORLD_OFFSET + Vector2(0.0, -10.0)
+	popup.call(
+		"setup_heal",
+		displayed_heal,
+		Color(0.32, 1.0, 0.42, 1.0)
+	)
+	target.set_meta("heal_number_popup", popup)
+
+
 static func show_text_at(
 	parent: Node2D,
 	world_position: Vector2,
