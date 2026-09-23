@@ -531,7 +531,7 @@ const PROFILES = {
 				"wave_interval": 0.75,
 				"wave_count": 3,
 				"damage_ratio": 1.10,
-				"repeat_hit_multipliers": [1.0, 0.80, 0.60],
+				"repeat_hit_multipliers": [1.0, 0.667, 0.334],
 				"size_growth_per_wave": 0.25,
 				"projectile_speed": 760.0,
 				"base_range": 560.0,
