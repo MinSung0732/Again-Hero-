@@ -5,6 +5,8 @@ const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const SPIDER_PROJECTILE_SCENE := preload("res://src/monsters/SpiderProjectile.tscn")
 
+const FAR_NAV_DISTANCE := 900.0
+
 signal died
 
 @export var monster_type: String = "spider"
@@ -73,7 +75,10 @@ func _physics_process(delta: float) -> void:
 			external_slow = 0.0
 		velocity = direction_to_hero * move_speed * external_slow
 		_visual_call(&"play_locomotion", [true])
-		move_and_slide()
+		if distance > FAR_NAV_DISTANCE:
+			global_position += velocity * delta
+		else:
+			move_and_slide()
 		return
 
 	velocity = Vector2.ZERO
