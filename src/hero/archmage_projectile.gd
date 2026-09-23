@@ -84,6 +84,22 @@ func _get_monster_nodes() -> Array:
 	return get_tree().get_nodes_in_group("monsters")
 
 
+func _get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
+	if is_instance_valid(source_hero) and source_hero.has_method("_get_monster_nodes_near"):
+		var nearby = source_hero.call("_get_monster_nodes_near", origin, radius)
+		if nearby is Array:
+			return nearby
+	return _get_monster_nodes()
+
+
+func _get_monster_nodes_in_rect(world_rect: Rect2) -> Array:
+	if is_instance_valid(source_hero) and source_hero.has_method("_get_monster_nodes_in_rect"):
+		var nearby = source_hero.call("_get_monster_nodes_in_rect", world_rect)
+		if nearby is Array:
+			return nearby
+	return _get_monster_nodes()
+
+
 func _check_chest_sweep(from_position: Vector2, to_position: Vector2) -> void:
 	for node in get_tree().get_nodes_in_group("treasure_chests"):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -151,7 +167,7 @@ func _apply_earth(body: Node2D) -> void:
 	var splash_radius := maxf(float(config.get("earth_splash_radius", 150.0)), 0.0)
 	body.call("take_damage", maxi(1, int(round(float(base_damage) * direct_multiplier))))
 
-	for node in _get_monster_nodes():
+	for node in _get_monster_nodes_near(global_position, splash_radius):
 		if not is_instance_valid(node) or node == body or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -186,7 +202,7 @@ func _apply_light(body: Node2D) -> void:
 	var chain_ratio := maxf(float(config.get("light_chain_damage_ratio", 0.72)), 0.0)
 	var nearest: Node2D = null
 	var nearest_distance := INF
-	for node in _get_monster_nodes():
+	for node in _get_monster_nodes_near(body.global_position, chain_range):
 		if not is_instance_valid(node) or node == body or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
