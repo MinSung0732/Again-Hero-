@@ -61,6 +61,7 @@ const CHEST_EXP_BUNDLE_MIN := 15
 const CHEST_EXP_BUNDLE_MAX := 20
 const CHEST_EXP_VALUE_MIN := 10
 const CHEST_EXP_VALUE_MAX := 30
+const MAX_EXP_ORB_POOL := 128
 
 
 var hero: Node2D
@@ -93,6 +94,7 @@ const MONSTER_SPATIAL_CELL_SIZE := 256.0
 var active_monsters: Dictionary = {}
 var monster_spatial_grid: Dictionary = {}
 var monster_spatial_grid_physics_frame: int = -1
+var exp_orb_pool: Array[Node2D] = []
 var battle_over: bool = false
 var external_pause: bool = false
 
@@ -326,6 +328,11 @@ func _process(delta: float) -> void:
 
 func _start_battle() -> void:
 	battle_over = false
+	var valid_orb_pool: Array[Node2D] = []
+	for pooled_orb in exp_orb_pool:
+		if is_instance_valid(pooled_orb) and not pooled_orb.is_queued_for_deletion():
+			valid_orb_pool.append(pooled_orb)
+	exp_orb_pool = valid_orb_pool
 	active_monsters.clear()
 	monster_spatial_grid.clear()
 	monster_spatial_grid_physics_frame = -1
@@ -1423,10 +1430,32 @@ func _spawn_exp_orb(
 	if exp_value <= 0:
 		return
 
-	var orb := EXP_ORB_SCENE.instantiate() as Node2D
-	add_child(orb)
+	var orb: Node2D = null
+	while not exp_orb_pool.is_empty() and orb == null:
+		var pooled = exp_orb_pool.pop_back()
+		if is_instance_valid(pooled) and not pooled.is_queued_for_deletion():
+			orb = pooled as Node2D
+
+	if orb == null:
+		orb = EXP_ORB_SCENE.instantiate() as Node2D
+		add_child(orb)
+
 	orb.global_position = drop_position
 	orb.call("setup", exp_value, initial_velocity)
+
+
+func recycle_exp_orb(orb: Node) -> void:
+	if not is_instance_valid(orb) or orb.is_queued_for_deletion():
+		return
+
+	if orb.has_method("deactivate_for_pool"):
+		orb.call("deactivate_for_pool")
+
+	if exp_orb_pool.size() >= MAX_EXP_ORB_POOL:
+		orb.queue_free()
+		return
+
+	exp_orb_pool.append(orb as Node2D)
 
 func _emit_demon_ultimate_changed() -> void:
 	var charge_max := maxf(DEMON_ULTIMATES.CHARGE_MAX, 1.0)
