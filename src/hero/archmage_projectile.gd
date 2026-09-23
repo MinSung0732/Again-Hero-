@@ -105,34 +105,37 @@ func _on_body_entered(body: Node) -> void:
 		return
 	if not body.is_in_group("monsters") or not body.has_method("take_damage"):
 		return
+	var body_2d := body as Node2D
+	if body_2d == null:
+		return
 
-	var instance_id := body.get_instance_id()
+	var instance_id := body_2d.get_instance_id()
 	if hit_ids.has(instance_id):
 		return
 	hit_ids[instance_id] = true
 
 	match element:
 		"earth":
-			_apply_earth(body)
+			_apply_earth(body_2d)
 		"fire":
-			_apply_fire(body)
+			_apply_fire(body_2d)
 		"ice":
-			_apply_ice(body)
+			_apply_ice(body_2d)
 		"light":
-			_apply_light(body)
+			_apply_light(body_2d)
 		"wind":
-			_apply_wind(body)
+			_apply_wind(body_2d)
 		"holy":
-			_apply_holy(body)
+			_apply_holy(body_2d)
 		_:
 			body.call("take_damage", base_damage)
 
-	_spawn_impact_feedback(body.global_position)
+	_spawn_impact_feedback(body_2d.global_position)
 
 	if element != "wind":
 		queue_free()
 
-func _apply_earth(body: Node) -> void:
+func _apply_earth(body: Node2D) -> void:
 	var direct_multiplier := maxf(float(config.get("earth_direct_damage_multiplier", 1.45)), 1.0)
 	var splash_ratio := maxf(float(config.get("earth_splash_damage_ratio", 0.70)), 0.0)
 	var splash_radius := maxf(float(config.get("earth_splash_radius", 150.0)), 0.0)
@@ -148,7 +151,7 @@ func _apply_earth(body: Node) -> void:
 			continue
 		monster.call("take_damage", maxi(1, int(round(float(base_damage) * splash_ratio))))
 
-func _apply_fire(body: Node) -> void:
+func _apply_fire(body: Node2D) -> void:
 	body.call("take_damage", base_damage)
 	var duration := maxf(float(config.get("fire_burn_duration", 3.0)), 0.1)
 	var tick_interval := maxf(float(config.get("fire_burn_tick_interval", 0.5)), 0.1)
@@ -159,7 +162,7 @@ func _apply_fire(body: Node) -> void:
 		tick_interval
 	)
 
-func _apply_ice(body: Node) -> void:
+func _apply_ice(body: Node2D) -> void:
 	body.call("take_damage", base_damage)
 	var freeze_chance := clampf(float(config.get("ice_freeze_chance", 0.10)), 0.0, 1.0)
 	if randf() <= freeze_chance:
@@ -167,7 +170,7 @@ func _apply_ice(body: Node) -> void:
 			maxf(float(config.get("ice_freeze_duration", 1.0)), 0.05)
 		)
 
-func _apply_light(body: Node) -> void:
+func _apply_light(body: Node2D) -> void:
 	body.call("take_damage", base_damage)
 	var chain_range := maxf(float(config.get("light_chain_range", 260.0)), 1.0)
 	var chain_ratio := maxf(float(config.get("light_chain_damage_ratio", 0.72)), 0.0)
@@ -188,14 +191,14 @@ func _apply_light(body: Node) -> void:
 		nearest.call("take_damage", maxi(1, int(round(float(base_damage) * chain_ratio))))
 		_spawn_chain_line(body.global_position, nearest.global_position)
 
-func _apply_wind(body: Node) -> void:
+func _apply_wind(body: Node2D) -> void:
 	body.call("take_damage", base_damage)
 	var knockback := maxf(float(config.get("wind_knockback_distance", 105.0)), 0.0)
 	var monster := body as Node2D
 	if monster != null and knockback > 0.0:
 		monster.global_position += direction.normalized() * knockback
 
-func _apply_holy(body: Node) -> void:
+func _apply_holy(body: Node2D) -> void:
 	var holy_damage := base_damage
 	if bool(body.get_meta("undead", false)) or bool(body.get_meta("is_undead", false)):
 		holy_damage = maxi(
