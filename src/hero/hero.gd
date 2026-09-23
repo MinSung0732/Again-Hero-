@@ -63,6 +63,8 @@ const STATUS_MEMORY_WINDOW := 20.0
 const STATUS_MEMORY_MIN_WEIGHT := 0.25
 const INVULNERABILITY_BLINK_INTERVAL := 0.07
 
+static var _archmage_fx_frames_cache: Dictionary = {}
+
 @export var max_hp: int = 300
 @export var move_speed: float = 230.0
 @export var attack_damage: int = 34
@@ -3288,7 +3290,7 @@ func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
 	var orb_position := global_position + facing.normalized() * 76.0
 	var charge_fx := _spawn_archmage_fx(
 		"res://assets/art/heroes/stage5_archmage/frames/effect2",
-		"fire", 1, 7, 18.0, true, orb_position, Vector2(0.48, 0.48)
+		"fire", 1, 7, 18.0, true, orb_position, Vector2(0.68, 0.68)
 	)
 	var duration := maxf(float(config.get("charge_duration", 0.90)), 0.05)
 	var tick_interval := maxf(float(config.get("charge_tick_interval", 0.18)), 0.05)
@@ -3317,7 +3319,7 @@ func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
 	var thrust_end := orb_position + thrust_direction * thrust_range
 	var thrust_fx := _spawn_archmage_fx(
 		"res://assets/art/heroes/stage5_archmage/frames/effect2",
-		"fire", 8, 5, 24.0, false, orb_position, Vector2(0.52, 0.52)
+		"fire", 8, 5, 24.0, false, orb_position, Vector2(0.74, 0.74)
 	)
 	if is_instance_valid(thrust_fx):
 		thrust_fx.rotation = thrust_direction.angle()
@@ -3368,7 +3370,7 @@ func _resolve_archmage_ice_pillars(hit_position: Vector2, empowered: bool) -> vo
 	var config: Dictionary = archmage_skill_config.get("ice_bolt", {})
 	_spawn_archmage_fx(
 		"res://assets/art/heroes/stage5_archmage/frames/effect4",
-		"ice", 7, 1, 18.0, false, hit_position, Vector2(0.50, 0.50)
+		"ice", 7, 1, 18.0, false, hit_position, Vector2(0.72, 0.72)
 	)
 	var count := maxi(int(config.get("pillar_count", 6)), 1)
 	var spawn_radius := maxf(float(config.get("pillar_spawn_radius", 210.0)), 1.0)
@@ -3383,7 +3385,7 @@ func _resolve_archmage_ice_pillars(hit_position: Vector2, empowered: bool) -> vo
 		var position := hit_position + Vector2.from_angle(angle) * randf_range(25.0, spawn_radius)
 		_spawn_archmage_fx(
 			"res://assets/art/heroes/stage5_archmage/frames/effect4",
-			"ice", 1, 6, 20.0, false, position, Vector2(0.50, 0.50)
+			"ice", 1, 6, 20.0, false, position, Vector2(0.70, 0.70)
 		)
 		_damage_monsters_in_radius(position, hit_radius, pillar_damage)
 		await get_tree().create_timer(0.045).timeout
@@ -3409,7 +3411,7 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 		var position := global_position + direction.normalized() * spacing * float(index + 1)
 		_spawn_archmage_fx(
 			"res://assets/art/heroes/stage5_archmage/frames/effect1",
-			"earth", 1, 11, 22.0, false, position, Vector2(0.52, 0.52)
+			"earth", 1, 11, 22.0, false, position, Vector2(0.72, 0.72)
 		)
 		_damage_monsters_in_radius_once(position, radius, spike_damage, hit_ids)
 		await get_tree().create_timer(maxf(float(config.get("spike_delay", 0.07)), 0.02)).timeout
@@ -3431,7 +3433,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 		var position := global_position + Vector2.from_angle(angle) * randf_range(30.0, spawn_radius)
 		_spawn_archmage_fx(
 			"res://assets/art/heroes/stage5_archmage/frames/effect3",
-			"holy", 1, 5, 20.0, false, position, Vector2(0.50, 0.50)
+			"holy", 1, 5, 20.0, false, position, Vector2(0.72, 0.72)
 		)
 		for node in get_tree().get_nodes_in_group("monsters"):
 			if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -3481,7 +3483,7 @@ func _cast_archmage_harmony(_config: Dictionary) -> void:
 		archmage_skill_cooldowns[key] = 0.0
 	_spawn_archmage_fx(
 		"res://assets/art/heroes/stage5_archmage/frames/effect7",
-		"orb", 8, 5, 16.0, false, global_position, Vector2(0.62, 0.62)
+		"orb", 8, 5, 16.0, false, global_position, Vector2(0.82, 0.82)
 	)
 
 
@@ -3580,16 +3582,32 @@ func _spawn_archmage_fx(
 	fx.z_index = 7
 	fx.global_position = world_position
 	fx.scale = fx_scale
-	var frames := SpriteFrames.new()
-	if frames.has_animation("default"):
-		frames.remove_animation("default")
-	frames.add_animation("fx")
-	frames.set_animation_speed("fx", fps)
-	frames.set_animation_loop("fx", looped)
-	for index in range(start, start + count):
-		var texture := _load_stage1_texture("%s/%s_%02d.png" % [dir, prefix, index])
-		if texture != null:
-			frames.add_frame("fx", texture)
+
+	var cache_key := "%s|%s|%d|%d|%.3f|%s" % [
+		dir,
+		prefix,
+		start,
+		count,
+		fps,
+		str(looped),
+	]
+	var cached = _archmage_fx_frames_cache.get(cache_key)
+	var frames: SpriteFrames
+	if cached is SpriteFrames:
+		frames = cached
+	else:
+		frames = SpriteFrames.new()
+		if frames.has_animation("default"):
+			frames.remove_animation("default")
+		frames.add_animation("fx")
+		frames.set_animation_speed("fx", fps)
+		frames.set_animation_loop("fx", looped)
+		for index in range(start, start + count):
+			var texture := _load_stage1_texture("%s/%s_%02d.png" % [dir, prefix, index])
+			if texture != null:
+				frames.add_frame("fx", texture)
+		_archmage_fx_frames_cache[cache_key] = frames
+
 	if frames.get_frame_count("fx") <= 0:
 		return null
 	fx.sprite_frames = frames
