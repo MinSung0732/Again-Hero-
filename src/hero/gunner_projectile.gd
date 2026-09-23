@@ -12,6 +12,8 @@ const DEAD_EYE_RICOCHET_FX := preload("res://src/hero/deadeye_ricochet_fx.gd")
 static var _projectile_frames_cache: SpriteFrames
 static var _impact_frames_cache: SpriteFrames
 static var _active_impact_fx_count: int = 0
+static var _chest_nodes_cache: Array = []
+static var _chest_nodes_cache_physics_frame: int = -1
 
 var direction := Vector2.RIGHT
 var speed := 920.0
@@ -23,11 +25,13 @@ var ricochet_bounces_left: int = 0
 var ricochet_radius: float = 260.0
 var is_deadeye_shot: bool = false
 var hit_ids: Dictionary = {}
+var source_hero: Node
 
 @onready var visual: AnimatedSprite2D = $Visual
 
 func _ready() -> void:
 	add_to_group("hero_projectiles")
+	source_hero = get_tree().get_first_node_in_group("hero")
 	body_entered.connect(_on_body_entered)
 	_apply_visual()
 
@@ -58,8 +62,24 @@ func _physics_process(delta: float) -> void:
 	if traveled >= max_range:
 		queue_free()
 
+func _get_chest_nodes_cached() -> Array:
+	var physics_frame := Engine.get_physics_frames()
+	if physics_frame != _chest_nodes_cache_physics_frame:
+		_chest_nodes_cache = get_tree().get_nodes_in_group("treasure_chests")
+		_chest_nodes_cache_physics_frame = physics_frame
+	return _chest_nodes_cache
+
+
+func _get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
+	if is_instance_valid(source_hero) and source_hero.has_method("_get_monster_nodes_near"):
+		var nearby = source_hero.call("_get_monster_nodes_near", origin, radius)
+		if nearby is Array:
+			return nearby
+	return get_tree().get_nodes_in_group("monsters")
+
+
 func _check_chest_sweep(from_position: Vector2, to_position: Vector2) -> void:
-	for node in get_tree().get_nodes_in_group("treasure_chests"):
+	for node in _get_chest_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var chest := node as Node2D
@@ -123,7 +143,7 @@ func _find_ricochet_target() -> Node2D:
 	var nearest_distance := INF
 	var max_distance_sq := ricochet_radius * ricochet_radius
 
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_near(global_position, ricochet_radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
