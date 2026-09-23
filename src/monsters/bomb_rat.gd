@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
+
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const BOMBRAT_FRAME_DIR := "res://assets/art/monsters/bombrat/frames"
 const BOMBRAT_TARGET_HEIGHT := 78.0
@@ -41,9 +43,16 @@ func _ready() -> void:
 	current_hp = max_hp
 	exp_reward = hero_kill_exp_reward
 	hero = get_tree().get_first_node_in_group("hero") as Node2D
+	_attach_status_effect_visual("slow")
 	_apply_bomb_rat_visual()
 	_apply_bomb_rat_explosion_visual()
 	queue_redraw()
+
+func _attach_status_effect_visual(effect_type: String) -> void:
+	var effect := COMBAT_STATUS_EFFECT_VISUAL.new()
+	add_child(effect)
+	effect.setup(self, effect_type)
+
 
 func _physics_process(delta: float) -> void:
 	if current_hp <= 0 or dying:
