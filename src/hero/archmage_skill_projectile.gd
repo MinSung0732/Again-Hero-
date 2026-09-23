@@ -57,9 +57,13 @@ func _physics_process(delta: float) -> void:
 			if not is_instance_valid(source_hero):
 				_finish()
 				return
+			var hero_node := source_hero as Node2D
+			if hero_node == null:
+				_finish()
+				return
 
 			var to_hero := (
-				source_hero.global_position - global_position
+				hero_node.global_position - global_position
 			)
 			if to_hero.length_squared() <= 55.0 * 55.0:
 				_finish()
