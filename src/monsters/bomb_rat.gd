@@ -72,8 +72,10 @@ func _physics_process(delta: float) -> void:
 	survival_time += delta
 
 	if hit_flash_timer > 0.0:
+		var previous_hit_flash := hit_flash_timer
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
-		queue_redraw()
+		if previous_hit_flash > 0.0 and hit_flash_timer <= 0.0:
+			queue_redraw()
 
 	if self_destructing:
 		velocity = Vector2.ZERO
