@@ -887,8 +887,12 @@ func _spawn_gunner_bullet(direction: Vector2, is_deadeye_shot: bool = false) -> 
 	)
 	if headshot:
 		damage = maxi(1, int(round(float(damage) * float(gunner_config.get("headshot_multiplier", 1.20)))))
-	var projectile := GUNNER_PROJECTILE_SCENE.instantiate() as Area2D
-	get_parent().add_child(projectile)
+	var projectile := _acquire_projectile(
+		GUNNER_PROJECTILE_SCENE,
+		"gunner_projectile"
+	)
+	if projectile == null:
+		return
 	projectile.global_position = global_position + direction.normalized() * 42.0
 	projectile.call(
 		"setup",
@@ -910,8 +914,12 @@ func _spawn_gunner_bullet_from(origin: Vector2, direction: Vector2) -> void:
 	)
 	if headshot:
 		damage = maxi(1, int(round(float(damage) * float(gunner_config.get("headshot_multiplier", 1.20)))))
-	var projectile := GUNNER_PROJECTILE_SCENE.instantiate() as Area2D
-	get_parent().add_child(projectile)
+	var projectile := _acquire_projectile(
+		GUNNER_PROJECTILE_SCENE,
+		"gunner_projectile"
+	)
+	if projectile == null:
+		return
 	projectile.global_position = origin + direction.normalized() * 42.0
 	projectile.call(
 		"setup",
@@ -3238,6 +3246,19 @@ func _find_nearest_monster() -> Node2D:
 
 	return nearest
 
+func _acquire_projectile(scene: PackedScene, pool_key: String) -> Area2D:
+	var parent := get_parent()
+	if is_instance_valid(parent) and parent.has_method("acquire_projectile"):
+		var pooled = parent.call("acquire_projectile", scene, pool_key)
+		if pooled is Area2D:
+			return pooled as Area2D
+
+	var projectile := scene.instantiate() as Area2D
+	if projectile != null and is_instance_valid(parent):
+		parent.add_child(projectile)
+	return projectile
+
+
 func _fire_projectile(current_target: Node2D) -> void:
 	if channeling:
 		return
@@ -3262,8 +3283,12 @@ func _fire_projectile(current_target: Node2D) -> void:
 	for index in range(projectile_count):
 		var angle_offset := (float(index) - center_index) * spread_step
 		var projectile_direction := shot_direction.rotated(angle_offset).normalized()
-		var projectile := PROJECTILE_SCENE.instantiate() as Area2D
-		get_parent().add_child(projectile)
+		var projectile := _acquire_projectile(
+			PROJECTILE_SCENE,
+			"hero_basic_projectile"
+		)
+		if projectile == null:
+			continue
 		projectile.global_position = global_position + projectile_direction * 46.0
 		projectile.call(
 			"setup",
@@ -3292,8 +3317,12 @@ func _fire_archmage_projectile(current_target: Node2D) -> void:
 	_restart_stage1_animation("attack")
 
 	var element := _roll_next_archmage_element()
-	var projectile := ARCHMAGE_PROJECTILE_SCENE.instantiate() as Area2D
-	get_parent().add_child(projectile)
+	var projectile := _acquire_projectile(
+		ARCHMAGE_PROJECTILE_SCENE,
+		"archmage_projectile"
+	)
+	if projectile == null:
+		return
 	projectile.global_position = global_position + shot_direction * 52.0
 	projectile.call(
 		"setup",
