@@ -126,6 +126,14 @@ func _spawn_chain_current(from_position: Vector2, to_position: Vector2) -> void:
 	line.add_point(parent.to_local(to_position))
 	parent.add_child(line)
 
+	var tick_count := maxi(int(config.get("chain_tick_count", 4)), 1)
+	var tick_interval := maxf(float(config.get("chain_tick_interval", 0.18)), 0.01)
+	var visible_lifetime := tick_interval * float(maxi(tick_count - 1, 0)) + 0.16
+	var cleanup_tween := line.create_tween()
+	cleanup_tween.tween_interval(visible_lifetime)
+	cleanup_tween.tween_property(line, "modulate:a", 0.0, 0.12)
+	cleanup_tween.finished.connect(line.queue_free)
+
 	_apply_chain_current_ticks(from_position, to_position, line)
 
 
@@ -151,12 +159,6 @@ func _apply_chain_current_ticks(
 		_damage_monsters_along_segment(from_position, to_position, width, tick_damage)
 		if tick_index < tick_count - 1:
 			await get_tree().create_timer(tick_interval).timeout
-
-	if is_instance_valid(line):
-		var tween := line.create_tween()
-		tween.tween_property(line, "modulate:a", 0.0, 0.12)
-		tween.finished.connect(line.queue_free)
-
 
 func _damage_monsters_along_segment(
 	from_position: Vector2,
