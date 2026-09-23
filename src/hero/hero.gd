@@ -190,6 +190,7 @@ var berserker_skill1_direction: Vector2 = Vector2.RIGHT
 var berserker_skill2_cooldown: float = 0.0
 var berserker_skill3_cooldown: float = 0.0
 var berserker_skill3_active: bool = false
+var berserker_skill4_cooldown: float = 0.0
 var berserker_skill_global_cooldown: float = 0.0
 
 var archmage_element_config: Dictionary = {}
@@ -445,6 +446,7 @@ func configure_profile(profile: Dictionary) -> void:
 	berserker_skill2_cooldown = 0.0
 	berserker_skill3_cooldown = 0.0
 	berserker_skill3_active = false
+	berserker_skill4_cooldown = 0.0
 	berserker_skill_global_cooldown = 0.0
 
 	var profile_gunner = profile.get("gunner", {})
@@ -6442,6 +6444,10 @@ func _physics_process_berserker(delta: float) -> void:
 		berserker_skill3_cooldown - delta,
 		0.0
 	)
+	berserker_skill4_cooldown = maxf(
+		berserker_skill4_cooldown - delta,
+		0.0
+	)
 	berserker_skill_global_cooldown = maxf(
 		berserker_skill_global_cooldown - delta,
 		0.0
@@ -6548,6 +6554,12 @@ func _physics_process_berserker(delta: float) -> void:
 		and distance <= 320.0
 	):
 		_start_berserker_skill2(target)
+	elif (
+		berserker_skill_global_cooldown <= 0.0
+		and berserker_skill4_cooldown <= 0.0
+		and _count_monsters_near(global_position, 245.0, 1) >= 1
+	):
+		_start_berserker_skill4()
 	elif distance <= attack_trigger_range and attack_timer <= 0.0:
 		_berserker_basic_attack(target)
 
@@ -7322,6 +7334,133 @@ func _finish_berserker_blood_orb(
 		_recycle_archmage_fx(orb_fx)
 	if current_hp > 0 and not is_dying:
 		heal_direct(heal_amount)
+
+
+func _start_berserker_skill4() -> void:
+	var skill_config_value = berserker_config.get("skill_4", {})
+	if typeof(skill_config_value) != TYPE_DICTIONARY:
+		return
+	var skill_config: Dictionary = skill_config_value
+	if skill_config.is_empty():
+		return
+
+	var hp_cost_ratio: float = clampf(
+		float(skill_config.get("hp_cost_ratio", 0.04)),
+		0.0,
+		0.95
+	)
+	var hp_cost: int = maxi(
+		int(round(float(current_hp) * hp_cost_ratio)),
+		1
+	)
+	current_hp = maxi(current_hp - hp_cost, 1)
+	health_changed.emit(current_hp, max_hp)
+
+	berserker_skill4_cooldown = maxf(
+		float(skill_config.get("cooldown", 8.0)),
+		0.0
+	)
+	berserker_skill_global_cooldown = maxf(
+		berserker_skill_global_cooldown,
+		1.15
+	)
+	attack_timer = maxf(attack_timer, 0.72)
+	attack_pose_timer = 0.72
+	_restart_stage1_animation("attack")
+
+	var radius: float = maxf(
+		float(skill_config.get("radius", 245.0)),
+		1.0
+	)
+	var damage: int = maxi(
+		int(round(
+			float(_get_berserker_effective_attack_damage())
+			* float(skill_config.get("damage_ratio", 0.65))
+		)),
+		1
+	)
+	var knockback_distance: float = maxf(
+		float(skill_config.get("knockback_distance", 150.0)),
+		0.0
+	)
+	var effect_scale: float = maxf(
+		float(skill_config.get("effect_scale", 1.05)),
+		0.1
+	)
+
+	var spin_fx: AnimatedSprite2D = _spawn_archmage_fx(
+		"%s/effect8" % STAGE6_FRAME_DIR,
+		"spin_slash",
+		1,
+		10,
+		22.0,
+		false,
+		global_position,
+		Vector2(effect_scale, effect_scale)
+	)
+	if is_instance_valid(spin_fx):
+		spin_fx.z_index = 8
+
+	var radius_sq: float = radius * radius
+	for node in _get_monster_nodes_near(global_position, radius):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null or not monster.has_method("take_damage"):
+			continue
+		if (
+			global_position.distance_squared_to(monster.global_position)
+			> radius_sq
+		):
+			continue
+
+		var hp_before_value = monster.get("current_hp")
+		var hp_before: int = (
+			int(hp_before_value)
+			if hp_before_value != null
+			else -1
+		)
+		monster.call("take_damage", damage)
+
+		if (
+			is_instance_valid(monster)
+			and knockback_distance > 0.0
+		):
+			var knockback_direction: Vector2 = global_position.direction_to(
+				monster.global_position
+			)
+			if knockback_direction.length_squared() <= 0.0:
+				knockback_direction = Vector2.RIGHT
+			var knockback_target: Vector2 = (
+				monster.global_position
+				+ knockback_direction.normalized() * knockback_distance
+			)
+			monster.global_position = Vector2(
+				clampf(
+					knockback_target.x,
+					FIELD_MARGIN,
+					battlefield_size.x - FIELD_MARGIN
+				),
+				clampf(
+					knockback_target.y,
+					FIELD_MARGIN,
+					battlefield_size.y - FIELD_MARGIN
+				)
+			)
+
+		if hp_before <= 0:
+			continue
+		var killed: bool = false
+		if not is_instance_valid(monster):
+			killed = true
+		else:
+			var hp_after_value = monster.get("current_hp")
+			if hp_after_value != null and int(hp_after_value) <= 0:
+				killed = true
+		if killed:
+			notify_berserker_skill_kill()
+
+	queue_redraw()
 
 
 func notify_berserker_skill_kill() -> void:
