@@ -9,6 +9,8 @@ const STAGE1_PROJECTILE_FRAME_PATHS := [
 const STAGE1_PROJECTILE_FPS := 12.0
 
 static var _stage1_frames_cache: SpriteFrames
+static var _chest_nodes_cache: Array = []
+static var _chest_nodes_cache_physics_frame: int = -1
 
 var direction: Vector2 = Vector2.RIGHT
 var speed: float = 680.0
@@ -19,11 +21,13 @@ var source_hero_id: String = ""
 var splash_radius: float = 0.0
 var splash_damage_ratio: float = 0.0
 var has_impacted: bool = false
+var source_hero: Node
 
 @onready var projectile_sprite: AnimatedSprite2D = $ProjectileSprite
 
 func _ready() -> void:
 	add_to_group("hero_projectiles")
+	source_hero = get_tree().get_first_node_in_group("hero")
 	body_entered.connect(_on_body_entered)
 	queue_redraw()
 
@@ -56,10 +60,26 @@ func _physics_process(delta: float) -> void:
 	if traveled_distance >= max_range:
 		queue_free()
 
+func _get_chest_nodes_cached() -> Array:
+	var physics_frame := Engine.get_physics_frames()
+	if physics_frame != _chest_nodes_cache_physics_frame:
+		_chest_nodes_cache = get_tree().get_nodes_in_group("treasure_chests")
+		_chest_nodes_cache_physics_frame = physics_frame
+	return _chest_nodes_cache
+
+
+func _get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
+	if is_instance_valid(source_hero) and source_hero.has_method("_get_monster_nodes_near"):
+		var nearby = source_hero.call("_get_monster_nodes_near", origin, radius)
+		if nearby is Array:
+			return nearby
+	return get_tree().get_nodes_in_group("monsters")
+
+
 func _check_chest_sweep(from_position: Vector2, to_position: Vector2) -> void:
 	if has_impacted:
 		return
-	for node in get_tree().get_nodes_in_group("treasure_chests"):
+	for node in _get_chest_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var chest := node as Node2D
@@ -104,7 +124,7 @@ func _apply_splash_damage(direct_target: Node) -> void:
 		int(round(float(damage) * splash_damage_ratio))
 	)
 
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes_near(global_position, splash_radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		if node == direct_target:
@@ -115,7 +135,7 @@ func _apply_splash_damage(direct_target: Node) -> void:
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		if global_position.distance_to(monster.global_position) > splash_radius:
+		if global_position.distance_squared_to(monster.global_position) > splash_radius * splash_radius:
 			continue
 
 		monster.call("take_damage", splash_damage)
