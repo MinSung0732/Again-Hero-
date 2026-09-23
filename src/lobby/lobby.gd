@@ -103,6 +103,8 @@ var _stage_pending_direction := 0
 var _stage_card_origin := Vector2.ZERO
 var _stage_card_base_modulate := Color.WHITE
 var _portrait_texture_cache: Dictionary = {}
+var _scene_load_path: String = ""
+var _scene_load_pending: bool = false
 
 var monster_collection_state: Dictionary = {}
 var team_catalog_ids: Array = []
@@ -121,6 +123,28 @@ var nav_button_style := StyleBoxFlat.new()
 var nav_button_active_style := StyleBoxFlat.new()
 var primary_button_style := StyleBoxFlat.new()
 var secondary_button_style := StyleBoxFlat.new()
+
+func _process(_delta: float) -> void:
+	if not _scene_load_pending:
+		return
+
+	var status := ResourceLoader.load_threaded_get_status(_scene_load_path)
+	if status == ResourceLoader.THREAD_LOAD_LOADED:
+		var packed = ResourceLoader.load_threaded_get(_scene_load_path)
+		_scene_load_pending = false
+		if packed is PackedScene:
+			get_tree().change_scene_to_packed(packed)
+			return
+		enter_stage_button.disabled = false
+		_refresh_stage_card()
+	elif (
+		status == ResourceLoader.THREAD_LOAD_FAILED
+		or status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE
+	):
+		_scene_load_pending = false
+		enter_stage_button.disabled = false
+		_refresh_stage_card()
+
 
 func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
@@ -2023,15 +2047,15 @@ func _load_texture(path: String) -> Texture2D:
 	if path.is_empty():
 		return null
 
-	if FileAccess.file_exists(path):
-		var image := Image.new()
-		if image.load(path) == OK:
-			return ImageTexture.create_from_image(image)
-
 	if ResourceLoader.exists(path):
 		var resource = load(path)
 		if resource is Texture2D:
 			return resource
+
+	if FileAccess.file_exists(path):
+		var image := Image.new()
+		if image.load(path) == OK:
+			return ImageTexture.create_from_image(image)
 
 	return null
 
@@ -2049,7 +2073,22 @@ func _enter_selected_stage() -> void:
 		return
 
 	STAGE_PROGRESS.set_current_stage(stage_id)
-	get_tree().change_scene_to_file(BATTLE_SCENE_PATH)
+	_begin_threaded_scene_change(BATTLE_SCENE_PATH)
+
+
+func _begin_threaded_scene_change(path: String) -> void:
+	if _scene_load_pending or path.is_empty():
+		return
+
+	var error := ResourceLoader.load_threaded_request(path, "PackedScene")
+	if error != OK:
+		get_tree().change_scene_to_file(path)
+		return
+
+	_scene_load_path = path
+	_scene_load_pending = true
+	enter_stage_button.disabled = true
+	enter_stage_button.text = "던전 준비 중..."
 
 func _rebuild_research_list() -> void:
 	for child in research_list.get_children():
