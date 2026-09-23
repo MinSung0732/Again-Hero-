@@ -52,6 +52,19 @@ func setup(
 	_apply_visual()
 
 func _physics_process(delta: float) -> void:
+	if skill_type == "berserker_wave":
+		var previous_position: Vector2 = global_position
+		var wave_step: Vector2 = direction * speed * delta
+		global_position += wave_step
+		traveled += speed * delta
+		_damage_berserker_wave_sweep(
+			previous_position,
+			global_position
+		)
+		if traveled >= max_range:
+			_finish()
+		return
+
 	if skill_type == "storm":
 		if storm_returning:
 			if not is_instance_valid(source_hero):
@@ -166,8 +179,72 @@ func _damage_storm_area(returning: bool) -> void:
 			)
 
 
+func _damage_berserker_wave_sweep(
+	from_position: Vector2,
+	to_position: Vector2
+) -> void:
+	var hit_radius: float = maxf(
+		float(config.get("hit_radius", 64.0)),
+		1.0
+	)
+	var segment: Vector2 = to_position - from_position
+	var length_sq: float = maxf(segment.length_squared(), 0.001)
+	var search_radius: float = hit_radius + segment.length() + 24.0
+	for node in _get_monster_nodes_near(
+		from_position.lerp(to_position, 0.5),
+		search_radius
+	):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null or not monster.has_method("take_damage"):
+			continue
+
+		var iid: int = monster.get_instance_id()
+		if hit_ids.has(iid):
+			continue
+
+		var t: float = clampf(
+			(monster.global_position - from_position).dot(segment)
+			/ length_sq,
+			0.0,
+			1.0
+		)
+		var closest: Vector2 = from_position + segment * t
+		if (
+			monster.global_position.distance_squared_to(closest)
+			> hit_radius * hit_radius
+		):
+			continue
+
+		hit_ids[iid] = true
+		var hp_before_value = monster.get("current_hp")
+		var hp_before: int = (
+			int(hp_before_value)
+			if hp_before_value != null
+			else -1
+		)
+		monster.call("take_damage", damage)
+
+		if hp_before <= 0:
+			continue
+		var killed: bool = false
+		if not is_instance_valid(monster):
+			killed = true
+		else:
+			var hp_after_value = monster.get("current_hp")
+			if hp_after_value != null and int(hp_after_value) <= 0:
+				killed = true
+		if (
+			killed
+			and is_instance_valid(source_hero)
+			and source_hero.has_method("notify_berserker_skill_kill")
+		):
+			source_hero.call("notify_berserker_skill_kill")
+
+
 func _on_body_entered(body: Node) -> void:
-	if skill_type == "storm":
+	if skill_type in ["storm", "berserker_wave"]:
 		return
 	if body == null or body.is_queued_for_deletion():
 		return
@@ -514,12 +591,30 @@ func _apply_visual() -> void:
 			prefix = "wind"
 			start = 5
 			count = 2
+		"berserker_wave":
+			dir = "res://assets/art/heroes/stage6_berserker/frames/effect4"
+			prefix = "heavy_slash"
+			start = 1
+			count = 11
 
 	var frames := _build_frames(dir, prefix, start, count, 22.0, true)
 	if frames != null:
 		sprite.sprite_frames = frames
 		sprite.visible = true
 		sprite.play("fx")
+
+	if skill_type == "berserker_wave":
+		var visual_scale: float = maxf(
+			float(config.get("visual_scale", 0.72)),
+			0.1
+		)
+		sprite.scale = Vector2(visual_scale, visual_scale)
+		sprite.flip_h = direction.x < 0.0
+		sprite.rotation = (
+			0.0
+			if direction.x >= 0.0
+			else PI
+		)
 
 	if skill_type == "storm":
 		sprite.scale *= 2.176
