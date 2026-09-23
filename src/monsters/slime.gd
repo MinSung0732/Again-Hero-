@@ -225,6 +225,17 @@ func take_damage(amount: int) -> void:
 	if current_hp <= 0:
 		_begin_death()
 
+func heal_direct(amount: int) -> int:
+	if amount <= 0 or current_hp <= 0 or dying:
+		return 0
+	var previous_hp: int = current_hp
+	current_hp = mini(current_hp + amount, max_hp)
+	var recovered: int = current_hp - previous_hp
+	if recovered > 0:
+		DAMAGE_NUMBERS.show_heal(self, recovered)
+		queue_redraw()
+	return recovered
+
 func _begin_death() -> void:
 	if dying:
 		return
