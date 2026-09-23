@@ -1,0 +1,666 @@
+{
+  "source_files": [
+    "stage8_summon1_spritesheet.png",
+    "stage8_summon1effect_spritesheet.png"
+  ],
+  "frame_count": 30,
+  "frame_order": [
+    "summon_01.png",
+    "summon_02.png",
+    "summon_03.png",
+    "summon_04.png",
+    "summon_05.png",
+    "summon_06.png",
+    "summon_07.png",
+    "summon_08.png",
+    "summon_09.png",
+    "summon_10.png",
+    "summon_11.png",
+    "summon_12.png",
+    "summon_13.png",
+    "summon_14.png",
+    "summon_15.png",
+    "summon_16.png",
+    "summon_17.png",
+    "summon_18.png",
+    "summon_19.png",
+    "summon_20.png",
+    "summon_21.png",
+    "summon_22.png",
+    "summon_23.png",
+    "summon_24.png",
+    "summon_25.png",
+    "summon_26.png",
+    "summon_27.png",
+    "summon_28.png",
+    "summon_29.png",
+    "summon_30.png"
+  ],
+  "sections": [
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "frames": "summon_01.png ... summon_17.png"
+    },
+    {
+      "source": "stage8_summon1effect_spritesheet.png",
+      "frames": "summon_18.png ... summon_30.png"
+    }
+  ],
+  "cell_size": [
+    512,
+    416
+  ],
+  "sheet_size": [
+    3072,
+    2080
+  ],
+  "columns": 6,
+  "rows": 5,
+  "anchor": [
+    256,
+    208
+  ],
+  "alignment": "Shared eye/effect-core X and central Y, no individual resizing or trimming",
+  "frames": [
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        0,
+        28,
+        245,
+        270
+      ],
+      "source_anchor": [
+        130,
+        150
+      ],
+      "phase": "summon",
+      "file": "summon_01.png",
+      "index": 0,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        245,
+        28,
+        475,
+        270
+      ],
+      "source_anchor": [
+        361,
+        150
+      ],
+      "phase": "summon",
+      "file": "summon_02.png",
+      "index": 1,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        475,
+        28,
+        705,
+        270
+      ],
+      "source_anchor": [
+        591,
+        150
+      ],
+      "phase": "summon",
+      "file": "summon_03.png",
+      "index": 2,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        705,
+        28,
+        944,
+        270
+      ],
+      "source_anchor": [
+        822,
+        150
+      ],
+      "phase": "summon",
+      "file": "summon_04.png",
+      "index": 3,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        0,
+        280,
+        243,
+        550
+      ],
+      "source_anchor": [
+        130,
+        418
+      ],
+      "phase": "summon",
+      "file": "summon_05.png",
+      "index": 4,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        243,
+        280,
+        475,
+        550
+      ],
+      "source_anchor": [
+        361,
+        418
+      ],
+      "phase": "summon",
+      "file": "summon_06.png",
+      "index": 5,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        475,
+        280,
+        710,
+        550
+      ],
+      "source_anchor": [
+        591,
+        418
+      ],
+      "phase": "summon",
+      "file": "summon_07.png",
+      "index": 6,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        710,
+        280,
+        975,
+        550
+      ],
+      "source_anchor": [
+        824,
+        418
+      ],
+      "phase": "summon",
+      "file": "summon_08.png",
+      "index": 7,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        975,
+        280,
+        1196,
+        550
+      ],
+      "source_anchor": [
+        1058,
+        418
+      ],
+      "phase": "summon",
+      "file": "summon_09.png",
+      "index": 8,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        1196,
+        280,
+        1448,
+        550
+      ],
+      "source_anchor": [
+        1310,
+        418
+      ],
+      "phase": "summon",
+      "file": "summon_10.png",
+      "index": 9,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        0,
+        548,
+        245,
+        790
+      ],
+      "source_anchor": [
+        130,
+        670
+      ],
+      "phase": "summon",
+      "file": "summon_11.png",
+      "index": 10,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        245,
+        548,
+        482,
+        790
+      ],
+      "source_anchor": [
+        365,
+        670
+      ],
+      "phase": "summon",
+      "file": "summon_12.png",
+      "index": 11,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        482,
+        548,
+        706,
+        790
+      ],
+      "source_anchor": [
+        592,
+        670
+      ],
+      "phase": "summon",
+      "file": "summon_13.png",
+      "index": 12,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        0,
+        790,
+        246,
+        1048
+      ],
+      "source_anchor": [
+        131,
+        919
+      ],
+      "phase": "summon",
+      "file": "summon_14.png",
+      "index": 13,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        246,
+        790,
+        482,
+        1048
+      ],
+      "source_anchor": [
+        365,
+        919
+      ],
+      "phase": "summon",
+      "file": "summon_15.png",
+      "index": 14,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        482,
+        790,
+        710,
+        1048
+      ],
+      "source_anchor": [
+        592,
+        919
+      ],
+      "phase": "summon",
+      "file": "summon_16.png",
+      "index": 15,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1_spritesheet.png",
+      "source_crop": [
+        710,
+        790,
+        944,
+        1048
+      ],
+      "source_anchor": [
+        823,
+        919
+      ],
+      "phase": "summon",
+      "file": "summon_17.png",
+      "index": 16,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1effect_spritesheet.png",
+      "source_crop": [
+        0,
+        280,
+        240,
+        610
+      ],
+      "source_anchor": [
+        127,
+        467
+      ],
+      "phase": "summon_effect",
+      "file": "summon_18.png",
+      "index": 17,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1effect_spritesheet.png",
+      "source_crop": [
+        240,
+        280,
+        484,
+        610
+      ],
+      "source_anchor": [
+        362,
+        467
+      ],
+      "phase": "summon_effect",
+      "file": "summon_19.png",
+      "index": 18,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1effect_spritesheet.png",
+      "source_crop": [
+        484,
+        280,
+        728,
+        610
+      ],
+      "source_anchor": [
+        607,
+        467
+      ],
+      "phase": "summon_effect",
+      "file": "summon_20.png",
+      "index": 19,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1effect_spritesheet.png",
+      "source_crop": [
+        728,
+        280,
+        960,
+        610
+      ],
+      "source_anchor": [
+        846,
+        467
+      ],
+      "phase": "summon_effect",
+      "file": "summon_21.png",
+      "index": 20,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1effect_spritesheet.png",
+      "source_crop": [
+        960,
+        280,
+        1210,
+        610
+      ],
+      "source_anchor": [
+        1086,
+        467
+      ],
+      "phase": "summon_effect",
+      "file": "summon_22.png",
+      "index": 21,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1effect_spritesheet.png",
+      "source_crop": [
+        1210,
+        280,
+        1448,
+        610
+      ],
+      "source_anchor": [
+        1321,
+        467
+      ],
+      "phase": "summon_effect",
+      "file": "summon_23.png",
+      "index": 22,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1effect_spritesheet.png",
+      "source_crop": [
+        0,
+        682,
+        226,
+        904
+      ],
+      "source_anchor": [
+        120,
+        789
+      ],
+      "phase": "summon_effect",
+      "file": "summon_24.png",
+      "index": 23,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1effect_spritesheet.png",
+      "source_crop": [
+        226,
+        682,
+        432,
+        904
+      ],
+      "source_anchor": [
+        331,
+        789
+      ],
+      "phase": "summon_effect",
+      "file": "summon_25.png",
+      "index": 24,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1effect_spritesheet.png",
+      "source_crop": [
+        432,
+        682,
+        640,
+        904
+      ],
+      "source_anchor": [
+        535,
+        789
+      ],
+      "phase": "summon_effect",
+      "file": "summon_26.png",
+      "index": 25,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1effect_spritesheet.png",
+      "source_crop": [
+        640,
+        682,
+        871,
+        904
+      ],
+      "source_anchor": [
+        749,
+        789
+      ],
+      "phase": "summon_effect",
+      "file": "summon_27.png",
+      "index": 26,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1effect_spritesheet.png",
+      "source_crop": [
+        871,
+        682,
+        1066,
+        904
+      ],
+      "source_anchor": [
+        967,
+        789
+      ],
+      "phase": "summon_effect",
+      "file": "summon_28.png",
+      "index": 27,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1effect_spritesheet.png",
+      "source_crop": [
+        1066,
+        682,
+        1250,
+        904
+      ],
+      "source_anchor": [
+        1152,
+        789
+      ],
+      "phase": "summon_effect",
+      "file": "summon_29.png",
+      "index": 28,
+      "anchor": [
+        256,
+        208
+      ]
+    },
+    {
+      "source": "stage8_summon1effect_spritesheet.png",
+      "source_crop": [
+        1250,
+        682,
+        1448,
+        904
+      ],
+      "source_anchor": [
+        1345,
+        789
+      ],
+      "phase": "summon_effect",
+      "file": "summon_30.png",
+      "index": 29,
+      "anchor": [
+        256,
+        208
+      ]
+    }
+  ]
+}

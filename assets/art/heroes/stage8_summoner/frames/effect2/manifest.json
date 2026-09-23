@@ -1,0 +1,463 @@
+{
+  "source": "stage8_summon2_spritesheet.png",
+  "frame_count": 22,
+  "cell_size": [
+    512,
+    320
+  ],
+  "sheet_size": [
+    3072,
+    1280
+  ],
+  "columns": 6,
+  "rows": 4,
+  "anchor": [
+    256,
+    160
+  ],
+  "frame_order": [
+    "summon_01.png",
+    "summon_02.png",
+    "summon_03.png",
+    "summon_04.png",
+    "idle_01.png",
+    "idle_02.png",
+    "idle_03.png",
+    "idle_04.png",
+    "move_01.png",
+    "move_02.png",
+    "move_03.png",
+    "move_04.png",
+    "move_05.png",
+    "move_06.png",
+    "attack_01.png",
+    "attack_02.png",
+    "attack_03.png",
+    "attack_04.png",
+    "death_01.png",
+    "death_02.png",
+    "death_03.png",
+    "death_04.png"
+  ],
+  "alignment": "Shared eye or effect core; original pixels kept at 1:1 scale",
+  "frames": [
+    {
+      "index": 0,
+      "file": "summon_01.png",
+      "action": "summon",
+      "source_crop": [
+        0,
+        35,
+        251,
+        258
+      ],
+      "source_core": [
+        151,
+        184
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 1,
+      "file": "summon_02.png",
+      "action": "summon",
+      "source_crop": [
+        251,
+        35,
+        490,
+        258
+      ],
+      "source_core": [
+        384,
+        184
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 2,
+      "file": "summon_03.png",
+      "action": "summon",
+      "source_crop": [
+        490,
+        35,
+        719,
+        258
+      ],
+      "source_core": [
+        623,
+        182
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 3,
+      "file": "summon_04.png",
+      "action": "summon",
+      "source_crop": [
+        719,
+        35,
+        951,
+        258
+      ],
+      "source_core": [
+        876,
+        178
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 4,
+      "file": "idle_01.png",
+      "action": "idle",
+      "source_crop": [
+        0,
+        268,
+        258,
+        482
+      ],
+      "source_core": [
+        192,
+        402
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 5,
+      "file": "idle_02.png",
+      "action": "idle",
+      "source_crop": [
+        258,
+        268,
+        491,
+        482
+      ],
+      "source_core": [
+        432,
+        405
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 6,
+      "file": "idle_03.png",
+      "action": "idle",
+      "source_crop": [
+        491,
+        268,
+        719,
+        482
+      ],
+      "source_core": [
+        665,
+        410
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 7,
+      "file": "idle_04.png",
+      "action": "idle",
+      "source_crop": [
+        719,
+        268,
+        951,
+        482
+      ],
+      "source_core": [
+        895,
+        408
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 8,
+      "file": "move_01.png",
+      "action": "move",
+      "source_crop": [
+        0,
+        489,
+        272,
+        664
+      ],
+      "source_core": [
+        225,
+        588
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 9,
+      "file": "move_02.png",
+      "action": "move",
+      "source_crop": [
+        272,
+        489,
+        516,
+        664
+      ],
+      "source_core": [
+        468,
+        591
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 10,
+      "file": "move_03.png",
+      "action": "move",
+      "source_crop": [
+        516,
+        489,
+        754,
+        664
+      ],
+      "source_core": [
+        708,
+        596
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 11,
+      "file": "move_04.png",
+      "action": "move",
+      "source_crop": [
+        754,
+        489,
+        989,
+        664
+      ],
+      "source_core": [
+        948,
+        598
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 12,
+      "file": "move_05.png",
+      "action": "move",
+      "source_crop": [
+        989,
+        489,
+        1221,
+        664
+      ],
+      "source_core": [
+        1177,
+        600
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 13,
+      "file": "move_06.png",
+      "action": "move",
+      "source_crop": [
+        1221,
+        489,
+        1448,
+        664
+      ],
+      "source_core": [
+        1390,
+        596
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 14,
+      "file": "attack_01.png",
+      "action": "attack",
+      "source_crop": [
+        0,
+        665,
+        268,
+        863
+      ],
+      "source_core": [
+        214,
+        777
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 15,
+      "file": "attack_02.png",
+      "action": "attack",
+      "source_crop": [
+        268,
+        665,
+        519,
+        863
+      ],
+      "source_core": [
+        455,
+        780
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 16,
+      "file": "attack_03.png",
+      "action": "attack",
+      "source_crop": [
+        519,
+        665,
+        769,
+        863
+      ],
+      "source_core": [
+        666,
+        783
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 17,
+      "file": "attack_04.png",
+      "action": "attack",
+      "source_crop": [
+        769,
+        665,
+        982,
+        863
+      ],
+      "source_core": [
+        908,
+        777
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 18,
+      "file": "death_01.png",
+      "action": "death",
+      "source_crop": [
+        0,
+        867,
+        256,
+        1061
+      ],
+      "source_core": [
+        195,
+        967
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 19,
+      "file": "death_02.png",
+      "action": "death",
+      "source_crop": [
+        256,
+        867,
+        492,
+        1061
+      ],
+      "source_core": [
+        408,
+        971
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 20,
+      "file": "death_03.png",
+      "action": "death",
+      "source_crop": [
+        492,
+        867,
+        721,
+        1061
+      ],
+      "source_core": [
+        611,
+        978
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    },
+    {
+      "index": 21,
+      "file": "death_04.png",
+      "action": "death",
+      "source_crop": [
+        721,
+        867,
+        936,
+        1061
+      ],
+      "source_core": [
+        826,
+        970
+      ],
+      "anchor": [
+        256,
+        160
+      ]
+    }
+  ]
+}

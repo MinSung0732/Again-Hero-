@@ -1,0 +1,419 @@
+{
+  "source": "stage9_hero_spritesheet.png",
+  "frame_count": 22,
+  "cell_size": [
+    384,
+    256
+  ],
+  "sheet_size": [
+    2304,
+    1024
+  ],
+  "columns": 6,
+  "rows": 4,
+  "anchor": [
+    160,
+    220
+  ],
+  "frame_order": [
+    "idle_01.png",
+    "idle_02.png",
+    "idle_03.png",
+    "idle_04.png",
+    "walk_01.png",
+    "walk_02.png",
+    "walk_03.png",
+    "walk_04.png",
+    "walk_05.png",
+    "walk_06.png",
+    "attack_01.png",
+    "attack_02.png",
+    "attack_03.png",
+    "attack_04.png",
+    "attack_05.png",
+    "hit_01.png",
+    "hit_02.png",
+    "hit_03.png",
+    "death_01.png",
+    "death_02.png",
+    "death_03.png",
+    "death_04.png"
+  ],
+  "alignment": "Fixed torso X and ground Y; all original pixels at native scale",
+  "frames": [
+    {
+      "index": 0,
+      "file": "idle_01.png",
+      "action": "idle",
+      "source_crop": [
+        284,
+        37,
+        440,
+        224
+      ],
+      "source_torso_x": 359,
+      "source_ground_y": 220,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 1,
+      "file": "idle_02.png",
+      "action": "idle",
+      "source_crop": [
+        515,
+        35,
+        675,
+        223
+      ],
+      "source_torso_x": 588,
+      "source_ground_y": 220,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 2,
+      "file": "idle_03.png",
+      "action": "idle",
+      "source_crop": [
+        766,
+        35,
+        927,
+        223
+      ],
+      "source_torso_x": 835,
+      "source_ground_y": 220,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 3,
+      "file": "idle_04.png",
+      "action": "idle",
+      "source_crop": [
+        1006,
+        35,
+        1167,
+        223
+      ],
+      "source_torso_x": 1076,
+      "source_ground_y": 220,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 4,
+      "file": "walk_01.png",
+      "action": "walk",
+      "source_crop": [
+        82,
+        251,
+        243,
+        437
+      ],
+      "source_torso_x": 160,
+      "source_ground_y": 435,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 5,
+      "file": "walk_02.png",
+      "action": "walk",
+      "source_crop": [
+        303,
+        249,
+        467,
+        437
+      ],
+      "source_torso_x": 385,
+      "source_ground_y": 435,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 6,
+      "file": "walk_03.png",
+      "action": "walk",
+      "source_crop": [
+        531,
+        251,
+        696,
+        437
+      ],
+      "source_torso_x": 617,
+      "source_ground_y": 435,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 7,
+      "file": "walk_04.png",
+      "action": "walk",
+      "source_crop": [
+        780,
+        251,
+        937,
+        437
+      ],
+      "source_torso_x": 857,
+      "source_ground_y": 435,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 8,
+      "file": "walk_05.png",
+      "action": "walk",
+      "source_crop": [
+        990,
+        249,
+        1149,
+        437
+      ],
+      "source_torso_x": 1076,
+      "source_ground_y": 435,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 9,
+      "file": "walk_06.png",
+      "action": "walk",
+      "source_crop": [
+        1205,
+        251,
+        1372,
+        437
+      ],
+      "source_torso_x": 1292,
+      "source_ground_y": 435,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 10,
+      "file": "attack_01.png",
+      "action": "attack",
+      "source_crop": [
+        161,
+        468,
+        326,
+        651
+      ],
+      "source_torso_x": 239,
+      "source_ground_y": 649,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 11,
+      "file": "attack_02.png",
+      "action": "attack",
+      "source_crop": [
+        395,
+        459,
+        575,
+        651
+      ],
+      "source_torso_x": 477,
+      "source_ground_y": 649,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 12,
+      "file": "attack_03.png",
+      "action": "attack",
+      "source_crop": [
+        634,
+        468,
+        814,
+        651
+      ],
+      "source_torso_x": 713,
+      "source_ground_y": 649,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 13,
+      "file": "attack_04.png",
+      "action": "attack",
+      "source_crop": [
+        864,
+        477,
+        1088,
+        651
+      ],
+      "source_torso_x": 948,
+      "source_ground_y": 649,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 14,
+      "file": "attack_05.png",
+      "action": "attack",
+      "source_crop": [
+        1127,
+        468,
+        1294,
+        651
+      ],
+      "source_torso_x": 1209,
+      "source_ground_y": 649,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 15,
+      "file": "hit_01.png",
+      "action": "hit",
+      "source_crop": [
+        360,
+        682,
+        522,
+        863
+      ],
+      "source_torso_x": 447,
+      "source_ground_y": 860,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 16,
+      "file": "hit_02.png",
+      "action": "hit",
+      "source_crop": [
+        642,
+        698,
+        805,
+        863
+      ],
+      "source_torso_x": 723,
+      "source_ground_y": 860,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 17,
+      "file": "hit_03.png",
+      "action": "hit",
+      "source_crop": [
+        925,
+        689,
+        1081,
+        863
+      ],
+      "source_torso_x": 999,
+      "source_ground_y": 860,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 18,
+      "file": "death_01.png",
+      "action": "death",
+      "source_crop": [
+        209,
+        891,
+        371,
+        1057
+      ],
+      "source_torso_x": 283,
+      "source_ground_y": 1060,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 19,
+      "file": "death_02.png",
+      "action": "death",
+      "source_crop": [
+        479,
+        908,
+        657,
+        1057
+      ],
+      "source_torso_x": 563,
+      "source_ground_y": 1060,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 20,
+      "file": "death_03.png",
+      "action": "death",
+      "source_crop": [
+        752,
+        939,
+        964,
+        1057
+      ],
+      "source_torso_x": 855,
+      "source_ground_y": 1060,
+      "anchor": [
+        160,
+        220
+      ]
+    },
+    {
+      "index": 21,
+      "file": "death_04.png",
+      "action": "death",
+      "source_crop": [
+        1030,
+        954,
+        1296,
+        1064
+      ],
+      "source_torso_x": 1170,
+      "source_ground_y": 1060,
+      "anchor": [
+        160,
+        220
+      ]
+    }
+  ]
+}

@@ -1,0 +1,643 @@
+{
+  "source": "stage9_effects_spritesheet.png",
+  "frame_count": 31,
+  "cell_size": [
+    384,
+    256
+  ],
+  "sheet_size": [
+    2304,
+    1536
+  ],
+  "columns": 6,
+  "rows": 6,
+  "anchor": [
+    192,
+    128
+  ],
+  "frame_order": [
+    "effect_01.png",
+    "effect_02.png",
+    "effect_03.png",
+    "effect_04.png",
+    "effect_05.png",
+    "effect_06.png",
+    "effect_07.png",
+    "effect_08.png",
+    "effect_09.png",
+    "effect_10.png",
+    "effect_11.png",
+    "effect_12.png",
+    "effect_13.png",
+    "effect_14.png",
+    "effect_15.png",
+    "effect_16.png",
+    "effect_17.png",
+    "effect_18.png",
+    "effect_19.png",
+    "effect_20.png",
+    "effect_21.png",
+    "effect_22.png",
+    "effect_23.png",
+    "effect_24.png",
+    "effect_25.png",
+    "effect_26.png",
+    "effect_27.png",
+    "effect_28.png",
+    "effect_29.png",
+    "effect_30.png",
+    "effect_31.png"
+  ],
+  "alignment": "Fixed core X and effect axis Y within each sequence; original 1:1 pixels",
+  "frames": [
+    {
+      "index": 0,
+      "file": "effect_01.png",
+      "sequence": "projectile",
+      "source_crop": [
+        133,
+        55,
+        249,
+        158
+      ],
+      "source_core": [
+        205,
+        112
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 1,
+      "file": "effect_02.png",
+      "sequence": "projectile",
+      "source_crop": [
+        308,
+        51,
+        447,
+        165
+      ],
+      "source_core": [
+        385,
+        112
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 2,
+      "file": "effect_03.png",
+      "sequence": "projectile",
+      "source_crop": [
+        494,
+        55,
+        641,
+        159
+      ],
+      "source_core": [
+        604,
+        112
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 3,
+      "file": "effect_04.png",
+      "sequence": "projectile",
+      "source_crop": [
+        683,
+        63,
+        840,
+        154
+      ],
+      "source_core": [
+        811,
+        112
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 4,
+      "file": "effect_05.png",
+      "sequence": "projectile",
+      "source_crop": [
+        885,
+        64,
+        1090,
+        153
+      ],
+      "source_core": [
+        1061,
+        112
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 5,
+      "file": "effect_06.png",
+      "sequence": "projectile",
+      "source_crop": [
+        1135,
+        71,
+        1316,
+        152
+      ],
+      "source_core": [
+        1255,
+        112
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 6,
+      "file": "effect_07.png",
+      "sequence": "flash",
+      "source_crop": [
+        127,
+        230,
+        228,
+        330
+      ],
+      "source_core": [
+        180,
+        279
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 7,
+      "file": "effect_08.png",
+      "sequence": "flash",
+      "source_crop": [
+        292,
+        211,
+        424,
+        345
+      ],
+      "source_core": [
+        361,
+        279
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 8,
+      "file": "effect_09.png",
+      "sequence": "flash",
+      "source_crop": [
+        482,
+        212,
+        628,
+        345
+      ],
+      "source_core": [
+        557,
+        279
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 9,
+      "file": "effect_10.png",
+      "sequence": "flash",
+      "source_crop": [
+        680,
+        218,
+        800,
+        331
+      ],
+      "source_core": [
+        747,
+        279
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 10,
+      "file": "effect_11.png",
+      "sequence": "sigil",
+      "source_crop": [
+        124,
+        411,
+        229,
+        530
+      ],
+      "source_core": [
+        181,
+        473
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 11,
+      "file": "effect_12.png",
+      "sequence": "sigil",
+      "source_crop": [
+        276,
+        394,
+        457,
+        552
+      ],
+      "source_core": [
+        367,
+        473
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 12,
+      "file": "effect_13.png",
+      "sequence": "sigil",
+      "source_crop": [
+        482,
+        379,
+        676,
+        560
+      ],
+      "source_core": [
+        579,
+        473
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 13,
+      "file": "effect_14.png",
+      "sequence": "sigil",
+      "source_crop": [
+        701,
+        373,
+        903,
+        569
+      ],
+      "source_core": [
+        801,
+        473
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 14,
+      "file": "effect_15.png",
+      "sequence": "sigil",
+      "source_crop": [
+        930,
+        385,
+        1126,
+        568
+      ],
+      "source_core": [
+        1024,
+        473
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 15,
+      "file": "effect_16.png",
+      "sequence": "sigil",
+      "source_crop": [
+        1158,
+        393,
+        1339,
+        557
+      ],
+      "source_core": [
+        1252,
+        473
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 16,
+      "file": "effect_17.png",
+      "sequence": "pillar",
+      "source_crop": [
+        122,
+        601,
+        257,
+        711
+      ],
+      "source_core": [
+        183,
+        701
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 17,
+      "file": "effect_18.png",
+      "sequence": "pillar",
+      "source_crop": [
+        305,
+        595,
+        465,
+        711
+      ],
+      "source_core": [
+        386,
+        701
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 18,
+      "file": "effect_19.png",
+      "sequence": "pillar",
+      "source_crop": [
+        500,
+        591,
+        690,
+        705
+      ],
+      "source_core": [
+        590,
+        701
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 19,
+      "file": "effect_20.png",
+      "sequence": "pillar",
+      "source_crop": [
+        729,
+        589,
+        917,
+        713
+      ],
+      "source_core": [
+        812,
+        701
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 20,
+      "file": "effect_21.png",
+      "sequence": "pillar",
+      "source_crop": [
+        963,
+        597,
+        1126,
+        712
+      ],
+      "source_core": [
+        1032,
+        701
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 21,
+      "file": "effect_22.png",
+      "sequence": "pillar",
+      "source_crop": [
+        1191,
+        626,
+        1319,
+        702
+      ],
+      "source_core": [
+        1250,
+        701
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 22,
+      "file": "effect_23.png",
+      "sequence": "ward",
+      "source_crop": [
+        131,
+        779,
+        268,
+        906
+      ],
+      "source_core": [
+        199,
+        837
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 23,
+      "file": "effect_24.png",
+      "sequence": "ward",
+      "source_crop": [
+        305,
+        764,
+        467,
+        908
+      ],
+      "source_core": [
+        383,
+        837
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 24,
+      "file": "effect_25.png",
+      "sequence": "ward",
+      "source_crop": [
+        511,
+        757,
+        669,
+        908
+      ],
+      "source_core": [
+        581,
+        837
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 25,
+      "file": "effect_26.png",
+      "sequence": "ward",
+      "source_crop": [
+        700,
+        757,
+        870,
+        923
+      ],
+      "source_core": [
+        779,
+        837
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 26,
+      "file": "effect_27.png",
+      "sequence": "ward",
+      "source_crop": [
+        887,
+        767,
+        1043,
+        908
+      ],
+      "source_core": [
+        964,
+        837
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 27,
+      "file": "effect_28.png",
+      "sequence": "ward",
+      "source_crop": [
+        1054,
+        769,
+        1318,
+        907
+      ],
+      "source_core": [
+        1175,
+        837
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 28,
+      "file": "effect_29.png",
+      "sequence": "disperse",
+      "source_crop": [
+        128,
+        956,
+        235,
+        1049
+      ],
+      "source_core": [
+        181,
+        1002
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 29,
+      "file": "effect_30.png",
+      "sequence": "disperse",
+      "source_crop": [
+        294,
+        956,
+        417,
+        1050
+      ],
+      "source_core": [
+        362,
+        1002
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    },
+    {
+      "index": 30,
+      "file": "effect_31.png",
+      "sequence": "disperse",
+      "source_crop": [
+        505,
+        973,
+        584,
+        1025
+      ],
+      "source_core": [
+        547,
+        1002
+      ],
+      "anchor": [
+        192,
+        128
+      ]
+    }
+  ]
+}
