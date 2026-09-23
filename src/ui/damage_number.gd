@@ -12,14 +12,29 @@ var start_position: Vector2 = Vector2.ZERO
 var horizontal_drift: float = 0.0
 var numeric_amount: int = 0
 var is_numeric: bool = false
+var numeric_prefix: String = ""
 
 func setup(amount: int, text_color: Color = Color.WHITE) -> void:
 	numeric_amount = maxi(amount, 0)
 	is_numeric = true
+	numeric_prefix = ""
 	value_label.text = str(numeric_amount)
 	value_label.add_theme_font_size_override("font_size", 32)
 	value_label.add_theme_color_override("font_color", text_color)
 	_start_float()
+
+func setup_heal(
+	amount: int,
+	text_color: Color = Color(0.32, 1.0, 0.42, 1.0)
+) -> void:
+	numeric_amount = maxi(amount, 0)
+	is_numeric = true
+	numeric_prefix = "+"
+	value_label.text = "+%d" % numeric_amount
+	value_label.add_theme_font_size_override("font_size", 32)
+	value_label.add_theme_color_override("font_color", text_color)
+	_start_float()
+
 
 func setup_text(
 	message: String,
@@ -32,7 +47,22 @@ func setup_text(
 	_start_float()
 
 func can_merge_damage() -> bool:
-	return is_numeric and elapsed <= MERGE_WINDOW and not is_queued_for_deletion()
+	return (
+		is_numeric
+		and numeric_prefix.is_empty()
+		and elapsed <= MERGE_WINDOW
+		and not is_queued_for_deletion()
+	)
+
+
+func can_merge_heal() -> bool:
+	return (
+		is_numeric
+		and numeric_prefix == "+"
+		and elapsed <= MERGE_WINDOW
+		and not is_queued_for_deletion()
+	)
+
 
 func add_damage(amount: int, text_color: Color = Color.WHITE) -> void:
 	if not can_merge_damage():
@@ -42,6 +72,19 @@ func add_damage(amount: int, text_color: Color = Color.WHITE) -> void:
 	value_label.add_theme_color_override("font_color", text_color)
 	elapsed = minf(elapsed, MERGE_WINDOW * 0.35)
 	scale = Vector2.ONE * 1.08
+
+func add_heal(
+	amount: int,
+	text_color: Color = Color(0.32, 1.0, 0.42, 1.0)
+) -> void:
+	if not can_merge_heal():
+		return
+	numeric_amount += maxi(amount, 0)
+	value_label.text = "+%d" % numeric_amount
+	value_label.add_theme_color_override("font_color", text_color)
+	elapsed = minf(elapsed, MERGE_WINDOW * 0.35)
+	scale = Vector2.ONE * 1.08
+
 
 func _start_float() -> void:
 	elapsed = 0.0
