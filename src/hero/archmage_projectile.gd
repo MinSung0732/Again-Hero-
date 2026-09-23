@@ -1,5 +1,7 @@
 extends Area2D
 
+static var _orb_frames_cache: SpriteFrames
+
 const STATUS_SCRIPT := preload("res://src/hero/archmage_element_status.gd")
 const ORB_FRAME_PATHS := [
 	"res://assets/art/heroes/stage5_archmage/frames/effect6/orb_01.png",
@@ -258,17 +260,20 @@ func _spawn_impact_feedback(world_position: Vector2) -> void:
 	tween.finished.connect(ring.queue_free)
 
 func _apply_orb_visual() -> void:
-	var frames := SpriteFrames.new()
-	if frames.has_animation("default"):
-		frames.remove_animation("default")
-	frames.add_animation("fly")
-	frames.set_animation_loop("fly", true)
-	frames.set_animation_speed("fly", 18.0)
+	var frames := _orb_frames_cache
+	if frames == null:
+		frames = SpriteFrames.new()
+		if frames.has_animation("default"):
+			frames.remove_animation("default")
+		frames.add_animation("fly")
+		frames.set_animation_loop("fly", true)
+		frames.set_animation_speed("fly", 18.0)
 
-	for path in ORB_FRAME_PATHS:
-		var texture := _load_texture_direct(path)
-		if texture != null:
-			frames.add_frame("fly", texture)
+		for path in ORB_FRAME_PATHS:
+			var texture := _load_texture_direct(path)
+			if texture != null:
+				frames.add_frame("fly", texture)
+		_orb_frames_cache = frames
 
 	if frames.get_frame_count("fly") <= 0:
 		return
@@ -279,12 +284,12 @@ func _apply_orb_visual() -> void:
 	projectile_sprite.play("fly")
 
 func _load_texture_direct(path: String) -> Texture2D:
-	if FileAccess.file_exists(path):
-		var image := Image.new()
-		if image.load(path) == OK:
-			return ImageTexture.create_from_image(image)
 	if ResourceLoader.exists(path):
 		var loaded = load(path)
 		if loaded is Texture2D:
 			return loaded
+	if FileAccess.file_exists(path):
+		var image := Image.new()
+		if image.load(path) == OK:
+			return ImageTexture.create_from_image(image)
 	return null
