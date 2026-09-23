@@ -2402,7 +2402,7 @@ func _apply_profile_visual() -> void:
 			berserker_frames, "move", berserker_dir, "walk", 6, 9.0, true
 		)
 		_add_named_sequence_animation(
-			berserker_frames, "attack", berserker_dir, "atk", 6, 10.0, false
+			berserker_frames, "attack", berserker_dir, "atk", 2, 10.0, false
 		)
 		_add_named_sequence_animation(
 			berserker_frames, "hit", berserker_dir, "hit", 3, 13.0, false
