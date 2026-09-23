@@ -194,6 +194,8 @@ var berserker_skill4_cooldown: float = 0.0
 var berserker_blood_art_eighth_stacks: int = 0
 var berserker_double_edged_heal_multiplier: float = 1.0
 var berserker_missing_hp_bonus_override: float = -1.0
+var berserker_killing_urge_bonus: float = 0.0
+var berserker_blood_art_cooldown_reduction: float = 0.0
 var berserker_skill_global_cooldown: float = 0.0
 
 var archmage_element_config: Dictionary = {}
@@ -453,6 +455,8 @@ func configure_profile(profile: Dictionary) -> void:
 	berserker_blood_art_eighth_stacks = 0
 	berserker_double_edged_heal_multiplier = 1.0
 	berserker_missing_hp_bonus_override = -1.0
+	berserker_killing_urge_bonus = 0.0
+	berserker_blood_art_cooldown_reduction = 0.0
 	berserker_skill_global_cooldown = 0.0
 
 	var profile_gunner = profile.get("gunner", {})
@@ -5669,25 +5673,25 @@ func get_skill_cooldown_hud() -> Array:
 				"res://assets/art/heroes/stage4_gunner/frames/effect/effect_projectile_05.png"
 			)
 		"berserker_madness":
-			_append_skill_cooldown_hud(
+			_append_berserker_skill_cooldown_hud(
 				skills,
 				Dictionary(berserker_config.get("skill_1", {})),
 				berserker_skill1_cooldown,
 				"res://assets/art/heroes/stage6_berserker/frames/effect4/heavy_slash_01.png"
 			)
-			_append_skill_cooldown_hud(
+			_append_berserker_skill_cooldown_hud(
 				skills,
 				Dictionary(berserker_config.get("skill_2", {})),
 				berserker_skill2_cooldown,
 				"res://assets/art/heroes/stage6_berserker/frames/effect3/ground_slam_07.png"
 			)
-			_append_skill_cooldown_hud(
+			_append_berserker_skill_cooldown_hud(
 				skills,
 				Dictionary(berserker_config.get("skill_3", {})),
 				berserker_skill3_cooldown,
 				"res://assets/art/heroes/stage6_berserker/frames/effect5/hit_effect_01.png"
 			)
-			_append_skill_cooldown_hud(
+			_append_berserker_skill_cooldown_hud(
 				skills,
 				Dictionary(berserker_config.get("skill_4", {})),
 				berserker_skill4_cooldown,
@@ -5706,6 +5710,29 @@ func _append_skill_cooldown_hud(
 	if config.is_empty():
 		return
 	var cooldown_total := maxf(float(config.get("cooldown", 0.0)), 0.0)
+	if cooldown_total <= 0.0:
+		return
+	skills.append({
+		"id": String(config.get("id", "skill")),
+		"name": String(config.get("name", "기술")),
+		"cooldown_total": cooldown_total,
+		"cooldown_remaining": maxf(remaining, 0.0),
+		"icon_path": icon_path,
+	})
+
+
+func _append_berserker_skill_cooldown_hud(
+	skills: Array,
+	config: Dictionary,
+	remaining: float,
+	icon_path: String
+) -> void:
+	if config.is_empty():
+		return
+	var cooldown_total: float = _get_berserker_skill_cooldown(
+		config,
+		0.0
+	)
 	if cooldown_total <= 0.0:
 		return
 	skills.append({
@@ -6460,6 +6487,60 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 				1.15
 			)
 
+		"berserker_blood_overflow":
+			var skill2_value = berserker_config.get("skill_2", {})
+			if typeof(skill2_value) == TYPE_DICTIONARY:
+				var skill2_config: Dictionary = skill2_value
+				skill2_config["blood_duration"] = minf(
+					float(skill2_config.get("blood_duration", 2.0)) + 0.25,
+					3.0
+				)
+				berserker_config["skill_2"] = skill2_config
+
+		"berserker_blood_orb_devour":
+			var skill3_value = berserker_config.get("skill_3", {})
+			if typeof(skill3_value) == TYPE_DICTIONARY:
+				var skill3_config: Dictionary = skill3_value
+				skill3_config["heal_per_orb"] = mini(
+					int(skill3_config.get("heal_per_orb", 70)) + 10,
+					120
+				)
+				berserker_config["skill_3"] = skill3_config
+
+		"berserker_killing_urge":
+			berserker_killing_urge_bonus = minf(
+				berserker_killing_urge_bonus + 0.20,
+				1.0
+			)
+
+		"berserker_blood_art_mastery":
+			berserker_blood_art_cooldown_reduction = minf(
+				berserker_blood_art_cooldown_reduction + 0.03,
+				0.15
+			)
+
+		"berserker_frenzied_leap":
+			berserker_config["madness_target_radius"] = minf(
+				float(
+					berserker_config.get(
+						"madness_target_radius",
+						375.0
+					)
+				) + 20.0,
+				475.0
+			)
+
+		"berserker_undying_madman":
+			berserker_config["revive_hp_ratio"] = minf(
+				float(
+					berserker_config.get(
+						"revive_hp_ratio",
+						0.50
+					)
+				) + 0.05,
+				0.70
+			)
+
 		"heal":
 			heal_direct(int(effect.get("value", 0)))
 
@@ -6719,6 +6800,23 @@ func _try_use_berserker_contextual_skill(
 	return false
 
 
+func _get_berserker_skill_cooldown(
+	skill_config: Dictionary,
+	fallback: float
+) -> float:
+	var base_cooldown: float = maxf(
+		float(skill_config.get("cooldown", fallback)),
+		0.0
+	)
+	return base_cooldown * (
+		1.0 - clampf(
+			berserker_blood_art_cooldown_reduction,
+			0.0,
+			0.15
+		)
+	)
+
+
 func _pay_berserker_skill_hp_cost(hp_cost_ratio: float) -> void:
 	var ratio: float = clampf(hp_cost_ratio, 0.0, 0.95)
 	var cost_base: float = float(current_hp)
@@ -6784,9 +6882,9 @@ func _start_berserker_skill1(current_target: Node2D) -> void:
 	berserker_skill1_active = true
 	berserker_skill1_wave_index = 0
 	berserker_skill1_wave_timer = 0.0
-	berserker_skill1_cooldown = maxf(
-		float(skill_config.get("cooldown", 15.0)),
-		0.0
+	berserker_skill1_cooldown = _get_berserker_skill_cooldown(
+		skill_config,
+		15.0
 	)
 	berserker_skill_global_cooldown = maxf(
 		berserker_skill_global_cooldown,
@@ -6964,9 +7062,9 @@ func _start_berserker_skill2(current_target: Node2D) -> void:
 	)
 	_pay_berserker_skill_hp_cost(hp_cost_ratio)
 
-	berserker_skill2_cooldown = maxf(
-		float(skill_config.get("cooldown", 19.0)),
-		0.0
+	berserker_skill2_cooldown = _get_berserker_skill_cooldown(
+		skill_config,
+		19.0
 	)
 	berserker_skill_global_cooldown = maxf(
 		berserker_skill_global_cooldown,
@@ -7313,9 +7411,9 @@ func _start_berserker_skill3(current_target: Node2D) -> void:
 	_face_attack_direction(dash_direction.x)
 
 	berserker_skill3_active = true
-	berserker_skill3_cooldown = maxf(
-		float(skill_config.get("cooldown", 30.0)),
-		0.0
+	berserker_skill3_cooldown = _get_berserker_skill_cooldown(
+		skill_config,
+		30.0
 	)
 	berserker_skill_global_cooldown = maxf(
 		berserker_skill_global_cooldown,
@@ -7526,9 +7624,9 @@ func _start_berserker_skill4() -> void:
 	)
 	_pay_berserker_skill_hp_cost(hp_cost_ratio)
 
-	berserker_skill4_cooldown = maxf(
-		float(skill_config.get("cooldown", 8.0)),
-		0.0
+	berserker_skill4_cooldown = _get_berserker_skill_cooldown(
+		skill_config,
+		8.0
 	)
 	berserker_skill_global_cooldown = maxf(
 		berserker_skill_global_cooldown,
@@ -7635,6 +7733,27 @@ func _start_berserker_skill4() -> void:
 
 
 func notify_berserker_skill_kill() -> void:
+	if berserker_madness_active:
+		if (
+			berserker_killing_urge_bonus > 0.0
+			and int(
+				build_counts.get(
+					"berserker_different_dream",
+					0
+				)
+			) <= 0
+		):
+			var gauge_max: float = maxf(
+				float(berserker_config.get("gauge_max", 100.0)),
+				1.0
+			)
+			ultimate_charge = minf(
+				ultimate_charge + berserker_killing_urge_bonus,
+				gauge_max
+			)
+			queue_redraw()
+		return
+
 	_add_berserker_gauge(
 		maxf(
 			float(berserker_config.get("gauge_per_kill", 1.0)),
@@ -7805,12 +7924,7 @@ func _berserker_basic_attack(current_target: Node2D) -> void:
 			if hp_after_value != null and int(hp_after_value) <= 0:
 				killed = true
 		if killed:
-			_add_berserker_gauge(
-				maxf(
-					float(berserker_config.get("gauge_per_kill", 1.0)),
-					0.0
-				)
-			)
+			notify_berserker_skill_kill()
 
 	_damage_treasure_chests(
 		global_position + direction * (reach * 0.55),
