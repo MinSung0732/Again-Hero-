@@ -3712,7 +3712,7 @@ func _skill_damage_multiplier(empowered: bool) -> float:
 
 func _begin_archmage_casting_sequence() -> void:
 	archmage_casting_sequence_count += 1
-	_begin_archmage_casting_sequence()
+	archmage_casting_sequence = true
 
 
 func _end_archmage_casting_sequence() -> void:
@@ -3779,7 +3779,7 @@ func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
 		maxf(float(config.get("thrust_half_width", 92.0)), 1.0),
 		thrust_damage
 	)
-	archmage_casting_sequence = false
+	_end_archmage_casting_sequence()
 
 
 func _cast_archmage_ice_bolt(config: Dictionary, empowered: bool) -> void:
@@ -3856,7 +3856,7 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 		)
 		_damage_monsters_in_radius_once(position, radius, spike_damage, hit_ids)
 		await get_tree().create_timer(maxf(float(config.get("spike_delay", 0.07)), 0.02)).timeout
-	archmage_casting_sequence = false
+	_end_archmage_casting_sequence()
 
 
 func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
@@ -3891,7 +3891,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 			monster.set_meta("gunner_slow_multiplier", clampf(float(config.get("slow_multiplier", 0.60)), 0.0, 1.0))
 			monster.set_meta("gunner_slow_until", Time.get_ticks_msec() + int(maxf(float(config.get("slow_duration", 2.0)), 0.0) * 1000.0))
 		await get_tree().create_timer(maxf(float(config.get("burst_delay", 0.09)), 0.02)).timeout
-	archmage_casting_sequence = false
+	_end_archmage_casting_sequence()
 
 
 func _cast_archmage_chain_dagger(config: Dictionary, empowered: bool) -> void:
