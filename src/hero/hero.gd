@@ -187,6 +187,7 @@ var berserker_skill1_active: bool = false
 var berserker_skill1_wave_index: int = 0
 var berserker_skill1_wave_timer: float = 0.0
 var berserker_skill1_direction: Vector2 = Vector2.RIGHT
+var berserker_skill2_cooldown: float = 0.0
 
 var archmage_element_config: Dictionary = {}
 var archmage_last_element: String = ""
@@ -438,6 +439,7 @@ func configure_profile(profile: Dictionary) -> void:
 	berserker_skill1_wave_index = 0
 	berserker_skill1_wave_timer = 0.0
 	berserker_skill1_direction = Vector2.RIGHT
+	berserker_skill2_cooldown = 0.0
 
 	var profile_gunner = profile.get("gunner", {})
 	gunner_config = (
@@ -788,6 +790,10 @@ func _physics_process_gunner(delta: float) -> void:
 		_refresh_ai_observation()
 
 	attack_timer = maxf(attack_timer - delta, 0.0)
+	berserker_skill2_cooldown = maxf(
+		berserker_skill2_cooldown - delta,
+		0.0
+	)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
 	wander_timer = maxf(wander_timer - delta, 0.0)
 	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
@@ -6493,6 +6499,8 @@ func _physics_process_berserker(delta: float) -> void:
 		)
 	):
 		_start_berserker_skill1(target)
+	elif berserker_skill2_cooldown <= 0.0 and distance <= 320.0:
+		_start_berserker_skill2(target)
 	elif distance <= attack_trigger_range and attack_timer <= 0.0:
 		_berserker_basic_attack(target)
 
@@ -6690,6 +6698,316 @@ func _berserker_emit_skill1_wave(
 		false,
 		null
 	)
+
+
+func _start_berserker_skill2(current_target: Node2D) -> void:
+	if not is_instance_valid(current_target):
+		return
+
+	var skill_config_value = berserker_config.get("skill_2", {})
+	if typeof(skill_config_value) != TYPE_DICTIONARY:
+		return
+	var skill_config: Dictionary = skill_config_value
+	if skill_config.is_empty():
+		return
+
+	var hp_cost_ratio: float = clampf(
+		float(skill_config.get("hp_cost_ratio", 0.07)),
+		0.0,
+		0.95
+	)
+	var hp_cost: int = maxi(
+		int(round(float(current_hp) * hp_cost_ratio)),
+		1
+	)
+	current_hp = maxi(current_hp - hp_cost, 1)
+	health_changed.emit(current_hp, max_hp)
+
+	berserker_skill2_cooldown = maxf(
+		float(skill_config.get("cooldown", 19.0)),
+		0.0
+	)
+	attack_timer = maxf(attack_timer, 0.72)
+	attack_pose_timer = 0.58
+	_face_attack_direction(
+		global_position.direction_to(current_target.global_position).x
+	)
+	_restart_stage1_animation("attack")
+
+	var slam_fx: AnimatedSprite2D = _spawn_archmage_fx(
+		"%s/effect3" % STAGE6_FRAME_DIR,
+		"ground_slam",
+		1,
+		11,
+		20.0,
+		false,
+		global_position,
+		Vector2(0.92, 0.92)
+	)
+	if is_instance_valid(slam_fx):
+		slam_fx.z_index = 6
+
+	var wave_count: int = maxi(
+		int(skill_config.get("wave_count", 4)),
+		1
+	)
+	var base_offset: float = randf_range(-0.22, 0.22)
+	for wave_index in range(wave_count):
+		var angle: float = (
+			TAU * float(wave_index) / float(wave_count)
+			+ base_offset
+			+ randf_range(-0.16, 0.16)
+		)
+		var wave_direction: Vector2 = Vector2.RIGHT.rotated(angle)
+		_run_berserker_skill2_wave(
+			global_position,
+			wave_direction,
+			skill_config
+		)
+
+	queue_redraw()
+
+
+func _run_berserker_skill2_wave(
+	start_position: Vector2,
+	start_direction: Vector2,
+	skill_config: Dictionary
+) -> void:
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return
+	var parent_2d := parent as Node2D
+	if parent_2d == null:
+		return
+
+	var path := Line2D.new()
+	parent.add_child(path)
+	path.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	path.z_index = 4
+	path.width = maxf(
+		float(skill_config.get("path_half_width", 30.0)) * 2.0,
+		2.0
+	)
+	path.default_color = Color(0.48, 0.015, 0.02, 0.92)
+	path.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	path.end_cap_mode = Line2D.LINE_CAP_ROUND
+	path.joint_mode = Line2D.LINE_JOINT_ROUND
+
+	var world_points: Array[Vector2] = []
+	world_points.append(start_position)
+	path.add_point(parent_2d.to_local(start_position))
+
+	var hit_ids: Dictionary = {}
+	var current_position: Vector2 = start_position
+	var current_direction: Vector2 = start_direction.normalized()
+	var cell_length: float = maxf(
+		float(skill_config.get("cell_length", 72.0)),
+		8.0
+	)
+	var cell_count: int = maxi(
+		int(skill_config.get("cell_count", 6)),
+		1
+	)
+	var branch_angle: float = deg_to_rad(
+		maxf(float(skill_config.get("branch_angle_degrees", 34.0)), 0.0)
+	)
+	var wave_speed: float = maxf(
+		float(skill_config.get("wave_speed", 620.0)),
+		1.0
+	)
+	var half_width: float = maxf(
+		float(skill_config.get("path_half_width", 30.0)),
+		1.0
+	)
+	var damage: int = maxi(
+		int(round(
+			float(_get_berserker_effective_attack_damage())
+			* float(skill_config.get("damage_ratio", 0.85))
+		)),
+		1
+	)
+
+	for cell_index in range(cell_count):
+		if not is_inside_tree() or not is_instance_valid(path):
+			return
+
+		var turn: float = randf_range(-branch_angle, branch_angle)
+		current_direction = current_direction.rotated(turn).normalized()
+		var next_position: Vector2 = (
+			current_position + current_direction * cell_length
+		)
+		next_position = Vector2(
+			clampf(
+				next_position.x,
+				FIELD_MARGIN,
+				battlefield_size.x - FIELD_MARGIN
+			),
+			clampf(
+				next_position.y,
+				FIELD_MARGIN,
+				battlefield_size.y - FIELD_MARGIN
+			)
+		)
+
+		_damage_berserker_skill2_segment(
+			current_position,
+			next_position,
+			half_width,
+			damage,
+			hit_ids
+		)
+		world_points.append(next_position)
+		path.add_point(parent_2d.to_local(next_position))
+		current_position = next_position
+
+		var step_time: float = cell_length / wave_speed
+		await get_tree().create_timer(
+			maxf(step_time, 0.03)
+		).timeout
+
+	var blood_duration: float = maxf(
+		float(skill_config.get("blood_duration", 2.0)),
+		0.0
+	)
+	var tick_interval: float = maxf(
+		float(skill_config.get("heal_tick_interval", 0.15)),
+		0.05
+	)
+	var heal_per_touch: int = maxi(
+		int(skill_config.get("heal_per_touch_tick", 10)),
+		1
+	)
+	var elapsed: float = 0.0
+	while (
+		elapsed < blood_duration
+		and is_inside_tree()
+		and is_instance_valid(path)
+	):
+		_heal_berserker_from_blood_path(
+			world_points,
+			half_width,
+			heal_per_touch
+		)
+		await get_tree().create_timer(tick_interval).timeout
+		elapsed += tick_interval
+
+	if not is_instance_valid(path):
+		return
+	var fade := path.create_tween()
+	fade.tween_property(
+		path,
+		"modulate:a",
+		0.0,
+		0.28
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	fade.finished.connect(
+		Callable(path, "queue_free"),
+		Object.CONNECT_ONE_SHOT
+	)
+
+
+func _damage_berserker_skill2_segment(
+	from_position: Vector2,
+	to_position: Vector2,
+	half_width: float,
+	damage: int,
+	hit_ids: Dictionary
+) -> void:
+	var segment: Vector2 = to_position - from_position
+	var length_sq: float = maxf(segment.length_squared(), 0.001)
+	var midpoint: Vector2 = from_position.lerp(to_position, 0.5)
+	var search_radius: float = segment.length() * 0.5 + half_width + 20.0
+
+	for node in _get_monster_nodes_near(midpoint, search_radius):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null or not monster.has_method("take_damage"):
+			continue
+
+		var iid: int = monster.get_instance_id()
+		if hit_ids.has(iid):
+			continue
+
+		var t: float = clampf(
+			(monster.global_position - from_position).dot(segment)
+			/ length_sq,
+			0.0,
+			1.0
+		)
+		var closest: Vector2 = from_position + segment * t
+		if (
+			monster.global_position.distance_squared_to(closest)
+			> half_width * half_width
+		):
+			continue
+
+		hit_ids[iid] = true
+		var hp_before_value = monster.get("current_hp")
+		var hp_before: int = (
+			int(hp_before_value)
+			if hp_before_value != null
+			else -1
+		)
+		monster.call("take_damage", damage)
+
+		if hp_before <= 0:
+			continue
+		var killed: bool = false
+		if not is_instance_valid(monster):
+			killed = true
+		else:
+			var hp_after_value = monster.get("current_hp")
+			if hp_after_value != null and int(hp_after_value) <= 0:
+				killed = true
+		if killed:
+			notify_berserker_skill_kill()
+
+
+func _heal_berserker_from_blood_path(
+	world_points: Array[Vector2],
+	half_width: float,
+	heal_per_touch: int
+) -> void:
+	if current_hp <= 0 or is_dying or world_points.size() < 2:
+		return
+
+	var healed_ids: Dictionary = {}
+	for segment_index in range(world_points.size() - 1):
+		var from_position: Vector2 = world_points[segment_index]
+		var to_position: Vector2 = world_points[segment_index + 1]
+		var segment: Vector2 = to_position - from_position
+		var length_sq: float = maxf(segment.length_squared(), 0.001)
+		var midpoint: Vector2 = from_position.lerp(to_position, 0.5)
+		var search_radius: float = (
+			segment.length() * 0.5 + half_width + 20.0
+		)
+
+		for node in _get_monster_nodes_near(midpoint, search_radius):
+			if not is_instance_valid(node) or node.is_queued_for_deletion():
+				continue
+			var monster := node as Node2D
+			if monster == null:
+				continue
+			var iid: int = monster.get_instance_id()
+			if healed_ids.has(iid):
+				continue
+
+			var t: float = clampf(
+				(monster.global_position - from_position).dot(segment)
+				/ length_sq,
+				0.0,
+				1.0
+			)
+			var closest: Vector2 = from_position + segment * t
+			if (
+				monster.global_position.distance_squared_to(closest)
+				> half_width * half_width
+			):
+				continue
+
+			healed_ids[iid] = true
+			heal_direct(heal_per_touch)
 
 
 func notify_berserker_skill_kill() -> void:
