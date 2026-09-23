@@ -842,7 +842,73 @@ const AUGMENTS = [
 			{"source": "recent_events_linear", "weight": 0.07, "cap": 1.2},
 			{"source": "nearby_linear", "weight": 0.35, "cap": 2.4}
 		]
+	},
+	{
+		"id": "berserker_unconscious",
+		"name": "무의식",
+		"description": "광기 게이지 초당 소모량 -0.5 (최대 5중첩)",
+		"base_score": 6.7,
+		"max_stack": 5,
+		"tags": ["berserker_gauge", "survival", "growth"],
+		"effects": [{"op": "berserker_unconscious"}],
+		"ai_rules": [
+			{"source": "context_linear", "key": "berserker_gauge_ratio", "weight": 1.4, "cap": 1.4},
+			{"source": "context_min", "key": "berserker_madness_active", "value": 0.5, "bonus": 1.0}
+		]
+	},
+	{
+		"id": "berserker_different_dream",
+		"name": "동상이몽",
+		"description": "광기 게이지 획득 불가. 광기 상태 영구 유지. 기존 광기 공속 +200%를 제거하고 중첩당 공격속도 +40% (최대 +200%)",
+		"base_score": 5.7,
+		"offer_weight": 0.35,
+		"max_stack": 5,
+		"tags": ["berserker_permanent_madness", "attack_speed", "damage"],
+		"blocked_by_augments": ["berserker_unconscious"],
+		"blocks_augment_tags": ["berserker_gauge"],
+		"effects": [{"op": "berserker_different_dream"}],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.35, "cap": 2.1},
+			{"source": "hp_ratio_min", "value": 0.55, "bonus": 0.8},
+			{"source": "total_count_min", "value": 6, "bonus": 0.8}
+		],
+		"synergy_rules": [
+			{"source": "build_augment_stacks", "key": "berserker_different_dream", "weight": 0.85, "cap": 3.4}
+		]
+	},
+	{
+		"id": "berserker_blood_art_eighth",
+		"name": "혈검술 제8식",
+		"description": "혈검술 체력 소모 기준이 현재 HP에서 최대 HP로 변경. 적중한 적 1명당 잃은 HP의 0.5% 회복, 중첩당 +0.3% (최대 1.4%)",
+		"base_score": 6.8,
+		"max_stack": 4,
+		"tags": ["recovery", "survival", "damage"],
+		"effects": [{"op": "berserker_blood_art_eighth"}],
+		"ai_rules": [
+			{"source": "hp_missing", "weight": 4.8},
+			{"source": "nearby_linear", "weight": 0.28, "cap": 2.2}
+		],
+		"synergy_rules": [
+			{"source": "build_tag_stacks", "key": "recovery", "weight": 0.30, "cap": 1.2}
+		]
+	},
+	{
+		"id": "berserker_double_edged_sword",
+		"name": "양날의 검",
+		"description": "잃은 HP 1%당 공격력 증가량 2% → 1.5%. 받는 회복량 중첩당 +3% (최대 +15%)",
+		"base_score": 6.5,
+		"max_stack": 5,
+		"tags": ["recovery", "survival"],
+		"effects": [{"op": "berserker_double_edged_sword"}],
+		"ai_rules": [
+			{"source": "hp_missing", "weight": 5.8},
+			{"source": "hp_ratio_max", "value": 0.50, "bonus": 1.2}
+		],
+		"synergy_rules": [
+			{"source": "build_tag_stacks", "key": "recovery", "weight": 0.35, "cap": 1.4}
+		]
 	}
+
 ]
 
 static func roll_candidates(
@@ -851,6 +917,15 @@ static func roll_candidates(
 	allowed_ids: Array = []
 ) -> Array:
 	var pool: Array = []
+	var blocked_tags: Dictionary = {}
+
+	for raw_owned_id in build_counts.keys():
+		var owned_id := String(raw_owned_id)
+		if int(build_counts.get(owned_id, 0)) <= 0:
+			continue
+		var owned_augment := get_augment(owned_id)
+		for raw_tag in owned_augment.get("blocks_augment_tags", []):
+			blocked_tags[String(raw_tag)] = true
 
 	for raw_augment in AUGMENTS:
 		var augment: Dictionary = raw_augment
@@ -860,18 +935,52 @@ static func roll_candidates(
 
 		if not allowed_ids.is_empty() and augment_id not in allowed_ids:
 			continue
-
 		if max_stack > 0 and current_stack >= max_stack:
+			continue
+
+		var blocked: bool = false
+		for raw_blocker in augment.get("blocked_by_augments", []):
+			if int(build_counts.get(String(raw_blocker), 0)) > 0:
+				blocked = true
+				break
+		if blocked:
+			continue
+
+		for raw_tag in augment.get("tags", []):
+			if blocked_tags.has(String(raw_tag)):
+				blocked = true
+				break
+		if blocked:
 			continue
 
 		pool.append(augment.duplicate(true))
 
-	pool.shuffle()
-
 	var result: Array = []
 	var take_count: int = mini(count, pool.size())
-	for index in range(take_count):
-		result.append(pool[index])
+	while result.size() < take_count and not pool.is_empty():
+		var total_weight: float = 0.0
+		for raw_pool_item in pool:
+			var pool_item: Dictionary = raw_pool_item
+			total_weight += maxf(
+				float(pool_item.get("offer_weight", 1.0)),
+				0.001
+			)
+
+		var roll: float = randf() * total_weight
+		var selected_index: int = 0
+		var cursor: float = 0.0
+		for index in range(pool.size()):
+			var pool_item: Dictionary = pool[index]
+			cursor += maxf(
+				float(pool_item.get("offer_weight", 1.0)),
+				0.001
+			)
+			if roll <= cursor:
+				selected_index = index
+				break
+
+		result.append(pool[selected_index])
+		pool.remove_at(selected_index)
 
 	return result
 
