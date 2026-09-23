@@ -579,13 +579,17 @@ const PROFILES = {
 			"skill_5": {
 				"id": "blood_sword_secret",
 				"name": "혈검술 오의",
-				"cooldown": 60.0,
+				"cooldown": 5.0,
 				"hp_cost_ratio": 0.20,
 				"cast_time": 1.0,
 				"channel_duration": 3.0,
 				"shot_interval": 0.34,
 				"impact_radius": 125.0,
 				"damage_ratio": 0.75,
+				"target_radius": 560.0,
+				"projectile_travel_time": 0.16,
+				"channel_effect_scale": 1.05,
+				"projectile_effect_scale": 0.78,
 			},
 		},
 		"augment_pool_ids": [
