@@ -798,6 +798,39 @@ const AUGMENTS = [
 		]
 	},
 	{
+		"id": "archmage_chain_multithrow",
+		"name": "분열투척",
+		"description": "체인대거 시전 시 중첩당 단검 1개를 추가로 서로 다른 방향의 대상에게 투척. 최대 3중첩",
+		"base_score": 7.7,
+		"max_stack": 3,
+		"tags": ["damage", "area", "projectile"],
+		"effects": [{"op": "archmage_chain_multithrow"}],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.62, "cap": 3.7},
+			{"source": "total_count_min", "value": 5, "bonus": 1.0}
+		],
+		"synergy_rules": [
+			{"source": "build_augment_stacks", "key": "archmage_chain_persistence", "weight": 0.45, "cap": 1.35},
+			{"source": "build_augment_stacks", "key": "archmage_multicast", "weight": 0.25, "cap": 0.75}
+		]
+	},
+	{
+		"id": "archmage_chain_persistence",
+		"name": "잔류전류",
+		"description": "체인대거가 만든 체인의 지속시간이 중첩당 0.35초 증가하며 그만큼 다단히트가 더 오래 지속됨. 최대 3중첩",
+		"base_score": 7.5,
+		"max_stack": 3,
+		"tags": ["damage", "area", "growth"],
+		"effects": [{"op": "archmage_chain_persistence"}],
+		"ai_rules": [
+			{"source": "recent_events_linear", "weight": 0.08, "cap": 1.4},
+			{"source": "current_role_ratio", "key": "tank", "weight": 1.5}
+		],
+		"synergy_rules": [
+			{"source": "build_augment_stacks", "key": "archmage_chain_multithrow", "weight": 0.50, "cap": 1.50}
+		]
+	},
+	{
 		"id": "archmage_element_cycle",
 		"name": "원소순환",
 		"description": "이미 보유한 원소를 다시 획득할 때 중첩당 25% 확률로 아직 없는 원소 1개를 추가 획득. 최대 3중첩",
