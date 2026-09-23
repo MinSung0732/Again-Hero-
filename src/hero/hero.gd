@@ -19,6 +19,7 @@ const ULTIMATE_PIERCING_PROJECTILE_SCENE := preload(
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const STATUS_EFFECT_CATALOG := preload("res://src/data/status_effect_catalog.gd")
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
+const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
 const STAGE1_FRAME_SIZE := Vector2(64, 64)
 const STAGE1_FRAME_DIR := "res://assets/art/heroes/stage1_mage/frames"
 const STAGE1_SHIELD_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_02"
@@ -499,6 +500,7 @@ func configure_battlefield(size: Vector2) -> void:
 
 func _ready() -> void:
 	add_to_group("hero")
+	_attach_status_effect_visual("slow")
 	_apply_camera_limits()
 	_apply_profile_visual()
 	_apply_stage1_shield_visual()
@@ -530,6 +532,12 @@ func _ready() -> void:
 	health_changed.emit(current_hp, max_hp)
 	progression_changed.emit(level, current_exp, exp_to_next_level)
 	queue_redraw()
+
+func _attach_status_effect_visual(effect_type: String) -> void:
+	var effect := COMBAT_STATUS_EFFECT_VISUAL.new()
+	add_child(effect)
+	effect.setup(self, effect_type)
+
 
 func _physics_process(delta: float) -> void:
 	if current_hp <= 0:
