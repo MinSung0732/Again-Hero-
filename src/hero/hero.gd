@@ -1246,7 +1246,11 @@ func _use_gunner_cylinder_strike() -> void:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
-		if monster == null or global_position.distance_to(monster.global_position) > radius:
+		if (
+			monster == null
+			or global_position.distance_squared_to(monster.global_position)
+			> radius * radius
+		):
 			continue
 		var dir := global_position.direction_to(monster.global_position)
 		if dir.length_squared() <= 0.0:
@@ -1855,7 +1859,10 @@ func _rogue_should_use_slash() -> bool:
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		if global_position.distance_to(monster.global_position) > radius:
+		if (
+			global_position.distance_squared_to(monster.global_position)
+			> radius * radius
+		):
 			continue
 		nearby += 1
 		if nearby >= required:
@@ -1947,7 +1954,10 @@ func _apply_rogue_slash_tick() -> void:
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		if global_position.distance_to(monster.global_position) > radius:
+		if (
+			global_position.distance_squared_to(monster.global_position)
+			> radius * radius
+		):
 			continue
 		if monster.has_method("take_damage"):
 			_rogue_damage_target(
@@ -2860,7 +2870,11 @@ func _move_without_monsters() -> void:
 			velocity = chest_direction * move_speed * 0.72 * move_multiplier
 			move_and_slide()
 			_clamp_to_battlefield()
-			if global_position.distance_to(chest_target.global_position) <= 90.0 and attack_timer <= 0.0:
+			if (
+				global_position.distance_squared_to(chest_target.global_position)
+				<= 90.0 * 90.0
+				and attack_timer <= 0.0
+			):
 				chest_target.call("take_damage", attack_damage)
 				attack_timer = _get_common_attack_interval(attack_cooldown)
 			return
@@ -2873,7 +2887,11 @@ func _move_without_monsters() -> void:
 		_clamp_to_battlefield()
 		return
 
-	if wander_timer <= 0.0 or position.distance_to(wander_target) <= WANDER_REACHED_DISTANCE:
+	if (
+		wander_timer <= 0.0
+		or position.distance_squared_to(wander_target)
+		<= WANDER_REACHED_DISTANCE * WANDER_REACHED_DISTANCE
+	):
 		_pick_new_wander_target()
 
 	var direction := position.direction_to(wander_target)
@@ -2921,7 +2939,10 @@ func _pick_new_wander_target() -> void:
 			randf_range(FIELD_MARGIN, battlefield_size.x - FIELD_MARGIN),
 			randf_range(FIELD_MARGIN, battlefield_size.y - FIELD_MARGIN)
 		)
-		if position.distance_to(candidate) >= WANDER_MIN_TARGET_DISTANCE:
+		if (
+			position.distance_squared_to(candidate)
+			>= WANDER_MIN_TARGET_DISTANCE * WANDER_MIN_TARGET_DISTANCE
+		):
 			break
 
 	wander_target = candidate
@@ -3212,7 +3233,11 @@ func _damage_treasure_chests(origin: Vector2, radius: float, damage: int) -> voi
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var chest := node as Node2D
-		if chest == null or origin.distance_to(chest.global_position) > radius:
+		if (
+			chest == null
+			or origin.distance_squared_to(chest.global_position)
+			> radius * radius
+		):
 			continue
 		if chest.has_method("take_damage"):
 			chest.call("take_damage", maxi(damage, 1))
@@ -4195,7 +4220,10 @@ func _apply_channel_damage() -> void:
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		if global_position.distance_to(monster.global_position) > radius:
+		if (
+			global_position.distance_squared_to(monster.global_position)
+			> radius * radius
+		):
 			continue
 
 		monster.call("take_damage", damage)
@@ -4258,7 +4286,10 @@ func _should_cast_shield() -> bool:
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		if global_position.distance_to(monster.global_position) > danger_radius:
+		if (
+			global_position.distance_squared_to(monster.global_position)
+			> danger_radius * danger_radius
+		):
 			continue
 		nearby += 1
 		if nearby >= danger_count:
@@ -4510,7 +4541,10 @@ func _use_area_burst_ultimate() -> void:
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		if global_position.distance_to(monster.global_position) > radius:
+		if (
+			global_position.distance_squared_to(monster.global_position)
+			> radius * radius
+		):
 			continue
 		if monster.has_method("take_damage"):
 			monster.call("take_damage", damage)
@@ -5408,7 +5442,10 @@ func _fighter_should_start_charge() -> bool:
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		if global_position.distance_to(monster.global_position) <= radius:
+		if (
+			global_position.distance_squared_to(monster.global_position)
+			<= radius * radius
+		):
 			nearby += 1
 			if nearby >= required:
 				return true
@@ -5518,7 +5555,10 @@ func _complete_fighter_charge_dash() -> void:
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		if global_position.distance_to(monster.global_position) <= radius:
+		if (
+			global_position.distance_squared_to(monster.global_position)
+			<= radius * radius
+		):
 			_fighter_charge_damage_target(monster, impact_damage)
 
 	_play_fighter_charge_impact_effect()
@@ -5662,7 +5702,11 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 			)
 			move_and_slide()
 			_clamp_to_battlefield()
-			if global_position.distance_to(chest_target.global_position) <= 105.0 and attack_timer <= 0.0:
+			if (
+				global_position.distance_squared_to(chest_target.global_position)
+				<= 105.0 * 105.0
+				and attack_timer <= 0.0
+			):
 				chest_target.call("take_damage", attack_damage)
 				attack_timer = _get_common_attack_interval(attack_cooldown)
 			return
@@ -5681,7 +5725,11 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 		_clamp_to_battlefield()
 		return
 
-	if wander_timer <= 0.0 or position.distance_to(wander_target) <= WANDER_REACHED_DISTANCE:
+	if (
+		wander_timer <= 0.0
+		or position.distance_squared_to(wander_target)
+		<= WANDER_REACHED_DISTANCE * WANDER_REACHED_DISTANCE
+	):
 		_pick_new_wander_target()
 
 	var direction := position.direction_to(wander_target)
@@ -5806,7 +5854,10 @@ func _fighter_should_use_slash() -> bool:
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		if global_position.distance_to(monster.global_position) <= radius:
+		if (
+			global_position.distance_squared_to(monster.global_position)
+			<= radius * radius
+		):
 			nearby += 1
 			if nearby >= trigger_count:
 				return true
@@ -5939,7 +5990,10 @@ func _fighter_can_activate_guard() -> bool:
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		if global_position.distance_to(monster.global_position) <= radius:
+		if (
+			global_position.distance_squared_to(monster.global_position)
+			<= radius * radius
+		):
 			nearby += 1
 			if nearby >= required:
 				return true
@@ -6005,7 +6059,10 @@ func _end_fighter_guard() -> void:
 			var monster := node as Node2D
 			if monster == null:
 				continue
-			if global_position.distance_to(monster.global_position) > release_radius:
+			if (
+				global_position.distance_squared_to(monster.global_position)
+				> release_radius * release_radius
+			):
 				continue
 			if monster.has_method("take_damage"):
 				monster.call("take_damage", release_damage)
