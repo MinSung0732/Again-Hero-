@@ -731,6 +731,84 @@ const AUGMENTS = [
 			{"source": "build_tag_stacks", "key": "attack_speed", "weight": 0.30, "cap": 1.2},
 			{"source": "build_tag_stacks", "key": "ammo", "weight": 0.25, "cap": 1.0}
 		]
+	},
+	{
+		"id": "archmage_multicast",
+		"name": "다중시전",
+		"description": "기술 시전 시 중첩당 서로 다른 다른 기술 1개를 0.3초 간격으로 추가 시전. 추가 시전은 쿨타임을 무시하고 게이지를 소모하지 않으며 재귀 발동하지 않음. 조화는 추가 시전 대상에서 제외. 최대 3중첩",
+		"base_score": 8.2,
+		"max_stack": 3,
+		"tags": ["damage", "area", "growth"],
+		"effects": [{"op": "archmage_multicast"}],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.55, "cap": 3.3},
+			{"source": "recent_events_linear", "weight": 0.07, "cap": 1.2}
+		]
+	},
+	{
+		"id": "archmage_emergency_escape",
+		"name": "긴급탈출",
+		"description": "1중첩부터 신규 스킬 블링크 해금. 포위 시 게이지와 무관하게 몬스터가 가장 적은 방향으로 최대 700 거리 순간이동. 쿨타임 30초, 이후 중첩당 -3초. 최대 5중첩",
+		"base_score": 7.6,
+		"max_stack": 5,
+		"tags": ["mobility", "survival", "kite"],
+		"effects": [{"op": "archmage_emergency_escape"}],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.65, "cap": 4.5},
+			{"source": "hp_missing", "weight": 3.0}
+		]
+	},
+	{
+		"id": "archmage_fast_cast",
+		"name": "고속영창",
+		"description": "대마법사 모든 기술 재사용 대기시간 -5%. 조화 포함. 최대 5중첩",
+		"base_score": 7.5,
+		"max_stack": 5,
+		"tags": ["attack_speed", "growth", "damage"],
+		"effects": [{"op": "archmage_fast_cast"}],
+		"ai_rules": [
+			{"source": "recent_events_linear", "weight": 0.08, "cap": 1.4},
+			{"source": "total_count_min", "value": 4, "bonus": 0.8}
+		]
+	},
+	{
+		"id": "archmage_mana_overflow",
+		"name": "마력과잉",
+		"description": "직접 기술 시전 후 중첩당 게이지 4 회복. 다중시전으로 발동한 추가 기술은 중첩당 게이지 1 회복. 최대 5중첩",
+		"base_score": 7.1,
+		"max_stack": 5,
+		"tags": ["growth", "damage"],
+		"effects": [{"op": "archmage_mana_overflow"}],
+		"ai_rules": [
+			{"source": "recent_events_linear", "weight": 0.07, "cap": 1.2},
+			{"source": "nearby_linear", "weight": 0.30, "cap": 2.1}
+		]
+	},
+	{
+		"id": "archmage_element_resonance",
+		"name": "원소공명",
+		"description": "6원소 완성 후 발동하는 강화 기술의 피해 배율 +10%. 최대 3중첩",
+		"base_score": 7.4,
+		"max_stack": 3,
+		"tags": ["damage", "growth"],
+		"effects": [{"op": "archmage_element_resonance"}],
+		"ai_rules": [
+			{"source": "recent_events_linear", "weight": 0.08, "cap": 1.4},
+			{"source": "current_role_ratio", "key": "tank", "weight": 1.4}
+		]
+	},
+	{
+		"id": "archmage_element_cycle",
+		"name": "원소순환",
+		"description": "이미 보유한 원소를 다시 획득할 때 중첩당 25% 확률로 아직 없는 원소 1개를 추가 획득. 최대 3중첩",
+		"base_score": 7.2,
+		"max_stack": 3,
+		"tags": ["growth", "area"],
+		"effects": [{"op": "archmage_element_cycle"}],
+		"ai_rules": [
+			{"source": "recent_events_linear", "weight": 0.07, "cap": 1.2},
+			{"source": "nearby_linear", "weight": 0.35, "cap": 2.4}
+		]
 	}
 ]
 
