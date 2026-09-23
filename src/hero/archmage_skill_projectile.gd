@@ -160,6 +160,14 @@ func _apply_chain_current_ticks(
 		if tick_index < tick_count - 1:
 			await get_tree().create_timer(tick_interval).timeout
 
+func _get_monster_nodes() -> Array:
+	if is_instance_valid(source_hero) and source_hero.has_method("_get_monster_nodes_cached"):
+		var cached = source_hero.call("_get_monster_nodes_cached")
+		if cached is Array:
+			return cached
+	return get_tree().get_nodes_in_group("monsters")
+
+
 func _damage_monsters_along_segment(
 	from_position: Vector2,
 	to_position: Vector2,
@@ -168,7 +176,7 @@ func _damage_monsters_along_segment(
 ) -> void:
 	var segment := to_position - from_position
 	var length_sq := maxf(segment.length_squared(), 0.001)
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -180,7 +188,7 @@ func _damage_monsters_along_segment(
 			1.0
 		)
 		var closest := from_position + segment * t
-		if monster.global_position.distance_to(closest) <= half_width:
+		if monster.global_position.distance_squared_to(closest) <= half_width * half_width:
 			monster.call("take_damage", tick_damage)
 
 
@@ -203,27 +211,27 @@ func _explode_storm_endpoint() -> void:
 		global_position
 	)
 
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
 		if monster == null or not monster.has_method("take_damage"):
 			continue
-		if global_position.distance_to(monster.global_position) <= radius:
+		if global_position.distance_squared_to(monster.global_position) <= radius * radius:
 			monster.call("take_damage", explosion_damage)
 
 
 func _find_nearest_unhit(origin: Vector2, radius: float) -> Node2D:
 	var best: Node2D = null
 	var best_distance := INF
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_monster_nodes():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
 		if monster == null or hit_ids.has(monster.get_instance_id()):
 			continue
-		var distance := origin.distance_to(monster.global_position)
-		if distance <= radius and distance < best_distance:
+		var distance := origin.distance_squared_to(monster.global_position)
+		if distance <= radius * radius and distance < best_distance:
 			best = monster
 			best_distance = distance
 	return best
