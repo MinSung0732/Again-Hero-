@@ -88,19 +88,19 @@ func _check_chest_sweep(from_position: Vector2, to_position: Vector2) -> void:
 		var chest_id := chest.get_instance_id()
 		if hit_ids.has(chest_id):
 			continue
-		if _distance_to_segment(chest.global_position, from_position, to_position) > 34.0:
+		if _distance_squared_to_segment(chest.global_position, from_position, to_position) > 34.0 * 34.0:
 			continue
 		hit_ids[chest_id] = true
 		chest.call("take_damage", damage)
 
 
-func _distance_to_segment(point: Vector2, a: Vector2, b: Vector2) -> float:
+func _distance_squared_to_segment(point: Vector2, a: Vector2, b: Vector2) -> float:
 	var segment := b - a
 	var length_sq := segment.length_squared()
 	if length_sq <= 0.001:
-		return point.distance_to(a)
+		return point.distance_squared_to(a)
 	var t := clampf((point - a).dot(segment) / length_sq, 0.0, 1.0)
-	return point.distance_to(a + segment * t)
+	return point.distance_squared_to(a + segment * t)
 
 
 func _on_body_entered(body: Node) -> void:
