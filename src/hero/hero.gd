@@ -7501,7 +7501,8 @@ func _start_berserker_skill5() -> void:
 		cast_time + channel_duration + 0.10
 	)
 	velocity = Vector2.ZERO
-	modulate.a = 0.28
+	modulate.a = 1.0
+	hero_sprite.visible = false
 	_execute_berserker_skill5(skill_config)
 	queue_redraw()
 
@@ -7570,6 +7571,7 @@ func _execute_berserker_skill5(skill_config: Dictionary) -> void:
 	berserker_skill5_active = false
 	invulnerability_timer = 0.0
 	modulate.a = 1.0
+	hero_sprite.visible = true
 	attack_pose_timer = 0.0
 	_play_stage1_animation("idle", 1.0)
 	queue_redraw()
@@ -7633,8 +7635,13 @@ func _spawn_berserker_skill5_projectile(
 
 	projectile_fx.z_index = 10
 	projectile_fx.rotation = direction.angle()
+	var projectile_speed: float = maxf(
+		float(skill_config.get("projectile_speed", 200.0)),
+		1.0
+	)
+	var travel_distance: float = start_position.distance_to(target_position)
 	var travel_time: float = maxf(
-		float(skill_config.get("projectile_travel_time", 0.16)),
+		travel_distance / projectile_speed,
 		0.04
 	)
 	var projectile_tween := projectile_fx.create_tween()
@@ -7719,21 +7726,39 @@ func _resolve_berserker_skill5_impact(
 		if killed:
 			notify_berserker_skill_kill()
 
-	var impact_fx: AnimatedSprite2D = _spawn_archmage_fx(
-		"%s/effect5" % STAGE6_FRAME_DIR,
-		"hit_effect",
-		1,
-		9,
-		24.0,
-		false,
-		impact_position,
-		Vector2(0.88, 0.88)
+	var impact_scale: float = maxf(
+		float(skill_config.get("impact_effect_scale", 2.20)),
+		0.1
 	)
-	if is_instance_valid(impact_fx):
-		impact_fx.z_index = 9
+	_play_berserker_skill5_impact_sequence(
+		impact_position,
+		impact_scale
+	)
 
 	if total_damage_dealt > 0:
 		heal_direct(total_damage_dealt)
+
+
+func _play_berserker_skill5_impact_sequence(
+	impact_position: Vector2,
+	effect_scale: float
+) -> void:
+	for frame_index in [7, 10, 9]:
+		var impact_fx: AnimatedSprite2D = _spawn_archmage_fx(
+			"%s/effect7" % STAGE6_FRAME_DIR,
+			"special",
+			frame_index,
+			1,
+			1.0,
+			true,
+			impact_position,
+			Vector2(effect_scale, effect_scale)
+		)
+		if is_instance_valid(impact_fx):
+			impact_fx.z_index = 11
+			await get_tree().create_timer(0.085).timeout
+			if is_instance_valid(impact_fx):
+				_recycle_archmage_fx(impact_fx)
 
 
 func notify_berserker_skill_kill() -> void:
@@ -9346,7 +9371,9 @@ func _update_invulnerability(delta: float) -> void:
 
 func _refresh_invulnerability_visual() -> void:
 	if berserker_skill5_active:
-		modulate.a = 0.28
+		modulate.a = 1.0
+		if hero_sprite != null:
+			hero_sprite.visible = false
 		return
 	if is_dying or invulnerability_timer <= 0.0:
 		modulate.a = 1.0
