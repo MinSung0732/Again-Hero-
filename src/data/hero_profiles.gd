@@ -519,7 +519,7 @@ const PROFILES = {
 			"revive_delay": 3.0,
 			"revive_hp_ratio": 0.50,
 			"gauge_max": 100.0,
-			"gauge_per_kill": 20.0,
+			"gauge_per_kill": 1.0,
 			"madness_drain_per_second": 10.0,
 			"madness_attack_speed_multiplier": 3.00,
 			"madness_target_radius": 375.0,
@@ -533,6 +533,8 @@ const PROFILES = {
 				"damage_ratio": 1.10,
 				"repeat_hit_multipliers": [1.0, 0.80, 0.60],
 				"size_growth_per_wave": 0.25,
+				"base_range": 430.0,
+				"base_half_width": 62.0,
 			},
 			"skill_2": {
 				"id": "blood_sword_second",
