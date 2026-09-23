@@ -4098,23 +4098,85 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 
 	_end_archmage_casting_sequence()
 
+func _find_archmage_holy_cluster_target(config: Dictionary) -> Node2D:
+	var search_radius: float = maxf(
+		float(config.get("cluster_search_radius", 850.0)),
+		1.0
+	)
+	var cluster_radius: float = maxf(
+		float(config.get("cluster_score_radius", 190.0)),
+		1.0
+	)
+	var best: Node2D = null
+	var best_count: int = -1
+	var best_distance_sq: float = INF
+
+	for node in _get_monster_nodes_near(global_position, search_radius):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+
+		var distance_sq: float = global_position.distance_squared_to(
+			monster.global_position
+		)
+		if distance_sq > search_radius * search_radius:
+			continue
+
+		var nearby_count: int = _count_monsters_near(
+			monster.global_position,
+			cluster_radius
+		)
+		if nearby_count > best_count:
+			best = monster
+			best_count = nearby_count
+			best_distance_sq = distance_sq
+		elif nearby_count == best_count and distance_sq < best_distance_sq:
+			best = monster
+			best_distance_sq = distance_sq
+
+	return best
+
+
 func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 	_begin_archmage_casting_sequence()
-	var count := maxi(int(config.get("burst_count", 7)), 1)
-	var spawn_radius := maxf(float(config.get("burst_spawn_radius", 330.0)), 1.0)
-	var hit_radius := maxf(float(config.get("burst_hit_radius", 86.0)), 1.0)
-	var base_damage := maxi(1, int(round(
-		float(attack_damage) * float(config.get("damage_ratio", 0.90)) * _skill_damage_multiplier(empowered)
+
+	var cluster_target: Node2D = _find_archmage_holy_cluster_target(config)
+	if not is_instance_valid(cluster_target):
+		_end_archmage_casting_sequence()
+		return
+
+	var cast_center: Vector2 = cluster_target.global_position
+	var count: int = maxi(int(config.get("burst_count", 7)), 1)
+	var spawn_radius: float = maxf(
+		float(config.get("burst_spawn_radius", 210.0)),
+		1.0
+	)
+	var hit_radius: float = maxf(
+		float(config.get("burst_hit_radius", 86.0)),
+		1.0
+	)
+	var base_damage: int = maxi(1, int(round(
+		float(attack_damage)
+		* float(config.get("damage_ratio", 0.90))
+		* _skill_damage_multiplier(empowered)
 	)))
+
 	for index in range(count):
 		if not is_inside_tree() or current_hp <= 0:
 			break
-		var angle := randf_range(0.0, TAU)
-		var position := global_position + Vector2.from_angle(angle) * randf_range(30.0, spawn_radius)
+
+		var angle: float = randf_range(0.0, TAU)
+		var position: Vector2 = (
+			cast_center
+			+ Vector2.from_angle(angle) * randf_range(0.0, spawn_radius)
+		)
 		_spawn_archmage_fx(
 			"res://assets/art/heroes/stage5_archmage/frames/effect3",
 			"holy", 1, 5, 20.0, false, position, Vector2(0.94, 0.94)
 		)
+
 		for node in _get_monster_nodes_near(position, hit_radius):
 			if not is_instance_valid(node) or node.is_queued_for_deletion():
 				continue
@@ -4123,15 +4185,44 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 				continue
 			if position.distance_squared_to(monster.global_position) > hit_radius * hit_radius:
 				continue
-			var dealt := base_damage
-			if bool(monster.get_meta("undead", false)) or bool(monster.get_meta("is_undead", false)):
-				dealt = maxi(1, int(round(float(dealt) * float(config.get("undead_damage_multiplier", 1.70)))))
-			monster.call("take_damage", dealt)
-			monster.set_meta("gunner_slow_multiplier", clampf(float(config.get("slow_multiplier", 0.60)), 0.0, 1.0))
-			monster.set_meta("gunner_slow_until", Time.get_ticks_msec() + int(maxf(float(config.get("slow_duration", 2.0)), 0.0) * 1000.0))
-		await get_tree().create_timer(maxf(float(config.get("burst_delay", 0.09)), 0.02)).timeout
-	_end_archmage_casting_sequence()
 
+			var dealt: int = base_damage
+			if bool(monster.get_meta("undead", false)) or bool(
+				monster.get_meta("is_undead", false)
+			):
+				dealt = maxi(
+					1,
+					int(round(
+						float(dealt)
+						* float(config.get("undead_damage_multiplier", 1.70))
+					))
+				)
+
+			monster.call("take_damage", dealt)
+			monster.set_meta(
+				"gunner_slow_multiplier",
+				clampf(
+					float(config.get("slow_multiplier", 0.60)),
+					0.0,
+					1.0
+				)
+			)
+			monster.set_meta(
+				"gunner_slow_until",
+				Time.get_ticks_msec()
+				+ int(
+					maxf(
+						float(config.get("slow_duration", 2.0)),
+						0.0
+					) * 1000.0
+				)
+			)
+
+		await get_tree().create_timer(
+			maxf(float(config.get("burst_delay", 0.09)), 0.02)
+		).timeout
+
+	_end_archmage_casting_sequence()
 
 func _get_archmage_chain_dagger_targets(
 	max_count: int,
