@@ -908,6 +908,98 @@ const AUGMENTS = [
 			{"source": "build_tag_stacks", "key": "recovery", "weight": 0.35, "cap": 1.4}
 		]
 	}
+,
+	{
+		"id": "berserker_blood_overflow",
+		"name": "혈류 과다",
+		"description": "혈검술 제2식 응고혈류 지속시간 +0.25초 (최대 4중첩)",
+		"base_score": 6.4,
+		"max_stack": 4,
+		"tags": ["recovery", "area", "survival"],
+		"effects": [{"op": "berserker_blood_overflow"}],
+		"ai_rules": [
+			{"source": "hp_missing", "weight": 3.8},
+			{"source": "nearby_linear", "weight": 0.30, "cap": 2.1}
+		],
+		"synergy_rules": [
+			{"source": "build_augment_stacks", "key": "berserker_blood_art_eighth", "weight": 0.40, "cap": 1.6}
+		]
+	},
+	{
+		"id": "berserker_blood_orb_devour",
+		"name": "혈구 포식",
+		"description": "혈검술 제3식 혈구 1개당 회복량 +10 (최대 5중첩)",
+		"base_score": 6.6,
+		"max_stack": 5,
+		"tags": ["recovery", "survival"],
+		"effects": [{"op": "berserker_blood_orb_devour"}],
+		"ai_rules": [
+			{"source": "hp_missing", "weight": 5.0},
+			{"source": "nearby_linear", "weight": 0.24, "cap": 1.8}
+		],
+		"synergy_rules": [
+			{"source": "build_augment_stacks", "key": "berserker_blood_art_eighth", "weight": 0.35, "cap": 1.4}
+		]
+	},
+	{
+		"id": "berserker_killing_urge",
+		"name": "살육충동",
+		"description": "광기 상태에서 처치 시 광기 게이지 +0.2 (최대 5중첩, 최대 +1.0)",
+		"base_score": 6.5,
+		"max_stack": 5,
+		"tags": ["berserker_gauge", "damage", "growth"],
+		"effects": [{"op": "berserker_killing_urge"}],
+		"ai_rules": [
+			{"source": "context_min", "key": "berserker_madness_active", "value": 0.5, "bonus": 1.5},
+			{"source": "context_linear", "key": "berserker_gauge_ratio", "weight": 1.0, "cap": 1.0},
+			{"source": "total_count_min", "value": 6, "bonus": 0.8}
+		],
+		"synergy_rules": [
+			{"source": "build_augment_stacks", "key": "berserker_unconscious", "weight": 0.35, "cap": 1.4}
+		]
+	},
+	{
+		"id": "berserker_blood_art_mastery",
+		"name": "혈검 숙련",
+		"description": "모든 혈검술 재사용 대기시간 -3% (최대 5중첩, 최대 -15%)",
+		"base_score": 6.8,
+		"max_stack": 5,
+		"tags": ["attack_speed", "damage", "growth"],
+		"effects": [{"op": "berserker_blood_art_mastery"}],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.30, "cap": 2.1},
+			{"source": "recent_events_linear", "weight": 0.07, "cap": 1.0}
+		],
+		"synergy_rules": [
+			{"source": "build_augment_stacks", "key": "berserker_blood_art_eighth", "weight": 0.25, "cap": 1.0}
+		]
+	},
+	{
+		"id": "berserker_frenzied_leap",
+		"name": "광폭한 도약",
+		"description": "광기 상태의 적 탐색 거리 +20 (최대 5중첩, 375 → 475)",
+		"base_score": 6.2,
+		"max_stack": 5,
+		"tags": ["mobility", "damage"],
+		"effects": [{"op": "berserker_frenzied_leap"}],
+		"ai_rules": [
+			{"source": "distance", "divisor": 180.0, "cap": 2.2},
+			{"source": "context_min", "key": "berserker_madness_active", "value": 0.5, "bonus": 0.9}
+		]
+	},
+	{
+		"id": "berserker_undying_madman",
+		"name": "불사의 광인",
+		"description": "부활 시 회복 HP +최대 HP 5%p (최대 4중첩, 50% → 70%)",
+		"base_score": 6.3,
+		"max_stack": 4,
+		"tags": ["survival", "durability"],
+		"effects": [{"op": "berserker_undying_madman"}],
+		"ai_rules": [
+			{"source": "hp_missing", "weight": 4.6},
+			{"source": "hp_ratio_max", "value": 0.45, "bonus": 1.1}
+		]
+	}
 
 ]
 
