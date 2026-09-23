@@ -1377,7 +1377,11 @@ func _update_gunner_deadeye(delta: float) -> void:
 		_start_gunner_reload()
 
 
-func _count_monsters_near(origin: Vector2, radius: float) -> int:
+func _count_monsters_near(
+	origin: Vector2,
+	radius: float,
+	stop_after: int = 0
+) -> int:
 	var battle := get_parent()
 	if (
 		is_instance_valid(battle)
@@ -1387,7 +1391,8 @@ func _count_monsters_near(origin: Vector2, radius: float) -> int:
 			battle.call(
 				"count_monsters_near",
 				origin,
-				radius
+				radius,
+				stop_after
 			)
 		)
 
@@ -1403,6 +1408,8 @@ func _count_monsters_near(origin: Vector2, radius: float) -> int:
 			<= radius_sq
 		):
 			count += 1
+			if stop_after > 0 and count >= stop_after:
+				return count
 	return count
 
 func _physics_process_rogue(delta: float) -> void:
@@ -1869,22 +1876,13 @@ func _rogue_should_use_slash() -> bool:
 		),
 		1
 	)
-	var nearby := 0
-	for node in _get_monster_nodes_near(global_position, radius):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		if (
-			global_position.distance_squared_to(monster.global_position)
-			> radius * radius
-		):
-			continue
-		nearby += 1
-		if nearby >= required:
-			return true
-	return false
+	if radius <= 0.0:
+		return false
+	return _count_monsters_near(
+		global_position,
+		radius,
+		required
+	) >= required
 
 func _start_rogue_slash() -> void:
 	rogue_combo_index = 0
@@ -4134,44 +4132,21 @@ func _should_cast_channel_skill() -> bool:
 	if radius <= 0.0:
 		return false
 
-	var nearby := 0
-	var very_close := 0
-	var radius_sq := radius * radius
-	var close_radius_sq := close_radius * close_radius
-
-	for node in _get_monster_nodes_near(global_position, radius):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-
-		var distance_sq := global_position.distance_squared_to(
-			monster.global_position
-		)
-		if distance_sq > radius_sq:
-			continue
-
-		nearby += 1
-		if distance_sq <= close_radius_sq:
-			very_close += 1
-
-		if (
-			nearby >= force_count
-			or (
-				nearby >= required_count
-				and very_close >= close_required
-			)
-		):
-			return true
-
-	return (
-		nearby >= force_count
-		or (
-			nearby >= required_count
-			and very_close >= close_required
-		)
+	var nearby := _count_monsters_near(
+		global_position,
+		radius,
+		force_count
 	)
+	if nearby >= force_count:
+		return true
+	if nearby < required_count or close_radius <= 0.0:
+		return false
+
+	return _count_monsters_near(
+		global_position,
+		close_radius,
+		close_required
+	) >= close_required
 
 func _use_channel_as_charged_skill() -> void:
 	if channel_skill_config.is_empty():
@@ -4307,23 +4282,11 @@ func _should_cast_shield() -> bool:
 	if danger_radius <= 0.0:
 		return false
 
-	var nearby := 0
-	for node in _get_monster_nodes_near(global_position, danger_radius):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		if (
-			global_position.distance_squared_to(monster.global_position)
-			> danger_radius * danger_radius
-		):
-			continue
-		nearby += 1
-		if nearby >= danger_count:
-			return true
-
-	return false
+	return _count_monsters_near(
+		global_position,
+		danger_radius,
+		danger_count
+	) >= danger_count
 
 func _activate_shield() -> void:
 	var configured_hp := maxf(
@@ -5474,23 +5437,19 @@ func _physics_process_fighter(delta: float) -> void:
 func _fighter_should_start_charge() -> bool:
 	if fighter_charge_config.is_empty() or fighter_guard_active:
 		return false
-	var radius := maxf(float(fighter_charge_config.get("trigger_radius", 245.0)), 1.0)
-	var required := maxi(int(fighter_charge_config.get("trigger_enemy_count", 4)), 1)
-	var nearby := 0
-	for node in _get_monster_nodes_near(global_position, radius):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		if (
-			global_position.distance_squared_to(monster.global_position)
-			<= radius * radius
-		):
-			nearby += 1
-			if nearby >= required:
-				return true
-	return false
+	var radius := maxf(
+		float(fighter_charge_config.get("trigger_radius", 245.0)),
+		1.0
+	)
+	var required := maxi(
+		int(fighter_charge_config.get("trigger_enemy_count", 4)),
+		1
+	)
+	return _count_monsters_near(
+		global_position,
+		radius,
+		required
+	) >= required
 
 func _start_fighter_charge() -> void:
 	var charge_target := _find_fighter_charge_target()
@@ -5501,18 +5460,24 @@ func _start_fighter_charge() -> void:
 
 func _find_fighter_charge_target(exclude: Node = null) -> Node2D:
 	var max_distance := maxf(float(fighter_charge_config.get("max_target_distance", 560.0)), 1.0)
+	var max_distance_sq := max_distance * max_distance
 	var farthest: Node2D = null
-	var farthest_distance := -1.0
+	var farthest_distance_sq := -1.0
 	for node in _get_monster_nodes_near(global_position, max_distance):
 		if not is_instance_valid(node) or node.is_queued_for_deletion() or node == exclude:
 			continue
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		var distance := global_position.distance_to(monster.global_position)
-		if distance <= max_distance and distance > farthest_distance:
+		var distance_sq := global_position.distance_squared_to(
+			monster.global_position
+		)
+		if (
+			distance_sq <= max_distance_sq
+			and distance_sq > farthest_distance_sq
+		):
 			farthest = monster
-			farthest_distance = distance
+			farthest_distance_sq = distance_sq
 	return farthest
 
 func _begin_fighter_charge_dash(charge_target: Node2D) -> void:
