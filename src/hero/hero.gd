@@ -62,6 +62,9 @@ const OFFENSE_MEMORY_MIN_WEIGHT := 0.25
 const STATUS_MEMORY_WINDOW := 20.0
 const STATUS_MEMORY_MIN_WEIGHT := 0.25
 const INVULNERABILITY_BLINK_INTERVAL := 0.07
+const HERO_BASE_ATTACK_GROWTH_PER_LEVEL := 0.02
+const HERO_ATTACK_MILESTONE_INTERVAL := 10
+const HERO_ATTACK_MILESTONE_BONUS := 0.05
 
 static var _archmage_fx_frames_cache: Dictionary = {}
 
@@ -89,6 +92,8 @@ var sprite_sheet_path: String = ""
 var sprite_frame_dir: String = ""
 var augment_pool_ids: Array[String] = []
 var level_growth_config: Dictionary = {}
+var base_attack_damage_for_level_growth: float = 34.0
+var passive_attack_growth_accumulator: float = 0.0
 
 var rogue_combo_config: Dictionary = {}
 var rogue_slash_config: Dictionary = {}
@@ -570,6 +575,11 @@ func configure_profile(profile: Dictionary) -> void:
 	max_hp = int(profile.get("max_hp", max_hp))
 	move_speed = float(profile.get("move_speed", move_speed))
 	attack_damage = int(profile.get("attack_damage", attack_damage))
+	base_attack_damage_for_level_growth = maxf(
+		float(attack_damage),
+		1.0
+	)
+	passive_attack_growth_accumulator = 0.0
 	attack_range = float(profile.get("attack_range", attack_range))
 	attack_cooldown = float(profile.get("attack_cooldown", attack_cooldown))
 	projectile_speed = float(profile.get("projectile_speed", projectile_speed))
@@ -5362,6 +5372,35 @@ func _level_up() -> void:
 	queue_redraw()
 
 func _apply_level_growth() -> void:
+	# Every hero gets a small additive damage floor independent of augment rolls.
+	# It is based on the profile's starting attack damage, never current damage,
+	# so it cannot snowball exponentially with damage augments.
+	var passive_damage_gain := (
+		base_attack_damage_for_level_growth
+		* HERO_BASE_ATTACK_GROWTH_PER_LEVEL
+	)
+	if (
+		HERO_ATTACK_MILESTONE_INTERVAL > 0
+		and level % HERO_ATTACK_MILESTONE_INTERVAL == 0
+	):
+		passive_damage_gain += (
+			base_attack_damage_for_level_growth
+			* HERO_ATTACK_MILESTONE_BONUS
+		)
+
+	passive_attack_growth_accumulator += passive_damage_gain
+	var whole_passive_gain := floori(
+		passive_attack_growth_accumulator + 0.0001
+	)
+	if whole_passive_gain > 0:
+		attack_damage += whole_passive_gain
+		passive_attack_growth_accumulator = maxf(
+			passive_attack_growth_accumulator
+			- float(whole_passive_gain),
+			0.0
+		)
+
+	# Existing per-profile level growth remains additive on top.
 	if level_growth_config.is_empty():
 		return
 
