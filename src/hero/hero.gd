@@ -191,6 +191,9 @@ var berserker_skill2_cooldown: float = 0.0
 var berserker_skill3_cooldown: float = 0.0
 var berserker_skill3_active: bool = false
 var berserker_skill4_cooldown: float = 0.0
+var berserker_blood_art_eighth_stacks: int = 0
+var berserker_double_edged_heal_multiplier: float = 1.0
+var berserker_missing_hp_bonus_override: float = -1.0
 var berserker_skill_global_cooldown: float = 0.0
 
 var archmage_element_config: Dictionary = {}
@@ -447,6 +450,9 @@ func configure_profile(profile: Dictionary) -> void:
 	berserker_skill3_cooldown = 0.0
 	berserker_skill3_active = false
 	berserker_skill4_cooldown = 0.0
+	berserker_blood_art_eighth_stacks = 0
+	berserker_double_edged_heal_multiplier = 1.0
+	berserker_missing_hp_bonus_override = -1.0
 	berserker_skill_global_cooldown = 0.0
 
 	var profile_gunner = profile.get("gunner", {})
@@ -5022,8 +5028,17 @@ func _find_nearest_monster_from_point(origin: Vector2) -> Node2D:
 func heal_direct(amount: int) -> int:
 	if amount <= 0 or current_hp <= 0 or is_dying:
 		return 0
+	var adjusted_amount: int = amount
+	if hero_archetype == "berserker_madness":
+		adjusted_amount = maxi(
+			int(round(
+				float(amount)
+				* berserker_double_edged_heal_multiplier
+			)),
+			1
+		)
 	var previous_hp := current_hp
-	current_hp = mini(current_hp + amount, max_hp)
+	current_hp = mini(current_hp + adjusted_amount, max_hp)
 	var recovered := current_hp - previous_hp
 	if recovered > 0:
 		DAMAGE_NUMBERS.show_heal(self, recovered)
@@ -6133,6 +6148,23 @@ func _build_ai_context() -> Dictionary:
 		"gunner_reload_state": gunner_reload_state,
 		"gunner_surround_pressure": gunner_surround_pressure,
 		"gunner_deadeye_cluster_score": gunner_deadeye_cluster_score,
+		"berserker_gauge_ratio": (
+			ultimate_charge
+			/ maxf(
+				float(berserker_config.get("gauge_max", 100.0)),
+				1.0
+			)
+			if hero_archetype == "berserker_madness"
+			else 0.0
+		),
+		"berserker_madness_active": (
+			1.0
+			if (
+				hero_archetype == "berserker_madness"
+				and berserker_madness_active
+			)
+			else 0.0
+		),
 	}
 
 func _apply_augment(augment: Dictionary) -> void:
@@ -6394,6 +6426,40 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 					1.05
 				)
 
+		"berserker_unconscious":
+			berserker_config["madness_drain_per_second"] = maxf(
+				float(
+					berserker_config.get(
+						"madness_drain_per_second",
+						10.0
+					)
+				) - 0.5,
+				0.0
+			)
+
+		"berserker_different_dream":
+			if not berserker_madness_active:
+				_start_berserker_madness()
+			var gauge_max: float = maxf(
+				float(berserker_config.get("gauge_max", 100.0)),
+				1.0
+			)
+			ultimate_charge = gauge_max
+			queue_redraw()
+
+		"berserker_blood_art_eighth":
+			berserker_blood_art_eighth_stacks = mini(
+				berserker_blood_art_eighth_stacks + 1,
+				4
+			)
+
+		"berserker_double_edged_sword":
+			berserker_missing_hp_bonus_override = 0.015
+			berserker_double_edged_heal_multiplier = minf(
+				berserker_double_edged_heal_multiplier + 0.03,
+				1.15
+			)
+
 		"heal":
 			heal_direct(int(effect.get("value", 0)))
 
@@ -6553,42 +6619,139 @@ func _physics_process_berserker(delta: float) -> void:
 			float(berserker_config.get("madness_target_radius", 375.0)),
 			attack_range
 		)
+	var used_contextual_skill: bool = _try_use_berserker_contextual_skill(
+		target,
+		distance
+	)
 	if (
-		berserker_skill_global_cooldown <= 0.0
-		and berserker_skill3_cooldown <= 0.0
-		and distance <= 500.0
+		not used_contextual_skill
+		and distance <= attack_trigger_range
+		and attack_timer <= 0.0
 	):
-		_start_berserker_skill3(target)
-	elif (
-		berserker_skill_global_cooldown <= 0.0
-		and berserker_skill1_cooldown <= 0.0
-		and distance <= maxf(
-			float(
-				berserker_config.get(
-					"skill_1",
-					{}
-				).get("base_range", 430.0)
-			),
-			attack_range
-		)
-	):
-		_start_berserker_skill1(target)
-	elif (
-		berserker_skill_global_cooldown <= 0.0
-		and berserker_skill2_cooldown <= 0.0
-		and distance <= 320.0
-	):
-		_start_berserker_skill2(target)
-	elif (
-		berserker_skill_global_cooldown <= 0.0
-		and berserker_skill4_cooldown <= 0.0
-		and _count_monsters_near(global_position, 245.0, 1) >= 1
-	):
-		_start_berserker_skill4()
-	elif distance <= attack_trigger_range and attack_timer <= 0.0:
 		_berserker_basic_attack(target)
 
 	_update_berserker_pose_visual(delta)
+
+
+func _try_use_berserker_contextual_skill(
+	current_target: Node2D,
+	distance: float
+) -> bool:
+	if (
+		berserker_skill_global_cooldown > 0.0
+		or not is_instance_valid(current_target)
+	):
+		return false
+
+	var hp_ratio: float = clampf(
+		float(current_hp) / float(maxi(max_hp, 1)),
+		0.0,
+		1.0
+	)
+	var close_count: int = _count_monsters_near(
+		global_position,
+		245.0,
+		6
+	)
+	var recovery_count: int = _count_monsters_near(
+		global_position,
+		330.0,
+		6
+	)
+	var skill1_value = berserker_config.get("skill_1", {})
+	var skill1_range: float = attack_range
+	if typeof(skill1_value) == TYPE_DICTIONARY:
+		var skill1_config: Dictionary = skill1_value
+		skill1_range = maxf(
+			float(skill1_config.get("base_range", 300.0)),
+			attack_range
+		)
+
+	# 3식은 저체력 회복/재배치용. 적이 충분할 때만 사용한다.
+	if (
+		berserker_skill3_cooldown <= 0.0
+		and distance <= 500.0
+		and recovery_count >= 2
+		and (
+			hp_ratio <= 0.62
+			or recovery_count >= 5
+		)
+	):
+		_start_berserker_skill3(current_target)
+		return true
+
+	# 4식은 실제 포위 압력이 있을 때 밀어내기 용도로 보존한다.
+	var spin_required: int = 2 if berserker_madness_active else 3
+	if (
+		berserker_skill4_cooldown <= 0.0
+		and close_count >= spin_required
+		and hp_ratio >= 0.22
+	):
+		_start_berserker_skill4()
+		return true
+
+	# 2식은 적 밀집 또는 체력 회복 가치가 있을 때 우선한다.
+	if (
+		berserker_skill2_cooldown <= 0.0
+		and distance <= 320.0
+		and hp_ratio >= 0.26
+		and (
+			recovery_count >= 4
+			or (
+				hp_ratio <= 0.58
+				and recovery_count >= 2
+			)
+		)
+	):
+		_start_berserker_skill2(current_target)
+		return true
+
+	# 1식은 중거리에서 평타가 닿지 않을 때 주력 견제기로 사용한다.
+	if (
+		berserker_skill1_cooldown <= 0.0
+		and distance <= skill1_range
+		and distance > maxf(attack_range * 0.90, 130.0)
+		and hp_ratio >= 0.30
+	):
+		_start_berserker_skill1(current_target)
+		return true
+
+	return false
+
+
+func _pay_berserker_skill_hp_cost(hp_cost_ratio: float) -> void:
+	var ratio: float = clampf(hp_cost_ratio, 0.0, 0.95)
+	var cost_base: float = float(current_hp)
+	if berserker_blood_art_eighth_stacks > 0:
+		cost_base = float(max_hp)
+	var hp_cost: int = maxi(
+		int(round(cost_base * ratio)),
+		1
+	)
+	current_hp = maxi(current_hp - hp_cost, 1)
+	health_changed.emit(current_hp, max_hp)
+
+
+func _berserker_blood_art_eighth_heal_on_hit() -> void:
+	if berserker_blood_art_eighth_stacks <= 0:
+		return
+	var missing_hp: int = maxi(max_hp - current_hp, 0)
+	if missing_hp <= 0:
+		return
+	var heal_ratio: float = (
+		0.005
+		+ 0.003
+		* float(berserker_blood_art_eighth_stacks - 1)
+	)
+	var heal_amount: int = maxi(
+		int(round(float(missing_hp) * heal_ratio)),
+		1
+	)
+	heal_direct(heal_amount)
+
+
+func notify_berserker_blood_art_hit() -> void:
+	_berserker_blood_art_eighth_heal_on_hit()
 
 
 func _start_berserker_skill1(current_target: Node2D) -> void:
@@ -6607,12 +6770,7 @@ func _start_berserker_skill1(current_target: Node2D) -> void:
 		0.0,
 		0.95
 	)
-	var hp_cost: int = maxi(
-		int(round(float(current_hp) * hp_cost_ratio)),
-		1
-	)
-	current_hp = maxi(current_hp - hp_cost, 1)
-	health_changed.emit(current_hp, max_hp)
+	_pay_berserker_skill_hp_cost(hp_cost_ratio)
 
 	berserker_skill1_direction = global_position.direction_to(
 		current_target.global_position
@@ -6804,12 +6962,7 @@ func _start_berserker_skill2(current_target: Node2D) -> void:
 		0.0,
 		0.95
 	)
-	var hp_cost: int = maxi(
-		int(round(float(current_hp) * hp_cost_ratio)),
-		1
-	)
-	current_hp = maxi(current_hp - hp_cost, 1)
-	health_changed.emit(current_hp, max_hp)
+	_pay_berserker_skill_hp_cost(hp_cost_ratio)
 
 	berserker_skill2_cooldown = maxf(
 		float(skill_config.get("cooldown", 19.0)),
@@ -7070,6 +7223,7 @@ func _damage_berserker_skill2_segment(
 			else -1
 		)
 		monster.call("take_damage", damage)
+		_berserker_blood_art_eighth_heal_on_hit()
 
 		if hp_before <= 0:
 			continue
@@ -7146,12 +7300,7 @@ func _start_berserker_skill3(current_target: Node2D) -> void:
 		0.0,
 		0.95
 	)
-	var hp_cost: int = maxi(
-		int(round(float(current_hp) * hp_cost_ratio)),
-		1
-	)
-	current_hp = maxi(current_hp - hp_cost, 1)
-	health_changed.emit(current_hp, max_hp)
+	_pay_berserker_skill_hp_cost(hp_cost_ratio)
 
 	var dash_direction: Vector2 = global_position.direction_to(
 		current_target.global_position
@@ -7261,6 +7410,7 @@ func _execute_berserker_skill3(
 			monster.global_position,
 			skill_config
 		)
+		_berserker_blood_art_eighth_heal_on_hit()
 		orb_count += 1
 
 	var pickup_duration: float = maxf(
@@ -7374,12 +7524,7 @@ func _start_berserker_skill4() -> void:
 		0.0,
 		0.95
 	)
-	var hp_cost: int = maxi(
-		int(round(float(current_hp) * hp_cost_ratio)),
-		1
-	)
-	current_hp = maxi(current_hp - hp_cost, 1)
-	health_changed.emit(current_hp, max_hp)
+	_pay_berserker_skill_hp_cost(hp_cost_ratio)
 
 	berserker_skill4_cooldown = maxf(
 		float(skill_config.get("cooldown", 8.0)),
@@ -7446,6 +7591,7 @@ func _start_berserker_skill4() -> void:
 			else -1
 		)
 		monster.call("take_damage", damage)
+		_berserker_blood_art_eighth_heal_on_hit()
 
 		if (
 			is_instance_valid(monster)
@@ -7534,6 +7680,8 @@ func _get_berserker_effective_attack_damage() -> int:
 		),
 		0.0
 	)
+	if berserker_missing_hp_bonus_override >= 0.0:
+		bonus_per_percent = berserker_missing_hp_bonus_override
 	var passive_bonus: float = (
 		base_attack_damage_for_level_growth
 		* missing_percent
@@ -7580,6 +7728,16 @@ func _berserker_basic_attack(current_target: Node2D) -> void:
 			),
 			0.1
 		)
+		var different_dream_stacks: int = int(
+			build_counts.get(
+				"berserker_different_dream",
+				0
+			)
+		)
+		if different_dream_stacks > 0:
+			madness_speed_multiplier = (
+				1.0 + 0.40 * float(different_dream_stacks)
+			)
 		attack_interval /= madness_speed_multiplier
 	attack_timer = maxf(attack_interval, 0.06)
 	attack_pose_timer = 0.52
@@ -7666,6 +7824,12 @@ func _add_berserker_gauge(amount: float) -> void:
 		amount <= 0.0
 		or hero_archetype != "berserker_madness"
 		or berserker_madness_active
+		or int(
+			build_counts.get(
+				"berserker_different_dream",
+				0
+			)
+		) > 0
 	):
 		return
 	var gauge_max: float = maxf(
@@ -7708,6 +7872,19 @@ func _update_berserker_madness(delta: float) -> void:
 	if hero_archetype != "berserker_madness":
 		return
 	if not berserker_madness_active:
+		return
+
+	if int(
+		build_counts.get(
+			"berserker_different_dream",
+			0
+		)
+	) > 0:
+		ultimate_charge = maxf(
+			float(berserker_config.get("gauge_max", 100.0)),
+			1.0
+		)
+		queue_redraw()
 		return
 
 	var drain_per_second: float = maxf(
