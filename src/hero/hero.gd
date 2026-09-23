@@ -6773,29 +6773,9 @@ func _run_berserker_skill2_wave(
 	start_direction: Vector2,
 	skill_config: Dictionary
 ) -> void:
-	var parent := get_parent()
-	if not is_instance_valid(parent):
-		return
-	var parent_2d := parent as Node2D
-	if parent_2d == null:
-		return
-
-	var path := Line2D.new()
-	parent.add_child(path)
-	path.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	path.z_index = 4
-	path.width = maxf(
-		float(skill_config.get("path_half_width", 30.0)) * 2.0,
-		2.0
-	)
-	path.default_color = Color(0.48, 0.015, 0.02, 0.92)
-	path.begin_cap_mode = Line2D.LINE_CAP_ROUND
-	path.end_cap_mode = Line2D.LINE_CAP_ROUND
-	path.joint_mode = Line2D.LINE_JOINT_ROUND
-
 	var world_points: Array[Vector2] = []
 	world_points.append(start_position)
-	path.add_point(parent_2d.to_local(start_position))
+	var blood_visuals: Array[AnimatedSprite2D] = []
 
 	var hit_ids: Dictionary = {}
 	var current_position: Vector2 = start_position
@@ -6828,7 +6808,7 @@ func _run_berserker_skill2_wave(
 	)
 
 	for cell_index in range(cell_count):
-		if not is_inside_tree() or not is_instance_valid(path):
+		if not is_inside_tree():
 			return
 
 		var turn: float = randf_range(-branch_angle, branch_angle)
@@ -6856,8 +6836,37 @@ func _run_berserker_skill2_wave(
 			damage,
 			hit_ids
 		)
+
+		var segment: Vector2 = next_position - current_position
+		var blood_position: Vector2 = current_position.lerp(
+			next_position,
+			0.5
+		)
+		var blood_scale_x: float = maxf(
+			segment.length() / 128.0,
+			0.42
+		)
+		var blood_scale_y: float = maxf(
+			half_width / 46.0,
+			0.46
+		)
+		var blood_fx: AnimatedSprite2D = _spawn_archmage_fx(
+			"%s/effect3" % STAGE6_FRAME_DIR,
+			"ground_slam",
+			7,
+			1,
+			1.0,
+			true,
+			blood_position,
+			Vector2(blood_scale_x, blood_scale_y)
+		)
+		if is_instance_valid(blood_fx):
+			blood_fx.rotation = segment.angle()
+			blood_fx.z_index = 4
+			blood_fx.modulate = Color.WHITE
+			blood_visuals.append(blood_fx)
+
 		world_points.append(next_position)
-		path.add_point(parent_2d.to_local(next_position))
 		current_position = next_position
 
 		var step_time: float = cell_length / wave_speed
@@ -6878,11 +6887,7 @@ func _run_berserker_skill2_wave(
 		1
 	)
 	var elapsed: float = 0.0
-	while (
-		elapsed < blood_duration
-		and is_inside_tree()
-		and is_instance_valid(path)
-	):
+	while elapsed < blood_duration and is_inside_tree():
 		_heal_berserker_from_blood_path(
 			world_points,
 			half_width,
@@ -6891,19 +6896,27 @@ func _run_berserker_skill2_wave(
 		await get_tree().create_timer(tick_interval).timeout
 		elapsed += tick_interval
 
-	if not is_instance_valid(path):
-		return
-	var fade := path.create_tween()
-	fade.tween_property(
-		path,
-		"modulate:a",
-		0.0,
-		0.28
-	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	fade.finished.connect(
-		Callable(path, "queue_free"),
-		Object.CONNECT_ONE_SHOT
-	)
+	for blood_fx in blood_visuals:
+		if not is_instance_valid(blood_fx):
+			continue
+		var fade_position: Vector2 = blood_fx.global_position
+		var fade_rotation: float = blood_fx.rotation
+		var fade_scale: Vector2 = blood_fx.scale
+		_recycle_archmage_fx(blood_fx)
+
+		var fade_fx: AnimatedSprite2D = _spawn_archmage_fx(
+			"%s/effect3" % STAGE6_FRAME_DIR,
+			"ground_slam",
+			8,
+			4,
+			12.0,
+			false,
+			fade_position,
+			fade_scale
+		)
+		if is_instance_valid(fade_fx):
+			fade_fx.rotation = fade_rotation
+			fade_fx.z_index = 4
 
 
 func _damage_berserker_skill2_segment(
