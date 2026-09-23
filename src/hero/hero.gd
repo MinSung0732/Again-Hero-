@@ -451,16 +451,6 @@ func configure_profile(profile: Dictionary) -> void:
 		else {}
 	)
 	archmage_skill_cooldowns.clear()
-	for skill_key in [
-		"combustion",
-		"ice_bolt",
-		"earth_spikes",
-		"holy_power",
-		"chain_dagger",
-		"harmony",
-		"storm",
-	]:
-		archmage_skill_cooldowns[skill_key] = 0.0
 	archmage_element_orbs.clear()
 	archmage_orbit_sprites.clear()
 	archmage_orbit_angle = 0.0
@@ -476,6 +466,17 @@ func configure_profile(profile: Dictionary) -> void:
 	archmage_cooldown_reduction = 0.0
 	archmage_mana_overflow_stacks = 0
 	archmage_element_cycle_stacks = 0
+	if hero_archetype == "archmage_elementalist":
+		for skill_key in [
+			"combustion",
+			"ice_bolt",
+			"earth_spikes",
+			"holy_power",
+			"chain_dagger",
+			"harmony",
+			"storm",
+		]:
+			archmage_skill_cooldowns[skill_key] = 0.0
 	var profile_rogue_slash = profile.get("rogue_slash_skill", {})
 	rogue_slash_config = (
 		profile_rogue_slash.duplicate(true)
@@ -612,8 +613,13 @@ func configure_battlefield(size: Vector2) -> void:
 	)
 
 func _ready() -> void:
+	# Establish core combat state before optional visual/status setup.
+	# If a visual resource has a problem, the battle still receives a valid hero.
+	current_hp = max_hp
+	exp_to_next_level = _required_exp_for_level(level)
+	strafe_sign = -1.0 if randf() < 0.5 else 1.0
 	add_to_group("hero")
-	_attach_status_effect_visual("slow")
+
 	_apply_camera_limits()
 	_apply_profile_visual()
 	_apply_stage1_shield_visual()
@@ -621,6 +627,8 @@ func _ready() -> void:
 	_apply_stage2_rogue_effect_visuals()
 	_apply_stage3_fighter_effect_visuals()
 	_apply_stage4_gunner_effect_visuals()
+	_attach_status_effect_visual("slow")
+
 	if (
 		not rogue_attack_effect.animation_finished.is_connected(
 			Callable(self, "_on_rogue_attack_effect_finished")
@@ -637,9 +645,7 @@ func _ready() -> void:
 		channel_effect.animation_finished.connect(
 			Callable(self, "_on_fighter_guard_release_effect_finished")
 		)
-	current_hp = max_hp
-	exp_to_next_level = _required_exp_for_level(level)
-	strafe_sign = -1.0 if randf() < 0.5 else 1.0
+
 	_pick_new_wander_target()
 	_refresh_ai_observation()
 	health_changed.emit(current_hp, max_hp)
