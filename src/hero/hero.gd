@@ -6705,8 +6705,8 @@ func _find_berserker_madness_target() -> Node2D:
 		1.0
 	)
 	var radius_sq: float = radius * radius
-	var nearest: Node2D = null
-	var nearest_distance_sq: float = INF
+	var farthest: Node2D = null
+	var farthest_distance_sq: float = -1.0
 	for node in _get_monster_nodes_near(global_position, radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
@@ -6719,11 +6719,11 @@ func _find_berserker_madness_target() -> Node2D:
 		var distance_sq: float = global_position.distance_squared_to(
 			monster.global_position
 		)
-		if distance_sq > radius_sq or distance_sq >= nearest_distance_sq:
+		if distance_sq > radius_sq or distance_sq <= farthest_distance_sq:
 			continue
-		nearest = monster
-		nearest_distance_sq = distance_sq
-	return nearest
+		farthest = monster
+		farthest_distance_sq = distance_sq
+	return farthest
 
 
 func _berserker_madness_blink_to(blink_target: Node2D) -> void:
