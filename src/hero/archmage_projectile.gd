@@ -300,36 +300,80 @@ func _spawn_chain_line(from_position: Vector2, to_position: Vector2) -> void:
 	var parent := get_parent()
 	if not is_instance_valid(parent):
 		return
-	var line := Line2D.new()
+	var line: Line2D = null
+	if parent.has_method("acquire_transient_fx"):
+		line = parent.call(
+			"acquire_transient_fx",
+			"archmage_basic_chain_line",
+			"line"
+		) as Line2D
+	if line == null:
+		line = Line2D.new()
+		parent.add_child(line)
+
+	line.clear_points()
 	line.width = 5.0
 	line.default_color = Color(1.0, 0.94, 0.48, 0.92)
+	line.modulate = Color.WHITE
+	line.scale = Vector2.ONE
 	line.z_index = 8
 	line.add_point(parent.to_local(from_position))
 	line.add_point(parent.to_local(to_position))
-	parent.add_child(line)
+	line.visible = true
 	var tween := line.create_tween()
 	tween.tween_property(line, "modulate:a", 0.0, 0.14)
-	tween.finished.connect(line.queue_free)
+	if parent.has_method("recycle_transient_fx"):
+		tween.finished.connect(
+			Callable(parent, "recycle_transient_fx").bind(
+				line,
+				"archmage_basic_chain_line"
+			),
+			Object.CONNECT_ONE_SHOT
+		)
+	else:
+		tween.finished.connect(line.queue_free)
 
 func _spawn_impact_feedback(world_position: Vector2) -> void:
 	var parent := get_parent()
 	if not is_instance_valid(parent):
 		return
-	var ring := Line2D.new()
+	var ring: Line2D = null
+	if parent.has_method("acquire_transient_fx"):
+		ring = parent.call(
+			"acquire_transient_fx",
+			"archmage_basic_impact_ring",
+			"line"
+		) as Line2D
+	if ring == null:
+		ring = Line2D.new()
+		parent.add_child(ring)
+
+	ring.clear_points()
 	ring.width = 4.0
 	ring.default_color = ELEMENT_COLORS.get(element, Color.WHITE)
+	ring.modulate = Color.WHITE
+	ring.scale = Vector2.ONE
 	ring.z_index = 7
 	ring.position = parent.to_local(world_position)
 	var radius := 22.0 if element != "earth" else 34.0
 	for index in range(17):
 		var angle := TAU * float(index) / 16.0
 		ring.add_point(Vector2.from_angle(angle) * radius)
-	parent.add_child(ring)
+	ring.visible = true
 	var tween := ring.create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(ring, "scale", Vector2(1.45, 1.45), 0.16)
 	tween.tween_property(ring, "modulate:a", 0.0, 0.16)
-	tween.finished.connect(ring.queue_free)
+	if parent.has_method("recycle_transient_fx"):
+		tween.finished.connect(
+			Callable(parent, "recycle_transient_fx").bind(
+				ring,
+				"archmage_basic_impact_ring"
+			),
+			Object.CONNECT_ONE_SHOT
+		)
+	else:
+		tween.finished.connect(ring.queue_free)
 
 func _apply_orb_visual() -> void:
 	var frames := _orb_frames_cache
