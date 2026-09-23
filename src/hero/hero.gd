@@ -179,6 +179,14 @@ var archmage_orbit_sprites: Dictionary = {}
 var archmage_orbit_angle: float = 0.0
 var archmage_chain_dagger_active: bool = false
 var archmage_casting_sequence: bool = false
+var archmage_casting_sequence_count: int = 0
+var archmage_multicast_stacks: int = 0
+var archmage_multicast_active: bool = false
+var archmage_blink_stacks: int = 0
+var archmage_blink_cooldown_timer: float = 0.0
+var archmage_cooldown_reduction: float = 0.0
+var archmage_mana_overflow_stacks: int = 0
+var archmage_element_cycle_stacks: int = 0
 
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
@@ -445,6 +453,14 @@ func configure_profile(profile: Dictionary) -> void:
 	archmage_orbit_angle = 0.0
 	archmage_chain_dagger_active = false
 	archmage_casting_sequence = false
+	archmage_casting_sequence_count = 0
+	archmage_multicast_stacks = 0
+	archmage_multicast_active = false
+	archmage_blink_stacks = 0
+	archmage_blink_cooldown_timer = 0.0
+	archmage_cooldown_reduction = 0.0
+	archmage_mana_overflow_stacks = 0
+	archmage_element_cycle_stacks = 0
 	var profile_rogue_slash = profile.get("rogue_slash_skill", {})
 	rogue_slash_config = (
 		profile_rogue_slash.duplicate(true)
@@ -3468,13 +3484,24 @@ func _update_archmage_skill_runtime(delta: float) -> void:
 			0.0
 		)
 
+	if archmage_blink_stacks > 0:
+		archmage_blink_cooldown_timer = maxf(
+			archmage_blink_cooldown_timer - delta,
+			0.0
+		)
+		if (
+			archmage_blink_cooldown_timer <= 0.0
+			and _archmage_is_surrounded_for_blink()
+		):
+			_cast_archmage_blink()
+
 	_add_archmage_gauge(
 		maxf(float(archmage_skill_config.get("gauge_per_second", 3.0)), 0.0) * delta
 	)
 	archmage_orbit_angle = fmod(archmage_orbit_angle + delta * 1.9, TAU)
 	_update_archmage_orbit_positions()
 
-	if archmage_casting_sequence:
+	if archmage_casting_sequence or archmage_multicast_active:
 		return
 
 	var gauge_max := maxf(float(archmage_skill_config.get("gauge_max", 100.0)), 1.0)
@@ -3485,7 +3512,6 @@ func _update_archmage_skill_runtime(delta: float) -> void:
 	if chosen.is_empty():
 		return
 	_use_archmage_skill(chosen)
-
 
 func _add_archmage_gauge(amount: float) -> void:
 	if amount <= 0.0 or hero_archetype != "archmage_elementalist":
@@ -3550,15 +3576,27 @@ func _archmage_skill_ready(skill_key: String) -> bool:
 
 
 func _use_archmage_skill(skill_key: String) -> void:
+	_cast_archmage_skill_internal(skill_key, true, true)
+
+
+func _cast_archmage_skill_internal(
+	skill_key: String,
+	consume_gauge: bool,
+	trigger_multicast: bool
+) -> bool:
 	var config: Dictionary = archmage_skill_config.get(skill_key, {})
 	if config.is_empty():
-		return
+		return false
 	if skill_key == "chain_dagger" and archmage_chain_dagger_active:
-		return
+		return false
 
-	var gauge_max := maxf(float(archmage_skill_config.get("gauge_max", 100.0)), 1.0)
-	if ultimate_charge + 0.001 < gauge_max:
-		return
+	if consume_gauge:
+		var gauge_max := maxf(
+			float(archmage_skill_config.get("gauge_max", 100.0)),
+			1.0
+		)
+		if ultimate_charge + 0.001 < gauge_max:
+			return false
 
 	var empowered := false
 	if skill_key != "harmony" and _archmage_has_all_element_orbs():
@@ -3566,9 +3604,18 @@ func _use_archmage_skill(skill_key: String) -> void:
 		archmage_element_orbs.clear()
 		_refresh_archmage_orbit_visuals()
 
-	ultimate_charge = 0.0
+	if consume_gauge:
+		ultimate_charge = 0.0
 	ultimate_flash_timer = 0.28
-	archmage_skill_cooldowns[skill_key] = maxf(float(config.get("cooldown", 0.0)), 0.0)
+
+	var cooldown_multiplier := maxf(
+		1.0 - archmage_cooldown_reduction,
+		0.10
+	)
+	archmage_skill_cooldowns[skill_key] = (
+		maxf(float(config.get("cooldown", 0.0)), 0.0)
+		* cooldown_multiplier
+	)
 	attack_pose_timer = 0.36
 	_restart_stage1_animation("attack")
 
@@ -3593,6 +3640,14 @@ func _use_archmage_skill(skill_key: String) -> void:
 		"storm":
 			_cast_archmage_storm(config, empowered)
 			_collect_archmage_element("wind")
+		_:
+			return false
+
+	if archmage_mana_overflow_stacks > 0:
+		var gauge_per_stack := 4.0 if consume_gauge else 1.0
+		_add_archmage_gauge(
+			gauge_per_stack * float(archmage_mana_overflow_stacks)
+		)
 
 	ultimate_used.emit(
 		String(config.get("id", skill_key)),
@@ -3600,6 +3655,52 @@ func _use_archmage_skill(skill_key: String) -> void:
 	)
 	queue_redraw()
 
+	if (
+		trigger_multicast
+		and archmage_multicast_stacks > 0
+		and not archmage_multicast_active
+	):
+		_start_archmage_multicast(skill_key)
+
+	return true
+
+
+func _start_archmage_multicast(origin_skill: String) -> void:
+	var candidates: Array[String] = []
+	for key in [
+		"combustion",
+		"ice_bolt",
+		"earth_spikes",
+		"holy_power",
+		"chain_dagger",
+		"storm",
+	]:
+		if key == origin_skill:
+			continue
+		if not archmage_skill_config.has(key):
+			continue
+		if key == "chain_dagger" and archmage_chain_dagger_active:
+			continue
+		candidates.append(key)
+
+	if candidates.is_empty():
+		return
+
+	candidates.shuffle()
+	archmage_multicast_active = true
+	var wanted := mini(archmage_multicast_stacks, candidates.size())
+	var casted := 0
+
+	while casted < wanted and not candidates.is_empty():
+		await get_tree().create_timer(0.30).timeout
+		if not is_inside_tree() or current_hp <= 0:
+			break
+
+		var extra_skill := String(candidates.pop_back())
+		if _cast_archmage_skill_internal(extra_skill, false, false):
+			casted += 1
+
+	archmage_multicast_active = false
 
 func _skill_damage_multiplier(empowered: bool) -> float:
 	return (
@@ -3609,8 +3710,21 @@ func _skill_damage_multiplier(empowered: bool) -> float:
 	)
 
 
+func _begin_archmage_casting_sequence() -> void:
+	archmage_casting_sequence_count += 1
+	_begin_archmage_casting_sequence()
+
+
+func _end_archmage_casting_sequence() -> void:
+	archmage_casting_sequence_count = maxi(
+		archmage_casting_sequence_count - 1,
+		0
+	)
+	archmage_casting_sequence = archmage_casting_sequence_count > 0
+
+
 func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
-	archmage_casting_sequence = true
+	_begin_archmage_casting_sequence()
 	var facing := Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	if is_instance_valid(target):
 		facing = global_position.direction_to(target.global_position)
@@ -3637,7 +3751,7 @@ func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
 	if is_instance_valid(charge_fx):
 		_recycle_archmage_fx(charge_fx)
 	if not is_inside_tree() or current_hp <= 0:
-		archmage_casting_sequence = false
+		_end_archmage_casting_sequence()
 		return
 
 	var thrust_direction := facing.normalized()
@@ -3719,7 +3833,7 @@ func _resolve_archmage_ice_pillars(hit_position: Vector2, empowered: bool) -> vo
 
 
 func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
-	archmage_casting_sequence = true
+	_begin_archmage_casting_sequence()
 	var direction := Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	if is_instance_valid(target):
 		direction = global_position.direction_to(target.global_position)
@@ -3746,7 +3860,7 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 
 
 func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
-	archmage_casting_sequence = true
+	_begin_archmage_casting_sequence()
 	var count := maxi(int(config.get("burst_count", 7)), 1)
 	var spawn_radius := maxf(float(config.get("burst_spawn_radius", 330.0)), 1.0)
 	var hit_radius := maxf(float(config.get("burst_hit_radius", 86.0)), 1.0)
@@ -3805,6 +3919,122 @@ func notify_archmage_chain_dagger_finished() -> void:
 	archmage_chain_dagger_active = false
 
 
+func _archmage_is_surrounded_for_blink() -> bool:
+	if archmage_blink_stacks <= 0:
+		return false
+	return _count_monsters_near(
+		global_position,
+		230.0,
+		5
+	) >= 5
+
+
+func _archmage_blink_cooldown() -> float:
+	return maxf(
+		30.0 - float(maxi(archmage_blink_stacks - 1, 0)) * 3.0,
+		18.0
+	)
+
+
+func _cast_archmage_blink() -> void:
+	if archmage_blink_stacks <= 0:
+		return
+
+	var start_position := global_position
+	var repulsion := Vector2.ZERO
+	for node in _get_monster_nodes_near(global_position, 460.0):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var offset := global_position - monster.global_position
+		var distance_sq := offset.length_squared()
+		if distance_sq <= 0.001:
+			continue
+		repulsion += offset.normalized() / maxf(
+			sqrt(distance_sq),
+			1.0
+		)
+
+	var preferred := (
+		repulsion.normalized()
+		if repulsion.length_squared() > 0.001
+		else Vector2.RIGHT
+	)
+	var best_position := start_position
+	var best_score := INF
+	var blink_distance := 700.0
+
+	for index in range(20):
+		var direction := Vector2.from_angle(
+			TAU * float(index) / 20.0
+		)
+		var raw_target := start_position + direction * blink_distance
+		var candidate := Vector2(
+			clampf(
+				raw_target.x,
+				FIELD_MARGIN,
+				battlefield_size.x - FIELD_MARGIN
+			),
+			clampf(
+				raw_target.y,
+				FIELD_MARGIN,
+				battlefield_size.y - FIELD_MARGIN
+			)
+		)
+		var actual_distance := start_position.distance_to(candidate)
+		if actual_distance < 120.0:
+			continue
+
+		var nearby_count := _count_monsters_near(
+			candidate,
+			320.0
+		)
+		var alignment_penalty := (
+			1.0 - direction.dot(preferred)
+		) * 2.5
+		var distance_loss := (
+			blink_distance - actual_distance
+		) / blink_distance
+		var score := (
+			float(nearby_count) * 100.0
+			+ alignment_penalty
+			+ distance_loss * 12.0
+		)
+		if score < best_score:
+			best_score = score
+			best_position = candidate
+
+	if best_position == start_position:
+		return
+
+	_spawn_archmage_fx(
+		"res://assets/art/heroes/stage5_archmage/frames/effect8",
+		"wind",
+		1,
+		9,
+		24.0,
+		false,
+		start_position,
+		Vector2(0.86, 0.86)
+	)
+	global_position = best_position
+	velocity = Vector2.ZERO
+	_clamp_to_battlefield()
+	_spawn_archmage_fx(
+		"res://assets/art/heroes/stage5_archmage/frames/effect8",
+		"wind",
+		1,
+		9,
+		24.0,
+		false,
+		global_position,
+		Vector2(0.86, 0.86)
+	)
+	archmage_blink_cooldown_timer = _archmage_blink_cooldown()
+
+
 func _cast_archmage_harmony(config: Dictionary) -> void:
 	for key in ["combustion", "ice_bolt", "earth_spikes", "holy_power", "chain_dagger", "storm"]:
 		archmage_skill_cooldowns[key] = 0.0
@@ -3833,9 +4063,34 @@ func _cast_archmage_storm(config: Dictionary, empowered: bool) -> void:
 func _collect_archmage_element(element: String) -> void:
 	if element.is_empty():
 		return
-	archmage_element_orbs[element] = true
-	_refresh_archmage_orbit_visuals()
 
+	var already_owned := bool(
+		archmage_element_orbs.get(element, false)
+	)
+	archmage_element_orbs[element] = true
+
+	if (
+		already_owned
+		and archmage_element_cycle_stacks > 0
+		and randf() <= 0.25 * float(archmage_element_cycle_stacks)
+	):
+		var missing: Array[String] = []
+		for candidate in [
+			"fire",
+			"water",
+			"wind",
+			"electric",
+			"earth",
+			"holy",
+		]:
+			if not bool(archmage_element_orbs.get(candidate, false)):
+				missing.append(candidate)
+		if not missing.is_empty():
+			archmage_element_orbs[
+				String(missing.pick_random())
+			] = true
+
+	_refresh_archmage_orbit_visuals()
 
 func _archmage_has_all_element_orbs() -> bool:
 	for element in ["fire", "water", "wind", "electric", "earth", "holy"]:
@@ -5296,6 +5551,63 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 					gunner_powder_bonus_per_ammo + 0.01,
 					0.06
 				)
+
+		"archmage_multicast":
+			archmage_multicast_stacks = mini(
+				archmage_multicast_stacks + 1,
+				3
+			)
+
+		"archmage_emergency_escape":
+			archmage_blink_stacks = mini(
+				archmage_blink_stacks + 1,
+				5
+			)
+
+		"archmage_fast_cast":
+			archmage_cooldown_reduction = minf(
+				archmage_cooldown_reduction + 0.05,
+				0.25
+			)
+
+		"archmage_mana_overflow":
+			archmage_mana_overflow_stacks = mini(
+				archmage_mana_overflow_stacks + 1,
+				5
+			)
+
+		"archmage_element_resonance":
+			archmage_skill_config["empowered_damage_multiplier"] = minf(
+				float(
+					archmage_skill_config.get(
+						"empowered_damage_multiplier",
+						1.50
+					)
+				) + 0.10,
+				1.80
+			)
+			for skill_key in ["chain_dagger", "storm"]:
+				var skill_config: Dictionary = archmage_skill_config.get(
+					skill_key,
+					{}
+				)
+				if skill_config.is_empty():
+					continue
+				skill_config["empowered_damage_multiplier"] = minf(
+					float(
+						skill_config.get(
+							"empowered_damage_multiplier",
+							1.50
+						)
+					) + 0.10,
+					1.80
+				)
+
+		"archmage_element_cycle":
+			archmage_element_cycle_stacks = mini(
+				archmage_element_cycle_stacks + 1,
+				3
+			)
 
 		"heal":
 			current_hp = mini(
