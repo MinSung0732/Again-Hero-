@@ -5,6 +5,7 @@ static var _chest_nodes_cache: Array = []
 static var _chest_nodes_cache_physics_frame: int = -1
 
 const STATUS_SCRIPT := preload("res://src/hero/archmage_element_status.gd")
+const POOL_KEY := "archmage_projectile"
 const ORB_FRAME_PATHS := [
 	"res://assets/art/heroes/stage5_archmage/frames/effect6/orb_01.png",
 	"res://assets/art/heroes/stage5_archmage/frames/effect6/orb_02.png",
@@ -38,6 +39,7 @@ var element: String = "earth"
 var config: Dictionary = {}
 var source_hero: Node
 var hit_ids: Dictionary = {}
+var active: bool = true
 
 @onready var projectile_sprite: AnimatedSprite2D = $ProjectileSprite
 
@@ -54,6 +56,13 @@ func setup(
 	new_config: Dictionary,
 	new_source_hero: Node
 ) -> void:
+	active = true
+	visible = true
+	set_physics_process(true)
+	if not is_in_group("hero_projectiles"):
+		add_to_group("hero_projectiles")
+	traveled_distance = 0.0
+	hit_ids.clear()
 	direction = new_direction.normalized()
 	base_damage = maxi(new_damage, 1)
 	speed = maxf(new_speed, 1.0)
@@ -69,6 +78,8 @@ func setup(
 	_apply_orb_visual()
 
 func _physics_process(delta: float) -> void:
+	if not active:
+		return
 	var previous_position := global_position
 	var step := direction * speed * delta
 	global_position += step
@@ -76,7 +87,32 @@ func _physics_process(delta: float) -> void:
 	_check_chest_sweep(previous_position, global_position)
 
 	if traveled_distance >= max_range:
+		_finish_projectile()
+
+func _finish_projectile() -> void:
+	if not active:
+		return
+	active = false
+	var parent := get_parent()
+	if is_instance_valid(parent) and parent.has_method("recycle_projectile"):
+		parent.call("recycle_projectile", self, POOL_KEY)
+	else:
 		queue_free()
+
+
+func deactivate_for_pool() -> void:
+	active = false
+	traveled_distance = 0.0
+	hit_ids.clear()
+	config.clear()
+	source_hero = null
+	element = "earth"
+	if is_in_group("hero_projectiles"):
+		remove_from_group("hero_projectiles")
+	set_physics_process(false)
+	visible = false
+	projectile_sprite.stop()
+
 
 func _get_monster_nodes() -> Array:
 	if is_instance_valid(source_hero) and source_hero.has_method("_get_monster_nodes_cached"):
@@ -125,7 +161,7 @@ func _check_chest_sweep(from_position: Vector2, to_position: Vector2) -> void:
 		hit_ids[chest_id] = true
 		chest.call("take_damage", base_damage)
 		if element != "wind":
-			queue_free()
+			_finish_projectile()
 		return
 
 func _distance_squared_to_segment(point: Vector2, a: Vector2, b: Vector2) -> float:
@@ -137,6 +173,8 @@ func _distance_squared_to_segment(point: Vector2, a: Vector2, b: Vector2) -> flo
 	return point.distance_squared_to(a + segment * t)
 
 func _on_body_entered(body: Node) -> void:
+	if not active:
+		return
 	if body == null or body.is_queued_for_deletion():
 		return
 	if not body.is_in_group("monsters") or not body.has_method("take_damage"):
@@ -169,7 +207,7 @@ func _on_body_entered(body: Node) -> void:
 	_spawn_impact_feedback(body_2d.global_position)
 
 	if element != "wind":
-		queue_free()
+		_finish_projectile()
 
 func _apply_earth(body: Node2D) -> void:
 	var direct_multiplier := maxf(float(config.get("earth_direct_damage_multiplier", 1.45)), 1.0)
