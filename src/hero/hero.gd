@@ -230,6 +230,30 @@ func _get_monster_nodes_cached() -> Array:
 	return _monster_nodes_cache
 
 
+func _get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
+	var battle := get_parent()
+	if (
+		is_instance_valid(battle)
+		and battle.has_method("query_monsters_near")
+	):
+		var nearby = battle.call("query_monsters_near", origin, radius)
+		if nearby is Array:
+			return nearby
+	return _get_monster_nodes_cached()
+
+
+func _get_monster_nodes_in_rect(world_rect: Rect2) -> Array:
+	var battle := get_parent()
+	if (
+		is_instance_valid(battle)
+		and battle.has_method("query_monsters_in_rect")
+	):
+		var nearby = battle.call("query_monsters_in_rect", world_rect)
+		if nearby is Array:
+			return nearby
+	return _get_monster_nodes_cached()
+
+
 var current_hp: int
 var level: int = 1
 var current_exp: int = 0
@@ -1296,7 +1320,7 @@ func _update_gunner_deadeye(delta: float) -> void:
 func _count_monsters_near(origin: Vector2, radius: float) -> int:
 	var count := 0
 	var radius_sq := radius * radius
-	for node in _get_monster_nodes_cached():
+	for node in _get_monster_nodes_near(origin, radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -2944,35 +2968,38 @@ func _heal_item_desire_for_hp(hp_ratio: float) -> float:
 func _estimate_monster_danger(at_position: Vector2, radius: float) -> float:
 	var danger := 0.0
 	var safe_radius := maxf(radius, 1.0)
-	for node in _get_monster_nodes_cached():
+	var safe_radius_sq := safe_radius * safe_radius
+	for node in _get_monster_nodes_near(at_position, safe_radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		var distance := at_position.distance_to(monster.global_position)
-		if distance >= safe_radius:
+		var distance_sq := at_position.distance_squared_to(monster.global_position)
+		if distance_sq >= safe_radius_sq:
 			continue
+		var distance := sqrt(distance_sq)
 		danger += 1.0 - clampf(distance / safe_radius, 0.0, 1.0)
 	return danger
-
 
 func _get_crowd_avoidance_direction(radius: float = 230.0) -> Vector2:
 	var avoidance := Vector2.ZERO
 	var safe_radius := maxf(radius, 1.0)
-	for node in _get_monster_nodes_cached():
+	var safe_radius_sq := safe_radius * safe_radius
+	for node in _get_monster_nodes_near(global_position, safe_radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		var distance := global_position.distance_to(monster.global_position)
-		if distance <= 0.0 or distance >= safe_radius:
+		var offset := global_position - monster.global_position
+		var distance_sq := offset.length_squared()
+		if distance_sq <= 0.0 or distance_sq >= safe_radius_sq:
 			continue
+		var distance := sqrt(distance_sq)
 		var weight := 1.0 - clampf(distance / safe_radius, 0.0, 1.0)
-		avoidance += monster.global_position.direction_to(global_position) * (0.35 + weight)
+		avoidance += offset / distance * (0.35 + weight)
 	return avoidance.normalized() if avoidance.length_squared() > 0.01 else Vector2.ZERO
-
 
 func _update_chest_goal(delta: float) -> void:
 	chest_retarget_timer = maxf(chest_retarget_timer - delta, 0.0)
@@ -3687,7 +3714,7 @@ func _spawn_archmage_fx(
 
 func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int) -> void:
 	var radius_sq := radius * radius
-	for node in _get_monster_nodes_cached():
+	for node in _get_monster_nodes_near(origin, radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3703,7 +3730,7 @@ func _damage_monsters_in_radius_once(
 	hit_ids: Dictionary
 ) -> void:
 	var radius_sq := radius * radius
-	for node in _get_monster_nodes_cached():
+	for node in _get_monster_nodes_near(origin, radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3724,7 +3751,18 @@ func _damage_monsters_in_corridor(
 ) -> void:
 	var segment := end - start
 	var length_sq := maxf(segment.length_squared(), 0.001)
-	for node in _get_monster_nodes_cached():
+	var min_point := Vector2(
+		minf(start.x, end.x) - half_width,
+		minf(start.y, end.y) - half_width
+	)
+	var max_point := Vector2(
+		maxf(start.x, end.x) + half_width,
+		maxf(start.y, end.y) + half_width
+	)
+	var query_rect := Rect2(min_point, max_point - min_point)
+	var half_width_sq := half_width * half_width
+
+	for node in _get_monster_nodes_in_rect(query_rect):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3732,9 +3770,8 @@ func _damage_monsters_in_corridor(
 			continue
 		var t := clampf((monster.global_position - start).dot(segment) / length_sq, 0.0, 1.0)
 		var closest := start + segment * t
-		if monster.global_position.distance_to(closest) <= half_width:
+		if monster.global_position.distance_squared_to(closest) <= half_width_sq:
 			monster.call("take_damage", damage)
-
 
 func _find_farthest_monster_from_point(origin: Vector2) -> Node2D:
 	var best: Node2D = null
