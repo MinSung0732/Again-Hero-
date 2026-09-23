@@ -1,6 +1,9 @@
 extends RefCounted
 class_name StageProgress
 
+const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
+const TESTER_UNLOCK_ALL_STAGES := true
+
 const SAVE_PATH := "user://stage_progress.cfg"
 
 static func load_state() -> Dictionary:
@@ -13,6 +16,8 @@ static func load_state() -> Dictionary:
 
 	var error := config.load(SAVE_PATH)
 	if error != OK:
+		if TESTER_UNLOCK_ALL_STAGES:
+			state["highest_unlocked_stage"] = STAGE_CATALOG.get_ordered_stage_ids().size()
 		return state
 
 	state["current_stage_id"] = String(
@@ -24,6 +29,8 @@ static func load_state() -> Dictionary:
 	state["research_points"] = int(
 		config.get_value("meta", "research_points", 0)
 	)
+	if TESTER_UNLOCK_ALL_STAGES:
+		state["highest_unlocked_stage"] = STAGE_CATALOG.get_ordered_stage_ids().size()
 	return state
 
 static func set_current_stage(stage_id: String) -> void:
@@ -86,6 +93,8 @@ static func complete_stage(
 	}
 
 static func is_stage_unlocked(stage_number: int) -> bool:
+	if TESTER_UNLOCK_ALL_STAGES:
+		return true
 	var state := load_state()
 	return stage_number <= int(state.get("highest_unlocked_stage", 1))
 
