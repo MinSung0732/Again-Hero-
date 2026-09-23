@@ -1,7 +1,7 @@
 extends RefCounted
 class_name StageCatalog
 
-const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4", "stage_5"]
+const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4", "stage_5", "stage_6"]
 
 const STAGES = {
 	"stage_1": {
@@ -317,6 +317,72 @@ const STAGES = {
 		],
 		"first_clear_reward": 0,
 		"run_reward_multiplier": 2.00,
+		"next_stage_id": "stage_6",
+	},
+	"stage_6": {
+		"id": "stage_6",
+		"number": 6,
+		"display_name": "여섯 번째 침입자",
+		"hero_id": "madness_hero",
+		"hero_ai_profile_id": "stage_6_madness",
+		"portrait_path": "res://assets/art/heroes/stage6_berserker/stage6_hero_portrait.png",
+		"lobby_description": "자신의 피를 대가로 강해지는 광기의 용사. 체력이 낮을수록 공격이 거세지고 죽음마저 한 번 거부한다.",
+		"hero_level_start": 1,
+		"map_width": 4200,
+		"map_height": 4200,
+		"run_duration_seconds": 600.0,
+		"event_timeline": [
+			{
+				"id": "stage6_elite_01",
+				"at_seconds": 150.0,
+				"type": "elite",
+				"name": "1차 혈전 돌연변이",
+				"selection_mode": "team",
+				"mutation_profile_id": "mutation_1",
+				"reinforcement_count": 12,
+				"reinforcement_batch_size": 3,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage6_elite_02",
+				"at_seconds": 300.0,
+				"type": "elite",
+				"name": "2차 광란 돌연변이",
+				"selection_mode": "team",
+				"mutation_profile_id": "mutation_2",
+				"reinforcement_count": 14,
+				"reinforcement_batch_size": 3,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage6_miniboss_01",
+				"at_seconds": 450.0,
+				"type": "miniboss",
+				"name": "대돌연변이 혈귀",
+				"selection_mode": "team",
+				"mutation_profile_id": "greater_mutation",
+				"reinforcement_count": 18,
+				"reinforcement_batch_size": 4,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage6_boss_01",
+				"at_seconds": 540.0,
+				"type": "boss",
+				"name": "광란 침공 대장",
+				"selection_mode": "team_random",
+				"hp_multiplier": 10.5,
+				"damage_multiplier": 3.20,
+				"speed_multiplier": 1.24,
+				"exp_multiplier": 4.6,
+				"visual_scale": 1.65,
+				"reinforcement_count": 20,
+				"reinforcement_batch_size": 4,
+				"reinforcement_interval": 0.12,
+			},
+		],
+		"first_clear_reward": 0,
+		"run_reward_multiplier": 2.25,
 		"next_stage_id": "",
 	},
 }
