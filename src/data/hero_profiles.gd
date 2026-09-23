@@ -557,7 +557,7 @@ const PROFILES = {
 			"skill_3": {
 				"id": "blood_sword_third",
 				"name": "혈검술 제3식",
-				"cooldown": 30.0,
+				"cooldown": 5.0,
 				"hp_cost_ratio": 0.05,
 				"dash_distance": 500.0,
 				"dash_duration": 0.20,
