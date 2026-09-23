@@ -175,9 +175,23 @@ func deactivate_for_pool() -> void:
 
 
 func _spawn_deadeye_ricochet_fx(next_direction: Vector2) -> void:
-	var fx := Node2D.new()
-	fx.set_script(DEAD_EYE_RICOCHET_FX)
-	get_parent().add_child(fx)
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return
+
+	var fx: Node = null
+	if parent.has_method("acquire_transient_fx"):
+		fx = parent.call(
+			"acquire_transient_fx",
+			"deadeye_ricochet_fx",
+			"node2d"
+		)
+	if fx == null:
+		fx = Node2D.new()
+		parent.add_child(fx)
+
+	if fx.get_script() != DEAD_EYE_RICOCHET_FX:
+		fx.set_script(DEAD_EYE_RICOCHET_FX)
 	fx.global_position = global_position
 	fx.call("setup", next_direction)
 
@@ -273,22 +287,53 @@ func _spawn_hit_impact() -> void:
 	if parent == null:
 		return
 
-	var fx := AnimatedSprite2D.new()
+	var fx: AnimatedSprite2D = null
+	if parent.has_method("acquire_transient_fx"):
+		fx = parent.call(
+			"acquire_transient_fx",
+			"gunner_hit_impact",
+			"animated_sprite"
+		) as AnimatedSprite2D
+	if fx == null:
+		fx = AnimatedSprite2D.new()
+		parent.add_child(fx)
+
 	fx.sprite_frames = frames
 	fx.animation = &"impact"
 	fx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	fx.scale = IMPACT_SCALE
+	fx.modulate = Color.WHITE
 	fx.z_index = 5
-	parent.add_child(fx)
 	fx.global_position = global_position
+	fx.frame = 0
+	fx.frame_progress = 0.0
+	fx.visible = true
 	_active_impact_fx_count += 1
-	fx.tree_exited.connect(_on_impact_fx_tree_exited, Object.CONNECT_ONE_SHOT)
-	fx.animation_finished.connect(Callable(fx, "queue_free"), Object.CONNECT_ONE_SHOT)
+
+	var finish_callback := Callable(
+		self,
+		"_recycle_hit_impact"
+	).bind(fx)
+	fx.animation_finished.connect(
+		finish_callback,
+		Object.CONNECT_ONE_SHOT
+	)
 	fx.play(&"impact")
 
 
-static func _on_impact_fx_tree_exited() -> void:
+func _recycle_hit_impact(fx: AnimatedSprite2D) -> void:
 	_active_impact_fx_count = maxi(_active_impact_fx_count - 1, 0)
+	if not is_instance_valid(fx):
+		return
+	var parent := get_parent()
+	if is_instance_valid(parent) and parent.has_method("recycle_transient_fx"):
+		parent.call(
+			"recycle_transient_fx",
+			fx,
+			"gunner_hit_impact"
+		)
+	else:
+		fx.queue_free()
 
 
 func _load_projectile_texture(path: String) -> Texture2D:
