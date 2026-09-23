@@ -16,6 +16,8 @@ var bounce_count := 0
 var current_target: Node2D
 var previous_chain_hit_position := Vector2.ZERO
 var has_previous_chain_hit := false
+var storm_returning := false
+var storm_return_hit_ids: Dictionary = {}
 
 @onready var sprite: AnimatedSprite2D = $Sprite
 @onready var tail: AnimatedSprite2D = $Tail
@@ -45,11 +47,53 @@ func setup(
 	current_target = initial_target
 	previous_chain_hit_position = Vector2.ZERO
 	has_previous_chain_hit = false
+	storm_returning = false
+	storm_return_hit_ids.clear()
 	_apply_visual()
 
 func _physics_process(delta: float) -> void:
-	if skill_type == "chain_dagger" and is_instance_valid(current_target):
-		var desired := global_position.direction_to(current_target.global_position)
+	if skill_type == "storm":
+		if storm_returning:
+			if not is_instance_valid(source_hero):
+				_finish()
+				return
+
+			var to_hero := (
+				source_hero.global_position - global_position
+			)
+			if to_hero.length_squared() <= 55.0 * 55.0:
+				_finish()
+				return
+
+			direction = to_hero.normalized()
+			rotation = direction.angle()
+			sprite.rotation = 0.0
+			tail.rotation = 0.0
+
+			var return_step := direction * speed * delta
+			global_position += return_step
+			_damage_storm_area(true)
+			return
+
+		var outward_step := direction * speed * delta
+		global_position += outward_step
+		traveled += speed * delta
+		_damage_storm_area(false)
+
+		if traveled >= max_range:
+			storm_returning = true
+			traveled = 0.0
+		return
+
+		return
+
+	if (
+		skill_type == "chain_dagger"
+		and is_instance_valid(current_target)
+	):
+		var desired := global_position.direction_to(
+			current_target.global_position
+		)
 		if desired.length_squared() > 0.0:
 			direction = desired.normalized()
 			rotation = direction.angle()
@@ -60,11 +104,125 @@ func _physics_process(delta: float) -> void:
 	global_position += step
 	traveled += speed * delta
 	if traveled >= max_range:
-		if skill_type == "storm":
-			_explode_storm_endpoint()
 		_finish()
 
+
+func _damage_storm_area(returning: bool) -> void:
+	if not is_instance_valid(source_hero):
+		return
+
+	var radius := maxf(
+		float(config.get("hit_radius", 125.0)),
+		1.0
+	)
+	var radius_sq := radius * radius
+	var damaged_ids := (
+		storm_return_hit_ids
+		if returning
+		else hit_ids
+	)
+	var damage_multiplier := (
+		maxf(
+			float(
+				config.get(
+					"return_damage_multiplier",
+					0.50
+				)
+			),
+			0.0
+		)
+		if returning
+		else 1.0
+	)
+	var hit_damage := maxi(
+		1,
+		int(round(float(damage) * damage_multiplier))
+	)
+	if empowered:
+		hit_damage = maxi(
+			1,
+			int(
+				round(
+					float(hit_damage)
+					* float(
+						config.get(
+							"empowered_damage_multiplier",
+							1.50
+						)
+					)
+				)
+			)
+		)
+
+	for node in _get_monster_nodes_near(
+		global_position,
+		radius
+	):
+		if (
+			not is_instance_valid(node)
+			or node.is_queued_for_deletion()
+		):
+			continue
+		var monster := node as Node2D
+		if (
+			monster == null
+			or not monster.has_method("take_damage")
+		):
+			continue
+		if (
+			global_position.distance_squared_to(
+				monster.global_position
+			) > radius_sq
+		):
+			continue
+
+		var iid := monster.get_instance_id()
+		if damaged_ids.has(iid):
+			continue
+		damaged_ids[iid] = true
+
+		monster.call("take_damage", hit_damage)
+		monster.set_meta(
+			"archmage_root_until",
+			Time.get_ticks_msec()
+			+ int(
+				maxf(
+					float(
+						config.get(
+							"root_duration",
+							2.0
+						)
+					),
+					0.0
+				) * 1000.0
+			)
+		)
+
+		# Gauge restoration remains an outbound-hit reward. Returning wind
+		# still deals damage and roots, but does not double gauge generation.
+		if (
+			not returning
+			and source_hero.has_method(
+				"restore_archmage_gauge"
+			)
+		):
+			source_hero.call(
+				"restore_archmage_gauge",
+				maxf(
+					float(
+						config.get(
+							"gauge_restore_per_hit",
+							4.0
+						)
+					),
+					0.0
+				)
+			)
+
+
 func _on_body_entered(body: Node) -> void:
+	if skill_type == "storm":
+		return
 	if body == null or body.is_queued_for_deletion():
 		return
 	var monster := body as Node2D
@@ -162,17 +320,6 @@ func _on_body_entered(body: Node) -> void:
 				float(config.get("bounce_range", 600.0)),
 				1.0
 			)
-		"storm":
-			var hit_damage := damage
-			if empowered:
-				hit_damage = maxi(1, int(round(float(hit_damage) * float(config.get("empowered_damage_multiplier", 1.50)))))
-			monster.call("take_damage", hit_damage)
-			monster.set_meta(
-				"archmage_root_until",
-				Time.get_ticks_msec() + int(maxf(float(config.get("root_duration", 2.0)), 0.0) * 1000.0)
-			)
-			if is_instance_valid(source_hero) and source_hero.has_method("restore_archmage_gauge"):
-				source_hero.call("restore_archmage_gauge", maxf(float(config.get("gauge_restore_per_hit", 4.0)), 0.0))
 
 func _spawn_chain_current(
 	from_position: Vector2,
@@ -377,35 +524,6 @@ func _damage_monsters_along_segment(
 		var closest := from_position + segment * t
 		if monster.global_position.distance_squared_to(closest) <= half_width * half_width:
 			monster.call("take_damage", tick_damage)
-
-
-func _explode_storm_endpoint() -> void:
-	var explosion_ratio := maxf(float(config.get("end_explosion_damage_ratio", 0.90)), 0.0)
-	var radius := maxf(float(config.get("end_explosion_radius", 125.0)), 1.0)
-	var explosion_damage := maxi(1, int(round(float(source_hero.get("attack_damage")) * explosion_ratio))) if is_instance_valid(source_hero) else maxi(1, int(round(float(damage) * explosion_ratio)))
-	if empowered:
-		explosion_damage = maxi(
-			1,
-			int(round(float(explosion_damage) * float(config.get("empowered_damage_multiplier", 1.50))))
-		)
-
-	_spawn_hit_animation(
-		"res://assets/art/heroes/stage5_archmage/frames/effect8",
-		"wind",
-		7,
-		3,
-		16.0,
-		global_position
-	)
-
-	for node in _get_monster_nodes_near(global_position, radius):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var monster := node as Node2D
-		if monster == null or not monster.has_method("take_damage"):
-			continue
-		if global_position.distance_squared_to(monster.global_position) <= radius * radius:
-			monster.call("take_damage", explosion_damage)
 
 
 func _find_nearest_unhit(origin: Vector2, radius: float) -> Node2D:
