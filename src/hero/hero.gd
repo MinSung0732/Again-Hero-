@@ -6130,12 +6130,7 @@ func _play_gunner_deadeye_flame(direction: Vector2) -> void:
 	_set_gunner_muzzle_transform(direction)
 	rogue_attack_effect.visible = true
 
-	if (
-		rogue_attack_effect.animation == &"deadeye_flame"
-		and rogue_attack_effect.is_playing()
-	):
-		return
-
+	# Deadeye muzzle flame must pop on every single shot.
 	rogue_attack_effect.stop()
 	rogue_attack_effect.animation = &"deadeye_flame"
 	rogue_attack_effect.frame = 0
