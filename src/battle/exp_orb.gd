@@ -3,6 +3,10 @@ extends Node2D
 const FRAME_COUNT := 6
 const FRAME_SIZE := Vector2(64, 56)
 const TARGET_HEIGHT := 42.0
+const IDLE_SENSE_MIN_INTERVAL := 0.10
+const IDLE_SENSE_MAX_INTERVAL := 0.16
+
+static var _tier_frames_cache: Dictionary = {}
 
 const TIER_DATA := [
 	{
@@ -53,10 +57,15 @@ var magnetized: bool = false
 var pulse_time: float = 0.0
 var burst_velocity: Vector2 = Vector2.ZERO
 var burst_time: float = 0.0
+var idle_sense_timer: float = 0.0
 
 func _ready() -> void:
 	add_to_group("exp_orbs")
 	hero = get_tree().get_first_node_in_group("hero") as Node2D
+	idle_sense_timer = randf_range(
+		IDLE_SENSE_MIN_INTERVAL,
+		IDLE_SENSE_MAX_INTERVAL
+	)
 	visual.visible = false
 	visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	queue_redraw()
@@ -65,6 +74,11 @@ func setup(value: int, initial_velocity: Vector2 = Vector2.ZERO) -> void:
 	exp_value = maxi(value, 0)
 	burst_velocity = initial_velocity
 	burst_time = 0.30 if initial_velocity.length_squared() > 0.01 else 0.0
+	magnetized = false
+	idle_sense_timer = randf_range(
+		IDLE_SENSE_MIN_INTERVAL,
+		IDLE_SENSE_MAX_INTERVAL
+	)
 	_apply_exp_stone_visual()
 	queue_redraw()
 
@@ -72,8 +86,12 @@ func _physics_process(delta: float) -> void:
 	pulse_time += delta
 	if burst_time > 0.0:
 		global_position += burst_velocity * delta
-		burst_velocity = burst_velocity.lerp(Vector2.ZERO, clampf(delta * 8.0, 0.0, 1.0))
+		burst_velocity = burst_velocity.lerp(
+			Vector2.ZERO,
+			clampf(delta * 8.0, 0.0, 1.0)
+		)
 		burst_time = maxf(burst_time - delta, 0.0)
+
 	if not visual.visible:
 		queue_redraw()
 
@@ -82,38 +100,55 @@ func _physics_process(delta: float) -> void:
 		if not is_instance_valid(hero):
 			return
 
-	var distance := global_position.distance_to(hero.global_position)
 	var pickup_radius := 150.0
 	var radius_value = hero.get("exp_pickup_radius")
 	if radius_value != null:
-		pickup_radius = float(radius_value)
+		pickup_radius = maxf(float(radius_value), 1.0)
 
-	if not magnetized and distance <= pickup_radius:
-		magnetized = true
+	# Once the initial drop burst is over, dormant orbs only need to check
+	# whether the hero entered pickup range at ~6-10 Hz.
+	if not magnetized and burst_time <= 0.0:
+		idle_sense_timer = maxf(idle_sense_timer - delta, 0.0)
+		if idle_sense_timer > 0.0:
+			return
+		idle_sense_timer = randf_range(
+			IDLE_SENSE_MIN_INTERVAL,
+			IDLE_SENSE_MAX_INTERVAL
+		)
+
+	var offset_to_hero := hero.global_position - global_position
+	var distance_sq := offset_to_hero.length_squared()
+	var pickup_radius_sq := pickup_radius * pickup_radius
 
 	if not magnetized:
-		return
+		if distance_sq > pickup_radius_sq:
+			return
+		magnetized = true
 
-	if distance <= collect_distance:
+	var collect_distance_sq := collect_distance * collect_distance
+	if distance_sq <= collect_distance_sq:
 		if hero.has_method("gain_exp"):
 			hero.call("gain_exp", exp_value)
 		queue_free()
 		return
 
+	var distance := sqrt(distance_sq)
 	var speed_scale := (
 		1.0
 		+ clampf(
-			(pickup_radius - distance) / maxf(pickup_radius, 1.0),
+			(pickup_radius - distance) / pickup_radius,
 			0.0,
 			1.0
 		) * 0.45
 	)
-	global_position += (
-		global_position.direction_to(hero.global_position)
-		* attraction_speed
-		* speed_scale
-		* delta
-	)
+	if distance_sq > 0.001:
+		global_position += (
+			offset_to_hero / distance
+			* attraction_speed
+			* speed_scale
+			* delta
+		)
+
 
 func _apply_exp_stone_visual() -> void:
 	visual.visible = false
@@ -123,29 +158,33 @@ func _apply_exp_stone_visual() -> void:
 	if tier.is_empty():
 		return
 
-	var frames := SpriteFrames.new()
-	if frames.has_animation(&"default"):
-		frames.remove_animation(&"default")
+	var tier_id := String(tier.get("id", ""))
+	var frames = _tier_frames_cache.get(tier_id)
+	if not (frames is SpriteFrames):
+		frames = SpriteFrames.new()
+		if frames.has_animation(&"default"):
+			frames.remove_animation(&"default")
 
-	frames.add_animation(&"idle")
-	frames.set_animation_speed(&"idle", 10.0)
-	frames.set_animation_loop(&"idle", true)
+		frames.add_animation(&"idle")
+		frames.set_animation_speed(&"idle", 10.0)
+		frames.set_animation_loop(&"idle", true)
 
-	var base_path := String(tier.get("path", ""))
-	for index in range(1, FRAME_COUNT + 1):
-		var frame_path := "%s/frame_%02d.png" % [base_path, index]
-		var texture := _load_texture(frame_path)
-		if texture == null:
-			visual.sprite_frames = null
-			visual.visible = false
-			return
-		frames.add_frame(&"idle", texture)
+		var base_path := String(tier.get("path", ""))
+		for index in range(1, FRAME_COUNT + 1):
+			var frame_path := "%s/frame_%02d.png" % [base_path, index]
+			var texture := _load_texture(frame_path)
+			if texture == null:
+				return
+			frames.add_frame(&"idle", texture)
+
+		_tier_frames_cache[tier_id] = frames
 
 	visual.sprite_frames = frames
 	var uniform_scale := TARGET_HEIGHT / FRAME_SIZE.y
 	visual.scale = Vector2(uniform_scale, uniform_scale)
 	visual.visible = true
 	visual.play(&"idle")
+
 
 func _get_tier_data(value: int) -> Dictionary:
 	var selected: Dictionary = {}
