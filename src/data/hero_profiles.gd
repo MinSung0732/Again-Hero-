@@ -590,6 +590,12 @@ const PROFILES = {
 			"berserker_different_dream",
 			"berserker_blood_art_eighth",
 			"berserker_double_edged_sword",
+			"berserker_blood_overflow",
+			"berserker_blood_orb_devour",
+			"berserker_killing_urge",
+			"berserker_blood_art_mastery",
+			"berserker_frenzied_leap",
+			"berserker_undying_madman",
 		],
 	},
 }
