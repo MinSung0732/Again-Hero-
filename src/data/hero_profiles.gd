@@ -208,6 +208,12 @@ const PROFILES = {
 			"exp_training",
 			"exp_magnet",
 			"long_reach",
+			"archmage_multicast",
+			"archmage_emergency_escape",
+			"archmage_fast_cast",
+			"archmage_mana_overflow",
+			"archmage_element_resonance",
+			"archmage_element_cycle",
 		],
 	},
 
