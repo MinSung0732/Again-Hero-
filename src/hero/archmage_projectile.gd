@@ -83,7 +83,7 @@ func _physics_process(delta: float) -> void:
 	var previous_position := global_position
 	var step := direction * speed * delta
 	global_position += step
-	traveled_distance += step.length()
+	traveled_distance += speed * delta
 	_check_chest_sweep(previous_position, global_position)
 
 	if traveled_distance >= max_range:
