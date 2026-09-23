@@ -1,0 +1,160 @@
+{
+  "source": "item_expbox_spritesheet.png",
+  "animation": "expbox",
+  "frame_count": 8,
+  "frame_order": [
+    "expbox_01.png",
+    "expbox_02.png",
+    "expbox_03.png",
+    "expbox_04.png",
+    "expbox_05.png",
+    "expbox_06.png",
+    "expbox_07.png",
+    "expbox_08.png"
+  ],
+  "cell_size": {
+    "width": 444,
+    "height": 444
+  },
+  "sheet_size": {
+    "width": 1776,
+    "height": 888
+  },
+  "sheet_columns": 4,
+  "sheet_rows": 2,
+  "anchor": {
+    "x": 222,
+    "y": 222
+  },
+  "alignment": "expbox body center aligned to shared anchor where a stable body is present",
+  "frames": [
+    {
+      "file": "expbox_01.png",
+      "index": 0,
+      "source_cell": {
+        "column": 0,
+        "row": 0
+      },
+      "anchor": {
+        "x": 222,
+        "y": 222
+      },
+      "source_body_center_x": 224.44,
+      "source_body_center_y": 249.55,
+      "horizontal_shift_px": -2,
+      "vertical_shift_px": -28
+    },
+    {
+      "file": "expbox_02.png",
+      "index": 1,
+      "source_cell": {
+        "column": 1,
+        "row": 0
+      },
+      "anchor": {
+        "x": 222,
+        "y": 222
+      },
+      "source_body_center_x": 223.67,
+      "source_body_center_y": 238.34,
+      "horizontal_shift_px": -2,
+      "vertical_shift_px": -16
+    },
+    {
+      "file": "expbox_03.png",
+      "index": 2,
+      "source_cell": {
+        "column": 2,
+        "row": 0
+      },
+      "anchor": {
+        "x": 222,
+        "y": 222
+      },
+      "source_body_center_x": 219.89,
+      "source_body_center_y": 255.03,
+      "horizontal_shift_px": 2,
+      "vertical_shift_px": -33
+    },
+    {
+      "file": "expbox_04.png",
+      "index": 3,
+      "source_cell": {
+        "column": 3,
+        "row": 0
+      },
+      "anchor": {
+        "x": 222,
+        "y": 222
+      },
+      "source_body_center_x": 220.25,
+      "source_body_center_y": 244.24,
+      "horizontal_shift_px": 2,
+      "vertical_shift_px": -22
+    },
+    {
+      "file": "expbox_05.png",
+      "index": 4,
+      "source_cell": {
+        "column": 0,
+        "row": 1
+      },
+      "anchor": {
+        "x": 222,
+        "y": 222
+      },
+      "source_body_center_x": 227.03,
+      "source_body_center_y": 232.04,
+      "horizontal_shift_px": -5,
+      "vertical_shift_px": -10
+    },
+    {
+      "file": "expbox_06.png",
+      "index": 5,
+      "source_cell": {
+        "column": 1,
+        "row": 1
+      },
+      "anchor": {
+        "x": 222,
+        "y": 222
+      },
+      "source_body_center_x": 224.42,
+      "source_body_center_y": 213.36,
+      "horizontal_shift_px": -2,
+      "vertical_shift_px": 9
+    },
+    {
+      "file": "expbox_07.png",
+      "index": 6,
+      "source_cell": {
+        "column": 2,
+        "row": 1
+      },
+      "anchor": {
+        "x": 222,
+        "y": 222
+      },
+      "source_body_center_x": 212.11,
+      "source_body_center_y": 286.01,
+      "horizontal_shift_px": 10,
+      "vertical_shift_px": 0
+    },
+    {
+      "file": "expbox_08.png",
+      "index": 7,
+      "source_cell": {
+        "column": 3,
+        "row": 1
+      },
+      "anchor": {
+        "x": 222,
+        "y": 222
+      },
+      "source_body_center_x": 218.85,
+      "source_body_center_y": 321.53,
+      "horizontal_shift_px": 3,
+      "vertical_shift_px": 0
+    }
+  ]
+}

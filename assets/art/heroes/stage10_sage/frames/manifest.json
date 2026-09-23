@@ -1,0 +1,138 @@
+{
+  "source": "stage10_hero_spritesheet.png",
+  "type": "hero",
+  "frame_count": 23,
+  "cell_size": [
+    384,
+    288
+  ],
+  "anchor": {
+    "x": 192,
+    "y": 240,
+    "basis": "fixed_source_axis"
+  },
+  "actions": {
+    "idle": 4,
+    "walk": 6,
+    "atk": 6,
+    "hit": 3,
+    "dead": 4
+  },
+  "frames": [
+    {
+      "file": "idle_01.png",
+      "action": "idle",
+      "order": 1
+    },
+    {
+      "file": "idle_02.png",
+      "action": "idle",
+      "order": 2
+    },
+    {
+      "file": "idle_03.png",
+      "action": "idle",
+      "order": 3
+    },
+    {
+      "file": "idle_04.png",
+      "action": "idle",
+      "order": 4
+    },
+    {
+      "file": "walk_01.png",
+      "action": "walk",
+      "order": 1
+    },
+    {
+      "file": "walk_02.png",
+      "action": "walk",
+      "order": 2
+    },
+    {
+      "file": "walk_03.png",
+      "action": "walk",
+      "order": 3
+    },
+    {
+      "file": "walk_04.png",
+      "action": "walk",
+      "order": 4
+    },
+    {
+      "file": "walk_05.png",
+      "action": "walk",
+      "order": 5
+    },
+    {
+      "file": "walk_06.png",
+      "action": "walk",
+      "order": 6
+    },
+    {
+      "file": "atk_01.png",
+      "action": "atk",
+      "order": 1
+    },
+    {
+      "file": "atk_02.png",
+      "action": "atk",
+      "order": 2
+    },
+    {
+      "file": "atk_03.png",
+      "action": "atk",
+      "order": 3
+    },
+    {
+      "file": "atk_04.png",
+      "action": "atk",
+      "order": 4
+    },
+    {
+      "file": "atk_05.png",
+      "action": "atk",
+      "order": 5
+    },
+    {
+      "file": "atk_06.png",
+      "action": "atk",
+      "order": 6
+    },
+    {
+      "file": "hit_01.png",
+      "action": "hit",
+      "order": 1
+    },
+    {
+      "file": "hit_02.png",
+      "action": "hit",
+      "order": 2
+    },
+    {
+      "file": "hit_03.png",
+      "action": "hit",
+      "order": 3
+    },
+    {
+      "file": "dead_01.png",
+      "action": "dead",
+      "order": 1
+    },
+    {
+      "file": "dead_02.png",
+      "action": "dead",
+      "order": 2
+    },
+    {
+      "file": "dead_03.png",
+      "action": "dead",
+      "order": 3
+    },
+    {
+      "file": "dead_04.png",
+      "action": "dead",
+      "order": 4
+    }
+  ]
+}

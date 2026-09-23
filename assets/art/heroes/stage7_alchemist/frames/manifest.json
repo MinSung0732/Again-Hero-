@@ -1,0 +1,563 @@
+{
+  "source": "stage7_hero_spritesheet.png",
+  "frame_count": 27,
+  "cell_size": {
+    "width": 512,
+    "height": 256
+  },
+  "sheet_size": {
+    "width": 3072,
+    "height": 1280
+  },
+  "columns": 6,
+  "rows": 5,
+  "anchor": {
+    "x": 160,
+    "y": 224
+  },
+  "alignment": "Shared torso X and ground Y; detached attack particles remain in their source frame",
+  "frame_order": [
+    "idle_01.png",
+    "idle_02.png",
+    "idle_03.png",
+    "idle_04.png",
+    "walk_01.png",
+    "walk_02.png",
+    "walk_03.png",
+    "walk_04.png",
+    "walk_05.png",
+    "walk_06.png",
+    "run_01.png",
+    "run_02.png",
+    "run_03.png",
+    "run_04.png",
+    "run_05.png",
+    "run_06.png",
+    "atk_01.png",
+    "atk_02.png",
+    "atk_03.png",
+    "atk_04.png",
+    "atk_05.png",
+    "hit_01.png",
+    "hit_02.png",
+    "dead_01.png",
+    "dead_02.png",
+    "dead_03.png",
+    "dead_04.png"
+  ],
+  "frames": [
+    {
+      "file": "idle_01.png",
+      "index": 0,
+      "action": "idle",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        0,
+        40,
+        210,
+        243
+      ],
+      "source_root": [
+        126,
+        237
+      ]
+    },
+    {
+      "file": "idle_02.png",
+      "index": 1,
+      "action": "idle",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        210,
+        40,
+        385,
+        243
+      ],
+      "source_root": [
+        297,
+        237
+      ]
+    },
+    {
+      "file": "idle_03.png",
+      "index": 2,
+      "action": "idle",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        385,
+        40,
+        565,
+        243
+      ],
+      "source_root": [
+        476,
+        237
+      ]
+    },
+    {
+      "file": "idle_04.png",
+      "index": 3,
+      "action": "idle",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        565,
+        40,
+        740,
+        243
+      ],
+      "source_root": [
+        655,
+        237
+      ]
+    },
+    {
+      "file": "walk_01.png",
+      "index": 4,
+      "action": "walk",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        0,
+        259,
+        220,
+        466
+      ],
+      "source_root": [
+        132,
+        460
+      ]
+    },
+    {
+      "file": "walk_02.png",
+      "index": 5,
+      "action": "walk",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        220,
+        259,
+        413,
+        466
+      ],
+      "source_root": [
+        318,
+        460
+      ]
+    },
+    {
+      "file": "walk_03.png",
+      "index": 6,
+      "action": "walk",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        413,
+        259,
+        602,
+        466
+      ],
+      "source_root": [
+        506,
+        460
+      ]
+    },
+    {
+      "file": "walk_04.png",
+      "index": 7,
+      "action": "walk",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        602,
+        259,
+        791,
+        466
+      ],
+      "source_root": [
+        694,
+        460
+      ]
+    },
+    {
+      "file": "walk_05.png",
+      "index": 8,
+      "action": "walk",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        791,
+        259,
+        980,
+        466
+      ],
+      "source_root": [
+        882,
+        460
+      ]
+    },
+    {
+      "file": "walk_06.png",
+      "index": 9,
+      "action": "walk",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        980,
+        259,
+        1165,
+        466
+      ],
+      "source_root": [
+        1070,
+        460
+      ]
+    },
+    {
+      "file": "run_01.png",
+      "index": 10,
+      "action": "run",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        0,
+        487,
+        239,
+        686
+      ],
+      "source_root": [
+        144,
+        680
+      ]
+    },
+    {
+      "file": "run_02.png",
+      "index": 11,
+      "action": "run",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        239,
+        487,
+        430,
+        686
+      ],
+      "source_root": [
+        336,
+        680
+      ]
+    },
+    {
+      "file": "run_03.png",
+      "index": 12,
+      "action": "run",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        430,
+        487,
+        630,
+        686
+      ],
+      "source_root": [
+        526,
+        680
+      ]
+    },
+    {
+      "file": "run_04.png",
+      "index": 13,
+      "action": "run",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        630,
+        487,
+        821,
+        686
+      ],
+      "source_root": [
+        718,
+        680
+      ]
+    },
+    {
+      "file": "run_05.png",
+      "index": 14,
+      "action": "run",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        821,
+        487,
+        1020,
+        686
+      ],
+      "source_root": [
+        908,
+        680
+      ]
+    },
+    {
+      "file": "run_06.png",
+      "index": 15,
+      "action": "run",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        1020,
+        487,
+        1210,
+        686
+      ],
+      "source_root": [
+        1107,
+        680
+      ]
+    },
+    {
+      "file": "atk_01.png",
+      "index": 16,
+      "action": "atk",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        0,
+        694,
+        243,
+        894
+      ],
+      "source_root": [
+        146,
+        888
+      ]
+    },
+    {
+      "file": "atk_02.png",
+      "index": 17,
+      "action": "atk",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        243,
+        694,
+        425,
+        894
+      ],
+      "source_root": [
+        328,
+        888
+      ]
+    },
+    {
+      "file": "atk_03.png",
+      "index": 18,
+      "action": "atk",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        425,
+        694,
+        650,
+        894
+      ],
+      "source_root": [
+        510,
+        888
+      ]
+    },
+    {
+      "file": "atk_04.png",
+      "index": 19,
+      "action": "atk",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        650,
+        694,
+        1071,
+        894
+      ],
+      "source_root": [
+        744,
+        888
+      ]
+    },
+    {
+      "file": "atk_05.png",
+      "index": 20,
+      "action": "atk",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        1071,
+        694,
+        1290,
+        894
+      ],
+      "source_root": [
+        1185,
+        888
+      ]
+    },
+    {
+      "file": "hit_01.png",
+      "index": 21,
+      "action": "hit",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        0,
+        906,
+        216,
+        1073
+      ],
+      "source_root": [
+        130,
+        1068
+      ]
+    },
+    {
+      "file": "hit_02.png",
+      "index": 22,
+      "action": "hit",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        216,
+        906,
+        410,
+        1073
+      ],
+      "source_root": [
+        312,
+        1068
+      ]
+    },
+    {
+      "file": "dead_01.png",
+      "index": 23,
+      "action": "dead",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        410,
+        906,
+        620,
+        1073
+      ],
+      "source_root": [
+        506,
+        1068
+      ]
+    },
+    {
+      "file": "dead_02.png",
+      "index": 24,
+      "action": "dead",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        620,
+        906,
+        870,
+        1073
+      ],
+      "source_root": [
+        752,
+        1068
+      ]
+    },
+    {
+      "file": "dead_03.png",
+      "index": 25,
+      "action": "dead",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        870,
+        906,
+        1170,
+        1073
+      ],
+      "source_root": [
+        1002,
+        1068
+      ]
+    },
+    {
+      "file": "dead_04.png",
+      "index": 26,
+      "action": "dead",
+      "anchor": {
+        "x": 160,
+        "y": 224
+      },
+      "source_crop": [
+        1170,
+        906,
+        1448,
+        1073
+      ],
+      "source_root": [
+        1284,
+        1068
+      ]
+    }
+  ]
+}

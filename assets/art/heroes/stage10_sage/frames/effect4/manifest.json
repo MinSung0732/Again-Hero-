@@ -1,0 +1,274 @@
+{
+  "source": "stage10_hero_effects_spritesheet.png",
+  "type": "effect",
+  "frame_count": 50,
+  "cell_size": [
+    384,
+    224
+  ],
+  "anchor": {
+    "x": 192,
+    "y": 112,
+    "basis": "fixed_source_axis"
+  },
+  "actions": {
+    "projectile": 7,
+    "crescent": 10,
+    "summon": 8,
+    "ice": 8,
+    "starburst": 10,
+    "dash": 7
+  },
+  "frames": [
+    {
+      "file": "projectile_01.png",
+      "action": "projectile",
+      "order": 1
+    },
+    {
+      "file": "projectile_02.png",
+      "action": "projectile",
+      "order": 2
+    },
+    {
+      "file": "projectile_03.png",
+      "action": "projectile",
+      "order": 3
+    },
+    {
+      "file": "projectile_04.png",
+      "action": "projectile",
+      "order": 4
+    },
+    {
+      "file": "projectile_05.png",
+      "action": "projectile",
+      "order": 5
+    },
+    {
+      "file": "projectile_06.png",
+      "action": "projectile",
+      "order": 6
+    },
+    {
+      "file": "projectile_07.png",
+      "action": "projectile",
+      "order": 7
+    },
+    {
+      "file": "crescent_01.png",
+      "action": "crescent",
+      "order": 1
+    },
+    {
+      "file": "crescent_02.png",
+      "action": "crescent",
+      "order": 2
+    },
+    {
+      "file": "crescent_03.png",
+      "action": "crescent",
+      "order": 3
+    },
+    {
+      "file": "crescent_04.png",
+      "action": "crescent",
+      "order": 4
+    },
+    {
+      "file": "crescent_05.png",
+      "action": "crescent",
+      "order": 5
+    },
+    {
+      "file": "crescent_06.png",
+      "action": "crescent",
+      "order": 6
+    },
+    {
+      "file": "crescent_07.png",
+      "action": "crescent",
+      "order": 7
+    },
+    {
+      "file": "crescent_08.png",
+      "action": "crescent",
+      "order": 8
+    },
+    {
+      "file": "crescent_09.png",
+      "action": "crescent",
+      "order": 9
+    },
+    {
+      "file": "crescent_10.png",
+      "action": "crescent",
+      "order": 10
+    },
+    {
+      "file": "summon_01.png",
+      "action": "summon",
+      "order": 1
+    },
+    {
+      "file": "summon_02.png",
+      "action": "summon",
+      "order": 2
+    },
+    {
+      "file": "summon_03.png",
+      "action": "summon",
+      "order": 3
+    },
+    {
+      "file": "summon_04.png",
+      "action": "summon",
+      "order": 4
+    },
+    {
+      "file": "summon_05.png",
+      "action": "summon",
+      "order": 5
+    },
+    {
+      "file": "summon_06.png",
+      "action": "summon",
+      "order": 6
+    },
+    {
+      "file": "summon_07.png",
+      "action": "summon",
+      "order": 7
+    },
+    {
+      "file": "summon_08.png",
+      "action": "summon",
+      "order": 8
+    },
+    {
+      "file": "ice_01.png",
+      "action": "ice",
+      "order": 1
+    },
+    {
+      "file": "ice_02.png",
+      "action": "ice",
+      "order": 2
+    },
+    {
+      "file": "ice_03.png",
+      "action": "ice",
+      "order": 3
+    },
+    {
+      "file": "ice_04.png",
+      "action": "ice",
+      "order": 4
+    },
+    {
+      "file": "ice_05.png",
+      "action": "ice",
+      "order": 5
+    },
+    {
+      "file": "ice_06.png",
+      "action": "ice",
+      "order": 6
+    },
+    {
+      "file": "ice_07.png",
+      "action": "ice",
+      "order": 7
+    },
+    {
+      "file": "ice_08.png",
+      "action": "ice",
+      "order": 8
+    },
+    {
+      "file": "starburst_01.png",
+      "action": "starburst",
+      "order": 1
+    },
+    {
+      "file": "starburst_02.png",
+      "action": "starburst",
+      "order": 2
+    },
+    {
+      "file": "starburst_03.png",
+      "action": "starburst",
+      "order": 3
+    },
+    {
+      "file": "starburst_04.png",
+      "action": "starburst",
+      "order": 4
+    },
+    {
+      "file": "starburst_05.png",
+      "action": "starburst",
+      "order": 5
+    },
+    {
+      "file": "starburst_06.png",
+      "action": "starburst",
+      "order": 6
+    },
+    {
+      "file": "starburst_07.png",
+      "action": "starburst",
+      "order": 7
+    },
+    {
+      "file": "starburst_08.png",
+      "action": "starburst",
+      "order": 8
+    },
+    {
+      "file": "starburst_09.png",
+      "action": "starburst",
+      "order": 9
+    },
+    {
+      "file": "starburst_10.png",
+      "action": "starburst",
+      "order": 10
+    },
+    {
+      "file": "dash_01.png",
+      "action": "dash",
+      "order": 1
+    },
+    {
+      "file": "dash_02.png",
+      "action": "dash",
+      "order": 2
+    },
+    {
+      "file": "dash_03.png",
+      "action": "dash",
+      "order": 3
+    },
+    {
+      "file": "dash_04.png",
+      "action": "dash",
+      "order": 4
+    },
+    {
+      "file": "dash_05.png",
+      "action": "dash",
+      "order": 5
+    },
+    {
+      "file": "dash_06.png",
+      "action": "dash",
+      "order": 6
+    },
+    {
+      "file": "dash_07.png",
+      "action": "dash",
+      "order": 7
+    }
+  ]
+}

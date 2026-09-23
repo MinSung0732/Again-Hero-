@@ -1,0 +1,423 @@
+{
+  "source": "stage7_effects_spritesheet.png",
+  "frame_count": 20,
+  "cell_size": {
+    "width": 320,
+    "height": 320
+  },
+  "sheet_size": {
+    "width": 2560,
+    "height": 960
+  },
+  "columns": 8,
+  "rows": 3,
+  "anchor": {
+    "x": 160,
+    "y": 272
+  },
+  "alignment": "Shared effect center X and ground Y across rows; vertical burst progression preserved",
+  "frame_order": [
+    "effect_01.png",
+    "effect_02.png",
+    "effect_03.png",
+    "effect_04.png",
+    "effect_05.png",
+    "effect_06.png",
+    "effect_07.png",
+    "effect_08.png",
+    "effect_09.png",
+    "effect_10.png",
+    "effect_11.png",
+    "effect_12.png",
+    "effect_13.png",
+    "effect_14.png",
+    "effect_15.png",
+    "effect_16.png",
+    "effect_17.png",
+    "effect_18.png",
+    "effect_19.png",
+    "effect_20.png"
+  ],
+  "frames": [
+    {
+      "file": "effect_01.png",
+      "index": 0,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        0,
+        254,
+        284,
+        482
+      ],
+      "source_root": [
+        142,
+        469
+      ]
+    },
+    {
+      "file": "effect_02.png",
+      "index": 1,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        284,
+        254,
+        481,
+        482
+      ],
+      "source_root": [
+        382,
+        469
+      ]
+    },
+    {
+      "file": "effect_03.png",
+      "index": 2,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        481,
+        254,
+        731,
+        482
+      ],
+      "source_root": [
+        606,
+        469
+      ]
+    },
+    {
+      "file": "effect_04.png",
+      "index": 3,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        731,
+        254,
+        944,
+        482
+      ],
+      "source_root": [
+        837,
+        469
+      ]
+    },
+    {
+      "file": "effect_05.png",
+      "index": 4,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        944,
+        254,
+        1222,
+        482
+      ],
+      "source_root": [
+        1083,
+        469
+      ]
+    },
+    {
+      "file": "effect_06.png",
+      "index": 5,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        1222,
+        254,
+        1448,
+        482
+      ],
+      "source_root": [
+        1335,
+        469
+      ]
+    },
+    {
+      "file": "effect_07.png",
+      "index": 6,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        0,
+        540,
+        230,
+        817
+      ],
+      "source_root": [
+        115,
+        801
+      ]
+    },
+    {
+      "file": "effect_08.png",
+      "index": 7,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        230,
+        540,
+        470,
+        817
+      ],
+      "source_root": [
+        350,
+        801
+      ]
+    },
+    {
+      "file": "effect_09.png",
+      "index": 8,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        470,
+        540,
+        708,
+        817
+      ],
+      "source_root": [
+        589,
+        801
+      ]
+    },
+    {
+      "file": "effect_10.png",
+      "index": 9,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        708,
+        540,
+        982,
+        817
+      ],
+      "source_root": [
+        845,
+        801
+      ]
+    },
+    {
+      "file": "effect_11.png",
+      "index": 10,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        982,
+        540,
+        1222,
+        817
+      ],
+      "source_root": [
+        1102,
+        801
+      ]
+    },
+    {
+      "file": "effect_12.png",
+      "index": 11,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        1222,
+        540,
+        1448,
+        817
+      ],
+      "source_root": [
+        1335,
+        801
+      ]
+    },
+    {
+      "file": "effect_13.png",
+      "index": 12,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        0,
+        836,
+        160,
+        1055
+      ],
+      "source_root": [
+        80,
+        1035
+      ]
+    },
+    {
+      "file": "effect_14.png",
+      "index": 13,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        160,
+        836,
+        335,
+        1055
+      ],
+      "source_root": [
+        247,
+        1035
+      ]
+    },
+    {
+      "file": "effect_15.png",
+      "index": 14,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        335,
+        836,
+        534,
+        1055
+      ],
+      "source_root": [
+        434,
+        1035
+      ]
+    },
+    {
+      "file": "effect_16.png",
+      "index": 15,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        534,
+        836,
+        773,
+        1055
+      ],
+      "source_root": [
+        653,
+        1035
+      ]
+    },
+    {
+      "file": "effect_17.png",
+      "index": 16,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        773,
+        836,
+        958,
+        1055
+      ],
+      "source_root": [
+        865,
+        1035
+      ]
+    },
+    {
+      "file": "effect_18.png",
+      "index": 17,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        958,
+        836,
+        1135,
+        1055
+      ],
+      "source_root": [
+        1046,
+        1035
+      ]
+    },
+    {
+      "file": "effect_19.png",
+      "index": 18,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        1135,
+        836,
+        1294,
+        1055
+      ],
+      "source_root": [
+        1214,
+        1035
+      ]
+    },
+    {
+      "file": "effect_20.png",
+      "index": 19,
+      "action": "effect",
+      "anchor": {
+        "x": 160,
+        "y": 272
+      },
+      "source_crop": [
+        1294,
+        836,
+        1448,
+        1055
+      ],
+      "source_root": [
+        1371,
+        1035
+      ]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "source": "item_magunet_spritesheet.png",
+  "animation": "magnet",
+  "frame_count": 4,
+  "frame_order": [
+    "magnet_01.png",
+    "magnet_02.png",
+    "magnet_03.png",
+    "magnet_04.png"
+  ],
+  "cell_size": {
+    "width": 627,
+    "height": 627
+  },
+  "sheet_size": {
+    "width": 1254,
+    "height": 1254
+  },
+  "sheet_columns": 2,
+  "sheet_rows": 2,
+  "anchor": {
+    "x": 313,
+    "y": 313
+  },
+  "alignment": "magnet body center aligned to shared anchor where a stable body is present",
+  "frames": [
+    {
+      "file": "magnet_01.png",
+      "index": 0,
+      "source_cell": {
+        "column": 0,
+        "row": 0
+      },
+      "anchor": {
+        "x": 313,
+        "y": 313
+      },
+      "source_body_center_x": 350.88,
+      "source_body_center_y": 419.49,
+      "horizontal_shift_px": -37,
+      "vertical_shift_px": -106
+    },
+    {
+      "file": "magnet_02.png",
+      "index": 1,
+      "source_cell": {
+        "column": 1,
+        "row": 0
+      },
+      "anchor": {
+        "x": 313,
+        "y": 313
+      },
+      "source_body_center_x": 267.18,
+      "source_body_center_y": 425.68,
+      "horizontal_shift_px": 46,
+      "vertical_shift_px": -112
+    },
+    {
+      "file": "magnet_03.png",
+      "index": 2,
+      "source_cell": {
+        "column": 0,
+        "row": 1
+      },
+      "anchor": {
+        "x": 313,
+        "y": 313
+      },
+      "source_body_center_x": 345.33,
+      "source_body_center_y": 328.11,
+      "horizontal_shift_px": -32,
+      "vertical_shift_px": -15
+    },
+    {
+      "file": "magnet_04.png",
+      "index": 3,
+      "source_cell": {
+        "column": 1,
+        "row": 1
+      },
+      "anchor": {
+        "x": 313,
+        "y": 313
+      },
+      "source_body_center_x": 269.78,
+      "source_body_center_y": 326.27,
+      "horizontal_shift_px": 44,
+      "vertical_shift_px": -13
+    }
+  ]
+}

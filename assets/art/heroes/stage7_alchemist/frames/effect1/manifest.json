@@ -1,0 +1,83 @@
+{
+  "source": "stage7_effect1_spritesheet.png",
+  "frame_count": 4,
+  "cell_size": [
+    512,
+    384
+  ],
+  "anchor": [
+    256,
+    374
+  ],
+  "sheet_columns": 4,
+  "sheet_rows": 1,
+  "frame_order": [
+    "effect_01.png",
+    "effect_02.png",
+    "effect_03.png",
+    "effect_04.png"
+  ],
+  "alignment": "Fixed horizontal cell center and aligned ground contact; original relative particle positions retained",
+  "frames": [
+    {
+      "index": 0,
+      "file": "effect_01.png",
+      "action": "effect",
+      "source_bounds": [
+        0,
+        240,
+        512,
+        558
+      ],
+      "source_anchor": [
+        256,
+        552
+      ]
+    },
+    {
+      "index": 1,
+      "file": "effect_02.png",
+      "action": "effect",
+      "source_bounds": [
+        512,
+        230,
+        1024,
+        560
+      ],
+      "source_anchor": [
+        768,
+        553
+      ]
+    },
+    {
+      "index": 2,
+      "file": "effect_03.png",
+      "action": "effect",
+      "source_bounds": [
+        1024,
+        230,
+        1536,
+        575
+      ],
+      "source_anchor": [
+        1280,
+        569
+      ]
+    },
+    {
+      "index": 3,
+      "file": "effect_04.png",
+      "action": "effect",
+      "source_bounds": [
+        1536,
+        270,
+        2048,
+        601
+      ],
+      "source_anchor": [
+        1792,
+        594
+      ]
+    }
+  ]
+}

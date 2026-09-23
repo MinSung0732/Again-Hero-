@@ -1,0 +1,387 @@
+{
+  "source": "stage8_hero_spritesheet.png",
+  "frame_count": 23,
+  "cell_size": [
+    512,
+    288
+  ],
+  "anchor": [
+    180,
+    257
+  ],
+  "sheet_columns": 6,
+  "sheet_rows": 4,
+  "frame_order": [
+    "idle_01.png",
+    "idle_02.png",
+    "idle_03.png",
+    "idle_04.png",
+    "walk_01.png",
+    "walk_02.png",
+    "walk_03.png",
+    "walk_04.png",
+    "walk_05.png",
+    "walk_06.png",
+    "atk_01.png",
+    "atk_02.png",
+    "atk_03.png",
+    "atk_04.png",
+    "atk_05.png",
+    "atk_06.png",
+    "hit_01.png",
+    "hit_02.png",
+    "hit_03.png",
+    "dead_01.png",
+    "dead_02.png",
+    "dead_03.png",
+    "dead_04.png"
+  ],
+  "alignment": "Fixed character torso X and foot/ground Y across idle, walk, attack, hit and fall; spell projectiles keep source-relative offsets",
+  "frames": [
+    {
+      "index": 0,
+      "file": "idle_01.png",
+      "action": "idle",
+      "source_bounds": [
+        0,
+        40,
+        229,
+        245
+      ],
+      "source_anchor": [
+        127,
+        241
+      ]
+    },
+    {
+      "index": 1,
+      "file": "idle_02.png",
+      "action": "idle",
+      "source_bounds": [
+        229,
+        40,
+        444,
+        245
+      ],
+      "source_anchor": [
+        336,
+        241
+      ]
+    },
+    {
+      "index": 2,
+      "file": "idle_03.png",
+      "action": "idle",
+      "source_bounds": [
+        444,
+        40,
+        653,
+        245
+      ],
+      "source_anchor": [
+        547,
+        241
+      ]
+    },
+    {
+      "index": 3,
+      "file": "idle_04.png",
+      "action": "idle",
+      "source_bounds": [
+        653,
+        40,
+        865,
+        245
+      ],
+      "source_anchor": [
+        758,
+        241
+      ]
+    },
+    {
+      "index": 4,
+      "file": "walk_01.png",
+      "action": "walk",
+      "source_bounds": [
+        0,
+        267,
+        257,
+        476
+      ],
+      "source_anchor": [
+        140,
+        470
+      ]
+    },
+    {
+      "index": 5,
+      "file": "walk_02.png",
+      "action": "walk",
+      "source_bounds": [
+        257,
+        267,
+        491,
+        476
+      ],
+      "source_anchor": [
+        368,
+        470
+      ]
+    },
+    {
+      "index": 6,
+      "file": "walk_03.png",
+      "action": "walk",
+      "source_bounds": [
+        491,
+        267,
+        721,
+        476
+      ],
+      "source_anchor": [
+        604,
+        470
+      ]
+    },
+    {
+      "index": 7,
+      "file": "walk_04.png",
+      "action": "walk",
+      "source_bounds": [
+        721,
+        267,
+        955,
+        476
+      ],
+      "source_anchor": [
+        835,
+        470
+      ]
+    },
+    {
+      "index": 8,
+      "file": "walk_05.png",
+      "action": "walk",
+      "source_bounds": [
+        955,
+        267,
+        1190,
+        476
+      ],
+      "source_anchor": [
+        1068,
+        470
+      ]
+    },
+    {
+      "index": 9,
+      "file": "walk_06.png",
+      "action": "walk",
+      "source_bounds": [
+        1190,
+        267,
+        1448,
+        476
+      ],
+      "source_anchor": [
+        1302,
+        470
+      ]
+    },
+    {
+      "index": 10,
+      "file": "atk_01.png",
+      "action": "atk",
+      "source_bounds": [
+        0,
+        483,
+        233,
+        715
+      ],
+      "source_anchor": [
+        128,
+        708
+      ]
+    },
+    {
+      "index": 11,
+      "file": "atk_02.png",
+      "action": "atk",
+      "source_bounds": [
+        233,
+        483,
+        445,
+        715
+      ],
+      "source_anchor": [
+        333,
+        708
+      ]
+    },
+    {
+      "index": 12,
+      "file": "atk_03.png",
+      "action": "atk",
+      "source_bounds": [
+        410,
+        483,
+        678,
+        715
+      ],
+      "source_anchor": [
+        563,
+        708
+      ]
+    },
+    {
+      "index": 13,
+      "file": "atk_04.png",
+      "action": "atk",
+      "source_bounds": [
+        678,
+        483,
+        955,
+        715
+      ],
+      "source_anchor": [
+        780,
+        708
+      ]
+    },
+    {
+      "index": 14,
+      "file": "atk_05.png",
+      "action": "atk",
+      "source_bounds": [
+        955,
+        483,
+        1203,
+        715
+      ],
+      "source_anchor": [
+        1065,
+        708
+      ]
+    },
+    {
+      "index": 15,
+      "file": "atk_06.png",
+      "action": "atk",
+      "source_bounds": [
+        1203,
+        483,
+        1448,
+        715
+      ],
+      "source_anchor": [
+        1309,
+        708
+      ]
+    },
+    {
+      "index": 16,
+      "file": "hit_01.png",
+      "action": "hit",
+      "source_bounds": [
+        0,
+        727,
+        252,
+        915
+      ],
+      "source_anchor": [
+        141,
+        910
+      ]
+    },
+    {
+      "index": 17,
+      "file": "hit_02.png",
+      "action": "hit",
+      "source_bounds": [
+        252,
+        727,
+        485,
+        915
+      ],
+      "source_anchor": [
+        364,
+        910
+      ]
+    },
+    {
+      "index": 18,
+      "file": "hit_03.png",
+      "action": "hit",
+      "source_bounds": [
+        485,
+        727,
+        706,
+        915
+      ],
+      "source_anchor": [
+        590,
+        910
+      ]
+    },
+    {
+      "index": 19,
+      "file": "dead_01.png",
+      "action": "dead",
+      "source_bounds": [
+        0,
+        918,
+        315,
+        1068
+      ],
+      "source_anchor": [
+        179,
+        1061
+      ]
+    },
+    {
+      "index": 20,
+      "file": "dead_02.png",
+      "action": "dead",
+      "source_bounds": [
+        315,
+        918,
+        636,
+        1068
+      ],
+      "source_anchor": [
+        485,
+        1061
+      ]
+    },
+    {
+      "index": 21,
+      "file": "dead_03.png",
+      "action": "dead",
+      "source_bounds": [
+        636,
+        918,
+        983,
+        1068
+      ],
+      "source_anchor": [
+        808,
+        1061
+      ]
+    },
+    {
+      "index": 22,
+      "file": "dead_04.png",
+      "action": "dead",
+      "source_bounds": [
+        983,
+        918,
+        1448,
+        1068
+      ],
+      "source_anchor": [
+        1154,
+        1061
+      ]
+    }
+  ]
+}

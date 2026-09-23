@@ -1,0 +1,843 @@
+{
+  "source": "stage5_effect5_spritesheet.png",
+  "frame_count": 41,
+  "cell_size": {
+    "width": 320,
+    "height": 160
+  },
+  "sheet_size": {
+    "width": 2880,
+    "height": 800
+  },
+  "columns": 9,
+  "rows": 5,
+  "anchor": {
+    "x": 160,
+    "y": 80
+  },
+  "alignment": "Shared chain midpoint and horizontal progress axis; particles fade in place",
+  "frame_order": [
+    "chain_01.png",
+    "chain_02.png",
+    "chain_03.png",
+    "chain_04.png",
+    "chain_05.png",
+    "chain_06.png",
+    "chain_07.png",
+    "chain_08.png",
+    "chain_09.png",
+    "chain_10.png",
+    "chain_11.png",
+    "chain_12.png",
+    "chain_13.png",
+    "chain_14.png",
+    "chain_15.png",
+    "chain_16.png",
+    "chain_17.png",
+    "chain_18.png",
+    "chain_19.png",
+    "chain_20.png",
+    "chain_21.png",
+    "chain_22.png",
+    "chain_23.png",
+    "chain_24.png",
+    "chain_25.png",
+    "chain_26.png",
+    "chain_27.png",
+    "chain_28.png",
+    "chain_29.png",
+    "chain_30.png",
+    "chain_31.png",
+    "chain_32.png",
+    "chain_33.png",
+    "chain_34.png",
+    "chain_35.png",
+    "chain_36.png",
+    "chain_37.png",
+    "chain_38.png",
+    "chain_39.png",
+    "chain_40.png",
+    "chain_41.png"
+  ],
+  "frames": [
+    {
+      "file": "chain_01.png",
+      "index": 0,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        0,
+        77,
+        227,
+        164
+      ],
+      "source_root": [
+        113,
+        120
+      ]
+    },
+    {
+      "file": "chain_02.png",
+      "index": 1,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        227,
+        77,
+        448,
+        164
+      ],
+      "source_root": [
+        337,
+        120
+      ]
+    },
+    {
+      "file": "chain_03.png",
+      "index": 2,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        448,
+        77,
+        646,
+        164
+      ],
+      "source_root": [
+        547,
+        120
+      ]
+    },
+    {
+      "file": "chain_04.png",
+      "index": 3,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        646,
+        77,
+        853,
+        164
+      ],
+      "source_root": [
+        749,
+        120
+      ]
+    },
+    {
+      "file": "chain_05.png",
+      "index": 4,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        853,
+        77,
+        1065,
+        164
+      ],
+      "source_root": [
+        959,
+        120
+      ]
+    },
+    {
+      "file": "chain_06.png",
+      "index": 5,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1065,
+        77,
+        1278,
+        164
+      ],
+      "source_root": [
+        1171,
+        120
+      ]
+    },
+    {
+      "file": "chain_07.png",
+      "index": 6,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1278,
+        77,
+        1513,
+        164
+      ],
+      "source_root": [
+        1395,
+        120
+      ]
+    },
+    {
+      "file": "chain_08.png",
+      "index": 7,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1513,
+        77,
+        1751,
+        164
+      ],
+      "source_root": [
+        1632,
+        120
+      ]
+    },
+    {
+      "file": "chain_09.png",
+      "index": 8,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1751,
+        77,
+        2048,
+        164
+      ],
+      "source_root": [
+        1899,
+        120
+      ]
+    },
+    {
+      "file": "chain_10.png",
+      "index": 9,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        0,
+        186,
+        257,
+        288
+      ],
+      "source_root": [
+        128,
+        238
+      ]
+    },
+    {
+      "file": "chain_11.png",
+      "index": 10,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        257,
+        186,
+        503,
+        288
+      ],
+      "source_root": [
+        380,
+        238
+      ]
+    },
+    {
+      "file": "chain_12.png",
+      "index": 11,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        503,
+        186,
+        764,
+        288
+      ],
+      "source_root": [
+        633,
+        238
+      ]
+    },
+    {
+      "file": "chain_13.png",
+      "index": 12,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        764,
+        186,
+        1022,
+        288
+      ],
+      "source_root": [
+        893,
+        238
+      ]
+    },
+    {
+      "file": "chain_14.png",
+      "index": 13,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1022,
+        186,
+        1272,
+        288
+      ],
+      "source_root": [
+        1147,
+        238
+      ]
+    },
+    {
+      "file": "chain_15.png",
+      "index": 14,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1272,
+        186,
+        1519,
+        288
+      ],
+      "source_root": [
+        1395,
+        238
+      ]
+    },
+    {
+      "file": "chain_16.png",
+      "index": 15,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1519,
+        186,
+        1775,
+        288
+      ],
+      "source_root": [
+        1647,
+        238
+      ]
+    },
+    {
+      "file": "chain_17.png",
+      "index": 16,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1775,
+        186,
+        2048,
+        288
+      ],
+      "source_root": [
+        1911,
+        238
+      ]
+    },
+    {
+      "file": "chain_18.png",
+      "index": 17,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        0,
+        311,
+        309,
+        420
+      ],
+      "source_root": [
+        154,
+        365
+      ]
+    },
+    {
+      "file": "chain_19.png",
+      "index": 18,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        309,
+        311,
+        550,
+        420
+      ],
+      "source_root": [
+        429,
+        365
+      ]
+    },
+    {
+      "file": "chain_20.png",
+      "index": 19,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        550,
+        311,
+        776,
+        420
+      ],
+      "source_root": [
+        663,
+        365
+      ]
+    },
+    {
+      "file": "chain_21.png",
+      "index": 20,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        776,
+        311,
+        1037,
+        420
+      ],
+      "source_root": [
+        906,
+        365
+      ]
+    },
+    {
+      "file": "chain_22.png",
+      "index": 21,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1037,
+        311,
+        1322,
+        420
+      ],
+      "source_root": [
+        1179,
+        365
+      ]
+    },
+    {
+      "file": "chain_23.png",
+      "index": 22,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1322,
+        311,
+        1566,
+        420
+      ],
+      "source_root": [
+        1444,
+        365
+      ]
+    },
+    {
+      "file": "chain_24.png",
+      "index": 23,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1566,
+        311,
+        1822,
+        420
+      ],
+      "source_root": [
+        1694,
+        365
+      ]
+    },
+    {
+      "file": "chain_25.png",
+      "index": 24,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1822,
+        311,
+        2048,
+        420
+      ],
+      "source_root": [
+        1935,
+        365
+      ]
+    },
+    {
+      "file": "chain_26.png",
+      "index": 25,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        0,
+        439,
+        268,
+        548
+      ],
+      "source_root": [
+        134,
+        493
+      ]
+    },
+    {
+      "file": "chain_27.png",
+      "index": 26,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        268,
+        439,
+        538,
+        548
+      ],
+      "source_root": [
+        403,
+        493
+      ]
+    },
+    {
+      "file": "chain_28.png",
+      "index": 27,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        538,
+        439,
+        805,
+        548
+      ],
+      "source_root": [
+        671,
+        493
+      ]
+    },
+    {
+      "file": "chain_29.png",
+      "index": 28,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        805,
+        439,
+        1079,
+        548
+      ],
+      "source_root": [
+        942,
+        493
+      ]
+    },
+    {
+      "file": "chain_30.png",
+      "index": 29,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1079,
+        439,
+        1334,
+        548
+      ],
+      "source_root": [
+        1206,
+        493
+      ]
+    },
+    {
+      "file": "chain_31.png",
+      "index": 30,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1334,
+        439,
+        1555,
+        548
+      ],
+      "source_root": [
+        1444,
+        493
+      ]
+    },
+    {
+      "file": "chain_32.png",
+      "index": 31,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1555,
+        439,
+        1770,
+        548
+      ],
+      "source_root": [
+        1662,
+        493
+      ]
+    },
+    {
+      "file": "chain_33.png",
+      "index": 32,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1770,
+        439,
+        2048,
+        548
+      ],
+      "source_root": [
+        1909,
+        493
+      ]
+    },
+    {
+      "file": "chain_34.png",
+      "index": 33,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        0,
+        577,
+        274,
+        650
+      ],
+      "source_root": [
+        137,
+        613
+      ]
+    },
+    {
+      "file": "chain_35.png",
+      "index": 34,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        274,
+        577,
+        548,
+        650
+      ],
+      "source_root": [
+        411,
+        613
+      ]
+    },
+    {
+      "file": "chain_36.png",
+      "index": 35,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        548,
+        577,
+        800,
+        650
+      ],
+      "source_root": [
+        674,
+        613
+      ]
+    },
+    {
+      "file": "chain_37.png",
+      "index": 36,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        800,
+        577,
+        1080,
+        650
+      ],
+      "source_root": [
+        940,
+        613
+      ]
+    },
+    {
+      "file": "chain_38.png",
+      "index": 37,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1080,
+        577,
+        1338,
+        650
+      ],
+      "source_root": [
+        1209,
+        613
+      ]
+    },
+    {
+      "file": "chain_39.png",
+      "index": 38,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1338,
+        577,
+        1558,
+        650
+      ],
+      "source_root": [
+        1448,
+        613
+      ]
+    },
+    {
+      "file": "chain_40.png",
+      "index": 39,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1558,
+        577,
+        1780,
+        650
+      ],
+      "source_root": [
+        1669,
+        613
+      ]
+    },
+    {
+      "file": "chain_41.png",
+      "index": 40,
+      "action": "chain",
+      "anchor": {
+        "x": 160,
+        "y": 80
+      },
+      "source_crop": [
+        1780,
+        577,
+        2048,
+        650
+      ],
+      "source_root": [
+        1914,
+        613
+      ]
+    }
+  ]
+}
