@@ -99,6 +99,8 @@ var monster_spatial_grid_physics_frame: int = -1
 var exp_orb_pool: Array[Node2D] = []
 var projectile_pools: Dictionary = {}
 var transient_fx_pools: Dictionary = {}
+var active_heal_items: Dictionary = {}
+var active_treasure_chests: Dictionary = {}
 var battle_over: bool = false
 var external_pause: bool = false
 
@@ -155,6 +157,47 @@ var permanent_research_levels: Dictionary = {}
 
 var allowed_monster_ids: Array = []
 var loadout_restriction_enabled: bool = false
+
+func _register_heal_item(item: Node) -> void:
+	if not is_instance_valid(item):
+		return
+	var iid := item.get_instance_id()
+	active_heal_items[iid] = item
+	item.tree_exited.connect(
+		Callable(self, "_on_heal_item_tree_exited").bind(iid),
+		Object.CONNECT_ONE_SHOT
+	)
+
+
+func _on_heal_item_tree_exited(instance_id: int) -> void:
+	active_heal_items.erase(instance_id)
+
+
+func _register_treasure_chest(chest: Node) -> void:
+	if not is_instance_valid(chest):
+		return
+	var iid := chest.get_instance_id()
+	active_treasure_chests[iid] = chest
+	chest.tree_exited.connect(
+		Callable(self, "_on_treasure_chest_tree_exited").bind(iid),
+		Object.CONNECT_ONE_SHOT
+	)
+
+
+func _on_treasure_chest_tree_exited(instance_id: int) -> void:
+	active_treasure_chests.erase(instance_id)
+
+
+func _active_registry_size(registry: Dictionary) -> int:
+	var stale_ids: Array = []
+	for raw_id in registry.keys():
+		var node = registry.get(raw_id)
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			stale_ids.append(raw_id)
+	for raw_id in stale_ids:
+		registry.erase(raw_id)
+	return registry.size()
+
 
 func _spatial_cell_for_position(world_position: Vector2) -> Vector2i:
 	return Vector2i(
@@ -332,6 +375,8 @@ func _process(delta: float) -> void:
 
 func _start_battle() -> void:
 	battle_over = false
+	active_heal_items.clear()
+	active_treasure_chests.clear()
 	var valid_orb_pool: Array[Node2D] = []
 	for pooled_orb in exp_orb_pool:
 		if is_instance_valid(pooled_orb) and not pooled_orb.is_queued_for_deletion():
@@ -1357,7 +1402,7 @@ func _process_special_death_spawn(
 func _try_spawn_chest_from_kills() -> void:
 	if hero_kills_toward_chest < CHEST_KILLS_REQUIRED:
 		return
-	if get_tree().get_nodes_in_group("treasure_chests").size() >= MAX_ACTIVE_CHESTS:
+	if _active_registry_size(active_treasure_chests) >= MAX_ACTIVE_CHESTS:
 		return
 
 	hero_kills_toward_chest = 0
@@ -1365,7 +1410,7 @@ func _try_spawn_chest_from_kills() -> void:
 
 
 func _spawn_random_treasure_chest() -> void:
-	if get_tree().get_nodes_in_group("treasure_chests").size() >= MAX_ACTIVE_CHESTS:
+	if _active_registry_size(active_treasure_chests) >= MAX_ACTIVE_CHESTS:
 		return
 	var margin := 180.0
 	var spawn_position := Vector2(
@@ -1375,11 +1420,21 @@ func _spawn_random_treasure_chest() -> void:
 	var chest := TREASURE_CHEST_SCENE.instantiate() as Node2D
 	add_child(chest)
 	chest.global_position = spawn_position
+	_register_treasure_chest(chest)
 	if chest.has_signal("destroyed"):
-		chest.connect("destroyed", Callable(self, "_on_treasure_chest_destroyed"))
+		chest.connect(
+			"destroyed",
+			Callable(self, "_on_treasure_chest_destroyed").bind(chest)
+		)
 
 
-func _on_treasure_chest_destroyed(drop_position: Vector2) -> void:
+func _on_treasure_chest_destroyed(
+	drop_position: Vector2,
+	chest: Node = null
+) -> void:
+	if is_instance_valid(chest):
+		active_treasure_chests.erase(chest.get_instance_id())
+
 	var bundle_count := randi_range(CHEST_EXP_BUNDLE_MIN, CHEST_EXP_BUNDLE_MAX)
 	for index in range(bundle_count):
 		var angle := TAU * float(index) / float(maxi(bundle_count, 1))
@@ -1398,7 +1453,7 @@ func _on_treasure_chest_destroyed(drop_position: Vector2) -> void:
 func _try_spawn_heal_item_from_kills() -> void:
 	if hero_kills_toward_heal_item < HEAL_ITEM_KILLS_REQUIRED:
 		return
-	if get_tree().get_nodes_in_group("heal_items").size() >= MAX_ACTIVE_HEAL_ITEMS:
+	if _active_registry_size(active_heal_items) >= MAX_ACTIVE_HEAL_ITEMS:
 		# Keep the trigger armed instead of consuming kills while the field is full.
 		return
 
@@ -1409,7 +1464,7 @@ func _try_spawn_heal_item_from_kills() -> void:
 func _spawn_random_heal_item() -> void:
 	if not is_instance_valid(hero):
 		return
-	if get_tree().get_nodes_in_group("heal_items").size() >= MAX_ACTIVE_HEAL_ITEMS:
+	if _active_registry_size(active_heal_items) >= MAX_ACTIVE_HEAL_ITEMS:
 		return
 
 	var margin := 150.0
@@ -1425,6 +1480,7 @@ func _spawn_random_heal_item() -> void:
 	var item := HEAL_ITEM_SCENE.instantiate() as Node2D
 	add_child(item)
 	item.global_position = spawn_position
+	_register_heal_item(item)
 
 func _spawn_exp_orb(
 	drop_position: Vector2,
