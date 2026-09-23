@@ -94,6 +94,10 @@ func set_lod_suspended(suspended: bool) -> void:
 
 	_lod_suspended = suspended
 	if suspended:
+		# Let a current attack/hit one-shot finish so it cannot remain
+		# permanently locked while offscreen.
+		if _one_shot_locked:
+			return
 		if _visual_ready and is_playing():
 			pause()
 		return
@@ -125,6 +129,8 @@ func _on_animation_finished() -> void:
 
 	if animation == &"attack" or animation == &"hit":
 		_one_shot_locked = false
+		if _lod_suspended:
+			return
 		if sprite_frames.has_animation(_desired_locomotion):
 			play(_desired_locomotion)
 
