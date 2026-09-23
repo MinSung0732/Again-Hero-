@@ -582,7 +582,6 @@ const PROFILES = {
 			"slow_resistance",
 			"exp_training",
 			"exp_magnet",
-			"long_reach",
 		],
 	},
 }
