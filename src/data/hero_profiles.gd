@@ -519,7 +519,7 @@ const PROFILES = {
 			"revive_delay": 3.0,
 			"revive_hp_ratio": 0.50,
 			"gauge_max": 100.0,
-			"gauge_per_kill": 1.0,
+			"gauge_per_kill": 20.0,
 			"madness_drain_per_second": 10.0,
 			"madness_attack_speed_multiplier": 1.50,
 			"madness_target_radius": 375.0,
