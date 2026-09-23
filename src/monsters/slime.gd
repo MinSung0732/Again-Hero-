@@ -24,6 +24,8 @@ var attack_timer: float = 0.0
 var hit_flash_timer: float = 0.0
 var dying: bool = false
 var special_augment_configs: Dictionary = {}
+var pack_bonus_cache: Dictionary = {}
+var pack_bonus_refresh_timer: float = 0.0
 
 func _ready() -> void:
 	add_to_group("monsters")
@@ -44,7 +46,11 @@ func _physics_process(delta: float) -> void:
 		return
 
 	attack_timer = maxf(attack_timer - delta, 0.0)
-	var pack_bonuses := _get_pack_bonuses()
+	pack_bonus_refresh_timer = maxf(pack_bonus_refresh_timer - delta, 0.0)
+	if pack_bonus_refresh_timer <= 0.0:
+		pack_bonus_refresh_timer = 0.25
+		pack_bonus_cache = _get_pack_bonuses()
+	var pack_bonuses := pack_bonus_cache
 	var external_slow := 1.0
 	if int(get_meta("gunner_slow_until", 0)) > Time.get_ticks_msec():
 		external_slow = clampf(float(get_meta("gunner_slow_multiplier", 1.0)), 0.1, 1.0)
