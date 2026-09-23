@@ -719,10 +719,6 @@ func _physics_process(delta: float) -> void:
 		_refresh_ai_observation()
 
 	attack_timer = maxf(attack_timer - delta, 0.0)
-	berserker_skill1_cooldown = maxf(
-		berserker_skill1_cooldown - delta,
-		0.0
-	)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
 	wander_timer = maxf(wander_timer - delta, 0.0)
 	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
@@ -792,14 +788,6 @@ func _physics_process_gunner(delta: float) -> void:
 		_refresh_ai_observation()
 
 	attack_timer = maxf(attack_timer - delta, 0.0)
-	berserker_skill2_cooldown = maxf(
-		berserker_skill2_cooldown - delta,
-		0.0
-	)
-	berserker_skill_global_cooldown = maxf(
-		berserker_skill_global_cooldown - delta,
-		0.0
-	)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
 	wander_timer = maxf(wander_timer - delta, 0.0)
 	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
@@ -6420,6 +6408,18 @@ func _physics_process_berserker(delta: float) -> void:
 		_refresh_ai_observation()
 
 	attack_timer = maxf(attack_timer - delta, 0.0)
+	berserker_skill1_cooldown = maxf(
+		berserker_skill1_cooldown - delta,
+		0.0
+	)
+	berserker_skill2_cooldown = maxf(
+		berserker_skill2_cooldown - delta,
+		0.0
+	)
+	berserker_skill_global_cooldown = maxf(
+		berserker_skill_global_cooldown - delta,
+		0.0
+	)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
 	wander_timer = maxf(wander_timer - delta, 0.0)
 	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
