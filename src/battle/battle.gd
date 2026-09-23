@@ -23,6 +23,7 @@ const HERO_SCENE := preload("res://src/hero/Hero.tscn")
 const EXP_ORB_SCENE := preload("res://src/battle/ExpOrb.tscn")
 const HEAL_ITEM_SCENE := preload("res://src/battle/HealItem.tscn")
 const TREASURE_CHEST_SCENE := preload("res://src/battle/TreasureChest.tscn")
+const MAGNET_ITEM_SCENE := preload("res://src/battle/MagnetItem.tscn")
 const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
 const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const HERO_AI_PROFILES := preload("res://src/data/hero_ai_profiles.gd")
@@ -57,6 +58,9 @@ const HEAL_ITEM_KILLS_REQUIRED := 30
 const MAX_ACTIVE_HEAL_ITEMS := 2
 const CHEST_KILLS_REQUIRED := 50
 const MAX_ACTIVE_CHESTS := 2
+const MAGNET_KILLS_REQUIRED := 70
+const MAX_ACTIVE_MAGNET_ITEMS := 2
+const EXP_MAGNET_DURATION := 2.0
 const CHEST_EXP_BUNDLE_MIN := 15
 const CHEST_EXP_BUNDLE_MAX := 20
 const CHEST_EXP_VALUE_MIN := 10
@@ -101,6 +105,8 @@ var projectile_pools: Dictionary = {}
 var transient_fx_pools: Dictionary = {}
 var active_heal_items: Dictionary = {}
 var active_treasure_chests: Dictionary = {}
+var active_magnet_items: Dictionary = {}
+var exp_magnet_until_msec: int = 0
 var battle_over: bool = false
 var external_pause: bool = false
 
@@ -131,6 +137,7 @@ var stage_reinforcement_interval: float = 0.12
 var stage_reinforcement_batch_size: int = 2
 var hero_kills_toward_heal_item: int = 0
 var hero_kills_toward_chest: int = 0
+var hero_kills_toward_magnet: int = 0
 
 var summon_cost_multiplier: float = 1.0
 var demon_exp_gain_multiplier: float = 1.0
@@ -186,6 +193,21 @@ func _register_treasure_chest(chest: Node) -> void:
 
 func _on_treasure_chest_tree_exited(instance_id: int) -> void:
 	active_treasure_chests.erase(instance_id)
+
+
+func _register_magnet_item(item: Node) -> void:
+	if not is_instance_valid(item):
+		return
+	var iid := item.get_instance_id()
+	active_magnet_items[iid] = item
+	item.tree_exited.connect(
+		Callable(self, "_on_magnet_item_tree_exited").bind(iid),
+		Object.CONNECT_ONE_SHOT
+	)
+
+
+func _on_magnet_item_tree_exited(instance_id: int) -> void:
+	active_magnet_items.erase(instance_id)
 
 
 func _active_registry_size(registry: Dictionary) -> int:
@@ -425,6 +447,8 @@ func _start_battle() -> void:
 	battle_over = false
 	active_heal_items.clear()
 	active_treasure_chests.clear()
+	active_magnet_items.clear()
+	exp_magnet_until_msec = 0
 	var valid_orb_pool: Array[Node2D] = []
 	for pooled_orb in exp_orb_pool:
 		if is_instance_valid(pooled_orb) and not pooled_orb.is_queued_for_deletion():
@@ -465,6 +489,8 @@ func _start_battle() -> void:
 	stage_reinforcement_interval = 0.12
 	stage_reinforcement_batch_size = 2
 	hero_kills_toward_heal_item = 0
+	hero_kills_toward_chest = 0
+	hero_kills_toward_magnet = 0
 
 	summon_cost_multiplier = 1.0
 	demon_exp_gain_multiplier = 1.0
@@ -1353,6 +1379,11 @@ func _on_monster_died(monster: Node) -> void:
 			CHEST_KILLS_REQUIRED
 		)
 		_try_spawn_chest_from_kills()
+		hero_kills_toward_magnet = mini(
+			hero_kills_toward_magnet + 1,
+			MAGNET_KILLS_REQUIRED
+		)
+		_try_spawn_magnet_from_kills()
 
 	var original_cost: float = float(monster_summon_costs.get(instance_id, 0.0))
 	monster_summon_costs.erase(instance_id)
@@ -1498,6 +1529,77 @@ func _on_treasure_chest_destroyed(
 		)
 
 
+func _try_spawn_magnet_from_kills() -> void:
+	if hero_kills_toward_magnet < MAGNET_KILLS_REQUIRED:
+		return
+	if (
+		_active_registry_size(active_magnet_items)
+		>= MAX_ACTIVE_MAGNET_ITEMS
+	):
+		# Keep the 70-kill trigger armed until a field slot opens.
+		return
+
+	hero_kills_toward_magnet = 0
+	_spawn_random_magnet_item()
+
+
+func _spawn_random_magnet_item() -> void:
+	if (
+		_active_registry_size(active_magnet_items)
+		>= MAX_ACTIVE_MAGNET_ITEMS
+	):
+		return
+
+	var margin := 150.0
+	var min_x := margin
+	var max_x := maxf(current_map_size.x - margin, min_x)
+	var min_y := margin
+	var max_y := maxf(current_map_size.y - margin, min_y)
+	var item := MAGNET_ITEM_SCENE.instantiate() as Node2D
+	add_child(item)
+	item.global_position = Vector2(
+		randf_range(min_x, max_x),
+		randf_range(min_y, max_y)
+	)
+	_register_magnet_item(item)
+
+
+func activate_exp_magnet(duration: float = EXP_MAGNET_DURATION) -> void:
+	if not is_instance_valid(hero):
+		return
+
+	var now_msec := Time.get_ticks_msec()
+	var duration_msec := int(maxf(duration, 0.0) * 1000.0)
+	exp_magnet_until_msec = maxi(
+		exp_magnet_until_msec,
+		now_msec + duration_msec
+	)
+	var remaining := maxf(
+		float(exp_magnet_until_msec - now_msec) / 1000.0,
+		0.0
+	)
+	for node in get_tree().get_nodes_in_group("exp_orbs"):
+		if (
+			not is_instance_valid(node)
+			or node.is_queued_for_deletion()
+			or not node.has_method("activate_global_magnet")
+		):
+			continue
+		node.call(
+			"activate_global_magnet",
+			hero,
+			remaining
+		)
+
+
+func _remaining_exp_magnet_seconds() -> float:
+	return maxf(
+		float(exp_magnet_until_msec - Time.get_ticks_msec())
+		/ 1000.0,
+		0.0
+	)
+
+
 func _try_spawn_heal_item_from_kills() -> void:
 	if hero_kills_toward_heal_item < HEAL_ITEM_KILLS_REQUIRED:
 		return
@@ -1550,6 +1652,17 @@ func _spawn_exp_orb(
 
 	orb.global_position = drop_position
 	orb.call("setup", exp_value, initial_velocity)
+	var magnet_remaining := _remaining_exp_magnet_seconds()
+	if (
+		magnet_remaining > 0.0
+		and orb.has_method("activate_global_magnet")
+		and is_instance_valid(hero)
+	):
+		orb.call(
+			"activate_global_magnet",
+			hero,
+			magnet_remaining
+		)
 
 
 func acquire_transient_fx(pool_key: String, fx_type: String) -> Node:
