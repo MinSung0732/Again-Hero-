@@ -216,6 +216,7 @@ var battlefield_size: Vector2 = Vector2(3200, 3200)
 var _monster_nodes_cache: Array = []
 var _monster_nodes_cache_process_frame: int = -1
 var _monster_nodes_cache_physics_frame: int = -1
+var _movement_monster_scratch: Array = []
 var _aux_group_nodes_cache: Dictionary = {}
 var _aux_group_nodes_cache_process_frame: int = -1
 var _aux_group_nodes_cache_physics_frame: int = -1
@@ -3014,8 +3015,24 @@ func _choose_melee_spacing_direction(
 
 func _choose_move_direction(nearest_target: Node2D, nearest_distance: float) -> Vector2:
 	var avoidance := Vector2.ZERO
+	var battle := get_parent()
+	if (
+		is_instance_valid(battle)
+		and battle.has_method("fill_monsters_near")
+	):
+		battle.call(
+			"fill_monsters_near",
+			global_position,
+			kite_distance,
+			_movement_monster_scratch
+		)
+	else:
+		_movement_monster_scratch.clear()
+		_movement_monster_scratch.append_array(
+			_get_monster_nodes_cached()
+		)
 
-	for node in _get_monster_nodes_near(global_position, kite_distance):
+	for node in _movement_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 
