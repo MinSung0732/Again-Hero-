@@ -187,12 +187,19 @@ func _spawn_chain_current(
 	if distance <= 1.0:
 		return
 
+	var chain_duration_bonus := maxf(
+		float(config.get("chain_duration_bonus", 0.0)),
+		0.0
+	)
+	var base_visual_duration := 41.0 / 44.0
+	var visual_duration := base_visual_duration + chain_duration_bonus
+	var chain_fps := 41.0 / maxf(visual_duration, 0.05)
 	var frames := _build_frames(
 		"res://assets/art/heroes/stage5_archmage/frames/effect5",
 		"chain",
 		1,
 		41,
-		44.0,
+		chain_fps,
 		false
 	)
 	if frames != null:
@@ -254,15 +261,32 @@ func _spawn_chain_current(
 	)
 
 
+func _get_chain_tick_count() -> int:
+	var base_count := maxi(
+		int(config.get("chain_tick_count", 4)),
+		1
+	)
+	var tick_interval := maxf(
+		float(config.get("chain_tick_interval", 0.18)),
+		0.01
+	)
+	var duration_bonus := maxf(
+		float(config.get("chain_duration_bonus", 0.0)),
+		0.0
+	)
+	var bonus_ticks := maxi(
+		int(round(duration_bonus / tick_interval)),
+		0
+	)
+	return base_count + bonus_ticks
+
+
 func _finish_after_chain_ticks() -> void:
 	set_physics_process(false)
 	set_deferred("monitoring", false)
 	sprite.visible = false
 	tail.visible = false
-	var tick_count := maxi(
-		int(config.get("chain_tick_count", 4)),
-		1
-	)
+	var tick_count := _get_chain_tick_count()
 	var tick_interval := maxf(
 		float(config.get("chain_tick_interval", 0.18)),
 		0.01
@@ -280,7 +304,7 @@ func _apply_chain_current_ticks(
 	from_position: Vector2,
 	to_position: Vector2
 ) -> void:
-	var tick_count := maxi(int(config.get("chain_tick_count", 4)), 1)
+	var tick_count := _get_chain_tick_count()
 	var tick_interval := maxf(float(config.get("chain_tick_interval", 0.18)), 0.01)
 	var tick_ratio := maxf(float(config.get("chain_tick_damage_ratio", 0.11)), 0.0)
 	var width := maxf(float(config.get("chain_width", 34.0)), 1.0)
