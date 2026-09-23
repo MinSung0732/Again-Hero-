@@ -181,6 +181,7 @@ var berserker_revive_used: bool = false
 var berserker_reviving: bool = false
 var berserker_saved_collision_layer: int = 0
 var berserker_saved_collision_mask: int = 0
+var berserker_madness_active: bool = false
 
 var archmage_element_config: Dictionary = {}
 var archmage_last_element: String = ""
@@ -426,6 +427,7 @@ func configure_profile(profile: Dictionary) -> void:
 	berserker_reviving = false
 	berserker_saved_collision_layer = collision_layer
 	berserker_saved_collision_mask = collision_mask
+	berserker_madness_active = false
 
 	var profile_gunner = profile.get("gunner", {})
 	gunner_config = (
@@ -639,6 +641,7 @@ func _ready() -> void:
 	_apply_stage2_rogue_effect_visuals()
 	_apply_stage3_fighter_effect_visuals()
 	_apply_stage4_gunner_effect_visuals()
+	_apply_stage6_berserker_effect_visuals()
 	if (
 		not rogue_attack_effect.animation_finished.is_connected(
 			Callable(self, "_on_rogue_attack_effect_finished")
@@ -2376,6 +2379,36 @@ func _on_fighter_guard_release_effect_finished() -> void:
 		channel_effect.visible = false
 		channel_effect.position = Vector2.ZERO
 		channel_effect.modulate = Color.WHITE
+
+
+func _apply_stage6_berserker_effect_visuals() -> void:
+	if hero_archetype != "berserker_madness":
+		return
+
+	channel_effect.visible = false
+	channel_effect.sprite_frames = null
+	channel_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	frames.add_animation("madness")
+	frames.set_animation_speed("madness", 1.0)
+	frames.set_animation_loop("madness", true)
+
+	var texture := _load_stage1_texture(
+		"%s/effect7/special_08.png" % STAGE6_FRAME_DIR
+	)
+	if texture == null:
+		return
+
+	frames.add_frame("madness", texture)
+	channel_effect.sprite_frames = frames
+	channel_effect.animation = &"madness"
+	channel_effect.position = Vector2(0.0, -76.0)
+	channel_effect.scale = Vector2(0.48, 0.48)
+	channel_effect.z_index = 9
+	channel_effect.modulate = Color.WHITE
 
 
 func _apply_profile_visual() -> void:
@@ -6353,6 +6386,7 @@ func _physics_process_berserker(delta: float) -> void:
 	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
 	ultimate_flash_timer = maxf(ultimate_flash_timer - delta, 0.0)
 	_update_invulnerability(delta)
+	_update_berserker_madness(delta)
 	_update_berserker_hp_visual()
 
 	if hit_flash_timer > 0.0:
@@ -6407,7 +6441,13 @@ func _physics_process_berserker(delta: float) -> void:
 	else:
 		velocity = Vector2.ZERO
 
-	if distance <= attack_range and attack_timer <= 0.0:
+	var attack_trigger_range: float = attack_range
+	if berserker_madness_active:
+		attack_trigger_range = maxf(
+			float(berserker_config.get("madness_target_radius", 375.0)),
+			attack_range
+		)
+	if distance <= attack_trigger_range and attack_timer <= 0.0:
 		_berserker_basic_attack(target)
 
 	_update_berserker_pose_visual(delta)
@@ -6472,10 +6512,47 @@ func _berserker_basic_attack(current_target: Node2D) -> void:
 		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	direction = direction.normalized()
 
-	attack_timer = _get_common_attack_interval(attack_cooldown)
+	if berserker_madness_active:
+		var blink_target: Node2D = _find_berserker_madness_target()
+		if is_instance_valid(blink_target):
+			_berserker_madness_blink_to(blink_target)
+			direction = global_position.direction_to(
+				blink_target.global_position
+			)
+			if direction.length_squared() <= 0.0:
+				direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+			direction = direction.normalized()
+
+	var attack_interval: float = _get_common_attack_interval(
+		attack_cooldown
+	)
+	if berserker_madness_active:
+		var madness_speed_multiplier: float = maxf(
+			float(
+				berserker_config.get(
+					"madness_attack_speed_multiplier",
+					1.50
+				)
+			),
+			0.1
+		)
+		attack_interval /= madness_speed_multiplier
+	attack_timer = maxf(attack_interval, 0.06)
 	attack_pose_timer = 0.52
 	_face_attack_direction(direction.x)
 	_restart_stage1_animation("attack")
+
+	if berserker_madness_active:
+		_spawn_archmage_fx(
+			"%s/effect1" % STAGE6_FRAME_DIR,
+			"basic_slash",
+			1,
+			13,
+			24.0,
+			false,
+			global_position + direction * 62.0,
+			Vector2(0.62, 0.62)
+		)
 
 	var reach: float = maxf(
 		float(berserker_config.get("basic_reach", 190.0)),
@@ -6537,14 +6614,140 @@ func _berserker_basic_attack(current_target: Node2D) -> void:
 
 
 func _add_berserker_gauge(amount: float) -> void:
-	if amount <= 0.0 or hero_archetype != "berserker_madness":
+	if (
+		amount <= 0.0
+		or hero_archetype != "berserker_madness"
+		or berserker_madness_active
+	):
 		return
 	var gauge_max: float = maxf(
 		float(berserker_config.get("gauge_max", 100.0)),
 		1.0
 	)
 	ultimate_charge = minf(ultimate_charge + amount, gauge_max)
+	if ultimate_charge + 0.001 >= gauge_max:
+		_start_berserker_madness()
 	queue_redraw()
+
+
+func _start_berserker_madness() -> void:
+	if berserker_madness_active or berserker_reviving or is_dying:
+		return
+	berserker_madness_active = true
+	var gauge_max: float = maxf(
+		float(berserker_config.get("gauge_max", 100.0)),
+		1.0
+	)
+	ultimate_charge = gauge_max
+	if channel_effect.sprite_frames != null:
+		channel_effect.visible = true
+		channel_effect.play(&"madness")
+	queue_redraw()
+
+
+func _end_berserker_madness() -> void:
+	berserker_madness_active = false
+	ultimate_charge = 0.0
+	if (
+		channel_effect.sprite_frames != null
+		and channel_effect.animation == &"madness"
+	):
+		channel_effect.visible = false
+	queue_redraw()
+
+
+func _update_berserker_madness(delta: float) -> void:
+	if hero_archetype != "berserker_madness":
+		return
+	if not berserker_madness_active:
+		return
+
+	var drain_per_second: float = maxf(
+		float(
+			berserker_config.get(
+				"madness_drain_per_second",
+				10.0
+			)
+		),
+		0.0
+	)
+	ultimate_charge = maxf(
+		ultimate_charge - drain_per_second * delta,
+		0.0
+	)
+	if ultimate_charge <= 0.001:
+		_end_berserker_madness()
+	else:
+		queue_redraw()
+
+
+func _find_berserker_madness_target() -> Node2D:
+	var radius: float = maxf(
+		float(berserker_config.get("madness_target_radius", 375.0)),
+		1.0
+	)
+	var radius_sq: float = radius * radius
+	var nearest: Node2D = null
+	var nearest_distance_sq: float = INF
+	for node in _get_monster_nodes_near(global_position, radius):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var hp_value = monster.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		var distance_sq: float = global_position.distance_squared_to(
+			monster.global_position
+		)
+		if distance_sq > radius_sq or distance_sq >= nearest_distance_sq:
+			continue
+		nearest = monster
+		nearest_distance_sq = distance_sq
+	return nearest
+
+
+func _berserker_madness_blink_to(blink_target: Node2D) -> void:
+	if not is_instance_valid(blink_target):
+		return
+
+	var start_position: Vector2 = global_position
+	var direction: Vector2 = start_position.direction_to(
+		blink_target.global_position
+	)
+	if direction.length_squared() <= 0.0:
+		return
+
+	_spawn_archmage_fx(
+		"%s/effect2" % STAGE6_FRAME_DIR,
+		"blood_effect",
+		1,
+		10,
+		26.0,
+		false,
+		start_position,
+		Vector2(0.58, 0.58)
+	)
+
+	var stop_distance: float = 82.0
+	var destination: Vector2 = (
+		blink_target.global_position
+		- direction.normalized() * stop_distance
+	)
+	global_position = Vector2(
+		clampf(
+			destination.x,
+			FIELD_MARGIN,
+			battlefield_size.x - FIELD_MARGIN
+		),
+		clampf(
+			destination.y,
+			FIELD_MARGIN,
+			battlefield_size.y - FIELD_MARGIN
+		)
+	)
+	velocity = Vector2.ZERO
 
 
 func _update_berserker_hp_visual() -> void:
