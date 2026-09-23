@@ -451,6 +451,16 @@ func configure_profile(profile: Dictionary) -> void:
 		else {}
 	)
 	archmage_skill_cooldowns.clear()
+	for skill_key in [
+		"combustion",
+		"ice_bolt",
+		"earth_spikes",
+		"holy_power",
+		"chain_dagger",
+		"harmony",
+		"storm",
+	]:
+		archmage_skill_cooldowns[skill_key] = 0.0
 	archmage_element_orbs.clear()
 	archmage_orbit_sprites.clear()
 	archmage_orbit_angle = 0.0
@@ -466,17 +476,6 @@ func configure_profile(profile: Dictionary) -> void:
 	archmage_cooldown_reduction = 0.0
 	archmage_mana_overflow_stacks = 0
 	archmage_element_cycle_stacks = 0
-	if hero_archetype == "archmage_elementalist":
-		for skill_key in [
-			"combustion",
-			"ice_bolt",
-			"earth_spikes",
-			"holy_power",
-			"chain_dagger",
-			"harmony",
-			"storm",
-		]:
-			archmage_skill_cooldowns[skill_key] = 0.0
 	var profile_rogue_slash = profile.get("rogue_slash_skill", {})
 	rogue_slash_config = (
 		profile_rogue_slash.duplicate(true)
@@ -613,13 +612,8 @@ func configure_battlefield(size: Vector2) -> void:
 	)
 
 func _ready() -> void:
-	# Establish core combat state before optional visual/status setup.
-	# If a visual resource has a problem, the battle still receives a valid hero.
-	current_hp = max_hp
-	exp_to_next_level = _required_exp_for_level(level)
-	strafe_sign = -1.0 if randf() < 0.5 else 1.0
 	add_to_group("hero")
-
+	_attach_status_effect_visual("slow")
 	_apply_camera_limits()
 	_apply_profile_visual()
 	_apply_stage1_shield_visual()
@@ -627,8 +621,6 @@ func _ready() -> void:
 	_apply_stage2_rogue_effect_visuals()
 	_apply_stage3_fighter_effect_visuals()
 	_apply_stage4_gunner_effect_visuals()
-	_attach_status_effect_visual("slow")
-
 	if (
 		not rogue_attack_effect.animation_finished.is_connected(
 			Callable(self, "_on_rogue_attack_effect_finished")
@@ -645,7 +637,9 @@ func _ready() -> void:
 		channel_effect.animation_finished.connect(
 			Callable(self, "_on_fighter_guard_release_effect_finished")
 		)
-
+	current_hp = max_hp
+	exp_to_next_level = _required_exp_for_level(level)
+	strafe_sign = -1.0 if randf() < 0.5 else 1.0
 	_pick_new_wander_target()
 	_refresh_ai_observation()
 	health_changed.emit(current_hp, max_hp)
@@ -3972,29 +3966,6 @@ func resolve_archmage_ice_bolt_hit(
 	hit_position: Vector2,
 	empowered: bool
 ) -> void:
-	var config: Dictionary = archmage_skill_config.get(
-		"ice_bolt",
-		{}
-	)
-	var impact_radius := maxf(
-		float(config.get("impact_radius", 125.0)),
-		1.0
-	)
-	var impact_damage := maxi(
-		1,
-		int(
-			round(
-				float(attack_damage)
-				* float(config.get("impact_damage_ratio", 1.50))
-				* _skill_damage_multiplier(empowered)
-			)
-		)
-	)
-	_damage_monsters_in_radius(
-		hit_position,
-		impact_radius,
-		impact_damage
-	)
 	_resolve_archmage_ice_pillars(hit_position, empowered)
 
 
@@ -4023,349 +3994,73 @@ func _resolve_archmage_ice_pillars(hit_position: Vector2, empowered: bool) -> vo
 		await get_tree().create_timer(0.045).timeout
 
 
-func _cast_archmage_earth_spikes(
-	config: Dictionary,
-	empowered: bool
-) -> void:
+func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 	_begin_archmage_casting_sequence()
-
-	var direction := Vector2.RIGHT
-	if hero_sprite.flip_h:
-		direction = Vector2.LEFT
+	var direction := Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	if is_instance_valid(target):
-		direction = global_position.direction_to(
-			target.global_position
-		)
+		direction = global_position.direction_to(target.global_position)
 	if direction.length_squared() <= 0.0:
 		direction = Vector2.RIGHT
-	direction = direction.normalized()
-
-	var count := maxi(
-		int(config.get("spike_count", 7)),
-		1
-	)
-	var spacing := maxf(
-		float(config.get("spike_spacing", 88.0)),
-		1.0
-	)
-	var radius := maxf(
-		float(config.get("spike_radius", 70.0)),
-		1.0
-	)
-	var spike_damage := maxi(
-		1,
-		int(
-			round(
-				float(attack_damage)
-				* float(config.get("damage_ratio", 1.20))
-				* _skill_damage_multiplier(empowered)
-			)
-		)
-	)
-	var spike_delay := maxf(
-		float(config.get("spike_delay", 0.07)),
-		0.02
-	)
-	var cast_origin := global_position
+	var count := maxi(int(config.get("spike_count", 7)), 1)
+	var spacing := maxf(float(config.get("spike_spacing", 88.0)), 1.0)
+	var radius := maxf(float(config.get("spike_radius", 70.0)), 1.0)
+	var spike_damage := maxi(1, int(round(
+		float(attack_damage) * float(config.get("damage_ratio", 1.20)) * _skill_damage_multiplier(empowered)
+	)))
 	var hit_ids: Dictionary = {}
-
 	for index in range(count):
 		if not is_inside_tree() or current_hp <= 0:
 			break
-		var position := (
-			cast_origin
-			+ direction
-			* spacing
-			* float(index + 1)
-		)
+		var position := global_position + direction.normalized() * spacing * float(index + 1)
 		_spawn_archmage_fx(
 			"res://assets/art/heroes/stage5_archmage/frames/effect1",
-			"earth",
-			1,
-			11,
-			22.0,
-			false,
-			position,
-			Vector2(0.72, 0.72)
+			"earth", 1, 11, 22.0, false, position, Vector2(0.72, 0.72)
 		)
-		_damage_monsters_in_radius_once(
-			position,
-			radius,
-			spike_damage,
-			hit_ids
-		)
-		await get_tree().create_timer(spike_delay).timeout
-
-	if is_inside_tree() and current_hp > 0:
-		var original_distance := spacing * float(count)
-		var branch_distance := (
-			original_distance
-			* clampf(
-				float(
-					config.get(
-						"branch_distance_ratio",
-						0.50
-					)
-				),
-				0.0,
-				2.0
-			)
-		)
-		if branch_distance > 0.0:
-			var endpoint := (
-				cast_origin
-				+ direction * original_distance
-			)
-			var branch_count := maxi(
-				ceili(branch_distance / spacing),
-				1
-			)
-			var branch_directions := [
-				direction.rotated(PI * 0.5),
-				direction.rotated(-PI * 0.5),
-			]
-
-			for branch_index in range(branch_count):
-				if not is_inside_tree() or current_hp <= 0:
-					break
-				var progress := (
-					float(branch_index + 1)
-					/ float(branch_count)
-				)
-				for branch_direction in branch_directions:
-					var branch_position := (
-						endpoint
-						+ branch_direction
-						* branch_distance
-						* progress
-					)
-					_spawn_archmage_fx(
-						"res://assets/art/heroes/stage5_archmage/frames/effect1",
-						"earth",
-						1,
-						11,
-						22.0,
-						false,
-						branch_position,
-						Vector2(0.72, 0.72)
-					)
-					_damage_monsters_in_radius_once(
-						branch_position,
-						radius,
-						spike_damage,
-						hit_ids
-					)
-				await get_tree().create_timer(
-					spike_delay
-				).timeout
-
+		_damage_monsters_in_radius_once(position, radius, spike_damage, hit_ids)
+		await get_tree().create_timer(maxf(float(config.get("spike_delay", 0.07)), 0.02)).timeout
 	_end_archmage_casting_sequence()
 
 
-func _find_archmage_holy_cluster_target(
-	config: Dictionary
-) -> Node2D:
-	var search_radius := maxf(
-		float(config.get("cluster_search_radius", 850.0)),
-		1.0
-	)
-	var cluster_radius := maxf(
-		float(config.get("cluster_score_radius", 190.0)),
-		1.0
-	)
-	var best: Node2D = null
-	var best_count := -1
-	var best_distance_sq := INF
-
-	for node in _get_monster_nodes_near(
-		global_position,
-		search_radius
-	):
-		if (
-			not is_instance_valid(node)
-			or node.is_queued_for_deletion()
-		):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-
-		var distance_sq := global_position.distance_squared_to(
-			monster.global_position
-		)
-		if distance_sq > search_radius * search_radius:
-			continue
-
-		var nearby_count := _count_monsters_near(
-			monster.global_position,
-			cluster_radius
-		)
-		if (
-			nearby_count > best_count
-			or (
-				nearby_count == best_count
-				and distance_sq < best_distance_sq
-			)
-		):
-			best = monster
-			best_count = nearby_count
-			best_distance_sq = distance_sq
-
-	return best
-
-
-func _cast_archmage_holy_power(
-	config: Dictionary,
-	empowered: bool
-) -> void:
+func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 	_begin_archmage_casting_sequence()
-
-	var cluster_target := _find_archmage_holy_cluster_target(
-		config
-	)
-	if not is_instance_valid(cluster_target):
-		_end_archmage_casting_sequence()
-		return
-
-	var cast_center := cluster_target.global_position
-	var count := maxi(
-		int(config.get("burst_count", 7)),
-		1
-	)
-	var spawn_radius := maxf(
-		float(config.get("burst_spawn_radius", 210.0)),
-		1.0
-	)
-	var hit_radius := maxf(
-		float(config.get("burst_hit_radius", 86.0)),
-		1.0
-	)
-	var base_damage := maxi(
-		1,
-		int(
-			round(
-				float(attack_damage)
-				* float(config.get("damage_ratio", 0.90))
-				* _skill_damage_multiplier(empowered)
-			)
-		)
-	)
-
+	var count := maxi(int(config.get("burst_count", 7)), 1)
+	var spawn_radius := maxf(float(config.get("burst_spawn_radius", 330.0)), 1.0)
+	var hit_radius := maxf(float(config.get("burst_hit_radius", 86.0)), 1.0)
+	var base_damage := maxi(1, int(round(
+		float(attack_damage) * float(config.get("damage_ratio", 0.90)) * _skill_damage_multiplier(empowered)
+	)))
 	for index in range(count):
 		if not is_inside_tree() or current_hp <= 0:
 			break
-
-		# Keep bursts concentrated around the monster cluster instead of
-		# scattering around the caster.
 		var angle := randf_range(0.0, TAU)
-		var position := (
-			cast_center
-			+ Vector2.from_angle(angle)
-			* randf_range(0.0, spawn_radius)
-		)
+		var position := global_position + Vector2.from_angle(angle) * randf_range(30.0, spawn_radius)
 		_spawn_archmage_fx(
 			"res://assets/art/heroes/stage5_archmage/frames/effect3",
-			"holy",
-			1,
-			5,
-			20.0,
-			false,
-			position,
-			Vector2(0.94, 0.94)
+			"holy", 1, 5, 20.0, false, position, Vector2(0.94, 0.94)
 		)
-
-		for node in _get_monster_nodes_near(
-			position,
-			hit_radius
-		):
-			if (
-				not is_instance_valid(node)
-				or node.is_queued_for_deletion()
-			):
+		for node in _get_monster_nodes_near(position, hit_radius):
+			if not is_instance_valid(node) or node.is_queued_for_deletion():
 				continue
 			var monster := node as Node2D
-			if (
-				monster == null
-				or not monster.has_method("take_damage")
-			):
+			if monster == null or not monster.has_method("take_damage"):
 				continue
-			if (
-				position.distance_squared_to(
-					monster.global_position
-				)
-				> hit_radius * hit_radius
-			):
+			if position.distance_squared_to(monster.global_position) > hit_radius * hit_radius:
 				continue
-
 			var dealt := base_damage
-			if (
-				bool(monster.get_meta("undead", false))
-				or bool(
-					monster.get_meta(
-						"is_undead",
-						false
-					)
-				)
-			):
-				dealt = maxi(
-					1,
-					int(
-						round(
-							float(dealt)
-							* float(
-								config.get(
-									"undead_damage_multiplier",
-									1.70
-								)
-							)
-						)
-					)
-				)
+			if bool(monster.get_meta("undead", false)) or bool(monster.get_meta("is_undead", false)):
+				dealt = maxi(1, int(round(float(dealt) * float(config.get("undead_damage_multiplier", 1.70)))))
 			monster.call("take_damage", dealt)
-			monster.set_meta(
-				"gunner_slow_multiplier",
-				clampf(
-					float(
-						config.get(
-							"slow_multiplier",
-							0.60
-						)
-					),
-					0.0,
-					1.0
-				)
-			)
-			monster.set_meta(
-				"gunner_slow_until",
-				Time.get_ticks_msec()
-				+ int(
-					maxf(
-						float(
-							config.get(
-								"slow_duration",
-								2.0
-							)
-						),
-						0.0
-					) * 1000.0
-				)
-			)
-
-		await get_tree().create_timer(
-			maxf(
-				float(config.get("burst_delay", 0.09)),
-				0.02
-			)
-		).timeout
-
+			monster.set_meta("gunner_slow_multiplier", clampf(float(config.get("slow_multiplier", 0.60)), 0.0, 1.0))
+			monster.set_meta("gunner_slow_until", Time.get_ticks_msec() + int(maxf(float(config.get("slow_duration", 2.0)), 0.0) * 1000.0))
+		await get_tree().create_timer(maxf(float(config.get("burst_delay", 0.09)), 0.02)).timeout
 	_end_archmage_casting_sequence()
 
 
 func _get_archmage_chain_dagger_targets(
 	max_count: int,
 	search_radius: float
-) -> Array:
-	var candidates: Array = []
+) -> Array[Node2D]:
+	var candidates: Array[Node2D] = []
 	var radius_sq := search_radius * search_radius
 	for node in _get_monster_nodes_near(global_position, search_radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -4383,7 +4078,7 @@ func _get_archmage_chain_dagger_targets(
 	if candidates.is_empty():
 		return []
 
-	var result: Array = []
+	var result: Array[Node2D] = []
 	if (
 		is_instance_valid(target)
 		and target.is_in_group("monsters")
