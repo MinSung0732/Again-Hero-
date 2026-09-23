@@ -6603,13 +6603,17 @@ func _berserker_emit_skill1_wave(
 		0.0
 	)
 	var scale_multiplier: float = 1.0 + growth * float(wave_index)
-	var slash_range: float = (
-		maxf(float(skill_config.get("base_range", 430.0)), 1.0)
+	var projectile_range: float = (
+		maxf(float(skill_config.get("base_range", 560.0)), 1.0)
 		* scale_multiplier
 	)
 	var half_width: float = (
-		maxf(float(skill_config.get("base_half_width", 62.0)), 1.0)
+		maxf(float(skill_config.get("base_half_width", 64.0)), 1.0)
 		* scale_multiplier
+	)
+	var projectile_speed_value: float = maxf(
+		float(skill_config.get("projectile_speed", 760.0)),
+		1.0
 	)
 
 	var repeat_values = skill_config.get(
@@ -6631,79 +6635,39 @@ func _berserker_emit_skill1_wave(
 		1
 	)
 
-	var start_position: Vector2 = global_position + direction * 36.0
-	var end_position: Vector2 = global_position + direction * slash_range
-	var segment: Vector2 = end_position - start_position
-	var midpoint: Vector2 = start_position + segment * 0.52
+	var projectile_config: Dictionary = {
+		"hit_radius": half_width,
+		"visual_scale": 0.72 * scale_multiplier,
+	}
+	var projectile := _acquire_projectile(
+		ARCHMAGE_SKILL_PROJECTILE_SCENE,
+		"berserker_wave_projectile"
+	)
+	if projectile == null:
+		return
 
-	var slash_fx: AnimatedSprite2D = _spawn_archmage_fx(
-		"%s/effect4" % STAGE6_FRAME_DIR,
-		"heavy_slash",
-		1,
-		11,
-		18.0,
+	projectile.global_position = global_position + direction * 54.0
+	projectile.call(
+		"setup",
+		"berserker_wave",
+		direction,
+		damage,
+		projectile_speed_value,
+		projectile_range,
+		projectile_config,
+		self,
 		false,
-		midpoint,
-		Vector2(
-			0.72 * scale_multiplier,
-			0.72 * scale_multiplier
+		null
+	)
+
+
+func notify_berserker_skill_kill() -> void:
+	_add_berserker_gauge(
+		maxf(
+			float(berserker_config.get("gauge_per_kill", 1.0)),
+			0.0
 		)
 	)
-	if is_instance_valid(slash_fx):
-		slash_fx.flip_h = direction.x < 0.0
-		slash_fx.rotation = (
-			direction.angle()
-			if direction.x >= 0.0
-			else direction.angle() - PI
-		)
-		slash_fx.z_index = 8
-
-	var side: Vector2 = Vector2(-direction.y, direction.x)
-	for node in _get_monster_nodes_near(
-		global_position,
-		slash_range + half_width
-	):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var monster := node as Node2D
-		if monster == null or not monster.has_method("take_damage"):
-			continue
-
-		var offset: Vector2 = monster.global_position - start_position
-		var forward: float = offset.dot(direction)
-		var lateral: float = absf(offset.dot(side))
-		if forward < 0.0 or forward > slash_range or lateral > half_width:
-			continue
-
-		var hp_before_value = monster.get("current_hp")
-		var hp_before: int = (
-			int(hp_before_value)
-			if hp_before_value != null
-			else -1
-		)
-		monster.call("take_damage", damage)
-
-		if hp_before <= 0:
-			continue
-		var killed: bool = false
-		if not is_instance_valid(monster):
-			killed = true
-		else:
-			var hp_after_value = monster.get("current_hp")
-			if hp_after_value != null and int(hp_after_value) <= 0:
-				killed = true
-		if killed:
-			_add_berserker_gauge(
-				maxf(
-					float(
-						berserker_config.get(
-							"gauge_per_kill",
-							1.0
-						)
-					),
-					0.0
-				)
-			)
 
 
 func _update_berserker_pose_visual(delta: float) -> void:
