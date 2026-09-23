@@ -545,6 +545,13 @@ const PROFILES = {
 				"wave_count": 4,
 				"blood_duration": 2.0,
 				"damage_ratio": 0.85,
+				"cell_length": 72.0,
+				"cell_count": 6,
+				"branch_angle_degrees": 34.0,
+				"wave_speed": 620.0,
+				"path_half_width": 30.0,
+				"heal_tick_interval": 0.15,
+				"heal_per_touch_tick": 10,
 			},
 			"skill_3": {
 				"id": "blood_sword_third",
