@@ -125,6 +125,8 @@ var hero_info_portrait_cache_path: String = ""
 var hero_info_portrait_cache: Texture2D = null
 var hero_skill_badges: Dictionary = {}
 var hero_skill_hud_refresh_timer: float = 0.0
+var _scene_load_path: String = ""
+var _scene_load_pending: bool = false
 
 func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
@@ -254,6 +256,26 @@ func _ready() -> void:
 	print("Finite world camera + persistent stage progression enabled.")
 
 func _process(delta: float) -> void:
+	if _scene_load_pending:
+		var load_status := ResourceLoader.load_threaded_get_status(_scene_load_path)
+		if load_status == ResourceLoader.THREAD_LOAD_LOADED:
+			var packed = ResourceLoader.load_threaded_get(_scene_load_path)
+			_scene_load_pending = false
+			if packed is PackedScene:
+				get_tree().change_scene_to_packed(packed)
+				return
+			status_label.text = "화면 전환에 실패했습니다."
+			if is_instance_valid(battle):
+				battle.set_external_pause(false)
+		elif (
+			load_status == ResourceLoader.THREAD_LOAD_FAILED
+			or load_status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE
+		):
+			_scene_load_pending = false
+			status_label.text = "화면 전환에 실패했습니다."
+			if is_instance_valid(battle):
+				battle.set_external_pause(false)
+
 	hero_skill_hud_refresh_timer -= delta
 	if hero_skill_hud_refresh_timer <= 0.0:
 		hero_skill_hud_refresh_timer = 0.05
@@ -1771,7 +1793,24 @@ func _on_next_stage_pressed() -> void:
 		get_tree().reload_current_scene()
 
 func _on_lobby_pressed() -> void:
-	get_tree().change_scene_to_file("res://src/lobby/Lobby.tscn")
+	_begin_threaded_scene_change("res://src/lobby/Lobby.tscn", "로비 이동 중...")
+
+
+func _begin_threaded_scene_change(path: String, message: String) -> void:
+	if _scene_load_pending or path.is_empty():
+		return
+
+	if is_instance_valid(battle):
+		battle.set_external_pause(true)
+
+	status_label.text = message
+	var error := ResourceLoader.load_threaded_request(path, "PackedScene")
+	if error != OK:
+		get_tree().change_scene_to_file(path)
+		return
+
+	_scene_load_path = path
+	_scene_load_pending = true
 
 func _on_restart_pressed() -> void:
 	get_tree().reload_current_scene()
