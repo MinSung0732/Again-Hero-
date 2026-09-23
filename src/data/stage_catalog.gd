@@ -334,7 +334,7 @@ const STAGES = {
 		"event_timeline": [
 			{
 				"id": "stage6_elite_01",
-				"at_seconds": 150.0,
+				"at_seconds": 120.0,
 				"type": "elite",
 				"name": "1차 혈전 돌연변이",
 				"selection_mode": "team",
@@ -345,7 +345,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage6_elite_02",
-				"at_seconds": 300.0,
+				"at_seconds": 240.0,
 				"type": "elite",
 				"name": "2차 광란 돌연변이",
 				"selection_mode": "team",
@@ -355,8 +355,19 @@ const STAGES = {
 				"reinforcement_interval": 0.12,
 			},
 			{
+				"id": "stage6_elite_03",
+				"at_seconds": 360.0,
+				"type": "elite",
+				"name": "3차 폭주 돌연변이",
+				"selection_mode": "team",
+				"mutation_profile_id": "mutation_2",
+				"reinforcement_count": 16,
+				"reinforcement_batch_size": 4,
+				"reinforcement_interval": 0.12,
+			},
+			{
 				"id": "stage6_miniboss_01",
-				"at_seconds": 450.0,
+				"at_seconds": 480.0,
 				"type": "miniboss",
 				"name": "대돌연변이 혈귀",
 				"selection_mode": "team",
