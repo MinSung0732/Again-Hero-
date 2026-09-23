@@ -39,6 +39,8 @@ func _physics_process(delta: float) -> void:
 	var external_slow := 1.0
 	if int(get_meta("gunner_slow_until", 0)) > Time.get_ticks_msec():
 		external_slow = clampf(float(get_meta("gunner_slow_multiplier", 1.0)), 0.1, 1.0)
+	if int(get_meta("archmage_root_until", 0)) > Time.get_ticks_msec():
+		external_slow = 0.0
 	var effective_move_speed := move_speed * float(
 		pack_bonuses.get("move_speed_multiplier", 1.0)
 	) * external_slow
