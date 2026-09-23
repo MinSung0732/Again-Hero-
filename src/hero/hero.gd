@@ -3193,8 +3193,8 @@ func _choose_archmage_skill() -> String:
 	for key in ["combustion", "ice_bolt", "earth_spikes", "holy_power", "chain_dagger", "storm"]:
 		if float(archmage_skill_cooldowns.get(key, 0.0)) > 0.0:
 			cooling_count += 1
-	if _archmage_skill_ready("harmony") and cooling_count >= 2:
-		scores["harmony"] = 0.6 + float(cooling_count) * 0.70
+	if _archmage_skill_ready("harmony") and cooling_count >= 1:
+		scores["harmony"] = 3.0 + float(cooling_count) * 1.10
 
 	if scores.is_empty():
 		return ""
@@ -3290,7 +3290,7 @@ func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
 	var orb_position := global_position + facing.normalized() * 76.0
 	var charge_fx := _spawn_archmage_fx(
 		"res://assets/art/heroes/stage5_archmage/frames/effect2",
-		"fire", 1, 7, 18.0, true, orb_position, Vector2(0.68, 0.68)
+		"fire", 1, 7, 18.0, true, orb_position, Vector2(0.88, 0.88)
 	)
 	var duration := maxf(float(config.get("charge_duration", 0.90)), 0.05)
 	var tick_interval := maxf(float(config.get("charge_tick_interval", 0.18)), 0.05)
@@ -3340,9 +3340,7 @@ func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
 
 
 func _cast_archmage_ice_bolt(config: Dictionary, empowered: bool) -> void:
-	var current_target := target
-	if not is_instance_valid(current_target):
-		current_target = _find_nearest_monster()
+	var current_target := _find_farthest_monster_from_point(global_position)
 	if not is_instance_valid(current_target):
 		return
 	var direction := global_position.direction_to(current_target.global_position)
@@ -3433,7 +3431,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 		var position := global_position + Vector2.from_angle(angle) * randf_range(30.0, spawn_radius)
 		_spawn_archmage_fx(
 			"res://assets/art/heroes/stage5_archmage/frames/effect3",
-			"holy", 1, 5, 20.0, false, position, Vector2(0.72, 0.72)
+			"holy", 1, 5, 20.0, false, position, Vector2(0.94, 0.94)
 		)
 		for node in get_tree().get_nodes_in_group("monsters"):
 			if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -3478,9 +3476,10 @@ func notify_archmage_chain_dagger_finished() -> void:
 	archmage_chain_dagger_active = false
 
 
-func _cast_archmage_harmony(_config: Dictionary) -> void:
+func _cast_archmage_harmony(config: Dictionary) -> void:
 	for key in ["combustion", "ice_bolt", "earth_spikes", "holy_power", "chain_dagger", "storm"]:
 		archmage_skill_cooldowns[key] = 0.0
+	_add_archmage_gauge(maxf(float(config.get("gauge_refund", 50.0)), 0.0))
 	_spawn_archmage_fx(
 		"res://assets/art/heroes/stage5_archmage/frames/effect7",
 		"orb", 8, 5, 16.0, false, global_position, Vector2(0.82, 0.82)
@@ -3667,6 +3666,22 @@ func _damage_monsters_in_corridor(
 		var closest := start + segment * t
 		if monster.global_position.distance_to(closest) <= half_width:
 			monster.call("take_damage", damage)
+
+
+func _find_farthest_monster_from_point(origin: Vector2) -> Node2D:
+	var best: Node2D = null
+	var best_distance := -1.0
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var distance := origin.distance_squared_to(monster.global_position)
+		if distance > best_distance:
+			best_distance = distance
+			best = monster
+	return best
 
 
 func _find_nearest_monster_from_point(origin: Vector2) -> Node2D:
