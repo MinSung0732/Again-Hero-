@@ -4024,23 +4024,66 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 		direction = global_position.direction_to(target.global_position)
 	if direction.length_squared() <= 0.0:
 		direction = Vector2.RIGHT
+	direction = direction.normalized()
+
 	var count := maxi(int(config.get("spike_count", 7)), 1)
 	var spacing := maxf(float(config.get("spike_spacing", 88.0)), 1.0)
 	var radius := maxf(float(config.get("spike_radius", 70.0)), 1.0)
 	var spike_damage := maxi(1, int(round(
 		float(attack_damage) * float(config.get("damage_ratio", 1.20)) * _skill_damage_multiplier(empowered)
 	)))
+	var spike_delay := maxf(float(config.get("spike_delay", 0.07)), 0.02)
+	var cast_origin := global_position
 	var hit_ids: Dictionary = {}
+
 	for index in range(count):
 		if not is_inside_tree() or current_hp <= 0:
 			break
-		var position := global_position + direction.normalized() * spacing * float(index + 1)
+		var position := cast_origin + direction * spacing * float(index + 1)
 		_spawn_archmage_fx(
 			"res://assets/art/heroes/stage5_archmage/frames/effect1",
 			"earth", 1, 11, 22.0, false, position, Vector2(0.72, 0.72)
 		)
 		_damage_monsters_in_radius_once(position, radius, spike_damage, hit_ids)
-		await get_tree().create_timer(maxf(float(config.get("spike_delay", 0.07)), 0.02)).timeout
+		await get_tree().create_timer(spike_delay).timeout
+
+	if is_inside_tree() and current_hp > 0:
+		var original_distance := spacing * float(count)
+		var branch_distance := original_distance * clampf(
+			float(config.get("branch_distance_ratio", 0.50)),
+			0.0,
+			2.0
+		)
+		if branch_distance > 0.0:
+			var endpoint := cast_origin + direction * original_distance
+			var branch_count := maxi(ceili(branch_distance / spacing), 1)
+			var branch_directions := [
+				direction.rotated(PI * 0.5),
+				direction.rotated(-PI * 0.5),
+			]
+
+			for branch_index in range(branch_count):
+				if not is_inside_tree() or current_hp <= 0:
+					break
+				var progress := float(branch_index + 1) / float(branch_count)
+				for branch_direction in branch_directions:
+					var branch_position := (
+						endpoint
+						+ branch_direction * branch_distance * progress
+					)
+					_spawn_archmage_fx(
+						"res://assets/art/heroes/stage5_archmage/frames/effect1",
+						"earth", 1, 11, 22.0, false,
+						branch_position, Vector2(0.72, 0.72)
+					)
+					_damage_monsters_in_radius_once(
+						branch_position,
+						radius,
+						spike_damage,
+						hit_ids
+					)
+				await get_tree().create_timer(spike_delay).timeout
+
 	_end_archmage_casting_sequence()
 
 
