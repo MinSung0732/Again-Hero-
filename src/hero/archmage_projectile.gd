@@ -1,6 +1,8 @@
 extends Area2D
 
 static var _orb_frames_cache: SpriteFrames
+static var _chest_nodes_cache: Array = []
+static var _chest_nodes_cache_physics_frame: int = -1
 
 const STATUS_SCRIPT := preload("res://src/hero/archmage_element_status.gd")
 const ORB_FRAME_PATHS := [
@@ -100,8 +102,16 @@ func _get_monster_nodes_in_rect(world_rect: Rect2) -> Array:
 	return _get_monster_nodes()
 
 
+func _get_chest_nodes_cached() -> Array:
+	var physics_frame := Engine.get_physics_frames()
+	if physics_frame != _chest_nodes_cache_physics_frame:
+		_chest_nodes_cache = get_tree().get_nodes_in_group("treasure_chests")
+		_chest_nodes_cache_physics_frame = physics_frame
+	return _chest_nodes_cache
+
+
 func _check_chest_sweep(from_position: Vector2, to_position: Vector2) -> void:
-	for node in get_tree().get_nodes_in_group("treasure_chests"):
+	for node in _get_chest_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var chest := node as Node2D
