@@ -47,13 +47,17 @@ func _physics_process(delta: float) -> void:
 	if skill_type == "chain_dagger" and is_instance_valid(current_target):
 		var desired := global_position.direction_to(current_target.global_position)
 		if desired.length_squared() > 0.0:
-			direction = desired
+			direction = desired.normalized()
 			rotation = direction.angle()
+			sprite.rotation = 0.0
+			tail.rotation = 0.0
 
 	var step := direction * speed * delta
 	global_position += step
 	traveled += step.length()
 	if traveled >= max_range:
+		if skill_type == "storm":
+			_explode_storm_endpoint()
 		_finish()
 
 func _on_body_entered(body: Node) -> void:
@@ -85,13 +89,18 @@ func _on_body_entered(body: Node) -> void:
 			if bounce_count > max_bounces:
 				_finish()
 				return
-			current_target = _find_nearest_unhit(monster.global_position, float(config.get("bounce_range", 420.0)))
+			current_target = _find_nearest_unhit(
+				monster.global_position,
+				float(config.get("bounce_range", 600.0))
+			)
 			if not is_instance_valid(current_target):
 				_finish()
 				return
-			direction = global_position.direction_to(current_target.global_position)
+			_spawn_chain_current(monster.global_position, current_target.global_position)
+			direction = global_position.direction_to(current_target.global_position).normalized()
+			rotation = direction.angle()
 			traveled = 0.0
-			max_range = maxf(float(config.get("bounce_range", 420.0)), 1.0)
+			max_range = maxf(float(config.get("bounce_range", 600.0)), 1.0)
 		"storm":
 			var hit_damage := damage
 			if empowered:
@@ -103,6 +112,104 @@ func _on_body_entered(body: Node) -> void:
 			)
 			if is_instance_valid(source_hero) and source_hero.has_method("restore_archmage_gauge"):
 				source_hero.call("restore_archmage_gauge", maxf(float(config.get("gauge_restore_per_hit", 4.0)), 0.0))
+
+func _spawn_chain_current(from_position: Vector2, to_position: Vector2) -> void:
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return
+
+	var line := Line2D.new()
+	line.width = 6.0
+	line.default_color = Color(0.95, 0.88, 0.30, 0.95)
+	line.z_index = 8
+	line.add_point(parent.to_local(from_position))
+	line.add_point(parent.to_local(to_position))
+	parent.add_child(line)
+
+	_apply_chain_current_ticks(from_position, to_position, line)
+
+
+func _apply_chain_current_ticks(
+	from_position: Vector2,
+	to_position: Vector2,
+	line: Line2D
+) -> void:
+	var tick_count := maxi(int(config.get("chain_tick_count", 4)), 1)
+	var tick_interval := maxf(float(config.get("chain_tick_interval", 0.18)), 0.01)
+	var tick_ratio := maxf(float(config.get("chain_tick_damage_ratio", 0.11)), 0.0)
+	var width := maxf(float(config.get("chain_width", 34.0)), 1.0)
+	var tick_damage := maxi(1, int(round(float(damage) * tick_ratio)))
+	if empowered:
+		tick_damage = maxi(
+			1,
+			int(round(float(tick_damage) * float(config.get("empowered_damage_multiplier", 1.50))))
+		)
+
+	for tick_index in range(tick_count):
+		if not is_inside_tree():
+			break
+		_damage_monsters_along_segment(from_position, to_position, width, tick_damage)
+		if tick_index < tick_count - 1:
+			await get_tree().create_timer(tick_interval).timeout
+
+	if is_instance_valid(line):
+		var tween := line.create_tween()
+		tween.tween_property(line, "modulate:a", 0.0, 0.12)
+		tween.finished.connect(line.queue_free)
+
+
+func _damage_monsters_along_segment(
+	from_position: Vector2,
+	to_position: Vector2,
+	half_width: float,
+	tick_damage: int
+) -> void:
+	var segment := to_position - from_position
+	var length_sq := maxf(segment.length_squared(), 0.001)
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null or not monster.has_method("take_damage"):
+			continue
+		var t := clampf(
+			(monster.global_position - from_position).dot(segment) / length_sq,
+			0.0,
+			1.0
+		)
+		var closest := from_position + segment * t
+		if monster.global_position.distance_to(closest) <= half_width:
+			monster.call("take_damage", tick_damage)
+
+
+func _explode_storm_endpoint() -> void:
+	var explosion_ratio := maxf(float(config.get("end_explosion_damage_ratio", 0.90)), 0.0)
+	var radius := maxf(float(config.get("end_explosion_radius", 125.0)), 1.0)
+	var explosion_damage := maxi(1, int(round(float(source_hero.get("attack_damage")) * explosion_ratio))) if is_instance_valid(source_hero) else maxi(1, int(round(float(damage) * explosion_ratio)))
+	if empowered:
+		explosion_damage = maxi(
+			1,
+			int(round(float(explosion_damage) * float(config.get("empowered_damage_multiplier", 1.50))))
+		)
+
+	_spawn_hit_animation(
+		"res://assets/art/heroes/stage5_archmage/frames/effect8",
+		"wind",
+		7,
+		3,
+		16.0,
+		global_position
+	)
+
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null or not monster.has_method("take_damage"):
+			continue
+		if global_position.distance_to(monster.global_position) <= radius:
+			monster.call("take_damage", explosion_damage)
+
 
 func _find_nearest_unhit(origin: Vector2, radius: float) -> Node2D:
 	var best: Node2D = null
@@ -154,6 +261,7 @@ func _apply_visual() -> void:
 		sprite.play("fx")
 
 	if skill_type == "storm":
+		sprite.scale *= 1.28
 		var tail_frames := _build_frames(
 			"res://assets/art/heroes/stage5_archmage/frames/effect8",
 			"wind",
@@ -165,7 +273,8 @@ func _apply_visual() -> void:
 		if tail_frames != null:
 			tail.sprite_frames = tail_frames
 			tail.visible = true
-			tail.position = Vector2(-48.0, 0.0)
+			tail.scale *= 0.68
+			tail.position = Vector2(-38.0, 0.0)
 			tail.play("fx")
 
 	rotation = direction.angle()
