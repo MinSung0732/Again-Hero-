@@ -8,6 +8,8 @@ const STAGE1_PROJECTILE_FRAME_PATHS := [
 ]
 const STAGE1_PROJECTILE_FPS := 12.0
 
+static var _stage1_frames_cache: SpriteFrames
+
 var direction: Vector2 = Vector2.RIGHT
 var speed: float = 680.0
 var max_range: float = 420.0
@@ -125,26 +127,24 @@ func _apply_projectile_visual() -> void:
 	if source_hero_id != "ranged_rookie":
 		return
 
-	var frames := SpriteFrames.new()
-	if frames.has_animation("default"):
-		frames.remove_animation("default")
+	var frames := _stage1_frames_cache
+	if frames == null:
+		frames = SpriteFrames.new()
+		if frames.has_animation("default"):
+			frames.remove_animation("default")
 
-	frames.add_animation("fly")
-	frames.set_animation_loop("fly", true)
-	frames.set_animation_speed("fly", STAGE1_PROJECTILE_FPS)
+		frames.add_animation("fly")
+		frames.set_animation_loop("fly", true)
+		frames.set_animation_speed("fly", STAGE1_PROJECTILE_FPS)
 
-	var loaded_count := 0
-	for frame_path in STAGE1_PROJECTILE_FRAME_PATHS:
-		var texture := _load_texture_direct(frame_path)
-		if texture == null:
-			push_warning("Projectile frame load failed: %s" % frame_path)
-			continue
+		for frame_path in STAGE1_PROJECTILE_FRAME_PATHS:
+			var texture := _load_texture_direct(frame_path)
+			if texture == null:
+				continue
+			frames.add_frame("fly", texture)
+		_stage1_frames_cache = frames
 
-		frames.add_frame("fly", texture)
-		loaded_count += 1
-
-	if loaded_count == 0:
-		push_warning("Stage 1 projectile animation: no PNG frames could be loaded.")
+	if frames.get_frame_count("fly") <= 0:
 		return
 
 	projectile_sprite.sprite_frames = frames
