@@ -502,7 +502,7 @@ const PROFILES = {
 			"attack_milestone_interval": 10,
 			"attack_milestone_bonus": 0.04,
 		},
-		"attack_range": 185.0,
+		"attack_range": 145.0,
 		"attack_cooldown": 1.10,
 		"projectile_speed": 0.0,
 		"exp_pickup_radius": 175.0,
