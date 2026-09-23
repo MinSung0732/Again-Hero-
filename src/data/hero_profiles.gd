@@ -214,6 +214,8 @@ const PROFILES = {
 			"archmage_mana_overflow",
 			"archmage_element_resonance",
 			"archmage_element_cycle",
+			"archmage_chain_multithrow",
+			"archmage_chain_persistence",
 		],
 	},
 
