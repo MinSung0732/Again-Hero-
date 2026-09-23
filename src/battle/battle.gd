@@ -88,6 +88,7 @@ const FULL_MODAL_PAUSE_DOMAINS := [
 ]
 
 var monsters_alive: int = 0
+var active_monsters: Dictionary = {}
 var battle_over: bool = false
 var external_pause: bool = false
 
@@ -228,6 +229,7 @@ func _process(delta: float) -> void:
 
 func _start_battle() -> void:
 	battle_over = false
+	active_monsters.clear()
 	external_pause = false
 	flow_pause_manager.reset()
 	monsters_alive = 0
@@ -961,7 +963,9 @@ func _spawn_monster(
 	_apply_special_augments_to_monster(monster, monster_type)
 	monster.connect("died", Callable(self, "_on_monster_died").bind(monster))
 
-	monster_summon_costs[monster.get_instance_id()] = summon_cost
+	var monster_instance_id := monster.get_instance_id()
+	monster_summon_costs[monster_instance_id] = summon_cost
+	active_monsters[monster_instance_id] = monster
 	monsters_alive += 1
 	return monster
 
@@ -1046,8 +1050,22 @@ func _apply_demon_level_scaling_to_monster(
 	if preserve_hp_ratio and monster.has_method("queue_redraw"):
 		monster.call("queue_redraw")
 
+func _get_active_monsters_snapshot() -> Array:
+	var result: Array = []
+	var stale_ids: Array = []
+	for raw_id in active_monsters.keys():
+		var node = active_monsters.get(raw_id)
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			stale_ids.append(raw_id)
+			continue
+		result.append(node)
+	for raw_id in stale_ids:
+		active_monsters.erase(raw_id)
+	return result
+
+
 func _refresh_alive_monsters_for_demon_level() -> void:
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_active_monsters_snapshot():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 
@@ -1134,6 +1152,7 @@ func _on_monster_died(monster: Node) -> void:
 
 	var original_cost: float = float(monster_summon_costs.get(instance_id, 0.0))
 	monster_summon_costs.erase(instance_id)
+	active_monsters.erase(instance_id)
 
 	if death_refund_ratio > 0.0 and original_cost > 0.0:
 		command_power = minf(
@@ -2461,7 +2480,7 @@ func _apply_special_augments_to_monster(
 		monster.call("configure_special_augments", configs)
 
 func _refresh_alive_monsters_for_augments() -> void:
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_active_monsters_snapshot():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster_id := String(node.get("monster_type"))
@@ -2651,7 +2670,7 @@ func get_debug_balance_summary() -> String:
 	]
 
 	var samples: Dictionary = {}
-	for node in get_tree().get_nodes_in_group("monsters"):
+	for node in _get_active_monsters_snapshot():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 
