@@ -272,6 +272,8 @@ var is_dying: bool = false
 var slow_timer: float = 0.0
 var move_multiplier: float = 1.0
 var strafe_sign: float = 1.0
+var combat_strafe_burst_timer: float = 0.0
+var combat_strafe_cooldown_timer: float = 0.0
 var wander_target: Vector2 = Vector2.ZERO
 var wander_timer: float = 0.0
 var facing_candidate_sign: int = 0
@@ -589,6 +591,8 @@ func _physics_process(delta: float) -> void:
 	if current_hp <= 0:
 		velocity = Vector2.ZERO
 		return
+
+	_update_combat_reposition(delta)
 
 	if hero_archetype == "rogue_combo":
 		_physics_process_rogue(delta)
@@ -1424,9 +1428,11 @@ func _physics_process_rogue(delta: float) -> void:
 			1.0
 		)
 
-	var move_direction := Vector2.ZERO
-	if distance > attack_range * 0.88:
-		move_direction = global_position.direction_to(target.global_position)
+	var move_direction := _choose_melee_spacing_direction(
+		target,
+		distance,
+		0.88
+	)
 	move_direction = _apply_heal_item_steering(move_direction, delta)
 	move_direction = _apply_chest_steering(move_direction, delta)
 	if move_direction.length_squared() > 0.01:
@@ -1475,6 +1481,17 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 	var lunge_distance := maxf(
 		float(rogue_combo_config.get("lunge_distance", 85.0)),
 		0.0
+	)
+	var target_distance := global_position.distance_to(
+		current_target.global_position
+	)
+	var lunge_stop_distance := maxf(
+		float(rogue_combo_config.get("lunge_stop_distance", 26.0)),
+		0.0
+	)
+	lunge_distance = minf(
+		lunge_distance,
+		maxf(target_distance - lunge_stop_distance, 0.0)
 	)
 	var lunge_start := global_position
 	global_position += direction * lunge_distance
@@ -2845,6 +2862,55 @@ func _pick_new_wander_target() -> void:
 	wander_target = candidate
 	wander_timer = randf_range(2.6, 5.0)
 
+func _update_combat_reposition(delta: float) -> void:
+	combat_strafe_burst_timer = maxf(
+		combat_strafe_burst_timer - delta,
+		0.0
+	)
+	combat_strafe_cooldown_timer = maxf(
+		combat_strafe_cooldown_timer - delta,
+		0.0
+	)
+
+	if (
+		combat_strafe_burst_timer <= 0.0
+		and combat_strafe_cooldown_timer <= 0.0
+	):
+		if randf() < 0.55:
+			strafe_sign *= -1.0
+		combat_strafe_burst_timer = randf_range(0.22, 0.38)
+		combat_strafe_cooldown_timer = randf_range(0.75, 1.30)
+
+
+func _choose_melee_spacing_direction(
+	nearest_target: Node2D,
+	nearest_distance: float,
+	approach_ratio: float
+) -> Vector2:
+	if not is_instance_valid(nearest_target):
+		return Vector2.ZERO
+
+	if nearest_distance > attack_range * approach_ratio:
+		return global_position.direction_to(nearest_target.global_position)
+
+	# Melee heroes should not orbit their target. Only make a short
+	# disengage when they are almost overlapping.
+	if nearest_distance >= attack_range * 0.46:
+		return Vector2.ZERO
+
+	var away := nearest_target.global_position.direction_to(global_position)
+	if away.length_squared() <= 0.001:
+		away = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+
+	if combat_strafe_burst_timer > 0.0:
+		var tangent := Vector2(-away.y, away.x) * strafe_sign
+		var desired := away * 0.90 + tangent * 0.24
+		if desired.length_squared() > 0.001:
+			return desired.normalized()
+
+	return away.normalized()
+
+
 func _choose_move_direction(nearest_target: Node2D, nearest_distance: float) -> Vector2:
 	var avoidance := Vector2.ZERO
 
@@ -2866,12 +2932,32 @@ func _choose_move_direction(nearest_target: Node2D, nearest_distance: float) -> 
 	if avoidance.length_squared() > 0.01:
 		return avoidance.normalized()
 
-	if nearest_distance > attack_range * APPROACH_DISTANCE_RATIO:
-		return global_position.direction_to(nearest_target.global_position)
+	if not is_instance_valid(nearest_target):
+		return Vector2.ZERO
 
 	var to_target := global_position.direction_to(nearest_target.global_position)
+	var away := -to_target
+
+	# Outside the preferred range, approach normally.
+	if nearest_distance > attack_range * APPROACH_DISTANCE_RATIO:
+		return to_target
+
+	# Too close: prioritize opening distance instead of circling.
+	if nearest_distance < attack_range * 0.58:
+		var retreat := away
+		if combat_strafe_burst_timer > 0.0:
+			var retreat_tangent := Vector2(-to_target.y, to_target.x) * strafe_sign
+			retreat = away * 0.86 + retreat_tangent * 0.30
+		return retreat.normalized()
+
+	# Inside the firing band, stand and shoot most of the time.
+	# Brief side-step bursts make the hero reposition without tracing circles.
+	if combat_strafe_burst_timer <= 0.0:
+		return Vector2.ZERO
+
 	var tangent := Vector2(-to_target.y, to_target.x) * strafe_sign
-	return tangent.normalized()
+	var reposition := away * 0.38 + tangent * 0.62
+	return reposition.normalized()
 
 func _clamp_to_battlefield() -> void:
 	var clamped_position := position
@@ -2888,6 +2974,11 @@ func _clamp_to_battlefield() -> void:
 
 	if hit_edge:
 		strafe_sign *= -1.0
+		combat_strafe_burst_timer = 0.0
+		combat_strafe_cooldown_timer = minf(
+			combat_strafe_cooldown_timer,
+			0.18
+		)
 
 func _update_heal_item_goal(delta: float) -> void:
 	heal_item_retarget_timer = maxf(heal_item_retarget_timer - delta, 0.0)
@@ -5142,9 +5233,11 @@ func _physics_process_fighter(delta: float) -> void:
 		return
 
 	var distance := global_position.distance_to(target.global_position)
-	var move_direction := Vector2.ZERO
-	if distance > attack_range * 0.90:
-		move_direction = global_position.direction_to(target.global_position)
+	var move_direction := _choose_melee_spacing_direction(
+		target,
+		distance,
+		0.90
+	)
 	move_direction = _apply_heal_item_steering(move_direction, delta)
 	move_direction = _apply_chest_steering(move_direction, delta)
 	if move_direction.length_squared() > 0.01:
