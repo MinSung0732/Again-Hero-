@@ -168,6 +168,22 @@ func _get_monster_nodes() -> Array:
 	return get_tree().get_nodes_in_group("monsters")
 
 
+func _get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
+	if is_instance_valid(source_hero) and source_hero.has_method("_get_monster_nodes_near"):
+		var nearby = source_hero.call("_get_monster_nodes_near", origin, radius)
+		if nearby is Array:
+			return nearby
+	return _get_monster_nodes()
+
+
+func _get_monster_nodes_in_rect(world_rect: Rect2) -> Array:
+	if is_instance_valid(source_hero) and source_hero.has_method("_get_monster_nodes_in_rect"):
+		var nearby = source_hero.call("_get_monster_nodes_in_rect", world_rect)
+		if nearby is Array:
+			return nearby
+	return _get_monster_nodes()
+
+
 func _damage_monsters_along_segment(
 	from_position: Vector2,
 	to_position: Vector2,
@@ -176,7 +192,16 @@ func _damage_monsters_along_segment(
 ) -> void:
 	var segment := to_position - from_position
 	var length_sq := maxf(segment.length_squared(), 0.001)
-	for node in _get_monster_nodes():
+	var min_point := Vector2(
+		minf(from_position.x, to_position.x) - half_width,
+		minf(from_position.y, to_position.y) - half_width
+	)
+	var max_point := Vector2(
+		maxf(from_position.x, to_position.x) + half_width,
+		maxf(from_position.y, to_position.y) + half_width
+	)
+	var query_rect := Rect2(min_point, max_point - min_point)
+	for node in _get_monster_nodes_in_rect(query_rect):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -211,7 +236,7 @@ func _explode_storm_endpoint() -> void:
 		global_position
 	)
 
-	for node in _get_monster_nodes():
+	for node in _get_monster_nodes_near(global_position, radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -224,7 +249,7 @@ func _explode_storm_endpoint() -> void:
 func _find_nearest_unhit(origin: Vector2, radius: float) -> Node2D:
 	var best: Node2D = null
 	var best_distance := INF
-	for node in _get_monster_nodes():
+	for node in _get_monster_nodes_near(origin, radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
