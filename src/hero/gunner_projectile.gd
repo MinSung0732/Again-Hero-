@@ -5,6 +5,8 @@ const FRAME_COUNT := 13
 const FPS := 22.0
 const DEAD_EYE_RICOCHET_FX := preload("res://src/hero/deadeye_ricochet_fx.gd")
 
+static var _projectile_frames_cache: SpriteFrames
+
 var direction := Vector2.RIGHT
 var speed := 920.0
 var max_range := 760.0
@@ -133,19 +135,23 @@ func _find_ricochet_target() -> Node2D:
 
 
 func _apply_visual() -> void:
-	var frames := SpriteFrames.new()
-	if frames.has_animation(&"default"):
-		frames.remove_animation(&"default")
-	frames.add_animation(&"fly")
-	frames.set_animation_loop(&"fly", true)
-	frames.set_animation_speed(&"fly", FPS)
-	for i in range(1, FRAME_COUNT + 1):
-		var path := "%s/effect_projectile_%02d.png" % [FRAME_DIR, i]
-		if not ResourceLoader.exists(path):
-			continue
-		var tex = load(path)
-		if tex is Texture2D:
-			frames.add_frame(&"fly", tex)
+	var frames := _projectile_frames_cache
+	if frames == null:
+		frames = SpriteFrames.new()
+		if frames.has_animation(&"default"):
+			frames.remove_animation(&"default")
+		frames.add_animation(&"fly")
+		frames.set_animation_loop(&"fly", true)
+		frames.set_animation_speed(&"fly", FPS)
+		for i in range(1, FRAME_COUNT + 1):
+			var path := "%s/effect_projectile_%02d.png" % [FRAME_DIR, i]
+			if not ResourceLoader.exists(path):
+				continue
+			var tex = load(path)
+			if tex is Texture2D:
+				frames.add_frame(&"fly", tex)
+		_projectile_frames_cache = frames
+
 	if frames.get_frame_count(&"fly") > 0:
 		visual.sprite_frames = frames
 		visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
