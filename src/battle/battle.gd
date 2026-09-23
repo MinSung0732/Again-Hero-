@@ -1475,7 +1475,8 @@ func acquire_transient_fx(pool_key: String, fx_type: String) -> Node:
 				return null
 		add_child(fx)
 
-	fx.visible = true
+	if fx is CanvasItem:
+		(fx as CanvasItem).visible = true
 	fx.process_mode = Node.PROCESS_MODE_INHERIT
 	return fx
 
@@ -1491,7 +1492,8 @@ func recycle_transient_fx(fx: Node, pool_key: String) -> void:
 	if fx.has_method("deactivate_for_pool"):
 		fx.call("deactivate_for_pool")
 	else:
-		fx.visible = false
+		if fx is CanvasItem:
+			(fx as CanvasItem).visible = false
 		fx.set_process(false)
 		fx.set_physics_process(false)
 		if fx is AnimatedSprite2D:
