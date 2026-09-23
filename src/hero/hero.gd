@@ -12,6 +12,7 @@ const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
 const PROJECTILE_SCENE := preload("res://src/hero/HeroProjectile.tscn")
 const GUNNER_PROJECTILE_SCENE := preload("res://src/hero/GunnerProjectile.tscn")
 const ARCHMAGE_PROJECTILE_SCENE := preload("res://src/hero/ArchmageProjectile.tscn")
+const ARCHMAGE_SKILL_PROJECTILE_SCENE := preload("res://src/hero/ArchmageSkillProjectile.tscn")
 const ULTIMATE_PIERCING_PROJECTILE_SCENE := preload(
 	"res://src/hero/UltimatePiercingProjectile.tscn"
 )
@@ -167,6 +168,13 @@ var gunner_powder_consumed_stacks: int = 0
 
 var archmage_element_config: Dictionary = {}
 var archmage_last_element: String = ""
+var archmage_skill_config: Dictionary = {}
+var archmage_skill_cooldowns: Dictionary = {}
+var archmage_element_orbs: Dictionary = {}
+var archmage_orbit_sprites: Dictionary = {}
+var archmage_orbit_angle: float = 0.0
+var archmage_chain_dagger_active: bool = false
+var archmage_casting_sequence: bool = false
 
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
@@ -337,6 +345,28 @@ func configure_profile(profile: Dictionary) -> void:
 		else {}
 	)
 	archmage_last_element = ""
+	var profile_archmage_skills = profile.get("archmage_skills", {})
+	archmage_skill_config = (
+		profile_archmage_skills.duplicate(true)
+		if typeof(profile_archmage_skills) == TYPE_DICTIONARY
+		else {}
+	)
+	archmage_skill_cooldowns.clear()
+	for skill_key in [
+		"combustion",
+		"ice_bolt",
+		"earth_spikes",
+		"holy_power",
+		"chain_dagger",
+		"harmony",
+		"storm",
+	]:
+		archmage_skill_cooldowns[skill_key] = 0.0
+	archmage_element_orbs.clear()
+	archmage_orbit_sprites.clear()
+	archmage_orbit_angle = 0.0
+	archmage_chain_dagger_active = false
+	archmage_casting_sequence = false
 	var profile_rogue_slash = profile.get("rogue_slash_skill", {})
 	rogue_slash_config = (
 		profile_rogue_slash.duplicate(true)
@@ -536,6 +566,8 @@ func _physics_process(delta: float) -> void:
 	_update_ultimate(delta)
 	_update_shield_skill(delta)
 	_update_channel_skill(delta)
+	if hero_archetype == "archmage_elementalist":
+		_update_archmage_skill_runtime(delta)
 
 	if hit_flash_timer > 0.0:
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
@@ -3059,6 +3091,9 @@ func _fire_archmage_projectile(current_target: Node2D) -> void:
 		archmage_element_config,
 		self
 	)
+	_add_archmage_gauge(
+		maxf(float(archmage_skill_config.get("gauge_per_basic_attack", 4.0)), 0.0)
+	)
 
 
 func _roll_next_archmage_element() -> String:
@@ -3083,6 +3118,545 @@ func _roll_next_archmage_element() -> String:
 	var chosen := String(candidates[randi_range(0, candidates.size() - 1)])
 	archmage_last_element = chosen
 	return chosen
+
+
+
+func _update_archmage_skill_runtime(delta: float) -> void:
+	for raw_key in archmage_skill_cooldowns.keys():
+		var key := String(raw_key)
+		archmage_skill_cooldowns[key] = maxf(
+			float(archmage_skill_cooldowns.get(key, 0.0)) - delta,
+			0.0
+		)
+
+	_add_archmage_gauge(
+		maxf(float(archmage_skill_config.get("gauge_per_second", 3.0)), 0.0) * delta
+	)
+	archmage_orbit_angle = fmod(archmage_orbit_angle + delta * 1.9, TAU)
+	_update_archmage_orbit_positions()
+
+	if archmage_casting_sequence:
+		return
+
+	var gauge_max := maxf(float(archmage_skill_config.get("gauge_max", 100.0)), 1.0)
+	if ultimate_charge + 0.001 < gauge_max:
+		return
+
+	var chosen := _choose_archmage_skill()
+	if chosen.is_empty():
+		return
+	_use_archmage_skill(chosen)
+
+
+func _add_archmage_gauge(amount: float) -> void:
+	if amount <= 0.0 or hero_archetype != "archmage_elementalist":
+		return
+	var gauge_max := maxf(float(archmage_skill_config.get("gauge_max", 100.0)), 1.0)
+	ultimate_charge = minf(ultimate_charge + amount, gauge_max)
+	queue_redraw()
+
+
+func restore_archmage_gauge(amount: float) -> void:
+	_add_archmage_gauge(amount)
+
+
+func _choose_archmage_skill() -> String:
+	var scores: Dictionary = {}
+	var nearby_220 := _count_monsters_near(global_position, 220.0)
+	var nearby_360 := _count_monsters_near(global_position, 360.0)
+	var total_monsters := get_tree().get_nodes_in_group("monsters").size()
+
+	if _archmage_skill_ready("combustion"):
+		scores["combustion"] = 1.2 + float(nearby_220) * 0.65
+	if _archmage_skill_ready("ice_bolt") and is_instance_valid(target):
+		scores["ice_bolt"] = 2.2
+	if _archmage_skill_ready("earth_spikes"):
+		scores["earth_spikes"] = 1.4 + minf(float(total_monsters) * 0.14, 2.2)
+	if _archmage_skill_ready("holy_power"):
+		scores["holy_power"] = 1.1 + float(nearby_360) * 0.45
+	if _archmage_skill_ready("chain_dagger") and not archmage_chain_dagger_active and total_monsters > 0:
+		scores["chain_dagger"] = 1.4 + minf(float(total_monsters) * 0.25, 2.6)
+	if _archmage_skill_ready("storm"):
+		scores["storm"] = 1.0 + float(nearby_360) * 0.55
+
+	var cooling_count := 0
+	for key in ["combustion", "ice_bolt", "earth_spikes", "holy_power", "chain_dagger", "storm"]:
+		if float(archmage_skill_cooldowns.get(key, 0.0)) > 0.0:
+			cooling_count += 1
+	if _archmage_skill_ready("harmony") and cooling_count >= 2:
+		scores["harmony"] = 0.6 + float(cooling_count) * 0.70
+
+	if scores.is_empty():
+		return ""
+
+	var total_score := 0.0
+	for raw_score in scores.values():
+		total_score += maxf(float(raw_score), 0.05)
+	var roll := randf() * total_score
+	for raw_key in scores.keys():
+		var key := String(raw_key)
+		roll -= maxf(float(scores[key]), 0.05)
+		if roll <= 0.0:
+			return key
+	return String(scores.keys()[scores.size() - 1])
+
+
+func _archmage_skill_ready(skill_key: String) -> bool:
+	if archmage_skill_config.is_empty():
+		return false
+	var config: Dictionary = archmage_skill_config.get(skill_key, {})
+	if config.is_empty():
+		return false
+	return float(archmage_skill_cooldowns.get(skill_key, 0.0)) <= 0.0
+
+
+func _use_archmage_skill(skill_key: String) -> void:
+	var config: Dictionary = archmage_skill_config.get(skill_key, {})
+	if config.is_empty():
+		return
+	if skill_key == "chain_dagger" and archmage_chain_dagger_active:
+		return
+
+	var gauge_max := maxf(float(archmage_skill_config.get("gauge_max", 100.0)), 1.0)
+	if ultimate_charge + 0.001 < gauge_max:
+		return
+
+	var empowered := false
+	if skill_key != "harmony" and _archmage_has_all_element_orbs():
+		empowered = true
+		archmage_element_orbs.clear()
+		_refresh_archmage_orbit_visuals()
+
+	ultimate_charge = 0.0
+	ultimate_flash_timer = 0.28
+	archmage_skill_cooldowns[skill_key] = maxf(float(config.get("cooldown", 0.0)), 0.0)
+	attack_pose_timer = 0.36
+	_restart_stage1_animation("attack")
+
+	match skill_key:
+		"combustion":
+			_cast_archmage_combustion(config, empowered)
+			_collect_archmage_element("fire")
+		"ice_bolt":
+			_cast_archmage_ice_bolt(config, empowered)
+			_collect_archmage_element("water")
+		"earth_spikes":
+			_cast_archmage_earth_spikes(config, empowered)
+			_collect_archmage_element("earth")
+		"holy_power":
+			_cast_archmage_holy_power(config, empowered)
+			_collect_archmage_element("holy")
+		"chain_dagger":
+			_cast_archmage_chain_dagger(config, empowered)
+			_collect_archmage_element("electric")
+		"harmony":
+			_cast_archmage_harmony(config)
+		"storm":
+			_cast_archmage_storm(config, empowered)
+			_collect_archmage_element("wind")
+
+	ultimate_used.emit(
+		String(config.get("id", skill_key)),
+		String(config.get("name", skill_key))
+	)
+	queue_redraw()
+
+
+func _skill_damage_multiplier(empowered: bool) -> float:
+	return (
+		maxf(float(archmage_skill_config.get("empowered_damage_multiplier", 1.50)), 1.0)
+		if empowered
+		else 1.0
+	)
+
+
+func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
+	archmage_casting_sequence = true
+	var facing := Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+	if is_instance_valid(target):
+		facing = global_position.direction_to(target.global_position)
+	if facing.length_squared() <= 0.0:
+		facing = Vector2.RIGHT
+	var orb_position := global_position + facing.normalized() * 76.0
+	var charge_fx := _spawn_archmage_fx(
+		"res://assets/art/heroes/stage5_archmage/frames/effect2",
+		"fire", 1, 7, 18.0, true, orb_position, Vector2(0.48, 0.48)
+	)
+	var duration := maxf(float(config.get("charge_duration", 0.90)), 0.05)
+	var tick_interval := maxf(float(config.get("charge_tick_interval", 0.18)), 0.05)
+	var radius := maxf(float(config.get("charge_radius", 95.0)), 1.0)
+	var tick_damage := maxi(1, int(round(
+		float(attack_damage)
+		* maxf(float(config.get("charge_tick_damage_ratio", 0.22)), 0.0)
+		* _skill_damage_multiplier(empowered)
+	)))
+	var elapsed := 0.0
+	while elapsed < duration and is_inside_tree() and current_hp > 0:
+		_damage_monsters_in_radius(orb_position, radius, tick_damage)
+		await get_tree().create_timer(tick_interval).timeout
+		elapsed += tick_interval
+	if is_instance_valid(charge_fx):
+		charge_fx.queue_free()
+	if not is_inside_tree() or current_hp <= 0:
+		archmage_casting_sequence = false
+		return
+
+	var thrust_direction := facing.normalized()
+	var nearest := _find_nearest_monster_from_point(orb_position)
+	if is_instance_valid(nearest):
+		thrust_direction = orb_position.direction_to(nearest.global_position)
+	var thrust_range := maxf(float(config.get("thrust_range", 280.0)), 1.0)
+	var thrust_end := orb_position + thrust_direction * thrust_range
+	var thrust_fx := _spawn_archmage_fx(
+		"res://assets/art/heroes/stage5_archmage/frames/effect2",
+		"fire", 8, 5, 24.0, false, orb_position, Vector2(0.52, 0.52)
+	)
+	if is_instance_valid(thrust_fx):
+		thrust_fx.rotation = thrust_direction.angle()
+		var tween := thrust_fx.create_tween()
+		tween.tween_property(thrust_fx, "global_position", thrust_end, 0.22)
+	var thrust_damage := maxi(1, int(round(
+		float(attack_damage)
+		* maxf(float(config.get("thrust_damage_ratio", 1.60)), 0.0)
+		* _skill_damage_multiplier(empowered)
+	)))
+	_damage_monsters_in_corridor(
+		orb_position,
+		thrust_end,
+		maxf(float(config.get("thrust_half_width", 92.0)), 1.0),
+		thrust_damage
+	)
+	archmage_casting_sequence = false
+
+
+func _cast_archmage_ice_bolt(config: Dictionary, empowered: bool) -> void:
+	var current_target := target
+	if not is_instance_valid(current_target):
+		current_target = _find_nearest_monster()
+	if not is_instance_valid(current_target):
+		return
+	var direction := global_position.direction_to(current_target.global_position)
+	var projectile := ARCHMAGE_SKILL_PROJECTILE_SCENE.instantiate() as Area2D
+	get_parent().add_child(projectile)
+	projectile.global_position = global_position + direction * 58.0
+	projectile.call(
+		"setup", "ice_bolt", direction,
+		maxi(1, int(round(float(attack_damage) * float(config.get("damage_ratio", 1.15)) * _skill_damage_multiplier(empowered)))),
+		float(config.get("projectile_speed", 1050.0)),
+		float(config.get("projectile_range", 850.0)),
+		config, self, empowered, current_target
+	)
+
+
+func resolve_archmage_ice_bolt_hit(
+	_hit_target: Node2D,
+	hit_position: Vector2,
+	empowered: bool
+) -> void:
+	_resolve_archmage_ice_pillars(hit_position, empowered)
+
+
+func _resolve_archmage_ice_pillars(hit_position: Vector2, empowered: bool) -> void:
+	var config: Dictionary = archmage_skill_config.get("ice_bolt", {})
+	_spawn_archmage_fx(
+		"res://assets/art/heroes/stage5_archmage/frames/effect4",
+		"ice", 7, 1, 18.0, false, hit_position, Vector2(0.50, 0.50)
+	)
+	var count := maxi(int(config.get("pillar_count", 6)), 1)
+	var spawn_radius := maxf(float(config.get("pillar_spawn_radius", 210.0)), 1.0)
+	var hit_radius := maxf(float(config.get("pillar_hit_radius", 72.0)), 1.0)
+	var pillar_damage := maxi(1, int(round(
+		float(attack_damage)
+		* float(config.get("pillar_damage_ratio", 0.85))
+		* _skill_damage_multiplier(empowered)
+	)))
+	for index in range(count):
+		var angle := randf_range(0.0, TAU)
+		var position := hit_position + Vector2.from_angle(angle) * randf_range(25.0, spawn_radius)
+		_spawn_archmage_fx(
+			"res://assets/art/heroes/stage5_archmage/frames/effect4",
+			"ice", 1, 6, 20.0, false, position, Vector2(0.50, 0.50)
+		)
+		_damage_monsters_in_radius(position, hit_radius, pillar_damage)
+		await get_tree().create_timer(0.045).timeout
+
+
+func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
+	archmage_casting_sequence = true
+	var direction := Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+	if is_instance_valid(target):
+		direction = global_position.direction_to(target.global_position)
+	if direction.length_squared() <= 0.0:
+		direction = Vector2.RIGHT
+	var count := maxi(int(config.get("spike_count", 7)), 1)
+	var spacing := maxf(float(config.get("spike_spacing", 88.0)), 1.0)
+	var radius := maxf(float(config.get("spike_radius", 70.0)), 1.0)
+	var spike_damage := maxi(1, int(round(
+		float(attack_damage) * float(config.get("damage_ratio", 1.20)) * _skill_damage_multiplier(empowered)
+	)))
+	var hit_ids: Dictionary = {}
+	for index in range(count):
+		if not is_inside_tree() or current_hp <= 0:
+			break
+		var position := global_position + direction.normalized() * spacing * float(index + 1)
+		_spawn_archmage_fx(
+			"res://assets/art/heroes/stage5_archmage/frames/effect1",
+			"earth", 1, 11, 22.0, false, position, Vector2(0.52, 0.52)
+		)
+		_damage_monsters_in_radius_once(position, radius, spike_damage, hit_ids)
+		await get_tree().create_timer(maxf(float(config.get("spike_delay", 0.07)), 0.02)).timeout
+	archmage_casting_sequence = false
+
+
+func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
+	archmage_casting_sequence = true
+	var count := maxi(int(config.get("burst_count", 7)), 1)
+	var spawn_radius := maxf(float(config.get("burst_spawn_radius", 330.0)), 1.0)
+	var hit_radius := maxf(float(config.get("burst_hit_radius", 86.0)), 1.0)
+	var base_damage := maxi(1, int(round(
+		float(attack_damage) * float(config.get("damage_ratio", 0.90)) * _skill_damage_multiplier(empowered)
+	)))
+	for index in range(count):
+		if not is_inside_tree() or current_hp <= 0:
+			break
+		var angle := randf_range(0.0, TAU)
+		var position := global_position + Vector2.from_angle(angle) * randf_range(30.0, spawn_radius)
+		_spawn_archmage_fx(
+			"res://assets/art/heroes/stage5_archmage/frames/effect3",
+			"holy", 1, 5, 20.0, false, position, Vector2(0.50, 0.50)
+		)
+		for node in get_tree().get_nodes_in_group("monsters"):
+			if not is_instance_valid(node) or node.is_queued_for_deletion():
+				continue
+			var monster := node as Node2D
+			if monster == null or not monster.has_method("take_damage"):
+				continue
+			if position.distance_to(monster.global_position) > hit_radius:
+				continue
+			var dealt := base_damage
+			if bool(monster.get_meta("undead", false)) or bool(monster.get_meta("is_undead", false)):
+				dealt = maxi(1, int(round(float(dealt) * float(config.get("undead_damage_multiplier", 1.70)))))
+			monster.call("take_damage", dealt)
+			monster.set_meta("gunner_slow_multiplier", clampf(float(config.get("slow_multiplier", 0.60)), 0.0, 1.0))
+			monster.set_meta("gunner_slow_until", Time.get_ticks_msec() + int(maxf(float(config.get("slow_duration", 2.0)), 0.0) * 1000.0))
+		await get_tree().create_timer(maxf(float(config.get("burst_delay", 0.09)), 0.02)).timeout
+	archmage_casting_sequence = false
+
+
+func _cast_archmage_chain_dagger(config: Dictionary, empowered: bool) -> void:
+	var current_target := target
+	if not is_instance_valid(current_target):
+		current_target = _find_nearest_monster()
+	if not is_instance_valid(current_target):
+		return
+	archmage_chain_dagger_active = true
+	var direction := global_position.direction_to(current_target.global_position)
+	var projectile := ARCHMAGE_SKILL_PROJECTILE_SCENE.instantiate() as Area2D
+	get_parent().add_child(projectile)
+	projectile.add_to_group("archmage_chain_dagger_projectile")
+	projectile.global_position = global_position + direction * 58.0
+	projectile.call(
+		"setup", "chain_dagger", direction,
+		maxi(1, int(round(float(attack_damage) * float(config.get("damage_ratio", 1.0))))),
+		float(config.get("projectile_speed", 1200.0)),
+		float(config.get("projectile_range", 900.0)),
+		config, self, empowered, current_target
+	)
+
+
+func notify_archmage_chain_dagger_finished() -> void:
+	archmage_chain_dagger_active = false
+
+
+func _cast_archmage_harmony(_config: Dictionary) -> void:
+	for key in ["combustion", "ice_bolt", "earth_spikes", "holy_power", "chain_dagger", "storm"]:
+		archmage_skill_cooldowns[key] = 0.0
+	_spawn_archmage_fx(
+		"res://assets/art/heroes/stage5_archmage/frames/effect7",
+		"orb", 8, 5, 16.0, false, global_position, Vector2(0.62, 0.62)
+	)
+
+
+func _cast_archmage_storm(config: Dictionary, empowered: bool) -> void:
+	for index in range(8):
+		var direction := Vector2.from_angle(TAU * float(index) / 8.0)
+		var projectile := ARCHMAGE_SKILL_PROJECTILE_SCENE.instantiate() as Area2D
+		get_parent().add_child(projectile)
+		projectile.global_position = global_position + direction * 56.0
+		projectile.call(
+			"setup", "storm", direction,
+			maxi(1, int(round(float(attack_damage) * float(config.get("damage_ratio", 0.75))))),
+			float(config.get("projectile_speed", 900.0)),
+			float(config.get("projectile_range", 950.0)),
+			config, self, empowered, null
+		)
+
+
+func _collect_archmage_element(element: String) -> void:
+	if element.is_empty():
+		return
+	archmage_element_orbs[element] = true
+	_refresh_archmage_orbit_visuals()
+
+
+func _archmage_has_all_element_orbs() -> bool:
+	for element in ["fire", "water", "wind", "electric", "earth", "holy"]:
+		if not bool(archmage_element_orbs.get(element, false)):
+			return false
+	return true
+
+
+func _refresh_archmage_orbit_visuals() -> void:
+	for raw_sprite in archmage_orbit_sprites.values():
+		if is_instance_valid(raw_sprite):
+			raw_sprite.queue_free()
+	archmage_orbit_sprites.clear()
+	if hero_archetype != "archmage_elementalist":
+		return
+	var frame_map := {
+		"fire": 1,
+		"water": 2,
+		"wind": 3,
+		"electric": 4,
+		"earth": 5,
+		"holy": 7,
+	}
+	for raw_element in archmage_element_orbs.keys():
+		var element := String(raw_element)
+		if not bool(archmage_element_orbs.get(element, false)):
+			continue
+		var frame_index := int(frame_map.get(element, 0))
+		if frame_index <= 0:
+			continue
+		var texture := _load_stage1_texture(
+			"res://assets/art/heroes/stage5_archmage/frames/effect6/orb_%02d.png" % frame_index
+		)
+		if texture == null:
+			continue
+		var sprite := Sprite2D.new()
+		sprite.texture = texture
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sprite.scale = Vector2(0.20, 0.20)
+		sprite.z_index = 8
+		add_child(sprite)
+		archmage_orbit_sprites[element] = sprite
+	_update_archmage_orbit_positions()
+
+
+func _update_archmage_orbit_positions() -> void:
+	var count := archmage_orbit_sprites.size()
+	if count <= 0:
+		return
+	var index := 0
+	for raw_key in archmage_orbit_sprites.keys():
+		var sprite = archmage_orbit_sprites[raw_key]
+		if not is_instance_valid(sprite):
+			continue
+		var angle := archmage_orbit_angle + TAU * float(index) / float(count)
+		sprite.position = Vector2.from_angle(angle) * 64.0 + Vector2(0.0, -8.0)
+		index += 1
+
+
+func _spawn_archmage_fx(
+	dir: String,
+	prefix: String,
+	start: int,
+	count: int,
+	fps: float,
+	looped: bool,
+	world_position: Vector2,
+	fx_scale: Vector2
+) -> AnimatedSprite2D:
+	var fx := AnimatedSprite2D.new()
+	fx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	fx.z_index = 7
+	fx.global_position = world_position
+	fx.scale = fx_scale
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	frames.add_animation("fx")
+	frames.set_animation_speed("fx", fps)
+	frames.set_animation_loop("fx", looped)
+	for index in range(start, start + count):
+		var texture := _load_stage1_texture("%s/%s_%02d.png" % [dir, prefix, index])
+		if texture != null:
+			frames.add_frame("fx", texture)
+	if frames.get_frame_count("fx") <= 0:
+		return null
+	fx.sprite_frames = frames
+	get_parent().add_child(fx)
+	if not looped:
+		fx.animation_finished.connect(fx.queue_free)
+	fx.play("fx")
+	return fx
+
+
+func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int) -> void:
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null or not monster.has_method("take_damage"):
+			continue
+		if origin.distance_to(monster.global_position) <= radius:
+			monster.call("take_damage", damage)
+
+
+func _damage_monsters_in_radius_once(
+	origin: Vector2,
+	radius: float,
+	damage: int,
+	hit_ids: Dictionary
+) -> void:
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null or not monster.has_method("take_damage"):
+			continue
+		var iid := monster.get_instance_id()
+		if hit_ids.has(iid):
+			continue
+		if origin.distance_to(monster.global_position) <= radius:
+			hit_ids[iid] = true
+			monster.call("take_damage", damage)
+
+
+func _damage_monsters_in_corridor(
+	start: Vector2,
+	end: Vector2,
+	half_width: float,
+	damage: int
+) -> void:
+	var segment := end - start
+	var length_sq := maxf(segment.length_squared(), 0.001)
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null or not monster.has_method("take_damage"):
+			continue
+		var t := clampf((monster.global_position - start).dot(segment) / length_sq, 0.0, 1.0)
+		var closest := start + segment * t
+		if monster.global_position.distance_to(closest) <= half_width:
+			monster.call("take_damage", damage)
+
+
+func _find_nearest_monster_from_point(origin: Vector2) -> Node2D:
+	var best: Node2D = null
+	var best_distance := INF
+	for node in get_tree().get_nodes_in_group("monsters"):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var distance := origin.distance_squared_to(monster.global_position)
+		if distance < best_distance:
+			best_distance = distance
+			best = monster
+	return best
 
 
 func heal_direct(amount: int) -> int:
@@ -3697,6 +4271,14 @@ func get_skill_cooldown_hud() -> Array:
 				fighter_charge_cooldown_timer,
 				"res://assets/art/heroes/stage3_fighter/frames/effect5/ground_effect_01.png"
 			)
+		"archmage_elementalist":
+			_append_archmage_skill_hud(skills, "combustion", "res://assets/art/heroes/stage5_archmage/frames/effect2/fire_08.png")
+			_append_archmage_skill_hud(skills, "ice_bolt", "res://assets/art/heroes/stage5_archmage/frames/effect4/ice_08.png")
+			_append_archmage_skill_hud(skills, "earth_spikes", "res://assets/art/heroes/stage5_archmage/frames/effect1/earth_01.png")
+			_append_archmage_skill_hud(skills, "holy_power", "res://assets/art/heroes/stage5_archmage/frames/effect3/holy_01.png")
+			_append_archmage_skill_hud(skills, "chain_dagger", "res://assets/art/heroes/stage5_archmage/frames/effect5/light_08.png")
+			_append_archmage_skill_hud(skills, "harmony", "res://assets/art/heroes/stage5_archmage/frames/effect7/orb_08.png")
+			_append_archmage_skill_hud(skills, "storm", "res://assets/art/heroes/stage5_archmage/frames/effect8/wind_01.png")
 		"pistol_gunner":
 			_append_gunner_cooldown_hud(
 				skills,
@@ -3742,6 +4324,26 @@ func _append_skill_cooldown_hud(
 		"name": String(config.get("name", "기술")),
 		"cooldown_total": cooldown_total,
 		"cooldown_remaining": maxf(remaining, 0.0),
+		"icon_path": icon_path,
+	})
+
+
+func _append_archmage_skill_hud(
+	skills: Array,
+	skill_key: String,
+	icon_path: String
+) -> void:
+	var config: Dictionary = archmage_skill_config.get(skill_key, {})
+	if config.is_empty():
+		return
+	var cooldown_total := maxf(float(config.get("cooldown", 0.0)), 0.0)
+	if cooldown_total <= 0.0:
+		return
+	skills.append({
+		"id": String(config.get("id", skill_key)),
+		"name": String(config.get("name", skill_key)),
+		"cooldown_total": cooldown_total,
+		"cooldown_remaining": maxf(float(archmage_skill_cooldowns.get(skill_key, 0.0)), 0.0),
 		"icon_path": icon_path,
 	})
 
