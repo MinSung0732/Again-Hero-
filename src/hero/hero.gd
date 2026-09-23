@@ -182,6 +182,11 @@ var berserker_reviving: bool = false
 var berserker_saved_collision_layer: int = 0
 var berserker_saved_collision_mask: int = 0
 var berserker_madness_active: bool = false
+var berserker_skill1_cooldown: float = 0.0
+var berserker_skill1_active: bool = false
+var berserker_skill1_wave_index: int = 0
+var berserker_skill1_wave_timer: float = 0.0
+var berserker_skill1_direction: Vector2 = Vector2.RIGHT
 
 var archmage_element_config: Dictionary = {}
 var archmage_last_element: String = ""
@@ -428,6 +433,11 @@ func configure_profile(profile: Dictionary) -> void:
 	berserker_saved_collision_layer = collision_layer
 	berserker_saved_collision_mask = collision_mask
 	berserker_madness_active = false
+	berserker_skill1_cooldown = 0.0
+	berserker_skill1_active = false
+	berserker_skill1_wave_index = 0
+	berserker_skill1_wave_timer = 0.0
+	berserker_skill1_direction = Vector2.RIGHT
 
 	var profile_gunner = profile.get("gunner", {})
 	gunner_config = (
@@ -705,6 +715,10 @@ func _physics_process(delta: float) -> void:
 		_refresh_ai_observation()
 
 	attack_timer = maxf(attack_timer - delta, 0.0)
+	berserker_skill1_cooldown = maxf(
+		berserker_skill1_cooldown - delta,
+		0.0
+	)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
 	wander_timer = maxf(wander_timer - delta, 0.0)
 	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
@@ -2405,7 +2419,7 @@ func _apply_stage6_berserker_effect_visuals() -> void:
 	frames.add_frame("madness", texture)
 	channel_effect.sprite_frames = frames
 	channel_effect.animation = &"madness"
-	channel_effect.position = Vector2(0.0, -76.0)
+	channel_effect.position = Vector2(0.0, -126.0)
 	channel_effect.scale = Vector2(0.48, 0.48)
 	channel_effect.z_index = 9
 	channel_effect.modulate = Color.WHITE
@@ -6421,6 +6435,11 @@ func _physics_process_berserker(delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 
+	if _update_berserker_skill1(delta):
+		velocity = Vector2.ZERO
+		_update_berserker_pose_visual(delta)
+		return
+
 	_update_heal_item_goal(delta)
 	_update_chest_goal(delta)
 	_update_magnet_item_goal(delta)
@@ -6461,10 +6480,230 @@ func _physics_process_berserker(delta: float) -> void:
 			float(berserker_config.get("madness_target_radius", 375.0)),
 			attack_range
 		)
-	if distance <= attack_trigger_range and attack_timer <= 0.0:
+	if (
+		berserker_skill1_cooldown <= 0.0
+		and distance <= maxf(
+			float(
+				berserker_config.get(
+					"skill_1",
+					{}
+				).get("base_range", 430.0)
+			),
+			attack_range
+		)
+	):
+		_start_berserker_skill1(target)
+	elif distance <= attack_trigger_range and attack_timer <= 0.0:
 		_berserker_basic_attack(target)
 
 	_update_berserker_pose_visual(delta)
+
+
+func _start_berserker_skill1(current_target: Node2D) -> void:
+	if berserker_skill1_active or not is_instance_valid(current_target):
+		return
+
+	var skill_config_value = berserker_config.get("skill_1", {})
+	if typeof(skill_config_value) != TYPE_DICTIONARY:
+		return
+	var skill_config: Dictionary = skill_config_value
+	if skill_config.is_empty():
+		return
+
+	var hp_cost_ratio: float = clampf(
+		float(skill_config.get("hp_cost_ratio", 0.05)),
+		0.0,
+		0.95
+	)
+	var hp_cost: int = maxi(
+		int(round(float(current_hp) * hp_cost_ratio)),
+		1
+	)
+	current_hp = maxi(current_hp - hp_cost, 1)
+	health_changed.emit(current_hp, max_hp)
+
+	berserker_skill1_direction = global_position.direction_to(
+		current_target.global_position
+	)
+	if berserker_skill1_direction.length_squared() <= 0.0:
+		berserker_skill1_direction = (
+			Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+		)
+	berserker_skill1_direction = berserker_skill1_direction.normalized()
+
+	berserker_skill1_active = true
+	berserker_skill1_wave_index = 0
+	berserker_skill1_wave_timer = 0.0
+	berserker_skill1_cooldown = maxf(
+		float(skill_config.get("cooldown", 15.0)),
+		0.0
+	)
+	attack_timer = maxf(attack_timer, 2.35)
+	attack_pose_timer = 0.0
+	_face_attack_direction(berserker_skill1_direction.x)
+	queue_redraw()
+
+
+func _update_berserker_skill1(delta: float) -> bool:
+	if not berserker_skill1_active:
+		return false
+
+	var skill_config_value = berserker_config.get("skill_1", {})
+	if typeof(skill_config_value) != TYPE_DICTIONARY:
+		berserker_skill1_active = false
+		return false
+	var skill_config: Dictionary = skill_config_value
+
+	berserker_skill1_wave_timer = maxf(
+		berserker_skill1_wave_timer - delta,
+		0.0
+	)
+	if berserker_skill1_wave_timer > 0.0:
+		return true
+
+	var wave_count: int = maxi(
+		int(skill_config.get("wave_count", 3)),
+		1
+	)
+	if berserker_skill1_wave_index >= wave_count:
+		berserker_skill1_active = false
+		return false
+
+	_berserker_emit_skill1_wave(
+		berserker_skill1_wave_index,
+		skill_config
+	)
+	berserker_skill1_wave_index += 1
+	if berserker_skill1_wave_index >= wave_count:
+		berserker_skill1_active = false
+		return false
+
+	berserker_skill1_wave_timer = maxf(
+		float(skill_config.get("wave_interval", 0.75)),
+		0.05
+	)
+	return true
+
+
+func _berserker_emit_skill1_wave(
+	wave_index: int,
+	skill_config: Dictionary
+) -> void:
+	var direction: Vector2 = berserker_skill1_direction
+	if direction.length_squared() <= 0.0:
+		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+	direction = direction.normalized()
+
+	_face_attack_direction(direction.x)
+	_restart_stage1_animation("attack")
+	attack_pose_timer = 0.46
+
+	var growth: float = maxf(
+		float(skill_config.get("size_growth_per_wave", 0.25)),
+		0.0
+	)
+	var scale_multiplier: float = 1.0 + growth * float(wave_index)
+	var slash_range: float = (
+		maxf(float(skill_config.get("base_range", 430.0)), 1.0)
+		* scale_multiplier
+	)
+	var half_width: float = (
+		maxf(float(skill_config.get("base_half_width", 62.0)), 1.0)
+		* scale_multiplier
+	)
+
+	var repeat_values = skill_config.get(
+		"repeat_hit_multipliers",
+		[1.0, 0.80, 0.60]
+	)
+	var repeat_multiplier: float = 1.0
+	if typeof(repeat_values) == TYPE_ARRAY:
+		var repeat_array: Array = repeat_values
+		if wave_index >= 0 and wave_index < repeat_array.size():
+			repeat_multiplier = float(repeat_array[wave_index])
+
+	var damage: int = maxi(
+		int(round(
+			float(_get_berserker_effective_attack_damage())
+			* float(skill_config.get("damage_ratio", 1.10))
+			* repeat_multiplier
+		)),
+		1
+	)
+
+	var start_position: Vector2 = global_position + direction * 36.0
+	var end_position: Vector2 = global_position + direction * slash_range
+	var segment: Vector2 = end_position - start_position
+	var midpoint: Vector2 = start_position + segment * 0.52
+
+	var slash_fx: AnimatedSprite2D = _spawn_archmage_fx(
+		"%s/effect4" % STAGE6_FRAME_DIR,
+		"heavy_slash",
+		1,
+		11,
+		18.0,
+		false,
+		midpoint,
+		Vector2(
+			0.72 * scale_multiplier,
+			0.72 * scale_multiplier
+		)
+	)
+	if is_instance_valid(slash_fx):
+		slash_fx.flip_h = direction.x < 0.0
+		slash_fx.rotation = (
+			direction.angle()
+			if direction.x >= 0.0
+			else direction.angle() - PI
+		)
+		slash_fx.z_index = 8
+
+	var side: Vector2 = Vector2(-direction.y, direction.x)
+	for node in _get_monster_nodes_near(
+		global_position,
+		slash_range + half_width
+	):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null or not monster.has_method("take_damage"):
+			continue
+
+		var offset: Vector2 = monster.global_position - start_position
+		var forward: float = offset.dot(direction)
+		var lateral: float = absf(offset.dot(side))
+		if forward < 0.0 or forward > slash_range or lateral > half_width:
+			continue
+
+		var hp_before_value = monster.get("current_hp")
+		var hp_before: int = (
+			int(hp_before_value)
+			if hp_before_value != null
+			else -1
+		)
+		monster.call("take_damage", damage)
+
+		if hp_before <= 0:
+			continue
+		var killed: bool = false
+		if not is_instance_valid(monster):
+			killed = true
+		else:
+			var hp_after_value = monster.get("current_hp")
+			if hp_after_value != null and int(hp_after_value) <= 0:
+				killed = true
+		if killed:
+			_add_berserker_gauge(
+				maxf(
+					float(
+						berserker_config.get(
+							"gauge_per_kill",
+							1.0
+						)
+					),
+					0.0
+				)
+			)
 
 
 func _update_berserker_pose_visual(delta: float) -> void:
