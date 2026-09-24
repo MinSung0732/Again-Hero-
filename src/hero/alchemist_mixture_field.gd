@@ -14,14 +14,14 @@ const SMOKE_TEXTURES := [
 	preload("res://assets/art/heroes/stage7_alchemist/frames/effect4/effect_20.png"),
 ]
 
-const SMOKE_POOL_SIZE := 8
+const SMOKE_POOL_SIZE := 12
 
 var active: bool = false
-var radius: float = 660.0
+var radius: float = 450.0
 var duration_remaining: float = 0.0
 var tick_interval: float = 0.5
 var tick_timer: float = 0.5
-var smoke_interval: float = 0.18
+var smoke_interval: float = 0.11
 var smoke_timer: float = 0.0
 var smoke_cursor: int = 0
 var smoke_pool: Array[AnimatedSprite2D] = []
@@ -39,7 +39,7 @@ func _ready() -> void:
 			frames.add_frame("smoke", texture)
 		smoke.sprite_frames = frames
 		smoke.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		smoke.scale = Vector2(0.55, 0.55)
+		smoke.scale = Vector2(0.62, 0.62)
 		smoke.visible = false
 		smoke.animation_finished.connect(_on_smoke_finished.bind(smoke))
 		add_child(smoke)
@@ -87,7 +87,7 @@ func _spawn_smoke() -> void:
 	var smoke := smoke_pool[smoke_cursor]
 	smoke_cursor = (smoke_cursor + 1) % smoke_pool.size()
 	var angle := randf() * TAU
-	var distance := sqrt(randf()) * radius * 0.88
+	var distance := sqrt(randf()) * radius * 0.94
 	smoke.position = Vector2.from_angle(angle) * distance
 	smoke.rotation = randf_range(-0.18, 0.18)
 	smoke.visible = true
@@ -112,6 +112,11 @@ func deactivate() -> void:
 func _draw() -> void:
 	if not active:
 		return
+	draw_circle(
+		Vector2.ZERO,
+		radius,
+		Color(0.20, 0.80, 0.34, 0.10)
+	)
 	draw_arc(
 		Vector2.ZERO,
 		radius,
