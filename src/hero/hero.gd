@@ -9300,7 +9300,7 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 		if magnet_direction.length_squared() > 0.01:
 			velocity = (
 				magnet_direction
-				* current_move_speed
+				* move_speed
 				* 0.82
 				* move_multiplier
 				* speed_scale
