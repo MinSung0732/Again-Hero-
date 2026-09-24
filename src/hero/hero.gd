@@ -71,6 +71,7 @@ const INVULNERABILITY_BLINK_INTERVAL := 0.07
 const HERO_BASE_ATTACK_GROWTH_PER_LEVEL := 0.02
 const HERO_ATTACK_MILESTONE_INTERVAL := 10
 const HERO_ATTACK_MILESTONE_BONUS := 0.05
+const HERO_ANIMATION_DUPLICATE_RESTART_GUARD_MSEC := 70
 
 static var _archmage_fx_frames_cache: Dictionary = {}
 
@@ -351,6 +352,8 @@ var hit_flash_timer: float = 0.0
 var level_flash_timer: float = 0.0
 var attack_pose_timer: float = 0.0
 var hit_pose_timer: float = 0.0
+var hero_animation_last_restart_name: StringName = &""
+var hero_animation_last_restart_msec: int = -1000000
 var invulnerability_timer: float = 0.0
 var is_dying: bool = false
 var slow_timer: float = 0.0
@@ -3630,15 +3633,73 @@ func _add_stage1_sheet_animation(
 		)
 		frames.add_frame(animation_name, atlas)
 
+func _hero_animation_priority(animation_name: StringName) -> int:
+	match animation_name:
+		&"death":
+			return 100
+		&"hit":
+			return 80
+		&"dash_start", &"dash_finish":
+			return 70
+		&"attack":
+			return 60
+		&"run", &"move":
+			return 20
+		&"idle":
+			return 10
+		_:
+			return 40
+
+
+func _is_current_hero_animation_protected(requested_animation: StringName) -> bool:
+	if not hero_sprite.visible or hero_sprite.sprite_frames == null:
+		return false
+
+	var current_animation: StringName = hero_sprite.animation
+	if current_animation == &"" or current_animation == requested_animation:
+		return false
+
+	var current_priority := _hero_animation_priority(current_animation)
+	var requested_priority := _hero_animation_priority(requested_animation)
+	if current_priority <= requested_priority:
+		return false
+
+	match current_animation:
+		&"death":
+			return is_dying or berserker_reviving or hero_sprite.is_playing()
+		&"hit":
+			return hit_pose_timer > 0.0 or hero_sprite.is_playing()
+		&"attack":
+			return attack_pose_timer > 0.0 or hero_sprite.is_playing()
+		&"dash_start", &"dash_finish":
+			return (
+				berserker_skill3_active
+				or fighter_charge_active
+				or hero_sprite.is_playing()
+			)
+		_:
+			if hero_sprite.sprite_frames.has_animation(current_animation):
+				return (
+					not hero_sprite.sprite_frames.get_animation_loop(current_animation)
+					and hero_sprite.is_playing()
+				)
+	return false
+
+
 func _play_stage1_animation(animation_name: String, speed_scale: float = 1.0) -> void:
 	if not hero_sprite.visible or hero_sprite.sprite_frames == null:
 		return
 	if not hero_sprite.sprite_frames.has_animation(animation_name):
 		return
 
+	var requested_animation := StringName(animation_name)
+	if _is_current_hero_animation_protected(requested_animation):
+		return
+
 	hero_sprite.speed_scale = speed_scale
-	if hero_sprite.animation != animation_name:
-		hero_sprite.play(animation_name)
+	if hero_sprite.animation != requested_animation:
+		hero_sprite.play(requested_animation)
+
 
 func _restart_stage1_animation(animation_name: String, speed_scale: float = 1.0) -> void:
 	if not hero_sprite.visible or hero_sprite.sprite_frames == null:
@@ -3646,12 +3707,31 @@ func _restart_stage1_animation(animation_name: String, speed_scale: float = 1.0)
 	if not hero_sprite.sprite_frames.has_animation(animation_name):
 		return
 
+	var requested_animation := StringName(animation_name)
+	if _is_current_hero_animation_protected(requested_animation):
+		return
+
+	var now_msec := Time.get_ticks_msec()
+	if (
+		hero_sprite.animation == requested_animation
+		and hero_sprite.is_playing()
+		and hero_animation_last_restart_name == requested_animation
+		and now_msec - hero_animation_last_restart_msec
+			< HERO_ANIMATION_DUPLICATE_RESTART_GUARD_MSEC
+	):
+		# Combat logic is not blocked; only suppress duplicate visual restarts
+		# that arrive almost simultaneously and make frame 0 vibrate.
+		hero_sprite.speed_scale = speed_scale
+		return
+
+	hero_animation_last_restart_name = requested_animation
+	hero_animation_last_restart_msec = now_msec
 	hero_sprite.stop()
-	hero_sprite.animation = animation_name
+	hero_sprite.animation = requested_animation
 	hero_sprite.frame = 0
 	hero_sprite.frame_progress = 0.0
 	hero_sprite.speed_scale = speed_scale
-	hero_sprite.play(animation_name)
+	hero_sprite.play(requested_animation)
 
 func _update_stage1_pose_visual(delta: float) -> void:
 	if hero_id not in ["ranged_rookie", "archmage_hero"] or not hero_sprite.visible or is_dying:
