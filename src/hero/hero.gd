@@ -5484,6 +5484,21 @@ func _get_common_attack_interval(base_interval: float) -> float:
 	)
 
 
+func get_runtime_info_stats() -> Dictionary:
+	# 전투 정보창 전용 값. 프로필 원본이 아니라 레벨업/Run 증강이
+	# 반영된 현재 런타임 스탯을 반환한다.
+	# 향후 용사 도감은 HeroProfiles 원본 데이터를 직접 사용한다.
+	return {
+		"max_hp": max_hp,
+		"attack_damage": attack_damage,
+		"move_speed": move_speed,
+		"attack_interval": _get_common_attack_interval(attack_cooldown),
+		"attack_range": attack_range,
+		"projectile_speed": projectile_speed,
+		"exp_pickup_radius": exp_pickup_radius,
+	}
+
+
 func _update_channel_skill(delta: float) -> void:
 	if channel_skill_config.is_empty() or is_dying or current_hp <= 0:
 		return
