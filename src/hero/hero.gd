@@ -3451,8 +3451,8 @@ func _apply_stage7_sprite_anchor() -> void:
 	# at (160, 224), not at the texture center (256, 128).
 	# Mirror X compensation when flip_h changes so the root remains fixed.
 	hero_sprite.offset = Vector2(
-		-96.0 if hero_sprite.flip_h else 96.0,
-		-48.0
+		-104.0 if hero_sprite.flip_h else 104.0,
+		-24.0
 	)
 
 
