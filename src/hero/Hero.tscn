@@ -40,5 +40,5 @@ scale = Vector2(3, 3)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 enabled = true
-position_smoothing_enabled = true
+position_smoothing_enabled = false
 position_smoothing_speed = 7.0
