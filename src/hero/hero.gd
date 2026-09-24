@@ -230,6 +230,7 @@ var alchemist_material_spawn_timer: float = 0.0
 var alchemist_throw_timer: float = 0.0
 var alchemist_throw_index: int = 0
 var alchemist_throw_positions: Array[Vector2] = []
+var alchemist_direct_chest_target: Node2D = null
 var alchemist_vial_pool: Array[Node2D] = []
 var alchemist_poison_pool: Array[Node2D] = []
 var alchemist_material_pool: Array[Node2D] = []
@@ -488,6 +489,7 @@ func configure_profile(profile: Dictionary) -> void:
 	alchemist_throw_timer = 0.0
 	alchemist_throw_index = 0
 	alchemist_throw_positions.clear()
+	alchemist_direct_chest_target = null
 	alchemist_vial_pool.clear()
 	alchemist_poison_pool.clear()
 	alchemist_material_pool.clear()
@@ -896,7 +898,7 @@ func _physics_process_alchemist(delta: float) -> void:
 		and attack_timer <= 0.0
 		and alchemist_throw_index >= alchemist_throw_positions.size()
 	):
-		_start_alchemist_basic_attack()
+		_start_alchemist_basic_attack(_get_alchemist_chest_attack_target())
 
 	_update_alchemist_pose_visual(delta)
 
@@ -1059,7 +1061,26 @@ func _consume_alchemist_gas(amount: float) -> bool:
 	return true
 
 
-func _start_alchemist_basic_attack() -> void:
+func _get_alchemist_chest_attack_target() -> Node2D:
+	if (
+		not is_instance_valid(chest_target)
+		or chest_target.is_queued_for_deletion()
+	):
+		return null
+
+	var max_distance := maxf(attack_range, 1.0)
+	var chest_distance_sq := global_position.distance_squared_to(chest_target.global_position)
+	if chest_distance_sq > max_distance * max_distance:
+		return null
+
+	if not is_instance_valid(target) or target.is_queued_for_deletion():
+		return chest_target
+
+	var monster_distance_sq := global_position.distance_squared_to(target.global_position)
+	return chest_target if chest_distance_sq <= monster_distance_sq else null
+
+
+func _start_alchemist_basic_attack(direct_chest_target: Node2D = null) -> void:
 	var gas_cost := maxf(float(alchemist_config.get("basic_gas_cost", 10.0)), 0.0)
 	if not _consume_alchemist_gas(gas_cost):
 		return
@@ -1069,17 +1090,30 @@ func _start_alchemist_basic_attack() -> void:
 	_restart_stage1_animation("attack", 1.0)
 
 	alchemist_throw_positions.clear()
+	alchemist_direct_chest_target = (
+		direct_chest_target
+		if is_instance_valid(direct_chest_target)
+		else null
+	)
 	var throw_radius := maxf(float(alchemist_config.get("basic_throw_radius", 400.0)), 1.0)
 	var vial_count := maxi(int(alchemist_config.get("basic_vial_count", 3)), 1)
-	for _index in range(vial_count):
-		var angle := randf() * TAU
-		var radius := sqrt(randf()) * throw_radius
-		var landing_position := global_position + Vector2.from_angle(angle) * radius
-		var margin := 64.0
-		landing_position.x = clampf(landing_position.x, margin, battlefield_size.x - margin)
-		landing_position.y = clampf(landing_position.y, margin, battlefield_size.y - margin)
+	for index in range(vial_count):
+		var landing_position := Vector2.ZERO
+		if index == 0 and is_instance_valid(alchemist_direct_chest_target):
+			landing_position = alchemist_direct_chest_target.global_position
+		else:
+			var angle := randf() * TAU
+			var radius := sqrt(randf()) * throw_radius
+			landing_position = global_position + Vector2.from_angle(angle) * radius
+			var margin := 64.0
+			landing_position.x = clampf(landing_position.x, margin, battlefield_size.x - margin)
+			landing_position.y = clampf(landing_position.y, margin, battlefield_size.y - margin)
 		alchemist_throw_positions.append(landing_position)
 
+	if is_instance_valid(alchemist_direct_chest_target):
+		_face_attack_direction(
+			alchemist_direct_chest_target.global_position.x - global_position.x
+		)
 	alchemist_throw_index = 0
 	alchemist_throw_timer = 0.0
 
@@ -1092,7 +1126,12 @@ func _update_alchemist_throw_sequence(delta: float) -> void:
 		return
 
 	var landing_position: Vector2 = alchemist_throw_positions[alchemist_throw_index]
-	_launch_alchemist_vial(landing_position)
+	var direct_target: Node2D = null
+	if alchemist_throw_index == 0 and is_instance_valid(alchemist_direct_chest_target):
+		direct_target = alchemist_direct_chest_target
+	_launch_alchemist_vial(landing_position, direct_target)
+	if alchemist_throw_index == 0:
+		alchemist_direct_chest_target = null
 	alchemist_throw_index += 1
 	alchemist_throw_timer = maxf(
 		float(alchemist_config.get("vial_throw_interval", 0.19)),
@@ -1100,7 +1139,10 @@ func _update_alchemist_throw_sequence(delta: float) -> void:
 	)
 
 
-func _launch_alchemist_vial(landing_position: Vector2) -> void:
+func _launch_alchemist_vial(
+	landing_position: Vector2,
+	direct_target: Node2D = null
+) -> void:
 	for vial in alchemist_vial_pool:
 		if not is_instance_valid(vial):
 			continue
@@ -1111,12 +1153,24 @@ func _launch_alchemist_vial(landing_position: Vector2) -> void:
 			global_position,
 			landing_position,
 			maxf(float(alchemist_config.get("vial_flight_duration", 0.46)), 0.08),
-			maxf(float(alchemist_config.get("vial_arc_height", 120.0)), 0.0)
+			maxf(float(alchemist_config.get("vial_arc_height", 120.0)), 0.0),
+			direct_target
 		)
 		return
 
 
-func _on_alchemist_vial_landed(landing_position: Vector2) -> void:
+func _on_alchemist_vial_landed(
+	landing_position: Vector2,
+	direct_target: Node
+) -> void:
+	if (
+		is_instance_valid(direct_target)
+		and not direct_target.is_queued_for_deletion()
+		and direct_target.is_in_group("treasure_chests")
+		and direct_target.has_method("take_damage")
+	):
+		direct_target.call("take_damage", maxi(attack_damage, 1))
+
 	var tick_damage := maxi(
 		1,
 		int(round(
@@ -3530,6 +3584,26 @@ func _move_without_monsters() -> void:
 			return
 
 	if is_instance_valid(chest_target):
+		if hero_archetype == "alchemist_chemical":
+			var chest_distance_sq := global_position.distance_squared_to(
+				chest_target.global_position
+			)
+			var alchemist_attack_range := maxf(attack_range, 1.0)
+			if chest_distance_sq > alchemist_attack_range * alchemist_attack_range:
+				var chest_direction := _apply_chest_steering(Vector2.ZERO, 0.016)
+				if chest_direction.length_squared() > 0.01:
+					velocity = chest_direction * move_speed * 0.72 * move_multiplier
+					move_and_slide()
+					_clamp_to_battlefield()
+			else:
+				velocity = Vector2.ZERO
+				if (
+					attack_timer <= 0.0
+					and alchemist_throw_index >= alchemist_throw_positions.size()
+				):
+					_start_alchemist_basic_attack(chest_target)
+			return
+
 		var chest_direction := _apply_chest_steering(Vector2.ZERO, 0.016)
 		if chest_direction.length_squared() > 0.01:
 			velocity = chest_direction * move_speed * 0.72 * move_multiplier
