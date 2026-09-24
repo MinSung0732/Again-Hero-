@@ -42,6 +42,10 @@ const STAGE3_CHARGE_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames
 const STAGE4_FRAME_DIR := "res://assets/art/heroes/stage4_gunner/frames"
 const STAGE5_FRAME_DIR := "res://assets/art/heroes/stage5_archmage/frames"
 const STAGE6_FRAME_DIR := "res://assets/art/heroes/stage6_berserker/frames"
+const STAGE7_FRAME_DIR := "res://assets/art/heroes/stage7_alchemist/frames"
+const ALCHEMIST_VIAL_SCENE := preload("res://src/hero/AlchemistVial.tscn")
+const ALCHEMIST_POISON_POOL_SCENE := preload("res://src/hero/AlchemistPoisonPool.tscn")
+const ALCHEMY_MATERIAL_SCENE := preload("res://src/hero/AlchemyMaterial.tscn")
 
 # 모든 용사 도트의 화면상 체급 기준은 Stage 1 견습 마법용사다.
 # 원본 PNG 캔버스 크기가 아니라 투명 여백을 제외한 실제 도트 높이를
@@ -217,6 +221,18 @@ var archmage_blink_cooldown_timer: float = 0.0
 var archmage_cooldown_reduction: float = 0.0
 var archmage_mana_overflow_stacks: int = 0
 var archmage_element_cycle_stacks: int = 0
+
+var alchemist_config: Dictionary = {}
+var alchemist_gas_max: float = 200.0
+var alchemist_gas: float = 200.0
+var alchemist_runtime_ready: bool = false
+var alchemist_material_spawn_timer: float = 0.0
+var alchemist_throw_timer: float = 0.0
+var alchemist_throw_index: int = 0
+var alchemist_throw_positions: Array[Vector2] = []
+var alchemist_vial_pool: Array[Node2D] = []
+var alchemist_poison_pool: Array[Node2D] = []
+var alchemist_material_pool: Array[Node2D] = []
 
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
@@ -458,6 +474,23 @@ func configure_profile(profile: Dictionary) -> void:
 	berserker_killing_urge_bonus = 0.0
 	berserker_blood_art_cooldown_reduction = 0.0
 	berserker_skill_global_cooldown = 0.0
+
+	var profile_alchemist = profile.get("alchemist", {})
+	alchemist_config = (
+		profile_alchemist.duplicate(true)
+		if typeof(profile_alchemist) == TYPE_DICTIONARY
+		else {}
+	)
+	alchemist_gas_max = maxf(float(alchemist_config.get("gas_max", 200.0)), 1.0)
+	alchemist_gas = alchemist_gas_max
+	alchemist_runtime_ready = false
+	alchemist_material_spawn_timer = 0.0
+	alchemist_throw_timer = 0.0
+	alchemist_throw_index = 0
+	alchemist_throw_positions.clear()
+	alchemist_vial_pool.clear()
+	alchemist_poison_pool.clear()
+	alchemist_material_pool.clear()
 
 	var profile_gunner = profile.get("gunner", {})
 	gunner_config = (
@@ -726,6 +759,10 @@ func _physics_process(delta: float) -> void:
 		_physics_process_berserker(delta)
 		return
 
+	if hero_archetype == "alchemist_chemical":
+		_physics_process_alchemist(delta)
+		return
+
 	ai_memory_clock += delta
 	_prune_offensive_memory()
 	_prune_status_memory()
@@ -793,6 +830,335 @@ func _physics_process(delta: float) -> void:
 		_fire_projectile(target)
 
 	_update_stage1_pose_visual(delta)
+
+
+func _physics_process_alchemist(delta: float) -> void:
+	_ensure_alchemist_runtime()
+
+	ai_memory_clock += delta
+	_prune_offensive_memory()
+	_prune_status_memory()
+	ai_observation_timer = maxf(ai_observation_timer - delta, 0.0)
+	if ai_observation_timer <= 0.0:
+		_refresh_ai_observation()
+
+	attack_timer = maxf(attack_timer - delta, 0.0)
+	retarget_timer = maxf(retarget_timer - delta, 0.0)
+	wander_timer = maxf(wander_timer - delta, 0.0)
+	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
+	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
+	_update_invulnerability(delta)
+	_update_alchemist_material_spawning(delta)
+	_update_alchemist_throw_sequence(delta)
+	_collect_nearby_alchemy_materials()
+
+	if slow_timer > 0.0:
+		slow_timer = maxf(slow_timer - delta, 0.0)
+		if slow_timer <= 0.0:
+			move_multiplier = 1.0
+			queue_redraw()
+
+	var basic_gas_cost := maxf(float(alchemist_config.get("basic_gas_cost", 10.0)), 0.0)
+	if alchemist_gas + 0.001 < basic_gas_cost:
+		var material_target := _find_nearest_active_alchemy_material()
+		if is_instance_valid(material_target):
+			var material_direction := global_position.direction_to(material_target.global_position)
+			velocity = material_direction * move_speed * move_multiplier
+			move_and_slide()
+			_clamp_to_battlefield()
+			_update_alchemist_pose_visual(delta)
+			return
+
+	_update_heal_item_goal(delta)
+	_update_chest_goal(delta)
+	_update_magnet_item_goal(delta)
+
+	if not is_instance_valid(target) or target.is_queued_for_deletion() or retarget_timer <= 0.0:
+		target = _find_nearest_monster()
+		retarget_timer = 0.12
+
+	if not is_instance_valid(target):
+		_move_without_monsters()
+		_update_alchemist_pose_visual(delta)
+		return
+
+	var distance := global_position.distance_to(target.global_position)
+	var move_direction := _choose_move_direction(target, distance)
+	move_direction = _apply_heal_item_steering(move_direction, delta)
+	move_direction = _apply_chest_steering(move_direction, delta)
+	move_direction = _apply_magnet_item_steering(move_direction, delta)
+	velocity = move_direction * move_speed * move_multiplier
+	move_and_slide()
+	_clamp_to_battlefield()
+
+	if (
+		distance <= attack_range
+		and attack_timer <= 0.0
+		and alchemist_throw_index >= alchemist_throw_positions.size()
+	):
+		_start_alchemist_basic_attack()
+
+	_update_alchemist_pose_visual(delta)
+
+
+func _ensure_alchemist_runtime() -> void:
+	if alchemist_runtime_ready or hero_archetype != "alchemist_chemical":
+		return
+	var world_parent := get_parent()
+	if not is_instance_valid(world_parent):
+		return
+
+	for _index in range(8):
+		var vial := ALCHEMIST_VIAL_SCENE.instantiate() as Node2D
+		if vial == null:
+			continue
+		world_parent.add_child(vial)
+		vial.connect("landed", Callable(self, "_on_alchemist_vial_landed"))
+		alchemist_vial_pool.append(vial)
+
+	for _index in range(16):
+		var poison := ALCHEMIST_POISON_POOL_SCENE.instantiate() as Node2D
+		if poison == null:
+			continue
+		world_parent.add_child(poison)
+		poison.connect("damage_tick", Callable(self, "_on_alchemist_poison_tick"))
+		alchemist_poison_pool.append(poison)
+
+	var max_materials := clampi(int(alchemist_config.get("material_max_count", 10)), 1, 10)
+	for _index in range(max_materials):
+		var material := ALCHEMY_MATERIAL_SCENE.instantiate() as Node2D
+		if material == null:
+			continue
+		world_parent.add_child(material)
+		alchemist_material_pool.append(material)
+
+	alchemist_runtime_ready = true
+	alchemist_material_spawn_timer = 0.0
+	var initial_count := clampi(
+		int(alchemist_config.get("initial_material_count", 6)),
+		0,
+		alchemist_material_pool.size()
+	)
+	for _index in range(initial_count):
+		_spawn_one_alchemy_material()
+
+
+func _update_alchemist_material_spawning(delta: float) -> void:
+	if not alchemist_runtime_ready:
+		return
+	alchemist_material_spawn_timer = maxf(alchemist_material_spawn_timer - delta, 0.0)
+	if alchemist_material_spawn_timer > 0.0:
+		return
+
+	var active_count := _count_active_alchemy_materials()
+	var max_count := mini(
+		clampi(int(alchemist_config.get("material_max_count", 10)), 1, 10),
+		alchemist_material_pool.size()
+	)
+	if active_count >= max_count:
+		alchemist_material_spawn_timer = 0.75
+		return
+
+	_spawn_one_alchemy_material()
+	var gas_ratio := alchemist_gas / maxf(alchemist_gas_max, 1.0)
+	if gas_ratio <= 0.001 and active_count < 3:
+		alchemist_material_spawn_timer = maxf(
+			float(alchemist_config.get("empty_spawn_interval", 0.8)),
+			0.25
+		)
+	elif gas_ratio <= 0.30:
+		alchemist_material_spawn_timer = maxf(
+			float(alchemist_config.get("low_gas_spawn_interval", 2.0)),
+			0.5
+		)
+	else:
+		alchemist_material_spawn_timer = maxf(
+			float(alchemist_config.get("material_spawn_interval", 4.0)),
+			0.75
+		)
+
+
+func _count_active_alchemy_materials() -> int:
+	var count := 0
+	for material in alchemist_material_pool:
+		if is_instance_valid(material) and bool(material.get("active")):
+			count += 1
+	return count
+
+
+func _spawn_one_alchemy_material() -> void:
+	var material_to_spawn: Node2D = null
+	for material in alchemist_material_pool:
+		if is_instance_valid(material) and not bool(material.get("active")):
+			material_to_spawn = material
+			break
+	if material_to_spawn == null:
+		return
+
+	var max_radius := maxf(float(alchemist_config.get("material_spawn_radius", 1500.0)), 100.0)
+	var min_radius := clampf(
+		float(alchemist_config.get("material_spawn_min_radius", 480.0)),
+		0.0,
+		max_radius
+	)
+	var angle := randf() * TAU
+	var radius_sq := lerpf(min_radius * min_radius, max_radius * max_radius, randf())
+	var radius := sqrt(maxf(radius_sq, 0.0))
+	var spawn_position := global_position + Vector2.from_angle(angle) * radius
+	var margin := 72.0
+	spawn_position.x = clampf(spawn_position.x, margin, battlefield_size.x - margin)
+	spawn_position.y = clampf(spawn_position.y, margin, battlefield_size.y - margin)
+	material_to_spawn.call(
+		"activate",
+		spawn_position,
+		maxf(float(alchemist_config.get("gas_per_material", 20.0)), 0.0)
+	)
+
+
+func _collect_nearby_alchemy_materials() -> void:
+	if alchemist_material_pool.is_empty():
+		return
+	var pickup_radius := maxf(float(alchemist_config.get("material_pickup_radius", 72.0)), 1.0)
+	var pickup_radius_sq := pickup_radius * pickup_radius
+	for material in alchemist_material_pool:
+		if not is_instance_valid(material) or not bool(material.get("active")):
+			continue
+		if global_position.distance_squared_to(material.global_position) > pickup_radius_sq:
+			continue
+		var gas_value := float(material.get("gas_value"))
+		material.call("deactivate")
+		_add_alchemist_gas(gas_value)
+
+
+func _find_nearest_active_alchemy_material() -> Node2D:
+	var nearest: Node2D = null
+	var nearest_distance_sq := INF
+	for material in alchemist_material_pool:
+		if not is_instance_valid(material) or not bool(material.get("active")):
+			continue
+		var distance_sq := global_position.distance_squared_to(material.global_position)
+		if distance_sq < nearest_distance_sq:
+			nearest_distance_sq = distance_sq
+			nearest = material
+	return nearest
+
+
+func _add_alchemist_gas(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	alchemist_gas = minf(alchemist_gas + amount, alchemist_gas_max)
+	queue_redraw()
+
+
+func _consume_alchemist_gas(amount: float) -> bool:
+	var cost := maxf(amount, 0.0)
+	if alchemist_gas + 0.001 < cost:
+		return false
+	alchemist_gas = maxf(alchemist_gas - cost, 0.0)
+	queue_redraw()
+	return true
+
+
+func _start_alchemist_basic_attack() -> void:
+	var gas_cost := maxf(float(alchemist_config.get("basic_gas_cost", 10.0)), 0.0)
+	if not _consume_alchemist_gas(gas_cost):
+		return
+
+	attack_timer = _get_common_attack_interval(attack_cooldown)
+	attack_pose_timer = 0.52
+	_restart_stage1_animation("attack", 1.0)
+
+	alchemist_throw_positions.clear()
+	var throw_radius := maxf(float(alchemist_config.get("basic_throw_radius", 400.0)), 1.0)
+	var vial_count := maxi(int(alchemist_config.get("basic_vial_count", 3)), 1)
+	for _index in range(vial_count):
+		var angle := randf() * TAU
+		var radius := sqrt(randf()) * throw_radius
+		var landing_position := global_position + Vector2.from_angle(angle) * radius
+		var margin := 64.0
+		landing_position.x = clampf(landing_position.x, margin, battlefield_size.x - margin)
+		landing_position.y = clampf(landing_position.y, margin, battlefield_size.y - margin)
+		alchemist_throw_positions.append(landing_position)
+
+	alchemist_throw_index = 0
+	alchemist_throw_timer = 0.0
+
+
+func _update_alchemist_throw_sequence(delta: float) -> void:
+	if alchemist_throw_index >= alchemist_throw_positions.size():
+		return
+	alchemist_throw_timer = maxf(alchemist_throw_timer - delta, 0.0)
+	if alchemist_throw_timer > 0.0:
+		return
+
+	var landing_position: Vector2 = alchemist_throw_positions[alchemist_throw_index]
+	_launch_alchemist_vial(landing_position)
+	alchemist_throw_index += 1
+	alchemist_throw_timer = maxf(
+		float(alchemist_config.get("vial_throw_interval", 0.19)),
+		0.01
+	)
+
+
+func _launch_alchemist_vial(landing_position: Vector2) -> void:
+	for vial in alchemist_vial_pool:
+		if not is_instance_valid(vial):
+			continue
+		if not bool(vial.call("is_available")):
+			continue
+		vial.call(
+			"launch",
+			global_position,
+			landing_position,
+			maxf(float(alchemist_config.get("vial_flight_duration", 0.46)), 0.08),
+			maxf(float(alchemist_config.get("vial_arc_height", 120.0)), 0.0)
+		)
+		return
+
+
+func _on_alchemist_vial_landed(landing_position: Vector2) -> void:
+	var tick_damage := maxi(
+		1,
+		int(round(
+			float(attack_damage)
+			* maxf(float(alchemist_config.get("poison_tick_damage_ratio", 0.18)), 0.0)
+		))
+	)
+	for poison in alchemist_poison_pool:
+		if not is_instance_valid(poison):
+			continue
+		if not bool(poison.call("is_available")):
+			continue
+		poison.call(
+			"activate",
+			landing_position,
+			maxf(float(alchemist_config.get("poison_duration", 4.0)), 0.1),
+			maxf(float(alchemist_config.get("poison_radius", 275.0)), 1.0),
+			maxf(float(alchemist_config.get("poison_tick_interval", 0.27)), 0.03),
+			tick_damage
+		)
+		return
+
+
+func _on_alchemist_poison_tick(origin: Vector2, radius: float, damage: int) -> void:
+	if current_hp <= 0:
+		return
+	_damage_monsters_in_radius(origin, radius, damage)
+
+
+func _update_alchemist_pose_visual(delta: float) -> void:
+	if hero_archetype != "alchemist_chemical" or not hero_sprite.visible or is_dying:
+		return
+	if hit_pose_timer > 0.0 or attack_pose_timer > 0.0:
+		return
+	_update_facing_from_horizontal(velocity.x, delta)
+	var speed := velocity.length()
+	if speed > 4.0:
+		var movement_ratio := speed / maxf(move_speed, 1.0)
+		_play_stage1_animation("move", clampf(movement_ratio, 0.80, 1.45))
+	else:
+		_play_stage1_animation("idle", 1.0)
+
 
 func _physics_process_gunner(delta: float) -> void:
 	ai_memory_clock += delta
@@ -2438,6 +2804,50 @@ func _apply_profile_visual() -> void:
 	hero_sprite.modulate = Color.WHITE
 	hero_sprite.rotation = 0.0
 	hero_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+
+	if hero_archetype == "alchemist_chemical":
+		var alchemist_dir := (
+			sprite_frame_dir
+			if not sprite_frame_dir.is_empty()
+			else STAGE7_FRAME_DIR
+		)
+		var alchemist_frames := SpriteFrames.new()
+		if alchemist_frames.has_animation("default"):
+			alchemist_frames.remove_animation("default")
+		if not _add_named_sequence_animation(
+			alchemist_frames, "idle", alchemist_dir, "idle", 4, 6.0, true
+		):
+			return
+		_add_named_sequence_animation(
+			alchemist_frames, "move", alchemist_dir, "run", 6, 11.0, true
+		)
+		alchemist_frames.add_animation("attack")
+		alchemist_frames.set_animation_speed("attack", 7.0)
+		alchemist_frames.set_animation_loop("attack", false)
+		for attack_frame_index in [1, 3, 4]:
+			var attack_texture := _load_stage1_texture(
+				"%s/atk_%02d.png" % [alchemist_dir, attack_frame_index]
+			)
+			if attack_texture == null:
+				push_warning(
+					"Stage 7 attack frame load failed: %s/atk_%02d.png"
+					% [alchemist_dir, attack_frame_index]
+				)
+				return
+			alchemist_frames.add_frame("attack", attack_texture)
+		_add_named_sequence_animation(
+			alchemist_frames, "hit", alchemist_dir, "hit", 2, 12.0, false
+		)
+		_add_named_sequence_animation(
+			alchemist_frames, "death", alchemist_dir, "dead", 4, 8.0, false
+		)
+		hero_sprite.sprite_frames = alchemist_frames
+		hero_sprite.visible = true
+		_apply_normalized_hero_visual_scale()
+		hero_sprite.speed_scale = 1.0
+		hero_sprite.play("idle")
+		return
 
 	if hero_archetype == "berserker_madness":
 		var berserker_dir := (
@@ -9469,6 +9879,14 @@ func _draw() -> void:
 			draw_rect(Rect2(x, -79.0, cell_width, 8.0), Color(0.12, 0.12, 0.14), true)
 			if index < displayed_cells:
 				draw_rect(Rect2(x, -79.0, cell_width, 8.0), Color(1.0, 0.77, 0.16), true)
+	elif hero_archetype == "alchemist_chemical":
+		var gas_ratio := clampf(alchemist_gas / maxf(alchemist_gas_max, 1.0), 0.0, 1.0)
+		draw_rect(Rect2(-bar_width / 2.0, -79.0, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
+		draw_rect(
+			Rect2(-bar_width / 2.0, -79.0, bar_width * gas_ratio, 8.0),
+			Color(0.68, 0.28, 0.92),
+			true
+		)
 	elif hero_archetype == "berserker_madness":
 		var madness_max: float = maxf(
 			float(berserker_config.get("gauge_max", 100.0)),
