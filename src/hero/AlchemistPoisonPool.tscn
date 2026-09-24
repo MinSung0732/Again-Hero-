@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/hero/alchemist_poison_pool.gd" id="1"]
+
+[node name="AlchemistPoisonPool" type="Node2D"]
+z_index = 0
+script = ExtResource("1")
+
+[node name="Visual" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
