@@ -240,6 +240,9 @@ var alchemist_mixture_field_config: Dictionary = {}
 var alchemist_mixture_field: Node2D = null
 var alchemist_mixture_field_cooldown: float = 0.0
 var alchemist_mixture_heal_timer: float = 0.0
+var alchemist_field_run_active: bool = false
+var alchemist_field_run_enter_timer: float = 0.0
+var alchemist_field_run_exit_timer: float = 0.0
 
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
@@ -510,6 +513,9 @@ func configure_profile(profile: Dictionary) -> void:
 	alchemist_mixture_field = null
 	alchemist_mixture_field_cooldown = 0.0
 	alchemist_mixture_heal_timer = 0.0
+	alchemist_field_run_active = false
+	alchemist_field_run_enter_timer = 0.0
+	alchemist_field_run_exit_timer = 0.0
 
 	var profile_gunner = profile.get("gunner", {})
 	gunner_config = (
@@ -872,6 +878,7 @@ func _physics_process_alchemist(delta: float) -> void:
 	_collect_nearby_alchemy_materials()
 	alchemist_mixture_field_cooldown = maxf(alchemist_mixture_field_cooldown - delta, 0.0)
 	_update_alchemist_mixture_field_hero_effects(delta)
+	_update_alchemist_field_locomotion_state(delta)
 	_try_cast_alchemist_mixture_field()
 
 	if slow_timer > 0.0:
@@ -1105,6 +1112,56 @@ func _get_alchemist_field_speed_multiplier() -> float:
 		float(alchemist_mixture_field_config.get("hero_move_speed_multiplier", 1.30)),
 		1.0
 	)
+
+
+func _is_alchemist_inside_mixture_field_with_margin(margin: float) -> bool:
+	if not is_instance_valid(alchemist_mixture_field):
+		return false
+	if not bool(alchemist_mixture_field.get("active")):
+		return false
+
+	var field_radius := maxf(float(alchemist_mixture_field.get("radius")) + margin, 1.0)
+	return (
+		alchemist_mixture_field.global_position.distance_squared_to(global_position)
+		<= field_radius * field_radius
+	)
+
+
+func _update_alchemist_field_locomotion_state(delta: float) -> void:
+	var enter_delay := maxf(
+		float(alchemist_mixture_field_config.get("run_enter_delay", 0.08)),
+		0.0
+	)
+	var exit_delay := maxf(
+		float(alchemist_mixture_field_config.get("run_exit_delay", 0.12)),
+		0.0
+	)
+	var exit_margin := maxf(
+		float(alchemist_mixture_field_config.get("run_exit_margin", 24.0)),
+		0.0
+	)
+
+	if not alchemist_field_run_active:
+		alchemist_field_run_exit_timer = 0.0
+		if not _is_alchemist_inside_mixture_field():
+			alchemist_field_run_enter_timer = 0.0
+			return
+
+		alchemist_field_run_enter_timer += delta
+		if alchemist_field_run_enter_timer >= enter_delay:
+			alchemist_field_run_active = true
+			alchemist_field_run_enter_timer = 0.0
+		return
+
+	alchemist_field_run_enter_timer = 0.0
+	if _is_alchemist_inside_mixture_field_with_margin(exit_margin):
+		alchemist_field_run_exit_timer = 0.0
+		return
+
+	alchemist_field_run_exit_timer += delta
+	if alchemist_field_run_exit_timer >= exit_delay:
+		alchemist_field_run_active = false
+		alchemist_field_run_exit_timer = 0.0
 
 
 func _update_alchemist_mixture_field_hero_effects(delta: float) -> void:
@@ -1380,7 +1437,7 @@ func _update_alchemist_pose_visual(delta: float) -> void:
 	if speed > 4.0:
 		var movement_ratio := speed / maxf(move_speed, 1.0)
 		var locomotion_animation := (
-			"run" if _is_alchemist_inside_mixture_field() else "move"
+			"run" if alchemist_field_run_active else "move"
 		)
 		_play_stage1_animation(
 			locomotion_animation,
