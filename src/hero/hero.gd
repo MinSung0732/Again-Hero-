@@ -2826,7 +2826,7 @@ func _apply_profile_visual() -> void:
 		alchemist_frames.add_animation("attack")
 		alchemist_frames.set_animation_speed("attack", 7.0)
 		alchemist_frames.set_animation_loop("attack", false)
-		for attack_frame_index in [1, 3, 4]:
+		for attack_frame_index in [1, 2, 5]:
 			var attack_texture := _load_stage1_texture(
 				"%s/atk_%02d.png" % [alchemist_dir, attack_frame_index]
 			)
@@ -3452,7 +3452,7 @@ func _apply_stage7_sprite_anchor() -> void:
 	# Mirror X compensation when flip_h changes so the root remains fixed.
 	hero_sprite.offset = Vector2(
 		-104.0 if hero_sprite.flip_h else 104.0,
-		-24.0
+		16.0
 	)
 
 
