@@ -84,6 +84,23 @@ const PROFILES = {
 			"long_reach": 0.35,
 		},
 	},
+	"stage_7_alchemist": {
+		"id": "stage_7_alchemist",
+		"display_name": "재료를 비축하는 화학자",
+		"observation_interval": 2.6,
+		"stack_inertia": 0.92,
+		"new_branch_penalty": 0.36,
+		"heal_item_desire": 1.08,
+		"heal_risk_tolerance": 0.50,
+		"heal_detour_weight": 1.05,
+		"augment_biases": {
+			"common_attack_training": 0.50,
+			"rapid_strikes": 0.30,
+			"iron_body": 0.30,
+			"pursuit": 0.45,
+			"slow_resistance": 0.25,
+		},
+	},
 	"stage_3_guardian": {
 		"id": "stage_3_guardian",
 		"display_name": "전선을 지키는 수호자",
