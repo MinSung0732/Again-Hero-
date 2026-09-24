@@ -15,6 +15,8 @@ const SMOKE_TEXTURES := [
 ]
 
 const SMOKE_POOL_SIZE := 12
+const REVEAL_DURATION := 0.32
+const SMOKE_REVEAL_THRESHOLD := 0.45
 
 var active: bool = false
 var radius: float = 450.0
@@ -24,6 +26,7 @@ var tick_timer: float = 0.5
 var smoke_interval: float = 0.11
 var smoke_timer: float = 0.0
 var smoke_cursor: int = 0
+var reveal_progress: float = 1.0
 var smoke_pool: Array[AnimatedSprite2D] = []
 
 func _ready() -> void:
@@ -53,6 +56,7 @@ func activate(world_position: Vector2, field_radius: float, duration: float, dam
 	tick_interval = maxf(damage_tick_interval, 0.05)
 	tick_timer = 0.0
 	smoke_timer = 0.0
+	reveal_progress = 0.0
 	active = true
 	visible = true
 	set_physics_process(true)
@@ -69,11 +73,22 @@ func _physics_process(delta: float) -> void:
 	tick_timer -= delta
 	smoke_timer -= delta
 
+	if reveal_progress < 1.0:
+		reveal_progress = minf(
+			reveal_progress + delta / REVEAL_DURATION,
+			1.0
+		)
+		queue_redraw()
+
 	while tick_timer <= 0.0 and duration_remaining > 0.0:
 		field_tick.emit(global_position, radius)
 		tick_timer += tick_interval
 
-	if smoke_timer <= 0.0 and duration_remaining > 0.0:
+	if (
+		reveal_progress >= SMOKE_REVEAL_THRESHOLD
+		and smoke_timer <= 0.0
+		and duration_remaining > 0.0
+	):
 		_spawn_smoke()
 		smoke_timer += smoke_interval
 
@@ -101,6 +116,7 @@ func _on_smoke_finished(smoke: AnimatedSprite2D) -> void:
 
 func deactivate() -> void:
 	active = false
+	reveal_progress = 1.0
 	visible = false
 	set_physics_process(false)
 	for smoke in smoke_pool:
@@ -112,11 +128,35 @@ func deactivate() -> void:
 func _draw() -> void:
 	if not active:
 		return
-	draw_circle(
-		Vector2.ZERO,
-		radius,
-		Color(0.20, 0.80, 0.34, 0.10)
-	)
+
+	var t := clampf(reveal_progress, 0.0, 1.0)
+	var eased := 1.0 - pow(1.0 - t, 3.0)
+	var fill_radius := radius * eased
+	var fill_alpha := 0.10 * eased
+
+	if fill_radius > 0.5:
+		draw_circle(
+			Vector2.ZERO,
+			fill_radius,
+			Color(0.20, 0.80, 0.34, fill_alpha)
+		)
+
+		# The advancing edge gives the field a soft "soaking outward" read
+		# without adding another scene/effect allocation.
+		if t < 1.0:
+			draw_arc(
+				Vector2.ZERO,
+				fill_radius,
+				0.0,
+				TAU,
+				96,
+				Color(0.35, 1.0, 0.50, 0.32 * (1.0 - t)),
+				3.0,
+				true
+			)
+
+	# Keep the final gameplay boundary visible from cast start so the player
+	# can read the full area while the translucent fill spreads underneath.
 	draw_arc(
 		Vector2.ZERO,
 		radius,
