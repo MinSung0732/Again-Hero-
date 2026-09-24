@@ -2803,6 +2803,7 @@ func _apply_profile_visual() -> void:
 	hero_sprite.sprite_frames = null
 	hero_sprite.modulate = Color.WHITE
 	hero_sprite.rotation = 0.0
+	hero_sprite.offset = Vector2.ZERO
 	hero_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 
@@ -2845,6 +2846,7 @@ func _apply_profile_visual() -> void:
 		hero_sprite.sprite_frames = alchemist_frames
 		hero_sprite.visible = true
 		_apply_normalized_hero_visual_scale()
+		_apply_stage7_sprite_anchor()
 		hero_sprite.speed_scale = 1.0
 		hero_sprite.play("idle")
 		return
@@ -3442,6 +3444,18 @@ func _update_stage1_pose_visual(delta: float) -> void:
 	else:
 		_play_stage1_animation("idle", 1.0)
 
+func _apply_stage7_sprite_anchor() -> void:
+	if hero_archetype != "alchemist_chemical" or not is_instance_valid(hero_sprite):
+		return
+	# Stage 7 standalone frames are 512x256 with the shared body/root anchor
+	# at (160, 224), not at the texture center (256, 128).
+	# Mirror X compensation when flip_h changes so the root remains fixed.
+	hero_sprite.offset = Vector2(
+		-96.0 if hero_sprite.flip_h else 96.0,
+		-96.0
+	)
+
+
 func _update_facing_from_horizontal(horizontal_speed: float, delta: float) -> void:
 	if absf(horizontal_speed) < facing_min_horizontal_speed:
 		facing_candidate_sign = 0
@@ -3466,6 +3480,7 @@ func _update_facing_from_horizontal(horizontal_speed: float, delta: float) -> vo
 		return
 
 	hero_sprite.flip_h = desired_sign < 0
+	_apply_stage7_sprite_anchor()
 	facing_candidate_sign = 0
 	facing_candidate_timer = 0.0
 
@@ -3474,6 +3489,7 @@ func _face_attack_direction(horizontal_direction: float) -> void:
 		return
 
 	hero_sprite.flip_h = horizontal_direction < 0.0
+	_apply_stage7_sprite_anchor()
 	facing_candidate_sign = 0
 	facing_candidate_timer = 0.0
 
