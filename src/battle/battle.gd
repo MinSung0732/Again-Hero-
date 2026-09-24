@@ -3334,11 +3334,31 @@ func get_snapshot() -> Dictionary:
 		level = int(hero.get("level"))
 		current_exp = int(hero.get("current_exp"))
 		exp_to_next_level = int(hero.get("exp_to_next_level"))
-		hero_attack_damage = int(hero.get("attack_damage"))
-		hero_move_speed = float(hero.get("move_speed"))
-		hero_attack_cooldown = float(hero.get("attack_cooldown"))
-		hero_attack_range = float(hero.get("attack_range"))
-		hero_projectile_speed = float(hero.get("projectile_speed"))
+
+		var runtime_info_stats: Dictionary = {}
+		if hero.has_method("get_runtime_info_stats"):
+			var raw_runtime_info = hero.call("get_runtime_info_stats")
+			if typeof(raw_runtime_info) == TYPE_DICTIONARY:
+				runtime_info_stats = raw_runtime_info
+
+		hero_attack_damage = int(
+			runtime_info_stats.get("attack_damage", hero.get("attack_damage"))
+		)
+		hero_move_speed = float(
+			runtime_info_stats.get("move_speed", hero.get("move_speed"))
+		)
+		hero_attack_cooldown = float(
+			runtime_info_stats.get("attack_interval", hero.get("attack_cooldown"))
+		)
+		hero_attack_range = float(
+			runtime_info_stats.get("attack_range", hero.get("attack_range"))
+		)
+		hero_projectile_speed = float(
+			runtime_info_stats.get("projectile_speed", hero.get("projectile_speed"))
+		)
+		max_hp_value = int(
+			runtime_info_stats.get("max_hp", max_hp_value)
+		)
 		hero_lifesteal_ratio = float(hero.get("rogue_lifesteal_ratio"))
 		hero_execute_ratio = (
 			float(
