@@ -1,6 +1,6 @@
 extends Node2D
 
-signal landed(world_position: Vector2)
+signal landed(world_position: Vector2, direct_target: Node)
 
 const PROJECTILE_TEXTURE := preload("res://assets/art/heroes/stage7_alchemist/frames/effect1/effect_01.png")
 const BREAK_TEXTURES := [
@@ -19,6 +19,7 @@ var flight_target := Vector2.ZERO
 var flight_duration: float = 0.46
 var flight_elapsed: float = 0.0
 var arc_height: float = 120.0
+var direct_hit_target: Node = null
 
 func _ready() -> void:
 	projectile_sprite.texture = PROJECTILE_TEXTURE
@@ -39,12 +40,19 @@ func _ready() -> void:
 func is_available() -> bool:
 	return phase == 0
 
-func launch(origin: Vector2, target: Vector2, duration: float, height: float) -> void:
+func launch(
+	origin: Vector2,
+	target: Vector2,
+	duration: float,
+	height: float,
+	direct_target: Node = null
+) -> void:
 	flight_origin = origin
 	flight_target = target
 	flight_duration = maxf(duration, 0.08)
 	flight_elapsed = 0.0
 	arc_height = maxf(height, 0.0)
+	direct_hit_target = direct_target
 	phase = 1
 	global_position = origin
 	visible = true
@@ -66,7 +74,8 @@ func _physics_process(delta: float) -> void:
 	break_sprite.visible = true
 	phase = 2
 	set_physics_process(false)
-	landed.emit(flight_target)
+	landed.emit(flight_target, direct_hit_target)
+	direct_hit_target = null
 	break_sprite.stop()
 	break_sprite.frame = 0
 	break_sprite.play("break")
@@ -77,6 +86,7 @@ func _on_break_finished() -> void:
 
 func _deactivate() -> void:
 	phase = 0
+	direct_hit_target = null
 	visible = false
 	projectile_sprite.visible = false
 	break_sprite.visible = false
