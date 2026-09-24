@@ -14,7 +14,7 @@ const POISON_TEXTURES := [
 
 var active: bool = false
 var duration_remaining: float = 0.0
-var hit_radius: float = 275.0
+var hit_radius: float = 206.25
 var tick_interval: float = 0.27
 var tick_timer: float = 0.27
 var tick_damage: int = 1
@@ -30,7 +30,7 @@ func _ready() -> void:
 		frames.add_frame("poison", texture)
 	visual.sprite_frames = frames
 	visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	visual.scale = Vector2(1.05, 1.05)
+	visual.scale = Vector2(0.79, 0.79)
 	deactivate()
 
 func is_available() -> bool:
