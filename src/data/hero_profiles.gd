@@ -646,7 +646,7 @@ const PROFILES = {
 				"name": "촉매 혼합장",
 				"cooldown": 20.0,
 				"gas_cost": 30.0,
-				"radius": 660.0,
+				"radius": 450.0,
 				"duration": 8.0,
 				"tick_interval": 0.50,
 				"tick_damage_ratio": 0.20,
