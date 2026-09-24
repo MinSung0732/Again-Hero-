@@ -3731,8 +3731,10 @@ func _apply_camera_limits() -> void:
 	follow_camera.limit_top = 0
 	follow_camera.limit_right = int(battlefield_size.x)
 	follow_camera.limit_bottom = int(battlefield_size.y)
-	follow_camera.position_smoothing_enabled = true
-	follow_camera.position_smoothing_speed = 7.0
+	# Pixel-art characters shimmer when the camera follows on sub-pixel
+	# positions. Keep the physics coordinates continuous, but make the
+	# shared Hero camera follow directly so rendered sprites stay stable.
+	follow_camera.position_smoothing_enabled = false
 
 func _move_without_monsters() -> void:
 	var current_move_speed := move_speed
