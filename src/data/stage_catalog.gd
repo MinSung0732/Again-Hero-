@@ -1,7 +1,7 @@
 extends RefCounted
 class_name StageCatalog
 
-const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4", "stage_5", "stage_6"]
+const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4", "stage_5", "stage_6", "stage_7"]
 
 const STAGES = {
 	"stage_1": {
@@ -394,6 +394,83 @@ const STAGES = {
 		],
 		"first_clear_reward": 0,
 		"run_reward_multiplier": 2.25,
+		"next_stage_id": "stage_7",
+	},
+	"stage_7": {
+		"id": "stage_7",
+		"number": 7,
+		"display_name": "일곱 번째 침입자",
+		"hero_id": "chemical_hero",
+		"hero_ai_profile_id": "stage_7_alchemist",
+		"portrait_path": "res://assets/art/heroes/stage7_alchemist/stage7_hero_portrait.png",
+		"lobby_description": "화학가스를 소모해 독극물 약병을 흩뿌리고, 전장의 연금술 재료를 회수해 다시 전투를 이어가는 화학의 용사.",
+		"hero_level_start": 1,
+		"map_width": 4400,
+		"map_height": 4400,
+		"run_duration_seconds": 600.0,
+		"event_timeline": [
+			{
+				"id": "stage7_elite_01",
+				"at_seconds": 120.0,
+				"type": "elite",
+				"name": "1차 화학 돌연변이",
+				"selection_mode": "team",
+				"mutation_profile_id": "mutation_1",
+				"reinforcement_count": 12,
+				"reinforcement_batch_size": 3,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage7_elite_02",
+				"at_seconds": 240.0,
+				"type": "elite",
+				"name": "2차 화학 돌연변이",
+				"selection_mode": "team",
+				"mutation_profile_id": "mutation_2",
+				"reinforcement_count": 15,
+				"reinforcement_batch_size": 3,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage7_elite_03",
+				"at_seconds": 360.0,
+				"type": "elite",
+				"name": "3차 화학 돌연변이",
+				"selection_mode": "team",
+				"mutation_profile_id": "mutation_2",
+				"reinforcement_count": 18,
+				"reinforcement_batch_size": 4,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage7_miniboss_01",
+				"at_seconds": 480.0,
+				"type": "miniboss",
+				"name": "대돌연변이 촉매체",
+				"selection_mode": "team",
+				"mutation_profile_id": "greater_mutation",
+				"reinforcement_count": 20,
+				"reinforcement_batch_size": 4,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage7_boss_01",
+				"at_seconds": 540.0,
+				"type": "boss",
+				"name": "화학 침공 대장",
+				"selection_mode": "team_random",
+				"hp_multiplier": 11.0,
+				"damage_multiplier": 3.3,
+				"speed_multiplier": 1.25,
+				"exp_multiplier": 4.8,
+				"visual_scale": 1.65,
+				"reinforcement_count": 22,
+				"reinforcement_batch_size": 4,
+				"reinforcement_interval": 0.12,
+			},
+		],
+		"first_clear_reward": 0,
+		"run_reward_multiplier": 2.50,
 		"next_stage_id": "",
 	},
 }
