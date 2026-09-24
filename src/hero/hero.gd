@@ -46,6 +46,7 @@ const STAGE7_FRAME_DIR := "res://assets/art/heroes/stage7_alchemist/frames"
 const ALCHEMIST_VIAL_SCENE := preload("res://src/hero/AlchemistVial.tscn")
 const ALCHEMIST_POISON_POOL_SCENE := preload("res://src/hero/AlchemistPoisonPool.tscn")
 const ALCHEMY_MATERIAL_SCENE := preload("res://src/hero/AlchemyMaterial.tscn")
+const ALCHEMIST_MIXTURE_FIELD_SCENE := preload("res://src/hero/AlchemistMixtureField.tscn")
 
 # 모든 용사 도트의 화면상 체급 기준은 Stage 1 견습 마법용사다.
 # 원본 PNG 캔버스 크기가 아니라 투명 여백을 제외한 실제 도트 높이를
@@ -234,6 +235,10 @@ var alchemist_direct_chest_target: Node2D = null
 var alchemist_vial_pool: Array[Node2D] = []
 var alchemist_poison_pool: Array[Node2D] = []
 var alchemist_material_pool: Array[Node2D] = []
+var alchemist_mixture_field_config: Dictionary = {}
+var alchemist_mixture_field: Node2D = null
+var alchemist_mixture_field_cooldown: float = 0.0
+var alchemist_mixture_heal_timer: float = 0.0
 
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
@@ -493,6 +498,15 @@ func configure_profile(profile: Dictionary) -> void:
 	alchemist_vial_pool.clear()
 	alchemist_poison_pool.clear()
 	alchemist_material_pool.clear()
+	var raw_mixture_field = alchemist_config.get("mixture_field", {})
+	alchemist_mixture_field_config = (
+		raw_mixture_field.duplicate(true)
+		if typeof(raw_mixture_field) == TYPE_DICTIONARY
+		else {}
+	)
+	alchemist_mixture_field = null
+	alchemist_mixture_field_cooldown = 0.0
+	alchemist_mixture_heal_timer = 0.0
 
 	var profile_gunner = profile.get("gunner", {})
 	gunner_config = (
@@ -853,6 +867,9 @@ func _physics_process_alchemist(delta: float) -> void:
 	_update_alchemist_material_spawning(delta)
 	_update_alchemist_throw_sequence(delta)
 	_collect_nearby_alchemy_materials()
+	alchemist_mixture_field_cooldown = maxf(alchemist_mixture_field_cooldown - delta, 0.0)
+	_update_alchemist_mixture_field_hero_effects(delta)
+	_try_cast_alchemist_mixture_field()
 
 	if slow_timer > 0.0:
 		slow_timer = maxf(slow_timer - delta, 0.0)
@@ -860,12 +877,13 @@ func _physics_process_alchemist(delta: float) -> void:
 			move_multiplier = 1.0
 			queue_redraw()
 
+	var alchemist_move_speed := move_speed * _get_alchemist_field_speed_multiplier()
 	var basic_gas_cost := maxf(float(alchemist_config.get("basic_gas_cost", 10.0)), 0.0)
 	if alchemist_gas + 0.001 < basic_gas_cost:
 		var material_target := _find_nearest_active_alchemy_material()
 		if is_instance_valid(material_target):
 			var material_direction := global_position.direction_to(material_target.global_position)
-			velocity = material_direction * move_speed * move_multiplier
+			velocity = material_direction * alchemist_move_speed * move_multiplier
 			move_and_slide()
 			_clamp_to_battlefield()
 			_update_alchemist_pose_visual(delta)
@@ -889,7 +907,7 @@ func _physics_process_alchemist(delta: float) -> void:
 	move_direction = _apply_heal_item_steering(move_direction, delta)
 	move_direction = _apply_chest_steering(move_direction, delta)
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
-	velocity = move_direction * move_speed * move_multiplier
+	velocity = move_direction * alchemist_move_speed * move_multiplier
 	move_and_slide()
 	_clamp_to_battlefield()
 
@@ -933,6 +951,14 @@ func _ensure_alchemist_runtime() -> void:
 			continue
 		world_parent.add_child(material)
 		alchemist_material_pool.append(material)
+
+	alchemist_mixture_field = ALCHEMIST_MIXTURE_FIELD_SCENE.instantiate() as Node2D
+	if is_instance_valid(alchemist_mixture_field):
+		world_parent.add_child(alchemist_mixture_field)
+		alchemist_mixture_field.connect(
+			"field_tick",
+			Callable(self, "_on_alchemist_mixture_field_tick")
+		)
 
 	alchemist_runtime_ready = true
 	alchemist_material_spawn_timer = 0.0
@@ -1059,6 +1085,147 @@ func _consume_alchemist_gas(amount: float) -> bool:
 	alchemist_gas = maxf(alchemist_gas - cost, 0.0)
 	queue_redraw()
 	return true
+
+
+func _is_alchemist_inside_mixture_field() -> bool:
+	return (
+		is_instance_valid(alchemist_mixture_field)
+		and bool(alchemist_mixture_field.get("active"))
+		and bool(alchemist_mixture_field.call("contains_world_point", global_position))
+	)
+
+
+func _get_alchemist_field_speed_multiplier() -> float:
+	if not _is_alchemist_inside_mixture_field():
+		return 1.0
+	return maxf(
+		float(alchemist_mixture_field_config.get("hero_move_speed_multiplier", 1.30)),
+		1.0
+	)
+
+
+func _update_alchemist_mixture_field_hero_effects(delta: float) -> void:
+	if not _is_alchemist_inside_mixture_field():
+		alchemist_mixture_heal_timer = 0.0
+		return
+
+	alchemist_mixture_heal_timer = maxf(alchemist_mixture_heal_timer - delta, 0.0)
+	if alchemist_mixture_heal_timer > 0.0:
+		return
+
+	var heal_ratio := maxf(
+		float(alchemist_mixture_field_config.get("heal_max_hp_ratio", 0.01)),
+		0.0
+	)
+	if heal_ratio > 0.0:
+		heal_direct(maxi(1, int(round(float(max_hp) * heal_ratio))))
+	alchemist_mixture_heal_timer = maxf(
+		float(alchemist_mixture_field_config.get("heal_interval", 1.0)),
+		0.1
+	)
+
+
+func _try_cast_alchemist_mixture_field() -> void:
+	if alchemist_mixture_field_config.is_empty():
+		return
+	if alchemist_mixture_field_cooldown > 0.0:
+		return
+	if not is_instance_valid(alchemist_mixture_field):
+		return
+	if bool(alchemist_mixture_field.get("active")):
+		return
+
+	var gas_cost := maxf(
+		float(alchemist_mixture_field_config.get("gas_cost", 30.0)),
+		0.0
+	)
+	if alchemist_gas + 0.001 < gas_cost:
+		return
+
+	var radius := maxf(
+		float(alchemist_mixture_field_config.get("radius", 660.0)),
+		1.0
+	)
+	var required_enemies := maxi(
+		int(alchemist_mixture_field_config.get("enemy_count_trigger", 2)),
+		1
+	)
+	var nearby_enemies := 0
+	var radius_sq := radius * radius
+	for node in _get_monster_nodes_near(global_position, radius):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if global_position.distance_squared_to(monster.global_position) > radius_sq:
+			continue
+		nearby_enemies += 1
+		if nearby_enemies >= required_enemies:
+			break
+	if nearby_enemies < required_enemies:
+		return
+
+	if not _consume_alchemist_gas(gas_cost):
+		return
+
+	alchemist_mixture_field_cooldown = maxf(
+		float(alchemist_mixture_field_config.get("cooldown", 20.0)),
+		0.0
+	)
+	alchemist_mixture_heal_timer = 0.0
+	alchemist_mixture_field.call(
+		"activate",
+		global_position,
+		radius,
+		maxf(float(alchemist_mixture_field_config.get("duration", 8.0)), 0.1),
+		maxf(float(alchemist_mixture_field_config.get("tick_interval", 0.50)), 0.05)
+	)
+
+
+func _on_alchemist_mixture_field_tick(origin: Vector2, radius: float) -> void:
+	if current_hp <= 0:
+		return
+
+	var damage := maxi(
+		1,
+		int(round(
+			float(attack_damage)
+			* maxf(
+				float(alchemist_mixture_field_config.get("tick_damage_ratio", 0.20)),
+				0.0
+			)
+		))
+	)
+	var slow_multiplier := clampf(
+		float(alchemist_mixture_field_config.get("slow_multiplier", 0.80)),
+		0.1,
+		1.0
+	)
+	var slow_until := Time.get_ticks_msec() + int(round(
+		maxf(
+			float(alchemist_mixture_field_config.get("slow_refresh_seconds", 0.75)),
+			0.05
+		) * 1000.0
+	))
+	var radius_sq := radius * radius
+
+	for node in _get_monster_nodes_near(origin, radius):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null or origin.distance_squared_to(monster.global_position) > radius_sq:
+			continue
+		if monster.has_method("take_damage"):
+			monster.call("take_damage", damage)
+		# Existing monster movement code reads these shared external-slow meta keys.
+		var current_until := int(monster.get_meta("gunner_slow_until", 0))
+		var current_multiplier := float(monster.get_meta("gunner_slow_multiplier", 1.0))
+		monster.set_meta("gunner_slow_until", maxi(current_until, slow_until))
+		monster.set_meta(
+			"gunner_slow_multiplier",
+			minf(current_multiplier, slow_multiplier)
+		)
 
 
 func _get_alchemist_chest_attack_target() -> Node2D:
@@ -1209,7 +1376,13 @@ func _update_alchemist_pose_visual(delta: float) -> void:
 	var speed := velocity.length()
 	if speed > 4.0:
 		var movement_ratio := speed / maxf(move_speed, 1.0)
-		_play_stage1_animation("move", clampf(movement_ratio, 0.80, 1.45))
+		var locomotion_animation := (
+			"run" if _is_alchemist_inside_mixture_field() else "move"
+		)
+		_play_stage1_animation(
+			locomotion_animation,
+			clampf(movement_ratio, 0.80, 1.45)
+		)
 	else:
 		_play_stage1_animation("idle", 1.0)
 
@@ -2875,7 +3048,10 @@ func _apply_profile_visual() -> void:
 		):
 			return
 		_add_named_sequence_animation(
-			alchemist_frames, "move", alchemist_dir, "run", 6, 11.0, true
+			alchemist_frames, "move", alchemist_dir, "walk", 6, 9.0, true
+		)
+		_add_named_sequence_animation(
+			alchemist_frames, "run", alchemist_dir, "run", 6, 11.0, true
 		)
 		alchemist_frames.add_animation("attack")
 		alchemist_frames.set_animation_speed("attack", 7.0)
@@ -3559,10 +3735,14 @@ func _apply_camera_limits() -> void:
 	follow_camera.position_smoothing_speed = 7.0
 
 func _move_without_monsters() -> void:
+	var current_move_speed := move_speed
+	if hero_archetype == "alchemist_chemical":
+		current_move_speed *= _get_alchemist_field_speed_multiplier()
+
 	if is_instance_valid(heal_item_target):
 		var heal_direction := _apply_heal_item_steering(Vector2.ZERO, 0.016)
 		if heal_direction.length_squared() > 0.01:
-			velocity = heal_direction * move_speed * 0.90 * move_multiplier
+			velocity = heal_direction * current_move_speed * 0.90 * move_multiplier
 			move_and_slide()
 			_clamp_to_battlefield()
 			return
@@ -3575,7 +3755,7 @@ func _move_without_monsters() -> void:
 		if magnet_direction.length_squared() > 0.01:
 			velocity = (
 				magnet_direction
-				* move_speed
+				* current_move_speed
 				* 0.82
 				* move_multiplier
 			)
@@ -3592,7 +3772,7 @@ func _move_without_monsters() -> void:
 			if chest_distance_sq > alchemist_attack_range * alchemist_attack_range:
 				var chest_direction := _apply_chest_steering(Vector2.ZERO, 0.016)
 				if chest_direction.length_squared() > 0.01:
-					velocity = chest_direction * move_speed * 0.72 * move_multiplier
+					velocity = chest_direction * current_move_speed * 0.72 * move_multiplier
 					move_and_slide()
 					_clamp_to_battlefield()
 			else:
@@ -3606,7 +3786,7 @@ func _move_without_monsters() -> void:
 
 		var chest_direction := _apply_chest_steering(Vector2.ZERO, 0.016)
 		if chest_direction.length_squared() > 0.01:
-			velocity = chest_direction * move_speed * 0.72 * move_multiplier
+			velocity = chest_direction * current_move_speed * 0.72 * move_multiplier
 			move_and_slide()
 			_clamp_to_battlefield()
 			if (
@@ -3621,7 +3801,7 @@ func _move_without_monsters() -> void:
 	var nearest_exp_orb := _find_nearest_exp_orb()
 	if is_instance_valid(nearest_exp_orb):
 		var exp_direction := global_position.direction_to(nearest_exp_orb.global_position)
-		velocity = exp_direction * move_speed * 0.90 * move_multiplier
+		velocity = exp_direction * current_move_speed * 0.90 * move_multiplier
 		move_and_slide()
 		_clamp_to_battlefield()
 		return
@@ -3634,7 +3814,7 @@ func _move_without_monsters() -> void:
 		_pick_new_wander_target()
 
 	var direction := position.direction_to(wander_target)
-	velocity = direction * move_speed * 0.72 * move_multiplier
+	velocity = direction * current_move_speed * 0.72 * move_multiplier
 	move_and_slide()
 	_clamp_to_battlefield()
 
@@ -6115,6 +6295,13 @@ func get_skill_cooldown_hud() -> Array:
 	var skills: Array = []
 
 	match hero_archetype:
+		"alchemist_chemical":
+			_append_skill_cooldown_hud(
+				skills,
+				alchemist_mixture_field_config,
+				alchemist_mixture_field_cooldown,
+				"res://assets/art/heroes/stage7_alchemist/frames/effect4/effect_13.png"
+			)
 		"ranged_kiter":
 			_append_skill_cooldown_hud(
 				skills,
@@ -9113,7 +9300,7 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 		if magnet_direction.length_squared() > 0.01:
 			velocity = (
 				magnet_direction
-				* move_speed
+				* current_move_speed
 				* 0.82
 				* move_multiplier
 				* speed_scale
