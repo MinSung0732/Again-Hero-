@@ -38,6 +38,16 @@ const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 @onready var main_tab: Control = $SafeArea/Layout/Content/MainTab
 @onready var research_tab: Control = $SafeArea/Layout/Content/ResearchTab
 @onready var other_tab: Control = $SafeArea/Layout/Content/OtherTab
+@onready var other_settings_tab_button: Button = $SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/Tabs/SettingsTabButton
+@onready var other_account_tab_button: Button = $SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/Tabs/AccountTabButton
+@onready var other_settings_panel: VBoxContainer = $SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel
+@onready var other_account_panel: VBoxContainer = $SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/AccountPanel
+@onready var bgm_slider: HSlider = $SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/BGMRow/Slider
+@onready var bgm_value_label: Label = $SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/BGMRow/Value
+@onready var bgm_mute_check: CheckBox = $SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/BGMMute
+@onready var sfx_slider: HSlider = $SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/SFXRow/Slider
+@onready var sfx_value_label: Label = $SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/SFXRow/Value
+@onready var sfx_mute_check: CheckBox = $SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/SFXMute
 
 @onready var shop_button: Button = $BottomNav/NavMargin/NavButtons/ShopButton
 @onready var team_button: Button = $BottomNav/NavMargin/NavButtons/TeamButton
@@ -807,6 +817,14 @@ func _connect_navigation() -> void:
 	research_button.pressed.connect(_switch_tab.bind("research"))
 	other_button.pressed.connect(_switch_tab.bind("other"))
 
+	other_settings_tab_button.pressed.connect(_show_other_settings)
+	other_account_tab_button.pressed.connect(_show_other_account)
+	bgm_slider.value_changed.connect(_on_bgm_level_changed)
+	sfx_slider.value_changed.connect(_on_sfx_level_changed)
+	bgm_mute_check.toggled.connect(_on_bgm_mute_toggled)
+	sfx_mute_check.toggled.connect(_on_sfx_mute_toggled)
+	_sync_audio_settings_ui()
+
 	prev_stage_button.pressed.connect(_change_stage.bind(-1))
 	next_stage_button.pressed.connect(_change_stage.bind(1))
 	enter_stage_button.pressed.connect(_enter_selected_stage)
@@ -858,12 +876,58 @@ func _switch_tab(tab_id: String) -> void:
 		_rebuild_shop_list()
 	elif tab_id == "research":
 		_rebuild_research_list()
+	elif tab_id == "other":
+		_sync_audio_settings_ui()
+		_show_other_settings()
 
 	_refresh_nav_button(shop_button, tab_id == "shop")
 	_refresh_nav_button(team_button, tab_id == "team")
 	_refresh_nav_button(main_button, tab_id == "main")
 	_refresh_nav_button(research_button, tab_id == "research")
 	_refresh_nav_button(other_button, tab_id == "other")
+
+func _show_other_settings() -> void:
+	other_settings_panel.show()
+	other_account_panel.hide()
+	other_settings_tab_button.disabled = true
+	other_account_tab_button.disabled = false
+
+
+func _show_other_account() -> void:
+	other_settings_panel.hide()
+	other_account_panel.show()
+	other_settings_tab_button.disabled = false
+	other_account_tab_button.disabled = true
+
+
+func _sync_audio_settings_ui() -> void:
+	bgm_slider.set_value_no_signal(float(AudioSettings.bgm_level))
+	sfx_slider.set_value_no_signal(float(AudioSettings.sfx_level))
+	bgm_mute_check.set_pressed_no_signal(AudioSettings.bgm_muted)
+	sfx_mute_check.set_pressed_no_signal(AudioSettings.sfx_muted)
+	bgm_value_label.text = str(AudioSettings.bgm_level)
+	sfx_value_label.text = str(AudioSettings.sfx_level)
+
+
+func _on_bgm_level_changed(value: float) -> void:
+	var level := int(round(value))
+	bgm_value_label.text = str(level)
+	AudioSettings.set_bgm_level(level)
+
+
+func _on_sfx_level_changed(value: float) -> void:
+	var level := int(round(value))
+	sfx_value_label.text = str(level)
+	AudioSettings.set_sfx_level(level)
+
+
+func _on_bgm_mute_toggled(enabled: bool) -> void:
+	AudioSettings.set_bgm_muted(enabled)
+
+
+func _on_sfx_mute_toggled(enabled: bool) -> void:
+	AudioSettings.set_sfx_muted(enabled)
+
 
 func _refresh_nav_button(button: Button, selected: bool) -> void:
 	var style := nav_button_active_style if selected else nav_button_style
