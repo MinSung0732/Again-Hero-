@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://src/hero/hero.gd" id="1_hero"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/level_up_rise07_cc0.mp3" id="2_levelup"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_emergency_blast_v2.wav" id="3_alchemist_emergency"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_failed_boom_skill3.wav" id="3_alchemist_emergency"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hero"]
 radius = 28.0
@@ -53,7 +53,7 @@ volume_db = -17.0
 
 [node name="AlchemistEmergencyAudio" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("3_alchemist_emergency")
-volume_db = -15.5
+volume_db = -17.0
 
 [node name="Camera2D" type="Camera2D" parent="."]
 enabled = true

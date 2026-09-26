@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-09-27 — Stage 7 연금 실패 폭발 SFX 교체
+- 2스킬 솥 실패음과 3스킬 「오늘도 실팬가!」를 종/차임/히스 중심 임시음에서 실제 폭발 Foley로 교체.
+- Kenney Sci-Fi Sounds의 CC0 `explosionCrunch` WAV 2종을 실제 바이너리로 반입.
+- 2스킬 실패는 `explosionCrunch_000` 기반 `alchemist_failed_boom_cauldron.wav`를 -17.5dB로 연결해 솥 내부에서 짧게 펑 터지는 느낌으로 조정.
+- 3스킬은 더 큰 `explosionCrunch_001` 기반 `alchemist_failed_boom_skill3.wav`를 -17dB로 연결해 연금 실패 비상폭발을 더 강하게 구분.
+- 성공/대성공/레벨업/기본 약병 투척·파손 SFX 및 스킬 판정/피해/쿨타임은 변경하지 않음.
+
 ## 2026-09-27 — 공용 레벨업 실제 CC0 SFX 교체
 - 임시 `level_up_8bit_short.wav`를 제거하고 OpenGameArt의 CC0 팩 `Level up, power up, Coin get (13 Sounds)` 중 `Rise07` 기반 실제 외부 음원을 공용 레벨업 SFX로 연결.
 - 사용 파일은 출처가 명시된 게임용 1.2초 정리본을 그대로 바이너리 자산으로 반입했으며, 직접 파형 합성/런타임 생성은 사용하지 않음.
