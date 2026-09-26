@@ -165,6 +165,11 @@ var permanent_research_levels: Dictionary = {}
 var allowed_monster_ids: Array = []
 var loadout_restriction_enabled: bool = false
 
+# First instances build monster SpriteFrames/status-effect caches synchronously.
+# Warm them once, spread across frames, before the first real mass summon.
+static var _monster_spawn_resources_warmed: bool = false
+var _monster_spawn_warmup_running: bool = false
+
 func _register_heal_item(item: Node) -> void:
 	if not is_instance_valid(item):
 		return
@@ -577,6 +582,47 @@ func _start_battle() -> void:
 		run_metrics.elapsed_seconds,
 		run_metrics.get_remaining_seconds()
 	)
+
+	# Defer until Hero and battle tree are fully ready. Each monster type warms
+	# on its own frame so startup stays responsive instead of moving one hitch
+	# from the first summon to a single battle-start frame.
+	call_deferred("_warm_monster_spawn_resources")
+
+
+func _warm_monster_spawn_resources() -> void:
+	if _monster_spawn_resources_warmed or _monster_spawn_warmup_running:
+		return
+	_monster_spawn_warmup_running = true
+
+	for raw_id in MONSTER_CATALOG.ORDER:
+		if not is_inside_tree() or battle_over:
+			_monster_spawn_warmup_running = false
+			return
+
+		var monster_id := String(raw_id)
+		var scene := MONSTER_CATALOG.get_scene(monster_id)
+		if scene == null:
+			continue
+
+		var warmup := scene.instantiate() as Node2D
+		if warmup == null:
+			continue
+
+		# _ready() still runs and fills the static visual/effect caches, while
+		# disabled processing prevents this temporary instance from joining
+		# combat simulation for a physics frame.
+		warmup.process_mode = Node.PROCESS_MODE_DISABLED
+		warmup.visible = false
+		add_child(warmup)
+		remove_child(warmup)
+		warmup.free()
+
+		# Spread first-time texture/SpriteFrames work over multiple frames.
+		await get_tree().process_frame
+
+	_monster_spawn_resources_warmed = true
+	_monster_spawn_warmup_running = false
+
 
 func _apply_permanent_research() -> void:
 	permanent_research_levels.clear()
