@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2026-09-27 — SFX 새 경로 강제 재임포트
+- 동일 WAV 파일명을 반복 덮어쓰며 Godot import cache가 이전 종/차임 버전을 유지할 가능성을 제거하기 위해 핵심 SFX 3종을 새 파일 경로로 분리.
+- 솥 성공: `alchemist_cauldron_bubble_success_v2.wav`로 새 경로 연결. 현재 비음정 액체/기포 Foley blob을 재사용하고 성공 가청성을 -12.5dB로 보정.
+- 3스킬: `alchemist_emergency_blast_v2.wav`로 새 경로 연결.
+- 공용 레벨업: `level_up_power_v2.wav`로 새 경로 연결.
+- 기존 경로의 import cache와 완전히 다른 Resource path를 사용하므로 Godot가 새 오디오 리소스로 인식하도록 변경.
+- 게임플레이/판정/쿨타임/대성공 약병 투척음 설정은 변경하지 않음.
+
 ## 2026-09-27 — 종소리 원인 제거: 완전 비음정 SFX 3차
 - 직전 Foley 재설계에도 저역 임팩트용 사인파가 남아 종/딩댕처럼 들릴 수 있는 원인을 확인.
 - 솥 성공 / 3스킬 / 레벨업 WAV에서 sin/cos 발진기와 고정 주파수 톤을 전부 제거.

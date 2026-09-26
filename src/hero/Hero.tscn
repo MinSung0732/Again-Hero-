@@ -1,8 +1,8 @@
 [gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://src/hero/hero.gd" id="1_hero"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/level_up_modern.wav" id="2_levelup"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_emergency_escape.wav" id="3_alchemist_emergency"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/level_up_power_v2.wav" id="2_levelup"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_emergency_blast_v2.wav" id="3_alchemist_emergency"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hero"]
 radius = 28.0
