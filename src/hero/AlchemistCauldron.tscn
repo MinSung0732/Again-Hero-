@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/hero/alchemist_cauldron.gd" id="1_cauldron"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_mystery_cauldron.wav" id="2_result_sfx"]
 
 [node name="AlchemistCauldron" type="Node2D"]
 z_index = 4
@@ -8,3 +9,7 @@ script = ExtResource("1_cauldron")
 
 [node name="Visual" type="Sprite2D" parent="."]
 texture_filter = 1
+
+[node name="ResultAudio" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_result_sfx")
+volume_db = -10.0
