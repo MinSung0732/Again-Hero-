@@ -38,6 +38,8 @@ const MATERIAL_TEXTURES: Array[Array] = [
 var active: bool = false
 var gas_value: float = 20.0
 var material_type: int = 1
+var lifetime_remaining: float = 0.0
+var temporary_drop: bool = false
 
 
 func _ready() -> void:
@@ -60,12 +62,20 @@ func _ready() -> void:
 	deactivate()
 
 
-func activate(world_position: Vector2, value: float) -> void:
+func activate(
+	world_position: Vector2,
+	value: float,
+	lifetime_seconds: float = 0.0,
+	is_temporary: bool = false
+) -> void:
 	global_position = world_position
 	gas_value = maxf(value, 0.0)
 	material_type = randi_range(1, MATERIAL_TEXTURES.size())
+	lifetime_remaining = maxf(lifetime_seconds, 0.0)
+	temporary_drop = is_temporary
 	active = true
 	visible = true
+	set_process(lifetime_remaining > 0.0)
 
 	var animation_name := StringName("item_%d" % material_type)
 	visual.play(animation_name)
@@ -74,8 +84,26 @@ func activate(world_position: Vector2, value: float) -> void:
 		visual.frame = randi_range(0, frame_count - 1)
 
 
+func _process(delta: float) -> void:
+	if not active or lifetime_remaining <= 0.0:
+		return
+	lifetime_remaining = maxf(lifetime_remaining - delta, 0.0)
+	if lifetime_remaining <= 0.0:
+		deactivate()
+		return
+
+	if lifetime_remaining <= 3.0:
+		var blink_speed: float = lerpf(5.0, 13.0, 1.0 - lifetime_remaining / 3.0)
+		visible = fmod(lifetime_remaining * blink_speed, 1.0) > 0.32
+	else:
+		visible = true
+
+
 func deactivate() -> void:
 	active = false
 	visible = false
+	set_process(false)
 	if is_instance_valid(visual):
 		visual.stop()
+	if temporary_drop:
+		queue_free()
