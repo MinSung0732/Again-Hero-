@@ -109,28 +109,47 @@ func _ensure_detail_popup() -> void:
 	detail_popup.add_child(margin)
 
 	detail_label = Label.new()
-	detail_label.custom_minimum_size = Vector2(500.0, 0.0)
+	detail_label.custom_minimum_size = Vector2(430.0, 0.0)
 	detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail_label.add_theme_font_size_override("font_size", 24)
 	margin.add_child(detail_label)
 
 
 func _gui_input(event: InputEvent) -> void:
-	var pressed := false
-	if event is InputEventScreenTouch:
-		pressed = (event as InputEventScreenTouch).pressed
-	elif event is InputEventMouseButton:
-		var mouse_event := event as InputEventMouseButton
-		pressed = (
-			mouse_event.pressed
-			and mouse_event.button_index == MOUSE_BUTTON_LEFT
-		)
-	if not pressed:
+	# PC keeps the native hover tooltip only. The explicit popup is reserved
+	# for real touchscreen devices so mouse clicks never open a large panel.
+	if not DisplayServer.is_touchscreen_available():
+		return
+	if not event is InputEventScreenTouch:
+		return
+
+	var touch := event as InputEventScreenTouch
+	if not touch.pressed:
 		return
 
 	_ensure_detail_popup()
 	detail_label.text = _build_detail_text()
-	detail_popup.popup_centered(Vector2i(560, 300))
+
+	var viewport_size := get_viewport_rect().size
+	var popup_size := Vector2i(480, 280)
+	var desired_x := int(global_position.x)
+	var desired_y := int(global_position.y + size.y + 10.0)
+	desired_x = clampi(
+		desired_x,
+		8,
+		maxi(8, int(viewport_size.x) - popup_size.x - 8)
+	)
+	desired_y = clampi(
+		desired_y,
+		8,
+		maxi(8, int(viewport_size.y) - popup_size.y - 8)
+	)
+	detail_popup.popup(
+		Rect2i(
+			Vector2i(desired_x, desired_y),
+			popup_size
+		)
+	)
 	accept_event()
 
 
