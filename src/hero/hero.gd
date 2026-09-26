@@ -972,7 +972,21 @@ func _physics_process_alchemist(delta: float) -> void:
 		var material_target := _find_nearest_active_alchemy_material()
 		if is_instance_valid(material_target):
 			var material_direction := global_position.direction_to(material_target.global_position)
-			velocity = material_direction * alchemist_move_speed * move_multiplier
+			var recovery_direction := material_direction
+			var nearest_threat := _find_nearest_monster()
+			if is_instance_valid(nearest_threat):
+				var threat_distance := global_position.distance_to(nearest_threat.global_position)
+				if threat_distance < kite_distance:
+					var escape_direction := _choose_move_direction(
+						nearest_threat,
+						threat_distance
+					)
+					if escape_direction.length_squared() > 0.01:
+						recovery_direction = (
+							material_direction * 0.55
+							+ escape_direction * 1.25
+						).normalized()
+			velocity = recovery_direction * alchemist_move_speed * move_multiplier
 			move_and_slide()
 			_clamp_to_battlefield()
 			_update_alchemist_pose_visual(delta)
@@ -1180,13 +1194,16 @@ func _collect_alchemy_material_list(
 func _find_nearest_active_alchemy_material() -> Node2D:
 	var nearest: Node2D = null
 	var nearest_distance_sq := INF
-	for material in alchemist_material_pool:
-		if not is_instance_valid(material) or not bool(material.get("active")):
-			continue
-		var distance_sq := global_position.distance_squared_to(material.global_position)
-		if distance_sq < nearest_distance_sq:
-			nearest_distance_sq = distance_sq
-			nearest = material
+	for materials in [alchemist_material_pool, alchemist_bonus_materials]:
+		for material in materials:
+			if not is_instance_valid(material) or not bool(material.get("active")):
+				continue
+			if bool(material.get("in_flight")):
+				continue
+			var distance_sq := global_position.distance_squared_to(material.global_position)
+			if distance_sq < nearest_distance_sq:
+				nearest_distance_sq = distance_sq
+				nearest = material
 	return nearest
 
 
