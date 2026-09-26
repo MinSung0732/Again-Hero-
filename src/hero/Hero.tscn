@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/hero/hero.gd" id="1_hero"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/level_up_8bit_short.wav" id="2_levelup"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hero"]
 radius = 28.0
@@ -46,6 +47,7 @@ texture_filter = 1
 
 [node name="LevelUpAudio" type="AudioStreamPlayer" parent="."]
 process_mode = 3
+stream = ExtResource("2_levelup")
 volume_db = 3.0
 
 [node name="Camera2D" type="Camera2D" parent="."]
