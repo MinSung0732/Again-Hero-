@@ -48,7 +48,7 @@ texture_filter = 1
 [node name="LevelUpAudio" type="AudioStreamPlayer" parent="."]
 process_mode = 3
 stream = ExtResource("2_levelup")
-volume_db = -14.0
+volume_db = -18.0
 
 [node name="Camera2D" type="Camera2D" parent="."]
 enabled = true
