@@ -1,10 +1,10 @@
 [gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://src/hero/alchemist_cauldron.gd" id="1_cauldron"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_cauldron_place.wav" id="2_place"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_cauldron_great_success.wav" id="3_great"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_cauldron_success.wav" id="4_success"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_cauldron_failure.wav" id="5_failure"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_vial_break.wav" id="2_place"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_vial_throw.wav" id="3_great"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_vial_break.wav" id="4_success"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_vial_break.wav" id="5_failure"]
 
 [node name="AlchemistCauldron" type="Node2D"]
 z_index = 4
@@ -15,16 +15,20 @@ texture_filter = 1
 
 [node name="PlaceAudio" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("2_place")
-volume_db = -17.0
+volume_db = -18.0
+pitch_scale = 0.62
 
 [node name="GreatSuccessAudio" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("3_great")
-volume_db = -23.0
+volume_db = -22.0
+pitch_scale = 0.92
 
 [node name="SuccessAudio" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("4_success")
-volume_db = -18.0
+volume_db = -19.0
+pitch_scale = 1.18
 
 [node name="FailureAudio" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("5_failure")
-volume_db = -18.5
+volume_db = -19.5
+pitch_scale = 0.78
