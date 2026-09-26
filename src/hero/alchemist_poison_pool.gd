@@ -10,6 +10,8 @@ const POISON_TEXTURES := [
 	preload("res://assets/art/heroes/stage7_alchemist/frames/effect1/effect_06.png"),
 ]
 
+static var _shared_poison_frames: SpriteFrames
+
 @onready var visual: AnimatedSprite2D = $Visual
 
 var active: bool = false
@@ -19,7 +21,9 @@ var tick_interval: float = 0.27
 var tick_timer: float = 0.27
 var tick_damage: int = 1
 
-func _ready() -> void:
+func _get_shared_poison_frames() -> SpriteFrames:
+	if _shared_poison_frames != null:
+		return _shared_poison_frames
 	var frames := SpriteFrames.new()
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
@@ -28,7 +32,12 @@ func _ready() -> void:
 	frames.set_animation_loop("poison", true)
 	for texture in POISON_TEXTURES:
 		frames.add_frame("poison", texture)
-	visual.sprite_frames = frames
+	_shared_poison_frames = frames
+	return _shared_poison_frames
+
+
+func _ready() -> void:
+	visual.sprite_frames = _get_shared_poison_frames()
 	visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	visual.scale = Vector2(0.79, 0.79)
 	deactivate()

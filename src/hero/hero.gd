@@ -252,6 +252,16 @@ var alchemist_field_run_exit_timer: float = 0.0
 var alchemist_emergency_config: Dictionary = {}
 var alchemist_emergency_cooldown: float = 0.0
 var alchemist_emergency_trapped_timer: float = 0.0
+var alchemist_philosopher_config: Dictionary = {}
+var alchemist_materials_collected: int = 0
+var alchemist_philosopher_used: bool = false
+var alchemist_philosopher_channeling: bool = false
+var alchemist_philosopher_channel_timer: float = 0.0
+var alchemist_transformed: bool = false
+var alchemist_gas_regen_timer: float = 0.0
+var alchemist_poison_trail_timer: float = 0.0
+var alchemist_poison_trail_last_position: Vector2 = Vector2.ZERO
+var alchemist_poison_trail_has_position: bool = false
 
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
@@ -406,6 +416,7 @@ var exp_orb_retarget_until_msec: int = 0
 @onready var level_up_effect: AnimatedSprite2D = $LevelUpEffect
 @onready var level_up_audio: AudioStreamPlayer = $LevelUpAudio
 @onready var alchemist_emergency_audio: AudioStreamPlayer = $AlchemistEmergencyAudio
+@onready var alchemist_philosopher_audio: AudioStreamPlayer = $AlchemistPhilosopherAudio
 
 func configure_profile(profile: Dictionary) -> void:
 	if profile.is_empty():
@@ -545,6 +556,21 @@ func configure_profile(profile: Dictionary) -> void:
 	)
 	alchemist_emergency_cooldown = 0.0
 	alchemist_emergency_trapped_timer = 0.0
+	var raw_philosopher = alchemist_config.get("philosopher_stone", {})
+	alchemist_philosopher_config = (
+		raw_philosopher.duplicate(true)
+		if typeof(raw_philosopher) == TYPE_DICTIONARY
+		else {}
+	)
+	alchemist_materials_collected = 0
+	alchemist_philosopher_used = false
+	alchemist_philosopher_channeling = false
+	alchemist_philosopher_channel_timer = 0.0
+	alchemist_transformed = false
+	alchemist_gas_regen_timer = 0.0
+	alchemist_poison_trail_timer = 0.0
+	alchemist_poison_trail_last_position = Vector2.ZERO
+	alchemist_poison_trail_has_position = false
 
 	var profile_gunner = profile.get("gunner", {})
 	gunner_config = (
@@ -960,7 +986,6 @@ func _physics_process_alchemist(delta: float) -> void:
 	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
 	_update_invulnerability(delta)
 	_update_alchemist_material_spawning(delta)
-	_update_alchemist_throw_sequence(delta)
 	_collect_nearby_alchemy_materials()
 	alchemist_mixture_field_cooldown = maxf(alchemist_mixture_field_cooldown - delta, 0.0)
 	alchemist_mystery_cauldron_cooldown = maxf(
@@ -971,6 +996,18 @@ func _physics_process_alchemist(delta: float) -> void:
 		alchemist_emergency_cooldown - delta,
 		0.0
 	)
+	_update_alchemist_philosopher_gas_regen(delta)
+
+	if _update_alchemist_philosopher_channel(delta):
+		return
+	if _try_start_alchemist_philosopher_stone():
+		return
+
+	# A pre-transformation vial burst may already be queued. Once the stone
+	# is active, basic vial attacks are permanently disabled for this run.
+	if not alchemist_transformed:
+		_update_alchemist_throw_sequence(delta)
+
 	_update_alchemist_mixture_field_hero_effects(delta)
 	_update_alchemist_field_locomotion_state(delta)
 	if _update_alchemist_emergency_escape(delta):
@@ -984,6 +1021,11 @@ func _physics_process_alchemist(delta: float) -> void:
 		if slow_timer <= 0.0:
 			move_multiplier = 1.0
 			queue_redraw()
+
+	if alchemist_transformed:
+		_move_alchemist_philosopher_form(delta)
+		_update_alchemist_pose_visual(delta)
+		return
 
 	var alchemist_move_speed := move_speed * _get_alchemist_field_speed_multiplier()
 	var basic_gas_cost := maxf(float(alchemist_config.get("basic_gas_cost", 10.0)), 0.0)
@@ -1042,7 +1084,6 @@ func _physics_process_alchemist(delta: float) -> void:
 
 	_update_alchemist_pose_visual(delta)
 
-
 func _ensure_alchemist_runtime() -> void:
 	if alchemist_runtime_ready or hero_archetype != "alchemist_chemical":
 		return
@@ -1058,7 +1099,7 @@ func _ensure_alchemist_runtime() -> void:
 		vial.connect("landed", Callable(self, "_on_alchemist_vial_landed"))
 		alchemist_vial_pool.append(vial)
 
-	for _index in range(16):
+	for _index in range(28):
 		var poison := ALCHEMIST_POISON_POOL_SCENE.instantiate() as Node2D
 		if poison == null:
 			continue
@@ -1207,6 +1248,14 @@ func _collect_alchemy_material_list(
 			continue
 		var gas_value := float(material.get("gas_value"))
 		material.call("deactivate")
+		var required_materials := maxi(
+			int(alchemist_philosopher_config.get("required_materials", 20)),
+			1
+		)
+		alchemist_materials_collected = mini(
+			alchemist_materials_collected + 1,
+			required_materials
+		)
 		_add_alchemist_gas(gas_value)
 
 
@@ -1240,6 +1289,314 @@ func _consume_alchemist_gas(amount: float) -> bool:
 	alchemist_gas = maxf(alchemist_gas - cost, 0.0)
 	queue_redraw()
 	return true
+
+
+func _get_alchemist_effective_cooldown(
+	config: Dictionary,
+	fallback: float
+) -> float:
+	var base_cooldown := maxf(float(config.get("cooldown", fallback)), 0.0)
+	if not alchemist_transformed:
+		return base_cooldown
+	return (
+		base_cooldown
+		* clampf(
+			float(alchemist_philosopher_config.get(
+				"skill_cooldown_multiplier",
+				0.70
+			)),
+			0.05,
+			1.0
+		)
+	)
+
+
+func _try_start_alchemist_philosopher_stone() -> bool:
+	if (
+		alchemist_philosopher_config.is_empty()
+		or alchemist_philosopher_used
+		or alchemist_philosopher_channeling
+		or alchemist_transformed
+	):
+		return false
+
+	var required_materials := maxi(
+		int(alchemist_philosopher_config.get("required_materials", 20)),
+		1
+	)
+	if alchemist_materials_collected < required_materials:
+		return false
+
+	var gas_cost := maxf(
+		float(alchemist_philosopher_config.get("gas_cost", 100.0)),
+		0.0
+	)
+	if alchemist_gas + 0.001 < gas_cost:
+		return false
+	if not _consume_alchemist_gas(gas_cost):
+		return false
+
+	alchemist_philosopher_used = true
+	alchemist_philosopher_channeling = true
+	var fps := maxf(
+		float(alchemist_philosopher_config.get("channel_fps", 8.0)),
+		1.0
+	)
+	alchemist_philosopher_channel_timer = 12.0 / fps
+	velocity = Vector2.ZERO
+	alchemist_throw_positions.clear()
+	alchemist_throw_index = 0
+	alchemist_throw_timer = 0.0
+	alchemist_direct_chest_target = null
+
+	if is_instance_valid(hero_sprite):
+		hero_sprite.visible = false
+		channel_hid_hero_sprite = true
+	if (
+		is_instance_valid(channel_effect)
+		and channel_effect.sprite_frames != null
+		and channel_effect.sprite_frames.has_animation("philosopher_stone")
+	):
+		channel_effect.stop()
+		channel_effect.frame = 0
+		channel_effect.frame_progress = 0.0
+		channel_effect.visible = true
+		channel_effect.play(&"philosopher_stone")
+	return true
+
+
+func _update_alchemist_philosopher_channel(delta: float) -> bool:
+	if not alchemist_philosopher_channeling:
+		return false
+
+	velocity = Vector2.ZERO
+	alchemist_philosopher_channel_timer = maxf(
+		alchemist_philosopher_channel_timer - delta,
+		0.0
+	)
+	if alchemist_philosopher_channel_timer > 0.0:
+		return true
+
+	alchemist_philosopher_channeling = false
+	if is_instance_valid(channel_effect):
+		channel_effect.stop()
+		channel_effect.visible = false
+	if channel_hid_hero_sprite and is_instance_valid(hero_sprite) and not is_dying:
+		hero_sprite.visible = true
+	channel_hid_hero_sprite = false
+	_activate_alchemist_philosopher_form()
+	return true
+
+
+func _activate_alchemist_philosopher_form() -> void:
+	if alchemist_transformed:
+		return
+	alchemist_transformed = true
+
+	var hp_multiplier := maxf(
+		float(alchemist_philosopher_config.get("hp_multiplier", 1.50)),
+		1.0
+	)
+	var attack_multiplier := maxf(
+		float(alchemist_philosopher_config.get("attack_multiplier", 1.50)),
+		1.0
+	)
+	var speed_multiplier := maxf(
+		float(alchemist_philosopher_config.get("move_speed_multiplier", 1.22)),
+		1.0
+	)
+	max_hp = maxi(1, int(round(float(max_hp) * hp_multiplier)))
+	current_hp = clampi(
+		int(round(float(current_hp) * hp_multiplier)),
+		1,
+		max_hp
+	)
+	attack_damage = maxi(
+		1,
+		int(round(float(attack_damage) * attack_multiplier))
+	)
+	base_attack_damage_for_level_growth *= attack_multiplier
+	move_speed *= speed_multiplier
+
+	var cooldown_multiplier := clampf(
+		float(alchemist_philosopher_config.get(
+			"skill_cooldown_multiplier",
+			0.70
+		)),
+		0.05,
+		1.0
+	)
+	alchemist_mixture_field_cooldown *= cooldown_multiplier
+	alchemist_mystery_cauldron_cooldown *= cooldown_multiplier
+	alchemist_emergency_cooldown *= cooldown_multiplier
+
+	alchemist_gas_regen_timer = maxf(
+		float(alchemist_philosopher_config.get("gas_regen_interval", 5.0)),
+		0.1
+	)
+	alchemist_poison_trail_timer = 0.0
+	alchemist_poison_trail_last_position = global_position
+	alchemist_poison_trail_has_position = true
+	target = null
+	attack_timer = 0.0
+	attack_pose_timer = 0.0
+
+	health_changed.emit(current_hp, max_hp)
+	queue_redraw()
+	if is_instance_valid(alchemist_philosopher_audio):
+		alchemist_philosopher_audio.stop()
+		alchemist_philosopher_audio.play()
+
+
+func _update_alchemist_philosopher_gas_regen(delta: float) -> void:
+	if not alchemist_transformed:
+		return
+	alchemist_gas_regen_timer -= delta
+	if alchemist_gas_regen_timer > 0.0:
+		return
+
+	var interval := maxf(
+		float(alchemist_philosopher_config.get("gas_regen_interval", 5.0)),
+		0.1
+	)
+	var amount := maxf(
+		float(alchemist_philosopher_config.get("gas_regen_amount", 10.0)),
+		0.0
+	)
+	_add_alchemist_gas(amount)
+	alchemist_gas_regen_timer += interval
+
+
+func _move_alchemist_philosopher_form(delta: float) -> void:
+	if (
+		wander_timer <= 0.0
+		or global_position.distance_squared_to(wander_target)
+		<= WANDER_REACHED_DISTANCE * WANDER_REACHED_DISTANCE
+	):
+		_pick_new_wander_target()
+
+	var desired := global_position.direction_to(wander_target)
+	var sense_radius := maxf(ai_sense_radius, 520.0)
+	var repulsion := Vector2.ZERO
+	var sense_radius_sq := sense_radius * sense_radius
+	for node in _get_monster_nodes_near(global_position, sense_radius):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var offset := global_position - monster.global_position
+		var distance_sq := offset.length_squared()
+		if distance_sq <= 0.01 or distance_sq > sense_radius_sq:
+			continue
+		var distance := sqrt(distance_sq)
+		var pressure := 1.0 - clampf(distance / sense_radius, 0.0, 1.0)
+		repulsion += offset / distance * (0.35 + pressure * pressure * 2.4)
+
+	if repulsion.length_squared() > 0.01:
+		desired = desired * 0.55 + repulsion * 1.55
+
+	var soft_margin := 330.0
+	var inward := Vector2.ZERO
+	var left_space := global_position.x - FIELD_MARGIN
+	var right_space := battlefield_size.x - FIELD_MARGIN - global_position.x
+	var top_space := global_position.y - FIELD_MARGIN
+	var bottom_space := battlefield_size.y - FIELD_MARGIN - global_position.y
+	if left_space < soft_margin:
+		inward.x += 1.0 - clampf(left_space / soft_margin, 0.0, 1.0)
+	if right_space < soft_margin:
+		inward.x -= 1.0 - clampf(right_space / soft_margin, 0.0, 1.0)
+	if top_space < soft_margin:
+		inward.y += 1.0 - clampf(top_space / soft_margin, 0.0, 1.0)
+	if bottom_space < soft_margin:
+		inward.y -= 1.0 - clampf(bottom_space / soft_margin, 0.0, 1.0)
+	if inward.length_squared() > 0.01:
+		desired += inward.normalized() * 2.2
+
+	if desired.length_squared() <= 0.01:
+		desired = global_position.direction_to(battlefield_size * 0.5)
+	if desired.length_squared() <= 0.01:
+		desired = Vector2.RIGHT
+
+	var speed := (
+		move_speed
+		* _get_alchemist_field_speed_multiplier()
+		* move_multiplier
+	)
+	velocity = desired.normalized() * speed
+	move_and_slide()
+	_clamp_to_battlefield()
+	_update_alchemist_poison_trail(delta)
+
+
+func _update_alchemist_poison_trail(delta: float) -> void:
+	if not alchemist_transformed:
+		return
+
+	alchemist_poison_trail_timer = maxf(
+		alchemist_poison_trail_timer - delta,
+		0.0
+	)
+	if alchemist_poison_trail_timer > 0.0 or velocity.length_squared() <= 16.0:
+		return
+
+	var min_spacing := maxf(
+		float(alchemist_philosopher_config.get("trail_min_spacing", 36.0)),
+		1.0
+	)
+	if (
+		alchemist_poison_trail_has_position
+		and global_position.distance_squared_to(alchemist_poison_trail_last_position)
+		< min_spacing * min_spacing
+	):
+		return
+
+	var damage := maxi(
+		1,
+		int(round(
+			float(attack_damage)
+			* maxf(float(alchemist_philosopher_config.get(
+				"trail_tick_damage_ratio",
+				0.18
+			)), 0.0)
+			* maxf(float(alchemist_philosopher_config.get(
+				"poison_damage_multiplier",
+				1.50
+			)), 0.0)
+		))
+	)
+	for poison_node in alchemist_poison_pool:
+		if not is_instance_valid(poison_node):
+			continue
+		if not bool(poison_node.call("is_available")):
+			continue
+		poison_node.call(
+			"activate",
+			global_position,
+			maxf(float(alchemist_philosopher_config.get(
+				"trail_duration",
+				2.0
+			)), 0.1),
+			maxf(float(alchemist_philosopher_config.get(
+				"trail_radius",
+				115.0
+			)), 1.0),
+			maxf(float(alchemist_philosopher_config.get(
+				"trail_tick_interval",
+				0.30
+			)), 0.03),
+			damage
+		)
+		alchemist_poison_trail_last_position = global_position
+		alchemist_poison_trail_has_position = true
+		alchemist_poison_trail_timer = maxf(
+			float(alchemist_philosopher_config.get(
+				"trail_spawn_interval",
+				0.22
+			)),
+			0.05
+		)
+		return
 
 
 func _is_alchemist_inside_mixture_field() -> bool:
@@ -1374,9 +1731,9 @@ func _try_cast_alchemist_mixture_field() -> void:
 	if not _consume_alchemist_gas(gas_cost):
 		return
 
-	alchemist_mixture_field_cooldown = maxf(
-		float(alchemist_mixture_field_config.get("cooldown", 20.0)),
-		0.0
+	alchemist_mixture_field_cooldown = _get_alchemist_effective_cooldown(
+		alchemist_mixture_field_config,
+		20.0
 	)
 	alchemist_mixture_heal_timer = 0.0
 	alchemist_mixture_field.call(
@@ -1438,9 +1795,9 @@ func _try_cast_alchemist_mystery_cauldron() -> void:
 	)
 	var mix_duration: float = randf_range(min_mix, max_mix)
 	cauldron_to_use.call("activate", placement, mix_duration)
-	alchemist_mystery_cauldron_cooldown = maxf(
-		float(alchemist_mystery_cauldron_config.get("cooldown", 20.0)),
-		0.0
+	alchemist_mystery_cauldron_cooldown = _get_alchemist_effective_cooldown(
+		alchemist_mystery_cauldron_config,
+		20.0
 	)
 
 
@@ -1863,7 +2220,10 @@ func _cast_alchemist_emergency_escape(
 	escape_direction: Vector2
 ) -> void:
 	alchemist_emergency_cooldown = maxf(
-		float(alchemist_emergency_config.get("cooldown", 10.0)),
+		_get_alchemist_effective_cooldown(
+			alchemist_emergency_config,
+			10.0
+		),
 		0.1
 	)
 	if escape_direction.length_squared() <= 0.01:
@@ -2129,7 +2489,9 @@ func _update_alchemist_pose_visual(delta: float) -> void:
 	if speed > 4.0:
 		var movement_ratio := speed / maxf(move_speed, 1.0)
 		var locomotion_animation := (
-			"run" if alchemist_field_run_active else "move"
+			"move"
+			if alchemist_transformed
+			else ("run" if alchemist_field_run_active else "move")
 		)
 		_play_stage1_animation(
 			locomotion_animation,
@@ -3777,6 +4139,49 @@ func _apply_stage6_berserker_effect_visuals() -> void:
 	channel_effect.modulate = Color.WHITE
 
 
+func _apply_alchemist_philosopher_effect_visuals() -> void:
+	if hero_archetype != "alchemist_chemical":
+		return
+
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	frames.add_animation("philosopher_stone")
+	frames.set_animation_speed(
+		"philosopher_stone",
+		maxf(
+			float(alchemist_philosopher_config.get("channel_fps", 8.0)),
+			1.0
+		)
+	)
+	frames.set_animation_loop("philosopher_stone", false)
+
+	for index in range(1, 9):
+		var brew := _load_stage1_texture(
+			"%s/effect7/brew_%02d.png" % [STAGE7_FRAME_DIR, index]
+		)
+		if brew != null:
+			frames.add_frame("philosopher_stone", brew)
+	for index in range(1, 5):
+		var cast := _load_stage1_texture(
+			"%s/effect7/cast_%02d.png" % [STAGE7_FRAME_DIR, index]
+		)
+		if cast != null:
+			frames.add_frame("philosopher_stone", cast)
+
+	channel_effect.stop()
+	channel_effect.sprite_frames = frames
+	channel_effect.animation = &"philosopher_stone"
+	channel_effect.visible = false
+	channel_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	# effect7 manifest anchor is (192,336) in a 512x384 frame.
+	channel_effect.offset = Vector2(64.0, -144.0)
+	channel_effect.position = Vector2.ZERO
+	channel_effect.scale = Vector2(0.50, 0.50)
+	channel_effect.z_index = 10
+	channel_effect.modulate = Color.WHITE
+
+
 func _apply_profile_visual() -> void:
 	hero_sprite.visible = false
 	hero_sprite.sprite_frames = null
@@ -3831,6 +4236,7 @@ func _apply_profile_visual() -> void:
 		_apply_stage7_sprite_anchor()
 		hero_sprite.speed_scale = 1.0
 		hero_sprite.play("idle")
+		_apply_alchemist_philosopher_effect_visuals()
 		return
 
 	if hero_archetype == "berserker_madness":
@@ -7131,20 +7537,33 @@ func get_skill_cooldown_hud() -> Array:
 				skills,
 				alchemist_mixture_field_config,
 				alchemist_mixture_field_cooldown,
-				"res://assets/art/heroes/stage7_alchemist/frames/effect4/effect_13.png"
+				"res://assets/art/heroes/stage7_alchemist/frames/effect4/effect_13.png",
+				_get_alchemist_effective_cooldown(
+					alchemist_mixture_field_config,
+					20.0
+				)
 			)
 			_append_skill_cooldown_hud(
 				skills,
 				alchemist_mystery_cauldron_config,
 				alchemist_mystery_cauldron_cooldown,
-				"res://assets/art/heroes/stage7_alchemist/frames/effect6/cauldron_04.png"
+				"res://assets/art/heroes/stage7_alchemist/frames/effect6/cauldron_04.png",
+				_get_alchemist_effective_cooldown(
+					alchemist_mystery_cauldron_config,
+					20.0
+				)
 			)
 			_append_skill_cooldown_hud(
 				skills,
 				alchemist_emergency_config,
 				alchemist_emergency_cooldown,
-				"res://assets/art/heroes/stage7_alchemist/frames/effect8/effect_04.png"
+				"res://assets/art/heroes/stage7_alchemist/frames/effect8/effect_04.png",
+				_get_alchemist_effective_cooldown(
+					alchemist_emergency_config,
+					10.0
+				)
 			)
+			_append_alchemist_philosopher_hud(skills)
 		"ranged_kiter":
 			_append_skill_cooldown_hud(
 				skills,
@@ -7246,23 +7665,107 @@ func get_skill_cooldown_hud() -> Array:
 	return skills
 
 
+func _skill_hud_description(config: Dictionary) -> String:
+	var explicit := String(config.get("description", "")).strip_edges()
+	if not explicit.is_empty():
+		return explicit
+	return "용사가 전투 상황과 사용 조건에 맞춰 자동으로 사용하는 기술입니다."
+
+
+func _skill_hud_resource_text(config: Dictionary) -> String:
+	if config.has("gas_cost"):
+		return "화학가스 %.0f" % maxf(float(config.get("gas_cost", 0.0)), 0.0)
+	if config.has("hp_cost_ratio"):
+		return "현재 HP %.0f%%" % (
+			maxf(float(config.get("hp_cost_ratio", 0.0)), 0.0) * 100.0
+		)
+	return ""
+
+
 func _append_skill_cooldown_hud(
 	skills: Array,
 	config: Dictionary,
 	remaining: float,
-	icon_path: String
+	icon_path: String,
+	cooldown_override: float = -1.0
 ) -> void:
 	if config.is_empty():
 		return
-	var cooldown_total := maxf(float(config.get("cooldown", 0.0)), 0.0)
+	var cooldown_total := (
+		maxf(cooldown_override, 0.0)
+		if cooldown_override >= 0.0
+		else maxf(float(config.get("cooldown", 0.0)), 0.0)
+	)
 	if cooldown_total <= 0.0:
 		return
+	var current_remaining := maxf(remaining, 0.0)
 	skills.append({
 		"id": String(config.get("id", "skill")),
 		"name": String(config.get("name", "기술")),
+		"description": _skill_hud_description(config),
+		"resource_text": _skill_hud_resource_text(config),
+		"status_text": (
+			"재사용 대기 중"
+			if current_remaining > 0.01
+			else "사용 가능"
+		),
+		"available": current_remaining <= 0.01,
 		"cooldown_total": cooldown_total,
-		"cooldown_remaining": maxf(remaining, 0.0),
+		"cooldown_remaining": current_remaining,
 		"icon_path": icon_path,
+	})
+
+
+func _append_alchemist_philosopher_hud(skills: Array) -> void:
+	if alchemist_philosopher_config.is_empty():
+		return
+	var required := maxi(
+		int(alchemist_philosopher_config.get("required_materials", 20)),
+		1
+	)
+	var gas_cost := maxf(
+		float(alchemist_philosopher_config.get("gas_cost", 100.0)),
+		0.0
+	)
+	var ready := (
+		not alchemist_philosopher_used
+		and not alchemist_philosopher_channeling
+		and not alchemist_transformed
+		and alchemist_materials_collected >= required
+		and alchemist_gas + 0.001 >= gas_cost
+	)
+	var status := "사용 조건 대기"
+	if alchemist_philosopher_channeling:
+		status = "채널링 중"
+	elif alchemist_transformed:
+		status = "사용 완료 · 현자의 돌 활성화"
+	elif alchemist_philosopher_used:
+		status = "사용 완료"
+	elif ready:
+		status = "사용 가능"
+
+	skills.append({
+		"id": String(alchemist_philosopher_config.get(
+			"id",
+			"alchemist_philosopher_stone"
+		)),
+		"name": String(alchemist_philosopher_config.get(
+			"name",
+			"현자의 돌"
+		)),
+		"description": _skill_hud_description(alchemist_philosopher_config),
+		"resource_text": "화학가스 %.0f · 전투당 1회" % gas_cost,
+		"progress_text": "연금술 재료 %d / %d · 현재 가스 %.0f / %.0f" % [
+			mini(alchemist_materials_collected, required),
+			required,
+			alchemist_gas,
+			alchemist_gas_max,
+		],
+		"status_text": status,
+		"available": ready,
+		"cooldown_total": 0.0,
+		"cooldown_remaining": 0.0,
+		"icon_path": "res://assets/art/heroes/stage7_alchemist/frames/effect7/cast_04.png",
 	})
 
 
@@ -7280,11 +7783,16 @@ func _append_berserker_skill_cooldown_hud(
 	)
 	if cooldown_total <= 0.0:
 		return
+	var current_remaining := maxf(remaining, 0.0)
 	skills.append({
 		"id": String(config.get("id", "skill")),
 		"name": String(config.get("name", "기술")),
+		"description": _skill_hud_description(config),
+		"resource_text": _skill_hud_resource_text(config),
+		"status_text": "재사용 대기 중" if current_remaining > 0.01 else "사용 가능",
+		"available": current_remaining <= 0.01,
 		"cooldown_total": cooldown_total,
-		"cooldown_remaining": maxf(remaining, 0.0),
+		"cooldown_remaining": current_remaining,
 		"icon_path": icon_path,
 	})
 
@@ -7300,11 +7808,19 @@ func _append_archmage_skill_hud(
 	var cooldown_total := maxf(float(config.get("cooldown", 0.0)), 0.0)
 	if cooldown_total <= 0.0:
 		return
+	var current_remaining := maxf(
+		float(archmage_skill_cooldowns.get(skill_key, 0.0)),
+		0.0
+	)
 	skills.append({
 		"id": String(config.get("id", skill_key)),
 		"name": String(config.get("name", skill_key)),
+		"description": _skill_hud_description(config),
+		"resource_text": _skill_hud_resource_text(config),
+		"status_text": "재사용 대기 중" if current_remaining > 0.01 else "사용 가능",
+		"available": current_remaining <= 0.01,
 		"cooldown_total": cooldown_total,
-		"cooldown_remaining": maxf(float(archmage_skill_cooldowns.get(skill_key, 0.0)), 0.0),
+		"cooldown_remaining": current_remaining,
 		"icon_path": icon_path,
 	})
 
@@ -7319,11 +7835,16 @@ func _append_gunner_cooldown_hud(
 ) -> void:
 	if cooldown_total <= 0.0:
 		return
+	var current_remaining := maxf(remaining, 0.0)
 	skills.append({
 		"id": skill_id,
 		"name": skill_name,
+		"description": "권총의 용사가 전투 상황에 맞춰 자동으로 사용하는 전용 기술입니다.",
+		"resource_text": "",
+		"status_text": "재사용 대기 중" if current_remaining > 0.01 else "사용 가능",
+		"available": current_remaining <= 0.01,
 		"cooldown_total": cooldown_total,
-		"cooldown_remaining": maxf(remaining, 0.0),
+		"cooldown_remaining": current_remaining,
 		"icon_path": icon_path,
 	})
 
