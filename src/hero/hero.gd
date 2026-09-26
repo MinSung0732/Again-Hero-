@@ -1605,10 +1605,23 @@ func _execute_alchemist_cauldron_success(origin: Vector2) -> void:
 			TAU * float(index) / float(maxi(heal_count, 1))
 			+ 0.35
 		)
-		item.global_position = (
+		var heal_position: Vector2 = (
 			origin
 			+ Vector2.from_angle(heal_angle) * randf_range(105.0, 165.0)
 		)
+		heal_position.x = clampf(
+			heal_position.x,
+			64.0,
+			battlefield_size.x - 64.0
+		)
+		heal_position.y = clampf(
+			heal_position.y,
+			64.0,
+			battlefield_size.y - 64.0
+		)
+		item.global_position = heal_position
+		if item.has_method("set_temporary_lifetime"):
+			item.call("set_temporary_lifetime", lifetime)
 
 
 func _execute_alchemist_cauldron_failure(origin: Vector2) -> void:
