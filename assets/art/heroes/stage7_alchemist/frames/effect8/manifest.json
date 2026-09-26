@@ -1,0 +1,163 @@
+{
+  "source": "stage7_hero_effect6_spritesheet.png",
+  "frame_count": 7,
+  "cell_size": [
+    512,
+    384
+  ],
+  "sheet_size": [
+    3584,
+    384
+  ],
+  "columns": 7,
+  "rows": 1,
+  "anchor": [
+    256,
+    192
+  ],
+  "alignment": "Shared effect center X and Y; frame 6 includes all fragments before the final pair of light blobs",
+  "frame_order": [
+    "effect_01.png",
+    "effect_02.png",
+    "effect_03.png",
+    "effect_04.png",
+    "effect_05.png",
+    "effect_06.png",
+    "effect_07.png"
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "file": "effect_01.png",
+      "action": "effect",
+      "source_crop": [
+        53,
+        307,
+        187,
+        427
+      ],
+      "source_root": [
+        122,
+        355
+      ],
+      "anchor": [
+        256,
+        192
+      ]
+    },
+    {
+      "index": 1,
+      "file": "effect_02.png",
+      "action": "effect",
+      "source_crop": [
+        266,
+        278,
+        458,
+        449
+      ],
+      "source_root": [
+        361,
+        355
+      ],
+      "anchor": [
+        256,
+        192
+      ]
+    },
+    {
+      "index": 2,
+      "file": "effect_03.png",
+      "action": "effect",
+      "source_crop": [
+        503,
+        253,
+        808,
+        476
+      ],
+      "source_root": [
+        648,
+        355
+      ],
+      "anchor": [
+        256,
+        192
+      ]
+    },
+    {
+      "index": 3,
+      "file": "effect_04.png",
+      "action": "effect",
+      "source_crop": [
+        832,
+        202,
+        1229,
+        497
+      ],
+      "source_root": [
+        1030,
+        355
+      ],
+      "anchor": [
+        256,
+        192
+      ]
+    },
+    {
+      "index": 4,
+      "file": "effect_05.png",
+      "action": "effect",
+      "source_crop": [
+        1260,
+        224,
+        1550,
+        479
+      ],
+      "source_root": [
+        1402,
+        355
+      ],
+      "anchor": [
+        256,
+        192
+      ]
+    },
+    {
+      "index": 5,
+      "file": "effect_06.png",
+      "action": "effect",
+      "source_crop": [
+        1591,
+        248,
+        1834,
+        473
+      ],
+      "source_root": [
+        1708,
+        355
+      ],
+      "anchor": [
+        256,
+        192
+      ]
+    },
+    {
+      "index": 6,
+      "file": "effect_07.png",
+      "action": "effect",
+      "source_crop": [
+        1895,
+        306,
+        2002,
+        426
+      ],
+      "source_root": [
+        1933,
+        355
+      ],
+      "anchor": [
+        256,
+        192
+      ]
+    }
+  ]
+}
