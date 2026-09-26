@@ -1810,10 +1810,8 @@ func _update_alchemist_emergency_escape(delta: float) -> bool:
 		return false
 
 	alchemist_emergency_trapped_timer = 0.0
-	_cast_alchemist_emergency_escape(
-		threats,
-		Vector2(escape_info.get("direction", Vector2.RIGHT))
-	)
+	var escape_direction: Vector2 = escape_info.get("direction", Vector2.RIGHT)
+	_cast_alchemist_emergency_escape(threats, escape_direction)
 	return true
 
 
@@ -2004,7 +2002,8 @@ func _build_alchemist_emergency_sfx() -> AudioStreamWAV:
 		var envelope := exp(-8.5 * t)
 		var thump := sin(TAU * (105.0 - 80.0 * t) * t) * envelope
 		var hiss_seed := sin(float(index) * 12.9898) * 43758.5453
-		var noise := (fract(hiss_seed) * 2.0 - 1.0) * exp(-16.0 * t)
+		var noise_unit := hiss_seed - floor(hiss_seed)
+		var noise := (noise_unit * 2.0 - 1.0) * exp(-16.0 * t)
 		var crack := sin(TAU * 680.0 * t) * exp(-24.0 * t)
 		var sample := clampf(
 			(thump * 0.62 + noise * 0.23 + crack * 0.15) * 0.78,
