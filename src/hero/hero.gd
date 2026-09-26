@@ -1426,10 +1426,13 @@ func _on_alchemist_cauldron_completed(
 	var roll: float = randf()
 
 	if roll < great_chance:
+		cauldron.call("play_result_sound", "great_success")
 		_execute_alchemist_cauldron_great_success(origin)
 	elif roll < great_chance + fail_chance:
+		cauldron.call("play_result_sound", "failure")
 		_execute_alchemist_cauldron_failure(origin)
 	else:
+		cauldron.call("play_result_sound", "success")
 		_execute_alchemist_cauldron_success(origin)
 
 	cauldron.call("deactivate")
