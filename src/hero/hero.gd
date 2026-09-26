@@ -1168,6 +1168,8 @@ func _collect_alchemy_material_list(
 	for material in materials:
 		if not is_instance_valid(material) or not bool(material.get("active")):
 			continue
+		if bool(material.get("in_flight")):
+			continue
 		if global_position.distance_squared_to(material.global_position) > pickup_radius_sq:
 			continue
 		var gas_value := float(material.get("gas_value"))
@@ -1427,15 +1429,19 @@ func _on_alchemist_cauldron_completed(
 
 	if roll < great_chance:
 		cauldron.call("play_result_sound", "great_success")
-		_execute_alchemist_cauldron_great_success(origin)
+		await _execute_alchemist_cauldron_great_success(origin)
+		await get_tree().create_timer(0.50).timeout
 	elif roll < great_chance + fail_chance:
 		cauldron.call("play_result_sound", "failure")
 		_execute_alchemist_cauldron_failure(origin)
+		await get_tree().create_timer(0.70).timeout
 	else:
 		cauldron.call("play_result_sound", "success")
 		_execute_alchemist_cauldron_success(origin)
+		await get_tree().create_timer(0.65).timeout
 
-	cauldron.call("deactivate")
+	if is_instance_valid(cauldron):
+		cauldron.call("deactivate")
 
 
 func _execute_alchemist_cauldron_great_success(origin: Vector2) -> void:
@@ -1583,10 +1589,17 @@ func _execute_alchemist_cauldron_success(origin: Vector2) -> void:
 		position.y = clampf(position.y, 64.0, battlefield_size.y - 64.0)
 		material.call(
 			"activate",
-			position,
+			origin,
 			maxf(float(alchemist_config.get("gas_per_material", 20.0)), 0.0),
 			lifetime,
 			true
+		)
+		material.call(
+			"launch_from_cauldron",
+			origin + Vector2(0.0, -18.0),
+			position,
+			randf_range(0.36, 0.50),
+			randf_range(52.0, 78.0)
 		)
 		alchemist_bonus_materials.append(material)
 
