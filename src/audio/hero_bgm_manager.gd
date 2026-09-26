@@ -23,6 +23,60 @@ const STAGE_BGM: Dictionary = {
 		"phase2": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage01/Stage01_Phase2_Frozen_First_Step.ogg",
 		"final": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage01/Stage01_Final_Frozen_First_Step.ogg",
 	},
+	"stage_2": {
+		"intro": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage02/Stage02_Intro_One_Move_Ahead.ogg",
+		"battle": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage02/Stage02_Battle_One_Move_Ahead.ogg",
+		"phase2": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage02/Stage02_Phase2_One_Move_Ahead.ogg",
+		"final": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage02/Stage02_Final_One_Move_Ahead.ogg",
+	},
+	"stage_3": {
+		"intro": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage03/Stage03_Intro_Oath_of_Conviction.ogg",
+		"battle": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage03/Stage03_Battle_Oath_of_Conviction.ogg",
+		"phase2": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage03/Stage03_Phase2_Oath_of_Conviction.ogg",
+		"final": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage03/Stage03_Final_Oath_of_Conviction.ogg",
+	},
+	"stage_4": {
+		"intro": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage04/Stage04_Intro_Twin_Stars_of_the_Badlands.ogg",
+		"battle": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage04/Stage04_Battle_Twin_Stars_of_the_Badlands.ogg",
+		"phase2": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage04/Stage04_Phase2_Twin_Stars_of_the_Badlands.ogg",
+		"final": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage04/Stage04_Final_Twin_Stars_of_the_Badlands.ogg",
+	},
+	"stage_5": {
+		"intro": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage05/Stage05_Intro_Star_Beyond_Defeat.ogg",
+		"battle": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage05/Stage05_Battle_Star_Beyond_Defeat.ogg",
+		"phase2": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage05/Stage05_Phase2_Star_Beyond_Defeat.ogg",
+		"final": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage05/Stage05_Final_Star_Beyond_Defeat.ogg",
+	},
+	"stage_6": {
+		"intro": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage06/Stage06_Intro_Bloodstained_Silence.ogg",
+		"battle": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage06/Stage06_Battle_Bloodstained_Silence.ogg",
+		"phase2": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage06/Stage06_Phase2_Bloodstained_Silence.ogg",
+		"final": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage06/Stage06_Final_Bloodstained_Silence.ogg",
+	},
+	"stage_7": {
+		"intro": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage07/Stage07_Intro_Perfectly_Unstable.ogg",
+		"battle": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage07/Stage07_Battle_Perfectly_Unstable.ogg",
+		"phase2": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage07/Stage07_Phase2_Perfectly_Unstable.ogg",
+		"final": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage07/Stage07_Final_Perfectly_Unstable.ogg",
+	},
+	"stage_8": {
+		"intro": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage08/Stage08_Intro_The_Otherworld_Obeys_Me.ogg",
+		"battle": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage08/Stage08_Battle_The_Otherworld_Obeys_Me.ogg",
+		"phase2": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage08/Stage08_Phase2_The_Otherworld_Obeys_Me.ogg",
+		"final": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage08/Stage08_Final_The_Otherworld_Obeys_Me.ogg",
+	},
+	"stage_9": {
+		"intro": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage09/Stage09_Intro_Where_Prayer_Ends.ogg",
+		"battle": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage09/Stage09_Battle_Where_Prayer_Ends.ogg",
+		"phase2": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage09/Stage09_Phase2_Where_Prayer_Ends.ogg",
+		"final": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage09/Stage09_Final_Where_Prayer_Ends.ogg",
+	},
+	"stage_10": {
+		"intro": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage10/Stage10_Intro_The_Star_No_Longer_Smiles.ogg",
+		"battle": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage10/Stage10_Battle_The_Star_No_Longer_Smiles.ogg",
+		"phase2": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage10/Stage10_Phase2_The_Star_No_Longer_Smiles.ogg",
+		"final": "res://assets/audio/bgm/hero_main_theme/phaseBgm/Stage10/Stage10_Final_The_Star_No_Longer_Smiles.ogg",
+	},
 }
 
 @onready var player_a: AudioStreamPlayer = $PlayerA
