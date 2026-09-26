@@ -1449,7 +1449,7 @@ func _execute_alchemist_cauldron_great_success(origin: Vector2) -> void:
 		),
 		0.05
 	)
-	for batch_index: int in range(batch_count):
+	for batch_index in range(batch_count):
 		var vial_min: int = maxi(
 			int(
 				alchemist_mystery_cauldron_config.get(
@@ -1469,7 +1469,7 @@ func _execute_alchemist_cauldron_great_success(origin: Vector2) -> void:
 			vial_min
 		)
 		var vial_count: int = randi_range(vial_min, vial_max)
-		for vial_index: int in range(vial_count):
+		for vial_index in range(vial_count):
 			_spawn_alchemist_mystery_vial(origin)
 		if batch_index + 1 < batch_count:
 			await get_tree().create_timer(batch_interval).timeout
@@ -1562,17 +1562,20 @@ func _execute_alchemist_cauldron_success(origin: Vector2) -> void:
 		),
 		0.1
 	)
-	for index: int in range(material_count):
+	for index in range(material_count):
 		var material := ALCHEMY_MATERIAL_SCENE.instantiate() as Node2D
 		if material == null:
 			continue
 		parent.add_child(material)
-		var angle: float = (
+		var material_angle: float = (
 			TAU * float(index) / float(maxi(material_count, 1))
 			+ randf_range(-0.24, 0.24)
 		)
-		var radius: float = randf_range(78.0, 170.0)
-		var position: Vector2 = origin + Vector2.from_angle(angle) * radius
+		var material_radius: float = randf_range(78.0, 170.0)
+		var position: Vector2 = (
+			origin
+			+ Vector2.from_angle(material_angle) * material_radius
+		)
 		position.x = clampf(position.x, 64.0, battlefield_size.x - 64.0)
 		position.y = clampf(position.y, 64.0, battlefield_size.y - 64.0)
 		material.call(
@@ -1593,17 +1596,18 @@ func _execute_alchemist_cauldron_success(origin: Vector2) -> void:
 		),
 		0
 	)
-	for index: int in range(heal_count):
+	for index in range(heal_count):
 		var item := HEAL_ITEM_SCENE.instantiate() as Node2D
 		if item == null:
 			continue
 		parent.add_child(item)
-		var angle: float = (
+		var heal_angle: float = (
 			TAU * float(index) / float(maxi(heal_count, 1))
 			+ 0.35
 		)
 		item.global_position = (
-			origin + Vector2.from_angle(angle) * randf_range(105.0, 165.0)
+			origin
+			+ Vector2.from_angle(heal_angle) * randf_range(105.0, 165.0)
 		)
 
 
