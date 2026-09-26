@@ -19,12 +19,12 @@ volume_db = -13.0
 
 [node name="GreatSuccessAudio" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("3_great")
-volume_db = -8.0
+volume_db = -12.0
 
 [node name="SuccessAudio" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("4_success")
-volume_db = -10.0
+volume_db = -12.0
 
 [node name="FailureAudio" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("5_failure")
-volume_db = -10.0
+volume_db = -12.0
