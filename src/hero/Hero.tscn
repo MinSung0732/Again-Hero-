@@ -40,13 +40,15 @@ texture_filter = 1
 scale = Vector2(3, 3)
 
 [node name="LevelUpEffect" type="AnimatedSprite2D" parent="."]
+process_mode = 3
 visible = false
 z_index = 6
 texture_filter = 1
 
 [node name="LevelUpAudio" type="AudioStreamPlayer" parent="."]
+process_mode = 3
 stream = ExtResource("2_levelup")
-volume_db = -2.0
+volume_db = 0.0
 
 [node name="Camera2D" type="Camera2D" parent="."]
 enabled = true
