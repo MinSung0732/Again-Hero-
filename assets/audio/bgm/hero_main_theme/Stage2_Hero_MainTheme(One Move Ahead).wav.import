@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://db8ft3knb2yio"
+path="res://.godot/imported/Stage2_Hero_MainTheme(One Move Ahead).wav-00d92764ea486d8fac7bc26ee8ef4f2e.sample"
+
+[deps]
+
+source_file="res://assets/audio/bgm/hero_main_theme/Stage2_Hero_MainTheme(One Move Ahead).wav"
+dest_files=["res://.godot/imported/Stage2_Hero_MainTheme(One Move Ahead).wav-00d92764ea486d8fac7bc26ee8ef4f2e.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

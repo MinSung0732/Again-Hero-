@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bvxjq4u6qc1mq"
+path="res://.godot/imported/Stage7_Hero_MainTheme(Perfectly Unstable).wav-8da5e79bbd072d9637dff40533b690e1.sample"
+
+[deps]
+
+source_file="res://assets/audio/bgm/hero_main_theme/Stage7_Hero_MainTheme(Perfectly Unstable).wav"
+dest_files=["res://.godot/imported/Stage7_Hero_MainTheme(Perfectly Unstable).wav-8da5e79bbd072d9637dff40533b690e1.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

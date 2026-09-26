@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://10lnnws3mr70"
+path="res://.godot/imported/Stage1_Hero_MainTheme(Frozen First Step).wav-da2db400dbff422490bf9444409df0de.sample"
+
+[deps]
+
+source_file="res://assets/audio/bgm/hero_main_theme/Stage1_Hero_MainTheme(Frozen First Step).wav"
+dest_files=["res://.godot/imported/Stage1_Hero_MainTheme(Frozen First Step).wav-da2db400dbff422490bf9444409df0de.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

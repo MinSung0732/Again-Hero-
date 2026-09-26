@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://c0qh4a04n0h85"
+path="res://.godot/imported/Stage4_Hero_MainTheme(Twin Stars of the Badlands).wav-ab84ff77ae05029fa0de4faae9fa1791.sample"
+
+[deps]
+
+source_file="res://assets/audio/bgm/hero_main_theme/Stage4_Hero_MainTheme(Twin Stars of the Badlands).wav"
+dest_files=["res://.godot/imported/Stage4_Hero_MainTheme(Twin Stars of the Badlands).wav-ab84ff77ae05029fa0de4faae9fa1791.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2
