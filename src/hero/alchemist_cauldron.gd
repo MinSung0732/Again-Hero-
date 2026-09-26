@@ -31,10 +31,6 @@ var complete_frame: int = 3
 
 
 func _ready() -> void:
-	place_audio.stream = _build_cauldron_sfx("place")
-	great_success_audio.stream = _build_cauldron_sfx("great_success")
-	success_audio.stream = _build_cauldron_sfx("success")
-	failure_audio.stream = _build_cauldron_sfx("failure")
 	visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	visual.centered = false
 	visual.offset = -ANCHOR
@@ -147,74 +143,6 @@ func _draw() -> void:
 		Rect2(top_left, Vector2(width * ratio, height)),
 		Color(0.72, 0.25, 0.92, 0.98)
 	)
-
-
-func _build_cauldron_sfx(kind: String) -> AudioStreamWAV:
-	var mix_rate: int = 22050
-	var duration: float = 0.36
-	match kind:
-		"great_success":
-			duration = 0.64
-		"success":
-			duration = 0.48
-		"failure":
-			duration = 0.55
-
-	var sample_count: int = maxi(int(round(duration * float(mix_rate))), 1)
-	var pcm := PackedByteArray()
-	var success_notes: Array[float] = [660.0, 880.0, 1100.0, 1320.0, 1760.0]
-	pcm.resize(sample_count)
-
-	for sample_index in range(sample_count):
-		var time: float = float(sample_index) / float(mix_rate)
-		var value: float = 0.0
-
-		match kind:
-			"place":
-				var place_env: float = exp(-time / 0.11)
-				value = (
-					sin(TAU * (220.0 - 110.0 * time / duration) * time)
-					* 0.42
-					* place_env
-					+ sin(TAU * 880.0 * time) * 0.14 * exp(-time / 0.05)
-				)
-			"great_success":
-				var note_index: int = mini(int(time / 0.09), 4)
-				var note_time: float = fmod(time, 0.09)
-				var square: float = (
-					1.0
-					if sin(TAU * success_notes[note_index] * note_time) >= 0.0
-					else -1.0
-				)
-				value = square * 0.30 * exp(-note_time / 0.16)
-			"success":
-				value = (
-					sin(TAU * 523.25 * time) * 0.24
-					+ sin(TAU * 659.25 * time) * 0.18
-					+ sin(TAU * 783.99 * time) * 0.14
-				) * exp(-time / 0.23)
-			"failure":
-				var falling_frequency: float = lerpf(420.0, 95.0, time / duration)
-				var failure_square: float = (
-					1.0 if sin(TAU * falling_frequency * time) >= 0.0 else -1.0
-				)
-				var noise_seed: int = (
-					(sample_index * 1103515245 + 12345) & 255
-				)
-				var noise: float = float(noise_seed) / 127.5 - 1.0
-				value = (
-					failure_square * 0.24
-					+ noise * 0.10
-				) * exp(-time / 0.28)
-
-		pcm[sample_index] = clampi(int(round(128.0 + value * 118.0)), 0, 255)
-
-	var stream := AudioStreamWAV.new()
-	stream.format = AudioStreamWAV.FORMAT_8_BITS
-	stream.mix_rate = mix_rate
-	stream.stereo = false
-	stream.data = pcm
-	return stream
 
 
 func _load_texture(path: String) -> Texture2D:
