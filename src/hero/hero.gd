@@ -405,6 +405,7 @@ var exp_orb_retarget_until_msec: int = 0
 @onready var rogue_attack_effect: AnimatedSprite2D = $RogueAttackEffect
 @onready var level_up_effect: AnimatedSprite2D = $LevelUpEffect
 @onready var level_up_audio: AudioStreamPlayer = $LevelUpAudio
+@onready var alchemist_emergency_audio: AudioStreamPlayer = $AlchemistEmergencyAudio
 
 func configure_profile(profile: Dictionary) -> void:
 	if profile.is_empty():
@@ -1929,6 +1930,10 @@ func _cast_alchemist_emergency_escape(
 	)
 	if is_instance_valid(fx):
 		fx.z_index = 10
+
+	if is_instance_valid(alchemist_emergency_audio):
+		alchemist_emergency_audio.stop()
+		alchemist_emergency_audio.play()
 
 	_apply_alchemist_emergency_self_damage()
 	_flash_alchemist_emergency_red()
