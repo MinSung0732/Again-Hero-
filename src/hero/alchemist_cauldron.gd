@@ -76,8 +76,12 @@ func _process(delta: float) -> void:
 			complete_timer = 0.0
 			_apply_frame(complete_frame)
 		elif complete_frame == 4 and complete_timer >= 0.18:
+			complete_frame = 5
+			complete_timer = 0.0
+			_apply_frame(complete_frame)
+		elif complete_frame == 5 and complete_timer >= 0.20:
 			mix_completed.emit(self, global_position)
-		return
+			set_process(false)
 		queue_redraw()
 		return
 
