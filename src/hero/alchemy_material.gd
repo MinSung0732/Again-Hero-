@@ -56,7 +56,7 @@ func _ready() -> void:
 
 	visual.sprite_frames = frames
 	visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	visual.scale = Vector2(0.48, 0.48)
+	visual.scale = Vector2(0.20, 0.20)
 	deactivate()
 
 
