@@ -1801,6 +1801,18 @@ func _try_cast_alchemist_mystery_cauldron() -> void:
 	)
 
 
+func set_alchemist_cauldron_runtime_paused(paused: bool) -> void:
+	if hero_archetype != "alchemist_chemical":
+		return
+	for cauldron in alchemist_cauldrons:
+		if not is_instance_valid(cauldron):
+			continue
+		if paused:
+			cauldron.set_process(false)
+		elif bool(cauldron.get("active")):
+			cauldron.set_process(true)
+
+
 func _on_alchemist_cauldron_completed(
 	cauldron: Node2D,
 	origin: Vector2
@@ -1825,9 +1837,12 @@ func _on_alchemist_cauldron_completed(
 		await _execute_alchemist_cauldron_great_success(origin)
 		await get_tree().create_timer(0.50).timeout
 	elif roll < great_chance + fail_chance:
+		# Failure should feel instantaneous: hide/deactivate the cauldron
+		# immediately, but let its child AudioStreamPlayer finish the boom.
 		cauldron.call("play_result_sound", "failure")
+		cauldron.call("deactivate")
 		_execute_alchemist_cauldron_failure(origin)
-		await get_tree().create_timer(0.70).timeout
+		return
 	else:
 		cauldron.call("play_result_sound", "success")
 		_execute_alchemist_cauldron_success(origin)

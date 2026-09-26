@@ -3130,6 +3130,11 @@ func _sync_combat_pause_state() -> void:
 func _set_combat_physics_enabled(enabled: bool) -> void:
 	if is_instance_valid(hero):
 		hero.set_physics_process(enabled)
+		if hero.has_method("set_alchemist_cauldron_runtime_paused"):
+			hero.call(
+				"set_alchemist_cauldron_runtime_paused",
+				not enabled
+			)
 
 	for group_name in ["monsters", "exp_orbs", "heal_items", "hero_projectiles", "monster_projectiles"]:
 		for node in get_tree().get_nodes_in_group(group_name):
