@@ -15,7 +15,10 @@ const MIX_FRAME_ORDER: Array[int] = [0, 1, 2, 5]
 const ANCHOR := Vector2(192.0, 596.0)
 
 @onready var visual: Sprite2D = $Visual
-@onready var result_audio: AudioStreamPlayer = $ResultAudio
+@onready var place_audio: AudioStreamPlayer = $PlaceAudio
+@onready var great_success_audio: AudioStreamPlayer = $GreatSuccessAudio
+@onready var success_audio: AudioStreamPlayer = $SuccessAudio
+@onready var failure_audio: AudioStreamPlayer = $FailureAudio
 
 var active: bool = false
 var mix_duration: float = 8.0
@@ -48,6 +51,9 @@ func activate(world_position: Vector2, duration: float) -> void:
 	visible = true
 	set_process(true)
 	_apply_frame(MIX_FRAME_ORDER[0])
+	if is_instance_valid(place_audio):
+		place_audio.stop()
+		place_audio.play()
 	queue_redraw()
 
 
@@ -87,11 +93,22 @@ func _process(delta: float) -> void:
 		complete_timer = 0.0
 		complete_frame = 3
 		_apply_frame(complete_frame)
-		if is_instance_valid(result_audio):
-			result_audio.stop()
-			result_audio.play()
 
 	queue_redraw()
+
+
+func play_result_sound(result_type: String) -> void:
+	var player: AudioStreamPlayer = null
+	match result_type:
+		"great_success":
+			player = great_success_audio
+		"success":
+			player = success_audio
+		"failure":
+			player = failure_audio
+	if is_instance_valid(player):
+		player.stop()
+		player.play()
 
 
 func _apply_frame(index: int) -> void:
