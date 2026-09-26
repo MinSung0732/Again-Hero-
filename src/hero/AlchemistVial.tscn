@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/hero/alchemist_vial.gd" id="1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_vial_throw.wav" id="2_throw"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_vial_break.wav" id="3_break"]
 
 [node name="AlchemistVial" type="Node2D"]
 z_index = 4
@@ -16,7 +18,9 @@ texture_filter = 1
 scale = Vector2(0.34, 0.34)
 
 [node name="ThrowAudio" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_throw")
 volume_db = -14.0
 
 [node name="BreakAudio" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_break")
 volume_db = -11.0
