@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2026-09-26 — Stage 7 연금술사 현대식 SFX 교체
+- 연금술사 솥 설치/성공/대성공/실패, 약병 투척/파손 6종 효과음을 현대 모바일 액션 RPG 톤의 레이어드 SFX로 교체.
+- 신규 효과음은 모바일 패키지 용량을 줄이기 위해 OGG(Vorbis)로 적용하고 기존 Alchemist WAV 파일 및 사용하지 않는 `alchemist_mystery_cauldron.wav`를 제거.
+- `AlchemistCauldron.tscn`과 `AlchemistVial.tscn`의 AudioStream 참조를 신규 OGG 경로로 변경. 기존 재생 타이밍과 볼륨 설정은 유지.
+- 공용 레벨업 SFX는 이번 연금술사 교체 대상이 아니므로 기존 파일을 유지.
+
 ## 2026-09-25 — Stage 7 장판 walk/run 전환 떨림 안정화
 - 촉매 혼합장 내부 run 모션 전환에 0.08초 진입 지연을 추가해 경계 판정 한두 프레임으로 즉시 애니메이션이 바뀌지 않도록 조정.
 - 장판 이탈 시 0.12초 유예와 24px 외곽 마진을 적용해 경계 근처에서 walk ↔ run이 반복 전환되는 현상을 완화.
