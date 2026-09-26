@@ -25,6 +25,8 @@ var direct_hit_target: Node = null
 var auto_free_after_break: bool = false
 
 func _ready() -> void:
+	throw_audio.stream = _build_vial_sfx(false)
+	break_audio.stream = _build_vial_sfx(true)
 	projectile_sprite.texture = PROJECTILE_TEXTURE
 	projectile_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	break_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -98,6 +100,41 @@ func _on_break_finished() -> void:
 		queue_free()
 		return
 	_deactivate()
+
+func _build_vial_sfx(is_break: bool) -> AudioStreamWAV:
+	var mix_rate: int = 22050
+	var duration: float = 0.28 if is_break else 0.24
+	var sample_count: int = maxi(int(round(duration * float(mix_rate))), 1)
+	var pcm := PackedByteArray()
+	pcm.resize(sample_count)
+
+	for sample_index in range(sample_count):
+		var time: float = float(sample_index) / float(mix_rate)
+		var noise_seed: int = ((sample_index * 1664525 + 1013904223) & 255)
+		var noise: float = float(noise_seed) / 127.5 - 1.0
+		var value: float = 0.0
+
+		if is_break:
+			value = noise * 0.16 * exp(-time / 0.07)
+			value += sin(TAU * 1700.0 * time) * 0.15 * exp(-time / 0.045)
+			value += sin(TAU * 2350.0 * time) * 0.11 * exp(-time / 0.040)
+			value += sin(TAU * 3200.0 * time) * 0.08 * exp(-time / 0.035)
+		else:
+			var sweep_frequency: float = lerpf(950.0, 420.0, time / duration)
+			value = (
+				noise * 0.16
+				+ sin(TAU * sweep_frequency * time) * 0.12
+			) * exp(-time / 0.09)
+
+		pcm[sample_index] = clampi(int(round(128.0 + value * 118.0)), 0, 255)
+
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.mix_rate = mix_rate
+	stream.stereo = false
+	stream.data = pcm
+	return stream
+
 
 func _deactivate() -> void:
 	phase = 0
