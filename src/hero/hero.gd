@@ -69,9 +69,6 @@ const STATUS_MEMORY_WINDOW := 20.0
 const STATUS_MEMORY_MIN_WEIGHT := 0.25
 const INVULNERABILITY_BLINK_INTERVAL := 0.07
 const HERO_BASE_ATTACK_GROWTH_PER_LEVEL := 0.02
-const LEVEL_UP_SFX: AudioStream = preload(
-	"res://assets/audio/sfx/level_up_8bit_short.wav"
-)
 const HERO_ATTACK_MILESTONE_INTERVAL := 10
 const HERO_ATTACK_MILESTONE_BONUS := 0.05
 const HERO_ANIMATION_DUPLICATE_RESTART_GUARD_MSEC := 70
@@ -736,9 +733,6 @@ func _ready() -> void:
 	_apply_stage4_gunner_effect_visuals()
 	_apply_stage6_berserker_effect_visuals()
 	_apply_level_up_effect_visual()
-	level_up_audio.stream = LEVEL_UP_SFX
-	level_up_audio.volume_db = 3.0
-	level_up_audio.stream_paused = false
 	if (
 		not rogue_attack_effect.animation_finished.is_connected(
 			Callable(self, "_on_rogue_attack_effect_finished")
@@ -812,10 +806,8 @@ func _play_level_up_feedback() -> void:
 		level_up_effect.play(&"level_up")
 
 	if is_instance_valid(level_up_audio):
-		level_up_audio.stream = LEVEL_UP_SFX
-		level_up_audio.stream_paused = false
 		level_up_audio.stop()
-		level_up_audio.play(0.0)
+		level_up_audio.play()
 
 
 func _on_level_up_effect_animation_finished() -> void:
