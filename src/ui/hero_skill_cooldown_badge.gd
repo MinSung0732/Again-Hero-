@@ -17,14 +17,17 @@ var status_text: String = ""
 var available: bool = true
 
 var detail_popup: PopupPanel
-var detail_label: Label
+var detail_label: RichTextLabel
 
 
 func _ready() -> void:
 	custom_minimum_size = BADGE_SIZE
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	focus_mode = Control.FOCUS_NONE
+	tooltip_text = ""
 	_ensure_detail_popup()
+	mouse_entered.connect(_on_mouse_entered)
+	mouse_exited.connect(_on_mouse_exited)
 	queue_redraw()
 
 
@@ -66,9 +69,9 @@ func update_state(data: Dictionary) -> void:
 	available = bool(data.get("available", true))
 	cooldown_total = maxf(float(data.get("cooldown_total", 0.0)), 0.0)
 	cooldown_remaining = maxf(float(data.get("cooldown_remaining", 0.0)), 0.0)
-	tooltip_text = _build_detail_text()
+	tooltip_text = ""
 	if is_instance_valid(detail_popup) and detail_popup.visible:
-		detail_label.text = tooltip_text
+		detail_label.text = _build_detail_bbcode()
 	queue_redraw()
 
 
@@ -77,22 +80,63 @@ func _build_detail_text() -> String:
 	lines.append(skill_name)
 	if not description.strip_edges().is_empty():
 		lines.append(description.strip_edges())
+	lines.append("")
+	lines.append("[분류 / 카테고리]")
+	lines.append(_get_category_text())
+	lines.append("")
+	lines.append("[실 사용 수치]")
+	lines.append_array(_get_usage_lines())
+	return "\n".join(lines)
+
+
+func _build_detail_bbcode() -> String:
+	var usage_text := "\n".join(_get_usage_lines())
+	return (
+		"[font_size=30][b]%s[/b][/font_size]\n"
+		+ "[color=#AEB6C8]%s[/color]\n\n"
+		+ "[font_size=20][color=#F2C85B][b]분류 / 카테고리[/b][/color][/font_size]\n"
+		+ "%s\n\n"
+		+ "[font_size=20][color=#7FD9FF][b]실 사용 수치[/b][/color][/font_size]\n"
+		+ "%s"
+	) % [
+		_escape_bbcode(skill_name),
+		_escape_bbcode(description.strip_edges()),
+		_escape_bbcode(_get_category_text()),
+		_escape_bbcode(usage_text),
+	]
+
+
+func _get_category_text() -> String:
+	if skill_id == "alchemist_philosopher_stone":
+		return "조건부 변신 · 전투당 1회"
+	if cooldown_total > 0.001:
+		return "자동 발동 · 재사용 대기형"
+	return "자동 발동 · 조건 충족형"
+
+
+func _get_usage_lines() -> PackedStringArray:
+	var lines: PackedStringArray = []
 	if cooldown_total > 0.001:
 		if cooldown_remaining > 0.01:
 			lines.append(
-				"남은 쿨타임 %.1f초 / %.1f초"
+				"쿨타임  %.1f초 남음 / %.1f초"
 				% [cooldown_remaining, cooldown_total]
 			)
 		else:
-			lines.append("쿨타임 준비됨 / %.1f초" % cooldown_total)
+			lines.append("쿨타임  준비됨 / %.1f초" % cooldown_total)
+	else:
+		lines.append("쿨타임  없음")
 	if not resource_text.is_empty():
-		lines.append("소모/조건 · %s" % resource_text)
+		lines.append("소모 / 조건  %s" % resource_text)
 	if not progress_text.is_empty():
-		lines.append(progress_text)
+		lines.append("진행  %s" % progress_text)
 	if not status_text.is_empty():
-		lines.append("상태 · %s" % status_text)
-	return "\n".join(lines)
+		lines.append("상태  %s" % status_text)
+	return lines
 
+
+func _escape_bbcode(value: String) -> String:
+	return value.replace("[", "\\[").replace("]", "\\]")
 
 func _ensure_detail_popup() -> void:
 	if is_instance_valid(detail_popup):
@@ -108,30 +152,48 @@ func _ensure_detail_popup() -> void:
 	margin.add_theme_constant_override("margin_bottom", 18)
 	detail_popup.add_child(margin)
 
-	detail_label = Label.new()
-	detail_label.custom_minimum_size = Vector2(430.0, 0.0)
+	detail_label = RichTextLabel.new()
+	detail_label.custom_minimum_size = Vector2(500.0, 250.0)
+	detail_label.bbcode_enabled = true
+	detail_label.fit_content = true
+	detail_label.scroll_active = false
 	detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	detail_label.add_theme_font_size_override("font_size", 24)
+	detail_label.add_theme_font_size_override("normal_font_size", 22)
+	detail_label.add_theme_constant_override("line_separation", 6)
 	margin.add_child(detail_label)
 
 
 func _gui_input(event: InputEvent) -> void:
-	# PC keeps the native hover tooltip only. The explicit popup is reserved
-	# for real touchscreen devices so mouse clicks never open a large panel.
-	if not DisplayServer.is_touchscreen_available():
-		return
 	if not event is InputEventScreenTouch:
 		return
-
 	var touch := event as InputEventScreenTouch
 	if not touch.pressed:
 		return
+	_show_detail_popup()
+	accept_event()
 
+
+func _on_mouse_entered() -> void:
+	if DisplayServer.is_touchscreen_available():
+		return
+	_show_detail_popup()
+
+
+func _on_mouse_exited() -> void:
+	if DisplayServer.is_touchscreen_available():
+		return
+	if is_instance_valid(detail_popup):
+		detail_popup.hide()
+
+
+func _show_detail_popup() -> void:
 	_ensure_detail_popup()
-	detail_label.text = _build_detail_text()
+	detail_label.text = _build_detail_bbcode()
 
 	var viewport_size := get_viewport_rect().size
-	var popup_size := Vector2i(480, 280)
+	var popup_width := mini(560, maxi(420, int(viewport_size.x) - 16))
+	var popup_height := mini(360, maxi(280, int(viewport_size.y) - 16))
+	var popup_size := Vector2i(popup_width, popup_height)
 	var desired_x := int(global_position.x)
 	var desired_y := int(global_position.y + size.y + 10.0)
 	desired_x = clampi(
@@ -150,8 +212,6 @@ func _gui_input(event: InputEvent) -> void:
 			popup_size
 		)
 	)
-	accept_event()
-
 
 func _draw() -> void:
 	var center := size * 0.5
