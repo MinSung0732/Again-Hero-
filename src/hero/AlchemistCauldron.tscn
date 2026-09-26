@@ -15,16 +15,16 @@ texture_filter = 1
 
 [node name="PlaceAudio" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("2_place")
-volume_db = -13.0
+volume_db = -17.0
 
 [node name="GreatSuccessAudio" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("3_great")
-volume_db = -12.0
+volume_db = -23.0
 
 [node name="SuccessAudio" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("4_success")
-volume_db = -12.0
+volume_db = -18.0
 
 [node name="FailureAudio" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("5_failure")
-volume_db = -12.0
+volume_db = -18.5
