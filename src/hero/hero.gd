@@ -1528,6 +1528,12 @@ func _spawn_alchemist_mystery_vial(origin: Vector2) -> void:
 	if vial == null:
 		return
 	parent.add_child(vial)
+	# Great success can throw 20+ vials in bursts. Keep the base-attack asset,
+	# but attenuate only these temporary mystery vials so their throw SFX stack
+	# does not overpower the cauldron result or combat mix.
+	var mystery_throw_audio := vial.get_node_or_null("ThrowAudio") as AudioStreamPlayer
+	if is_instance_valid(mystery_throw_audio):
+		mystery_throw_audio.volume_db = -24.0
 	vial.connect(
 		"landed",
 		Callable(self, "_on_alchemist_mystery_vial_landed")
