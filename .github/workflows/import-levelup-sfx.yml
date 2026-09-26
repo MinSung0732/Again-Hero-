@@ -1,0 +1,26 @@
+name: One-off level-up SFX import
+
+on:
+  push:
+    paths:
+      - ".github/workflows/import-levelup-sfx.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  import-levelup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download CC0 source
+        run: |
+          curl -L --fail --retry 3             "https://raw.githubusercontent.com/Malnati/brikaya/main/public/assets/audio/sfx-level-complete-01.mp3"             -o /tmp/levelup.mp3
+      - name: Convert to Godot-safe WAV
+        run: |
+          ffmpeg -hide_banner -loglevel error -y             -i /tmp/levelup.mp3 -ac 1 -ar 44100 -c:a pcm_s16le             /tmp/level_up_rise07_cc0.wav
+      - name: Upload WAV
+        uses: actions/upload-artifact@v4
+        with:
+          name: level-up-rises07-cc0
+          path: /tmp/level_up_rise07_cc0.wav
+          if-no-files-found: error
