@@ -257,6 +257,7 @@ var alchemist_materials_collected: int = 0
 var alchemist_philosopher_used: bool = false
 var alchemist_philosopher_channeling: bool = false
 var alchemist_philosopher_channel_timer: float = 0.0
+var alchemist_philosopher_test_timer: float = 0.0
 var alchemist_transformed: bool = false
 var alchemist_gas_regen_timer: float = 0.0
 var alchemist_poison_trail_timer: float = 0.0
@@ -566,6 +567,14 @@ func configure_profile(profile: Dictionary) -> void:
 	alchemist_philosopher_used = false
 	alchemist_philosopher_channeling = false
 	alchemist_philosopher_channel_timer = 0.0
+	alchemist_philosopher_test_timer = (
+		maxf(
+			float(alchemist_philosopher_config.get("test_delay_seconds", 5.0)),
+			0.0
+		)
+		if bool(alchemist_philosopher_config.get("test_mode", false))
+		else 0.0
+	)
 	alchemist_transformed = false
 	alchemist_gas_regen_timer = 0.0
 	alchemist_poison_trail_timer = 0.0
@@ -997,6 +1006,16 @@ func _physics_process_alchemist(delta: float) -> void:
 		0.0
 	)
 	_update_alchemist_philosopher_gas_regen(delta)
+	if (
+		bool(alchemist_philosopher_config.get("test_mode", false))
+		and not alchemist_philosopher_used
+		and not alchemist_philosopher_channeling
+		and not alchemist_transformed
+	):
+		alchemist_philosopher_test_timer = maxf(
+			alchemist_philosopher_test_timer - delta,
+			0.0
+		)
 
 	if _update_alchemist_philosopher_channel(delta):
 		return
@@ -1324,7 +1343,11 @@ func _try_start_alchemist_philosopher_stone() -> bool:
 		int(alchemist_philosopher_config.get("required_materials", 20)),
 		1
 	)
-	if alchemist_materials_collected < required_materials:
+	var test_ready := (
+		bool(alchemist_philosopher_config.get("test_mode", false))
+		and alchemist_philosopher_test_timer <= 0.0
+	)
+	if not test_ready and alchemist_materials_collected < required_materials:
 		return false
 
 	var gas_cost := maxf(
