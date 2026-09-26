@@ -11649,7 +11649,11 @@ func _draw() -> void:
 		)
 
 
-	if not hero_sprite.visible:
+	# The fallback debug body is only for a genuinely missing/unavailable
+	# hero visual. During channeling the real sprite is intentionally hidden
+	# behind ChannelEffect, so drawing the placeholder here leaks a fake body
+	# through the 12-frame philosopher-stone animation.
+	if not hero_sprite.visible and not channel_hid_hero_sprite:
 		var body_color := Color(0.35, 0.68, 1.0)
 		if hit_flash_timer > 0.0:
 			body_color = Color(1.0, 1.0, 1.0)
