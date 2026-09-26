@@ -249,6 +249,10 @@ var alchemist_mixture_heal_timer: float = 0.0
 var alchemist_field_run_active: bool = false
 var alchemist_field_run_enter_timer: float = 0.0
 var alchemist_field_run_exit_timer: float = 0.0
+var alchemist_emergency_config: Dictionary = {}
+var alchemist_emergency_cooldown: float = 0.0
+var alchemist_emergency_trapped_timer: float = 0.0
+var alchemist_emergency_audio: AudioStreamPlayer = null
 
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
@@ -533,6 +537,15 @@ func configure_profile(profile: Dictionary) -> void:
 	alchemist_field_run_active = false
 	alchemist_field_run_enter_timer = 0.0
 	alchemist_field_run_exit_timer = 0.0
+	var raw_emergency = alchemist_config.get("emergency_escape", {})
+	alchemist_emergency_config = (
+		raw_emergency.duplicate(true)
+		if typeof(raw_emergency) == TYPE_DICTIONARY
+		else {}
+	)
+	alchemist_emergency_cooldown = 0.0
+	alchemist_emergency_trapped_timer = 0.0
+	alchemist_emergency_audio = null
 
 	var profile_gunner = profile.get("gunner", {})
 	gunner_config = (
@@ -955,8 +968,15 @@ func _physics_process_alchemist(delta: float) -> void:
 		alchemist_mystery_cauldron_cooldown - delta,
 		0.0
 	)
+	alchemist_emergency_cooldown = maxf(
+		alchemist_emergency_cooldown - delta,
+		0.0
+	)
 	_update_alchemist_mixture_field_hero_effects(delta)
 	_update_alchemist_field_locomotion_state(delta)
+	if _update_alchemist_emergency_escape(delta):
+		_update_alchemist_pose_visual(delta)
+		return
 	_try_cast_alchemist_mixture_field()
 	_try_cast_alchemist_mystery_cauldron()
 
@@ -1078,6 +1098,13 @@ func _ensure_alchemist_runtime() -> void:
 			"field_tick",
 			Callable(self, "_on_alchemist_mixture_field_tick")
 		)
+
+	if alchemist_emergency_audio == null:
+		alchemist_emergency_audio = AudioStreamPlayer.new()
+		alchemist_emergency_audio.name = "AlchemistEmergencyAudio"
+		alchemist_emergency_audio.volume_db = -15.0
+		alchemist_emergency_audio.stream = _build_alchemist_emergency_sfx()
+		add_child(alchemist_emergency_audio)
 
 	alchemist_runtime_ready = true
 	alchemist_material_spawn_timer = 0.0
@@ -1672,6 +1699,24 @@ func _execute_alchemist_cauldron_failure(origin: Vector2) -> void:
 		fail_fx.z_index = 9
 
 
+func _apply_monster_slow(
+	monster: Node2D,
+	slow_multiplier: float,
+	duration_seconds: float
+) -> void:
+	if not is_instance_valid(monster):
+		return
+	var now := Time.get_ticks_msec()
+	var slow_until := now + int(round(maxf(duration_seconds, 0.05) * 1000.0))
+	var current_until := int(monster.get_meta("gunner_slow_until", 0))
+	var current_multiplier := float(monster.get_meta("gunner_slow_multiplier", 1.0))
+	monster.set_meta("gunner_slow_until", maxi(current_until, slow_until))
+	monster.set_meta(
+		"gunner_slow_multiplier",
+		minf(current_multiplier, clampf(slow_multiplier, 0.1, 1.0))
+	)
+
+
 func _on_alchemist_mixture_field_tick(origin: Vector2, radius: float) -> void:
 	if current_hp <= 0:
 		return
@@ -1691,12 +1736,10 @@ func _on_alchemist_mixture_field_tick(origin: Vector2, radius: float) -> void:
 		0.1,
 		1.0
 	)
-	var slow_until := Time.get_ticks_msec() + int(round(
-		maxf(
-			float(alchemist_mixture_field_config.get("slow_refresh_seconds", 0.75)),
-			0.05
-		) * 1000.0
-	))
+	var slow_duration := maxf(
+		float(alchemist_mixture_field_config.get("slow_refresh_seconds", 0.75)),
+		0.05
+	)
 	var radius_sq := radius * radius
 
 	for node in _get_monster_nodes_near(origin, radius):
@@ -1707,14 +1750,270 @@ func _on_alchemist_mixture_field_tick(origin: Vector2, radius: float) -> void:
 			continue
 		if monster.has_method("take_damage"):
 			monster.call("take_damage", damage)
-		# Existing monster movement code reads these shared external-slow meta keys.
-		var current_until := int(monster.get_meta("gunner_slow_until", 0))
-		var current_multiplier := float(monster.get_meta("gunner_slow_multiplier", 1.0))
-		monster.set_meta("gunner_slow_until", maxi(current_until, slow_until))
-		monster.set_meta(
-			"gunner_slow_multiplier",
-			minf(current_multiplier, slow_multiplier)
+		_apply_monster_slow(monster, slow_multiplier, slow_duration)
+
+
+func _update_alchemist_emergency_escape(delta: float) -> bool:
+	if alchemist_emergency_config.is_empty():
+		alchemist_emergency_trapped_timer = 0.0
+		return false
+	if alchemist_emergency_cooldown > 0.0 or alchemist_gas > 0.001:
+		alchemist_emergency_trapped_timer = 0.0
+		return false
+
+	var trigger_radius := clampf(
+		float(alchemist_emergency_config.get("trigger_radius", 230.0)),
+		200.0,
+		240.0
+	)
+	var min_enemies := maxi(
+		int(alchemist_emergency_config.get("min_enemy_count", 4)),
+		2
+	)
+	var nearby := _get_monster_nodes_near(global_position, trigger_radius)
+	var threats: Array[Node2D] = []
+	var radius_sq := trigger_radius * trigger_radius
+	for node in nearby:
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var hp_value = monster.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		if global_position.distance_squared_to(monster.global_position) <= radius_sq:
+			threats.append(monster)
+
+	if threats.size() < min_enemies:
+		alchemist_emergency_trapped_timer = 0.0
+		return false
+
+	var escape_info := _find_alchemist_escape_direction(threats, trigger_radius)
+	var blocked_ratio := float(escape_info.get("blocked_ratio", 0.0))
+	var required_blocked_ratio := clampf(
+		float(alchemist_emergency_config.get("blocked_direction_ratio", 0.75)),
+		0.50,
+		1.0
+	)
+	if blocked_ratio + 0.001 < required_blocked_ratio:
+		alchemist_emergency_trapped_timer = 0.0
+		return false
+
+	alchemist_emergency_trapped_timer += delta
+	var trapped_duration := clampf(
+		float(alchemist_emergency_config.get("trapped_duration", 0.40)),
+		0.30,
+		0.50
+	)
+	if alchemist_emergency_trapped_timer < trapped_duration:
+		return false
+
+	alchemist_emergency_trapped_timer = 0.0
+	_cast_alchemist_emergency_escape(
+		threats,
+		Vector2(escape_info.get("direction", Vector2.RIGHT))
+	)
+	return true
+
+
+func _find_alchemist_escape_direction(
+	threats: Array[Node2D],
+	trigger_radius: float
+) -> Dictionary:
+	const SAMPLE_COUNT := 12
+	var best_direction := Vector2.RIGHT
+	var best_score := -INF
+	var blocked_count := 0
+	var block_distance := minf(trigger_radius, 185.0)
+
+	for sample_index in range(SAMPLE_COUNT):
+		var direction := Vector2.from_angle(
+			TAU * float(sample_index) / float(SAMPLE_COUNT)
 		)
+		var blocked := false
+		var score := 0.0
+		for monster in threats:
+			if not is_instance_valid(monster):
+				continue
+			var offset := monster.global_position - global_position
+			var distance := maxf(offset.length(), 1.0)
+			var toward := direction.dot(offset / distance)
+			if distance <= block_distance and toward > 0.45:
+				blocked = true
+			if toward > 0.0:
+				score -= toward * (1.0 - clampf(distance / trigger_radius, 0.0, 1.0))
+			else:
+				score += (-toward) * 0.18
+
+		var probe := global_position + direction * 150.0
+		var margin := 72.0
+		if (
+			probe.x < margin
+			or probe.y < margin
+			or probe.x > battlefield_size.x - margin
+			or probe.y > battlefield_size.y - margin
+		):
+			blocked = true
+			score -= 2.0
+
+		if blocked:
+			blocked_count += 1
+		else:
+			score += 1.25
+		if score > best_score:
+			best_score = score
+			best_direction = direction
+
+	return {
+		"direction": best_direction,
+		"blocked_ratio": float(blocked_count) / float(SAMPLE_COUNT),
+	}
+
+
+func _cast_alchemist_emergency_escape(
+	threats: Array[Node2D],
+	escape_direction: Vector2
+) -> void:
+	alchemist_emergency_cooldown = maxf(
+		float(alchemist_emergency_config.get("cooldown", 10.0)),
+		0.1
+	)
+	if escape_direction.length_squared() <= 0.01:
+		escape_direction = Vector2.RIGHT
+	escape_direction = escape_direction.normalized()
+
+	var effect_radius := maxf(
+		float(alchemist_emergency_config.get("effect_radius", 245.0)),
+		1.0
+	)
+	var knockback := maxf(
+		float(alchemist_emergency_config.get("knockback_distance", 185.0)),
+		0.0
+	)
+	var damage_ratio := maxf(
+		float(alchemist_emergency_config.get("damage_ratio", 0.35)),
+		0.0
+	)
+	var slow_multiplier := clampf(
+		float(alchemist_emergency_config.get("slow_multiplier", 0.85)),
+		0.1,
+		1.0
+	)
+	var slow_duration := maxf(
+		float(alchemist_emergency_config.get("slow_duration", 2.0)),
+		0.05
+	)
+	var effect_radius_sq := effect_radius * effect_radius
+	var enemy_damage := maxi(1, int(round(float(attack_damage) * damage_ratio)))
+
+	for monster in threats:
+		if not is_instance_valid(monster) or monster.is_queued_for_deletion():
+			continue
+		if global_position.distance_squared_to(monster.global_position) > effect_radius_sq:
+			continue
+		var radial := global_position.direction_to(monster.global_position)
+		if radial.length_squared() <= 0.01:
+			radial = -escape_direction
+		# Push enemies away from the hero, with extra lateral clearance in the
+		# chosen escape lane so the cast creates a real path instead of only
+		# spreading the pack evenly.
+		var lane_dot := radial.dot(escape_direction)
+		var push_direction := radial
+		if lane_dot > 0.15:
+			var side := Vector2(-escape_direction.y, escape_direction.x)
+			var side_sign := 1.0 if side.dot(radial) >= 0.0 else -1.0
+			push_direction = (
+				radial * 0.55
+				+ side * side_sign * 0.85
+				- escape_direction * 0.30
+			).normalized()
+		monster.global_position += push_direction * knockback
+		if monster.has_method("take_damage"):
+			monster.call("take_damage", enemy_damage)
+		_apply_monster_slow(monster, slow_multiplier, slow_duration)
+
+	var fx := _spawn_archmage_fx(
+		"%s/effect8" % STAGE7_FRAME_DIR,
+		"effect",
+		1,
+		7,
+		16.0,
+		false,
+		global_position,
+		Vector2(0.50, 0.50)
+	)
+	if is_instance_valid(fx):
+		fx.z_index = 10
+
+	if is_instance_valid(alchemist_emergency_audio):
+		alchemist_emergency_audio.stop()
+		alchemist_emergency_audio.play()
+
+	_apply_alchemist_emergency_self_damage()
+	_flash_alchemist_emergency_red()
+
+
+func _apply_alchemist_emergency_self_damage() -> void:
+	if current_hp <= 0 or is_dying:
+		return
+	var self_ratio := clampf(
+		float(alchemist_emergency_config.get("self_damage_current_hp_ratio", 0.02)),
+		0.0,
+		1.0
+	)
+	var minimum_damage := maxi(
+		int(alchemist_emergency_config.get("self_damage_min", 100)),
+		1
+	)
+	var self_damage := maxi(
+		minimum_damage,
+		int(ceil(float(current_hp) * self_ratio))
+	)
+	var previous_hp := current_hp
+	current_hp = maxi(current_hp - self_damage, 0)
+	var applied := previous_hp - current_hp
+	if applied > 0:
+		DAMAGE_NUMBERS.show(self, applied)
+		health_changed.emit(current_hp, max_hp)
+		queue_redraw()
+	if current_hp <= 0:
+		_begin_death_sequence()
+
+
+func _flash_alchemist_emergency_red() -> void:
+	if not is_instance_valid(hero_sprite):
+		return
+	var tween := create_tween()
+	hero_sprite.modulate = Color(1.0, 0.22, 0.22, 1.0)
+	tween.tween_property(hero_sprite, "modulate", Color.WHITE, 0.18)
+
+
+func _build_alchemist_emergency_sfx() -> AudioStreamWAV:
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = 44100
+	stream.stereo = false
+
+	var duration := 0.34
+	var sample_count := int(stream.mix_rate * duration)
+	var pcm := PackedByteArray()
+	pcm.resize(sample_count * 2)
+	for index in range(sample_count):
+		var t := float(index) / float(stream.mix_rate)
+		var envelope := exp(-8.5 * t)
+		var thump := sin(TAU * (105.0 - 80.0 * t) * t) * envelope
+		var hiss_seed := sin(float(index) * 12.9898) * 43758.5453
+		var noise := (fract(hiss_seed) * 2.0 - 1.0) * exp(-16.0 * t)
+		var crack := sin(TAU * 680.0 * t) * exp(-24.0 * t)
+		var sample := clampf(
+			(thump * 0.62 + noise * 0.23 + crack * 0.15) * 0.78,
+			-1.0,
+			1.0
+		)
+		pcm.encode_s16(index * 2, int(round(sample * 32767.0)))
+	stream.data = pcm
+	return stream
 
 
 func _get_alchemist_chest_attack_target() -> Node2D:
@@ -2437,8 +2736,7 @@ func _use_gunner_cylinder_strike() -> void:
 		var damage_ratio := maxf(float(gunner_config.get("cylinder_damage_ratio", 0.0)), 0.0)
 		if damage_ratio > 0.0 and monster.has_method("take_damage"):
 			monster.call("take_damage", maxi(1, int(round(float(attack_damage) * damage_ratio))))
-		monster.set_meta("gunner_slow_multiplier", slow_multiplier)
-		monster.set_meta("gunner_slow_until", Time.get_ticks_msec() + int(slow_duration * 1000.0))
+		_apply_monster_slow(monster, slow_multiplier, slow_duration)
 
 
 func _gunner_deadeye_best_direction() -> Dictionary:
@@ -6875,6 +7173,12 @@ func get_skill_cooldown_hud() -> Array:
 				alchemist_mystery_cauldron_config,
 				alchemist_mystery_cauldron_cooldown,
 				"res://assets/art/heroes/stage7_alchemist/frames/effect6/cauldron_04.png"
+			)
+			_append_skill_cooldown_hud(
+				skills,
+				alchemist_emergency_config,
+				alchemist_emergency_cooldown,
+				"res://assets/art/heroes/stage7_alchemist/frames/effect8/effect_04.png"
 			)
 		"ranged_kiter":
 			_append_skill_cooldown_hud(
