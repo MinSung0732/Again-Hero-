@@ -15,6 +15,7 @@ const MIX_FRAME_ORDER: Array[int] = [0, 1, 2, 5]
 const ANCHOR := Vector2(192.0, 596.0)
 
 @onready var visual: Sprite2D = $Visual
+@onready var result_audio: AudioStreamPlayer = $ResultAudio
 
 var active: bool = false
 var mix_duration: float = 8.0
@@ -86,6 +87,9 @@ func _process(delta: float) -> void:
 		complete_timer = 0.0
 		complete_frame = 3
 		_apply_frame(complete_frame)
+		if is_instance_valid(result_audio):
+			result_audio.stop()
+			result_audio.play()
 
 	queue_redraw()
 
