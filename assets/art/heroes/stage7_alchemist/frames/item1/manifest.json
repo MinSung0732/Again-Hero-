@@ -1,0 +1,91 @@
+{
+  "source": "Codex 이미지 2026년 9월 26일 오후 05_36_17-1(1).png",
+  "frame_count": 4,
+  "cell_size": [
+    512,
+    576
+  ],
+  "sheet_size": [
+    1024,
+    1152
+  ],
+  "columns": 2,
+  "rows": 2,
+  "anchor": [
+    256,
+    288
+  ],
+  "frame_order": [
+    "idle_01.png",
+    "idle_02.png",
+    "idle_03.png",
+    "idle_04.png"
+  ],
+  "alignment": "Main object X aligned; source-relative vertical floating motion preserved; native pixels",
+  "frames": [
+    {
+      "index": 0,
+      "file": "idle_01.png",
+      "source_crop": [
+        187,
+        84,
+        477,
+        559
+      ],
+      "source_object_center_x": 333,
+      "source_row_y": 313,
+      "anchor": [
+        256,
+        288
+      ]
+    },
+    {
+      "index": 1,
+      "file": "idle_02.png",
+      "source_crop": [
+        788,
+        97,
+        1080,
+        572
+      ],
+      "source_object_center_x": 942,
+      "source_row_y": 313,
+      "anchor": [
+        256,
+        288
+      ]
+    },
+    {
+      "index": 2,
+      "file": "idle_03.png",
+      "source_crop": [
+        200,
+        681,
+        505,
+        1177
+      ],
+      "source_object_center_x": 356,
+      "source_row_y": 940,
+      "anchor": [
+        256,
+        288
+      ]
+    },
+    {
+      "index": 3,
+      "file": "idle_04.png",
+      "source_crop": [
+        791,
+        684,
+        1066,
+        1177
+      ],
+      "source_object_center_x": 936,
+      "source_row_y": 940,
+      "anchor": [
+        256,
+        288
+      ]
+    }
+  ]
+}

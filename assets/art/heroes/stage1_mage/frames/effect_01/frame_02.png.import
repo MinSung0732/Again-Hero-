@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bs4cauuhyeecf"
-path="res://.godot/imported/frame_02.png-313792e3e7da65c8b3e19d8068eef4d7.ctex"
+path="res://.godot/imported/frame_02.png-077e32625d71555f6be25f7730e777eb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/heroes/stage1_mage/effect_01/frame_02.png"
-dest_files=["res://.godot/imported/frame_02.png-313792e3e7da65c8b3e19d8068eef4d7.ctex"]
+source_file="res://assets/art/heroes/stage1_mage/frames/effect_01/frame_02.png"
+dest_files=["res://.godot/imported/frame_02.png-077e32625d71555f6be25f7730e777eb.ctex"]
 
 [params]
 

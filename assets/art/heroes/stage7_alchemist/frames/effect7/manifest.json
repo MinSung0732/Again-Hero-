@@ -1,0 +1,263 @@
+{
+  "source": "Codex 이미지 2026년 9월 26일 오후 06_46_43.png",
+  "frame_count": 12,
+  "cell_size": [
+    512,
+    384
+  ],
+  "sheet_size": [
+    4096,
+    768
+  ],
+  "columns": 8,
+  "rows": 2,
+  "anchor": [
+    192,
+    336
+  ],
+  "alignment": "Fixed character torso X and cauldron floor Y; spell particles remain in their source frames",
+  "frame_order": [
+    "brew_01.png",
+    "brew_02.png",
+    "brew_03.png",
+    "brew_04.png",
+    "brew_05.png",
+    "brew_06.png",
+    "brew_07.png",
+    "brew_08.png",
+    "cast_01.png",
+    "cast_02.png",
+    "cast_03.png",
+    "cast_04.png"
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "file": "brew_01.png",
+      "action": "brew",
+      "source_crop": [
+        31,
+        85,
+        246,
+        298
+      ],
+      "source_root": [
+        135,
+        303
+      ],
+      "anchor": [
+        192,
+        336
+      ]
+    },
+    {
+      "index": 1,
+      "file": "brew_02.png",
+      "action": "brew",
+      "source_crop": [
+        280,
+        92,
+        514,
+        298
+      ],
+      "source_root": [
+        380,
+        303
+      ],
+      "anchor": [
+        192,
+        336
+      ]
+    },
+    {
+      "index": 2,
+      "file": "brew_03.png",
+      "action": "brew",
+      "source_crop": [
+        533,
+        88,
+        746,
+        300
+      ],
+      "source_root": [
+        620,
+        303
+      ],
+      "anchor": [
+        192,
+        336
+      ]
+    },
+    {
+      "index": 3,
+      "file": "brew_04.png",
+      "action": "brew",
+      "source_crop": [
+        758,
+        92,
+        988,
+        300
+      ],
+      "source_root": [
+        870,
+        303
+      ],
+      "anchor": [
+        192,
+        336
+      ]
+    },
+    {
+      "index": 4,
+      "file": "brew_05.png",
+      "action": "brew",
+      "source_crop": [
+        1001,
+        91,
+        1234,
+        300
+      ],
+      "source_root": [
+        1120,
+        303
+      ],
+      "anchor": [
+        192,
+        336
+      ]
+    },
+    {
+      "index": 5,
+      "file": "brew_06.png",
+      "action": "brew",
+      "source_crop": [
+        1262,
+        88,
+        1483,
+        300
+      ],
+      "source_root": [
+        1370,
+        303
+      ],
+      "anchor": [
+        192,
+        336
+      ]
+    },
+    {
+      "index": 6,
+      "file": "brew_07.png",
+      "action": "brew",
+      "source_crop": [
+        1504,
+        87,
+        1747,
+        300
+      ],
+      "source_root": [
+        1620,
+        303
+      ],
+      "anchor": [
+        192,
+        336
+      ]
+    },
+    {
+      "index": 7,
+      "file": "brew_08.png",
+      "action": "brew",
+      "source_crop": [
+        1751,
+        84,
+        2027,
+        305
+      ],
+      "source_root": [
+        1870,
+        303
+      ],
+      "anchor": [
+        192,
+        336
+      ]
+    },
+    {
+      "index": 8,
+      "file": "cast_01.png",
+      "action": "cast",
+      "source_crop": [
+        183,
+        399,
+        472,
+        639
+      ],
+      "source_root": [
+        325,
+        640
+      ],
+      "anchor": [
+        192,
+        336
+      ]
+    },
+    {
+      "index": 9,
+      "file": "cast_02.png",
+      "action": "cast",
+      "source_crop": [
+        541,
+        360,
+        870,
+        639
+      ],
+      "source_root": [
+        686,
+        640
+      ],
+      "anchor": [
+        192,
+        336
+      ]
+    },
+    {
+      "index": 10,
+      "file": "cast_03.png",
+      "action": "cast",
+      "source_crop": [
+        950,
+        380,
+        1306,
+        641
+      ],
+      "source_root": [
+        1084,
+        640
+      ],
+      "anchor": [
+        192,
+        336
+      ]
+    },
+    {
+      "index": 11,
+      "file": "cast_04.png",
+      "action": "cast",
+      "source_crop": [
+        1400,
+        404,
+        1769,
+        642
+      ],
+      "source_root": [
+        1515,
+        640
+      ],
+      "anchor": [
+        192,
+        336
+      ]
+    }
+  ]
+}

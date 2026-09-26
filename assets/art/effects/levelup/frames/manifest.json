@@ -1,0 +1,137 @@
+{
+  "source": "effect_levelup_spritesheet.png",
+  "frame_count": 6,
+  "cell_size": [
+    384,
+    448
+  ],
+  "sheet_size": [
+    2304,
+    448
+  ],
+  "columns": 6,
+  "rows": 1,
+  "anchor": [
+    192,
+    410
+  ],
+  "alignment": "Ground circle center X and ground Y; original pixel scale",
+  "frame_order": [
+    "levelup_01.png",
+    "levelup_02.png",
+    "levelup_03.png",
+    "levelup_04.png",
+    "levelup_05.png",
+    "levelup_06.png"
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "file": "levelup_01.png",
+      "source_crop": [
+        88,
+        346,
+        295,
+        514
+      ],
+      "source_ground_center": [
+        183,
+        511
+      ],
+      "anchor": [
+        192,
+        410
+      ]
+    },
+    {
+      "index": 1,
+      "file": "levelup_02.png",
+      "source_crop": [
+        390,
+        262,
+        615,
+        522
+      ],
+      "source_ground_center": [
+        503,
+        519
+      ],
+      "anchor": [
+        192,
+        410
+      ]
+    },
+    {
+      "index": 2,
+      "file": "levelup_03.png",
+      "source_crop": [
+        710,
+        137,
+        1003,
+        532
+      ],
+      "source_ground_center": [
+        856,
+        529
+      ],
+      "anchor": [
+        192,
+        410
+      ]
+    },
+    {
+      "index": 3,
+      "file": "levelup_04.png",
+      "source_crop": [
+        1046,
+        223,
+        1352,
+        522
+      ],
+      "source_ground_center": [
+        1198,
+        519
+      ],
+      "anchor": [
+        192,
+        410
+      ]
+    },
+    {
+      "index": 4,
+      "file": "levelup_05.png",
+      "source_crop": [
+        1419,
+        202,
+        1667,
+        530
+      ],
+      "source_ground_center": [
+        1541,
+        527
+      ],
+      "anchor": [
+        192,
+        410
+      ]
+    },
+    {
+      "index": 5,
+      "file": "levelup_06.png",
+      "source_crop": [
+        1771,
+        265,
+        1965,
+        516
+      ],
+      "source_ground_center": [
+        1867,
+        513
+      ],
+      "anchor": [
+        192,
+        410
+      ]
+    }
+  ]
+}

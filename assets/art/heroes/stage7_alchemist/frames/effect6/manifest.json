@@ -1,0 +1,143 @@
+{
+  "source": "stage7_effect3_spritesheet.png",
+  "frame_count": 6,
+  "cell_size": [
+    384,
+    640
+  ],
+  "sheet_size": [
+    2304,
+    640
+  ],
+  "columns": 6,
+  "rows": 1,
+  "anchor": [
+    192,
+    596
+  ],
+  "alignment": "Fixed cauldron base X and floor Y; glow and bubbles retain source-relative offsets",
+  "frame_order": [
+    "cauldron_01.png",
+    "cauldron_02.png",
+    "cauldron_03.png",
+    "cauldron_04.png",
+    "cauldron_05.png",
+    "cauldron_06.png"
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "file": "cauldron_01.png",
+      "action": "cauldron",
+      "source_crop": [
+        35,
+        388,
+        260,
+        693
+      ],
+      "source_root": [
+        148,
+        691
+      ],
+      "anchor": [
+        192,
+        596
+      ]
+    },
+    {
+      "index": 1,
+      "file": "cauldron_02.png",
+      "action": "cauldron",
+      "source_crop": [
+        352,
+        381,
+        601,
+        693
+      ],
+      "source_root": [
+        478,
+        691
+      ],
+      "anchor": [
+        192,
+        596
+      ]
+    },
+    {
+      "index": 2,
+      "file": "cauldron_03.png",
+      "action": "cauldron",
+      "source_crop": [
+        653,
+        388,
+        935,
+        694
+      ],
+      "source_root": [
+        796,
+        691
+      ],
+      "anchor": [
+        192,
+        596
+      ]
+    },
+    {
+      "index": 3,
+      "file": "cauldron_04.png",
+      "action": "cauldron",
+      "source_crop": [
+        976,
+        248,
+        1288,
+        693
+      ],
+      "source_root": [
+        1127,
+        691
+      ],
+      "anchor": [
+        192,
+        596
+      ]
+    },
+    {
+      "index": 4,
+      "file": "cauldron_05.png",
+      "action": "cauldron",
+      "source_crop": [
+        1326,
+        117,
+        1637,
+        694
+      ],
+      "source_root": [
+        1483,
+        691
+      ],
+      "anchor": [
+        192,
+        596
+      ]
+    },
+    {
+      "index": 5,
+      "file": "cauldron_06.png",
+      "action": "cauldron",
+      "source_crop": [
+        1699,
+        298,
+        1962,
+        693
+      ],
+      "source_root": [
+        1831,
+        691
+      ],
+      "anchor": [
+        192,
+        596
+      ]
+    }
+  ]
+}
