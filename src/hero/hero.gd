@@ -47,6 +47,8 @@ const ALCHEMIST_VIAL_SCENE := preload("res://src/hero/AlchemistVial.tscn")
 const ALCHEMIST_POISON_POOL_SCENE := preload("res://src/hero/AlchemistPoisonPool.tscn")
 const ALCHEMY_MATERIAL_SCENE := preload("res://src/hero/AlchemyMaterial.tscn")
 const ALCHEMIST_MIXTURE_FIELD_SCENE := preload("res://src/hero/AlchemistMixtureField.tscn")
+const ALCHEMIST_CAULDRON_SCENE := preload("res://src/hero/AlchemistCauldron.tscn")
+const HEAL_ITEM_SCENE := preload("res://src/battle/HealItem.tscn")
 
 # 모든 용사 도트의 화면상 체급 기준은 Stage 1 견습 마법용사다.
 # 원본 PNG 캔버스 크기가 아니라 투명 여백을 제외한 실제 도트 높이를
@@ -236,7 +238,11 @@ var alchemist_direct_chest_target: Node2D = null
 var alchemist_vial_pool: Array[Node2D] = []
 var alchemist_poison_pool: Array[Node2D] = []
 var alchemist_material_pool: Array[Node2D] = []
+var alchemist_bonus_materials: Array[Node2D] = []
 var alchemist_mixture_field_config: Dictionary = {}
+var alchemist_mystery_cauldron_config: Dictionary = {}
+var alchemist_cauldrons: Array[Node2D] = []
+var alchemist_mystery_cauldron_cooldown: float = 0.0
 var alchemist_mixture_field: Node2D = null
 var alchemist_mixture_field_cooldown: float = 0.0
 var alchemist_mixture_heal_timer: float = 0.0
@@ -506,10 +512,19 @@ func configure_profile(profile: Dictionary) -> void:
 	alchemist_vial_pool.clear()
 	alchemist_poison_pool.clear()
 	alchemist_material_pool.clear()
+	alchemist_bonus_materials.clear()
+	alchemist_cauldrons.clear()
+	alchemist_mystery_cauldron_cooldown = 0.0
 	var raw_mixture_field = alchemist_config.get("mixture_field", {})
 	alchemist_mixture_field_config = (
 		raw_mixture_field.duplicate(true)
 		if typeof(raw_mixture_field) == TYPE_DICTIONARY
+		else {}
+	)
+	var raw_mystery_cauldron = alchemist_config.get("mystery_cauldron", {})
+	alchemist_mystery_cauldron_config = (
+		raw_mystery_cauldron.duplicate(true)
+		if typeof(raw_mystery_cauldron) == TYPE_DICTIONARY
 		else {}
 	)
 	alchemist_mixture_field = null
@@ -936,9 +951,14 @@ func _physics_process_alchemist(delta: float) -> void:
 	_update_alchemist_throw_sequence(delta)
 	_collect_nearby_alchemy_materials()
 	alchemist_mixture_field_cooldown = maxf(alchemist_mixture_field_cooldown - delta, 0.0)
+	alchemist_mystery_cauldron_cooldown = maxf(
+		alchemist_mystery_cauldron_cooldown - delta,
+		0.0
+	)
 	_update_alchemist_mixture_field_hero_effects(delta)
 	_update_alchemist_field_locomotion_state(delta)
 	_try_cast_alchemist_mixture_field()
+	_try_cast_alchemist_mystery_cauldron()
 
 	if slow_timer > 0.0:
 		slow_timer = maxf(slow_timer - delta, 0.0)
@@ -1020,6 +1040,22 @@ func _ensure_alchemist_runtime() -> void:
 			continue
 		world_parent.add_child(material)
 		alchemist_material_pool.append(material)
+
+	var cauldron_count: int = clampi(
+		int(alchemist_mystery_cauldron_config.get("max_active", 2)),
+		1,
+		2
+	)
+	for _index in range(cauldron_count):
+		var cauldron := ALCHEMIST_CAULDRON_SCENE.instantiate() as Node2D
+		if cauldron == null:
+			continue
+		world_parent.add_child(cauldron)
+		cauldron.connect(
+			"mix_completed",
+			Callable(self, "_on_alchemist_cauldron_completed")
+		)
+		alchemist_cauldrons.append(cauldron)
 
 	alchemist_mixture_field = ALCHEMIST_MIXTURE_FIELD_SCENE.instantiate() as Node2D
 	if is_instance_valid(alchemist_mixture_field):
@@ -1113,11 +1149,23 @@ func _spawn_one_alchemy_material() -> void:
 
 
 func _collect_nearby_alchemy_materials() -> void:
-	if alchemist_material_pool.is_empty():
-		return
 	var pickup_radius := maxf(float(alchemist_config.get("material_pickup_radius", 72.0)), 1.0)
 	var pickup_radius_sq := pickup_radius * pickup_radius
-	for material in alchemist_material_pool:
+	_collect_alchemy_material_list(alchemist_material_pool, pickup_radius_sq)
+	_collect_alchemy_material_list(alchemist_bonus_materials, pickup_radius_sq)
+
+	var valid_bonus: Array[Node2D] = []
+	for material in alchemist_bonus_materials:
+		if is_instance_valid(material) and not material.is_queued_for_deletion():
+			valid_bonus.append(material)
+	alchemist_bonus_materials = valid_bonus
+
+
+func _collect_alchemy_material_list(
+	materials: Array[Node2D],
+	pickup_radius_sq: float
+) -> void:
+	for material in materials:
 		if not is_instance_valid(material) or not bool(material.get("active")):
 			continue
 		if global_position.distance_squared_to(material.global_position) > pickup_radius_sq:
@@ -1300,6 +1348,278 @@ func _try_cast_alchemist_mixture_field() -> void:
 		maxf(float(alchemist_mixture_field_config.get("duration", 8.0)), 0.1),
 		maxf(float(alchemist_mixture_field_config.get("tick_interval", 0.50)), 0.05)
 	)
+
+
+func _count_active_alchemist_cauldrons() -> int:
+	var count: int = 0
+	for cauldron in alchemist_cauldrons:
+		if is_instance_valid(cauldron) and bool(cauldron.get("active")):
+			count += 1
+	return count
+
+
+func _try_cast_alchemist_mystery_cauldron() -> void:
+	if alchemist_mystery_cauldron_config.is_empty():
+		return
+	if alchemist_mystery_cauldron_cooldown > 0.0:
+		return
+
+	var max_active: int = clampi(
+		int(alchemist_mystery_cauldron_config.get("max_active", 2)),
+		1,
+		2
+	)
+	if _count_active_alchemist_cauldrons() >= max_active:
+		return
+
+	var cauldron_to_use: Node2D = null
+	for cauldron in alchemist_cauldrons:
+		if is_instance_valid(cauldron) and not bool(cauldron.get("active")):
+			cauldron_to_use = cauldron
+			break
+	if cauldron_to_use == null:
+		return
+
+	var angle: float = randf() * TAU
+	var placement_radius: float = randf_range(90.0, 145.0)
+	var placement: Vector2 = (
+		global_position
+		+ Vector2.from_angle(angle) * placement_radius
+	)
+	var margin: float = 96.0
+	placement.x = clampf(placement.x, margin, battlefield_size.x - margin)
+	placement.y = clampf(placement.y, margin, battlefield_size.y - margin)
+
+	var min_mix: float = maxf(
+		float(alchemist_mystery_cauldron_config.get("mix_time_min", 8.0)),
+		0.1
+	)
+	var max_mix: float = maxf(
+		float(alchemist_mystery_cauldron_config.get("mix_time_max", 10.0)),
+		min_mix
+	)
+	var mix_duration: float = randf_range(min_mix, max_mix)
+	cauldron_to_use.call("activate", placement, mix_duration)
+	alchemist_mystery_cauldron_cooldown = maxf(
+		float(alchemist_mystery_cauldron_config.get("cooldown", 20.0)),
+		0.0
+	)
+
+
+func _on_alchemist_cauldron_completed(
+	cauldron: Node2D,
+	origin: Vector2
+) -> void:
+	if not is_instance_valid(cauldron):
+		return
+
+	var great_chance: float = clampf(
+		float(alchemist_mystery_cauldron_config.get("great_success_chance", 0.20)),
+		0.0,
+		1.0
+	)
+	var fail_chance: float = clampf(
+		float(alchemist_mystery_cauldron_config.get("failure_chance", 0.20)),
+		0.0,
+		1.0 - great_chance
+	)
+	var roll: float = randf()
+
+	if roll < great_chance:
+		_execute_alchemist_cauldron_great_success(origin)
+	elif roll < great_chance + fail_chance:
+		_execute_alchemist_cauldron_failure(origin)
+	else:
+		_execute_alchemist_cauldron_success(origin)
+
+	cauldron.call("deactivate")
+
+
+func _execute_alchemist_cauldron_great_success(origin: Vector2) -> void:
+	var batch_count: int = maxi(
+		int(alchemist_mystery_cauldron_config.get("great_success_batches", 5)),
+		1
+	)
+	var batch_interval: float = maxf(
+		float(
+			alchemist_mystery_cauldron_config.get(
+				"great_success_batch_interval",
+				0.32
+			)
+		),
+		0.05
+	)
+	for batch_index: int in range(batch_count):
+		var vial_min: int = maxi(
+			int(
+				alchemist_mystery_cauldron_config.get(
+					"great_success_vials_min",
+					4
+				)
+			),
+			1
+		)
+		var vial_max: int = maxi(
+			int(
+				alchemist_mystery_cauldron_config.get(
+					"great_success_vials_max",
+					5
+				)
+			),
+			vial_min
+		)
+		var vial_count: int = randi_range(vial_min, vial_max)
+		for vial_index: int in range(vial_count):
+			_spawn_alchemist_mystery_vial(origin)
+		if batch_index + 1 < batch_count:
+			await get_tree().create_timer(batch_interval).timeout
+
+
+func _spawn_alchemist_mystery_vial(origin: Vector2) -> void:
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return
+	var vial := ALCHEMIST_VIAL_SCENE.instantiate() as Node2D
+	if vial == null:
+		return
+	parent.add_child(vial)
+	vial.connect(
+		"landed",
+		Callable(self, "_on_alchemist_mystery_vial_landed")
+	)
+	var throw_radius: float = maxf(
+		float(
+			alchemist_mystery_cauldron_config.get(
+				"great_success_throw_radius",
+				285.0
+			)
+		),
+		60.0
+	)
+	var angle: float = randf() * TAU
+	var radius: float = sqrt(randf()) * throw_radius
+	var landing: Vector2 = origin + Vector2.from_angle(angle) * radius
+	var margin: float = 64.0
+	landing.x = clampf(landing.x, margin, battlefield_size.x - margin)
+	landing.y = clampf(landing.y, margin, battlefield_size.y - margin)
+	vial.call(
+		"launch",
+		origin + Vector2(0.0, -24.0),
+		landing,
+		0.42,
+		105.0,
+		null,
+		true
+	)
+
+
+func _on_alchemist_mystery_vial_landed(
+	landing_position: Vector2,
+	_direct_target: Node
+) -> void:
+	var radius: float = maxf(
+		float(
+			alchemist_mystery_cauldron_config.get(
+				"great_success_hit_radius",
+				105.0
+			)
+		),
+		1.0
+	)
+	var damage: int = maxi(
+		int(round(
+			float(attack_damage)
+			* maxf(
+				float(
+					alchemist_mystery_cauldron_config.get(
+						"great_success_damage_ratio",
+						0.45
+					)
+				),
+				0.0
+			)
+		)),
+		1
+	)
+	_damage_monsters_in_radius(landing_position, radius, damage)
+
+
+func _execute_alchemist_cauldron_success(origin: Vector2) -> void:
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return
+
+	var material_count: int = maxi(
+		int(alchemist_mystery_cauldron_config.get("success_material_count", 7)),
+		0
+	)
+	var lifetime: float = maxf(
+		float(
+			alchemist_mystery_cauldron_config.get(
+				"success_drop_duration",
+				10.0
+			)
+		),
+		0.1
+	)
+	for index: int in range(material_count):
+		var material := ALCHEMY_MATERIAL_SCENE.instantiate() as Node2D
+		if material == null:
+			continue
+		parent.add_child(material)
+		var angle: float = (
+			TAU * float(index) / float(maxi(material_count, 1))
+			+ randf_range(-0.24, 0.24)
+		)
+		var radius: float = randf_range(78.0, 170.0)
+		var position: Vector2 = origin + Vector2.from_angle(angle) * radius
+		position.x = clampf(position.x, 64.0, battlefield_size.x - 64.0)
+		position.y = clampf(position.y, 64.0, battlefield_size.y - 64.0)
+		material.call(
+			"activate",
+			position,
+			maxf(float(alchemist_config.get("gas_per_material", 20.0)), 0.0),
+			lifetime,
+			true
+		)
+		alchemist_bonus_materials.append(material)
+
+	var heal_count: int = maxi(
+		int(
+			alchemist_mystery_cauldron_config.get(
+				"success_heal_item_count",
+				3
+			)
+		),
+		0
+	)
+	for index: int in range(heal_count):
+		var item := HEAL_ITEM_SCENE.instantiate() as Node2D
+		if item == null:
+			continue
+		parent.add_child(item)
+		var angle: float = (
+			TAU * float(index) / float(maxi(heal_count, 1))
+			+ 0.35
+		)
+		item.global_position = (
+			origin + Vector2.from_angle(angle) * randf_range(105.0, 165.0)
+		)
+
+
+func _execute_alchemist_cauldron_failure(origin: Vector2) -> void:
+	var fail_fx := _spawn_archmage_fx(
+		"%s/effect3" % STAGE7_FRAME_DIR,
+		"effect",
+		8,
+		4,
+		14.0,
+		false,
+		origin,
+		Vector2(0.52, 0.52)
+	)
+	if is_instance_valid(fail_fx):
+		fail_fx.z_index = 9
 
 
 func _on_alchemist_mixture_field_tick(origin: Vector2, radius: float) -> void:
@@ -6499,6 +6819,12 @@ func get_skill_cooldown_hud() -> Array:
 				alchemist_mixture_field_config,
 				alchemist_mixture_field_cooldown,
 				"res://assets/art/heroes/stage7_alchemist/frames/effect4/effect_13.png"
+			)
+			_append_skill_cooldown_hud(
+				skills,
+				alchemist_mystery_cauldron_config,
+				alchemist_mystery_cauldron_cooldown,
+				"res://assets/art/heroes/stage7_alchemist/frames/effect6/cauldron_04.png"
 			)
 		"ranged_kiter":
 			_append_skill_cooldown_hud(
