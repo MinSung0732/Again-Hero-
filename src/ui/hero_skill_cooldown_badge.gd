@@ -84,7 +84,7 @@ func _build_detail_text() -> String:
 	lines.append("[분류 / 카테고리]")
 	lines.append(_get_category_text())
 	lines.append("")
-	lines.append("[실 사용 수치]")
+	lines.append("[사용 효과]")
 	lines.append_array(_get_usage_lines())
 	return "\n".join(lines)
 
@@ -96,7 +96,7 @@ func _build_detail_bbcode() -> String:
 		+ "[color=#AEB6C8]%s[/color]\n\n"
 		+ "[font_size=20][color=#F2C85B][b]분류 / 카테고리[/b][/color][/font_size]\n"
 		+ "%s\n\n"
-		+ "[font_size=20][color=#7FD9FF][b]실 사용 수치[/b][/color][/font_size]\n"
+		+ "[font_size=20][color=#7FD9FF][b]사용 효과[/b][/color][/font_size]\n"
 		+ "%s"
 	) % [
 		_escape_bbcode(skill_name),
