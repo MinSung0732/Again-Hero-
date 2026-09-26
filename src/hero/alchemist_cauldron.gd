@@ -35,6 +35,7 @@ func _ready() -> void:
 	visual.centered = false
 	visual.offset = -ANCHOR
 	visual.scale = Vector2(0.34, 0.34)
+	_configure_cauldron_audio()
 	deactivate()
 
 
@@ -147,6 +148,145 @@ func _draw() -> void:
 		Rect2(top_left, Vector2(width * ratio, height)),
 		Color(0.72, 0.25, 0.92, 0.98)
 	)
+
+
+
+const CAULDRON_PLACE_VOLUME_DB := -16.5
+const CAULDRON_SUCCESS_VOLUME_DB := -17.5
+const CAULDRON_GREAT_SUCCESS_VOLUME_DB := -22.0
+const CAULDRON_FAILURE_VOLUME_DB := -18.0
+
+
+func _configure_cauldron_audio() -> void:
+	if is_instance_valid(place_audio):
+		place_audio.stream = _build_cauldron_place_sfx()
+		place_audio.volume_db = CAULDRON_PLACE_VOLUME_DB
+	if is_instance_valid(success_audio):
+		success_audio.stream = _build_cauldron_success_sfx()
+		success_audio.volume_db = CAULDRON_SUCCESS_VOLUME_DB
+	if is_instance_valid(great_success_audio):
+		great_success_audio.stream = _build_cauldron_great_success_sfx()
+		great_success_audio.volume_db = CAULDRON_GREAT_SUCCESS_VOLUME_DB
+	if is_instance_valid(failure_audio):
+		failure_audio.stream = _build_cauldron_failure_sfx()
+		failure_audio.volume_db = CAULDRON_FAILURE_VOLUME_DB
+
+
+func _build_cauldron_place_sfx() -> AudioStreamWAV:
+	var stream := _new_cauldron_stream()
+	var duration := 0.42
+	var sample_count := int(stream.mix_rate * duration)
+	var pcm := PackedByteArray()
+	pcm.resize(sample_count * 2)
+	for index in range(sample_count):
+		var t := float(index) / float(stream.mix_rate)
+		var impact_env := exp(-13.0 * t)
+		var metal_env := exp(-7.2 * t)
+		var body := (
+			sin(TAU * 82.0 * t) * 0.62
+			+ sin(TAU * 137.0 * t) * 0.23
+		) * impact_env
+		var metal := (
+			sin(TAU * 437.0 * t) * 0.23
+			+ sin(TAU * 683.0 * t) * 0.17
+			+ sin(TAU * 1091.0 * t) * 0.10
+		) * metal_env
+		var transient := _cauldron_noise(index, 1.7) * exp(-38.0 * t) * 0.30
+		var scrape := _cauldron_noise(index, 3.1) * exp(-11.0 * t) * 0.07
+		var sample := clampf((body + metal + transient + scrape) * 0.68, -1.0, 1.0)
+		pcm.encode_s16(index * 2, int(round(sample * 32767.0)))
+	stream.data = pcm
+	return stream
+
+
+func _build_cauldron_success_sfx() -> AudioStreamWAV:
+	var stream := _new_cauldron_stream()
+	var duration := 0.62
+	var sample_count := int(stream.mix_rate * duration)
+	var pcm := PackedByteArray()
+	pcm.resize(sample_count * 2)
+	for index in range(sample_count):
+		var t := float(index) / float(stream.mix_rate)
+		var bubble_delta := (t - 0.055) / 0.034
+		var bubble_env := exp(-bubble_delta * bubble_delta * 3.2)
+		var bubble := sin(TAU * 148.0 * t) * bubble_env * 0.28
+		var chime_t := maxf(t - 0.07, 0.0)
+		var chime_gate := 1.0 if t >= 0.07 else 0.0
+		var chime_env := chime_gate * exp(-5.8 * chime_t)
+		var chime := (
+			sin(TAU * 724.0 * chime_t) * 0.42
+			+ sin(TAU * 1037.0 * chime_t) * 0.27
+			+ sin(TAU * 1481.0 * chime_t) * 0.15
+		) * chime_env
+		var air := _cauldron_noise(index, 5.3) * exp(-7.0 * t) * 0.08
+		var sample := clampf((bubble + chime + air) * 0.62, -1.0, 1.0)
+		pcm.encode_s16(index * 2, int(round(sample * 32767.0)))
+	stream.data = pcm
+	return stream
+
+
+func _build_cauldron_great_success_sfx() -> AudioStreamWAV:
+	var stream := _new_cauldron_stream()
+	var duration := 0.95
+	var sample_count := int(stream.mix_rate * duration)
+	var pcm := PackedByteArray()
+	pcm.resize(sample_count * 2)
+	for index in range(sample_count):
+		var t := float(index) / float(stream.mix_rate)
+		var bloom := (
+			sin(TAU * 151.0 * t) * 0.34
+			+ sin(TAU * 227.0 * t) * 0.18
+		) * exp(-4.6 * t)
+		var sparkle_t := maxf(t - 0.08, 0.0)
+		var sparkle_gate := 1.0 if t >= 0.08 else 0.0
+		var sparkle := (
+			sin(TAU * 611.0 * sparkle_t) * 0.29
+			+ sin(TAU * 941.0 * sparkle_t) * 0.23
+			+ sin(TAU * 1367.0 * sparkle_t) * 0.17
+			+ sin(TAU * 1831.0 * sparkle_t) * 0.10
+		) * sparkle_gate * exp(-4.1 * sparkle_t)
+		var tail_t := maxf(t - 0.31, 0.0)
+		var tail_gate := 1.0 if t >= 0.31 else 0.0
+		var tail := (
+			sin(TAU * 823.0 * tail_t) * 0.18
+			+ sin(TAU * 1259.0 * tail_t) * 0.12
+		) * tail_gate * exp(-5.2 * tail_t)
+		var air := _cauldron_noise(index, 7.7) * exp(-4.0 * t) * 0.06
+		var sample := clampf((bloom + sparkle + tail + air) * 0.52, -1.0, 1.0)
+		pcm.encode_s16(index * 2, int(round(sample * 32767.0)))
+	stream.data = pcm
+	return stream
+
+
+func _build_cauldron_failure_sfx() -> AudioStreamWAV:
+	var stream := _new_cauldron_stream()
+	var duration := 0.48
+	var sample_count := int(stream.mix_rate * duration)
+	var pcm := PackedByteArray()
+	pcm.resize(sample_count * 2)
+	for index in range(sample_count):
+		var t := float(index) / float(stream.mix_rate)
+		var plop := sin(TAU * (178.0 - 92.0 * t) * t) * exp(-9.5 * t) * 0.45
+		var fizz := _cauldron_noise(index, 11.4) * exp(-8.2 * t) * 0.18
+		var glass := sin(TAU * 503.0 * t) * exp(-15.0 * t) * 0.12
+		var sample := clampf((plop + fizz + glass) * 0.66, -1.0, 1.0)
+		pcm.encode_s16(index * 2, int(round(sample * 32767.0)))
+	stream.data = pcm
+	return stream
+
+
+func _new_cauldron_stream() -> AudioStreamWAV:
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = 44100
+	stream.stereo = false
+	return stream
+
+
+func _cauldron_noise(index: int, salt: float) -> float:
+	var seed := sin(float(index) * 12.9898 + salt * 78.233) * 43758.5453
+	var unit := seed - floor(seed)
+	return unit * 2.0 - 1.0
 
 
 func _load_texture(path: String) -> Texture2D:
