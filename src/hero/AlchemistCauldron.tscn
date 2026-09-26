@@ -14,19 +14,23 @@ script = ExtResource("1_cauldron")
 texture_filter = 1
 
 [node name="PlaceAudio" type="AudioStreamPlayer" parent="."]
+bus = &"SFX"
 stream = ExtResource("2_place")
 volume_db = -18.0
 pitch_scale = 0.62
 
 [node name="GreatSuccessAudio" type="AudioStreamPlayer" parent="."]
+bus = &"SFX"
 stream = ExtResource("3_great")
 volume_db = -22.0
 pitch_scale = 0.92
 
 [node name="SuccessAudio" type="AudioStreamPlayer" parent="."]
+bus = &"SFX"
 stream = ExtResource("4_success")
 volume_db = -12.5
 
 [node name="FailureAudio" type="AudioStreamPlayer" parent="."]
+bus = &"SFX"
 stream = ExtResource("5_failure")
 volume_db = -17.5
