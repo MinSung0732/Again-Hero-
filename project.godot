@@ -21,6 +21,7 @@ config/icon="uid://bxdb4cg7dutw3"
 [autoload]
 
 GameFontManager="*res://src/ui/game_font_manager.gd"
+AudioSettings="*res://src/audio/audio_settings.gd"
 
 [display]
 
