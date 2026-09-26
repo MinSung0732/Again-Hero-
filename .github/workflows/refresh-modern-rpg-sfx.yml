@@ -1,0 +1,125 @@
+name: Refresh Modern RPG SFX
+
+on:
+  push:
+    paths:
+      - ".github/workflows/refresh-modern-rpg-sfx.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-sfx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure ffmpeg
+        shell: bash
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
+
+      - name: Download and convert Pixabay SFX
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          fetch_pixabay() {
+            local page_url="$1"
+            local output_wav="$2"
+            local trim_seconds="$3"
+            local tmp_html tmp_mp3 audio_url
+
+            tmp_html="$(mktemp)"
+            tmp_mp3="$(mktemp --suffix=.mp3)"
+
+            curl -fL --retry 4 --retry-delay 2 \
+              -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126 Safari/537.36" \
+              "$page_url" -o "$tmp_html"
+
+            audio_url="$(python3 - "$tmp_html" <<'PY'
+import html
+import re
+import sys
+
+text = open(sys.argv[1], "r", encoding="utf-8", errors="ignore").read()
+text = html.unescape(text)
+patterns = [
+    r'https://cdn\.pixabay\.com/download/audio/[^"\'<> ]+?\.mp3(?:\?[^"\'<> ]*)?',
+    r'https://cdn\.pixabay\.com/audio/[^"\'<> ]+?\.mp3(?:\?[^"\'<> ]*)?',
+]
+for pattern in patterns:
+    match = re.search(pattern, text)
+    if match:
+        print(match.group(0))
+        break
+else:
+    raise SystemExit("Could not locate Pixabay MP3 URL")
+PY
+)"
+
+            test -n "$audio_url"
+            curl -fL --retry 4 --retry-delay 2 \
+              -A "Mozilla/5.0" \
+              "$audio_url" -o "$tmp_mp3"
+
+            mkdir -p "$(dirname "$output_wav")"
+            ffmpeg -hide_banner -loglevel error -y \
+              -i "$tmp_mp3" \
+              -t "$trim_seconds" \
+              -ar 44100 -ac 1 -c:a pcm_s16le \
+              "$output_wav"
+
+            rm -f "$tmp_html" "$tmp_mp3"
+          }
+
+          # Modern fantasy/RPG level-up: short magical rise, not retro/chiptune.
+          fetch_pixabay \
+            "https://pixabay.com/sound-effects/film-special-effects-level-up-2-540176/" \
+            "assets/audio/sfx/level_up_8bit_short.wav" \
+            "1.6"
+
+          # Alchemy success: actual cauldron/potion bubbling.
+          fetch_pixabay \
+            "https://pixabay.com/sound-effects/film-special-effects-cauldron-bubbling-2-232443/" \
+            "assets/audio/sfx/alchemist_cauldron_success.wav" \
+            "2.2"
+
+          # Alchemy failure: short pressure release/fizz, deliberately non-reward-like.
+          fetch_pixabay \
+            "https://pixabay.com/sound-effects/film-special-effects-080242-carbonation-release-and-fizzwav-88523/" \
+            "assets/audio/sfx/alchemist_cauldron_failure.wav" \
+            "2.2"
+
+          # Skill 3 emergency burst: cinematic magical burst.
+          # The old great-success asset path is currently unused by the cauldron scene,
+          # so it is safely repurposed as the skill-3 sound asset.
+          fetch_pixabay \
+            "https://pixabay.com/sound-effects/magic-burst-452852/" \
+            "assets/audio/sfx/alchemist_cauldron_great_success.wav" \
+            "2.8"
+
+      - name: Commit refreshed audio assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            assets/audio/sfx/level_up_8bit_short.wav \
+            assets/audio/sfx/alchemist_cauldron_success.wav \
+            assets/audio/sfx/alchemist_cauldron_failure.wav \
+            assets/audio/sfx/alchemist_cauldron_great_success.wav
+
+          if git diff --cached --quiet; then
+            echo "No audio changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Replace retro SFX with modern Pixabay assets"
+          git push origin HEAD:main
