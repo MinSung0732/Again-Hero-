@@ -7669,7 +7669,45 @@ func _skill_hud_description(config: Dictionary) -> String:
 	var explicit := String(config.get("description", "")).strip_edges()
 	if not explicit.is_empty():
 		return explicit
-	return "용사가 전투 상황과 사용 조건에 맞춰 자동으로 사용하는 기술입니다."
+
+	var skill_id := String(config.get("id", ""))
+	match skill_id:
+		"arcane_piercer":
+			return "전방으로 강력한 마력 관통포를 발사해 일직선상의 적을 공격합니다."
+		"arcane_barrier":
+			return "마력 장벽을 전개해 일정 시간 피해를 흡수합니다."
+		"arcane_field":
+			return "제자리에서 비전 집중을 채널링해 전투 능력을 보조합니다."
+		"blade_storm":
+			return "주변 적을 빠르게 연속 베어 다수의 적을 압박합니다."
+		"shadow_assassination":
+			return "급습 후 연속 암살 공격으로 단일 대상을 집중 타격합니다."
+		"shield_charge":
+			return "방패를 앞세워 돌진하며 경로의 적을 밀어내고 피해를 줍니다."
+		"archmage_combustion":
+			return "화염구를 남겨 지속 피해를 준 뒤 연소 돌진으로 마무리합니다."
+		"archmage_ice_bolt":
+			return "먼 적에게 얼음 투사체를 발사하고 적중 지점 주변에 얼음기둥을 생성합니다."
+		"archmage_earth_spikes":
+			return "전방 직선 경로에 땅의 가시를 연속 생성해 적을 관통 공격합니다."
+		"archmage_holy_power":
+			return "주변 위치에 신성 폭발을 연속 발생시키고 피격 적을 둔화합니다."
+		"archmage_chain_dagger":
+			return "체인대거가 적 사이를 연속 도탄하며 갈수록 강한 피해를 줍니다."
+		"archmage_harmony":
+			return "모든 원소를 조율해 다른 대마법 기술의 재사용 대기시간을 초기화합니다."
+		"archmage_storm":
+			return "8방향으로 폭풍 투사체를 발사해 적을 관통하고 속박합니다."
+		"blood_sword_first":
+			return "혈기를 소모해 점점 커지는 검기 파동을 연속 발사합니다."
+		"blood_sword_second":
+			return "갈라지는 혈흔 공격을 전개하고 혈흔 접촉으로 체력을 회복합니다."
+		"blood_sword_third":
+			return "빠르게 돌진하며 혈구를 생성하고 회수한 혈구만큼 체력을 회복합니다."
+		"blood_sword_fourth":
+			return "주변을 크게 베어 적에게 피해를 주고 바깥으로 밀어냅니다."
+		_:
+			return "용사가 전투 상황과 사용 조건에 맞춰 자동으로 사용하는 기술입니다."
 
 
 func _skill_hud_resource_text(config: Dictionary) -> String:
@@ -7839,7 +7877,19 @@ func _append_gunner_cooldown_hud(
 	skills.append({
 		"id": skill_id,
 		"name": skill_name,
-		"description": "권총의 용사가 전투 상황에 맞춰 자동으로 사용하는 전용 기술입니다.",
+		"description": (
+			"위험한 순간 뒤로 빠르게 이동해 거리를 벌립니다."
+			if skill_id == "gunner_backstep"
+			else (
+				"재장전 중 실린더를 타격해 주변 적을 공격하고 제어합니다."
+				if skill_id == "gunner_cylinder"
+				else (
+					"집중 상태에 들어가 강력한 연속 사격을 가합니다."
+					if skill_id == "gunner_deadeye"
+					else "권총의 용사가 전투 상황에 맞춰 자동으로 사용하는 전용 기술입니다."
+				)
+			)
+		),
 		"resource_text": "",
 		"status_text": "재사용 대기 중" if current_remaining > 0.01 else "사용 가능",
 		"available": current_remaining <= 0.01,
