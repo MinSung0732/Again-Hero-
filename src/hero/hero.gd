@@ -394,6 +394,8 @@ var exp_orb_retarget_until_msec: int = 0
 @onready var shield_effect: AnimatedSprite2D = $ShieldEffect
 @onready var channel_effect: AnimatedSprite2D = $ChannelEffect
 @onready var rogue_attack_effect: AnimatedSprite2D = $RogueAttackEffect
+@onready var level_up_effect: AnimatedSprite2D = $LevelUpEffect
+@onready var level_up_audio: AudioStreamPlayer = $LevelUpAudio
 
 func configure_profile(profile: Dictionary) -> void:
 	if profile.is_empty():
@@ -730,6 +732,7 @@ func _ready() -> void:
 	_apply_stage3_fighter_effect_visuals()
 	_apply_stage4_gunner_effect_visuals()
 	_apply_stage6_berserker_effect_visuals()
+	_apply_level_up_effect_visual()
 	if (
 		not rogue_attack_effect.animation_finished.is_connected(
 			Callable(self, "_on_rogue_attack_effect_finished")
@@ -746,6 +749,14 @@ func _ready() -> void:
 		channel_effect.animation_finished.connect(
 			Callable(self, "_on_fighter_guard_release_effect_finished")
 		)
+	if (
+		not level_up_effect.animation_finished.is_connected(
+			Callable(self, "_on_level_up_effect_animation_finished")
+		)
+	):
+		level_up_effect.animation_finished.connect(
+			Callable(self, "_on_level_up_effect_animation_finished")
+		)
 	current_hp = max_hp
 	exp_to_next_level = _required_exp_for_level(level)
 	strafe_sign = -1.0 if randf() < 0.5 else 1.0
@@ -754,6 +765,54 @@ func _ready() -> void:
 	health_changed.emit(current_hp, max_hp)
 	progression_changed.emit(level, current_exp, exp_to_next_level)
 	queue_redraw()
+
+func _apply_level_up_effect_visual() -> void:
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	frames.add_animation("level_up")
+	frames.set_animation_speed("level_up", 13.5)
+	frames.set_animation_loop("level_up", false)
+
+	for frame_index: int in range(1, 7):
+		var texture := _load_stage1_texture(
+			"res://assets/art/effects/levelup/frames/levelup_%02d.png"
+			% frame_index
+		)
+		if texture != null:
+			frames.add_frame("level_up", texture)
+
+	level_up_effect.sprite_frames = frames
+	level_up_effect.animation = &"level_up"
+	level_up_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	level_up_effect.centered = false
+	level_up_effect.offset = Vector2(-192.0, -410.0)
+	level_up_effect.scale = Vector2(0.42, 0.42)
+	level_up_effect.position = Vector2.ZERO
+	level_up_effect.z_index = 6
+	level_up_effect.visible = false
+
+
+func _play_level_up_feedback() -> void:
+	if (
+		level_up_effect.sprite_frames != null
+		and level_up_effect.sprite_frames.has_animation("level_up")
+		and level_up_effect.sprite_frames.get_frame_count("level_up") > 0
+	):
+		level_up_effect.stop()
+		level_up_effect.frame = 0
+		level_up_effect.frame_progress = 0.0
+		level_up_effect.visible = true
+		level_up_effect.play(&"level_up")
+
+	if is_instance_valid(level_up_audio):
+		level_up_audio.stop()
+		level_up_audio.play()
+
+
+func _on_level_up_effect_animation_finished() -> void:
+	level_up_effect.visible = false
+
 
 func _attach_status_effect_visual(effect_type: String) -> void:
 	var effect := COMBAT_STATUS_EFFECT_VISUAL.new()
@@ -6764,6 +6823,7 @@ func _level_up() -> void:
 	level += 1
 	exp_to_next_level = _required_exp_for_level(level)
 	level_flash_timer = 0.45
+	_play_level_up_feedback()
 	_apply_level_growth()
 
 	var candidates: Array = AUGMENT_CATALOG.roll_candidates(
@@ -10284,8 +10344,6 @@ func _draw() -> void:
 			8.0
 		)
 
-	if level_flash_timer > 0.0:
-		draw_circle(Vector2.ZERO, 58.0, Color(1.0, 0.86, 0.25, 0.35), false, 7.0)
 
 	if not hero_sprite.visible:
 		var body_color := Color(0.35, 0.68, 1.0)
