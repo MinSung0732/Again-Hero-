@@ -12,6 +12,7 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
 @onready var battle_viewport: SubViewport = $BattleViewportContainer/BattleViewport
 @onready var battle = $BattleViewportContainer/BattleViewport/Battle
+@onready var hero_bgm_manager = $HeroBGMManager
 
 @onready var subtitle_label: Label = $HUD/TopBar/Subtitle
 @onready var run_timer_label: Label = $HUD/TopBar/RunTimer
@@ -210,6 +211,7 @@ func _ready() -> void:
 
 	var snapshot: Dictionary = battle.get_snapshot()
 	_apply_stage_snapshot(snapshot)
+	hero_bgm_manager.start_stage(String(snapshot.get("stage_id", "")))
 
 	_on_stats_changed(
 		int(snapshot.get("hero_hp", 0)),
@@ -534,6 +536,7 @@ func _format_run_time(seconds: float) -> String:
 func _on_stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int) -> void:
 	hero_hp_label.text = "용사 HP %d / %d" % [hero_hp, hero_max_hp]
 	monsters_label.text = "몬스터 %d" % monsters_left
+	hero_bgm_manager.update_hero_hp(hero_hp, hero_max_hp)
 	if hero_info_panel.visible:
 		_refresh_hero_info_panel()
 
@@ -1743,6 +1746,7 @@ func _on_hero_augment_selected(
 		_refresh_hero_info_panel()
 
 func _on_battle_finished(message: String, player_won: bool) -> void:
+	hero_bgm_manager.stop_bgm()
 	pause_menu.hide()
 	hero_skill_cooldown_bar.hide()
 	demon_augment_panel.hide()
