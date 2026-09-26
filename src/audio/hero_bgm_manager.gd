@@ -47,6 +47,9 @@ func _ready() -> void:
 	player_b.volume_db = SILENT_DB
 	player_a.finished.connect(_on_player_finished.bind(player_a))
 	player_b.finished.connect(_on_player_finished.bind(player_b))
+	if AudioSettings != null:
+		AudioSettings.settings_changed.connect(_sync_mute_state)
+	_sync_mute_state()
 
 
 func start_stage(stage_id: String) -> void:
@@ -156,6 +159,7 @@ func crossfade_to(stream: AudioStream, duration: float = CROSSFADE_SECONDS) -> v
 	incoming.stream = stream
 	incoming.volume_db = SILENT_DB
 	incoming.play()
+	_sync_mute_state()
 
 	_active_player = incoming
 	_standby_player = outgoing
@@ -187,6 +191,7 @@ func _play_immediate(stream: AudioStream) -> void:
 	_active_player.stream = stream
 	_active_player.volume_db = PLAY_DB
 	_active_player.play()
+	_sync_mute_state()
 
 
 func _on_player_finished(player: AudioStreamPlayer) -> void:
@@ -218,6 +223,16 @@ func _cache_stage_streams(stage_data: Dictionary) -> void:
 			stream = ogg_stream
 
 		_stage_streams[phase_key] = stream
+
+
+func _sync_mute_state() -> void:
+	var should_pause := false
+	if AudioSettings != null:
+		should_pause = bool(AudioSettings.bgm_muted)
+
+	for player in [player_a, player_b]:
+		if is_instance_valid(player):
+			player.stream_paused = should_pause
 
 
 func _phase_key(phase: int) -> String:
