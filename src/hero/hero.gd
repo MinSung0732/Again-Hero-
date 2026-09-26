@@ -4731,12 +4731,14 @@ func _apply_stage1_shield_visual() -> void:
 	shield_effect.scale = Vector2(uniform_scale, uniform_scale)
 
 func _apply_stage1_channel_visual() -> void:
+	# Non-Stage-1 heroes can already have their own ChannelEffect configured
+	# by _apply_profile_visual(). Do not erase those frames here.
+	if hero_id != "ranged_rookie":
+		return
+
 	channel_effect.visible = false
 	channel_effect.sprite_frames = null
 	channel_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-
-	if hero_id != "ranged_rookie":
-		return
 
 	var frames := SpriteFrames.new()
 	if frames.has_animation(&"default"):
@@ -5243,7 +5245,11 @@ func _choose_move_direction(nearest_target: Node2D, nearest_distance: float) -> 
 		var retreat := away
 		if combat_strafe_burst_timer > 0.0:
 			var retreat_tangent := Vector2(-to_target.y, to_target.x) * strafe_sign
-			retreat = away * 0.86 + retreat_tangent * 0.30
+			var retreat_strafe_scale := _get_combat_strafe_scale(to_target)
+			retreat = (
+				away * 0.86
+				+ retreat_tangent * 0.30 * retreat_strafe_scale
+			)
 		return retreat.normalized()
 
 	# Inside the firing band, stand and shoot most of the time.
@@ -5251,9 +5257,23 @@ func _choose_move_direction(nearest_target: Node2D, nearest_distance: float) -> 
 	if combat_strafe_burst_timer <= 0.0:
 		return Vector2.ZERO
 
+	var strafe_scale := _get_combat_strafe_scale(to_target)
+	if strafe_scale <= 0.05:
+		return Vector2.ZERO
 	var tangent := Vector2(-to_target.y, to_target.x) * strafe_sign
-	var reposition := away * 0.38 + tangent * 0.62
+	var reposition := away * 0.38 + tangent * 0.62 * strafe_scale
 	return reposition.normalized()
+
+
+func _get_combat_strafe_scale(to_target: Vector2) -> float:
+	if hero_archetype != "alchemist_chemical":
+		return 1.0
+
+	# When the target is almost directly above/below, tangential strafing is
+	# almost pure left/right movement. Suppress it smoothly so the alchemist
+	# does not ping-pong horizontally while visually travelling vertically.
+	var horizontal_alignment := absf(to_target.x)
+	return clampf((horizontal_alignment - 0.12) / 0.28, 0.0, 1.0)
 
 func _clamp_to_battlefield() -> void:
 	var clamped_position := position
@@ -8082,7 +8102,7 @@ func _level_up() -> void:
 
 	var candidates: Array = AUGMENT_CATALOG.roll_candidates(
 		3,
-		build_counts,
+		_get_augment_roll_build_counts(),
 		augment_pool_ids
 	)
 	if candidates.is_empty():
@@ -8349,10 +8369,40 @@ func _build_ai_context() -> Dictionary:
 		),
 	}
 
+func _get_augment_roll_build_counts() -> Dictionary:
+	if (
+		hero_archetype != "alchemist_chemical"
+		or int(build_counts.get("pursuit", 0)) < 3
+	):
+		return build_counts
+
+	# Only the alchemist caps Agile Footwork at 3 stacks. The catalog stays
+	# unchanged so every other hero keeps the shared augment's normal limit.
+	var roll_counts := build_counts.duplicate()
+	var pursuit_augment := AUGMENT_CATALOG.get_augment("pursuit")
+	roll_counts["pursuit"] = maxi(
+		3,
+		int(pursuit_augment.get("max_stack", 3))
+	)
+	return roll_counts
+
+
+func _get_effective_augment_max_stack(
+	augment_id: String,
+	catalog_max_stack: int
+) -> int:
+	if hero_archetype == "alchemist_chemical" and augment_id == "pursuit":
+		return 3
+	return catalog_max_stack
+
+
 func _apply_augment(augment: Dictionary) -> void:
 	var augment_id: String = String(augment.get("id", ""))
 	var current_stack: int = int(build_counts.get(augment_id, 0))
-	var max_stack := int(augment.get("max_stack", 0))
+	var max_stack := _get_effective_augment_max_stack(
+		augment_id,
+		int(augment.get("max_stack", 0))
+	)
 
 	if not augment_id.is_empty() and max_stack > 0 and current_stack >= max_stack:
 		return
