@@ -12,6 +12,8 @@ const BREAK_TEXTURES := [
 
 @onready var projectile_sprite: Sprite2D = $Projectile
 @onready var break_sprite: AnimatedSprite2D = $Break
+@onready var throw_audio: AudioStreamPlayer = $ThrowAudio
+@onready var break_audio: AudioStreamPlayer = $BreakAudio
 
 var phase: int = 0
 var flight_origin := Vector2.ZERO
@@ -61,6 +63,9 @@ func launch(
 	visible = true
 	projectile_sprite.visible = true
 	break_sprite.visible = false
+	if is_instance_valid(throw_audio):
+		throw_audio.stop()
+		throw_audio.play()
 	set_physics_process(true)
 
 func _physics_process(delta: float) -> void:
@@ -78,6 +83,9 @@ func _physics_process(delta: float) -> void:
 	phase = 2
 	set_physics_process(false)
 	landed.emit(flight_target, direct_hit_target)
+	if is_instance_valid(break_audio):
+		break_audio.stop()
+		break_audio.play()
 	direct_hit_target = null
 	break_sprite.stop()
 	break_sprite.frame = 0
