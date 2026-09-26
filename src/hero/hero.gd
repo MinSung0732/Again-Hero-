@@ -788,7 +788,7 @@ func _apply_level_up_effect_visual() -> void:
 	level_up_effect.centered = false
 	level_up_effect.offset = Vector2(-192.0, -410.0)
 	level_up_effect.scale = Vector2(0.42, 0.42)
-	level_up_effect.position = Vector2.ZERO
+	level_up_effect.position = Vector2(0.0, 44.0)
 	level_up_effect.z_index = 6
 	level_up_effect.visible = false
 
