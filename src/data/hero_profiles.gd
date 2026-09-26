@@ -704,9 +704,11 @@ const PROFILES = {
 			"philosopher_stone": {
 				"id": "alchemist_philosopher_stone",
 				"name": "현자의 돌",
-				"description": "연금술 재료 20개를 모으면 가스 소모 없이 전투당 1회 채널링합니다. 완료 시 최대/현재 HP와 공격력 1.5배, 이동속도 1.22배, 독 피해 1.5배, 스킬 쿨타임 30% 감소를 얻고 5초마다 가스 10을 회복합니다. 이후 약병 평타 대신 이동 경로에 2초 독자취를 남기며 계속 회피 이동합니다.",
+				"description": "연금술 재료 20개를 모으면 가스 소모 없이 전투당 1회 채널링합니다. 테스트 모드에서는 게임 시작 5초 후 재료 조건을 무시하고 자동 사용합니다. 완료 시 최대/현재 HP와 공격력 1.5배, 이동속도 1.22배, 독 피해 1.5배, 스킬 쿨타임 30% 감소를 얻고 5초마다 가스 10을 회복합니다. 이후 약병 평타 대신 이동 경로에 2초 독자취를 남기며 계속 회피 이동합니다.",
 				"gas_cost": 0.0,
 				"required_materials": 20,
+				"test_mode": true,
+				"test_delay_seconds": 5.0,
 				"channel_fps": 8.0,
 				"hp_multiplier": 1.50,
 				"attack_multiplier": 1.50,
