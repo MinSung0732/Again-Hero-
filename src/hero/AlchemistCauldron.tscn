@@ -1,10 +1,10 @@
 [gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://src/hero/alchemist_cauldron.gd" id="1_cauldron"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/sfx_alchemist_cauldron_place.ogg" id="2_place"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/sfx_alchemist_great_success.ogg" id="3_great"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/sfx_alchemist_success.ogg" id="4_success"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/sfx_alchemist_failure.ogg" id="5_failure"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_cauldron_place.wav" id="2_place"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_cauldron_great_success.wav" id="3_great"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_cauldron_success.wav" id="4_success"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_cauldron_failure.wav" id="5_failure"]
 
 [node name="AlchemistCauldron" type="Node2D"]
 z_index = 4
