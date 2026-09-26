@@ -14,15 +14,40 @@ static var _visible_height_cache: float = 0.0
 
 var hero: Node2D
 var collected: bool = false
+var temporary_lifetime_remaining: float = 0.0
+var temporary_lifetime_enabled: bool = false
 
 func _ready() -> void:
 	add_to_group("heal_items")
 	hero = get_tree().get_first_node_in_group("hero") as Node2D
 	_apply_visual()
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if collected:
 		return
+
+	if temporary_lifetime_enabled:
+		temporary_lifetime_remaining = maxf(
+			temporary_lifetime_remaining - delta,
+			0.0
+		)
+		if temporary_lifetime_remaining <= 0.0:
+			queue_free()
+			return
+		if temporary_lifetime_remaining <= 3.0:
+			var blink_speed: float = lerpf(
+				5.0,
+				13.0,
+				1.0 - temporary_lifetime_remaining / 3.0
+			)
+			visual.visible = (
+				fmod(
+					temporary_lifetime_remaining * blink_speed,
+					1.0
+				) > 0.32
+			)
+		else:
+			visual.visible = true
 	if not is_instance_valid(hero):
 		hero = get_tree().get_first_node_in_group("hero") as Node2D
 		if not is_instance_valid(hero):
@@ -38,6 +63,11 @@ func _physics_process(_delta: float) -> void:
 	if hero.has_method("collect_heal_item"):
 		hero.call("collect_heal_item", HEAL_AMOUNT)
 	queue_free()
+
+func set_temporary_lifetime(seconds: float) -> void:
+	temporary_lifetime_remaining = maxf(seconds, 0.0)
+	temporary_lifetime_enabled = temporary_lifetime_remaining > 0.0
+
 
 func _apply_visual() -> void:
 	visual.visible = false
