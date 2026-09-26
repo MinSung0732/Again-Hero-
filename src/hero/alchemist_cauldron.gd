@@ -162,6 +162,7 @@ func _build_cauldron_sfx(kind: String) -> AudioStreamWAV:
 
 	var sample_count: int = maxi(int(round(duration * float(mix_rate))), 1)
 	var pcm := PackedByteArray()
+	var success_notes: Array[float] = [660.0, 880.0, 1100.0, 1320.0, 1760.0]
 	pcm.resize(sample_count)
 
 	for sample_index in range(sample_count):
@@ -179,9 +180,12 @@ func _build_cauldron_sfx(kind: String) -> AudioStreamWAV:
 				)
 			"great_success":
 				var note_index: int = mini(int(time / 0.09), 4)
-				var notes: Array[float] = [660.0, 880.0, 1100.0, 1320.0, 1760.0]
 				var note_time: float = fmod(time, 0.09)
-				var square: float = 1.0 if sin(TAU * notes[note_index] * note_time) >= 0.0 else -1.0
+				var square: float = (
+					1.0
+					if sin(TAU * success_notes[note_index] * note_time) >= 0.0
+					else -1.0
+				)
 				value = square * 0.30 * exp(-note_time / 0.16)
 			"success":
 				value = (
