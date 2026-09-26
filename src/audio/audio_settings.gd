@@ -12,10 +12,16 @@ const MAX_LEVEL := 10
 
 # Level 10 preserves the project's intended mix ceiling.
 # BGM stays behind combat sounds even at maximum.
-const BGM_MIN_DB := -42.0
-const BGM_MAX_DB := -18.0
-const SFX_MIN_DB := -30.0
-const SFX_MAX_DB := 0.0
+# 1~10 각 단계가 체감상 확실히 구분되도록 dB 간격을 크게 둔다.
+# BGM 10은 기존 -18 dB 상한을 유지해서 전투음 뒤에 깔리게 한다.
+const BGM_LEVEL_DB := PackedFloat32Array([
+	-54.0, -48.0, -43.0, -38.0, -34.0,
+	-30.0, -27.0, -24.0, -21.0, -18.0,
+])
+const SFX_LEVEL_DB := PackedFloat32Array([
+	-45.0, -38.0, -32.0, -27.0, -22.0,
+	-18.0, -14.0, -10.0, -5.0, 0.0,
+])
 
 var bgm_level: int = DEFAULT_LEVEL
 var sfx_level: int = DEFAULT_LEVEL
@@ -30,13 +36,13 @@ func _ready() -> void:
 
 func set_bgm_level(value: int) -> void:
 	bgm_level = clampi(value, MIN_LEVEL, MAX_LEVEL)
-	_apply_bus(BGM_BUS, bgm_level, bgm_muted, BGM_MIN_DB, BGM_MAX_DB)
+	_apply_bus(BGM_BUS, bgm_level, bgm_muted, BGM_LEVEL_DB)
 	_save_and_emit()
 
 
 func set_sfx_level(value: int) -> void:
 	sfx_level = clampi(value, MIN_LEVEL, MAX_LEVEL)
-	_apply_bus(SFX_BUS, sfx_level, sfx_muted, SFX_MIN_DB, SFX_MAX_DB)
+	_apply_bus(SFX_BUS, sfx_level, sfx_muted, SFX_LEVEL_DB)
 	_save_and_emit()
 
 
@@ -80,16 +86,15 @@ func _apply_bus(
 	bus_name: StringName,
 	level: int,
 	muted: bool,
-	min_db: float,
-	max_db: float
+	level_db: PackedFloat32Array
 ) -> void:
 	var bus_index := AudioServer.get_bus_index(bus_name)
-	if bus_index < 0:
+	if bus_index < 0 or level_db.is_empty():
 		return
 
-	var ratio := float(clampi(level, MIN_LEVEL, MAX_LEVEL) - MIN_LEVEL) / float(MAX_LEVEL - MIN_LEVEL)
-	var db := lerpf(min_db, max_db, ratio)
-	AudioServer.set_bus_volume_db(bus_index, db)
+	var level_index := clampi(level, MIN_LEVEL, MAX_LEVEL) - MIN_LEVEL
+	level_index = mini(level_index, level_db.size() - 1)
+	AudioServer.set_bus_volume_db(bus_index, level_db[level_index])
 	AudioServer.set_bus_mute(bus_index, muted)
 
 
