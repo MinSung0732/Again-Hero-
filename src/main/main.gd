@@ -79,7 +79,17 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 @onready var pause_time_label: Label = $HUD/PauseMenu/MenuPanel/Margin/VBox/TimeLabel
 @onready var pause_resume_button: Button = $HUD/PauseMenu/MenuPanel/Margin/VBox/ResumeButton
 @onready var pause_restart_button: Button = $HUD/PauseMenu/MenuPanel/Margin/VBox/RestartButton
+@onready var pause_settings_button: Button = $HUD/PauseMenu/MenuPanel/Margin/VBox/SettingsButton
 @onready var pause_lobby_button: Button = $HUD/PauseMenu/MenuPanel/Margin/VBox/LobbyButton
+
+@onready var settings_overlay: Control = $HUD/SettingsOverlay
+@onready var settings_close_button: Button = $HUD/SettingsOverlay/Panel/Margin/VBox/CloseButton
+@onready var settings_bgm_slider: HSlider = $HUD/SettingsOverlay/Panel/Margin/VBox/BGMRow/Slider
+@onready var settings_bgm_value: Label = $HUD/SettingsOverlay/Panel/Margin/VBox/BGMRow/Value
+@onready var settings_bgm_mute: CheckBox = $HUD/SettingsOverlay/Panel/Margin/VBox/BGMMute
+@onready var settings_sfx_slider: HSlider = $HUD/SettingsOverlay/Panel/Margin/VBox/SFXRow/Slider
+@onready var settings_sfx_value: Label = $HUD/SettingsOverlay/Panel/Margin/VBox/SFXRow/Value
+@onready var settings_sfx_mute: CheckBox = $HUD/SettingsOverlay/Panel/Margin/VBox/SFXMute
 
 @onready var demon_augment_panel: PanelContainer = $HUD/DemonAugmentPanel
 @onready var demon_augment_title: Label = $HUD/DemonAugmentPanel/Margin/VBox/Title
@@ -165,7 +175,15 @@ func _ready() -> void:
 		)
 	pause_resume_button.pressed.connect(_close_pause_menu)
 	pause_restart_button.pressed.connect(_on_pause_restart_pressed)
+	pause_settings_button.pressed.connect(_open_settings_overlay)
 	pause_lobby_button.pressed.connect(_on_lobby_pressed)
+
+	settings_close_button.pressed.connect(_close_settings_overlay)
+	settings_bgm_slider.value_changed.connect(_on_settings_bgm_level_changed)
+	settings_sfx_slider.value_changed.connect(_on_settings_sfx_level_changed)
+	settings_bgm_mute.toggled.connect(_on_settings_bgm_mute_toggled)
+	settings_sfx_mute.toggled.connect(_on_settings_sfx_mute_toggled)
+	_sync_audio_settings_ui()
 
 	placement_toggle.toggled.connect(_on_placement_mode_toggled)
 
@@ -300,7 +318,9 @@ func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		if monster_info_panel.visible:
+		if settings_overlay.visible:
+			_close_settings_overlay()
+		elif monster_info_panel.visible:
 			_close_monster_info()
 		elif hero_info_panel.visible:
 			_close_hero_info()
@@ -436,9 +456,50 @@ func _close_pause_menu() -> void:
 	if not pause_menu.visible:
 		return
 
+	settings_overlay.hide()
 	pause_menu.hide()
 	if not result_panel.visible:
 		battle.set_external_pause(false)
+
+
+func _open_settings_overlay() -> void:
+	_sync_audio_settings_ui()
+	settings_overlay.show()
+	settings_overlay.move_to_front()
+
+
+func _close_settings_overlay() -> void:
+	settings_overlay.hide()
+
+
+func _sync_audio_settings_ui() -> void:
+	settings_bgm_slider.set_value_no_signal(float(AudioSettings.bgm_level))
+	settings_sfx_slider.set_value_no_signal(float(AudioSettings.sfx_level))
+	settings_bgm_mute.set_pressed_no_signal(AudioSettings.bgm_muted)
+	settings_sfx_mute.set_pressed_no_signal(AudioSettings.sfx_muted)
+	settings_bgm_value.text = str(AudioSettings.bgm_level)
+	settings_sfx_value.text = str(AudioSettings.sfx_level)
+
+
+func _on_settings_bgm_level_changed(value: float) -> void:
+	var level := int(round(value))
+	settings_bgm_value.text = str(level)
+	AudioSettings.set_bgm_level(level)
+
+
+func _on_settings_sfx_level_changed(value: float) -> void:
+	var level := int(round(value))
+	settings_sfx_value.text = str(level)
+	AudioSettings.set_sfx_level(level)
+
+
+func _on_settings_bgm_mute_toggled(enabled: bool) -> void:
+	AudioSettings.set_bgm_muted(enabled)
+
+
+func _on_settings_sfx_mute_toggled(enabled: bool) -> void:
+	AudioSettings.set_sfx_muted(enabled)
+
 
 func _on_pause_restart_pressed() -> void:
 	pause_menu.hide()
@@ -1747,6 +1808,7 @@ func _on_hero_augment_selected(
 
 func _on_battle_finished(message: String, player_won: bool) -> void:
 	hero_bgm_manager.stop_bgm()
+	settings_overlay.hide()
 	pause_menu.hide()
 	hero_skill_cooldown_bar.hide()
 	demon_augment_panel.hide()
