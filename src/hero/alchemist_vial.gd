@@ -20,6 +20,7 @@ var flight_duration: float = 0.46
 var flight_elapsed: float = 0.0
 var arc_height: float = 120.0
 var direct_hit_target: Node = null
+var auto_free_after_break: bool = false
 
 func _ready() -> void:
 	projectile_sprite.texture = PROJECTILE_TEXTURE
@@ -45,7 +46,8 @@ func launch(
 	target: Vector2,
 	duration: float,
 	height: float,
-	direct_target: Node = null
+	direct_target: Node = null,
+	auto_free: bool = false
 ) -> void:
 	flight_origin = origin
 	flight_target = target
@@ -53,6 +55,7 @@ func launch(
 	flight_elapsed = 0.0
 	arc_height = maxf(height, 0.0)
 	direct_hit_target = direct_target
+	auto_free_after_break = auto_free
 	phase = 1
 	global_position = origin
 	visible = true
@@ -81,12 +84,17 @@ func _physics_process(delta: float) -> void:
 	break_sprite.play("break")
 
 func _on_break_finished() -> void:
-	if phase == 2:
-		_deactivate()
+	if phase != 2:
+		return
+	if auto_free_after_break:
+		queue_free()
+		return
+	_deactivate()
 
 func _deactivate() -> void:
 	phase = 0
 	direct_hit_target = null
+	auto_free_after_break = false
 	visible = false
 	projectile_sprite.visible = false
 	break_sprite.visible = false
