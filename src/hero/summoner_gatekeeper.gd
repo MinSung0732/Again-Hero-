@@ -293,6 +293,14 @@ func _build_projectile_pool() -> void:
 		_debug_pool_logged = true
 
 
+func _load_texture(path: String) -> Texture2D:
+	if ResourceLoader.exists(path):
+		var resource = load(path)
+		if resource is Texture2D:
+			return resource
+	return null
+
+
 func _load_optional_audio() -> void:
 	if ResourceLoader.exists(ATTACK_AUDIO_PATH):
 		var stream = load(ATTACK_AUDIO_PATH)
