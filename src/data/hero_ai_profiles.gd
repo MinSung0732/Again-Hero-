@@ -123,7 +123,24 @@ const PROFILES = {
 			"fighter_charge_recovery": 0.25,
 			"iron_body": 0.35,
 		},
-	},
+	},,
+	"stage_8_summoner": {
+		"id": "stage_8_summoner",
+		"display_name": "전장을 구축하는 소환사",
+		"observation_interval": 2.5,
+		"stack_inertia": 0.90,
+		"new_branch_penalty": 0.34,
+		"heal_item_desire": 1.12,
+		"heal_risk_tolerance": 0.48,
+		"heal_detour_weight": 1.06,
+		"augment_biases": {
+			"common_attack_training": 0.35,
+			"rapid_strikes": 0.30,
+			"iron_body": 0.25,
+			"pursuit": 0.35,
+		},
+	}
+
 }
 
 static func get_profile(profile_id: String) -> Dictionary:
