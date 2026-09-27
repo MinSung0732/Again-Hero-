@@ -277,6 +277,7 @@ var summoner_slot_base: int = 5
 var summoner_slot_bonus: int = 0
 var summoner_gatekeeper_pool: Array[Node2D] = []
 var summoner_gatekeeper_cooldown: float = 0.0
+var summoner_cast_pending: bool = false
 var summoner_runtime_ready: bool = false
 var summoner_basic_effect: AnimatedSprite2D = null
 var summoner_basic_audio: AudioStreamPlayer = null
@@ -623,6 +624,7 @@ func configure_profile(profile: Dictionary) -> void:
 		float(summoner_gatekeeper_config.get("initial_cooldown", 0.0)),
 		0.0
 	)
+	summoner_cast_pending = not summoner_gatekeeper_config.is_empty()
 	summoner_runtime_ready = false
 	summoner_basic_effect = null
 	summoner_basic_audio = null
@@ -1107,9 +1109,9 @@ func _ensure_summoner_runtime() -> void:
 
 	summoner_runtime_ready = not summoner_gatekeeper_pool.is_empty()
 	if summoner_runtime_ready:
-		# First summon is available immediately. Defer one frame so all pooled
-		# summon nodes have completed _ready() before activation.
-		call_deferred("_try_cast_summoner_gatekeeper")
+		# Keep an explicit request alive until a pooled summon is actually acquired.
+		# This prevents the first cast from being silently lost during node setup.
+		summoner_cast_pending = true
 	queue_redraw()
 
 
@@ -1144,7 +1146,9 @@ func _physics_process_summoner(delta: float) -> void:
 		summoner_gatekeeper_cooldown <= 0.0
 		and _get_active_summon_count() < _get_summoner_slot_capacity()
 	):
-		_try_cast_summoner_gatekeeper()
+		summoner_cast_pending = true
+	if summoner_cast_pending and _try_cast_summoner_gatekeeper():
+		summoner_cast_pending = false
 
 	_update_heal_item_goal(delta)
 	_update_chest_goal(delta)
@@ -1211,6 +1215,8 @@ func _try_cast_summoner_gatekeeper() -> bool:
 
 
 func _on_summoner_gatekeeper_released(_summon: Node2D) -> void:
+	if summoner_gatekeeper_cooldown <= 0.0:
+		summoner_cast_pending = true
 	queue_redraw()
 
 

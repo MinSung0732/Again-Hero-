@@ -34,8 +34,10 @@ var projectile_pool: Array[Node2D] = []
 func _ready() -> void:
 	_setup_visual()
 	_load_optional_audio()
-	_build_projectile_pool()
 	deactivate(false)
+	# Do not add projectile siblings to our parent while this node is still in
+	# its own _ready() setup. Build the fixed pool on the deferred idle step.
+	call_deferred("_build_projectile_pool")
 
 
 func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) -> void:
@@ -255,6 +257,8 @@ func _add_sequence(
 
 
 func _build_projectile_pool() -> void:
+	if not projectile_pool.is_empty():
+		return
 	var world := get_parent()
 	if not is_instance_valid(world):
 		return
