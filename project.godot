@@ -18,10 +18,6 @@ run/main_scene="res://src/lobby/Lobby.tscn"
 config/features=PackedStringArray("4.7")
 config/icon="uid://bxdb4cg7dutw3"
 
-[audio]
-
-default_bus_layout="res://default_bus_layout.tres"
-
 [autoload]
 
 GameFontManager="*res://src/ui/game_font_manager.gd"
