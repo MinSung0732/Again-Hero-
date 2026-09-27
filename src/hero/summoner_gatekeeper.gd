@@ -85,6 +85,12 @@ func _physics_process(delta: float) -> void:
 	if visual.animation == &"birth" and visual.is_playing():
 		queue_redraw()
 		return
+	if (
+		visual.animation == &"birth"
+		and visual.sprite_frames != null
+		and visual.sprite_frames.get_frame_count(&"birth") <= 0
+	):
+		visual.play(&"idle")
 	if dying:
 		return
 
@@ -211,7 +217,9 @@ func _setup_visual() -> void:
 		var frames := SpriteFrames.new()
 		if frames.has_animation(&"default"):
 			frames.remove_animation(&"default")
-		_add_sequence(frames, &"birth", "birth", 4, 9.0, false)
+		# The current effect1 resource names the summon-in frames
+		# summon_01~04 (there are no birth_01~04 files).
+		_add_sequence(frames, &"birth", "summon", 4, 9.0, false)
 		_add_sequence(frames, &"idle", "idle", 5, 6.0, true)
 		frames.add_animation(&"attack")
 		frames.set_animation_speed(&"attack", 8.0)
