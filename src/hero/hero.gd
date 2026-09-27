@@ -80,7 +80,6 @@ const HERO_ATTACK_MILESTONE_BONUS := 0.05
 const HERO_ANIMATION_DUPLICATE_RESTART_GUARD_MSEC := 70
 
 static var _archmage_fx_frames_cache: Dictionary = {}
-static var _hit_flash_shader: Shader
 
 @export var max_hp: int = 300
 @export var move_speed: float = 230.0
@@ -391,7 +390,6 @@ var target: Node2D
 var attack_timer: float = 0.0
 var retarget_timer: float = 0.0
 var hit_flash_timer: float = 0.0
-var hit_flash_material: ShaderMaterial
 var level_flash_timer: float = 0.0
 var attack_pose_timer: float = 0.0
 var hit_pose_timer: float = 0.0
@@ -12121,42 +12119,12 @@ func take_damage(amount: int, source: Node = null) -> bool:
 
 	return true
 
-func _ensure_hit_flash_material() -> void:
-	if not is_instance_valid(hero_sprite):
-		return
-	if hit_flash_material != null:
-		return
-	if _hit_flash_shader == null:
-		_hit_flash_shader = Shader.new()
-		_hit_flash_shader.code = """
-shader_type canvas_item;
-uniform float flash_strength : hint_range(0.0, 1.0) = 0.0;
-
-void fragment() {
-	vec4 base = texture(TEXTURE, UV) * COLOR;
-	base.rgb = mix(base.rgb, vec3(1.0), flash_strength);
-	COLOR = base;
-}
-"""
-	hit_flash_material = ShaderMaterial.new()
-	hit_flash_material.shader = _hit_flash_shader
-	hit_flash_material.set_shader_parameter("flash_strength", 0.0)
-	hero_sprite.material = hit_flash_material
-
-
 func _update_hero_hit_flash(delta: float) -> void:
-	if hit_flash_timer > 0.0:
-		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
-		_ensure_hit_flash_material()
-		if hit_flash_material != null:
-			hit_flash_material.set_shader_parameter(
-				"flash_strength",
-				1.0 if hit_flash_timer > 0.0 else 0.0
-			)
-		if hit_flash_timer <= 0.0:
-			queue_redraw()
-	elif hit_flash_material != null:
-		hit_flash_material.set_shader_parameter("flash_strength", 0.0)
+	if hit_flash_timer <= 0.0:
+		return
+	hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
+	if hit_flash_timer <= 0.0:
+		queue_redraw()
 
 
 func _update_invulnerability(delta: float) -> void:

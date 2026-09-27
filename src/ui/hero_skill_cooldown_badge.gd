@@ -253,6 +253,20 @@ func _draw() -> void:
 	if on_cooldown and cooldown_total > 0.001:
 		var ratio := clampf(cooldown_remaining / cooldown_total, 0.0, 1.0)
 		_draw_cooldown_sector(center, radius - 1.0, ratio)
+		_draw_cooldown_rim(center, radius - 1.5, ratio)
+		_draw_center_text(
+			center,
+			str(maxi(int(ceil(cooldown_remaining)), 1)),
+			20,
+			Color(1.0, 1.0, 1.0, 0.98)
+		)
+	elif cooldown_total > 0.001 and available:
+		_draw_center_text(
+			center,
+			"READY",
+			13,
+			Color(1.0, 0.90, 0.36, 1.0)
+		)
 
 	draw_arc(
 		center,
@@ -260,9 +274,9 @@ func _draw() -> void:
 		0.0,
 		TAU,
 		48,
-		Color(0.72, 0.76, 0.84, 0.86)
+		Color(0.80, 0.84, 0.92, 0.96)
 			if dimmed
-			else Color(1.0, 0.82, 0.34, 0.95),
+			else Color(1.0, 0.82, 0.34, 1.0),
 		2.0,
 		true
 	)
@@ -282,4 +296,58 @@ func _draw_cooldown_sector(center: Vector2, radius: float, ratio: float) -> void
 		var angle := start_angle + sweep * t
 		points.append(center + Vector2.from_angle(angle) * radius)
 
-	draw_colored_polygon(points, Color(0.025, 0.03, 0.045, 0.70))
+	draw_colored_polygon(points, Color(0.015, 0.02, 0.035, 0.82))
+
+
+func _draw_cooldown_rim(center: Vector2, radius: float, ratio: float) -> void:
+	if ratio <= 0.001:
+		return
+	var start_angle := -PI * 0.5
+	var end_angle := start_angle + TAU * ratio
+	draw_arc(
+		center,
+		radius,
+		start_angle,
+		end_angle,
+		maxi(int(ceil(48.0 * ratio)), 2),
+		Color(0.62, 0.86, 1.0, 1.0),
+		4.0,
+		true
+	)
+
+
+func _draw_center_text(
+	center: Vector2,
+	text_value: String,
+	font_size: int,
+	color: Color
+) -> void:
+	var font := ThemeDB.fallback_font
+	var text_size := font.get_string_size(
+		text_value,
+		HORIZONTAL_ALIGNMENT_LEFT,
+		-1.0,
+		font_size
+	)
+	var baseline := Vector2(
+		center.x - text_size.x * 0.5,
+		center.y + text_size.y * 0.34
+	)
+	draw_string(
+		font,
+		baseline,
+		text_value,
+		HORIZONTAL_ALIGNMENT_LEFT,
+		-1.0,
+		font_size,
+		Color(0.0, 0.0, 0.0, 0.95)
+	)
+	draw_string(
+		font,
+		baseline + Vector2(0.0, -1.0),
+		text_value,
+		HORIZONTAL_ALIGNMENT_LEFT,
+		-1.0,
+		font_size,
+		color
+	)
