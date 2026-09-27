@@ -734,6 +734,12 @@ const PROFILES = {
 			"slow_resistance",
 			"exp_training",
 			"exp_magnet",
+			"alchemist_equivalent_exchange",
+			"alchemist_chemical_support",
+			"alchemist_failure_mother_success",
+			"alchemist_quick_decision",
+			"alchemist_compressed_gas",
+			"alchemist_quick_preparation",
 		],
 	},
 }
