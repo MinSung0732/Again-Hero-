@@ -1,6 +1,10 @@
 용사 리소스 규격
 Again-Hero- 프로젝트 공통 기준
 
+캐릭터 픽셀아트의 그림체, 색/명암, 32×32 스프라이트, 64×64 초상화,
+프레임 파일명과 납품 패키지 규격은 아래 문서를 공식 기준으로 함께 사용한다.
+docs/PIXEL_ART_CHARACTER_STANDARD.md
+
 1. 목적
 이 문서는 모든 스테이지 용사의 인게임 도트와 로비 초상화가
 서로 다른 원본 해상도/캔버스 크기를 사용하더라도
@@ -66,6 +70,7 @@ Again-Hero- 프로젝트 공통 기준
 - 로비 초상화 크기도 Stage 1 기준 자동 정규화
 
 7. 신규 용사 추가 체크리스트
+[ ] docs/PIXEL_ART_CHARACTER_STANDARD.md 준수
 [ ] Hero profile 작성
 [ ] Stage portrait_path 지정
 [ ] 첫 idle 프레임 존재

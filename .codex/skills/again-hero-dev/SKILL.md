@@ -39,3 +39,7 @@ Use this skill only in the `MinSung0732/Again-Hero-` repository. Treat repositor
 ## Audio
 
 For a new sound effect, search Pixabay first and time-box the search to a few viable candidates. Verify the license and record the source URL, creator, and content ID. If Base64 is needed, use it only to transport the asset, decode once to a real binary under `assets/audio/`, and reference that file from Godot. Never add runtime Base64 decoding merely to ship audio.
+
+## Character pixel art
+
+For character sprites, portraits, frame extraction, or pixel-art review, also read `docs/PIXEL_ART_CHARACTER_STANDARD.md` and use the dedicated `$again-hero-pixel-art` workflow. Treat the Stage 8 images named there as style-density and composition references, never as designs to copy.

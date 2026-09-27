@@ -38,4 +38,5 @@
 ## Codex 스킬 원본
 
 - 프로젝트 전용 스킬 원본은 `.codex/skills/again-hero-dev/`에 둔다.
+- 캐릭터 픽셀아트 전용 스킬 원본은 `.codex/skills/again-hero-pixel-art/`에 둔다.
 - 개인 Codex 스킬 설치본과 원본을 함께 수정할 때는 저장소 원본을 먼저 고치고 동일 파일인지 검증한다.

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2026-09-28 — 캐릭터 픽셀아트 공통 규격 / 전용 Codex 스킬
+- 모든 캐릭터에 적용할 공식 그림체, 색·명암, 32×32 본체 도트, 64×64 초상화, 프레임/anchor, 파일명, ZIP·manifest 납품 기준을 `docs/PIXEL_ART_CHARACTER_STANDARD.md`로 추가.
+- Stage 8 소환사 이미지 2종은 디자인 복제가 아닌 픽셀 밀도·얼굴 비율·명암·외곽선·SD 비율·초상화 구도 레퍼런스로 한정하고, 실제 원본 크기와 최종 납품 치수를 명확히 구분.
+- `AGENTS.md`, `HERO_RESOURCE_STANDARD.txt`, `PROJECT_CONTEXT.md`, `again-hero-dev` 스킬에서 새 공식 규격을 참조하도록 연결.
+- 캐릭터 스프라이트/초상화 생성·수정·분리·패키징·검수에 자동 적용할 `again-hero-pixel-art` Codex 스킬 원본 추가.
+
 ## 2026-09-28 — 프로젝트 AI 작업 기준 / Codex 스킬 추가
 - `docs/AI_DEVELOPMENT_WORKFLOW.md`를 추가해 핵심 게임 방향, 데이터 중심 설계, 모바일 성능 금지 패턴, Git 최신 SHA 확인, 정적 검증, 커밋 보고 규칙을 저장소 기준으로 고정.
 - `AGENTS.md`가 새 작업 기준 문서를 필수로 읽고, Godot 미실행 시 런타임 검증을 주장하지 않도록 명시.

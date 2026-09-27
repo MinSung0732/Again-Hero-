@@ -1,0 +1,4 @@
+interface:
+  display_name: "Again, Hero 픽셀아트"
+  short_description: "32×32 캐릭터와 64×64 초상화 공통 규격"
+  default_prompt: "Use $again-hero-pixel-art to create and package this Again, Hero character in the official shared pixel-art style."
