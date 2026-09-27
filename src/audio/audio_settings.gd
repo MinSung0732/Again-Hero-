@@ -6,15 +6,15 @@ const CONFIG_PATH := "user://audio_settings.cfg"
 const BGM_BUS := &"BGM"
 const SFX_BUS := &"SFX"
 
-const DEFAULT_LEVEL := 10
+const DEFAULT_LEVEL := 8
 const MIN_LEVEL := 1
 const MAX_LEVEL := 10
 
-# Level 10 matches the unattenuated playback volume (0 dB).
-# Lower levels use deliberately large steps so each slider position is audible.
+# BGM is deliberately mixed behind combat SFX. Level 10 is still attenuated.
+# SFX keeps 0 dB at level 10 so combat feedback remains dominant.
 const BGM_LEVEL_DB := [
-	-54.0, -42.0, -34.0, -27.0, -21.0,
-	-16.0, -12.0, -8.0, -4.0, 0.0,
+	-44.0, -38.0, -33.0, -29.0, -25.0,
+	-22.0, -19.0, -16.0, -14.0, -12.0,
 ]
 const SFX_LEVEL_DB := [
 	-45.0, -38.0, -32.0, -27.0, -22.0,
