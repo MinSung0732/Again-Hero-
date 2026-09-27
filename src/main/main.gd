@@ -91,6 +91,8 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 @onready var settings_sfx_value: Label = $HUD/SettingsOverlay/Panel/Margin/VBox/SFXRow/Value
 @onready var settings_sfx_mute: CheckBox = $HUD/SettingsOverlay/Panel/Margin/VBox/SFXMute
 @onready var settings_debug_info: Label = $HUD/SettingsOverlay/Panel/Margin/VBox/DebugInfo
+@onready var bgm_player_a: AudioStreamPlayer = $HeroBGMManager/PlayerA
+@onready var bgm_player_b: AudioStreamPlayer = $HeroBGMManager/PlayerB
 
 @onready var demon_augment_panel: PanelContainer = $HUD/DemonAugmentPanel
 @onready var demon_augment_title: Label = $HUD/DemonAugmentPanel/Margin/VBox/Title
@@ -496,23 +498,72 @@ func _refresh_audio_debug_info() -> void:
 	if not is_instance_valid(settings_debug_info):
 		return
 	if (
-		not is_instance_valid(hero_bgm_manager)
-		or not hero_bgm_manager.has_method("get_audio_debug_summary")
+		is_instance_valid(hero_bgm_manager)
+		and hero_bgm_manager.has_method("get_audio_debug_summary")
 	):
-		settings_debug_info.text = "BGMDBG-1\nHeroBGMManager 진단 API 없음"
+		settings_debug_info.text = String(
+			hero_bgm_manager.get_audio_debug_summary()
+		)
 		return
 
-	settings_debug_info.text = String(
-		hero_bgm_manager.get_audio_debug_summary()
-	)
+	settings_debug_info.text = "\n".join([
+		"BGMDBG-FALLBACK",
+		"HeroBGMManager 진단 API 없음",
+		"A playing=%s paused=%s db=%.1f bus=%s" % [
+			str(bgm_player_a.playing),
+			str(bgm_player_a.stream_paused),
+			bgm_player_a.volume_db,
+			String(bgm_player_a.bus),
+		],
+		"B playing=%s paused=%s db=%.1f bus=%s" % [
+			str(bgm_player_b.playing),
+			str(bgm_player_b.stream_paused),
+			bgm_player_b.volume_db,
+			String(bgm_player_b.bus),
+		],
+	])
 
 
 func _on_settings_bgm_level_changed(value: float) -> void:
 	var level := int(round(value))
 	settings_bgm_value.text = str(level)
 	AudioSettings.set_bgm_level(level)
-	hero_bgm_manager.set_user_bgm_level(level)
+	if hero_bgm_manager.has_method("set_user_bgm_level"):
+		hero_bgm_manager.set_user_bgm_level(level)
+	_force_apply_bgm_players(level, settings_bgm_mute.button_pressed)
 	_refresh_audio_debug_info()
+
+
+func _force_apply_bgm_players(level: int, muted: bool) -> void:
+	var target_db := -18.0
+	match clampi(level, 1, 10):
+		1:
+			target_db = -54.0
+		2:
+			target_db = -48.0
+		3:
+			target_db = -43.0
+		4:
+			target_db = -38.0
+		5:
+			target_db = -34.0
+		6:
+			target_db = -30.0
+		7:
+			target_db = -27.0
+		8:
+			target_db = -24.0
+		9:
+			target_db = -21.0
+
+	for player in [bgm_player_a, bgm_player_b]:
+		if not is_instance_valid(player):
+			continue
+		player.stream_paused = muted
+		if muted:
+			player.volume_db = -80.0
+		elif player.playing:
+			player.volume_db = target_db
 
 
 func _on_settings_sfx_level_changed(value: float) -> void:
@@ -523,7 +574,9 @@ func _on_settings_sfx_level_changed(value: float) -> void:
 
 func _on_settings_bgm_mute_toggled(enabled: bool) -> void:
 	AudioSettings.set_bgm_muted(enabled)
-	hero_bgm_manager.set_user_bgm_muted(enabled)
+	if hero_bgm_manager.has_method("set_user_bgm_muted"):
+		hero_bgm_manager.set_user_bgm_muted(enabled)
+	_force_apply_bgm_players(int(round(settings_bgm_slider.value)), enabled)
 	_refresh_audio_debug_info()
 
 
