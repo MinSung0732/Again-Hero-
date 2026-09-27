@@ -1,0 +1,183 @@
+{
+  "source": "ui_gagebar_spritesheet.png",
+  "frame_count": 8,
+  "cell_size": [
+    256,
+    256
+  ],
+  "sheet_size": [
+    2048,
+    256
+  ],
+  "columns": 8,
+  "rows": 1,
+  "anchor": [
+    128,
+    128
+  ],
+  "alignment": "Ring center fixed to (128,128) across all eight frames; original pixel scale preserved",
+  "frame_order": [
+    "gage_01.png",
+    "gage_02.png",
+    "gage_03.png",
+    "gage_04.png",
+    "gage_05.png",
+    "gage_06.png",
+    "gage_07.png",
+    "gage_08.png"
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "file": "gage_01.png",
+      "action": "gage",
+      "source_crop": [
+        37,
+        242,
+        252,
+        456
+      ],
+      "source_root": [
+        144,
+        349
+      ],
+      "anchor": [
+        128,
+        128
+      ]
+    },
+    {
+      "index": 1,
+      "file": "gage_02.png",
+      "action": "gage",
+      "source_crop": [
+        291,
+        242,
+        506,
+        456
+      ],
+      "source_root": [
+        398,
+        349
+      ],
+      "anchor": [
+        128,
+        128
+      ]
+    },
+    {
+      "index": 2,
+      "file": "gage_03.png",
+      "action": "gage",
+      "source_crop": [
+        536,
+        237,
+        750,
+        450
+      ],
+      "source_root": [
+        643,
+        344
+      ],
+      "anchor": [
+        128,
+        128
+      ]
+    },
+    {
+      "index": 3,
+      "file": "gage_04.png",
+      "action": "gage",
+      "source_crop": [
+        793,
+        233,
+        1006,
+        447
+      ],
+      "source_root": [
+        900,
+        340
+      ],
+      "anchor": [
+        128,
+        128
+      ]
+    },
+    {
+      "index": 4,
+      "file": "gage_05.png",
+      "action": "gage",
+      "source_crop": [
+        1049,
+        231,
+        1262,
+        446
+      ],
+      "source_root": [
+        1155,
+        339
+      ],
+      "anchor": [
+        128,
+        128
+      ]
+    },
+    {
+      "index": 5,
+      "file": "gage_06.png",
+      "action": "gage",
+      "source_crop": [
+        1302,
+        229,
+        1517,
+        447
+      ],
+      "source_root": [
+        1409,
+        338
+      ],
+      "anchor": [
+        128,
+        128
+      ]
+    },
+    {
+      "index": 6,
+      "file": "gage_07.png",
+      "action": "gage",
+      "source_crop": [
+        1558,
+        230,
+        1772,
+        447
+      ],
+      "source_root": [
+        1665,
+        339
+      ],
+      "anchor": [
+        128,
+        128
+      ]
+    },
+    {
+      "index": 7,
+      "file": "gage_08.png",
+      "action": "gage",
+      "source_crop": [
+        1807,
+        229,
+        2022,
+        446
+      ],
+      "source_root": [
+        1914,
+        338
+      ],
+      "anchor": [
+        128,
+        128
+      ]
+    }
+  ]
+}

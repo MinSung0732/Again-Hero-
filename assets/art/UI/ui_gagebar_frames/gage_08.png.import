@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d2xsrvcn74xaq"
-path="res://.godot/imported/demonking_portrait_04.png-c2269be91db4509ef060ed8f5b2827f7.ctex"
+uid="uid://48xgnlta8iy"
+path="res://.godot/imported/gage_08.png-95a355fe2790a82136c4a83ec90e0e9e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/demonking/demonking_portrait_04.png"
-dest_files=["res://.godot/imported/demonking_portrait_04.png-c2269be91db4509ef060ed8f5b2827f7.ctex"]
+source_file="res://assets/art/UI/ui_gagebar_frames/gage_08.png"
+dest_files=["res://.godot/imported/gage_08.png-95a355fe2790a82136c4a83ec90e0e9e.ctex"]
 
 [params]
 

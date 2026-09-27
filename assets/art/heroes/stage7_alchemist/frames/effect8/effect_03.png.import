@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cysm4ku22nibr"
-path="res://.godot/imported/demonking_portrait_03.png-dc70b3bef2c10c1e414ba566491db3bd.ctex"
+uid="uid://bl0xy3dvpbwwv"
+path="res://.godot/imported/effect_03.png-3c6f6886b40ac4267ba07deee1580a17.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/demonking/demonking_portrait_03.png"
-dest_files=["res://.godot/imported/demonking_portrait_03.png-dc70b3bef2c10c1e414ba566491db3bd.ctex"]
+source_file="res://assets/art/heroes/stage7_alchemist/frames/effect8/effect_03.png"
+dest_files=["res://.godot/imported/effect_03.png-3c6f6886b40ac4267ba07deee1580a17.ctex"]
 
 [params]
 
