@@ -14,6 +14,13 @@ const REVEAL_HOLD_SECONDS := 0.22
 const LOADING_FRAME_SECONDS := 0.08
 const LOADING_LOOPS := 2
 const OUTRO_SECONDS := 0.22
+const STINGER_PARTS := [
+	"res://assets/audio/sfx/hero_reveal_stinger_data/part_00.tres",
+	"res://assets/audio/sfx/hero_reveal_stinger_data/part_01.tres",
+	"res://assets/audio/sfx/hero_reveal_stinger_data/part_02.tres",
+	"res://assets/audio/sfx/hero_reveal_stinger_data/part_03.tres",
+	"res://assets/audio/sfx/hero_reveal_stinger_data/part_04.tres",
+]
 
 @onready var root: Control = $Root
 @onready var effect_frame: TextureRect = $Root/EffectFrame
@@ -24,9 +31,11 @@ const OUTRO_SECONDS := 0.22
 @onready var loading_panel: Panel = $Root/LoadingPanel
 @onready var loading_logo: TextureRect = $Root/LoadingLogo
 @onready var loading_text: Label = $Root/LoadingText
+@onready var reveal_stinger: AudioStreamPlayer = $RevealStinger
 
 static var _effect_frames: Array[Texture2D] = []
 static var _loading_frames: Array[Texture2D] = []
+static var _stinger_stream: AudioStreamOggVorbis
 
 var _active: bool = false
 var _stage_id: String = ""
@@ -36,6 +45,7 @@ var _portrait_material: ShaderMaterial
 func _ready() -> void:
 	visible = false
 	_portrait_material = hero_portrait.material as ShaderMaterial
+	reveal_stinger.stream = _load_reveal_stinger()
 
 
 func play_reveal(data: Dictionary) -> void:
@@ -82,6 +92,9 @@ func play_reveal(data: Dictionary) -> void:
 
 
 func _run_sequence() -> void:
+	if reveal_stinger.stream != null:
+		reveal_stinger.play()
+
 	for frame in _effect_frames:
 		if not _active:
 			return
@@ -91,7 +104,6 @@ func _run_sequence() -> void:
 	if not _active:
 		return
 
-	bgm_start_requested.emit(_stage_id)
 	await _reveal_hero()
 	if not _active:
 		return
@@ -101,11 +113,23 @@ func _run_sequence() -> void:
 	if not _active:
 		return
 
+	if reveal_stinger.playing:
+		await reveal_stinger.finished
+	if not _active:
+		return
+
+	bgm_start_requested.emit(_stage_id)
+	await get_tree().create_timer(0.18).timeout
+	if not _active:
+		return
+
 	var tween := create_tween()
 	tween.tween_property(root, "modulate:a", 0.0, OUTRO_SECONDS)
 	await tween.finished
 
 	_active = false
+	if reveal_stinger.playing:
+		reveal_stinger.stop()
 	visible = false
 	finished.emit()
 
@@ -187,6 +211,27 @@ func _ensure_frame_cache() -> void:
 			var texture := _load_texture(path)
 			if texture != null:
 				_loading_frames.append(texture)
+
+
+func _load_reveal_stinger() -> AudioStreamOggVorbis:
+	if _stinger_stream != null:
+		return _stinger_stream
+
+	var encoded := ""
+	for path in STINGER_PARTS:
+		if not ResourceLoader.exists(path):
+			return null
+		var resource = load(path)
+		if resource == null or not resource.has_meta("base64"):
+			return null
+		encoded += String(resource.get_meta("base64"))
+
+	var audio_bytes := Marshalls.base64_to_raw(encoded)
+	if audio_bytes.is_empty():
+		return null
+
+	_stinger_stream = AudioStreamOggVorbis.load_from_buffer(audio_bytes)
+	return _stinger_stream
 
 
 func _load_texture(path: String) -> Texture2D:
