@@ -8,10 +8,10 @@ const EFFECT_DIR := "res://assets/art/UI/talk_light_only_30_frames"
 const LOADING_DIR := "res://assets/art/UI/loading/loadingframes"
 const EFFECT_FRAME_COUNT := 30
 const LOADING_FRAME_COUNT := 8
-const EFFECT_FRAME_SECONDS := 0.05
-const REVEAL_SECONDS := 0.48
-const REVEAL_HOLD_SECONDS := 0.35
-const LOADING_FRAME_SECONDS := 0.10
+const EFFECT_FRAME_SECONDS := 0.038
+const REVEAL_SECONDS := 0.42
+const REVEAL_HOLD_SECONDS := 0.22
+const LOADING_FRAME_SECONDS := 0.08
 const LOADING_LOOPS := 2
 const OUTRO_SECONDS := 0.22
 
@@ -68,7 +68,7 @@ func play_reveal(data: Dictionary) -> void:
 	)
 	effect_frame.visible = true
 	hero_portrait.visible = true
-	hero_portrait.scale = Vector2(0.94, 0.94)
+	hero_portrait.scale = Vector2(0.84, 0.84)
 	title_panel.visible = false
 	title_label.modulate.a = 0.0
 	true_name_label.modulate.a = 0.0
@@ -119,7 +119,7 @@ func _reveal_hero() -> void:
 	tween.tween_property(
 		hero_portrait,
 		"scale",
-		Vector2(1.04, 1.04),
+		Vector2(0.98, 0.98),
 		REVEAL_SECONDS
 	)
 	tween.tween_property(
@@ -153,14 +153,14 @@ func _reveal_hero() -> void:
 	settle.tween_property(
 		hero_portrait,
 		"scale",
-		Vector2.ONE,
-		0.16
+		Vector2(0.94, 0.94),
+		0.14
 	)
 	await settle.finished
 
 
 func _play_fake_loading() -> void:
-	loading_panel.visible = true
+	loading_panel.visible = false
 	loading_logo.visible = true
 	loading_text.visible = true
 	var total_steps := LOADING_FRAME_COUNT * LOADING_LOOPS
