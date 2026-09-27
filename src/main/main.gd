@@ -7,12 +7,16 @@ const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const HERO_AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
 const HERO_SKILL_COOLDOWN_BADGE := preload("res://src/ui/hero_skill_cooldown_badge.gd")
+const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
+const STAGE_INTRO_DIALOGUES := preload("res://src/data/stage_intro_dialogues.gd")
 const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png"
 
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
 @onready var battle_viewport: SubViewport = $BattleViewportContainer/BattleViewport
 @onready var battle = $BattleViewportContainer/BattleViewport/Battle
 @onready var hero_bgm_manager = $HeroBGMManager
+@onready var hud_layer: CanvasLayer = $HUD
+@onready var stage_intro_cutscene = $StageIntroCutscene
 
 @onready var subtitle_label: Label = $HUD/TopBar/Subtitle
 @onready var run_timer_label: Label = $HUD/TopBar/RunTimer
@@ -140,10 +144,18 @@ var hero_skill_badges: Dictionary = {}
 var hero_skill_hud_refresh_timer: float = 0.0
 var _scene_load_path: String = ""
 var _scene_load_pending: bool = false
+var _stage_intro_active: bool = false
+var _stage_intro_stage_id: String = ""
 
 func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
 		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_PORTRAIT)
+
+	# Stage entry begins frozen and silent. The intro sequence owns the handoff
+	# to gameplay so combat AI, cooldowns and the run timer cannot advance early.
+	battle.set_external_pause(true)
+	hud_layer.visible = false
+	stage_intro_cutscene.finished.connect(_on_stage_intro_finished)
 
 	battle.stats_changed.connect(_on_stats_changed)
 	battle.progression_changed.connect(_on_progression_changed)
@@ -231,8 +243,6 @@ func _ready() -> void:
 
 	var snapshot: Dictionary = battle.get_snapshot()
 	_apply_stage_snapshot(snapshot)
-	hero_bgm_manager.start_stage(String(snapshot.get("stage_id", "")))
-	_force_apply_bgm_players(AudioSettings.bgm_level, AudioSettings.bgm_muted)
 
 	_on_stats_changed(
 		int(snapshot.get("hero_hp", 0)),
@@ -274,6 +284,7 @@ func _ready() -> void:
 	debug_balance_label.text = String(snapshot.get("debug_balance_summary", "[DEBUG]"))
 	placement_toggle.button_pressed = true
 	_on_placement_mode_toggled(true)
+	_begin_stage_entry(snapshot)
 
 	print("Again, Hero? stage/camera prototype loaded.")
 	print("Finite world camera + persistent stage progression enabled.")
@@ -319,7 +330,51 @@ func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 		String(snapshot.get("hero_name", "견습 마도사")),
 	]
 
+
+func _begin_stage_entry(snapshot: Dictionary) -> void:
+	var stage_id := String(snapshot.get("stage_id", ""))
+	var dialogue := STAGE_INTRO_DIALOGUES.get_dialogue(stage_id)
+	if dialogue.is_empty():
+		_start_battle_after_intro(stage_id)
+		return
+
+	_stage_intro_active = true
+	_stage_intro_stage_id = stage_id
+	hud_layer.visible = false
+
+	# Existing saves may predate the intro_seen flag. A cleared stage is
+	# therefore treated as a repeat run and gets the SKIP control immediately.
+	var allow_skip := (
+		STAGE_PROGRESS.has_seen_stage_intro(stage_id)
+		or STAGE_PROGRESS.is_stage_cleared(stage_id)
+	)
+	stage_intro_cutscene.call("play_dialogue", dialogue, allow_skip)
+
+
+func _on_stage_intro_finished(_skipped: bool) -> void:
+	if not _stage_intro_active:
+		return
+
+	if not _stage_intro_stage_id.is_empty():
+		STAGE_PROGRESS.mark_stage_intro_seen(_stage_intro_stage_id)
+
+	var stage_id := _stage_intro_stage_id
+	_stage_intro_stage_id = ""
+	_start_battle_after_intro(stage_id)
+
+
+func _start_battle_after_intro(stage_id: String) -> void:
+	_stage_intro_active = false
+	hud_layer.visible = true
+	hero_bgm_manager.start_stage(stage_id)
+	_force_apply_bgm_players(AudioSettings.bgm_level, AudioSettings.bgm_muted)
+	battle.set_external_pause(false)
+
+
 func _input(event: InputEvent) -> void:
+	if _stage_intro_active:
+		return
+
 	if event.is_action_pressed("ui_cancel"):
 		if settings_overlay.visible:
 			_close_settings_overlay()

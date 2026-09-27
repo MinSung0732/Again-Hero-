@@ -110,6 +110,25 @@ static func is_reward_claimed(stage_id: String) -> bool:
 		return false
 	return bool(config.get_value("reward_claimed", stage_id, false))
 
+
+static func has_seen_stage_intro(stage_id: String) -> bool:
+	if stage_id.is_empty():
+		return false
+	var config := ConfigFile.new()
+	if config.load(SAVE_PATH) != OK:
+		return false
+	return bool(config.get_value("intro_seen", stage_id, false))
+
+
+static func mark_stage_intro_seen(stage_id: String) -> bool:
+	if stage_id.is_empty():
+		return false
+	var config := ConfigFile.new()
+	config.load(SAVE_PATH)
+	config.set_value("intro_seen", stage_id, true)
+	return config.save(SAVE_PATH) == OK
+
+
 static func get_research_points() -> int:
 	var state := load_state()
 	return int(state.get("research_points", 0))
