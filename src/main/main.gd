@@ -485,7 +485,7 @@ func _on_settings_bgm_level_changed(value: float) -> void:
 	var level := int(round(value))
 	settings_bgm_value.text = str(level)
 	AudioSettings.set_bgm_level(level)
-	hero_bgm_manager.refresh_user_audio_settings()
+	hero_bgm_manager.set_user_bgm_level(level)
 
 
 func _on_settings_sfx_level_changed(value: float) -> void:
@@ -496,7 +496,7 @@ func _on_settings_sfx_level_changed(value: float) -> void:
 
 func _on_settings_bgm_mute_toggled(enabled: bool) -> void:
 	AudioSettings.set_bgm_muted(enabled)
-	hero_bgm_manager.refresh_user_audio_settings()
+	hero_bgm_manager.set_user_bgm_muted(enabled)
 
 
 func _on_settings_sfx_mute_toggled(enabled: bool) -> void:
