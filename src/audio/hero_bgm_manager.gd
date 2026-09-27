@@ -102,8 +102,8 @@ func _ready() -> void:
 	player_a.finished.connect(_on_player_finished.bind(player_a))
 	player_b.finished.connect(_on_player_finished.bind(player_b))
 	if AudioSettings != null:
-		AudioSettings.settings_changed.connect(_sync_mute_state)
-	_sync_mute_state()
+		AudioSettings.settings_changed.connect(_sync_audio_settings)
+	_sync_audio_settings()
 
 
 func start_stage(stage_id: String) -> void:
@@ -213,7 +213,7 @@ func crossfade_to(stream: AudioStream, duration: float = CROSSFADE_SECONDS) -> v
 	incoming.stream = stream
 	incoming.volume_db = SILENT_DB
 	incoming.play()
-	_sync_mute_state()
+	_sync_stream_pause_state()
 
 	_active_player = incoming
 	_standby_player = outgoing
@@ -221,7 +221,7 @@ func crossfade_to(stream: AudioStream, duration: float = CROSSFADE_SECONDS) -> v
 	var fade_duration := maxf(duration, 0.01)
 	var tween := create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(incoming, "volume_db", PLAY_DB, fade_duration)
+	tween.tween_property(incoming, "volume_db", _get_play_db(), fade_duration)
 	if outgoing.playing:
 		tween.tween_property(outgoing, "volume_db", SILENT_DB, fade_duration)
 
@@ -243,9 +243,9 @@ func _play_immediate(stream: AudioStream) -> void:
 	_active_player = player_a
 	_standby_player = player_b
 	_active_player.stream = stream
-	_active_player.volume_db = PLAY_DB
+	_active_player.volume_db = _get_play_db()
 	_active_player.play()
-	_sync_mute_state()
+	_sync_stream_pause_state()
 
 
 func _on_player_finished(player: AudioStreamPlayer) -> void:
@@ -279,7 +279,29 @@ func _cache_stage_streams(stage_data: Dictionary) -> void:
 		_stage_streams[phase_key] = stream
 
 
-func _sync_mute_state() -> void:
+func _sync_audio_settings() -> void:
+	_sync_stream_pause_state()
+
+	if _stopping:
+		return
+
+	# Apply the user BGM level directly to the active player.
+	# This makes volume control independent of audio-bus routing.
+	if is_instance_valid(_active_player) and _active_player.playing:
+		_kill_fade_tween()
+		_active_player.volume_db = _get_play_db()
+
+	if (
+		is_instance_valid(_standby_player)
+		and _standby_player != _active_player
+		and _standby_player.playing
+	):
+		_standby_player.stop()
+		_standby_player.stream = null
+		_standby_player.volume_db = SILENT_DB
+
+
+func _sync_stream_pause_state() -> void:
 	var should_pause := false
 	if AudioSettings != null:
 		should_pause = bool(AudioSettings.bgm_muted)
@@ -287,6 +309,12 @@ func _sync_mute_state() -> void:
 	for player in [player_a, player_b]:
 		if is_instance_valid(player):
 			player.stream_paused = should_pause
+
+
+func _get_play_db() -> float:
+	if AudioSettings != null and AudioSettings.has_method("get_bgm_volume_db"):
+		return float(AudioSettings.get_bgm_volume_db())
+	return PLAY_DB
 
 
 func _phase_key(phase: int) -> String:
