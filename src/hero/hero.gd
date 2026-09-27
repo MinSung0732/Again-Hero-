@@ -1448,6 +1448,15 @@ func _deal_alchemist_dot_damage(monster: Node, base_damage: int) -> void:
 			_on_alchemist_equivalent_exchange_kill()
 
 
+func _get_alchemist_mystery_cauldron_cooldown_total() -> float:
+	var base := _get_alchemist_effective_cooldown(
+		alchemist_mystery_cauldron_config,
+		20.0
+	)
+	var stacks := _get_alchemist_augment_stacks("alchemist_quick_preparation")
+	return base * maxf(1.0 - 0.10 * float(stacks), 0.10)
+
+
 func _get_alchemist_effective_cooldown(
 	config: Dictionary,
 	fallback: float
@@ -1753,7 +1762,8 @@ func _update_alchemist_poison_trail(delta: float) -> void:
 				"trail_tick_interval",
 				0.30
 			)), 0.03),
-			damage
+			damage,
+			_get_alchemist_compressed_range_multiplier()
 		)
 		alchemist_poison_trail_last_position = global_position
 		alchemist_poison_trail_has_position = true
@@ -1966,16 +1976,8 @@ func _try_cast_alchemist_mystery_cauldron() -> void:
 	)
 	var mix_duration: float = randf_range(min_mix, max_mix)
 	cauldron_to_use.call("activate", placement, mix_duration)
-	var quick_prep_cooldown_multiplier := maxf(
-		1.0 - 0.10 * float(quick_prep_stacks),
-		0.10
-	)
 	alchemist_mystery_cauldron_cooldown = (
-		_get_alchemist_effective_cooldown(
-			alchemist_mystery_cauldron_config,
-			20.0
-		)
-		* quick_prep_cooldown_multiplier
+		_get_alchemist_mystery_cauldron_cooldown_total()
 	)
 
 
@@ -2678,7 +2680,8 @@ func _on_alchemist_vial_landed(
 				1.0
 			),
 			maxf(float(alchemist_config.get("poison_tick_interval", 0.27)), 0.03),
-			tick_damage
+			tick_damage,
+			_get_alchemist_compressed_range_multiplier()
 		)
 		return
 
@@ -7787,10 +7790,7 @@ func get_skill_cooldown_hud() -> Array:
 				alchemist_mystery_cauldron_config,
 				alchemist_mystery_cauldron_cooldown,
 				"res://assets/art/heroes/stage7_alchemist/frames/effect6/cauldron_04.png",
-				_get_alchemist_effective_cooldown(
-					alchemist_mystery_cauldron_config,
-					20.0
-				)
+				_get_alchemist_mystery_cauldron_cooldown_total()
 			)
 			_append_skill_cooldown_hud(
 				skills,
