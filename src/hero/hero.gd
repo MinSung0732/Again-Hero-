@@ -279,6 +279,10 @@ var summoner_gatekeeper_pool: Array[Node2D] = []
 var summoner_gatekeeper_cooldown: float = 0.0
 var summoner_cast_pending: bool = false
 var summoner_runtime_ready: bool = false
+var summoner_debug_profile_logged: bool = false
+var summoner_debug_runtime_logged: bool = false
+var summoner_debug_cast_success_logged: bool = false
+var summoner_debug_last_failure: String = ""
 var summoner_basic_effect: AnimatedSprite2D = null
 var summoner_basic_audio: AudioStreamPlayer = null
 
@@ -626,6 +630,20 @@ func configure_profile(profile: Dictionary) -> void:
 	)
 	summoner_cast_pending = not summoner_gatekeeper_config.is_empty()
 	summoner_runtime_ready = false
+	summoner_debug_profile_logged = false
+	summoner_debug_runtime_logged = false
+	summoner_debug_cast_success_logged = false
+	summoner_debug_last_failure = ""
+	if hero_archetype == "summoner_gatekeeper":
+		print(
+			"[SUMMON_DEBUG] profile configured | config_empty=",
+			summoner_gatekeeper_config.is_empty(),
+			" initial_cd=",
+			summoner_gatekeeper_cooldown,
+			" slots=",
+			_get_summoner_slot_capacity()
+		)
+		summoner_debug_profile_logged = true
 	summoner_basic_effect = null
 	summoner_basic_audio = null
 
@@ -1108,6 +1126,16 @@ func _ensure_summoner_runtime() -> void:
 	add_child(summoner_basic_audio)
 
 	summoner_runtime_ready = not summoner_gatekeeper_pool.is_empty()
+	if not summoner_debug_runtime_logged:
+		print(
+			"[SUMMON_DEBUG] runtime built | requested_pool=",
+			pool_size,
+			" actual_pool=",
+			summoner_gatekeeper_pool.size(),
+			" runtime_ready=",
+			summoner_runtime_ready
+		)
+		summoner_debug_runtime_logged = true
 	if summoner_runtime_ready:
 		# Keep an explicit request alive until a pooled summon is actually acquired.
 		# This prevents the first cast from being silently lost during node setup.
@@ -1184,10 +1212,15 @@ func _physics_process_summoner(delta: float) -> void:
 
 func _try_cast_summoner_gatekeeper() -> bool:
 	if summoner_gatekeeper_config.is_empty():
+		_summoner_debug_cast_failure("config_empty")
 		return false
 	if summoner_gatekeeper_cooldown > 0.0:
+		_summoner_debug_cast_failure("cooldown")
 		return false
-	if _get_active_summon_count() >= _get_summoner_slot_capacity():
+	var active_count := _get_active_summon_count()
+	var slot_capacity := _get_summoner_slot_capacity()
+	if active_count >= slot_capacity:
+		_summoner_debug_cast_failure("slots_full")
 		return false
 
 	var summon_to_use: Node2D = null
@@ -1196,6 +1229,7 @@ func _try_cast_summoner_gatekeeper() -> bool:
 			summon_to_use = summon
 			break
 	if summon_to_use == null:
+		_summoner_debug_cast_failure("no_inactive_pool_member")
 		return false
 
 	var runtime_config := summoner_gatekeeper_config.duplicate(true)
@@ -1210,8 +1244,41 @@ func _try_cast_summoner_gatekeeper() -> bool:
 		float(summoner_gatekeeper_config.get("cooldown", 10.0)),
 		0.0
 	)
+	summoner_debug_last_failure = ""
+	if not summoner_debug_cast_success_logged:
+		print(
+			"[SUMMON_DEBUG] cast success | pool=",
+			summoner_gatekeeper_pool.size(),
+			" active_before=",
+			active_count,
+			" slots=",
+			slot_capacity,
+			" next_cd=",
+			summoner_gatekeeper_cooldown
+		)
+		summoner_debug_cast_success_logged = true
 	queue_redraw()
 	return true
+
+
+func _summoner_debug_cast_failure(reason: String) -> void:
+	if summoner_debug_last_failure == reason:
+		return
+	summoner_debug_last_failure = reason
+	print(
+		"[SUMMON_DEBUG] cast blocked | reason=",
+		reason,
+		" config_empty=",
+		summoner_gatekeeper_config.is_empty(),
+		" cooldown=",
+		summoner_gatekeeper_cooldown,
+		" active=",
+		_get_active_summon_count(),
+		" slots=",
+		_get_summoner_slot_capacity(),
+		" pool=",
+		summoner_gatekeeper_pool.size()
+	)
 
 
 func _on_summoner_gatekeeper_released(_summon: Node2D) -> void:

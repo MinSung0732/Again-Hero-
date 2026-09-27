@@ -10,6 +10,9 @@ const SUMMON_AUDIO_PATH := "res://assets/audio/sfx/summoner_gatekeeper_summon_pi
 const PROJECTILE_POOL_SIZE := 6
 
 static var _frames_cache: SpriteFrames
+static var _debug_ready_logged: bool = false
+static var _debug_pool_logged: bool = false
+static var _debug_activate_logged: bool = false
 
 @onready var visual: AnimatedSprite2D = $Visual
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -35,12 +38,26 @@ func _ready() -> void:
 	_setup_visual()
 	_load_optional_audio()
 	deactivate(false)
+	if not _debug_ready_logged:
+		print(
+			"[SUMMON_DEBUG] gatekeeper ready | birth_frames=",
+			visual.sprite_frames.get_frame_count(&"birth")
+		)
+		_debug_ready_logged = true
 	# Do not add projectile siblings to our parent while this node is still in
 	# its own _ready() setup. Build the fixed pool on the deferred idle step.
 	call_deferred("_build_projectile_pool")
 
 
 func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) -> void:
+	if not _debug_activate_logged:
+		print(
+			"[SUMMON_DEBUG] gatekeeper activate entered | projectile_pool=",
+			projectile_pool.size(),
+			" config_empty=",
+			config.is_empty()
+		)
+		_debug_activate_logged = true
 	global_position = world_position
 	owner_hero = new_owner
 	max_hp = maxi(int(config.get("max_hp", 650)), 1)
@@ -268,6 +285,12 @@ func _build_projectile_pool() -> void:
 			continue
 		world.add_child(projectile)
 		projectile_pool.append(projectile)
+	if not _debug_pool_logged:
+		print(
+			"[SUMMON_DEBUG] gatekeeper projectile pool built | count=",
+			projectile_pool.size()
+		)
+		_debug_pool_logged = true
 
 
 func _load_optional_audio() -> void:
