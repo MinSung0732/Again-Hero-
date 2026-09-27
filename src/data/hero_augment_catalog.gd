@@ -20,6 +20,7 @@ const TAG_LABELS := {
 	"deadeye": "데드아이",
 	"evasion": "회피",
 	"gunner": "권총",
+	"alchemist": "연금술",
 }
 
 const AUGMENTS = [
@@ -1000,8 +1001,82 @@ const AUGMENTS = [
 			{"source": "hp_ratio_max", "value": 0.45, "bonus": 1.1}
 		]
 	}
+,
+	{
+		"id": "alchemist_equivalent_exchange",
+		"name": "등가교환의 법칙",
+		"description": "연금술 재료가 부족하면 체력으로 대체합니다. 현재 HP가 20% 이하일 때는 발동하지 않습니다. 중첩에 따라 체력 대가가 감소하고 등가교환으로 발동한 연금술의 피해가 강화됩니다.",
+		"base_score": 7.4,
+		"max_stack": 5,
+		"tags": ["alchemist", "damage", "survival"],
+		"effects": [{"op": "alchemist_equivalent_exchange"}],
+		"ai_rules": [
+			{"source": "hp_ratio_min", "value": 0.35, "bonus": 0.8},
+			{"source": "recent_events_linear", "weight": 0.05, "cap": 0.8}
+		]
+	},
+	{
+		"id": "alchemist_chemical_support",
+		"name": "화학지원",
+		"description": "중첩당 기본 공격 약병 개수 +1 (최대 3중첩)",
+		"base_score": 7.7,
+		"max_stack": 3,
+		"tags": ["alchemist", "projectile", "area", "damage"],
+		"effects": [{"op": "alchemist_chemical_support"}],
+		"ai_rules": [{"source": "nearby_linear", "weight": 0.45, "cap": 2.7}]
+	},
+	{
+		"id": "alchemist_failure_mother_success",
+		"name": "실패는 성공의 어머니",
+		"description": "1중첩: 대성공 확률 +10%p, 실패 확률 -10%p. 이후 중첩당 각각 +2.5%p / -2.5%p (최대 5중첩)",
+		"base_score": 7.3,
+		"max_stack": 5,
+		"tags": ["alchemist", "growth"],
+		"effects": [{"op": "alchemist_failure_mother_success"}]
+	},
+	{
+		"id": "alchemist_quick_decision",
+		"name": "속전속결",
+		"description": "자신과 대상 몬스터의 이동속도 차이 20당 중첩당 추가 피해 +1% (최대 5중첩)",
+		"base_score": 7.1,
+		"max_stack": 5,
+		"tags": ["alchemist", "damage", "mobility"],
+		"effects": [{"op": "alchemist_quick_decision"}],
+		"synergy_rules": [{"source": "build_tag_stacks", "key": "mobility", "weight": 0.28, "cap": 1.4}]
+	},
+	{
+		"id": "alchemist_compressed_gas",
+		"name": "압축 화학가스",
+		"description": "중첩당 모든 지속피해류의 범위/이펙트 -10%, 피해 +8.8% (최대 5중첩)",
+		"base_score": 7.2,
+		"max_stack": 5,
+		"tags": ["alchemist", "damage", "area"],
+		"effects": [{"op": "alchemist_compressed_gas"}]
+	},
+	{
+		"id": "alchemist_quick_preparation",
+		"name": "빠른조제",
+		"description": "중첩당 2스킬 쿨타임 -10%, 동시 설치 최대 개수 +1. 3중첩 시 2스킬 대성공으로 쿨타임 초기화 (최대 3중첩)",
+		"base_score": 7.6,
+		"max_stack": 3,
+		"tags": ["alchemist", "growth", "area"],
+		"effects": [{"op": "alchemist_quick_preparation"}]
+	}
 
 ]
+
+static func get_effective_max_stack(
+	augment_id: String,
+	hero_archetype: String,
+	catalog_max_stack: int = -1
+) -> int:
+	var max_stack := catalog_max_stack
+	if max_stack < 0:
+		max_stack = int(get_augment(augment_id).get("max_stack", 0))
+	if hero_archetype == "alchemist_chemical" and augment_id == "pursuit":
+		return 3
+	return max_stack
+
 
 static func roll_candidates(
 	count: int = 3,
