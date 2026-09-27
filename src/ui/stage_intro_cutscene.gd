@@ -3,20 +3,35 @@ class_name StageIntroCutscene
 
 signal finished(skipped: bool)
 
-const ACTIVE_SCALE := Vector2(1.07, 1.07)
-const INACTIVE_SCALE := Vector2(0.94, 0.94)
+const ACTIVE_SCALE := Vector2(1.055, 1.055)
+const INACTIVE_SCALE := Vector2(0.965, 0.965)
 const ACTIVE_COLOR := Color(1.0, 1.0, 1.0, 1.0)
-const INACTIVE_COLOR := Color(0.26, 0.27, 0.32, 0.72)
-const SPEAKER_TWEEN_SECONDS := 0.16
+const INACTIVE_COLOR := Color(0.38, 0.40, 0.48, 0.68)
+const ACTIVE_NAME_COLOR := Color(1.0, 1.0, 1.0, 1.0)
+const INACTIVE_NAME_COLOR := Color(0.45, 0.47, 0.54, 0.58)
+const DEMON_SPEAKER_COLOR := Color(1.0, 0.80, 0.43, 1.0)
+const HERO_SPEAKER_COLOR := Color(0.58, 0.82, 1.0, 1.0)
+const DEMON_ACCENT_COLOR := Color(0.94, 0.57, 0.22, 0.95)
+const HERO_ACCENT_COLOR := Color(0.30, 0.64, 1.0, 0.95)
+const SPEAKER_TWEEN_SECONDS := 0.20
+const TEXT_FADE_SECONDS := 0.10
+const INTRO_FADE_SECONDS := 0.24
+const DEMON_ACTIVE_SHIFT := Vector2(20.0, -10.0)
+const DEMON_INACTIVE_SHIFT := Vector2(-14.0, 8.0)
+const HERO_ACTIVE_SHIFT := Vector2(-20.0, -10.0)
+const HERO_INACTIVE_SHIFT := Vector2(14.0, 8.0)
 
 @onready var root: Control = $Root
 @onready var location_label: Label = $Root/Location
 @onready var demon_portrait: TextureRect = $Root/DemonPortrait
 @onready var hero_portrait: TextureRect = $Root/HeroPortrait
-@onready var demon_name: Label = $Root/DemonName
-@onready var hero_name: Label = $Root/HeroName
+@onready var demon_name_plate: Panel = $Root/DemonNamePlate
+@onready var hero_name_plate: Panel = $Root/HeroNamePlate
+@onready var demon_name: Label = $Root/DemonNamePlate/DemonName
+@onready var hero_name: Label = $Root/HeroNamePlate/HeroName
 @onready var dialogue_speaker: Label = $Root/DialoguePanel/Speaker
 @onready var dialogue_text: Label = $Root/DialoguePanel/Text
+@onready var speaker_accent: ColorRect = $Root/DialoguePanel/SpeakerAccent
 @onready var next_hint: Label = $Root/DialoguePanel/NextHint
 @onready var skip_button: Button = $Root/SkipButton
 
@@ -24,11 +39,18 @@ var _lines: Array = []
 var _line_index: int = -1
 var _hero_display_name: String = "용사"
 var _active: bool = false
+var _current_speaker: String = ""
 var _speaker_tween: Tween
+var _text_tween: Tween
+var _intro_tween: Tween
+var _demon_base_position: Vector2 = Vector2.ZERO
+var _hero_base_position: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
 	visible = false
+	_demon_base_position = demon_portrait.position
+	_hero_base_position = hero_portrait.position
 	root.gui_input.connect(_on_root_gui_input)
 	skip_button.pressed.connect(_on_skip_pressed)
 
@@ -49,10 +71,32 @@ func play_dialogue(dialogue: Dictionary, allow_skip: bool) -> void:
 	next_hint.text = "화면을 터치하여 계속  ▶"
 
 	_line_index = 0
+	_current_speaker = ""
 	_active = true
 	visible = true
 	_reset_portrait_state()
+	_play_intro_fade()
 	call_deferred("_show_current_line")
+
+
+func _play_intro_fade() -> void:
+	if _intro_tween != null and _intro_tween.is_valid():
+		_intro_tween.kill()
+
+	root.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	demon_portrait.position = _demon_base_position + Vector2(-34.0, 10.0)
+	hero_portrait.position = _hero_base_position + Vector2(34.0, 10.0)
+
+	_intro_tween = create_tween()
+	_intro_tween.set_parallel(true)
+	_intro_tween.set_trans(Tween.TRANS_QUAD)
+	_intro_tween.set_ease(Tween.EASE_OUT)
+	_intro_tween.tween_property(
+		root,
+		"modulate:a",
+		1.0,
+		INTRO_FADE_SECONDS
+	)
 
 
 func _on_root_gui_input(event: InputEvent) -> void:
@@ -106,12 +150,44 @@ func _show_current_line() -> void:
 	var entry: Dictionary = line
 	var speaker := String(entry.get("speaker", "hero"))
 	dialogue_text.text = String(entry.get("text", ""))
+	_animate_dialogue_text()
+
 	if speaker == "demon":
 		dialogue_speaker.text = "마왕"
-		_focus_speaker(true)
+		dialogue_speaker.add_theme_color_override(
+			"font_color",
+			DEMON_SPEAKER_COLOR
+		)
+		speaker_accent.color = DEMON_ACCENT_COLOR
 	else:
 		dialogue_speaker.text = _hero_display_name
-		_focus_speaker(false)
+		dialogue_speaker.add_theme_color_override(
+			"font_color",
+			HERO_SPEAKER_COLOR
+		)
+		speaker_accent.color = HERO_ACCENT_COLOR
+
+	# Consecutive lines from the same speaker should feel like one continuous
+	# conversation beat instead of repeatedly zooming in and out.
+	if speaker != _current_speaker:
+		_current_speaker = speaker
+		_focus_speaker(speaker == "demon")
+
+
+func _animate_dialogue_text() -> void:
+	if _text_tween != null and _text_tween.is_valid():
+		_text_tween.kill()
+
+	dialogue_text.modulate = Color(1.0, 1.0, 1.0, 0.34)
+	_text_tween = create_tween()
+	_text_tween.set_trans(Tween.TRANS_QUAD)
+	_text_tween.set_ease(Tween.EASE_OUT)
+	_text_tween.tween_property(
+		dialogue_text,
+		"modulate:a",
+		1.0,
+		TEXT_FADE_SECONDS
+	)
 
 
 func _focus_speaker(demon_is_speaking: bool) -> void:
@@ -125,6 +201,15 @@ func _focus_speaker(demon_is_speaking: bool) -> void:
 	var hero_scale := INACTIVE_SCALE if demon_is_speaking else ACTIVE_SCALE
 	var demon_color := ACTIVE_COLOR if demon_is_speaking else INACTIVE_COLOR
 	var hero_color := INACTIVE_COLOR if demon_is_speaking else ACTIVE_COLOR
+	var demon_position := _demon_base_position + (
+		DEMON_ACTIVE_SHIFT if demon_is_speaking else DEMON_INACTIVE_SHIFT
+	)
+	var hero_position := _hero_base_position + (
+		HERO_INACTIVE_SHIFT if demon_is_speaking else HERO_ACTIVE_SHIFT
+	)
+
+	demon_portrait.z_index = 5 if demon_is_speaking else 3
+	hero_portrait.z_index = 3 if demon_is_speaking else 5
 
 	_speaker_tween = create_tween()
 	_speaker_tween.set_parallel(true)
@@ -144,6 +229,18 @@ func _focus_speaker(demon_is_speaking: bool) -> void:
 	)
 	_speaker_tween.tween_property(
 		demon_portrait,
+		"position",
+		demon_position,
+		SPEAKER_TWEEN_SECONDS
+	)
+	_speaker_tween.tween_property(
+		hero_portrait,
+		"position",
+		hero_position,
+		SPEAKER_TWEEN_SECONDS
+	)
+	_speaker_tween.tween_property(
+		demon_portrait,
 		"modulate",
 		demon_color,
 		SPEAKER_TWEEN_SECONDS
@@ -155,15 +252,15 @@ func _focus_speaker(demon_is_speaking: bool) -> void:
 		SPEAKER_TWEEN_SECONDS
 	)
 	_speaker_tween.tween_property(
-		demon_name,
+		demon_name_plate,
 		"modulate",
-		ACTIVE_COLOR if demon_is_speaking else INACTIVE_COLOR,
+		ACTIVE_NAME_COLOR if demon_is_speaking else INACTIVE_NAME_COLOR,
 		SPEAKER_TWEEN_SECONDS
 	)
 	_speaker_tween.tween_property(
-		hero_name,
+		hero_name_plate,
 		"modulate",
-		INACTIVE_COLOR if demon_is_speaking else ACTIVE_COLOR,
+		INACTIVE_NAME_COLOR if demon_is_speaking else ACTIVE_NAME_COLOR,
 		SPEAKER_TWEEN_SECONDS
 	)
 
@@ -171,10 +268,13 @@ func _focus_speaker(demon_is_speaking: bool) -> void:
 func _reset_portrait_state() -> void:
 	demon_portrait.scale = Vector2.ONE
 	hero_portrait.scale = Vector2.ONE
+	demon_portrait.position = _demon_base_position
+	hero_portrait.position = _hero_base_position
 	demon_portrait.modulate = ACTIVE_COLOR
 	hero_portrait.modulate = ACTIVE_COLOR
-	demon_name.modulate = ACTIVE_COLOR
-	hero_name.modulate = ACTIVE_COLOR
+	demon_name_plate.modulate = ACTIVE_NAME_COLOR
+	hero_name_plate.modulate = ACTIVE_NAME_COLOR
+	dialogue_text.modulate = ACTIVE_COLOR
 
 
 func _on_skip_pressed() -> void:
@@ -187,8 +287,13 @@ func _finish(skipped: bool) -> void:
 	if not _active:
 		return
 	_active = false
-	if _speaker_tween != null and _speaker_tween.is_valid():
-		_speaker_tween.kill()
+
+	for tween in [_speaker_tween, _text_tween, _intro_tween]:
+		if tween != null and tween.is_valid():
+			tween.kill()
+
 	_speaker_tween = null
+	_text_tween = null
+	_intro_tween = null
 	visible = false
 	finished.emit(skipped)
