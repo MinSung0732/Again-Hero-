@@ -5455,12 +5455,12 @@ func _update_stage1_pose_visual(delta: float) -> void:
 func _apply_stage7_sprite_anchor() -> void:
 	if hero_archetype != "alchemist_chemical" or not is_instance_valid(hero_sprite):
 		return
-	# Stage 7 standalone frames are 512x256 with the shared body/root anchor
-	# at (160, 224), not at the texture center (256, 128).
-	# Mirror X compensation when flip_h changes so the root remains fixed.
+	# Stage 7 standalone frames are 512x256 with the shared body/root anchor.
+	# Keep the authored X compensation, but render the body lower so the
+	# oversized pixel frame clears the resource/HP bars above the hero.
 	hero_sprite.offset = Vector2(
 		-104.0 if hero_sprite.flip_h else 104.0,
-		16.0
+		48.0
 	)
 
 

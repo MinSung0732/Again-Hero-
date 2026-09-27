@@ -13,7 +13,7 @@ code = "shader_type canvas_item;\n\nvoid fragment() {\n\tvec2 centered = UV - ve
 shader = SubResource("Shader_atmosphere")
 
 [sub_resource type="Shader" id="Shader_portrait_blend"]
-code = "shader_type canvas_item;\nuniform float fade_left : hint_range(0.0, 0.4) = 0.0;\nuniform float fade_right : hint_range(0.0, 0.4) = 0.0;\nuniform float side_fade_strength : hint_range(0.0, 1.0) = 1.0;\nuniform float bottom_fade_start : hint_range(0.5, 0.95) = 0.72;\nuniform float bottom_fade_strength : hint_range(0.0, 1.0) = 0.88;\n\nvoid fragment() {\n\tvec4 tex = texture(TEXTURE, UV) * COLOR;\n\tfloat bottom_fade = 1.0 - smoothstep(bottom_fade_start, 1.0, UV.y);\n\tfloat lower_weight = smoothstep(0.34, 0.72, UV.y);\n\tfloat left_mask = 1.0;\n\tfloat right_mask = 1.0;\n\tif (fade_left > 0.001) {\n\t\tleft_mask = smoothstep(0.0, fade_left, UV.x);\n\t}\n\tif (fade_right > 0.001) {\n\t\tright_mask = 1.0 - smoothstep(1.0 - fade_right, 1.0, UV.x);\n\t}\n\tfloat side_mask = min(left_mask, right_mask);\n\tfloat softened_side = mix(1.0, side_mask, lower_weight * side_fade_strength);\n\ttex.a *= mix(1.0, bottom_fade, bottom_fade_strength);\n\ttex.a *= softened_side;\n\tCOLOR = tex;\n}\n"
+code = "shader_type canvas_item;\nuniform float fade_left : hint_range(0.0, 0.4) = 0.0;\nuniform float fade_right : hint_range(0.0, 0.4) = 0.0;\nuniform float side_fade_strength : hint_range(0.0, 1.0) = 1.0;\nuniform float bottom_fade_start : hint_range(0.5, 0.95) = 0.72;\nuniform float bottom_fade_strength : hint_range(0.0, 1.0) = 0.88;\nuniform float flip_h : hint_range(0.0, 1.0) = 0.0;\n\nvoid fragment() {\n\tvec2 sample_uv = vec2(mix(UV.x, 1.0 - UV.x, flip_h), UV.y);\n\tvec4 tex = texture(TEXTURE, sample_uv) * COLOR;\n\tfloat bottom_fade = 1.0 - smoothstep(bottom_fade_start, 1.0, UV.y);\n\tfloat lower_weight = smoothstep(0.34, 0.72, UV.y);\n\tfloat left_mask = 1.0;\n\tfloat right_mask = 1.0;\n\tif (fade_left > 0.001) {\n\t\tleft_mask = smoothstep(0.0, fade_left, UV.x);\n\t}\n\tif (fade_right > 0.001) {\n\t\tright_mask = 1.0 - smoothstep(1.0 - fade_right, 1.0, UV.x);\n\t}\n\tfloat side_mask = min(left_mask, right_mask);\n\tfloat softened_side = mix(1.0, side_mask, lower_weight * side_fade_strength);\n\ttex.a *= mix(1.0, bottom_fade, bottom_fade_strength);\n\ttex.a *= softened_side;\n\tCOLOR = tex;\n}\n"
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_demon_portrait"]
 shader = SubResource("Shader_portrait_blend")
@@ -30,6 +30,7 @@ shader_parameter/fade_right = 0.0
 shader_parameter/side_fade_strength = 0.62
 shader_parameter/bottom_fade_start = 0.84
 shader_parameter/bottom_fade_strength = 0.52
+shader_parameter/flip_h = 0.0
 
 [sub_resource type="Shader" id="Shader_floor_fog"]
 code = "shader_type canvas_item;\n\nvoid fragment() {\n\tfloat y = smoothstep(0.0, 0.82, UV.y);\n\tfloat center = 1.0 - smoothstep(0.0, 0.58, abs(UV.x - 0.5));\n\tvec3 fog_color = mix(vec3(0.025, 0.022, 0.055), vec3(0.11, 0.045, 0.15), center * 0.42);\n\tCOLOR = vec4(fog_color, y * 0.48);\n}\n"
