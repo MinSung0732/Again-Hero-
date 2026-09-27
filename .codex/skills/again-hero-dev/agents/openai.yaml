@@ -1,0 +1,4 @@
+interface:
+  display_name: "Again, Hero 개발"
+  short_description: "프로젝트 규칙을 지키는 Godot 개발 작업"
+  default_prompt: "Use $again-hero-dev to implement this change in Again, Hero and report verification plus the commit hash."
