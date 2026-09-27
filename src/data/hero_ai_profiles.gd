@@ -123,7 +123,7 @@ const PROFILES = {
 			"fighter_charge_recovery": 0.25,
 			"iron_body": 0.35,
 		},
-	},,
+	},
 	"stage_8_summoner": {
 		"id": "stage_8_summoner",
 		"display_name": "전장을 구축하는 소환사",
