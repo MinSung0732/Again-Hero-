@@ -23,6 +23,7 @@ signal died
 
 var current_hp: int
 var hero: Node2D
+var hero_target_refresh_timer: float = 0.0
 var attack_timer: float = 0.0
 var hit_flash_timer: float = 0.0
 var dying: bool = false
@@ -42,8 +43,28 @@ func _ready() -> void:
 	far_ai_tick_timer = randf_range(0.0, 0.16)
 	current_hp = max_hp
 	hero = get_tree().get_first_node_in_group("hero") as Node2D
+	hero_target_refresh_timer = 0.0
 	_attach_status_effect_visual("slow")
 	queue_redraw()
+
+
+func _refresh_combat_target() -> void:
+	hero_target_refresh_timer = 0.25
+	var battle := get_parent()
+	if (
+		is_instance_valid(battle)
+		and battle.has_method("get_nearest_hero_combat_target")
+	):
+		var candidate = battle.call(
+			"get_nearest_hero_combat_target",
+			global_position
+		)
+		if candidate is Node2D:
+			hero = candidate
+			return
+	hero = get_tree().get_first_node_in_group("hero") as Node2D
+
+
 
 func _attach_status_effect_visual(effect_type: String) -> void:
 	var effect := COMBAT_STATUS_EFFECT_VISUAL.new()
@@ -52,6 +73,10 @@ func _attach_status_effect_visual(effect_type: String) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	hero_target_refresh_timer = maxf(hero_target_refresh_timer - delta, 0.0)
+	if hero_target_refresh_timer <= 0.0 or not is_instance_valid(hero):
+		_refresh_combat_target()
+
 	if current_hp <= 0 or dying:
 		velocity = Vector2.ZERO
 		return
