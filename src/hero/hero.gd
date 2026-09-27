@@ -1091,7 +1091,7 @@ func _ensure_summoner_runtime() -> void:
 
 	summoner_basic_audio = AudioStreamPlayer.new()
 	summoner_basic_audio.bus = &"SFX"
-	summoner_basic_audio.volume_db = -7.0
+	summoner_basic_audio.volume_db = -10.0
 	var audio_path := String(
 		summoner_config.get(
 			"basic_attack_audio_path",
