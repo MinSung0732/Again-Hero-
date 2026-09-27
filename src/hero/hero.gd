@@ -263,6 +263,9 @@ var alchemist_gas_regen_timer: float = 0.0
 var alchemist_poison_trail_timer: float = 0.0
 var alchemist_poison_trail_last_position: Vector2 = Vector2.ZERO
 var alchemist_poison_trail_has_position: bool = false
+var alchemist_equivalent_exchange_active: bool = false
+var alchemist_equivalent_exchange_paid_hp: int = 0
+var alchemist_equivalent_exchange_damage_reduction_timer: float = 0.0
 
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
@@ -580,6 +583,9 @@ func configure_profile(profile: Dictionary) -> void:
 	alchemist_poison_trail_timer = 0.0
 	alchemist_poison_trail_last_position = Vector2.ZERO
 	alchemist_poison_trail_has_position = false
+	alchemist_equivalent_exchange_active = false
+	alchemist_equivalent_exchange_paid_hp = 0
+	alchemist_equivalent_exchange_damage_reduction_timer = 0.0
 
 	var profile_gunner = profile.get("gunner", {})
 	gunner_config = (
@@ -994,6 +1000,10 @@ func _physics_process_alchemist(delta: float) -> void:
 	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
 	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
 	_update_invulnerability(delta)
+	alchemist_equivalent_exchange_damage_reduction_timer = maxf(
+		alchemist_equivalent_exchange_damage_reduction_timer - delta,
+		0.0
+	)
 	_update_alchemist_material_spawning(delta)
 	_collect_nearby_alchemy_materials()
 	alchemist_mixture_field_cooldown = maxf(alchemist_mixture_field_cooldown - delta, 0.0)
@@ -1135,9 +1145,9 @@ func _ensure_alchemist_runtime() -> void:
 		alchemist_material_pool.append(material)
 
 	var cauldron_count: int = clampi(
-		int(alchemist_mystery_cauldron_config.get("max_active", 2)),
+		int(alchemist_mystery_cauldron_config.get("max_active", 2)) + 3,
 		1,
-		2
+		5
 	)
 	for _index in range(cauldron_count):
 		var cauldron := ALCHEMIST_CAULDRON_SCENE.instantiate() as Node2D
@@ -1310,6 +1320,134 @@ func _consume_alchemist_gas(amount: float) -> bool:
 	return true
 
 
+func _get_alchemist_augment_stacks(augment_id: String) -> int:
+	return maxi(int(build_counts.get(augment_id, 0)), 0)
+
+
+func _get_alchemist_compressed_range_multiplier() -> float:
+	var stacks := _get_alchemist_augment_stacks("alchemist_compressed_gas")
+	return maxf(1.0 - 0.10 * float(stacks), 0.50)
+
+
+func _get_alchemist_compressed_damage_multiplier() -> float:
+	var stacks := _get_alchemist_augment_stacks("alchemist_compressed_gas")
+	return 1.0 + 0.088 * float(stacks)
+
+
+func _get_alchemist_speed_gap_damage_multiplier(monster: Node) -> float:
+	var stacks := _get_alchemist_augment_stacks("alchemist_quick_decision")
+	if stacks <= 0 or not is_instance_valid(monster):
+		return 1.0
+	var monster_speed_value = monster.get("move_speed")
+	if monster_speed_value == null:
+		return 1.0
+	var speed_gap := absf(move_speed - float(monster_speed_value))
+	var gap_steps := int(floor(speed_gap / 20.0))
+	return 1.0 + float(gap_steps * stacks) * 0.01
+
+
+func _get_alchemist_equivalent_exchange_data(stacks: int) -> Dictionary:
+	match clampi(stacks, 1, 5):
+		1:
+			return {"hp_cost_ratio": 0.03, "damage_multiplier": 1.20, "range_multiplier": 1.00, "material_refund_chance": 0.0, "damage_reduction": 0.0}
+		2:
+			return {"hp_cost_ratio": 0.025, "damage_multiplier": 1.35, "range_multiplier": 1.00, "material_refund_chance": 0.20, "damage_reduction": 0.0}
+		3:
+			return {"hp_cost_ratio": 0.02, "damage_multiplier": 1.50, "range_multiplier": 1.15, "material_refund_chance": 0.35, "damage_reduction": 0.0}
+		4:
+			return {"hp_cost_ratio": 0.015, "damage_multiplier": 1.70, "range_multiplier": 1.25, "material_refund_chance": 0.50, "damage_reduction": 0.10}
+		_:
+			return {"hp_cost_ratio": 0.01, "damage_multiplier": 2.00, "range_multiplier": 1.35, "material_refund_chance": 0.70, "damage_reduction": 0.20}
+
+
+func _get_alchemist_equivalent_damage_multiplier() -> float:
+	if not alchemist_equivalent_exchange_active:
+		return 1.0
+	var stacks := _get_alchemist_augment_stacks("alchemist_equivalent_exchange")
+	if stacks <= 0:
+		return 1.0
+	return float(_get_alchemist_equivalent_exchange_data(stacks).get("damage_multiplier", 1.0))
+
+
+func _get_alchemist_equivalent_range_multiplier() -> float:
+	if not alchemist_equivalent_exchange_active:
+		return 1.0
+	var stacks := _get_alchemist_augment_stacks("alchemist_equivalent_exchange")
+	if stacks <= 0:
+		return 1.0
+	return float(_get_alchemist_equivalent_exchange_data(stacks).get("range_multiplier", 1.0))
+
+
+func _try_pay_alchemist_equivalent_exchange(required_materials: int) -> bool:
+	var stacks := _get_alchemist_augment_stacks("alchemist_equivalent_exchange")
+	if stacks <= 0:
+		return false
+	if alchemist_materials_collected >= required_materials:
+		return true
+	if current_hp <= int(ceil(float(max_hp) * 0.20)):
+		return false
+
+	var missing := maxi(required_materials - alchemist_materials_collected, 0)
+	if missing <= 0:
+		return true
+	var data := _get_alchemist_equivalent_exchange_data(stacks)
+	var hp_cost := maxi(
+		1,
+		int(ceil(
+			float(current_hp)
+			* float(data.get("hp_cost_ratio", 0.03))
+			* float(missing)
+		))
+	)
+	alchemist_equivalent_exchange_paid_hp = mini(hp_cost, current_hp - 1)
+	current_hp = maxi(current_hp - alchemist_equivalent_exchange_paid_hp, 1)
+	alchemist_materials_collected = required_materials
+	alchemist_equivalent_exchange_active = true
+	if float(data.get("damage_reduction", 0.0)) > 0.0:
+		alchemist_equivalent_exchange_damage_reduction_timer = 3.0
+	health_changed.emit(current_hp, max_hp)
+	queue_redraw()
+	return true
+
+
+func _on_alchemist_equivalent_exchange_kill() -> void:
+	if not alchemist_equivalent_exchange_active:
+		return
+	var stacks := _get_alchemist_augment_stacks("alchemist_equivalent_exchange")
+	if stacks <= 0:
+		return
+	var data := _get_alchemist_equivalent_exchange_data(stacks)
+	var refund_chance := float(data.get("material_refund_chance", 0.0))
+	if refund_chance > 0.0 and randf() < refund_chance:
+		var required := maxi(
+			int(alchemist_philosopher_config.get("required_materials", 20)),
+			1
+		)
+		alchemist_materials_collected = mini(alchemist_materials_collected + 1, required)
+	if stacks >= 5 and alchemist_equivalent_exchange_paid_hp > 0:
+		var heal_amount := int(round(float(alchemist_equivalent_exchange_paid_hp) * 0.50))
+		current_hp = mini(current_hp + maxi(heal_amount, 1), max_hp)
+		alchemist_equivalent_exchange_paid_hp = 0
+		health_changed.emit(current_hp, max_hp)
+
+
+func _deal_alchemist_dot_damage(monster: Node, base_damage: int) -> void:
+	if not is_instance_valid(monster) or not monster.has_method("take_damage"):
+		return
+	var before_hp_value = monster.get("current_hp")
+	var before_hp := int(before_hp_value) if before_hp_value != null else -1
+	var multiplier := (
+		_get_alchemist_compressed_damage_multiplier()
+		* _get_alchemist_speed_gap_damage_multiplier(monster)
+	)
+	var final_damage := maxi(1, int(round(float(base_damage) * multiplier)))
+	monster.call("take_damage", final_damage)
+	if before_hp > 0:
+		var after_hp_value = monster.get("current_hp")
+		if after_hp_value != null and int(after_hp_value) <= 0:
+			_on_alchemist_equivalent_exchange_kill()
+
+
 func _get_alchemist_effective_cooldown(
 	config: Dictionary,
 	fallback: float
@@ -1348,7 +1486,8 @@ func _try_start_alchemist_philosopher_stone() -> bool:
 		and alchemist_philosopher_test_timer <= 0.0
 	)
 	if not test_ready and alchemist_materials_collected < required_materials:
-		return false
+		if not _try_pay_alchemist_equivalent_exchange(required_materials):
+			return false
 
 	var gas_cost := maxf(
 		float(alchemist_philosopher_config.get("gas_cost", 100.0)),
@@ -1586,6 +1725,7 @@ func _update_alchemist_poison_trail(delta: float) -> void:
 				"poison_damage_multiplier",
 				1.50
 			)), 0.0)
+			* _get_alchemist_equivalent_damage_multiplier()
 		))
 	)
 	for poison_node in alchemist_poison_pool:
@@ -1600,10 +1740,15 @@ func _update_alchemist_poison_trail(delta: float) -> void:
 				"trail_duration",
 				2.0
 			)), 0.1),
-			maxf(float(alchemist_philosopher_config.get(
-				"trail_radius",
-				115.0
-			)), 1.0),
+			maxf(
+				float(alchemist_philosopher_config.get(
+					"trail_radius",
+					115.0
+				))
+				* _get_alchemist_compressed_range_multiplier()
+				* _get_alchemist_equivalent_range_multiplier(),
+				1.0
+			),
 			maxf(float(alchemist_philosopher_config.get(
 				"trail_tick_interval",
 				0.30
@@ -1728,7 +1873,8 @@ func _try_cast_alchemist_mixture_field() -> void:
 		return
 
 	var radius := maxf(
-		float(alchemist_mixture_field_config.get("radius", 660.0)),
+		float(alchemist_mixture_field_config.get("radius", 660.0))
+		* _get_alchemist_compressed_range_multiplier(),
 		1.0
 	)
 	var required_enemies := maxi(
@@ -1782,10 +1928,12 @@ func _try_cast_alchemist_mystery_cauldron() -> void:
 	if alchemist_mystery_cauldron_cooldown > 0.0:
 		return
 
+	var quick_prep_stacks := _get_alchemist_augment_stacks("alchemist_quick_preparation")
 	var max_active: int = clampi(
-		int(alchemist_mystery_cauldron_config.get("max_active", 2)),
+		int(alchemist_mystery_cauldron_config.get("max_active", 2))
+		+ quick_prep_stacks,
 		1,
-		2
+		alchemist_cauldrons.size()
 	)
 	if _count_active_alchemist_cauldrons() >= max_active:
 		return
@@ -1818,9 +1966,16 @@ func _try_cast_alchemist_mystery_cauldron() -> void:
 	)
 	var mix_duration: float = randf_range(min_mix, max_mix)
 	cauldron_to_use.call("activate", placement, mix_duration)
-	alchemist_mystery_cauldron_cooldown = _get_alchemist_effective_cooldown(
-		alchemist_mystery_cauldron_config,
-		20.0
+	var quick_prep_cooldown_multiplier := maxf(
+		1.0 - 0.10 * float(quick_prep_stacks),
+		0.10
+	)
+	alchemist_mystery_cauldron_cooldown = (
+		_get_alchemist_effective_cooldown(
+			alchemist_mystery_cauldron_config,
+			20.0
+		)
+		* quick_prep_cooldown_multiplier
 	)
 
 
@@ -1843,19 +1998,29 @@ func _on_alchemist_cauldron_completed(
 	if not is_instance_valid(cauldron):
 		return
 
+	var success_mother_stacks := _get_alchemist_augment_stacks(
+		"alchemist_failure_mother_success"
+	)
+	var chance_shift := 0.0
+	if success_mother_stacks > 0:
+		chance_shift = 0.10 + 0.025 * float(success_mother_stacks - 1)
 	var great_chance: float = clampf(
-		float(alchemist_mystery_cauldron_config.get("great_success_chance", 0.20)),
+		float(alchemist_mystery_cauldron_config.get("great_success_chance", 0.20))
+		+ chance_shift,
 		0.0,
 		1.0
 	)
 	var fail_chance: float = clampf(
-		float(alchemist_mystery_cauldron_config.get("failure_chance", 0.20)),
+		float(alchemist_mystery_cauldron_config.get("failure_chance", 0.20))
+		- chance_shift,
 		0.0,
 		1.0 - great_chance
 	)
 	var roll: float = randf()
 
 	if roll < great_chance:
+		if _get_alchemist_augment_stacks("alchemist_quick_preparation") >= 3:
+			alchemist_mystery_cauldron_cooldown = 0.0
 		cauldron.call("play_result_sound", "great_success")
 		await _execute_alchemist_cauldron_great_success(origin)
 		await get_tree().create_timer(0.50).timeout
@@ -2125,8 +2290,7 @@ func _on_alchemist_mixture_field_tick(origin: Vector2, radius: float) -> void:
 		var monster := node as Node2D
 		if monster == null or origin.distance_squared_to(monster.global_position) > radius_sq:
 			continue
-		if monster.has_method("take_damage"):
-			monster.call("take_damage", damage)
+		_deal_alchemist_dot_damage(monster, damage)
 		# Existing monster movement code reads these shared external-slow meta keys.
 		var current_until := int(monster.get_meta("gunner_slow_until", 0))
 		var current_multiplier := float(monster.get_meta("gunner_slow_multiplier", 1.0))
@@ -2413,7 +2577,11 @@ func _start_alchemist_basic_attack(direct_chest_target: Node2D = null) -> void:
 		else null
 	)
 	var throw_radius := maxf(float(alchemist_config.get("basic_throw_radius", 400.0)), 1.0)
-	var vial_count := maxi(int(alchemist_config.get("basic_vial_count", 3)), 1)
+	var vial_count := maxi(
+		int(alchemist_config.get("basic_vial_count", 3))
+		+ _get_alchemist_augment_stacks("alchemist_chemical_support"),
+		1
+	)
 	for index in range(vial_count):
 		var landing_position := Vector2.ZERO
 		if index == 0 and is_instance_valid(alchemist_direct_chest_target):
@@ -2504,7 +2672,11 @@ func _on_alchemist_vial_landed(
 			"activate",
 			landing_position,
 			maxf(float(alchemist_config.get("poison_duration", 4.0)), 0.1),
-			maxf(float(alchemist_config.get("poison_radius", 275.0)), 1.0),
+			maxf(
+				float(alchemist_config.get("poison_radius", 275.0))
+				* _get_alchemist_compressed_range_multiplier(),
+				1.0
+			),
 			maxf(float(alchemist_config.get("poison_tick_interval", 0.27)), 0.03),
 			tick_damage
 		)
@@ -2514,7 +2686,16 @@ func _on_alchemist_vial_landed(
 func _on_alchemist_poison_tick(origin: Vector2, radius: float, damage: int) -> void:
 	if current_hp <= 0:
 		return
-	_damage_monsters_in_radius(origin, radius, damage)
+	var radius_sq := radius * radius
+	for node in _get_monster_nodes_near(origin, radius):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		if origin.distance_squared_to(monster.global_position) > radius_sq:
+			continue
+		_deal_alchemist_dot_damage(monster, damage)
 
 
 func _update_alchemist_pose_visual(delta: float) -> void:
@@ -8391,9 +8572,11 @@ func _get_effective_augment_max_stack(
 	augment_id: String,
 	catalog_max_stack: int
 ) -> int:
-	if hero_archetype == "alchemist_chemical" and augment_id == "pursuit":
-		return 3
-	return catalog_max_stack
+	return AUGMENT_CATALOG.get_effective_max_stack(
+		augment_id,
+		hero_archetype,
+		catalog_max_stack
+	)
 
 
 func _apply_augment(augment: Dictionary) -> void:
@@ -8452,6 +8635,11 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 				set(target, int(round(next_value)))
 			else:
 				set(target, next_value)
+
+		"alchemist_equivalent_exchange", "alchemist_chemical_support", "alchemist_failure_mother_success", "alchemist_quick_decision", "alchemist_compressed_gas", "alchemist_quick_preparation":
+			# Alchemist augments are read from build_counts at the authoritative
+			# combat decision points, so no mutable duplicate stat is required.
+			pass
 
 		"advance_projectile_fan":
 			projectile_count_bonus = mini(projectile_count_bonus + 1, 4)
@@ -11512,6 +11700,20 @@ func take_damage(amount: int, source: Node = null) -> bool:
 		return false
 
 	var raw_damage := float(amount)
+	if (
+		hero_archetype == "alchemist_chemical"
+		and alchemist_equivalent_exchange_damage_reduction_timer > 0.0
+	):
+		var exchange_stacks := _get_alchemist_augment_stacks(
+			"alchemist_equivalent_exchange"
+		)
+		if exchange_stacks >= 4:
+			var exchange_data := _get_alchemist_equivalent_exchange_data(exchange_stacks)
+			raw_damage *= 1.0 - clampf(
+				float(exchange_data.get("damage_reduction", 0.0)),
+				0.0,
+				0.90
+			)
 	var remaining_damage := raw_damage
 	var absorbed_damage := 0
 
