@@ -1,0 +1,757 @@
+{
+  "frame_count": 30,
+  "order": "sheet 1, then sheet 2, then sheet 3; each left-to-right, top row then bottom row",
+  "frame_order": [
+    "effect_01.png",
+    "effect_02.png",
+    "effect_03.png",
+    "effect_04.png",
+    "effect_05.png",
+    "effect_06.png",
+    "effect_07.png",
+    "effect_08.png",
+    "effect_09.png",
+    "effect_10.png",
+    "effect_11.png",
+    "effect_12.png",
+    "effect_13.png",
+    "effect_14.png",
+    "effect_15.png",
+    "effect_16.png",
+    "effect_17.png",
+    "effect_18.png",
+    "effect_19.png",
+    "effect_20.png",
+    "effect_21.png",
+    "effect_22.png",
+    "effect_23.png",
+    "effect_24.png",
+    "effect_25.png",
+    "effect_26.png",
+    "effect_27.png",
+    "effect_28.png",
+    "effect_29.png",
+    "effect_30.png"
+  ],
+  "cell_size": [
+    279,
+    496
+  ],
+  "sheet_size": [
+    1395,
+    2976
+  ],
+  "sheet_columns": 5,
+  "sheet_rows": 6,
+  "anchor": [
+    139,
+    248
+  ],
+  "source_composition": "Opaque dark illustrated panels; gutters outside each crop are transparent. Background is baked into artwork.",
+  "target_context": {
+    "display": [
+      1080,
+      1920
+    ],
+    "battle_subviewport": [
+      1080,
+      1174
+    ],
+    "orientation": "portrait",
+    "stretch_mode": "canvas_items",
+    "aspect": "expand"
+  },
+  "pixel_policy": "Unscaled direct crops, centered on equal-size transparent cells; preserves internal upper-right to lower-left motion.",
+  "frames": [
+    {
+      "index": 1,
+      "file": "effect_01.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_10-1.png",
+      "source_grid": [
+        0,
+        0
+      ],
+      "source_rect": [
+        43,
+        20,
+        300,
+        485
+      ],
+      "placement": [
+        11,
+        15
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 2,
+      "file": "effect_02.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_10-1.png",
+      "source_grid": [
+        0,
+        1
+      ],
+      "source_rect": [
+        333,
+        20,
+        590,
+        485
+      ],
+      "placement": [
+        11,
+        15
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 3,
+      "file": "effect_03.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_10-1.png",
+      "source_grid": [
+        0,
+        2
+      ],
+      "source_rect": [
+        617,
+        20,
+        875,
+        485
+      ],
+      "placement": [
+        10,
+        15
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 4,
+      "file": "effect_04.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_10-1.png",
+      "source_grid": [
+        0,
+        3
+      ],
+      "source_rect": [
+        907,
+        20,
+        1163,
+        485
+      ],
+      "placement": [
+        11,
+        15
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 5,
+      "file": "effect_05.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_10-1.png",
+      "source_grid": [
+        0,
+        4
+      ],
+      "source_rect": [
+        1189,
+        20,
+        1448,
+        485
+      ],
+      "placement": [
+        10,
+        15
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 6,
+      "file": "effect_06.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_10-1.png",
+      "source_grid": [
+        1,
+        0
+      ],
+      "source_rect": [
+        43,
+        529,
+        300,
+        1014
+      ],
+      "placement": [
+        11,
+        5
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 7,
+      "file": "effect_07.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_10-1.png",
+      "source_grid": [
+        1,
+        1
+      ],
+      "source_rect": [
+        333,
+        529,
+        590,
+        1014
+      ],
+      "placement": [
+        11,
+        5
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 8,
+      "file": "effect_08.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_10-1.png",
+      "source_grid": [
+        1,
+        2
+      ],
+      "source_rect": [
+        617,
+        529,
+        875,
+        1014
+      ],
+      "placement": [
+        10,
+        5
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 9,
+      "file": "effect_09.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_10-1.png",
+      "source_grid": [
+        1,
+        3
+      ],
+      "source_rect": [
+        907,
+        529,
+        1163,
+        1014
+      ],
+      "placement": [
+        11,
+        5
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 10,
+      "file": "effect_10.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_10-1.png",
+      "source_grid": [
+        1,
+        4
+      ],
+      "source_rect": [
+        1189,
+        529,
+        1448,
+        1014
+      ],
+      "placement": [
+        10,
+        5
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 11,
+      "file": "effect_11.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_14-2.png",
+      "source_grid": [
+        0,
+        0
+      ],
+      "source_rect": [
+        39,
+        20,
+        296,
+        476
+      ],
+      "placement": [
+        11,
+        20
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 12,
+      "file": "effect_12.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_14-2.png",
+      "source_grid": [
+        0,
+        1
+      ],
+      "source_rect": [
+        323,
+        20,
+        579,
+        476
+      ],
+      "placement": [
+        11,
+        20
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 13,
+      "file": "effect_13.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_14-2.png",
+      "source_grid": [
+        0,
+        2
+      ],
+      "source_rect": [
+        605,
+        20,
+        861,
+        476
+      ],
+      "placement": [
+        11,
+        20
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 14,
+      "file": "effect_14.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_14-2.png",
+      "source_grid": [
+        0,
+        3
+      ],
+      "source_rect": [
+        890,
+        20,
+        1145,
+        476
+      ],
+      "placement": [
+        12,
+        20
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 15,
+      "file": "effect_15.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_14-2.png",
+      "source_grid": [
+        0,
+        4
+      ],
+      "source_rect": [
+        1174,
+        20,
+        1433,
+        476
+      ],
+      "placement": [
+        10,
+        20
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 16,
+      "file": "effect_16.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_14-2.png",
+      "source_grid": [
+        1,
+        0
+      ],
+      "source_rect": [
+        39,
+        518,
+        296,
+        995
+      ],
+      "placement": [
+        11,
+        9
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 17,
+      "file": "effect_17.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_14-2.png",
+      "source_grid": [
+        1,
+        1
+      ],
+      "source_rect": [
+        323,
+        518,
+        579,
+        995
+      ],
+      "placement": [
+        11,
+        9
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 18,
+      "file": "effect_18.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_14-2.png",
+      "source_grid": [
+        1,
+        2
+      ],
+      "source_rect": [
+        605,
+        518,
+        861,
+        995
+      ],
+      "placement": [
+        11,
+        9
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 19,
+      "file": "effect_19.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_14-2.png",
+      "source_grid": [
+        1,
+        3
+      ],
+      "source_rect": [
+        890,
+        518,
+        1145,
+        995
+      ],
+      "placement": [
+        12,
+        9
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 20,
+      "file": "effect_20.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_14-2.png",
+      "source_grid": [
+        1,
+        4
+      ],
+      "source_rect": [
+        1174,
+        518,
+        1433,
+        995
+      ],
+      "placement": [
+        10,
+        9
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 21,
+      "file": "effect_21.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_16-3.png",
+      "source_grid": [
+        0,
+        0
+      ],
+      "source_rect": [
+        41,
+        22,
+        294,
+        472
+      ],
+      "placement": [
+        13,
+        23
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 22,
+      "file": "effect_22.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_16-3.png",
+      "source_grid": [
+        0,
+        1
+      ],
+      "source_rect": [
+        329,
+        22,
+        584,
+        472
+      ],
+      "placement": [
+        12,
+        23
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 23,
+      "file": "effect_23.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_16-3.png",
+      "source_grid": [
+        0,
+        2
+      ],
+      "source_rect": [
+        616,
+        22,
+        872,
+        472
+      ],
+      "placement": [
+        11,
+        23
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 24,
+      "file": "effect_24.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_16-3.png",
+      "source_grid": [
+        0,
+        3
+      ],
+      "source_rect": [
+        902,
+        22,
+        1157,
+        472
+      ],
+      "placement": [
+        12,
+        23
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 25,
+      "file": "effect_25.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_16-3.png",
+      "source_grid": [
+        0,
+        4
+      ],
+      "source_rect": [
+        1189,
+        22,
+        1445,
+        472
+      ],
+      "placement": [
+        11,
+        23
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 26,
+      "file": "effect_26.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_16-3.png",
+      "source_grid": [
+        1,
+        0
+      ],
+      "source_rect": [
+        41,
+        512,
+        294,
+        976
+      ],
+      "placement": [
+        13,
+        16
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 27,
+      "file": "effect_27.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_16-3.png",
+      "source_grid": [
+        1,
+        1
+      ],
+      "source_rect": [
+        329,
+        512,
+        584,
+        976
+      ],
+      "placement": [
+        12,
+        16
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 28,
+      "file": "effect_28.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_16-3.png",
+      "source_grid": [
+        1,
+        2
+      ],
+      "source_rect": [
+        616,
+        512,
+        872,
+        976
+      ],
+      "placement": [
+        11,
+        16
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 29,
+      "file": "effect_29.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_16-3.png",
+      "source_grid": [
+        1,
+        3
+      ],
+      "source_rect": [
+        902,
+        512,
+        1157,
+        976
+      ],
+      "placement": [
+        12,
+        16
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    },
+    {
+      "index": 30,
+      "file": "effect_30.png",
+      "source": "ChatGPT 이미지 2026년 9월 27일 오후 08_15_16-3.png",
+      "source_grid": [
+        1,
+        4
+      ],
+      "source_rect": [
+        1189,
+        512,
+        1445,
+        976
+      ],
+      "placement": [
+        11,
+        16
+      ],
+      "anchor": [
+        139,
+        248
+      ]
+    }
+  ]
+}
