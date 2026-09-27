@@ -18,9 +18,11 @@ texture_filter = 1
 scale = Vector2(0.34, 0.34)
 
 [node name="ThrowAudio" type="AudioStreamPlayer" parent="."]
+bus = &"SFX"
 stream = ExtResource("2_throw")
-volume_db = -14.0
+volume_db = -11.0
 
 [node name="BreakAudio" type="AudioStreamPlayer" parent="."]
+bus = &"SFX"
 stream = ExtResource("3_break")
-volume_db = -15.0
+volume_db = -9.0
