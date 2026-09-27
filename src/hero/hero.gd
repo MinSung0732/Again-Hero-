@@ -1798,9 +1798,11 @@ func _try_start_alchemist_philosopher_stone() -> bool:
 		bool(alchemist_philosopher_config.get("test_mode", false))
 		and alchemist_philosopher_test_timer <= 0.0
 	)
+	# Philosopher's Stone is a strict collection milestone. Equivalent Exchange
+	# may substitute materials for normal alchemy, but it must never synthesize
+	# the 20/20 Stone progress or trigger the transformation early.
 	if not test_ready and alchemist_materials_collected < required_materials:
-		if not _try_pay_alchemist_equivalent_exchange(required_materials):
-			return false
+		return false
 
 	var gas_cost := maxf(
 		float(alchemist_philosopher_config.get("gas_cost", 100.0)),

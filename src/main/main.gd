@@ -11,6 +11,10 @@ const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const STAGE_INTRO_DIALOGUES := preload("res://src/data/stage_intro_dialogues.gd")
 const HERO_REVEAL_CATALOG := preload("res://src/data/hero_reveal_catalog.gd")
 const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png"
+const TOUCH_HOLD_FRAME_DIR := "res://assets/art/UI/loading/loadingframes"
+const TOUCH_HOLD_FRAME_COUNT := 8
+const TOUCH_HOLD_DELAY := 0.18
+const TOUCH_HOLD_FRAME_SECONDS := 0.08
 
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
 @onready var battle_viewport: SubViewport = $BattleViewportContainer/BattleViewport
@@ -30,6 +34,7 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 @onready var exp_bar: ProgressBar = $HUD/TopBar/ExpBar
 @onready var debug_balance_label: Label = $HUD/DebugBalance
 @onready var hero_skill_cooldown_bar: HBoxContainer = $HUD/HeroSkillCooldownBar
+@onready var touch_hold_indicator: TextureRect = $HUD/TouchHoldIndicator
 
 @onready var monster_info_bookmark: Button = $HUD/MonsterInfoBookmark
 @onready var monster_info_panel: PanelContainer = $HUD/MonsterInfoPanel
@@ -148,8 +153,16 @@ var _scene_load_path: String = ""
 var _scene_load_pending: bool = false
 var _stage_intro_active: bool = false
 var _stage_intro_stage_id: String = ""
+var _touch_hold_frames: Array[Texture2D] = []
+var _touch_hold_active: bool = false
+var _touch_hold_elapsed: float = 0.0
+var _touch_hold_frame_elapsed: float = 0.0
+var _touch_hold_frame_index: int = 0
+var _touch_hold_position: Vector2 = Vector2.ZERO
+var _touch_pointer_id: int = -1
 
 func _ready() -> void:
+	_load_touch_hold_frames()
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
 		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_PORTRAIT)
 
@@ -296,6 +309,8 @@ func _ready() -> void:
 	print("Finite world camera + persistent stage progression enabled.")
 
 func _process(delta: float) -> void:
+	_update_touch_hold_feedback(delta)
+
 	if _scene_load_pending:
 		var load_status := ResourceLoader.load_threaded_get_status(_scene_load_path)
 		if load_status == ResourceLoader.THREAD_LOAD_LOADED:
@@ -422,6 +437,7 @@ func _start_battle_after_intro(_stage_id: String) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	_update_touch_hold_input(event)
 	if _stage_intro_active:
 		return
 
@@ -533,6 +549,90 @@ func _input(event: InputEvent) -> void:
 
 	battle.try_summon_at_position(selected_monster_type, battle_position)
 	get_viewport().set_input_as_handled()
+
+func _load_touch_hold_frames() -> void:
+	_touch_hold_frames.clear()
+	for index in range(1, TOUCH_HOLD_FRAME_COUNT + 1):
+		var texture := _load_ui_texture(
+			"%s/loading_logo_%02d.png" % [TOUCH_HOLD_FRAME_DIR, index]
+		)
+		if texture != null:
+			_touch_hold_frames.append(texture)
+
+
+func _update_touch_hold_input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch:
+		var touch := event as InputEventScreenTouch
+		if touch.pressed:
+			if _touch_pointer_id < 0:
+				_touch_pointer_id = touch.index
+				_begin_touch_hold(touch.position)
+		elif touch.index == _touch_pointer_id:
+			_end_touch_hold()
+	elif event is InputEventScreenDrag:
+		var drag := event as InputEventScreenDrag
+		if drag.index == _touch_pointer_id:
+			_touch_hold_position = drag.position
+	elif event is InputEventMouseButton:
+		var mouse := event as InputEventMouseButton
+		if mouse.button_index != MOUSE_BUTTON_LEFT:
+			return
+		# Desktop fallback for testing; real touch takes priority.
+		if _touch_pointer_id >= 0:
+			return
+		if mouse.pressed:
+			_begin_touch_hold(mouse.position)
+		else:
+			_end_touch_hold()
+	elif event is InputEventMouseMotion:
+		if _touch_hold_active and _touch_pointer_id < 0:
+			_touch_hold_position = (event as InputEventMouseMotion).position
+
+
+func _begin_touch_hold(position: Vector2) -> void:
+	_touch_hold_active = true
+	_touch_hold_elapsed = 0.0
+	_touch_hold_frame_elapsed = 0.0
+	_touch_hold_frame_index = 0
+	_touch_hold_position = position
+	touch_hold_indicator.visible = false
+
+
+func _end_touch_hold() -> void:
+	_touch_hold_active = false
+	_touch_hold_elapsed = 0.0
+	_touch_hold_frame_elapsed = 0.0
+	_touch_hold_frame_index = 0
+	_touch_pointer_id = -1
+	touch_hold_indicator.visible = false
+
+
+func _update_touch_hold_feedback(delta: float) -> void:
+	if not _touch_hold_active or _touch_hold_frames.is_empty():
+		touch_hold_indicator.visible = false
+		return
+	if _stage_intro_active:
+		touch_hold_indicator.visible = false
+		return
+
+	_touch_hold_elapsed += delta
+	if _touch_hold_elapsed < TOUCH_HOLD_DELAY:
+		touch_hold_indicator.visible = false
+		return
+
+	touch_hold_indicator.visible = true
+	touch_hold_indicator.position = _touch_hold_position - touch_hold_indicator.size * 0.5
+	touch_hold_indicator.texture = _touch_hold_frames[_touch_hold_frame_index]
+	_touch_hold_frame_elapsed += delta
+	if _touch_hold_frame_elapsed >= TOUCH_HOLD_FRAME_SECONDS:
+		_touch_hold_frame_elapsed = fmod(
+			_touch_hold_frame_elapsed,
+			TOUCH_HOLD_FRAME_SECONDS
+		)
+		_touch_hold_frame_index = (
+			_touch_hold_frame_index + 1
+		) % _touch_hold_frames.size()
+
 
 func _on_stage_menu_pressed() -> void:
 	if demon_augment_panel.visible or result_panel.visible:
