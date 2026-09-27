@@ -51,17 +51,17 @@ texture_filter = 1
 bus = &"SFX"
 process_mode = 3
 stream = ExtResource("2_levelup")
-volume_db = -17.0
+volume_db = -12.0
 
 [node name="AlchemistEmergencyAudio" type="AudioStreamPlayer" parent="."]
 bus = &"SFX"
 stream = ExtResource("3_alchemist_emergency")
-volume_db = -17.0
+volume_db = -10.0
 
 [node name="AlchemistPhilosopherAudio" type="AudioStreamPlayer" parent="."]
 bus = &"SFX"
 stream = ExtResource("4_alchemist_philosopher")
-volume_db = -18.0
+volume_db = -10.0
 
 [node name="Camera2D" type="Camera2D" parent="."]
 enabled = true
