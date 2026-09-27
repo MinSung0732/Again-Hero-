@@ -1,7 +1,7 @@
 extends RefCounted
 class_name StageCatalog
 
-const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4", "stage_5", "stage_6", "stage_7"]
+const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4", "stage_5", "stage_6", "stage_7", "stage_8"]
 
 const STAGES = {
 	"stage_1": {
@@ -471,6 +471,83 @@ const STAGES = {
 		],
 		"first_clear_reward": 0,
 		"run_reward_multiplier": 2.50,
+		"next_stage_id": "stage_8",
+	},
+	"stage_8": {
+		"id": "stage_8",
+		"number": 8,
+		"display_name": "여덟 번째 침입자",
+		"hero_id": "summoner_hero",
+		"hero_ai_profile_id": "stage_8_summoner",
+		"portrait_path": "res://assets/art/heroes/stage8_summoner/8stage_hero_portrait.png",
+		"lobby_description": "소환 슬롯을 관리하며 이계의 문지기를 설치해 전장을 장악하는 소환의 용사.",
+		"hero_level_start": 1,
+		"map_width": 4600,
+		"map_height": 4600,
+		"run_duration_seconds": 600.0,
+		"event_timeline": [
+			{
+				"id": "stage8_elite_01",
+				"at_seconds": 120.0,
+				"type": "elite",
+				"name": "1차 이계 돌연변이",
+				"selection_mode": "team",
+				"mutation_profile_id": "mutation_1",
+				"reinforcement_count": 13,
+				"reinforcement_batch_size": 3,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage8_elite_02",
+				"at_seconds": 240.0,
+				"type": "elite",
+				"name": "2차 이계 돌연변이",
+				"selection_mode": "team",
+				"mutation_profile_id": "mutation_2",
+				"reinforcement_count": 16,
+				"reinforcement_batch_size": 4,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage8_elite_03",
+				"at_seconds": 360.0,
+				"type": "elite",
+				"name": "3차 이계 돌연변이",
+				"selection_mode": "team",
+				"mutation_profile_id": "mutation_2",
+				"reinforcement_count": 19,
+				"reinforcement_batch_size": 4,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage8_miniboss_01",
+				"at_seconds": 480.0,
+				"type": "miniboss",
+				"name": "대돌연변이 문지기 파쇄자",
+				"selection_mode": "team",
+				"mutation_profile_id": "greater_mutation",
+				"reinforcement_count": 21,
+				"reinforcement_batch_size": 4,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage8_boss_01",
+				"at_seconds": 540.0,
+				"type": "boss",
+				"name": "이계 침공 대장",
+				"selection_mode": "team_random",
+				"hp_multiplier": 11.5,
+				"damage_multiplier": 3.45,
+				"speed_multiplier": 1.26,
+				"exp_multiplier": 5.0,
+				"visual_scale": 1.68,
+				"reinforcement_count": 24,
+				"reinforcement_batch_size": 4,
+				"reinforcement_interval": 0.12,
+			},
+		],
+		"first_clear_reward": 0,
+		"run_reward_multiplier": 2.75,
 		"next_stage_id": "",
 	},
 }
