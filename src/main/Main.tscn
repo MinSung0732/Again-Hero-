@@ -818,6 +818,12 @@ text = "메뉴가 열린 동안 전투와 타이머가 정지합니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
+[node name="SettingsButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+text = "설정"
+
 [node name="ResumeButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 124)
 layout_mode = 2
@@ -829,12 +835,6 @@ custom_minimum_size = Vector2(0, 115)
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
 text = "이 스테이지 다시 도전"
-
-[node name="SettingsButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 100)
-layout_mode = 2
-theme_override_font_sizes/font_size = 34
-text = "설정"
 
 [node name="LobbyButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 115)
@@ -871,9 +871,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -430.0
-offset_top = -610.0
+offset_top = -430.0
 offset_right = 430.0
-offset_bottom = 610.0
+offset_bottom = 430.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -964,22 +964,6 @@ theme_override_colors/font_color = Color(0.68, 0.64, 0.73, 1)
 theme_override_font_sizes/font_size = 24
 text = "1~10 단계 · 변경 즉시 적용 · 자동 저장"
 horizontal_alignment = 1
-
-[node name="DebugTitle" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.72, 0.42, 1)
-theme_override_font_sizes/font_size = 24
-text = "BGM 런타임 진단"
-horizontal_alignment = 1
-
-[node name="DebugInfo" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 320)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.84, 0.9, 1, 1)
-theme_override_font_sizes/font_size = 20
-text = "BGMDBG-1\n진단 대기 중"
-autowrap_mode = 2
-selectable = true
 
 [node name="CloseButton" type="Button" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 108)

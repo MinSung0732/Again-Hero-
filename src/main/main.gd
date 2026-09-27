@@ -90,7 +90,6 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 @onready var settings_sfx_slider: HSlider = $HUD/SettingsOverlay/Panel/Margin/VBox/SFXRow/Slider
 @onready var settings_sfx_value: Label = $HUD/SettingsOverlay/Panel/Margin/VBox/SFXRow/Value
 @onready var settings_sfx_mute: CheckBox = $HUD/SettingsOverlay/Panel/Margin/VBox/SFXMute
-@onready var settings_debug_info: Label = $HUD/SettingsOverlay/Panel/Margin/VBox/DebugInfo
 @onready var bgm_player_a: AudioStreamPlayer = $HeroBGMManager/PlayerA
 @onready var bgm_player_b: AudioStreamPlayer = $HeroBGMManager/PlayerB
 
@@ -127,10 +126,6 @@ var selected_monster_type: String = ""
 var current_demon_candidates: Array = []
 var current_mutation_candidates: Array = []
 var debug_refresh_timer: float = 0.0
-var audio_debug_refresh_timer: float = 0.0
-var audio_debug_action: String = "none"
-var audio_debug_level_events: int = 0
-var audio_debug_mute_events: int = 0
 var battle_loadout_ids: Array = []
 var summon_slot_buttons: Array = []
 var demon_ultimate_charge_ready: bool = false
@@ -317,14 +312,6 @@ func _process(delta: float) -> void:
 		if is_instance_valid(battle) and battle.has_method("get_debug_balance_summary"):
 			debug_balance_label.text = String(battle.call("get_debug_balance_summary"))
 
-	if settings_overlay.visible:
-		audio_debug_refresh_timer -= delta
-		if audio_debug_refresh_timer <= 0.0:
-			audio_debug_refresh_timer = 0.20
-			_refresh_audio_debug_info()
-	else:
-		audio_debug_refresh_timer = 0.0
-
 func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 	subtitle_label.text = "Stage %d · %s · %s" % [
 		int(snapshot.get("stage_number", 1)),
@@ -480,7 +467,6 @@ func _close_pause_menu() -> void:
 
 func _open_settings_overlay() -> void:
 	_sync_audio_settings_ui()
-	_refresh_audio_debug_info()
 	settings_overlay.show()
 	settings_overlay.move_to_front()
 
@@ -498,67 +484,16 @@ func _sync_audio_settings_ui() -> void:
 	settings_sfx_value.text = str(AudioSettings.sfx_level)
 
 
-func _refresh_audio_debug_info() -> void:
-	if not is_instance_valid(settings_debug_info):
-		return
-	if (
-		is_instance_valid(hero_bgm_manager)
-		and hero_bgm_manager.has_method("get_audio_debug_summary")
-	):
-		var manager_summary := String(
-			hero_bgm_manager.get_audio_debug_summary()
-		)
-		var direct_summary := "UI action=%s level_events=%d mute_events=%d\nDirect A playing=%s paused=%s db=%.1f bus=%s\nDirect B playing=%s paused=%s db=%.1f bus=%s" % [
-			audio_debug_action,
-			audio_debug_level_events,
-			audio_debug_mute_events,
-			str(bgm_player_a.playing),
-			str(bgm_player_a.stream_paused),
-			bgm_player_a.volume_db,
-			String(bgm_player_a.bus),
-			str(bgm_player_b.playing),
-			str(bgm_player_b.stream_paused),
-			bgm_player_b.volume_db,
-			String(bgm_player_b.bus),
-		]
-		settings_debug_info.text = manager_summary + "\n" + direct_summary
-		return
-
-	settings_debug_info.text = "\n".join([
-		"BGMDBG-FALLBACK",
-		"HeroBGMManager 진단 API 없음",
-		"A playing=%s paused=%s db=%.1f bus=%s" % [
-			str(bgm_player_a.playing),
-			str(bgm_player_a.stream_paused),
-			bgm_player_a.volume_db,
-			String(bgm_player_a.bus),
-		],
-		"B playing=%s paused=%s db=%.1f bus=%s" % [
-			str(bgm_player_b.playing),
-			str(bgm_player_b.stream_paused),
-			bgm_player_b.volume_db,
-			String(bgm_player_b.bus),
-		],
-	])
-
-
 func _on_settings_bgm_level_changed(value: float) -> void:
 	var level := int(round(value))
-	audio_debug_level_events += 1
-	audio_debug_action = "level:%d direct" % level
 	settings_bgm_value.text = str(level)
 
-	# Apply to the actual players first. If AudioSettings throws later,
-	# the audible result still changes and the diagnostic tells us where it stopped.
+	# Apply to the actual output path before persisting the setting.
 	_force_apply_bgm_players(level, settings_bgm_mute.button_pressed)
 	if hero_bgm_manager.has_method("set_user_bgm_level"):
 		hero_bgm_manager.set_user_bgm_level(level)
-	audio_debug_action = "level:%d before settings" % level
-	_refresh_audio_debug_info()
 
 	AudioSettings.set_bgm_level(level)
-	audio_debug_action = "level:%d complete" % level
-	_refresh_audio_debug_info()
 
 
 func _force_apply_bgm_players(level: int, muted: bool) -> void:
@@ -581,19 +516,12 @@ func _on_settings_sfx_level_changed(value: float) -> void:
 
 
 func _on_settings_bgm_mute_toggled(enabled: bool) -> void:
-	audio_debug_mute_events += 1
-	audio_debug_action = "mute:%s direct" % str(enabled)
-
 	# Same ordering as volume: touch the real players before persistence/signals.
 	_force_apply_bgm_players(int(round(settings_bgm_slider.value)), enabled)
 	if hero_bgm_manager.has_method("set_user_bgm_muted"):
 		hero_bgm_manager.set_user_bgm_muted(enabled)
-	audio_debug_action = "mute:%s before settings" % str(enabled)
-	_refresh_audio_debug_info()
 
 	AudioSettings.set_bgm_muted(enabled)
-	audio_debug_action = "mute:%s complete" % str(enabled)
-	_refresh_audio_debug_info()
 
 
 func _on_settings_sfx_mute_toggled(enabled: bool) -> void:
