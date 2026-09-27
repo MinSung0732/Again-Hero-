@@ -1,0 +1,160 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/ui/hero_reveal_cutscene.gd" id="1_script"]
+[ext_resource type="Theme" path="res://src/ui/game_theme.tres" id="2_theme"]
+
+[sub_resource type="Shader" id="Shader_silhouette"]
+code = "shader_type canvas_item;\nuniform float silhouette_strength : hint_range(0.0, 1.0) = 1.0;\n\nvoid fragment() {\n\tvec4 base = texture(TEXTURE, UV) * COLOR;\n\tvec3 shadow = vec3(0.008, 0.006, 0.018);\n\tbase.rgb = mix(base.rgb, shadow, silhouette_strength);\n\tCOLOR = base;\n}\n"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_silhouette"]
+shader = SubResource("Shader_silhouette")
+shader_parameter/silhouette_strength = 1.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_title"]
+bg_color = Color(0.015, 0.018, 0.038, 0.80)
+border_width_top = 2
+border_width_bottom = 2
+border_color = Color(0.72, 0.54, 0.26, 0.86)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_loading"]
+bg_color = Color(0.012, 0.014, 0.028, 0.76)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.32, 0.38, 0.56, 0.42)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="HeroRevealCutscene" type="CanvasLayer"]
+layer = 105
+visible = false
+script = ExtResource("1_script")
+
+[node name="Root" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+theme = ExtResource("2_theme")
+
+[node name="Backdrop" type="ColorRect" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.004, 0.005, 0.012, 1)
+
+[node name="EffectFrame" type="TextureRect" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+texture_filter = 1
+
+[node name="HeroPortrait" type="TextureRect" parent="Root"]
+z_index = 5
+layout_mode = 0
+offset_left = 170.0
+offset_top = 270.0
+offset_right = 910.0
+offset_bottom = 1340.0
+pivot_offset = Vector2(370, 535)
+mouse_filter = 2
+material = SubResource("ShaderMaterial_silhouette")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="TitlePanel" type="Panel" parent="Root"]
+z_index = 8
+layout_mode = 0
+offset_left = 104.0
+offset_top = 1280.0
+offset_right = 976.0
+offset_bottom = 1516.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_title")
+
+[node name="Title" type="Label" parent="Root"]
+z_index = 9
+layout_mode = 0
+offset_left = 130.0
+offset_top = 1310.0
+offset_right = 950.0
+offset_bottom = 1400.0
+theme_override_colors/font_color = Color(1, 0.82, 0.42, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.96)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 50
+text = "견습 마법용사"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TrueName" type="Label" parent="Root"]
+z_index = 9
+layout_mode = 0
+offset_left = 130.0
+offset_top = 1408.0
+offset_right = 950.0
+offset_bottom = 1486.0
+theme_override_colors/font_color = Color(0.72, 0.76, 0.88, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.96)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 32
+text = "진명 : ???"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LoadingPanel" type="Panel" parent="Root"]
+z_index = 10
+layout_mode = 0
+offset_left = 272.0
+offset_top = 1540.0
+offset_right = 808.0
+offset_bottom = 1880.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_loading")
+
+[node name="LoadingLogo" type="TextureRect" parent="Root"]
+z_index = 11
+visible = false
+layout_mode = 0
+offset_left = 400.0
+offset_top = 1552.0
+offset_right = 680.0
+offset_bottom = 1832.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="LoadingText" type="Label" parent="Root"]
+z_index = 11
+visible = false
+layout_mode = 0
+offset_left = 282.0
+offset_top = 1828.0
+offset_right = 798.0
+offset_bottom = 1870.0
+theme_override_colors/font_color = Color(0.70, 0.76, 0.90, 0.9)
+theme_override_font_sizes/font_size = 23
+text = "침입 기록 동기화 중..."
+horizontal_alignment = 1
+vertical_alignment = 1

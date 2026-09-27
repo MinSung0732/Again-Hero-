@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://src/battle/Battle.tscn" id="2_battle"]
 [ext_resource type="Theme" path="res://src/ui/game_theme.tres" id="3_game_theme"]
 [ext_resource type="Script" path="res://src/audio/hero_bgm_manager.gd" id="4_hero_bgm"]
 [ext_resource type="PackedScene" path="res://src/ui/StageIntroCutscene.tscn" id="5_intro"]
+[ext_resource type="PackedScene" path="res://src/ui/HeroRevealCutscene.tscn" id="6_reveal"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cooldown_bg"]
 bg_color = Color(0.16, 0.16, 0.18, 0.55)
@@ -70,6 +71,8 @@ volume_db = -80.0
 bus = &"BGM"
 
 [node name="StageIntroCutscene" parent="." instance=ExtResource("5_intro")]
+
+[node name="HeroRevealCutscene" parent="." instance=ExtResource("6_reveal")]
 
 [node name="ScreenBackground" type="CanvasLayer" parent="."]
 layer = -10

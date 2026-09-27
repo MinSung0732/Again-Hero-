@@ -9,6 +9,7 @@ const HERO_AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
 const HERO_SKILL_COOLDOWN_BADGE := preload("res://src/ui/hero_skill_cooldown_badge.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const STAGE_INTRO_DIALOGUES := preload("res://src/data/stage_intro_dialogues.gd")
+const HERO_REVEAL_CATALOG := preload("res://src/data/hero_reveal_catalog.gd")
 const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png"
 
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
@@ -17,6 +18,7 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 @onready var hero_bgm_manager = $HeroBGMManager
 @onready var hud_layer: CanvasLayer = $HUD
 @onready var stage_intro_cutscene = $StageIntroCutscene
+@onready var hero_reveal_cutscene = $HeroRevealCutscene
 
 @onready var subtitle_label: Label = $HUD/TopBar/Subtitle
 @onready var run_timer_label: Label = $HUD/TopBar/RunTimer
@@ -156,6 +158,10 @@ func _ready() -> void:
 	battle.set_external_pause(true)
 	hud_layer.visible = false
 	stage_intro_cutscene.finished.connect(_on_stage_intro_finished)
+	hero_reveal_cutscene.finished.connect(_on_hero_reveal_finished)
+	hero_reveal_cutscene.bgm_start_requested.connect(
+		_on_hero_reveal_bgm_start_requested
+	)
 
 	battle.stats_changed.connect(_on_stats_changed)
 	battle.progression_changed.connect(_on_progression_changed)
@@ -335,7 +341,7 @@ func _begin_stage_entry(snapshot: Dictionary) -> void:
 	var stage_id := String(snapshot.get("stage_id", ""))
 	var dialogue := STAGE_INTRO_DIALOGUES.get_dialogue(stage_id)
 	if dialogue.is_empty():
-		_start_battle_after_intro(stage_id)
+		_begin_hero_reveal(snapshot)
 		return
 
 	_stage_intro_active = true
@@ -358,16 +364,48 @@ func _on_stage_intro_finished(_skipped: bool) -> void:
 	if not _stage_intro_stage_id.is_empty():
 		STAGE_PROGRESS.mark_stage_intro_seen(_stage_intro_stage_id)
 
+	_begin_hero_reveal(battle.get_snapshot())
+
+
+func _begin_hero_reveal(snapshot: Dictionary) -> void:
+	var stage_id := String(snapshot.get("stage_id", ""))
+	var hero_id := String(snapshot.get("hero_id", ""))
+	var reveal_data := HERO_REVEAL_CATALOG.get_reveal_data(
+		hero_id,
+		String(snapshot.get("hero_name", "용사")),
+		String(snapshot.get("hero_portrait_path", ""))
+	)
+	reveal_data["stage_id"] = stage_id
+
+	var identity_id := String(reveal_data.get("identity_id", hero_id))
+	var encounter := STAGE_PROGRESS.record_hero_encounter(
+		stage_id,
+		identity_id
+	)
+	reveal_data["true_name_unlocked"] = bool(
+		encounter.get("true_name_unlocked", false)
+	)
+
+	_stage_intro_active = true
+	_stage_intro_stage_id = stage_id
+	hud_layer.visible = false
+	hero_reveal_cutscene.call("play_reveal", reveal_data)
+
+
+func _on_hero_reveal_bgm_start_requested(stage_id: String) -> void:
+	hero_bgm_manager.start_stage(stage_id)
+	_force_apply_bgm_players(AudioSettings.bgm_level, AudioSettings.bgm_muted)
+
+
+func _on_hero_reveal_finished() -> void:
 	var stage_id := _stage_intro_stage_id
 	_stage_intro_stage_id = ""
 	_start_battle_after_intro(stage_id)
 
 
-func _start_battle_after_intro(stage_id: String) -> void:
+func _start_battle_after_intro(_stage_id: String) -> void:
 	_stage_intro_active = false
 	hud_layer.visible = true
-	hero_bgm_manager.start_stage(stage_id)
-	_force_apply_bgm_players(AudioSettings.bgm_level, AudioSettings.bgm_muted)
 	battle.set_external_pause(false)
 
 

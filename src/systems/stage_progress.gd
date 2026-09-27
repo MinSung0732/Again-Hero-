@@ -129,6 +129,74 @@ static func mark_stage_intro_seen(stage_id: String) -> bool:
 	return config.save(SAVE_PATH) == OK
 
 
+static func record_hero_encounter(
+	stage_id: String,
+	identity_id: String
+) -> Dictionary:
+	if stage_id.is_empty() or identity_id.is_empty():
+		return {
+			"stage_encounters": 0,
+			"unique_stage_encounters": 0,
+			"true_name_unlocked": false,
+		}
+
+	var config := ConfigFile.new()
+	config.load(SAVE_PATH)
+
+	var stage_count := int(
+		config.get_value("hero_stage_encounters", stage_id, 0)
+	) + 1
+	config.set_value("hero_stage_encounters", stage_id, stage_count)
+
+	var raw_stages = config.get_value(
+		"hero_identity_stages",
+		identity_id,
+		PackedStringArray()
+	)
+	var stages := PackedStringArray()
+	if raw_stages is PackedStringArray:
+		stages = raw_stages
+	elif raw_stages is Array:
+		for raw_stage in raw_stages:
+			stages.append(String(raw_stage))
+
+	if stage_id not in stages:
+		stages.append(stage_id)
+	config.set_value("hero_identity_stages", identity_id, stages)
+	config.save(SAVE_PATH)
+
+	return {
+		"stage_encounters": stage_count,
+		"unique_stage_encounters": stages.size(),
+		"true_name_unlocked": stage_count >= 100 or stages.size() >= 3,
+	}
+
+
+static func is_hero_true_name_unlocked(
+	stage_id: String,
+	identity_id: String
+) -> bool:
+	if stage_id.is_empty() or identity_id.is_empty():
+		return false
+	var config := ConfigFile.new()
+	if config.load(SAVE_PATH) != OK:
+		return false
+
+	var stage_count := int(
+		config.get_value("hero_stage_encounters", stage_id, 0)
+	)
+	var raw_stages = config.get_value(
+		"hero_identity_stages",
+		identity_id,
+		PackedStringArray()
+	)
+	var unique_count := 0
+	if raw_stages is PackedStringArray or raw_stages is Array:
+		unique_count = raw_stages.size()
+
+	return stage_count >= 100 or unique_count >= 3
+
+
 static func get_research_points() -> int:
 	var state := load_state()
 	return int(state.get("research_points", 0))
