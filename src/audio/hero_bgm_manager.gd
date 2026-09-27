@@ -279,17 +279,34 @@ func _cache_stage_streams(stage_data: Dictionary) -> void:
 		_stage_streams[phase_key] = stream
 
 
+func refresh_user_audio_settings() -> void:
+	_sync_audio_settings()
+
+
 func _sync_audio_settings() -> void:
-	_sync_stream_pause_state()
+	var muted := false
+	if AudioSettings != null:
+		muted = bool(AudioSettings.bgm_muted)
 
-	if _stopping:
-		return
-
-	# Apply the user BGM level directly to the active player.
-	# This makes volume control independent of audio-bus routing.
-	if is_instance_valid(_active_player) and _active_player.playing:
+	# Hard-apply mute and gain to both actual BGM players.
+	# Do not rely on the bus or signal delivery alone.
+	if muted:
 		_kill_fade_tween()
-		_active_player.volume_db = _get_play_db()
+
+	for player in [player_a, player_b]:
+		if not is_instance_valid(player):
+			continue
+
+		player.stream_paused = muted
+		if muted:
+			player.volume_db = SILENT_DB
+		elif player == _active_player and player.playing:
+			player.volume_db = _get_play_db()
+		elif player != _active_player:
+			player.volume_db = SILENT_DB
+
+	if _stopping or muted:
+		return
 
 	if (
 		is_instance_valid(_standby_player)
@@ -307,8 +324,13 @@ func _sync_stream_pause_state() -> void:
 		should_pause = bool(AudioSettings.bgm_muted)
 
 	for player in [player_a, player_b]:
-		if is_instance_valid(player):
-			player.stream_paused = should_pause
+		if not is_instance_valid(player):
+			continue
+		player.stream_paused = should_pause
+		if should_pause:
+			player.volume_db = SILENT_DB
+		elif player == _active_player and player.playing:
+			player.volume_db = _get_play_db()
 
 
 func _get_play_db() -> float:
