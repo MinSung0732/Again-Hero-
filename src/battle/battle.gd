@@ -1001,6 +1001,34 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 
 	return detail
 
+
+func get_nearest_hero_combat_target(origin: Vector2) -> Node2D:
+	var nearest: Node2D = null
+	var nearest_distance_sq := INF
+
+	if is_instance_valid(hero) and not hero.is_queued_for_deletion():
+		nearest = hero
+		nearest_distance_sq = origin.distance_squared_to(hero.global_position)
+
+	# Summon count is intentionally small and capped by the hero slot system.
+	# Keeping target resolution here makes the combat authority easy to move
+	# to a multiplayer server later.
+	for raw_node in get_tree().get_nodes_in_group("hero_summons"):
+		if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
+			continue
+		var summon := raw_node as Node2D
+		if summon == null or not bool(summon.get("active")):
+			continue
+		var distance_sq := origin.distance_squared_to(summon.global_position)
+		if distance_sq >= nearest_distance_sq:
+			continue
+		nearest_distance_sq = distance_sq
+		nearest = summon
+
+	return nearest
+
+
+
 func _get_auto_spawn_position() -> Vector2:
 	var origin := current_map_size * 0.5
 	if is_instance_valid(hero):
