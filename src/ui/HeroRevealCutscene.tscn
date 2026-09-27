@@ -12,10 +12,16 @@ shader = SubResource("Shader_silhouette")
 shader_parameter/silhouette_strength = 1.0
 
 [sub_resource type="Shader" id="Shader_light_add"]
-code = "shader_type canvas_item;\nrender_mode blend_add;\n\nvoid fragment() {\n\tvec4 tex = texture(TEXTURE, UV) * COLOR;\n\tCOLOR = tex;\n}\n"
+code = "shader_type canvas_item;\nrender_mode blend_add;\n\nuniform float blur_radius : hint_range(0.5, 3.0) = 1.35;\nuniform float blur_mix : hint_range(0.0, 1.0) = 0.48;\nuniform float glow_strength : hint_range(0.0, 2.5) = 0.72;\nuniform float glow_threshold : hint_range(0.0, 1.0) = 0.16;\nuniform float glow_softness : hint_range(0.01, 0.5) = 0.20;\nuniform float alpha_boost : hint_range(0.5, 1.5) = 0.96;\n\nfloat luma(vec3 color) {\n\treturn dot(color, vec3(0.299, 0.587, 0.114));\n}\n\nvoid fragment() {\n\tvec2 px = TEXTURE_PIXEL_SIZE * blur_radius;\n\tvec4 center = texture(TEXTURE, UV);\n\tvec4 blur = center * 0.24;\n\tblur += texture(TEXTURE, UV + vec2(px.x, 0.0)) * 0.11;\n\tblur += texture(TEXTURE, UV - vec2(px.x, 0.0)) * 0.11;\n\tblur += texture(TEXTURE, UV + vec2(0.0, px.y)) * 0.11;\n\tblur += texture(TEXTURE, UV - vec2(0.0, px.y)) * 0.11;\n\tblur += texture(TEXTURE, UV + px) * 0.08;\n\tblur += texture(TEXTURE, UV - px) * 0.08;\n\tblur += texture(TEXTURE, UV + vec2(px.x, -px.y)) * 0.08;\n\tblur += texture(TEXTURE, UV + vec2(-px.x, px.y)) * 0.08;\n\n\tvec4 softened = mix(center, blur, blur_mix);\n\tfloat brightness = luma(blur.rgb);\n\tfloat glow_mask = smoothstep(\n\t\tglow_threshold,\n\t\tglow_threshold + glow_softness,\n\t\tbrightness\n\t);\n\tvec3 glow = blur.rgb * glow_mask * glow_strength;\n\tvec3 final_rgb = softened.rgb + glow;\n\tfloat final_alpha = clamp(\n\t\tmax(softened.a, blur.a * 0.82) * alpha_boost,\n\t\t0.0,\n\t\t1.0\n\t);\n\tCOLOR = vec4(final_rgb, final_alpha) * COLOR;\n}\n"
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_light_add"]
 shader = SubResource("Shader_light_add")
+shader_parameter/blur_radius = 1.35
+shader_parameter/blur_mix = 0.48
+shader_parameter/glow_strength = 0.72
+shader_parameter/glow_threshold = 0.16
+shader_parameter/glow_softness = 0.2
+shader_parameter/alpha_boost = 0.96
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_title"]
 bg_color = Color(0.015, 0.018, 0.038, 0.80)
@@ -97,6 +103,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 material = SubResource("ShaderMaterial_light_add")
+modulate = Color(1, 1, 1, 0.94)
 expand_mode = 1
 stretch_mode = 6
 texture_filter = 2
