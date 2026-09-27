@@ -480,7 +480,7 @@ const STAGES = {
 		"hero_id": "summoner_hero",
 		"hero_ai_profile_id": "stage_8_summoner",
 		"portrait_path": "res://assets/art/heroes/stage8_summoner/8stage_hero_portrait.png",
-		"lobby_description": "소환 슬롯을 관리하며 이계의 문지기를 설치해 전장을 장악하는 소환의 용사.",
+		"lobby_description": "소환 슬롯을 관리하며 이계의 문지기를 설치해 전장을 장악하는 이계의 용사.",
 		"hero_level_start": 1,
 		"map_width": 4600,
 		"map_height": 4600,
