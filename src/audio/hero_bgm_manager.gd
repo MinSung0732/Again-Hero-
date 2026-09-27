@@ -90,6 +90,8 @@ var _standby_player: AudioStreamPlayer
 var _stage_streams: Dictionary = {}
 var _fade_tween: Tween
 var _stopping: bool = false
+var _user_volume_db: float = PLAY_DB
+var _user_muted: bool = false
 
 
 func _ready() -> void:
@@ -279,33 +281,49 @@ func _cache_stage_streams(stage_data: Dictionary) -> void:
 		_stage_streams[phase_key] = stream
 
 
+func set_user_bgm_level(level: int) -> void:
+	if AudioSettings != null and AudioSettings.has_method("get_bgm_volume_db"):
+		_user_volume_db = float(AudioSettings.get_bgm_volume_db())
+	else:
+		_user_volume_db = PLAY_DB
+	_apply_user_audio_state()
+
+
+func set_user_bgm_muted(muted: bool) -> void:
+	_user_muted = muted
+	_apply_user_audio_state()
+
+
 func refresh_user_audio_settings() -> void:
 	_sync_audio_settings()
 
 
 func _sync_audio_settings() -> void:
-	var muted := false
 	if AudioSettings != null:
-		muted = bool(AudioSettings.bgm_muted)
+		_user_muted = bool(AudioSettings.bgm_muted)
+		if AudioSettings.has_method("get_bgm_volume_db"):
+			_user_volume_db = float(AudioSettings.get_bgm_volume_db())
+		else:
+			_user_volume_db = PLAY_DB
+	_apply_user_audio_state()
 
-	# Hard-apply mute and gain to both actual BGM players.
-	# Do not rely on the bus or signal delivery alone.
-	if muted:
+
+func _apply_user_audio_state() -> void:
+	if _user_muted:
 		_kill_fade_tween()
 
 	for player in [player_a, player_b]:
 		if not is_instance_valid(player):
 			continue
-
-		player.stream_paused = muted
-		if muted:
+		player.stream_paused = _user_muted
+		if _user_muted:
 			player.volume_db = SILENT_DB
 		elif player == _active_player and player.playing:
-			player.volume_db = _get_play_db()
+			player.volume_db = _user_volume_db
 		elif player != _active_player:
 			player.volume_db = SILENT_DB
 
-	if _stopping or muted:
+	if _stopping or _user_muted:
 		return
 
 	if (
@@ -319,24 +337,18 @@ func _sync_audio_settings() -> void:
 
 
 func _sync_stream_pause_state() -> void:
-	var should_pause := false
-	if AudioSettings != null:
-		should_pause = bool(AudioSettings.bgm_muted)
-
 	for player in [player_a, player_b]:
 		if not is_instance_valid(player):
 			continue
-		player.stream_paused = should_pause
-		if should_pause:
+		player.stream_paused = _user_muted
+		if _user_muted:
 			player.volume_db = SILENT_DB
 		elif player == _active_player and player.playing:
-			player.volume_db = _get_play_db()
+			player.volume_db = _user_volume_db
 
 
 func _get_play_db() -> float:
-	if AudioSettings != null and AudioSettings.has_method("get_bgm_volume_db"):
-		return float(AudioSettings.get_bgm_volume_db())
-	return PLAY_DB
+	return _user_volume_db
 
 
 func _phase_key(phase: int) -> String:
