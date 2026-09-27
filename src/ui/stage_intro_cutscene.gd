@@ -16,6 +16,7 @@ const HERO_ACCENT_COLOR := Color(0.30, 0.64, 1.0, 0.95)
 const SPEAKER_TWEEN_SECONDS := 0.20
 const TEXT_FADE_SECONDS := 0.10
 const INTRO_FADE_SECONDS := 0.24
+const ADVANCE_DEBOUNCE_MSEC := 140
 const DEMON_ACTIVE_SHIFT := Vector2(14.0, -6.0)
 const DEMON_INACTIVE_SHIFT := Vector2(-4.0, 4.0)
 const HERO_ACTIVE_SHIFT := Vector2(-14.0, -6.0)
@@ -45,6 +46,7 @@ var _text_tween: Tween
 var _intro_tween: Tween
 var _demon_base_position: Vector2 = Vector2.ZERO
 var _hero_base_position: Vector2 = Vector2.ZERO
+var _last_advance_msec: int = -1000000
 
 
 func _ready() -> void:
@@ -84,6 +86,7 @@ func play_dialogue(dialogue: Dictionary, allow_skip: bool) -> void:
 
 	_line_index = 0
 	_current_speaker = ""
+	_last_advance_msec = -1000000
 	_active = true
 	visible = true
 	_reset_portrait_state()
@@ -128,7 +131,7 @@ func _on_root_gui_input(event: InputEvent) -> void:
 	if not advance:
 		return
 
-	_advance()
+	_request_advance()
 	root.accept_event()
 
 
@@ -136,8 +139,20 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if not _active or not event.is_pressed():
 		return
 	if event.is_action("ui_accept"):
-		_advance()
+		_request_advance()
 		get_viewport().set_input_as_handled()
+
+
+func _request_advance() -> void:
+	if not _active:
+		return
+
+	var now_msec := Time.get_ticks_msec()
+	if now_msec - _last_advance_msec < ADVANCE_DEBOUNCE_MSEC:
+		return
+
+	_last_advance_msec = now_msec
+	_advance()
 
 
 func _advance() -> void:
