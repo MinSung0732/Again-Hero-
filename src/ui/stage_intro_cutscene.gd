@@ -22,6 +22,15 @@ const DEMON_INACTIVE_SHIFT := Vector2(-4.0, 4.0)
 const HERO_ACTIVE_SHIFT := Vector2(-14.0, -6.0)
 const HERO_INACTIVE_SHIFT := Vector2(4.0, 4.0)
 
+# Portraits are authored for a 1080x1920 composition, but their vertical
+# placement is intentionally expressed relative to the current screen bottom.
+# This keeps the same visual overlap with the bottom dialogue panel on tall
+# mobile aspect ratios.
+const DEMON_BASE_X := -8.0
+const HERO_BASE_X := 476.0
+const DEMON_BASE_BOTTOM_TOP := -1550.0
+const HERO_BASE_BOTTOM_TOP := -1548.0
+
 @onready var root: Control = $Root
 @onready var location_label: Label = $Root/Location
 @onready var demon_portrait: TextureRect = $Root/DemonPortrait
@@ -51,10 +60,9 @@ var _last_advance_msec: int = -1000000
 
 func _ready() -> void:
 	visible = false
-	_demon_base_position = demon_portrait.position
-	_hero_base_position = hero_portrait.position
 	root.gui_input.connect(_on_root_gui_input)
 	skip_button.pressed.connect(_on_skip_pressed)
+	root.resized.connect(_on_root_resized)
 
 
 func play_dialogue(dialogue: Dictionary, allow_skip: bool) -> void:
@@ -89,9 +97,42 @@ func play_dialogue(dialogue: Dictionary, allow_skip: bool) -> void:
 	_last_advance_msec = -1000000
 	_active = true
 	visible = true
+	_refresh_responsive_portrait_positions()
 	_reset_portrait_state()
 	_play_intro_fade()
 	call_deferred("_show_current_line")
+
+
+func _refresh_responsive_portrait_positions() -> void:
+	_demon_base_position = Vector2(
+		DEMON_BASE_X,
+		root.size.y + DEMON_BASE_BOTTOM_TOP
+	)
+	_hero_base_position = Vector2(
+		HERO_BASE_X,
+		root.size.y + HERO_BASE_BOTTOM_TOP
+	)
+
+
+func _on_root_resized() -> void:
+	if not is_instance_valid(root):
+		return
+
+	_refresh_responsive_portrait_positions()
+	if not _active:
+		return
+
+	# Reapply the current speaker pose against the new mobile layout instead
+	# of keeping a stale absolute position captured before the resize.
+	if _current_speaker == "demon":
+		demon_portrait.position = _demon_base_position + DEMON_ACTIVE_SHIFT
+		hero_portrait.position = _hero_base_position + HERO_INACTIVE_SHIFT
+	elif _current_speaker == "hero":
+		demon_portrait.position = _demon_base_position + DEMON_INACTIVE_SHIFT
+		hero_portrait.position = _hero_base_position + HERO_ACTIVE_SHIFT
+	else:
+		demon_portrait.position = _demon_base_position
+		hero_portrait.position = _hero_base_position
 
 
 func _play_intro_fade() -> void:
