@@ -13,12 +13,6 @@ const STOP_FADE_SECONDS := 0.40
 const SILENT_DB := -80.0
 const PLAY_DB := 0.0
 const BGM_BUS := &"BGM"
-const MIN_LEVEL := 1
-const MAX_LEVEL := 10
-const BGM_LEVEL_DB := PackedFloat32Array([
-	-54.0, -48.0, -43.0, -38.0, -34.0,
-	-30.0, -27.0, -24.0, -21.0, -18.0,
-])
 
 # Add stage_2 ~ stage_10 entries here after Stage 1 verification.
 # The manager logic itself does not need stage-specific branches.
@@ -103,7 +97,6 @@ var _user_muted: bool = false
 func _ready() -> void:
 	_active_player = player_a
 	_standby_player = player_b
-	_ensure_bgm_bus()
 	player_a.bus = BGM_BUS
 	player_b.bus = BGM_BUS
 	player_a.volume_db = SILENT_DB
@@ -289,7 +282,10 @@ func _cache_stage_streams(stage_data: Dictionary) -> void:
 
 
 func set_user_bgm_level(level: int) -> void:
-	_user_volume_db = _level_to_db(level)
+	if AudioSettings != null and AudioSettings.has_method("get_bgm_volume_db"):
+		_user_volume_db = float(AudioSettings.get_bgm_volume_db())
+	else:
+		_user_volume_db = PLAY_DB
 	_apply_user_audio_state()
 
 
@@ -305,15 +301,14 @@ func refresh_user_audio_settings() -> void:
 func _sync_audio_settings() -> void:
 	if AudioSettings != null:
 		_user_muted = bool(AudioSettings.bgm_muted)
-		_user_volume_db = _level_to_db(int(AudioSettings.bgm_level))
+		if AudioSettings.has_method("get_bgm_volume_db"):
+			_user_volume_db = float(AudioSettings.get_bgm_volume_db())
+		else:
+			_user_volume_db = PLAY_DB
 	_apply_user_audio_state()
 
 
 func _apply_user_audio_state() -> void:
-	_ensure_bgm_bus()
-	player_a.bus = BGM_BUS
-	player_b.bus = BGM_BUS
-
 	if _user_muted:
 		_kill_fade_tween()
 
@@ -363,7 +358,8 @@ func get_audio_debug_summary() -> String:
 	if AudioSettings != null:
 		settings_level = int(AudioSettings.bgm_level)
 		settings_muted = bool(AudioSettings.bgm_muted)
-		settings_db = _level_to_db(settings_level)
+		if AudioSettings.has_method("get_bgm_volume_db"):
+			settings_db = float(AudioSettings.get_bgm_volume_db())
 
 	var bgm_bus_index := AudioServer.get_bus_index(BGM_BUS)
 	var bgm_bus_line := "BGM bus=MISSING"
@@ -394,7 +390,7 @@ func get_audio_debug_summary() -> String:
 		bus_names.append("%d:%s" % [index, AudioServer.get_bus_name(index)])
 
 	return "\n".join([
-		"BGMDBG-2",
+		"BGMDBG-1",
 		"stage=%s phase=%s(%d)" % [current_stage_id, phase_key, current_phase],
 		"settings level=%d mute=%s db=%.1f" % [
 			settings_level,
@@ -435,23 +431,6 @@ func _player_debug_line(label: String, player: AudioStreamPlayer) -> String:
 		String(player.bus),
 		stream_name,
 	]
-
-
-func _level_to_db(level: int) -> float:
-	var index := clampi(level, MIN_LEVEL, MAX_LEVEL) - MIN_LEVEL
-	index = mini(index, BGM_LEVEL_DB.size() - 1)
-	return BGM_LEVEL_DB[index]
-
-
-func _ensure_bgm_bus() -> void:
-	var bus_index := AudioServer.get_bus_index(BGM_BUS)
-	if bus_index < 0:
-		bus_index = AudioServer.bus_count
-		AudioServer.add_bus(bus_index)
-		AudioServer.set_bus_name(bus_index, BGM_BUS)
-
-	AudioServer.set_bus_volume_db(bus_index, 0.0)
-	AudioServer.set_bus_mute(bus_index, false)
 
 
 func _phase_key(phase: int) -> String:
