@@ -744,7 +744,7 @@ const PROFILES = {
 	},
 	"summoner_hero": {
 		"id": "summoner_hero",
-		"display_name": "소환의 용사",
+		"display_name": "이계의 용사",
 		"archetype": "summoner_gatekeeper",
 		"max_hp": 2500,
 		"move_speed": 260.0,
