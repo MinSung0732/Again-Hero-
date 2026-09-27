@@ -18,8 +18,10 @@ const OUTRO_SECONDS := 0.22
 @onready var root: Control = $Root
 @onready var effect_frame: TextureRect = $Root/EffectFrame
 @onready var hero_portrait: TextureRect = $Root/HeroPortrait
+@onready var title_panel: Panel = $Root/TitlePanel
 @onready var title_label: Label = $Root/Title
 @onready var true_name_label: Label = $Root/TrueName
+@onready var loading_panel: Panel = $Root/LoadingPanel
 @onready var loading_logo: TextureRect = $Root/LoadingLogo
 @onready var loading_text: Label = $Root/LoadingText
 
@@ -62,8 +64,10 @@ func play_reveal(data: Dictionary) -> void:
 	effect_frame.visible = true
 	hero_portrait.visible = true
 	hero_portrait.scale = Vector2(0.94, 0.94)
+	title_panel.visible = false
 	title_label.modulate.a = 0.0
 	true_name_label.modulate.a = 0.0
+	loading_panel.visible = false
 	loading_logo.visible = false
 	loading_text.visible = false
 	if _portrait_material != null:
@@ -102,6 +106,7 @@ func _run_sequence() -> void:
 
 
 func _reveal_hero() -> void:
+	title_panel.visible = true
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.set_trans(Tween.TRANS_QUAD)
@@ -150,6 +155,7 @@ func _reveal_hero() -> void:
 
 
 func _play_fake_loading() -> void:
+	loading_panel.visible = true
 	loading_logo.visible = true
 	loading_text.visible = true
 	var total_steps := LOADING_FRAME_COUNT * LOADING_LOOPS
