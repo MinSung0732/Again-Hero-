@@ -310,6 +310,10 @@ func _sync_audio_settings() -> void:
 
 
 func _apply_user_audio_state() -> void:
+	_ensure_bgm_bus()
+	player_a.bus = BGM_BUS
+	player_b.bus = BGM_BUS
+
 	if _user_muted:
 		_kill_fade_tween()
 
@@ -390,7 +394,7 @@ func get_audio_debug_summary() -> String:
 		bus_names.append("%d:%s" % [index, AudioServer.get_bus_name(index)])
 
 	return "\n".join([
-		"BGMDBG-1",
+		"BGMDBG-2",
 		"stage=%s phase=%s(%d)" % [current_stage_id, phase_key, current_phase],
 		"settings level=%d mute=%s db=%.1f" % [
 			settings_level,
