@@ -46,7 +46,7 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 @onready var hero_info_name: Label = $HUD/HeroInfoPanel/Root/Scroll/Margin/VBox/Name
 @onready var hero_info_stats: Label = $HUD/HeroInfoPanel/Root/Scroll/Margin/VBox/Stats
 @onready var hero_info_abilities: Label = $HUD/HeroInfoPanel/Root/Scroll/Margin/VBox/Abilities
-@onready var hero_info_build: Label = $HUD/HeroInfoPanel/Root/Scroll/Margin/VBox/Build
+@onready var hero_info_build: RichTextLabel = $HUD/HeroInfoPanel/Root/Scroll/Margin/VBox/Build
 @onready var hero_info_ai: Label = $HUD/HeroInfoPanel/Root/Scroll/Margin/VBox/AI
 
 @onready var build_label: Label = $HUD/BottomBar/BuildLabel
@@ -971,12 +971,19 @@ func _refresh_hero_info_panel() -> void:
 		if stacks <= 0:
 			continue
 		var augment := HERO_AUGMENTS.get_augment(augment_id)
-		build_lines.append(
-			"%s x%d" % [
-				String(augment.get("name", augment_id)),
-				stacks,
-			]
+		var augment_name := String(augment.get("name", augment_id))
+		var catalog_max := int(augment.get("max_stack", 0))
+		var effective_max := HERO_AUGMENTS.get_effective_max_stack(
+			augment_id,
+			hero_archetype,
+			catalog_max
 		)
+		if effective_max > 0 and stacks >= effective_max:
+			build_lines.append(
+				"[color=#F6C945]%s · MAX[/color]" % augment_name
+			)
+		else:
+			build_lines.append("%s x%d" % [augment_name, stacks])
 	hero_info_build.text = (
 		"아직 선택한 용사 증강 없음"
 		if build_lines.is_empty()
