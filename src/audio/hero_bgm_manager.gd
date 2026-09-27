@@ -427,27 +427,7 @@ func _player_debug_line(label: String, player: AudioStreamPlayer) -> String:
 
 
 func _level_to_db(level: int) -> float:
-	match clampi(level, 1, 10):
-		1:
-			return -54.0
-		2:
-			return -48.0
-		3:
-			return -43.0
-		4:
-			return -38.0
-		5:
-			return -34.0
-		6:
-			return -30.0
-		7:
-			return -27.0
-		8:
-			return -24.0
-		9:
-			return -21.0
-		_:
-			return -18.0
+	return AudioSettings.bgm_level_to_db(level)
 
 
 func _phase_key(phase: int) -> String:

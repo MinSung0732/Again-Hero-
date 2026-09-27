@@ -10,13 +10,11 @@ const DEFAULT_LEVEL := 10
 const MIN_LEVEL := 1
 const MAX_LEVEL := 10
 
-# Level 10 preserves the project's intended mix ceiling.
-# BGM stays behind combat sounds even at maximum.
-# 1~10 각 단계가 체감상 확실히 구분되도록 dB 간격을 크게 둔다.
-# BGM 10은 기존 -18 dB 상한을 유지해서 전투음 뒤에 깔리게 한다.
+# Level 10 matches the unattenuated playback volume (0 dB).
+# Lower levels use deliberately large steps so each slider position is audible.
 const BGM_LEVEL_DB := PackedFloat32Array([
-	-54.0, -48.0, -43.0, -38.0, -34.0,
-	-30.0, -27.0, -24.0, -21.0, -18.0,
+	-54.0, -42.0, -34.0, -27.0, -21.0,
+	-16.0, -12.0, -8.0, -4.0, 0.0,
 ])
 const SFX_LEVEL_DB := PackedFloat32Array([
 	-45.0, -38.0, -32.0, -27.0, -22.0,
@@ -98,7 +96,11 @@ func _ensure_bus(bus_name: StringName) -> void:
 
 
 func get_bgm_volume_db() -> float:
-	var level_index := clampi(bgm_level, MIN_LEVEL, MAX_LEVEL) - MIN_LEVEL
+	return bgm_level_to_db(bgm_level)
+
+
+func bgm_level_to_db(level: int) -> float:
+	var level_index := clampi(level, MIN_LEVEL, MAX_LEVEL) - MIN_LEVEL
 	level_index = mini(level_index, BGM_LEVEL_DB.size() - 1)
 	return BGM_LEVEL_DB[level_index]
 

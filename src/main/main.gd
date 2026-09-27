@@ -237,6 +237,7 @@ func _ready() -> void:
 	var snapshot: Dictionary = battle.get_snapshot()
 	_apply_stage_snapshot(snapshot)
 	hero_bgm_manager.start_stage(String(snapshot.get("stage_id", "")))
+	_force_apply_bgm_players(AudioSettings.bgm_level, AudioSettings.bgm_muted)
 
 	_on_stats_changed(
 		int(snapshot.get("hero_hp", 0)),
@@ -561,26 +562,7 @@ func _on_settings_bgm_level_changed(value: float) -> void:
 
 
 func _force_apply_bgm_players(level: int, muted: bool) -> void:
-	var target_db := -18.0
-	match clampi(level, 1, 10):
-		1:
-			target_db = -54.0
-		2:
-			target_db = -48.0
-		3:
-			target_db = -43.0
-		4:
-			target_db = -38.0
-		5:
-			target_db = -34.0
-		6:
-			target_db = -30.0
-		7:
-			target_db = -27.0
-		8:
-			target_db = -24.0
-		9:
-			target_db = -21.0
+	var target_db := AudioSettings.bgm_level_to_db(level)
 
 	for player in [bgm_player_a, bgm_player_b]:
 		if not is_instance_valid(player):
