@@ -37,7 +37,7 @@ func _ready() -> void:
 
 func set_bgm_level(value: int) -> void:
 	bgm_level = clampi(value, MIN_LEVEL, MAX_LEVEL)
-	_apply_bus(BGM_BUS, bgm_level, bgm_muted, BGM_LEVEL_DB)
+	_apply_bgm_bus_state()
 	_save_and_emit()
 
 
@@ -49,7 +49,7 @@ func set_sfx_level(value: int) -> void:
 
 func set_bgm_muted(value: bool) -> void:
 	bgm_muted = value
-	_apply_bus(BGM_BUS, bgm_level, bgm_muted, BGM_LEVEL_DB)
+	_apply_bgm_bus_state()
 	_save_and_emit()
 
 
@@ -60,7 +60,7 @@ func set_sfx_muted(value: bool) -> void:
 
 
 func apply_settings() -> void:
-	_apply_bus(BGM_BUS, bgm_level, bgm_muted, BGM_LEVEL_DB)
+	_apply_bgm_bus_state()
 	_apply_bus(SFX_BUS, sfx_level, sfx_muted, SFX_LEVEL_DB)
 
 
@@ -95,6 +95,23 @@ func _ensure_bus(bus_name: StringName) -> void:
 	var bus_index := AudioServer.bus_count
 	AudioServer.add_bus(bus_index)
 	AudioServer.set_bus_name(bus_index, bus_name)
+
+
+func get_bgm_volume_db() -> float:
+	var level_index := clampi(bgm_level, MIN_LEVEL, MAX_LEVEL) - MIN_LEVEL
+	level_index = mini(level_index, BGM_LEVEL_DB.size() - 1)
+	return BGM_LEVEL_DB[level_index]
+
+
+func _apply_bgm_bus_state() -> void:
+	var bus_index := AudioServer.get_bus_index(BGM_BUS)
+	if bus_index < 0:
+		return
+
+	# HeroBGMManager applies the user level directly to its players so
+	# crossfades and mute cannot be bypassed by a missing/misrouted bus.
+	AudioServer.set_bus_volume_db(bus_index, 0.0)
+	AudioServer.set_bus_mute(bus_index, bgm_muted)
 
 
 func _apply_bus(
