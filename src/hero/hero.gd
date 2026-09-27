@@ -12208,6 +12208,16 @@ func _draw() -> void:
 		draw_circle(Vector2(49, -17), 8.0, Color(0.95, 0.86, 0.32))
 
 	var bar_width := 92.0
+	var resource_bar_y := -79.0
+	var hp_bar_y := -64.0
+	var shield_bar_y := -49.0
+	if hero_archetype == "summoner_gatekeeper":
+		# Stage 8 uses a feet/root anchor. Its body is taller above the node,
+		# so the shared -64 HP bar crosses the torso. Lift both summon slots
+		# and HP bar together while keeping their original 15px spacing.
+		resource_bar_y = -128.0
+		hp_bar_y = -113.0
+		shield_bar_y = -98.0
 	if hero_archetype == "pistol_gunner":
 		var gap := 2.0
 		var cell_width := (bar_width - gap * float(gunner_magazine_size - 1)) / float(gunner_magazine_size)
@@ -12218,9 +12228,9 @@ func _draw() -> void:
 			displayed_cells = clampi(int(floor(reload_progress * float(gunner_magazine_size))), 0, gunner_magazine_size)
 		for index in range(gunner_magazine_size):
 			var x := -bar_width / 2.0 + float(index) * (cell_width + gap)
-			draw_rect(Rect2(x, -79.0, cell_width, 8.0), Color(0.12, 0.12, 0.14), true)
+			draw_rect(Rect2(x, resource_bar_y, cell_width, 8.0), Color(0.12, 0.12, 0.14), true)
 			if index < displayed_cells:
-				draw_rect(Rect2(x, -79.0, cell_width, 8.0), Color(1.0, 0.77, 0.16), true)
+				draw_rect(Rect2(x, resource_bar_y, cell_width, 8.0), Color(1.0, 0.77, 0.16), true)
 	elif hero_archetype == "summoner_gatekeeper":
 		var slot_count := _get_summoner_slot_capacity()
 		var active_summons := _get_active_summon_count()
@@ -12231,19 +12241,19 @@ func _draw() -> void:
 		for index in range(slot_count):
 			var x := -bar_width / 2.0 + float(index) * (cell_width + gap)
 			draw_rect(
-				Rect2(x, -79.0, cell_width, 8.0),
+				Rect2(x, resource_bar_y, cell_width, 8.0),
 				Color(0.12, 0.12, 0.14),
 				true
 			)
 			if index < active_summons:
 				draw_rect(
-					Rect2(x, -79.0, cell_width, 8.0),
+					Rect2(x, resource_bar_y, cell_width, 8.0),
 					Color(0.55, 0.40, 0.95),
 					true
 				)
 	elif hero_archetype == "alchemist_chemical":
 		var gas_ratio := clampf(alchemist_gas / maxf(alchemist_gas_max, 1.0), 0.0, 1.0)
-		draw_rect(Rect2(-bar_width / 2.0, -79.0, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
+		draw_rect(Rect2(-bar_width / 2.0, resource_bar_y, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
 		draw_rect(
 			Rect2(-bar_width / 2.0, -79.0, bar_width * gas_ratio, 8.0),
 			Color(0.68, 0.28, 0.92),
@@ -12260,14 +12270,14 @@ func _draw() -> void:
 			1.0
 		)
 		draw_rect(
-			Rect2(-bar_width / 2.0, -79.0, bar_width, 8.0),
+			Rect2(-bar_width / 2.0, resource_bar_y, bar_width, 8.0),
 			Color(0.12, 0.12, 0.14),
 			true
 		)
 		draw_rect(
 			Rect2(
 				-bar_width / 2.0,
-				-79.0,
+				resource_bar_y,
 				bar_width * madness_ratio,
 				8.0
 			),
@@ -12277,19 +12287,19 @@ func _draw() -> void:
 	else:
 		var ultimate_max := maxf(float(ultimate_config.get("charge_max", 100.0)), 1.0)
 		var ultimate_ratio := clampf(ultimate_charge / ultimate_max, 0.0, 1.0)
-		draw_rect(Rect2(-bar_width / 2.0, -79.0, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
-		draw_rect(Rect2(-bar_width / 2.0, -79.0, bar_width * ultimate_ratio, 8.0), Color(1.0, 0.77, 0.16), true)
+		draw_rect(Rect2(-bar_width / 2.0, resource_bar_y, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
+		draw_rect(Rect2(-bar_width / 2.0, resource_bar_y, bar_width * ultimate_ratio, 8.0), Color(1.0, 0.77, 0.16), true)
 
 	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
 	draw_rect(
-		Rect2(-bar_width / 2.0, -64.0, bar_width, 10.0),
+		Rect2(-bar_width / 2.0, hp_bar_y, bar_width, 10.0),
 		Color(0.12, 0.12, 0.14),
 		true
 	)
 	draw_rect(
 		Rect2(
 			-bar_width / 2.0,
-			-64.0,
+			hp_bar_y,
 			bar_width * hp_ratio,
 			10.0
 		),
@@ -12304,14 +12314,14 @@ func _draw() -> void:
 			1.0
 		)
 		draw_rect(
-			Rect2(-bar_width / 2.0, -49.0, bar_width, 8.0),
+			Rect2(-bar_width / 2.0, shield_bar_y, bar_width, 8.0),
 			Color(0.10, 0.12, 0.18),
 			true
 		)
 		draw_rect(
 			Rect2(
 				-bar_width / 2.0,
-				-49.0,
+				shield_bar_y,
 				bar_width * shield_ratio,
 				8.0
 			),
