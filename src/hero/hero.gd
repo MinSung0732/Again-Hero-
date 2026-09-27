@@ -43,6 +43,10 @@ const STAGE4_FRAME_DIR := "res://assets/art/heroes/stage4_gunner/frames"
 const STAGE5_FRAME_DIR := "res://assets/art/heroes/stage5_archmage/frames"
 const STAGE6_FRAME_DIR := "res://assets/art/heroes/stage6_berserker/frames"
 const STAGE7_FRAME_DIR := "res://assets/art/heroes/stage7_alchemist/frames"
+const STAGE8_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames"
+const SUMMONER_GATEKEEPER_SCENE := preload("res://src/hero/SummonerGatekeeper.tscn")
+const SUMMONER_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/summoner_basic_attack_pixabay.mp3"
+const SUMMONER_GATEKEEPER_POOL_HEADROOM := 4
 const ALCHEMIST_VIAL_SCENE := preload("res://src/hero/AlchemistVial.tscn")
 const ALCHEMIST_POISON_POOL_SCENE := preload("res://src/hero/AlchemistPoisonPool.tscn")
 const ALCHEMY_MATERIAL_SCENE := preload("res://src/hero/AlchemyMaterial.tscn")
@@ -266,6 +270,16 @@ var alchemist_poison_trail_has_position: bool = false
 var alchemist_equivalent_exchange_active: bool = false
 var alchemist_equivalent_exchange_paid_hp: int = 0
 var alchemist_equivalent_exchange_damage_reduction_timer: float = 0.0
+
+var summoner_config: Dictionary = {}
+var summoner_gatekeeper_config: Dictionary = {}
+var summoner_slot_base: int = 5
+var summoner_slot_bonus: int = 0
+var summoner_gatekeeper_pool: Array[Node2D] = []
+var summoner_gatekeeper_cooldown: float = 0.0
+var summoner_runtime_ready: bool = false
+var summoner_basic_effect: AnimatedSprite2D = null
+var summoner_basic_audio: AudioStreamPlayer = null
 
 var ultimate_config: Dictionary = {}
 var ultimate_charge: float = 0.0
@@ -586,6 +600,32 @@ func configure_profile(profile: Dictionary) -> void:
 	alchemist_equivalent_exchange_active = false
 	alchemist_equivalent_exchange_paid_hp = 0
 	alchemist_equivalent_exchange_damage_reduction_timer = 0.0
+
+	var profile_summoner = profile.get("summoner", {})
+	summoner_config = (
+		profile_summoner.duplicate(true)
+		if typeof(profile_summoner) == TYPE_DICTIONARY
+		else {}
+	)
+	var raw_gatekeeper = summoner_config.get("gatekeeper", {})
+	summoner_gatekeeper_config = (
+		raw_gatekeeper.duplicate(true)
+		if typeof(raw_gatekeeper) == TYPE_DICTIONARY
+		else {}
+	)
+	summoner_slot_base = maxi(
+		int(summoner_config.get("base_slot_count", 5)),
+		1
+	)
+	summoner_slot_bonus = 0
+	summoner_gatekeeper_pool.clear()
+	summoner_gatekeeper_cooldown = maxf(
+		float(summoner_gatekeeper_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
+	summoner_runtime_ready = false
+	summoner_basic_effect = null
+	summoner_basic_audio = null
 
 	var profile_gunner = profile.get("gunner", {})
 	gunner_config = (
@@ -915,6 +955,10 @@ func _physics_process(delta: float) -> void:
 		_physics_process_alchemist(delta)
 		return
 
+	if hero_archetype == "summoner_gatekeeper":
+		_physics_process_summoner(delta)
+		return
+
 	ai_memory_clock += delta
 	_prune_offensive_memory()
 	_prune_status_memory()
@@ -982,6 +1026,238 @@ func _physics_process(delta: float) -> void:
 		_fire_projectile(target)
 
 	_update_stage1_pose_visual(delta)
+
+
+
+func _get_summoner_slot_capacity() -> int:
+	return maxi(summoner_slot_base + summoner_slot_bonus, 1)
+
+
+func _get_active_summon_count() -> int:
+	var count := 0
+	for summon in summoner_gatekeeper_pool:
+		if is_instance_valid(summon) and bool(summon.get("active")):
+			count += 1
+	return count
+
+
+func _ensure_summoner_runtime() -> void:
+	if summoner_runtime_ready or hero_archetype != "summoner_gatekeeper":
+		return
+	var world_parent := get_parent()
+	if not is_instance_valid(world_parent):
+		return
+
+	var pool_size := _get_summoner_slot_capacity() + SUMMONER_GATEKEEPER_POOL_HEADROOM
+	for _index in range(pool_size):
+		var gatekeeper := SUMMONER_GATEKEEPER_SCENE.instantiate() as Node2D
+		if gatekeeper == null:
+			continue
+		world_parent.add_child(gatekeeper)
+		gatekeeper.connect(
+			"released",
+			Callable(self, "_on_summoner_gatekeeper_released")
+		)
+		summoner_gatekeeper_pool.append(gatekeeper)
+
+	summoner_basic_effect = AnimatedSprite2D.new()
+	var effect_frames := SpriteFrames.new()
+	if effect_frames.has_animation(&"default"):
+		effect_frames.remove_animation(&"default")
+	effect_frames.add_animation(&"cast")
+	effect_frames.set_animation_loop(&"cast", false)
+	effect_frames.set_animation_speed(&"cast", 10.0)
+	var effect_dir := String(
+		summoner_config.get(
+			"basic_effect_dir",
+			"%s/effect2" % STAGE8_FRAME_DIR
+		)
+	)
+	for frame_index in range(1, 3):
+		var texture := _load_stage1_texture(
+			"%s/summon_%02d.png" % [effect_dir, frame_index]
+		)
+		if texture != null:
+			effect_frames.add_frame(&"cast", texture)
+	summoner_basic_effect.sprite_frames = effect_frames
+	summoner_basic_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	summoner_basic_effect.scale = Vector2(0.46, 0.46)
+	summoner_basic_effect.position = Vector2(0.0, -18.0)
+	summoner_basic_effect.z_index = 7
+	summoner_basic_effect.visible = false
+	summoner_basic_effect.animation_finished.connect(
+		Callable(self, "_on_summoner_basic_effect_finished")
+	)
+	add_child(summoner_basic_effect)
+
+	summoner_basic_audio = AudioStreamPlayer.new()
+	summoner_basic_audio.bus = &"SFX"
+	summoner_basic_audio.volume_db = -7.0
+	var audio_path := String(
+		summoner_config.get(
+			"basic_attack_audio_path",
+			SUMMONER_BASIC_ATTACK_AUDIO_PATH
+		)
+	)
+	if ResourceLoader.exists(audio_path):
+		var stream = load(audio_path)
+		if stream is AudioStream:
+			summoner_basic_audio.stream = stream
+	add_child(summoner_basic_audio)
+
+	summoner_runtime_ready = true
+	queue_redraw()
+
+
+func _physics_process_summoner(delta: float) -> void:
+	_ensure_summoner_runtime()
+
+	ai_memory_clock += delta
+	_prune_offensive_memory()
+	_prune_status_memory()
+	ai_observation_timer = maxf(ai_observation_timer - delta, 0.0)
+	if ai_observation_timer <= 0.0:
+		_refresh_ai_observation()
+
+	attack_timer = maxf(attack_timer - delta, 0.0)
+	retarget_timer = maxf(retarget_timer - delta, 0.0)
+	wander_timer = maxf(wander_timer - delta, 0.0)
+	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
+	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
+	summoner_gatekeeper_cooldown = maxf(
+		summoner_gatekeeper_cooldown - delta,
+		0.0
+	)
+	_update_invulnerability(delta)
+
+	if slow_timer > 0.0:
+		slow_timer = maxf(slow_timer - delta, 0.0)
+		if slow_timer <= 0.0:
+			move_multiplier = 1.0
+			queue_redraw()
+
+	if (
+		summoner_gatekeeper_cooldown <= 0.0
+		and _get_active_summon_count() < _get_summoner_slot_capacity()
+	):
+		_try_cast_summoner_gatekeeper()
+
+	_update_heal_item_goal(delta)
+	_update_chest_goal(delta)
+	_update_magnet_item_goal(delta)
+
+	if (
+		not is_instance_valid(target)
+		or target.is_queued_for_deletion()
+		or retarget_timer <= 0.0
+	):
+		target = _find_nearest_monster()
+		retarget_timer = 0.12
+
+	if not is_instance_valid(target):
+		_move_without_monsters()
+		_update_summoner_pose_visual(delta)
+		return
+
+	var distance := global_position.distance_to(target.global_position)
+	var move_direction := _choose_move_direction(target, distance)
+	move_direction = _apply_heal_item_steering(move_direction, delta)
+	move_direction = _apply_chest_steering(move_direction, delta)
+	move_direction = _apply_magnet_item_steering(move_direction, delta)
+	velocity = move_direction * move_speed * move_multiplier
+	move_and_slide()
+	_clamp_to_battlefield()
+
+	if distance <= attack_range and attack_timer <= 0.0:
+		_summoner_basic_attack(target)
+
+	_update_summoner_pose_visual(delta)
+
+
+func _try_cast_summoner_gatekeeper() -> bool:
+	if summoner_gatekeeper_config.is_empty():
+		return false
+	if _get_active_summon_count() >= _get_summoner_slot_capacity():
+		return false
+
+	var summon_to_use: Node2D = null
+	for summon in summoner_gatekeeper_pool:
+		if is_instance_valid(summon) and not bool(summon.get("active")):
+			summon_to_use = summon
+			break
+	if summon_to_use == null:
+		return false
+
+	var runtime_config := summoner_gatekeeper_config.duplicate(true)
+	runtime_config["owner_attack_damage"] = attack_damage
+	summon_to_use.call(
+		"activate",
+		global_position,
+		self,
+		runtime_config
+	)
+	summoner_gatekeeper_cooldown = maxf(
+		float(summoner_gatekeeper_config.get("cooldown", 10.0)),
+		0.0
+	)
+	queue_redraw()
+	return true
+
+
+func _on_summoner_gatekeeper_released(_summon: Node2D) -> void:
+	queue_redraw()
+
+
+func _summoner_basic_attack(current_target: Node2D) -> void:
+	if not is_instance_valid(current_target):
+		return
+	attack_timer = _get_common_attack_interval(attack_cooldown)
+	attack_pose_timer = 0.38
+	_face_attack_direction(
+		current_target.global_position.x - global_position.x
+	)
+	_restart_stage1_animation("attack", 1.0)
+
+	if is_instance_valid(summoner_basic_effect):
+		summoner_basic_effect.flip_h = hero_sprite.flip_h
+		summoner_basic_effect.stop()
+		summoner_basic_effect.frame = 0
+		summoner_basic_effect.visible = true
+		summoner_basic_effect.play(&"cast")
+	if (
+		is_instance_valid(summoner_basic_audio)
+		and summoner_basic_audio.stream != null
+	):
+		summoner_basic_audio.stop()
+		summoner_basic_audio.play()
+
+	# Hitscan: damage is decided immediately; the summon_01~02 frames are
+	# feedback only, keeping combat state easy to make server-authoritative.
+	if current_target.has_method("take_damage"):
+		current_target.call("take_damage", maxi(attack_damage, 1))
+
+
+func _on_summoner_basic_effect_finished() -> void:
+	if is_instance_valid(summoner_basic_effect):
+		summoner_basic_effect.visible = false
+
+
+func _update_summoner_pose_visual(delta: float) -> void:
+	if not hero_sprite.visible or is_dying:
+		return
+	if hit_pose_timer > 0.0 or attack_pose_timer > 0.0:
+		return
+
+	_update_facing_from_horizontal(velocity.x, delta)
+	if velocity.length() > 4.0:
+		var movement_ratio := velocity.length() / maxf(move_speed, 1.0)
+		_play_stage1_animation(
+			"move",
+			clampf(movement_ratio, 0.72, 1.35)
+		)
+	else:
+		_play_stage1_animation("idle", 1.0)
+
 
 
 func _physics_process_alchemist(delta: float) -> void:
@@ -4413,6 +4689,38 @@ func _apply_profile_visual() -> void:
 	hero_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 
+	if hero_archetype == "summoner_gatekeeper":
+		var summoner_dir := (
+			sprite_frame_dir
+			if not sprite_frame_dir.is_empty()
+			else STAGE8_FRAME_DIR
+		)
+		var summoner_frames := SpriteFrames.new()
+		if summoner_frames.has_animation("default"):
+			summoner_frames.remove_animation("default")
+		if not _add_named_sequence_animation(
+			summoner_frames, "idle", summoner_dir, "idle", 4, 6.0, true
+		):
+			return
+		_add_named_sequence_animation(
+			summoner_frames, "move", summoner_dir, "walk", 6, 9.0, true
+		)
+		_add_named_sequence_animation(
+			summoner_frames, "attack", summoner_dir, "atk", 6, 12.0, false
+		)
+		_add_named_sequence_animation(
+			summoner_frames, "hit", summoner_dir, "hit", 3, 12.0, false
+		)
+		_add_named_sequence_animation(
+			summoner_frames, "death", summoner_dir, "dead", 4, 8.0, false
+		)
+		hero_sprite.sprite_frames = summoner_frames
+		hero_sprite.visible = true
+		_apply_normalized_hero_visual_scale()
+		hero_sprite.speed_scale = 1.0
+		hero_sprite.play("idle")
+		return
+
 	if hero_archetype == "alchemist_chemical":
 		var alchemist_dir := (
 			sprite_frame_dir
@@ -7774,6 +8082,17 @@ func get_skill_cooldown_hud() -> Array:
 	var skills: Array = []
 
 	match hero_archetype:
+		"summoner_gatekeeper":
+			_append_skill_cooldown_hud(
+				skills,
+				summoner_gatekeeper_config,
+				summoner_gatekeeper_cooldown,
+				"res://assets/art/heroes/stage8_summoner/frames/effect1/birth_04.png",
+				maxf(
+					float(summoner_gatekeeper_config.get("cooldown", 10.0)),
+					0.0
+				)
+			)
 		"alchemist_chemical":
 			_append_skill_cooldown_hud(
 				skills,
@@ -11878,6 +12197,26 @@ func _draw() -> void:
 			draw_rect(Rect2(x, -79.0, cell_width, 8.0), Color(0.12, 0.12, 0.14), true)
 			if index < displayed_cells:
 				draw_rect(Rect2(x, -79.0, cell_width, 8.0), Color(1.0, 0.77, 0.16), true)
+	elif hero_archetype == "summoner_gatekeeper":
+		var slot_count := _get_summoner_slot_capacity()
+		var active_summons := _get_active_summon_count()
+		var gap := 2.0
+		var cell_width := (
+			bar_width - gap * float(slot_count - 1)
+		) / float(slot_count)
+		for index in range(slot_count):
+			var x := -bar_width / 2.0 + float(index) * (cell_width + gap)
+			draw_rect(
+				Rect2(x, -79.0, cell_width, 8.0),
+				Color(0.12, 0.12, 0.14),
+				true
+			)
+			if index < active_summons:
+				draw_rect(
+					Rect2(x, -79.0, cell_width, 8.0),
+					Color(0.55, 0.40, 0.95),
+					true
+				)
 	elif hero_archetype == "alchemist_chemical":
 		var gas_ratio := clampf(alchemist_gas / maxf(alchemist_gas_max, 1.0), 0.0, 1.0)
 		draw_rect(Rect2(-bar_width / 2.0, -79.0, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
