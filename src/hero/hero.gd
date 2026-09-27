@@ -441,6 +441,17 @@ func configure_profile(profile: Dictionary) -> void:
 	if profile.is_empty():
 		return
 
+	# configure_profile() is the authoritative start of a fresh battle run.
+	# Clear all run-only progression before applying the selected hero profile
+	# so retries can never inherit augments that bypass resource conditions.
+	build_counts.clear()
+	current_exp = 0
+	status_resistances.clear()
+	offensive_memory_events.clear()
+	status_effect_events.clear()
+	ai_observed_context.clear()
+	ai_observed_context_time = 0.0
+
 	hero_id = String(profile.get("id", hero_id))
 	hero_display_name = String(profile.get("display_name", hero_display_name))
 	hero_archetype = String(profile.get("archetype", hero_archetype))
@@ -581,6 +592,7 @@ func configure_profile(profile: Dictionary) -> void:
 		if typeof(raw_philosopher) == TYPE_DICTIONARY
 		else {}
 	)
+	# Philosopher-stone progress is strictly per battle run.
 	alchemist_materials_collected = 0
 	alchemist_philosopher_used = false
 	alchemist_philosopher_channeling = false
