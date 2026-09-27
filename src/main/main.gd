@@ -847,12 +847,12 @@ func _refresh_hero_skill_cooldown_hud() -> void:
 		hero_skill_cooldown_bar.hide()
 		return
 
-	var hero_node = battle.get("hero")
-	if not is_instance_valid(hero_node) or not hero_node.has_method("get_skill_cooldown_hud"):
+	if not battle.has_method("get_snapshot"):
 		hero_skill_cooldown_bar.hide()
 		return
 
-	var raw_skills = hero_node.call("get_skill_cooldown_hud")
+	var snapshot: Dictionary = battle.get_snapshot()
+	var raw_skills = snapshot.get("hero_skill_cooldowns", [])
 	if typeof(raw_skills) != TYPE_ARRAY:
 		hero_skill_cooldown_bar.hide()
 		return
@@ -886,6 +886,9 @@ func _refresh_hero_skill_cooldown_hud() -> void:
 		hero_skill_badges.erase(skill_id)
 
 	hero_skill_cooldown_bar.visible = not seen.is_empty()
+	if hero_skill_cooldown_bar.visible:
+		hero_skill_cooldown_bar.z_index = 120
+		hero_skill_cooldown_bar.move_to_front()
 
 
 func _refresh_hero_info_panel() -> void:

@@ -28,7 +28,18 @@ func _ready() -> void:
 	_ensure_detail_popup()
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
+	set_process(false)
 	queue_redraw()
+
+
+func _process(delta: float) -> void:
+	if cooldown_remaining <= 0.0 or cooldown_total <= 0.001:
+		set_process(false)
+		return
+	cooldown_remaining = maxf(cooldown_remaining - delta, 0.0)
+	queue_redraw()
+	if cooldown_remaining <= 0.0:
+		set_process(false)
 
 
 func configure(data: Dictionary) -> void:
@@ -69,6 +80,7 @@ func update_state(data: Dictionary) -> void:
 	available = bool(data.get("available", true))
 	cooldown_total = maxf(float(data.get("cooldown_total", 0.0)), 0.0)
 	cooldown_remaining = maxf(float(data.get("cooldown_remaining", 0.0)), 0.0)
+	set_process(cooldown_remaining > 0.01 and cooldown_total > 0.001)
 	tooltip_text = ""
 	if is_instance_valid(detail_popup) and detail_popup.visible:
 		detail_label.text = _build_detail_bbcode()

@@ -80,6 +80,7 @@ const HERO_ATTACK_MILESTONE_BONUS := 0.05
 const HERO_ANIMATION_DUPLICATE_RESTART_GUARD_MSEC := 70
 
 static var _archmage_fx_frames_cache: Dictionary = {}
+static var _hit_flash_shader: Shader
 
 @export var max_hp: int = 300
 @export var move_speed: float = 230.0
@@ -390,6 +391,7 @@ var target: Node2D
 var attack_timer: float = 0.0
 var retarget_timer: float = 0.0
 var hit_flash_timer: float = 0.0
+var hit_flash_material: ShaderMaterial
 var level_flash_timer: float = 0.0
 var attack_pose_timer: float = 0.0
 var hit_pose_timer: float = 0.0
@@ -935,6 +937,7 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 
+	_update_hero_hit_flash(delta)
 	_update_combat_reposition(delta)
 
 	if hero_archetype == "rogue_combo":
@@ -981,10 +984,6 @@ func _physics_process(delta: float) -> void:
 	_update_channel_skill(delta)
 	if hero_archetype == "archmage_elementalist":
 		_update_archmage_skill_runtime(delta)
-
-	if hit_flash_timer > 0.0:
-		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
-		queue_redraw()
 
 	if level_flash_timer > 0.0:
 		level_flash_timer = maxf(level_flash_timer - delta, 0.0)
@@ -3764,10 +3763,6 @@ func _physics_process_rogue(delta: float) -> void:
 	)
 	if passive_charge > 0.0 and not rogue_assassination_active:
 		_add_ultimate_charge(passive_charge * delta)
-
-	if hit_flash_timer > 0.0:
-		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
-		queue_redraw()
 
 	if level_flash_timer > 0.0:
 		level_flash_timer = maxf(level_flash_timer - delta, 0.0)
@@ -9375,10 +9370,6 @@ func _physics_process_berserker(delta: float) -> void:
 	_update_berserker_madness(delta)
 	_update_berserker_hp_visual()
 
-	if hit_flash_timer > 0.0:
-		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
-		queue_redraw()
-
 	if level_flash_timer > 0.0:
 		level_flash_timer = maxf(level_flash_timer - delta, 0.0)
 		queue_redraw()
@@ -11001,10 +10992,6 @@ func _physics_process_fighter(delta: float) -> void:
 		_update_fighter_pose_visual(delta)
 		return
 
-	if hit_flash_timer > 0.0:
-		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
-		queue_redraw()
-
 	if level_flash_timer > 0.0:
 		level_flash_timer = maxf(level_flash_timer - delta, 0.0)
 		queue_redraw()
@@ -12133,6 +12120,44 @@ func take_damage(amount: int, source: Node = null) -> bool:
 		_refresh_invulnerability_visual()
 
 	return true
+
+func _ensure_hit_flash_material() -> void:
+	if not is_instance_valid(hero_sprite):
+		return
+	if hit_flash_material != null:
+		return
+	if _hit_flash_shader == null:
+		_hit_flash_shader = Shader.new()
+		_hit_flash_shader.code = """
+shader_type canvas_item;
+uniform float flash_strength : hint_range(0.0, 1.0) = 0.0;
+
+void fragment() {
+	vec4 base = texture(TEXTURE, UV) * COLOR;
+	base.rgb = mix(base.rgb, vec3(1.0), flash_strength);
+	COLOR = base;
+}
+"""
+	hit_flash_material = ShaderMaterial.new()
+	hit_flash_material.shader = _hit_flash_shader
+	hit_flash_material.set_shader_parameter("flash_strength", 0.0)
+	hero_sprite.material = hit_flash_material
+
+
+func _update_hero_hit_flash(delta: float) -> void:
+	if hit_flash_timer > 0.0:
+		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
+		_ensure_hit_flash_material()
+		if hit_flash_material != null:
+			hit_flash_material.set_shader_parameter(
+				"flash_strength",
+				1.0 if hit_flash_timer > 0.0 else 0.0
+			)
+		if hit_flash_timer <= 0.0:
+			queue_redraw()
+	elif hit_flash_material != null:
+		hit_flash_material.set_shader_parameter("flash_strength", 0.0)
+
 
 func _update_invulnerability(delta: float) -> void:
 	if invulnerability_timer <= 0.0:

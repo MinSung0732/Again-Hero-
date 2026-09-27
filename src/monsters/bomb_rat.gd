@@ -11,6 +11,7 @@ const BOMBRAT_EFFECT_TARGET_DIAMETER := 300.0
 
 static var _default_visual_frames_cache: SpriteFrames
 static var _explosion_frames_cache: SpriteFrames
+static var _hit_flash_shader: Shader
 
 const FAR_NAV_DISTANCE := 900.0
 const VISUAL_LOD_DISTANCE := 1400.0
@@ -37,6 +38,7 @@ var current_hp: int
 var hero: Node2D
 var hero_target_refresh_timer: float = 0.0
 var hit_flash_timer: float = 0.0
+var hit_flash_material: ShaderMaterial
 var dying: bool = false
 var self_destructing: bool = false
 var self_destruct_timer: float = 0.0
@@ -50,6 +52,7 @@ var self_destruct_hp_ratio: float = 1.0
 
 func _ready() -> void:
 	add_to_group("monsters")
+	_ensure_hit_flash_material()
 	far_ai_tick_timer = randf_range(0.0, 0.16)
 	current_hp = max_hp
 	exp_reward = hero_kill_exp_reward
@@ -97,9 +100,13 @@ func _physics_process(delta: float) -> void:
 	survival_time += delta
 
 	if hit_flash_timer > 0.0:
-		var previous_hit_flash := hit_flash_timer
 		hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
-		if previous_hit_flash > 0.0 and hit_flash_timer <= 0.0:
+		if hit_flash_material != null:
+			hit_flash_material.set_shader_parameter(
+				"flash_strength",
+				1.0 if hit_flash_timer > 0.0 else 0.0
+			)
+		if hit_flash_timer <= 0.0:
 			queue_redraw()
 
 	if self_destructing:
@@ -145,6 +152,27 @@ func _physics_process(delta: float) -> void:
 	else:
 		_begin_self_destruct()
 
+func _ensure_hit_flash_material() -> void:
+	if hit_flash_material != null:
+		return
+	if _hit_flash_shader == null:
+		_hit_flash_shader = Shader.new()
+		_hit_flash_shader.code = """
+shader_type canvas_item;
+uniform float flash_strength : hint_range(0.0, 1.0) = 0.0;
+
+void fragment() {
+	vec4 base = texture(TEXTURE, UV) * COLOR;
+	base.rgb = mix(base.rgb, vec3(1.0), flash_strength);
+	COLOR = base;
+}
+"""
+	hit_flash_material = ShaderMaterial.new()
+	hit_flash_material.shader = _hit_flash_shader
+	hit_flash_material.set_shader_parameter("flash_strength", 0.0)
+	visual.material = hit_flash_material
+
+
 func _update_visual_lod(distance_sq: float) -> void:
 	if dying or self_destructing:
 		return
@@ -186,6 +214,9 @@ func take_damage(amount: int) -> void:
 	var applied_damage := previous_hp - current_hp
 	DAMAGE_NUMBERS.show(self, applied_damage)
 	hit_flash_timer = 0.10
+	_ensure_hit_flash_material()
+	if hit_flash_material != null:
+		hit_flash_material.set_shader_parameter("flash_strength", 1.0)
 
 	if current_hp <= 0:
 		_die_from_hero()

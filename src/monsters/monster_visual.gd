@@ -18,17 +18,20 @@ signal death_animation_finished
 @export var death_fps: float = 10.0
 
 static var _frames_cache: Dictionary = {}
+static var _hit_flash_shader: Shader
 
 var _visual_ready: bool = false
 var _one_shot_locked: bool = false
 var _death_playing: bool = false
 var _desired_locomotion: StringName = &"idle"
 var _flash_timer: float = 0.0
+var _hit_flash_material: ShaderMaterial
 var _lod_suspended: bool = false
 
 func _ready() -> void:
 	animation_finished.connect(_on_animation_finished)
 	_setup_sprite_frames()
+	_ensure_hit_flash_material()
 	set_process(false)
 
 	if _visual_ready:
@@ -39,9 +42,34 @@ func _process(delta: float) -> void:
 		return
 
 	_flash_timer = maxf(_flash_timer - delta, 0.0)
+	if _hit_flash_material != null:
+		_hit_flash_material.set_shader_parameter(
+			"flash_strength",
+			1.0 if _flash_timer > 0.0 else 0.0
+		)
 	if _flash_timer <= 0.0:
-		self_modulate = Color.WHITE
 		set_process(false)
+
+func _ensure_hit_flash_material() -> void:
+	if _hit_flash_material != null:
+		return
+	if _hit_flash_shader == null:
+		_hit_flash_shader = Shader.new()
+		_hit_flash_shader.code = """
+shader_type canvas_item;
+uniform float flash_strength : hint_range(0.0, 1.0) = 0.0;
+
+void fragment() {
+	vec4 base = texture(TEXTURE, UV) * COLOR;
+	base.rgb = mix(base.rgb, vec3(1.0), flash_strength);
+	COLOR = base;
+}
+"""
+	_hit_flash_material = ShaderMaterial.new()
+	_hit_flash_material.shader = _hit_flash_shader
+	_hit_flash_material.set_shader_parameter("flash_strength", 0.0)
+	material = _hit_flash_material
+
 
 func is_visual_ready() -> bool:
 	return _visual_ready
@@ -66,13 +94,14 @@ func play_hit() -> void:
 	if _death_playing or _lod_suspended:
 		return
 
+	_flash_timer = 0.12
+	_ensure_hit_flash_material()
+	if _hit_flash_material != null:
+		_hit_flash_material.set_shader_parameter("flash_strength", 1.0)
+	set_process(true)
+
 	if _visual_ready and sprite_frames.has_animation(&"hit"):
 		_play_one_shot(&"hit")
-		return
-
-	_flash_timer = 0.12
-	self_modulate = Color(1.0, 0.58, 0.58, 1.0)
-	set_process(true)
 
 func play_death() -> void:
 	if _death_playing:
@@ -81,6 +110,9 @@ func play_death() -> void:
 	set_lod_suspended(false)
 	_death_playing = true
 	_one_shot_locked = true
+	_flash_timer = 0.0
+	if _hit_flash_material != null:
+		_hit_flash_material.set_shader_parameter("flash_strength", 0.0)
 	self_modulate = Color.WHITE
 
 	if _visual_ready and sprite_frames.has_animation(&"death"):
