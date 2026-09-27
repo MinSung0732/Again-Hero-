@@ -1088,7 +1088,7 @@ func _ensure_summoner_runtime() -> void:
 	summoner_basic_effect.animation_finished.connect(
 		Callable(self, "_on_summoner_basic_effect_finished")
 	)
-	add_child(summoner_basic_effect)
+	world_parent.add_child(summoner_basic_effect)
 
 	summoner_basic_audio = AudioStreamPlayer.new()
 	summoner_basic_audio.bus = &"SFX"
@@ -1105,7 +1105,11 @@ func _ensure_summoner_runtime() -> void:
 			summoner_basic_audio.stream = stream
 	add_child(summoner_basic_audio)
 
-	summoner_runtime_ready = true
+	summoner_runtime_ready = not summoner_gatekeeper_pool.is_empty()
+	if summoner_runtime_ready:
+		# First summon is available immediately. Defer one frame so all pooled
+		# summon nodes have completed _ready() before activation.
+		call_deferred("_try_cast_summoner_gatekeeper")
 	queue_redraw()
 
 
@@ -1216,10 +1220,14 @@ func _summoner_basic_attack(current_target: Node2D) -> void:
 	_face_attack_direction(
 		current_target.global_position.x - global_position.x
 	)
+	_apply_stage8_sprite_anchor()
 	_restart_stage1_animation("attack", 1.0)
 
 	if is_instance_valid(summoner_basic_effect):
-		summoner_basic_effect.flip_h = hero_sprite.flip_h
+		# effect2 summon_01~02 is impact feedback for this hitscan attack.
+		# Keep it in world space at the monster's feet/root instead of on caster.
+		summoner_basic_effect.global_position = current_target.global_position
+		summoner_basic_effect.flip_h = false
 		summoner_basic_effect.stop()
 		summoner_basic_effect.frame = 0
 		summoner_basic_effect.visible = true
@@ -1249,6 +1257,7 @@ func _update_summoner_pose_visual(delta: float) -> void:
 		return
 
 	_update_facing_from_horizontal(velocity.x, delta)
+	_apply_stage8_sprite_anchor()
 	if velocity.length() > 4.0:
 		var movement_ratio := velocity.length() / maxf(move_speed, 1.0)
 		_play_stage1_animation(
@@ -4717,6 +4726,7 @@ func _apply_profile_visual() -> void:
 		hero_sprite.sprite_frames = summoner_frames
 		hero_sprite.visible = true
 		_apply_normalized_hero_visual_scale()
+		_apply_stage8_sprite_anchor()
 		hero_sprite.speed_scale = 1.0
 		hero_sprite.play("idle")
 		return
@@ -5450,6 +5460,18 @@ func _apply_stage7_sprite_anchor() -> void:
 	hero_sprite.offset = Vector2(
 		-104.0 if hero_sprite.flip_h else 104.0,
 		16.0
+	)
+
+
+func _apply_stage8_sprite_anchor() -> void:
+	if hero_archetype != "summoner_gatekeeper" or not is_instance_valid(hero_sprite):
+		return
+	# Stage 8 frames use a 512x288 cell and the authored body/foot anchor is
+	# (180,257). AnimatedSprite2D centers at (256,144), so compensate by the
+	# center-to-anchor delta. Mirror only X when the hero faces left.
+	hero_sprite.offset = Vector2(
+		-76.0 if hero_sprite.flip_h else 76.0,
+		-113.0
 	)
 
 
