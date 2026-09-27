@@ -66,7 +66,10 @@ func _on_body_entered(body: Node) -> void:
 		return
 	if body == null or body.is_queued_for_deletion():
 		return
-	if not body.is_in_group("hero"):
+	if (
+		not body.is_in_group("hero")
+		and not body.is_in_group("hero_summons")
+	):
 		return
 
 	has_impacted = true
