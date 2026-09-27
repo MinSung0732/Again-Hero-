@@ -68,6 +68,12 @@ func play_dialogue(dialogue: Dictionary, allow_skip: bool) -> void:
 	var portrait_texture := _load_texture(portrait_path)
 	if portrait_texture != null:
 		hero_portrait.texture = portrait_texture
+	var hero_portrait_material := hero_portrait.material as ShaderMaterial
+	if hero_portrait_material != null:
+		hero_portrait_material.set_shader_parameter(
+			"flip_h",
+			1.0 if bool(dialogue.get("hero_portrait_flip_h", false)) else 0.0
+		)
 	demon_name.text = "마왕"
 	hero_name.text = _hero_display_name
 	skip_button.visible = allow_skip

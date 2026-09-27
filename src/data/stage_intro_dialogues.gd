@@ -810,6 +810,7 @@ static func _stage_8() -> Dictionary:
 		"location": "[마왕성 외곽 전선]",
 		"hero_name": "이계의 용사",
 		"hero_portrait_path": "res://assets/art/heroes/portrait/stage8_hero_portrait.png",
+		"hero_portrait_flip_h": true,
 		"lines": [
 			{"speaker": "narration", "text": "[마족들과 정체불명의 이계 생물들이 곳곳에서 충돌하고 있다.]"},
 			{"speaker": "demon", "text": "……이건 뭐지."},

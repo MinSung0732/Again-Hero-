@@ -357,13 +357,25 @@ func _begin_stage_entry(snapshot: Dictionary) -> void:
 	stage_intro_cutscene.call("play_dialogue", dialogue, allow_skip)
 
 
-func _on_stage_intro_finished(_skipped: bool) -> void:
+func _on_stage_intro_finished(skipped: bool) -> void:
 	if not _stage_intro_active:
 		return
 
 	if not _stage_intro_stage_id.is_empty():
 		STAGE_PROGRESS.mark_stage_intro_seen(_stage_intro_stage_id)
 
+	if skipped:
+		# Let the SKIP button release finish on the hidden dialogue layer
+		# before showing the reveal, so the same input cannot jump past it.
+		call_deferred("_begin_hero_reveal_after_dialogue_skip")
+		return
+
+	_begin_hero_reveal(battle.get_snapshot())
+
+
+func _begin_hero_reveal_after_dialogue_skip() -> void:
+	if not _stage_intro_active:
+		return
 	_begin_hero_reveal(battle.get_snapshot())
 
 

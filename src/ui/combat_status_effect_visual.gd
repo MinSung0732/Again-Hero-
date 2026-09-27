@@ -50,8 +50,20 @@ func setup(new_target: Node, new_effect_type: String) -> void:
 
 	match effect_type:
 		"slow":
-			scale = Vector2(0.30, 0.30)
-			position = Vector2(0.0, 18.0)
+			var target_archetype := ""
+			var archetype_value = target.get("hero_archetype") if is_instance_valid(target) else null
+			if archetype_value != null:
+				target_archetype = String(archetype_value)
+			if target_archetype == "summoner_gatekeeper":
+				# Stage 8 uses a feet/root node origin and a much taller body.
+				# Center the slow aura above the feet and enlarge it so the
+				# animation rises around the full silhouette instead of
+				# floating around the wrong point.
+				scale = Vector2(0.42, 0.42)
+				position = Vector2(0.0, -44.0)
+			else:
+				scale = Vector2(0.30, 0.30)
+				position = Vector2(0.0, 18.0)
 		"orc_rage":
 			scale = Vector2(0.34, 0.34)
 			position = Vector2(0.0, -10.0)
