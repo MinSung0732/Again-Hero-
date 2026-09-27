@@ -351,6 +351,88 @@ func _get_play_db() -> float:
 	return _user_volume_db
 
 
+func get_audio_debug_summary() -> String:
+	var settings_level := -1
+	var settings_muted := false
+	var settings_db := PLAY_DB
+	if AudioSettings != null:
+		settings_level = int(AudioSettings.bgm_level)
+		settings_muted = bool(AudioSettings.bgm_muted)
+		if AudioSettings.has_method("get_bgm_volume_db"):
+			settings_db = float(AudioSettings.get_bgm_volume_db())
+
+	var bgm_bus_index := AudioServer.get_bus_index(BGM_BUS)
+	var bgm_bus_line := "BGM bus=MISSING"
+	if bgm_bus_index >= 0:
+		bgm_bus_line = "BGM bus=%d mute=%s db=%.1f" % [
+			bgm_bus_index,
+			str(AudioServer.is_bus_mute(bgm_bus_index)),
+			AudioServer.get_bus_volume_db(bgm_bus_index),
+		]
+
+	var master_index := AudioServer.get_bus_index(&"Master")
+	var master_line := "Master=MISSING"
+	if master_index >= 0:
+		master_line = "Master=%d mute=%s db=%.1f" % [
+			master_index,
+			str(AudioServer.is_bus_mute(master_index)),
+			AudioServer.get_bus_volume_db(master_index),
+		]
+
+	var phase_key := _phase_key(current_phase)
+	var expected_path := ""
+	var stage_data = STAGE_BGM.get(current_stage_id, {})
+	if typeof(stage_data) == TYPE_DICTIONARY:
+		expected_path = String(Dictionary(stage_data).get(phase_key, ""))
+
+	var bus_names: PackedStringArray = []
+	for index in range(AudioServer.bus_count):
+		bus_names.append("%d:%s" % [index, AudioServer.get_bus_name(index)])
+
+	return "\n".join([
+		"BGMDBG-1",
+		"stage=%s phase=%s(%d)" % [current_stage_id, phase_key, current_phase],
+		"settings level=%d mute=%s db=%.1f" % [
+			settings_level,
+			str(settings_muted),
+			settings_db,
+		],
+		"manager mute=%s db=%.1f stopping=%s" % [
+			str(_user_muted),
+			_user_volume_db,
+			str(_stopping),
+		],
+		_player_debug_line("A", player_a),
+		_player_debug_line("B", player_b),
+		bgm_bus_line,
+		master_line,
+		"buses=%s" % ", ".join(bus_names),
+		"expected=%s" % expected_path,
+	])
+
+
+func _player_debug_line(label: String, player: AudioStreamPlayer) -> String:
+	if not is_instance_valid(player):
+		return "%s INVALID" % label
+
+	var active := player == _active_player
+	var stream_name := "none"
+	if player.stream != null:
+		stream_name = player.stream.resource_path
+		if stream_name.is_empty():
+			stream_name = player.stream.get_class()
+
+	return "%s active=%s playing=%s paused=%s db=%.1f bus=%s stream=%s" % [
+		label,
+		str(active),
+		str(player.playing),
+		str(player.stream_paused),
+		player.volume_db,
+		String(player.bus),
+		stream_name,
+	]
+
+
 func _phase_key(phase: int) -> String:
 	match phase:
 		Phase.INTRO:
