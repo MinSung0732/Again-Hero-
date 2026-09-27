@@ -64,6 +64,10 @@ func play_dialogue(dialogue: Dictionary, allow_skip: bool) -> void:
 
 	_hero_display_name = String(dialogue.get("hero_name", "용사"))
 	location_label.text = String(dialogue.get("location", ""))
+	var portrait_path := String(dialogue.get("hero_portrait_path", ""))
+	var portrait_texture := _load_texture(portrait_path)
+	if portrait_texture != null:
+		hero_portrait.texture = portrait_texture
 	demon_name.text = "마왕"
 	hero_name.text = _hero_display_name
 	skip_button.visible = allow_skip
@@ -159,6 +163,13 @@ func _show_current_line() -> void:
 			DEMON_SPEAKER_COLOR
 		)
 		speaker_accent.color = DEMON_ACCENT_COLOR
+	elif speaker == "narration":
+		dialogue_speaker.text = ""
+		dialogue_speaker.add_theme_color_override(
+			"font_color",
+			Color(0.78, 0.80, 0.86, 0.90)
+		)
+		speaker_accent.color = Color(0.42, 0.44, 0.52, 0.55)
 	else:
 		dialogue_speaker.text = _hero_display_name
 		dialogue_speaker.add_theme_color_override(
@@ -171,7 +182,10 @@ func _show_current_line() -> void:
 	# conversation beat instead of repeatedly zooming in and out.
 	if speaker != _current_speaker:
 		_current_speaker = speaker
-		_focus_speaker(speaker == "demon")
+		if speaker == "narration":
+			_focus_narration()
+		else:
+			_focus_speaker(speaker == "demon")
 
 
 func _animate_dialogue_text() -> void:
@@ -265,6 +279,54 @@ func _focus_speaker(demon_is_speaking: bool) -> void:
 	)
 
 
+func _focus_narration() -> void:
+	if _speaker_tween != null and _speaker_tween.is_valid():
+		_speaker_tween.kill()
+
+	demon_portrait.pivot_offset = demon_portrait.size * 0.5
+	hero_portrait.pivot_offset = hero_portrait.size * 0.5
+	_speaker_tween = create_tween()
+	_speaker_tween.set_parallel(true)
+	_speaker_tween.set_trans(Tween.TRANS_QUAD)
+	_speaker_tween.set_ease(Tween.EASE_OUT)
+	_speaker_tween.tween_property(
+		demon_portrait,
+		"scale",
+		INACTIVE_SCALE,
+		SPEAKER_TWEEN_SECONDS
+	)
+	_speaker_tween.tween_property(
+		hero_portrait,
+		"scale",
+		INACTIVE_SCALE,
+		SPEAKER_TWEEN_SECONDS
+	)
+	_speaker_tween.tween_property(
+		demon_portrait,
+		"modulate",
+		INACTIVE_COLOR,
+		SPEAKER_TWEEN_SECONDS
+	)
+	_speaker_tween.tween_property(
+		hero_portrait,
+		"modulate",
+		INACTIVE_COLOR,
+		SPEAKER_TWEEN_SECONDS
+	)
+	_speaker_tween.tween_property(
+		demon_name_plate,
+		"modulate",
+		INACTIVE_NAME_COLOR,
+		SPEAKER_TWEEN_SECONDS
+	)
+	_speaker_tween.tween_property(
+		hero_name_plate,
+		"modulate",
+		INACTIVE_NAME_COLOR,
+		SPEAKER_TWEEN_SECONDS
+	)
+
+
 func _reset_portrait_state() -> void:
 	demon_portrait.scale = Vector2.ONE
 	hero_portrait.scale = Vector2.ONE
@@ -297,3 +359,10 @@ func _finish(skipped: bool) -> void:
 	_intro_tween = null
 	visible = false
 	finished.emit(skipped)
+
+
+func _load_texture(path: String) -> Texture2D:
+	if path.is_empty() or not ResourceLoader.exists(path):
+		return null
+	var resource = load(path)
+	return resource as Texture2D if resource is Texture2D else null
