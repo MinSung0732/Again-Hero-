@@ -15,6 +15,7 @@ script = ExtResource("1")
 shape = SubResource("1")
 
 [node name="Visual" type="AnimatedSprite2D" parent="."]
+z_index = 2
 texture_filter = 1
 
 [node name="AttackAudio" type="AudioStreamPlayer" parent="."]
