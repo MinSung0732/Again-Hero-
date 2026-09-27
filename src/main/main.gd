@@ -90,6 +90,7 @@ const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage
 @onready var settings_sfx_slider: HSlider = $HUD/SettingsOverlay/Panel/Margin/VBox/SFXRow/Slider
 @onready var settings_sfx_value: Label = $HUD/SettingsOverlay/Panel/Margin/VBox/SFXRow/Value
 @onready var settings_sfx_mute: CheckBox = $HUD/SettingsOverlay/Panel/Margin/VBox/SFXMute
+@onready var settings_debug_info: Label = $HUD/SettingsOverlay/Panel/Margin/VBox/DebugInfo
 
 @onready var demon_augment_panel: PanelContainer = $HUD/DemonAugmentPanel
 @onready var demon_augment_title: Label = $HUD/DemonAugmentPanel/Margin/VBox/Title
@@ -124,6 +125,7 @@ var selected_monster_type: String = ""
 var current_demon_candidates: Array = []
 var current_mutation_candidates: Array = []
 var debug_refresh_timer: float = 0.0
+var audio_debug_refresh_timer: float = 0.0
 var battle_loadout_ids: Array = []
 var summon_slot_buttons: Array = []
 var demon_ultimate_charge_ready: bool = false
@@ -309,6 +311,14 @@ func _process(delta: float) -> void:
 		if is_instance_valid(battle) and battle.has_method("get_debug_balance_summary"):
 			debug_balance_label.text = String(battle.call("get_debug_balance_summary"))
 
+	if settings_overlay.visible:
+		audio_debug_refresh_timer -= delta
+		if audio_debug_refresh_timer <= 0.0:
+			audio_debug_refresh_timer = 0.20
+			_refresh_audio_debug_info()
+	else:
+		audio_debug_refresh_timer = 0.0
+
 func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 	subtitle_label.text = "Stage %d · %s · %s" % [
 		int(snapshot.get("stage_number", 1)),
@@ -464,6 +474,7 @@ func _close_pause_menu() -> void:
 
 func _open_settings_overlay() -> void:
 	_sync_audio_settings_ui()
+	_refresh_audio_debug_info()
 	settings_overlay.show()
 	settings_overlay.move_to_front()
 
@@ -481,11 +492,27 @@ func _sync_audio_settings_ui() -> void:
 	settings_sfx_value.text = str(AudioSettings.sfx_level)
 
 
+func _refresh_audio_debug_info() -> void:
+	if not is_instance_valid(settings_debug_info):
+		return
+	if (
+		not is_instance_valid(hero_bgm_manager)
+		or not hero_bgm_manager.has_method("get_audio_debug_summary")
+	):
+		settings_debug_info.text = "BGMDBG-1\nHeroBGMManager 진단 API 없음"
+		return
+
+	settings_debug_info.text = String(
+		hero_bgm_manager.get_audio_debug_summary()
+	)
+
+
 func _on_settings_bgm_level_changed(value: float) -> void:
 	var level := int(round(value))
 	settings_bgm_value.text = str(level)
 	AudioSettings.set_bgm_level(level)
 	hero_bgm_manager.set_user_bgm_level(level)
+	_refresh_audio_debug_info()
 
 
 func _on_settings_sfx_level_changed(value: float) -> void:
@@ -497,6 +524,7 @@ func _on_settings_sfx_level_changed(value: float) -> void:
 func _on_settings_bgm_mute_toggled(enabled: bool) -> void:
 	AudioSettings.set_bgm_muted(enabled)
 	hero_bgm_manager.set_user_bgm_muted(enabled)
+	_refresh_audio_debug_info()
 
 
 func _on_settings_sfx_mute_toggled(enabled: bool) -> void:
