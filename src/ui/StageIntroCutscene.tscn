@@ -13,7 +13,7 @@ code = "shader_type canvas_item;\n\nvoid fragment() {\n\tvec2 centered = UV - ve
 shader = SubResource("Shader_atmosphere")
 
 [sub_resource type="Shader" id="Shader_portrait_blend"]
-code = "shader_type canvas_item;\n\nvoid fragment() {\n\tvec4 tex = texture(TEXTURE, UV) * COLOR;\n\tfloat bottom_fade = 1.0 - smoothstep(0.82, 1.0, UV.y);\n\ttex.a *= mix(1.0, bottom_fade, 0.78);\n\tCOLOR = tex;\n}\n"
+code = "shader_type canvas_item;\n\nvoid fragment() {\n\tvec4 tex = texture(TEXTURE, UV) * COLOR;\n\tfloat bottom_fade = 1.0 - smoothstep(0.72, 1.0, UV.y);\n\ttex.a *= mix(1.0, bottom_fade, 0.88);\n\tCOLOR = tex;\n}\n"
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_portrait_blend"]
 shader = SubResource("Shader_portrait_blend")
@@ -127,10 +127,10 @@ focus_mode = 0
 [node name="DemonPortrait" type="TextureRect" parent="Root"]
 z_index = 4
 layout_mode = 0
-offset_left = -116.0
-offset_top = 222.0
-offset_right = 592.0
-offset_bottom = 1518.0
+offset_left = 18.0
+offset_top = 270.0
+offset_right = 568.0
+offset_bottom = 1438.0
 mouse_filter = 2
 material = SubResource("ShaderMaterial_portrait_blend")
 texture = ExtResource("3_demon")
@@ -141,10 +141,10 @@ texture_filter = 1
 [node name="HeroPortrait" type="TextureRect" parent="Root"]
 z_index = 3
 layout_mode = 0
-offset_left = 496.0
-offset_top = 258.0
-offset_right = 1146.0
-offset_bottom = 1518.0
+offset_left = 512.0
+offset_top = 300.0
+offset_right = 1062.0
+offset_bottom = 1438.0
 mouse_filter = 2
 material = SubResource("ShaderMaterial_portrait_blend")
 texture = ExtResource("4_hero")
@@ -156,7 +156,7 @@ texture_filter = 1
 z_index = 6
 layout_mode = 0
 offset_left = 0.0
-offset_top = 1060.0
+offset_top = 1010.0
 offset_right = 1080.0
 offset_bottom = 1488.0
 mouse_filter = 2

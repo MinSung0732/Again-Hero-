@@ -3,8 +3,8 @@ class_name StageIntroCutscene
 
 signal finished(skipped: bool)
 
-const ACTIVE_SCALE := Vector2(1.055, 1.055)
-const INACTIVE_SCALE := Vector2(0.965, 0.965)
+const ACTIVE_SCALE := Vector2(1.025, 1.025)
+const INACTIVE_SCALE := Vector2(0.955, 0.955)
 const ACTIVE_COLOR := Color(1.0, 1.0, 1.0, 1.0)
 const INACTIVE_COLOR := Color(0.38, 0.40, 0.48, 0.68)
 const ACTIVE_NAME_COLOR := Color(1.0, 1.0, 1.0, 1.0)
@@ -16,10 +16,10 @@ const HERO_ACCENT_COLOR := Color(0.30, 0.64, 1.0, 0.95)
 const SPEAKER_TWEEN_SECONDS := 0.20
 const TEXT_FADE_SECONDS := 0.10
 const INTRO_FADE_SECONDS := 0.24
-const DEMON_ACTIVE_SHIFT := Vector2(20.0, -10.0)
-const DEMON_INACTIVE_SHIFT := Vector2(-14.0, 8.0)
-const HERO_ACTIVE_SHIFT := Vector2(-20.0, -10.0)
-const HERO_INACTIVE_SHIFT := Vector2(14.0, 8.0)
+const DEMON_ACTIVE_SHIFT := Vector2(8.0, -6.0)
+const DEMON_INACTIVE_SHIFT := Vector2(-6.0, 5.0)
+const HERO_ACTIVE_SHIFT := Vector2(-8.0, -6.0)
+const HERO_INACTIVE_SHIFT := Vector2(6.0, 5.0)
 
 @onready var root: Control = $Root
 @onready var location_label: Label = $Root/Location
@@ -84,8 +84,8 @@ func _play_intro_fade() -> void:
 		_intro_tween.kill()
 
 	root.modulate = Color(1.0, 1.0, 1.0, 0.0)
-	demon_portrait.position = _demon_base_position + Vector2(-34.0, 10.0)
-	hero_portrait.position = _hero_base_position + Vector2(34.0, 10.0)
+	demon_portrait.position = _demon_base_position + Vector2(-16.0, 8.0)
+	hero_portrait.position = _hero_base_position + Vector2(16.0, 8.0)
 
 	_intro_tween = create_tween()
 	_intro_tween.set_parallel(true)
