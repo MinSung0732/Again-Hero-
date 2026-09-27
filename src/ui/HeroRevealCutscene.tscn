@@ -1,7 +1,8 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://src/ui/hero_reveal_cutscene.gd" id="1_script"]
 [ext_resource type="Theme" path="res://src/ui/game_theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/diagonal_battle_30_frames/effect_02.png" id="3_static_bg"]
 
 [sub_resource type="Shader" id="Shader_silhouette"]
 code = "shader_type canvas_item;\nuniform float silhouette_strength : hint_range(0.0, 1.0) = 1.0;\n\nvoid fragment() {\n\tvec4 base = texture(TEXTURE, UV) * COLOR;\n\tvec3 shadow = vec3(0.008, 0.006, 0.018);\n\tbase.rgb = mix(base.rgb, shadow, silhouette_strength);\n\tCOLOR = base;\n}\n"
@@ -9,6 +10,12 @@ code = "shader_type canvas_item;\nuniform float silhouette_strength : hint_range
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_silhouette"]
 shader = SubResource("Shader_silhouette")
 shader_parameter/silhouette_strength = 1.0
+
+[sub_resource type="Shader" id="Shader_light_add"]
+code = "shader_type canvas_item;\nrender_mode blend_add;\n\nvoid fragment() {\n\tvec4 tex = texture(TEXTURE, UV) * COLOR;\n\tCOLOR = tex;\n}\n"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_light_add"]
+shader = SubResource("Shader_light_add")
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_title"]
 bg_color = Color(0.015, 0.018, 0.038, 0.80)
@@ -56,7 +63,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.004, 0.005, 0.012, 1)
 
-[node name="EffectFrame" type="TextureRect" parent="Root"]
+[node name="StaticBackground" type="TextureRect" parent="Root"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -64,9 +71,35 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+texture = ExtResource("3_static_bg")
 expand_mode = 1
 stretch_mode = 6
-texture_filter = 1
+texture_filter = 2
+
+[node name="StaticDim" type="ColorRect" parent="Root"]
+z_index = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.01, 0.008, 0.016, 0.28)
+
+[node name="EffectFrame" type="TextureRect" parent="Root"]
+z_index = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+material = SubResource("ShaderMaterial_light_add")
+expand_mode = 1
+stretch_mode = 6
+texture_filter = 2
 
 [node name="HeroPortrait" type="TextureRect" parent="Root"]
 z_index = 5

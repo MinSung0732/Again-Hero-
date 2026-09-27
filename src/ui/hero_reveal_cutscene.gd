@@ -4,7 +4,7 @@ class_name HeroRevealCutscene
 signal bgm_start_requested(stage_id: String)
 signal finished
 
-const EFFECT_DIR := "res://assets/art/UI/diagonal_battle_30_frames"
+const EFFECT_DIR := "res://assets/art/UI/talk_light_only_30_frames"
 const LOADING_DIR := "res://assets/art/UI/loading/loadingframes"
 const EFFECT_FRAME_COUNT := 30
 const LOADING_FRAME_COUNT := 8
@@ -61,6 +61,11 @@ func play_reveal(data: Dictionary) -> void:
 	_active = true
 	visible = true
 	root.modulate = Color.WHITE
+	effect_frame.texture = (
+		_effect_frames[0]
+		if not _effect_frames.is_empty()
+		else null
+	)
 	effect_frame.visible = true
 	hero_portrait.visible = true
 	hero_portrait.scale = Vector2(0.94, 0.94)
