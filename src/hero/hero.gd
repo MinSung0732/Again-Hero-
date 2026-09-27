@@ -1181,6 +1181,8 @@ func _physics_process_summoner(delta: float) -> void:
 func _try_cast_summoner_gatekeeper() -> bool:
 	if summoner_gatekeeper_config.is_empty():
 		return false
+	if summoner_gatekeeper_cooldown > 0.0:
+		return false
 	if _get_active_summon_count() >= _get_summoner_slot_capacity():
 		return false
 
