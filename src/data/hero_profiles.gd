@@ -741,7 +741,7 @@ const PROFILES = {
 			"alchemist_compressed_gas",
 			"alchemist_quick_preparation",
 		],
-	},,
+	},
 	"summoner_hero": {
 		"id": "summoner_hero",
 		"display_name": "소환의 용사",
