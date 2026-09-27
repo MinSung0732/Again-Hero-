@@ -10,15 +10,17 @@ const DEFAULT_LEVEL := 8
 const MIN_LEVEL := 1
 const MAX_LEVEL := 10
 
-# BGM is deliberately mixed behind combat SFX. Level 10 is still attenuated.
-# SFX keeps 0 dB at level 10 so combat feedback remains dominant.
-const BGM_LEVEL_DB := [
-	-44.0, -38.0, -33.0, -29.0, -25.0,
-	-22.0, -19.0, -16.0, -14.0, -12.0,
-]
+# SFX is the mix reference. BGM is kept roughly 30% lower in amplitude
+# (about -3.1 dB) at matching slider levels so music never masks combat cues.
+# The SFX curve is also slightly lifted through the normal play range because
+# several source clips are mastered much quieter than the stage music.
 const SFX_LEVEL_DB := [
-	-45.0, -38.0, -32.0, -27.0, -22.0,
-	-18.0, -14.0, -10.0, -5.0, 0.0,
+	-42.0, -35.0, -29.0, -24.0, -19.0,
+	-15.0, -11.0, -7.0, -3.0, 0.0,
+]
+const BGM_LEVEL_DB := [
+	-45.1, -38.1, -32.1, -27.1, -22.1,
+	-18.1, -14.1, -10.1, -6.1, -3.1,
 ]
 
 var bgm_level: int = DEFAULT_LEVEL

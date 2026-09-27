@@ -1422,7 +1422,9 @@ func _ensure_alchemist_runtime() -> void:
 	if not is_instance_valid(world_parent):
 		return
 
-	for _index in range(8):
+	# Base attack can reach 6 vials with Chemical Support. Keep enough pooled
+	# projectiles for overlapping volleys so bonus vials are never dropped.
+	for _index in range(16):
 		var vial := ALCHEMIST_VIAL_SCENE.instantiate() as Node2D
 		if vial == null:
 			continue
@@ -2918,7 +2920,11 @@ func _update_alchemist_throw_sequence(delta: float) -> void:
 	var direct_target: Node2D = null
 	if alchemist_throw_index == 0 and is_instance_valid(alchemist_direct_chest_target):
 		direct_target = alchemist_direct_chest_target
-	_launch_alchemist_vial(landing_position, direct_target)
+	if not _launch_alchemist_vial(landing_position, direct_target):
+		# Retry on the next physics tick instead of silently losing a Chemical
+		# Support bonus vial when every pooled projectile is still in flight.
+		alchemist_throw_timer = 0.01
+		return
 	if alchemist_throw_index == 0:
 		alchemist_direct_chest_target = null
 	alchemist_throw_index += 1
@@ -2931,7 +2937,7 @@ func _update_alchemist_throw_sequence(delta: float) -> void:
 func _launch_alchemist_vial(
 	landing_position: Vector2,
 	direct_target: Node2D = null
-) -> void:
+) -> bool:
 	for vial in alchemist_vial_pool:
 		if not is_instance_valid(vial):
 			continue
@@ -2945,7 +2951,8 @@ func _launch_alchemist_vial(
 			maxf(float(alchemist_config.get("vial_arc_height", 120.0)), 0.0),
 			direct_target
 		)
-		return
+		return true
+	return false
 
 
 func _on_alchemist_vial_landed(
