@@ -282,10 +282,7 @@ func _cache_stage_streams(stage_data: Dictionary) -> void:
 
 
 func set_user_bgm_level(level: int) -> void:
-	if AudioSettings != null and AudioSettings.has_method("get_bgm_volume_db"):
-		_user_volume_db = float(AudioSettings.get_bgm_volume_db())
-	else:
-		_user_volume_db = PLAY_DB
+	_user_volume_db = _level_to_db(level)
 	_apply_user_audio_state()
 
 
@@ -301,10 +298,7 @@ func refresh_user_audio_settings() -> void:
 func _sync_audio_settings() -> void:
 	if AudioSettings != null:
 		_user_muted = bool(AudioSettings.bgm_muted)
-		if AudioSettings.has_method("get_bgm_volume_db"):
-			_user_volume_db = float(AudioSettings.get_bgm_volume_db())
-		else:
-			_user_volume_db = PLAY_DB
+		_user_volume_db = _level_to_db(int(AudioSettings.bgm_level))
 	_apply_user_audio_state()
 
 
@@ -358,8 +352,7 @@ func get_audio_debug_summary() -> String:
 	if AudioSettings != null:
 		settings_level = int(AudioSettings.bgm_level)
 		settings_muted = bool(AudioSettings.bgm_muted)
-		if AudioSettings.has_method("get_bgm_volume_db"):
-			settings_db = float(AudioSettings.get_bgm_volume_db())
+		settings_db = _level_to_db(settings_level)
 
 	var bgm_bus_index := AudioServer.get_bus_index(BGM_BUS)
 	var bgm_bus_line := "BGM bus=MISSING"
@@ -390,7 +383,7 @@ func get_audio_debug_summary() -> String:
 		bus_names.append("%d:%s" % [index, AudioServer.get_bus_name(index)])
 
 	return "\n".join([
-		"BGMDBG-1",
+		"BGMDBG-3",
 		"stage=%s phase=%s(%d)" % [current_stage_id, phase_key, current_phase],
 		"settings level=%d mute=%s db=%.1f" % [
 			settings_level,
@@ -431,6 +424,30 @@ func _player_debug_line(label: String, player: AudioStreamPlayer) -> String:
 		String(player.bus),
 		stream_name,
 	]
+
+
+func _level_to_db(level: int) -> float:
+	match clampi(level, 1, 10):
+		1:
+			return -54.0
+		2:
+			return -48.0
+		3:
+			return -43.0
+		4:
+			return -38.0
+		5:
+			return -34.0
+		6:
+			return -30.0
+		7:
+			return -27.0
+		8:
+			return -24.0
+		9:
+			return -21.0
+		_:
+			return -18.0
 
 
 func _phase_key(phase: int) -> String:
