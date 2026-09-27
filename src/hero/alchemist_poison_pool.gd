@@ -45,7 +45,14 @@ func _ready() -> void:
 func is_available() -> bool:
 	return not active
 
-func activate(world_position: Vector2, duration: float, radius: float, interval: float, damage: int) -> void:
+func activate(
+	world_position: Vector2,
+	duration: float,
+	radius: float,
+	interval: float,
+	damage: int,
+	visual_scale_multiplier: float = 1.0
+) -> void:
 	global_position = world_position
 	duration_remaining = maxf(duration, 0.1)
 	hit_radius = maxf(radius, 1.0)
@@ -54,6 +61,7 @@ func activate(world_position: Vector2, duration: float, radius: float, interval:
 	tick_damage = maxi(damage, 1)
 	active = true
 	visible = true
+	visual.scale = Vector2(0.79, 0.79) * maxf(visual_scale_multiplier, 0.10)
 	visual.stop()
 	visual.frame = 0
 	visual.play("poison")
