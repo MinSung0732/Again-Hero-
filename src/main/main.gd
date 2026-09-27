@@ -562,7 +562,7 @@ func _on_settings_bgm_level_changed(value: float) -> void:
 
 
 func _force_apply_bgm_players(level: int, muted: bool) -> void:
-	var target_db := AudioSettings.bgm_level_to_db(level)
+	AudioSettings.apply_bgm_level_to_bus(level, muted)
 
 	for player in [bgm_player_a, bgm_player_b]:
 		if not is_instance_valid(player):
@@ -571,7 +571,7 @@ func _force_apply_bgm_players(level: int, muted: bool) -> void:
 		if muted:
 			player.volume_db = -80.0
 		elif player.playing:
-			player.volume_db = target_db
+			player.volume_db = 0.0
 
 
 func _on_settings_sfx_level_changed(value: float) -> void:

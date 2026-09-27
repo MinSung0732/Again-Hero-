@@ -12,14 +12,14 @@ const MAX_LEVEL := 10
 
 # Level 10 matches the unattenuated playback volume (0 dB).
 # Lower levels use deliberately large steps so each slider position is audible.
-const BGM_LEVEL_DB := PackedFloat32Array([
+const BGM_LEVEL_DB := [
 	-54.0, -42.0, -34.0, -27.0, -21.0,
 	-16.0, -12.0, -8.0, -4.0, 0.0,
-])
-const SFX_LEVEL_DB := PackedFloat32Array([
+]
+const SFX_LEVEL_DB := [
 	-45.0, -38.0, -32.0, -27.0, -22.0,
 	-18.0, -14.0, -10.0, -5.0, 0.0,
-])
+]
 
 var bgm_level: int = DEFAULT_LEVEL
 var sfx_level: int = DEFAULT_LEVEL
@@ -106,21 +106,28 @@ func bgm_level_to_db(level: int) -> float:
 
 
 func _apply_bgm_bus_state() -> void:
+	apply_bgm_level_to_bus(bgm_level, bgm_muted)
+
+
+func apply_bgm_level_to_bus(level: int, muted: bool) -> void:
 	var bus_index := AudioServer.get_bus_index(BGM_BUS)
 	if bus_index < 0:
-		return
+		_ensure_bus(BGM_BUS)
+		bus_index = AudioServer.get_bus_index(BGM_BUS)
+		if bus_index < 0:
+			return
 
-	# HeroBGMManager applies the user level directly to its players so
-	# crossfades and mute cannot be bypassed by a missing/misrouted bus.
-	AudioServer.set_bus_volume_db(bus_index, 0.0)
-	AudioServer.set_bus_mute(bus_index, bgm_muted)
+	# The bus owns user volume so crossfade tweens cannot overwrite it.
+	# Players only use 0/-80 dB as their relative crossfade gain.
+	AudioServer.set_bus_volume_db(bus_index, bgm_level_to_db(level))
+	AudioServer.set_bus_mute(bus_index, muted)
 
 
 func _apply_bus(
 	bus_name: StringName,
 	level: int,
 	muted: bool,
-	level_db: PackedFloat32Array
+	level_db: Array
 ) -> void:
 	var bus_index := AudioServer.get_bus_index(bus_name)
 	if bus_index < 0 or level_db.is_empty():

@@ -283,11 +283,13 @@ func _cache_stage_streams(stage_data: Dictionary) -> void:
 
 func set_user_bgm_level(level: int) -> void:
 	_user_volume_db = _level_to_db(level)
+	AudioSettings.apply_bgm_level_to_bus(level, _user_muted)
 	_apply_user_audio_state()
 
 
 func set_user_bgm_muted(muted: bool) -> void:
 	_user_muted = muted
+	AudioSettings.apply_bgm_level_to_bus(AudioSettings.bgm_level, muted)
 	_apply_user_audio_state()
 
 
@@ -299,6 +301,10 @@ func _sync_audio_settings() -> void:
 	if AudioSettings != null:
 		_user_muted = bool(AudioSettings.bgm_muted)
 		_user_volume_db = _level_to_db(int(AudioSettings.bgm_level))
+		AudioSettings.apply_bgm_level_to_bus(
+			int(AudioSettings.bgm_level),
+			_user_muted
+		)
 	_apply_user_audio_state()
 
 
@@ -313,7 +319,7 @@ func _apply_user_audio_state() -> void:
 		if _user_muted:
 			player.volume_db = SILENT_DB
 		elif player == _active_player and player.playing:
-			player.volume_db = _user_volume_db
+			player.volume_db = PLAY_DB
 		elif player != _active_player:
 			player.volume_db = SILENT_DB
 
@@ -338,11 +344,11 @@ func _sync_stream_pause_state() -> void:
 		if _user_muted:
 			player.volume_db = SILENT_DB
 		elif player == _active_player and player.playing:
-			player.volume_db = _user_volume_db
+			player.volume_db = PLAY_DB
 
 
 func _get_play_db() -> float:
-	return _user_volume_db
+	return PLAY_DB
 
 
 func get_audio_debug_summary() -> String:
