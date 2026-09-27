@@ -810,7 +810,10 @@ static func _stage_8() -> Dictionary:
 		"location": "[마왕성 외곽 전선]",
 		"hero_name": "이계의 용사",
 		"hero_portrait_path": "res://assets/art/heroes/portrait/stage8_hero_portrait.png",
-		"hero_portrait_flip_h": true,
+		# 전용 좌향 대화 일러스트가 준비되면 이 경로만 채우면 된다.
+		# 비어 있으면 기존 초상화를 원본 방향 그대로 사용한다.
+		"hero_dialogue_portrait_path": "",
+		"hero_portrait_flip_h": false,
 		"lines": [
 			{"speaker": "narration", "text": "[마족들과 정체불명의 이계 생물들이 곳곳에서 충돌하고 있다.]"},
 			{"speaker": "demon", "text": "……이건 뭐지."},

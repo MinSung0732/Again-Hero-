@@ -64,7 +64,9 @@ func play_dialogue(dialogue: Dictionary, allow_skip: bool) -> void:
 
 	_hero_display_name = String(dialogue.get("hero_name", "용사"))
 	location_label.text = String(dialogue.get("location", ""))
-	var portrait_path := String(dialogue.get("hero_portrait_path", ""))
+	var portrait_path := String(dialogue.get("hero_dialogue_portrait_path", ""))
+	if portrait_path.is_empty():
+		portrait_path = String(dialogue.get("hero_portrait_path", ""))
 	var portrait_texture := _load_texture(portrait_path)
 	if portrait_texture != null:
 		hero_portrait.texture = portrait_texture
