@@ -30,6 +30,7 @@ var sfx_muted: bool = false
 
 
 func _ready() -> void:
+	_ensure_audio_buses()
 	load_settings()
 	apply_settings()
 
@@ -48,19 +49,19 @@ func set_sfx_level(value: int) -> void:
 
 func set_bgm_muted(value: bool) -> void:
 	bgm_muted = value
-	_apply_bus(BGM_BUS, bgm_level, bgm_muted, BGM_MIN_DB, BGM_MAX_DB)
+	_apply_bus(BGM_BUS, bgm_level, bgm_muted, BGM_LEVEL_DB)
 	_save_and_emit()
 
 
 func set_sfx_muted(value: bool) -> void:
 	sfx_muted = value
-	_apply_bus(SFX_BUS, sfx_level, sfx_muted, SFX_MIN_DB, SFX_MAX_DB)
+	_apply_bus(SFX_BUS, sfx_level, sfx_muted, SFX_LEVEL_DB)
 	_save_and_emit()
 
 
 func apply_settings() -> void:
-	_apply_bus(BGM_BUS, bgm_level, bgm_muted, BGM_MIN_DB, BGM_MAX_DB)
-	_apply_bus(SFX_BUS, sfx_level, sfx_muted, SFX_MIN_DB, SFX_MAX_DB)
+	_apply_bus(BGM_BUS, bgm_level, bgm_muted, BGM_LEVEL_DB)
+	_apply_bus(SFX_BUS, sfx_level, sfx_muted, SFX_LEVEL_DB)
 
 
 func load_settings() -> void:
@@ -80,6 +81,20 @@ func load_settings() -> void:
 	)
 	bgm_muted = bool(config.get_value("audio", "bgm_muted", false))
 	sfx_muted = bool(config.get_value("audio", "sfx_muted", false))
+
+
+func _ensure_audio_buses() -> void:
+	_ensure_bus(BGM_BUS)
+	_ensure_bus(SFX_BUS)
+
+
+func _ensure_bus(bus_name: StringName) -> void:
+	if AudioServer.get_bus_index(bus_name) >= 0:
+		return
+
+	var bus_index := AudioServer.bus_count
+	AudioServer.add_bus(bus_index)
+	AudioServer.set_bus_name(bus_index, bus_name)
 
 
 func _apply_bus(
