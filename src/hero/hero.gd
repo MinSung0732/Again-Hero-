@@ -5473,7 +5473,7 @@ func _apply_stage8_sprite_anchor() -> void:
 	# center-to-anchor delta. Mirror only X when the hero faces left.
 	hero_sprite.offset = Vector2(
 		-76.0 if hero_sprite.flip_h else 76.0,
-		-113.0
+		-84.0
 	)
 
 
