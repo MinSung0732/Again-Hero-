@@ -821,17 +821,17 @@ text = "메뉴가 열린 동안 전투와 타이머가 정지합니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="SettingsButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 100)
-layout_mode = 2
-theme_override_font_sizes/font_size = 34
-text = "설정"
-
 [node name="ResumeButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 124)
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
 text = "계속하기"
+
+[node name="SettingsButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+text = "설정"
 
 [node name="RestartButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 115)
