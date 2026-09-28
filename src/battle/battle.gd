@@ -449,6 +449,22 @@ func _process(delta: float) -> void:
 			command_emit_timer = 0.10
 			command_changed.emit(command_power, max_command)
 
+func _configure_stage1_depth_actor(actor: Node2D, visual_node_name: String) -> void:
+	if current_stage_id != "stage_1" or not is_instance_valid(actor):
+		return
+
+	# Layer 3 is reserved for Stage 1 solid decor footprints.
+	if actor is CollisionObject2D:
+		(actor as CollisionObject2D).collision_mask |= (1 << 2)
+
+	# Battle.y_sort_enabled compares direct children at the same Z. Normalize
+	# only the main body visual; skill/projectile FX keep their own Z layers.
+	actor.z_index = 0
+	var visual := actor.get_node_or_null(visual_node_name) as CanvasItem
+	if is_instance_valid(visual):
+		visual.z_index = 0
+
+
 func _start_battle() -> void:
 	battle_over = false
 	active_heal_items.clear()
@@ -535,6 +551,9 @@ func _start_battle() -> void:
 		float(current_stage_data.get("map_width", int(DEFAULT_MAP_SIZE.x))),
 		float(current_stage_data.get("map_height", int(DEFAULT_MAP_SIZE.y)))
 	)
+	# Stage 1 uses native Y-sort for actors and tall props. Other stages keep
+	# their existing fixed draw ordering until their maps are authored.
+	y_sort_enabled = current_stage_id == "stage_1"
 	var stage1_battlefield := get_node_or_null("Stage1Battlefield")
 	if (
 		is_instance_valid(stage1_battlefield)
@@ -568,6 +587,7 @@ func _start_battle() -> void:
 	if hero.has_method("configure_battlefield"):
 		hero.call("configure_battlefield", current_map_size)
 	hero.set("level", int(current_stage_data.get("hero_level_start", 1)))
+	_configure_stage1_depth_actor(hero, "HeroSprite")
 
 	add_child(hero)
 	hero.position = current_map_size * 0.5
@@ -1272,6 +1292,7 @@ func _spawn_monster(
 		if split_exp_value != null:
 			monster.set("exp_reward", 0)
 
+	_configure_stage1_depth_actor(monster, "Visual")
 	add_child(monster)
 	monster.position = spawn_position
 	monster.set_meta("split_child", split_child)
