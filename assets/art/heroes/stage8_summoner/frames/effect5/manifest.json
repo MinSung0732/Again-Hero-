@@ -1,0 +1,120 @@
+{
+  "source": "stage8_effect2_spritesheet.png",
+  "frame_count": 8,
+  "order": "left-to-right, top-to-bottom",
+  "frame_canvas": [
+    362,
+    400
+  ],
+  "sheet_canvas": [
+    1448,
+    800
+  ],
+  "anchor_xy": [
+    181,
+    390
+  ],
+  "row_crop_top_y": [
+    150,
+    608
+  ],
+  "transform": "original RGBA pixels; fixed 362x400 crop in each row, no scaling or per-frame recentering",
+  "frames": [
+    {
+      "index": 1,
+      "file": "effect_01.png",
+      "row": 0,
+      "column": 0,
+      "source_box_xyxy": [
+        0,
+        150,
+        362,
+        550
+      ]
+    },
+    {
+      "index": 2,
+      "file": "effect_02.png",
+      "row": 0,
+      "column": 1,
+      "source_box_xyxy": [
+        362,
+        150,
+        724,
+        550
+      ]
+    },
+    {
+      "index": 3,
+      "file": "effect_03.png",
+      "row": 0,
+      "column": 2,
+      "source_box_xyxy": [
+        724,
+        150,
+        1086,
+        550
+      ]
+    },
+    {
+      "index": 4,
+      "file": "effect_04.png",
+      "row": 0,
+      "column": 3,
+      "source_box_xyxy": [
+        1086,
+        150,
+        1448,
+        550
+      ]
+    },
+    {
+      "index": 5,
+      "file": "effect_05.png",
+      "row": 1,
+      "column": 0,
+      "source_box_xyxy": [
+        0,
+        608,
+        362,
+        1008
+      ]
+    },
+    {
+      "index": 6,
+      "file": "effect_06.png",
+      "row": 1,
+      "column": 1,
+      "source_box_xyxy": [
+        362,
+        608,
+        724,
+        1008
+      ]
+    },
+    {
+      "index": 7,
+      "file": "effect_07.png",
+      "row": 1,
+      "column": 2,
+      "source_box_xyxy": [
+        724,
+        608,
+        1086,
+        1008
+      ]
+    },
+    {
+      "index": 8,
+      "file": "effect_08.png",
+      "row": 1,
+      "column": 3,
+      "source_box_xyxy": [
+        1086,
+        608,
+        1448,
+        1008
+      ]
+    }
+  ]
+}
