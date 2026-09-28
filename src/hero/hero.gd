@@ -9319,9 +9319,9 @@ func _try_activate_purifier_protection() -> void:
 		float(purifier_protection_config.get("shield_tick_interval", 1.0)),
 		0.05
 	)
-	purifier_protection_cooldown = maxf(
-		float(purifier_protection_config.get("cooldown", 30.0)),
-		0.0
+	purifier_protection_cooldown = (
+		maxf(float(purifier_protection_config.get("cooldown", 30.0)), 0.0)
+		* _get_purifier_skill_cooldown_multiplier()
 	)
 	shield_hp = 0.0
 	shield_max_hp = 0.0
