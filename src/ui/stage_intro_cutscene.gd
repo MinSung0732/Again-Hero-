@@ -64,10 +64,18 @@ var _last_advance_msec: int = -1000000
 
 func _ready() -> void:
 	visible = false
-	# Keep name labels one draw layer above their panels. This avoids portrait/name
-	# draw-order edge cases when the active portrait changes z_index.
-	demon_name.z_index = 1
-	hero_name.z_index = 1
+	# Portraits animate up to z=5. Keep the name plates and their labels on
+	# explicit absolute canvas layers so an active portrait can never cover a
+	# hero name. The previous relative z=1 labels could still end up behind the
+	# portrait depending on the Control hierarchy.
+	demon_name_plate.z_as_relative = false
+	hero_name_plate.z_as_relative = false
+	demon_name_plate.z_index = 8
+	hero_name_plate.z_index = 8
+	demon_name.z_as_relative = false
+	hero_name.z_as_relative = false
+	demon_name.z_index = 9
+	hero_name.z_index = 9
 	root.gui_input.connect(_on_root_gui_input)
 	skip_button.pressed.connect(_on_skip_pressed)
 	root.resized.connect(_on_root_resized)
