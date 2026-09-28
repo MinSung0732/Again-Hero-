@@ -64,6 +64,10 @@ var _last_advance_msec: int = -1000000
 
 func _ready() -> void:
 	visible = false
+	# Keep name labels one draw layer above their panels. This avoids portrait/name
+	# draw-order edge cases when the active portrait changes z_index.
+	demon_name.z_index = 1
+	hero_name.z_index = 1
 	root.gui_input.connect(_on_root_gui_input)
 	skip_button.pressed.connect(_on_skip_pressed)
 	root.resized.connect(_on_root_resized)
@@ -92,6 +96,14 @@ func play_dialogue(dialogue: Dictionary, allow_skip: bool) -> void:
 		)
 	demon_name.text = "마왕"
 	hero_name.text = _hero_display_name
+	demon_name.visible = true
+	hero_name.visible = true
+	# Name-plate panel dimming is handled with self_modulate so the label itself
+	# cannot disappear through inherited panel modulation.
+	demon_name_plate.self_modulate = ACTIVE_NAME_COLOR
+	hero_name_plate.self_modulate = ACTIVE_NAME_COLOR
+	demon_name.modulate = ACTIVE_NAME_COLOR
+	hero_name.modulate = ACTIVE_NAME_COLOR
 	skip_button.visible = allow_skip
 	skip_button.disabled = not allow_skip
 	next_hint.text = "화면을 터치하여 계속  ▶"
@@ -343,16 +355,34 @@ func _focus_speaker(demon_is_speaking: bool) -> void:
 		hero_color,
 		SPEAKER_TWEEN_SECONDS
 	)
+	var demon_name_color := (
+		ACTIVE_NAME_COLOR if demon_is_speaking else INACTIVE_NAME_COLOR
+	)
+	var hero_name_color := (
+		INACTIVE_NAME_COLOR if demon_is_speaking else ACTIVE_NAME_COLOR
+	)
 	_speaker_tween.tween_property(
 		demon_name_plate,
-		"modulate",
-		ACTIVE_NAME_COLOR if demon_is_speaking else INACTIVE_NAME_COLOR,
+		"self_modulate",
+		demon_name_color,
 		SPEAKER_TWEEN_SECONDS
 	)
 	_speaker_tween.tween_property(
 		hero_name_plate,
+		"self_modulate",
+		hero_name_color,
+		SPEAKER_TWEEN_SECONDS
+	)
+	_speaker_tween.tween_property(
+		demon_name,
 		"modulate",
-		INACTIVE_NAME_COLOR if demon_is_speaking else ACTIVE_NAME_COLOR,
+		demon_name_color,
+		SPEAKER_TWEEN_SECONDS
+	)
+	_speaker_tween.tween_property(
+		hero_name,
+		"modulate",
+		hero_name_color,
 		SPEAKER_TWEEN_SECONDS
 	)
 
@@ -393,12 +423,24 @@ func _focus_narration() -> void:
 	)
 	_speaker_tween.tween_property(
 		demon_name_plate,
-		"modulate",
+		"self_modulate",
 		INACTIVE_NAME_COLOR,
 		SPEAKER_TWEEN_SECONDS
 	)
 	_speaker_tween.tween_property(
 		hero_name_plate,
+		"self_modulate",
+		INACTIVE_NAME_COLOR,
+		SPEAKER_TWEEN_SECONDS
+	)
+	_speaker_tween.tween_property(
+		demon_name,
+		"modulate",
+		INACTIVE_NAME_COLOR,
+		SPEAKER_TWEEN_SECONDS
+	)
+	_speaker_tween.tween_property(
+		hero_name,
 		"modulate",
 		INACTIVE_NAME_COLOR,
 		SPEAKER_TWEEN_SECONDS
@@ -412,8 +454,12 @@ func _reset_portrait_state() -> void:
 	hero_portrait.position = _hero_base_position
 	demon_portrait.modulate = ACTIVE_COLOR
 	hero_portrait.modulate = ACTIVE_COLOR
-	demon_name_plate.modulate = ACTIVE_NAME_COLOR
-	hero_name_plate.modulate = ACTIVE_NAME_COLOR
+	demon_name_plate.self_modulate = ACTIVE_NAME_COLOR
+	hero_name_plate.self_modulate = ACTIVE_NAME_COLOR
+	demon_name.modulate = ACTIVE_NAME_COLOR
+	hero_name.modulate = ACTIVE_NAME_COLOR
+	demon_name.visible = true
+	hero_name.visible = true
 	dialogue_text.modulate = ACTIVE_COLOR
 
 
