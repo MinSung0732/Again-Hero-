@@ -306,6 +306,10 @@ var summoner_scout_cast_pending: bool = false
 var summoner_hound_cast_pending: bool = false
 var summoner_watcher_cast_pending: bool = false
 var summoner_open_gate_cast_pending: bool = false
+var summoner_ai_config: Dictionary = {}
+var summoner_ai_personality: String = "balanced"
+var summoner_ai_choice_counts: Dictionary = {}
+var summoner_ai_last_choice: String = ""
 var summoner_runtime_ready: bool = false
 var summoner_basic_effect: AnimatedSprite2D = null
 var summoner_basic_audio: AudioStreamPlayer = null
@@ -649,6 +653,15 @@ func configure_profile(profile: Dictionary) -> void:
 		if typeof(profile_summoner) == TYPE_DICTIONARY
 		else {}
 	)
+	var raw_summoner_ai = summoner_config.get("ai", {})
+	summoner_ai_config = (
+		raw_summoner_ai.duplicate(true)
+		if typeof(raw_summoner_ai) == TYPE_DICTIONARY
+		else {}
+	)
+	summoner_ai_choice_counts.clear()
+	summoner_ai_last_choice = ""
+	summoner_ai_personality = _roll_summoner_ai_personality()
 	var raw_gatekeeper = summoner_config.get("gatekeeper", {})
 	summoner_gatekeeper_config = (
 		raw_gatekeeper.duplicate(true)
@@ -1425,38 +1438,13 @@ func _physics_process_summoner(delta: float) -> void:
 			summoner_watcher_cast_pending = true
 
 	if summoner_cast_lock_timer <= 0.0:
-		var summon_casted := false
-		if summoner_cast_pending and _try_cast_summoner_gatekeeper():
-			summoner_cast_pending = false
-			summon_casted = true
-		elif (
-			_get_active_summon_count() < _get_summoner_slot_capacity()
-			and summoner_scout_cast_pending
-			and _try_cast_summoner_scout()
-		):
-			summoner_scout_cast_pending = false
-			summon_casted = true
-		elif (
-			_get_active_summon_count() < _get_summoner_slot_capacity()
-			and summoner_hound_cast_pending
-			and _try_cast_summoner_hound()
-		):
-			summoner_hound_cast_pending = false
-			summon_casted = true
-		elif (
-			_get_active_summon_count() < _get_summoner_slot_capacity()
-			and summoner_watcher_cast_pending
-			and _try_cast_summoner_watcher()
-		):
-			summoner_watcher_cast_pending = false
-			summon_casted = true
-		elif (
-			summoner_open_gate_cast_pending
-			and _try_cast_summoner_open_gate()
-		):
-			summoner_open_gate_cast_pending = false
-			summon_casted = true
+		var selected_summon := _choose_summoner_ai_cast()
+		var summon_casted := _try_cast_summoner_ai_choice(selected_summon)
 		if summon_casted:
+			summoner_ai_last_choice = selected_summon
+			summoner_ai_choice_counts[selected_summon] = (
+				int(summoner_ai_choice_counts.get(selected_summon, 0)) + 1
+			)
 			summoner_cast_lock_timer = summoner_cast_interval
 
 	_update_heal_item_goal(delta)
@@ -1492,6 +1480,179 @@ func _physics_process_summoner(delta: float) -> void:
 	_update_summoner_pose_visual(delta)
 
 
+func _roll_summoner_ai_personality() -> String:
+	var personalities = summoner_ai_config.get(
+		"personalities",
+		["balanced", "aggressive", "defensive", "swarm", "focus"]
+	)
+	if not personalities is Array or personalities.is_empty():
+		return "balanced"
+	return String(personalities[randi() % personalities.size()])
+
+
+func _count_active_summons(pool: Array[Node2D]) -> int:
+	var count := 0
+	for summon in pool:
+		if is_instance_valid(summon) and bool(summon.get("active")):
+			count += 1
+	return count
+
+
+func _get_summoner_target_hp_ratio() -> float:
+	if not is_instance_valid(target):
+		return 0.0
+	var raw_current = target.get("current_hp")
+	var raw_max = target.get("max_hp")
+	if raw_current == null or raw_max == null:
+		return 0.0
+	var target_max := maxf(float(raw_max), 1.0)
+	return clampf(float(raw_current) / target_max, 0.0, 1.0)
+
+
+func _score_summoner_ai_candidate(skill_id: String, nearby_count: int) -> float:
+	var score := 50.0
+	var hero_hp_ratio := clampf(float(current_hp) / float(maxi(max_hp, 1)), 0.0, 1.0)
+	var target_hp_ratio := _get_summoner_target_hp_ratio()
+	var gatekeepers := _count_active_summons(summoner_gatekeeper_pool)
+	var scouts := _count_active_summons(summoner_scout_pool)
+	var hounds := _count_active_summons(summoner_hound_pool)
+	var watchers := _count_active_summons(summoner_watcher_pool)
+	var same_active := 0
+
+	match skill_id:
+		"gatekeeper":
+			same_active = gatekeepers
+			score += (1.0 - hero_hp_ratio) * 32.0
+			score += minf(float(nearby_count), 10.0) * 1.8
+			score += float(hounds + scouts) * 2.5
+		"scout":
+			same_active = scouts
+			score += minf(float(nearby_count), 12.0) * 2.3
+			score += 8.0 if nearby_count >= 5 else 0.0
+		"hound":
+			same_active = hounds
+			score += 20.0 if is_instance_valid(target) and nearby_count <= 4 else 0.0
+			score += target_hp_ratio * 18.0
+			score -= maxf(float(nearby_count - 6), 0.0) * 2.0
+		"watcher":
+			same_active = watchers
+			score += 22.0 if is_instance_valid(target) else -12.0
+			score += target_hp_ratio * 12.0
+			score += float(hounds + scouts) * 2.0
+		"open_gate":
+			score += minf(float(nearby_count), 14.0) * 3.0
+			score += (1.0 - hero_hp_ratio) * 12.0
+			score += 16.0 if nearby_count >= 8 else 0.0
+			score += 10.0 if _get_active_summon_count() <= 2 else 0.0
+
+	if skill_id != "open_gate":
+		score -= float(same_active) * 11.0
+
+	var past_picks := int(summoner_ai_choice_counts.get(skill_id, 0))
+	score += minf(float(past_picks), 6.0) * 1.8
+	if summoner_ai_last_choice == skill_id:
+		score -= 5.0
+
+	match summoner_ai_personality:
+		"aggressive":
+			if skill_id in ["hound", "scout"]:
+				score += 10.0
+		"defensive":
+			if skill_id == "gatekeeper":
+				score += 14.0
+			elif skill_id == "watcher":
+				score += 5.0
+		"swarm":
+			if skill_id in ["scout", "open_gate"]:
+				score += 12.0
+		"focus":
+			if skill_id in ["watcher", "hound"]:
+				score += 12.0
+		_:
+			pass
+
+	var random_span := maxf(
+		float(summoner_ai_config.get("random_score_span", 8.0)),
+		0.0
+	)
+	score += randf_range(-random_span, random_span)
+	return maxf(score, 1.0)
+
+
+func _choose_summoner_ai_cast() -> String:
+	var candidates: Array[String] = []
+	var shared_slot_available := (
+		_get_active_summon_count() < _get_summoner_slot_capacity()
+	)
+	if shared_slot_available and summoner_cast_pending and summoner_gatekeeper_cooldown <= 0.0:
+		candidates.append("gatekeeper")
+	if shared_slot_available and summoner_scout_cast_pending and summoner_scout_cooldown <= 0.0:
+		candidates.append("scout")
+	if shared_slot_available and summoner_hound_cast_pending and summoner_hound_cooldown <= 0.0:
+		candidates.append("hound")
+	if (
+		shared_slot_available
+		and summoner_watcher_cast_pending
+		and summoner_watcher_cooldown <= 0.0
+		and _get_active_summoner_watcher_count() < _get_summoner_watcher_max_active()
+	):
+		candidates.append("watcher")
+	if (
+		summoner_open_gate_cast_pending
+		and summoner_open_gate_unlocked
+		and summoner_open_gate_cooldown <= 0.0
+		and not is_instance_valid(_get_active_summoner_open_gate())
+	):
+		candidates.append("open_gate")
+	if candidates.is_empty():
+		return ""
+
+	var nearby := _get_monster_nodes_near(
+		global_position,
+		maxf(float(summoner_ai_config.get("observation_radius", 760.0)), 1.0)
+	)
+	var nearby_count := nearby.size()
+	var weights: Array[float] = []
+	var total_weight := 0.0
+	for skill_id in candidates:
+		var score := _score_summoner_ai_candidate(skill_id, nearby_count)
+		var weight := pow(maxf(score - 25.0, 1.0), 1.35)
+		weights.append(weight)
+		total_weight += weight
+
+	var roll := randf() * total_weight
+	for index in range(candidates.size()):
+		roll -= weights[index]
+		if roll <= 0.0:
+			return candidates[index]
+	return candidates[candidates.size() - 1]
+
+
+func _try_cast_summoner_ai_choice(skill_id: String) -> bool:
+	match skill_id:
+		"gatekeeper":
+			if _try_cast_summoner_gatekeeper():
+				summoner_cast_pending = false
+				return true
+		"scout":
+			if _try_cast_summoner_scout():
+				summoner_scout_cast_pending = false
+				return true
+		"hound":
+			if _try_cast_summoner_hound():
+				summoner_hound_cast_pending = false
+				return true
+		"watcher":
+			if _try_cast_summoner_watcher():
+				summoner_watcher_cast_pending = false
+				return true
+		"open_gate":
+			if _try_cast_summoner_open_gate():
+				summoner_open_gate_cast_pending = false
+				return true
+	return false
+
+
 func _get_active_summoner_open_gate() -> Node2D:
 	for open_gate in summoner_open_gate_pool:
 		if is_instance_valid(open_gate) and bool(open_gate.get("active")):
@@ -1504,49 +1665,40 @@ func _apply_summoner_open_gate_tether(move_direction: Vector2) -> Vector2:
 	if not is_instance_valid(open_gate):
 		return move_direction
 
-	var soft_radius := maxf(
-		float(summoner_open_gate_config.get("hero_tether_radius", 460.0)),
+	var preference_radius := maxf(
+		float(summoner_open_gate_config.get("hero_tether_radius", 650.0)),
 		1.0
 	)
-	var hard_radius := maxf(
-		float(summoner_open_gate_config.get("hero_tether_hard_radius", 680.0)),
-		soft_radius + 1.0
+	var influence_radius := maxf(
+		float(summoner_open_gate_config.get("hero_tether_hard_radius", 950.0)),
+		preference_radius + 1.0
 	)
 	var distance := global_position.distance_to(open_gate.global_position)
-	if distance <= soft_radius:
+	if distance <= preference_radius:
 		return move_direction
 
+	# Gate proximity is only a soft tactical preference. It must never behave
+	# like an invisible wall or override a useful combat target.
 	var return_direction := global_position.direction_to(open_gate.global_position)
-	var strength := clampf(
-		(distance - soft_radius) / (hard_radius - soft_radius),
-		0.25,
+	var distance_factor := clampf(
+		(distance - preference_radius) / (influence_radius - preference_radius),
+		0.0,
 		1.0
 	)
+	var max_strength := clampf(
+		float(summoner_open_gate_config.get("hero_tether_max_strength", 0.28)),
+		0.0,
+		0.45
+	)
+	var strength := distance_factor * max_strength
 	var blended := move_direction.lerp(return_direction, strength)
-	return blended.normalized() if blended.length_squared() > 0.001 else return_direction
+	return blended.normalized() if blended.length_squared() > 0.001 else move_direction
 
 
 func _move_summoner_without_monsters_near_open_gate() -> void:
-	var open_gate := _get_active_summoner_open_gate()
-	if not is_instance_valid(open_gate):
-		_move_without_monsters()
-		return
-
-	var soft_radius := maxf(
-		float(summoner_open_gate_config.get("hero_tether_radius", 460.0)),
-		1.0
-	)
-	if global_position.distance_to(open_gate.global_position) <= soft_radius:
-		_move_without_monsters()
-		return
-
-	velocity = (
-		global_position.direction_to(open_gate.global_position)
-		* move_speed
-		* move_multiplier
-	)
-	move_and_slide()
-	_clamp_to_battlefield()
+	# With no combat target, keep the normal wander behaviour. The open gate
+	# influences combat positioning but never cages the hero around the portal.
+	_move_without_monsters()
 
 
 func _update_summoner_full_slot_shield(delta: float) -> void:
