@@ -10,6 +10,9 @@ const CARPET_STEP_Y := 160.0
 const PERIMETER_WALL_SCALE := 0.96
 const PERIMETER_WALL_OVERLAP := 44.0
 const PERIMETER_OUTSET := 58.0
+const TOP_WALL_Y := 62.0
+const TOP_WALL_COLLISION_BOTTOM := 148.0
+const TOP_WALL_COLLISION_HEIGHT := 32.0
 
 const TILE_ROOT := "res://assets/art/UI/tiles"
 const FLOOR_ROOT := TILE_ROOT + "/again_hero_A_48_black_grid"
@@ -278,15 +281,29 @@ func _build_top_wall() -> void:
 		panel_width - PERIMETER_WALL_OVERLAP
 	)
 	var x := panel_width * 0.5 - PERIMETER_WALL_OVERLAP * 0.5
-	var wall_y := -PERIMETER_OUTSET
 
+	# Unlike the side/bottom boundaries, the upper wall is intentionally visible
+	# inside the arena so the battlefield reads as an interior castle hall.
+	# Only a thin strip at the wall base is solid, preserving almost all combat
+	# space while preventing actors from visually walking through the masonry.
 	while x < battlefield_size.x + panel_width * 0.5:
 		_add_background_visual(
 			"wall_large",
-			Vector2(x, wall_y),
+			Vector2(x, TOP_WALL_Y),
 			PERIMETER_WALL_SCALE
 		)
 		x += repeat_step
+
+	_add_collision(
+		Vector2(
+			battlefield_size.x * 0.5,
+			TOP_WALL_COLLISION_BOTTOM
+		),
+		Vector2(
+			battlefield_size.x,
+			TOP_WALL_COLLISION_HEIGHT
+		)
+	)
 
 
 func _build_side_walls() -> void:
@@ -379,42 +396,42 @@ func _build_castle_decor() -> void:
 	# they stay collision-free and hang from the upper perimeter wall.
 	_add_background_visual(
 		"crystal",
-		Vector2(center_x - 1050.0, 82.0),
+		Vector2(center_x - 1050.0, 92.0),
 		0.62,
 		false,
 		2
 	)
 	_add_background_visual(
 		"flag_a",
-		Vector2(center_x - 720.0, 96.0),
+		Vector2(center_x - 720.0, 108.0),
 		0.66,
 		false,
 		2
 	)
 	_add_background_visual(
 		"flag_b",
-		Vector2(center_x - 355.0, 104.0),
+		Vector2(center_x - 355.0, 114.0),
 		0.58,
 		false,
 		2
 	)
 	_add_background_visual(
 		"flag_b",
-		Vector2(center_x + 355.0, 104.0),
+		Vector2(center_x + 355.0, 114.0),
 		0.58,
 		true,
 		2
 	)
 	_add_background_visual(
 		"flag_a",
-		Vector2(center_x + 720.0, 96.0),
+		Vector2(center_x + 720.0, 108.0),
 		0.66,
 		true,
 		2
 	)
 	_add_background_visual(
 		"crystal",
-		Vector2(center_x + 1050.0, 82.0),
+		Vector2(center_x + 1050.0, 92.0),
 		0.62,
 		true,
 		2
