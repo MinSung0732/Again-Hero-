@@ -9145,11 +9145,13 @@ func _ensure_purifier_skill_runtime() -> void:
 		# the animated hero frames so it does not drift a few pixels per frame.
 		purifier_crown_effect.scale = hero_sprite.scale * 0.78
 		# Center the crown on the gameplay/root X, then place it directly above
-		# the head. Layer order is HeroSprite(-2) < Crown(-1) < bars(parent 0).
+		# the head. Demon Castle Y-sort normalizes HeroSprite to z=0 after _ready().
+		# Keep the crown on that same behind-parent layer: HeroSprite is an earlier
+		# child, so Crown draws over the body, while Hero._draw() bars stay on top.
 		purifier_crown_effect.offset = Vector2(0.0, -24.0)
 		purifier_crown_effect.position = Vector2(0.0, -36.0)
 		purifier_crown_effect.show_behind_parent = true
-		purifier_crown_effect.z_index = -1
+		purifier_crown_effect.z_index = 0
 		purifier_crown_effect.visible = false
 		purifier_crown_effect.animation_finished.connect(
 			Callable(self, "_on_purifier_crown_effect_finished")
