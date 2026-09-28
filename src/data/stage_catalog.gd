@@ -1,7 +1,7 @@
 extends RefCounted
 class_name StageCatalog
 
-const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4", "stage_5", "stage_6", "stage_7", "stage_8"]
+const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4", "stage_5", "stage_6", "stage_7", "stage_8", "stage_9"]
 
 const STAGES = {
 	"stage_1": {
@@ -548,6 +548,83 @@ const STAGES = {
 		],
 		"first_clear_reward": 0,
 		"run_reward_multiplier": 2.75,
+		"next_stage_id": "stage_9",
+	},
+	"stage_9": {
+		"id": "stage_9",
+		"number": 9,
+		"display_name": "아홉 번째 침입자",
+		"hero_id": "purifier_hero",
+		"hero_ai_profile_id": "stage_9_purifier",
+		"portrait_path": "res://assets/art/heroes/portrait/stage9_hero_portrait.png",
+		"lobby_description": "온화한 성직자의 얼굴로 마왕과 마왕군 전부를 정화하러 온 정화의 용사.",
+		"hero_level_start": 1,
+		"map_width": 4800,
+		"map_height": 4800,
+		"run_duration_seconds": 600.0,
+		"event_timeline": [
+			{
+				"id": "stage9_elite_01",
+				"at_seconds": 120.0,
+				"type": "elite",
+				"name": "1차 성광 돌연변이",
+				"selection_mode": "team",
+				"mutation_profile_id": "mutation_1",
+				"reinforcement_count": 14,
+				"reinforcement_batch_size": 3,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage9_elite_02",
+				"at_seconds": 240.0,
+				"type": "elite",
+				"name": "2차 정화 돌연변이",
+				"selection_mode": "team",
+				"mutation_profile_id": "mutation_2",
+				"reinforcement_count": 17,
+				"reinforcement_batch_size": 4,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage9_elite_03",
+				"at_seconds": 360.0,
+				"type": "elite",
+				"name": "3차 성역 돌연변이",
+				"selection_mode": "team",
+				"mutation_profile_id": "mutation_2",
+				"reinforcement_count": 20,
+				"reinforcement_batch_size": 4,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage9_miniboss_01",
+				"at_seconds": 480.0,
+				"type": "miniboss",
+				"name": "대돌연변이 성역 파쇄자",
+				"selection_mode": "team",
+				"mutation_profile_id": "greater_mutation",
+				"reinforcement_count": 22,
+				"reinforcement_batch_size": 4,
+				"reinforcement_interval": 0.12,
+			},
+			{
+				"id": "stage9_boss_01",
+				"at_seconds": 540.0,
+				"type": "boss",
+				"name": "정화 침공 대장",
+				"selection_mode": "team_random",
+				"hp_multiplier": 12.0,
+				"damage_multiplier": 3.60,
+				"speed_multiplier": 1.27,
+				"exp_multiplier": 5.2,
+				"visual_scale": 1.70,
+				"reinforcement_count": 26,
+				"reinforcement_batch_size": 4,
+				"reinforcement_interval": 0.12,
+			},
+		],
+		"first_clear_reward": 0,
+		"run_reward_multiplier": 3.00,
 		"next_stage_id": "",
 	},
 }
