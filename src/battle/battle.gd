@@ -535,6 +535,17 @@ func _start_battle() -> void:
 		float(current_stage_data.get("map_width", int(DEFAULT_MAP_SIZE.x))),
 		float(current_stage_data.get("map_height", int(DEFAULT_MAP_SIZE.y)))
 	)
+	var stage1_battlefield := get_node_or_null("Stage1Battlefield")
+	if (
+		is_instance_valid(stage1_battlefield)
+		and stage1_battlefield.has_method("configure")
+	):
+		stage1_battlefield.call(
+			"configure",
+			current_stage_id,
+			current_map_size
+		)
+	queue_redraw()
 	run_time_limit_seconds = maxf(
 		float(current_stage_data.get("run_duration_seconds", 360.0)),
 		60.0
@@ -3604,26 +3615,64 @@ func go_to_next_stage() -> bool:
 	return true
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, current_map_size), Color(0.075, 0.085, 0.105), true)
+	# Stage 1 uses the RPG-style Demon Castle tile field. Other stages keep the
+	# existing debug battlefield until their own map layouts are authored.
+	if current_stage_id != "stage_1":
+		draw_rect(
+			Rect2(Vector2.ZERO, current_map_size),
+			Color(0.075, 0.085, 0.105),
+			true
+		)
 
-	var grid_spacing := 320.0
-	var grid_color := Color(0.105, 0.12, 0.145)
-	var x := grid_spacing
-	while x < current_map_size.x:
-		draw_line(Vector2(x, 0), Vector2(x, current_map_size.y), grid_color, 2.0)
-		x += grid_spacing
+		var grid_spacing := 320.0
+		var grid_color := Color(0.105, 0.12, 0.145)
+		var x := grid_spacing
+		while x < current_map_size.x:
+			draw_line(
+				Vector2(x, 0),
+				Vector2(x, current_map_size.y),
+				grid_color,
+				2.0
+			)
+			x += grid_spacing
 
-	var y := grid_spacing
-	while y < current_map_size.y:
-		draw_line(Vector2(0, y), Vector2(current_map_size.x, y), grid_color, 2.0)
-		y += grid_spacing
+		var y := grid_spacing
+		while y < current_map_size.y:
+			draw_line(
+				Vector2(0, y),
+				Vector2(current_map_size.x, y),
+				grid_color,
+				2.0
+			)
+			y += grid_spacing
 
-	draw_rect(Rect2(Vector2.ZERO, current_map_size), Color(0.34, 0.39, 0.48), false, 8.0)
+		draw_rect(
+			Rect2(Vector2.ZERO, current_map_size),
+			Color(0.34, 0.39, 0.48),
+			false,
+			8.0
+		)
 
-	var center := current_map_size * 0.5
-	draw_circle(center, 92.0, Color(0.1, 0.12, 0.15), false, 3.0)
-	draw_line(center + Vector2(0, -110), center + Vector2(0, 110), Color(0.15, 0.18, 0.22), 2.0)
-	draw_line(center + Vector2(-110, 0), center + Vector2(110, 0), Color(0.15, 0.18, 0.22), 2.0)
+		var center := current_map_size * 0.5
+		draw_circle(
+			center,
+			92.0,
+			Color(0.1, 0.12, 0.15),
+			false,
+			3.0
+		)
+		draw_line(
+			center + Vector2(0, -110),
+			center + Vector2(0, 110),
+			Color(0.15, 0.18, 0.22),
+			2.0
+		)
+		draw_line(
+			center + Vector2(-110, 0),
+			center + Vector2(110, 0),
+			Color(0.15, 0.18, 0.22),
+			2.0
+		)
 
 	if manual_spawn_warning_timer > 0.0 and is_instance_valid(hero):
 		var warning_alpha := clampf(
