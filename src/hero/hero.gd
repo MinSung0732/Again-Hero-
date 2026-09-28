@@ -9990,6 +9990,11 @@ func _apply_augment(augment: Dictionary) -> void:
 
 	if not augment_id.is_empty():
 		build_counts[augment_id] = current_stack + 1
+		if (
+			hero_archetype == "summoner_gatekeeper"
+			and augment_id == "summoner_watcher_network"
+		):
+			_ensure_summoner_pool_capacity()
 
 func _apply_augment_effect(effect: Dictionary) -> void:
 	var op := String(effect.get("op", ""))
