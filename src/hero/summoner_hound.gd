@@ -349,15 +349,14 @@ func _draw() -> void:
 	if not active:
 		return
 	var bar_width := 72.0
-	var bar_center_x := visual_offset.x
-	var duration_bar_y := -94.0
-	var hp_bar_y := -84.0
+	var bar_center_x := 0.0
+	var duration_bar_y := -102.0
+	var hp_bar_y := -92.0
 	var hp_ratio := clampf(float(current_hp) / float(maxi(max_hp, 1)), 0.0, 1.0)
 	var duration_ratio := clampf(duration_remaining / maxf(duration_total, 0.1), 0.0, 1.0)
 
-	# Keep the gauges centered over the visually offset hound rather than the
-	# CharacterBody origin. The hound was enlarged, so the gauges also sit a
-	# little higher to clear the taller sprite.
+	# Keep status gauges centered on the summon body origin. The sprite keeps
+	# its own visual offset, while the bars stay stable across facing changes.
 	draw_rect(Rect2(bar_center_x - bar_width / 2.0, duration_bar_y, bar_width, 5.0), Color(0.10, 0.10, 0.12), true)
 	draw_rect(Rect2(bar_center_x - bar_width / 2.0, duration_bar_y, bar_width * duration_ratio, 5.0), Color(1.0, 1.0, 1.0), true)
 	draw_rect(Rect2(bar_center_x - bar_width / 2.0, hp_bar_y, bar_width, 8.0), Color(0.10, 0.10, 0.12), true)
