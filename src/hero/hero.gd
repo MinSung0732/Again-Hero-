@@ -79,6 +79,8 @@ const APPROACH_DISTANCE_RATIO := 0.86
 const FIELD_MARGIN := 72.0
 const WANDER_REACHED_DISTANCE := 42.0
 const WANDER_MIN_TARGET_DISTANCE := 260.0
+const RANGED_BOUNDARY_SOFT_MARGIN := 360.0
+const RANGED_BOUNDARY_HARD_MARGIN := 155.0
 const OFFENSE_MEMORY_WINDOW := 20.0
 const OFFENSE_MEMORY_MIN_WEIGHT := 0.25
 const STATUS_MEMORY_WINDOW := 20.0
@@ -1212,6 +1214,8 @@ func _physics_process(delta: float) -> void:
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	if hero_archetype == "archmage_elementalist":
 		move_direction = _apply_archmage_boundary_steering(move_direction)
+	else:
+		move_direction = _apply_ranged_boundary_escape(move_direction)
 	velocity = (
 		move_direction
 		* move_speed
@@ -1546,6 +1550,7 @@ func _physics_process_summoner(delta: float) -> void:
 	move_direction = _apply_heal_item_steering(move_direction, delta)
 	move_direction = _apply_chest_steering(move_direction, delta)
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
+	move_direction = _apply_ranged_boundary_escape(move_direction)
 	velocity = move_direction * move_speed * move_multiplier
 	move_and_slide()
 	_clamp_to_battlefield()
@@ -2329,6 +2334,7 @@ func _physics_process_alchemist(delta: float) -> void:
 							material_direction * 0.55
 							+ escape_direction * 1.25
 						).normalized()
+			recovery_direction = _apply_ranged_boundary_escape(recovery_direction)
 			velocity = recovery_direction * alchemist_move_speed * move_multiplier
 			move_and_slide()
 			_clamp_to_battlefield()
@@ -2353,6 +2359,7 @@ func _physics_process_alchemist(delta: float) -> void:
 	move_direction = _apply_heal_item_steering(move_direction, delta)
 	move_direction = _apply_chest_steering(move_direction, delta)
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
+	move_direction = _apply_ranged_boundary_escape(move_direction)
 	velocity = move_direction * alchemist_move_speed * move_multiplier
 	move_and_slide()
 	_clamp_to_battlefield()
@@ -3001,6 +3008,7 @@ func _move_alchemist_philosopher_form(delta: float) -> void:
 		desired = global_position.direction_to(battlefield_size * 0.5)
 	if desired.length_squared() <= 0.01:
 		desired = Vector2.RIGHT
+	desired = _apply_ranged_boundary_escape(desired, 360.0, 155.0)
 
 	var speed := (
 		move_speed
@@ -4141,86 +4149,11 @@ func _update_gunner_pose_visual(delta: float) -> void:
 
 
 func _apply_archmage_boundary_steering(base_direction: Vector2) -> Vector2:
-	var center_direction := global_position.direction_to(battlefield_size * 0.5)
+	return _apply_ranged_boundary_escape(base_direction, 440.0, 165.0)
 
-	var soft_margin := 440.0
-	var hard_margin := 150.0
-	var left_space := global_position.x - FIELD_MARGIN
-	var right_space := battlefield_size.x - FIELD_MARGIN - global_position.x
-	var top_space := global_position.y - FIELD_MARGIN
-	var bottom_space := battlefield_size.y - FIELD_MARGIN - global_position.y
-
-	var inward := Vector2.ZERO
-	if left_space < soft_margin:
-		inward.x += 1.0 - clampf(left_space / soft_margin, 0.0, 1.0)
-	if right_space < soft_margin:
-		inward.x -= 1.0 - clampf(right_space / soft_margin, 0.0, 1.0)
-	if top_space < soft_margin:
-		inward.y += 1.0 - clampf(top_space / soft_margin, 0.0, 1.0)
-	if bottom_space < soft_margin:
-		inward.y -= 1.0 - clampf(bottom_space / soft_margin, 0.0, 1.0)
-
-	var near_horizontal_edge := minf(left_space, right_space) < hard_margin
-	var near_vertical_edge := minf(top_space, bottom_space) < hard_margin
-	if near_horizontal_edge and near_vertical_edge:
-		var corner_escape := center_direction * 2.8
-		if inward.length_squared() > 0.001:
-			corner_escape += inward.normalized() * 2.2
-		if corner_escape.length_squared() > 0.01:
-			return corner_escape.normalized()
-
-	# Do not invent movement while the archmage is comfortably inside the field.
-	# This lets the new combat spacing logic actually stand and cast.
-	if inward.length_squared() <= 0.001:
-		return (
-			base_direction.normalized()
-			if base_direction.length_squared() > 0.01
-			else Vector2.ZERO
-		)
-
-	if base_direction.length_squared() <= 0.01:
-		return inward.normalized()
-
-	var edge_pressure := clampf(inward.length(), 0.0, 1.5)
-	var inward_weight := lerpf(0.95, 2.8, clampf(edge_pressure, 0.0, 1.0))
-	var desired := base_direction.normalized() + inward.normalized() * inward_weight
-	if desired.length_squared() <= 0.01:
-		return center_direction.normalized()
-	return desired.normalized()
 
 func _apply_gunner_boundary_steering(base_direction: Vector2) -> Vector2:
-	if base_direction.length_squared() <= 0.01:
-		return Vector2.ZERO
-
-	# 회복 아이템/상자를 직접 향하는 동안에는 목적지 접근을 방해하지 않는다.
-	if is_instance_valid(heal_item_target) or is_instance_valid(chest_target):
-		return base_direction.normalized()
-
-	var soft_margin := 360.0
-	var left_space := global_position.x - FIELD_MARGIN
-	var right_space := battlefield_size.x - FIELD_MARGIN - global_position.x
-	var top_space := global_position.y - FIELD_MARGIN
-	var bottom_space := battlefield_size.y - FIELD_MARGIN - global_position.y
-
-	var inward := Vector2.ZERO
-	if left_space < soft_margin:
-		inward.x += 1.0 - clampf(left_space / soft_margin, 0.0, 1.0)
-	if right_space < soft_margin:
-		inward.x -= 1.0 - clampf(right_space / soft_margin, 0.0, 1.0)
-	if top_space < soft_margin:
-		inward.y += 1.0 - clampf(top_space / soft_margin, 0.0, 1.0)
-	if bottom_space < soft_margin:
-		inward.y -= 1.0 - clampf(bottom_space / soft_margin, 0.0, 1.0)
-
-	if inward.length_squared() <= 0.001:
-		return base_direction.normalized()
-
-	var pressure := clampf(inward.length(), 0.0, 1.35)
-	var inward_weight := lerpf(0.75, 2.35, clampf(pressure, 0.0, 1.0))
-	var desired := base_direction.normalized() + inward.normalized() * inward_weight
-	if desired.length_squared() <= 0.01:
-		return inward.normalized()
-	return desired.normalized()
+	return _apply_ranged_boundary_escape(base_direction, 360.0, 155.0)
 
 
 func _gunner_attack(current_target: Node2D) -> void:
@@ -6635,6 +6568,12 @@ func _apply_stage9_sprite_anchor() -> void:
 		(16.0 + correction_x) * facing_sign,
 		-24.0
 	)
+	# Attached Stage 9 effects follow the exact same per-frame X correction.
+	# This prevents the crown/shield art from appearing to slide beside the body.
+	if is_instance_valid(purifier_protection_effect):
+		purifier_protection_effect.offset.x = hero_sprite.offset.x
+	if is_instance_valid(purifier_crown_effect):
+		purifier_crown_effect.offset.x = hero_sprite.offset.x + 2.0
 
 
 func _apply_stage8_sprite_anchor() -> void:
@@ -6709,6 +6648,7 @@ func _move_without_monsters() -> void:
 	if is_instance_valid(heal_item_target):
 		var heal_direction := _apply_heal_item_steering(Vector2.ZERO, 0.016)
 		if heal_direction.length_squared() > 0.01:
+			heal_direction = _apply_ranged_boundary_escape(heal_direction)
 			velocity = heal_direction * current_move_speed * 0.90 * move_multiplier
 			move_and_slide()
 			_clamp_to_battlefield()
@@ -6720,6 +6660,7 @@ func _move_without_monsters() -> void:
 			0.016
 		)
 		if magnet_direction.length_squared() > 0.01:
+			magnet_direction = _apply_ranged_boundary_escape(magnet_direction)
 			velocity = (
 				magnet_direction
 				* current_move_speed
@@ -6739,6 +6680,7 @@ func _move_without_monsters() -> void:
 			if chest_distance_sq > alchemist_attack_range * alchemist_attack_range:
 				var chest_direction := _apply_chest_steering(Vector2.ZERO, 0.016)
 				if chest_direction.length_squared() > 0.01:
+					chest_direction = _apply_ranged_boundary_escape(chest_direction)
 					velocity = chest_direction * current_move_speed * 0.72 * move_multiplier
 					move_and_slide()
 					_clamp_to_battlefield()
@@ -6753,6 +6695,7 @@ func _move_without_monsters() -> void:
 
 		var chest_direction := _apply_chest_steering(Vector2.ZERO, 0.016)
 		if chest_direction.length_squared() > 0.01:
+			chest_direction = _apply_ranged_boundary_escape(chest_direction)
 			velocity = chest_direction * current_move_speed * 0.72 * move_multiplier
 			move_and_slide()
 			_clamp_to_battlefield()
@@ -6768,6 +6711,7 @@ func _move_without_monsters() -> void:
 	var nearest_exp_orb := _find_nearest_exp_orb()
 	if is_instance_valid(nearest_exp_orb):
 		var exp_direction := global_position.direction_to(nearest_exp_orb.global_position)
+		exp_direction = _apply_ranged_boundary_escape(exp_direction)
 		velocity = exp_direction * current_move_speed * 0.90 * move_multiplier
 		move_and_slide()
 		_clamp_to_battlefield()
@@ -6781,6 +6725,7 @@ func _move_without_monsters() -> void:
 		_pick_new_wander_target()
 
 	var direction := position.direction_to(wander_target)
+	direction = _apply_ranged_boundary_escape(direction)
 	velocity = direction * current_move_speed * 0.72 * move_multiplier
 	move_and_slide()
 	_clamp_to_battlefield()
@@ -6964,6 +6909,78 @@ func _get_combat_strafe_scale(to_target: Vector2) -> float:
 	# does not ping-pong horizontally while visually travelling vertically.
 	var horizontal_alignment := absf(to_target.x)
 	return clampf((horizontal_alignment - 0.12) / 0.28, 0.0, 1.0)
+
+
+func _is_ranged_ai_archetype() -> bool:
+	return hero_archetype in [
+		"ranged_kiter",
+		"pistol_gunner",
+		"archmage_elementalist",
+		"alchemist_chemical",
+		"summoner_gatekeeper",
+		"cleric_purifier",
+	]
+
+
+func _apply_ranged_boundary_escape(
+	base_direction: Vector2,
+	soft_margin: float = RANGED_BOUNDARY_SOFT_MARGIN,
+	hard_margin: float = RANGED_BOUNDARY_HARD_MARGIN
+) -> Vector2:
+	var base := (
+		base_direction.normalized()
+		if base_direction.length_squared() > 0.01
+		else Vector2.ZERO
+	)
+	if not _is_ranged_ai_archetype():
+		return base
+
+	var left_space := global_position.x - FIELD_MARGIN
+	var right_space := battlefield_size.x - FIELD_MARGIN - global_position.x
+	var top_space := global_position.y - FIELD_MARGIN
+	var bottom_space := battlefield_size.y - FIELD_MARGIN - global_position.y
+
+	var inward := Vector2.ZERO
+	if left_space < soft_margin:
+		inward.x += 1.0 - clampf(left_space / soft_margin, 0.0, 1.0)
+	if right_space < soft_margin:
+		inward.x -= 1.0 - clampf(right_space / soft_margin, 0.0, 1.0)
+	if top_space < soft_margin:
+		inward.y += 1.0 - clampf(top_space / soft_margin, 0.0, 1.0)
+	if bottom_space < soft_margin:
+		inward.y -= 1.0 - clampf(bottom_space / soft_margin, 0.0, 1.0)
+
+	if inward.length_squared() <= 0.001:
+		return base
+
+	var center_direction := global_position.direction_to(battlefield_size * 0.5)
+	var near_horizontal_edge := minf(left_space, right_space) < hard_margin
+	var near_vertical_edge := minf(top_space, bottom_space) < hard_margin
+
+	# A corner is a hard escape state. Combat avoidance can otherwise point
+	# directly into both clamped axes forever, leaving ranged heroes stationary.
+	if near_horizontal_edge and near_vertical_edge:
+		var corner_escape := inward.normalized() * 2.8 + center_direction * 1.8
+		if corner_escape.length_squared() > 0.01:
+			return corner_escape.normalized()
+
+	# On a hard edge, guarantee a meaningful inward component even when the
+	# current combat/loot steering is zero or points outside the battlefield.
+	if near_horizontal_edge or near_vertical_edge:
+		var hard_escape := inward.normalized() * 2.7 + base * 0.35
+		if hard_escape.length_squared() > 0.01:
+			return hard_escape.normalized()
+
+	if base.length_squared() <= 0.01:
+		return inward.normalized()
+
+	var pressure := clampf(inward.length(), 0.0, 1.35)
+	var inward_weight := lerpf(0.55, 1.75, clampf(pressure, 0.0, 1.0))
+	var desired := base + inward.normalized() * inward_weight
+	if desired.length_squared() <= 0.01:
+		return center_direction.normalized()
+	return desired.normalized()
+
 
 func _clamp_to_battlefield() -> void:
 	var clamped_position := position
@@ -9114,11 +9131,15 @@ func _ensure_purifier_skill_runtime() -> void:
 		purifier_crown_effect = AnimatedSprite2D.new()
 		purifier_crown_effect.sprite_frames = _purifier_crown_frames_cache
 		purifier_crown_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		purifier_crown_effect.scale = hero_sprite.scale
-		purifier_crown_effect.offset = Vector2(16.0, -24.0)
-		# Keep the crown above both Stage 9 bars instead of covering the HP bar.
-		purifier_crown_effect.position = Vector2(0.0, -48.0)
-		purifier_crown_effect.z_index = 9
+		# The raw effect3 crown is visually larger than the Stage 9 head.
+		# Keep it compact and attached to the same horizontal visual anchor as
+		# the animated hero frames so it does not drift a few pixels per frame.
+		purifier_crown_effect.scale = hero_sprite.scale * 0.78
+		purifier_crown_effect.offset = Vector2(hero_sprite.offset.x + 2.0, -24.0)
+		purifier_crown_effect.position = Vector2(0.0, -38.0)
+		# Draw below the Hero parent (and therefore below HP/resource bars).
+		purifier_crown_effect.show_behind_parent = true
+		purifier_crown_effect.z_index = -1
 		purifier_crown_effect.visible = false
 		purifier_crown_effect.animation_finished.connect(
 			Callable(self, "_on_purifier_crown_effect_finished")
