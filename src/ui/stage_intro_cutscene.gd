@@ -28,8 +28,11 @@ const HERO_INACTIVE_SHIFT := Vector2(4.0, 4.0)
 # mobile aspect ratios.
 const DEMON_BASE_X := -8.0
 const HERO_BASE_X := 476.0
-const DEMON_BASE_BOTTOM_TOP := -1550.0
-const HERO_BASE_BOTTOM_TOP := -1548.0
+# Original 1080x1920 composition:
+# dialogue top 1418, demon top 370, hero top 372.
+# Keep those exact gaps on every aspect ratio.
+const DEMON_DIALOGUE_TOP_GAP := 1048.0
+const HERO_DIALOGUE_TOP_GAP := 1046.0
 
 @onready var root: Control = $Root
 @onready var location_label: Label = $Root/Location
@@ -41,6 +44,7 @@ const HERO_BASE_BOTTOM_TOP := -1548.0
 @onready var hero_name: Label = $Root/HeroNamePlate/HeroName
 @onready var dialogue_speaker: Label = $Root/DialoguePanel/Speaker
 @onready var dialogue_text: Label = $Root/DialoguePanel/Text
+@onready var dialogue_panel: Panel = $Root/DialoguePanel
 @onready var speaker_accent: ColorRect = $Root/DialoguePanel/SpeakerAccent
 @onready var next_hint: Label = $Root/DialoguePanel/NextHint
 @onready var skip_button: Button = $Root/SkipButton
@@ -97,20 +101,30 @@ func play_dialogue(dialogue: Dictionary, allow_skip: bool) -> void:
 	_last_advance_msec = -1000000
 	_active = true
 	visible = true
+	call_deferred("_apply_initial_responsive_layout")
+
+
+func _apply_initial_responsive_layout() -> void:
+	if not _active:
+		return
 	_refresh_responsive_portrait_positions()
 	_reset_portrait_state()
 	_play_intro_fade()
-	call_deferred("_show_current_line")
+	_show_current_line()
 
 
 func _refresh_responsive_portrait_positions() -> void:
+	if not is_instance_valid(dialogue_panel):
+		return
+
+	var dialogue_top := dialogue_panel.position.y
 	_demon_base_position = Vector2(
 		DEMON_BASE_X,
-		root.size.y + DEMON_BASE_BOTTOM_TOP
+		dialogue_top - DEMON_DIALOGUE_TOP_GAP
 	)
 	_hero_base_position = Vector2(
 		HERO_BASE_X,
-		root.size.y + HERO_BASE_BOTTOM_TOP
+		dialogue_top - HERO_DIALOGUE_TOP_GAP
 	)
 
 
