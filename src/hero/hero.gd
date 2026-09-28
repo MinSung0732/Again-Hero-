@@ -6471,7 +6471,7 @@ func _apply_stage9_sprite_anchor() -> void:
 	# Stage 9's normalized sprite still sits slightly too high relative to the
 	# shared resource/HP bars. Keep the gameplay root unchanged and lower only
 	# the rendered sprite enough to leave a small visual gap above the head.
-	hero_sprite.offset = Vector2(6.0, -24.0)
+	hero_sprite.offset = Vector2(12.0, -24.0)
 
 
 func _apply_stage8_sprite_anchor() -> void:
@@ -13386,8 +13386,9 @@ func _draw() -> void:
 		# Stage 9's hood/head reaches into the shared bar area even after the
 		# sprite anchor correction. Keep the hero root and sprite position as-is
 		# and lift only the UI bars, preserving their 15px vertical spacing.
-		# Match the bars to the purifier sprite's +6px visual X offset.
-		bar_x_offset = 6.0
+		# Keep the bars centered on the gameplay root. The purifier sprite itself
+		# carries the Stage 9-specific horizontal visual compensation.
+		bar_x_offset = 0.0
 		resource_bar_y = -100.0
 		hp_bar_y = -85.0
 		shield_bar_y = -70.0
