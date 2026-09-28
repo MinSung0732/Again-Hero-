@@ -11,7 +11,7 @@ const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const STAGE_INTRO_DIALOGUES := preload("res://src/data/stage_intro_dialogues.gd")
 const HERO_REVEAL_CATALOG := preload("res://src/data/hero_reveal_catalog.gd")
 const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png"
-const TOUCH_HOLD_FRAME_DIR := "res://assets/art/UI/loading/loadingframes"
+const TOUCH_HOLD_FRAME_DIR := "res://assets/art/UI/ui_gagebar_frames"
 const TOUCH_HOLD_FRAME_COUNT := 8
 const TOUCH_HOLD_DELAY := 0.18
 const TOUCH_HOLD_FRAME_SECONDS := 0.08
@@ -554,7 +554,7 @@ func _load_touch_hold_frames() -> void:
 	_touch_hold_frames.clear()
 	for index in range(1, TOUCH_HOLD_FRAME_COUNT + 1):
 		var texture := _load_ui_texture(
-			"%s/loading_logo_%02d.png" % [TOUCH_HOLD_FRAME_DIR, index]
+			"%s/gage_%02d.png" % [TOUCH_HOLD_FRAME_DIR, index]
 		)
 		if texture != null:
 			_touch_hold_frames.append(texture)
