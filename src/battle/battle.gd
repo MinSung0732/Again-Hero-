@@ -3164,7 +3164,15 @@ func _set_combat_physics_enabled(enabled: bool) -> void:
 				not enabled
 			)
 
-	for group_name in ["monsters", "exp_orbs", "heal_items", "hero_projectiles", "monster_projectiles"]:
+	for group_name in [
+		"monsters",
+		"exp_orbs",
+		"heal_items",
+		"hero_projectiles",
+		"monster_projectiles",
+		"hero_summons",
+		"hero_summon_projectiles",
+	]:
 		for node in get_tree().get_nodes_in_group(group_name):
 			if is_instance_valid(node):
 				node.set_physics_process(enabled)

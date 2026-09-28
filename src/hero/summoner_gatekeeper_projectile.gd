@@ -52,6 +52,8 @@ func activate(
 	sprite.rotation = direction.angle()
 	active = true
 	visible = true
+	if not is_in_group("hero_summon_projectiles"):
+		add_to_group("hero_summon_projectiles")
 	set_physics_process(true)
 
 
@@ -93,6 +95,8 @@ func deactivate() -> void:
 	target = null
 	visible = false
 	set_physics_process(false)
+	if is_in_group("hero_summon_projectiles"):
+		remove_from_group("hero_summon_projectiles")
 	released.emit(self)
 
 
