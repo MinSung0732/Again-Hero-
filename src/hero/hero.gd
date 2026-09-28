@@ -52,6 +52,7 @@ const SUMMONER_HOUND_SCENE := preload("res://src/hero/SummonerHound.tscn")
 const SUMMONER_WATCHER_SCENE := preload("res://src/hero/SummonerWatcher.tscn")
 const SUMMONER_OPEN_GATE_SCENE := preload("res://src/hero/SummonerOpenGate.tscn")
 const SUMMONER_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/summoner_basic_attack_pixabay.mp3"
+const PURIFIER_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/purifier_basic_attack_pixabay.mp3"
 const SUMMONER_POOL_HEADROOM := 4
 const ALCHEMIST_VIAL_SCENE := preload("res://src/hero/AlchemistVial.tscn")
 const ALCHEMIST_POISON_POOL_SCENE := preload("res://src/hero/AlchemistPoisonPool.tscn")
@@ -319,6 +320,7 @@ var summoner_ai_last_choice: String = ""
 var summoner_runtime_ready: bool = false
 var summoner_basic_effect: AnimatedSprite2D = null
 var summoner_basic_audio: AudioStreamPlayer = null
+var purifier_basic_audio: AudioStreamPlayer = null
 
 var ultimate_config: Dictionary = {}
 var purifier_gauge_config: Dictionary = {}
@@ -7383,6 +7385,37 @@ func _acquire_projectile(scene: PackedScene, pool_key: String) -> Area2D:
 	return projectile
 
 
+func _ensure_purifier_basic_audio() -> void:
+	if hero_archetype != "cleric_purifier":
+		return
+	if is_instance_valid(purifier_basic_audio):
+		return
+
+	purifier_basic_audio = AudioStreamPlayer.new()
+	purifier_basic_audio.bus = &"SFX"
+	purifier_basic_audio.volume_db = -13.0
+	# The source is a broader elemental projectile sound. A slightly higher
+	# pitch keeps the purifier version brighter and distinct from Stage 8.
+	purifier_basic_audio.pitch_scale = 1.12
+	if ResourceLoader.exists(PURIFIER_BASIC_ATTACK_AUDIO_PATH):
+		var stream = load(PURIFIER_BASIC_ATTACK_AUDIO_PATH)
+		if stream is AudioStream:
+			purifier_basic_audio.stream = stream
+	add_child(purifier_basic_audio)
+
+
+func _play_purifier_basic_audio() -> void:
+	_ensure_purifier_basic_audio()
+	if (
+		is_instance_valid(purifier_basic_audio)
+		and purifier_basic_audio.stream != null
+	):
+		# One player per hero; restarting avoids overlapping a long tail every
+		# 1.35s while keeping allocation-free repeated basic attacks.
+		purifier_basic_audio.stop()
+		purifier_basic_audio.play()
+
+
 func _fire_projectile(current_target: Node2D) -> void:
 	if channeling:
 		return
@@ -7400,6 +7433,8 @@ func _fire_projectile(current_target: Node2D) -> void:
 	attack_pose_timer = 0.34
 	_face_attack_direction(shot_direction.x)
 	_restart_stage1_animation("attack")
+	if hero_archetype == "cleric_purifier":
+		_play_purifier_basic_audio()
 
 	var projectile_count := 1 + clampi(projectile_count_bonus, 0, 4)
 	var spread_step := deg_to_rad(12.0)
