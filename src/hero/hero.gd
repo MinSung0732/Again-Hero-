@@ -1252,6 +1252,8 @@ func _ensure_summoner_pool_capacity() -> void:
 			"released",
 			Callable(self, "_on_summoner_open_gate_released")
 		)
+		if open_gate.has_method("prepare_pool"):
+			open_gate.call("prepare_pool", summoner_open_gate_config)
 		summoner_open_gate_pool.append(open_gate)
 
 
