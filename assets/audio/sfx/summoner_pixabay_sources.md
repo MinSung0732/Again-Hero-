@@ -15,10 +15,7 @@ Stage 8 summoner runtime filenames and the Pixabay source used for each file.
 The files are stored directly in `assets/audio/sfx/` and loaded by Godot as MP3 resources.
 Check the linked Pixabay pages/license terms when redistributing outside this project.
 
-- `summoner_open_gate_pixabay.mp3`
-  - Dedicated Stage 8 Skill 5 gate-opening asset path.
-  - Reuses the bundled Pixabay portal source used by `summoner_gatekeeper_summon_pixabay.mp3`.
-  - Kept as a separate file path so the gate-opening mix can be tuned independently later.
-- `summoner_drone_spawn_pixabay.mp3`
-  - Dedicated Stage 8 Skill 5 drone-spawn asset path.
-  - Reuses the same Pixabay portal source at a much lower in-game volume for rapid repeated spawns.
+- Stage 8 Skill 5 gate opening reuses `summoner_gatekeeper_summon_pixabay.mp3` directly.
+- `summoner_drone_spawn.mp3`
+  - Dedicated short, faint dimensional pop used only for rapid suicide-drone spawns.
+  - This is a separate custom-generated SFX, not a duplicate of the gate-opening sound.

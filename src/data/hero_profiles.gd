@@ -880,8 +880,8 @@ const PROFILES = {
 				"drone_spawn_half_width": 90.0,
 				"drone_spawn_y_min": -220.0,
 				"drone_spawn_y_max": -70.0,
-				"opening_audio_path": "res://assets/audio/sfx/summoner_open_gate_pixabay.mp3",
-				"drone_spawn_audio_path": "res://assets/audio/sfx/summoner_drone_spawn_pixabay.mp3",
+				"opening_audio_path": "res://assets/audio/sfx/summoner_gatekeeper_summon_pixabay.mp3",
+				"drone_spawn_audio_path": "res://assets/audio/sfx/summoner_drone_spawn.mp3",
 				"drone": {
 					"max_hp": 100,
 					"damage_ratio": 0.15,
