@@ -6,7 +6,7 @@ class_name Stage1Battlefield
 const FLOOR_STEP := Vector2(171.0, 175.0)
 const FLOOR_DRAW_SIZE := Vector2(171.0, 175.0)
 const DECOR_COLLISION_LAYER := 1 << 2
-const CARPET_STEP_Y := 160.0
+const CARPET_STEP_Y := 154.0
 const PERIMETER_WALL_SCALE := 0.96
 const PERIMETER_WALL_OVERLAP := 44.0
 const PERIMETER_OUTSET := 58.0
