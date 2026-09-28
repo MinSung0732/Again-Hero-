@@ -135,7 +135,7 @@ func _get_owner_priority_target() -> Node2D:
 	if not is_instance_valid(owner_hero):
 		return null
 	var raw_target = owner_hero.get("target")
-	if raw_target is not Node2D:
+	if not raw_target is Node2D:
 		return null
 	var priority_target := raw_target as Node2D
 	if (
