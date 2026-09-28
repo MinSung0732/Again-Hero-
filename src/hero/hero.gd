@@ -48,6 +48,7 @@ const SUMMONER_GATEKEEPER_SCENE := preload("res://src/hero/SummonerGatekeeper.ts
 const SUMMONER_SCOUT_SCENE := preload("res://src/hero/SummonerScout.tscn")
 const SUMMONER_HOUND_SCENE := preload("res://src/hero/SummonerHound.tscn")
 const SUMMONER_WATCHER_SCENE := preload("res://src/hero/SummonerWatcher.tscn")
+const SUMMONER_OPEN_GATE_SCENE := preload("res://src/hero/SummonerOpenGate.tscn")
 const SUMMONER_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/summoner_basic_attack_pixabay.mp3"
 const SUMMONER_POOL_HEADROOM := 4
 const ALCHEMIST_VIAL_SCENE := preload("res://src/hero/AlchemistVial.tscn")
@@ -279,6 +280,7 @@ var summoner_gatekeeper_config: Dictionary = {}
 var summoner_scout_config: Dictionary = {}
 var summoner_hound_config: Dictionary = {}
 var summoner_watcher_config: Dictionary = {}
+var summoner_open_gate_config: Dictionary = {}
 var summoner_full_slot_shield_config: Dictionary = {}
 var summoner_full_slot_shield_cooldown: float = 0.0
 var summoner_slot_base: int = 5
@@ -287,16 +289,19 @@ var summoner_gatekeeper_pool: Array[Node2D] = []
 var summoner_scout_pool: Array[Node2D] = []
 var summoner_hound_pool: Array[Node2D] = []
 var summoner_watcher_pool: Array[Node2D] = []
+var summoner_open_gate_pool: Array[Node2D] = []
 var summoner_gatekeeper_cooldown: float = 0.0
 var summoner_scout_cooldown: float = 0.0
 var summoner_hound_cooldown: float = 0.0
 var summoner_watcher_cooldown: float = 0.0
+var summoner_open_gate_cooldown: float = 0.0
 var summoner_cast_interval: float = 1.0
 var summoner_cast_lock_timer: float = 0.0
 var summoner_cast_pending: bool = false
 var summoner_scout_cast_pending: bool = false
 var summoner_hound_cast_pending: bool = false
 var summoner_watcher_cast_pending: bool = false
+var summoner_open_gate_cast_pending: bool = false
 var summoner_runtime_ready: bool = false
 var summoner_basic_effect: AnimatedSprite2D = null
 var summoner_basic_audio: AudioStreamPlayer = null
@@ -663,6 +668,12 @@ func configure_profile(profile: Dictionary) -> void:
 		if typeof(raw_watcher) == TYPE_DICTIONARY
 		else {}
 	)
+	var raw_open_gate = summoner_config.get("open_gate", {})
+	summoner_open_gate_config = (
+		raw_open_gate.duplicate(true)
+		if typeof(raw_open_gate) == TYPE_DICTIONARY
+		else {}
+	)
 	var raw_full_slot_shield = summoner_config.get("full_slot_shield", {})
 	summoner_full_slot_shield_config = (
 		raw_full_slot_shield.duplicate(true)
@@ -682,6 +693,7 @@ func configure_profile(profile: Dictionary) -> void:
 	summoner_scout_pool.clear()
 	summoner_hound_pool.clear()
 	summoner_watcher_pool.clear()
+	summoner_open_gate_pool.clear()
 	summoner_gatekeeper_cooldown = maxf(
 		float(summoner_gatekeeper_config.get("initial_cooldown", 0.0)),
 		0.0
@@ -698,6 +710,10 @@ func configure_profile(profile: Dictionary) -> void:
 		float(summoner_watcher_config.get("initial_cooldown", 0.0)),
 		0.0
 	)
+	summoner_open_gate_cooldown = maxf(
+		float(summoner_open_gate_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
 	summoner_cast_interval = maxf(
 		float(summoner_config.get("cast_interval", 1.0)),
 		0.0
@@ -707,6 +723,7 @@ func configure_profile(profile: Dictionary) -> void:
 	summoner_scout_cast_pending = not summoner_scout_config.is_empty()
 	summoner_hound_cast_pending = not summoner_hound_config.is_empty()
 	summoner_watcher_cast_pending = not summoner_watcher_config.is_empty()
+	summoner_open_gate_cast_pending = not summoner_open_gate_config.is_empty()
 	summoner_runtime_ready = false
 	summoner_basic_effect = null
 	summoner_basic_audio = null
@@ -1222,6 +1239,21 @@ func _ensure_summoner_pool_capacity() -> void:
 		)
 		summoner_watcher_pool.append(watcher)
 
+	var open_gate_pool_size := maxi(
+		int(summoner_open_gate_config.get("pool_size", 1)),
+		0
+	)
+	while summoner_open_gate_pool.size() < open_gate_pool_size:
+		var open_gate := SUMMONER_OPEN_GATE_SCENE.instantiate() as Node2D
+		if open_gate == null:
+			break
+		world_parent.add_child(open_gate)
+		open_gate.connect(
+			"released",
+			Callable(self, "_on_summoner_open_gate_released")
+		)
+		summoner_open_gate_pool.append(open_gate)
+
 
 func _ensure_summoner_runtime() -> void:
 	if summoner_runtime_ready or hero_archetype != "summoner_gatekeeper":
@@ -1291,6 +1323,10 @@ func _ensure_summoner_runtime() -> void:
 			summoner_watcher_config.is_empty()
 			or not summoner_watcher_pool.is_empty()
 		)
+		and (
+			summoner_open_gate_config.is_empty()
+			or not summoner_open_gate_pool.is_empty()
+		)
 	)
 	if summoner_runtime_ready:
 		# Keep explicit requests alive until a pooled summon is actually acquired.
@@ -1298,6 +1334,7 @@ func _ensure_summoner_runtime() -> void:
 		summoner_scout_cast_pending = not summoner_scout_config.is_empty()
 		summoner_hound_cast_pending = not summoner_hound_config.is_empty()
 		summoner_watcher_cast_pending = not summoner_watcher_config.is_empty()
+		summoner_open_gate_cast_pending = not summoner_open_gate_config.is_empty()
 	queue_redraw()
 
 
@@ -1332,6 +1369,10 @@ func _physics_process_summoner(delta: float) -> void:
 		summoner_watcher_cooldown - delta,
 		0.0
 	)
+	summoner_open_gate_cooldown = maxf(
+		summoner_open_gate_cooldown - delta,
+		0.0
+	)
 	summoner_cast_lock_timer = maxf(
 		summoner_cast_lock_timer - delta,
 		0.0
@@ -1344,6 +1385,9 @@ func _physics_process_summoner(delta: float) -> void:
 		if slow_timer <= 0.0:
 			move_multiplier = 1.0
 			queue_redraw()
+
+	if summoner_open_gate_cooldown <= 0.0:
+		summoner_open_gate_cast_pending = true
 
 	if _get_active_summon_count() < _get_summoner_slot_capacity():
 		if summoner_gatekeeper_cooldown <= 0.0:
@@ -1385,6 +1429,12 @@ func _physics_process_summoner(delta: float) -> void:
 		):
 			summoner_watcher_cast_pending = false
 			summon_casted = true
+		elif (
+			summoner_open_gate_cast_pending
+			and _try_cast_summoner_open_gate()
+		):
+			summoner_open_gate_cast_pending = false
+			summon_casted = true
 		if summon_casted:
 			summoner_cast_lock_timer = summoner_cast_interval
 
@@ -1401,12 +1451,13 @@ func _physics_process_summoner(delta: float) -> void:
 		retarget_timer = 0.12
 
 	if not is_instance_valid(target):
-		_move_without_monsters()
+		_move_summoner_without_monsters_near_open_gate()
 		_update_summoner_pose_visual(delta)
 		return
 
 	var distance := global_position.distance_to(target.global_position)
 	var move_direction := _choose_move_direction(target, distance)
+	move_direction = _apply_summoner_open_gate_tether(move_direction)
 	move_direction = _apply_heal_item_steering(move_direction, delta)
 	move_direction = _apply_chest_steering(move_direction, delta)
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
@@ -1418,6 +1469,63 @@ func _physics_process_summoner(delta: float) -> void:
 		_summoner_basic_attack(target)
 
 	_update_summoner_pose_visual(delta)
+
+
+func _get_active_summoner_open_gate() -> Node2D:
+	for open_gate in summoner_open_gate_pool:
+		if is_instance_valid(open_gate) and bool(open_gate.get("active")):
+			return open_gate
+	return null
+
+
+func _apply_summoner_open_gate_tether(move_direction: Vector2) -> Vector2:
+	var open_gate := _get_active_summoner_open_gate()
+	if not is_instance_valid(open_gate):
+		return move_direction
+
+	var soft_radius := maxf(
+		float(summoner_open_gate_config.get("hero_tether_radius", 460.0)),
+		1.0
+	)
+	var hard_radius := maxf(
+		float(summoner_open_gate_config.get("hero_tether_hard_radius", 680.0)),
+		soft_radius + 1.0
+	)
+	var distance := global_position.distance_to(open_gate.global_position)
+	if distance <= soft_radius:
+		return move_direction
+
+	var return_direction := global_position.direction_to(open_gate.global_position)
+	var strength := clampf(
+		(distance - soft_radius) / (hard_radius - soft_radius),
+		0.25,
+		1.0
+	)
+	var blended := move_direction.lerp(return_direction, strength)
+	return blended.normalized() if blended.length_squared() > 0.001 else return_direction
+
+
+func _move_summoner_without_monsters_near_open_gate() -> void:
+	var open_gate := _get_active_summoner_open_gate()
+	if not is_instance_valid(open_gate):
+		_move_without_monsters()
+		return
+
+	var soft_radius := maxf(
+		float(summoner_open_gate_config.get("hero_tether_radius", 460.0)),
+		1.0
+	)
+	if global_position.distance_to(open_gate.global_position) <= soft_radius:
+		_move_without_monsters()
+		return
+
+	velocity = (
+		global_position.direction_to(open_gate.global_position)
+		* move_speed
+		* move_multiplier
+	)
+	move_and_slide()
+	_clamp_to_battlefield()
 
 
 func _update_summoner_full_slot_shield(delta: float) -> void:
@@ -1673,6 +1781,40 @@ func _on_summoner_watcher_released(_summon: Node2D) -> void:
 		< _get_summoner_watcher_max_active()
 	):
 		summoner_watcher_cast_pending = true
+	queue_redraw()
+
+
+func _try_cast_summoner_open_gate() -> bool:
+	if summoner_open_gate_config.is_empty():
+		return false
+	if summoner_open_gate_cooldown > 0.0:
+		return false
+
+	var gate_to_use: Node2D = null
+	for open_gate in summoner_open_gate_pool:
+		if is_instance_valid(open_gate) and not bool(open_gate.get("active")):
+			gate_to_use = open_gate
+			break
+	if gate_to_use == null:
+		return false
+
+	gate_to_use.call(
+		"activate",
+		global_position,
+		self,
+		summoner_open_gate_config.duplicate(true)
+	)
+	summoner_open_gate_cooldown = maxf(
+		float(summoner_open_gate_config.get("cooldown", 100.0)),
+		0.0
+	)
+	queue_redraw()
+	return true
+
+
+func _on_summoner_open_gate_released(_open_gate: Node2D) -> void:
+	if summoner_open_gate_cooldown <= 0.0:
+		summoner_open_gate_cast_pending = true
 	queue_redraw()
 
 
@@ -8611,6 +8753,16 @@ func get_skill_cooldown_hud() -> Array:
 				"res://assets/art/heroes/stage8_summoner/frames/effect4/idle_01.png",
 				maxf(
 					float(summoner_watcher_config.get("cooldown", 7.0)),
+					0.0
+				)
+			)
+			_append_skill_cooldown_hud(
+				skills,
+				summoner_open_gate_config,
+				summoner_open_gate_cooldown,
+				"res://assets/art/heroes/stage8_summoner/frames/effect5/effect_06.png",
+				maxf(
+					float(summoner_open_gate_config.get("cooldown", 100.0)),
 					0.0
 				)
 			)
