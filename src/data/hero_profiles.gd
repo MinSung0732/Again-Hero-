@@ -860,6 +860,9 @@ const PROFILES = {
 				"frame_dir": "res://assets/art/heroes/stage8_summoner/frames/effect5",
 				"visual_scale": 0.70,
 				"visual_offset_y": -133.0,
+				"drone_spawn_half_width": 90.0,
+				"drone_spawn_y_min": -220.0,
+				"drone_spawn_y_max": -70.0,
 				"opening_audio_path": "res://assets/audio/sfx/summoner_gatekeeper_summon_pixabay.mp3",
 				"drone_spawn_audio_path": "res://assets/audio/sfx/summoner_gatekeeper_summon_pixabay.mp3",
 				"drone": {
@@ -868,7 +871,7 @@ const PROFILES = {
 					"attack_range": 100.0,
 					"move_speed": 360.0,
 					"sense_range": 1200.0,
-					"max_lifetime": 12.0,
+					"max_lifetime": 5.0,
 					"visual_scale": 0.276,
 					"spawn_effect_scale": 0.22,
 					"explosion_scale": 0.34,
