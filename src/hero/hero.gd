@@ -87,6 +87,11 @@ const HERO_ANIMATION_DUPLICATE_RESTART_GUARD_MSEC := 70
 
 static var _archmage_fx_frames_cache: Dictionary = {}
 
+# Stage 9 standalone frames have small per-frame X drift in their authored
+# transparent canvas. Cache a body/root correction once when the visual is built
+# so animation playback never scans pixels or allocates arrays per frame.
+var stage9_frame_anchor_offsets: Dictionary = {}
+
 @export var max_hp: int = 300
 @export var move_speed: float = 230.0
 @export var attack_damage: int = 34
@@ -972,6 +977,11 @@ func _ready() -> void:
 	_attach_status_effect_visual("slow")
 	_apply_camera_limits()
 	_apply_profile_visual()
+	var stage9_anchor_callback := Callable(self, "_on_hero_sprite_frame_or_animation_changed")
+	if not hero_sprite.frame_changed.is_connected(stage9_anchor_callback):
+		hero_sprite.frame_changed.connect(stage9_anchor_callback)
+	if not hero_sprite.animation_changed.is_connected(stage9_anchor_callback):
+		hero_sprite.animation_changed.connect(stage9_anchor_callback)
 	_apply_stage1_shield_visual()
 	_apply_stage1_channel_visual()
 	_apply_stage2_rogue_effect_visuals()
@@ -5690,6 +5700,7 @@ func _apply_profile_visual() -> void:
 		)
 		hero_sprite.sprite_frames = purifier_frames
 		hero_sprite.visible = true
+		_build_stage9_frame_anchor_cache()
 		_apply_normalized_hero_visual_scale()
 		_apply_stage9_sprite_anchor()
 		hero_sprite.speed_scale = 1.0
@@ -6465,13 +6476,112 @@ func _apply_stage7_sprite_anchor() -> void:
 	)
 
 
+func _stage9_frame_anchor_key(animation_name: StringName, frame_index: int) -> String:
+	return "%s:%d" % [String(animation_name), frame_index]
+
+
+func _find_stage9_body_anchor_x(texture: Texture2D) -> float:
+	if texture == null:
+		return 0.0
+	var image := texture.get_image()
+	if image == null or image.is_empty():
+		return float(texture.get_width()) * 0.5
+	var used_rect := image.get_used_rect()
+	if used_rect.size.x <= 0 or used_rect.size.y <= 0:
+		return float(texture.get_width()) * 0.5
+
+	# Sample the lower-middle body band and use the widest opaque horizontal
+	# run. Thin staff/veil pixels then cannot drag the anchor away from the
+	# torso/robe root the way a full bounding-box center can.
+	var y_start := used_rect.position.y + int(round(float(used_rect.size.y) * 0.48))
+	var y_end := used_rect.position.y + int(round(float(used_rect.size.y) * 0.90))
+	var y_step := maxi(1, int(round(float(used_rect.size.y) / 14.0)))
+	var x_start := used_rect.position.x
+	var x_end := used_rect.position.x + used_rect.size.x
+	var best_run_start := x_start
+	var best_run_length := 0
+
+	for y in range(y_start, y_end + 1, y_step):
+		var run_start := -1
+		for x in range(x_start, x_end):
+			var opaque := image.get_pixel(x, y).a > 0.20
+			if opaque and run_start < 0:
+				run_start = x
+			elif not opaque and run_start >= 0:
+				var run_length := x - run_start
+				if run_length > best_run_length:
+					best_run_length = run_length
+					best_run_start = run_start
+				run_start = -1
+		if run_start >= 0:
+			var run_length := x_end - run_start
+			if run_length > best_run_length:
+				best_run_length = run_length
+				best_run_start = run_start
+
+	if best_run_length <= 0:
+		return float(used_rect.position.x) + float(used_rect.size.x) * 0.5
+	return float(best_run_start) + float(best_run_length) * 0.5
+
+
+func _build_stage9_frame_anchor_cache() -> void:
+	stage9_frame_anchor_offsets.clear()
+	if (
+		hero_archetype != "cleric_purifier"
+		or not is_instance_valid(hero_sprite)
+		or hero_sprite.sprite_frames == null
+		or not hero_sprite.sprite_frames.has_animation(&"idle")
+		or hero_sprite.sprite_frames.get_frame_count(&"idle") <= 0
+	):
+		return
+
+	var reference_texture := hero_sprite.sprite_frames.get_frame_texture(&"idle", 0)
+	if reference_texture == null:
+		return
+	var reference_anchor_local := (
+		_find_stage9_body_anchor_x(reference_texture)
+		- float(reference_texture.get_width()) * 0.5
+	)
+
+	for animation_name in hero_sprite.sprite_frames.get_animation_names():
+		var frame_count := hero_sprite.sprite_frames.get_frame_count(animation_name)
+		for frame_index in range(frame_count):
+			var texture := hero_sprite.sprite_frames.get_frame_texture(
+				animation_name,
+				frame_index
+			)
+			if texture == null:
+				continue
+			var anchor_local := (
+				_find_stage9_body_anchor_x(texture)
+				- float(texture.get_width()) * 0.5
+			)
+			stage9_frame_anchor_offsets[
+				_stage9_frame_anchor_key(animation_name, frame_index)
+			] = reference_anchor_local - anchor_local
+
+
+func _on_hero_sprite_frame_or_animation_changed() -> void:
+	if hero_archetype == "cleric_purifier":
+		_apply_stage9_sprite_anchor()
+
+
 func _apply_stage9_sprite_anchor() -> void:
 	if hero_archetype != "cleric_purifier" or not is_instance_valid(hero_sprite):
 		return
-	# Stage 9's normalized sprite still sits slightly too high relative to the
-	# shared resource/HP bars. Keep the gameplay root unchanged and lower only
-	# the rendered sprite enough to leave a small visual gap above the head.
-	hero_sprite.offset = Vector2(12.0, -24.0)
+	var correction_x := float(
+		stage9_frame_anchor_offsets.get(
+			_stage9_frame_anchor_key(hero_sprite.animation, hero_sprite.frame),
+			0.0
+		)
+	)
+	var facing_sign := -1.0 if hero_sprite.flip_h else 1.0
+	# Preserve the tuned Stage 9 global placement, but cancel authored
+	# frame-to-frame body drift around the same gameplay/root position.
+	hero_sprite.offset = Vector2(
+		(12.0 + correction_x) * facing_sign,
+		-24.0
+	)
 
 
 func _apply_stage8_sprite_anchor() -> void:
@@ -6511,6 +6621,7 @@ func _update_facing_from_horizontal(horizontal_speed: float, delta: float) -> vo
 
 	hero_sprite.flip_h = desired_sign < 0
 	_apply_stage7_sprite_anchor()
+	_apply_stage9_sprite_anchor()
 	facing_candidate_sign = 0
 	facing_candidate_timer = 0.0
 
@@ -6520,6 +6631,7 @@ func _face_attack_direction(horizontal_direction: float) -> void:
 
 	hero_sprite.flip_h = horizontal_direction < 0.0
 	_apply_stage7_sprite_anchor()
+	_apply_stage9_sprite_anchor()
 	facing_candidate_sign = 0
 	facing_candidate_timer = 0.0
 
