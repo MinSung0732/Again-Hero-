@@ -1352,7 +1352,10 @@ func _ensure_summoner_runtime() -> void:
 		summoner_scout_cast_pending = not summoner_scout_config.is_empty()
 		summoner_hound_cast_pending = not summoner_hound_config.is_empty()
 		summoner_watcher_cast_pending = not summoner_watcher_config.is_empty()
-		summoner_open_gate_cast_pending = not summoner_open_gate_config.is_empty()
+		summoner_open_gate_cast_pending = (
+			not summoner_open_gate_config.is_empty()
+			and summoner_open_gate_unlocked
+		)
 	queue_redraw()
 
 
