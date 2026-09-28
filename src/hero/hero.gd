@@ -6912,14 +6912,12 @@ func _get_combat_strafe_scale(to_target: Vector2) -> float:
 
 
 func _is_ranged_ai_archetype() -> bool:
-	return hero_archetype in [
-		"ranged_kiter",
-		"pistol_gunner",
-		"archmage_elementalist",
-		"alchemist_chemical",
-		"summoner_gatekeeper",
-		"cleric_purifier",
-	]
+	match hero_archetype:
+		"ranged_kiter", "pistol_gunner", "archmage_elementalist", \
+		"alchemist_chemical", "summoner_gatekeeper", "cleric_purifier":
+			return true
+		_:
+			return false
 
 
 func _apply_ranged_boundary_escape(
