@@ -288,7 +288,9 @@ func _build_perimeter_architecture() -> void:
 	var arch_count := maxi(stage_number - 3, 0)
 	for arch_index in range(arch_count):
 		var side := arch_index % 2
-		var lane := float(arch_index / 2 + 1) / float(maxi((arch_count + 1) / 2 + 1, 2))
+		var lane_index := floori(float(arch_index) / 2.0) + 1
+		var lane_count := ceili(float(arch_count) / 2.0) + 1
+		var lane := float(lane_index) / float(maxi(lane_count, 2))
 		var y := lerpf(720.0, map_size.y - 620.0, lane)
 		var x_position := 250.0 if side == 0 else map_size.x - 250.0
 		_add_sprite(
