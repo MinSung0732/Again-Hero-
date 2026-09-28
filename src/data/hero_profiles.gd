@@ -850,6 +850,11 @@ const PROFILES = {
 				"name": "이계의 문 - 개방",
 				"cooldown": 100.0,
 				"initial_cooldown": 0.0,
+				"unlock_condition": {
+					"type": "summon_count",
+					"required_count": 50,
+					"cutscene_event": "conditional_skill_unlocked",
+				},
 				"pool_size": 1,
 				"opening_frame_seconds": 2.0,
 				"open_duration": 40.0,
