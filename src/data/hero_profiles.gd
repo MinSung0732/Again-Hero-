@@ -766,6 +766,17 @@ const PROFILES = {
 		"summoner": {
 			"base_slot_count": 5,
 			"cast_interval": 1.0,
+			"ai": {
+				"personalities": [
+					"balanced",
+					"aggressive",
+					"defensive",
+					"swarm",
+					"focus",
+				],
+				"observation_radius": 760.0,
+				"random_score_span": 8.0,
+			},
 			"full_slot_shield": {
 				"id": "summoner_full_slot_shield",
 				"name": "포화 방벽",
@@ -860,8 +871,9 @@ const PROFILES = {
 				"open_duration": 40.0,
 				"drone_spawn_interval": 0.20,
 				"drone_pool_size": 96,
-				"hero_tether_radius": 460.0,
-				"hero_tether_hard_radius": 680.0,
+				"hero_tether_radius": 650.0,
+				"hero_tether_hard_radius": 950.0,
+				"hero_tether_max_strength": 0.28,
 				"frame_dir": "res://assets/art/heroes/stage8_summoner/frames/effect5",
 				"visual_scale": 0.70,
 				"visual_offset_y": -133.0,
