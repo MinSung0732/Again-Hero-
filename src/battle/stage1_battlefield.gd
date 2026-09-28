@@ -14,6 +14,16 @@ const TOP_WALL_Y := 62.0
 const TOP_WALL_COLLISION_BOTTOM := 148.0
 const TOP_WALL_COLLISION_HEIGHT := 32.0
 
+const THRONE_GROUND_Y := 560.0
+const THRONE_BRAZIER_OFFSET_X := 470.0
+const SIDE_PILLAR_X := 390.0
+const SIDE_PILLAR_START_Y := 940.0
+const SIDE_PILLAR_STEP_Y := 520.0
+const SIDE_PILLAR_COUNT := 4
+const INNER_PROP_X := 680.0
+const INNER_PROP_START_Y := 1200.0
+const INNER_PROP_STEP_Y := 520.0
+
 const TILE_ROOT := "res://assets/art/UI/tiles"
 const FLOOR_ROOT := TILE_ROOT + "/again_hero_A_48_black_grid"
 const WALL_ROOT := TILE_ROOT + "/again_hero_B_walls"
@@ -270,6 +280,28 @@ func _add_solid_depth_prop(
 	_add_collision(ground_position, collision_size)
 
 
+func _add_mirrored_solid_prop(
+	key: String,
+	left_x: float,
+	ground_y: float,
+	scale_factor: float,
+	collision_size: Vector2
+) -> void:
+	_add_solid_depth_prop(
+		key,
+		Vector2(left_x, ground_y),
+		scale_factor,
+		collision_size
+	)
+	_add_solid_depth_prop(
+		key,
+		Vector2(battlefield_size.x - left_x, ground_y),
+		scale_factor,
+		collision_size,
+		true
+	)
+
+
 func _build_top_wall() -> void:
 	var wall_texture := _texture("wall_large")
 	if wall_texture == null:
@@ -392,11 +424,11 @@ func _build_castle_decor() -> void:
 
 	var center_x := battlefield_size.x * 0.5
 
-	# Wall-mounted ornaments. These assets are banners/sconces, not floor props:
-	# they stay collision-free and hang from the upper perimeter wall.
+	# Wall-mounted ornaments follow a fixed 360 px rhythm around the center.
+	# They are visual-only and never become floor obstacles.
 	_add_background_visual(
 		"crystal",
-		Vector2(center_x - 1050.0, 92.0),
+		Vector2(center_x - 1080.0, 92.0),
 		0.62,
 		false,
 		2
@@ -410,14 +442,14 @@ func _build_castle_decor() -> void:
 	)
 	_add_background_visual(
 		"flag_b",
-		Vector2(center_x - 355.0, 114.0),
+		Vector2(center_x - 360.0, 114.0),
 		0.58,
 		false,
 		2
 	)
 	_add_background_visual(
 		"flag_b",
-		Vector2(center_x + 355.0, 114.0),
+		Vector2(center_x + 360.0, 114.0),
 		0.58,
 		true,
 		2
@@ -431,103 +463,76 @@ func _build_castle_decor() -> void:
 	)
 	_add_background_visual(
 		"crystal",
-		Vector2(center_x + 1050.0, 92.0),
+		Vector2(center_x + 1080.0, 92.0),
 		0.62,
 		true,
 		2
 	)
 
-	# Throne cluster. Ground positions are the Y-sort anchors, so actors can
-	# pass behind the tall artwork while only the physical bases block movement.
+	# Throne cluster anchors the room on the carpet axis.
 	_add_solid_depth_prop(
 		"throne",
-		Vector2(center_x, 585.0),
+		Vector2(center_x, THRONE_GROUND_Y),
 		0.92,
 		Vector2(300.0, 74.0)
 	)
 	_add_solid_depth_prop(
 		"brazier",
-		Vector2(center_x - 455.0, 735.0),
+		Vector2(center_x - THRONE_BRAZIER_OFFSET_X, THRONE_GROUND_Y + 150.0),
 		0.72,
 		Vector2(82.0, 58.0)
 	)
 	_add_solid_depth_prop(
 		"brazier",
-		Vector2(center_x + 455.0, 735.0),
+		Vector2(center_x + THRONE_BRAZIER_OFFSET_X, THRONE_GROUND_Y + 150.0),
 		0.72,
 		Vector2(82.0, 58.0),
 		true
 	)
 
-	# Side architecture frames the arena instead of cutting through it.
-	var side_x_left := 345.0
-	var side_x_right := battlefield_size.x - 345.0
-	var pillar_ys := [980.0, 1510.0, 2040.0, 2570.0]
-	for index in range(pillar_ys.size()):
-		var ground_y := float(pillar_ys[index])
+	# Four evenly spaced pillar gates frame both sides of the arena. Alternating
+	# pillar art adds variation without breaking the spacing rule.
+	for index in range(SIDE_PILLAR_COUNT):
+		var ground_y := SIDE_PILLAR_START_Y + float(index) * SIDE_PILLAR_STEP_Y
 		var pillar_key := "pillar_a" if index % 2 == 0 else "pillar_b"
-		_add_solid_depth_prop(
+		_add_mirrored_solid_prop(
 			pillar_key,
-			Vector2(side_x_left, ground_y),
+			SIDE_PILLAR_X,
+			ground_y,
 			0.82,
 			Vector2(86.0, 72.0)
 		)
-		_add_solid_depth_prop(
-			pillar_key,
-			Vector2(side_x_right, ground_y),
-			0.82,
-			Vector2(86.0, 72.0),
-			true
-		)
 
-	# Floor props begin here. Wall-mounted crystal/flags are handled above.
-	_add_solid_depth_prop(
+	# Inner side props sit halfway between the pillar rows. This keeps a strong
+	# left/right rhythm while preserving a wide central combat lane and carpet.
+	_add_mirrored_solid_prop(
 		"altar",
-		Vector2(670.0, 1335.0),
+		INNER_PROP_X,
+		INNER_PROP_START_Y,
 		0.62,
 		Vector2(158.0, 66.0)
 	)
-	_add_solid_depth_prop(
-		"altar",
-		Vector2(battlefield_size.x - 670.0, 1335.0),
+	_add_mirrored_solid_prop(
+		"brazier",
+		INNER_PROP_X,
+		INNER_PROP_START_Y + INNER_PROP_STEP_Y,
 		0.62,
-		Vector2(158.0, 66.0),
-		true
+		Vector2(70.0, 50.0)
 	)
-
-	# Low-profile braziers and statues decorate the lower half without closing
-	# off the main combat corridor.
-	var edge_brazier_ys := [1780.0, 2350.0]
-	for brazier_y_value in edge_brazier_ys:
-		var brazier_y := float(brazier_y_value)
-		_add_solid_depth_prop(
-			"brazier",
-			Vector2(235.0, brazier_y),
-			0.62,
-			Vector2(70.0, 50.0)
-		)
-		_add_solid_depth_prop(
-			"brazier",
-			Vector2(battlefield_size.x - 235.0, brazier_y),
-			0.62,
-			Vector2(70.0, 50.0),
-			true
-		)
-
-	_add_solid_depth_prop(
+	_add_mirrored_solid_prop(
+		"brazier",
+		INNER_PROP_X,
+		INNER_PROP_START_Y + INNER_PROP_STEP_Y * 2.0,
+		0.62,
+		Vector2(70.0, 50.0)
+	)
+	_add_mirrored_solid_prop(
 		"statue",
-		Vector2(610.0, battlefield_size.y - 500.0),
+		INNER_PROP_X,
+		INNER_PROP_START_Y + INNER_PROP_STEP_Y * 3.0,
 		0.70,
 		Vector2(118.0, 74.0)
 	)
-	_add_solid_depth_prop(
-		"statue",
-		Vector2(battlefield_size.x - 610.0, battlefield_size.y - 500.0),
-		0.70,
-		Vector2(118.0, 74.0),
-		true
-	)
-
 
 
 func _draw() -> void:
