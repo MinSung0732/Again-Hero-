@@ -1,8 +1,8 @@
 extends Node2D
 class_name Stage1Battlefield
 
-# Stage 1: RPG-style Demon Castle throne hall.
-# Floor drawing and prop construction happen once when the battle starts.
+# Stage 1~10: the same Demon Castle throne hall deteriorates as intruders advance.
+# All floor drawing and prop construction happen only when a battle is configured.
 const FLOOR_STEP := Vector2(171.0, 175.0)
 const FLOOR_DRAW_SIZE := Vector2(171.0, 175.0)
 const DECOR_COLLISION_LAYER := 1 << 2
@@ -23,6 +23,8 @@ const SIDE_PILLAR_COUNT := 4
 const INNER_PROP_X := 680.0
 const INNER_PROP_START_Y := 1200.0
 const INNER_PROP_STEP_Y := 520.0
+const CASTLE_STAGE_MIN := 1
+const CASTLE_STAGE_MAX := 10
 
 const TILE_ROOT := "res://assets/art/UI/tiles"
 const FLOOR_ROOT := TILE_ROOT + "/again_hero_A_48_black_grid"
@@ -31,14 +33,37 @@ const OBJECT_ROOT := TILE_ROOT + "/again_hero_C_objects"
 
 const TEXTURE_PATHS := {
 	"floor": FLOOR_ROOT + "/tile_001.png",
+	"floor_damage_1": FLOOR_ROOT + "/tile_014.png",
+	"floor_damage_2": FLOOR_ROOT + "/tile_015.png",
+	"floor_damage_3": FLOOR_ROOT + "/tile_016.png",
+	"floor_damage_4": FLOOR_ROOT + "/tile_017.png",
+	"floor_damage_5": FLOOR_ROOT + "/tile_047.png",
 	"rug_long": FLOOR_ROOT + "/tile_022.png",
+	"rug_torn_1": FLOOR_ROOT + "/tile_043.png",
+	"rug_torn_2": FLOOR_ROOT + "/tile_044.png",
+	"rug_torn_3": FLOOR_ROOT + "/tile_045.png",
+	"rug_torn_4": FLOOR_ROOT + "/tile_046.png",
 	"wall_large": WALL_ROOT + "/wall_top_001.png",
+	"wall_broken_1": WALL_ROOT + "/wall_broken_001.png",
+	"wall_broken_2": WALL_ROOT + "/wall_broken_002.png",
+	"wall_broken_3": WALL_ROOT + "/wall_broken_003.png",
+	"wall_broken_4": WALL_ROOT + "/wall_broken_004.png",
+	"wall_broken_5": WALL_ROOT + "/wall_broken_005.png",
+	"wall_broken_6": WALL_ROOT + "/wall_broken_006.png",
+	"wall_broken_7": WALL_ROOT + "/wall_broken_007.png",
+	"wall_broken_8": WALL_ROOT + "/wall_broken_008.png",
 	"wall_arch": WALL_ROOT + "/wall_arch_001.png",
+	"wall_arch_broken": WALL_ROOT + "/wall_arch_broken_001.png",
 	"wall_banner": WALL_ROOT + "/wall_top_002.png",
 	"wall_window": WALL_ROOT + "/wall_door_001.png",
 	"wall_corner": WALL_ROOT + "/wall_corner_outer_001.png",
 	"pillar_a": OBJECT_ROOT + "/pillar_001.png",
 	"pillar_b": OBJECT_ROOT + "/pillar_002.png",
+	"pillar_broken": OBJECT_ROOT + "/pillar_003.png",
+	"debris_a": OBJECT_ROOT + "/debris_001.png",
+	"debris_b": OBJECT_ROOT + "/debris_002.png",
+	"debris_c": OBJECT_ROOT + "/debris_003.png",
+	"ruins": OBJECT_ROOT + "/ruins_001.png",
 	"throne": OBJECT_ROOT + "/throne_001.png",
 	"altar": OBJECT_ROOT + "/altar_001.png",
 	"brazier": OBJECT_ROOT + "/brazier_001.png",
@@ -50,6 +75,7 @@ const TEXTURE_PATHS := {
 
 var battlefield_size := Vector2(3200.0, 3200.0)
 var stage_active := false
+var current_stage_number := 1
 var textures: Dictionary = {}
 var background_decor_layer: Node2D
 var collision_layer_root: Node2D
@@ -63,8 +89,28 @@ func _ready() -> void:
 	visible = false
 
 
+func _stage_number_from_id(stage_id: String) -> int:
+	if not stage_id.begins_with("stage_"):
+		return 0
+	return stage_id.trim_prefix("stage_").to_int()
+
+
+func _destruction_level() -> int:
+	return clampi(current_stage_number - CASTLE_STAGE_MIN, 0, 9)
+
+
+func _stable_roll(a: int, b: int, salt: int = 0) -> int:
+	# Stage-independent coordinates mean damage accumulates in the same places
+	# instead of reshuffling every run/stage.
+	return posmod(a * 37 + b * 61 + a * b * 13 + salt * 17, 100)
+
+
 func configure(stage_id: String, map_size: Vector2) -> void:
-	stage_active = stage_id == "stage_1"
+	current_stage_number = _stage_number_from_id(stage_id)
+	stage_active = (
+		current_stage_number >= CASTLE_STAGE_MIN
+		and current_stage_number <= CASTLE_STAGE_MAX
+	)
 	visible = stage_active
 
 	_ensure_layers()
@@ -118,7 +164,7 @@ func _ensure_textures() -> void:
 	for key in TEXTURE_PATHS.keys():
 		var path := String(TEXTURE_PATHS[key])
 		if not ResourceLoader.exists(path):
-			push_warning("Stage 1 battlefield texture missing: %s" % path)
+			push_warning("Castle battlefield texture missing: %s" % path)
 			continue
 		var resource = load(path)
 		if resource is Texture2D:
@@ -130,19 +176,38 @@ func _texture(key: String) -> Texture2D:
 	return value as Texture2D if value is Texture2D else null
 
 
+func _floor_texture_for_cell(column: int, row: int) -> Texture2D:
+	var base_floor := _texture("floor")
+	var destruction := _destruction_level()
+	if destruction <= 0:
+		return base_floor
+
+	# 3% more damaged cells per destruction step. Because the roll is stage
+	# independent, damage accumulates at existing coordinates as stages rise.
+	var damage_threshold := mini(27, destruction * 3)
+	if _stable_roll(column, row, 3) >= damage_threshold:
+		return base_floor
+
+	var max_variant := 1 + mini(4, floori(float(destruction) / 2.0))
+	var variant := 1 + posmod(_stable_roll(column, row, 11), max_variant)
+	var damaged := _texture("floor_damage_%d" % variant)
+	return damaged if damaged != null else base_floor
+
+
 func _draw_floor() -> void:
 	var floor_texture := _texture("floor")
 	if floor_texture == null:
 		return
 
-	# One seamless base tile only. Mixing different masonry patterns per cell
-	# created visible square patches because their grout layouts do not match.
 	var columns := ceili(battlefield_size.x / FLOOR_STEP.x)
 	var rows := ceili(battlefield_size.y / FLOOR_STEP.y)
 	for row in range(rows):
 		for column in range(columns):
+			var cell_texture := _floor_texture_for_cell(column, row)
+			if cell_texture == null:
+				cell_texture = floor_texture
 			draw_texture_rect(
-				floor_texture,
+				cell_texture,
 				Rect2(
 					Vector2(
 						float(column) * FLOOR_STEP.x,
@@ -154,23 +219,40 @@ func _draw_floor() -> void:
 			)
 
 
+func _carpet_texture_for_segment(segment_index: int) -> Texture2D:
+	var runner := _texture("rug_long")
+	var destruction := _destruction_level()
+	if destruction < 3:
+		return runner
+
+	# Carpet tears start at Stage 4 and accumulate at stable segment positions.
+	var damage_threshold := mini(49, (destruction - 2) * 7)
+	if _stable_roll(segment_index, 0, 29) >= damage_threshold:
+		return runner
+
+	var max_variant := 2 if destruction < 6 else 4
+	var variant := 1 + posmod(_stable_roll(segment_index, 0, 41), max_variant)
+	var torn := _texture("rug_torn_%d" % variant)
+	return torn if torn != null else runner
+
+
 func _draw_royal_carpet() -> void:
 	var runner := _texture("rug_long")
 	if runner == null:
 		return
 
-	# tile_022 is the straight carpet strip from the user's reference layout.
-	# Its visible artwork is 160 px high inside the shared 171x175 canvas, so
-	# stepping by 160 px overlaps only transparent padding and reads as one
-	# continuous carpet instead of repeated medallion tiles.
 	var center_x := battlefield_size.x * 0.5
 	var start_y := 470.0
 	var end_y := battlefield_size.y + CARPET_STEP_Y
 	var y := start_y
+	var segment_index := 0
 
 	while y < end_y:
+		var segment_texture := _carpet_texture_for_segment(segment_index)
+		if segment_texture == null:
+			segment_texture = runner
 		draw_texture_rect(
-			runner,
+			segment_texture,
 			Rect2(
 				Vector2(
 					center_x - FLOOR_DRAW_SIZE.x * 0.5,
@@ -181,6 +263,7 @@ func _draw_royal_carpet() -> void:
 			false
 		)
 		y += CARPET_STEP_Y
+		segment_index += 1
 
 
 func _add_background_visual(
@@ -222,7 +305,7 @@ func _add_depth_prop_visual(
 	# native Y-sort then gives the desired top-down rule:
 	# actor above this Y -> prop covers actor; actor below -> actor covers prop.
 	var sort_root := Node2D.new()
-	sort_root.name = "Stage1DepthProp"
+	sort_root.name = "CastleDepthProp"
 	sort_root.position = ground_position
 	sort_root.z_index = 0
 	world_parent.add_child(sort_root)
@@ -302,6 +385,45 @@ func _add_mirrored_solid_prop(
 	)
 
 
+func _add_mirrored_depth_prop(
+	key: String,
+	left_x: float,
+	ground_y: float,
+	scale_factor: float
+) -> void:
+	_add_depth_prop_visual(
+		key,
+		Vector2(left_x, ground_y),
+		scale_factor
+	)
+	_add_depth_prop_visual(
+		key,
+		Vector2(battlefield_size.x - left_x, ground_y),
+		scale_factor,
+		true
+	)
+
+
+func _wall_key_for_slot(slot_index: int, salt: int) -> String:
+	var destruction := _destruction_level()
+	if destruction <= 0:
+		return "wall_large"
+
+	var break_threshold := mini(72, destruction * 8)
+	if _stable_roll(slot_index, salt, 53) >= break_threshold:
+		return "wall_large"
+
+	var mild_variant := 1 + posmod(_stable_roll(slot_index, salt, 59), 4)
+	if destruction < 5:
+		return "wall_broken_%d" % mild_variant
+
+	var severe_threshold := mini(70, (destruction - 4) * 14)
+	if _stable_roll(slot_index, salt, 67) < severe_threshold:
+		var severe_variant := 5 + posmod(_stable_roll(slot_index, salt, 71), 4)
+		return "wall_broken_%d" % severe_variant
+	return "wall_broken_%d" % mild_variant
+
+
 func _build_top_wall() -> void:
 	var wall_texture := _texture("wall_large")
 	if wall_texture == null:
@@ -313,18 +435,17 @@ func _build_top_wall() -> void:
 		panel_width - PERIMETER_WALL_OVERLAP
 	)
 	var x := panel_width * 0.5 - PERIMETER_WALL_OVERLAP * 0.5
+	var slot_index := 0
 
-	# Unlike the side/bottom boundaries, the upper wall is intentionally visible
-	# inside the arena so the battlefield reads as an interior castle hall.
-	# Only a thin strip at the wall base is solid, preserving almost all combat
-	# space while preventing actors from visually walking through the masonry.
+	# The upper wall remains inside the arena for the interior-castle read.
 	while x < battlefield_size.x + panel_width * 0.5:
 		_add_background_visual(
-			"wall_large",
+			_wall_key_for_slot(slot_index, 1),
 			Vector2(x, TOP_WALL_Y),
 			PERIMETER_WALL_SCALE
 		)
 		x += repeat_step
+		slot_index += 1
 
 	_add_collision(
 		Vector2(
@@ -349,10 +470,12 @@ func _build_side_walls() -> void:
 		panel_length - PERIMETER_WALL_OVERLAP
 	)
 	var y := panel_length * 0.5 - PERIMETER_WALL_OVERLAP * 0.5
+	var slot_index := 0
 
 	while y < battlefield_size.y + panel_length * 0.5:
+		var wall_key := _wall_key_for_slot(slot_index, 2)
 		_add_background_visual(
-			"wall_large",
+			wall_key,
 			Vector2(-PERIMETER_OUTSET, y),
 			PERIMETER_WALL_SCALE,
 			false,
@@ -360,7 +483,7 @@ func _build_side_walls() -> void:
 			-PI * 0.5
 		)
 		_add_background_visual(
-			"wall_large",
+			wall_key,
 			Vector2(battlefield_size.x + PERIMETER_OUTSET, y),
 			PERIMETER_WALL_SCALE,
 			true,
@@ -368,6 +491,7 @@ func _build_side_walls() -> void:
 			PI * 0.5
 		)
 		y += repeat_step
+		slot_index += 1
 
 
 func _build_bottom_wall() -> void:
@@ -391,11 +515,12 @@ func _build_bottom_wall() -> void:
 
 	var x := panel_width * 0.5 - PERIMETER_WALL_OVERLAP * 0.5
 	var wall_y := battlefield_size.y + PERIMETER_OUTSET
+	var slot_index := 0
 
 	while x < battlefield_size.x + panel_width * 0.5:
 		if absf(x - center_x) > doorway_half_width:
 			_add_background_visual(
-				"wall_large",
+				_wall_key_for_slot(slot_index, 3),
 				Vector2(x, wall_y),
 				PERIMETER_WALL_SCALE,
 				false,
@@ -403,18 +528,40 @@ func _build_bottom_wall() -> void:
 				PI
 			)
 		x += repeat_step
+		slot_index += 1
+
+	var arch_key := "wall_arch"
+	if _destruction_level() >= 5:
+		arch_texture = _texture("wall_arch_broken")
+		arch_key = "wall_arch_broken"
 
 	if arch_texture != null:
 		# Most of the doorway remains outside the arena; only the upper arch
 		# intrudes into view, so it reads as part of the boundary instead of
 		# stealing combat space.
 		_add_background_visual(
-			"wall_arch",
+			arch_key,
 			Vector2(center_x, battlefield_size.y + 72.0),
 			PERIMETER_WALL_SCALE,
 			false,
 			1
 		)
+
+
+func _build_destruction_debris() -> void:
+	var destruction := _destruction_level()
+	if destruction >= 1:
+		_add_mirrored_depth_prop("debris_c", 520.0, 1020.0, 0.52)
+	if destruction >= 3:
+		_add_mirrored_depth_prop("debris_a", 470.0, 1560.0, 0.50)
+	if destruction >= 5:
+		_add_mirrored_depth_prop("debris_b", 500.0, 2120.0, 0.48)
+	if destruction >= 7:
+		_add_mirrored_depth_prop("debris_c", 360.0, 2720.0, 0.58)
+	if destruction >= 8:
+		_add_mirrored_depth_prop("ruins", 260.0, 1880.0, 0.48)
+	if destruction >= 9:
+		_add_mirrored_depth_prop("ruins", 300.0, 2860.0, 0.54)
 
 
 func _build_castle_decor() -> void:
@@ -423,53 +570,56 @@ func _build_castle_decor() -> void:
 	_build_bottom_wall()
 
 	var center_x := battlefield_size.x * 0.5
+	var destruction := _destruction_level()
 
-	# Wall-mounted ornaments follow a fixed 360 px rhythm around the center.
-	# They are visual-only and never become floor obstacles.
-	_add_background_visual(
-		"crystal",
-		Vector2(center_x - 1080.0, 92.0),
-		0.62,
-		false,
-		2
-	)
-	_add_background_visual(
-		"flag_a",
-		Vector2(center_x - 720.0, 108.0),
-		0.66,
-		false,
-		2
-	)
-	_add_background_visual(
-		"flag_b",
-		Vector2(center_x - 360.0, 114.0),
-		0.58,
-		false,
-		2
-	)
-	_add_background_visual(
-		"flag_b",
-		Vector2(center_x + 360.0, 114.0),
-		0.58,
-		true,
-		2
-	)
-	_add_background_visual(
-		"flag_a",
-		Vector2(center_x + 720.0, 108.0),
-		0.66,
-		true,
-		2
-	)
-	_add_background_visual(
-		"crystal",
-		Vector2(center_x + 1080.0, 92.0),
-		0.62,
-		true,
-		2
-	)
+	# Hanging ornaments disappear in pairs as the wall structure gives way.
+	if destruction < 4:
+		_add_background_visual(
+			"crystal",
+			Vector2(center_x - 1080.0, 92.0),
+			0.62,
+			false,
+			2
+		)
+		_add_background_visual(
+			"crystal",
+			Vector2(center_x + 1080.0, 92.0),
+			0.62,
+			true,
+			2
+		)
+	if destruction < 6:
+		_add_background_visual(
+			"flag_a",
+			Vector2(center_x - 720.0, 108.0),
+			0.66,
+			false,
+			2
+		)
+		_add_background_visual(
+			"flag_a",
+			Vector2(center_x + 720.0, 108.0),
+			0.66,
+			true,
+			2
+		)
+	if destruction < 8:
+		_add_background_visual(
+			"flag_b",
+			Vector2(center_x - 360.0, 114.0),
+			0.58,
+			false,
+			2
+		)
+		_add_background_visual(
+			"flag_b",
+			Vector2(center_x + 360.0, 114.0),
+			0.58,
+			true,
+			2
+		)
 
-	# Throne cluster anchors the room on the carpet axis.
+	# Throne remains the visual anchor even in the ruined late stages.
 	_add_solid_depth_prop(
 		"throne",
 		Vector2(center_x, THRONE_GROUND_Y),
@@ -490,11 +640,15 @@ func _build_castle_decor() -> void:
 		true
 	)
 
-	# Four evenly spaced pillar gates frame both sides of the arena. Alternating
-	# pillar art adds variation without breaking the spacing rule.
+	# One mirrored pillar pair breaks at Stages 3, 5, 7, and 9. Collision
+	# footprints stay identical, so destruction remains visual rather than a
+	# hidden gameplay geometry change.
 	for index in range(SIDE_PILLAR_COUNT):
 		var ground_y := SIDE_PILLAR_START_Y + float(index) * SIDE_PILLAR_STEP_Y
 		var pillar_key := "pillar_a" if index % 2 == 0 else "pillar_b"
+		var break_stage := 3 + index * 2
+		if current_stage_number >= break_stage:
+			pillar_key = "pillar_broken"
 		_add_mirrored_solid_prop(
 			pillar_key,
 			SIDE_PILLAR_X,
@@ -503,8 +657,6 @@ func _build_castle_decor() -> void:
 			Vector2(86.0, 72.0)
 		)
 
-	# Inner side props sit halfway between the pillar rows. This keeps a strong
-	# left/right rhythm while preserving a wide central combat lane and carpet.
 	_add_mirrored_solid_prop(
 		"altar",
 		INNER_PROP_X,
@@ -533,6 +685,8 @@ func _build_castle_decor() -> void:
 		0.70,
 		Vector2(118.0, 74.0)
 	)
+
+	_build_destruction_debris()
 
 
 func _draw() -> void:

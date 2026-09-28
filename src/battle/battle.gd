@@ -449,11 +449,18 @@ func _process(delta: float) -> void:
 			command_emit_timer = 0.10
 			command_changed.emit(command_power, max_command)
 
-func _configure_stage1_depth_actor(actor: Node2D, visual_node_name: String) -> void:
-	if current_stage_id != "stage_1" or not is_instance_valid(actor):
+func _uses_castle_battlefield(stage_id: String) -> bool:
+	if not stage_id.begins_with("stage_"):
+		return false
+	var stage_number := stage_id.trim_prefix("stage_").to_int()
+	return stage_number >= 1 and stage_number <= 10
+
+
+func _configure_castle_depth_actor(actor: Node2D, visual_node_name: String) -> void:
+	if not _uses_castle_battlefield(current_stage_id) or not is_instance_valid(actor):
 		return
 
-	# Layer 3 is reserved for Stage 1 solid decor footprints.
+	# Layer 3 is reserved for Demon Castle solid decor footprints.
 	if actor is CollisionObject2D:
 		(actor as CollisionObject2D).collision_mask |= (1 << 2)
 
@@ -551,15 +558,15 @@ func _start_battle() -> void:
 		float(current_stage_data.get("map_width", int(DEFAULT_MAP_SIZE.x))),
 		float(current_stage_data.get("map_height", int(DEFAULT_MAP_SIZE.y)))
 	)
-	# Stage 1 uses native Y-sort for actors and tall props. Other stages keep
-	# their existing fixed draw ordering until their maps are authored.
-	y_sort_enabled = current_stage_id == "stage_1"
-	var stage1_battlefield := get_node_or_null("Stage1Battlefield")
+	# Stages 1~10 share the Demon Castle map, progressively destroyed per stage.
+	# Keep actor/prop depth rules consistent across the whole castle arc.
+	y_sort_enabled = _uses_castle_battlefield(current_stage_id)
+	var castle_battlefield := get_node_or_null("Stage1Battlefield")
 	if (
-		is_instance_valid(stage1_battlefield)
-		and stage1_battlefield.has_method("configure")
+		is_instance_valid(castle_battlefield)
+		and castle_battlefield.has_method("configure")
 	):
-		stage1_battlefield.call(
+		castle_battlefield.call(
 			"configure",
 			current_stage_id,
 			current_map_size
@@ -591,9 +598,9 @@ func _start_battle() -> void:
 	add_child(hero)
 	hero.position = current_map_size * 0.5
 	# add_child() runs Hero._ready(), which reapplies the profile visual and
-	# restores HeroSprite.z_index. Normalize Stage 1 depth only after _ready()
+	# restores HeroSprite.z_index. Normalize Demon Castle depth only after _ready()
 	# so the hero participates in Battle's Y-sort just like monsters/props.
-	_configure_stage1_depth_actor(hero, "HeroSprite")
+	_configure_castle_depth_actor(hero, "HeroSprite")
 	last_hero_hp_for_ultimate = int(hero.get("current_hp"))
 
 	run_metrics.reset(
@@ -1298,7 +1305,7 @@ func _spawn_monster(
 	add_child(monster)
 	monster.position = spawn_position
 	# Keep depth normalization after the monster's _ready() for consistency.
-	_configure_stage1_depth_actor(monster, "Visual")
+	_configure_castle_depth_actor(monster, "Visual")
 	monster.set_meta("split_child", split_child)
 	monster.set_meta(
 		"spawn_source",
@@ -3640,9 +3647,9 @@ func go_to_next_stage() -> bool:
 	return true
 
 func _draw() -> void:
-	# Stage 1 uses the RPG-style Demon Castle tile field. Other stages keep the
-	# existing debug battlefield until their own map layouts are authored.
-	if current_stage_id != "stage_1":
+	# Stages 1~10 use the Demon Castle battlefield. Only non-castle stages keep
+	# the legacy debug field.
+	if not _uses_castle_battlefield(current_stage_id):
 		draw_rect(
 			Rect2(Vector2.ZERO, current_map_size),
 			Color(0.075, 0.085, 0.105),
