@@ -309,4 +309,4 @@ func _draw() -> void:
 	draw_rect(Rect2(-bar_width / 2.0, -70.0, bar_width, 5.0), Color(0.10, 0.10, 0.12), true)
 	draw_rect(Rect2(-bar_width / 2.0, -70.0, bar_width * duration_ratio, 5.0), Color(1.0, 1.0, 1.0), true)
 	draw_rect(Rect2(-bar_width / 2.0, -60.0, bar_width, 7.0), Color(0.10, 0.10, 0.12), true)
-	draw_rect(Rect2(-bar_width / 2.0, -60.0, bar_width * hp_ratio, 7.0), Color(0.56, 0.86, 0.72), true)
+	draw_rect(Rect2(-bar_width / 2.0, -60.0, bar_width * hp_ratio, 7.0), Color(0.45, 0.82, 1.0), true)

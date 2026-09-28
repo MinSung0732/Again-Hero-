@@ -275,6 +275,8 @@ var alchemist_equivalent_exchange_damage_reduction_timer: float = 0.0
 var summoner_config: Dictionary = {}
 var summoner_gatekeeper_config: Dictionary = {}
 var summoner_scout_config: Dictionary = {}
+var summoner_full_slot_shield_config: Dictionary = {}
+var summoner_full_slot_shield_cooldown: float = 0.0
 var summoner_slot_base: int = 5
 var summoner_slot_bonus: int = 0
 var summoner_gatekeeper_pool: Array[Node2D] = []
@@ -638,6 +640,16 @@ func configure_profile(profile: Dictionary) -> void:
 		raw_scout.duplicate(true)
 		if typeof(raw_scout) == TYPE_DICTIONARY
 		else {}
+	)
+	var raw_full_slot_shield = summoner_config.get("full_slot_shield", {})
+	summoner_full_slot_shield_config = (
+		raw_full_slot_shield.duplicate(true)
+		if typeof(raw_full_slot_shield) == TYPE_DICTIONARY
+		else {}
+	)
+	summoner_full_slot_shield_cooldown = maxf(
+		float(summoner_full_slot_shield_config.get("initial_cooldown", 0.0)),
+		0.0
 	)
 	summoner_slot_base = maxi(
 		int(summoner_config.get("base_slot_count", 5)),
@@ -1214,6 +1226,7 @@ func _physics_process_summoner(delta: float) -> void:
 		summoner_cast_lock_timer - delta,
 		0.0
 	)
+	_update_summoner_full_slot_shield(delta)
 	_update_invulnerability(delta)
 
 	if slow_timer > 0.0:
@@ -1273,6 +1286,48 @@ func _physics_process_summoner(delta: float) -> void:
 		_summoner_basic_attack(target)
 
 	_update_summoner_pose_visual(delta)
+
+
+func _update_summoner_full_slot_shield(delta: float) -> void:
+	if summoner_full_slot_shield_config.is_empty():
+		return
+
+	summoner_full_slot_shield_cooldown = maxf(
+		summoner_full_slot_shield_cooldown - delta,
+		0.0
+	)
+
+	if shield_duration_timer > 0.0:
+		shield_duration_timer = maxf(shield_duration_timer - delta, 0.0)
+		if shield_duration_timer <= 0.0 and shield_hp > 0.0:
+			_end_shield()
+
+	if summoner_full_slot_shield_cooldown > 0.0:
+		return
+	if _get_active_summon_count() < _get_summoner_slot_capacity():
+		return
+
+	var shield_ratio := clampf(
+		float(summoner_full_slot_shield_config.get("shield_hp_ratio", 0.15)),
+		0.0,
+		1.0
+	)
+	var refreshed_shield := float(max_hp) * shield_ratio
+	if refreshed_shield <= 0.0:
+		return
+
+	# Refresh-type passive: replace remaining shield amount and duration.
+	shield_max_hp = refreshed_shield
+	shield_hp = refreshed_shield
+	shield_duration_timer = maxf(
+		float(summoner_full_slot_shield_config.get("duration", 8.0)),
+		0.0
+	)
+	summoner_full_slot_shield_cooldown = maxf(
+		float(summoner_full_slot_shield_config.get("cooldown", 40.0)),
+		0.0
+	)
+	queue_redraw()
 
 
 func _try_cast_summoner_gatekeeper() -> bool:
