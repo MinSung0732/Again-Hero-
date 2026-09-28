@@ -587,10 +587,13 @@ func _start_battle() -> void:
 	if hero.has_method("configure_battlefield"):
 		hero.call("configure_battlefield", current_map_size)
 	hero.set("level", int(current_stage_data.get("hero_level_start", 1)))
-	_configure_stage1_depth_actor(hero, "HeroSprite")
 
 	add_child(hero)
 	hero.position = current_map_size * 0.5
+	# add_child() runs Hero._ready(), which reapplies the profile visual and
+	# restores HeroSprite.z_index. Normalize Stage 1 depth only after _ready()
+	# so the hero participates in Battle's Y-sort just like monsters/props.
+	_configure_stage1_depth_actor(hero, "HeroSprite")
 	last_hero_hp_for_ultimate = int(hero.get("current_hp"))
 
 	run_metrics.reset(
@@ -1292,9 +1295,10 @@ func _spawn_monster(
 		if split_exp_value != null:
 			monster.set("exp_reward", 0)
 
-	_configure_stage1_depth_actor(monster, "Visual")
 	add_child(monster)
 	monster.position = spawn_position
+	# Keep depth normalization after the monster's _ready() for consistency.
+	_configure_stage1_depth_actor(monster, "Visual")
 	monster.set_meta("split_child", split_child)
 	monster.set_meta(
 		"spawn_source",
