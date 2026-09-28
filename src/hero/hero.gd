@@ -99,6 +99,7 @@ static var _purifier_crown_frames_cache: SpriteFrames
 # transparent canvas. Cache a body/root correction once when the visual is built
 # so animation playback never scans pixels or allocates arrays per frame.
 var stage9_frame_anchor_offsets: Dictionary = {}
+var stage9_body_center_offset_x: float = 16.0
 
 @export var max_hp: int = 300
 @export var move_speed: float = 230.0
@@ -5657,6 +5658,8 @@ func _apply_profile_visual() -> void:
 	hero_sprite.modulate = Color.WHITE
 	hero_sprite.rotation = 0.0
 	hero_sprite.offset = Vector2.ZERO
+	hero_sprite.z_index = 1
+	hero_sprite.show_behind_parent = false
 	hero_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 	if hero_archetype == "cleric_purifier":
@@ -5686,6 +5689,9 @@ func _apply_profile_visual() -> void:
 		)
 		hero_sprite.sprite_frames = purifier_frames
 		hero_sprite.visible = true
+		# Stage 9 draw order: HeroSprite < crown effect < Hero._draw() bars.
+		hero_sprite.z_index = -2
+		hero_sprite.show_behind_parent = true
 		_build_stage9_frame_anchor_cache()
 		_apply_normalized_hero_visual_scale()
 		_apply_stage9_sprite_anchor()
@@ -6528,6 +6534,9 @@ func _build_stage9_frame_anchor_cache() -> void:
 		_find_stage9_body_anchor_x(reference_texture)
 		- float(reference_texture.get_width()) * 0.5
 	)
+	# Move the actual torso/robe root, not the transparent frame canvas, onto
+	# the gameplay root. The HP/resource bars are centered on this same X=0.
+	stage9_body_center_offset_x = -reference_anchor_local
 
 	for animation_name in hero_sprite.sprite_frames.get_animation_names():
 		var frame_count := hero_sprite.sprite_frames.get_frame_count(animation_name)
@@ -6565,15 +6574,15 @@ func _apply_stage9_sprite_anchor() -> void:
 	# Preserve the tuned Stage 9 global placement, but cancel authored
 	# frame-to-frame body drift around the same gameplay/root position.
 	hero_sprite.offset = Vector2(
-		(16.0 + correction_x) * facing_sign,
+		(stage9_body_center_offset_x + correction_x) * facing_sign,
 		-24.0
 	)
-	# Attached Stage 9 effects follow the exact same per-frame X correction.
-	# This prevents the crown/shield art from appearing to slide beside the body.
+	# effect3/effect4 are authored around the hero root, so keep them centered
+	# on X=0 instead of inheriting the sprite frame's transparent-canvas offset.
 	if is_instance_valid(purifier_protection_effect):
-		purifier_protection_effect.offset.x = hero_sprite.offset.x
+		purifier_protection_effect.offset.x = 0.0
 	if is_instance_valid(purifier_crown_effect):
-		purifier_crown_effect.offset.x = hero_sprite.offset.x + 2.0
+		purifier_crown_effect.offset.x = 0.0
 
 
 func _apply_stage8_sprite_anchor() -> void:
@@ -9132,9 +9141,10 @@ func _ensure_purifier_skill_runtime() -> void:
 		# Keep it compact and attached to the same horizontal visual anchor as
 		# the animated hero frames so it does not drift a few pixels per frame.
 		purifier_crown_effect.scale = hero_sprite.scale * 0.78
-		purifier_crown_effect.offset = Vector2(hero_sprite.offset.x + 2.0, -24.0)
-		purifier_crown_effect.position = Vector2(0.0, -38.0)
-		# Draw below the Hero parent (and therefore below HP/resource bars).
+		# Center the crown on the gameplay/root X, then place it directly above
+		# the head. Layer order is HeroSprite(-2) < Crown(-1) < bars(parent 0).
+		purifier_crown_effect.offset = Vector2(0.0, -24.0)
+		purifier_crown_effect.position = Vector2(0.0, -36.0)
 		purifier_crown_effect.show_behind_parent = true
 		purifier_crown_effect.z_index = -1
 		purifier_crown_effect.visible = false
