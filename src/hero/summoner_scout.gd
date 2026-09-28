@@ -177,7 +177,7 @@ func _attack_target(current_target: Node2D) -> void:
 		attack_audio.stop()
 		attack_audio.play()
 	if current_target.has_method("take_damage"):
-		current_target.call("take_damage", attack_damage, self)
+		current_target.call("take_damage", attack_damage)
 
 
 func take_damage(amount: int, _source: Node = null) -> bool:
