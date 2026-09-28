@@ -34,6 +34,28 @@ func _ready() -> void:
 	deactivate(false)
 
 
+func prepare_pool(config: Dictionary) -> void:
+	var raw_drone_config = config.get("drone", {})
+	drone_config = (
+		raw_drone_config.duplicate(true)
+		if typeof(raw_drone_config) == TYPE_DICTIONARY
+		else {}
+	)
+	frame_dir = String(config.get("frame_dir", DEFAULT_FRAME_DIR))
+	visual_scale = maxf(float(config.get("visual_scale", 0.70)), 0.01)
+	visual_offset_y = float(config.get("visual_offset_y", -133.0))
+	var opening_frame_seconds := maxf(
+		float(config.get("opening_frame_seconds", 2.0)),
+		0.05
+	)
+	_setup_visual(frame_dir, opening_frame_seconds)
+	_load_audio(
+		String(config.get("opening_audio_path", DEFAULT_OPENING_AUDIO_PATH)),
+		String(config.get("drone_spawn_audio_path", DEFAULT_DRONE_SPAWN_AUDIO_PATH))
+	)
+	_ensure_drone_pool(maxi(int(config.get("drone_pool_size", 96)), 1))
+
+
 func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) -> void:
 	global_position = world_position
 	owner_hero = new_owner
