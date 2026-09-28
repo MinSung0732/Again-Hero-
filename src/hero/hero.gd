@@ -13381,6 +13381,13 @@ func _draw() -> void:
 		resource_bar_y = -128.0
 		hp_bar_y = -113.0
 		shield_bar_y = -98.0
+	elif hero_archetype == "cleric_purifier":
+		# Stage 9's hood/head reaches into the shared bar area even after the
+		# sprite anchor correction. Keep the hero root and sprite position as-is
+		# and lift only the UI bars, preserving their 15px vertical spacing.
+		resource_bar_y = -100.0
+		hp_bar_y = -85.0
+		shield_bar_y = -70.0
 	if hero_archetype == "pistol_gunner":
 		var gap := 2.0
 		var cell_width := (bar_width - gap * float(gunner_magazine_size - 1)) / float(gunner_magazine_size)
