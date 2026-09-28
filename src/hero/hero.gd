@@ -1094,39 +1094,6 @@ func _physics_process(delta: float) -> void:
 		_physics_process_alchemist(delta)
 		return
 
-	if hero_archetype == "cleric_purifier":
-		var purifier_dir := (
-			sprite_frame_dir
-			if not sprite_frame_dir.is_empty()
-			else STAGE9_FRAME_DIR
-		)
-		var purifier_frames := SpriteFrames.new()
-		if purifier_frames.has_animation("default"):
-			purifier_frames.remove_animation("default")
-		if not _add_named_sequence_animation(
-			purifier_frames, "idle", purifier_dir, "idle", 4, 6.0, true
-		):
-			return
-		_add_named_sequence_animation(
-			purifier_frames, "move", purifier_dir, "walk", 6, 9.0, true
-		)
-		_add_named_sequence_animation(
-			purifier_frames, "attack", purifier_dir, "attack", 4, 8.0, false
-		)
-		_add_named_sequence_animation(
-			purifier_frames, "hit", purifier_dir, "hit", 3, 12.0, false
-		)
-		_add_named_sequence_animation(
-			purifier_frames, "death", purifier_dir, "death", 4, 8.0, false
-		)
-		hero_sprite.sprite_frames = purifier_frames
-		hero_sprite.visible = true
-		_apply_normalized_hero_visual_scale()
-		_apply_stage9_sprite_anchor()
-		hero_sprite.speed_scale = 1.0
-		hero_sprite.play("idle")
-		return
-
 	if hero_archetype == "summoner_gatekeeper":
 		_physics_process_summoner(delta)
 		return
@@ -5690,6 +5657,38 @@ func _apply_profile_visual() -> void:
 	hero_sprite.offset = Vector2.ZERO
 	hero_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
+	if hero_archetype == "cleric_purifier":
+		var purifier_dir := (
+			sprite_frame_dir
+			if not sprite_frame_dir.is_empty()
+			else STAGE9_FRAME_DIR
+		)
+		var purifier_frames := SpriteFrames.new()
+		if purifier_frames.has_animation("default"):
+			purifier_frames.remove_animation("default")
+		if not _add_named_sequence_animation(
+			purifier_frames, "idle", purifier_dir, "idle", 4, 6.0, true
+		):
+			return
+		_add_named_sequence_animation(
+			purifier_frames, "move", purifier_dir, "walk", 6, 9.0, true
+		)
+		_add_named_sequence_animation(
+			purifier_frames, "attack", purifier_dir, "attack", 4, 8.0, false
+		)
+		_add_named_sequence_animation(
+			purifier_frames, "hit", purifier_dir, "hit", 3, 12.0, false
+		)
+		_add_named_sequence_animation(
+			purifier_frames, "death", purifier_dir, "death", 4, 8.0, false
+		)
+		hero_sprite.sprite_frames = purifier_frames
+		hero_sprite.visible = true
+		_apply_normalized_hero_visual_scale()
+		_apply_stage9_sprite_anchor()
+		hero_sprite.speed_scale = 1.0
+		hero_sprite.play("idle")
+		return
 
 	if hero_archetype == "summoner_gatekeeper":
 		var summoner_dir := (
