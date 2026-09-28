@@ -129,6 +129,13 @@ func _apply_initial_responsive_layout() -> void:
 		return
 	_refresh_responsive_portrait_positions()
 	_reset_portrait_state()
+	# The name plates split the screen at 50%. Reassert the stage hero name
+	# after the responsive layout pass so no container/resize update can leave
+	# the right label stale or visually empty.
+	demon_name.text = "마왕"
+	hero_name.text = _hero_display_name
+	demon_name.visible = true
+	hero_name.visible = true
 	_play_intro_fade()
 	_show_current_line()
 
