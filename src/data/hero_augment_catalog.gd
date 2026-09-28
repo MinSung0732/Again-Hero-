@@ -1062,6 +1062,87 @@ const AUGMENTS = [
 		"tags": ["alchemist", "growth", "area"],
 		"effects": [{"op": "alchemist_quick_preparation"}]
 	}
+,
+	{
+		"id": "summoner_gatekeeper_fortress",
+		"name": "철벽의 문지기",
+		"description": "중첩당 문지기 최대 HP +8%, 지속시간 +3초, 공격속도 -2% (최대 5중첩)",
+		"base_score": 7.1, "max_stack": 5,
+		"tags": ["summoner", "summoner_gatekeeper", "durability"],
+		"effects": [{"op": "summoner_runtime_augment"}]
+	},
+	{
+		"id": "summoner_gatekeeper_barrage",
+		"name": "장거리 포격체계",
+		"description": "중첩당 문지기 공격력 +5%, 투사체 속도 +4%, 사거리 +16. 같은 대상 연속 공격은 단계당 중첩당 +1% 피해, 최대 4단계 (최대 5중첩)",
+		"base_score": 7.4, "max_stack": 5,
+		"tags": ["summoner", "summoner_gatekeeper", "damage", "range"],
+		"effects": [{"op": "summoner_runtime_augment"}]
+	},
+	{
+		"id": "summoner_watcher_focus",
+		"name": "집중 감시",
+		"description": "용사가 공격 중인 적을 감시자가 공격할 때 중첩당 공격속도 +7%, 피해 +3% (최대 5중첩)",
+		"base_score": 7.4, "max_stack": 5,
+		"tags": ["summoner", "summoner_watcher", "damage", "attack_speed"],
+		"effects": [{"op": "summoner_runtime_augment"}]
+	},
+	{
+		"id": "summoner_watcher_network",
+		"name": "증설된 감시망",
+		"description": "중첩당 감시자 최대 소환 +1, 개체당 공격력 계수 -1%p (최대 2중첩)",
+		"base_score": 7.0, "max_stack": 2,
+		"tags": ["summoner", "summoner_watcher", "area"],
+		"effects": [{"op": "summoner_runtime_augment"}]
+	},
+	{
+		"id": "summoner_hound_frenzy",
+		"name": "광견화",
+		"description": "중첩당 투견 이동속도 +5%, 공격속도 +4%, 두 번째 타격 추가 피해 +용사 공격력 2.4% (최대 5중첩)",
+		"base_score": 7.4, "max_stack": 5,
+		"tags": ["summoner", "summoner_hound", "damage", "mobility"],
+		"effects": [{"op": "summoner_runtime_augment"}]
+	},
+	{
+		"id": "summoner_hound_blood_track",
+		"name": "피의 추적",
+		"description": "중첩당 HP 50% 이상 적에게 투견 피해 +5%, 엘리트/보스 추적 이동속도 +3% (최대 5중첩)",
+		"base_score": 7.2, "max_stack": 5,
+		"tags": ["summoner", "summoner_hound", "damage", "mobility"],
+		"effects": [{"op": "summoner_runtime_augment"}]
+	},
+	{
+		"id": "summoner_scout_reinforcement",
+		"name": "선봉대 증원",
+		"description": "중첩당 정찰병 지속시간 +4초, 이동속도 +4% (최대 5중첩)",
+		"base_score": 7.1, "max_stack": 5,
+		"tags": ["summoner", "summoner_scout", "growth", "mobility"],
+		"effects": [{"op": "summoner_runtime_augment"}]
+	},
+	{
+		"id": "summoner_scout_swarm_tactics",
+		"name": "군집 전술",
+		"description": "정찰병 3기 이상이면 중첩당 공격속도 +4%, 공격력 +2%. 5기 이상이면 이동속도 +3% (최대 5중첩)",
+		"base_score": 7.3, "max_stack": 5,
+		"tags": ["summoner", "summoner_scout", "damage", "attack_speed"],
+		"effects": [{"op": "summoner_runtime_augment"}]
+	},
+	{
+		"id": "summoner_shield_fortify",
+		"name": "포화 방벽 강화",
+		"description": "중첩당 포화 방벽 최대 HP 비율 +1.4%p, 지속시간 +0.4초 (최대 5중첩)",
+		"base_score": 6.8, "max_stack": 5,
+		"tags": ["summoner", "summoner_shield", "survival"],
+		"effects": [{"op": "summoner_runtime_augment"}]
+	},
+	{
+		"id": "summoner_shield_resonance",
+		"name": "방벽 공명",
+		"description": "방벽 활성 중 중첩당 일반 소환수 공격속도 +2.4%, 이동속도 +2%. 피해로 파괴되면 일반 소환수 지속시간 +0.6초 (최대 5중첩)",
+		"base_score": 6.9, "max_stack": 5,
+		"tags": ["summoner", "summoner_shield", "support"],
+		"effects": [{"op": "summoner_runtime_augment"}]
+	}
 
 ]
 

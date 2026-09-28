@@ -28,6 +28,9 @@ var attack_cooldown: float = 1.65
 var projectile_speed: float = 560.0
 var attack_timer: float = 0.0
 var dying: bool = false
+var consecutive_damage_bonus_per_step: float = 0.0
+var consecutive_target_id: int = 0
+var consecutive_target_steps: int = 0
 var projectile_pool: Array[Node2D] = []
 
 
@@ -57,6 +60,9 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 	attack_range = maxf(float(config.get("attack_range", 720.0)), 1.0)
 	attack_cooldown = maxf(float(config.get("attack_cooldown", 1.65)), 0.05)
 	projectile_speed = maxf(float(config.get("projectile_speed", 560.0)), 1.0)
+	consecutive_damage_bonus_per_step = maxf(float(config.get("consecutive_damage_bonus_per_step", 0.0)), 0.0)
+	consecutive_target_id = 0
+	consecutive_target_steps = 0
 	attack_timer = 0.55
 	dying = false
 	active = true
@@ -100,7 +106,11 @@ func _physics_process(delta: float) -> void:
 		var target := _find_nearest_target()
 		if is_instance_valid(target):
 			_fire_at(target)
-			attack_timer = attack_cooldown
+			var speed_multiplier := 1.0
+			if is_instance_valid(owner_hero) and owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
+				var multipliers: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
+				speed_multiplier = maxf(float(multipliers.get("attack_speed", 1.0)), 0.1)
+			attack_timer = attack_cooldown / speed_multiplier
 	queue_redraw()
 
 
@@ -142,11 +152,19 @@ func _fire_at(target: Node2D) -> void:
 	var projectile := _acquire_projectile()
 	if projectile == null:
 		return
+	var target_id := target.get_instance_id()
+	if target_id == consecutive_target_id:
+		consecutive_target_steps = mini(consecutive_target_steps + 1, 4)
+	else:
+		consecutive_target_id = target_id
+		consecutive_target_steps = 1
+	var bonus_steps := maxi(consecutive_target_steps - 1, 0)
+	var shot_damage := maxi(int(round(float(attack_damage) * (1.0 + consecutive_damage_bonus_per_step * float(bonus_steps)))), 1)
 	projectile.call(
 		"activate",
 		global_position + Vector2(0.0, -18.0),
 		target,
-		attack_damage,
+		shot_damage,
 		projectile_speed,
 		attack_range + 80.0
 	)

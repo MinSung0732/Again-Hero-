@@ -37,6 +37,10 @@ var dying: bool = false
 var frame_dir: String = DEFAULT_FRAME_DIR
 var visual_scale: float = 0.46
 var visual_offset: Vector2 = Vector2(9.2, -55.2)
+var owner_attack_damage: int = 1
+var second_hit_bonus_ratio: float = 0.0
+var high_hp_damage_bonus: float = 0.0
+var elite_move_speed_bonus: float = 0.0
 
 
 func _ready() -> void:
@@ -48,6 +52,7 @@ func _ready() -> void:
 func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) -> void:
 	global_position = world_position
 	owner_hero = new_owner
+	owner_attack_damage = maxi(int(config.get("owner_attack_damage", 1)), 1)
 	max_hp = maxi(int(config.get("max_hp", 2000)), 1)
 	current_hp = max_hp
 	duration_total = maxf(float(config.get("duration", 40.0)), 0.1)
@@ -65,6 +70,9 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 	attack_cooldown = maxf(float(config.get("attack_cooldown", 0.72)), 0.05)
 	move_speed = maxf(float(config.get("move_speed", 300.0)), 1.0)
 	sense_range = maxf(float(config.get("sense_range", 820.0)), attack_range)
+	second_hit_bonus_ratio = maxf(float(config.get("second_hit_bonus_ratio", 0.0)), 0.0)
+	high_hp_damage_bonus = maxf(float(config.get("high_hp_damage_bonus", 0.0)), 0.0)
+	elite_move_speed_bonus = maxf(float(config.get("elite_move_speed_bonus", 0.0)), 0.0)
 	frame_dir = String(config.get("frame_dir", DEFAULT_FRAME_DIR))
 	visual_scale = maxf(float(config.get("visual_scale", 0.46)), 0.01)
 	visual_offset = Vector2(
@@ -146,7 +154,13 @@ func _physics_process(delta: float) -> void:
 		visual.flip_h = horizontal_delta < 0.0
 
 	if distance > attack_range * 0.88:
-		velocity = global_position.direction_to(target.global_position) * move_speed
+		var move_multiplier := 1.0
+		if bool(target.get_meta("elite", false)) or bool(target.get_meta("boss", false)) or bool(target.get_meta("is_boss", false)):
+			move_multiplier += elite_move_speed_bonus
+		if is_instance_valid(owner_hero) and owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
+			var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
+			move_multiplier *= maxf(float(support.get("move_speed", 1.0)), 0.1)
+		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier
 		move_and_slide()
 		if visual.animation != &"move":
 			visual.play(&"move")
@@ -168,7 +182,15 @@ func _update_pending_hits(delta: float) -> void:
 
 	if is_instance_valid(attack_target) and not attack_target.is_queued_for_deletion():
 		if attack_target.has_method("take_damage"):
-			attack_target.call("take_damage", attack_damage)
+			var dealt_damage := float(attack_damage)
+			var raw_hp = attack_target.get("current_hp")
+			var raw_max_hp = attack_target.get("max_hp")
+			if raw_hp != null and raw_max_hp != null and float(raw_max_hp) > 0.0 and float(raw_hp) / float(raw_max_hp) >= 0.50:
+				dealt_damage *= 1.0 + high_hp_damage_bonus
+			var hit_index := hits_per_attack - pending_hits + 1
+			if hit_index == 2 and second_hit_bonus_ratio > 0.0:
+				dealt_damage += float(owner_attack_damage) * second_hit_bonus_ratio
+			attack_target.call("take_damage", maxi(int(round(dealt_damage)), 1))
 		if attack_audio.stream != null:
 			attack_audio.stop()
 			attack_audio.play()
@@ -212,7 +234,11 @@ func _find_nearest_target() -> Node2D:
 func _start_attack(current_target: Node2D) -> void:
 	if not is_instance_valid(current_target):
 		return
-	attack_timer = attack_cooldown
+	var attack_speed_multiplier := 1.0
+	if is_instance_valid(owner_hero) and owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
+		var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
+		attack_speed_multiplier = maxf(float(support.get("attack_speed", 1.0)), 0.1)
+	attack_timer = attack_cooldown / attack_speed_multiplier
 	attack_target = current_target
 	pending_hits = hits_per_attack
 	hit_timer = 0.0

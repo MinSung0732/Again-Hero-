@@ -31,6 +31,8 @@ var follow_offset: Vector2 = Vector2.ZERO
 var frame_dir: String = DEFAULT_FRAME_DIR
 var visual_scale: float = 0.50
 var visual_offset: Vector2 = Vector2(24.0, -8.0)
+var focus_attack_speed_bonus: float = 0.0
+var focus_damage_bonus: float = 0.0
 var projectile_pool: Array[Node2D] = []
 
 
@@ -56,6 +58,8 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 	attack_range = maxf(float(config.get("attack_range", 700.0)), 1.0)
 	attack_cooldown = maxf(float(config.get("attack_cooldown", 0.34)), 0.05)
 	projectile_speed = maxf(float(config.get("projectile_speed", 800.0)), 1.0)
+	focus_attack_speed_bonus = maxf(float(config.get("focus_attack_speed_bonus", 0.0)), 0.0)
+	focus_damage_bonus = maxf(float(config.get("focus_damage_bonus", 0.0)), 0.0)
 	frame_dir = String(config.get("frame_dir", DEFAULT_FRAME_DIR))
 	visual_scale = maxf(float(config.get("visual_scale", 0.50)), 0.01)
 	visual_offset = Vector2(
@@ -184,12 +188,21 @@ func _fire_at_target(current_target: Node2D) -> void:
 	if projectile == null:
 		return
 
-	attack_timer = attack_cooldown
+	var focus_active := false
+	if is_instance_valid(owner_hero):
+		var owner_target = owner_hero.get("target")
+		focus_active = owner_target == current_target
+	var attack_speed_multiplier := 1.0 + (focus_attack_speed_bonus if focus_active else 0.0)
+	if is_instance_valid(owner_hero) and owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
+		var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
+		attack_speed_multiplier *= maxf(float(support.get("attack_speed", 1.0)), 0.1)
+	attack_timer = attack_cooldown / maxf(attack_speed_multiplier, 0.1)
+	var shot_damage := maxi(int(round(float(attack_damage) * (1.0 + (focus_damage_bonus if focus_active else 0.0)))), 1)
 	projectile.call(
 		"activate",
 		global_position,
 		current_target,
-		attack_damage,
+		shot_damage,
 		projectile_speed,
 		attack_range
 	)

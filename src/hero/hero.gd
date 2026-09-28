@@ -1195,7 +1195,11 @@ func _get_active_summoner_watcher_count() -> int:
 
 
 func _get_summoner_watcher_max_active() -> int:
-	return maxi(int(summoner_watcher_config.get("max_active", 2)), 0)
+	return maxi(
+		int(summoner_watcher_config.get("max_active", 2))
+		+ _get_summoner_augment_stacks("summoner_watcher_network"),
+		0
+	)
 
 
 func _get_next_summoner_watcher_follow_slot() -> int:
@@ -1701,6 +1705,46 @@ func _move_summoner_without_monsters_near_open_gate() -> void:
 	_move_without_monsters()
 
 
+func _get_summoner_augment_stacks(augment_id: String) -> int:
+	return maxi(int(build_counts.get(augment_id, 0)), 0)
+
+
+func get_summoner_runtime_speed_multipliers() -> Dictionary:
+	var attack_speed := 1.0
+	var move_speed_multiplier := 1.0
+	if shield_hp > 0.0:
+		var resonance := _get_summoner_augment_stacks("summoner_shield_resonance")
+		attack_speed += float(resonance) * 0.024
+		move_speed_multiplier += float(resonance) * 0.02
+	return {"attack_speed": attack_speed, "move_speed": move_speed_multiplier}
+
+
+func get_summoner_scout_swarm_multipliers() -> Dictionary:
+	var stacks := _get_summoner_augment_stacks("summoner_scout_swarm_tactics")
+	var active_scouts := _count_active_summons(summoner_scout_pool)
+	var attack_speed := 1.0
+	var damage := 1.0
+	var move := 1.0
+	if active_scouts >= 3:
+		attack_speed += float(stacks) * 0.04
+		damage += float(stacks) * 0.02
+	if active_scouts >= 5:
+		move += float(stacks) * 0.03
+	return {"attack_speed": attack_speed, "damage": damage, "move_speed": move}
+
+
+func _extend_regular_summon_durations(seconds: float) -> void:
+	if seconds <= 0.0:
+		return
+	for pool in [summoner_gatekeeper_pool, summoner_scout_pool, summoner_hound_pool, summoner_watcher_pool]:
+		for summon in pool:
+			if not is_instance_valid(summon) or not bool(summon.get("active")):
+				continue
+			var remaining = summon.get("duration_remaining")
+			if remaining != null:
+				summon.set("duration_remaining", float(remaining) + seconds)
+
+
 func _update_summoner_full_slot_shield(delta: float) -> void:
 	if summoner_full_slot_shield_config.is_empty():
 		return
@@ -1720,8 +1764,10 @@ func _update_summoner_full_slot_shield(delta: float) -> void:
 	if _get_active_summon_count() < _get_summoner_slot_capacity():
 		return
 
+	var shield_fortify_stacks := _get_summoner_augment_stacks("summoner_shield_fortify")
 	var shield_ratio := clampf(
-		float(summoner_full_slot_shield_config.get("shield_hp_ratio", 0.15)),
+		float(summoner_full_slot_shield_config.get("shield_hp_ratio", 0.15))
+		+ float(shield_fortify_stacks) * 0.014,
 		0.0,
 		1.0
 	)
@@ -1733,7 +1779,8 @@ func _update_summoner_full_slot_shield(delta: float) -> void:
 	shield_max_hp = refreshed_shield
 	shield_hp = refreshed_shield
 	shield_duration_timer = maxf(
-		float(summoner_full_slot_shield_config.get("duration", 8.0)),
+		float(summoner_full_slot_shield_config.get("duration", 8.0))
+		+ float(shield_fortify_stacks) * 0.4,
 		0.0
 	)
 	summoner_full_slot_shield_cooldown = maxf(
@@ -1760,7 +1807,16 @@ func _try_cast_summoner_gatekeeper() -> bool:
 		return false
 
 	var runtime_config := summoner_gatekeeper_config.duplicate(true)
+	var fortress_stacks := _get_summoner_augment_stacks("summoner_gatekeeper_fortress")
+	var barrage_stacks := _get_summoner_augment_stacks("summoner_gatekeeper_barrage")
 	runtime_config["owner_attack_damage"] = attack_damage
+	runtime_config["max_hp"] = int(round(float(runtime_config.get("max_hp", 650)) * (1.0 + float(fortress_stacks) * 0.08)))
+	runtime_config["duration"] = float(runtime_config.get("duration", 60.0)) + float(fortress_stacks) * 3.0
+	runtime_config["attack_cooldown"] = float(runtime_config.get("attack_cooldown", 1.65)) * (1.0 + float(fortress_stacks) * 0.02)
+	runtime_config["damage_ratio"] = float(runtime_config.get("damage_ratio", 0.70)) * (1.0 + float(barrage_stacks) * 0.05)
+	runtime_config["projectile_speed"] = float(runtime_config.get("projectile_speed", 560.0)) * (1.0 + float(barrage_stacks) * 0.04)
+	runtime_config["attack_range"] = float(runtime_config.get("attack_range", 720.0)) + float(barrage_stacks) * 16.0
+	runtime_config["consecutive_damage_bonus_per_step"] = float(barrage_stacks) * 0.01
 	summon_to_use.call(
 		"activate",
 		global_position,
@@ -1815,7 +1871,10 @@ func _try_cast_summoner_scout() -> bool:
 		return false
 
 	var runtime_config := summoner_scout_config.duplicate(true)
+	var reinforcement_stacks := _get_summoner_augment_stacks("summoner_scout_reinforcement")
 	runtime_config["owner_attack_damage"] = attack_damage
+	runtime_config["duration"] = float(runtime_config.get("duration", 60.0)) + float(reinforcement_stacks) * 4.0
+	runtime_config["move_speed"] = float(runtime_config.get("move_speed", 220.0)) * (1.0 + float(reinforcement_stacks) * 0.04)
 	summon_to_use.call(
 		"activate",
 		global_position,
@@ -1870,7 +1929,14 @@ func _try_cast_summoner_hound() -> bool:
 		return false
 
 	var runtime_config := summoner_hound_config.duplicate(true)
+	var frenzy_stacks := _get_summoner_augment_stacks("summoner_hound_frenzy")
+	var blood_track_stacks := _get_summoner_augment_stacks("summoner_hound_blood_track")
 	runtime_config["owner_attack_damage"] = attack_damage
+	runtime_config["move_speed"] = float(runtime_config.get("move_speed", 300.0)) * (1.0 + float(frenzy_stacks) * 0.05)
+	runtime_config["attack_cooldown"] = float(runtime_config.get("attack_cooldown", 0.72)) / (1.0 + float(frenzy_stacks) * 0.04)
+	runtime_config["second_hit_bonus_ratio"] = float(frenzy_stacks) * 0.024
+	runtime_config["high_hp_damage_bonus"] = float(blood_track_stacks) * 0.05
+	runtime_config["elite_move_speed_bonus"] = float(blood_track_stacks) * 0.03
 	summon_to_use.call(
 		"activate",
 		global_position,
@@ -1928,7 +1994,12 @@ func _try_cast_summoner_watcher() -> bool:
 		return false
 
 	var runtime_config := summoner_watcher_config.duplicate(true)
+	var focus_stacks := _get_summoner_augment_stacks("summoner_watcher_focus")
+	var network_stacks := _get_summoner_augment_stacks("summoner_watcher_network")
 	runtime_config["owner_attack_damage"] = attack_damage
+	runtime_config["damage_ratio"] = maxf(float(runtime_config.get("damage_ratio", 0.10)) - float(network_stacks) * 0.01, 0.01)
+	runtime_config["focus_attack_speed_bonus"] = float(focus_stacks) * 0.07
+	runtime_config["focus_damage_bonus"] = float(focus_stacks) * 0.03
 	runtime_config["follow_slot"] = follow_slot
 	summon_to_use.call(
 		"activate",
@@ -9562,6 +9633,32 @@ func _add_status_resistance(
 		max_value
 	)
 
+func _get_summoner_augment_ai_settings() -> Dictionary:
+	var settings := ai_settings.duplicate(true)
+	if hero_archetype != "summoner_gatekeeper":
+		return settings
+	var biases: Dictionary = Dictionary(settings.get("augment_biases", {})).duplicate(true)
+	var families := {
+		"gatekeeper": ["summoner_gatekeeper_fortress", "summoner_gatekeeper_barrage"],
+		"scout": ["summoner_scout_reinforcement", "summoner_scout_swarm_tactics"],
+		"hound": ["summoner_hound_frenzy", "summoner_hound_blood_track"],
+		"watcher": ["summoner_watcher_focus", "summoner_watcher_network"],
+	}
+	var total := 0
+	for family_id in families.keys():
+		total += int(summoner_ai_choice_counts.get(family_id, 0))
+	if total > 0:
+		for family_id in families.keys():
+			var ratio := float(summoner_ai_choice_counts.get(family_id, 0)) / float(total)
+			for augment_id in families[family_id]:
+				biases[augment_id] = float(biases.get(augment_id, 0.0)) + ratio * 4.0
+	var filled_ratio := float(_get_active_summon_count()) / float(maxi(_get_summoner_slot_capacity(), 1))
+	biases["summoner_shield_fortify"] = float(biases.get("summoner_shield_fortify", 0.0)) + filled_ratio * 1.4
+	biases["summoner_shield_resonance"] = float(biases.get("summoner_shield_resonance", 0.0)) + filled_ratio * 1.2
+	settings["augment_biases"] = biases
+	return settings
+
+
 func _level_up() -> void:
 	level += 1
 	exp_to_next_level = _required_exp_for_level(level)
@@ -9592,11 +9689,16 @@ func _level_up() -> void:
 		return
 
 	var ai_context: Dictionary = _get_ai_decision_context()
+	var augment_ai_settings := (
+		_get_summoner_augment_ai_settings()
+		if hero_archetype == "summoner_gatekeeper"
+		else ai_settings
+	)
 	var chosen: Dictionary = BUILD_AI.choose_candidate(
 		candidates,
 		ai_context,
 		build_counts,
-		ai_settings
+		augment_ai_settings
 	)
 	_apply_augment(chosen)
 
@@ -9928,7 +10030,7 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 			else:
 				set(target, next_value)
 
-		"alchemist_equivalent_exchange", "alchemist_chemical_support", "alchemist_failure_mother_success", "alchemist_quick_decision", "alchemist_compressed_gas", "alchemist_quick_preparation":
+		"alchemist_equivalent_exchange", "alchemist_chemical_support", "alchemist_failure_mother_success", "alchemist_quick_decision", "alchemist_compressed_gas", "alchemist_quick_preparation", "summoner_runtime_augment":
 			# Alchemist augments are read from build_counts at the authoritative
 			# combat decision points, so no mutable duplicate stat is required.
 			pass
@@ -13025,6 +13127,9 @@ func take_damage(amount: int, source: Node = null) -> bool:
 			if hero_archetype == "sword_shield" and fighter_guard_active:
 				shield_hp = 0.0
 			else:
+				if hero_archetype == "summoner_gatekeeper":
+					var resonance_stacks := _get_summoner_augment_stacks("summoner_shield_resonance")
+					_extend_regular_summon_durations(float(resonance_stacks) * 0.6)
 				_end_shield()
 
 	var previous_hp := current_hp

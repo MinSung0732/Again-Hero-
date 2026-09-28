@@ -124,7 +124,15 @@ func _physics_process(delta: float) -> void:
 		visual.flip_h = horizontal_delta < 0.0
 
 	if distance > attack_range * 0.88:
-		velocity = global_position.direction_to(target.global_position) * move_speed
+		var move_multiplier := 1.0
+		if is_instance_valid(owner_hero):
+			if owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
+				var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
+				move_multiplier *= maxf(float(support.get("move_speed", 1.0)), 0.1)
+			if owner_hero.has_method("get_summoner_scout_swarm_multipliers"):
+				var swarm: Dictionary = owner_hero.call("get_summoner_scout_swarm_multipliers")
+				move_multiplier *= maxf(float(swarm.get("move_speed", 1.0)), 0.1)
+		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier
 		move_and_slide()
 		if visual.animation != &"move":
 			visual.play(&"move")
@@ -170,14 +178,24 @@ func _find_nearest_target() -> Node2D:
 func _attack_target(current_target: Node2D) -> void:
 	if not is_instance_valid(current_target):
 		return
-	attack_timer = attack_cooldown
+	var attack_speed_multiplier := 1.0
+	var damage_multiplier := 1.0
+	if is_instance_valid(owner_hero):
+		if owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
+			var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
+			attack_speed_multiplier *= maxf(float(support.get("attack_speed", 1.0)), 0.1)
+		if owner_hero.has_method("get_summoner_scout_swarm_multipliers"):
+			var swarm: Dictionary = owner_hero.call("get_summoner_scout_swarm_multipliers")
+			attack_speed_multiplier *= maxf(float(swarm.get("attack_speed", 1.0)), 0.1)
+			damage_multiplier *= maxf(float(swarm.get("damage", 1.0)), 0.1)
+	attack_timer = attack_cooldown / attack_speed_multiplier
 	if visual.sprite_frames != null and visual.sprite_frames.has_animation(&"attack"):
 		visual.play(&"attack")
 	if attack_audio.stream != null:
 		attack_audio.stop()
 		attack_audio.play()
 	if current_target.has_method("take_damage"):
-		current_target.call("take_damage", attack_damage)
+		current_target.call("take_damage", maxi(int(round(float(attack_damage) * damage_multiplier)), 1))
 
 
 func take_damage(amount: int, _source: Node = null) -> bool:
