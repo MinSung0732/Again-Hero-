@@ -6471,7 +6471,7 @@ func _apply_stage9_sprite_anchor() -> void:
 	# Stage 9's normalized sprite still sits slightly too high relative to the
 	# shared resource/HP bars. Keep the gameplay root unchanged and lower only
 	# the rendered sprite enough to leave a small visual gap above the head.
-	hero_sprite.offset = Vector2(0.0, -24.0)
+	hero_sprite.offset = Vector2(6.0, -24.0)
 
 
 func _apply_stage8_sprite_anchor() -> void:
