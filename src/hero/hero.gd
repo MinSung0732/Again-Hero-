@@ -6579,7 +6579,7 @@ func _apply_stage9_sprite_anchor() -> void:
 	# Preserve the tuned Stage 9 global placement, but cancel authored
 	# frame-to-frame body drift around the same gameplay/root position.
 	hero_sprite.offset = Vector2(
-		(12.0 + correction_x) * facing_sign,
+		(16.0 + correction_x) * facing_sign,
 		-24.0
 	)
 
