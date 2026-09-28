@@ -1,0 +1,48 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/ui/skill_unlock_cutscene.gd" id="1_script"]
+
+[sub_resource type="Shader" id="Shader_live_art"]
+code = "shader_type canvas_item;\n\nuniform float reveal_progress : hint_range(0.0, 1.0) = 0.0;\nuniform float motion_phase = 0.0;\nuniform float glow_pulse : hint_range(0.0, 1.0) = 0.0;\n\nfloat luma(vec3 color) {\n\treturn dot(color, vec3(0.299, 0.587, 0.114));\n}\n\nvoid fragment() {\n\tfloat lower_body = smoothstep(0.18, 0.95, UV.y);\n\tfloat hair_band = 1.0 - smoothstep(0.18, 0.62, abs(UV.y - 0.34));\n\tvec2 animated_uv = UV;\n\tanimated_uv.x += sin(UV.y * 12.0 + motion_phase) * 0.0015 * lower_body;\n\tanimated_uv.x += sin(UV.y * 18.0 - motion_phase * 1.15) * 0.0010 * hair_band;\n\tanimated_uv.y += sin(UV.x * 4.0 + motion_phase * 0.82) * 0.0009 * lower_body;\n\tanimated_uv = clamp(animated_uv, vec2(0.001), vec2(0.999));\n\n\tvec4 base = texture(TEXTURE, animated_uv) * COLOR;\n\tfloat diagonal = UV.x * 0.72 + (1.0 - UV.y) * 0.28;\n\tfloat reveal = smoothstep(diagonal, diagonal + 0.12, reveal_progress * 1.12);\n\tfloat brightness = smoothstep(0.58, 0.96, luma(base.rgb));\n\tvec3 warm_glow = vec3(1.0, 0.72, 0.24) * brightness * glow_pulse * 0.16;\n\tbase.rgb += warm_glow;\n\tbase.a *= reveal;\n\tCOLOR = base;\n}\n"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_live_art"]
+shader = SubResource("Shader_live_art")
+shader_parameter/reveal_progress = 0.0
+shader_parameter/motion_phase = 0.0
+shader_parameter/glow_pulse = 0.0
+
+[node name="SkillUnlockCutscene" type="CanvasLayer"]
+layer = 11
+visible = false
+script = ExtResource("1_script")
+
+[node name="BattleFrame" type="Control" parent="."]
+clip_contents = true
+offset_top = 270.0
+offset_right = 1080.0
+offset_bottom = 1444.0
+mouse_filter = 2
+
+[node name="Artwork" type="TextureRect" parent="BattleFrame"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(540, 587)
+mouse_filter = 2
+material = SubResource("ShaderMaterial_live_art")
+expand_mode = 1
+stretch_mode = 6
+texture_filter = 1
+
+[node name="Flash" type="ColorRect" parent="BattleFrame"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.86, 0.48, 0)

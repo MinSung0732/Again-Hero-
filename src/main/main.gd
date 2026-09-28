@@ -23,6 +23,7 @@ const TOUCH_HOLD_FRAME_SECONDS := 0.08
 @onready var hud_layer: CanvasLayer = $HUD
 @onready var stage_intro_cutscene = $StageIntroCutscene
 @onready var hero_reveal_cutscene = $HeroRevealCutscene
+@onready var skill_unlock_cutscene = $SkillUnlockCutscene
 
 @onready var subtitle_label: Label = $HUD/TopBar/Subtitle
 @onready var run_timer_label: Label = $HUD/TopBar/RunTimer
@@ -153,6 +154,7 @@ var _scene_load_path: String = ""
 var _scene_load_pending: bool = false
 var _stage_intro_active: bool = false
 var _stage_intro_stage_id: String = ""
+var _skill_unlock_cutscene_active: bool = false
 var _touch_hold_frames: Array[Texture2D] = []
 var _touch_hold_active: bool = false
 var _touch_hold_elapsed: float = 0.0
@@ -175,11 +177,15 @@ func _ready() -> void:
 	hero_reveal_cutscene.bgm_start_requested.connect(
 		_on_hero_reveal_bgm_start_requested
 	)
+	skill_unlock_cutscene.finished.connect(_on_skill_unlock_cutscene_finished)
 
 	battle.stats_changed.connect(_on_stats_changed)
 	battle.progression_changed.connect(_on_progression_changed)
 	battle.hero_leveled_up.connect(_on_hero_leveled_up)
 	battle.hero_augment_selected.connect(_on_hero_augment_selected)
+	battle.conditional_skill_unlocked.connect(
+		_on_conditional_skill_unlocked
+	)
 	battle.command_changed.connect(_on_command_changed)
 	battle.demon_progression_changed.connect(_on_demon_progression_changed)
 	battle.summon_result.connect(_on_summon_result)
@@ -436,9 +442,32 @@ func _start_battle_after_intro(_stage_id: String) -> void:
 	battle.set_external_pause(false)
 
 
+func _on_conditional_skill_unlocked(
+	_skill_id: String,
+	_skill_name: String,
+	payload: Dictionary
+) -> void:
+	if _skill_unlock_cutscene_active:
+		return
+	if String(payload.get("cutscene_texture_path", "")).is_empty():
+		return
+
+	_skill_unlock_cutscene_active = true
+	battle.set_external_pause(true)
+	skill_unlock_cutscene.call("play_unlock", payload)
+
+
+func _on_skill_unlock_cutscene_finished() -> void:
+	if not _skill_unlock_cutscene_active:
+		return
+	_skill_unlock_cutscene_active = false
+	if is_instance_valid(battle) and not bool(battle.get("battle_over")):
+		battle.set_external_pause(false)
+
+
 func _input(event: InputEvent) -> void:
 	_update_touch_hold_input(event)
-	if _stage_intro_active:
+	if _stage_intro_active or _skill_unlock_cutscene_active:
 		return
 
 	if event.is_action_pressed("ui_cancel"):

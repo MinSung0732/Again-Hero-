@@ -902,6 +902,8 @@ const PROFILES = {
 				"name": "이계의 문 - 개방",
 				"cooldown": 100.0,
 				"initial_cooldown": 0.0,
+				"cutscene_texture_path": "res://assets/art/heroes/stage8_summoner/cutscene/open_gate_unlock.png",
+				"cutscene_hold_seconds": 1.05,
 				"unlock_condition": {
 					"type": "summon_count",
 					"required_count": 50,

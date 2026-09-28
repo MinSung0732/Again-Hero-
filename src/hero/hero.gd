@@ -2071,6 +2071,12 @@ func _record_summoner_spawn_for_open_gate_unlock() -> void:
 			"hero_id": hero_id,
 			"archetype": hero_archetype,
 			"source": "summoner_spawn_count",
+			"cutscene_texture_path": String(
+				summoner_open_gate_config.get("cutscene_texture_path", "")
+			),
+			"cutscene_hold_seconds": float(
+				summoner_open_gate_config.get("cutscene_hold_seconds", 1.05)
+			),
 		}
 	)
 

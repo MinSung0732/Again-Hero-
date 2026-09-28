@@ -4,6 +4,7 @@ signal stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int)
 signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
 signal hero_leveled_up(new_level: int)
 signal hero_augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String)
+signal conditional_skill_unlocked(skill_id: String, skill_name: String, payload: Dictionary)
 signal command_changed(current_value: float, max_value: float)
 signal summon_result(monster_type: String, success: bool, message: String)
 signal demon_progression_changed(level: int, current_exp: float, exp_to_next_level: float)
@@ -570,6 +571,10 @@ func _start_battle() -> void:
 	hero.connect("progression_changed", Callable(self, "_on_hero_progression_changed"))
 	hero.connect("leveled_up", Callable(self, "_on_hero_leveled_up"))
 	hero.connect("augment_selected", Callable(self, "_on_hero_augment_selected"))
+	hero.connect(
+		"conditional_skill_unlocked",
+		Callable(self, "_on_hero_conditional_skill_unlocked")
+	)
 	hero.connect("died", Callable(self, "_on_hero_died"))
 
 	_emit_stats()
@@ -3557,6 +3562,18 @@ func set_external_pause(paused: bool) -> void:
 		flow_pause_manager.release_pause(PAUSE_REASON_EXTERNAL)
 
 	_sync_combat_pause_state()
+
+
+func _on_hero_conditional_skill_unlocked(
+	skill_id: String,
+	skill_name: String,
+	payload: Dictionary
+) -> void:
+	conditional_skill_unlocked.emit(
+		skill_id,
+		skill_name,
+		payload.duplicate(true)
+	)
 
 func can_go_to_next_stage() -> bool:
 	var next_stage_id: String = String(current_stage_data.get("next_stage_id", ""))
