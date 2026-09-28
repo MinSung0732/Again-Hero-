@@ -6468,11 +6468,10 @@ func _apply_stage7_sprite_anchor() -> void:
 func _apply_stage9_sprite_anchor() -> void:
 	if hero_archetype != "cleric_purifier" or not is_instance_valid(hero_sprite):
 		return
-	# Stage 9's standalone frames already carry most of the vertical padding.
-	# The previous -100px source offset lifted the normalized body into the
-	# resource/HP bars. Keep the gameplay root unchanged and lower only the
-	# rendered sprite so the bars sit cleanly above the head.
-	hero_sprite.offset = Vector2(0.0, -40.0)
+	# Stage 9's normalized sprite still sits slightly too high relative to the
+	# shared resource/HP bars. Keep the gameplay root unchanged and lower only
+	# the rendered sprite enough to leave a small visual gap above the head.
+	hero_sprite.offset = Vector2(0.0, -24.0)
 
 
 func _apply_stage8_sprite_anchor() -> void:
