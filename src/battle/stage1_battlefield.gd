@@ -6,9 +6,10 @@ class_name Stage1Battlefield
 const FLOOR_STEP := Vector2(171.0, 175.0)
 const FLOOR_DRAW_SIZE := Vector2(171.0, 175.0)
 const DECOR_COLLISION_LAYER := 1 << 2
-const CARPET_STEP_Y := 154.0
+const CARPET_STEP_Y := 160.0
 const PERIMETER_WALL_SCALE := 0.96
-const PERIMETER_WALL_OVERLAP := 18.0
+const PERIMETER_WALL_OVERLAP := 44.0
+const PERIMETER_OUTSET := 58.0
 
 const TILE_ROOT := "res://assets/art/UI/tiles"
 const FLOOR_ROOT := TILE_ROOT + "/again_hero_A_48_black_grid"
@@ -17,9 +18,9 @@ const OBJECT_ROOT := TILE_ROOT + "/again_hero_C_objects"
 
 const TEXTURE_PATHS := {
 	"floor": FLOOR_ROOT + "/tile_001.png",
-	"rug_runner": FLOOR_ROOT + "/tile_026.png",
-	"rug_end": FLOOR_ROOT + "/tile_027.png",
+	"rug_long": FLOOR_ROOT + "/tile_022.png",
 	"wall_large": WALL_ROOT + "/wall_top_001.png",
+	"wall_arch": WALL_ROOT + "/wall_arch_001.png",
 	"wall_banner": WALL_ROOT + "/wall_top_002.png",
 	"wall_window": WALL_ROOT + "/wall_door_001.png",
 	"wall_corner": WALL_ROOT + "/wall_corner_outer_001.png",
@@ -31,7 +32,6 @@ const TEXTURE_PATHS := {
 	"crystal": OBJECT_ROOT + "/crystal_001.png",
 	"flag_a": OBJECT_ROOT + "/flag_001.png",
 	"flag_b": OBJECT_ROOT + "/flag_002.png",
-	"door": OBJECT_ROOT + "/door_001.png",
 	"statue": OBJECT_ROOT + "/statue_001.png",
 }
 
@@ -142,30 +142,22 @@ func _draw_floor() -> void:
 
 
 func _draw_royal_carpet() -> void:
-	var runner := _texture("rug_runner")
-	var runner_end := _texture("rug_end")
+	var runner := _texture("rug_long")
 	if runner == null:
 		return
 
-	# The source carpet sprites contain a little transparent padding at their
-	# top/bottom edges. Advancing by the visible carpet height instead of the
-	# full canvas height makes adjacent pieces overlap cleanly with no dark gap.
+	# tile_022 is the straight carpet strip from the user's reference layout.
+	# Its visible artwork is 160 px high inside the shared 171x175 canvas, so
+	# stepping by 160 px overlaps only transparent padding and reads as one
+	# continuous carpet instead of repeated medallion tiles.
 	var center_x := battlefield_size.x * 0.5
-	var start_y := FLOOR_STEP.y * 3.0
-	var end_limit := battlefield_size.y - 165.0
-	var segment_count := maxi(
-		1,
-		ceili((end_limit - start_y) / CARPET_STEP_Y)
-	)
+	var start_y := 470.0
+	var end_y := battlefield_size.y + CARPET_STEP_Y
+	var y := start_y
 
-	for segment in range(segment_count):
-		var current := runner
-		if segment == segment_count - 1 and runner_end != null:
-			current = runner_end
-
-		var y := start_y + float(segment) * CARPET_STEP_Y
+	while y < end_y:
 		draw_texture_rect(
-			current,
+			runner,
 			Rect2(
 				Vector2(
 					center_x - FLOOR_DRAW_SIZE.x * 0.5,
@@ -175,6 +167,7 @@ func _draw_royal_carpet() -> void:
 			),
 			false
 		)
+		y += CARPET_STEP_Y
 
 
 func _add_background_visual(
@@ -275,47 +268,25 @@ func _add_solid_depth_prop(
 
 
 func _build_top_wall() -> void:
-	var y := 105.0
-	var spacing := 210.0
-	var slot_count := maxi(
-		1,
-		ceili((battlefield_size.x - 120.0) / spacing)
+	var wall_texture := _texture("wall_large")
+	if wall_texture == null:
+		return
+
+	var panel_width := float(wall_texture.get_width()) * PERIMETER_WALL_SCALE
+	var repeat_step := maxf(
+		120.0,
+		panel_width - PERIMETER_WALL_OVERLAP
 	)
-	var center_slot := floori(float(slot_count) * 0.5)
+	var x := panel_width * 0.5 - PERIMETER_WALL_OVERLAP * 0.5
+	var wall_y := -PERIMETER_OUTSET
 
-	for slot in range(slot_count):
-		var x := 80.0 + float(slot) * spacing
-		if x > battlefield_size.x - 70.0:
-			break
-
-		var wall_key := "wall_large"
-		if slot == center_slot:
-			wall_key = "wall_window"
-		elif slot % 3 == 1:
-			wall_key = "wall_banner"
-
+	while x < battlefield_size.x + panel_width * 0.5:
 		_add_background_visual(
-			wall_key,
-			Vector2(x, y),
-			0.96,
-			false,
-			0
+			"wall_large",
+			Vector2(x, wall_y),
+			PERIMETER_WALL_SCALE
 		)
-
-	_add_background_visual(
-		"wall_corner",
-		Vector2(105.0, 128.0),
-		0.94,
-		false,
-		1
-	)
-	_add_background_visual(
-		"wall_corner",
-		Vector2(battlefield_size.x - 105.0, 128.0),
-		0.94,
-		true,
-		1
-	)
+		x += repeat_step
 
 
 func _build_side_walls() -> void:
@@ -323,20 +294,17 @@ func _build_side_walls() -> void:
 	if wall_texture == null:
 		return
 
-	# Rotating the same wall family keeps the stone pattern consistent around
-	# the whole room. Slight overlap hides transparent edge padding/seams.
+	var panel_length := float(wall_texture.get_width()) * PERIMETER_WALL_SCALE
 	var repeat_step := maxf(
 		120.0,
-		float(wall_texture.get_width()) * PERIMETER_WALL_SCALE
-		- PERIMETER_WALL_OVERLAP
+		panel_length - PERIMETER_WALL_OVERLAP
 	)
-	var y := 250.0
-	var end_y := battlefield_size.y - 180.0
+	var y := panel_length * 0.5 - PERIMETER_WALL_OVERLAP * 0.5
 
-	while y < end_y:
+	while y < battlefield_size.y + panel_length * 0.5:
 		_add_background_visual(
 			"wall_large",
-			Vector2(10.0, y),
+			Vector2(-PERIMETER_OUTSET, y),
 			PERIMETER_WALL_SCALE,
 			false,
 			0,
@@ -344,7 +312,7 @@ func _build_side_walls() -> void:
 		)
 		_add_background_visual(
 			"wall_large",
-			Vector2(battlefield_size.x - 10.0, y),
+			Vector2(battlefield_size.x + PERIMETER_OUTSET, y),
 			PERIMETER_WALL_SCALE,
 			true,
 			0,
@@ -355,20 +323,27 @@ func _build_side_walls() -> void:
 
 func _build_bottom_wall() -> void:
 	var wall_texture := _texture("wall_large")
+	var arch_texture := _texture("wall_arch")
 	if wall_texture == null:
 		return
 
 	var center_x := battlefield_size.x * 0.5
+	var panel_width := float(wall_texture.get_width()) * PERIMETER_WALL_SCALE
 	var repeat_step := maxf(
 		120.0,
-		float(wall_texture.get_width()) * PERIMETER_WALL_SCALE
-		- PERIMETER_WALL_OVERLAP
+		panel_width - PERIMETER_WALL_OVERLAP
 	)
-	var doorway_half_width := 205.0
-	var x := repeat_step * 0.5
-	var wall_y := battlefield_size.y - 10.0
+	var doorway_half_width := 145.0
+	if arch_texture != null:
+		doorway_half_width = (
+			float(arch_texture.get_width()) * PERIMETER_WALL_SCALE * 0.5
+			+ 12.0
+		)
 
-	while x < battlefield_size.x:
+	var x := panel_width * 0.5 - PERIMETER_WALL_OVERLAP * 0.5
+	var wall_y := battlefield_size.y + PERIMETER_OUTSET
+
+	while x < battlefield_size.x + panel_width * 0.5:
 		if absf(x - center_x) > doorway_half_width:
 			_add_background_visual(
 				"wall_large",
@@ -379,6 +354,18 @@ func _build_bottom_wall() -> void:
 				PI
 			)
 		x += repeat_step
+
+	if arch_texture != null:
+		# Most of the doorway remains outside the arena; only the upper arch
+		# intrudes into view, so it reads as part of the boundary instead of
+		# stealing combat space.
+		_add_background_visual(
+			"wall_arch",
+			Vector2(center_x, battlefield_size.y + 72.0),
+			PERIMETER_WALL_SCALE,
+			false,
+			1
+		)
 
 
 func _build_castle_decor() -> void:
@@ -524,18 +511,6 @@ func _build_castle_decor() -> void:
 		true
 	)
 
-	# Sink the entrance below the map boundary so it reads as a doorway built
-	# into the bottom perimeter wall. Only the inner threshold keeps collision.
-	_add_depth_prop_visual(
-		"door",
-		Vector2(center_x, battlefield_size.y + 110.0),
-		0.78,
-		false
-	)
-	_add_collision(
-		Vector2(center_x, battlefield_size.y - 4.0),
-		Vector2(220.0, 48.0)
-	)
 
 
 func _draw() -> void:
