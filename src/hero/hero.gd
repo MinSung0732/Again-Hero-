@@ -6,6 +6,7 @@ signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
 signal leveled_up(new_level: int)
 signal augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String)
 signal ultimate_used(ultimate_id: String, ultimate_name: String)
+signal conditional_skill_unlocked(skill_id: String, skill_name: String, payload: Dictionary)
 
 const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
@@ -295,6 +296,9 @@ var summoner_scout_cooldown: float = 0.0
 var summoner_hound_cooldown: float = 0.0
 var summoner_watcher_cooldown: float = 0.0
 var summoner_open_gate_cooldown: float = 0.0
+var summoner_total_summons: int = 0
+var summoner_open_gate_unlocked: bool = false
+var conditional_skill_unlocks: Dictionary = {}
 var summoner_cast_interval: float = 1.0
 var summoner_cast_lock_timer: float = 0.0
 var summoner_cast_pending: bool = false
@@ -469,6 +473,7 @@ func configure_profile(profile: Dictionary) -> void:
 	# Clear all run-only progression before applying the selected hero profile
 	# so retries can never inherit augments that bypass resource conditions.
 	build_counts.clear()
+	conditional_skill_unlocks.clear()
 	current_exp = 0
 	status_resistances.clear()
 	offensive_memory_events.clear()
@@ -714,6 +719,14 @@ func configure_profile(profile: Dictionary) -> void:
 		float(summoner_open_gate_config.get("initial_cooldown", 0.0)),
 		0.0
 	)
+	summoner_total_summons = 0
+	summoner_open_gate_unlocked = (
+		_get_summoner_open_gate_required_summons() <= 0
+	)
+	if summoner_open_gate_unlocked and not summoner_open_gate_config.is_empty():
+		conditional_skill_unlocks[
+			String(summoner_open_gate_config.get("id", "summoner_open_gate"))
+		] = true
 	summoner_cast_interval = maxf(
 		float(summoner_config.get("cast_interval", 1.0)),
 		0.0
@@ -723,7 +736,10 @@ func configure_profile(profile: Dictionary) -> void:
 	summoner_scout_cast_pending = not summoner_scout_config.is_empty()
 	summoner_hound_cast_pending = not summoner_hound_config.is_empty()
 	summoner_watcher_cast_pending = not summoner_watcher_config.is_empty()
-	summoner_open_gate_cast_pending = not summoner_open_gate_config.is_empty()
+	summoner_open_gate_cast_pending = (
+		not summoner_open_gate_config.is_empty()
+		and summoner_open_gate_unlocked
+	)
 	summoner_runtime_ready = false
 	summoner_basic_effect = null
 	summoner_basic_audio = null
@@ -1388,7 +1404,7 @@ func _physics_process_summoner(delta: float) -> void:
 			move_multiplier = 1.0
 			queue_redraw()
 
-	if summoner_open_gate_cooldown <= 0.0:
+	if summoner_open_gate_unlocked and summoner_open_gate_cooldown <= 0.0:
 		summoner_open_gate_cast_pending = true
 
 	if _get_active_summon_count() < _get_summoner_slot_capacity():
@@ -1600,6 +1616,7 @@ func _try_cast_summoner_gatekeeper() -> bool:
 		float(summoner_gatekeeper_config.get("cooldown", 10.0)),
 		0.0
 	)
+	_record_summoner_spawn_for_open_gate_unlock()
 	queue_redraw()
 	return true
 
@@ -1654,6 +1671,7 @@ func _try_cast_summoner_scout() -> bool:
 		float(summoner_scout_config.get("cooldown", 20.0)),
 		0.0
 	)
+	_record_summoner_spawn_for_open_gate_unlock()
 	queue_redraw()
 	return true
 
@@ -1708,6 +1726,7 @@ func _try_cast_summoner_hound() -> bool:
 		float(summoner_hound_config.get("cooldown", 30.0)),
 		0.0
 	)
+	_record_summoner_spawn_for_open_gate_unlock()
 	queue_redraw()
 	return true
 
@@ -1766,6 +1785,7 @@ func _try_cast_summoner_watcher() -> bool:
 		float(summoner_watcher_config.get("cooldown", 7.0)),
 		0.0
 	)
+	_record_summoner_spawn_for_open_gate_unlock()
 	queue_redraw()
 	return true
 
@@ -1786,8 +1806,44 @@ func _on_summoner_watcher_released(_summon: Node2D) -> void:
 	queue_redraw()
 
 
+func _get_summoner_open_gate_required_summons() -> int:
+	if summoner_open_gate_config.is_empty():
+		return 0
+	var raw_condition = summoner_open_gate_config.get("unlock_condition", {})
+	if typeof(raw_condition) != TYPE_DICTIONARY:
+		return 0
+	var condition: Dictionary = raw_condition
+	return maxi(int(condition.get("required_count", 50)), 0)
+
+
+func _record_summoner_spawn_for_open_gate_unlock() -> void:
+	if summoner_open_gate_config.is_empty() or summoner_open_gate_unlocked:
+		return
+	summoner_total_summons += 1
+	var required := _get_summoner_open_gate_required_summons()
+	if summoner_total_summons < required:
+		return
+
+	summoner_open_gate_unlocked = true
+	summoner_open_gate_cast_pending = true
+	_unlock_conditional_skill(
+		String(summoner_open_gate_config.get("id", "summoner_open_gate")),
+		String(summoner_open_gate_config.get("name", "이계의 문 - 개방")),
+		"summon_count",
+		summoner_total_summons,
+		required,
+		{
+			"hero_id": hero_id,
+			"archetype": hero_archetype,
+			"source": "summoner_spawn_count",
+		}
+	)
+
+
 func _try_cast_summoner_open_gate() -> bool:
 	if summoner_open_gate_config.is_empty():
+		return false
+	if not summoner_open_gate_unlocked:
 		return false
 	if summoner_open_gate_cooldown > 0.0:
 		return false
@@ -2180,6 +2236,7 @@ func _collect_alchemy_material_list(
 			alchemist_materials_collected + 1,
 			required_materials
 		)
+		_check_alchemist_philosopher_unlock()
 		_add_alchemist_gas(gas_value)
 
 
@@ -2370,6 +2427,61 @@ func _get_alchemist_effective_cooldown(
 			1.0
 		)
 	)
+
+
+func _check_alchemist_philosopher_unlock() -> void:
+	if alchemist_philosopher_config.is_empty():
+		return
+	var required := maxi(
+		int(alchemist_philosopher_config.get("required_materials", 20)),
+		1
+	)
+	if alchemist_materials_collected < required:
+		return
+	_unlock_conditional_skill(
+		String(alchemist_philosopher_config.get(
+			"id",
+			"alchemist_philosopher_stone"
+		)),
+		String(alchemist_philosopher_config.get("name", "현자의 돌")),
+		"material_count",
+		alchemist_materials_collected,
+		required,
+		{
+			"hero_id": hero_id,
+			"archetype": hero_archetype,
+			"source": "alchemist_material_collection",
+		}
+	)
+
+
+func _unlock_conditional_skill(
+	skill_id: String,
+	skill_name: String,
+	condition_type: String,
+	current_value: int,
+	required_value: int,
+	extra_payload: Dictionary = {}
+) -> void:
+	if skill_id.is_empty() or bool(conditional_skill_unlocks.get(skill_id, false)):
+		return
+
+	conditional_skill_unlocks[skill_id] = true
+	var payload := extra_payload.duplicate(true)
+	payload["condition_type"] = condition_type
+	payload["current_value"] = current_value
+	payload["required_value"] = required_value
+	payload["skill_id"] = skill_id
+	payload["skill_name"] = skill_name
+	conditional_skill_unlocked.emit(skill_id, skill_name, payload)
+
+
+func is_conditional_skill_unlocked(skill_id: String) -> bool:
+	return bool(conditional_skill_unlocks.get(skill_id, false))
+
+
+func get_conditional_skill_unlock_state() -> Dictionary:
+	return conditional_skill_unlocks.duplicate(true)
 
 
 func _try_start_alchemist_philosopher_stone() -> bool:
@@ -8758,16 +8870,7 @@ func get_skill_cooldown_hud() -> Array:
 					0.0
 				)
 			)
-			_append_skill_cooldown_hud(
-				skills,
-				summoner_open_gate_config,
-				summoner_open_gate_cooldown,
-				"res://assets/art/heroes/stage8_summoner/frames/effect5/effect_06.png",
-				maxf(
-					float(summoner_open_gate_config.get("cooldown", 100.0)),
-					0.0
-				)
-			)
+			_append_summoner_open_gate_hud(skills)
 		"alchemist_chemical":
 			_append_skill_cooldown_hud(
 				skills,
@@ -8984,6 +9087,42 @@ func _append_skill_cooldown_hud(
 		"cooldown_total": cooldown_total,
 		"cooldown_remaining": current_remaining,
 		"icon_path": icon_path,
+	})
+
+
+func _append_summoner_open_gate_hud(skills: Array) -> void:
+	if summoner_open_gate_config.is_empty():
+		return
+	var required := maxi(_get_summoner_open_gate_required_summons(), 1)
+	var cooldown_total := maxf(
+		float(summoner_open_gate_config.get("cooldown", 100.0)),
+		0.0
+	)
+	var cooldown_remaining := maxf(summoner_open_gate_cooldown, 0.0)
+	var status := "사용 조건 대기"
+	if summoner_open_gate_unlocked:
+		status = (
+			"재사용 대기 중"
+			if cooldown_remaining > 0.01
+			else "사용 가능"
+		)
+	skills.append({
+		"id": String(summoner_open_gate_config.get("id", "summoner_open_gate")),
+		"name": String(summoner_open_gate_config.get("name", "이계의 문 - 개방")),
+		"description": _skill_hud_description(summoner_open_gate_config),
+		"progress_text": (
+			"누적 소환 %d / %d"
+			% [mini(summoner_total_summons, required), required]
+		),
+		"status_text": status,
+		"available": summoner_open_gate_unlocked and cooldown_remaining <= 0.01,
+		"cooldown_total": cooldown_total,
+		"cooldown_remaining": (
+			cooldown_remaining
+			if summoner_open_gate_unlocked
+			else cooldown_total
+		),
+		"icon_path": "res://assets/art/heroes/stage8_summoner/frames/effect5/effect_06.png",
 	})
 
 
