@@ -6,6 +6,9 @@ class_name Stage1Battlefield
 const FLOOR_STEP := Vector2(171.0, 175.0)
 const FLOOR_DRAW_SIZE := Vector2(171.0, 175.0)
 const DECOR_COLLISION_LAYER := 1 << 2
+const CARPET_STEP_Y := 154.0
+const PERIMETER_WALL_SCALE := 0.96
+const PERIMETER_WALL_OVERLAP := 18.0
 
 const TILE_ROOT := "res://assets/art/UI/tiles"
 const FLOOR_ROOT := TILE_ROOT + "/again_hero_A_48_black_grid"
@@ -144,15 +147,15 @@ func _draw_royal_carpet() -> void:
 	if runner == null:
 		return
 
-	# The carpet is a single straight atlas family. Every segment is placed on
-	# the exact source texture size so the newly cleaned tile edges meet without
-	# stretching, overlap, or the old cross-piece width mismatch.
+	# The source carpet sprites contain a little transparent padding at their
+	# top/bottom edges. Advancing by the visible carpet height instead of the
+	# full canvas height makes adjacent pieces overlap cleanly with no dark gap.
 	var center_x := battlefield_size.x * 0.5
 	var start_y := FLOOR_STEP.y * 3.0
-	var end_limit := battlefield_size.y - FLOOR_STEP.y * 2.0
+	var end_limit := battlefield_size.y - 165.0
 	var segment_count := maxi(
 		1,
-		floori((end_limit - start_y) / FLOOR_STEP.y)
+		ceili((end_limit - start_y) / CARPET_STEP_Y)
 	)
 
 	for segment in range(segment_count):
@@ -160,7 +163,7 @@ func _draw_royal_carpet() -> void:
 		if segment == segment_count - 1 and runner_end != null:
 			current = runner_end
 
-		var y := start_y + float(segment) * FLOOR_STEP.y
+		var y := start_y + float(segment) * CARPET_STEP_Y
 		draw_texture_rect(
 			current,
 			Rect2(
@@ -179,7 +182,8 @@ func _add_background_visual(
 	world_position: Vector2,
 	scale_factor: float = 1.0,
 	flip_h: bool = false,
-	z_offset: int = 0
+	z_offset: int = 0,
+	rotation_radians: float = 0.0
 ) -> Sprite2D:
 	var texture := _texture(key)
 	if texture == null:
@@ -192,6 +196,7 @@ func _add_background_visual(
 	sprite.scale = Vector2(scale_factor, scale_factor)
 	sprite.flip_h = flip_h
 	sprite.z_index = z_offset
+	sprite.rotation = rotation_radians
 	background_decor_layer.add_child(sprite)
 	return sprite
 
@@ -313,8 +318,73 @@ func _build_top_wall() -> void:
 	)
 
 
+func _build_side_walls() -> void:
+	var wall_texture := _texture("wall_large")
+	if wall_texture == null:
+		return
+
+	# Rotating the same wall family keeps the stone pattern consistent around
+	# the whole room. Slight overlap hides transparent edge padding/seams.
+	var repeat_step := maxf(
+		120.0,
+		float(wall_texture.get_width()) * PERIMETER_WALL_SCALE
+		- PERIMETER_WALL_OVERLAP
+	)
+	var y := 250.0
+	var end_y := battlefield_size.y - 180.0
+
+	while y < end_y:
+		_add_background_visual(
+			"wall_large",
+			Vector2(10.0, y),
+			PERIMETER_WALL_SCALE,
+			false,
+			0,
+			-PI * 0.5
+		)
+		_add_background_visual(
+			"wall_large",
+			Vector2(battlefield_size.x - 10.0, y),
+			PERIMETER_WALL_SCALE,
+			true,
+			0,
+			PI * 0.5
+		)
+		y += repeat_step
+
+
+func _build_bottom_wall() -> void:
+	var wall_texture := _texture("wall_large")
+	if wall_texture == null:
+		return
+
+	var center_x := battlefield_size.x * 0.5
+	var repeat_step := maxf(
+		120.0,
+		float(wall_texture.get_width()) * PERIMETER_WALL_SCALE
+		- PERIMETER_WALL_OVERLAP
+	)
+	var doorway_half_width := 205.0
+	var x := repeat_step * 0.5
+	var wall_y := battlefield_size.y - 10.0
+
+	while x < battlefield_size.x:
+		if absf(x - center_x) > doorway_half_width:
+			_add_background_visual(
+				"wall_large",
+				Vector2(x, wall_y),
+				PERIMETER_WALL_SCALE,
+				false,
+				0,
+				PI
+			)
+		x += repeat_step
+
+
 func _build_castle_decor() -> void:
 	_build_top_wall()
+	_build_side_walls()
+	_build_bottom_wall()
 
 	var center_x := battlefield_size.x * 0.5
 
@@ -454,12 +524,17 @@ func _build_castle_decor() -> void:
 		true
 	)
 
-	# Entrance is near the lower boundary and only its threshold blocks passage.
-	_add_solid_depth_prop(
+	# Sink the entrance below the map boundary so it reads as a doorway built
+	# into the bottom perimeter wall. Only the inner threshold keeps collision.
+	_add_depth_prop_visual(
 		"door",
-		Vector2(center_x, battlefield_size.y - 45.0),
+		Vector2(center_x, battlefield_size.y + 110.0),
 		0.78,
-		Vector2(220.0, 66.0)
+		false
+	)
+	_add_collision(
+		Vector2(center_x, battlefield_size.y - 4.0),
+		Vector2(220.0, 48.0)
 	)
 
 
