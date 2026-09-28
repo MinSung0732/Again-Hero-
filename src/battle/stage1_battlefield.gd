@@ -375,33 +375,47 @@ func _build_castle_decor() -> void:
 
 	var center_x := battlefield_size.x * 0.5
 
-	# The upper wall reads as the throne-room focal point while the central
-	# battlefield stays open for kiting and swarm movement.
+	# Wall-mounted ornaments. These assets are banners/sconces, not floor props:
+	# they stay collision-free and hang from the upper perimeter wall.
+	_add_background_visual(
+		"crystal",
+		Vector2(center_x - 1050.0, 82.0),
+		0.62,
+		false,
+		2
+	)
 	_add_background_visual(
 		"flag_a",
-		Vector2(center_x - 760.0, 292.0),
-		0.74,
+		Vector2(center_x - 720.0, 96.0),
+		0.66,
 		false,
 		2
 	)
 	_add_background_visual(
 		"flag_b",
-		Vector2(center_x - 420.0, 300.0),
-		0.70,
+		Vector2(center_x - 355.0, 104.0),
+		0.58,
 		false,
 		2
 	)
 	_add_background_visual(
 		"flag_b",
-		Vector2(center_x + 420.0, 300.0),
-		0.70,
+		Vector2(center_x + 355.0, 104.0),
+		0.58,
 		true,
 		2
 	)
 	_add_background_visual(
 		"flag_a",
-		Vector2(center_x + 760.0, 292.0),
-		0.74,
+		Vector2(center_x + 720.0, 96.0),
+		0.66,
+		true,
+		2
+	)
+	_add_background_visual(
+		"crystal",
+		Vector2(center_x + 1050.0, 82.0),
+		0.62,
 		true,
 		2
 	)
@@ -449,21 +463,7 @@ func _build_castle_decor() -> void:
 			true
 		)
 
-	# Upper side shrines give the hall a lived-in Demon Castle silhouette while
-	# keeping all hard collision near the outer lanes.
-	_add_solid_depth_prop(
-		"crystal",
-		Vector2(560.0, 825.0),
-		0.74,
-		Vector2(62.0, 54.0)
-	)
-	_add_solid_depth_prop(
-		"crystal",
-		Vector2(battlefield_size.x - 560.0, 825.0),
-		0.74,
-		Vector2(62.0, 54.0),
-		true
-	)
+	# Floor props begin here. Wall-mounted crystal/flags are handled above.
 	_add_solid_depth_prop(
 		"altar",
 		Vector2(670.0, 1335.0),
