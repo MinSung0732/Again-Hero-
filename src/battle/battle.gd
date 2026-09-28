@@ -1445,6 +1445,15 @@ func _on_monster_died(monster: Node) -> void:
 	if reward > 0:
 		_spawn_exp_orb(drop_position, reward)
 
+	# Passive resources are driven from the authoritative monster-death registry
+	# instead of polling monster groups from Hero every frame.
+	if (
+		death_type != "self_destruct"
+		and is_instance_valid(hero)
+		and hero.has_method("notify_monster_kill")
+	):
+		hero.call("notify_monster_kill", monster_type)
+
 	run_metrics.record_monster_death(monster_type)
 
 	if death_type != "self_destruct":

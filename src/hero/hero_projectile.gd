@@ -134,7 +134,24 @@ func _on_body_entered(body: Node) -> void:
 		return
 
 	has_impacted = true
-	body.call("take_damage", damage)
+	var dealt_damage := damage
+	if (
+		source_hero_id == "purifier_hero"
+		and body.is_in_group("monsters")
+		and is_instance_valid(source_hero)
+		and source_hero.has_method("get_purifier_holy_damage_multiplier")
+	):
+		dealt_damage = maxi(
+			1,
+			int(round(
+				float(damage)
+				* float(source_hero.call(
+					"get_purifier_holy_damage_multiplier",
+					body
+				))
+			))
+		)
+	body.call("take_damage", dealt_damage)
 
 	if splash_radius > 0.0 and splash_damage_ratio > 0.0:
 		_apply_splash_damage(body)
@@ -217,7 +234,23 @@ func _apply_splash_damage(direct_target: Node) -> void:
 		if global_position.distance_squared_to(monster.global_position) > splash_radius * splash_radius:
 			continue
 
-		monster.call("take_damage", splash_damage)
+		var dealt_damage := splash_damage
+		if (
+			source_hero_id == "purifier_hero"
+			and is_instance_valid(source_hero)
+			and source_hero.has_method("get_purifier_holy_damage_multiplier")
+		):
+			dealt_damage = maxi(
+				1,
+				int(round(
+					float(splash_damage)
+					* float(source_hero.call(
+						"get_purifier_holy_damage_multiplier",
+						monster
+					))
+				))
+			)
+		monster.call("take_damage", dealt_damage)
 
 func _apply_projectile_visual() -> void:
 	projectile_sprite.visible = false

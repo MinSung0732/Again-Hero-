@@ -53,6 +53,9 @@ const SUMMONER_WATCHER_SCENE := preload("res://src/hero/SummonerWatcher.tscn")
 const SUMMONER_OPEN_GATE_SCENE := preload("res://src/hero/SummonerOpenGate.tscn")
 const SUMMONER_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/summoner_basic_attack_pixabay.mp3"
 const PURIFIER_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/purifier_basic_attack_pixabay.mp3"
+const PURIFIER_SHIELD_CREATE_AUDIO_PATH := "res://assets/audio/sfx/purifier_shield_create_pixabay.mp3"
+const PURIFIER_SHIELD_BREAK_AUDIO_PATH := "res://assets/audio/sfx/purifier_shield_break_pixabay.mp3"
+const PURIFIER_CROWN_AUDIO_PATH := "res://assets/audio/sfx/purifier_crown_buff_pixabay.mp3"
 const SUMMONER_POOL_HEADROOM := 4
 const ALCHEMIST_VIAL_SCENE := preload("res://src/hero/AlchemistVial.tscn")
 const ALCHEMIST_POISON_POOL_SCENE := preload("res://src/hero/AlchemistPoisonPool.tscn")
@@ -87,6 +90,8 @@ const HERO_ATTACK_MILESTONE_BONUS := 0.05
 const HERO_ANIMATION_DUPLICATE_RESTART_GUARD_MSEC := 70
 
 static var _archmage_fx_frames_cache: Dictionary = {}
+static var _purifier_protection_frames_cache: SpriteFrames
+static var _purifier_crown_frames_cache: SpriteFrames
 
 # Stage 9 standalone frames have small per-frame X drift in their authored
 # transparent canvas. Cache a body/root correction once when the visual is built
@@ -321,9 +326,25 @@ var summoner_runtime_ready: bool = false
 var summoner_basic_effect: AnimatedSprite2D = null
 var summoner_basic_audio: AudioStreamPlayer = null
 var purifier_basic_audio: AudioStreamPlayer = null
+var purifier_shield_create_audio: AudioStreamPlayer = null
+var purifier_shield_break_audio: AudioStreamPlayer = null
+var purifier_crown_audio: AudioStreamPlayer = null
+var purifier_protection_effect: AnimatedSprite2D = null
+var purifier_crown_effect: AnimatedSprite2D = null
 
 var ultimate_config: Dictionary = {}
 var purifier_gauge_config: Dictionary = {}
+var purifier_protection_config: Dictionary = {}
+var purifier_crown_config: Dictionary = {}
+var purifier_protection_cooldown: float = 0.0
+var purifier_protection_active: bool = false
+var purifier_protection_duration_timer: float = 0.0
+var purifier_protection_tick_timer: float = 0.0
+var purifier_protection_break_triggered: bool = false
+var purifier_crown_cooldown: float = 0.0
+var purifier_crown_stacks: int = 0
+var purifier_crown_duration_timer: float = 0.0
+var purifier_crown_heal_timer: float = 0.0
 var ultimate_charge: float = 0.0
 var ultimate_flash_timer: float = 0.0
 var ultimate_cooldown_timer: float = 0.0
@@ -892,6 +913,30 @@ func configure_profile(profile: Dictionary) -> void:
 		if typeof(raw_purifier_gauge) == TYPE_DICTIONARY
 		else {}
 	)
+	var raw_purifier_protection = purifier_gauge_config.get("protection", {})
+	purifier_protection_config = (
+		raw_purifier_protection.duplicate(true)
+		if typeof(raw_purifier_protection) == TYPE_DICTIONARY
+		else {}
+	)
+	var raw_purifier_crown = profile.get("purifier_crown", {})
+	purifier_crown_config = (
+		raw_purifier_crown.duplicate(true)
+		if typeof(raw_purifier_crown) == TYPE_DICTIONARY
+		else {}
+	)
+	purifier_protection_cooldown = 0.0
+	purifier_protection_active = false
+	purifier_protection_duration_timer = 0.0
+	purifier_protection_tick_timer = 0.0
+	purifier_protection_break_triggered = false
+	purifier_crown_cooldown = maxf(
+		float(purifier_crown_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
+	purifier_crown_stacks = 0
+	purifier_crown_duration_timer = 0.0
+	purifier_crown_heal_timer = 0.0
 	fighter_guard_charge_seconds = maxf(
 		float(ultimate_config.get("charge_seconds", fighter_guard_charge_seconds)),
 		1.0
@@ -979,6 +1024,7 @@ func _ready() -> void:
 	_attach_status_effect_visual("slow")
 	_apply_camera_limits()
 	_apply_profile_visual()
+	_ensure_purifier_skill_runtime()
 	var stage9_anchor_callback := Callable(self, "_on_hero_sprite_frame_or_animation_changed")
 	if not hero_sprite.frame_changed.is_connected(stage9_anchor_callback):
 		hero_sprite.frame_changed.connect(stage9_anchor_callback)
@@ -1166,7 +1212,12 @@ func _physics_process(delta: float) -> void:
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	if hero_archetype == "archmage_elementalist":
 		move_direction = _apply_archmage_boundary_steering(move_direction)
-	velocity = move_direction * move_speed * move_multiplier
+	velocity = (
+		move_direction
+		* move_speed
+		* move_multiplier
+		* _get_purifier_move_speed_multiplier()
+	)
 	move_and_slide()
 	_clamp_to_battlefield()
 
@@ -6651,7 +6702,7 @@ func _apply_camera_limits() -> void:
 	follow_camera.position_smoothing_enabled = false
 
 func _move_without_monsters() -> void:
-	var current_move_speed := move_speed
+	var current_move_speed := move_speed * _get_purifier_move_speed_multiplier()
 	if hero_archetype == "alchemist_chemical":
 		current_move_speed *= _get_alchemist_field_speed_multiplier()
 
@@ -7463,10 +7514,6 @@ func _fire_projectile(current_target: Node2D) -> void:
 	_add_ultimate_charge(
 		float(ultimate_config.get("charge_on_attack", 0.0))
 	)
-	if hero_archetype == "cleric_purifier":
-		_add_purifier_gauge(
-			float(purifier_gauge_config.get("charge_on_attack", 4.0))
-		)
 
 
 func _fire_archmage_projectile(current_target: Node2D) -> void:
@@ -8716,7 +8763,7 @@ func get_runtime_info_stats() -> Dictionary:
 	return {
 		"max_hp": max_hp,
 		"attack_damage": attack_damage,
-		"move_speed": move_speed,
+		"move_speed": move_speed * _get_purifier_move_speed_multiplier(),
 		"attack_interval": _get_common_attack_interval(attack_cooldown),
 		"attack_range": attack_range,
 		"projectile_speed": projectile_speed,
@@ -8964,6 +9011,435 @@ func _end_shield() -> void:
 	shield_effect.visible = false
 	queue_redraw()
 
+func _build_purifier_effect_frames(
+	effect_dir: String,
+	start_first: int,
+	start_last: int,
+	sustain_first: int,
+	sustain_last: int,
+	end_first: int,
+	end_last: int
+) -> SpriteFrames:
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.remove_animation(&"default")
+
+	frames.add_animation(&"start")
+	frames.set_animation_loop(&"start", false)
+	frames.set_animation_speed(&"start", 10.0)
+	for frame_index in range(start_first, start_last + 1):
+		var texture := _load_stage1_texture(
+			"%s/effect_%02d.png" % [effect_dir, frame_index]
+		)
+		if texture != null:
+			frames.add_frame(&"start", texture)
+
+	frames.add_animation(&"sustain")
+	frames.set_animation_loop(&"sustain", true)
+	frames.set_animation_speed(&"sustain", 7.0)
+	for frame_index in range(sustain_first, sustain_last + 1):
+		var texture := _load_stage1_texture(
+			"%s/effect_%02d.png" % [effect_dir, frame_index]
+		)
+		if texture != null:
+			frames.add_frame(&"sustain", texture)
+
+	frames.add_animation(&"end")
+	frames.set_animation_loop(&"end", false)
+	frames.set_animation_speed(&"end", 10.0)
+	for frame_index in range(end_first, end_last + 1):
+		var texture := _load_stage1_texture(
+			"%s/effect_%02d.png" % [effect_dir, frame_index]
+		)
+		if texture != null:
+			frames.add_frame(&"end", texture)
+	return frames
+
+
+func _create_purifier_audio_player(
+	audio_path: String,
+	volume_db: float,
+	pitch_scale: float = 1.0
+) -> AudioStreamPlayer:
+	var player := AudioStreamPlayer.new()
+	player.bus = &"SFX"
+	player.volume_db = volume_db
+	player.pitch_scale = pitch_scale
+	if ResourceLoader.exists(audio_path):
+		var stream = load(audio_path)
+		if stream is AudioStream:
+			player.stream = stream
+	add_child(player)
+	return player
+
+
+func _ensure_purifier_skill_runtime() -> void:
+	if hero_archetype != "cleric_purifier":
+		return
+
+	if not is_instance_valid(purifier_protection_effect):
+		if _purifier_protection_frames_cache == null:
+			var effect_dir := String(
+				purifier_protection_config.get(
+					"effect_dir",
+					"%s/effect4" % STAGE9_FRAME_DIR
+				)
+			)
+			_purifier_protection_frames_cache = _build_purifier_effect_frames(
+				effect_dir, 23, 24, 24, 26, 27, 28
+			)
+		purifier_protection_effect = AnimatedSprite2D.new()
+		purifier_protection_effect.sprite_frames = _purifier_protection_frames_cache
+		purifier_protection_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		purifier_protection_effect.scale = hero_sprite.scale
+		purifier_protection_effect.offset = Vector2(16.0, -24.0)
+		purifier_protection_effect.z_index = 8
+		purifier_protection_effect.visible = false
+		purifier_protection_effect.animation_finished.connect(
+			Callable(self, "_on_purifier_protection_effect_finished")
+		)
+		add_child(purifier_protection_effect)
+
+	if not is_instance_valid(purifier_crown_effect):
+		if _purifier_crown_frames_cache == null:
+			var effect_dir := String(
+				purifier_crown_config.get(
+					"effect_dir",
+					"%s/effect3" % STAGE9_FRAME_DIR
+				)
+			)
+			_purifier_crown_frames_cache = _build_purifier_effect_frames(
+				effect_dir, 17, 18, 19, 20, 21, 22
+			)
+		purifier_crown_effect = AnimatedSprite2D.new()
+		purifier_crown_effect.sprite_frames = _purifier_crown_frames_cache
+		purifier_crown_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		purifier_crown_effect.scale = hero_sprite.scale
+		purifier_crown_effect.offset = Vector2(16.0, -24.0)
+		# Keep the crown above both Stage 9 bars instead of covering the HP bar.
+		purifier_crown_effect.position = Vector2(0.0, -48.0)
+		purifier_crown_effect.z_index = 9
+		purifier_crown_effect.visible = false
+		purifier_crown_effect.animation_finished.connect(
+			Callable(self, "_on_purifier_crown_effect_finished")
+		)
+		add_child(purifier_crown_effect)
+
+	if not is_instance_valid(purifier_shield_create_audio):
+		purifier_shield_create_audio = _create_purifier_audio_player(
+			String(purifier_protection_config.get(
+				"create_audio_path",
+				PURIFIER_SHIELD_CREATE_AUDIO_PATH
+			)),
+			-12.0,
+			1.08
+		)
+	if not is_instance_valid(purifier_shield_break_audio):
+		purifier_shield_break_audio = _create_purifier_audio_player(
+			String(purifier_protection_config.get(
+				"break_audio_path",
+				PURIFIER_SHIELD_BREAK_AUDIO_PATH
+			)),
+			-11.0,
+			0.82
+		)
+	if not is_instance_valid(purifier_crown_audio):
+		purifier_crown_audio = _create_purifier_audio_player(
+			String(purifier_crown_config.get(
+				"audio_path",
+				PURIFIER_CROWN_AUDIO_PATH
+			)),
+			-13.0,
+			1.12
+		)
+
+
+func _play_purifier_audio(player: AudioStreamPlayer) -> void:
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	player.stop()
+	player.play()
+
+
+func _on_purifier_protection_effect_finished() -> void:
+	if not is_instance_valid(purifier_protection_effect):
+		return
+	if purifier_protection_effect.animation == &"start":
+		if purifier_protection_active:
+			purifier_protection_effect.play(&"sustain")
+		else:
+			purifier_protection_effect.visible = false
+	elif purifier_protection_effect.animation == &"end":
+		purifier_protection_effect.visible = false
+
+
+func _on_purifier_crown_effect_finished() -> void:
+	if not is_instance_valid(purifier_crown_effect):
+		return
+	if purifier_crown_effect.animation == &"start":
+		if purifier_crown_stacks > 0:
+			purifier_crown_effect.play(&"sustain")
+		else:
+			purifier_crown_effect.visible = false
+	elif purifier_crown_effect.animation == &"end":
+		purifier_crown_effect.visible = false
+
+
+func _play_purifier_effect(effect: AnimatedSprite2D, animation_name: StringName) -> void:
+	if (
+		not is_instance_valid(effect)
+		or effect.sprite_frames == null
+		or not effect.sprite_frames.has_animation(animation_name)
+		or effect.sprite_frames.get_frame_count(animation_name) <= 0
+	):
+		return
+	effect.visible = true
+	effect.stop()
+	effect.animation = animation_name
+	effect.frame = 0
+	effect.frame_progress = 0.0
+	effect.play(animation_name)
+
+
+func _get_purifier_skill_cooldown_multiplier() -> float:
+	if hero_archetype != "cleric_purifier" or purifier_crown_stacks <= 0:
+		return 1.0
+	return maxf(
+		1.0
+		- float(purifier_crown_config.get("cooldown_reduction_per_stack", 0.04))
+		* float(purifier_crown_stacks),
+		0.20
+	)
+
+
+func _get_purifier_move_speed_multiplier() -> float:
+	if hero_archetype != "cleric_purifier" or purifier_crown_stacks <= 0:
+		return 1.0
+	return 1.0 + maxf(
+		float(purifier_crown_config.get("move_speed_per_stack", 0.02)),
+		0.0
+	) * float(purifier_crown_stacks)
+
+
+func _is_purifier_undead_target(target_node: Node) -> bool:
+	if not is_instance_valid(target_node):
+		return false
+	if (
+		bool(target_node.get_meta("undead", false))
+		or bool(target_node.get_meta("is_undead", false))
+		or target_node.is_in_group("undead")
+	):
+		return true
+	var monster_type_value = target_node.get("monster_type")
+	if monster_type_value == null:
+		return false
+	var monster_type := String(monster_type_value).to_lower()
+	return (
+		"undead" in monster_type
+		or "skeleton" in monster_type
+		or "zombie" in monster_type
+		or "ghoul" in monster_type
+	)
+
+
+func get_purifier_holy_damage_multiplier(target_node: Node = null) -> float:
+	if hero_archetype != "cleric_purifier":
+		return 1.0
+	var multiplier := (
+		1.0
+		+ maxf(
+			float(purifier_crown_config.get("holy_damage_per_stack", 0.05)),
+			0.0
+		) * float(purifier_crown_stacks)
+	)
+	if shield_hp > 0.0:
+		multiplier *= maxf(
+			float(purifier_protection_config.get("holy_damage_multiplier", 1.15)),
+			0.0
+		)
+	if _is_purifier_undead_target(target_node):
+		multiplier *= (
+			1.0
+			+ maxf(
+				float(purifier_crown_config.get("undead_damage_per_stack", 0.10)),
+				0.0
+			) * float(purifier_crown_stacks)
+		)
+	return multiplier
+
+
+func notify_monster_kill(_monster_type: String = "") -> void:
+	if hero_archetype != "cleric_purifier" or is_dying or current_hp <= 0:
+		return
+	_add_purifier_gauge(
+		maxf(float(purifier_gauge_config.get("charge_per_kill", 2.0)), 0.0)
+	)
+	_try_activate_purifier_protection()
+
+
+func _add_purifier_shield_layer() -> void:
+	var layer_amount := maxf(
+		float(max_hp)
+		* maxf(
+			float(purifier_protection_config.get("shield_hp_ratio_per_tick", 0.01)),
+			0.0
+		),
+		1.0
+	)
+	shield_max_hp += layer_amount
+	shield_hp += layer_amount
+	queue_redraw()
+
+
+func _try_activate_purifier_protection() -> void:
+	if (
+		hero_archetype != "cleric_purifier"
+		or purifier_protection_config.is_empty()
+		or purifier_protection_active
+		or purifier_protection_cooldown > 0.0
+		or is_dying
+		or current_hp <= 0
+	):
+		return
+	var gauge_max := maxf(
+		float(purifier_gauge_config.get("charge_max", 100.0)),
+		1.0
+	)
+	if ultimate_charge + 0.001 < gauge_max:
+		return
+
+	ultimate_charge = 0.0
+	purifier_protection_active = true
+	purifier_protection_break_triggered = false
+	purifier_protection_duration_timer = maxf(
+		float(purifier_protection_config.get("duration", 20.0)),
+		0.1
+	)
+	purifier_protection_tick_timer = maxf(
+		float(purifier_protection_config.get("shield_tick_interval", 1.0)),
+		0.05
+	)
+	purifier_protection_cooldown = maxf(
+		float(purifier_protection_config.get("cooldown", 30.0)),
+		0.0
+	)
+	shield_hp = 0.0
+	shield_max_hp = 0.0
+	_add_purifier_shield_layer()
+	_ensure_purifier_skill_runtime()
+	_play_purifier_effect(purifier_protection_effect, &"start")
+	_play_purifier_audio(purifier_shield_create_audio)
+	queue_redraw()
+
+
+func _trigger_purifier_protection_break_pulse() -> void:
+	var radius := maxf(
+		float(purifier_protection_config.get("break_radius", 240.0)),
+		0.0
+	)
+	if radius <= 0.0:
+		return
+	var knockback := maxf(
+		float(purifier_protection_config.get("break_knockback", 135.0)),
+		0.0
+	)
+	var slow_multiplier := clampf(
+		float(purifier_protection_config.get("break_slow_multiplier", 0.70)),
+		0.1,
+		1.0
+	)
+	var slow_until := Time.get_ticks_msec() + int(round(
+		maxf(
+			float(purifier_protection_config.get("break_slow_duration", 1.5)),
+			0.05
+		) * 1000.0
+	))
+	var radius_sq := radius * radius
+	for node in _get_monster_nodes_near(global_position, radius):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if (
+			monster == null
+			or global_position.distance_squared_to(monster.global_position) > radius_sq
+		):
+			continue
+		var push_direction := global_position.direction_to(monster.global_position)
+		if push_direction.length_squared() <= 0.001:
+			push_direction = Vector2.RIGHT
+		monster.global_position += push_direction.normalized() * knockback
+		var current_until := int(monster.get_meta("gunner_slow_until", 0))
+		var current_multiplier := float(
+			monster.get_meta("gunner_slow_multiplier", 1.0)
+		)
+		monster.set_meta("gunner_slow_until", maxi(current_until, slow_until))
+		monster.set_meta(
+			"gunner_slow_multiplier",
+			minf(current_multiplier, slow_multiplier)
+		)
+
+
+func _end_purifier_protection(broken: bool) -> void:
+	if not purifier_protection_active and shield_hp <= 0.0:
+		return
+	if broken and not purifier_protection_break_triggered:
+		purifier_protection_break_triggered = true
+		_trigger_purifier_protection_break_pulse()
+	purifier_protection_active = false
+	purifier_protection_duration_timer = 0.0
+	purifier_protection_tick_timer = 0.0
+	shield_hp = 0.0
+	shield_max_hp = 0.0
+	_ensure_purifier_skill_runtime()
+	_play_purifier_effect(purifier_protection_effect, &"end")
+	_play_purifier_audio(purifier_shield_break_audio)
+	queue_redraw()
+
+
+func _cast_purifier_crown() -> void:
+	if (
+		hero_archetype != "cleric_purifier"
+		or purifier_crown_config.is_empty()
+		or purifier_crown_cooldown > 0.0
+		or is_dying
+		or current_hp <= 0
+	):
+		return
+	var max_stacks := maxi(
+		int(purifier_crown_config.get("max_stacks", 5)),
+		1
+	)
+	purifier_crown_stacks = mini(purifier_crown_stacks + 1, max_stacks)
+	purifier_crown_duration_timer = maxf(
+		float(purifier_crown_config.get("duration", 60.0)),
+		0.1
+	)
+	if purifier_crown_heal_timer <= 0.0:
+		purifier_crown_heal_timer = maxf(
+			float(purifier_crown_config.get("heal_interval", 5.0)),
+			0.1
+		)
+	purifier_crown_cooldown = (
+		maxf(float(purifier_crown_config.get("cooldown", 20.0)), 0.0)
+		* _get_purifier_skill_cooldown_multiplier()
+	)
+	_ensure_purifier_skill_runtime()
+	_play_purifier_effect(purifier_crown_effect, &"start")
+	_play_purifier_audio(purifier_crown_audio)
+	queue_redraw()
+
+
+func _expire_purifier_crown() -> void:
+	if purifier_crown_stacks <= 0:
+		return
+	purifier_crown_stacks = 0
+	purifier_crown_duration_timer = 0.0
+	purifier_crown_heal_timer = 0.0
+	_ensure_purifier_skill_runtime()
+	_play_purifier_effect(purifier_crown_effect, &"end")
+	queue_redraw()
+
+
 func _update_purifier_gauge(delta: float) -> void:
 	if (
 		hero_archetype != "cleric_purifier"
@@ -8972,12 +9448,54 @@ func _update_purifier_gauge(delta: float) -> void:
 		or current_hp <= 0
 	):
 		return
-	var passive_charge := maxf(
-		float(purifier_gauge_config.get("charge_per_second", 2.5)),
+
+	purifier_protection_cooldown = maxf(
+		purifier_protection_cooldown - delta,
 		0.0
 	)
-	if passive_charge > 0.0:
-		_add_purifier_gauge(passive_charge * delta)
+	purifier_crown_cooldown = maxf(purifier_crown_cooldown - delta, 0.0)
+
+	if purifier_protection_active:
+		purifier_protection_duration_timer = maxf(
+			purifier_protection_duration_timer - delta,
+			0.0
+		)
+		purifier_protection_tick_timer -= delta
+		if purifier_protection_duration_timer <= 0.0:
+			_end_purifier_protection(false)
+		else:
+			var tick_interval := maxf(
+				float(purifier_protection_config.get("shield_tick_interval", 1.0)),
+				0.05
+			)
+			while purifier_protection_tick_timer <= 0.0:
+				_add_purifier_shield_layer()
+				purifier_protection_tick_timer += tick_interval
+
+	if purifier_crown_stacks > 0:
+		purifier_crown_duration_timer = maxf(
+			purifier_crown_duration_timer - delta,
+			0.0
+		)
+		purifier_crown_heal_timer -= delta
+		if purifier_crown_duration_timer <= 0.0:
+			_expire_purifier_crown()
+		elif purifier_crown_heal_timer <= 0.0:
+			heal_direct(
+				maxi(
+					int(purifier_crown_config.get("heal_per_stack", 20))
+					* purifier_crown_stacks,
+					1
+				)
+			)
+			purifier_crown_heal_timer += maxf(
+				float(purifier_crown_config.get("heal_interval", 5.0)),
+				0.1
+			)
+
+	if purifier_crown_cooldown <= 0.0:
+		_cast_purifier_crown()
+	_try_activate_purifier_protection()
 
 
 func _add_purifier_gauge(amount: float) -> void:
@@ -9298,6 +9816,17 @@ func get_skill_cooldown_hud() -> Array:
 	var skills: Array = []
 
 	match hero_archetype:
+		"cleric_purifier":
+			_append_skill_cooldown_hud(
+				skills,
+				purifier_crown_config,
+				purifier_crown_cooldown,
+				"res://assets/art/heroes/stage9_prist/frames/effect3/effect_19.png",
+				maxf(
+					float(purifier_crown_config.get("cooldown", 20.0)),
+					0.0
+				) * _get_purifier_skill_cooldown_multiplier()
+			)
 		"summoner_gatekeeper":
 			_append_skill_cooldown_hud(
 				skills,
@@ -13374,6 +13903,8 @@ func take_damage(amount: int, source: Node = null) -> bool:
 		if shield_hp <= 0.0:
 			if hero_archetype == "sword_shield" and fighter_guard_active:
 				shield_hp = 0.0
+			elif hero_archetype == "cleric_purifier" and purifier_protection_active:
+				_end_purifier_protection(true)
 			else:
 				if hero_archetype == "summoner_gatekeeper":
 					var resonance_stacks := _get_summoner_augment_stacks("summoner_shield_resonance")
@@ -13401,15 +13932,6 @@ func take_damage(amount: int, source: Node = null) -> bool:
 				0.0
 			)
 		)
-		if hero_archetype == "cleric_purifier":
-			_add_purifier_gauge(
-				float(applied_damage)
-				* maxf(
-					float(purifier_gauge_config.get("charge_per_damage", 0.25)),
-					0.0
-				)
-			)
-
 	health_changed.emit(current_hp, max_hp)
 	queue_redraw()
 
