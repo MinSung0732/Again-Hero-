@@ -13371,6 +13371,7 @@ func _draw() -> void:
 		draw_circle(Vector2(49, -17), 8.0, Color(0.95, 0.86, 0.32))
 
 	var bar_width := 92.0
+	var bar_x_offset := 0.0
 	var resource_bar_y := -79.0
 	var hp_bar_y := -64.0
 	var shield_bar_y := -49.0
@@ -13385,9 +13386,12 @@ func _draw() -> void:
 		# Stage 9's hood/head reaches into the shared bar area even after the
 		# sprite anchor correction. Keep the hero root and sprite position as-is
 		# and lift only the UI bars, preserving their 15px vertical spacing.
+		# Match the bars to the purifier sprite's +6px visual X offset.
+		bar_x_offset = 6.0
 		resource_bar_y = -100.0
 		hp_bar_y = -85.0
 		shield_bar_y = -70.0
+	var bar_left_x := -bar_width / 2.0 + bar_x_offset
 	if hero_archetype == "pistol_gunner":
 		var gap := 2.0
 		var cell_width := (bar_width - gap * float(gunner_magazine_size - 1)) / float(gunner_magazine_size)
@@ -13440,12 +13444,12 @@ func _draw() -> void:
 			1.0
 		)
 		draw_rect(
-			Rect2(-bar_width / 2.0, resource_bar_y, bar_width, 8.0),
+			Rect2(bar_left_x, resource_bar_y, bar_width, 8.0),
 			Color(0.12, 0.12, 0.14),
 			true
 		)
 		draw_rect(
-			Rect2(-bar_width / 2.0, resource_bar_y, bar_width * purifier_ratio, 8.0),
+			Rect2(bar_left_x, resource_bar_y, bar_width * purifier_ratio, 8.0),
 			Color(1.0, 0.77, 0.16),
 			true
 		)
@@ -13482,13 +13486,13 @@ func _draw() -> void:
 
 	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
 	draw_rect(
-		Rect2(-bar_width / 2.0, hp_bar_y, bar_width, 10.0),
+		Rect2(bar_left_x, hp_bar_y, bar_width, 10.0),
 		Color(0.12, 0.12, 0.14),
 		true
 	)
 	draw_rect(
 		Rect2(
-			-bar_width / 2.0,
+			bar_left_x,
 			hp_bar_y,
 			bar_width * hp_ratio,
 			10.0
@@ -13504,13 +13508,13 @@ func _draw() -> void:
 			1.0
 		)
 		draw_rect(
-			Rect2(-bar_width / 2.0, shield_bar_y, bar_width, 8.0),
+			Rect2(bar_left_x, shield_bar_y, bar_width, 8.0),
 			Color(0.10, 0.12, 0.18),
 			true
 		)
 		draw_rect(
 			Rect2(
-				-bar_width / 2.0,
+				bar_left_x,
 				shield_bar_y,
 				bar_width * shield_ratio,
 				8.0
