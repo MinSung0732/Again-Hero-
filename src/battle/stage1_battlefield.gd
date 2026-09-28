@@ -16,7 +16,6 @@ const TEXTURE_PATHS := {
 	"floor": FLOOR_ROOT + "/tile_001.png",
 	"rug_runner": FLOOR_ROOT + "/tile_026.png",
 	"rug_end": FLOOR_ROOT + "/tile_027.png",
-	"rug_cross": FLOOR_ROOT + "/tile_042.png",
 	"wall_large": WALL_ROOT + "/wall_top_001.png",
 	"wall_banner": WALL_ROOT + "/wall_top_002.png",
 	"wall_window": WALL_ROOT + "/wall_door_001.png",
@@ -122,8 +121,8 @@ func _draw_floor() -> void:
 
 	# One seamless base tile only. Mixing different masonry patterns per cell
 	# created visible square patches because their grout layouts do not match.
-	var columns := ceili(battlefield_size.x / FLOOR_STEP.x) + 1
-	var rows := ceili(battlefield_size.y / FLOOR_STEP.y) + 1
+	var columns := ceili(battlefield_size.x / FLOOR_STEP.x)
+	var rows := ceili(battlefield_size.y / FLOOR_STEP.y)
 	for row in range(rows):
 		for column in range(columns):
 			draw_texture_rect(
@@ -142,40 +141,32 @@ func _draw_floor() -> void:
 func _draw_royal_carpet() -> void:
 	var runner := _texture("rug_runner")
 	var runner_end := _texture("rug_end")
-	var cross := _texture("rug_cross")
 	if runner == null:
 		return
 
+	# The carpet is a single straight atlas family. Every segment is placed on
+	# the exact source texture size so the newly cleaned tile edges meet without
+	# stretching, overlap, or the old cross-piece width mismatch.
 	var center_x := battlefield_size.x * 0.5
-	var center_y := battlefield_size.y * 0.5
-	var start_y := 500.0
-	var end_y := battlefield_size.y - 430.0
-	var y := start_y
+	var start_y := FLOOR_STEP.y * 3.0
+	var end_limit := battlefield_size.y - FLOOR_STEP.y * 2.0
+	var segment_count := maxi(
+		1,
+		floori((end_limit - start_y) / FLOOR_STEP.y)
+	)
 
-	while y < end_y:
+	for segment in range(segment_count):
 		var current := runner
-		if y + FLOOR_STEP.y >= end_y and runner_end != null:
+		if segment == segment_count - 1 and runner_end != null:
 			current = runner_end
+
+		var y := start_y + float(segment) * FLOOR_STEP.y
 		draw_texture_rect(
 			current,
 			Rect2(
 				Vector2(
 					center_x - FLOOR_DRAW_SIZE.x * 0.5,
 					y
-				),
-				FLOOR_DRAW_SIZE
-			),
-			false
-		)
-		y += FLOOR_STEP.y
-
-	if cross != null:
-		draw_texture_rect(
-			cross,
-			Rect2(
-				Vector2(
-					center_x - FLOOR_DRAW_SIZE.x * 0.5,
-					center_y - FLOOR_DRAW_SIZE.y * 0.5
 				),
 				FLOOR_DRAW_SIZE
 			),
@@ -327,24 +318,39 @@ func _build_castle_decor() -> void:
 
 	var center_x := battlefield_size.x * 0.5
 
-	# Background hanging decoration has no collision.
+	# The upper wall reads as the throne-room focal point while the central
+	# battlefield stays open for kiting and swarm movement.
 	_add_background_visual(
 		"flag_a",
-		Vector2(center_x - 690.0, 290.0),
-		0.80,
+		Vector2(center_x - 760.0, 292.0),
+		0.74,
 		false,
 		2
 	)
 	_add_background_visual(
 		"flag_b",
-		Vector2(center_x + 690.0, 300.0),
-		0.72,
+		Vector2(center_x - 420.0, 300.0),
+		0.70,
+		false,
+		2
+	)
+	_add_background_visual(
+		"flag_b",
+		Vector2(center_x + 420.0, 300.0),
+		0.70,
+		true,
+		2
+	)
+	_add_background_visual(
+		"flag_a",
+		Vector2(center_x + 760.0, 292.0),
+		0.74,
 		true,
 		2
 	)
 
-	# Depth props use their bottom/ground point as Y-sort origin. Collision is
-	# deliberately limited to the pedestal/feet region.
+	# Throne cluster. Ground positions are the Y-sort anchors, so actors can
+	# pass behind the tall artwork while only the physical bases block movement.
 	_add_solid_depth_prop(
 		"throne",
 		Vector2(center_x, 585.0),
@@ -353,21 +359,22 @@ func _build_castle_decor() -> void:
 	)
 	_add_solid_depth_prop(
 		"brazier",
-		Vector2(center_x - 470.0, 735.0),
+		Vector2(center_x - 455.0, 735.0),
 		0.72,
 		Vector2(82.0, 58.0)
 	)
 	_add_solid_depth_prop(
 		"brazier",
-		Vector2(center_x + 470.0, 735.0),
+		Vector2(center_x + 455.0, 735.0),
 		0.72,
 		Vector2(82.0, 58.0),
 		true
 	)
 
+	# Side architecture frames the arena instead of cutting through it.
 	var side_x_left := 345.0
 	var side_x_right := battlefield_size.x - 345.0
-	var pillar_ys := [1030.0, 1700.0, 2370.0]
+	var pillar_ys := [980.0, 1510.0, 2040.0, 2570.0]
 	for index in range(pillar_ys.size()):
 		var ground_y := float(pillar_ys[index])
 		var pillar_key := "pillar_a" if index % 2 == 0 else "pillar_b"
@@ -385,33 +392,53 @@ func _build_castle_decor() -> void:
 			true
 		)
 
-	_add_solid_depth_prop(
-		"altar",
-		Vector2(680.0, 1390.0),
-		0.62,
-		Vector2(158.0, 66.0)
-	)
-	_add_solid_depth_prop(
-		"altar",
-		Vector2(battlefield_size.x - 680.0, 1390.0),
-		0.62,
-		Vector2(158.0, 66.0),
-		true
-	)
-
+	# Upper side shrines give the hall a lived-in Demon Castle silhouette while
+	# keeping all hard collision near the outer lanes.
 	_add_solid_depth_prop(
 		"crystal",
-		Vector2(560.0, 830.0),
+		Vector2(560.0, 825.0),
 		0.74,
 		Vector2(62.0, 54.0)
 	)
 	_add_solid_depth_prop(
 		"crystal",
-		Vector2(battlefield_size.x - 560.0, 830.0),
+		Vector2(battlefield_size.x - 560.0, 825.0),
 		0.74,
 		Vector2(62.0, 54.0),
 		true
 	)
+	_add_solid_depth_prop(
+		"altar",
+		Vector2(670.0, 1335.0),
+		0.62,
+		Vector2(158.0, 66.0)
+	)
+	_add_solid_depth_prop(
+		"altar",
+		Vector2(battlefield_size.x - 670.0, 1335.0),
+		0.62,
+		Vector2(158.0, 66.0),
+		true
+	)
+
+	# Low-profile braziers and statues decorate the lower half without closing
+	# off the main combat corridor.
+	var edge_brazier_ys := [1780.0, 2350.0]
+	for brazier_y_value in edge_brazier_ys:
+		var brazier_y := float(brazier_y_value)
+		_add_solid_depth_prop(
+			"brazier",
+			Vector2(235.0, brazier_y),
+			0.62,
+			Vector2(70.0, 50.0)
+		)
+		_add_solid_depth_prop(
+			"brazier",
+			Vector2(battlefield_size.x - 235.0, brazier_y),
+			0.62,
+			Vector2(70.0, 50.0),
+			true
+		)
 
 	_add_solid_depth_prop(
 		"statue",
