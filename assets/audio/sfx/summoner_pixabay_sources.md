@@ -15,7 +15,10 @@ Stage 8 summoner runtime filenames and the Pixabay source used for each file.
 The files are stored directly in `assets/audio/sfx/` and loaded by Godot as MP3 resources.
 Check the linked Pixabay pages/license terms when redistributing outside this project.
 
-- `summoner_open_gate` candidate researched for Skill 5
-  - Apertura del portal — freesound_community
-  - https://pixabay.com/sound-effects/film-special-effects-apertura-del-portal-100966/
-  - Runtime currently falls back to the bundled `summoner_gatekeeper_summon_pixabay.mp3` until the new binary is imported.
+- `summoner_open_gate_pixabay.mp3`
+  - Dedicated Stage 8 Skill 5 gate-opening asset path.
+  - Reuses the bundled Pixabay portal source used by `summoner_gatekeeper_summon_pixabay.mp3`.
+  - Kept as a separate file path so the gate-opening mix can be tuned independently later.
+- `summoner_drone_spawn_pixabay.mp3`
+  - Dedicated Stage 8 Skill 5 drone-spawn asset path.
+  - Reuses the same Pixabay portal source at a much lower in-game volume for rapid repeated spawns.

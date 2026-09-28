@@ -4,8 +4,8 @@ signal released(open_gate: Node2D)
 
 const DRONE_SCENE := preload("res://src/hero/SummonerSuicideDrone.tscn")
 const DEFAULT_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames/effect5"
-const DEFAULT_OPENING_AUDIO_PATH := "res://assets/audio/sfx/summoner_gatekeeper_summon_pixabay.mp3"
-const DEFAULT_DRONE_SPAWN_AUDIO_PATH := "res://assets/audio/sfx/summoner_gatekeeper_summon_pixabay.mp3"
+const DEFAULT_OPENING_AUDIO_PATH := "res://assets/audio/sfx/summoner_open_gate_pixabay.mp3"
+const DEFAULT_DRONE_SPAWN_AUDIO_PATH := "res://assets/audio/sfx/summoner_drone_spawn_pixabay.mp3"
 
 static var _frames_cache_by_dir: Dictionary = {}
 
