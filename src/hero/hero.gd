@@ -47,6 +47,7 @@ const STAGE8_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames"
 const SUMMONER_GATEKEEPER_SCENE := preload("res://src/hero/SummonerGatekeeper.tscn")
 const SUMMONER_SCOUT_SCENE := preload("res://src/hero/SummonerScout.tscn")
 const SUMMONER_HOUND_SCENE := preload("res://src/hero/SummonerHound.tscn")
+const SUMMONER_WATCHER_SCENE := preload("res://src/hero/SummonerWatcher.tscn")
 const SUMMONER_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/summoner_basic_attack_pixabay.mp3"
 const SUMMONER_POOL_HEADROOM := 4
 const ALCHEMIST_VIAL_SCENE := preload("res://src/hero/AlchemistVial.tscn")
@@ -277,6 +278,7 @@ var summoner_config: Dictionary = {}
 var summoner_gatekeeper_config: Dictionary = {}
 var summoner_scout_config: Dictionary = {}
 var summoner_hound_config: Dictionary = {}
+var summoner_watcher_config: Dictionary = {}
 var summoner_full_slot_shield_config: Dictionary = {}
 var summoner_full_slot_shield_cooldown: float = 0.0
 var summoner_slot_base: int = 5
@@ -284,14 +286,17 @@ var summoner_slot_bonus: int = 0
 var summoner_gatekeeper_pool: Array[Node2D] = []
 var summoner_scout_pool: Array[Node2D] = []
 var summoner_hound_pool: Array[Node2D] = []
+var summoner_watcher_pool: Array[Node2D] = []
 var summoner_gatekeeper_cooldown: float = 0.0
 var summoner_scout_cooldown: float = 0.0
 var summoner_hound_cooldown: float = 0.0
+var summoner_watcher_cooldown: float = 0.0
 var summoner_cast_interval: float = 1.0
 var summoner_cast_lock_timer: float = 0.0
 var summoner_cast_pending: bool = false
 var summoner_scout_cast_pending: bool = false
 var summoner_hound_cast_pending: bool = false
+var summoner_watcher_cast_pending: bool = false
 var summoner_runtime_ready: bool = false
 var summoner_basic_effect: AnimatedSprite2D = null
 var summoner_basic_audio: AudioStreamPlayer = null
@@ -652,6 +657,12 @@ func configure_profile(profile: Dictionary) -> void:
 		if typeof(raw_hound) == TYPE_DICTIONARY
 		else {}
 	)
+	var raw_watcher = summoner_config.get("watcher", {})
+	summoner_watcher_config = (
+		raw_watcher.duplicate(true)
+		if typeof(raw_watcher) == TYPE_DICTIONARY
+		else {}
+	)
 	var raw_full_slot_shield = summoner_config.get("full_slot_shield", {})
 	summoner_full_slot_shield_config = (
 		raw_full_slot_shield.duplicate(true)
@@ -670,6 +681,7 @@ func configure_profile(profile: Dictionary) -> void:
 	summoner_gatekeeper_pool.clear()
 	summoner_scout_pool.clear()
 	summoner_hound_pool.clear()
+	summoner_watcher_pool.clear()
 	summoner_gatekeeper_cooldown = maxf(
 		float(summoner_gatekeeper_config.get("initial_cooldown", 0.0)),
 		0.0
@@ -682,6 +694,10 @@ func configure_profile(profile: Dictionary) -> void:
 		float(summoner_hound_config.get("initial_cooldown", 0.0)),
 		0.0
 	)
+	summoner_watcher_cooldown = maxf(
+		float(summoner_watcher_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
 	summoner_cast_interval = maxf(
 		float(summoner_config.get("cast_interval", 1.0)),
 		0.0
@@ -690,6 +706,7 @@ func configure_profile(profile: Dictionary) -> void:
 	summoner_cast_pending = not summoner_gatekeeper_config.is_empty()
 	summoner_scout_cast_pending = not summoner_scout_config.is_empty()
 	summoner_hound_cast_pending = not summoner_hound_config.is_empty()
+	summoner_watcher_cast_pending = not summoner_watcher_config.is_empty()
 	summoner_runtime_ready = false
 	summoner_basic_effect = null
 	summoner_basic_audio = null
@@ -1117,7 +1134,39 @@ func _get_active_summon_count() -> int:
 	for summon in summoner_hound_pool:
 		if is_instance_valid(summon) and bool(summon.get("active")):
 			count += 1
+	for summon in summoner_watcher_pool:
+		if is_instance_valid(summon) and bool(summon.get("active")):
+			count += 1
 	return count
+
+
+func _get_active_summoner_watcher_count() -> int:
+	var count := 0
+	for summon in summoner_watcher_pool:
+		if is_instance_valid(summon) and bool(summon.get("active")):
+			count += 1
+	return count
+
+
+func _get_summoner_watcher_max_active() -> int:
+	return maxi(int(summoner_watcher_config.get("max_active", 2)), 0)
+
+
+func _get_next_summoner_watcher_follow_slot() -> int:
+	var max_active := _get_summoner_watcher_max_active()
+	for slot_index in range(max_active):
+		var occupied := false
+		for summon in summoner_watcher_pool:
+			if (
+				is_instance_valid(summon)
+				and bool(summon.get("active"))
+				and int(summon.get("follow_slot")) == slot_index
+			):
+				occupied = true
+				break
+		if not occupied:
+			return slot_index
+	return -1
 
 
 func _ensure_summoner_pool_capacity() -> void:
@@ -1160,6 +1209,18 @@ func _ensure_summoner_pool_capacity() -> void:
 			Callable(self, "_on_summoner_hound_released")
 		)
 		summoner_hound_pool.append(hound)
+
+	var watcher_pool_size := _get_summoner_watcher_max_active()
+	while summoner_watcher_pool.size() < watcher_pool_size:
+		var watcher := SUMMONER_WATCHER_SCENE.instantiate() as Node2D
+		if watcher == null:
+			break
+		world_parent.add_child(watcher)
+		watcher.connect(
+			"released",
+			Callable(self, "_on_summoner_watcher_released")
+		)
+		summoner_watcher_pool.append(watcher)
 
 
 func _ensure_summoner_runtime() -> void:
@@ -1226,12 +1287,17 @@ func _ensure_summoner_runtime() -> void:
 			summoner_hound_config.is_empty()
 			or not summoner_hound_pool.is_empty()
 		)
+		and (
+			summoner_watcher_config.is_empty()
+			or not summoner_watcher_pool.is_empty()
+		)
 	)
 	if summoner_runtime_ready:
 		# Keep explicit requests alive until a pooled summon is actually acquired.
 		summoner_cast_pending = not summoner_gatekeeper_config.is_empty()
 		summoner_scout_cast_pending = not summoner_scout_config.is_empty()
 		summoner_hound_cast_pending = not summoner_hound_config.is_empty()
+		summoner_watcher_cast_pending = not summoner_watcher_config.is_empty()
 	queue_redraw()
 
 
@@ -1262,6 +1328,10 @@ func _physics_process_summoner(delta: float) -> void:
 		summoner_hound_cooldown - delta,
 		0.0
 	)
+	summoner_watcher_cooldown = maxf(
+		summoner_watcher_cooldown - delta,
+		0.0
+	)
 	summoner_cast_lock_timer = maxf(
 		summoner_cast_lock_timer - delta,
 		0.0
@@ -1282,6 +1352,12 @@ func _physics_process_summoner(delta: float) -> void:
 			summoner_scout_cast_pending = true
 		if summoner_hound_cooldown <= 0.0:
 			summoner_hound_cast_pending = true
+		if (
+			summoner_watcher_cooldown <= 0.0
+			and _get_active_summoner_watcher_count()
+			< _get_summoner_watcher_max_active()
+		):
+			summoner_watcher_cast_pending = true
 
 	if summoner_cast_lock_timer <= 0.0:
 		var summon_casted := false
@@ -1301,6 +1377,13 @@ func _physics_process_summoner(delta: float) -> void:
 			and _try_cast_summoner_hound()
 		):
 			summoner_hound_cast_pending = false
+			summon_casted = true
+		elif (
+			_get_active_summon_count() < _get_summoner_slot_capacity()
+			and summoner_watcher_cast_pending
+			and _try_cast_summoner_watcher()
+		):
+			summoner_watcher_cast_pending = false
 			summon_casted = true
 		if summon_casted:
 			summoner_cast_lock_timer = summoner_cast_interval
@@ -1418,6 +1501,12 @@ func _on_summoner_gatekeeper_released(_summon: Node2D) -> void:
 		summoner_scout_cast_pending = true
 	if summoner_hound_cooldown <= 0.0:
 		summoner_hound_cast_pending = true
+	if (
+		summoner_watcher_cooldown <= 0.0
+		and _get_active_summoner_watcher_count()
+		< _get_summoner_watcher_max_active()
+	):
+		summoner_watcher_cast_pending = true
 	queue_redraw()
 
 
@@ -1466,6 +1555,12 @@ func _on_summoner_scout_released(_summon: Node2D) -> void:
 		summoner_scout_cast_pending = true
 	if summoner_hound_cooldown <= 0.0:
 		summoner_hound_cast_pending = true
+	if (
+		summoner_watcher_cooldown <= 0.0
+		and _get_active_summoner_watcher_count()
+		< _get_summoner_watcher_max_active()
+	):
+		summoner_watcher_cast_pending = true
 	queue_redraw()
 
 
@@ -1514,6 +1609,70 @@ func _on_summoner_hound_released(_summon: Node2D) -> void:
 		summoner_scout_cast_pending = true
 	if summoner_hound_cooldown <= 0.0:
 		summoner_hound_cast_pending = true
+	if (
+		summoner_watcher_cooldown <= 0.0
+		and _get_active_summoner_watcher_count()
+		< _get_summoner_watcher_max_active()
+	):
+		summoner_watcher_cast_pending = true
+	queue_redraw()
+
+
+func _try_cast_summoner_watcher() -> bool:
+	if summoner_watcher_config.is_empty():
+		return false
+	if summoner_watcher_cooldown > 0.0:
+		return false
+	if _get_active_summon_count() >= _get_summoner_slot_capacity():
+		return false
+	if (
+		_get_active_summoner_watcher_count()
+		>= _get_summoner_watcher_max_active()
+	):
+		return false
+
+	var follow_slot := _get_next_summoner_watcher_follow_slot()
+	if follow_slot < 0:
+		return false
+
+	var summon_to_use: Node2D = null
+	for summon in summoner_watcher_pool:
+		if is_instance_valid(summon) and not bool(summon.get("active")):
+			summon_to_use = summon
+			break
+	if summon_to_use == null:
+		return false
+
+	var runtime_config := summoner_watcher_config.duplicate(true)
+	runtime_config["owner_attack_damage"] = attack_damage
+	runtime_config["follow_slot"] = follow_slot
+	summon_to_use.call(
+		"activate",
+		global_position,
+		self,
+		runtime_config
+	)
+	summoner_watcher_cooldown = maxf(
+		float(summoner_watcher_config.get("cooldown", 7.0)),
+		0.0
+	)
+	queue_redraw()
+	return true
+
+
+func _on_summoner_watcher_released(_summon: Node2D) -> void:
+	if summoner_gatekeeper_cooldown <= 0.0:
+		summoner_cast_pending = true
+	if summoner_scout_cooldown <= 0.0:
+		summoner_scout_cast_pending = true
+	if summoner_hound_cooldown <= 0.0:
+		summoner_hound_cast_pending = true
+	if (
+		summoner_watcher_cooldown <= 0.0
+		and _get_active_summoner_watcher_count()
+		< _get_summoner_watcher_max_active()
+	):
+		summoner_watcher_cast_pending = true
 	queue_redraw()
 
 
@@ -8442,6 +8601,16 @@ func get_skill_cooldown_hud() -> Array:
 				"res://assets/art/heroes/stage8_summoner/frames/effect3/summon_03.png",
 				maxf(
 					float(summoner_hound_config.get("cooldown", 30.0)),
+					0.0
+				)
+			)
+			_append_skill_cooldown_hud(
+				skills,
+				summoner_watcher_config,
+				summoner_watcher_cooldown,
+				"res://assets/art/heroes/stage8_summoner/frames/effect4/idle_01.png",
+				maxf(
+					float(summoner_watcher_config.get("cooldown", 7.0)),
 					0.0
 				)
 			)
