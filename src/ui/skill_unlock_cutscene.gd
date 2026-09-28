@@ -38,7 +38,6 @@ func play_unlock(data: Dictionary) -> void:
 	artwork.rotation = deg_to_rad(-0.35)
 	flash.color = Color(1.0, 0.86, 0.48, 0.0)
 	_set_shader_value("reveal_progress", 0.0)
-	_set_shader_value("motion_phase", 0.0)
 	_set_shader_value("glow_pulse", 0.0)
 
 	call_deferred("_run_sequence", data)
@@ -79,19 +78,6 @@ func _run_sequence(data: Dictionary) -> void:
 		artwork,
 		"scale",
 		Vector2(1.022, 1.022),
-		hold_seconds
-	)
-	live_motion.tween_property(
-		artwork,
-		"position",
-		Vector2(-3.0, -5.0),
-		hold_seconds
-	)
-	live_motion.tween_method(
-		func(value: float) -> void:
-			_set_shader_value("motion_phase", value),
-		0.0,
-		TAU * 1.25,
 		hold_seconds
 	)
 	live_motion.tween_method(
