@@ -261,7 +261,7 @@ func _build_top_wall() -> void:
 		1,
 		ceili((battlefield_size.x - 120.0) / spacing)
 	)
-	var center_slot := slot_count / 2
+	var center_slot := floori(float(slot_count) * 0.5)
 
 	for slot in range(slot_count):
 		var x := 80.0 + float(slot) * spacing
