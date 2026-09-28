@@ -765,6 +765,7 @@ const PROFILES = {
 		"sprite_frame_dir": "res://assets/art/heroes/stage8_summoner/frames",
 		"summoner": {
 			"base_slot_count": 5,
+			"cast_interval": 1.0,
 			"basic_effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect2",
 			"basic_attack_audio_path": "res://assets/audio/sfx/summoner_basic_attack_pixabay.mp3",
 			"gatekeeper": {

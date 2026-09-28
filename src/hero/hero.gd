@@ -281,6 +281,8 @@ var summoner_gatekeeper_pool: Array[Node2D] = []
 var summoner_scout_pool: Array[Node2D] = []
 var summoner_gatekeeper_cooldown: float = 0.0
 var summoner_scout_cooldown: float = 0.0
+var summoner_cast_interval: float = 1.0
+var summoner_cast_lock_timer: float = 0.0
 var summoner_cast_pending: bool = false
 var summoner_scout_cast_pending: bool = false
 var summoner_runtime_ready: bool = false
@@ -652,6 +654,11 @@ func configure_profile(profile: Dictionary) -> void:
 		float(summoner_scout_config.get("initial_cooldown", 0.0)),
 		0.0
 	)
+	summoner_cast_interval = maxf(
+		float(summoner_config.get("cast_interval", 1.0)),
+		0.0
+	)
+	summoner_cast_lock_timer = 0.0
 	summoner_cast_pending = not summoner_gatekeeper_config.is_empty()
 	summoner_scout_cast_pending = not summoner_scout_config.is_empty()
 	summoner_runtime_ready = false
@@ -1203,6 +1210,10 @@ func _physics_process_summoner(delta: float) -> void:
 		summoner_scout_cooldown - delta,
 		0.0
 	)
+	summoner_cast_lock_timer = maxf(
+		summoner_cast_lock_timer - delta,
+		0.0
+	)
 	_update_invulnerability(delta)
 
 	if slow_timer > 0.0:
@@ -1217,14 +1228,20 @@ func _physics_process_summoner(delta: float) -> void:
 		if summoner_scout_cooldown <= 0.0:
 			summoner_scout_cast_pending = true
 
-	if summoner_cast_pending and _try_cast_summoner_gatekeeper():
-		summoner_cast_pending = false
-	if (
-		_get_active_summon_count() < _get_summoner_slot_capacity()
-		and summoner_scout_cast_pending
-		and _try_cast_summoner_scout()
-	):
-		summoner_scout_cast_pending = false
+	if summoner_cast_lock_timer <= 0.0:
+		var summon_casted := false
+		if summoner_cast_pending and _try_cast_summoner_gatekeeper():
+			summoner_cast_pending = false
+			summon_casted = true
+		elif (
+			_get_active_summon_count() < _get_summoner_slot_capacity()
+			and summoner_scout_cast_pending
+			and _try_cast_summoner_scout()
+		):
+			summoner_scout_cast_pending = false
+			summon_casted = true
+		if summon_casted:
+			summoner_cast_lock_timer = summoner_cast_interval
 
 	_update_heal_item_goal(delta)
 	_update_chest_goal(delta)
