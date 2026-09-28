@@ -1,0 +1,703 @@
+{
+  "source": "again_hero_tile_spritesheet3(1).png",
+  "source_size": [
+    1586,
+    992
+  ],
+  "object_count": 46,
+  "format": "RGBA PNG",
+  "pixel_processing": "Original pixel values and original scale; independent objects segmented; detached fragments within 13 pixels of their parent retained.",
+  "sequence": "top to bottom, left to right",
+  "objects": [
+    {
+      "order": 1,
+      "file": "wall_top_001.png",
+      "source_bbox_xyxy": [
+        12,
+        29,
+        244,
+        230
+      ],
+      "canvas_size": [
+        236,
+        205
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 2,
+      "file": "wall_top_002.png",
+      "source_bbox_xyxy": [
+        269,
+        29,
+        452,
+        228
+      ],
+      "canvas_size": [
+        187,
+        203
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 3,
+      "file": "wall_door_001.png",
+      "source_bbox_xyxy": [
+        462,
+        29,
+        646,
+        230
+      ],
+      "canvas_size": [
+        188,
+        205
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 4,
+      "file": "wall_top_003.png",
+      "source_bbox_xyxy": [
+        654,
+        29,
+        886,
+        229
+      ],
+      "canvas_size": [
+        236,
+        204
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 5,
+      "file": "wall_corner_inner_001.png",
+      "source_bbox_xyxy": [
+        883,
+        29,
+        1071,
+        228
+      ],
+      "canvas_size": [
+        192,
+        203
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 6,
+      "file": "wall_corner_outer_001.png",
+      "source_bbox_xyxy": [
+        1071,
+        30,
+        1249,
+        230
+      ],
+      "canvas_size": [
+        182,
+        204
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 7,
+      "file": "wall_corner_outer_002.png",
+      "source_bbox_xyxy": [
+        1246,
+        22,
+        1411,
+        240
+      ],
+      "canvas_size": [
+        169,
+        222
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 8,
+      "file": "wall_end_001.png",
+      "source_bbox_xyxy": [
+        1474,
+        26,
+        1570,
+        227
+      ],
+      "canvas_size": [
+        100,
+        205
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 9,
+      "file": "wall_end_002.png",
+      "source_bbox_xyxy": [
+        14,
+        257,
+        84,
+        448
+      ],
+      "canvas_size": [
+        74,
+        195
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 10,
+      "file": "wall_end_003.png",
+      "source_bbox_xyxy": [
+        139,
+        255,
+        236,
+        450
+      ],
+      "canvas_size": [
+        101,
+        199
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 11,
+      "file": "wall_top_004.png",
+      "source_bbox_xyxy": [
+        273,
+        235,
+        449,
+        451
+      ],
+      "canvas_size": [
+        180,
+        220
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 12,
+      "file": "wall_door_002.png",
+      "source_bbox_xyxy": [
+        463,
+        227,
+        645,
+        450
+      ],
+      "canvas_size": [
+        186,
+        227
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 13,
+      "file": "wall_arch_001.png",
+      "source_bbox_xyxy": [
+        669,
+        227,
+        871,
+        440
+      ],
+      "canvas_size": [
+        206,
+        217
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 14,
+      "file": "wall_corner_inner_002.png",
+      "source_bbox_xyxy": [
+        890,
+        232,
+        1043,
+        458
+      ],
+      "canvas_size": [
+        157,
+        230
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 15,
+      "file": "wall_corner_outer_003.png",
+      "source_bbox_xyxy": [
+        1086,
+        228,
+        1255,
+        464
+      ],
+      "canvas_size": [
+        173,
+        240
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 16,
+      "file": "wall_corner_outer_004.png",
+      "source_bbox_xyxy": [
+        1261,
+        243,
+        1410,
+        463
+      ],
+      "canvas_size": [
+        153,
+        224
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 17,
+      "file": "wall_end_004.png",
+      "source_bbox_xyxy": [
+        1471,
+        241,
+        1559,
+        464
+      ],
+      "canvas_size": [
+        92,
+        227
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 18,
+      "file": "wall_broken_001.png",
+      "source_bbox_xyxy": [
+        15,
+        468,
+        246,
+        646
+      ],
+      "canvas_size": [
+        235,
+        182
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 19,
+      "file": "wall_broken_002.png",
+      "source_bbox_xyxy": [
+        265,
+        467,
+        460,
+        644
+      ],
+      "canvas_size": [
+        199,
+        181
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 20,
+      "file": "wall_broken_003.png",
+      "source_bbox_xyxy": [
+        460,
+        465,
+        657,
+        644
+      ],
+      "canvas_size": [
+        201,
+        183
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 21,
+      "file": "wall_broken_004.png",
+      "source_bbox_xyxy": [
+        657,
+        468,
+        882,
+        646
+      ],
+      "canvas_size": [
+        229,
+        182
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 22,
+      "file": "wall_corner_inner_broken_001.png",
+      "source_bbox_xyxy": [
+        890,
+        464,
+        1069,
+        649
+      ],
+      "canvas_size": [
+        183,
+        189
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 23,
+      "file": "wall_corner_outer_broken_001.png",
+      "source_bbox_xyxy": [
+        1069,
+        458,
+        1254,
+        655
+      ],
+      "canvas_size": [
+        189,
+        201
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 24,
+      "file": "wall_corner_outer_broken_002.png",
+      "source_bbox_xyxy": [
+        1248,
+        458,
+        1413,
+        656
+      ],
+      "canvas_size": [
+        169,
+        202
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 25,
+      "file": "wall_end_broken_001.png",
+      "source_bbox_xyxy": [
+        1440,
+        457,
+        1558,
+        660
+      ],
+      "canvas_size": [
+        122,
+        207
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 26,
+      "file": "wall_end_broken_002.png",
+      "source_bbox_xyxy": [
+        19,
+        644,
+        108,
+        816
+      ],
+      "canvas_size": [
+        93,
+        176
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 27,
+      "file": "wall_end_broken_003.png",
+      "source_bbox_xyxy": [
+        112,
+        641,
+        244,
+        819
+      ],
+      "canvas_size": [
+        136,
+        182
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 28,
+      "file": "wall_broken_005.png",
+      "source_bbox_xyxy": [
+        265,
+        639,
+        422,
+        820
+      ],
+      "canvas_size": [
+        161,
+        185
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 29,
+      "file": "wall_broken_006.png",
+      "source_bbox_xyxy": [
+        461,
+        639,
+        643,
+        820
+      ],
+      "canvas_size": [
+        186,
+        185
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 30,
+      "file": "wall_arch_broken_001.png",
+      "source_bbox_xyxy": [
+        668,
+        643,
+        868,
+        817
+      ],
+      "canvas_size": [
+        204,
+        178
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 31,
+      "file": "wall_end_broken_004.png",
+      "source_bbox_xyxy": [
+        890,
+        646,
+        1059,
+        819
+      ],
+      "canvas_size": [
+        173,
+        177
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 32,
+      "file": "wall_broken_007.png",
+      "source_bbox_xyxy": [
+        1072,
+        649,
+        1253,
+        820
+      ],
+      "canvas_size": [
+        185,
+        175
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 33,
+      "file": "wall_end_broken_005.png",
+      "source_bbox_xyxy": [
+        1281,
+        650,
+        1410,
+        819
+      ],
+      "canvas_size": [
+        133,
+        173
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 34,
+      "file": "wall_end_broken_006.png",
+      "source_bbox_xyxy": [
+        1449,
+        653,
+        1562,
+        830
+      ],
+      "canvas_size": [
+        117,
+        181
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 35,
+      "file": "wall_end_005.png",
+      "source_bbox_xyxy": [
+        15,
+        846,
+        100,
+        979
+      ],
+      "canvas_size": [
+        89,
+        137
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 36,
+      "file": "wall_end_006.png",
+      "source_bbox_xyxy": [
+        131,
+        824,
+        229,
+        980
+      ],
+      "canvas_size": [
+        102,
+        160
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 37,
+      "file": "wall_end_007.png",
+      "source_bbox_xyxy": [
+        255,
+        818,
+        353,
+        980
+      ],
+      "canvas_size": [
+        102,
+        166
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 38,
+      "file": "wall_end_008.png",
+      "source_bbox_xyxy": [
+        363,
+        833,
+        432,
+        977
+      ],
+      "canvas_size": [
+        73,
+        148
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 39,
+      "file": "wall_end_broken_007.png",
+      "source_bbox_xyxy": [
+        415,
+        828,
+        529,
+        979
+      ],
+      "canvas_size": [
+        118,
+        155
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 40,
+      "file": "wall_door_003.png",
+      "source_bbox_xyxy": [
+        542,
+        812,
+        646,
+        979
+      ],
+      "canvas_size": [
+        108,
+        171
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 41,
+      "file": "wall_broken_008.png",
+      "source_bbox_xyxy": [
+        654,
+        817,
+        901,
+        980
+      ],
+      "canvas_size": [
+        251,
+        167
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 42,
+      "file": "wall_end_broken_008.png",
+      "source_bbox_xyxy": [
+        913,
+        833,
+        1018,
+        976
+      ],
+      "canvas_size": [
+        109,
+        147
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 43,
+      "file": "wall_end_009.png",
+      "source_bbox_xyxy": [
+        1012,
+        831,
+        1060,
+        973
+      ],
+      "canvas_size": [
+        52,
+        146
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 44,
+      "file": "wall_corner_outer_broken_003.png",
+      "source_bbox_xyxy": [
+        1084,
+        815,
+        1252,
+        980
+      ],
+      "canvas_size": [
+        172,
+        169
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 45,
+      "file": "wall_corner_outer_005.png",
+      "source_bbox_xyxy": [
+        1281,
+        811,
+        1400,
+        992
+      ],
+      "canvas_size": [
+        123,
+        185
+      ],
+      "transparent_padding_px": 2
+    },
+    {
+      "order": 46,
+      "file": "wall_end_010.png",
+      "source_bbox_xyxy": [
+        1485,
+        822,
+        1559,
+        981
+      ],
+      "canvas_size": [
+        78,
+        163
+      ],
+      "transparent_padding_px": 2
+    }
+  ]
+}

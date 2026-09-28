@@ -1,0 +1,286 @@
+{
+  "source": "again_hero_tile_spritesheet2(1).png",
+  "source_size": [
+    1448,
+    1086
+  ],
+  "format": "RGBA PNG",
+  "background": "transparent",
+  "order": "source sheet top to bottom, left to right",
+  "objects": [
+    {
+      "order": 1,
+      "file": "pillar_001.png",
+      "category": "pillar",
+      "source_bbox_xyxy": [
+        29,
+        80,
+        170,
+        374
+      ],
+      "canvas_size": [
+        145,
+        298
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 2,
+      "file": "pillar_002.png",
+      "category": "pillar",
+      "source_bbox_xyxy": [
+        196,
+        72,
+        338,
+        375
+      ],
+      "canvas_size": [
+        146,
+        307
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 3,
+      "file": "pillar_003.png",
+      "category": "pillar",
+      "source_bbox_xyxy": [
+        352,
+        94,
+        492,
+        387
+      ],
+      "canvas_size": [
+        144,
+        297
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 4,
+      "file": "debris_001.png",
+      "category": "debris",
+      "source_bbox_xyxy": [
+        492,
+        227,
+        722,
+        393
+      ],
+      "canvas_size": [
+        234,
+        170
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 5,
+      "file": "door_001.png",
+      "category": "door",
+      "source_bbox_xyxy": [
+        737,
+        58,
+        1074,
+        389
+      ],
+      "canvas_size": [
+        341,
+        335
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 6,
+      "file": "door_002.png",
+      "category": "door",
+      "source_bbox_xyxy": [
+        1075,
+        54,
+        1418,
+        382
+      ],
+      "canvas_size": [
+        347,
+        332
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 7,
+      "file": "throne_001.png",
+      "category": "throne",
+      "source_bbox_xyxy": [
+        23,
+        402,
+        412,
+        725
+      ],
+      "canvas_size": [
+        393,
+        327
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 8,
+      "file": "altar_001.png",
+      "category": "altar",
+      "source_bbox_xyxy": [
+        413,
+        428,
+        722,
+        724
+      ],
+      "canvas_size": [
+        313,
+        300
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 9,
+      "file": "brazier_001.png",
+      "category": "brazier",
+      "source_bbox_xyxy": [
+        733,
+        395,
+        917,
+        723
+      ],
+      "canvas_size": [
+        188,
+        332
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 10,
+      "file": "crystal_001.png",
+      "category": "crystal",
+      "source_bbox_xyxy": [
+        946,
+        438,
+        1077,
+        705
+      ],
+      "canvas_size": [
+        135,
+        271
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 11,
+      "file": "flag_001.png",
+      "category": "flag",
+      "source_bbox_xyxy": [
+        1092,
+        416,
+        1215,
+        699
+      ],
+      "canvas_size": [
+        127,
+        287
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 12,
+      "file": "flag_002.png",
+      "category": "flag",
+      "source_bbox_xyxy": [
+        1216,
+        404,
+        1423,
+        715
+      ],
+      "canvas_size": [
+        211,
+        315
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 13,
+      "file": "stairs_001.png",
+      "category": "stairs",
+      "source_bbox_xyxy": [
+        35,
+        744,
+        406,
+        1023
+      ],
+      "canvas_size": [
+        375,
+        283
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 14,
+      "file": "debris_002.png",
+      "category": "debris",
+      "source_bbox_xyxy": [
+        406,
+        807,
+        649,
+        1037
+      ],
+      "canvas_size": [
+        247,
+        234
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 15,
+      "file": "debris_003.png",
+      "category": "debris",
+      "source_bbox_xyxy": [
+        648,
+        851,
+        821,
+        1023
+      ],
+      "canvas_size": [
+        177,
+        176
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 16,
+      "file": "ruins_001.png",
+      "category": "ruins",
+      "source_bbox_xyxy": [
+        829,
+        721,
+        1216,
+        1039
+      ],
+      "canvas_size": [
+        391,
+        322
+      ],
+      "padding_px": 2
+    },
+    {
+      "order": 17,
+      "file": "statue_001.png",
+      "category": "statue",
+      "source_bbox_xyxy": [
+        1217,
+        723,
+        1434,
+        1042
+      ],
+      "canvas_size": [
+        221,
+        323
+      ],
+      "padding_px": 2
+    }
+  ],
+  "count": 17,
+  "notes": "Connected throne/platform, doors/frames and full stairs remain single objects. Rubble piles and nearby independent decorations are separate."
+}

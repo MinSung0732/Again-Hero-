@@ -1,0 +1,809 @@
+{
+  "source": "again_hero_tile_spritesheet1(1).png",
+  "source_resolution": [
+    1448,
+    1086
+  ],
+  "grid": [
+    8,
+    6
+  ],
+  "tile_count": 48,
+  "split_basis": "midpoints of black separator lines in source",
+  "x_edges": [
+    44,
+    215,
+    385,
+    555,
+    725,
+    895,
+    1065,
+    1235,
+    1405
+  ],
+  "y_edges": [
+    43,
+    218,
+    383,
+    543,
+    699,
+    853,
+    1016
+  ],
+  "output_canvas": [
+    171,
+    175
+  ],
+  "processing": "No resizing or recoloring; unequal source-grid pitches are padded transparently to one common canvas.",
+  "order": "left to right, then top to bottom",
+  "tiles": [
+    {
+      "order": 1,
+      "file": "tile_001.png",
+      "row": 1,
+      "column": 1,
+      "source_rect_xyxy": [
+        44,
+        43,
+        215,
+        218
+      ],
+      "canvas_offset_xy": [
+        0,
+        0
+      ]
+    },
+    {
+      "order": 2,
+      "file": "tile_002.png",
+      "row": 1,
+      "column": 2,
+      "source_rect_xyxy": [
+        215,
+        43,
+        385,
+        218
+      ],
+      "canvas_offset_xy": [
+        0,
+        0
+      ]
+    },
+    {
+      "order": 3,
+      "file": "tile_003.png",
+      "row": 1,
+      "column": 3,
+      "source_rect_xyxy": [
+        385,
+        43,
+        555,
+        218
+      ],
+      "canvas_offset_xy": [
+        0,
+        0
+      ]
+    },
+    {
+      "order": 4,
+      "file": "tile_004.png",
+      "row": 1,
+      "column": 4,
+      "source_rect_xyxy": [
+        555,
+        43,
+        725,
+        218
+      ],
+      "canvas_offset_xy": [
+        0,
+        0
+      ]
+    },
+    {
+      "order": 5,
+      "file": "tile_005.png",
+      "row": 1,
+      "column": 5,
+      "source_rect_xyxy": [
+        725,
+        43,
+        895,
+        218
+      ],
+      "canvas_offset_xy": [
+        0,
+        0
+      ]
+    },
+    {
+      "order": 6,
+      "file": "tile_006.png",
+      "row": 1,
+      "column": 6,
+      "source_rect_xyxy": [
+        895,
+        43,
+        1065,
+        218
+      ],
+      "canvas_offset_xy": [
+        0,
+        0
+      ]
+    },
+    {
+      "order": 7,
+      "file": "tile_007.png",
+      "row": 1,
+      "column": 7,
+      "source_rect_xyxy": [
+        1065,
+        43,
+        1235,
+        218
+      ],
+      "canvas_offset_xy": [
+        0,
+        0
+      ]
+    },
+    {
+      "order": 8,
+      "file": "tile_008.png",
+      "row": 1,
+      "column": 8,
+      "source_rect_xyxy": [
+        1235,
+        43,
+        1405,
+        218
+      ],
+      "canvas_offset_xy": [
+        0,
+        0
+      ]
+    },
+    {
+      "order": 9,
+      "file": "tile_009.png",
+      "row": 2,
+      "column": 1,
+      "source_rect_xyxy": [
+        44,
+        218,
+        215,
+        383
+      ],
+      "canvas_offset_xy": [
+        0,
+        5
+      ]
+    },
+    {
+      "order": 10,
+      "file": "tile_010.png",
+      "row": 2,
+      "column": 2,
+      "source_rect_xyxy": [
+        215,
+        218,
+        385,
+        383
+      ],
+      "canvas_offset_xy": [
+        0,
+        5
+      ]
+    },
+    {
+      "order": 11,
+      "file": "tile_011.png",
+      "row": 2,
+      "column": 3,
+      "source_rect_xyxy": [
+        385,
+        218,
+        555,
+        383
+      ],
+      "canvas_offset_xy": [
+        0,
+        5
+      ]
+    },
+    {
+      "order": 12,
+      "file": "tile_012.png",
+      "row": 2,
+      "column": 4,
+      "source_rect_xyxy": [
+        555,
+        218,
+        725,
+        383
+      ],
+      "canvas_offset_xy": [
+        0,
+        5
+      ]
+    },
+    {
+      "order": 13,
+      "file": "tile_013.png",
+      "row": 2,
+      "column": 5,
+      "source_rect_xyxy": [
+        725,
+        218,
+        895,
+        383
+      ],
+      "canvas_offset_xy": [
+        0,
+        5
+      ]
+    },
+    {
+      "order": 14,
+      "file": "tile_014.png",
+      "row": 2,
+      "column": 6,
+      "source_rect_xyxy": [
+        895,
+        218,
+        1065,
+        383
+      ],
+      "canvas_offset_xy": [
+        0,
+        5
+      ]
+    },
+    {
+      "order": 15,
+      "file": "tile_015.png",
+      "row": 2,
+      "column": 7,
+      "source_rect_xyxy": [
+        1065,
+        218,
+        1235,
+        383
+      ],
+      "canvas_offset_xy": [
+        0,
+        5
+      ]
+    },
+    {
+      "order": 16,
+      "file": "tile_016.png",
+      "row": 2,
+      "column": 8,
+      "source_rect_xyxy": [
+        1235,
+        218,
+        1405,
+        383
+      ],
+      "canvas_offset_xy": [
+        0,
+        5
+      ]
+    },
+    {
+      "order": 17,
+      "file": "tile_017.png",
+      "row": 3,
+      "column": 1,
+      "source_rect_xyxy": [
+        44,
+        383,
+        215,
+        543
+      ],
+      "canvas_offset_xy": [
+        0,
+        7
+      ]
+    },
+    {
+      "order": 18,
+      "file": "tile_018.png",
+      "row": 3,
+      "column": 2,
+      "source_rect_xyxy": [
+        215,
+        383,
+        385,
+        543
+      ],
+      "canvas_offset_xy": [
+        0,
+        7
+      ]
+    },
+    {
+      "order": 19,
+      "file": "tile_019.png",
+      "row": 3,
+      "column": 3,
+      "source_rect_xyxy": [
+        385,
+        383,
+        555,
+        543
+      ],
+      "canvas_offset_xy": [
+        0,
+        7
+      ]
+    },
+    {
+      "order": 20,
+      "file": "tile_020.png",
+      "row": 3,
+      "column": 4,
+      "source_rect_xyxy": [
+        555,
+        383,
+        725,
+        543
+      ],
+      "canvas_offset_xy": [
+        0,
+        7
+      ]
+    },
+    {
+      "order": 21,
+      "file": "tile_021.png",
+      "row": 3,
+      "column": 5,
+      "source_rect_xyxy": [
+        725,
+        383,
+        895,
+        543
+      ],
+      "canvas_offset_xy": [
+        0,
+        7
+      ]
+    },
+    {
+      "order": 22,
+      "file": "tile_022.png",
+      "row": 3,
+      "column": 6,
+      "source_rect_xyxy": [
+        895,
+        383,
+        1065,
+        543
+      ],
+      "canvas_offset_xy": [
+        0,
+        7
+      ]
+    },
+    {
+      "order": 23,
+      "file": "tile_023.png",
+      "row": 3,
+      "column": 7,
+      "source_rect_xyxy": [
+        1065,
+        383,
+        1235,
+        543
+      ],
+      "canvas_offset_xy": [
+        0,
+        7
+      ]
+    },
+    {
+      "order": 24,
+      "file": "tile_024.png",
+      "row": 3,
+      "column": 8,
+      "source_rect_xyxy": [
+        1235,
+        383,
+        1405,
+        543
+      ],
+      "canvas_offset_xy": [
+        0,
+        7
+      ]
+    },
+    {
+      "order": 25,
+      "file": "tile_025.png",
+      "row": 4,
+      "column": 1,
+      "source_rect_xyxy": [
+        44,
+        543,
+        215,
+        699
+      ],
+      "canvas_offset_xy": [
+        0,
+        9
+      ]
+    },
+    {
+      "order": 26,
+      "file": "tile_026.png",
+      "row": 4,
+      "column": 2,
+      "source_rect_xyxy": [
+        215,
+        543,
+        385,
+        699
+      ],
+      "canvas_offset_xy": [
+        0,
+        9
+      ]
+    },
+    {
+      "order": 27,
+      "file": "tile_027.png",
+      "row": 4,
+      "column": 3,
+      "source_rect_xyxy": [
+        385,
+        543,
+        555,
+        699
+      ],
+      "canvas_offset_xy": [
+        0,
+        9
+      ]
+    },
+    {
+      "order": 28,
+      "file": "tile_028.png",
+      "row": 4,
+      "column": 4,
+      "source_rect_xyxy": [
+        555,
+        543,
+        725,
+        699
+      ],
+      "canvas_offset_xy": [
+        0,
+        9
+      ]
+    },
+    {
+      "order": 29,
+      "file": "tile_029.png",
+      "row": 4,
+      "column": 5,
+      "source_rect_xyxy": [
+        725,
+        543,
+        895,
+        699
+      ],
+      "canvas_offset_xy": [
+        0,
+        9
+      ]
+    },
+    {
+      "order": 30,
+      "file": "tile_030.png",
+      "row": 4,
+      "column": 6,
+      "source_rect_xyxy": [
+        895,
+        543,
+        1065,
+        699
+      ],
+      "canvas_offset_xy": [
+        0,
+        9
+      ]
+    },
+    {
+      "order": 31,
+      "file": "tile_031.png",
+      "row": 4,
+      "column": 7,
+      "source_rect_xyxy": [
+        1065,
+        543,
+        1235,
+        699
+      ],
+      "canvas_offset_xy": [
+        0,
+        9
+      ]
+    },
+    {
+      "order": 32,
+      "file": "tile_032.png",
+      "row": 4,
+      "column": 8,
+      "source_rect_xyxy": [
+        1235,
+        543,
+        1405,
+        699
+      ],
+      "canvas_offset_xy": [
+        0,
+        9
+      ]
+    },
+    {
+      "order": 33,
+      "file": "tile_033.png",
+      "row": 5,
+      "column": 1,
+      "source_rect_xyxy": [
+        44,
+        699,
+        215,
+        853
+      ],
+      "canvas_offset_xy": [
+        0,
+        10
+      ]
+    },
+    {
+      "order": 34,
+      "file": "tile_034.png",
+      "row": 5,
+      "column": 2,
+      "source_rect_xyxy": [
+        215,
+        699,
+        385,
+        853
+      ],
+      "canvas_offset_xy": [
+        0,
+        10
+      ]
+    },
+    {
+      "order": 35,
+      "file": "tile_035.png",
+      "row": 5,
+      "column": 3,
+      "source_rect_xyxy": [
+        385,
+        699,
+        555,
+        853
+      ],
+      "canvas_offset_xy": [
+        0,
+        10
+      ]
+    },
+    {
+      "order": 36,
+      "file": "tile_036.png",
+      "row": 5,
+      "column": 4,
+      "source_rect_xyxy": [
+        555,
+        699,
+        725,
+        853
+      ],
+      "canvas_offset_xy": [
+        0,
+        10
+      ]
+    },
+    {
+      "order": 37,
+      "file": "tile_037.png",
+      "row": 5,
+      "column": 5,
+      "source_rect_xyxy": [
+        725,
+        699,
+        895,
+        853
+      ],
+      "canvas_offset_xy": [
+        0,
+        10
+      ]
+    },
+    {
+      "order": 38,
+      "file": "tile_038.png",
+      "row": 5,
+      "column": 6,
+      "source_rect_xyxy": [
+        895,
+        699,
+        1065,
+        853
+      ],
+      "canvas_offset_xy": [
+        0,
+        10
+      ]
+    },
+    {
+      "order": 39,
+      "file": "tile_039.png",
+      "row": 5,
+      "column": 7,
+      "source_rect_xyxy": [
+        1065,
+        699,
+        1235,
+        853
+      ],
+      "canvas_offset_xy": [
+        0,
+        10
+      ]
+    },
+    {
+      "order": 40,
+      "file": "tile_040.png",
+      "row": 5,
+      "column": 8,
+      "source_rect_xyxy": [
+        1235,
+        699,
+        1405,
+        853
+      ],
+      "canvas_offset_xy": [
+        0,
+        10
+      ]
+    },
+    {
+      "order": 41,
+      "file": "tile_041.png",
+      "row": 6,
+      "column": 1,
+      "source_rect_xyxy": [
+        44,
+        853,
+        215,
+        1016
+      ],
+      "canvas_offset_xy": [
+        0,
+        6
+      ]
+    },
+    {
+      "order": 42,
+      "file": "tile_042.png",
+      "row": 6,
+      "column": 2,
+      "source_rect_xyxy": [
+        215,
+        853,
+        385,
+        1016
+      ],
+      "canvas_offset_xy": [
+        0,
+        6
+      ]
+    },
+    {
+      "order": 43,
+      "file": "tile_043.png",
+      "row": 6,
+      "column": 3,
+      "source_rect_xyxy": [
+        385,
+        853,
+        555,
+        1016
+      ],
+      "canvas_offset_xy": [
+        0,
+        6
+      ]
+    },
+    {
+      "order": 44,
+      "file": "tile_044.png",
+      "row": 6,
+      "column": 4,
+      "source_rect_xyxy": [
+        555,
+        853,
+        725,
+        1016
+      ],
+      "canvas_offset_xy": [
+        0,
+        6
+      ]
+    },
+    {
+      "order": 45,
+      "file": "tile_045.png",
+      "row": 6,
+      "column": 5,
+      "source_rect_xyxy": [
+        725,
+        853,
+        895,
+        1016
+      ],
+      "canvas_offset_xy": [
+        0,
+        6
+      ]
+    },
+    {
+      "order": 46,
+      "file": "tile_046.png",
+      "row": 6,
+      "column": 6,
+      "source_rect_xyxy": [
+        895,
+        853,
+        1065,
+        1016
+      ],
+      "canvas_offset_xy": [
+        0,
+        6
+      ]
+    },
+    {
+      "order": 47,
+      "file": "tile_047.png",
+      "row": 6,
+      "column": 7,
+      "source_rect_xyxy": [
+        1065,
+        853,
+        1235,
+        1016
+      ],
+      "canvas_offset_xy": [
+        0,
+        6
+      ]
+    },
+    {
+      "order": 48,
+      "file": "tile_048.png",
+      "row": 6,
+      "column": 8,
+      "source_rect_xyxy": [
+        1235,
+        853,
+        1405,
+        1016
+      ],
+      "canvas_offset_xy": [
+        0,
+        6
+      ]
+    }
+  ]
+}
