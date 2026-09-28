@@ -45,6 +45,7 @@ const STAGE5_FRAME_DIR := "res://assets/art/heroes/stage5_archmage/frames"
 const STAGE6_FRAME_DIR := "res://assets/art/heroes/stage6_berserker/frames"
 const STAGE7_FRAME_DIR := "res://assets/art/heroes/stage7_alchemist/frames"
 const STAGE8_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames"
+const STAGE9_FRAME_DIR := "res://assets/art/heroes/stage9_prist/frames"
 const SUMMONER_GATEKEEPER_SCENE := preload("res://src/hero/SummonerGatekeeper.tscn")
 const SUMMONER_SCOUT_SCENE := preload("res://src/hero/SummonerScout.tscn")
 const SUMMONER_HOUND_SCENE := preload("res://src/hero/SummonerHound.tscn")
@@ -315,6 +316,7 @@ var summoner_basic_effect: AnimatedSprite2D = null
 var summoner_basic_audio: AudioStreamPlayer = null
 
 var ultimate_config: Dictionary = {}
+var purifier_gauge_config: Dictionary = {}
 var ultimate_charge: float = 0.0
 var ultimate_flash_timer: float = 0.0
 var ultimate_cooldown_timer: float = 0.0
@@ -877,6 +879,12 @@ func configure_profile(profile: Dictionary) -> void:
 		if typeof(profile_ultimate) == TYPE_DICTIONARY
 		else {}
 	)
+	var raw_purifier_gauge = profile.get("purifier_gauge", {})
+	purifier_gauge_config = (
+		raw_purifier_gauge.duplicate(true)
+		if typeof(raw_purifier_gauge) == TYPE_DICTIONARY
+		else {}
+	)
 	fighter_guard_charge_seconds = maxf(
 		float(ultimate_config.get("charge_seconds", fighter_guard_charge_seconds)),
 		1.0
@@ -1086,6 +1094,39 @@ func _physics_process(delta: float) -> void:
 		_physics_process_alchemist(delta)
 		return
 
+	if hero_archetype == "cleric_purifier":
+		var purifier_dir := (
+			sprite_frame_dir
+			if not sprite_frame_dir.is_empty()
+			else STAGE9_FRAME_DIR
+		)
+		var purifier_frames := SpriteFrames.new()
+		if purifier_frames.has_animation("default"):
+			purifier_frames.remove_animation("default")
+		if not _add_named_sequence_animation(
+			purifier_frames, "idle", purifier_dir, "idle", 4, 6.0, true
+		):
+			return
+		_add_named_sequence_animation(
+			purifier_frames, "move", purifier_dir, "walk", 6, 9.0, true
+		)
+		_add_named_sequence_animation(
+			purifier_frames, "attack", purifier_dir, "attack", 4, 8.0, false
+		)
+		_add_named_sequence_animation(
+			purifier_frames, "hit", purifier_dir, "hit", 3, 12.0, false
+		)
+		_add_named_sequence_animation(
+			purifier_frames, "death", purifier_dir, "death", 4, 8.0, false
+		)
+		hero_sprite.sprite_frames = purifier_frames
+		hero_sprite.visible = true
+		_apply_normalized_hero_visual_scale()
+		_apply_stage9_sprite_anchor()
+		hero_sprite.speed_scale = 1.0
+		hero_sprite.play("idle")
+		return
+
 	if hero_archetype == "summoner_gatekeeper":
 		_physics_process_summoner(delta)
 		return
@@ -1106,6 +1147,7 @@ func _physics_process(delta: float) -> void:
 	ultimate_flash_timer = maxf(ultimate_flash_timer - delta, 0.0)
 	_update_invulnerability(delta)
 	_update_ultimate(delta)
+	_update_purifier_gauge(delta)
 	_update_shield_skill(delta)
 	_update_channel_skill(delta)
 	if hero_archetype == "archmage_elementalist":
@@ -6382,7 +6424,11 @@ func _restart_stage1_animation(animation_name: String, speed_scale: float = 1.0)
 	hero_sprite.play(requested_animation)
 
 func _update_stage1_pose_visual(delta: float) -> void:
-	if hero_id not in ["ranged_rookie", "archmage_hero"] or not hero_sprite.visible or is_dying:
+	if (
+		hero_id not in ["ranged_rookie", "archmage_hero", "purifier_hero"]
+		or not hero_sprite.visible
+		or is_dying
+	):
 		return
 
 	if hit_pose_timer > 0.0:
@@ -6412,6 +6458,12 @@ func _apply_stage7_sprite_anchor() -> void:
 		-104.0 if hero_sprite.flip_h else 104.0,
 		48.0
 	)
+
+
+func _apply_stage9_sprite_anchor() -> void:
+	if hero_archetype != "cleric_purifier" or not is_instance_valid(hero_sprite):
+		return
+	hero_sprite.offset = Vector2(0.0, -100.0)
 
 
 func _apply_stage8_sprite_anchor() -> void:
@@ -7256,6 +7308,10 @@ func _fire_projectile(current_target: Node2D) -> void:
 	_add_ultimate_charge(
 		float(ultimate_config.get("charge_on_attack", 0.0))
 	)
+	if hero_archetype == "cleric_purifier":
+		_add_purifier_gauge(
+			float(purifier_gauge_config.get("charge_on_attack", 4.0))
+		)
 
 
 func _fire_archmage_projectile(current_target: Node2D) -> void:
@@ -8752,6 +8808,38 @@ func _end_shield() -> void:
 	shield_max_hp = 0.0
 	shield_effect.visible = false
 	queue_redraw()
+
+func _update_purifier_gauge(delta: float) -> void:
+	if (
+		hero_archetype != "cleric_purifier"
+		or purifier_gauge_config.is_empty()
+		or is_dying
+		or current_hp <= 0
+	):
+		return
+	var passive_charge := maxf(
+		float(purifier_gauge_config.get("charge_per_second", 2.5)),
+		0.0
+	)
+	if passive_charge > 0.0:
+		_add_purifier_gauge(passive_charge * delta)
+
+
+func _add_purifier_gauge(amount: float) -> void:
+	if (
+		amount <= 0.0
+		or hero_archetype != "cleric_purifier"
+		or purifier_gauge_config.is_empty()
+		or is_dying
+	):
+		return
+	var gauge_max := maxf(
+		float(purifier_gauge_config.get("charge_max", 100.0)),
+		1.0
+	)
+	ultimate_charge = minf(ultimate_charge + amount, gauge_max)
+	queue_redraw()
+
 
 func _update_ultimate(delta: float) -> void:
 	if ultimate_config.is_empty() or is_dying or current_hp <= 0:
@@ -13158,6 +13246,14 @@ func take_damage(amount: int, source: Node = null) -> bool:
 				0.0
 			)
 		)
+		if hero_archetype == "cleric_purifier":
+			_add_purifier_gauge(
+				float(applied_damage)
+				* maxf(
+					float(purifier_gauge_config.get("charge_per_damage", 0.25)),
+					0.0
+				)
+			)
 
 	health_changed.emit(current_hp, max_hp)
 	queue_redraw()
@@ -13316,6 +13412,26 @@ func _draw() -> void:
 		draw_rect(
 			Rect2(-bar_width / 2.0, -79.0, bar_width * gas_ratio, 8.0),
 			Color(0.68, 0.28, 0.92),
+			true
+		)
+	elif hero_archetype == "cleric_purifier":
+		var purifier_max := maxf(
+			float(purifier_gauge_config.get("charge_max", 100.0)),
+			1.0
+		)
+		var purifier_ratio := clampf(
+			ultimate_charge / purifier_max,
+			0.0,
+			1.0
+		)
+		draw_rect(
+			Rect2(-bar_width / 2.0, resource_bar_y, bar_width, 8.0),
+			Color(0.12, 0.12, 0.14),
+			true
+		)
+		draw_rect(
+			Rect2(-bar_width / 2.0, resource_bar_y, bar_width * purifier_ratio, 8.0),
+			Color(1.0, 0.77, 0.16),
 			true
 		)
 	elif hero_archetype == "berserker_madness":

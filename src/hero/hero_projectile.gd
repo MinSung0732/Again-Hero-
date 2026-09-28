@@ -7,9 +7,13 @@ const STAGE1_PROJECTILE_FRAME_PATHS := [
 	"res://assets/art/projectiles/stage1_mage/projectile_04.png",
 ]
 const STAGE1_PROJECTILE_FPS := 12.0
+const STAGE9_EFFECT_DIR := "res://assets/art/heroes/stage9_prist/frames/effect1"
+const STAGE9_PROJECTILE_FPS := 14.0
+const STAGE9_IMPACT_FPS := 18.0
 const POOL_KEY := "hero_basic_projectile"
 
 static var _stage1_frames_cache: SpriteFrames
+static var _stage9_frames_cache: SpriteFrames
 static var _chest_nodes_cache: Array = []
 static var _chest_nodes_cache_physics_frame: int = -1
 
@@ -31,6 +35,9 @@ func _ready() -> void:
 	add_to_group("hero_projectiles")
 	source_hero = get_tree().get_first_node_in_group("hero")
 	body_entered.connect(_on_body_entered)
+	projectile_sprite.animation_finished.connect(
+		Callable(self, "_on_projectile_animation_finished")
+	)
 	queue_redraw()
 
 func setup(
@@ -58,6 +65,7 @@ func setup(
 	splash_radius = maxf(new_splash_radius, 0.0)
 	splash_damage_ratio = clampf(new_splash_damage_ratio, 0.0, 1.0)
 	rotation = direction.angle()
+	monitoring = true
 	_apply_projectile_visual()
 
 func _physics_process(delta: float) -> void:
@@ -101,7 +109,10 @@ func _check_chest_sweep(from_position: Vector2, to_position: Vector2) -> void:
 			continue
 		has_impacted = true
 		chest.call("take_damage", damage)
-		_finish_projectile()
+		if source_hero_id == "purifier_hero":
+			_play_stage9_impact()
+		else:
+			_finish_projectile()
 		return
 
 
@@ -128,7 +139,39 @@ func _on_body_entered(body: Node) -> void:
 	if splash_radius > 0.0 and splash_damage_ratio > 0.0:
 		_apply_splash_damage(body)
 
+	if source_hero_id == "purifier_hero":
+		_play_stage9_impact()
+	else:
+		_finish_projectile()
+
+func _play_stage9_impact() -> void:
+	if not active:
+		return
+	set_physics_process(false)
+	monitoring = false
+	rotation = 0.0
+	if (
+		projectile_sprite.sprite_frames != null
+		and projectile_sprite.sprite_frames.has_animation("impact")
+		and projectile_sprite.sprite_frames.get_frame_count("impact") > 0
+	):
+		projectile_sprite.stop()
+		projectile_sprite.animation = &"impact"
+		projectile_sprite.frame = 0
+		projectile_sprite.play(&"impact")
+		return
 	_finish_projectile()
+
+
+func _on_projectile_animation_finished() -> void:
+	if (
+		active
+		and has_impacted
+		and source_hero_id == "purifier_hero"
+		and projectile_sprite.animation == &"impact"
+	):
+		_finish_projectile()
+
 
 func _finish_projectile() -> void:
 	if not active:
@@ -149,6 +192,7 @@ func deactivate_for_pool() -> void:
 	if is_in_group("hero_projectiles"):
 		remove_from_group("hero_projectiles")
 	set_physics_process(false)
+	monitoring = false
 	visible = false
 	projectile_sprite.stop()
 
@@ -179,6 +223,41 @@ func _apply_projectile_visual() -> void:
 	projectile_sprite.visible = false
 	projectile_sprite.sprite_frames = null
 
+	if source_hero_id == "purifier_hero":
+		var purifier_frames := _stage9_frames_cache
+		if purifier_frames == null:
+			purifier_frames = SpriteFrames.new()
+			if purifier_frames.has_animation("default"):
+				purifier_frames.remove_animation("default")
+			purifier_frames.add_animation("fly")
+			purifier_frames.set_animation_loop("fly", true)
+			purifier_frames.set_animation_speed("fly", STAGE9_PROJECTILE_FPS)
+			for frame_index in range(1, 7):
+				var texture := _load_texture_direct(
+					"%s/effect_%02d.png" % [STAGE9_EFFECT_DIR, frame_index]
+				)
+				if texture != null:
+					purifier_frames.add_frame("fly", texture)
+			purifier_frames.add_animation("impact")
+			purifier_frames.set_animation_loop("impact", false)
+			purifier_frames.set_animation_speed("impact", STAGE9_IMPACT_FPS)
+			for frame_index in range(7, 11):
+				var texture := _load_texture_direct(
+					"%s/effect_%02d.png" % [STAGE9_EFFECT_DIR, frame_index]
+				)
+				if texture != null:
+					purifier_frames.add_frame("impact", texture)
+			_stage9_frames_cache = purifier_frames
+		if purifier_frames.get_frame_count("fly") <= 0:
+			return
+		projectile_sprite.sprite_frames = purifier_frames
+		projectile_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		projectile_sprite.scale = Vector2(0.46, 0.46)
+		projectile_sprite.visible = true
+		projectile_sprite.play("fly")
+		queue_redraw()
+		return
+
 	if source_hero_id != "ranged_rookie":
 		return
 
@@ -203,6 +282,7 @@ func _apply_projectile_visual() -> void:
 		return
 
 	projectile_sprite.sprite_frames = frames
+	projectile_sprite.scale = Vector2.ONE
 	projectile_sprite.visible = true
 	projectile_sprite.play("fly")
 	queue_redraw()
