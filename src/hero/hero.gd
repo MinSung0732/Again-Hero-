@@ -9115,6 +9115,9 @@ func _ensure_purifier_skill_runtime() -> void:
 		purifier_protection_effect.sprite_frames = _purifier_protection_frames_cache
 		purifier_protection_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		purifier_protection_effect.scale = hero_sprite.scale
+		# Divine Protection should stay readable without covering the hero body.
+		# self_modulate keeps the effect at a consistent 50% opacity.
+		purifier_protection_effect.self_modulate = Color(1.0, 1.0, 1.0, 0.5)
 		purifier_protection_effect.offset = Vector2(16.0, -24.0)
 		purifier_protection_effect.z_index = 8
 		purifier_protection_effect.visible = false
