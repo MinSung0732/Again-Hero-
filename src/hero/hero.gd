@@ -45,8 +45,9 @@ const STAGE6_FRAME_DIR := "res://assets/art/heroes/stage6_berserker/frames"
 const STAGE7_FRAME_DIR := "res://assets/art/heroes/stage7_alchemist/frames"
 const STAGE8_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames"
 const SUMMONER_GATEKEEPER_SCENE := preload("res://src/hero/SummonerGatekeeper.tscn")
+const SUMMONER_SCOUT_SCENE := preload("res://src/hero/SummonerScout.tscn")
 const SUMMONER_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/summoner_basic_attack_pixabay.mp3"
-const SUMMONER_GATEKEEPER_POOL_HEADROOM := 4
+const SUMMONER_POOL_HEADROOM := 4
 const ALCHEMIST_VIAL_SCENE := preload("res://src/hero/AlchemistVial.tscn")
 const ALCHEMIST_POISON_POOL_SCENE := preload("res://src/hero/AlchemistPoisonPool.tscn")
 const ALCHEMY_MATERIAL_SCENE := preload("res://src/hero/AlchemyMaterial.tscn")
@@ -273,11 +274,15 @@ var alchemist_equivalent_exchange_damage_reduction_timer: float = 0.0
 
 var summoner_config: Dictionary = {}
 var summoner_gatekeeper_config: Dictionary = {}
+var summoner_scout_config: Dictionary = {}
 var summoner_slot_base: int = 5
 var summoner_slot_bonus: int = 0
 var summoner_gatekeeper_pool: Array[Node2D] = []
+var summoner_scout_pool: Array[Node2D] = []
 var summoner_gatekeeper_cooldown: float = 0.0
+var summoner_scout_cooldown: float = 0.0
 var summoner_cast_pending: bool = false
+var summoner_scout_cast_pending: bool = false
 var summoner_runtime_ready: bool = false
 var summoner_basic_effect: AnimatedSprite2D = null
 var summoner_basic_audio: AudioStreamPlayer = null
@@ -626,17 +631,29 @@ func configure_profile(profile: Dictionary) -> void:
 		if typeof(raw_gatekeeper) == TYPE_DICTIONARY
 		else {}
 	)
+	var raw_scout = summoner_config.get("scout", {})
+	summoner_scout_config = (
+		raw_scout.duplicate(true)
+		if typeof(raw_scout) == TYPE_DICTIONARY
+		else {}
+	)
 	summoner_slot_base = maxi(
 		int(summoner_config.get("base_slot_count", 5)),
 		1
 	)
 	summoner_slot_bonus = 0
 	summoner_gatekeeper_pool.clear()
+	summoner_scout_pool.clear()
 	summoner_gatekeeper_cooldown = maxf(
 		float(summoner_gatekeeper_config.get("initial_cooldown", 0.0)),
 		0.0
 	)
+	summoner_scout_cooldown = maxf(
+		float(summoner_scout_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
 	summoner_cast_pending = not summoner_gatekeeper_config.is_empty()
+	summoner_scout_cast_pending = not summoner_scout_config.is_empty()
 	summoner_runtime_ready = false
 	summoner_basic_effect = null
 	summoner_basic_audio = null
@@ -1040,8 +1057,17 @@ func _physics_process(delta: float) -> void:
 
 
 
+func _get_summoner_level_slot_bonus() -> int:
+	return maxi(int(floor(float(level) / 5.0)), 0)
+
+
 func _get_summoner_slot_capacity() -> int:
-	return maxi(summoner_slot_base + summoner_slot_bonus, 1)
+	return maxi(
+		summoner_slot_base
+		+ summoner_slot_bonus
+		+ _get_summoner_level_slot_bonus(),
+		1
+	)
 
 
 func _get_active_summon_count() -> int:
@@ -1049,7 +1075,41 @@ func _get_active_summon_count() -> int:
 	for summon in summoner_gatekeeper_pool:
 		if is_instance_valid(summon) and bool(summon.get("active")):
 			count += 1
+	for summon in summoner_scout_pool:
+		if is_instance_valid(summon) and bool(summon.get("active")):
+			count += 1
 	return count
+
+
+func _ensure_summoner_pool_capacity() -> void:
+	if hero_archetype != "summoner_gatekeeper":
+		return
+	var world_parent := get_parent()
+	if not is_instance_valid(world_parent):
+		return
+
+	var pool_size := _get_summoner_slot_capacity() + SUMMONER_POOL_HEADROOM
+	while summoner_gatekeeper_pool.size() < pool_size:
+		var gatekeeper := SUMMONER_GATEKEEPER_SCENE.instantiate() as Node2D
+		if gatekeeper == null:
+			break
+		world_parent.add_child(gatekeeper)
+		gatekeeper.connect(
+			"released",
+			Callable(self, "_on_summoner_gatekeeper_released")
+		)
+		summoner_gatekeeper_pool.append(gatekeeper)
+
+	while summoner_scout_pool.size() < pool_size:
+		var scout := SUMMONER_SCOUT_SCENE.instantiate() as Node2D
+		if scout == null:
+			break
+		world_parent.add_child(scout)
+		scout.connect(
+			"released",
+			Callable(self, "_on_summoner_scout_released")
+		)
+		summoner_scout_pool.append(scout)
 
 
 func _ensure_summoner_runtime() -> void:
@@ -1059,17 +1119,7 @@ func _ensure_summoner_runtime() -> void:
 	if not is_instance_valid(world_parent):
 		return
 
-	var pool_size := _get_summoner_slot_capacity() + SUMMONER_GATEKEEPER_POOL_HEADROOM
-	for _index in range(pool_size):
-		var gatekeeper := SUMMONER_GATEKEEPER_SCENE.instantiate() as Node2D
-		if gatekeeper == null:
-			continue
-		world_parent.add_child(gatekeeper)
-		gatekeeper.connect(
-			"released",
-			Callable(self, "_on_summoner_gatekeeper_released")
-		)
-		summoner_gatekeeper_pool.append(gatekeeper)
+	_ensure_summoner_pool_capacity()
 
 	summoner_basic_effect = AnimatedSprite2D.new()
 	var effect_frames := SpriteFrames.new()
@@ -1116,11 +1166,17 @@ func _ensure_summoner_runtime() -> void:
 			summoner_basic_audio.stream = stream
 	add_child(summoner_basic_audio)
 
-	summoner_runtime_ready = not summoner_gatekeeper_pool.is_empty()
+	summoner_runtime_ready = (
+		not summoner_gatekeeper_pool.is_empty()
+		and (
+			summoner_scout_config.is_empty()
+			or not summoner_scout_pool.is_empty()
+		)
+	)
 	if summoner_runtime_ready:
-		# Keep an explicit request alive until a pooled summon is actually acquired.
-		# This prevents the first cast from being silently lost during node setup.
-		summoner_cast_pending = true
+		# Keep explicit requests alive until a pooled summon is actually acquired.
+		summoner_cast_pending = not summoner_gatekeeper_config.is_empty()
+		summoner_scout_cast_pending = not summoner_scout_config.is_empty()
 	queue_redraw()
 
 
@@ -1143,6 +1199,10 @@ func _physics_process_summoner(delta: float) -> void:
 		summoner_gatekeeper_cooldown - delta,
 		0.0
 	)
+	summoner_scout_cooldown = maxf(
+		summoner_scout_cooldown - delta,
+		0.0
+	)
 	_update_invulnerability(delta)
 
 	if slow_timer > 0.0:
@@ -1151,13 +1211,20 @@ func _physics_process_summoner(delta: float) -> void:
 			move_multiplier = 1.0
 			queue_redraw()
 
-	if (
-		summoner_gatekeeper_cooldown <= 0.0
-		and _get_active_summon_count() < _get_summoner_slot_capacity()
-	):
-		summoner_cast_pending = true
+	if _get_active_summon_count() < _get_summoner_slot_capacity():
+		if summoner_gatekeeper_cooldown <= 0.0:
+			summoner_cast_pending = true
+		if summoner_scout_cooldown <= 0.0:
+			summoner_scout_cast_pending = true
+
 	if summoner_cast_pending and _try_cast_summoner_gatekeeper():
 		summoner_cast_pending = false
+	if (
+		_get_active_summon_count() < _get_summoner_slot_capacity()
+		and summoner_scout_cast_pending
+		and _try_cast_summoner_scout()
+	):
+		summoner_scout_cast_pending = false
 
 	_update_heal_item_goal(delta)
 	_update_chest_goal(delta)
@@ -1226,6 +1293,54 @@ func _try_cast_summoner_gatekeeper() -> bool:
 func _on_summoner_gatekeeper_released(_summon: Node2D) -> void:
 	if summoner_gatekeeper_cooldown <= 0.0:
 		summoner_cast_pending = true
+	if summoner_scout_cooldown <= 0.0:
+		summoner_scout_cast_pending = true
+	queue_redraw()
+
+
+func _try_cast_summoner_scout() -> bool:
+	if summoner_scout_config.is_empty():
+		return false
+	if summoner_scout_cooldown > 0.0:
+		return false
+	if _get_active_summon_count() >= _get_summoner_slot_capacity():
+		return false
+
+	var summon_to_use: Node2D = null
+	for summon in summoner_scout_pool:
+		if is_instance_valid(summon) and not bool(summon.get("active")):
+			summon_to_use = summon
+			break
+	if summon_to_use == null:
+		_ensure_summoner_pool_capacity()
+		for summon in summoner_scout_pool:
+			if is_instance_valid(summon) and not bool(summon.get("active")):
+				summon_to_use = summon
+				break
+	if summon_to_use == null:
+		return false
+
+	var runtime_config := summoner_scout_config.duplicate(true)
+	runtime_config["owner_attack_damage"] = attack_damage
+	summon_to_use.call(
+		"activate",
+		global_position,
+		self,
+		runtime_config
+	)
+	summoner_scout_cooldown = maxf(
+		float(summoner_scout_config.get("cooldown", 20.0)),
+		0.0
+	)
+	queue_redraw()
+	return true
+
+
+func _on_summoner_scout_released(_summon: Node2D) -> void:
+	if summoner_gatekeeper_cooldown <= 0.0:
+		summoner_cast_pending = true
+	if summoner_scout_cooldown <= 0.0:
+		summoner_scout_cast_pending = true
 	queue_redraw()
 
 
@@ -8137,6 +8252,16 @@ func get_skill_cooldown_hud() -> Array:
 					0.0
 				)
 			)
+			_append_skill_cooldown_hud(
+				skills,
+				summoner_scout_config,
+				summoner_scout_cooldown,
+				"res://assets/art/heroes/stage8_summoner/frames/effect2/summon_04.png",
+				maxf(
+					float(summoner_scout_config.get("cooldown", 20.0)),
+					0.0
+				)
+			)
 		"alchemist_chemical":
 			_append_skill_cooldown_hud(
 				skills,
@@ -8643,6 +8768,10 @@ func _level_up() -> void:
 	level_flash_timer = 0.45
 	_play_level_up_feedback()
 	_apply_level_growth()
+	if hero_archetype == "summoner_gatekeeper" and level % 5 == 0:
+		# Stage 8 gains one shared summon slot every five levels. Expand the
+		# fixed pools only at the milestone instead of instantiating during combat.
+		_ensure_summoner_pool_capacity()
 
 	var candidates: Array = AUGMENT_CATALOG.roll_candidates(
 		3,
