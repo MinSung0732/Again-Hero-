@@ -7378,7 +7378,12 @@ func _estimate_monster_danger(at_position: Vector2, radius: float) -> float:
 	var danger := 0.0
 	var safe_radius := maxf(radius, 1.0)
 	var safe_radius_sq := safe_radius * safe_radius
-	for node in _get_monster_nodes_near(at_position, safe_radius):
+	_fill_monster_nodes_near(
+		at_position,
+		safe_radius,
+		_movement_monster_scratch
+	)
+	for node in _movement_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -7389,13 +7394,19 @@ func _estimate_monster_danger(at_position: Vector2, radius: float) -> float:
 			continue
 		var distance := sqrt(distance_sq)
 		danger += 1.0 - clampf(distance / safe_radius, 0.0, 1.0)
+	_movement_monster_scratch.clear()
 	return danger
 
 func _get_crowd_avoidance_direction(radius: float = 230.0) -> Vector2:
 	var avoidance := Vector2.ZERO
 	var safe_radius := maxf(radius, 1.0)
 	var safe_radius_sq := safe_radius * safe_radius
-	for node in _get_monster_nodes_near(global_position, safe_radius):
+	_fill_monster_nodes_near(
+		global_position,
+		safe_radius,
+		_movement_monster_scratch
+	)
+	for node in _movement_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -7408,6 +7419,7 @@ func _get_crowd_avoidance_direction(radius: float = 230.0) -> Vector2:
 		var distance := sqrt(distance_sq)
 		var weight := 1.0 - clampf(distance / safe_radius, 0.0, 1.0)
 		avoidance += offset / distance * (0.35 + weight)
+	_movement_monster_scratch.clear()
 	return avoidance.normalized() if avoidance.length_squared() > 0.01 else Vector2.ZERO
 
 func _update_chest_goal(delta: float) -> void:
