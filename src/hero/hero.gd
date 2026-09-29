@@ -10046,7 +10046,7 @@ func _purifier_orb_link_key(a: Node2D, b: Node2D) -> String:
 func _refresh_purifier_orb_links() -> void:
 	var active_orbs := _get_active_purifier_orbs()
 	var link_distance := maxf(
-		float(purifier_orb_config.get("link_distance", 600.0)),
+		float(purifier_orb_config.get("link_distance", 780.0)),
 		1.0
 	)
 	var link_distance_sq := link_distance * link_distance
@@ -10161,7 +10161,7 @@ func _purifier_orb_connection_count(
 	active_orbs: Array[Node2D]
 ) -> int:
 	var link_distance := maxf(
-		float(purifier_orb_config.get("link_distance", 600.0)),
+		float(purifier_orb_config.get("link_distance", 780.0)),
 		1.0
 	)
 	var link_distance_sq := link_distance * link_distance
@@ -10181,7 +10181,7 @@ func _purifier_orb_resulting_component_size(
 	active_orbs: Array[Node2D]
 ) -> int:
 	var link_distance := maxf(
-		float(purifier_orb_config.get("link_distance", 600.0)),
+		float(purifier_orb_config.get("link_distance", 780.0)),
 		1.0
 	)
 	var link_distance_sq := link_distance * link_distance
@@ -10251,7 +10251,7 @@ func _choose_purifier_orb_target_position() -> Vector2:
 		1.0
 	)
 	var link_distance := maxf(
-		float(purifier_orb_config.get("link_distance", 600.0)),
+		float(purifier_orb_config.get("link_distance", 780.0)),
 		1.0
 	)
 	var active_orbs := _get_active_purifier_orbs()
@@ -10286,7 +10286,7 @@ func _choose_purifier_orb_target_position() -> Vector2:
 		if desired_direction.length_squared() <= 0.001:
 			desired_direction = Vector2.from_angle(randf_range(0.0, TAU))
 
-		for angle_offset in [-0.55, 0.0, 0.55]:
+		for angle_offset in [-0.70, -0.35, 0.0, 0.35, 0.70]:
 			candidates.append(
 				orb.global_position
 				+ desired_direction.rotated(angle_offset)
@@ -10329,7 +10329,7 @@ func _choose_purifier_orb_target_position() -> Vector2:
 		active_orbs.size() >= 2
 		and randf()
 		< clampf(
-			float(purifier_orb_config.get("chain_hold_chance", 0.35)),
+			float(purifier_orb_config.get("chain_hold_chance", 0.25)),
 			0.0,
 			1.0
 		)
@@ -10370,11 +10370,49 @@ func _choose_purifier_orb_target_position() -> Vector2:
 					else 1.2
 				)
 			else:
-				score += float(link_count) * 3.0
+				if resulting_component_size == 2:
+					score += maxf(
+						float(
+							purifier_orb_config.get(
+								"partial_link_score_bonus",
+								4.0
+							)
+						),
+						0.0
+					)
+				score += (
+					float(link_count)
+					* maxf(
+						float(
+							purifier_orb_config.get(
+								"link_score_per_neighbor",
+								5.0
+							)
+						),
+						0.0
+					)
+				)
 				if resulting_component_size >= 3:
 					score += (
-						8.0
-						+ float(resulting_component_size - 3) * 4.0
+						maxf(
+							float(
+								purifier_orb_config.get(
+									"chain_ready_score_bonus",
+									12.0
+								)
+							),
+							0.0
+						)
+						+ float(resulting_component_size - 3)
+						* maxf(
+							float(
+								purifier_orb_config.get(
+									"extra_chain_orb_score_bonus",
+									5.0
+								)
+							),
+							0.0
+						)
 					)
 
 			score -= (
@@ -10442,7 +10480,7 @@ func _cast_purifier_orb() -> void:
 			float(purifier_orb_config.get("projectile_speed", 380.0)),
 			1.0
 		),
-		maxf(float(purifier_orb_config.get("duration", 50.0)), 0.1),
+		maxf(float(purifier_orb_config.get("duration", 80.0)), 0.1),
 		maxf(
 			float(purifier_orb_config.get("explosion_radius", 275.0)),
 			1.0
@@ -10474,7 +10512,7 @@ func _get_purifier_orb_component(start_orb: Node2D) -> Array[Node2D]:
 		return component
 
 	var link_distance := maxf(
-		float(purifier_orb_config.get("link_distance", 600.0)),
+		float(purifier_orb_config.get("link_distance", 780.0)),
 		1.0
 	)
 	var link_distance_sq := link_distance * link_distance
