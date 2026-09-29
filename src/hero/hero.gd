@@ -297,6 +297,7 @@ var archmage_chain_dagger_active_count: int = 0
 var archmage_chain_multithrow_stacks: int = 0
 var archmage_chain_target_candidates: Array[Node2D] = []
 var archmage_chain_target_results: Array[Node2D] = []
+var archmage_query_candidates: Array = []
 var archmage_casting_sequence: bool = false
 var archmage_casting_sequence_count: int = 0
 var archmage_multicast_stacks: int = 0
@@ -928,6 +929,7 @@ func configure_profile(profile: Dictionary) -> void:
 	archmage_chain_multithrow_stacks = 0
 	archmage_chain_target_candidates.clear()
 	archmage_chain_target_results.clear()
+	archmage_query_candidates.clear()
 	archmage_casting_sequence = false
 	archmage_casting_sequence_count = 0
 	archmage_multicast_stacks = 0
@@ -8462,8 +8464,14 @@ func _find_archmage_holy_cluster_target(config: Dictionary) -> Node2D:
 	var best: Node2D = null
 	var best_count: int = -1
 	var best_distance_sq: float = INF
+	var search_radius_sq := search_radius * search_radius
+	_fill_monster_nodes_near(
+		global_position,
+		search_radius,
+		archmage_query_candidates
+	)
 
-	for node in _get_monster_nodes_near(global_position, search_radius):
+	for node in archmage_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -8473,7 +8481,7 @@ func _find_archmage_holy_cluster_target(config: Dictionary) -> Node2D:
 		var distance_sq: float = global_position.distance_squared_to(
 			monster.global_position
 		)
-		if distance_sq > search_radius * search_radius:
+		if distance_sq > search_radius_sq:
 			continue
 
 		var nearby_count: int = _count_monsters_near(
@@ -8488,6 +8496,7 @@ func _find_archmage_holy_cluster_target(config: Dictionary) -> Node2D:
 			best = monster
 			best_distance_sq = distance_sq
 
+	archmage_query_candidates.clear()
 	return best
 
 
@@ -8514,6 +8523,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 		* float(config.get("damage_ratio", 0.90))
 		* _skill_damage_multiplier(empowered)
 	)))
+	var hit_radius_sq := hit_radius * hit_radius
 
 	for index in range(count):
 		if not is_inside_tree() or current_hp <= 0:
@@ -8529,13 +8539,18 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 			"holy", 1, 5, 20.0, false, position, Vector2(0.94, 0.94)
 		)
 
-		for node in _get_monster_nodes_near(position, hit_radius):
+		_fill_monster_nodes_near(
+			position,
+			hit_radius,
+			archmage_query_candidates
+		)
+		for node in archmage_query_candidates:
 			if not is_instance_valid(node) or node.is_queued_for_deletion():
 				continue
 			var monster := node as Node2D
 			if monster == null or not monster.has_method("take_damage"):
 				continue
-			if position.distance_squared_to(monster.global_position) > hit_radius * hit_radius:
+			if position.distance_squared_to(monster.global_position) > hit_radius_sq:
 				continue
 
 			var dealt: int = base_damage
@@ -8569,6 +8584,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 					) * 1000.0
 				)
 			)
+		archmage_query_candidates.clear()
 
 		await get_tree().create_timer(
 			maxf(float(config.get("burst_delay", 0.09)), 0.02)
@@ -8583,7 +8599,12 @@ func _get_archmage_chain_dagger_targets(
 	archmage_chain_target_candidates.clear()
 	archmage_chain_target_results.clear()
 	var radius_sq := search_radius * search_radius
-	for node in _get_monster_nodes_near(global_position, search_radius):
+	_fill_monster_nodes_near(
+		global_position,
+		search_radius,
+		archmage_query_candidates
+	)
+	for node in archmage_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -8595,6 +8616,7 @@ func _get_archmage_chain_dagger_targets(
 		):
 			continue
 		archmage_chain_target_candidates.append(monster)
+	archmage_query_candidates.clear()
 
 	if archmage_chain_target_candidates.is_empty():
 		return archmage_chain_target_results
@@ -8756,7 +8778,12 @@ func _cast_archmage_blink() -> void:
 
 	var start_position := global_position
 	var repulsion := Vector2.ZERO
-	for node in _get_monster_nodes_near(global_position, 460.0):
+	_fill_monster_nodes_near(
+		global_position,
+		460.0,
+		archmage_query_candidates
+	)
+	for node in archmage_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -8770,6 +8797,7 @@ func _cast_archmage_blink() -> void:
 			sqrt(distance_sq),
 			1.0
 		)
+	archmage_query_candidates.clear()
 
 	var preferred := (
 		repulsion.normalized()
