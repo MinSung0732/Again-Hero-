@@ -18,6 +18,8 @@ enum State {
 
 static var _texture_cache: Dictionary = {}
 
+@onready var charge_aura: Sprite2D = $ChargeAura
+@onready var trail_layer: Node2D = $TrailLayer
 @onready var visual: Sprite2D = $Visual
 
 var caster: Node2D
@@ -38,6 +40,26 @@ var impact_hold_seconds: float = 0.06
 var explosion_fps: float = 12.0
 var projectile_visual_scale: float = 0.62
 var explosion_visual_scale: float = 1.30
+
+var charge_effect_dir: String = ""
+var charge_visual_scale: float = 0.85
+var charge_alpha_start: float = 0.28
+var charge_alpha_end: float = 0.88
+var charge_frame_first: int = 17
+var charge_frame_last: int = 22
+var _last_charge_frame: int = -1
+
+var trail_interval: float = 0.035
+var trail_lifetime: float = 0.20
+var trail_alpha: float = 0.42
+var trail_scale_multiplier: float = 0.94
+var trail_pool_size: int = 10
+var trail_timer: float = 0.0
+var _trail_pool: Array[Sprite2D] = []
+var _trail_ages: Array[float] = []
+var _trail_active: Array[bool] = []
+var _trail_base_scales: Array[Vector2] = []
+var _trail_pool_index: int = 0
 
 var cast_elapsed: float = 0.0
 var travelled: float = 0.0
@@ -69,6 +91,53 @@ func setup(
 			"effect_dir",
 			"res://assets/art/heroes/stage9_prist/frames/effect6"
 		)
+	)
+	charge_effect_dir = String(
+		config.get(
+			"charge_effect_dir",
+			"res://assets/art/heroes/stage9_prist/frames/effect3"
+		)
+	)
+	charge_visual_scale = maxf(
+		float(config.get("charge_visual_scale", 0.85)),
+		0.05
+	)
+	charge_alpha_start = clampf(
+		float(config.get("charge_alpha_start", 0.28)),
+		0.0,
+		1.0
+	)
+	charge_alpha_end = clampf(
+		float(config.get("charge_alpha_end", 0.88)),
+		0.0,
+		1.0
+	)
+	charge_frame_first = int(config.get("charge_frame_first", 17))
+	charge_frame_last = maxi(
+		int(config.get("charge_frame_last", 22)),
+		charge_frame_first
+	)
+	trail_interval = maxf(
+		float(config.get("trail_interval", 0.035)),
+		0.01
+	)
+	trail_lifetime = maxf(
+		float(config.get("trail_lifetime", 0.20)),
+		0.05
+	)
+	trail_alpha = clampf(
+		float(config.get("trail_alpha", 0.42)),
+		0.0,
+		0.95
+	)
+	trail_scale_multiplier = maxf(
+		float(config.get("trail_scale_multiplier", 0.94)),
+		0.05
+	)
+	trail_pool_size = clampi(
+		int(config.get("trail_pool_size", 10)),
+		4,
+		24
 	)
 	cast_seconds = maxf(float(config.get("cast_seconds", 1.0)), 0.05)
 	projectile_speed = maxf(
@@ -132,14 +201,23 @@ func setup(
 	rotation = direction.angle()
 	visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	visual.scale = Vector2.ONE * projectile_visual_scale
+	charge_aura.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	charge_aura.top_level = true
+	charge_aura.global_position = global_position
+	charge_aura.global_rotation = 0.0
+	charge_aura.visible = true
+	_build_trail_pool()
 	state = State.CASTING
 	cast_elapsed = 0.0
 	travelled = 0.0
+	trail_timer = 0.0
 	_set_cast_frame(1)
+	_update_charge_aura(0.0)
 	set_physics_process(true)
 
 
 func _physics_process(delta: float) -> void:
+	_update_trails(delta)
 	match state:
 		State.CASTING:
 			_update_casting(delta)
@@ -168,6 +246,7 @@ func _update_casting(delta: float) -> void:
 	var normalized := clampf(cast_elapsed / cast_seconds, 0.0, 0.9999)
 	var frame_offset := mini(floori(normalized * 5.0), 4)
 	_set_cast_frame(frame_offset + 1)
+	_update_charge_aura(normalized)
 
 	if cast_elapsed + 0.0001 >= cast_seconds:
 		_begin_flight()
@@ -177,7 +256,11 @@ func _begin_flight() -> void:
 	if state != State.CASTING:
 		return
 	state = State.FLYING
+	if is_instance_valid(charge_aura):
+		charge_aura.visible = false
+	trail_timer = trail_interval
 	_set_flight_frame(5)
+	_emit_trail()
 	launched.emit()
 
 
@@ -202,6 +285,11 @@ func _update_flying(delta: float) -> void:
 		_set_flight_frame(6)
 	else:
 		_set_flight_frame(5)
+
+	trail_timer -= delta
+	while trail_timer <= 0.0:
+		_emit_trail()
+		trail_timer += trail_interval
 
 	if travelled + 0.001 >= max_distance:
 		_arrive()
@@ -422,6 +510,123 @@ func _apply_explosion() -> void:
 		)
 
 
+func _update_charge_aura(normalized: float) -> void:
+	if not is_instance_valid(charge_aura):
+		return
+	var progress := clampf(normalized, 0.0, 1.0)
+	var frame_count := maxi(charge_frame_last - charge_frame_first + 1, 1)
+	var frame_offset := mini(
+		floori(progress * float(frame_count)),
+		frame_count - 1
+	)
+	var frame_index := charge_frame_first + frame_offset
+	if frame_index != _last_charge_frame:
+		_last_charge_frame = frame_index
+		var path := "%s/effect_%02d.png" % [
+			charge_effect_dir,
+			frame_index,
+		]
+		var texture := _load_texture_cached(path)
+		if texture != null:
+			charge_aura.texture = texture
+
+	charge_aura.global_position = global_position
+	charge_aura.global_rotation = 0.0
+	var gather_scale := charge_visual_scale * lerpf(0.72, 1.05, progress)
+	var pulse := 1.0 + sin(progress * PI * 4.0) * 0.035
+	charge_aura.scale = Vector2.ONE * gather_scale * pulse
+	charge_aura.modulate = Color(
+		1.0,
+		1.0,
+		1.0,
+		lerpf(charge_alpha_start, charge_alpha_end, progress)
+	)
+	charge_aura.visible = true
+
+
+func _build_trail_pool() -> void:
+	_trail_pool.clear()
+	_trail_ages.clear()
+	_trail_active.clear()
+	_trail_base_scales.clear()
+	_trail_pool_index = 0
+
+	for index in range(trail_pool_size):
+		var ghost := Sprite2D.new()
+		ghost.name = "GungnirTrail%02d" % index
+		ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		ghost.top_level = true
+		ghost.z_index = -1
+		ghost.visible = false
+		trail_layer.add_child(ghost)
+		_trail_pool.append(ghost)
+		_trail_ages.append(0.0)
+		_trail_active.append(false)
+		_trail_base_scales.append(Vector2.ONE)
+
+
+func _emit_trail() -> void:
+	if (
+		state != State.FLYING
+		or visual.texture == null
+		or _trail_pool.is_empty()
+	):
+		return
+
+	var index := _trail_pool_index
+	_trail_pool_index = (_trail_pool_index + 1) % _trail_pool.size()
+	var ghost := _trail_pool[index]
+	ghost.texture = visual.texture
+	ghost.global_position = global_position
+	ghost.global_rotation = rotation
+	ghost.scale = visual.scale * trail_scale_multiplier
+	ghost.modulate = Color(1.0, 1.0, 1.0, trail_alpha)
+	ghost.visible = true
+	_trail_ages[index] = 0.0
+	_trail_active[index] = true
+	_trail_base_scales[index] = ghost.scale
+
+
+func _update_trails(delta: float) -> void:
+	if _trail_pool.is_empty():
+		return
+
+	for index in range(_trail_pool.size()):
+		if not _trail_active[index]:
+			continue
+		var ghost := _trail_pool[index]
+		if not is_instance_valid(ghost):
+			_trail_active[index] = false
+			continue
+
+		var age := _trail_ages[index] + delta
+		_trail_ages[index] = age
+		var ratio := clampf(age / trail_lifetime, 0.0, 1.0)
+		if ratio >= 1.0:
+			ghost.visible = false
+			_trail_active[index] = false
+			continue
+
+		var fade := 1.0 - ratio
+		ghost.modulate = Color(
+			1.0,
+			1.0,
+			1.0,
+			trail_alpha * fade * fade
+		)
+		var base_scale := _trail_base_scales[index]
+		ghost.scale = base_scale * lerpf(1.0, 0.86, ratio)
+
+
+func _clear_trails() -> void:
+	for index in range(_trail_pool.size()):
+		var ghost := _trail_pool[index]
+		if is_instance_valid(ghost):
+			ghost.visible = false
+		_trail_active[index] = false
+		_trail_ages[index] = 0.0
+
+
 func _set_cast_frame(frame_index: int) -> void:
 	if frame_index == _last_cast_frame:
 		return
@@ -469,6 +674,9 @@ func _finish() -> void:
 		return
 	state = State.DONE
 	_release_captured()
+	_clear_trails()
+	if is_instance_valid(charge_aura):
+		charge_aura.visible = false
 	set_physics_process(false)
 	finished.emit()
 	queue_free()
@@ -476,3 +684,4 @@ func _finish() -> void:
 
 func _exit_tree() -> void:
 	_release_captured()
+	_clear_trails()

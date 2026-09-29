@@ -6,6 +6,14 @@
 z_index = 9
 script = ExtResource("1")
 
+[node name="ChargeAura" type="Sprite2D" parent="."]
+texture_filter = 1
+z_index = 0
+visible = false
+
+[node name="TrailLayer" type="Node2D" parent="."]
+z_index = 0
+
 [node name="Visual" type="Sprite2D" parent="."]
 texture_filter = 1
 z_index = 1
