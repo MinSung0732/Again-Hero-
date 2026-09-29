@@ -50,11 +50,14 @@ var charge_frame_first: int = 17
 var charge_frame_last: int = 22
 var _last_charge_frame: int = -1
 
-var trail_interval: float = 0.035
-var trail_lifetime: float = 0.20
-var trail_alpha: float = 0.42
-var trail_scale_multiplier: float = 0.94
-var trail_pool_size: int = 10
+var trail_interval: float = 0.028
+var trail_lifetime: float = 0.42
+var trail_alpha: float = 0.62
+var trail_scale_multiplier: float = 0.98
+var trail_pool_size: int = 18
+var trail_end_length_scale: float = 0.72
+var trail_end_width_scale: float = 0.44
+var trail_warmth: float = 0.70
 var trail_timer: float = 0.0
 var _trail_pool: Array[Sprite2D] = []
 var _trail_ages: Array[float] = []
@@ -132,26 +135,41 @@ func setup(
 		charge_frame_first
 	)
 	trail_interval = maxf(
-		float(config.get("trail_interval", 0.035)),
+		float(config.get("trail_interval", 0.028)),
 		0.01
 	)
 	trail_lifetime = maxf(
-		float(config.get("trail_lifetime", 0.20)),
+		float(config.get("trail_lifetime", 0.42)),
 		0.05
 	)
 	trail_alpha = clampf(
-		float(config.get("trail_alpha", 0.42)),
+		float(config.get("trail_alpha", 0.62)),
 		0.0,
 		0.95
 	)
 	trail_scale_multiplier = maxf(
-		float(config.get("trail_scale_multiplier", 0.94)),
+		float(config.get("trail_scale_multiplier", 0.98)),
 		0.05
 	)
 	trail_pool_size = clampi(
-		int(config.get("trail_pool_size", 10)),
+		int(config.get("trail_pool_size", 18)),
 		4,
 		24
+	)
+	trail_end_length_scale = clampf(
+		float(config.get("trail_end_length_scale", 0.72)),
+		0.20,
+		1.0
+	)
+	trail_end_width_scale = clampf(
+		float(config.get("trail_end_width_scale", 0.44)),
+		0.10,
+		1.0
+	)
+	trail_warmth = clampf(
+		float(config.get("trail_warmth", 0.70)),
+		0.0,
+		1.0
 	)
 	camera_zoom_multiplier = clampf(
 		float(config.get("camera_zoom_multiplier", 0.52)),
@@ -724,7 +742,7 @@ func _emit_trail() -> void:
 	ghost.global_position = global_position
 	ghost.global_rotation = rotation
 	ghost.scale = visual.scale * trail_scale_multiplier
-	ghost.modulate = Color(1.0, 1.0, 1.0, trail_alpha)
+	ghost.modulate = Color(1.0, 0.96, 0.82, trail_alpha)
 	ghost.visible = true
 	_trail_ages[index] = 0.0
 	_trail_active[index] = true
@@ -752,14 +770,19 @@ func _update_trails(delta: float) -> void:
 			continue
 
 		var fade := 1.0 - ratio
+		var alpha_curve := pow(fade, 1.35)
+		var warm_progress := ratio * trail_warmth
 		ghost.modulate = Color(
 			1.0,
-			1.0,
-			1.0,
-			trail_alpha * fade * fade
+			lerpf(0.96, 0.64, warm_progress),
+			lerpf(0.82, 0.30, warm_progress),
+			trail_alpha * alpha_curve
 		)
 		var base_scale := _trail_base_scales[index]
-		ghost.scale = base_scale * lerpf(1.0, 0.86, ratio)
+		ghost.scale = Vector2(
+			base_scale.x * lerpf(1.0, trail_end_length_scale, ratio),
+			base_scale.y * lerpf(1.0, trail_end_width_scale, ratio)
+		)
 
 
 func _clear_trails() -> void:
