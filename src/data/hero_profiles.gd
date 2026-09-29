@@ -812,7 +812,7 @@ const PROFILES = {
 			"duration": 80.0,
 			"explosion_radius": 275.0,
 			"link_distance": 780.0,
-			"base_damage_ratio": 0.80,
+			"base_damage_ratio": 1.10,
 			"chain_damage_growth": 0.15,
 			"chain_interval": 1.0,
 			"chain_hold_chance": 0.25,
