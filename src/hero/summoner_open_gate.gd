@@ -26,6 +26,9 @@ var visual_offset_y: float = -133.0
 var phase: StringName = &"inactive"
 var drone_pool: Array[Node2D] = []
 var drone_spawn_index: int = 0
+var drone_spawn_half_width: float = 90.0
+var drone_spawn_y_min: float = -220.0
+var drone_spawn_y_max: float = -70.0
 
 
 func _ready() -> void:
@@ -44,18 +47,18 @@ func prepare_pool(config: Dictionary) -> void:
 	frame_dir = String(config.get("frame_dir", DEFAULT_FRAME_DIR))
 	visual_scale = maxf(float(config.get("visual_scale", 0.70)), 0.01)
 	visual_offset_y = float(config.get("visual_offset_y", -133.0))
-	set_meta(
-		"drone_spawn_half_width",
-		maxf(float(config.get("drone_spawn_half_width", 90.0)), 0.0)
+	drone_spawn_half_width = maxf(
+		float(config.get("drone_spawn_half_width", 90.0)),
+		0.0
 	)
-	set_meta(
-		"drone_spawn_y_min",
-		float(config.get("drone_spawn_y_min", -220.0))
+	var raw_spawn_y_min := float(
+		config.get("drone_spawn_y_min", -220.0)
 	)
-	set_meta(
-		"drone_spawn_y_max",
-		float(config.get("drone_spawn_y_max", -70.0))
+	var raw_spawn_y_max := float(
+		config.get("drone_spawn_y_max", -70.0)
 	)
+	drone_spawn_y_min = minf(raw_spawn_y_min, raw_spawn_y_max)
+	drone_spawn_y_max = maxf(raw_spawn_y_min, raw_spawn_y_max)
 	var opening_frame_seconds := maxf(
 		float(config.get("opening_frame_seconds", 2.0)),
 		0.05
@@ -84,18 +87,18 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 	frame_dir = String(config.get("frame_dir", DEFAULT_FRAME_DIR))
 	visual_scale = maxf(float(config.get("visual_scale", 0.70)), 0.01)
 	visual_offset_y = float(config.get("visual_offset_y", -133.0))
-	set_meta(
-		"drone_spawn_half_width",
-		maxf(float(config.get("drone_spawn_half_width", 90.0)), 0.0)
+	drone_spawn_half_width = maxf(
+		float(config.get("drone_spawn_half_width", 90.0)),
+		0.0
 	)
-	set_meta(
-		"drone_spawn_y_min",
-		float(config.get("drone_spawn_y_min", -220.0))
+	var raw_spawn_y_min := float(
+		config.get("drone_spawn_y_min", -220.0)
 	)
-	set_meta(
-		"drone_spawn_y_max",
-		float(config.get("drone_spawn_y_max", -70.0))
+	var raw_spawn_y_max := float(
+		config.get("drone_spawn_y_max", -70.0)
 	)
+	drone_spawn_y_min = minf(raw_spawn_y_min, raw_spawn_y_max)
+	drone_spawn_y_max = maxf(raw_spawn_y_min, raw_spawn_y_max)
 	var opening_frame_seconds := maxf(float(config.get("opening_frame_seconds", 2.0)), 0.05)
 	_setup_visual(frame_dir, opening_frame_seconds)
 	_load_audio(
@@ -140,29 +143,14 @@ func _spawn_drone() -> void:
 
 	# Spawn from a random point inside the visible portal body so drones read
 	# as emerging from the open gate instead of orbiting around its origin.
-	var half_width := maxf(
-		float(get_meta("drone_spawn_half_width", 90.0)),
-		0.0
-	)
-	var spawn_y_min := float(get_meta("drone_spawn_y_min", -220.0))
-	var spawn_y_max := float(get_meta("drone_spawn_y_max", -70.0))
-	if spawn_y_min > spawn_y_max:
-		var swap_y := spawn_y_min
-		spawn_y_min = spawn_y_max
-		spawn_y_max = swap_y
 	var spawn_offset := Vector2(
-		randf_range(-half_width, half_width),
-		randf_range(spawn_y_min, spawn_y_max)
+		randf_range(-drone_spawn_half_width, drone_spawn_half_width),
+		randf_range(drone_spawn_y_min, drone_spawn_y_max)
 	)
 	var spawn_position := global_position + spawn_offset
 	drone_spawn_index += 1
 
-	var runtime_config := drone_config.duplicate(true)
-	var owner_attack_damage := 1
-	if is_instance_valid(owner_hero):
-		owner_attack_damage = maxi(int(owner_hero.get("attack_damage")), 1)
-	runtime_config["owner_attack_damage"] = owner_attack_damage
-	drone.call("activate", spawn_position, owner_hero, runtime_config)
+	drone.call("activate", spawn_position, owner_hero, drone_config)
 	var world := get_parent()
 	if (
 		is_instance_valid(world)
