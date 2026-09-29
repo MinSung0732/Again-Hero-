@@ -3665,6 +3665,30 @@ func get_hero_skill_cooldown_hud() -> Array:
 	)
 
 
+func get_command_hud_state() -> Vector2:
+	return Vector2(command_power, max_command)
+
+
+func get_demon_ultimate_hud_state(skill_id: String = "") -> Dictionary:
+	return {
+		"charge": demon_ultimate_charge,
+		"max": DEMON_ULTIMATES.CHARGE_MAX,
+		"ready": (
+			demon_ultimate_charge + 0.001
+			>= demon_ultimate_cheapest_cost
+		),
+		"cooldown": (
+			float(demon_ultimate_cooldowns.get(skill_id, 0.0))
+			if not skill_id.is_empty()
+			else 0.0
+		),
+	}
+
+
+func get_demon_reroll_max() -> int:
+	return demon_reroll_max
+
+
 func get_hero_info_hud() -> Dictionary:
 	if not is_instance_valid(hero):
 		return {}

@@ -846,11 +846,9 @@ func _on_mutation_choice_pressed(index: int) -> void:
 	mutation_panel.hide()
 	current_mutation_candidates.clear()
 
-	var snapshot: Dictionary = battle.get_snapshot()
-	_on_command_changed(
-		float(snapshot.get("command_power", 0.0)),
-		float(snapshot.get("command_max", 100.0))
-	)
+	if battle.has_method("get_command_hud_state"):
+		var command_state: Vector2 = battle.call("get_command_hud_state")
+		_on_command_changed(command_state.x, command_state.y)
 
 	battle.spawn_selected_mutation(monster_id)
 
@@ -1872,17 +1870,28 @@ func _refresh_demon_ultimate_buttons() -> void:
 
 func _on_demon_ultimate_pressed(skill_id: String) -> void:
 	if skill_id == "line_assault":
-		var snapshot: Dictionary = battle.get_snapshot()
 		var skill := DEMON_ULTIMATES.get_skill("line_assault")
 		var mana_cost := maxf(float(skill.get("mana_cost", 40.0)), 0.0)
-		if float(snapshot.get("demon_ultimate_charge", 0.0)) + 0.001 < mana_cost:
+		var ultimate_state: Dictionary = {}
+		if battle.has_method("get_demon_ultimate_hud_state"):
+			var raw_ultimate_state = battle.call(
+				"get_demon_ultimate_hud_state",
+				"line_assault"
+			)
+			if typeof(raw_ultimate_state) == TYPE_DICTIONARY:
+				ultimate_state = raw_ultimate_state
+		var current_charge := float(
+			ultimate_state.get("charge", demon_mana_current)
+		)
+		if current_charge + 0.001 < mana_cost:
 			status_label.text = "마력이 부족합니다. 일직선 공세는 마력 %d가 필요합니다." % int(round(mana_cost))
 			return
-		var cooldowns: Dictionary = snapshot.get(
-			"demon_ultimate_cooldowns",
-			{}
+		var remaining := float(
+			ultimate_state.get(
+				"cooldown",
+				demon_ultimate_cooldowns.get("line_assault", 0.0)
+			)
 		)
-		var remaining := float(cooldowns.get("line_assault", 0.0))
 		if remaining > 0.001:
 			status_label.text = "일직선 공세 쿨타임 %.1f초" % remaining
 			return
@@ -1911,12 +1920,22 @@ func _open_demon_direction_select() -> void:
 func _close_demon_direction_select() -> void:
 	demon_direction_buttons.hide()
 	$HUD/DemonUltimatePanel/UltimateButtons.show()
-	var snapshot: Dictionary = battle.get_snapshot()
-	_on_demon_ultimate_changed(
-		float(snapshot.get("demon_ultimate_charge", 0.0)),
-		float(snapshot.get("demon_ultimate_max", 100.0)),
-		bool(snapshot.get("demon_ultimate_ready", false))
-	)
+	if battle.has_method("get_demon_ultimate_hud_state"):
+		var raw_ultimate_state = battle.call(
+			"get_demon_ultimate_hud_state"
+		)
+		if typeof(raw_ultimate_state) == TYPE_DICTIONARY:
+			var ultimate_state: Dictionary = raw_ultimate_state
+			_on_demon_ultimate_changed(
+				float(ultimate_state.get("charge", demon_mana_current)),
+				float(ultimate_state.get("max", 100.0)),
+				bool(
+					ultimate_state.get(
+						"ready",
+						demon_ultimate_charge_ready
+					)
+				)
+			)
 
 func _on_demon_line_direction_pressed(direction: String) -> void:
 	if battle.try_use_demon_ultimate("line_assault", direction):
@@ -2020,7 +2039,9 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 				),
 			]
 
-	var reroll_max := int(battle.get_snapshot().get("demon_reroll_max", 3))
+	var reroll_max := 3
+	if battle.has_method("get_demon_reroll_max"):
+		reroll_max = int(battle.call("get_demon_reroll_max"))
 	demon_reroll_button.text = "↻ 새로고침 %d / %d" % [rerolls_left, reroll_max]
 	demon_reroll_button.disabled = rerolls_left <= 0
 	status_label.text = (
@@ -2107,10 +2128,11 @@ func _on_demon_choice_pressed(index: int) -> void:
 	if battle.choose_demon_augment(augment_id):
 		demon_augment_panel.hide()
 		current_demon_candidates.clear()
-		_on_command_changed(
-			float(battle.get_snapshot().get("command_power", 0.0)),
-			float(battle.get_snapshot().get("command_max", 100.0))
-		)
+		if battle.has_method("get_command_hud_state"):
+			var command_state: Vector2 = battle.call(
+				"get_command_hud_state"
+			)
+			_on_command_changed(command_state.x, command_state.y)
 
 func _on_demon_reroll_pressed() -> void:
 	battle.reroll_demon_augments()
