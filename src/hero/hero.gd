@@ -192,6 +192,7 @@ var rogue_lifesteal_buffer: float = 0.0
 var rogue_combo_direction: Vector2 = Vector2.RIGHT
 var rogue_attack_collision_ignore_timer: float = 0.0
 var rogue_saved_collision_mask: int = -1
+var rogue_query_candidates: Array = []
 var fighter_basic_config: Dictionary = {}
 var fighter_guard_active: bool = false
 var fighter_guard_duration_timer: float = 0.0
@@ -966,6 +967,7 @@ func configure_profile(profile: Dictionary) -> void:
 	rogue_combo_direction = Vector2.RIGHT
 	rogue_attack_collision_ignore_timer = 0.0
 	rogue_saved_collision_mask = -1
+	rogue_query_candidates.clear()
 	fighter_guard_active = false
 	fighter_guard_duration_timer = 0.0
 	fighter_guard_stored_damage = 0.0
@@ -5508,8 +5510,14 @@ func _apply_rogue_slash_tick() -> void:
 			)
 		))
 	)
+	var radius_sq := radius * radius
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		rogue_query_candidates
+	)
 
-	for node in _get_monster_nodes_near(global_position, radius):
+	for node in rogue_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -5517,7 +5525,7 @@ func _apply_rogue_slash_tick() -> void:
 			continue
 		if (
 			global_position.distance_squared_to(monster.global_position)
-			> radius * radius
+			> radius_sq
 		):
 			continue
 		if monster.has_method("take_damage"):
@@ -5526,6 +5534,7 @@ func _apply_rogue_slash_tick() -> void:
 				damage,
 				0.50
 			)
+	rogue_query_candidates.clear()
 
 	if shield_effect.sprite_frames != null:
 		shield_effect.visible = true
@@ -5716,8 +5725,16 @@ func _update_rogue_assassination(delta: float) -> void:
 		0.0,
 		1.0
 	)
+	var assassination_aoe_radius_sq := (
+		assassination_aoe_radius * assassination_aoe_radius
+	)
+	_fill_monster_nodes_near(
+		current_target.global_position,
+		assassination_aoe_radius,
+		rogue_query_candidates
+	)
 
-	for node in _get_monster_nodes_near(current_target.global_position, assassination_aoe_radius):
+	for node in rogue_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -5726,10 +5743,10 @@ func _update_rogue_assassination(delta: float) -> void:
 		if monster.get_instance_id() == main_target_id:
 			continue
 		if (
-			current_target.global_position.distance_to(
+			current_target.global_position.distance_squared_to(
 				monster.global_position
 			)
-			> assassination_aoe_radius
+			> assassination_aoe_radius_sq
 		):
 			continue
 
@@ -5738,6 +5755,7 @@ func _update_rogue_assassination(delta: float) -> void:
 			secondary_damage,
 			secondary_lifesteal
 		)
+	rogue_query_candidates.clear()
 
 	attack_pose_timer = 0.20
 	_restart_stage1_animation("attack", 1.35)
@@ -5764,8 +5782,14 @@ func _find_rogue_assassination_target() -> Node2D:
 	)
 	var best: Node2D = null
 	var best_score := INF
+	var radius_sq := radius * radius
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		rogue_query_candidates
+	)
 
-	for node in _get_monster_nodes_near(global_position, radius):
+	for node in rogue_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -5776,11 +5800,12 @@ func _find_rogue_assassination_target() -> Node2D:
 		if hp_value != null and int(hp_value) <= 0:
 			continue
 
-		var distance := global_position.distance_to(
+		var distance_sq := global_position.distance_squared_to(
 			monster.global_position
 		)
-		if distance > radius:
+		if distance_sq > radius_sq:
 			continue
+		var distance := sqrt(distance_sq)
 
 		var hp_ratio := 1.0
 		var max_hp_value = monster.get("max_hp")
@@ -5795,6 +5820,7 @@ func _find_rogue_assassination_target() -> Node2D:
 			best_score = score
 			best = monster
 
+	rogue_query_candidates.clear()
 	return best
 
 func _end_rogue_assassination() -> void:
