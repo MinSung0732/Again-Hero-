@@ -156,3 +156,36 @@ static func begin_standard_death(
 		owner.queue_free()
 
 	return true
+
+
+
+static func apply_direct_heal(
+	owner: Node2D,
+	amount: int,
+	current_hp: int,
+	max_hp: int,
+	dying: bool,
+	damage_numbers: Script
+) -> int:
+	if (
+		amount <= 0
+		or current_hp <= 0
+		or dying
+	):
+		return 0
+
+	var recovered := mini(
+		amount,
+		maxi(max_hp - current_hp, 0)
+	)
+	if recovered <= 0:
+		return 0
+
+	if damage_numbers != null:
+		damage_numbers.call(
+			"show_heal",
+			owner,
+			recovered
+		)
+	owner.queue_redraw()
+	return recovered
