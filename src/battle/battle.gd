@@ -1322,6 +1322,15 @@ func _spawn_monster(
 		if split_exp_value != null:
 			monster.set("exp_reward", 0)
 
+	# Give monsters direct access to the Battle target authority before _ready().
+	# Their normal combat path no longer needs SceneTree hero-group lookups.
+	if monster.has_method("configure_combat_context"):
+		monster.call(
+			"configure_combat_context",
+			hero,
+			self
+		)
+
 	add_child(monster)
 	monster.position = spawn_position
 	# Keep depth normalization after the monster's _ready() for consistency.

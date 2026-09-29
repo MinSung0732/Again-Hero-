@@ -23,6 +23,7 @@ signal died
 
 var current_hp: int
 var hero: Node2D
+var combat_authority: Node
 var hero_target_refresh_timer: float = 0.0
 var attack_timer: float = 0.0
 var hit_flash_timer: float = 0.0
@@ -42,27 +43,44 @@ func _ready() -> void:
 	pack_bonus_refresh_timer = randf_range(0.0, 0.25)
 	far_ai_tick_timer = randf_range(0.0, 0.16)
 	current_hp = max_hp
-	hero = get_tree().get_first_node_in_group("hero") as Node2D
+	if not is_instance_valid(hero):
+		hero = get_tree().get_first_node_in_group("hero") as Node2D
+	if not is_instance_valid(combat_authority):
+		combat_authority = get_parent()
 	hero_target_refresh_timer = 0.0
 	_attach_status_effect_visual("slow")
 	queue_redraw()
 
 
+func configure_combat_context(
+	primary_hero: Node2D,
+	authority: Node
+) -> void:
+	hero = primary_hero
+	combat_authority = authority
+
+
 func _refresh_combat_target() -> void:
 	hero_target_refresh_timer = 0.25
-	var battle := get_parent()
+
 	if (
-		is_instance_valid(battle)
-		and battle.has_method("get_nearest_hero_combat_target")
+		is_instance_valid(combat_authority)
+		and combat_authority.has_method("get_nearest_hero_combat_target")
 	):
-		var candidate = battle.call(
+		var candidate = combat_authority.call(
 			"get_nearest_hero_combat_target",
 			global_position
 		)
 		if candidate is Node2D:
 			hero = candidate
 			return
-	hero = get_tree().get_first_node_in_group("hero") as Node2D
+
+	# Standalone/debug scene fallback only. Normal Battle spawns inject both
+	# references before _ready(), so gameplay avoids this SceneTree lookup.
+	if not is_instance_valid(combat_authority):
+		combat_authority = get_parent()
+	if not is_instance_valid(hero):
+		hero = get_tree().get_first_node_in_group("hero") as Node2D
 
 
 
@@ -107,7 +125,7 @@ func _physics_process(delta: float) -> void:
 			queue_redraw()
 
 	if not is_instance_valid(hero):
-		hero = get_tree().get_first_node_in_group("hero") as Node2D
+		_refresh_combat_target()
 		if not is_instance_valid(hero):
 			velocity = Vector2.ZERO
 			_update_visual_motion(0.0, false)
