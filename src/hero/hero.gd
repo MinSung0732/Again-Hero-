@@ -1296,6 +1296,15 @@ func _get_next_summoner_watcher_follow_slot() -> int:
 	return -1
 
 
+func _register_summon_pool_node(summon: Node2D) -> void:
+	var battle := get_parent()
+	if (
+		is_instance_valid(battle)
+		and battle.has_method("register_hero_summon_node")
+	):
+		battle.call("register_hero_summon_node", summon)
+
+
 func _ensure_summoner_pool_capacity() -> void:
 	if hero_archetype != "summoner_gatekeeper":
 		return
@@ -1309,6 +1318,7 @@ func _ensure_summoner_pool_capacity() -> void:
 		if gatekeeper == null:
 			break
 		world_parent.add_child(gatekeeper)
+		_register_summon_pool_node(gatekeeper)
 		gatekeeper.connect(
 			"released",
 			Callable(self, "_on_summoner_gatekeeper_released")
@@ -1320,6 +1330,7 @@ func _ensure_summoner_pool_capacity() -> void:
 		if scout == null:
 			break
 		world_parent.add_child(scout)
+		_register_summon_pool_node(scout)
 		scout.connect(
 			"released",
 			Callable(self, "_on_summoner_scout_released")
@@ -1331,6 +1342,7 @@ func _ensure_summoner_pool_capacity() -> void:
 		if hound == null:
 			break
 		world_parent.add_child(hound)
+		_register_summon_pool_node(hound)
 		hound.connect(
 			"released",
 			Callable(self, "_on_summoner_hound_released")
@@ -1343,6 +1355,7 @@ func _ensure_summoner_pool_capacity() -> void:
 		if watcher == null:
 			break
 		world_parent.add_child(watcher)
+		_register_summon_pool_node(watcher)
 		watcher.connect(
 			"released",
 			Callable(self, "_on_summoner_watcher_released")
@@ -1358,6 +1371,7 @@ func _ensure_summoner_pool_capacity() -> void:
 		if open_gate == null:
 			break
 		world_parent.add_child(open_gate)
+		_register_summon_pool_node(open_gate)
 		open_gate.connect(
 			"released",
 			Callable(self, "_on_summoner_open_gate_released")

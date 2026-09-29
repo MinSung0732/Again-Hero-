@@ -271,6 +271,8 @@ func _ensure_drone_pool(pool_size: int) -> void:
 		if drone == null:
 			break
 		world.add_child(drone)
+		if world.has_method("register_hero_summon_node"):
+			world.call("register_hero_summon_node", drone)
 		drone_pool.append(drone)
 
 
