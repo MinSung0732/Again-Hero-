@@ -10273,7 +10273,7 @@ func _choose_purifier_orb_target_position() -> Vector2:
 		1.0
 	)
 	var blast_radius := maxf(
-		float(purifier_orb_config.get("explosion_radius", 275.0)),
+		float(purifier_orb_config.get("explosion_radius", 137.5)),
 		1.0
 	)
 	var link_distance := maxf(
@@ -10508,7 +10508,7 @@ func _cast_purifier_orb() -> void:
 		),
 		maxf(float(purifier_orb_config.get("duration", 80.0)), 0.1),
 		maxf(
-			float(purifier_orb_config.get("explosion_radius", 275.0)),
+			float(purifier_orb_config.get("explosion_radius", 137.5)),
 			1.0
 		),
 		purifier_orb_install_serial,
@@ -10706,7 +10706,7 @@ func _detonate_purifier_orb(
 		return
 
 	var radius := maxf(
-		float(purifier_orb_config.get("explosion_radius", 275.0)),
+		float(purifier_orb_config.get("explosion_radius", 137.5)),
 		1.0
 	)
 	var radius_sq := radius * radius
@@ -10903,7 +10903,7 @@ func _cast_purifier_cleansing() -> void:
 		return
 
 	var radius := maxf(
-		float(purifier_cleansing_config.get("radius", 180.0)),
+		float(purifier_cleansing_config.get("radius", 100.0)),
 		1.0
 	)
 	var base_ratio := maxf(
