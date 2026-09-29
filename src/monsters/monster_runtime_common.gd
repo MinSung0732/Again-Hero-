@@ -85,13 +85,61 @@ static func get_external_movement_multiplier(owner: Node) -> float:
 	var now_msec := Time.get_ticks_msec()
 	if int(owner.get_meta("archmage_root_until", 0)) > now_msec:
 		return 0.0
+	if is_forced_movement_locked(owner):
+		return 0.0
+
+	var multiplier := 1.0
 	if int(owner.get_meta("gunner_slow_until", 0)) > now_msec:
-		return clampf(
-			float(owner.get_meta("gunner_slow_multiplier", 1.0)),
-			0.1,
-			1.0
+		multiplier = minf(
+			multiplier,
+			clampf(
+				float(owner.get_meta("gunner_slow_multiplier", 1.0)),
+				0.1,
+				1.0
+			)
 		)
-	return 1.0
+	if int(owner.get_meta("movement_slow_until", 0)) > now_msec:
+		multiplier = minf(
+			multiplier,
+			clampf(
+				float(owner.get_meta("movement_slow_multiplier", 1.0)),
+				0.1,
+				1.0
+			)
+		)
+	return multiplier
+
+
+static func is_forced_movement_locked(owner: Node) -> bool:
+	if owner == null or not is_instance_valid(owner):
+		return false
+	return int(owner.get_meta("forced_movement_lock_until", 0)) > Time.get_ticks_msec()
+
+
+static func can_be_forced_moved(owner: Node) -> bool:
+	if owner == null or not is_instance_valid(owner):
+		return false
+	if owner.has_method("is_forced_movement_immune"):
+		if bool(owner.call("is_forced_movement_immune")):
+			return false
+	if bool(owner.get_meta("forced_movement_immune", false)):
+		return false
+	if bool(owner.get_meta("movement_effect_immune", false)):
+		return false
+	return true
+
+
+static func can_receive_movement_slow(owner: Node) -> bool:
+	if owner == null or not is_instance_valid(owner):
+		return false
+	if owner.has_method("is_movement_effect_immune"):
+		if bool(owner.call("is_movement_effect_immune")):
+			return false
+	if bool(owner.get_meta("movement_effect_immune", false)):
+		return false
+	if bool(owner.get_meta("slow_immune", false)):
+		return false
+	return true
 
 
 static func attach_status_effect_visual(

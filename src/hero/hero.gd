@@ -102,9 +102,13 @@ const PURIFIER_CROWN_AUDIO_PATH := "res://assets/audio/sfx/purifier_crown_buff_p
 const PURIFIER_ORB_CREATE_AUDIO_PATH := "res://assets/audio/sfx/purifier_orb_create_pixabay.mp3"
 const PURIFIER_ORB_EXPLOSION_AUDIO_PATH := "res://assets/audio/sfx/purifier_orb_explosion_pixabay.mp3"
 const PURIFIER_CLEANSING_AUDIO_PATH := "res://assets/audio/sfx/purifier_cleansing_pixabay.mp3"
+const PURIFIER_GUNGNIR_CHARGE_AUDIO_PATH := "res://assets/audio/sfx/purifier_gungnir_charge_pixabay.mp3"
+const PURIFIER_GUNGNIR_FLIGHT_AUDIO_PATH := "res://assets/audio/sfx/purifier_gungnir_flight_pixabay.mp3"
+const PURIFIER_GUNGNIR_EXPLOSION_AUDIO_PATH := "res://assets/audio/sfx/purifier_gungnir_explosion_pixabay.mp3"
 const PURIFIER_ORB_SCENE := preload("res://src/hero/PurifierOrb.tscn")
 const PURIFIER_ORB_LINK_SCENE := preload("res://src/hero/PurifierOrbLink.tscn")
 const PURIFIER_CLEANSING_FX_SCENE := preload("res://src/hero/PurifierCleansingFx.tscn")
+const PURIFIER_GUNGNIR_SCENE := preload("res://src/hero/PurifierGungnir.tscn")
 const SUMMONER_POOL_HEADROOM := 4
 const ALCHEMIST_VIAL_SCENE := preload("res://src/hero/AlchemistVial.tscn")
 const ALCHEMIST_POISON_POOL_SCENE := preload("res://src/hero/AlchemistPoisonPool.tscn")
@@ -413,6 +417,9 @@ var purifier_crown_audio: AudioStreamPlayer = null
 var purifier_orb_create_audio: AudioStreamPlayer = null
 var purifier_orb_explosion_audio: AudioStreamPlayer = null
 var purifier_cleansing_audio: AudioStreamPlayer = null
+var purifier_gungnir_charge_audio: AudioStreamPlayer = null
+var purifier_gungnir_flight_audio: AudioStreamPlayer = null
+var purifier_gungnir_explosion_audio: AudioStreamPlayer = null
 var purifier_protection_effect: AnimatedSprite2D = null
 var purifier_crown_effect: AnimatedSprite2D = null
 
@@ -433,6 +440,11 @@ var purifier_orb_chain_speed_multiplier: float = 1.0
 var purifier_cleansing_config: Dictionary = {}
 var purifier_cleansing_cooldown: float = 0.0
 var purifier_cleansing_stacks: int = 0
+var purifier_gungnir_config: Dictionary = {}
+var purifier_gungnir_cooldown: float = 0.0
+var purifier_gungnir_casting: bool = false
+var purifier_gungnir_direction: Vector2 = Vector2.RIGHT
+var purifier_gungnir_instance: Node2D = null
 var purifier_protection_cooldown: float = 0.0
 var purifier_protection_active: bool = false
 var purifier_protection_duration_timer: float = 0.0
@@ -1078,6 +1090,19 @@ func configure_profile(profile: Dictionary) -> void:
 		0.0
 	)
 	purifier_cleansing_stacks = 0
+	var raw_purifier_gungnir = profile.get("purifier_gungnir", {})
+	purifier_gungnir_config = (
+		raw_purifier_gungnir.duplicate(true)
+		if typeof(raw_purifier_gungnir) == TYPE_DICTIONARY
+		else {}
+	)
+	purifier_gungnir_cooldown = maxf(
+		float(purifier_gungnir_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
+	purifier_gungnir_casting = false
+	purifier_gungnir_direction = Vector2.RIGHT
+	purifier_gungnir_instance = null
 	purifier_protection_cooldown = 0.0
 	purifier_protection_active = false
 	purifier_protection_duration_timer = 0.0
@@ -1343,6 +1368,11 @@ func _physics_process(delta: float) -> void:
 
 	if channeling:
 		velocity = Vector2.ZERO
+		return
+
+	if purifier_gungnir_casting:
+		velocity = Vector2.ZERO
+		_update_stage1_pose_visual(delta)
 		return
 
 	_update_heal_item_goal(delta)
@@ -9731,6 +9761,33 @@ func _ensure_purifier_skill_runtime() -> void:
 			-12.0,
 			1.18
 		)
+	if not is_instance_valid(purifier_gungnir_charge_audio):
+		purifier_gungnir_charge_audio = _create_purifier_audio_player(
+			String(purifier_gungnir_config.get(
+				"charge_audio_path",
+				PURIFIER_GUNGNIR_CHARGE_AUDIO_PATH
+			)),
+			-10.0,
+			1.05
+		)
+	if not is_instance_valid(purifier_gungnir_flight_audio):
+		purifier_gungnir_flight_audio = _create_purifier_audio_player(
+			String(purifier_gungnir_config.get(
+				"flight_audio_path",
+				PURIFIER_GUNGNIR_FLIGHT_AUDIO_PATH
+			)),
+			-9.0,
+			1.12
+		)
+	if not is_instance_valid(purifier_gungnir_explosion_audio):
+		purifier_gungnir_explosion_audio = _create_purifier_audio_player(
+			String(purifier_gungnir_config.get(
+				"explosion_audio_path",
+				PURIFIER_GUNGNIR_EXPLOSION_AUDIO_PATH
+			)),
+			-8.0,
+			0.78
+		)
 
 
 func _play_purifier_audio(player: AudioStreamPlayer) -> void:
@@ -10958,6 +11015,180 @@ func _cast_purifier_cleansing() -> void:
 	queue_redraw()
 
 
+func _choose_purifier_gungnir_direction() -> Vector2:
+	if purifier_gungnir_config.is_empty():
+		return Vector2.ZERO
+
+	var flight_distance := maxf(
+		float(purifier_gungnir_config.get("flight_distance", 1500.0)),
+		1.0
+	)
+	var capture_radius := maxf(
+		float(purifier_gungnir_config.get("capture_diameter", 300.0)) * 0.5,
+		1.0
+	)
+	var sample_count := maxi(
+		int(purifier_gungnir_config.get("direction_samples", 24)),
+		8
+	)
+	var search_radius := flight_distance + capture_radius
+	_fill_monster_nodes_near(
+		global_position,
+		search_radius,
+		_combat_monster_scratch
+	)
+
+	var best_direction := Vector2.ZERO
+	var best_score := -INF
+	var best_count := 0
+
+	for sample_index in range(sample_count):
+		var angle := TAU * float(sample_index) / float(sample_count)
+		var candidate_direction := Vector2.from_angle(angle)
+		var hit_count := 0
+		var density_score := 0.0
+		var distance_score := 0.0
+
+		for raw_node in _combat_monster_scratch:
+			if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
+				continue
+			var monster := raw_node as Node2D
+			if monster == null or not monster.is_in_group("monsters"):
+				continue
+			var hp_value = monster.get("current_hp")
+			if hp_value != null and int(hp_value) <= 0:
+				continue
+
+			var offset := monster.global_position - global_position
+			var forward := offset.dot(candidate_direction)
+			if forward < 0.0 or forward > flight_distance:
+				continue
+			var lateral := absf(candidate_direction.cross(offset))
+			if lateral > capture_radius:
+				continue
+
+			hit_count += 1
+			density_score += 1.0 - clampf(
+				lateral / capture_radius,
+				0.0,
+				1.0
+			)
+			distance_score += 1.0 - clampf(
+				forward / flight_distance,
+				0.0,
+				1.0
+			)
+
+		var score := (
+			float(hit_count) * 1000.0
+			+ density_score * 20.0
+			+ distance_score * 2.0
+		)
+		if hit_count > best_count or (
+			hit_count == best_count and score > best_score
+		):
+			best_count = hit_count
+			best_score = score
+			best_direction = candidate_direction
+
+	_combat_monster_scratch.clear()
+	if best_count <= 0:
+		return Vector2.ZERO
+	return best_direction.normalized()
+
+
+func _try_start_purifier_gungnir() -> bool:
+	if (
+		hero_archetype != "cleric_purifier"
+		or purifier_gungnir_config.is_empty()
+		or purifier_gungnir_casting
+		or purifier_gungnir_cooldown > 0.0
+		or is_dying
+		or current_hp <= 0
+	):
+		return false
+
+	var unlock_skill_id := String(
+		purifier_gungnir_config.get(
+			"unlock_skill_id",
+			"purifier_fourth_skill"
+		)
+	)
+	if not is_conditional_skill_unlocked(unlock_skill_id):
+		return false
+
+	var fire_direction := _choose_purifier_gungnir_direction()
+	if fire_direction.length_squared() <= 0.001:
+		return false
+
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return false
+	var gungnir := PURIFIER_GUNGNIR_SCENE.instantiate() as Node2D
+	if gungnir == null:
+		return false
+
+	parent.add_child(gungnir)
+	gungnir.connect(
+		"launched",
+		Callable(self, "_on_purifier_gungnir_launched")
+	)
+	gungnir.connect(
+		"impacted",
+		Callable(self, "_on_purifier_gungnir_impacted")
+	)
+	gungnir.connect(
+		"finished",
+		Callable(self, "_on_purifier_gungnir_finished").bind(gungnir)
+	)
+
+	purifier_gungnir_instance = gungnir
+	purifier_gungnir_direction = fire_direction
+	purifier_gungnir_casting = true
+	purifier_gungnir_cooldown = (
+		maxf(float(purifier_gungnir_config.get("cooldown", 90.0)), 0.0)
+		* _get_purifier_skill_cooldown_multiplier()
+	)
+
+	if absf(fire_direction.x) > 0.05 and is_instance_valid(hero_sprite):
+		hero_sprite.flip_h = fire_direction.x < 0.0
+	velocity = Vector2.ZERO
+	_ensure_purifier_skill_runtime()
+	_play_purifier_audio(purifier_gungnir_charge_audio)
+	gungnir.call(
+		"setup",
+		self,
+		fire_direction,
+		purifier_gungnir_config
+	)
+	return true
+
+
+func _on_purifier_gungnir_launched() -> void:
+	purifier_gungnir_casting = false
+	if is_instance_valid(purifier_gungnir_charge_audio):
+		purifier_gungnir_charge_audio.stop()
+	_ensure_purifier_skill_runtime()
+	_play_purifier_audio(purifier_gungnir_flight_audio)
+
+
+func _on_purifier_gungnir_impacted() -> void:
+	if is_instance_valid(purifier_gungnir_flight_audio):
+		purifier_gungnir_flight_audio.stop()
+	_ensure_purifier_skill_runtime()
+	_play_purifier_audio(purifier_gungnir_explosion_audio)
+
+
+func _on_purifier_gungnir_finished(instance: Node2D) -> void:
+	if is_instance_valid(purifier_gungnir_charge_audio):
+		purifier_gungnir_charge_audio.stop()
+	if is_instance_valid(purifier_gungnir_flight_audio):
+		purifier_gungnir_flight_audio.stop()
+	if purifier_gungnir_instance == instance:
+		purifier_gungnir_instance = null
+	purifier_gungnir_casting = false
+
+
 func _update_purifier_gauge(delta: float) -> void:
 	if (
 		hero_archetype != "cleric_purifier"
@@ -10975,6 +11206,10 @@ func _update_purifier_gauge(delta: float) -> void:
 	purifier_orb_cooldown = maxf(purifier_orb_cooldown - delta, 0.0)
 	purifier_cleansing_cooldown = maxf(
 		purifier_cleansing_cooldown - delta,
+		0.0
+	)
+	purifier_gungnir_cooldown = maxf(
+		purifier_gungnir_cooldown - delta,
 		0.0
 	)
 	_update_purifier_orb_chain(delta)
@@ -11017,6 +11252,12 @@ func _update_purifier_gauge(delta: float) -> void:
 				0.1
 			)
 
+	if purifier_gungnir_casting:
+		_try_activate_purifier_protection()
+		return
+	if _try_start_purifier_gungnir():
+		_try_activate_purifier_protection()
+		return
 	if purifier_crown_cooldown <= 0.0:
 		_cast_purifier_crown()
 	if purifier_orb_cooldown <= 0.0:
@@ -11388,6 +11629,7 @@ func get_skill_cooldown_hud() -> Array:
 				) * _get_purifier_skill_cooldown_multiplier()
 			)
 			_append_purifier_cleansing_hud(skills)
+			_append_purifier_gungnir_hud(skills)
 		"summoner_gatekeeper":
 			_append_skill_cooldown_hud(
 				skills,
@@ -11682,6 +11924,58 @@ func _append_purifier_cleansing_hud(skills: Array) -> void:
 		"cooldown_total": cooldown_total,
 		"cooldown_remaining": cooldown_remaining,
 		"icon_path": "res://assets/art/heroes/stage9_prist/frames/effect5/effect_30.png",
+	})
+
+
+func _append_purifier_gungnir_hud(skills: Array) -> void:
+	if purifier_gungnir_config.is_empty():
+		return
+	var required := maxi(
+		int(purifier_gungnir_config.get("required_cleansing_stacks", 100)),
+		1
+	)
+	var unlock_skill_id := String(
+		purifier_gungnir_config.get(
+			"unlock_skill_id",
+			"purifier_fourth_skill"
+		)
+	)
+	var unlocked := is_conditional_skill_unlocked(unlock_skill_id)
+	var cooldown_total := (
+		maxf(float(purifier_gungnir_config.get("cooldown", 90.0)), 0.0)
+		* _get_purifier_skill_cooldown_multiplier()
+	)
+	var cooldown_remaining := maxf(purifier_gungnir_cooldown, 0.0)
+	var status := "해금 조건 대기"
+	if unlocked:
+		if purifier_gungnir_casting:
+			status = "시전 중"
+		elif cooldown_remaining > 0.01:
+			status = "재사용 대기 중"
+		else:
+			status = "사용 가능"
+
+	skills.append({
+		"id": String(purifier_gungnir_config.get("id", "purifier_gungnir")),
+		"name": String(purifier_gungnir_config.get("name", "궁그닐")),
+		"description": _skill_hud_description(purifier_gungnir_config),
+		"progress_text": (
+			"정화 %d / %d · 해금 조건"
+			% [mini(purifier_cleansing_stacks, required), required]
+		),
+		"status_text": status,
+		"available": (
+			unlocked
+			and not purifier_gungnir_casting
+			and cooldown_remaining <= 0.01
+		),
+		"cooldown_total": cooldown_total,
+		"cooldown_remaining": (
+			cooldown_remaining
+			if unlocked
+			else cooldown_total
+		),
+		"icon_path": "res://assets/art/heroes/stage9_prist/frames/effect6/frame_05.png",
 	})
 
 

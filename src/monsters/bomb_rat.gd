@@ -112,6 +112,11 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 
+	if MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self):
+		velocity = Vector2.ZERO
+		_play_locomotion(false)
+		return
+
 	survival_time += delta
 
 	if hit_flash_timer > 0.0:
