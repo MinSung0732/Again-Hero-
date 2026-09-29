@@ -13,8 +13,17 @@ var horizontal_drift: float = 0.0
 var numeric_amount: int = 0
 var is_numeric: bool = false
 var numeric_prefix: String = ""
+var pool_active: bool = false
 
-func setup(amount: int, text_color: Color = Color.WHITE) -> void:
+
+func _ready() -> void:
+	_deactivate_for_pool()
+
+
+func setup(
+	amount: int,
+	text_color: Color = Color.WHITE
+) -> void:
 	numeric_amount = maxi(amount, 0)
 	is_numeric = true
 	numeric_prefix = ""
@@ -22,6 +31,7 @@ func setup(amount: int, text_color: Color = Color.WHITE) -> void:
 	value_label.add_theme_font_size_override("font_size", 32)
 	value_label.add_theme_color_override("font_color", text_color)
 	_start_float()
+
 
 func setup_heal(
 	amount: int,
@@ -40,31 +50,41 @@ func setup_text(
 	message: String,
 	text_color: Color = Color(1.0, 0.58, 0.42, 1.0)
 ) -> void:
+	numeric_amount = 0
 	is_numeric = false
+	numeric_prefix = ""
 	value_label.text = message
 	value_label.add_theme_font_size_override("font_size", 23)
 	value_label.add_theme_color_override("font_color", text_color)
 	_start_float()
 
+
+func is_pool_active() -> bool:
+	return pool_active
+
+
 func can_merge_damage() -> bool:
 	return (
-		is_numeric
+		pool_active
+		and is_numeric
 		and numeric_prefix.is_empty()
 		and elapsed <= MERGE_WINDOW
-		and not is_queued_for_deletion()
 	)
 
 
 func can_merge_heal() -> bool:
 	return (
-		is_numeric
+		pool_active
+		and is_numeric
 		and numeric_prefix == "+"
 		and elapsed <= MERGE_WINDOW
-		and not is_queued_for_deletion()
 	)
 
 
-func add_damage(amount: int, text_color: Color = Color.WHITE) -> void:
+func add_damage(
+	amount: int,
+	text_color: Color = Color.WHITE
+) -> void:
 	if not can_merge_damage():
 		return
 	numeric_amount += maxi(amount, 0)
@@ -72,6 +92,7 @@ func add_damage(amount: int, text_color: Color = Color.WHITE) -> void:
 	value_label.add_theme_color_override("font_color", text_color)
 	elapsed = minf(elapsed, MERGE_WINDOW * 0.35)
 	scale = Vector2.ONE * 1.08
+
 
 func add_heal(
 	amount: int,
@@ -87,12 +108,33 @@ func add_heal(
 
 
 func _start_float() -> void:
+	pool_active = true
+	visible = true
+	set_process(true)
 	elapsed = 0.0
 	start_position = position
 	horizontal_drift = randf_range(-10.0, 10.0)
 	scale = Vector2(0.85, 0.85)
+	modulate = Color.WHITE
+
+
+func _deactivate_for_pool() -> void:
+	pool_active = false
+	visible = false
+	set_process(false)
+	elapsed = 0.0
+	horizontal_drift = 0.0
+	numeric_amount = 0
+	is_numeric = false
+	numeric_prefix = ""
+	scale = Vector2.ONE
+	modulate = Color.WHITE
+
 
 func _process(delta: float) -> void:
+	if not pool_active:
+		return
+
 	elapsed += delta
 	var progress := clampf(elapsed / LIFETIME, 0.0, 1.0)
 
@@ -105,7 +147,11 @@ func _process(delta: float) -> void:
 	if progress < 0.18:
 		pop_scale = lerpf(0.85, 1.08, progress / 0.18)
 	else:
-		pop_scale = lerpf(1.08, 1.0, (progress - 0.18) / 0.82)
+		pop_scale = lerpf(
+			1.08,
+			1.0,
+			(progress - 0.18) / 0.82
+		)
 	scale = Vector2.ONE * pop_scale
 
 	if progress > FADE_START:
@@ -114,4 +160,4 @@ func _process(delta: float) -> void:
 		)
 
 	if elapsed >= LIFETIME:
-		queue_free()
+		_deactivate_for_pool()
