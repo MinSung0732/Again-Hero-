@@ -833,6 +833,11 @@ func _update_touch_hold_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
 		var touch := event as InputEventScreenTouch
 		if touch.pressed:
+			# _input() runs before Control._gui_input(). Never start the global
+			# hold indicator when the touch began on an interactive battle HUD.
+			if _is_pointer_over_battle_ui(touch.position):
+				_end_touch_hold()
+				return
 			if (
 				not camera_view_locked
 				and _can_use_battle_pointer(touch.position)
@@ -862,6 +867,9 @@ func _update_touch_hold_input(event: InputEvent) -> void:
 		if _touch_pointer_id >= 0:
 			return
 		if mouse.pressed:
+			if _is_pointer_over_battle_ui(mouse.position):
+				_end_touch_hold()
+				return
 			if (
 				not camera_view_locked
 				and _can_use_battle_pointer(mouse.position)
