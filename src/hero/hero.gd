@@ -265,6 +265,7 @@ var alchemist_vial_pool: Array[Node2D] = []
 var alchemist_mystery_vial_pool: Array[Node2D] = []
 var alchemist_poison_pool: Array[Node2D] = []
 var alchemist_material_pool: Array[Node2D] = []
+var alchemist_bonus_material_pool: Array[Node2D] = []
 var alchemist_bonus_materials: Array[Node2D] = []
 var alchemist_mixture_field_config: Dictionary = {}
 var alchemist_mystery_cauldron_config: Dictionary = {}
@@ -611,6 +612,7 @@ func configure_profile(profile: Dictionary) -> void:
 	alchemist_mystery_vial_pool.clear()
 	alchemist_poison_pool.clear()
 	alchemist_material_pool.clear()
+	alchemist_bonus_material_pool.clear()
 	alchemist_bonus_materials.clear()
 	alchemist_cauldrons.clear()
 	alchemist_mystery_cauldron_cooldown = 0.0
@@ -2608,7 +2610,11 @@ func _collect_nearby_alchemy_materials() -> void:
 	# instead of allocating and replacing a fresh Array every frame.
 	for index in range(alchemist_bonus_materials.size() - 1, -1, -1):
 		var material := alchemist_bonus_materials[index]
-		if not is_instance_valid(material) or material.is_queued_for_deletion():
+		if (
+			not is_instance_valid(material)
+			or material.is_queued_for_deletion()
+			or not bool(material.get("active"))
+		):
 			alchemist_bonus_materials.remove_at(index)
 
 
@@ -3578,6 +3584,24 @@ func _on_alchemist_mystery_vial_landed(
 	_damage_monsters_in_radius(landing_position, radius, damage)
 
 
+func _acquire_alchemist_bonus_material() -> Node2D:
+	for material in alchemist_bonus_material_pool:
+		if is_instance_valid(material) and not bool(material.get("active")):
+			return material
+
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return null
+	var material := ALCHEMY_MATERIAL_SCENE.instantiate() as Node2D
+	if material == null:
+		return null
+	parent.add_child(material)
+	if material.has_method("set_temporary_reuse_enabled"):
+		material.call("set_temporary_reuse_enabled", true)
+	alchemist_bonus_material_pool.append(material)
+	return material
+
+
 func _execute_alchemist_cauldron_success(origin: Vector2) -> void:
 	var parent := get_parent()
 	if not is_instance_valid(parent):
@@ -3597,10 +3621,9 @@ func _execute_alchemist_cauldron_success(origin: Vector2) -> void:
 		0.1
 	)
 	for index in range(material_count):
-		var material := ALCHEMY_MATERIAL_SCENE.instantiate() as Node2D
+		var material := _acquire_alchemist_bonus_material()
 		if material == null:
 			continue
-		parent.add_child(material)
 		var material_angle: float = (
 			TAU * float(index) / float(maxi(material_count, 1))
 			+ randf_range(-0.24, 0.24)
@@ -3626,7 +3649,8 @@ func _execute_alchemist_cauldron_success(origin: Vector2) -> void:
 			randf_range(0.36, 0.50),
 			randf_range(52.0, 78.0)
 		)
-		alchemist_bonus_materials.append(material)
+		if not alchemist_bonus_materials.has(material):
+			alchemist_bonus_materials.append(material)
 
 	var heal_count: int = maxi(
 		int(

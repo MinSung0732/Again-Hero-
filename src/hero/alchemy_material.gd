@@ -42,6 +42,7 @@ var gas_value: float = 20.0
 var material_type: int = 1
 var lifetime_remaining: float = 0.0
 var temporary_drop: bool = false
+var recycle_temporary_drop: bool = false
 var in_flight: bool = false
 var flight_origin: Vector2 = Vector2.ZERO
 var flight_target: Vector2 = Vector2.ZERO
@@ -101,6 +102,10 @@ func activate(
 		visual.frame = randi_range(0, frame_count - 1)
 
 
+func set_temporary_reuse_enabled(enabled: bool) -> void:
+	recycle_temporary_drop = enabled
+
+
 func launch_from_cauldron(
 	origin: Vector2,
 	target: Vector2,
@@ -150,12 +155,15 @@ func _process(delta: float) -> void:
 
 
 func deactivate() -> void:
+	var should_free := temporary_drop and not recycle_temporary_drop
 	active = false
 	in_flight = false
 	flight_elapsed = 0.0
+	lifetime_remaining = 0.0
+	temporary_drop = false
 	visible = false
 	set_process(false)
 	if is_instance_valid(visual):
 		visual.stop()
-	if temporary_drop:
+	if should_free:
 		queue_free()
