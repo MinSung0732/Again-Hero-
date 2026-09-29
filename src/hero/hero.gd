@@ -21,6 +21,7 @@ const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const STATUS_EFFECT_CATALOG := preload("res://src/data/status_effect_catalog.gd")
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
+const HERO_WORLD_QUERY_RUNTIME := preload("res://src/hero/hero_world_query_runtime.gd")
 const STAGE1_FRAME_SIZE := Vector2(64, 64)
 const STAGE1_FRAME_DIR := "res://assets/art/heroes/stage1_mage/frames"
 const STAGE1_SHIELD_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_02"
@@ -378,71 +379,42 @@ var ai_settings: Dictionary = {
 
 var battlefield_size: Vector2 = Vector2(3200, 3200)
 
-# Same-frame monster queries are common across targeting, AI and AoE skills.
-# Cache only for the current process/physics frame pair so combat semantics do not change.
-var _monster_nodes_cache: Array = []
-var _monster_nodes_cache_process_frame: int = -1
-var _monster_nodes_cache_physics_frame: int = -1
+# World-query cache state lives outside this giant facade. Keep these method
+# names stable because hero projectiles and skills already call them.
+var _world_query_runtime: RefCounted
 var _movement_monster_scratch: Array = []
-var _aux_group_nodes_cache: Dictionary = {}
-var _aux_group_nodes_cache_process_frame: int = -1
-var _aux_group_nodes_cache_physics_frame: int = -1
+
+
+func _get_world_query_runtime() -> RefCounted:
+	if _world_query_runtime == null:
+		_world_query_runtime = HERO_WORLD_QUERY_RUNTIME.new(self)
+	return _world_query_runtime
 
 
 func _get_monster_nodes_cached() -> Array:
-	var process_frame := Engine.get_process_frames()
-	var physics_frame := Engine.get_physics_frames()
-	if (
-		process_frame != _monster_nodes_cache_process_frame
-		or physics_frame != _monster_nodes_cache_physics_frame
-	):
-		_monster_nodes_cache = get_tree().get_nodes_in_group("monsters")
-		_monster_nodes_cache_process_frame = process_frame
-		_monster_nodes_cache_physics_frame = physics_frame
-	return _monster_nodes_cache
+	return _get_world_query_runtime().call("get_monster_nodes_cached")
 
 
 func _get_aux_group_nodes_cached(group_name: StringName) -> Array:
-	var process_frame := Engine.get_process_frames()
-	var physics_frame := Engine.get_physics_frames()
-	if (
-		process_frame != _aux_group_nodes_cache_process_frame
-		or physics_frame != _aux_group_nodes_cache_physics_frame
-	):
-		_aux_group_nodes_cache.clear()
-		_aux_group_nodes_cache_process_frame = process_frame
-		_aux_group_nodes_cache_physics_frame = physics_frame
-
-	if not _aux_group_nodes_cache.has(group_name):
-		_aux_group_nodes_cache[group_name] = get_tree().get_nodes_in_group(
-			group_name
-		)
-	var cached = _aux_group_nodes_cache.get(group_name, [])
-	return cached if cached is Array else []
+	return _get_world_query_runtime().call(
+		"get_aux_group_nodes_cached",
+		group_name
+	)
 
 
 func _get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
-	var battle := get_parent()
-	if (
-		is_instance_valid(battle)
-		and battle.has_method("query_monsters_near")
-	):
-		var nearby = battle.call("query_monsters_near", origin, radius)
-		if nearby is Array:
-			return nearby
-	return _get_monster_nodes_cached()
+	return _get_world_query_runtime().call(
+		"get_monster_nodes_near",
+		origin,
+		radius
+	)
 
 
 func _get_monster_nodes_in_rect(world_rect: Rect2) -> Array:
-	var battle := get_parent()
-	if (
-		is_instance_valid(battle)
-		and battle.has_method("query_monsters_in_rect")
-	):
-		var nearby = battle.call("query_monsters_in_rect", world_rect)
-		if nearby is Array:
-			return nearby
-	return _get_monster_nodes_cached()
+	return _get_world_query_runtime().call(
+		"get_monster_nodes_in_rect",
+		world_rect
+	)
 
 
 var current_hp: int
