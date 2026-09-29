@@ -9770,6 +9770,52 @@ func _purifier_orb_connection_count(
 	return count
 
 
+func _purifier_orb_resulting_component_size(
+	position: Vector2,
+	active_orbs: Array[Node2D]
+) -> int:
+	var link_distance := maxf(
+		float(purifier_orb_config.get("link_distance", 600.0)),
+		1.0
+	)
+	var link_distance_sq := link_distance * link_distance
+	var visited: Dictionary = {}
+	var frontier: Array[Node2D] = []
+
+	for orb in active_orbs:
+		if (
+			_is_purifier_orb_active(orb)
+			and position.distance_squared_to(orb.global_position)
+			<= link_distance_sq
+		):
+			frontier.append(orb)
+
+	var cursor := 0
+	while cursor < frontier.size():
+		var current := frontier[cursor]
+		cursor += 1
+		if not _is_purifier_orb_active(current):
+			continue
+		var current_id := current.get_instance_id()
+		if visited.has(current_id):
+			continue
+		visited[current_id] = true
+
+		for candidate in active_orbs:
+			if (
+				not _is_purifier_orb_active(candidate)
+				or visited.has(candidate.get_instance_id())
+				or current.global_position.distance_squared_to(
+					candidate.global_position
+				) > link_distance_sq
+			):
+				continue
+			frontier.append(candidate)
+
+	# Include the candidate orb itself.
+	return visited.size() + 1
+
+
 func _purifier_orb_position_has_spacing(
 	position: Vector2,
 	active_orbs: Array[Node2D]
@@ -9897,7 +9943,13 @@ func _choose_purifier_orb_target_position() -> Vector2:
 				candidate,
 				active_orbs
 			)
-			if avoid_multi_link and link_count >= 2:
+			var resulting_component_size := (
+				_purifier_orb_resulting_component_size(
+					candidate,
+					active_orbs
+				)
+			)
+			if avoid_multi_link and resulting_component_size >= 3:
 				continue
 
 			var monster_count := _count_monsters_near(
@@ -9912,9 +9964,12 @@ func _choose_purifier_orb_target_position() -> Vector2:
 					else 1.2
 				)
 			else:
-				score += float(link_count) * 4.5
-				if link_count >= 2:
-					score += 8.0 + float(link_count - 2) * 3.0
+				score += float(link_count) * 3.0
+				if resulting_component_size >= 3:
+					score += (
+						8.0
+						+ float(resulting_component_size - 3) * 4.0
+					)
 
 			score -= (
 				global_position.distance_to(candidate)
