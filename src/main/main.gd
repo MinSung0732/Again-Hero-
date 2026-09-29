@@ -1101,7 +1101,7 @@ func _hide_monster_info_immediate() -> void:
 	monster_info_animating = false
 
 func _should_refresh_hero_skill_cooldown_hud() -> bool:
-	if not is_instance_valid(hud_layer) or not hud_layer.is_visible_in_tree():
+	if not is_instance_valid(hud_layer) or not hud_layer.visible:
 		return false
 	if _skill_unlock_cutscene_active:
 		return false

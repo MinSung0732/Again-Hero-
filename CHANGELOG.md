@@ -35,6 +35,7 @@
 - 마왕 증강 선택/돌연변이 선택 후 지휘력 UI, 마력기술 방향 선택/검증, 리롤 최대치 조회에 각각 경량 getter를 추가해 메뉴 상호작용마다 전체 `battle.get_snapshot()`을 만들던 경로를 제거. 마력기술 버튼 검증은 현재 Battle 값을 직접 읽어 기존 정확한 쿨다운/마력 판정을 유지.
 - Hero 스킬 쿨다운 HUD의 20Hz polling을 실제 HUD가 보이고 전투 UI가 활성인 동안에만 수행하도록 제한. 스테이지 인트로/용사 공개, 스킬 해금 컷신, 일시정지, 마왕 증강/돌연변이 선택, 결과 화면에서는 polling을 중단하고 복귀 시 즉시 다음 프레임에 재동기화하며, HUD가 숨겨진 초기 진입의 불필요한 1회 조회도 제거.
 - Phase 4 Hero 분리를 Fighter부터 재개. `hero_fighter_runtime.gd`에 돌진 발동 조건/최대 탐색 거리, 베기·가드 발동 조건, 최장거리 돌진 타깃 선택을 분리하고 Hero는 facade로 유지. 베기·가드의 주변 적 판정은 기존 개별 배열 순회를 제거하고 Battle 공간 인덱스를 사용하는 `_count_monsters_near()` 경로로 통일.
+- Hero 스킬 쿨다운 HUD 비활성 polling 가드에서 `CanvasLayer`에 존재하지 않는 `is_visible_in_tree()`를 호출해 HUD 갱신이 중단되던 회귀를 수정. HUD 표시 여부는 `CanvasLayer.visible`로 확인하도록 변경.
 - Godot 실행 파일이 없는 환경이라 실제 런타임/프로파일러 검증은 수행하지 않았고 정적 참조·diff 검증만 수행.
 
 ## 2026-09-28 — Stage 8 5스킬 컷신 이미지 왜곡 제거
