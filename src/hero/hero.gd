@@ -243,6 +243,10 @@ var gunner_deadeye_active: bool = false
 var gunner_deadeye_shots_left: int = 0
 var gunner_deadeye_shot_timer: float = 0.0
 var gunner_deadeye_direction: Vector2 = Vector2.RIGHT
+var gunner_deadeye_monster_offsets: Array[Vector2] = []
+var gunner_deadeye_analysis_direction: Vector2 = Vector2.RIGHT
+var gunner_deadeye_analysis_score: float = 0.0
+var gunner_deadeye_analysis_hits: int = 0
 var gunner_ricochet_stacks: int = 0
 var gunner_afterimage_shot_stacks: int = 0
 var gunner_reload_move_speed_bonus: float = 0.0
@@ -854,6 +858,10 @@ func configure_profile(profile: Dictionary) -> void:
 	gunner_deadeye_shots_left = 0
 	gunner_deadeye_shot_timer = 0.0
 	gunner_deadeye_direction = Vector2.RIGHT
+	gunner_deadeye_monster_offsets.clear()
+	gunner_deadeye_analysis_direction = Vector2.RIGHT
+	gunner_deadeye_analysis_score = 0.0
+	gunner_deadeye_analysis_hits = 0
 	gunner_ricochet_stacks = 0
 	gunner_afterimage_shot_stacks = 0
 	gunner_reload_move_speed_bonus = 0.0
@@ -4714,14 +4722,25 @@ func _use_gunner_cylinder_strike() -> void:
 		monster.set_meta("gunner_slow_until", Time.get_ticks_msec() + int(slow_duration * 1000.0))
 
 
-func _gunner_deadeye_best_direction() -> Dictionary:
-	var sample_count := maxi(int(gunner_config.get("deadeye_cluster_samples", 36)), 8)
-	var max_range := maxf(float(gunner_config.get("deadeye_cluster_range", 620.0)), 1.0)
-	var half_width := maxf(float(gunner_config.get("deadeye_corridor_half_width", 105.0)), 1.0)
-	var best_direction := Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+func _update_gunner_deadeye_aim_analysis() -> void:
+	var sample_count := maxi(
+		int(gunner_config.get("deadeye_cluster_samples", 36)),
+		8
+	)
+	var max_range := maxf(
+		float(gunner_config.get("deadeye_cluster_range", 620.0)),
+		1.0
+	)
+	var half_width := maxf(
+		float(gunner_config.get("deadeye_corridor_half_width", 105.0)),
+		1.0
+	)
+	var best_direction := (
+		Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+	)
 	var best_score := 0.0
 	var best_hits := 0
-	var monster_offsets: Array[Vector2] = []
+	gunner_deadeye_monster_offsets.clear()
 
 	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -4734,14 +4753,16 @@ func _gunner_deadeye_best_direction() -> Dictionary:
 			continue
 		var offset := monster.global_position - global_position
 		if offset.length_squared() <= max_range * max_range:
-			monster_offsets.append(offset)
+			gunner_deadeye_monster_offsets.append(offset)
 
 	for index in range(sample_count):
-		var direction := Vector2.from_angle(TAU * float(index) / float(sample_count))
+		var direction := Vector2.from_angle(
+			TAU * float(index) / float(sample_count)
+		)
 		var side := Vector2(-direction.y, direction.x)
 		var score := 0.0
 		var hits := 0
-		for offset in monster_offsets:
+		for offset in gunner_deadeye_monster_offsets:
 			var forward := offset.dot(direction)
 			if forward <= 0.0 or forward > max_range:
 				continue
@@ -4749,18 +4770,31 @@ func _gunner_deadeye_best_direction() -> Dictionary:
 			if lateral > half_width:
 				continue
 			hits += 1
-			var distance_weight := 1.0 - clampf(forward / max_range, 0.0, 1.0) * 0.35
-			var center_weight := 1.0 - clampf(lateral / half_width, 0.0, 1.0) * 0.45
+			var distance_weight := (
+				1.0
+				- clampf(forward / max_range, 0.0, 1.0) * 0.35
+			)
+			var center_weight := (
+				1.0
+				- clampf(lateral / half_width, 0.0, 1.0) * 0.45
+			)
 			score += maxf(distance_weight * center_weight, 0.1)
 		if score > best_score:
 			best_score = score
 			best_hits = hits
 			best_direction = direction
 
+	gunner_deadeye_analysis_direction = best_direction.normalized()
+	gunner_deadeye_analysis_score = best_score
+	gunner_deadeye_analysis_hits = best_hits
+
+
+func _gunner_deadeye_best_direction() -> Dictionary:
+	_update_gunner_deadeye_aim_analysis()
 	return {
-		"direction": best_direction.normalized(),
-		"score": best_score,
-		"hits": best_hits,
+		"direction": gunner_deadeye_analysis_direction,
+		"score": gunner_deadeye_analysis_score,
+		"hits": gunner_deadeye_analysis_hits,
 	}
 
 func _gunner_should_start_deadeye() -> bool:
@@ -4770,8 +4804,8 @@ func _gunner_should_start_deadeye() -> bool:
 	if gunner_ammo < min_ammo:
 		return false
 
-	var aim := _gunner_deadeye_best_direction()
-	var score := float(aim.get("score", 0.0))
+	_update_gunner_deadeye_aim_analysis()
+	var score := gunner_deadeye_analysis_score
 	var min_score := maxf(float(gunner_config.get("deadeye_min_cluster_score", 3.0)), 0.0)
 	if score < min_score:
 		return false
@@ -4787,11 +4821,7 @@ func _gunner_should_start_deadeye() -> bool:
 func _start_gunner_deadeye() -> void:
 	if gunner_ammo <= 0:
 		return
-	var aim := _gunner_deadeye_best_direction()
-	var aim_direction: Vector2 = aim.get(
-		"direction",
-		Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
-	)
+	var aim_direction := gunner_deadeye_analysis_direction
 	if aim_direction.length_squared() <= 0.0:
 		aim_direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	gunner_deadeye_cooldown = maxf(float(gunner_config.get("deadeye_cooldown", 20.0)), 0.1)
@@ -10974,9 +11004,8 @@ func _build_ai_context() -> Dictionary:
 		gunner_ammo_ratio = float(gunner_ammo) / float(maxi(gunner_magazine_size, 1))
 		gunner_reload_state = 1.0 if gunner_reloading else 0.0
 		gunner_surround_pressure = _gunner_surround_pressure()
-		gunner_deadeye_cluster_score = float(
-			_gunner_deadeye_best_direction().get("score", 0.0)
-		)
+		_update_gunner_deadeye_aim_analysis()
+		gunner_deadeye_cluster_score = gunner_deadeye_analysis_score
 
 	return {
 		"nearby_count": nearby_count,
