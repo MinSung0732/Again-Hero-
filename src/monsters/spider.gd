@@ -315,8 +315,7 @@ func heal_direct(amount: int) -> int:
 		amount,
 		current_hp,
 		max_hp,
-		dying,
-		DAMAGE_NUMBERS
+		dying
 	)
 	current_hp += recovered
 	return recovered
