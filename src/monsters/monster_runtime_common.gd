@@ -77,3 +77,31 @@ static func apply_standard_visual_lod(
 	):
 		visual.call("set_lod_suspended", should_suspend)
 	return should_suspend
+
+
+static func get_external_movement_multiplier(owner: Node) -> float:
+	var now_msec := Time.get_ticks_msec()
+	if int(owner.get_meta("archmage_root_until", 0)) > now_msec:
+		return 0.0
+	if int(owner.get_meta("gunner_slow_until", 0)) > now_msec:
+		return clampf(
+			float(owner.get_meta("gunner_slow_multiplier", 1.0)),
+			0.1,
+			1.0
+		)
+	return 1.0
+
+
+static func attach_status_effect_visual(
+	owner: Node,
+	effect_script: Script,
+	effect_type: String
+) -> void:
+	if effect_script == null:
+		return
+	var effect := effect_script.new() as Node
+	if effect == null:
+		return
+	owner.add_child(effect)
+	if effect.has_method("setup"):
+		effect.call("setup", owner, effect_type)

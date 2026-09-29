@@ -49,7 +49,11 @@ func _ready() -> void:
 	if not is_instance_valid(combat_authority):
 		combat_authority = get_parent()
 	hero_target_refresh_timer = 0.0
-	_attach_status_effect_visual("slow")
+	MONSTER_RUNTIME_COMMON.attach_status_effect_visual(
+		self,
+		COMBAT_STATUS_EFFECT_VISUAL,
+		"slow"
+	)
 	queue_redraw()
 
 
@@ -75,10 +79,6 @@ func _refresh_combat_target() -> void:
 
 
 
-func _attach_status_effect_visual(effect_type: String) -> void:
-	var effect := COMBAT_STATUS_EFFECT_VISUAL.new()
-	add_child(effect)
-	effect.setup(self, effect_type)
 
 
 func _physics_process(delta: float) -> void:
@@ -102,11 +102,9 @@ func _physics_process(delta: float) -> void:
 		pack_bonus_refresh_timer = 0.25
 		pack_bonus_cache = _get_pack_bonuses()
 	var pack_bonuses := pack_bonus_cache
-	var external_slow := 1.0
-	if int(get_meta("gunner_slow_until", 0)) > Time.get_ticks_msec():
-		external_slow = clampf(float(get_meta("gunner_slow_multiplier", 1.0)), 0.1, 1.0)
-	if int(get_meta("archmage_root_until", 0)) > Time.get_ticks_msec():
-		external_slow = 0.0
+	var external_slow := (
+		MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
+	)
 	var effective_move_speed := move_speed * float(
 		pack_bonuses.get("move_speed_multiplier", 1.0)
 	) * external_slow

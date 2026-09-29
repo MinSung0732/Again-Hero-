@@ -63,7 +63,11 @@ func _ready() -> void:
 	if not is_instance_valid(combat_authority):
 		combat_authority = get_parent()
 	hero_target_refresh_timer = 0.0
-	_attach_status_effect_visual("slow")
+	MONSTER_RUNTIME_COMMON.attach_status_effect_visual(
+		self,
+		COMBAT_STATUS_EFFECT_VISUAL,
+		"slow"
+	)
 	_apply_bomb_rat_visual()
 	_apply_bomb_rat_explosion_visual()
 	queue_redraw()
@@ -91,10 +95,6 @@ func _refresh_combat_target() -> void:
 
 
 
-func _attach_status_effect_visual(effect_type: String) -> void:
-	var effect := COMBAT_STATUS_EFFECT_VISUAL.new()
-	add_child(effect)
-	effect.setup(self, effect_type)
 
 
 func _physics_process(delta: float) -> void:
@@ -160,11 +160,9 @@ func _physics_process(delta: float) -> void:
 			far_ai_tick_timer = MONSTER_RUNTIME_COMMON.next_far_navigation_delay()
 		if visual.visible and absf(direction_to_hero.x) > 0.01:
 			visual.flip_h = direction_to_hero.x < 0.0
-		var external_slow := 1.0
-		if int(get_meta("gunner_slow_until", 0)) > Time.get_ticks_msec():
-			external_slow = clampf(float(get_meta("gunner_slow_multiplier", 1.0)), 0.1, 1.0)
-		if int(get_meta("archmage_root_until", 0)) > Time.get_ticks_msec():
-			external_slow = 0.0
+		var external_slow := (
+			MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
+		)
 		velocity = direction_to_hero * move_speed * external_slow
 		_play_locomotion(true)
 		if distance_sq > far_nav_sq:
