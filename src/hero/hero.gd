@@ -7934,8 +7934,12 @@ func _cast_archmage_ice_bolt(config: Dictionary, empowered: bool) -> void:
 	if not is_instance_valid(current_target):
 		return
 	var direction := global_position.direction_to(current_target.global_position)
-	var projectile := ARCHMAGE_SKILL_PROJECTILE_SCENE.instantiate() as Area2D
-	get_parent().add_child(projectile)
+	var projectile := _acquire_projectile(
+		ARCHMAGE_SKILL_PROJECTILE_SCENE,
+		"archmage_skill_projectile"
+	)
+	if projectile == null:
+		return
 	projectile.global_position = global_position + direction * 58.0
 	projectile.call(
 		"setup", "ice_bolt", direction,
@@ -8484,8 +8488,12 @@ func _cast_archmage_harmony(config: Dictionary) -> void:
 func _cast_archmage_storm(config: Dictionary, empowered: bool) -> void:
 	for index in range(8):
 		var direction := Vector2.from_angle(TAU * float(index) / 8.0)
-		var projectile := ARCHMAGE_SKILL_PROJECTILE_SCENE.instantiate() as Area2D
-		get_parent().add_child(projectile)
+		var projectile := _acquire_projectile(
+			ARCHMAGE_SKILL_PROJECTILE_SCENE,
+			"archmage_skill_projectile"
+		)
+		if projectile == null:
+			continue
 		projectile.global_position = global_position + direction * 56.0
 		projectile.call(
 			"setup", "storm", direction,
@@ -9680,8 +9688,12 @@ func _use_piercing_projectile_ultimate() -> void:
 	_face_attack_direction(shot_direction.x)
 	_restart_stage1_animation("attack")
 
-	var projectile := ULTIMATE_PIERCING_PROJECTILE_SCENE.instantiate() as Area2D
-	get_parent().add_child(projectile)
+	var projectile := _acquire_projectile(
+		ULTIMATE_PIERCING_PROJECTILE_SCENE,
+		"ultimate_piercing_projectile"
+	)
+	if projectile == null:
+		return
 	projectile.global_position = global_position + shot_direction * 54.0
 	projectile.call(
 		"setup",

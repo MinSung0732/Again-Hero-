@@ -2,6 +2,9 @@ extends Area2D
 
 static var _frames_cache: Dictionary = {}
 
+const DEFAULT_SPRITE_SCALE := Vector2(0.60, 0.60)
+const DEFAULT_TAIL_SCALE := Vector2(0.58, 0.58)
+
 var skill_type: String = ""
 var direction := Vector2.RIGHT
 var speed := 900.0
@@ -18,12 +21,15 @@ var previous_chain_hit_position := Vector2.ZERO
 var has_previous_chain_hit := false
 var storm_returning: bool = false
 var storm_return_hit_ids: Dictionary = {}
+var active: bool = false
 
 @onready var sprite: AnimatedSprite2D = $Sprite
 @onready var tail: AnimatedSprite2D = $Tail
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	deactivate_for_pool()
+
 
 func setup(
 	new_skill_type: String,
@@ -45,13 +51,25 @@ func setup(
 	source_hero = new_source_hero
 	empowered = is_empowered
 	current_target = initial_target
+	traveled = 0.0
+	hit_ids.clear()
+	bounce_count = 0
 	previous_chain_hit_position = Vector2.ZERO
 	has_previous_chain_hit = false
 	storm_returning = false
 	storm_return_hit_ids.clear()
+	active = true
+	visible = true
+	if not is_in_group("hero_projectiles"):
+		add_to_group("hero_projectiles")
+	monitoring = true
+	set_physics_process(true)
+	_reset_visual_state()
 	_apply_visual()
 
 func _physics_process(delta: float) -> void:
+	if not active:
+		return
 	if skill_type == "berserker_wave":
 		var previous_position: Vector2 = global_position
 		var wave_step: Vector2 = direction * speed * delta
@@ -253,6 +271,8 @@ func _damage_berserker_wave_sweep(
 
 
 func _on_body_entered(body: Node) -> void:
+	if not active:
+		return
 	if skill_type in ["storm", "berserker_wave"]:
 		return
 	if body == null or body.is_queued_for_deletion():
@@ -574,10 +594,86 @@ func _find_nearest_unhit(origin: Vector2, radius: float) -> Node2D:
 	return best
 
 func _finish() -> void:
-	if skill_type == "chain_dagger" and is_instance_valid(source_hero):
+	if not active:
+		return
+
+	var finished_skill_type := skill_type
+	if finished_skill_type == "chain_dagger" and is_instance_valid(source_hero):
 		if source_hero.has_method("notify_archmage_chain_dagger_finished"):
 			source_hero.call("notify_archmage_chain_dagger_finished")
-	queue_free()
+
+	active = false
+	var pool_key := _pool_key_for_skill(finished_skill_type)
+	var parent := get_parent()
+	if (
+		not pool_key.is_empty()
+		and is_instance_valid(parent)
+		and parent.has_method("recycle_projectile")
+	):
+		parent.call("recycle_projectile", self, pool_key)
+	else:
+		queue_free()
+
+
+func _pool_key_for_skill(projectile_skill_type: String) -> String:
+	match projectile_skill_type:
+		"ice_bolt", "storm":
+			return "archmage_skill_projectile"
+		"berserker_wave":
+			return "berserker_wave_projectile"
+		_:
+			return ""
+
+
+func deactivate_for_pool() -> void:
+	active = false
+	skill_type = ""
+	direction = Vector2.RIGHT
+	speed = 900.0
+	max_range = 900.0
+	traveled = 0.0
+	damage = 1
+	config = {}
+	source_hero = null
+	empowered = false
+	hit_ids.clear()
+	bounce_count = 0
+	current_target = null
+	previous_chain_hit_position = Vector2.ZERO
+	has_previous_chain_hit = false
+	storm_returning = false
+	storm_return_hit_ids.clear()
+	rotation = 0.0
+	if is_in_group("hero_projectiles"):
+		remove_from_group("hero_projectiles")
+	monitoring = false
+	set_physics_process(false)
+	visible = false
+	_reset_visual_state()
+
+
+func _reset_visual_state() -> void:
+	if not is_instance_valid(sprite) or not is_instance_valid(tail):
+		return
+	sprite.stop()
+	sprite.visible = false
+	sprite.scale = DEFAULT_SPRITE_SCALE
+	sprite.position = Vector2.ZERO
+	sprite.rotation = 0.0
+	sprite.flip_h = false
+	sprite.modulate = Color.WHITE
+	sprite.frame = 0
+	sprite.frame_progress = 0.0
+	tail.stop()
+	tail.visible = false
+	tail.scale = DEFAULT_TAIL_SCALE
+	tail.position = Vector2.ZERO
+	tail.rotation = 0.0
+	tail.flip_h = false
+	tail.modulate = Color.WHITE
+	tail.frame = 0
+	tail.frame_progress = 0.0
+
 
 func _apply_visual() -> void:
 	var dir := ""
