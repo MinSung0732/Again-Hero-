@@ -9745,8 +9745,8 @@ func _clamp_purifier_orb_target_position(candidate: Vector2) -> Vector2:
 			"_clamp_manual_spawn_position",
 			clamped
 		)
-		if battle_clamped is Vector2:
-			clamped = battle_clamped
+		if typeof(battle_clamped) == TYPE_VECTOR2:
+			clamped = Vector2(battle_clamped)
 	return clamped
 
 
@@ -10196,7 +10196,10 @@ func _advance_purifier_orb_chain() -> void:
 
 	var orb: Node2D = null
 	while not purifier_orb_chain_queue.is_empty():
-		var candidate := purifier_orb_chain_queue.pop_front()
+		var candidate := (
+			purifier_orb_chain_queue.pop_front()
+			as Node2D
+		)
 		if _is_purifier_orb_active(candidate):
 			orb = candidate
 			break
