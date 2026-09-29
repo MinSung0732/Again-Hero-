@@ -907,6 +907,13 @@ const PROFILES = {
 			"exp_training",
 			"exp_magnet",
 			"long_reach",
+			"purifier_pilgrims_path",
+			"purifier_chain_cleansing",
+			"purifier_prism_phenomenon",
+			"purifier_radiant_crown",
+			"purifier_broken_sanctuary",
+			"purifier_book_of_purification",
+			"purifier_o_lord",
 		],
 	},
 	"summoner_hero": {

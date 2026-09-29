@@ -454,6 +454,11 @@ var purifier_crown_cooldown: float = 0.0
 var purifier_crown_stacks: int = 0
 var purifier_crown_duration_timer: float = 0.0
 var purifier_crown_heal_timer: float = 0.0
+var purifier_protection_break_count: int = 0
+var purifier_broken_sanctuary_timer: float = 0.0
+var purifier_prism_launch_queue: Array[Dictionary] = []
+var purifier_prism_launch_timer: float = 0.0
+var purifier_prism_active: Array[Dictionary] = []
 var ultimate_charge: float = 0.0
 var ultimate_flash_timer: float = 0.0
 var ultimate_cooldown_timer: float = 0.0
@@ -1115,6 +1120,11 @@ func configure_profile(profile: Dictionary) -> void:
 	purifier_crown_stacks = 0
 	purifier_crown_duration_timer = 0.0
 	purifier_crown_heal_timer = 0.0
+	purifier_protection_break_count = 0
+	purifier_broken_sanctuary_timer = 0.0
+	purifier_prism_launch_queue.clear()
+	purifier_prism_launch_timer = 0.0
+	purifier_prism_active.clear()
 	fighter_guard_charge_seconds = maxf(
 		float(ultimate_config.get("charge_seconds", fighter_guard_charge_seconds)),
 		1.0
@@ -9900,12 +9910,59 @@ func _play_purifier_effect(effect: AnimatedSprite2D, animation_name: StringName)
 	effect.play(animation_name)
 
 
+func _get_purifier_augment_stacks(augment_id: String) -> int:
+	if hero_archetype != "cleric_purifier":
+		return 0
+	return maxi(int(build_counts.get(augment_id, 0)), 0)
+
+
+func _get_purifier_crown_effect_multiplier() -> float:
+	return (
+		0.85
+		if _get_purifier_augment_stacks("purifier_radiant_crown") > 0
+		else 1.0
+	)
+
+
+func _get_purifier_crown_max_stacks() -> int:
+	return maxi(
+		int(purifier_crown_config.get("max_stacks", 5))
+		+ _get_purifier_augment_stacks("purifier_radiant_crown"),
+		1
+	)
+
+
+func _get_purifier_orb_damage_multiplier() -> float:
+	return (
+		0.50
+		if _get_purifier_augment_stacks("purifier_book_of_purification") > 0
+		else 1.0
+	)
+
+
+func _get_purifier_orb_range_multiplier() -> float:
+	return (
+		0.50
+		if _get_purifier_augment_stacks("purifier_book_of_purification") > 0
+		else 1.0
+	)
+
+
+func _get_purifier_orb_explosion_radius() -> float:
+	return maxf(
+		float(purifier_orb_config.get("explosion_radius", 137.5))
+		* _get_purifier_orb_range_multiplier(),
+		1.0
+	)
+
+
 func _get_purifier_skill_cooldown_multiplier() -> float:
 	if hero_archetype != "cleric_purifier" or purifier_crown_stacks <= 0:
 		return 1.0
 	return maxf(
 		1.0
 		- float(purifier_crown_config.get("cooldown_reduction_per_stack", 0.04))
+		* _get_purifier_crown_effect_multiplier()
 		* float(purifier_crown_stacks),
 		0.20
 	)
@@ -9917,8 +9974,7 @@ func _get_purifier_move_speed_multiplier() -> float:
 	return 1.0 + maxf(
 		float(purifier_crown_config.get("move_speed_per_stack", 0.02)),
 		0.0
-	) * float(purifier_crown_stacks)
-
+	) * _get_purifier_crown_effect_multiplier() * float(purifier_crown_stacks)
 
 func _is_purifier_undead_target(target_node: Node) -> bool:
 	if not is_instance_valid(target_node):
@@ -9944,12 +10000,13 @@ func _is_purifier_undead_target(target_node: Node) -> bool:
 func get_purifier_holy_damage_multiplier(target_node: Node = null) -> float:
 	if hero_archetype != "cleric_purifier":
 		return 1.0
+	var crown_effect_multiplier := _get_purifier_crown_effect_multiplier()
 	var multiplier := (
 		1.0
 		+ maxf(
 			float(purifier_crown_config.get("holy_damage_per_stack", 0.05)),
 			0.0
-		) * float(purifier_crown_stacks)
+		) * crown_effect_multiplier * float(purifier_crown_stacks)
 	)
 	if shield_hp > 0.0:
 		multiplier *= maxf(
@@ -9962,10 +10019,14 @@ func get_purifier_holy_damage_multiplier(target_node: Node = null) -> float:
 			+ maxf(
 				float(purifier_crown_config.get("undead_damage_per_stack", 0.10)),
 				0.0
-			) * float(purifier_crown_stacks)
+			) * crown_effect_multiplier * float(purifier_crown_stacks)
 		)
+	var broken_sanctuary_stacks := _get_purifier_augment_stacks(
+		"purifier_broken_sanctuary"
+	)
+	if broken_sanctuary_stacks > 0 and purifier_broken_sanctuary_timer > 0.0:
+		multiplier *= 1.0 + 0.06 * float(broken_sanctuary_stacks)
 	return multiplier
-
 
 func notify_monster_kill(_monster_type: String = "") -> void:
 	if hero_archetype != "cleric_purifier" or is_dying or current_hp <= 0:
@@ -10089,7 +10150,10 @@ func _end_purifier_protection(broken: bool) -> void:
 		return
 	if broken and not purifier_protection_break_triggered:
 		purifier_protection_break_triggered = true
+		purifier_protection_break_count += 1
 		_trigger_purifier_protection_break_pulse()
+		if _get_purifier_augment_stacks("purifier_broken_sanctuary") > 0:
+			purifier_broken_sanctuary_timer = 6.0
 	purifier_protection_active = false
 	purifier_protection_duration_timer = 0.0
 	purifier_protection_tick_timer = 0.0
@@ -10110,10 +10174,7 @@ func _cast_purifier_crown() -> void:
 		or current_hp <= 0
 	):
 		return
-	var max_stacks := maxi(
-		int(purifier_crown_config.get("max_stacks", 5)),
-		1
-	)
+	var max_stacks := _get_purifier_crown_max_stacks()
 	purifier_crown_stacks = mini(purifier_crown_stacks + 1, max_stacks)
 	purifier_crown_duration_timer = maxf(
 		float(purifier_crown_config.get("duration", 60.0)),
@@ -10161,6 +10222,14 @@ func _clear_purifier_orb_runtime() -> void:
 	purifier_orb_chain_timer = 0.0
 	purifier_orb_chain_step = 0
 
+	for entry in purifier_prism_active:
+		var prism_orb = entry.get("orb", null)
+		if is_instance_valid(prism_orb):
+			prism_orb.queue_free()
+	purifier_prism_active.clear()
+	purifier_prism_launch_queue.clear()
+	purifier_prism_launch_timer = 0.0
+
 
 func _is_purifier_orb_active(orb: Node2D) -> bool:
 	return (
@@ -10207,6 +10276,14 @@ func _refresh_purifier_orb_links() -> void:
 		float(purifier_orb_config.get("link_vertical_scale", 0.58)),
 		0.05
 	)
+	var pilgrims_path_stacks := _get_purifier_augment_stacks(
+		"purifier_pilgrims_path"
+	)
+	var link_damage_ratio := (
+		0.10 + 0.05 * float(pilgrims_path_stacks - 1)
+		if pilgrims_path_stacks > 0
+		else 0.0
+	)
 	var parent := get_parent()
 	if not is_instance_valid(parent):
 		return
@@ -10224,6 +10301,18 @@ func _refresh_purifier_orb_links() -> void:
 			var key := _purifier_orb_link_key(first, second)
 			seen_links[key] = true
 			if purifier_orb_links.has(key):
+				var existing_link = purifier_orb_links.get(key)
+				if (
+					is_instance_valid(existing_link)
+					and existing_link.has_method("configure_damage")
+				):
+					existing_link.call(
+						"configure_damage",
+						self,
+						link_damage_ratio,
+						0.22,
+						24.0
+					)
 				continue
 
 			var link := PURIFIER_ORB_LINK_SCENE.instantiate() as Node2D
@@ -10235,7 +10324,11 @@ func _refresh_purifier_orb_links() -> void:
 				first.global_position,
 				second.global_position,
 				link_effect_dir,
-				link_vertical_scale
+				link_vertical_scale,
+				self,
+				link_damage_ratio,
+				0.22,
+				24.0
 			)
 			purifier_orb_links[key] = link
 
@@ -10392,10 +10485,7 @@ func _choose_purifier_orb_target_position() -> Vector2:
 		float(purifier_orb_config.get("throw_range", 820.0)),
 		1.0
 	)
-	var blast_radius := maxf(
-		float(purifier_orb_config.get("explosion_radius", 137.5)),
-		1.0
-	)
+	var blast_radius := _get_purifier_orb_explosion_radius()
 	var link_distance := maxf(
 		float(purifier_orb_config.get("link_distance", 780.0)),
 		1.0
@@ -10582,23 +10672,14 @@ func _choose_purifier_orb_target_position() -> Vector2:
 	return _clamp_purifier_orb_target_position(fallback)
 
 
-func _cast_purifier_orb() -> void:
-	if (
-		hero_archetype != "cleric_purifier"
-		or purifier_orb_config.is_empty()
-		or purifier_orb_cooldown > 0.0
-		or is_dying
-		or current_hp <= 0
-	):
-		return
-
+func _spawn_purifier_network_orb(destination: Vector2) -> bool:
 	var parent := get_parent()
 	if not is_instance_valid(parent):
-		return
+		return false
 
 	var orb := PURIFIER_ORB_SCENE.instantiate() as Node2D
 	if orb == null:
-		return
+		return false
 
 	purifier_orb_install_serial += 1
 	parent.add_child(orb)
@@ -10615,7 +10696,6 @@ func _cast_purifier_orb() -> void:
 		Callable(self, "_on_purifier_orb_finished")
 	)
 
-	var destination := _choose_purifier_orb_target_position()
 	var start_position := global_position + Vector2(0.0, -42.0)
 	orb.call(
 		"setup",
@@ -10627,10 +10707,7 @@ func _cast_purifier_orb() -> void:
 			1.0
 		),
 		maxf(float(purifier_orb_config.get("duration", 80.0)), 0.1),
-		maxf(
-			float(purifier_orb_config.get("explosion_radius", 137.5)),
-			1.0
-		),
+		_get_purifier_orb_explosion_radius(),
 		purifier_orb_install_serial,
 		String(
 			purifier_orb_config.get(
@@ -10644,13 +10721,74 @@ func _cast_purifier_orb() -> void:
 		)
 	)
 	purifier_orbs.append(orb)
+	return true
+
+
+func _cast_purifier_orb() -> void:
+	if (
+		hero_archetype != "cleric_purifier"
+		or purifier_orb_config.is_empty()
+		or purifier_orb_cooldown > 0.0
+		or is_dying
+		or current_hp <= 0
+	):
+		return
+
+	var book_stacks := _get_purifier_augment_stacks("purifier_book_of_purification")
+	var orb_count := 1 + book_stacks
+	var primary_destination := _choose_purifier_orb_target_position()
+	var spacing := maxf(
+		float(purifier_orb_config.get("min_orb_spacing", 96.0)) * 1.20,
+		72.0
+	)
+	var launched := 0
+	var reserved_positions: Array[Vector2] = []
+
+	for orb_index in range(orb_count):
+		var destination := primary_destination
+		if orb_index > 0:
+			var extra_count := maxi(orb_count - 1, 1)
+			var angle := (
+				TAU * float(orb_index - 1) / float(extra_count)
+				+ 0.35
+			)
+			destination = _clamp_purifier_orb_target_position(
+				primary_destination
+				+ Vector2.from_angle(angle)
+				* spacing
+				* (1.0 + 0.12 * float(orb_index - 1))
+			)
+
+		var adjustment_index := 0
+		var needs_adjustment := true
+		while needs_adjustment and adjustment_index < 4:
+			needs_adjustment = false
+			for reserved in reserved_positions:
+				if destination.distance_to(reserved) < spacing * 0.85:
+					needs_adjustment = true
+					break
+			if needs_adjustment:
+				destination = _clamp_purifier_orb_target_position(
+					destination
+					+ Vector2.from_angle(
+						0.85 + float(adjustment_index) * 1.70
+					) * spacing * 0.75
+				)
+				adjustment_index += 1
+
+		reserved_positions.append(destination)
+		if _spawn_purifier_network_orb(destination):
+			launched += 1
+
+	if launched <= 0:
+		return
+
 	purifier_orb_cooldown = (
 		maxf(float(purifier_orb_config.get("cooldown", 10.0)), 0.0)
 		* _get_purifier_skill_cooldown_multiplier()
 	)
 	_ensure_purifier_skill_runtime()
 	_play_purifier_audio(purifier_orb_create_audio)
-
 
 func _get_purifier_orb_component(start_orb: Node2D) -> Array[Node2D]:
 	var component: Array[Node2D] = []
@@ -10825,15 +10963,12 @@ func _detonate_purifier_orb(
 	if not is_instance_valid(orb):
 		return
 
-	var radius := maxf(
-		float(purifier_orb_config.get("explosion_radius", 137.5)),
-		1.0
-	)
+	var radius := _get_purifier_orb_explosion_radius()
 	var radius_sq := radius * radius
 	var base_ratio := maxf(
 		float(purifier_orb_config.get("base_damage_ratio", 0.80)),
 		0.0
-	)
+	) * _get_purifier_orb_damage_multiplier()
 	var growth := maxf(
 		float(purifier_orb_config.get("chain_damage_growth", 0.15)),
 		0.0
@@ -10843,6 +10978,17 @@ func _detonate_purifier_orb(
 		float(attack_damage) * base_ratio * chain_multiplier,
 		1.0
 	)
+	var chain_cleansing_stacks := _get_purifier_augment_stacks("purifier_chain_cleansing")
+	var chain_cleansing_chance := (
+		clampf(
+			0.20 + 0.08 * float(chain_cleansing_stacks - 1),
+			0.0,
+			1.0
+		)
+		if chain_cleansing_stacks > 0
+		else 0.0
+	)
+	var cleansing_proc_positions: Array[Vector2] = []
 
 	for node in _get_monster_nodes_near(orb.global_position, radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -10857,13 +11003,296 @@ func _detonate_purifier_orb(
 		):
 			continue
 
+		var hit_position := monster.global_position
 		var holy_multiplier := get_purifier_holy_damage_multiplier(monster)
 		var hit_damage := maxi(
 			int(round(raw_damage * holy_multiplier)),
 			1
 		)
 		monster.call("take_damage", hit_damage)
+		if (
+			chain_cleansing_chance > 0.0
+			and randf() <= chain_cleansing_chance
+		):
+			cleansing_proc_positions.append(hit_position)
 
+	_queue_purifier_prism_burst(
+		orb.global_position,
+		raw_damage,
+		radius
+	)
+
+	for proc_position in cleansing_proc_positions:
+		_trigger_purifier_auto_cleansing(proc_position)
+
+
+func _queue_purifier_prism_burst(
+	origin: Vector2,
+	source_raw_damage: float,
+	source_radius: float
+) -> void:
+	var prism_stacks := _get_purifier_augment_stacks("purifier_prism_phenomenon")
+	if prism_stacks <= 0:
+		return
+
+	var queue_was_empty := purifier_prism_launch_queue.is_empty()
+	for _index in range(prism_stacks):
+		purifier_prism_launch_queue.append({
+			"origin": origin,
+			"raw_damage": maxf(source_raw_damage * 0.50, 1.0),
+			"radius": maxf(source_radius * 0.50, 1.0),
+		})
+	if queue_was_empty:
+		purifier_prism_launch_timer = 0.0
+
+
+func _choose_purifier_prism_target_position(origin: Vector2) -> Vector2:
+	var search_range := maxf(
+		float(purifier_orb_config.get("throw_range", 820.0)) * 0.50,
+		80.0
+	)
+	var search_range_sq := search_range * search_range
+	var score_radius := maxf(_get_purifier_orb_explosion_radius(), 80.0)
+	_fill_monster_nodes_near(origin, search_range, _combat_monster_scratch)
+
+	var best_position := Vector2.ZERO
+	var best_score := -INF
+	var found := false
+	for raw_node in _combat_monster_scratch:
+		if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
+			continue
+		var monster := raw_node as Node2D
+		if monster == null:
+			continue
+		var distance_sq := origin.distance_squared_to(monster.global_position)
+		if distance_sq > search_range_sq:
+			continue
+		var nearby := _count_monsters_near(monster.global_position, score_radius)
+		var score := (
+			float(nearby) * 10.0
+			- sqrt(distance_sq) / maxf(search_range, 1.0)
+		)
+		if not found or score > best_score:
+			found = true
+			best_score = score
+			best_position = monster.global_position
+	_combat_monster_scratch.clear()
+
+	if not found:
+		var direction := Vector2.RIGHT
+		if is_instance_valid(target) and not target.is_queued_for_deletion():
+			direction = origin.direction_to(target.global_position)
+		if direction.length_squared() <= 0.001:
+			direction = Vector2.from_angle(randf_range(0.0, TAU))
+		best_position = origin + direction.normalized() * minf(180.0, search_range)
+
+	return Vector2(
+		clampf(
+			best_position.x,
+			FIELD_MARGIN,
+			maxf(battlefield_size.x - FIELD_MARGIN, FIELD_MARGIN)
+		),
+		clampf(
+			best_position.y,
+			FIELD_MARGIN,
+			maxf(battlefield_size.y - FIELD_MARGIN, FIELD_MARGIN)
+		)
+	)
+
+
+func _launch_purifier_prism_orb(job: Dictionary) -> void:
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return
+	var orb := PURIFIER_ORB_SCENE.instantiate() as Node2D
+	if orb == null:
+		return
+
+	var origin: Vector2 = job.get("origin", global_position)
+	var destination := _choose_purifier_prism_target_position(origin)
+	parent.add_child(orb)
+	orb.call(
+		"setup",
+		self,
+		origin,
+		destination,
+		maxf(
+			float(purifier_orb_config.get("projectile_speed", 380.0)),
+			1.0
+		),
+		3.0,
+		maxf(float(job.get("radius", 1.0)), 1.0),
+		-1,
+		String(
+			purifier_orb_config.get(
+				"effect_dir",
+				"%s/effect2" % STAGE9_FRAME_DIR
+			)
+		),
+		maxf(
+			float(purifier_orb_config.get("visual_scale", 0.45)) * 0.50,
+			0.05
+		)
+	)
+	purifier_prism_active.append({
+		"orb": orb,
+		"timer": 2.0,
+		"raw_damage": maxf(float(job.get("raw_damage", 1.0)), 1.0),
+		"radius": maxf(float(job.get("radius", 1.0)), 1.0),
+	})
+
+
+func _detonate_purifier_prism_orb(entry: Dictionary) -> void:
+	var raw_orb = entry.get("orb", null)
+	if not is_instance_valid(raw_orb):
+		return
+	var orb := raw_orb as Node2D
+	if orb == null:
+		return
+
+	var radius := maxf(float(entry.get("radius", 1.0)), 1.0)
+	var radius_sq := radius * radius
+	var raw_damage := maxf(float(entry.get("raw_damage", 1.0)), 1.0)
+	_fill_monster_nodes_near(orb.global_position, radius, _combat_monster_scratch)
+	for raw_node in _combat_monster_scratch:
+		if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
+			continue
+		var monster := raw_node as Node2D
+		if (
+			monster == null
+			or not monster.has_method("take_damage")
+			or orb.global_position.distance_squared_to(monster.global_position) > radius_sq
+		):
+			continue
+		var hit_damage := maxi(
+			int(round(raw_damage * get_purifier_holy_damage_multiplier(monster))),
+			1
+		)
+		monster.call("take_damage", hit_damage)
+	_combat_monster_scratch.clear()
+
+	if orb.has_method("trigger_explosion"):
+		orb.call("trigger_explosion")
+	_ensure_purifier_skill_runtime()
+	_play_purifier_audio(purifier_orb_explosion_audio)
+
+
+func _update_purifier_prism(delta: float) -> void:
+	if not purifier_prism_launch_queue.is_empty():
+		purifier_prism_launch_timer = maxf(
+			purifier_prism_launch_timer - delta,
+			0.0
+		)
+		if purifier_prism_launch_timer <= 0.0:
+			var job: Dictionary = purifier_prism_launch_queue.pop_front()
+			_launch_purifier_prism_orb(job)
+			purifier_prism_launch_timer = 0.32
+
+	for index in range(purifier_prism_active.size() - 1, -1, -1):
+		var entry: Dictionary = purifier_prism_active[index]
+		var raw_orb = entry.get("orb", null)
+		if not is_instance_valid(raw_orb) or raw_orb.is_queued_for_deletion():
+			purifier_prism_active.remove_at(index)
+			continue
+		var timer := float(entry.get("timer", 0.0)) - delta
+		entry["timer"] = timer
+		if timer > 0.0:
+			continue
+		_detonate_purifier_prism_orb(entry)
+		purifier_prism_active.remove_at(index)
+
+
+func _advance_purifier_cleansing_stack() -> void:
+	var max_stacks := maxi(
+		int(purifier_cleansing_config.get("max_stacks", 100)),
+		1
+	)
+	purifier_cleansing_stacks = mini(
+		purifier_cleansing_stacks + 1,
+		max_stacks
+	)
+
+
+func _try_purifier_o_lord_heal(total_damage: int) -> void:
+	var stacks := _get_purifier_augment_stacks("purifier_o_lord")
+	if stacks <= 0 or total_damage <= 0:
+		return
+	var chance := clampf(
+		0.30 + 0.03 * float(stacks - 1),
+		0.0,
+		1.0
+	)
+	if randf() <= chance:
+		heal_direct(total_damage)
+
+
+func _apply_purifier_cleansing_centers(centers: Array[Vector2]) -> int:
+	if centers.is_empty():
+		return 0
+	var radius := maxf(
+		float(purifier_cleansing_config.get("radius", 100.0)),
+		1.0
+	)
+	var radius_sq := radius * radius
+	var base_ratio := maxf(
+		float(purifier_cleansing_config.get("base_damage_ratio", 0.80)),
+		0.0
+	)
+	var undead_multiplier := maxf(
+		float(
+			purifier_cleansing_config.get(
+				"undead_damage_multiplier",
+				1.50
+			)
+		),
+		0.0
+	)
+	var raw_damage := maxf(float(attack_damage) * base_ratio, 1.0)
+	var damaged_ids: Dictionary = {}
+	var total_damage := 0
+
+	for center in centers:
+		_spawn_purifier_cleansing_fx(center)
+		for raw_node in _get_monster_nodes_near(center, radius):
+			if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
+				continue
+			var monster := raw_node as Node2D
+			if monster == null or not monster.has_method("take_damage"):
+				continue
+			var instance_id := monster.get_instance_id()
+			if damaged_ids.has(instance_id):
+				continue
+			if center.distance_squared_to(monster.global_position) > radius_sq:
+				continue
+			damaged_ids[instance_id] = true
+			var multiplier := get_purifier_holy_damage_multiplier(monster)
+			if _is_purifier_undead_target(monster):
+				multiplier *= undead_multiplier
+			var hit_damage := maxi(
+				int(round(raw_damage * multiplier)),
+				1
+			)
+			monster.call("take_damage", hit_damage)
+			total_damage += hit_damage
+
+	_try_purifier_o_lord_heal(total_damage)
+	return total_damage
+
+
+func _trigger_purifier_auto_cleansing(center: Vector2) -> void:
+	if (
+		hero_archetype != "cleric_purifier"
+		or purifier_cleansing_config.is_empty()
+		or is_dying
+		or current_hp <= 0
+	):
+		return
+	_advance_purifier_cleansing_stack()
+	var centers: Array[Vector2] = []
+	centers.append(center)
+	_apply_purifier_cleansing_centers(centers)
+	_try_unlock_purifier_fourth_skill()
+	queue_redraw()
 
 func _get_purifier_cleansing_target_count() -> int:
 	var per_target := maxi(
@@ -11007,13 +11436,8 @@ func _cast_purifier_cleansing() -> void:
 	):
 		return
 
-	var max_stacks := maxi(
-		int(purifier_cleansing_config.get("max_stacks", 100)),
-		1
-	)
-	var next_stacks := mini(purifier_cleansing_stacks + 1, max_stacks)
 	var previous_stacks := purifier_cleansing_stacks
-	purifier_cleansing_stacks = next_stacks
+	_advance_purifier_cleansing_stack()
 
 	var targets := _collect_purifier_cleansing_targets(
 		_get_purifier_cleansing_target_count()
@@ -11022,52 +11446,16 @@ func _cast_purifier_cleansing() -> void:
 		purifier_cleansing_stacks = previous_stacks
 		return
 
-	var radius := maxf(
-		float(purifier_cleansing_config.get("radius", 100.0)),
-		1.0
-	)
-	var base_ratio := maxf(
-		float(purifier_cleansing_config.get("base_damage_ratio", 0.80)),
-		0.0
-	)
-	var undead_multiplier := maxf(
-		float(
-			purifier_cleansing_config.get(
-				"undead_damage_multiplier",
-				1.50
-			)
-		),
-		0.0
-	)
-	var raw_damage := maxf(float(attack_damage) * base_ratio, 1.0)
-	var damaged_ids: Dictionary = {}
-
+	var centers: Array[Vector2] = []
 	for cast_target in targets:
-		if not is_instance_valid(cast_target):
-			continue
-		var center := cast_target.global_position
-		_spawn_purifier_cleansing_fx(center)
-		for raw_node in _get_monster_nodes_near(center, radius):
-			if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
-				continue
-			var monster := raw_node as Node2D
-			if monster == null or not monster.has_method("take_damage"):
-				continue
-			var instance_id := monster.get_instance_id()
-			if damaged_ids.has(instance_id):
-				continue
-			if center.distance_squared_to(monster.global_position) > radius * radius:
-				continue
-			damaged_ids[instance_id] = true
-			var multiplier := get_purifier_holy_damage_multiplier(monster)
-			if _is_purifier_undead_target(monster):
-				multiplier *= undead_multiplier
-			var hit_damage := maxi(
-				int(round(raw_damage * multiplier)),
-				1
-			)
-			monster.call("take_damage", hit_damage)
+		if is_instance_valid(cast_target):
+			centers.append(cast_target.global_position)
 
+	if centers.is_empty():
+		purifier_cleansing_stacks = previous_stacks
+		return
+
+	_apply_purifier_cleansing_centers(centers)
 	purifier_cleansing_cooldown = (
 		maxf(float(purifier_cleansing_config.get("cooldown", 3.0)), 0.0)
 		* _get_purifier_skill_cooldown_multiplier()
@@ -11076,7 +11464,6 @@ func _cast_purifier_cleansing() -> void:
 	_play_purifier_audio(purifier_cleansing_audio)
 	_try_unlock_purifier_fourth_skill()
 	queue_redraw()
-
 
 func _choose_purifier_gungnir_direction() -> Vector2:
 	if purifier_gungnir_config.is_empty():
@@ -11275,7 +11662,12 @@ func _update_purifier_gauge(delta: float) -> void:
 		purifier_gungnir_cooldown - delta,
 		0.0
 	)
+	purifier_broken_sanctuary_timer = maxf(
+		purifier_broken_sanctuary_timer - delta,
+		0.0
+	)
 	_update_purifier_orb_chain(delta)
+	_update_purifier_prism(delta)
 
 	if purifier_protection_active:
 		purifier_protection_duration_timer = maxf(
@@ -11305,8 +11697,18 @@ func _update_purifier_gauge(delta: float) -> void:
 		elif purifier_crown_heal_timer <= 0.0:
 			heal_direct(
 				maxi(
-					int(purifier_crown_config.get("heal_per_stack", 20))
-					* purifier_crown_stacks,
+					int(round(
+						float(
+							int(
+								purifier_crown_config.get(
+									"heal_per_stack",
+									20
+								)
+							)
+						)
+						* float(purifier_crown_stacks)
+						* _get_purifier_crown_effect_multiplier()
+					)),
 					1
 				)
 			)
@@ -12603,6 +13005,36 @@ func _build_ai_context() -> Dictionary:
 	var gunner_reload_state := 0.0
 	var gunner_surround_pressure := 0.0
 	var gunner_deadeye_cluster_score := 0.0
+	var purifier_active_orb_count := 0
+	var purifier_link_count := 0
+	var purifier_cleansing_progress_ratio := 0.0
+	var purifier_cleansing_target_count := 1
+	var purifier_crown_stack_ratio := 0.0
+	var purifier_protection_breaks := 0
+	if hero_archetype == "cleric_purifier":
+		for orb in purifier_orbs:
+			if _is_purifier_orb_active(orb):
+				purifier_active_orb_count += 1
+		purifier_link_count = purifier_orb_links.size()
+		purifier_cleansing_progress_ratio = clampf(
+			float(purifier_cleansing_stacks)
+			/ float(
+				maxi(
+					int(purifier_cleansing_config.get("max_stacks", 100)),
+					1
+				)
+			),
+			0.0,
+			1.0
+		)
+		purifier_cleansing_target_count = _get_purifier_cleansing_target_count()
+		purifier_crown_stack_ratio = clampf(
+			float(purifier_crown_stacks)
+			/ float(_get_purifier_crown_max_stacks()),
+			0.0,
+			1.0
+		)
+		purifier_protection_breaks = purifier_protection_break_count
 	if hero_archetype == "pistol_gunner":
 		gunner_ammo_ratio = float(gunner_ammo) / float(maxi(gunner_magazine_size, 1))
 		gunner_reload_state = 1.0 if gunner_reloading else 0.0
@@ -12635,6 +13067,17 @@ func _build_ai_context() -> Dictionary:
 		"gunner_reload_state": gunner_reload_state,
 		"gunner_surround_pressure": gunner_surround_pressure,
 		"gunner_deadeye_cluster_score": gunner_deadeye_cluster_score,
+		"purifier_active_orb_count": purifier_active_orb_count,
+		"purifier_link_count": purifier_link_count,
+		"purifier_cleansing_progress_ratio": purifier_cleansing_progress_ratio,
+		"purifier_cleansing_target_count": purifier_cleansing_target_count,
+		"purifier_crown_stacks": (
+			purifier_crown_stacks
+			if hero_archetype == "cleric_purifier"
+			else 0
+		),
+		"purifier_crown_stack_ratio": purifier_crown_stack_ratio,
+		"purifier_protection_break_count": purifier_protection_breaks,
 		"berserker_gauge_ratio": (
 			ultimate_charge
 			/ maxf(
@@ -12705,6 +13148,26 @@ func _apply_augment(augment: Dictionary) -> void:
 			and augment_id == "summoner_watcher_network"
 		):
 			_ensure_summoner_pool_capacity()
+		elif (
+			hero_archetype == "cleric_purifier"
+			and augment_id.begins_with("purifier_")
+		):
+			_on_purifier_augment_stack_changed(augment_id)
+
+
+func _on_purifier_augment_stack_changed(augment_id: String) -> void:
+	if hero_archetype != "cleric_purifier":
+		return
+	if augment_id == "purifier_pilgrims_path":
+		_refresh_purifier_orb_links()
+	elif augment_id == "purifier_book_of_purification":
+		var effective_radius := _get_purifier_orb_explosion_radius()
+		for orb in purifier_orbs:
+			if not is_instance_valid(orb) or orb.is_queued_for_deletion():
+				continue
+			orb.set("blast_radius", effective_radius)
+			orb.queue_redraw()
+
 
 func _apply_augment_effect(effect: Dictionary) -> void:
 	var op := String(effect.get("op", ""))
@@ -12745,8 +13208,8 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 			else:
 				set(target, next_value)
 
-		"alchemist_equivalent_exchange", "alchemist_chemical_support", "alchemist_failure_mother_success", "alchemist_quick_decision", "alchemist_compressed_gas", "alchemist_quick_preparation", "summoner_runtime_augment":
-			# Alchemist augments are read from build_counts at the authoritative
+		"alchemist_equivalent_exchange", "alchemist_chemical_support", "alchemist_failure_mother_success", "alchemist_quick_decision", "alchemist_compressed_gas", "alchemist_quick_preparation", "summoner_runtime_augment", "purifier_runtime_augment":
+			# Runtime augments are read from build_counts at the authoritative
 			# combat decision points, so no mutable duplicate stat is required.
 			pass
 
