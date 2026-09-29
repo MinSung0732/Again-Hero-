@@ -280,6 +280,7 @@ var berserker_missing_hp_bonus_override: float = -1.0
 var berserker_killing_urge_bonus: float = 0.0
 var berserker_blood_art_cooldown_reduction: float = 0.0
 var berserker_skill_global_cooldown: float = 0.0
+var berserker_query_candidates: Array = []
 
 var archmage_element_config: Dictionary = {}
 var archmage_basic_elements: Array[String] = []
@@ -665,6 +666,7 @@ func configure_profile(profile: Dictionary) -> void:
 	berserker_killing_urge_bonus = 0.0
 	berserker_blood_art_cooldown_reduction = 0.0
 	berserker_skill_global_cooldown = 0.0
+	berserker_query_candidates.clear()
 
 	var profile_alchemist = profile.get("alchemist", {})
 	alchemist_config = (
@@ -12241,8 +12243,14 @@ func _damage_berserker_skill2_segment(
 	var length_sq: float = maxf(segment.length_squared(), 0.001)
 	var midpoint: Vector2 = from_position.lerp(to_position, 0.5)
 	var search_radius: float = segment.length() * 0.5 + half_width + 20.0
+	var half_width_sq: float = half_width * half_width
+	_fill_monster_nodes_near(
+		midpoint,
+		search_radius,
+		berserker_query_candidates
+	)
 
-	for node in _get_monster_nodes_near(midpoint, search_radius):
+	for node in berserker_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -12262,7 +12270,7 @@ func _damage_berserker_skill2_segment(
 		var closest: Vector2 = from_position + segment * t
 		if (
 			monster.global_position.distance_squared_to(closest)
-			> half_width * half_width
+			> half_width_sq
 		):
 			continue
 
@@ -12287,6 +12295,7 @@ func _damage_berserker_skill2_segment(
 				killed = true
 		if killed:
 			notify_berserker_skill_kill()
+	berserker_query_candidates.clear()
 
 
 func _heal_berserker_from_blood_path(
@@ -12299,6 +12308,7 @@ func _heal_berserker_from_blood_path(
 		return
 
 	healed_ids.clear()
+	var half_width_sq: float = half_width * half_width
 	for segment_index in range(world_points.size() - 1):
 		var from_position: Vector2 = world_points[segment_index]
 		var to_position: Vector2 = world_points[segment_index + 1]
@@ -12308,8 +12318,13 @@ func _heal_berserker_from_blood_path(
 		var search_radius: float = (
 			segment.length() * 0.5 + half_width + 20.0
 		)
+		_fill_monster_nodes_near(
+			midpoint,
+			search_radius,
+			berserker_query_candidates
+		)
 
-		for node in _get_monster_nodes_near(midpoint, search_radius):
+		for node in berserker_query_candidates:
 			if not is_instance_valid(node) or node.is_queued_for_deletion():
 				continue
 			var monster := node as Node2D
@@ -12328,12 +12343,13 @@ func _heal_berserker_from_blood_path(
 			var closest: Vector2 = from_position + segment * t
 			if (
 				monster.global_position.distance_squared_to(closest)
-				> half_width * half_width
+				> half_width_sq
 			):
 				continue
 
 			healed_ids[iid] = true
 			heal_direct(heal_per_touch)
+		berserker_query_candidates.clear()
 
 
 func _start_berserker_skill3(current_target: Node2D) -> void:
@@ -12447,7 +12463,12 @@ func _execute_berserker_skill3(
 	)
 	var orb_radius_sq: float = orb_radius * orb_radius
 	var orb_count: int = 0
-	for node in _get_monster_nodes_near(global_position, orb_radius):
+	_fill_monster_nodes_near(
+		global_position,
+		orb_radius,
+		berserker_query_candidates
+	)
+	for node in berserker_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -12464,6 +12485,7 @@ func _execute_berserker_skill3(
 		)
 		_berserker_blood_art_eighth_heal_on_hit()
 		orb_count += 1
+	berserker_query_candidates.clear()
 
 	var pickup_duration: float = maxf(
 		float(skill_config.get("orb_pickup_duration", 0.42)),
@@ -12624,7 +12646,12 @@ func _start_berserker_skill4() -> void:
 		spin_fx.z_index = 8
 
 	var radius_sq: float = radius * radius
-	for node in _get_monster_nodes_near(global_position, radius):
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		berserker_query_candidates
+	)
+	for node in berserker_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -12682,6 +12709,7 @@ func _start_berserker_skill4() -> void:
 				killed = true
 		if killed:
 			notify_berserker_skill_kill()
+	berserker_query_candidates.clear()
 
 	queue_redraw()
 
@@ -12843,11 +12871,13 @@ func _berserker_basic_attack(current_target: Node2D) -> void:
 	)
 	var damage: int = _get_berserker_effective_attack_damage()
 	var side: Vector2 = Vector2(-direction.y, direction.x)
-
-	for node in _get_monster_nodes_near(
+	_fill_monster_nodes_near(
 		global_position,
-		reach + half_width
-	):
+		reach + half_width,
+		berserker_query_candidates
+	)
+
+	for node in berserker_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -12879,6 +12909,7 @@ func _berserker_basic_attack(current_target: Node2D) -> void:
 				killed = true
 		if killed:
 			notify_berserker_skill_kill()
+	berserker_query_candidates.clear()
 
 	_damage_treasure_chests(
 		global_position + direction * (reach * 0.55),
@@ -12982,7 +13013,12 @@ func _find_berserker_madness_target() -> Node2D:
 	var radius_sq: float = radius * radius
 	var farthest: Node2D = null
 	var farthest_distance_sq: float = -1.0
-	for node in _get_monster_nodes_near(global_position, radius):
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		berserker_query_candidates
+	)
+	for node in berserker_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -12998,6 +13034,7 @@ func _find_berserker_madness_target() -> Node2D:
 			continue
 		farthest = monster
 		farthest_distance_sq = distance_sq
+	berserker_query_candidates.clear()
 	return farthest
 
 
