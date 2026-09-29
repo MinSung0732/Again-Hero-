@@ -12993,8 +12993,20 @@ func _spawn_berserker_blood_dash_trail(
 		return
 
 	var parent_2d := parent as Node2D
-	var trail := Line2D.new()
-	parent.add_child(trail)
+	var trail: Line2D = null
+	if parent.has_method("acquire_transient_fx"):
+		trail = parent.call(
+			"acquire_transient_fx",
+			"berserker_blood_dash_trail",
+			"line"
+		) as Line2D
+	if trail == null:
+		trail = Line2D.new()
+		parent.add_child(trail)
+
+	trail.clear_points()
+	trail.visible = true
+	trail.modulate = Color.WHITE
 	trail.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	trail.z_index = 6
 	trail.width = 30.0
@@ -13024,10 +13036,19 @@ func _spawn_berserker_blood_dash_trail(
 		6.0,
 		0.34
 	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	trail_tween.finished.connect(
-		Callable(trail, "queue_free"),
-		Object.CONNECT_ONE_SHOT
-	)
+	if parent.has_method("recycle_transient_fx"):
+		trail_tween.finished.connect(
+			Callable(parent, "recycle_transient_fx").bind(
+				trail,
+				"berserker_blood_dash_trail"
+			),
+			Object.CONNECT_ONE_SHOT
+		)
+	else:
+		trail_tween.finished.connect(
+			Callable(trail, "queue_free"),
+			Object.CONNECT_ONE_SHOT
+		)
 
 	var segment: Vector2 = end_position - start_position
 	var segment_length: float = segment.length()

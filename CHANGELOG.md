@@ -22,6 +22,7 @@
 - Stage 4 거너 Deadeye 방향 분석의 몬스터 오프셋 배열을 재사용하고 결과를 scalar/member 상태로 보관해 매 physics tick 임시 `Array`/`Dictionary` 생성과 발동 순간의 중복 방향 분석을 제거.
 - 거너 백스텝 안전 방향 계산의 몬스터 위치 목록도 재사용 버퍼로 전환해 피격 백스텝마다 새 `Array`를 만들지 않도록 변경.
 - Stage 6 버서커 2식 혈로 회복 판정의 `healed_ids`를 파동 수명 동안 재사용해 약 2초간 반복 회복 틱마다 새 `Dictionary`를 만들던 비용을 제거.
+- 버서커 3식/광기 점멸의 피 궤적 `Line2D`를 Battle transient FX pool에 연결해 이동마다 하던 `Line2D.new()/queue_free()` 반복을 제거.
 - Godot 실행 파일이 없는 환경이라 실제 런타임/프로파일러 검증은 수행하지 않았고 정적 참조·diff 검증만 수행.
 
 ## 2026-09-28 — Stage 8 5스킬 컷신 이미지 왜곡 제거
