@@ -4553,7 +4553,21 @@ func _spawn_gunner_afterimage(
 	if frame_texture == null:
 		return
 
-	var ghost := Sprite2D.new()
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return
+	var ghost: Sprite2D = null
+	if parent.has_method("acquire_transient_fx"):
+		ghost = parent.call(
+			"acquire_transient_fx",
+			"gunner_afterimage",
+			"sprite"
+		) as Sprite2D
+	if ghost == null:
+		ghost = Sprite2D.new()
+		parent.add_child(ghost)
+
+	ghost.visible = true
 	ghost.texture = frame_texture
 	ghost.centered = hero_sprite.centered
 	ghost.flip_h = hero_sprite.flip_h
@@ -4565,7 +4579,6 @@ func _spawn_gunner_afterimage(
 	ghost.z_index = hero_sprite.z_index
 	ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	ghost.modulate = Color(0.82, 0.94, 1.0, clampf(alpha, 0.08, 0.95))
-	get_parent().add_child(ghost)
 
 	var tween := ghost.create_tween()
 	tween.set_parallel(true)
@@ -4576,7 +4589,19 @@ func _spawn_gunner_afterimage(
 		ghost.scale * 1.04,
 		maxf(fade_time, 0.05)
 	)
-	tween.finished.connect(Callable(ghost, "queue_free"))
+	if parent.has_method("recycle_transient_fx"):
+		tween.finished.connect(
+			Callable(parent, "recycle_transient_fx").bind(
+				ghost,
+				"gunner_afterimage"
+			),
+			Object.CONNECT_ONE_SHOT
+		)
+	else:
+		tween.finished.connect(
+			Callable(ghost, "queue_free"),
+			Object.CONNECT_ONE_SHOT
+		)
 
 
 func _find_gunner_escape_direction() -> Vector2:
@@ -13457,7 +13482,21 @@ func _spawn_fighter_afterimage(alpha: float) -> void:
 	if frame_texture == null:
 		return
 
-	var ghost := Sprite2D.new()
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return
+	var ghost: Sprite2D = null
+	if parent.has_method("acquire_transient_fx"):
+		ghost = parent.call(
+			"acquire_transient_fx",
+			"fighter_charge_afterimage",
+			"sprite"
+		) as Sprite2D
+	if ghost == null:
+		ghost = Sprite2D.new()
+		parent.add_child(ghost)
+
+	ghost.visible = true
 	ghost.texture = frame_texture
 	ghost.centered = hero_sprite.centered
 	ghost.flip_h = hero_sprite.flip_h
@@ -13469,7 +13508,6 @@ func _spawn_fighter_afterimage(alpha: float) -> void:
 	ghost.z_index = hero_sprite.z_index - 1
 	ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	ghost.modulate = Color(1.0, 1.0, 1.0, clampf(alpha, 0.05, 0.85))
-	get_parent().add_child(ghost)
 
 	var fade_time := maxf(
 		float(fighter_charge_config.get("afterimage_fade_time", 0.30)),
@@ -13477,7 +13515,19 @@ func _spawn_fighter_afterimage(alpha: float) -> void:
 	)
 	var tween := ghost.create_tween()
 	tween.tween_property(ghost, "modulate:a", 0.0, fade_time)
-	tween.finished.connect(Callable(ghost, "queue_free"))
+	if parent.has_method("recycle_transient_fx"):
+		tween.finished.connect(
+			Callable(parent, "recycle_transient_fx").bind(
+				ghost,
+				"fighter_charge_afterimage"
+			),
+			Object.CONNECT_ONE_SHOT
+		)
+	else:
+		tween.finished.connect(
+			Callable(ghost, "queue_free"),
+			Object.CONNECT_ONE_SHOT
+		)
 
 func _play_fighter_charge_impact_effect() -> void:
 	if channel_effect.sprite_frames == null:

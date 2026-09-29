@@ -23,6 +23,7 @@
 - 거너 백스텝 안전 방향 계산의 몬스터 위치 목록도 재사용 버퍼로 전환해 피격 백스텝마다 새 `Array`를 만들지 않도록 변경.
 - Stage 6 버서커 2식 혈로 회복 판정의 `healed_ids`를 파동 수명 동안 재사용해 약 2초간 반복 회복 틱마다 새 `Dictionary`를 만들던 비용을 제거.
 - 버서커 3식/광기 점멸의 피 궤적 `Line2D`를 Battle transient FX pool에 연결해 이동마다 하던 `Line2D.new()/queue_free()` 반복을 제거.
+- Battle transient FX pool에 `Sprite2D` 지원을 추가하고 Stage 3 Fighter 돌진 잔상과 Stage 4 Gunner 백스텝 잔상을 풀링해 고빈도 `Sprite2D.new()/queue_free()` 반복을 제거.
 - Godot 실행 파일이 없는 환경이라 실제 런타임/프로파일러 검증은 수행하지 않았고 정적 참조·diff 검증만 수행.
 
 ## 2026-09-28 — Stage 8 5스킬 컷신 이미지 왜곡 제거

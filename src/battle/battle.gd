@@ -1935,6 +1935,8 @@ func acquire_transient_fx(pool_key: String, fx_type: String) -> Node:
 		match fx_type:
 			"animated_sprite":
 				fx = AnimatedSprite2D.new()
+			"sprite":
+				fx = Sprite2D.new()
 			"line":
 				fx = Line2D.new()
 			"node2d":
@@ -1966,6 +1968,17 @@ func recycle_transient_fx(fx: Node, pool_key: String) -> void:
 		fx.set_physics_process(false)
 		if fx is AnimatedSprite2D:
 			(fx as AnimatedSprite2D).stop()
+		elif fx is Sprite2D:
+			var sprite := fx as Sprite2D
+			sprite.texture = null
+			sprite.centered = true
+			sprite.flip_h = false
+			sprite.flip_v = false
+			sprite.offset = Vector2.ZERO
+			sprite.modulate = Color.WHITE
+			sprite.scale = Vector2.ONE
+			sprite.rotation = 0.0
+			sprite.position = Vector2.ZERO
 		elif fx is Line2D:
 			var line := fx as Line2D
 			line.clear_points()
