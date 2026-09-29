@@ -21,6 +21,12 @@ const TAG_LABELS := {
 	"evasion": "회피",
 	"gunner": "권총",
 	"alchemist": "연금술",
+	"purifier": "정화",
+	"purifier_orb": "정화의 구체",
+	"purifier_link": "성광 연결선",
+	"purifier_cleansing": "정화",
+	"purifier_crown": "용기의 왕관",
+	"purifier_protection": "신성보호",
 }
 
 const AUGMENTS = [
@@ -1063,6 +1069,125 @@ const AUGMENTS = [
 		"effects": [{"op": "alchemist_quick_preparation"}]
 	}
 ,
+	{
+		"id": "purifier_pilgrims_path",
+		"name": "순례자의 길",
+		"description": "정화의 구체 연결선에 적이 닿으면 0.22초마다 공격력 10% 신성 피해. 추가 중첩당 피해 +5%p (최대 7중첩)",
+		"base_score": 7.2,
+		"max_stack": 7,
+		"tags": ["purifier", "purifier_orb", "purifier_link", "damage"],
+		"effects": [{"op": "purifier_runtime_augment"}],
+		"ai_rules": [
+			{"source": "context_linear", "key": "purifier_link_count", "weight": 0.45, "cap": 3.15},
+			{"source": "context_linear", "key": "purifier_active_orb_count", "weight": 0.25, "cap": 1.50},
+			{"source": "nearby_linear", "weight": 0.15, "cap": 1.20},
+		],
+		"synergy_rules": [
+			{"source": "build_augment_stacks", "key": "purifier_book_of_purification", "weight": 0.35, "cap": 1.05},
+			{"source": "build_augment_stacks", "key": "purifier_prism_phenomenon", "weight": 0.25, "cap": 1.25},
+		],
+	},
+	{
+		"id": "purifier_chain_cleansing",
+		"name": "연쇄 정화",
+		"description": "구체 폭발 적중 시 20% 확률로 해당 위치에 정화 자동 발동. 자동 정화도 정화 누적 +1, 추가 중첩당 발동률 +8%p (최대 5중첩)",
+		"base_score": 7.4,
+		"max_stack": 5,
+		"tags": ["purifier", "purifier_orb", "purifier_cleansing", "growth", "damage"],
+		"effects": [{"op": "purifier_runtime_augment"}],
+		"ai_rules": [
+			{"source": "context_linear", "key": "purifier_active_orb_count", "weight": 0.30, "cap": 1.80},
+			{"source": "context_max", "key": "purifier_cleansing_progress_ratio", "value": 0.75, "bonus": 1.40},
+			{"source": "total_count_min", "value": 4, "bonus": 0.70},
+		],
+		"synergy_rules": [
+			{"source": "build_augment_stacks", "key": "purifier_book_of_purification", "weight": 0.45, "cap": 1.35},
+			{"source": "build_augment_stacks", "key": "purifier_prism_phenomenon", "weight": 0.35, "cap": 1.75},
+		],
+	},
+	{
+		"id": "purifier_prism_phenomenon",
+		"name": "프리즘 현상",
+		"description": "구체 폭발 시 중첩당 소형 구체 1개를 0.32초 간격으로 몬스터 밀집 방향에 발사. 소형 구체는 크기/폭발 범위 50%, 2초 후 원 폭발 피해의 50%로 폭발 (최대 5중첩)",
+		"base_score": 7.2,
+		"max_stack": 5,
+		"tags": ["purifier", "purifier_orb", "area", "damage"],
+		"effects": [{"op": "purifier_runtime_augment"}],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.32, "cap": 2.56},
+			{"source": "total_count_min", "value": 6, "bonus": 1.20},
+			{"source": "current_role_ratio", "key": "swarm", "weight": 2.00},
+		],
+		"synergy_rules": [
+			{"source": "build_augment_stacks", "key": "purifier_book_of_purification", "weight": 0.45, "cap": 1.35},
+			{"source": "build_augment_stacks", "key": "purifier_chain_cleansing", "weight": 0.30, "cap": 1.50},
+		],
+	},
+	{
+		"id": "purifier_radiant_crown",
+		"name": "찬란한 왕관",
+		"description": "용기의 왕관 버프 효과가 15% 감소하고, 중첩당 왕관 최대 스택 +1 (최대 3중첩)",
+		"base_score": 6.8,
+		"max_stack": 3,
+		"tags": ["purifier", "purifier_crown", "growth"],
+		"effects": [{"op": "purifier_runtime_augment"}],
+		"ai_rules": [
+			{"source": "context_linear", "key": "purifier_crown_stacks", "weight": 0.35, "cap": 2.80},
+			{"source": "context_min", "key": "purifier_crown_stack_ratio", "value": 0.80, "bonus": 1.40},
+			{"source": "total_count_min", "value": 5, "bonus": 0.40},
+		],
+	},
+	{
+		"id": "purifier_broken_sanctuary",
+		"name": "깨진 성역",
+		"description": "신성보호가 피해로 파괴되면 6초간 중첩당 신성 피해 +6%. 다시 파괴되면 지속시간을 6초로 갱신 (최대 5중첩)",
+		"base_score": 6.9,
+		"max_stack": 5,
+		"tags": ["purifier", "purifier_protection", "damage", "survival"],
+		"effects": [{"op": "purifier_runtime_augment"}],
+		"ai_rules": [
+			{"source": "context_linear", "key": "purifier_protection_break_count", "weight": 0.55, "cap": 2.75},
+			{"source": "nearby_linear", "weight": 0.25, "cap": 1.75},
+			{"source": "hp_missing", "weight": 2.50},
+		],
+	},
+	{
+		"id": "purifier_book_of_purification",
+		"name": "정화의 서",
+		"description": "정화의 구체 피해와 폭발 범위 50% 감소. 구체 사용 시 서로 다른 위치에 중첩당 추가 구체 +1 (최대 3중첩)",
+		"base_score": 7.0,
+		"max_stack": 3,
+		"tags": ["purifier", "purifier_orb", "area", "projectile"],
+		"effects": [{"op": "purifier_runtime_augment"}],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.40, "cap": 3.20},
+			{"source": "total_count_min", "value": 5, "bonus": 1.00},
+			{"source": "current_role_ratio", "key": "swarm", "weight": 1.80},
+		],
+		"synergy_rules": [
+			{"source": "build_augment_stacks", "key": "purifier_pilgrims_path", "weight": 0.30, "cap": 2.10},
+			{"source": "build_augment_stacks", "key": "purifier_prism_phenomenon", "weight": 0.50, "cap": 2.50},
+			{"source": "build_augment_stacks", "key": "purifier_chain_cleansing", "weight": 0.40, "cap": 2.00},
+		],
+	},
+	{
+		"id": "purifier_o_lord",
+		"name": "신이시여",
+		"description": "정화 발동 시 30% 확률로 그 정화가 준 총 피해만큼 HP 회복. 추가 중첩당 발동률 +3%p (최대 3중첩)",
+		"base_score": 6.6,
+		"max_stack": 3,
+		"tags": ["purifier", "purifier_cleansing", "recovery", "survival"],
+		"effects": [{"op": "purifier_runtime_augment"}],
+		"ai_rules": [
+			{"source": "hp_missing", "weight": 7.00},
+			{"source": "context_linear", "key": "purifier_cleansing_target_count", "weight": 0.40, "cap": 2.40},
+			{"source": "context_min", "key": "purifier_cleansing_progress_ratio", "value": 0.40, "bonus": 0.50},
+		],
+		"synergy_rules": [
+			{"source": "build_augment_stacks", "key": "purifier_chain_cleansing", "weight": 0.55, "cap": 2.75},
+		],
+	},
+
 	{
 		"id": "summoner_gatekeeper_fortress",
 		"name": "철벽의 문지기",
