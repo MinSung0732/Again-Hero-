@@ -149,6 +149,8 @@ var hero_info_animating: bool = false
 var hero_info_portrait_cache_path: String = ""
 var hero_info_portrait_cache: Texture2D = null
 var hero_skill_badges: Dictionary = {}
+var hero_skill_hud_seen: Dictionary = {}
+var hero_skill_hud_stale_ids: Array[String] = []
 var hero_skill_hud_refresh_timer: float = 0.0
 var _scene_load_path: String = ""
 var _scene_load_pending: bool = false
@@ -1123,7 +1125,8 @@ func _refresh_hero_skill_cooldown_hud() -> void:
 		hero_skill_cooldown_bar.hide()
 		return
 
-	var seen: Dictionary = {}
+	var was_visible := hero_skill_cooldown_bar.visible
+	hero_skill_hud_seen.clear()
 	for raw_skill in raw_skills:
 		if typeof(raw_skill) != TYPE_DICTIONARY:
 			continue
@@ -1131,7 +1134,7 @@ func _refresh_hero_skill_cooldown_hud() -> void:
 		var skill_id := String(skill.get("id", ""))
 		if skill_id.is_empty():
 			continue
-		seen[skill_id] = true
+		hero_skill_hud_seen[skill_id] = true
 
 		var badge: Control = hero_skill_badges.get(skill_id)
 		if not is_instance_valid(badge):
@@ -1142,17 +1145,22 @@ func _refresh_hero_skill_cooldown_hud() -> void:
 		else:
 			badge.call("update_state", skill)
 
-	for raw_id in hero_skill_badges.keys():
+	hero_skill_hud_stale_ids.clear()
+	for raw_id in hero_skill_badges:
 		var skill_id := String(raw_id)
-		if seen.has(skill_id):
+		if hero_skill_hud_seen.has(skill_id):
 			continue
+		hero_skill_hud_stale_ids.append(skill_id)
+
+	for skill_id in hero_skill_hud_stale_ids:
 		var stale_badge = hero_skill_badges.get(skill_id)
 		if is_instance_valid(stale_badge):
 			stale_badge.queue_free()
 		hero_skill_badges.erase(skill_id)
 
-	hero_skill_cooldown_bar.visible = not seen.is_empty()
-	if hero_skill_cooldown_bar.visible:
+	var has_skills := not hero_skill_hud_seen.is_empty()
+	hero_skill_cooldown_bar.visible = has_skills
+	if has_skills and not was_visible:
 		hero_skill_cooldown_bar.z_index = 120
 		hero_skill_cooldown_bar.move_to_front()
 
