@@ -3630,6 +3630,23 @@ func _emit_progression() -> void:
 		int(hero.get("exp_to_next_level"))
 	)
 
+func get_hero_skill_cooldown_hud() -> Array:
+	if (
+		not is_instance_valid(hero)
+		or not hero.has_method("get_skill_cooldown_hud")
+	):
+		return []
+
+	var raw_skill_cooldowns = hero.call(
+		"get_skill_cooldown_hud"
+	)
+	return (
+		raw_skill_cooldowns
+		if raw_skill_cooldowns is Array
+		else []
+	)
+
+
 func get_snapshot() -> Dictionary:
 	var hp := 0
 	var max_hp_value := 0

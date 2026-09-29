@@ -28,6 +28,7 @@
 - 위 Hero 재타깃 helper가 기존 몬스터용 `get_nearest_hero_combat_target()`과 이름이 충돌해 Battle 스크립트 파싱을 막던 문제를 수정하고, Hero→적/상자 조회는 `get_nearest_hostile_target_for_hero()`로 분리.
 - Phase 5 dead-code audit 시작: 최근 리팩터에서 참조가 사라진 Summoner 레벨 슬롯 wrapper, Gunner Deadeye Dictionary wrapper, 구형 Stage 1 시트 로더/애니메이션 helper를 제거.
 - 구형 Stage 1 시트 경로에서 함께 남은 미사용 `STAGE1_FRAME_SIZE` 상수와 `sprite_sheet_path` 저장 필드를 제거.
+- Phase 6 UI cleanup 시작: 숨겨진 `DebugBalance`는 실제 표시 중에만 갱신하고, 20Hz Hero 스킬 쿨다운 HUD는 전체 `battle.get_snapshot()` 대신 전용 경량 getter를 사용해 대형 snapshot/중첩 Dictionary 복제 비용을 제거.
 - Godot 실행 파일이 없는 환경이라 실제 런타임/프로파일러 검증은 수행하지 않았고 정적 참조·diff 검증만 수행.
 
 ## 2026-09-28 — Stage 8 5스킬 컷신 이미지 왜곡 제거

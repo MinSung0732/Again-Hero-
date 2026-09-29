@@ -349,8 +349,15 @@ func _process(delta: float) -> void:
 	debug_refresh_timer -= delta
 	if debug_refresh_timer <= 0.0:
 		debug_refresh_timer = 0.25
-		if is_instance_valid(battle) and battle.has_method("get_debug_balance_summary"):
-			debug_balance_label.text = String(battle.call("get_debug_balance_summary"))
+		if (
+			is_instance_valid(debug_balance_label)
+			and debug_balance_label.is_visible_in_tree()
+			and is_instance_valid(battle)
+			and battle.has_method("get_debug_balance_summary")
+		):
+			debug_balance_label.text = String(
+				battle.call("get_debug_balance_summary")
+			)
 
 func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 	subtitle_label.text = "Stage %d · %s · %s" % [
@@ -1097,13 +1104,22 @@ func _refresh_hero_skill_cooldown_hud() -> void:
 		hero_skill_cooldown_bar.hide()
 		return
 
-	if not battle.has_method("get_snapshot"):
-		hero_skill_cooldown_bar.hide()
-		return
-
-	var snapshot: Dictionary = battle.get_snapshot()
-	var raw_skills = snapshot.get("hero_skill_cooldowns", [])
-	if typeof(raw_skills) != TYPE_ARRAY:
+	var raw_skills: Array = []
+	if battle.has_method("get_hero_skill_cooldown_hud"):
+		var raw_skill_state = battle.call(
+			"get_hero_skill_cooldown_hud"
+		)
+		if raw_skill_state is Array:
+			raw_skills = raw_skill_state
+	elif battle.has_method("get_snapshot"):
+		var snapshot: Dictionary = battle.get_snapshot()
+		var fallback_skills = snapshot.get(
+			"hero_skill_cooldowns",
+			[]
+		)
+		if fallback_skills is Array:
+			raw_skills = fallback_skills
+	else:
 		hero_skill_cooldown_bar.hide()
 		return
 
