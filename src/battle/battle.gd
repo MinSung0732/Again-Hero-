@@ -464,7 +464,8 @@ func get_nearest_monster_target(
 	return nearest
 
 
-func query_monsters_in_rect(world_rect: Rect2) -> Array:
+func fill_monsters_in_rect(world_rect: Rect2, result: Array) -> void:
+	result.clear()
 	_ensure_monster_spatial_grid()
 
 	var min_cell := _spatial_cell_for_position(world_rect.position)
@@ -472,7 +473,6 @@ func query_monsters_in_rect(world_rect: Rect2) -> Array:
 	min_cell -= Vector2i.ONE
 	max_cell += Vector2i.ONE
 
-	var result: Array = []
 	for cell_x in range(min_cell.x, max_cell.x + 1):
 		for cell_y in range(min_cell.y, max_cell.y + 1):
 			var cell := Vector2i(cell_x, cell_y)
@@ -482,6 +482,11 @@ func query_monsters_in_rect(world_rect: Rect2) -> Array:
 			for node in bucket:
 				if is_instance_valid(node) and not node.is_queued_for_deletion():
 					result.append(node)
+
+
+func query_monsters_in_rect(world_rect: Rect2) -> Array:
+	var result: Array = []
+	fill_monsters_in_rect(world_rect, result)
 	return result
 
 

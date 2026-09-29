@@ -88,16 +88,27 @@ func get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
 	return result
 
 
-func get_monster_nodes_in_rect(world_rect: Rect2) -> Array:
+func fill_monster_nodes_in_rect(
+	world_rect: Rect2,
+	result: Array
+) -> void:
+	result.clear()
 	if not is_instance_valid(owner):
-		return []
+		return
 
 	var battle := owner.get_parent()
 	if (
 		is_instance_valid(battle)
-		and battle.has_method("query_monsters_in_rect")
+		and battle.has_method("fill_monsters_in_rect")
 	):
-		var nearby = battle.call("query_monsters_in_rect", world_rect)
-		if nearby is Array:
-			return nearby
-	return get_monster_nodes_cached()
+		battle.call("fill_monsters_in_rect", world_rect, result)
+		return
+
+	for node in get_monster_nodes_cached():
+		result.append(node)
+
+
+func get_monster_nodes_in_rect(world_rect: Rect2) -> Array:
+	var result: Array = []
+	fill_monster_nodes_in_rect(world_rect, result)
+	return result

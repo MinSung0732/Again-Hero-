@@ -396,6 +396,7 @@ var summoner_ai_config: Dictionary = {}
 var summoner_ai_personality: String = "balanced"
 var summoner_ai_choice_counts: Dictionary = {}
 var summoner_ai_last_choice: String = ""
+var summoner_ai_query_candidates: Array = []
 var summoner_runtime_ready: bool = false
 var summoner_basic_effect: AnimatedSprite2D = null
 var summoner_basic_audio: AudioStreamPlayer = null
@@ -497,6 +498,17 @@ func _get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
 		radius
 	)
 	return result if result is Array else []
+
+
+func _fill_monster_nodes_in_rect(
+	world_rect: Rect2,
+	result: Array
+) -> void:
+	_get_world_query_runtime().call(
+		"fill_monster_nodes_in_rect",
+		world_rect,
+		result
+	)
 
 
 func _get_monster_nodes_in_rect(world_rect: Rect2) -> Array:
@@ -768,6 +780,7 @@ func configure_profile(profile: Dictionary) -> void:
 	)
 	summoner_ai_choice_counts.clear()
 	summoner_ai_last_choice = ""
+	summoner_ai_query_candidates.clear()
 	summoner_ai_personality = _roll_summoner_ai_personality()
 	var raw_gatekeeper = summoner_config.get("gatekeeper", {})
 	summoner_gatekeeper_config = (
@@ -1754,11 +1767,13 @@ func _choose_summoner_ai_cast() -> String:
 	):
 		return ""
 
-	var nearby := _get_monster_nodes_near(
+	_fill_monster_nodes_near(
 		global_position,
-		maxf(float(summoner_ai_config.get("observation_radius", 760.0)), 1.0)
+		maxf(float(summoner_ai_config.get("observation_radius", 760.0)), 1.0),
+		summoner_ai_query_candidates
 	)
-	var nearby_count := nearby.size()
+	var nearby_count := summoner_ai_query_candidates.size()
+	summoner_ai_query_candidates.clear()
 	var gatekeeper_weight := 0.0
 	var scout_weight := 0.0
 	var hound_weight := 0.0
@@ -9151,8 +9166,9 @@ func _damage_monsters_in_corridor(
 	)
 	var query_rect := Rect2(min_point, max_point - min_point)
 	var half_width_sq := half_width * half_width
+	_fill_monster_nodes_in_rect(query_rect, _combat_monster_scratch)
 
-	for node in _get_monster_nodes_in_rect(query_rect):
+	for node in _combat_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -9162,6 +9178,7 @@ func _damage_monsters_in_corridor(
 		var closest := start + segment * t
 		if monster.global_position.distance_squared_to(closest) <= half_width_sq:
 			monster.call("take_damage", damage)
+	_combat_monster_scratch.clear()
 
 func _find_farthest_monster_from_point(origin: Vector2) -> Node2D:
 	var best: Node2D = null

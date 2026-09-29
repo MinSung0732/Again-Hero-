@@ -48,6 +48,7 @@
 - 전역 `SceneTransition` autoload를 추가해 던전 입장/로비 복귀의 threaded scene load와 실제 scene swap 사이에도 로딩 레이어가 유지되도록 변경. 새 씬의 불가피한 `_ready()` 메인스레드 비용은 로딩 화면 뒤에서 처리하고, 기존 로컬 전환 경로는 fallback으로 유지.
 - Archmage 성역 군집 탐색, 성역 폭발, 연쇄 단검 후보 수집, 공간도약 회피에 재사용 주변 몬스터 scratch 배열을 적용해 남아 있던 Archmage 직접 주변조회 임시 Array 4곳을 제거. 반복 반경 제곱 계산도 캐시하도록 정리.
 - 공용 범위 데미지/중복방지 범위 데미지, 채널링 틱, 정화자 보호막 파동, 관통 궁극기 조준, 광역 궁극기가 `_combat_monster_scratch`를 재사용하도록 변경. 관통 조준은 별도 `monsters` Array까지 제거하고 scratch를 역순 제자리 필터링해 반복 할당을 추가로 축소.
+- Summoner AI 관측 후보는 전용 scratch 배열을 재사용해 기존 공간그리드 후보 수 semantics를 그대로 유지하면서 임시 Array 생성을 제거. Battle/World query에 caller-owned `fill_monsters_in_rect()` 경로를 추가하고 corridor 데미지도 공용 combat scratch를 사용하도록 전환해 Hero의 직접 배열 생성형 근접/직사각 조회를 모두 제거.
 - Godot 실행 파일이 없는 환경이라 실제 런타임/프로파일러 검증은 수행하지 않았고 정적 참조·diff 검증만 수행.
 
 ## 2026-09-28 — Stage 8 5스킬 컷신 이미지 왜곡 제거
