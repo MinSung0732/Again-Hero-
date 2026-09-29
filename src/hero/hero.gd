@@ -291,6 +291,7 @@ var archmage_casting_sequence: bool = false
 var archmage_casting_sequence_count: int = 0
 var archmage_multicast_stacks: int = 0
 var archmage_multicast_active: bool = false
+var archmage_multicast_candidates: Array[String] = []
 var archmage_blink_stacks: int = 0
 var archmage_blink_cooldown_timer: float = 0.0
 var archmage_cooldown_reduction: float = 0.0
@@ -893,6 +894,7 @@ func configure_profile(profile: Dictionary) -> void:
 	archmage_casting_sequence_count = 0
 	archmage_multicast_stacks = 0
 	archmage_multicast_active = false
+	archmage_multicast_candidates.clear()
 	archmage_blink_stacks = 0
 	archmage_blink_cooldown_timer = 0.0
 	archmage_cooldown_reduction = 0.0
@@ -8046,7 +8048,7 @@ func _cast_archmage_skill_internal(
 
 
 func _start_archmage_multicast(origin_skill: String) -> void:
-	var candidates: Array[String] = []
+	archmage_multicast_candidates.clear()
 	for key in ARCHMAGE_OFFENSIVE_SKILL_KEYS:
 		if key == origin_skill:
 			continue
@@ -8054,25 +8056,34 @@ func _start_archmage_multicast(origin_skill: String) -> void:
 			continue
 		if key == "chain_dagger" and archmage_chain_dagger_active:
 			continue
-		candidates.append(key)
+		archmage_multicast_candidates.append(key)
 
-	if candidates.is_empty():
+	if archmage_multicast_candidates.is_empty():
 		return
 
-	candidates.shuffle()
+	archmage_multicast_candidates.shuffle()
 	archmage_multicast_active = true
-	var wanted := mini(archmage_multicast_stacks, candidates.size())
+	var wanted := mini(
+		archmage_multicast_stacks,
+		archmage_multicast_candidates.size()
+	)
 	var casted := 0
 
-	while casted < wanted and not candidates.is_empty():
+	while (
+		casted < wanted
+		and not archmage_multicast_candidates.is_empty()
+	):
 		await get_tree().create_timer(0.30).timeout
 		if not is_inside_tree() or current_hp <= 0:
 			break
 
-		var extra_skill := String(candidates.pop_back())
+		var extra_skill := String(
+			archmage_multicast_candidates.pop_back()
+		)
 		if _cast_archmage_skill_internal(extra_skill, false, false):
 			casted += 1
 
+	archmage_multicast_candidates.clear()
 	archmage_multicast_active = false
 
 func _skill_damage_multiplier(empowered: bool) -> float:
