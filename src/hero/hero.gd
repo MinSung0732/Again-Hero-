@@ -69,6 +69,22 @@ const ARCHMAGE_DEFAULT_BASIC_ELEMENTS: Array[String] = [
 	"wind",
 	"holy",
 ]
+const ARCHMAGE_ORB_ELEMENTS: Array[String] = [
+	"fire",
+	"water",
+	"wind",
+	"electric",
+	"earth",
+	"holy",
+]
+const ARCHMAGE_ORB_FRAME_INDEX := {
+	"fire": 1,
+	"water": 2,
+	"wind": 3,
+	"electric": 4,
+	"earth": 5,
+	"holy": 7,
+}
 const STAGE6_FRAME_DIR := "res://assets/art/heroes/stage6_berserker/frames"
 const STAGE7_FRAME_DIR := "res://assets/art/heroes/stage7_alchemist/frames"
 const STAGE8_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames"
@@ -264,6 +280,7 @@ var archmage_skill_config: Dictionary = {}
 var archmage_skill_cooldowns: Dictionary = {}
 var archmage_element_orbs: Dictionary = {}
 var archmage_orbit_sprites: Dictionary = {}
+var archmage_orbit_order: Array[String] = []
 var archmage_orbit_angle: float = 0.0
 var archmage_chain_dagger_active: bool = false
 var archmage_chain_dagger_active_count: int = 0
@@ -859,6 +876,10 @@ func configure_profile(profile: Dictionary) -> void:
 	for skill_key in ARCHMAGE_SKILL_KEYS:
 		archmage_skill_cooldowns[skill_key] = 0.0
 	archmage_element_orbs.clear()
+	archmage_orbit_order.clear()
+	for raw_sprite in archmage_orbit_sprites.values():
+		if is_instance_valid(raw_sprite):
+			raw_sprite.queue_free()
 	archmage_orbit_sprites.clear()
 	archmage_orbit_angle = 0.0
 	archmage_chain_dagger_active = false
@@ -7956,6 +7977,7 @@ func _cast_archmage_skill_internal(
 	if skill_key != "harmony" and _archmage_has_all_element_orbs():
 		empowered = true
 		archmage_element_orbs.clear()
+		archmage_orbit_order.clear()
 		_refresh_archmage_orbit_visuals()
 
 	if consume_gauge:
@@ -8712,6 +8734,8 @@ func _collect_archmage_element(element: String) -> void:
 		archmage_element_orbs.get(element, false)
 	)
 	archmage_element_orbs[element] = true
+	if not already_owned:
+		archmage_orbit_order.append(element)
 
 	if (
 		already_owned
@@ -8719,75 +8743,75 @@ func _collect_archmage_element(element: String) -> void:
 		and randf() <= 0.25 * float(archmage_element_cycle_stacks)
 	):
 		var missing: Array[String] = []
-		for candidate in [
-			"fire",
-			"water",
-			"wind",
-			"electric",
-			"earth",
-			"holy",
-		]:
+		for candidate in ARCHMAGE_ORB_ELEMENTS:
 			if not bool(archmage_element_orbs.get(candidate, false)):
 				missing.append(candidate)
 		if not missing.is_empty():
-			archmage_element_orbs[
-				String(missing.pick_random())
-			] = true
+			var granted := String(missing.pick_random())
+			archmage_element_orbs[granted] = true
+			archmage_orbit_order.append(granted)
 
 	_refresh_archmage_orbit_visuals()
 
 func _archmage_has_all_element_orbs() -> bool:
-	for element in ["fire", "water", "wind", "electric", "earth", "holy"]:
+	for element in ARCHMAGE_ORB_ELEMENTS:
 		if not bool(archmage_element_orbs.get(element, false)):
 			return false
 	return true
 
 
 func _refresh_archmage_orbit_visuals() -> void:
-	for raw_sprite in archmage_orbit_sprites.values():
-		if is_instance_valid(raw_sprite):
-			raw_sprite.queue_free()
-	archmage_orbit_sprites.clear()
+	for element in ARCHMAGE_ORB_ELEMENTS:
+		var existing = archmage_orbit_sprites.get(element)
+		if is_instance_valid(existing):
+			existing.visible = false
+
 	if hero_archetype != "archmage_elementalist":
 		return
-	var frame_map := {
-		"fire": 1,
-		"water": 2,
-		"wind": 3,
-		"electric": 4,
-		"earth": 5,
-		"holy": 7,
-	}
-	for raw_element in archmage_element_orbs.keys():
-		var element := String(raw_element)
+
+	for element in archmage_orbit_order:
 		if not bool(archmage_element_orbs.get(element, false)):
 			continue
-		var frame_index := int(frame_map.get(element, 0))
+		var frame_index := int(ARCHMAGE_ORB_FRAME_INDEX.get(element, 0))
 		if frame_index <= 0:
 			continue
-		var texture := _load_stage1_texture(
-			"res://assets/art/heroes/stage5_archmage/frames/effect6/orb_%02d.png" % frame_index
-		)
-		if texture == null:
-			continue
-		var sprite := Sprite2D.new()
-		sprite.texture = texture
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		sprite.scale = Vector2(0.20, 0.20)
-		sprite.z_index = 8
-		add_child(sprite)
-		archmage_orbit_sprites[element] = sprite
+
+		var sprite := archmage_orbit_sprites.get(element) as Sprite2D
+		if not is_instance_valid(sprite):
+			var texture := _load_stage1_texture(
+				"res://assets/art/heroes/stage5_archmage/frames/effect6/orb_%02d.png" % frame_index
+			)
+			if texture == null:
+				continue
+			sprite = Sprite2D.new()
+			sprite.texture = texture
+			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			sprite.scale = Vector2(0.20, 0.20)
+			sprite.z_index = 8
+			add_child(sprite)
+			archmage_orbit_sprites[element] = sprite
+		sprite.visible = true
+
 	_update_archmage_orbit_positions()
 
 
 func _update_archmage_orbit_positions() -> void:
-	var count := archmage_orbit_sprites.size()
+	var count := 0
+	for element in archmage_orbit_order:
+		if not bool(archmage_element_orbs.get(element, false)):
+			continue
+		var sprite := archmage_orbit_sprites.get(element) as Sprite2D
+		if is_instance_valid(sprite) and sprite.visible:
+			count += 1
 	if count <= 0:
 		return
+
 	var index := 0
-	for raw_key in archmage_orbit_sprites.keys():
-		var sprite = archmage_orbit_sprites[raw_key]
-		if not is_instance_valid(sprite):
+	for element in archmage_orbit_order:
+		if not bool(archmage_element_orbs.get(element, false)):
+			continue
+		var sprite := archmage_orbit_sprites.get(element) as Sprite2D
+		if not is_instance_valid(sprite) or not sprite.visible:
 			continue
 		var angle := archmage_orbit_angle + TAU * float(index) / float(count)
 		sprite.position = Vector2.from_angle(angle) * 64.0 + Vector2(0.0, -8.0)
