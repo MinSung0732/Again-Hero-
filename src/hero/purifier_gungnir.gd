@@ -13,6 +13,7 @@ enum State {
 	FLYING,
 	IMPACT_HOLD,
 	EXPLODING,
+	CAMERA_RESTORE,
 	DONE,
 }
 
@@ -60,6 +61,19 @@ var _trail_ages: Array[float] = []
 var _trail_active: Array[bool] = []
 var _trail_base_scales: Array[Vector2] = []
 var _trail_pool_index: int = 0
+
+var camera_zoom_multiplier: float = 0.52
+var camera_zoom_out_seconds: float = 0.22
+var camera_zoom_in_seconds: float = 0.32
+var camera_focus_ratio: float = 0.50
+var _camera: Camera2D
+var _camera_original_zoom: Vector2 = Vector2.ONE
+var _camera_original_position: Vector2 = Vector2.ZERO
+var _camera_zoom_from: Vector2 = Vector2.ONE
+var _camera_position_from: Vector2 = Vector2.ZERO
+var _camera_zoom_elapsed: float = 0.0
+var _camera_restore_elapsed: float = 0.0
+var _camera_effect_active: bool = false
 
 var cast_elapsed: float = 0.0
 var travelled: float = 0.0
@@ -138,6 +152,24 @@ func setup(
 		int(config.get("trail_pool_size", 10)),
 		4,
 		24
+	)
+	camera_zoom_multiplier = clampf(
+		float(config.get("camera_zoom_multiplier", 0.52)),
+		0.20,
+		1.0
+	)
+	camera_zoom_out_seconds = maxf(
+		float(config.get("camera_zoom_out_seconds", 0.22)),
+		0.0
+	)
+	camera_zoom_in_seconds = maxf(
+		float(config.get("camera_zoom_in_seconds", 0.32)),
+		0.0
+	)
+	camera_focus_ratio = clampf(
+		float(config.get("camera_focus_ratio", 0.50)),
+		0.0,
+		1.0
 	)
 	cast_seconds = maxf(float(config.get("cast_seconds", 1.0)), 0.05)
 	projectile_speed = maxf(
@@ -227,6 +259,8 @@ func _physics_process(delta: float) -> void:
 			_update_impact_hold(delta)
 		State.EXPLODING:
 			_update_explosion(delta)
+		State.CAMERA_RESTORE:
+			_update_camera_restore(delta)
 		_:
 			pass
 
@@ -259,6 +293,7 @@ func _begin_flight() -> void:
 	if is_instance_valid(charge_aura):
 		charge_aura.visible = false
 	trail_timer = trail_interval
+	_begin_camera_flight_view()
 	_set_flight_frame(5)
 	_emit_trail()
 	launched.emit()
@@ -274,6 +309,7 @@ func _update_flying(delta: float) -> void:
 	var movement := direction * step_distance
 	global_position += movement
 	travelled += step_distance
+	_update_camera_flight_view(delta)
 
 	_drag_captured(movement)
 	_capture_nearby_monsters()
@@ -328,9 +364,117 @@ func _update_explosion(delta: float) -> void:
 	explosion_elapsed += delta
 	var frame_offset := floori(explosion_elapsed * explosion_fps)
 	if frame_offset >= 8:
-		_finish()
+		_begin_camera_restore()
 		return
 	_set_explosion_frame(10 + frame_offset)
+
+
+func _begin_camera_flight_view() -> void:
+	if not is_instance_valid(caster):
+		return
+	var camera_node := caster.get_node_or_null("Camera2D")
+	if camera_node == null or not (camera_node is Camera2D):
+		return
+
+	_camera = camera_node as Camera2D
+	_camera_original_zoom = _camera.zoom
+	_camera_original_position = _camera.position
+	_camera_zoom_from = _camera.zoom
+	_camera_position_from = _camera.position
+	_camera_zoom_elapsed = 0.0
+	_camera_restore_elapsed = 0.0
+	_camera_effect_active = true
+	_update_camera_flight_view(0.0)
+
+
+func _update_camera_flight_view(delta: float) -> void:
+	if not _camera_effect_active:
+		return
+	if not is_instance_valid(_camera):
+		_camera_effect_active = false
+		return
+
+	_camera_zoom_elapsed = minf(
+		_camera_zoom_elapsed + delta,
+		camera_zoom_out_seconds
+	)
+	var zoom_progress := 1.0
+	if camera_zoom_out_seconds > 0.0001:
+		zoom_progress = clampf(
+			_camera_zoom_elapsed / camera_zoom_out_seconds,
+			0.0,
+			1.0
+		)
+	var zoom_eased := (
+		zoom_progress
+		* zoom_progress
+		* (3.0 - 2.0 * zoom_progress)
+	)
+	var target_zoom := _camera_original_zoom * camera_zoom_multiplier
+	_camera.zoom = _camera_zoom_from.lerp(target_zoom, zoom_eased)
+	_camera.position = (
+		_camera_original_position
+		+ direction * travelled * camera_focus_ratio
+	)
+
+
+func _begin_camera_restore() -> void:
+	if not _camera_effect_active or not is_instance_valid(_camera):
+		_camera_effect_active = false
+		_finish()
+		return
+
+	state = State.CAMERA_RESTORE
+	_camera_zoom_from = _camera.zoom
+	_camera_position_from = _camera.position
+	_camera_restore_elapsed = 0.0
+	visual.visible = false
+	_clear_trails()
+
+	if camera_zoom_in_seconds <= 0.0001:
+		_restore_camera_immediately()
+		_finish()
+
+
+func _update_camera_restore(delta: float) -> void:
+	if not _camera_effect_active:
+		_finish()
+		return
+	if not is_instance_valid(_camera):
+		_camera_effect_active = false
+		_finish()
+		return
+
+	_camera_restore_elapsed = minf(
+		_camera_restore_elapsed + delta,
+		camera_zoom_in_seconds
+	)
+	var progress := 1.0
+	if camera_zoom_in_seconds > 0.0001:
+		progress = clampf(
+			_camera_restore_elapsed / camera_zoom_in_seconds,
+			0.0,
+			1.0
+		)
+	var eased := progress * progress * (3.0 - 2.0 * progress)
+	_camera.zoom = _camera_zoom_from.lerp(_camera_original_zoom, eased)
+	_camera.position = _camera_position_from.lerp(
+		_camera_original_position,
+		eased
+	)
+
+	if progress >= 1.0:
+		_restore_camera_immediately()
+		_finish()
+
+
+func _restore_camera_immediately() -> void:
+	if not _camera_effect_active:
+		return
+	if is_instance_valid(_camera):
+		_camera.zoom = _camera_original_zoom
+		_camera.position = _camera_original_position
+	_camera_effect_active = false
 
 
 func _capture_nearby_monsters() -> void:
@@ -673,6 +817,7 @@ func _finish() -> void:
 	if state == State.DONE:
 		return
 	state = State.DONE
+	_restore_camera_immediately()
 	_release_captured()
 	_clear_trails()
 	if is_instance_valid(charge_aura):
@@ -683,5 +828,6 @@ func _finish() -> void:
 
 
 func _exit_tree() -> void:
+	_restore_camera_immediately()
 	_release_captured()
 	_clear_trails()
