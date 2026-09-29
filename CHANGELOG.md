@@ -5,6 +5,7 @@
 - 소환사 물리 틱의 슬롯/실드 판정과 AI 점수 계산에서 gatekeeper/scout/hound/watcher 풀 반복 순회를 제거.
 - `summoner_suicide_drone.gd`가 공유 설정에 `owner_attack_damage`가 없으면 현재 소유 Hero의 공격력을 직접 읽도록 해 기존 현재 공격력 반영 의미를 유지.
 - `summoner_open_gate.gd`에서 드론 생성마다 하던 `drone_config.duplicate(true)`와 스폰 범위 `meta` 조회/정렬을 제거하고, 활성화 시 한 번 계산한 typed 값을 재사용하도록 변경.
+- 소환수 이동/공격 지원 배율 조회에 scalar fast path를 추가해 정상 전투의 physics/attack 루프에서 임시 `Dictionary` 생성을 제거하고, 기존 Dictionary API는 호환용으로 유지.
 - Godot 실행 파일이 없는 환경이라 실제 런타임/프로파일러 검증은 수행하지 않았고 정적 참조·diff 검증만 수행.
 
 ## 2026-09-28 — Stage 8 5스킬 컷신 이미지 왜곡 제거

@@ -107,9 +107,15 @@ func _physics_process(delta: float) -> void:
 		if is_instance_valid(target):
 			_fire_at(target)
 			var speed_multiplier := 1.0
-			if is_instance_valid(owner_hero) and owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
-				var multipliers: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
-				speed_multiplier = maxf(float(multipliers.get("attack_speed", 1.0)), 0.1)
+			if is_instance_valid(owner_hero):
+				if owner_hero.has_method("get_summoner_runtime_attack_speed_multiplier"):
+					speed_multiplier = maxf(
+						float(owner_hero.call("get_summoner_runtime_attack_speed_multiplier")),
+						0.1
+					)
+				elif owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
+					var multipliers: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
+					speed_multiplier = maxf(float(multipliers.get("attack_speed", 1.0)), 0.1)
 			attack_timer = attack_cooldown / speed_multiplier
 	queue_redraw()
 

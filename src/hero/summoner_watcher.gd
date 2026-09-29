@@ -200,9 +200,15 @@ func _fire_at_target(current_target: Node2D) -> void:
 		var owner_target = owner_hero.get("target")
 		focus_active = owner_target == current_target
 	var attack_speed_multiplier := 1.0 + (focus_attack_speed_bonus if focus_active else 0.0)
-	if is_instance_valid(owner_hero) and owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
-		var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
-		attack_speed_multiplier *= maxf(float(support.get("attack_speed", 1.0)), 0.1)
+	if is_instance_valid(owner_hero):
+		if owner_hero.has_method("get_summoner_runtime_attack_speed_multiplier"):
+			attack_speed_multiplier *= maxf(
+				float(owner_hero.call("get_summoner_runtime_attack_speed_multiplier")),
+				0.1
+			)
+		elif owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
+			var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
+			attack_speed_multiplier *= maxf(float(support.get("attack_speed", 1.0)), 0.1)
 	attack_timer = attack_cooldown / maxf(attack_speed_multiplier, 0.1)
 	var shot_damage := maxi(int(round(float(attack_damage) * (1.0 + (focus_damage_bonus if focus_active else 0.0)))), 1)
 	projectile.call(

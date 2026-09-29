@@ -488,37 +488,84 @@ static func get_augment_stacks(
 	)
 
 
+static func get_runtime_attack_speed_multiplier(
+	shield_active: bool,
+	resonance_stacks: int
+) -> float:
+	if not shield_active:
+		return 1.0
+	return 1.0 + float(resonance_stacks) * 0.024
+
+
+static func get_runtime_move_speed_multiplier(
+	shield_active: bool,
+	resonance_stacks: int
+) -> float:
+	if not shield_active:
+		return 1.0
+	return 1.0 + float(resonance_stacks) * 0.02
+
+
 static func get_runtime_speed_multipliers(
 	shield_active: bool,
 	resonance_stacks: int
 ) -> Dictionary:
-	var attack_speed := 1.0
-	var move_speed := 1.0
-	if shield_active:
-		attack_speed += float(resonance_stacks) * 0.024
-		move_speed += float(resonance_stacks) * 0.02
 	return {
-		"attack_speed": attack_speed,
-		"move_speed": move_speed,
+		"attack_speed": get_runtime_attack_speed_multiplier(
+			shield_active,
+			resonance_stacks
+		),
+		"move_speed": get_runtime_move_speed_multiplier(
+			shield_active,
+			resonance_stacks
+		),
 	}
+
+
+static func get_scout_swarm_attack_speed_multiplier(
+	swarm_stacks: int,
+	active_scouts: int
+) -> float:
+	if active_scouts < 3:
+		return 1.0
+	return 1.0 + float(swarm_stacks) * 0.04
+
+
+static func get_scout_swarm_damage_multiplier(
+	swarm_stacks: int,
+	active_scouts: int
+) -> float:
+	if active_scouts < 3:
+		return 1.0
+	return 1.0 + float(swarm_stacks) * 0.02
+
+
+static func get_scout_swarm_move_speed_multiplier(
+	swarm_stacks: int,
+	active_scouts: int
+) -> float:
+	if active_scouts < 5:
+		return 1.0
+	return 1.0 + float(swarm_stacks) * 0.03
 
 
 static func get_scout_swarm_multipliers(
 	swarm_stacks: int,
 	active_scouts: int
 ) -> Dictionary:
-	var attack_speed := 1.0
-	var damage := 1.0
-	var move_speed := 1.0
-	if active_scouts >= 3:
-		attack_speed += float(swarm_stacks) * 0.04
-		damage += float(swarm_stacks) * 0.02
-	if active_scouts >= 5:
-		move_speed += float(swarm_stacks) * 0.03
 	return {
-		"attack_speed": attack_speed,
-		"damage": damage,
-		"move_speed": move_speed,
+		"attack_speed": get_scout_swarm_attack_speed_multiplier(
+			swarm_stacks,
+			active_scouts
+		),
+		"damage": get_scout_swarm_damage_multiplier(
+			swarm_stacks,
+			active_scouts
+		),
+		"move_speed": get_scout_swarm_move_speed_multiplier(
+			swarm_stacks,
+			active_scouts
+		),
 	}
 
 

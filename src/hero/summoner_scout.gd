@@ -126,10 +126,20 @@ func _physics_process(delta: float) -> void:
 	if distance > attack_range * 0.88:
 		var move_multiplier := 1.0
 		if is_instance_valid(owner_hero):
-			if owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
+			if owner_hero.has_method("get_summoner_runtime_move_speed_multiplier"):
+				move_multiplier *= maxf(
+					float(owner_hero.call("get_summoner_runtime_move_speed_multiplier")),
+					0.1
+				)
+			elif owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
 				var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
 				move_multiplier *= maxf(float(support.get("move_speed", 1.0)), 0.1)
-			if owner_hero.has_method("get_summoner_scout_swarm_multipliers"):
+			if owner_hero.has_method("get_summoner_scout_move_speed_multiplier"):
+				move_multiplier *= maxf(
+					float(owner_hero.call("get_summoner_scout_move_speed_multiplier")),
+					0.1
+				)
+			elif owner_hero.has_method("get_summoner_scout_swarm_multipliers"):
 				var swarm: Dictionary = owner_hero.call("get_summoner_scout_swarm_multipliers")
 				move_multiplier *= maxf(float(swarm.get("move_speed", 1.0)), 0.1)
 		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier
@@ -187,10 +197,27 @@ func _attack_target(current_target: Node2D) -> void:
 	var attack_speed_multiplier := 1.0
 	var damage_multiplier := 1.0
 	if is_instance_valid(owner_hero):
-		if owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
+		if owner_hero.has_method("get_summoner_runtime_attack_speed_multiplier"):
+			attack_speed_multiplier *= maxf(
+				float(owner_hero.call("get_summoner_runtime_attack_speed_multiplier")),
+				0.1
+			)
+		elif owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
 			var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
 			attack_speed_multiplier *= maxf(float(support.get("attack_speed", 1.0)), 0.1)
-		if owner_hero.has_method("get_summoner_scout_swarm_multipliers"):
+		if (
+			owner_hero.has_method("get_summoner_scout_attack_speed_multiplier")
+			and owner_hero.has_method("get_summoner_scout_damage_multiplier")
+		):
+			attack_speed_multiplier *= maxf(
+				float(owner_hero.call("get_summoner_scout_attack_speed_multiplier")),
+				0.1
+			)
+			damage_multiplier *= maxf(
+				float(owner_hero.call("get_summoner_scout_damage_multiplier")),
+				0.1
+			)
+		elif owner_hero.has_method("get_summoner_scout_swarm_multipliers"):
 			var swarm: Dictionary = owner_hero.call("get_summoner_scout_swarm_multipliers")
 			attack_speed_multiplier *= maxf(float(swarm.get("attack_speed", 1.0)), 0.1)
 			damage_multiplier *= maxf(float(swarm.get("damage", 1.0)), 0.1)

@@ -1749,12 +1749,57 @@ func _get_summoner_augment_stacks(augment_id: String) -> int:
 	)
 
 
+func get_summoner_runtime_attack_speed_multiplier() -> float:
+	return HERO_SUMMONER_RUNTIME.get_runtime_attack_speed_multiplier(
+		shield_hp > 0.0,
+		_get_summoner_augment_stacks(
+			"summoner_shield_resonance"
+		)
+	)
+
+
+func get_summoner_runtime_move_speed_multiplier() -> float:
+	return HERO_SUMMONER_RUNTIME.get_runtime_move_speed_multiplier(
+		shield_hp > 0.0,
+		_get_summoner_augment_stacks(
+			"summoner_shield_resonance"
+		)
+	)
+
+
 func get_summoner_runtime_speed_multipliers() -> Dictionary:
 	return HERO_SUMMONER_RUNTIME.get_runtime_speed_multipliers(
 		shield_hp > 0.0,
 		_get_summoner_augment_stacks(
 			"summoner_shield_resonance"
 		)
+	)
+
+
+func get_summoner_scout_attack_speed_multiplier() -> float:
+	return HERO_SUMMONER_RUNTIME.get_scout_swarm_attack_speed_multiplier(
+		_get_summoner_augment_stacks(
+			"summoner_scout_swarm_tactics"
+		),
+		summoner_active_scouts
+	)
+
+
+func get_summoner_scout_damage_multiplier() -> float:
+	return HERO_SUMMONER_RUNTIME.get_scout_swarm_damage_multiplier(
+		_get_summoner_augment_stacks(
+			"summoner_scout_swarm_tactics"
+		),
+		summoner_active_scouts
+	)
+
+
+func get_summoner_scout_move_speed_multiplier() -> float:
+	return HERO_SUMMONER_RUNTIME.get_scout_swarm_move_speed_multiplier(
+		_get_summoner_augment_stacks(
+			"summoner_scout_swarm_tactics"
+		),
+		summoner_active_scouts
 	)
 
 

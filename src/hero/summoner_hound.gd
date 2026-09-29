@@ -157,9 +157,15 @@ func _physics_process(delta: float) -> void:
 		var move_multiplier := 1.0
 		if bool(target.get_meta("elite", false)) or bool(target.get_meta("boss", false)) or bool(target.get_meta("is_boss", false)):
 			move_multiplier += elite_move_speed_bonus
-		if is_instance_valid(owner_hero) and owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
-			var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
-			move_multiplier *= maxf(float(support.get("move_speed", 1.0)), 0.1)
+		if is_instance_valid(owner_hero):
+			if owner_hero.has_method("get_summoner_runtime_move_speed_multiplier"):
+				move_multiplier *= maxf(
+					float(owner_hero.call("get_summoner_runtime_move_speed_multiplier")),
+					0.1
+				)
+			elif owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
+				var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
+				move_multiplier *= maxf(float(support.get("move_speed", 1.0)), 0.1)
 		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier
 		move_and_slide()
 		if visual.animation != &"move":
@@ -242,9 +248,15 @@ func _start_attack(current_target: Node2D) -> void:
 	if not is_instance_valid(current_target):
 		return
 	var attack_speed_multiplier := 1.0
-	if is_instance_valid(owner_hero) and owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
-		var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
-		attack_speed_multiplier = maxf(float(support.get("attack_speed", 1.0)), 0.1)
+	if is_instance_valid(owner_hero):
+		if owner_hero.has_method("get_summoner_runtime_attack_speed_multiplier"):
+			attack_speed_multiplier = maxf(
+				float(owner_hero.call("get_summoner_runtime_attack_speed_multiplier")),
+				0.1
+			)
+		elif owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
+			var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
+			attack_speed_multiplier = maxf(float(support.get("attack_speed", 1.0)), 0.1)
 	attack_timer = attack_cooldown / attack_speed_multiplier
 	attack_target = current_target
 	pending_hits = hits_per_attack
