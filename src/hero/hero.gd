@@ -90,6 +90,7 @@ const HERO_BASE_ATTACK_GROWTH_PER_LEVEL := 0.02
 const HERO_ATTACK_MILESTONE_INTERVAL := 10
 const HERO_ATTACK_MILESTONE_BONUS := 0.05
 const HERO_ANIMATION_DUPLICATE_RESTART_GUARD_MSEC := 70
+const MONSTER_QUERY_SCRATCH_COUNT := 16
 
 static var _archmage_fx_frames_cache: Dictionary = {}
 static var _purifier_protection_frames_cache: SpriteFrames
@@ -383,10 +384,37 @@ var battlefield_size: Vector2 = Vector2(3200, 3200)
 var _monster_nodes_cache: Array = []
 var _monster_nodes_cache_process_frame: int = -1
 var _monster_nodes_cache_physics_frame: int = -1
+var _monster_query_scratch_pool: Array = []
+var _monster_query_scratch_index: int = 0
+var _monster_query_scratch_process_frame: int = -1
+var _monster_query_scratch_physics_frame: int = -1
 var _movement_monster_scratch: Array = []
+var _combat_target_scratch: Array = []
 var _aux_group_nodes_cache: Dictionary = {}
 var _aux_group_nodes_cache_process_frame: int = -1
 var _aux_group_nodes_cache_physics_frame: int = -1
+
+
+func _acquire_monster_query_scratch() -> Array:
+	var process_frame := Engine.get_process_frames()
+	var physics_frame := Engine.get_physics_frames()
+	if (
+		process_frame != _monster_query_scratch_process_frame
+		or physics_frame != _monster_query_scratch_physics_frame
+	):
+		_monster_query_scratch_index = 0
+		_monster_query_scratch_process_frame = process_frame
+		_monster_query_scratch_physics_frame = physics_frame
+
+	var slot := _monster_query_scratch_index
+	if slot >= _monster_query_scratch_pool.size():
+		_monster_query_scratch_pool.append([])
+	var result: Array = _monster_query_scratch_pool[slot]
+	_monster_query_scratch_index = (
+		_monster_query_scratch_index + 1
+	) % MONSTER_QUERY_SCRATCH_COUNT
+	result.clear()
+	return result
 
 
 func _get_monster_nodes_cached() -> Array:
@@ -396,7 +424,20 @@ func _get_monster_nodes_cached() -> Array:
 		process_frame != _monster_nodes_cache_process_frame
 		or physics_frame != _monster_nodes_cache_physics_frame
 	):
-		_monster_nodes_cache = get_tree().get_nodes_in_group("monsters")
+		_monster_nodes_cache.clear()
+		var battle := get_parent()
+		if (
+			is_instance_valid(battle)
+			and battle.has_method("fill_active_monsters")
+		):
+			battle.call(
+				"fill_active_monsters",
+				_monster_nodes_cache
+			)
+		else:
+			_monster_nodes_cache.append_array(
+				get_tree().get_nodes_in_group("monsters")
+			)
 		_monster_nodes_cache_process_frame = process_frame
 		_monster_nodes_cache_physics_frame = physics_frame
 	return _monster_nodes_cache
@@ -417,33 +458,55 @@ func _get_aux_group_nodes_cached(group_name: StringName) -> Array:
 		_aux_group_nodes_cache[group_name] = get_tree().get_nodes_in_group(
 			group_name
 		)
-	var cached = _aux_group_nodes_cache.get(group_name, [])
+	var cached = _aux_group_nodes_cache.get(group_name)
 	return cached if cached is Array else []
 
 
 func _get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
+	var result := _acquire_monster_query_scratch()
 	var battle := get_parent()
 	if (
 		is_instance_valid(battle)
-		and battle.has_method("query_monsters_near")
+		and battle.has_method("fill_monsters_near")
 	):
-		var nearby = battle.call("query_monsters_near", origin, radius)
-		if nearby is Array:
-			return nearby
-	return _get_monster_nodes_cached()
+		battle.call(
+			"fill_monsters_near",
+			origin,
+			radius,
+			result
+		)
+		return result
+
+	result.append_array(_get_monster_nodes_cached())
+	return result
 
 
 func _get_monster_nodes_in_rect(world_rect: Rect2) -> Array:
+	var result := _acquire_monster_query_scratch()
 	var battle := get_parent()
 	if (
 		is_instance_valid(battle)
-		and battle.has_method("query_monsters_in_rect")
+		and battle.has_method("fill_monsters_in_rect")
 	):
-		var nearby = battle.call("query_monsters_in_rect", world_rect)
-		if nearby is Array:
-			return nearby
-	return _get_monster_nodes_cached()
+		battle.call(
+			"fill_monsters_in_rect",
+			world_rect,
+			result
+		)
+		return result
 
+	result.append_array(_get_monster_nodes_cached())
+	return result
+
+
+func _get_active_monster_count() -> int:
+	var battle := get_parent()
+	if (
+		is_instance_valid(battle)
+		and battle.has_method("get_active_monster_count")
+	):
+		return int(battle.call("get_active_monster_count"))
+	return _get_monster_nodes_cached().size()
 
 var current_hp: int
 var level: int = 1
@@ -7428,21 +7491,27 @@ func _apply_heal_item_steering(base_direction: Vector2, delta: float) -> Vector2
 func _find_nearest_monster() -> Node2D:
 	var nearest: Node2D = null
 	var nearest_distance := INF
+	_combat_target_scratch.clear()
+	_combat_target_scratch.append_array(_get_monster_nodes_cached())
+	_combat_target_scratch.append_array(
+		_get_aux_group_nodes_cached(&"treasure_chests")
+	)
 
-	for group_name in ["monsters", "treasure_chests"]:
-		for node in get_tree().get_nodes_in_group(group_name):
-			if not is_instance_valid(node) or node.is_queued_for_deletion():
-				continue
-			var combat_target := node as Node2D
-			if combat_target == null:
-				continue
-			var hp_value = combat_target.get("current_hp")
-			if hp_value != null and int(hp_value) <= 0:
-				continue
-			var distance := global_position.distance_squared_to(combat_target.global_position)
-			if distance < nearest_distance:
-				nearest_distance = distance
-				nearest = combat_target
+	for node in _combat_target_scratch:
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var combat_target := node as Node2D
+		if combat_target == null:
+			continue
+		var hp_value = combat_target.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		var distance := global_position.distance_squared_to(
+			combat_target.global_position
+		)
+		if distance < nearest_distance:
+			nearest_distance = distance
+			nearest = combat_target
 
 	return nearest
 
@@ -7650,7 +7719,7 @@ func _choose_archmage_skill() -> String:
 	var scores: Dictionary = {}
 	var nearby_220 := _count_monsters_near(global_position, 220.0)
 	var nearby_360 := _count_monsters_near(global_position, 360.0)
-	var total_monsters := _get_monster_nodes_cached().size()
+	var total_monsters := _get_active_monster_count()
 
 	if _archmage_skill_ready("combustion"):
 		scores["combustion"] = 1.2 + float(nearby_220) * 0.65
