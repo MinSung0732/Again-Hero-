@@ -453,9 +453,29 @@ static func _describe_rule(rule: Dictionary, context: Dictionary) -> String:
 			)
 		"context_linear", "context_min", "context_max":
 			var context_key := String(rule.get("key", "상황"))
+			var context_value := float(context.get(context_key, 0.0))
+			match context_key:
+				"purifier_link_count":
+					return "현재 정화의 구체 연결선 %d개" % int(context_value)
+				"purifier_active_orb_count":
+					return "현재 설치된 정화의 구체 %d개" % int(context_value)
+				"purifier_cleansing_progress_ratio":
+					return "정화 누적 진행 %.0f%%" % (
+						clampf(context_value, 0.0, 1.0) * 100.0
+					)
+				"purifier_cleansing_target_count":
+					return "현재 정화 대상 %d명" % int(context_value)
+				"purifier_crown_stacks":
+					return "용기의 왕관 %d스택" % int(context_value)
+				"purifier_crown_stack_ratio":
+					return "용기의 왕관 누적 %.0f%%" % (
+						clampf(context_value, 0.0, 1.0) * 100.0
+					)
+				"purifier_protection_break_count":
+					return "이번 전투 신성보호 파괴 %d회" % int(context_value)
 			return "전용 상황 %s %.2f" % [
 				context_key,
-				float(context.get(context_key, 0.0)),
+				context_value,
 			]
 
 	return ""
