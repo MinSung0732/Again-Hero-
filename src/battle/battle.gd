@@ -366,6 +366,53 @@ func count_monsters_near(
 	return count
 
 
+func get_nearest_hero_combat_target(origin: Vector2) -> Node2D:
+	var nearest: Node2D = null
+	var nearest_distance_sq := INF
+
+	for raw_id in active_monsters:
+		var raw_node = active_monsters.get(raw_id)
+		if (
+			not is_instance_valid(raw_node)
+			or raw_node.is_queued_for_deletion()
+		):
+			continue
+		var combat_target := raw_node as Node2D
+		if combat_target == null:
+			continue
+		var hp_value = combat_target.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		var distance_sq := origin.distance_squared_to(
+			combat_target.global_position
+		)
+		if distance_sq < nearest_distance_sq:
+			nearest_distance_sq = distance_sq
+			nearest = combat_target
+
+	for raw_id in active_treasure_chests:
+		var raw_node = active_treasure_chests.get(raw_id)
+		if (
+			not is_instance_valid(raw_node)
+			or raw_node.is_queued_for_deletion()
+		):
+			continue
+		var combat_target := raw_node as Node2D
+		if combat_target == null:
+			continue
+		var hp_value = combat_target.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		var distance_sq := origin.distance_squared_to(
+			combat_target.global_position
+		)
+		if distance_sq < nearest_distance_sq:
+			nearest_distance_sq = distance_sq
+			nearest = combat_target
+
+	return nearest
+
+
 func get_nearest_monster_target(
 	origin: Vector2,
 	radius: float

@@ -7657,9 +7657,21 @@ func _apply_heal_item_steering(base_direction: Vector2, delta: float) -> Vector2
 
 
 func _find_nearest_monster() -> Node2D:
+	var battle := get_parent()
+	if (
+		is_instance_valid(battle)
+		and battle.has_method("get_nearest_hero_combat_target")
+	):
+		var registered_target = battle.call(
+			"get_nearest_hero_combat_target",
+			global_position
+		)
+		if registered_target is Node2D:
+			return registered_target as Node2D
+
+	# Compatibility fallback for isolated scenes/tests without Battle.
 	var nearest: Node2D = null
 	var nearest_distance := INF
-
 	for group_name in ["monsters", "treasure_chests"]:
 		for node in get_tree().get_nodes_in_group(group_name):
 			if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -7670,7 +7682,9 @@ func _find_nearest_monster() -> Node2D:
 			var hp_value = combat_target.get("current_hp")
 			if hp_value != null and int(hp_value) <= 0:
 				continue
-			var distance := global_position.distance_squared_to(combat_target.global_position)
+			var distance := global_position.distance_squared_to(
+				combat_target.global_position
+			)
 			if distance < nearest_distance:
 				nearest_distance = distance
 				nearest = combat_target
