@@ -308,7 +308,6 @@ func _ready() -> void:
 		float(snapshot.get("run_elapsed_seconds", 0.0)),
 		float(snapshot.get("run_remaining_seconds", 0.0))
 	)
-	_refresh_hero_skill_cooldown_hud()
 
 	build_label.text = ""
 	debug_balance_label.text = String(snapshot.get("debug_balance_summary", "[DEBUG]"))
@@ -344,10 +343,13 @@ func _process(delta: float) -> void:
 			if is_instance_valid(battle):
 				battle.set_external_pause(false)
 
-	hero_skill_hud_refresh_timer -= delta
-	if hero_skill_hud_refresh_timer <= 0.0:
-		hero_skill_hud_refresh_timer = 0.05
-		_refresh_hero_skill_cooldown_hud()
+	if _should_refresh_hero_skill_cooldown_hud():
+		hero_skill_hud_refresh_timer -= delta
+		if hero_skill_hud_refresh_timer <= 0.0:
+			hero_skill_hud_refresh_timer = 0.05
+			_refresh_hero_skill_cooldown_hud()
+	else:
+		hero_skill_hud_refresh_timer = 0.0
 
 	debug_refresh_timer -= delta
 	if debug_refresh_timer <= 0.0:
@@ -1097,6 +1099,21 @@ func _hide_monster_info_immediate() -> void:
 		monster_info_panel.hide()
 	monster_info_bookmark.show()
 	monster_info_animating = false
+
+func _should_refresh_hero_skill_cooldown_hud() -> bool:
+	if not is_instance_valid(hud_layer) or not hud_layer.is_visible_in_tree():
+		return false
+	if _skill_unlock_cutscene_active:
+		return false
+	if (
+		pause_menu.visible
+		or demon_augment_panel.visible
+		or mutation_panel.visible
+		or result_panel.visible
+	):
+		return false
+	return true
+
 
 func _refresh_hero_skill_cooldown_hud() -> void:
 	if not is_instance_valid(hero_skill_cooldown_bar):
