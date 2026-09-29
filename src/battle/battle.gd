@@ -1097,6 +1097,11 @@ func get_nearest_hero_combat_target(origin: Vector2) -> Node2D:
 		var summon := raw_summon as Node2D
 		if summon == null or not bool(summon.get("active")):
 			continue
+		if (
+			summon.has_method("is_combat_targetable")
+			and not bool(summon.call("is_combat_targetable"))
+		):
+			continue
 		var distance_sq := origin.distance_squared_to(summon.global_position)
 		if distance_sq >= nearest_distance_sq:
 			continue

@@ -178,6 +178,8 @@ func _ready() -> void:
 		_on_hero_reveal_bgm_start_requested
 	)
 	skill_unlock_cutscene.finished.connect(_on_skill_unlock_cutscene_finished)
+	get_viewport().size_changed.connect(_sync_skill_unlock_cutscene_frame)
+	call_deferred("_sync_skill_unlock_cutscene_frame")
 
 	battle.stats_changed.connect(_on_stats_changed)
 	battle.progression_changed.connect(_on_progression_changed)
@@ -442,6 +444,19 @@ func _start_battle_after_intro(_stage_id: String) -> void:
 	battle.set_external_pause(false)
 
 
+func _sync_skill_unlock_cutscene_frame() -> void:
+	if (
+		not is_instance_valid(skill_unlock_cutscene)
+		or not is_instance_valid(battle_viewport_container)
+	):
+		return
+	if skill_unlock_cutscene.has_method("configure_battle_frame"):
+		skill_unlock_cutscene.call(
+			"configure_battle_frame",
+			battle_viewport_container.get_global_rect()
+		)
+
+
 func _on_conditional_skill_unlocked(
 	_skill_id: String,
 	_skill_name: String,
@@ -454,6 +469,7 @@ func _on_conditional_skill_unlocked(
 
 	_skill_unlock_cutscene_active = true
 	battle.set_external_pause(true)
+	_sync_skill_unlock_cutscene_frame()
 	skill_unlock_cutscene.call("play_unlock", payload)
 
 

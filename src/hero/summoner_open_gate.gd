@@ -200,6 +200,10 @@ func deactivate(emit_signal: bool = true) -> void:
 		released.emit(self)
 
 
+func is_combat_targetable() -> bool:
+	return false
+
+
 func take_damage(_amount: int, _source: Node = null) -> bool:
 	return false
 
