@@ -7813,44 +7813,111 @@ func restore_archmage_gauge(amount: float) -> void:
 
 
 func _choose_archmage_skill() -> String:
-	var scores: Dictionary = {}
 	var nearby_220 := _count_monsters_near(global_position, 220.0)
 	var nearby_360 := _count_monsters_near(global_position, 360.0)
 	var total_monsters := _get_monster_nodes_cached().size()
 
+	var combustion_weight := 0.0
+	var ice_bolt_weight := 0.0
+	var earth_spikes_weight := 0.0
+	var holy_power_weight := 0.0
+	var chain_dagger_weight := 0.0
+	var storm_weight := 0.0
+	var harmony_weight := 0.0
+
 	if _archmage_skill_ready("combustion"):
-		scores["combustion"] = 1.2 + float(nearby_220) * 0.65
+		combustion_weight = maxf(
+			1.2 + float(nearby_220) * 0.65,
+			0.05
+		)
 	if _archmage_skill_ready("ice_bolt") and is_instance_valid(target):
-		scores["ice_bolt"] = 2.2
+		ice_bolt_weight = maxf(2.2, 0.05)
 	if _archmage_skill_ready("earth_spikes"):
-		scores["earth_spikes"] = 1.4 + minf(float(total_monsters) * 0.14, 2.2)
+		earth_spikes_weight = maxf(
+			1.4 + minf(float(total_monsters) * 0.14, 2.2),
+			0.05
+		)
 	if _archmage_skill_ready("holy_power"):
-		scores["holy_power"] = 1.1 + float(nearby_360) * 0.45
-	if _archmage_skill_ready("chain_dagger") and not archmage_chain_dagger_active and total_monsters > 0:
-		scores["chain_dagger"] = 1.4 + minf(float(total_monsters) * 0.25, 2.6)
+		holy_power_weight = maxf(
+			1.1 + float(nearby_360) * 0.45,
+			0.05
+		)
+	if (
+		_archmage_skill_ready("chain_dagger")
+		and not archmage_chain_dagger_active
+		and total_monsters > 0
+	):
+		chain_dagger_weight = maxf(
+			1.4 + minf(float(total_monsters) * 0.25, 2.6),
+			0.05
+		)
 	if _archmage_skill_ready("storm"):
-		scores["storm"] = 1.0 + float(nearby_360) * 0.55
+		storm_weight = maxf(
+			1.0 + float(nearby_360) * 0.55,
+			0.05
+		)
 
 	var cooling_count := 0
 	for key in ARCHMAGE_OFFENSIVE_SKILL_KEYS:
 		if float(archmage_skill_cooldowns.get(key, 0.0)) > 0.0:
 			cooling_count += 1
 	if _archmage_skill_ready("harmony") and cooling_count >= 1:
-		scores["harmony"] = 3.0 + float(cooling_count) * 1.10
+		harmony_weight = maxf(
+			3.0 + float(cooling_count) * 1.10,
+			0.05
+		)
 
-	if scores.is_empty():
+	var total_score := (
+		combustion_weight
+		+ ice_bolt_weight
+		+ earth_spikes_weight
+		+ holy_power_weight
+		+ chain_dagger_weight
+		+ storm_weight
+		+ harmony_weight
+	)
+	if total_score <= 0.0:
 		return ""
 
-	var total_score := 0.0
-	for raw_score in scores.values():
-		total_score += maxf(float(raw_score), 0.05)
 	var roll := randf() * total_score
-	for raw_key in scores.keys():
-		var key := String(raw_key)
-		roll -= maxf(float(scores[key]), 0.05)
+	if combustion_weight > 0.0:
+		roll -= combustion_weight
 		if roll <= 0.0:
-			return key
-	return String(scores.keys()[scores.size() - 1])
+			return "combustion"
+	if ice_bolt_weight > 0.0:
+		roll -= ice_bolt_weight
+		if roll <= 0.0:
+			return "ice_bolt"
+	if earth_spikes_weight > 0.0:
+		roll -= earth_spikes_weight
+		if roll <= 0.0:
+			return "earth_spikes"
+	if holy_power_weight > 0.0:
+		roll -= holy_power_weight
+		if roll <= 0.0:
+			return "holy_power"
+	if chain_dagger_weight > 0.0:
+		roll -= chain_dagger_weight
+		if roll <= 0.0:
+			return "chain_dagger"
+	if storm_weight > 0.0:
+		roll -= storm_weight
+		if roll <= 0.0:
+			return "storm"
+	if harmony_weight > 0.0:
+		return "harmony"
+
+	if storm_weight > 0.0:
+		return "storm"
+	if chain_dagger_weight > 0.0:
+		return "chain_dagger"
+	if holy_power_weight > 0.0:
+		return "holy_power"
+	if earth_spikes_weight > 0.0:
+		return "earth_spikes"
+	if ice_bolt_weight > 0.0:
+		return "ice_bolt"
+	return "combustion"
 
 
 func _archmage_skill_ready(skill_key: String) -> bool:
