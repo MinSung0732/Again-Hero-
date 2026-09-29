@@ -1837,17 +1837,18 @@ func _try_cast_summoner_gatekeeper() -> bool:
 	if summon_to_use == null:
 		return false
 
-	var runtime_config := summoner_gatekeeper_config.duplicate(true)
-	var fortress_stacks := _get_summoner_augment_stacks("summoner_gatekeeper_fortress")
-	var barrage_stacks := _get_summoner_augment_stacks("summoner_gatekeeper_barrage")
-	runtime_config["owner_attack_damage"] = attack_damage
-	runtime_config["max_hp"] = int(round(float(runtime_config.get("max_hp", 650)) * (1.0 + float(fortress_stacks) * 0.08)))
-	runtime_config["duration"] = float(runtime_config.get("duration", 60.0)) + float(fortress_stacks) * 3.0
-	runtime_config["attack_cooldown"] = float(runtime_config.get("attack_cooldown", 1.65)) * (1.0 + float(fortress_stacks) * 0.02)
-	runtime_config["damage_ratio"] = float(runtime_config.get("damage_ratio", 0.70)) * (1.0 + float(barrage_stacks) * 0.05)
-	runtime_config["projectile_speed"] = float(runtime_config.get("projectile_speed", 560.0)) * (1.0 + float(barrage_stacks) * 0.04)
-	runtime_config["attack_range"] = float(runtime_config.get("attack_range", 720.0)) + float(barrage_stacks) * 16.0
-	runtime_config["consecutive_damage_bonus_per_step"] = float(barrage_stacks) * 0.01
+	var runtime_config := (
+		HERO_SUMMONER_RUNTIME.build_gatekeeper_runtime_config(
+			summoner_gatekeeper_config,
+			attack_damage,
+			_get_summoner_augment_stacks(
+				"summoner_gatekeeper_fortress"
+			),
+			_get_summoner_augment_stacks(
+				"summoner_gatekeeper_barrage"
+			)
+		)
+	)
 	if not HERO_SUMMONER_RUNTIME.activate_summon(
 		summon_to_use,
 		global_position,
@@ -1892,11 +1893,15 @@ func _try_cast_summoner_scout() -> bool:
 	if summon_to_use == null:
 		return false
 
-	var runtime_config := summoner_scout_config.duplicate(true)
-	var reinforcement_stacks := _get_summoner_augment_stacks("summoner_scout_reinforcement")
-	runtime_config["owner_attack_damage"] = attack_damage
-	runtime_config["duration"] = float(runtime_config.get("duration", 60.0)) + float(reinforcement_stacks) * 4.0
-	runtime_config["move_speed"] = float(runtime_config.get("move_speed", 220.0)) * (1.0 + float(reinforcement_stacks) * 0.04)
+	var runtime_config := (
+		HERO_SUMMONER_RUNTIME.build_scout_runtime_config(
+			summoner_scout_config,
+			attack_damage,
+			_get_summoner_augment_stacks(
+				"summoner_scout_reinforcement"
+			)
+		)
+	)
 	if not HERO_SUMMONER_RUNTIME.activate_summon(
 		summon_to_use,
 		global_position,
@@ -1941,15 +1946,18 @@ func _try_cast_summoner_hound() -> bool:
 	if summon_to_use == null:
 		return false
 
-	var runtime_config := summoner_hound_config.duplicate(true)
-	var frenzy_stacks := _get_summoner_augment_stacks("summoner_hound_frenzy")
-	var blood_track_stacks := _get_summoner_augment_stacks("summoner_hound_blood_track")
-	runtime_config["owner_attack_damage"] = attack_damage
-	runtime_config["move_speed"] = float(runtime_config.get("move_speed", 300.0)) * (1.0 + float(frenzy_stacks) * 0.05)
-	runtime_config["attack_cooldown"] = float(runtime_config.get("attack_cooldown", 0.72)) / (1.0 + float(frenzy_stacks) * 0.04)
-	runtime_config["second_hit_bonus_ratio"] = float(frenzy_stacks) * 0.024
-	runtime_config["high_hp_damage_bonus"] = float(blood_track_stacks) * 0.05
-	runtime_config["elite_move_speed_bonus"] = float(blood_track_stacks) * 0.03
+	var runtime_config := (
+		HERO_SUMMONER_RUNTIME.build_hound_runtime_config(
+			summoner_hound_config,
+			attack_damage,
+			_get_summoner_augment_stacks(
+				"summoner_hound_frenzy"
+			),
+			_get_summoner_augment_stacks(
+				"summoner_hound_blood_track"
+			)
+		)
+	)
 	if not HERO_SUMMONER_RUNTIME.activate_summon(
 		summon_to_use,
 		global_position,
@@ -1996,14 +2004,19 @@ func _try_cast_summoner_watcher() -> bool:
 	if summon_to_use == null:
 		return false
 
-	var runtime_config := summoner_watcher_config.duplicate(true)
-	var focus_stacks := _get_summoner_augment_stacks("summoner_watcher_focus")
-	var network_stacks := _get_summoner_augment_stacks("summoner_watcher_network")
-	runtime_config["owner_attack_damage"] = attack_damage
-	runtime_config["damage_ratio"] = maxf(float(runtime_config.get("damage_ratio", 0.10)) - float(network_stacks) * 0.01, 0.01)
-	runtime_config["focus_attack_speed_bonus"] = float(focus_stacks) * 0.07
-	runtime_config["focus_damage_bonus"] = float(focus_stacks) * 0.03
-	runtime_config["follow_slot"] = follow_slot
+	var runtime_config := (
+		HERO_SUMMONER_RUNTIME.build_watcher_runtime_config(
+			summoner_watcher_config,
+			attack_damage,
+			_get_summoner_augment_stacks(
+				"summoner_watcher_focus"
+			),
+			_get_summoner_augment_stacks(
+				"summoner_watcher_network"
+			),
+			follow_slot
+		)
+	)
 	if not HERO_SUMMONER_RUNTIME.activate_summon(
 		summon_to_use,
 		global_position,

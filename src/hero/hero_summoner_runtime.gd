@@ -364,3 +364,114 @@ static func get_release_pending_mask(
 	):
 		mask |= PENDING_WATCHER
 	return mask
+
+
+
+static func build_gatekeeper_runtime_config(
+	base_config: Dictionary,
+	owner_attack_damage: int,
+	fortress_stacks: int,
+	barrage_stacks: int
+) -> Dictionary:
+	var runtime_config := base_config.duplicate(true)
+	runtime_config["owner_attack_damage"] = owner_attack_damage
+	runtime_config["max_hp"] = int(
+		round(
+			float(runtime_config.get("max_hp", 650))
+			* (1.0 + float(fortress_stacks) * 0.08)
+		)
+	)
+	runtime_config["duration"] = (
+		float(runtime_config.get("duration", 60.0))
+		+ float(fortress_stacks) * 3.0
+	)
+	runtime_config["attack_cooldown"] = (
+		float(runtime_config.get("attack_cooldown", 1.65))
+		* (1.0 + float(fortress_stacks) * 0.02)
+	)
+	runtime_config["damage_ratio"] = (
+		float(runtime_config.get("damage_ratio", 0.70))
+		* (1.0 + float(barrage_stacks) * 0.05)
+	)
+	runtime_config["projectile_speed"] = (
+		float(runtime_config.get("projectile_speed", 560.0))
+		* (1.0 + float(barrage_stacks) * 0.04)
+	)
+	runtime_config["attack_range"] = (
+		float(runtime_config.get("attack_range", 720.0))
+		+ float(barrage_stacks) * 16.0
+	)
+	runtime_config["consecutive_damage_bonus_per_step"] = (
+		float(barrage_stacks) * 0.01
+	)
+	return runtime_config
+
+
+static func build_scout_runtime_config(
+	base_config: Dictionary,
+	owner_attack_damage: int,
+	reinforcement_stacks: int
+) -> Dictionary:
+	var runtime_config := base_config.duplicate(true)
+	runtime_config["owner_attack_damage"] = owner_attack_damage
+	runtime_config["duration"] = (
+		float(runtime_config.get("duration", 60.0))
+		+ float(reinforcement_stacks) * 4.0
+	)
+	runtime_config["move_speed"] = (
+		float(runtime_config.get("move_speed", 220.0))
+		* (1.0 + float(reinforcement_stacks) * 0.04)
+	)
+	return runtime_config
+
+
+static func build_hound_runtime_config(
+	base_config: Dictionary,
+	owner_attack_damage: int,
+	frenzy_stacks: int,
+	blood_track_stacks: int
+) -> Dictionary:
+	var runtime_config := base_config.duplicate(true)
+	runtime_config["owner_attack_damage"] = owner_attack_damage
+	runtime_config["move_speed"] = (
+		float(runtime_config.get("move_speed", 300.0))
+		* (1.0 + float(frenzy_stacks) * 0.05)
+	)
+	runtime_config["attack_cooldown"] = (
+		float(runtime_config.get("attack_cooldown", 0.72))
+		/ (1.0 + float(frenzy_stacks) * 0.04)
+	)
+	runtime_config["second_hit_bonus_ratio"] = (
+		float(frenzy_stacks) * 0.024
+	)
+	runtime_config["high_hp_damage_bonus"] = (
+		float(blood_track_stacks) * 0.05
+	)
+	runtime_config["elite_move_speed_bonus"] = (
+		float(blood_track_stacks) * 0.03
+	)
+	return runtime_config
+
+
+static func build_watcher_runtime_config(
+	base_config: Dictionary,
+	owner_attack_damage: int,
+	focus_stacks: int,
+	network_stacks: int,
+	follow_slot: int
+) -> Dictionary:
+	var runtime_config := base_config.duplicate(true)
+	runtime_config["owner_attack_damage"] = owner_attack_damage
+	runtime_config["damage_ratio"] = maxf(
+		float(runtime_config.get("damage_ratio", 0.10))
+		- float(network_stacks) * 0.01,
+		0.01
+	)
+	runtime_config["focus_attack_speed_bonus"] = (
+		float(focus_stacks) * 0.07
+	)
+	runtime_config["focus_damage_bonus"] = (
+		float(focus_stacks) * 0.03
+	)
+	runtime_config["follow_slot"] = follow_slot
+	return runtime_config
