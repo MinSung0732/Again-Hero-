@@ -262,6 +262,7 @@ var alchemist_throw_index: int = 0
 var alchemist_throw_positions: Array[Vector2] = []
 var alchemist_direct_chest_target: Node2D = null
 var alchemist_vial_pool: Array[Node2D] = []
+var alchemist_mystery_vial_pool: Array[Node2D] = []
 var alchemist_poison_pool: Array[Node2D] = []
 var alchemist_material_pool: Array[Node2D] = []
 var alchemist_bonus_materials: Array[Node2D] = []
@@ -607,6 +608,7 @@ func configure_profile(profile: Dictionary) -> void:
 	alchemist_throw_positions.clear()
 	alchemist_direct_chest_target = null
 	alchemist_vial_pool.clear()
+	alchemist_mystery_vial_pool.clear()
 	alchemist_poison_pool.clear()
 	alchemist_material_pool.clear()
 	alchemist_bonus_materials.clear()
@@ -3487,17 +3489,23 @@ func _execute_alchemist_cauldron_great_success(origin: Vector2) -> void:
 			await get_tree().create_timer(batch_interval).timeout
 
 
-func _spawn_alchemist_mystery_vial(origin: Vector2) -> void:
+func _acquire_alchemist_mystery_vial() -> Node2D:
+	for vial in alchemist_mystery_vial_pool:
+		if (
+			is_instance_valid(vial)
+			and vial.has_method("is_available")
+			and bool(vial.call("is_available"))
+		):
+			return vial
+
 	var parent := get_parent()
 	if not is_instance_valid(parent):
-		return
+		return null
 	var vial := ALCHEMIST_VIAL_SCENE.instantiate() as Node2D
 	if vial == null:
-		return
+		return null
 	parent.add_child(vial)
-	# Great success can throw 20+ vials in bursts. Keep the base-attack asset,
-	# but attenuate only these temporary mystery vials so their throw SFX stack
-	# does not overpower the cauldron result or combat mix.
+	# Great-success vials keep their quieter throw mix for every reuse.
 	var mystery_throw_audio := vial.get_node_or_null("ThrowAudio") as AudioStreamPlayer
 	if is_instance_valid(mystery_throw_audio):
 		mystery_throw_audio.volume_db = -24.0
@@ -3505,6 +3513,14 @@ func _spawn_alchemist_mystery_vial(origin: Vector2) -> void:
 		"landed",
 		Callable(self, "_on_alchemist_mystery_vial_landed")
 	)
+	alchemist_mystery_vial_pool.append(vial)
+	return vial
+
+
+func _spawn_alchemist_mystery_vial(origin: Vector2) -> void:
+	var vial := _acquire_alchemist_mystery_vial()
+	if vial == null:
+		return
 	var throw_radius: float = maxf(
 		float(
 			alchemist_mystery_cauldron_config.get(
@@ -3527,7 +3543,7 @@ func _spawn_alchemist_mystery_vial(origin: Vector2) -> void:
 		0.42,
 		105.0,
 		null,
-		true
+		false
 	)
 
 
