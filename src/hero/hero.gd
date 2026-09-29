@@ -23,6 +23,7 @@ const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
 const HERO_WORLD_QUERY_RUNTIME := preload("res://src/hero/hero_world_query_runtime.gd")
 const HERO_SUMMONER_RUNTIME := preload("res://src/hero/hero_summoner_runtime.gd")
+const HERO_FIGHTER_RUNTIME := preload("res://src/hero/hero_fighter_runtime.gd")
 const STAGE1_FRAME_DIR := "res://assets/art/heroes/stage1_mage/frames"
 const STAGE1_SHIELD_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_02"
 const STAGE1_SHIELD_EFFECT_FRAME_COUNT := 6
@@ -13250,14 +13251,11 @@ func _physics_process_fighter(delta: float) -> void:
 func _fighter_should_start_charge() -> bool:
 	if fighter_charge_config.is_empty() or fighter_guard_active:
 		return false
-	var radius := maxf(
-		float(fighter_charge_config.get("trigger_radius", 245.0)),
-		1.0
+	var trigger := HERO_FIGHTER_RUNTIME.get_charge_trigger(
+		fighter_charge_config
 	)
-	var required := maxi(
-		int(fighter_charge_config.get("trigger_enemy_count", 4)),
-		1
-	)
+	var radius := trigger.x
+	var required := maxi(int(trigger.y), 1)
 	return _count_monsters_near(
 		global_position,
 		radius,
@@ -13272,26 +13270,15 @@ func _start_fighter_charge() -> void:
 	_begin_fighter_charge_dash(charge_target)
 
 func _find_fighter_charge_target(exclude: Node = null) -> Node2D:
-	var max_distance := maxf(float(fighter_charge_config.get("max_target_distance", 560.0)), 1.0)
-	var max_distance_sq := max_distance * max_distance
-	var farthest: Node2D = null
-	var farthest_distance_sq := -1.0
-	for node in _get_monster_nodes_near(global_position, max_distance):
-		if not is_instance_valid(node) or node.is_queued_for_deletion() or node == exclude:
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		var distance_sq := global_position.distance_squared_to(
-			monster.global_position
-		)
-		if (
-			distance_sq <= max_distance_sq
-			and distance_sq > farthest_distance_sq
-		):
-			farthest = monster
-			farthest_distance_sq = distance_sq
-	return farthest
+	var max_distance := HERO_FIGHTER_RUNTIME.get_charge_max_target_distance(
+		fighter_charge_config
+	)
+	return HERO_FIGHTER_RUNTIME.find_farthest_charge_target(
+		_get_monster_nodes_near(global_position, max_distance),
+		global_position,
+		max_distance,
+		exclude
+	)
 
 func _begin_fighter_charge_dash(charge_target: Node2D) -> void:
 	if not is_instance_valid(charge_target):
@@ -13695,30 +13682,17 @@ func _restart_fighter_attack_animation(reverse_frames: bool) -> void:
 
 
 func _fighter_should_use_slash() -> bool:
-	var trigger_count := maxi(
-		int(fighter_basic_config.get("slash_enemy_trigger", 2)),
-		1
+	var trigger := HERO_FIGHTER_RUNTIME.get_slash_trigger(
+		fighter_basic_config,
+		fighter_slash_half_width_bonus
 	)
-	var radius := maxf(
-		float(fighter_basic_config.get("slash_reach", 135.0))
-		+ fighter_slash_half_width_bonus,
-		1.0
-	)
-	var nearby := 0
-	for node in _get_monster_nodes_near(global_position, radius):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		if (
-			global_position.distance_squared_to(monster.global_position)
-			<= radius * radius
-		):
-			nearby += 1
-			if nearby >= trigger_count:
-				return true
-	return false
+	var radius := trigger.x
+	var required := maxi(int(trigger.y), 1)
+	return _count_monsters_near(
+		global_position,
+		radius,
+		required
+	) >= required
 
 func _fighter_apply_slash(direction: Vector2, bonus_hit: bool = false) -> int:
 	var reach := maxf(float(fighter_basic_config.get("slash_reach", 135.0)), 1.0)
@@ -13828,29 +13802,16 @@ func _update_fighter_guard(delta: float) -> void:
 	queue_redraw()
 
 func _fighter_can_activate_guard() -> bool:
-	var radius := maxf(
-		float(ultimate_config.get("activation_enemy_radius", 320.0)),
-		1.0
+	var trigger := HERO_FIGHTER_RUNTIME.get_guard_trigger(
+		ultimate_config
 	)
-	var required := maxi(
-		int(ultimate_config.get("activation_enemy_count", 1)),
-		1
-	)
-	var nearby := 0
-	for node in _get_monster_nodes_near(global_position, radius):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		if (
-			global_position.distance_squared_to(monster.global_position)
-			<= radius * radius
-		):
-			nearby += 1
-			if nearby >= required:
-				return true
-	return false
+	var radius := trigger.x
+	var required := maxi(int(trigger.y), 1)
+	return _count_monsters_near(
+		global_position,
+		radius,
+		required
+	) >= required
 
 
 func _start_fighter_guard() -> void:
