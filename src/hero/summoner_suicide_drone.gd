@@ -38,9 +38,21 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 	owner_hero = new_owner
 	max_hp = maxi(int(config.get("max_hp", 100)), 1)
 	current_hp = max_hp
+	var owner_attack_damage := maxi(
+		int(config.get("owner_attack_damage", 0)),
+		0
+	)
+	if owner_attack_damage <= 0 and is_instance_valid(new_owner):
+		var raw_owner_attack_damage = new_owner.get("attack_damage")
+		if raw_owner_attack_damage != null:
+			owner_attack_damage = maxi(
+				int(raw_owner_attack_damage),
+				1
+			)
+	owner_attack_damage = maxi(owner_attack_damage, 1)
 	attack_damage = maxi(
 		int(round(
-			float(config.get("owner_attack_damage", 1))
+			float(owner_attack_damage)
 			* maxf(float(config.get("damage_ratio", 0.15)), 0.0)
 		)),
 		1
