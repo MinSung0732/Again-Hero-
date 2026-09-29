@@ -285,6 +285,8 @@ var archmage_orbit_angle: float = 0.0
 var archmage_chain_dagger_active: bool = false
 var archmage_chain_dagger_active_count: int = 0
 var archmage_chain_multithrow_stacks: int = 0
+var archmage_chain_target_candidates: Array[Node2D] = []
+var archmage_chain_target_results: Array[Node2D] = []
 var archmage_casting_sequence: bool = false
 var archmage_casting_sequence_count: int = 0
 var archmage_multicast_stacks: int = 0
@@ -885,6 +887,8 @@ func configure_profile(profile: Dictionary) -> void:
 	archmage_chain_dagger_active = false
 	archmage_chain_dagger_active_count = 0
 	archmage_chain_multithrow_stacks = 0
+	archmage_chain_target_candidates.clear()
+	archmage_chain_target_results.clear()
 	archmage_casting_sequence = false
 	archmage_casting_sequence_count = 0
 	archmage_multicast_stacks = 0
@@ -8439,7 +8443,8 @@ func _get_archmage_chain_dagger_targets(
 	max_count: int,
 	search_radius: float
 ) -> Array[Node2D]:
-	var candidates: Array[Node2D] = []
+	archmage_chain_target_candidates.clear()
+	archmage_chain_target_results.clear()
 	var radius_sq := search_radius * search_radius
 	for node in _get_monster_nodes_near(global_position, search_radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -8452,25 +8457,28 @@ func _get_archmage_chain_dagger_targets(
 			> radius_sq
 		):
 			continue
-		candidates.append(monster)
+		archmage_chain_target_candidates.append(monster)
 
-	if candidates.is_empty():
-		return []
+	if archmage_chain_target_candidates.is_empty():
+		return archmage_chain_target_results
 
-	var result: Array[Node2D] = []
 	if (
 		is_instance_valid(target)
 		and target.is_in_group("monsters")
 		and global_position.distance_squared_to(target.global_position)
 		<= radius_sq
 	):
-		result.append(target)
+		archmage_chain_target_results.append(target)
 
-	while result.size() < max_count and result.size() < candidates.size():
+	while (
+		archmage_chain_target_results.size() < max_count
+		and archmage_chain_target_results.size()
+		< archmage_chain_target_candidates.size()
+	):
 		var best: Node2D = null
 		var best_score := -INF
-		for candidate in candidates:
-			if candidate in result:
+		for candidate in archmage_chain_target_candidates:
+			if candidate in archmage_chain_target_results:
 				continue
 			var direction := global_position.direction_to(
 				candidate.global_position
@@ -8479,8 +8487,8 @@ func _get_archmage_chain_dagger_targets(
 				continue
 
 			var min_angle := PI
-			if not result.is_empty():
-				for chosen in result:
+			if not archmage_chain_target_results.is_empty():
+				for chosen in archmage_chain_target_results:
 					var chosen_direction := global_position.direction_to(
 						chosen.global_position
 					)
@@ -8503,11 +8511,13 @@ func _get_archmage_chain_dagger_targets(
 
 		if not is_instance_valid(best):
 			break
-		result.append(best)
+		archmage_chain_target_results.append(best)
 
-	if result.is_empty():
-		result.append(candidates[0])
-	return result
+	if archmage_chain_target_results.is_empty():
+		archmage_chain_target_results.append(
+			archmage_chain_target_candidates[0]
+		)
+	return archmage_chain_target_results
 
 
 func _cast_archmage_chain_dagger(config: Dictionary, empowered: bool) -> void:
