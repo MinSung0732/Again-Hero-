@@ -22,6 +22,7 @@ const STATUS_EFFECT_CATALOG := preload("res://src/data/status_effect_catalog.gd"
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
 const HERO_WORLD_QUERY_RUNTIME := preload("res://src/hero/hero_world_query_runtime.gd")
+const HERO_SUMMONER_RUNTIME := preload("res://src/hero/hero_summoner_runtime.gd")
 const STAGE1_FRAME_SIZE := Vector2(64, 64)
 const STAGE1_FRAME_DIR := "res://assets/art/heroes/stage1_mage/frames"
 const STAGE1_SHIELD_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_02"
@@ -1212,66 +1213,44 @@ func _physics_process(delta: float) -> void:
 
 
 func _get_summoner_level_slot_bonus() -> int:
-	return maxi(int(floor(float(level) / 5.0)), 0)
+	return HERO_SUMMONER_RUNTIME.get_level_slot_bonus(level)
 
 
 func _get_summoner_slot_capacity() -> int:
-	return maxi(
-		summoner_slot_base
-		+ summoner_slot_bonus
-		+ _get_summoner_level_slot_bonus(),
-		1
+	return HERO_SUMMONER_RUNTIME.get_slot_capacity(
+		summoner_slot_base,
+		summoner_slot_bonus,
+		level
 	)
 
 
 func _get_active_summon_count() -> int:
-	var count := 0
-	for summon in summoner_gatekeeper_pool:
-		if is_instance_valid(summon) and bool(summon.get("active")):
-			count += 1
-	for summon in summoner_scout_pool:
-		if is_instance_valid(summon) and bool(summon.get("active")):
-			count += 1
-	for summon in summoner_hound_pool:
-		if is_instance_valid(summon) and bool(summon.get("active")):
-			count += 1
-	for summon in summoner_watcher_pool:
-		if is_instance_valid(summon) and bool(summon.get("active")):
-			count += 1
-	return count
+	return HERO_SUMMONER_RUNTIME.count_active_regular_summons(
+		summoner_gatekeeper_pool,
+		summoner_scout_pool,
+		summoner_hound_pool,
+		summoner_watcher_pool
+	)
 
 
 func _get_active_summoner_watcher_count() -> int:
-	var count := 0
-	for summon in summoner_watcher_pool:
-		if is_instance_valid(summon) and bool(summon.get("active")):
-			count += 1
-	return count
+	return HERO_SUMMONER_RUNTIME.count_active_summons(
+		summoner_watcher_pool
+	)
 
 
 func _get_summoner_watcher_max_active() -> int:
-	return maxi(
-		int(summoner_watcher_config.get("max_active", 2))
-		+ _get_summoner_augment_stacks("summoner_watcher_network"),
-		0
+	return HERO_SUMMONER_RUNTIME.get_watcher_max_active(
+		summoner_watcher_config,
+		_get_summoner_augment_stacks("summoner_watcher_network")
 	)
 
 
 func _get_next_summoner_watcher_follow_slot() -> int:
-	var max_active := _get_summoner_watcher_max_active()
-	for slot_index in range(max_active):
-		var occupied := false
-		for summon in summoner_watcher_pool:
-			if (
-				is_instance_valid(summon)
-				and bool(summon.get("active"))
-				and int(summon.get("follow_slot")) == slot_index
-			):
-				occupied = true
-				break
-		if not occupied:
-			return slot_index
-	return -1
+	return HERO_SUMMONER_RUNTIME.get_next_watcher_follow_slot(
+		summoner_watcher_pool,
+		_get_summoner_watcher_max_active()
+	)
 
 
 func _set_summon_registry_active(
@@ -1557,102 +1536,57 @@ func _physics_process_summoner(delta: float) -> void:
 
 
 func _roll_summoner_ai_personality() -> String:
-	var personalities = summoner_ai_config.get(
-		"personalities",
-		["balanced", "aggressive", "defensive", "swarm", "focus"]
+	return HERO_SUMMONER_RUNTIME.roll_ai_personality(
+		summoner_ai_config
 	)
-	if not personalities is Array or personalities.is_empty():
-		return "balanced"
-	return String(personalities[randi() % personalities.size()])
 
 
 func _count_active_summons(pool: Array[Node2D]) -> int:
-	var count := 0
-	for summon in pool:
-		if is_instance_valid(summon) and bool(summon.get("active")):
-			count += 1
-	return count
+	return HERO_SUMMONER_RUNTIME.count_active_summons(pool)
 
 
 func _get_summoner_target_hp_ratio() -> float:
-	if not is_instance_valid(target):
-		return 0.0
-	var raw_current = target.get("current_hp")
-	var raw_max = target.get("max_hp")
-	if raw_current == null or raw_max == null:
-		return 0.0
-	var target_max := maxf(float(raw_max), 1.0)
-	return clampf(float(raw_current) / target_max, 0.0, 1.0)
+	return HERO_SUMMONER_RUNTIME.get_target_hp_ratio(target)
 
 
-func _score_summoner_ai_candidate(skill_id: String, nearby_count: int) -> float:
-	var score := 50.0
-	var hero_hp_ratio := clampf(float(current_hp) / float(maxi(max_hp, 1)), 0.0, 1.0)
-	var target_hp_ratio := _get_summoner_target_hp_ratio()
-	var gatekeepers := _count_active_summons(summoner_gatekeeper_pool)
+func _score_summoner_ai_candidate(
+	skill_id: String,
+	nearby_count: int
+) -> float:
+	var hero_hp_ratio := clampf(
+		float(current_hp) / float(maxi(max_hp, 1)),
+		0.0,
+		1.0
+	)
+	var gatekeepers := _count_active_summons(
+		summoner_gatekeeper_pool
+	)
 	var scouts := _count_active_summons(summoner_scout_pool)
 	var hounds := _count_active_summons(summoner_hound_pool)
-	var watchers := _count_active_summons(summoner_watcher_pool)
-	var same_active := 0
-
-	match skill_id:
-		"gatekeeper":
-			same_active = gatekeepers
-			score += (1.0 - hero_hp_ratio) * 32.0
-			score += minf(float(nearby_count), 10.0) * 1.8
-			score += float(hounds + scouts) * 2.5
-		"scout":
-			same_active = scouts
-			score += minf(float(nearby_count), 12.0) * 2.3
-			score += 8.0 if nearby_count >= 5 else 0.0
-		"hound":
-			same_active = hounds
-			score += 20.0 if is_instance_valid(target) and nearby_count <= 4 else 0.0
-			score += target_hp_ratio * 18.0
-			score -= maxf(float(nearby_count - 6), 0.0) * 2.0
-		"watcher":
-			same_active = watchers
-			score += 22.0 if is_instance_valid(target) else -12.0
-			score += target_hp_ratio * 12.0
-			score += float(hounds + scouts) * 2.0
-		"open_gate":
-			score += minf(float(nearby_count), 14.0) * 3.0
-			score += (1.0 - hero_hp_ratio) * 12.0
-			score += 16.0 if nearby_count >= 8 else 0.0
-			score += 10.0 if _get_active_summon_count() <= 2 else 0.0
-
-	if skill_id != "open_gate":
-		score -= float(same_active) * 11.0
-
-	var past_picks := int(summoner_ai_choice_counts.get(skill_id, 0))
-	score += minf(float(past_picks), 6.0) * 1.8
-	if summoner_ai_last_choice == skill_id:
-		score -= 5.0
-
-	match summoner_ai_personality:
-		"aggressive":
-			if skill_id in ["hound", "scout"]:
-				score += 10.0
-		"defensive":
-			if skill_id == "gatekeeper":
-				score += 14.0
-			elif skill_id == "watcher":
-				score += 5.0
-		"swarm":
-			if skill_id in ["scout", "open_gate"]:
-				score += 12.0
-		"focus":
-			if skill_id in ["watcher", "hound"]:
-				score += 12.0
-		_:
-			pass
-
-	var random_span := maxf(
-		float(summoner_ai_config.get("random_score_span", 8.0)),
-		0.0
+	var watchers := _count_active_summons(
+		summoner_watcher_pool
 	)
-	score += randf_range(-random_span, random_span)
-	return maxf(score, 1.0)
+	return HERO_SUMMONER_RUNTIME.score_ai_candidate(
+		skill_id,
+		nearby_count,
+		hero_hp_ratio,
+		is_instance_valid(target),
+		_get_summoner_target_hp_ratio(),
+		gatekeepers,
+		scouts,
+		hounds,
+		watchers,
+		_get_active_summon_count(),
+		int(summoner_ai_choice_counts.get(skill_id, 0)),
+		summoner_ai_last_choice,
+		summoner_ai_personality,
+		float(
+			summoner_ai_config.get(
+				"random_score_span",
+				8.0
+			)
+		)
+	)
 
 
 func _choose_summoner_ai_cast() -> String:
@@ -10455,29 +10389,14 @@ func _add_status_resistance(
 	)
 
 func _get_summoner_augment_ai_settings() -> Dictionary:
-	var settings := ai_settings.duplicate(true)
 	if hero_archetype != "summoner_gatekeeper":
-		return settings
-	var biases: Dictionary = Dictionary(settings.get("augment_biases", {})).duplicate(true)
-	var families := {
-		"gatekeeper": ["summoner_gatekeeper_fortress", "summoner_gatekeeper_barrage"],
-		"scout": ["summoner_scout_reinforcement", "summoner_scout_swarm_tactics"],
-		"hound": ["summoner_hound_frenzy", "summoner_hound_blood_track"],
-		"watcher": ["summoner_watcher_focus", "summoner_watcher_network"],
-	}
-	var total := 0
-	for family_id in families.keys():
-		total += int(summoner_ai_choice_counts.get(family_id, 0))
-	if total > 0:
-		for family_id in families.keys():
-			var ratio := float(summoner_ai_choice_counts.get(family_id, 0)) / float(total)
-			for augment_id in families[family_id]:
-				biases[augment_id] = float(biases.get(augment_id, 0.0)) + ratio * 4.0
-	var filled_ratio := float(_get_active_summon_count()) / float(maxi(_get_summoner_slot_capacity(), 1))
-	biases["summoner_shield_fortify"] = float(biases.get("summoner_shield_fortify", 0.0)) + filled_ratio * 1.4
-	biases["summoner_shield_resonance"] = float(biases.get("summoner_shield_resonance", 0.0)) + filled_ratio * 1.2
-	settings["augment_biases"] = biases
-	return settings
+		return ai_settings.duplicate(true)
+	return HERO_SUMMONER_RUNTIME.build_augment_ai_settings(
+		ai_settings,
+		summoner_ai_choice_counts,
+		_get_active_summon_count(),
+		_get_summoner_slot_capacity()
+	)
 
 
 func _level_up() -> void:
