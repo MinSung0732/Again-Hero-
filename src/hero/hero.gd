@@ -9746,7 +9746,7 @@ func _clamp_purifier_orb_target_position(candidate: Vector2) -> Vector2:
 			clamped
 		)
 		if typeof(battle_clamped) == TYPE_VECTOR2:
-			clamped = Vector2(battle_clamped)
+			clamped = battle_clamped as Vector2
 	return clamped
 
 
