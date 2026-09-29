@@ -1580,10 +1580,6 @@ func _roll_summoner_ai_personality() -> String:
 	)
 
 
-func _count_active_summons(pool: Array[Node2D]) -> int:
-	return HERO_SUMMONER_RUNTIME.count_active_summons(pool)
-
-
 func _get_summoner_target_hp_ratio() -> float:
 	return HERO_SUMMONER_RUNTIME.get_target_hp_ratio(target)
 
