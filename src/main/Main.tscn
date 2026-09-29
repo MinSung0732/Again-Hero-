@@ -7,6 +7,10 @@
 [ext_resource type="PackedScene" path="res://src/ui/StageIntroCutscene.tscn" id="5_intro"]
 [ext_resource type="PackedScene" path="res://src/ui/HeroRevealCutscene.tscn" id="6_reveal"]
 [ext_resource type="PackedScene" path="res://src/ui/SkillUnlockCutscene.tscn" id="7_skill_unlock"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_polish/panel_wide.png" id="8_hud_wide"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_polish/panel_wide_accent.png" id="9_hud_accent"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_polish/panel_square.png" id="10_hud_square"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_polish/panel_large.png" id="11_hud_large"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cooldown_bg"]
 bg_color = Color(0.16, 0.16, 0.18, 0.55)
@@ -37,6 +41,46 @@ corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
 corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hero_hp_bg"]
+bg_color = Color(0.025, 0.03, 0.055, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.3, 0.34, 0.55, 0.95)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hero_hp_fill"]
+bg_color = Color(0.16, 0.9, 0.32, 0.98)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hero_exp_fill"]
+bg_color = Color(0.24, 0.42, 0.85, 0.95)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_hud_button"]
+texture = ExtResource("10_hud_square")
+texture_margin_left = 44.0
+texture_margin_top = 44.0
+texture_margin_right = 44.0
+texture_margin_bottom = 44.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_hud_card"]
+texture = ExtResource("11_hud_large")
+texture_margin_left = 48.0
+texture_margin_top = 48.0
+texture_margin_right = 48.0
+texture_margin_bottom = 48.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hero_info"]
 bg_color = Color(0.05, 0.04, 0.055, 0.98)
@@ -142,91 +186,216 @@ offset_bottom = 354.0
 theme_override_constants/separation = 8
 mouse_filter = 2
 
+[node name="BattleToast" type="Label" parent="HUD"]
+visible = false
+z_index = 190
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 1336.0
+offset_bottom = 1400.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.64, 1)
+theme_override_colors/font_outline_color = Color(0.04, 0.02, 0.08, 0.98)
+theme_override_constants/outline_size = 7
+theme_override_font_sizes/font_size = 30
+text = "알림"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="TopBar" type="ColorRect" parent="HUD"]
 anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 270.0
 grow_horizontal = 2
 mouse_filter = 1
-color = Color(0.055, 0.058, 0.078, 0.98)
+color = Color(0.025, 0.022, 0.05, 0.82)
+
+[node name="StageFrame" type="NinePatchRect" parent="HUD/TopBar"]
+offset_left = 344.0
+offset_top = 8.0
+offset_right = 720.0
+offset_bottom = 136.0
+mouse_filter = 2
+texture = ExtResource("9_hud_accent")
+patch_margin_left = 58
+patch_margin_top = 50
+patch_margin_right = 58
+patch_margin_bottom = 50
+texture_filter = 1
+
+[node name="TimerFrame" type="NinePatchRect" parent="HUD/TopBar"]
+offset_left = 724.0
+offset_top = 8.0
+offset_right = 1048.0
+offset_bottom = 84.0
+mouse_filter = 2
+texture = ExtResource("8_hud_wide")
+patch_margin_left = 52
+patch_margin_top = 46
+patch_margin_right = 52
+patch_margin_bottom = 46
+texture_filter = 1
+
+[node name="HeroFrame" type="NinePatchRect" parent="HUD/TopBar"]
+offset_left = 18.0
+offset_top = 136.0
+offset_right = 700.0
+offset_bottom = 262.0
+mouse_filter = 2
+texture = ExtResource("8_hud_wide")
+patch_margin_left = 52
+patch_margin_top = 46
+patch_margin_right = 52
+patch_margin_bottom = 46
+texture_filter = 1
+
+[node name="HeroPortraitFrame" type="NinePatchRect" parent="HUD/TopBar"]
+offset_left = 24.0
+offset_top = 142.0
+offset_right = 146.0
+offset_bottom = 260.0
+mouse_filter = 2
+texture = ExtResource("10_hud_square")
+patch_margin_left = 44
+patch_margin_top = 44
+patch_margin_right = 44
+patch_margin_bottom = 44
+texture_filter = 1
+
+[node name="HeroPortrait" type="TextureRect" parent="HUD/TopBar"]
+offset_left = 38.0
+offset_top = 154.0
+offset_right = 132.0
+offset_bottom = 248.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="MonsterFrame" type="NinePatchRect" parent="HUD/TopBar"]
+offset_left = 716.0
+offset_top = 138.0
+offset_right = 1048.0
+offset_bottom = 260.0
+mouse_filter = 2
+texture = ExtResource("8_hud_wide")
+patch_margin_left = 52
+patch_margin_top = 46
+patch_margin_right = 52
+patch_margin_bottom = 46
+texture_filter = 1
 
 [node name="Title" type="Label" parent="HUD/TopBar"]
-offset_left = 40.0
+offset_left = 24.0
 offset_top = 20.0
-offset_right = 720.0
-offset_bottom = 80.0
-theme_override_font_sizes/font_size = 66
+offset_right = 330.0
+offset_bottom = 126.0
+theme_override_colors/font_color = Color(1, 0.72, 0.22, 1)
+theme_override_colors/font_outline_color = Color(0.12, 0.025, 0.12, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 48
 text = "용사, 또 너야?"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="RunTimer" type="Label" parent="HUD/TopBar"]
-offset_left = 730.0
+offset_left = 744.0
 offset_top = 24.0
-offset_right = 1040.0
-offset_bottom = 72.0
-theme_override_font_sizes/font_size = 36
+offset_right = 1028.0
+offset_bottom = 70.0
+theme_override_font_sizes/font_size = 28
 text = "남은 시간 06:00"
-horizontal_alignment = 2
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Subtitle" type="Label" parent="HUD/TopBar"]
-offset_left = 42.0
-offset_top = 86.0
-offset_right = 805.0
-offset_bottom = 124.0
-theme_override_font_sizes/font_size = 30
-text = "Stage 1 · 첫 번째 침입자 · 견습 마도사"
+offset_left = 360.0
+offset_top = 18.0
+offset_right = 705.0
+offset_bottom = 126.0
+theme_override_colors/font_color = Color(0.96, 0.9, 0.82, 1)
+theme_override_font_sizes/font_size = 25
+text = "Stage 1\n첫 번째 침입자\n견습 마도사"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="StageMenuButton" type="Button" parent="HUD/TopBar"]
-offset_left = 825.0
-offset_top = 78.0
+offset_left = 830.0
+offset_top = 88.0
 offset_right = 1040.0
-offset_bottom = 132.0
-theme_override_font_sizes/font_size = 30
+offset_bottom = 138.0
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxTexture_hud_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_hud_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_hud_button")
 text = "메뉴"
 
 [node name="HeroLevel" type="Label" parent="HUD/TopBar"]
-offset_left = 40.0
-offset_top = 142.0
-offset_right = 240.0
-offset_bottom = 196.0
-theme_override_font_sizes/font_size = 42
-text = "Lv.1"
+offset_left = 156.0
+offset_top = 148.0
+offset_right = 610.0
+offset_bottom = 184.0
+theme_override_font_sizes/font_size = 31
+text = "Lv. 1   용사"
 vertical_alignment = 1
 
+[node name="HeroHPBar" type="ProgressBar" parent="HUD/TopBar"]
+offset_left = 156.0
+offset_top = 187.0
+offset_right = 604.0
+offset_bottom = 217.0
+max_value = 300.0
+value = 300.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_hero_hp_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hero_hp_fill")
+show_percentage = false
+
 [node name="HeroHP" type="Label" parent="HUD/TopBar"]
-offset_left = 215.0
-offset_top = 142.0
-offset_right = 690.0
-offset_bottom = 196.0
-theme_override_font_sizes/font_size = 42
-text = "용사 HP 300 / 300"
+offset_left = 156.0
+offset_top = 184.0
+offset_right = 604.0
+offset_bottom = 220.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 24
+text = "HP 300 / 300"
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Monsters" type="Label" parent="HUD/TopBar"]
-offset_left = 720.0
-offset_top = 142.0
-offset_right = 1040.0
-offset_bottom = 196.0
-theme_override_font_sizes/font_size = 42
-text = "몬스터 0"
-horizontal_alignment = 2
+offset_left = 742.0
+offset_top = 164.0
+offset_right = 1028.0
+offset_bottom = 238.0
+theme_override_colors/font_color = Color(0.96, 0.9, 0.98, 1)
+theme_override_font_sizes/font_size = 38
+text = "몬스터  0"
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="ExpLabel" type="Label" parent="HUD/TopBar"]
-offset_left = 40.0
-offset_top = 207.0
-offset_right = 260.0
-offset_bottom = 250.0
-theme_override_font_sizes/font_size = 30
+offset_left = 156.0
+offset_top = 221.0
+offset_right = 604.0
+offset_bottom = 251.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 22
 text = "EXP 0 / 50"
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="ExpBar" type="ProgressBar" parent="HUD/TopBar"]
-offset_left = 265.0
-offset_top = 216.0
-offset_right = 1040.0
-offset_bottom = 244.0
+offset_left = 156.0
+offset_top = 222.0
+offset_right = 604.0
+offset_bottom = 251.0
 max_value = 50.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_hero_hp_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hero_exp_fill")
 show_percentage = false
 
 [node name="DemonUltimatePanel" type="ColorRect" parent="HUD"]
@@ -238,7 +407,22 @@ offset_top = -476.0
 offset_bottom = -360.0
 grow_horizontal = 2
 grow_vertical = 0
-color = Color(0.075, 0.055, 0.095, 0.96)
+color = Color(0, 0, 0, 0)
+
+[node name="Frame" type="NinePatchRect" parent="HUD/DemonUltimatePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("9_hud_accent")
+patch_margin_left = 58
+patch_margin_top = 50
+patch_margin_right = 58
+patch_margin_bottom = 50
+texture_filter = 1
 
 [node name="UltimateLabel" type="Label" parent="HUD/DemonUltimatePanel"]
 offset_left = 28.0
@@ -386,7 +570,21 @@ anchor_bottom = 1.0
 offset_top = -360.0
 grow_horizontal = 2
 grow_vertical = 0
-color = Color(0.055, 0.058, 0.078, 0.98)
+color = Color(0, 0, 0, 0)
+
+[node name="Frame" type="NinePatchRect" parent="HUD/BottomBar"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("11_hud_large")
+patch_margin_left = 54
+patch_margin_top = 54
+patch_margin_right = 54
+patch_margin_bottom = 54
+texture_filter = 1
 
 [node name="BuildLabel" type="Label" parent="HUD/BottomBar"]
 visible = false
@@ -401,26 +599,28 @@ vertical_alignment = 1
 clip_text = true
 
 [node name="Status" type="Label" parent="HUD/BottomBar"]
-offset_left = 28.0
-offset_top = 8.0
-offset_right = 790.0
-offset_bottom = 64.0
-theme_override_font_sizes/font_size = 24
-text = "지휘력을 사용해 원하는 몬스터를 소환하세요."
+offset_left = 34.0
+offset_top = 10.0
+offset_right = 782.0
+offset_bottom = 76.0
+theme_override_colors/font_color = Color(1, 0.83, 0.46, 1)
+theme_override_font_sizes/font_size = 25
+text = "자동 배치 : 용사 주변 반경에서 몬스터가 소환됩니다."
 horizontal_alignment = 0
 vertical_alignment = 1
 clip_text = true
 
 [node name="PlacementModeToggle" type="CheckButton" parent="HUD/BottomBar"]
-offset_left = 808.0
-offset_top = 34.0
-offset_right = 1052.0
-offset_bottom = 68.0
-theme_override_font_sizes/font_size = 24
+offset_left = 804.0
+offset_top = 16.0
+offset_right = 1048.0
+offset_bottom = 70.0
+theme_override_font_sizes/font_size = 25
 button_pressed = true
 text = "자동 배치"
 
 [node name="DemonProgressLabel" type="Label" parent="HUD/BottomBar"]
+visible = false
 offset_left = 28.0
 offset_top = 72.0
 offset_right = 350.0
@@ -430,6 +630,7 @@ text = "마왕 Lv.1 · EXP 0 / 30"
 vertical_alignment = 1
 
 [node name="DemonExpBar" type="ProgressBar" parent="HUD/BottomBar"]
+visible = false
 offset_left = 350.0
 offset_top = 77.0
 offset_right = 1052.0
@@ -438,6 +639,7 @@ max_value = 30.0
 show_percentage = false
 
 [node name="CommandLabel" type="Label" parent="HUD/BottomBar"]
+visible = false
 offset_left = 28.0
 offset_top = 106.0
 offset_right = 350.0
@@ -447,6 +649,7 @@ text = "지휘력 0 / 100"
 vertical_alignment = 1
 
 [node name="CommandBar" type="ProgressBar" parent="HUD/BottomBar"]
+visible = false
 offset_left = 350.0
 offset_top = 112.0
 offset_right = 1052.0
@@ -456,14 +659,17 @@ value = 0.0
 show_percentage = false
 
 [node name="SummonButtons" type="HBoxContainer" parent="HUD/BottomBar"]
-offset_left = 28.0
-offset_top = 150.0
-offset_right = 1052.0
-offset_bottom = 344.0
-theme_override_constants/separation = 14
+offset_left = 22.0
+offset_top = 82.0
+offset_right = 1058.0
+offset_bottom = 348.0
+theme_override_constants/separation = 12
 alignment = 1
 
 [node name="SlimeButton" type="Button" parent="HUD/BottomBar/SummonButtons"]
+theme_override_styles/normal = SubResource("StyleBoxTexture_hud_card")
+theme_override_styles/hover = SubResource("StyleBoxTexture_hud_card")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_hud_card")
 custom_minimum_size = Vector2(0, 212)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -471,6 +677,9 @@ theme_override_font_sizes/font_size = 36
 text = "슬라임\n비용 3"
 
 [node name="SpiderButton" type="Button" parent="HUD/BottomBar/SummonButtons"]
+theme_override_styles/normal = SubResource("StyleBoxTexture_hud_card")
+theme_override_styles/hover = SubResource("StyleBoxTexture_hud_card")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_hud_card")
 custom_minimum_size = Vector2(0, 212)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -478,6 +687,9 @@ theme_override_font_sizes/font_size = 36
 text = "거미\n비용 7"
 
 [node name="OrcButton" type="Button" parent="HUD/BottomBar/SummonButtons"]
+theme_override_styles/normal = SubResource("StyleBoxTexture_hud_card")
+theme_override_styles/hover = SubResource("StyleBoxTexture_hud_card")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_hud_card")
 custom_minimum_size = Vector2(0, 212)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -489,13 +701,16 @@ z_index = 200
 anchors_preset = 4
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -200.0
-offset_top = 330.0
-offset_right = -8.0
-offset_bottom = 456.0
+offset_left = -176.0
+offset_top = 338.0
+offset_right = -10.0
+offset_bottom = 454.0
 grow_horizontal = 0
-theme_override_font_sizes/font_size = 30
-text = "◀ 상세정보"
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxTexture_hud_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_hud_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_hud_button")
+text = "상세정보"
 focus_mode = 0
 mouse_filter = 0
 
@@ -504,16 +719,16 @@ z_index = 200
 anchors_preset = 4
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -200.0
-offset_top = 470.0
-offset_right = -8.0
-offset_bottom = 596.0
+offset_left = -176.0
+offset_top = 468.0
+offset_right = -10.0
+offset_bottom = 584.0
 grow_horizontal = 0
-theme_override_font_sizes/font_size = 30
-theme_override_styles/normal = SubResource("StyleBoxFlat_hero_bookmark")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hero_bookmark")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_hero_bookmark")
-text = "◀ 용사정보"
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxTexture_hud_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_hud_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_hud_button")
+text = "용사정보"
 focus_mode = 0
 mouse_filter = 0
 
