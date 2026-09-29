@@ -101,8 +101,10 @@ const PURIFIER_SHIELD_BREAK_AUDIO_PATH := "res://assets/audio/sfx/purifier_shiel
 const PURIFIER_CROWN_AUDIO_PATH := "res://assets/audio/sfx/purifier_crown_buff_pixabay.mp3"
 const PURIFIER_ORB_CREATE_AUDIO_PATH := "res://assets/audio/sfx/purifier_orb_create_pixabay.mp3"
 const PURIFIER_ORB_EXPLOSION_AUDIO_PATH := "res://assets/audio/sfx/purifier_orb_explosion_pixabay.mp3"
+const PURIFIER_CLEANSING_AUDIO_PATH := "res://assets/audio/sfx/purifier_cleansing_pixabay.mp3"
 const PURIFIER_ORB_SCENE := preload("res://src/hero/PurifierOrb.tscn")
 const PURIFIER_ORB_LINK_SCENE := preload("res://src/hero/PurifierOrbLink.tscn")
+const PURIFIER_CLEANSING_FX_SCENE := preload("res://src/hero/PurifierCleansingFx.tscn")
 const SUMMONER_POOL_HEADROOM := 4
 const ALCHEMIST_VIAL_SCENE := preload("res://src/hero/AlchemistVial.tscn")
 const ALCHEMIST_POISON_POOL_SCENE := preload("res://src/hero/AlchemistPoisonPool.tscn")
@@ -410,6 +412,7 @@ var purifier_shield_break_audio: AudioStreamPlayer = null
 var purifier_crown_audio: AudioStreamPlayer = null
 var purifier_orb_create_audio: AudioStreamPlayer = null
 var purifier_orb_explosion_audio: AudioStreamPlayer = null
+var purifier_cleansing_audio: AudioStreamPlayer = null
 var purifier_protection_effect: AnimatedSprite2D = null
 var purifier_crown_effect: AnimatedSprite2D = null
 
@@ -427,6 +430,9 @@ var purifier_orb_chain_queue: Array[Node2D] = []
 var purifier_orb_chain_timer: float = 0.0
 var purifier_orb_chain_step: int = 0
 var purifier_orb_chain_speed_multiplier: float = 1.0
+var purifier_cleansing_config: Dictionary = {}
+var purifier_cleansing_cooldown: float = 0.0
+var purifier_cleansing_stacks: int = 0
 var purifier_protection_cooldown: float = 0.0
 var purifier_protection_active: bool = false
 var purifier_protection_duration_timer: float = 0.0
@@ -1061,6 +1067,17 @@ func configure_profile(profile: Dictionary) -> void:
 	purifier_orb_chain_timer = 0.0
 	purifier_orb_chain_step = 0
 	purifier_orb_chain_speed_multiplier = 1.0
+	var raw_purifier_cleansing = profile.get("purifier_cleansing", {})
+	purifier_cleansing_config = (
+		raw_purifier_cleansing.duplicate(true)
+		if typeof(raw_purifier_cleansing) == TYPE_DICTIONARY
+		else {}
+	)
+	purifier_cleansing_cooldown = maxf(
+		float(purifier_cleansing_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
+	purifier_cleansing_stacks = 0
 	purifier_protection_cooldown = 0.0
 	purifier_protection_active = false
 	purifier_protection_duration_timer = 0.0
@@ -9705,6 +9722,15 @@ func _ensure_purifier_skill_runtime() -> void:
 			-10.0,
 			0.96
 		)
+	if not is_instance_valid(purifier_cleansing_audio):
+		purifier_cleansing_audio = _create_purifier_audio_player(
+			String(purifier_cleansing_config.get(
+				"audio_path",
+				PURIFIER_CLEANSING_AUDIO_PATH
+			)),
+			-12.0,
+			1.18
+		)
 
 
 func _play_purifier_audio(player: AudioStreamPlayer) -> void:
@@ -10719,6 +10745,215 @@ func _detonate_purifier_orb(
 		monster.call("take_damage", hit_damage)
 
 
+func _get_purifier_cleansing_target_count() -> int:
+	var per_target := maxi(
+		int(purifier_cleansing_config.get("casts_per_extra_target", 20)),
+		1
+	)
+	var max_targets := maxi(
+		int(purifier_cleansing_config.get("max_targets", 6)),
+		1
+	)
+	return mini(1 + purifier_cleansing_stacks / per_target, max_targets)
+
+
+func _collect_purifier_cleansing_targets(
+	target_count: int
+) -> Array[Node2D]:
+	var result: Array[Node2D] = []
+	if target_count <= 0:
+		return result
+
+	if (
+		is_instance_valid(target)
+		and not target.is_queued_for_deletion()
+	):
+		var hp_value = target.get("current_hp")
+		if hp_value == null or int(hp_value) > 0:
+			result.append(target)
+
+	var search_radius := maxf(ai_sense_radius, attack_range)
+	var candidates := _get_monster_nodes_near(global_position, search_radius)
+	while result.size() < target_count:
+		var best: Node2D = null
+		var best_distance_sq := INF
+		for raw_node in candidates:
+			if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
+				continue
+			var monster := raw_node as Node2D
+			if monster == null or monster in result:
+				continue
+			var hp_value = monster.get("current_hp")
+			if hp_value != null and int(hp_value) <= 0:
+				continue
+			var distance_sq := global_position.distance_squared_to(
+				monster.global_position
+			)
+			if distance_sq < best_distance_sq:
+				best_distance_sq = distance_sq
+				best = monster
+		if best == null:
+			break
+		result.append(best)
+
+	return result
+
+
+func _spawn_purifier_cleansing_fx(world_position: Vector2) -> void:
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return
+	var fx := PURIFIER_CLEANSING_FX_SCENE.instantiate() as Node2D
+	if fx == null:
+		return
+	parent.add_child(fx)
+	fx.call(
+		"setup",
+		world_position,
+		String(
+			purifier_cleansing_config.get(
+				"effect_dir",
+				"%s/effect5" % STAGE9_FRAME_DIR
+			)
+		),
+		maxf(
+			float(purifier_cleansing_config.get("visual_scale", 1.0)),
+			0.05
+		),
+		maxf(
+			float(purifier_cleansing_config.get("effect_fps", 12.0)),
+			1.0
+		)
+	)
+
+
+func _try_unlock_purifier_fourth_skill() -> void:
+	var required := maxi(
+		int(purifier_cleansing_config.get("max_stacks", 100)),
+		1
+	)
+	if purifier_cleansing_stacks < required:
+		return
+	var skill_id := String(
+		purifier_cleansing_config.get(
+			"unlock_skill_id",
+			"purifier_fourth_skill"
+		)
+	)
+	if is_conditional_skill_unlocked(skill_id):
+		return
+	_unlock_conditional_skill(
+		skill_id,
+		String(
+			purifier_cleansing_config.get(
+				"unlock_skill_name",
+				"4스킬"
+			)
+		),
+		"purification_cast_count",
+		purifier_cleansing_stacks,
+		required,
+		{
+			"hero_id": hero_id,
+			"archetype": hero_archetype,
+			"source": "purifier_cleansing_stacks",
+			"cutscene_texture_path": String(
+				purifier_cleansing_config.get(
+					"cutscene_texture_path",
+					""
+				)
+			),
+			"cutscene_hold_seconds": float(
+				purifier_cleansing_config.get(
+					"cutscene_hold_seconds",
+					1.05
+				)
+			),
+		}
+	)
+
+
+func _cast_purifier_cleansing() -> void:
+	if (
+		hero_archetype != "cleric_purifier"
+		or purifier_cleansing_config.is_empty()
+		or purifier_cleansing_cooldown > 0.0
+		or is_dying
+		or current_hp <= 0
+	):
+		return
+
+	var max_stacks := maxi(
+		int(purifier_cleansing_config.get("max_stacks", 100)),
+		1
+	)
+	var next_stacks := mini(purifier_cleansing_stacks + 1, max_stacks)
+	var previous_stacks := purifier_cleansing_stacks
+	purifier_cleansing_stacks = next_stacks
+
+	var targets := _collect_purifier_cleansing_targets(
+		_get_purifier_cleansing_target_count()
+	)
+	if targets.is_empty():
+		purifier_cleansing_stacks = previous_stacks
+		return
+
+	var radius := maxf(
+		float(purifier_cleansing_config.get("radius", 180.0)),
+		1.0
+	)
+	var base_ratio := maxf(
+		float(purifier_cleansing_config.get("base_damage_ratio", 0.80)),
+		0.0
+	)
+	var undead_multiplier := maxf(
+		float(
+			purifier_cleansing_config.get(
+				"undead_damage_multiplier",
+				1.50
+			)
+		),
+		0.0
+	)
+	var raw_damage := maxf(float(attack_damage) * base_ratio, 1.0)
+	var damaged_ids: Dictionary = {}
+
+	for cast_target in targets:
+		if not is_instance_valid(cast_target):
+			continue
+		var center := cast_target.global_position
+		_spawn_purifier_cleansing_fx(center)
+		for raw_node in _get_monster_nodes_near(center, radius):
+			if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
+				continue
+			var monster := raw_node as Node2D
+			if monster == null or not monster.has_method("take_damage"):
+				continue
+			var instance_id := monster.get_instance_id()
+			if damaged_ids.has(instance_id):
+				continue
+			if center.distance_squared_to(monster.global_position) > radius * radius:
+				continue
+			damaged_ids[instance_id] = true
+			var multiplier := get_purifier_holy_damage_multiplier(monster)
+			if _is_purifier_undead_target(monster):
+				multiplier *= undead_multiplier
+			var hit_damage := maxi(
+				int(round(raw_damage * multiplier)),
+				1
+			)
+			monster.call("take_damage", hit_damage)
+
+	purifier_cleansing_cooldown = (
+		maxf(float(purifier_cleansing_config.get("cooldown", 3.0)), 0.0)
+		* _get_purifier_skill_cooldown_multiplier()
+	)
+	_ensure_purifier_skill_runtime()
+	_play_purifier_audio(purifier_cleansing_audio)
+	_try_unlock_purifier_fourth_skill()
+	queue_redraw()
+
+
 func _update_purifier_gauge(delta: float) -> void:
 	if (
 		hero_archetype != "cleric_purifier"
@@ -10734,6 +10969,10 @@ func _update_purifier_gauge(delta: float) -> void:
 	)
 	purifier_crown_cooldown = maxf(purifier_crown_cooldown - delta, 0.0)
 	purifier_orb_cooldown = maxf(purifier_orb_cooldown - delta, 0.0)
+	purifier_cleansing_cooldown = maxf(
+		purifier_cleansing_cooldown - delta,
+		0.0
+	)
 	_update_purifier_orb_chain(delta)
 
 	if purifier_protection_active:
@@ -10778,6 +11017,8 @@ func _update_purifier_gauge(delta: float) -> void:
 		_cast_purifier_crown()
 	if purifier_orb_cooldown <= 0.0:
 		_cast_purifier_orb()
+	if purifier_cleansing_cooldown <= 0.0:
+		_cast_purifier_cleansing()
 	_try_activate_purifier_protection()
 
 
@@ -11142,6 +11383,7 @@ func get_skill_cooldown_hud() -> Array:
 					0.0
 				) * _get_purifier_skill_cooldown_multiplier()
 			)
+			_append_purifier_cleansing_hud(skills)
 		"summoner_gatekeeper":
 			_append_skill_cooldown_hud(
 				skills,
@@ -11400,6 +11642,42 @@ func _append_skill_cooldown_hud(
 		"cooldown_total": cooldown_total,
 		"cooldown_remaining": current_remaining,
 		"icon_path": icon_path,
+	})
+
+
+func _append_purifier_cleansing_hud(skills: Array) -> void:
+	if purifier_cleansing_config.is_empty():
+		return
+	var cooldown_total := (
+		maxf(float(purifier_cleansing_config.get("cooldown", 3.0)), 0.0)
+		* _get_purifier_skill_cooldown_multiplier()
+	)
+	var cooldown_remaining := maxf(purifier_cleansing_cooldown, 0.0)
+	var max_stacks := maxi(
+		int(purifier_cleansing_config.get("max_stacks", 100)),
+		1
+	)
+	skills.append({
+		"id": String(purifier_cleansing_config.get("id", "purifier_cleansing")),
+		"name": String(purifier_cleansing_config.get("name", "정화")),
+		"description": _skill_hud_description(purifier_cleansing_config),
+		"progress_text": (
+			"정화 스택 %d / %d · 대상 수 %d"
+			% [
+				purifier_cleansing_stacks,
+				max_stacks,
+				_get_purifier_cleansing_target_count(),
+			]
+		),
+		"status_text": (
+			"재사용 대기 중"
+			if cooldown_remaining > 0.01
+			else "사용 가능"
+		),
+		"available": cooldown_remaining <= 0.01,
+		"cooldown_total": cooldown_total,
+		"cooldown_remaining": cooldown_remaining,
+		"icon_path": "res://assets/art/heroes/stage9_prist/frames/effect5/effect_30.png",
 	})
 
 
