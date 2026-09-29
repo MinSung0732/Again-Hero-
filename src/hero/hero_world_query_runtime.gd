@@ -61,19 +61,31 @@ func get_aux_group_nodes_cached(group_name: StringName) -> Array:
 	return cached if cached is Array else []
 
 
-func get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
+func fill_monster_nodes_near(
+	origin: Vector2,
+	radius: float,
+	result: Array
+) -> void:
+	result.clear()
 	if not is_instance_valid(owner):
-		return []
+		return
 
 	var battle := owner.get_parent()
 	if (
 		is_instance_valid(battle)
-		and battle.has_method("query_monsters_near")
+		and battle.has_method("fill_monsters_near")
 	):
-		var nearby = battle.call("query_monsters_near", origin, radius)
-		if nearby is Array:
-			return nearby
-	return get_monster_nodes_cached()
+		battle.call("fill_monsters_near", origin, radius, result)
+		return
+
+	for node in get_monster_nodes_cached():
+		result.append(node)
+
+
+func get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
+	var result: Array = []
+	fill_monster_nodes_near(origin, radius, result)
+	return result
 
 
 func get_monster_nodes_in_rect(world_rect: Rect2) -> Array:

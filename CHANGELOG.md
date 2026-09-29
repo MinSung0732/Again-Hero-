@@ -37,6 +37,7 @@
 - Phase 4 Hero 분리를 Fighter부터 재개. `hero_fighter_runtime.gd`에 돌진 발동 조건/최대 탐색 거리, 베기·가드 발동 조건, 최장거리 돌진 타깃 선택을 분리하고 Hero는 facade로 유지. 베기·가드의 주변 적 판정은 기존 개별 배열 순회를 제거하고 Battle 공간 인덱스를 사용하는 `_count_monsters_near()` 경로로 통일.
 - Hero 스킬 쿨다운 HUD 비활성 polling 가드에서 `CanvasLayer`에 존재하지 않는 `is_visible_in_tree()`를 호출해 HUD 갱신이 중단되던 회귀를 수정. HUD 표시 여부는 `CanvasLayer.visible`로 확인하도록 변경.
 - 거너 백스텝 잔상 알파를 95/84/72/60%로 높이고 페이드 지속시간/스케일 차이를 늘렸으며, 파이터 돌진 잔상은 시작 78%·반복 62%, 기본 페이드 0.38초로 조정해 작은 화면에서도 이동 궤적이 더 선명하게 보이도록 개선.
+- Hero world query에 caller-owned `fill_monster_nodes_near()` 경로를 추가하고 Fighter 돌진 타깃 탐색/착지 충격 범위에 재사용 후보 배열을 적용해 연속 돌진마다 생성되던 임시 주변 몬스터 Array 2개를 제거.
 - Godot 실행 파일이 없는 환경이라 실제 런타임/프로파일러 검증은 수행하지 않았고 정적 참조·diff 검증만 수행.
 
 ## 2026-09-28 — Stage 8 5스킬 컷신 이미지 왜곡 제거

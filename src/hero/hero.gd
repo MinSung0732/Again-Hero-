@@ -223,6 +223,8 @@ var fighter_charge_duration: float = 0.0
 var fighter_charge_elapsed: float = 0.0
 var fighter_charge_chain_count: int = 0
 var fighter_charge_afterimage_timer: float = 0.0
+var fighter_charge_target_candidates: Array = []
+var fighter_charge_impact_candidates: Array = []
 var fighter_courage_bonus: float = 0.0
 var fighter_charge_kill_heal: float = 0.0
 
@@ -466,6 +468,19 @@ func _get_aux_group_nodes_cached(group_name: StringName) -> Array:
 	return result if result is Array else []
 
 
+func _fill_monster_nodes_near(
+	origin: Vector2,
+	radius: float,
+	result: Array
+) -> void:
+	_get_world_query_runtime().call(
+		"fill_monster_nodes_near",
+		origin,
+		radius,
+		result
+	)
+
+
 func _get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
 	var result = _get_world_query_runtime().call(
 		"get_monster_nodes_near",
@@ -590,6 +605,8 @@ func configure_profile(profile: Dictionary) -> void:
 	fighter_charge_elapsed = 0.0
 	fighter_charge_chain_count = 0
 	fighter_charge_afterimage_timer = 0.0
+	fighter_charge_target_candidates.clear()
+	fighter_charge_impact_candidates.clear()
 	fighter_courage_bonus = 0.0
 	fighter_charge_kill_heal = 0.0
 	fighter_slash_mastery_stacks = 0
@@ -13273,12 +13290,19 @@ func _find_fighter_charge_target(exclude: Node = null) -> Node2D:
 	var max_distance := HERO_FIGHTER_RUNTIME.get_charge_max_target_distance(
 		fighter_charge_config
 	)
-	return HERO_FIGHTER_RUNTIME.find_farthest_charge_target(
-		_get_monster_nodes_near(global_position, max_distance),
+	_fill_monster_nodes_near(
+		global_position,
+		max_distance,
+		fighter_charge_target_candidates
+	)
+	var charge_target := HERO_FIGHTER_RUNTIME.find_farthest_charge_target(
+		fighter_charge_target_candidates,
 		global_position,
 		max_distance,
 		exclude
 	)
+	fighter_charge_target_candidates.clear()
+	return charge_target
 
 func _begin_fighter_charge_dash(charge_target: Node2D) -> void:
 	if not is_instance_valid(charge_target):
@@ -13355,7 +13379,12 @@ func _complete_fighter_charge_dash() -> void:
 		))
 	)
 	var radius := maxf(float(fighter_charge_config.get("impact_radius", 175.0)), 1.0)
-	for node in _get_monster_nodes_near(global_position, radius):
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		fighter_charge_impact_candidates
+	)
+	for node in fighter_charge_impact_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -13366,6 +13395,7 @@ func _complete_fighter_charge_dash() -> void:
 			<= radius * radius
 		):
 			_fighter_charge_damage_target(monster, impact_damage)
+	fighter_charge_impact_candidates.clear()
 
 	_play_fighter_charge_impact_effect()
 	fighter_charge_chain_count += 1
