@@ -5,6 +5,7 @@ const ELITE_EFFECT_DIR := "res://assets/art/elitemonster/spider/frames/effect"
 const EFFECT_FRAME_COUNT := 8
 const EFFECT_FPS_FALLBACK := 8.0
 const EFFECT_TARGET_HEIGHT := 64.0
+const POOL_KEY := "spider_projectile"
 
 static var _normal_frames_cache: SpriteFrames
 static var _elite_frames_cache: SpriteFrames
@@ -17,14 +18,15 @@ var slow_multiplier: float = 0.72
 var slow_duration: float = 1.5
 var traveled_distance: float = 0.0
 var has_impacted: bool = false
+var active: bool = false
 var elite_visual: bool = false
 var binding_config: Dictionary = {}
 
 @onready var projectile_sprite: AnimatedSprite2D = $ProjectileSprite
 
 func _ready() -> void:
-	add_to_group("monster_projectiles")
 	body_entered.connect(_on_body_entered)
+	deactivate_for_pool()
 
 func setup(
 	new_direction: Vector2,
@@ -47,11 +49,19 @@ func setup(
 	slow_duration = maxf(new_slow_duration, 0.0)
 	elite_visual = use_elite_visual
 	binding_config = new_binding_config.duplicate(true)
+	traveled_distance = 0.0
+	has_impacted = false
+	active = true
 	rotation = direction.angle()
+	if not is_in_group("monster_projectiles"):
+		add_to_group("monster_projectiles")
+	visible = true
+	monitoring = true
+	set_physics_process(true)
 	_apply_projectile_visual()
 
 func _physics_process(delta: float) -> void:
-	if has_impacted:
+	if not active or has_impacted:
 		return
 
 	var step := direction * speed * delta
@@ -59,7 +69,7 @@ func _physics_process(delta: float) -> void:
 	traveled_distance += step.length()
 
 	if traveled_distance >= max_range:
-		queue_free()
+		_finish_projectile()
 
 func _on_body_entered(body: Node) -> void:
 	if has_impacted:
@@ -82,7 +92,43 @@ func _on_body_entered(body: Node) -> void:
 		body.call("apply_slow", slow_multiplier, slow_duration)
 		_apply_binding_hit(body)
 
-	queue_free()
+	_finish_projectile()
+
+
+func _finish_projectile() -> void:
+	if not active:
+		return
+	active = false
+
+	var parent := get_parent()
+	if is_instance_valid(parent) and parent.has_method("recycle_projectile"):
+		parent.call("recycle_projectile", self, POOL_KEY)
+	else:
+		queue_free()
+
+
+func deactivate_for_pool() -> void:
+	active = false
+	traveled_distance = 0.0
+	has_impacted = false
+	direction = Vector2.RIGHT
+	speed = 320.0
+	max_range = 360.0
+	damage = 5
+	slow_multiplier = 0.72
+	slow_duration = 1.5
+	elite_visual = false
+	binding_config = {}
+	rotation = 0.0
+	if is_in_group("monster_projectiles"):
+		remove_from_group("monster_projectiles")
+	monitoring = false
+	set_physics_process(false)
+	visible = false
+	if is_instance_valid(projectile_sprite):
+		projectile_sprite.stop()
+		projectile_sprite.visible = false
+
 
 func _apply_binding_hit(body: Node) -> void:
 	if binding_config.is_empty():

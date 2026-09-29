@@ -4,6 +4,7 @@ const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_
 
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const SPIDER_PROJECTILE_SCENE := preload("res://src/monsters/SpiderProjectile.tscn")
+const SPIDER_PROJECTILE_POOL_KEY := "spider_projectile"
 
 const FAR_NAV_DISTANCE := 900.0
 const VISUAL_LOD_DISTANCE := 1400.0
@@ -205,6 +206,27 @@ func _begin_projectile_attack(direction_to_hero: Vector2) -> void:
 			damage_multiplier
 		)
 
+func _acquire_spider_projectile() -> Area2D:
+	var projectile_parent := get_parent()
+	if not is_instance_valid(projectile_parent):
+		return null
+
+	if projectile_parent.has_method("acquire_projectile"):
+		var pooled = projectile_parent.call(
+			"acquire_projectile",
+			SPIDER_PROJECTILE_SCENE,
+			SPIDER_PROJECTILE_POOL_KEY
+		)
+		if pooled is Area2D:
+			return pooled as Area2D
+
+	# Fallback keeps the monster usable outside Battle test scenes.
+	var projectile := SPIDER_PROJECTILE_SCENE.instantiate() as Area2D
+	if projectile != null:
+		projectile_parent.add_child(projectile)
+	return projectile
+
+
 func _fire_projectile(
 	direction_to_hero: Vector2,
 	damage_multiplier: float = 1.0
@@ -212,15 +234,10 @@ func _fire_projectile(
 	if SPIDER_PROJECTILE_SCENE == null:
 		return
 
-	var projectile = SPIDER_PROJECTILE_SCENE.instantiate() as Area2D
+	var projectile := _acquire_spider_projectile()
 	if projectile == null:
 		return
 
-	var projectile_parent := get_parent()
-	if projectile_parent == null:
-		return
-
-	projectile_parent.add_child(projectile)
 	projectile.global_position = global_position
 
 	var sticky: Dictionary = special_augment_configs.get(
