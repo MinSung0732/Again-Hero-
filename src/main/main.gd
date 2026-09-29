@@ -512,29 +512,40 @@ func _on_skill_unlock_cutscene_finished() -> void:
 		battle.set_external_pause(false)
 
 
-func _unhandled_input(event: InputEvent) -> void:
+func _handle_camera_pan_input(event: InputEvent) -> bool:
 	if camera_view_locked or _camera_pan_blocked():
-		return
+		return false
 
 	if event is InputEventScreenTouch:
 		var touch := event as InputEventScreenTouch
-		if touch.pressed and _can_use_battle_pointer(touch.position):
-			_begin_camera_drag(touch.index)
-	elif event is InputEventScreenDrag:
+		if touch.pressed:
+			if _can_use_battle_pointer(touch.position):
+				_begin_camera_drag(touch.index)
+		elif touch.index == _camera_drag_pointer_id:
+			_end_camera_drag()
+		return false
+
+	if event is InputEventScreenDrag:
 		var drag := event as InputEventScreenDrag
 		if _camera_drag_active and drag.index == _camera_drag_pointer_id:
 			_pan_camera_by_screen_delta(drag.relative)
 			_end_touch_hold()
 			get_viewport().set_input_as_handled()
-	elif event is InputEventMouseButton:
+			return true
+		return false
+
+	if event is InputEventMouseButton:
 		var mouse := event as InputEventMouseButton
-		if (
-			mouse.button_index == MOUSE_BUTTON_LEFT
-			and mouse.pressed
-			and _can_use_battle_pointer(mouse.position)
-		):
-			_begin_camera_drag(-2)
-	elif event is InputEventMouseMotion:
+		if mouse.button_index != MOUSE_BUTTON_LEFT:
+			return false
+		if mouse.pressed:
+			if _can_use_battle_pointer(mouse.position):
+				_begin_camera_drag(-2)
+		elif _camera_drag_pointer_id == -2:
+			_end_camera_drag()
+		return false
+
+	if event is InputEventMouseMotion:
 		var motion := event as InputEventMouseMotion
 		if (
 			_camera_drag_active
@@ -544,11 +555,17 @@ func _unhandled_input(event: InputEvent) -> void:
 			_pan_camera_by_screen_delta(motion.relative)
 			_end_touch_hold()
 			get_viewport().set_input_as_handled()
+			return true
+
+	return false
 
 
 func _input(event: InputEvent) -> void:
+	var camera_pan_consumed := _handle_camera_pan_input(event)
 	_update_touch_hold_input(event)
 	_finish_camera_drag_on_release(event)
+	if camera_pan_consumed:
+		return
 	if _stage_intro_active or _skill_unlock_cutscene_active:
 		return
 
@@ -816,6 +833,12 @@ func _update_touch_hold_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
 		var touch := event as InputEventScreenTouch
 		if touch.pressed:
+			if (
+				not camera_view_locked
+				and _can_use_battle_pointer(touch.position)
+			):
+				_end_touch_hold()
+				return
 			if _touch_pointer_id < 0:
 				_touch_pointer_id = touch.index
 				_begin_touch_hold(touch.position)
@@ -823,7 +846,13 @@ func _update_touch_hold_input(event: InputEvent) -> void:
 			_end_touch_hold()
 	elif event is InputEventScreenDrag:
 		var drag := event as InputEventScreenDrag
-		if drag.index == _touch_pointer_id:
+		if (
+			not camera_view_locked
+			and _camera_drag_active
+			and drag.index == _camera_drag_pointer_id
+		):
+			_end_touch_hold()
+		elif drag.index == _touch_pointer_id:
 			_touch_hold_position = drag.position
 	elif event is InputEventMouseButton:
 		var mouse := event as InputEventMouseButton
@@ -833,11 +862,23 @@ func _update_touch_hold_input(event: InputEvent) -> void:
 		if _touch_pointer_id >= 0:
 			return
 		if mouse.pressed:
+			if (
+				not camera_view_locked
+				and _can_use_battle_pointer(mouse.position)
+			):
+				_end_touch_hold()
+				return
 			_begin_touch_hold(mouse.position)
 		else:
 			_end_touch_hold()
 	elif event is InputEventMouseMotion:
-		if _touch_hold_active and _touch_pointer_id < 0:
+		if (
+			not camera_view_locked
+			and _camera_drag_active
+			and _camera_drag_pointer_id == -2
+		):
+			_end_touch_hold()
+		elif _touch_hold_active and _touch_pointer_id < 0:
 			_touch_hold_position = (event as InputEventMouseMotion).position
 
 
