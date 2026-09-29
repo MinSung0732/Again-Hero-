@@ -1167,10 +1167,18 @@ func _refresh_hero_skill_cooldown_hud() -> void:
 
 
 func _refresh_hero_info_panel() -> void:
-	if battle == null or not battle.has_method("get_snapshot"):
+	if battle == null:
 		return
 
-	var snapshot: Dictionary = battle.get_snapshot()
+	var snapshot: Dictionary = {}
+	if battle.has_method("get_hero_info_hud"):
+		var raw_hero_info = battle.call("get_hero_info_hud")
+		if typeof(raw_hero_info) == TYPE_DICTIONARY:
+			snapshot = raw_hero_info
+	if snapshot.is_empty() and battle.has_method("get_snapshot"):
+		snapshot = battle.get_snapshot()
+	if snapshot.is_empty():
+		return
 	var hero_name := String(snapshot.get("hero_name", "용사"))
 	var hero_archetype := String(
 		snapshot.get("hero_archetype", "")

@@ -3665,6 +3665,105 @@ func get_hero_skill_cooldown_hud() -> Array:
 	)
 
 
+func get_hero_info_hud() -> Dictionary:
+	if not is_instance_valid(hero):
+		return {}
+
+	var hp := int(hero.get("current_hp"))
+	var max_hp_value := int(hero.get("max_hp"))
+	var runtime_info_stats: Dictionary = {}
+	if hero.has_method("get_runtime_info_stats"):
+		var raw_runtime_info = hero.call("get_runtime_info_stats")
+		if typeof(raw_runtime_info) == TYPE_DICTIONARY:
+			runtime_info_stats = raw_runtime_info
+
+	var hero_build_counts: Dictionary = {}
+	var raw_build_counts = hero.get("build_counts")
+	if typeof(raw_build_counts) == TYPE_DICTIONARY:
+		hero_build_counts = Dictionary(raw_build_counts).duplicate(true)
+
+	max_hp_value = int(
+		runtime_info_stats.get("max_hp", max_hp_value)
+	)
+	var hero_execute_ratio := (
+		float(
+			Dictionary(
+				current_hero_profile.get("ultimate", {})
+			).get("execute_hp_ratio", 0.0)
+		)
+		+ float(hero.get("rogue_execute_threshold_bonus"))
+	)
+	var hero_slash_shield_ratio := (
+		float(
+			Dictionary(
+				current_hero_profile.get("rogue_slash_skill", {})
+			).get("shield_hp_ratio", 0.0)
+		)
+		+ float(hero.get("rogue_slash_shield_ratio_bonus"))
+	)
+
+	return {
+		"hero_name": String(
+			current_hero_profile.get("display_name", "견습 마도사")
+		),
+		"hero_archetype": String(
+			current_hero_profile.get("archetype", "ranged_kiter")
+		),
+		"hero_portrait_path": String(
+			current_stage_data.get("portrait_path", "")
+		),
+		"hero_hp": hp,
+		"hero_max_hp": max_hp_value,
+		"hero_level": int(hero.get("level")),
+		"hero_attack_damage": int(
+			runtime_info_stats.get(
+				"attack_damage",
+				hero.get("attack_damage")
+			)
+		),
+		"hero_move_speed": float(
+			runtime_info_stats.get(
+				"move_speed",
+				hero.get("move_speed")
+			)
+		),
+		"hero_attack_cooldown": float(
+			runtime_info_stats.get(
+				"attack_interval",
+				hero.get("attack_cooldown")
+			)
+		),
+		"hero_attack_range": float(
+			runtime_info_stats.get(
+				"attack_range",
+				hero.get("attack_range")
+			)
+		),
+		"hero_projectile_speed": float(
+			runtime_info_stats.get(
+				"projectile_speed",
+				hero.get("projectile_speed")
+			)
+		),
+		"hero_lifesteal_ratio": float(
+			hero.get("rogue_lifesteal_ratio")
+		),
+		"hero_execute_ratio": hero_execute_ratio,
+		"hero_slash_shield_ratio": hero_slash_shield_ratio,
+		"hero_build_counts": hero_build_counts,
+		"hero_recent_offense": (
+			String(hero.call("get_recent_offense_summary"))
+			if hero.has_method("get_recent_offense_summary")
+			else "최근 공세 기록 없음"
+		),
+		"hero_ai_observation": (
+			String(hero.call("get_ai_observation_summary"))
+			if hero.has_method("get_ai_observation_summary")
+			else "AI 관측 정보 없음"
+		),
+	}
+
+
 func get_snapshot() -> Dictionary:
 	var hp := 0
 	var max_hp_value := 0

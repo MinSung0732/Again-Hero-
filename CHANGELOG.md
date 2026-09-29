@@ -31,6 +31,7 @@
 - Phase 6 UI cleanup 시작: 숨겨진 `DebugBalance`는 실제 표시 중에만 갱신하고, 20Hz Hero 스킬 쿨다운 HUD는 전체 `battle.get_snapshot()` 대신 전용 경량 getter를 사용해 대형 snapshot/중첩 Dictionary 복제 비용을 제거.
 - Hero 스킬 쿨다운 HUD의 `seen`/stale 컨테이너를 재사용하고 `Dictionary.keys()` 생성을 제거했으며, 쿨다운 바 `move_to_front()`는 숨김→표시 전환 시에만 수행하도록 축소.
 - 마왕 마력기술의 ordered ID/최저 마력비용을 Battle 시작 시 캐시해 활성 쿨다운의 매 프레임 Catalog 배열 생성과 10Hz 마력 HUD 갱신의 반복 스킬 Dictionary 복제를 제거하고, UI 쿨다운 상태 Dictionary도 재사용하도록 변경. 초기 진입 시 중복 호출되던 동일 쿨다운 갱신 1회도 제거.
+- 용사 정보창 전용 `get_hero_info_hud()` 경량 getter를 추가해 정보창이 열린 상태에서 HP/EXP 신호마다 전체 Battle snapshot, Run 통계, 디버그/연구 요약, 마왕 빌드/쿨다운 데이터까지 함께 복제하던 비용을 제거. 기존 전체 snapshot 경로는 호환 fallback으로 유지.
 - Godot 실행 파일이 없는 환경이라 실제 런타임/프로파일러 검증은 수행하지 않았고 정적 참조·diff 검증만 수행.
 
 ## 2026-09-28 — Stage 8 5스킬 컷신 이미지 왜곡 제거
