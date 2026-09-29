@@ -2244,6 +2244,14 @@ func _begin_threaded_scene_change(path: String, message: String) -> void:
 		battle.set_external_pause(true)
 
 	status_label.text = message
+	var transition := get_node_or_null("/root/SceneTransition")
+	if (
+		is_instance_valid(transition)
+		and transition.has_method("change_scene")
+		and bool(transition.call("change_scene", path, message))
+	):
+		return
+
 	var error := ResourceLoader.load_threaded_request(path, "PackedScene")
 	if error != OK:
 		get_tree().change_scene_to_file(path)
