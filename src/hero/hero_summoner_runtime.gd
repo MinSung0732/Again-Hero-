@@ -475,3 +475,111 @@ static func build_watcher_runtime_config(
 	)
 	runtime_config["follow_slot"] = follow_slot
 	return runtime_config
+
+
+
+static func get_augment_stacks(
+	build_counts: Dictionary,
+	augment_id: String
+) -> int:
+	return maxi(
+		int(build_counts.get(augment_id, 0)),
+		0
+	)
+
+
+static func get_runtime_speed_multipliers(
+	shield_active: bool,
+	resonance_stacks: int
+) -> Dictionary:
+	var attack_speed := 1.0
+	var move_speed := 1.0
+	if shield_active:
+		attack_speed += float(resonance_stacks) * 0.024
+		move_speed += float(resonance_stacks) * 0.02
+	return {
+		"attack_speed": attack_speed,
+		"move_speed": move_speed,
+	}
+
+
+static func get_scout_swarm_multipliers(
+	swarm_stacks: int,
+	active_scouts: int
+) -> Dictionary:
+	var attack_speed := 1.0
+	var damage := 1.0
+	var move_speed := 1.0
+	if active_scouts >= 3:
+		attack_speed += float(swarm_stacks) * 0.04
+		damage += float(swarm_stacks) * 0.02
+	if active_scouts >= 5:
+		move_speed += float(swarm_stacks) * 0.03
+	return {
+		"attack_speed": attack_speed,
+		"damage": damage,
+		"move_speed": move_speed,
+	}
+
+
+static func extend_regular_summon_durations(
+	seconds: float,
+	gatekeeper_pool: Array,
+	scout_pool: Array,
+	hound_pool: Array,
+	watcher_pool: Array
+) -> void:
+	if seconds <= 0.0:
+		return
+	_extend_pool_durations(gatekeeper_pool, seconds)
+	_extend_pool_durations(scout_pool, seconds)
+	_extend_pool_durations(hound_pool, seconds)
+	_extend_pool_durations(watcher_pool, seconds)
+
+
+static func _extend_pool_durations(
+	pool: Array,
+	seconds: float
+) -> void:
+	for summon in pool:
+		if (
+			not is_instance_valid(summon)
+			or not bool(summon.get("active"))
+		):
+			continue
+		var remaining = summon.get("duration_remaining")
+		if remaining != null:
+			summon.set(
+				"duration_remaining",
+				float(remaining) + seconds
+			)
+
+
+static func get_open_gate_required_summons(
+	open_gate_config: Dictionary
+) -> int:
+	if open_gate_config.is_empty():
+		return 0
+	var raw_condition = open_gate_config.get(
+		"unlock_condition",
+		{}
+	)
+	if typeof(raw_condition) != TYPE_DICTIONARY:
+		return 0
+	var condition: Dictionary = raw_condition
+	return maxi(
+		int(condition.get("required_count", 50)),
+		0
+	)
+
+
+static func has_reached_open_gate_unlock(
+	open_gate_config: Dictionary,
+	already_unlocked: bool,
+	total_summons: int
+) -> bool:
+	if open_gate_config.is_empty() or already_unlocked:
+		return false
+	return total_summons >= get_open_gate_required_summons(
+		open_gate_config
+	)

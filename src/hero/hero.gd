@@ -1711,43 +1711,38 @@ func _move_summoner_without_monsters_near_open_gate() -> void:
 
 
 func _get_summoner_augment_stacks(augment_id: String) -> int:
-	return maxi(int(build_counts.get(augment_id, 0)), 0)
+	return HERO_SUMMONER_RUNTIME.get_augment_stacks(
+		build_counts,
+		augment_id
+	)
 
 
 func get_summoner_runtime_speed_multipliers() -> Dictionary:
-	var attack_speed := 1.0
-	var move_speed_multiplier := 1.0
-	if shield_hp > 0.0:
-		var resonance := _get_summoner_augment_stacks("summoner_shield_resonance")
-		attack_speed += float(resonance) * 0.024
-		move_speed_multiplier += float(resonance) * 0.02
-	return {"attack_speed": attack_speed, "move_speed": move_speed_multiplier}
+	return HERO_SUMMONER_RUNTIME.get_runtime_speed_multipliers(
+		shield_hp > 0.0,
+		_get_summoner_augment_stacks(
+			"summoner_shield_resonance"
+		)
+	)
 
 
 func get_summoner_scout_swarm_multipliers() -> Dictionary:
-	var stacks := _get_summoner_augment_stacks("summoner_scout_swarm_tactics")
-	var active_scouts := _count_active_summons(summoner_scout_pool)
-	var attack_speed := 1.0
-	var damage := 1.0
-	var move := 1.0
-	if active_scouts >= 3:
-		attack_speed += float(stacks) * 0.04
-		damage += float(stacks) * 0.02
-	if active_scouts >= 5:
-		move += float(stacks) * 0.03
-	return {"attack_speed": attack_speed, "damage": damage, "move_speed": move}
+	return HERO_SUMMONER_RUNTIME.get_scout_swarm_multipliers(
+		_get_summoner_augment_stacks(
+			"summoner_scout_swarm_tactics"
+		),
+		_count_active_summons(summoner_scout_pool)
+	)
 
 
 func _extend_regular_summon_durations(seconds: float) -> void:
-	if seconds <= 0.0:
-		return
-	for pool in [summoner_gatekeeper_pool, summoner_scout_pool, summoner_hound_pool, summoner_watcher_pool]:
-		for summon in pool:
-			if not is_instance_valid(summon) or not bool(summon.get("active")):
-				continue
-			var remaining = summon.get("duration_remaining")
-			if remaining != null:
-				summon.set("duration_remaining", float(remaining) + seconds)
+	HERO_SUMMONER_RUNTIME.extend_regular_summon_durations(
+		seconds,
+		summoner_gatekeeper_pool,
+		summoner_scout_pool,
+		summoner_hound_pool,
+		summoner_watcher_pool
+	)
 
 
 func _update_summoner_full_slot_shield(delta: float) -> void:
@@ -2039,13 +2034,9 @@ func _on_summoner_watcher_released(_summon: Node2D) -> void:
 
 
 func _get_summoner_open_gate_required_summons() -> int:
-	if summoner_open_gate_config.is_empty():
-		return 0
-	var raw_condition = summoner_open_gate_config.get("unlock_condition", {})
-	if typeof(raw_condition) != TYPE_DICTIONARY:
-		return 0
-	var condition: Dictionary = raw_condition
-	return maxi(int(condition.get("required_count", 50)), 0)
+	return HERO_SUMMONER_RUNTIME.get_open_gate_required_summons(
+		summoner_open_gate_config
+	)
 
 
 func _record_summoner_spawn_for_open_gate_unlock() -> void:
@@ -2053,7 +2044,11 @@ func _record_summoner_spawn_for_open_gate_unlock() -> void:
 		return
 	summoner_total_summons += 1
 	var required := _get_summoner_open_gate_required_summons()
-	if summoner_total_summons < required:
+	if not HERO_SUMMONER_RUNTIME.has_reached_open_gate_unlock(
+		summoner_open_gate_config,
+		summoner_open_gate_unlocked,
+		summoner_total_summons
+	):
 		return
 
 	summoner_open_gate_unlocked = true
