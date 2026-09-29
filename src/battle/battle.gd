@@ -102,6 +102,8 @@ const MONSTER_SPATIAL_CELL_SIZE := 256.0
 var active_monsters: Dictionary = {}
 var active_hero_summons: Dictionary = {}
 var monster_spatial_grid: Dictionary = {}
+var monster_spatial_used_cells: Array[Vector2i] = []
+var monster_spatial_stale_ids: Array[int] = []
 var monster_spatial_grid_physics_frame: int = -1
 var exp_orb_pool: Array[Node2D] = []
 var projectile_pools: Dictionary = {}
@@ -220,7 +222,7 @@ func _on_magnet_item_tree_exited(instance_id: int) -> void:
 
 func _active_registry_size(registry: Dictionary) -> int:
 	var stale_ids: Array = []
-	for raw_id in registry.keys():
+	for raw_id in registry:
 		var node = registry.get(raw_id)
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			stale_ids.append(raw_id)
@@ -237,13 +239,22 @@ func _spatial_cell_for_position(world_position: Vector2) -> Vector2i:
 
 
 func _rebuild_monster_spatial_grid() -> void:
-	monster_spatial_grid.clear()
-	var stale_ids: Array = []
+	# Keep cell Arrays alive and only clear buckets used by the previous
+	# physics frame. This avoids rebuilding Dictionary/Array storage every
+	# frame when large monster waves are active.
+	for cell in monster_spatial_used_cells:
+		var previous_bucket = monster_spatial_grid.get(cell, null)
+		if typeof(previous_bucket) == TYPE_ARRAY:
+			var reusable_bucket: Array = previous_bucket
+			reusable_bucket.clear()
 
-	for raw_id in active_monsters.keys():
+	monster_spatial_used_cells.clear()
+	monster_spatial_stale_ids.clear()
+
+	for raw_id in active_monsters:
 		var node = active_monsters.get(raw_id)
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			stale_ids.append(raw_id)
+			monster_spatial_stale_ids.append(int(raw_id))
 			continue
 
 		var monster := node as Node2D
@@ -254,13 +265,19 @@ func _rebuild_monster_spatial_grid() -> void:
 			continue
 
 		var cell := _spatial_cell_for_position(monster.global_position)
-		if not monster_spatial_grid.has(cell):
-			monster_spatial_grid[cell] = []
-		var bucket: Array = monster_spatial_grid[cell]
-		bucket.append(monster)
-		monster_spatial_grid[cell] = bucket
+		var raw_bucket = monster_spatial_grid.get(cell, null)
+		var bucket: Array
+		if typeof(raw_bucket) == TYPE_ARRAY:
+			bucket = raw_bucket
+		else:
+			bucket = []
+			monster_spatial_grid[cell] = bucket
 
-	for raw_id in stale_ids:
+		if bucket.is_empty():
+			monster_spatial_used_cells.append(cell)
+		bucket.append(monster)
+
+	for raw_id in monster_spatial_stale_ids:
 		active_monsters.erase(raw_id)
 
 	monster_spatial_grid_physics_frame = Engine.get_physics_frames()
@@ -296,7 +313,7 @@ func fill_monsters_near(
 	for cell_x in range(min_cell.x, max_cell.x + 1):
 		for cell_y in range(min_cell.y, max_cell.y + 1):
 			var cell := Vector2i(cell_x, cell_y)
-			var bucket = monster_spatial_grid.get(cell, [])
+			var bucket = monster_spatial_grid.get(cell, null)
 			if typeof(bucket) != TYPE_ARRAY:
 				continue
 			for node in bucket:
@@ -332,7 +349,7 @@ func count_monsters_near(
 	for cell_x in range(min_cell.x, max_cell.x + 1):
 		for cell_y in range(min_cell.y, max_cell.y + 1):
 			var cell := Vector2i(cell_x, cell_y)
-			var bucket = monster_spatial_grid.get(cell, [])
+			var bucket = monster_spatial_grid.get(cell, null)
 			if typeof(bucket) != TYPE_ARRAY:
 				continue
 			for node in bucket:
@@ -410,7 +427,7 @@ func query_monsters_in_rect(world_rect: Rect2) -> Array:
 	for cell_x in range(min_cell.x, max_cell.x + 1):
 		for cell_y in range(min_cell.y, max_cell.y + 1):
 			var cell := Vector2i(cell_x, cell_y)
-			var bucket = monster_spatial_grid.get(cell, [])
+			var bucket = monster_spatial_grid.get(cell, null)
 			if typeof(bucket) != TYPE_ARRAY:
 				continue
 			for node in bucket:
@@ -537,6 +554,8 @@ func _start_battle() -> void:
 	active_monsters.clear()
 	active_hero_summons.clear()
 	monster_spatial_grid.clear()
+	monster_spatial_used_cells.clear()
+	monster_spatial_stale_ids.clear()
 	monster_spatial_grid_physics_frame = -1
 	external_pause = false
 	flow_pause_manager.reset()
@@ -1506,7 +1525,7 @@ func _apply_demon_level_scaling_to_monster(
 func _get_active_monsters_snapshot() -> Array:
 	var result: Array = []
 	var stale_ids: Array = []
-	for raw_id in active_monsters.keys():
+	for raw_id in active_monsters:
 		var node = active_monsters.get(raw_id)
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			stale_ids.append(raw_id)
