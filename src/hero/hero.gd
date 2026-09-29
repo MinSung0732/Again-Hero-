@@ -7023,6 +7023,69 @@ func _apply_camera_limits() -> void:
 	# shared Hero camera follow directly so rendered sprites stay stable.
 	follow_camera.position_smoothing_enabled = false
 
+
+func set_camera_view_locked(locked: bool) -> void:
+	if not is_instance_valid(follow_camera):
+		return
+
+	if locked:
+		follow_camera.top_level = false
+		follow_camera.position = Vector2.ZERO
+	else:
+		var current_center := follow_camera.get_screen_center_position()
+		follow_camera.top_level = true
+		follow_camera.global_position = _clamp_manual_camera_center(
+			current_center
+		)
+	follow_camera.force_update_scroll()
+
+
+func pan_camera_by_screen_delta(screen_delta: Vector2) -> void:
+	if (
+		not is_instance_valid(follow_camera)
+		or not follow_camera.top_level
+		or screen_delta.length_squared() <= 0.001
+	):
+		return
+
+	var zoom := follow_camera.zoom
+	var world_delta := Vector2(
+		screen_delta.x / maxf(absf(zoom.x), 0.01),
+		screen_delta.y / maxf(absf(zoom.y), 0.01)
+	)
+	follow_camera.global_position = _clamp_manual_camera_center(
+		follow_camera.global_position - world_delta
+	)
+	follow_camera.force_update_scroll()
+
+
+func _clamp_manual_camera_center(center: Vector2) -> Vector2:
+	var viewport_size := get_viewport_rect().size
+	var zoom := follow_camera.zoom
+	var half_view := Vector2(
+		viewport_size.x * 0.5 / maxf(absf(zoom.x), 0.01),
+		viewport_size.y * 0.5 / maxf(absf(zoom.y), 0.01)
+	)
+	var min_x := float(follow_camera.limit_left) + half_view.x
+	var max_x := float(follow_camera.limit_right) - half_view.x
+	var min_y := float(follow_camera.limit_top) + half_view.y
+	var max_y := float(follow_camera.limit_bottom) - half_view.y
+
+	if min_x > max_x:
+		center.x = (
+			float(follow_camera.limit_left + follow_camera.limit_right) * 0.5
+		)
+	else:
+		center.x = clampf(center.x, min_x, max_x)
+
+	if min_y > max_y:
+		center.y = (
+			float(follow_camera.limit_top + follow_camera.limit_bottom) * 0.5
+		)
+	else:
+		center.y = clampf(center.y, min_y, max_y)
+	return center
+
 func _move_without_monsters() -> void:
 	var current_move_speed := move_speed * _get_purifier_move_speed_multiplier()
 	if hero_archetype == "alchemist_chemical":

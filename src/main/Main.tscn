@@ -918,17 +918,27 @@ theme_override_font_sizes/font_size = 52
 text = "설정"
 horizontal_alignment = 1
 
-[node name="BGMRow" type="HBoxContainer" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
+[node name="SettingsTabs" type="TabContainer" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 520)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 30
+
+[node name="Sound" type="VBoxContainer" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs"]
+layout_mode = 2
+theme_override_constants/separation = 22
+
+[node name="BGMRow" type="HBoxContainer" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound"]
 layout_mode = 2
 theme_override_constants/separation = 18
 
-[node name="Label" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/BGMRow"]
+[node name="Label" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/BGMRow"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "배경음"
 
-[node name="Slider" type="HSlider" parent="HUD/SettingsOverlay/Panel/Margin/VBox/BGMRow"]
+[node name="Slider" type="HSlider" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/BGMRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 1.0
@@ -936,30 +946,30 @@ max_value = 10.0
 step = 1.0
 value = 10.0
 
-[node name="Value" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/BGMRow"]
+[node name="Value" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/BGMRow"]
 custom_minimum_size = Vector2(72, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "10"
 horizontal_alignment = 1
 
-[node name="BGMMute" type="CheckBox" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
+[node name="BGMMute" type="CheckBox" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound"]
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "배경음 끄기"
 
-[node name="SFXRow" type="HBoxContainer" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
+[node name="SFXRow" type="HBoxContainer" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound"]
 layout_mode = 2
 theme_override_constants/separation = 18
 
-[node name="Label" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SFXRow"]
+[node name="Label" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/SFXRow"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "효과음"
 
-[node name="Slider" type="HSlider" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SFXRow"]
+[node name="Slider" type="HSlider" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/SFXRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 1.0
@@ -967,25 +977,44 @@ max_value = 10.0
 step = 1.0
 value = 10.0
 
-[node name="Value" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SFXRow"]
+[node name="Value" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/SFXRow"]
 custom_minimum_size = Vector2(72, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "10"
 horizontal_alignment = 1
 
-[node name="SFXMute" type="CheckBox" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
+[node name="SFXMute" type="CheckBox" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound"]
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "효과음 끄기"
 
-[node name="Guide" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
+[node name="Guide" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.68, 0.64, 0.73, 1)
 theme_override_font_sizes/font_size = 24
 text = "1~10 단계 · 변경 즉시 적용 · 자동 저장"
 horizontal_alignment = 1
+
+[node name="Gameplay" type="VBoxContainer" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 22
+
+[node name="CameraLock" type="CheckBox" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Gameplay"]
+custom_minimum_size = Vector2(0, 84)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+button_pressed = true
+text = "시야 고정"
+
+[node name="CameraGuide" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Gameplay"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.74, 0.82, 1)
+theme_override_font_sizes/font_size = 26
+text = "켜짐: 용사를 자동 추적합니다.\n꺼짐: 전투 화면을 드래그/스와이프해 시야를 이동합니다."
+autowrap_mode = 2
 
 [node name="CloseButton" type="Button" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 108)

@@ -15,6 +15,8 @@ const TOUCH_HOLD_FRAME_DIR := "res://assets/art/UI/ui_gagebar_frames"
 const TOUCH_HOLD_FRAME_COUNT := 8
 const TOUCH_HOLD_DELAY := 0.18
 const TOUCH_HOLD_FRAME_SECONDS := 0.08
+const GAMEPLAY_SETTINGS_PATH := "user://gameplay_settings.cfg"
+const CAMERA_DRAG_THRESHOLD := 12.0
 
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
 @onready var battle_viewport: SubViewport = $BattleViewportContainer/BattleViewport
@@ -68,6 +70,7 @@ const TOUCH_HOLD_FRAME_SECONDS := 0.08
 @onready var demon_exp_bar: ProgressBar = $HUD/BottomBar/DemonExpBar
 @onready var command_label: Label = $HUD/BottomBar/CommandLabel
 @onready var command_bar: ProgressBar = $HUD/BottomBar/CommandBar
+@onready var demon_ultimate_panel: ColorRect = $HUD/DemonUltimatePanel
 @onready var demon_ultimate_label: Label = $HUD/DemonUltimatePanel/UltimateLabel
 @onready var demon_ultimate_bar: ProgressBar = $HUD/DemonUltimatePanel/UltimateBar
 @onready var demon_ultimate_1: Button = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate1
@@ -96,12 +99,14 @@ const TOUCH_HOLD_FRAME_SECONDS := 0.08
 
 @onready var settings_overlay: Control = $HUD/SettingsOverlay
 @onready var settings_close_button: Button = $HUD/SettingsOverlay/Panel/Margin/VBox/CloseButton
-@onready var settings_bgm_slider: HSlider = $HUD/SettingsOverlay/Panel/Margin/VBox/BGMRow/Slider
-@onready var settings_bgm_value: Label = $HUD/SettingsOverlay/Panel/Margin/VBox/BGMRow/Value
-@onready var settings_bgm_mute: CheckBox = $HUD/SettingsOverlay/Panel/Margin/VBox/BGMMute
-@onready var settings_sfx_slider: HSlider = $HUD/SettingsOverlay/Panel/Margin/VBox/SFXRow/Slider
-@onready var settings_sfx_value: Label = $HUD/SettingsOverlay/Panel/Margin/VBox/SFXRow/Value
-@onready var settings_sfx_mute: CheckBox = $HUD/SettingsOverlay/Panel/Margin/VBox/SFXMute
+@onready var settings_tabs: TabContainer = $HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs
+@onready var settings_bgm_slider: HSlider = $HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/BGMRow/Slider
+@onready var settings_bgm_value: Label = $HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/BGMRow/Value
+@onready var settings_bgm_mute: CheckBox = $HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/BGMMute
+@onready var settings_sfx_slider: HSlider = $HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/SFXRow/Slider
+@onready var settings_sfx_value: Label = $HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/SFXRow/Value
+@onready var settings_sfx_mute: CheckBox = $HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/SFXMute
+@onready var settings_camera_lock: CheckBox = $HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Gameplay/CameraLock
 @onready var bgm_player_a: AudioStreamPlayer = $HeroBGMManager/PlayerA
 @onready var bgm_player_b: AudioStreamPlayer = $HeroBGMManager/PlayerB
 
@@ -167,6 +172,13 @@ var _touch_hold_frame_elapsed: float = 0.0
 var _touch_hold_frame_index: int = 0
 var _touch_hold_position: Vector2 = Vector2.ZERO
 var _touch_pointer_id: int = -1
+var camera_view_locked: bool = true
+var _camera_drag_active: bool = false
+var _camera_drag_pointer_id: int = -1
+var _camera_drag_distance: float = 0.0
+var _pending_manual_spawn: bool = false
+var _pending_manual_spawn_position: Vector2 = Vector2.ZERO
+var _pending_manual_spawn_pointer_id: int = -1
 
 func _ready() -> void:
 	_cache_demon_ultimate_ui_data()
@@ -225,11 +237,18 @@ func _ready() -> void:
 	pause_lobby_button.pressed.connect(_on_lobby_pressed)
 
 	settings_close_button.pressed.connect(_close_settings_overlay)
+	if settings_tabs.get_tab_count() >= 2:
+		settings_tabs.set_tab_title(0, "사운드")
+		settings_tabs.set_tab_title(1, "게임플레이")
 	settings_bgm_slider.value_changed.connect(_on_settings_bgm_level_changed)
 	settings_sfx_slider.value_changed.connect(_on_settings_sfx_level_changed)
 	settings_bgm_mute.toggled.connect(_on_settings_bgm_mute_toggled)
 	settings_sfx_mute.toggled.connect(_on_settings_sfx_mute_toggled)
+	settings_camera_lock.toggled.connect(_on_settings_camera_lock_toggled)
+	_load_gameplay_settings()
 	_sync_audio_settings_ui()
+	_sync_gameplay_settings_ui()
+	_apply_camera_view_mode()
 
 	placement_toggle.toggled.connect(_on_placement_mode_toggled)
 
@@ -493,8 +512,43 @@ func _on_skill_unlock_cutscene_finished() -> void:
 		battle.set_external_pause(false)
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if camera_view_locked or _camera_pan_blocked():
+		return
+
+	if event is InputEventScreenTouch:
+		var touch := event as InputEventScreenTouch
+		if touch.pressed and _can_use_battle_pointer(touch.position):
+			_begin_camera_drag(touch.index)
+	elif event is InputEventScreenDrag:
+		var drag := event as InputEventScreenDrag
+		if _camera_drag_active and drag.index == _camera_drag_pointer_id:
+			_pan_camera_by_screen_delta(drag.relative)
+			_end_touch_hold()
+			get_viewport().set_input_as_handled()
+	elif event is InputEventMouseButton:
+		var mouse := event as InputEventMouseButton
+		if (
+			mouse.button_index == MOUSE_BUTTON_LEFT
+			and mouse.pressed
+			and _can_use_battle_pointer(mouse.position)
+		):
+			_begin_camera_drag(-2)
+	elif event is InputEventMouseMotion:
+		var motion := event as InputEventMouseMotion
+		if (
+			_camera_drag_active
+			and _camera_drag_pointer_id == -2
+			and (motion.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0
+		):
+			_pan_camera_by_screen_delta(motion.relative)
+			_end_touch_hold()
+			get_viewport().set_input_as_handled()
+
+
 func _input(event: InputEvent) -> void:
 	_update_touch_hold_input(event)
+	_finish_camera_drag_on_release(event)
 	if _stage_intro_active or _skill_unlock_cutscene_active:
 		return
 
@@ -549,6 +603,7 @@ func _input(event: InputEvent) -> void:
 	if (
 		result_panel.visible
 		or pause_menu.visible
+		or settings_overlay.visible
 		or demon_augment_panel.visible
 		or mutation_panel.visible
 		or auto_placement
@@ -558,19 +613,52 @@ func _input(event: InputEvent) -> void:
 
 	var pointer_position := Vector2.ZERO
 	var is_pressed := false
+	var is_released := false
+	var pointer_id := -1
 
 	if event is InputEventScreenTouch:
 		var touch_event := event as InputEventScreenTouch
 		is_pressed = touch_event.pressed
+		is_released = not touch_event.pressed
 		pointer_position = touch_event.position
+		pointer_id = touch_event.index
 	elif event is InputEventMouseButton:
 		var mouse_event := event as InputEventMouseButton
-		is_pressed = mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT
+		if mouse_event.button_index != MOUSE_BUTTON_LEFT:
+			return
+		is_pressed = mouse_event.pressed
+		is_released = not mouse_event.pressed
 		pointer_position = mouse_event.position
-
-	if not is_pressed:
+		pointer_id = -2
+	else:
 		return
 
+	if not camera_view_locked and is_released:
+		if (
+			_pending_manual_spawn
+			and _pending_manual_spawn_pointer_id == pointer_id
+		):
+			if _camera_drag_distance < CAMERA_DRAG_THRESHOLD:
+				_try_manual_spawn_at_screen_position(
+					_pending_manual_spawn_position
+				)
+			_clear_pending_manual_spawn()
+			get_viewport().set_input_as_handled()
+		return
+
+	if not is_pressed or not _can_use_battle_pointer(pointer_position):
+		return
+
+	if not camera_view_locked:
+		_pending_manual_spawn = true
+		_pending_manual_spawn_position = pointer_position
+		_pending_manual_spawn_pointer_id = pointer_id
+		return
+
+	_try_manual_spawn_at_screen_position(pointer_position)
+
+
+func _try_manual_spawn_at_screen_position(pointer_position: Vector2) -> void:
 	var viewport_rect: Rect2 = battle_viewport_container.get_global_rect()
 	if not viewport_rect.has_point(pointer_position):
 		return
@@ -606,6 +694,106 @@ func _input(event: InputEvent) -> void:
 
 	battle.try_summon_at_position(selected_monster_type, battle_position)
 	get_viewport().set_input_as_handled()
+
+
+func _camera_pan_blocked() -> bool:
+	return (
+		_stage_intro_active
+		or _skill_unlock_cutscene_active
+		or result_panel.visible
+		or pause_menu.visible
+		or settings_overlay.visible
+		or demon_augment_panel.visible
+		or mutation_panel.visible
+		or monster_info_panel.visible
+		or hero_info_panel.visible
+	)
+
+
+func _can_use_battle_pointer(pointer_position: Vector2) -> bool:
+	if not battle_viewport_container.get_global_rect().has_point(pointer_position):
+		return false
+	return not _is_pointer_over_battle_ui(pointer_position)
+
+
+func _is_pointer_over_battle_ui(pointer_position: Vector2) -> bool:
+	if (
+		demon_ultimate_panel.visible
+		and demon_ultimate_panel.get_global_rect().has_point(pointer_position)
+	):
+		return true
+	if (
+		hero_skill_cooldown_bar.visible
+		and hero_skill_cooldown_bar.get_global_rect().has_point(pointer_position)
+	):
+		return true
+	if (
+		monster_info_bookmark.visible
+		and monster_info_bookmark.get_global_rect().has_point(pointer_position)
+	):
+		return true
+	if (
+		hero_info_bookmark.visible
+		and hero_info_bookmark.get_global_rect().has_point(pointer_position)
+	):
+		return true
+	return false
+
+
+func _begin_camera_drag(pointer_id: int) -> void:
+	if _camera_drag_active:
+		return
+	_camera_drag_active = true
+	_camera_drag_pointer_id = pointer_id
+	_camera_drag_distance = 0.0
+
+
+func _finish_camera_drag_on_release(event: InputEvent) -> void:
+	if not _camera_drag_active:
+		return
+	if event is InputEventScreenTouch:
+		var touch := event as InputEventScreenTouch
+		if not touch.pressed and touch.index == _camera_drag_pointer_id:
+			_end_camera_drag()
+	elif event is InputEventMouseButton:
+		var mouse := event as InputEventMouseButton
+		if (
+			mouse.button_index == MOUSE_BUTTON_LEFT
+			and not mouse.pressed
+			and _camera_drag_pointer_id == -2
+		):
+			_end_camera_drag()
+
+
+func _end_camera_drag() -> void:
+	_camera_drag_active = false
+	_camera_drag_pointer_id = -1
+
+
+func _clear_pending_manual_spawn() -> void:
+	_pending_manual_spawn = false
+	_pending_manual_spawn_position = Vector2.ZERO
+	_pending_manual_spawn_pointer_id = -1
+
+
+func _pan_camera_by_screen_delta(screen_delta: Vector2) -> void:
+	if screen_delta.length_squared() <= 0.001:
+		return
+
+	_camera_drag_distance += screen_delta.length()
+	var viewport_rect := battle_viewport_container.get_global_rect()
+	var viewport_size := Vector2(battle_viewport.size)
+	var battle_delta := Vector2(
+		screen_delta.x * viewport_size.x / maxf(viewport_rect.size.x, 1.0),
+		screen_delta.y * viewport_size.y / maxf(viewport_rect.size.y, 1.0)
+	)
+	var hero_node = battle.get("hero")
+	if (
+		is_instance_valid(hero_node)
+		and hero_node.has_method("pan_camera_by_screen_delta")
+	):
+		hero_node.call("pan_camera_by_screen_delta", battle_delta)
+
 
 func _warm_touch_hold_frames() -> void:
 	if not _touch_hold_frames.is_empty():
@@ -736,6 +924,7 @@ func _close_pause_menu() -> void:
 
 func _open_settings_overlay() -> void:
 	_sync_audio_settings_ui()
+	_sync_gameplay_settings_ui()
 	settings_overlay.show()
 	settings_overlay.move_to_front()
 
@@ -751,6 +940,43 @@ func _sync_audio_settings_ui() -> void:
 	settings_sfx_mute.set_pressed_no_signal(AudioSettings.sfx_muted)
 	settings_bgm_value.text = str(AudioSettings.bgm_level)
 	settings_sfx_value.text = str(AudioSettings.sfx_level)
+
+
+func _load_gameplay_settings() -> void:
+	var config := ConfigFile.new()
+	if config.load(GAMEPLAY_SETTINGS_PATH) != OK:
+		camera_view_locked = true
+		return
+	camera_view_locked = bool(
+		config.get_value("gameplay", "camera_view_locked", true)
+	)
+
+
+func _save_gameplay_settings() -> void:
+	var config := ConfigFile.new()
+	config.set_value("gameplay", "camera_view_locked", camera_view_locked)
+	config.save(GAMEPLAY_SETTINGS_PATH)
+
+
+func _sync_gameplay_settings_ui() -> void:
+	settings_camera_lock.set_pressed_no_signal(camera_view_locked)
+
+
+func _on_settings_camera_lock_toggled(enabled: bool) -> void:
+	camera_view_locked = enabled
+	_clear_pending_manual_spawn()
+	_end_camera_drag()
+	_save_gameplay_settings()
+	_apply_camera_view_mode()
+
+
+func _apply_camera_view_mode() -> void:
+	var hero_node = battle.get("hero")
+	if (
+		is_instance_valid(hero_node)
+		and hero_node.has_method("set_camera_view_locked")
+	):
+		hero_node.call("set_camera_view_locked", camera_view_locked)
 
 
 func _on_settings_bgm_level_changed(value: float) -> void:
