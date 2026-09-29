@@ -1,0 +1,79 @@
+extends RefCounted
+class_name MonsterRuntimeCommon
+
+const TARGET_REFRESH_INTERVAL := 0.25
+const FAR_NAV_INITIAL_MAX := 0.16
+const FAR_NAV_TICK_MIN := 0.10
+const FAR_NAV_TICK_MAX := 0.16
+
+
+static func tick_countdown(timer: float, delta: float) -> float:
+	return maxf(timer - delta, 0.0)
+
+
+static func should_refresh_target(
+	timer: float,
+	current_target: Node2D
+) -> bool:
+	return timer <= 0.0 or not is_instance_valid(current_target)
+
+
+static func resolve_combat_target(
+	owner: Node2D,
+	current_target: Node2D,
+	combat_authority: Node
+) -> Node2D:
+	if (
+		is_instance_valid(combat_authority)
+		and combat_authority.has_method("get_nearest_hero_combat_target")
+	):
+		var candidate = combat_authority.call(
+			"get_nearest_hero_combat_target",
+			owner.global_position
+		)
+		if candidate is Node2D:
+			return candidate as Node2D
+
+	if is_instance_valid(current_target):
+		return current_target
+
+	var tree := owner.get_tree()
+	if tree == null:
+		return null
+	return tree.get_first_node_in_group("hero") as Node2D
+
+
+static func initial_far_navigation_delay() -> float:
+	return randf_range(0.0, FAR_NAV_INITIAL_MAX)
+
+
+static func next_far_navigation_delay() -> float:
+	return randf_range(FAR_NAV_TICK_MIN, FAR_NAV_TICK_MAX)
+
+
+static func should_refresh_far_navigation(
+	distance_sq: float,
+	far_nav_sq: float,
+	timer: float
+) -> bool:
+	return distance_sq <= far_nav_sq or timer <= 0.0
+
+
+static func apply_standard_visual_lod(
+	owner: Node2D,
+	visual: Node,
+	currently_suspended: bool,
+	distance_sq: float,
+	lod_distance: float
+) -> bool:
+	var should_suspend := distance_sq > lod_distance * lod_distance
+	if should_suspend == currently_suspended:
+		return currently_suspended
+
+	owner.set_meta("visual_lod_suspended", should_suspend)
+	if (
+		is_instance_valid(visual)
+		and visual.has_method("set_lod_suspended")
+	):
+		visual.call("set_lod_suspended", should_suspend)
+	return should_suspend

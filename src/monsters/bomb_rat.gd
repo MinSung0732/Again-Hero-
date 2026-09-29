@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
+const MONSTER_RUNTIME_COMMON := preload("res://src/monsters/monster_runtime_common.gd")
 
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const BOMBRAT_FRAME_DIR := "res://assets/art/monsters/bombrat/frames"
@@ -54,7 +55,7 @@ var self_destruct_hp_ratio: float = 1.0
 func _ready() -> void:
 	add_to_group("monsters")
 	_ensure_hit_flash_material()
-	far_ai_tick_timer = randf_range(0.0, 0.16)
+	far_ai_tick_timer = MONSTER_RUNTIME_COMMON.initial_far_navigation_delay()
 	current_hp = max_hp
 	exp_reward = hero_kill_exp_reward
 	if not is_instance_valid(hero):
@@ -77,26 +78,16 @@ func configure_combat_context(
 
 
 func _refresh_combat_target() -> void:
-	hero_target_refresh_timer = 0.25
-
-	if (
-		is_instance_valid(combat_authority)
-		and combat_authority.has_method("get_nearest_hero_combat_target")
-	):
-		var candidate = combat_authority.call(
-			"get_nearest_hero_combat_target",
-			global_position
-		)
-		if candidate is Node2D:
-			hero = candidate
-			return
-
-	# Standalone/debug scene fallback only. Normal Battle spawns inject both
-	# references before _ready(), so gameplay avoids this SceneTree lookup.
+	hero_target_refresh_timer = (
+		MONSTER_RUNTIME_COMMON.TARGET_REFRESH_INTERVAL
+	)
 	if not is_instance_valid(combat_authority):
 		combat_authority = get_parent()
-	if not is_instance_valid(hero):
-		hero = get_tree().get_first_node_in_group("hero") as Node2D
+	hero = MONSTER_RUNTIME_COMMON.resolve_combat_target(
+		self,
+		hero,
+		combat_authority
+	)
 
 
 
@@ -107,8 +98,14 @@ func _attach_status_effect_visual(effect_type: String) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	hero_target_refresh_timer = maxf(hero_target_refresh_timer - delta, 0.0)
-	if hero_target_refresh_timer <= 0.0 or not is_instance_valid(hero):
+	hero_target_refresh_timer = MONSTER_RUNTIME_COMMON.tick_countdown(
+		hero_target_refresh_timer,
+		delta
+	)
+	if MONSTER_RUNTIME_COMMON.should_refresh_target(
+		hero_target_refresh_timer,
+		hero
+	):
 		_refresh_combat_target()
 
 	if current_hp <= 0 or dying:
@@ -146,14 +143,21 @@ func _physics_process(delta: float) -> void:
 	_update_visual_lod(distance_sq)
 	var far_nav_sq := FAR_NAV_DISTANCE * FAR_NAV_DISTANCE
 	var self_destruct_range_sq := self_destruct_range * self_destruct_range
-	far_ai_tick_timer = maxf(far_ai_tick_timer - delta, 0.0)
+	far_ai_tick_timer = MONSTER_RUNTIME_COMMON.tick_countdown(
+		far_ai_tick_timer,
+		delta
+	)
 
 	if distance_sq > self_destruct_range_sq:
 		var direction_to_hero := cached_direction_to_hero
-		if distance_sq <= far_nav_sq or far_ai_tick_timer <= 0.0:
+		if MONSTER_RUNTIME_COMMON.should_refresh_far_navigation(
+			distance_sq,
+			far_nav_sq,
+			far_ai_tick_timer
+		):
 			direction_to_hero = offset_to_hero.normalized()
 			cached_direction_to_hero = direction_to_hero
-			far_ai_tick_timer = randf_range(0.10, 0.16)
+			far_ai_tick_timer = MONSTER_RUNTIME_COMMON.next_far_navigation_delay()
 		if visual.visible and absf(direction_to_hero.x) > 0.01:
 			visual.flip_h = direction_to_hero.x < 0.0
 		var external_slow := 1.0
