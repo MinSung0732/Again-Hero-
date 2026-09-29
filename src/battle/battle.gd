@@ -102,6 +102,8 @@ const MONSTER_SPATIAL_CELL_SIZE := 256.0
 var active_monsters: Dictionary = {}
 var monster_spatial_grid: Dictionary = {}
 var monster_spatial_grid_physics_frame: int = -1
+var _monster_spatial_bucket_pool: Array = []
+var _monster_registry_stale_ids_scratch: Array = []
 var exp_orb_pool: Array[Node2D] = []
 var projectile_pools: Dictionary = {}
 var transient_fx_pools: Dictionary = {}
@@ -228,6 +230,33 @@ func _active_registry_size(registry: Dictionary) -> int:
 	return registry.size()
 
 
+func fill_active_monsters(result: Array) -> void:
+	result.clear()
+	_monster_registry_stale_ids_scratch.clear()
+
+	for raw_id in active_monsters:
+		var node = active_monsters.get(raw_id)
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			_monster_registry_stale_ids_scratch.append(raw_id)
+			continue
+		result.append(node)
+
+	for raw_id in _monster_registry_stale_ids_scratch:
+		active_monsters.erase(raw_id)
+
+	if not _monster_registry_stale_ids_scratch.is_empty():
+		monster_spatial_grid_physics_frame = -1
+
+
+func get_active_monster_count() -> int:
+	var count := 0
+	for raw_id in active_monsters:
+		var node = active_monsters.get(raw_id)
+		if is_instance_valid(node) and not node.is_queued_for_deletion():
+			count += 1
+	return count
+
+
 func _spatial_cell_for_position(world_position: Vector2) -> Vector2i:
 	return Vector2i(
 		floori(world_position.x / MONSTER_SPATIAL_CELL_SIZE),
@@ -236,13 +265,20 @@ func _spatial_cell_for_position(world_position: Vector2) -> Vector2i:
 
 
 func _rebuild_monster_spatial_grid() -> void:
+	# Recycle cell buckets instead of allocating a fresh Array for every
+	# occupied cell on every physics frame.
+	for raw_cell in monster_spatial_grid:
+		var existing_bucket = monster_spatial_grid.get(raw_cell)
+		if existing_bucket is Array:
+			existing_bucket.clear()
+			_monster_spatial_bucket_pool.append(existing_bucket)
 	monster_spatial_grid.clear()
-	var stale_ids: Array = []
+	_monster_registry_stale_ids_scratch.clear()
 
-	for raw_id in active_monsters.keys():
+	for raw_id in active_monsters:
 		var node = active_monsters.get(raw_id)
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			stale_ids.append(raw_id)
+			_monster_registry_stale_ids_scratch.append(raw_id)
 			continue
 
 		var monster := node as Node2D
@@ -254,12 +290,16 @@ func _rebuild_monster_spatial_grid() -> void:
 
 		var cell := _spatial_cell_for_position(monster.global_position)
 		if not monster_spatial_grid.has(cell):
-			monster_spatial_grid[cell] = []
+			var bucket: Array
+			if _monster_spatial_bucket_pool.is_empty():
+				bucket = []
+			else:
+				bucket = _monster_spatial_bucket_pool.pop_back()
+			monster_spatial_grid[cell] = bucket
 		var bucket: Array = monster_spatial_grid[cell]
 		bucket.append(monster)
-		monster_spatial_grid[cell] = bucket
 
-	for raw_id in stale_ids:
+	for raw_id in _monster_registry_stale_ids_scratch:
 		active_monsters.erase(raw_id)
 
 	monster_spatial_grid_physics_frame = Engine.get_physics_frames()
@@ -295,7 +335,7 @@ func fill_monsters_near(
 	for cell_x in range(min_cell.x, max_cell.x + 1):
 		for cell_y in range(min_cell.y, max_cell.y + 1):
 			var cell := Vector2i(cell_x, cell_y)
-			var bucket = monster_spatial_grid.get(cell, [])
+			var bucket = monster_spatial_grid.get(cell)
 			if typeof(bucket) != TYPE_ARRAY:
 				continue
 			for node in bucket:
@@ -331,7 +371,7 @@ func count_monsters_near(
 	for cell_x in range(min_cell.x, max_cell.x + 1):
 		for cell_y in range(min_cell.y, max_cell.y + 1):
 			var cell := Vector2i(cell_x, cell_y)
-			var bucket = monster_spatial_grid.get(cell, [])
+			var bucket = monster_spatial_grid.get(cell)
 			if typeof(bucket) != TYPE_ARRAY:
 				continue
 			for node in bucket:
@@ -348,7 +388,11 @@ func count_monsters_near(
 	return count
 
 
-func query_monsters_in_rect(world_rect: Rect2) -> Array:
+func fill_monsters_in_rect(
+	world_rect: Rect2,
+	result: Array
+) -> void:
+	result.clear()
 	_ensure_monster_spatial_grid()
 
 	var min_cell := _spatial_cell_for_position(world_rect.position)
@@ -356,18 +400,21 @@ func query_monsters_in_rect(world_rect: Rect2) -> Array:
 	min_cell -= Vector2i.ONE
 	max_cell += Vector2i.ONE
 
-	var result: Array = []
 	for cell_x in range(min_cell.x, max_cell.x + 1):
 		for cell_y in range(min_cell.y, max_cell.y + 1):
 			var cell := Vector2i(cell_x, cell_y)
-			var bucket = monster_spatial_grid.get(cell, [])
+			var bucket = monster_spatial_grid.get(cell)
 			if typeof(bucket) != TYPE_ARRAY:
 				continue
 			for node in bucket:
 				if is_instance_valid(node) and not node.is_queued_for_deletion():
 					result.append(node)
-	return result
 
+
+func query_monsters_in_rect(world_rect: Rect2) -> Array:
+	var result: Array = []
+	fill_monsters_in_rect(world_rect, result)
+	return result
 
 func _ready() -> void:
 	queue_redraw()
@@ -1424,15 +1471,7 @@ func _apply_demon_level_scaling_to_monster(
 
 func _get_active_monsters_snapshot() -> Array:
 	var result: Array = []
-	var stale_ids: Array = []
-	for raw_id in active_monsters.keys():
-		var node = active_monsters.get(raw_id)
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			stale_ids.append(raw_id)
-			continue
-		result.append(node)
-	for raw_id in stale_ids:
-		active_monsters.erase(raw_id)
+	fill_active_monsters(result)
 	return result
 
 
