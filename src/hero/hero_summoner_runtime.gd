@@ -223,3 +223,93 @@ static func build_augment_ai_settings(
 	)
 	settings["augment_biases"] = biases
 	return settings
+
+
+
+static func ensure_pool_capacity(
+	world_parent: Node,
+	pool: Array,
+	scene: PackedScene,
+	target_size: int,
+	released_callable: Callable,
+	prepare_method: StringName = &"",
+	prepare_config: Dictionary = {}
+) -> void:
+	if (
+		not is_instance_valid(world_parent)
+		or scene == null
+		or target_size <= 0
+	):
+		return
+
+	while pool.size() < target_size:
+		var summon := scene.instantiate() as Node2D
+		if summon == null:
+			break
+
+		world_parent.add_child(summon)
+		if (
+			summon.has_signal("released")
+			and released_callable.is_valid()
+			and not summon.is_connected(
+				"released",
+				released_callable
+			)
+		):
+			summon.connect(
+				"released",
+				released_callable
+			)
+
+		if (
+			prepare_method != &""
+			and summon.has_method(prepare_method)
+		):
+			summon.call(
+				prepare_method,
+				prepare_config
+			)
+
+		pool.append(summon)
+
+
+static func acquire_inactive_summon(pool: Array) -> Node2D:
+	for summon in pool:
+		if (
+			is_instance_valid(summon)
+			and not bool(summon.get("active"))
+		):
+			return summon as Node2D
+	return null
+
+
+static func are_runtime_pools_ready(
+	gatekeeper_pool: Array,
+	scout_config: Dictionary,
+	scout_pool: Array,
+	hound_config: Dictionary,
+	hound_pool: Array,
+	watcher_config: Dictionary,
+	watcher_pool: Array,
+	open_gate_config: Dictionary,
+	open_gate_pool: Array
+) -> bool:
+	return (
+		not gatekeeper_pool.is_empty()
+		and (
+			scout_config.is_empty()
+			or not scout_pool.is_empty()
+		)
+		and (
+			hound_config.is_empty()
+			or not hound_pool.is_empty()
+		)
+		and (
+			watcher_config.is_empty()
+			or not watcher_pool.is_empty()
+		)
+		and (
+			open_gate_config.is_empty()
+			or not open_gate_pool.is_empty()
+		)
+	)

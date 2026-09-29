@@ -1276,68 +1276,73 @@ func _ensure_summoner_pool_capacity() -> void:
 	if not is_instance_valid(world_parent):
 		return
 
-	var pool_size := _get_summoner_slot_capacity() + SUMMONER_POOL_HEADROOM
-	while summoner_gatekeeper_pool.size() < pool_size:
-		var gatekeeper := SUMMONER_GATEKEEPER_SCENE.instantiate() as Node2D
-		if gatekeeper == null:
-			break
-		world_parent.add_child(gatekeeper)
-		gatekeeper.connect(
-			"released",
-			Callable(self, "_on_summoner_gatekeeper_released")
+	var pool_size := (
+		_get_summoner_slot_capacity()
+		+ SUMMONER_POOL_HEADROOM
+	)
+	HERO_SUMMONER_RUNTIME.ensure_pool_capacity(
+		world_parent,
+		summoner_gatekeeper_pool,
+		SUMMONER_GATEKEEPER_SCENE,
+		pool_size,
+		Callable(
+			self,
+			"_on_summoner_gatekeeper_released"
 		)
-		summoner_gatekeeper_pool.append(gatekeeper)
+	)
+	HERO_SUMMONER_RUNTIME.ensure_pool_capacity(
+		world_parent,
+		summoner_scout_pool,
+		SUMMONER_SCOUT_SCENE,
+		pool_size,
+		Callable(
+			self,
+			"_on_summoner_scout_released"
+		)
+	)
+	HERO_SUMMONER_RUNTIME.ensure_pool_capacity(
+		world_parent,
+		summoner_hound_pool,
+		SUMMONER_HOUND_SCENE,
+		pool_size,
+		Callable(
+			self,
+			"_on_summoner_hound_released"
+		)
+	)
 
-	while summoner_scout_pool.size() < pool_size:
-		var scout := SUMMONER_SCOUT_SCENE.instantiate() as Node2D
-		if scout == null:
-			break
-		world_parent.add_child(scout)
-		scout.connect(
-			"released",
-			Callable(self, "_on_summoner_scout_released")
+	HERO_SUMMONER_RUNTIME.ensure_pool_capacity(
+		world_parent,
+		summoner_watcher_pool,
+		SUMMONER_WATCHER_SCENE,
+		_get_summoner_watcher_max_active(),
+		Callable(
+			self,
+			"_on_summoner_watcher_released"
 		)
-		summoner_scout_pool.append(scout)
-
-	while summoner_hound_pool.size() < pool_size:
-		var hound := SUMMONER_HOUND_SCENE.instantiate() as Node2D
-		if hound == null:
-			break
-		world_parent.add_child(hound)
-		hound.connect(
-			"released",
-			Callable(self, "_on_summoner_hound_released")
-		)
-		summoner_hound_pool.append(hound)
-
-	var watcher_pool_size := _get_summoner_watcher_max_active()
-	while summoner_watcher_pool.size() < watcher_pool_size:
-		var watcher := SUMMONER_WATCHER_SCENE.instantiate() as Node2D
-		if watcher == null:
-			break
-		world_parent.add_child(watcher)
-		watcher.connect(
-			"released",
-			Callable(self, "_on_summoner_watcher_released")
-		)
-		summoner_watcher_pool.append(watcher)
+	)
 
 	var open_gate_pool_size := maxi(
-		int(summoner_open_gate_config.get("pool_size", 1)),
+		int(
+			summoner_open_gate_config.get(
+				"pool_size",
+				1
+			)
+		),
 		0
 	)
-	while summoner_open_gate_pool.size() < open_gate_pool_size:
-		var open_gate := SUMMONER_OPEN_GATE_SCENE.instantiate() as Node2D
-		if open_gate == null:
-			break
-		world_parent.add_child(open_gate)
-		open_gate.connect(
-			"released",
-			Callable(self, "_on_summoner_open_gate_released")
-		)
-		if open_gate.has_method("prepare_pool"):
-			open_gate.call("prepare_pool", summoner_open_gate_config)
-		summoner_open_gate_pool.append(open_gate)
+	HERO_SUMMONER_RUNTIME.ensure_pool_capacity(
+		world_parent,
+		summoner_open_gate_pool,
+		SUMMONER_OPEN_GATE_SCENE,
+		open_gate_pool_size,
+		Callable(
+			self,
+			"_on_summoner_open_gate_released"
+		),
+		&"prepare_pool",
+		summoner_open_gate_config
+	)
 
 
 func _ensure_summoner_runtime() -> void:
@@ -1395,22 +1400,16 @@ func _ensure_summoner_runtime() -> void:
 	add_child(summoner_basic_audio)
 
 	summoner_runtime_ready = (
-		not summoner_gatekeeper_pool.is_empty()
-		and (
-			summoner_scout_config.is_empty()
-			or not summoner_scout_pool.is_empty()
-		)
-		and (
-			summoner_hound_config.is_empty()
-			or not summoner_hound_pool.is_empty()
-		)
-		and (
-			summoner_watcher_config.is_empty()
-			or not summoner_watcher_pool.is_empty()
-		)
-		and (
-			summoner_open_gate_config.is_empty()
-			or not summoner_open_gate_pool.is_empty()
+		HERO_SUMMONER_RUNTIME.are_runtime_pools_ready(
+			summoner_gatekeeper_pool,
+			summoner_scout_config,
+			summoner_scout_pool,
+			summoner_hound_config,
+			summoner_hound_pool,
+			summoner_watcher_config,
+			summoner_watcher_pool,
+			summoner_open_gate_config,
+			summoner_open_gate_pool
 		)
 	)
 	if summoner_runtime_ready:
@@ -1804,11 +1803,11 @@ func _try_cast_summoner_gatekeeper() -> bool:
 	if _get_active_summon_count() >= _get_summoner_slot_capacity():
 		return false
 
-	var summon_to_use: Node2D = null
-	for summon in summoner_gatekeeper_pool:
-		if is_instance_valid(summon) and not bool(summon.get("active")):
-			summon_to_use = summon
-			break
+	var summon_to_use := (
+		HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
+			summoner_gatekeeper_pool
+		)
+	)
 	if summon_to_use == null:
 		return false
 
@@ -1864,17 +1863,18 @@ func _try_cast_summoner_scout() -> bool:
 	if _get_active_summon_count() >= _get_summoner_slot_capacity():
 		return false
 
-	var summon_to_use: Node2D = null
-	for summon in summoner_scout_pool:
-		if is_instance_valid(summon) and not bool(summon.get("active")):
-			summon_to_use = summon
-			break
+	var summon_to_use := (
+		HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
+			summoner_scout_pool
+		)
+	)
 	if summon_to_use == null:
 		_ensure_summoner_pool_capacity()
-		for summon in summoner_scout_pool:
-			if is_instance_valid(summon) and not bool(summon.get("active")):
-				summon_to_use = summon
-				break
+		summon_to_use = (
+			HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
+				summoner_scout_pool
+			)
+		)
 	if summon_to_use == null:
 		return false
 
@@ -1924,17 +1924,18 @@ func _try_cast_summoner_hound() -> bool:
 	if _get_active_summon_count() >= _get_summoner_slot_capacity():
 		return false
 
-	var summon_to_use: Node2D = null
-	for summon in summoner_hound_pool:
-		if is_instance_valid(summon) and not bool(summon.get("active")):
-			summon_to_use = summon
-			break
+	var summon_to_use := (
+		HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
+			summoner_hound_pool
+		)
+	)
 	if summon_to_use == null:
 		_ensure_summoner_pool_capacity()
-		for summon in summoner_hound_pool:
-			if is_instance_valid(summon) and not bool(summon.get("active")):
-				summon_to_use = summon
-				break
+		summon_to_use = (
+			HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
+				summoner_hound_pool
+			)
+		)
 	if summon_to_use == null:
 		return false
 
@@ -1997,11 +1998,11 @@ func _try_cast_summoner_watcher() -> bool:
 	if follow_slot < 0:
 		return false
 
-	var summon_to_use: Node2D = null
-	for summon in summoner_watcher_pool:
-		if is_instance_valid(summon) and not bool(summon.get("active")):
-			summon_to_use = summon
-			break
+	var summon_to_use := (
+		HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
+			summoner_watcher_pool
+		)
+	)
 	if summon_to_use == null:
 		return false
 
@@ -2094,11 +2095,11 @@ func _try_cast_summoner_open_gate() -> bool:
 	if summoner_open_gate_cooldown > 0.0:
 		return false
 
-	var gate_to_use: Node2D = null
-	for open_gate in summoner_open_gate_pool:
-		if is_instance_valid(open_gate) and not bool(open_gate.get("active")):
-			gate_to_use = open_gate
-			break
+	var gate_to_use := (
+		HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
+			summoner_open_gate_pool
+		)
+	)
 	if gate_to_use == null:
 		return false
 
