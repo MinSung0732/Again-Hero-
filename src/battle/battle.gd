@@ -135,6 +135,8 @@ var demon_ultimate_spawn_interval: float = 0.04
 var demon_ultimate_spawn_batch_size: int = 2
 var demon_ultimate_cooldowns: Dictionary = {}
 var demon_ultimate_cooldown_emit_timer: float = 0.0
+var demon_ultimate_skill_ids: Array[String] = []
+var demon_ultimate_cheapest_cost: float = DEMON_ULTIMATES.CHARGE_MAX
 
 var stage_reinforcement_queue: Array[Dictionary] = []
 var stage_reinforcement_timer: float = 0.0
@@ -485,6 +487,7 @@ func query_monsters_in_rect(world_rect: Rect2) -> Array:
 
 func _ready() -> void:
 	queue_redraw()
+	_cache_demon_ultimate_runtime_data()
 	_start_battle()
 
 func _process(delta: float) -> void:
@@ -587,6 +590,28 @@ func _configure_castle_depth_actor(actor: Node2D, visual_node_name: String) -> v
 		visual.z_index = 0
 
 
+func _cache_demon_ultimate_runtime_data() -> void:
+	demon_ultimate_skill_ids.clear()
+	demon_ultimate_cheapest_cost = maxf(
+		DEMON_ULTIMATES.CHARGE_MAX,
+		1.0
+	)
+	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
+		var skill_id := String(raw_id)
+		demon_ultimate_skill_ids.append(skill_id)
+		var skill := DEMON_ULTIMATES.get_skill(skill_id)
+		if skill.is_empty() or not bool(skill.get("implemented", false)):
+			continue
+		var mana_cost := maxf(
+			float(skill.get("mana_cost", DEMON_ULTIMATES.CHARGE_MAX)),
+			0.0
+		)
+		demon_ultimate_cheapest_cost = minf(
+			demon_ultimate_cheapest_cost,
+			mana_cost
+		)
+
+
 func _start_battle() -> void:
 	battle_over = false
 	active_heal_items.clear()
@@ -628,8 +653,8 @@ func _start_battle() -> void:
 	demon_ultimate_spawn_interval = 0.04
 	demon_ultimate_spawn_batch_size = 2
 	demon_ultimate_cooldowns.clear()
-	for skill_id in DEMON_ULTIMATES.get_ordered_ids():
-		demon_ultimate_cooldowns[String(skill_id)] = 0.0
+	for skill_id in demon_ultimate_skill_ids:
+		demon_ultimate_cooldowns[skill_id] = 0.0
 	demon_ultimate_cooldown_emit_timer = 0.0
 	stage_reinforcement_queue.clear()
 	stage_reinforcement_timer = 0.0
@@ -2105,16 +2130,10 @@ func recycle_exp_orb(orb: Node) -> void:
 
 func _emit_demon_ultimate_changed() -> void:
 	var charge_max := maxf(DEMON_ULTIMATES.CHARGE_MAX, 1.0)
-	var cheapest_cost := charge_max
-	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
-		var skill := DEMON_ULTIMATES.get_skill(String(raw_id))
-		if skill.is_empty() or not bool(skill.get("implemented", false)):
-			continue
-		cheapest_cost = minf(cheapest_cost, maxf(float(skill.get("mana_cost", charge_max)), 0.0))
 	demon_ultimate_changed.emit(
 		demon_ultimate_charge,
 		charge_max,
-		demon_ultimate_charge + 0.001 >= cheapest_cost
+		demon_ultimate_charge + 0.001 >= demon_ultimate_cheapest_cost
 	)
 
 func _emit_demon_ultimate_cooldowns() -> void:
@@ -2125,8 +2144,7 @@ func _emit_demon_ultimate_cooldowns() -> void:
 func _update_demon_ultimate_cooldowns(delta: float) -> void:
 	var changed := false
 	var reached_ready := false
-	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
-		var skill_id := String(raw_id)
+	for skill_id in demon_ultimate_skill_ids:
 		var previous_remaining := maxf(
 			float(demon_ultimate_cooldowns.get(skill_id, 0.0)),
 			0.0

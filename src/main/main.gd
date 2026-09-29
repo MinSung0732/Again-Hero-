@@ -143,6 +143,9 @@ var summon_slot_buttons: Array = []
 var demon_ultimate_charge_ready: bool = false
 var demon_mana_current: float = 0.0
 var demon_ultimate_cooldowns: Dictionary = {}
+var demon_ultimate_ui_skills: Array[Dictionary] = []
+var demon_ultimate_ui_buttons: Array[Button] = []
+var demon_ultimate_ui_cooldown_bars: Array[ProgressBar] = []
 var monster_info_selected_index: int = 0
 var monster_info_animating: bool = false
 var hero_info_animating: bool = false
@@ -167,6 +170,7 @@ var _touch_pointer_id: int = -1
 
 func _ready() -> void:
 	_load_touch_hold_frames()
+	_cache_demon_ultimate_ui_data()
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
 		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_PORTRAIT)
 
@@ -296,9 +300,6 @@ func _ready() -> void:
 		float(snapshot.get("demon_ultimate_charge", 0.0)),
 		float(snapshot.get("demon_ultimate_max", 100.0)),
 		bool(snapshot.get("demon_ultimate_ready", false))
-	)
-	_on_demon_ultimate_cooldowns_changed(
-		Dictionary(snapshot.get("demon_ultimate_cooldowns", {}))
 	)
 	_on_demon_ultimate_cooldowns_changed(
 		Dictionary(snapshot.get("demon_ultimate_cooldowns", {}))
@@ -1775,27 +1776,48 @@ func _on_demon_ultimate_changed(
 	demon_ultimate_bar.value = current_value
 	_refresh_demon_ultimate_buttons()
 
-func _on_demon_ultimate_cooldowns_changed(cooldowns: Dictionary) -> void:
-	demon_ultimate_cooldowns = cooldowns.duplicate(true)
-	_refresh_demon_ultimate_buttons()
+func _cache_demon_ultimate_ui_data() -> void:
+	demon_ultimate_ui_skills.clear()
+	demon_ultimate_ui_buttons.clear()
+	demon_ultimate_ui_cooldown_bars.clear()
 
-func _refresh_demon_ultimate_buttons() -> void:
-	var ultimate_buttons := {
-		"encirclement": demon_ultimate_1,
-		"line_assault": demon_ultimate_2,
-		"square_siege": demon_ultimate_3,
-	}
-	var cooldown_bars := {
-		"encirclement": demon_ultimate_1_cooldown,
-		"line_assault": demon_ultimate_2_cooldown,
-		"square_siege": demon_ultimate_3_cooldown,
-	}
+	demon_ultimate_ui_buttons.append(demon_ultimate_1)
+	demon_ultimate_ui_buttons.append(demon_ultimate_2)
+	demon_ultimate_ui_buttons.append(demon_ultimate_3)
+	demon_ultimate_ui_cooldown_bars.append(demon_ultimate_1_cooldown)
+	demon_ultimate_ui_cooldown_bars.append(demon_ultimate_2_cooldown)
+	demon_ultimate_ui_cooldown_bars.append(demon_ultimate_3_cooldown)
 
 	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
 		var skill_id := String(raw_id)
 		var skill := DEMON_ULTIMATES.get_skill(skill_id)
-		var button: Button = ultimate_buttons[skill_id]
-		var bar: ProgressBar = cooldown_bars[skill_id]
+		if skill.is_empty():
+			skill = {"id": skill_id}
+		demon_ultimate_ui_skills.append(skill)
+
+
+func _on_demon_ultimate_cooldowns_changed(cooldowns: Dictionary) -> void:
+	demon_ultimate_cooldowns.clear()
+	for raw_id in cooldowns:
+		demon_ultimate_cooldowns[raw_id] = cooldowns[raw_id]
+	_refresh_demon_ultimate_buttons()
+
+
+func _refresh_demon_ultimate_buttons() -> void:
+	var ui_count := mini(
+		demon_ultimate_ui_skills.size(),
+		demon_ultimate_ui_buttons.size()
+	)
+	ui_count = mini(
+		ui_count,
+		demon_ultimate_ui_cooldown_bars.size()
+	)
+
+	for index in ui_count:
+		var skill: Dictionary = demon_ultimate_ui_skills[index]
+		var skill_id := String(skill.get("id", ""))
+		var button: Button = demon_ultimate_ui_buttons[index]
+		var bar: ProgressBar = demon_ultimate_ui_cooldown_bars[index]
 		var cooldown_max := maxf(float(skill.get("cooldown", 0.0)), 0.0)
 		var remaining := maxf(
 			float(demon_ultimate_cooldowns.get(skill_id, 0.0)),
