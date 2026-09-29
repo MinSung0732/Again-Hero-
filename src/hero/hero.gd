@@ -454,6 +454,11 @@ var purifier_crown_cooldown: float = 0.0
 var purifier_crown_stacks: int = 0
 var purifier_crown_duration_timer: float = 0.0
 var purifier_crown_heal_timer: float = 0.0
+var purifier_protection_break_count: int = 0
+var purifier_broken_sanctuary_timer: float = 0.0
+var purifier_prism_launch_queue: Array[Dictionary] = []
+var purifier_prism_launch_timer: float = 0.0
+var purifier_prism_active: Array[Dictionary] = []
 var ultimate_charge: float = 0.0
 var ultimate_flash_timer: float = 0.0
 var ultimate_cooldown_timer: float = 0.0
@@ -1115,6 +1120,11 @@ func configure_profile(profile: Dictionary) -> void:
 	purifier_crown_stacks = 0
 	purifier_crown_duration_timer = 0.0
 	purifier_crown_heal_timer = 0.0
+	purifier_protection_break_count = 0
+	purifier_broken_sanctuary_timer = 0.0
+	purifier_prism_launch_queue.clear()
+	purifier_prism_launch_timer = 0.0
+	purifier_prism_active.clear()
 	fighter_guard_charge_seconds = maxf(
 		float(ultimate_config.get("charge_seconds", fighter_guard_charge_seconds)),
 		1.0
@@ -9900,12 +9910,59 @@ func _play_purifier_effect(effect: AnimatedSprite2D, animation_name: StringName)
 	effect.play(animation_name)
 
 
+func _get_purifier_augment_stacks(augment_id: String) -> int:
+	if hero_archetype != "cleric_purifier":
+		return 0
+	return maxi(int(build_counts.get(augment_id, 0)), 0)
+
+
+func _get_purifier_crown_effect_multiplier() -> float:
+	return (
+		0.85
+		if _get_purifier_augment_stacks("purifier_radiant_crown") > 0
+		else 1.0
+	)
+
+
+func _get_purifier_crown_max_stacks() -> int:
+	return maxi(
+		int(purifier_crown_config.get("max_stacks", 5))
+		+ _get_purifier_augment_stacks("purifier_radiant_crown"),
+		1
+	)
+
+
+func _get_purifier_orb_damage_multiplier() -> float:
+	return (
+		0.50
+		if _get_purifier_augment_stacks("purifier_book_of_purification") > 0
+		else 1.0
+	)
+
+
+func _get_purifier_orb_range_multiplier() -> float:
+	return (
+		0.50
+		if _get_purifier_augment_stacks("purifier_book_of_purification") > 0
+		else 1.0
+	)
+
+
+func _get_purifier_orb_explosion_radius() -> float:
+	return maxf(
+		float(purifier_orb_config.get("explosion_radius", 137.5))
+		* _get_purifier_orb_range_multiplier(),
+		1.0
+	)
+
+
 func _get_purifier_skill_cooldown_multiplier() -> float:
 	if hero_archetype != "cleric_purifier" or purifier_crown_stacks <= 0:
 		return 1.0
 	return maxf(
 		1.0
 		- float(purifier_crown_config.get("cooldown_reduction_per_stack", 0.04))
+		* _get_purifier_crown_effect_multiplier()
 		* float(purifier_crown_stacks),
 		0.20
 	)
@@ -9917,8 +9974,7 @@ func _get_purifier_move_speed_multiplier() -> float:
 	return 1.0 + maxf(
 		float(purifier_crown_config.get("move_speed_per_stack", 0.02)),
 		0.0
-	) * float(purifier_crown_stacks)
-
+	) * _get_purifier_crown_effect_multiplier() * float(purifier_crown_stacks)
 
 func _is_purifier_undead_target(target_node: Node) -> bool:
 	if not is_instance_valid(target_node):
@@ -9944,12 +10000,13 @@ func _is_purifier_undead_target(target_node: Node) -> bool:
 func get_purifier_holy_damage_multiplier(target_node: Node = null) -> float:
 	if hero_archetype != "cleric_purifier":
 		return 1.0
+	var crown_effect_multiplier := _get_purifier_crown_effect_multiplier()
 	var multiplier := (
 		1.0
 		+ maxf(
 			float(purifier_crown_config.get("holy_damage_per_stack", 0.05)),
 			0.0
-		) * float(purifier_crown_stacks)
+		) * crown_effect_multiplier * float(purifier_crown_stacks)
 	)
 	if shield_hp > 0.0:
 		multiplier *= maxf(
@@ -9962,10 +10019,14 @@ func get_purifier_holy_damage_multiplier(target_node: Node = null) -> float:
 			+ maxf(
 				float(purifier_crown_config.get("undead_damage_per_stack", 0.10)),
 				0.0
-			) * float(purifier_crown_stacks)
+			) * crown_effect_multiplier * float(purifier_crown_stacks)
 		)
+	var broken_sanctuary_stacks := _get_purifier_augment_stacks(
+		"purifier_broken_sanctuary"
+	)
+	if broken_sanctuary_stacks > 0 and purifier_broken_sanctuary_timer > 0.0:
+		multiplier *= 1.0 + 0.06 * float(broken_sanctuary_stacks)
 	return multiplier
-
 
 func notify_monster_kill(_monster_type: String = "") -> void:
 	if hero_archetype != "cleric_purifier" or is_dying or current_hp <= 0:
@@ -10089,7 +10150,10 @@ func _end_purifier_protection(broken: bool) -> void:
 		return
 	if broken and not purifier_protection_break_triggered:
 		purifier_protection_break_triggered = true
+		purifier_protection_break_count += 1
 		_trigger_purifier_protection_break_pulse()
+		if _get_purifier_augment_stacks("purifier_broken_sanctuary") > 0:
+			purifier_broken_sanctuary_timer = 6.0
 	purifier_protection_active = false
 	purifier_protection_duration_timer = 0.0
 	purifier_protection_tick_timer = 0.0
@@ -10110,10 +10174,7 @@ func _cast_purifier_crown() -> void:
 		or current_hp <= 0
 	):
 		return
-	var max_stacks := maxi(
-		int(purifier_crown_config.get("max_stacks", 5)),
-		1
-	)
+	var max_stacks := _get_purifier_crown_max_stacks()
 	purifier_crown_stacks = mini(purifier_crown_stacks + 1, max_stacks)
 	purifier_crown_duration_timer = maxf(
 		float(purifier_crown_config.get("duration", 60.0)),
@@ -10161,6 +10222,14 @@ func _clear_purifier_orb_runtime() -> void:
 	purifier_orb_chain_timer = 0.0
 	purifier_orb_chain_step = 0
 
+	for entry in purifier_prism_active:
+		var prism_orb = entry.get("orb", null)
+		if is_instance_valid(prism_orb):
+			prism_orb.queue_free()
+	purifier_prism_active.clear()
+	purifier_prism_launch_queue.clear()
+	purifier_prism_launch_timer = 0.0
+
 
 func _is_purifier_orb_active(orb: Node2D) -> bool:
 	return (
@@ -10207,6 +10276,14 @@ func _refresh_purifier_orb_links() -> void:
 		float(purifier_orb_config.get("link_vertical_scale", 0.58)),
 		0.05
 	)
+	var pilgrims_path_stacks := _get_purifier_augment_stacks(
+		"purifier_pilgrims_path"
+	)
+	var link_damage_ratio := (
+		0.10 + 0.05 * float(pilgrims_path_stacks - 1)
+		if pilgrims_path_stacks > 0
+		else 0.0
+	)
 	var parent := get_parent()
 	if not is_instance_valid(parent):
 		return
@@ -10224,6 +10301,18 @@ func _refresh_purifier_orb_links() -> void:
 			var key := _purifier_orb_link_key(first, second)
 			seen_links[key] = true
 			if purifier_orb_links.has(key):
+				var existing_link = purifier_orb_links.get(key)
+				if (
+					is_instance_valid(existing_link)
+					and existing_link.has_method("configure_damage")
+				):
+					existing_link.call(
+						"configure_damage",
+						self,
+						link_damage_ratio,
+						0.22,
+						24.0
+					)
 				continue
 
 			var link := PURIFIER_ORB_LINK_SCENE.instantiate() as Node2D
@@ -10235,7 +10324,11 @@ func _refresh_purifier_orb_links() -> void:
 				first.global_position,
 				second.global_position,
 				link_effect_dir,
-				link_vertical_scale
+				link_vertical_scale,
+				self,
+				link_damage_ratio,
+				0.22,
+				24.0
 			)
 			purifier_orb_links[key] = link
 
@@ -10392,10 +10485,7 @@ func _choose_purifier_orb_target_position() -> Vector2:
 		float(purifier_orb_config.get("throw_range", 820.0)),
 		1.0
 	)
-	var blast_radius := maxf(
-		float(purifier_orb_config.get("explosion_radius", 137.5)),
-		1.0
-	)
+	var blast_radius := _get_purifier_orb_explosion_radius()
 	var link_distance := maxf(
 		float(purifier_orb_config.get("link_distance", 780.0)),
 		1.0
@@ -10582,23 +10672,14 @@ func _choose_purifier_orb_target_position() -> Vector2:
 	return _clamp_purifier_orb_target_position(fallback)
 
 
-func _cast_purifier_orb() -> void:
-	if (
-		hero_archetype != "cleric_purifier"
-		or purifier_orb_config.is_empty()
-		or purifier_orb_cooldown > 0.0
-		or is_dying
-		or current_hp <= 0
-	):
-		return
-
+func _spawn_purifier_network_orb(destination: Vector2) -> bool:
 	var parent := get_parent()
 	if not is_instance_valid(parent):
-		return
+		return false
 
 	var orb := PURIFIER_ORB_SCENE.instantiate() as Node2D
 	if orb == null:
-		return
+		return false
 
 	purifier_orb_install_serial += 1
 	parent.add_child(orb)
@@ -10615,7 +10696,6 @@ func _cast_purifier_orb() -> void:
 		Callable(self, "_on_purifier_orb_finished")
 	)
 
-	var destination := _choose_purifier_orb_target_position()
 	var start_position := global_position + Vector2(0.0, -42.0)
 	orb.call(
 		"setup",
@@ -10627,10 +10707,7 @@ func _cast_purifier_orb() -> void:
 			1.0
 		),
 		maxf(float(purifier_orb_config.get("duration", 80.0)), 0.1),
-		maxf(
-			float(purifier_orb_config.get("explosion_radius", 137.5)),
-			1.0
-		),
+		_get_purifier_orb_explosion_radius(),
 		purifier_orb_install_serial,
 		String(
 			purifier_orb_config.get(
@@ -10644,13 +10721,74 @@ func _cast_purifier_orb() -> void:
 		)
 	)
 	purifier_orbs.append(orb)
+	return true
+
+
+func _cast_purifier_orb() -> void:
+	if (
+		hero_archetype != "cleric_purifier"
+		or purifier_orb_config.is_empty()
+		or purifier_orb_cooldown > 0.0
+		or is_dying
+		or current_hp <= 0
+	):
+		return
+
+	var book_stacks := _get_purifier_augment_stacks("purifier_book_of_purification")
+	var orb_count := 1 + book_stacks
+	var primary_destination := _choose_purifier_orb_target_position()
+	var spacing := maxf(
+		float(purifier_orb_config.get("min_orb_spacing", 96.0)) * 1.20,
+		72.0
+	)
+	var launched := 0
+	var reserved_positions: Array[Vector2] = []
+
+	for orb_index in range(orb_count):
+		var destination := primary_destination
+		if orb_index > 0:
+			var extra_count := maxi(orb_count - 1, 1)
+			var angle := (
+				TAU * float(orb_index - 1) / float(extra_count)
+				+ 0.35
+			)
+			destination = _clamp_purifier_orb_target_position(
+				primary_destination
+				+ Vector2.from_angle(angle)
+				* spacing
+				* (1.0 + 0.12 * float(orb_index - 1))
+			)
+
+		var adjustment_index := 0
+		var needs_adjustment := true
+		while needs_adjustment and adjustment_index < 4:
+			needs_adjustment = false
+			for reserved in reserved_positions:
+				if destination.distance_to(reserved) < spacing * 0.85:
+					needs_adjustment = true
+					break
+			if needs_adjustment:
+				destination = _clamp_purifier_orb_target_position(
+					destination
+					+ Vector2.from_angle(
+						0.85 + float(adjustment_index) * 1.70
+					) * spacing * 0.75
+				)
+				adjustment_index += 1
+
+		reserved_positions.append(destination)
+		if _spawn_purifier_network_orb(destination):
+			launched += 1
+
+	if launched <= 0:
+		return
+
 	purifier_orb_cooldown = (
 		maxf(float(purifier_orb_config.get("cooldown", 10.0)), 0.0)
 		* _get_purifier_skill_cooldown_multiplier()
 	)
 	_ensure_purifier_skill_runtime()
 	_play_purifier_audio(purifier_orb_create_audio)
-
 
 func _get_purifier_orb_component(start_orb: Node2D) -> Array[Node2D]:
 	var component: Array[Node2D] = []
