@@ -281,32 +281,11 @@ func heal_direct(amount: int) -> int:
 	return recovered
 
 func _begin_death() -> void:
-	if dying:
-		return
-
-	dying = true
-	visual_lod_suspended = false
-	set_meta("visual_lod_suspended", false)
-	if is_instance_valid(visual) and visual.has_method("set_lod_suspended"):
-		visual.call("set_lod_suspended", false)
-	velocity = Vector2.ZERO
-	collision_shape.set_deferred("disabled", true)
-
-	died.emit()
-
-	if (
-		is_instance_valid(visual)
-		and visual.has_signal("death_animation_finished")
-		and visual.has_method("play_death")
-	):
-		visual.connect(
-			"death_animation_finished",
-			Callable(self, "_on_death_animation_finished"),
-			Object.CONNECT_ONE_SHOT
-		)
-		visual.call("play_death")
-	else:
-		queue_free()
+	MONSTER_RUNTIME_COMMON.begin_standard_death(
+		self,
+		visual,
+		collision_shape
+	)
 
 func _on_death_animation_finished() -> void:
 	queue_free()

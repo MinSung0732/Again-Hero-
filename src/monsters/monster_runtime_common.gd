@@ -105,3 +105,54 @@ static func attach_status_effect_visual(
 	owner.add_child(effect)
 	if effect.has_method("setup"):
 		effect.call("setup", owner, effect_type)
+
+
+
+static func begin_standard_death(
+	owner: CharacterBody2D,
+	visual: Node,
+	collision_shape: CollisionShape2D,
+	finished_method: StringName = &"_on_death_animation_finished"
+) -> bool:
+	if owner == null or not is_instance_valid(owner):
+		return false
+	if bool(owner.get("dying")):
+		return false
+
+	owner.set("dying", true)
+	owner.set("visual_lod_suspended", false)
+	owner.set_meta("visual_lod_suspended", false)
+	owner.velocity = Vector2.ZERO
+	owner.set_physics_process(false)
+
+	if (
+		is_instance_valid(visual)
+		and visual.has_method("set_lod_suspended")
+	):
+		visual.call("set_lod_suspended", false)
+
+	if is_instance_valid(collision_shape):
+		collision_shape.set_deferred("disabled", true)
+
+	owner.emit_signal("died")
+
+	if (
+		is_instance_valid(visual)
+		and visual.has_signal("death_animation_finished")
+		and visual.has_method("play_death")
+	):
+		var finished_callable := Callable(owner, finished_method)
+		if not visual.is_connected(
+			"death_animation_finished",
+			finished_callable
+		):
+			visual.connect(
+				"death_animation_finished",
+				finished_callable,
+				Object.CONNECT_ONE_SHOT
+			)
+		visual.call("play_death")
+	else:
+		owner.queue_free()
+
+	return true
