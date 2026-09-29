@@ -1100,15 +1100,6 @@ func configure_profile(profile: Dictionary) -> void:
 		float(purifier_gungnir_config.get("initial_cooldown", 0.0)),
 		0.0
 	)
-	if bool(purifier_gungnir_config.get("test_unlocked", false)):
-		var test_unlock_skill_id := String(
-			purifier_gungnir_config.get(
-				"unlock_skill_id",
-				"purifier_fourth_skill"
-			)
-		)
-		if not test_unlock_skill_id.is_empty():
-			conditional_skill_unlocks[test_unlock_skill_id] = true
 	purifier_gungnir_casting = false
 	purifier_gungnir_direction = Vector2.RIGHT
 	purifier_gungnir_instance = null
