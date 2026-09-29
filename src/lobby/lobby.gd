@@ -178,9 +178,7 @@ func _ready() -> void:
 
 	_switch_tab("main")
 	_refresh_header()
-	_precache_stage_portraits()
 	_refresh_stage_card()
-	_rebuild_research_list()
 
 func _build_styles() -> void:
 	panel_style = _make_style(

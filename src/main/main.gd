@@ -169,7 +169,6 @@ var _touch_hold_position: Vector2 = Vector2.ZERO
 var _touch_pointer_id: int = -1
 
 func _ready() -> void:
-	_load_touch_hold_frames()
 	_cache_demon_ultimate_ui_data()
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
 		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_PORTRAIT)
@@ -314,6 +313,7 @@ func _ready() -> void:
 	placement_toggle.button_pressed = true
 	_on_placement_mode_toggled(true)
 	_begin_stage_entry(snapshot)
+	call_deferred("_warm_touch_hold_frames")
 
 	print("Again, Hero? stage/camera prototype loaded.")
 	print("Finite world camera + persistent stage progression enabled.")
@@ -607,14 +607,21 @@ func _input(event: InputEvent) -> void:
 	battle.try_summon_at_position(selected_monster_type, battle_position)
 	get_viewport().set_input_as_handled()
 
-func _load_touch_hold_frames() -> void:
+func _warm_touch_hold_frames() -> void:
+	if not _touch_hold_frames.is_empty():
+		return
 	_touch_hold_frames.clear()
 	for index in range(1, TOUCH_HOLD_FRAME_COUNT + 1):
+		if not is_inside_tree():
+			return
 		var texture := _load_ui_texture(
 			"%s/gage_%02d.png" % [TOUCH_HOLD_FRAME_DIR, index]
 		)
 		if texture != null:
 			_touch_hold_frames.append(texture)
+		# Spread first-time UI texture creation over several rendered frames
+		# instead of blocking the first battle frame with all eight images.
+		await get_tree().process_frame
 
 
 func _update_touch_hold_input(event: InputEvent) -> void:
@@ -1377,40 +1384,25 @@ func _load_normalized_hero_portrait(path: String) -> Texture2D:
 
 func _get_visible_alpha_rect(
 	image: Image,
-	alpha_threshold: float = 0.05
+	_alpha_threshold: float = 0.05
 ) -> Rect2i:
-	var min_x := image.get_width()
-	var min_y := image.get_height()
-	var max_x := -1
-	var max_y := -1
-	for y in range(image.get_height()):
-		for x in range(image.get_width()):
-			if image.get_pixel(x, y).a <= alpha_threshold:
-				continue
-			min_x = mini(min_x, x)
-			min_y = mini(min_y, y)
-			max_x = maxi(max_x, x)
-			max_y = maxi(max_y, y)
-	if max_x < min_x or max_y < min_y:
-		return Rect2i()
-	return Rect2i(
-		min_x,
-		min_y,
-		max_x - min_x + 1,
-		max_y - min_y + 1
-	)
+	# Hero portraits are nearest-neighbor pixel art with binary transparency.
+	# Run the alpha-bounds scan in the engine instead of GDScript per pixel.
+	return image.get_used_rect()
 
 func _load_ui_texture(path: String) -> Texture2D:
 	if path.is_empty():
 		return null
-	if FileAccess.file_exists(path):
-		var image := Image.new()
-		if image.load(path) == OK:
-			return ImageTexture.create_from_image(image)
+	# Prefer Godot's imported/resource cache. Raw PNG decoding is kept only
+	# as a fallback for unimported development assets.
 	if ResourceLoader.exists(path):
 		var resource = load(path)
 		if resource is Texture2D:
 			return resource
+	if FileAccess.file_exists(path):
+		var image := Image.new()
+		if image.load(path) == OK:
+			return ImageTexture.create_from_image(image)
 	return null
 
 func _on_monster_info_tab_pressed(tab_index: int) -> void:
