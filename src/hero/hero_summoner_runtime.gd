@@ -313,3 +313,54 @@ static func are_runtime_pools_ready(
 			or not open_gate_pool.is_empty()
 		)
 	)
+
+
+
+const PENDING_GATEKEEPER := 1
+const PENDING_SCOUT := 2
+const PENDING_HOUND := 4
+const PENDING_WATCHER := 8
+
+
+static func activate_summon(
+	summon: Node2D,
+	spawn_position: Vector2,
+	owner_hero: Node,
+	runtime_config: Dictionary
+) -> bool:
+	if (
+		not is_instance_valid(summon)
+		or summon.is_queued_for_deletion()
+		or not summon.has_method("activate")
+	):
+		return false
+	summon.call(
+		"activate",
+		spawn_position,
+		owner_hero,
+		runtime_config
+	)
+	return true
+
+
+static func get_release_pending_mask(
+	gatekeeper_cooldown: float,
+	scout_cooldown: float,
+	hound_cooldown: float,
+	watcher_cooldown: float,
+	active_watchers: int,
+	max_watchers: int
+) -> int:
+	var mask := 0
+	if gatekeeper_cooldown <= 0.0:
+		mask |= PENDING_GATEKEEPER
+	if scout_cooldown <= 0.0:
+		mask |= PENDING_SCOUT
+	if hound_cooldown <= 0.0:
+		mask |= PENDING_HOUND
+	if (
+		watcher_cooldown <= 0.0
+		and active_watchers < max_watchers
+	):
+		mask |= PENDING_WATCHER
+	return mask

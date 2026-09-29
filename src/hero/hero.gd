@@ -1795,6 +1795,32 @@ func _update_summoner_full_slot_shield(delta: float) -> void:
 	queue_redraw()
 
 
+func _refresh_regular_summon_pending_after_release(
+	summon: Node2D
+) -> void:
+	_set_summon_registry_active(summon, false)
+	var pending_mask := HERO_SUMMONER_RUNTIME.get_release_pending_mask(
+		summoner_gatekeeper_cooldown,
+		summoner_scout_cooldown,
+		summoner_hound_cooldown,
+		summoner_watcher_cooldown,
+		_get_active_summoner_watcher_count(),
+		_get_summoner_watcher_max_active()
+	)
+	if (
+		pending_mask
+		& HERO_SUMMONER_RUNTIME.PENDING_GATEKEEPER
+	):
+		summoner_cast_pending = true
+	if pending_mask & HERO_SUMMONER_RUNTIME.PENDING_SCOUT:
+		summoner_scout_cast_pending = true
+	if pending_mask & HERO_SUMMONER_RUNTIME.PENDING_HOUND:
+		summoner_hound_cast_pending = true
+	if pending_mask & HERO_SUMMONER_RUNTIME.PENDING_WATCHER:
+		summoner_watcher_cast_pending = true
+	queue_redraw()
+
+
 func _try_cast_summoner_gatekeeper() -> bool:
 	if summoner_gatekeeper_config.is_empty():
 		return false
@@ -1822,12 +1848,13 @@ func _try_cast_summoner_gatekeeper() -> bool:
 	runtime_config["projectile_speed"] = float(runtime_config.get("projectile_speed", 560.0)) * (1.0 + float(barrage_stacks) * 0.04)
 	runtime_config["attack_range"] = float(runtime_config.get("attack_range", 720.0)) + float(barrage_stacks) * 16.0
 	runtime_config["consecutive_damage_bonus_per_step"] = float(barrage_stacks) * 0.01
-	summon_to_use.call(
-		"activate",
+	if not HERO_SUMMONER_RUNTIME.activate_summon(
+		summon_to_use,
 		global_position,
 		self,
 		runtime_config
-	)
+	):
+		return false
 	_set_summon_registry_active(summon_to_use, true)
 	summoner_gatekeeper_cooldown = maxf(
 		float(summoner_gatekeeper_config.get("cooldown", 10.0)),
@@ -1839,20 +1866,7 @@ func _try_cast_summoner_gatekeeper() -> bool:
 
 
 func _on_summoner_gatekeeper_released(_summon: Node2D) -> void:
-	_set_summon_registry_active(_summon, false)
-	if summoner_gatekeeper_cooldown <= 0.0:
-		summoner_cast_pending = true
-	if summoner_scout_cooldown <= 0.0:
-		summoner_scout_cast_pending = true
-	if summoner_hound_cooldown <= 0.0:
-		summoner_hound_cast_pending = true
-	if (
-		summoner_watcher_cooldown <= 0.0
-		and _get_active_summoner_watcher_count()
-		< _get_summoner_watcher_max_active()
-	):
-		summoner_watcher_cast_pending = true
-	queue_redraw()
+	_refresh_regular_summon_pending_after_release(_summon)
 
 
 func _try_cast_summoner_scout() -> bool:
@@ -1883,12 +1897,13 @@ func _try_cast_summoner_scout() -> bool:
 	runtime_config["owner_attack_damage"] = attack_damage
 	runtime_config["duration"] = float(runtime_config.get("duration", 60.0)) + float(reinforcement_stacks) * 4.0
 	runtime_config["move_speed"] = float(runtime_config.get("move_speed", 220.0)) * (1.0 + float(reinforcement_stacks) * 0.04)
-	summon_to_use.call(
-		"activate",
+	if not HERO_SUMMONER_RUNTIME.activate_summon(
+		summon_to_use,
 		global_position,
 		self,
 		runtime_config
-	)
+	):
+		return false
 	_set_summon_registry_active(summon_to_use, true)
 	summoner_scout_cooldown = maxf(
 		float(summoner_scout_config.get("cooldown", 20.0)),
@@ -1900,20 +1915,7 @@ func _try_cast_summoner_scout() -> bool:
 
 
 func _on_summoner_scout_released(_summon: Node2D) -> void:
-	_set_summon_registry_active(_summon, false)
-	if summoner_gatekeeper_cooldown <= 0.0:
-		summoner_cast_pending = true
-	if summoner_scout_cooldown <= 0.0:
-		summoner_scout_cast_pending = true
-	if summoner_hound_cooldown <= 0.0:
-		summoner_hound_cast_pending = true
-	if (
-		summoner_watcher_cooldown <= 0.0
-		and _get_active_summoner_watcher_count()
-		< _get_summoner_watcher_max_active()
-	):
-		summoner_watcher_cast_pending = true
-	queue_redraw()
+	_refresh_regular_summon_pending_after_release(_summon)
 
 
 func _try_cast_summoner_hound() -> bool:
@@ -1948,12 +1950,13 @@ func _try_cast_summoner_hound() -> bool:
 	runtime_config["second_hit_bonus_ratio"] = float(frenzy_stacks) * 0.024
 	runtime_config["high_hp_damage_bonus"] = float(blood_track_stacks) * 0.05
 	runtime_config["elite_move_speed_bonus"] = float(blood_track_stacks) * 0.03
-	summon_to_use.call(
-		"activate",
+	if not HERO_SUMMONER_RUNTIME.activate_summon(
+		summon_to_use,
 		global_position,
 		self,
 		runtime_config
-	)
+	):
+		return false
 	_set_summon_registry_active(summon_to_use, true)
 	summoner_hound_cooldown = maxf(
 		float(summoner_hound_config.get("cooldown", 30.0)),
@@ -1965,20 +1968,7 @@ func _try_cast_summoner_hound() -> bool:
 
 
 func _on_summoner_hound_released(_summon: Node2D) -> void:
-	_set_summon_registry_active(_summon, false)
-	if summoner_gatekeeper_cooldown <= 0.0:
-		summoner_cast_pending = true
-	if summoner_scout_cooldown <= 0.0:
-		summoner_scout_cast_pending = true
-	if summoner_hound_cooldown <= 0.0:
-		summoner_hound_cast_pending = true
-	if (
-		summoner_watcher_cooldown <= 0.0
-		and _get_active_summoner_watcher_count()
-		< _get_summoner_watcher_max_active()
-	):
-		summoner_watcher_cast_pending = true
-	queue_redraw()
+	_refresh_regular_summon_pending_after_release(_summon)
 
 
 func _try_cast_summoner_watcher() -> bool:
@@ -2014,12 +2004,13 @@ func _try_cast_summoner_watcher() -> bool:
 	runtime_config["focus_attack_speed_bonus"] = float(focus_stacks) * 0.07
 	runtime_config["focus_damage_bonus"] = float(focus_stacks) * 0.03
 	runtime_config["follow_slot"] = follow_slot
-	summon_to_use.call(
-		"activate",
+	if not HERO_SUMMONER_RUNTIME.activate_summon(
+		summon_to_use,
 		global_position,
 		self,
 		runtime_config
-	)
+	):
+		return false
 	_set_summon_registry_active(summon_to_use, true)
 	summoner_watcher_cooldown = maxf(
 		float(summoner_watcher_config.get("cooldown", 7.0)),
@@ -2031,20 +2022,7 @@ func _try_cast_summoner_watcher() -> bool:
 
 
 func _on_summoner_watcher_released(_summon: Node2D) -> void:
-	_set_summon_registry_active(_summon, false)
-	if summoner_gatekeeper_cooldown <= 0.0:
-		summoner_cast_pending = true
-	if summoner_scout_cooldown <= 0.0:
-		summoner_scout_cast_pending = true
-	if summoner_hound_cooldown <= 0.0:
-		summoner_hound_cast_pending = true
-	if (
-		summoner_watcher_cooldown <= 0.0
-		and _get_active_summoner_watcher_count()
-		< _get_summoner_watcher_max_active()
-	):
-		summoner_watcher_cast_pending = true
-	queue_redraw()
+	_refresh_regular_summon_pending_after_release(_summon)
 
 
 func _get_summoner_open_gate_required_summons() -> int:
@@ -2103,12 +2081,13 @@ func _try_cast_summoner_open_gate() -> bool:
 	if gate_to_use == null:
 		return false
 
-	gate_to_use.call(
-		"activate",
+	if not HERO_SUMMONER_RUNTIME.activate_summon(
+		gate_to_use,
 		global_position,
 		self,
 		summoner_open_gate_config.duplicate(true)
-	)
+	):
+		return false
 	_set_summon_registry_active(gate_to_use, true)
 	summoner_open_gate_cooldown = maxf(
 		float(summoner_open_gate_config.get("cooldown", 100.0)),
