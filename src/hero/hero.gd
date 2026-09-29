@@ -56,6 +56,10 @@ const PURIFIER_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/purifier_basic
 const PURIFIER_SHIELD_CREATE_AUDIO_PATH := "res://assets/audio/sfx/purifier_shield_create_pixabay.mp3"
 const PURIFIER_SHIELD_BREAK_AUDIO_PATH := "res://assets/audio/sfx/purifier_shield_break_pixabay.mp3"
 const PURIFIER_CROWN_AUDIO_PATH := "res://assets/audio/sfx/purifier_crown_buff_pixabay.mp3"
+const PURIFIER_ORB_CREATE_AUDIO_PATH := "res://assets/audio/sfx/purifier_orb_create_pixabay.mp3"
+const PURIFIER_ORB_EXPLOSION_AUDIO_PATH := "res://assets/audio/sfx/purifier_orb_explosion_pixabay.mp3"
+const PURIFIER_ORB_SCENE := preload("res://src/hero/PurifierOrb.tscn")
+const PURIFIER_ORB_LINK_SCENE := preload("res://src/hero/PurifierOrbLink.tscn")
 const SUMMONER_POOL_HEADROOM := 4
 const ALCHEMIST_VIAL_SCENE := preload("res://src/hero/AlchemistVial.tscn")
 const ALCHEMIST_POISON_POOL_SCENE := preload("res://src/hero/AlchemistPoisonPool.tscn")
@@ -333,6 +337,8 @@ var purifier_basic_audio: AudioStreamPlayer = null
 var purifier_shield_create_audio: AudioStreamPlayer = null
 var purifier_shield_break_audio: AudioStreamPlayer = null
 var purifier_crown_audio: AudioStreamPlayer = null
+var purifier_orb_create_audio: AudioStreamPlayer = null
+var purifier_orb_explosion_audio: AudioStreamPlayer = null
 var purifier_protection_effect: AnimatedSprite2D = null
 var purifier_crown_effect: AnimatedSprite2D = null
 
@@ -340,6 +346,16 @@ var ultimate_config: Dictionary = {}
 var purifier_gauge_config: Dictionary = {}
 var purifier_protection_config: Dictionary = {}
 var purifier_crown_config: Dictionary = {}
+var purifier_orb_config: Dictionary = {}
+var purifier_orb_cooldown: float = 0.0
+var purifier_orbs: Array[Node2D] = []
+var purifier_orb_links: Dictionary = {}
+var purifier_orb_install_serial: int = 0
+var purifier_orb_chain_active: bool = false
+var purifier_orb_chain_queue: Array[Node2D] = []
+var purifier_orb_chain_timer: float = 0.0
+var purifier_orb_chain_step: int = 0
+var purifier_orb_chain_speed_multiplier: float = 1.0
 var purifier_protection_cooldown: float = 0.0
 var purifier_protection_active: bool = false
 var purifier_protection_duration_timer: float = 0.0
@@ -991,6 +1007,23 @@ func configure_profile(profile: Dictionary) -> void:
 		if typeof(raw_purifier_crown) == TYPE_DICTIONARY
 		else {}
 	)
+	_clear_purifier_orb_runtime()
+	var raw_purifier_orb = profile.get("purifier_orb", {})
+	purifier_orb_config = (
+		raw_purifier_orb.duplicate(true)
+		if typeof(raw_purifier_orb) == TYPE_DICTIONARY
+		else {}
+	)
+	purifier_orb_cooldown = maxf(
+		float(purifier_orb_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
+	purifier_orb_install_serial = 0
+	purifier_orb_chain_active = false
+	purifier_orb_chain_queue.clear()
+	purifier_orb_chain_timer = 0.0
+	purifier_orb_chain_step = 0
+	purifier_orb_chain_speed_multiplier = 1.0
 	purifier_protection_cooldown = 0.0
 	purifier_protection_active = false
 	purifier_protection_duration_timer = 0.0
@@ -9254,6 +9287,24 @@ func _ensure_purifier_skill_runtime() -> void:
 			-13.0,
 			1.12
 		)
+	if not is_instance_valid(purifier_orb_create_audio):
+		purifier_orb_create_audio = _create_purifier_audio_player(
+			String(purifier_orb_config.get(
+				"create_audio_path",
+				PURIFIER_ORB_CREATE_AUDIO_PATH
+			)),
+			-12.0,
+			1.04
+		)
+	if not is_instance_valid(purifier_orb_explosion_audio):
+		purifier_orb_explosion_audio = _create_purifier_audio_player(
+			String(purifier_orb_config.get(
+				"explosion_audio_path",
+				PURIFIER_ORB_EXPLOSION_AUDIO_PATH
+			)),
+			-10.0,
+			0.96
+		)
 
 
 func _play_purifier_audio(player: AudioStreamPlayer) -> void:
@@ -9556,6 +9607,8 @@ func _update_purifier_gauge(delta: float) -> void:
 		0.0
 	)
 	purifier_crown_cooldown = maxf(purifier_crown_cooldown - delta, 0.0)
+	purifier_orb_cooldown = maxf(purifier_orb_cooldown - delta, 0.0)
+	_update_purifier_orb_chain(delta)
 
 	if purifier_protection_active:
 		purifier_protection_duration_timer = maxf(
@@ -9597,6 +9650,8 @@ func _update_purifier_gauge(delta: float) -> void:
 
 	if purifier_crown_cooldown <= 0.0:
 		_cast_purifier_crown()
+	if purifier_orb_cooldown <= 0.0:
+		_cast_purifier_orb()
 	_try_activate_purifier_protection()
 
 
@@ -9926,6 +9981,16 @@ func get_skill_cooldown_hud() -> Array:
 				"res://assets/art/heroes/stage9_prist/frames/effect3/effect_19.png",
 				maxf(
 					float(purifier_crown_config.get("cooldown", 20.0)),
+					0.0
+				) * _get_purifier_skill_cooldown_multiplier()
+			)
+			_append_skill_cooldown_hud(
+				skills,
+				purifier_orb_config,
+				purifier_orb_cooldown,
+				"res://assets/art/heroes/stage9_prist/frames/effect2/effect_13.png",
+				maxf(
+					float(purifier_orb_config.get("cooldown", 10.0)),
 					0.0
 				) * _get_purifier_skill_cooldown_multiplier()
 			)
