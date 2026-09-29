@@ -44,6 +44,23 @@ const STAGE3_AURA_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/e
 const STAGE3_CHARGE_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect5"
 const STAGE4_FRAME_DIR := "res://assets/art/heroes/stage4_gunner/frames"
 const STAGE5_FRAME_DIR := "res://assets/art/heroes/stage5_archmage/frames"
+const ARCHMAGE_OFFENSIVE_SKILL_KEYS: Array[String] = [
+	"combustion",
+	"ice_bolt",
+	"earth_spikes",
+	"holy_power",
+	"chain_dagger",
+	"storm",
+]
+const ARCHMAGE_SKILL_KEYS: Array[String] = [
+	"combustion",
+	"ice_bolt",
+	"earth_spikes",
+	"holy_power",
+	"chain_dagger",
+	"harmony",
+	"storm",
+]
 const STAGE6_FRAME_DIR := "res://assets/art/heroes/stage6_berserker/frames"
 const STAGE7_FRAME_DIR := "res://assets/art/heroes/stage7_alchemist/frames"
 const STAGE8_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames"
@@ -829,15 +846,7 @@ func configure_profile(profile: Dictionary) -> void:
 		else {}
 	)
 	archmage_skill_cooldowns.clear()
-	for skill_key in [
-		"combustion",
-		"ice_bolt",
-		"earth_spikes",
-		"holy_power",
-		"chain_dagger",
-		"harmony",
-		"storm",
-	]:
+	for skill_key in ARCHMAGE_SKILL_KEYS:
 		archmage_skill_cooldowns[skill_key] = 0.0
 	archmage_element_orbs.clear()
 	archmage_orbit_sprites.clear()
@@ -7726,8 +7735,7 @@ func _roll_next_archmage_element() -> String:
 
 
 func _update_archmage_skill_runtime(delta: float) -> void:
-	for raw_key in archmage_skill_cooldowns.keys():
-		var key := String(raw_key)
+	for key in ARCHMAGE_SKILL_KEYS:
 		archmage_skill_cooldowns[key] = maxf(
 			float(archmage_skill_cooldowns.get(key, 0.0)) - delta,
 			0.0
@@ -7794,7 +7802,7 @@ func _choose_archmage_skill() -> String:
 		scores["storm"] = 1.0 + float(nearby_360) * 0.55
 
 	var cooling_count := 0
-	for key in ["combustion", "ice_bolt", "earth_spikes", "holy_power", "chain_dagger", "storm"]:
+	for key in ARCHMAGE_OFFENSIVE_SKILL_KEYS:
 		if float(archmage_skill_cooldowns.get(key, 0.0)) > 0.0:
 			cooling_count += 1
 	if _archmage_skill_ready("harmony") and cooling_count >= 1:
@@ -7916,14 +7924,7 @@ func _cast_archmage_skill_internal(
 
 func _start_archmage_multicast(origin_skill: String) -> void:
 	var candidates: Array[String] = []
-	for key in [
-		"combustion",
-		"ice_bolt",
-		"earth_spikes",
-		"holy_power",
-		"chain_dagger",
-		"storm",
-	]:
+	for key in ARCHMAGE_OFFENSIVE_SKILL_KEYS:
 		if key == origin_skill:
 			continue
 		if not archmage_skill_config.has(key):
@@ -8578,7 +8579,7 @@ func _cast_archmage_blink() -> void:
 
 
 func _cast_archmage_harmony(config: Dictionary) -> void:
-	for key in ["combustion", "ice_bolt", "earth_spikes", "holy_power", "chain_dagger", "storm"]:
+	for key in ARCHMAGE_OFFENSIVE_SKILL_KEYS:
 		archmage_skill_cooldowns[key] = 0.0
 	_add_archmage_gauge(maxf(float(config.get("gauge_refund", 50.0)), 0.0))
 	_spawn_archmage_fx(
