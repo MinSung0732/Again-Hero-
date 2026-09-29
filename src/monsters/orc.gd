@@ -57,7 +57,11 @@ func _ready() -> void:
 		COMBAT_STATUS_EFFECT_VISUAL,
 		"slow"
 	)
-	_attach_status_effect_visual("orc_rage")
+	MONSTER_RUNTIME_COMMON.attach_status_effect_visual(
+		self,
+		COMBAT_STATUS_EFFECT_VISUAL,
+		"orc_rage"
+	)
 	queue_redraw()
 
 
