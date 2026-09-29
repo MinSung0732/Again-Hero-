@@ -1,6 +1,8 @@
 extends RefCounted
 class_name MonsterRuntimeCommon
 
+const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
+
 const TARGET_REFRESH_INTERVAL := 0.25
 const FAR_NAV_INITIAL_MAX := 0.16
 const FAR_NAV_TICK_MIN := 0.10
@@ -164,8 +166,7 @@ static func apply_direct_heal(
 	amount: int,
 	current_hp: int,
 	max_hp: int,
-	dying: bool,
-	damage_numbers: Script
+	dying: bool
 ) -> int:
 	if (
 		amount <= 0
@@ -181,11 +182,6 @@ static func apply_direct_heal(
 	if recovered <= 0:
 		return 0
 
-	if damage_numbers != null:
-		damage_numbers.call(
-			"show_heal",
-			owner,
-			recovered
-		)
+	DAMAGE_NUMBERS.show_heal(owner, recovered)
 	owner.queue_redraw()
 	return recovered
