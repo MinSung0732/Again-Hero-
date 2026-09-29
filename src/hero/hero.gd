@@ -278,6 +278,8 @@ var alchemist_field_run_exit_timer: float = 0.0
 var alchemist_emergency_config: Dictionary = {}
 var alchemist_emergency_cooldown: float = 0.0
 var alchemist_emergency_trapped_timer: float = 0.0
+var alchemist_emergency_threats: Array[Node2D] = []
+var alchemist_emergency_escape_direction: Vector2 = Vector2.RIGHT
 var alchemist_philosopher_config: Dictionary = {}
 var alchemist_materials_collected: int = 0
 var alchemist_philosopher_used: bool = false
@@ -636,6 +638,8 @@ func configure_profile(profile: Dictionary) -> void:
 	)
 	alchemist_emergency_cooldown = 0.0
 	alchemist_emergency_trapped_timer = 0.0
+	alchemist_emergency_threats.clear()
+	alchemist_emergency_escape_direction = Vector2.RIGHT
 	var raw_philosopher = alchemist_config.get("philosopher_stone", {})
 	alchemist_philosopher_config = (
 		raw_philosopher.duplicate(true)
@@ -3707,9 +3711,11 @@ func _on_alchemist_mixture_field_tick(origin: Vector2, radius: float) -> void:
 func _update_alchemist_emergency_escape(delta: float) -> bool:
 	if alchemist_emergency_config.is_empty():
 		alchemist_emergency_trapped_timer = 0.0
+		alchemist_emergency_threats.clear()
 		return false
 	if alchemist_emergency_cooldown > 0.0 or alchemist_gas > 0.001:
 		alchemist_emergency_trapped_timer = 0.0
+		alchemist_emergency_threats.clear()
 		return false
 
 	var trigger_radius := clampf(
@@ -3722,7 +3728,7 @@ func _update_alchemist_emergency_escape(delta: float) -> bool:
 		2
 	)
 	var nearby := _get_monster_nodes_near(global_position, trigger_radius)
-	var threats: Array[Node2D] = []
+	alchemist_emergency_threats.clear()
 	var radius_sq := trigger_radius * trigger_radius
 	for node in nearby:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -3734,14 +3740,16 @@ func _update_alchemist_emergency_escape(delta: float) -> bool:
 		if hp_value != null and int(hp_value) <= 0:
 			continue
 		if global_position.distance_squared_to(monster.global_position) <= radius_sq:
-			threats.append(monster)
+			alchemist_emergency_threats.append(monster)
 
-	if threats.size() < min_enemies:
+	if alchemist_emergency_threats.size() < min_enemies:
 		alchemist_emergency_trapped_timer = 0.0
 		return false
 
-	var escape_info := _find_alchemist_escape_direction(threats, trigger_radius)
-	var blocked_ratio := float(escape_info.get("blocked_ratio", 0.0))
+	var blocked_ratio := _update_alchemist_escape_direction(
+		alchemist_emergency_threats,
+		trigger_radius
+	)
 	var required_blocked_ratio := clampf(
 		float(alchemist_emergency_config.get("blocked_direction_ratio", 0.75)),
 		0.50,
@@ -3761,15 +3769,18 @@ func _update_alchemist_emergency_escape(delta: float) -> bool:
 		return false
 
 	alchemist_emergency_trapped_timer = 0.0
-	var escape_direction: Vector2 = escape_info.get("direction", Vector2.RIGHT)
-	_cast_alchemist_emergency_escape(threats, escape_direction)
+	_cast_alchemist_emergency_escape(
+		alchemist_emergency_threats,
+		alchemist_emergency_escape_direction
+	)
+	alchemist_emergency_threats.clear()
 	return true
 
 
-func _find_alchemist_escape_direction(
+func _update_alchemist_escape_direction(
 	threats: Array[Node2D],
 	trigger_radius: float
-) -> Dictionary:
+) -> float:
 	const SAMPLE_COUNT := 12
 	var best_direction := Vector2.RIGHT
 	var best_score := -INF
@@ -3814,10 +3825,8 @@ func _find_alchemist_escape_direction(
 			best_score = score
 			best_direction = direction
 
-	return {
-		"direction": best_direction,
-		"blocked_ratio": float(blocked_count) / float(SAMPLE_COUNT),
-	}
+	alchemist_emergency_escape_direction = best_direction
+	return float(blocked_count) / float(SAMPLE_COUNT)
 
 
 func _cast_alchemist_emergency_escape(
