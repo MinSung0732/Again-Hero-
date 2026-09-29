@@ -9593,6 +9593,630 @@ func _expire_purifier_crown() -> void:
 	queue_redraw()
 
 
+func _clear_purifier_orb_runtime() -> void:
+	for raw_link in purifier_orb_links.values():
+		var link := raw_link as Node
+		if is_instance_valid(link):
+			link.queue_free()
+	purifier_orb_links.clear()
+
+	for orb in purifier_orbs:
+		if is_instance_valid(orb):
+			orb.queue_free()
+	purifier_orbs.clear()
+	purifier_orb_chain_queue.clear()
+	purifier_orb_chain_active = false
+	purifier_orb_chain_timer = 0.0
+	purifier_orb_chain_step = 0
+
+
+func _is_purifier_orb_active(orb: Node2D) -> bool:
+	return (
+		is_instance_valid(orb)
+		and not orb.is_queued_for_deletion()
+		and orb.has_method("is_network_active")
+		and bool(orb.call("is_network_active"))
+	)
+
+
+func _get_active_purifier_orbs() -> Array[Node2D]:
+	var result: Array[Node2D] = []
+	for orb in purifier_orbs:
+		if _is_purifier_orb_active(orb):
+			result.append(orb)
+	return result
+
+
+func _purifier_orb_link_key(a: Node2D, b: Node2D) -> String:
+	var a_id := a.get_instance_id()
+	var b_id := b.get_instance_id()
+	if a_id > b_id:
+		var swap := a_id
+		a_id = b_id
+		b_id = swap
+	return "%d:%d" % [a_id, b_id]
+
+
+func _refresh_purifier_orb_links() -> void:
+	var active_orbs := _get_active_purifier_orbs()
+	var link_distance := maxf(
+		float(purifier_orb_config.get("link_distance", 600.0)),
+		1.0
+	)
+	var link_distance_sq := link_distance * link_distance
+	var seen_links: Dictionary = {}
+	var link_effect_dir := String(
+		purifier_orb_config.get(
+			"link_effect_dir",
+			"%s/effect5" % STAGE5_FRAME_DIR
+		)
+	)
+	var link_vertical_scale := maxf(
+		float(purifier_orb_config.get("link_vertical_scale", 0.58)),
+		0.05
+	)
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return
+
+	for first_index in range(active_orbs.size()):
+		var first := active_orbs[first_index]
+		for second_index in range(first_index + 1, active_orbs.size()):
+			var second := active_orbs[second_index]
+			if (
+				first.global_position.distance_squared_to(second.global_position)
+				> link_distance_sq
+			):
+				continue
+
+			var key := _purifier_orb_link_key(first, second)
+			seen_links[key] = true
+			if purifier_orb_links.has(key):
+				continue
+
+			var link := PURIFIER_ORB_LINK_SCENE.instantiate() as Node2D
+			if link == null:
+				continue
+			parent.add_child(link)
+			link.call(
+				"setup",
+				first.global_position,
+				second.global_position,
+				link_effect_dir,
+				link_vertical_scale
+			)
+			purifier_orb_links[key] = link
+
+	for raw_key in purifier_orb_links.keys():
+		var key := String(raw_key)
+		if seen_links.has(key):
+			continue
+		var stale_link = purifier_orb_links.get(key)
+		if is_instance_valid(stale_link):
+			stale_link.queue_free()
+		purifier_orb_links.erase(key)
+
+
+func _on_purifier_orb_settled(orb: Node2D) -> void:
+	if not _is_purifier_orb_active(orb):
+		return
+	_refresh_purifier_orb_links()
+	_try_start_purifier_orb_chain_from(orb)
+
+
+func _on_purifier_orb_deactivated(_orb: Node2D) -> void:
+	_refresh_purifier_orb_links()
+
+
+func _on_purifier_orb_finished(orb: Node2D) -> void:
+	purifier_orbs.erase(orb)
+	purifier_orb_chain_queue.erase(orb)
+	_refresh_purifier_orb_links()
+
+
+func _clamp_purifier_orb_target_position(candidate: Vector2) -> Vector2:
+	var throw_range := maxf(
+		float(purifier_orb_config.get("throw_range", 820.0)),
+		1.0
+	)
+	var offset := candidate - global_position
+	if offset.length_squared() > throw_range * throw_range:
+		offset = offset.normalized() * throw_range
+		candidate = global_position + offset
+
+	var clamped := Vector2(
+		clampf(
+			candidate.x,
+			FIELD_MARGIN,
+			maxf(battlefield_size.x - FIELD_MARGIN, FIELD_MARGIN)
+		),
+		clampf(
+			candidate.y,
+			FIELD_MARGIN,
+			maxf(battlefield_size.y - FIELD_MARGIN, FIELD_MARGIN)
+		)
+	)
+	var battle := get_parent()
+	if (
+		is_instance_valid(battle)
+		and battle.has_method("_clamp_manual_spawn_position")
+	):
+		var battle_clamped = battle.call(
+			"_clamp_manual_spawn_position",
+			clamped
+		)
+		if battle_clamped is Vector2:
+			clamped = battle_clamped
+	return clamped
+
+
+func _purifier_orb_connection_count(
+	position: Vector2,
+	active_orbs: Array[Node2D]
+) -> int:
+	var link_distance := maxf(
+		float(purifier_orb_config.get("link_distance", 600.0)),
+		1.0
+	)
+	var link_distance_sq := link_distance * link_distance
+	var count := 0
+	for orb in active_orbs:
+		if (
+			_is_purifier_orb_active(orb)
+			and position.distance_squared_to(orb.global_position)
+			<= link_distance_sq
+		):
+			count += 1
+	return count
+
+
+func _purifier_orb_position_has_spacing(
+	position: Vector2,
+	active_orbs: Array[Node2D]
+) -> bool:
+	var min_spacing := maxf(
+		float(purifier_orb_config.get("min_orb_spacing", 96.0)),
+		1.0
+	)
+	var min_spacing_sq := min_spacing * min_spacing
+	for orb in active_orbs:
+		if (
+			_is_purifier_orb_active(orb)
+			and position.distance_squared_to(orb.global_position)
+			< min_spacing_sq
+		):
+			return false
+	return true
+
+
+func _choose_purifier_orb_target_position() -> Vector2:
+	var throw_range := maxf(
+		float(purifier_orb_config.get("throw_range", 820.0)),
+		1.0
+	)
+	var blast_radius := maxf(
+		float(purifier_orb_config.get("explosion_radius", 275.0)),
+		1.0
+	)
+	var link_distance := maxf(
+		float(purifier_orb_config.get("link_distance", 600.0)),
+		1.0
+	)
+	var active_orbs := _get_active_purifier_orbs()
+	var candidates: Array[Vector2] = []
+
+	if is_instance_valid(target) and not target.is_queued_for_deletion():
+		candidates.append(target.global_position)
+
+	var monsters := _get_monster_nodes_near(global_position, throw_range)
+	var monster_sample_count := 0
+	for node in monsters:
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		candidates.append(monster.global_position)
+		monster_sample_count += 1
+		if monster_sample_count >= 12:
+			break
+
+	for orb in active_orbs:
+		var desired_direction := Vector2.ZERO
+		if is_instance_valid(target):
+			desired_direction = orb.global_position.direction_to(
+				target.global_position
+			)
+		if desired_direction.length_squared() <= 0.001:
+			desired_direction = global_position.direction_to(
+				orb.global_position
+			)
+		if desired_direction.length_squared() <= 0.001:
+			desired_direction = Vector2.from_angle(randf_range(0.0, TAU))
+
+		for angle_offset in [-0.55, 0.0, 0.55]:
+			candidates.append(
+				orb.global_position
+				+ desired_direction.rotated(angle_offset)
+				* link_distance * 0.72
+			)
+
+	for first_index in range(active_orbs.size()):
+		for second_index in range(first_index + 1, active_orbs.size()):
+			var first := active_orbs[first_index]
+			var second := active_orbs[second_index]
+			if (
+				first.global_position.distance_squared_to(second.global_position)
+				<= (link_distance * 2.0) * (link_distance * 2.0)
+			):
+				candidates.append(
+					first.global_position.lerp(second.global_position, 0.5)
+				)
+
+	var random_center := global_position
+	if is_instance_valid(target):
+		random_center = target.global_position
+	for _sample_index in range(8):
+		candidates.append(
+			random_center
+			+ Vector2.from_angle(randf_range(0.0, TAU))
+			* randf_range(80.0, minf(blast_radius * 1.65, throw_range))
+		)
+
+	if candidates.is_empty():
+		var fallback_direction := (
+			Vector2.LEFT
+			if hero_sprite.flip_h
+			else Vector2.RIGHT
+		)
+		return _clamp_purifier_orb_target_position(
+			global_position + fallback_direction * minf(420.0, throw_range)
+		)
+
+	var hold_chain := (
+		active_orbs.size() >= 2
+		and randf()
+		< clampf(
+			float(purifier_orb_config.get("chain_hold_chance", 0.35)),
+			0.0,
+			1.0
+		)
+	)
+	var best_position := Vector2.ZERO
+	var best_score := -INF
+	var found := false
+
+	for pass_index in range(2):
+		var avoid_multi_link := hold_chain and pass_index == 0
+		for raw_candidate in candidates:
+			var candidate := _clamp_purifier_orb_target_position(raw_candidate)
+			if not _purifier_orb_position_has_spacing(candidate, active_orbs):
+				continue
+
+			var link_count := _purifier_orb_connection_count(
+				candidate,
+				active_orbs
+			)
+			if avoid_multi_link and link_count >= 2:
+				continue
+
+			var monster_count := _count_monsters_near(
+				candidate,
+				blast_radius
+			)
+			var score := float(monster_count) * 3.0
+			if avoid_multi_link:
+				score += (
+					2.5
+					if link_count == 0
+					else 1.2
+				)
+			else:
+				score += float(link_count) * 4.5
+				if link_count >= 2:
+					score += 8.0 + float(link_count - 2) * 3.0
+
+			score -= (
+				global_position.distance_to(candidate)
+				/ throw_range
+			) * 0.30
+			score += randf_range(-0.35, 0.35)
+
+			if not found or score > best_score:
+				found = true
+				best_score = score
+				best_position = candidate
+
+		if found:
+			break
+
+	if found:
+		return best_position
+
+	var fallback := candidates[0]
+	return _clamp_purifier_orb_target_position(fallback)
+
+
+func _cast_purifier_orb() -> void:
+	if (
+		hero_archetype != "cleric_purifier"
+		or purifier_orb_config.is_empty()
+		or purifier_orb_cooldown > 0.0
+		or is_dying
+		or current_hp <= 0
+	):
+		return
+
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return
+
+	var orb := PURIFIER_ORB_SCENE.instantiate() as Node2D
+	if orb == null:
+		return
+
+	purifier_orb_install_serial += 1
+	parent.add_child(orb)
+	orb.connect(
+		"settled",
+		Callable(self, "_on_purifier_orb_settled")
+	)
+	orb.connect(
+		"deactivated",
+		Callable(self, "_on_purifier_orb_deactivated")
+	)
+	orb.connect(
+		"finished",
+		Callable(self, "_on_purifier_orb_finished")
+	)
+
+	var destination := _choose_purifier_orb_target_position()
+	var start_position := global_position + Vector2(0.0, -42.0)
+	orb.call(
+		"setup",
+		self,
+		start_position,
+		destination,
+		maxf(
+			float(purifier_orb_config.get("projectile_speed", 380.0)),
+			1.0
+		),
+		maxf(float(purifier_orb_config.get("duration", 50.0)), 0.1),
+		maxf(
+			float(purifier_orb_config.get("explosion_radius", 275.0)),
+			1.0
+		),
+		purifier_orb_install_serial,
+		String(
+			purifier_orb_config.get(
+				"effect_dir",
+				"%s/effect2" % STAGE9_FRAME_DIR
+			)
+		),
+		maxf(
+			float(purifier_orb_config.get("visual_scale", 0.45)),
+			0.05
+		)
+	)
+	purifier_orbs.append(orb)
+	purifier_orb_cooldown = (
+		maxf(float(purifier_orb_config.get("cooldown", 10.0)), 0.0)
+		* _get_purifier_skill_cooldown_multiplier()
+	)
+	_ensure_purifier_skill_runtime()
+	_play_purifier_audio(purifier_orb_create_audio)
+
+
+func _get_purifier_orb_component(start_orb: Node2D) -> Array[Node2D]:
+	var component: Array[Node2D] = []
+	if not _is_purifier_orb_active(start_orb):
+		return component
+
+	var link_distance := maxf(
+		float(purifier_orb_config.get("link_distance", 600.0)),
+		1.0
+	)
+	var link_distance_sq := link_distance * link_distance
+	component.append(start_orb)
+	var cursor := 0
+
+	while cursor < component.size():
+		var current := component[cursor]
+		cursor += 1
+		for candidate in purifier_orbs:
+			if (
+				not _is_purifier_orb_active(candidate)
+				or candidate in component
+			):
+				continue
+			if (
+				current.global_position.distance_squared_to(
+					candidate.global_position
+				)
+				<= link_distance_sq
+			):
+				component.append(candidate)
+
+	return component
+
+
+func _purifier_orb_install_index(orb: Node2D) -> int:
+	if (
+		is_instance_valid(orb)
+		and orb.has_method("get_install_index")
+	):
+		return int(orb.call("get_install_index"))
+	return 0
+
+
+func _sort_purifier_orbs_by_install_order(
+	orbs: Array[Node2D]
+) -> void:
+	for index in range(1, orbs.size()):
+		var current := orbs[index]
+		var current_order := _purifier_orb_install_index(current)
+		var insert_index := index - 1
+		while (
+			insert_index >= 0
+			and _purifier_orb_install_index(orbs[insert_index])
+			> current_order
+		):
+			orbs[insert_index + 1] = orbs[insert_index]
+			insert_index -= 1
+		orbs[insert_index + 1] = current
+
+
+func _try_start_purifier_orb_chain_from(orb: Node2D) -> void:
+	if purifier_orb_chain_active:
+		return
+	var component := _get_purifier_orb_component(orb)
+	if component.size() < 3:
+		return
+	_start_purifier_orb_chain(component)
+
+
+func _try_start_any_purifier_orb_chain() -> void:
+	if purifier_orb_chain_active:
+		return
+	for orb in purifier_orbs:
+		if not _is_purifier_orb_active(orb):
+			continue
+		var component := _get_purifier_orb_component(orb)
+		if component.size() >= 3:
+			_start_purifier_orb_chain(component)
+			return
+
+
+func _start_purifier_orb_chain(component: Array[Node2D]) -> void:
+	if purifier_orb_chain_active or component.size() < 3:
+		return
+
+	_sort_purifier_orbs_by_install_order(component)
+	purifier_orb_chain_queue.clear()
+	for orb in component:
+		if not _is_purifier_orb_active(orb):
+			continue
+		orb.call("reserve_for_chain")
+		purifier_orb_chain_queue.append(orb)
+
+	if purifier_orb_chain_queue.size() < 3:
+		purifier_orb_chain_queue.clear()
+		return
+
+	purifier_orb_chain_active = true
+	purifier_orb_chain_timer = 0.0
+	purifier_orb_chain_step = 0
+	_advance_purifier_orb_chain()
+
+
+func _get_purifier_orb_chain_interval() -> float:
+	var base_interval := maxf(
+		float(purifier_orb_config.get("chain_interval", 1.0)),
+		0.05
+	)
+	return base_interval / maxf(
+		purifier_orb_chain_speed_multiplier,
+		0.05
+	)
+
+
+func set_purifier_orb_chain_speed_multiplier(multiplier: float) -> void:
+	purifier_orb_chain_speed_multiplier = maxf(multiplier, 0.05)
+
+
+func _update_purifier_orb_chain(delta: float) -> void:
+	if not purifier_orb_chain_active:
+		return
+	purifier_orb_chain_timer = maxf(
+		purifier_orb_chain_timer - delta,
+		0.0
+	)
+	if purifier_orb_chain_timer <= 0.0:
+		_advance_purifier_orb_chain()
+
+
+func _advance_purifier_orb_chain() -> void:
+	if not purifier_orb_chain_active:
+		return
+
+	var orb: Node2D = null
+	while not purifier_orb_chain_queue.is_empty():
+		var candidate := purifier_orb_chain_queue.pop_front()
+		if _is_purifier_orb_active(candidate):
+			orb = candidate
+			break
+
+	if not is_instance_valid(orb):
+		_finish_purifier_orb_chain()
+		return
+
+	_detonate_purifier_orb(orb, purifier_orb_chain_step)
+	purifier_orb_chain_step += 1
+	orb.call("trigger_explosion")
+	_ensure_purifier_skill_runtime()
+	_play_purifier_audio(purifier_orb_explosion_audio)
+
+	if purifier_orb_chain_queue.is_empty():
+		_finish_purifier_orb_chain()
+	else:
+		purifier_orb_chain_timer = _get_purifier_orb_chain_interval()
+
+
+func _finish_purifier_orb_chain() -> void:
+	purifier_orb_chain_active = false
+	purifier_orb_chain_timer = 0.0
+	purifier_orb_chain_step = 0
+	purifier_orb_chain_queue.clear()
+	_try_start_any_purifier_orb_chain()
+
+
+func _detonate_purifier_orb(
+	orb: Node2D,
+	chain_index: int
+) -> void:
+	if not is_instance_valid(orb):
+		return
+
+	var radius := maxf(
+		float(purifier_orb_config.get("explosion_radius", 275.0)),
+		1.0
+	)
+	var radius_sq := radius * radius
+	var base_ratio := maxf(
+		float(purifier_orb_config.get("base_damage_ratio", 0.80)),
+		0.0
+	)
+	var growth := maxf(
+		float(purifier_orb_config.get("chain_damage_growth", 0.15)),
+		0.0
+	)
+	var chain_multiplier := 1.0 + growth * float(maxi(chain_index, 0))
+	var raw_damage := maxf(
+		float(attack_damage) * base_ratio * chain_multiplier,
+		1.0
+	)
+
+	for node in _get_monster_nodes_near(orb.global_position, radius):
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if (
+			monster == null
+			or not monster.has_method("take_damage")
+			or orb.global_position.distance_squared_to(
+				monster.global_position
+			) > radius_sq
+		):
+			continue
+
+		var holy_multiplier := get_purifier_holy_damage_multiplier(monster)
+		var hit_damage := maxi(
+			int(round(raw_damage * holy_multiplier)),
+			1
+		)
+		monster.call("take_damage", hit_damage)
+
+
 func _update_purifier_gauge(delta: float) -> void:
 	if (
 		hero_archetype != "cleric_purifier"
