@@ -247,6 +247,7 @@ var gunner_deadeye_monster_offsets: Array[Vector2] = []
 var gunner_deadeye_analysis_direction: Vector2 = Vector2.RIGHT
 var gunner_deadeye_analysis_score: float = 0.0
 var gunner_deadeye_analysis_hits: int = 0
+var gunner_escape_monster_positions: Array[Vector2] = []
 var gunner_ricochet_stacks: int = 0
 var gunner_afterimage_shot_stacks: int = 0
 var gunner_reload_move_speed_bonus: float = 0.0
@@ -862,6 +863,7 @@ func configure_profile(profile: Dictionary) -> void:
 	gunner_deadeye_analysis_direction = Vector2.RIGHT
 	gunner_deadeye_analysis_score = 0.0
 	gunner_deadeye_analysis_hits = 0
+	gunner_escape_monster_positions.clear()
 	gunner_ricochet_stacks = 0
 	gunner_afterimage_shot_stacks = 0
 	gunner_reload_move_speed_bonus = 0.0
@@ -4584,7 +4586,7 @@ func _find_gunner_escape_direction() -> Vector2:
 	var dash_distance := maxf(float(gunner_config.get("backstep_distance", 260.0)), 1.0)
 	var threat_radius := maxf(dash_distance + 360.0, 560.0)
 	var repulsion := Vector2.ZERO
-	var monster_positions: Array[Vector2] = []
+	gunner_escape_monster_positions.clear()
 
 	for node in _get_monster_nodes_near(global_position, threat_radius):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -4597,7 +4599,7 @@ func _find_gunner_escape_direction() -> Vector2:
 			continue
 
 		var monster_position := monster.global_position
-		monster_positions.append(monster_position)
+		gunner_escape_monster_positions.append(monster_position)
 
 		var offset := monster_position - global_position
 		var distance := offset.length()
@@ -4631,7 +4633,7 @@ func _find_gunner_escape_direction() -> Vector2:
 		var side := Vector2(-dir.y, dir.x)
 		var danger_radius := 320.0
 
-		for monster_position in monster_positions:
+		for monster_position in gunner_escape_monster_positions:
 			var endpoint_distance := endpoint.distance_to(monster_position)
 			if endpoint_distance < danger_radius:
 				endpoint_danger += 1.0 - clampf(
