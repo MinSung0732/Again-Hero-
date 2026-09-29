@@ -72,7 +72,7 @@ func _physics_process(delta: float) -> void:
 		_finish_projectile()
 
 func _on_body_entered(body: Node) -> void:
-	if has_impacted:
+	if not active or has_impacted:
 		return
 	if body == null or body.is_queued_for_deletion():
 		return
@@ -219,6 +219,10 @@ func _apply_projectile_visual() -> void:
 	var uniform_scale := float(frames.get_meta("visual_scale", 1.0))
 	projectile_sprite.scale = Vector2(uniform_scale, uniform_scale)
 	projectile_sprite.visible = true
+	projectile_sprite.stop()
+	projectile_sprite.animation = &"fly"
+	projectile_sprite.frame = 0
+	projectile_sprite.frame_progress = 0.0
 	projectile_sprite.play(&"fly")
 
 func _load_texture(path: String) -> Texture2D:
