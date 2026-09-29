@@ -734,6 +734,19 @@ func _can_use_battle_pointer(pointer_position: Vector2) -> bool:
 
 
 func _is_pointer_over_battle_ui(pointer_position: Vector2) -> bool:
+	# Detail panels must win the initial touch before locked-camera manual
+	# placement can consume it in _input(). Otherwise ScrollContainer misses
+	# the press and only begins scrolling after a long hold/secondary drag.
+	if (
+		monster_info_panel.visible
+		and monster_info_panel.get_global_rect().has_point(pointer_position)
+	):
+		return true
+	if (
+		hero_info_panel.visible
+		and hero_info_panel.get_global_rect().has_point(pointer_position)
+	):
+		return true
 	if (
 		demon_ultimate_panel.visible
 		and demon_ultimate_panel.get_global_rect().has_point(pointer_position)
