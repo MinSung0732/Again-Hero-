@@ -225,6 +225,7 @@ var fighter_charge_chain_count: int = 0
 var fighter_charge_afterimage_timer: float = 0.0
 var fighter_charge_target_candidates: Array = []
 var fighter_charge_impact_candidates: Array = []
+var fighter_combat_candidates: Array = []
 var fighter_courage_bonus: float = 0.0
 var fighter_charge_kill_heal: float = 0.0
 
@@ -607,6 +608,7 @@ func configure_profile(profile: Dictionary) -> void:
 	fighter_charge_afterimage_timer = 0.0
 	fighter_charge_target_candidates.clear()
 	fighter_charge_impact_candidates.clear()
+	fighter_combat_candidates.clear()
 	fighter_courage_bonus = 0.0
 	fighter_charge_kill_heal = 0.0
 	fighter_slash_mastery_stacks = 0
@@ -13742,7 +13744,12 @@ func _fighter_apply_slash(direction: Vector2, bonus_hit: bool = false) -> int:
 	var side := Vector2(-direction.y, direction.x)
 	var bonus_kills := 0
 
-	for node in _get_monster_nodes_near(global_position, reach + half_width):
+	_fill_monster_nodes_near(
+		global_position,
+		reach + half_width,
+		fighter_combat_candidates
+	)
+	for node in fighter_combat_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -13767,6 +13774,7 @@ func _fighter_apply_slash(direction: Vector2, bonus_hit: bool = false) -> int:
 		var hp_after_value = monster.get("current_hp")
 		if hp_after_value != null and int(hp_after_value) <= 0:
 			bonus_kills += 1
+	fighter_combat_candidates.clear()
 
 	if bonus_kills > 0 and current_hp > 0:
 		heal_direct(bonus_kills * 10)
@@ -13797,7 +13805,12 @@ func _fighter_apply_thrust(direction: Vector2) -> void:
 	)
 	var side := Vector2(-direction.y, direction.x)
 
-	for node in _get_monster_nodes_near(global_position, length + half_width):
+	_fill_monster_nodes_near(
+		global_position,
+		length + half_width,
+		fighter_combat_candidates
+	)
+	for node in fighter_combat_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -13810,6 +13823,7 @@ func _fighter_apply_thrust(direction: Vector2) -> void:
 			continue
 		if monster.has_method("take_damage"):
 			monster.call("take_damage", damage)
+	fighter_combat_candidates.clear()
 
 func _update_fighter_guard(delta: float) -> void:
 	if fighter_guard_active:
@@ -13897,7 +13911,13 @@ func _end_fighter_guard() -> void:
 	)
 
 	if release_damage > 0 and release_radius > 0.0:
-		for node in _get_monster_nodes_near(global_position, release_radius):
+		_fill_monster_nodes_near(
+			global_position,
+			release_radius,
+			fighter_combat_candidates
+		)
+		var release_radius_sq := release_radius * release_radius
+		for node in fighter_combat_candidates:
 			if not is_instance_valid(node) or node.is_queued_for_deletion():
 				continue
 			var monster := node as Node2D
@@ -13905,11 +13925,12 @@ func _end_fighter_guard() -> void:
 				continue
 			if (
 				global_position.distance_squared_to(monster.global_position)
-				> release_radius * release_radius
+				> release_radius_sq
 			):
 				continue
 			if monster.has_method("take_damage"):
 				monster.call("take_damage", release_damage)
+		fighter_combat_candidates.clear()
 
 	_play_fighter_guard_release_effect()
 
@@ -13939,17 +13960,29 @@ func _fighter_reflect_damage(raw_damage: float, source: Node) -> void:
 		1.0
 	)
 	var nearest: Node2D = null
-	var nearest_distance := INF
-	for node in _get_monster_nodes_near(global_position, reflect_radius):
+	var nearest_distance_sq := INF
+	var reflect_radius_sq := reflect_radius * reflect_radius
+	_fill_monster_nodes_near(
+		global_position,
+		reflect_radius,
+		fighter_combat_candidates
+	)
+	for node in fighter_combat_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		var distance := global_position.distance_to(monster.global_position)
-		if distance <= reflect_radius and distance < nearest_distance:
+		var distance_sq := global_position.distance_squared_to(
+			monster.global_position
+		)
+		if (
+			distance_sq <= reflect_radius_sq
+			and distance_sq < nearest_distance_sq
+		):
 			nearest = monster
-			nearest_distance = distance
+			nearest_distance_sq = distance_sq
+	fighter_combat_candidates.clear()
 	if is_instance_valid(nearest) and nearest.has_method("take_damage"):
 		nearest.call("take_damage", reflected)
 
