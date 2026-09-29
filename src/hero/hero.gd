@@ -1296,13 +1296,20 @@ func _get_next_summoner_watcher_follow_slot() -> int:
 	return -1
 
 
-func _register_summon_pool_node(summon: Node2D) -> void:
+func _set_summon_registry_active(
+	summon: Node2D,
+	is_active: bool
+) -> void:
 	var battle := get_parent()
 	if (
 		is_instance_valid(battle)
-		and battle.has_method("register_hero_summon_node")
+		and battle.has_method("set_hero_summon_active")
 	):
-		battle.call("register_hero_summon_node", summon)
+		battle.call(
+			"set_hero_summon_active",
+			summon,
+			is_active
+		)
 
 
 func _ensure_summoner_pool_capacity() -> void:
@@ -1318,7 +1325,6 @@ func _ensure_summoner_pool_capacity() -> void:
 		if gatekeeper == null:
 			break
 		world_parent.add_child(gatekeeper)
-		_register_summon_pool_node(gatekeeper)
 		gatekeeper.connect(
 			"released",
 			Callable(self, "_on_summoner_gatekeeper_released")
@@ -1330,7 +1336,6 @@ func _ensure_summoner_pool_capacity() -> void:
 		if scout == null:
 			break
 		world_parent.add_child(scout)
-		_register_summon_pool_node(scout)
 		scout.connect(
 			"released",
 			Callable(self, "_on_summoner_scout_released")
@@ -1342,7 +1347,6 @@ func _ensure_summoner_pool_capacity() -> void:
 		if hound == null:
 			break
 		world_parent.add_child(hound)
-		_register_summon_pool_node(hound)
 		hound.connect(
 			"released",
 			Callable(self, "_on_summoner_hound_released")
@@ -1355,7 +1359,6 @@ func _ensure_summoner_pool_capacity() -> void:
 		if watcher == null:
 			break
 		world_parent.add_child(watcher)
-		_register_summon_pool_node(watcher)
 		watcher.connect(
 			"released",
 			Callable(self, "_on_summoner_watcher_released")
@@ -1371,7 +1374,6 @@ func _ensure_summoner_pool_capacity() -> void:
 		if open_gate == null:
 			break
 		world_parent.add_child(open_gate)
-		_register_summon_pool_node(open_gate)
 		open_gate.connect(
 			"released",
 			Callable(self, "_on_summoner_open_gate_released")
@@ -1915,6 +1917,7 @@ func _try_cast_summoner_gatekeeper() -> bool:
 		self,
 		runtime_config
 	)
+	_set_summon_registry_active(summon_to_use, true)
 	summoner_gatekeeper_cooldown = maxf(
 		float(summoner_gatekeeper_config.get("cooldown", 10.0)),
 		0.0
@@ -1925,6 +1928,7 @@ func _try_cast_summoner_gatekeeper() -> bool:
 
 
 func _on_summoner_gatekeeper_released(_summon: Node2D) -> void:
+	_set_summon_registry_active(_summon, false)
 	if summoner_gatekeeper_cooldown <= 0.0:
 		summoner_cast_pending = true
 	if summoner_scout_cooldown <= 0.0:
@@ -1973,6 +1977,7 @@ func _try_cast_summoner_scout() -> bool:
 		self,
 		runtime_config
 	)
+	_set_summon_registry_active(summon_to_use, true)
 	summoner_scout_cooldown = maxf(
 		float(summoner_scout_config.get("cooldown", 20.0)),
 		0.0
@@ -1983,6 +1988,7 @@ func _try_cast_summoner_scout() -> bool:
 
 
 func _on_summoner_scout_released(_summon: Node2D) -> void:
+	_set_summon_registry_active(_summon, false)
 	if summoner_gatekeeper_cooldown <= 0.0:
 		summoner_cast_pending = true
 	if summoner_scout_cooldown <= 0.0:
@@ -2035,6 +2041,7 @@ func _try_cast_summoner_hound() -> bool:
 		self,
 		runtime_config
 	)
+	_set_summon_registry_active(summon_to_use, true)
 	summoner_hound_cooldown = maxf(
 		float(summoner_hound_config.get("cooldown", 30.0)),
 		0.0
@@ -2045,6 +2052,7 @@ func _try_cast_summoner_hound() -> bool:
 
 
 func _on_summoner_hound_released(_summon: Node2D) -> void:
+	_set_summon_registry_active(_summon, false)
 	if summoner_gatekeeper_cooldown <= 0.0:
 		summoner_cast_pending = true
 	if summoner_scout_cooldown <= 0.0:
@@ -2099,6 +2107,7 @@ func _try_cast_summoner_watcher() -> bool:
 		self,
 		runtime_config
 	)
+	_set_summon_registry_active(summon_to_use, true)
 	summoner_watcher_cooldown = maxf(
 		float(summoner_watcher_config.get("cooldown", 7.0)),
 		0.0
@@ -2109,6 +2118,7 @@ func _try_cast_summoner_watcher() -> bool:
 
 
 func _on_summoner_watcher_released(_summon: Node2D) -> void:
+	_set_summon_registry_active(_summon, false)
 	if summoner_gatekeeper_cooldown <= 0.0:
 		summoner_cast_pending = true
 	if summoner_scout_cooldown <= 0.0:
@@ -2186,6 +2196,7 @@ func _try_cast_summoner_open_gate() -> bool:
 		self,
 		summoner_open_gate_config.duplicate(true)
 	)
+	_set_summon_registry_active(gate_to_use, true)
 	summoner_open_gate_cooldown = maxf(
 		float(summoner_open_gate_config.get("cooldown", 100.0)),
 		0.0
@@ -2195,6 +2206,7 @@ func _try_cast_summoner_open_gate() -> bool:
 
 
 func _on_summoner_open_gate_released(_open_gate: Node2D) -> void:
+	_set_summon_registry_active(_open_gate, false)
 	if summoner_open_gate_cooldown <= 0.0:
 		summoner_open_gate_cast_pending = true
 	queue_redraw()

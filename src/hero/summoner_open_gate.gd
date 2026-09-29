@@ -163,9 +163,24 @@ func _spawn_drone() -> void:
 		owner_attack_damage = maxi(int(owner_hero.get("attack_damage")), 1)
 	runtime_config["owner_attack_damage"] = owner_attack_damage
 	drone.call("activate", spawn_position, owner_hero, runtime_config)
+	var world := get_parent()
+	if (
+		is_instance_valid(world)
+		and world.has_method("set_hero_summon_active")
+	):
+		world.call("set_hero_summon_active", drone, true)
 
 	if drone_spawn_audio.stream != null:
 		drone_spawn_audio.play()
+
+
+func _on_drone_released(drone: Node2D) -> void:
+	var world := get_parent()
+	if (
+		is_instance_valid(world)
+		and world.has_method("set_hero_summon_active")
+	):
+		world.call("set_hero_summon_active", drone, false)
 
 
 func _acquire_drone() -> Node2D:
@@ -275,8 +290,8 @@ func _ensure_drone_pool(pool_size: int) -> void:
 		if drone == null:
 			break
 		world.add_child(drone)
-		if world.has_method("register_hero_summon_node"):
-			world.call("register_hero_summon_node", drone)
+		if not drone.released.is_connected(_on_drone_released):
+			drone.released.connect(_on_drone_released)
 		drone_pool.append(drone)
 
 

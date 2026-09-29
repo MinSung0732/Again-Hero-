@@ -100,7 +100,7 @@ var monsters_alive: int = 0
 const MONSTER_SPATIAL_CELL_SIZE := 256.0
 
 var active_monsters: Dictionary = {}
-var hero_summon_registry: Dictionary = {}
+var active_hero_summons: Dictionary = {}
 var monster_spatial_grid: Dictionary = {}
 var monster_spatial_grid_physics_frame: int = -1
 var exp_orb_pool: Array[Node2D] = []
@@ -535,7 +535,7 @@ func _start_battle() -> void:
 			valid_orb_pool.append(pooled_orb)
 	exp_orb_pool = valid_orb_pool
 	active_monsters.clear()
-	hero_summon_registry.clear()
+	active_hero_summons.clear()
 	monster_spatial_grid.clear()
 	monster_spatial_grid_physics_frame = -1
 	external_pause = false
@@ -1119,10 +1119,17 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 	return detail
 
 
-func register_hero_summon_node(summon: Node2D) -> void:
-	if not is_instance_valid(summon) or summon.is_queued_for_deletion():
+func set_hero_summon_active(
+	summon: Node2D,
+	is_active: bool
+) -> void:
+	if not is_instance_valid(summon):
 		return
-	hero_summon_registry[summon.get_instance_id()] = summon
+	var summon_id := summon.get_instance_id()
+	if is_active and not summon.is_queued_for_deletion():
+		active_hero_summons[summon_id] = summon
+	else:
+		active_hero_summons.erase(summon_id)
 
 
 func get_nearest_hero_combat_target(origin: Vector2) -> Node2D:
@@ -1133,11 +1140,10 @@ func get_nearest_hero_combat_target(origin: Vector2) -> Node2D:
 		nearest = hero
 		nearest_distance_sq = origin.distance_squared_to(hero.global_position)
 
-	# Summon pools are registered once when created. Iterate the Dictionary
-	# directly so target refresh does not allocate a SceneTree group snapshot
-	# or a temporary values() Array.
-	for summon_id in hero_summon_registry:
-		var raw_summon = hero_summon_registry.get(summon_id)
+	# Only active Stage 8 summons live in this registry. Target refresh avoids
+	# scanning preallocated inactive pools (especially the large drone pool).
+	for summon_id in active_hero_summons:
+		var raw_summon = active_hero_summons.get(summon_id)
 		if (
 			not is_instance_valid(raw_summon)
 			or raw_summon.is_queued_for_deletion()
@@ -3317,8 +3323,8 @@ func _set_combat_physics_enabled(enabled: bool) -> void:
 			if is_instance_valid(node):
 				node.set_physics_process(enabled)
 
-	for summon_id in hero_summon_registry:
-		var summon = hero_summon_registry.get(summon_id)
+	for summon_id in active_hero_summons:
+		var summon = active_hero_summons.get(summon_id)
 		if (
 			is_instance_valid(summon)
 			and bool(summon.get("active"))
