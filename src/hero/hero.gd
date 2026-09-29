@@ -392,29 +392,35 @@ func _get_world_query_runtime() -> RefCounted:
 
 
 func _get_monster_nodes_cached() -> Array:
-	return _get_world_query_runtime().call("get_monster_nodes_cached")
+	var result = _get_world_query_runtime().call(
+		"get_monster_nodes_cached"
+	)
+	return result if result is Array else []
 
 
 func _get_aux_group_nodes_cached(group_name: StringName) -> Array:
-	return _get_world_query_runtime().call(
+	var result = _get_world_query_runtime().call(
 		"get_aux_group_nodes_cached",
 		group_name
 	)
+	return result if result is Array else []
 
 
 func _get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
-	return _get_world_query_runtime().call(
+	var result = _get_world_query_runtime().call(
 		"get_monster_nodes_near",
 		origin,
 		radius
 	)
+	return result if result is Array else []
 
 
 func _get_monster_nodes_in_rect(world_rect: Rect2) -> Array:
-	return _get_world_query_runtime().call(
+	var result = _get_world_query_runtime().call(
 		"get_monster_nodes_in_rect",
 		world_rect
 	)
+	return result if result is Array else []
 
 
 var current_hp: int
