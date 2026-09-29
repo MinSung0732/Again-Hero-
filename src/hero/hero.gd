@@ -250,6 +250,7 @@ var gunner_deadeye_analysis_direction: Vector2 = Vector2.RIGHT
 var gunner_deadeye_analysis_score: float = 0.0
 var gunner_deadeye_analysis_hits: int = 0
 var gunner_escape_monster_positions: Array[Vector2] = []
+var gunner_query_candidates: Array = []
 var gunner_ricochet_stacks: int = 0
 var gunner_afterimage_shot_stacks: int = 0
 var gunner_reload_move_speed_bonus: float = 0.0
@@ -881,6 +882,7 @@ func configure_profile(profile: Dictionary) -> void:
 	gunner_deadeye_analysis_score = 0.0
 	gunner_deadeye_analysis_hits = 0
 	gunner_escape_monster_positions.clear()
+	gunner_query_candidates.clear()
 	gunner_ricochet_stacks = 0
 	gunner_afterimage_shot_stacks = 0
 	gunner_reload_move_speed_bonus = 0.0
@@ -4625,8 +4627,13 @@ func _find_gunner_escape_direction() -> Vector2:
 	var threat_radius := maxf(dash_distance + 360.0, 560.0)
 	var repulsion := Vector2.ZERO
 	gunner_escape_monster_positions.clear()
+	_fill_monster_nodes_near(
+		global_position,
+		threat_radius,
+		gunner_query_candidates
+	)
 
-	for node in _get_monster_nodes_near(global_position, threat_radius):
+	for node in gunner_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -4646,6 +4653,7 @@ func _find_gunner_escape_direction() -> Vector2:
 		var proximity := 1.0 - clampf(distance / threat_radius, 0.0, 1.0)
 		repulsion -= offset.normalized() * (0.35 + proximity * proximity * 2.65)
 
+	gunner_query_candidates.clear()
 	var preferred_away := (
 		repulsion.normalized()
 		if repulsion.length_squared() > 0.001
@@ -4741,14 +4749,20 @@ func _use_gunner_cylinder_strike() -> void:
 	var knockback := maxf(float(gunner_config.get("cylinder_knockback", 145.0)), 0.0)
 	var slow_multiplier := clampf(float(gunner_config.get("cylinder_slow_multiplier", 0.50)), 0.1, 1.0)
 	var slow_duration := maxf(float(gunner_config.get("cylinder_slow_duration", 2.0)), 0.1)
-	for node in _get_monster_nodes_near(global_position, radius):
+	var radius_sq := radius * radius
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		gunner_query_candidates
+	)
+	for node in gunner_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
 		if (
 			monster == null
 			or global_position.distance_squared_to(monster.global_position)
-			> radius * radius
+			> radius_sq
 		):
 			continue
 		var dir := global_position.direction_to(monster.global_position)
@@ -4760,6 +4774,7 @@ func _use_gunner_cylinder_strike() -> void:
 			monster.call("take_damage", maxi(1, int(round(float(attack_damage) * damage_ratio))))
 		monster.set_meta("gunner_slow_multiplier", slow_multiplier)
 		monster.set_meta("gunner_slow_until", Time.get_ticks_msec() + int(slow_duration * 1000.0))
+	gunner_query_candidates.clear()
 
 
 func _update_gunner_deadeye_aim_analysis() -> void:
