@@ -61,6 +61,14 @@ const ARCHMAGE_SKILL_KEYS: Array[String] = [
 	"harmony",
 	"storm",
 ]
+const ARCHMAGE_DEFAULT_BASIC_ELEMENTS: Array[String] = [
+	"earth",
+	"fire",
+	"ice",
+	"light",
+	"wind",
+	"holy",
+]
 const STAGE6_FRAME_DIR := "res://assets/art/heroes/stage6_berserker/frames"
 const STAGE7_FRAME_DIR := "res://assets/art/heroes/stage7_alchemist/frames"
 const STAGE8_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames"
@@ -250,6 +258,7 @@ var berserker_blood_art_cooldown_reduction: float = 0.0
 var berserker_skill_global_cooldown: float = 0.0
 
 var archmage_element_config: Dictionary = {}
+var archmage_basic_elements: Array[String] = []
 var archmage_last_element: String = ""
 var archmage_skill_config: Dictionary = {}
 var archmage_skill_cooldowns: Dictionary = {}
@@ -838,6 +847,7 @@ func configure_profile(profile: Dictionary) -> void:
 		if typeof(profile_archmage_elements) == TYPE_DICTIONARY
 		else {}
 	)
+	_configure_archmage_basic_elements()
 	archmage_last_element = ""
 	var profile_archmage_skills = profile.get("archmage_skills", {})
 	archmage_skill_config = (
@@ -7709,26 +7719,46 @@ func _fire_archmage_projectile(current_target: Node2D) -> void:
 	)
 
 
-func _roll_next_archmage_element() -> String:
+func _configure_archmage_basic_elements() -> void:
+	archmage_basic_elements.clear()
 	var configured = archmage_element_config.get(
 		"elements",
-		["earth", "fire", "ice", "light", "wind", "holy"]
+		ARCHMAGE_DEFAULT_BASIC_ELEMENTS
 	)
-	var elements: Array[String] = []
 	if typeof(configured) == TYPE_ARRAY:
 		for raw_element in configured:
 			var element := String(raw_element)
-			if not element.is_empty() and element not in elements:
-				elements.append(element)
+			if (
+				not element.is_empty()
+				and element not in archmage_basic_elements
+			):
+				archmage_basic_elements.append(element)
 
-	if elements.is_empty():
-		elements = ["earth", "fire", "ice", "light", "wind", "holy"]
+	if archmage_basic_elements.is_empty():
+		for element in ARCHMAGE_DEFAULT_BASIC_ELEMENTS:
+			archmage_basic_elements.append(element)
 
-	var candidates := elements.duplicate()
-	if candidates.size() > 1 and not archmage_last_element.is_empty():
-		candidates.erase(archmage_last_element)
 
-	var chosen := String(candidates[randi_range(0, candidates.size() - 1)])
+func _roll_next_archmage_element() -> String:
+	if archmage_basic_elements.is_empty():
+		_configure_archmage_basic_elements()
+	if archmage_basic_elements.is_empty():
+		return "earth"
+
+	var element_count := archmage_basic_elements.size()
+	var chosen_index := 0
+	if element_count > 1 and not archmage_last_element.is_empty():
+		var last_index := archmage_basic_elements.find(archmage_last_element)
+		if last_index >= 0:
+			chosen_index = randi_range(0, element_count - 2)
+			if chosen_index >= last_index:
+				chosen_index += 1
+		else:
+			chosen_index = randi_range(0, element_count - 1)
+	else:
+		chosen_index = randi_range(0, element_count - 1)
+
+	var chosen := archmage_basic_elements[chosen_index]
 	archmage_last_element = chosen
 	return chosen
 
