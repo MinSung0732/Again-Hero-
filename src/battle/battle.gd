@@ -290,12 +290,12 @@ func _rebuild_monster_spatial_grid() -> void:
 
 		var cell := _spatial_cell_for_position(monster.global_position)
 		if not monster_spatial_grid.has(cell):
-			var bucket: Array
+			var new_bucket: Array
 			if _monster_spatial_bucket_pool.is_empty():
-				bucket = []
+				new_bucket = []
 			else:
-				bucket = _monster_spatial_bucket_pool.pop_back()
-			monster_spatial_grid[cell] = bucket
+				new_bucket = _monster_spatial_bucket_pool.pop_back()
+			monster_spatial_grid[cell] = new_bucket
 		var bucket: Array = monster_spatial_grid[cell]
 		bucket.append(monster)
 
