@@ -1,0 +1,152 @@
+{
+  "source": "stge9_effect3_spritesheet.png",
+  "frame_count": 8,
+  "cell_size": [
+    420,
+    800
+  ],
+  "anchor": [
+    210,
+    400
+  ],
+  "alignment": "source horizontal axis y=389 placed at cell y=400; each visible frame centered at x=210",
+  "sheet": "stge9_effect3_aligned_8frame_sheet.png",
+  "frames": [
+    {
+      "file": "frame_01.png",
+      "source_x_range": [
+        0,
+        198
+      ],
+      "source_alpha_bbox": [
+        24,
+        106,
+        197,
+        672
+      ],
+      "paste_xy": [
+        124,
+        117
+      ]
+    },
+    {
+      "file": "frame_02.png",
+      "source_x_range": [
+        198,
+        475
+      ],
+      "source_alpha_bbox": [
+        202,
+        120,
+        467,
+        692
+      ],
+      "paste_xy": [
+        78,
+        131
+      ]
+    },
+    {
+      "file": "frame_03.png",
+      "source_x_range": [
+        475,
+        747
+      ],
+      "source_alpha_bbox": [
+        478,
+        55,
+        746,
+        724
+      ],
+      "paste_xy": [
+        76,
+        66
+      ]
+    },
+    {
+      "file": "frame_04.png",
+      "source_x_range": [
+        747,
+        1127
+      ],
+      "source_alpha_bbox": [
+        747,
+        9,
+        1126,
+        724
+      ],
+      "paste_xy": [
+        20,
+        20
+      ]
+    },
+    {
+      "file": "frame_05.png",
+      "source_x_range": [
+        1127,
+        1461
+      ],
+      "source_alpha_bbox": [
+        1127,
+        13,
+        1460,
+        692
+      ],
+      "paste_xy": [
+        44,
+        24
+      ]
+    },
+    {
+      "file": "frame_06.png",
+      "source_x_range": [
+        1461,
+        1755
+      ],
+      "source_alpha_bbox": [
+        1463,
+        41,
+        1750,
+        705
+      ],
+      "paste_xy": [
+        66,
+        52
+      ]
+    },
+    {
+      "file": "frame_07.png",
+      "source_x_range": [
+        1755,
+        1950
+      ],
+      "source_alpha_bbox": [
+        1755,
+        83,
+        1941,
+        724
+      ],
+      "paste_xy": [
+        117,
+        94
+      ]
+    },
+    {
+      "file": "frame_08.png",
+      "source_x_range": [
+        1950,
+        2172
+      ],
+      "source_alpha_bbox": [
+        1976,
+        172,
+        2158,
+        660
+      ],
+      "paste_xy": [
+        119,
+        183
+      ]
+    }
+  ]
+}
