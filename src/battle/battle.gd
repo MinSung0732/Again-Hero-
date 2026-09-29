@@ -366,7 +366,7 @@ func count_monsters_near(
 	return count
 
 
-func get_nearest_hero_combat_target(origin: Vector2) -> Node2D:
+func get_nearest_hostile_target_for_hero(origin: Vector2) -> Node2D:
 	var nearest: Node2D = null
 	var nearest_distance_sq := INF
 

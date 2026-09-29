@@ -7660,10 +7660,10 @@ func _find_nearest_monster() -> Node2D:
 	var battle := get_parent()
 	if (
 		is_instance_valid(battle)
-		and battle.has_method("get_nearest_hero_combat_target")
+		and battle.has_method("get_nearest_hostile_target_for_hero")
 	):
 		var registered_target = battle.call(
-			"get_nearest_hero_combat_target",
+			"get_nearest_hostile_target_for_hero",
 			global_position
 		)
 		if registered_target is Node2D:
