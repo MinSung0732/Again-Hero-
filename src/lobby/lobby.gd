@@ -178,9 +178,7 @@ func _ready() -> void:
 
 	_switch_tab("main")
 	_refresh_header()
-	_precache_stage_portraits()
 	_refresh_stage_card()
-	_rebuild_research_list()
 
 func _build_styles() -> void:
 	panel_style = _make_style(
@@ -2145,6 +2143,20 @@ func _enter_selected_stage() -> void:
 
 func _begin_threaded_scene_change(path: String) -> void:
 	if _scene_load_pending or path.is_empty():
+		return
+
+	var transition := get_node_or_null("/root/SceneTransition")
+	if (
+		is_instance_valid(transition)
+		and transition.has_method("change_scene")
+		and bool(transition.call(
+			"change_scene",
+			path,
+			"던전 불러오는 중..."
+		))
+	):
+		enter_stage_button.disabled = true
+		enter_stage_button.text = "던전 준비 중..."
 		return
 
 	var error := ResourceLoader.load_threaded_request(path, "PackedScene")

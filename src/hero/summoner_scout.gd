@@ -126,10 +126,20 @@ func _physics_process(delta: float) -> void:
 	if distance > attack_range * 0.88:
 		var move_multiplier := 1.0
 		if is_instance_valid(owner_hero):
-			if owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
+			if owner_hero.has_method("get_summoner_runtime_move_speed_multiplier"):
+				move_multiplier *= maxf(
+					float(owner_hero.call("get_summoner_runtime_move_speed_multiplier")),
+					0.1
+				)
+			elif owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
 				var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
 				move_multiplier *= maxf(float(support.get("move_speed", 1.0)), 0.1)
-			if owner_hero.has_method("get_summoner_scout_swarm_multipliers"):
+			if owner_hero.has_method("get_summoner_scout_move_speed_multiplier"):
+				move_multiplier *= maxf(
+					float(owner_hero.call("get_summoner_scout_move_speed_multiplier")),
+					0.1
+				)
+			elif owner_hero.has_method("get_summoner_scout_swarm_multipliers"):
 				var swarm: Dictionary = owner_hero.call("get_summoner_scout_swarm_multipliers")
 				move_multiplier *= maxf(float(swarm.get("move_speed", 1.0)), 0.1)
 		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier
@@ -150,24 +160,30 @@ func _find_nearest_target() -> Node2D:
 	if not is_instance_valid(battle):
 		return null
 
-	var candidates: Array = []
-	if battle.has_method("query_monsters_near"):
-		var result = battle.call("query_monsters_near", global_position, sense_range)
-		if result is Array:
-			candidates = result
-	else:
-		# Compatibility fallback only. Normal battle runtime uses the spatial query.
-		candidates = get_tree().get_nodes_in_group("monsters")
+	if battle.has_method("get_nearest_monster_target"):
+		var target = battle.call(
+			"get_nearest_monster_target",
+			global_position,
+			sense_range
+		)
+		return target as Node2D if target is Node2D else null
 
+	# Standalone/debug fallback only. Normal Battle runtime uses the spatial
+	# nearest-target query above and allocates no candidate Array.
 	var nearest: Node2D = null
 	var nearest_distance_sq := sense_range * sense_range
-	for raw_node in candidates:
+	for raw_node in get_tree().get_nodes_in_group("monsters"):
 		if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
 			continue
 		var monster := raw_node as Node2D
 		if monster == null:
 			continue
-		var distance_sq := global_position.distance_squared_to(monster.global_position)
+		var hp_value = monster.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		var distance_sq := global_position.distance_squared_to(
+			monster.global_position
+		)
 		if distance_sq > nearest_distance_sq:
 			continue
 		nearest_distance_sq = distance_sq
@@ -181,10 +197,27 @@ func _attack_target(current_target: Node2D) -> void:
 	var attack_speed_multiplier := 1.0
 	var damage_multiplier := 1.0
 	if is_instance_valid(owner_hero):
-		if owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
+		if owner_hero.has_method("get_summoner_runtime_attack_speed_multiplier"):
+			attack_speed_multiplier *= maxf(
+				float(owner_hero.call("get_summoner_runtime_attack_speed_multiplier")),
+				0.1
+			)
+		elif owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
 			var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
 			attack_speed_multiplier *= maxf(float(support.get("attack_speed", 1.0)), 0.1)
-		if owner_hero.has_method("get_summoner_scout_swarm_multipliers"):
+		if (
+			owner_hero.has_method("get_summoner_scout_attack_speed_multiplier")
+			and owner_hero.has_method("get_summoner_scout_damage_multiplier")
+		):
+			attack_speed_multiplier *= maxf(
+				float(owner_hero.call("get_summoner_scout_attack_speed_multiplier")),
+				0.1
+			)
+			damage_multiplier *= maxf(
+				float(owner_hero.call("get_summoner_scout_damage_multiplier")),
+				0.1
+			)
+		elif owner_hero.has_method("get_summoner_scout_swarm_multipliers"):
 			var swarm: Dictionary = owner_hero.call("get_summoner_scout_swarm_multipliers")
 			attack_speed_multiplier *= maxf(float(swarm.get("attack_speed", 1.0)), 0.1)
 			damage_multiplier *= maxf(float(swarm.get("damage", 1.0)), 0.1)

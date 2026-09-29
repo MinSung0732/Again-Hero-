@@ -21,7 +21,9 @@ const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const STATUS_EFFECT_CATALOG := preload("res://src/data/status_effect_catalog.gd")
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
-const STAGE1_FRAME_SIZE := Vector2(64, 64)
+const HERO_WORLD_QUERY_RUNTIME := preload("res://src/hero/hero_world_query_runtime.gd")
+const HERO_SUMMONER_RUNTIME := preload("res://src/hero/hero_summoner_runtime.gd")
+const HERO_FIGHTER_RUNTIME := preload("res://src/hero/hero_fighter_runtime.gd")
 const STAGE1_FRAME_DIR := "res://assets/art/heroes/stage1_mage/frames"
 const STAGE1_SHIELD_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_02"
 const STAGE1_SHIELD_EFFECT_FRAME_COUNT := 6
@@ -42,6 +44,47 @@ const STAGE3_AURA_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/e
 const STAGE3_CHARGE_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect5"
 const STAGE4_FRAME_DIR := "res://assets/art/heroes/stage4_gunner/frames"
 const STAGE5_FRAME_DIR := "res://assets/art/heroes/stage5_archmage/frames"
+const ARCHMAGE_OFFENSIVE_SKILL_KEYS: Array[String] = [
+	"combustion",
+	"ice_bolt",
+	"earth_spikes",
+	"holy_power",
+	"chain_dagger",
+	"storm",
+]
+const ARCHMAGE_SKILL_KEYS: Array[String] = [
+	"combustion",
+	"ice_bolt",
+	"earth_spikes",
+	"holy_power",
+	"chain_dagger",
+	"harmony",
+	"storm",
+]
+const ARCHMAGE_DEFAULT_BASIC_ELEMENTS: Array[String] = [
+	"earth",
+	"fire",
+	"ice",
+	"light",
+	"wind",
+	"holy",
+]
+const ARCHMAGE_ORB_ELEMENTS: Array[String] = [
+	"fire",
+	"water",
+	"wind",
+	"electric",
+	"earth",
+	"holy",
+]
+const ARCHMAGE_ORB_FRAME_INDEX := {
+	"fire": 1,
+	"water": 2,
+	"wind": 3,
+	"electric": 4,
+	"earth": 5,
+	"holy": 7,
+}
 const STAGE6_FRAME_DIR := "res://assets/art/heroes/stage6_berserker/frames"
 const STAGE7_FRAME_DIR := "res://assets/art/heroes/stage7_alchemist/frames"
 const STAGE8_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames"
@@ -94,7 +137,6 @@ const HERO_BASE_ATTACK_GROWTH_PER_LEVEL := 0.02
 const HERO_ATTACK_MILESTONE_INTERVAL := 10
 const HERO_ATTACK_MILESTONE_BONUS := 0.05
 const HERO_ANIMATION_DUPLICATE_RESTART_GUARD_MSEC := 70
-const MONSTER_QUERY_SCRATCH_COUNT := 16
 
 static var _archmage_fx_frames_cache: Dictionary = {}
 static var _purifier_protection_frames_cache: SpriteFrames
@@ -126,7 +168,6 @@ var heal_item_multiplier: float = 1.0
 var hero_id: String = "ranged_rookie"
 var hero_display_name: String = "견습 마법용사"
 var hero_archetype: String = "ranged_kiter"
-var sprite_sheet_path: String = ""
 var sprite_frame_dir: String = ""
 var augment_pool_ids: Array[String] = []
 var level_growth_config: Dictionary = {}
@@ -155,6 +196,7 @@ var rogue_lifesteal_buffer: float = 0.0
 var rogue_combo_direction: Vector2 = Vector2.RIGHT
 var rogue_attack_collision_ignore_timer: float = 0.0
 var rogue_saved_collision_mask: int = -1
+var rogue_query_candidates: Array = []
 var fighter_basic_config: Dictionary = {}
 var fighter_guard_active: bool = false
 var fighter_guard_duration_timer: float = 0.0
@@ -186,6 +228,9 @@ var fighter_charge_duration: float = 0.0
 var fighter_charge_elapsed: float = 0.0
 var fighter_charge_chain_count: int = 0
 var fighter_charge_afterimage_timer: float = 0.0
+var fighter_charge_target_candidates: Array = []
+var fighter_charge_impact_candidates: Array = []
+var fighter_combat_candidates: Array = []
 var fighter_courage_bonus: float = 0.0
 var fighter_charge_kill_heal: float = 0.0
 
@@ -205,6 +250,12 @@ var gunner_deadeye_active: bool = false
 var gunner_deadeye_shots_left: int = 0
 var gunner_deadeye_shot_timer: float = 0.0
 var gunner_deadeye_direction: Vector2 = Vector2.RIGHT
+var gunner_deadeye_monster_offsets: Array[Vector2] = []
+var gunner_deadeye_analysis_direction: Vector2 = Vector2.RIGHT
+var gunner_deadeye_analysis_score: float = 0.0
+var gunner_deadeye_analysis_hits: int = 0
+var gunner_escape_monster_positions: Array[Vector2] = []
+var gunner_query_candidates: Array = []
 var gunner_ricochet_stacks: int = 0
 var gunner_afterimage_shot_stacks: int = 0
 var gunner_reload_move_speed_bonus: float = 0.0
@@ -234,21 +285,28 @@ var berserker_missing_hp_bonus_override: float = -1.0
 var berserker_killing_urge_bonus: float = 0.0
 var berserker_blood_art_cooldown_reduction: float = 0.0
 var berserker_skill_global_cooldown: float = 0.0
+var berserker_query_candidates: Array = []
 
 var archmage_element_config: Dictionary = {}
+var archmage_basic_elements: Array[String] = []
 var archmage_last_element: String = ""
 var archmage_skill_config: Dictionary = {}
 var archmage_skill_cooldowns: Dictionary = {}
 var archmage_element_orbs: Dictionary = {}
 var archmage_orbit_sprites: Dictionary = {}
+var archmage_orbit_order: Array[String] = []
 var archmage_orbit_angle: float = 0.0
 var archmage_chain_dagger_active: bool = false
 var archmage_chain_dagger_active_count: int = 0
 var archmage_chain_multithrow_stacks: int = 0
+var archmage_chain_target_candidates: Array[Node2D] = []
+var archmage_chain_target_results: Array[Node2D] = []
+var archmage_query_candidates: Array = []
 var archmage_casting_sequence: bool = false
 var archmage_casting_sequence_count: int = 0
 var archmage_multicast_stacks: int = 0
 var archmage_multicast_active: bool = false
+var archmage_multicast_candidates: Array[String] = []
 var archmage_blink_stacks: int = 0
 var archmage_blink_cooldown_timer: float = 0.0
 var archmage_cooldown_reduction: float = 0.0
@@ -265,8 +323,10 @@ var alchemist_throw_index: int = 0
 var alchemist_throw_positions: Array[Vector2] = []
 var alchemist_direct_chest_target: Node2D = null
 var alchemist_vial_pool: Array[Node2D] = []
+var alchemist_mystery_vial_pool: Array[Node2D] = []
 var alchemist_poison_pool: Array[Node2D] = []
 var alchemist_material_pool: Array[Node2D] = []
+var alchemist_bonus_material_pool: Array[Node2D] = []
 var alchemist_bonus_materials: Array[Node2D] = []
 var alchemist_mixture_field_config: Dictionary = {}
 var alchemist_mystery_cauldron_config: Dictionary = {}
@@ -281,6 +341,11 @@ var alchemist_field_run_exit_timer: float = 0.0
 var alchemist_emergency_config: Dictionary = {}
 var alchemist_emergency_cooldown: float = 0.0
 var alchemist_emergency_trapped_timer: float = 0.0
+var alchemist_emergency_threats: Array[Node2D] = []
+var alchemist_movement_query_candidates: Array = []
+var alchemist_damage_query_candidates: Array = []
+var alchemist_emergency_query_candidates: Array = []
+var alchemist_emergency_escape_direction: Vector2 = Vector2.RIGHT
 var alchemist_philosopher_config: Dictionary = {}
 var alchemist_materials_collected: int = 0
 var alchemist_philosopher_used: bool = false
@@ -311,6 +376,11 @@ var summoner_scout_pool: Array[Node2D] = []
 var summoner_hound_pool: Array[Node2D] = []
 var summoner_watcher_pool: Array[Node2D] = []
 var summoner_open_gate_pool: Array[Node2D] = []
+var summoner_active_regular_count: int = 0
+var summoner_active_gatekeepers: int = 0
+var summoner_active_scouts: int = 0
+var summoner_active_hounds: int = 0
+var summoner_active_watchers: int = 0
 var summoner_gatekeeper_cooldown: float = 0.0
 var summoner_scout_cooldown: float = 0.0
 var summoner_hound_cooldown: float = 0.0
@@ -330,6 +400,7 @@ var summoner_ai_config: Dictionary = {}
 var summoner_ai_personality: String = "balanced"
 var summoner_ai_choice_counts: Dictionary = {}
 var summoner_ai_last_choice: String = ""
+var summoner_ai_query_candidates: Array = []
 var summoner_runtime_ready: bool = false
 var summoner_basic_effect: AnimatedSprite2D = null
 var summoner_basic_audio: AudioStreamPlayer = null
@@ -395,134 +466,74 @@ var ai_settings: Dictionary = {
 
 var battlefield_size: Vector2 = Vector2(3200, 3200)
 
-# Same-frame monster queries are common across targeting, AI and AoE skills.
-# Cache only for the current process/physics frame pair so combat semantics do not change.
-var _monster_nodes_cache: Array = []
-var _monster_nodes_cache_process_frame: int = -1
-var _monster_nodes_cache_physics_frame: int = -1
-var _monster_query_scratch_pool: Array = []
-var _monster_query_scratch_index: int = 0
-var _monster_query_scratch_process_frame: int = -1
-var _monster_query_scratch_physics_frame: int = -1
+# World-query cache state lives outside this giant facade. Keep these method
+# names stable because hero projectiles and skills already call them.
+var _world_query_runtime: RefCounted
 var _movement_monster_scratch: Array = []
-var _combat_target_scratch: Array = []
-var _aux_group_nodes_cache: Dictionary = {}
-var _aux_group_nodes_cache_process_frame: int = -1
-var _aux_group_nodes_cache_physics_frame: int = -1
+var _combat_monster_scratch: Array = []
 
 
-func _acquire_monster_query_scratch() -> Array:
-	var process_frame := Engine.get_process_frames()
-	var physics_frame := Engine.get_physics_frames()
-	if (
-		process_frame != _monster_query_scratch_process_frame
-		or physics_frame != _monster_query_scratch_physics_frame
-	):
-		_monster_query_scratch_index = 0
-		_monster_query_scratch_process_frame = process_frame
-		_monster_query_scratch_physics_frame = physics_frame
-
-	var slot := _monster_query_scratch_index
-	if slot >= _monster_query_scratch_pool.size():
-		_monster_query_scratch_pool.append([])
-	var result: Array = _monster_query_scratch_pool[slot]
-	_monster_query_scratch_index = (
-		_monster_query_scratch_index + 1
-	) % MONSTER_QUERY_SCRATCH_COUNT
-	result.clear()
-	return result
+func _get_world_query_runtime() -> RefCounted:
+	if _world_query_runtime == null:
+		_world_query_runtime = HERO_WORLD_QUERY_RUNTIME.new(self)
+	return _world_query_runtime
 
 
 func _get_monster_nodes_cached() -> Array:
-	var process_frame := Engine.get_process_frames()
-	var physics_frame := Engine.get_physics_frames()
-	if (
-		process_frame != _monster_nodes_cache_process_frame
-		or physics_frame != _monster_nodes_cache_physics_frame
-	):
-		_monster_nodes_cache.clear()
-		var battle := get_parent()
-		if (
-			is_instance_valid(battle)
-			and battle.has_method("fill_active_monsters")
-		):
-			battle.call(
-				"fill_active_monsters",
-				_monster_nodes_cache
-			)
-		else:
-			_monster_nodes_cache.append_array(
-				get_tree().get_nodes_in_group("monsters")
-			)
-		_monster_nodes_cache_process_frame = process_frame
-		_monster_nodes_cache_physics_frame = physics_frame
-	return _monster_nodes_cache
+	var result = _get_world_query_runtime().call(
+		"get_monster_nodes_cached"
+	)
+	return result if result is Array else []
 
 
 func _get_aux_group_nodes_cached(group_name: StringName) -> Array:
-	var process_frame := Engine.get_process_frames()
-	var physics_frame := Engine.get_physics_frames()
-	if (
-		process_frame != _aux_group_nodes_cache_process_frame
-		or physics_frame != _aux_group_nodes_cache_physics_frame
-	):
-		_aux_group_nodes_cache.clear()
-		_aux_group_nodes_cache_process_frame = process_frame
-		_aux_group_nodes_cache_physics_frame = physics_frame
+	var result = _get_world_query_runtime().call(
+		"get_aux_group_nodes_cached",
+		group_name
+	)
+	return result if result is Array else []
 
-	if not _aux_group_nodes_cache.has(group_name):
-		_aux_group_nodes_cache[group_name] = get_tree().get_nodes_in_group(
-			group_name
-		)
-	var cached = _aux_group_nodes_cache.get(group_name)
-	return cached if cached is Array else []
+
+func _fill_monster_nodes_near(
+	origin: Vector2,
+	radius: float,
+	result: Array
+) -> void:
+	_get_world_query_runtime().call(
+		"fill_monster_nodes_near",
+		origin,
+		radius,
+		result
+	)
 
 
 func _get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
-	var result := _acquire_monster_query_scratch()
-	var battle := get_parent()
-	if (
-		is_instance_valid(battle)
-		and battle.has_method("fill_monsters_near")
-	):
-		battle.call(
-			"fill_monsters_near",
-			origin,
-			radius,
-			result
-		)
-		return result
+	var result = _get_world_query_runtime().call(
+		"get_monster_nodes_near",
+		origin,
+		radius
+	)
+	return result if result is Array else []
 
-	result.append_array(_get_monster_nodes_cached())
-	return result
+
+func _fill_monster_nodes_in_rect(
+	world_rect: Rect2,
+	result: Array
+) -> void:
+	_get_world_query_runtime().call(
+		"fill_monster_nodes_in_rect",
+		world_rect,
+		result
+	)
 
 
 func _get_monster_nodes_in_rect(world_rect: Rect2) -> Array:
-	var result := _acquire_monster_query_scratch()
-	var battle := get_parent()
-	if (
-		is_instance_valid(battle)
-		and battle.has_method("fill_monsters_in_rect")
-	):
-		battle.call(
-			"fill_monsters_in_rect",
-			world_rect,
-			result
-		)
-		return result
+	var result = _get_world_query_runtime().call(
+		"get_monster_nodes_in_rect",
+		world_rect
+	)
+	return result if result is Array else []
 
-	result.append_array(_get_monster_nodes_cached())
-	return result
-
-
-func _get_active_monster_count() -> int:
-	var battle := get_parent()
-	if (
-		is_instance_valid(battle)
-		and battle.has_method("get_active_monster_count")
-	):
-		return int(battle.call("get_active_monster_count"))
-	return _get_monster_nodes_cached().size()
 
 var current_hp: int
 var level: int = 1
@@ -594,13 +605,14 @@ func configure_profile(profile: Dictionary) -> void:
 	status_resistances.clear()
 	offensive_memory_events.clear()
 	status_effect_events.clear()
+	_movement_monster_scratch.clear()
+	_combat_monster_scratch.clear()
 	ai_observed_context.clear()
 	ai_observed_context_time = 0.0
 
 	hero_id = String(profile.get("id", hero_id))
 	hero_display_name = String(profile.get("display_name", hero_display_name))
 	hero_archetype = String(profile.get("archetype", hero_archetype))
-	sprite_sheet_path = String(profile.get("sprite_sheet_path", ""))
 	sprite_frame_dir = String(profile.get("sprite_frame_dir", ""))
 	var profile_level_growth = profile.get("level_growth", {})
 	level_growth_config = (
@@ -632,6 +644,9 @@ func configure_profile(profile: Dictionary) -> void:
 	fighter_charge_elapsed = 0.0
 	fighter_charge_chain_count = 0
 	fighter_charge_afterimage_timer = 0.0
+	fighter_charge_target_candidates.clear()
+	fighter_charge_impact_candidates.clear()
+	fighter_combat_candidates.clear()
 	fighter_courage_bonus = 0.0
 	fighter_charge_kill_heal = 0.0
 	fighter_slash_mastery_stacks = 0
@@ -684,6 +699,7 @@ func configure_profile(profile: Dictionary) -> void:
 	berserker_killing_urge_bonus = 0.0
 	berserker_blood_art_cooldown_reduction = 0.0
 	berserker_skill_global_cooldown = 0.0
+	berserker_query_candidates.clear()
 
 	var profile_alchemist = profile.get("alchemist", {})
 	alchemist_config = (
@@ -700,8 +716,10 @@ func configure_profile(profile: Dictionary) -> void:
 	alchemist_throw_positions.clear()
 	alchemist_direct_chest_target = null
 	alchemist_vial_pool.clear()
+	alchemist_mystery_vial_pool.clear()
 	alchemist_poison_pool.clear()
 	alchemist_material_pool.clear()
+	alchemist_bonus_material_pool.clear()
 	alchemist_bonus_materials.clear()
 	alchemist_cauldrons.clear()
 	alchemist_mystery_cauldron_cooldown = 0.0
@@ -731,6 +749,11 @@ func configure_profile(profile: Dictionary) -> void:
 	)
 	alchemist_emergency_cooldown = 0.0
 	alchemist_emergency_trapped_timer = 0.0
+	alchemist_emergency_threats.clear()
+	alchemist_movement_query_candidates.clear()
+	alchemist_damage_query_candidates.clear()
+	alchemist_emergency_query_candidates.clear()
+	alchemist_emergency_escape_direction = Vector2.RIGHT
 	var raw_philosopher = alchemist_config.get("philosopher_stone", {})
 	alchemist_philosopher_config = (
 		raw_philosopher.duplicate(true)
@@ -773,6 +796,7 @@ func configure_profile(profile: Dictionary) -> void:
 	)
 	summoner_ai_choice_counts.clear()
 	summoner_ai_last_choice = ""
+	summoner_ai_query_candidates.clear()
 	summoner_ai_personality = _roll_summoner_ai_personality()
 	var raw_gatekeeper = summoner_config.get("gatekeeper", {})
 	summoner_gatekeeper_config = (
@@ -824,6 +848,11 @@ func configure_profile(profile: Dictionary) -> void:
 	summoner_hound_pool.clear()
 	summoner_watcher_pool.clear()
 	summoner_open_gate_pool.clear()
+	summoner_active_regular_count = 0
+	summoner_active_gatekeepers = 0
+	summoner_active_scouts = 0
+	summoner_active_hounds = 0
+	summoner_active_watchers = 0
 	summoner_gatekeeper_cooldown = maxf(
 		float(summoner_gatekeeper_config.get("initial_cooldown", 0.0)),
 		0.0
@@ -890,6 +919,12 @@ func configure_profile(profile: Dictionary) -> void:
 	gunner_deadeye_shots_left = 0
 	gunner_deadeye_shot_timer = 0.0
 	gunner_deadeye_direction = Vector2.RIGHT
+	gunner_deadeye_monster_offsets.clear()
+	gunner_deadeye_analysis_direction = Vector2.RIGHT
+	gunner_deadeye_analysis_score = 0.0
+	gunner_deadeye_analysis_hits = 0
+	gunner_escape_monster_positions.clear()
+	gunner_query_candidates.clear()
 	gunner_ricochet_stacks = 0
 	gunner_afterimage_shot_stacks = 0
 	gunner_reload_move_speed_bonus = 0.0
@@ -903,6 +938,7 @@ func configure_profile(profile: Dictionary) -> void:
 		if typeof(profile_archmage_elements) == TYPE_DICTIONARY
 		else {}
 	)
+	_configure_archmage_basic_elements()
 	archmage_last_element = ""
 	var profile_archmage_skills = profile.get("archmage_skills", {})
 	archmage_skill_config = (
@@ -911,26 +947,26 @@ func configure_profile(profile: Dictionary) -> void:
 		else {}
 	)
 	archmage_skill_cooldowns.clear()
-	for skill_key in [
-		"combustion",
-		"ice_bolt",
-		"earth_spikes",
-		"holy_power",
-		"chain_dagger",
-		"harmony",
-		"storm",
-	]:
+	for skill_key in ARCHMAGE_SKILL_KEYS:
 		archmage_skill_cooldowns[skill_key] = 0.0
 	archmage_element_orbs.clear()
+	archmage_orbit_order.clear()
+	for raw_sprite in archmage_orbit_sprites.values():
+		if is_instance_valid(raw_sprite):
+			raw_sprite.queue_free()
 	archmage_orbit_sprites.clear()
 	archmage_orbit_angle = 0.0
 	archmage_chain_dagger_active = false
 	archmage_chain_dagger_active_count = 0
 	archmage_chain_multithrow_stacks = 0
+	archmage_chain_target_candidates.clear()
+	archmage_chain_target_results.clear()
+	archmage_query_candidates.clear()
 	archmage_casting_sequence = false
 	archmage_casting_sequence_count = 0
 	archmage_multicast_stacks = 0
 	archmage_multicast_active = false
+	archmage_multicast_candidates.clear()
 	archmage_blink_stacks = 0
 	archmage_blink_cooldown_timer = 0.0
 	archmage_cooldown_reduction = 0.0
@@ -965,6 +1001,7 @@ func configure_profile(profile: Dictionary) -> void:
 	rogue_combo_direction = Vector2.RIGHT
 	rogue_attack_collision_ignore_timer = 0.0
 	rogue_saved_collision_mask = -1
+	rogue_query_candidates.clear()
 	fighter_guard_active = false
 	fighter_guard_duration_timer = 0.0
 	fighter_guard_stored_damage = 0.0
@@ -1329,67 +1366,87 @@ func _physics_process(delta: float) -> void:
 
 
 
-func _get_summoner_level_slot_bonus() -> int:
-	return maxi(int(floor(float(level) / 5.0)), 0)
-
-
 func _get_summoner_slot_capacity() -> int:
-	return maxi(
-		summoner_slot_base
-		+ summoner_slot_bonus
-		+ _get_summoner_level_slot_bonus(),
-		1
+	return HERO_SUMMONER_RUNTIME.get_slot_capacity(
+		summoner_slot_base,
+		summoner_slot_bonus,
+		level
 	)
 
 
 func _get_active_summon_count() -> int:
-	var count := 0
-	for summon in summoner_gatekeeper_pool:
-		if is_instance_valid(summon) and bool(summon.get("active")):
-			count += 1
-	for summon in summoner_scout_pool:
-		if is_instance_valid(summon) and bool(summon.get("active")):
-			count += 1
-	for summon in summoner_hound_pool:
-		if is_instance_valid(summon) and bool(summon.get("active")):
-			count += 1
-	for summon in summoner_watcher_pool:
-		if is_instance_valid(summon) and bool(summon.get("active")):
-			count += 1
-	return count
+	return summoner_active_regular_count
 
 
 func _get_active_summoner_watcher_count() -> int:
-	var count := 0
-	for summon in summoner_watcher_pool:
-		if is_instance_valid(summon) and bool(summon.get("active")):
-			count += 1
-	return count
+	return summoner_active_watchers
+
+
+func _adjust_summoner_active_count(
+	summon_kind: StringName,
+	delta: int
+) -> void:
+	if delta == 0:
+		return
+	match summon_kind:
+		&"gatekeeper":
+			summoner_active_gatekeepers = maxi(
+				summoner_active_gatekeepers + delta,
+				0
+			)
+		&"scout":
+			summoner_active_scouts = maxi(
+				summoner_active_scouts + delta,
+				0
+			)
+		&"hound":
+			summoner_active_hounds = maxi(
+				summoner_active_hounds + delta,
+				0
+			)
+		&"watcher":
+			summoner_active_watchers = maxi(
+				summoner_active_watchers + delta,
+				0
+			)
+		_:
+			return
+	summoner_active_regular_count = (
+		summoner_active_gatekeepers
+		+ summoner_active_scouts
+		+ summoner_active_hounds
+		+ summoner_active_watchers
+	)
 
 
 func _get_summoner_watcher_max_active() -> int:
-	return maxi(
-		int(summoner_watcher_config.get("max_active", 2))
-		+ _get_summoner_augment_stacks("summoner_watcher_network"),
-		0
+	return HERO_SUMMONER_RUNTIME.get_watcher_max_active(
+		summoner_watcher_config,
+		_get_summoner_augment_stacks("summoner_watcher_network")
 	)
 
 
 func _get_next_summoner_watcher_follow_slot() -> int:
-	var max_active := _get_summoner_watcher_max_active()
-	for slot_index in range(max_active):
-		var occupied := false
-		for summon in summoner_watcher_pool:
-			if (
-				is_instance_valid(summon)
-				and bool(summon.get("active"))
-				and int(summon.get("follow_slot")) == slot_index
-			):
-				occupied = true
-				break
-		if not occupied:
-			return slot_index
-	return -1
+	return HERO_SUMMONER_RUNTIME.get_next_watcher_follow_slot(
+		summoner_watcher_pool,
+		_get_summoner_watcher_max_active()
+	)
+
+
+func _set_summon_registry_active(
+	summon: Node2D,
+	is_active: bool
+) -> void:
+	var battle := get_parent()
+	if (
+		is_instance_valid(battle)
+		and battle.has_method("set_hero_summon_active")
+	):
+		battle.call(
+			"set_hero_summon_active",
+			summon,
+			is_active
+		)
 
 
 func _ensure_summoner_pool_capacity() -> void:
@@ -1399,68 +1456,73 @@ func _ensure_summoner_pool_capacity() -> void:
 	if not is_instance_valid(world_parent):
 		return
 
-	var pool_size := _get_summoner_slot_capacity() + SUMMONER_POOL_HEADROOM
-	while summoner_gatekeeper_pool.size() < pool_size:
-		var gatekeeper := SUMMONER_GATEKEEPER_SCENE.instantiate() as Node2D
-		if gatekeeper == null:
-			break
-		world_parent.add_child(gatekeeper)
-		gatekeeper.connect(
-			"released",
-			Callable(self, "_on_summoner_gatekeeper_released")
+	var pool_size := (
+		_get_summoner_slot_capacity()
+		+ SUMMONER_POOL_HEADROOM
+	)
+	HERO_SUMMONER_RUNTIME.ensure_pool_capacity(
+		world_parent,
+		summoner_gatekeeper_pool,
+		SUMMONER_GATEKEEPER_SCENE,
+		pool_size,
+		Callable(
+			self,
+			"_on_summoner_gatekeeper_released"
 		)
-		summoner_gatekeeper_pool.append(gatekeeper)
+	)
+	HERO_SUMMONER_RUNTIME.ensure_pool_capacity(
+		world_parent,
+		summoner_scout_pool,
+		SUMMONER_SCOUT_SCENE,
+		pool_size,
+		Callable(
+			self,
+			"_on_summoner_scout_released"
+		)
+	)
+	HERO_SUMMONER_RUNTIME.ensure_pool_capacity(
+		world_parent,
+		summoner_hound_pool,
+		SUMMONER_HOUND_SCENE,
+		pool_size,
+		Callable(
+			self,
+			"_on_summoner_hound_released"
+		)
+	)
 
-	while summoner_scout_pool.size() < pool_size:
-		var scout := SUMMONER_SCOUT_SCENE.instantiate() as Node2D
-		if scout == null:
-			break
-		world_parent.add_child(scout)
-		scout.connect(
-			"released",
-			Callable(self, "_on_summoner_scout_released")
+	HERO_SUMMONER_RUNTIME.ensure_pool_capacity(
+		world_parent,
+		summoner_watcher_pool,
+		SUMMONER_WATCHER_SCENE,
+		_get_summoner_watcher_max_active(),
+		Callable(
+			self,
+			"_on_summoner_watcher_released"
 		)
-		summoner_scout_pool.append(scout)
-
-	while summoner_hound_pool.size() < pool_size:
-		var hound := SUMMONER_HOUND_SCENE.instantiate() as Node2D
-		if hound == null:
-			break
-		world_parent.add_child(hound)
-		hound.connect(
-			"released",
-			Callable(self, "_on_summoner_hound_released")
-		)
-		summoner_hound_pool.append(hound)
-
-	var watcher_pool_size := _get_summoner_watcher_max_active()
-	while summoner_watcher_pool.size() < watcher_pool_size:
-		var watcher := SUMMONER_WATCHER_SCENE.instantiate() as Node2D
-		if watcher == null:
-			break
-		world_parent.add_child(watcher)
-		watcher.connect(
-			"released",
-			Callable(self, "_on_summoner_watcher_released")
-		)
-		summoner_watcher_pool.append(watcher)
+	)
 
 	var open_gate_pool_size := maxi(
-		int(summoner_open_gate_config.get("pool_size", 1)),
+		int(
+			summoner_open_gate_config.get(
+				"pool_size",
+				1
+			)
+		),
 		0
 	)
-	while summoner_open_gate_pool.size() < open_gate_pool_size:
-		var open_gate := SUMMONER_OPEN_GATE_SCENE.instantiate() as Node2D
-		if open_gate == null:
-			break
-		world_parent.add_child(open_gate)
-		open_gate.connect(
-			"released",
-			Callable(self, "_on_summoner_open_gate_released")
-		)
-		if open_gate.has_method("prepare_pool"):
-			open_gate.call("prepare_pool", summoner_open_gate_config)
-		summoner_open_gate_pool.append(open_gate)
+	HERO_SUMMONER_RUNTIME.ensure_pool_capacity(
+		world_parent,
+		summoner_open_gate_pool,
+		SUMMONER_OPEN_GATE_SCENE,
+		open_gate_pool_size,
+		Callable(
+			self,
+			"_on_summoner_open_gate_released"
+		),
+		&"prepare_pool",
+		summoner_open_gate_config
+	)
 
 
 func _ensure_summoner_runtime() -> void:
@@ -1518,22 +1580,16 @@ func _ensure_summoner_runtime() -> void:
 	add_child(summoner_basic_audio)
 
 	summoner_runtime_ready = (
-		not summoner_gatekeeper_pool.is_empty()
-		and (
-			summoner_scout_config.is_empty()
-			or not summoner_scout_pool.is_empty()
-		)
-		and (
-			summoner_hound_config.is_empty()
-			or not summoner_hound_pool.is_empty()
-		)
-		and (
-			summoner_watcher_config.is_empty()
-			or not summoner_watcher_pool.is_empty()
-		)
-		and (
-			summoner_open_gate_config.is_empty()
-			or not summoner_open_gate_pool.is_empty()
+		HERO_SUMMONER_RUNTIME.are_runtime_pools_ready(
+			summoner_gatekeeper_pool,
+			summoner_scout_config,
+			summoner_scout_pool,
+			summoner_hound_config,
+			summoner_hound_pool,
+			summoner_watcher_config,
+			summoner_watcher_pool,
+			summoner_open_gate_config,
+			summoner_open_gate_pool
 		)
 	)
 	if summoner_runtime_ready:
@@ -1659,151 +1715,167 @@ func _physics_process_summoner(delta: float) -> void:
 
 
 func _roll_summoner_ai_personality() -> String:
-	var personalities = summoner_ai_config.get(
-		"personalities",
-		["balanced", "aggressive", "defensive", "swarm", "focus"]
+	return HERO_SUMMONER_RUNTIME.roll_ai_personality(
+		summoner_ai_config
 	)
-	if not personalities is Array or personalities.is_empty():
-		return "balanced"
-	return String(personalities[randi() % personalities.size()])
-
-
-func _count_active_summons(pool: Array[Node2D]) -> int:
-	var count := 0
-	for summon in pool:
-		if is_instance_valid(summon) and bool(summon.get("active")):
-			count += 1
-	return count
 
 
 func _get_summoner_target_hp_ratio() -> float:
-	if not is_instance_valid(target):
-		return 0.0
-	var raw_current = target.get("current_hp")
-	var raw_max = target.get("max_hp")
-	if raw_current == null or raw_max == null:
-		return 0.0
-	var target_max := maxf(float(raw_max), 1.0)
-	return clampf(float(raw_current) / target_max, 0.0, 1.0)
+	return HERO_SUMMONER_RUNTIME.get_target_hp_ratio(target)
 
 
-func _score_summoner_ai_candidate(skill_id: String, nearby_count: int) -> float:
-	var score := 50.0
-	var hero_hp_ratio := clampf(float(current_hp) / float(maxi(max_hp, 1)), 0.0, 1.0)
-	var target_hp_ratio := _get_summoner_target_hp_ratio()
-	var gatekeepers := _count_active_summons(summoner_gatekeeper_pool)
-	var scouts := _count_active_summons(summoner_scout_pool)
-	var hounds := _count_active_summons(summoner_hound_pool)
-	var watchers := _count_active_summons(summoner_watcher_pool)
-	var same_active := 0
-
-	match skill_id:
-		"gatekeeper":
-			same_active = gatekeepers
-			score += (1.0 - hero_hp_ratio) * 32.0
-			score += minf(float(nearby_count), 10.0) * 1.8
-			score += float(hounds + scouts) * 2.5
-		"scout":
-			same_active = scouts
-			score += minf(float(nearby_count), 12.0) * 2.3
-			score += 8.0 if nearby_count >= 5 else 0.0
-		"hound":
-			same_active = hounds
-			score += 20.0 if is_instance_valid(target) and nearby_count <= 4 else 0.0
-			score += target_hp_ratio * 18.0
-			score -= maxf(float(nearby_count - 6), 0.0) * 2.0
-		"watcher":
-			same_active = watchers
-			score += 22.0 if is_instance_valid(target) else -12.0
-			score += target_hp_ratio * 12.0
-			score += float(hounds + scouts) * 2.0
-		"open_gate":
-			score += minf(float(nearby_count), 14.0) * 3.0
-			score += (1.0 - hero_hp_ratio) * 12.0
-			score += 16.0 if nearby_count >= 8 else 0.0
-			score += 10.0 if _get_active_summon_count() <= 2 else 0.0
-
-	if skill_id != "open_gate":
-		score -= float(same_active) * 11.0
-
-	var past_picks := int(summoner_ai_choice_counts.get(skill_id, 0))
-	score += minf(float(past_picks), 6.0) * 1.8
-	if summoner_ai_last_choice == skill_id:
-		score -= 5.0
-
-	match summoner_ai_personality:
-		"aggressive":
-			if skill_id in ["hound", "scout"]:
-				score += 10.0
-		"defensive":
-			if skill_id == "gatekeeper":
-				score += 14.0
-			elif skill_id == "watcher":
-				score += 5.0
-		"swarm":
-			if skill_id in ["scout", "open_gate"]:
-				score += 12.0
-		"focus":
-			if skill_id in ["watcher", "hound"]:
-				score += 12.0
-		_:
-			pass
-
-	var random_span := maxf(
-		float(summoner_ai_config.get("random_score_span", 8.0)),
-		0.0
+func _score_summoner_ai_candidate(
+	skill_id: String,
+	nearby_count: int
+) -> float:
+	var hero_hp_ratio := clampf(
+		float(current_hp) / float(maxi(max_hp, 1)),
+		0.0,
+		1.0
 	)
-	score += randf_range(-random_span, random_span)
-	return maxf(score, 1.0)
+	var gatekeepers := summoner_active_gatekeepers
+	var scouts := summoner_active_scouts
+	var hounds := summoner_active_hounds
+	var watchers := summoner_active_watchers
+	return HERO_SUMMONER_RUNTIME.score_ai_candidate(
+		skill_id,
+		nearby_count,
+		hero_hp_ratio,
+		is_instance_valid(target),
+		_get_summoner_target_hp_ratio(),
+		gatekeepers,
+		scouts,
+		hounds,
+		watchers,
+		_get_active_summon_count(),
+		int(summoner_ai_choice_counts.get(skill_id, 0)),
+		summoner_ai_last_choice,
+		summoner_ai_personality,
+		float(
+			summoner_ai_config.get(
+				"random_score_span",
+				8.0
+			)
+		)
+	)
 
 
 func _choose_summoner_ai_cast() -> String:
-	var candidates: Array[String] = []
 	var shared_slot_available := (
 		_get_active_summon_count() < _get_summoner_slot_capacity()
 	)
-	if shared_slot_available and summoner_cast_pending and summoner_gatekeeper_cooldown <= 0.0:
-		candidates.append("gatekeeper")
-	if shared_slot_available and summoner_scout_cast_pending and summoner_scout_cooldown <= 0.0:
-		candidates.append("scout")
-	if shared_slot_available and summoner_hound_cast_pending and summoner_hound_cooldown <= 0.0:
-		candidates.append("hound")
-	if (
+	var gatekeeper_available := (
+		shared_slot_available
+		and summoner_cast_pending
+		and summoner_gatekeeper_cooldown <= 0.0
+	)
+	var scout_available := (
+		shared_slot_available
+		and summoner_scout_cast_pending
+		and summoner_scout_cooldown <= 0.0
+	)
+	var hound_available := (
+		shared_slot_available
+		and summoner_hound_cast_pending
+		and summoner_hound_cooldown <= 0.0
+	)
+	var watcher_available := (
 		shared_slot_available
 		and summoner_watcher_cast_pending
 		and summoner_watcher_cooldown <= 0.0
 		and _get_active_summoner_watcher_count() < _get_summoner_watcher_max_active()
-	):
-		candidates.append("watcher")
-	if (
+	)
+	var open_gate_available := (
 		summoner_open_gate_cast_pending
 		and summoner_open_gate_unlocked
 		and summoner_open_gate_cooldown <= 0.0
 		and not is_instance_valid(_get_active_summoner_open_gate())
+	)
+	if not (
+		gatekeeper_available
+		or scout_available
+		or hound_available
+		or watcher_available
+		or open_gate_available
 	):
-		candidates.append("open_gate")
-	if candidates.is_empty():
 		return ""
 
-	var nearby := _get_monster_nodes_near(
+	_fill_monster_nodes_near(
 		global_position,
-		maxf(float(summoner_ai_config.get("observation_radius", 760.0)), 1.0)
+		maxf(float(summoner_ai_config.get("observation_radius", 760.0)), 1.0),
+		summoner_ai_query_candidates
 	)
-	var nearby_count := nearby.size()
-	var weights: Array[float] = []
+	var nearby_count := summoner_ai_query_candidates.size()
+	summoner_ai_query_candidates.clear()
+	var gatekeeper_weight := 0.0
+	var scout_weight := 0.0
+	var hound_weight := 0.0
+	var watcher_weight := 0.0
+	var open_gate_weight := 0.0
 	var total_weight := 0.0
-	for skill_id in candidates:
-		var score := _score_summoner_ai_candidate(skill_id, nearby_count)
-		var weight := pow(maxf(score - 25.0, 1.0), 1.35)
-		weights.append(weight)
-		total_weight += weight
+
+	if gatekeeper_available:
+		gatekeeper_weight = pow(
+			maxf(_score_summoner_ai_candidate("gatekeeper", nearby_count) - 25.0, 1.0),
+			1.35
+		)
+		total_weight += gatekeeper_weight
+	if scout_available:
+		scout_weight = pow(
+			maxf(_score_summoner_ai_candidate("scout", nearby_count) - 25.0, 1.0),
+			1.35
+		)
+		total_weight += scout_weight
+	if hound_available:
+		hound_weight = pow(
+			maxf(_score_summoner_ai_candidate("hound", nearby_count) - 25.0, 1.0),
+			1.35
+		)
+		total_weight += hound_weight
+	if watcher_available:
+		watcher_weight = pow(
+			maxf(_score_summoner_ai_candidate("watcher", nearby_count) - 25.0, 1.0),
+			1.35
+		)
+		total_weight += watcher_weight
+	if open_gate_available:
+		open_gate_weight = pow(
+			maxf(_score_summoner_ai_candidate("open_gate", nearby_count) - 25.0, 1.0),
+			1.35
+		)
+		total_weight += open_gate_weight
 
 	var roll := randf() * total_weight
-	for index in range(candidates.size()):
-		roll -= weights[index]
+	if gatekeeper_available:
+		roll -= gatekeeper_weight
 		if roll <= 0.0:
-			return candidates[index]
-	return candidates[candidates.size() - 1]
+			return "gatekeeper"
+	if scout_available:
+		roll -= scout_weight
+		if roll <= 0.0:
+			return "scout"
+	if hound_available:
+		roll -= hound_weight
+		if roll <= 0.0:
+			return "hound"
+	if watcher_available:
+		roll -= watcher_weight
+		if roll <= 0.0:
+			return "watcher"
+	if open_gate_available:
+		roll -= open_gate_weight
+		if roll <= 0.0:
+			return "open_gate"
+
+	if open_gate_available:
+		return "open_gate"
+	if watcher_available:
+		return "watcher"
+	if hound_available:
+		return "hound"
+	if scout_available:
+		return "scout"
+	return "gatekeeper"
 
 
 func _try_cast_summoner_ai_choice(skill_id: String) -> bool:
@@ -1880,43 +1952,83 @@ func _move_summoner_without_monsters_near_open_gate() -> void:
 
 
 func _get_summoner_augment_stacks(augment_id: String) -> int:
-	return maxi(int(build_counts.get(augment_id, 0)), 0)
+	return HERO_SUMMONER_RUNTIME.get_augment_stacks(
+		build_counts,
+		augment_id
+	)
+
+
+func get_summoner_runtime_attack_speed_multiplier() -> float:
+	return HERO_SUMMONER_RUNTIME.get_runtime_attack_speed_multiplier(
+		shield_hp > 0.0,
+		_get_summoner_augment_stacks(
+			"summoner_shield_resonance"
+		)
+	)
+
+
+func get_summoner_runtime_move_speed_multiplier() -> float:
+	return HERO_SUMMONER_RUNTIME.get_runtime_move_speed_multiplier(
+		shield_hp > 0.0,
+		_get_summoner_augment_stacks(
+			"summoner_shield_resonance"
+		)
+	)
 
 
 func get_summoner_runtime_speed_multipliers() -> Dictionary:
-	var attack_speed := 1.0
-	var move_speed_multiplier := 1.0
-	if shield_hp > 0.0:
-		var resonance := _get_summoner_augment_stacks("summoner_shield_resonance")
-		attack_speed += float(resonance) * 0.024
-		move_speed_multiplier += float(resonance) * 0.02
-	return {"attack_speed": attack_speed, "move_speed": move_speed_multiplier}
+	return HERO_SUMMONER_RUNTIME.get_runtime_speed_multipliers(
+		shield_hp > 0.0,
+		_get_summoner_augment_stacks(
+			"summoner_shield_resonance"
+		)
+	)
+
+
+func get_summoner_scout_attack_speed_multiplier() -> float:
+	return HERO_SUMMONER_RUNTIME.get_scout_swarm_attack_speed_multiplier(
+		_get_summoner_augment_stacks(
+			"summoner_scout_swarm_tactics"
+		),
+		summoner_active_scouts
+	)
+
+
+func get_summoner_scout_damage_multiplier() -> float:
+	return HERO_SUMMONER_RUNTIME.get_scout_swarm_damage_multiplier(
+		_get_summoner_augment_stacks(
+			"summoner_scout_swarm_tactics"
+		),
+		summoner_active_scouts
+	)
+
+
+func get_summoner_scout_move_speed_multiplier() -> float:
+	return HERO_SUMMONER_RUNTIME.get_scout_swarm_move_speed_multiplier(
+		_get_summoner_augment_stacks(
+			"summoner_scout_swarm_tactics"
+		),
+		summoner_active_scouts
+	)
 
 
 func get_summoner_scout_swarm_multipliers() -> Dictionary:
-	var stacks := _get_summoner_augment_stacks("summoner_scout_swarm_tactics")
-	var active_scouts := _count_active_summons(summoner_scout_pool)
-	var attack_speed := 1.0
-	var damage := 1.0
-	var move := 1.0
-	if active_scouts >= 3:
-		attack_speed += float(stacks) * 0.04
-		damage += float(stacks) * 0.02
-	if active_scouts >= 5:
-		move += float(stacks) * 0.03
-	return {"attack_speed": attack_speed, "damage": damage, "move_speed": move}
+	return HERO_SUMMONER_RUNTIME.get_scout_swarm_multipliers(
+		_get_summoner_augment_stacks(
+			"summoner_scout_swarm_tactics"
+		),
+		summoner_active_scouts
+	)
 
 
 func _extend_regular_summon_durations(seconds: float) -> void:
-	if seconds <= 0.0:
-		return
-	for pool in [summoner_gatekeeper_pool, summoner_scout_pool, summoner_hound_pool, summoner_watcher_pool]:
-		for summon in pool:
-			if not is_instance_valid(summon) or not bool(summon.get("active")):
-				continue
-			var remaining = summon.get("duration_remaining")
-			if remaining != null:
-				summon.set("duration_remaining", float(remaining) + seconds)
+	HERO_SUMMONER_RUNTIME.extend_regular_summon_durations(
+		seconds,
+		summoner_gatekeeper_pool,
+		summoner_scout_pool,
+		summoner_hound_pool,
+		summoner_watcher_pool
+	)
 
 
 func _update_summoner_full_slot_shield(delta: float) -> void:
@@ -1964,6 +2076,32 @@ func _update_summoner_full_slot_shield(delta: float) -> void:
 	queue_redraw()
 
 
+func _refresh_regular_summon_pending_after_release(
+	summon: Node2D
+) -> void:
+	_set_summon_registry_active(summon, false)
+	var pending_mask := HERO_SUMMONER_RUNTIME.get_release_pending_mask(
+		summoner_gatekeeper_cooldown,
+		summoner_scout_cooldown,
+		summoner_hound_cooldown,
+		summoner_watcher_cooldown,
+		_get_active_summoner_watcher_count(),
+		_get_summoner_watcher_max_active()
+	)
+	if (
+		pending_mask
+		& HERO_SUMMONER_RUNTIME.PENDING_GATEKEEPER
+	):
+		summoner_cast_pending = true
+	if pending_mask & HERO_SUMMONER_RUNTIME.PENDING_SCOUT:
+		summoner_scout_cast_pending = true
+	if pending_mask & HERO_SUMMONER_RUNTIME.PENDING_HOUND:
+		summoner_hound_cast_pending = true
+	if pending_mask & HERO_SUMMONER_RUNTIME.PENDING_WATCHER:
+		summoner_watcher_cast_pending = true
+	queue_redraw()
+
+
 func _try_cast_summoner_gatekeeper() -> bool:
 	if summoner_gatekeeper_config.is_empty():
 		return false
@@ -1972,31 +2110,35 @@ func _try_cast_summoner_gatekeeper() -> bool:
 	if _get_active_summon_count() >= _get_summoner_slot_capacity():
 		return false
 
-	var summon_to_use: Node2D = null
-	for summon in summoner_gatekeeper_pool:
-		if is_instance_valid(summon) and not bool(summon.get("active")):
-			summon_to_use = summon
-			break
+	var summon_to_use := (
+		HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
+			summoner_gatekeeper_pool
+		)
+	)
 	if summon_to_use == null:
 		return false
 
-	var runtime_config := summoner_gatekeeper_config.duplicate(true)
-	var fortress_stacks := _get_summoner_augment_stacks("summoner_gatekeeper_fortress")
-	var barrage_stacks := _get_summoner_augment_stacks("summoner_gatekeeper_barrage")
-	runtime_config["owner_attack_damage"] = attack_damage
-	runtime_config["max_hp"] = int(round(float(runtime_config.get("max_hp", 650)) * (1.0 + float(fortress_stacks) * 0.08)))
-	runtime_config["duration"] = float(runtime_config.get("duration", 60.0)) + float(fortress_stacks) * 3.0
-	runtime_config["attack_cooldown"] = float(runtime_config.get("attack_cooldown", 1.65)) * (1.0 + float(fortress_stacks) * 0.02)
-	runtime_config["damage_ratio"] = float(runtime_config.get("damage_ratio", 0.70)) * (1.0 + float(barrage_stacks) * 0.05)
-	runtime_config["projectile_speed"] = float(runtime_config.get("projectile_speed", 560.0)) * (1.0 + float(barrage_stacks) * 0.04)
-	runtime_config["attack_range"] = float(runtime_config.get("attack_range", 720.0)) + float(barrage_stacks) * 16.0
-	runtime_config["consecutive_damage_bonus_per_step"] = float(barrage_stacks) * 0.01
-	summon_to_use.call(
-		"activate",
+	var runtime_config := (
+		HERO_SUMMONER_RUNTIME.build_gatekeeper_runtime_config(
+			summoner_gatekeeper_config,
+			attack_damage,
+			_get_summoner_augment_stacks(
+				"summoner_gatekeeper_fortress"
+			),
+			_get_summoner_augment_stacks(
+				"summoner_gatekeeper_barrage"
+			)
+		)
+	)
+	if not HERO_SUMMONER_RUNTIME.activate_summon(
+		summon_to_use,
 		global_position,
 		self,
 		runtime_config
-	)
+	):
+		return false
+	_adjust_summoner_active_count(&"gatekeeper", 1)
+	_set_summon_registry_active(summon_to_use, true)
 	summoner_gatekeeper_cooldown = maxf(
 		float(summoner_gatekeeper_config.get("cooldown", 10.0)),
 		0.0
@@ -2007,19 +2149,8 @@ func _try_cast_summoner_gatekeeper() -> bool:
 
 
 func _on_summoner_gatekeeper_released(_summon: Node2D) -> void:
-	if summoner_gatekeeper_cooldown <= 0.0:
-		summoner_cast_pending = true
-	if summoner_scout_cooldown <= 0.0:
-		summoner_scout_cast_pending = true
-	if summoner_hound_cooldown <= 0.0:
-		summoner_hound_cast_pending = true
-	if (
-		summoner_watcher_cooldown <= 0.0
-		and _get_active_summoner_watcher_count()
-		< _get_summoner_watcher_max_active()
-	):
-		summoner_watcher_cast_pending = true
-	queue_redraw()
+	_adjust_summoner_active_count(&"gatekeeper", -1)
+	_refresh_regular_summon_pending_after_release(_summon)
 
 
 func _try_cast_summoner_scout() -> bool:
@@ -2030,31 +2161,39 @@ func _try_cast_summoner_scout() -> bool:
 	if _get_active_summon_count() >= _get_summoner_slot_capacity():
 		return false
 
-	var summon_to_use: Node2D = null
-	for summon in summoner_scout_pool:
-		if is_instance_valid(summon) and not bool(summon.get("active")):
-			summon_to_use = summon
-			break
+	var summon_to_use := (
+		HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
+			summoner_scout_pool
+		)
+	)
 	if summon_to_use == null:
 		_ensure_summoner_pool_capacity()
-		for summon in summoner_scout_pool:
-			if is_instance_valid(summon) and not bool(summon.get("active")):
-				summon_to_use = summon
-				break
+		summon_to_use = (
+			HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
+				summoner_scout_pool
+			)
+		)
 	if summon_to_use == null:
 		return false
 
-	var runtime_config := summoner_scout_config.duplicate(true)
-	var reinforcement_stacks := _get_summoner_augment_stacks("summoner_scout_reinforcement")
-	runtime_config["owner_attack_damage"] = attack_damage
-	runtime_config["duration"] = float(runtime_config.get("duration", 60.0)) + float(reinforcement_stacks) * 4.0
-	runtime_config["move_speed"] = float(runtime_config.get("move_speed", 220.0)) * (1.0 + float(reinforcement_stacks) * 0.04)
-	summon_to_use.call(
-		"activate",
+	var runtime_config := (
+		HERO_SUMMONER_RUNTIME.build_scout_runtime_config(
+			summoner_scout_config,
+			attack_damage,
+			_get_summoner_augment_stacks(
+				"summoner_scout_reinforcement"
+			)
+		)
+	)
+	if not HERO_SUMMONER_RUNTIME.activate_summon(
+		summon_to_use,
 		global_position,
 		self,
 		runtime_config
-	)
+	):
+		return false
+	_adjust_summoner_active_count(&"scout", 1)
+	_set_summon_registry_active(summon_to_use, true)
 	summoner_scout_cooldown = maxf(
 		float(summoner_scout_config.get("cooldown", 20.0)),
 		0.0
@@ -2065,19 +2204,8 @@ func _try_cast_summoner_scout() -> bool:
 
 
 func _on_summoner_scout_released(_summon: Node2D) -> void:
-	if summoner_gatekeeper_cooldown <= 0.0:
-		summoner_cast_pending = true
-	if summoner_scout_cooldown <= 0.0:
-		summoner_scout_cast_pending = true
-	if summoner_hound_cooldown <= 0.0:
-		summoner_hound_cast_pending = true
-	if (
-		summoner_watcher_cooldown <= 0.0
-		and _get_active_summoner_watcher_count()
-		< _get_summoner_watcher_max_active()
-	):
-		summoner_watcher_cast_pending = true
-	queue_redraw()
+	_adjust_summoner_active_count(&"scout", -1)
+	_refresh_regular_summon_pending_after_release(_summon)
 
 
 func _try_cast_summoner_hound() -> bool:
@@ -2088,35 +2216,42 @@ func _try_cast_summoner_hound() -> bool:
 	if _get_active_summon_count() >= _get_summoner_slot_capacity():
 		return false
 
-	var summon_to_use: Node2D = null
-	for summon in summoner_hound_pool:
-		if is_instance_valid(summon) and not bool(summon.get("active")):
-			summon_to_use = summon
-			break
+	var summon_to_use := (
+		HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
+			summoner_hound_pool
+		)
+	)
 	if summon_to_use == null:
 		_ensure_summoner_pool_capacity()
-		for summon in summoner_hound_pool:
-			if is_instance_valid(summon) and not bool(summon.get("active")):
-				summon_to_use = summon
-				break
+		summon_to_use = (
+			HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
+				summoner_hound_pool
+			)
+		)
 	if summon_to_use == null:
 		return false
 
-	var runtime_config := summoner_hound_config.duplicate(true)
-	var frenzy_stacks := _get_summoner_augment_stacks("summoner_hound_frenzy")
-	var blood_track_stacks := _get_summoner_augment_stacks("summoner_hound_blood_track")
-	runtime_config["owner_attack_damage"] = attack_damage
-	runtime_config["move_speed"] = float(runtime_config.get("move_speed", 300.0)) * (1.0 + float(frenzy_stacks) * 0.05)
-	runtime_config["attack_cooldown"] = float(runtime_config.get("attack_cooldown", 0.72)) / (1.0 + float(frenzy_stacks) * 0.04)
-	runtime_config["second_hit_bonus_ratio"] = float(frenzy_stacks) * 0.024
-	runtime_config["high_hp_damage_bonus"] = float(blood_track_stacks) * 0.05
-	runtime_config["elite_move_speed_bonus"] = float(blood_track_stacks) * 0.03
-	summon_to_use.call(
-		"activate",
+	var runtime_config := (
+		HERO_SUMMONER_RUNTIME.build_hound_runtime_config(
+			summoner_hound_config,
+			attack_damage,
+			_get_summoner_augment_stacks(
+				"summoner_hound_frenzy"
+			),
+			_get_summoner_augment_stacks(
+				"summoner_hound_blood_track"
+			)
+		)
+	)
+	if not HERO_SUMMONER_RUNTIME.activate_summon(
+		summon_to_use,
 		global_position,
 		self,
 		runtime_config
-	)
+	):
+		return false
+	_adjust_summoner_active_count(&"hound", 1)
+	_set_summon_registry_active(summon_to_use, true)
 	summoner_hound_cooldown = maxf(
 		float(summoner_hound_config.get("cooldown", 30.0)),
 		0.0
@@ -2127,19 +2262,8 @@ func _try_cast_summoner_hound() -> bool:
 
 
 func _on_summoner_hound_released(_summon: Node2D) -> void:
-	if summoner_gatekeeper_cooldown <= 0.0:
-		summoner_cast_pending = true
-	if summoner_scout_cooldown <= 0.0:
-		summoner_scout_cast_pending = true
-	if summoner_hound_cooldown <= 0.0:
-		summoner_hound_cast_pending = true
-	if (
-		summoner_watcher_cooldown <= 0.0
-		and _get_active_summoner_watcher_count()
-		< _get_summoner_watcher_max_active()
-	):
-		summoner_watcher_cast_pending = true
-	queue_redraw()
+	_adjust_summoner_active_count(&"hound", -1)
+	_refresh_regular_summon_pending_after_release(_summon)
 
 
 func _try_cast_summoner_watcher() -> bool:
@@ -2159,28 +2283,36 @@ func _try_cast_summoner_watcher() -> bool:
 	if follow_slot < 0:
 		return false
 
-	var summon_to_use: Node2D = null
-	for summon in summoner_watcher_pool:
-		if is_instance_valid(summon) and not bool(summon.get("active")):
-			summon_to_use = summon
-			break
+	var summon_to_use := (
+		HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
+			summoner_watcher_pool
+		)
+	)
 	if summon_to_use == null:
 		return false
 
-	var runtime_config := summoner_watcher_config.duplicate(true)
-	var focus_stacks := _get_summoner_augment_stacks("summoner_watcher_focus")
-	var network_stacks := _get_summoner_augment_stacks("summoner_watcher_network")
-	runtime_config["owner_attack_damage"] = attack_damage
-	runtime_config["damage_ratio"] = maxf(float(runtime_config.get("damage_ratio", 0.10)) - float(network_stacks) * 0.01, 0.01)
-	runtime_config["focus_attack_speed_bonus"] = float(focus_stacks) * 0.07
-	runtime_config["focus_damage_bonus"] = float(focus_stacks) * 0.03
-	runtime_config["follow_slot"] = follow_slot
-	summon_to_use.call(
-		"activate",
+	var runtime_config := (
+		HERO_SUMMONER_RUNTIME.build_watcher_runtime_config(
+			summoner_watcher_config,
+			attack_damage,
+			_get_summoner_augment_stacks(
+				"summoner_watcher_focus"
+			),
+			_get_summoner_augment_stacks(
+				"summoner_watcher_network"
+			),
+			follow_slot
+		)
+	)
+	if not HERO_SUMMONER_RUNTIME.activate_summon(
+		summon_to_use,
 		global_position,
 		self,
 		runtime_config
-	)
+	):
+		return false
+	_adjust_summoner_active_count(&"watcher", 1)
+	_set_summon_registry_active(summon_to_use, true)
 	summoner_watcher_cooldown = maxf(
 		float(summoner_watcher_config.get("cooldown", 7.0)),
 		0.0
@@ -2191,29 +2323,14 @@ func _try_cast_summoner_watcher() -> bool:
 
 
 func _on_summoner_watcher_released(_summon: Node2D) -> void:
-	if summoner_gatekeeper_cooldown <= 0.0:
-		summoner_cast_pending = true
-	if summoner_scout_cooldown <= 0.0:
-		summoner_scout_cast_pending = true
-	if summoner_hound_cooldown <= 0.0:
-		summoner_hound_cast_pending = true
-	if (
-		summoner_watcher_cooldown <= 0.0
-		and _get_active_summoner_watcher_count()
-		< _get_summoner_watcher_max_active()
-	):
-		summoner_watcher_cast_pending = true
-	queue_redraw()
+	_adjust_summoner_active_count(&"watcher", -1)
+	_refresh_regular_summon_pending_after_release(_summon)
 
 
 func _get_summoner_open_gate_required_summons() -> int:
-	if summoner_open_gate_config.is_empty():
-		return 0
-	var raw_condition = summoner_open_gate_config.get("unlock_condition", {})
-	if typeof(raw_condition) != TYPE_DICTIONARY:
-		return 0
-	var condition: Dictionary = raw_condition
-	return maxi(int(condition.get("required_count", 50)), 0)
+	return HERO_SUMMONER_RUNTIME.get_open_gate_required_summons(
+		summoner_open_gate_config
+	)
 
 
 func _record_summoner_spawn_for_open_gate_unlock() -> void:
@@ -2221,7 +2338,11 @@ func _record_summoner_spawn_for_open_gate_unlock() -> void:
 		return
 	summoner_total_summons += 1
 	var required := _get_summoner_open_gate_required_summons()
-	if summoner_total_summons < required:
+	if not HERO_SUMMONER_RUNTIME.has_reached_open_gate_unlock(
+		summoner_open_gate_config,
+		summoner_open_gate_unlocked,
+		summoner_total_summons
+	):
 		return
 
 	summoner_open_gate_unlocked = true
@@ -2254,20 +2375,22 @@ func _try_cast_summoner_open_gate() -> bool:
 	if summoner_open_gate_cooldown > 0.0:
 		return false
 
-	var gate_to_use: Node2D = null
-	for open_gate in summoner_open_gate_pool:
-		if is_instance_valid(open_gate) and not bool(open_gate.get("active")):
-			gate_to_use = open_gate
-			break
+	var gate_to_use := (
+		HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
+			summoner_open_gate_pool
+		)
+	)
 	if gate_to_use == null:
 		return false
 
-	gate_to_use.call(
-		"activate",
+	if not HERO_SUMMONER_RUNTIME.activate_summon(
+		gate_to_use,
 		global_position,
 		self,
 		summoner_open_gate_config.duplicate(true)
-	)
+	):
+		return false
+	_set_summon_registry_active(gate_to_use, true)
 	summoner_open_gate_cooldown = maxf(
 		float(summoner_open_gate_config.get("cooldown", 100.0)),
 		0.0
@@ -2277,6 +2400,7 @@ func _try_cast_summoner_open_gate() -> bool:
 
 
 func _on_summoner_open_gate_released(_open_gate: Node2D) -> void:
+	_set_summon_registry_active(_open_gate, false)
 	if summoner_open_gate_cooldown <= 0.0:
 		summoner_open_gate_cast_pending = true
 	queue_redraw()
@@ -2616,11 +2740,16 @@ func _collect_nearby_alchemy_materials() -> void:
 	_collect_alchemy_material_list(alchemist_material_pool, pickup_radius_sq)
 	_collect_alchemy_material_list(alchemist_bonus_materials, pickup_radius_sq)
 
-	var valid_bonus: Array[Node2D] = []
-	for material in alchemist_bonus_materials:
-		if is_instance_valid(material) and not material.is_queued_for_deletion():
-			valid_bonus.append(material)
-	alchemist_bonus_materials = valid_bonus
+	# This runs every physics tick. Compact the temporary-drop list in place
+	# instead of allocating and replacing a fresh Array every frame.
+	for index in range(alchemist_bonus_materials.size() - 1, -1, -1):
+		var material := alchemist_bonus_materials[index]
+		if (
+			not is_instance_valid(material)
+			or material.is_queued_for_deletion()
+			or not bool(material.get("active"))
+		):
+			alchemist_bonus_materials.remove_at(index)
 
 
 func _collect_alchemy_material_list(
@@ -3067,7 +3196,12 @@ func _move_alchemist_philosopher_form(delta: float) -> void:
 	var sense_radius := maxf(ai_sense_radius, 520.0)
 	var repulsion := Vector2.ZERO
 	var sense_radius_sq := sense_radius * sense_radius
-	for node in _get_monster_nodes_near(global_position, sense_radius):
+	_fill_monster_nodes_near(
+		global_position,
+		sense_radius,
+		alchemist_movement_query_candidates
+	)
+	for node in alchemist_movement_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3080,6 +3214,7 @@ func _move_alchemist_philosopher_form(delta: float) -> void:
 		var distance := sqrt(distance_sq)
 		var pressure := 1.0 - clampf(distance / sense_radius, 0.0, 1.0)
 		repulsion += offset / distance * (0.35 + pressure * pressure * 2.4)
+	alchemist_movement_query_candidates.clear()
 
 	if repulsion.length_squared() > 0.01:
 		desired = desired * 0.55 + repulsion * 1.55
@@ -3309,19 +3444,11 @@ func _try_cast_alchemist_mixture_field() -> void:
 		int(alchemist_mixture_field_config.get("enemy_count_trigger", 2)),
 		1
 	)
-	var nearby_enemies := 0
-	var radius_sq := radius * radius
-	for node in _get_monster_nodes_near(global_position, radius):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		if global_position.distance_squared_to(monster.global_position) > radius_sq:
-			continue
-		nearby_enemies += 1
-		if nearby_enemies >= required_enemies:
-			break
+	var nearby_enemies := _count_monsters_near(
+		global_position,
+		radius,
+		required_enemies
+	)
 	if nearby_enemies < required_enemies:
 		return
 
@@ -3500,17 +3627,23 @@ func _execute_alchemist_cauldron_great_success(origin: Vector2) -> void:
 			await get_tree().create_timer(batch_interval).timeout
 
 
-func _spawn_alchemist_mystery_vial(origin: Vector2) -> void:
+func _acquire_alchemist_mystery_vial() -> Node2D:
+	for vial in alchemist_mystery_vial_pool:
+		if (
+			is_instance_valid(vial)
+			and vial.has_method("is_available")
+			and bool(vial.call("is_available"))
+		):
+			return vial
+
 	var parent := get_parent()
 	if not is_instance_valid(parent):
-		return
+		return null
 	var vial := ALCHEMIST_VIAL_SCENE.instantiate() as Node2D
 	if vial == null:
-		return
+		return null
 	parent.add_child(vial)
-	# Great success can throw 20+ vials in bursts. Keep the base-attack asset,
-	# but attenuate only these temporary mystery vials so their throw SFX stack
-	# does not overpower the cauldron result or combat mix.
+	# Great-success vials keep their quieter throw mix for every reuse.
 	var mystery_throw_audio := vial.get_node_or_null("ThrowAudio") as AudioStreamPlayer
 	if is_instance_valid(mystery_throw_audio):
 		mystery_throw_audio.volume_db = -24.0
@@ -3518,6 +3651,14 @@ func _spawn_alchemist_mystery_vial(origin: Vector2) -> void:
 		"landed",
 		Callable(self, "_on_alchemist_mystery_vial_landed")
 	)
+	alchemist_mystery_vial_pool.append(vial)
+	return vial
+
+
+func _spawn_alchemist_mystery_vial(origin: Vector2) -> void:
+	var vial := _acquire_alchemist_mystery_vial()
+	if vial == null:
+		return
 	var throw_radius: float = maxf(
 		float(
 			alchemist_mystery_cauldron_config.get(
@@ -3540,7 +3681,7 @@ func _spawn_alchemist_mystery_vial(origin: Vector2) -> void:
 		0.42,
 		105.0,
 		null,
-		true
+		false
 	)
 
 
@@ -3575,6 +3716,24 @@ func _on_alchemist_mystery_vial_landed(
 	_damage_monsters_in_radius(landing_position, radius, damage)
 
 
+func _acquire_alchemist_bonus_material() -> Node2D:
+	for material in alchemist_bonus_material_pool:
+		if is_instance_valid(material) and not bool(material.get("active")):
+			return material
+
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return null
+	var material := ALCHEMY_MATERIAL_SCENE.instantiate() as Node2D
+	if material == null:
+		return null
+	parent.add_child(material)
+	if material.has_method("set_temporary_reuse_enabled"):
+		material.call("set_temporary_reuse_enabled", true)
+	alchemist_bonus_material_pool.append(material)
+	return material
+
+
 func _execute_alchemist_cauldron_success(origin: Vector2) -> void:
 	var parent := get_parent()
 	if not is_instance_valid(parent):
@@ -3594,10 +3753,9 @@ func _execute_alchemist_cauldron_success(origin: Vector2) -> void:
 		0.1
 	)
 	for index in range(material_count):
-		var material := ALCHEMY_MATERIAL_SCENE.instantiate() as Node2D
+		var material := _acquire_alchemist_bonus_material()
 		if material == null:
 			continue
-		parent.add_child(material)
 		var material_angle: float = (
 			TAU * float(index) / float(maxi(material_count, 1))
 			+ randf_range(-0.24, 0.24)
@@ -3623,7 +3781,8 @@ func _execute_alchemist_cauldron_success(origin: Vector2) -> void:
 			randf_range(0.36, 0.50),
 			randf_range(52.0, 78.0)
 		)
-		alchemist_bonus_materials.append(material)
+		if not alchemist_bonus_materials.has(material):
+			alchemist_bonus_materials.append(material)
 
 	var heal_count: int = maxi(
 		int(
@@ -3703,8 +3862,13 @@ func _on_alchemist_mixture_field_tick(origin: Vector2, radius: float) -> void:
 		) * 1000.0
 	))
 	var radius_sq := radius * radius
+	_fill_monster_nodes_near(
+		origin,
+		radius,
+		alchemist_damage_query_candidates
+	)
 
-	for node in _get_monster_nodes_near(origin, radius):
+	for node in alchemist_damage_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3719,14 +3883,17 @@ func _on_alchemist_mixture_field_tick(origin: Vector2, radius: float) -> void:
 			"gunner_slow_multiplier",
 			minf(current_multiplier, slow_multiplier)
 		)
+	alchemist_damage_query_candidates.clear()
 
 
 func _update_alchemist_emergency_escape(delta: float) -> bool:
 	if alchemist_emergency_config.is_empty():
 		alchemist_emergency_trapped_timer = 0.0
+		alchemist_emergency_threats.clear()
 		return false
 	if alchemist_emergency_cooldown > 0.0 or alchemist_gas > 0.001:
 		alchemist_emergency_trapped_timer = 0.0
+		alchemist_emergency_threats.clear()
 		return false
 
 	var trigger_radius := clampf(
@@ -3738,10 +3905,14 @@ func _update_alchemist_emergency_escape(delta: float) -> bool:
 		int(alchemist_emergency_config.get("min_enemy_count", 4)),
 		2
 	)
-	var nearby := _get_monster_nodes_near(global_position, trigger_radius)
-	var threats: Array[Node2D] = []
+	_fill_monster_nodes_near(
+		global_position,
+		trigger_radius,
+		alchemist_emergency_query_candidates
+	)
+	alchemist_emergency_threats.clear()
 	var radius_sq := trigger_radius * trigger_radius
-	for node in nearby:
+	for node in alchemist_emergency_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3751,14 +3922,17 @@ func _update_alchemist_emergency_escape(delta: float) -> bool:
 		if hp_value != null and int(hp_value) <= 0:
 			continue
 		if global_position.distance_squared_to(monster.global_position) <= radius_sq:
-			threats.append(monster)
+			alchemist_emergency_threats.append(monster)
+	alchemist_emergency_query_candidates.clear()
 
-	if threats.size() < min_enemies:
+	if alchemist_emergency_threats.size() < min_enemies:
 		alchemist_emergency_trapped_timer = 0.0
 		return false
 
-	var escape_info := _find_alchemist_escape_direction(threats, trigger_radius)
-	var blocked_ratio := float(escape_info.get("blocked_ratio", 0.0))
+	var blocked_ratio := _update_alchemist_escape_direction(
+		alchemist_emergency_threats,
+		trigger_radius
+	)
 	var required_blocked_ratio := clampf(
 		float(alchemist_emergency_config.get("blocked_direction_ratio", 0.75)),
 		0.50,
@@ -3778,15 +3952,18 @@ func _update_alchemist_emergency_escape(delta: float) -> bool:
 		return false
 
 	alchemist_emergency_trapped_timer = 0.0
-	var escape_direction: Vector2 = escape_info.get("direction", Vector2.RIGHT)
-	_cast_alchemist_emergency_escape(threats, escape_direction)
+	_cast_alchemist_emergency_escape(
+		alchemist_emergency_threats,
+		alchemist_emergency_escape_direction
+	)
+	alchemist_emergency_threats.clear()
 	return true
 
 
-func _find_alchemist_escape_direction(
+func _update_alchemist_escape_direction(
 	threats: Array[Node2D],
 	trigger_radius: float
-) -> Dictionary:
+) -> float:
 	const SAMPLE_COUNT := 12
 	var best_direction := Vector2.RIGHT
 	var best_score := -INF
@@ -3831,10 +4008,8 @@ func _find_alchemist_escape_direction(
 			best_score = score
 			best_direction = direction
 
-	return {
-		"direction": best_direction,
-		"blocked_ratio": float(blocked_count) / float(SAMPLE_COUNT),
-	}
+	alchemist_emergency_escape_direction = best_direction
+	return float(blocked_count) / float(SAMPLE_COUNT)
 
 
 func _cast_alchemist_emergency_escape(
@@ -4113,7 +4288,12 @@ func _on_alchemist_poison_tick(origin: Vector2, radius: float, damage: int) -> v
 	if current_hp <= 0:
 		return
 	var radius_sq := radius * radius
-	for node in _get_monster_nodes_near(origin, radius):
+	_fill_monster_nodes_near(
+		origin,
+		radius,
+		alchemist_damage_query_candidates
+	)
+	for node in alchemist_damage_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -4122,6 +4302,7 @@ func _on_alchemist_poison_tick(origin: Vector2, radius: float, damage: int) -> v
 		if origin.distance_squared_to(monster.global_position) > radius_sq:
 			continue
 		_deal_alchemist_dot_damage(monster, damage)
+	alchemist_damage_query_candidates.clear()
 
 
 func _update_alchemist_pose_visual(delta: float) -> void:
@@ -4431,10 +4612,10 @@ func _start_gunner_backstep() -> void:
 	var escape_direction := _find_gunner_escape_direction()
 	var start_position := global_position
 	var distance := maxf(float(gunner_config.get("backstep_distance", 260.0)), 0.0)
-	_spawn_gunner_afterimage(start_position, 0.88, 0.52, 1.10)
-	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.25, 0.72, 0.46, 1.08)
-	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.50, 0.58, 0.40, 1.06)
-	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.75, 0.42, 0.34, 1.04)
+	_spawn_gunner_afterimage(start_position, 0.95, 0.66, 1.12)
+	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.25, 0.84, 0.58, 1.10)
+	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.50, 0.72, 0.50, 1.08)
+	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.75, 0.60, 0.44, 1.06)
 	if gunner_afterimage_shot_stacks > 0:
 		var counter_direction := -escape_direction
 		for shot_index in range(gunner_afterimage_shot_stacks * 2):
@@ -4465,7 +4646,21 @@ func _spawn_gunner_afterimage(
 	if frame_texture == null:
 		return
 
-	var ghost := Sprite2D.new()
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return
+	var ghost: Sprite2D = null
+	if parent.has_method("acquire_transient_fx"):
+		ghost = parent.call(
+			"acquire_transient_fx",
+			"gunner_afterimage",
+			"sprite"
+		) as Sprite2D
+	if ghost == null:
+		ghost = Sprite2D.new()
+		parent.add_child(ghost)
+
+	ghost.visible = true
 	ghost.texture = frame_texture
 	ghost.centered = hero_sprite.centered
 	ghost.flip_h = hero_sprite.flip_h
@@ -4477,7 +4672,6 @@ func _spawn_gunner_afterimage(
 	ghost.z_index = hero_sprite.z_index
 	ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	ghost.modulate = Color(0.82, 0.94, 1.0, clampf(alpha, 0.08, 0.95))
-	get_parent().add_child(ghost)
 
 	var tween := ghost.create_tween()
 	tween.set_parallel(true)
@@ -4488,7 +4682,19 @@ func _spawn_gunner_afterimage(
 		ghost.scale * 1.04,
 		maxf(fade_time, 0.05)
 	)
-	tween.finished.connect(Callable(ghost, "queue_free"))
+	if parent.has_method("recycle_transient_fx"):
+		tween.finished.connect(
+			Callable(parent, "recycle_transient_fx").bind(
+				ghost,
+				"gunner_afterimage"
+			),
+			Object.CONNECT_ONE_SHOT
+		)
+	else:
+		tween.finished.connect(
+			Callable(ghost, "queue_free"),
+			Object.CONNECT_ONE_SHOT
+		)
 
 
 func _find_gunner_escape_direction() -> Vector2:
@@ -4498,9 +4704,14 @@ func _find_gunner_escape_direction() -> Vector2:
 	var dash_distance := maxf(float(gunner_config.get("backstep_distance", 260.0)), 1.0)
 	var threat_radius := maxf(dash_distance + 360.0, 560.0)
 	var repulsion := Vector2.ZERO
-	var monster_positions: Array[Vector2] = []
+	gunner_escape_monster_positions.clear()
+	_fill_monster_nodes_near(
+		global_position,
+		threat_radius,
+		gunner_query_candidates
+	)
 
-	for node in _get_monster_nodes_near(global_position, threat_radius):
+	for node in gunner_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -4511,7 +4722,7 @@ func _find_gunner_escape_direction() -> Vector2:
 			continue
 
 		var monster_position := monster.global_position
-		monster_positions.append(monster_position)
+		gunner_escape_monster_positions.append(monster_position)
 
 		var offset := monster_position - global_position
 		var distance := offset.length()
@@ -4520,6 +4731,7 @@ func _find_gunner_escape_direction() -> Vector2:
 		var proximity := 1.0 - clampf(distance / threat_radius, 0.0, 1.0)
 		repulsion -= offset.normalized() * (0.35 + proximity * proximity * 2.65)
 
+	gunner_query_candidates.clear()
 	var preferred_away := (
 		repulsion.normalized()
 		if repulsion.length_squared() > 0.001
@@ -4545,7 +4757,7 @@ func _find_gunner_escape_direction() -> Vector2:
 		var side := Vector2(-dir.y, dir.x)
 		var danger_radius := 320.0
 
-		for monster_position in monster_positions:
+		for monster_position in gunner_escape_monster_positions:
 			var endpoint_distance := endpoint.distance_to(monster_position)
 			if endpoint_distance < danger_radius:
 				endpoint_danger += 1.0 - clampf(
@@ -4615,14 +4827,20 @@ func _use_gunner_cylinder_strike() -> void:
 	var knockback := maxf(float(gunner_config.get("cylinder_knockback", 145.0)), 0.0)
 	var slow_multiplier := clampf(float(gunner_config.get("cylinder_slow_multiplier", 0.50)), 0.1, 1.0)
 	var slow_duration := maxf(float(gunner_config.get("cylinder_slow_duration", 2.0)), 0.1)
-	for node in _get_monster_nodes_near(global_position, radius):
+	var radius_sq := radius * radius
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		gunner_query_candidates
+	)
+	for node in gunner_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
 		if (
 			monster == null
 			or global_position.distance_squared_to(monster.global_position)
-			> radius * radius
+			> radius_sq
 		):
 			continue
 		var dir := global_position.direction_to(monster.global_position)
@@ -4634,16 +4852,28 @@ func _use_gunner_cylinder_strike() -> void:
 			monster.call("take_damage", maxi(1, int(round(float(attack_damage) * damage_ratio))))
 		monster.set_meta("gunner_slow_multiplier", slow_multiplier)
 		monster.set_meta("gunner_slow_until", Time.get_ticks_msec() + int(slow_duration * 1000.0))
+	gunner_query_candidates.clear()
 
 
-func _gunner_deadeye_best_direction() -> Dictionary:
-	var sample_count := maxi(int(gunner_config.get("deadeye_cluster_samples", 36)), 8)
-	var max_range := maxf(float(gunner_config.get("deadeye_cluster_range", 620.0)), 1.0)
-	var half_width := maxf(float(gunner_config.get("deadeye_corridor_half_width", 105.0)), 1.0)
-	var best_direction := Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+func _update_gunner_deadeye_aim_analysis() -> void:
+	var sample_count := maxi(
+		int(gunner_config.get("deadeye_cluster_samples", 36)),
+		8
+	)
+	var max_range := maxf(
+		float(gunner_config.get("deadeye_cluster_range", 620.0)),
+		1.0
+	)
+	var half_width := maxf(
+		float(gunner_config.get("deadeye_corridor_half_width", 105.0)),
+		1.0
+	)
+	var best_direction := (
+		Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
+	)
 	var best_score := 0.0
 	var best_hits := 0
-	var monster_offsets: Array[Vector2] = []
+	gunner_deadeye_monster_offsets.clear()
 
 	for node in _get_monster_nodes_cached():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -4656,14 +4886,16 @@ func _gunner_deadeye_best_direction() -> Dictionary:
 			continue
 		var offset := monster.global_position - global_position
 		if offset.length_squared() <= max_range * max_range:
-			monster_offsets.append(offset)
+			gunner_deadeye_monster_offsets.append(offset)
 
 	for index in range(sample_count):
-		var direction := Vector2.from_angle(TAU * float(index) / float(sample_count))
+		var direction := Vector2.from_angle(
+			TAU * float(index) / float(sample_count)
+		)
 		var side := Vector2(-direction.y, direction.x)
 		var score := 0.0
 		var hits := 0
-		for offset in monster_offsets:
+		for offset in gunner_deadeye_monster_offsets:
 			var forward := offset.dot(direction)
 			if forward <= 0.0 or forward > max_range:
 				continue
@@ -4671,19 +4903,24 @@ func _gunner_deadeye_best_direction() -> Dictionary:
 			if lateral > half_width:
 				continue
 			hits += 1
-			var distance_weight := 1.0 - clampf(forward / max_range, 0.0, 1.0) * 0.35
-			var center_weight := 1.0 - clampf(lateral / half_width, 0.0, 1.0) * 0.45
+			var distance_weight := (
+				1.0
+				- clampf(forward / max_range, 0.0, 1.0) * 0.35
+			)
+			var center_weight := (
+				1.0
+				- clampf(lateral / half_width, 0.0, 1.0) * 0.45
+			)
 			score += maxf(distance_weight * center_weight, 0.1)
 		if score > best_score:
 			best_score = score
 			best_hits = hits
 			best_direction = direction
 
-	return {
-		"direction": best_direction.normalized(),
-		"score": best_score,
-		"hits": best_hits,
-	}
+	gunner_deadeye_analysis_direction = best_direction.normalized()
+	gunner_deadeye_analysis_score = best_score
+	gunner_deadeye_analysis_hits = best_hits
+
 
 func _gunner_should_start_deadeye() -> bool:
 	if gunner_reloading or gunner_deadeye_cooldown > 0.0:
@@ -4692,8 +4929,8 @@ func _gunner_should_start_deadeye() -> bool:
 	if gunner_ammo < min_ammo:
 		return false
 
-	var aim := _gunner_deadeye_best_direction()
-	var score := float(aim.get("score", 0.0))
+	_update_gunner_deadeye_aim_analysis()
+	var score := gunner_deadeye_analysis_score
 	var min_score := maxf(float(gunner_config.get("deadeye_min_cluster_score", 3.0)), 0.0)
 	if score < min_score:
 		return false
@@ -4709,11 +4946,7 @@ func _gunner_should_start_deadeye() -> bool:
 func _start_gunner_deadeye() -> void:
 	if gunner_ammo <= 0:
 		return
-	var aim := _gunner_deadeye_best_direction()
-	var aim_direction: Vector2 = aim.get(
-		"direction",
-		Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
-	)
+	var aim_direction := gunner_deadeye_analysis_direction
 	if aim_direction.length_squared() <= 0.0:
 		aim_direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	gunner_deadeye_cooldown = maxf(float(gunner_config.get("deadeye_cooldown", 20.0)), 0.1)
@@ -5330,8 +5563,14 @@ func _apply_rogue_slash_tick() -> void:
 			)
 		))
 	)
+	var radius_sq := radius * radius
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		rogue_query_candidates
+	)
 
-	for node in _get_monster_nodes_near(global_position, radius):
+	for node in rogue_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -5339,7 +5578,7 @@ func _apply_rogue_slash_tick() -> void:
 			continue
 		if (
 			global_position.distance_squared_to(monster.global_position)
-			> radius * radius
+			> radius_sq
 		):
 			continue
 		if monster.has_method("take_damage"):
@@ -5348,6 +5587,7 @@ func _apply_rogue_slash_tick() -> void:
 				damage,
 				0.50
 			)
+	rogue_query_candidates.clear()
 
 	if shield_effect.sprite_frames != null:
 		shield_effect.visible = true
@@ -5538,8 +5778,16 @@ func _update_rogue_assassination(delta: float) -> void:
 		0.0,
 		1.0
 	)
+	var assassination_aoe_radius_sq := (
+		assassination_aoe_radius * assassination_aoe_radius
+	)
+	_fill_monster_nodes_near(
+		current_target.global_position,
+		assassination_aoe_radius,
+		rogue_query_candidates
+	)
 
-	for node in _get_monster_nodes_near(current_target.global_position, assassination_aoe_radius):
+	for node in rogue_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -5548,10 +5796,10 @@ func _update_rogue_assassination(delta: float) -> void:
 		if monster.get_instance_id() == main_target_id:
 			continue
 		if (
-			current_target.global_position.distance_to(
+			current_target.global_position.distance_squared_to(
 				monster.global_position
 			)
-			> assassination_aoe_radius
+			> assassination_aoe_radius_sq
 		):
 			continue
 
@@ -5560,6 +5808,7 @@ func _update_rogue_assassination(delta: float) -> void:
 			secondary_damage,
 			secondary_lifesteal
 		)
+	rogue_query_candidates.clear()
 
 	attack_pose_timer = 0.20
 	_restart_stage1_animation("attack", 1.35)
@@ -5586,8 +5835,14 @@ func _find_rogue_assassination_target() -> Node2D:
 	)
 	var best: Node2D = null
 	var best_score := INF
+	var radius_sq := radius * radius
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		rogue_query_candidates
+	)
 
-	for node in _get_monster_nodes_near(global_position, radius):
+	for node in rogue_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -5598,11 +5853,12 @@ func _find_rogue_assassination_target() -> Node2D:
 		if hp_value != null and int(hp_value) <= 0:
 			continue
 
-		var distance := global_position.distance_to(
+		var distance_sq := global_position.distance_squared_to(
 			monster.global_position
 		)
-		if distance > radius:
+		if distance_sq > radius_sq:
 			continue
+		var distance := sqrt(distance_sq)
 
 		var hp_ratio := 1.0
 		var max_hp_value = monster.get("max_hp")
@@ -5617,6 +5873,7 @@ func _find_rogue_assassination_target() -> Node2D:
 			best_score = score
 			best = monster
 
+	rogue_query_candidates.clear()
 	return best
 
 func _end_rogue_assassination() -> void:
@@ -6378,9 +6635,6 @@ func _apply_stage1_channel_visual() -> void:
 	)
 	channel_effect.scale = Vector2(uniform_scale, uniform_scale)
 
-func _load_stage1_sheet_texture() -> Texture2D:
-	return _load_stage1_texture(sprite_sheet_path)
-
 func _load_stage1_texture(path: String) -> Texture2D:
 	if path.is_empty():
 		return null
@@ -6403,29 +6657,6 @@ func _load_stage1_texture(path: String) -> Texture2D:
 			return imported_texture
 
 	return null
-
-func _add_stage1_sheet_animation(
-	frames: SpriteFrames,
-	animation_name: String,
-	sheet: Texture2D,
-	row: int,
-	frame_count: int,
-	fps: float,
-	loop_animation: bool
-) -> void:
-	frames.add_animation(animation_name)
-	frames.set_animation_speed(animation_name, fps)
-	frames.set_animation_loop(animation_name, loop_animation)
-
-	for column in range(frame_count):
-		var atlas := AtlasTexture.new()
-		atlas.atlas = sheet
-		atlas.filter_clip = true
-		atlas.region = Rect2(
-			Vector2(column, row) * STAGE1_FRAME_SIZE,
-			STAGE1_FRAME_SIZE
-		)
-		frames.add_frame(animation_name, atlas)
 
 func _hero_animation_priority(animation_name: StringName) -> int:
 	match animation_name:
@@ -7200,7 +7431,12 @@ func _estimate_monster_danger(at_position: Vector2, radius: float) -> float:
 	var danger := 0.0
 	var safe_radius := maxf(radius, 1.0)
 	var safe_radius_sq := safe_radius * safe_radius
-	for node in _get_monster_nodes_near(at_position, safe_radius):
+	_fill_monster_nodes_near(
+		at_position,
+		safe_radius,
+		_movement_monster_scratch
+	)
+	for node in _movement_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -7211,13 +7447,19 @@ func _estimate_monster_danger(at_position: Vector2, radius: float) -> float:
 			continue
 		var distance := sqrt(distance_sq)
 		danger += 1.0 - clampf(distance / safe_radius, 0.0, 1.0)
+	_movement_monster_scratch.clear()
 	return danger
 
 func _get_crowd_avoidance_direction(radius: float = 230.0) -> Vector2:
 	var avoidance := Vector2.ZERO
 	var safe_radius := maxf(radius, 1.0)
 	var safe_radius_sq := safe_radius * safe_radius
-	for node in _get_monster_nodes_near(global_position, safe_radius):
+	_fill_monster_nodes_near(
+		global_position,
+		safe_radius,
+		_movement_monster_scratch
+	)
+	for node in _movement_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -7230,6 +7472,7 @@ func _get_crowd_avoidance_direction(radius: float = 230.0) -> Vector2:
 		var distance := sqrt(distance_sq)
 		var weight := 1.0 - clampf(distance / safe_radius, 0.0, 1.0)
 		avoidance += offset / distance * (0.35 + weight)
+	_movement_monster_scratch.clear()
 	return avoidance.normalized() if avoidance.length_squared() > 0.01 else Vector2.ZERO
 
 func _update_chest_goal(delta: float) -> void:
@@ -7522,29 +7765,37 @@ func _apply_heal_item_steering(base_direction: Vector2, delta: float) -> Vector2
 
 
 func _find_nearest_monster() -> Node2D:
+	var battle := get_parent()
+	if (
+		is_instance_valid(battle)
+		and battle.has_method("get_nearest_hostile_target_for_hero")
+	):
+		var registered_target = battle.call(
+			"get_nearest_hostile_target_for_hero",
+			global_position
+		)
+		if registered_target is Node2D:
+			return registered_target as Node2D
+
+	# Compatibility fallback for isolated scenes/tests without Battle.
 	var nearest: Node2D = null
 	var nearest_distance := INF
-	_combat_target_scratch.clear()
-	_combat_target_scratch.append_array(_get_monster_nodes_cached())
-	_combat_target_scratch.append_array(
-		_get_aux_group_nodes_cached(&"treasure_chests")
-	)
-
-	for node in _combat_target_scratch:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var combat_target := node as Node2D
-		if combat_target == null:
-			continue
-		var hp_value = combat_target.get("current_hp")
-		if hp_value != null and int(hp_value) <= 0:
-			continue
-		var distance := global_position.distance_squared_to(
-			combat_target.global_position
-		)
-		if distance < nearest_distance:
-			nearest_distance = distance
-			nearest = combat_target
+	for group_name in ["monsters", "treasure_chests"]:
+		for node in get_tree().get_nodes_in_group(group_name):
+			if not is_instance_valid(node) or node.is_queued_for_deletion():
+				continue
+			var combat_target := node as Node2D
+			if combat_target == null:
+				continue
+			var hp_value = combat_target.get("current_hp")
+			if hp_value != null and int(hp_value) <= 0:
+				continue
+			var distance := global_position.distance_squared_to(
+				combat_target.global_position
+			)
+			if distance < nearest_distance:
+				nearest_distance = distance
+				nearest = combat_target
 
 	return nearest
 
@@ -7674,34 +7925,53 @@ func _fire_archmage_projectile(current_target: Node2D) -> void:
 	)
 
 
-func _roll_next_archmage_element() -> String:
+func _configure_archmage_basic_elements() -> void:
+	archmage_basic_elements.clear()
 	var configured = archmage_element_config.get(
 		"elements",
-		["earth", "fire", "ice", "light", "wind", "holy"]
+		ARCHMAGE_DEFAULT_BASIC_ELEMENTS
 	)
-	var elements: Array[String] = []
 	if typeof(configured) == TYPE_ARRAY:
 		for raw_element in configured:
 			var element := String(raw_element)
-			if not element.is_empty() and element not in elements:
-				elements.append(element)
+			if (
+				not element.is_empty()
+				and element not in archmage_basic_elements
+			):
+				archmage_basic_elements.append(element)
 
-	if elements.is_empty():
-		elements = ["earth", "fire", "ice", "light", "wind", "holy"]
+	if archmage_basic_elements.is_empty():
+		for element in ARCHMAGE_DEFAULT_BASIC_ELEMENTS:
+			archmage_basic_elements.append(element)
 
-	var candidates := elements.duplicate()
-	if candidates.size() > 1 and not archmage_last_element.is_empty():
-		candidates.erase(archmage_last_element)
 
-	var chosen := String(candidates[randi_range(0, candidates.size() - 1)])
+func _roll_next_archmage_element() -> String:
+	if archmage_basic_elements.is_empty():
+		_configure_archmage_basic_elements()
+	if archmage_basic_elements.is_empty():
+		return "earth"
+
+	var element_count := archmage_basic_elements.size()
+	var chosen_index := 0
+	if element_count > 1 and not archmage_last_element.is_empty():
+		var last_index := archmage_basic_elements.find(archmage_last_element)
+		if last_index >= 0:
+			chosen_index = randi_range(0, element_count - 2)
+			if chosen_index >= last_index:
+				chosen_index += 1
+		else:
+			chosen_index = randi_range(0, element_count - 1)
+	else:
+		chosen_index = randi_range(0, element_count - 1)
+
+	var chosen := archmage_basic_elements[chosen_index]
 	archmage_last_element = chosen
 	return chosen
 
 
 
 func _update_archmage_skill_runtime(delta: float) -> void:
-	for raw_key in archmage_skill_cooldowns.keys():
-		var key := String(raw_key)
+	for key in ARCHMAGE_SKILL_KEYS:
 		archmage_skill_cooldowns[key] = maxf(
 			float(archmage_skill_cooldowns.get(key, 0.0)) - delta,
 			0.0
@@ -7749,44 +8019,111 @@ func restore_archmage_gauge(amount: float) -> void:
 
 
 func _choose_archmage_skill() -> String:
-	var scores: Dictionary = {}
 	var nearby_220 := _count_monsters_near(global_position, 220.0)
 	var nearby_360 := _count_monsters_near(global_position, 360.0)
-	var total_monsters := _get_active_monster_count()
+	var total_monsters := _get_monster_nodes_cached().size()
+
+	var combustion_weight := 0.0
+	var ice_bolt_weight := 0.0
+	var earth_spikes_weight := 0.0
+	var holy_power_weight := 0.0
+	var chain_dagger_weight := 0.0
+	var storm_weight := 0.0
+	var harmony_weight := 0.0
 
 	if _archmage_skill_ready("combustion"):
-		scores["combustion"] = 1.2 + float(nearby_220) * 0.65
+		combustion_weight = maxf(
+			1.2 + float(nearby_220) * 0.65,
+			0.05
+		)
 	if _archmage_skill_ready("ice_bolt") and is_instance_valid(target):
-		scores["ice_bolt"] = 2.2
+		ice_bolt_weight = maxf(2.2, 0.05)
 	if _archmage_skill_ready("earth_spikes"):
-		scores["earth_spikes"] = 1.4 + minf(float(total_monsters) * 0.14, 2.2)
+		earth_spikes_weight = maxf(
+			1.4 + minf(float(total_monsters) * 0.14, 2.2),
+			0.05
+		)
 	if _archmage_skill_ready("holy_power"):
-		scores["holy_power"] = 1.1 + float(nearby_360) * 0.45
-	if _archmage_skill_ready("chain_dagger") and not archmage_chain_dagger_active and total_monsters > 0:
-		scores["chain_dagger"] = 1.4 + minf(float(total_monsters) * 0.25, 2.6)
+		holy_power_weight = maxf(
+			1.1 + float(nearby_360) * 0.45,
+			0.05
+		)
+	if (
+		_archmage_skill_ready("chain_dagger")
+		and not archmage_chain_dagger_active
+		and total_monsters > 0
+	):
+		chain_dagger_weight = maxf(
+			1.4 + minf(float(total_monsters) * 0.25, 2.6),
+			0.05
+		)
 	if _archmage_skill_ready("storm"):
-		scores["storm"] = 1.0 + float(nearby_360) * 0.55
+		storm_weight = maxf(
+			1.0 + float(nearby_360) * 0.55,
+			0.05
+		)
 
 	var cooling_count := 0
-	for key in ["combustion", "ice_bolt", "earth_spikes", "holy_power", "chain_dagger", "storm"]:
+	for key in ARCHMAGE_OFFENSIVE_SKILL_KEYS:
 		if float(archmage_skill_cooldowns.get(key, 0.0)) > 0.0:
 			cooling_count += 1
 	if _archmage_skill_ready("harmony") and cooling_count >= 1:
-		scores["harmony"] = 3.0 + float(cooling_count) * 1.10
+		harmony_weight = maxf(
+			3.0 + float(cooling_count) * 1.10,
+			0.05
+		)
 
-	if scores.is_empty():
+	var total_score := (
+		combustion_weight
+		+ ice_bolt_weight
+		+ earth_spikes_weight
+		+ holy_power_weight
+		+ chain_dagger_weight
+		+ storm_weight
+		+ harmony_weight
+	)
+	if total_score <= 0.0:
 		return ""
 
-	var total_score := 0.0
-	for raw_score in scores.values():
-		total_score += maxf(float(raw_score), 0.05)
 	var roll := randf() * total_score
-	for raw_key in scores.keys():
-		var key := String(raw_key)
-		roll -= maxf(float(scores[key]), 0.05)
+	if combustion_weight > 0.0:
+		roll -= combustion_weight
 		if roll <= 0.0:
-			return key
-	return String(scores.keys()[scores.size() - 1])
+			return "combustion"
+	if ice_bolt_weight > 0.0:
+		roll -= ice_bolt_weight
+		if roll <= 0.0:
+			return "ice_bolt"
+	if earth_spikes_weight > 0.0:
+		roll -= earth_spikes_weight
+		if roll <= 0.0:
+			return "earth_spikes"
+	if holy_power_weight > 0.0:
+		roll -= holy_power_weight
+		if roll <= 0.0:
+			return "holy_power"
+	if chain_dagger_weight > 0.0:
+		roll -= chain_dagger_weight
+		if roll <= 0.0:
+			return "chain_dagger"
+	if storm_weight > 0.0:
+		roll -= storm_weight
+		if roll <= 0.0:
+			return "storm"
+	if harmony_weight > 0.0:
+		return "harmony"
+
+	if storm_weight > 0.0:
+		return "storm"
+	if chain_dagger_weight > 0.0:
+		return "chain_dagger"
+	if holy_power_weight > 0.0:
+		return "holy_power"
+	if earth_spikes_weight > 0.0:
+		return "earth_spikes"
+	if ice_bolt_weight > 0.0:
+		return "ice_bolt"
+	return "combustion"
 
 
 func _archmage_skill_ready(skill_key: String) -> bool:
@@ -7825,6 +8162,7 @@ func _cast_archmage_skill_internal(
 	if skill_key != "harmony" and _archmage_has_all_element_orbs():
 		empowered = true
 		archmage_element_orbs.clear()
+		archmage_orbit_order.clear()
 		_refresh_archmage_orbit_visuals()
 
 	if consume_gauge:
@@ -7889,40 +8227,42 @@ func _cast_archmage_skill_internal(
 
 
 func _start_archmage_multicast(origin_skill: String) -> void:
-	var candidates: Array[String] = []
-	for key in [
-		"combustion",
-		"ice_bolt",
-		"earth_spikes",
-		"holy_power",
-		"chain_dagger",
-		"storm",
-	]:
+	archmage_multicast_candidates.clear()
+	for key in ARCHMAGE_OFFENSIVE_SKILL_KEYS:
 		if key == origin_skill:
 			continue
 		if not archmage_skill_config.has(key):
 			continue
 		if key == "chain_dagger" and archmage_chain_dagger_active:
 			continue
-		candidates.append(key)
+		archmage_multicast_candidates.append(key)
 
-	if candidates.is_empty():
+	if archmage_multicast_candidates.is_empty():
 		return
 
-	candidates.shuffle()
+	archmage_multicast_candidates.shuffle()
 	archmage_multicast_active = true
-	var wanted := mini(archmage_multicast_stacks, candidates.size())
+	var wanted := mini(
+		archmage_multicast_stacks,
+		archmage_multicast_candidates.size()
+	)
 	var casted := 0
 
-	while casted < wanted and not candidates.is_empty():
+	while (
+		casted < wanted
+		and not archmage_multicast_candidates.is_empty()
+	):
 		await get_tree().create_timer(0.30).timeout
 		if not is_inside_tree() or current_hp <= 0:
 			break
 
-		var extra_skill := String(candidates.pop_back())
+		var extra_skill := String(
+			archmage_multicast_candidates.pop_back()
+		)
 		if _cast_archmage_skill_internal(extra_skill, false, false):
 			casted += 1
 
+	archmage_multicast_candidates.clear()
 	archmage_multicast_active = false
 
 func _skill_damage_multiplier(empowered: bool) -> float:
@@ -8010,8 +8350,12 @@ func _cast_archmage_ice_bolt(config: Dictionary, empowered: bool) -> void:
 	if not is_instance_valid(current_target):
 		return
 	var direction := global_position.direction_to(current_target.global_position)
-	var projectile := ARCHMAGE_SKILL_PROJECTILE_SCENE.instantiate() as Area2D
-	get_parent().add_child(projectile)
+	var projectile := _acquire_projectile(
+		ARCHMAGE_SKILL_PROJECTILE_SCENE,
+		"archmage_skill_projectile"
+	)
+	if projectile == null:
+		return
 	projectile.global_position = global_position + direction * 58.0
 	projectile.call(
 		"setup", "ice_bolt", direction,
@@ -8171,8 +8515,14 @@ func _find_archmage_holy_cluster_target(config: Dictionary) -> Node2D:
 	var best: Node2D = null
 	var best_count: int = -1
 	var best_distance_sq: float = INF
+	var search_radius_sq := search_radius * search_radius
+	_fill_monster_nodes_near(
+		global_position,
+		search_radius,
+		archmage_query_candidates
+	)
 
-	for node in _get_monster_nodes_near(global_position, search_radius):
+	for node in archmage_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -8182,7 +8532,7 @@ func _find_archmage_holy_cluster_target(config: Dictionary) -> Node2D:
 		var distance_sq: float = global_position.distance_squared_to(
 			monster.global_position
 		)
-		if distance_sq > search_radius * search_radius:
+		if distance_sq > search_radius_sq:
 			continue
 
 		var nearby_count: int = _count_monsters_near(
@@ -8197,6 +8547,7 @@ func _find_archmage_holy_cluster_target(config: Dictionary) -> Node2D:
 			best = monster
 			best_distance_sq = distance_sq
 
+	archmage_query_candidates.clear()
 	return best
 
 
@@ -8223,6 +8574,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 		* float(config.get("damage_ratio", 0.90))
 		* _skill_damage_multiplier(empowered)
 	)))
+	var hit_radius_sq := hit_radius * hit_radius
 
 	for index in range(count):
 		if not is_inside_tree() or current_hp <= 0:
@@ -8238,13 +8590,18 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 			"holy", 1, 5, 20.0, false, position, Vector2(0.94, 0.94)
 		)
 
-		for node in _get_monster_nodes_near(position, hit_radius):
+		_fill_monster_nodes_near(
+			position,
+			hit_radius,
+			archmage_query_candidates
+		)
+		for node in archmage_query_candidates:
 			if not is_instance_valid(node) or node.is_queued_for_deletion():
 				continue
 			var monster := node as Node2D
 			if monster == null or not monster.has_method("take_damage"):
 				continue
-			if position.distance_squared_to(monster.global_position) > hit_radius * hit_radius:
+			if position.distance_squared_to(monster.global_position) > hit_radius_sq:
 				continue
 
 			var dealt: int = base_damage
@@ -8278,6 +8635,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 					) * 1000.0
 				)
 			)
+		archmage_query_candidates.clear()
 
 		await get_tree().create_timer(
 			maxf(float(config.get("burst_delay", 0.09)), 0.02)
@@ -8289,9 +8647,15 @@ func _get_archmage_chain_dagger_targets(
 	max_count: int,
 	search_radius: float
 ) -> Array[Node2D]:
-	var candidates: Array[Node2D] = []
+	archmage_chain_target_candidates.clear()
+	archmage_chain_target_results.clear()
 	var radius_sq := search_radius * search_radius
-	for node in _get_monster_nodes_near(global_position, search_radius):
+	_fill_monster_nodes_near(
+		global_position,
+		search_radius,
+		archmage_query_candidates
+	)
+	for node in archmage_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -8302,25 +8666,29 @@ func _get_archmage_chain_dagger_targets(
 			> radius_sq
 		):
 			continue
-		candidates.append(monster)
+		archmage_chain_target_candidates.append(monster)
+	archmage_query_candidates.clear()
 
-	if candidates.is_empty():
-		return []
+	if archmage_chain_target_candidates.is_empty():
+		return archmage_chain_target_results
 
-	var result: Array[Node2D] = []
 	if (
 		is_instance_valid(target)
 		and target.is_in_group("monsters")
 		and global_position.distance_squared_to(target.global_position)
 		<= radius_sq
 	):
-		result.append(target)
+		archmage_chain_target_results.append(target)
 
-	while result.size() < max_count and result.size() < candidates.size():
+	while (
+		archmage_chain_target_results.size() < max_count
+		and archmage_chain_target_results.size()
+		< archmage_chain_target_candidates.size()
+	):
 		var best: Node2D = null
 		var best_score := -INF
-		for candidate in candidates:
-			if candidate in result:
+		for candidate in archmage_chain_target_candidates:
+			if candidate in archmage_chain_target_results:
 				continue
 			var direction := global_position.direction_to(
 				candidate.global_position
@@ -8329,8 +8697,8 @@ func _get_archmage_chain_dagger_targets(
 				continue
 
 			var min_angle := PI
-			if not result.is_empty():
-				for chosen in result:
+			if not archmage_chain_target_results.is_empty():
+				for chosen in archmage_chain_target_results:
 					var chosen_direction := global_position.direction_to(
 						chosen.global_position
 					)
@@ -8353,11 +8721,13 @@ func _get_archmage_chain_dagger_targets(
 
 		if not is_instance_valid(best):
 			break
-		result.append(best)
+		archmage_chain_target_results.append(best)
 
-	if result.is_empty():
-		result.append(candidates[0])
-	return result
+	if archmage_chain_target_results.is_empty():
+		archmage_chain_target_results.append(
+			archmage_chain_target_candidates[0]
+		)
+	return archmage_chain_target_results
 
 
 func _cast_archmage_chain_dagger(config: Dictionary, empowered: bool) -> void:
@@ -8388,14 +8758,19 @@ func _cast_archmage_chain_dagger(config: Dictionary, empowered: bool) -> void:
 		if direction.length_squared() <= 0.001:
 			direction = Vector2.RIGHT
 
-		var projectile := (
-			ARCHMAGE_SKILL_PROJECTILE_SCENE.instantiate()
-			as Area2D
-		)
-		get_parent().add_child(projectile)
-		projectile.add_to_group(
+		var projectile := _acquire_projectile(
+			ARCHMAGE_SKILL_PROJECTILE_SCENE,
 			"archmage_chain_dagger_projectile"
 		)
+		if projectile == null:
+			notify_archmage_chain_dagger_finished()
+			continue
+		if not projectile.is_in_group(
+			"archmage_chain_dagger_projectile"
+		):
+			projectile.add_to_group(
+				"archmage_chain_dagger_projectile"
+			)
 		projectile.global_position = (
 			global_position + direction.normalized() * 58.0
 		)
@@ -8454,7 +8829,12 @@ func _cast_archmage_blink() -> void:
 
 	var start_position := global_position
 	var repulsion := Vector2.ZERO
-	for node in _get_monster_nodes_near(global_position, 460.0):
+	_fill_monster_nodes_near(
+		global_position,
+		460.0,
+		archmage_query_candidates
+	)
+	for node in archmage_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -8468,6 +8848,7 @@ func _cast_archmage_blink() -> void:
 			sqrt(distance_sq),
 			1.0
 		)
+	archmage_query_candidates.clear()
 
 	var preferred := (
 		repulsion.normalized()
@@ -8548,7 +8929,7 @@ func _cast_archmage_blink() -> void:
 
 
 func _cast_archmage_harmony(config: Dictionary) -> void:
-	for key in ["combustion", "ice_bolt", "earth_spikes", "holy_power", "chain_dagger", "storm"]:
+	for key in ARCHMAGE_OFFENSIVE_SKILL_KEYS:
 		archmage_skill_cooldowns[key] = 0.0
 	_add_archmage_gauge(maxf(float(config.get("gauge_refund", 50.0)), 0.0))
 	_spawn_archmage_fx(
@@ -8560,8 +8941,12 @@ func _cast_archmage_harmony(config: Dictionary) -> void:
 func _cast_archmage_storm(config: Dictionary, empowered: bool) -> void:
 	for index in range(8):
 		var direction := Vector2.from_angle(TAU * float(index) / 8.0)
-		var projectile := ARCHMAGE_SKILL_PROJECTILE_SCENE.instantiate() as Area2D
-		get_parent().add_child(projectile)
+		var projectile := _acquire_projectile(
+			ARCHMAGE_SKILL_PROJECTILE_SCENE,
+			"archmage_skill_projectile"
+		)
+		if projectile == null:
+			continue
 		projectile.global_position = global_position + direction * 56.0
 		projectile.call(
 			"setup", "storm", direction,
@@ -8580,6 +8965,8 @@ func _collect_archmage_element(element: String) -> void:
 		archmage_element_orbs.get(element, false)
 	)
 	archmage_element_orbs[element] = true
+	if not already_owned:
+		archmage_orbit_order.append(element)
 
 	if (
 		already_owned
@@ -8587,75 +8974,75 @@ func _collect_archmage_element(element: String) -> void:
 		and randf() <= 0.25 * float(archmage_element_cycle_stacks)
 	):
 		var missing: Array[String] = []
-		for candidate in [
-			"fire",
-			"water",
-			"wind",
-			"electric",
-			"earth",
-			"holy",
-		]:
+		for candidate in ARCHMAGE_ORB_ELEMENTS:
 			if not bool(archmage_element_orbs.get(candidate, false)):
 				missing.append(candidate)
 		if not missing.is_empty():
-			archmage_element_orbs[
-				String(missing.pick_random())
-			] = true
+			var granted := String(missing.pick_random())
+			archmage_element_orbs[granted] = true
+			archmage_orbit_order.append(granted)
 
 	_refresh_archmage_orbit_visuals()
 
 func _archmage_has_all_element_orbs() -> bool:
-	for element in ["fire", "water", "wind", "electric", "earth", "holy"]:
+	for element in ARCHMAGE_ORB_ELEMENTS:
 		if not bool(archmage_element_orbs.get(element, false)):
 			return false
 	return true
 
 
 func _refresh_archmage_orbit_visuals() -> void:
-	for raw_sprite in archmage_orbit_sprites.values():
-		if is_instance_valid(raw_sprite):
-			raw_sprite.queue_free()
-	archmage_orbit_sprites.clear()
+	for element in ARCHMAGE_ORB_ELEMENTS:
+		var existing = archmage_orbit_sprites.get(element)
+		if is_instance_valid(existing):
+			existing.visible = false
+
 	if hero_archetype != "archmage_elementalist":
 		return
-	var frame_map := {
-		"fire": 1,
-		"water": 2,
-		"wind": 3,
-		"electric": 4,
-		"earth": 5,
-		"holy": 7,
-	}
-	for raw_element in archmage_element_orbs.keys():
-		var element := String(raw_element)
+
+	for element in archmage_orbit_order:
 		if not bool(archmage_element_orbs.get(element, false)):
 			continue
-		var frame_index := int(frame_map.get(element, 0))
+		var frame_index := int(ARCHMAGE_ORB_FRAME_INDEX.get(element, 0))
 		if frame_index <= 0:
 			continue
-		var texture := _load_stage1_texture(
-			"res://assets/art/heroes/stage5_archmage/frames/effect6/orb_%02d.png" % frame_index
-		)
-		if texture == null:
-			continue
-		var sprite := Sprite2D.new()
-		sprite.texture = texture
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		sprite.scale = Vector2(0.20, 0.20)
-		sprite.z_index = 8
-		add_child(sprite)
-		archmage_orbit_sprites[element] = sprite
+
+		var sprite := archmage_orbit_sprites.get(element) as Sprite2D
+		if not is_instance_valid(sprite):
+			var texture := _load_stage1_texture(
+				"res://assets/art/heroes/stage5_archmage/frames/effect6/orb_%02d.png" % frame_index
+			)
+			if texture == null:
+				continue
+			sprite = Sprite2D.new()
+			sprite.texture = texture
+			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			sprite.scale = Vector2(0.20, 0.20)
+			sprite.z_index = 8
+			add_child(sprite)
+			archmage_orbit_sprites[element] = sprite
+		sprite.visible = true
+
 	_update_archmage_orbit_positions()
 
 
 func _update_archmage_orbit_positions() -> void:
-	var count := archmage_orbit_sprites.size()
+	var count := 0
+	for element in archmage_orbit_order:
+		if not bool(archmage_element_orbs.get(element, false)):
+			continue
+		var sprite := archmage_orbit_sprites.get(element) as Sprite2D
+		if is_instance_valid(sprite) and sprite.visible:
+			count += 1
 	if count <= 0:
 		return
+
 	var index := 0
-	for raw_key in archmage_orbit_sprites.keys():
-		var sprite = archmage_orbit_sprites[raw_key]
-		if not is_instance_valid(sprite):
+	for element in archmage_orbit_order:
+		if not bool(archmage_element_orbs.get(element, false)):
+			continue
+		var sprite := archmage_orbit_sprites.get(element) as Sprite2D
+		if not is_instance_valid(sprite) or not sprite.visible:
 			continue
 		var angle := archmage_orbit_angle + TAU * float(index) / float(count)
 		sprite.position = Vector2.from_angle(angle) * 64.0 + Vector2(0.0, -8.0)
@@ -8761,7 +9148,8 @@ func _recycle_archmage_fx(fx: AnimatedSprite2D) -> void:
 
 func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int) -> void:
 	var radius_sq := radius * radius
-	for node in _get_monster_nodes_near(origin, radius):
+	_fill_monster_nodes_near(origin, radius, _combat_monster_scratch)
+	for node in _combat_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -8769,6 +9157,7 @@ func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int) -> 
 			continue
 		if origin.distance_squared_to(monster.global_position) <= radius_sq:
 			monster.call("take_damage", damage)
+	_combat_monster_scratch.clear()
 
 func _damage_monsters_in_radius_once(
 	origin: Vector2,
@@ -8777,7 +9166,8 @@ func _damage_monsters_in_radius_once(
 	hit_ids: Dictionary
 ) -> void:
 	var radius_sq := radius * radius
-	for node in _get_monster_nodes_near(origin, radius):
+	_fill_monster_nodes_near(origin, radius, _combat_monster_scratch)
+	for node in _combat_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -8789,6 +9179,7 @@ func _damage_monsters_in_radius_once(
 		if origin.distance_squared_to(monster.global_position) <= radius_sq:
 			hit_ids[iid] = true
 			monster.call("take_damage", damage)
+	_combat_monster_scratch.clear()
 
 func _damage_monsters_in_corridor(
 	start: Vector2,
@@ -8808,8 +9199,9 @@ func _damage_monsters_in_corridor(
 	)
 	var query_rect := Rect2(min_point, max_point - min_point)
 	var half_width_sq := half_width * half_width
+	_fill_monster_nodes_in_rect(query_rect, _combat_monster_scratch)
 
-	for node in _get_monster_nodes_in_rect(query_rect):
+	for node in _combat_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -8819,6 +9211,7 @@ func _damage_monsters_in_corridor(
 		var closest := start + segment * t
 		if monster.global_position.distance_squared_to(closest) <= half_width_sq:
 			monster.call("take_damage", damage)
+	_combat_monster_scratch.clear()
 
 func _find_farthest_monster_from_point(origin: Vector2) -> Node2D:
 	var best: Node2D = null
@@ -9023,7 +9416,13 @@ func _apply_channel_damage() -> void:
 	if radius <= 0.0:
 		return
 
-	for node in _get_monster_nodes_near(global_position, radius):
+	var radius_sq := radius * radius
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		_combat_monster_scratch
+	)
+	for node in _combat_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		if not node.has_method("take_damage"):
@@ -9034,11 +9433,12 @@ func _apply_channel_damage() -> void:
 			continue
 		if (
 			global_position.distance_squared_to(monster.global_position)
-			> radius * radius
+			> radius_sq
 		):
 			continue
 
 		monster.call("take_damage", damage)
+	_combat_monster_scratch.clear()
 
 func _end_channel_skill() -> void:
 	channeling = false
@@ -9508,7 +9908,12 @@ func _trigger_purifier_protection_break_pulse() -> void:
 		) * 1000.0
 	))
 	var radius_sq := radius * radius
-	for node in _get_monster_nodes_near(global_position, radius):
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		_combat_monster_scratch
+	)
+	for node in _combat_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -9530,6 +9935,7 @@ func _trigger_purifier_protection_break_pulse() -> void:
 			"gunner_slow_multiplier",
 			minf(current_multiplier, slow_multiplier)
 		)
+	_combat_monster_scratch.clear()
 
 
 func _end_purifier_protection(broken: bool) -> void:
@@ -10460,8 +10866,12 @@ func _use_piercing_projectile_ultimate() -> void:
 	_face_attack_direction(shot_direction.x)
 	_restart_stage1_animation("attack")
 
-	var projectile := ULTIMATE_PIERCING_PROJECTILE_SCENE.instantiate() as Area2D
-	get_parent().add_child(projectile)
+	var projectile := _acquire_projectile(
+		ULTIMATE_PIERCING_PROJECTILE_SCENE,
+		"ultimate_piercing_projectile"
+	)
+	if projectile == null:
+		return
 	projectile.global_position = global_position + shot_direction * 54.0
 	projectile.call(
 		"setup",
@@ -10481,29 +10891,38 @@ func _find_best_piercing_direction() -> Vector2:
 		1.0
 	)
 
-	var monsters: Array[Node2D] = []
-	for node in _get_monster_nodes_near(global_position, max_range):
+	var max_range_sq := max_range * max_range
+	_fill_monster_nodes_near(
+		global_position,
+		max_range,
+		_combat_monster_scratch
+	)
+	for index in range(_combat_monster_scratch.size() - 1, -1, -1):
+		var node = _combat_monster_scratch[index]
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			_combat_monster_scratch.remove_at(index)
 			continue
 		var monster := node as Node2D
 		if monster == null:
+			_combat_monster_scratch.remove_at(index)
 			continue
-		var distance := global_position.distance_to(
+		var distance_sq := global_position.distance_squared_to(
 			monster.global_position
 		)
-		if distance <= 0.0 or distance > max_range:
-			continue
-		monsters.append(monster)
+		if distance_sq <= 0.0 or distance_sq > max_range_sq:
+			_combat_monster_scratch.remove_at(index)
 
-	if monsters.is_empty():
+	if _combat_monster_scratch.is_empty():
 		return Vector2.ZERO
 
+	var first_monster := _combat_monster_scratch[0] as Node2D
 	var best_direction := global_position.direction_to(
-		monsters[0].global_position
+		first_monster.global_position
 	)
 	var best_score := -INF
 
-	for candidate in monsters:
+	for raw_candidate in _combat_monster_scratch:
+		var candidate := raw_candidate as Node2D
 		var candidate_direction := global_position.direction_to(
 			candidate.global_position
 		)
@@ -10511,7 +10930,8 @@ func _find_best_piercing_direction() -> Vector2:
 			continue
 
 		var score := 0.0
-		for target_monster in monsters:
+		for raw_target_monster in _combat_monster_scratch:
+			var target_monster := raw_target_monster as Node2D
 			var offset := (
 				target_monster.global_position
 				- global_position
@@ -10536,7 +10956,9 @@ func _find_best_piercing_direction() -> Vector2:
 			best_score = score
 			best_direction = candidate_direction
 
-	return best_direction.normalized()
+	var result := best_direction.normalized()
+	_combat_monster_scratch.clear()
+	return result
 
 func _use_area_burst_ultimate() -> void:
 	var radius := maxf(
@@ -10550,8 +10972,13 @@ func _use_area_burst_ultimate() -> void:
 	if radius <= 0.0 or damage <= 0:
 		return
 
-	var targets: Array = _get_monster_nodes_near(global_position, radius)
-	for node in targets:
+	var radius_sq := radius * radius
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		_combat_monster_scratch
+	)
+	for node in _combat_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 
@@ -10560,11 +10987,12 @@ func _use_area_burst_ultimate() -> void:
 			continue
 		if (
 			global_position.distance_squared_to(monster.global_position)
-			> radius * radius
+			> radius_sq
 		):
 			continue
 		if monster.has_method("take_damage"):
 			monster.call("take_damage", damage)
+	_combat_monster_scratch.clear()
 
 func collect_heal_item(base_amount: int) -> int:
 	if base_amount <= 0 or current_hp <= 0 or is_dying:
@@ -11255,29 +11683,14 @@ func _add_status_resistance(
 	)
 
 func _get_summoner_augment_ai_settings() -> Dictionary:
-	var settings := ai_settings.duplicate(true)
 	if hero_archetype != "summoner_gatekeeper":
-		return settings
-	var biases: Dictionary = Dictionary(settings.get("augment_biases", {})).duplicate(true)
-	var families := {
-		"gatekeeper": ["summoner_gatekeeper_fortress", "summoner_gatekeeper_barrage"],
-		"scout": ["summoner_scout_reinforcement", "summoner_scout_swarm_tactics"],
-		"hound": ["summoner_hound_frenzy", "summoner_hound_blood_track"],
-		"watcher": ["summoner_watcher_focus", "summoner_watcher_network"],
-	}
-	var total := 0
-	for family_id in families.keys():
-		total += int(summoner_ai_choice_counts.get(family_id, 0))
-	if total > 0:
-		for family_id in families.keys():
-			var ratio := float(summoner_ai_choice_counts.get(family_id, 0)) / float(total)
-			for augment_id in families[family_id]:
-				biases[augment_id] = float(biases.get(augment_id, 0.0)) + ratio * 4.0
-	var filled_ratio := float(_get_active_summon_count()) / float(maxi(_get_summoner_slot_capacity(), 1))
-	biases["summoner_shield_fortify"] = float(biases.get("summoner_shield_fortify", 0.0)) + filled_ratio * 1.4
-	biases["summoner_shield_resonance"] = float(biases.get("summoner_shield_resonance", 0.0)) + filled_ratio * 1.2
-	settings["augment_biases"] = biases
-	return settings
+		return ai_settings.duplicate(true)
+	return HERO_SUMMONER_RUNTIME.build_augment_ai_settings(
+		ai_settings,
+		summoner_ai_choice_counts,
+		_get_active_summon_count(),
+		_get_summoner_slot_capacity()
+	)
 
 
 func _level_up() -> void:
@@ -11517,9 +11930,8 @@ func _build_ai_context() -> Dictionary:
 		gunner_ammo_ratio = float(gunner_ammo) / float(maxi(gunner_magazine_size, 1))
 		gunner_reload_state = 1.0 if gunner_reloading else 0.0
 		gunner_surround_pressure = _gunner_surround_pressure()
-		gunner_deadeye_cluster_score = float(
-			_gunner_deadeye_best_direction().get("score", 0.0)
-		)
+		_update_gunner_deadeye_aim_analysis()
+		gunner_deadeye_cluster_score = gunner_deadeye_analysis_score
 
 	return {
 		"nearby_count": nearby_count,
@@ -12530,6 +12942,7 @@ func _run_berserker_skill2_wave(
 	var blood_visuals: Array[AnimatedSprite2D] = []
 
 	var hit_ids: Dictionary = {}
+	var healed_ids: Dictionary = {}
 	var current_position: Vector2 = start_position
 	var current_direction: Vector2 = start_direction.normalized()
 	var cell_length: float = maxf(
@@ -12658,7 +13071,8 @@ func _run_berserker_skill2_wave(
 		_heal_berserker_from_blood_path(
 			world_points,
 			half_width,
-			heal_per_touch
+			heal_per_touch,
+			healed_ids
 		)
 		await get_tree().create_timer(tick_interval).timeout
 		elapsed += tick_interval
@@ -12697,8 +13111,14 @@ func _damage_berserker_skill2_segment(
 	var length_sq: float = maxf(segment.length_squared(), 0.001)
 	var midpoint: Vector2 = from_position.lerp(to_position, 0.5)
 	var search_radius: float = segment.length() * 0.5 + half_width + 20.0
+	var half_width_sq: float = half_width * half_width
+	_fill_monster_nodes_near(
+		midpoint,
+		search_radius,
+		berserker_query_candidates
+	)
 
-	for node in _get_monster_nodes_near(midpoint, search_radius):
+	for node in berserker_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -12718,7 +13138,7 @@ func _damage_berserker_skill2_segment(
 		var closest: Vector2 = from_position + segment * t
 		if (
 			monster.global_position.distance_squared_to(closest)
-			> half_width * half_width
+			> half_width_sq
 		):
 			continue
 
@@ -12743,17 +13163,20 @@ func _damage_berserker_skill2_segment(
 				killed = true
 		if killed:
 			notify_berserker_skill_kill()
+	berserker_query_candidates.clear()
 
 
 func _heal_berserker_from_blood_path(
 	world_points: Array[Vector2],
 	half_width: float,
-	heal_per_touch: int
+	heal_per_touch: int,
+	healed_ids: Dictionary
 ) -> void:
 	if current_hp <= 0 or is_dying or world_points.size() < 2:
 		return
 
-	var healed_ids: Dictionary = {}
+	healed_ids.clear()
+	var half_width_sq: float = half_width * half_width
 	for segment_index in range(world_points.size() - 1):
 		var from_position: Vector2 = world_points[segment_index]
 		var to_position: Vector2 = world_points[segment_index + 1]
@@ -12763,8 +13186,13 @@ func _heal_berserker_from_blood_path(
 		var search_radius: float = (
 			segment.length() * 0.5 + half_width + 20.0
 		)
+		_fill_monster_nodes_near(
+			midpoint,
+			search_radius,
+			berserker_query_candidates
+		)
 
-		for node in _get_monster_nodes_near(midpoint, search_radius):
+		for node in berserker_query_candidates:
 			if not is_instance_valid(node) or node.is_queued_for_deletion():
 				continue
 			var monster := node as Node2D
@@ -12783,12 +13211,13 @@ func _heal_berserker_from_blood_path(
 			var closest: Vector2 = from_position + segment * t
 			if (
 				monster.global_position.distance_squared_to(closest)
-				> half_width * half_width
+				> half_width_sq
 			):
 				continue
 
 			healed_ids[iid] = true
 			heal_direct(heal_per_touch)
+		berserker_query_candidates.clear()
 
 
 func _start_berserker_skill3(current_target: Node2D) -> void:
@@ -12902,7 +13331,12 @@ func _execute_berserker_skill3(
 	)
 	var orb_radius_sq: float = orb_radius * orb_radius
 	var orb_count: int = 0
-	for node in _get_monster_nodes_near(global_position, orb_radius):
+	_fill_monster_nodes_near(
+		global_position,
+		orb_radius,
+		berserker_query_candidates
+	)
+	for node in berserker_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -12919,6 +13353,7 @@ func _execute_berserker_skill3(
 		)
 		_berserker_blood_art_eighth_heal_on_hit()
 		orb_count += 1
+	berserker_query_candidates.clear()
 
 	var pickup_duration: float = maxf(
 		float(skill_config.get("orb_pickup_duration", 0.42)),
@@ -13079,7 +13514,12 @@ func _start_berserker_skill4() -> void:
 		spin_fx.z_index = 8
 
 	var radius_sq: float = radius * radius
-	for node in _get_monster_nodes_near(global_position, radius):
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		berserker_query_candidates
+	)
+	for node in berserker_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -13137,6 +13577,7 @@ func _start_berserker_skill4() -> void:
 				killed = true
 		if killed:
 			notify_berserker_skill_kill()
+	berserker_query_candidates.clear()
 
 	queue_redraw()
 
@@ -13298,11 +13739,13 @@ func _berserker_basic_attack(current_target: Node2D) -> void:
 	)
 	var damage: int = _get_berserker_effective_attack_damage()
 	var side: Vector2 = Vector2(-direction.y, direction.x)
-
-	for node in _get_monster_nodes_near(
+	_fill_monster_nodes_near(
 		global_position,
-		reach + half_width
-	):
+		reach + half_width,
+		berserker_query_candidates
+	)
+
+	for node in berserker_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -13334,6 +13777,7 @@ func _berserker_basic_attack(current_target: Node2D) -> void:
 				killed = true
 		if killed:
 			notify_berserker_skill_kill()
+	berserker_query_candidates.clear()
 
 	_damage_treasure_chests(
 		global_position + direction * (reach * 0.55),
@@ -13437,7 +13881,12 @@ func _find_berserker_madness_target() -> Node2D:
 	var radius_sq: float = radius * radius
 	var farthest: Node2D = null
 	var farthest_distance_sq: float = -1.0
-	for node in _get_monster_nodes_near(global_position, radius):
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		berserker_query_candidates
+	)
+	for node in berserker_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -13453,6 +13902,7 @@ func _find_berserker_madness_target() -> Node2D:
 			continue
 		farthest = monster
 		farthest_distance_sq = distance_sq
+	berserker_query_candidates.clear()
 	return farthest
 
 
@@ -13502,8 +13952,20 @@ func _spawn_berserker_blood_dash_trail(
 		return
 
 	var parent_2d := parent as Node2D
-	var trail := Line2D.new()
-	parent.add_child(trail)
+	var trail: Line2D = null
+	if parent.has_method("acquire_transient_fx"):
+		trail = parent.call(
+			"acquire_transient_fx",
+			"berserker_blood_dash_trail",
+			"line"
+		) as Line2D
+	if trail == null:
+		trail = Line2D.new()
+		parent.add_child(trail)
+
+	trail.clear_points()
+	trail.visible = true
+	trail.modulate = Color.WHITE
 	trail.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	trail.z_index = 6
 	trail.width = 30.0
@@ -13533,10 +13995,19 @@ func _spawn_berserker_blood_dash_trail(
 		6.0,
 		0.34
 	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	trail_tween.finished.connect(
-		Callable(trail, "queue_free"),
-		Object.CONNECT_ONE_SHOT
-	)
+	if parent.has_method("recycle_transient_fx"):
+		trail_tween.finished.connect(
+			Callable(parent, "recycle_transient_fx").bind(
+				trail,
+				"berserker_blood_dash_trail"
+			),
+			Object.CONNECT_ONE_SHOT
+		)
+	else:
+		trail_tween.finished.connect(
+			Callable(trail, "queue_free"),
+			Object.CONNECT_ONE_SHOT
+		)
 
 	var segment: Vector2 = end_position - start_position
 	var segment_length: float = segment.length()
@@ -13740,14 +14211,11 @@ func _physics_process_fighter(delta: float) -> void:
 func _fighter_should_start_charge() -> bool:
 	if fighter_charge_config.is_empty() or fighter_guard_active:
 		return false
-	var radius := maxf(
-		float(fighter_charge_config.get("trigger_radius", 245.0)),
-		1.0
+	var trigger := HERO_FIGHTER_RUNTIME.get_charge_trigger(
+		fighter_charge_config
 	)
-	var required := maxi(
-		int(fighter_charge_config.get("trigger_enemy_count", 4)),
-		1
-	)
+	var radius := trigger.x
+	var required := maxi(int(trigger.y), 1)
 	return _count_monsters_near(
 		global_position,
 		radius,
@@ -13762,26 +14230,22 @@ func _start_fighter_charge() -> void:
 	_begin_fighter_charge_dash(charge_target)
 
 func _find_fighter_charge_target(exclude: Node = null) -> Node2D:
-	var max_distance := maxf(float(fighter_charge_config.get("max_target_distance", 560.0)), 1.0)
-	var max_distance_sq := max_distance * max_distance
-	var farthest: Node2D = null
-	var farthest_distance_sq := -1.0
-	for node in _get_monster_nodes_near(global_position, max_distance):
-		if not is_instance_valid(node) or node.is_queued_for_deletion() or node == exclude:
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		var distance_sq := global_position.distance_squared_to(
-			monster.global_position
-		)
-		if (
-			distance_sq <= max_distance_sq
-			and distance_sq > farthest_distance_sq
-		):
-			farthest = monster
-			farthest_distance_sq = distance_sq
-	return farthest
+	var max_distance := HERO_FIGHTER_RUNTIME.get_charge_max_target_distance(
+		fighter_charge_config
+	)
+	_fill_monster_nodes_near(
+		global_position,
+		max_distance,
+		fighter_charge_target_candidates
+	)
+	var charge_target := HERO_FIGHTER_RUNTIME.find_farthest_charge_target(
+		fighter_charge_target_candidates,
+		global_position,
+		max_distance,
+		exclude
+	)
+	fighter_charge_target_candidates.clear()
+	return charge_target
 
 func _begin_fighter_charge_dash(charge_target: Node2D) -> void:
 	if not is_instance_valid(charge_target):
@@ -13805,7 +14269,7 @@ func _begin_fighter_charge_dash(charge_target: Node2D) -> void:
 	_face_attack_direction(direction.x)
 	_restart_stage1_animation("attack", 1.65)
 	_play_fighter_attack_effect("thrust", direction)
-	_spawn_fighter_afterimage(0.62)
+	_spawn_fighter_afterimage(0.78)
 
 func _update_fighter_charge(delta: float) -> void:
 	if not fighter_charge_active:
@@ -13826,7 +14290,7 @@ func _update_fighter_charge(delta: float) -> void:
 
 	fighter_charge_afterimage_timer -= delta
 	if fighter_charge_afterimage_timer <= 0.0:
-		_spawn_fighter_afterimage(0.48)
+		_spawn_fighter_afterimage(0.62)
 		fighter_charge_afterimage_timer = maxf(
 			float(fighter_charge_config.get("afterimage_interval", 0.035)),
 			0.015
@@ -13858,7 +14322,12 @@ func _complete_fighter_charge_dash() -> void:
 		))
 	)
 	var radius := maxf(float(fighter_charge_config.get("impact_radius", 175.0)), 1.0)
-	for node in _get_monster_nodes_near(global_position, radius):
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		fighter_charge_impact_candidates
+	)
+	for node in fighter_charge_impact_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -13869,6 +14338,7 @@ func _complete_fighter_charge_dash() -> void:
 			<= radius * radius
 		):
 			_fighter_charge_damage_target(monster, impact_damage)
+	fighter_charge_impact_candidates.clear()
 
 	_play_fighter_charge_impact_effect()
 	fighter_charge_chain_count += 1
@@ -13945,7 +14415,21 @@ func _spawn_fighter_afterimage(alpha: float) -> void:
 	if frame_texture == null:
 		return
 
-	var ghost := Sprite2D.new()
+	var parent := get_parent()
+	if not is_instance_valid(parent):
+		return
+	var ghost: Sprite2D = null
+	if parent.has_method("acquire_transient_fx"):
+		ghost = parent.call(
+			"acquire_transient_fx",
+			"fighter_charge_afterimage",
+			"sprite"
+		) as Sprite2D
+	if ghost == null:
+		ghost = Sprite2D.new()
+		parent.add_child(ghost)
+
+	ghost.visible = true
 	ghost.texture = frame_texture
 	ghost.centered = hero_sprite.centered
 	ghost.flip_h = hero_sprite.flip_h
@@ -13956,8 +14440,7 @@ func _spawn_fighter_afterimage(alpha: float) -> void:
 	ghost.global_position = global_position
 	ghost.z_index = hero_sprite.z_index - 1
 	ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	ghost.modulate = Color(1.0, 1.0, 1.0, clampf(alpha, 0.05, 0.85))
-	get_parent().add_child(ghost)
+	ghost.modulate = Color(1.0, 1.0, 1.0, clampf(alpha, 0.05, 0.92))
 
 	var fade_time := maxf(
 		float(fighter_charge_config.get("afterimage_fade_time", 0.30)),
@@ -13965,7 +14448,19 @@ func _spawn_fighter_afterimage(alpha: float) -> void:
 	)
 	var tween := ghost.create_tween()
 	tween.tween_property(ghost, "modulate:a", 0.0, fade_time)
-	tween.finished.connect(Callable(ghost, "queue_free"))
+	if parent.has_method("recycle_transient_fx"):
+		tween.finished.connect(
+			Callable(parent, "recycle_transient_fx").bind(
+				ghost,
+				"fighter_charge_afterimage"
+			),
+			Object.CONNECT_ONE_SHOT
+		)
+	else:
+		tween.finished.connect(
+			Callable(ghost, "queue_free"),
+			Object.CONNECT_ONE_SHOT
+		)
 
 func _play_fighter_charge_impact_effect() -> void:
 	if channel_effect.sprite_frames == null:
@@ -14160,30 +14655,17 @@ func _restart_fighter_attack_animation(reverse_frames: bool) -> void:
 
 
 func _fighter_should_use_slash() -> bool:
-	var trigger_count := maxi(
-		int(fighter_basic_config.get("slash_enemy_trigger", 2)),
-		1
+	var trigger := HERO_FIGHTER_RUNTIME.get_slash_trigger(
+		fighter_basic_config,
+		fighter_slash_half_width_bonus
 	)
-	var radius := maxf(
-		float(fighter_basic_config.get("slash_reach", 135.0))
-		+ fighter_slash_half_width_bonus,
-		1.0
-	)
-	var nearby := 0
-	for node in _get_monster_nodes_near(global_position, radius):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		if (
-			global_position.distance_squared_to(monster.global_position)
-			<= radius * radius
-		):
-			nearby += 1
-			if nearby >= trigger_count:
-				return true
-	return false
+	var radius := trigger.x
+	var required := maxi(int(trigger.y), 1)
+	return _count_monsters_near(
+		global_position,
+		radius,
+		required
+	) >= required
 
 func _fighter_apply_slash(direction: Vector2, bonus_hit: bool = false) -> int:
 	var reach := maxf(float(fighter_basic_config.get("slash_reach", 135.0)), 1.0)
@@ -14203,7 +14685,12 @@ func _fighter_apply_slash(direction: Vector2, bonus_hit: bool = false) -> int:
 	var side := Vector2(-direction.y, direction.x)
 	var bonus_kills := 0
 
-	for node in _get_monster_nodes_near(global_position, reach + half_width):
+	_fill_monster_nodes_near(
+		global_position,
+		reach + half_width,
+		fighter_combat_candidates
+	)
+	for node in fighter_combat_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -14228,6 +14715,7 @@ func _fighter_apply_slash(direction: Vector2, bonus_hit: bool = false) -> int:
 		var hp_after_value = monster.get("current_hp")
 		if hp_after_value != null and int(hp_after_value) <= 0:
 			bonus_kills += 1
+	fighter_combat_candidates.clear()
 
 	if bonus_kills > 0 and current_hp > 0:
 		heal_direct(bonus_kills * 10)
@@ -14258,7 +14746,12 @@ func _fighter_apply_thrust(direction: Vector2) -> void:
 	)
 	var side := Vector2(-direction.y, direction.x)
 
-	for node in _get_monster_nodes_near(global_position, length + half_width):
+	_fill_monster_nodes_near(
+		global_position,
+		length + half_width,
+		fighter_combat_candidates
+	)
+	for node in fighter_combat_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -14271,6 +14764,7 @@ func _fighter_apply_thrust(direction: Vector2) -> void:
 			continue
 		if monster.has_method("take_damage"):
 			monster.call("take_damage", damage)
+	fighter_combat_candidates.clear()
 
 func _update_fighter_guard(delta: float) -> void:
 	if fighter_guard_active:
@@ -14293,29 +14787,16 @@ func _update_fighter_guard(delta: float) -> void:
 	queue_redraw()
 
 func _fighter_can_activate_guard() -> bool:
-	var radius := maxf(
-		float(ultimate_config.get("activation_enemy_radius", 320.0)),
-		1.0
+	var trigger := HERO_FIGHTER_RUNTIME.get_guard_trigger(
+		ultimate_config
 	)
-	var required := maxi(
-		int(ultimate_config.get("activation_enemy_count", 1)),
-		1
-	)
-	var nearby := 0
-	for node in _get_monster_nodes_near(global_position, radius):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		if (
-			global_position.distance_squared_to(monster.global_position)
-			<= radius * radius
-		):
-			nearby += 1
-			if nearby >= required:
-				return true
-	return false
+	var radius := trigger.x
+	var required := maxi(int(trigger.y), 1)
+	return _count_monsters_near(
+		global_position,
+		radius,
+		required
+	) >= required
 
 
 func _start_fighter_guard() -> void:
@@ -14371,7 +14852,13 @@ func _end_fighter_guard() -> void:
 	)
 
 	if release_damage > 0 and release_radius > 0.0:
-		for node in _get_monster_nodes_near(global_position, release_radius):
+		_fill_monster_nodes_near(
+			global_position,
+			release_radius,
+			fighter_combat_candidates
+		)
+		var release_radius_sq := release_radius * release_radius
+		for node in fighter_combat_candidates:
 			if not is_instance_valid(node) or node.is_queued_for_deletion():
 				continue
 			var monster := node as Node2D
@@ -14379,11 +14866,12 @@ func _end_fighter_guard() -> void:
 				continue
 			if (
 				global_position.distance_squared_to(monster.global_position)
-				> release_radius * release_radius
+				> release_radius_sq
 			):
 				continue
 			if monster.has_method("take_damage"):
 				monster.call("take_damage", release_damage)
+		fighter_combat_candidates.clear()
 
 	_play_fighter_guard_release_effect()
 
@@ -14413,17 +14901,29 @@ func _fighter_reflect_damage(raw_damage: float, source: Node) -> void:
 		1.0
 	)
 	var nearest: Node2D = null
-	var nearest_distance := INF
-	for node in _get_monster_nodes_near(global_position, reflect_radius):
+	var nearest_distance_sq := INF
+	var reflect_radius_sq := reflect_radius * reflect_radius
+	_fill_monster_nodes_near(
+		global_position,
+		reflect_radius,
+		fighter_combat_candidates
+	)
+	for node in fighter_combat_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
 		if monster == null:
 			continue
-		var distance := global_position.distance_to(monster.global_position)
-		if distance <= reflect_radius and distance < nearest_distance:
+		var distance_sq := global_position.distance_squared_to(
+			monster.global_position
+		)
+		if (
+			distance_sq <= reflect_radius_sq
+			and distance_sq < nearest_distance_sq
+		):
 			nearest = monster
-			nearest_distance = distance
+			nearest_distance_sq = distance_sq
+	fighter_combat_candidates.clear()
 	if is_instance_valid(nearest) and nearest.has_method("take_damage"):
 		nearest.call("take_damage", reflected)
 

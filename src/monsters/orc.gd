@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
+const MONSTER_RUNTIME_COMMON := preload("res://src/monsters/monster_runtime_common.gd")
 
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 
@@ -23,6 +24,7 @@ signal died
 
 var current_hp: int
 var hero: Node2D
+var combat_authority: Node
 var hero_target_refresh_timer: float = 0.0
 var attack_timer: float = 0.0
 var hit_flash_timer: float = 0.0
@@ -42,43 +44,60 @@ var last_charge_timer: float = 0.0
 
 func _ready() -> void:
 	add_to_group("monsters")
-	far_ai_tick_timer = randf_range(0.0, 0.16)
+	far_ai_tick_timer = MONSTER_RUNTIME_COMMON.initial_far_navigation_delay()
 	combat_bonus_refresh_timer = randf_range(0.0, 0.10)
 	current_hp = max_hp
-	hero = get_tree().get_first_node_in_group("hero") as Node2D
+	if not is_instance_valid(hero):
+		hero = get_tree().get_first_node_in_group("hero") as Node2D
+	if not is_instance_valid(combat_authority):
+		combat_authority = get_parent()
 	hero_target_refresh_timer = 0.0
-	_attach_status_effect_visual("slow")
-	_attach_status_effect_visual("orc_rage")
+	MONSTER_RUNTIME_COMMON.attach_status_effect_visual(
+		self,
+		COMBAT_STATUS_EFFECT_VISUAL,
+		"slow"
+	)
+	MONSTER_RUNTIME_COMMON.attach_status_effect_visual(
+		self,
+		COMBAT_STATUS_EFFECT_VISUAL,
+		"orc_rage"
+	)
 	queue_redraw()
 
 
+func configure_combat_context(
+	primary_hero: Node2D,
+	authority: Node
+) -> void:
+	hero = primary_hero
+	combat_authority = authority
+
+
 func _refresh_combat_target() -> void:
-	hero_target_refresh_timer = 0.25
-	var battle := get_parent()
-	if (
-		is_instance_valid(battle)
-		and battle.has_method("get_nearest_hero_combat_target")
-	):
-		var candidate = battle.call(
-			"get_nearest_hero_combat_target",
-			global_position
-		)
-		if candidate is Node2D:
-			hero = candidate
-			return
-	hero = get_tree().get_first_node_in_group("hero") as Node2D
+	hero_target_refresh_timer = (
+		MONSTER_RUNTIME_COMMON.TARGET_REFRESH_INTERVAL
+	)
+	if not is_instance_valid(combat_authority):
+		combat_authority = get_parent()
+	hero = MONSTER_RUNTIME_COMMON.resolve_combat_target(
+		self,
+		hero,
+		combat_authority
+	)
 
 
 
-func _attach_status_effect_visual(effect_type: String) -> void:
-	var effect := COMBAT_STATUS_EFFECT_VISUAL.new()
-	add_child(effect)
-	effect.setup(self, effect_type)
 
 
 func _physics_process(delta: float) -> void:
-	hero_target_refresh_timer = maxf(hero_target_refresh_timer - delta, 0.0)
-	if hero_target_refresh_timer <= 0.0 or not is_instance_valid(hero):
+	hero_target_refresh_timer = MONSTER_RUNTIME_COMMON.tick_countdown(
+		hero_target_refresh_timer,
+		delta
+	)
+	if MONSTER_RUNTIME_COMMON.should_refresh_target(
+		hero_target_refresh_timer,
+		hero
+	):
 		_refresh_combat_target()
 
 	if current_hp <= 0 or dying:
@@ -99,11 +118,9 @@ func _physics_process(delta: float) -> void:
 			cached_berserk_visual_active = berserk_active
 			set_meta("orc_berserk_visual_active", berserk_active)
 	var combat_bonuses := combat_bonus_cache
-	var external_slow := 1.0
-	if int(get_meta("gunner_slow_until", 0)) > Time.get_ticks_msec():
-		external_slow = clampf(float(get_meta("gunner_slow_multiplier", 1.0)), 0.1, 1.0)
-	if int(get_meta("archmage_root_until", 0)) > Time.get_ticks_msec():
-		external_slow = 0.0
+	var external_slow := (
+		MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
+	)
 	var effective_move_speed := move_speed * float(
 		combat_bonuses.get("move_speed_multiplier", 1.0)
 	) * external_slow
@@ -119,7 +136,7 @@ func _physics_process(delta: float) -> void:
 			queue_redraw()
 
 	if not is_instance_valid(hero):
-		hero = get_tree().get_first_node_in_group("hero") as Node2D
+		_refresh_combat_target()
 		if not is_instance_valid(hero):
 			velocity = Vector2.ZERO
 			_update_visual_motion(0.0, false)
@@ -130,14 +147,21 @@ func _physics_process(delta: float) -> void:
 	_update_visual_lod(distance_sq)
 	var far_nav_sq := FAR_NAV_DISTANCE * FAR_NAV_DISTANCE
 	var attack_range_sq := attack_range * attack_range
-	far_ai_tick_timer = maxf(far_ai_tick_timer - delta, 0.0)
+	far_ai_tick_timer = MONSTER_RUNTIME_COMMON.tick_countdown(
+		far_ai_tick_timer,
+		delta
+	)
 
 	if distance_sq > attack_range_sq:
 		var direction_to_hero := cached_direction_to_hero
-		if distance_sq <= far_nav_sq or far_ai_tick_timer <= 0.0:
+		if MONSTER_RUNTIME_COMMON.should_refresh_far_navigation(
+			distance_sq,
+			far_nav_sq,
+			far_ai_tick_timer
+		):
 			direction_to_hero = offset_to_hero.normalized()
 			cached_direction_to_hero = direction_to_hero
-			far_ai_tick_timer = randf_range(0.10, 0.16)
+			far_ai_tick_timer = MONSTER_RUNTIME_COMMON.next_far_navigation_delay()
 		velocity = direction_to_hero * effective_move_speed
 		_update_visual_motion(direction_to_hero.x, true)
 		if distance_sq > far_nav_sq:
@@ -177,16 +201,15 @@ func take_damage(amount: int) -> void:
 		_begin_death()
 
 func _update_visual_lod(distance_sq: float) -> void:
-	var should_suspend := (
-		distance_sq > VISUAL_LOD_DISTANCE * VISUAL_LOD_DISTANCE
+	visual_lod_suspended = (
+		MONSTER_RUNTIME_COMMON.apply_standard_visual_lod(
+			self,
+			visual,
+			visual_lod_suspended,
+			distance_sq,
+			VISUAL_LOD_DISTANCE
+		)
 	)
-	if should_suspend == visual_lod_suspended:
-		return
-
-	visual_lod_suspended = should_suspend
-	set_meta("visual_lod_suspended", should_suspend)
-	if is_instance_valid(visual) and visual.has_method("set_lod_suspended"):
-		visual.call("set_lod_suspended", should_suspend)
 
 
 func _update_visual_motion(direction_x: float, moving: bool) -> void:
@@ -285,43 +308,22 @@ func _get_combat_bonuses() -> Dictionary:
 	}
 
 func heal_direct(amount: int) -> int:
-	if amount <= 0 or current_hp <= 0 or dying:
-		return 0
-	var previous_hp: int = current_hp
-	current_hp = mini(current_hp + amount, max_hp)
-	var recovered: int = current_hp - previous_hp
-	if recovered > 0:
-		DAMAGE_NUMBERS.show_heal(self, recovered)
-		queue_redraw()
+	var recovered := MONSTER_RUNTIME_COMMON.apply_direct_heal(
+		self,
+		amount,
+		current_hp,
+		max_hp,
+		dying
+	)
+	current_hp += recovered
 	return recovered
 
 func _begin_death() -> void:
-	if dying:
-		return
-
-	dying = true
-	visual_lod_suspended = false
-	set_meta("visual_lod_suspended", false)
-	if is_instance_valid(visual) and visual.has_method("set_lod_suspended"):
-		visual.call("set_lod_suspended", false)
-	velocity = Vector2.ZERO
-	collision_shape.set_deferred("disabled", true)
-
-	died.emit()
-
-	if (
-		is_instance_valid(visual)
-		and visual.has_signal("death_animation_finished")
-		and visual.has_method("play_death")
-	):
-		visual.connect(
-			"death_animation_finished",
-			Callable(self, "_on_death_animation_finished"),
-			Object.CONNECT_ONE_SHOT
-		)
-		visual.call("play_death")
-	else:
-		queue_free()
+	MONSTER_RUNTIME_COMMON.begin_standard_death(
+		self,
+		visual,
+		collision_shape
+	)
 
 func _on_death_animation_finished() -> void:
 	queue_free()

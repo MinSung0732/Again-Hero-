@@ -1,5 +1,56 @@
 # CHANGELOG
 
+## 2026-09-29 — Stage 8 소환사 런타임 스캔 / 드론 할당 최적화
+- `hero.gd`의 정규 소환수/감시자 활성 수를 풀 전체 재스캔 대신 소환 성공·해제 신호 기반 캐시 카운터로 유지하도록 변경.
+- 소환사 물리 틱의 슬롯/실드 판정과 AI 점수 계산에서 gatekeeper/scout/hound/watcher 풀 반복 순회를 제거.
+- `summoner_suicide_drone.gd`가 공유 설정에 `owner_attack_damage`가 없으면 현재 소유 Hero의 공격력을 직접 읽도록 해 기존 현재 공격력 반영 의미를 유지.
+- `summoner_open_gate.gd`에서 드론 생성마다 하던 `drone_config.duplicate(true)`와 스폰 범위 `meta` 조회/정렬을 제거하고, 활성화 시 한 번 계산한 typed 값을 재사용하도록 변경.
+- 소환수 이동/공격 지원 배율 조회에 scalar fast path를 추가해 정상 전투의 physics/attack 루프에서 임시 `Dictionary` 생성을 제거하고, 기존 Dictionary API는 호환용으로 유지.
+- 소환사 AI 스킬 선택을 고정 로컬 상태/가중치 계산으로 바꿔 쿨다운 대기 중 매 physics tick의 후보/가중치 `Array` 생성을 제거하면서 후보 순서·점수·랜덤 호출 순서는 유지.
+- Stage 7 연금술사의 매 physics tick 보너스 재료 정리에서 임시 `Array` 재생성을 제거하고 기존 배열을 뒤에서부터 제자리 정리하도록 변경.
+- 연금술사 비상탈출의 위협 목록을 재사용 배열로 유지하고 방향 탐색 결과를 scalar/member 상태로 반환해 함정 판정 중 매 physics tick의 임시 `Array`/`Dictionary` 생성을 제거.
+- 연금술사 약병·재료·혼합장 연기 오브젝트가 동일 `SpriteFrames`를 인스턴스마다 재구성하지 않고 정적 공유 캐시를 사용하도록 변경(독장판의 기존 공유 방식과 통일).
+- 가마솥 대성공 약병을 사용 시 필요한 만큼만 늘어나는 전용 lazy pool로 전환해 첫 피크 이후 `instantiate()/queue_free()` 반복을 제거하고, 투척 음량·비행/파손 타이밍·데미지 처리는 유지.
+- 가마솥 성공 보너스 재료도 별도 lazy pool로 재사용하며, 기본 재료/기존 임시 재료의 `queue_free()` 의미는 유지하도록 재사용 플래그를 분리.
+- Stage 5 대마법사의 스킬 키 집합을 상수 배열로 고정해 매 physics tick 쿨다운 갱신에서 `Dictionary.keys()` 임시 배열 생성을 제거하고 초기화·하모니·멀티캐스트에도 동일 순서를 재사용.
+- 대마법사 평타 원소 목록을 프로필 적용 시 한 번 정규화해 캐시하고, 매 발마다 만들던 원소/후보 `Array`와 `duplicate()/erase()`를 제거하면서 직전 원소 연속 방지 확률은 동일하게 유지.
+- 대마법사 스킬 선택의 임시 점수 `Dictionary`/`keys()`/`values()` 생성을 제거하고 고정 로컬 가중치로 같은 후보 순서·점수식·최종 `randf()` 선택을 유지.
+- 대마법사 원소 구슬 Sprite를 스킬마다 전부 삭제/재생성하지 않고 재사용하며, 획득 순서를 별도 배열로 유지해 매 physics tick 위치 갱신의 `Dictionary.keys()` 생성도 제거.
+- 대마법사 체인 대거 투사체를 Battle 공용 projectile pool에 연결해 스킬 사용마다 하던 `instantiate()/queue_free()`를 제거하고 기존 bounce/chain tick 종료 후 동일하게 회수.
+- 체인 대거의 타깃 후보/선택 결과 `Array`를 Hero 소유 재사용 버퍼로 전환해 시전마다 두 배열을 새로 만드는 비용을 제거하면서 기존 부채꼴 우선 선택 로직은 유지.
+- 대마법사 멀티캐스트 후보 목록도 Hero 소유 재사용 버퍼로 전환해 발동마다 새 `Array`를 만들지 않으며 기존 후보 필터·shuffle·0.30초 간격 시전 순서는 유지.
+- Stage 4 거너 Deadeye 방향 분석의 몬스터 오프셋 배열을 재사용하고 결과를 scalar/member 상태로 보관해 매 physics tick 임시 `Array`/`Dictionary` 생성과 발동 순간의 중복 방향 분석을 제거.
+- 거너 백스텝 안전 방향 계산의 몬스터 위치 목록도 재사용 버퍼로 전환해 피격 백스텝마다 새 `Array`를 만들지 않도록 변경.
+- Stage 6 버서커 2식 혈로 회복 판정의 `healed_ids`를 파동 수명 동안 재사용해 약 2초간 반복 회복 틱마다 새 `Dictionary`를 만들던 비용을 제거.
+- 버서커 3식/광기 점멸의 피 궤적 `Line2D`를 Battle transient FX pool에 연결해 이동마다 하던 `Line2D.new()/queue_free()` 반복을 제거.
+- Battle transient FX pool에 `Sprite2D` 지원을 추가하고 Stage 3 Fighter 돌진 잔상과 Stage 4 Gunner 백스텝 잔상을 풀링해 고빈도 `Sprite2D.new()/queue_free()` 반복을 제거.
+- Hero 공통 재타깃을 Battle의 `active_monsters`/`active_treasure_chests` 레지스트리 직접 조회로 전환해 여러 archetype의 0.1초 단위 `get_nodes_in_group()` 배열 생성/전체 그룹 스캔을 제거하고, isolated scene용 fallback은 유지.
+- 위 Hero 재타깃 helper가 기존 몬스터용 `get_nearest_hero_combat_target()`과 이름이 충돌해 Battle 스크립트 파싱을 막던 문제를 수정하고, Hero→적/상자 조회는 `get_nearest_hostile_target_for_hero()`로 분리.
+- Phase 5 dead-code audit 시작: 최근 리팩터에서 참조가 사라진 Summoner 레벨 슬롯 wrapper, Gunner Deadeye Dictionary wrapper, 구형 Stage 1 시트 로더/애니메이션 helper를 제거.
+- 구형 Stage 1 시트 경로에서 함께 남은 미사용 `STAGE1_FRAME_SIZE` 상수와 `sprite_sheet_path` 저장 필드를 제거.
+- Phase 6 UI cleanup 시작: 숨겨진 `DebugBalance`는 실제 표시 중에만 갱신하고, 20Hz Hero 스킬 쿨다운 HUD는 전체 `battle.get_snapshot()` 대신 전용 경량 getter를 사용해 대형 snapshot/중첩 Dictionary 복제 비용을 제거.
+- Hero 스킬 쿨다운 HUD의 `seen`/stale 컨테이너를 재사용하고 `Dictionary.keys()` 생성을 제거했으며, 쿨다운 바 `move_to_front()`는 숨김→표시 전환 시에만 수행하도록 축소.
+- 마왕 마력기술의 ordered ID/최저 마력비용을 Battle 시작 시 캐시해 활성 쿨다운의 매 프레임 Catalog 배열 생성과 10Hz 마력 HUD 갱신의 반복 스킬 Dictionary 복제를 제거하고, UI 쿨다운 상태 Dictionary도 재사용하도록 변경. 초기 진입 시 중복 호출되던 동일 쿨다운 갱신 1회도 제거.
+- 용사 정보창 전용 `get_hero_info_hud()` 경량 getter를 추가해 정보창이 열린 상태에서 HP/EXP 신호마다 전체 Battle snapshot, Run 통계, 디버그/연구 요약, 마왕 빌드/쿨다운 데이터까지 함께 복제하던 비용을 제거. 기존 전체 snapshot 경로는 호환 fallback으로 유지.
+- 마왕 증강 선택/돌연변이 선택 후 지휘력 UI, 마력기술 방향 선택/검증, 리롤 최대치 조회에 각각 경량 getter를 추가해 메뉴 상호작용마다 전체 `battle.get_snapshot()`을 만들던 경로를 제거. 마력기술 버튼 검증은 현재 Battle 값을 직접 읽어 기존 정확한 쿨다운/마력 판정을 유지.
+- Hero 스킬 쿨다운 HUD의 20Hz polling을 실제 HUD가 보이고 전투 UI가 활성인 동안에만 수행하도록 제한. 스테이지 인트로/용사 공개, 스킬 해금 컷신, 일시정지, 마왕 증강/돌연변이 선택, 결과 화면에서는 polling을 중단하고 복귀 시 즉시 다음 프레임에 재동기화하며, HUD가 숨겨진 초기 진입의 불필요한 1회 조회도 제거.
+- Phase 4 Hero 분리를 Fighter부터 재개. `hero_fighter_runtime.gd`에 돌진 발동 조건/최대 탐색 거리, 베기·가드 발동 조건, 최장거리 돌진 타깃 선택을 분리하고 Hero는 facade로 유지. 베기·가드의 주변 적 판정은 기존 개별 배열 순회를 제거하고 Battle 공간 인덱스를 사용하는 `_count_monsters_near()` 경로로 통일.
+- Hero 스킬 쿨다운 HUD 비활성 polling 가드에서 `CanvasLayer`에 존재하지 않는 `is_visible_in_tree()`를 호출해 HUD 갱신이 중단되던 회귀를 수정. HUD 표시 여부는 `CanvasLayer.visible`로 확인하도록 변경.
+- 거너 백스텝 잔상 알파를 95/84/72/60%로 높이고 페이드 지속시간/스케일 차이를 늘렸으며, 파이터 돌진 잔상은 시작 78%·반복 62%, 기본 페이드 0.38초로 조정해 작은 화면에서도 이동 궤적이 더 선명하게 보이도록 개선.
+- Hero world query에 caller-owned `fill_monster_nodes_near()` 경로를 추가하고 Fighter 돌진 타깃 탐색/착지 충격 범위에 재사용 후보 배열을 적용해 연속 돌진마다 생성되던 임시 주변 몬스터 Array 2개를 제거.
+- Fighter 베기·찌르기·가드 해제 폭발·반사 대상 탐색도 공용 재사용 후보 버퍼를 사용하도록 변경해 각 공격 시 생성되던 주변 몬스터 임시 Array를 제거. 가드 반사 최단거리 비교는 `distance_to()` 대신 제곱거리 비교로 전환해 반복 sqrt 계산도 제거.
+- Gunner 백스텝 탈출 방향 계산과 실린더 범위 공격에 공용 재사용 후보 버퍼를 적용해 각 발동마다 생성되던 주변 몬스터 임시 Array를 제거. 실린더 범위 판정은 반경 제곱값도 한 번만 계산하도록 정리.
+- Alchemist 변신 이동 회피, 비상 탈출, 혼합 필드/독 장판 틱에 재사용 주변 몬스터 버퍼를 적용해 physics/tick마다 생성되던 임시 Array를 제거. 혼합 필드 발동 조건은 Battle 공간 인덱스의 `_count_monsters_near()` 조기 종료 경로로 전환.
+- Berserker 혈흔 경로 타격/회복, 피의 구슬 생성, 회전 공격, 기본 공격, 광란 타깃 탐색에 공용 재사용 주변 몬스터 버퍼를 적용해 전투 중 임시 Array 생성을 제거. 혈흔 선분 판정의 반폭 제곱값도 루프 밖에서 재사용하도록 정리.
+- Rogue 회전 베기 틱, 암살 연쇄의 주변 피해, 암살 다음 타깃 탐색에 공용 재사용 주변 몬스터 버퍼를 적용해 주력 전투 경로의 임시 Array 생성을 제거. 범위 판정은 반경 제곱값을 캐시해 불필요한 거리 제곱/제곱근 계산을 줄임.
+- 공용 이동 AI의 위험도 계산과 군중 회피가 기존 `_movement_monster_scratch` 버퍼를 재사용하도록 변경해 회복 아이템 경로 평가/회피 조향에서 반복 생성되던 주변 몬스터 임시 Array를 제거.
+- 로비 복귀 시 전체 스테이지 초상화 일괄 프리캐시와 숨겨진 연구 목록 선생성을 제거해 초기 `_ready()` 작업량을 축소. 전투 진입 시 터치 홀드 UI 8프레임은 프레임별 워밍업으로 분산하고, 용사정보 초상화 정규화의 알파 경계 계산을 GDScript 전 픽셀 순회 대신 엔진 `Image.get_used_rect()`로 전환했으며 UI 텍스처는 ResourceLoader 캐시를 우선 사용하도록 개선.
+- 전역 `SceneTransition` autoload를 추가해 던전 입장/로비 복귀의 threaded scene load와 실제 scene swap 사이에도 로딩 레이어가 유지되도록 변경. 새 씬의 불가피한 `_ready()` 메인스레드 비용은 로딩 화면 뒤에서 처리하고, 기존 로컬 전환 경로는 fallback으로 유지.
+- Archmage 성역 군집 탐색, 성역 폭발, 연쇄 단검 후보 수집, 공간도약 회피에 재사용 주변 몬스터 scratch 배열을 적용해 남아 있던 Archmage 직접 주변조회 임시 Array 4곳을 제거. 반복 반경 제곱 계산도 캐시하도록 정리.
+- 공용 범위 데미지/중복방지 범위 데미지, 채널링 틱, 정화자 보호막 파동, 관통 궁극기 조준, 광역 궁극기가 `_combat_monster_scratch`를 재사용하도록 변경. 관통 조준은 별도 `monsters` Array까지 제거하고 scratch를 역순 제자리 필터링해 반복 할당을 추가로 축소.
+- Summoner AI 관측 후보는 전용 scratch 배열을 재사용해 기존 공간그리드 후보 수 semantics를 그대로 유지하면서 임시 Array 생성을 제거. Battle/World query에 caller-owned `fill_monsters_in_rect()` 경로를 추가하고 corridor 데미지도 공용 combat scratch를 사용하도록 전환해 Hero의 직접 배열 생성형 근접/직사각 조회를 모두 제거.
+- Godot 실행 파일이 없는 환경이라 실제 런타임/프로파일러 검증은 수행하지 않았고 정적 참조·diff 검증만 수행.
+
 ## 2026-09-28 — Stage 8 5스킬 컷신 이미지 왜곡 제거
 - 단일 원화 전체에 적용하던 Live2D풍 UV 굴곡과 위치 드리프트를 제거해 캐릭터와 배경이 함께 꿀렁이던 현상을 없앰.
 - 전투영역 한정 표시, 대각선 진입 와이프, 정착 줌, 금빛 섬광, 페이드아웃과 약 1.4초의 전투 일시정지 흐름은 유지.

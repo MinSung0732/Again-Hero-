@@ -143,12 +143,17 @@ var summon_slot_buttons: Array = []
 var demon_ultimate_charge_ready: bool = false
 var demon_mana_current: float = 0.0
 var demon_ultimate_cooldowns: Dictionary = {}
+var demon_ultimate_ui_skills: Array[Dictionary] = []
+var demon_ultimate_ui_buttons: Array[Button] = []
+var demon_ultimate_ui_cooldown_bars: Array[ProgressBar] = []
 var monster_info_selected_index: int = 0
 var monster_info_animating: bool = false
 var hero_info_animating: bool = false
 var hero_info_portrait_cache_path: String = ""
 var hero_info_portrait_cache: Texture2D = null
 var hero_skill_badges: Dictionary = {}
+var hero_skill_hud_seen: Dictionary = {}
+var hero_skill_hud_stale_ids: Array[String] = []
 var hero_skill_hud_refresh_timer: float = 0.0
 var _scene_load_path: String = ""
 var _scene_load_pending: bool = false
@@ -164,7 +169,7 @@ var _touch_hold_position: Vector2 = Vector2.ZERO
 var _touch_pointer_id: int = -1
 
 func _ready() -> void:
-	_load_touch_hold_frames()
+	_cache_demon_ultimate_ui_data()
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
 		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_PORTRAIT)
 
@@ -178,6 +183,8 @@ func _ready() -> void:
 		_on_hero_reveal_bgm_start_requested
 	)
 	skill_unlock_cutscene.finished.connect(_on_skill_unlock_cutscene_finished)
+	get_viewport().size_changed.connect(_sync_skill_unlock_cutscene_frame)
+	call_deferred("_sync_skill_unlock_cutscene_frame")
 
 	battle.stats_changed.connect(_on_stats_changed)
 	battle.progression_changed.connect(_on_progression_changed)
@@ -296,20 +303,17 @@ func _ready() -> void:
 	_on_demon_ultimate_cooldowns_changed(
 		Dictionary(snapshot.get("demon_ultimate_cooldowns", {}))
 	)
-	_on_demon_ultimate_cooldowns_changed(
-		Dictionary(snapshot.get("demon_ultimate_cooldowns", {}))
-	)
 	_on_run_time_changed(
 		float(snapshot.get("run_elapsed_seconds", 0.0)),
 		float(snapshot.get("run_remaining_seconds", 0.0))
 	)
-	_refresh_hero_skill_cooldown_hud()
 
 	build_label.text = ""
 	debug_balance_label.text = String(snapshot.get("debug_balance_summary", "[DEBUG]"))
 	placement_toggle.button_pressed = true
 	_on_placement_mode_toggled(true)
 	_begin_stage_entry(snapshot)
+	call_deferred("_warm_touch_hold_frames")
 
 	print("Again, Hero? stage/camera prototype loaded.")
 	print("Finite world camera + persistent stage progression enabled.")
@@ -339,16 +343,26 @@ func _process(delta: float) -> void:
 			if is_instance_valid(battle):
 				battle.set_external_pause(false)
 
-	hero_skill_hud_refresh_timer -= delta
-	if hero_skill_hud_refresh_timer <= 0.0:
-		hero_skill_hud_refresh_timer = 0.05
-		_refresh_hero_skill_cooldown_hud()
+	if _should_refresh_hero_skill_cooldown_hud():
+		hero_skill_hud_refresh_timer -= delta
+		if hero_skill_hud_refresh_timer <= 0.0:
+			hero_skill_hud_refresh_timer = 0.05
+			_refresh_hero_skill_cooldown_hud()
+	else:
+		hero_skill_hud_refresh_timer = 0.0
 
 	debug_refresh_timer -= delta
 	if debug_refresh_timer <= 0.0:
 		debug_refresh_timer = 0.25
-		if is_instance_valid(battle) and battle.has_method("get_debug_balance_summary"):
-			debug_balance_label.text = String(battle.call("get_debug_balance_summary"))
+		if (
+			is_instance_valid(debug_balance_label)
+			and debug_balance_label.is_visible_in_tree()
+			and is_instance_valid(battle)
+			and battle.has_method("get_debug_balance_summary")
+		):
+			debug_balance_label.text = String(
+				battle.call("get_debug_balance_summary")
+			)
 
 func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 	subtitle_label.text = "Stage %d · %s · %s" % [
@@ -442,6 +456,19 @@ func _start_battle_after_intro(_stage_id: String) -> void:
 	battle.set_external_pause(false)
 
 
+func _sync_skill_unlock_cutscene_frame() -> void:
+	if (
+		not is_instance_valid(skill_unlock_cutscene)
+		or not is_instance_valid(battle_viewport_container)
+	):
+		return
+	if skill_unlock_cutscene.has_method("configure_battle_frame"):
+		skill_unlock_cutscene.call(
+			"configure_battle_frame",
+			battle_viewport_container.get_global_rect()
+		)
+
+
 func _on_conditional_skill_unlocked(
 	_skill_id: String,
 	_skill_name: String,
@@ -454,6 +481,7 @@ func _on_conditional_skill_unlocked(
 
 	_skill_unlock_cutscene_active = true
 	battle.set_external_pause(true)
+	_sync_skill_unlock_cutscene_frame()
 	skill_unlock_cutscene.call("play_unlock", payload)
 
 
@@ -579,14 +607,21 @@ func _input(event: InputEvent) -> void:
 	battle.try_summon_at_position(selected_monster_type, battle_position)
 	get_viewport().set_input_as_handled()
 
-func _load_touch_hold_frames() -> void:
+func _warm_touch_hold_frames() -> void:
+	if not _touch_hold_frames.is_empty():
+		return
 	_touch_hold_frames.clear()
 	for index in range(1, TOUCH_HOLD_FRAME_COUNT + 1):
+		if not is_inside_tree():
+			return
 		var texture := _load_ui_texture(
 			"%s/gage_%02d.png" % [TOUCH_HOLD_FRAME_DIR, index]
 		)
 		if texture != null:
 			_touch_hold_frames.append(texture)
+		# Spread first-time UI texture creation over several rendered frames
+		# instead of blocking the first battle frame with all eight images.
+		await get_tree().process_frame
 
 
 func _update_touch_hold_input(event: InputEvent) -> void:
@@ -820,11 +855,9 @@ func _on_mutation_choice_pressed(index: int) -> void:
 	mutation_panel.hide()
 	current_mutation_candidates.clear()
 
-	var snapshot: Dictionary = battle.get_snapshot()
-	_on_command_changed(
-		float(snapshot.get("command_power", 0.0)),
-		float(snapshot.get("command_max", 100.0))
-	)
+	if battle.has_method("get_command_hud_state"):
+		var command_state: Vector2 = battle.call("get_command_hud_state")
+		_on_command_changed(command_state.x, command_state.y)
 
 	battle.spawn_selected_mutation(monster_id)
 
@@ -1074,6 +1107,21 @@ func _hide_monster_info_immediate() -> void:
 	monster_info_bookmark.show()
 	monster_info_animating = false
 
+func _should_refresh_hero_skill_cooldown_hud() -> bool:
+	if not is_instance_valid(hud_layer) or not hud_layer.visible:
+		return false
+	if _skill_unlock_cutscene_active:
+		return false
+	if (
+		pause_menu.visible
+		or demon_augment_panel.visible
+		or mutation_panel.visible
+		or result_panel.visible
+	):
+		return false
+	return true
+
+
 func _refresh_hero_skill_cooldown_hud() -> void:
 	if not is_instance_valid(hero_skill_cooldown_bar):
 		return
@@ -1081,17 +1129,27 @@ func _refresh_hero_skill_cooldown_hud() -> void:
 		hero_skill_cooldown_bar.hide()
 		return
 
-	if not battle.has_method("get_snapshot"):
+	var raw_skills: Array = []
+	if battle.has_method("get_hero_skill_cooldown_hud"):
+		var raw_skill_state = battle.call(
+			"get_hero_skill_cooldown_hud"
+		)
+		if raw_skill_state is Array:
+			raw_skills = raw_skill_state
+	elif battle.has_method("get_snapshot"):
+		var snapshot: Dictionary = battle.get_snapshot()
+		var fallback_skills = snapshot.get(
+			"hero_skill_cooldowns",
+			[]
+		)
+		if fallback_skills is Array:
+			raw_skills = fallback_skills
+	else:
 		hero_skill_cooldown_bar.hide()
 		return
 
-	var snapshot: Dictionary = battle.get_snapshot()
-	var raw_skills = snapshot.get("hero_skill_cooldowns", [])
-	if typeof(raw_skills) != TYPE_ARRAY:
-		hero_skill_cooldown_bar.hide()
-		return
-
-	var seen: Dictionary = {}
+	var was_visible := hero_skill_cooldown_bar.visible
+	hero_skill_hud_seen.clear()
 	for raw_skill in raw_skills:
 		if typeof(raw_skill) != TYPE_DICTIONARY:
 			continue
@@ -1099,7 +1157,7 @@ func _refresh_hero_skill_cooldown_hud() -> void:
 		var skill_id := String(skill.get("id", ""))
 		if skill_id.is_empty():
 			continue
-		seen[skill_id] = true
+		hero_skill_hud_seen[skill_id] = true
 
 		var badge: Control = hero_skill_badges.get(skill_id)
 		if not is_instance_valid(badge):
@@ -1110,26 +1168,39 @@ func _refresh_hero_skill_cooldown_hud() -> void:
 		else:
 			badge.call("update_state", skill)
 
-	for raw_id in hero_skill_badges.keys():
+	hero_skill_hud_stale_ids.clear()
+	for raw_id in hero_skill_badges:
 		var skill_id := String(raw_id)
-		if seen.has(skill_id):
+		if hero_skill_hud_seen.has(skill_id):
 			continue
+		hero_skill_hud_stale_ids.append(skill_id)
+
+	for skill_id in hero_skill_hud_stale_ids:
 		var stale_badge = hero_skill_badges.get(skill_id)
 		if is_instance_valid(stale_badge):
 			stale_badge.queue_free()
 		hero_skill_badges.erase(skill_id)
 
-	hero_skill_cooldown_bar.visible = not seen.is_empty()
-	if hero_skill_cooldown_bar.visible:
+	var has_skills := not hero_skill_hud_seen.is_empty()
+	hero_skill_cooldown_bar.visible = has_skills
+	if has_skills and not was_visible:
 		hero_skill_cooldown_bar.z_index = 120
 		hero_skill_cooldown_bar.move_to_front()
 
 
 func _refresh_hero_info_panel() -> void:
-	if battle == null or not battle.has_method("get_snapshot"):
+	if battle == null:
 		return
 
-	var snapshot: Dictionary = battle.get_snapshot()
+	var snapshot: Dictionary = {}
+	if battle.has_method("get_hero_info_hud"):
+		var raw_hero_info = battle.call("get_hero_info_hud")
+		if typeof(raw_hero_info) == TYPE_DICTIONARY:
+			snapshot = raw_hero_info
+	if snapshot.is_empty() and battle.has_method("get_snapshot"):
+		snapshot = battle.get_snapshot()
+	if snapshot.is_empty():
+		return
 	var hero_name := String(snapshot.get("hero_name", "용사"))
 	var hero_archetype := String(
 		snapshot.get("hero_archetype", "")
@@ -1313,40 +1384,25 @@ func _load_normalized_hero_portrait(path: String) -> Texture2D:
 
 func _get_visible_alpha_rect(
 	image: Image,
-	alpha_threshold: float = 0.05
+	_alpha_threshold: float = 0.05
 ) -> Rect2i:
-	var min_x := image.get_width()
-	var min_y := image.get_height()
-	var max_x := -1
-	var max_y := -1
-	for y in range(image.get_height()):
-		for x in range(image.get_width()):
-			if image.get_pixel(x, y).a <= alpha_threshold:
-				continue
-			min_x = mini(min_x, x)
-			min_y = mini(min_y, y)
-			max_x = maxi(max_x, x)
-			max_y = maxi(max_y, y)
-	if max_x < min_x or max_y < min_y:
-		return Rect2i()
-	return Rect2i(
-		min_x,
-		min_y,
-		max_x - min_x + 1,
-		max_y - min_y + 1
-	)
+	# Hero portraits are nearest-neighbor pixel art with binary transparency.
+	# Run the alpha-bounds scan in the engine instead of GDScript per pixel.
+	return image.get_used_rect()
 
 func _load_ui_texture(path: String) -> Texture2D:
 	if path.is_empty():
 		return null
-	if FileAccess.file_exists(path):
-		var image := Image.new()
-		if image.load(path) == OK:
-			return ImageTexture.create_from_image(image)
+	# Prefer Godot's imported/resource cache. Raw PNG decoding is kept only
+	# as a fallback for unimported development assets.
 	if ResourceLoader.exists(path):
 		var resource = load(path)
 		if resource is Texture2D:
 			return resource
+	if FileAccess.file_exists(path):
+		var image := Image.new()
+		if image.load(path) == OK:
+			return ImageTexture.create_from_image(image)
 	return null
 
 func _on_monster_info_tab_pressed(tab_index: int) -> void:
@@ -1735,27 +1791,48 @@ func _on_demon_ultimate_changed(
 	demon_ultimate_bar.value = current_value
 	_refresh_demon_ultimate_buttons()
 
-func _on_demon_ultimate_cooldowns_changed(cooldowns: Dictionary) -> void:
-	demon_ultimate_cooldowns = cooldowns.duplicate(true)
-	_refresh_demon_ultimate_buttons()
+func _cache_demon_ultimate_ui_data() -> void:
+	demon_ultimate_ui_skills.clear()
+	demon_ultimate_ui_buttons.clear()
+	demon_ultimate_ui_cooldown_bars.clear()
 
-func _refresh_demon_ultimate_buttons() -> void:
-	var ultimate_buttons := {
-		"encirclement": demon_ultimate_1,
-		"line_assault": demon_ultimate_2,
-		"square_siege": demon_ultimate_3,
-	}
-	var cooldown_bars := {
-		"encirclement": demon_ultimate_1_cooldown,
-		"line_assault": demon_ultimate_2_cooldown,
-		"square_siege": demon_ultimate_3_cooldown,
-	}
+	demon_ultimate_ui_buttons.append(demon_ultimate_1)
+	demon_ultimate_ui_buttons.append(demon_ultimate_2)
+	demon_ultimate_ui_buttons.append(demon_ultimate_3)
+	demon_ultimate_ui_cooldown_bars.append(demon_ultimate_1_cooldown)
+	demon_ultimate_ui_cooldown_bars.append(demon_ultimate_2_cooldown)
+	demon_ultimate_ui_cooldown_bars.append(demon_ultimate_3_cooldown)
 
 	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
 		var skill_id := String(raw_id)
 		var skill := DEMON_ULTIMATES.get_skill(skill_id)
-		var button: Button = ultimate_buttons[skill_id]
-		var bar: ProgressBar = cooldown_bars[skill_id]
+		if skill.is_empty():
+			skill = {"id": skill_id}
+		demon_ultimate_ui_skills.append(skill)
+
+
+func _on_demon_ultimate_cooldowns_changed(cooldowns: Dictionary) -> void:
+	demon_ultimate_cooldowns.clear()
+	for raw_id in cooldowns:
+		demon_ultimate_cooldowns[raw_id] = cooldowns[raw_id]
+	_refresh_demon_ultimate_buttons()
+
+
+func _refresh_demon_ultimate_buttons() -> void:
+	var ui_count := mini(
+		demon_ultimate_ui_skills.size(),
+		demon_ultimate_ui_buttons.size()
+	)
+	ui_count = mini(
+		ui_count,
+		demon_ultimate_ui_cooldown_bars.size()
+	)
+
+	for index in ui_count:
+		var skill: Dictionary = demon_ultimate_ui_skills[index]
+		var skill_id := String(skill.get("id", ""))
+		var button: Button = demon_ultimate_ui_buttons[index]
+		var bar: ProgressBar = demon_ultimate_ui_cooldown_bars[index]
 		var cooldown_max := maxf(float(skill.get("cooldown", 0.0)), 0.0)
 		var remaining := maxf(
 			float(demon_ultimate_cooldowns.get(skill_id, 0.0)),
@@ -1802,17 +1879,28 @@ func _refresh_demon_ultimate_buttons() -> void:
 
 func _on_demon_ultimate_pressed(skill_id: String) -> void:
 	if skill_id == "line_assault":
-		var snapshot: Dictionary = battle.get_snapshot()
 		var skill := DEMON_ULTIMATES.get_skill("line_assault")
 		var mana_cost := maxf(float(skill.get("mana_cost", 40.0)), 0.0)
-		if float(snapshot.get("demon_ultimate_charge", 0.0)) + 0.001 < mana_cost:
+		var ultimate_state: Dictionary = {}
+		if battle.has_method("get_demon_ultimate_hud_state"):
+			var raw_ultimate_state = battle.call(
+				"get_demon_ultimate_hud_state",
+				"line_assault"
+			)
+			if typeof(raw_ultimate_state) == TYPE_DICTIONARY:
+				ultimate_state = raw_ultimate_state
+		var current_charge := float(
+			ultimate_state.get("charge", demon_mana_current)
+		)
+		if current_charge + 0.001 < mana_cost:
 			status_label.text = "마력이 부족합니다. 일직선 공세는 마력 %d가 필요합니다." % int(round(mana_cost))
 			return
-		var cooldowns: Dictionary = snapshot.get(
-			"demon_ultimate_cooldowns",
-			{}
+		var remaining := float(
+			ultimate_state.get(
+				"cooldown",
+				demon_ultimate_cooldowns.get("line_assault", 0.0)
+			)
 		)
-		var remaining := float(cooldowns.get("line_assault", 0.0))
 		if remaining > 0.001:
 			status_label.text = "일직선 공세 쿨타임 %.1f초" % remaining
 			return
@@ -1841,12 +1929,22 @@ func _open_demon_direction_select() -> void:
 func _close_demon_direction_select() -> void:
 	demon_direction_buttons.hide()
 	$HUD/DemonUltimatePanel/UltimateButtons.show()
-	var snapshot: Dictionary = battle.get_snapshot()
-	_on_demon_ultimate_changed(
-		float(snapshot.get("demon_ultimate_charge", 0.0)),
-		float(snapshot.get("demon_ultimate_max", 100.0)),
-		bool(snapshot.get("demon_ultimate_ready", false))
-	)
+	if battle.has_method("get_demon_ultimate_hud_state"):
+		var raw_ultimate_state = battle.call(
+			"get_demon_ultimate_hud_state"
+		)
+		if typeof(raw_ultimate_state) == TYPE_DICTIONARY:
+			var ultimate_state: Dictionary = raw_ultimate_state
+			_on_demon_ultimate_changed(
+				float(ultimate_state.get("charge", demon_mana_current)),
+				float(ultimate_state.get("max", 100.0)),
+				bool(
+					ultimate_state.get(
+						"ready",
+						demon_ultimate_charge_ready
+					)
+				)
+			)
 
 func _on_demon_line_direction_pressed(direction: String) -> void:
 	if battle.try_use_demon_ultimate("line_assault", direction):
@@ -1950,7 +2048,9 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 				),
 			]
 
-	var reroll_max := int(battle.get_snapshot().get("demon_reroll_max", 3))
+	var reroll_max := 3
+	if battle.has_method("get_demon_reroll_max"):
+		reroll_max = int(battle.call("get_demon_reroll_max"))
 	demon_reroll_button.text = "↻ 새로고침 %d / %d" % [rerolls_left, reroll_max]
 	demon_reroll_button.disabled = rerolls_left <= 0
 	status_label.text = (
@@ -2037,10 +2137,11 @@ func _on_demon_choice_pressed(index: int) -> void:
 	if battle.choose_demon_augment(augment_id):
 		demon_augment_panel.hide()
 		current_demon_candidates.clear()
-		_on_command_changed(
-			float(battle.get_snapshot().get("command_power", 0.0)),
-			float(battle.get_snapshot().get("command_max", 100.0))
-		)
+		if battle.has_method("get_command_hud_state"):
+			var command_state: Vector2 = battle.call(
+				"get_command_hud_state"
+			)
+			_on_command_changed(command_state.x, command_state.y)
 
 func _on_demon_reroll_pressed() -> void:
 	battle.reroll_demon_augments()
@@ -2143,6 +2244,14 @@ func _begin_threaded_scene_change(path: String, message: String) -> void:
 		battle.set_external_pause(true)
 
 	status_label.text = message
+	var transition := get_node_or_null("/root/SceneTransition")
+	if (
+		is_instance_valid(transition)
+		and transition.has_method("change_scene")
+		and bool(transition.call("change_scene", path, message))
+	):
+		return
+
 	var error := ResourceLoader.load_threaded_request(path, "PackedScene")
 	if error != OK:
 		get_tree().change_scene_to_file(path)

@@ -10,6 +10,8 @@ const BREAK_TEXTURES := [
 	preload("res://assets/art/heroes/stage7_alchemist/frames/effect5/effect_04.png"),
 ]
 
+static var _shared_break_frames: SpriteFrames
+
 @onready var projectile_sprite: Sprite2D = $Projectile
 @onready var break_sprite: AnimatedSprite2D = $Break
 @onready var throw_audio: AudioStreamPlayer = $ThrowAudio
@@ -24,10 +26,9 @@ var arc_height: float = 120.0
 var direct_hit_target: Node = null
 var auto_free_after_break: bool = false
 
-func _ready() -> void:
-	projectile_sprite.texture = PROJECTILE_TEXTURE
-	projectile_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	break_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+func _get_shared_break_frames() -> SpriteFrames:
+	if _shared_break_frames != null:
+		return _shared_break_frames
 	var frames := SpriteFrames.new()
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
@@ -36,7 +37,15 @@ func _ready() -> void:
 	frames.set_animation_loop("break", false)
 	for texture in BREAK_TEXTURES:
 		frames.add_frame("break", texture)
-	break_sprite.sprite_frames = frames
+	_shared_break_frames = frames
+	return _shared_break_frames
+
+
+func _ready() -> void:
+	projectile_sprite.texture = PROJECTILE_TEXTURE
+	projectile_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	break_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	break_sprite.sprite_frames = _get_shared_break_frames()
 	break_sprite.animation_finished.connect(_on_break_finished)
 	_deactivate()
 

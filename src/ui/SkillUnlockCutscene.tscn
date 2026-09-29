@@ -17,9 +17,6 @@ script = ExtResource("1_script")
 
 [node name="BattleFrame" type="Control" parent="."]
 clip_contents = true
-offset_top = 270.0
-offset_right = 1080.0
-offset_bottom = 1444.0
 mouse_filter = 2
 
 [node name="Artwork" type="TextureRect" parent="BattleFrame"]

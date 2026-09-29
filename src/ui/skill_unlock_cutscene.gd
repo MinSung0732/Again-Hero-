@@ -20,6 +20,16 @@ func _ready() -> void:
 	_art_material = artwork.material as ShaderMaterial
 
 
+func configure_battle_frame(frame_rect: Rect2) -> void:
+	root.position = frame_rect.position
+	root.size = Vector2(
+		maxf(frame_rect.size.x, 1.0),
+		maxf(frame_rect.size.y, 1.0)
+	)
+	root.pivot_offset = root.size * 0.5
+	artwork.pivot_offset = root.size * 0.5
+
+
 func play_unlock(data: Dictionary) -> void:
 	if _active:
 		return

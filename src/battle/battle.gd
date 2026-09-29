@@ -100,10 +100,11 @@ var monsters_alive: int = 0
 const MONSTER_SPATIAL_CELL_SIZE := 256.0
 
 var active_monsters: Dictionary = {}
+var active_hero_summons: Dictionary = {}
 var monster_spatial_grid: Dictionary = {}
+var monster_spatial_used_cells: Array[Vector2i] = []
+var monster_spatial_stale_ids: Array[int] = []
 var monster_spatial_grid_physics_frame: int = -1
-var _monster_spatial_bucket_pool: Array = []
-var _monster_registry_stale_ids_scratch: Array = []
 var exp_orb_pool: Array[Node2D] = []
 var projectile_pools: Dictionary = {}
 var transient_fx_pools: Dictionary = {}
@@ -134,6 +135,8 @@ var demon_ultimate_spawn_interval: float = 0.04
 var demon_ultimate_spawn_batch_size: int = 2
 var demon_ultimate_cooldowns: Dictionary = {}
 var demon_ultimate_cooldown_emit_timer: float = 0.0
+var demon_ultimate_skill_ids: Array[String] = []
+var demon_ultimate_cheapest_cost: float = DEMON_ULTIMATES.CHARGE_MAX
 
 var stage_reinforcement_queue: Array[Dictionary] = []
 var stage_reinforcement_timer: float = 0.0
@@ -221,40 +224,13 @@ func _on_magnet_item_tree_exited(instance_id: int) -> void:
 
 func _active_registry_size(registry: Dictionary) -> int:
 	var stale_ids: Array = []
-	for raw_id in registry.keys():
+	for raw_id in registry:
 		var node = registry.get(raw_id)
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			stale_ids.append(raw_id)
 	for raw_id in stale_ids:
 		registry.erase(raw_id)
 	return registry.size()
-
-
-func fill_active_monsters(result: Array) -> void:
-	result.clear()
-	_monster_registry_stale_ids_scratch.clear()
-
-	for raw_id in active_monsters:
-		var node = active_monsters.get(raw_id)
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			_monster_registry_stale_ids_scratch.append(raw_id)
-			continue
-		result.append(node)
-
-	for raw_id in _monster_registry_stale_ids_scratch:
-		active_monsters.erase(raw_id)
-
-	if not _monster_registry_stale_ids_scratch.is_empty():
-		monster_spatial_grid_physics_frame = -1
-
-
-func get_active_monster_count() -> int:
-	var count := 0
-	for raw_id in active_monsters:
-		var node = active_monsters.get(raw_id)
-		if is_instance_valid(node) and not node.is_queued_for_deletion():
-			count += 1
-	return count
 
 
 func _spatial_cell_for_position(world_position: Vector2) -> Vector2i:
@@ -265,20 +241,22 @@ func _spatial_cell_for_position(world_position: Vector2) -> Vector2i:
 
 
 func _rebuild_monster_spatial_grid() -> void:
-	# Recycle cell buckets instead of allocating a fresh Array for every
-	# occupied cell on every physics frame.
-	for raw_cell in monster_spatial_grid:
-		var existing_bucket = monster_spatial_grid.get(raw_cell)
-		if existing_bucket is Array:
-			existing_bucket.clear()
-			_monster_spatial_bucket_pool.append(existing_bucket)
-	monster_spatial_grid.clear()
-	_monster_registry_stale_ids_scratch.clear()
+	# Keep cell Arrays alive and only clear buckets used by the previous
+	# physics frame. This avoids rebuilding Dictionary/Array storage every
+	# frame when large monster waves are active.
+	for cell in monster_spatial_used_cells:
+		var previous_bucket = monster_spatial_grid.get(cell, null)
+		if typeof(previous_bucket) == TYPE_ARRAY:
+			var reusable_bucket: Array = previous_bucket
+			reusable_bucket.clear()
+
+	monster_spatial_used_cells.clear()
+	monster_spatial_stale_ids.clear()
 
 	for raw_id in active_monsters:
 		var node = active_monsters.get(raw_id)
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			_monster_registry_stale_ids_scratch.append(raw_id)
+			monster_spatial_stale_ids.append(int(raw_id))
 			continue
 
 		var monster := node as Node2D
@@ -289,17 +267,19 @@ func _rebuild_monster_spatial_grid() -> void:
 			continue
 
 		var cell := _spatial_cell_for_position(monster.global_position)
-		if not monster_spatial_grid.has(cell):
-			var new_bucket: Array
-			if _monster_spatial_bucket_pool.is_empty():
-				new_bucket = []
-			else:
-				new_bucket = _monster_spatial_bucket_pool.pop_back()
-			monster_spatial_grid[cell] = new_bucket
-		var bucket: Array = monster_spatial_grid[cell]
+		var raw_bucket = monster_spatial_grid.get(cell, null)
+		var bucket: Array
+		if typeof(raw_bucket) == TYPE_ARRAY:
+			bucket = raw_bucket
+		else:
+			bucket = []
+			monster_spatial_grid[cell] = bucket
+
+		if bucket.is_empty():
+			monster_spatial_used_cells.append(cell)
 		bucket.append(monster)
 
-	for raw_id in _monster_registry_stale_ids_scratch:
+	for raw_id in monster_spatial_stale_ids:
 		active_monsters.erase(raw_id)
 
 	monster_spatial_grid_physics_frame = Engine.get_physics_frames()
@@ -335,7 +315,7 @@ func fill_monsters_near(
 	for cell_x in range(min_cell.x, max_cell.x + 1):
 		for cell_y in range(min_cell.y, max_cell.y + 1):
 			var cell := Vector2i(cell_x, cell_y)
-			var bucket = monster_spatial_grid.get(cell)
+			var bucket = monster_spatial_grid.get(cell, null)
 			if typeof(bucket) != TYPE_ARRAY:
 				continue
 			for node in bucket:
@@ -371,7 +351,7 @@ func count_monsters_near(
 	for cell_x in range(min_cell.x, max_cell.x + 1):
 		for cell_y in range(min_cell.y, max_cell.y + 1):
 			var cell := Vector2i(cell_x, cell_y)
-			var bucket = monster_spatial_grid.get(cell)
+			var bucket = monster_spatial_grid.get(cell, null)
 			if typeof(bucket) != TYPE_ARRAY:
 				continue
 			for node in bucket:
@@ -388,10 +368,103 @@ func count_monsters_near(
 	return count
 
 
-func fill_monsters_in_rect(
-	world_rect: Rect2,
-	result: Array
-) -> void:
+func get_nearest_hostile_target_for_hero(origin: Vector2) -> Node2D:
+	var nearest: Node2D = null
+	var nearest_distance_sq := INF
+
+	for raw_id in active_monsters:
+		var raw_node = active_monsters.get(raw_id)
+		if (
+			not is_instance_valid(raw_node)
+			or raw_node.is_queued_for_deletion()
+		):
+			continue
+		var combat_target := raw_node as Node2D
+		if combat_target == null:
+			continue
+		var hp_value = combat_target.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		var distance_sq := origin.distance_squared_to(
+			combat_target.global_position
+		)
+		if distance_sq < nearest_distance_sq:
+			nearest_distance_sq = distance_sq
+			nearest = combat_target
+
+	for raw_id in active_treasure_chests:
+		var raw_node = active_treasure_chests.get(raw_id)
+		if (
+			not is_instance_valid(raw_node)
+			or raw_node.is_queued_for_deletion()
+		):
+			continue
+		var combat_target := raw_node as Node2D
+		if combat_target == null:
+			continue
+		var hp_value = combat_target.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		var distance_sq := origin.distance_squared_to(
+			combat_target.global_position
+		)
+		if distance_sq < nearest_distance_sq:
+			nearest_distance_sq = distance_sq
+			nearest = combat_target
+
+	return nearest
+
+
+func get_nearest_monster_target(
+	origin: Vector2,
+	radius: float
+) -> Node2D:
+	_ensure_monster_spatial_grid()
+
+	var safe_radius := maxf(radius, 0.0)
+	var nearest_distance_sq := safe_radius * safe_radius
+	var nearest: Node2D = null
+	var min_cell := _spatial_cell_for_position(
+		origin - Vector2(safe_radius, safe_radius)
+	)
+	var max_cell := _spatial_cell_for_position(
+		origin + Vector2(safe_radius, safe_radius)
+	)
+	min_cell -= Vector2i.ONE
+	max_cell += Vector2i.ONE
+
+	for cell_x in range(min_cell.x, max_cell.x + 1):
+		for cell_y in range(min_cell.y, max_cell.y + 1):
+			var bucket = monster_spatial_grid.get(
+				Vector2i(cell_x, cell_y),
+				null
+			)
+			if typeof(bucket) != TYPE_ARRAY:
+				continue
+			for raw_node in bucket:
+				if (
+					not is_instance_valid(raw_node)
+					or raw_node.is_queued_for_deletion()
+				):
+					continue
+				var monster := raw_node as Node2D
+				if monster == null:
+					continue
+				var hp_value = monster.get("current_hp")
+				if hp_value != null and int(hp_value) <= 0:
+					continue
+				var distance_sq := origin.distance_squared_to(
+					monster.global_position
+				)
+				if distance_sq > nearest_distance_sq:
+					continue
+				nearest_distance_sq = distance_sq
+				nearest = monster
+
+	return nearest
+
+
+func fill_monsters_in_rect(world_rect: Rect2, result: Array) -> void:
 	result.clear()
 	_ensure_monster_spatial_grid()
 
@@ -403,7 +476,7 @@ func fill_monsters_in_rect(
 	for cell_x in range(min_cell.x, max_cell.x + 1):
 		for cell_y in range(min_cell.y, max_cell.y + 1):
 			var cell := Vector2i(cell_x, cell_y)
-			var bucket = monster_spatial_grid.get(cell)
+			var bucket = monster_spatial_grid.get(cell, null)
 			if typeof(bucket) != TYPE_ARRAY:
 				continue
 			for node in bucket:
@@ -416,8 +489,10 @@ func query_monsters_in_rect(world_rect: Rect2) -> Array:
 	fill_monsters_in_rect(world_rect, result)
 	return result
 
+
 func _ready() -> void:
 	queue_redraw()
+	_cache_demon_ultimate_runtime_data()
 	_start_battle()
 
 func _process(delta: float) -> void:
@@ -520,6 +595,28 @@ func _configure_castle_depth_actor(actor: Node2D, visual_node_name: String) -> v
 		visual.z_index = 0
 
 
+func _cache_demon_ultimate_runtime_data() -> void:
+	demon_ultimate_skill_ids.clear()
+	demon_ultimate_cheapest_cost = maxf(
+		DEMON_ULTIMATES.CHARGE_MAX,
+		1.0
+	)
+	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
+		var skill_id := String(raw_id)
+		demon_ultimate_skill_ids.append(skill_id)
+		var skill := DEMON_ULTIMATES.get_skill(skill_id)
+		if skill.is_empty() or not bool(skill.get("implemented", false)):
+			continue
+		var mana_cost := maxf(
+			float(skill.get("mana_cost", DEMON_ULTIMATES.CHARGE_MAX)),
+			0.0
+		)
+		demon_ultimate_cheapest_cost = minf(
+			demon_ultimate_cheapest_cost,
+			mana_cost
+		)
+
+
 func _start_battle() -> void:
 	battle_over = false
 	active_heal_items.clear()
@@ -532,7 +629,10 @@ func _start_battle() -> void:
 			valid_orb_pool.append(pooled_orb)
 	exp_orb_pool = valid_orb_pool
 	active_monsters.clear()
+	active_hero_summons.clear()
 	monster_spatial_grid.clear()
+	monster_spatial_used_cells.clear()
+	monster_spatial_stale_ids.clear()
 	monster_spatial_grid_physics_frame = -1
 	external_pause = false
 	flow_pause_manager.reset()
@@ -558,8 +658,8 @@ func _start_battle() -> void:
 	demon_ultimate_spawn_interval = 0.04
 	demon_ultimate_spawn_batch_size = 2
 	demon_ultimate_cooldowns.clear()
-	for skill_id in DEMON_ULTIMATES.get_ordered_ids():
-		demon_ultimate_cooldowns[String(skill_id)] = 0.0
+	for skill_id in demon_ultimate_skill_ids:
+		demon_ultimate_cooldowns[skill_id] = 0.0
 	demon_ultimate_cooldown_emit_timer = 0.0
 	stage_reinforcement_queue.clear()
 	stage_reinforcement_timer = 0.0
@@ -1115,6 +1215,19 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 	return detail
 
 
+func set_hero_summon_active(
+	summon: Node2D,
+	is_active: bool
+) -> void:
+	if not is_instance_valid(summon):
+		return
+	var summon_id := summon.get_instance_id()
+	if is_active and not summon.is_queued_for_deletion():
+		active_hero_summons[summon_id] = summon
+	else:
+		active_hero_summons.erase(summon_id)
+
+
 func get_nearest_hero_combat_target(origin: Vector2) -> Node2D:
 	var nearest: Node2D = null
 	var nearest_distance_sq := INF
@@ -1123,14 +1236,22 @@ func get_nearest_hero_combat_target(origin: Vector2) -> Node2D:
 		nearest = hero
 		nearest_distance_sq = origin.distance_squared_to(hero.global_position)
 
-	# Summon count is intentionally small and capped by the hero slot system.
-	# Keeping target resolution here makes the combat authority easy to move
-	# to a multiplayer server later.
-	for raw_node in get_tree().get_nodes_in_group("hero_summons"):
-		if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
+	# Only active Stage 8 summons live in this registry. Target refresh avoids
+	# scanning preallocated inactive pools (especially the large drone pool).
+	for summon_id in active_hero_summons:
+		var raw_summon = active_hero_summons.get(summon_id)
+		if (
+			not is_instance_valid(raw_summon)
+			or raw_summon.is_queued_for_deletion()
+		):
 			continue
-		var summon := raw_node as Node2D
+		var summon := raw_summon as Node2D
 		if summon == null or not bool(summon.get("active")):
+			continue
+		if (
+			summon.has_method("is_combat_targetable")
+			and not bool(summon.call("is_combat_targetable"))
+		):
 			continue
 		var distance_sq := origin.distance_squared_to(summon.global_position)
 		if distance_sq >= nearest_distance_sq:
@@ -1369,6 +1490,15 @@ func _spawn_monster(
 		if split_exp_value != null:
 			monster.set("exp_reward", 0)
 
+	# Give monsters direct access to the Battle target authority before _ready().
+	# Their normal combat path no longer needs SceneTree hero-group lookups.
+	if monster.has_method("configure_combat_context"):
+		monster.call(
+			"configure_combat_context",
+			hero,
+			self
+		)
+
 	add_child(monster)
 	monster.position = spawn_position
 	# Keep depth normalization after the monster's _ready() for consistency.
@@ -1471,7 +1601,15 @@ func _apply_demon_level_scaling_to_monster(
 
 func _get_active_monsters_snapshot() -> Array:
 	var result: Array = []
-	fill_active_monsters(result)
+	var stale_ids: Array = []
+	for raw_id in active_monsters:
+		var node = active_monsters.get(raw_id)
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			stale_ids.append(raw_id)
+			continue
+		result.append(node)
+	for raw_id in stale_ids:
+		active_monsters.erase(raw_id)
 	return result
 
 
@@ -1874,6 +2012,8 @@ func acquire_transient_fx(pool_key: String, fx_type: String) -> Node:
 		match fx_type:
 			"animated_sprite":
 				fx = AnimatedSprite2D.new()
+			"sprite":
+				fx = Sprite2D.new()
 			"line":
 				fx = Line2D.new()
 			"node2d":
@@ -1905,6 +2045,17 @@ func recycle_transient_fx(fx: Node, pool_key: String) -> void:
 		fx.set_physics_process(false)
 		if fx is AnimatedSprite2D:
 			(fx as AnimatedSprite2D).stop()
+		elif fx is Sprite2D:
+			var sprite := fx as Sprite2D
+			sprite.texture = null
+			sprite.centered = true
+			sprite.flip_h = false
+			sprite.flip_v = false
+			sprite.offset = Vector2.ZERO
+			sprite.modulate = Color.WHITE
+			sprite.scale = Vector2.ONE
+			sprite.rotation = 0.0
+			sprite.position = Vector2.ZERO
 		elif fx is Line2D:
 			var line := fx as Line2D
 			line.clear_points()
@@ -1984,16 +2135,10 @@ func recycle_exp_orb(orb: Node) -> void:
 
 func _emit_demon_ultimate_changed() -> void:
 	var charge_max := maxf(DEMON_ULTIMATES.CHARGE_MAX, 1.0)
-	var cheapest_cost := charge_max
-	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
-		var skill := DEMON_ULTIMATES.get_skill(String(raw_id))
-		if skill.is_empty() or not bool(skill.get("implemented", false)):
-			continue
-		cheapest_cost = minf(cheapest_cost, maxf(float(skill.get("mana_cost", charge_max)), 0.0))
 	demon_ultimate_changed.emit(
 		demon_ultimate_charge,
 		charge_max,
-		demon_ultimate_charge + 0.001 >= cheapest_cost
+		demon_ultimate_charge + 0.001 >= demon_ultimate_cheapest_cost
 	)
 
 func _emit_demon_ultimate_cooldowns() -> void:
@@ -2004,8 +2149,7 @@ func _emit_demon_ultimate_cooldowns() -> void:
 func _update_demon_ultimate_cooldowns(delta: float) -> void:
 	var changed := false
 	var reached_ready := false
-	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
-		var skill_id := String(raw_id)
+	for skill_id in demon_ultimate_skill_ids:
 		var previous_remaining := maxf(
 			float(demon_ultimate_cooldowns.get(skill_id, 0.0)),
 			0.0
@@ -3275,12 +3419,19 @@ func _set_combat_physics_enabled(enabled: bool) -> void:
 		"heal_items",
 		"hero_projectiles",
 		"monster_projectiles",
-		"hero_summons",
 		"hero_summon_projectiles",
 	]:
 		for node in get_tree().get_nodes_in_group(group_name):
 			if is_instance_valid(node):
 				node.set_physics_process(enabled)
+
+	for summon_id in active_hero_summons:
+		var summon = active_hero_summons.get(summon_id)
+		if (
+			is_instance_valid(summon)
+			and bool(summon.get("active"))
+		):
+			summon.set_physics_process(enabled)
 
 func get_demon_build_summary() -> String:
 	if demon_build_counts.is_empty() and demon_special_augments.is_empty():
@@ -3501,6 +3652,146 @@ func _emit_progression() -> void:
 		int(hero.get("current_exp")),
 		int(hero.get("exp_to_next_level"))
 	)
+
+func get_hero_skill_cooldown_hud() -> Array:
+	if (
+		not is_instance_valid(hero)
+		or not hero.has_method("get_skill_cooldown_hud")
+	):
+		return []
+
+	var raw_skill_cooldowns = hero.call(
+		"get_skill_cooldown_hud"
+	)
+	return (
+		raw_skill_cooldowns
+		if raw_skill_cooldowns is Array
+		else []
+	)
+
+
+func get_command_hud_state() -> Vector2:
+	return Vector2(command_power, max_command)
+
+
+func get_demon_ultimate_hud_state(skill_id: String = "") -> Dictionary:
+	return {
+		"charge": demon_ultimate_charge,
+		"max": DEMON_ULTIMATES.CHARGE_MAX,
+		"ready": (
+			demon_ultimate_charge + 0.001
+			>= demon_ultimate_cheapest_cost
+		),
+		"cooldown": (
+			float(demon_ultimate_cooldowns.get(skill_id, 0.0))
+			if not skill_id.is_empty()
+			else 0.0
+		),
+	}
+
+
+func get_demon_reroll_max() -> int:
+	return demon_reroll_max
+
+
+func get_hero_info_hud() -> Dictionary:
+	if not is_instance_valid(hero):
+		return {}
+
+	var hp := int(hero.get("current_hp"))
+	var max_hp_value := int(hero.get("max_hp"))
+	var runtime_info_stats: Dictionary = {}
+	if hero.has_method("get_runtime_info_stats"):
+		var raw_runtime_info = hero.call("get_runtime_info_stats")
+		if typeof(raw_runtime_info) == TYPE_DICTIONARY:
+			runtime_info_stats = raw_runtime_info
+
+	var hero_build_counts: Dictionary = {}
+	var raw_build_counts = hero.get("build_counts")
+	if typeof(raw_build_counts) == TYPE_DICTIONARY:
+		hero_build_counts = Dictionary(raw_build_counts).duplicate(true)
+
+	max_hp_value = int(
+		runtime_info_stats.get("max_hp", max_hp_value)
+	)
+	var hero_execute_ratio := (
+		float(
+			Dictionary(
+				current_hero_profile.get("ultimate", {})
+			).get("execute_hp_ratio", 0.0)
+		)
+		+ float(hero.get("rogue_execute_threshold_bonus"))
+	)
+	var hero_slash_shield_ratio := (
+		float(
+			Dictionary(
+				current_hero_profile.get("rogue_slash_skill", {})
+			).get("shield_hp_ratio", 0.0)
+		)
+		+ float(hero.get("rogue_slash_shield_ratio_bonus"))
+	)
+
+	return {
+		"hero_name": String(
+			current_hero_profile.get("display_name", "견습 마도사")
+		),
+		"hero_archetype": String(
+			current_hero_profile.get("archetype", "ranged_kiter")
+		),
+		"hero_portrait_path": String(
+			current_stage_data.get("portrait_path", "")
+		),
+		"hero_hp": hp,
+		"hero_max_hp": max_hp_value,
+		"hero_level": int(hero.get("level")),
+		"hero_attack_damage": int(
+			runtime_info_stats.get(
+				"attack_damage",
+				hero.get("attack_damage")
+			)
+		),
+		"hero_move_speed": float(
+			runtime_info_stats.get(
+				"move_speed",
+				hero.get("move_speed")
+			)
+		),
+		"hero_attack_cooldown": float(
+			runtime_info_stats.get(
+				"attack_interval",
+				hero.get("attack_cooldown")
+			)
+		),
+		"hero_attack_range": float(
+			runtime_info_stats.get(
+				"attack_range",
+				hero.get("attack_range")
+			)
+		),
+		"hero_projectile_speed": float(
+			runtime_info_stats.get(
+				"projectile_speed",
+				hero.get("projectile_speed")
+			)
+		),
+		"hero_lifesteal_ratio": float(
+			hero.get("rogue_lifesteal_ratio")
+		),
+		"hero_execute_ratio": hero_execute_ratio,
+		"hero_slash_shield_ratio": hero_slash_shield_ratio,
+		"hero_build_counts": hero_build_counts,
+		"hero_recent_offense": (
+			String(hero.call("get_recent_offense_summary"))
+			if hero.has_method("get_recent_offense_summary")
+			else "최근 공세 기록 없음"
+		),
+		"hero_ai_observation": (
+			String(hero.call("get_ai_observation_summary"))
+			if hero.has_method("get_ai_observation_summary")
+			else "AI 관측 정보 없음"
+		),
+	}
+
 
 func get_snapshot() -> Dictionary:
 	var hp := 0

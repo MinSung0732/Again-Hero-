@@ -107,9 +107,15 @@ func _physics_process(delta: float) -> void:
 		if is_instance_valid(target):
 			_fire_at(target)
 			var speed_multiplier := 1.0
-			if is_instance_valid(owner_hero) and owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
-				var multipliers: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
-				speed_multiplier = maxf(float(multipliers.get("attack_speed", 1.0)), 0.1)
+			if is_instance_valid(owner_hero):
+				if owner_hero.has_method("get_summoner_runtime_attack_speed_multiplier"):
+					speed_multiplier = maxf(
+						float(owner_hero.call("get_summoner_runtime_attack_speed_multiplier")),
+						0.1
+					)
+				elif owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
+					var multipliers: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
+					speed_multiplier = maxf(float(multipliers.get("attack_speed", 1.0)), 0.1)
 			attack_timer = attack_cooldown / speed_multiplier
 	queue_redraw()
 
@@ -118,23 +124,31 @@ func _find_nearest_target() -> Node2D:
 	var battle := get_parent()
 	if not is_instance_valid(battle):
 		return null
-	var candidates: Array = []
-	if battle.has_method("query_monsters_near"):
-		var result = battle.call("query_monsters_near", global_position, attack_range)
-		if result is Array:
-			candidates = result
-	else:
-		candidates = get_tree().get_nodes_in_group("monsters")
 
+	if battle.has_method("get_nearest_monster_target"):
+		var target = battle.call(
+			"get_nearest_monster_target",
+			global_position,
+			attack_range
+		)
+		return target as Node2D if target is Node2D else null
+
+	# Standalone/debug fallback only. Normal Battle runtime uses the spatial
+	# nearest-target query above and allocates no candidate Array.
 	var nearest: Node2D = null
 	var nearest_distance_sq := attack_range * attack_range
-	for raw_node in candidates:
+	for raw_node in get_tree().get_nodes_in_group("monsters"):
 		if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
 			continue
 		var monster := raw_node as Node2D
 		if monster == null:
 			continue
-		var distance_sq := global_position.distance_squared_to(monster.global_position)
+		var hp_value = monster.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		var distance_sq := global_position.distance_squared_to(
+			monster.global_position
+		)
 		if distance_sq > nearest_distance_sq:
 			continue
 		nearest_distance_sq = distance_sq

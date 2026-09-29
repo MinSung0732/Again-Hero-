@@ -38,9 +38,21 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 	owner_hero = new_owner
 	max_hp = maxi(int(config.get("max_hp", 100)), 1)
 	current_hp = max_hp
+	var owner_attack_damage := maxi(
+		int(config.get("owner_attack_damage", 0)),
+		0
+	)
+	if owner_attack_damage <= 0 and is_instance_valid(new_owner):
+		var raw_owner_attack_damage = new_owner.get("attack_damage")
+		if raw_owner_attack_damage != null:
+			owner_attack_damage = maxi(
+				int(raw_owner_attack_damage),
+				1
+			)
+	owner_attack_damage = maxi(owner_attack_damage, 1)
 	attack_damage = maxi(
 		int(round(
-			float(config.get("owner_attack_damage", 1))
+			float(owner_attack_damage)
 			* maxf(float(config.get("damage_ratio", 0.15)), 0.0)
 		)),
 		1
@@ -111,23 +123,30 @@ func _find_nearest_target() -> Node2D:
 	if not is_instance_valid(battle):
 		return null
 
-	var candidates: Array = []
-	if battle.has_method("query_monsters_near"):
-		var result = battle.call("query_monsters_near", global_position, sense_range)
-		if result is Array:
-			candidates = result
-	else:
-		candidates = get_tree().get_nodes_in_group("monsters")
+	if battle.has_method("get_nearest_monster_target"):
+		var target = battle.call(
+			"get_nearest_monster_target",
+			global_position,
+			sense_range
+		)
+		return target as Node2D if target is Node2D else null
 
+	# Standalone/debug fallback only. Normal Battle runtime uses the spatial
+	# nearest-target query above and allocates no candidate Array.
 	var nearest: Node2D = null
 	var nearest_distance_sq := sense_range * sense_range
-	for raw_node in candidates:
+	for raw_node in get_tree().get_nodes_in_group("monsters"):
 		if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
 			continue
 		var monster := raw_node as Node2D
 		if monster == null:
 			continue
-		var distance_sq := global_position.distance_squared_to(monster.global_position)
+		var hp_value = monster.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		var distance_sq := global_position.distance_squared_to(
+			monster.global_position
+		)
 		if distance_sq > nearest_distance_sq:
 			continue
 		nearest_distance_sq = distance_sq

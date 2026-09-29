@@ -33,6 +33,8 @@ const MATERIAL_TEXTURES: Array[Array] = [
 	],
 ]
 
+static var _shared_material_frames: SpriteFrames
+
 @onready var visual: AnimatedSprite2D = $Visual
 
 var active: bool = false
@@ -40,6 +42,7 @@ var gas_value: float = 20.0
 var material_type: int = 1
 var lifetime_remaining: float = 0.0
 var temporary_drop: bool = false
+var recycle_temporary_drop: bool = false
 var in_flight: bool = false
 var flight_origin: Vector2 = Vector2.ZERO
 var flight_target: Vector2 = Vector2.ZERO
@@ -48,7 +51,9 @@ var flight_elapsed: float = 0.0
 var flight_arc_height: float = 0.0
 
 
-func _ready() -> void:
+func _get_shared_material_frames() -> SpriteFrames:
+	if _shared_material_frames != null:
+		return _shared_material_frames
 	var frames := SpriteFrames.new()
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
@@ -62,7 +67,12 @@ func _ready() -> void:
 		for texture in textures:
 			frames.add_frame(animation_name, texture)
 
-	visual.sprite_frames = frames
+	_shared_material_frames = frames
+	return _shared_material_frames
+
+
+func _ready() -> void:
+	visual.sprite_frames = _get_shared_material_frames()
 	visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	visual.scale = Vector2(0.20, 0.20)
 	deactivate()
@@ -90,6 +100,10 @@ func activate(
 	var frame_count: int = visual.sprite_frames.get_frame_count(animation_name)
 	if frame_count > 0:
 		visual.frame = randi_range(0, frame_count - 1)
+
+
+func set_temporary_reuse_enabled(enabled: bool) -> void:
+	recycle_temporary_drop = enabled
 
 
 func launch_from_cauldron(
@@ -141,12 +155,15 @@ func _process(delta: float) -> void:
 
 
 func deactivate() -> void:
+	var should_free := temporary_drop and not recycle_temporary_drop
 	active = false
 	in_flight = false
 	flight_elapsed = 0.0
+	lifetime_remaining = 0.0
+	temporary_drop = false
 	visible = false
 	set_process(false)
 	if is_instance_valid(visual):
 		visual.stop()
-	if temporary_drop:
+	if should_free:
 		queue_free()

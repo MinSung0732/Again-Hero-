@@ -18,6 +18,8 @@ const SMOKE_POOL_SIZE := 12
 const REVEAL_DURATION := 0.32
 const SMOKE_REVEAL_THRESHOLD := 0.45
 
+static var _shared_smoke_frames: SpriteFrames
+
 var active: bool = false
 var radius: float = 450.0
 var duration_remaining: float = 0.0
@@ -29,18 +31,26 @@ var smoke_cursor: int = 0
 var reveal_progress: float = 1.0
 var smoke_pool: Array[AnimatedSprite2D] = []
 
+func _get_shared_smoke_frames() -> SpriteFrames:
+	if _shared_smoke_frames != null:
+		return _shared_smoke_frames
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	frames.add_animation("smoke")
+	frames.set_animation_speed("smoke", 12.0)
+	frames.set_animation_loop("smoke", false)
+	for texture in SMOKE_TEXTURES:
+		frames.add_frame("smoke", texture)
+	_shared_smoke_frames = frames
+	return _shared_smoke_frames
+
+
 func _ready() -> void:
+	var smoke_frames := _get_shared_smoke_frames()
 	for _index in range(SMOKE_POOL_SIZE):
 		var smoke := AnimatedSprite2D.new()
-		var frames := SpriteFrames.new()
-		if frames.has_animation("default"):
-			frames.remove_animation("default")
-		frames.add_animation("smoke")
-		frames.set_animation_speed("smoke", 12.0)
-		frames.set_animation_loop("smoke", false)
-		for texture in SMOKE_TEXTURES:
-			frames.add_frame("smoke", texture)
-		smoke.sprite_frames = frames
+		smoke.sprite_frames = smoke_frames
 		smoke.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		smoke.scale = Vector2(0.62, 0.62)
 		smoke.visible = false
