@@ -335,6 +335,9 @@ var alchemist_emergency_config: Dictionary = {}
 var alchemist_emergency_cooldown: float = 0.0
 var alchemist_emergency_trapped_timer: float = 0.0
 var alchemist_emergency_threats: Array[Node2D] = []
+var alchemist_movement_query_candidates: Array = []
+var alchemist_damage_query_candidates: Array = []
+var alchemist_emergency_query_candidates: Array = []
 var alchemist_emergency_escape_direction: Vector2 = Vector2.RIGHT
 var alchemist_philosopher_config: Dictionary = {}
 var alchemist_materials_collected: int = 0
@@ -712,6 +715,9 @@ func configure_profile(profile: Dictionary) -> void:
 	alchemist_emergency_cooldown = 0.0
 	alchemist_emergency_trapped_timer = 0.0
 	alchemist_emergency_threats.clear()
+	alchemist_movement_query_candidates.clear()
+	alchemist_damage_query_candidates.clear()
+	alchemist_emergency_query_candidates.clear()
 	alchemist_emergency_escape_direction = Vector2.RIGHT
 	var raw_philosopher = alchemist_config.get("philosopher_stone", {})
 	alchemist_philosopher_config = (
@@ -3133,7 +3139,12 @@ func _move_alchemist_philosopher_form(delta: float) -> void:
 	var sense_radius := maxf(ai_sense_radius, 520.0)
 	var repulsion := Vector2.ZERO
 	var sense_radius_sq := sense_radius * sense_radius
-	for node in _get_monster_nodes_near(global_position, sense_radius):
+	_fill_monster_nodes_near(
+		global_position,
+		sense_radius,
+		alchemist_movement_query_candidates
+	)
+	for node in alchemist_movement_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3146,6 +3157,7 @@ func _move_alchemist_philosopher_form(delta: float) -> void:
 		var distance := sqrt(distance_sq)
 		var pressure := 1.0 - clampf(distance / sense_radius, 0.0, 1.0)
 		repulsion += offset / distance * (0.35 + pressure * pressure * 2.4)
+	alchemist_movement_query_candidates.clear()
 
 	if repulsion.length_squared() > 0.01:
 		desired = desired * 0.55 + repulsion * 1.55
@@ -3375,19 +3387,11 @@ func _try_cast_alchemist_mixture_field() -> void:
 		int(alchemist_mixture_field_config.get("enemy_count_trigger", 2)),
 		1
 	)
-	var nearby_enemies := 0
-	var radius_sq := radius * radius
-	for node in _get_monster_nodes_near(global_position, radius):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		if global_position.distance_squared_to(monster.global_position) > radius_sq:
-			continue
-		nearby_enemies += 1
-		if nearby_enemies >= required_enemies:
-			break
+	var nearby_enemies := _count_monsters_near(
+		global_position,
+		radius,
+		required_enemies
+	)
 	if nearby_enemies < required_enemies:
 		return
 
@@ -3801,8 +3805,13 @@ func _on_alchemist_mixture_field_tick(origin: Vector2, radius: float) -> void:
 		) * 1000.0
 	))
 	var radius_sq := radius * radius
+	_fill_monster_nodes_near(
+		origin,
+		radius,
+		alchemist_damage_query_candidates
+	)
 
-	for node in _get_monster_nodes_near(origin, radius):
+	for node in alchemist_damage_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3817,6 +3826,7 @@ func _on_alchemist_mixture_field_tick(origin: Vector2, radius: float) -> void:
 			"gunner_slow_multiplier",
 			minf(current_multiplier, slow_multiplier)
 		)
+	alchemist_damage_query_candidates.clear()
 
 
 func _update_alchemist_emergency_escape(delta: float) -> bool:
@@ -3838,10 +3848,14 @@ func _update_alchemist_emergency_escape(delta: float) -> bool:
 		int(alchemist_emergency_config.get("min_enemy_count", 4)),
 		2
 	)
-	var nearby := _get_monster_nodes_near(global_position, trigger_radius)
+	_fill_monster_nodes_near(
+		global_position,
+		trigger_radius,
+		alchemist_emergency_query_candidates
+	)
 	alchemist_emergency_threats.clear()
 	var radius_sq := trigger_radius * trigger_radius
-	for node in nearby:
+	for node in alchemist_emergency_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -3852,6 +3866,7 @@ func _update_alchemist_emergency_escape(delta: float) -> bool:
 			continue
 		if global_position.distance_squared_to(monster.global_position) <= radius_sq:
 			alchemist_emergency_threats.append(monster)
+	alchemist_emergency_query_candidates.clear()
 
 	if alchemist_emergency_threats.size() < min_enemies:
 		alchemist_emergency_trapped_timer = 0.0
@@ -4216,7 +4231,12 @@ func _on_alchemist_poison_tick(origin: Vector2, radius: float, damage: int) -> v
 	if current_hp <= 0:
 		return
 	var radius_sq := radius * radius
-	for node in _get_monster_nodes_near(origin, radius):
+	_fill_monster_nodes_near(
+		origin,
+		radius,
+		alchemist_damage_query_candidates
+	)
+	for node in alchemist_damage_query_candidates:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -4225,6 +4245,7 @@ func _on_alchemist_poison_tick(origin: Vector2, radius: float, damage: int) -> v
 		if origin.distance_squared_to(monster.global_position) > radius_sq:
 			continue
 		_deal_alchemist_dot_damage(monster, damage)
+	alchemist_damage_query_candidates.clear()
 
 
 func _update_alchemist_pose_visual(delta: float) -> void:
