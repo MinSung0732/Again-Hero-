@@ -10754,7 +10754,10 @@ func _get_purifier_cleansing_target_count() -> int:
 		int(purifier_cleansing_config.get("max_targets", 6)),
 		1
 	)
-	return mini(1 + purifier_cleansing_stacks / per_target, max_targets)
+	var extra_targets := floori(
+		float(purifier_cleansing_stacks) / float(per_target)
+	)
+	return mini(1 + extra_targets, max_targets)
 
 
 func _collect_purifier_cleansing_targets(
@@ -10767,6 +10770,7 @@ func _collect_purifier_cleansing_targets(
 	if (
 		is_instance_valid(target)
 		and not target.is_queued_for_deletion()
+		and target.is_in_group("monsters")
 	):
 		var hp_value = target.get("current_hp")
 		if hp_value == null or int(hp_value) > 0:
