@@ -1621,31 +1621,43 @@ func _score_summoner_ai_candidate(
 
 
 func _choose_summoner_ai_cast() -> String:
-	var candidates: Array[String] = []
 	var shared_slot_available := (
 		_get_active_summon_count() < _get_summoner_slot_capacity()
 	)
-	if shared_slot_available and summoner_cast_pending and summoner_gatekeeper_cooldown <= 0.0:
-		candidates.append("gatekeeper")
-	if shared_slot_available and summoner_scout_cast_pending and summoner_scout_cooldown <= 0.0:
-		candidates.append("scout")
-	if shared_slot_available and summoner_hound_cast_pending and summoner_hound_cooldown <= 0.0:
-		candidates.append("hound")
-	if (
+	var gatekeeper_available := (
+		shared_slot_available
+		and summoner_cast_pending
+		and summoner_gatekeeper_cooldown <= 0.0
+	)
+	var scout_available := (
+		shared_slot_available
+		and summoner_scout_cast_pending
+		and summoner_scout_cooldown <= 0.0
+	)
+	var hound_available := (
+		shared_slot_available
+		and summoner_hound_cast_pending
+		and summoner_hound_cooldown <= 0.0
+	)
+	var watcher_available := (
 		shared_slot_available
 		and summoner_watcher_cast_pending
 		and summoner_watcher_cooldown <= 0.0
 		and _get_active_summoner_watcher_count() < _get_summoner_watcher_max_active()
-	):
-		candidates.append("watcher")
-	if (
+	)
+	var open_gate_available := (
 		summoner_open_gate_cast_pending
 		and summoner_open_gate_unlocked
 		and summoner_open_gate_cooldown <= 0.0
 		and not is_instance_valid(_get_active_summoner_open_gate())
+	)
+	if not (
+		gatekeeper_available
+		or scout_available
+		or hound_available
+		or watcher_available
+		or open_gate_available
 	):
-		candidates.append("open_gate")
-	if candidates.is_empty():
 		return ""
 
 	var nearby := _get_monster_nodes_near(
@@ -1653,20 +1665,75 @@ func _choose_summoner_ai_cast() -> String:
 		maxf(float(summoner_ai_config.get("observation_radius", 760.0)), 1.0)
 	)
 	var nearby_count := nearby.size()
-	var weights: Array[float] = []
+	var gatekeeper_weight := 0.0
+	var scout_weight := 0.0
+	var hound_weight := 0.0
+	var watcher_weight := 0.0
+	var open_gate_weight := 0.0
 	var total_weight := 0.0
-	for skill_id in candidates:
-		var score := _score_summoner_ai_candidate(skill_id, nearby_count)
-		var weight := pow(maxf(score - 25.0, 1.0), 1.35)
-		weights.append(weight)
-		total_weight += weight
+
+	if gatekeeper_available:
+		gatekeeper_weight = pow(
+			maxf(_score_summoner_ai_candidate("gatekeeper", nearby_count) - 25.0, 1.0),
+			1.35
+		)
+		total_weight += gatekeeper_weight
+	if scout_available:
+		scout_weight = pow(
+			maxf(_score_summoner_ai_candidate("scout", nearby_count) - 25.0, 1.0),
+			1.35
+		)
+		total_weight += scout_weight
+	if hound_available:
+		hound_weight = pow(
+			maxf(_score_summoner_ai_candidate("hound", nearby_count) - 25.0, 1.0),
+			1.35
+		)
+		total_weight += hound_weight
+	if watcher_available:
+		watcher_weight = pow(
+			maxf(_score_summoner_ai_candidate("watcher", nearby_count) - 25.0, 1.0),
+			1.35
+		)
+		total_weight += watcher_weight
+	if open_gate_available:
+		open_gate_weight = pow(
+			maxf(_score_summoner_ai_candidate("open_gate", nearby_count) - 25.0, 1.0),
+			1.35
+		)
+		total_weight += open_gate_weight
 
 	var roll := randf() * total_weight
-	for index in range(candidates.size()):
-		roll -= weights[index]
+	if gatekeeper_available:
+		roll -= gatekeeper_weight
 		if roll <= 0.0:
-			return candidates[index]
-	return candidates[candidates.size() - 1]
+			return "gatekeeper"
+	if scout_available:
+		roll -= scout_weight
+		if roll <= 0.0:
+			return "scout"
+	if hound_available:
+		roll -= hound_weight
+		if roll <= 0.0:
+			return "hound"
+	if watcher_available:
+		roll -= watcher_weight
+		if roll <= 0.0:
+			return "watcher"
+	if open_gate_available:
+		roll -= open_gate_weight
+		if roll <= 0.0:
+			return "open_gate"
+
+	if open_gate_available:
+		return "open_gate"
+	if watcher_available:
+		return "watcher"
+	if hound_available:
+		return "hound"
+	if scout_available:
+		return "scout"
+	return "gatekeeper"
 
 
 func _try_cast_summoner_ai_choice(skill_id: String) -> bool:
