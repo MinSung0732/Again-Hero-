@@ -2598,11 +2598,12 @@ func _collect_nearby_alchemy_materials() -> void:
 	_collect_alchemy_material_list(alchemist_material_pool, pickup_radius_sq)
 	_collect_alchemy_material_list(alchemist_bonus_materials, pickup_radius_sq)
 
-	var valid_bonus: Array[Node2D] = []
-	for material in alchemist_bonus_materials:
-		if is_instance_valid(material) and not material.is_queued_for_deletion():
-			valid_bonus.append(material)
-	alchemist_bonus_materials = valid_bonus
+	# This runs every physics tick. Compact the temporary-drop list in place
+	# instead of allocating and replacing a fresh Array every frame.
+	for index in range(alchemist_bonus_materials.size() - 1, -1, -1):
+		var material := alchemist_bonus_materials[index]
+		if not is_instance_valid(material) or material.is_queued_for_deletion():
+			alchemist_bonus_materials.remove_at(index)
 
 
 func _collect_alchemy_material_list(
