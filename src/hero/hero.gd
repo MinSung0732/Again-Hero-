@@ -308,6 +308,11 @@ var summoner_scout_pool: Array[Node2D] = []
 var summoner_hound_pool: Array[Node2D] = []
 var summoner_watcher_pool: Array[Node2D] = []
 var summoner_open_gate_pool: Array[Node2D] = []
+var summoner_active_regular_count: int = 0
+var summoner_active_gatekeepers: int = 0
+var summoner_active_scouts: int = 0
+var summoner_active_hounds: int = 0
+var summoner_active_watchers: int = 0
 var summoner_gatekeeper_cooldown: float = 0.0
 var summoner_scout_cooldown: float = 0.0
 var summoner_hound_cooldown: float = 0.0
@@ -724,6 +729,11 @@ func configure_profile(profile: Dictionary) -> void:
 	summoner_hound_pool.clear()
 	summoner_watcher_pool.clear()
 	summoner_open_gate_pool.clear()
+	summoner_active_regular_count = 0
+	summoner_active_gatekeepers = 0
+	summoner_active_scouts = 0
+	summoner_active_hounds = 0
+	summoner_active_watchers = 0
 	summoner_gatekeeper_cooldown = maxf(
 		float(summoner_gatekeeper_config.get("initial_cooldown", 0.0)),
 		0.0
@@ -1225,17 +1235,47 @@ func _get_summoner_slot_capacity() -> int:
 
 
 func _get_active_summon_count() -> int:
-	return HERO_SUMMONER_RUNTIME.count_active_regular_summons(
-		summoner_gatekeeper_pool,
-		summoner_scout_pool,
-		summoner_hound_pool,
-		summoner_watcher_pool
-	)
+	return summoner_active_regular_count
 
 
 func _get_active_summoner_watcher_count() -> int:
-	return HERO_SUMMONER_RUNTIME.count_active_summons(
-		summoner_watcher_pool
+	return summoner_active_watchers
+
+
+func _adjust_summoner_active_count(
+	summon_kind: StringName,
+	delta: int
+) -> void:
+	if delta == 0:
+		return
+	match summon_kind:
+		&"gatekeeper":
+			summoner_active_gatekeepers = maxi(
+				summoner_active_gatekeepers + delta,
+				0
+			)
+		&"scout":
+			summoner_active_scouts = maxi(
+				summoner_active_scouts + delta,
+				0
+			)
+		&"hound":
+			summoner_active_hounds = maxi(
+				summoner_active_hounds + delta,
+				0
+			)
+		&"watcher":
+			summoner_active_watchers = maxi(
+				summoner_active_watchers + delta,
+				0
+			)
+		_:
+			return
+	summoner_active_regular_count = (
+		summoner_active_gatekeepers
+		+ summoner_active_scouts
+		+ summoner_active_hounds
+		+ summoner_active_watchers
 	)
 
 
@@ -1557,14 +1597,10 @@ func _score_summoner_ai_candidate(
 		0.0,
 		1.0
 	)
-	var gatekeepers := _count_active_summons(
-		summoner_gatekeeper_pool
-	)
-	var scouts := _count_active_summons(summoner_scout_pool)
-	var hounds := _count_active_summons(summoner_hound_pool)
-	var watchers := _count_active_summons(
-		summoner_watcher_pool
-	)
+	var gatekeepers := summoner_active_gatekeepers
+	var scouts := summoner_active_scouts
+	var hounds := summoner_active_hounds
+	var watchers := summoner_active_watchers
 	return HERO_SUMMONER_RUNTIME.score_ai_candidate(
 		skill_id,
 		nearby_count,
@@ -1731,7 +1767,7 @@ func get_summoner_scout_swarm_multipliers() -> Dictionary:
 		_get_summoner_augment_stacks(
 			"summoner_scout_swarm_tactics"
 		),
-		_count_active_summons(summoner_scout_pool)
+		summoner_active_scouts
 	)
 
 
@@ -1851,6 +1887,7 @@ func _try_cast_summoner_gatekeeper() -> bool:
 		runtime_config
 	):
 		return false
+	_adjust_summoner_active_count(&"gatekeeper", 1)
 	_set_summon_registry_active(summon_to_use, true)
 	summoner_gatekeeper_cooldown = maxf(
 		float(summoner_gatekeeper_config.get("cooldown", 10.0)),
@@ -1862,6 +1899,7 @@ func _try_cast_summoner_gatekeeper() -> bool:
 
 
 func _on_summoner_gatekeeper_released(_summon: Node2D) -> void:
+	_adjust_summoner_active_count(&"gatekeeper", -1)
 	_refresh_regular_summon_pending_after_release(_summon)
 
 
@@ -1904,6 +1942,7 @@ func _try_cast_summoner_scout() -> bool:
 		runtime_config
 	):
 		return false
+	_adjust_summoner_active_count(&"scout", 1)
 	_set_summon_registry_active(summon_to_use, true)
 	summoner_scout_cooldown = maxf(
 		float(summoner_scout_config.get("cooldown", 20.0)),
@@ -1915,6 +1954,7 @@ func _try_cast_summoner_scout() -> bool:
 
 
 func _on_summoner_scout_released(_summon: Node2D) -> void:
+	_adjust_summoner_active_count(&"scout", -1)
 	_refresh_regular_summon_pending_after_release(_summon)
 
 
@@ -1960,6 +2000,7 @@ func _try_cast_summoner_hound() -> bool:
 		runtime_config
 	):
 		return false
+	_adjust_summoner_active_count(&"hound", 1)
 	_set_summon_registry_active(summon_to_use, true)
 	summoner_hound_cooldown = maxf(
 		float(summoner_hound_config.get("cooldown", 30.0)),
@@ -1971,6 +2012,7 @@ func _try_cast_summoner_hound() -> bool:
 
 
 func _on_summoner_hound_released(_summon: Node2D) -> void:
+	_adjust_summoner_active_count(&"hound", -1)
 	_refresh_regular_summon_pending_after_release(_summon)
 
 
@@ -2019,6 +2061,7 @@ func _try_cast_summoner_watcher() -> bool:
 		runtime_config
 	):
 		return false
+	_adjust_summoner_active_count(&"watcher", 1)
 	_set_summon_registry_active(summon_to_use, true)
 	summoner_watcher_cooldown = maxf(
 		float(summoner_watcher_config.get("cooldown", 7.0)),
@@ -2030,6 +2073,7 @@ func _try_cast_summoner_watcher() -> bool:
 
 
 func _on_summoner_watcher_released(_summon: Node2D) -> void:
+	_adjust_summoner_active_count(&"watcher", -1)
 	_refresh_regular_summon_pending_after_release(_summon)
 
 
