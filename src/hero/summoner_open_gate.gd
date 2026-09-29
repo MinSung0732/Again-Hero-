@@ -290,8 +290,12 @@ func _ensure_drone_pool(pool_size: int) -> void:
 		if drone == null:
 			break
 		world.add_child(drone)
-		if not drone.released.is_connected(_on_drone_released):
-			drone.released.connect(_on_drone_released)
+		var release_callable := Callable(self, "_on_drone_released")
+		if (
+			drone.has_signal("released")
+			and not drone.is_connected("released", release_callable)
+		):
+			drone.connect("released", release_callable)
 		drone_pool.append(drone)
 
 
