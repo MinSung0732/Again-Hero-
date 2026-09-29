@@ -46,6 +46,7 @@ const BASE_MAX_COMMAND := 100.0
 const START_COMMAND := 0.0
 const BASE_COMMAND_REGEN_PER_SECOND := 3.0
 const MANUAL_SPAWN_MARGIN := 70.0
+const CASTLE_TOP_SPAWN_MARGIN := 230.0
 const MANUAL_SPAWN_HERO_MIN_DISTANCE := 220.0
 const MANUAL_SPAWN_WARNING_DURATION := 0.70
 const DEMON_BASE_EXP_TO_NEXT := 15.0
@@ -894,11 +895,22 @@ func is_spawn_position_valid(spawn_position: Vector2) -> bool:
 		and _is_spawn_position_far_enough_from_hero(spawn_position)
 	)
 
+func _get_spawn_top_margin() -> float:
+	# The Demon Castle top wall occupies the upper map band. Keep monster centers
+	# below it with enough clearance for their collision radius.
+	return (
+		CASTLE_TOP_SPAWN_MARGIN
+		if _uses_castle_battlefield(current_stage_id)
+		else MANUAL_SPAWN_MARGIN
+	)
+
+
 func _is_spawn_position_inside_bounds(spawn_position: Vector2) -> bool:
+	var top_margin := _get_spawn_top_margin()
 	return (
 		spawn_position.x >= MANUAL_SPAWN_MARGIN
 		and spawn_position.x <= current_map_size.x - MANUAL_SPAWN_MARGIN
-		and spawn_position.y >= MANUAL_SPAWN_MARGIN
+		and spawn_position.y >= top_margin
 		and spawn_position.y <= current_map_size.y - MANUAL_SPAWN_MARGIN
 	)
 
@@ -913,8 +925,16 @@ func _is_spawn_position_far_enough_from_hero(spawn_position: Vector2) -> bool:
 
 func _clamp_manual_spawn_position(spawn_position: Vector2) -> Vector2:
 	return Vector2(
-		clampf(spawn_position.x, MANUAL_SPAWN_MARGIN, current_map_size.x - MANUAL_SPAWN_MARGIN),
-		clampf(spawn_position.y, MANUAL_SPAWN_MARGIN, current_map_size.y - MANUAL_SPAWN_MARGIN)
+		clampf(
+			spawn_position.x,
+			MANUAL_SPAWN_MARGIN,
+			current_map_size.x - MANUAL_SPAWN_MARGIN
+		),
+		clampf(
+			spawn_position.y,
+			_get_spawn_top_margin(),
+			current_map_size.y - MANUAL_SPAWN_MARGIN
+		)
 	)
 
 func get_monster_cost(monster_type: String) -> float:
@@ -1083,11 +1103,7 @@ func _get_auto_spawn_position() -> Vector2:
 	var angle := randf_range(0.0, TAU)
 	var distance := randf_range(AUTO_SPAWN_MIN_DISTANCE, AUTO_SPAWN_MAX_DISTANCE)
 	var candidate := origin + Vector2.from_angle(angle) * distance
-
-	return Vector2(
-		clampf(candidate.x, MANUAL_SPAWN_MARGIN, current_map_size.x - MANUAL_SPAWN_MARGIN),
-		clampf(candidate.y, MANUAL_SPAWN_MARGIN, current_map_size.y - MANUAL_SPAWN_MARGIN)
-	)
+	return _clamp_manual_spawn_position(candidate)
 
 func _spawn_monster(
 	monster_type: String,
@@ -1101,6 +1117,10 @@ func _spawn_monster(
 		push_warning("Unknown monster id: %s" % monster_type)
 		return null
 
+	# Never instantiate a monster inside the solid upper castle wall. This is
+	# also the catch-all for queued ultimates/reinforcements that precomputed
+	# their positions with older/general map margins.
+	spawn_position = _clamp_manual_spawn_position(spawn_position)
 	var monster := scene.instantiate() as Node2D
 
 	var raw_speed_value = monster.get("move_speed")
@@ -2779,18 +2799,7 @@ func _get_stage_event_spawn_position(
 		hero.position
 		+ Vector2.from_angle(angle) * maxf(spawn_distance, 1.0)
 	)
-	return Vector2(
-		clampf(
-			candidate.x,
-			MANUAL_SPAWN_MARGIN,
-			current_map_size.x - MANUAL_SPAWN_MARGIN
-		),
-		clampf(
-			candidate.y,
-			MANUAL_SPAWN_MARGIN,
-			current_map_size.y - MANUAL_SPAWN_MARGIN
-		)
-	)
+	return _clamp_manual_spawn_position(candidate)
 
 func _gain_demon_exp(amount: float) -> void:
 	if amount <= 0.0 or battle_over:

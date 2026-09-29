@@ -11,8 +11,8 @@ const PERIMETER_WALL_SCALE := 0.96
 const PERIMETER_WALL_OVERLAP := 44.0
 const PERIMETER_OUTSET := 58.0
 const TOP_WALL_Y := 62.0
-const TOP_WALL_COLLISION_BOTTOM := 148.0
-const TOP_WALL_COLLISION_HEIGHT := 32.0
+const TOP_WALL_COLLISION_BOTTOM := 190.0
+const TOP_WALL_COLLISION_HEIGHT := 190.0
 
 const THRONE_GROUND_Y := 560.0
 const THRONE_BRAZIER_OFFSET_X := 470.0
@@ -438,6 +438,8 @@ func _build_top_wall() -> void:
 	var slot_index := 0
 
 	# The upper wall remains inside the arena for the interior-castle read.
+	# Its full visual band is solid (0..190 px), so actors cannot occupy the
+	# narrow strip behind the wall and get trapped there.
 	while x < battlefield_size.x + panel_width * 0.5:
 		_add_background_visual(
 			_wall_key_for_slot(slot_index, 1),
