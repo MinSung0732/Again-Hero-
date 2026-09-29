@@ -33,6 +33,8 @@ const MATERIAL_TEXTURES: Array[Array] = [
 	],
 ]
 
+static var _shared_material_frames: SpriteFrames
+
 @onready var visual: AnimatedSprite2D = $Visual
 
 var active: bool = false
@@ -48,7 +50,9 @@ var flight_elapsed: float = 0.0
 var flight_arc_height: float = 0.0
 
 
-func _ready() -> void:
+func _get_shared_material_frames() -> SpriteFrames:
+	if _shared_material_frames != null:
+		return _shared_material_frames
 	var frames := SpriteFrames.new()
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
@@ -62,7 +66,12 @@ func _ready() -> void:
 		for texture in textures:
 			frames.add_frame(animation_name, texture)
 
-	visual.sprite_frames = frames
+	_shared_material_frames = frames
+	return _shared_material_frames
+
+
+func _ready() -> void:
+	visual.sprite_frames = _get_shared_material_frames()
 	visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	visual.scale = Vector2(0.20, 0.20)
 	deactivate()
