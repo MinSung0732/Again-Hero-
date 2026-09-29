@@ -450,7 +450,7 @@ const PROFILES = {
 			"courage_max_chains": 6,
 			"chain_delay": 0.16,
 			"afterimage_interval": 0.035,
-			"afterimage_fade_time": 0.30,
+			"afterimage_fade_time": 0.38,
 		},
 		"ultimate": {
 			"id": "shield_guard",

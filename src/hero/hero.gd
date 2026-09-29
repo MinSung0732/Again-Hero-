@@ -4513,10 +4513,10 @@ func _start_gunner_backstep() -> void:
 	var escape_direction := _find_gunner_escape_direction()
 	var start_position := global_position
 	var distance := maxf(float(gunner_config.get("backstep_distance", 260.0)), 0.0)
-	_spawn_gunner_afterimage(start_position, 0.88, 0.52, 1.10)
-	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.25, 0.72, 0.46, 1.08)
-	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.50, 0.58, 0.40, 1.06)
-	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.75, 0.42, 0.34, 1.04)
+	_spawn_gunner_afterimage(start_position, 0.95, 0.66, 1.12)
+	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.25, 0.84, 0.58, 1.10)
+	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.50, 0.72, 0.50, 1.08)
+	_spawn_gunner_afterimage(start_position + escape_direction * distance * 0.75, 0.60, 0.44, 1.06)
 	if gunner_afterimage_shot_stacks > 0:
 		var counter_direction := -escape_direction
 		for shot_index in range(gunner_afterimage_shot_stacks * 2):
@@ -13302,7 +13302,7 @@ func _begin_fighter_charge_dash(charge_target: Node2D) -> void:
 	_face_attack_direction(direction.x)
 	_restart_stage1_animation("attack", 1.65)
 	_play_fighter_attack_effect("thrust", direction)
-	_spawn_fighter_afterimage(0.62)
+	_spawn_fighter_afterimage(0.78)
 
 func _update_fighter_charge(delta: float) -> void:
 	if not fighter_charge_active:
@@ -13323,7 +13323,7 @@ func _update_fighter_charge(delta: float) -> void:
 
 	fighter_charge_afterimage_timer -= delta
 	if fighter_charge_afterimage_timer <= 0.0:
-		_spawn_fighter_afterimage(0.48)
+		_spawn_fighter_afterimage(0.62)
 		fighter_charge_afterimage_timer = maxf(
 			float(fighter_charge_config.get("afterimage_interval", 0.035)),
 			0.015
@@ -13467,7 +13467,7 @@ func _spawn_fighter_afterimage(alpha: float) -> void:
 	ghost.global_position = global_position
 	ghost.z_index = hero_sprite.z_index - 1
 	ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	ghost.modulate = Color(1.0, 1.0, 1.0, clampf(alpha, 0.05, 0.85))
+	ghost.modulate = Color(1.0, 1.0, 1.0, clampf(alpha, 0.05, 0.92))
 
 	var fade_time := maxf(
 		float(fighter_charge_config.get("afterimage_fade_time", 0.30)),
