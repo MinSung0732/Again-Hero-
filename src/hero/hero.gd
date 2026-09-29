@@ -453,6 +453,7 @@ var battlefield_size: Vector2 = Vector2(3200, 3200)
 # names stable because hero projectiles and skills already call them.
 var _world_query_runtime: RefCounted
 var _movement_monster_scratch: Array = []
+var _combat_monster_scratch: Array = []
 
 
 func _get_world_query_runtime() -> RefCounted:
@@ -576,6 +577,8 @@ func configure_profile(profile: Dictionary) -> void:
 	status_resistances.clear()
 	offensive_memory_events.clear()
 	status_effect_events.clear()
+	_movement_monster_scratch.clear()
+	_combat_monster_scratch.clear()
 	ai_observed_context.clear()
 	ai_observed_context_time = 0.0
 
@@ -9097,7 +9100,8 @@ func _recycle_archmage_fx(fx: AnimatedSprite2D) -> void:
 
 func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int) -> void:
 	var radius_sq := radius * radius
-	for node in _get_monster_nodes_near(origin, radius):
+	_fill_monster_nodes_near(origin, radius, _combat_monster_scratch)
+	for node in _combat_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -9105,6 +9109,7 @@ func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int) -> 
 			continue
 		if origin.distance_squared_to(monster.global_position) <= radius_sq:
 			monster.call("take_damage", damage)
+	_combat_monster_scratch.clear()
 
 func _damage_monsters_in_radius_once(
 	origin: Vector2,
@@ -9113,7 +9118,8 @@ func _damage_monsters_in_radius_once(
 	hit_ids: Dictionary
 ) -> void:
 	var radius_sq := radius * radius
-	for node in _get_monster_nodes_near(origin, radius):
+	_fill_monster_nodes_near(origin, radius, _combat_monster_scratch)
+	for node in _combat_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -9125,6 +9131,7 @@ func _damage_monsters_in_radius_once(
 		if origin.distance_squared_to(monster.global_position) <= radius_sq:
 			hit_ids[iid] = true
 			monster.call("take_damage", damage)
+	_combat_monster_scratch.clear()
 
 func _damage_monsters_in_corridor(
 	start: Vector2,
@@ -9359,7 +9366,13 @@ func _apply_channel_damage() -> void:
 	if radius <= 0.0:
 		return
 
-	for node in _get_monster_nodes_near(global_position, radius):
+	var radius_sq := radius * radius
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		_combat_monster_scratch
+	)
+	for node in _combat_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		if not node.has_method("take_damage"):
@@ -9370,11 +9383,12 @@ func _apply_channel_damage() -> void:
 			continue
 		if (
 			global_position.distance_squared_to(monster.global_position)
-			> radius * radius
+			> radius_sq
 		):
 			continue
 
 		monster.call("take_damage", damage)
+	_combat_monster_scratch.clear()
 
 func _end_channel_skill() -> void:
 	channeling = false
@@ -9826,7 +9840,12 @@ func _trigger_purifier_protection_break_pulse() -> void:
 		) * 1000.0
 	))
 	var radius_sq := radius * radius
-	for node in _get_monster_nodes_near(global_position, radius):
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		_combat_monster_scratch
+	)
+	for node in _combat_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -9848,6 +9867,7 @@ func _trigger_purifier_protection_break_pulse() -> void:
 			"gunner_slow_multiplier",
 			minf(current_multiplier, slow_multiplier)
 		)
+	_combat_monster_scratch.clear()
 
 
 func _end_purifier_protection(broken: bool) -> void:
@@ -10117,29 +10137,38 @@ func _find_best_piercing_direction() -> Vector2:
 		1.0
 	)
 
-	var monsters: Array[Node2D] = []
-	for node in _get_monster_nodes_near(global_position, max_range):
+	var max_range_sq := max_range * max_range
+	_fill_monster_nodes_near(
+		global_position,
+		max_range,
+		_combat_monster_scratch
+	)
+	for index in range(_combat_monster_scratch.size() - 1, -1, -1):
+		var node = _combat_monster_scratch[index]
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			_combat_monster_scratch.remove_at(index)
 			continue
 		var monster := node as Node2D
 		if monster == null:
+			_combat_monster_scratch.remove_at(index)
 			continue
-		var distance := global_position.distance_to(
+		var distance_sq := global_position.distance_squared_to(
 			monster.global_position
 		)
-		if distance <= 0.0 or distance > max_range:
-			continue
-		monsters.append(monster)
+		if distance_sq <= 0.0 or distance_sq > max_range_sq:
+			_combat_monster_scratch.remove_at(index)
 
-	if monsters.is_empty():
+	if _combat_monster_scratch.is_empty():
 		return Vector2.ZERO
 
+	var first_monster := _combat_monster_scratch[0] as Node2D
 	var best_direction := global_position.direction_to(
-		monsters[0].global_position
+		first_monster.global_position
 	)
 	var best_score := -INF
 
-	for candidate in monsters:
+	for raw_candidate in _combat_monster_scratch:
+		var candidate := raw_candidate as Node2D
 		var candidate_direction := global_position.direction_to(
 			candidate.global_position
 		)
@@ -10147,7 +10176,8 @@ func _find_best_piercing_direction() -> Vector2:
 			continue
 
 		var score := 0.0
-		for target_monster in monsters:
+		for raw_target_monster in _combat_monster_scratch:
+			var target_monster := raw_target_monster as Node2D
 			var offset := (
 				target_monster.global_position
 				- global_position
@@ -10172,7 +10202,9 @@ func _find_best_piercing_direction() -> Vector2:
 			best_score = score
 			best_direction = candidate_direction
 
-	return best_direction.normalized()
+	var result := best_direction.normalized()
+	_combat_monster_scratch.clear()
+	return result
 
 func _use_area_burst_ultimate() -> void:
 	var radius := maxf(
@@ -10186,8 +10218,13 @@ func _use_area_burst_ultimate() -> void:
 	if radius <= 0.0 or damage <= 0:
 		return
 
-	var targets: Array = _get_monster_nodes_near(global_position, radius)
-	for node in targets:
+	var radius_sq := radius * radius
+	_fill_monster_nodes_near(
+		global_position,
+		radius,
+		_combat_monster_scratch
+	)
+	for node in _combat_monster_scratch:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 
@@ -10196,11 +10233,12 @@ func _use_area_burst_ultimate() -> void:
 			continue
 		if (
 			global_position.distance_squared_to(monster.global_position)
-			> radius * radius
+			> radius_sq
 		):
 			continue
 		if monster.has_method("take_damage"):
 			monster.call("take_damage", damage)
+	_combat_monster_scratch.clear()
 
 func collect_heal_item(base_amount: int) -> int:
 	if base_amount <= 0 or current_hp <= 0 or is_dying:
