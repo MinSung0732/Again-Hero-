@@ -22,6 +22,11 @@ Stage 9 uses dedicated runtime filenames, while reusing the already-downloaded P
   - https://pixabay.com/sound-effects/film-special-effects-powerful-spell-213833/
   - Crown of Courage stack application.
 
+- `purifier_cleansing_pixabay.mp3`
+  - powerful spell — SingularitysMarauder
+  - https://pixabay.com/sound-effects/film-special-effects-powerful-spell-213833/
+  - Stage 9 Cleansing cast. Uses the same already-downloaded Pixabay source bytes as `purifier_crown_buff_pixabay.mp3` under a skill-specific runtime filename; runtime pitch is raised for a shorter, brighter purification cue.
+
 - `purifier_orb_create_pixabay.mp3`
   - the portal — CeebFrack (Freesound)
   - https://pixabay.com/sound-effects/film-special-effects-the-portal-90750/
