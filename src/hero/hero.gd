@@ -8538,14 +8538,19 @@ func _cast_archmage_chain_dagger(config: Dictionary, empowered: bool) -> void:
 		if direction.length_squared() <= 0.001:
 			direction = Vector2.RIGHT
 
-		var projectile := (
-			ARCHMAGE_SKILL_PROJECTILE_SCENE.instantiate()
-			as Area2D
-		)
-		get_parent().add_child(projectile)
-		projectile.add_to_group(
+		var projectile := _acquire_projectile(
+			ARCHMAGE_SKILL_PROJECTILE_SCENE,
 			"archmage_chain_dagger_projectile"
 		)
+		if projectile == null:
+			notify_archmage_chain_dagger_finished()
+			continue
+		if not projectile.is_in_group(
+			"archmage_chain_dagger_projectile"
+		):
+			projectile.add_to_group(
+				"archmage_chain_dagger_projectile"
+			)
 		projectile.global_position = (
 			global_position + direction.normalized() * 58.0
 		)

@@ -619,6 +619,8 @@ func _pool_key_for_skill(projectile_skill_type: String) -> String:
 	match projectile_skill_type:
 		"ice_bolt", "storm":
 			return "archmage_skill_projectile"
+		"chain_dagger":
+			return "archmage_chain_dagger_projectile"
 		"berserker_wave":
 			return "berserker_wave_projectile"
 		_:
