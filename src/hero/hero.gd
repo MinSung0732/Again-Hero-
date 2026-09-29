@@ -12018,6 +12018,7 @@ func _run_berserker_skill2_wave(
 	var blood_visuals: Array[AnimatedSprite2D] = []
 
 	var hit_ids: Dictionary = {}
+	var healed_ids: Dictionary = {}
 	var current_position: Vector2 = start_position
 	var current_direction: Vector2 = start_direction.normalized()
 	var cell_length: float = maxf(
@@ -12146,7 +12147,8 @@ func _run_berserker_skill2_wave(
 		_heal_berserker_from_blood_path(
 			world_points,
 			half_width,
-			heal_per_touch
+			heal_per_touch,
+			healed_ids
 		)
 		await get_tree().create_timer(tick_interval).timeout
 		elapsed += tick_interval
@@ -12236,12 +12238,13 @@ func _damage_berserker_skill2_segment(
 func _heal_berserker_from_blood_path(
 	world_points: Array[Vector2],
 	half_width: float,
-	heal_per_touch: int
+	heal_per_touch: int,
+	healed_ids: Dictionary
 ) -> void:
 	if current_hp <= 0 or is_dying or world_points.size() < 2:
 		return
 
-	var healed_ids: Dictionary = {}
+	healed_ids.clear()
 	for segment_index in range(world_points.size() - 1):
 		var from_position: Vector2 = world_points[segment_index]
 		var to_position: Vector2 = world_points[segment_index + 1]
