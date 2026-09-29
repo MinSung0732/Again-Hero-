@@ -26,6 +26,7 @@
 - Battle transient FX pool에 `Sprite2D` 지원을 추가하고 Stage 3 Fighter 돌진 잔상과 Stage 4 Gunner 백스텝 잔상을 풀링해 고빈도 `Sprite2D.new()/queue_free()` 반복을 제거.
 - Hero 공통 재타깃을 Battle의 `active_monsters`/`active_treasure_chests` 레지스트리 직접 조회로 전환해 여러 archetype의 0.1초 단위 `get_nodes_in_group()` 배열 생성/전체 그룹 스캔을 제거하고, isolated scene용 fallback은 유지.
 - 위 Hero 재타깃 helper가 기존 몬스터용 `get_nearest_hero_combat_target()`과 이름이 충돌해 Battle 스크립트 파싱을 막던 문제를 수정하고, Hero→적/상자 조회는 `get_nearest_hostile_target_for_hero()`로 분리.
+- Phase 5 dead-code audit 시작: 최근 리팩터에서 참조가 사라진 Summoner 레벨 슬롯 wrapper, Gunner Deadeye Dictionary wrapper, 구형 Stage 1 시트 로더/애니메이션 helper를 제거.
 - Godot 실행 파일이 없는 환경이라 실제 런타임/프로파일러 검증은 수행하지 않았고 정적 참조·diff 검증만 수행.
 
 ## 2026-09-28 — Stage 8 5스킬 컷신 이미지 왜곡 제거

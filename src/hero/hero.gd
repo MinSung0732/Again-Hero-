@@ -1286,10 +1286,6 @@ func _physics_process(delta: float) -> void:
 
 
 
-func _get_summoner_level_slot_bonus() -> int:
-	return HERO_SUMMONER_RUNTIME.get_level_slot_bonus(level)
-
-
 func _get_summoner_slot_capacity() -> int:
 	return HERO_SUMMONER_RUNTIME.get_slot_capacity(
 		summoner_slot_base,
@@ -4816,14 +4812,6 @@ func _update_gunner_deadeye_aim_analysis() -> void:
 	gunner_deadeye_analysis_hits = best_hits
 
 
-func _gunner_deadeye_best_direction() -> Dictionary:
-	_update_gunner_deadeye_aim_analysis()
-	return {
-		"direction": gunner_deadeye_analysis_direction,
-		"score": gunner_deadeye_analysis_score,
-		"hits": gunner_deadeye_analysis_hits,
-	}
-
 func _gunner_should_start_deadeye() -> bool:
 	if gunner_reloading or gunner_deadeye_cooldown > 0.0:
 		return false
@@ -6513,9 +6501,6 @@ func _apply_stage1_channel_visual() -> void:
 	)
 	channel_effect.scale = Vector2(uniform_scale, uniform_scale)
 
-func _load_stage1_sheet_texture() -> Texture2D:
-	return _load_stage1_texture(sprite_sheet_path)
-
 func _load_stage1_texture(path: String) -> Texture2D:
 	if path.is_empty():
 		return null
@@ -6538,29 +6523,6 @@ func _load_stage1_texture(path: String) -> Texture2D:
 			return imported_texture
 
 	return null
-
-func _add_stage1_sheet_animation(
-	frames: SpriteFrames,
-	animation_name: String,
-	sheet: Texture2D,
-	row: int,
-	frame_count: int,
-	fps: float,
-	loop_animation: bool
-) -> void:
-	frames.add_animation(animation_name)
-	frames.set_animation_speed(animation_name, fps)
-	frames.set_animation_loop(animation_name, loop_animation)
-
-	for column in range(frame_count):
-		var atlas := AtlasTexture.new()
-		atlas.atlas = sheet
-		atlas.filter_clip = true
-		atlas.region = Rect2(
-			Vector2(column, row) * STAGE1_FRAME_SIZE,
-			STAGE1_FRAME_SIZE
-		)
-		frames.add_frame(animation_name, atlas)
 
 func _hero_animation_priority(animation_name: StringName) -> int:
 	match animation_name:
