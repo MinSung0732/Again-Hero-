@@ -349,6 +349,55 @@ func count_monsters_near(
 	return count
 
 
+func get_nearest_monster_target(
+	origin: Vector2,
+	radius: float
+) -> Node2D:
+	_ensure_monster_spatial_grid()
+
+	var safe_radius := maxf(radius, 0.0)
+	var nearest_distance_sq := safe_radius * safe_radius
+	var nearest: Node2D = null
+	var min_cell := _spatial_cell_for_position(
+		origin - Vector2(safe_radius, safe_radius)
+	)
+	var max_cell := _spatial_cell_for_position(
+		origin + Vector2(safe_radius, safe_radius)
+	)
+	min_cell -= Vector2i.ONE
+	max_cell += Vector2i.ONE
+
+	for cell_x in range(min_cell.x, max_cell.x + 1):
+		for cell_y in range(min_cell.y, max_cell.y + 1):
+			var bucket = monster_spatial_grid.get(
+				Vector2i(cell_x, cell_y),
+				null
+			)
+			if typeof(bucket) != TYPE_ARRAY:
+				continue
+			for raw_node in bucket:
+				if (
+					not is_instance_valid(raw_node)
+					or raw_node.is_queued_for_deletion()
+				):
+					continue
+				var monster := raw_node as Node2D
+				if monster == null:
+					continue
+				var hp_value = monster.get("current_hp")
+				if hp_value != null and int(hp_value) <= 0:
+					continue
+				var distance_sq := origin.distance_squared_to(
+					monster.global_position
+				)
+				if distance_sq > nearest_distance_sq:
+					continue
+				nearest_distance_sq = distance_sq
+				nearest = monster
+
+	return nearest
+
+
 func query_monsters_in_rect(world_rect: Rect2) -> Array:
 	_ensure_monster_spatial_grid()
 

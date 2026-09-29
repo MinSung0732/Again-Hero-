@@ -150,24 +150,30 @@ func _find_nearest_target() -> Node2D:
 	if not is_instance_valid(battle):
 		return null
 
-	var candidates: Array = []
-	if battle.has_method("query_monsters_near"):
-		var result = battle.call("query_monsters_near", global_position, sense_range)
-		if result is Array:
-			candidates = result
-	else:
-		# Compatibility fallback only. Normal battle runtime uses the spatial query.
-		candidates = get_tree().get_nodes_in_group("monsters")
+	if battle.has_method("get_nearest_monster_target"):
+		var target = battle.call(
+			"get_nearest_monster_target",
+			global_position,
+			sense_range
+		)
+		return target as Node2D if target is Node2D else null
 
+	# Standalone/debug fallback only. Normal Battle runtime uses the spatial
+	# nearest-target query above and allocates no candidate Array.
 	var nearest: Node2D = null
 	var nearest_distance_sq := sense_range * sense_range
-	for raw_node in candidates:
+	for raw_node in get_tree().get_nodes_in_group("monsters"):
 		if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
 			continue
 		var monster := raw_node as Node2D
 		if monster == null:
 			continue
-		var distance_sq := global_position.distance_squared_to(monster.global_position)
+		var hp_value = monster.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		var distance_sq := global_position.distance_squared_to(
+			monster.global_position
+		)
 		if distance_sq > nearest_distance_sq:
 			continue
 		nearest_distance_sq = distance_sq
