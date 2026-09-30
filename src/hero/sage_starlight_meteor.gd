@@ -25,6 +25,7 @@ var fall_elapsed: float = 0.0
 var explosion_elapsed: float = 0.0
 var fall_origin: Vector2 = Vector2(0.0, -430.0)
 var _query_scratch: Array = []
+var caster: Node2D
 
 @onready var visual: Sprite2D = $Visual
 @onready var explosion_audio: AudioStreamPlayer2D = $ExplosionAudio
@@ -42,12 +43,14 @@ func setup(
 	new_visual_scale: float,
 	new_fall_height: float,
 	new_fall_side_offset: float,
-	new_explosion_fps: float
+	new_explosion_fps: float,
+	caster_node: Node2D
 ) -> void:
 	damage = maxi(new_damage, 1)
 	impact_radius = maxf(new_impact_radius, 1.0)
 	fall_duration = maxf(new_fall_duration, 0.05)
 	explosion_fps = maxf(new_explosion_fps, 1.0)
+	caster = caster_node
 	fall_elapsed = 0.0
 	explosion_elapsed = 0.0
 	var side_offset := maxf(absf(new_fall_side_offset), 0.0)
@@ -168,7 +171,13 @@ func _apply_damage() -> void:
 		var hp_value = monster.get("current_hp")
 		if hp_value != null and int(hp_value) <= 0:
 			continue
+		var hit_position := monster.global_position
 		monster.call("take_damage", damage)
+		if (
+			is_instance_valid(caster)
+			and caster.has_method("_on_sage_skill_hit")
+		):
+			caster.call("_on_sage_skill_hit", hit_position)
 	_query_scratch.clear()
 
 
@@ -223,6 +232,7 @@ func deactivate_for_pool() -> void:
 	state = MeteorState.INACTIVE
 	set_physics_process(false)
 	visible = false
+	caster = null
 	_query_scratch.clear()
 	if is_instance_valid(visual):
 		visual.visible = false
