@@ -164,6 +164,7 @@ func _ready() -> void:
 	_apply_styles()
 	_apply_asset_frames()
 	_apply_new_ui_assets()
+	_apply_lobby_visual_polish()
 	_connect_navigation()
 
 	stage_ids = STAGE_CATALOG.get_ordered_stage_ids()
@@ -745,6 +746,213 @@ func _apply_new_ui_assets() -> void:
 		_apply_arrow_texture(prev_stage_button, arrow_texture, false)
 		_apply_arrow_texture(next_stage_button, arrow_texture, true)
 		_refresh_stage_nav_buttons()
+
+
+
+func _set_lobby_label_style(
+	path: NodePath,
+	font_size: int,
+	color: Color
+) -> void:
+	var label := get_node_or_null(path) as Label
+	if label == null:
+		return
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color)
+
+
+func _apply_lobby_button_skin(
+	button: Button,
+	primary: bool = false,
+	font_size: int = 24
+) -> void:
+	if button == null:
+		return
+
+	var normal_style := primary_button_style if primary else secondary_button_style
+	button.add_theme_stylebox_override("normal", normal_style)
+	button.add_theme_stylebox_override("hover", primary_button_style)
+	button.add_theme_stylebox_override("pressed", primary_button_style)
+	button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	button.add_theme_font_size_override("font_size", font_size)
+	button.add_theme_color_override(
+		"font_color",
+		Color("fff0c2") if primary else Color("eee7f2")
+	)
+	button.add_theme_color_override("font_hover_color", Color("fff5d7"))
+	button.add_theme_color_override("font_pressed_color", Color("ffe29a"))
+	button.add_theme_color_override("font_disabled_color", Color("756f7c"))
+
+
+func _ensure_nav_active_indicator(button: Button) -> void:
+	if button == null:
+		return
+	if button.get_node_or_null("ActiveIndicator") != null:
+		return
+
+	var indicator := ColorRect.new()
+	indicator.name = "ActiveIndicator"
+	indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	indicator.color = Color("efc44f")
+	indicator.anchor_left = 0.18
+	indicator.anchor_top = 0.0
+	indicator.anchor_right = 0.82
+	indicator.anchor_bottom = 0.0
+	indicator.offset_top = 6.0
+	indicator.offset_bottom = 12.0
+	indicator.visible = false
+	button.add_child(indicator)
+
+
+func _apply_lobby_visual_polish() -> void:
+	# Keep the 1080x1920 logical layout intact and only refine presentation.
+	# This makes the pass safe for the existing 540x960 window override and
+	# avoids changing touch targets or tab behavior.
+	var background := $Background as ColorRect
+	var backdrop_glow := $BackdropGlow as ColorRect
+	background.color = Color("08060f")
+	backdrop_glow.color = Color("1b1027")
+	backdrop_glow.anchor_bottom = 0.64
+
+	var safe_area := $SafeArea as MarginContainer
+	safe_area.add_theme_constant_override("margin_left", 28)
+	safe_area.add_theme_constant_override("margin_right", 28)
+
+	var header := $SafeArea/Layout/Header as PanelContainer
+	header.custom_minimum_size = Vector2(0.0, 206.0)
+
+	var layout := $SafeArea/Layout as VBoxContainer
+	layout.add_theme_constant_override("separation", 10)
+
+	var nav_margin := $BottomNav/NavMargin as MarginContainer
+	nav_margin.add_theme_constant_override("margin_left", 18)
+	nav_margin.add_theme_constant_override("margin_top", 18)
+	nav_margin.add_theme_constant_override("margin_right", 18)
+	nav_margin.add_theme_constant_override("margin_bottom", 22)
+
+	var nav_buttons := $BottomNav/NavMargin/NavButtons as HBoxContainer
+	nav_buttons.add_theme_constant_override("separation", 6)
+
+	resource_label.add_theme_font_size_override("font_size", 26)
+	resource_label.add_theme_color_override("font_color", Color("f3cf72"))
+	progress_label.add_theme_font_size_override("font_size", 24)
+	progress_label.add_theme_color_override("font_color", Color("cbbbd4"))
+
+	_set_lobby_label_style(
+		^"SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox/SectionTitle",
+		38,
+		Color("f7edf8")
+	)
+	_set_lobby_label_style(
+		^"SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox/SectionSubtitle",
+		23,
+		Color("9f91aa")
+	)
+	stage_number_label.add_theme_font_size_override("font_size", 28)
+	stage_number_label.add_theme_color_override("font_color", Color("e2b85c"))
+	stage_name_label.add_theme_font_size_override("font_size", 38)
+	stage_name_label.add_theme_color_override("font_color", Color("fff6e5"))
+	hero_name_label.add_theme_font_size_override("font_size", 34)
+	hero_name_label.add_theme_color_override("font_color", Color("f2d486"))
+	stage_description_label.add_theme_font_size_override("font_size", 24)
+	stage_description_label.add_theme_color_override("font_color", Color("e6dfe9"))
+	stage_status_label.add_theme_font_size_override("font_size", 22)
+	stage_status_label.add_theme_color_override("font_color", Color("b9a9c4"))
+	stage_reward_label.add_theme_font_size_override("font_size", 22)
+	stage_reward_label.add_theme_color_override("font_color", Color("e6c66d"))
+	_apply_lobby_button_skin(enter_stage_button, true, 34)
+
+	_set_lobby_label_style(
+		^"SafeArea/Layout/Content/ShopTab/ShopLayout/Title",
+		40,
+		Color("fff4dd")
+	)
+	_set_lobby_label_style(
+		^"SafeArea/Layout/Content/ShopTab/ShopLayout/Guide",
+		23,
+		Color("aa9bb4")
+	)
+	_set_lobby_label_style(
+		^"SafeArea/Layout/Content/ShopTab/ShopLayout/Gold",
+		30,
+		Color("f3cf72")
+	)
+	_set_lobby_label_style(
+		^"SafeArea/Layout/Content/ShopTab/ShopLayout/ResultTitle",
+		28,
+		Color("ead8ef")
+	)
+	shop_rates_label.add_theme_color_override("font_color", Color("cfc3d5"))
+	shop_status_label.add_theme_color_override("font_color", Color("918799"))
+	_apply_lobby_button_skin(shop_single_button, false, 25)
+	_apply_lobby_button_skin(shop_multi_button, true, 25)
+
+	_set_lobby_label_style(
+		^"SafeArea/Layout/Content/TeamTab/TeamLayout/Title",
+		40,
+		Color("fff4dd")
+	)
+	_set_lobby_label_style(
+		^"SafeArea/Layout/Content/TeamTab/TeamLayout/Guide",
+		23,
+		Color("aa9bb4")
+	)
+	_set_lobby_label_style(
+		^"SafeArea/Layout/Content/TeamTab/TeamLayout/ListTitle",
+		28,
+		Color("ead8ef")
+	)
+	team_summary_label.add_theme_color_override("font_color", Color("d8c7de"))
+	team_status_label.add_theme_color_override("font_color", Color("918799"))
+	for slot_button in [team_slot_1_button, team_slot_2_button, team_slot_3_button]:
+		_apply_lobby_button_skin(slot_button, false, 24)
+
+	_set_lobby_label_style(
+		^"SafeArea/Layout/Content/ResearchTab/ResearchLayout/Title",
+		40,
+		Color("fff4dd")
+	)
+	research_points_label.add_theme_font_size_override("font_size", 28)
+	research_points_label.add_theme_color_override("font_color", Color("f3cf72"))
+	research_status_label.add_theme_color_override("font_color", Color("918799"))
+
+	_set_lobby_label_style(
+		^"SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/Title",
+		40,
+		Color("fff4dd")
+	)
+	_set_lobby_label_style(
+		^"SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/AudioTitle",
+		28,
+		Color("ead8ef")
+	)
+	_set_lobby_label_style(
+		^"SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/AccountPanel/AccountTitle",
+		28,
+		Color("ead8ef")
+	)
+
+	_apply_lobby_button_skin(other_settings_tab_button, true, 24)
+	_apply_lobby_button_skin(other_account_tab_button, false, 24)
+
+	for raw_path in [
+		^"SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/AccountPanel/KakaoLogin",
+		^"SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/AccountPanel/GoogleLogin",
+		^"SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/AccountPanel/AppLogin",
+	]:
+		var login_button := get_node_or_null(raw_path) as Button
+		_apply_lobby_button_skin(login_button, false, 24)
+
+	for nav_button in [
+		shop_button,
+		team_button,
+		main_button,
+		research_button,
+		other_button,
+	]:
+		nav_button.custom_minimum_size = Vector2(0.0, 120.0)
+		nav_button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+		_ensure_nav_active_indicator(nav_button)
 
 
 func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> void:
