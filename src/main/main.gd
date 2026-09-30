@@ -2354,7 +2354,7 @@ func _on_demon_ultimate_used(
 	skill_name: String,
 	message: String
 ) -> void:
-	var toast_message := message
+	var toast_message: String = message
 	if toast_message.is_empty():
 		toast_message = "%s 발동" % skill_name
 	_show_battle_toast(toast_message, 1.2)
