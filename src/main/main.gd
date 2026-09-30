@@ -500,13 +500,15 @@ func _apply_battle_pixel_asset_frames() -> void:
 		monster_info_panel,
 		BATTLE_PIXEL_FRAME_MEDIUM_DIR,
 		0.34,
-		14.0
+		0.0,
+		18.0
 	)
 	_replace_panel_frame(
 		hero_info_panel,
 		BATTLE_PIXEL_FRAME_MEDIUM_DIR,
 		0.34,
-		14.0
+		0.0,
+		18.0
 	)
 
 
@@ -572,20 +574,32 @@ func _replace_panel_frame(
 	panel: PanelContainer,
 	frame_dir: String,
 	scale: float,
-	content_margin: float = 0.0
+	content_margin: float = 0.0,
+	background_inset: float = 0.0
 ) -> void:
 	if panel == null:
 		return
+	var clean_background := Color(0.035, 0.032, 0.075, 0.98)
+	var uses_inset_background := background_inset > 0.0
+	var panel_background := clean_background
+	var overlay_background := Color(0.0, 0.0, 0.0, 0.0)
+	if uses_inset_background:
+		panel_background = Color(0.0, 0.0, 0.0, 0.0)
+		overlay_background = clean_background
 	BATTLE_PIXEL_FRAME_ASSEMBLER.clear_panel_style(panel)
 	BATTLE_PIXEL_FRAME_ASSEMBLER.apply_clean_panel_background(
 		panel,
-		Color(0.035, 0.032, 0.075, 0.98),
+		panel_background,
 		content_margin
 	)
 	BATTLE_PIXEL_FRAME_ASSEMBLER.add_split_frame(
 		panel,
 		frame_dir,
-		scale
+		scale,
+		"",
+		0,
+		overlay_background,
+		background_inset
 	)
 
 

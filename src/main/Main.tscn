@@ -159,6 +159,26 @@ corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ultimate_disabled"]
+bg_color = Color(0.032, 0.024, 0.058, 0.8)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.18, 0.1, 0.25, 0.72)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_action_hover"]
 bg_color = Color(0.14, 0.075, 0.23, 0.98)
@@ -771,17 +791,17 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_hud_ultimate_fill")
 show_percentage = false
 
 [node name="UltimateButtons" type="HBoxContainer" parent="HUD/DemonUltimatePanel"]
-offset_left = 48.0
-offset_top = 98.0
-offset_right = 1032.0
-offset_bottom = 194.0
-theme_override_constants/separation = 22
+offset_left = 54.0
+offset_top = 100.0
+offset_right = 1026.0
+offset_bottom = 184.0
+theme_override_constants/separation = 26
 alignment = 1
 
 [node name="Ultimate1" type="Button" parent="HUD/DemonUltimatePanel/UltimateButtons"]
 focus_mode = 0
 theme_override_colors/font_pressed_color = Color(1, 0.9, 0.58, 1)
-custom_minimum_size = Vector2(0, 96)
+custom_minimum_size = Vector2(0, 84)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.95, 0.91, 0.98, 1)
@@ -789,7 +809,7 @@ theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("StyleBoxFlat_ultimate_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_action_disabled")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_ultimate_disabled")
 text = "1  원형 포위\n마력 70 필요"
 disabled = true
 
@@ -814,7 +834,7 @@ show_percentage = false
 [node name="Ultimate2" type="Button" parent="HUD/DemonUltimatePanel/UltimateButtons"]
 focus_mode = 0
 theme_override_colors/font_pressed_color = Color(1, 0.9, 0.58, 1)
-custom_minimum_size = Vector2(0, 96)
+custom_minimum_size = Vector2(0, 84)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.95, 0.91, 0.98, 1)
@@ -822,7 +842,7 @@ theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("StyleBoxFlat_ultimate_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_action_disabled")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_ultimate_disabled")
 text = "2  일직선 공세\n마력 40 필요"
 disabled = true
 
@@ -847,7 +867,7 @@ show_percentage = false
 [node name="Ultimate3" type="Button" parent="HUD/DemonUltimatePanel/UltimateButtons"]
 focus_mode = 0
 theme_override_colors/font_pressed_color = Color(1, 0.9, 0.58, 1)
-custom_minimum_size = Vector2(0, 96)
+custom_minimum_size = Vector2(0, 84)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.95, 0.91, 0.98, 1)
@@ -855,7 +875,7 @@ theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("StyleBoxFlat_ultimate_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_action_disabled")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_ultimate_disabled")
 text = "3  사각 포위\n마력 100 필요"
 disabled = true
 
@@ -1294,9 +1314,19 @@ theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 layout_mode = 2
 theme_override_constants/separation = 8
 
+[node name="TopInset" type="Control" parent="HUD/MonsterInfoPanel/Root"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+mouse_filter = 2
+
 [node name="Header" type="HBoxContainer" parent="HUD/MonsterInfoPanel/Root"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 76)
+
+[node name="LeftInset" type="Control" parent="HUD/MonsterInfoPanel/Root/Header"]
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
+mouse_filter = 2
 
 [node name="Title" type="Label" parent="HUD/MonsterInfoPanel/Root/Header"]
 clip_text = true
@@ -1314,6 +1344,11 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 25
 text = "닫기"
 
+[node name="RightInset" type="Control" parent="HUD/MonsterInfoPanel/Root/Header"]
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
+mouse_filter = 2
+
 [node name="Scroll" type="ScrollContainer" parent="HUD/MonsterInfoPanel/Root"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -1323,10 +1358,10 @@ vertical_scroll_mode = 1
 [node name="Margin" type="MarginContainer" parent="HUD/MonsterInfoPanel/Root/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/margin_left = 24
+theme_override_constants/margin_left = 36
 theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 22
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 30
 
 [node name="VBox" type="VBoxContainer" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin"]
 layout_mode = 2
@@ -1438,9 +1473,19 @@ theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 layout_mode = 2
 theme_override_constants/separation = 8
 
+[node name="TopInset" type="Control" parent="HUD/HeroInfoPanel/Root"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+mouse_filter = 2
+
 [node name="Header" type="HBoxContainer" parent="HUD/HeroInfoPanel/Root"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 76)
+
+[node name="LeftInset" type="Control" parent="HUD/HeroInfoPanel/Root/Header"]
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
+mouse_filter = 2
 
 [node name="Title" type="Label" parent="HUD/HeroInfoPanel/Root/Header"]
 clip_text = true
@@ -1459,6 +1504,11 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 25
 text = "닫기"
 
+[node name="RightInset" type="Control" parent="HUD/HeroInfoPanel/Root/Header"]
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
+mouse_filter = 2
+
 [node name="Scroll" type="ScrollContainer" parent="HUD/HeroInfoPanel/Root"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -1468,10 +1518,10 @@ vertical_scroll_mode = 1
 [node name="Margin" type="MarginContainer" parent="HUD/HeroInfoPanel/Root/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/margin_left = 24
+theme_override_constants/margin_left = 36
 theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 22
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 30
 
 [node name="VBox" type="VBoxContainer" parent="HUD/HeroInfoPanel/Root/Scroll/Margin"]
 layout_mode = 2
