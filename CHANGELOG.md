@@ -1,3 +1,8 @@
+### Astra condensation status-bar layering
+- Stage 10 마력응축 궤도 이펙트를 Hero 부모의 HP/쉴드/노란 게이지 draw 레이어 뒤로 이동.
+- 마력응축 Sprite를 `z_index = 0`, `show_behind_parent = true`로 고정해 세 상태바를 가리지 않도록 변경.
+- 다른 Astra 스킬 이펙트와 공용 Hero UI 위치/크기는 변경하지 않음.
+
 ### Monster soft separation
 - 슬라임/오크/거미/폭탄쥐에 작은 소프트 분리 반경을 공통 적용.
 - 실제 CharacterBody hitbox/mask는 변경하지 않고 중심 간 약 18~25px 안쪽에서만 약한 분리 방향을 생성해 군집이 한 점으로 겹치는 현상을 완화.
