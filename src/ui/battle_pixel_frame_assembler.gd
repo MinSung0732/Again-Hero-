@@ -301,19 +301,20 @@ static func _make_seamless_edge_strip(
 	var texture_size := texture.get_size()
 	var strip := AtlasTexture.new()
 	strip.atlas = texture
+	strip.filter_clip = true
 	if tiles_horizontally:
-		var strip_width := minf(8.0, texture_size.x)
+		var strip_width := minf(2.0, texture_size.x)
 		strip.region = Rect2(
-			floorf((texture_size.x - strip_width) * 0.5),
+			floorf(texture_size.x * 0.33),
 			0.0,
 			strip_width,
 			texture_size.y
 		)
 	else:
-		var strip_height := minf(8.0, texture_size.y)
+		var strip_height := minf(2.0, texture_size.y)
 		strip.region = Rect2(
 			0.0,
-			floorf((texture_size.y - strip_height) * 0.5),
+			floorf(texture_size.y * 0.33),
 			texture_size.x,
 			strip_height
 		)

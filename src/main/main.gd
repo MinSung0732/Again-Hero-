@@ -501,14 +501,14 @@ func _apply_battle_pixel_asset_frames() -> void:
 		BATTLE_PIXEL_FRAME_MEDIUM_DIR,
 		0.34,
 		0.0,
-		18.0
+		4.0
 	)
 	_replace_panel_frame(
 		hero_info_panel,
 		BATTLE_PIXEL_FRAME_MEDIUM_DIR,
 		0.34,
 		0.0,
-		18.0
+		4.0
 	)
 
 
