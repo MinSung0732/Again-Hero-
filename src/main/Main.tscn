@@ -632,7 +632,7 @@ custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 25
-text = "동"
+text = "동쪽 ▶"
 
 [node name="West" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
 focus_mode = 0
@@ -645,7 +645,7 @@ custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 25
-text = "서"
+text = "◀ 서쪽"
 
 [node name="North" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
 focus_mode = 0
@@ -658,7 +658,7 @@ custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 25
-text = "북"
+text = "▲ 북쪽"
 
 [node name="South" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
 focus_mode = 0
@@ -671,7 +671,7 @@ custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 25
-text = "남"
+text = "▼ 남쪽"
 
 [node name="Cancel" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
 focus_mode = 0
@@ -1609,9 +1609,14 @@ expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 [node name="RerollButton" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox"]
+focus_mode = 0
+theme_override_styles/disabled = SubResource("StyleBoxFlat_action_disabled")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
 custom_minimum_size = Vector2(0, 106)
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
 text = "↻ 새로고침 3 / 3"
 
 [node name="MutationPanel" type="PanelContainer" parent="HUD"]
@@ -1643,13 +1648,13 @@ alignment = 1
 
 [node name="Title" type="Label" parent="HUD/MutationPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 54
+theme_override_font_sizes/font_size = 46
 text = "돌연변이 선택"
 horizontal_alignment = 1
 
 [node name="Trigger" type="Label" parent="HUD/MutationPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 25
 text = "편성 몬스터 중 하나를 선택하세요."
 horizontal_alignment = 1
 autowrap_mode = 2
@@ -1660,27 +1665,39 @@ theme_override_constants/separation = 16
 alignment = 1
 
 [node name="Choice0" type="Button" parent="HUD/MutationPanel/Margin/VBox/Choices"]
+focus_mode = 0
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
 mouse_filter = 0
 custom_minimum_size = Vector2(270, 288)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 28
 text = "슬라임\n선택"
 
 [node name="Choice1" type="Button" parent="HUD/MutationPanel/Margin/VBox/Choices"]
+focus_mode = 0
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
 mouse_filter = 0
 custom_minimum_size = Vector2(270, 288)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 28
 text = "거미\n선택"
 
 [node name="Choice2" type="Button" parent="HUD/MutationPanel/Margin/VBox/Choices"]
+focus_mode = 0
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
 mouse_filter = 0
 custom_minimum_size = Vector2(270, 288)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 28
 text = "오크\n선택"
 
 [node name="ResultPanel" type="PanelContainer" parent="HUD"]
@@ -1712,13 +1729,13 @@ alignment = 1
 
 [node name="ResultTitle" type="Label" parent="HUD/ResultPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 60
+theme_override_font_sizes/font_size = 50
 text = "전투 종료"
 horizontal_alignment = 1
 
 [node name="ResultMessage" type="Label" parent="HUD/ResultPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 30
 text = "결과"
 horizontal_alignment = 1
 autowrap_mode = 2
@@ -1733,27 +1750,39 @@ vertical_scroll_mode = 1
 [node name="ResultAnalysis" type="Label" parent="HUD/ResultPanel/Margin/VBox/ResultAnalysisScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 22
 text = "Run 분석"
 horizontal_alignment = 0
 vertical_alignment = 0
 autowrap_mode = 2
 
 [node name="NextStageButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
+focus_mode = 0
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
 visible = false
 custom_minimum_size = Vector2(0, 115)
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 30
 text = "다음 스테이지"
 
 [node name="StageSelectResultButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
+focus_mode = 0
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
 custom_minimum_size = Vector2(0, 103)
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 29
 text = "로비로 돌아가기"
 
 [node name="RestartButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
+focus_mode = 0
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
 custom_minimum_size = Vector2(0, 115)
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 29
 text = "같은 스테이지 다시 도전"
