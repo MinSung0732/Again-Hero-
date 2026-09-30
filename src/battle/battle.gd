@@ -57,6 +57,12 @@ const DEMON_LEVEL_MONSTER_HP_GROWTH := 1.05
 const DEMON_LEVEL_MONSTER_DAMAGE_GROWTH := 1.05
 const DEMON_LEVEL_MONSTER_SPEED_GROWTH := 1.02
 const DEMON_LEVEL_MONSTER_SPEED_MAX_MULTIPLIER := 1.25
+const GIANT_MONSTER_UNLOCK_LEVEL := 10
+const GIANT_MONSTER_BASE_CHANCE := 0.10
+const GIANT_MONSTER_LEVEL_STEP := 5
+const GIANT_MONSTER_CHANCE_PER_STEP := 0.01
+const GIANT_MONSTER_STAT_MULTIPLIER := 1.28
+const GIANT_MONSTER_SIZE_MULTIPLIER := 2.0
 const HEAL_ITEM_KILLS_REQUIRED := 30
 const MAX_ACTIVE_HEAL_ITEMS := 2
 const CHEST_KILLS_REQUIRED := 50
@@ -992,7 +998,14 @@ func _can_attempt_summon(monster_type: String) -> bool:
 func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float, manual: bool) -> bool:
 	command_power = maxf(command_power - cost, 0.0)
 
-	_spawn_monster(monster_type, spawn_position, cost, false)
+	var giant_spawn := _roll_giant_monster_for_normal_summon()
+	var primary_monster = _spawn_monster(
+		monster_type,
+		spawn_position,
+		cost,
+		false,
+		{"giant_monster": giant_spawn}
+	)
 	_spawn_extra_normal_summon_monsters(monster_type, spawn_position)
 	run_metrics.record_summon(monster_type, cost)
 
@@ -1010,12 +1023,21 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 	var gained_exp := base_summon_exp * demon_exp_gain_multiplier
 	run_metrics.record_summon_demon_exp(monster_type, gained_exp)
 	var mode_text := "수동 배치" if manual else "소환"
+	var giant_text := (
+		" · 대형몹!"
+		if (
+			is_instance_valid(primary_monster)
+			and bool(primary_monster.get_meta("giant_monster", false))
+		)
+		else ""
+	)
 	summon_result.emit(
 		monster_type,
 		true,
-		"%s %s! 지휘력 %.1f 소모 · 마왕 EXP +%.1f" % [
+		"%s %s%s 지휘력 %.1f 소모 · 마왕 EXP +%.1f" % [
 			_get_monster_name(monster_type),
 			mode_text,
+			giant_text,
 			cost,
 			gained_exp,
 		]
@@ -1293,6 +1315,164 @@ func _get_auto_spawn_position() -> Vector2:
 	var candidate := origin + Vector2.from_angle(angle) * distance
 	return _clamp_manual_spawn_position(candidate)
 
+func _get_giant_monster_summon_chance() -> float:
+	if demon_level < GIANT_MONSTER_UNLOCK_LEVEL:
+		return 0.0
+	var level_steps := floori(
+		float(demon_level - GIANT_MONSTER_UNLOCK_LEVEL)
+		/ float(GIANT_MONSTER_LEVEL_STEP)
+	)
+	return clampf(
+		GIANT_MONSTER_BASE_CHANCE
+		+ float(level_steps) * GIANT_MONSTER_CHANCE_PER_STEP,
+		0.0,
+		1.0
+	)
+
+
+func _roll_giant_monster_for_normal_summon() -> bool:
+	var chance := _get_giant_monster_summon_chance()
+	return chance > 0.0 and randf() < chance
+
+
+func _apply_giant_monster_base_stats(
+	monster: Node2D,
+	monster_type: String
+) -> void:
+	if not is_instance_valid(monster):
+		return
+
+	monster.set_meta("giant_monster", true)
+	monster.set_meta(
+		"giant_stat_multiplier",
+		GIANT_MONSTER_STAT_MULTIPLIER
+	)
+	monster.set_meta(
+		"giant_size_multiplier",
+		GIANT_MONSTER_SIZE_MULTIPLIER
+	)
+
+	# Apply the giant factor before raw augment baselines are captured. This
+	# makes later Demon-level/augment refreshes preserve the giant bonuses.
+	var max_hp_value = monster.get("max_hp")
+	if max_hp_value != null:
+		monster.set(
+			"max_hp",
+			maxi(
+				1,
+				int(round(
+					float(max_hp_value)
+					* GIANT_MONSTER_STAT_MULTIPLIER
+				))
+			)
+		)
+
+	var move_speed_value = monster.get("move_speed")
+	if move_speed_value != null:
+		monster.set(
+			"move_speed",
+			float(move_speed_value) * GIANT_MONSTER_STAT_MULTIPLIER
+		)
+
+	var exp_value = monster.get("exp_reward")
+	if exp_value != null:
+		monster.set(
+			"exp_reward",
+			maxi(
+				1,
+				int(round(
+					float(exp_value)
+					* GIANT_MONSTER_STAT_MULTIPLIER
+				))
+			)
+		)
+
+	if monster_type in ["slime", "orc", "spider"]:
+		var damage_value = monster.get("attack_damage")
+		if damage_value != null:
+			monster.set(
+				"attack_damage",
+				maxi(
+					1,
+					int(round(
+						float(damage_value)
+						* GIANT_MONSTER_STAT_MULTIPLIER
+					))
+				)
+			)
+
+		var attack_range_value = monster.get("attack_range")
+		if attack_range_value != null:
+			monster.set(
+				"attack_range",
+				float(attack_range_value)
+				* GIANT_MONSTER_STAT_MULTIPLIER
+			)
+
+		var attack_cooldown_value = monster.get("attack_cooldown")
+		if attack_cooldown_value != null:
+			monster.set(
+				"attack_cooldown",
+				maxf(
+					0.10,
+					float(attack_cooldown_value)
+					/ GIANT_MONSTER_STAT_MULTIPLIER
+				)
+			)
+
+	if monster_type == "spider":
+		monster.set(
+			"projectile_speed",
+			float(monster.get("projectile_speed"))
+			* GIANT_MONSTER_STAT_MULTIPLIER
+		)
+		monster.set(
+			"projectile_range",
+			float(monster.get("projectile_range"))
+			* GIANT_MONSTER_STAT_MULTIPLIER
+		)
+		monster.set(
+			"slow_duration",
+			float(monster.get("slow_duration"))
+			* GIANT_MONSTER_STAT_MULTIPLIER
+		)
+
+	if monster_type == "bomb_rat":
+		monster.set(
+			"self_destruct_range",
+			float(monster.get("self_destruct_range"))
+			* GIANT_MONSTER_STAT_MULTIPLIER
+		)
+		monster.set(
+			"self_destruct_fuse",
+			maxf(
+				0.10,
+				float(monster.get("self_destruct_fuse"))
+				/ GIANT_MONSTER_STAT_MULTIPLIER
+			)
+		)
+		monster.set(
+			"explosion_radius",
+			float(monster.get("explosion_radius"))
+			* GIANT_MONSTER_STAT_MULTIPLIER
+		)
+		monster.set(
+			"explosion_damage",
+			maxi(
+				1,
+				int(round(
+					float(monster.get("explosion_damage"))
+					* GIANT_MONSTER_STAT_MULTIPLIER
+				))
+			)
+		)
+
+	# Scaling the CharacterBody doubles the authored visual and its child
+	# CollisionShape2D together. This keeps the collision footprint matched to
+	# the requested 2x body size without mutating shared Shape2D resources.
+	monster.scale *= GIANT_MONSTER_SIZE_MULTIPLIER
+
+
 func _spawn_monster(
 	monster_type: String,
 	spawn_position: Vector2,
@@ -1310,6 +1490,9 @@ func _spawn_monster(
 	# their positions with older/general map margins.
 	spawn_position = _clamp_manual_spawn_position(spawn_position)
 	var monster := scene.instantiate() as Node2D
+	var is_giant := bool(spawn_modifiers.get("giant_monster", false))
+	if is_giant and not split_child:
+		_apply_giant_monster_base_stats(monster, monster_type)
 	_ensure_monster_ground_shadow(monster, monster_type)
 
 	var raw_speed_value = monster.get("move_speed")
@@ -3546,12 +3729,13 @@ func get_demon_build_summary() -> String:
 	return " · ".join(names)
 
 func get_debug_balance_summary() -> String:
-	var level_line := "[DEBUG] 마왕 Lv.%d · 레벨배율 HP x%.3f / ATK x%.3f / SPD x%.3f (cap x%.2f)" % [
+	var level_line := "[DEBUG] 마왕 Lv.%d · 레벨배율 HP x%.3f / ATK x%.3f / SPD x%.3f (cap x%.2f) · 대형몹 %.0f%%" % [
 		demon_level,
 		_get_demon_level_monster_hp_multiplier(),
 		_get_demon_level_monster_damage_multiplier(),
 		_get_demon_level_monster_speed_multiplier(),
 		DEMON_LEVEL_MONSTER_SPEED_MAX_MULTIPLIER,
+		_get_giant_monster_summon_chance() * 100.0,
 	]
 
 	var augment_line := "신규소환 보정: 비용 x%.3f · SPD x%.3f · ATK x%.3f · OrcHP x%.3f · 거미둔화 x%.3f · 환급 %.0f%% · 분열 %.0f%%" % [
@@ -3997,6 +4181,7 @@ func get_snapshot() -> Dictionary:
 		"command_max": max_command,
 		"demon_level": demon_level,
 		"demon_exp": demon_exp,
+		"giant_monster_chance": _get_giant_monster_summon_chance(),
 		"demon_exp_to_next": demon_exp_to_next_level,
 		"demon_ultimate_charge": demon_ultimate_charge,
 		"demon_ultimate_max": DEMON_ULTIMATES.CHARGE_MAX,
