@@ -112,6 +112,8 @@ func setup(
 func _physics_process(delta: float) -> void:
 	if state == State.INACTIVE or state == State.AUDIO_TAIL:
 		return
+	if _is_combat_simulation_paused():
+		return
 	if (
 		is_instance_valid(caster)
 		and not caster.is_queued_for_deletion()
@@ -130,6 +132,15 @@ func _physics_process(delta: float) -> void:
 			_update_disappearing(delta)
 		_:
 			pass
+
+
+func _is_combat_simulation_paused() -> bool:
+	var battle := get_parent()
+	if not is_instance_valid(battle):
+		return false
+	if battle.has_method("is_combat_simulation_paused"):
+		return bool(battle.call("is_combat_simulation_paused"))
+	return false
 
 
 func _update_creating(delta: float) -> void:

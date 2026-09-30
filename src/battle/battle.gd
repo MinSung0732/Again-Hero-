@@ -3473,6 +3473,15 @@ func _spawn_extra_normal_summon_monsters(
 		if is_instance_valid(extra_slime):
 			extra_slime.set_meta("allow_special_death_split", true)
 
+func is_combat_simulation_paused() -> bool:
+	return (
+		battle_over
+		or flow_pause_manager.is_paused(
+			FLOW_PAUSE_MANAGER.DOMAIN_COMBAT
+		)
+	)
+
+
 func _sync_combat_pause_state() -> void:
 	var should_enable := (
 		not battle_over

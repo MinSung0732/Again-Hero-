@@ -8439,11 +8439,29 @@ func _update_sage_runtime(delta: float) -> void:
 		if sage_gauge_redraw_timer <= 0.0:
 			sage_gauge_redraw_timer = 0.10
 			queue_redraw()
-	sage_skill1_cooldown_timer = maxf(sage_skill1_cooldown_timer - delta, 0.0)
-	sage_skill2_cooldown_timer = maxf(sage_skill2_cooldown_timer - delta, 0.0)
-	sage_skill3_cooldown_timer = maxf(sage_skill3_cooldown_timer - delta, 0.0)
-	sage_skill4_cooldown_timer = maxf(sage_skill4_cooldown_timer - delta, 0.0)
-	sage_skill5_cooldown_timer = maxf(sage_skill5_cooldown_timer - delta, 0.0)
+	var sage_skill_cooldown_delta := (
+		delta * _get_sage_condensation_cooldown_rate()
+	)
+	sage_skill1_cooldown_timer = maxf(
+		sage_skill1_cooldown_timer - sage_skill_cooldown_delta,
+		0.0
+	)
+	sage_skill2_cooldown_timer = maxf(
+		sage_skill2_cooldown_timer - sage_skill_cooldown_delta,
+		0.0
+	)
+	sage_skill3_cooldown_timer = maxf(
+		sage_skill3_cooldown_timer - sage_skill_cooldown_delta,
+		0.0
+	)
+	sage_skill4_cooldown_timer = maxf(
+		sage_skill4_cooldown_timer - sage_skill_cooldown_delta,
+		0.0
+	)
+	sage_skill5_cooldown_timer = maxf(
+		sage_skill5_cooldown_timer - sage_skill_cooldown_delta,
+		0.0
+	)
 	sage_condensation_skill_damage_buff_timer = maxf(
 		sage_condensation_skill_damage_buff_timer - delta,
 		0.0
@@ -8939,6 +8957,32 @@ func _consume_sage_condensation(skill: Dictionary) -> void:
 	_try_start_sage_late_skill_unlock_sequence(skill)
 
 
+func _get_sage_condensation_cooldown_reduction() -> float:
+	if (
+		hero_archetype != "grand_sage_astra"
+		or sage_condensation_stacks <= 0
+	):
+		return 0.0
+	var skill_value = sage_config.get("skill_3", {})
+	var skill: Dictionary = (
+		skill_value if typeof(skill_value) == TYPE_DICTIONARY else {}
+	)
+	var per_stack := maxf(
+		float(skill.get("cooldown_reduction_per_stack", 0.02)),
+		0.0
+	)
+	return clampf(
+		per_stack * float(sage_condensation_stacks),
+		0.0,
+		0.90
+	)
+
+
+func _get_sage_condensation_cooldown_rate() -> float:
+	var reduction := _get_sage_condensation_cooldown_reduction()
+	return 1.0 / maxf(1.0 - reduction, 0.10)
+
+
 func _get_sage_skill_damage_multiplier() -> float:
 	if (
 		hero_archetype != "grand_sage_astra"
@@ -8956,7 +9000,7 @@ func _get_sage_skill_damage_multiplier() -> float:
 
 
 func _try_start_sage_late_skill_unlock_sequence(skill: Dictionary) -> void:
-	var required := maxi(int(skill.get("unlock_completion_count", 3)), 1)
+	var required := maxi(int(skill.get("unlock_completion_count", 2)), 1)
 	if sage_condensation_completion_count < required:
 		return
 	if (
@@ -9022,7 +9066,7 @@ func _emit_sage_late_skill_unlock_cutscene() -> void:
 	var skill: Dictionary = (
 		skill_value if typeof(skill_value) == TYPE_DICTIONARY else {}
 	)
-	var required := maxi(int(skill.get("unlock_completion_count", 3)), 1)
+	var required := maxi(int(skill.get("unlock_completion_count", 2)), 1)
 	var payload := {
 		"hero_id": hero_id,
 		"archetype": hero_archetype,
@@ -13396,11 +13440,11 @@ func _skill_hud_description(config: Dictionary) -> String:
 		"radiance_singularity":
 			return "주변으로 10개의 광휘구체를 순차 방출합니다. 구체는 도착 1초 뒤 폭발해 범위 피해를 주고 2초 동안 적을 둔화합니다."
 		"mana_condensation":
-			return "8방향에 마력을 하나씩 응축합니다. 8스택 상태에서 다시 사용하면 전부 소모해 영구 스탯을 강화하고 10초간 모든 스킬 피해가 30% 증가합니다. 이 완성을 3회 달성하면 스킬 5·6이 해금됩니다."
+			return "8방향에 마력을 하나씩 응축합니다. 스택당 모든 스킬 재사용 대기시간이 2% 감소하며, 8스택 상태에서 다시 사용하면 전부 소모해 쿨감이 초기화되고 영구 스탯을 강화하며 10초간 모든 스킬 피해가 30% 증가합니다. 이 완성을 2회 달성하면 스킬 5·6이 해금됩니다."
 		"starlight":
 			return "8초 동안 별빛을 전개합니다. 0.75초마다 용사 주변 지름 1200 범위의 무작위 지점 3곳에 유성을 떨어뜨리며, 각 유성은 지름 200 범위에 공격력의 110% 피해를 줍니다."
 		"annihilation":
-			return "자신의 위치에 소멸점을 생성합니다. 소멸점은 전장의 몬스터를 조금씩 끌어당기고, 지름 400 범위의 적에게 0.5초마다 공격력 70% 피해를 줍니다. 피해 시 체력이 10% 이하인 적은 소멸점에 먹혀 즉시 처형됩니다."
+			return "자신의 위치에 15초 동안 소멸점을 생성합니다. 소멸점은 전장의 몬스터를 조금씩 끌어당기고, 지름 400 범위의 적에게 0.5초마다 공격력 70% 피해를 줍니다. 피해 시 체력이 10% 이하인 적은 소멸점에 먹혀 즉시 처형됩니다."
 		"arcane_piercer":
 			return "전방으로 강력한 마력 관통포를 발사해 일직선상의 적을 공격합니다."
 		"arcane_barrier":
@@ -13577,7 +13621,7 @@ func _append_sage_skill3_hud(skills: Array) -> void:
 	var ready := cooldown_ready and has_gauge
 	var max_stacks := maxi(int(skill.get("max_stacks", 8)), 1)
 	var required_completions := maxi(
-		int(skill.get("unlock_completion_count", 3)),
+		int(skill.get("unlock_completion_count", 2)),
 		1
 	)
 	var unlocked := (
@@ -13601,6 +13645,11 @@ func _append_sage_skill3_hud(skills: Array) -> void:
 		mini(sage_condensation_completion_count, required_completions),
 		required_completions,
 	]
+	var cooldown_reduction_percent := (
+		_get_sage_condensation_cooldown_reduction() * 100.0
+	)
+	if cooldown_reduction_percent > 0.01:
+		progress += " · 스킬 쿨감 +%.0f%%" % cooldown_reduction_percent
 	if sage_condensation_skill_damage_buff_timer > 0.0:
 		progress += " · 스킬피해 +30%% %.1f초" % (
 			sage_condensation_skill_damage_buff_timer
@@ -13690,10 +13739,20 @@ func _append_sage_skill5_hud(skills: Array) -> void:
 
 	var progress := "게이지 %.0f / %.0f" % [gauge_current, gauge_max]
 	if not unlocked:
-		progress = "마력응축 완성 %d/3 · 스킬 5 해금 조건" % mini(
-			sage_condensation_completion_count,
-			3
+		var skill3_value = sage_config.get("skill_3", {})
+		var skill3: Dictionary = (
+			skill3_value
+			if typeof(skill3_value) == TYPE_DICTIONARY
+			else {}
 		)
+		var required_completions := maxi(
+			int(skill3.get("unlock_completion_count", 2)),
+			1
+		)
+		progress = "마력응축 완성 %d/%d · 스킬 5 해금 조건" % [
+			mini(sage_condensation_completion_count, required_completions),
+			required_completions,
+		]
 
 	skills.append({
 		"id": String(skill.get("id", "annihilation")),
