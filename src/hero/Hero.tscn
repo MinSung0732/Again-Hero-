@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://src/hero/hero.gd" id="1_hero"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/level_up_rise07_cc0.mp3" id="2_levelup"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_failed_boom_skill3.wav" id="3_alchemist_emergency"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/alchemist_philosopher_stone_magic_burst.wav" id="4_alchemist_philosopher"]
+[ext_resource type="Script" path="res://src/battle/ground_shadow.gd" id="5_ground_shadow"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hero"]
 radius = 28.0
@@ -16,6 +17,13 @@ script = ExtResource("1_hero")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_hero")
+
+[node name="GroundShadow" type="Sprite2D" parent="."]
+z_index = -10
+position = Vector2(0, 43)
+script = ExtResource("5_ground_shadow")
+display_size = Vector2(84, 28)
+opacity = 0.52
 
 [node name="ShieldEffect" type="AnimatedSprite2D" parent="."]
 visible = false
