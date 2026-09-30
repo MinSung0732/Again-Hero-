@@ -7,6 +7,16 @@ const TARGET_REFRESH_INTERVAL := 0.25
 const FAR_NAV_INITIAL_MAX := 0.16
 const FAR_NAV_TICK_MIN := 0.10
 const FAR_NAV_TICK_MAX := 0.16
+const SOFT_SEPARATION_TICK_MIN := 0.10
+const SOFT_SEPARATION_TICK_MAX := 0.14
+const SOFT_SEPARATION_RADIUS_SCALE := 0.78
+const SOFT_SEPARATION_RADIUS_MIN := 18.0
+const SOFT_SEPARATION_RADIUS_MAX := 25.0
+const SOFT_SEPARATION_STEER_WEIGHT := 0.26
+const SOFT_SEPARATION_IDLE_SPEED_RATIO := 0.18
+const SOFT_SEPARATION_IDLE_SPEED_MAX := 26.0
+
+static var _soft_separation_scratch: Array = []
 
 
 static func tick_countdown(timer: float, delta: float) -> float:
@@ -59,6 +69,160 @@ static func should_refresh_far_navigation(
 	timer: float
 ) -> bool:
 	return distance_sq <= far_nav_sq or timer <= 0.0
+
+
+static func initial_soft_separation_delay() -> float:
+	return randf_range(0.0, SOFT_SEPARATION_TICK_MAX)
+
+
+static func next_soft_separation_delay() -> float:
+	return randf_range(
+		SOFT_SEPARATION_TICK_MIN,
+		SOFT_SEPARATION_TICK_MAX
+	)
+
+
+static func compute_soft_separation_bias(
+	owner: CharacterBody2D,
+	combat_authority: Node
+) -> Vector2:
+	if owner == null or not is_instance_valid(owner):
+		return Vector2.ZERO
+	if (
+		not is_instance_valid(combat_authority)
+		or not combat_authority.has_method("fill_monsters_near")
+	):
+		return Vector2.ZERO
+
+	var separation_radius := SOFT_SEPARATION_RADIUS_MIN
+	var collision := owner.get_node_or_null(
+		"CollisionShape2D"
+	) as CollisionShape2D
+	if is_instance_valid(collision):
+		var shape := collision.shape
+		if shape is CircleShape2D:
+			separation_radius = clampf(
+				(shape as CircleShape2D).radius
+				* SOFT_SEPARATION_RADIUS_SCALE,
+				SOFT_SEPARATION_RADIUS_MIN,
+				SOFT_SEPARATION_RADIUS_MAX
+			)
+		elif shape is CapsuleShape2D:
+			separation_radius = clampf(
+				(shape as CapsuleShape2D).radius
+				* SOFT_SEPARATION_RADIUS_SCALE,
+				SOFT_SEPARATION_RADIUS_MIN,
+				SOFT_SEPARATION_RADIUS_MAX
+			)
+
+	_soft_separation_scratch.clear()
+	combat_authority.call(
+		"fill_monsters_near",
+		owner.global_position,
+		separation_radius,
+		_soft_separation_scratch
+	)
+
+	var bias := Vector2.ZERO
+	var owner_id := owner.get_instance_id()
+	var separation_radius_sq := separation_radius * separation_radius
+	for raw_node in _soft_separation_scratch:
+		if (
+			not is_instance_valid(raw_node)
+			or raw_node == owner
+			or raw_node.is_queued_for_deletion()
+		):
+			continue
+		var other := raw_node as Node2D
+		if other == null:
+			continue
+
+		var offset := owner.global_position - other.global_position
+		var distance_sq := offset.length_squared()
+		if distance_sq >= separation_radius_sq:
+			continue
+
+		var away := Vector2.ZERO
+		var distance := 0.0
+		if distance_sq <= 0.01:
+			away = _deterministic_overlap_direction(
+				owner_id,
+				other.get_instance_id()
+			)
+		else:
+			distance = sqrt(distance_sq)
+			away = offset / distance
+
+		var pressure := 1.0 - clampf(
+			distance / separation_radius,
+			0.0,
+			1.0
+		)
+		bias += away * pressure
+
+	_soft_separation_scratch.clear()
+	if bias.length_squared() <= 0.0001:
+		return Vector2.ZERO
+	return bias.normalized()
+
+
+static func blend_soft_separation_direction(
+	base_direction: Vector2,
+	separation_bias: Vector2
+) -> Vector2:
+	if separation_bias.length_squared() <= 0.0001:
+		return base_direction.normalized()
+
+	var base := (
+		base_direction.normalized()
+		if base_direction.length_squared() > 0.0001
+		else Vector2.ZERO
+	)
+	if base.length_squared() <= 0.0001:
+		return separation_bias.normalized()
+
+	var blended := (
+		base
+		+ separation_bias.normalized()
+		* SOFT_SEPARATION_STEER_WEIGHT
+	)
+	if blended.length_squared() <= 0.0001:
+		return base
+	return blended.normalized()
+
+
+static func get_soft_separation_idle_velocity(
+	separation_bias: Vector2,
+	move_speed: float
+) -> Vector2:
+	if separation_bias.length_squared() <= 0.0001:
+		return Vector2.ZERO
+	var idle_speed := minf(
+		maxf(move_speed, 0.0)
+		* SOFT_SEPARATION_IDLE_SPEED_RATIO,
+		SOFT_SEPARATION_IDLE_SPEED_MAX
+	)
+	if idle_speed <= 0.01:
+		return Vector2.ZERO
+	return separation_bias.normalized() * idle_speed
+
+
+static func _deterministic_overlap_direction(
+	owner_id: int,
+	other_id: int
+) -> Vector2:
+	var low_id := mini(owner_id, other_id)
+	var high_id := maxi(owner_id, other_id)
+	var mixed := (
+		(low_id * 1103515245)
+		^ (high_id * 12345)
+	)
+	var angle := (
+		float(abs(mixed) % 6283)
+		/ 1000.0
+	)
+	var direction := Vector2.from_angle(angle)
+	return direction if owner_id <= other_id else -direction
 
 
 static func apply_standard_visual_lod(
