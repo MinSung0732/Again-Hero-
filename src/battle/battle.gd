@@ -292,6 +292,24 @@ func _ensure_monster_spatial_grid() -> void:
 		_rebuild_monster_spatial_grid()
 
 
+func fill_active_monsters(result: Array) -> void:
+	result.clear()
+	for raw_id in active_monsters:
+		var raw_node = active_monsters.get(raw_id)
+		if (
+			not is_instance_valid(raw_node)
+			or raw_node.is_queued_for_deletion()
+		):
+			continue
+		var monster := raw_node as Node2D
+		if monster == null:
+			continue
+		var hp_value = monster.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		result.append(monster)
+
+
 func fill_monsters_near(
 	origin: Vector2,
 	radius: float,

@@ -56,3 +56,15 @@ Both Skill 3 MP3 runtime files are committed directly under `assets/audio/sfx/` 
   - Source: Elemental Magic Spell Impact Outgoing — RescopicSound
   - https://pixabay.com/sound-effects/film-special-effects-elemental-magic-spell-impact-outgoing-228342/
   - The existing checked-in Pixabay MP3 is reused directly to avoid another runtime binary and preserve pooling/audio-tail behavior.
+
+
+- `sage_astra_annihilation_create_pixabay.mp3`
+  - the portal — CeebFrack (Freesound)
+  - https://pixabay.com/sound-effects/film-special-effects-the-portal-90750/
+  - Skill 5 "소멸" point creation cue. Reuses the already-tracked Pixabay source bytes from `sage_astra_condensation_release_pixabay.mp3`, played lower for a darker portal/void opening.
+- `sage_astra_annihilation_execute_pixabay.mp3`
+  - Elemental Magic Spell Impact Outgoing — RescopicSound
+  - https://pixabay.com/sound-effects/film-special-effects-elemental-magic-spell-impact-outgoing-228342/
+  - Skill 5 execution cue. Reuses the already-tracked Pixabay source bytes from `purifier_gungnir_explosion_pixabay.mp3`, played lower for a heavier consume/execute impact.
+
+Both source pages currently state free use under the Pixabay Content License. The dedicated runtime filenames keep Skill 5 audio wiring explicit while reusing already-downloaded source blobs.

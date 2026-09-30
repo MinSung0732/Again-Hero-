@@ -1,0 +1,32 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/hero/sage_annihilation_point.gd" id="1_annihilation"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/sage_astra_annihilation_create_pixabay.mp3" id="2_create"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/sage_astra_annihilation_execute_pixabay.mp3" id="3_execute"]
+
+[node name="SageAnnihilationPoint" type="Area2D"]
+z_index = 4
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+script = ExtResource("1_annihilation")
+
+[node name="Visual" type="Sprite2D" parent="."]
+texture_filter = 1
+
+[node name="AttractionLayer" type="Node2D" parent="."]
+
+[node name="CreationAudio" type="AudioStreamPlayer2D" parent="."]
+bus = &"SFX"
+stream = ExtResource("2_create")
+volume_db = -10.0
+pitch_scale = 0.78
+max_distance = 1300.0
+
+[node name="ExecutionAudio" type="AudioStreamPlayer2D" parent="."]
+bus = &"SFX"
+stream = ExtResource("3_execute")
+volume_db = -9.0
+pitch_scale = 0.78
+max_distance = 1100.0

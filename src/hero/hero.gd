@@ -18,6 +18,7 @@ const SAGE_PROJECTILE_SCENE := preload("res://src/hero/SageProjectile.tscn")
 const SAGE_ICE_PILLAR_SCENE := preload("res://src/hero/SageIcePillar.tscn")
 const SAGE_RADIANCE_ORB_SCENE := preload("res://src/hero/SageRadianceOrb.tscn")
 const SAGE_STARLIGHT_METEOR_SCENE := preload("res://src/hero/SageStarlightMeteor.tscn")
+const SAGE_ANNIHILATION_POINT_SCENE := preload("res://src/hero/SageAnnihilationPoint.tscn")
 const ULTIMATE_PIERCING_PROJECTILE_SCENE := preload(
 	"res://src/hero/UltimatePiercingProjectile.tscn"
 )
@@ -352,6 +353,7 @@ var sage_skill1_cooldown_timer: float = 0.0
 var sage_skill2_cooldown_timer: float = 0.0
 var sage_skill3_cooldown_timer: float = 0.0
 var sage_skill4_cooldown_timer: float = 0.0
+var sage_skill5_cooldown_timer: float = 0.0
 var sage_radiance_launch_remaining: int = 0
 var sage_radiance_launch_timer: float = 0.0
 var sage_condensation_stacks: int = 0
@@ -1232,6 +1234,14 @@ func configure_profile(profile: Dictionary) -> void:
 	)
 	sage_skill4_cooldown_timer = maxf(
 		float(sage_skill4_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
+	var sage_skill5_value = sage_config.get("skill_5", {})
+	var sage_skill5_config: Dictionary = (
+		sage_skill5_value if typeof(sage_skill5_value) == TYPE_DICTIONARY else {}
+	)
+	sage_skill5_cooldown_timer = maxf(
+		float(sage_skill5_config.get("initial_cooldown", 0.0)),
 		0.0
 	)
 	sage_radiance_launch_remaining = 0
@@ -8384,6 +8394,7 @@ func _update_sage_runtime(delta: float) -> void:
 	sage_skill2_cooldown_timer = maxf(sage_skill2_cooldown_timer - delta, 0.0)
 	sage_skill3_cooldown_timer = maxf(sage_skill3_cooldown_timer - delta, 0.0)
 	sage_skill4_cooldown_timer = maxf(sage_skill4_cooldown_timer - delta, 0.0)
+	sage_skill5_cooldown_timer = maxf(sage_skill5_cooldown_timer - delta, 0.0)
 	sage_condensation_skill_damage_buff_timer = maxf(
 		sage_condensation_skill_damage_buff_timer - delta,
 		0.0
@@ -8428,6 +8439,8 @@ func _update_sage_runtime(delta: float) -> void:
 				float(skill2.get("spawn_interval", 0.25)),
 				0.01
 			)
+	elif sage_skill5_cooldown_timer <= 0.0 and _try_cast_sage_annihilation():
+		pass
 	elif sage_skill4_cooldown_timer <= 0.0 and _try_cast_sage_starlight():
 		pass
 	elif sage_skill3_cooldown_timer <= 0.0:
@@ -8600,6 +8613,67 @@ func _launch_sage_radiance_orb() -> void:
 		maxf(float(skill.get("slow_duration", 2.0)), 0.0),
 		orb_scale
 	)
+
+
+func _try_cast_sage_annihilation() -> bool:
+	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
+		return false
+	if not is_conditional_skill_unlocked("sage_skill_5"):
+		return false
+
+	var skill_value = sage_config.get("skill_5", {})
+	if typeof(skill_value) != TYPE_DICTIONARY:
+		return false
+	var skill: Dictionary = skill_value
+	if skill.is_empty():
+		return false
+
+	var gauge_cost := maxf(float(skill.get("gauge_cost", 100.0)), 0.0)
+	if ultimate_charge + 0.001 < gauge_cost:
+		return false
+
+	var point := _acquire_projectile(
+		SAGE_ANNIHILATION_POINT_SCENE,
+		"sage_annihilation_point"
+	)
+	if point == null:
+		return false
+
+	var damage := maxi(
+		int(round(
+			float(attack_damage)
+			* maxf(float(skill.get("damage_ratio", 0.70)), 0.0)
+			* _get_sage_skill_damage_multiplier()
+		)),
+		1
+	)
+	point.global_position = global_position
+	point.call(
+		"setup",
+		self,
+		maxf(float(skill.get("duration", 6.0)), 0.1),
+		maxf(float(skill.get("effect_diameter", 400.0)) * 0.5, 1.0),
+		damage,
+		maxf(float(skill.get("pull_interval", 0.10)), 0.05),
+		maxf(float(skill.get("pull_step", 10.0)), 0.0),
+		maxf(float(skill.get("damage_interval", 0.50)), 0.05),
+		clampf(float(skill.get("execution_hp_ratio", 0.10)), 0.0, 1.0),
+		maxf(float(skill.get("visual_scale", 1.05)), 0.05),
+		maxf(float(skill.get("create_fps", 10.0)), 1.0),
+		maxf(float(skill.get("active_fps", 5.0)), 1.0),
+		maxf(float(skill.get("disappear_fps", 10.0)), 1.0)
+	)
+
+	ultimate_charge = maxf(ultimate_charge - gauge_cost, 0.0)
+	sage_skill5_cooldown_timer = maxf(
+		float(skill.get("cooldown", 60.0)),
+		0.1
+	)
+	attack_timer = maxf(attack_timer, 0.40)
+	attack_pose_timer = maxf(attack_pose_timer, 0.48)
+	_restart_stage1_animation("attack")
+	queue_redraw()
+	return true
 
 
 func _try_cast_sage_starlight() -> bool:
@@ -13061,6 +13135,7 @@ func get_skill_cooldown_hud() -> Array:
 			_append_sage_skill2_hud(skills)
 			_append_sage_skill3_hud(skills)
 			_append_sage_skill4_hud(skills)
+			_append_sage_skill5_hud(skills)
 		"cleric_purifier":
 			_append_skill_cooldown_hud(
 				skills,
@@ -13271,6 +13346,8 @@ func _skill_hud_description(config: Dictionary) -> String:
 			return "8방향에 마력을 하나씩 응축합니다. 8스택 상태에서 다시 사용하면 전부 소모해 영구 스탯을 강화하고 10초간 모든 스킬 피해가 30% 증가합니다. 이 완성을 3회 달성하면 스킬 5·6이 해금됩니다."
 		"starlight":
 			return "8초 동안 별빛을 전개합니다. 0.75초마다 용사 주변 지름 1200 범위의 무작위 지점 3곳에 유성을 떨어뜨리며, 각 유성은 지름 200 범위에 공격력의 110% 피해를 줍니다."
+		"annihilation":
+			return "자신의 위치에 소멸점을 생성합니다. 소멸점은 전장의 몬스터를 조금씩 끌어당기고, 지름 400 범위의 적에게 0.5초마다 공격력 70% 피해를 줍니다. 피해 시 체력이 10% 이하인 적은 소멸점에 먹혀 즉시 처형됩니다."
 		"arcane_piercer":
 			return "전방으로 강력한 마력 관통포를 발사해 일직선상의 적을 공격합니다."
 		"arcane_barrier":
@@ -13530,6 +13607,52 @@ func _append_sage_skill4_hud(skills: Array) -> void:
 		"cooldown_total": cooldown_total,
 		"cooldown_remaining": cooldown_remaining,
 		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect7/stage10_effect2_01.png",
+	})
+
+
+func _append_sage_skill5_hud(skills: Array) -> void:
+	var raw_skill = sage_config.get("skill_5", {})
+	if typeof(raw_skill) != TYPE_DICTIONARY:
+		return
+	var skill: Dictionary = raw_skill
+	if skill.is_empty():
+		return
+
+	var unlocked := is_conditional_skill_unlocked("sage_skill_5")
+	var cooldown_total := maxf(float(skill.get("cooldown", 60.0)), 0.0)
+	var cooldown_remaining := maxf(sage_skill5_cooldown_timer, 0.0)
+	var gauge_cost := maxf(float(skill.get("gauge_cost", 100.0)), 0.0)
+	var gauge_max := maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
+	var gauge_current := clampf(ultimate_charge, 0.0, gauge_max)
+	var has_gauge := gauge_current + 0.001 >= gauge_cost
+	var ready := unlocked and cooldown_remaining <= 0.01 and has_gauge
+
+	var status := "사용 가능"
+	if not unlocked:
+		status = "해금 조건 대기"
+	elif cooldown_remaining > 0.01:
+		status = "재사용 대기 중"
+	elif not has_gauge:
+		status = "게이지 부족"
+
+	var progress := "게이지 %.0f / %.0f" % [gauge_current, gauge_max]
+	if not unlocked:
+		progress = "마력응축 완성 %d/3 · 스킬 5 해금 조건" % mini(
+			sage_condensation_completion_count,
+			3
+		)
+
+	skills.append({
+		"id": String(skill.get("id", "annihilation")),
+		"name": String(skill.get("name", "소멸")),
+		"description": _skill_hud_description(skill),
+		"resource_text": "게이지 %.0f" % gauge_cost,
+		"progress_text": progress,
+		"status_text": status,
+		"available": ready,
+		"cooldown_total": cooldown_total,
+		"cooldown_remaining": cooldown_remaining,
+		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect8/stage10_effect3_05.png",
 	})
 
 
