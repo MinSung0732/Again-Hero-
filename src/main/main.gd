@@ -2146,7 +2146,7 @@ func _load_monster_mutation_icon(monster_id: String) -> Texture2D:
 	if asset_dir.is_empty() or typeof(animations) != TYPE_DICTIONARY:
 		return _load_monster_card_icon(monster_id)
 
-	var idle_data = Dictionary(animations).get("idle", {})
+	var idle_data = animations.get("idle", {})
 	if typeof(idle_data) != TYPE_DICTIONARY:
 		return _load_monster_card_icon(monster_id)
 
