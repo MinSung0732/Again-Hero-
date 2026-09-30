@@ -8614,7 +8614,11 @@ func _ensure_sage_condensation_visuals() -> void:
 			deg_to_rad(SAGE_CONDENSATION_SLOT_ANGLES[index])
 		) * radius
 		sprite.scale = Vector2.ONE * visual_scale
-		sprite.z_index = 2
+		# Health/shield/resource bars are drawn by the Hero parent itself.
+		# Keep condensation visuals behind the parent draw so the orbiting
+		# effect can never cover Astra's HP, shield, or yellow gauge bars.
+		sprite.z_index = 0
+		sprite.show_behind_parent = true
 		sprite.visible = false
 		add_child(sprite)
 		sage_condensation_visuals.append(sprite)
