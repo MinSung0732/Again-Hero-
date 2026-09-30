@@ -1,0 +1,212 @@
+{
+  "source": "stage10_effect3_spritesheet.png",
+  "source_size": [
+    1448,
+    1086
+  ],
+  "layout": "4 columns x 2 rows, left to right then top to bottom",
+  "count": 8,
+  "canvas_size": [
+    520,
+    640
+  ],
+  "output_anchor_xy": [
+    260,
+    320
+  ],
+  "method": "Original RGBA pixels only, no scaling. Source regions follow visual gaps; constant output canvas and central anchor.",
+  "frames": [
+    {
+      "order": 1,
+      "file": "stage10_effect3_01.png",
+      "source_region_xyxy": [
+        0,
+        0,
+        350,
+        543
+      ],
+      "source_anchor_xy": [
+        210,
+        370
+      ],
+      "output_anchor_xy": [
+        260,
+        320
+      ],
+      "content_bbox_xyxy": [
+        200,
+        265,
+        340,
+        394
+      ]
+    },
+    {
+      "order": 2,
+      "file": "stage10_effect3_02.png",
+      "source_region_xyxy": [
+        350,
+        0,
+        675,
+        543
+      ],
+      "source_anchor_xy": [
+        520,
+        370
+      ],
+      "output_anchor_xy": [
+        260,
+        320
+      ],
+      "content_bbox_xyxy": [
+        148,
+        229,
+        371,
+        429
+      ]
+    },
+    {
+      "order": 3,
+      "file": "stage10_effect3_03.png",
+      "source_region_xyxy": [
+        675,
+        0,
+        1015,
+        543
+      ],
+      "source_anchor_xy": [
+        840,
+        370
+      ],
+      "output_anchor_xy": [
+        260,
+        320
+      ],
+      "content_bbox_xyxy": [
+        120,
+        199,
+        407,
+        455
+      ]
+    },
+    {
+      "order": 4,
+      "file": "stage10_effect3_04.png",
+      "source_region_xyxy": [
+        1015,
+        0,
+        1448,
+        543
+      ],
+      "source_anchor_xy": [
+        1210,
+        370
+      ],
+      "output_anchor_xy": [
+        260,
+        320
+      ],
+      "content_bbox_xyxy": [
+        85,
+        135,
+        449,
+        475
+      ]
+    },
+    {
+      "order": 5,
+      "file": "stage10_effect3_05.png",
+      "source_region_xyxy": [
+        0,
+        543,
+        405,
+        1086
+      ],
+      "source_anchor_xy": [
+        210,
+        790
+      ],
+      "output_anchor_xy": [
+        260,
+        320
+      ],
+      "content_bbox_xyxy": [
+        76,
+        93,
+        448,
+        478
+      ]
+    },
+    {
+      "order": 6,
+      "file": "stage10_effect3_06.png",
+      "source_region_xyxy": [
+        405,
+        543,
+        800,
+        1086
+      ],
+      "source_anchor_xy": [
+        590,
+        790
+      ],
+      "output_anchor_xy": [
+        260,
+        320
+      ],
+      "content_bbox_xyxy": [
+        89,
+        119,
+        456,
+        497
+      ]
+    },
+    {
+      "order": 7,
+      "file": "stage10_effect3_07.png",
+      "source_region_xyxy": [
+        800,
+        543,
+        1140,
+        1086
+      ],
+      "source_anchor_xy": [
+        960,
+        790
+      ],
+      "output_anchor_xy": [
+        260,
+        320
+      ],
+      "content_bbox_xyxy": [
+        109,
+        165,
+        419,
+        479
+      ]
+    },
+    {
+      "order": 8,
+      "file": "stage10_effect3_08.png",
+      "source_region_xyxy": [
+        1140,
+        543,
+        1448,
+        1086
+      ],
+      "source_anchor_xy": [
+        1270,
+        790
+      ],
+      "output_anchor_xy": [
+        260,
+        320
+      ],
+      "content_bbox_xyxy": [
+        150,
+        252,
+        384,
+        452
+      ]
+    }
+  ]
+}
