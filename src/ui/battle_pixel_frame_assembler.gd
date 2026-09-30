@@ -136,6 +136,133 @@ static func add_split_frame(
 	)
 
 
+static func add_top_right_split_frame(
+	target: Control,
+	frame_dir: String,
+	scale: float,
+	clean_center_color: Color = Color(0.0, 0.0, 0.0, 0.0),
+	clean_center_inset: float = 0.0
+) -> void:
+	if target == null:
+		return
+	if scale <= 0.0:
+		return
+
+	var existing := target.get_node_or_null(FRAME_NODE_NAME)
+	if existing != null:
+		existing.queue_free()
+
+	# 02_top_right_panel uses a different part order from the general frame set:
+	# 01 TL, 02 TR, 03 top, 04 left, 05 right, 06 BL, 07 BR, 08 bottom.
+	# part_09 is a separate decorative divider and is intentionally not tiled.
+	var textures := {
+		"top_left": _load_texture(frame_dir + "/part_01.png"),
+		"top_right": _load_texture(frame_dir + "/part_02.png"),
+		"top": _load_texture(frame_dir + "/part_03.png"),
+		"left": _load_texture(frame_dir + "/part_04.png"),
+		"right": _load_texture(frame_dir + "/part_05.png"),
+		"bottom_left": _load_texture(frame_dir + "/part_06.png"),
+		"bottom_right": _load_texture(frame_dir + "/part_07.png"),
+		"bottom": _load_texture(frame_dir + "/part_08.png"),
+	}
+	for texture in textures.values():
+		if texture == null:
+			return
+
+	var overlay := Control.new()
+	overlay.name = FRAME_NODE_NAME
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	target.add_child(overlay)
+	target.move_child(overlay, 0)
+
+	if clean_center_color.a > 0.0:
+		_add_clean_center_panel(
+			overlay,
+			clean_center_color,
+			maxf(clean_center_inset, 0.0)
+		)
+
+	var top_left: Texture2D = textures["top_left"]
+	var top_right: Texture2D = textures["top_right"]
+	var top: Texture2D = textures["top"]
+	var left: Texture2D = textures["left"]
+	var right: Texture2D = textures["right"]
+	var bottom_left: Texture2D = textures["bottom_left"]
+	var bottom_right: Texture2D = textures["bottom_right"]
+	var bottom: Texture2D = textures["bottom"]
+
+	var top_left_size := top_left.get_size() * scale
+	var top_right_size := top_right.get_size() * scale
+	var bottom_left_size := bottom_left.get_size() * scale
+	var bottom_right_size := bottom_right.get_size() * scale
+	var top_height := top.get_height() * scale
+	var bottom_height := bottom.get_height() * scale
+	var left_width := left.get_width() * scale
+	var right_width := right.get_width() * scale
+
+	_add_corner(
+		overlay,
+		top_left,
+		Vector2.ZERO,
+		top_left_size,
+		Vector2.ZERO
+	)
+	_add_corner(
+		overlay,
+		top_right,
+		Vector2(1.0, 0.0),
+		top_right_size,
+		Vector2(-top_right_size.x, 0.0)
+	)
+	_add_tiled_piece(
+		overlay,
+		top,
+		Vector2(0.0, 0.0),
+		Vector2(1.0, 0.0),
+		Vector2(top_left_size.x, 0.0),
+		Vector2(-top_right_size.x, top_height)
+	)
+	_add_tiled_piece(
+		overlay,
+		left,
+		Vector2(0.0, 0.0),
+		Vector2(0.0, 1.0),
+		Vector2(0.0, top_left_size.y),
+		Vector2(left_width, -bottom_left_size.y)
+	)
+	_add_tiled_piece(
+		overlay,
+		right,
+		Vector2(1.0, 0.0),
+		Vector2(1.0, 1.0),
+		Vector2(-right_width, top_right_size.y),
+		Vector2(0.0, -bottom_right_size.y)
+	)
+	_add_corner(
+		overlay,
+		bottom_left,
+		Vector2(0.0, 1.0),
+		bottom_left_size,
+		Vector2(0.0, -bottom_left_size.y)
+	)
+	_add_corner(
+		overlay,
+		bottom_right,
+		Vector2(1.0, 1.0),
+		bottom_right_size,
+		Vector2(-bottom_right_size.x, -bottom_right_size.y)
+	)
+	_add_tiled_piece(
+		overlay,
+		bottom,
+		Vector2(0.0, 1.0),
+		Vector2(1.0, 1.0),
+		Vector2(bottom_left_size.x, -bottom_height),
+		Vector2(-bottom_right_size.x, 0.0)
+	)
+
+
 static func clear_button_style(button: Button) -> void:
 	if button == null:
 		return
