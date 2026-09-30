@@ -15,6 +15,7 @@ const GUNNER_PROJECTILE_SCENE := preload("res://src/hero/GunnerProjectile.tscn")
 const ARCHMAGE_PROJECTILE_SCENE := preload("res://src/hero/ArchmageProjectile.tscn")
 const ARCHMAGE_SKILL_PROJECTILE_SCENE := preload("res://src/hero/ArchmageSkillProjectile.tscn")
 const SAGE_PROJECTILE_SCENE := preload("res://src/hero/SageProjectile.tscn")
+const SAGE_ICE_PILLAR_SCENE := preload("res://src/hero/SageIcePillar.tscn")
 const ULTIMATE_PIERCING_PROJECTILE_SCENE := preload(
 	"res://src/hero/UltimatePiercingProjectile.tscn"
 )
@@ -94,6 +95,8 @@ const STAGE10_FRAME_DIR := "res://assets/art/heroes/stage10_sage/frames"
 const SAGE_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_basic_attack_pixabay.mp3"
 const SAGE_THIRD_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_third_attack_pixabay.mp3"
 const SAGE_PHASE_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_phase_pixabay.mp3"
+const SAGE_ICE_PILLAR_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_ice_pillar_pixabay.mp3"
+const SAGE_SFX_REFERENCE_DB := -10.0
 const SUMMONER_GATEKEEPER_SCENE := preload("res://src/hero/SummonerGatekeeper.tscn")
 const SUMMONER_SCOUT_SCENE := preload("res://src/hero/SummonerScout.tscn")
 const SUMMONER_HOUND_SCENE := preload("res://src/hero/SummonerHound.tscn")
@@ -336,9 +339,11 @@ var sage_afterimage_pool: Array[AnimatedSprite2D] = []
 var sage_afterimage_index: int = 0
 var sage_post_phase_shield_timer: float = 0.0
 var sage_gauge_redraw_timer: float = 0.0
+var sage_skill1_cooldown_timer: float = 0.0
 var sage_basic_audio: AudioStreamPlayer
 var sage_third_audio: AudioStreamPlayer
 var sage_phase_audio: AudioStreamPlayer
+var sage_ice_pillar_audio: AudioStreamPlayer
 
 var alchemist_config: Dictionary = {}
 var alchemist_gas_max: float = 200.0
@@ -1169,6 +1174,14 @@ func configure_profile(profile: Dictionary) -> void:
 	sage_phase_cooldown_timer = maxf(
 		float(sage_config.get("phase_interval", 25.0)),
 		0.1
+	)
+	var sage_skill1_value = sage_config.get("skill_1", {})
+	var sage_skill1_config: Dictionary = (
+		sage_skill1_value if typeof(sage_skill1_value) == TYPE_DICTIONARY else {}
+	)
+	sage_skill1_cooldown_timer = maxf(
+		float(sage_skill1_config.get("initial_cooldown", 0.0)),
+		0.0
 	)
 	ultimate_charge = 0.0
 	ultimate_cooldown_timer = maxf(
@@ -8080,11 +8093,13 @@ func _ensure_sage_runtime() -> void:
 	if hero_archetype != "grand_sage_astra":
 		return
 	if not is_instance_valid(sage_basic_audio):
-		sage_basic_audio = _create_sage_audio_player(SAGE_BASIC_ATTACK_AUDIO_PATH, -11.0, 1.08)
+		sage_basic_audio = _create_sage_audio_player(SAGE_BASIC_ATTACK_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 1.08)
 	if not is_instance_valid(sage_third_audio):
-		sage_third_audio = _create_sage_audio_player(SAGE_THIRD_ATTACK_AUDIO_PATH, -9.0, 0.92)
+		sage_third_audio = _create_sage_audio_player(SAGE_THIRD_ATTACK_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 0.92)
 	if not is_instance_valid(sage_phase_audio):
-		sage_phase_audio = _create_sage_audio_player(SAGE_PHASE_AUDIO_PATH, -9.0, 1.02)
+		sage_phase_audio = _create_sage_audio_player(SAGE_PHASE_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 1.02)
+	if not is_instance_valid(sage_ice_pillar_audio):
+		sage_ice_pillar_audio = _create_sage_audio_player(SAGE_ICE_PILLAR_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 0.90)
 	if not sage_afterimage_pool.is_empty():
 		return
 	if _sage_afterimage_frames_cache == null:
@@ -8203,6 +8218,9 @@ func _update_sage_runtime(delta: float) -> void:
 		if sage_gauge_redraw_timer <= 0.0:
 			sage_gauge_redraw_timer = 0.10
 			queue_redraw()
+	sage_skill1_cooldown_timer = maxf(sage_skill1_cooldown_timer - delta, 0.0)
+	if sage_skill1_cooldown_timer <= 0.0:
+		_try_cast_sage_ice_pillar()
 	if sage_post_phase_shield_timer > 0.0:
 		sage_post_phase_shield_timer = maxf(sage_post_phase_shield_timer - delta, 0.0)
 		if shield_hp <= 0.0:
@@ -8224,6 +8242,53 @@ func _update_sage_runtime(delta: float) -> void:
 	sage_phase_cooldown_timer = maxf(sage_phase_cooldown_timer - delta, 0.0)
 	if sage_phase_cooldown_timer <= 0.0:
 		_start_sage_phase()
+
+
+func _try_cast_sage_ice_pillar() -> void:
+	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
+		return
+	if not is_instance_valid(target) or target.is_queued_for_deletion():
+		return
+	var skill_value = sage_config.get("skill_1", {})
+	if typeof(skill_value) != TYPE_DICTIONARY:
+		return
+	var skill: Dictionary = skill_value
+	if skill.is_empty():
+		return
+	var gauge_cost := maxf(float(skill.get("gauge_cost", 35.0)), 0.0)
+	if ultimate_charge + 0.001 < gauge_cost:
+		return
+
+	var pillar := _acquire_projectile(SAGE_ICE_PILLAR_SCENE, "sage_ice_pillar")
+	if pillar == null:
+		return
+
+	var effect_diameter := maxf(float(skill.get("effect_diameter", 250.0)), 2.0)
+	var damage := maxi(
+		1,
+		int(round(
+			float(attack_damage)
+			* maxf(float(skill.get("damage_ratio", 1.0)), 0.0)
+		))
+	)
+	pillar.global_position = target.global_position
+	pillar.call(
+		"setup",
+		damage,
+		maxf(float(skill.get("duration", 4.0)), 0.1),
+		effect_diameter * 0.5,
+		clampf(float(skill.get("slow_multiplier", 0.80)), 0.1, 1.0),
+		maxf(float(skill.get("collision_radius", 34.0)), 8.0)
+	)
+
+	ultimate_charge = maxf(ultimate_charge - gauge_cost, 0.0)
+	sage_skill1_cooldown_timer = maxf(float(skill.get("cooldown", 25.0)), 0.1)
+	attack_timer = maxf(attack_timer, 0.35)
+	attack_pose_timer = maxf(attack_pose_timer, 0.42)
+	_face_attack_direction(target.global_position.x - global_position.x)
+	_restart_stage1_animation("attack")
+	_play_sage_audio(sage_ice_pillar_audio)
+	queue_redraw()
 
 
 func _start_sage_phase() -> void:

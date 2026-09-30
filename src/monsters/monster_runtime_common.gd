@@ -85,6 +85,8 @@ static func get_external_movement_multiplier(owner: Node) -> float:
 	var now_msec := Time.get_ticks_msec()
 	if int(owner.get_meta("archmage_root_until", 0)) > now_msec:
 		return 0.0
+	if int(owner.get_meta("sage_ice_root_until", 0)) > now_msec:
+		return 0.0
 	if is_forced_movement_locked(owner):
 		return 0.0
 
@@ -103,6 +105,15 @@ static func get_external_movement_multiplier(owner: Node) -> float:
 			multiplier,
 			clampf(
 				float(owner.get_meta("movement_slow_multiplier", 1.0)),
+				0.1,
+				1.0
+			)
+		)
+	if int(owner.get_meta("sage_ice_slow_until", 0)) > now_msec:
+		multiplier = minf(
+			multiplier,
+			clampf(
+				float(owner.get_meta("sage_ice_slow_multiplier", 0.80)),
 				0.1,
 				1.0
 			)

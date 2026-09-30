@@ -16,3 +16,11 @@ Stage 10 uses dedicated runtime filenames while reusing Pixabay source bytes alr
   - Reuses `purifier_shield_create_pixabay.mp3` for fluidization entry.
 
 These are the same Pixabay sources already documented by the Stage 8/9 SFX metadata. Check the current linked license terms when redistributing outside this project.
+
+
+- `sage_astra_ice_pillar_pixabay.mp3`
+  - Elemental Magic Spell Impact Outgoing — RescopicSound
+  - https://pixabay.com/sound-effects/film-special-effects-elemental-magic-spell-impact-outgoing-228342/
+  - Used for Skill 1 "빙점폭발" ice-pillar creation. A skill-specific runtime filename reuses the already-stored Pixabay source bytes.
+
+Stage 10 SFX playback reference: basic attack, third attack, fluidization, and ice-pillar creation are all played at `-10 dB` before their intentional pitch differences.

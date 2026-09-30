@@ -1,0 +1,50 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/hero/sage_ice_pillar.gd" id="1_ice_pillar"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_obstacle"]
+size = Vector2(68, 52)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_effect"]
+radius = 125.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_trap"]
+radius = 34.0
+
+[node name="SageIcePillar" type="Area2D"]
+z_index = 2
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+script = ExtResource("1_ice_pillar")
+
+[node name="Visual" type="AnimatedSprite2D" parent="."]
+z_index = 1
+texture_filter = 1
+
+[node name="Obstacle" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Obstacle"]
+disabled = true
+shape = SubResource("RectangleShape2D_obstacle")
+
+[node name="EffectArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EffectArea"]
+shape = SubResource("CircleShape2D_effect")
+
+[node name="TrapArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TrapArea"]
+shape = SubResource("CircleShape2D_trap")
