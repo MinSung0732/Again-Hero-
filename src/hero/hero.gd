@@ -19,6 +19,7 @@ const SAGE_ICE_PILLAR_SCENE := preload("res://src/hero/SageIcePillar.tscn")
 const SAGE_RADIANCE_ORB_SCENE := preload("res://src/hero/SageRadianceOrb.tscn")
 const SAGE_STARLIGHT_METEOR_SCENE := preload("res://src/hero/SageStarlightMeteor.tscn")
 const SAGE_ANNIHILATION_POINT_SCENE := preload("res://src/hero/SageAnnihilationPoint.tscn")
+const SAGE_BLACKSPOT_EXPLOSION_SCENE := preload("res://src/hero/SageBlackSpotExplosion.tscn")
 const ULTIMATE_PIERCING_PROJECTILE_SCENE := preload(
 	"res://src/hero/UltimatePiercingProjectile.tscn"
 )
@@ -8559,7 +8560,16 @@ func _fire_sage_projectile(current_target: Node2D) -> void:
 		shot_range = maxf(float(sage_config.get("piercing_range", 1200.0)), 1.0)
 		diameter = maxf(float(sage_config.get("piercing_diameter", 220.0)), 2.0)
 	projectile.global_position = global_position + shot_direction * 54.0
-	projectile.call("setup", shot_direction, shot_damage, shot_speed, shot_range, projectile_mode, diameter)
+	projectile.call(
+		"setup",
+		shot_direction,
+		shot_damage,
+		shot_speed,
+		shot_range,
+		projectile_mode,
+		diameter,
+		self
+	)
 	if is_piercing:
 		_play_sage_audio(sage_third_audio)
 	else:
@@ -8734,7 +8744,8 @@ func _try_cast_sage_ice_pillar() -> void:
 		maxf(float(skill.get("duration", 4.0)), 0.1),
 		effect_diameter * 0.5,
 		clampf(float(skill.get("slow_multiplier", 0.80)), 0.1, 1.0),
-		maxf(float(skill.get("collision_radius", 34.0)), 8.0)
+		maxf(float(skill.get("collision_radius", 34.0)), 8.0),
+		self
 	)
 
 	ultimate_charge = maxf(ultimate_charge - gauge_cost, 0.0)
@@ -8831,7 +8842,8 @@ func _launch_sage_radiance_orb() -> void:
 		orb_damage,
 		clampf(float(skill.get("slow_multiplier", 0.85)), 0.1, 1.0),
 		maxf(float(skill.get("slow_duration", 2.0)), 0.0),
-		orb_scale
+		orb_scale,
+		self
 	)
 
 
@@ -8871,7 +8883,7 @@ func _try_cast_sage_annihilation() -> bool:
 	point.call(
 		"setup",
 		self,
-		maxf(float(skill.get("duration", 6.0)), 0.1),
+		maxf(float(skill.get("duration", 15.0)), 0.1),
 		maxf(float(skill.get("effect_diameter", 400.0)) * 0.5, 1.0),
 		damage,
 		maxf(float(skill.get("pull_interval", 0.10)), 0.05),
@@ -9007,7 +9019,8 @@ func _launch_sage_starlight_volley(skill: Dictionary) -> void:
 			visual_scale,
 			fall_height,
 			fall_side_offset,
-			explosion_fps
+			explosion_fps,
+			self
 		)
 
 
@@ -9137,19 +9150,119 @@ func _get_sage_condensation_cooldown_rate() -> float:
 
 
 func _get_sage_skill_damage_multiplier() -> float:
+	if hero_archetype != "grand_sage_astra":
+		return 1.0
+
+	var bonus_ratio := 0.0
+	if sage_condensation_skill_damage_buff_timer > 0.0:
+		var skill3_value = sage_config.get("skill_3", {})
+		var skill3: Dictionary = (
+			skill3_value
+			if typeof(skill3_value) == TYPE_DICTIONARY
+			else {}
+		)
+		bonus_ratio += maxf(
+			float(skill3.get("skill_damage_buff_ratio", 0.30)),
+			0.0
+		)
+
+	if is_conditional_skill_unlocked("sage_skill_6"):
+		var skill6_value = sage_config.get("skill_6", {})
+		var skill6: Dictionary = (
+			skill6_value
+			if typeof(skill6_value) == TYPE_DICTIONARY
+			else {}
+		)
+		bonus_ratio += maxf(
+			float(skill6.get("skill_damage_bonus_ratio", 0.10)),
+			0.0
+		)
+
+	return 1.0 + bonus_ratio
+
+
+func _on_sage_skill_hit(hit_position: Vector2) -> void:
 	if (
 		hero_archetype != "grand_sage_astra"
-		or sage_condensation_skill_damage_buff_timer <= 0.0
+		or is_dying
+		or current_hp <= 0
+		or not is_conditional_skill_unlocked("sage_skill_6")
 	):
-		return 1.0
-	var skill_value = sage_config.get("skill_3", {})
-	var skill: Dictionary = (
-		skill_value if typeof(skill_value) == TYPE_DICTIONARY else {}
+		return
+
+	var skill_value = sage_config.get("skill_6", {})
+	if typeof(skill_value) != TYPE_DICTIONARY:
+		return
+	var skill: Dictionary = skill_value
+	if skill.is_empty():
+		return
+	if randf() >= clampf(
+		float(skill.get("trigger_chance", 0.50)),
+		0.0,
+		1.0
+	):
+		return
+
+	var explosion := _acquire_projectile(
+		SAGE_BLACKSPOT_EXPLOSION_SCENE,
+		"sage_blackspot_explosion"
 	)
-	return 1.0 + maxf(
-		float(skill.get("skill_damage_buff_ratio", 0.30)),
+	if explosion == null:
+		return
+
+	var blackspot_damage := maxi(
+		int(round(
+			float(attack_damage)
+			* maxf(float(skill.get("damage_ratio", 0.80)), 0.0)
+			* _get_sage_skill_damage_multiplier()
+		)),
+		1
+	)
+	explosion.global_position = hit_position
+	explosion.call(
+		"setup",
+		self,
+		blackspot_damage,
+		maxf(
+			float(skill.get("explosion_diameter", 150.0)) * 0.5,
+			1.0
+		),
+		maxf(float(skill.get("explosion_fps", 14.0)), 1.0),
+		maxf(float(skill.get("visual_scale", 0.34)), 0.05)
+	)
+
+
+func _on_sage_blackspot_kill() -> void:
+	if (
+		hero_archetype != "grand_sage_astra"
+		or is_dying
+		or current_hp <= 0
+		or current_hp >= max_hp
+	):
+		return
+
+	var skill_value = sage_config.get("skill_6", {})
+	var skill: Dictionary = (
+		skill_value
+		if typeof(skill_value) == TYPE_DICTIONARY
+		else {}
+	)
+	var heal_ratio := maxf(
+		float(skill.get("kill_heal_current_hp_ratio", 0.005)),
 		0.0
 	)
+	if heal_ratio <= 0.0:
+		return
+
+	var heal_amount := maxi(
+		int(round(float(current_hp) * heal_ratio)),
+		1
+	)
+	var previous_hp := current_hp
+	current_hp = mini(current_hp + heal_amount, max_hp)
+	if current_hp != previous_hp:
+		health_changed.emit(current_hp, max_hp)
+		queue_redraw()
 
 
 func _try_start_sage_late_skill_unlock_sequence(skill: Dictionary) -> void:
@@ -13386,6 +13499,7 @@ func get_skill_cooldown_hud() -> Array:
 			_append_sage_skill3_hud(skills)
 			_append_sage_skill4_hud(skills)
 			_append_sage_skill5_hud(skills)
+			_append_sage_skill6_hud(skills)
 		"cleric_purifier":
 			_append_skill_cooldown_hud(
 				skills,
@@ -13918,6 +14032,62 @@ func _append_sage_skill5_hud(skills: Array) -> void:
 		"cooldown_total": cooldown_total,
 		"cooldown_remaining": cooldown_remaining,
 		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect8/stage10_effect3_05.png",
+	})
+
+
+func _append_sage_skill6_hud(skills: Array) -> void:
+	var raw_skill = sage_config.get("skill_6", {})
+	if typeof(raw_skill) != TYPE_DICTIONARY:
+		return
+	var skill: Dictionary = raw_skill
+	if skill.is_empty():
+		return
+
+	var unlocked := is_conditional_skill_unlocked("sage_skill_6")
+	var skill3_value = sage_config.get("skill_3", {})
+	var skill3: Dictionary = (
+		skill3_value
+		if typeof(skill3_value) == TYPE_DICTIONARY
+		else {}
+	)
+	var required_completions := maxi(
+		int(skill3.get("unlock_completion_count", 2)),
+		1
+	)
+	var progress := (
+		"스킬 피해 +%.0f%% · 적중 시 %.0f%% 발동"
+		% [
+			maxf(
+				float(skill.get("skill_damage_bonus_ratio", 0.10)),
+				0.0
+			) * 100.0,
+			clampf(
+				float(skill.get("trigger_chance", 0.50)),
+				0.0,
+				1.0
+			) * 100.0,
+		]
+		if unlocked
+		else "마력응축 완성 %d/%d · 스킬 6 해금 조건" % [
+			mini(
+				sage_condensation_completion_count,
+				required_completions
+			),
+			required_completions,
+		]
+	)
+
+	skills.append({
+		"id": String(skill.get("id", "black_spot_explosion")),
+		"name": String(skill.get("name", "흑점폭발")),
+		"description": _skill_hud_description(skill),
+		"resource_text": "패시브",
+		"progress_text": progress,
+		"status_text": "패시브 활성" if unlocked else "해금 조건 대기",
+		"available": unlocked,
+		"cooldown_total": 0.0,
+		"cooldown_remaining": 0.0,
+		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect9/stage10_effect4_04.png",
 	})
 
 
