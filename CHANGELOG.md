@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-09-30 — 모달 레이어 우선순위 수정
+- 전투 메뉴가 열렸을 때 z_index 200의 상세정보/용사정보 북마크 버튼이 모달 위로 튀어나오던 문제 수정.
+- PauseMenu / DemonAugmentPanel / MutationPanel을 HUD 북마크보다 높은 z_index 300으로 통일.
+- SettingsOverlay는 320, ResultPanel은 340으로 두어 중첩 모달에서도 레이어 순서가 안정적으로 유지되게 조정.
+- 기존 mouse_filter=STOP 흐름을 그대로 활용해 모달이 열린 동안 뒤쪽 HUD 버튼 입력도 차단.
+
+
 ## 2026-09-30 — HUD 정렬/증강 카드/Stage 패널 마감
 - 우측 메뉴/상세정보/용사정보 버튼을 장식 프레임 + 실제 아이콘 TextureRect + Label 구조로 분리해 아이콘/텍스트 묶음을 버튼 중앙에 배치.
 - 몬스터 카운터도 해골 아이콘과 숫자 텍스트를 중앙 그룹처럼 보이도록 재정렬.
