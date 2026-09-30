@@ -694,16 +694,30 @@ expand_mode = 1
 stretch_mode = 0
 texture_filter = 1
 
-[node name="UltimateLabel" type="Label" parent="HUD/DemonUltimatePanel"]
+[node name="DemonLevelLabel" type="Label" parent="HUD/DemonUltimatePanel"]
 offset_left = 96.0
 offset_top = 22.0
-offset_right = 450.0
+offset_right = 244.0
+offset_bottom = 63.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.78, 0.32, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 24
+text = "마왕 Lv.1"
+clip_text = true
+vertical_alignment = 1
+
+[node name="UltimateLabel" type="Label" parent="HUD/DemonUltimatePanel"]
+offset_left = 252.0
+offset_top = 22.0
+offset_right = 492.0
 offset_bottom = 63.0
 theme_override_colors/font_color = Color(0.97, 0.92, 0.88, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 26
-text = "마왕 필살기   0 / 100"
+theme_override_font_sizes/font_size = 23
+text = "필살기   0 / 100"
 clip_text = true
 vertical_alignment = 1
 
