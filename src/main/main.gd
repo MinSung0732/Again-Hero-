@@ -452,6 +452,35 @@ func _apply_battle_pixel_asset_frames() -> void:
 			20
 		)
 
+	# Large modal windows use the original split PNG frame too.
+	# Their internal MarginContainer nodes already provide safe content padding,
+	# so the old SVG panel skin can be removed without changing layout semantics.
+	_replace_panel_frame(
+		$HUD/PauseMenu/MenuPanel,
+		BATTLE_PIXEL_FRAME_LARGE_DIR,
+		0.52
+	)
+	_replace_panel_frame(
+		$HUD/SettingsOverlay/Panel,
+		BATTLE_PIXEL_FRAME_LARGE_DIR,
+		0.52
+	)
+	_replace_panel_frame(
+		demon_augment_panel,
+		BATTLE_PIXEL_FRAME_LARGE_DIR,
+		0.52
+	)
+	_replace_panel_frame(
+		mutation_panel,
+		BATTLE_PIXEL_FRAME_LARGE_DIR,
+		0.48
+	)
+	_replace_panel_frame(
+		result_panel,
+		BATTLE_PIXEL_FRAME_LARGE_DIR,
+		0.52
+	)
+
 
 func _replace_texture_frame(
 	target: TextureRect,
@@ -491,6 +520,23 @@ func _replace_button_frame(
 	)
 	button.button_down.connect(_on_pixel_asset_button_down.bind(button))
 	button.button_up.connect(_on_pixel_asset_button_up.bind(button))
+
+
+func _replace_panel_frame(
+	panel: PanelContainer,
+	frame_dir: String,
+	scale: float
+) -> void:
+	if panel == null:
+		return
+	BATTLE_PIXEL_FRAME_ASSEMBLER.clear_panel_style(panel)
+	BATTLE_PIXEL_FRAME_ASSEMBLER.add_split_frame(
+		panel,
+		frame_dir,
+		scale,
+		BATTLE_PIXEL_CENTER_DARK,
+		18
+	)
 
 
 func _on_pixel_asset_button_down(button: BaseButton) -> void:
