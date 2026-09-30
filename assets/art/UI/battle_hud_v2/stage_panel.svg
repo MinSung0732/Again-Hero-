@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="125" viewBox="0 0 400 125">
+<g shape-rendering="crispEdges">
+<polygon points="18,4 382,4 396,18 396,107 382,121 18,121 4,107 4,18" fill="#08091b" stroke="#ffb52a" stroke-width="5"/>
+<polygon points="28,14 372,14 386,27 386,98 372,111 28,111 14,98 14,27" fill="#11102a" stroke="#592479" stroke-width="3"/>
+<rect x="52" y="29" width="296" height="27" fill="#3b155f" stroke="#6e2c9a" stroke-width="2"/>
+<rect x="52" y="62" width="296" height="25" fill="#2b124a" stroke="#5e257f" stroke-width="2"/>
+<rect x="88" y="92" width="224" height="15" fill="#11102a" stroke="#4d1f68" stroke-width="2"/>
+<polygon points="200,0 216,16 200,32 184,16" fill="#9a25df" stroke="#ffd052" stroke-width="4"/>
+<path d="M18 25 H35 V12 M382 25 H365 V12 M18 100 H35 V113 M382 100 H365 V113" fill="none" stroke="#ffd052" stroke-width="4"/>
+</g></svg>

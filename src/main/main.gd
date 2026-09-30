@@ -1194,7 +1194,7 @@ func _on_stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int) -> vo
 	hero_hp_bar.max_value = maxf(float(hero_max_hp), 1.0)
 	hero_hp_bar.value = float(hero_hp)
 	hero_hp_label.text = "HP %d / %d" % [hero_hp, hero_max_hp]
-	monsters_label.text = "몬스터  %d" % monsters_left
+	monsters_label.text = "☠  몬스터 %d" % monsters_left
 	hero_bgm_manager.update_hero_hp(hero_hp, hero_max_hp)
 	if hero_info_panel.visible:
 		_refresh_hero_info_panel()
@@ -1237,6 +1237,11 @@ func _on_command_changed(current_value: float, max_value: float) -> void:
 		var monster_id := String(battle_loadout_ids[slot_index])
 		var cost: float = battle.get_monster_cost(monster_id)
 		button.visible = true
+		button.icon = _load_monster_info_icon(monster_id)
+		button.expand_icon = true
+		button.icon_max_width = 92
+		button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		button.text = "%s\n비용 %.1f" % [
 			_get_catalog_monster_name(monster_id),
 			cost,

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="205" viewBox="0 0 1040 205">
+<g shape-rendering="crispEdges">
+<polygon points="15,3 1025,3 1037,15 1037,190 1025,202 15,202 3,190 3,15" fill="#070819" stroke="#ffb52a" stroke-width="5"/>
+<polygon points="25,13 1015,13 1027,25 1027,180 1015,192 25,192 13,180 13,25" fill="#0d1024" stroke="#5a2479" stroke-width="3"/>
+<polygon points="26,25 450,25 466,41 450,66 26,66 12,50" fill="#201043" stroke="#7130a0" stroke-width="3"/>
+<rect x="480" y="28" width="530" height="32" fill="#08091c" stroke="#6e2d94" stroke-width="3"/>
+<polygon points="30,82 326,82 338,94 338,174 326,186 30,186 18,174 18,94" fill="#11102a" stroke="#5c2780" stroke-width="3"/>
+<polygon points="372,82 668,82 680,94 680,174 668,186 372,186 360,174 360,94" fill="#11102a" stroke="#5c2780" stroke-width="3"/>
+<polygon points="714,82 1010,82 1022,94 1022,174 1010,186 714,186 702,174 702,94" fill="#11102a" stroke="#5c2780" stroke-width="3"/>
+<polygon points="54,31 73,18 92,31 86,55 62,55" fill="#6d1bb0" stroke="#b54aff" stroke-width="3"/>
+</g></svg>

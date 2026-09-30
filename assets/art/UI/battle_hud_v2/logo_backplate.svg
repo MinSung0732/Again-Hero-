@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="120" viewBox="0 0 300 120">
+<g shape-rendering="crispEdges">
+<path d="M10 28 L28 12 L70 15 L86 4 L112 16 L148 8 L176 18 L210 8 L232 20 L275 14 L294 34 L286 91 L263 108 L220 103 L197 116 L159 105 L124 114 L96 102 L56 109 L33 98 L7 88 Z" fill="#070717"/>
+<path d="M16 31 L33 18 L70 21 L87 11 L112 22 L149 14 L176 24 L210 14 L230 25 L270 20 L287 37" fill="none" stroke="#5b247b" stroke-width="5"/>
+<path d="M16 88 L36 100 L58 103 M240 101 L265 102 L283 87" fill="none" stroke="#5b247b" stroke-width="5"/>
+<path d="M18 34 L32 21 M271 23 L285 38 M13 84 L31 98 M267 102 L285 85" stroke="#ffb62a" stroke-width="5"/>
+<polygon points="151,6 162,18 151,30 140,18" fill="#9c36dc" stroke="#ffc142" stroke-width="4"/>
+</g></svg>
