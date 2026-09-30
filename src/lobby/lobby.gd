@@ -824,7 +824,7 @@ func _install_lobby_background() -> void:
 		move_child(backdrop, 0)
 
 	backdrop.texture = texture
-	backdrop.modulate = Color(0.62, 0.50, 0.72, 0.82)
+	backdrop.modulate = Color(0.76, 0.64, 0.86, 0.94)
 
 
 func _make_hud_panel_style(
@@ -850,7 +850,10 @@ func _install_stage_entry_hud() -> void:
 	var section_header := $SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox as Control
 	var section_title := $SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox/SectionTitle as Label
 	var section_subtitle := $SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox/SectionSubtitle as Label
+	var stage_layout := $SafeArea/Layout/Content/MainTab/StageLayout as VBoxContainer
 	var stage_meta := $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox as Control
+	var stage_picker := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker as HBoxContainer
+	var stage_card_slot := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot as Control
 	var card_margin := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin as MarginContainer
 	var portrait_frame := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame as PanelContainer
 	var portrait_inner := portrait_texture.get_parent() as PanelContainer
@@ -858,27 +861,35 @@ func _install_stage_entry_hud() -> void:
 
 	# Header and stage meta used to overflow their VBox slots. Keep every label
 	# inside its own reserved area so the whole screen reads as one HUD.
-	section_header.custom_minimum_size = Vector2(0.0, 112.0)
-	section_title.offset_top = 12.0
-	section_title.offset_bottom = 58.0
-	section_subtitle.offset_top = 60.0
-	section_subtitle.offset_bottom = 96.0
+	stage_layout.offset_top = 16.0
+	stage_layout.offset_bottom = -22.0
+	stage_layout.add_theme_constant_override("separation", 6)
 
-	stage_meta.custom_minimum_size = Vector2(0.0, 116.0)
-	stage_number_label.offset_top = 12.0
-	stage_number_label.offset_bottom = 44.0
-	stage_name_label.offset_top = 44.0
-	stage_name_label.offset_bottom = 102.0
+	section_header.custom_minimum_size = Vector2(0.0, 96.0)
+	section_title.offset_top = 4.0
+	section_title.offset_bottom = 48.0
+	section_subtitle.offset_top = 48.0
+	section_subtitle.offset_bottom = 82.0
+
+	stage_meta.custom_minimum_size = Vector2(0.0, 104.0)
+	stage_number_label.offset_top = 8.0
+	stage_number_label.offset_bottom = 38.0
+	stage_name_label.offset_top = 36.0
+	stage_name_label.offset_bottom = 92.0
+
+	stage_picker.add_theme_constant_override("separation", 8)
+	stage_card_slot.custom_minimum_size = Vector2(820.0, 1160.0)
+	stage_card_slot.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 
 	var meta_plate := stage_meta.get_node_or_null("StageMetaPlate") as Panel
 	if meta_plate == null:
 		meta_plate = Panel.new()
 		meta_plate.name = "StageMetaPlate"
 		meta_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		meta_plate.anchor_left = 0.16
-		meta_plate.anchor_top = 0.04
-		meta_plate.anchor_right = 0.84
-		meta_plate.anchor_bottom = 0.96
+		meta_plate.anchor_left = 0.12
+		meta_plate.anchor_top = 0.02
+		meta_plate.anchor_right = 0.88
+		meta_plate.anchor_bottom = 0.98
 		meta_plate.add_theme_stylebox_override(
 			"panel",
 			_make_hud_panel_style(
@@ -890,6 +901,21 @@ func _install_stage_entry_hud() -> void:
 		)
 		stage_meta.add_child(meta_plate)
 		stage_meta.move_child(meta_plate, 0)
+
+		for ratio in [0.06, 0.94]:
+			var jewel := ColorRect.new()
+			jewel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			jewel.color = Color("bb63d9")
+			jewel.anchor_left = ratio
+			jewel.anchor_top = 0.48
+			jewel.anchor_right = ratio
+			jewel.anchor_bottom = 0.48
+			jewel.offset_left = -6.0
+			jewel.offset_top = -6.0
+			jewel.offset_right = 6.0
+			jewel.offset_bottom = 6.0
+			jewel.rotation = PI * 0.25
+			meta_plate.add_child(jewel)
 
 	for data in [
 		["HeaderRuleLeft", 0.05, 0.38, 0.30, 0.40],
@@ -909,16 +935,43 @@ func _install_stage_entry_hud() -> void:
 		section_header.add_child(rule)
 		section_header.move_child(rule, 0)
 
-	card_margin.add_theme_constant_override("margin_left", 30)
-	card_margin.add_theme_constant_override("margin_right", 30)
-	card_margin.add_theme_constant_override("margin_bottom", 42)
+	card_margin.add_theme_constant_override("margin_left", 24)
+	card_margin.add_theme_constant_override("margin_right", 24)
+	card_margin.add_theme_constant_override("margin_bottom", 32)
 
-	portrait_frame.anchor_left = 0.035
-	portrait_frame.anchor_top = 0.145
-	portrait_frame.anchor_right = 0.965
-	portrait_frame.anchor_bottom = 0.575
-	hero_name_label.anchor_top = 0.585
-	hero_name_label.anchor_bottom = 0.645
+	portrait_frame.anchor_left = 0.025
+	portrait_frame.anchor_top = 0.085
+	portrait_frame.anchor_right = 0.975
+	portrait_frame.anchor_bottom = 0.555
+
+	var hero_name_plate := hero_name_label.get_parent().get_node_or_null(
+		"HeroNamePlate"
+	) as Panel
+	if hero_name_plate == null:
+		hero_name_plate = Panel.new()
+		hero_name_plate.name = "HeroNamePlate"
+		hero_name_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hero_name_plate.anchor_left = 0.22
+		hero_name_plate.anchor_top = 0.545
+		hero_name_plate.anchor_right = 0.78
+		hero_name_plate.anchor_bottom = 0.625
+		hero_name_plate.add_theme_stylebox_override(
+			"panel",
+			_make_hud_panel_style(
+				Color(0.05, 0.035, 0.07, 0.94),
+				Color(0.78, 0.56, 0.23, 0.96),
+				2,
+				8
+			)
+		)
+		hero_name_label.get_parent().add_child(hero_name_plate)
+		hero_name_label.get_parent().move_child(hero_name_plate, 1)
+
+	hero_name_label.anchor_left = 0.18
+	hero_name_label.anchor_top = 0.548
+	hero_name_label.anchor_right = 0.82
+	hero_name_label.anchor_bottom = 0.625
+	hero_name_label.z_index = 3
 
 	if portrait_inner != null:
 		var portrait_backdrop := portrait_inner.get_node_or_null("PortraitBackdrop") as TextureRect
@@ -934,7 +987,7 @@ func _install_stage_entry_hud() -> void:
 				portrait_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 				portrait_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 				portrait_backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-				portrait_backdrop.modulate = Color(0.46, 0.32, 0.56, 0.52)
+				portrait_backdrop.modulate = Color(0.62, 0.48, 0.72, 0.66)
 				portrait_backdrop.set_anchors_and_offsets_preset(
 					Control.PRESET_FULL_RECT
 				)
@@ -945,10 +998,10 @@ func _install_stage_entry_hud() -> void:
 	portrait_placeholder.z_index = 2
 	portrait_badge.z_index = 2
 
-	bottom_panel.anchor_left = 0.075
-	bottom_panel.anchor_top = 0.68
-	bottom_panel.anchor_right = 0.925
-	bottom_panel.anchor_bottom = 0.935
+	bottom_panel.anchor_left = 0.055
+	bottom_panel.anchor_top = 0.635
+	bottom_panel.anchor_right = 0.945
+	bottom_panel.anchor_bottom = 0.955
 
 	var description_backing := bottom_panel.get_node_or_null(
 		"DescriptionBacking"
@@ -960,7 +1013,7 @@ func _install_stage_entry_hud() -> void:
 		description_backing.anchor_left = 0.0
 		description_backing.anchor_top = 0.0
 		description_backing.anchor_right = 1.0
-		description_backing.anchor_bottom = 0.34
+		description_backing.anchor_bottom = 0.36
 		description_backing.add_theme_stylebox_override(
 			"panel",
 			_make_hud_panel_style(
@@ -979,9 +1032,9 @@ func _install_stage_entry_hud() -> void:
 		info_backing.name = "EntryInfoBacking"
 		info_backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		info_backing.anchor_left = 0.0
-		info_backing.anchor_top = 0.39
+		info_backing.anchor_top = 0.40
 		info_backing.anchor_right = 1.0
-		info_backing.anchor_bottom = 0.66
+		info_backing.anchor_bottom = 0.70
 		info_backing.add_theme_stylebox_override(
 			"panel",
 			_make_hud_panel_style(
@@ -1006,23 +1059,23 @@ func _install_stage_entry_hud() -> void:
 			divider.offset_right = 1.0
 			info_backing.add_child(divider)
 
-	stage_description_label.anchor_left = 0.04
-	stage_description_label.anchor_top = 0.03
-	stage_description_label.anchor_right = 0.96
-	stage_description_label.anchor_bottom = 0.31
+	stage_description_label.anchor_left = 0.045
+	stage_description_label.anchor_top = 0.025
+	stage_description_label.anchor_right = 0.955
+	stage_description_label.anchor_bottom = 0.335
 	stage_description_label.offset_left = 0.0
 	stage_description_label.offset_top = 0.0
 	stage_description_label.offset_right = 0.0
 	stage_description_label.offset_bottom = 0.0
 
-	stage_status_label.anchor_left = 0.02
-	stage_status_label.anchor_top = 0.40
+	stage_status_label.anchor_left = 0.015
+	stage_status_label.anchor_top = 0.405
 	stage_status_label.anchor_right = 0.325
-	stage_status_label.anchor_bottom = 0.65
+	stage_status_label.anchor_bottom = 0.695
 	stage_reward_label.anchor_left = 0.345
-	stage_reward_label.anchor_top = 0.40
+	stage_reward_label.anchor_top = 0.405
 	stage_reward_label.anchor_right = 0.655
-	stage_reward_label.anchor_bottom = 0.65
+	stage_reward_label.anchor_bottom = 0.695
 
 	var repeat_label := bottom_panel.get_node_or_null("RepeatReward") as Label
 	if repeat_label == null:
@@ -1030,24 +1083,24 @@ func _install_stage_entry_hud() -> void:
 		repeat_label.name = "RepeatReward"
 		repeat_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		repeat_label.anchor_left = 0.675
-		repeat_label.anchor_top = 0.40
-		repeat_label.anchor_right = 0.98
-		repeat_label.anchor_bottom = 0.65
+		repeat_label.anchor_top = 0.405
+		repeat_label.anchor_right = 0.985
+		repeat_label.anchor_bottom = 0.695
 		repeat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		repeat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		repeat_label.add_theme_font_size_override("font_size", 20)
 		repeat_label.add_theme_color_override("font_color", Color("d7c8df"))
 		bottom_panel.add_child(repeat_label)
 
-	enter_stage_button.anchor_left = 0.05
-	enter_stage_button.anchor_top = 0.72
-	enter_stage_button.anchor_right = 0.95
-	enter_stage_button.anchor_bottom = 0.98
-	enter_stage_button.custom_minimum_size = Vector2(0.0, 70.0)
+	enter_stage_button.anchor_left = 0.04
+	enter_stage_button.anchor_top = 0.745
+	enter_stage_button.anchor_right = 0.96
+	enter_stage_button.anchor_bottom = 0.985
+	enter_stage_button.custom_minimum_size = Vector2(0.0, 82.0)
 
-	stage_description_label.add_theme_font_size_override("font_size", 22)
-	stage_status_label.add_theme_font_size_override("font_size", 20)
-	stage_reward_label.add_theme_font_size_override("font_size", 20)
+	stage_description_label.add_theme_font_size_override("font_size", 23)
+	stage_status_label.add_theme_font_size_override("font_size", 21)
+	stage_reward_label.add_theme_font_size_override("font_size", 21)
 	stage_status_label.add_theme_color_override("font_color", Color("ded3e4"))
 	stage_reward_label.add_theme_color_override("font_color", Color("f0cb68"))
 
@@ -1061,8 +1114,8 @@ func _apply_lobby_visual_polish() -> void:
 
 	var background := $Background as ColorRect
 	var backdrop_glow := $BackdropGlow as ColorRect
-	background.color = Color(0.025, 0.018, 0.04, 0.72)
-	backdrop_glow.color = Color(0.16, 0.07, 0.23, 0.18)
+	background.color = Color(0.025, 0.018, 0.04, 0.50)
+	backdrop_glow.color = Color(0.19, 0.08, 0.28, 0.14)
 	backdrop_glow.anchor_bottom = 0.72
 
 	var safe_area := $SafeArea as MarginContainer
@@ -1099,11 +1152,11 @@ func _apply_lobby_visual_polish() -> void:
 		23,
 		Color("9f91aa")
 	)
-	stage_number_label.add_theme_font_size_override("font_size", 28)
+	stage_number_label.add_theme_font_size_override("font_size", 26)
 	stage_number_label.add_theme_color_override("font_color", Color("e2b85c"))
-	stage_name_label.add_theme_font_size_override("font_size", 38)
+	stage_name_label.add_theme_font_size_override("font_size", 40)
 	stage_name_label.add_theme_color_override("font_color", Color("fff6e5"))
-	hero_name_label.add_theme_font_size_override("font_size", 34)
+	hero_name_label.add_theme_font_size_override("font_size", 30)
 	hero_name_label.add_theme_color_override("font_color", Color("f2d486"))
 	stage_description_label.add_theme_font_size_override("font_size", 24)
 	stage_description_label.add_theme_color_override("font_color", Color("e6dfe9"))
