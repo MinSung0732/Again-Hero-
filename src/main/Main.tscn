@@ -11,8 +11,11 @@
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/stage_panel.svg" id="9_stage"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/timer_panel.svg" id="10_timer"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/hero_status_panel.svg" id="11_hero_status"]
-[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/side_button.svg" id="12_side"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/menu_button.svg" id="12_menu"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/ultimate_panel.svg" id="13_ultimate"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/monster_button.svg" id="16_monster"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/detail_button.svg" id="17_detail"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/hero_button.svg" id="18_hero"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/auto_bar.svg" id="14_auto"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/summon_card.svg" id="15_card"]
 
@@ -63,8 +66,22 @@ bg_color = Color(0.08, 0.55, 1, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_ultimate_fill"]
 bg_color = Color(1, 0.55, 0.03, 1)
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_side"]
-texture = ExtResource("12_side")
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_menu"]
+texture = ExtResource("12_menu")
+texture_margin_left = 24.0
+texture_margin_top = 20.0
+texture_margin_right = 24.0
+texture_margin_bottom = 20.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_detail"]
+texture = ExtResource("17_detail")
+texture_margin_left = 24.0
+texture_margin_top = 20.0
+texture_margin_right = 24.0
+texture_margin_bottom = 20.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_hero_button"]
+texture = ExtResource("18_hero")
 texture_margin_left = 24.0
 texture_margin_top = 20.0
 texture_margin_right = 24.0
@@ -368,10 +385,10 @@ offset_right = 1050.0
 offset_bottom = 204.0
 theme_override_colors/font_color = Color(0.96, 0.92, 0.86, 1)
 theme_override_font_sizes/font_size = 27
-theme_override_styles/normal = SubResource("StyleBoxTexture_side")
-theme_override_styles/hover = SubResource("StyleBoxTexture_side")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_side")
-text = "☰   메뉴"
+theme_override_styles/normal = SubResource("StyleBoxTexture_menu")
+theme_override_styles/hover = SubResource("StyleBoxTexture_menu")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_menu")
+text = "메뉴"
 
 [node name="MonsterFrame" type="TextureRect" parent="HUD/TopBar"]
 offset_left = 790.0
@@ -379,7 +396,7 @@ offset_top = 210.0
 offset_right = 1050.0
 offset_bottom = 288.0
 mouse_filter = 2
-texture = ExtResource("12_side")
+texture = ExtResource("16_monster")
 expand_mode = 1
 stretch_mode = 0
 texture_filter = 1
@@ -393,7 +410,7 @@ theme_override_colors/font_color = Color(0.96, 0.92, 0.95, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 31
-text = "☠  몬스터 0"
+text = "몬스터 0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -689,10 +706,10 @@ offset_right = -10.0
 offset_bottom = 404.0
 grow_horizontal = 0
 theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("StyleBoxTexture_side")
-theme_override_styles/hover = SubResource("StyleBoxTexture_side")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_side")
-text = "▤  상세정보"
+theme_override_styles/normal = SubResource("StyleBoxTexture_detail")
+theme_override_styles/hover = SubResource("StyleBoxTexture_detail")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_detail")
+text = "상세정보"
 focus_mode = 0
 mouse_filter = 0
 
@@ -707,10 +724,10 @@ offset_right = -10.0
 offset_bottom = 492.0
 grow_horizontal = 0
 theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("StyleBoxTexture_side")
-theme_override_styles/hover = SubResource("StyleBoxTexture_side")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_side")
-text = "♟  용사정보"
+theme_override_styles/normal = SubResource("StyleBoxTexture_hero_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_hero_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_hero_button")
+text = "용사정보"
 focus_mode = 0
 mouse_filter = 0
 

@@ -4,4 +4,5 @@
 <polygon points="13,3 247,3 257,13 257,65 247,75 13,75 3,65 3,13" fill="#08091b" stroke="#ffb52a" stroke-width="5"/>
 <polygon points="22,12 238,12 248,21 248,57 238,66 22,66 12,57 12,21" fill="#11102a" stroke="#592479" stroke-width="3"/>
 <path d="M14 22 H29 V11 M246 22 H231 V11 M14 56 H29 V67 M246 56 H231 V67" fill="none" stroke="#ffd052" stroke-width="3"/>
+<path d="M30 19 H58 V57 H30 Z" fill="#ffd25b" stroke="#a85c13" stroke-width="3"/><path d="M36 28 H52 M36 36 H52 M36 44 H49" stroke="#6d3a12" stroke-width="3"/><path d="M25 24 L30 19 V57 L25 52 Z" fill="#e49b22"/>
 </g></svg>

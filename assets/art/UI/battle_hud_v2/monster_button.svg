@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="78" viewBox="0 0 260 78">
+<g shape-rendering="crispEdges">
+<polygon points="13,3 247,3 257,13 257,65 247,75 13,75 3,65 3,13" fill="#08091b" stroke="#ffb52a" stroke-width="5"/>
+<polygon points="22,12 238,12 248,21 248,57 238,66 22,66 12,57 12,21" fill="#11102a" stroke="#592479" stroke-width="3"/>
+<path d="M14 22 H29 V11 M246 22 H231 V11 M14 56 H29 V67 M246 56 H231 V67" fill="none" stroke="#ffd052" stroke-width="3"/>
+<path d="M28 28 L34 18 L43 23 L52 18 L58 28 V45 L53 54 H33 L28 45 Z" fill="#f1eff8" stroke="#7d6d91" stroke-width="2"/><rect x="34" y="34" width="7" height="7" fill="#111226"/><rect x="46" y="34" width="7" height="7" fill="#111226"/><path d="M39 47 H47" stroke="#111226" stroke-width="3"/>
+</g></svg>

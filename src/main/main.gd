@@ -73,7 +73,7 @@ const CAMERA_DRAG_THRESHOLD := 12.0
 @onready var demon_exp_bar: ProgressBar = $HUD/BottomBar/DemonExpBar
 @onready var command_label: Label = $HUD/BottomBar/CommandLabel
 @onready var command_bar: ProgressBar = $HUD/BottomBar/CommandBar
-@onready var demon_ultimate_panel: ColorRect = $HUD/DemonUltimatePanel
+@onready var demon_ultimate_panel: Control = $HUD/DemonUltimatePanel
 @onready var demon_ultimate_label: Label = $HUD/DemonUltimatePanel/UltimateLabel
 @onready var demon_ultimate_bar: ProgressBar = $HUD/DemonUltimatePanel/UltimateBar
 @onready var demon_ultimate_1: Button = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate1
@@ -1194,7 +1194,7 @@ func _on_stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int) -> vo
 	hero_hp_bar.max_value = maxf(float(hero_max_hp), 1.0)
 	hero_hp_bar.value = float(hero_hp)
 	hero_hp_label.text = "HP %d / %d" % [hero_hp, hero_max_hp]
-	monsters_label.text = "☠  몬스터 %d" % monsters_left
+	monsters_label.text = "몬스터 %d" % monsters_left
 	hero_bgm_manager.update_hero_hp(hero_hp, hero_max_hp)
 	if hero_info_panel.visible:
 		_refresh_hero_info_panel()
