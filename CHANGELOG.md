@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2026-09-30 — 전투 HUD V2 카드/타이포 마감
+- 모바일 실기기 스크린샷 기준으로 상단 로고, Stage, 타이머, 용사명, 필살기, 자동배치 영역의 폰트 크기를 낮추고 clip_text를 적용해 프레임 밖 글자 침범을 제거.
+- 소환 카드에서 Button.icon 사용을 제거하고 슬롯별 TextureRect/Name/Cost 레이어로 분리해 몬스터 원본 이미지 비율에 관계없이 안정적으로 표시.
+- 몬스터 아이콘은 MonsterCatalog.card_icon_path를 읽은 뒤 투명 여백을 자동 crop한 AtlasTexture를 캐시하여 사용.
+- 슬롯은 Slime/Spider/Orc 고정 노드가 아니라 Slot1~Slot3로 일반화. 현재 팀편성 battle_loadout_ids 순서대로 ID/아이콘/이름/비용을 그리므로 폭탄쥐 및 이후 추가 몬스터도 카탈로그에 card_icon_path만 있으면 별도 HUD 코드 수정 없이 표시.
+- 몬스터 상세정보 초상화도 동일한 정규화 아이콘 로더를 공유하도록 통일.
+
+
 ## 2026-09-30 — 전투 HUD V2 전면 재정립
 - 이전 battle-ui-polish 시안에서 발생한 프레임 압축/폰트 겹침/비율 붕괴를 제거하기 위해 Main.tscn을 main 기준으로 다시 구성.
 - 1080x1920 전용 고정 비율 SVG HUD 에셋 8종을 assets/art/UI/battle_hud_v2/에 신규 제작.
