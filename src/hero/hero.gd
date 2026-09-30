@@ -8157,7 +8157,7 @@ func _fire_sage_projectile(current_target: Node2D) -> void:
 	var shot_damage := attack_damage
 	var shot_speed := maxf(float(sage_config.get("basic_projectile_speed", 800.0)), 1.0)
 	var shot_range := maxf(float(sage_config.get("basic_range", 650.0)), 1.0)
-	var diameter := 44.0
+	var diameter := 26.4 # Stage 10 basic projectile hit size: 40% smaller than the previous 44px.
 	var projectile_mode := 0
 	if is_piercing:
 		projectile_mode = 1
@@ -16829,6 +16829,10 @@ func _draw() -> void:
 		resource_bar_y = -100.0
 		hp_bar_y = -85.0
 		shield_bar_y = -70.0
+	elif hero_archetype == "grand_sage_astra":
+		# Astra can gain a temporary post-phase shield. Put that bar above the
+		# yellow gauge and HP bar so it never crosses the Stage 10 sprite.
+		shield_bar_y = -94.0
 	var bar_left_x := -bar_width / 2.0 + bar_x_offset
 	if hero_archetype == "pistol_gunner":
 		var gap := 2.0

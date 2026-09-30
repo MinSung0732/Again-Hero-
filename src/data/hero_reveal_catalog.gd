@@ -16,7 +16,7 @@ const DATA := {
 	"sage_astra": {
 		"identity_id": "returning_magic_hero",
 		"true_name": "아스트라",
-		"portrait_path": "res://assets/art/heroes/stage10_sage/cutscene/stage10_hero_cutscene.png",
+		"portrait_path": "res://assets/art/heroes/portrait/stage10_hero_portrait.png",
 	},
 }
 

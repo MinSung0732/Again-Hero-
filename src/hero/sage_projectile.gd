@@ -16,6 +16,8 @@ const PIERCING_EXPIRE_FPS := 15.0
 
 static var _basic_frames_cache: SpriteFrames
 static var _piercing_frames_cache: SpriteFrames
+static var _chest_nodes_cache: Array = []
+static var _chest_nodes_cache_physics_frame: int = -1
 
 var direction: Vector2 = Vector2.RIGHT
 var damage: int = 1
@@ -74,9 +76,12 @@ func setup(
 func _physics_process(delta: float) -> void:
 	if not active:
 		return
+	var previous_position := global_position
 	var travel_step := speed * delta
 	global_position += direction * travel_step
 	traveled_distance += travel_step
+	if _check_chest_sweep(previous_position, global_position):
+		return
 	if projectile_mode == ProjectileMode.PIERCING:
 		var expire_duration := 5.0 / PIERCING_EXPIRE_FPS
 		var expire_start := maxf(max_range - speed * expire_duration, 0.0)
@@ -92,14 +97,53 @@ func _physics_process(delta: float) -> void:
 		_finish_projectile()
 
 
+func _get_chest_nodes_cached() -> Array:
+	var physics_frame := Engine.get_physics_frames()
+	if physics_frame != _chest_nodes_cache_physics_frame:
+		_chest_nodes_cache = get_tree().get_nodes_in_group("treasure_chests")
+		_chest_nodes_cache_physics_frame = physics_frame
+	return _chest_nodes_cache
+
+
+func _check_chest_sweep(from_position: Vector2, to_position: Vector2) -> bool:
+	for node in _get_chest_nodes_cached():
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var chest := node as Node2D
+		if chest == null or not chest.has_method("take_damage"):
+			continue
+		var sweep_radius := maxf(36.0, visual_diameter * 0.5)
+		if _distance_squared_to_segment(chest.global_position, from_position, to_position) > sweep_radius * sweep_radius:
+			continue
+		if not _try_hit_target(chest):
+			continue
+		# Piercing shots continue through chests just like monsters; the basic
+		# shot stops and plays its normal impact animation.
+		return projectile_mode == ProjectileMode.BASIC
+	return false
+
+
+func _distance_squared_to_segment(point: Vector2, a: Vector2, b: Vector2) -> float:
+	var segment := b - a
+	var length_sq := segment.length_squared()
+	if length_sq <= 0.001:
+		return point.distance_squared_to(a)
+	var t := clampf((point - a).dot(segment) / length_sq, 0.0, 1.0)
+	return point.distance_squared_to(a + segment * t)
+
+
 func _on_body_entered(body: Node) -> void:
+	_try_hit_target(body)
+
+
+func _try_hit_target(body: Node) -> bool:
 	if not active or body == null or body.is_queued_for_deletion():
-		return
+		return false
 	if not (body.is_in_group("monsters") or body.is_in_group("treasure_chests")) or not body.has_method("take_damage"):
-		return
+		return false
 	var instance_id := body.get_instance_id()
 	if hit_ids.has(instance_id):
-		return
+		return false
 	hit_ids[instance_id] = true
 	body.call("take_damage", damage)
 	if projectile_mode == ProjectileMode.BASIC:
@@ -107,6 +151,7 @@ func _on_body_entered(body: Node) -> void:
 		monitoring = false
 		projectile_sprite.stop()
 		projectile_sprite.play(&"impact")
+	return true
 
 
 func _begin_piercing_expire() -> void:
@@ -171,7 +216,9 @@ func _apply_visual() -> void:
 	projectile_sprite.visible = true
 	projectile_sprite.scale = Vector2.ONE
 	if projectile_mode == ProjectileMode.PIERCING:
-		_fit_piercing_visual(visual_diameter)
+		_fit_piercing_visual(visual_diameter * 1.50)
+	else:
+		projectile_sprite.scale = Vector2.ONE * 0.60
 	projectile_sprite.play(&"launch")
 
 
