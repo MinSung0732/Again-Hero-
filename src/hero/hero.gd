@@ -164,6 +164,11 @@ const HERO_ANIMATION_DUPLICATE_RESTART_GUARD_MSEC := 70
 # Demon Castle hard-boundary layer. Astra phase may ignore monsters/decor,
 # but must still collide with structural arena boundaries such as the top wall.
 const SAGE_PHASE_BOUNDARY_COLLISION_MASK := 1 << 3
+const HERO_DECOR_COLLISION_LAYER := 1 << 2
+const OBSTACLE_STUCK_TRIGGER_SECONDS := 0.30
+const OBSTACLE_ESCAPE_SECONDS := 0.65
+const OBSTACLE_MIN_INTENDED_SPEED := 36.0
+const OBSTACLE_STUCK_PROGRESS_RATIO := 0.26
 
 static var _archmage_fx_frames_cache: Dictionary = {}
 static var _purifier_protection_frames_cache: SpriteFrames
@@ -646,6 +651,10 @@ var combat_strafe_burst_timer: float = 0.0
 var combat_strafe_cooldown_timer: float = 0.0
 var wander_target: Vector2 = Vector2.ZERO
 var wander_timer: float = 0.0
+var obstacle_stuck_timer: float = 0.0
+var obstacle_escape_timer: float = 0.0
+var obstacle_escape_direction: Vector2 = Vector2.ZERO
+var obstacle_escape_side: float = 1.0
 var facing_candidate_sign: int = 0
 var facing_candidate_timer: float = 0.0
 
@@ -761,6 +770,10 @@ func configure_profile(profile: Dictionary) -> void:
 	magnet_item_steering_direction = Vector2.ZERO
 	exp_orb_target = null
 	exp_orb_retarget_until_msec = 0
+	obstacle_stuck_timer = 0.0
+	obstacle_escape_timer = 0.0
+	obstacle_escape_direction = Vector2.ZERO
+	obstacle_escape_side = 1.0 if randf() >= 0.5 else -1.0
 	var profile_fighter_basic = profile.get("fighter_basic", {})
 	fighter_basic_config = (
 		profile_fighter_basic.duplicate(true)
@@ -1601,7 +1614,7 @@ func _physics_process(delta: float) -> void:
 		* move_multiplier
 		* _get_purifier_move_speed_multiplier()
 	)
-	move_and_slide()
+	_move_and_slide_with_obstacle_escape()
 	_clamp_to_battlefield()
 
 	if distance <= attack_range and attack_timer <= 0.0:
@@ -1950,7 +1963,7 @@ func _physics_process_summoner(delta: float) -> void:
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	move_direction = _apply_ranged_boundary_escape(move_direction)
 	velocity = move_direction * move_speed * move_multiplier
-	move_and_slide()
+	_move_and_slide_with_obstacle_escape()
 	_clamp_to_battlefield()
 
 	if distance <= attack_range and attack_timer <= 0.0:
@@ -2808,7 +2821,7 @@ func _physics_process_alchemist(delta: float) -> void:
 						).normalized()
 			recovery_direction = _apply_ranged_boundary_escape(recovery_direction)
 			velocity = recovery_direction * alchemist_move_speed * move_multiplier
-			move_and_slide()
+			_move_and_slide_with_obstacle_escape()
 			_clamp_to_battlefield()
 			_update_alchemist_pose_visual(delta)
 			return
@@ -2833,7 +2846,7 @@ func _physics_process_alchemist(delta: float) -> void:
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	move_direction = _apply_ranged_boundary_escape(move_direction)
 	velocity = move_direction * alchemist_move_speed * move_multiplier
-	move_and_slide()
+	_move_and_slide_with_obstacle_escape()
 	_clamp_to_battlefield()
 
 	if (
@@ -3636,7 +3649,7 @@ func _move_alchemist_philosopher_form(delta: float) -> void:
 		* move_multiplier
 	)
 	velocity = desired.normalized() * speed
-	move_and_slide()
+	_move_and_slide_with_obstacle_escape()
 	_clamp_to_battlefield()
 	_update_alchemist_poison_trail(delta)
 
@@ -4782,7 +4795,7 @@ func _physics_process_gunner(delta: float) -> void:
 	move_direction = _apply_gunner_boundary_steering(move_direction)
 	var gunner_speed_scale := 1.0 + (gunner_reload_move_speed_bonus if gunner_reloading else 0.0)
 	velocity = move_direction * move_speed * move_multiplier * gunner_speed_scale
-	move_and_slide()
+	_move_and_slide_with_obstacle_escape()
 	_clamp_to_battlefield()
 
 	if _gunner_should_start_deadeye():
@@ -5357,7 +5370,7 @@ func _update_gunner_deadeye(delta: float) -> void:
 	var speed_bonus := maxf(float(gunner_config.get("deadeye_move_speed_multiplier", 1.30)), 1.0)
 	var deadeye_move_direction := _apply_gunner_boundary_steering(gunner_deadeye_direction)
 	velocity = deadeye_move_direction * move_speed * move_multiplier * speed_bonus
-	move_and_slide()
+	_move_and_slide_with_obstacle_escape()
 	_clamp_to_battlefield()
 	gunner_deadeye_shot_timer = maxf(gunner_deadeye_shot_timer - delta, 0.0)
 	if gunner_deadeye_shot_timer <= 0.0 and gunner_deadeye_shots_left > 0:
@@ -5514,7 +5527,7 @@ func _physics_process_rogue(delta: float) -> void:
 			* move_multiplier
 			* speed_scale
 		)
-		move_and_slide()
+		_move_and_slide_with_obstacle_escape()
 		_clamp_to_battlefield()
 	else:
 		velocity = Vector2.ZERO
@@ -7455,7 +7468,7 @@ func _move_without_monsters() -> void:
 		if heal_direction.length_squared() > 0.01:
 			heal_direction = _apply_ranged_boundary_escape(heal_direction)
 			velocity = heal_direction * current_move_speed * 0.90 * move_multiplier
-			move_and_slide()
+			_move_and_slide_with_obstacle_escape()
 			_clamp_to_battlefield()
 			return
 
@@ -7472,7 +7485,7 @@ func _move_without_monsters() -> void:
 				* 0.82
 				* move_multiplier
 			)
-			move_and_slide()
+			_move_and_slide_with_obstacle_escape()
 			_clamp_to_battlefield()
 			return
 
@@ -7487,7 +7500,7 @@ func _move_without_monsters() -> void:
 				if chest_direction.length_squared() > 0.01:
 					chest_direction = _apply_ranged_boundary_escape(chest_direction)
 					velocity = chest_direction * current_move_speed * 0.72 * move_multiplier
-					move_and_slide()
+					_move_and_slide_with_obstacle_escape()
 					_clamp_to_battlefield()
 			else:
 				velocity = Vector2.ZERO
@@ -7502,7 +7515,7 @@ func _move_without_monsters() -> void:
 		if chest_direction.length_squared() > 0.01:
 			chest_direction = _apply_ranged_boundary_escape(chest_direction)
 			velocity = chest_direction * current_move_speed * 0.72 * move_multiplier
-			move_and_slide()
+			_move_and_slide_with_obstacle_escape()
 			_clamp_to_battlefield()
 			if (
 				global_position.distance_squared_to(chest_target.global_position)
@@ -7518,7 +7531,7 @@ func _move_without_monsters() -> void:
 		var exp_direction := global_position.direction_to(nearest_exp_orb.global_position)
 		exp_direction = _apply_ranged_boundary_escape(exp_direction)
 		velocity = exp_direction * current_move_speed * 0.90 * move_multiplier
-		move_and_slide()
+		_move_and_slide_with_obstacle_escape()
 		_clamp_to_battlefield()
 		return
 
@@ -7532,7 +7545,7 @@ func _move_without_monsters() -> void:
 	var direction := position.direction_to(wander_target)
 	direction = _apply_ranged_boundary_escape(direction)
 	velocity = direction * current_move_speed * 0.72 * move_multiplier
-	move_and_slide()
+	_move_and_slide_with_obstacle_escape()
 	_clamp_to_battlefield()
 
 func _find_nearest_exp_orb() -> Node2D:
@@ -7782,6 +7795,151 @@ func _apply_ranged_boundary_escape(
 	if desired.length_squared() <= 0.01:
 		return center_direction.normalized()
 	return desired.normalized()
+
+
+func _move_and_slide_with_obstacle_escape() -> void:
+	var intended_velocity := velocity
+	var intended_speed := intended_velocity.length()
+	var delta := maxf(float(get_physics_process_delta_time()), 0.001)
+
+	obstacle_escape_timer = maxf(
+		obstacle_escape_timer - delta,
+		0.0
+	)
+	if (
+		obstacle_escape_timer > 0.0
+		and intended_speed >= OBSTACLE_MIN_INTENDED_SPEED
+		and obstacle_escape_direction.length_squared() > 0.01
+	):
+		# Keep most of the temporary tangent escape, but retain some of the
+		# original AI intent so the detour naturally bends back toward its goal.
+		var intended_direction := intended_velocity / intended_speed
+		var blended_direction := (
+			obstacle_escape_direction * 0.88
+			+ intended_direction * 0.32
+		)
+		if blended_direction.length_squared() > 0.01:
+			velocity = blended_direction.normalized() * intended_speed
+
+	var movement_start := global_position
+	move_and_slide()
+	var moved_distance := global_position.distance_to(movement_start)
+
+	if intended_speed < OBSTACLE_MIN_INTENDED_SPEED:
+		obstacle_stuck_timer = 0.0
+		return
+
+	var intended_direction := intended_velocity / intended_speed
+	var decor_normal := _get_blocking_decor_normal(
+		intended_direction
+	)
+	if decor_normal.length_squared() <= 0.01:
+		obstacle_stuck_timer = 0.0
+		return
+
+	var expected_distance := intended_speed * delta
+	var minimum_progress := maxf(
+		expected_distance * OBSTACLE_STUCK_PROGRESS_RATIO,
+		1.25
+	)
+	if moved_distance > minimum_progress:
+		obstacle_stuck_timer = 0.0
+		return
+
+	obstacle_stuck_timer += delta
+	if obstacle_stuck_timer < OBSTACLE_STUCK_TRIGGER_SECONDS:
+		return
+
+	_start_obstacle_escape(decor_normal, intended_direction)
+	obstacle_stuck_timer = 0.0
+
+
+func _get_blocking_decor_normal(
+	intended_direction: Vector2
+) -> Vector2:
+	var best_normal := Vector2.ZERO
+	var best_block_score := 0.0
+	var collision_count := get_slide_collision_count()
+	for collision_index in range(collision_count):
+		var collision := get_slide_collision(collision_index)
+		if collision == null:
+			continue
+		var collider := collision.get_collider() as CollisionObject2D
+		if collider == null:
+			continue
+		if (
+			int(collider.collision_layer)
+			& HERO_DECOR_COLLISION_LAYER
+		) == 0:
+			continue
+
+		var normal := collision.get_normal()
+		if normal.length_squared() <= 0.01:
+			continue
+		normal = normal.normalized()
+		var block_score := maxf(
+			-intended_direction.dot(normal),
+			0.0
+		)
+		if block_score > best_block_score:
+			best_block_score = block_score
+			best_normal = normal
+
+	return best_normal
+
+
+func _start_obstacle_escape(
+	blocking_normal: Vector2,
+	intended_direction: Vector2
+) -> void:
+	var safe_normal := blocking_normal.normalized()
+	if safe_normal.length_squared() <= 0.01:
+		return
+
+	var tangent := Vector2(-safe_normal.y, safe_normal.x)
+	var center_direction := global_position.direction_to(
+		battlefield_size * 0.5
+	)
+	var candidate_a := (
+		tangent * 0.88
+		+ safe_normal * 0.48
+		+ intended_direction * 0.18
+	).normalized()
+	var candidate_b := (
+		-tangent * 0.88
+		+ safe_normal * 0.48
+		+ intended_direction * 0.18
+	).normalized()
+
+	# Prefer the side that does not drag the hero toward the outer map edge.
+	# If both are similarly good, alternate sides between stuck incidents so a
+	# concave prop/corner cannot trap the AI in the same failed choice forever.
+	var score_a := candidate_a.dot(center_direction) * 0.72
+	var score_b := candidate_b.dot(center_direction) * 0.72
+	score_a += candidate_a.dot(intended_direction) * 0.28
+	score_b += candidate_b.dot(intended_direction) * 0.28
+
+	if absf(score_a - score_b) <= 0.08:
+		obstacle_escape_direction = (
+			candidate_a
+			if obstacle_escape_side >= 0.0
+			else candidate_b
+		)
+		obstacle_escape_side *= -1.0
+	elif score_a > score_b:
+		obstacle_escape_direction = candidate_a
+	else:
+		obstacle_escape_direction = candidate_b
+
+	obstacle_escape_timer = OBSTACLE_ESCAPE_SECONDS
+	# Also break the current combat strafe choice. Otherwise a ranged hero can
+	# immediately request the exact same blocked lateral direction again.
+	strafe_sign *= -1.0
+	combat_strafe_burst_timer = 0.0
+	combat_strafe_cooldown_timer = minf(
+		combat_strafe_cooldown_timer,
+		0.16
+	)
 
 
 func _clamp_to_battlefield() -> void:
@@ -15397,7 +15555,7 @@ func _physics_process_berserker(delta: float) -> void:
 
 	if move_direction.length_squared() > 0.01:
 		velocity = move_direction * move_speed * move_multiplier
-		move_and_slide()
+		_move_and_slide_with_obstacle_escape()
 		_clamp_to_battlefield()
 	else:
 		velocity = Vector2.ZERO
@@ -17078,7 +17236,7 @@ func _physics_process_fighter(delta: float) -> void:
 			* move_multiplier
 			* guard_move_scale
 		)
-		move_and_slide()
+		_move_and_slide_with_obstacle_escape()
 		_clamp_to_battlefield()
 	else:
 		velocity = Vector2.ZERO
@@ -17373,7 +17531,7 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 				* move_multiplier
 				* speed_scale
 			)
-			move_and_slide()
+			_move_and_slide_with_obstacle_escape()
 			_clamp_to_battlefield()
 			return
 
@@ -17390,7 +17548,7 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 				* move_multiplier
 				* speed_scale
 			)
-			move_and_slide()
+			_move_and_slide_with_obstacle_escape()
 			_clamp_to_battlefield()
 			return
 
@@ -17404,7 +17562,7 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 				* move_multiplier
 				* speed_scale
 			)
-			move_and_slide()
+			_move_and_slide_with_obstacle_escape()
 			_clamp_to_battlefield()
 			if (
 				global_position.distance_squared_to(chest_target.global_position)
@@ -17425,7 +17583,7 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 			* move_multiplier
 			* speed_scale
 		)
-		move_and_slide()
+		_move_and_slide_with_obstacle_escape()
 		_clamp_to_battlefield()
 		return
 
@@ -17444,7 +17602,7 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 		* move_multiplier
 		* speed_scale
 	)
-	move_and_slide()
+	_move_and_slide_with_obstacle_escape()
 	_clamp_to_battlefield()
 
 func _update_fighter_pose_visual(delta: float) -> void:
