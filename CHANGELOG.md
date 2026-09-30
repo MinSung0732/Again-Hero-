@@ -1,3 +1,9 @@
+### Astra phase upper-wall collision fix
+- Demon Castle 상단 벽을 장식물 충돌 레이어와 분리한 하드 경계 레이어로 이동.
+- 일반 전투에서는 용사/몬스터가 장식물과 상단 경계 모두 충돌.
+- Stage 10 유체화는 몬스터/장식물 충돌만 무시하고 상단 경계 레이어는 유지하여 윗벽 너머로 진입하지 못함.
+- 기존 외곽 battlefield clamp는 그대로 유지.
+
 ### Hero ground shadow profile tuning
 - 공용 Hero.tscn 그림자(84x28 / Y+43)를 그대로 쓰던 Stage 1, 2, 4, 5, 7, 8 용사에 프로필별 그림자 크기/오프셋/투명도를 추가.
 - Hero 런타임이 `ground_shadow` 프로필을 읽어 공유 GroundShadow 텍스처의 표시 크기만 갱신하므로 추가 텍스처 생성이나 매프레임 작업은 없음.

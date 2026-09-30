@@ -6,6 +6,9 @@ class_name Stage1Battlefield
 const FLOOR_STEP := Vector2(171.0, 175.0)
 const FLOOR_DRAW_SIZE := Vector2(171.0, 175.0)
 const DECOR_COLLISION_LAYER := 1 << 2
+# Layer 4 is reserved for hard castle boundaries that phase/ghost movement
+# must never ignore. Decorative props remain on layer 3.
+const BOUNDARY_COLLISION_LAYER := 1 << 3
 const CARPET_STEP_Y := 154.0
 const PERIMETER_WALL_SCALE := 0.96
 const PERIMETER_WALL_OVERLAP := 44.0
@@ -327,13 +330,14 @@ func _add_depth_prop_visual(
 
 func _add_collision(
 	ground_position: Vector2,
-	size: Vector2
+	size: Vector2,
+	collision_layer_value: int = DECOR_COLLISION_LAYER
 ) -> void:
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
 
 	var body := StaticBody2D.new()
-	body.collision_layer = DECOR_COLLISION_LAYER
+	body.collision_layer = collision_layer_value
 	body.collision_mask = 0
 	# Only the footprint/base blocks movement. The tall upper art is intentionally
 	# non-solid so actors can route behind it and be hidden by Y-sort.
@@ -457,7 +461,8 @@ func _build_top_wall() -> void:
 		Vector2(
 			battlefield_size.x,
 			TOP_WALL_COLLISION_HEIGHT
-		)
+		),
+		BOUNDARY_COLLISION_LAYER
 	)
 
 

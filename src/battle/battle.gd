@@ -602,9 +602,10 @@ func _configure_castle_depth_actor(actor: Node2D, visual_node_name: String) -> v
 	if not _uses_castle_battlefield(current_stage_id) or not is_instance_valid(actor):
 		return
 
-	# Layer 3 is reserved for Demon Castle solid decor footprints.
+	# Layer 3: passable-during-phase castle decor footprints.
+	# Layer 4: hard castle boundaries (the upper wall) that must always block.
 	if actor is CollisionObject2D:
-		(actor as CollisionObject2D).collision_mask |= (1 << 2)
+		(actor as CollisionObject2D).collision_mask |= (1 << 2) | (1 << 3)
 
 	# Battle.y_sort_enabled compares direct children at the same Z. Normalize
 	# only the main body visual; skill/projectile FX keep their own Z layers.

@@ -160,6 +160,9 @@ const HERO_BASE_ATTACK_GROWTH_PER_LEVEL := 0.02
 const HERO_ATTACK_MILESTONE_INTERVAL := 10
 const HERO_ATTACK_MILESTONE_BONUS := 0.05
 const HERO_ANIMATION_DUPLICATE_RESTART_GUARD_MSEC := 70
+# Demon Castle hard-boundary layer. Astra phase may ignore monsters/decor,
+# but must still collide with structural arena boundaries such as the top wall.
+const SAGE_PHASE_BOUNDARY_COLLISION_MASK := 1 << 3
 
 static var _archmage_fx_frames_cache: Dictionary = {}
 static var _purifier_protection_frames_cache: SpriteFrames
@@ -9056,8 +9059,12 @@ func _start_sage_phase() -> void:
 	sage_afterimage_timer = 0.0
 	if sage_saved_collision_mask < 0:
 		sage_saved_collision_mask = collision_mask
-	# Monster/decor collision is ignored; the existing battlefield clamp still keeps the hero inside the outer map.
-	collision_mask = 0
+	# Ignore monsters and decorative obstacles, but preserve hard castle
+	# boundaries so phase cannot cross the upper wall and get trapped behind it.
+	collision_mask = (
+		sage_saved_collision_mask
+		& SAGE_PHASE_BOUNDARY_COLLISION_MASK
+	)
 	_play_sage_audio(sage_phase_audio)
 
 
