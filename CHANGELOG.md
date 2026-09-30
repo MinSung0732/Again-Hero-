@@ -1,3 +1,13 @@
+### Stage 10 Astra Skill 6 — 흑점폭발
+- 마력응축 완성 2회로 `sage_skill_6` 해금 후 자동 적용되는 패시브.
+- 모든 Astra 스킬 피해 +10%. 마력응축 임시 +30%와 가산되어 동시 활성 시 총 +40%.
+- 스킬 1/2/4/5 적중 및 매 3번째 관통 기본공격 적중 시 각각 50% 확률로 피격 위치에 흑점폭발 생성. 일반 기본공격은 제외.
+- effect9 `stage10_effect4_01→08`, 지름 150, 공격력 80% 기반 피해. 폭발 피크에서 Battle 근접 레지스트리를 한 번만 조회.
+- 흑점폭발 자체는 스킬 적중 콜백을 호출하지 않아 재점화/연쇄 발동을 구조적으로 차단.
+- 흑점폭발로 적을 처치할 때마다 현재 HP의 0.5% 회복.
+- 흑점폭발 런타임은 Battle projectile pool로 재사용하며 전투 정지 중 애니메이션/피해/오디오도 정지.
+- 폭발음은 Pixabay "Loud Explosion" — DRAGON-STUDIO 사용.
+
 ### Stage 7 Philosopher's Stone unlock presentation
 - 연금술 재료 20개 달성 시 현자의 돌을 즉시 사용하지 않고 전용 해금 시퀀스를 시작.
 - effect7 `cast_01→04`를 이용한 약 0.55초 해금 이펙트 후 Stage 7 `stage7_hero_cutscene.png`를 공용 SkillUnlockCutscene으로 재생.
