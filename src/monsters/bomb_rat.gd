@@ -49,6 +49,8 @@ var special_augment_configs: Dictionary = {}
 var survival_time: float = 0.0
 var far_ai_tick_timer: float = 0.0
 var cached_direction_to_hero: Vector2 = Vector2.ZERO
+var soft_separation_timer: float = 0.0
+var soft_separation_bias: Vector2 = Vector2.ZERO
 var visual_lod_suspended: bool = false
 var self_destruct_hp_ratio: float = 1.0
 
@@ -56,6 +58,9 @@ func _ready() -> void:
 	add_to_group("monsters")
 	_ensure_hit_flash_material()
 	far_ai_tick_timer = MONSTER_RUNTIME_COMMON.initial_far_navigation_delay()
+	soft_separation_timer = (
+		MONSTER_RUNTIME_COMMON.initial_soft_separation_delay()
+	)
 	current_hp = max_hp
 	exp_reward = hero_kill_exp_reward
 	if not is_instance_valid(hero):
@@ -117,6 +122,21 @@ func _physics_process(delta: float) -> void:
 		_play_locomotion(false)
 		return
 
+	soft_separation_timer = MONSTER_RUNTIME_COMMON.tick_countdown(
+		soft_separation_timer,
+		delta
+	)
+	if soft_separation_timer <= 0.0:
+		soft_separation_bias = (
+			MONSTER_RUNTIME_COMMON.compute_soft_separation_bias(
+				self,
+				combat_authority
+			)
+		)
+		soft_separation_timer = (
+			MONSTER_RUNTIME_COMMON.next_soft_separation_delay()
+		)
+
 	survival_time += delta
 
 	if hit_flash_timer > 0.0:
@@ -168,7 +188,13 @@ func _physics_process(delta: float) -> void:
 		var external_slow := (
 			MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
 		)
-		velocity = direction_to_hero * move_speed * external_slow
+		var move_direction := (
+			MONSTER_RUNTIME_COMMON.blend_soft_separation_direction(
+				direction_to_hero,
+				soft_separation_bias
+			)
+		)
+		velocity = move_direction * move_speed * external_slow
 		_play_locomotion(true)
 		if distance_sq > far_nav_sq:
 			global_position += velocity * delta
