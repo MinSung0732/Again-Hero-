@@ -2261,10 +2261,16 @@ func _refresh_demon_ultimate_buttons() -> void:
 				remaining,
 			]
 		elif ready:
-			if skill_id == "line_assault":
-				button.text = "%s\n마력 %d · 방향 선택" % [button_title, int(round(mana_cost))]
+			if String(skill.get("targeting_mode", "instant")) == "direction":
+				button.text = "%s\n마력 %d · 방향 선택" % [
+					button_title,
+					int(round(mana_cost)),
+				]
 			else:
-				button.text = "%s\n마력 %d · 발동 가능" % [button_title, int(round(mana_cost))]
+				button.text = "%s\n마력 %d · 발동 가능" % [
+					button_title,
+					int(round(mana_cost)),
+				]
 		else:
 			button.text = "%s\n마력 %d 필요" % [button_title, int(round(mana_cost))]
 
@@ -2284,13 +2290,18 @@ func _on_demon_ultimate_pressed(skill_id: String) -> void:
 	if selected_skill.is_empty():
 		return
 	if String(selected_skill.get("targeting_mode", "instant")) == "direction":
-		var skill := DEMON_ULTIMATES.get_skill(skill_id)
-		var mana_cost := maxf(float(skill.get("mana_cost", 40.0)), 0.0)
+		var mana_cost := maxf(
+			float(selected_skill.get("mana_cost", 40.0)),
+			0.0
+		)
+		var skill_name := String(
+			selected_skill.get("name", "방향 필살기")
+		)
 		var ultimate_state: Dictionary = {}
 		if battle.has_method("get_demon_ultimate_hud_state"):
 			var raw_ultimate_state = battle.call(
 				"get_demon_ultimate_hud_state",
-				"line_assault"
+				skill_id
 			)
 			if typeof(raw_ultimate_state) == TYPE_DICTIONARY:
 				ultimate_state = raw_ultimate_state
@@ -2298,16 +2309,22 @@ func _on_demon_ultimate_pressed(skill_id: String) -> void:
 			ultimate_state.get("charge", demon_mana_current)
 		)
 		if current_charge + 0.001 < mana_cost:
-			status_label.text = "마력이 부족합니다. 일직선 공세는 마력 %d가 필요합니다." % int(round(mana_cost))
+			status_label.text = (
+				"마력이 부족합니다. %s은(는) 마력 %d가 필요합니다."
+				% [skill_name, int(round(mana_cost))]
+			)
 			return
 		var remaining := float(
 			ultimate_state.get(
 				"cooldown",
-				demon_ultimate_cooldowns.get("line_assault", 0.0)
+				demon_ultimate_cooldowns.get(skill_id, 0.0)
 			)
 		)
 		if remaining > 0.001:
-			status_label.text = "일직선 공세 쿨타임 %.1f초" % remaining
+			status_label.text = "%s 쿨타임 %.1f초" % [
+				skill_name,
+				remaining,
+			]
 			return
 		_open_demon_direction_select(skill_id)
 		return
