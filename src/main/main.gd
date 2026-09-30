@@ -204,10 +204,11 @@ func _ready() -> void:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
 		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_PORTRAIT)
 
-	# Stage entry begins frozen and silent. The intro sequence owns the handoff
-	# to gameplay so combat AI, cooldowns and the run timer cannot advance early.
+	# Core combat state is initialized before optional menus/settings.
+	# If a secondary UI setup fails, the battle HUD/loadout must still work.
 	battle.set_external_pause(true)
 	hud_layer.visible = false
+
 	stage_intro_cutscene.finished.connect(_on_stage_intro_finished)
 	hero_reveal_cutscene.finished.connect(_on_hero_reveal_finished)
 	hero_reveal_cutscene.bgm_start_requested.connect(
@@ -217,6 +218,22 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_sync_skill_unlock_cutscene_frame)
 	call_deferred("_sync_skill_unlock_cutscene_frame")
 
+	_connect_battle_runtime_signals()
+	_initialize_core_battle_controls()
+
+	var snapshot: Dictionary = battle.get_snapshot()
+	_sync_battle_snapshot_to_hud(snapshot)
+	_begin_stage_entry(snapshot)
+
+	_connect_secondary_battle_ui()
+	call_deferred("_initialize_optional_settings_ui")
+	call_deferred("_warm_touch_hold_frames")
+
+	print("Again, Hero? stage/camera prototype loaded.")
+	print("Finite world camera + persistent stage progression enabled.")
+
+
+func _connect_battle_runtime_signals() -> void:
 	battle.stats_changed.connect(_on_stats_changed)
 	battle.progression_changed.connect(_on_progression_changed)
 	battle.hero_leveled_up.connect(_on_hero_leveled_up)
@@ -241,36 +258,8 @@ func _ready() -> void:
 	battle.run_time_changed.connect(_on_run_time_changed)
 	battle.battle_finished.connect(_on_battle_finished)
 
-	stage_menu_button.pressed.connect(_on_stage_menu_pressed)
-	monster_info_bookmark.pressed.connect(_toggle_monster_info)
-	monster_info_close.pressed.connect(_close_monster_info)
-	hero_info_bookmark.pressed.connect(_toggle_hero_info)
-	hero_info_close.pressed.connect(_close_hero_info)
-	for tab_index in range(monster_info_tabs.size()):
-		monster_info_tabs[tab_index].pressed.connect(
-			_on_monster_info_tab_pressed.bind(tab_index)
-		)
-	pause_resume_button.pressed.connect(_close_pause_menu)
-	pause_restart_button.pressed.connect(_on_pause_restart_pressed)
-	pause_settings_button.pressed.connect(_open_settings_overlay)
-	pause_lobby_button.pressed.connect(_on_lobby_pressed)
 
-	settings_close_button.pressed.connect(_close_settings_overlay)
-	if settings_tabs.get_tab_count() >= 2:
-		settings_tabs.set_tab_title(0, "사운드")
-		settings_tabs.set_tab_title(1, "게임플레이")
-	settings_bgm_slider.value_changed.connect(_on_settings_bgm_level_changed)
-	settings_sfx_slider.value_changed.connect(_on_settings_sfx_level_changed)
-	settings_bgm_mute.toggled.connect(_on_settings_bgm_mute_toggled)
-	settings_sfx_mute.toggled.connect(_on_settings_sfx_mute_toggled)
-	settings_camera_lock.toggled.connect(_on_settings_camera_lock_toggled)
-	_load_gameplay_settings()
-	_sync_audio_settings_ui()
-	_sync_gameplay_settings_ui()
-	_apply_camera_view_mode()
-
-	placement_toggle.toggled.connect(_on_placement_mode_toggled)
-
+func _initialize_core_battle_controls() -> void:
 	summon_slot_buttons = [
 		summon_slot_1,
 		summon_slot_2,
@@ -291,8 +280,11 @@ func _ready() -> void:
 		summon_slot_cost_2,
 		summon_slot_cost_3,
 	]
+
 	_load_battle_loadout()
 	_configure_battle_loadout_buttons()
+
+	placement_toggle.toggled.connect(_on_placement_mode_toggled)
 	demon_choice_0.pressed.connect(_on_demon_choice_pressed.bind(0))
 	demon_choice_1.pressed.connect(_on_demon_choice_pressed.bind(1))
 	demon_choice_2.pressed.connect(_on_demon_choice_pressed.bind(2))
@@ -300,6 +292,7 @@ func _ready() -> void:
 	mutation_choice_0.pressed.connect(_on_mutation_choice_pressed.bind(0))
 	mutation_choice_1.pressed.connect(_on_mutation_choice_pressed.bind(1))
 	mutation_choice_2.pressed.connect(_on_mutation_choice_pressed.bind(2))
+
 	demon_ultimate_1.pressed.connect(
 		_on_demon_ultimate_pressed.bind("encirclement")
 	)
@@ -322,13 +315,14 @@ func _ready() -> void:
 		_on_demon_line_direction_pressed.bind("south")
 	)
 	demon_direction_cancel.pressed.connect(_close_demon_direction_select)
+
 	next_stage_button.pressed.connect(_on_next_stage_pressed)
 	stage_select_result_button.pressed.connect(_on_lobby_pressed)
 	restart_button.pressed.connect(_on_restart_pressed)
 
-	var snapshot: Dictionary = battle.get_snapshot()
-	_apply_stage_snapshot(snapshot)
 
+func _sync_battle_snapshot_to_hud(snapshot: Dictionary) -> void:
+	_apply_stage_snapshot(snapshot)
 	_on_stats_changed(
 		int(snapshot.get("hero_hp", 0)),
 		int(snapshot.get("hero_max_hp", 0)),
@@ -362,14 +356,57 @@ func _ready() -> void:
 	)
 
 	build_label.text = ""
-	debug_balance_label.text = String(snapshot.get("debug_balance_summary", "[DEBUG]"))
-	placement_toggle.button_pressed = true
+	debug_balance_label.text = String(
+		snapshot.get("debug_balance_summary", "[DEBUG]")
+	)
+	placement_toggle.set_pressed_no_signal(true)
 	_on_placement_mode_toggled(true)
-	_begin_stage_entry(snapshot)
-	call_deferred("_warm_touch_hold_frames")
 
-	print("Again, Hero? stage/camera prototype loaded.")
-	print("Finite world camera + persistent stage progression enabled.")
+
+func _connect_secondary_battle_ui() -> void:
+	stage_menu_button.pressed.connect(_on_stage_menu_pressed)
+	monster_info_bookmark.pressed.connect(_toggle_monster_info)
+	monster_info_close.pressed.connect(_close_monster_info)
+	hero_info_bookmark.pressed.connect(_toggle_hero_info)
+	hero_info_close.pressed.connect(_close_hero_info)
+
+	for tab_index in range(monster_info_tabs.size()):
+		monster_info_tabs[tab_index].pressed.connect(
+			_on_monster_info_tab_pressed.bind(tab_index)
+		)
+
+	pause_resume_button.pressed.connect(_close_pause_menu)
+	pause_restart_button.pressed.connect(_on_pause_restart_pressed)
+	pause_settings_button.pressed.connect(_open_settings_overlay)
+	pause_lobby_button.pressed.connect(_on_lobby_pressed)
+
+
+func _initialize_optional_settings_ui() -> void:
+	if not is_instance_valid(settings_close_button):
+		push_warning("Battle settings UI is unavailable; combat remains active.")
+		return
+
+	settings_close_button.pressed.connect(_close_settings_overlay)
+	if settings_tabs.get_tab_count() >= 2:
+		settings_tabs.set_tab_title(0, "사운드")
+		settings_tabs.set_tab_title(1, "게임플레이")
+
+	settings_bgm_slider.value_changed.connect(
+		_on_settings_bgm_level_changed
+	)
+	settings_sfx_slider.value_changed.connect(
+		_on_settings_sfx_level_changed
+	)
+	settings_bgm_mute.toggled.connect(_on_settings_bgm_mute_toggled)
+	settings_sfx_mute.toggled.connect(_on_settings_sfx_mute_toggled)
+	settings_camera_lock.toggled.connect(
+		_on_settings_camera_lock_toggled
+	)
+
+	_load_gameplay_settings()
+	_sync_audio_settings_ui()
+	_sync_gameplay_settings_ui()
+	_apply_camera_view_mode()
 
 func _process(delta: float) -> void:
 	_update_touch_hold_feedback(delta)
