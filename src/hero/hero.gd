@@ -8108,7 +8108,11 @@ func _ensure_sage_runtime() -> void:
 		ghost.sprite_frames = _sage_afterimage_frames_cache
 		ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		ghost.top_level = true
-		ghost.z_index = 0
+		# Keep Astra's phase trail strictly behind the hero body. Using both a
+		# lower Z and show_behind_parent avoids the trail covering the sprite
+		# even when the battle root uses Y-sorting.
+		ghost.z_index = -1
+		ghost.show_behind_parent = true
 		ghost.visible = false
 		ghost.modulate = Color(1.0, 1.0, 1.0, 0.58)
 		ghost.animation_finished.connect(Callable(self, "_on_sage_afterimage_finished").bind(ghost))
