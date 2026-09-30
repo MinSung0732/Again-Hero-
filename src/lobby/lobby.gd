@@ -918,6 +918,7 @@ func _install_stage_entry_hud() -> void:
 	var section_header := $SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox as Control
 	var section_title := $SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox/SectionTitle as Label
 	var section_subtitle := $SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox/SectionSubtitle as Label
+	var main_tab_control := $SafeArea/Layout/Content/MainTab as Control
 	var stage_layout := $SafeArea/Layout/Content/MainTab/StageLayout as VBoxContainer
 	var stage_meta := $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox as Control
 	var stage_picker := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker as HBoxContainer
@@ -946,8 +947,8 @@ func _install_stage_entry_hud() -> void:
 	stage_name_label.offset_bottom = 88.0
 
 	stage_picker.add_theme_constant_override("separation", 6)
-	prev_stage_button.custom_minimum_size = Vector2(64.0, 156.0)
-	next_stage_button.custom_minimum_size = Vector2(64.0, 156.0)
+	prev_stage_button.custom_minimum_size = Vector2(54.0, 148.0)
+	next_stage_button.custom_minimum_size = Vector2(54.0, 148.0)
 	stage_card_slot.custom_minimum_size = Vector2(860.0, 1250.0)
 	stage_card_slot.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	stage_card.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
@@ -972,6 +973,45 @@ func _install_stage_entry_hud() -> void:
 		)
 		stage_meta.add_child(meta_plate)
 		stage_meta.move_child(meta_plate, 0)
+
+		var connector := Control.new()
+		connector.name = "StageConnector"
+		connector.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		connector.anchor_left = 0.5
+		connector.anchor_top = 1.0
+		connector.anchor_right = 0.5
+		connector.anchor_bottom = 1.0
+		connector.offset_left = -18.0
+		connector.offset_top = -2.0
+		connector.offset_right = 18.0
+		connector.offset_bottom = 28.0
+		connector.z_index = 3
+		meta_plate.add_child(connector)
+
+		var connector_line := ColorRect.new()
+		connector_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		connector_line.color = Color(0.79, 0.56, 0.23, 0.92)
+		connector_line.anchor_left = 0.5
+		connector_line.anchor_top = 0.0
+		connector_line.anchor_right = 0.5
+		connector_line.anchor_bottom = 1.0
+		connector_line.offset_left = -1.0
+		connector_line.offset_right = 1.0
+		connector.add_child(connector_line)
+
+		var connector_gem := ColorRect.new()
+		connector_gem.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		connector_gem.color = Color("bd67da")
+		connector_gem.anchor_left = 0.5
+		connector_gem.anchor_top = 0.58
+		connector_gem.anchor_right = 0.5
+		connector_gem.anchor_bottom = 0.58
+		connector_gem.offset_left = -6.0
+		connector_gem.offset_top = -6.0
+		connector_gem.offset_right = 6.0
+		connector_gem.offset_bottom = 6.0
+		connector_gem.rotation = PI * 0.25
+		connector.add_child(connector_gem)
 
 		for ratio in [0.06, 0.94]:
 			var jewel := ColorRect.new()
@@ -1117,6 +1157,17 @@ func _install_stage_entry_hud() -> void:
 		bottom_panel.add_child(description_backing)
 		bottom_panel.move_child(description_backing, 0)
 
+		var description_highlight := ColorRect.new()
+		description_highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		description_highlight.color = Color(0.58, 0.37, 0.70, 0.52)
+		description_highlight.anchor_left = 0.10
+		description_highlight.anchor_top = 0.0
+		description_highlight.anchor_right = 0.90
+		description_highlight.anchor_bottom = 0.0
+		description_highlight.offset_top = 1.0
+		description_highlight.offset_bottom = 3.0
+		description_backing.add_child(description_highlight)
+
 	var info_backing := bottom_panel.get_node_or_null("EntryInfoBacking") as Panel
 	if info_backing == null:
 		info_backing = Panel.new()
@@ -1137,6 +1188,17 @@ func _install_stage_entry_hud() -> void:
 		)
 		bottom_panel.add_child(info_backing)
 		bottom_panel.move_child(info_backing, 1)
+
+		var info_highlight := ColorRect.new()
+		info_highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		info_highlight.color = Color(0.73, 0.52, 0.24, 0.44)
+		info_highlight.anchor_left = 0.08
+		info_highlight.anchor_top = 0.0
+		info_highlight.anchor_right = 0.92
+		info_highlight.anchor_bottom = 0.0
+		info_highlight.offset_top = 1.0
+		info_highlight.offset_bottom = 3.0
+		info_backing.add_child(info_highlight)
 
 		for split_ratio in [0.333, 0.666]:
 			var divider := ColorRect.new()
@@ -1194,6 +1256,64 @@ func _install_stage_entry_hud() -> void:
 	stage_reward_label.add_theme_font_size_override("font_size", 19)
 	stage_status_label.add_theme_color_override("font_color", Color("ded3e4"))
 	stage_reward_label.add_theme_color_override("font_color", Color("f0cb68"))
+
+	var footer := main_tab_control.get_node_or_null("StageFooterOrnament") as Control
+	if footer == null:
+		footer = Control.new()
+		footer.name = "StageFooterOrnament"
+		footer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		footer.anchor_left = 0.18
+		footer.anchor_top = 0.875
+		footer.anchor_right = 0.82
+		footer.anchor_bottom = 0.945
+		footer.z_index = 2
+		main_tab_control.add_child(footer)
+
+		var footer_line_left := ColorRect.new()
+		footer_line_left.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		footer_line_left.color = Color(0.74, 0.52, 0.22, 0.76)
+		footer_line_left.anchor_left = 0.0
+		footer_line_left.anchor_top = 0.49
+		footer_line_left.anchor_right = 0.44
+		footer_line_left.anchor_bottom = 0.51
+		footer.add_child(footer_line_left)
+
+		var footer_line_right := ColorRect.new()
+		footer_line_right.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		footer_line_right.color = Color(0.74, 0.52, 0.22, 0.76)
+		footer_line_right.anchor_left = 0.56
+		footer_line_right.anchor_top = 0.49
+		footer_line_right.anchor_right = 1.0
+		footer_line_right.anchor_bottom = 0.51
+		footer.add_child(footer_line_right)
+
+		var footer_gem_outer := ColorRect.new()
+		footer_gem_outer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		footer_gem_outer.color = Color("d8a64a")
+		footer_gem_outer.anchor_left = 0.5
+		footer_gem_outer.anchor_top = 0.5
+		footer_gem_outer.anchor_right = 0.5
+		footer_gem_outer.anchor_bottom = 0.5
+		footer_gem_outer.offset_left = -10.0
+		footer_gem_outer.offset_top = -10.0
+		footer_gem_outer.offset_right = 10.0
+		footer_gem_outer.offset_bottom = 10.0
+		footer_gem_outer.rotation = PI * 0.25
+		footer.add_child(footer_gem_outer)
+
+		var footer_gem_inner := ColorRect.new()
+		footer_gem_inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		footer_gem_inner.color = Color("8e38b0")
+		footer_gem_inner.anchor_left = 0.5
+		footer_gem_inner.anchor_top = 0.5
+		footer_gem_inner.anchor_right = 0.5
+		footer_gem_inner.anchor_bottom = 0.5
+		footer_gem_inner.offset_left = -5.0
+		footer_gem_inner.offset_top = -5.0
+		footer_gem_inner.offset_right = 5.0
+		footer_gem_inner.offset_bottom = 5.0
+		footer_gem_inner.rotation = PI * 0.25
+		footer.add_child(footer_gem_inner)
 
 
 func _apply_lobby_visual_polish() -> void:
@@ -1376,6 +1496,10 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 	skin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	skin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	skin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	skin.offset_left = 4.0
+	skin.offset_top = 8.0
+	skin.offset_right = -4.0
+	skin.offset_bottom = -8.0
 	skin.flip_h = flip_h
 	button.add_child(skin)
 
