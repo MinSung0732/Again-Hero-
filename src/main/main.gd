@@ -1151,9 +1151,13 @@ func _on_mutation_choice_ready(
 ) -> void:
 	current_mutation_candidates = candidates.duplicate()
 	mutation_panel.show()
-	for button in summon_slot_buttons:
-		if button is Button:
-			button.disabled = true
+	for slot_index in range(summon_slot_buttons.size()):
+		summon_slot_buttons[slot_index].disabled = true
+		_apply_summon_slot_availability(
+			slot_index,
+			true,
+			false
+		)
 
 	mutation_title.text = String(
 		event_data.get("ui_title", "돌연변이 선택")
@@ -1178,7 +1182,14 @@ func _on_mutation_choice_ready(
 
 		button.show()
 		var monster_id := String(current_mutation_candidates[index])
-		button.text = "%s\n선택" % _get_catalog_monster_name(monster_id)
+		button.text = ""
+
+		var icon: TextureRect = button.get_node("Icon") as TextureRect
+		var name_label: Label = button.get_node("Name") as Label
+		var select_label: Label = button.get_node("Select") as Label
+		icon.texture = _load_monster_card_icon(monster_id)
+		name_label.text = _get_catalog_monster_name(monster_id)
+		select_label.text = "선택"
 
 	status_label.text = "Stage 이벤트: 돌연변이로 투입할 편성 몬스터를 선택하세요."
 
@@ -1279,10 +1290,41 @@ func _on_command_changed(current_value: float, max_value: float) -> void:
 			)
 		if slot_index < summon_slot_cost_labels.size():
 			summon_slot_cost_labels[slot_index].text = "비용 %.1f" % cost
-		button.disabled = (
+		var cannot_summon := (
 			mutation_panel.visible
 			or current_value + 0.001 < cost
 		)
+		button.disabled = cannot_summon
+		_apply_summon_slot_availability(
+			slot_index,
+			cannot_summon,
+			current_value + 0.001 < cost
+		)
+
+func _apply_summon_slot_availability(
+	slot_index: int,
+	disabled: bool,
+	cost_blocked: bool
+) -> void:
+	if slot_index < 0 or slot_index >= summon_slot_buttons.size():
+		return
+
+	var button: Button = summon_slot_buttons[slot_index]
+	button.modulate = (
+		Color(0.43, 0.43, 0.49, 0.82)
+		if disabled
+		else Color(1, 1, 1, 1)
+	)
+
+	if slot_index < summon_slot_cost_labels.size():
+		var cost_label: Label = summon_slot_cost_labels[slot_index]
+		cost_label.add_theme_color_override(
+			"font_color",
+			Color(1.0, 0.56, 0.56, 1.0)
+			if cost_blocked
+			else Color(0.95, 0.9, 0.98, 1.0)
+		)
+
 
 func _load_battle_loadout() -> void:
 	var valid_ids: Array = []
@@ -2114,7 +2156,7 @@ func _is_monster_equipped(monster_id: String) -> bool:
 func _set_default_battle_status() -> void:
 	if auto_placement:
 		placement_toggle.text = "자동 배치"
-		status_label.text = "자동 배치 : 용사 주변 반경에서 몬스터가 소환됩니다."
+		status_label.text = "자동 배치 · 용사 주변 반경 소환"
 	elif selected_monster_type.is_empty():
 		placement_toggle.text = "수동 배치"
 		status_label.text = "수동 배치 : 몬스터 카드를 고른 뒤 전장을 터치하세요."
