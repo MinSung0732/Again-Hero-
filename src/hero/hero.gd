@@ -16,6 +16,7 @@ const ARCHMAGE_PROJECTILE_SCENE := preload("res://src/hero/ArchmageProjectile.ts
 const ARCHMAGE_SKILL_PROJECTILE_SCENE := preload("res://src/hero/ArchmageSkillProjectile.tscn")
 const SAGE_PROJECTILE_SCENE := preload("res://src/hero/SageProjectile.tscn")
 const SAGE_ICE_PILLAR_SCENE := preload("res://src/hero/SageIcePillar.tscn")
+const SAGE_RADIANCE_ORB_SCENE := preload("res://src/hero/SageRadianceOrb.tscn")
 const ULTIMATE_PIERCING_PROJECTILE_SCENE := preload(
 	"res://src/hero/UltimatePiercingProjectile.tscn"
 )
@@ -96,6 +97,7 @@ const SAGE_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_basic_a
 const SAGE_THIRD_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_third_attack_pixabay.mp3"
 const SAGE_PHASE_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_phase_pixabay.mp3"
 const SAGE_ICE_PILLAR_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_ice_pillar_pixabay.mp3"
+const SAGE_RADIANCE_CREATE_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_radiance_create_pixabay.mp3"
 const SAGE_SFX_REFERENCE_DB := -10.0
 const SUMMONER_GATEKEEPER_SCENE := preload("res://src/hero/SummonerGatekeeper.tscn")
 const SUMMONER_SCOUT_SCENE := preload("res://src/hero/SummonerScout.tscn")
@@ -340,10 +342,14 @@ var sage_afterimage_index: int = 0
 var sage_post_phase_shield_timer: float = 0.0
 var sage_gauge_redraw_timer: float = 0.0
 var sage_skill1_cooldown_timer: float = 0.0
+var sage_skill2_cooldown_timer: float = 0.0
+var sage_radiance_launch_remaining: int = 0
+var sage_radiance_launch_timer: float = 0.0
 var sage_basic_audio: AudioStreamPlayer
 var sage_third_audio: AudioStreamPlayer
 var sage_phase_audio: AudioStreamPlayer
 var sage_ice_pillar_audio: AudioStreamPlayer
+var sage_radiance_create_audio: AudioStreamPlayer
 
 var alchemist_config: Dictionary = {}
 var alchemist_gas_max: float = 200.0
@@ -1183,6 +1189,16 @@ func configure_profile(profile: Dictionary) -> void:
 		float(sage_skill1_config.get("initial_cooldown", 0.0)),
 		0.0
 	)
+	var sage_skill2_value = sage_config.get("skill_2", {})
+	var sage_skill2_config: Dictionary = (
+		sage_skill2_value if typeof(sage_skill2_value) == TYPE_DICTIONARY else {}
+	)
+	sage_skill2_cooldown_timer = maxf(
+		float(sage_skill2_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
+	sage_radiance_launch_remaining = 0
+	sage_radiance_launch_timer = 0.0
 	ultimate_charge = 0.0
 	ultimate_cooldown_timer = maxf(
 		float(ultimate_config.get("initial_cooldown", 0.0)),
@@ -8100,6 +8116,8 @@ func _ensure_sage_runtime() -> void:
 		sage_phase_audio = _create_sage_audio_player(SAGE_PHASE_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 1.02)
 	if not is_instance_valid(sage_ice_pillar_audio):
 		sage_ice_pillar_audio = _create_sage_audio_player(SAGE_ICE_PILLAR_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 0.90)
+	if not is_instance_valid(sage_radiance_create_audio):
+		sage_radiance_create_audio = _create_sage_audio_player(SAGE_RADIANCE_CREATE_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 1.04)
 	if not sage_afterimage_pool.is_empty():
 		return
 	if _sage_afterimage_frames_cache == null:
@@ -8219,8 +8237,27 @@ func _update_sage_runtime(delta: float) -> void:
 			sage_gauge_redraw_timer = 0.10
 			queue_redraw()
 	sage_skill1_cooldown_timer = maxf(sage_skill1_cooldown_timer - delta, 0.0)
-	if sage_skill1_cooldown_timer <= 0.0:
+	sage_skill2_cooldown_timer = maxf(sage_skill2_cooldown_timer - delta, 0.0)
+
+	if sage_radiance_launch_remaining > 0:
+		sage_radiance_launch_timer = maxf(sage_radiance_launch_timer - delta, 0.0)
+		if sage_radiance_launch_timer <= 0.0:
+			_launch_sage_radiance_orb()
+			sage_radiance_launch_remaining = maxi(sage_radiance_launch_remaining - 1, 0)
+			var skill2_value = sage_config.get("skill_2", {})
+			var skill2: Dictionary = (
+				skill2_value if typeof(skill2_value) == TYPE_DICTIONARY else {}
+			)
+			sage_radiance_launch_timer = maxf(
+				float(skill2.get("spawn_interval", 0.25)),
+				0.01
+			)
+	elif sage_skill2_cooldown_timer <= 0.0:
+		if not _try_cast_sage_radiance_singularity() and sage_skill1_cooldown_timer <= 0.0:
+			_try_cast_sage_ice_pillar()
+	elif sage_skill1_cooldown_timer <= 0.0:
 		_try_cast_sage_ice_pillar()
+
 	if sage_post_phase_shield_timer > 0.0:
 		sage_post_phase_shield_timer = maxf(sage_post_phase_shield_timer - delta, 0.0)
 		if shield_hp <= 0.0:
@@ -8289,6 +8326,94 @@ func _try_cast_sage_ice_pillar() -> void:
 	_restart_stage1_animation("attack")
 	_play_sage_audio(sage_ice_pillar_audio)
 	queue_redraw()
+
+
+func _try_cast_sage_radiance_singularity() -> bool:
+	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
+		return false
+	var skill_value = sage_config.get("skill_2", {})
+	if typeof(skill_value) != TYPE_DICTIONARY:
+		return false
+	var skill: Dictionary = skill_value
+	if skill.is_empty() or sage_radiance_launch_remaining > 0:
+		return false
+
+	var gauge_cost := maxf(float(skill.get("gauge_cost", 40.0)), 0.0)
+	if ultimate_charge + 0.001 < gauge_cost:
+		return false
+
+	ultimate_charge = maxf(ultimate_charge - gauge_cost, 0.0)
+	sage_skill2_cooldown_timer = maxf(float(skill.get("cooldown", 45.0)), 0.1)
+	sage_radiance_launch_remaining = maxi(int(skill.get("orb_count", 10)), 1)
+	sage_radiance_launch_timer = 0.0
+	attack_timer = maxf(attack_timer, 0.35)
+	attack_pose_timer = maxf(attack_pose_timer, 0.42)
+	_restart_stage1_animation("attack")
+	_play_sage_audio(sage_radiance_create_audio)
+	queue_redraw()
+	return true
+
+
+func _launch_sage_radiance_orb() -> void:
+	var skill_value = sage_config.get("skill_2", {})
+	if typeof(skill_value) != TYPE_DICTIONARY:
+		return
+	var skill: Dictionary = skill_value
+	if skill.is_empty():
+		return
+
+	var direction := Vector2.from_angle(randf_range(0.0, TAU))
+	var min_distance := maxf(float(skill.get("travel_distance_min", 180.0)), 1.0)
+	var max_distance := maxf(
+		float(skill.get("travel_distance_max", attack_range)),
+		min_distance
+	)
+	var travel_distance := randf_range(min_distance, max_distance)
+	var destination := global_position + direction * travel_distance
+	destination.x = clampf(
+		destination.x,
+		FIELD_MARGIN,
+		battlefield_size.x - FIELD_MARGIN
+	)
+	destination.y = clampf(
+		destination.y,
+		FIELD_MARGIN,
+		battlefield_size.y - FIELD_MARGIN
+	)
+
+	var size_min := clampf(float(skill.get("orb_scale_min", 0.50)), 0.05, 4.0)
+	var size_max := maxf(float(skill.get("orb_scale_max", 1.0)), size_min)
+	var orb_scale := randf_range(size_min, size_max)
+	var size_ratio := (
+		clampf((orb_scale - size_min) / maxf(size_max - size_min, 0.001), 0.0, 1.0)
+	)
+	var diameter := lerpf(
+		maxf(float(skill.get("explosion_diameter_min", 100.0)), 2.0),
+		maxf(float(skill.get("explosion_diameter_max", 250.0)), 2.0),
+		size_ratio
+	)
+	var damage_ratio := lerpf(
+		maxf(float(skill.get("damage_ratio_min", 0.50)), 0.0),
+		maxf(float(skill.get("damage_ratio_max", 1.0)), 0.0),
+		size_ratio
+	)
+	var orb_damage := maxi(1, int(round(float(attack_damage) * damage_ratio)))
+
+	var orb := _acquire_projectile(SAGE_RADIANCE_ORB_SCENE, "sage_radiance_orb")
+	if orb == null:
+		return
+	orb.global_position = global_position
+	orb.call(
+		"setup",
+		destination,
+		maxf(float(skill.get("projectile_speed", 350.0)), 1.0),
+		maxf(float(skill.get("arrival_delay", 1.0)), 0.0),
+		diameter * 0.5,
+		orb_damage,
+		clampf(float(skill.get("slow_multiplier", 0.85)), 0.1, 1.0),
+		maxf(float(skill.get("slow_duration", 2.0)), 0.0),
+		orb_scale
+	)
 
 
 func _start_sage_phase() -> void:
@@ -12422,6 +12547,7 @@ func get_skill_cooldown_hud() -> Array:
 	match hero_archetype:
 		"grand_sage_astra":
 			_append_sage_skill1_hud(skills)
+			_append_sage_skill2_hud(skills)
 		"cleric_purifier":
 			_append_skill_cooldown_hud(
 				skills,
@@ -12626,6 +12752,8 @@ func _skill_hud_description(config: Dictionary) -> String:
 	match skill_id:
 		"freezing_point_explosion":
 			return "지정 지점에 얼음기둥을 생성해 주변 적에게 피해를 주고, 범위 안의 적을 지속 둔화하며 기둥에 끼인 적의 이동을 봉쇄합니다."
+		"radiance_singularity":
+			return "주변으로 10개의 광휘구체를 순차 방출합니다. 구체는 도착 1초 뒤 폭발해 범위 피해를 주고 2초 동안 적을 둔화합니다."
 		"arcane_piercer":
 			return "전방으로 강력한 마력 관통포를 발사해 일직선상의 적을 공격합니다."
 		"arcane_barrier":
@@ -12742,6 +12870,45 @@ func _append_sage_skill1_hud(skills: Array) -> void:
 		"cooldown_total": cooldown_total,
 		"cooldown_remaining": cooldown_remaining,
 		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect1/ice_04.png",
+	})
+
+
+func _append_sage_skill2_hud(skills: Array) -> void:
+	var raw_skill = sage_config.get("skill_2", {})
+	if typeof(raw_skill) != TYPE_DICTIONARY:
+		return
+	var skill: Dictionary = raw_skill
+	if skill.is_empty():
+		return
+
+	var cooldown_total := maxf(float(skill.get("cooldown", 45.0)), 0.0)
+	var cooldown_remaining := maxf(sage_skill2_cooldown_timer, 0.0)
+	var gauge_cost := maxf(float(skill.get("gauge_cost", 40.0)), 0.0)
+	var gauge_max := maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
+	var gauge_current := clampf(ultimate_charge, 0.0, gauge_max)
+	var has_gauge := gauge_current + 0.001 >= gauge_cost
+	var launching := sage_radiance_launch_remaining > 0
+	var ready := cooldown_remaining <= 0.01 and has_gauge and not launching
+
+	var status := "사용 가능"
+	if launching:
+		status = "광휘구체 방출 중"
+	elif cooldown_remaining > 0.01:
+		status = "재사용 대기 중"
+	elif not has_gauge:
+		status = "게이지 부족"
+
+	skills.append({
+		"id": String(skill.get("id", "radiance_singularity")),
+		"name": String(skill.get("name", "광휘의 특이점")),
+		"description": _skill_hud_description(skill),
+		"resource_text": "게이지 %.0f" % gauge_cost,
+		"progress_text": "게이지 %.0f / %.0f" % [gauge_current, gauge_max],
+		"status_text": status,
+		"available": ready,
+		"cooldown_total": cooldown_total,
+		"cooldown_remaining": cooldown_remaining,
+		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect3/starburst_04.png",
 	})
 
 

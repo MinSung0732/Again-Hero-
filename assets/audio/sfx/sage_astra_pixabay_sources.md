@@ -26,3 +26,15 @@ These are the same Pixabay sources already documented by the Stage 8/9 SFX metad
 Stage 10 SFX playback reference: basic attack, third attack, fluidization, and ice-pillar creation are all played at `-10 dB` before their intentional pitch differences.
 
 The MP3 runtime assets above are committed directly under `assets/audio/sfx/`; Godot loads the checked-in file from `res://` and does not depend on a remote URL at runtime.
+
+
+- `sage_astra_radiance_create_pixabay.mp3`
+  - powerful spell — SingularitysMarauder
+  - https://pixabay.com/sound-effects/film-special-effects-powerful-spell-213833/
+  - Skill 2 "광휘의 특이점" cast/creation cue. Reuses the already-committed Pixabay source bytes from `purifier_crown_buff_pixabay.mp3`.
+- `sage_astra_radiance_explosion_pixabay.mp3`
+  - Elemental Magic Spell Impact Outgoing — RescopicSound
+  - https://pixabay.com/sound-effects/film-special-effects-elemental-magic-spell-impact-outgoing-228342/
+  - Skill 2 orb explosion cue. Reuses the already-committed Pixabay source bytes from `purifier_basic_attack_pixabay.mp3`.
+
+Both Skill 2 runtime MP3s are committed directly under `assets/audio/sfx/` and use the Stage 10 SFX playback reference of `-10 dB`.

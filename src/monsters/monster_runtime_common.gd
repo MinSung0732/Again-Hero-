@@ -118,6 +118,15 @@ static func get_external_movement_multiplier(owner: Node) -> float:
 				1.0
 			)
 		)
+	if int(owner.get_meta("sage_radiance_slow_until", 0)) > now_msec:
+		multiplier = minf(
+			multiplier,
+			clampf(
+				float(owner.get_meta("sage_radiance_slow_multiplier", 0.85)),
+				0.1,
+				1.0
+			)
+		)
 	return multiplier
 
 
