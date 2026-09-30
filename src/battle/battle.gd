@@ -37,6 +37,7 @@ const RUN_METRICS := preload("res://src/systems/run_metrics.gd")
 const STAGE_DIRECTOR := preload("res://src/systems/stage_director.gd")
 const MUTATION_DIRECTOR := preload("res://src/systems/mutation_director.gd")
 const FLOW_PAUSE_MANAGER := preload("res://src/systems/flow_pause_manager.gd")
+const GROUND_SHADOW_SCRIPT := preload("res://src/battle/ground_shadow.gd")
 
 const DEFAULT_MAP_SIZE := Vector2(3200, 3200)
 const AUTO_SPAWN_MIN_DISTANCE := 560.0
@@ -1290,6 +1291,7 @@ func _spawn_monster(
 	# their positions with older/general map margins.
 	spawn_position = _clamp_manual_spawn_position(spawn_position)
 	var monster := scene.instantiate() as Node2D
+	_ensure_monster_ground_shadow(monster, monster_type)
 
 	var raw_speed_value = monster.get("move_speed")
 	if raw_speed_value != null:
@@ -1517,6 +1519,63 @@ func _spawn_monster(
 	monster_spatial_grid_physics_frame = -1
 	monsters_alive += 1
 	return monster
+
+
+func _ensure_monster_ground_shadow(
+	monster: Node2D,
+	monster_type: String
+) -> void:
+	if not is_instance_valid(monster):
+		return
+	if monster.get_node_or_null("GroundShadow") != null:
+		return
+
+	var config := MONSTER_CATALOG.get_ground_shadow_config(monster_type)
+	if not bool(config.get("enabled", true)):
+		return
+
+	var collision_radius := 24.0
+	var collision := monster.get_node_or_null(
+		"CollisionShape2D"
+	) as CollisionShape2D
+	if is_instance_valid(collision):
+		var collision_shape := collision.shape
+		if collision_shape is CircleShape2D:
+			collision_radius = maxf(
+				(collision_shape as CircleShape2D).radius,
+				1.0
+			)
+		elif collision_shape is CapsuleShape2D:
+			collision_radius = maxf(
+				(collision_shape as CapsuleShape2D).radius,
+				1.0
+			)
+		elif collision_shape is RectangleShape2D:
+			collision_radius = maxf(
+				(collision_shape as RectangleShape2D).size.x * 0.5,
+				1.0
+			)
+
+	var default_size := Vector2(
+		collision_radius * 2.8,
+		collision_radius * 0.9
+	)
+	var display_size: Vector2 = config.get("size", default_size)
+	var offset_y := float(
+		config.get("offset_y", collision_radius * 1.2)
+	)
+	var opacity := clampf(float(config.get("opacity", 0.48)), 0.0, 1.0)
+
+	var shadow := GROUND_SHADOW_SCRIPT.new() as Sprite2D
+	if shadow == null:
+		return
+	shadow.name = "GroundShadow"
+	shadow.z_index = -10
+	shadow.position = Vector2(0.0, offset_y)
+	shadow.set("display_size", display_size)
+	shadow.set("opacity", opacity)
+	monster.add_child(shadow)
+
 
 func _get_demon_level_monster_hp_multiplier() -> float:
 	var growth_steps := maxi(demon_level - 1, 0)

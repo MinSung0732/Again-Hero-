@@ -21,6 +21,11 @@ const MONSTERS := {
 		"shards_required": 20,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/slime/frames/idle_01.png",
+		"ground_shadow": {
+			"size": Vector2(62.0, 20.0),
+			"offset_y": 27.0,
+			"opacity": 0.48,
+		},
 		"special_augment_ids": [
 			"slime_cell_division",
 			"slime_residual_mucus",
@@ -59,6 +64,11 @@ const MONSTERS := {
 		"shards_required": 30,
 		"rarity": "rare",
 		"card_icon_path": "res://assets/art/monsters/spider/frames/idle_01.png",
+		"ground_shadow": {
+			"size": Vector2(68.0, 22.0),
+			"offset_y": 31.0,
+			"opacity": 0.50,
+		},
 		"special_augment_ids": [
 			"spider_triple_web",
 			"spider_sticky_web",
@@ -94,6 +104,11 @@ const MONSTERS := {
 		"shards_required": 40,
 		"rarity": "legendary",
 		"card_icon_path": "res://assets/art/monsters/orc/frames/idle_01.png",
+		"ground_shadow": {
+			"size": Vector2(82.0, 26.0),
+			"offset_y": 38.0,
+			"opacity": 0.52,
+		},
 		"special_augment_ids": [
 			"orc_berserk",
 			"orc_rage_stacks",
@@ -131,6 +146,11 @@ const MONSTERS := {
 		"shards_required": 30,
 		"rarity": "rare",
 		"card_icon_path": "res://assets/art/monsters/bombrat/frames/frame_01.png",
+		"ground_shadow": {
+			"size": Vector2(60.0, 20.0),
+			"offset_y": 27.0,
+			"opacity": 0.48,
+		},
 		"special_augment_ids": [
 			"bomb_rat_litter",
 			"bomb_rat_powder_overload",
@@ -168,6 +188,13 @@ static func get_elite_visual_profile(monster_id: String) -> Dictionary:
 	if typeof(profile) != TYPE_DICTIONARY:
 		return {}
 	return Dictionary(profile).duplicate(true)
+
+static func get_ground_shadow_config(monster_id: String) -> Dictionary:
+	var data: Dictionary = MONSTERS.get(monster_id, {})
+	var config = data.get("ground_shadow", {})
+	if typeof(config) != TYPE_DICTIONARY:
+		return {}
+	return Dictionary(config).duplicate(true)
 
 static func get_scene(monster_id: String) -> PackedScene:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
