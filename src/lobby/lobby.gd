@@ -2413,19 +2413,24 @@ func _refresh_stage_card() -> void:
 		)
 	)
 
-	var status_parts: PackedStringArray = []
-	status_parts.append("클리어 완료" if cleared else ("입장 가능" if unlocked else "잠김"))
-	if minutes > 0:
-		status_parts.append("제한 %d분" % minutes)
-	stage_status_label.text = " · ".join(status_parts)
+	var entry_state := (
+		"클리어 완료"
+		if cleared
+		else ("입장 가능" if unlocked else "잠김")
+	)
+	var time_text := "제한 %d분" % minutes if minutes > 0 else "시간 제한 없음"
+	stage_status_label.text = "%s\n%s" % [entry_state, time_text]
 
 	if reward_claimed:
-		stage_reward_label.text = "반복 클리어 연구 보상  ×%.2f" % run_reward_multiplier
+		stage_reward_label.text = "최초 보상\n획득 완료"
 	else:
-		stage_reward_label.text = (
-			"최초 클리어 +%d · 반복 클리어 ×%.2f"
-			% [reward, run_reward_multiplier]
-		)
+		stage_reward_label.text = "최초 보상\n+%d" % reward
+
+	var repeat_label := stage_description_label.get_parent().get_node_or_null(
+		"RepeatReward"
+	) as Label
+	if repeat_label != null:
+		repeat_label.text = "반복 클리어\n×%.2f" % run_reward_multiplier
 
 	enter_stage_button.disabled = not unlocked
 	enter_stage_button.text = "던전 입장" if unlocked else "스테이지 잠김"
