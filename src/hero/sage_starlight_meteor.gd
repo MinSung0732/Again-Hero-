@@ -50,8 +50,9 @@ func setup(
 	explosion_fps = maxf(new_explosion_fps, 1.0)
 	fall_elapsed = 0.0
 	explosion_elapsed = 0.0
+	var side_offset := maxf(absf(new_fall_side_offset), 0.0)
 	fall_origin = Vector2(
-		randf_range(-absf(new_fall_side_offset), absf(new_fall_side_offset)),
+		randf_range(side_offset * 0.85, side_offset * 1.15),
 		-maxf(new_fall_height, 40.0)
 	)
 
