@@ -33,6 +33,8 @@ var visual_moving_state: int = -1
 var visual_facing_sign: int = 0
 var far_ai_tick_timer: float = 0.0
 var cached_direction_to_hero: Vector2 = Vector2.ZERO
+var soft_separation_timer: float = 0.0
+var soft_separation_bias: Vector2 = Vector2.ZERO
 var visual_lod_suspended: bool = false
 var combat_bonus_refresh_timer: float = 0.0
 var combat_bonus_cache: Dictionary = {}
@@ -45,6 +47,9 @@ var last_charge_timer: float = 0.0
 func _ready() -> void:
 	add_to_group("monsters")
 	far_ai_tick_timer = MONSTER_RUNTIME_COMMON.initial_far_navigation_delay()
+	soft_separation_timer = (
+		MONSTER_RUNTIME_COMMON.initial_soft_separation_delay()
+	)
 	combat_bonus_refresh_timer = randf_range(0.0, 0.10)
 	current_hp = max_hp
 	if not is_instance_valid(hero):
@@ -109,6 +114,21 @@ func _physics_process(delta: float) -> void:
 		_update_visual_motion(0.0, false)
 		return
 
+	soft_separation_timer = MONSTER_RUNTIME_COMMON.tick_countdown(
+		soft_separation_timer,
+		delta
+	)
+	if soft_separation_timer <= 0.0:
+		soft_separation_bias = (
+			MONSTER_RUNTIME_COMMON.compute_soft_separation_bias(
+				self,
+				combat_authority
+			)
+		)
+		soft_separation_timer = (
+			MONSTER_RUNTIME_COMMON.next_soft_separation_delay()
+		)
+
 	attack_timer = maxf(attack_timer - delta, 0.0)
 	last_charge_timer = maxf(last_charge_timer - delta, 0.0)
 
@@ -167,8 +187,14 @@ func _physics_process(delta: float) -> void:
 			direction_to_hero = offset_to_hero.normalized()
 			cached_direction_to_hero = direction_to_hero
 			far_ai_tick_timer = MONSTER_RUNTIME_COMMON.next_far_navigation_delay()
-		velocity = direction_to_hero * effective_move_speed
-		_update_visual_motion(direction_to_hero.x, true)
+		var move_direction := (
+			MONSTER_RUNTIME_COMMON.blend_soft_separation_direction(
+				direction_to_hero,
+				soft_separation_bias
+			)
+		)
+		velocity = move_direction * effective_move_speed
+		_update_visual_motion(move_direction.x, true)
 		if distance_sq > far_nav_sq:
 			global_position += velocity * delta
 		else:
@@ -180,7 +206,14 @@ func _physics_process(delta: float) -> void:
 			else cached_direction_to_hero
 		)
 		cached_direction_to_hero = direction_to_hero
-		velocity = Vector2.ZERO
+		velocity = (
+			MONSTER_RUNTIME_COMMON.get_soft_separation_idle_velocity(
+				soft_separation_bias,
+				effective_move_speed
+			)
+		)
+		if velocity.length_squared() > 0.01:
+			move_and_slide()
 		_update_visual_motion(direction_to_hero.x, false)
 		if attack_timer <= 0.0:
 			attack_timer = effective_attack_cooldown
