@@ -68,3 +68,10 @@ Both Skill 3 MP3 runtime files are committed directly under `assets/audio/sfx/` 
   - Skill 5 execution cue. Reuses the already-tracked Pixabay source bytes from `purifier_gungnir_explosion_pixabay.mp3`, played lower for a heavier consume/execute impact.
 
 Both source pages currently state free use under the Pixabay Content License. The dedicated runtime filenames keep Skill 5 audio wiring explicit while reusing already-downloaded source blobs.
+
+
+- `sage_astra_blackspot_explosion_pixabay.mp3`
+  - Loud Explosion — DRAGON-STUDIO
+  - https://pixabay.com/sound-effects/film-special-effects-loud-explosion-425457/
+  - Stage 10 Skill 6 "흑점폭발" detonation cue.
+  - Source page lists the MP3 for free use under the Pixabay Content License.
