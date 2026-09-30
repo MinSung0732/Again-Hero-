@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2026-09-30 — Stage 번호 다이아몬드 겹침 수정
+- StageFrame 상단 중앙 다이아몬드는 y=0~32 영역을 차지하므로 StageNumber를 y=33부터 시작하도록 아래로 이동.
+- StageNumber 폰트/외곽선을 축소하고 clip_text를 적용해 장식 위로 글자가 올라가지 않도록 수정.
+- 가운데 부제는 y=50~81로 재배치하고 폰트를 소폭 줄여 StageNumber/용사명과 서로 겹치지 않도록 정리.
+
 ## 2026-09-30 — 스테이지 헤더 클리핑 / 돌연변이 전용 도트
 - 상단 StageHeroName 영역을 프레임 안쪽으로 올리고 높이/폰트 크기를 조정한 뒤 clip_text를 적용해 하단 프레임선을 침범하지 않도록 수정.
 - 돌연변이 선택 카드가 일반 card_icon_path를 재사용하던 코드를 제거하고, MonsterCatalog의 elite_visual idle 첫 프레임을 선택 미리보기로 사용하도록 변경.
