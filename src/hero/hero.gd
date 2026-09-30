@@ -12420,6 +12420,8 @@ func get_skill_cooldown_hud() -> Array:
 	var skills: Array = []
 
 	match hero_archetype:
+		"grand_sage_astra":
+			_append_sage_skill1_hud(skills)
 		"cleric_purifier":
 			_append_skill_cooldown_hud(
 				skills,
@@ -12622,6 +12624,8 @@ func _skill_hud_description(config: Dictionary) -> String:
 
 	var skill_id := String(config.get("id", ""))
 	match skill_id:
+		"freezing_point_explosion":
+			return "지정 지점에 얼음기둥을 생성해 주변 적에게 피해를 주고, 범위 안의 적을 지속 둔화하며 기둥에 끼인 적의 이동을 봉쇄합니다."
 		"arcane_piercer":
 			return "전방으로 강력한 마력 관통포를 발사해 일직선상의 적을 공격합니다."
 		"arcane_barrier":
@@ -12701,6 +12705,43 @@ func _append_skill_cooldown_hud(
 		"cooldown_total": cooldown_total,
 		"cooldown_remaining": current_remaining,
 		"icon_path": icon_path,
+	})
+
+
+func _append_sage_skill1_hud(skills: Array) -> void:
+	var raw_skill = sage_config.get("skill_1", {})
+	if typeof(raw_skill) != TYPE_DICTIONARY:
+		return
+	var skill: Dictionary = raw_skill
+	if skill.is_empty():
+		return
+
+	var cooldown_total := maxf(float(skill.get("cooldown", 25.0)), 0.0)
+	var cooldown_remaining := maxf(sage_skill1_cooldown_timer, 0.0)
+	var gauge_cost := maxf(float(skill.get("gauge_cost", 35.0)), 0.0)
+	var gauge_max := maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
+	var gauge_current := clampf(ultimate_charge, 0.0, gauge_max)
+	var has_gauge := gauge_current + 0.001 >= gauge_cost
+	var cooldown_ready := cooldown_remaining <= 0.01
+	var ready := cooldown_ready and has_gauge
+
+	var status := "사용 가능"
+	if not cooldown_ready:
+		status = "재사용 대기 중"
+	elif not has_gauge:
+		status = "게이지 부족"
+
+	skills.append({
+		"id": String(skill.get("id", "freezing_point_explosion")),
+		"name": String(skill.get("name", "빙점폭발")),
+		"description": _skill_hud_description(skill),
+		"resource_text": "노란 게이지 %.0f" % gauge_cost,
+		"progress_text": "노란 게이지 %.0f / %.0f" % [gauge_current, gauge_max],
+		"status_text": status,
+		"available": ready,
+		"cooldown_total": cooldown_total,
+		"cooldown_remaining": cooldown_remaining,
+		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect1/ice_04.png",
 	})
 
 

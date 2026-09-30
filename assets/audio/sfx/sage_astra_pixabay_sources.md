@@ -24,3 +24,5 @@ These are the same Pixabay sources already documented by the Stage 8/9 SFX metad
   - Used for Skill 1 "빙점폭발" ice-pillar creation. A skill-specific runtime filename reuses the already-stored Pixabay source bytes.
 
 Stage 10 SFX playback reference: basic attack, third attack, fluidization, and ice-pillar creation are all played at `-10 dB` before their intentional pitch differences.
+
+The MP3 runtime assets above are committed directly under `assets/audio/sfx/`; Godot loads the checked-in file from `res://` and does not depend on a remote URL at runtime.
