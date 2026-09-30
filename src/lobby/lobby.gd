@@ -735,10 +735,10 @@ func _apply_new_ui_assets() -> void:
 		stage_skin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		stage_skin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		stage_skin.set_anchors_preset(Control.PRESET_FULL_RECT)
-		stage_skin.offset_left = 8.0
-		stage_skin.offset_top = 6.0
-		stage_skin.offset_right = -8.0
-		stage_skin.offset_bottom = -6.0
+		stage_skin.offset_left = 2.0
+		stage_skin.offset_top = 2.0
+		stage_skin.offset_right = -2.0
+		stage_skin.offset_bottom = -2.0
 		stage_card.add_child(stage_skin)
 		stage_card.move_child(stage_skin, 0)
 
@@ -945,9 +945,12 @@ func _install_stage_entry_hud() -> void:
 	stage_name_label.offset_top = 34.0
 	stage_name_label.offset_bottom = 88.0
 
-	stage_picker.add_theme_constant_override("separation", 8)
-	stage_card_slot.custom_minimum_size = Vector2(820.0, 1230.0)
+	stage_picker.add_theme_constant_override("separation", 6)
+	prev_stage_button.custom_minimum_size = Vector2(64.0, 156.0)
+	next_stage_button.custom_minimum_size = Vector2(64.0, 156.0)
+	stage_card_slot.custom_minimum_size = Vector2(860.0, 1250.0)
 	stage_card_slot.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	stage_card.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 
 	var meta_plate := stage_meta.get_node_or_null("StageMetaPlate") as Panel
 	if meta_plate == null:
@@ -1003,14 +1006,14 @@ func _install_stage_entry_hud() -> void:
 		section_header.add_child(rule)
 		section_header.move_child(rule, 0)
 
-	card_margin.add_theme_constant_override("margin_left", 24)
-	card_margin.add_theme_constant_override("margin_right", 24)
-	card_margin.add_theme_constant_override("margin_bottom", 32)
+	card_margin.add_theme_constant_override("margin_left", 18)
+	card_margin.add_theme_constant_override("margin_right", 18)
+	card_margin.add_theme_constant_override("margin_bottom", 28)
 
-	portrait_frame.anchor_left = 0.025
-	portrait_frame.anchor_top = 0.055
-	portrait_frame.anchor_right = 0.975
-	portrait_frame.anchor_bottom = 0.535
+	portrait_frame.anchor_left = 0.030
+	portrait_frame.anchor_top = 0.052
+	portrait_frame.anchor_right = 0.970
+	portrait_frame.anchor_bottom = 0.532
 
 	var hero_name_plate := hero_name_label.get_parent().get_node_or_null(
 		"HeroNamePlate"
@@ -1086,10 +1089,10 @@ func _install_stage_entry_hud() -> void:
 	portrait_placeholder.z_index = 2
 	portrait_badge.z_index = 2
 
-	bottom_panel.anchor_left = 0.045
-	bottom_panel.anchor_top = 0.600
-	bottom_panel.anchor_right = 0.955
-	bottom_panel.anchor_bottom = 0.955
+	bottom_panel.anchor_left = 0.055
+	bottom_panel.anchor_top = 0.598
+	bottom_panel.anchor_right = 0.945
+	bottom_panel.anchor_bottom = 0.952
 
 	var description_backing := bottom_panel.get_node_or_null(
 		"DescriptionBacking"
@@ -2564,8 +2567,10 @@ func _refresh_stage_card() -> void:
 
 	if reward_claimed:
 		stage_reward_label.text = "최초 보상\n획득 완료"
-	else:
+	elif reward > 0:
 		stage_reward_label.text = "최초 보상\n연구 +%d" % reward
+	else:
+		stage_reward_label.text = "최초 보상\n-"
 
 	var repeat_label := stage_description_label.get_parent().get_node_or_null(
 		"RepeatReward"
