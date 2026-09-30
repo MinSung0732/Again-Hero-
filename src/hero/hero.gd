@@ -417,6 +417,10 @@ var alchemist_philosopher_used: bool = false
 var alchemist_philosopher_channeling: bool = false
 var alchemist_philosopher_channel_timer: float = 0.0
 var alchemist_philosopher_test_timer: float = 0.0
+var alchemist_philosopher_unlock_pending: bool = false
+var alchemist_philosopher_unlock_timer: float = 0.0
+var alchemist_philosopher_unlock_grace_timer: float = 0.0
+var alchemist_philosopher_unlock_effect: AnimatedSprite2D
 var alchemist_transformed: bool = false
 var alchemist_gas_regen_timer: float = 0.0
 var alchemist_poison_trail_timer: float = 0.0
@@ -854,6 +858,12 @@ func configure_profile(profile: Dictionary) -> void:
 	alchemist_philosopher_used = false
 	alchemist_philosopher_channeling = false
 	alchemist_philosopher_channel_timer = 0.0
+	alchemist_philosopher_unlock_pending = false
+	alchemist_philosopher_unlock_timer = 0.0
+	alchemist_philosopher_unlock_grace_timer = 0.0
+	if is_instance_valid(alchemist_philosopher_unlock_effect):
+		alchemist_philosopher_unlock_effect.stop()
+		alchemist_philosopher_unlock_effect.visible = false
 	alchemist_philosopher_test_timer = (
 		maxf(
 			float(alchemist_philosopher_config.get("test_delay_seconds", 5.0)),
@@ -2719,6 +2729,12 @@ func _physics_process_alchemist(delta: float) -> void:
 	)
 	_update_alchemist_material_spawning(delta)
 	_collect_nearby_alchemy_materials()
+	alchemist_philosopher_unlock_grace_timer = maxf(
+		alchemist_philosopher_unlock_grace_timer - delta,
+		0.0
+	)
+	if _update_alchemist_philosopher_unlock_sequence(delta):
+		return
 	alchemist_mixture_field_cooldown = maxf(alchemist_mixture_field_cooldown - delta, 0.0)
 	alchemist_mystery_cauldron_cooldown = maxf(
 		alchemist_mystery_cauldron_cooldown - delta,
@@ -2885,6 +2901,7 @@ func _ensure_alchemist_runtime() -> void:
 			Callable(self, "_on_alchemist_mixture_field_tick")
 		)
 
+	_ensure_alchemist_philosopher_unlock_effect()
 	alchemist_runtime_ready = true
 	alchemist_material_spawn_timer = 0.0
 	var initial_count := clampi(
@@ -3209,11 +3226,56 @@ func _check_alchemist_philosopher_unlock() -> void:
 	)
 	if alchemist_materials_collected < required:
 		return
-	_unlock_conditional_skill(
-		String(alchemist_philosopher_config.get(
-			"id",
-			"alchemist_philosopher_stone"
+
+	var skill_id := String(alchemist_philosopher_config.get(
+		"id",
+		"alchemist_philosopher_stone"
+	))
+	if (
+		alchemist_philosopher_unlock_pending
+		or is_conditional_skill_unlocked(skill_id)
+	):
+		return
+
+	alchemist_philosopher_unlock_pending = true
+	alchemist_philosopher_unlock_timer = maxf(
+		float(alchemist_philosopher_config.get(
+			"unlock_effect_seconds",
+			0.55
 		)),
+		0.1
+	)
+	velocity = Vector2.ZERO
+	_play_alchemist_philosopher_unlock_effect()
+
+
+func _update_alchemist_philosopher_unlock_sequence(delta: float) -> bool:
+	if not alchemist_philosopher_unlock_pending:
+		return false
+
+	velocity = Vector2.ZERO
+	alchemist_philosopher_unlock_timer = maxf(
+		alchemist_philosopher_unlock_timer - delta,
+		0.0
+	)
+	if alchemist_philosopher_unlock_timer > 0.0:
+		return true
+
+	alchemist_philosopher_unlock_pending = false
+	if is_instance_valid(alchemist_philosopher_unlock_effect):
+		alchemist_philosopher_unlock_effect.stop()
+		alchemist_philosopher_unlock_effect.visible = false
+
+	var required := maxi(
+		int(alchemist_philosopher_config.get("required_materials", 20)),
+		1
+	)
+	var skill_id := String(alchemist_philosopher_config.get(
+		"id",
+		"alchemist_philosopher_stone"
+	))
+	_unlock_conditional_skill(
+		skill_id,
 		String(alchemist_philosopher_config.get("name", "현자의 돌")),
 		"material_count",
 		alchemist_materials_collected,
@@ -3222,8 +3284,88 @@ func _check_alchemist_philosopher_unlock() -> void:
 			"hero_id": hero_id,
 			"archetype": hero_archetype,
 			"source": "alchemist_material_collection",
+			"cutscene_texture_path": String(
+				alchemist_philosopher_config.get(
+					"cutscene_texture_path",
+					"res://assets/art/heroes/stage7_alchemist/cutscene/stage7_hero_cutscene.png"
+				)
+			),
+			"cutscene_hold_seconds": float(
+				alchemist_philosopher_config.get(
+					"cutscene_hold_seconds",
+					1.20
+				)
+			),
 		}
 	)
+	# The unlock signal starts the modal cutscene synchronously. Keep a small
+	# post-cutscene grace so the Stone does not auto-channel on the same frame.
+	alchemist_philosopher_unlock_grace_timer = 0.18
+	return true
+
+
+func _ensure_alchemist_philosopher_unlock_effect() -> void:
+	if is_instance_valid(alchemist_philosopher_unlock_effect):
+		return
+
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	frames.add_animation("unlock")
+	frames.set_animation_speed(
+		"unlock",
+		maxf(
+			float(alchemist_philosopher_config.get(
+				"unlock_effect_fps",
+				9.0
+			)),
+			1.0
+		)
+	)
+	frames.set_animation_loop("unlock", false)
+
+	for index in range(1, 5):
+		var texture := _load_stage1_texture(
+			"%s/effect7/cast_%02d.png" % [STAGE7_FRAME_DIR, index]
+		)
+		if texture != null:
+			frames.add_frame("unlock", texture)
+
+	if frames.get_frame_count("unlock") <= 0:
+		return
+
+	var effect := AnimatedSprite2D.new()
+	effect.name = "AlchemistPhilosopherUnlockEffect"
+	effect.sprite_frames = frames
+	effect.animation = &"unlock"
+	effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	# Same effect7 anchor correction as the Stone channel effect.
+	effect.offset = Vector2(64.0, -144.0)
+	effect.position = Vector2.ZERO
+	effect.scale = Vector2.ONE * maxf(
+		float(alchemist_philosopher_config.get(
+			"unlock_effect_scale",
+			0.58
+		)),
+		0.05
+	)
+	effect.z_index = 11
+	effect.modulate = Color(1.0, 0.92, 0.66, 1.0)
+	effect.visible = false
+	add_child(effect)
+	alchemist_philosopher_unlock_effect = effect
+
+
+func _play_alchemist_philosopher_unlock_effect() -> void:
+	_ensure_alchemist_philosopher_unlock_effect()
+	if not is_instance_valid(alchemist_philosopher_unlock_effect):
+		return
+
+	alchemist_philosopher_unlock_effect.stop()
+	alchemist_philosopher_unlock_effect.visible = true
+	alchemist_philosopher_unlock_effect.frame = 0
+	alchemist_philosopher_unlock_effect.frame_progress = 0.0
+	alchemist_philosopher_unlock_effect.play(&"unlock")
 
 
 func _unlock_conditional_skill(
@@ -3272,11 +3414,22 @@ func _try_start_alchemist_philosopher_stone() -> bool:
 		bool(alchemist_philosopher_config.get("test_mode", false))
 		and alchemist_philosopher_test_timer <= 0.0
 	)
+	var skill_id := String(alchemist_philosopher_config.get(
+		"id",
+		"alchemist_philosopher_stone"
+	))
 	# Philosopher's Stone is a strict collection milestone. Equivalent Exchange
 	# may substitute materials for normal alchemy, but it must never synthesize
 	# the 20/20 Stone progress or trigger the transformation early.
-	if not test_ready and alchemist_materials_collected < required_materials:
-		return false
+	if not test_ready:
+		if alchemist_materials_collected < required_materials:
+			return false
+		if (
+			alchemist_philosopher_unlock_pending
+			or alchemist_philosopher_unlock_grace_timer > 0.0
+			or not is_conditional_skill_unlocked(skill_id)
+		):
+			return false
 
 	var gas_cost := maxf(
 		float(alchemist_philosopher_config.get("gas_cost", 100.0)),
@@ -13903,15 +14056,25 @@ func _append_alchemist_philosopher_hud(skills: Array) -> void:
 		float(alchemist_philosopher_config.get("gas_cost", 100.0)),
 		0.0
 	)
+	var skill_id := String(alchemist_philosopher_config.get(
+		"id",
+		"alchemist_philosopher_stone"
+	))
+	var unlocked := is_conditional_skill_unlocked(skill_id)
 	var ready := (
-		not alchemist_philosopher_used
+		unlocked
+		and not alchemist_philosopher_unlock_pending
+		and alchemist_philosopher_unlock_grace_timer <= 0.0
+		and not alchemist_philosopher_used
 		and not alchemist_philosopher_channeling
 		and not alchemist_transformed
 		and alchemist_materials_collected >= required
 		and alchemist_gas + 0.001 >= gas_cost
 	)
-	var status := "사용 조건 대기"
-	if alchemist_philosopher_channeling:
+	var status := "해금 조건 대기"
+	if alchemist_philosopher_unlock_pending:
+		status = "현자의 돌 해금 중"
+	elif alchemist_philosopher_channeling:
 		status = "채널링 중"
 	elif alchemist_transformed:
 		status = "사용 완료 · 현자의 돌 활성화"
@@ -13919,6 +14082,8 @@ func _append_alchemist_philosopher_hud(skills: Array) -> void:
 		status = "사용 완료"
 	elif ready:
 		status = "사용 가능"
+	elif unlocked:
+		status = "사용 준비 중"
 
 	skills.append({
 		"id": String(alchemist_philosopher_config.get(

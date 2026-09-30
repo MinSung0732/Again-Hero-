@@ -1,3 +1,10 @@
+### Stage 7 Philosopher's Stone unlock presentation
+- 연금술 재료 20개 달성 시 현자의 돌을 즉시 사용하지 않고 전용 해금 시퀀스를 시작.
+- effect7 `cast_01→04`를 이용한 약 0.55초 해금 이펙트 후 Stage 7 `stage7_hero_cutscene.png`를 공용 SkillUnlockCutscene으로 재생.
+- 컷신 재생 중 Battle external pause가 걸리고 종료 후 자동 복귀.
+- 해금 이펙트/컷신이 끝나기 전에는 현자의 돌 자동 채널링을 막고, 컷신 종료 후 짧은 유예 뒤 정상 사용 가능.
+- 기존 재료 20개 조건, 전투당 1회, 실제 현자의 돌 12프레임 채널링/변신 효과는 유지.
+
 ### Stage 10 Astra balance / pause update
 - 스킬 5 소멸 유지시간을 6초에서 15초로 증가.
 - 소멸 런타임은 Battle의 combat pause 상태를 확인해 메뉴/증강/돌연변이 선택 중 지속시간, 흡입, 피해 틱, 이펙트 진행을 모두 정지하고 재개 후 이어서 진행.
