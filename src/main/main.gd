@@ -471,6 +471,24 @@ func _replace_button_frame(
 		center_texture_path,
 		center_patch_margin
 	)
+	button.button_down.connect(_on_pixel_asset_button_down.bind(button))
+	button.button_up.connect(_on_pixel_asset_button_up.bind(button))
+
+
+func _on_pixel_asset_button_down(button: BaseButton) -> void:
+	if not is_instance_valid(button) or button.disabled:
+		return
+	var frame := button.get_node_or_null("PixelAssetFrame") as CanvasItem
+	if frame != null:
+		frame.modulate = Color(1.0, 0.68, 0.34, 1.0)
+
+
+func _on_pixel_asset_button_up(button: BaseButton) -> void:
+	if not is_instance_valid(button):
+		return
+	var frame := button.get_node_or_null("PixelAssetFrame") as CanvasItem
+	if frame != null:
+		frame.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
 
 func _process(delta: float) -> void:
@@ -2327,10 +2345,16 @@ func _show_battle_toast(message: String, duration: float = 1.4) -> void:
 func _flash_button_feedback(button: BaseButton) -> void:
 	if not is_instance_valid(button):
 		return
-	button.modulate = Color(1.0, 0.72, 0.42, 1.0)
+
+	var feedback_target: CanvasItem = button
+	var pixel_frame := button.get_node_or_null("PixelAssetFrame") as CanvasItem
+	if pixel_frame != null:
+		feedback_target = pixel_frame
+
+	feedback_target.modulate = Color(1.0, 0.72, 0.42, 1.0)
 	var tween: Tween = create_tween()
 	tween.tween_property(
-		button,
+		feedback_target,
 		"modulate",
 		Color(1.0, 1.0, 1.0, 1.0),
 		0.16
