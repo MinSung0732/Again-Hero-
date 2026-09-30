@@ -88,9 +88,18 @@ const CAMERA_DRAG_THRESHOLD := 12.0
 @onready var demon_direction_north: Button = $HUD/DemonUltimatePanel/DirectionButtons/North
 @onready var demon_direction_south: Button = $HUD/DemonUltimatePanel/DirectionButtons/South
 @onready var demon_direction_cancel: Button = $HUD/DemonUltimatePanel/DirectionButtons/Cancel
-@onready var slime_button: Button = $HUD/BottomBar/SummonButtons/SlimeButton
-@onready var spider_button: Button = $HUD/BottomBar/SummonButtons/SpiderButton
-@onready var orc_button: Button = $HUD/BottomBar/SummonButtons/OrcButton
+@onready var summon_slot_1: Button = $HUD/BottomBar/SummonButtons/Slot1
+@onready var summon_slot_2: Button = $HUD/BottomBar/SummonButtons/Slot2
+@onready var summon_slot_3: Button = $HUD/BottomBar/SummonButtons/Slot3
+@onready var summon_slot_icon_1: TextureRect = $HUD/BottomBar/SummonButtons/Slot1/Icon
+@onready var summon_slot_icon_2: TextureRect = $HUD/BottomBar/SummonButtons/Slot2/Icon
+@onready var summon_slot_icon_3: TextureRect = $HUD/BottomBar/SummonButtons/Slot3/Icon
+@onready var summon_slot_name_1: Label = $HUD/BottomBar/SummonButtons/Slot1/Name
+@onready var summon_slot_name_2: Label = $HUD/BottomBar/SummonButtons/Slot2/Name
+@onready var summon_slot_name_3: Label = $HUD/BottomBar/SummonButtons/Slot3/Name
+@onready var summon_slot_cost_1: Label = $HUD/BottomBar/SummonButtons/Slot1/Cost
+@onready var summon_slot_cost_2: Label = $HUD/BottomBar/SummonButtons/Slot2/Cost
+@onready var summon_slot_cost_3: Label = $HUD/BottomBar/SummonButtons/Slot3/Cost
 
 @onready var pause_menu: Control = $HUD/PauseMenu
 @onready var pause_stage_label: Label = $HUD/PauseMenu/MenuPanel/Margin/VBox/StageLabel
@@ -147,7 +156,11 @@ var current_demon_candidates: Array = []
 var current_mutation_candidates: Array = []
 var debug_refresh_timer: float = 0.0
 var battle_loadout_ids: Array = []
-var summon_slot_buttons: Array = []
+var summon_slot_buttons: Array[Button] = []
+var summon_slot_icons: Array[TextureRect] = []
+var summon_slot_name_labels: Array[Label] = []
+var summon_slot_cost_labels: Array[Label] = []
+var monster_card_icon_cache: Dictionary = {}
 var demon_ultimate_charge_ready: bool = false
 var demon_mana_current: float = 0.0
 var demon_ultimate_cooldowns: Dictionary = {}
@@ -258,9 +271,24 @@ func _ready() -> void:
 	placement_toggle.toggled.connect(_on_placement_mode_toggled)
 
 	summon_slot_buttons = [
-		slime_button,
-		spider_button,
-		orc_button,
+		summon_slot_1,
+		summon_slot_2,
+		summon_slot_3,
+	]
+	summon_slot_icons = [
+		summon_slot_icon_1,
+		summon_slot_icon_2,
+		summon_slot_icon_3,
+	]
+	summon_slot_name_labels = [
+		summon_slot_name_1,
+		summon_slot_name_2,
+		summon_slot_name_3,
+	]
+	summon_slot_cost_labels = [
+		summon_slot_cost_1,
+		summon_slot_cost_2,
+		summon_slot_cost_3,
 	]
 	_load_battle_loadout()
 	_configure_battle_loadout_buttons()
@@ -1225,27 +1253,27 @@ func _on_command_changed(current_value: float, max_value: float) -> void:
 	command_bar.value = current_value
 
 	for slot_index in range(summon_slot_buttons.size()):
-		var button = summon_slot_buttons[slot_index]
-		if not (button is Button):
-			continue
-
+		var button := summon_slot_buttons[slot_index]
 		if slot_index >= battle_loadout_ids.size():
-			button.visible = false
+			button.hide()
 			button.disabled = true
+			if slot_index < summon_slot_icons.size():
+				summon_slot_icons[slot_index].texture = null
 			continue
 
 		var monster_id := String(battle_loadout_ids[slot_index])
 		var cost: float = battle.get_monster_cost(monster_id)
-		button.visible = true
-		button.icon = _load_monster_info_icon(monster_id)
-		button.expand_icon = true
-		button.icon_max_width = 92
-		button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		button.alignment = HORIZONTAL_ALIGNMENT_CENTER
-		button.text = "%s\n비용 %.1f" % [
-			_get_catalog_monster_name(monster_id),
-			cost,
-		]
+		button.show()
+		if slot_index < summon_slot_icons.size():
+			summon_slot_icons[slot_index].texture = _load_monster_card_icon(
+				monster_id
+			)
+		if slot_index < summon_slot_name_labels.size():
+			summon_slot_name_labels[slot_index].text = (
+				_get_catalog_monster_name(monster_id)
+			)
+		if slot_index < summon_slot_cost_labels.size():
+			summon_slot_cost_labels[slot_index].text = "비용 %.1f" % cost
 		button.disabled = (
 			mutation_panel.visible
 			or current_value + 0.001 < cost
@@ -1274,16 +1302,28 @@ func _load_battle_loadout() -> void:
 
 func _configure_battle_loadout_buttons() -> void:
 	for slot_index in range(summon_slot_buttons.size()):
-		var button = summon_slot_buttons[slot_index]
-		if not (button is Button):
-			continue
-
+		var button := summon_slot_buttons[slot_index]
 		if slot_index >= battle_loadout_ids.size():
-			button.visible = false
+			button.hide()
 			button.disabled = true
 			continue
 
-		button.visible = true
+		var monster_id := String(battle_loadout_ids[slot_index])
+		button.show()
+		if slot_index < summon_slot_icons.size():
+			summon_slot_icons[slot_index].texture = _load_monster_card_icon(
+				monster_id
+			)
+		if slot_index < summon_slot_name_labels.size():
+			summon_slot_name_labels[slot_index].text = (
+				_get_catalog_monster_name(monster_id)
+			)
+		if slot_index < summon_slot_cost_labels.size():
+			var catalog_data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
+			var base_cost := 0.0
+			if typeof(catalog_data) == TYPE_DICTIONARY:
+				base_cost = float(catalog_data.get("base_cost", 0.0))
+			summon_slot_cost_labels[slot_index].text = "비용 %.1f" % base_cost
 		button.pressed.connect(
 			_on_summon_slot_pressed.bind(slot_index)
 		)
@@ -2015,17 +2055,38 @@ func _get_battle_monster_multiplier(
 		)
 	)
 
-func _load_monster_info_icon(monster_id: String) -> Texture2D:
+func _load_monster_card_icon(monster_id: String) -> Texture2D:
+	if monster_card_icon_cache.has(monster_id):
+		return monster_card_icon_cache.get(monster_id) as Texture2D
+
 	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
 	if typeof(data) != TYPE_DICTIONARY:
 		return null
 
 	var path := String(data.get("card_icon_path", ""))
-	if path.is_empty() or not ResourceLoader.exists(path):
+	var texture := _load_ui_texture(path)
+	if texture == null:
 		return null
 
-	var resource = load(path)
-	return resource as Texture2D
+	var display_texture: Texture2D = texture
+	var image := texture.get_image()
+	if image != null and not image.is_empty():
+		var used_rect := image.get_used_rect()
+		if used_rect.size.x > 0 and used_rect.size.y > 0:
+			var atlas := AtlasTexture.new()
+			atlas.atlas = texture
+			atlas.region = Rect2(
+				used_rect.position,
+				used_rect.size
+			)
+			display_texture = atlas
+
+	monster_card_icon_cache[monster_id] = display_texture
+	return display_texture
+
+
+func _load_monster_info_icon(monster_id: String) -> Texture2D:
+	return _load_monster_card_icon(monster_id)
 
 func _on_summon_slot_pressed(slot_index: int) -> void:
 	if slot_index < 0 or slot_index >= battle_loadout_ids.size():
@@ -2503,9 +2564,8 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	hero_info_panel.hide()
 	hero_info_bookmark.hide()
 	hero_info_animating = false
-	slime_button.disabled = true
-	spider_button.disabled = true
-	orc_button.disabled = true
+	for summon_button in summon_slot_buttons:
+		summon_button.disabled = true
 	demon_ultimate_1.disabled = true
 	demon_ultimate_2.disabled = true
 	demon_ultimate_3.disabled = true
