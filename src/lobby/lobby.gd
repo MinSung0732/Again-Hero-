@@ -21,6 +21,7 @@ const UI_CARD_FRAME_DIR := "res://assets/art/UI/uicardframes"
 const UI_HEADER_CARD_PATH := UI_CARD_FRAME_DIR + "/ui1.png"
 const UI_CONTENT_CARD_PATH := UI_CARD_FRAME_DIR + "/ui9.png"
 const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
+const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_background.png"
 
 @onready var title_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
 @onready var resource_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ResourceLabel
@@ -804,15 +805,265 @@ func _ensure_nav_active_indicator(button: Button) -> void:
 	button.add_child(indicator)
 
 
+
+func _install_lobby_background() -> void:
+	var texture := _load_png_texture_direct(UI_LOBBY_BACKGROUND_PATH)
+	if texture == null:
+		return
+
+	var backdrop := get_node_or_null("LobbyBackground") as TextureRect
+	if backdrop == null:
+		backdrop = TextureRect.new()
+		backdrop.name = "LobbyBackground"
+		backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		add_child(backdrop)
+		move_child(backdrop, 0)
+
+	backdrop.texture = texture
+	backdrop.modulate = Color(0.62, 0.50, 0.72, 0.82)
+
+
+func _make_hud_panel_style(
+	background: Color,
+	border: Color,
+	border_width: int = 2,
+	corner_radius: int = 12
+) -> StyleBoxFlat:
+	var style := _make_style(
+		background,
+		border,
+		border_width,
+		corner_radius
+	)
+	style.content_margin_left = 0.0
+	style.content_margin_top = 0.0
+	style.content_margin_right = 0.0
+	style.content_margin_bottom = 0.0
+	return style
+
+
+func _install_stage_entry_hud() -> void:
+	var section_header := $SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox as Control
+	var section_title := $SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox/SectionTitle as Label
+	var section_subtitle := $SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox/SectionSubtitle as Label
+	var stage_meta := $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox as Control
+	var card_margin := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin as MarginContainer
+	var portrait_frame := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame as PanelContainer
+	var portrait_inner := portrait_texture.get_parent() as PanelContainer
+	var bottom_panel := stage_description_label.get_parent() as Control
+
+	# Header and stage meta used to overflow their VBox slots. Keep every label
+	# inside its own reserved area so the whole screen reads as one HUD.
+	section_header.custom_minimum_size = Vector2(0.0, 112.0)
+	section_title.offset_top = 12.0
+	section_title.offset_bottom = 58.0
+	section_subtitle.offset_top = 60.0
+	section_subtitle.offset_bottom = 96.0
+
+	stage_meta.custom_minimum_size = Vector2(0.0, 116.0)
+	stage_number_label.offset_top = 12.0
+	stage_number_label.offset_bottom = 44.0
+	stage_name_label.offset_top = 44.0
+	stage_name_label.offset_bottom = 102.0
+
+	var meta_plate := stage_meta.get_node_or_null("StageMetaPlate") as Panel
+	if meta_plate == null:
+		meta_plate = Panel.new()
+		meta_plate.name = "StageMetaPlate"
+		meta_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		meta_plate.anchor_left = 0.16
+		meta_plate.anchor_top = 0.04
+		meta_plate.anchor_right = 0.84
+		meta_plate.anchor_bottom = 0.96
+		meta_plate.add_theme_stylebox_override(
+			"panel",
+			_make_hud_panel_style(
+				Color(0.055, 0.035, 0.075, 0.84),
+				Color(0.78, 0.55, 0.22, 0.92),
+				2,
+				10
+			)
+		)
+		stage_meta.add_child(meta_plate)
+		stage_meta.move_child(meta_plate, 0)
+
+	for data in [
+		["HeaderRuleLeft", 0.05, 0.38, 0.30, 0.40],
+		["HeaderRuleRight", 0.70, 0.38, 0.95, 0.40],
+	]:
+		var node_name := String(data[0])
+		if section_header.get_node_or_null(node_name) != null:
+			continue
+		var rule := ColorRect.new()
+		rule.name = node_name
+		rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		rule.color = Color(0.74, 0.47, 0.83, 0.72)
+		rule.anchor_left = float(data[1])
+		rule.anchor_top = float(data[2])
+		rule.anchor_right = float(data[3])
+		rule.anchor_bottom = float(data[4])
+		section_header.add_child(rule)
+		section_header.move_child(rule, 0)
+
+	card_margin.add_theme_constant_override("margin_left", 30)
+	card_margin.add_theme_constant_override("margin_right", 30)
+	card_margin.add_theme_constant_override("margin_bottom", 42)
+
+	portrait_frame.anchor_left = 0.035
+	portrait_frame.anchor_top = 0.145
+	portrait_frame.anchor_right = 0.965
+	portrait_frame.anchor_bottom = 0.575
+	hero_name_label.anchor_top = 0.585
+	hero_name_label.anchor_bottom = 0.645
+
+	if portrait_inner != null:
+		var portrait_backdrop := portrait_inner.get_node_or_null("PortraitBackdrop") as TextureRect
+		if portrait_backdrop == null:
+			var portrait_background_texture := _load_png_texture_direct(
+				UI_LOBBY_BACKGROUND_PATH
+			)
+			if portrait_background_texture != null:
+				portrait_backdrop = TextureRect.new()
+				portrait_backdrop.name = "PortraitBackdrop"
+				portrait_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				portrait_backdrop.texture = portrait_background_texture
+				portrait_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				portrait_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+				portrait_backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				portrait_backdrop.modulate = Color(0.46, 0.32, 0.56, 0.52)
+				portrait_backdrop.set_anchors_and_offsets_preset(
+					Control.PRESET_FULL_RECT
+				)
+				portrait_inner.add_child(portrait_backdrop)
+				portrait_inner.move_child(portrait_backdrop, 0)
+
+	portrait_texture.z_index = 1
+	portrait_placeholder.z_index = 2
+	portrait_badge.z_index = 2
+
+	bottom_panel.anchor_left = 0.075
+	bottom_panel.anchor_top = 0.68
+	bottom_panel.anchor_right = 0.925
+	bottom_panel.anchor_bottom = 0.935
+
+	var description_backing := bottom_panel.get_node_or_null(
+		"DescriptionBacking"
+	) as Panel
+	if description_backing == null:
+		description_backing = Panel.new()
+		description_backing.name = "DescriptionBacking"
+		description_backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		description_backing.anchor_left = 0.0
+		description_backing.anchor_top = 0.0
+		description_backing.anchor_right = 1.0
+		description_backing.anchor_bottom = 0.34
+		description_backing.add_theme_stylebox_override(
+			"panel",
+			_make_hud_panel_style(
+				Color(0.055, 0.04, 0.075, 0.90),
+				Color(0.29, 0.22, 0.35, 0.95),
+				2,
+				10
+			)
+		)
+		bottom_panel.add_child(description_backing)
+		bottom_panel.move_child(description_backing, 0)
+
+	var info_backing := bottom_panel.get_node_or_null("EntryInfoBacking") as Panel
+	if info_backing == null:
+		info_backing = Panel.new()
+		info_backing.name = "EntryInfoBacking"
+		info_backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		info_backing.anchor_left = 0.0
+		info_backing.anchor_top = 0.39
+		info_backing.anchor_right = 1.0
+		info_backing.anchor_bottom = 0.66
+		info_backing.add_theme_stylebox_override(
+			"panel",
+			_make_hud_panel_style(
+				Color(0.07, 0.045, 0.095, 0.94),
+				Color(0.68, 0.47, 0.19, 0.92),
+				2,
+				8
+			)
+		)
+		bottom_panel.add_child(info_backing)
+		bottom_panel.move_child(info_backing, 1)
+
+		for split_ratio in [0.333, 0.666]:
+			var divider := ColorRect.new()
+			divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			divider.color = Color(0.55, 0.39, 0.19, 0.72)
+			divider.anchor_left = split_ratio
+			divider.anchor_top = 0.16
+			divider.anchor_right = split_ratio
+			divider.anchor_bottom = 0.84
+			divider.offset_left = -1.0
+			divider.offset_right = 1.0
+			info_backing.add_child(divider)
+
+	stage_description_label.anchor_left = 0.04
+	stage_description_label.anchor_top = 0.03
+	stage_description_label.anchor_right = 0.96
+	stage_description_label.anchor_bottom = 0.31
+	stage_description_label.offset_left = 0.0
+	stage_description_label.offset_top = 0.0
+	stage_description_label.offset_right = 0.0
+	stage_description_label.offset_bottom = 0.0
+
+	stage_status_label.anchor_left = 0.02
+	stage_status_label.anchor_top = 0.40
+	stage_status_label.anchor_right = 0.325
+	stage_status_label.anchor_bottom = 0.65
+	stage_reward_label.anchor_left = 0.345
+	stage_reward_label.anchor_top = 0.40
+	stage_reward_label.anchor_right = 0.655
+	stage_reward_label.anchor_bottom = 0.65
+
+	var repeat_label := bottom_panel.get_node_or_null("RepeatReward") as Label
+	if repeat_label == null:
+		repeat_label = Label.new()
+		repeat_label.name = "RepeatReward"
+		repeat_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		repeat_label.anchor_left = 0.675
+		repeat_label.anchor_top = 0.40
+		repeat_label.anchor_right = 0.98
+		repeat_label.anchor_bottom = 0.65
+		repeat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		repeat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		repeat_label.add_theme_font_size_override("font_size", 20)
+		repeat_label.add_theme_color_override("font_color", Color("d7c8df"))
+		bottom_panel.add_child(repeat_label)
+
+	enter_stage_button.anchor_left = 0.05
+	enter_stage_button.anchor_top = 0.72
+	enter_stage_button.anchor_right = 0.95
+	enter_stage_button.anchor_bottom = 0.98
+	enter_stage_button.custom_minimum_size = Vector2(0.0, 70.0)
+
+	stage_description_label.add_theme_font_size_override("font_size", 22)
+	stage_status_label.add_theme_font_size_override("font_size", 20)
+	stage_reward_label.add_theme_font_size_override("font_size", 20)
+	stage_status_label.add_theme_color_override("font_color", Color("ded3e4"))
+	stage_reward_label.add_theme_color_override("font_color", Color("f0cb68"))
+
+
 func _apply_lobby_visual_polish() -> void:
 	# Keep the 1080x1920 logical layout intact and only refine presentation.
 	# This makes the pass safe for the existing 540x960 window override and
 	# avoids changing touch targets or tab behavior.
+	_install_lobby_background()
+	_install_stage_entry_hud()
+
 	var background := $Background as ColorRect
 	var backdrop_glow := $BackdropGlow as ColorRect
-	background.color = Color("08060f")
-	backdrop_glow.color = Color("1b1027")
-	backdrop_glow.anchor_bottom = 0.64
+	background.color = Color(0.025, 0.018, 0.04, 0.72)
+	backdrop_glow.color = Color(0.16, 0.07, 0.23, 0.18)
+	backdrop_glow.anchor_bottom = 0.72
 
 	var safe_area := $SafeArea as MarginContainer
 	safe_area.add_theme_constant_override("margin_left", 28)
