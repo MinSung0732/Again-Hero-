@@ -304,11 +304,17 @@ func _apply_damage_tick() -> void:
 		var max_hp_value = monster.get("max_hp")
 		var current_hp := maxi(int(hp_value), 0)
 		var max_hp := maxi(int(max_hp_value) if max_hp_value != null else current_hp, 1)
+		var hit_position := monster.global_position
 		if float(current_hp) / float(max_hp) <= execution_hp_ratio:
 			_execute_monster(monster, current_hp, max_hp)
 			executed_any = true
 		else:
 			monster.call("take_damage", damage)
+		if (
+			is_instance_valid(caster)
+			and caster.has_method("_on_sage_skill_hit")
+		):
+			caster.call("_on_sage_skill_hit", hit_position)
 
 	_damage_scratch.clear()
 	if (
