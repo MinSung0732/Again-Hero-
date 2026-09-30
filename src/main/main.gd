@@ -7,6 +7,7 @@ const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const HERO_AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
 const HERO_SKILL_COOLDOWN_BADGE := preload("res://src/ui/hero_skill_cooldown_badge.gd")
+const BATTLE_PIXEL_FRAME_ASSEMBLER := preload("res://src/ui/battle_pixel_frame_assembler.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const STAGE_INTRO_DIALOGUES := preload("res://src/data/stage_intro_dialogues.gd")
 const HERO_REVEAL_CATALOG := preload("res://src/data/hero_reveal_catalog.gd")
@@ -17,6 +18,11 @@ const TOUCH_HOLD_DELAY := 0.18
 const TOUCH_HOLD_FRAME_SECONDS := 0.08
 const GAMEPLAY_SETTINGS_PATH := "user://gameplay_settings.cfg"
 const CAMERA_DRAG_THRESHOLD := 12.0
+
+const BATTLE_PIXEL_FRAME_LARGE_DIR := "res://assets/art/UI/01_large_left_panel"
+const BATTLE_PIXEL_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
+const BATTLE_PIXEL_CENTER_LARGE := BATTLE_PIXEL_FRAME_LARGE_DIR + "/part_04.png"
+const BATTLE_PIXEL_CENTER_DARK := "res://assets/art/UI/05_right_bars/part_02.png"
 
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
 @onready var battle_viewport: SubViewport = $BattleViewportContainer/BattleViewport
@@ -220,6 +226,7 @@ func _ready() -> void:
 	skill_unlock_cutscene.finished.connect(_on_skill_unlock_cutscene_finished)
 	get_viewport().size_changed.connect(_sync_skill_unlock_cutscene_frame)
 	call_deferred("_sync_skill_unlock_cutscene_frame")
+	call_deferred("_apply_battle_pixel_asset_frames")
 
 	battle.stats_changed.connect(_on_stats_changed)
 	battle.progression_changed.connect(_on_progression_changed)
@@ -374,6 +381,97 @@ func _ready() -> void:
 
 	print("Again, Hero? stage/camera prototype loaded.")
 	print("Finite world camera + persistent stage progression enabled.")
+
+func _apply_battle_pixel_asset_frames() -> void:
+	# Use the original split PNG assets as tiled frame pieces.
+	# Long edges tile instead of stretching, so corner pixel art keeps its shape.
+	_replace_texture_frame(
+		$HUD/TopBar/HeroStatusFrame,
+		BATTLE_PIXEL_FRAME_LARGE_DIR,
+		0.62,
+		BATTLE_PIXEL_CENTER_LARGE,
+		28
+	)
+	_replace_button_frame(
+		stage_menu_button,
+		BATTLE_PIXEL_FRAME_MEDIUM_DIR,
+		0.34,
+		BATTLE_PIXEL_CENTER_DARK,
+		18
+	)
+	_replace_texture_frame(
+		$HUD/TopBar/MonsterFrame,
+		BATTLE_PIXEL_FRAME_MEDIUM_DIR,
+		0.34,
+		BATTLE_PIXEL_CENTER_DARK,
+		18
+	)
+	_replace_button_frame(
+		monster_info_bookmark,
+		BATTLE_PIXEL_FRAME_MEDIUM_DIR,
+		0.34,
+		BATTLE_PIXEL_CENTER_DARK,
+		18
+	)
+	_replace_button_frame(
+		hero_info_bookmark,
+		BATTLE_PIXEL_FRAME_MEDIUM_DIR,
+		0.34,
+		BATTLE_PIXEL_CENTER_DARK,
+		18
+	)
+
+	for button in [
+		summon_slot_1,
+		summon_slot_2,
+		summon_slot_3,
+	]:
+		_replace_button_frame(
+			button,
+			BATTLE_PIXEL_FRAME_MEDIUM_DIR,
+			0.44,
+			BATTLE_PIXEL_CENTER_DARK,
+			20
+		)
+
+
+func _replace_texture_frame(
+	target: TextureRect,
+	frame_dir: String,
+	scale: float,
+	center_texture_path: String,
+	center_patch_margin: int
+) -> void:
+	if target == null:
+		return
+	target.texture = null
+	BATTLE_PIXEL_FRAME_ASSEMBLER.add_split_frame(
+		target,
+		frame_dir,
+		scale,
+		center_texture_path,
+		center_patch_margin
+	)
+
+
+func _replace_button_frame(
+	button: Button,
+	frame_dir: String,
+	scale: float,
+	center_texture_path: String,
+	center_patch_margin: int
+) -> void:
+	if button == null:
+		return
+	BATTLE_PIXEL_FRAME_ASSEMBLER.clear_button_style(button)
+	BATTLE_PIXEL_FRAME_ASSEMBLER.add_split_frame(
+		button,
+		frame_dir,
+		scale,
+		center_texture_path,
+		center_patch_margin
+	)
+
 
 func _process(delta: float) -> void:
 	_update_touch_hold_feedback(delta)
