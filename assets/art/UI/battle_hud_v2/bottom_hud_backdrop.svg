@@ -64,8 +64,6 @@
   <rect x="0" y="0" width="1080" height="10" fill="#070812"/>
   <rect x="0" y="8" width="1080" height="2" fill="#8a35a8" opacity="0.70"/>
   <rect x="0" y="12" width="1080" height="2" fill="#d58a27" opacity="0.30"/>
-  <polygon points="540,2 548,10 540,18 532,10" fill="#73299c" stroke="#dca43a" stroke-width="2"/>
-
   <!-- bottom grounding -->
   <rect x="0" y="455" width="1080" height="10" fill="#060711"/>
   <rect x="0" y="453" width="1080" height="2" fill="#4f215f" opacity="0.55"/>

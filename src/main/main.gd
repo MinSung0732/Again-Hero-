@@ -1,5 +1,7 @@
 extends Control
 
+signal demon_action_choice_selected(context: String, choice_id: String)
+
 const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
@@ -92,12 +94,7 @@ const BATTLE_PIXEL_BAR_BACKGROUND := "res://assets/art/UI/05_right_bars/part_02.
 @onready var demon_ultimate_1_cooldown: ProgressBar = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate1/CooldownBar
 @onready var demon_ultimate_2_cooldown: ProgressBar = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate2/CooldownBar
 @onready var demon_ultimate_3_cooldown: ProgressBar = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate3/CooldownBar
-@onready var demon_direction_buttons: HBoxContainer = $HUD/DemonUltimatePanel/DirectionButtons
-@onready var demon_direction_east: Button = $HUD/DemonUltimatePanel/DirectionButtons/East
-@onready var demon_direction_west: Button = $HUD/DemonUltimatePanel/DirectionButtons/West
-@onready var demon_direction_north: Button = $HUD/DemonUltimatePanel/DirectionButtons/North
-@onready var demon_direction_south: Button = $HUD/DemonUltimatePanel/DirectionButtons/South
-@onready var demon_direction_cancel: Button = $HUD/DemonUltimatePanel/DirectionButtons/Cancel
+@onready var demon_action_choice_grid: GridContainer = $HUD/DemonUltimatePanel/ActionChoiceGrid
 @onready var summon_slot_1: Button = $HUD/BottomBar/SummonButtons/Slot1
 @onready var summon_slot_2: Button = $HUD/BottomBar/SummonButtons/Slot2
 @onready var summon_slot_3: Button = $HUD/BottomBar/SummonButtons/Slot3
@@ -175,10 +172,14 @@ var monster_mutation_icon_cache: Dictionary = {}
 var demon_ultimate_charge_ready: bool = false
 var demon_mana_current: float = 0.0
 var demon_ultimate_cooldowns: Dictionary = {}
-var demon_direction_select_active: bool = false
+var demon_action_choice_active: bool = false
 var demon_ultimate_ui_skills: Array[Dictionary] = []
 var demon_ultimate_ui_buttons: Array[Button] = []
 var demon_ultimate_ui_cooldown_bars: Array[ProgressBar] = []
+var demon_action_choice_context: String = ""
+var demon_action_choice_ids: Array[String] = []
+var demon_action_choice_actions: Array[Callable] = []
+var demon_action_choice_buttons: Array[Button] = []
 var monster_info_selected_index: int = 0
 var monster_info_animating: bool = false
 var hero_info_animating: bool = false
@@ -212,6 +213,7 @@ var _battle_toast_timer: float = 0.0
 
 func _ready() -> void:
 	_cache_demon_ultimate_ui_data()
+	_ensure_demon_action_choice_capacity(5)
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
 		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_PORTRAIT)
 
@@ -321,19 +323,6 @@ func _ready() -> void:
 	demon_ultimate_3.pressed.connect(
 		_on_demon_ultimate_pressed.bind("square_siege")
 	)
-	demon_direction_east.pressed.connect(
-		_on_demon_line_direction_pressed.bind("east")
-	)
-	demon_direction_west.pressed.connect(
-		_on_demon_line_direction_pressed.bind("west")
-	)
-	demon_direction_north.pressed.connect(
-		_on_demon_line_direction_pressed.bind("north")
-	)
-	demon_direction_south.pressed.connect(
-		_on_demon_line_direction_pressed.bind("south")
-	)
-	demon_direction_cancel.pressed.connect(_close_demon_direction_select)
 	next_stage_button.pressed.connect(_on_next_stage_pressed)
 	stage_select_result_button.pressed.connect(_on_lobby_pressed)
 	restart_button.pressed.connect(_on_restart_pressed)
@@ -2521,7 +2510,7 @@ func _on_demon_ultimate_changed(
 	demon_mana_current = current_value
 	demon_ultimate_bar.max_value = maxf(max_value, 1.0)
 	demon_ultimate_bar.value = current_value
-	if not demon_direction_select_active:
+	if not demon_action_choice_active:
 		demon_ultimate_label.text = "필살기   %d / %d" % [
 			int(round(current_value)),
 			int(round(max_value)),
@@ -2546,6 +2535,128 @@ func _cache_demon_ultimate_ui_data() -> void:
 		if skill.is_empty():
 			skill = {"id": skill_id}
 		demon_ultimate_ui_skills.append(skill)
+
+
+func _ensure_demon_action_choice_capacity(required_count: int) -> void:
+	while demon_action_choice_buttons.size() < maxi(required_count, 0):
+		var button_index := demon_action_choice_buttons.size()
+		var button := Button.new()
+		button.name = "Choice%d" % (button_index + 1)
+		button.focus_mode = Control.FOCUS_NONE
+		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		button.clip_text = true
+		button.add_theme_color_override(
+			"font_color",
+			Color(0.96, 0.91, 1.0, 1.0)
+		)
+		button.add_theme_color_override(
+			"font_pressed_color",
+			Color(1.0, 0.88, 0.4, 1.0)
+		)
+		button.add_theme_color_override(
+			"font_disabled_color",
+			Color(0.48, 0.45, 0.54, 0.9)
+		)
+		for style_name in ["normal", "hover", "pressed", "disabled"]:
+			var style_box := demon_ultimate_1.get_theme_stylebox(style_name)
+			if style_box != null:
+				button.add_theme_stylebox_override(style_name, style_box)
+		button.pressed.connect(
+			_on_demon_action_choice_button_pressed.bind(button_index)
+		)
+		demon_action_choice_grid.add_child(button)
+		button.hide()
+		demon_action_choice_buttons.append(button)
+
+
+func _show_demon_action_choices(
+	title: String,
+	context: String,
+	choices: Array
+) -> void:
+	var choice_count := choices.size()
+	if choice_count <= 0:
+		return
+
+	_ensure_demon_action_choice_capacity(choice_count)
+	demon_action_choice_active = true
+	demon_action_choice_context = context
+	demon_action_choice_ids.clear()
+	demon_action_choice_actions.clear()
+
+	var column_count := choice_count
+	if choice_count > 5:
+		column_count = ceili(float(choice_count) / 2.0)
+	demon_action_choice_grid.columns = maxi(column_count, 1)
+	var row_count := ceili(
+		float(choice_count) / float(demon_action_choice_grid.columns)
+	)
+	var font_size := 22
+	if choice_count >= 5:
+		font_size = 20
+	if row_count > 1:
+		font_size = 17
+
+	for choice_index in range(choice_count):
+		var choice: Dictionary = choices[choice_index]
+		var choice_id := String(choice.get("id", "choice_%d" % choice_index))
+		var action := Callable()
+		var raw_action = choice.get("action", Callable())
+		if typeof(raw_action) == TYPE_CALLABLE:
+			action = raw_action
+		demon_action_choice_ids.append(choice_id)
+		demon_action_choice_actions.append(action)
+
+		var button := demon_action_choice_buttons[choice_index]
+		button.text = String(choice.get("text", choice_id))
+		button.disabled = bool(choice.get("disabled", false))
+		button.add_theme_font_size_override(
+			"font_size",
+			int(choice.get("font_size", font_size))
+		)
+		button.show()
+
+	for button_index in range(
+		choice_count,
+		demon_action_choice_buttons.size()
+	):
+		demon_action_choice_buttons[button_index].hide()
+
+	$HUD/DemonUltimatePanel/UltimateButtons.hide()
+	demon_ultimate_bar.hide()
+	demon_action_choice_grid.show()
+	demon_ultimate_label.text = title
+	demon_ultimate_label.add_theme_color_override(
+		"font_color",
+		Color(1.0, 0.78, 0.28, 1.0)
+	)
+
+
+func _hide_demon_action_choices() -> void:
+	demon_action_choice_active = false
+	demon_action_choice_grid.hide()
+	for button in demon_action_choice_buttons:
+		button.hide()
+	demon_action_choice_context = ""
+	demon_action_choice_ids.clear()
+	demon_action_choice_actions.clear()
+
+
+func _on_demon_action_choice_button_pressed(button_index: int) -> void:
+	if button_index < 0 or button_index >= demon_action_choice_ids.size():
+		return
+	var button := demon_action_choice_buttons[button_index]
+	_flash_button_feedback(button)
+	var choice_id := demon_action_choice_ids[button_index]
+	demon_action_choice_selected.emit(
+		demon_action_choice_context,
+		choice_id
+	)
+	var action := demon_action_choice_actions[button_index]
+	if action.is_valid():
+		action.call()
 
 
 func _on_demon_ultimate_cooldowns_changed(cooldowns: Dictionary) -> void:
@@ -2667,20 +2778,54 @@ func _on_demon_ultimate_pressed(skill_id: String) -> void:
 		status_label.text = "마력이 부족합니다. %s은(는) 마력 %d가 필요합니다." % [String(skill.get("name", "마력 기술")), int(round(mana_cost))]
 
 func _open_demon_direction_select() -> void:
-	demon_direction_select_active = true
-	$HUD/DemonUltimatePanel/UltimateButtons.hide()
-	demon_ultimate_bar.hide()
-	demon_direction_buttons.show()
-	demon_ultimate_label.text = "일직선 공세 · 방향 선택"
-	demon_ultimate_label.add_theme_color_override(
-		"font_color",
-		Color(1.0, 0.78, 0.28, 1.0)
+	var direction_choices: Array = [
+		{
+			"id": "east",
+			"text": "동쪽 ▶",
+			"action": Callable(
+				self,
+				"_on_demon_line_direction_pressed"
+			).bind("east"),
+		},
+		{
+			"id": "west",
+			"text": "◀ 서쪽",
+			"action": Callable(
+				self,
+				"_on_demon_line_direction_pressed"
+			).bind("west"),
+		},
+		{
+			"id": "north",
+			"text": "▲ 북쪽",
+			"action": Callable(
+				self,
+				"_on_demon_line_direction_pressed"
+			).bind("north"),
+		},
+		{
+			"id": "south",
+			"text": "▼ 남쪽",
+			"action": Callable(
+				self,
+				"_on_demon_line_direction_pressed"
+			).bind("south"),
+		},
+		{
+			"id": "cancel",
+			"text": "취소",
+			"action": Callable(self, "_close_demon_direction_select"),
+		},
+	]
+	_show_demon_action_choices(
+		"일직선 공세 · 방향 선택",
+		"line_direction",
+		direction_choices
 	)
 	_show_battle_toast("일직선 공세 · 발사 방향을 선택하세요", 1.2)
 
 func _close_demon_direction_select() -> void:
-	demon_direction_select_active = false
-	demon_direction_buttons.hide()
+	_hide_demon_action_choices()
 	demon_ultimate_bar.show()
 	$HUD/DemonUltimatePanel/UltimateButtons.show()
 	demon_ultimate_label.remove_theme_color_override("font_color")
@@ -2702,16 +2847,6 @@ func _close_demon_direction_select() -> void:
 			)
 
 func _on_demon_line_direction_pressed(direction: String) -> void:
-	match direction:
-		"east":
-			_flash_button_feedback(demon_direction_east)
-		"west":
-			_flash_button_feedback(demon_direction_west)
-		"north":
-			_flash_button_feedback(demon_direction_north)
-		"south":
-			_flash_button_feedback(demon_direction_south)
-
 	var direction_name: String = String({
 		"east": "동쪽",
 		"west": "서쪽",
@@ -2993,7 +3128,7 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	demon_ultimate_1.disabled = true
 	demon_ultimate_2.disabled = true
 	demon_ultimate_3.disabled = true
-	demon_direction_buttons.hide()
+	_hide_demon_action_choices()
 	placement_toggle.disabled = true
 
 	if player_won:

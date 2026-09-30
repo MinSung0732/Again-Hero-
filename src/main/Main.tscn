@@ -897,79 +897,15 @@ theme_override_styles/background = SubResource("StyleBoxFlat_cooldown_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_cooldown_fill")
 show_percentage = false
 
-[node name="DirectionButtons" type="HBoxContainer" parent="HUD/DemonUltimatePanel"]
+[node name="ActionChoiceGrid" type="GridContainer" parent="HUD/DemonUltimatePanel"]
 visible = false
-offset_left = 48.0
-offset_top = 98.0
-offset_right = 1032.0
-offset_bottom = 194.0
-theme_override_constants/separation = 10
-alignment = 1
-
-[node name="East" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
-focus_mode = 0
-theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
-theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
-theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
-theme_override_colors/font_pressed_color = Color(1, 0.88, 0.4, 1)
-theme_override_colors/font_color = Color(0.96, 0.91, 1, 1)
-custom_minimum_size = Vector2(0, 96)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 25
-text = "동쪽 ▶"
-
-[node name="West" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
-focus_mode = 0
-theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
-theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
-theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
-theme_override_colors/font_pressed_color = Color(1, 0.88, 0.4, 1)
-theme_override_colors/font_color = Color(0.96, 0.91, 1, 1)
-custom_minimum_size = Vector2(0, 96)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 25
-text = "◀ 서쪽"
-
-[node name="North" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
-focus_mode = 0
-theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
-theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
-theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
-theme_override_colors/font_pressed_color = Color(1, 0.88, 0.4, 1)
-theme_override_colors/font_color = Color(0.96, 0.91, 1, 1)
-custom_minimum_size = Vector2(0, 96)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 25
-text = "▲ 북쪽"
-
-[node name="South" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
-focus_mode = 0
-theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
-theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
-theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
-theme_override_colors/font_pressed_color = Color(1, 0.88, 0.4, 1)
-theme_override_colors/font_color = Color(0.96, 0.91, 1, 1)
-custom_minimum_size = Vector2(0, 96)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 25
-text = "▼ 남쪽"
-
-[node name="Cancel" type="Button" parent="HUD/DemonUltimatePanel/DirectionButtons"]
-focus_mode = 0
-theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
-theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
-theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
-theme_override_colors/font_pressed_color = Color(1, 0.88, 0.4, 1)
-theme_override_colors/font_color = Color(0.96, 0.91, 1, 1)
-custom_minimum_size = Vector2(0, 96)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 20
-text = "취소"
+offset_left = 54.0
+offset_top = 100.0
+offset_right = 1026.0
+offset_bottom = 184.0
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 8
+columns = 5
 
 [node name="BottomBar" type="Control" parent="HUD"]
 anchors_preset = 12
