@@ -1452,6 +1452,26 @@ func _apply_giant_monster_base_stats(
 			)
 		)
 		monster.set(
+			"hero_kill_exp_reward",
+			maxi(
+				1,
+				int(round(
+					float(monster.get("hero_kill_exp_reward"))
+					* GIANT_MONSTER_STAT_MULTIPLIER
+				))
+			)
+		)
+		monster.set(
+			"self_destruct_exp_reward",
+			maxi(
+				1,
+				int(round(
+					float(monster.get("self_destruct_exp_reward"))
+					* GIANT_MONSTER_STAT_MULTIPLIER
+				))
+			)
+		)
+		monster.set(
 			"explosion_radius",
 			float(monster.get("explosion_radius"))
 			* GIANT_MONSTER_STAT_MULTIPLIER
