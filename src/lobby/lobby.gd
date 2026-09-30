@@ -964,6 +964,7 @@ func _install_stage_entry_hud() -> void:
 				8
 			)
 		)
+		hero_name_plate.z_index = 2
 		hero_name_label.get_parent().add_child(hero_name_plate)
 		hero_name_label.get_parent().move_child(hero_name_plate, 1)
 
@@ -1088,7 +1089,7 @@ func _install_stage_entry_hud() -> void:
 		repeat_label.anchor_bottom = 0.695
 		repeat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		repeat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		repeat_label.add_theme_font_size_override("font_size", 20)
+		repeat_label.add_theme_font_size_override("font_size", 21)
 		repeat_label.add_theme_color_override("font_color", Color("d7c8df"))
 		bottom_panel.add_child(repeat_label)
 
@@ -2477,13 +2478,13 @@ func _refresh_stage_card() -> void:
 	if reward_claimed:
 		stage_reward_label.text = "최초 보상\n획득 완료"
 	else:
-		stage_reward_label.text = "최초 보상\n+%d" % reward
+		stage_reward_label.text = "최초 보상\n연구 +%d" % reward
 
 	var repeat_label := stage_description_label.get_parent().get_node_or_null(
 		"RepeatReward"
 	) as Label
 	if repeat_label != null:
-		repeat_label.text = "반복 클리어\n×%.2f" % run_reward_multiplier
+		repeat_label.text = "반복 보상\n×%.2f" % run_reward_multiplier
 
 	enter_stage_button.disabled = not unlocked
 	enter_stage_button.text = "던전 입장" if unlocked else "스테이지 잠김"
