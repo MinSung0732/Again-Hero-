@@ -258,6 +258,10 @@ func _show_current_line() -> void:
 
 	var entry: Dictionary = line
 	var speaker := String(entry.get("speaker", "hero"))
+	var hero_name_override := String(entry.get("hero_name", "")).strip_edges()
+	if not hero_name_override.is_empty():
+		_hero_display_name = hero_name_override
+		hero_name.text = _hero_display_name
 	dialogue_text.text = String(entry.get("text", ""))
 	_animate_dialogue_text()
 

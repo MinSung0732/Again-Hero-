@@ -1,7 +1,7 @@
 extends RefCounted
 class_name StageCatalog
 
-const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4", "stage_5", "stage_6", "stage_7", "stage_8", "stage_9"]
+const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4", "stage_5", "stage_6", "stage_7", "stage_8", "stage_9", "stage_10"]
 
 const STAGES = {
 	"stage_1": {
@@ -625,6 +625,29 @@ const STAGES = {
 		],
 		"first_clear_reward": 0,
 		"run_reward_multiplier": 3.00,
+		"next_stage_id": "stage_10",
+	},
+	"stage_10": {
+		"id": "stage_10",
+		"number": 10,
+		"display_name": "열 번째 침입자",
+		"hero_id": "sage_astra",
+		"hero_ai_profile_id": "stage_10_sage",
+		"portrait_path": "res://assets/art/heroes/portrait/stage10_hero_portrait.png",
+		"lobby_description": "두 번의 패배를 넘어 준비와 각오로 돌아온 대현자 용사.",
+		"hero_level_start": 1,
+		"map_width": 5000,
+		"map_height": 5000,
+		"run_duration_seconds": 600.0,
+		"event_timeline": [
+			{"id": "stage10_elite_01", "at_seconds": 120.0, "type": "elite", "name": "1차 현자 돌연변이", "selection_mode": "team", "mutation_profile_id": "mutation_1", "reinforcement_count": 15, "reinforcement_batch_size": 3, "reinforcement_interval": 0.12},
+			{"id": "stage10_elite_02", "at_seconds": 240.0, "type": "elite", "name": "2차 성좌 돌연변이", "selection_mode": "team", "mutation_profile_id": "mutation_2", "reinforcement_count": 18, "reinforcement_batch_size": 4, "reinforcement_interval": 0.12},
+			{"id": "stage10_elite_03", "at_seconds": 360.0, "type": "elite", "name": "3차 대현자 돌연변이", "selection_mode": "team", "mutation_profile_id": "mutation_2", "reinforcement_count": 21, "reinforcement_batch_size": 4, "reinforcement_interval": 0.12},
+			{"id": "stage10_miniboss_01", "at_seconds": 480.0, "type": "miniboss", "name": "대돌연변이 별의 파수꾼", "selection_mode": "team", "mutation_profile_id": "greater_mutation", "reinforcement_count": 24, "reinforcement_batch_size": 4, "reinforcement_interval": 0.12},
+			{"id": "stage10_boss_01", "at_seconds": 540.0, "type": "boss", "name": "대현자 침공 대장", "selection_mode": "team_random", "hp_multiplier": 12.5, "damage_multiplier": 3.75, "speed_multiplier": 1.28, "exp_multiplier": 5.4, "visual_scale": 1.72, "reinforcement_count": 28, "reinforcement_batch_size": 4, "reinforcement_interval": 0.12},
+		],
+		"first_clear_reward": 0,
+		"run_reward_multiplier": 3.25,
 		"next_stage_id": "",
 	},
 }

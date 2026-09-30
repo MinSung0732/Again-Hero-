@@ -700,6 +700,20 @@ func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 func _begin_stage_entry(snapshot: Dictionary) -> void:
 	var stage_id := String(snapshot.get("stage_id", ""))
 	var dialogue := STAGE_INTRO_DIALOGUES.get_dialogue(stage_id)
+	if stage_id in ["stage_1", "stage_5"] and not dialogue.is_empty():
+		var hero_id := String(snapshot.get("hero_id", ""))
+		var reveal_data := HERO_REVEAL_CATALOG.get_reveal_data(
+			hero_id,
+			String(snapshot.get("hero_name", "용사")),
+			String(snapshot.get("hero_portrait_path", ""))
+		)
+		var identity_id := String(reveal_data.get("identity_id", hero_id))
+		var true_name := String(reveal_data.get("true_name", "")).strip_edges()
+		if (
+			not true_name.is_empty()
+			and STAGE_PROGRESS.is_hero_true_name_unlocked(identity_id)
+		):
+			dialogue["hero_name"] = true_name
 	if dialogue.is_empty():
 		_begin_hero_reveal(snapshot)
 		return

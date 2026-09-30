@@ -14,6 +14,7 @@ const PROJECTILE_SCENE := preload("res://src/hero/HeroProjectile.tscn")
 const GUNNER_PROJECTILE_SCENE := preload("res://src/hero/GunnerProjectile.tscn")
 const ARCHMAGE_PROJECTILE_SCENE := preload("res://src/hero/ArchmageProjectile.tscn")
 const ARCHMAGE_SKILL_PROJECTILE_SCENE := preload("res://src/hero/ArchmageSkillProjectile.tscn")
+const SAGE_PROJECTILE_SCENE := preload("res://src/hero/SageProjectile.tscn")
 const ULTIMATE_PIERCING_PROJECTILE_SCENE := preload(
 	"res://src/hero/UltimatePiercingProjectile.tscn"
 )
@@ -89,6 +90,10 @@ const STAGE6_FRAME_DIR := "res://assets/art/heroes/stage6_berserker/frames"
 const STAGE7_FRAME_DIR := "res://assets/art/heroes/stage7_alchemist/frames"
 const STAGE8_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames"
 const STAGE9_FRAME_DIR := "res://assets/art/heroes/stage9_prist/frames"
+const STAGE10_FRAME_DIR := "res://assets/art/heroes/stage10_sage/frames"
+const SAGE_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_basic_attack_pixabay.mp3"
+const SAGE_THIRD_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_third_attack_pixabay.mp3"
+const SAGE_PHASE_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_phase_pixabay.mp3"
 const SUMMONER_GATEKEEPER_SCENE := preload("res://src/hero/SummonerGatekeeper.tscn")
 const SUMMONER_SCOUT_SCENE := preload("res://src/hero/SummonerScout.tscn")
 const SUMMONER_HOUND_SCENE := preload("res://src/hero/SummonerHound.tscn")
@@ -147,6 +152,7 @@ const HERO_ANIMATION_DUPLICATE_RESTART_GUARD_MSEC := 70
 static var _archmage_fx_frames_cache: Dictionary = {}
 static var _purifier_protection_frames_cache: SpriteFrames
 static var _purifier_crown_frames_cache: SpriteFrames
+static var _sage_afterimage_frames_cache: SpriteFrames
 
 # Stage 9 standalone frames have small per-frame X drift in their authored
 # transparent canvas. Cache a body/root correction once when the visual is built
@@ -318,6 +324,21 @@ var archmage_blink_cooldown_timer: float = 0.0
 var archmage_cooldown_reduction: float = 0.0
 var archmage_mana_overflow_stacks: int = 0
 var archmage_element_cycle_stacks: int = 0
+
+var sage_config: Dictionary = {}
+var sage_attack_serial: int = 0
+var sage_phase_cooldown_timer: float = 25.0
+var sage_phase_remaining: float = 0.0
+var sage_phase_active: bool = false
+var sage_saved_collision_mask: int = -1
+var sage_afterimage_timer: float = 0.0
+var sage_afterimage_pool: Array[AnimatedSprite2D] = []
+var sage_afterimage_index: int = 0
+var sage_post_phase_shield_timer: float = 0.0
+var sage_gauge_redraw_timer: float = 0.0
+var sage_basic_audio: AudioStreamPlayer
+var sage_third_audio: AudioStreamPlayer
+var sage_phase_audio: AudioStreamPlayer
 
 var alchemist_config: Dictionary = {}
 var alchemist_gas_max: float = 200.0
@@ -1129,6 +1150,26 @@ func configure_profile(profile: Dictionary) -> void:
 		float(ultimate_config.get("charge_seconds", fighter_guard_charge_seconds)),
 		1.0
 	)
+	if sage_saved_collision_mask >= 0:
+		collision_mask = sage_saved_collision_mask
+	var raw_sage = profile.get("sage", {})
+	sage_config = (
+		raw_sage.duplicate(true)
+		if typeof(raw_sage) == TYPE_DICTIONARY
+		else {}
+	)
+	sage_attack_serial = 0
+	sage_phase_active = false
+	sage_phase_remaining = 0.0
+	sage_saved_collision_mask = -1
+	sage_afterimage_timer = 0.0
+	sage_afterimage_index = 0
+	sage_post_phase_shield_timer = 0.0
+	sage_gauge_redraw_timer = 0.0
+	sage_phase_cooldown_timer = maxf(
+		float(sage_config.get("phase_interval", 25.0)),
+		0.1
+	)
 	ultimate_charge = 0.0
 	ultimate_cooldown_timer = maxf(
 		float(ultimate_config.get("initial_cooldown", 0.0)),
@@ -1213,6 +1254,7 @@ func _ready() -> void:
 	_apply_camera_limits()
 	_apply_profile_visual()
 	_ensure_purifier_skill_runtime()
+	_ensure_sage_runtime()
 	var stage9_anchor_callback := Callable(self, "_on_hero_sprite_frame_or_animation_changed")
 	if not hero_sprite.frame_changed.is_connected(stage9_anchor_callback):
 		hero_sprite.frame_changed.connect(stage9_anchor_callback)
@@ -1361,6 +1403,7 @@ func _physics_process(delta: float) -> void:
 	_update_invulnerability(delta)
 	_update_ultimate(delta)
 	_update_purifier_gauge(delta)
+	_update_sage_runtime(delta)
 	_update_shield_skill(delta)
 	_update_channel_skill(delta)
 	if hero_archetype == "archmage_elementalist":
@@ -6072,6 +6115,24 @@ func _apply_profile_visual() -> void:
 	hero_sprite.show_behind_parent = false
 	hero_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
+	if hero_archetype == "grand_sage_astra":
+		var sage_dir := sprite_frame_dir if not sprite_frame_dir.is_empty() else STAGE10_FRAME_DIR
+		var sage_frames := SpriteFrames.new()
+		if sage_frames.has_animation("default"):
+			sage_frames.remove_animation("default")
+		if not _add_named_sequence_animation(sage_frames, "idle", sage_dir, "idle", 4, 5.5, true):
+			return
+		_add_named_sequence_animation(sage_frames, "move", sage_dir, "walk", 6, 8.0, true)
+		_add_named_sequence_animation(sage_frames, "attack", sage_dir, "atk", 6, 10.0, false)
+		_add_named_sequence_animation(sage_frames, "hit", sage_dir, "hit", 3, 12.0, false)
+		_add_named_sequence_animation(sage_frames, "death", sage_dir, "dead", 4, 8.0, false)
+		hero_sprite.sprite_frames = sage_frames
+		hero_sprite.visible = true
+		_apply_normalized_hero_visual_scale()
+		hero_sprite.speed_scale = 1.0
+		hero_sprite.play("idle")
+		return
+
 	if hero_archetype == "cleric_purifier":
 		var purifier_dir := (
 			sprite_frame_dir
@@ -7971,6 +8032,9 @@ func _fire_projectile(current_target: Node2D) -> void:
 	if hero_archetype == "archmage_elementalist":
 		_fire_archmage_projectile(current_target)
 		return
+	if hero_archetype == "grand_sage_astra":
+		_fire_sage_projectile(current_target)
+		return
 
 	var shot_direction := global_position.direction_to(current_target.global_position)
 	if shot_direction.length_squared() <= 0.0:
@@ -8010,6 +8074,208 @@ func _fire_projectile(current_target: Node2D) -> void:
 	_add_ultimate_charge(
 		float(ultimate_config.get("charge_on_attack", 0.0))
 	)
+
+
+func _ensure_sage_runtime() -> void:
+	if hero_archetype != "grand_sage_astra":
+		return
+	if not is_instance_valid(sage_basic_audio):
+		sage_basic_audio = _create_sage_audio_player(SAGE_BASIC_ATTACK_AUDIO_PATH, -11.0, 1.08)
+	if not is_instance_valid(sage_third_audio):
+		sage_third_audio = _create_sage_audio_player(SAGE_THIRD_ATTACK_AUDIO_PATH, -9.0, 0.92)
+	if not is_instance_valid(sage_phase_audio):
+		sage_phase_audio = _create_sage_audio_player(SAGE_PHASE_AUDIO_PATH, -9.0, 1.02)
+	if not sage_afterimage_pool.is_empty():
+		return
+	if _sage_afterimage_frames_cache == null:
+		var frames := SpriteFrames.new()
+		if frames.has_animation(&"default"):
+			frames.remove_animation(&"default")
+		frames.add_animation(&"trail")
+		frames.set_animation_loop(&"trail", false)
+		frames.set_animation_speed(&"trail", 18.0)
+		for frame_index in range(1, 8):
+			var texture := _load_stage1_texture("%s/effect6/dash_%02d.png" % [STAGE10_FRAME_DIR, frame_index])
+			if texture != null:
+				frames.add_frame(&"trail", texture)
+		_sage_afterimage_frames_cache = frames
+	if _sage_afterimage_frames_cache.get_frame_count(&"trail") <= 0:
+		return
+	var pool_size := clampi(int(sage_config.get("afterimage_pool_size", 12)), 4, 20)
+	for index in range(pool_size):
+		var ghost := AnimatedSprite2D.new()
+		ghost.name = "SageAfterimage%02d" % index
+		ghost.sprite_frames = _sage_afterimage_frames_cache
+		ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		ghost.top_level = true
+		ghost.z_index = 0
+		ghost.visible = false
+		ghost.modulate = Color(1.0, 1.0, 1.0, 0.58)
+		ghost.animation_finished.connect(Callable(self, "_on_sage_afterimage_finished").bind(ghost))
+		add_child(ghost)
+		sage_afterimage_pool.append(ghost)
+
+
+func _create_sage_audio_player(audio_path: String, volume_db: float, pitch_scale: float) -> AudioStreamPlayer:
+	var player := AudioStreamPlayer.new()
+	player.bus = &"SFX"
+	player.volume_db = volume_db
+	player.pitch_scale = pitch_scale
+	if ResourceLoader.exists(audio_path):
+		var stream = load(audio_path)
+		if stream is AudioStream:
+			player.stream = stream
+	add_child(player)
+	return player
+
+
+func _play_sage_audio(player: AudioStreamPlayer) -> void:
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	player.stop()
+	player.play()
+
+
+func _fire_sage_projectile(current_target: Node2D) -> void:
+	if not is_instance_valid(current_target):
+		return
+	var shot_direction := global_position.direction_to(current_target.global_position)
+	if shot_direction.length_squared() <= 0.0:
+		return
+	_ensure_sage_runtime()
+	attack_timer = _get_common_attack_interval(attack_cooldown)
+	attack_pose_timer = 0.42
+	_face_attack_direction(shot_direction.x)
+	_restart_stage1_animation("attack")
+	sage_attack_serial += 1
+	var third_interval := maxi(int(sage_config.get("third_attack_interval", 3)), 1)
+	var is_piercing := sage_attack_serial % third_interval == 0
+	var pool_key := "sage_piercing_projectile" if is_piercing else "sage_basic_projectile"
+	var projectile := _acquire_projectile(SAGE_PROJECTILE_SCENE, pool_key)
+	if projectile == null:
+		return
+	var shot_damage := attack_damage
+	var shot_speed := maxf(float(sage_config.get("basic_projectile_speed", 800.0)), 1.0)
+	var shot_range := maxf(float(sage_config.get("basic_range", 650.0)), 1.0)
+	var diameter := 44.0
+	var projectile_mode := 0
+	if is_piercing:
+		projectile_mode = 1
+		shot_damage = maxi(1, int(round(float(attack_damage) * maxf(float(sage_config.get("piercing_damage_ratio", 0.90)), 0.0))))
+		shot_speed = maxf(float(sage_config.get("piercing_projectile_speed", 800.0)), 1.0)
+		shot_range = maxf(float(sage_config.get("piercing_range", 1200.0)), 1.0)
+		diameter = maxf(float(sage_config.get("piercing_diameter", 220.0)), 2.0)
+	projectile.global_position = global_position + shot_direction * 54.0
+	projectile.call("setup", shot_direction, shot_damage, shot_speed, shot_range, projectile_mode, diameter)
+	if is_piercing:
+		_play_sage_audio(sage_third_audio)
+	else:
+		_play_sage_audio(sage_basic_audio)
+
+
+func _add_sage_gauge(amount: float) -> void:
+	if amount <= 0.0 or hero_archetype != "grand_sage_astra" or sage_config.is_empty() or is_dying:
+		return
+	var gauge_max := maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
+	ultimate_charge = minf(ultimate_charge + amount, gauge_max)
+	queue_redraw()
+
+
+func is_sage_skill_ready() -> bool:
+	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
+		return false
+	return ultimate_charge + 0.001 >= maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
+
+
+func _update_sage_runtime(delta: float) -> void:
+	if hero_archetype != "grand_sage_astra" or sage_config.is_empty() or is_dying or current_hp <= 0:
+		return
+	var gauge_max := maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
+	var level_steps := floori(float(maxi(level, 0)) / 5.0)
+	var regen_per_second := maxf(float(sage_config.get("gauge_regen_base", 1.0)), 0.0) + float(level_steps) * maxf(float(sage_config.get("gauge_regen_per_5_levels", 1.0)), 0.0)
+	if regen_per_second > 0.0 and ultimate_charge < gauge_max:
+		ultimate_charge = minf(ultimate_charge + regen_per_second * delta, gauge_max)
+		sage_gauge_redraw_timer -= delta
+		if sage_gauge_redraw_timer <= 0.0:
+			sage_gauge_redraw_timer = 0.10
+			queue_redraw()
+	if sage_post_phase_shield_timer > 0.0:
+		sage_post_phase_shield_timer = maxf(sage_post_phase_shield_timer - delta, 0.0)
+		if shield_hp <= 0.0:
+			sage_post_phase_shield_timer = 0.0
+			shield_max_hp = 0.0
+		elif sage_post_phase_shield_timer <= 0.0:
+			shield_hp = 0.0
+			shield_max_hp = 0.0
+			queue_redraw()
+	if sage_phase_active:
+		sage_phase_remaining = maxf(sage_phase_remaining - delta, 0.0)
+		sage_afterimage_timer = maxf(sage_afterimage_timer - delta, 0.0)
+		if velocity.length_squared() > 36.0 and sage_afterimage_timer <= 0.0:
+			_emit_sage_afterimage()
+			sage_afterimage_timer = maxf(float(sage_config.get("afterimage_interval", 0.075)), 0.03)
+		if sage_phase_remaining <= 0.0:
+			_end_sage_phase()
+		return
+	sage_phase_cooldown_timer = maxf(sage_phase_cooldown_timer - delta, 0.0)
+	if sage_phase_cooldown_timer <= 0.0:
+		_start_sage_phase()
+
+
+func _start_sage_phase() -> void:
+	if sage_phase_active or hero_archetype != "grand_sage_astra":
+		return
+	_ensure_sage_runtime()
+	sage_phase_active = true
+	sage_phase_remaining = maxf(float(sage_config.get("phase_duration", 7.0)), 0.1)
+	sage_afterimage_timer = 0.0
+	if sage_saved_collision_mask < 0:
+		sage_saved_collision_mask = collision_mask
+	# Monster/decor collision is ignored; the existing battlefield clamp still keeps the hero inside the outer map.
+	collision_mask = 0
+	_play_sage_audio(sage_phase_audio)
+
+
+func _end_sage_phase() -> void:
+	if not sage_phase_active:
+		return
+	sage_phase_active = false
+	sage_phase_remaining = 0.0
+	if sage_saved_collision_mask >= 0:
+		collision_mask = sage_saved_collision_mask
+	sage_saved_collision_mask = -1
+	var interval := maxf(float(sage_config.get("phase_interval", 25.0)), 0.1)
+	var duration := maxf(float(sage_config.get("phase_duration", 7.0)), 0.0)
+	sage_phase_cooldown_timer = maxf(interval - duration, 0.1)
+	var shield_ratio := maxf(float(sage_config.get("post_phase_shield_ratio", 0.10)), 0.0)
+	shield_max_hp = float(max_hp) * shield_ratio
+	shield_hp = shield_max_hp
+	sage_post_phase_shield_timer = maxf(float(sage_config.get("post_phase_shield_duration", 3.0)), 0.0)
+	queue_redraw()
+
+
+func _emit_sage_afterimage() -> void:
+	if sage_afterimage_pool.is_empty() or not is_instance_valid(hero_sprite):
+		return
+	var ghost := sage_afterimage_pool[sage_afterimage_index]
+	sage_afterimage_index = (sage_afterimage_index + 1) % sage_afterimage_pool.size()
+	if not is_instance_valid(ghost):
+		return
+	ghost.stop()
+	ghost.global_position = global_position
+	ghost.global_rotation = 0.0
+	ghost.scale = hero_sprite.scale
+	ghost.offset = hero_sprite.offset
+	ghost.flip_h = hero_sprite.flip_h
+	ghost.modulate = Color(1.0, 1.0, 1.0, 0.58)
+	ghost.visible = true
+	ghost.frame = 0
+	ghost.play(&"trail")
+
+
+func _on_sage_afterimage_finished(ghost: AnimatedSprite2D) -> void:
+	if is_instance_valid(ghost):
+		ghost.visible = false
 
 
 func _fire_archmage_projectile(current_target: Node2D) -> void:
@@ -9969,12 +10235,18 @@ func _get_purifier_skill_cooldown_multiplier() -> float:
 
 
 func _get_purifier_move_speed_multiplier() -> float:
-	if hero_archetype != "cleric_purifier" or purifier_crown_stacks <= 0:
-		return 1.0
-	return 1.0 + maxf(
-		float(purifier_crown_config.get("move_speed_per_stack", 0.02)),
-		0.0
-	) * _get_purifier_crown_effect_multiplier() * float(purifier_crown_stacks)
+	var multiplier := 1.0
+	if hero_archetype == "cleric_purifier" and purifier_crown_stacks > 0:
+		multiplier *= 1.0 + maxf(
+			float(purifier_crown_config.get("move_speed_per_stack", 0.02)),
+			0.0
+		) * _get_purifier_crown_effect_multiplier() * float(purifier_crown_stacks)
+	if hero_archetype == "grand_sage_astra" and sage_phase_active:
+		multiplier *= maxf(
+			float(sage_config.get("phase_move_speed_multiplier", 1.40)),
+			1.0
+		)
+	return multiplier
 
 func _is_purifier_undead_target(target_node: Node) -> bool:
 	if not is_instance_valid(target_node):
@@ -10029,7 +10301,14 @@ func get_purifier_holy_damage_multiplier(target_node: Node = null) -> float:
 	return multiplier
 
 func notify_monster_kill(_monster_type: String = "") -> void:
-	if hero_archetype != "cleric_purifier" or is_dying or current_hp <= 0:
+	if is_dying or current_hp <= 0:
+		return
+	if hero_archetype == "grand_sage_astra":
+		_add_sage_gauge(
+			maxf(float(sage_config.get("gauge_per_kill", 1.0)), 0.0)
+		)
+		return
+	if hero_archetype != "cleric_purifier":
 		return
 	_add_purifier_gauge(
 		maxf(float(purifier_gauge_config.get("charge_per_kill", 2.0)), 0.0)

@@ -22,6 +22,8 @@ static func get_dialogue(stage_id: String) -> Dictionary:
 			return _stage_8()
 		"stage_9":
 			return _stage_9()
+		"stage_10":
+			return _stage_10()
 		_:
 			return {}
 
@@ -1225,3 +1227,61 @@ static func _stage_9() -> Dictionary:
 			{"speaker": "narration", "text": "[전투 시작]"},
 		],
 	}
+
+static func _stage_10() -> Dictionary:
+	return {
+		"location": "[마왕성]",
+		"hero_name": "대현자 용사",
+		"hero_portrait_path": "res://assets/art/heroes/portrait/stage10_hero_portrait.png",
+		"lines": [
+			{"speaker": "demon", "text": "……이 마력."},
+			{"speaker": "demon", "text": "이번에는 알아보겠군."},
+			{"speaker": "hero", "text": "오랜만입니다, 마왕."},
+			{"speaker": "demon", "text": "그래."},
+			{"speaker": "demon", "text": "이번에는 정말 다른 얼굴을 하고 왔군."},
+			{"speaker": "hero", "text": "두 번이나 패했으니까요."},
+			{"speaker": "demon", "text": "처음엔 견습 마도사."},
+			{"speaker": "demon", "text": "다음엔 대마법사."},
+			{"speaker": "demon", "text": "이제는 대현자라던가?"},
+			{"speaker": "hero", "text": "네."},
+			{"speaker": "hero", "text": "당신을 쓰러뜨리기 위해 여기까지 왔습니다."},
+			{"speaker": "demon", "text": "오직 나 하나 때문에?"},
+			{"speaker": "hero", "text": "첫 번째 패배로 제가 약하다는 걸 알았고."},
+			{"speaker": "hero", "text": "두 번째 패배로 강하기만 해서는 부족하다는 걸 배웠습니다."},
+			{"speaker": "demon", "text": "……좋은 눈을 하게 되었군."},
+			{"speaker": "demon", "text": "그런데 생각해보니—"},
+			{"speaker": "demon", "text": "우리는 세 번이나 만났는데 아직 네 이름을 모르고 있었어."},
+			{"speaker": "hero", "text": "……"},
+			{"speaker": "demon", "text": "알려주겠나?"},
+			{"speaker": "hero", "text": "아스트라.", "hero_name": "아스트라"},
+			{"speaker": "demon", "text": "……."},
+			{"speaker": "hero", "text": "제 진명은 아스트라입니다."},
+			{"speaker": "demon", "text": "아스트라……"},
+			{"speaker": "demon", "text": "좋은 이름이군."},
+			{"speaker": "hero", "text": "기억해 두세요."},
+			{"speaker": "hero", "text": "당신이 마지막으로 듣게 될 용사의 이름입니다."},
+			{"speaker": "demon", "text": "하하."},
+			{"speaker": "demon", "text": "정말 많이 변했군."},
+			{"speaker": "hero", "text": "이제 옛날의 저로 보지 마세요."},
+			{"speaker": "demon", "text": "그렇다면 어떻게 봐야 하지?"},
+			{"speaker": "hero", "text": "적을 보는 눈으로."},
+			{"speaker": "narration", "text": "[아스트라가 지팡이를 겨눈다.]"},
+			{"speaker": "demon", "text": "……좋다."},
+			{"speaker": "demon", "text": "대현자 아스트라."},
+			{"speaker": "demon", "text": "이번에는 나도 전력으로 상대해주마."},
+			{"speaker": "hero", "text": "그러셔야 합니다."},
+			{"speaker": "demon", "text": "자신 있나?"},
+			{"speaker": "hero", "text": "자신감은 두 번이나 버리고 왔습니다."},
+			{"speaker": "hero", "text": "지금 제게 남은 건 준비와 각오뿐입니다."},
+			{"speaker": "demon", "text": "……훌륭하다."},
+			{"speaker": "hero", "text": "그리고 이번에는—"},
+			{"speaker": "hero", "text": "얌전히 쓰러져 달라고 부탁하지 않겠습니다."},
+			{"speaker": "demon", "text": "……기억하고 있었군."},
+			{"speaker": "hero", "text": "네."},
+			{"speaker": "hero", "text": "제가 직접 쓰러뜨리겠습니다."},
+			{"speaker": "demon", "text": "와라, 아스트라."},
+			{"speaker": "hero", "text": "갑니다, 마왕."},
+			{"speaker": "narration", "text": "[전투 시작]"},
+		],
+	}
+

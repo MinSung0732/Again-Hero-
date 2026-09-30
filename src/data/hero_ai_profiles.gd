@@ -157,7 +157,27 @@ const PROFILES = {
 			"iron_body": 0.25,
 			"pursuit": 0.35,
 		},
-	}
+	},
+	"stage_10_sage": {
+		"id": "stage_10_sage",
+		"display_name": "관성과 대응을 중시하는 대현자",
+		"observation_interval": 2.4,
+		"stack_inertia": 1.05,
+		"new_branch_penalty": 0.38,
+		"heal_item_desire": 1.08,
+		"heal_risk_tolerance": 0.46,
+		"heal_detour_weight": 1.08,
+		"augment_biases": {
+			"common_attack_training": 0.55,
+			"projectile_power": 0.50,
+			"rapid_strikes": 0.30,
+			"iron_body": 0.35,
+			"pursuit": 0.20,
+			"slow_resistance": 0.25,
+			"long_reach": 0.35,
+		},
+	},
+
 
 }
 
