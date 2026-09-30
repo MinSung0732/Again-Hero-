@@ -194,6 +194,7 @@ var hero_id: String = "ranged_rookie"
 var hero_display_name: String = "견습 마법용사"
 var hero_archetype: String = "ranged_kiter"
 var sprite_frame_dir: String = ""
+var ground_shadow_config: Dictionary = {}
 var augment_pool_ids: Array[String] = []
 var level_growth_config: Dictionary = {}
 var base_attack_damage_for_level_growth: float = 34.0
@@ -661,6 +662,7 @@ var exp_orb_target: Node2D
 var exp_orb_retarget_until_msec: int = 0
 
 @onready var follow_camera: Camera2D = $Camera2D
+@onready var ground_shadow: Sprite2D = $GroundShadow
 @onready var hero_sprite: AnimatedSprite2D = $HeroSprite
 @onready var shield_effect: AnimatedSprite2D = $ShieldEffect
 @onready var channel_effect: AnimatedSprite2D = $ChannelEffect
@@ -692,6 +694,12 @@ func configure_profile(profile: Dictionary) -> void:
 	hero_display_name = String(profile.get("display_name", hero_display_name))
 	hero_archetype = String(profile.get("archetype", hero_archetype))
 	sprite_frame_dir = String(profile.get("sprite_frame_dir", ""))
+	var profile_ground_shadow = profile.get("ground_shadow", {})
+	ground_shadow_config = (
+		profile_ground_shadow.duplicate(true)
+		if typeof(profile_ground_shadow) == TYPE_DICTIONARY
+		else {}
+	)
 	var profile_level_growth = profile.get("level_growth", {})
 	level_growth_config = (
 		profile_level_growth.duplicate(true)
@@ -1338,6 +1346,7 @@ func _ready() -> void:
 	_attach_status_effect_visual("slow")
 	_apply_camera_limits()
 	_apply_profile_visual()
+	_apply_ground_shadow_profile()
 	_ensure_purifier_skill_runtime()
 	_ensure_sage_runtime()
 	var stage9_anchor_callback := Callable(self, "_on_hero_sprite_frame_or_animation_changed")
@@ -1384,6 +1393,43 @@ func _ready() -> void:
 	health_changed.emit(current_hp, max_hp)
 	progression_changed.emit(level, current_exp, exp_to_next_level)
 	queue_redraw()
+
+func _apply_ground_shadow_profile() -> void:
+	if not is_instance_valid(ground_shadow):
+		return
+	if ground_shadow_config.is_empty():
+		return
+
+	var enabled := bool(ground_shadow_config.get("enabled", true))
+	ground_shadow.visible = enabled
+	if not enabled:
+		return
+
+	var display_size := Vector2(84.0, 28.0)
+	var raw_size = ground_shadow_config.get("size", display_size)
+	if typeof(raw_size) == TYPE_VECTOR2:
+		display_size = raw_size
+
+	var offset := Vector2(0.0, 43.0)
+	var raw_offset = ground_shadow_config.get("offset", offset)
+	if typeof(raw_offset) == TYPE_VECTOR2:
+		offset = raw_offset
+	else:
+		offset.x = float(ground_shadow_config.get("offset_x", offset.x))
+		offset.y = float(ground_shadow_config.get("offset_y", offset.y))
+
+	var shadow_opacity := clampf(
+		float(ground_shadow_config.get("opacity", 0.52)),
+		0.0,
+		1.0
+	)
+	ground_shadow.position = offset
+	if ground_shadow.has_method("configure"):
+		ground_shadow.call("configure", display_size, shadow_opacity)
+	else:
+		ground_shadow.set("display_size", display_size)
+		ground_shadow.set("opacity", shadow_opacity)
+
 
 func _apply_level_up_effect_visual() -> void:
 	var frames := SpriteFrames.new()

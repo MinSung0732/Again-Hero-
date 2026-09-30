@@ -1,3 +1,9 @@
+### Hero ground shadow profile tuning
+- 공용 Hero.tscn 그림자(84x28 / Y+43)를 그대로 쓰던 Stage 1, 2, 4, 5, 7, 8 용사에 프로필별 그림자 크기/오프셋/투명도를 추가.
+- Hero 런타임이 `ground_shadow` 프로필을 읽어 공유 GroundShadow 텍스처의 표시 크기만 갱신하므로 추가 텍스처 생성이나 매프레임 작업은 없음.
+- Stage 8 이계의 용사는 발/root 앵커 구조에 맞춰 그림자를 특히 위쪽(Y+10)으로 당김.
+- 설정이 없는 다른 용사는 기존 Hero.tscn 기본 그림자를 그대로 사용.
+
 ### Stage 10 Astra Skill 5 — 소멸
 - 스킬 3 마력응축 완성 3회 후 `sage_skill_5` 해금 시 사용 가능.
 - 게이지 100 / 쿨타임 60초 / 유지시간 6초(별도 데이터값).

@@ -15,12 +15,25 @@ func _ready() -> void:
 	texture = _get_shared_texture()
 	centered = true
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_apply_visual_settings()
+	set_process(false)
+
+
+func configure(new_display_size: Vector2, new_opacity: float) -> void:
+	display_size = Vector2(
+		maxf(new_display_size.x, 1.0),
+		maxf(new_display_size.y, 1.0)
+	)
+	opacity = clampf(new_opacity, 0.0, 1.0)
+	_apply_visual_settings()
+
+
+func _apply_visual_settings() -> void:
 	self_modulate = Color(0.0, 0.0, 0.0, opacity)
 	scale = Vector2(
 		display_size.x / float(TEXTURE_SIZE.x),
 		display_size.y / float(TEXTURE_SIZE.y)
 	)
-	set_process(false)
 
 
 static func _get_shared_texture() -> ImageTexture:

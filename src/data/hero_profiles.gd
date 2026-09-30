@@ -23,6 +23,11 @@ const PROFILES = {
 		"invulnerability_duration": 0.35,
 		"facing_switch_delay": 0.14,
 		"facing_min_horizontal_speed": 18.0,
+		"ground_shadow": {
+			"size": Vector2(54.0, 14.0),
+			"offset": Vector2(0.0, 15.0),
+			"opacity": 0.42,
+		},
 		"ultimate": {
 			"id": "arcane_piercer",
 			"name": "마력 관통포",
@@ -101,6 +106,11 @@ const PROFILES = {
 		"invulnerability_duration": 0.30,
 		"facing_switch_delay": 0.10,
 		"facing_min_horizontal_speed": 14.0,
+		"ground_shadow": {
+			"size": Vector2(62.0, 16.0),
+			"offset": Vector2(0.0, 15.0),
+			"opacity": 0.43,
+		},
 		"sprite_frame_dir": "res://assets/art/heroes/stage5_archmage/frames",
 		"archmage_elements": {
 			"elements": ["earth", "fire", "ice", "light", "wind", "holy"],
@@ -255,6 +265,11 @@ const PROFILES = {
 		"invulnerability_duration": 0.28,
 		"facing_switch_delay": 0.08,
 		"facing_min_horizontal_speed": 16.0,
+		"ground_shadow": {
+			"size": Vector2(58.0, 15.0),
+			"offset": Vector2(0.0, 14.0),
+			"opacity": 0.42,
+		},
 		"sprite_frame_dir": "res://assets/art/heroes/stage2_rogue/frames",
 		"rogue_combo": {
 			"hit_intervals": [0.24, 0.26, 0.28, 0.30],
@@ -341,6 +356,11 @@ const PROFILES = {
 		"invulnerability_duration": 0.22,
 		"facing_switch_delay": 0.06,
 		"facing_min_horizontal_speed": 12.0,
+		"ground_shadow": {
+			"size": Vector2(56.0, 15.0),
+			"offset": Vector2(0.0, 14.0),
+			"opacity": 0.42,
+		},
 		"sprite_frame_dir": "res://assets/art/heroes/stage4_gunner/frames",
 		"gunner": {
 			"magazine_size": 12,
@@ -619,6 +639,11 @@ const PROFILES = {
 		"invulnerability_duration": 0.27,
 		"facing_switch_delay": 0.08,
 		"facing_min_horizontal_speed": 14.0,
+		"ground_shadow": {
+			"size": Vector2(58.0, 15.0),
+			"offset": Vector2(0.0, 16.0),
+			"opacity": 0.42,
+		},
 		"sprite_frame_dir": "res://assets/art/heroes/stage7_alchemist/frames",
 		"alchemist": {
 			"gas_max": 200.0,
@@ -937,6 +962,11 @@ const PROFILES = {
 		"invulnerability_duration": 0.26,
 		"facing_switch_delay": 0.08,
 		"facing_min_horizontal_speed": 14.0,
+		"ground_shadow": {
+			"size": Vector2(64.0, 17.0),
+			"offset": Vector2(0.0, 10.0),
+			"opacity": 0.44,
+		},
 		"sprite_frame_dir": "res://assets/art/heroes/stage8_summoner/frames",
 		"summoner": {
 			"base_slot_count": 5,
