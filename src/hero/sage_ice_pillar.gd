@@ -5,6 +5,8 @@ const POOL_KEY := "sage_ice_pillar"
 const CREATE_FPS := 12.0
 const DESTROY_FPS := 15.0
 const VISUAL_SCALE := 0.55
+const SLOW_REFRESH_INTERVAL := 0.10
+const SLOW_REFRESH_DURATION_MSEC := 180
 
 static var _frames_cache: SpriteFrames
 
@@ -19,6 +21,8 @@ var slow_multiplier: float = 0.80
 var collision_radius: float = 34.0
 var effect_end_msec: int = 0
 var initial_damage_ids: Dictionary = {}
+var slowed_bodies: Dictionary = {}
+var slow_refresh_timer: float = 0.0
 
 @onready var visual: AnimatedSprite2D = $Visual
 @onready var obstacle_shape: CollisionShape2D = $Obstacle/CollisionShape2D
@@ -55,6 +59,8 @@ func setup(
 	slow_multiplier = clampf(new_slow_multiplier, 0.1, 1.0)
 	collision_radius = maxf(new_collision_radius, 8.0)
 	initial_damage_ids.clear()
+	slowed_bodies.clear()
+	slow_refresh_timer = 0.0
 	visible = true
 	set_process(true)
 	effect_area.monitoring = false
@@ -75,8 +81,17 @@ func setup(
 
 
 func _process(delta: float) -> void:
-	if not active or not pillar_active or destroying:
+	if not active or not pillar_active:
 		return
+
+	slow_refresh_timer = maxf(slow_refresh_timer - delta, 0.0)
+	if slow_refresh_timer <= 0.0:
+		slow_refresh_timer = SLOW_REFRESH_INTERVAL
+		_refresh_slowed_bodies()
+
+	if destroying:
+		return
+
 	active_remaining = maxf(active_remaining - delta, 0.0)
 	if active_remaining <= 0.0:
 		_begin_destroy()
@@ -102,22 +117,20 @@ func _apply_initial_overlaps_after_physics() -> void:
 	if not active or not pillar_active:
 		return
 	for body in effect_area.get_overlapping_bodies():
-		_apply_slow(body)
+		_track_slow_target(body)
 		_apply_initial_damage(body)
 	for body in trap_area.get_overlapping_bodies():
 		_apply_root(body)
 
 
 func _on_effect_body_entered(body: Node) -> void:
-	_apply_slow(body)
+	_track_slow_target(body)
 
 
 func _on_effect_body_exited(body: Node) -> void:
-	if not _is_valid_monster(body):
+	if body == null or not is_instance_valid(body):
 		return
-	if int(body.get_meta("sage_ice_slow_source", 0)) == get_instance_id():
-		body.set_meta("sage_ice_slow_until", Time.get_ticks_msec())
-		body.set_meta("sage_ice_slow_source", 0)
+	slowed_bodies.erase(body.get_instance_id())
 
 
 func _on_trap_body_entered(body: Node) -> void:
@@ -134,10 +147,29 @@ func _apply_initial_damage(body: Node) -> void:
 	body.call("take_damage", damage)
 
 
-func _apply_slow(body: Node) -> void:
+func _track_slow_target(body: Node) -> void:
 	if not _is_valid_monster(body):
 		return
-	body.set_meta("sage_ice_slow_until", effect_end_msec)
+	slowed_bodies[body.get_instance_id()] = body
+	_refresh_slow(body)
+
+
+func _refresh_slowed_bodies() -> void:
+	for instance_id in slowed_bodies:
+		var body = slowed_bodies[instance_id]
+		if not _is_valid_monster(body):
+			continue
+		_refresh_slow(body)
+
+
+func _refresh_slow(body: Node) -> void:
+	if not _is_valid_monster(body):
+		return
+	var now_msec := Time.get_ticks_msec()
+	body.set_meta(
+		"sage_ice_slow_until",
+		now_msec + SLOW_REFRESH_DURATION_MSEC
+	)
 	body.set_meta("sage_ice_slow_multiplier", slow_multiplier)
 	body.set_meta("sage_ice_slow_source", get_instance_id())
 
@@ -187,11 +219,7 @@ func _finish_pillar() -> void:
 	effect_area.set_deferred("monitoring", false)
 	trap_area.set_deferred("monitoring", false)
 	obstacle_shape.set_deferred("disabled", true)
-	var now_msec := Time.get_ticks_msec()
-	for body in effect_area.get_overlapping_bodies():
-		if _is_valid_monster(body) and int(body.get_meta("sage_ice_slow_source", 0)) == get_instance_id():
-			body.set_meta("sage_ice_slow_until", now_msec)
-			body.set_meta("sage_ice_slow_source", 0)
+	slowed_bodies.clear()
 	active = false
 	pillar_active = false
 	destroying = false
@@ -209,6 +237,8 @@ func deactivate_for_pool() -> void:
 	active_remaining = 0.0
 	effect_end_msec = 0
 	initial_damage_ids.clear()
+	slowed_bodies.clear()
+	slow_refresh_timer = 0.0
 	set_process(false)
 	visible = false
 	if is_instance_valid(visual):
