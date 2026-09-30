@@ -711,7 +711,7 @@ func _begin_stage_entry(snapshot: Dictionary) -> void:
 		var true_name := String(reveal_data.get("true_name", "")).strip_edges()
 		if (
 			not true_name.is_empty()
-			and STAGE_PROGRESS.is_hero_true_name_unlocked(identity_id)
+			and STAGE_PROGRESS.is_hero_true_name_unlocked(stage_id, identity_id)
 		):
 			dialogue["hero_name"] = true_name
 	if dialogue.is_empty():
