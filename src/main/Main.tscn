@@ -1361,6 +1361,7 @@ text = "이 창을 열어도 전투는 계속 진행됩니다."
 autowrap_mode = 2
 
 [node name="PauseMenu" type="Control" parent="HUD"]
+z_index = 300
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -1478,7 +1479,7 @@ text = "로비로 나가기"
 
 [node name="SettingsOverlay" type="Control" parent="HUD"]
 visible = false
-z_index = 250
+z_index = 320
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -1640,6 +1641,7 @@ theme_override_font_sizes/font_size = 28
 text = "돌아가기"
 
 [node name="DemonAugmentPanel" type="PanelContainer" parent="HUD"]
+z_index = 300
 theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 visible = false
 anchors_preset = 8
@@ -1937,6 +1939,7 @@ theme_override_font_sizes/font_size = 26
 text = "↻ 새로고침 3 / 3"
 
 [node name="MutationPanel" type="PanelContainer" parent="HUD"]
+z_index = 300
 theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 visible = false
 mouse_filter = 0
@@ -2021,7 +2024,7 @@ text = "오크\n선택"
 [node name="ResultPanel" type="PanelContainer" parent="HUD"]
 theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 visible = false
-z_index = 300
+z_index = 340
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
