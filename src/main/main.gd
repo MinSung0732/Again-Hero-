@@ -164,6 +164,7 @@ var monster_card_icon_cache: Dictionary = {}
 var demon_ultimate_charge_ready: bool = false
 var demon_mana_current: float = 0.0
 var demon_ultimate_cooldowns: Dictionary = {}
+var demon_direction_select_active: bool = false
 var demon_ultimate_ui_skills: Array[Dictionary] = []
 var demon_ultimate_ui_buttons: Array[Button] = []
 var demon_ultimate_ui_cooldown_bars: Array[ProgressBar] = []
@@ -2155,12 +2156,13 @@ func _on_demon_ultimate_changed(
 ) -> void:
 	demon_ultimate_charge_ready = ready
 	demon_mana_current = current_value
-	demon_ultimate_label.text = "마왕 필살기   %d / %d" % [
-		int(round(current_value)),
-		int(round(max_value)),
-	]
 	demon_ultimate_bar.max_value = maxf(max_value, 1.0)
 	demon_ultimate_bar.value = current_value
+	if not demon_direction_select_active:
+		demon_ultimate_label.text = "마왕 필살기   %d / %d" % [
+			int(round(current_value)),
+			int(round(max_value)),
+		]
 	_refresh_demon_ultimate_buttons()
 
 func _cache_demon_ultimate_ui_data() -> void:
@@ -2294,13 +2296,23 @@ func _on_demon_ultimate_pressed(skill_id: String) -> void:
 		status_label.text = "마력이 부족합니다. %s은(는) 마력 %d가 필요합니다." % [String(skill.get("name", "마력 기술")), int(round(mana_cost))]
 
 func _open_demon_direction_select() -> void:
+	demon_direction_select_active = true
 	$HUD/DemonUltimatePanel/UltimateButtons.hide()
+	demon_ultimate_bar.hide()
 	demon_direction_buttons.show()
-	demon_ultimate_label.text = "마력 · 2번 일직선 공세 방향 선택"
+	demon_ultimate_label.text = "일직선 공세 · 방향 선택"
+	demon_ultimate_label.add_theme_color_override(
+		"font_color",
+		Color(1.0, 0.78, 0.28, 1.0)
+	)
+	_show_battle_toast("일직선 공세 · 발사 방향을 선택하세요", 1.2)
 
 func _close_demon_direction_select() -> void:
+	demon_direction_select_active = false
 	demon_direction_buttons.hide()
+	demon_ultimate_bar.show()
 	$HUD/DemonUltimatePanel/UltimateButtons.show()
+	demon_ultimate_label.remove_theme_color_override("font_color")
 	if battle.has_method("get_demon_ultimate_hud_state"):
 		var raw_ultimate_state = battle.call(
 			"get_demon_ultimate_hud_state"
@@ -2319,11 +2331,22 @@ func _close_demon_direction_select() -> void:
 			)
 
 func _on_demon_line_direction_pressed(direction: String) -> void:
+	var direction_name := {
+		"east": "동쪽",
+		"west": "서쪽",
+		"north": "북쪽",
+		"south": "남쪽",
+	}.get(direction, direction)
 	if battle.try_use_demon_ultimate("line_assault", direction):
+		_show_battle_toast(
+			"일직선 공세 · %s 발동" % String(direction_name),
+			1.0
+		)
 		_close_demon_direction_select()
 		return
 
-	status_label.text = "일직선 공세를 발동할 수 없습니다."
+	_show_battle_toast("일직선 공세를 발동할 수 없습니다.", 1.2)
+	_set_default_battle_status()
 	_close_demon_direction_select()
 
 func _on_demon_ultimate_used(
@@ -2331,7 +2354,11 @@ func _on_demon_ultimate_used(
 	skill_name: String,
 	message: String
 ) -> void:
-	status_label.text = message
+	var toast_message := message
+	if toast_message.is_empty():
+		toast_message = "%s 발동" % skill_name
+	_show_battle_toast(toast_message, 1.2)
+	_set_default_battle_status()
 
 func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: int) -> void:
 	current_demon_candidates = candidates.duplicate(true)
@@ -2380,7 +2407,7 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 				demon_choice_icons[index],
 				monster_id
 			)
-			buttons[index].add_theme_font_size_override("font_size", 24)
+			buttons[index].add_theme_font_size_override("font_size", 22)
 			buttons[index].text = "★ [%s]\n%s\n\n%s" % [
 				_get_catalog_monster_name(monster_id),
 				_wrap_augment_card_text(
@@ -2405,7 +2432,7 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 			var current_stack := int(candidate.get("current_stack", 0))
 			var max_stack := int(candidate.get("max_stack", 1))
 			var next_stack := mini(current_stack + 1, max_stack)
-			buttons[index].add_theme_font_size_override("font_size", 24)
+			buttons[index].add_theme_font_size_override("font_size", 22)
 			buttons[index].text = "%s\nLv.%d → Lv.%d / %d\n\n%s" % [
 				_wrap_augment_card_text(
 					String(candidate.get("name", "증강")),
