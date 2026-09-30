@@ -22,6 +22,7 @@ var explosion_radius: float = 50.0
 var damage: int = 1
 var slow_multiplier: float = 0.85
 var slow_duration: float = 2.0
+var caster: Node2D
 
 @onready var visual: AnimatedSprite2D = $Visual
 @onready var explosion_area: Area2D = $ExplosionArea
@@ -43,7 +44,8 @@ func setup(
 	new_damage: int,
 	new_slow_multiplier: float,
 	new_slow_duration: float,
-	new_visual_scale: float
+	new_visual_scale: float,
+	caster_node: Node2D
 ) -> void:
 	_build_frames()
 	destination = new_destination
@@ -53,6 +55,7 @@ func setup(
 	damage = maxi(new_damage, 1)
 	slow_multiplier = clampf(new_slow_multiplier, 0.1, 1.0)
 	slow_duration = maxf(new_slow_duration, 0.0)
+	caster = caster_node
 	_set_explosion_radius(explosion_radius)
 
 	state = OrbState.TRAVEL
@@ -98,7 +101,17 @@ func _explode() -> void:
 		if not _is_valid_monster(body):
 			continue
 		if body.has_method("take_damage"):
+			var hit_position := (
+				(body as Node2D).global_position
+				if body is Node2D
+				else global_position
+			)
 			body.call("take_damage", damage)
+			if (
+				is_instance_valid(caster)
+				and caster.has_method("_on_sage_skill_hit")
+			):
+				caster.call("_on_sage_skill_hit", hit_position)
 		_apply_slow(body)
 
 	if is_instance_valid(explosion_audio) and explosion_audio.stream != null:
@@ -169,6 +182,7 @@ func _finish() -> void:
 
 
 func deactivate_for_pool() -> void:
+	caster = null
 	state = OrbState.INACTIVE
 	set_physics_process(false)
 	visible = false
