@@ -23,6 +23,7 @@ const BATTLE_PIXEL_FRAME_LARGE_DIR := "res://assets/art/UI/01_large_left_panel"
 const BATTLE_PIXEL_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
 const BATTLE_PIXEL_CENTER_LARGE := BATTLE_PIXEL_FRAME_LARGE_DIR + "/part_04.png"
 const BATTLE_PIXEL_CENTER_DARK := "res://assets/art/UI/05_right_bars/part_02.png"
+const BATTLE_PIXEL_BAR_BACKGROUND := "res://assets/art/UI/05_right_bars/part_02.png"
 
 @onready var battle_viewport_container: SubViewportContainer = $BattleViewportContainer
 @onready var battle_viewport: SubViewport = $BattleViewportContainer/BattleViewport
@@ -388,10 +389,27 @@ func _apply_battle_pixel_asset_frames() -> void:
 	_replace_texture_frame(
 		$HUD/TopBar/HeroStatusFrame,
 		BATTLE_PIXEL_FRAME_LARGE_DIR,
-		0.62,
+		0.50,
 		BATTLE_PIXEL_CENTER_LARGE,
 		28
 	)
+	BATTLE_PIXEL_FRAME_ASSEMBLER.add_split_frame(
+		hero_hud_portrait,
+		BATTLE_PIXEL_FRAME_MEDIUM_DIR,
+		0.28
+	)
+	for bar in [
+		hero_hp_bar,
+		exp_bar,
+		demon_ultimate_bar,
+		command_bar,
+	]:
+		BATTLE_PIXEL_FRAME_ASSEMBLER.apply_progress_background(
+			bar,
+			BATTLE_PIXEL_BAR_BACKGROUND,
+			18.0,
+			7.0
+		)
 	_replace_button_frame(
 		stage_menu_button,
 		BATTLE_PIXEL_FRAME_MEDIUM_DIR,
