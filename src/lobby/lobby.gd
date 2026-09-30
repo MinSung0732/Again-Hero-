@@ -933,6 +933,11 @@ func _apply_lobby_visual_polish() -> void:
 	)
 
 	_apply_lobby_button_skin(other_settings_tab_button, true, 24)
+	other_settings_tab_button.add_theme_stylebox_override("disabled", primary_button_style)
+	other_settings_tab_button.add_theme_color_override(
+		"font_disabled_color",
+		Color("ffe7a8")
+	)
 	_apply_lobby_button_skin(other_account_tab_button, false, 24)
 
 	for raw_path in [
@@ -1108,6 +1113,11 @@ func _show_other_account() -> void:
 	other_account_tab_button.disabled = true
 	_apply_lobby_button_skin(other_settings_tab_button, false, 24)
 	_apply_lobby_button_skin(other_account_tab_button, true, 24)
+	other_account_tab_button.add_theme_stylebox_override("disabled", primary_button_style)
+	other_account_tab_button.add_theme_color_override(
+		"font_disabled_color",
+		Color("ffe7a8")
+	)
 
 
 func _sync_audio_settings_ui() -> void:
