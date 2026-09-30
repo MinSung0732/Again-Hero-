@@ -1194,7 +1194,7 @@ const PROFILES = {
 				"damage_ratio": 1.10,
 				"fall_duration": 0.58,
 				"fall_height": 430.0,
-				"fall_side_offset": 90.0,
+				"fall_side_offset": 260.0,
 				"meteor_visual_scale": 0.62,
 				"aura_visual_scale": 0.70,
 				"explosion_fps": 14.0,
