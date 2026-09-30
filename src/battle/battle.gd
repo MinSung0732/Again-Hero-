@@ -62,6 +62,7 @@ const GIANT_MONSTER_BASE_CHANCE := 0.10
 const GIANT_MONSTER_LEVEL_STEP := 5
 const GIANT_MONSTER_CHANCE_PER_STEP := 0.01
 const GIANT_MONSTER_STAT_MULTIPLIER := 1.28
+const GIANT_MONSTER_HP_MULTIPLIER := 1.54
 const GIANT_MONSTER_SIZE_MULTIPLIER := 2.0
 const HEAL_ITEM_KILLS_REQUIRED := 30
 const MAX_ACTIVE_HEAL_ITEMS := 2
@@ -1348,6 +1349,10 @@ func _apply_giant_monster_base_stats(
 		GIANT_MONSTER_STAT_MULTIPLIER
 	)
 	monster.set_meta(
+		"giant_hp_multiplier",
+		GIANT_MONSTER_HP_MULTIPLIER
+	)
+	monster.set_meta(
 		"giant_size_multiplier",
 		GIANT_MONSTER_SIZE_MULTIPLIER
 	)
@@ -1362,7 +1367,7 @@ func _apply_giant_monster_base_stats(
 				1,
 				int(round(
 					float(max_hp_value)
-					* GIANT_MONSTER_STAT_MULTIPLIER
+					* GIANT_MONSTER_HP_MULTIPLIER
 				))
 			)
 		)
