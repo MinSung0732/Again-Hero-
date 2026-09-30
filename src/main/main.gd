@@ -76,6 +76,7 @@ const CAMERA_DRAG_THRESHOLD := 12.0
 @onready var command_label: Label = $HUD/BottomBar/CommandLabel
 @onready var command_bar: ProgressBar = $HUD/BottomBar/CommandBar
 @onready var demon_ultimate_panel: Control = $HUD/DemonUltimatePanel
+@onready var demon_level_label: Label = $HUD/DemonUltimatePanel/DemonLevelLabel
 @onready var demon_ultimate_label: Label = $HUD/DemonUltimatePanel/UltimateLabel
 @onready var demon_ultimate_bar: ProgressBar = $HUD/DemonUltimatePanel/UltimateBar
 @onready var demon_ultimate_1: Button = $HUD/DemonUltimatePanel/UltimateButtons/Ultimate1
@@ -1253,6 +1254,7 @@ func _on_progression_changed(level: int, current_exp: int, exp_to_next_level: in
 		_refresh_hero_info_panel()
 
 func _on_demon_progression_changed(level: int, current_exp: float, exp_to_next_level: float) -> void:
+	demon_level_label.text = "마왕 Lv.%d" % level
 	demon_progress_label.text = "마왕 Lv.%d · EXP %.1f / %.1f" % [
 		level,
 		current_exp,
@@ -2271,7 +2273,7 @@ func _on_demon_ultimate_changed(
 	demon_ultimate_bar.max_value = maxf(max_value, 1.0)
 	demon_ultimate_bar.value = current_value
 	if not demon_direction_select_active:
-		demon_ultimate_label.text = "마왕 필살기   %d / %d" % [
+		demon_ultimate_label.text = "필살기   %d / %d" % [
 			int(round(current_value)),
 			int(round(max_value)),
 		]
