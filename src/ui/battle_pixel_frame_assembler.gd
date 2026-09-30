@@ -135,6 +135,28 @@ static func clear_button_style(button: Button) -> void:
 		button.add_theme_stylebox_override(state, empty)
 
 
+static func apply_progress_background(
+	bar: ProgressBar,
+	texture_path: String,
+	horizontal_margin: float = 18.0,
+	vertical_margin: float = 7.0
+) -> void:
+	if bar == null:
+		return
+	var texture := _load_texture(texture_path)
+	if texture == null:
+		return
+
+	var background := StyleBoxTexture.new()
+	background.texture = texture
+	background.texture_margin_left = maxf(horizontal_margin, 0.0)
+	background.texture_margin_top = maxf(vertical_margin, 0.0)
+	background.texture_margin_right = maxf(horizontal_margin, 0.0)
+	background.texture_margin_bottom = maxf(vertical_margin, 0.0)
+	background.draw_center = true
+	bar.add_theme_stylebox_override("background", background)
+
+
 static func _load_texture(path: String) -> Texture2D:
 	if path.is_empty() or not ResourceLoader.exists(path):
 		return null
