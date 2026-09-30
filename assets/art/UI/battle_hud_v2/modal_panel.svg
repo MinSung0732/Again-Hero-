@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-<g shape-rendering="crispEdges">
-<rect x="3" y="3" width="122" height="122" fill="#070818" stroke="#f3aa24" stroke-width="5"/>
-<rect x="11" y="11" width="106" height="106" fill="#0b0b1d" stroke="#5d237f" stroke-width="3"/>
-<path d="M4 29 H16 V16 H29 M124 29 H112 V16 H99 M4 99 H16 V112 H29 M124 99 H112 V112 H99" fill="none" stroke="#ffd153" stroke-width="4"/>
-<path d="M20 7 H48 M80 7 H108 M20 121 H48 M80 121 H108" stroke="#7a2aa6" stroke-width="3"/>
-<polygon points="64,3 72,11 64,19 56,11" fill="#8f2ed1" stroke="#ffd153" stroke-width="3"/>
-</g></svg>

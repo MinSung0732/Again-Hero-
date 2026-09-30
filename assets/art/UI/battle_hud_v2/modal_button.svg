@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="192" height="72" viewBox="0 0 192 72">
-<g shape-rendering="crispEdges">
-<polygon points="10,3 182,3 189,10 189,62 182,69 10,69 3,62 3,10" fill="#0a0a1d" stroke="#efaa28" stroke-width="4"/>
-<polygon points="18,11 174,11 181,18 181,54 174,61 18,61 11,54 11,18" fill="#15102d" stroke="#612786" stroke-width="3"/>
-<path d="M12 21 H26 V10 M180 21 H166 V10 M12 51 H26 V62 M180 51 H166 V62" fill="none" stroke="#ffd35a" stroke-width="3"/>
-</g></svg>

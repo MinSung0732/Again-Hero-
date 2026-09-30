@@ -3,7 +3,6 @@ extends Control
 const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
-const DEMON_ULTIMATE_LOADOUT_STORE := preload("res://src/systems/demon_ultimate_loadout_store.gd")
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const HERO_AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
@@ -166,8 +165,6 @@ var demon_ultimate_charge_ready: bool = false
 var demon_mana_current: float = 0.0
 var demon_ultimate_cooldowns: Dictionary = {}
 var demon_ultimate_ui_skills: Array[Dictionary] = []
-var battle_ultimate_loadout_ids: Array = []
-var pending_direction_ultimate_id: String = ""
 var demon_ultimate_ui_buttons: Array[Button] = []
 var demon_ultimate_ui_cooldown_bars: Array[ProgressBar] = []
 var monster_info_selected_index: int = 0
@@ -302,10 +299,15 @@ func _ready() -> void:
 	mutation_choice_0.pressed.connect(_on_mutation_choice_pressed.bind(0))
 	mutation_choice_1.pressed.connect(_on_mutation_choice_pressed.bind(1))
 	mutation_choice_2.pressed.connect(_on_mutation_choice_pressed.bind(2))
-	for slot_index in range(demon_ultimate_ui_buttons.size()):
-		demon_ultimate_ui_buttons[slot_index].pressed.connect(
-			_on_demon_ultimate_slot_pressed.bind(slot_index)
-		)
+	demon_ultimate_1.pressed.connect(
+		_on_demon_ultimate_pressed.bind("encirclement")
+	)
+	demon_ultimate_2.pressed.connect(
+		_on_demon_ultimate_pressed.bind("line_assault")
+	)
+	demon_ultimate_3.pressed.connect(
+		_on_demon_ultimate_pressed.bind("square_siege")
+	)
 	demon_direction_east.pressed.connect(
 		_on_demon_line_direction_pressed.bind("east")
 	)
@@ -2161,30 +2163,10 @@ func _on_demon_ultimate_changed(
 	demon_ultimate_bar.value = current_value
 	_refresh_demon_ultimate_buttons()
 
-func _load_demon_ultimate_loadout() -> void:
-	var valid_ids: Array = []
-	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
-		var skill_id := String(raw_id)
-		if not DEMON_ULTIMATES.get_skill(skill_id).is_empty():
-			valid_ids.append(skill_id)
-
-	var fallback_ids: Array = []
-	for skill_id in valid_ids:
-		fallback_ids.append(skill_id)
-		if fallback_ids.size() >= DEMON_ULTIMATE_LOADOUT_STORE.MAX_SLOTS:
-			break
-
-	battle_ultimate_loadout_ids = DEMON_ULTIMATE_LOADOUT_STORE.load_ids(
-		valid_ids,
-		fallback_ids
-	)
-
-
 func _cache_demon_ultimate_ui_data() -> void:
 	demon_ultimate_ui_skills.clear()
 	demon_ultimate_ui_buttons.clear()
 	demon_ultimate_ui_cooldown_bars.clear()
-	_load_demon_ultimate_loadout()
 
 	demon_ultimate_ui_buttons.append(demon_ultimate_1)
 	demon_ultimate_ui_buttons.append(demon_ultimate_2)
@@ -2193,17 +2175,12 @@ func _cache_demon_ultimate_ui_data() -> void:
 	demon_ultimate_ui_cooldown_bars.append(demon_ultimate_2_cooldown)
 	demon_ultimate_ui_cooldown_bars.append(demon_ultimate_3_cooldown)
 
-	for raw_id in battle_ultimate_loadout_ids:
+	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
 		var skill_id := String(raw_id)
 		var skill := DEMON_ULTIMATES.get_skill(skill_id)
 		if skill.is_empty():
-			continue
+			skill = {"id": skill_id}
 		demon_ultimate_ui_skills.append(skill)
-
-	for index in range(demon_ultimate_ui_buttons.size()):
-		var visible := index < demon_ultimate_ui_skills.size()
-		demon_ultimate_ui_buttons[index].visible = visible
-		demon_ultimate_ui_cooldown_bars[index].visible = false
 
 
 func _on_demon_ultimate_cooldowns_changed(cooldowns: Dictionary) -> void:
@@ -2250,10 +2227,14 @@ func _refresh_demon_ultimate_buttons() -> void:
 		var ready := demon_mana_current + 0.001 >= mana_cost and remaining <= 0.001
 		button.disabled = not ready
 
-		var button_title := "%d %s" % [
-			index + 1,
-			String(skill.get("name", "마력 기술")),
-		]
+		var button_title := "마력 기술"
+		match skill_id:
+			"encirclement":
+				button_title = "1 원형 포위"
+			"line_assault":
+				button_title = "2 일직선 공세"
+			"square_siege":
+				button_title = "3 사각 포위"
 
 		if remaining > 0.001:
 			button.text = "%s\n쿨타임 %.1f초" % [
@@ -2261,47 +2242,22 @@ func _refresh_demon_ultimate_buttons() -> void:
 				remaining,
 			]
 		elif ready:
-			if String(skill.get("targeting_mode", "instant")) == "direction":
-				button.text = "%s\n마력 %d · 방향 선택" % [
-					button_title,
-					int(round(mana_cost)),
-				]
+			if skill_id == "line_assault":
+				button.text = "%s\n마력 %d · 방향 선택" % [button_title, int(round(mana_cost))]
 			else:
-				button.text = "%s\n마력 %d · 발동 가능" % [
-					button_title,
-					int(round(mana_cost)),
-				]
+				button.text = "%s\n마력 %d · 발동 가능" % [button_title, int(round(mana_cost))]
 		else:
 			button.text = "%s\n마력 %d 필요" % [button_title, int(round(mana_cost))]
 
-func _on_demon_ultimate_slot_pressed(slot_index: int) -> void:
-	if slot_index < 0 or slot_index >= demon_ultimate_ui_skills.size():
-		return
-	var skill_id := String(
-		demon_ultimate_ui_skills[slot_index].get("id", "")
-	)
-	if skill_id.is_empty():
-		return
-	_on_demon_ultimate_pressed(skill_id)
-
-
 func _on_demon_ultimate_pressed(skill_id: String) -> void:
-	var selected_skill := DEMON_ULTIMATES.get_skill(skill_id)
-	if selected_skill.is_empty():
-		return
-	if String(selected_skill.get("targeting_mode", "instant")) == "direction":
-		var mana_cost := maxf(
-			float(selected_skill.get("mana_cost", 40.0)),
-			0.0
-		)
-		var skill_name := String(
-			selected_skill.get("name", "방향 필살기")
-		)
+	if skill_id == "line_assault":
+		var skill := DEMON_ULTIMATES.get_skill("line_assault")
+		var mana_cost := maxf(float(skill.get("mana_cost", 40.0)), 0.0)
 		var ultimate_state: Dictionary = {}
 		if battle.has_method("get_demon_ultimate_hud_state"):
 			var raw_ultimate_state = battle.call(
 				"get_demon_ultimate_hud_state",
-				skill_id
+				"line_assault"
 			)
 			if typeof(raw_ultimate_state) == TYPE_DICTIONARY:
 				ultimate_state = raw_ultimate_state
@@ -2309,24 +2265,18 @@ func _on_demon_ultimate_pressed(skill_id: String) -> void:
 			ultimate_state.get("charge", demon_mana_current)
 		)
 		if current_charge + 0.001 < mana_cost:
-			status_label.text = (
-				"마력이 부족합니다. %s은(는) 마력 %d가 필요합니다."
-				% [skill_name, int(round(mana_cost))]
-			)
+			status_label.text = "마력이 부족합니다. 일직선 공세는 마력 %d가 필요합니다." % int(round(mana_cost))
 			return
 		var remaining := float(
 			ultimate_state.get(
 				"cooldown",
-				demon_ultimate_cooldowns.get(skill_id, 0.0)
+				demon_ultimate_cooldowns.get("line_assault", 0.0)
 			)
 		)
 		if remaining > 0.001:
-			status_label.text = "%s 쿨타임 %.1f초" % [
-				skill_name,
-				remaining,
-			]
+			status_label.text = "일직선 공세 쿨타임 %.1f초" % remaining
 			return
-		_open_demon_direction_select(skill_id)
+		_open_demon_direction_select()
 		return
 
 	if battle.try_use_demon_ultimate(skill_id):
@@ -2343,17 +2293,12 @@ func _on_demon_ultimate_pressed(skill_id: String) -> void:
 		var mana_cost := maxf(float(skill.get("mana_cost", 100.0)), 0.0)
 		status_label.text = "마력이 부족합니다. %s은(는) 마력 %d가 필요합니다." % [String(skill.get("name", "마력 기술")), int(round(mana_cost))]
 
-func _open_demon_direction_select(skill_id: String) -> void:
-	pending_direction_ultimate_id = skill_id
+func _open_demon_direction_select() -> void:
 	$HUD/DemonUltimatePanel/UltimateButtons.hide()
 	demon_direction_buttons.show()
-	var skill := DEMON_ULTIMATES.get_skill(skill_id)
-	demon_ultimate_label.text = "마왕 필살기 · %s 방향 선택" % String(
-		skill.get("name", "방향 기술")
-	)
+	demon_ultimate_label.text = "마력 · 2번 일직선 공세 방향 선택"
 
 func _close_demon_direction_select() -> void:
-	pending_direction_ultimate_id = ""
 	demon_direction_buttons.hide()
 	$HUD/DemonUltimatePanel/UltimateButtons.show()
 	if battle.has_method("get_demon_ultimate_hud_state"):
@@ -2374,10 +2319,7 @@ func _close_demon_direction_select() -> void:
 			)
 
 func _on_demon_line_direction_pressed(direction: String) -> void:
-	var skill_id := pending_direction_ultimate_id
-	if skill_id.is_empty():
-		return
-	if battle.try_use_demon_ultimate(skill_id, direction):
+	if battle.try_use_demon_ultimate("line_assault", direction):
 		_close_demon_direction_select()
 		return
 

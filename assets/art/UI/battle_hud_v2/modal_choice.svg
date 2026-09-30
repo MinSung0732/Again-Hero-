@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="180" height="220" viewBox="0 0 180 220">
-<g shape-rendering="crispEdges">
-<polygon points="11,3 169,3 177,11 177,209 169,217 11,217 3,209 3,11" fill="#08091c" stroke="#efaa28" stroke-width="4"/>
-<polygon points="19,12 161,12 169,20 169,200 161,208 19,208 11,200 11,20" fill="#110d27" stroke="#5d247e" stroke-width="3"/>
-<rect x="22" y="22" width="136" height="48" fill="#23103f" stroke="#6f2b98" stroke-width="2"/>
-<path d="M13 31 H29 V14 M167 31 H151 V14 M13 189 H29 V206 M167 189 H151 V206" fill="none" stroke="#ffd35a" stroke-width="3"/>
-</g></svg>

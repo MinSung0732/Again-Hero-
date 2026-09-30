@@ -24,7 +24,6 @@ const SKILLS = {
 		"name": "일직선 공세",
 		"description": "동/서/남/북 한 면에서 일직선 소환",
 		"implemented": true,
-		"targeting_mode": "direction",
 		"mana_cost": 40.0,
 		"spawn_count": 10,
 		"spawn_distance": 700.0,
