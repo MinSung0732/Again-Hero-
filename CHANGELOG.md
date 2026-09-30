@@ -1,3 +1,10 @@
+### Monster soft separation
+- 슬라임/오크/거미/폭탄쥐에 작은 소프트 분리 반경을 공통 적용.
+- 실제 CharacterBody hitbox/mask는 변경하지 않고 중심 간 약 18~25px 안쪽에서만 약한 분리 방향을 생성해 군집이 한 점으로 겹치는 현상을 완화.
+- 주변 갱신은 0.10~0.14초로 분산하고 Battle의 기존 monster spatial grid / `fill_monsters_near`를 재사용해 전체 그룹 스캔을 추가하지 않음.
+- 이동 중에는 원래 추적 방향에 26% 정도만 분리 방향을 섞고, 슬라임/오크/거미는 공격 중 정지 상태에서도 최대 26px/s의 아주 약한 벌어짐만 허용.
+- 몬스터끼리 하드 물리 충돌은 켜지 않아 좁은 길목에서 서로 막혀 정체되는 부작용을 피함.
+
 ### Shared hero decorative-obstacle stall recovery
 - Stage 1~10 공통 Hero 이동 경로 21곳을 동일한 경량 obstacle-stall 래퍼로 통합.
 - 평소에는 기존 AI 이동을 그대로 사용하고, 장식물 충돌 상태에서 의도 이동량의 26% 이하만 전진하는 상태가 0.30초 지속될 때만 막힘으로 판단.
