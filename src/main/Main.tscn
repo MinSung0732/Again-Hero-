@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=3]
+[gd_scene load_steps=33 format=3]
 
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://src/battle/Battle.tscn" id="2_battle"]
@@ -8,8 +8,6 @@
 [ext_resource type="PackedScene" path="res://src/ui/HeroRevealCutscene.tscn" id="6_reveal"]
 [ext_resource type="PackedScene" path="res://src/ui/SkillUnlockCutscene.tscn" id="7_skill_unlock"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/logo/AgainHeroLogo.png" id="8_logo"]
-[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/stage_panel.svg" id="9_stage"]
-[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/timer_panel.svg" id="10_timer"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/hero_status_panel.svg" id="11_hero_status"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/side_frame.svg" id="12_menu"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/side_frame.svg" id="16_monster"]
@@ -474,7 +472,6 @@ offset_top = 8.0
 offset_right = 718.0
 offset_bottom = 133.0
 mouse_filter = 2
-texture = ExtResource("9_stage")
 expand_mode = 1
 stretch_mode = 0
 texture_filter = 1
@@ -529,13 +526,12 @@ offset_top = 20.0
 offset_right = 1050.0
 offset_bottom = 106.0
 mouse_filter = 2
-texture = ExtResource("10_timer")
 expand_mode = 1
 stretch_mode = 0
 texture_filter = 1
 
 [node name="RunTimer" type="Label" parent="HUD/TopBar"]
-offset_left = 790.0
+offset_left = 746.0
 offset_top = 36.0
 offset_right = 1034.0
 offset_bottom = 91.0
