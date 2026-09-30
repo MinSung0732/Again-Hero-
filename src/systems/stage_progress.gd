@@ -172,14 +172,30 @@ static func record_hero_encounter(
 	}
 
 
+static func reveal_hero_true_name(identity_id: String) -> bool:
+	if identity_id.is_empty():
+		return false
+	var config := ConfigFile.new()
+	config.load(SAVE_PATH)
+	config.set_value("hero_true_names", identity_id, true)
+	return config.save(SAVE_PATH) == OK
+
+
 static func is_hero_true_name_unlocked(
 	stage_id: String,
 	identity_id: String
 ) -> bool:
-	if stage_id.is_empty() or identity_id.is_empty():
+	if identity_id.is_empty():
 		return false
 	var config := ConfigFile.new()
 	if config.load(SAVE_PATH) != OK:
+		return false
+
+	if bool(config.get_value("hero_true_names", identity_id, false)):
+		return true
+	if identity_id == "returning_magic_hero":
+		return false
+	if stage_id.is_empty():
 		return false
 
 	var stage_count := int(
