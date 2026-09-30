@@ -141,6 +141,24 @@ static func clear_panel_style(panel: PanelContainer) -> void:
 	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 
 
+static func apply_clean_panel_background(
+	panel: PanelContainer,
+	bg_color: Color = Color(0.035, 0.032, 0.075, 0.98),
+	content_margin: float = 0.0
+) -> void:
+	if panel == null:
+		return
+
+	var background := StyleBoxFlat.new()
+	background.bg_color = bg_color
+	var safe_margin := maxf(content_margin, 0.0)
+	background.content_margin_left = safe_margin
+	background.content_margin_top = safe_margin
+	background.content_margin_right = safe_margin
+	background.content_margin_bottom = safe_margin
+	panel.add_theme_stylebox_override("panel", background)
+
+
 static func apply_progress_background(
 	bar: ProgressBar,
 	texture_path: String,
