@@ -2,6 +2,7 @@ extends CanvasLayer
 class_name StageIntroCutscene
 
 signal finished(skipped: bool)
+signal dialogue_event(event_id: String, payload: Dictionary)
 
 const ACTIVE_SCALE := Vector2(1.025, 1.025)
 const INACTIVE_SCALE := Vector2(0.965, 0.965)
@@ -258,6 +259,15 @@ func _show_current_line() -> void:
 
 	var entry: Dictionary = line
 	var speaker := String(entry.get("speaker", "hero"))
+	var event_id := String(entry.get("event", ""))
+	if not event_id.is_empty():
+		var payload := entry.duplicate(true)
+		dialogue_event.emit(event_id, payload)
+		if event_id == "reveal_hero_true_name":
+			var revealed_name := String(entry.get("true_name", "")).strip_edges()
+			if not revealed_name.is_empty():
+				_hero_display_name = revealed_name
+				hero_name.text = _hero_display_name
 	var hero_name_override := String(entry.get("hero_name", "")).strip_edges()
 	if not hero_name_override.is_empty():
 		_hero_display_name = hero_name_override
