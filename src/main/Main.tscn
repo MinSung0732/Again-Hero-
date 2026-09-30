@@ -464,10 +464,10 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="StageNumber" type="Label" parent="HUD/TopBar"]
-offset_left = 344.0
-offset_top = 33.0
-offset_right = 688.0
-offset_bottom = 49.0
+offset_left = 356.0
+offset_top = 18.0
+offset_right = 476.0
+offset_bottom = 44.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.82, 0.38, 1)
 theme_override_colors/font_outline_color = Color(0.03, 0.02, 0.07, 1)
@@ -475,7 +475,7 @@ theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 15
 text = "Stage 1"
 clip_text = true
-horizontal_alignment = 1
+horizontal_alignment = 0
 vertical_alignment = 1
 
 [node name="StageHeroName" type="Label" parent="HUD/TopBar"]
