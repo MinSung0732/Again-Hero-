@@ -30,7 +30,9 @@ const CAMERA_DRAG_THRESHOLD := 12.0
 @onready var subtitle_label: Label = $HUD/TopBar/Subtitle
 @onready var run_timer_label: Label = $HUD/TopBar/RunTimer
 @onready var stage_menu_button: Button = $HUD/TopBar/StageMenuButton
+@onready var hero_hud_portrait: TextureRect = $HUD/TopBar/HeroPortrait
 @onready var hero_level_label: Label = $HUD/TopBar/HeroLevel
+@onready var hero_hp_bar: ProgressBar = $HUD/TopBar/HeroHPBar
 @onready var hero_hp_label: Label = $HUD/TopBar/HeroHP
 @onready var monsters_label: Label = $HUD/TopBar/Monsters
 @onready var exp_label: Label = $HUD/TopBar/ExpLabel
@@ -38,6 +40,7 @@ const CAMERA_DRAG_THRESHOLD := 12.0
 @onready var debug_balance_label: Label = $HUD/DebugBalance
 @onready var hero_skill_cooldown_bar: HBoxContainer = $HUD/HeroSkillCooldownBar
 @onready var touch_hold_indicator: TextureRect = $HUD/TouchHoldIndicator
+@onready var battle_toast: Label = $HUD/BattleToast
 
 @onready var monster_info_bookmark: Button = $HUD/MonsterInfoBookmark
 @onready var monster_info_panel: PanelContainer = $HUD/MonsterInfoPanel
@@ -179,6 +182,8 @@ var _camera_drag_distance: float = 0.0
 var _pending_manual_spawn: bool = false
 var _pending_manual_spawn_position: Vector2 = Vector2.ZERO
 var _pending_manual_spawn_pointer_id: int = -1
+var current_stage_hero_name: String = "용사"
+var _battle_toast_timer: float = 0.0
 
 func _ready() -> void:
 	_cache_demon_ultimate_ui_data()
@@ -339,6 +344,10 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_update_touch_hold_feedback(delta)
+	if _battle_toast_timer > 0.0:
+		_battle_toast_timer = maxf(_battle_toast_timer - delta, 0.0)
+		if _battle_toast_timer <= 0.0:
+			battle_toast.hide()
 
 	if _scene_load_pending:
 		var load_status := ResourceLoader.load_threaded_get_status(_scene_load_path)
@@ -384,11 +393,16 @@ func _process(delta: float) -> void:
 			)
 
 func _apply_stage_snapshot(snapshot: Dictionary) -> void:
-	subtitle_label.text = "Stage %d · %s · %s" % [
+	current_stage_hero_name = String(snapshot.get("hero_name", "용사"))
+	subtitle_label.text = "Stage %d\n%s\n%s" % [
 		int(snapshot.get("stage_number", 1)),
 		String(snapshot.get("stage_name", "첫 번째 침입자")),
-		String(snapshot.get("hero_name", "견습 마도사")),
+		current_stage_hero_name,
 	]
+	var portrait_path := String(snapshot.get("hero_portrait_path", ""))
+	if portrait_path.is_empty():
+		portrait_path = HERO_PORTRAIT_REFERENCE_PATH
+	hero_hud_portrait.texture = _load_normalized_hero_portrait(portrait_path)
 
 
 func _begin_stage_entry(snapshot: Dictionary) -> void:
@@ -1177,14 +1191,16 @@ func _format_run_time(seconds: float) -> String:
 	return "%02d:%02d" % [minutes, remaining]
 
 func _on_stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int) -> void:
-	hero_hp_label.text = "용사 HP %d / %d" % [hero_hp, hero_max_hp]
-	monsters_label.text = "몬스터 %d" % monsters_left
+	hero_hp_bar.max_value = maxf(float(hero_max_hp), 1.0)
+	hero_hp_bar.value = float(hero_hp)
+	hero_hp_label.text = "HP %d / %d" % [hero_hp, hero_max_hp]
+	monsters_label.text = "몬스터  %d" % monsters_left
 	hero_bgm_manager.update_hero_hp(hero_hp, hero_max_hp)
 	if hero_info_panel.visible:
 		_refresh_hero_info_panel()
 
 func _on_progression_changed(level: int, current_exp: int, exp_to_next_level: int) -> void:
-	hero_level_label.text = "Lv.%d" % level
+	hero_level_label.text = "Lv. %d   %s" % [level, current_stage_hero_name]
 	exp_label.text = "EXP %d / %d" % [current_exp, exp_to_next_level]
 	exp_bar.max_value = maxf(float(exp_to_next_level), 1.0)
 	exp_bar.value = float(current_exp)
@@ -2022,18 +2038,29 @@ func _get_catalog_monster_name(monster_id: String) -> String:
 func _is_monster_equipped(monster_id: String) -> bool:
 	return monster_id in battle_loadout_ids
 
-func _on_placement_mode_toggled(auto_enabled: bool) -> void:
-	auto_placement = auto_enabled
-
+func _set_default_battle_status() -> void:
 	if auto_placement:
 		placement_toggle.text = "자동 배치"
-		status_label.text = "자동 배치: 용사 주변 바깥쪽에서 몬스터가 소환됩니다."
+		status_label.text = "자동 배치 : 용사 주변 반경에서 몬스터가 소환됩니다."
+	elif selected_monster_type.is_empty():
+		placement_toggle.text = "수동 배치"
+		status_label.text = "수동 배치 : 몬스터 카드를 고른 뒤 전장을 터치하세요."
 	else:
 		placement_toggle.text = "수동 배치"
-		if selected_monster_type.is_empty():
-			status_label.text = "수동 배치: 몬스터 버튼을 선택한 뒤 현재 화면의 전장을 터치하세요."
-		else:
-			status_label.text = "수동 배치: %s 선택됨 · 현재 화면을 터치하세요." % _get_monster_name(selected_monster_type)
+		status_label.text = "수동 배치 : %s 선택됨" % _get_monster_name(selected_monster_type)
+
+
+func _show_battle_toast(message: String, duration: float = 1.4) -> void:
+	if message.is_empty():
+		return
+	battle_toast.text = message
+	battle_toast.show()
+	_battle_toast_timer = maxf(duration, 0.2)
+
+
+func _on_placement_mode_toggled(auto_enabled: bool) -> void:
+	auto_placement = auto_enabled
+	_set_default_battle_status()
 
 func _on_summon_pressed(monster_type: String) -> void:
 	if mutation_panel.visible:
@@ -2052,17 +2079,8 @@ func _on_summon_pressed(monster_type: String) -> void:
 	status_label.text = "수동 배치: %s 선택됨 · 현재 보이는 전장을 터치해 연속 배치하세요." % _get_monster_name(monster_type)
 
 func _on_summon_result(_monster_type: String, success: bool, message: String) -> void:
-	if not success:
-		status_label.text = message
-		return
-
-	if auto_placement:
-		status_label.text = "%s\n자동 배치 모드" % message
-	else:
-		status_label.text = "%s\n%s 선택 유지 · 계속 터치해서 배치 가능" % [
-			message,
-			_get_monster_name(selected_monster_type),
-		]
+	_show_battle_toast(message, 1.2 if success else 1.8)
+	_set_default_battle_status()
 
 func _on_demon_ultimate_changed(
 	current_value: float,
@@ -2071,7 +2089,7 @@ func _on_demon_ultimate_changed(
 ) -> void:
 	demon_ultimate_charge_ready = ready
 	demon_mana_current = current_value
-	demon_ultimate_label.text = "마력  %d / %d" % [
+	demon_ultimate_label.text = "마왕 필살기   %d / %d" % [
 		int(round(current_value)),
 		int(round(max_value)),
 	]
@@ -2434,8 +2452,9 @@ func _on_demon_choice_pressed(index: int) -> void:
 func _on_demon_reroll_pressed() -> void:
 	battle.reroll_demon_augments()
 
-func _on_demon_augment_applied(augment_name: String, build_summary: String) -> void:
-	status_label.text = "마왕 증강 획득 → %s\n현재 마왕 빌드: %s" % [augment_name, build_summary]
+func _on_demon_augment_applied(augment_name: String, _build_summary: String) -> void:
+	_show_battle_toast("마왕 증강 · %s" % augment_name, 1.6)
+	_set_default_battle_status()
 	if monster_info_panel.visible:
 		_refresh_monster_info_panel()
 
