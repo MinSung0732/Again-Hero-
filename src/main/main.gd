@@ -78,8 +78,8 @@ const BATTLE_PIXEL_BAR_BACKGROUND := "res://assets/art/UI/05_right_bars/part_02.
 @onready var build_label: Label = $HUD/BottomBar/BuildLabel
 @onready var status_label: Label = $HUD/BottomBar/Status
 @onready var placement_toggle: CheckButton = $HUD/BottomBar/PlacementModeToggle
-@onready var demon_progress_label: Label = $HUD/BottomBar/DemonProgressLabel
-@onready var demon_exp_bar: ProgressBar = $HUD/BottomBar/DemonExpBar
+@onready var demon_progress_label: Label = $HUD/DemonUltimatePanel/DemonProgressLabel
+@onready var demon_exp_bar: ProgressBar = $HUD/DemonUltimatePanel/DemonExpBar
 @onready var command_label: Label = $HUD/BottomBar/CommandLabel
 @onready var command_bar: ProgressBar = $HUD/BottomBar/CommandBar
 @onready var demon_ultimate_panel: Control = $HUD/DemonUltimatePanel
@@ -410,6 +410,12 @@ func _apply_battle_pixel_asset_frames() -> void:
 			18.0,
 			7.0
 		)
+	BATTLE_PIXEL_FRAME_ASSEMBLER.apply_progress_background(
+		demon_exp_bar,
+		BATTLE_PIXEL_BAR_BACKGROUND,
+		12.0,
+		4.0
+	)
 	_replace_button_frame(
 		stage_menu_button,
 		BATTLE_PIXEL_FRAME_MEDIUM_DIR,
@@ -437,6 +443,16 @@ func _apply_battle_pixel_asset_frames() -> void:
 		0.34,
 		BATTLE_PIXEL_CENTER_DARK,
 		18
+	)
+	_replace_texture_frame_clean(
+		$HUD/DemonUltimatePanel/Frame,
+		BATTLE_PIXEL_FRAME_LARGE_DIR,
+		0.34
+	)
+	_replace_texture_frame_clean(
+		$HUD/BottomBar/AutoFrame,
+		BATTLE_PIXEL_FRAME_MEDIUM_DIR,
+		0.28
 	)
 
 	for button in [
@@ -510,6 +526,24 @@ func _replace_texture_frame(
 		scale,
 		center_texture_path,
 		center_patch_margin
+	)
+
+
+func _replace_texture_frame_clean(
+	target: TextureRect,
+	frame_dir: String,
+	scale: float
+) -> void:
+	if target == null:
+		return
+	target.texture = null
+	BATTLE_PIXEL_FRAME_ASSEMBLER.add_split_frame(
+		target,
+		frame_dir,
+		scale,
+		"",
+		0,
+		Color(0.035, 0.032, 0.075, 0.98)
 	)
 
 
@@ -1451,8 +1485,7 @@ func _on_progression_changed(level: int, current_exp: int, exp_to_next_level: in
 
 func _on_demon_progression_changed(level: int, current_exp: float, exp_to_next_level: float) -> void:
 	demon_level_label.text = "마왕 Lv.%d" % level
-	demon_progress_label.text = "마왕 Lv.%d · EXP %.1f / %.1f" % [
-		level,
+	demon_progress_label.text = "EXP %.1f / %.1f" % [
 		current_exp,
 		exp_to_next_level,
 	]

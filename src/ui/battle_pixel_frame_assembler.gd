@@ -8,7 +8,8 @@ static func add_split_frame(
 	frame_dir: String,
 	scale: float,
 	center_texture_path: String = "",
-	center_patch_margin: int = 20
+	center_patch_margin: int = 20,
+	clean_center_color: Color = Color(0.0, 0.0, 0.0, 0.0)
 ) -> void:
 	if target == null:
 		return
@@ -39,6 +40,9 @@ static func add_split_frame(
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	target.add_child(overlay)
 	target.move_child(overlay, 0)
+
+	if clean_center_color.a > 0.0:
+		_add_clean_center_panel(overlay, clean_center_color)
 
 	if not center_texture_path.is_empty():
 		_add_center_panel(
@@ -208,6 +212,15 @@ static func _add_center_panel(
 	panel.patch_margin_bottom = patch_margin
 	panel.axis_stretch_horizontal = NinePatchRect.AXIS_STRETCH_MODE_TILE
 	panel.axis_stretch_vertical = NinePatchRect.AXIS_STRETCH_MODE_TILE
+	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	parent.add_child(panel)
+
+
+static func _add_clean_center_panel(parent: Control, color: Color) -> void:
+	var panel := ColorRect.new()
+	panel.name = "Center"
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.color = color
 	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	parent.add_child(panel)
 

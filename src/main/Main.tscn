@@ -12,7 +12,6 @@
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/timer_panel.svg" id="10_timer"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/hero_status_panel.svg" id="11_hero_status"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/side_frame.svg" id="12_menu"]
-[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/ultimate_panel.svg" id="13_ultimate"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/side_frame.svg" id="16_monster"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/side_frame.svg" id="17_detail"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/side_frame.svg" id="18_hero"]
@@ -20,7 +19,6 @@
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/icon_monster.svg" id="23_side_monster_icon"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/icon_detail.svg" id="24_side_detail_icon"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/icon_hero.svg" id="25_side_hero_icon"]
-[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/auto_bar.svg" id="14_auto"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/summon_card.svg" id="15_card"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/modal_panel.svg" id="19_modal_panel"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/top_hud_backdrop.svg" id="26_top_backdrop"]
@@ -690,7 +688,6 @@ offset_top = 4.0
 offset_right = 1060.0
 offset_bottom = 209.0
 mouse_filter = 2
-texture = ExtResource("13_ultimate")
 expand_mode = 1
 stretch_mode = 0
 texture_filter = 1
@@ -707,6 +704,32 @@ theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 24
 text = "마왕 Lv.1"
 clip_text = true
+vertical_alignment = 1
+
+[node name="DemonExpBar" type="ProgressBar" parent="HUD/DemonUltimatePanel"]
+offset_left = 96.0
+offset_top = 68.0
+offset_right = 474.0
+offset_bottom = 82.0
+max_value = 15.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_hud_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hud_exp_fill")
+show_percentage = false
+
+[node name="DemonProgressLabel" type="Label" parent="HUD/DemonUltimatePanel"]
+offset_left = 96.0
+offset_top = 61.0
+offset_right = 474.0
+offset_bottom = 86.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.9, 0.88, 1, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+text = "EXP 0.0 / 15.0"
+clip_text = true
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="UltimateLabel" type="Label" parent="HUD/DemonUltimatePanel"]
@@ -929,7 +952,6 @@ offset_top = 2.0
 offset_right = 1060.0
 offset_bottom = 82.0
 mouse_filter = 2
-texture = ExtResource("14_auto")
 expand_mode = 1
 stretch_mode = 0
 texture_filter = 1
@@ -958,12 +980,6 @@ offset_bottom = 68.0
 theme_override_font_sizes/font_size = 18
 button_pressed = true
 text = "자동 배치"
-
-[node name="DemonProgressLabel" type="Label" parent="HUD/BottomBar"]
-visible = false
-
-[node name="DemonExpBar" type="ProgressBar" parent="HUD/BottomBar"]
-visible = false
 
 [node name="CommandLabel" type="Label" parent="HUD/BottomBar"]
 vertical_alignment = 1

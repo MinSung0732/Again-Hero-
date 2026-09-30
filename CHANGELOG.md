@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-09-30 — 전투 HUD 마왕 EXP 복구 / 하단 PNG 프레임 전환
+- 숨김 상태였던 마왕 EXP 바와 수치를 필살기 패널 좌측 헤더 아래 여유 공간으로 옮겨 전투 중 마왕 성장도를 확인할 수 있게 복구.
+- 기존 `demon_progression_changed` 신호와 초기 스냅샷 갱신 경로를 그대로 사용하며, 매 프레임 폴링이나 전투 로직 변경은 추가하지 않음.
+- `DemonUltimatePanel/Frame`의 `ultimate_panel.svg`와 `BottomBar/AutoFrame`의 `auto_bar.svg`를 각각 01_large_left_panel / 03_middle_right_panel 분리 PNG 조립 프레임으로 교체.
+- 모서리는 원본 비율로 고정하고 상·하·좌·우 직선만 타일 반복하며, 내부는 점무늬 없는 짙은 남보라 단색 배경으로 처리.
+- 기존 필살기 게이지/버튼/방향 선택, 자동배치/지휘력, 소환카드의 위치와 게임플레이 의미는 유지.
+
 ## 2026-09-30 — 모달 점무늬 제거 / 정보 사이드 패널 픽셀 프레임
 - 전투 메뉴, 설정, 마왕 증강, 돌연변이 선택, 전투 결과 중앙 배경에서 05_right_bars/part_02.png 타일 사용을 제거해 반복되던 보라색 점/파편 무늬를 없앰.
 - 큰 모달은 외곽 01_large_left_panel 분리 PNG 프레임만 유지하고, 내부는 무늬 없는 짙은 남보라 StyleBoxFlat 배경으로 분리.
