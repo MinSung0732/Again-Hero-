@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3]
+[gd_scene load_steps=34 format=3]
 
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://src/battle/Battle.tscn" id="2_battle"]
@@ -23,6 +23,10 @@
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/auto_bar.svg" id="14_auto"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/summon_card.svg" id="15_card"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/modal_panel.svg" id="19_modal_panel"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/top_hud_backdrop.svg" id="26_top_backdrop"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/settings_slider_knob.svg" id="27_settings_knob"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/settings_check_on.svg" id="28_settings_check_on"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/settings_check_off.svg" id="29_settings_check_off"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cooldown_bg"]
 bg_color = Color(0.16, 0.16, 0.18, 0.55)
@@ -174,6 +178,76 @@ corner_radius_top_right = 7
 corner_radius_bottom_right = 7
 corner_radius_bottom_left = 7
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_settings_inner"]
+bg_color = Color(0.035, 0.026, 0.075, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.36, 0.16, 0.5, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 18.0
+content_margin_top = 18.0
+content_margin_right = 18.0
+content_margin_bottom = 18.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_settings_tab_normal"]
+bg_color = Color(0.055, 0.035, 0.11, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.31, 0.13, 0.43, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_settings_tab_selected"]
+bg_color = Color(0.19, 0.09, 0.29, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.95, 0.65, 0.16, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_settings_slider"]
+bg_color = Color(0.035, 0.028, 0.07, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.38, 0.18, 0.52, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_settings_slider_fill"]
+bg_color = Color(0.56, 0.2, 0.76, 1)
+border_width_top = 1
+border_width_bottom = 1
+border_color = Color(0.95, 0.65, 0.16, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hud"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hero_info"]
@@ -226,6 +300,15 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0.035, 0.038, 0.052, 1)
+
+[node name="TopHUDBackdrop" type="TextureRect" parent="ScreenBackground"]
+offset_right = 1080.0
+offset_bottom = 300.0
+mouse_filter = 2
+texture = ExtResource("26_top_backdrop")
+expand_mode = 1
+stretch_mode = 0
+texture_filter = 1
 
 [node name="BattleViewportContainer" type="SubViewportContainer" parent="."]
 layout_mode = 1
@@ -1506,53 +1589,71 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -430.0
-offset_top = -430.0
-offset_right = 430.0
-offset_bottom = 430.0
+offset_left = -440.0
+offset_top = -445.0
+offset_right = 440.0
+offset_bottom = 445.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Margin" type="MarginContainer" parent="HUD/SettingsOverlay/Panel"]
 layout_mode = 2
-theme_override_constants/margin_left = 52
-theme_override_constants/margin_top = 46
-theme_override_constants/margin_right = 52
-theme_override_constants/margin_bottom = 46
+theme_override_constants/margin_left = 58
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 58
+theme_override_constants/margin_bottom = 50
 
 [node name="VBox" type="VBoxContainer" parent="HUD/SettingsOverlay/Panel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 30
+theme_override_constants/separation = 26
 alignment = 1
 
 [node name="Title" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
+theme_override_constants/outline_size = 4
+theme_override_colors/font_outline_color = Color(0.08, 0.025, 0.12, 1)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
-theme_override_font_sizes/font_size = 44
+theme_override_colors/font_color = Color(1, 0.78, 0.3, 1)
+theme_override_font_sizes/font_size = 42
 text = "설정"
 horizontal_alignment = 1
 
 [node name="SettingsTabs" type="TabContainer" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 520)
+theme_override_styles/tab_hovered = SubResource("StyleBoxFlat_settings_tab_selected")
+theme_override_styles/tab_unselected = SubResource("StyleBoxFlat_settings_tab_normal")
+theme_override_styles/tab_selected = SubResource("StyleBoxFlat_settings_tab_selected")
+theme_override_styles/panel = SubResource("StyleBoxFlat_settings_inner")
+theme_override_colors/font_unselected_color = Color(0.72, 0.68, 0.78, 1)
+theme_override_colors/font_selected_color = Color(1, 0.86, 0.55, 1)
+custom_minimum_size = Vector2(0, 535)
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_font_sizes/font_size = 25
+theme_override_font_sizes/font_size = 24
 
 [node name="Sound" type="VBoxContainer" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs"]
 layout_mode = 2
 theme_override_constants/separation = 22
 
 [node name="BGMRow" type="HBoxContainer" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound"]
+custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 16
 
 [node name="Label" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/BGMRow"]
-custom_minimum_size = Vector2(200, 0)
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.96, 0.91, 1, 1)
+custom_minimum_size = Vector2(166, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 25
 text = "배경음"
 
 [node name="Slider" type="HSlider" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/BGMRow"]
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_settings_slider_fill")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_settings_slider_fill")
+theme_override_styles/slider = SubResource("StyleBoxFlat_settings_slider")
+theme_override_icons/grabber_disabled = ExtResource("27_settings_knob")
+theme_override_icons/grabber_highlight = ExtResource("27_settings_knob")
+theme_override_icons/grabber = ExtResource("27_settings_knob")
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 1.0
@@ -1561,29 +1662,47 @@ step = 1.0
 value = 10.0
 
 [node name="Value" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/BGMRow"]
-custom_minimum_size = Vector2(72, 0)
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.77, 0.3, 1)
+custom_minimum_size = Vector2(58, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 25
 text = "10"
 horizontal_alignment = 1
 
 [node name="BGMMute" type="CheckBox" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound"]
-custom_minimum_size = Vector2(0, 76)
+theme_override_icons/unchecked_disabled = ExtResource("29_settings_check_off")
+theme_override_icons/checked_disabled = ExtResource("28_settings_check_on")
+theme_override_icons/unchecked = ExtResource("29_settings_check_off")
+theme_override_icons/checked = ExtResource("28_settings_check_on")
+theme_override_colors/font_hover_color = Color(1, 0.86, 0.55, 1)
+theme_override_colors/font_color = Color(0.88, 0.84, 0.92, 1)
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 23
 text = "배경음 끄기"
 
 [node name="SFXRow" type="HBoxContainer" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound"]
+custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 16
 
 [node name="Label" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/SFXRow"]
-custom_minimum_size = Vector2(200, 0)
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.96, 0.91, 1, 1)
+custom_minimum_size = Vector2(166, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 25
 text = "효과음"
 
 [node name="Slider" type="HSlider" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/SFXRow"]
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_settings_slider_fill")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_settings_slider_fill")
+theme_override_styles/slider = SubResource("StyleBoxFlat_settings_slider")
+theme_override_icons/grabber_disabled = ExtResource("27_settings_knob")
+theme_override_icons/grabber_highlight = ExtResource("27_settings_knob")
+theme_override_icons/grabber = ExtResource("27_settings_knob")
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 1.0
@@ -1592,22 +1711,30 @@ step = 1.0
 value = 10.0
 
 [node name="Value" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/SFXRow"]
-custom_minimum_size = Vector2(72, 0)
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.77, 0.3, 1)
+custom_minimum_size = Vector2(58, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 25
 text = "10"
 horizontal_alignment = 1
 
 [node name="SFXMute" type="CheckBox" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound"]
-custom_minimum_size = Vector2(0, 76)
+theme_override_icons/unchecked_disabled = ExtResource("29_settings_check_off")
+theme_override_icons/checked_disabled = ExtResource("28_settings_check_on")
+theme_override_icons/unchecked = ExtResource("29_settings_check_off")
+theme_override_icons/checked = ExtResource("28_settings_check_on")
+theme_override_colors/font_hover_color = Color(1, 0.86, 0.55, 1)
+theme_override_colors/font_color = Color(0.88, 0.84, 0.92, 1)
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 23
 text = "효과음 끄기"
 
 [node name="Guide" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.68, 0.64, 0.73, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.68, 0.61, 0.75, 1)
+theme_override_font_sizes/font_size = 18
 text = "1~10 단계 · 변경 즉시 적용 · 자동 저장"
 horizontal_alignment = 1
 
@@ -1617,27 +1744,35 @@ layout_mode = 2
 theme_override_constants/separation = 22
 
 [node name="CameraLock" type="CheckBox" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Gameplay"]
-custom_minimum_size = Vector2(0, 84)
+theme_override_icons/unchecked_disabled = ExtResource("29_settings_check_off")
+theme_override_icons/checked_disabled = ExtResource("28_settings_check_on")
+theme_override_icons/unchecked = ExtResource("29_settings_check_off")
+theme_override_icons/checked = ExtResource("28_settings_check_on")
+theme_override_colors/font_hover_color = Color(1, 0.86, 0.55, 1)
+theme_override_colors/font_color = Color(0.94, 0.9, 1, 1)
+custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 24
 button_pressed = true
 text = "시야 고정"
 
 [node name="CameraGuide" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Gameplay"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.74, 0.82, 1)
-theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.76, 0.71, 0.82, 1)
+theme_override_font_sizes/font_size = 20
 text = "켜짐: 용사를 자동 추적합니다.\n꺼짐: 전투 화면을 드래그/스와이프해 시야를 이동합니다."
 autowrap_mode = 2
 
 [node name="CloseButton" type="Button" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
+theme_override_colors/font_pressed_color = Color(1, 0.88, 0.45, 1)
+theme_override_colors/font_color = Color(0.96, 0.91, 1, 1)
 focus_mode = 0
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
-custom_minimum_size = Vector2(0, 108)
+custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 27
 text = "돌아가기"
 
 [node name="DemonAugmentPanel" type="PanelContainer" parent="HUD"]
