@@ -23,6 +23,7 @@ var effect_end_msec: int = 0
 var initial_damage_ids: Dictionary = {}
 var slowed_bodies: Dictionary = {}
 var slow_refresh_timer: float = 0.0
+var caster: Node2D
 
 @onready var visual: AnimatedSprite2D = $Visual
 @onready var obstacle_shape: CollisionShape2D = $Obstacle/CollisionShape2D
@@ -46,7 +47,8 @@ func setup(
 	new_duration: float,
 	new_effect_radius: float,
 	new_slow_multiplier: float,
-	new_collision_radius: float
+	new_collision_radius: float,
+	caster_node: Node2D
 ) -> void:
 	_build_frames()
 	active = true
@@ -58,6 +60,7 @@ func setup(
 	effect_radius = maxf(new_effect_radius, 1.0)
 	slow_multiplier = clampf(new_slow_multiplier, 0.1, 1.0)
 	collision_radius = maxf(new_collision_radius, 8.0)
+	caster = caster_node
 	initial_damage_ids.clear()
 	slowed_bodies.clear()
 	slow_refresh_timer = 0.0
@@ -144,7 +147,17 @@ func _apply_initial_damage(body: Node) -> void:
 	if initial_damage_ids.has(instance_id):
 		return
 	initial_damage_ids[instance_id] = true
+	var hit_position := (
+		(body as Node2D).global_position
+		if body is Node2D
+		else global_position
+	)
 	body.call("take_damage", damage)
+	if (
+		is_instance_valid(caster)
+		and caster.has_method("_on_sage_skill_hit")
+	):
+		caster.call("_on_sage_skill_hit", hit_position)
 
 
 func _track_slow_target(body: Node) -> void:
@@ -238,6 +251,7 @@ func _finish_pillar() -> void:
 
 
 func deactivate_for_pool() -> void:
+	caster = null
 	active = false
 	pillar_active = false
 	destroying = false
