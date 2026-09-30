@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3]
+[gd_scene load_steps=35 format=3]
 
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://src/battle/Battle.tscn" id="2_battle"]
@@ -27,6 +27,7 @@
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/settings_slider_knob.svg" id="27_settings_knob"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/settings_check_on.svg" id="28_settings_check_on"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/settings_check_off.svg" id="29_settings_check_off"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/bottom_hud_backdrop.svg" id="30_bottom_backdrop"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cooldown_bg"]
 bg_color = Color(0.16, 0.16, 0.18, 0.55)
@@ -310,6 +311,20 @@ expand_mode = 1
 stretch_mode = 0
 texture_filter = 1
 
+[node name="BottomHUDBackdrop" type="TextureRect" parent="ScreenBackground"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -465.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+texture = ExtResource("30_bottom_backdrop")
+expand_mode = 1
+stretch_mode = 0
+texture_filter = 1
+
 [node name="BattleViewportContainer" type="SubViewportContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -502,10 +517,10 @@ stretch_mode = 0
 texture_filter = 1
 
 [node name="HeroPortrait" type="TextureRect" parent="HUD/TopBar"]
-offset_left = 42.0
-offset_top = 158.0
-offset_right = 158.0
-offset_bottom = 274.0
+offset_left = 36.0
+offset_top = 151.0
+offset_right = 164.0
+offset_bottom = 279.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5

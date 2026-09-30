@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="465" viewBox="0 0 1080 465">
+<g shape-rendering="crispEdges">
+  <rect width="1080" height="465" fill="#070812"/>
+  <rect width="1080" height="465" fill="#0d0b1b" opacity="0.98"/>
+
+  <!-- masonry field -->
+  <g fill="#141522" stroke="#242238" stroke-width="2" opacity="0.70">
+    <rect x="-28" y="8" width="240" height="72"/>
+    <rect x="216" y="8" width="274" height="72"/>
+    <rect x="494" y="8" width="236" height="72"/>
+    <rect x="734" y="8" width="250" height="72"/>
+    <rect x="988" y="8" width="120" height="72"/>
+
+    <rect x="-82" y="84" width="278" height="74"/>
+    <rect x="200" y="84" width="248" height="74"/>
+    <rect x="452" y="84" width="294" height="74"/>
+    <rect x="750" y="84" width="220" height="74"/>
+    <rect x="974" y="84" width="132" height="74"/>
+
+    <rect x="-18" y="162" width="226" height="76"/>
+    <rect x="212" y="162" width="286" height="76"/>
+    <rect x="502" y="162" width="218" height="76"/>
+    <rect x="724" y="162" width="266" height="76"/>
+    <rect x="994" y="162" width="112" height="76"/>
+
+    <rect x="-72" y="242" width="280" height="82"/>
+    <rect x="212" y="242" width="236" height="82"/>
+    <rect x="452" y="242" width="300" height="82"/>
+    <rect x="756" y="242" width="228" height="82"/>
+    <rect x="988" y="242" width="118" height="82"/>
+
+    <rect x="-20" y="328" width="230" height="128"/>
+    <rect x="214" y="328" width="286" height="128"/>
+    <rect x="504" y="328" width="226" height="128"/>
+    <rect x="734" y="328" width="260" height="128"/>
+    <rect x="998" y="328" width="108" height="128"/>
+  </g>
+
+  <!-- purple demonic haze behind the ultimate strip and summon cards -->
+  <ellipse cx="540" cy="120" rx="390" ry="118" fill="#56136f" opacity="0.08"/>
+  <ellipse cx="540" cy="346" rx="450" ry="150" fill="#44105e" opacity="0.065"/>
+
+  <!-- subtle crest centered behind ultimate panel -->
+  <g fill="none" stroke="#772c98" opacity="0.12">
+    <circle cx="540" cy="112" r="60" stroke-width="2"/>
+    <path d="M540 54 L556 91 L596 96 L566 123 L574 163 L540 143 L506 163 L514 123 L484 96 L524 91 Z" stroke-width="2"/>
+  </g>
+
+  <!-- chained lower corners -->
+  <g fill="none" opacity="0.40">
+    <path d="M16 384 C82 350 112 372 170 332 C202 310 232 286 260 252" stroke="#6f4027" stroke-width="6"/>
+    <path d="M1064 384 C998 350 968 372 910 332 C878 310 848 286 820 252" stroke="#6f4027" stroke-width="6"/>
+    <path d="M18 384 C84 350 114 372 172 332 C204 310 234 286 262 252" stroke="#b56a31" stroke-width="2"/>
+    <path d="M1062 384 C996 350 966 372 908 332 C876 310 846 286 818 252" stroke="#b56a31" stroke-width="2"/>
+  </g>
+
+  <!-- readability veils exactly under the bottom HUD groups -->
+  <rect x="0" y="0" width="1080" height="212" fill="#05060d" opacity="0.36"/>
+  <rect x="0" y="210" width="1080" height="74" fill="#05060d" opacity="0.30"/>
+  <rect x="0" y="282" width="1080" height="183" fill="#05060d" opacity="0.34"/>
+
+  <!-- upper battlefield separator -->
+  <rect x="0" y="0" width="1080" height="10" fill="#070812"/>
+  <rect x="0" y="8" width="1080" height="2" fill="#8a35a8" opacity="0.70"/>
+  <rect x="0" y="12" width="1080" height="2" fill="#d58a27" opacity="0.30"/>
+  <polygon points="540,2 548,10 540,18 532,10" fill="#73299c" stroke="#dca43a" stroke-width="2"/>
+
+  <!-- bottom grounding -->
+  <rect x="0" y="455" width="1080" height="10" fill="#060711"/>
+  <rect x="0" y="453" width="1080" height="2" fill="#4f215f" opacity="0.55"/>
+</g>
+</svg>

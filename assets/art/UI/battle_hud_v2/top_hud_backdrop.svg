@@ -1,62 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1080" height="300" viewBox="0 0 1080 300">
 <g shape-rendering="crispEdges">
-  <rect width="1080" height="300" fill="#080914"/>
-  <rect x="0" y="0" width="1080" height="300" fill="#0d0b1b" opacity="0.96"/>
+  <rect width="1080" height="300" fill="#070812"/>
+  <rect width="1080" height="300" fill="#0d0b1b" opacity="0.98"/>
 
-  <!-- subtle stone courses -->
-  <g fill="#151525" stroke="#25233a" stroke-width="2" opacity="0.82">
-    <rect x="0" y="8" width="170" height="54"/><rect x="174" y="8" width="230" height="54"/>
-    <rect x="408" y="8" width="205" height="54"/><rect x="617" y="8" width="250" height="54"/><rect x="871" y="8" width="209" height="54"/>
-    <rect x="-65" y="66" width="230" height="54"/><rect x="169" y="66" width="210" height="54"/>
-    <rect x="383" y="66" width="270" height="54"/><rect x="657" y="66" width="195" height="54"/><rect x="856" y="66" width="245" height="54"/>
-    <rect x="0" y="124" width="205" height="54"/><rect x="209" y="124" width="260" height="54"/>
-    <rect x="473" y="124" width="188" height="54"/><rect x="665" y="124" width="235" height="54"/><rect x="904" y="124" width="176" height="54"/>
-    <rect x="-80" y="182" width="250" height="54"/><rect x="174" y="182" width="218" height="54"/>
-    <rect x="396" y="182" width="244" height="54"/><rect x="644" y="182" width="212" height="54"/><rect x="860" y="182" width="250" height="54"/>
-    <rect x="0" y="240" width="182" height="60"/><rect x="186" y="240" width="242" height="60"/>
-    <rect x="432" y="240" width="226" height="60"/><rect x="662" y="240" width="198" height="60"/><rect x="864" y="240" width="216" height="60"/>
+  <!-- broad dungeon masonry: kept low contrast so HUD stays dominant -->
+  <g fill="#141522" stroke="#242238" stroke-width="2" opacity="0.72">
+    <rect x="-20" y="8" width="214" height="58"/>
+    <rect x="198" y="8" width="244" height="58"/>
+    <rect x="446" y="8" width="190" height="58"/>
+    <rect x="640" y="8" width="260" height="58"/>
+    <rect x="904" y="8" width="196" height="58"/>
+    <rect x="-78" y="70" width="264" height="62"/>
+    <rect x="190" y="70" width="290" height="62"/>
+    <rect x="484" y="70" width="214" height="62"/>
+    <rect x="702" y="70" width="260" height="62"/>
+    <rect x="966" y="70" width="140" height="62"/>
+    <rect x="-18" y="136" width="240" height="66"/>
+    <rect x="226" y="136" width="278" height="66"/>
+    <rect x="508" y="136" width="222" height="66"/>
+    <rect x="734" y="136" width="252" height="66"/>
+    <rect x="990" y="136" width="120" height="66"/>
+    <rect x="-68" y="206" width="270" height="82"/>
+    <rect x="206" y="206" width="266" height="82"/>
+    <rect x="476" y="206" width="238" height="82"/>
+    <rect x="718" y="206" width="248" height="82"/>
+    <rect x="970" y="206" width="136" height="82"/>
   </g>
 
-  <!-- recessed upper arch/shadow -->
-  <path d="M280 0 H800 L760 34 H320 Z" fill="#090713" opacity="0.95"/>
-  <path d="M335 0 H745 L712 27 H368 Z" fill="#17102b" opacity="0.55"/>
-
-  <!-- chains -->
-  <g fill="none" stroke="#6a3a25" stroke-width="5" opacity="0.48">
-    <path d="M34 18 C92 58 78 124 134 160 C164 180 190 194 219 228"/>
-    <path d="M1045 16 C986 60 1001 122 944 159 C911 181 889 199 861 230"/>
-  </g>
-  <g fill="none" stroke="#a1602d" stroke-width="2" opacity="0.42">
-    <path d="M35 18 C93 58 79 124 135 160 C165 180 191 194 220 228"/>
-    <path d="M1044 16 C985 60 1000 122 943 159 C910 181 888 199 860 230"/>
-  </g>
-
-  <!-- faint purple magic haze / sigil -->
-  <ellipse cx="540" cy="126" rx="300" ry="110" fill="#39105b" opacity="0.10"/>
-  <ellipse cx="540" cy="126" rx="230" ry="82" fill="#69218f" opacity="0.06"/>
-  <g fill="none" stroke="#722a9a" opacity="0.18">
+  <!-- central demonic crest / magic haze -->
+  <ellipse cx="540" cy="126" rx="320" ry="118" fill="#451164" opacity="0.08"/>
+  <ellipse cx="540" cy="126" rx="238" ry="86" fill="#7a239a" opacity="0.045"/>
+  <g fill="none" stroke="#743198" opacity="0.14">
     <circle cx="540" cy="130" r="74" stroke-width="2"/>
-    <circle cx="540" cy="130" r="50" stroke-width="2"/>
-    <path d="M540 63 L560 107 L608 111 L571 142 L582 190 L540 165 L498 190 L509 142 L472 111 L520 107 Z" stroke-width="2"/>
+    <circle cx="540" cy="130" r="48" stroke-width="2"/>
+    <path d="M540 64 L558 107 L604 112 L570 143 L580 188 L540 164 L500 188 L510 143 L476 112 L522 107 Z" stroke-width="2"/>
   </g>
 
-  <!-- cracks -->
-  <g fill="none" stroke="#2f2a42" stroke-width="3" opacity="0.62">
-    <path d="M208 88 l28 18 -17 14 23 22 -9 20"/>
-    <path d="M842 85 l-22 20 14 17 -20 21 8 20"/>
-    <path d="M94 213 l28 -12 16 17 28 -6"/>
-    <path d="M944 216 l-30 -11 -17 18 -27 -5"/>
+  <!-- corner chains -->
+  <g fill="none" opacity="0.42">
+    <path d="M26 12 C90 50 80 119 136 157 C166 178 191 197 222 230" stroke="#6f4027" stroke-width="6"/>
+    <path d="M1054 12 C990 50 1000 119 944 157 C914 178 889 197 858 230" stroke="#6f4027" stroke-width="6"/>
+    <path d="M28 12 C92 50 82 119 138 157 C168 178 193 197 224 230" stroke="#b56a31" stroke-width="2"/>
+    <path d="M1052 12 C988 50 998 119 942 157 C912 178 887 197 856 230" stroke="#b56a31" stroke-width="2"/>
   </g>
 
-  <!-- dark readability veils behind HUD clusters -->
-  <rect x="0" y="0" width="310" height="146" fill="#060711" opacity="0.38"/>
-  <rect x="304" y="0" width="430" height="146" fill="#060711" opacity="0.28"/>
-  <rect x="720" y="0" width="360" height="300" fill="#060711" opacity="0.34"/>
-  <rect x="0" y="126" width="740" height="174" fill="#060711" opacity="0.30"/>
+  <!-- soft shadow plates behind the four main HUD clusters -->
+  <rect x="0" y="0" width="310" height="144" fill="#05060d" opacity="0.42"/>
+  <rect x="306" y="0" width="422" height="144" fill="#05060d" opacity="0.30"/>
+  <rect x="720" y="0" width="360" height="300" fill="#05060d" opacity="0.36"/>
+  <rect x="0" y="124" width="740" height="176" fill="#05060d" opacity="0.34"/>
 
-  <!-- bottom separator -->
-  <rect x="0" y="292" width="1080" height="8" fill="#090914"/>
-  <rect x="0" y="292" width="1080" height="2" fill="#5b257b" opacity="0.55"/>
+  <!-- restrained cracks -->
+  <g fill="none" stroke="#332d47" stroke-width="3" opacity="0.52">
+    <path d="M218 91 l24 17 -14 15 20 22 -8 18"/>
+    <path d="M850 88 l-22 19 13 17 -18 20 8 18"/>
+    <path d="M92 220 l29 -13 16 17 29 -7"/>
+    <path d="M948 222 l-31 -12 -16 18 -28 -6"/>
+  </g>
+
+  <!-- ornamental separator to the battlefield -->
+  <rect x="0" y="288" width="1080" height="12" fill="#070812"/>
+  <rect x="0" y="288" width="1080" height="2" fill="#8a35a8" opacity="0.72"/>
+  <rect x="0" y="292" width="1080" height="2" fill="#d58a27" opacity="0.34"/>
+  <polygon points="540,284 548,292 540,300 532,292" fill="#73299c" stroke="#dca43a" stroke-width="2"/>
 </g>
 </svg>
