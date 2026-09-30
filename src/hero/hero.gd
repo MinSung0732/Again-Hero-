@@ -17,6 +17,7 @@ const ARCHMAGE_SKILL_PROJECTILE_SCENE := preload("res://src/hero/ArchmageSkillPr
 const SAGE_PROJECTILE_SCENE := preload("res://src/hero/SageProjectile.tscn")
 const SAGE_ICE_PILLAR_SCENE := preload("res://src/hero/SageIcePillar.tscn")
 const SAGE_RADIANCE_ORB_SCENE := preload("res://src/hero/SageRadianceOrb.tscn")
+const SAGE_STARLIGHT_METEOR_SCENE := preload("res://src/hero/SageStarlightMeteor.tscn")
 const ULTIMATE_PIERCING_PROJECTILE_SCENE := preload(
 	"res://src/hero/UltimatePiercingProjectile.tscn"
 )
@@ -350,6 +351,7 @@ var sage_gauge_redraw_timer: float = 0.0
 var sage_skill1_cooldown_timer: float = 0.0
 var sage_skill2_cooldown_timer: float = 0.0
 var sage_skill3_cooldown_timer: float = 0.0
+var sage_skill4_cooldown_timer: float = 0.0
 var sage_radiance_launch_remaining: int = 0
 var sage_radiance_launch_timer: float = 0.0
 var sage_condensation_stacks: int = 0
@@ -359,6 +361,9 @@ var sage_condensation_visuals: Array[AnimatedSprite2D] = []
 var sage_condensation_free_slots: Array[int] = []
 var sage_condensation_unlock_pending: bool = false
 var sage_condensation_unlock_effect_timer: float = 0.0
+var sage_starlight_remaining: float = 0.0
+var sage_starlight_volley_timer: float = 0.0
+var sage_starlight_aura: Sprite2D
 var sage_basic_audio: AudioStreamPlayer
 var sage_third_audio: AudioStreamPlayer
 var sage_phase_audio: AudioStreamPlayer
@@ -1221,6 +1226,14 @@ func configure_profile(profile: Dictionary) -> void:
 		float(sage_skill3_config.get("initial_cooldown", 0.0)),
 		0.0
 	)
+	var sage_skill4_value = sage_config.get("skill_4", {})
+	var sage_skill4_config: Dictionary = (
+		sage_skill4_value if typeof(sage_skill4_value) == TYPE_DICTIONARY else {}
+	)
+	sage_skill4_cooldown_timer = maxf(
+		float(sage_skill4_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
 	sage_radiance_launch_remaining = 0
 	sage_radiance_launch_timer = 0.0
 	sage_condensation_stacks = 0
@@ -1228,7 +1241,10 @@ func configure_profile(profile: Dictionary) -> void:
 	sage_condensation_skill_damage_buff_timer = 0.0
 	sage_condensation_unlock_pending = false
 	sage_condensation_unlock_effect_timer = 0.0
+	sage_starlight_remaining = 0.0
+	sage_starlight_volley_timer = 0.0
 	_reset_sage_condensation_slots()
+	_set_sage_starlight_aura_active(false)
 	ultimate_charge = 0.0
 	ultimate_cooldown_timer = maxf(
 		float(ultimate_config.get("initial_cooldown", 0.0)),
@@ -8153,6 +8169,7 @@ func _ensure_sage_runtime() -> void:
 	if not is_instance_valid(sage_condensation_release_audio):
 		sage_condensation_release_audio = _create_sage_audio_player(SAGE_CONDENSATION_RELEASE_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 0.96)
 	_ensure_sage_condensation_visuals()
+	_ensure_sage_starlight_aura()
 	if not sage_afterimage_pool.is_empty():
 		return
 	if _sage_afterimage_frames_cache == null:
@@ -8243,6 +8260,43 @@ func _reset_sage_condensation_slots() -> void:
 			sprite.modulate = Color.WHITE
 
 
+func _ensure_sage_starlight_aura() -> void:
+	if is_instance_valid(sage_starlight_aura):
+		return
+
+	var texture := _load_stage1_texture(
+		"%s/effect7/stage10_effect2_01.png" % STAGE10_FRAME_DIR
+	)
+	if texture == null:
+		return
+
+	var raw_skill = sage_config.get("skill_4", {})
+	var skill: Dictionary = (
+		raw_skill if typeof(raw_skill) == TYPE_DICTIONARY else {}
+	)
+	var sprite := Sprite2D.new()
+	sprite.name = "SageStarlightAura"
+	sprite.texture = texture
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.position = Vector2.ZERO
+	sprite.scale = Vector2.ONE * maxf(
+		float(skill.get("aura_visual_scale", 0.70)),
+		0.05
+	)
+	sprite.show_behind_parent = true
+	sprite.z_index = -1
+	sprite.visible = false
+	add_child(sprite)
+	sage_starlight_aura = sprite
+
+
+func _set_sage_starlight_aura_active(active: bool) -> void:
+	if active:
+		_ensure_sage_starlight_aura()
+	if is_instance_valid(sage_starlight_aura):
+		sage_starlight_aura.visible = active
+
+
 func _create_sage_audio_player(audio_path: String, volume_db: float, pitch_scale: float) -> AudioStreamPlayer:
 	var player := AudioStreamPlayer.new()
 	player.bus = &"SFX"
@@ -8329,6 +8383,7 @@ func _update_sage_runtime(delta: float) -> void:
 	sage_skill1_cooldown_timer = maxf(sage_skill1_cooldown_timer - delta, 0.0)
 	sage_skill2_cooldown_timer = maxf(sage_skill2_cooldown_timer - delta, 0.0)
 	sage_skill3_cooldown_timer = maxf(sage_skill3_cooldown_timer - delta, 0.0)
+	sage_skill4_cooldown_timer = maxf(sage_skill4_cooldown_timer - delta, 0.0)
 	sage_condensation_skill_damage_buff_timer = maxf(
 		sage_condensation_skill_damage_buff_timer - delta,
 		0.0
@@ -8343,6 +8398,23 @@ func _update_sage_runtime(delta: float) -> void:
 			sage_condensation_unlock_pending = false
 			_emit_sage_late_skill_unlock_cutscene()
 
+	if sage_starlight_remaining > 0.0:
+		sage_starlight_remaining = maxf(sage_starlight_remaining - delta, 0.0)
+		sage_starlight_volley_timer -= delta
+		var skill4_value = sage_config.get("skill_4", {})
+		var skill4: Dictionary = (
+			skill4_value if typeof(skill4_value) == TYPE_DICTIONARY else {}
+		)
+		var volley_interval := maxf(
+			float(skill4.get("spawn_interval", 0.75)),
+			0.05
+		)
+		while sage_starlight_remaining > 0.0 and sage_starlight_volley_timer <= 0.0:
+			_launch_sage_starlight_volley(skill4)
+			sage_starlight_volley_timer += volley_interval
+		if sage_starlight_remaining <= 0.0:
+			_set_sage_starlight_aura_active(false)
+
 	if sage_radiance_launch_remaining > 0:
 		sage_radiance_launch_timer = maxf(sage_radiance_launch_timer - delta, 0.0)
 		if sage_radiance_launch_timer <= 0.0:
@@ -8356,6 +8428,8 @@ func _update_sage_runtime(delta: float) -> void:
 				float(skill2.get("spawn_interval", 0.25)),
 				0.01
 			)
+	elif sage_skill4_cooldown_timer <= 0.0 and _try_cast_sage_starlight():
+		pass
 	elif sage_skill3_cooldown_timer <= 0.0:
 		if not _try_cast_sage_mana_condensation():
 			if sage_skill2_cooldown_timer <= 0.0:
@@ -8526,6 +8600,121 @@ func _launch_sage_radiance_orb() -> void:
 		maxf(float(skill.get("slow_duration", 2.0)), 0.0),
 		orb_scale
 	)
+
+
+func _try_cast_sage_starlight() -> bool:
+	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
+		return false
+	if sage_starlight_remaining > 0.0:
+		return false
+
+	var skill_value = sage_config.get("skill_4", {})
+	if typeof(skill_value) != TYPE_DICTIONARY:
+		return false
+	var skill: Dictionary = skill_value
+	if skill.is_empty():
+		return false
+
+	var gauge_cost := maxf(float(skill.get("gauge_cost", 70.0)), 0.0)
+	if ultimate_charge + 0.001 < gauge_cost:
+		return false
+
+	_ensure_sage_runtime()
+	ultimate_charge = maxf(ultimate_charge - gauge_cost, 0.0)
+	sage_skill4_cooldown_timer = maxf(
+		float(skill.get("cooldown", 60.0)),
+		0.1
+	)
+	sage_starlight_remaining = maxf(
+		float(skill.get("duration", 8.0)),
+		0.1
+	)
+	sage_starlight_volley_timer = maxf(
+		float(skill.get("spawn_interval", 0.75)),
+		0.05
+	)
+	_set_sage_starlight_aura_active(true)
+	_launch_sage_starlight_volley(skill)
+
+	attack_timer = maxf(attack_timer, 0.35)
+	attack_pose_timer = maxf(attack_pose_timer, 0.42)
+	_restart_stage1_animation("attack")
+	queue_redraw()
+	return true
+
+
+func _launch_sage_starlight_volley(skill: Dictionary) -> void:
+	if skill.is_empty():
+		return
+
+	var meteor_count := maxi(int(skill.get("meteors_per_volley", 3)), 1)
+	var spawn_radius := maxf(
+		float(skill.get("spawn_diameter", 1200.0)) * 0.5,
+		1.0
+	)
+	var impact_radius := maxf(
+		float(skill.get("impact_diameter", 200.0)) * 0.5,
+		1.0
+	)
+	var damage_ratio := maxf(float(skill.get("damage_ratio", 1.10)), 0.0)
+	var hit_damage := maxi(
+		int(round(
+			float(attack_damage)
+			* damage_ratio
+			* _get_sage_skill_damage_multiplier()
+		)),
+		1
+	)
+	var fall_duration := maxf(float(skill.get("fall_duration", 0.58)), 0.05)
+	var fall_height := maxf(float(skill.get("fall_height", 430.0)), 40.0)
+	var fall_side_offset := maxf(
+		float(skill.get("fall_side_offset", 90.0)),
+		0.0
+	)
+	var visual_scale := maxf(
+		float(skill.get("meteor_visual_scale", 0.62)),
+		0.05
+	)
+	var explosion_fps := maxf(
+		float(skill.get("explosion_fps", 14.0)),
+		1.0
+	)
+
+	for _index in range(meteor_count):
+		var angle := randf_range(0.0, TAU)
+		var distance := sqrt(randf()) * spawn_radius
+		var impact_position := (
+			global_position
+			+ Vector2.from_angle(angle) * distance
+		)
+		impact_position.x = clampf(
+			impact_position.x,
+			FIELD_MARGIN,
+			maxf(battlefield_size.x - FIELD_MARGIN, FIELD_MARGIN)
+		)
+		impact_position.y = clampf(
+			impact_position.y,
+			FIELD_MARGIN,
+			maxf(battlefield_size.y - FIELD_MARGIN, FIELD_MARGIN)
+		)
+
+		var meteor := _acquire_projectile(
+			SAGE_STARLIGHT_METEOR_SCENE,
+			"sage_starlight_meteor"
+		)
+		if meteor == null:
+			continue
+		meteor.global_position = impact_position
+		meteor.call(
+			"setup",
+			hit_damage,
+			impact_radius,
+			fall_duration,
+			visual_scale,
+			fall_height,
+			fall_side_offset,
+			explosion_fps
+		)
 
 
 func _try_cast_sage_mana_condensation() -> bool:
@@ -12871,6 +13060,7 @@ func get_skill_cooldown_hud() -> Array:
 			_append_sage_skill1_hud(skills)
 			_append_sage_skill2_hud(skills)
 			_append_sage_skill3_hud(skills)
+			_append_sage_skill4_hud(skills)
 		"cleric_purifier":
 			_append_skill_cooldown_hud(
 				skills,
@@ -13079,6 +13269,8 @@ func _skill_hud_description(config: Dictionary) -> String:
 			return "주변으로 10개의 광휘구체를 순차 방출합니다. 구체는 도착 1초 뒤 폭발해 범위 피해를 주고 2초 동안 적을 둔화합니다."
 		"mana_condensation":
 			return "8방향에 마력을 하나씩 응축합니다. 8스택 상태에서 다시 사용하면 전부 소모해 영구 스탯을 강화하고 10초간 모든 스킬 피해가 30% 증가합니다. 이 완성을 3회 달성하면 스킬 5·6이 해금됩니다."
+		"starlight":
+			return "8초 동안 별빛을 전개합니다. 0.75초마다 용사 주변 지름 1200 범위의 무작위 지점 3곳에 유성을 떨어뜨리며, 각 유성은 지름 200 범위에 공격력의 110% 피해를 줍니다."
 		"arcane_piercer":
 			return "전방으로 강력한 마력 관통포를 발사해 일직선상의 적을 공격합니다."
 		"arcane_barrier":
@@ -13295,6 +13487,49 @@ func _append_sage_skill3_hud(skills: Array) -> void:
 		"cooldown_total": cooldown_total,
 		"cooldown_remaining": cooldown_remaining,
 		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect4/summon_08.png",
+	})
+
+
+func _append_sage_skill4_hud(skills: Array) -> void:
+	var raw_skill = sage_config.get("skill_4", {})
+	if typeof(raw_skill) != TYPE_DICTIONARY:
+		return
+	var skill: Dictionary = raw_skill
+	if skill.is_empty():
+		return
+
+	var cooldown_total := maxf(float(skill.get("cooldown", 60.0)), 0.0)
+	var cooldown_remaining := maxf(sage_skill4_cooldown_timer, 0.0)
+	var gauge_cost := maxf(float(skill.get("gauge_cost", 70.0)), 0.0)
+	var gauge_max := maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
+	var gauge_current := clampf(ultimate_charge, 0.0, gauge_max)
+	var has_gauge := gauge_current + 0.001 >= gauge_cost
+	var active := sage_starlight_remaining > 0.0
+	var ready := cooldown_remaining <= 0.01 and has_gauge and not active
+
+	var status := "사용 가능"
+	if active:
+		status = "스타라이트 전개 중"
+	elif cooldown_remaining > 0.01:
+		status = "재사용 대기 중"
+	elif not has_gauge:
+		status = "게이지 부족"
+
+	var progress := "게이지 %.0f / %.0f" % [gauge_current, gauge_max]
+	if active:
+		progress += " · 남은 시간 %.1f초" % sage_starlight_remaining
+
+	skills.append({
+		"id": String(skill.get("id", "starlight")),
+		"name": String(skill.get("name", "스타라이트")),
+		"description": _skill_hud_description(skill),
+		"resource_text": "게이지 %.0f" % gauge_cost,
+		"progress_text": progress,
+		"status_text": status,
+		"available": ready,
+		"cooldown_total": cooldown_total,
+		"cooldown_remaining": cooldown_remaining,
+		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect7/stage10_effect2_01.png",
 	})
 
 
