@@ -223,6 +223,9 @@ func _ready() -> void:
 	battle.set_external_pause(true)
 	hud_layer.visible = false
 	stage_intro_cutscene.finished.connect(_on_stage_intro_finished)
+	stage_intro_cutscene.dialogue_event.connect(
+		_on_stage_intro_dialogue_event
+	)
 	hero_reveal_cutscene.finished.connect(_on_hero_reveal_finished)
 	hero_reveal_cutscene.bgm_start_requested.connect(
 		_on_hero_reveal_bgm_start_requested
@@ -731,6 +734,19 @@ func _begin_stage_entry(snapshot: Dictionary) -> void:
 	stage_intro_cutscene.call("play_dialogue", dialogue, allow_skip)
 
 
+func _on_stage_intro_dialogue_event(
+	event_id: String,
+	payload: Dictionary
+) -> void:
+	if event_id != "reveal_hero_true_name":
+		return
+	var identity_id := String(payload.get("identity_id", ""))
+	var true_name := String(payload.get("true_name", "")).strip_edges()
+	if identity_id.is_empty() or true_name.is_empty():
+		return
+	STAGE_PROGRESS.reveal_hero_true_name(identity_id)
+
+
 func _on_stage_intro_finished(skipped: bool) -> void:
 	if not _stage_intro_active:
 		return
@@ -764,12 +780,15 @@ func _begin_hero_reveal(snapshot: Dictionary) -> void:
 	reveal_data["stage_id"] = stage_id
 
 	var identity_id := String(reveal_data.get("identity_id", hero_id))
-	var encounter := STAGE_PROGRESS.record_hero_encounter(
+	STAGE_PROGRESS.record_hero_encounter(
 		stage_id,
 		identity_id
 	)
-	reveal_data["true_name_unlocked"] = bool(
-		encounter.get("true_name_unlocked", false)
+	reveal_data["true_name_unlocked"] = (
+		STAGE_PROGRESS.is_hero_true_name_unlocked(
+			stage_id,
+			identity_id
+		)
 	)
 
 	_stage_intro_active = true
