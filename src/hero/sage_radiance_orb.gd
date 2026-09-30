@@ -14,7 +14,7 @@ enum OrbState {
 	EXPLODE,
 }
 
-var state: OrbState = OrbState.INACTIVE
+var state: int = OrbState.INACTIVE
 var destination: Vector2 = Vector2.ZERO
 var speed: float = 350.0
 var wait_remaining: float = 1.0
@@ -65,7 +65,9 @@ func setup(
 	visual.frame = 0
 	visual.frame_progress = 0.0
 	visual.play(&"create")
-	explosion_area.monitoring = true
+	explosion_area.set_deferred("monitoring", true)
+	if is_instance_valid(explosion_audio):
+		explosion_audio.stop()
 	queue_redraw()
 
 
@@ -144,7 +146,17 @@ func _on_animation_finished() -> void:
 	if visual.animation == &"create":
 		visual.play(&"hold")
 	elif visual.animation == &"explode":
-		_finish()
+		visual.visible = false
+		queue_redraw()
+		if is_instance_valid(explosion_audio) and explosion_audio.playing:
+			var finished_callable := Callable(self, "_finish")
+			if not explosion_audio.finished.is_connected(finished_callable):
+				explosion_audio.finished.connect(
+					finished_callable,
+					Object.CONNECT_ONE_SHOT
+				)
+		else:
+			_finish()
 
 
 func _finish() -> void:
@@ -164,9 +176,7 @@ func deactivate_for_pool() -> void:
 		visual.stop()
 		visual.visible = false
 	if is_instance_valid(explosion_area):
-		explosion_area.monitoring = false
-	if is_instance_valid(explosion_audio):
-		explosion_audio.stop()
+		explosion_area.set_deferred("monitoring", false)
 	queue_redraw()
 
 
