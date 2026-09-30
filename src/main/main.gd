@@ -22,6 +22,7 @@ const GAMEPLAY_SETTINGS_PATH := "user://gameplay_settings.cfg"
 const CAMERA_DRAG_THRESHOLD := 12.0
 
 const BATTLE_PIXEL_FRAME_LARGE_DIR := "res://assets/art/UI/01_large_left_panel"
+const BATTLE_PIXEL_FRAME_TOP_RIGHT_DIR := "res://assets/art/UI/02_top_right_panel"
 const BATTLE_PIXEL_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
 const BATTLE_PIXEL_CENTER_LARGE := BATTLE_PIXEL_FRAME_LARGE_DIR + "/part_04.png"
 const BATTLE_PIXEL_CENTER_DARK := "res://assets/art/UI/05_right_bars/part_02.png"
@@ -375,6 +376,16 @@ func _ready() -> void:
 func _apply_battle_pixel_asset_frames() -> void:
 	# Use the original split PNG assets as tiled frame pieces.
 	# Long edges tile instead of stretching, so corner pixel art keeps its shape.
+	_replace_texture_frame_clean(
+		$HUD/TopBar/StageFrame,
+		BATTLE_PIXEL_FRAME_TOP_RIGHT_DIR,
+		0.36
+	)
+	_replace_texture_frame_clean(
+		$HUD/TopBar/TimerFrame,
+		BATTLE_PIXEL_FRAME_TOP_RIGHT_DIR,
+		0.28
+	)
 	_replace_texture_frame(
 		$HUD/TopBar/HeroStatusFrame,
 		BATTLE_PIXEL_FRAME_LARGE_DIR,
