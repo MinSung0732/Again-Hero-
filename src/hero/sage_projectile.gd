@@ -29,6 +29,7 @@ var active: bool = false
 var expiring: bool = false
 var visual_diameter: float = 44.0
 var hit_ids: Dictionary = {}
+var caster: Node2D
 
 @onready var projectile_sprite: AnimatedSprite2D = $ProjectileSprite
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -51,7 +52,8 @@ func setup(
 	new_speed: float,
 	new_max_range: float,
 	new_mode: int,
-	new_diameter: float
+	new_diameter: float,
+	caster_node: Node2D
 ) -> void:
 	active = true
 	expiring = false
@@ -66,6 +68,7 @@ func setup(
 	max_range = maxf(new_max_range, 1.0)
 	projectile_mode = clampi(new_mode, ProjectileMode.BASIC, ProjectileMode.PIERCING)
 	visual_diameter = maxf(new_diameter, 2.0)
+	caster = caster_node
 	traveled_distance = 0.0
 	hit_ids.clear()
 	rotation = direction.angle()
@@ -145,7 +148,19 @@ func _try_hit_target(body: Node) -> bool:
 	if hit_ids.has(instance_id):
 		return false
 	hit_ids[instance_id] = true
+	var hit_position := (
+		(body as Node2D).global_position
+		if body is Node2D
+		else global_position
+	)
 	body.call("take_damage", damage)
+	if (
+		projectile_mode == ProjectileMode.PIERCING
+		and body.is_in_group("monsters")
+		and is_instance_valid(caster)
+		and caster.has_method("_on_sage_skill_hit")
+	):
+		caster.call("_on_sage_skill_hit", hit_position)
 	if projectile_mode == ProjectileMode.BASIC:
 		set_physics_process(false)
 		monitoring = false
@@ -195,6 +210,7 @@ func deactivate_for_pool() -> void:
 	traveled_distance = 0.0
 	hit_ids.clear()
 	direction = Vector2.RIGHT
+	caster = null
 	monitoring = false
 	set_physics_process(false)
 	visible = false
