@@ -480,6 +480,18 @@ func _apply_battle_pixel_asset_frames() -> void:
 		BATTLE_PIXEL_FRAME_LARGE_DIR,
 		0.52
 	)
+	_replace_panel_frame(
+		monster_info_panel,
+		BATTLE_PIXEL_FRAME_MEDIUM_DIR,
+		0.34,
+		14.0
+	)
+	_replace_panel_frame(
+		hero_info_panel,
+		BATTLE_PIXEL_FRAME_MEDIUM_DIR,
+		0.34,
+		14.0
+	)
 
 
 func _replace_texture_frame(
@@ -525,17 +537,21 @@ func _replace_button_frame(
 func _replace_panel_frame(
 	panel: PanelContainer,
 	frame_dir: String,
-	scale: float
+	scale: float,
+	content_margin: float = 0.0
 ) -> void:
 	if panel == null:
 		return
 	BATTLE_PIXEL_FRAME_ASSEMBLER.clear_panel_style(panel)
+	BATTLE_PIXEL_FRAME_ASSEMBLER.apply_clean_panel_background(
+		panel,
+		Color(0.035, 0.032, 0.075, 0.98),
+		content_margin
+	)
 	BATTLE_PIXEL_FRAME_ASSEMBLER.add_split_frame(
 		panel,
 		frame_dir,
-		scale,
-		BATTLE_PIXEL_CENTER_DARK,
-		18
+		scale
 	)
 
 
