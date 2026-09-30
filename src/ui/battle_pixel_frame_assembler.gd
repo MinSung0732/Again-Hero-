@@ -135,6 +135,12 @@ static func clear_button_style(button: Button) -> void:
 		button.add_theme_stylebox_override(state, empty)
 
 
+static func clear_panel_style(panel: PanelContainer) -> void:
+	if panel == null:
+		return
+	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+
+
 static func apply_progress_background(
 	bar: ProgressBar,
 	texture_path: String,
