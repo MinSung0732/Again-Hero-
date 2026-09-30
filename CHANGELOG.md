@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2026-09-30 — Stage / Timer 프레임 깨짐 롤백
+- 02_top_right_panel 분리 PNG를 범용 9-slice처럼 조립하면서 우측 세로 장식과 하단 마감 조각이 반복되어 프레임 밖으로 튀어나오던 문제를 확인.
+- StageFrame / TimerFrame만 직전 안정 상태의 stage_panel.svg / timer_panel.svg로 되돌려 우측·하단 깨짐을 즉시 복구.
+- 다른 원본 픽셀 프레임 적용(용사 상태창, 하단 HUD, 모달, 상세 패널)은 그대로 유지.
+- 02_top_right_panel은 범용 조립 대상에서 제외하고, 추후 전용 조각 매핑을 확인한 뒤 별도 방식으로 다시 적용 예정.
+
 ## 2026-09-30 — Stage / Timer 원본 픽셀 프레임 전환
 - 상단에 마지막으로 남아 있던 StageFrame / TimerFrame의 battle_hud_v2 SVG 프레임을 제거하고 02_top_right_panel 분리 PNG 조립 프레임으로 교체.
 - Stage는 0.36, Timer는 0.28 스케일로 모서리 원본 비율을 유지하며 긴 직선만 반복하고, 중앙은 점무늬 없는 짙은 남보라 배경을 사용.
