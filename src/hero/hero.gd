@@ -6878,7 +6878,7 @@ func _restart_stage1_animation(animation_name: String, speed_scale: float = 1.0)
 
 func _update_stage1_pose_visual(delta: float) -> void:
 	if (
-		hero_id not in ["ranged_rookie", "archmage_hero", "purifier_hero"]
+		hero_id not in ["ranged_rookie", "archmage_hero", "purifier_hero", "sage_astra"]
 		or not hero_sprite.visible
 		or is_dying
 	):
