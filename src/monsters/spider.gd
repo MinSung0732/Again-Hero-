@@ -39,12 +39,17 @@ var visual_moving_state: int = -1
 var visual_facing_sign: int = 0
 var far_ai_tick_timer: float = 0.0
 var cached_direction_to_hero: Vector2 = Vector2.ZERO
+var soft_separation_timer: float = 0.0
+var soft_separation_bias: Vector2 = Vector2.ZERO
 var visual_lod_suspended: bool = false
 var special_augment_configs: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("monsters")
 	far_ai_tick_timer = MONSTER_RUNTIME_COMMON.initial_far_navigation_delay()
+	soft_separation_timer = (
+		MONSTER_RUNTIME_COMMON.initial_soft_separation_delay()
+	)
 	current_hp = max_hp
 	if not is_instance_valid(hero):
 		hero = get_tree().get_first_node_in_group("hero") as Node2D
@@ -103,6 +108,21 @@ func _physics_process(delta: float) -> void:
 		_update_visual_motion(0.0, false)
 		return
 
+	soft_separation_timer = MONSTER_RUNTIME_COMMON.tick_countdown(
+		soft_separation_timer,
+		delta
+	)
+	if soft_separation_timer <= 0.0:
+		soft_separation_bias = (
+			MONSTER_RUNTIME_COMMON.compute_soft_separation_bias(
+				self,
+				combat_authority
+			)
+		)
+		soft_separation_timer = (
+			MONSTER_RUNTIME_COMMON.next_soft_separation_delay()
+		)
+
 	attack_timer = maxf(attack_timer - delta, 0.0)
 
 	if hit_flash_timer > 0.0:
@@ -141,8 +161,14 @@ func _physics_process(delta: float) -> void:
 		var external_slow := (
 			MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
 		)
-		velocity = direction_to_hero * move_speed * external_slow
-		_update_visual_motion(direction_to_hero.x, true)
+		var move_direction := (
+			MONSTER_RUNTIME_COMMON.blend_soft_separation_direction(
+				direction_to_hero,
+				soft_separation_bias
+			)
+		)
+		velocity = move_direction * move_speed * external_slow
+		_update_visual_motion(move_direction.x, true)
 		if distance_sq > far_nav_sq:
 			global_position += velocity * delta
 		else:
@@ -155,7 +181,17 @@ func _physics_process(delta: float) -> void:
 		else cached_direction_to_hero
 	)
 	cached_direction_to_hero = direction_to_hero
-	velocity = Vector2.ZERO
+	var idle_external_slow := (
+		MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
+	)
+	velocity = (
+		MONSTER_RUNTIME_COMMON.get_soft_separation_idle_velocity(
+			soft_separation_bias,
+			move_speed * idle_external_slow
+		)
+	)
+	if velocity.length_squared() > 0.01:
+		move_and_slide()
 	_update_visual_motion(direction_to_hero.x, false)
 	if attack_timer <= 0.0:
 		attack_timer = attack_cooldown
