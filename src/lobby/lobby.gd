@@ -785,6 +785,74 @@ func _apply_lobby_button_skin(
 	button.add_theme_color_override("font_disabled_color", Color("756f7c"))
 
 
+
+func _apply_enter_stage_button_skin() -> void:
+	if enter_stage_button == null:
+		return
+
+	var normal := _make_style(
+		Color("652b7d"),
+		Color("e9b84b"),
+		4,
+		8
+	)
+	var hover := _make_style(
+		Color("7b3596"),
+		Color("ffdf7d"),
+		4,
+		8
+	)
+	var pressed := _make_style(
+		Color("4f225f"),
+		Color("d59b37"),
+		4,
+		8
+	)
+	var disabled := _make_style(
+		Color("302638"),
+		Color("68576e"),
+		3,
+		8
+	)
+	for style in [normal, hover, pressed, disabled]:
+		style.content_margin_top = 10.0
+		style.content_margin_bottom = 10.0
+		style.anti_aliasing = false
+
+	enter_stage_button.add_theme_stylebox_override("normal", normal)
+	enter_stage_button.add_theme_stylebox_override("hover", hover)
+	enter_stage_button.add_theme_stylebox_override("pressed", pressed)
+	enter_stage_button.add_theme_stylebox_override("disabled", disabled)
+	enter_stage_button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	enter_stage_button.add_theme_font_size_override("font_size", 34)
+	enter_stage_button.add_theme_color_override("font_color", Color("fff1ca"))
+	enter_stage_button.add_theme_color_override("font_hover_color", Color("fff8df"))
+	enter_stage_button.add_theme_color_override("font_pressed_color", Color("ffe3a0"))
+	enter_stage_button.add_theme_color_override("font_disabled_color", Color("8f8495"))
+
+	for data in [
+		["EnterGemLeft", 0.065],
+		["EnterGemRight", 0.935],
+	]:
+		var node_name := String(data[0])
+		var gem := enter_stage_button.get_node_or_null(node_name) as ColorRect
+		if gem == null:
+			gem = ColorRect.new()
+			gem.name = node_name
+			gem.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			gem.color = Color("d98bea")
+			gem.anchor_left = float(data[1])
+			gem.anchor_top = 0.5
+			gem.anchor_right = float(data[1])
+			gem.anchor_bottom = 0.5
+			gem.offset_left = -6.0
+			gem.offset_top = -6.0
+			gem.offset_right = 6.0
+			gem.offset_bottom = 6.0
+			gem.rotation = PI * 0.25
+			enter_stage_button.add_child(gem)
+
+
 func _ensure_nav_active_indicator(button: Button) -> void:
 	if button == null:
 		return
@@ -967,6 +1035,25 @@ func _install_stage_entry_hud() -> void:
 		hero_name_plate.z_index = 2
 		hero_name_label.get_parent().add_child(hero_name_plate)
 		hero_name_label.get_parent().move_child(hero_name_plate, 1)
+
+		for data in [
+			["NameGemLeft", 0.08],
+			["NameGemRight", 0.92],
+		]:
+			var gem := ColorRect.new()
+			gem.name = String(data[0])
+			gem.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			gem.color = Color("d8a94d")
+			gem.anchor_left = float(data[1])
+			gem.anchor_top = 0.5
+			gem.anchor_right = float(data[1])
+			gem.anchor_bottom = 0.5
+			gem.offset_left = -4.0
+			gem.offset_top = -4.0
+			gem.offset_right = 4.0
+			gem.offset_bottom = 4.0
+			gem.rotation = PI * 0.25
+			hero_name_plate.add_child(gem)
 
 	hero_name_label.anchor_left = 0.20
 	hero_name_label.anchor_top = 0.520
@@ -1165,7 +1252,7 @@ func _apply_lobby_visual_polish() -> void:
 	stage_status_label.add_theme_color_override("font_color", Color("d6cadc"))
 	stage_reward_label.add_theme_font_size_override("font_size", 19)
 	stage_reward_label.add_theme_color_override("font_color", Color("e6c66d"))
-	_apply_lobby_button_skin(enter_stage_button, true, 34)
+	_apply_enter_stage_button_skin()
 
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/ShopTab/ShopLayout/Title",
