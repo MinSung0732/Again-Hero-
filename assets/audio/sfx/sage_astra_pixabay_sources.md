@@ -50,3 +50,9 @@ Both Skill 2 runtime MP3s are committed directly under `assets/audio/sfx/` and u
   - Skill 3 8-stack consume / empowerment cue. Reuses the already-committed Pixabay source bytes.
 
 Both Skill 3 MP3 runtime files are committed directly under `assets/audio/sfx/` and use the Stage 10 SFX playback reference of `-10 dB`.
+
+
+- Stage 10 Skill 4 "스타라이트" meteor impacts reuse `sage_astra_radiance_explosion_pixabay.mp3`.
+  - Source: Elemental Magic Spell Impact Outgoing — RescopicSound
+  - https://pixabay.com/sound-effects/film-special-effects-elemental-magic-spell-impact-outgoing-228342/
+  - The existing checked-in Pixabay MP3 is reused directly to avoid another runtime binary and preserve pooling/audio-tail behavior.
