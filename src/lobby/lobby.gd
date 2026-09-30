@@ -1097,6 +1097,8 @@ func _show_other_settings() -> void:
 	other_account_panel.hide()
 	other_settings_tab_button.disabled = true
 	other_account_tab_button.disabled = false
+	_apply_lobby_button_skin(other_settings_tab_button, true, 24)
+	_apply_lobby_button_skin(other_account_tab_button, false, 24)
 
 
 func _show_other_account() -> void:
@@ -1104,6 +1106,8 @@ func _show_other_account() -> void:
 	other_account_panel.show()
 	other_settings_tab_button.disabled = false
 	other_account_tab_button.disabled = true
+	_apply_lobby_button_skin(other_settings_tab_button, false, 24)
+	_apply_lobby_button_skin(other_account_tab_button, true, 24)
 
 
 func _sync_audio_settings_ui() -> void:
@@ -1140,14 +1144,18 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 	button.add_theme_stylebox_override("normal", style)
 	button.add_theme_stylebox_override("hover", style)
 	button.add_theme_stylebox_override("pressed", style)
+	button.add_theme_font_size_override("font_size", 27 if selected else 23)
 	button.add_theme_color_override(
 		"font_color",
-		Color("ffe7a8") if selected else Color("d8cfdf")
+		Color("ffe7a8") if selected else Color("c9bfce")
 	)
 	button.add_theme_color_override(
 		"font_hover_color",
 		Color("fff1c7") if selected else Color("eee7f2")
 	)
+	var indicator := button.get_node_or_null("ActiveIndicator") as ColorRect
+	if indicator != null:
+		indicator.visible = selected
 
 func _format_shop_number(value: int) -> String:
 	var digits := str(maxi(value, 0))
