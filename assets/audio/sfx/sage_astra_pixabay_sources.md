@@ -38,3 +38,15 @@ The MP3 runtime assets above are committed directly under `assets/audio/sfx/`; G
   - Skill 2 orb explosion cue. Reuses the already-committed Pixabay source bytes from `purifier_basic_attack_pixabay.mp3`.
 
 Both Skill 2 runtime MP3s are committed directly under `assets/audio/sfx/` and use the Stage 10 SFX playback reference of `-10 dB`.
+
+
+- `sage_astra_condensation_stack_pixabay.mp3`
+  - powerful spell — SingularitysMarauder
+  - https://pixabay.com/sound-effects/powerful-spell-213833/
+  - Skill 3 "마력응축" stack-add cue. Reuses the already-committed Pixabay source bytes with a brighter runtime pitch.
+- `sage_astra_condensation_release_pixabay.mp3`
+  - the portal — CeebFrack (Freesound)
+  - https://pixabay.com/sound-effects/film-special-effects-the-portal-90750/
+  - Skill 3 8-stack consume / empowerment cue. Reuses the already-committed Pixabay source bytes.
+
+Both Skill 3 MP3 runtime files are committed directly under `assets/audio/sfx/` and use the Stage 10 SFX playback reference of `-10 dB`.

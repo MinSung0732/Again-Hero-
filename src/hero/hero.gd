@@ -98,6 +98,11 @@ const SAGE_THIRD_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_third_a
 const SAGE_PHASE_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_phase_pixabay.mp3"
 const SAGE_ICE_PILLAR_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_ice_pillar_pixabay.mp3"
 const SAGE_RADIANCE_CREATE_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_radiance_create_pixabay.mp3"
+const SAGE_CONDENSATION_STACK_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_condensation_stack_pixabay.mp3"
+const SAGE_CONDENSATION_RELEASE_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_condensation_release_pixabay.mp3"
+const SAGE_CONDENSATION_SLOT_ANGLES: Array[float] = [
+	-90.0, 0.0, 90.0, 180.0, -60.0, 60.0, 120.0, -150.0
+]
 const SAGE_SFX_REFERENCE_DB := -10.0
 const SUMMONER_GATEKEEPER_SCENE := preload("res://src/hero/SummonerGatekeeper.tscn")
 const SUMMONER_SCOUT_SCENE := preload("res://src/hero/SummonerScout.tscn")
@@ -158,6 +163,7 @@ static var _archmage_fx_frames_cache: Dictionary = {}
 static var _purifier_protection_frames_cache: SpriteFrames
 static var _purifier_crown_frames_cache: SpriteFrames
 static var _sage_afterimage_frames_cache: SpriteFrames
+static var _sage_condensation_frames_cache: SpriteFrames
 
 # Stage 9 standalone frames have small per-frame X drift in their authored
 # transparent canvas. Cache a body/root correction once when the visual is built
@@ -343,13 +349,23 @@ var sage_post_phase_shield_timer: float = 0.0
 var sage_gauge_redraw_timer: float = 0.0
 var sage_skill1_cooldown_timer: float = 0.0
 var sage_skill2_cooldown_timer: float = 0.0
+var sage_skill3_cooldown_timer: float = 0.0
 var sage_radiance_launch_remaining: int = 0
 var sage_radiance_launch_timer: float = 0.0
+var sage_condensation_stacks: int = 0
+var sage_condensation_completion_count: int = 0
+var sage_condensation_skill_damage_buff_timer: float = 0.0
+var sage_condensation_visuals: Array[AnimatedSprite2D] = []
+var sage_condensation_free_slots: Array[int] = []
+var sage_condensation_unlock_pending: bool = false
+var sage_condensation_unlock_effect_timer: float = 0.0
 var sage_basic_audio: AudioStreamPlayer
 var sage_third_audio: AudioStreamPlayer
 var sage_phase_audio: AudioStreamPlayer
 var sage_ice_pillar_audio: AudioStreamPlayer
 var sage_radiance_create_audio: AudioStreamPlayer
+var sage_condensation_stack_audio: AudioStreamPlayer
+var sage_condensation_release_audio: AudioStreamPlayer
 
 var alchemist_config: Dictionary = {}
 var alchemist_gas_max: float = 200.0
@@ -1197,8 +1213,22 @@ func configure_profile(profile: Dictionary) -> void:
 		float(sage_skill2_config.get("initial_cooldown", 0.0)),
 		0.0
 	)
+	var sage_skill3_value = sage_config.get("skill_3", {})
+	var sage_skill3_config: Dictionary = (
+		sage_skill3_value if typeof(sage_skill3_value) == TYPE_DICTIONARY else {}
+	)
+	sage_skill3_cooldown_timer = maxf(
+		float(sage_skill3_config.get("initial_cooldown", 0.0)),
+		0.0
+	)
 	sage_radiance_launch_remaining = 0
 	sage_radiance_launch_timer = 0.0
+	sage_condensation_stacks = 0
+	sage_condensation_completion_count = 0
+	sage_condensation_skill_damage_buff_timer = 0.0
+	sage_condensation_unlock_pending = false
+	sage_condensation_unlock_effect_timer = 0.0
+	_reset_sage_condensation_slots()
 	ultimate_charge = 0.0
 	ultimate_cooldown_timer = maxf(
 		float(ultimate_config.get("initial_cooldown", 0.0)),
@@ -8118,6 +8148,11 @@ func _ensure_sage_runtime() -> void:
 		sage_ice_pillar_audio = _create_sage_audio_player(SAGE_ICE_PILLAR_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 0.90)
 	if not is_instance_valid(sage_radiance_create_audio):
 		sage_radiance_create_audio = _create_sage_audio_player(SAGE_RADIANCE_CREATE_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 1.04)
+	if not is_instance_valid(sage_condensation_stack_audio):
+		sage_condensation_stack_audio = _create_sage_audio_player(SAGE_CONDENSATION_STACK_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 1.18)
+	if not is_instance_valid(sage_condensation_release_audio):
+		sage_condensation_release_audio = _create_sage_audio_player(SAGE_CONDENSATION_RELEASE_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 0.96)
+	_ensure_sage_condensation_visuals()
 	if not sage_afterimage_pool.is_empty():
 		return
 	if _sage_afterimage_frames_cache == null:
@@ -8151,6 +8186,61 @@ func _ensure_sage_runtime() -> void:
 		ghost.animation_finished.connect(Callable(self, "_on_sage_afterimage_finished").bind(ghost))
 		add_child(ghost)
 		sage_afterimage_pool.append(ghost)
+
+
+func _ensure_sage_condensation_visuals() -> void:
+	if not sage_condensation_visuals.is_empty():
+		return
+
+	if _sage_condensation_frames_cache == null:
+		var frames := SpriteFrames.new()
+		if frames.has_animation(&"default"):
+			frames.remove_animation(&"default")
+		frames.add_animation(&"summon")
+		frames.set_animation_loop(&"summon", false)
+		frames.set_animation_speed(&"summon", 12.0)
+		for frame_index in range(1, 9):
+			var texture := _load_stage1_texture(
+				"%s/effect4/summon_%02d.png"
+				% [STAGE10_FRAME_DIR, frame_index]
+			)
+			if texture != null:
+				frames.add_frame(&"summon", texture)
+		_sage_condensation_frames_cache = frames
+
+	if _sage_condensation_frames_cache.get_frame_count(&"summon") <= 0:
+		return
+
+	var skill_value = sage_config.get("skill_3", {})
+	var skill: Dictionary = (
+		skill_value if typeof(skill_value) == TYPE_DICTIONARY else {}
+	)
+	var radius := maxf(float(skill.get("visual_radius", 82.0)), 20.0)
+	var visual_scale := maxf(float(skill.get("visual_scale", 0.34)), 0.05)
+	for index in range(SAGE_CONDENSATION_SLOT_ANGLES.size()):
+		var sprite := AnimatedSprite2D.new()
+		sprite.name = "SageCondensation%02d" % index
+		sprite.sprite_frames = _sage_condensation_frames_cache
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sprite.position = Vector2.from_angle(
+			deg_to_rad(SAGE_CONDENSATION_SLOT_ANGLES[index])
+		) * radius
+		sprite.scale = Vector2.ONE * visual_scale
+		sprite.z_index = 2
+		sprite.visible = false
+		add_child(sprite)
+		sage_condensation_visuals.append(sprite)
+
+
+func _reset_sage_condensation_slots() -> void:
+	sage_condensation_free_slots.clear()
+	for index in range(8):
+		sage_condensation_free_slots.append(index)
+	for sprite in sage_condensation_visuals:
+		if is_instance_valid(sprite):
+			sprite.stop()
+			sprite.visible = false
+			sprite.modulate = Color.WHITE
 
 
 func _create_sage_audio_player(audio_path: String, volume_db: float, pitch_scale: float) -> AudioStreamPlayer:
@@ -8238,6 +8328,20 @@ func _update_sage_runtime(delta: float) -> void:
 			queue_redraw()
 	sage_skill1_cooldown_timer = maxf(sage_skill1_cooldown_timer - delta, 0.0)
 	sage_skill2_cooldown_timer = maxf(sage_skill2_cooldown_timer - delta, 0.0)
+	sage_skill3_cooldown_timer = maxf(sage_skill3_cooldown_timer - delta, 0.0)
+	sage_condensation_skill_damage_buff_timer = maxf(
+		sage_condensation_skill_damage_buff_timer - delta,
+		0.0
+	)
+
+	if sage_condensation_unlock_pending:
+		sage_condensation_unlock_effect_timer = maxf(
+			sage_condensation_unlock_effect_timer - delta,
+			0.0
+		)
+		if sage_condensation_unlock_effect_timer <= 0.0:
+			sage_condensation_unlock_pending = false
+			_emit_sage_late_skill_unlock_cutscene()
 
 	if sage_radiance_launch_remaining > 0:
 		sage_radiance_launch_timer = maxf(sage_radiance_launch_timer - delta, 0.0)
@@ -8252,6 +8356,13 @@ func _update_sage_runtime(delta: float) -> void:
 				float(skill2.get("spawn_interval", 0.25)),
 				0.01
 			)
+	elif sage_skill3_cooldown_timer <= 0.0:
+		if not _try_cast_sage_mana_condensation():
+			if sage_skill2_cooldown_timer <= 0.0:
+				if not _try_cast_sage_radiance_singularity() and sage_skill1_cooldown_timer <= 0.0:
+					_try_cast_sage_ice_pillar()
+			elif sage_skill1_cooldown_timer <= 0.0:
+				_try_cast_sage_ice_pillar()
 	elif sage_skill2_cooldown_timer <= 0.0:
 		if not _try_cast_sage_radiance_singularity() and sage_skill1_cooldown_timer <= 0.0:
 			_try_cast_sage_ice_pillar()
@@ -8306,6 +8417,7 @@ func _try_cast_sage_ice_pillar() -> void:
 		int(round(
 			float(attack_damage)
 			* maxf(float(skill.get("damage_ratio", 1.0)), 0.0)
+			* _get_sage_skill_damage_multiplier()
 		))
 	)
 	pillar.global_position = target.global_position
@@ -8397,7 +8509,7 @@ func _launch_sage_radiance_orb() -> void:
 		maxf(float(skill.get("damage_ratio_max", 1.0)), 0.0),
 		size_ratio
 	)
-	var orb_damage := maxi(1, int(round(float(attack_damage) * damage_ratio)))
+	var orb_damage := maxi(1, int(round(float(attack_damage) * damage_ratio * _get_sage_skill_damage_multiplier())))
 
 	var orb := _acquire_projectile(SAGE_RADIANCE_ORB_SCENE, "sage_radiance_orb")
 	if orb == null:
@@ -8413,6 +8525,216 @@ func _launch_sage_radiance_orb() -> void:
 		clampf(float(skill.get("slow_multiplier", 0.85)), 0.1, 1.0),
 		maxf(float(skill.get("slow_duration", 2.0)), 0.0),
 		orb_scale
+	)
+
+
+func _try_cast_sage_mana_condensation() -> bool:
+	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
+		return false
+	var skill_value = sage_config.get("skill_3", {})
+	if typeof(skill_value) != TYPE_DICTIONARY:
+		return false
+	var skill: Dictionary = skill_value
+	if skill.is_empty():
+		return false
+
+	var gauge_cost := maxf(float(skill.get("gauge_cost", 20.0)), 0.0)
+	if ultimate_charge + 0.001 < gauge_cost:
+		return false
+
+	_ensure_sage_runtime()
+	ultimate_charge = maxf(ultimate_charge - gauge_cost, 0.0)
+	sage_skill3_cooldown_timer = maxf(float(skill.get("cooldown", 13.0)), 0.1)
+	attack_timer = maxf(attack_timer, 0.30)
+	attack_pose_timer = maxf(attack_pose_timer, 0.38)
+	_restart_stage1_animation("attack")
+
+	var max_stacks := maxi(int(skill.get("max_stacks", 8)), 1)
+	if sage_condensation_stacks >= max_stacks:
+		_consume_sage_condensation(skill)
+	else:
+		_add_sage_condensation_stack(skill)
+	queue_redraw()
+	return true
+
+
+func _add_sage_condensation_stack(skill: Dictionary) -> void:
+	if sage_condensation_free_slots.is_empty():
+		return
+	var pick_index := randi_range(0, sage_condensation_free_slots.size() - 1)
+	var slot_index := sage_condensation_free_slots[pick_index]
+	sage_condensation_free_slots.remove_at(pick_index)
+	sage_condensation_stacks = mini(
+		sage_condensation_stacks + 1,
+		maxi(int(skill.get("max_stacks", 8)), 1)
+	)
+
+	if slot_index >= 0 and slot_index < sage_condensation_visuals.size():
+		var sprite := sage_condensation_visuals[slot_index]
+		if is_instance_valid(sprite):
+			sprite.modulate = Color.WHITE
+			sprite.visible = true
+			sprite.stop()
+			sprite.animation = &"summon"
+			sprite.frame = 0
+			sprite.frame_progress = 0.0
+			sprite.play(&"summon")
+	_play_sage_audio(sage_condensation_stack_audio)
+
+
+func _consume_sage_condensation(skill: Dictionary) -> void:
+	sage_condensation_stacks = 0
+	_reset_sage_condensation_slots()
+	sage_condensation_completion_count += 1
+
+	var hp_multiplier := 1.0 + maxf(
+		float(skill.get("permanent_hp_ratio", 0.03)),
+		0.0
+	)
+	var attack_multiplier := 1.0 + maxf(
+		float(skill.get("permanent_attack_ratio", 0.03)),
+		0.0
+	)
+	var move_multiplier := 1.0 + maxf(
+		float(skill.get("permanent_move_speed_ratio", 0.0025)),
+		0.0
+	)
+	var attack_speed_gain := maxf(
+		float(skill.get("permanent_attack_speed_ratio", 0.0025)),
+		0.0
+	)
+
+	var previous_max_hp := max_hp
+	max_hp = maxi(1, int(round(float(max_hp) * hp_multiplier)))
+	current_hp = mini(
+		max_hp,
+		current_hp + maxi(max_hp - previous_max_hp, 0)
+	)
+	attack_damage = maxi(
+		1,
+		int(round(float(attack_damage) * attack_multiplier))
+	)
+	base_attack_damage_for_level_growth *= attack_multiplier
+	move_speed *= move_multiplier
+	common_attack_speed_bonus += attack_speed_gain
+	sage_condensation_skill_damage_buff_timer = maxf(
+		float(skill.get("skill_damage_buff_duration", 10.0)),
+		0.0
+	)
+
+	_play_sage_audio(sage_condensation_release_audio)
+	health_changed.emit(current_hp, max_hp)
+	_try_start_sage_late_skill_unlock_sequence(skill)
+
+
+func _get_sage_skill_damage_multiplier() -> float:
+	if (
+		hero_archetype != "grand_sage_astra"
+		or sage_condensation_skill_damage_buff_timer <= 0.0
+	):
+		return 1.0
+	var skill_value = sage_config.get("skill_3", {})
+	var skill: Dictionary = (
+		skill_value if typeof(skill_value) == TYPE_DICTIONARY else {}
+	)
+	return 1.0 + maxf(
+		float(skill.get("skill_damage_buff_ratio", 0.30)),
+		0.0
+	)
+
+
+func _try_start_sage_late_skill_unlock_sequence(skill: Dictionary) -> void:
+	var required := maxi(int(skill.get("unlock_completion_count", 3)), 1)
+	if sage_condensation_completion_count < required:
+		return
+	if (
+		is_conditional_skill_unlocked("sage_skill_5")
+		and is_conditional_skill_unlocked("sage_skill_6")
+	):
+		return
+
+	conditional_skill_unlocks["sage_skill_5"] = true
+	conditional_skill_unlocks["sage_skill_6"] = true
+	sage_condensation_unlock_pending = true
+	sage_condensation_unlock_effect_timer = maxf(
+		float(skill.get("unlock_effect_seconds", 0.80)),
+		0.1
+	)
+	_play_sage_condensation_unlock_effect(skill)
+
+
+func _play_sage_condensation_unlock_effect(skill: Dictionary) -> void:
+	var visual_scale := maxf(float(skill.get("visual_scale", 0.34)), 0.05)
+	for sprite in sage_condensation_visuals:
+		if not is_instance_valid(sprite):
+			continue
+		sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		sprite.scale = Vector2.ONE * visual_scale * 1.18
+		sprite.visible = true
+		sprite.stop()
+		sprite.animation = &"summon"
+		sprite.frame = 0
+		sprite.frame_progress = 0.0
+		sprite.play(&"summon")
+		var tween := create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(
+			sprite,
+			"scale",
+			Vector2.ONE * visual_scale * 1.42,
+			0.72
+		)
+		tween.tween_property(sprite, "modulate:a", 0.0, 0.72)
+		tween.chain().tween_callback(
+			Callable(self, "_hide_sage_condensation_unlock_sprite").bind(
+				sprite,
+				visual_scale
+			)
+		)
+
+
+func _hide_sage_condensation_unlock_sprite(
+	sprite: AnimatedSprite2D,
+	visual_scale: float
+) -> void:
+	if not is_instance_valid(sprite):
+		return
+	sprite.stop()
+	sprite.visible = false
+	sprite.scale = Vector2.ONE * visual_scale
+	sprite.modulate = Color.WHITE
+
+
+func _emit_sage_late_skill_unlock_cutscene() -> void:
+	var skill_value = sage_config.get("skill_3", {})
+	var skill: Dictionary = (
+		skill_value if typeof(skill_value) == TYPE_DICTIONARY else {}
+	)
+	var required := maxi(int(skill.get("unlock_completion_count", 3)), 1)
+	var payload := {
+		"hero_id": hero_id,
+		"archetype": hero_archetype,
+		"source": "sage_condensation_completions",
+		"condition_type": "mana_condensation_cycles",
+		"current_value": sage_condensation_completion_count,
+		"required_value": required,
+		"skill_id": "sage_skill_5_6",
+		"skill_name": "스킬 5·6",
+		"unlocked_skill_ids": ["sage_skill_5", "sage_skill_6"],
+		"cutscene_texture_path": String(
+			skill.get(
+				"cutscene_texture_path",
+				"res://assets/art/heroes/stage10_sage/cutscene/stage10_hero_cutscene.png"
+			)
+		),
+		"cutscene_hold_seconds": float(
+			skill.get("cutscene_hold_seconds", 1.20)
+		),
+	}
+	conditional_skill_unlocked.emit(
+		"sage_skill_5_6",
+		"스킬 5·6",
+		payload
 	)
 
 
@@ -12548,6 +12870,7 @@ func get_skill_cooldown_hud() -> Array:
 		"grand_sage_astra":
 			_append_sage_skill1_hud(skills)
 			_append_sage_skill2_hud(skills)
+			_append_sage_skill3_hud(skills)
 		"cleric_purifier":
 			_append_skill_cooldown_hud(
 				skills,
@@ -12754,6 +13077,8 @@ func _skill_hud_description(config: Dictionary) -> String:
 			return "지정 지점에 얼음기둥을 생성해 주변 적에게 피해를 주고, 범위 안의 적을 지속 둔화하며 기둥에 끼인 적의 이동을 봉쇄합니다."
 		"radiance_singularity":
 			return "주변으로 10개의 광휘구체를 순차 방출합니다. 구체는 도착 1초 뒤 폭발해 범위 피해를 주고 2초 동안 적을 둔화합니다."
+		"mana_condensation":
+			return "8방향에 마력을 하나씩 응축합니다. 8스택 상태에서 다시 사용하면 전부 소모해 영구 스탯을 강화하고 10초간 모든 스킬 피해가 30% 증가합니다. 이 완성을 3회 달성하면 스킬 5·6이 해금됩니다."
 		"arcane_piercer":
 			return "전방으로 강력한 마력 관통포를 발사해 일직선상의 적을 공격합니다."
 		"arcane_barrier":
@@ -12909,6 +13234,67 @@ func _append_sage_skill2_hud(skills: Array) -> void:
 		"cooldown_total": cooldown_total,
 		"cooldown_remaining": cooldown_remaining,
 		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect3/starburst_04.png",
+	})
+
+
+func _append_sage_skill3_hud(skills: Array) -> void:
+	var raw_skill = sage_config.get("skill_3", {})
+	if typeof(raw_skill) != TYPE_DICTIONARY:
+		return
+	var skill: Dictionary = raw_skill
+	if skill.is_empty():
+		return
+
+	var cooldown_total := maxf(float(skill.get("cooldown", 13.0)), 0.0)
+	var cooldown_remaining := maxf(sage_skill3_cooldown_timer, 0.0)
+	var gauge_cost := maxf(float(skill.get("gauge_cost", 20.0)), 0.0)
+	var gauge_max := maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
+	var gauge_current := clampf(ultimate_charge, 0.0, gauge_max)
+	var has_gauge := gauge_current + 0.001 >= gauge_cost
+	var cooldown_ready := cooldown_remaining <= 0.01
+	var ready := cooldown_ready and has_gauge
+	var max_stacks := maxi(int(skill.get("max_stacks", 8)), 1)
+	var required_completions := maxi(
+		int(skill.get("unlock_completion_count", 3)),
+		1
+	)
+	var unlocked := (
+		is_conditional_skill_unlocked("sage_skill_5")
+		and is_conditional_skill_unlocked("sage_skill_6")
+	)
+
+	var status := "사용 가능"
+	if cooldown_remaining > 0.01:
+		status = "재사용 대기 중"
+	elif not has_gauge:
+		status = "게이지 부족"
+	elif sage_condensation_stacks >= max_stacks:
+		status = "8스택 소모 가능"
+	if unlocked:
+		status += " · 스킬 5·6 해금 완료"
+
+	var progress := "마력응축 (%d/%d) · 완성 %d/%d" % [
+		sage_condensation_stacks,
+		max_stacks,
+		mini(sage_condensation_completion_count, required_completions),
+		required_completions,
+	]
+	if sage_condensation_skill_damage_buff_timer > 0.0:
+		progress += " · 스킬피해 +30%% %.1f초" % (
+			sage_condensation_skill_damage_buff_timer
+		)
+
+	skills.append({
+		"id": String(skill.get("id", "mana_condensation")),
+		"name": String(skill.get("name", "마력응축")),
+		"description": _skill_hud_description(skill),
+		"resource_text": "게이지 %.0f" % gauge_cost,
+		"progress_text": progress,
+		"status_text": status,
+		"available": ready,
+		"cooldown_total": cooldown_total,
+		"cooldown_remaining": cooldown_remaining,
+		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect4/summon_08.png",
 	})
 
 
