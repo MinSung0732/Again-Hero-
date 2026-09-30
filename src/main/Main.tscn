@@ -451,13 +451,13 @@ texture_filter = 1
 
 [node name="Subtitle" type="Label" parent="HUD/TopBar"]
 offset_left = 336.0
-offset_top = 47.0
+offset_top = 50.0
 offset_right = 696.0
-offset_bottom = 82.0
+offset_bottom = 81.0
 theme_override_colors/font_color = Color(0.98, 0.94, 0.9, 1)
 theme_override_colors/font_outline_color = Color(0.03, 0.02, 0.07, 1)
 theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 25
 text = "첫 번째 침입자"
 clip_text = true
 horizontal_alignment = 1
@@ -465,15 +465,16 @@ vertical_alignment = 1
 
 [node name="StageNumber" type="Label" parent="HUD/TopBar"]
 offset_left = 344.0
-offset_top = 19.0
+offset_top = 33.0
 offset_right = 688.0
-offset_bottom = 45.0
+offset_bottom = 49.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.82, 0.38, 1)
 theme_override_colors/font_outline_color = Color(0.03, 0.02, 0.07, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 19
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 15
 text = "Stage 1"
+clip_text = true
 horizontal_alignment = 1
 vertical_alignment = 1
 
