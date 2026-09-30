@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/hero/sage_blackspot_explosion.gd" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/sage_astra_blackspot_explosion_pixabay.mp3" id="2_audio"]
+
+[node name="SageBlackSpotExplosion" type="Node2D"]
+z_index = 6
+script = ExtResource("1_script")
+
+[node name="Visual" type="Sprite2D" parent="."]
+texture_filter = 1
+
+[node name="ExplosionAudio" type="AudioStreamPlayer2D" parent="."]
+bus = &"SFX"
+stream = ExtResource("2_audio")
+volume_db = -10.0
+pitch_scale = 0.90
+max_distance = 1100.0
