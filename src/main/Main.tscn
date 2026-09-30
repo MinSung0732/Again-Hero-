@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3]
+[gd_scene load_steps=26 format=3]
 
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://src/battle/Battle.tscn" id="2_battle"]
@@ -18,6 +18,7 @@
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/hero_button.svg" id="18_hero"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/auto_bar.svg" id="14_auto"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/summon_card.svg" id="15_card"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/modal_panel.svg" id="19_modal_panel"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cooldown_bg"]
 bg_color = Color(0.16, 0.16, 0.18, 0.55)
@@ -93,6 +94,13 @@ texture_margin_left = 22.0
 texture_margin_top = 20.0
 texture_margin_right = 22.0
 texture_margin_bottom = 20.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_modal_panel"]
+texture = ExtResource("19_modal_panel")
+texture_margin_left = 30.0
+texture_margin_top = 30.0
+texture_margin_right = 30.0
+texture_margin_bottom = 30.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_action_normal"]
 bg_color = Color(0.075, 0.045, 0.14, 0.92)
@@ -385,10 +393,10 @@ clip_text = true
 vertical_alignment = 1
 
 [node name="HeroHPBar" type="ProgressBar" parent="HUD/TopBar"]
-offset_left = 190.0
-offset_top = 198.0
-offset_right = 682.0
-offset_bottom = 226.0
+offset_left = 192.0
+offset_top = 201.0
+offset_right = 695.0
+offset_bottom = 230.0
 max_value = 300.0
 value = 300.0
 mouse_filter = 2
@@ -397,10 +405,10 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_hud_hp_fill")
 show_percentage = false
 
 [node name="HeroHP" type="Label" parent="HUD/TopBar"]
-offset_left = 190.0
-offset_top = 194.0
-offset_right = 682.0
-offset_bottom = 230.0
+offset_left = 192.0
+offset_top = 197.0
+offset_right = 695.0
+offset_bottom = 233.0
 theme_override_colors/font_color = Color(0.94, 1, 0.95, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.95)
 theme_override_constants/outline_size = 4
@@ -410,10 +418,10 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="ExpBar" type="ProgressBar" parent="HUD/TopBar"]
-offset_left = 190.0
-offset_top = 244.0
-offset_right = 682.0
-offset_bottom = 264.0
+offset_left = 192.0
+offset_top = 247.0
+offset_right = 695.0
+offset_bottom = 266.0
 max_value = 50.0
 mouse_filter = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_hud_bar_bg")
@@ -421,10 +429,10 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_hud_exp_fill")
 show_percentage = false
 
 [node name="ExpLabel" type="Label" parent="HUD/TopBar"]
-offset_left = 190.0
-offset_top = 238.0
-offset_right = 682.0
-offset_bottom = 269.0
+offset_left = 192.0
+offset_top = 240.0
+offset_right = 695.0
+offset_bottom = 270.0
 theme_override_colors/font_color = Color(0.88, 0.91, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.95)
 theme_override_constants/outline_size = 3
@@ -504,10 +512,10 @@ clip_text = true
 vertical_alignment = 1
 
 [node name="UltimateBar" type="ProgressBar" parent="HUD/DemonUltimatePanel"]
-offset_left = 495.0
-offset_top = 32.0
-offset_right = 1018.0
-offset_bottom = 54.0
+offset_left = 503.0
+offset_top = 35.0
+offset_right = 1027.0
+offset_bottom = 61.0
 max_value = 100.0
 mouse_filter = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_hud_bar_bg")
@@ -752,12 +760,13 @@ theme_override_constants/separation = 10
 alignment = 1
 
 [node name="Slot1" type="Button" parent="HUD/BottomBar/SummonButtons"]
+focus_mode = 0
 custom_minimum_size = Vector2(332, 158)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxTexture_card")
 theme_override_styles/hover = SubResource("StyleBoxTexture_card")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_card")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/disabled = SubResource("StyleBoxTexture_card")
 text = ""
 
@@ -774,15 +783,15 @@ texture_filter = 1
 
 [node name="Name" type="Label" parent="HUD/BottomBar/SummonButtons/Slot1"]
 layout_mode = 1
-offset_left = 130.0
-offset_top = 31.0
-offset_right = 307.0
+offset_left = 136.0
+offset_top = 40.0
+offset_right = 294.0
 offset_bottom = 74.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.96, 0.93, 1, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 22
 text = "몬스터"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -790,27 +799,28 @@ clip_text = true
 
 [node name="Cost" type="Label" parent="HUD/BottomBar/SummonButtons/Slot1"]
 layout_mode = 1
-offset_left = 130.0
-offset_top = 83.0
-offset_right = 307.0
-offset_bottom = 124.0
+offset_left = 136.0
+offset_top = 88.0
+offset_right = 294.0
+offset_bottom = 122.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.95, 0.9, 0.98, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 23
+theme_override_font_sizes/font_size = 20
 text = "비용 0"
 horizontal_alignment = 1
 vertical_alignment = 1
 clip_text = true
 
 [node name="Slot2" type="Button" parent="HUD/BottomBar/SummonButtons"]
+focus_mode = 0
 custom_minimum_size = Vector2(332, 158)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxTexture_card")
 theme_override_styles/hover = SubResource("StyleBoxTexture_card")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_card")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/disabled = SubResource("StyleBoxTexture_card")
 text = ""
 
@@ -827,15 +837,15 @@ texture_filter = 1
 
 [node name="Name" type="Label" parent="HUD/BottomBar/SummonButtons/Slot2"]
 layout_mode = 1
-offset_left = 130.0
-offset_top = 31.0
-offset_right = 307.0
+offset_left = 136.0
+offset_top = 40.0
+offset_right = 294.0
 offset_bottom = 74.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.96, 0.93, 1, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 22
 text = "몬스터"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -843,27 +853,28 @@ clip_text = true
 
 [node name="Cost" type="Label" parent="HUD/BottomBar/SummonButtons/Slot2"]
 layout_mode = 1
-offset_left = 130.0
-offset_top = 83.0
-offset_right = 307.0
-offset_bottom = 124.0
+offset_left = 136.0
+offset_top = 88.0
+offset_right = 294.0
+offset_bottom = 122.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.95, 0.9, 0.98, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 23
+theme_override_font_sizes/font_size = 20
 text = "비용 0"
 horizontal_alignment = 1
 vertical_alignment = 1
 clip_text = true
 
 [node name="Slot3" type="Button" parent="HUD/BottomBar/SummonButtons"]
+focus_mode = 0
 custom_minimum_size = Vector2(332, 158)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxTexture_card")
 theme_override_styles/hover = SubResource("StyleBoxTexture_card")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_card")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/disabled = SubResource("StyleBoxTexture_card")
 text = ""
 
@@ -880,15 +891,15 @@ texture_filter = 1
 
 [node name="Name" type="Label" parent="HUD/BottomBar/SummonButtons/Slot3"]
 layout_mode = 1
-offset_left = 130.0
-offset_top = 31.0
-offset_right = 307.0
+offset_left = 136.0
+offset_top = 40.0
+offset_right = 294.0
 offset_bottom = 74.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.96, 0.93, 1, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 22
 text = "몬스터"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -896,15 +907,15 @@ clip_text = true
 
 [node name="Cost" type="Label" parent="HUD/BottomBar/SummonButtons/Slot3"]
 layout_mode = 1
-offset_left = 130.0
-offset_top = 83.0
-offset_right = 307.0
-offset_bottom = 124.0
+offset_left = 136.0
+offset_top = 88.0
+offset_right = 294.0
+offset_bottom = 122.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.95, 0.9, 0.98, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 23
+theme_override_font_sizes/font_size = 20
 text = "비용 0"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -957,7 +968,7 @@ offset_top = 290.0
 offset_right = -15.0
 offset_bottom = 1424.0
 grow_horizontal = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_monster_info")
+theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 
 [node name="Root" type="VBoxContainer" parent="HUD/MonsterInfoPanel"]
 layout_mode = 2
@@ -1101,7 +1112,7 @@ offset_top = 290.0
 offset_right = -15.0
 offset_bottom = 1424.0
 grow_horizontal = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_hero_info")
+theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 
 [node name="Root" type="VBoxContainer" parent="HUD/HeroInfoPanel"]
 layout_mode = 2
@@ -1235,6 +1246,7 @@ color = Color(0.015, 0.012, 0.02, 0.78)
 mouse_filter = 0
 
 [node name="MenuPanel" type="PanelContainer" parent="HUD/PauseMenu"]
+theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -1351,6 +1363,7 @@ color = Color(0.015, 0.012, 0.02, 0.84)
 mouse_filter = 0
 
 [node name="Panel" type="PanelContainer" parent="HUD/SettingsOverlay"]
+theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -1492,6 +1505,7 @@ theme_override_font_sizes/font_size = 28
 text = "돌아가기"
 
 [node name="DemonAugmentPanel" type="PanelContainer" parent="HUD"]
+theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 visible = false
 anchors_preset = 8
 anchor_left = 0.5
@@ -1620,6 +1634,7 @@ theme_override_font_sizes/font_size = 26
 text = "↻ 새로고침 3 / 3"
 
 [node name="MutationPanel" type="PanelContainer" parent="HUD"]
+theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 visible = false
 mouse_filter = 0
 anchors_preset = 8
@@ -1701,6 +1716,7 @@ theme_override_font_sizes/font_size = 28
 text = "오크\n선택"
 
 [node name="ResultPanel" type="PanelContainer" parent="HUD"]
+theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 visible = false
 z_index = 300
 anchors_preset = 8

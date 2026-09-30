@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<g shape-rendering="crispEdges">
+<rect x="3" y="3" width="122" height="122" fill="#070817" stroke="#f0a923" stroke-width="5"/>
+<rect x="11" y="11" width="106" height="106" fill="#0b0b1d" stroke="#552178" stroke-width="3"/>
+<path d="M4 30 H18 V16 H32 M124 30 H110 V16 H96 M4 98 H18 V112 H32 M124 98 H110 V112 H96"
+ fill="none" stroke="#ffd053" stroke-width="4"/>
+<path d="M21 7 H49 M79 7 H107 M21 121 H49 M79 121 H107"
+ stroke="#782aa1" stroke-width="3"/>
+<polygon points="64,3 72,11 64,19 56,11" fill="#8f2ed1" stroke="#ffd053" stroke-width="3"/>
+</g></svg>

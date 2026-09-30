@@ -2092,6 +2092,8 @@ func _load_monster_info_icon(monster_id: String) -> Texture2D:
 func _on_summon_slot_pressed(slot_index: int) -> void:
 	if slot_index < 0 or slot_index >= battle_loadout_ids.size():
 		return
+	if slot_index < summon_slot_buttons.size():
+		_flash_button_feedback(summon_slot_buttons[slot_index])
 
 	var monster_id := String(battle_loadout_ids[slot_index])
 	_on_summon_pressed(monster_id)
@@ -2123,6 +2125,19 @@ func _show_battle_toast(message: String, duration: float = 1.4) -> void:
 	battle_toast.text = message
 	battle_toast.show()
 	_battle_toast_timer = maxf(duration, 0.2)
+
+
+func _flash_button_feedback(button: BaseButton) -> void:
+	if not is_instance_valid(button):
+		return
+	button.modulate = Color(1.0, 0.72, 0.42, 1.0)
+	var tween: Tween = create_tween()
+	tween.tween_property(
+		button,
+		"modulate",
+		Color(1.0, 1.0, 1.0, 1.0),
+		0.16
+	)
 
 
 func _on_placement_mode_toggled(auto_enabled: bool) -> void:
@@ -2252,6 +2267,14 @@ func _refresh_demon_ultimate_buttons() -> void:
 			button.text = "%s\n마력 %d 필요" % [button_title, int(round(mana_cost))]
 
 func _on_demon_ultimate_pressed(skill_id: String) -> void:
+	match skill_id:
+		"encirclement":
+			_flash_button_feedback(demon_ultimate_1)
+		"line_assault":
+			_flash_button_feedback(demon_ultimate_2)
+		"square_siege":
+			_flash_button_feedback(demon_ultimate_3)
+
 	if skill_id == "line_assault":
 		var skill := DEMON_ULTIMATES.get_skill("line_assault")
 		var mana_cost := maxf(float(skill.get("mana_cost", 40.0)), 0.0)
@@ -2331,6 +2354,16 @@ func _close_demon_direction_select() -> void:
 			)
 
 func _on_demon_line_direction_pressed(direction: String) -> void:
+	match direction:
+		"east":
+			_flash_button_feedback(demon_direction_east)
+		"west":
+			_flash_button_feedback(demon_direction_west)
+		"north":
+			_flash_button_feedback(demon_direction_north)
+		"south":
+			_flash_button_feedback(demon_direction_south)
+
 	var direction_name: String = String({
 		"east": "동쪽",
 		"west": "서쪽",
