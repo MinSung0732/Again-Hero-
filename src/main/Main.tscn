@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=23 format=3]
 
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://src/battle/Battle.tscn" id="2_battle"]
@@ -16,6 +16,9 @@
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/monster_button.svg" id="16_monster"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/detail_button.svg" id="17_detail"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/hero_button.svg" id="18_hero"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/modal_panel.svg" id="19_modal_panel"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/modal_button.svg" id="20_modal_button"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/modal_choice.svg" id="21_modal_choice"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/auto_bar.svg" id="14_auto"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/summon_card.svg" id="15_card"]
 
@@ -93,6 +96,27 @@ texture_margin_left = 22.0
 texture_margin_top = 20.0
 texture_margin_right = 22.0
 texture_margin_bottom = 20.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_modal_panel"]
+texture = ExtResource("19_modal_panel")
+texture_margin_left = 28.0
+texture_margin_top = 28.0
+texture_margin_right = 28.0
+texture_margin_bottom = 28.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_modal_button"]
+texture = ExtResource("20_modal_button")
+texture_margin_left = 26.0
+texture_margin_top = 18.0
+texture_margin_right = 26.0
+texture_margin_bottom = 18.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_modal_choice"]
+texture = ExtResource("21_modal_choice")
+texture_margin_left = 24.0
+texture_margin_top = 30.0
+texture_margin_right = 24.0
+texture_margin_bottom = 30.0
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hud"]
 
@@ -869,7 +893,7 @@ offset_top = 290.0
 offset_right = -15.0
 offset_bottom = 1424.0
 grow_horizontal = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_monster_info")
+theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 
 [node name="Root" type="VBoxContainer" parent="HUD/MonsterInfoPanel"]
 layout_mode = 2
@@ -880,15 +904,19 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 76)
 
 [node name="Title" type="Label" parent="HUD/MonsterInfoPanel/Root/Header"]
+theme_override_colors/font_color = Color(1, 0.82, 0.4, 1)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 32
 text = "몬스터 상세정보"
 
 [node name="Close" type="Button" parent="HUD/MonsterInfoPanel/Root/Header"]
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_button")
 custom_minimum_size = Vector2(82, 64)
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 24
 text = "닫기"
 
 [node name="Scroll" type="ScrollContainer" parent="HUD/MonsterInfoPanel/Root"]
@@ -915,24 +943,36 @@ layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="Tab1" type="Button" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox/Tabs"]
+theme_override_styles/disabled = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_button")
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 25
 text = "1"
 
 [node name="Tab2" type="Button" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox/Tabs"]
+theme_override_styles/disabled = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_button")
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 25
 text = "2"
 
 [node name="Tab3" type="Button" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox/Tabs"]
+theme_override_styles/disabled = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_button")
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 25
 text = "3"
 
 [node name="Portrait" type="TextureRect" parent="HUD/MonsterInfoPanel/Root/Scroll/Margin/VBox"]
@@ -997,7 +1037,7 @@ offset_top = 290.0
 offset_right = -15.0
 offset_bottom = 1424.0
 grow_horizontal = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_hero_info")
+theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 
 [node name="Root" type="VBoxContainer" parent="HUD/HeroInfoPanel"]
 layout_mode = 2
@@ -1010,14 +1050,17 @@ custom_minimum_size = Vector2(0, 76)
 [node name="Title" type="Label" parent="HUD/HeroInfoPanel/Root/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 0.55, 0.58, 1)
-theme_override_font_sizes/font_size = 36
+theme_override_colors/font_color = Color(1, 0.82, 0.4, 1)
+theme_override_font_sizes/font_size = 32
 text = "용사 정보"
 
 [node name="Close" type="Button" parent="HUD/HeroInfoPanel/Root/Header"]
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_button")
 custom_minimum_size = Vector2(82, 64)
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 24
 text = "닫기"
 
 [node name="Scroll" type="ScrollContainer" parent="HUD/HeroInfoPanel/Root"]
@@ -1127,6 +1170,7 @@ color = Color(0.015, 0.012, 0.02, 0.78)
 mouse_filter = 0
 
 [node name="MenuPanel" type="PanelContainer" parent="HUD/PauseMenu"]
+theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -1154,8 +1198,8 @@ alignment = 1
 
 [node name="Title" type="Label" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
-theme_override_font_sizes/font_size = 54
+theme_override_colors/font_color = Color(1, 0.82, 0.4, 1)
+theme_override_font_sizes/font_size = 48
 text = "전투 메뉴"
 horizontal_alignment = 1
 
@@ -1182,24 +1226,36 @@ horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="ResumeButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_button")
 custom_minimum_size = Vector2(0, 124)
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
 text = "계속하기"
 
 [node name="SettingsButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_button")
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 theme_override_font_sizes/font_size = 34
 text = "설정"
 
 [node name="RestartButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_button")
 custom_minimum_size = Vector2(0, 115)
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
 text = "이 스테이지 다시 도전"
 
 [node name="LobbyButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_button")
 custom_minimum_size = Vector2(0, 115)
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
@@ -1227,6 +1283,7 @@ color = Color(0.015, 0.012, 0.02, 0.84)
 mouse_filter = 0
 
 [node name="Panel" type="PanelContainer" parent="HUD/SettingsOverlay"]
+theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -1254,12 +1311,16 @@ alignment = 1
 
 [node name="Title" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
-theme_override_font_sizes/font_size = 52
+theme_override_colors/font_color = Color(1, 0.82, 0.4, 1)
+theme_override_font_sizes/font_size = 46
 text = "설정"
 horizontal_alignment = 1
 
 [node name="SettingsTabs" type="TabContainer" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
+theme_override_styles/tab_hovered = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/tab_unselected = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/tab_selected = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 custom_minimum_size = Vector2(0, 520)
 layout_mode = 2
 size_flags_vertical = 3
@@ -1358,12 +1419,16 @@ text = "켜짐: 용사를 자동 추적합니다.\n꺼짐: 전투 화면을 드�
 autowrap_mode = 2
 
 [node name="CloseButton" type="Button" parent="HUD/SettingsOverlay/Panel/Margin/VBox"]
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_button")
 custom_minimum_size = Vector2(0, 108)
 layout_mode = 2
 theme_override_font_sizes/font_size = 34
 text = "돌아가기"
 
 [node name="DemonAugmentPanel" type="PanelContainer" parent="HUD"]
+theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 visible = false
 anchors_preset = 8
 anchor_left = 0.5
@@ -1389,8 +1454,9 @@ layout_mode = 2
 theme_override_constants/separation = 24
 
 [node name="Title" type="Label" parent="HUD/DemonAugmentPanel/Margin/VBox"]
+theme_override_colors/font_color = Color(1, 0.82, 0.4, 1)
 layout_mode = 2
-theme_override_font_sizes/font_size = 54
+theme_override_font_sizes/font_size = 48
 text = "마왕의 개입"
 horizontal_alignment = 1
 
@@ -1405,6 +1471,10 @@ layout_mode = 2
 theme_override_constants/separation = 16
 
 [node name="Choice0" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices"]
+theme_override_styles/disabled = SubResource("StyleBoxTexture_modal_choice")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_choice")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_choice")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_choice")
 custom_minimum_size = Vector2(0, 414)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1426,6 +1496,10 @@ expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 [node name="Choice1" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices"]
+theme_override_styles/disabled = SubResource("StyleBoxTexture_modal_choice")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_choice")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_choice")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_choice")
 custom_minimum_size = Vector2(0, 414)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1447,6 +1521,10 @@ expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 [node name="Choice2" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices"]
+theme_override_styles/disabled = SubResource("StyleBoxTexture_modal_choice")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_choice")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_choice")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_choice")
 custom_minimum_size = Vector2(0, 414)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1468,12 +1546,16 @@ expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 [node name="RerollButton" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox"]
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_button")
 custom_minimum_size = Vector2(0, 106)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "↻ 새로고침 3 / 3"
 
 [node name="MutationPanel" type="PanelContainer" parent="HUD"]
+theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 visible = false
 mouse_filter = 0
 anchors_preset = 8
@@ -1501,8 +1583,9 @@ theme_override_constants/separation = 26
 alignment = 1
 
 [node name="Title" type="Label" parent="HUD/MutationPanel/Margin/VBox"]
+theme_override_colors/font_color = Color(1, 0.82, 0.4, 1)
 layout_mode = 2
-theme_override_font_sizes/font_size = 54
+theme_override_font_sizes/font_size = 48
 text = "돌연변이 선택"
 horizontal_alignment = 1
 
@@ -1519,6 +1602,9 @@ theme_override_constants/separation = 16
 alignment = 1
 
 [node name="Choice0" type="Button" parent="HUD/MutationPanel/Margin/VBox/Choices"]
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_choice")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_choice")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_choice")
 mouse_filter = 0
 custom_minimum_size = Vector2(270, 288)
 layout_mode = 2
@@ -1527,6 +1613,9 @@ theme_override_font_sizes/font_size = 36
 text = "슬라임\n선택"
 
 [node name="Choice1" type="Button" parent="HUD/MutationPanel/Margin/VBox/Choices"]
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_choice")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_choice")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_choice")
 mouse_filter = 0
 custom_minimum_size = Vector2(270, 288)
 layout_mode = 2
@@ -1535,6 +1624,9 @@ theme_override_font_sizes/font_size = 36
 text = "거미\n선택"
 
 [node name="Choice2" type="Button" parent="HUD/MutationPanel/Margin/VBox/Choices"]
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_choice")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_choice")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_choice")
 mouse_filter = 0
 custom_minimum_size = Vector2(270, 288)
 layout_mode = 2
@@ -1543,6 +1635,7 @@ theme_override_font_sizes/font_size = 36
 text = "오크\n선택"
 
 [node name="ResultPanel" type="PanelContainer" parent="HUD"]
+theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 visible = false
 z_index = 300
 anchors_preset = 8
@@ -1570,8 +1663,9 @@ theme_override_constants/separation = 26
 alignment = 1
 
 [node name="ResultTitle" type="Label" parent="HUD/ResultPanel/Margin/VBox"]
+theme_override_colors/font_color = Color(1, 0.82, 0.4, 1)
 layout_mode = 2
-theme_override_font_sizes/font_size = 60
+theme_override_font_sizes/font_size = 52
 text = "전투 종료"
 horizontal_alignment = 1
 
@@ -1599,6 +1693,9 @@ vertical_alignment = 0
 autowrap_mode = 2
 
 [node name="NextStageButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_button")
 visible = false
 custom_minimum_size = Vector2(0, 115)
 layout_mode = 2
@@ -1606,12 +1703,18 @@ theme_override_font_sizes/font_size = 36
 text = "다음 스테이지"
 
 [node name="StageSelectResultButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_button")
 custom_minimum_size = Vector2(0, 103)
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
 text = "로비로 돌아가기"
 
 [node name="RestartButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
+theme_override_styles/pressed = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_modal_button")
+theme_override_styles/normal = SubResource("StyleBoxTexture_modal_button")
 custom_minimum_size = Vector2(0, 115)
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
