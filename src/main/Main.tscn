@@ -243,7 +243,7 @@ offset_bottom = 106.0
 theme_override_colors/font_color = Color(1, 0.68, 0.18, 1)
 theme_override_colors/font_outline_color = Color(0.16, 0.025, 0.17, 1)
 theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 45
+theme_override_font_sizes/font_size = 36
 text = "용사, 또 너야?"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -267,8 +267,9 @@ offset_bottom = 119.0
 theme_override_colors/font_color = Color(0.96, 0.92, 0.86, 1)
 theme_override_colors/font_outline_color = Color(0.03, 0.02, 0.07, 1)
 theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 22
 text = "Stage 1\n첫 번째 침입자\n견습 마도사"
+clip_text = true
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -291,8 +292,9 @@ offset_bottom = 91.0
 theme_override_colors/font_color = Color(0.96, 0.93, 0.88, 1)
 theme_override_colors/font_outline_color = Color(0.03, 0.02, 0.07, 1)
 theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 25
 text = "남은 시간 06:00"
+clip_text = true
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -325,8 +327,9 @@ offset_bottom = 184.0
 theme_override_colors/font_color = Color(1, 0.91, 0.76, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 29
+theme_override_font_sizes/font_size = 27
 text = "Lv. 1   용사"
+clip_text = true
 vertical_alignment = 1
 
 [node name="HeroHPBar" type="ProgressBar" parent="HUD/TopBar"]
@@ -443,8 +446,9 @@ offset_bottom = 63.0
 theme_override_colors/font_color = Color(0.97, 0.92, 0.88, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 29
+theme_override_font_sizes/font_size = 26
 text = "마왕 필살기   0 / 100"
+clip_text = true
 vertical_alignment = 1
 
 [node name="UltimateBar" type="ProgressBar" parent="HUD/DemonUltimatePanel"]
@@ -625,7 +629,7 @@ offset_bottom = 61.0
 theme_override_colors/font_color = Color(1, 0.84, 0.5, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 20
 text = "자동 배치 : 용사 주변 반경에서 몬스터가 소환됩니다."
 vertical_alignment = 1
 clip_text = true
@@ -635,7 +639,7 @@ offset_left = 820.0
 offset_top = 13.0
 offset_right = 1038.0
 offset_bottom = 62.0
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 20
 button_pressed = true
 text = "자동 배치"
 
@@ -659,41 +663,164 @@ offset_bottom = 248.0
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="SlimeButton" type="Button" parent="HUD/BottomBar/SummonButtons"]
+[node name="Slot1" type="Button" parent="HUD/BottomBar/SummonButtons"]
 custom_minimum_size = Vector2(332, 158)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.95, 0.92, 1, 1)
-theme_override_font_sizes/font_size = 29
 theme_override_styles/normal = SubResource("StyleBoxTexture_card")
 theme_override_styles/hover = SubResource("StyleBoxTexture_card")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_card")
 theme_override_styles/disabled = SubResource("StyleBoxTexture_card")
-text = "슬라임\n비용 3"
+text = ""
 
-[node name="SpiderButton" type="Button" parent="HUD/BottomBar/SummonButtons"]
-custom_minimum_size = Vector2(332, 158)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.95, 0.92, 1, 1)
-theme_override_font_sizes/font_size = 29
-theme_override_styles/normal = SubResource("StyleBoxTexture_card")
-theme_override_styles/hover = SubResource("StyleBoxTexture_card")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_card")
-theme_override_styles/disabled = SubResource("StyleBoxTexture_card")
-text = "거미\n비용 7"
+[node name="Icon" type="TextureRect" parent="HUD/BottomBar/SummonButtons/Slot1"]
+layout_mode = 1
+offset_left = 24.0
+offset_top = 30.0
+offset_right = 116.0
+offset_bottom = 130.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
 
-[node name="OrcButton" type="Button" parent="HUD/BottomBar/SummonButtons"]
+[node name="Name" type="Label" parent="HUD/BottomBar/SummonButtons/Slot1"]
+layout_mode = 1
+offset_left = 130.0
+offset_top = 31.0
+offset_right = 307.0
+offset_bottom = 74.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.93, 1, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 27
+text = "몬스터"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="Cost" type="Label" parent="HUD/BottomBar/SummonButtons/Slot1"]
+layout_mode = 1
+offset_left = 130.0
+offset_top = 83.0
+offset_right = 307.0
+offset_bottom = 124.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.95, 0.9, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 23
+text = "비용 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="Slot2" type="Button" parent="HUD/BottomBar/SummonButtons"]
 custom_minimum_size = Vector2(332, 158)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.95, 0.92, 1, 1)
-theme_override_font_sizes/font_size = 29
 theme_override_styles/normal = SubResource("StyleBoxTexture_card")
 theme_override_styles/hover = SubResource("StyleBoxTexture_card")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_card")
 theme_override_styles/disabled = SubResource("StyleBoxTexture_card")
-text = "오크\n비용 18"
+text = ""
+
+[node name="Icon" type="TextureRect" parent="HUD/BottomBar/SummonButtons/Slot2"]
+layout_mode = 1
+offset_left = 24.0
+offset_top = 30.0
+offset_right = 116.0
+offset_bottom = 130.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="Name" type="Label" parent="HUD/BottomBar/SummonButtons/Slot2"]
+layout_mode = 1
+offset_left = 130.0
+offset_top = 31.0
+offset_right = 307.0
+offset_bottom = 74.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.93, 1, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 27
+text = "몬스터"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="Cost" type="Label" parent="HUD/BottomBar/SummonButtons/Slot2"]
+layout_mode = 1
+offset_left = 130.0
+offset_top = 83.0
+offset_right = 307.0
+offset_bottom = 124.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.95, 0.9, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 23
+text = "비용 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="Slot3" type="Button" parent="HUD/BottomBar/SummonButtons"]
+custom_minimum_size = Vector2(332, 158)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/normal = SubResource("StyleBoxTexture_card")
+theme_override_styles/hover = SubResource("StyleBoxTexture_card")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_card")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_card")
+text = ""
+
+[node name="Icon" type="TextureRect" parent="HUD/BottomBar/SummonButtons/Slot3"]
+layout_mode = 1
+offset_left = 24.0
+offset_top = 30.0
+offset_right = 116.0
+offset_bottom = 130.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="Name" type="Label" parent="HUD/BottomBar/SummonButtons/Slot3"]
+layout_mode = 1
+offset_left = 130.0
+offset_top = 31.0
+offset_right = 307.0
+offset_bottom = 74.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.93, 1, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 27
+text = "몬스터"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="Cost" type="Label" parent="HUD/BottomBar/SummonButtons/Slot3"]
+layout_mode = 1
+offset_left = 130.0
+offset_top = 83.0
+offset_right = 307.0
+offset_bottom = 124.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.95, 0.9, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 23
+text = "비용 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
 
 [node name="MonsterInfoBookmark" type="Button" parent="HUD"]
 z_index = 200
