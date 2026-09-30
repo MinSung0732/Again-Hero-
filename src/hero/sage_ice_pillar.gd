@@ -155,10 +155,17 @@ func _track_slow_target(body: Node) -> void:
 
 
 func _refresh_slowed_bodies() -> void:
-	for instance_id in slowed_bodies:
-		var body = slowed_bodies[instance_id]
+	if not is_instance_valid(effect_area) or not effect_area.monitoring:
+		return
+
+	# Physics overlap is the source of truth. This catches enemies that enter,
+	# remain, or were already inside when the pillar became active without
+	# scanning the global monster group.
+	slowed_bodies.clear()
+	for body in effect_area.get_overlapping_bodies():
 		if not _is_valid_monster(body):
 			continue
+		slowed_bodies[body.get_instance_id()] = body
 		_refresh_slow(body)
 
 

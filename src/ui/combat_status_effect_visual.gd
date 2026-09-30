@@ -123,6 +123,12 @@ func _is_slow_active() -> bool:
 		return true
 	if int(target.get_meta("archmage_root_until", 0)) > now:
 		return true
+	if int(target.get_meta("movement_slow_until", 0)) > now:
+		return true
+	if int(target.get_meta("sage_ice_slow_until", 0)) > now:
+		return true
+	if int(target.get_meta("sage_ice_root_until", 0)) > now:
+		return true
 	return false
 
 func _load_texture(path: String) -> Texture2D:
