@@ -163,6 +163,7 @@ var summon_slot_icons: Array[TextureRect] = []
 var summon_slot_name_labels: Array[Label] = []
 var summon_slot_cost_labels: Array[Label] = []
 var monster_card_icon_cache: Dictionary = {}
+var monster_mutation_icon_cache: Dictionary = {}
 var demon_ultimate_charge_ready: bool = false
 var demon_mana_current: float = 0.0
 var demon_ultimate_cooldowns: Dictionary = {}
@@ -1187,7 +1188,7 @@ func _on_mutation_choice_ready(
 		var icon: TextureRect = button.get_node("Icon") as TextureRect
 		var name_label: Label = button.get_node("Name") as Label
 		var select_label: Label = button.get_node("Select") as Label
-		icon.texture = _load_monster_card_icon(monster_id)
+		icon.texture = _load_monster_mutation_icon(monster_id)
 		name_label.text = _get_catalog_monster_name(monster_id)
 		select_label.text = "선택"
 
@@ -2129,6 +2130,56 @@ func _load_monster_card_icon(monster_id: String) -> Texture2D:
 			display_texture = atlas
 
 	monster_card_icon_cache[monster_id] = display_texture
+	return display_texture
+
+
+func _load_monster_mutation_icon(monster_id: String) -> Texture2D:
+	if monster_mutation_icon_cache.has(monster_id):
+		return monster_mutation_icon_cache.get(monster_id) as Texture2D
+
+	var profile := MONSTER_CATALOG.get_elite_visual_profile(monster_id)
+	if profile.is_empty():
+		return _load_monster_card_icon(monster_id)
+
+	var asset_dir := String(profile.get("asset_dir", ""))
+	var animations = profile.get("animations", {})
+	if asset_dir.is_empty() or typeof(animations) != TYPE_DICTIONARY:
+		return _load_monster_card_icon(monster_id)
+
+	var idle_data = Dictionary(animations).get("idle", {})
+	if typeof(idle_data) != TYPE_DICTIONARY:
+		return _load_monster_card_icon(monster_id)
+
+	var idle: Dictionary = idle_data
+	var path := ""
+	match String(profile.get("mode", "")):
+		"frames":
+			var prefix := String(idle.get("prefix", "idle"))
+			path = "%s/%s_01.png" % [asset_dir, prefix]
+		"sequence":
+			var start_frame := maxi(int(idle.get("start", 1)), 1)
+			path = "%s/frame_%02d.png" % [asset_dir, start_frame]
+		_:
+			return _load_monster_card_icon(monster_id)
+
+	var texture := _load_ui_texture(path)
+	if texture == null:
+		return _load_monster_card_icon(monster_id)
+
+	var display_texture: Texture2D = texture
+	var image := texture.get_image()
+	if image != null and not image.is_empty():
+		var used_rect := image.get_used_rect()
+		if used_rect.size.x > 0 and used_rect.size.y > 0:
+			var atlas := AtlasTexture.new()
+			atlas.atlas = texture
+			atlas.region = Rect2(
+				used_rect.position,
+				used_rect.size
+			)
+			display_texture = atlas
+
+	monster_mutation_icon_cache[monster_id] = display_texture
 	return display_texture
 
 
