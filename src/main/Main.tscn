@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3]
+[gd_scene load_steps=30 format=3]
 
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://src/battle/Battle.tscn" id="2_battle"]
@@ -11,11 +11,15 @@
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/stage_panel.svg" id="9_stage"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/timer_panel.svg" id="10_timer"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/hero_status_panel.svg" id="11_hero_status"]
-[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/menu_button.svg" id="12_menu"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/side_frame.svg" id="12_menu"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/ultimate_panel.svg" id="13_ultimate"]
-[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/monster_button.svg" id="16_monster"]
-[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/detail_button.svg" id="17_detail"]
-[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/hero_button.svg" id="18_hero"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/side_frame.svg" id="16_monster"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/side_frame.svg" id="17_detail"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/side_frame.svg" id="18_hero"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/icon_menu.svg" id="22_side_menu_icon"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/icon_monster.svg" id="23_side_monster_icon"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/icon_detail.svg" id="24_side_detail_icon"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/icon_hero.svg" id="25_side_hero_icon"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/auto_bar.svg" id="14_auto"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/summon_card.svg" id="15_card"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/modal_panel.svg" id="19_modal_panel"]
@@ -337,16 +341,44 @@ stretch_mode = 0
 texture_filter = 1
 
 [node name="Subtitle" type="Label" parent="HUD/TopBar"]
-offset_left = 344.0
-offset_top = 24.0
-offset_right = 688.0
-offset_bottom = 119.0
-theme_override_colors/font_color = Color(0.96, 0.92, 0.86, 1)
+offset_left = 336.0
+offset_top = 47.0
+offset_right = 696.0
+offset_bottom = 82.0
+theme_override_colors/font_color = Color(0.98, 0.94, 0.9, 1)
 theme_override_colors/font_outline_color = Color(0.03, 0.02, 0.07, 1)
 theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 22
-text = "Stage 1\n첫 번째 침입자\n견습 마도사"
+theme_override_font_sizes/font_size = 27
+text = "첫 번째 침입자"
 clip_text = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StageNumber" type="Label" parent="HUD/TopBar"]
+offset_left = 344.0
+offset_top = 19.0
+offset_right = 688.0
+offset_bottom = 45.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.38, 1)
+theme_override_colors/font_outline_color = Color(0.03, 0.02, 0.07, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 19
+text = "Stage 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StageHeroName" type="Label" parent="HUD/TopBar"]
+offset_left = 344.0
+offset_top = 84.0
+offset_right = 688.0
+offset_bottom = 112.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.76, 0.28, 1)
+theme_override_colors/font_outline_color = Color(0.03, 0.02, 0.07, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 19
+text = "견습 마도사"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -468,7 +500,32 @@ theme_override_font_sizes/font_size = 27
 theme_override_styles/normal = SubResource("StyleBoxTexture_menu")
 theme_override_styles/hover = SubResource("StyleBoxTexture_menu")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_menu")
+text = ""
+
+[node name="Icon" type="TextureRect" parent="HUD/TopBar/StageMenuButton"]
+layout_mode = 1
+offset_left = 53.0
+offset_top = 19.0
+offset_right = 91.0
+offset_bottom = 57.0
+mouse_filter = 2
+texture = ExtResource("22_side_menu_icon")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="Label" type="Label" parent="HUD/TopBar/StageMenuButton"]
+layout_mode = 1
+offset_left = 96.0
+offset_top = 13.0
+offset_right = 220.0
+offset_bottom = 63.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.92, 0.86, 1)
+theme_override_font_sizes/font_size = 25
 text = "메뉴"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="MonsterFrame" type="TextureRect" parent="HUD/TopBar"]
 offset_left = 790.0
@@ -481,15 +538,26 @@ expand_mode = 1
 stretch_mode = 0
 texture_filter = 1
 
+[node name="MonsterIcon" type="TextureRect" parent="HUD/TopBar"]
+offset_left = 827.0
+offset_top = 229.0
+offset_right = 865.0
+offset_bottom = 267.0
+mouse_filter = 2
+texture = ExtResource("23_side_monster_icon")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
 [node name="Monsters" type="Label" parent="HUD/TopBar"]
-offset_left = 810.0
+offset_left = 872.0
 offset_top = 218.0
-offset_right = 1032.0
+offset_right = 1026.0
 offset_bottom = 281.0
 theme_override_colors/font_color = Color(0.96, 0.92, 0.95, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 31
+theme_override_font_sizes/font_size = 29
 text = "몬스터 0"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -952,9 +1020,34 @@ theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxTexture_detail")
 theme_override_styles/hover = SubResource("StyleBoxTexture_detail")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_detail")
-text = "상세정보"
+text = ""
 focus_mode = 0
 mouse_filter = 0
+
+[node name="Icon" type="TextureRect" parent="HUD/MonsterInfoBookmark"]
+layout_mode = 1
+offset_left = 50.0
+offset_top = 19.0
+offset_right = 88.0
+offset_bottom = 57.0
+mouse_filter = 2
+texture = ExtResource("24_side_detail_icon")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="Label" type="Label" parent="HUD/MonsterInfoBookmark"]
+layout_mode = 1
+offset_left = 94.0
+offset_top = 13.0
+offset_right = 222.0
+offset_bottom = 63.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.92, 0.86, 1)
+theme_override_font_sizes/font_size = 23
+text = "상세정보"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="HeroInfoBookmark" type="Button" parent="HUD"]
 z_index = 200
@@ -970,9 +1063,34 @@ theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxTexture_hero_button")
 theme_override_styles/hover = SubResource("StyleBoxTexture_hero_button")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_hero_button")
-text = "용사정보"
+text = ""
 focus_mode = 0
 mouse_filter = 0
+
+[node name="Icon" type="TextureRect" parent="HUD/HeroInfoBookmark"]
+layout_mode = 1
+offset_left = 50.0
+offset_top = 19.0
+offset_right = 88.0
+offset_bottom = 57.0
+mouse_filter = 2
+texture = ExtResource("25_side_hero_icon")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="Label" type="Label" parent="HUD/HeroInfoBookmark"]
+layout_mode = 1
+offset_left = 94.0
+offset_top = 13.0
+offset_right = 222.0
+offset_bottom = 63.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.92, 0.86, 1)
+theme_override_font_sizes/font_size = 23
+text = "용사정보"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="MonsterInfoPanel" type="PanelContainer" parent="HUD"]
 visible = false
@@ -1572,8 +1690,8 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
 custom_minimum_size = Vector2(0, 414)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 24
-text = "증강 1"
+theme_override_font_sizes/font_size = 20
+text = ""
 
 
 [node name="Icon" type="TextureRect" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice0"]
@@ -1581,14 +1699,70 @@ mouse_filter = 2
 layout_mode = 0
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -42.0
-offset_top = 28.0
-offset_right = 42.0
+offset_left = -44.0
+offset_top = 24.0
+offset_right = 44.0
 offset_bottom = 112.0
 grow_horizontal = 2
 expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
+[node name="Name" type="Label" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice0"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 122.0
+offset_right = -16.0
+offset_bottom = 176.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.98, 0.94, 1, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 22
+text = "증강"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Description" type="Label" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice0"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 18.0
+offset_top = 180.0
+offset_right = -18.0
+offset_bottom = 332.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.88, 0.84, 0.92, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 19
+text = "효과 설명"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Level" type="Label" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice0"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 18.0
+offset_top = 348.0
+offset_right = -18.0
+offset_bottom = 390.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.78, 0.34, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 20
+text = "1/10"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="Choice1" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices"]
 focus_mode = 0
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
@@ -1597,8 +1771,8 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
 custom_minimum_size = Vector2(0, 414)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 24
-text = "증강 2"
+theme_override_font_sizes/font_size = 20
+text = ""
 
 
 [node name="Icon" type="TextureRect" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice1"]
@@ -1606,14 +1780,70 @@ mouse_filter = 2
 layout_mode = 0
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -42.0
-offset_top = 28.0
-offset_right = 42.0
+offset_left = -44.0
+offset_top = 24.0
+offset_right = 44.0
 offset_bottom = 112.0
 grow_horizontal = 2
 expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
+[node name="Name" type="Label" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice1"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 122.0
+offset_right = -16.0
+offset_bottom = 176.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.98, 0.94, 1, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 22
+text = "증강"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Description" type="Label" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice1"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 18.0
+offset_top = 180.0
+offset_right = -18.0
+offset_bottom = 332.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.88, 0.84, 0.92, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 19
+text = "효과 설명"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Level" type="Label" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice1"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 18.0
+offset_top = 348.0
+offset_right = -18.0
+offset_bottom = 390.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.78, 0.34, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 20
+text = "1/10"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="Choice2" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices"]
 focus_mode = 0
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
@@ -1622,8 +1852,8 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
 custom_minimum_size = Vector2(0, 414)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 24
-text = "증강 3"
+theme_override_font_sizes/font_size = 20
+text = ""
 
 
 [node name="Icon" type="TextureRect" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice2"]
@@ -1631,14 +1861,70 @@ mouse_filter = 2
 layout_mode = 0
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -42.0
-offset_top = 28.0
-offset_right = 42.0
+offset_left = -44.0
+offset_top = 24.0
+offset_right = 44.0
 offset_bottom = 112.0
 grow_horizontal = 2
 expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
+[node name="Name" type="Label" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice2"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 122.0
+offset_right = -16.0
+offset_bottom = 176.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.98, 0.94, 1, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 22
+text = "증강"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Description" type="Label" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice2"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 18.0
+offset_top = 180.0
+offset_right = -18.0
+offset_bottom = 332.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.88, 0.84, 0.92, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 19
+text = "효과 설명"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Level" type="Label" parent="HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice2"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 18.0
+offset_top = 348.0
+offset_right = -18.0
+offset_bottom = 390.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.78, 0.34, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 20
+text = "1/10"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="RerollButton" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox"]
 focus_mode = 0
 theme_override_styles/disabled = SubResource("StyleBoxFlat_action_disabled")

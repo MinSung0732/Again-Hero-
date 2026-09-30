@@ -28,6 +28,8 @@ const CAMERA_DRAG_THRESHOLD := 12.0
 @onready var skill_unlock_cutscene = $SkillUnlockCutscene
 
 @onready var subtitle_label: Label = $HUD/TopBar/Subtitle
+@onready var stage_number_label: Label = $HUD/TopBar/StageNumber
+@onready var stage_hero_name_label: Label = $HUD/TopBar/StageHeroName
 @onready var run_timer_label: Label = $HUD/TopBar/RunTimer
 @onready var stage_menu_button: Button = $HUD/TopBar/StageMenuButton
 @onready var hero_hud_portrait: TextureRect = $HUD/TopBar/HeroPortrait
@@ -423,11 +425,13 @@ func _process(delta: float) -> void:
 
 func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 	current_stage_hero_name = String(snapshot.get("hero_name", "용사"))
-	subtitle_label.text = "Stage %d\n%s\n%s" % [
-		int(snapshot.get("stage_number", 1)),
-		String(snapshot.get("stage_name", "첫 번째 침입자")),
-		current_stage_hero_name,
-	]
+	stage_number_label.text = "Stage %d" % int(
+		snapshot.get("stage_number", 1)
+	)
+	subtitle_label.text = String(
+		snapshot.get("stage_name", "첫 번째 침입자")
+	)
+	stage_hero_name_label.text = current_stage_hero_name
 	var portrait_path := String(snapshot.get("hero_portrait_path", ""))
 	if portrait_path.is_empty():
 		portrait_path = HERO_PORTRAIT_REFERENCE_PATH
@@ -2433,6 +2437,16 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 
 		demon_choice_icons[index].texture = null
 		demon_choice_icons[index].visible = false
+		buttons[index].text = ""
+
+		var name_label: Label = buttons[index].get_node("Name") as Label
+		var description_label: Label = buttons[index].get_node(
+			"Description"
+		) as Label
+		var level_label: Label = buttons[index].get_node("Level") as Label
+		name_label.text = ""
+		description_label.text = ""
+		level_label.text = ""
 
 		if candidate_type == "special":
 			var monster_id := String(candidate.get("monster_id", ""))
@@ -2440,18 +2454,17 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 				demon_choice_icons[index],
 				monster_id
 			)
-			buttons[index].add_theme_font_size_override("font_size", 22)
-			buttons[index].text = "★ [%s]\n%s\n\n%s" % [
-				_get_catalog_monster_name(monster_id),
-				_wrap_augment_card_text(
-					String(candidate.get("name", "특수증강")),
-					11
-				),
-				_wrap_augment_card_text(
-					String(candidate.get("description", "")),
-					13
-				),
-			]
+			name_label.text = _wrap_augment_card_text(
+				String(candidate.get("name", "특수증강")),
+				14
+			)
+			description_label.text = _wrap_augment_card_text(
+				String(candidate.get("description", "")),
+				16
+			)
+			level_label.text = "특수 · %s" % (
+				_get_catalog_monster_name(monster_id)
+			)
 		else:
 			var target_monster_id := String(
 				candidate.get("target_monster_id", "")
@@ -2465,20 +2478,27 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 			var current_stack := int(candidate.get("current_stack", 0))
 			var max_stack := int(candidate.get("max_stack", 1))
 			var next_stack := mini(current_stack + 1, max_stack)
-			buttons[index].add_theme_font_size_override("font_size", 22)
-			buttons[index].text = "%s\nLv.%d → Lv.%d / %d\n\n%s" % [
-				_wrap_augment_card_text(
-					String(candidate.get("name", "증강")),
-					12
-				),
-				current_stack,
+			name_label.text = _wrap_augment_card_text(
+				String(candidate.get("name", "증강")),
+				14
+			)
+			description_label.text = _wrap_augment_card_text(
+				String(candidate.get("description", "")),
+				16
+			)
+			level_label.text = "%d/%d" % [
 				next_stack,
 				max_stack,
-				_wrap_augment_card_text(
-					String(candidate.get("description", "")),
-					14
-				),
 			]
+
+		if demon_choice_icons[index].visible:
+			name_label.offset_top = 122.0
+			name_label.offset_bottom = 176.0
+			description_label.offset_top = 180.0
+		else:
+			name_label.offset_top = 64.0
+			name_label.offset_bottom = 118.0
+			description_label.offset_top = 126.0
 
 	var reroll_max := 3
 	if battle.has_method("get_demon_reroll_max"):
