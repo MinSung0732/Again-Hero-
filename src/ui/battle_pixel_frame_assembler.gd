@@ -259,7 +259,14 @@ static func _add_tiled_piece(
 ) -> void:
 	var piece := TextureRect.new()
 	piece.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	piece.texture = texture
+	var tiles_horizontally := not is_equal_approx(
+		anchor_start.x,
+		anchor_end.x
+	)
+	piece.texture = _make_seamless_edge_strip(
+		texture,
+		tiles_horizontally
+	)
 	piece.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	piece.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	piece.stretch_mode = TextureRect.STRETCH_TILE
@@ -272,3 +279,29 @@ static func _add_tiled_piece(
 	piece.offset_right = offset_end.x
 	piece.offset_bottom = offset_end.y
 	parent.add_child(piece)
+
+
+static func _make_seamless_edge_strip(
+	texture: Texture2D,
+	tiles_horizontally: bool
+) -> Texture2D:
+	var texture_size := texture.get_size()
+	var strip := AtlasTexture.new()
+	strip.atlas = texture
+	if tiles_horizontally:
+		var strip_width := minf(8.0, texture_size.x)
+		strip.region = Rect2(
+			floorf((texture_size.x - strip_width) * 0.5),
+			0.0,
+			strip_width,
+			texture_size.y
+		)
+	else:
+		var strip_height := minf(8.0, texture_size.y)
+		strip.region = Rect2(
+			0.0,
+			floorf((texture_size.y - strip_height) * 0.5),
+			texture_size.x,
+			strip_height
+		)
+	return strip

@@ -2438,13 +2438,13 @@ func _is_monster_equipped(monster_id: String) -> bool:
 func _set_default_battle_status() -> void:
 	if auto_placement:
 		placement_toggle.text = "자동 배치"
-		status_label.text = "자동 배치 · 용사 주변 반경 소환"
+		status_label.text = "용사 주변 반경에 소환"
 	elif selected_monster_type.is_empty():
 		placement_toggle.text = "수동 배치"
-		status_label.text = "수동 배치 : 몬스터 카드를 고른 뒤 전장을 터치하세요."
+		status_label.text = "카드 선택 후 전장을 터치"
 	else:
 		placement_toggle.text = "수동 배치"
-		status_label.text = "수동 배치 : %s 선택됨" % _get_monster_name(selected_monster_type)
+		status_label.text = "%s 선택됨 · 전장을 터치" % _get_monster_name(selected_monster_type)
 
 
 func _show_battle_toast(message: String, duration: float = 1.4) -> void:

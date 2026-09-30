@@ -148,6 +148,18 @@ corner_radius_top_right = 7
 corner_radius_bottom_right = 7
 corner_radius_bottom_left = 7
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ultimate_normal"]
+bg_color = Color(0.05, 0.035, 0.095, 0.92)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.25, 0.12, 0.35, 0.88)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_action_hover"]
 bg_color = Color(0.14, 0.075, 0.23, 0.98)
 border_width_left = 3
@@ -686,7 +698,7 @@ grow_vertical = 0
 offset_left = 20.0
 offset_top = 4.0
 offset_right = 1060.0
-offset_bottom = 209.0
+offset_bottom = 203.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 0
@@ -694,23 +706,24 @@ texture_filter = 1
 
 [node name="DemonLevelLabel" type="Label" parent="HUD/DemonUltimatePanel"]
 offset_left = 96.0
-offset_top = 22.0
-offset_right = 232.0
-offset_bottom = 63.0
+offset_top = 14.0
+offset_right = 474.0
+offset_bottom = 45.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.78, 0.32, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 22
 text = "마왕 Lv.1"
 clip_text = true
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="DemonExpBar" type="ProgressBar" parent="HUD/DemonUltimatePanel"]
 offset_left = 96.0
-offset_top = 68.0
+offset_top = 52.0
 offset_right = 474.0
-offset_bottom = 82.0
+offset_bottom = 76.0
 max_value = 15.0
 mouse_filter = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_hud_bar_bg")
@@ -719,37 +732,38 @@ show_percentage = false
 
 [node name="DemonProgressLabel" type="Label" parent="HUD/DemonUltimatePanel"]
 offset_left = 96.0
-offset_top = 61.0
+offset_top = 49.0
 offset_right = 474.0
-offset_bottom = 86.0
+offset_bottom = 79.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.9, 0.88, 1, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 17
 text = "EXP 0.0 / 15.0"
 clip_text = true
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="UltimateLabel" type="Label" parent="HUD/DemonUltimatePanel"]
-offset_left = 264.0
-offset_top = 22.0
-offset_right = 498.0
-offset_bottom = 63.0
+offset_left = 520.0
+offset_top = 14.0
+offset_right = 1021.0
+offset_bottom = 45.0
 theme_override_colors/font_color = Color(0.97, 0.92, 0.88, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 23
+theme_override_font_sizes/font_size = 22
 text = "필살기   0 / 100"
 clip_text = true
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="UltimateBar" type="ProgressBar" parent="HUD/DemonUltimatePanel"]
 offset_left = 520.0
-offset_top = 36.0
+offset_top = 52.0
 offset_right = 1021.0
-offset_bottom = 60.0
+offset_bottom = 76.0
 max_value = 100.0
 mouse_filter = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_hud_bar_bg")
@@ -757,11 +771,11 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_hud_ultimate_fill")
 show_percentage = false
 
 [node name="UltimateButtons" type="HBoxContainer" parent="HUD/DemonUltimatePanel"]
-offset_left = 38.0
-offset_top = 88.0
-offset_right = 1042.0
+offset_left = 48.0
+offset_top = 91.0
+offset_right = 1032.0
 offset_bottom = 187.0
-theme_override_constants/separation = 18
+theme_override_constants/separation = 22
 alignment = 1
 
 [node name="Ultimate1" type="Button" parent="HUD/DemonUltimatePanel/UltimateButtons"]
@@ -772,7 +786,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.95, 0.91, 0.98, 1)
 theme_override_font_sizes/font_size = 20
-theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
+theme_override_styles/normal = SubResource("StyleBoxFlat_ultimate_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_action_disabled")
@@ -805,7 +819,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.95, 0.91, 0.98, 1)
 theme_override_font_sizes/font_size = 20
-theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
+theme_override_styles/normal = SubResource("StyleBoxFlat_ultimate_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_action_disabled")
@@ -838,7 +852,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.95, 0.91, 0.98, 1)
 theme_override_font_sizes/font_size = 20
-theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
+theme_override_styles/normal = SubResource("StyleBoxFlat_ultimate_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_action_disabled")
@@ -865,9 +879,9 @@ show_percentage = false
 
 [node name="DirectionButtons" type="HBoxContainer" parent="HUD/DemonUltimatePanel"]
 visible = false
-offset_left = 38.0
-offset_top = 88.0
-offset_right = 1042.0
+offset_left = 48.0
+offset_top = 91.0
+offset_right = 1032.0
 offset_bottom = 187.0
 theme_override_constants/separation = 10
 alignment = 1
@@ -960,9 +974,9 @@ texture_filter = 1
 visible = false
 
 [node name="Status" type="Label" parent="HUD/BottomBar"]
-offset_left = 88.0
+offset_left = 52.0
 offset_top = 17.0
-offset_right = 358.0
+offset_right = 350.0
 offset_bottom = 67.0
 theme_override_colors/font_color = Color(1, 0.84, 0.5, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
@@ -973,9 +987,9 @@ vertical_alignment = 1
 clip_text = true
 
 [node name="PlacementModeToggle" type="CheckButton" parent="HUD/BottomBar"]
-offset_left = 844.0
+offset_left = 838.0
 offset_top = 15.0
-offset_right = 1038.0
+offset_right = 1028.0
 offset_bottom = 68.0
 theme_override_font_sizes/font_size = 18
 button_pressed = true
@@ -990,9 +1004,9 @@ theme_override_constants/outline_size = 3
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
 theme_override_colors/font_color = Color(0.72, 0.92, 1, 1)
 offset_bottom = 67.0
-offset_right = 535.0
+offset_right = 526.0
 offset_top = 17.0
-offset_left = 374.0
+offset_left = 376.0
 visible = true
 
 [node name="CommandBar" type="ProgressBar" parent="HUD/BottomBar"]
@@ -1002,14 +1016,14 @@ theme_override_styles/background = SubResource("StyleBoxFlat_hud_bar_bg")
 mouse_filter = 2
 max_value = 100.0
 offset_bottom = 54.0
-offset_right = 818.0
+offset_right = 806.0
 offset_top = 32.0
-offset_left = 546.0
+offset_left = 540.0
 visible = true
 
 [node name="SummonButtons" type="HBoxContainer" parent="HUD/BottomBar"]
 offset_left = 20.0
-offset_top = 88.0
+offset_top = 96.0
 offset_right = 1060.0
 offset_bottom = 254.0
 theme_override_constants/separation = 10
