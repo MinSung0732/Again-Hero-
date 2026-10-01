@@ -53,7 +53,7 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 	attack_damage = maxi(
 		int(round(
 			float(owner_attack_damage)
-			* maxf(float(config.get("damage_ratio", 0.15)), 0.0)
+			* maxf(float(config.get("damage_ratio", 0.30)), 0.0)
 		)),
 		1
 	)

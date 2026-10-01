@@ -1096,7 +1096,7 @@ const PROFILES = {
 				"drone_spawn_audio_path": "res://assets/audio/sfx/summoner_drone_spawn.mp3",
 				"drone": {
 					"max_hp": 70,
-					"damage_ratio": 0.15,
+					"damage_ratio": 0.30,
 					"attack_range": 100.0,
 					"move_speed": 360.0,
 					"sense_range": 1200.0,
