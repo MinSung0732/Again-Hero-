@@ -2785,13 +2785,13 @@ func _refresh_header() -> void:
 	progress_label.text = "최고 해금  Stage %d" % highest
 
 	var gold_value := get_node_or_null(
-		^"SafeArea/Layout/Header/HeaderGoldPlate/HeaderGoldValue"
+		^"SafeArea/Layout/Header/HeaderSlots/HeaderGoldPlate/HeaderGoldValue"
 	) as Label
 	if gold_value != null:
 		gold_value.text = gold_text
 
 	var progress_value := get_node_or_null(
-		^"SafeArea/Layout/Header/HeaderProgressPlate/HeaderProgressValue"
+		^"SafeArea/Layout/Header/HeaderSlots/HeaderProgressPlate/HeaderProgressValue"
 	) as Label
 	if progress_value != null:
 		progress_value.text = "Stage %d" % highest

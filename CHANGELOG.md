@@ -1,3 +1,8 @@
+### Lobby header progress data binding correction
+- 동적 헤더가 `HeaderSlots` 아래로 이동한 뒤 남아 있던 골드/최고 해금 라벨의 구 경로를 새 슬롯 경로로 수정.
+- 헤더 표시가 초기 placeholder `Stage 1`에 머무르지 않고 `StageProgress.load_state()`의 `highest_unlocked_stage`를 반영하도록 복구.
+- 테스트 전체 해금 모드에서는 전체 스테이지 수, 정식 진행 모드에서는 저장된 최고 해금 단계가 표시되며 헤더 배치와 스테이지 로직은 변경하지 않음.
+
 ### Lobby stage description containment and navigation sizing
 - 긴 침입자 설명은 최대 3줄 자동 줄바꿈 후 말줄임 처리하고 `clip_text`를 적용해 프레임 밖으로 벗어나지 않도록 제한.
 - 실제 최종 스타일 적용 단계에서도 설명 18px, 상태/보상 17px을 유지하도록 중복 폰트 재정의를 수정.
