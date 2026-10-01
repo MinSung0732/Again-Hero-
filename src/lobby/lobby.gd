@@ -723,29 +723,32 @@ func _apply_new_ui_assets() -> void:
 	gold_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	gold_plate.anchor_left = 0.02
 	gold_plate.anchor_top = 0.0
-	gold_plate.anchor_right = 0.32
+	gold_plate.anchor_right = 0.30
 	gold_plate.anchor_bottom = 1.0
-	gold_plate.z_index = 1
+	gold_plate.clip_contents = true
+	gold_plate.z_index = 0
 	header.add_child(gold_plate)
 
 	var center_slot := Control.new()
 	center_slot.name = "HeaderCenterSlot"
 	center_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	center_slot.anchor_left = 0.32
+	center_slot.anchor_left = 0.35
 	center_slot.anchor_top = 0.0
-	center_slot.anchor_right = 0.68
+	center_slot.anchor_right = 0.65
 	center_slot.anchor_bottom = 1.0
-	center_slot.z_index = 2
+	center_slot.clip_contents = true
+	center_slot.z_index = 0
 	header.add_child(center_slot)
 
 	var progress_plate := Control.new()
 	progress_plate.name = "HeaderProgressPlate"
 	progress_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	progress_plate.anchor_left = 0.68
+	progress_plate.anchor_left = 0.70
 	progress_plate.anchor_top = 0.0
 	progress_plate.anchor_right = 0.98
 	progress_plate.anchor_bottom = 1.0
-	progress_plate.z_index = 1
+	progress_plate.clip_contents = true
+	progress_plate.z_index = 0
 	header.add_child(progress_plate)
 
 	if left_wing_texture != null:
@@ -793,7 +796,7 @@ func _apply_new_ui_assets() -> void:
 	gold_title.anchor_bottom = 0.52
 	gold_title.offset_left = 58.0
 	gold_title.offset_top = -23.0
-	gold_title.offset_right = -92.0
+	gold_title.offset_right = -66.0
 	gold_title.offset_bottom = -3.0
 	gold_title.clip_text = true
 	gold_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -802,7 +805,7 @@ func _apply_new_ui_assets() -> void:
 	gold_title.add_theme_color_override("font_color", Color("eee6f2"))
 	gold_title.add_theme_color_override("font_outline_color", Color("171027"))
 	gold_title.add_theme_constant_override("outline_size", 2)
-	gold_title.z_index = 5
+	gold_title.z_index = 3
 	gold_plate.add_child(gold_title)
 
 	var gold_value := Label.new()
@@ -815,7 +818,7 @@ func _apply_new_ui_assets() -> void:
 	gold_value.anchor_bottom = 0.52
 	gold_value.offset_left = 58.0
 	gold_value.offset_top = 0.0
-	gold_value.offset_right = -92.0
+	gold_value.offset_right = -66.0
 	gold_value.offset_bottom = 26.0
 	gold_value.clip_text = true
 	gold_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -824,7 +827,7 @@ func _apply_new_ui_assets() -> void:
 	gold_value.add_theme_color_override("font_color", Color("ffe28a"))
 	gold_value.add_theme_color_override("font_outline_color", Color("171027"))
 	gold_value.add_theme_constant_override("outline_size", 2)
-	gold_value.z_index = 5
+	gold_value.z_index = 3
 	gold_plate.add_child(gold_value)
 
 	if coin_texture != null:
@@ -843,7 +846,7 @@ func _apply_new_ui_assets() -> void:
 		coin_icon.offset_top = -14.0
 		coin_icon.offset_right = 46.0
 		coin_icon.offset_bottom = 14.0
-		coin_icon.z_index = 5
+		coin_icon.z_index = 3
 		gold_plate.add_child(coin_icon)
 
 	if plus_texture != null:
@@ -863,7 +866,7 @@ func _apply_new_ui_assets() -> void:
 		plus_button.offset_bottom = 13.0
 		plus_button.tooltip_text = "상점"
 		plus_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		plus_button.z_index = 6
+		plus_button.z_index = 3
 		plus_button.pressed.connect(_switch_tab.bind("shop"))
 		gold_plate.add_child(plus_button)
 
@@ -886,7 +889,7 @@ func _apply_new_ui_assets() -> void:
 	progress_title.add_theme_color_override("font_color", Color("eee6f2"))
 	progress_title.add_theme_color_override("font_outline_color", Color("171027"))
 	progress_title.add_theme_constant_override("outline_size", 2)
-	progress_title.z_index = 5
+	progress_title.z_index = 3
 	progress_plate.add_child(progress_title)
 
 	var progress_value := Label.new()
@@ -908,7 +911,7 @@ func _apply_new_ui_assets() -> void:
 	progress_value.add_theme_color_override("font_color", Color("ffe28a"))
 	progress_value.add_theme_color_override("font_outline_color", Color("171027"))
 	progress_value.add_theme_constant_override("outline_size", 2)
-	progress_value.z_index = 5
+	progress_value.z_index = 3
 	progress_plate.add_child(progress_value)
 
 	if logo_backplate_texture != null:
@@ -919,11 +922,11 @@ func _apply_new_ui_assets() -> void:
 		logo_backplate.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo_backplate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo_backplate.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo_backplate.anchor_left = 0.16
+		logo_backplate.anchor_left = 0.12
 		logo_backplate.anchor_top = 0.22
-		logo_backplate.anchor_right = 0.84
+		logo_backplate.anchor_right = 0.88
 		logo_backplate.anchor_bottom = 0.64
-		logo_backplate.z_index = 2
+		logo_backplate.z_index = 1
 		center_slot.add_child(logo_backplate)
 
 	var logo_texture := _load_png_texture_direct(UI_LOGO_PATH)
@@ -935,11 +938,11 @@ func _apply_new_ui_assets() -> void:
 		logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo.anchor_left = 0.10
+		logo.anchor_left = 0.02
 		logo.anchor_top = 0.11
-		logo.anchor_right = 0.90
+		logo.anchor_right = 0.98
 		logo.anchor_bottom = 0.71
-		logo.z_index = 4
+		logo.z_index = 2
 		center_slot.add_child(logo)
 
 	var stage_card := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard
