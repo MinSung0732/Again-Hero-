@@ -750,7 +750,7 @@ func _apply_new_ui_assets() -> void:
 	center_slot.anchor_top = 0.0
 	center_slot.anchor_right = 0.75
 	center_slot.anchor_bottom = 1.0
-	center_slot.clip_contents = true
+	center_slot.clip_contents = false
 	center_slot.z_index = 0
 	slots_root.add_child(center_slot)
 
@@ -936,14 +936,14 @@ func _apply_new_ui_assets() -> void:
 		logo.texture = logo_texture
 		logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-		logo.anchor_left = 0.0
+		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		logo.anchor_left = -0.14
 		logo.anchor_top = 0.0
-		logo.anchor_right = 1.0
+		logo.anchor_right = 1.14
 		logo.anchor_bottom = 1.0
 		logo.offset_top = -8.0
 		logo.offset_bottom = 8.0
-		logo.z_index = 2
+		logo.z_index = 10
 		center_slot.add_child(logo)
 
 	var stage_card := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard
