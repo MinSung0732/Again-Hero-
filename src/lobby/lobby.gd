@@ -103,7 +103,7 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var stage_card: PanelContainer = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard
 @onready var prev_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/PrevButton
 @onready var next_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/NextButton
-@onready var stage_number_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox/StageNumber
+@onready var stage_selector_button: MenuButton = $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox/StageNumber
 @onready var stage_name_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox/StageName
 @onready var portrait_texture: TextureRect = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner/PortraitTexture
 @onready var portrait_placeholder: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner/PortraitPlaceholder
@@ -1264,8 +1264,12 @@ func _install_stage_entry_hud() -> void:
 		section_header.move_child(section_frame, 0)
 
 	stage_meta.custom_minimum_size = Vector2(0.0, 100.0)
-	stage_number_label.offset_top = 8.0
-	stage_number_label.offset_bottom = 34.0
+	stage_selector_button.offset_top = 8.0
+	stage_selector_button.offset_bottom = 36.0
+	stage_selector_button.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
+	stage_selector_button.add_theme_stylebox_override("hover", StyleBoxEmpty.new())
+	stage_selector_button.add_theme_stylebox_override("pressed", StyleBoxEmpty.new())
+	stage_selector_button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	stage_name_label.offset_top = 40.0
 	stage_name_label.offset_bottom = 86.0
 	stage_name_label.clip_text = true
@@ -1312,17 +1316,6 @@ func _install_stage_entry_hud() -> void:
 		connector.offset_bottom = 28.0
 		connector.z_index = 3
 		meta_plate.add_child(connector)
-
-		var connector_line := ColorRect.new()
-		connector_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		connector_line.color = Color(0.79, 0.56, 0.23, 0.92)
-		connector_line.anchor_left = 0.5
-		connector_line.anchor_top = 0.0
-		connector_line.anchor_right = 0.5
-		connector_line.anchor_bottom = 1.0
-		connector_line.offset_left = -1.0
-		connector_line.offset_right = 1.0
-		connector.add_child(connector_line)
 
 		var connector_gem := ColorRect.new()
 		connector_gem.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1651,8 +1644,10 @@ func _apply_lobby_visual_polish() -> void:
 		23,
 		Color("9f91aa")
 	)
-	stage_number_label.add_theme_font_size_override("font_size", 26)
-	stage_number_label.add_theme_color_override("font_color", Color("e2b85c"))
+	stage_selector_button.add_theme_font_size_override("font_size", 26)
+	stage_selector_button.add_theme_color_override("font_color", Color("e2b85c"))
+	stage_selector_button.add_theme_color_override("font_hover_color", Color("f4d47d"))
+	stage_selector_button.add_theme_color_override("font_pressed_color", Color("fff0ad"))
 	stage_name_label.add_theme_font_size_override("font_size", 40)
 	stage_name_label.add_theme_color_override("font_color", Color("fff6e5"))
 	hero_name_label.add_theme_font_size_override("font_size", 30)
@@ -1886,6 +1881,7 @@ func _connect_navigation() -> void:
 
 	prev_stage_button.pressed.connect(_change_stage.bind(-1))
 	next_stage_button.pressed.connect(_change_stage.bind(1))
+	stage_selector_button.get_popup().id_pressed.connect(_on_stage_selected)
 	enter_stage_button.pressed.connect(_enter_selected_stage)
 
 	shop_single_button.pressed.connect(_open_monster_boxes.bind(1))
@@ -2808,6 +2804,24 @@ func _change_stage(direction: int) -> void:
 	)
 	if target_index == selected_stage_index:
 		return
+	_start_stage_transition(target_index, signi(direction))
+
+
+func _on_stage_selected(target_index: int) -> void:
+	if stage_ids.is_empty() or _stage_transition_running:
+		return
+	var max_browsable_index := _get_max_browsable_stage_index()
+	if target_index < 0 or target_index > max_browsable_index:
+		return
+	if target_index == selected_stage_index:
+		return
+	var direction := 1 if target_index > selected_stage_index else -1
+	_start_stage_transition(target_index, direction)
+
+
+func _start_stage_transition(target_index: int, direction: int) -> void:
+	if direction == 0:
+		return
 
 	_stage_transition_running = true
 	_stage_pending_index = target_index
@@ -2817,7 +2831,7 @@ func _change_stage(direction: int) -> void:
 
 	stage_card.pivot_offset = stage_card.size * 0.5
 
-	var meta_box := stage_number_label.get_parent() as Control
+	var meta_box := stage_selector_button.get_parent() as Control
 	if meta_box != null:
 		meta_box.pivot_offset = meta_box.size * 0.5
 
@@ -2876,7 +2890,7 @@ func _on_stage_slide_out_finished() -> void:
 	stage_card.modulate = start_modulate
 	stage_card.pivot_offset = stage_card.size * 0.5
 
-	var meta_box := stage_number_label.get_parent() as Control
+	var meta_box := stage_selector_button.get_parent() as Control
 	if meta_box != null:
 		meta_box.pivot_offset = meta_box.size * 0.5
 		meta_box.scale = Vector2(0.96, 0.96)
@@ -2925,7 +2939,7 @@ func _on_stage_slide_finished() -> void:
 	stage_card.scale = Vector2.ONE
 	stage_card.modulate = _stage_card_base_modulate
 
-	var meta_box := stage_number_label.get_parent() as Control
+	var meta_box := stage_selector_button.get_parent() as Control
 	if meta_box != null:
 		meta_box.scale = Vector2.ONE
 		meta_box.modulate.a = 1.0
@@ -2974,6 +2988,24 @@ func _refresh_stage_nav_buttons() -> void:
 			prev_arrow.modulate = Color.WHITE
 
 	_set_stage_arrow_visual(next_stage_button, can_go_next)
+	_refresh_stage_selector_menu(max_browsable_index)
+
+
+func _refresh_stage_selector_menu(max_browsable_index: int) -> void:
+	var popup := stage_selector_button.get_popup()
+	popup.clear()
+	popup.add_theme_font_size_override("font_size", 28)
+	popup.add_theme_constant_override("v_separation", 12)
+	for index in range(stage_ids.size()):
+		var stage := STAGE_CATALOG.get_stage(stage_ids[index])
+		var stage_number := int(stage.get("number", index + 1))
+		var display_name := String(stage.get("display_name", "미지의 침입자"))
+		popup.add_check_item(
+			"STAGE %02d  ·  %s" % [stage_number, display_name],
+			index
+		)
+		popup.set_item_checked(index, index == selected_stage_index)
+		popup.set_item_disabled(index, index > max_browsable_index)
 
 
 func _set_stage_arrow_visual(button: Button, enabled: bool) -> void:
@@ -3017,7 +3049,7 @@ func _refresh_stage_card() -> void:
 	var duration_seconds := float(stage.get("run_duration_seconds", 0.0))
 	var minutes := int(round(duration_seconds / 60.0))
 
-	stage_number_label.text = "STAGE %02d" % stage_number
+	stage_selector_button.text = "STAGE %02d  ▾" % stage_number
 	stage_name_label.text = String(stage.get("display_name", "미지의 침입자"))
 	hero_name_label.text = hero_name
 	stage_description_label.text = String(

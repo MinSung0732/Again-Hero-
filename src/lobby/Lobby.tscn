@@ -359,7 +359,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 92)
 layout_mode = 2
 
-[node name="StageNumber" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
+[node name="StageNumber" type="MenuButton" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
 layout_mode = 1
 anchor_right = 1.0
 offset_top = 72.0
@@ -367,9 +367,11 @@ offset_bottom = 96.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
 theme_override_font_sizes/font_size = 24
-text = "STAGE 01"
-horizontal_alignment = 1
-vertical_alignment = 1
+mouse_default_cursor_shape = 2
+tooltip_text = "스테이지 바로 선택"
+flat = true
+text = "STAGE 01  ▾"
+alignment = 1
 
 [node name="StageName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
 layout_mode = 1
@@ -1049,5 +1051,4 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
 text = "기타"
-
 
