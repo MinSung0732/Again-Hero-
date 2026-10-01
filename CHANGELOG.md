@@ -1,3 +1,10 @@
+### Lobby header two-line info layout
+- 좌측 골드 HUD를 `골드` / 실제 골드 값의 2줄 구조로 분리.
+- 우측 최고 해금 HUD를 `최고 해금` / `Stage N`의 2줄 구조로 분리해 중앙 로고와의 가로 충돌을 줄임.
+- 기존 `ResourceLabel`, `ProgressLabel`은 숨긴 상태 데이터 소스로 유지하고, 화면 표시용 전용 라벨 4개를 생성해 제목/값의 폰트 크기와 정렬을 독립 조절.
+- `_refresh_header()`에서 실제 골드 값과 최고 해금 스테이지가 새 2줄 HUD 값 라벨에 동기화되도록 연결.
+- 중앙 로고/던전 카드/하단 네비/스테이지 로직은 변경하지 않음.
+
 ### Lobby header center-mask pass
 - 좌/우 사이드바 높이를 더 줄여 얇은 HUD 바처럼 보이도록 조정하고 중앙 로고 뒤쪽까지 살짝 연장.
 - 중앙에 불투명 `HeaderCenterMask`를 추가해 좌/우 `side_frame.svg`의 안쪽 금색 상/하 테두리가 중앙을 관통하지 않도록 실제로 끊음.
