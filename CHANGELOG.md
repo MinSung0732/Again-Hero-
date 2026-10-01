@@ -1,3 +1,8 @@
+### Lobby header vertical scale refinement
+- 좌우 wing의 세로 점유율을 48%에서 60%로 높여 2줄 텍스트 위아래에 안정적인 프레임 여백을 확보.
+- 중앙 로고는 기존 중앙 슬롯과 가로 비율을 유지하면서 위아래로 8px씩 확대해 좌우 패널의 높이 증가와 균형을 맞춤.
+- 기존 중앙 정렬, 아이콘 크기, 3영역 경계와 던전 카드/하단 네비/스테이지 로직은 유지.
+
 ### Lobby header logo frame removal and text centering
 - 중앙 로고 뒤의 `logo_backplate.svg` 렌더링을 제거해 로고 주변 보라색 외곽 테두리를 삭제.
 - 중앙 로고는 비율 유지 cover 방식으로 중앙 슬롯 전체 높이를 채우고 슬롯 경계에서 좌우 장식만 자연스럽게 잘리도록 조정.

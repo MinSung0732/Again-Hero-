@@ -774,9 +774,9 @@ func _apply_new_ui_assets() -> void:
 		left_wing.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		left_wing.stretch_mode = TextureRect.STRETCH_SCALE
 		left_wing.anchor_left = 0.0
-		left_wing.anchor_top = 0.28
+		left_wing.anchor_top = 0.22
 		left_wing.anchor_right = 1.0
-		left_wing.anchor_bottom = 0.76
+		left_wing.anchor_bottom = 0.82
 		left_wing.z_index = 0
 		gold_plate.add_child(left_wing)
 
@@ -789,9 +789,9 @@ func _apply_new_ui_assets() -> void:
 		right_wing.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		right_wing.stretch_mode = TextureRect.STRETCH_SCALE
 		right_wing.anchor_left = 0.0
-		right_wing.anchor_top = 0.28
+		right_wing.anchor_top = 0.22
 		right_wing.anchor_right = 1.0
-		right_wing.anchor_bottom = 0.76
+		right_wing.anchor_bottom = 0.82
 		right_wing.z_index = 0
 		progress_plate.add_child(right_wing)
 
@@ -941,6 +941,8 @@ func _apply_new_ui_assets() -> void:
 		logo.anchor_top = 0.0
 		logo.anchor_right = 1.0
 		logo.anchor_bottom = 1.0
+		logo.offset_top = -8.0
+		logo.offset_bottom = 8.0
 		logo.z_index = 2
 		center_slot.add_child(logo)
 
