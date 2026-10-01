@@ -36,6 +36,13 @@ const UI_LOBBY_NAV_TEAM_ICON_PATH := UI_LOBBY_FOOTER_DIR + "/icon_team.svg"
 const UI_LOBBY_NAV_MAIN_ICON_PATH := UI_LOBBY_FOOTER_DIR + "/icon_main.svg"
 const UI_LOBBY_NAV_RESEARCH_ICON_PATH := UI_LOBBY_FOOTER_DIR + "/icon_research.svg"
 const UI_LOBBY_NAV_OTHER_ICON_PATH := UI_LOBBY_FOOTER_DIR + "/icon_other.svg"
+const UI_LOBBY_STAGE_DIR := "res://assets/art/UI/lobby_stage"
+const UI_LOBBY_STAGE_TITLE_PATH := UI_LOBBY_STAGE_DIR + "/section_title.svg"
+const UI_LOBBY_STAGE_META_PATH := UI_LOBBY_STAGE_DIR + "/stage_meta.svg"
+const UI_LOBBY_STAGE_PORTRAIT_PATH := UI_LOBBY_STAGE_DIR + "/portrait_frame.svg"
+const UI_LOBBY_STAGE_INFO_PATH := UI_LOBBY_STAGE_DIR + "/info_panel.svg"
+const UI_LOBBY_STAGE_ENTER_PATH := UI_LOBBY_STAGE_DIR + "/enter_button.svg"
+const UI_LOBBY_STAGE_ENTER_PRESSED_PATH := UI_LOBBY_STAGE_DIR + "/enter_button_pressed.svg"
 const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_background.png"
 
@@ -485,6 +492,29 @@ func _make_nav_tab_style(texture: Texture2D) -> StyleBoxTexture:
 	style.content_margin_top = 60.0
 	style.content_margin_right = 12.0
 	style.content_margin_bottom = 8.0
+	return style
+
+
+func _make_svg_style(
+	path: String,
+	texture_margin_x: float,
+	texture_margin_y: float,
+	content_margin_x: float = 0.0,
+	content_margin_y: float = 0.0
+) -> StyleBoxTexture:
+	var texture := _load_svg_texture_direct(path)
+	if texture == null:
+		return null
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.texture_margin_left = texture_margin_x
+	style.texture_margin_top = texture_margin_y
+	style.texture_margin_right = texture_margin_x
+	style.texture_margin_bottom = texture_margin_y
+	style.content_margin_left = content_margin_x
+	style.content_margin_top = content_margin_y
+	style.content_margin_right = content_margin_x
+	style.content_margin_bottom = content_margin_y
 	return style
 
 
@@ -1088,23 +1118,19 @@ func _apply_enter_stage_button_skin() -> void:
 	if enter_stage_button == null:
 		return
 
-	var normal := _make_style(
-		Color("652b7d"),
-		Color("e9b84b"),
-		4,
-		8
+	var normal := _make_svg_style(
+		UI_LOBBY_STAGE_ENTER_PATH,
+		28.0,
+		24.0,
+		18.0,
+		12.0
 	)
-	var hover := _make_style(
-		Color("7b3596"),
-		Color("ffdf7d"),
-		4,
-		8
-	)
-	var pressed := _make_style(
-		Color("4f225f"),
-		Color("d59b37"),
-		4,
-		8
+	var pressed := _make_svg_style(
+		UI_LOBBY_STAGE_ENTER_PRESSED_PATH,
+		28.0,
+		24.0,
+		18.0,
+		12.0
 	)
 	var disabled := _make_style(
 		Color("302638"),
@@ -1112,13 +1138,14 @@ func _apply_enter_stage_button_skin() -> void:
 		3,
 		8
 	)
-	for style in [normal, hover, pressed, disabled]:
-		style.content_margin_top = 10.0
-		style.content_margin_bottom = 10.0
-		style.anti_aliasing = false
+	if normal == null or pressed == null:
+		return
+	disabled.content_margin_top = 10.0
+	disabled.content_margin_bottom = 10.0
+	disabled.anti_aliasing = false
 
 	enter_stage_button.add_theme_stylebox_override("normal", normal)
-	enter_stage_button.add_theme_stylebox_override("hover", hover)
+	enter_stage_button.add_theme_stylebox_override("hover", normal)
 	enter_stage_button.add_theme_stylebox_override("pressed", pressed)
 	enter_stage_button.add_theme_stylebox_override("disabled", disabled)
 	enter_stage_button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
@@ -1216,6 +1243,26 @@ func _install_stage_entry_hud() -> void:
 	section_subtitle.offset_top = 68.0
 	section_subtitle.offset_bottom = 100.0
 
+	var old_section_frame := section_header.get_node_or_null("SectionHudFrame")
+	if old_section_frame != null:
+		section_header.remove_child(old_section_frame)
+		old_section_frame.free()
+	var section_texture := _load_svg_texture_direct(UI_LOBBY_STAGE_TITLE_PATH)
+	if section_texture != null:
+		var section_frame := TextureRect.new()
+		section_frame.name = "SectionHudFrame"
+		section_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		section_frame.texture = section_texture
+		section_frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		section_frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		section_frame.stretch_mode = TextureRect.STRETCH_SCALE
+		section_frame.anchor_left = 0.08
+		section_frame.anchor_top = 0.0
+		section_frame.anchor_right = 0.92
+		section_frame.anchor_bottom = 1.0
+		section_header.add_child(section_frame)
+		section_header.move_child(section_frame, 0)
+
 	stage_meta.custom_minimum_size = Vector2(0.0, 100.0)
 	stage_number_label.offset_top = 6.0
 	stage_number_label.offset_bottom = 36.0
@@ -1304,6 +1351,16 @@ func _install_stage_entry_hud() -> void:
 			jewel.rotation = PI * 0.25
 			meta_plate.add_child(jewel)
 
+	var meta_style := _make_svg_style(
+		UI_LOBBY_STAGE_META_PATH,
+		30.0,
+		22.0,
+		8.0,
+		6.0
+	)
+	if meta_style != null:
+		meta_plate.add_theme_stylebox_override("panel", meta_style)
+
 	for stale_name in ["SectionTitlePlate", "HeaderRuleLeft", "HeaderRuleRight"]:
 		var stale_header_node := section_header.get_node_or_null(stale_name)
 		if stale_header_node != null:
@@ -1318,6 +1375,15 @@ func _install_stage_entry_hud() -> void:
 	portrait_frame.anchor_top = 0.080
 	portrait_frame.anchor_right = 0.860
 	portrait_frame.anchor_bottom = 0.525
+	var portrait_style := _make_svg_style(
+		UI_LOBBY_STAGE_PORTRAIT_PATH,
+		30.0,
+		30.0,
+		14.0,
+		14.0
+	)
+	if portrait_style != null:
+		portrait_frame.add_theme_stylebox_override("panel", portrait_style)
 
 	var hero_name_plate := hero_name_label.get_parent().get_node_or_null(
 		"HeroNamePlate"
@@ -1411,6 +1477,18 @@ func _install_stage_entry_hud() -> void:
 		)
 		bottom_panel.add_child(description_backing)
 		bottom_panel.move_child(description_backing, 0)
+	var description_style := _make_svg_style(
+		UI_LOBBY_STAGE_INFO_PATH,
+		24.0,
+		18.0,
+		10.0,
+		8.0
+	)
+	if description_style != null:
+		description_backing.add_theme_stylebox_override(
+			"panel",
+			description_style
+		)
 
 	var info_backing := bottom_panel.get_node_or_null("EntryInfoBacking") as Panel
 	if info_backing == null:
@@ -1444,6 +1522,15 @@ func _install_stage_entry_hud() -> void:
 			divider.offset_left = -0.5
 			divider.offset_right = 0.5
 			info_backing.add_child(divider)
+	var info_style := _make_svg_style(
+		UI_LOBBY_STAGE_INFO_PATH,
+		24.0,
+		18.0,
+		10.0,
+		8.0
+	)
+	if info_style != null:
+		info_backing.add_theme_stylebox_override("panel", info_style)
 
 	stage_description_label.anchor_left = 0.070
 	stage_description_label.anchor_top = 0.035
