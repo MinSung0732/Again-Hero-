@@ -806,7 +806,7 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_ultimate_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_ultimate_disabled")
-text = "1  원형 포위\n마력 70 필요"
+text = "1  원형 포위\n코스트 70 필요"
 disabled = true
 
 [node name="CooldownBar" type="ProgressBar" parent="HUD/DemonUltimatePanel/UltimateButtons/Ultimate1"]
@@ -839,7 +839,7 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_ultimate_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_ultimate_disabled")
-text = "2  일직선 공세\n마력 40 필요"
+text = "2  일직선 공세\n코스트 40 필요"
 disabled = true
 
 [node name="CooldownBar" type="ProgressBar" parent="HUD/DemonUltimatePanel/UltimateButtons/Ultimate2"]
@@ -872,7 +872,7 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_ultimate_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_ultimate_disabled")
-text = "3  사각 포위\n마력 100 필요"
+text = "3  사각 포위\n코스트 100 필요"
 disabled = true
 
 [node name="CooldownBar" type="ProgressBar" parent="HUD/DemonUltimatePanel/UltimateButtons/Ultimate3"]

@@ -298,11 +298,36 @@ focus_mode = 0
 theme_override_font_sizes/font_size = 23
 text = "스킬 편성"
 
-[node name="ListTitle" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+[node name="ListHeader" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ListTitle" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
 text = "몬스터 컬렉션"
-horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CostSortButtons" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader"]
+custom_minimum_size = Vector2(300, 54)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="LowButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/CostSortButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 19
+text = "낮은순"
+
+[node name="HighButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/CostSortButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 19
+text = "높은순"
 
 [node name="MonsterScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2

@@ -90,7 +90,9 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var team_slot_3_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow/Slot3Button
 @onready var team_mode_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/ModeTabs/TeamModeButton
 @onready var skill_mode_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/ModeTabs/SkillModeButton
-@onready var formation_list_title: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/ListTitle
+@onready var formation_list_title: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/ListTitle
+@onready var formation_cost_low_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/CostSortButtons/LowButton
+@onready var formation_cost_high_button: Button = $SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/CostSortButtons/HighButton
 @onready var team_monster_grid: GridContainer = $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterScroll/MonsterGrid
 @onready var team_status_label: Label = $SafeArea/Layout/Content/TeamTab/TeamLayout/Status
 
@@ -162,6 +164,7 @@ var team_selected_ids: Array = []
 var demon_skill_catalog_ids: Array = []
 var demon_skill_selected_ids: Array = []
 var formation_mode: String = "team"
+var formation_cost_descending := false
 
 var panel_style := StyleBoxFlat.new()
 var header_style := StyleBoxFlat.new()
@@ -1803,7 +1806,7 @@ func _apply_lobby_visual_polish() -> void:
 		Color("aa9bb4")
 	)
 	_set_lobby_label_style(
-		^"SafeArea/Layout/Content/TeamTab/TeamLayout/ListTitle",
+		^"SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/ListTitle",
 		28,
 		Color("ead8ef")
 	)
@@ -1813,6 +1816,7 @@ func _apply_lobby_visual_polish() -> void:
 		_apply_lobby_button_skin(slot_button, false, 20)
 	_apply_lobby_button_skin(team_mode_button, true, 23)
 	_apply_lobby_button_skin(skill_mode_button, false, 23)
+	_refresh_formation_cost_sort_buttons()
 
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/ResearchTab/ResearchLayout/Title",
@@ -2010,6 +2014,12 @@ func _connect_navigation() -> void:
 	team_slot_3_button.pressed.connect(_on_team_slot_pressed.bind(2))
 	team_mode_button.pressed.connect(_show_formation_mode.bind("team"))
 	skill_mode_button.pressed.connect(_show_formation_mode.bind("skill"))
+	formation_cost_low_button.pressed.connect(
+		_on_formation_cost_sort_selected.bind(false)
+	)
+	formation_cost_high_button.pressed.connect(
+		_on_formation_cost_sort_selected.bind(true)
+	)
 	monster_detail_close_button.pressed.connect(_close_monster_detail)
 	$MonsterDetailOverlay/Dim.gui_input.connect(_on_monster_detail_dim_input)
 
@@ -2406,6 +2416,49 @@ func _show_formation_mode(mode: String) -> void:
 	_refresh_formation_mode()
 
 
+func _on_formation_cost_sort_selected(descending: bool) -> void:
+	if formation_cost_descending == descending:
+		return
+	formation_cost_descending = descending
+	_refresh_formation_cost_sort_buttons()
+	_refresh_formation_mode()
+
+
+func _refresh_formation_cost_sort_buttons() -> void:
+	_apply_lobby_button_skin(
+		formation_cost_low_button,
+		not formation_cost_descending,
+		19
+	)
+	_apply_lobby_button_skin(
+		formation_cost_high_button,
+		formation_cost_descending,
+		19
+	)
+
+
+func _formation_cost_before(left_id: Variant, right_id: Variant) -> bool:
+	var left := String(left_id)
+	var right := String(right_id)
+	var left_cost := _formation_item_cost(left)
+	var right_cost := _formation_item_cost(right)
+	if is_equal_approx(left_cost, right_cost):
+		return left < right
+	return left_cost > right_cost if formation_cost_descending else left_cost < right_cost
+
+
+func _formation_item_cost(item_id: String) -> float:
+	if formation_mode == "skill":
+		return float(DEMON_ULTIMATES.get_skill(item_id).get("mana_cost", 0.0))
+	return MONSTER_CATALOG.get_base_cost(item_id)
+
+
+func _sorted_formation_ids(source_ids: Array) -> Array:
+	var sorted_ids: Array = source_ids.duplicate()
+	sorted_ids.sort_custom(_formation_cost_before)
+	return sorted_ids
+
+
 func _refresh_formation_mode() -> void:
 	var showing_team := formation_mode == "team"
 	_apply_lobby_button_skin(team_mode_button, showing_team, 23)
@@ -2413,11 +2466,11 @@ func _refresh_formation_mode() -> void:
 	team_mode_button.disabled = showing_team
 	skill_mode_button.disabled = not showing_team
 	if showing_team:
-		formation_list_title.text = "몬스터 목록"
+		formation_list_title.text = "몬스터 목록 · 코스트"
 		_refresh_team_preview()
 		team_status_label.text = "몬스터 카드를 위아래로 스크롤해 편성을 변경할 수 있습니다."
 	else:
-		formation_list_title.text = "마왕 스킬 목록"
+		formation_list_title.text = "마왕 스킬 목록 · 코스트"
 		_refresh_demon_skill_preview()
 		team_status_label.text = "마왕 스킬 카드를 위아래로 스크롤해 편성을 변경할 수 있습니다."
 
@@ -2452,7 +2505,7 @@ func _clear_team_monster_cards() -> void:
 func _rebuild_team_monster_cards() -> void:
 	_clear_team_monster_cards()
 
-	for raw_id in team_catalog_ids:
+	for raw_id in _sorted_formation_ids(team_catalog_ids):
 		var monster_id := String(raw_id)
 		team_monster_grid.add_child(_create_team_monster_card(monster_id))
 
@@ -2503,7 +2556,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	info.add_theme_font_size_override("font_size", 18)
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	if available:
-		info.text = "%s · 비용 %.1f%s" % [
+		info.text = "%s · 코스트 %.1f%s" % [
 			_team_monster_role_label(monster_id),
 			float(data.get("base_cost", 0.0)),
 			" · 편성 중" if selected else "",
@@ -2602,7 +2655,7 @@ func _refresh_demon_skill_preview() -> void:
 	]
 
 	_clear_team_monster_cards()
-	for raw_id in demon_skill_catalog_ids:
+	for raw_id in _sorted_formation_ids(demon_skill_catalog_ids):
 		team_monster_grid.add_child(
 			_create_demon_skill_card(String(raw_id))
 		)
@@ -2613,7 +2666,7 @@ func _refresh_demon_skill_slot(button: Button, slot_index: int) -> void:
 	if slot_index < demon_skill_selected_ids.size():
 		var skill_id := String(demon_skill_selected_ids[slot_index])
 		var skill := DEMON_ULTIMATES.get_skill(skill_id)
-		button.text = "%d  ◆\n%s\n마력 %d · 탭해서 해제" % [
+		button.text = "%d  ◆\n%s\n코스트 %d · 탭해서 해제" % [
 			slot_index + 1,
 			String(skill.get("name", skill_id)),
 			int(round(float(skill.get("mana_cost", 0.0)))),
@@ -2662,7 +2715,7 @@ func _create_demon_skill_card(skill_id: String) -> Control:
 	vbox.add_child(title)
 
 	var info := Label.new()
-	info.text = "마력 %d · 쿨 %.0f초\n%s" % [
+	info.text = "코스트 %d · 쿨 %.0f초\n%s" % [
 		int(round(float(skill.get("mana_cost", 0.0)))),
 		float(skill.get("cooldown", 0.0)),
 		String(skill.get("description", "")),
@@ -2810,7 +2863,7 @@ func _build_normal_detail_text(
 	var lines: PackedStringArray = []
 	lines.append("기본 스탯")
 	lines.append("역할  %s" % role_label)
-	lines.append("소환 비용  %.1f" % float(data.get("base_cost", 0.0)))
+	lines.append("소환 코스트  %.1f" % float(data.get("base_cost", 0.0)))
 	lines.append("마왕 EXP  %.1f" % float(data.get("summon_exp", 0.0)))
 
 	var hp_value = stats.get("max_hp")
@@ -3055,7 +3108,7 @@ func _team_collection_card_text(monster_id: String) -> String:
 		if monster_id in team_selected_ids
 		else "탭해서 편성"
 	)
-	return "%s\n%s · 비용 %.0f\n%s" % [
+	return "%s\n%s · 코스트 %.0f\n%s" % [
 		_team_monster_name(monster_id),
 		_team_monster_role_label(monster_id),
 		_team_monster_cost(monster_id),

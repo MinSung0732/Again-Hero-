@@ -63,7 +63,7 @@ const RESEARCH = {
 	"summon_efficiency": {
 		"id": "summon_efficiency",
 		"name": "소환 효율화",
-		"description": "소환 비용 감소 연구. 고레벨 구간일수록 효율이 감소합니다.",
+		"description": "소환 코스트 감소 연구. 고레벨 구간일수록 효율이 감소합니다.",
 		"max_level": 20,
 		"base_cost": 100,
 		"cost_growth": 1.15,

@@ -1575,7 +1575,7 @@ func _on_command_changed(current_value: float, max_value: float) -> void:
 				_get_catalog_monster_name(monster_id)
 			)
 		if slot_index < summon_slot_cost_labels.size():
-			summon_slot_cost_labels[slot_index].text = "비용 %.1f" % cost
+			summon_slot_cost_labels[slot_index].text = "코스트 %.1f" % cost
 		var cannot_summon := (
 			mutation_panel.visible
 			or current_value + 0.001 < cost
@@ -1656,7 +1656,7 @@ func _configure_battle_loadout_buttons() -> void:
 			var base_cost := 0.0
 			if typeof(catalog_data) == TYPE_DICTIONARY:
 				base_cost = float(catalog_data.get("base_cost", 0.0))
-			summon_slot_cost_labels[slot_index].text = "비용 %.1f" % base_cost
+			summon_slot_cost_labels[slot_index].text = "코스트 %.1f" % base_cost
 		button.pressed.connect(
 			_on_summon_slot_pressed.bind(slot_index)
 		)
@@ -2784,11 +2784,11 @@ func _refresh_demon_ultimate_buttons() -> void:
 			]
 		elif ready:
 			if skill_id == "line_assault":
-				button.text = "%s\n마력 %d · 방향 선택" % [button_title, int(round(mana_cost))]
+				button.text = "%s\n코스트 %d · 방향 선택" % [button_title, int(round(mana_cost))]
 			else:
-				button.text = "%s\n마력 %d · 발동 가능" % [button_title, int(round(mana_cost))]
+				button.text = "%s\n코스트 %d · 발동 가능" % [button_title, int(round(mana_cost))]
 		else:
-			button.text = "%s\n마력 %d 필요" % [button_title, int(round(mana_cost))]
+			button.text = "%s\n코스트 %d 필요" % [button_title, int(round(mana_cost))]
 
 func _on_demon_ultimate_pressed(skill_id: String) -> void:
 	for index in demon_ultimate_ui_skills.size():
@@ -2813,7 +2813,7 @@ func _on_demon_ultimate_pressed(skill_id: String) -> void:
 			ultimate_state.get("charge", demon_mana_current)
 		)
 		if current_charge + 0.001 < mana_cost:
-			status_label.text = "마력이 부족합니다. 일직선 공세는 마력 %d가 필요합니다." % int(round(mana_cost))
+			status_label.text = "마력이 부족합니다. 일직선 공세는 코스트 %d가 필요합니다." % int(round(mana_cost))
 			return
 		var remaining := float(
 			ultimate_state.get(
@@ -2839,7 +2839,7 @@ func _on_demon_ultimate_pressed(skill_id: String) -> void:
 		)
 	else:
 		var mana_cost := maxf(float(skill.get("mana_cost", 100.0)), 0.0)
-		status_label.text = "마력이 부족합니다. %s은(는) 마력 %d가 필요합니다." % [String(skill.get("name", "마력 기술")), int(round(mana_cost))]
+		status_label.text = "마력이 부족합니다. %s은(는) 코스트 %d가 필요합니다." % [String(skill.get("name", "마력 기술")), int(round(mana_cost))]
 
 func _open_demon_direction_select() -> void:
 	var direction_choices: Array = [
