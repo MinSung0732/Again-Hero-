@@ -180,6 +180,8 @@ var nav_button_style: StyleBox = StyleBoxFlat.new()
 var nav_button_active_style: StyleBox = StyleBoxFlat.new()
 var primary_button_style := StyleBoxFlat.new()
 var secondary_button_style := StyleBoxFlat.new()
+var primary_button_disabled_style := StyleBoxFlat.new()
+var secondary_button_disabled_style := StyleBoxFlat.new()
 var formation_card_style := StyleBoxFlat.new()
 var formation_card_selected_style := StyleBoxFlat.new()
 var stage_selector_item_style := StyleBoxFlat.new()
@@ -313,6 +315,24 @@ func _build_styles() -> void:
 		Color("685674"),
 		3,
 		18
+	)
+	primary_button_disabled_style = (
+		primary_button_style.duplicate() as StyleBoxFlat
+	)
+	primary_button_disabled_style.bg_color = (
+		primary_button_disabled_style.bg_color.darkened(0.38)
+	)
+	primary_button_disabled_style.border_color = (
+		primary_button_disabled_style.border_color.darkened(0.28)
+	)
+	secondary_button_disabled_style = (
+		secondary_button_style.duplicate() as StyleBoxFlat
+	)
+	secondary_button_disabled_style.bg_color = (
+		secondary_button_disabled_style.bg_color.darkened(0.22)
+	)
+	secondary_button_disabled_style.border_color = (
+		secondary_button_disabled_style.border_color.darkened(0.22)
 	)
 	formation_card_style = stage_card_style.duplicate() as StyleBoxFlat
 	formation_card_selected_style = primary_button_style.duplicate() as StyleBoxFlat
@@ -2554,14 +2574,15 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	vbox.add_child(title)
 
 	var info := Label.new()
+	info.custom_minimum_size = Vector2(0.0, 26.0)
 	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	info.add_theme_font_size_override("font_size", 18)
-	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.autowrap_mode = TextServer.AUTOWRAP_OFF
+	info.clip_text = true
 	if available:
-		info.text = "%s · 코스트 %.1f%s" % [
+		info.text = "%s · 코스트 %.1f" % [
 			_team_monster_role_label(monster_id),
 			float(data.get("base_cost", 0.0)),
-			" · 편성 중" if selected else "",
 		]
 	else:
 		var required := maxi(int(data.get("shards_required", 1)), 1)
@@ -2574,6 +2595,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	vbox.add_child(info)
 
 	var actions := HBoxContainer.new()
+	actions.custom_minimum_size = Vector2(0.0, 50.0)
 	actions.add_theme_constant_override("separation", 6)
 	vbox.add_child(actions)
 
@@ -2590,6 +2612,18 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	team_button.add_theme_stylebox_override(
 		"normal",
 		primary_button_style if selected else secondary_button_style
+	)
+	team_button.add_theme_stylebox_override(
+		"disabled",
+		(
+			primary_button_disabled_style
+			if selected
+			else secondary_button_disabled_style
+		)
+	)
+	team_button.add_theme_color_override(
+		"font_disabled_color",
+		Color("9a8fa1")
 	)
 	team_button.add_theme_stylebox_override("hover", primary_button_style)
 	team_button.add_theme_stylebox_override("pressed", primary_button_style)
@@ -2742,6 +2776,18 @@ func _create_demon_skill_card(skill_id: String) -> Control:
 	select_button.add_theme_stylebox_override(
 		"normal",
 		primary_button_style if selected else secondary_button_style
+	)
+	select_button.add_theme_stylebox_override(
+		"disabled",
+		(
+			primary_button_disabled_style
+			if selected
+			else secondary_button_disabled_style
+		)
+	)
+	select_button.add_theme_color_override(
+		"font_disabled_color",
+		Color("9a8fa1")
 	)
 	select_button.add_theme_stylebox_override("hover", primary_button_style)
 	select_button.add_theme_stylebox_override("pressed", primary_button_style)
