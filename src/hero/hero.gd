@@ -102,6 +102,13 @@ const STAGE1_ARCANE_FIELD_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_arca
 const STAGE1_ARCANE_PIERCER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_arcane_piercer_pixabay.mp3"
 const STAGE1_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_hit_pixabay.mp3"
 const STAGE1_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_death_pixabay.mp3"
+const STAGE1_LEVEL_UP_AUDIO_PATH := "res://assets/audio/sfx/level_up_rise07_cc0.mp3"
+const STAGE2_COMBO_SLASH_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_combo_slash_pixabay.mp3"
+const STAGE2_BLADE_STORM_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_blade_storm_pixabay.mp3"
+const STAGE2_ASSASSINATION_START_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_assassination_start_pixabay.mp3"
+const STAGE2_ASSASSINATION_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_assassination_hit_pixabay.mp3"
+const STAGE2_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_hit_pixabay.mp3"
+const STAGE2_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_death_pixabay.mp3"
 
 # Hero SFX loudness defaults are anchored to the established Stage 7-10 mix.
 # Source loudness and repetition density may justify a quieter per-asset value,
@@ -504,6 +511,15 @@ var stage1_arcane_field_audio: AudioStreamPlayer = null
 var stage1_arcane_piercer_audio: AudioStreamPlayer = null
 var stage1_hit_audio: AudioStreamPlayer = null
 var stage1_death_audio: AudioStreamPlayer = null
+var stage1_level_up_audio: AudioStreamPlayer = null
+var rogue_combo_audio_pool: Array[AudioStreamPlayer] = []
+var rogue_combo_audio_cursor: int = 0
+var rogue_blade_storm_audio: AudioStreamPlayer = null
+var rogue_assassination_start_audio: AudioStreamPlayer = null
+var rogue_assassination_hit_audio_pool: Array[AudioStreamPlayer] = []
+var rogue_assassination_hit_audio_cursor: int = 0
+var rogue_hit_audio: AudioStreamPlayer = null
+var rogue_death_audio: AudioStreamPlayer = null
 var purifier_basic_audio: AudioStreamPlayer = null
 var purifier_shield_create_audio: AudioStreamPlayer = null
 var purifier_shield_break_audio: AudioStreamPlayer = null
@@ -1513,6 +1529,13 @@ func _apply_level_up_effect_visual() -> void:
 
 func _play_level_up_feedback() -> void:
 	if (
+		level_up_effect.sprite_frames == null
+		or not level_up_effect.sprite_frames.has_animation("level_up")
+		or level_up_effect.sprite_frames.get_frame_count("level_up") <= 0
+	):
+		_apply_level_up_effect_visual()
+
+	if (
 		level_up_effect.sprite_frames != null
 		and level_up_effect.sprite_frames.has_animation("level_up")
 		and level_up_effect.sprite_frames.get_frame_count("level_up") > 0
@@ -1523,7 +1546,9 @@ func _play_level_up_feedback() -> void:
 		level_up_effect.visible = true
 		level_up_effect.play(&"level_up")
 
-	if is_instance_valid(level_up_audio):
+	if hero_archetype == "ranged_kiter":
+		_play_stage1_audio(&"level_up")
+	elif is_instance_valid(level_up_audio):
 		level_up_audio.stop()
 		level_up_audio.play()
 
@@ -5746,6 +5771,7 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 		"stab",
 		direction
 	)
+	_play_rogue_combo_audio(rogue_combo_index)
 
 	_add_ultimate_charge(
 		float(ultimate_config.get("charge_on_attack", 0.0))
@@ -5938,6 +5964,7 @@ func _start_rogue_slash() -> void:
 	shield_max_hp = float(max_hp) * shield_ratio
 	shield_hp = shield_max_hp
 
+	_play_rogue_blade_storm_audio()
 	_apply_rogue_slash_tick()
 	queue_redraw()
 
@@ -6058,6 +6085,7 @@ func _start_rogue_assassination() -> void:
 	)
 	velocity = Vector2.ZERO
 	modulate.a = 0.18
+	_play_rogue_assassination_start_audio()
 	ultimate_used.emit(
 		String(ultimate_config.get("id", "shadow_assassination")),
 		String(ultimate_config.get("name", "급습-암살"))
@@ -6244,6 +6272,7 @@ func _update_rogue_assassination(delta: float) -> void:
 		"assassinate",
 		-approach_direction
 	)
+	_play_rogue_assassination_hit_audio()
 
 	rogue_assassination_hits_left -= 1
 	if rogue_assassination_hits_left <= 0:
@@ -8783,6 +8812,10 @@ func _ensure_stage1_audio_runtime() -> void:
 		stage1_death_audio = _create_stage1_audio_player(
 			STAGE1_DEATH_AUDIO_PATH, HERO_SFX_DB_DEATH, 0.72
 		)
+	if not is_instance_valid(stage1_level_up_audio):
+		stage1_level_up_audio = _create_stage1_audio_player(
+			STAGE1_LEVEL_UP_AUDIO_PATH, HERO_SFX_DB_REGULAR_SKILL, 1.0
+		)
 
 
 func _play_stage1_audio(slot: StringName) -> void:
@@ -8801,10 +8834,150 @@ func _play_stage1_audio(slot: StringName) -> void:
 			player = stage1_hit_audio
 		&"death":
 			player = stage1_death_audio
+		&"level_up":
+			player = stage1_level_up_audio
 	if not is_instance_valid(player) or player.stream == null:
 		return
 	player.stop()
 	player.play()
+
+
+func _create_hero_sfx_player(
+	audio_path: String,
+	volume_db: float,
+	pitch_scale: float = 1.0
+) -> AudioStreamPlayer:
+	var player := AudioStreamPlayer.new()
+	player.bus = &"SFX"
+	player.volume_db = volume_db
+	player.pitch_scale = pitch_scale
+	if ResourceLoader.exists(audio_path):
+		var stream = load(audio_path)
+		if stream is AudioStream:
+			player.stream = stream
+	add_child(player)
+	return player
+
+
+func _ensure_rogue_audio_runtime() -> void:
+	if hero_archetype != "rogue_combo":
+		return
+
+	if rogue_combo_audio_pool.is_empty():
+		for index in range(3):
+			rogue_combo_audio_pool.append(
+				_create_hero_sfx_player(
+					STAGE2_COMBO_SLASH_AUDIO_PATH,
+					HERO_SFX_DB_PRIMARY_ATTACK - 6.0,
+					1.0
+				)
+			)
+
+	if not is_instance_valid(rogue_blade_storm_audio):
+		rogue_blade_storm_audio = _create_hero_sfx_player(
+			STAGE2_BLADE_STORM_AUDIO_PATH,
+			HERO_SFX_DB_REGULAR_SKILL,
+			0.92
+		)
+
+	if not is_instance_valid(rogue_assassination_start_audio):
+		rogue_assassination_start_audio = _create_hero_sfx_player(
+			STAGE2_ASSASSINATION_START_AUDIO_PATH,
+			HERO_SFX_DB_HEAVY_SKILL,
+			0.82
+		)
+
+	if rogue_assassination_hit_audio_pool.is_empty():
+		for index in range(3):
+			rogue_assassination_hit_audio_pool.append(
+				_create_hero_sfx_player(
+					STAGE2_ASSASSINATION_HIT_AUDIO_PATH,
+					HERO_SFX_DB_HIT,
+					0.98
+				)
+			)
+
+	if not is_instance_valid(rogue_hit_audio):
+		rogue_hit_audio = _create_hero_sfx_player(
+			STAGE2_HIT_AUDIO_PATH,
+			HERO_SFX_DB_HIT,
+			1.30
+		)
+
+	if not is_instance_valid(rogue_death_audio):
+		rogue_death_audio = _create_hero_sfx_player(
+			STAGE2_DEATH_AUDIO_PATH,
+			HERO_SFX_DB_DEATH,
+			0.96
+		)
+
+
+func _play_rogue_combo_audio(combo_index: int) -> void:
+	_ensure_rogue_audio_runtime()
+	if rogue_combo_audio_pool.is_empty():
+		return
+	var player := rogue_combo_audio_pool[
+		rogue_combo_audio_cursor % rogue_combo_audio_pool.size()
+	]
+	rogue_combo_audio_cursor = (
+		rogue_combo_audio_cursor + 1
+	) % rogue_combo_audio_pool.size()
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	var pitch_steps: Array[float] = [1.14, 1.06, 0.98, 0.92]
+	player.pitch_scale = pitch_steps[
+		clampi(combo_index, 0, pitch_steps.size() - 1)
+	]
+	player.stop()
+	player.play()
+
+
+func _play_rogue_blade_storm_audio() -> void:
+	_ensure_rogue_audio_runtime()
+	if is_instance_valid(rogue_blade_storm_audio) and rogue_blade_storm_audio.stream != null:
+		rogue_blade_storm_audio.stop()
+		rogue_blade_storm_audio.play()
+
+
+func _play_rogue_assassination_start_audio() -> void:
+	_ensure_rogue_audio_runtime()
+	if (
+		is_instance_valid(rogue_assassination_start_audio)
+		and rogue_assassination_start_audio.stream != null
+	):
+		rogue_assassination_start_audio.stop()
+		rogue_assassination_start_audio.play()
+
+
+func _play_rogue_assassination_hit_audio() -> void:
+	_ensure_rogue_audio_runtime()
+	if rogue_assassination_hit_audio_pool.is_empty():
+		return
+	var player := rogue_assassination_hit_audio_pool[
+		rogue_assassination_hit_audio_cursor
+		% rogue_assassination_hit_audio_pool.size()
+	]
+	rogue_assassination_hit_audio_cursor = (
+		rogue_assassination_hit_audio_cursor + 1
+	) % rogue_assassination_hit_audio_pool.size()
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	player.stop()
+	player.play()
+
+
+func _play_rogue_hit_audio() -> void:
+	_ensure_rogue_audio_runtime()
+	if is_instance_valid(rogue_hit_audio) and rogue_hit_audio.stream != null:
+		rogue_hit_audio.stop()
+		rogue_hit_audio.play()
+
+
+func _play_rogue_death_audio() -> void:
+	_ensure_rogue_audio_runtime()
+	if is_instance_valid(rogue_death_audio) and rogue_death_audio.stream != null:
+		rogue_death_audio.stop()
+		rogue_death_audio.play()
 
 
 func _create_sage_audio_player(audio_path: String, volume_db: float, pitch_scale: float) -> AudioStreamPlayer:
@@ -18575,8 +18748,11 @@ func take_damage(amount: int, source: Node = null) -> bool:
 	hit_flash_timer = 0.12
 	hit_pose_timer = 0.23
 	_restart_stage1_animation("hit")
-	if hero_archetype == "ranged_kiter" and current_hp > 0:
-		_play_stage1_audio(&"hit")
+	if current_hp > 0:
+		if hero_archetype == "ranged_kiter":
+			_play_stage1_audio(&"hit")
+		elif hero_archetype == "rogue_combo":
+			_play_rogue_hit_audio()
 
 	if current_hp > 0 and applied_damage > 0:
 		_add_ultimate_charge(
@@ -18640,6 +18816,8 @@ func _begin_death_sequence() -> void:
 	is_dying = true
 	if hero_archetype == "ranged_kiter":
 		_play_stage1_audio(&"death")
+	elif hero_archetype == "rogue_combo":
+		_play_rogue_death_audio()
 	invulnerability_timer = 0.0
 	modulate.a = 1.0
 	velocity = Vector2.ZERO
