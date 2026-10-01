@@ -1105,25 +1105,31 @@ func _install_stage_entry_hud() -> void:
 	hero_name_label.z_index = 3
 
 	if portrait_inner != null:
-		var portrait_backdrop := portrait_inner.get_node_or_null("PortraitBackdrop") as TextureRect
-		if portrait_backdrop == null:
-			var portrait_background_texture := _load_png_texture_direct(
-				UI_LOBBY_BACKGROUND_PATH
-			)
-			if portrait_background_texture != null:
-				portrait_backdrop = TextureRect.new()
-				portrait_backdrop.name = "PortraitBackdrop"
-				portrait_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-				portrait_backdrop.texture = portrait_background_texture
-				portrait_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-				portrait_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-				portrait_backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-				portrait_backdrop.modulate = Color(0.62, 0.48, 0.72, 0.66)
-				portrait_backdrop.set_anchors_and_offsets_preset(
-					Control.PRESET_FULL_RECT
-				)
-				portrait_inner.add_child(portrait_backdrop)
-				portrait_inner.move_child(portrait_backdrop, 0)
+		var old_portrait_backdrop := portrait_inner.get_node_or_null(
+			"PortraitBackdrop"
+		)
+		if old_portrait_backdrop != null:
+			old_portrait_backdrop.queue_free()
+
+		var portrait_backdrop := ColorRect.new()
+		portrait_backdrop.name = "PortraitBackdrop"
+		portrait_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		portrait_backdrop.color = Color(0.035, 0.025, 0.055, 0.98)
+		portrait_backdrop.set_anchors_and_offsets_preset(
+			Control.PRESET_FULL_RECT
+		)
+		portrait_inner.add_child(portrait_backdrop)
+		portrait_inner.move_child(portrait_backdrop, 0)
+
+		var portrait_glow := ColorRect.new()
+		portrait_glow.name = "PortraitGlow"
+		portrait_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		portrait_glow.color = Color(0.16, 0.08, 0.22, 0.20)
+		portrait_glow.anchor_left = 0.10
+		portrait_glow.anchor_top = 0.06
+		portrait_glow.anchor_right = 0.90
+		portrait_glow.anchor_bottom = 0.94
+		portrait_backdrop.add_child(portrait_glow)
 
 	portrait_texture.z_index = 1
 	portrait_placeholder.z_index = 2
@@ -1149,8 +1155,8 @@ func _install_stage_entry_hud() -> void:
 			"panel",
 			_make_hud_panel_style(
 				Color(0.045, 0.032, 0.065, 0.88),
-				Color(0.25, 0.19, 0.31, 0.70),
-				1,
+				Color(0, 0, 0, 0),
+				0,
 				10
 			)
 		)
@@ -1159,7 +1165,7 @@ func _install_stage_entry_hud() -> void:
 
 		var description_highlight := ColorRect.new()
 		description_highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		description_highlight.color = Color(0.58, 0.37, 0.70, 0.52)
+		description_highlight.color = Color(0.58, 0.37, 0.70, 0.34)
 		description_highlight.anchor_left = 0.10
 		description_highlight.anchor_top = 0.0
 		description_highlight.anchor_right = 0.90
@@ -1181,8 +1187,8 @@ func _install_stage_entry_hud() -> void:
 			"panel",
 			_make_hud_panel_style(
 				Color(0.060, 0.040, 0.082, 0.92),
-				Color(0.50, 0.36, 0.18, 0.68),
-				1,
+				Color(0, 0, 0, 0),
+				0,
 				8
 			)
 		)
@@ -1191,7 +1197,7 @@ func _install_stage_entry_hud() -> void:
 
 		var info_highlight := ColorRect.new()
 		info_highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		info_highlight.color = Color(0.73, 0.52, 0.24, 0.44)
+		info_highlight.color = Color(0.73, 0.52, 0.24, 0.28)
 		info_highlight.anchor_left = 0.08
 		info_highlight.anchor_top = 0.0
 		info_highlight.anchor_right = 0.92
@@ -1203,7 +1209,7 @@ func _install_stage_entry_hud() -> void:
 		for split_ratio in [0.333, 0.666]:
 			var divider := ColorRect.new()
 			divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			divider.color = Color(0.55, 0.39, 0.19, 0.72)
+			divider.color = Color(0.55, 0.39, 0.19, 0.46)
 			divider.anchor_left = split_ratio
 			divider.anchor_top = 0.16
 			divider.anchor_right = split_ratio
