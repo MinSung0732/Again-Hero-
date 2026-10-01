@@ -116,6 +116,14 @@ const STAGE3_GUARD_RELEASE_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_
 const STAGE3_CHARGE_IMPACT_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_charge_impact_pixabay.mp3"
 const STAGE3_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_hit_pixabay.mp3"
 const STAGE3_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_death_pixabay.mp3"
+const STAGE4_GUNSHOT_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_gunshot_pixabay.mp3"
+const STAGE4_RELOAD_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_reload_pixabay.mp3"
+const STAGE4_BACKSTEP_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_backstep_pixabay.mp3"
+const STAGE4_CYLINDER_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_cylinder_pixabay.mp3"
+const STAGE4_DEADEYE_START_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_deadeye_start_pixabay.mp3"
+const STAGE4_DEADEYE_SHOT_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_deadeye_shot_pixabay.mp3"
+const STAGE4_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_hit_pixabay.mp3"
+const STAGE4_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_death_pixabay.mp3"
 
 # Hero SFX loudness defaults are anchored to the established Stage 7-10 mix.
 # Source loudness and repetition density may justify a quieter per-asset value,
@@ -537,6 +545,16 @@ var fighter_charge_impact_audio_pool: Array[AudioStreamPlayer] = []
 var fighter_charge_impact_audio_cursor: int = 0
 var fighter_hit_audio: AudioStreamPlayer = null
 var fighter_death_audio: AudioStreamPlayer = null
+var gunner_shot_audio_pool: Array[AudioStreamPlayer] = []
+var gunner_shot_audio_cursor: int = 0
+var gunner_deadeye_shot_audio_pool: Array[AudioStreamPlayer] = []
+var gunner_deadeye_shot_audio_cursor: int = 0
+var gunner_reload_audio: AudioStreamPlayer = null
+var gunner_backstep_audio: AudioStreamPlayer = null
+var gunner_cylinder_audio: AudioStreamPlayer = null
+var gunner_deadeye_start_audio: AudioStreamPlayer = null
+var gunner_hit_audio: AudioStreamPlayer = null
+var gunner_death_audio: AudioStreamPlayer = null
 var purifier_basic_audio: AudioStreamPlayer = null
 var purifier_shield_create_audio: AudioStreamPlayer = null
 var purifier_shield_break_audio: AudioStreamPlayer = null
@@ -4917,6 +4935,7 @@ func _gunner_attack(current_target: Node2D) -> void:
 	attack_pose_timer = 0.30
 	_face_attack_direction(direction.x)
 	_restart_stage1_animation("attack", 1.0)
+	_play_gunner_basic_shot_audio()
 	_spawn_gunner_bullet(direction)
 	var random_angle := deg_to_rad(randf_range(-float(gunner_config.get("random_shot_angle_degrees", 28.0)), float(gunner_config.get("random_shot_angle_degrees", 28.0))))
 	_spawn_gunner_bullet(direction.rotated(random_angle))
@@ -5011,6 +5030,7 @@ func _gunner_powder_damage_multiplier() -> float:
 
 
 func _start_gunner_reload() -> void:
+	_play_gunner_reload_audio()
 	gunner_powder_consumed_stacks = 0
 	gunner_reloading = true
 	gunner_reload_timer = maxf(float(gunner_config.get("reload_seconds", 2.4)), 0.1)
@@ -5076,6 +5096,7 @@ func _gunner_should_use_cylinder() -> bool:
 
 
 func _start_gunner_backstep() -> void:
+	_play_gunner_backstep_audio()
 	gunner_backstep_cooldown = maxf(float(gunner_config.get("backstep_cooldown", 7.0)), 0.1)
 	invulnerability_timer = maxf(invulnerability_timer, float(gunner_config.get("backstep_invulnerability", 0.75)))
 	var escape_direction := _find_gunner_escape_direction()
@@ -5290,6 +5311,7 @@ func _update_gunner_collision_ignore(delta: float) -> void:
 
 
 func _use_gunner_cylinder_strike() -> void:
+	_play_gunner_cylinder_audio()
 	gunner_cylinder_cooldown = maxf(float(gunner_config.get("cylinder_cooldown", 10.0)), 0.1)
 	_play_gunner_cylinder_dust()
 	var radius := maxf(float(gunner_config.get("cylinder_radius", 190.0)), 1.0)
@@ -5420,6 +5442,7 @@ func _start_gunner_deadeye() -> void:
 		aim_direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	gunner_deadeye_cooldown = maxf(float(gunner_config.get("deadeye_cooldown", 20.0)), 0.1)
 	gunner_deadeye_active = true
+	_play_gunner_deadeye_start_audio()
 	var deadeye_consumed_ammo := gunner_ammo
 	gunner_deadeye_shots_left = maxi(
 		1,
@@ -5442,6 +5465,7 @@ func _update_gunner_deadeye(delta: float) -> void:
 	_clamp_to_battlefield()
 	gunner_deadeye_shot_timer = maxf(gunner_deadeye_shot_timer - delta, 0.0)
 	if gunner_deadeye_shot_timer <= 0.0 and gunner_deadeye_shots_left > 0:
+		_play_gunner_deadeye_shot_audio()
 		_play_gunner_deadeye_flame(gunner_deadeye_direction)
 		_spawn_gunner_bullet(gunner_deadeye_direction, true)
 		gunner_deadeye_shots_left -= 1
@@ -9149,6 +9173,145 @@ func _play_fighter_death_audio() -> void:
 	):
 		fighter_death_audio.stop()
 		fighter_death_audio.play()
+
+
+func _ensure_gunner_audio_runtime() -> void:
+	if hero_archetype != "pistol_gunner":
+		return
+
+	if gunner_shot_audio_pool.is_empty():
+		for index in range(3):
+			gunner_shot_audio_pool.append(
+				_create_hero_sfx_player(
+					STAGE4_GUNSHOT_AUDIO_PATH,
+					HERO_SFX_DB_PRIMARY_ATTACK - 6.0,
+					1.55
+				)
+			)
+
+	if gunner_deadeye_shot_audio_pool.is_empty():
+		for index in range(4):
+			gunner_deadeye_shot_audio_pool.append(
+				_create_hero_sfx_player(
+					STAGE4_DEADEYE_SHOT_AUDIO_PATH,
+					HERO_SFX_DB_HIT - 4.0,
+					1.68
+				)
+			)
+
+	if not is_instance_valid(gunner_reload_audio):
+		gunner_reload_audio = _create_hero_sfx_player(
+			STAGE4_RELOAD_AUDIO_PATH,
+			HERO_SFX_DB_REGULAR_SKILL - 5.0,
+			0.72
+		)
+
+	if not is_instance_valid(gunner_backstep_audio):
+		gunner_backstep_audio = _create_hero_sfx_player(
+			STAGE4_BACKSTEP_AUDIO_PATH,
+			HERO_SFX_DB_REGULAR_SKILL - 4.0,
+			1.12
+		)
+
+	if not is_instance_valid(gunner_cylinder_audio):
+		gunner_cylinder_audio = _create_hero_sfx_player(
+			STAGE4_CYLINDER_AUDIO_PATH,
+			HERO_SFX_DB_HEAVY_SKILL - 6.0,
+			0.78
+		)
+
+	if not is_instance_valid(gunner_deadeye_start_audio):
+		gunner_deadeye_start_audio = _create_hero_sfx_player(
+			STAGE4_DEADEYE_START_AUDIO_PATH,
+			HERO_SFX_DB_REGULAR_SKILL - 3.0,
+			0.92
+		)
+
+	if not is_instance_valid(gunner_hit_audio):
+		gunner_hit_audio = _create_hero_sfx_player(
+			STAGE4_HIT_AUDIO_PATH,
+			HERO_SFX_DB_HIT,
+			1.22
+		)
+
+	if not is_instance_valid(gunner_death_audio):
+		gunner_death_audio = _create_hero_sfx_player(
+			STAGE4_DEATH_AUDIO_PATH,
+			HERO_SFX_DB_DEATH,
+			0.92
+		)
+
+
+func _play_gunner_basic_shot_audio() -> void:
+	_ensure_gunner_audio_runtime()
+	if gunner_shot_audio_pool.is_empty():
+		return
+	var player := gunner_shot_audio_pool[
+		gunner_shot_audio_cursor % gunner_shot_audio_pool.size()
+	]
+	gunner_shot_audio_cursor = (
+		gunner_shot_audio_cursor + 1
+	) % gunner_shot_audio_pool.size()
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	player.pitch_scale = 1.48 + 0.05 * float(gunner_shot_audio_cursor % 3)
+	player.stop()
+	player.play()
+
+
+func _play_gunner_deadeye_shot_audio() -> void:
+	_ensure_gunner_audio_runtime()
+	if gunner_deadeye_shot_audio_pool.is_empty():
+		return
+	var player := gunner_deadeye_shot_audio_pool[
+		gunner_deadeye_shot_audio_cursor
+		% gunner_deadeye_shot_audio_pool.size()
+	]
+	gunner_deadeye_shot_audio_cursor = (
+		gunner_deadeye_shot_audio_cursor + 1
+	) % gunner_deadeye_shot_audio_pool.size()
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	player.pitch_scale = 1.62 + 0.04 * float(gunner_deadeye_shot_audio_cursor % 4)
+	player.stop()
+	player.play()
+
+
+func _play_gunner_audio(player: AudioStreamPlayer) -> void:
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	player.stop()
+	player.play()
+
+
+func _play_gunner_reload_audio() -> void:
+	_ensure_gunner_audio_runtime()
+	_play_gunner_audio(gunner_reload_audio)
+
+
+func _play_gunner_backstep_audio() -> void:
+	_ensure_gunner_audio_runtime()
+	_play_gunner_audio(gunner_backstep_audio)
+
+
+func _play_gunner_cylinder_audio() -> void:
+	_ensure_gunner_audio_runtime()
+	_play_gunner_audio(gunner_cylinder_audio)
+
+
+func _play_gunner_deadeye_start_audio() -> void:
+	_ensure_gunner_audio_runtime()
+	_play_gunner_audio(gunner_deadeye_start_audio)
+
+
+func _play_gunner_hit_audio() -> void:
+	_ensure_gunner_audio_runtime()
+	_play_gunner_audio(gunner_hit_audio)
+
+
+func _play_gunner_death_audio() -> void:
+	_ensure_gunner_audio_runtime()
+	_play_gunner_audio(gunner_death_audio)
 
 
 func _create_sage_audio_player(audio_path: String, volume_db: float, pitch_scale: float) -> AudioStreamPlayer:
@@ -18934,6 +19097,8 @@ func take_damage(amount: int, source: Node = null) -> bool:
 			_play_rogue_hit_audio()
 		elif hero_archetype == "sword_shield":
 			_play_fighter_hit_audio()
+		elif hero_archetype == "pistol_gunner":
+			_play_gunner_hit_audio()
 
 	if current_hp > 0 and applied_damage > 0:
 		_add_ultimate_charge(
@@ -19001,6 +19166,8 @@ func _begin_death_sequence() -> void:
 		_play_rogue_death_audio()
 	elif hero_archetype == "sword_shield":
 		_play_fighter_death_audio()
+	elif hero_archetype == "pistol_gunner":
+		_play_gunner_death_audio()
 	invulnerability_timer = 0.0
 	modulate.a = 1.0
 	velocity = Vector2.ZERO
