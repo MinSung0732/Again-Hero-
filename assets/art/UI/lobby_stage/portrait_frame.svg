@@ -1,9 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="650" height="520" viewBox="0 0 650 520">
 <g shape-rendering="crispEdges">
   <path d="M34 5 H616 L645 34 V486 L616 515 H34 L5 486 V34 Z"
-        fill="#090715" fill-opacity=".24" stroke="#f5bd3e" stroke-width="7"/>
-  <path d="M46 18 H604 L632 46 V474 L604 502 H46 L18 474 V46 Z"
+        fill="#090715" fill-opacity=".24"/>
+  <path d="M34 5 L5 34 V486 L34 515 H616 L645 486 V34 L616 5"
+        fill="none" stroke="#f5bd3e" stroke-width="7"/>
+  <path d="M34 5 H270 M380 5 H616" stroke="#f5bd3e" stroke-width="7"/>
+  <path d="M46 18 L18 46 V474 L46 502 H604 L632 474 V46 L604 18"
         fill="none" stroke="#6c287f" stroke-width="4"/>
+  <path d="M46 18 H282 M368 18 H604" stroke="#6c287f" stroke-width="4"/>
   <path d="M60 29 H278 M372 29 H590" stroke="#ffe27a" stroke-width="3"/>
   <path d="M60 491 H278 M372 491 H590" stroke="#a43fbc" stroke-width="3"/>
   <path d="M325 7 L344 26 L325 45 L306 26 Z" fill="#81279f" stroke="#ffd35a" stroke-width="4"/>

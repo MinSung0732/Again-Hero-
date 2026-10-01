@@ -1268,10 +1268,12 @@ func _install_stage_entry_hud() -> void:
 	stage_number_label.offset_bottom = 34.0
 	stage_name_label.offset_top = 40.0
 	stage_name_label.offset_bottom = 86.0
+	stage_name_label.clip_text = true
+	stage_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 
 	stage_picker.add_theme_constant_override("separation", 6)
-	prev_stage_button.custom_minimum_size = Vector2(54.0, 148.0)
-	next_stage_button.custom_minimum_size = Vector2(54.0, 148.0)
+	prev_stage_button.custom_minimum_size = Vector2(92.0, 200.0)
+	next_stage_button.custom_minimum_size = Vector2(92.0, 200.0)
 	stage_card_slot.custom_minimum_size = Vector2(826.0, 1200.0)
 	stage_card_slot.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	stage_card.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
@@ -1432,6 +1434,8 @@ func _install_stage_entry_hud() -> void:
 	hero_name_label.anchor_top = 0.518
 	hero_name_label.anchor_right = 0.75
 	hero_name_label.anchor_bottom = 0.578
+	hero_name_label.clip_text = true
+	hero_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	hero_name_label.z_index = 3
 
 	if portrait_inner != null:
@@ -1540,6 +1544,12 @@ func _install_stage_entry_hud() -> void:
 	stage_description_label.offset_top = 0.0
 	stage_description_label.offset_right = 0.0
 	stage_description_label.offset_bottom = 0.0
+	stage_description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	stage_description_label.clip_text = true
+	stage_description_label.max_lines_visible = 3
+	stage_description_label.text_overrun_behavior = (
+		TextServer.OVERRUN_TRIM_ELLIPSIS
+	)
 
 	stage_status_label.anchor_left = 0.060
 	stage_status_label.anchor_top = 0.355
@@ -1549,6 +1559,8 @@ func _install_stage_entry_hud() -> void:
 	stage_reward_label.anchor_top = 0.355
 	stage_reward_label.anchor_right = 0.630
 	stage_reward_label.anchor_bottom = 0.525
+	stage_status_label.clip_text = true
+	stage_reward_label.clip_text = true
 
 	var repeat_label := bottom_panel.get_node_or_null("RepeatReward") as Label
 	if repeat_label == null:
@@ -1564,6 +1576,7 @@ func _install_stage_entry_hud() -> void:
 	repeat_label.anchor_right = 0.940
 	repeat_label.anchor_bottom = 0.525
 	repeat_label.add_theme_font_size_override("font_size", 17)
+	repeat_label.clip_text = true
 
 	enter_stage_button.anchor_left = 0.090
 	enter_stage_button.anchor_top = 0.580
@@ -1644,11 +1657,11 @@ func _apply_lobby_visual_polish() -> void:
 	stage_name_label.add_theme_color_override("font_color", Color("fff6e5"))
 	hero_name_label.add_theme_font_size_override("font_size", 30)
 	hero_name_label.add_theme_color_override("font_color", Color("f2d486"))
-	stage_description_label.add_theme_font_size_override("font_size", 21)
+	stage_description_label.add_theme_font_size_override("font_size", 18)
 	stage_description_label.add_theme_color_override("font_color", Color("eee7f0"))
-	stage_status_label.add_theme_font_size_override("font_size", 19)
+	stage_status_label.add_theme_font_size_override("font_size", 17)
 	stage_status_label.add_theme_color_override("font_color", Color("d6cadc"))
-	stage_reward_label.add_theme_font_size_override("font_size", 19)
+	stage_reward_label.add_theme_font_size_override("font_size", 17)
 	stage_reward_label.add_theme_color_override("font_color", Color("e6c66d"))
 	_apply_enter_stage_button_skin()
 
@@ -1812,10 +1825,10 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 	skin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	skin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	skin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	skin.offset_left = 4.0
-	skin.offset_top = 8.0
-	skin.offset_right = -4.0
-	skin.offset_bottom = -8.0
+	skin.offset_left = 2.0
+	skin.offset_top = 4.0
+	skin.offset_right = -2.0
+	skin.offset_bottom = -4.0
 	skin.flip_h = flip_h
 	button.add_child(skin)
 
