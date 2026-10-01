@@ -1,3 +1,9 @@
+### Dungeon entry inner-divider cleanup
+- clean outer frame 적용 후 코드로 추가했던 설명 영역 하단 가로선과 정보 영역 하단 가로선을 제거.
+- 설명/정보 배경판 투명도를 더 낮춰 내부가 다시 프레임처럼 보이지 않도록 정리.
+- 입장 상태/최초 보상/반복 보상 사이 세로 구분선 2개만 남기고 길이와 알파를 낮춰 최소한의 정보 구획만 유지.
+- 신규 `ui10_clean_frame.png` 외곽 프레임과 스테이지 전환/입장/보상 로직은 변경하지 않음.
+
 ### Dungeon entry clean outer-frame asset
 - 던전 입장 카드 전용 `ui10_clean_frame.png`를 430x625 투명 픽셀 소스로 추가하고 런타임에서 2배 스케일해 860x1250 카드에 정확히 맞춤. 기존 ui10에 포함돼 있던 내부 큰/작은 사각 구분선을 제거하고 외곽 금색/보라 픽셀 프레임만 유지.
 - StageCardSkin이 기존 `ui10.png` 대신 신규 clean frame을 직접 로드하도록 변경하고 카드 크기에 맞춰 1:1로 스케일.
