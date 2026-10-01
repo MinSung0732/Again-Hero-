@@ -29,6 +29,8 @@ const UI_HEADER_COIN_PATH := UI_LOBBY_HEADER_DIR + "/coin.svg"
 const UI_HEADER_PLUS_PATH := UI_LOBBY_HEADER_DIR + "/plus.svg"
 const UI_LOBBY_FOOTER_DIR := "res://assets/art/UI/lobby_footer"
 const UI_LOBBY_NAV_FRAME_PATH := UI_LOBBY_FOOTER_DIR + "/nav_frame.svg"
+const UI_LOBBY_NAV_TAB_PATH := UI_LOBBY_FOOTER_DIR + "/tab_normal.svg"
+const UI_LOBBY_NAV_TAB_ACTIVE_PATH := UI_LOBBY_FOOTER_DIR + "/tab_active.svg"
 const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_background.png"
 
@@ -139,8 +141,8 @@ var portrait_outer_style := StyleBoxFlat.new()
 var portrait_inner_style := StyleBoxFlat.new()
 var nav_style := StyleBoxFlat.new()
 var nav_active_style := StyleBoxFlat.new()
-var nav_button_style := StyleBoxFlat.new()
-var nav_button_active_style := StyleBoxFlat.new()
+var nav_button_style: StyleBox = StyleBoxFlat.new()
+var nav_button_active_style: StyleBox = StyleBoxFlat.new()
 var primary_button_style := StyleBoxFlat.new()
 var secondary_button_style := StyleBoxFlat.new()
 
@@ -443,6 +445,10 @@ func _install_bottom_nav_frame() -> void:
 	var frame_texture := _load_ui_texture_resource(UI_LOBBY_NAV_FRAME_PATH)
 	if frame_texture == null:
 		return
+	var tab_texture := _load_ui_texture_resource(UI_LOBBY_NAV_TAB_PATH)
+	var active_tab_texture := _load_ui_texture_resource(
+		UI_LOBBY_NAV_TAB_ACTIVE_PATH
+	)
 
 	var frame := TextureRect.new()
 	frame.name = "BottomNavFrame"
@@ -455,6 +461,26 @@ func _install_bottom_nav_frame() -> void:
 	frame.z_index = 0
 	bottom_nav.add_child(frame)
 	bottom_nav.move_child(frame, 0)
+
+	if tab_texture != null:
+		nav_button_style = _make_nav_tab_style(tab_texture)
+	if active_tab_texture != null:
+		nav_button_active_style = _make_nav_tab_style(active_tab_texture)
+
+
+func _make_nav_tab_style(texture: Texture2D) -> StyleBoxTexture:
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.texture_margin_left = 20.0
+	style.texture_margin_top = 20.0
+	style.texture_margin_right = 20.0
+	style.texture_margin_bottom = 20.0
+	style.content_margin_left = 12.0
+	style.content_margin_top = 12.0
+	style.content_margin_right = 12.0
+	style.content_margin_bottom = 12.0
+	return style
+
 
 func _add_asset_frame(
 	target: Control,
@@ -1101,45 +1127,6 @@ func _apply_enter_stage_button_skin() -> void:
 			enter_stage_button.add_child(gem)
 
 
-func _ensure_nav_active_indicator(button: Button) -> void:
-	if button == null:
-		return
-	var indicator := button.get_node_or_null("ActiveIndicator") as ColorRect
-	if indicator == null:
-		indicator = ColorRect.new()
-		indicator.name = "ActiveIndicator"
-		indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		indicator.color = Color("ffd45d")
-		indicator.anchor_left = 0.24
-		indicator.anchor_top = 0.0
-		indicator.anchor_right = 0.76
-		indicator.anchor_bottom = 0.0
-		indicator.offset_top = 7.0
-		indicator.offset_bottom = 12.0
-		indicator.visible = false
-		button.add_child(indicator)
-
-	var gem := button.get_node_or_null("ActiveGem") as ColorRect
-	if gem == null:
-		gem = ColorRect.new()
-		gem.name = "ActiveGem"
-		gem.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		gem.color = Color("bd58dd")
-		gem.anchor_left = 0.5
-		gem.anchor_top = 0.0
-		gem.anchor_right = 0.5
-		gem.anchor_bottom = 0.0
-		gem.offset_left = -6.0
-		gem.offset_top = 3.0
-		gem.offset_right = 6.0
-		gem.offset_bottom = 15.0
-		gem.pivot_offset = Vector2(6.0, 6.0)
-		gem.rotation = PI * 0.25
-		gem.visible = false
-		button.add_child(gem)
-
-
-
 func _install_lobby_background() -> void:
 	var texture := _load_png_texture_direct(UI_LOBBY_BACKGROUND_PATH)
 	if texture == null:
@@ -1649,7 +1636,6 @@ func _apply_lobby_visual_polish() -> void:
 	]:
 		nav_button.custom_minimum_size = Vector2(0.0, 120.0)
 		nav_button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-		_ensure_nav_active_indicator(nav_button)
 
 
 func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> void:
@@ -1861,12 +1847,7 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 	)
 	button.add_theme_color_override("font_outline_color", Color("100b18"))
 	button.add_theme_constant_override("outline_size", 3 if selected else 2)
-	var indicator := button.get_node_or_null("ActiveIndicator") as ColorRect
-	if indicator != null:
-		indicator.visible = selected
-	var gem := button.get_node_or_null("ActiveGem") as ColorRect
-	if gem != null:
-		gem.visible = selected
+
 
 func _format_shop_number(value: int) -> String:
 	var digits := str(maxi(value, 0))
