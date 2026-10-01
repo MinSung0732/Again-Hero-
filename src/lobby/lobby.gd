@@ -1238,10 +1238,10 @@ func _install_stage_entry_hud() -> void:
 	stage_layout.add_theme_constant_override("separation", 6)
 
 	section_header.custom_minimum_size = Vector2(0.0, 108.0)
-	section_title.offset_top = 28.0
-	section_title.offset_bottom = 66.0
-	section_subtitle.offset_top = 68.0
-	section_subtitle.offset_bottom = 100.0
+	section_title.offset_top = 24.0
+	section_title.offset_bottom = 60.0
+	section_subtitle.offset_top = 64.0
+	section_subtitle.offset_bottom = 98.0
 
 	var old_section_frame := section_header.get_node_or_null("SectionHudFrame")
 	if old_section_frame != null:
@@ -1264,10 +1264,10 @@ func _install_stage_entry_hud() -> void:
 		section_header.move_child(section_frame, 0)
 
 	stage_meta.custom_minimum_size = Vector2(0.0, 100.0)
-	stage_number_label.offset_top = 6.0
-	stage_number_label.offset_bottom = 36.0
-	stage_name_label.offset_top = 34.0
-	stage_name_label.offset_bottom = 88.0
+	stage_number_label.offset_top = 8.0
+	stage_number_label.offset_bottom = 34.0
+	stage_name_label.offset_top = 40.0
+	stage_name_label.offset_bottom = 86.0
 
 	stage_picker.add_theme_constant_override("separation", 6)
 	prev_stage_button.custom_minimum_size = Vector2(54.0, 148.0)
@@ -1451,7 +1451,7 @@ func _install_stage_entry_hud() -> void:
 	portrait_badge.z_index = 2
 
 	bottom_panel.anchor_left = 0.145
-	bottom_panel.anchor_top = 0.605
+	bottom_panel.anchor_top = 0.590
 	bottom_panel.anchor_right = 0.855
 	bottom_panel.anchor_bottom = 0.920
 
@@ -1463,9 +1463,9 @@ func _install_stage_entry_hud() -> void:
 		description_backing.name = "DescriptionBacking"
 		description_backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		description_backing.anchor_left = 0.035
-		description_backing.anchor_top = 0.0
+		description_backing.anchor_top = 0.015
 		description_backing.anchor_right = 0.965
-		description_backing.anchor_bottom = 0.25
+		description_backing.anchor_bottom = 0.285
 		description_backing.add_theme_stylebox_override(
 			"panel",
 			_make_hud_panel_style(
@@ -1496,9 +1496,9 @@ func _install_stage_entry_hud() -> void:
 		info_backing.name = "EntryInfoBacking"
 		info_backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		info_backing.anchor_left = 0.035
-		info_backing.anchor_top = 0.31
+		info_backing.anchor_top = 0.315
 		info_backing.anchor_right = 0.965
-		info_backing.anchor_bottom = 0.53
+		info_backing.anchor_bottom = 0.565
 		info_backing.add_theme_stylebox_override(
 			"panel",
 			_make_hud_panel_style(
@@ -1532,38 +1532,38 @@ func _install_stage_entry_hud() -> void:
 	if info_style != null:
 		info_backing.add_theme_stylebox_override("panel", info_style)
 
-	stage_description_label.anchor_left = 0.070
-	stage_description_label.anchor_top = 0.035
-	stage_description_label.anchor_right = 0.930
-	stage_description_label.anchor_bottom = 0.235
+	stage_description_label.anchor_left = 0.095
+	stage_description_label.anchor_top = 0.055
+	stage_description_label.anchor_right = 0.905
+	stage_description_label.anchor_bottom = 0.250
 	stage_description_label.offset_left = 0.0
 	stage_description_label.offset_top = 0.0
 	stage_description_label.offset_right = 0.0
 	stage_description_label.offset_bottom = 0.0
 
 	stage_status_label.anchor_left = 0.060
-	stage_status_label.anchor_top = 0.340
+	stage_status_label.anchor_top = 0.355
 	stage_status_label.anchor_right = 0.320
-	stage_status_label.anchor_bottom = 0.520
+	stage_status_label.anchor_bottom = 0.525
 	stage_reward_label.anchor_left = 0.370
-	stage_reward_label.anchor_top = 0.340
+	stage_reward_label.anchor_top = 0.355
 	stage_reward_label.anchor_right = 0.630
-	stage_reward_label.anchor_bottom = 0.520
+	stage_reward_label.anchor_bottom = 0.525
 
 	var repeat_label := bottom_panel.get_node_or_null("RepeatReward") as Label
 	if repeat_label == null:
 		repeat_label = Label.new()
 		repeat_label.name = "RepeatReward"
 		repeat_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		repeat_label.anchor_left = 0.680
-		repeat_label.anchor_top = 0.340
-		repeat_label.anchor_right = 0.940
-		repeat_label.anchor_bottom = 0.520
 		repeat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		repeat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		repeat_label.add_theme_font_size_override("font_size", 19)
 		repeat_label.add_theme_color_override("font_color", Color("d7c8df"))
 		bottom_panel.add_child(repeat_label)
+	repeat_label.anchor_left = 0.680
+	repeat_label.anchor_top = 0.355
+	repeat_label.anchor_right = 0.940
+	repeat_label.anchor_bottom = 0.525
+	repeat_label.add_theme_font_size_override("font_size", 17)
 
 	enter_stage_button.anchor_left = 0.090
 	enter_stage_button.anchor_top = 0.580
@@ -1571,9 +1571,9 @@ func _install_stage_entry_hud() -> void:
 	enter_stage_button.anchor_bottom = 0.730
 	enter_stage_button.custom_minimum_size = Vector2(0.0, 76.0)
 
-	stage_description_label.add_theme_font_size_override("font_size", 21)
-	stage_status_label.add_theme_font_size_override("font_size", 19)
-	stage_reward_label.add_theme_font_size_override("font_size", 19)
+	stage_description_label.add_theme_font_size_override("font_size", 18)
+	stage_status_label.add_theme_font_size_override("font_size", 17)
+	stage_reward_label.add_theme_font_size_override("font_size", 17)
 	stage_status_label.add_theme_color_override("font_color", Color("ded3e4"))
 	stage_reward_label.add_theme_color_override("font_color", Color("f0cb68"))
 

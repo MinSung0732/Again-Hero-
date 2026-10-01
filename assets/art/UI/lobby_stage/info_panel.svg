@@ -2,10 +2,10 @@
 <g shape-rendering="crispEdges">
   <path d="M22 5 H628 L645 22 V198 L628 215 H22 L5 198 V22 Z"
         fill="#130e20" fill-opacity=".94" stroke="#8a5c95" stroke-width="4"/>
-  <path d="M30 14 H620 L636 30 V190 L620 206 H30 L14 190 V30 Z"
-        fill="#21142d" fill-opacity=".82" stroke="#4b285b" stroke-width="3"/>
-  <path d="M48 20 H602" stroke="#d19a38" stroke-width="2" opacity=".72"/>
-  <path d="M48 200 H602" stroke="#8c35a5" stroke-width="2" opacity=".82"/>
+  <path d="M32 16 H618 L634 32 V188 L618 204 H32 L16 188 V32 Z"
+        fill="#21142d" fill-opacity=".74"/>
+  <path d="M62 18 H588" stroke="#d19a38" stroke-width="2" opacity=".58"/>
+  <path d="M62 202 H588" stroke="#8c35a5" stroke-width="2" opacity=".62"/>
   <path d="M19 90 L29 100 L19 110 L9 100 Z M631 90 L641 100 L631 110 L621 100 Z"
         fill="#a43bc0" stroke="#e7ad3d" stroke-width="2"/>
 </g>
