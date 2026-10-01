@@ -741,31 +741,70 @@ func _apply_new_ui_assets() -> void:
 			frame.z_index = 0
 			plate.add_child(frame)
 
-	var resource_parent := resource_label.get_parent()
-	if resource_parent != gold_plate:
-		resource_parent.remove_child(resource_label)
-		gold_plate.add_child(resource_label)
-	resource_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	resource_label.offset_left = 30.0
-	resource_label.offset_top = 0.0
-	resource_label.offset_right = -214.0
-	resource_label.offset_bottom = 0.0
-	resource_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	resource_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	resource_label.z_index = 5
+	# Keep the original labels as hidden state holders. The visible HUD uses
+	# dedicated two-line labels so title/value typography can be tuned separately.
+	resource_label.visible = false
+	progress_label.visible = false
 
-	var progress_parent := progress_label.get_parent()
-	if progress_parent != progress_plate:
-		progress_parent.remove_child(progress_label)
-		progress_plate.add_child(progress_label)
-	progress_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	progress_label.offset_left = 214.0
-	progress_label.offset_top = 0.0
-	progress_label.offset_right = -30.0
-	progress_label.offset_bottom = 0.0
-	progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	progress_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	progress_label.z_index = 5
+	var gold_title := Label.new()
+	gold_title.name = "HeaderGoldTitle"
+	gold_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	gold_title.text = "골드"
+	gold_title.anchor_left = 0.08
+	gold_title.anchor_top = 0.08
+	gold_title.anchor_right = 0.56
+	gold_title.anchor_bottom = 0.46
+	gold_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	gold_title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	gold_title.add_theme_font_size_override("font_size", 17)
+	gold_title.add_theme_color_override("font_color", Color("d7c8dd"))
+	gold_title.z_index = 5
+	gold_plate.add_child(gold_title)
+
+	var gold_value := Label.new()
+	gold_value.name = "HeaderGoldValue"
+	gold_value.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	gold_value.text = _format_shop_number(SHOP_CATALOG.TEST_GOLD)
+	gold_value.anchor_left = 0.08
+	gold_value.anchor_top = 0.44
+	gold_value.anchor_right = 0.56
+	gold_value.anchor_bottom = 0.94
+	gold_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	gold_value.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	gold_value.add_theme_font_size_override("font_size", 23)
+	gold_value.add_theme_color_override("font_color", Color("f5d16d"))
+	gold_value.z_index = 5
+	gold_plate.add_child(gold_value)
+
+	var progress_title := Label.new()
+	progress_title.name = "HeaderProgressTitle"
+	progress_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	progress_title.text = "최고 해금"
+	progress_title.anchor_left = 0.44
+	progress_title.anchor_top = 0.08
+	progress_title.anchor_right = 0.92
+	progress_title.anchor_bottom = 0.46
+	progress_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	progress_title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	progress_title.add_theme_font_size_override("font_size", 17)
+	progress_title.add_theme_color_override("font_color", Color("d7c8dd"))
+	progress_title.z_index = 5
+	progress_plate.add_child(progress_title)
+
+	var progress_value := Label.new()
+	progress_value.name = "HeaderProgressValue"
+	progress_value.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	progress_value.text = "Stage 1"
+	progress_value.anchor_left = 0.44
+	progress_value.anchor_top = 0.44
+	progress_value.anchor_right = 0.92
+	progress_value.anchor_bottom = 0.94
+	progress_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	progress_value.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	progress_value.add_theme_font_size_override("font_size", 23)
+	progress_value.add_theme_color_override("font_color", Color("f5d16d"))
+	progress_value.z_index = 5
+	progress_plate.add_child(progress_value)
 
 	var center_mask := Panel.new()
 	center_mask.name = "HeaderCenterMask"
@@ -2454,9 +2493,23 @@ func _team_monster_cost(monster_id: String) -> float:
 func _refresh_header() -> void:
 	var state := STAGE_PROGRESS.load_state()
 	var highest := int(state.get("highest_unlocked_stage", 1))
+	var gold_text := _format_shop_number(SHOP_CATALOG.TEST_GOLD)
+
 	title_label.text = "용사, 또 너야?"
-	resource_label.text = "골드  %s" % _format_shop_number(SHOP_CATALOG.TEST_GOLD)
+	resource_label.text = "골드  %s" % gold_text
 	progress_label.text = "최고 해금  Stage %d" % highest
+
+	var gold_value := get_node_or_null(
+		^"SafeArea/Layout/Header/HeaderGoldPlate/HeaderGoldValue"
+	) as Label
+	if gold_value != null:
+		gold_value.text = gold_text
+
+	var progress_value := get_node_or_null(
+		^"SafeArea/Layout/Header/HeaderProgressPlate/HeaderProgressValue"
+	) as Label
+	if progress_value != null:
+		progress_value.text = "Stage %d" % highest
 
 func _change_stage(direction: int) -> void:
 	if stage_ids.is_empty() or _stage_transition_running:
