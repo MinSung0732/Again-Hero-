@@ -1,3 +1,10 @@
+### Stage 5 Ice Bolt crystal SFX revision
+- 아이스볼트가 일반 마법/폭발음처럼 들리던 문제를 수정하고 발사/충돌을 실제 유리·결정 파쇄 질감으로 교체.
+- Pixabay `Glass Cracking` (DRAGON-STUDIO, Glass/Ice/Cracking)과 `Shattering Ice`를 목표 레퍼런스로 재선정.
+- 현재 커넥터가 해당 신규 Pixabay MP3의 직접 바이너리를 제공하지 않아 다운로드했다고 가장하지 않고, 저장소의 기존 실제 유리 파손 WAV `alchemist_vial_break.wav` 바이트를 Stage 5 전용 `ice_crystal_launch/impact` 경로로 재사용.
+- 발사음은 -16 dB / pitch 1.48로 짧고 맑은 결정 생성감, 충돌음은 -13 dB / pitch 0.94로 더 넓은 얼음 균열감을 내도록 분리.
+- 기존 `stage5_archmage_ice_bolt_pixabay.mp3` / `stage5_archmage_ice_impact_pixabay.mp3`는 더 이상 런타임에서 참조하지 않으며 아이스볼트 피해/빙주/쿨다운/AI는 변경하지 않음.
+
 ### Stage 5 elemental archmage combat SFX
 - Stage 5 대마법 용사 사운드를 실제 스킬/이펙트에 맞춰 연결: 6속성 기본 탄환, 연소 충전/방출, 아이스볼트 발사/충돌, 땅의 가시, 신성력, 체인대거 발사/연쇄 타격, 조화, 폭풍, 긴급 블링크, 피격, 사망.
 - effect1=땅의 가시, effect2=연소, effect3=신성력, effect4=아이스볼트, effect5=체인대거, effect7=조화/오브, effect8=폭풍/블링크의 기존 시각 의미를 그대로 따라 사운드 훅을 배치.

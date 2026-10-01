@@ -127,8 +127,8 @@ const STAGE4_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_death_pix
 const STAGE5_BASIC_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_basic_pixabay.mp3"
 const STAGE5_COMBUSTION_CHARGE_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_combustion_charge_pixabay.mp3"
 const STAGE5_COMBUSTION_RELEASE_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_combustion_release_pixabay.mp3"
-const STAGE5_ICE_BOLT_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_ice_bolt_pixabay.mp3"
-const STAGE5_ICE_IMPACT_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_ice_impact_pixabay.mp3"
+const STAGE5_ICE_BOLT_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_ice_crystal_launch.wav"
+const STAGE5_ICE_IMPACT_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_ice_crystal_impact.wav"
 const STAGE5_EARTH_SPIKE_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_earth_spike_pixabay.mp3"
 const STAGE5_HOLY_BURST_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_holy_burst_pixabay.mp3"
 const STAGE5_CHAIN_LAUNCH_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_chain_launch_pixabay.mp3"
@@ -9375,14 +9375,14 @@ func _ensure_archmage_audio_runtime() -> void:
 	if not is_instance_valid(archmage_ice_bolt_audio):
 		archmage_ice_bolt_audio = _create_hero_sfx_player(
 			STAGE5_ICE_BOLT_AUDIO_PATH,
-			HERO_SFX_DB_REGULAR_SKILL,
-			1.18
+			HERO_SFX_DB_REGULAR_SKILL - 4.0,
+			1.48
 		)
 	if not is_instance_valid(archmage_ice_impact_audio):
 		archmage_ice_impact_audio = _create_hero_sfx_player(
 			STAGE5_ICE_IMPACT_AUDIO_PATH,
-			HERO_SFX_DB_REGULAR_SKILL - 2.0,
-			1.28
+			HERO_SFX_DB_REGULAR_SKILL - 1.0,
+			0.94
 		)
 
 	if archmage_earth_audio_pool.is_empty():

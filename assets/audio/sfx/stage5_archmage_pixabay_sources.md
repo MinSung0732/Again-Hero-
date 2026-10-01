@@ -60,3 +60,22 @@ Performance policy:
 - Repeated earth spikes, holy bursts, and chain-dagger hit cues use fixed 4-player pools at reduced gain.
 - One-shot skill casts, blink, hit, and death reuse persistent AudioStreamPlayers.
 - No AudioStreamPlayer is allocated per projectile hit or per physics frame.
+
+
+## Ice Bolt crystal-tone revision
+
+User feedback correctly identified that the previous Ice Bolt mix read as a generic magic/explosion cue rather than an ice-crystal event.
+
+Reference selected from Pixabay:
+- Glass Cracking — DRAGON-STUDIO
+  - https://pixabay.com/sound-effects/household-glass-cracking-511310/
+  - Pixabay description: Glass / Ice / Cracking; MP3; free for use under the Pixabay Content License.
+- Shattering Ice — DRAGON-STUDIO
+  - https://pixabay.com/sound-effects/shattering-ice-454251/
+  - Used as a secondary tonal reference for a larger frozen fracture.
+
+The current connector still does not expose the direct downloadable Pixabay MP3 bytes. This revision therefore does not claim those two new files were downloaded. To remove the incorrect explosion character immediately, the runtime Ice Bolt assets now alias the repository's existing real glass-break WAV (`alchemist_vial_break.wav`) under dedicated Stage 5 paths:
+- `stage5_archmage_ice_crystal_launch.wav` -> existing glass-break WAV, high pitch (1.48), -16 dB for a short crystalline cast snap
+- `stage5_archmage_ice_crystal_impact.wav` -> existing glass-break WAV, lower pitch (0.94), -13 dB for a broader ice-fracture hit
+
+The previous generic-magic/explosion files `stage5_archmage_ice_bolt_pixabay.mp3` and `stage5_archmage_ice_impact_pixabay.mp3` remain tracked but are no longer referenced by Stage 5 runtime code.
