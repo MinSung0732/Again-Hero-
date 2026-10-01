@@ -1,3 +1,11 @@
+### Dedicated lobby header art pass
+- 로비 헤더 전용 `assets/art/UI/lobby_header/` 리소스 4종(`left_wing.svg`, `right_wing.svg`, `coin.svg`, `plus.svg`)을 신규 제작.
+- 기존 전투 HUD `side_frame.svg` 재활용을 중단하고 로비 전용 좌/우 윙 에셋으로 교체해 중앙 로고와 양옆 정보 바가 명확히 분리되도록 디자인 통일.
+- 좌측 골드 HUD에 전용 코인 아이콘과 `+` 버튼을 추가하고, `+` 버튼은 실제 상점 탭으로 이동하도록 연결.
+- 기존 2줄 골드/최고 해금 정보 구조는 유지하면서 신규 윙 비율에 맞춰 텍스트 위치와 폰트 크기를 재조정.
+- 중앙 `AgainHeroLogo.png`와 작은 `logo_backplate.svg`는 유지해 기존 게임 로고 정체성을 보존.
+- 중앙 던전 카드/하단 네비/스테이지 로직은 변경하지 않음.
+
 ### Lobby header two-line info layout
 - 좌측 골드 HUD를 `골드` / 실제 골드 값의 2줄 구조로 분리.
 - 우측 최고 해금 HUD를 `최고 해금` / `Stage N`의 2줄 구조로 분리해 중앙 로고와의 가로 충돌을 줄임.
