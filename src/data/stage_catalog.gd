@@ -3,6 +3,29 @@ class_name StageCatalog
 
 const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4", "stage_5", "stage_6", "stage_7", "stage_8", "stage_9", "stage_10"]
 
+const RUN_REWARD_RULES := {
+	"base_reward": 30,
+	"victory_reward": 20,
+	"damage_step_ratio": 0.10,
+	"damage_step_reward": 3,
+	"damage_max": 60,
+	"demon_level_step_reward": 3,
+	"demon_level_max": 30,
+	"hero_level_step_reward": 2,
+	"hero_level_max": 30,
+	"summon_spend_step": 20.0,
+	"summon_spend_step_reward": 2,
+	"summon_spend_max": 30,
+	"remaining_time_step_seconds": 30.0,
+	"remaining_time_step_reward": 3,
+	"remaining_time_max": 30,
+	"hero_augment_reward": 2,
+	"hero_augment_max": 10,
+	"strategy_switch_reward": 3,
+	"strategy_switch_max": 12,
+	"total_max": 200,
+}
+
 const STAGES = {
 	"stage_1": {
 		"id": "stage_1",
@@ -15,32 +38,32 @@ const STAGES = {
 		"hero_level_start": 1,
 		"map_width": 3200,
 		"map_height": 3200,
-		"run_duration_seconds": 360.0,
+		"run_duration_seconds": 300.0,
 		"event_timeline": [
 			{
 				"id": "elite_01",
-				"at_seconds": 90.0,
+				"at_seconds": 75.0,
 				"type": "elite",
 				"name": "1차 돌연변이",
 				"selection_mode": "team",
 				"mutation_profile_id": "mutation_1",
 			},			{
 				"id": "elite_02",
-				"at_seconds": 180.0,
+				"at_seconds": 150.0,
 				"type": "elite",
 				"name": "2차 돌연변이",
 				"selection_mode": "team",
 				"mutation_profile_id": "mutation_2",
 			},			{
 				"id": "miniboss_01",
-				"at_seconds": 240.0,
+				"at_seconds": 200.0,
 				"type": "miniboss",
 				"name": "대돌연변이",
 				"selection_mode": "team",
 				"mutation_profile_id": "greater_mutation",
 			},			{
 				"id": "boss_01",
-				"at_seconds": 300.0,
+				"at_seconds": 250.0,
 				"type": "boss",
 				"name": "침공 대장",
 				"selection_mode": "team_random",
@@ -51,7 +74,7 @@ const STAGES = {
 				"visual_scale": 1.50,
 			},
 		],
-		"first_clear_reward": 250,
+		"first_clear_reward": 300,
 		"run_reward_multiplier": 1.00,
 		"next_stage_id": "stage_2",
 	},
@@ -66,11 +89,11 @@ const STAGES = {
 		"hero_level_start": 1,
 		"map_width": 3600,
 		"map_height": 3600,
-		"run_duration_seconds": 420.0,
+		"run_duration_seconds": 330.0,
 		"event_timeline": [
 			{
 				"id": "stage2_elite_01",
-				"at_seconds": 105.0,
+				"at_seconds": 85.0,
 				"type": "elite",
 				"name": "1차 추격 돌연변이",
 				"selection_mode": "team",
@@ -81,7 +104,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage2_elite_02",
-				"at_seconds": 210.0,
+				"at_seconds": 165.0,
 				"type": "elite",
 				"name": "2차 추격 돌연변이",
 				"selection_mode": "team",
@@ -92,7 +115,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage2_miniboss_01",
-				"at_seconds": 300.0,
+				"at_seconds": 235.0,
 				"type": "miniboss",
 				"name": "대돌연변이 추격자",
 				"selection_mode": "team",
@@ -103,7 +126,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage2_boss_01",
-				"at_seconds": 360.0,
+				"at_seconds": 285.0,
 				"type": "boss",
 				"name": "최종 침공 대장",
 				"selection_mode": "team_random",
@@ -117,8 +140,8 @@ const STAGES = {
 				"reinforcement_interval": 0.12,
 			},
 		],
-		"first_clear_reward": 400,
-		"run_reward_multiplier": 1.35,
+		"first_clear_reward": 450,
+		"run_reward_multiplier": 1.15,
 		"next_stage_id": "stage_3",
 	},
 	"stage_3": {
@@ -132,11 +155,11 @@ const STAGES = {
 		"hero_level_start": 1,
 		"map_width": 3800,
 		"map_height": 3800,
-		"run_duration_seconds": 480.0,
+		"run_duration_seconds": 360.0,
 		"event_timeline": [
 			{
 				"id": "stage3_elite_01",
-				"at_seconds": 120.0,
+				"at_seconds": 90.0,
 				"type": "elite",
 				"name": "1차 철벽 돌연변이",
 				"selection_mode": "team",
@@ -147,7 +170,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage3_elite_02",
-				"at_seconds": 240.0,
+				"at_seconds": 180.0,
 				"type": "elite",
 				"name": "2차 철벽 돌연변이",
 				"selection_mode": "team",
@@ -158,7 +181,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage3_miniboss_01",
-				"at_seconds": 360.0,
+				"at_seconds": 270.0,
 				"type": "miniboss",
 				"name": "대돌연변이 파쇄자",
 				"selection_mode": "team",
@@ -169,7 +192,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage3_boss_01",
-				"at_seconds": 420.0,
+				"at_seconds": 315.0,
 				"type": "boss",
 				"name": "철벽 분쇄 대장",
 				"selection_mode": "team_random",
@@ -183,8 +206,8 @@ const STAGES = {
 				"reinforcement_interval": 0.12,
 			},
 		],
-		"first_clear_reward": 600,
-		"run_reward_multiplier": 1.70,
+		"first_clear_reward": 650,
+		"run_reward_multiplier": 1.30,
 		"next_stage_id": "stage_4",
 	},
 	"stage_4": {
@@ -198,11 +221,11 @@ const STAGES = {
 		"hero_level_start": 1,
 		"map_width": 4000,
 		"map_height": 4000,
-		"run_duration_seconds": 540.0,
+		"run_duration_seconds": 420.0,
 		"event_timeline": [
 			{
 				"id": "stage4_elite_01",
-				"at_seconds": 135.0,
+				"at_seconds": 105.0,
 				"type": "elite",
 				"name": "1차 탄막 돌연변이",
 				"selection_mode": "team",
@@ -213,7 +236,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage4_elite_02",
-				"at_seconds": 270.0,
+				"at_seconds": 210.0,
 				"type": "elite",
 				"name": "2차 탄막 돌연변이",
 				"selection_mode": "team",
@@ -224,7 +247,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage4_miniboss_01",
-				"at_seconds": 405.0,
+				"at_seconds": 315.0,
 				"type": "miniboss",
 				"name": "대돌연변이 사격 돌파대",
 				"selection_mode": "team",
@@ -235,7 +258,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage4_boss_01",
-				"at_seconds": 480.0,
+				"at_seconds": 375.0,
 				"type": "boss",
 				"name": "최종 침공 대장",
 				"selection_mode": "team_random",
@@ -249,8 +272,8 @@ const STAGES = {
 				"reinforcement_interval": 0.12,
 			},
 		],
-		"first_clear_reward": 800,
-		"run_reward_multiplier": 2.00,
+		"first_clear_reward": 1000,
+		"run_reward_multiplier": 1.60,
 		"next_stage_id": "stage_5",
 	},
 	"stage_5": {
@@ -264,11 +287,11 @@ const STAGES = {
 		"hero_level_start": 1,
 		"map_width": 4000,
 		"map_height": 4000,
-		"run_duration_seconds": 540.0,
+		"run_duration_seconds": 480.0,
 		"event_timeline": [
 			{
 				"id": "stage5_elite_01",
-				"at_seconds": 135.0,
+				"at_seconds": 120.0,
 				"type": "elite",
 				"name": "1차 원소 돌연변이",
 				"selection_mode": "team",
@@ -279,7 +302,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage5_elite_02",
-				"at_seconds": 270.0,
+				"at_seconds": 240.0,
 				"type": "elite",
 				"name": "2차 원소 돌연변이",
 				"selection_mode": "team",
@@ -290,7 +313,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage5_miniboss_01",
-				"at_seconds": 405.0,
+				"at_seconds": 360.0,
 				"type": "miniboss",
 				"name": "대돌연변이 마력 파쇄대",
 				"selection_mode": "team",
@@ -301,7 +324,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage5_boss_01",
-				"at_seconds": 480.0,
+				"at_seconds": 425.0,
 				"type": "boss",
 				"name": "대마법 침공 대장",
 				"selection_mode": "team_random",
@@ -315,8 +338,8 @@ const STAGES = {
 				"reinforcement_interval": 0.12,
 			},
 		],
-		"first_clear_reward": 0,
-		"run_reward_multiplier": 2.00,
+		"first_clear_reward": 1300,
+		"run_reward_multiplier": 1.85,
 		"next_stage_id": "stage_6",
 	},
 	"stage_6": {
@@ -330,11 +353,11 @@ const STAGES = {
 		"hero_level_start": 1,
 		"map_width": 4200,
 		"map_height": 4200,
-		"run_duration_seconds": 600.0,
+		"run_duration_seconds": 540.0,
 		"event_timeline": [
 			{
 				"id": "stage6_elite_01",
-				"at_seconds": 120.0,
+				"at_seconds": 110.0,
 				"type": "elite",
 				"name": "1차 혈전 돌연변이",
 				"selection_mode": "team",
@@ -345,7 +368,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage6_elite_02",
-				"at_seconds": 240.0,
+				"at_seconds": 215.0,
 				"type": "elite",
 				"name": "2차 광란 돌연변이",
 				"selection_mode": "team",
@@ -356,7 +379,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage6_elite_03",
-				"at_seconds": 360.0,
+				"at_seconds": 325.0,
 				"type": "elite",
 				"name": "3차 폭주 돌연변이",
 				"selection_mode": "team",
@@ -367,7 +390,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage6_miniboss_01",
-				"at_seconds": 480.0,
+				"at_seconds": 430.0,
 				"type": "miniboss",
 				"name": "대돌연변이 혈귀",
 				"selection_mode": "team",
@@ -378,7 +401,7 @@ const STAGES = {
 			},
 			{
 				"id": "stage6_boss_01",
-				"at_seconds": 540.0,
+				"at_seconds": 485.0,
 				"type": "boss",
 				"name": "광란 침공 대장",
 				"selection_mode": "team_random",
@@ -392,8 +415,8 @@ const STAGES = {
 				"reinforcement_interval": 0.12,
 			},
 		],
-		"first_clear_reward": 0,
-		"run_reward_multiplier": 2.25,
+		"first_clear_reward": 1700,
+		"run_reward_multiplier": 2.10,
 		"next_stage_id": "stage_7",
 	},
 	"stage_7": {
@@ -469,8 +492,8 @@ const STAGES = {
 				"reinforcement_interval": 0.12,
 			},
 		],
-		"first_clear_reward": 0,
-		"run_reward_multiplier": 2.50,
+		"first_clear_reward": 2200,
+		"run_reward_multiplier": 2.35,
 		"next_stage_id": "stage_8",
 	},
 	"stage_8": {
@@ -546,8 +569,8 @@ const STAGES = {
 				"reinforcement_interval": 0.12,
 			},
 		],
-		"first_clear_reward": 0,
-		"run_reward_multiplier": 2.75,
+		"first_clear_reward": 2800,
+		"run_reward_multiplier": 2.60,
 		"next_stage_id": "stage_9",
 	},
 	"stage_9": {
@@ -623,8 +646,8 @@ const STAGES = {
 				"reinforcement_interval": 0.12,
 			},
 		],
-		"first_clear_reward": 0,
-		"run_reward_multiplier": 3.00,
+		"first_clear_reward": 3500,
+		"run_reward_multiplier": 2.90,
 		"next_stage_id": "stage_10",
 	},
 	"stage_10": {
@@ -646,7 +669,7 @@ const STAGES = {
 			{"id": "stage10_miniboss_01", "at_seconds": 480.0, "type": "miniboss", "name": "대돌연변이 별의 파수꾼", "selection_mode": "team", "mutation_profile_id": "greater_mutation", "reinforcement_count": 24, "reinforcement_batch_size": 4, "reinforcement_interval": 0.12},
 			{"id": "stage10_boss_01", "at_seconds": 540.0, "type": "boss", "name": "대현자 침공 대장", "selection_mode": "team_random", "hp_multiplier": 12.5, "damage_multiplier": 3.75, "speed_multiplier": 1.28, "exp_multiplier": 5.4, "visual_scale": 1.72, "reinforcement_count": 28, "reinforcement_batch_size": 4, "reinforcement_interval": 0.12},
 		],
-		"first_clear_reward": 0,
+		"first_clear_reward": 4500,
 		"run_reward_multiplier": 3.25,
 		"next_stage_id": "",
 	},

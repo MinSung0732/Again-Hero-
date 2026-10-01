@@ -8,19 +8,10 @@ const STRATEGY_MIN_SPEND := 12.0
 const STRATEGY_DOMINANCE_RATIO := 0.60
 const STRATEGY_SWITCH_COOLDOWN := 6.0
 
-const RESEARCH_BASE_REWARD := 80
-const RESEARCH_DAMAGE_STEP_RATIO := 0.10
-const RESEARCH_DAMAGE_STEP_REWARD := 6
-const RESEARCH_DAMAGE_MAX := 60
-const RESEARCH_TIME_STEP_SECONDS := 60.0
-const RESEARCH_TIME_STEP_REWARD := 5
-const RESEARCH_TIME_MAX := 30
-const RESEARCH_OBSERVATION_REWARD := 4
-const RESEARCH_OBSERVATION_MAX := 20
-const RESEARCH_TOTAL_MAX := 160
-
 var elapsed_seconds: float = 0.0
 var duration_seconds: float = 0.0
+var total_damage_dealt: int = 0
+var peak_hero_max_hp: int = 1
 
 var summon_counts: Dictionary = {}
 var summon_spend: Dictionary = {}
@@ -45,6 +36,8 @@ func reset(
 ) -> void:
 	elapsed_seconds = 0.0
 	duration_seconds = maxf(new_duration_seconds, 0.0)
+	total_damage_dealt = 0
+	peak_hero_max_hp = maxi(initial_hero_max_hp, 1)
 
 	summon_counts.clear()
 	summon_spend.clear()
@@ -118,10 +111,16 @@ func record_hero_hp(current_hp: int, max_hp: int) -> void:
 	var safe_max := maxi(max_hp, 1)
 	var safe_hp := clampi(current_hp, 0, safe_max)
 	var ratio := float(safe_hp) / float(safe_max)
+	peak_hero_max_hp = maxi(peak_hero_max_hp, safe_max)
 
 	if ratio < lowest_hero_hp_ratio:
 		lowest_hero_hp_ratio = ratio
 		lowest_hero_hp = safe_hp
+
+func record_hero_damage(amount: int) -> void:
+	if amount <= 0:
+		return
+	total_damage_dealt += amount
 
 func record_hero_augment(
 	level: int,
@@ -135,44 +134,120 @@ func record_hero_augment(
 		"reason": reason,
 	})
 
-func get_research_reward_breakdown() -> Dictionary:
-	var damage_ratio := clampf(1.0 - lowest_hero_hp_ratio, 0.0, 1.0)
+func get_research_reward_breakdown(
+	victory: bool,
+	demon_level: int,
+	hero_level: int,
+	reward_rules: Dictionary
+) -> Dictionary:
+	var base_reward := maxi(int(reward_rules.get("base_reward", 0)), 0)
+	var victory_reward := (
+		maxi(int(reward_rules.get("victory_reward", 0)), 0)
+		if victory
+		else 0
+	)
+	var damage_step_ratio := maxf(
+		float(reward_rules.get("damage_step_ratio", 0.10)),
+		0.001
+	)
+	var damage_ratio := (
+		float(total_damage_dealt) / float(maxi(peak_hero_max_hp, 1))
+	)
 	var damage_steps := int(floor(
-		(damage_ratio + 0.0001) / RESEARCH_DAMAGE_STEP_RATIO
+		(damage_ratio + 0.0001) / damage_step_ratio
 	))
 	var damage_reward := mini(
-		damage_steps * RESEARCH_DAMAGE_STEP_REWARD,
-		RESEARCH_DAMAGE_MAX
+		damage_steps * maxi(
+			int(reward_rules.get("damage_step_reward", 0)),
+			0
+		),
+		maxi(int(reward_rules.get("damage_max", 0)), 0)
 	)
 
-	var time_steps := int(floor(
-		maxf(elapsed_seconds, 0.0) / RESEARCH_TIME_STEP_SECONDS
-	))
-	var time_reward := mini(
-		time_steps * RESEARCH_TIME_STEP_REWARD,
-		RESEARCH_TIME_MAX
+	var demon_level_reward := mini(
+		maxi(demon_level - 1, 0)
+		* maxi(int(reward_rules.get("demon_level_step_reward", 0)), 0),
+		maxi(int(reward_rules.get("demon_level_max", 0)), 0)
 	)
+	var hero_level_reward := mini(
+		maxi(hero_level - 1, 0)
+		* maxi(int(reward_rules.get("hero_level_step_reward", 0)), 0),
+		maxi(int(reward_rules.get("hero_level_max", 0)), 0)
+	)
+
+	var total_summon_spend := 0.0
+	for raw_spend in summon_spend.values():
+		total_summon_spend += maxf(float(raw_spend), 0.0)
+	var summon_spend_step := maxf(
+		float(reward_rules.get("summon_spend_step", 20.0)),
+		0.001
+	)
+	var summon_steps := int(floor(
+		(total_summon_spend + 0.0001) / summon_spend_step
+	))
+	var summon_reward := mini(
+		summon_steps * maxi(
+			int(reward_rules.get("summon_spend_step_reward", 0)),
+			0
+		),
+		maxi(int(reward_rules.get("summon_spend_max", 0)), 0)
+	)
+
+	var remaining_reward := 0
+	if victory:
+		var remaining_step := maxf(
+			float(reward_rules.get("remaining_time_step_seconds", 30.0)),
+			0.001
+		)
+		var remaining_steps := int(floor(
+			(get_remaining_seconds() + 0.0001) / remaining_step
+		))
+		remaining_reward = mini(
+			remaining_steps * maxi(
+				int(reward_rules.get("remaining_time_step_reward", 0)),
+				0
+			),
+			maxi(int(reward_rules.get("remaining_time_max", 0)), 0)
+		)
 
 	var observation_reward := mini(
-		hero_augment_events.size() * RESEARCH_OBSERVATION_REWARD,
-		RESEARCH_OBSERVATION_MAX
+		hero_augment_events.size()
+		* maxi(int(reward_rules.get("hero_augment_reward", 0)), 0),
+		maxi(int(reward_rules.get("hero_augment_max", 0)), 0)
+	)
+	var strategy_reward := mini(
+		strategy_switches.size()
+		* maxi(int(reward_rules.get("strategy_switch_reward", 0)), 0),
+		maxi(int(reward_rules.get("strategy_switch_max", 0)), 0)
 	)
 
 	var total := mini(
-		RESEARCH_BASE_REWARD
+		base_reward
+		+ victory_reward
 		+ damage_reward
-		+ time_reward
-		+ observation_reward,
-		RESEARCH_TOTAL_MAX
+		+ demon_level_reward
+		+ hero_level_reward
+		+ summon_reward
+		+ remaining_reward
+		+ observation_reward
+		+ strategy_reward,
+		maxi(int(reward_rules.get("total_max", 0)), 0)
 	)
 
 	return {
-		"base": RESEARCH_BASE_REWARD,
+		"base": base_reward,
+		"victory": victory_reward,
 		"damage": damage_reward,
-		"time": time_reward,
+		"demon_level": demon_level_reward,
+		"hero_level": hero_level_reward,
+		"summon": summon_reward,
+		"remaining_time": remaining_reward,
 		"observation": observation_reward,
+		"strategy": strategy_reward,
 		"total": total,
 		"damage_ratio": damage_ratio,
+		"total_damage_dealt": total_damage_dealt,
+		"total_summon_spend": total_summon_spend,
 	}
 
 func get_snapshot() -> Dictionary:
@@ -180,6 +255,8 @@ func get_snapshot() -> Dictionary:
 		"elapsed_seconds": elapsed_seconds,
 		"duration_seconds": duration_seconds,
 		"remaining_seconds": get_remaining_seconds(),
+		"total_damage_dealt": total_damage_dealt,
+		"peak_hero_max_hp": peak_hero_max_hp,
 		"summon_counts": summon_counts.duplicate(true),
 		"summon_spend": summon_spend.duplicate(true),
 		"summon_demon_exp": summon_demon_exp.duplicate(true),
@@ -202,6 +279,7 @@ func get_result_summary() -> String:
 		lowest_hero_hp,
 		lowest_hero_hp_ratio * 100.0,
 	])
+	lines.append("Hero 누적 HP 피해: %d" % total_damage_dealt)
 
 	var summon_parts: PackedStringArray = []
 	for monster_type in MONSTER_CATALOG.get_ids():

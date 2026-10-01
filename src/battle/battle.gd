@@ -1924,6 +1924,7 @@ func _on_hero_health_changed(current_hp: int, max_hp_value: int) -> void:
 
 	if last_hero_hp_for_ultimate > current_hp:
 		var dealt_damage := last_hero_hp_for_ultimate - current_hp
+		run_metrics.record_hero_damage(dealt_damage)
 		_add_demon_ultimate_charge(
 			float(dealt_damage)
 			* DEMON_ULTIMATES.HERO_DAMAGE_CHARGE_MULTIPLIER
@@ -3856,7 +3857,15 @@ func _on_run_time_up() -> void:
 	_finish_battle(result_text, false)
 
 func _grant_run_research_reward(apply_clear_multiplier: bool) -> String:
-	var breakdown: Dictionary = run_metrics.get_research_reward_breakdown()
+	var hero_level := 1
+	if is_instance_valid(hero):
+		hero_level = maxi(int(hero.get("level")), 1)
+	var breakdown: Dictionary = run_metrics.get_research_reward_breakdown(
+		apply_clear_multiplier,
+		demon_level,
+		hero_level,
+		STAGE_CATALOG.RUN_REWARD_RULES
+	)
 	var base_total := int(breakdown.get("total", 0))
 	if base_total <= 0:
 		return ""
@@ -3878,10 +3887,28 @@ func _grant_run_research_reward(apply_clear_multiplier: bool) -> String:
 
 	if apply_clear_multiplier:
 		return (
-			"\nRun 연구 +%d · 기본 산정 %d × Stage %.2f"
-			% [granted, base_total, stage_multiplier]
+			"\nRun 연구 +%d · 산정 %d × Stage %.2f%s"
+			% [granted, base_total, stage_multiplier, _format_run_reward_detail(breakdown)]
 		)
-	return "\nRun 연구 +%d" % granted
+	return "\nRun 연구 +%d%s" % [
+		granted,
+		_format_run_reward_detail(breakdown),
+	]
+
+func _format_run_reward_detail(breakdown: Dictionary) -> String:
+	return (
+		"\n기본 +%d · 피해 +%d · 마왕Lv +%d · 용사Lv +%d"
+		+ " · 소환 +%d · 신속 +%d · 관찰/전환 +%d"
+	) % [
+		int(breakdown.get("base", 0)) + int(breakdown.get("victory", 0)),
+		int(breakdown.get("damage", 0)),
+		int(breakdown.get("demon_level", 0)),
+		int(breakdown.get("hero_level", 0)),
+		int(breakdown.get("summon", 0)),
+		int(breakdown.get("remaining_time", 0)),
+		int(breakdown.get("observation", 0))
+		+ int(breakdown.get("strategy", 0)),
+	]
 
 func get_run_analysis_summary() -> String:
 	var lines: PackedStringArray = []
