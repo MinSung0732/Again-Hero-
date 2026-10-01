@@ -1,3 +1,11 @@
+### Stage 5 elemental archmage combat SFX
+- Stage 5 대마법 용사 사운드를 실제 스킬/이펙트에 맞춰 연결: 6속성 기본 탄환, 연소 충전/방출, 아이스볼트 발사/충돌, 땅의 가시, 신성력, 체인대거 발사/연쇄 타격, 조화, 폭풍, 긴급 블링크, 피격, 사망.
+- effect1=땅의 가시, effect2=연소, effect3=신성력, effect4=아이스볼트, effect5=체인대거, effect7=조화/오브, effect8=폭풍/블링크의 기존 시각 의미를 그대로 따라 사운드 훅을 배치.
+- Pixabay의 Magic Spell, Fire Spell Impact, Ice Spell Impact, Earth Spell Impact, Holy Spell Cast, Electric/Wind Elemental Spell Impact를 스킬 의미 기준 후보로 비교하고 출처 문서를 추가.
+- 현재 커넥터가 후보 페이지의 직접 MP3 바이너리 URL을 제공하지 않아 신규 후보를 다운로드했다고 가장하지 않고, 저장소에 이미 추적된 Pixabay 원본 바이트를 Stage 5 전용 런타임 파일명으로 재사용.
+- 기본 공격은 3-player 풀과 속성별 pitch 변형, 땅의 가시/신성력/체인대거 연쇄 타격은 4-player 고정 풀과 낮은 볼륨을 사용해 반복 이펙트에서 tail만 제한적으로 겹치도록 구성.
+- 게임플레이 수치, 스킬 쿨다운, AI 선택, 원소 판정, 이펙트 프레임, 투사체 피해 로직은 변경하지 않음.
+
 ### Stage 4 pistol gunner combat SFX
 - Stage 4 권총의 용사 전투 SFX 8종 연결: 기본 권총 사격, 재장전, 백스텝, 실린더타격, 데드아이 시작, 데드아이 연사, 피격, 사망.
 - 기존 Stage 4 전투 의미를 그대로 유지하고 사운드 훅만 추가. 기본 공격 1회당 사격음 1회, 데드아이는 실제 0.08초 사격 틱마다 전용 저볼륨 사격음을 재생.

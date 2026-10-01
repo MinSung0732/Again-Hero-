@@ -321,6 +321,11 @@ func _on_body_entered(body: Node) -> void:
 					)
 				)
 			monster.call("take_damage", hit_damage)
+			if (
+				is_instance_valid(source_hero)
+				and source_hero.has_method("play_archmage_chain_hit_audio")
+			):
+				source_hero.call("play_archmage_chain_hit_audio")
 			_spawn_hit_animation(
 				"res://assets/art/heroes/stage5_archmage/frames/effect5",
 				"light",

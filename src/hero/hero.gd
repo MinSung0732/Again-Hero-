@@ -124,6 +124,20 @@ const STAGE4_DEADEYE_START_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_d
 const STAGE4_DEADEYE_SHOT_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_deadeye_shot_pixabay.mp3"
 const STAGE4_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_hit_pixabay.mp3"
 const STAGE4_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_death_pixabay.mp3"
+const STAGE5_BASIC_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_basic_pixabay.mp3"
+const STAGE5_COMBUSTION_CHARGE_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_combustion_charge_pixabay.mp3"
+const STAGE5_COMBUSTION_RELEASE_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_combustion_release_pixabay.mp3"
+const STAGE5_ICE_BOLT_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_ice_bolt_pixabay.mp3"
+const STAGE5_ICE_IMPACT_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_ice_impact_pixabay.mp3"
+const STAGE5_EARTH_SPIKE_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_earth_spike_pixabay.mp3"
+const STAGE5_HOLY_BURST_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_holy_burst_pixabay.mp3"
+const STAGE5_CHAIN_LAUNCH_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_chain_launch_pixabay.mp3"
+const STAGE5_CHAIN_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_chain_hit_pixabay.mp3"
+const STAGE5_HARMONY_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_harmony_pixabay.mp3"
+const STAGE5_STORM_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_storm_pixabay.mp3"
+const STAGE5_BLINK_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_blink_pixabay.mp3"
+const STAGE5_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_hit_pixabay.mp3"
+const STAGE5_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_death_pixabay.mp3"
 
 # Hero SFX loudness defaults are anchored to the established Stage 7-10 mix.
 # Source loudness and repetition density may justify a quieter per-asset value,
@@ -555,6 +569,24 @@ var gunner_cylinder_audio: AudioStreamPlayer = null
 var gunner_deadeye_start_audio: AudioStreamPlayer = null
 var gunner_hit_audio: AudioStreamPlayer = null
 var gunner_death_audio: AudioStreamPlayer = null
+var archmage_basic_audio_pool: Array[AudioStreamPlayer] = []
+var archmage_basic_audio_cursor: int = 0
+var archmage_combustion_charge_audio: AudioStreamPlayer = null
+var archmage_combustion_release_audio: AudioStreamPlayer = null
+var archmage_ice_bolt_audio: AudioStreamPlayer = null
+var archmage_ice_impact_audio: AudioStreamPlayer = null
+var archmage_earth_audio_pool: Array[AudioStreamPlayer] = []
+var archmage_earth_audio_cursor: int = 0
+var archmage_holy_audio_pool: Array[AudioStreamPlayer] = []
+var archmage_holy_audio_cursor: int = 0
+var archmage_chain_launch_audio: AudioStreamPlayer = null
+var archmage_chain_hit_audio_pool: Array[AudioStreamPlayer] = []
+var archmage_chain_hit_audio_cursor: int = 0
+var archmage_harmony_audio: AudioStreamPlayer = null
+var archmage_storm_audio: AudioStreamPlayer = null
+var archmage_blink_audio: AudioStreamPlayer = null
+var archmage_hit_audio: AudioStreamPlayer = null
+var archmage_death_audio: AudioStreamPlayer = null
 var purifier_basic_audio: AudioStreamPlayer = null
 var purifier_shield_create_audio: AudioStreamPlayer = null
 var purifier_shield_break_audio: AudioStreamPlayer = null
@@ -9314,6 +9346,203 @@ func _play_gunner_death_audio() -> void:
 	_play_gunner_audio(gunner_death_audio)
 
 
+func _ensure_archmage_audio_runtime() -> void:
+	if hero_archetype != "archmage_elementalist":
+		return
+
+	if archmage_basic_audio_pool.is_empty():
+		for index in range(3):
+			archmage_basic_audio_pool.append(
+				_create_hero_sfx_player(
+					STAGE5_BASIC_AUDIO_PATH,
+					HERO_SFX_DB_PRIMARY_ATTACK - 3.0,
+					1.0
+				)
+			)
+
+	if not is_instance_valid(archmage_combustion_charge_audio):
+		archmage_combustion_charge_audio = _create_hero_sfx_player(
+			STAGE5_COMBUSTION_CHARGE_AUDIO_PATH,
+			HERO_SFX_DB_REGULAR_SKILL,
+			0.92
+		)
+	if not is_instance_valid(archmage_combustion_release_audio):
+		archmage_combustion_release_audio = _create_hero_sfx_player(
+			STAGE5_COMBUSTION_RELEASE_AUDIO_PATH,
+			HERO_SFX_DB_HEAVY_SKILL - 1.0,
+			0.88
+		)
+	if not is_instance_valid(archmage_ice_bolt_audio):
+		archmage_ice_bolt_audio = _create_hero_sfx_player(
+			STAGE5_ICE_BOLT_AUDIO_PATH,
+			HERO_SFX_DB_REGULAR_SKILL,
+			1.18
+		)
+	if not is_instance_valid(archmage_ice_impact_audio):
+		archmage_ice_impact_audio = _create_hero_sfx_player(
+			STAGE5_ICE_IMPACT_AUDIO_PATH,
+			HERO_SFX_DB_REGULAR_SKILL - 2.0,
+			1.28
+		)
+
+	if archmage_earth_audio_pool.is_empty():
+		for index in range(4):
+			archmage_earth_audio_pool.append(
+				_create_hero_sfx_player(
+					STAGE5_EARTH_SPIKE_AUDIO_PATH,
+					HERO_SFX_DB_REPEATED_SECONDARY - 1.0,
+					0.78
+				)
+			)
+
+	if archmage_holy_audio_pool.is_empty():
+		for index in range(4):
+			archmage_holy_audio_pool.append(
+				_create_hero_sfx_player(
+					STAGE5_HOLY_BURST_AUDIO_PATH,
+					HERO_SFX_DB_REPEATED_SECONDARY,
+					1.20
+				)
+			)
+
+	if not is_instance_valid(archmage_chain_launch_audio):
+		archmage_chain_launch_audio = _create_hero_sfx_player(
+			STAGE5_CHAIN_LAUNCH_AUDIO_PATH,
+			HERO_SFX_DB_REGULAR_SKILL - 2.0,
+			1.18
+		)
+	if archmage_chain_hit_audio_pool.is_empty():
+		for index in range(4):
+			archmage_chain_hit_audio_pool.append(
+				_create_hero_sfx_player(
+					STAGE5_CHAIN_HIT_AUDIO_PATH,
+					HERO_SFX_DB_REPEATED_SECONDARY + 2.0,
+					1.30
+				)
+			)
+
+	if not is_instance_valid(archmage_harmony_audio):
+		archmage_harmony_audio = _create_hero_sfx_player(
+			STAGE5_HARMONY_AUDIO_PATH,
+			HERO_SFX_DB_HEAVY_SKILL - 1.0,
+			1.10
+		)
+	if not is_instance_valid(archmage_storm_audio):
+		archmage_storm_audio = _create_hero_sfx_player(
+			STAGE5_STORM_AUDIO_PATH,
+			HERO_SFX_DB_REGULAR_SKILL - 2.0,
+			1.06
+		)
+	if not is_instance_valid(archmage_blink_audio):
+		archmage_blink_audio = _create_hero_sfx_player(
+			STAGE5_BLINK_AUDIO_PATH,
+			HERO_SFX_DB_REGULAR_SKILL - 4.0,
+			1.18
+		)
+	if not is_instance_valid(archmage_hit_audio):
+		archmage_hit_audio = _create_hero_sfx_player(
+			STAGE5_HIT_AUDIO_PATH,
+			HERO_SFX_DB_HIT,
+			1.24
+		)
+	if not is_instance_valid(archmage_death_audio):
+		archmage_death_audio = _create_hero_sfx_player(
+			STAGE5_DEATH_AUDIO_PATH,
+			HERO_SFX_DB_DEATH,
+			0.88
+		)
+
+
+func _play_archmage_player(player: AudioStreamPlayer) -> void:
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	player.stop()
+	player.play()
+
+
+func _play_archmage_basic_audio(element: String) -> void:
+	_ensure_archmage_audio_runtime()
+	if archmage_basic_audio_pool.is_empty():
+		return
+	var player := archmage_basic_audio_pool[
+		archmage_basic_audio_cursor % archmage_basic_audio_pool.size()
+	]
+	archmage_basic_audio_cursor = (
+		archmage_basic_audio_cursor + 1
+	) % archmage_basic_audio_pool.size()
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	var element_pitch := {
+		"earth": 0.82,
+		"fire": 0.96,
+		"ice": 1.16,
+		"light": 1.28,
+		"wind": 1.08,
+		"holy": 1.22,
+	}
+	player.pitch_scale = float(element_pitch.get(element, 1.0))
+	player.stop()
+	player.play()
+
+
+func _play_archmage_earth_spike_audio() -> void:
+	_ensure_archmage_audio_runtime()
+	if archmage_earth_audio_pool.is_empty():
+		return
+	var player := archmage_earth_audio_pool[
+		archmage_earth_audio_cursor % archmage_earth_audio_pool.size()
+	]
+	archmage_earth_audio_cursor = (
+		archmage_earth_audio_cursor + 1
+	) % archmage_earth_audio_pool.size()
+	if is_instance_valid(player) and player.stream != null:
+		player.pitch_scale = 0.74 + 0.04 * float(archmage_earth_audio_cursor % 3)
+		player.stop()
+		player.play()
+
+
+func _play_archmage_holy_burst_audio() -> void:
+	_ensure_archmage_audio_runtime()
+	if archmage_holy_audio_pool.is_empty():
+		return
+	var player := archmage_holy_audio_pool[
+		archmage_holy_audio_cursor % archmage_holy_audio_pool.size()
+	]
+	archmage_holy_audio_cursor = (
+		archmage_holy_audio_cursor + 1
+	) % archmage_holy_audio_pool.size()
+	if is_instance_valid(player) and player.stream != null:
+		player.pitch_scale = 1.14 + 0.04 * float(archmage_holy_audio_cursor % 4)
+		player.stop()
+		player.play()
+
+
+func play_archmage_chain_hit_audio() -> void:
+	_ensure_archmage_audio_runtime()
+	if archmage_chain_hit_audio_pool.is_empty():
+		return
+	var player := archmage_chain_hit_audio_pool[
+		archmage_chain_hit_audio_cursor % archmage_chain_hit_audio_pool.size()
+	]
+	archmage_chain_hit_audio_cursor = (
+		archmage_chain_hit_audio_cursor + 1
+	) % archmage_chain_hit_audio_pool.size()
+	if is_instance_valid(player) and player.stream != null:
+		player.pitch_scale = 1.22 + 0.04 * float(archmage_chain_hit_audio_cursor % 4)
+		player.stop()
+		player.play()
+
+
+func _play_archmage_hit_audio() -> void:
+	_ensure_archmage_audio_runtime()
+	_play_archmage_player(archmage_hit_audio)
+
+
+func _play_archmage_death_audio() -> void:
+	_ensure_archmage_audio_runtime()
+	_play_archmage_player(archmage_death_audio)
+
+
 func _create_sage_audio_player(audio_path: String, volume_db: float, pitch_scale: float) -> AudioStreamPlayer:
 	var player := AudioStreamPlayer.new()
 	player.bus = &"SFX"
@@ -10337,6 +10566,7 @@ func _fire_archmage_projectile(current_target: Node2D) -> void:
 	)
 	if projectile == null:
 		return
+	_play_archmage_basic_audio(element)
 	projectile.global_position = global_position + shot_direction * 52.0
 	projectile.call(
 		"setup",
@@ -10716,6 +10946,8 @@ func _end_archmage_casting_sequence() -> void:
 
 func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
 	_begin_archmage_casting_sequence()
+	_ensure_archmage_audio_runtime()
+	_play_archmage_player(archmage_combustion_charge_audio)
 	var facing := Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	if is_instance_valid(target):
 		facing = global_position.direction_to(target.global_position)
@@ -10770,10 +11002,14 @@ func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
 		maxf(float(config.get("thrust_half_width", 92.0)), 1.0),
 		thrust_damage
 	)
+	_ensure_archmage_audio_runtime()
+	_play_archmage_player(archmage_combustion_release_audio)
 	_end_archmage_casting_sequence()
 
 
 func _cast_archmage_ice_bolt(config: Dictionary, empowered: bool) -> void:
+	_ensure_archmage_audio_runtime()
+	_play_archmage_player(archmage_ice_bolt_audio)
 	var current_target := _find_farthest_monster_from_point(global_position)
 	if not is_instance_valid(current_target):
 		return
@@ -10799,6 +11035,8 @@ func resolve_archmage_ice_bolt_hit(
 	hit_position: Vector2,
 	empowered: bool
 ) -> void:
+	_ensure_archmage_audio_runtime()
+	_play_archmage_player(archmage_ice_impact_audio)
 	var config: Dictionary = archmage_skill_config.get(
 		"ice_bolt",
 		{}
@@ -10877,6 +11115,7 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 			"res://assets/art/heroes/stage5_archmage/frames/effect1",
 			"earth", 1, 11, 22.0, false, position, Vector2(0.72, 0.72)
 		)
+		_play_archmage_earth_spike_audio()
 		_damage_monsters_in_radius_once(position, radius, spike_damage, hit_ids)
 		await get_tree().create_timer(spike_delay).timeout
 
@@ -10909,6 +11148,7 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 					"earth", 1, 11, 22.0, false,
 					left_position, Vector2(0.72, 0.72)
 				)
+				_play_archmage_earth_spike_audio()
 				_damage_monsters_in_radius_once(
 					left_position,
 					radius,
@@ -10921,6 +11161,7 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 					"earth", 1, 11, 22.0, false,
 					right_position, Vector2(0.72, 0.72)
 				)
+				_play_archmage_earth_spike_audio()
 				_damage_monsters_in_radius_once(
 					right_position,
 					radius,
@@ -11017,6 +11258,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 			"res://assets/art/heroes/stage5_archmage/frames/effect3",
 			"holy", 1, 5, 20.0, false, position, Vector2(0.94, 0.94)
 		)
+		_play_archmage_holy_burst_audio()
 
 		_fill_monster_nodes_near(
 			position,
@@ -11175,6 +11417,8 @@ func _cast_archmage_chain_dagger(config: Dictionary, empowered: bool) -> void:
 	archmage_chain_dagger_active = (
 		archmage_chain_dagger_active_count > 0
 	)
+	_ensure_archmage_audio_runtime()
+	_play_archmage_player(archmage_chain_launch_audio)
 
 	for current_target in targets:
 		if not is_instance_valid(current_target):
@@ -11330,6 +11574,8 @@ func _cast_archmage_blink() -> void:
 	if best_position == start_position:
 		return
 
+	_ensure_archmage_audio_runtime()
+	_play_archmage_player(archmage_blink_audio)
 	_spawn_archmage_fx(
 		"res://assets/art/heroes/stage5_archmage/frames/effect8",
 		"wind",
@@ -11357,6 +11603,8 @@ func _cast_archmage_blink() -> void:
 
 
 func _cast_archmage_harmony(config: Dictionary) -> void:
+	_ensure_archmage_audio_runtime()
+	_play_archmage_player(archmage_harmony_audio)
 	for key in ARCHMAGE_OFFENSIVE_SKILL_KEYS:
 		archmage_skill_cooldowns[key] = 0.0
 	_add_archmage_gauge(maxf(float(config.get("gauge_refund", 50.0)), 0.0))
@@ -11367,6 +11615,8 @@ func _cast_archmage_harmony(config: Dictionary) -> void:
 
 
 func _cast_archmage_storm(config: Dictionary, empowered: bool) -> void:
+	_ensure_archmage_audio_runtime()
+	_play_archmage_player(archmage_storm_audio)
 	for index in range(8):
 		var direction := Vector2.from_angle(TAU * float(index) / 8.0)
 		var projectile := _acquire_projectile(
@@ -19099,6 +19349,8 @@ func take_damage(amount: int, source: Node = null) -> bool:
 			_play_fighter_hit_audio()
 		elif hero_archetype == "pistol_gunner":
 			_play_gunner_hit_audio()
+		elif hero_archetype == "archmage_elementalist":
+			_play_archmage_hit_audio()
 
 	if current_hp > 0 and applied_damage > 0:
 		_add_ultimate_charge(
@@ -19168,6 +19420,8 @@ func _begin_death_sequence() -> void:
 		_play_fighter_death_audio()
 	elif hero_archetype == "pistol_gunner":
 		_play_gunner_death_audio()
+	elif hero_archetype == "archmage_elementalist":
+		_play_archmage_death_audio()
 	invulnerability_timer = 0.0
 	modulate.a = 1.0
 	velocity = Vector2.ZERO
