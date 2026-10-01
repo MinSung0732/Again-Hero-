@@ -96,6 +96,12 @@ const STAGE7_FRAME_DIR := "res://assets/art/heroes/stage7_alchemist/frames"
 const STAGE8_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames"
 const STAGE9_FRAME_DIR := "res://assets/art/heroes/stage9_prist/frames"
 const STAGE10_FRAME_DIR := "res://assets/art/heroes/stage10_sage/frames"
+const STAGE1_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_basic_attack_pixabay.mp3"
+const STAGE1_BARRIER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_barrier_pixabay.mp3"
+const STAGE1_ARCANE_FIELD_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_arcane_field_pixabay.mp3"
+const STAGE1_ARCANE_PIERCER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_arcane_piercer_pixabay.mp3"
+const STAGE1_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_hit_pixabay.mp3"
+const STAGE1_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_death_pixabay.mp3"
 const SAGE_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_basic_attack_pixabay.mp3"
 const SAGE_THIRD_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_third_attack_pixabay.mp3"
 const SAGE_PHASE_AUDIO_PATH := "res://assets/audio/sfx/sage_astra_phase_pixabay.mp3"
@@ -480,6 +486,12 @@ var summoner_ai_query_candidates: Array = []
 var summoner_runtime_ready: bool = false
 var summoner_basic_effect: AnimatedSprite2D = null
 var summoner_basic_audio: AudioStreamPlayer = null
+var stage1_basic_audio: AudioStreamPlayer = null
+var stage1_barrier_audio: AudioStreamPlayer = null
+var stage1_arcane_field_audio: AudioStreamPlayer = null
+var stage1_arcane_piercer_audio: AudioStreamPlayer = null
+var stage1_hit_audio: AudioStreamPlayer = null
+var stage1_death_audio: AudioStreamPlayer = null
 var purifier_basic_audio: AudioStreamPlayer = null
 var purifier_shield_create_audio: AudioStreamPlayer = null
 var purifier_shield_break_audio: AudioStreamPlayer = null
@@ -8492,6 +8504,8 @@ func _fire_projectile(current_target: Node2D) -> void:
 	attack_pose_timer = 0.34
 	_face_attack_direction(shot_direction.x)
 	_restart_stage1_animation("attack")
+	if hero_archetype == "ranged_kiter":
+		_play_stage1_audio(&"basic")
 	if hero_archetype == "cleric_purifier":
 		_play_purifier_basic_audio()
 
@@ -8711,6 +8725,74 @@ func _set_sage_starlight_aura_active(active: bool) -> void:
 		_ensure_sage_starlight_aura()
 	if is_instance_valid(sage_starlight_aura):
 		sage_starlight_aura.visible = active
+
+
+func _create_stage1_audio_player(
+	audio_path: String,
+	volume_db: float,
+	pitch_scale: float
+) -> AudioStreamPlayer:
+	var player := AudioStreamPlayer.new()
+	player.bus = &"SFX"
+	player.volume_db = volume_db
+	player.pitch_scale = pitch_scale
+	if ResourceLoader.exists(audio_path):
+		var stream = load(audio_path)
+		if stream is AudioStream:
+			player.stream = stream
+	add_child(player)
+	return player
+
+
+func _ensure_stage1_audio_runtime() -> void:
+	if hero_archetype != "ranged_kiter":
+		return
+	if not is_instance_valid(stage1_basic_audio):
+		stage1_basic_audio = _create_stage1_audio_player(
+			STAGE1_BASIC_ATTACK_AUDIO_PATH, -16.0, 1.35
+		)
+	if not is_instance_valid(stage1_barrier_audio):
+		stage1_barrier_audio = _create_stage1_audio_player(
+			STAGE1_BARRIER_AUDIO_PATH, -13.0, 1.08
+		)
+	if not is_instance_valid(stage1_arcane_field_audio):
+		stage1_arcane_field_audio = _create_stage1_audio_player(
+			STAGE1_ARCANE_FIELD_AUDIO_PATH, -14.0, 0.96
+		)
+	if not is_instance_valid(stage1_arcane_piercer_audio):
+		stage1_arcane_piercer_audio = _create_stage1_audio_player(
+			STAGE1_ARCANE_PIERCER_AUDIO_PATH, -10.0, 1.08
+		)
+	if not is_instance_valid(stage1_hit_audio):
+		stage1_hit_audio = _create_stage1_audio_player(
+			STAGE1_HIT_AUDIO_PATH, -21.0, 1.55
+		)
+	if not is_instance_valid(stage1_death_audio):
+		stage1_death_audio = _create_stage1_audio_player(
+			STAGE1_DEATH_AUDIO_PATH, -12.0, 0.72
+		)
+
+
+func _play_stage1_audio(slot: StringName) -> void:
+	_ensure_stage1_audio_runtime()
+	var player: AudioStreamPlayer = null
+	match slot:
+		&"basic":
+			player = stage1_basic_audio
+		&"barrier":
+			player = stage1_barrier_audio
+		&"arcane_field":
+			player = stage1_arcane_field_audio
+		&"arcane_piercer":
+			player = stage1_arcane_piercer_audio
+		&"hit":
+			player = stage1_hit_audio
+		&"death":
+			player = stage1_death_audio
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	player.stop()
+	player.play()
 
 
 func _create_sage_audio_player(audio_path: String, volume_db: float, pitch_scale: float) -> AudioStreamPlayer:
@@ -11223,6 +11305,8 @@ func _activate_channel_skill() -> void:
 	if channel_effect.sprite_frames != null:
 		channel_effect.visible = true
 		channel_effect.play(&"channel")
+	if hero_archetype == "ranged_kiter":
+		_play_stage1_audio(&"arcane_field")
 
 	_apply_channel_damage()
 	channel_tick_timer = maxf(
@@ -11353,6 +11437,8 @@ func _activate_shield() -> void:
 	if shield_effect.sprite_frames != null:
 		shield_effect.visible = true
 		shield_effect.play(&"shield")
+	if hero_archetype == "ranged_kiter":
+		_play_stage1_audio(&"barrier")
 
 	queue_redraw()
 
@@ -13589,6 +13675,8 @@ func _use_piercing_projectile_ultimate() -> void:
 		speed,
 		max_range
 	)
+	if hero_archetype == "ranged_kiter":
+		_play_stage1_audio(&"arcane_piercer")
 
 func _find_best_piercing_direction() -> Vector2:
 	var max_range := maxf(
@@ -18475,6 +18563,8 @@ func take_damage(amount: int, source: Node = null) -> bool:
 	hit_flash_timer = 0.12
 	hit_pose_timer = 0.23
 	_restart_stage1_animation("hit")
+	if hero_archetype == "ranged_kiter" and current_hp > 0:
+		_play_stage1_audio(&"hit")
 
 	if current_hp > 0 and applied_damage > 0:
 		_add_ultimate_charge(
@@ -18536,6 +18626,8 @@ func _begin_death_sequence() -> void:
 		return
 
 	is_dying = true
+	if hero_archetype == "ranged_kiter":
+		_play_stage1_audio(&"death")
 	invulnerability_timer = 0.0
 	modulate.a = 1.0
 	velocity = Vector2.ZERO
