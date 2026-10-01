@@ -690,6 +690,7 @@ func _apply_new_ui_assets() -> void:
 		"HeaderBackdrop",
 		"HeaderGoldPlate",
 		"HeaderProgressPlate",
+		"HeaderCenterMask",
 		"HeaderLogoBackplate",
 		"HeaderLogo",
 	]:
@@ -709,19 +710,19 @@ func _apply_new_ui_assets() -> void:
 	gold_plate.name = "HeaderGoldPlate"
 	gold_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	gold_plate.anchor_left = 0.010
-	gold_plate.anchor_top = 0.335
-	gold_plate.anchor_right = 0.420
-	gold_plate.anchor_bottom = 0.575
+	gold_plate.anchor_top = 0.355
+	gold_plate.anchor_right = 0.435
+	gold_plate.anchor_bottom = 0.555
 	gold_plate.z_index = 1
 	header.add_child(gold_plate)
 
 	var progress_plate := Control.new()
 	progress_plate.name = "HeaderProgressPlate"
 	progress_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	progress_plate.anchor_left = 0.580
-	progress_plate.anchor_top = 0.335
+	progress_plate.anchor_left = 0.565
+	progress_plate.anchor_top = 0.355
 	progress_plate.anchor_right = 0.990
-	progress_plate.anchor_bottom = 0.575
+	progress_plate.anchor_bottom = 0.555
 	progress_plate.z_index = 1
 	header.add_child(progress_plate)
 
@@ -732,9 +733,9 @@ func _apply_new_ui_assets() -> void:
 			frame.texture = side_frame_texture
 			frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			frame.patch_margin_left = 28
-			frame.patch_margin_top = 20
+			frame.patch_margin_top = 16
 			frame.patch_margin_right = 28
-			frame.patch_margin_bottom = 20
+			frame.patch_margin_bottom = 16
 			frame.draw_center = true
 			frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 			frame.z_index = 0
@@ -745,26 +746,41 @@ func _apply_new_ui_assets() -> void:
 		resource_parent.remove_child(resource_label)
 		gold_plate.add_child(resource_label)
 	resource_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	resource_label.offset_left = 32.0
+	resource_label.offset_left = 30.0
 	resource_label.offset_top = 0.0
-	resource_label.offset_right = -182.0
+	resource_label.offset_right = -214.0
 	resource_label.offset_bottom = 0.0
 	resource_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	resource_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	resource_label.z_index = 4
+	resource_label.z_index = 5
 
 	var progress_parent := progress_label.get_parent()
 	if progress_parent != progress_plate:
 		progress_parent.remove_child(progress_label)
 		progress_plate.add_child(progress_label)
 	progress_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	progress_label.offset_left = 182.0
+	progress_label.offset_left = 214.0
 	progress_label.offset_top = 0.0
-	progress_label.offset_right = -32.0
+	progress_label.offset_right = -30.0
 	progress_label.offset_bottom = 0.0
 	progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	progress_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	progress_label.z_index = 4
+	progress_label.z_index = 5
+
+	var center_mask := Panel.new()
+	center_mask.name = "HeaderCenterMask"
+	center_mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	center_mask.anchor_left = 0.300
+	center_mask.anchor_top = 0.325
+	center_mask.anchor_right = 0.700
+	center_mask.anchor_bottom = 0.585
+	var center_mask_style := StyleBoxFlat.new()
+	center_mask_style.bg_color = Color(0.025, 0.015, 0.045, 0.98)
+	center_mask_style.set_corner_radius_all(18)
+	center_mask_style.anti_aliasing = false
+	center_mask.add_theme_stylebox_override("panel", center_mask_style)
+	center_mask.z_index = 2
+	header.add_child(center_mask)
 
 	if logo_backplate_texture != null:
 		var logo_backplate := TextureRect.new()
@@ -774,11 +790,11 @@ func _apply_new_ui_assets() -> void:
 		logo_backplate.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo_backplate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo_backplate.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo_backplate.anchor_left = 0.235
-		logo_backplate.anchor_top = 0.055
-		logo_backplate.anchor_right = 0.765
-		logo_backplate.anchor_bottom = 0.760
-		logo_backplate.z_index = 2
+		logo_backplate.anchor_left = 0.270
+		logo_backplate.anchor_top = 0.090
+		logo_backplate.anchor_right = 0.730
+		logo_backplate.anchor_bottom = 0.700
+		logo_backplate.z_index = 3
 		header.add_child(logo_backplate)
 
 	var logo_texture := _load_png_texture_direct(UI_LOGO_PATH)
@@ -790,11 +806,11 @@ func _apply_new_ui_assets() -> void:
 		logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo.anchor_left = 0.195
-		logo.anchor_top = 0.000
-		logo.anchor_right = 0.805
-		logo.anchor_bottom = 0.765
-		logo.z_index = 3
+		logo.anchor_left = 0.175
+		logo.anchor_top = -0.005
+		logo.anchor_right = 0.825
+		logo.anchor_bottom = 0.735
+		logo.z_index = 4
 		header.add_child(logo)
 
 	var stage_card := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard
