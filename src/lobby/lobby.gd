@@ -741,7 +741,7 @@ func _apply_new_ui_assets() -> void:
 	gold_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	gold_plate.anchor_left = 0.005
 	gold_plate.anchor_top = 0.0
-	gold_plate.anchor_right = 0.305
+	gold_plate.anchor_right = 0.40
 	gold_plate.anchor_bottom = 1.0
 	gold_plate.clip_contents = true
 	gold_plate.z_index = 0
@@ -750,9 +750,9 @@ func _apply_new_ui_assets() -> void:
 	var center_slot := Control.new()
 	center_slot.name = "HeaderCenterSlot"
 	center_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	center_slot.anchor_left = 0.31
+	center_slot.anchor_left = 0.25
 	center_slot.anchor_top = 0.0
-	center_slot.anchor_right = 0.69
+	center_slot.anchor_right = 0.75
 	center_slot.anchor_bottom = 1.0
 	center_slot.clip_contents = true
 	center_slot.z_index = 0
@@ -761,7 +761,7 @@ func _apply_new_ui_assets() -> void:
 	var progress_plate := Control.new()
 	progress_plate.name = "HeaderProgressPlate"
 	progress_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	progress_plate.anchor_left = 0.695
+	progress_plate.anchor_left = 0.60
 	progress_plate.anchor_top = 0.0
 	progress_plate.anchor_right = 0.995
 	progress_plate.anchor_bottom = 1.0
@@ -778,9 +778,9 @@ func _apply_new_ui_assets() -> void:
 		left_wing.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		left_wing.stretch_mode = TextureRect.STRETCH_SCALE
 		left_wing.anchor_left = 0.0
-		left_wing.anchor_top = 0.26
+		left_wing.anchor_top = 0.28
 		left_wing.anchor_right = 1.0
-		left_wing.anchor_bottom = 0.78
+		left_wing.anchor_bottom = 0.76
 		left_wing.z_index = 0
 		gold_plate.add_child(left_wing)
 
@@ -793,9 +793,9 @@ func _apply_new_ui_assets() -> void:
 		right_wing.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		right_wing.stretch_mode = TextureRect.STRETCH_SCALE
 		right_wing.anchor_left = 0.0
-		right_wing.anchor_top = 0.26
+		right_wing.anchor_top = 0.28
 		right_wing.anchor_right = 1.0
-		right_wing.anchor_bottom = 0.78
+		right_wing.anchor_bottom = 0.76
 		right_wing.z_index = 0
 		progress_plate.add_child(right_wing)
 
@@ -810,11 +810,11 @@ func _apply_new_ui_assets() -> void:
 	gold_title.text = "골드"
 	gold_title.anchor_left = 0.0
 	gold_title.anchor_top = 0.52
-	gold_title.anchor_right = 1.0
+	gold_title.anchor_right = 0.67
 	gold_title.anchor_bottom = 0.52
 	gold_title.offset_left = 58.0
 	gold_title.offset_top = -29.0
-	gold_title.offset_right = -66.0
+	gold_title.offset_right = -24.0
 	gold_title.offset_bottom = -4.0
 	gold_title.clip_text = true
 	gold_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -832,11 +832,11 @@ func _apply_new_ui_assets() -> void:
 	gold_value.text = _format_shop_number(SHOP_CATALOG.TEST_GOLD)
 	gold_value.anchor_left = 0.0
 	gold_value.anchor_top = 0.52
-	gold_value.anchor_right = 1.0
+	gold_value.anchor_right = 0.67
 	gold_value.anchor_bottom = 0.52
 	gold_value.offset_left = 58.0
 	gold_value.offset_top = 0.0
-	gold_value.offset_right = -66.0
+	gold_value.offset_right = -24.0
 	gold_value.offset_bottom = 31.0
 	gold_value.clip_text = true
 	gold_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -874,13 +874,13 @@ func _apply_new_ui_assets() -> void:
 		plus_button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		plus_button.ignore_texture_size = true
 		plus_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-		plus_button.anchor_left = 1.0
+		plus_button.anchor_left = 0.67
 		plus_button.anchor_top = 0.52
-		plus_button.anchor_right = 1.0
+		plus_button.anchor_right = 0.67
 		plus_button.anchor_bottom = 0.52
-		plus_button.offset_left = -50.0
+		plus_button.offset_left = -16.0
 		plus_button.offset_top = -16.0
-		plus_button.offset_right = -18.0
+		plus_button.offset_right = 16.0
 		plus_button.offset_bottom = 16.0
 		plus_button.tooltip_text = "상점"
 		plus_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -940,10 +940,10 @@ func _apply_new_ui_assets() -> void:
 		logo_backplate.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo_backplate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo_backplate.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo_backplate.anchor_left = 0.08
-		logo_backplate.anchor_top = 0.16
-		logo_backplate.anchor_right = 0.92
-		logo_backplate.anchor_bottom = 0.72
+		logo_backplate.anchor_left = 0.04
+		logo_backplate.anchor_top = 0.14
+		logo_backplate.anchor_right = 0.96
+		logo_backplate.anchor_bottom = 0.94
 		logo_backplate.z_index = 1
 		center_slot.add_child(logo_backplate)
 
@@ -956,10 +956,10 @@ func _apply_new_ui_assets() -> void:
 		logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo.anchor_left = 0.0
-		logo.anchor_top = 0.06
-		logo.anchor_right = 1.0
-		logo.anchor_bottom = 0.76
+		logo.anchor_left = 0.08
+		logo.anchor_top = 0.10
+		logo.anchor_right = 0.92
+		logo.anchor_bottom = 1.0
 		logo.z_index = 2
 		center_slot.add_child(logo)
 
