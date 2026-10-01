@@ -1,3 +1,12 @@
+### Stage 6 madness berserker combat SFX
+- Stage 6 광기의 용사 전투 SFX 연결: 기본 베기, 혈검술 제1식 3연속 검기, 제2식 지면 혈파, 제3식 돌진, 제4식 회전베기, 광폭 진입, 피격, 사망.
+- 광폭 중 평타 공격속도가 최대 3배가 되는 기존 구조에 맞춰 기본 베기는 4-player 고정 풀(-17 dB), 제1식 검기는 3-player 고정 풀(-15 dB)을 순환해 연속 재생 시 노드 생성과 과도한 끊김을 방지.
+- 제2식은 저피치 중량 충격(-11 dB), 제3식은 빠른 이동 계열(-14 dB), 제4식은 묵직한 회전 검격(-13 dB), 피격 -20 dB, 사망 -12 dB로 분리.
+- Pixabay `Sword Slash and Swing`, Heavy Swing/Greatsword, Ground Impact, Sword Whoosh 후보를 기술 의미 기준으로 비교해 출처 문서 추가.
+- 광폭 진입 보이스는 Pixabay `Human Roar`(Universfield)와 `Male Angry Growl`(freesound_community/usamah)을 목표로 선정. 후자는 Human/Man/Angry Growl 계열 4초 MP3.
+- 현재 커넥터가 신규 Pixabay 후보의 직접 MP3 바이트를 제공하지 않아 남성 포효 파일을 다운로드했다고 가장하지 않으며, 런타임 광폭 훅은 먼저 완성하고 기존 추적 Pixabay `the portal` 바이트를 저피치 임시 growl layer로 사용. 실제 보이스 파일 확보 시 단일 에셋 교체만으로 전환 가능.
+- 공격력/HP 소모/쿨다운/광폭 게이지/공격속도/AI/이펙트/회복 로직은 변경하지 않음.
+
 ### Stage 5 Ice Bolt crystal SFX revision
 - 아이스볼트가 일반 마법/폭발음처럼 들리던 문제를 수정하고 발사/충돌을 실제 유리·결정 파쇄 질감으로 교체.
 - Pixabay `Glass Cracking` (DRAGON-STUDIO, Glass/Ice/Cracking)과 `Shattering Ice`를 목표 레퍼런스로 재선정.

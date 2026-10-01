@@ -138,6 +138,14 @@ const STAGE5_STORM_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_storm_p
 const STAGE5_BLINK_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_blink_pixabay.mp3"
 const STAGE5_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_hit_pixabay.mp3"
 const STAGE5_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_death_pixabay.mp3"
+const STAGE6_BASIC_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_basic_slash_pixabay.mp3"
+const STAGE6_SKILL1_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_blood_wave_pixabay.mp3"
+const STAGE6_SKILL2_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_ground_slam_pixabay.mp3"
+const STAGE6_SKILL3_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_dash_pixabay.mp3"
+const STAGE6_SKILL4_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_spin_slash_pixabay.mp3"
+const STAGE6_MADNESS_ROAR_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_madness_roar_pixabay.mp3"
+const STAGE6_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_hit_pixabay.mp3"
+const STAGE6_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_death_pixabay.mp3"
 
 # Hero SFX loudness defaults are anchored to the established Stage 7-10 mix.
 # Source loudness and repetition density may justify a quieter per-asset value,
@@ -587,6 +595,16 @@ var archmage_storm_audio: AudioStreamPlayer = null
 var archmage_blink_audio: AudioStreamPlayer = null
 var archmage_hit_audio: AudioStreamPlayer = null
 var archmage_death_audio: AudioStreamPlayer = null
+var berserker_basic_audio_pool: Array[AudioStreamPlayer] = []
+var berserker_basic_audio_cursor: int = 0
+var berserker_skill1_audio_pool: Array[AudioStreamPlayer] = []
+var berserker_skill1_audio_cursor: int = 0
+var berserker_skill2_audio: AudioStreamPlayer = null
+var berserker_skill3_audio: AudioStreamPlayer = null
+var berserker_skill4_audio: AudioStreamPlayer = null
+var berserker_madness_roar_audio: AudioStreamPlayer = null
+var berserker_hit_audio: AudioStreamPlayer = null
+var berserker_death_audio: AudioStreamPlayer = null
 var purifier_basic_audio: AudioStreamPlayer = null
 var purifier_shield_create_audio: AudioStreamPlayer = null
 var purifier_shield_break_audio: AudioStreamPlayer = null
@@ -9543,6 +9561,123 @@ func _play_archmage_death_audio() -> void:
 	_play_archmage_player(archmage_death_audio)
 
 
+func _ensure_berserker_audio_runtime() -> void:
+	if hero_archetype != "berserker_madness":
+		return
+
+	if berserker_basic_audio_pool.is_empty():
+		for index in range(4):
+			berserker_basic_audio_pool.append(
+				_create_hero_sfx_player(
+					STAGE6_BASIC_AUDIO_PATH,
+					HERO_SFX_DB_PRIMARY_ATTACK - 5.0,
+					0.94
+				)
+			)
+
+	if berserker_skill1_audio_pool.is_empty():
+		for index in range(3):
+			berserker_skill1_audio_pool.append(
+				_create_hero_sfx_player(
+					STAGE6_SKILL1_AUDIO_PATH,
+					HERO_SFX_DB_REGULAR_SKILL - 3.0,
+					0.82
+				)
+			)
+
+	if not is_instance_valid(berserker_skill2_audio):
+		berserker_skill2_audio = _create_hero_sfx_player(
+			STAGE6_SKILL2_AUDIO_PATH,
+			HERO_SFX_DB_HEAVY_SKILL - 2.0,
+			0.72
+		)
+	if not is_instance_valid(berserker_skill3_audio):
+		berserker_skill3_audio = _create_hero_sfx_player(
+			STAGE6_SKILL3_AUDIO_PATH,
+			HERO_SFX_DB_REGULAR_SKILL - 2.0,
+			1.18
+		)
+	if not is_instance_valid(berserker_skill4_audio):
+		berserker_skill4_audio = _create_hero_sfx_player(
+			STAGE6_SKILL4_AUDIO_PATH,
+			HERO_SFX_DB_REGULAR_SKILL - 1.0,
+			0.90
+		)
+	if not is_instance_valid(berserker_madness_roar_audio):
+		berserker_madness_roar_audio = _create_hero_sfx_player(
+			STAGE6_MADNESS_ROAR_AUDIO_PATH,
+			HERO_SFX_DB_HEAVY_SKILL - 1.0,
+			0.56
+		)
+	if not is_instance_valid(berserker_hit_audio):
+		berserker_hit_audio = _create_hero_sfx_player(
+			STAGE6_HIT_AUDIO_PATH,
+			HERO_SFX_DB_HIT,
+			0.92
+		)
+	if not is_instance_valid(berserker_death_audio):
+		berserker_death_audio = _create_hero_sfx_player(
+			STAGE6_DEATH_AUDIO_PATH,
+			HERO_SFX_DB_DEATH,
+			0.82
+		)
+
+
+func _play_berserker_player(player: AudioStreamPlayer) -> void:
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	player.stop()
+	player.play()
+
+
+func _play_berserker_basic_audio() -> void:
+	_ensure_berserker_audio_runtime()
+	if berserker_basic_audio_pool.is_empty():
+		return
+	var player := berserker_basic_audio_pool[
+		berserker_basic_audio_cursor % berserker_basic_audio_pool.size()
+	]
+	berserker_basic_audio_cursor = (
+		berserker_basic_audio_cursor + 1
+	) % berserker_basic_audio_pool.size()
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	player.pitch_scale = (
+		1.02 + 0.04 * float(berserker_basic_audio_cursor % 3)
+		if berserker_madness_active
+		else 0.88 + 0.04 * float(berserker_basic_audio_cursor % 3)
+	)
+	player.stop()
+	player.play()
+
+
+func _play_berserker_skill1_audio(wave_index: int) -> void:
+	_ensure_berserker_audio_runtime()
+	if berserker_skill1_audio_pool.is_empty():
+		return
+	var player := berserker_skill1_audio_pool[
+		berserker_skill1_audio_cursor % berserker_skill1_audio_pool.size()
+	]
+	berserker_skill1_audio_cursor = (
+		berserker_skill1_audio_cursor + 1
+	) % berserker_skill1_audio_pool.size()
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	player.pitch_scale = 0.78 + 0.07 * float(clampi(wave_index, 0, 2))
+	player.stop()
+	player.play()
+
+
+func _play_berserker_hit_audio() -> void:
+	_ensure_berserker_audio_runtime()
+	_play_berserker_player(berserker_hit_audio)
+
+
+func _play_berserker_death_audio() -> void:
+	_ensure_berserker_audio_runtime()
+	_play_berserker_player(berserker_death_audio)
+
+
 func _create_sage_audio_player(audio_path: String, volume_db: float, pitch_scale: float) -> AudioStreamPlayer:
 	var player := AudioStreamPlayer.new()
 	player.bus = &"SFX"
@@ -16828,6 +16963,7 @@ func _berserker_emit_skill1_wave(
 	_face_attack_direction(direction.x)
 	_restart_stage1_animation("attack")
 	attack_pose_timer = 0.46
+	_play_berserker_skill1_audio(wave_index)
 
 	var growth: float = maxf(
 		float(skill_config.get("size_growth_per_wave", 0.25)),
@@ -16955,6 +17091,8 @@ func _start_berserker_skill2(current_target: Node2D) -> void:
 		global_position.direction_to(current_target.global_position).x
 	)
 	_restart_stage1_animation("attack")
+	_ensure_berserker_audio_runtime()
+	_play_berserker_player(berserker_skill2_audio)
 
 	var slam_fx: AnimatedSprite2D = _spawn_archmage_fx(
 		"%s/effect3" % STAGE6_FRAME_DIR,
@@ -17355,6 +17493,8 @@ func _execute_berserker_skill3(
 	collision_mask = 0
 	velocity = Vector2.ZERO
 	_restart_stage1_animation("dash_start")
+	_ensure_berserker_audio_runtime()
+	_play_berserker_player(berserker_skill3_audio)
 
 	_spawn_berserker_blood_dash_trail(
 		start_position,
@@ -17537,6 +17677,8 @@ func _start_berserker_skill4() -> void:
 	attack_timer = maxf(attack_timer, 0.72)
 	attack_pose_timer = 0.72
 	_restart_stage1_animation("attack")
+	_ensure_berserker_audio_runtime()
+	_play_berserker_player(berserker_skill4_audio)
 
 	var radius: float = maxf(
 		float(skill_config.get("radius", 245.0)),
@@ -17770,6 +17912,7 @@ func _berserker_basic_attack(current_target: Node2D) -> void:
 	attack_pose_timer = 0.52
 	_face_attack_direction(direction.x)
 	_restart_stage1_animation("attack")
+	_play_berserker_basic_audio()
 
 	if berserker_madness_active:
 		var slash_fx: AnimatedSprite2D = _spawn_archmage_fx(
@@ -17871,6 +18014,8 @@ func _start_berserker_madness() -> void:
 	if berserker_madness_active or berserker_reviving or is_dying:
 		return
 	berserker_madness_active = true
+	_ensure_berserker_audio_runtime()
+	_play_berserker_player(berserker_madness_roar_audio)
 	var gauge_max: float = maxf(
 		float(berserker_config.get("gauge_max", 100.0)),
 		1.0
@@ -19351,6 +19496,8 @@ func take_damage(amount: int, source: Node = null) -> bool:
 			_play_gunner_hit_audio()
 		elif hero_archetype == "archmage_elementalist":
 			_play_archmage_hit_audio()
+		elif hero_archetype == "berserker_madness":
+			_play_berserker_hit_audio()
 
 	if current_hp > 0 and applied_damage > 0:
 		_add_ultimate_charge(
@@ -19422,6 +19569,8 @@ func _begin_death_sequence() -> void:
 		_play_gunner_death_audio()
 	elif hero_archetype == "archmage_elementalist":
 		_play_archmage_death_audio()
+	elif hero_archetype == "berserker_madness":
+		_play_berserker_death_audio()
 	invulnerability_timer = 0.0
 	modulate.a = 1.0
 	velocity = Vector2.ZERO
