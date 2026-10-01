@@ -20,6 +20,7 @@ const UI_FRAME_MEDIUM_DIR := "res://assets/art/UI/03_middle_right_panel"
 const UI_CARD_FRAME_DIR := "res://assets/art/UI/uicardframes"
 const UI_HEADER_CARD_PATH := UI_CARD_FRAME_DIR + "/ui1.png"
 const UI_CONTENT_CARD_PATH := UI_CARD_FRAME_DIR + "/ui9.png"
+const UI_STAGE_CARD_FRAME_PATH := UI_CARD_FRAME_DIR + "/ui10_clean_frame.png"
 const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_background.png"
 
@@ -717,10 +718,10 @@ func _apply_new_ui_assets() -> void:
 		header.move_child(logo, 0)
 
 	var stage_card := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard
-	# ui10 is a complete two-section stage card.
-	# Upper panel = stage/portrait, lower panel = description/reward/action.
-	var stage_texture := _load_png_texture_cropped(
-		UI_CARD_FRAME_DIR + "/ui10.png"
+	# Dungeon entry uses a dedicated clean outer frame.
+	# Internal section dividers are drawn by code so they cannot overlap content.
+	var stage_texture := _load_png_texture_direct(
+		UI_STAGE_CARD_FRAME_PATH
 	)
 	if stage_card != null and stage_texture != null:
 		var old_stage_skin := stage_card.get_node_or_null("StageCardSkin")
@@ -733,12 +734,12 @@ func _apply_new_ui_assets() -> void:
 		stage_skin.texture = stage_texture
 		stage_skin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		stage_skin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		stage_skin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		stage_skin.stretch_mode = TextureRect.STRETCH_SCALE
 		stage_skin.set_anchors_preset(Control.PRESET_FULL_RECT)
-		stage_skin.offset_left = 2.0
-		stage_skin.offset_top = 2.0
-		stage_skin.offset_right = -2.0
-		stage_skin.offset_bottom = -2.0
+		stage_skin.offset_left = 0.0
+		stage_skin.offset_top = 0.0
+		stage_skin.offset_right = 0.0
+		stage_skin.offset_bottom = 0.0
 		stage_card.add_child(stage_skin)
 		stage_card.move_child(stage_skin, 0)
 
@@ -1050,10 +1051,10 @@ func _install_stage_entry_hud() -> void:
 	card_margin.add_theme_constant_override("margin_right", 18)
 	card_margin.add_theme_constant_override("margin_bottom", 28)
 
-	portrait_frame.anchor_left = 0.030
-	portrait_frame.anchor_top = 0.052
-	portrait_frame.anchor_right = 0.970
-	portrait_frame.anchor_bottom = 0.532
+	portrait_frame.anchor_left = 0.085
+	portrait_frame.anchor_top = 0.080
+	portrait_frame.anchor_right = 0.915
+	portrait_frame.anchor_bottom = 0.525
 
 	var hero_name_plate := hero_name_label.get_parent().get_node_or_null(
 		"HeroNamePlate"
@@ -1136,10 +1137,10 @@ func _install_stage_entry_hud() -> void:
 	portrait_placeholder.z_index = 2
 	portrait_badge.z_index = 2
 
-	bottom_panel.anchor_left = 0.075
-	bottom_panel.anchor_top = 0.608
-	bottom_panel.anchor_right = 0.925
-	bottom_panel.anchor_bottom = 0.938
+	bottom_panel.anchor_left = 0.100
+	bottom_panel.anchor_top = 0.605
+	bottom_panel.anchor_right = 0.900
+	bottom_panel.anchor_bottom = 0.920
 
 	var description_backing := bottom_panel.get_node_or_null(
 		"DescriptionBacking"
@@ -1155,10 +1156,10 @@ func _install_stage_entry_hud() -> void:
 		description_backing.add_theme_stylebox_override(
 			"panel",
 			_make_hud_panel_style(
-				Color(0.045, 0.032, 0.065, 0.78),
+				Color(0.045, 0.032, 0.065, 0.58),
 				Color(0, 0, 0, 0),
 				0,
-				10
+				8
 			)
 		)
 		bottom_panel.add_child(description_backing)
@@ -1166,13 +1167,13 @@ func _install_stage_entry_hud() -> void:
 
 		var description_highlight := ColorRect.new()
 		description_highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		description_highlight.color = Color(0.58, 0.37, 0.70, 0.22)
+		description_highlight.color = Color(0.67, 0.48, 0.22, 0.48)
 		description_highlight.anchor_left = 0.10
-		description_highlight.anchor_top = 0.0
+		description_highlight.anchor_top = 1.0
 		description_highlight.anchor_right = 0.90
-		description_highlight.anchor_bottom = 0.0
-		description_highlight.offset_top = 1.0
-		description_highlight.offset_bottom = 3.0
+		description_highlight.anchor_bottom = 1.0
+		description_highlight.offset_top = -2.0
+		description_highlight.offset_bottom = 0.0
 		description_backing.add_child(description_highlight)
 
 	var info_backing := bottom_panel.get_node_or_null("EntryInfoBacking") as Panel
@@ -1187,10 +1188,10 @@ func _install_stage_entry_hud() -> void:
 		info_backing.add_theme_stylebox_override(
 			"panel",
 			_make_hud_panel_style(
-				Color(0.060, 0.040, 0.082, 0.80),
+				Color(0.060, 0.040, 0.082, 0.62),
 				Color(0, 0, 0, 0),
 				0,
-				8
+				6
 			)
 		)
 		bottom_panel.add_child(info_backing)
@@ -1198,19 +1199,19 @@ func _install_stage_entry_hud() -> void:
 
 		var info_highlight := ColorRect.new()
 		info_highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		info_highlight.color = Color(0.73, 0.52, 0.24, 0.18)
+		info_highlight.color = Color(0.67, 0.48, 0.22, 0.42)
 		info_highlight.anchor_left = 0.08
-		info_highlight.anchor_top = 0.0
+		info_highlight.anchor_top = 1.0
 		info_highlight.anchor_right = 0.92
-		info_highlight.anchor_bottom = 0.0
-		info_highlight.offset_top = 1.0
-		info_highlight.offset_bottom = 3.0
+		info_highlight.anchor_bottom = 1.0
+		info_highlight.offset_top = -2.0
+		info_highlight.offset_bottom = 0.0
 		info_backing.add_child(info_highlight)
 
 		for split_ratio in [0.333, 0.666]:
 			var divider := ColorRect.new()
 			divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			divider.color = Color(0.55, 0.39, 0.19, 0.34)
+			divider.color = Color(0.67, 0.48, 0.22, 0.42)
 			divider.anchor_left = split_ratio
 			divider.anchor_top = 0.16
 			divider.anchor_right = split_ratio
