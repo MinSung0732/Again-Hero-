@@ -44,3 +44,13 @@ Performance policy:
 - Deadeye's 0.08-second repeated shots use a fixed 4-player pool and a much quieter mix.
 - Reload, backstep, cylinder, deadeye-start, hit, and death use persistent AudioStreamPlayers.
 - No per-shot/per-frame AudioStreamPlayer allocation is added.
+
+
+## Clean impact replacement revision
+
+The previously reused Pixabay `Loud Explosion` MP3 was retired project-wide because repeated/high-pitch playback produced objectionable compressed distortion.
+Runtime explosion/impact aliases in this stage now use the already-tracked Kenney Sci-Fi Sounds CC0 `explosionCrunch` WAV sources instead:
+- `explosionCrunch_000` / `alchemist_failed_boom_cauldron.wav` for compact/fast impacts.
+- `explosionCrunch_001` / `alchemist_failed_boom_skill3.wav` for larger/heavier impacts.
+
+Any older mapping in this document that names `Loud Explosion` is historical and is superseded by this revision.

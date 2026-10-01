@@ -55,3 +55,13 @@ Performance:
 - Blood Sword First Form waves use a fixed 3-player pool.
 - Other skills, madness entry, hit, and death reuse persistent players.
 - No per-hit/per-frame AudioStreamPlayer creation is added.
+
+
+## Clean impact replacement revision
+
+The previously reused Pixabay `Loud Explosion` MP3 was retired project-wide because repeated/high-pitch playback produced objectionable compressed distortion.
+Runtime explosion/impact aliases in this stage now use the already-tracked Kenney Sci-Fi Sounds CC0 `explosionCrunch` WAV sources instead:
+- `explosionCrunch_000` / `alchemist_failed_boom_cauldron.wav` for compact/fast impacts.
+- `explosionCrunch_001` / `alchemist_failed_boom_skill3.wav` for larger/heavier impacts.
+
+Any older mapping in this document that names `Loud Explosion` is historical and is superseded by this revision.

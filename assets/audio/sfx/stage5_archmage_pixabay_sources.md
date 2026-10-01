@@ -78,4 +78,14 @@ The current connector still does not expose the direct downloadable Pixabay MP3 
 - `stage5_archmage_ice_crystal_launch.wav` -> existing glass-break WAV, high pitch (1.48), -16 dB for a short crystalline cast snap
 - `stage5_archmage_ice_crystal_impact.wav` -> existing glass-break WAV, lower pitch (0.94), -13 dB for a broader ice-fracture hit
 
-The previous generic-magic/explosion files `stage5_archmage_ice_bolt_pixabay.mp3` and `stage5_archmage_ice_impact_pixabay.mp3` remain tracked but are no longer referenced by Stage 5 runtime code.
+The previous generic-magic/explosion files are retired from runtime; the obsolete `stage5_archmage_ice_impact_pixabay.mp3` is removed in the clean-impact pass, while Ice Bolt continues to use its dedicated crystal WAV pair.
+
+
+## Clean impact replacement revision
+
+The previously reused Pixabay `Loud Explosion` MP3 was retired project-wide because repeated/high-pitch playback produced objectionable compressed distortion.
+Runtime explosion/impact aliases in this stage now use the already-tracked Kenney Sci-Fi Sounds CC0 `explosionCrunch` WAV sources instead:
+- `explosionCrunch_000` / `alchemist_failed_boom_cauldron.wav` for compact/fast impacts.
+- `explosionCrunch_001` / `alchemist_failed_boom_skill3.wav` for larger/heavier impacts.
+
+Any older mapping in this document that names `Loud Explosion` is historical and is superseded by this revision.

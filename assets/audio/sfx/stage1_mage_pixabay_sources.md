@@ -33,3 +33,13 @@ Stage 1 uses dedicated runtime filenames while reusing Pixabay source bytes alre
   - Low-pitch magical collapse cue on death. Reuses `purifier_shield_create_pixabay.mp3`.
 
 The linked Pixabay source pages are tracked for licensing. Check current Pixabay Content License terms when redistributing outside this project.
+
+
+## Clean impact replacement revision
+
+The previously reused Pixabay `Loud Explosion` MP3 was retired project-wide because repeated/high-pitch playback produced objectionable compressed distortion.
+Runtime explosion/impact aliases in this stage now use the already-tracked Kenney Sci-Fi Sounds CC0 `explosionCrunch` WAV sources instead:
+- `explosionCrunch_000` / `alchemist_failed_boom_cauldron.wav` for compact/fast impacts.
+- `explosionCrunch_001` / `alchemist_failed_boom_skill3.wav` for larger/heavier impacts.
+
+Any older mapping in this document that names `Loud Explosion` is historical and is superseded by this revision.

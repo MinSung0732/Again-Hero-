@@ -75,3 +75,13 @@ Both source pages currently state free use under the Pixabay Content License. Th
   - https://pixabay.com/sound-effects/film-special-effects-loud-explosion-425457/
   - Stage 10 Skill 6 "흑점폭발" detonation cue.
   - Source page lists the MP3 for free use under the Pixabay Content License.
+
+
+## Clean impact replacement revision
+
+The previously reused Pixabay `Loud Explosion` MP3 was retired project-wide because repeated/high-pitch playback produced objectionable compressed distortion.
+Runtime explosion/impact aliases in this stage now use the already-tracked Kenney Sci-Fi Sounds CC0 `explosionCrunch` WAV sources instead:
+- `explosionCrunch_000` / `alchemist_failed_boom_cauldron.wav` for compact/fast impacts.
+- `explosionCrunch_001` / `alchemist_failed_boom_skill3.wav` for larger/heavier impacts.
+
+Any older mapping in this document that names `Loud Explosion` is historical and is superseded by this revision.

@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/hero/sage_blackspot_explosion.gd" id="1_script"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/sage_astra_blackspot_explosion_pixabay.mp3" id="2_audio"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/sage_astra_blackspot_explosion_clean.wav" id="2_audio"]
 
 [node name="SageBlackSpotExplosion" type="Node2D"]
 z_index = 6

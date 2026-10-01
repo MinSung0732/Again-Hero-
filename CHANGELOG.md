@@ -1,3 +1,12 @@
+### Clean explosion/impact SFX replacement
+- 반복 재활용되던 Pixabay `Loud Explosion` MP3 원본이 고피치/반복 재생에서 거칠고 깨지는 문제를 제거.
+- 동일 blob을 사용하던 모든 런타임 경로를 저장소에 이미 실제 바이너리로 보관 중인 Kenney Sci-Fi Sounds CC0 `explosionCrunch` WAV 계열로 교체.
+- 작은/빠른 충격(권총, 데드아이, 실린더, 땅의 가시)은 `explosionCrunch_000` 기반 `alchemist_failed_boom_cauldron.wav` 바이트 재사용.
+- 큰/중량 충격(마력 관통포, 검방 돌격, 연소 방출, 혈검술 제2식, 흑점폭발)은 `explosionCrunch_001` 기반 `alchemist_failed_boom_skill3.wav` 바이트 재사용.
+- 기존 `Loud Explosion` blob SHA `50e2d33a08b772ff1c2a3ae4d0cb169a42b182e7`를 가진 전용 런타임 파일 10개를 제거해 이후 재사용되지 않게 정리.
+- WAV 원본을 그대로 사용하며 런타임 Base64/디코딩/변환 없음. 스킬 판정/피해/쿨다운/풀링 구조는 변경하지 않음.
+- Pixabay 후속 후보로 `Explosion Sound Effect` (DRAGON-STUDIO, 3초)와 `Hard Heavy Impact`를 확인했지만 이번 변경은 이미 확보·출처 검증된 Kenney CC0 WAV를 우선 사용.
+
 ### Stage 6 madness berserker combat SFX
 - Stage 6 광기의 용사 전투 SFX 연결: 기본 베기, 혈검술 제1식 3연속 검기, 제2식 지면 혈파, 제3식 돌진, 제4식 회전베기, 광폭 진입, 피격, 사망.
 - 광폭 중 평타 공격속도가 최대 3배가 되는 기존 구조에 맞춰 기본 베기는 4-player 고정 풀(-17 dB), 제1식 검기는 3-player 고정 풀(-15 dB)을 순환해 연속 재생 시 노드 생성과 과도한 끊김을 방지.
