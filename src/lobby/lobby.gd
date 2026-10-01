@@ -694,6 +694,7 @@ func _apply_new_ui_assets() -> void:
 		"HeaderBackdrop",
 		"HeaderGoldPlate",
 		"HeaderProgressPlate",
+		"HeaderCenterSlot",
 		"HeaderCenterMask",
 		"HeaderLogoBackplate",
 		"HeaderLogo",
@@ -715,23 +716,35 @@ func _apply_new_ui_assets() -> void:
 		UI_HEADER_LOGO_BACKPLATE_PATH
 	)
 
+	# Keep the header in three non-overlapping slots. Each slot owns its art and
+	# content so long values and the center logo cannot push into a neighbour.
 	var gold_plate := Control.new()
 	gold_plate.name = "HeaderGoldPlate"
 	gold_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	gold_plate.anchor_left = 0.012
-	gold_plate.anchor_top = 0.340
-	gold_plate.anchor_right = 0.345
-	gold_plate.anchor_bottom = 0.615
+	gold_plate.anchor_left = 0.02
+	gold_plate.anchor_top = 0.0
+	gold_plate.anchor_right = 0.32
+	gold_plate.anchor_bottom = 1.0
 	gold_plate.z_index = 1
 	header.add_child(gold_plate)
+
+	var center_slot := Control.new()
+	center_slot.name = "HeaderCenterSlot"
+	center_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	center_slot.anchor_left = 0.32
+	center_slot.anchor_top = 0.0
+	center_slot.anchor_right = 0.68
+	center_slot.anchor_bottom = 1.0
+	center_slot.z_index = 2
+	header.add_child(center_slot)
 
 	var progress_plate := Control.new()
 	progress_plate.name = "HeaderProgressPlate"
 	progress_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	progress_plate.anchor_left = 0.655
-	progress_plate.anchor_top = 0.340
-	progress_plate.anchor_right = 0.988
-	progress_plate.anchor_bottom = 0.615
+	progress_plate.anchor_left = 0.68
+	progress_plate.anchor_top = 0.0
+	progress_plate.anchor_right = 0.98
+	progress_plate.anchor_bottom = 1.0
 	progress_plate.z_index = 1
 	header.add_child(progress_plate)
 
@@ -743,7 +756,10 @@ func _apply_new_ui_assets() -> void:
 		left_wing.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		left_wing.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		left_wing.stretch_mode = TextureRect.STRETCH_SCALE
-		left_wing.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		left_wing.anchor_left = 0.0
+		left_wing.anchor_top = 0.41
+		left_wing.anchor_right = 1.0
+		left_wing.anchor_bottom = 0.65
 		left_wing.z_index = 0
 		gold_plate.add_child(left_wing)
 
@@ -755,7 +771,10 @@ func _apply_new_ui_assets() -> void:
 		right_wing.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		right_wing.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		right_wing.stretch_mode = TextureRect.STRETCH_SCALE
-		right_wing.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		right_wing.anchor_left = 0.0
+		right_wing.anchor_top = 0.41
+		right_wing.anchor_right = 1.0
+		right_wing.anchor_bottom = 0.65
 		right_wing.z_index = 0
 		progress_plate.add_child(right_wing)
 
@@ -768,10 +787,15 @@ func _apply_new_ui_assets() -> void:
 	gold_title.name = "HeaderGoldTitle"
 	gold_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	gold_title.text = "골드"
-	gold_title.anchor_left = 0.19
-	gold_title.anchor_top = 0.08
-	gold_title.anchor_right = 0.58
-	gold_title.anchor_bottom = 0.45
+	gold_title.anchor_left = 0.0
+	gold_title.anchor_top = 0.52
+	gold_title.anchor_right = 1.0
+	gold_title.anchor_bottom = 0.52
+	gold_title.offset_left = 54.0
+	gold_title.offset_top = -23.0
+	gold_title.offset_right = -62.0
+	gold_title.offset_bottom = -3.0
+	gold_title.clip_text = true
 	gold_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	gold_title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	gold_title.add_theme_font_size_override("font_size", 13)
@@ -783,10 +807,15 @@ func _apply_new_ui_assets() -> void:
 	gold_value.name = "HeaderGoldValue"
 	gold_value.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	gold_value.text = _format_shop_number(SHOP_CATALOG.TEST_GOLD)
-	gold_value.anchor_left = 0.19
-	gold_value.anchor_top = 0.43
-	gold_value.anchor_right = 0.58
-	gold_value.anchor_bottom = 0.93
+	gold_value.anchor_left = 0.0
+	gold_value.anchor_top = 0.52
+	gold_value.anchor_right = 1.0
+	gold_value.anchor_bottom = 0.52
+	gold_value.offset_left = 54.0
+	gold_value.offset_top = 0.0
+	gold_value.offset_right = -62.0
+	gold_value.offset_bottom = 26.0
+	gold_value.clip_text = true
 	gold_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	gold_value.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	gold_value.add_theme_font_size_override("font_size", 18)
@@ -802,10 +831,14 @@ func _apply_new_ui_assets() -> void:
 		coin_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		coin_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		coin_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		coin_icon.anchor_left = 0.070
-		coin_icon.anchor_top = 0.27
-		coin_icon.anchor_right = 0.145
-		coin_icon.anchor_bottom = 0.73
+		coin_icon.anchor_left = 0.0
+		coin_icon.anchor_top = 0.52
+		coin_icon.anchor_right = 0.0
+		coin_icon.anchor_bottom = 0.52
+		coin_icon.offset_left = 18.0
+		coin_icon.offset_top = -14.0
+		coin_icon.offset_right = 46.0
+		coin_icon.offset_bottom = 14.0
 		coin_icon.z_index = 5
 		gold_plate.add_child(coin_icon)
 
@@ -816,10 +849,14 @@ func _apply_new_ui_assets() -> void:
 		plus_button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		plus_button.ignore_texture_size = true
 		plus_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-		plus_button.anchor_left = 0.640
-		plus_button.anchor_top = 0.25
-		plus_button.anchor_right = 0.735
-		plus_button.anchor_bottom = 0.75
+		plus_button.anchor_left = 1.0
+		plus_button.anchor_top = 0.52
+		plus_button.anchor_right = 1.0
+		plus_button.anchor_bottom = 0.52
+		plus_button.offset_left = -48.0
+		plus_button.offset_top = -15.0
+		plus_button.offset_right = -18.0
+		plus_button.offset_bottom = 15.0
 		plus_button.tooltip_text = "상점"
 		plus_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		plus_button.z_index = 6
@@ -830,10 +867,15 @@ func _apply_new_ui_assets() -> void:
 	progress_title.name = "HeaderProgressTitle"
 	progress_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	progress_title.text = "최고 해금"
-	progress_title.anchor_left = 0.42
-	progress_title.anchor_top = 0.08
-	progress_title.anchor_right = 0.89
-	progress_title.anchor_bottom = 0.45
+	progress_title.anchor_left = 0.0
+	progress_title.anchor_top = 0.52
+	progress_title.anchor_right = 1.0
+	progress_title.anchor_bottom = 0.52
+	progress_title.offset_left = 34.0
+	progress_title.offset_top = -23.0
+	progress_title.offset_right = -28.0
+	progress_title.offset_bottom = -3.0
+	progress_title.clip_text = true
 	progress_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	progress_title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	progress_title.add_theme_font_size_override("font_size", 13)
@@ -845,10 +887,15 @@ func _apply_new_ui_assets() -> void:
 	progress_value.name = "HeaderProgressValue"
 	progress_value.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	progress_value.text = "Stage 1"
-	progress_value.anchor_left = 0.42
-	progress_value.anchor_top = 0.43
-	progress_value.anchor_right = 0.89
-	progress_value.anchor_bottom = 0.93
+	progress_value.anchor_left = 0.0
+	progress_value.anchor_top = 0.52
+	progress_value.anchor_right = 1.0
+	progress_value.anchor_bottom = 0.52
+	progress_value.offset_left = 34.0
+	progress_value.offset_top = 0.0
+	progress_value.offset_right = -28.0
+	progress_value.offset_bottom = 26.0
+	progress_value.clip_text = true
 	progress_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	progress_value.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	progress_value.add_theme_font_size_override("font_size", 18)
@@ -864,12 +911,12 @@ func _apply_new_ui_assets() -> void:
 		logo_backplate.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo_backplate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo_backplate.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo_backplate.anchor_left = 0.285
-		logo_backplate.anchor_top = 0.075
-		logo_backplate.anchor_right = 0.715
-		logo_backplate.anchor_bottom = 0.710
+		logo_backplate.anchor_left = 0.08
+		logo_backplate.anchor_top = 0.22
+		logo_backplate.anchor_right = 0.92
+		logo_backplate.anchor_bottom = 0.64
 		logo_backplate.z_index = 2
-		header.add_child(logo_backplate)
+		center_slot.add_child(logo_backplate)
 
 	var logo_texture := _load_png_texture_direct(UI_LOGO_PATH)
 	if logo_texture != null:
@@ -880,12 +927,12 @@ func _apply_new_ui_assets() -> void:
 		logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo.anchor_left = 0.185
-		logo.anchor_top = -0.010
-		logo.anchor_right = 0.815
-		logo.anchor_bottom = 0.750
+		logo.anchor_left = 0.0
+		logo.anchor_top = 0.11
+		logo.anchor_right = 1.0
+		logo.anchor_bottom = 0.71
 		logo.z_index = 4
-		header.add_child(logo)
+		center_slot.add_child(logo)
 
 	var stage_card := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard
 	# Dungeon entry uses a dedicated clean outer frame.
