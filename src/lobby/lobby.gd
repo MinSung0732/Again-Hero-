@@ -101,11 +101,13 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var monster_detail_title: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Header/Title
 @onready var monster_detail_close_button: Button = $MonsterDetailOverlay/Panel/Margin/VBox/Header/CloseButton
 @onready var monster_detail_normal_panel: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel
+@onready var monster_detail_normal_badge: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Badge
 @onready var monster_detail_normal_portrait: TextureRect = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Portrait
 @onready var monster_detail_normal_name: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Name
 @onready var monster_detail_normal_stats: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Stats
 @onready var monster_detail_specials: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Specials
 @onready var monster_detail_elite_panel: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel
+@onready var monster_detail_elite_badge: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Badge
 @onready var monster_detail_elite_portrait: TextureRect = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Portrait
 @onready var monster_detail_elite_name: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Name
 @onready var monster_detail_elite_stats: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Stats
@@ -2828,12 +2830,24 @@ func _populate_monster_detail(monster_id: String) -> void:
 	var role_label := MONSTER_CATALOG.get_role_label(
 		String(data.get("role", ""))
 	)
+	var species_label := MONSTER_CATALOG.get_species_label(
+		String(data.get("species", ""))
+	)
+	var grade_label := MONSTER_CATALOG.get_grade_label(
+		String(data.get("grade", "normal"))
+	)
+	var elite_skills := MONSTER_CATALOG.get_elite_skills(monster_id)
 	var base_stats := _read_monster_base_stats(monster_id)
 	var mutation := MUTATION_CATALOG.get_profile("mutation_1")
 
 	monster_detail_title.text = "%s 상세 정보" % monster_name
+	monster_detail_normal_badge.text = grade_label
+	monster_detail_elite_badge.text = "엘리트 · %s 등급 기술 %d개" % [
+		grade_label,
+		elite_skills.size(),
+	]
 	monster_detail_normal_name.text = monster_name
-	monster_detail_elite_name.text = "돌연변이 %s" % monster_name
+	monster_detail_elite_name.text = "엘리트 %s" % monster_name
 	monster_detail_normal_portrait.texture = _team_monster_card_icon(monster_id)
 	monster_detail_elite_portrait.texture = _load_elite_preview(monster_id)
 
@@ -2863,6 +2877,16 @@ func _build_normal_detail_text(
 	var lines: PackedStringArray = []
 	lines.append("기본 스탯")
 	lines.append("역할  %s" % role_label)
+	lines.append(
+		"종류  %s" % MONSTER_CATALOG.get_species_label(
+			String(data.get("species", ""))
+		)
+	)
+	lines.append(
+		"등급  %s" % MONSTER_CATALOG.get_grade_label(
+			String(data.get("grade", "normal"))
+		)
+	)
 	lines.append("소환 코스트  %.1f" % float(data.get("base_cost", 0.0)))
 	lines.append("마왕 EXP  %.1f" % float(data.get("summon_exp", 0.0)))
 
@@ -3009,6 +3033,29 @@ func _build_elite_detail_text(
 					),
 				]
 			)
+
+	lines.append("")
+	lines.append("엘리트 기술")
+	var elite_skills := MONSTER_CATALOG.get_elite_skills(monster_id)
+	if elite_skills.is_empty():
+		lines.append("등록된 엘리트 기술이 없습니다.")
+	else:
+		for raw_skill in elite_skills:
+			if typeof(raw_skill) != TYPE_DICTIONARY:
+				continue
+			var skill: Dictionary = raw_skill
+			lines.append(
+				"◆ %s" % String(skill.get("name", "엘리트 기술"))
+			)
+			lines.append(
+				"  선쿨 %.1f초 · 재사용 %.1f초" % [
+					maxf(float(skill.get("initial_cooldown", 0.0)), 0.0),
+					maxf(float(skill.get("cooldown", 0.0)), 0.0),
+				]
+			)
+			var description := String(skill.get("description", ""))
+			if not description.is_empty():
+				lines.append("  %s" % description)
 
 	lines.append("")
 	lines.append("※ 마왕 레벨/연구/Run 증강은 제외한 기준치")

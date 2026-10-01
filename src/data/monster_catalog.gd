@@ -49,6 +49,7 @@ const MONSTERS := {
 			{
 				"id": "elite_slime_proliferation",
 				"name": "분열증식",
+				"description": "사용 시 자신 주변으로 일반 슬라임을 0.25초 간격으로 총 12마리 무작위 방향에 포물선으로 투척합니다.",
 				"initial_cooldown": 3.0,
 				"cooldown": 20.0,
 				"spawn_count": 12,
@@ -107,6 +108,7 @@ const MONSTERS := {
 			{
 				"id": "elite_spider_web_nest",
 				"name": "거미집",
+				"description": "지름 500 거미집을 5초간 설치합니다. 범위 내 용사는 이동속도 50% 둔화, 몬스터는 이동속도 15% 증가합니다.",
 				"initial_cooldown": 3.0,
 				"cooldown": 25.0,
 				"duration": 5.0,
@@ -164,6 +166,7 @@ const MONSTERS := {
 			{
 				"id": "elite_orc_frenzy",
 				"name": "광분",
+				"description": "몸이 붉게 변하며 용사에게 빠르게 돌진해 기본 공격력의 150% 피해를 주고 1초간 이동속도를 99% 둔화시킵니다.",
 				"initial_cooldown": 0.0,
 				"cooldown": 20.0,
 				"charge_speed_multiplier": 5.0,
@@ -220,6 +223,7 @@ const MONSTERS := {
 			{
 				"id": "elite_bomb_rat_vibration",
 				"name": "진동감지",
+				"description": "4초간 이동속도가 200% 증가하고 자신의 최대 체력 150%만큼 쉴드를 획득합니다.",
 				"initial_cooldown": 0.0,
 				"cooldown": 20.0,
 				"duration": 4.0,
