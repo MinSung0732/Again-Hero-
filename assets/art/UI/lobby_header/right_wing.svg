@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="430" height="92" viewBox="0 0 430 92">
+<g shape-rendering="crispEdges" transform="translate(430 0) scale(-1 1)">
+  <path d="M12 8 H342 L362 2 H390 L402 14 H422 V78 H402 L390 90 H362 L342 84 H12 L4 76 V16 Z"
+        fill="#08091b" stroke="#ffbd35" stroke-width="5"/>
+  <path d="M20 17 H338 L358 11 H384 L393 20 H412 V72 H393 L384 81 H358 L338 75 H20 L13 68 V24 Z"
+        fill="#121027" stroke="#52206f" stroke-width="3"/>
+  <path d="M28 22 H335" stroke="#ffe07a" stroke-width="2" opacity=".78"/>
+  <path d="M28 70 H335" stroke="#8f3ab3" stroke-width="2" opacity=".78"/>
+  <path d="M17 29 H33 V15 M17 63 H33 V77" fill="none" stroke="#ffd35d" stroke-width="4"/>
+  <polygon points="370,14 380,24 370,34 360,24" fill="#8e2fbd" stroke="#ffc544" stroke-width="3"/>
+  <path d="M388 27 H405 V37 M388 65 H405 V55" fill="none" stroke="#ffd35d" stroke-width="3"/>
+  <rect x="31" y="30" width="300" height="32" fill="#0d0b1d" opacity=".72"/>
+</g></svg>
