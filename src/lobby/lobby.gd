@@ -713,7 +713,7 @@ func _apply_new_ui_assets() -> void:
 		logo.offset_left = 104.0
 		logo.offset_top = 0.0
 		logo.offset_right = -104.0
-		logo.offset_bottom = 102.0
+		logo.offset_bottom = 94.0
 		header.add_child(logo)
 		header.move_child(logo, 0)
 
@@ -935,10 +935,10 @@ func _install_stage_entry_hud() -> void:
 	stage_layout.add_theme_constant_override("separation", 6)
 
 	section_header.custom_minimum_size = Vector2(0.0, 108.0)
-	section_title.offset_top = 20.0
-	section_title.offset_bottom = 60.0
-	section_subtitle.offset_top = 62.0
-	section_subtitle.offset_bottom = 96.0
+	section_title.offset_top = 28.0
+	section_title.offset_bottom = 66.0
+	section_subtitle.offset_top = 68.0
+	section_subtitle.offset_bottom = 100.0
 
 	stage_meta.custom_minimum_size = Vector2(0.0, 100.0)
 	stage_number_label.offset_top = 6.0
@@ -949,7 +949,7 @@ func _install_stage_entry_hud() -> void:
 	stage_picker.add_theme_constant_override("separation", 6)
 	prev_stage_button.custom_minimum_size = Vector2(54.0, 148.0)
 	next_stage_button.custom_minimum_size = Vector2(54.0, 148.0)
-	stage_card_slot.custom_minimum_size = Vector2(860.0, 1250.0)
+	stage_card_slot.custom_minimum_size = Vector2(826.0, 1200.0)
 	stage_card_slot.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	stage_card.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 
@@ -1028,47 +1028,11 @@ func _install_stage_entry_hud() -> void:
 			jewel.rotation = PI * 0.25
 			meta_plate.add_child(jewel)
 
-	var section_title_plate := section_header.get_node_or_null("SectionTitlePlate") as Panel
-	if section_title_plate == null:
-		section_title_plate = Panel.new()
-		section_title_plate.name = "SectionTitlePlate"
-		section_title_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		section_title_plate.anchor_left = 0.29
-		section_title_plate.anchor_top = 0.17
-		section_title_plate.anchor_right = 0.71
-		section_title_plate.anchor_bottom = 0.60
-		section_title_plate.add_theme_stylebox_override(
-			"panel",
-			_make_hud_panel_style(
-				Color(0.035, 0.022, 0.050, 0.94),
-				Color(0.49, 0.31, 0.58, 0.72),
-				1,
-				8
-			)
-		)
-		section_title_plate.z_index = 0
-		section_header.add_child(section_title_plate)
-		section_header.move_child(section_title_plate, 0)
-	section_title.z_index = 2
-	section_subtitle.z_index = 2
-
-	for data in [
-		["HeaderRuleLeft", 0.05, 0.38, 0.30, 0.40],
-		["HeaderRuleRight", 0.70, 0.38, 0.95, 0.40],
-	]:
-		var node_name := String(data[0])
-		if section_header.get_node_or_null(node_name) != null:
-			continue
-		var rule := ColorRect.new()
-		rule.name = node_name
-		rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		rule.color = Color(0.74, 0.47, 0.83, 0.72)
-		rule.anchor_left = float(data[1])
-		rule.anchor_top = float(data[2])
-		rule.anchor_right = float(data[3])
-		rule.anchor_bottom = float(data[4])
-		section_header.add_child(rule)
-		section_header.move_child(rule, 0)
+	for stale_name in ["SectionTitlePlate", "HeaderRuleLeft", "HeaderRuleRight"]:
+		var stale_header_node := section_header.get_node_or_null(stale_name)
+		if stale_header_node != null:
+			section_header.remove_child(stale_header_node)
+			stale_header_node.free()
 
 	card_margin.add_theme_constant_override("margin_left", 18)
 	card_margin.add_theme_constant_override("margin_right", 18)
@@ -1294,34 +1258,21 @@ func _apply_lobby_visual_polish() -> void:
 	var nav_buttons := $BottomNav/NavMargin/NavButtons as HBoxContainer
 	nav_buttons.add_theme_constant_override("separation", 6)
 
-	resource_label.add_theme_font_size_override("font_size", 22)
+	var header_margin := $SafeArea/Layout/Header/HeaderMargin as MarginContainer
+	header_margin.add_theme_constant_override("margin_left", 72)
+	header_margin.add_theme_constant_override("margin_top", 116)
+	header_margin.add_theme_constant_override("margin_right", 72)
+	header_margin.add_theme_constant_override("margin_bottom", 8)
+
+	var resource_row := $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow as HBoxContainer
+	resource_row.add_theme_constant_override("separation", 36)
+
+	resource_label.add_theme_font_size_override("font_size", 21)
 	resource_label.add_theme_color_override("font_color", Color("f3cf72"))
-	progress_label.add_theme_font_size_override("font_size", 21)
+	resource_label.remove_theme_stylebox_override("normal")
+	progress_label.add_theme_font_size_override("font_size", 20)
 	progress_label.add_theme_color_override("font_color", Color("d8c8df"))
-
-	var resource_plate := _make_hud_panel_style(
-		Color(0.035, 0.022, 0.050, 0.90),
-		Color(0.72, 0.50, 0.20, 0.74),
-		1,
-		8
-	)
-	resource_plate.content_margin_left = 16.0
-	resource_plate.content_margin_right = 16.0
-	resource_plate.content_margin_top = 4.0
-	resource_plate.content_margin_bottom = 4.0
-	resource_label.add_theme_stylebox_override("normal", resource_plate)
-
-	var progress_plate := _make_hud_panel_style(
-		Color(0.035, 0.022, 0.050, 0.90),
-		Color(0.72, 0.50, 0.20, 0.74),
-		1,
-		8
-	)
-	progress_plate.content_margin_left = 16.0
-	progress_plate.content_margin_right = 16.0
-	progress_plate.content_margin_top = 4.0
-	progress_plate.content_margin_bottom = 4.0
-	progress_label.add_theme_stylebox_override("normal", progress_plate)
+	progress_label.remove_theme_stylebox_override("normal")
 
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox/SectionTitle",
