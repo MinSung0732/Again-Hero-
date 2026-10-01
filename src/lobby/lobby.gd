@@ -757,9 +757,9 @@ func _apply_new_ui_assets() -> void:
 		left_wing.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		left_wing.stretch_mode = TextureRect.STRETCH_SCALE
 		left_wing.anchor_left = 0.0
-		left_wing.anchor_top = 0.41
+		left_wing.anchor_top = 0.43
 		left_wing.anchor_right = 1.0
-		left_wing.anchor_bottom = 0.65
+		left_wing.anchor_bottom = 0.64
 		left_wing.z_index = 0
 		gold_plate.add_child(left_wing)
 
@@ -772,9 +772,9 @@ func _apply_new_ui_assets() -> void:
 		right_wing.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		right_wing.stretch_mode = TextureRect.STRETCH_SCALE
 		right_wing.anchor_left = 0.0
-		right_wing.anchor_top = 0.41
+		right_wing.anchor_top = 0.43
 		right_wing.anchor_right = 1.0
-		right_wing.anchor_bottom = 0.65
+		right_wing.anchor_bottom = 0.64
 		right_wing.z_index = 0
 		progress_plate.add_child(right_wing)
 
@@ -791,15 +791,17 @@ func _apply_new_ui_assets() -> void:
 	gold_title.anchor_top = 0.52
 	gold_title.anchor_right = 1.0
 	gold_title.anchor_bottom = 0.52
-	gold_title.offset_left = 54.0
+	gold_title.offset_left = 58.0
 	gold_title.offset_top = -23.0
-	gold_title.offset_right = -62.0
+	gold_title.offset_right = -92.0
 	gold_title.offset_bottom = -3.0
 	gold_title.clip_text = true
 	gold_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	gold_title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	gold_title.add_theme_font_size_override("font_size", 13)
-	gold_title.add_theme_color_override("font_color", Color("d7c8dd"))
+	gold_title.add_theme_font_size_override("font_size", 15)
+	gold_title.add_theme_color_override("font_color", Color("eee6f2"))
+	gold_title.add_theme_color_override("font_outline_color", Color("171027"))
+	gold_title.add_theme_constant_override("outline_size", 2)
 	gold_title.z_index = 5
 	gold_plate.add_child(gold_title)
 
@@ -811,15 +813,17 @@ func _apply_new_ui_assets() -> void:
 	gold_value.anchor_top = 0.52
 	gold_value.anchor_right = 1.0
 	gold_value.anchor_bottom = 0.52
-	gold_value.offset_left = 54.0
+	gold_value.offset_left = 58.0
 	gold_value.offset_top = 0.0
-	gold_value.offset_right = -62.0
+	gold_value.offset_right = -92.0
 	gold_value.offset_bottom = 26.0
 	gold_value.clip_text = true
 	gold_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	gold_value.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	gold_value.add_theme_font_size_override("font_size", 18)
-	gold_value.add_theme_color_override("font_color", Color("f5d16d"))
+	gold_value.add_theme_font_size_override("font_size", 20)
+	gold_value.add_theme_color_override("font_color", Color("ffe28a"))
+	gold_value.add_theme_color_override("font_outline_color", Color("171027"))
+	gold_value.add_theme_constant_override("outline_size", 2)
 	gold_value.z_index = 5
 	gold_plate.add_child(gold_value)
 
@@ -853,10 +857,10 @@ func _apply_new_ui_assets() -> void:
 		plus_button.anchor_top = 0.52
 		plus_button.anchor_right = 1.0
 		plus_button.anchor_bottom = 0.52
-		plus_button.offset_left = -48.0
-		plus_button.offset_top = -15.0
+		plus_button.offset_left = -44.0
+		plus_button.offset_top = -13.0
 		plus_button.offset_right = -18.0
-		plus_button.offset_bottom = 15.0
+		plus_button.offset_bottom = 13.0
 		plus_button.tooltip_text = "상점"
 		plus_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		plus_button.z_index = 6
@@ -871,15 +875,17 @@ func _apply_new_ui_assets() -> void:
 	progress_title.anchor_top = 0.52
 	progress_title.anchor_right = 1.0
 	progress_title.anchor_bottom = 0.52
-	progress_title.offset_left = 34.0
+	progress_title.offset_left = 72.0
 	progress_title.offset_top = -23.0
-	progress_title.offset_right = -28.0
+	progress_title.offset_right = -22.0
 	progress_title.offset_bottom = -3.0
 	progress_title.clip_text = true
 	progress_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	progress_title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	progress_title.add_theme_font_size_override("font_size", 13)
-	progress_title.add_theme_color_override("font_color", Color("d7c8dd"))
+	progress_title.add_theme_font_size_override("font_size", 15)
+	progress_title.add_theme_color_override("font_color", Color("eee6f2"))
+	progress_title.add_theme_color_override("font_outline_color", Color("171027"))
+	progress_title.add_theme_constant_override("outline_size", 2)
 	progress_title.z_index = 5
 	progress_plate.add_child(progress_title)
 
@@ -891,15 +897,17 @@ func _apply_new_ui_assets() -> void:
 	progress_value.anchor_top = 0.52
 	progress_value.anchor_right = 1.0
 	progress_value.anchor_bottom = 0.52
-	progress_value.offset_left = 34.0
+	progress_value.offset_left = 72.0
 	progress_value.offset_top = 0.0
-	progress_value.offset_right = -28.0
+	progress_value.offset_right = -22.0
 	progress_value.offset_bottom = 26.0
 	progress_value.clip_text = true
 	progress_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	progress_value.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	progress_value.add_theme_font_size_override("font_size", 18)
-	progress_value.add_theme_color_override("font_color", Color("f5d16d"))
+	progress_value.add_theme_font_size_override("font_size", 20)
+	progress_value.add_theme_color_override("font_color", Color("ffe28a"))
+	progress_value.add_theme_color_override("font_outline_color", Color("171027"))
+	progress_value.add_theme_constant_override("outline_size", 2)
 	progress_value.z_index = 5
 	progress_plate.add_child(progress_value)
 
@@ -911,9 +919,9 @@ func _apply_new_ui_assets() -> void:
 		logo_backplate.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo_backplate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo_backplate.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo_backplate.anchor_left = 0.08
+		logo_backplate.anchor_left = 0.16
 		logo_backplate.anchor_top = 0.22
-		logo_backplate.anchor_right = 0.92
+		logo_backplate.anchor_right = 0.84
 		logo_backplate.anchor_bottom = 0.64
 		logo_backplate.z_index = 2
 		center_slot.add_child(logo_backplate)
@@ -927,9 +935,9 @@ func _apply_new_ui_assets() -> void:
 		logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo.anchor_left = 0.0
+		logo.anchor_left = 0.10
 		logo.anchor_top = 0.11
-		logo.anchor_right = 1.0
+		logo.anchor_right = 0.90
 		logo.anchor_bottom = 0.71
 		logo.z_index = 4
 		center_slot.add_child(logo)
