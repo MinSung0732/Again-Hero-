@@ -1136,10 +1136,10 @@ func _install_stage_entry_hud() -> void:
 	portrait_placeholder.z_index = 2
 	portrait_badge.z_index = 2
 
-	bottom_panel.anchor_left = 0.055
-	bottom_panel.anchor_top = 0.598
-	bottom_panel.anchor_right = 0.945
-	bottom_panel.anchor_bottom = 0.952
+	bottom_panel.anchor_left = 0.075
+	bottom_panel.anchor_top = 0.600
+	bottom_panel.anchor_right = 0.925
+	bottom_panel.anchor_bottom = 0.938
 
 	var description_backing := bottom_panel.get_node_or_null(
 		"DescriptionBacking"
@@ -1148,10 +1148,10 @@ func _install_stage_entry_hud() -> void:
 		description_backing = Panel.new()
 		description_backing.name = "DescriptionBacking"
 		description_backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		description_backing.anchor_left = 0.0
+		description_backing.anchor_left = 0.035
 		description_backing.anchor_top = 0.0
-		description_backing.anchor_right = 1.0
-		description_backing.anchor_bottom = 0.30
+		description_backing.anchor_right = 0.965
+		description_backing.anchor_bottom = 0.25
 		description_backing.add_theme_stylebox_override(
 			"panel",
 			_make_hud_panel_style(
@@ -1180,10 +1180,10 @@ func _install_stage_entry_hud() -> void:
 		info_backing = Panel.new()
 		info_backing.name = "EntryInfoBacking"
 		info_backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		info_backing.anchor_left = 0.0
-		info_backing.anchor_top = 0.34
-		info_backing.anchor_right = 1.0
-		info_backing.anchor_bottom = 0.62
+		info_backing.anchor_left = 0.035
+		info_backing.anchor_top = 0.31
+		info_backing.anchor_right = 0.965
+		info_backing.anchor_bottom = 0.53
 		info_backing.add_theme_stylebox_override(
 			"panel",
 			_make_hud_panel_style(
@@ -1219,44 +1219,44 @@ func _install_stage_entry_hud() -> void:
 			divider.offset_right = 1.0
 			info_backing.add_child(divider)
 
-	stage_description_label.anchor_left = 0.050
-	stage_description_label.anchor_top = 0.015
-	stage_description_label.anchor_right = 0.950
-	stage_description_label.anchor_bottom = 0.285
+	stage_description_label.anchor_left = 0.070
+	stage_description_label.anchor_top = 0.035
+	stage_description_label.anchor_right = 0.930
+	stage_description_label.anchor_bottom = 0.235
 	stage_description_label.offset_left = 0.0
 	stage_description_label.offset_top = 0.0
 	stage_description_label.offset_right = 0.0
 	stage_description_label.offset_bottom = 0.0
 
-	stage_status_label.anchor_left = 0.015
-	stage_status_label.anchor_top = 0.345
-	stage_status_label.anchor_right = 0.325
-	stage_status_label.anchor_bottom = 0.615
-	stage_reward_label.anchor_left = 0.345
-	stage_reward_label.anchor_top = 0.345
-	stage_reward_label.anchor_right = 0.655
-	stage_reward_label.anchor_bottom = 0.615
+	stage_status_label.anchor_left = 0.060
+	stage_status_label.anchor_top = 0.340
+	stage_status_label.anchor_right = 0.320
+	stage_status_label.anchor_bottom = 0.520
+	stage_reward_label.anchor_left = 0.370
+	stage_reward_label.anchor_top = 0.340
+	stage_reward_label.anchor_right = 0.630
+	stage_reward_label.anchor_bottom = 0.520
 
 	var repeat_label := bottom_panel.get_node_or_null("RepeatReward") as Label
 	if repeat_label == null:
 		repeat_label = Label.new()
 		repeat_label.name = "RepeatReward"
 		repeat_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		repeat_label.anchor_left = 0.675
-		repeat_label.anchor_top = 0.345
-		repeat_label.anchor_right = 0.985
-		repeat_label.anchor_bottom = 0.615
+		repeat_label.anchor_left = 0.680
+		repeat_label.anchor_top = 0.340
+		repeat_label.anchor_right = 0.940
+		repeat_label.anchor_bottom = 0.520
 		repeat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		repeat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		repeat_label.add_theme_font_size_override("font_size", 19)
 		repeat_label.add_theme_color_override("font_color", Color("d7c8df"))
 		bottom_panel.add_child(repeat_label)
 
-	enter_stage_button.anchor_left = 0.035
-	enter_stage_button.anchor_top = 0.685
-	enter_stage_button.anchor_right = 0.965
-	enter_stage_button.anchor_bottom = 0.955
-	enter_stage_button.custom_minimum_size = Vector2(0.0, 88.0)
+	enter_stage_button.anchor_left = 0.090
+	enter_stage_button.anchor_top = 0.580
+	enter_stage_button.anchor_right = 0.910
+	enter_stage_button.anchor_bottom = 0.730
+	enter_stage_button.custom_minimum_size = Vector2(0.0, 76.0)
 
 	stage_description_label.add_theme_font_size_override("font_size", 21)
 	stage_status_label.add_theme_font_size_override("font_size", 19)
@@ -1269,10 +1269,10 @@ func _install_stage_entry_hud() -> void:
 		footer = Control.new()
 		footer.name = "StageFooterOrnament"
 		footer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		footer.anchor_left = 0.18
-		footer.anchor_top = 0.875
-		footer.anchor_right = 0.82
-		footer.anchor_bottom = 0.945
+		footer.anchor_left = 0.24
+		footer.anchor_top = 0.835
+		footer.anchor_right = 0.76
+		footer.anchor_bottom = 0.885
 		footer.z_index = 2
 		main_tab_control.add_child(footer)
 
