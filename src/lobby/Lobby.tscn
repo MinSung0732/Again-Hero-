@@ -207,6 +207,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+clip_contents = true
 
 [node name="TeamLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/TeamTab"]
 layout_mode = 1
@@ -214,63 +215,88 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 20.0
-offset_top = 38.0
+offset_top = 32.0
 offset_right = -20.0
-offset_bottom = -34.0
+offset_bottom = -28.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 8
 
 [node name="Title" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.87, 1, 1)
-theme_override_font_sizes/font_size = 42
-text = "몬스터 편성"
+theme_override_font_sizes/font_size = 38
+text = "전투 편성"
 horizontal_alignment = 1
 
 [node name="Guide" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
-theme_override_font_sizes/font_size = 24
-text = "각 몬스터 카드의 팀 편성/해제 버튼으로 최대 3종을 구성하고, 상세정보 버튼으로 능력치를 확인합니다."
+theme_override_font_sizes/font_size = 20
+text = "몬스터와 마왕 스킬을 각각 최대 3종까지 편성합니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="Summary" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 24
 text = "팀 탭을 열어 편성을 표시합니다."
 horizontal_alignment = 1
 
 [node name="SlotRow" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
-custom_minimum_size = Vector2(0, 168)
+custom_minimum_size = Vector2(0, 146)
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 10
 
 [node name="Slot1Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
-custom_minimum_size = Vector2(0, 168)
+custom_minimum_size = Vector2(0, 146)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 20
+expand_icon = true
+icon_max_width = 72
 text = "1\n빈 슬롯"
 
 [node name="Slot2Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
-custom_minimum_size = Vector2(0, 168)
+custom_minimum_size = Vector2(0, 146)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 20
+expand_icon = true
+icon_max_width = 72
 text = "2\n빈 슬롯"
 
 [node name="Slot3Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
-custom_minimum_size = Vector2(0, 168)
+custom_minimum_size = Vector2(0, 146)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 20
+expand_icon = true
+icon_max_width = 72
 text = "3\n빈 슬롯"
+
+[node name="ModeTabs" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TeamModeButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ModeTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 23
+text = "팀 편성"
+
+[node name="SkillModeButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ModeTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 23
+text = "스킬 편성"
 
 [node name="ListTitle" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
@@ -279,23 +305,23 @@ text = "몬스터 컬렉션"
 horizontal_alignment = 1
 
 [node name="MonsterScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
-custom_minimum_size = Vector2(0, 420)
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
+vertical_scroll_mode = 1
 
 [node name="MonsterGrid" type="GridContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-columns = 2
-theme_override_constants/h_separation = 18
-theme_override_constants/v_separation = 18
+columns = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
 
 [node name="Status" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
-custom_minimum_size = Vector2(0, 54)
+custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 19
 text = "팀 편성/해제와 상세정보가 분리되어 있습니다."
 horizontal_alignment = 1
 vertical_alignment = 1

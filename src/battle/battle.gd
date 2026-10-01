@@ -31,6 +31,9 @@ const HERO_AI_PROFILES := preload("res://src/data/hero_ai_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
+const DEMON_SKILL_LOADOUT_STORE := preload(
+	"res://src/systems/demon_skill_loadout_store.gd"
+)
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const RUN_METRICS := preload("res://src/systems/run_metrics.gd")
@@ -628,7 +631,12 @@ func _cache_demon_ultimate_runtime_data() -> void:
 		DEMON_ULTIMATES.CHARGE_MAX,
 		1.0
 	)
-	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
+	var valid_skill_ids: Array = DEMON_ULTIMATES.get_ordered_ids()
+	var selected_skill_ids := DEMON_SKILL_LOADOUT_STORE.load_ids(
+		valid_skill_ids,
+		valid_skill_ids
+	)
+	for raw_id in selected_skill_ids:
 		var skill_id := String(raw_id)
 		demon_ultimate_skill_ids.append(skill_id)
 		var skill := DEMON_ULTIMATES.get_skill(skill_id)
@@ -2477,6 +2485,8 @@ func try_use_demon_ultimate(
 	direction: String = ""
 ) -> bool:
 	if battle_over or external_pause or demon_augment_selection_active:
+		return false
+	if skill_id not in demon_ultimate_skill_ids:
 		return false
 	if float(demon_ultimate_cooldowns.get(skill_id, 0.0)) > 0.001:
 		return false

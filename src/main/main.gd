@@ -6,6 +6,9 @@ const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
+const DEMON_SKILL_LOADOUT_STORE := preload(
+	"res://src/systems/demon_skill_loadout_store.gd"
+)
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const HERO_AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
 const HERO_SKILL_COOLDOWN_BADGE := preload("res://src/ui/hero_skill_cooldown_badge.gd")
@@ -318,15 +321,6 @@ func _ready() -> void:
 	mutation_choice_0.pressed.connect(_on_mutation_choice_pressed.bind(0))
 	mutation_choice_1.pressed.connect(_on_mutation_choice_pressed.bind(1))
 	mutation_choice_2.pressed.connect(_on_mutation_choice_pressed.bind(2))
-	demon_ultimate_1.pressed.connect(
-		_on_demon_ultimate_pressed.bind("encirclement")
-	)
-	demon_ultimate_2.pressed.connect(
-		_on_demon_ultimate_pressed.bind("line_assault")
-	)
-	demon_ultimate_3.pressed.connect(
-		_on_demon_ultimate_pressed.bind("square_siege")
-	)
 	next_stage_button.pressed.connect(_on_next_stage_pressed)
 	stage_select_result_button.pressed.connect(_on_lobby_pressed)
 	restart_button.pressed.connect(_on_restart_pressed)
@@ -2586,12 +2580,30 @@ func _cache_demon_ultimate_ui_data() -> void:
 	demon_ultimate_ui_cooldown_bars.append(demon_ultimate_2_cooldown)
 	demon_ultimate_ui_cooldown_bars.append(demon_ultimate_3_cooldown)
 
-	for raw_id in DEMON_ULTIMATES.get_ordered_ids():
+	var valid_skill_ids: Array = DEMON_ULTIMATES.get_ordered_ids()
+	var selected_skill_ids := DEMON_SKILL_LOADOUT_STORE.load_ids(
+		valid_skill_ids,
+		valid_skill_ids
+	)
+	for raw_id in selected_skill_ids:
 		var skill_id := String(raw_id)
 		var skill := DEMON_ULTIMATES.get_skill(skill_id)
 		if skill.is_empty():
 			skill = {"id": skill_id}
 		demon_ultimate_ui_skills.append(skill)
+
+	for index in demon_ultimate_ui_buttons.size():
+		var button := demon_ultimate_ui_buttons[index]
+		var active := index < demon_ultimate_ui_skills.size()
+		button.visible = active
+		if not active:
+			continue
+		var skill_id := String(
+			demon_ultimate_ui_skills[index].get("id", "")
+		)
+		button.pressed.connect(
+			_on_demon_ultimate_pressed.bind(skill_id)
+		)
 
 
 func _ensure_demon_action_choice_capacity(required_count: int) -> void:
@@ -2760,14 +2772,10 @@ func _refresh_demon_ultimate_buttons() -> void:
 		var ready := demon_mana_current + 0.001 >= mana_cost and remaining <= 0.001
 		button.disabled = not ready
 
-		var button_title := "마력 기술"
-		match skill_id:
-			"encirclement":
-				button_title = "1 원형 포위"
-			"line_assault":
-				button_title = "2 일직선 공세"
-			"square_siege":
-				button_title = "3 사각 포위"
+		var button_title := "%d %s" % [
+			index + 1,
+			String(skill.get("name", "마력 기술")),
+		]
 
 		if remaining > 0.001:
 			button.text = "%s\n쿨타임 %.1f초" % [
@@ -2783,13 +2791,12 @@ func _refresh_demon_ultimate_buttons() -> void:
 			button.text = "%s\n마력 %d 필요" % [button_title, int(round(mana_cost))]
 
 func _on_demon_ultimate_pressed(skill_id: String) -> void:
-	match skill_id:
-		"encirclement":
-			_flash_button_feedback(demon_ultimate_1)
-		"line_assault":
-			_flash_button_feedback(demon_ultimate_2)
-		"square_siege":
-			_flash_button_feedback(demon_ultimate_3)
+	for index in demon_ultimate_ui_skills.size():
+		if String(demon_ultimate_ui_skills[index].get("id", "")) != skill_id:
+			continue
+		if index < demon_ultimate_ui_buttons.size():
+			_flash_button_feedback(demon_ultimate_ui_buttons[index])
+		break
 
 	if skill_id == "line_assault":
 		var skill := DEMON_ULTIMATES.get_skill("line_assault")
