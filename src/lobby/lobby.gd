@@ -919,7 +919,6 @@ func _install_stage_entry_hud() -> void:
 	var section_header := $SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox as Control
 	var section_title := $SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox/SectionTitle as Label
 	var section_subtitle := $SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox/SectionSubtitle as Label
-	var main_tab_control := $SafeArea/Layout/Content/MainTab as Control
 	var stage_layout := $SafeArea/Layout/Content/MainTab/StageLayout as VBoxContainer
 	var stage_meta := $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox as Control
 	var stage_picker := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker as HBoxContainer
@@ -931,15 +930,15 @@ func _install_stage_entry_hud() -> void:
 
 	# Header and stage meta used to overflow their VBox slots. Keep every label
 	# inside its own reserved area so the whole screen reads as one HUD.
-	stage_layout.offset_top = 42.0
+	stage_layout.offset_top = 54.0
 	stage_layout.offset_bottom = -18.0
 	stage_layout.add_theme_constant_override("separation", 6)
 
-	section_header.custom_minimum_size = Vector2(0.0, 96.0)
-	section_title.offset_top = 8.0
-	section_title.offset_bottom = 50.0
-	section_subtitle.offset_top = 52.0
-	section_subtitle.offset_bottom = 86.0
+	section_header.custom_minimum_size = Vector2(0.0, 108.0)
+	section_title.offset_top = 20.0
+	section_title.offset_bottom = 60.0
+	section_subtitle.offset_top = 62.0
+	section_subtitle.offset_bottom = 96.0
 
 	stage_meta.custom_minimum_size = Vector2(0.0, 100.0)
 	stage_number_label.offset_top = 6.0
@@ -1029,6 +1028,30 @@ func _install_stage_entry_hud() -> void:
 			jewel.rotation = PI * 0.25
 			meta_plate.add_child(jewel)
 
+	var section_title_plate := section_header.get_node_or_null("SectionTitlePlate") as Panel
+	if section_title_plate == null:
+		section_title_plate = Panel.new()
+		section_title_plate.name = "SectionTitlePlate"
+		section_title_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		section_title_plate.anchor_left = 0.29
+		section_title_plate.anchor_top = 0.17
+		section_title_plate.anchor_right = 0.71
+		section_title_plate.anchor_bottom = 0.60
+		section_title_plate.add_theme_stylebox_override(
+			"panel",
+			_make_hud_panel_style(
+				Color(0.035, 0.022, 0.050, 0.94),
+				Color(0.49, 0.31, 0.58, 0.72),
+				1,
+				8
+			)
+		)
+		section_title_plate.z_index = 0
+		section_header.add_child(section_title_plate)
+		section_header.move_child(section_title_plate, 0)
+	section_title.z_index = 2
+	section_subtitle.z_index = 2
+
 	for data in [
 		["HeaderRuleLeft", 0.05, 0.38, 0.30, 0.40],
 		["HeaderRuleRight", 0.70, 0.38, 0.95, 0.40],
@@ -1112,26 +1135,10 @@ func _install_stage_entry_hud() -> void:
 		if old_portrait_backdrop != null:
 			portrait_inner.remove_child(old_portrait_backdrop)
 			old_portrait_backdrop.free()
-
-		var portrait_backdrop := ColorRect.new()
-		portrait_backdrop.name = "PortraitBackdrop"
-		portrait_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		portrait_backdrop.color = Color(0.045, 0.030, 0.070, 0.98)
-		portrait_backdrop.set_anchors_and_offsets_preset(
-			Control.PRESET_FULL_RECT
-		)
-		portrait_inner.add_child(portrait_backdrop)
-		portrait_inner.move_child(portrait_backdrop, 0)
-
-		var portrait_glow := ColorRect.new()
-		portrait_glow.name = "PortraitGlow"
-		portrait_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		portrait_glow.color = Color(0.22, 0.10, 0.30, 0.24)
-		portrait_glow.anchor_left = 0.18
-		portrait_glow.anchor_top = 0.10
-		portrait_glow.anchor_right = 0.82
-		portrait_glow.anchor_bottom = 0.90
-		portrait_backdrop.add_child(portrait_glow)
+		var old_portrait_glow := portrait_inner.get_node_or_null("PortraitGlow")
+		if old_portrait_glow != null:
+			portrait_inner.remove_child(old_portrait_glow)
+			old_portrait_glow.free()
 
 	portrait_texture.z_index = 1
 	portrait_placeholder.z_index = 2
@@ -1243,63 +1250,12 @@ func _install_stage_entry_hud() -> void:
 	stage_status_label.add_theme_color_override("font_color", Color("ded3e4"))
 	stage_reward_label.add_theme_color_override("font_color", Color("f0cb68"))
 
-	var footer := main_tab_control.get_node_or_null("StageFooterOrnament") as Control
-	if footer == null:
-		footer = Control.new()
-		footer.name = "StageFooterOrnament"
-		footer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		footer.anchor_left = 0.26
-		footer.anchor_top = 0.815
-		footer.anchor_right = 0.74
-		footer.anchor_bottom = 0.865
-		footer.z_index = 2
-		main_tab_control.add_child(footer)
-
-		var footer_line_left := ColorRect.new()
-		footer_line_left.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		footer_line_left.color = Color(0.74, 0.52, 0.22, 0.76)
-		footer_line_left.anchor_left = 0.0
-		footer_line_left.anchor_top = 0.49
-		footer_line_left.anchor_right = 0.44
-		footer_line_left.anchor_bottom = 0.51
-		footer.add_child(footer_line_left)
-
-		var footer_line_right := ColorRect.new()
-		footer_line_right.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		footer_line_right.color = Color(0.74, 0.52, 0.22, 0.76)
-		footer_line_right.anchor_left = 0.56
-		footer_line_right.anchor_top = 0.49
-		footer_line_right.anchor_right = 1.0
-		footer_line_right.anchor_bottom = 0.51
-		footer.add_child(footer_line_right)
-
-		var footer_gem_outer := ColorRect.new()
-		footer_gem_outer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		footer_gem_outer.color = Color("d8a64a")
-		footer_gem_outer.anchor_left = 0.5
-		footer_gem_outer.anchor_top = 0.5
-		footer_gem_outer.anchor_right = 0.5
-		footer_gem_outer.anchor_bottom = 0.5
-		footer_gem_outer.offset_left = -10.0
-		footer_gem_outer.offset_top = -10.0
-		footer_gem_outer.offset_right = 10.0
-		footer_gem_outer.offset_bottom = 10.0
-		footer_gem_outer.rotation = PI * 0.25
-		footer.add_child(footer_gem_outer)
-
-		var footer_gem_inner := ColorRect.new()
-		footer_gem_inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		footer_gem_inner.color = Color("8e38b0")
-		footer_gem_inner.anchor_left = 0.5
-		footer_gem_inner.anchor_top = 0.5
-		footer_gem_inner.anchor_right = 0.5
-		footer_gem_inner.anchor_bottom = 0.5
-		footer_gem_inner.offset_left = -5.0
-		footer_gem_inner.offset_top = -5.0
-		footer_gem_inner.offset_right = 5.0
-		footer_gem_inner.offset_bottom = 5.0
-		footer_gem_inner.rotation = PI * 0.25
-		footer.add_child(footer_gem_inner)
+	var stale_footer := $SafeArea/Layout/Content/MainTab.get_node_or_null(
+		"StageFooterOrnament"
+	)
+	if stale_footer != null:
+		stale_footer.get_parent().remove_child(stale_footer)
+		stale_footer.free()
 
 
 func _apply_lobby_visual_polish() -> void:
@@ -1325,19 +1281,47 @@ func _apply_lobby_visual_polish() -> void:
 	var layout := $SafeArea/Layout as VBoxContainer
 	layout.add_theme_constant_override("separation", 10)
 
+	var bottom_nav := $BottomNav as PanelContainer
+	bottom_nav.offset_left = 18.0
+	bottom_nav.offset_right = -18.0
+
 	var nav_margin := $BottomNav/NavMargin as MarginContainer
-	nav_margin.add_theme_constant_override("margin_left", 18)
+	nav_margin.add_theme_constant_override("margin_left", 26)
 	nav_margin.add_theme_constant_override("margin_top", 18)
-	nav_margin.add_theme_constant_override("margin_right", 18)
+	nav_margin.add_theme_constant_override("margin_right", 26)
 	nav_margin.add_theme_constant_override("margin_bottom", 22)
 
 	var nav_buttons := $BottomNav/NavMargin/NavButtons as HBoxContainer
 	nav_buttons.add_theme_constant_override("separation", 6)
 
-	resource_label.add_theme_font_size_override("font_size", 26)
+	resource_label.add_theme_font_size_override("font_size", 22)
 	resource_label.add_theme_color_override("font_color", Color("f3cf72"))
-	progress_label.add_theme_font_size_override("font_size", 24)
-	progress_label.add_theme_color_override("font_color", Color("cbbbd4"))
+	progress_label.add_theme_font_size_override("font_size", 21)
+	progress_label.add_theme_color_override("font_color", Color("d8c8df"))
+
+	var resource_plate := _make_hud_panel_style(
+		Color(0.035, 0.022, 0.050, 0.90),
+		Color(0.72, 0.50, 0.20, 0.74),
+		1,
+		8
+	)
+	resource_plate.content_margin_left = 16.0
+	resource_plate.content_margin_right = 16.0
+	resource_plate.content_margin_top = 4.0
+	resource_plate.content_margin_bottom = 4.0
+	resource_label.add_theme_stylebox_override("normal", resource_plate)
+
+	var progress_plate := _make_hud_panel_style(
+		Color(0.035, 0.022, 0.050, 0.90),
+		Color(0.72, 0.50, 0.20, 0.74),
+		1,
+		8
+	)
+	progress_plate.content_margin_left = 16.0
+	progress_plate.content_margin_right = 16.0
+	progress_plate.content_margin_top = 4.0
+	progress_plate.content_margin_bottom = 4.0
+	progress_label.add_theme_stylebox_override("normal", progress_plate)
 
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox/SectionTitle",
