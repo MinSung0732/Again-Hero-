@@ -1,3 +1,10 @@
+### Lobby header logo-and-sidebars composition
+- 헤더 전체를 덮던 전투 HUD `top_hud_backdrop.svg`를 제거해 별도 검은 박스처럼 보이던 배경을 없앰.
+- 좌/우 `side_frame.svg` 패널 높이를 줄여 얇고 긴 사이드바로 재구성하고 중앙 로고 뒤쪽까지 연장.
+- 중앙에는 `logo_backplate.svg`를 작은 불규칙 백플레이트로 다시 적용해 사이드바 안쪽 선을 가리고, `AgainHeroLogo.png`를 더 크게 올려 목표 레퍼런스처럼 중앙 로고가 전면에 보이도록 조정.
+- 골드/최고 해금 텍스트는 각 사이드바의 바깥쪽 절반으로 이동해 중앙 로고와 겹치지 않도록 정리.
+- 중앙 던전 카드/하단 네비/스테이지 로직은 변경하지 않음.
+
 ### Lobby header composition refinement
 - 중앙 `logo_backplate.svg`는 목표 레퍼런스보다 큰 금색 사각틀로 읽혀 제거하고, 기존 `AgainHeroLogo.png`만 중앙 독립 레이어로 유지.
 - 좌/우 `side_frame.svg`는 `NinePatchRect`로 전환해 코너 장식 두께를 보존하면서 중앙 구간만 자연스럽게 늘어나도록 수정.
