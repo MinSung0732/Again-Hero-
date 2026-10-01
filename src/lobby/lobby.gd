@@ -31,6 +31,11 @@ const UI_LOBBY_FOOTER_DIR := "res://assets/art/UI/lobby_footer"
 const UI_LOBBY_NAV_FRAME_PATH := UI_LOBBY_FOOTER_DIR + "/nav_frame.svg"
 const UI_LOBBY_NAV_TAB_PATH := UI_LOBBY_FOOTER_DIR + "/tab_normal.svg"
 const UI_LOBBY_NAV_TAB_ACTIVE_PATH := UI_LOBBY_FOOTER_DIR + "/tab_active.svg"
+const UI_LOBBY_NAV_SHOP_ICON_PATH := UI_LOBBY_FOOTER_DIR + "/icon_shop.svg"
+const UI_LOBBY_NAV_TEAM_ICON_PATH := UI_LOBBY_FOOTER_DIR + "/icon_team.svg"
+const UI_LOBBY_NAV_MAIN_ICON_PATH := UI_LOBBY_FOOTER_DIR + "/icon_main.svg"
+const UI_LOBBY_NAV_RESEARCH_ICON_PATH := UI_LOBBY_FOOTER_DIR + "/icon_research.svg"
+const UI_LOBBY_NAV_OTHER_ICON_PATH := UI_LOBBY_FOOTER_DIR + "/icon_other.svg"
 const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_background.png"
 
@@ -258,8 +263,9 @@ func _build_styles() -> void:
 		4,
 		14
 	)
-	nav_button_active_style.content_margin_top = 10.0
-	nav_button_active_style.content_margin_bottom = 10.0
+	for style in [nav_button_style, nav_button_active_style]:
+		style.content_margin_top = 60.0
+		style.content_margin_bottom = 8.0
 	primary_button_style = _make_style(
 		Color("6c3b87"),
 		Color("d4af52"),
@@ -442,11 +448,11 @@ func _install_bottom_nav_frame() -> void:
 			bottom_nav.remove_child(stale)
 			stale.free()
 
-	var frame_texture := _load_ui_texture_resource(UI_LOBBY_NAV_FRAME_PATH)
+	var frame_texture := _load_svg_texture_direct(UI_LOBBY_NAV_FRAME_PATH)
 	if frame_texture == null:
 		return
-	var tab_texture := _load_ui_texture_resource(UI_LOBBY_NAV_TAB_PATH)
-	var active_tab_texture := _load_ui_texture_resource(
+	var tab_texture := _load_svg_texture_direct(UI_LOBBY_NAV_TAB_PATH)
+	var active_tab_texture := _load_svg_texture_direct(
 		UI_LOBBY_NAV_TAB_ACTIVE_PATH
 	)
 
@@ -476,9 +482,9 @@ func _make_nav_tab_style(texture: Texture2D) -> StyleBoxTexture:
 	style.texture_margin_right = 20.0
 	style.texture_margin_bottom = 20.0
 	style.content_margin_left = 12.0
-	style.content_margin_top = 12.0
+	style.content_margin_top = 60.0
 	style.content_margin_right = 12.0
-	style.content_margin_bottom = 12.0
+	style.content_margin_bottom = 8.0
 	return style
 
 
@@ -634,8 +640,26 @@ func _load_ui_texture_resource(path: String) -> Texture2D:
 	var resource := load(path)
 	if resource is Texture2D:
 		return resource as Texture2D
+	if path.get_extension().to_lower() == "svg":
+		return _load_svg_texture_direct(path)
 	push_warning("UI texture resource load failed: %s" % path)
 	return null
+
+
+func _load_svg_texture_direct(path: String) -> Texture2D:
+	if not FileAccess.file_exists(path):
+		push_warning("UI SVG file missing: %s" % path)
+		return null
+	var svg_text := FileAccess.get_file_as_string(path)
+	if svg_text.is_empty():
+		push_warning("UI SVG file empty: %s" % path)
+		return null
+	var image := Image.new()
+	var load_error := image.load_svg_from_string(svg_text, 1.0)
+	if load_error != OK or image.is_empty():
+		push_warning("UI SVG load failed: %s / error=%s" % [path, load_error])
+		return null
+	return ImageTexture.create_from_image(image)
 
 
 func _load_png_texture_cropped(path: String) -> Texture2D:
@@ -1637,6 +1661,48 @@ func _apply_lobby_visual_polish() -> void:
 		nav_button.custom_minimum_size = Vector2(0.0, 120.0)
 		nav_button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 
+	for icon_data in [
+		[shop_button, UI_LOBBY_NAV_SHOP_ICON_PATH],
+		[team_button, UI_LOBBY_NAV_TEAM_ICON_PATH],
+		[main_button, UI_LOBBY_NAV_MAIN_ICON_PATH],
+		[research_button, UI_LOBBY_NAV_RESEARCH_ICON_PATH],
+		[other_button, UI_LOBBY_NAV_OTHER_ICON_PATH],
+	]:
+		_install_nav_button_icon(
+			icon_data[0] as Button,
+			String(icon_data[1])
+		)
+
+
+func _install_nav_button_icon(button: Button, icon_path: String) -> void:
+	if button == null:
+		return
+	var old_icon := button.get_node_or_null("NavIcon")
+	if old_icon != null:
+		button.remove_child(old_icon)
+		old_icon.free()
+
+	var icon_texture := _load_svg_texture_direct(icon_path)
+	if icon_texture == null:
+		return
+	var icon := TextureRect.new()
+	icon.name = "NavIcon"
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.texture = icon_texture
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.anchor_left = 0.5
+	icon.anchor_top = 0.0
+	icon.anchor_right = 0.5
+	icon.anchor_bottom = 0.0
+	icon.offset_left = -24.0
+	icon.offset_top = 24.0
+	icon.offset_right = 24.0
+	icon.offset_bottom = 68.0
+	icon.z_index = 2
+	button.add_child(icon)
+
 
 func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> void:
 	if button == null:
@@ -1847,6 +1913,9 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 	)
 	button.add_theme_color_override("font_outline_color", Color("100b18"))
 	button.add_theme_constant_override("outline_size", 3 if selected else 2)
+	var icon := button.get_node_or_null("NavIcon") as TextureRect
+	if icon != null:
+		icon.modulate = Color.WHITE if selected else Color("b7adc2")
 
 
 func _format_shop_number(value: int) -> String:

@@ -6,8 +6,8 @@
         fill="#351b43" stroke="#8635a2" stroke-width="3"/>
   <path d="M24 18 H79 M121 18 H176" stroke="#ffe27a" stroke-width="3"/>
   <path d="M24 102 H79 M121 102 H176" stroke="#b34ac9" stroke-width="3"/>
-  <path d="M100 6 L113 19 L100 32 L87 19 Z" fill="#7d289f" stroke="#ffd45c" stroke-width="3"/>
-  <path d="M100 12 L107 19 L100 26 L93 19 Z" fill="#e077f0"/>
+  <path d="M100 4 L110 14 L100 24 L90 14 Z" fill="#7d289f" stroke="#ffd45c" stroke-width="3"/>
+  <path d="M100 9 L105 14 L100 19 L95 14 Z" fill="#e077f0"/>
   <path d="M8 32 H19 V18 M8 88 H19 V102" fill="none" stroke="#ffd45c" stroke-width="3"/>
   <path d="M192 32 H181 V18 M192 88 H181 V102" fill="none" stroke="#ffd45c" stroke-width="3"/>
   <rect x="21" y="27" width="158" height="67" fill="#2b1738" opacity=".70"/>

@@ -7,19 +7,13 @@
   <path d="M58 29 H1022 L1048 53 V127 L1022 151 H58 L32 127 V53 Z"
         fill="#0b0a18" stroke="#2e2140" stroke-width="2"/>
 
-  <path d="M66 24 H474" stroke="#ffe079" stroke-width="3" opacity=".88"/>
-  <path d="M606 24 H1014" stroke="#ffe079" stroke-width="3" opacity=".88"/>
-  <path d="M66 156 H474" stroke="#7b2d99" stroke-width="3" opacity=".90"/>
-  <path d="M606 156 H1014" stroke="#7b2d99" stroke-width="3" opacity=".90"/>
+  <path d="M66 24 H1014" stroke="#ffe079" stroke-width="3" opacity=".88"/>
+  <path d="M66 156 H1014" stroke="#7b2d99" stroke-width="3" opacity=".90"/>
 
   <path d="M22 58 H42 V34 M22 122 H42 V146" fill="none" stroke="#ffd45c" stroke-width="4"/>
   <path d="M1058 58 H1038 V34 M1058 122 H1038 V146" fill="none" stroke="#ffd45c" stroke-width="4"/>
   <path d="M36 48 L48 36 L60 48 L48 60 Z" fill="#7c2ca0" stroke="#efbd45" stroke-width="3"/>
   <path d="M1044 48 L1032 36 L1020 48 L1032 60 Z" fill="#7c2ca0" stroke="#efbd45" stroke-width="3"/>
-
-  <path d="M540 8 L558 26 L540 44 L522 26 Z" fill="#7e2aa3" stroke="#ffd35a" stroke-width="4"/>
-  <path d="M540 15 L550 26 L540 37 L530 26 Z" fill="#d96cf1"/>
-  <path d="M486 26 H516 M564 26 H594" stroke="#bd6bce" stroke-width="3" opacity=".8"/>
 
   <rect x="48" y="38" width="984" height="104" fill="#161124" opacity=".34"/>
   <path d="M48 142 H1032" stroke="#e6a934" stroke-width="2" opacity=".55"/>

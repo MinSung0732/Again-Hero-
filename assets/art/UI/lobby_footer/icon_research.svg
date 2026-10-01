@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+<g shape-rendering="crispEdges" stroke-linejoin="miter">
+  <path d="M18 10 H49 V45 H23 L15 53 V17 Z" fill="#b7a8c9" stroke="#eee7f8" stroke-width="3"/>
+  <path d="M15 17 C15 12 19 9 24 10 V48 C19 48 15 51 15 55 Z" fill="#6b567e" stroke="#d8cee5" stroke-width="3"/>
+  <path d="M29 21 H44 M29 29 H44 M29 37 H40" stroke="#4e3562" stroke-width="3"/>
+  <path d="M49 45 C54 45 55 49 52 53 H23 C26 50 26 47 23 45 Z" fill="#806494" stroke="#e3d7ec" stroke-width="3"/>
+</g>
+</svg>
