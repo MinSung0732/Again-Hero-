@@ -214,9 +214,9 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 20.0
+offset_left = 52.0
 offset_top = 32.0
-offset_right = -20.0
+offset_right = -52.0
 offset_bottom = -28.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -256,7 +256,7 @@ size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 20
 expand_icon = true
-icon_max_width = 72
+theme_override_constants/icon_max_width = 48
 text = "1\n빈 슬롯"
 
 [node name="Slot2Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
@@ -266,7 +266,7 @@ size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 20
 expand_icon = true
-icon_max_width = 72
+theme_override_constants/icon_max_width = 48
 text = "2\n빈 슬롯"
 
 [node name="Slot3Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
@@ -276,7 +276,7 @@ size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 20
 expand_icon = true
-icon_max_width = 72
+theme_override_constants/icon_max_width = 48
 text = "3\n빈 슬롯"
 
 [node name="ModeTabs" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]

@@ -150,6 +150,7 @@ var _stage_pending_direction := 0
 var _stage_card_origin := Vector2.ZERO
 var _stage_card_base_modulate := Color.WHITE
 var _portrait_texture_cache: Dictionary = {}
+var _monster_icon_texture_cache: Dictionary = {}
 var stage_selector_buttons: Array[Button] = []
 var _scene_load_path: String = ""
 var _scene_load_pending: bool = false
@@ -3060,19 +3061,33 @@ func _team_monster_card_icon(monster_id: String) -> Texture2D:
 	var icon_path := String(data.get("card_icon_path", ""))
 	if icon_path.is_empty():
 		return null
+	var icon_region = data.get("card_icon_region")
+	var cache_key := icon_path
+	if typeof(icon_region) == TYPE_RECT2:
+		cache_key += ":%s" % icon_region
+	if _monster_icon_texture_cache.has(cache_key):
+		return _monster_icon_texture_cache[cache_key] as Texture2D
 
-	var texture := _load_texture(icon_path)
+	var texture: Texture2D = null
+	if (
+		typeof(icon_region) != TYPE_RECT2
+		and icon_path.get_extension().to_lower() == "png"
+	):
+		texture = _load_png_texture_cropped(icon_path)
+	if texture == null:
+		texture = _load_texture(icon_path)
 	if texture == null:
 		return null
 
-	var icon_region = data.get("card_icon_region")
 	if typeof(icon_region) == TYPE_RECT2:
 		var atlas := AtlasTexture.new()
 		atlas.atlas = texture
 		atlas.filter_clip = true
 		atlas.region = icon_region
+		_monster_icon_texture_cache[cache_key] = atlas
 		return atlas
 
+	_monster_icon_texture_cache[cache_key] = texture
 	return texture
 
 func _team_monster_name(monster_id: String) -> String:
