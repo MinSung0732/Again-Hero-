@@ -6915,21 +6915,21 @@ func _apply_profile_visual() -> void:
 	if rogue_frames.has_animation("default"):
 		rogue_frames.remove_animation("default")
 
-	if not _add_sequence_animation(
-		rogue_frames, "idle", frame_dir, 1, 4, 6.0, true
+	if not _add_named_sequence_animation(
+		rogue_frames, "idle", frame_dir, "idle", 4, 6.0, true
 	):
 		return
-	_add_sequence_animation(
-		rogue_frames, "move", frame_dir, 5, 6, 11.0, true
+	_add_named_sequence_animation(
+		rogue_frames, "move", frame_dir, "walk", 6, 11.0, true
 	)
-	_add_sequence_animation(
-		rogue_frames, "attack", frame_dir, 11, 6, 18.0, false
+	_add_named_sequence_animation(
+		rogue_frames, "attack", frame_dir, "attack", 6, 18.0, false
 	)
-	_add_sequence_animation(
-		rogue_frames, "hit", frame_dir, 17, 3, 14.0, false
+	_add_named_sequence_animation(
+		rogue_frames, "hit", frame_dir, "hit", 3, 14.0, false
 	)
-	_add_sequence_animation(
-		rogue_frames, "death", frame_dir, 20, 4, 10.0, false
+	_add_named_sequence_animation(
+		rogue_frames, "death", frame_dir, "dead", 4, 10.0, false
 	)
 
 	hero_sprite.sprite_frames = rogue_frames

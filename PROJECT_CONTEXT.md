@@ -1774,6 +1774,12 @@ Android 실기기에서 Milestone 1 실행 및 기본 전투 흐름이 정상 �
 - 납품은 가능하면 Sprite Sheet, 개별 프레임, 64×64 초상화, manifest.json, ZIP을 함께 제공한다.
 
 
+## Stage 2 / 일반 Orc·Spider 프레임 연결 갱신 (2026-10-01)
+
+- Stage 2 `rogue_combo`는 이름 기반 본체 프레임을 사용한다: `idle 4`, `walk 6`, `attack 6`, `hit 3`, `dead 4`. 내부 애니메이션 이름은 기존 상태 전이와 호환되도록 `idle/move/attack/hit/death`를 유지한다.
+- 일반 Orc는 `idle 4`, `move 6`, `attack 6`, `hit 3`, `death 4`; 일반 Spider는 `idle 4`, `move 6`, `attack 7`, `hit 3`, `death 4`를 사용한다.
+- 프레임 교체는 시각 리소스 연결만 변경하며 공격 타이밍, 이동속도, 피해 판정, AI, 애니메이션 FPS는 유지한다.
+
 ## Stage 9 정화의 용사 전용 증강 v1 (2026-09-30)
 
 Stage 9 cleric_purifier의 전용 증강은 회복 스킬 강화가 아니라 정화의 구체 네트워크 / 정화 누적 / 용기의 왕관 / 신성보호 / 궁그닐 해금 흐름을 변형한다.
@@ -1851,4 +1857,3 @@ Build AI는 전체/주변 몬스터 수, 최근 공세, 역할 비율, 거리, �
 - 모든 용사 전투 SFX는 `SFX` 버스를 사용한다.
 - 반복 호출되는 사운드는 가능하면 AudioStreamPlayer를 재사용해 불필요한 노드 생성과 긴 tail 중첩을 방지한다.
 - 최종 체감 음량은 Godot 런타임 청취로 확인하며, 단순 `volume_db` 숫자만으로 서로 다른 원본의 실제 loudness가 완전히 동일하다고 간주하지 않는다.
-

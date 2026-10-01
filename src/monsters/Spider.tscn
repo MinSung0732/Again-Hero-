@@ -21,11 +21,12 @@ target_height = 88.0
 idle_count = 4
 move_count = 6
 attack_count = 7
-hit_count = 0
+hit_count = 3
 death_count = 4
 idle_fps = 6.0
 move_fps = 10.0
 attack_fps = 14.0
+hit_fps = 14.0
 death_fps = 10.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

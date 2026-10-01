@@ -1,3 +1,9 @@
+### Stage 2 / 일반 Orc·Spider 신규 프레임 연결
+- Stage 2 날렵한 용사 본체 애니메이션을 삭제된 `frame_01~23` 연속 번호 대신 `idle_01~04`, `walk_01~06`, `attack_01~06`, `hit_01~03`, `dead_01~04` 파일명으로 연결.
+- 일반 Orc의 피격 프레임을 4개에서 3개, 사망 프레임을 6개에서 4개로 조정하고 삭제된 프레임의 오래된 `.import` 메타데이터를 제거.
+- 일반 Spider의 새 피격 프레임 3개를 런타임 애니메이션에 연결. 공격·이동·사망 프레임 수는 새 에셋과 기존 설정이 일치해 유지.
+- Orc·Spider manifest의 `walk/dead` 파일명을 실제 저장 파일인 `move/death`와 일치시킴. 전투 수치·판정·애니메이션 FPS는 변경하지 않음.
+
 ### Clean explosion/impact SFX replacement
 - 반복 재활용되던 Pixabay `Loud Explosion` MP3 원본이 고피치/반복 재생에서 거칠고 깨지는 문제를 제거.
 - 동일 blob을 사용하던 모든 런타임 경로를 저장소에 이미 실제 바이너리로 보관 중인 Kenney Sci-Fi Sounds CC0 `explosionCrunch` WAV 계열로 교체.
