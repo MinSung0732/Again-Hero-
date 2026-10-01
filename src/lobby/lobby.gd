@@ -663,6 +663,18 @@ func _apply_new_ui_assets() -> void:
 	var header_margin := $SafeArea/Layout/Header/HeaderMargin as MarginContainer
 	header_margin.visible = false
 
+	var existing_gold_plate := header.get_node_or_null("HeaderGoldPlate")
+	if existing_gold_plate != null and resource_label.get_parent() == existing_gold_plate:
+		existing_gold_plate.remove_child(resource_label)
+		header.add_child(resource_label)
+	var existing_progress_plate := header.get_node_or_null("HeaderProgressPlate")
+	if (
+		existing_progress_plate != null
+		and progress_label.get_parent() == existing_progress_plate
+	):
+		existing_progress_plate.remove_child(progress_label)
+		header.add_child(progress_label)
+
 	for stale_name in ["HeaderGoldPlate", "HeaderProgressPlate", "HeaderLogo"]:
 		var stale := header.get_node_or_null(stale_name)
 		if stale != null:
