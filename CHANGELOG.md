@@ -1,3 +1,10 @@
+### Lobby header center-mask pass
+- 좌/우 사이드바 높이를 더 줄여 얇은 HUD 바처럼 보이도록 조정하고 중앙 로고 뒤쪽까지 살짝 연장.
+- 중앙에 불투명 `HeaderCenterMask`를 추가해 좌/우 `side_frame.svg`의 안쪽 금색 상/하 테두리가 중앙을 관통하지 않도록 실제로 끊음.
+- `logo_backplate.svg`는 마스크 위에 더 작게 배치하고 `AgainHeroLogo.png`는 한 단계 크게 올려 중앙 로고가 전면에 튀어나오는 구조로 조정.
+- 골드/최고 해금 텍스트는 각 사이드바의 바깥쪽 절반으로 더 밀어 중앙 로고와 간섭하지 않게 정리.
+- 중앙 던전 카드/하단 네비/스테이지 로직은 변경하지 않음.
+
 ### Lobby header logo-and-sidebars composition
 - 헤더 전체를 덮던 전투 HUD `top_hud_backdrop.svg`를 제거해 별도 검은 박스처럼 보이던 배경을 없앰.
 - 좌/우 `side_frame.svg` 패널 높이를 줄여 얇고 긴 사이드바로 재구성하고 중앙 로고 뒤쪽까지 연장.
