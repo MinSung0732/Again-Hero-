@@ -359,7 +359,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 92)
 layout_mode = 2
 
-[node name="StageNumber" type="MenuButton" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
+[node name="StageNumber" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
 layout_mode = 1
 anchor_right = 1.0
 offset_top = 72.0
@@ -369,8 +369,7 @@ theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
 theme_override_font_sizes/font_size = 24
 mouse_default_cursor_shape = 2
 tooltip_text = "스테이지 바로 선택"
-flat = true
-text = "STAGE 01  ▾"
+text = "STAGE 01  ·  목록 선택"
 alignment = 1
 
 [node name="StageName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
@@ -996,6 +995,99 @@ theme_override_font_sizes/font_size = 24
 text = "실제 돌연변이/대돌연변이/보스 이벤트에 따라 배율은 달라질 수 있습니다."
 autowrap_mode = 2
 
+[node name="StageSelectOverlay" type="Control" parent="."]
+visible = false
+z_index = 110
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Dim" type="ColorRect" parent="StageSelectOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.01, 0.008, 0.015, 0.9)
+mouse_filter = 0
+
+[node name="Panel" type="PanelContainer" parent="StageSelectOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -440.0
+offset_top = -590.0
+offset_right = 440.0
+offset_bottom = 590.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="StageSelectOverlay/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 54
+theme_override_constants/margin_top = 54
+theme_override_constants/margin_right = 54
+theme_override_constants/margin_bottom = 48
+
+[node name="VBox" type="VBoxContainer" parent="StageSelectOverlay/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Header" type="HBoxContainer" parent="StageSelectOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="StageSelectOverlay/Panel/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.86, 0.4, 1)
+theme_override_font_sizes/font_size = 42
+text = "스테이지 선택"
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="StageSelectOverlay/Panel/Margin/VBox/Header"]
+custom_minimum_size = Vector2(112, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "닫기"
+
+[node name="Guide" type="Label" parent="StageSelectOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.69, 0.8, 1)
+theme_override_font_sizes/font_size = 24
+text = "이동할 침입자 기록을 선택하세요."
+horizontal_alignment = 1
+
+[node name="Ornament" type="Label" parent="StageSelectOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.31, 0.82, 1)
+theme_override_font_sizes/font_size = 22
+text = "◆ ───────── ◆"
+horizontal_alignment = 1
+
+[node name="StageGrid" type="GridContainer" parent="StageSelectOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 16
+columns = 2
+
+[node name="Footer" type="Label" parent="StageSelectOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.52, 0.62, 1)
+theme_override_font_sizes/font_size = 20
+text = "잠긴 스테이지는 이전 스테이지 토벌 후 선택할 수 있습니다."
+horizontal_alignment = 1
+autowrap_mode = 2
+
 [node name="BottomNav" type="PanelContainer" parent="."]
 layout_mode = 1
 anchors_preset = 12
@@ -1051,4 +1143,3 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
 text = "기타"
-

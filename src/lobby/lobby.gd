@@ -43,6 +43,7 @@ const UI_LOBBY_STAGE_PORTRAIT_PATH := UI_LOBBY_STAGE_DIR + "/portrait_frame.svg"
 const UI_LOBBY_STAGE_INFO_PATH := UI_LOBBY_STAGE_DIR + "/info_panel.svg"
 const UI_LOBBY_STAGE_ENTER_PATH := UI_LOBBY_STAGE_DIR + "/enter_button.svg"
 const UI_LOBBY_STAGE_ENTER_PRESSED_PATH := UI_LOBBY_STAGE_DIR + "/enter_button_pressed.svg"
+const UI_MODAL_PANEL_PATH := UI_BATTLE_HUD_DIR + "/modal_panel.svg"
 const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_background.png"
 
@@ -103,7 +104,7 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var stage_card: PanelContainer = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard
 @onready var prev_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/PrevButton
 @onready var next_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/NextButton
-@onready var stage_selector_button: MenuButton = $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox/StageNumber
+@onready var stage_selector_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox/StageNumber
 @onready var stage_name_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox/StageName
 @onready var portrait_texture: TextureRect = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner/PortraitTexture
 @onready var portrait_placeholder: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner/PortraitPlaceholder
@@ -113,6 +114,11 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var stage_status_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel/StageStatus
 @onready var stage_reward_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel/StageReward
 @onready var enter_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel/EnterButton
+
+@onready var stage_select_overlay: Control = $StageSelectOverlay
+@onready var stage_select_panel: PanelContainer = $StageSelectOverlay/Panel
+@onready var stage_select_close_button: Button = $StageSelectOverlay/Panel/Margin/VBox/Header/CloseButton
+@onready var stage_select_grid: GridContainer = $StageSelectOverlay/Panel/Margin/VBox/StageGrid
 
 @onready var research_points_label: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/Points
 @onready var research_status_label: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/Status
@@ -137,6 +143,7 @@ var _stage_pending_direction := 0
 var _stage_card_origin := Vector2.ZERO
 var _stage_card_base_modulate := Color.WHITE
 var _portrait_texture_cache: Dictionary = {}
+var stage_selector_buttons: Array[Button] = []
 var _scene_load_path: String = ""
 var _scene_load_pending: bool = false
 
@@ -157,6 +164,9 @@ var nav_button_style: StyleBox = StyleBoxFlat.new()
 var nav_button_active_style: StyleBox = StyleBoxFlat.new()
 var primary_button_style := StyleBoxFlat.new()
 var secondary_button_style := StyleBoxFlat.new()
+var stage_selector_item_style := StyleBoxFlat.new()
+var stage_selector_current_style := StyleBoxFlat.new()
+var stage_selector_disabled_style := StyleBoxFlat.new()
 
 func _process(_delta: float) -> void:
 	if not _scene_load_pending:
@@ -200,6 +210,7 @@ func _ready() -> void:
 	)
 	var saved_index := stage_ids.find(saved_stage_id)
 	selected_stage_index = saved_index if saved_index >= 0 else 0
+	_setup_stage_selector_buttons()
 
 	_switch_tab("main")
 	_refresh_header()
@@ -1264,14 +1275,14 @@ func _install_stage_entry_hud() -> void:
 		section_header.move_child(section_frame, 0)
 
 	stage_meta.custom_minimum_size = Vector2(0.0, 100.0)
-	stage_selector_button.offset_top = 8.0
-	stage_selector_button.offset_bottom = 36.0
-	stage_selector_button.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
-	stage_selector_button.add_theme_stylebox_override("hover", StyleBoxEmpty.new())
-	stage_selector_button.add_theme_stylebox_override("pressed", StyleBoxEmpty.new())
-	stage_selector_button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	stage_name_label.offset_top = 40.0
-	stage_name_label.offset_bottom = 86.0
+	stage_selector_button.anchor_left = 0.25
+	stage_selector_button.anchor_right = 0.75
+	stage_selector_button.offset_left = 0.0
+	stage_selector_button.offset_top = 2.0
+	stage_selector_button.offset_right = 0.0
+	stage_selector_button.offset_bottom = 46.0
+	stage_name_label.offset_top = 50.0
+	stage_name_label.offset_bottom = 94.0
 	stage_name_label.clip_text = true
 	stage_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 
@@ -1591,12 +1602,88 @@ func _install_stage_entry_hud() -> void:
 		stale_footer.free()
 
 
+func _install_stage_selector_modal() -> void:
+	var trigger_normal := _make_svg_style(
+		UI_LOBBY_STAGE_ENTER_PATH,
+		30.0,
+		16.0,
+		18.0,
+		2.0
+	)
+	var trigger_pressed := _make_svg_style(
+		UI_LOBBY_STAGE_ENTER_PRESSED_PATH,
+		30.0,
+		16.0,
+		18.0,
+		2.0
+	)
+	if trigger_normal != null:
+		stage_selector_button.add_theme_stylebox_override("normal", trigger_normal)
+		stage_selector_button.add_theme_stylebox_override("hover", trigger_normal)
+	if trigger_pressed != null:
+		stage_selector_button.add_theme_stylebox_override("pressed", trigger_pressed)
+	stage_selector_button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	stage_selector_button.add_theme_font_size_override("font_size", 25)
+	stage_selector_button.add_theme_color_override("font_color", Color("fff0bd"))
+	stage_selector_button.add_theme_color_override("font_hover_color", Color("ffffff"))
+	stage_selector_button.add_theme_color_override("font_pressed_color", Color("ffe080"))
+
+	var modal_style := _make_svg_style(
+		UI_MODAL_PANEL_PATH,
+		34.0,
+		34.0,
+		18.0,
+		18.0
+	)
+	if modal_style != null:
+		stage_select_panel.add_theme_stylebox_override("panel", modal_style)
+	else:
+		stage_select_panel.add_theme_stylebox_override("panel", header_style)
+
+	stage_select_close_button.add_theme_stylebox_override(
+		"normal",
+		secondary_button_style
+	)
+	stage_select_close_button.add_theme_stylebox_override(
+		"hover",
+		primary_button_style
+	)
+	stage_select_close_button.add_theme_stylebox_override(
+		"pressed",
+		primary_button_style
+	)
+	stage_select_close_button.add_theme_stylebox_override(
+		"focus",
+		StyleBoxEmpty.new()
+	)
+
+	stage_selector_item_style = _make_hud_panel_style(
+		Color("100d1e"),
+		Color("8b4aa3"),
+		3,
+		10
+	)
+	stage_selector_current_style = _make_hud_panel_style(
+		Color("5b2472"),
+		Color("ffd04f"),
+		4,
+		10
+	)
+	stage_selector_disabled_style = _make_hud_panel_style(
+		Color("17131e"),
+		Color("4a3c50"),
+		2,
+		10
+	)
+
+
 func _apply_lobby_visual_polish() -> void:
 	# Keep the 1080x1920 logical layout intact and only refine presentation.
 	# This makes the pass safe for the existing 540x960 window override and
 	# avoids changing touch targets or tab behavior.
 	_install_lobby_background()
 	_install_stage_entry_hud()
+	_install_stage_selector_modal()
 
 	var background := $Background as ColorRect
 	var backdrop_glow := $BackdropGlow as ColorRect
@@ -1644,10 +1731,10 @@ func _apply_lobby_visual_polish() -> void:
 		23,
 		Color("9f91aa")
 	)
-	stage_selector_button.add_theme_font_size_override("font_size", 26)
-	stage_selector_button.add_theme_color_override("font_color", Color("e2b85c"))
-	stage_selector_button.add_theme_color_override("font_hover_color", Color("f4d47d"))
-	stage_selector_button.add_theme_color_override("font_pressed_color", Color("fff0ad"))
+	stage_selector_button.add_theme_font_size_override("font_size", 25)
+	stage_selector_button.add_theme_color_override("font_color", Color("fff0bd"))
+	stage_selector_button.add_theme_color_override("font_hover_color", Color("ffffff"))
+	stage_selector_button.add_theme_color_override("font_pressed_color", Color("ffe080"))
 	stage_name_label.add_theme_font_size_override("font_size", 40)
 	stage_name_label.add_theme_color_override("font_color", Color("fff6e5"))
 	hero_name_label.add_theme_font_size_override("font_size", 30)
@@ -1829,6 +1916,11 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 
 
 func _input(event: InputEvent) -> void:
+	if stage_select_overlay.visible:
+		_stage_swipe_active = false
+		if event.is_action_pressed("ui_cancel"):
+			_close_stage_selector()
+		return
 	if current_tab != "main" or stage_card == null:
 		_stage_swipe_active = false
 		return
@@ -1881,7 +1973,9 @@ func _connect_navigation() -> void:
 
 	prev_stage_button.pressed.connect(_change_stage.bind(-1))
 	next_stage_button.pressed.connect(_change_stage.bind(1))
-	stage_selector_button.get_popup().id_pressed.connect(_on_stage_selected)
+	stage_selector_button.pressed.connect(_open_stage_selector)
+	stage_select_close_button.pressed.connect(_close_stage_selector)
+	$StageSelectOverlay/Dim.gui_input.connect(_on_stage_selector_dim_input)
 	enter_stage_button.pressed.connect(_enter_selected_stage)
 
 	shop_single_button.pressed.connect(_open_monster_boxes.bind(1))
@@ -2807,12 +2901,32 @@ func _change_stage(direction: int) -> void:
 	_start_stage_transition(target_index, signi(direction))
 
 
+func _open_stage_selector() -> void:
+	if stage_ids.is_empty() or _stage_transition_running:
+		return
+	_refresh_stage_selector_buttons(_get_max_browsable_stage_index())
+	stage_select_overlay.show()
+	stage_select_overlay.move_to_front()
+
+
+func _close_stage_selector() -> void:
+	stage_select_overlay.hide()
+
+
+func _on_stage_selector_dim_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		_close_stage_selector()
+	elif event is InputEventScreenTouch and event.pressed:
+		_close_stage_selector()
+
+
 func _on_stage_selected(target_index: int) -> void:
 	if stage_ids.is_empty() or _stage_transition_running:
 		return
 	var max_browsable_index := _get_max_browsable_stage_index()
 	if target_index < 0 or target_index > max_browsable_index:
 		return
+	_close_stage_selector()
 	if target_index == selected_stage_index:
 		return
 	var direction := 1 if target_index > selected_stage_index else -1
@@ -2988,24 +3102,67 @@ func _refresh_stage_nav_buttons() -> void:
 			prev_arrow.modulate = Color.WHITE
 
 	_set_stage_arrow_visual(next_stage_button, can_go_next)
-	_refresh_stage_selector_menu(max_browsable_index)
+	_refresh_stage_selector_buttons(max_browsable_index)
 
 
-func _refresh_stage_selector_menu(max_browsable_index: int) -> void:
-	var popup := stage_selector_button.get_popup()
-	popup.clear()
-	popup.add_theme_font_size_override("font_size", 28)
-	popup.add_theme_constant_override("v_separation", 12)
+func _setup_stage_selector_buttons() -> void:
+	stage_selector_buttons.clear()
+	for index in range(stage_ids.size()):
+		var button := Button.new()
+		button.custom_minimum_size = Vector2(0.0, 142.0)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.add_theme_font_size_override("font_size", 23)
+		button.add_theme_color_override("font_outline_color", Color("0a0610"))
+		button.add_theme_constant_override("outline_size", 3)
+		button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+		button.pressed.connect(_on_stage_selected.bind(index))
+		stage_select_grid.add_child(button)
+		stage_selector_buttons.append(button)
+
+
+func _refresh_stage_selector_buttons(max_browsable_index: int) -> void:
+	if stage_selector_buttons.size() != stage_ids.size():
+		return
 	for index in range(stage_ids.size()):
 		var stage := STAGE_CATALOG.get_stage(stage_ids[index])
 		var stage_number := int(stage.get("number", index + 1))
 		var display_name := String(stage.get("display_name", "미지의 침입자"))
-		popup.add_check_item(
-			"STAGE %02d  ·  %s" % [stage_number, display_name],
-			index
+		var button := stage_selector_buttons[index]
+		var unlocked := STAGE_PROGRESS.is_stage_unlocked(stage_number)
+		var cleared := STAGE_PROGRESS.is_stage_cleared(stage_ids[index])
+		var selectable := index <= max_browsable_index
+		var selected := index == selected_stage_index
+		var state_text := "잠김"
+		if selected:
+			state_text = "◆ 현재 선택 ◆"
+		elif cleared:
+			state_text = "토벌 완료"
+		elif unlocked:
+			state_text = "입장 가능"
+		elif selectable:
+			state_text = "미리보기"
+		button.text = "STAGE %02d\n%s\n%s" % [
+			stage_number,
+			display_name,
+			state_text,
+		]
+		button.disabled = not selectable
+		var normal_style: StyleBox = (
+			stage_selector_current_style
+			if selected
+			else stage_selector_item_style
 		)
-		popup.set_item_checked(index, index == selected_stage_index)
-		popup.set_item_disabled(index, index > max_browsable_index)
+		button.add_theme_stylebox_override("normal", normal_style)
+		button.add_theme_stylebox_override("hover", stage_selector_current_style)
+		button.add_theme_stylebox_override("pressed", stage_selector_current_style)
+		button.add_theme_stylebox_override("disabled", stage_selector_disabled_style)
+		button.add_theme_color_override(
+			"font_color",
+			Color("fff0b4") if selected else Color("eee4f1")
+		)
+		button.add_theme_color_override("font_hover_color", Color("ffffff"))
+		button.add_theme_color_override("font_pressed_color", Color("ffe079"))
+		button.add_theme_color_override("font_disabled_color", Color("6f6673"))
 
 
 func _set_stage_arrow_visual(button: Button, enabled: bool) -> void:
@@ -3049,7 +3206,7 @@ func _refresh_stage_card() -> void:
 	var duration_seconds := float(stage.get("run_duration_seconds", 0.0))
 	var minutes := int(round(duration_seconds / 60.0))
 
-	stage_selector_button.text = "STAGE %02d  ▾" % stage_number
+	stage_selector_button.text = "STAGE %02d  ·  목록 선택" % stage_number
 	stage_name_label.text = String(stage.get("display_name", "미지의 침입자"))
 	hero_name_label.text = hero_name
 	stage_description_label.text = String(
