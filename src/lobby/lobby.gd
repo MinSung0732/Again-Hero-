@@ -27,6 +27,8 @@ const UI_HEADER_LEFT_WING_PATH := UI_LOBBY_HEADER_DIR + "/left_wing.svg"
 const UI_HEADER_RIGHT_WING_PATH := UI_LOBBY_HEADER_DIR + "/right_wing.svg"
 const UI_HEADER_COIN_PATH := UI_LOBBY_HEADER_DIR + "/coin.svg"
 const UI_HEADER_PLUS_PATH := UI_LOBBY_HEADER_DIR + "/plus.svg"
+const UI_LOBBY_FOOTER_DIR := "res://assets/art/UI/lobby_footer"
+const UI_LOBBY_NAV_FRAME_PATH := UI_LOBBY_FOOTER_DIR + "/nav_frame.svg"
 const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_background.png"
 
@@ -243,16 +245,16 @@ func _build_styles() -> void:
 		0
 	)
 	nav_button_style = _make_style(
-		Color("17131f"),
-		Color("3a3045"),
+		Color("12101c"),
+		Color("554562"),
 		2,
-		18
+		14
 	)
 	nav_button_active_style = _make_style(
-		Color("402848"),
-		Color("e0b64f"),
+		Color("3b2147"),
+		Color("f2c34f"),
 		4,
-		18
+		14
 	)
 	nav_button_active_style.content_margin_top = 10.0
 	nav_button_active_style.content_margin_bottom = 10.0
@@ -338,7 +340,7 @@ func _apply_styles() -> void:
 		"panel",
 		dark_backing
 	)
-	$BottomNav.add_theme_stylebox_override("panel", content_backing)
+	$BottomNav.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 
 	var stage_nav_style := _make_style(
 		Color("171321"),
@@ -410,19 +412,7 @@ func _apply_styles() -> void:
 
 
 func _apply_asset_frames() -> void:
-	# 하단 네비게이션은 검증된 조립 프레임을 유지한다.
-	_add_asset_frame(
-		$BottomNav,
-		UI_FRAME_MEDIUM_DIR,
-		Vector2(26.0, 25.0),
-		Vector2(26.0, 25.0),
-		Vector2(26.0, 25.0),
-		Vector2(26.0, 25.0),
-		14.0,
-		14.0,
-		12.0,
-		12.0
-	)
+	_install_bottom_nav_frame()
 
 	# 팝업만 별도 프레임을 사용한다. 카드 내부 중첩 장식은 피한다.
 	_add_asset_frame(
@@ -437,6 +427,34 @@ func _apply_asset_frames() -> void:
 		16.0,
 		16.0
 	)
+
+
+func _install_bottom_nav_frame() -> void:
+	var bottom_nav := $BottomNav as PanelContainer
+	if bottom_nav == null:
+		return
+
+	for stale_name in ["AssetFrame", "BottomNavFrame"]:
+		var stale := bottom_nav.get_node_or_null(stale_name)
+		if stale != null:
+			bottom_nav.remove_child(stale)
+			stale.free()
+
+	var frame_texture := _load_ui_texture_resource(UI_LOBBY_NAV_FRAME_PATH)
+	if frame_texture == null:
+		return
+
+	var frame := TextureRect.new()
+	frame.name = "BottomNavFrame"
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.texture = frame_texture
+	frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	frame.stretch_mode = TextureRect.STRETCH_SCALE
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	frame.z_index = 0
+	bottom_nav.add_child(frame)
+	bottom_nav.move_child(frame, 0)
 
 func _add_asset_frame(
 	target: Control,
@@ -1086,21 +1104,39 @@ func _apply_enter_stage_button_skin() -> void:
 func _ensure_nav_active_indicator(button: Button) -> void:
 	if button == null:
 		return
-	if button.get_node_or_null("ActiveIndicator") != null:
-		return
+	var indicator := button.get_node_or_null("ActiveIndicator") as ColorRect
+	if indicator == null:
+		indicator = ColorRect.new()
+		indicator.name = "ActiveIndicator"
+		indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		indicator.color = Color("ffd45d")
+		indicator.anchor_left = 0.24
+		indicator.anchor_top = 0.0
+		indicator.anchor_right = 0.76
+		indicator.anchor_bottom = 0.0
+		indicator.offset_top = 7.0
+		indicator.offset_bottom = 12.0
+		indicator.visible = false
+		button.add_child(indicator)
 
-	var indicator := ColorRect.new()
-	indicator.name = "ActiveIndicator"
-	indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	indicator.color = Color("efc44f")
-	indicator.anchor_left = 0.18
-	indicator.anchor_top = 0.0
-	indicator.anchor_right = 0.82
-	indicator.anchor_bottom = 0.0
-	indicator.offset_top = 6.0
-	indicator.offset_bottom = 12.0
-	indicator.visible = false
-	button.add_child(indicator)
+	var gem := button.get_node_or_null("ActiveGem") as ColorRect
+	if gem == null:
+		gem = ColorRect.new()
+		gem.name = "ActiveGem"
+		gem.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		gem.color = Color("bd58dd")
+		gem.anchor_left = 0.5
+		gem.anchor_top = 0.0
+		gem.anchor_right = 0.5
+		gem.anchor_bottom = 0.0
+		gem.offset_left = -6.0
+		gem.offset_top = 3.0
+		gem.offset_right = 6.0
+		gem.offset_bottom = 15.0
+		gem.pivot_offset = Vector2(6.0, 6.0)
+		gem.rotation = PI * 0.25
+		gem.visible = false
+		button.add_child(gem)
 
 
 
@@ -1479,13 +1515,13 @@ func _apply_lobby_visual_polish() -> void:
 	bottom_nav.offset_right = -18.0
 
 	var nav_margin := $BottomNav/NavMargin as MarginContainer
-	nav_margin.add_theme_constant_override("margin_left", 26)
-	nav_margin.add_theme_constant_override("margin_top", 18)
-	nav_margin.add_theme_constant_override("margin_right", 26)
-	nav_margin.add_theme_constant_override("margin_bottom", 22)
+	nav_margin.add_theme_constant_override("margin_left", 34)
+	nav_margin.add_theme_constant_override("margin_top", 22)
+	nav_margin.add_theme_constant_override("margin_right", 34)
+	nav_margin.add_theme_constant_override("margin_bottom", 24)
 
 	var nav_buttons := $BottomNav/NavMargin/NavButtons as HBoxContainer
-	nav_buttons.add_theme_constant_override("separation", 6)
+	nav_buttons.add_theme_constant_override("separation", 8)
 
 	resource_label.add_theme_font_size_override("font_size", 20)
 	resource_label.add_theme_color_override("font_color", Color("f5d16d"))
@@ -1823,9 +1859,14 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 		"font_hover_color",
 		Color("fff1c7") if selected else Color("eee7f2")
 	)
+	button.add_theme_color_override("font_outline_color", Color("100b18"))
+	button.add_theme_constant_override("outline_size", 3 if selected else 2)
 	var indicator := button.get_node_or_null("ActiveIndicator") as ColorRect
 	if indicator != null:
 		indicator.visible = selected
+	var gem := button.get_node_or_null("ActiveGem") as ColorRect
+	if gem != null:
+		gem.visible = selected
 
 func _format_shop_number(value: int) -> String:
 	var digits := str(maxi(value, 0))

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="180" viewBox="0 0 1080 180">
+<g shape-rendering="crispEdges">
+  <path d="M36 8 H1044 L1072 36 V144 L1044 172 H36 L8 144 V36 Z"
+        fill="#080817" stroke="#f7bd39" stroke-width="6"/>
+  <path d="M46 19 H1034 L1060 45 V135 L1034 161 H46 L20 135 V45 Z"
+        fill="#111024" stroke="#55206e" stroke-width="4"/>
+  <path d="M58 29 H1022 L1048 53 V127 L1022 151 H58 L32 127 V53 Z"
+        fill="#0b0a18" stroke="#2e2140" stroke-width="2"/>
+
+  <path d="M66 24 H474" stroke="#ffe079" stroke-width="3" opacity=".88"/>
+  <path d="M606 24 H1014" stroke="#ffe079" stroke-width="3" opacity=".88"/>
+  <path d="M66 156 H474" stroke="#7b2d99" stroke-width="3" opacity=".90"/>
+  <path d="M606 156 H1014" stroke="#7b2d99" stroke-width="3" opacity=".90"/>
+
+  <path d="M22 58 H42 V34 M22 122 H42 V146" fill="none" stroke="#ffd45c" stroke-width="4"/>
+  <path d="M1058 58 H1038 V34 M1058 122 H1038 V146" fill="none" stroke="#ffd45c" stroke-width="4"/>
+  <path d="M36 48 L48 36 L60 48 L48 60 Z" fill="#7c2ca0" stroke="#efbd45" stroke-width="3"/>
+  <path d="M1044 48 L1032 36 L1020 48 L1032 60 Z" fill="#7c2ca0" stroke="#efbd45" stroke-width="3"/>
+
+  <path d="M540 8 L558 26 L540 44 L522 26 Z" fill="#7e2aa3" stroke="#ffd35a" stroke-width="4"/>
+  <path d="M540 15 L550 26 L540 37 L530 26 Z" fill="#d96cf1"/>
+  <path d="M486 26 H516 M564 26 H594" stroke="#bd6bce" stroke-width="3" opacity=".8"/>
+
+  <rect x="48" y="38" width="984" height="104" fill="#161124" opacity=".34"/>
+  <path d="M48 142 H1032" stroke="#e6a934" stroke-width="2" opacity=".55"/>
+</g>
+</svg>
