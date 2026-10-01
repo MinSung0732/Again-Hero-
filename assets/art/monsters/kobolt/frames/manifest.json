@@ -1,0 +1,204 @@
+{
+  "source": "13.png",
+  "source_size": [
+    1536,
+    1024
+  ],
+  "canvas_size": [
+    460,
+    260
+  ],
+  "anchor": [
+    230,
+    240
+  ],
+  "frame_count": 18,
+  "row_counts": [
+    4,
+    4,
+    6,
+    4
+  ],
+  "frames": [
+    {
+      "file": "frame_001.png",
+      "row": 1,
+      "column": 1,
+      "source_anchor": [
+        165,
+        237
+      ],
+      "nontransparent_pixels": 23480
+    },
+    {
+      "file": "frame_002.png",
+      "row": 1,
+      "column": 2,
+      "source_anchor": [
+        420,
+        237
+      ],
+      "nontransparent_pixels": 23779
+    },
+    {
+      "file": "frame_003.png",
+      "row": 1,
+      "column": 3,
+      "source_anchor": [
+        665,
+        237
+      ],
+      "nontransparent_pixels": 24377
+    },
+    {
+      "file": "frame_004.png",
+      "row": 1,
+      "column": 4,
+      "source_anchor": [
+        910,
+        237
+      ],
+      "nontransparent_pixels": 23706
+    },
+    {
+      "file": "frame_005.png",
+      "row": 2,
+      "column": 1,
+      "source_anchor": [
+        165,
+        494
+      ],
+      "nontransparent_pixels": 23749
+    },
+    {
+      "file": "frame_006.png",
+      "row": 2,
+      "column": 2,
+      "source_anchor": [
+        405,
+        494
+      ],
+      "nontransparent_pixels": 23174
+    },
+    {
+      "file": "frame_007.png",
+      "row": 2,
+      "column": 3,
+      "source_anchor": [
+        655,
+        494
+      ],
+      "nontransparent_pixels": 24051
+    },
+    {
+      "file": "frame_008.png",
+      "row": 2,
+      "column": 4,
+      "source_anchor": [
+        905,
+        494
+      ],
+      "nontransparent_pixels": 23375
+    },
+    {
+      "file": "frame_009.png",
+      "row": 3,
+      "column": 1,
+      "source_anchor": [
+        165,
+        730
+      ],
+      "nontransparent_pixels": 24535
+    },
+    {
+      "file": "frame_010.png",
+      "row": 3,
+      "column": 2,
+      "source_anchor": [
+        425,
+        730
+      ],
+      "nontransparent_pixels": 23373
+    },
+    {
+      "file": "frame_011.png",
+      "row": 3,
+      "column": 3,
+      "source_anchor": [
+        675,
+        730
+      ],
+      "nontransparent_pixels": 22742
+    },
+    {
+      "file": "frame_012.png",
+      "row": 3,
+      "column": 4,
+      "source_anchor": [
+        920,
+        730
+      ],
+      "nontransparent_pixels": 21338
+    },
+    {
+      "file": "frame_013.png",
+      "row": 3,
+      "column": 5,
+      "source_anchor": [
+        1180,
+        730
+      ],
+      "nontransparent_pixels": 4699
+    },
+    {
+      "file": "frame_014.png",
+      "row": 3,
+      "column": 6,
+      "source_anchor": [
+        1360,
+        730
+      ],
+      "nontransparent_pixels": 23156
+    },
+    {
+      "file": "frame_015.png",
+      "row": 4,
+      "column": 1,
+      "source_anchor": [
+        165,
+        977
+      ],
+      "nontransparent_pixels": 24508
+    },
+    {
+      "file": "frame_016.png",
+      "row": 4,
+      "column": 2,
+      "source_anchor": [
+        420,
+        977
+      ],
+      "nontransparent_pixels": 24958
+    },
+    {
+      "file": "frame_017.png",
+      "row": 4,
+      "column": 3,
+      "source_anchor": [
+        710,
+        977
+      ],
+      "nontransparent_pixels": 23018
+    },
+    {
+      "file": "frame_018.png",
+      "row": 4,
+      "column": 4,
+      "source_anchor": [
+        1010,
+        977
+      ],
+      "nontransparent_pixels": 22545
+    }
+  ]
+}

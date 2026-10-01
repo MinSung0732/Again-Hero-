@@ -1,0 +1,82 @@
+{
+  "source": "16.png",
+  "source_size": [
+    2048,
+    682
+  ],
+  "frame_count": 8,
+  "canvas_size": [
+    460,
+    360
+  ],
+  "anchor": [
+    230,
+    180
+  ],
+  "frames": [
+    {
+      "file": "frame_01.png",
+      "source_anchor": [
+        121,
+        340
+      ],
+      "nontransparent_pixels": 7779
+    },
+    {
+      "file": "frame_02.png",
+      "source_anchor": [
+        316,
+        340
+      ],
+      "nontransparent_pixels": 16596
+    },
+    {
+      "file": "frame_03.png",
+      "source_anchor": [
+        554,
+        340
+      ],
+      "nontransparent_pixels": 42905
+    },
+    {
+      "file": "frame_04.png",
+      "source_anchor": [
+        845,
+        340
+      ],
+      "nontransparent_pixels": 52937
+    },
+    {
+      "file": "frame_05.png",
+      "source_anchor": [
+        1138,
+        340
+      ],
+      "nontransparent_pixels": 44127
+    },
+    {
+      "file": "frame_06.png",
+      "source_anchor": [
+        1409,
+        340
+      ],
+      "nontransparent_pixels": 33238
+    },
+    {
+      "file": "frame_07.png",
+      "source_anchor": [
+        1664,
+        340
+      ],
+      "nontransparent_pixels": 23173
+    },
+    {
+      "file": "frame_08.png",
+      "source_anchor": [
+        1926,
+        340
+      ],
+      "nontransparent_pixels": 10815
+    }
+  ]
+}

@@ -1,0 +1,390 @@
+{
+  "source": "8.png",
+  "source_size": [
+    1448,
+    1086
+  ],
+  "canvas_size": [
+    350,
+    235
+  ],
+  "anchor": "bottom center of each fixed cell",
+  "rows": [
+    4,
+    6,
+    6,
+    3,
+    4
+  ],
+  "frame_count": 23,
+  "frames": [
+    {
+      "file": "frame_001.png",
+      "row": 1,
+      "column": 1,
+      "source_cell": [
+        0,
+        0,
+        287,
+        235
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 25493
+    },
+    {
+      "file": "frame_002.png",
+      "row": 1,
+      "column": 2,
+      "source_cell": [
+        287,
+        0,
+        552,
+        235
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 24895
+    },
+    {
+      "file": "frame_003.png",
+      "row": 1,
+      "column": 3,
+      "source_cell": [
+        552,
+        0,
+        817,
+        235
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 24748
+    },
+    {
+      "file": "frame_004.png",
+      "row": 1,
+      "column": 4,
+      "source_cell": [
+        817,
+        0,
+        1125,
+        235
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 24278
+    },
+    {
+      "file": "frame_005.png",
+      "row": 2,
+      "column": 1,
+      "source_cell": [
+        0,
+        235,
+        275,
+        455
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 26462
+    },
+    {
+      "file": "frame_006.png",
+      "row": 2,
+      "column": 2,
+      "source_cell": [
+        275,
+        235,
+        515,
+        455
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 24524
+    },
+    {
+      "file": "frame_007.png",
+      "row": 2,
+      "column": 3,
+      "source_cell": [
+        515,
+        235,
+        747,
+        455
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 23762
+    },
+    {
+      "file": "frame_008.png",
+      "row": 2,
+      "column": 4,
+      "source_cell": [
+        747,
+        235,
+        980,
+        455
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 27232
+    },
+    {
+      "file": "frame_009.png",
+      "row": 2,
+      "column": 5,
+      "source_cell": [
+        980,
+        235,
+        1212,
+        455
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 22863
+    },
+    {
+      "file": "frame_010.png",
+      "row": 2,
+      "column": 6,
+      "source_cell": [
+        1212,
+        235,
+        1448,
+        455
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 23844
+    },
+    {
+      "file": "frame_011.png",
+      "row": 3,
+      "column": 1,
+      "source_cell": [
+        0,
+        455,
+        272,
+        675
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 25090
+    },
+    {
+      "file": "frame_012.png",
+      "row": 3,
+      "column": 2,
+      "source_cell": [
+        272,
+        455,
+        522,
+        675
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 26271
+    },
+    {
+      "file": "frame_013.png",
+      "row": 3,
+      "column": 3,
+      "source_cell": [
+        522,
+        455,
+        767,
+        675
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 26182
+    },
+    {
+      "file": "frame_014.png",
+      "row": 3,
+      "column": 4,
+      "source_cell": [
+        767,
+        455,
+        992,
+        675
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 25129
+    },
+    {
+      "file": "frame_015.png",
+      "row": 3,
+      "column": 5,
+      "source_cell": [
+        992,
+        455,
+        1215,
+        675
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 25476
+    },
+    {
+      "file": "frame_016.png",
+      "row": 3,
+      "column": 6,
+      "source_cell": [
+        1215,
+        455,
+        1448,
+        675
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 22513
+    },
+    {
+      "file": "frame_017.png",
+      "row": 4,
+      "column": 1,
+      "source_cell": [
+        0,
+        675,
+        292,
+        885
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 26298
+    },
+    {
+      "file": "frame_018.png",
+      "row": 4,
+      "column": 2,
+      "source_cell": [
+        292,
+        675,
+        547,
+        885
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 24921
+    },
+    {
+      "file": "frame_019.png",
+      "row": 4,
+      "column": 3,
+      "source_cell": [
+        547,
+        675,
+        850,
+        885
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 21987
+    },
+    {
+      "file": "frame_020.png",
+      "row": 5,
+      "column": 1,
+      "source_cell": [
+        0,
+        885,
+        305,
+        1086
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 24726
+    },
+    {
+      "file": "frame_021.png",
+      "row": 5,
+      "column": 2,
+      "source_cell": [
+        305,
+        885,
+        577,
+        1086
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 22497
+    },
+    {
+      "file": "frame_022.png",
+      "row": 5,
+      "column": 3,
+      "source_cell": [
+        577,
+        885,
+        847,
+        1086
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 19090
+    },
+    {
+      "file": "frame_023.png",
+      "row": 5,
+      "column": 4,
+      "source_cell": [
+        847,
+        885,
+        1165,
+        1086
+      ],
+      "anchor": [
+        175,
+        235
+      ],
+      "nontransparent_pixels": 16935
+    }
+  ]
+}

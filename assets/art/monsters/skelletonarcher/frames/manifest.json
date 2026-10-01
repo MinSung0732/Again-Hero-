@@ -1,0 +1,255 @@
+{
+  "source": "1.png",
+  "source_size": [
+    1374,
+    1145
+  ],
+  "canvas_size": [
+    460,
+    260
+  ],
+  "anchor": [
+    230,
+    240
+  ],
+  "row_counts": [
+    4,
+    6,
+    6,
+    3,
+    4
+  ],
+  "frame_count": 23,
+  "frames": [
+    {
+      "file": "frame_001.png",
+      "row": 1,
+      "column": 1,
+      "source_anchor": [
+        135,
+        256
+      ],
+      "pixel_count": 19814
+    },
+    {
+      "file": "frame_002.png",
+      "row": 1,
+      "column": 2,
+      "source_anchor": [
+        355,
+        256
+      ],
+      "pixel_count": 20026
+    },
+    {
+      "file": "frame_003.png",
+      "row": 1,
+      "column": 3,
+      "source_anchor": [
+        580,
+        256
+      ],
+      "pixel_count": 20207
+    },
+    {
+      "file": "frame_004.png",
+      "row": 1,
+      "column": 4,
+      "source_anchor": [
+        800,
+        256
+      ],
+      "pixel_count": 19991
+    },
+    {
+      "file": "frame_005.png",
+      "row": 2,
+      "column": 1,
+      "source_anchor": [
+        127,
+        481
+      ],
+      "pixel_count": 20472
+    },
+    {
+      "file": "frame_006.png",
+      "row": 2,
+      "column": 2,
+      "source_anchor": [
+        353,
+        481
+      ],
+      "pixel_count": 20818
+    },
+    {
+      "file": "frame_007.png",
+      "row": 2,
+      "column": 3,
+      "source_anchor": [
+        583,
+        481
+      ],
+      "pixel_count": 20245
+    },
+    {
+      "file": "frame_008.png",
+      "row": 2,
+      "column": 4,
+      "source_anchor": [
+        809,
+        481
+      ],
+      "pixel_count": 20528
+    },
+    {
+      "file": "frame_009.png",
+      "row": 2,
+      "column": 5,
+      "source_anchor": [
+        1035,
+        481
+      ],
+      "pixel_count": 21660
+    },
+    {
+      "file": "frame_010.png",
+      "row": 2,
+      "column": 6,
+      "source_anchor": [
+        1260,
+        481
+      ],
+      "pixel_count": 20334
+    },
+    {
+      "file": "frame_011.png",
+      "row": 3,
+      "column": 1,
+      "source_anchor": [
+        133,
+        712
+      ],
+      "pixel_count": 23387
+    },
+    {
+      "file": "frame_012.png",
+      "row": 3,
+      "column": 2,
+      "source_anchor": [
+        363,
+        712
+      ],
+      "pixel_count": 22213
+    },
+    {
+      "file": "frame_013.png",
+      "row": 3,
+      "column": 3,
+      "source_anchor": [
+        595,
+        712
+      ],
+      "pixel_count": 22183
+    },
+    {
+      "file": "frame_014.png",
+      "row": 3,
+      "column": 4,
+      "source_anchor": [
+        810,
+        712
+      ],
+      "pixel_count": 22266
+    },
+    {
+      "file": "frame_015.png",
+      "row": 3,
+      "column": 5,
+      "source_anchor": [
+        1050,
+        712
+      ],
+      "pixel_count": 19158
+    },
+    {
+      "file": "frame_016.png",
+      "row": 3,
+      "column": 6,
+      "source_anchor": [
+        1260,
+        712
+      ],
+      "pixel_count": 20191
+    },
+    {
+      "file": "frame_017.png",
+      "row": 4,
+      "column": 1,
+      "source_anchor": [
+        130,
+        928
+      ],
+      "pixel_count": 20686
+    },
+    {
+      "file": "frame_018.png",
+      "row": 4,
+      "column": 2,
+      "source_anchor": [
+        350,
+        928
+      ],
+      "pixel_count": 21803
+    },
+    {
+      "file": "frame_019.png",
+      "row": 4,
+      "column": 3,
+      "source_anchor": [
+        575,
+        928
+      ],
+      "pixel_count": 17982
+    },
+    {
+      "file": "frame_020.png",
+      "row": 5,
+      "column": 1,
+      "source_anchor": [
+        132,
+        1114
+      ],
+      "pixel_count": 17763
+    },
+    {
+      "file": "frame_021.png",
+      "row": 5,
+      "column": 2,
+      "source_anchor": [
+        360,
+        1114
+      ],
+      "pixel_count": 18326
+    },
+    {
+      "file": "frame_022.png",
+      "row": 5,
+      "column": 3,
+      "source_anchor": [
+        590,
+        1114
+      ],
+      "pixel_count": 15285
+    },
+    {
+      "file": "frame_023.png",
+      "row": 5,
+      "column": 4,
+      "source_anchor": [
+        820,
+        1114
+      ],
+      "pixel_count": 14314
+    }
+  ]
+}
