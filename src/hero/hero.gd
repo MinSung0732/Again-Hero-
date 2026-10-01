@@ -109,6 +109,13 @@ const STAGE2_ASSASSINATION_START_AUDIO_PATH := "res://assets/audio/sfx/stage2_ro
 const STAGE2_ASSASSINATION_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_assassination_hit_pixabay.mp3"
 const STAGE2_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_hit_pixabay.mp3"
 const STAGE2_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_death_pixabay.mp3"
+const STAGE3_SLASH_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_slash_pixabay.mp3"
+const STAGE3_THRUST_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_thrust_pixabay.mp3"
+const STAGE3_GUARD_START_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_guard_start_pixabay.mp3"
+const STAGE3_GUARD_RELEASE_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_guard_release_pixabay.mp3"
+const STAGE3_CHARGE_IMPACT_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_charge_impact_pixabay.mp3"
+const STAGE3_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_hit_pixabay.mp3"
+const STAGE3_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_death_pixabay.mp3"
 
 # Hero SFX loudness defaults are anchored to the established Stage 7-10 mix.
 # Source loudness and repetition density may justify a quieter per-asset value,
@@ -520,6 +527,16 @@ var rogue_assassination_hit_audio_pool: Array[AudioStreamPlayer] = []
 var rogue_assassination_hit_audio_cursor: int = 0
 var rogue_hit_audio: AudioStreamPlayer = null
 var rogue_death_audio: AudioStreamPlayer = null
+var fighter_slash_audio_pool: Array[AudioStreamPlayer] = []
+var fighter_slash_audio_cursor: int = 0
+var fighter_thrust_audio_pool: Array[AudioStreamPlayer] = []
+var fighter_thrust_audio_cursor: int = 0
+var fighter_guard_start_audio: AudioStreamPlayer = null
+var fighter_guard_release_audio: AudioStreamPlayer = null
+var fighter_charge_impact_audio_pool: Array[AudioStreamPlayer] = []
+var fighter_charge_impact_audio_cursor: int = 0
+var fighter_hit_audio: AudioStreamPlayer = null
+var fighter_death_audio: AudioStreamPlayer = null
 var purifier_basic_audio: AudioStreamPlayer = null
 var purifier_shield_create_audio: AudioStreamPlayer = null
 var purifier_shield_break_audio: AudioStreamPlayer = null
@@ -8978,6 +8995,160 @@ func _play_rogue_death_audio() -> void:
 	if is_instance_valid(rogue_death_audio) and rogue_death_audio.stream != null:
 		rogue_death_audio.stop()
 		rogue_death_audio.play()
+
+
+func _ensure_fighter_audio_runtime() -> void:
+	if hero_archetype != "sword_shield":
+		return
+
+	if fighter_slash_audio_pool.is_empty():
+		for index in range(3):
+			fighter_slash_audio_pool.append(
+				_create_hero_sfx_player(
+					STAGE3_SLASH_AUDIO_PATH,
+					HERO_SFX_DB_PRIMARY_ATTACK - 3.0,
+					0.96
+				)
+			)
+
+	if fighter_thrust_audio_pool.is_empty():
+		for index in range(3):
+			fighter_thrust_audio_pool.append(
+				_create_hero_sfx_player(
+					STAGE3_THRUST_AUDIO_PATH,
+					HERO_SFX_DB_PRIMARY_ATTACK - 2.0,
+					1.08
+				)
+			)
+
+	if not is_instance_valid(fighter_guard_start_audio):
+		fighter_guard_start_audio = _create_hero_sfx_player(
+			STAGE3_GUARD_START_AUDIO_PATH,
+			HERO_SFX_DB_HEAVY_SKILL - 2.0,
+			0.72
+		)
+
+	if not is_instance_valid(fighter_guard_release_audio):
+		fighter_guard_release_audio = _create_hero_sfx_player(
+			STAGE3_GUARD_RELEASE_AUDIO_PATH,
+			HERO_SFX_DB_HEAVY_SKILL - 2.0,
+			0.76
+		)
+
+	if fighter_charge_impact_audio_pool.is_empty():
+		for index in range(3):
+			fighter_charge_impact_audio_pool.append(
+				_create_hero_sfx_player(
+					STAGE3_CHARGE_IMPACT_AUDIO_PATH,
+					HERO_SFX_DB_HEAVY_SKILL - 7.0,
+					0.86
+				)
+			)
+
+	if not is_instance_valid(fighter_hit_audio):
+		fighter_hit_audio = _create_hero_sfx_player(
+			STAGE3_HIT_AUDIO_PATH,
+			HERO_SFX_DB_HIT,
+			0.86
+		)
+
+	if not is_instance_valid(fighter_death_audio):
+		fighter_death_audio = _create_hero_sfx_player(
+			STAGE3_DEATH_AUDIO_PATH,
+			HERO_SFX_DB_DEATH,
+			0.82
+		)
+
+
+func _play_fighter_slash_audio() -> void:
+	_ensure_fighter_audio_runtime()
+	if fighter_slash_audio_pool.is_empty():
+		return
+	var player := fighter_slash_audio_pool[
+		fighter_slash_audio_cursor % fighter_slash_audio_pool.size()
+	]
+	fighter_slash_audio_cursor = (
+		fighter_slash_audio_cursor + 1
+	) % fighter_slash_audio_pool.size()
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	var pitch_steps: Array[float] = [0.94, 1.00, 0.90]
+	player.pitch_scale = pitch_steps[
+		fighter_slash_audio_cursor % pitch_steps.size()
+	]
+	player.stop()
+	player.play()
+
+
+func _play_fighter_thrust_audio(is_charge: bool = false) -> void:
+	_ensure_fighter_audio_runtime()
+	if fighter_thrust_audio_pool.is_empty():
+		return
+	var player := fighter_thrust_audio_pool[
+		fighter_thrust_audio_cursor % fighter_thrust_audio_pool.size()
+	]
+	fighter_thrust_audio_cursor = (
+		fighter_thrust_audio_cursor + 1
+	) % fighter_thrust_audio_pool.size()
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	player.pitch_scale = 0.90 if is_charge else 1.12
+	player.stop()
+	player.play()
+
+
+func _play_fighter_guard_start_audio() -> void:
+	_ensure_fighter_audio_runtime()
+	if (
+		is_instance_valid(fighter_guard_start_audio)
+		and fighter_guard_start_audio.stream != null
+	):
+		fighter_guard_start_audio.stop()
+		fighter_guard_start_audio.play()
+
+
+func _play_fighter_guard_release_audio() -> void:
+	_ensure_fighter_audio_runtime()
+	if (
+		is_instance_valid(fighter_guard_release_audio)
+		and fighter_guard_release_audio.stream != null
+	):
+		fighter_guard_release_audio.stop()
+		fighter_guard_release_audio.play()
+
+
+func _play_fighter_charge_impact_audio() -> void:
+	_ensure_fighter_audio_runtime()
+	if fighter_charge_impact_audio_pool.is_empty():
+		return
+	var player := fighter_charge_impact_audio_pool[
+		fighter_charge_impact_audio_cursor
+		% fighter_charge_impact_audio_pool.size()
+	]
+	fighter_charge_impact_audio_cursor = (
+		fighter_charge_impact_audio_cursor + 1
+	) % fighter_charge_impact_audio_pool.size()
+	if not is_instance_valid(player) or player.stream == null:
+		return
+	player.stop()
+	player.play()
+
+
+func _play_fighter_hit_audio() -> void:
+	_ensure_fighter_audio_runtime()
+	if is_instance_valid(fighter_hit_audio) and fighter_hit_audio.stream != null:
+		fighter_hit_audio.stop()
+		fighter_hit_audio.play()
+
+
+func _play_fighter_death_audio() -> void:
+	_ensure_fighter_audio_runtime()
+	if (
+		is_instance_valid(fighter_death_audio)
+		and fighter_death_audio.stream != null
+	):
+		fighter_death_audio.stop()
+		fighter_death_audio.play()
 
 
 func _create_sage_audio_player(audio_path: String, volume_db: float, pitch_scale: float) -> AudioStreamPlayer:
@@ -17743,6 +17914,8 @@ func _begin_fighter_charge_dash(charge_target: Node2D) -> void:
 	_face_attack_direction(direction.x)
 	_restart_stage1_animation("attack", 1.65)
 	_play_fighter_attack_effect("thrust", direction)
+	if fighter_charge_chain_count == 0:
+		_play_fighter_thrust_audio(true)
 	_spawn_fighter_afterimage(0.78)
 
 func _update_fighter_charge(delta: float) -> void:
@@ -17937,6 +18110,7 @@ func _spawn_fighter_afterimage(alpha: float) -> void:
 		)
 
 func _play_fighter_charge_impact_effect() -> void:
+	_play_fighter_charge_impact_audio()
 	if channel_effect.sprite_frames == null:
 		return
 	if not channel_effect.sprite_frames.has_animation("charge_impact"):
@@ -18063,6 +18237,7 @@ func _fighter_basic_attack(current_target: Node2D) -> void:
 	if _fighter_should_use_slash():
 		_fighter_apply_slash(direction, false)
 		_play_fighter_attack_effect("slash", direction, false)
+		_play_fighter_slash_audio()
 		if fighter_slash_mastery_stacks > 0:
 			fighter_slash_bonus_hits_remaining = fighter_slash_mastery_stacks
 			fighter_slash_combo_direction = direction
@@ -18071,6 +18246,7 @@ func _fighter_basic_attack(current_target: Node2D) -> void:
 	else:
 		_fighter_apply_thrust(direction)
 		_play_fighter_attack_effect("thrust", direction, false)
+		_play_fighter_thrust_audio()
 	_damage_treasure_chests(
 		global_position + direction * 85.0,
 		145.0,
@@ -18098,6 +18274,7 @@ func _update_fighter_slash_combo(delta: float) -> bool:
 	_restart_fighter_attack_animation(reverse_frames)
 	_fighter_apply_slash(direction, true)
 	_play_fighter_attack_effect("slash", direction, reverse_frames)
+	_play_fighter_slash_audio()
 
 	fighter_slash_bonus_hits_remaining -= 1
 	if fighter_slash_bonus_hits_remaining > 0:
@@ -18293,6 +18470,7 @@ func _start_fighter_guard() -> void:
 	shield_max_hp = float(max_hp) * shield_ratio
 	shield_hp = shield_max_hp
 
+	_play_fighter_guard_start_audio()
 	if shield_effect.sprite_frames != null and shield_effect.sprite_frames.has_animation("guard_aura"):
 		shield_effect.visible = true
 		shield_effect.play("guard_aura")
@@ -18427,6 +18605,7 @@ func _play_fighter_attack_effect(
 
 
 func _play_fighter_guard_release_effect() -> void:
+	_play_fighter_guard_release_audio()
 	if channel_effect.sprite_frames == null:
 		return
 	if not channel_effect.sprite_frames.has_animation("guard_release"):
@@ -18753,6 +18932,8 @@ func take_damage(amount: int, source: Node = null) -> bool:
 			_play_stage1_audio(&"hit")
 		elif hero_archetype == "rogue_combo":
 			_play_rogue_hit_audio()
+		elif hero_archetype == "sword_shield":
+			_play_fighter_hit_audio()
 
 	if current_hp > 0 and applied_damage > 0:
 		_add_ultimate_charge(
@@ -18818,6 +18999,8 @@ func _begin_death_sequence() -> void:
 		_play_stage1_audio(&"death")
 	elif hero_archetype == "rogue_combo":
 		_play_rogue_death_audio()
+	elif hero_archetype == "sword_shield":
+		_play_fighter_death_audio()
 	invulnerability_timer = 0.0
 	modulate.a = 1.0
 	velocity = Vector2.ZERO

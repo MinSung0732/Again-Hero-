@@ -1,3 +1,11 @@
+### Stage 3 sword-and-shield fighter combat SFX
+- Stage 3 검과 방패의 용사 전투 SFX 7종 연결: 베기, 찌르기, 막기 시작, 막기 축적 피해 방출, 검방 돌격 지면 충격, 피격, 사망.
+- 실제 이펙트 매핑에 맞춰 effect2=베기, effect3=찌르기, effect4=막기 오라, effect1=막기 방출, effect5=돌격 지면 충격으로 재생 훅을 연결.
+- Pixabay에서 `Sword Slash and Swing`, `Shield Block Shortsword`, `Blade Piercing Body` 등을 비교하고, 저장소에 이미 추적 중인 Pixabay 원본 바이트를 Stage 3 전용 런타임 파일명으로 재사용해 중복 바이너리 다운로드를 피함.
+- 검격 기본공격은 -15~-14 dB, 막기 시작/방출은 -11 dB, 연쇄 가능한 돌격 충격은 -16 dB, 피격 -20 dB, 사망 -12 dB 기준으로 연결.
+- 빠르게 연속될 수 있는 베기/찌르기/돌격 충격은 고정 3개 AudioStreamPlayer 풀을 순환하고, 막기/피격/사망은 지속 플레이어를 재사용해 타격마다 노드를 생성하지 않음.
+- 게임플레이 판정, 공격/스킬 수치, 이펙트 프레임, AI 판단은 변경하지 않음.
+
 ### Stage 1 level-up feedback + Stage 2 rogue combat SFX
 - Stage 1 견습 마법용사 레벨업 시 레벨업 비주얼 프레임이 비어 있으면 즉시 재구성한 뒤 재생하도록 보강하고, 공용 레벨업 MP3를 Stage 1 런타임 SFX 경로로 명시 연결.
 - Stage 2 날렵한 용사 전투 SFX 6종 연결: 연격 평타, 난도질, 급습-암살 시작, 암살 연타, 피격, 사망.
