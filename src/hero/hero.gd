@@ -9390,7 +9390,7 @@ func _ensure_archmage_audio_runtime() -> void:
 			archmage_earth_audio_pool.append(
 				_create_hero_sfx_player(
 					STAGE5_EARTH_SPIKE_AUDIO_PATH,
-					HERO_SFX_DB_REPEATED_SECONDARY - 1.0,
+					HERO_SFX_DB_SECONDARY_REPEAT - 1.0,
 					0.78
 				)
 			)
@@ -9400,7 +9400,7 @@ func _ensure_archmage_audio_runtime() -> void:
 			archmage_holy_audio_pool.append(
 				_create_hero_sfx_player(
 					STAGE5_HOLY_BURST_AUDIO_PATH,
-					HERO_SFX_DB_REPEATED_SECONDARY,
+					HERO_SFX_DB_SECONDARY_REPEAT,
 					1.20
 				)
 			)
@@ -9416,7 +9416,7 @@ func _ensure_archmage_audio_runtime() -> void:
 			archmage_chain_hit_audio_pool.append(
 				_create_hero_sfx_player(
 					STAGE5_CHAIN_HIT_AUDIO_PATH,
-					HERO_SFX_DB_REPEATED_SECONDARY + 2.0,
+					HERO_SFX_DB_SECONDARY_REPEAT + 2.0,
 					1.30
 				)
 			)
