@@ -22,6 +22,7 @@ const UI_HEADER_CARD_PATH := UI_CARD_FRAME_DIR + "/ui1.png"
 const UI_CONTENT_CARD_PATH := UI_CARD_FRAME_DIR + "/ui9.png"
 const UI_STAGE_CARD_FRAME_PATH := UI_CARD_FRAME_DIR + "/ui10_clean_frame.png"
 const UI_BATTLE_HUD_DIR := "res://assets/art/UI/battle_hud_v2"
+const UI_HEADER_TOP_BACKDROP_PATH := UI_BATTLE_HUD_DIR + "/top_hud_backdrop.svg"
 const UI_HEADER_SIDE_FRAME_PATH := UI_BATTLE_HUD_DIR + "/side_frame.svg"
 const UI_HEADER_LOGO_BACKPLATE_PATH := UI_BATTLE_HUD_DIR + "/logo_backplate.svg"
 const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
@@ -687,6 +688,7 @@ func _apply_new_ui_assets() -> void:
 		header.add_child(progress_label)
 
 	for stale_name in [
+		"HeaderBackdrop",
 		"HeaderGoldPlate",
 		"HeaderProgressPlate",
 		"HeaderLogoBackplate",
@@ -697,6 +699,9 @@ func _apply_new_ui_assets() -> void:
 			header.remove_child(stale)
 			stale.free()
 
+	var top_backdrop_texture := _load_ui_texture_resource(
+		UI_HEADER_TOP_BACKDROP_PATH
+	)
 	var side_frame_texture := _load_ui_texture_resource(
 		UI_HEADER_SIDE_FRAME_PATH
 	)
@@ -704,23 +709,37 @@ func _apply_new_ui_assets() -> void:
 		UI_HEADER_LOGO_BACKPLATE_PATH
 	)
 
+	if top_backdrop_texture != null:
+		var backdrop := TextureRect.new()
+		backdrop.name = "HeaderBackdrop"
+		backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		backdrop.texture = top_backdrop_texture
+		backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		backdrop.modulate = Color(1.0, 1.0, 1.0, 0.72)
+		backdrop.z_index = 0
+		header.add_child(backdrop)
+		header.move_child(backdrop, 0)
+
 	var gold_plate := Control.new()
 	gold_plate.name = "HeaderGoldPlate"
 	gold_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	gold_plate.anchor_left = 0.020
-	gold_plate.anchor_top = 0.235
-	gold_plate.anchor_right = 0.385
-	gold_plate.anchor_bottom = 0.635
+	gold_plate.anchor_left = 0.018
+	gold_plate.anchor_top = 0.285
+	gold_plate.anchor_right = 0.305
+	gold_plate.anchor_bottom = 0.665
 	gold_plate.z_index = 1
 	header.add_child(gold_plate)
 
 	var progress_plate := Control.new()
 	progress_plate.name = "HeaderProgressPlate"
 	progress_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	progress_plate.anchor_left = 0.615
-	progress_plate.anchor_top = 0.235
-	progress_plate.anchor_right = 0.980
-	progress_plate.anchor_bottom = 0.635
+	progress_plate.anchor_left = 0.695
+	progress_plate.anchor_top = 0.285
+	progress_plate.anchor_right = 0.982
+	progress_plate.anchor_bottom = 0.665
 	progress_plate.z_index = 1
 	header.add_child(progress_plate)
 
@@ -731,7 +750,7 @@ func _apply_new_ui_assets() -> void:
 			frame.texture = side_frame_texture
 			frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			frame.stretch_mode = TextureRect.STRETCH_SCALE
+			frame.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 			frame.z_index = 0
 			plate.add_child(frame)
@@ -741,9 +760,9 @@ func _apply_new_ui_assets() -> void:
 		resource_parent.remove_child(resource_label)
 		gold_plate.add_child(resource_label)
 	resource_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	resource_label.offset_left = 34.0
+	resource_label.offset_left = 30.0
 	resource_label.offset_top = 2.0
-	resource_label.offset_right = -42.0
+	resource_label.offset_right = -28.0
 	resource_label.offset_bottom = -2.0
 	resource_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	resource_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -754,9 +773,9 @@ func _apply_new_ui_assets() -> void:
 		progress_parent.remove_child(progress_label)
 		progress_plate.add_child(progress_label)
 	progress_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	progress_label.offset_left = 42.0
+	progress_label.offset_left = 28.0
 	progress_label.offset_top = 2.0
-	progress_label.offset_right = -34.0
+	progress_label.offset_right = -30.0
 	progress_label.offset_bottom = -2.0
 	progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	progress_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -770,11 +789,12 @@ func _apply_new_ui_assets() -> void:
 		logo_backplate.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo_backplate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo_backplate.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo_backplate.anchor_left = 0.205
-		logo_backplate.anchor_top = 0.025
-		logo_backplate.anchor_right = 0.795
-		logo_backplate.anchor_bottom = 0.790
-		logo_backplate.z_index = 3
+		logo_backplate.anchor_left = 0.300
+		logo_backplate.anchor_top = 0.055
+		logo_backplate.anchor_right = 0.700
+		logo_backplate.anchor_bottom = 0.785
+		logo_backplate.modulate = Color(1.0, 1.0, 1.0, 0.94)
+		logo_backplate.z_index = 2
 		header.add_child(logo_backplate)
 
 	var logo_texture := _load_png_texture_direct(UI_LOGO_PATH)
@@ -786,11 +806,11 @@ func _apply_new_ui_assets() -> void:
 		logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo.anchor_left = 0.225
-		logo.anchor_top = 0.015
-		logo.anchor_right = 0.775
-		logo.anchor_bottom = 0.710
-		logo.z_index = 4
+		logo.anchor_left = 0.285
+		logo.anchor_top = 0.035
+		logo.anchor_right = 0.715
+		logo.anchor_bottom = 0.690
+		logo.z_index = 3
 		header.add_child(logo)
 
 	var stage_card := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard
@@ -1334,10 +1354,10 @@ func _apply_lobby_visual_polish() -> void:
 	var nav_buttons := $BottomNav/NavMargin/NavButtons as HBoxContainer
 	nav_buttons.add_theme_constant_override("separation", 6)
 
-	resource_label.add_theme_font_size_override("font_size", 21)
+	resource_label.add_theme_font_size_override("font_size", 20)
 	resource_label.add_theme_color_override("font_color", Color("f5d16d"))
 	resource_label.remove_theme_stylebox_override("normal")
-	progress_label.add_theme_font_size_override("font_size", 20)
+	progress_label.add_theme_font_size_override("font_size", 19)
 	progress_label.add_theme_color_override("font_color", Color("ded1e4"))
 	progress_label.remove_theme_stylebox_override("normal")
 
