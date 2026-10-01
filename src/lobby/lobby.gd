@@ -1051,9 +1051,9 @@ func _install_stage_entry_hud() -> void:
 	card_margin.add_theme_constant_override("margin_right", 18)
 	card_margin.add_theme_constant_override("margin_bottom", 28)
 
-	portrait_frame.anchor_left = 0.085
+	portrait_frame.anchor_left = 0.140
 	portrait_frame.anchor_top = 0.080
-	portrait_frame.anchor_right = 0.915
+	portrait_frame.anchor_right = 0.860
 	portrait_frame.anchor_bottom = 0.525
 
 	var hero_name_plate := hero_name_label.get_parent().get_node_or_null(
@@ -1063,9 +1063,9 @@ func _install_stage_entry_hud() -> void:
 		hero_name_plate = Panel.new()
 		hero_name_plate.name = "HeroNamePlate"
 		hero_name_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		hero_name_plate.anchor_left = 0.24
+		hero_name_plate.anchor_left = 0.28
 		hero_name_plate.anchor_top = 0.515
-		hero_name_plate.anchor_right = 0.76
+		hero_name_plate.anchor_right = 0.72
 		hero_name_plate.anchor_bottom = 0.580
 		hero_name_plate.add_theme_stylebox_override(
 			"panel",
@@ -1099,9 +1099,9 @@ func _install_stage_entry_hud() -> void:
 			gem.rotation = PI * 0.25
 			hero_name_plate.add_child(gem)
 
-	hero_name_label.anchor_left = 0.20
+	hero_name_label.anchor_left = 0.25
 	hero_name_label.anchor_top = 0.518
-	hero_name_label.anchor_right = 0.80
+	hero_name_label.anchor_right = 0.75
 	hero_name_label.anchor_bottom = 0.578
 	hero_name_label.z_index = 3
 
@@ -1137,9 +1137,9 @@ func _install_stage_entry_hud() -> void:
 	portrait_placeholder.z_index = 2
 	portrait_badge.z_index = 2
 
-	bottom_panel.anchor_left = 0.100
+	bottom_panel.anchor_left = 0.145
 	bottom_panel.anchor_top = 0.605
-	bottom_panel.anchor_right = 0.900
+	bottom_panel.anchor_right = 0.855
 	bottom_panel.anchor_bottom = 0.920
 
 	var description_backing := bottom_panel.get_node_or_null(
