@@ -1,3 +1,11 @@
+### Stage 1 level-up feedback + Stage 2 rogue combat SFX
+- Stage 1 견습 마법용사 레벨업 시 레벨업 비주얼 프레임이 비어 있으면 즉시 재구성한 뒤 재생하도록 보강하고, 공용 레벨업 MP3를 Stage 1 런타임 SFX 경로로 명시 연결.
+- Stage 2 날렵한 용사 전투 SFX 6종 연결: 연격 평타, 난도질, 급습-암살 시작, 암살 연타, 피격, 사망.
+- Stage 2 검격 계열은 Pixabay `Sword Slash and Swing`, 급습 시작은 기존 Pixabay portal 소스, 사망은 Pixabay `Fatal Body Fall Thud`를 사용하며 출처 문서를 추가.
+- 7~10 기준 공통 음량 정책을 적용. 빠른 연격/암살 연타는 반복 밀도를 고려해 기본 기준보다 낮게 믹스.
+- 연격/암살 연타는 고정 3개 AudioStreamPlayer 풀을 순환 사용해 타격마다 노드를 생성하지 않고 짧은 tail 중첩만 허용.
+- Stage 3~6 전투 사운드는 이번 변경에서 건드리지 않음.
+
 ### Hero SFX loudness standard
 - Stage 7~10의 기존 전투 믹스를 기준으로 신규 용사 SFX 공통 시작값을 정의.
 - 기본 기준: 주력 기본공격 -12 dB, 일반 스킬 -12 dB, 강한 스킬/궁극기 -9 dB, 피격 -20 dB, 사망 -12 dB, 반복 보조공격 -26 dB, 매우 잦은 작은 보조음 -32 dB.
