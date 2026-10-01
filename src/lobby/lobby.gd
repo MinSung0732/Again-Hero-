@@ -1109,7 +1109,8 @@ func _install_stage_entry_hud() -> void:
 			"PortraitBackdrop"
 		)
 		if old_portrait_backdrop != null:
-			old_portrait_backdrop.queue_free()
+			portrait_inner.remove_child(old_portrait_backdrop)
+			old_portrait_backdrop.free()
 
 		var portrait_backdrop := ColorRect.new()
 		portrait_backdrop.name = "PortraitBackdrop"
