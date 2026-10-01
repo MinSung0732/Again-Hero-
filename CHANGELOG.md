@@ -1,3 +1,9 @@
+### Lobby header scale rebalance
+- 로비 전용 좌/우 윙 높이를 줄여 중앙 로고보다 프레임이 더 커 보이던 비율을 완화.
+- 코인 아이콘과 상점 이동 `+` 버튼을 약 30~35% 축소해 정보 바 내부 장식 비중을 낮춤.
+- 골드/최고 해금 제목 및 값 폰트를 한 단계씩 줄이고 2줄 정렬 범위를 재조정.
+- 중앙 로고/로고 백플레이트, 던전 카드/하단 네비/스테이지 로직은 변경하지 않음.
+
 ### Dedicated lobby header art pass
 - 로비 헤더 전용 `assets/art/UI/lobby_header/` 리소스 4종(`left_wing.svg`, `right_wing.svg`, `coin.svg`, `plus.svg`)을 신규 제작.
 - 기존 전투 HUD `side_frame.svg` 재활용을 중단하고 로비 전용 좌/우 윙 에셋으로 교체해 중앙 로고와 양옆 정보 바가 명확히 분리되도록 디자인 통일.
