@@ -1,3 +1,10 @@
+### Lobby header unified battle-HUD styling
+- 헤더 전체 바닥에 기존 전투 HUD의 `top_hud_backdrop.svg`를 추가해 로비/전투 HUD의 보라·금색 픽셀 장식 언어를 통일.
+- 좌/우 `side_frame.svg` 패널은 원본 비율에 가깝게 축소하고 `STRETCH_KEEP_ASPECT_CENTERED`로 변경해 테두리 두께가 과하게 늘어나던 문제를 완화.
+- 중앙 `logo_backplate.svg`와 `AgainHeroLogo.png` 폭을 줄이고 중앙에 재배치해 좌우 정보판과 하나의 거대한 외곽 프레임처럼 합쳐져 보이던 현상을 줄임.
+- 골드/최고 해금 텍스트 크기와 내부 여백도 새 패널 크기에 맞게 조정.
+- 중앙 던전 카드/하단 네비/스테이지 로직은 변경하지 않음.
+
 ### Lobby header battle-HUD asset reuse
 - 로비 헤더의 임시 StyleBox 좌/우 패널을 제거하고 기존 전투 HUD 분리 리소스 `battle_hud_v2/side_frame.svg`를 실제 헤더 정보판에 재활용.
 - 중앙 로고 뒤에는 `battle_hud_v2/logo_backplate.svg`를 배치하고 기존 `AgainHeroLogo.png`를 상위 레이어에 유지해 목표 레퍼런스의 중앙 로고 구조에 가깝게 조정.
