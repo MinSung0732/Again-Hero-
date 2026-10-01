@@ -870,10 +870,10 @@ func _apply_new_ui_assets() -> void:
 		plus_button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		plus_button.ignore_texture_size = true
 		plus_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-		plus_button.anchor_left = 0.58
-		plus_button.anchor_top = 0.52
-		plus_button.anchor_right = 0.58
-		plus_button.anchor_bottom = 0.52
+		plus_button.anchor_left = 0.56
+		plus_button.anchor_top = 0.38
+		plus_button.anchor_right = 0.56
+		plus_button.anchor_bottom = 0.38
 		plus_button.offset_left = -16.0
 		plus_button.offset_top = -16.0
 		plus_button.offset_right = 16.0
