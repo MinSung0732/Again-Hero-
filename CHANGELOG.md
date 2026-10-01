@@ -1,3 +1,11 @@
+### Lobby header battle-HUD asset reuse
+- 로비 헤더의 임시 StyleBox 좌/우 패널을 제거하고 기존 전투 HUD 분리 리소스 `battle_hud_v2/side_frame.svg`를 실제 헤더 정보판에 재활용.
+- 중앙 로고 뒤에는 `battle_hud_v2/logo_backplate.svg`를 배치하고 기존 `AgainHeroLogo.png`를 상위 레이어에 유지해 목표 레퍼런스의 중앙 로고 구조에 가깝게 조정.
+- 좌측 골드/우측 최고 해금 패널을 중앙 로고 뒤쪽으로 일부 겹치도록 배치해 하나의 통합 상단 HUD처럼 보이도록 z-order와 anchor를 재구성.
+- SVG는 Godot import 리소스를 Texture2D로 직접 로드하는 전용 헬퍼를 추가해 런타임 Image PNG 로더와 분리.
+- 기존 헤더 레이아웃 높이와 중앙 던전 카드 크기/위치는 유지.
+- 스테이지 전환/입장/해금/보상 로직은 변경하지 않음.
+
 ### Lobby header split-HUD rebuild
 - 목표 레퍼런스처럼 헤더를 좌측 골드 패널 / 중앙 로고 / 우측 최고 해금 패널의 3영역 구조로 재구성.
 - 기존 full-width `ui1` 헤더 프레임을 제거하고 Header 레이아웃 높이는 유지해 중앙 던전 카드 이하 UI 위치는 변경하지 않음.
