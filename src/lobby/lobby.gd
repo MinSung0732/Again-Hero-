@@ -719,9 +719,9 @@ func _apply_new_ui_assets() -> void:
 	gold_plate.name = "HeaderGoldPlate"
 	gold_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	gold_plate.anchor_left = 0.012
-	gold_plate.anchor_top = 0.300
+	gold_plate.anchor_top = 0.340
 	gold_plate.anchor_right = 0.345
-	gold_plate.anchor_bottom = 0.670
+	gold_plate.anchor_bottom = 0.615
 	gold_plate.z_index = 1
 	header.add_child(gold_plate)
 
@@ -729,9 +729,9 @@ func _apply_new_ui_assets() -> void:
 	progress_plate.name = "HeaderProgressPlate"
 	progress_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	progress_plate.anchor_left = 0.655
-	progress_plate.anchor_top = 0.300
+	progress_plate.anchor_top = 0.340
 	progress_plate.anchor_right = 0.988
-	progress_plate.anchor_bottom = 0.670
+	progress_plate.anchor_bottom = 0.615
 	progress_plate.z_index = 1
 	header.add_child(progress_plate)
 
@@ -768,13 +768,13 @@ func _apply_new_ui_assets() -> void:
 	gold_title.name = "HeaderGoldTitle"
 	gold_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	gold_title.text = "골드"
-	gold_title.anchor_left = 0.20
-	gold_title.anchor_top = 0.12
-	gold_title.anchor_right = 0.57
-	gold_title.anchor_bottom = 0.46
+	gold_title.anchor_left = 0.19
+	gold_title.anchor_top = 0.08
+	gold_title.anchor_right = 0.58
+	gold_title.anchor_bottom = 0.45
 	gold_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	gold_title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	gold_title.add_theme_font_size_override("font_size", 15)
+	gold_title.add_theme_font_size_override("font_size", 13)
 	gold_title.add_theme_color_override("font_color", Color("d7c8dd"))
 	gold_title.z_index = 5
 	gold_plate.add_child(gold_title)
@@ -783,13 +783,13 @@ func _apply_new_ui_assets() -> void:
 	gold_value.name = "HeaderGoldValue"
 	gold_value.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	gold_value.text = _format_shop_number(SHOP_CATALOG.TEST_GOLD)
-	gold_value.anchor_left = 0.20
+	gold_value.anchor_left = 0.19
 	gold_value.anchor_top = 0.43
-	gold_value.anchor_right = 0.57
-	gold_value.anchor_bottom = 0.90
+	gold_value.anchor_right = 0.58
+	gold_value.anchor_bottom = 0.93
 	gold_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	gold_value.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	gold_value.add_theme_font_size_override("font_size", 22)
+	gold_value.add_theme_font_size_override("font_size", 18)
 	gold_value.add_theme_color_override("font_color", Color("f5d16d"))
 	gold_value.z_index = 5
 	gold_plate.add_child(gold_value)
@@ -802,10 +802,10 @@ func _apply_new_ui_assets() -> void:
 		coin_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		coin_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		coin_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		coin_icon.anchor_left = 0.055
-		coin_icon.anchor_top = 0.24
-		coin_icon.anchor_right = 0.185
-		coin_icon.anchor_bottom = 0.78
+		coin_icon.anchor_left = 0.070
+		coin_icon.anchor_top = 0.27
+		coin_icon.anchor_right = 0.145
+		coin_icon.anchor_bottom = 0.73
 		coin_icon.z_index = 5
 		gold_plate.add_child(coin_icon)
 
@@ -816,10 +816,10 @@ func _apply_new_ui_assets() -> void:
 		plus_button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		plus_button.ignore_texture_size = true
 		plus_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-		plus_button.anchor_left = 0.620
-		plus_button.anchor_top = 0.20
-		plus_button.anchor_right = 0.790
-		plus_button.anchor_bottom = 0.82
+		plus_button.anchor_left = 0.640
+		plus_button.anchor_top = 0.25
+		plus_button.anchor_right = 0.735
+		plus_button.anchor_bottom = 0.75
 		plus_button.tooltip_text = "상점"
 		plus_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		plus_button.z_index = 6
@@ -830,13 +830,13 @@ func _apply_new_ui_assets() -> void:
 	progress_title.name = "HeaderProgressTitle"
 	progress_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	progress_title.text = "최고 해금"
-	progress_title.anchor_left = 0.43
-	progress_title.anchor_top = 0.12
-	progress_title.anchor_right = 0.88
-	progress_title.anchor_bottom = 0.46
+	progress_title.anchor_left = 0.42
+	progress_title.anchor_top = 0.08
+	progress_title.anchor_right = 0.89
+	progress_title.anchor_bottom = 0.45
 	progress_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	progress_title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	progress_title.add_theme_font_size_override("font_size", 15)
+	progress_title.add_theme_font_size_override("font_size", 13)
 	progress_title.add_theme_color_override("font_color", Color("d7c8dd"))
 	progress_title.z_index = 5
 	progress_plate.add_child(progress_title)
@@ -845,13 +845,13 @@ func _apply_new_ui_assets() -> void:
 	progress_value.name = "HeaderProgressValue"
 	progress_value.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	progress_value.text = "Stage 1"
-	progress_value.anchor_left = 0.43
+	progress_value.anchor_left = 0.42
 	progress_value.anchor_top = 0.43
-	progress_value.anchor_right = 0.88
-	progress_value.anchor_bottom = 0.90
+	progress_value.anchor_right = 0.89
+	progress_value.anchor_bottom = 0.93
 	progress_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	progress_value.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	progress_value.add_theme_font_size_override("font_size", 22)
+	progress_value.add_theme_font_size_override("font_size", 18)
 	progress_value.add_theme_color_override("font_color", Color("f5d16d"))
 	progress_value.z_index = 5
 	progress_plate.add_child(progress_value)
