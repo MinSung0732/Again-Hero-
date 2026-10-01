@@ -175,6 +175,8 @@ var nav_button_style: StyleBox = StyleBoxFlat.new()
 var nav_button_active_style: StyleBox = StyleBoxFlat.new()
 var primary_button_style := StyleBoxFlat.new()
 var secondary_button_style := StyleBoxFlat.new()
+var formation_card_style := StyleBoxFlat.new()
+var formation_card_selected_style := StyleBoxFlat.new()
 var stage_selector_item_style := StyleBoxFlat.new()
 var stage_selector_current_style := StyleBoxFlat.new()
 var stage_selector_disabled_style := StyleBoxFlat.new()
@@ -307,6 +309,13 @@ func _build_styles() -> void:
 		3,
 		18
 	)
+	formation_card_style = stage_card_style.duplicate() as StyleBoxFlat
+	formation_card_selected_style = primary_button_style.duplicate() as StyleBoxFlat
+	for style in [formation_card_style, formation_card_selected_style]:
+		style.content_margin_left = 2.0
+		style.content_margin_top = 2.0
+		style.content_margin_right = 2.0
+		style.content_margin_bottom = 2.0
 
 func _make_style(
 	background: Color,
@@ -2457,7 +2466,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.add_theme_stylebox_override(
 		"panel",
-		primary_button_style if selected else stage_card_style
+		formation_card_selected_style if selected else formation_card_style
 	)
 
 	var margin := MarginContainer.new()
@@ -2623,7 +2632,7 @@ func _create_demon_skill_card(skill_id: String) -> Control:
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.add_theme_stylebox_override(
 		"panel",
-		primary_button_style if selected else stage_card_style
+		formation_card_selected_style if selected else formation_card_style
 	)
 
 	var margin := MarginContainer.new()
