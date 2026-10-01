@@ -679,10 +679,18 @@ func _apply_new_ui_assets() -> void:
 	header_margin.visible = false
 
 	var existing_gold_plate := header.get_node_or_null("HeaderGoldPlate")
+	if existing_gold_plate == null:
+		existing_gold_plate = header.get_node_or_null(
+			"HeaderSlots/HeaderGoldPlate"
+		)
 	if existing_gold_plate != null and resource_label.get_parent() == existing_gold_plate:
 		existing_gold_plate.remove_child(resource_label)
 		header.add_child(resource_label)
 	var existing_progress_plate := header.get_node_or_null("HeaderProgressPlate")
+	if existing_progress_plate == null:
+		existing_progress_plate = header.get_node_or_null(
+			"HeaderSlots/HeaderProgressPlate"
+		)
 	if (
 		existing_progress_plate != null
 		and progress_label.get_parent() == existing_progress_plate
@@ -692,6 +700,7 @@ func _apply_new_ui_assets() -> void:
 
 	for stale_name in [
 		"HeaderBackdrop",
+		"HeaderSlots",
 		"HeaderGoldPlate",
 		"HeaderProgressPlate",
 		"HeaderCenterSlot",
@@ -716,6 +725,15 @@ func _apply_new_ui_assets() -> void:
 		UI_HEADER_LOGO_BACKPLATE_PATH
 	)
 
+	# PanelContainer forces every direct Control child to its full rect. Place one
+	# full-size overlay under it, then anchor the three real slots inside that plain
+	# Control so their boundaries are actually respected at runtime.
+	var slots_root := Control.new()
+	slots_root.name = "HeaderSlots"
+	slots_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slots_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	header.add_child(slots_root)
+
 	# Keep the header in three non-overlapping slots. Each slot owns its art and
 	# content so long values and the center logo cannot push into a neighbour.
 	var gold_plate := Control.new()
@@ -723,33 +741,33 @@ func _apply_new_ui_assets() -> void:
 	gold_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	gold_plate.anchor_left = 0.02
 	gold_plate.anchor_top = 0.0
-	gold_plate.anchor_right = 0.30
+	gold_plate.anchor_right = 0.32
 	gold_plate.anchor_bottom = 1.0
 	gold_plate.clip_contents = true
 	gold_plate.z_index = 0
-	header.add_child(gold_plate)
+	slots_root.add_child(gold_plate)
 
 	var center_slot := Control.new()
 	center_slot.name = "HeaderCenterSlot"
 	center_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	center_slot.anchor_left = 0.35
+	center_slot.anchor_left = 0.34
 	center_slot.anchor_top = 0.0
-	center_slot.anchor_right = 0.65
+	center_slot.anchor_right = 0.66
 	center_slot.anchor_bottom = 1.0
 	center_slot.clip_contents = true
 	center_slot.z_index = 0
-	header.add_child(center_slot)
+	slots_root.add_child(center_slot)
 
 	var progress_plate := Control.new()
 	progress_plate.name = "HeaderProgressPlate"
 	progress_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	progress_plate.anchor_left = 0.70
+	progress_plate.anchor_left = 0.68
 	progress_plate.anchor_top = 0.0
 	progress_plate.anchor_right = 0.98
 	progress_plate.anchor_bottom = 1.0
 	progress_plate.clip_contents = true
 	progress_plate.z_index = 0
-	header.add_child(progress_plate)
+	slots_root.add_child(progress_plate)
 
 	if left_wing_texture != null:
 		var left_wing := TextureRect.new()
@@ -760,9 +778,9 @@ func _apply_new_ui_assets() -> void:
 		left_wing.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		left_wing.stretch_mode = TextureRect.STRETCH_SCALE
 		left_wing.anchor_left = 0.0
-		left_wing.anchor_top = 0.43
+		left_wing.anchor_top = 0.32
 		left_wing.anchor_right = 1.0
-		left_wing.anchor_bottom = 0.64
+		left_wing.anchor_bottom = 0.70
 		left_wing.z_index = 0
 		gold_plate.add_child(left_wing)
 
@@ -775,9 +793,9 @@ func _apply_new_ui_assets() -> void:
 		right_wing.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		right_wing.stretch_mode = TextureRect.STRETCH_SCALE
 		right_wing.anchor_left = 0.0
-		right_wing.anchor_top = 0.43
+		right_wing.anchor_top = 0.32
 		right_wing.anchor_right = 1.0
-		right_wing.anchor_bottom = 0.64
+		right_wing.anchor_bottom = 0.70
 		right_wing.z_index = 0
 		progress_plate.add_child(right_wing)
 
@@ -922,10 +940,10 @@ func _apply_new_ui_assets() -> void:
 		logo_backplate.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo_backplate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo_backplate.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo_backplate.anchor_left = 0.12
-		logo_backplate.anchor_top = 0.22
-		logo_backplate.anchor_right = 0.88
-		logo_backplate.anchor_bottom = 0.64
+		logo_backplate.anchor_left = 0.10
+		logo_backplate.anchor_top = 0.20
+		logo_backplate.anchor_right = 0.90
+		logo_backplate.anchor_bottom = 0.68
 		logo_backplate.z_index = 1
 		center_slot.add_child(logo_backplate)
 
@@ -938,10 +956,10 @@ func _apply_new_ui_assets() -> void:
 		logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo.anchor_left = 0.02
-		logo.anchor_top = 0.11
-		logo.anchor_right = 0.98
-		logo.anchor_bottom = 0.71
+		logo.anchor_left = 0.0
+		logo.anchor_top = 0.10
+		logo.anchor_right = 1.0
+		logo.anchor_bottom = 0.73
 		logo.z_index = 2
 		center_slot.add_child(logo)
 
