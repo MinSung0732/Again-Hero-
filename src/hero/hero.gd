@@ -366,6 +366,7 @@ var sage_skill4_cooldown_timer: float = 0.0
 var sage_skill5_cooldown_timer: float = 0.0
 var sage_radiance_launch_remaining: int = 0
 var sage_radiance_launch_timer: float = 0.0
+var sage_radiance_target_cursor: int = 0
 var sage_condensation_stacks: int = 0
 var sage_condensation_completion_count: int = 0
 var sage_condensation_skill_damage_buff_timer: float = 0.0
@@ -1281,6 +1282,7 @@ func configure_profile(profile: Dictionary) -> void:
 	)
 	sage_radiance_launch_remaining = 0
 	sage_radiance_launch_timer = 0.0
+	sage_radiance_target_cursor = 0
 	sage_condensation_stacks = 0
 	sage_condensation_completion_count = 0
 	sage_condensation_skill_damage_buff_timer = 0.0
@@ -8522,6 +8524,45 @@ func _fire_projectile(current_target: Node2D) -> void:
 	)
 
 
+func _get_sage_augment_stacks(augment_id: String) -> int:
+	if hero_archetype != "grand_sage_astra":
+		return 0
+	return maxi(int(build_counts.get(augment_id, 0)), 0)
+
+
+func _consume_one_sage_condensation_stack() -> bool:
+	if sage_condensation_stacks <= 0:
+		return false
+	sage_condensation_stacks -= 1
+	for slot_index in range(sage_condensation_visuals.size()):
+		if slot_index in sage_condensation_free_slots:
+			continue
+		var sprite := sage_condensation_visuals[slot_index]
+		if is_instance_valid(sprite):
+			sprite.stop()
+			sprite.visible = false
+		sage_condensation_free_slots.append(slot_index)
+		break
+	queue_redraw()
+	return true
+
+
+func _apply_sage_mana_conversion(incoming_damage: float) -> float:
+	var augment_stacks := _get_sage_augment_stacks("sage_mana_conversion")
+	if augment_stacks <= 0 or sage_condensation_stacks <= 0:
+		return incoming_damage
+	var projected_hp := maxf(float(current_hp) - incoming_damage, 0.0)
+	if projected_hp / float(maxi(max_hp, 1)) > 0.50:
+		return incoming_damage
+	var absorbed := minf(
+		incoming_damage,
+		float(max_hp) * 0.03 * float(augment_stacks)
+	)
+	if absorbed <= 0.0 or not _consume_one_sage_condensation_stack():
+		return incoming_damage
+	return maxf(incoming_damage - absorbed, 0.0)
+
+
 func _ensure_sage_runtime() -> void:
 	if hero_archetype != "grand_sage_astra":
 		return
@@ -8717,9 +8758,20 @@ func _fire_sage_projectile(current_target: Node2D) -> void:
 	var projectile_mode := 0
 	if is_piercing:
 		projectile_mode = 1
-		shot_damage = maxi(1, int(round(float(attack_damage) * maxf(float(sage_config.get("piercing_damage_ratio", 0.90)), 0.0))))
+		var celestial_pierce_stacks := _get_sage_augment_stacks(
+			"sage_celestial_pierce"
+		)
+		shot_damage = maxi(1, int(round(
+			float(attack_damage)
+			* maxf(float(sage_config.get("piercing_damage_ratio", 0.90)), 0.0)
+			* (1.0 + 0.08 * float(celestial_pierce_stacks))
+		)))
 		shot_speed = maxf(float(sage_config.get("piercing_projectile_speed", 800.0)), 1.0)
-		shot_range = maxf(float(sage_config.get("piercing_range", 1200.0)), 1.0)
+		shot_range = maxf(
+			float(sage_config.get("piercing_range", 1200.0))
+			+ 80.0 * float(celestial_pierce_stacks),
+			1.0
+		)
 		diameter = maxf(float(sage_config.get("piercing_diameter", 220.0)), 2.0)
 	projectile.global_position = global_position + shot_direction * 54.0
 	projectile.call(
@@ -8886,10 +8938,6 @@ func _try_cast_sage_ice_pillar() -> void:
 	if ultimate_charge + 0.001 < gauge_cost:
 		return
 
-	var pillar := _acquire_projectile(SAGE_ICE_PILLAR_SCENE, "sage_ice_pillar")
-	if pillar == null:
-		return
-
 	var effect_diameter := maxf(float(skill.get("effect_diameter", 250.0)), 2.0)
 	var damage := maxi(
 		1,
@@ -8899,16 +8947,56 @@ func _try_cast_sage_ice_pillar() -> void:
 			* _get_sage_skill_damage_multiplier()
 		))
 	)
-	pillar.global_position = target.global_position
-	pillar.call(
-		"setup",
-		damage,
-		maxf(float(skill.get("duration", 4.0)), 0.1),
-		effect_diameter * 0.5,
-		clampf(float(skill.get("slow_multiplier", 0.80)), 0.1, 1.0),
-		maxf(float(skill.get("collision_radius", 34.0)), 8.0),
-		self
-	)
+	var cast_position := target.global_position
+	var cast_direction := global_position.direction_to(cast_position)
+	if cast_direction.length_squared() <= 0.001:
+		cast_direction = Vector2.RIGHT
+	var wall_direction := cast_direction.orthogonal().normalized()
+	var glacier_wall_stacks := _get_sage_augment_stacks("sage_glacier_wall")
+	var spawned_any := false
+	for pillar_index in range(1 + glacier_wall_stacks):
+		var pillar := _acquire_projectile(
+			SAGE_ICE_PILLAR_SCENE,
+			"sage_ice_pillar"
+		)
+		if pillar == null:
+			continue
+		var pillar_position := cast_position
+		var pillar_damage := damage
+		if pillar_index > 0:
+			var side := -1.0 if pillar_index % 2 == 1 else 1.0
+			var row := float(ceili(float(pillar_index) / 2.0))
+			pillar_position += (
+				wall_direction
+				* side
+				* row
+				* effect_diameter
+				* 0.72
+			)
+			pillar_damage = maxi(1, int(round(float(damage) * 0.65)))
+		pillar_position.x = clampf(
+			pillar_position.x,
+			FIELD_MARGIN,
+			battlefield_size.x - FIELD_MARGIN
+		)
+		pillar_position.y = clampf(
+			pillar_position.y,
+			FIELD_MARGIN,
+			battlefield_size.y - FIELD_MARGIN
+		)
+		pillar.global_position = pillar_position
+		pillar.call(
+			"setup",
+			pillar_damage,
+			maxf(float(skill.get("duration", 4.0)), 0.1),
+			effect_diameter * 0.5,
+			clampf(float(skill.get("slow_multiplier", 0.80)), 0.1, 1.0),
+			maxf(float(skill.get("collision_radius", 34.0)), 8.0),
+			self
+		)
+		spawned_any = true
+	if not spawned_any:
+		return
 
 	ultimate_charge = maxf(ultimate_charge - gauge_cost, 0.0)
 	sage_skill1_cooldown_timer = maxf(float(skill.get("cooldown", 25.0)), 0.1)
@@ -8936,7 +9024,11 @@ func _try_cast_sage_radiance_singularity() -> bool:
 
 	ultimate_charge = maxf(ultimate_charge - gauge_cost, 0.0)
 	sage_skill2_cooldown_timer = maxf(float(skill.get("cooldown", 45.0)), 0.1)
-	sage_radiance_launch_remaining = maxi(int(skill.get("orb_count", 10)), 1)
+	sage_radiance_launch_remaining = maxi(
+		int(skill.get("orb_count", 10))
+		+ _get_sage_augment_stacks("sage_radiance_split") * 2,
+		1
+	)
 	sage_radiance_launch_timer = 0.0
 	attack_timer = maxf(attack_timer, 0.35)
 	attack_pose_timer = maxf(attack_pose_timer, 0.42)
@@ -8962,6 +9054,29 @@ func _launch_sage_radiance_orb() -> void:
 	)
 	var travel_distance := randf_range(min_distance, max_distance)
 	var destination := global_position + direction * travel_distance
+	var tracked_target: Node2D = null
+	if _get_sage_augment_stacks("sage_radiance_split") > 0:
+		var monster_nodes := _get_monster_nodes_cached()
+		var monster_count := monster_nodes.size()
+		for offset in range(monster_count):
+			var candidate_index := (
+				sage_radiance_target_cursor + offset
+			) % maxi(monster_count, 1)
+			var candidate := monster_nodes[candidate_index] as Node2D
+			if (
+				not is_instance_valid(candidate)
+				or candidate.is_queued_for_deletion()
+			):
+				continue
+			var hp_value = candidate.get("current_hp")
+			if hp_value != null and int(hp_value) <= 0:
+				continue
+			tracked_target = candidate
+			destination = candidate.global_position
+			sage_radiance_target_cursor = (
+				candidate_index + 1
+			) % maxi(monster_count, 1)
+			break
 	destination.x = clampf(
 		destination.x,
 		FIELD_MARGIN,
@@ -9005,7 +9120,8 @@ func _launch_sage_radiance_orb() -> void:
 		clampf(float(skill.get("slow_multiplier", 0.85)), 0.1, 1.0),
 		maxf(float(skill.get("slow_duration", 2.0)), 0.0),
 		orb_scale,
-		self
+		self,
+		tracked_target
 	)
 
 
@@ -9045,11 +9161,24 @@ func _try_cast_sage_annihilation() -> bool:
 	point.call(
 		"setup",
 		self,
-		maxf(float(skill.get("duration", 15.0)), 0.1),
-		maxf(float(skill.get("effect_diameter", 400.0)) * 0.5, 1.0),
+		maxf(
+			float(skill.get("duration", 15.0))
+			+ 0.6 * float(_get_sage_augment_stacks("sage_event_horizon")),
+			0.1
+		),
+		maxf(
+			float(skill.get("effect_diameter", 400.0))
+			* 0.5
+			* (1.0 + 0.12 * float(_get_sage_augment_stacks("sage_event_horizon"))),
+			1.0
+		),
 		damage,
 		maxf(float(skill.get("pull_interval", 0.10)), 0.05),
-		maxf(float(skill.get("pull_step", 10.0)), 0.0),
+		maxf(
+			float(skill.get("pull_step", 10.0))
+			* (1.0 + 0.08 * float(_get_sage_augment_stacks("sage_event_horizon"))),
+			0.0
+		),
 		maxf(float(skill.get("damage_interval", 0.50)), 0.05),
 		clampf(float(skill.get("execution_hp_ratio", 0.10)), 0.0, 1.0),
 		maxf(float(skill.get("visual_scale", 1.05)), 0.05),
@@ -9115,7 +9244,11 @@ func _launch_sage_starlight_volley(skill: Dictionary) -> void:
 	if skill.is_empty():
 		return
 
-	var meteor_count := maxi(int(skill.get("meteors_per_volley", 3)), 1)
+	var meteor_count := maxi(
+		int(skill.get("meteors_per_volley", 3))
+		+ _get_sage_augment_stacks("sage_constellation_chain"),
+		1
+	)
 	var spawn_radius := maxf(
 		float(skill.get("spawn_diameter", 1200.0)) * 0.5,
 		1.0
@@ -9308,7 +9441,10 @@ func _get_sage_condensation_cooldown_reduction() -> float:
 
 func _get_sage_condensation_cooldown_rate() -> float:
 	var reduction := _get_sage_condensation_cooldown_reduction()
-	return 1.0 / maxf(1.0 - reduction, 0.10)
+	return (
+		1.0 / maxf(1.0 - reduction, 0.10)
+		* (1.0 + 0.05 * float(_get_sage_augment_stacks("sage_multicast")))
+	)
 
 
 func _get_sage_skill_damage_multiplier() -> float:
@@ -9339,6 +9475,7 @@ func _get_sage_skill_damage_multiplier() -> float:
 			float(skill6.get("skill_damage_bonus_ratio", 0.10)),
 			0.0
 		)
+	bonus_ratio += 0.08 * float(_get_sage_augment_stacks("sage_multicast"))
 
 	return 1.0 + bonus_ratio
 
@@ -14920,6 +15057,20 @@ func _build_ai_context() -> Dictionary:
 	var purifier_cleansing_target_count := 1
 	var purifier_crown_stack_ratio := 0.0
 	var purifier_protection_breaks := 0
+	var sage_condensation_ratio := 0.0
+	if hero_archetype == "grand_sage_astra":
+		var sage_skill3_value = sage_config.get("skill_3", {})
+		var sage_skill3: Dictionary = (
+			sage_skill3_value
+			if typeof(sage_skill3_value) == TYPE_DICTIONARY
+			else {}
+		)
+		sage_condensation_ratio = clampf(
+			float(sage_condensation_stacks)
+			/ float(maxi(int(sage_skill3.get("max_stacks", 8)), 1)),
+			0.0,
+			1.0
+		)
 	if hero_archetype == "cleric_purifier":
 		for orb in purifier_orbs:
 			if _is_purifier_orb_active(orb):
@@ -14987,6 +15138,7 @@ func _build_ai_context() -> Dictionary:
 		),
 		"purifier_crown_stack_ratio": purifier_crown_stack_ratio,
 		"purifier_protection_break_count": purifier_protection_breaks,
+		"sage_condensation_ratio": sage_condensation_ratio,
 		"berserker_gauge_ratio": (
 			ultimate_charge
 			/ maxf(
@@ -15117,7 +15269,7 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 			else:
 				set(target, next_value)
 
-		"alchemist_equivalent_exchange", "alchemist_chemical_support", "alchemist_failure_mother_success", "alchemist_quick_decision", "alchemist_compressed_gas", "alchemist_quick_preparation", "summoner_runtime_augment", "purifier_runtime_augment":
+		"alchemist_equivalent_exchange", "alchemist_chemical_support", "alchemist_failure_mother_success", "alchemist_quick_decision", "alchemist_compressed_gas", "alchemist_quick_preparation", "summoner_runtime_augment", "purifier_runtime_augment", "sage_runtime_augment":
 			# Runtime augments are read from build_counts at the authoritative
 			# combat decision points, so no mutable duplicate stat is required.
 			pass
@@ -18275,6 +18427,8 @@ func take_damage(amount: int, source: Node = null) -> bool:
 				0.0,
 				0.90
 			)
+	if hero_archetype == "grand_sage_astra":
+		raw_damage = _apply_sage_mana_conversion(raw_damage)
 	var remaining_damage := raw_damage
 	var absorbed_damage := 0
 

@@ -27,6 +27,16 @@ const TAG_LABELS := {
 	"purifier_cleansing": "정화",
 	"purifier_crown": "용기의 왕관",
 	"purifier_protection": "신성보호",
+	"sage": "대현자",
+	"sage_skill": "대현자 스킬",
+	"sage_condensation": "마력응축",
+	"starlight": "스타라이트",
+	"annihilation": "소멸",
+	"radiance": "광휘",
+	"ice": "빙결",
+	"control": "제어",
+	"basic_attack": "기본공격",
+	"single_target": "단일 대상",
 }
 
 const AUGMENTS = [
@@ -848,6 +858,116 @@ const AUGMENTS = [
 		"ai_rules": [
 			{"source": "recent_events_linear", "weight": 0.07, "cap": 1.2},
 			{"source": "nearby_linear", "weight": 0.35, "cap": 2.4}
+		]
+	},
+	{
+		"id": "sage_multicast",
+		"name": "다중시전",
+		"description": "대현자의 모든 공격 스킬 피해가 중첩당 8% 증가하고 스킬 재사용 대기시간 회복 속도가 중첩당 5% 증가. 최대 2중첩",
+		"base_score": 7.4,
+		"max_stack": 2,
+		"tags": ["sage", "sage_skill", "damage", "growth"],
+		"effects": [{"op": "sage_runtime_augment"}],
+		"ai_rules": [
+			{"source": "total_count_min", "value": 6, "bonus": 1.4},
+			{"source": "recent_events_linear", "weight": 0.09, "cap": 2.0},
+			{"source": "current_role_ratio", "key": "swarm", "weight": 1.1}
+		],
+		"synergy_rules": [
+			{"source": "build_tag_stacks", "key": "sage_skill", "weight": 0.32, "cap": 2.56}
+		]
+	},
+	{
+		"id": "sage_glacier_wall",
+		"name": "빙하벽",
+		"description": "빙점폭발이 대상과 용사를 잇는 방향에 수직인 빙하 기둥을 중첩당 1개 추가 생성. 추가 기둥 피해는 65%. 최대 5중첩",
+		"base_score": 7.2,
+		"max_stack": 5,
+		"tags": ["sage", "sage_skill", "ice", "area", "control"],
+		"effects": [{"op": "sage_runtime_augment"}],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.48, "cap": 4.8},
+			{"source": "current_role_ratio", "key": "swarm", "weight": 2.8},
+			{"source": "recent_role_ratio", "key": "swarm", "weight": 2.4},
+			{"source": "recent_events_linear", "weight": 0.07, "cap": 1.4}
+		]
+	},
+	{
+		"id": "sage_radiance_split",
+		"name": "광휘분열",
+		"description": "광휘의 특이점 구체가 중첩당 2개 증가하고, 구체가 현재 생존한 서로 다른 적을 순환 추적. 최대 5중첩",
+		"base_score": 7.1,
+		"max_stack": 5,
+		"tags": ["sage", "sage_skill", "radiance", "area", "projectile"],
+		"effects": [{"op": "sage_runtime_augment"}],
+		"ai_rules": [
+			{"source": "total_count_min", "value": 8, "bonus": 2.4},
+			{"source": "current_role_ratio", "key": "swarm", "weight": 3.0},
+			{"source": "recent_role_ratio", "key": "swarm", "weight": 2.0},
+			{"source": "total_count_max", "value": 2, "bonus": -2.8}
+		]
+	},
+	{
+		"id": "sage_constellation_chain",
+		"name": "성좌연쇄",
+		"description": "스타라이트가 매 일제사격마다 중첩당 별똥별 1개를 추가 낙하시킴. 최대 5중첩",
+		"base_score": 7.3,
+		"max_stack": 5,
+		"tags": ["sage", "sage_skill", "starlight", "area", "damage"],
+		"effects": [{"op": "sage_runtime_augment"}],
+		"ai_rules": [
+			{"source": "total_count_min", "value": 5, "bonus": 1.5},
+			{"source": "recent_events_linear", "weight": 0.10, "cap": 2.4},
+			{"source": "current_role_ratio", "key": "swarm", "weight": 1.6},
+			{"source": "current_role_ratio", "key": "tank", "weight": 1.0}
+		]
+	},
+	{
+		"id": "sage_event_horizon",
+		"name": "사건의 지평선",
+		"description": "소멸의 반경이 중첩당 12%, 흡입 거리가 8%, 지속시간이 0.6초 증가. 최대 3중첩",
+		"base_score": 7.0,
+		"max_stack": 3,
+		"tags": ["sage", "sage_skill", "annihilation", "area", "control"],
+		"effects": [{"op": "sage_runtime_augment"}],
+		"ai_rules": [
+			{"source": "nearby_linear", "weight": 0.55, "cap": 5.5},
+			{"source": "current_role_ratio", "key": "swarm", "weight": 2.0},
+			{"source": "current_role_ratio", "key": "tank", "weight": 1.5},
+			{"source": "current_role_ratio", "key": "burst", "weight": 2.2},
+			{"source": "recent_role_ratio", "key": "burst", "weight": 1.4}
+		]
+	},
+	{
+		"id": "sage_celestial_pierce",
+		"name": "천체관통",
+		"description": "3번째 관통 기본공격의 피해가 중첩당 8%, 최대 사거리가 80 증가. 최대 7중첩",
+		"base_score": 7.0,
+		"max_stack": 7,
+		"tags": ["sage", "basic_attack", "projectile", "range", "single_target"],
+		"effects": [{"op": "sage_runtime_augment"}],
+		"ai_rules": [
+			{"source": "distance", "divisor": 180.0, "cap": 4.0},
+			{"source": "nearby_count_max", "value": 2, "bonus": 2.2},
+			{"source": "total_count_max", "value": 4, "bonus": 1.2},
+			{"source": "current_role_ratio", "key": "tank", "weight": 2.2},
+			{"source": "recent_role_ratio", "key": "tank", "weight": 1.4}
+		]
+	},
+	{
+		"id": "sage_mana_conversion",
+		"name": "마력치환",
+		"description": "피격으로 체력이 50% 이하가 될 때 마력응축 1스택을 소모해 중첩당 최대 HP의 3%만큼 피해를 흡수. 최대 3중첩",
+		"base_score": 6.9,
+		"max_stack": 3,
+		"tags": ["sage", "sage_condensation", "survival", "defense"],
+		"effects": [{"op": "sage_runtime_augment"}],
+		"ai_rules": [
+			{"source": "hp_missing", "weight": 5.0},
+			{"source": "context_linear", "key": "sage_condensation_ratio", "weight": 2.4, "cap": 2.4},
+			{"source": "current_role_ratio", "key": "tank", "weight": 1.6},
+			{"source": "current_role_ratio", "key": "burst", "weight": 2.4},
+			{"source": "recent_role_ratio", "key": "burst", "weight": 1.6}
 		]
 	},
 	{

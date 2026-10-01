@@ -1285,6 +1285,13 @@ const PROFILES = {
 			"exp_training",
 			"exp_magnet",
 			"long_reach",
+			"sage_multicast",
+			"sage_glacier_wall",
+			"sage_radiance_split",
+			"sage_constellation_chain",
+			"sage_event_horizon",
+			"sage_celestial_pierce",
+			"sage_mana_conversion",
 		],
 	},
 

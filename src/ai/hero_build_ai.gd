@@ -473,6 +473,10 @@ static func _describe_rule(rule: Dictionary, context: Dictionary) -> String:
 					)
 				"purifier_protection_break_count":
 					return "이번 전투 신성보호 파괴 %d회" % int(context_value)
+				"sage_condensation_ratio":
+					return "마력응축 누적 %.0f%%" % (
+						clampf(context_value, 0.0, 1.0) * 100.0
+					)
 			return "전용 상황 %s %.2f" % [
 				context_key,
 				context_value,

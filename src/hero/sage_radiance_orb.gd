@@ -23,6 +23,7 @@ var damage: int = 1
 var slow_multiplier: float = 0.85
 var slow_duration: float = 2.0
 var caster: Node2D
+var tracked_target: Node2D
 
 @onready var visual: AnimatedSprite2D = $Visual
 @onready var explosion_area: Area2D = $ExplosionArea
@@ -45,7 +46,8 @@ func setup(
 	new_slow_multiplier: float,
 	new_slow_duration: float,
 	new_visual_scale: float,
-	caster_node: Node2D
+	caster_node: Node2D,
+	new_tracked_target: Node2D = null
 ) -> void:
 	_build_frames()
 	destination = new_destination
@@ -56,6 +58,7 @@ func setup(
 	slow_multiplier = clampf(new_slow_multiplier, 0.1, 1.0)
 	slow_duration = maxf(new_slow_duration, 0.0)
 	caster = caster_node
+	tracked_target = new_tracked_target
 	_set_explosion_radius(explosion_radius)
 
 	state = OrbState.TRAVEL
@@ -77,6 +80,11 @@ func setup(
 func _physics_process(delta: float) -> void:
 	match state:
 		OrbState.TRAVEL:
+			if (
+				is_instance_valid(tracked_target)
+				and not tracked_target.is_queued_for_deletion()
+			):
+				destination = tracked_target.global_position
 			var offset := destination - global_position
 			var step := speed * delta
 			if offset.length_squared() <= step * step:
@@ -183,6 +191,7 @@ func _finish() -> void:
 
 func deactivate_for_pool() -> void:
 	caster = null
+	tracked_target = null
 	state = OrbState.INACTIVE
 	set_physics_process(false)
 	visible = false

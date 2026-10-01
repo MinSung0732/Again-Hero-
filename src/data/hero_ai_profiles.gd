@@ -175,6 +175,13 @@ const PROFILES = {
 			"pursuit": 0.20,
 			"slow_resistance": 0.25,
 			"long_reach": 0.35,
+			"sage_multicast": 0.25,
+			"sage_glacier_wall": 0.20,
+			"sage_radiance_split": 0.15,
+			"sage_constellation_chain": 0.20,
+			"sage_event_horizon": 0.10,
+			"sage_celestial_pierce": 0.30,
+			"sage_mana_conversion": 0.10,
 		},
 	},
 
