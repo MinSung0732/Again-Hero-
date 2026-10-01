@@ -739,9 +739,9 @@ func _apply_new_ui_assets() -> void:
 	var gold_plate := Control.new()
 	gold_plate.name = "HeaderGoldPlate"
 	gold_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	gold_plate.anchor_left = 0.02
+	gold_plate.anchor_left = 0.005
 	gold_plate.anchor_top = 0.0
-	gold_plate.anchor_right = 0.32
+	gold_plate.anchor_right = 0.305
 	gold_plate.anchor_bottom = 1.0
 	gold_plate.clip_contents = true
 	gold_plate.z_index = 0
@@ -750,9 +750,9 @@ func _apply_new_ui_assets() -> void:
 	var center_slot := Control.new()
 	center_slot.name = "HeaderCenterSlot"
 	center_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	center_slot.anchor_left = 0.34
+	center_slot.anchor_left = 0.31
 	center_slot.anchor_top = 0.0
-	center_slot.anchor_right = 0.66
+	center_slot.anchor_right = 0.69
 	center_slot.anchor_bottom = 1.0
 	center_slot.clip_contents = true
 	center_slot.z_index = 0
@@ -761,9 +761,9 @@ func _apply_new_ui_assets() -> void:
 	var progress_plate := Control.new()
 	progress_plate.name = "HeaderProgressPlate"
 	progress_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	progress_plate.anchor_left = 0.68
+	progress_plate.anchor_left = 0.695
 	progress_plate.anchor_top = 0.0
-	progress_plate.anchor_right = 0.98
+	progress_plate.anchor_right = 0.995
 	progress_plate.anchor_bottom = 1.0
 	progress_plate.clip_contents = true
 	progress_plate.z_index = 0
@@ -778,9 +778,9 @@ func _apply_new_ui_assets() -> void:
 		left_wing.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		left_wing.stretch_mode = TextureRect.STRETCH_SCALE
 		left_wing.anchor_left = 0.0
-		left_wing.anchor_top = 0.32
+		left_wing.anchor_top = 0.26
 		left_wing.anchor_right = 1.0
-		left_wing.anchor_bottom = 0.70
+		left_wing.anchor_bottom = 0.78
 		left_wing.z_index = 0
 		gold_plate.add_child(left_wing)
 
@@ -793,9 +793,9 @@ func _apply_new_ui_assets() -> void:
 		right_wing.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		right_wing.stretch_mode = TextureRect.STRETCH_SCALE
 		right_wing.anchor_left = 0.0
-		right_wing.anchor_top = 0.32
+		right_wing.anchor_top = 0.26
 		right_wing.anchor_right = 1.0
-		right_wing.anchor_bottom = 0.70
+		right_wing.anchor_bottom = 0.78
 		right_wing.z_index = 0
 		progress_plate.add_child(right_wing)
 
@@ -813,13 +813,13 @@ func _apply_new_ui_assets() -> void:
 	gold_title.anchor_right = 1.0
 	gold_title.anchor_bottom = 0.52
 	gold_title.offset_left = 58.0
-	gold_title.offset_top = -23.0
+	gold_title.offset_top = -29.0
 	gold_title.offset_right = -66.0
-	gold_title.offset_bottom = -3.0
+	gold_title.offset_bottom = -4.0
 	gold_title.clip_text = true
 	gold_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	gold_title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	gold_title.add_theme_font_size_override("font_size", 15)
+	gold_title.add_theme_font_size_override("font_size", 17)
 	gold_title.add_theme_color_override("font_color", Color("eee6f2"))
 	gold_title.add_theme_color_override("font_outline_color", Color("171027"))
 	gold_title.add_theme_constant_override("outline_size", 2)
@@ -837,11 +837,11 @@ func _apply_new_ui_assets() -> void:
 	gold_value.offset_left = 58.0
 	gold_value.offset_top = 0.0
 	gold_value.offset_right = -66.0
-	gold_value.offset_bottom = 26.0
+	gold_value.offset_bottom = 31.0
 	gold_value.clip_text = true
 	gold_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	gold_value.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	gold_value.add_theme_font_size_override("font_size", 20)
+	gold_value.add_theme_font_size_override("font_size", 23)
 	gold_value.add_theme_color_override("font_color", Color("ffe28a"))
 	gold_value.add_theme_color_override("font_outline_color", Color("171027"))
 	gold_value.add_theme_constant_override("outline_size", 2)
@@ -860,10 +860,10 @@ func _apply_new_ui_assets() -> void:
 		coin_icon.anchor_top = 0.52
 		coin_icon.anchor_right = 0.0
 		coin_icon.anchor_bottom = 0.52
-		coin_icon.offset_left = 18.0
-		coin_icon.offset_top = -14.0
-		coin_icon.offset_right = 46.0
-		coin_icon.offset_bottom = 14.0
+		coin_icon.offset_left = 16.0
+		coin_icon.offset_top = -17.0
+		coin_icon.offset_right = 50.0
+		coin_icon.offset_bottom = 17.0
 		coin_icon.z_index = 3
 		gold_plate.add_child(coin_icon)
 
@@ -878,10 +878,10 @@ func _apply_new_ui_assets() -> void:
 		plus_button.anchor_top = 0.52
 		plus_button.anchor_right = 1.0
 		plus_button.anchor_bottom = 0.52
-		plus_button.offset_left = -44.0
-		plus_button.offset_top = -13.0
+		plus_button.offset_left = -50.0
+		plus_button.offset_top = -16.0
 		plus_button.offset_right = -18.0
-		plus_button.offset_bottom = 13.0
+		plus_button.offset_bottom = 16.0
 		plus_button.tooltip_text = "상점"
 		plus_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		plus_button.z_index = 3
@@ -897,13 +897,13 @@ func _apply_new_ui_assets() -> void:
 	progress_title.anchor_right = 1.0
 	progress_title.anchor_bottom = 0.52
 	progress_title.offset_left = 72.0
-	progress_title.offset_top = -23.0
+	progress_title.offset_top = -29.0
 	progress_title.offset_right = -22.0
-	progress_title.offset_bottom = -3.0
+	progress_title.offset_bottom = -4.0
 	progress_title.clip_text = true
 	progress_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	progress_title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	progress_title.add_theme_font_size_override("font_size", 15)
+	progress_title.add_theme_font_size_override("font_size", 17)
 	progress_title.add_theme_color_override("font_color", Color("eee6f2"))
 	progress_title.add_theme_color_override("font_outline_color", Color("171027"))
 	progress_title.add_theme_constant_override("outline_size", 2)
@@ -921,11 +921,11 @@ func _apply_new_ui_assets() -> void:
 	progress_value.offset_left = 72.0
 	progress_value.offset_top = 0.0
 	progress_value.offset_right = -22.0
-	progress_value.offset_bottom = 26.0
+	progress_value.offset_bottom = 31.0
 	progress_value.clip_text = true
 	progress_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	progress_value.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	progress_value.add_theme_font_size_override("font_size", 20)
+	progress_value.add_theme_font_size_override("font_size", 23)
 	progress_value.add_theme_color_override("font_color", Color("ffe28a"))
 	progress_value.add_theme_color_override("font_outline_color", Color("171027"))
 	progress_value.add_theme_constant_override("outline_size", 2)
@@ -940,10 +940,10 @@ func _apply_new_ui_assets() -> void:
 		logo_backplate.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo_backplate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo_backplate.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo_backplate.anchor_left = 0.10
-		logo_backplate.anchor_top = 0.20
-		logo_backplate.anchor_right = 0.90
-		logo_backplate.anchor_bottom = 0.68
+		logo_backplate.anchor_left = 0.08
+		logo_backplate.anchor_top = 0.16
+		logo_backplate.anchor_right = 0.92
+		logo_backplate.anchor_bottom = 0.72
 		logo_backplate.z_index = 1
 		center_slot.add_child(logo_backplate)
 
@@ -957,9 +957,9 @@ func _apply_new_ui_assets() -> void:
 		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		logo.anchor_left = 0.0
-		logo.anchor_top = 0.10
+		logo.anchor_top = 0.06
 		logo.anchor_right = 1.0
-		logo.anchor_bottom = 0.73
+		logo.anchor_bottom = 0.76
 		logo.z_index = 2
 		center_slot.add_child(logo)
 
