@@ -1,0 +1,524 @@
+{
+  "source": "monster_spider_spritesheet.png",
+  "source_size": [
+    1983,
+    793
+  ],
+  "count": 24,
+  "canvas_size": [
+    420,
+    320
+  ],
+  "anchor_xy": [
+    210,
+    285
+  ],
+  "sequence": "idle, walk, attack, hit, dead; left to right per row",
+  "method": "No resizing. Frame silhouettes and nearby detached effect pixels are assigned by original source position; transparent common canvas.",
+  "frames": [
+    {
+      "order": 1,
+      "file": "idle_01.png",
+      "action": "idle",
+      "action_frame": 1,
+      "source_bbox_xyxy": [
+        58,
+        24,
+        272,
+        167
+      ],
+      "source_anchor_xy": [
+        165,
+        165
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 20419
+    },
+    {
+      "order": 2,
+      "file": "idle_02.png",
+      "action": "idle",
+      "action_frame": 2,
+      "source_bbox_xyxy": [
+        332,
+        23,
+        556,
+        162
+      ],
+      "source_anchor_xy": [
+        445,
+        165
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 20041
+    },
+    {
+      "order": 3,
+      "file": "idle_03.png",
+      "action": "idle",
+      "action_frame": 3,
+      "source_bbox_xyxy": [
+        630,
+        23,
+        848,
+        164
+      ],
+      "source_anchor_xy": [
+        740,
+        165
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 20062
+    },
+    {
+      "order": 4,
+      "file": "idle_04.png",
+      "action": "idle",
+      "action_frame": 4,
+      "source_bbox_xyxy": [
+        926,
+        22,
+        1137,
+        166
+      ],
+      "source_anchor_xy": [
+        1035,
+        165
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 20113
+    },
+    {
+      "order": 5,
+      "file": "walk_01.png",
+      "action": "walk",
+      "action_frame": 1,
+      "source_bbox_xyxy": [
+        40,
+        192,
+        279,
+        337
+      ],
+      "source_anchor_xy": [
+        160,
+        339
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 21001
+    },
+    {
+      "order": 6,
+      "file": "walk_02.png",
+      "action": "walk",
+      "action_frame": 2,
+      "source_bbox_xyxy": [
+        342,
+        192,
+        573,
+        337
+      ],
+      "source_anchor_xy": [
+        455,
+        339
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 20766
+    },
+    {
+      "order": 7,
+      "file": "walk_03.png",
+      "action": "walk",
+      "action_frame": 3,
+      "source_bbox_xyxy": [
+        630,
+        193,
+        871,
+        340
+      ],
+      "source_anchor_xy": [
+        750,
+        339
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 21363
+    },
+    {
+      "order": 8,
+      "file": "walk_04.png",
+      "action": "walk",
+      "action_frame": 4,
+      "source_bbox_xyxy": [
+        935,
+        193,
+        1175,
+        333
+      ],
+      "source_anchor_xy": [
+        1050,
+        339
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 20557
+    },
+    {
+      "order": 9,
+      "file": "walk_05.png",
+      "action": "walk",
+      "action_frame": 5,
+      "source_bbox_xyxy": [
+        1238,
+        192,
+        1468,
+        337
+      ],
+      "source_anchor_xy": [
+        1350,
+        339
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 20803
+    },
+    {
+      "order": 10,
+      "file": "walk_06.png",
+      "action": "walk",
+      "action_frame": 6,
+      "source_bbox_xyxy": [
+        1524,
+        192,
+        1757,
+        337
+      ],
+      "source_anchor_xy": [
+        1640,
+        339
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 20895
+    },
+    {
+      "order": 11,
+      "file": "attack_01.png",
+      "action": "attack",
+      "action_frame": 1,
+      "source_bbox_xyxy": [
+        52,
+        365,
+        272,
+        514
+      ],
+      "source_anchor_xy": [
+        160,
+        517
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 21274
+    },
+    {
+      "order": 12,
+      "file": "attack_02.png",
+      "action": "attack",
+      "action_frame": 2,
+      "source_bbox_xyxy": [
+        325,
+        365,
+        565,
+        518
+      ],
+      "source_anchor_xy": [
+        450,
+        517
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 23437
+    },
+    {
+      "order": 13,
+      "file": "attack_03.png",
+      "action": "attack",
+      "action_frame": 3,
+      "source_bbox_xyxy": [
+        610,
+        370,
+        851,
+        517
+      ],
+      "source_anchor_xy": [
+        740,
+        517
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 22403
+    },
+    {
+      "order": 14,
+      "file": "attack_04.png",
+      "action": "attack",
+      "action_frame": 4,
+      "source_bbox_xyxy": [
+        898,
+        373,
+        1177,
+        514
+      ],
+      "source_anchor_xy": [
+        1035,
+        517
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 22525
+    },
+    {
+      "order": 15,
+      "file": "attack_05.png",
+      "action": "attack",
+      "action_frame": 5,
+      "source_bbox_xyxy": [
+        1251,
+        365,
+        1481,
+        517
+      ],
+      "source_anchor_xy": [
+        1350,
+        517
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 22045
+    },
+    {
+      "order": 16,
+      "file": "attack_06.png",
+      "action": "attack",
+      "action_frame": 6,
+      "source_bbox_xyxy": [
+        1524,
+        365,
+        1730,
+        518
+      ],
+      "source_anchor_xy": [
+        1630,
+        517
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 21076
+    },
+    {
+      "order": 17,
+      "file": "attack_07.png",
+      "action": "attack",
+      "action_frame": 7,
+      "source_bbox_xyxy": [
+        1758,
+        370,
+        1971,
+        518
+      ],
+      "source_anchor_xy": [
+        1870,
+        517
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 20974
+    },
+    {
+      "order": 18,
+      "file": "hit_01.png",
+      "action": "hit",
+      "action_frame": 1,
+      "source_bbox_xyxy": [
+        52,
+        538,
+        271,
+        685
+      ],
+      "source_anchor_xy": [
+        160,
+        681
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 20459
+    },
+    {
+      "order": 19,
+      "file": "hit_02.png",
+      "action": "hit",
+      "action_frame": 2,
+      "source_bbox_xyxy": [
+        339,
+        548,
+        564,
+        681
+      ],
+      "source_anchor_xy": [
+        450,
+        681
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 19909
+    },
+    {
+      "order": 20,
+      "file": "hit_03.png",
+      "action": "hit",
+      "action_frame": 3,
+      "source_bbox_xyxy": [
+        633,
+        564,
+        866,
+        675
+      ],
+      "source_anchor_xy": [
+        750,
+        681
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 17329
+    },
+    {
+      "order": 21,
+      "file": "dead_01.png",
+      "action": "dead",
+      "action_frame": 1,
+      "source_bbox_xyxy": [
+        56,
+        686,
+        273,
+        793
+      ],
+      "source_anchor_xy": [
+        160,
+        787
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 15279
+    },
+    {
+      "order": 22,
+      "file": "dead_02.png",
+      "action": "dead",
+      "action_frame": 2,
+      "source_bbox_xyxy": [
+        343,
+        695,
+        575,
+        793
+      ],
+      "source_anchor_xy": [
+        455,
+        787
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 14768
+    },
+    {
+      "order": 23,
+      "file": "dead_03.png",
+      "action": "dead",
+      "action_frame": 3,
+      "source_bbox_xyxy": [
+        645,
+        691,
+        875,
+        793
+      ],
+      "source_anchor_xy": [
+        755,
+        787
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 15427
+    },
+    {
+      "order": 24,
+      "file": "dead_04.png",
+      "action": "dead",
+      "action_frame": 4,
+      "source_bbox_xyxy": [
+        935,
+        695,
+        1194,
+        793
+      ],
+      "source_anchor_xy": [
+        1065,
+        787
+      ],
+      "output_anchor_xy": [
+        210,
+        285
+      ],
+      "nontransparent_pixels": 16271
+    }
+  ]
+}
