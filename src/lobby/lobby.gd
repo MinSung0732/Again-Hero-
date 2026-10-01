@@ -644,44 +644,10 @@ func _apply_header_card_skin(header: Control) -> void:
 	if header == null:
 		return
 
-	# PanelContainer에 NinePatchRect를 자식으로 넣으면 해당 텍스처의 최소 크기가
-	# Header의 최소 크기 계산에 참여해 Content 전체를 아래로 밀 수 있다.
-	# 프레임 이미지는 child Control이 아니라 panel StyleBox로 적용해 레이아웃과 분리한다.
-	var old_skin := header.get_node_or_null("HeaderCardSkin")
-	if old_skin != null:
-		old_skin.queue_free()
-
-	var texture := _load_png_texture_cropped(UI_HEADER_CARD_PATH)
-	if texture == null:
-		return
-
-	var texture_size := texture.get_size()
-	# ui1 원본은 2172x724의 가로형 프레임이다.
-	# 이전 10% / 22% 마진은 158px 높이의 실제 Header보다 상하 고정 영역이
-	# 커져 9-slice가 중앙에서 눌리며 가로 금색 띠처럼 보였다.
-	# 실제 Header 높이 안에 top+bottom 고정 영역이 충분히 들어오도록 축소한다.
-	var margin_x := maxi(1, int(round(texture_size.x * 0.045)))
-	var margin_y := maxi(1, int(round(texture_size.y * 0.075)))
-
-	var header_skin := StyleBoxTexture.new()
-	header_skin.texture = texture
-	header_skin.texture_margin_left = margin_x
-	header_skin.texture_margin_top = margin_y
-	header_skin.texture_margin_right = margin_x
-	header_skin.texture_margin_bottom = margin_y
-	header_skin.content_margin_left = 0.0
-	header_skin.content_margin_top = 0.0
-	header_skin.content_margin_right = 0.0
-	header_skin.content_margin_bottom = 0.0
-
-	# PC 마감: Header 레이아웃 크기는 그대로 두고 프레임 그림만 살짝
-	# 바깥으로 확장한다. Content/StageCard의 Y 좌표에는 영향이 없다.
-	header_skin.expand_margin_left = 6.0
-	header_skin.expand_margin_top = 4.0
-	header_skin.expand_margin_right = 6.0
-	header_skin.expand_margin_bottom = 14.0
-
-	header.add_theme_stylebox_override("panel", header_skin)
+	# The previous full-width ui1 frame forced the logo, resource text and
+	# decorative rails into the same strip. Keep the Header layout footprint,
+	# but let dedicated left/right HUD plates and the center logo own the art.
+	header.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 
 
 func _apply_new_ui_assets() -> void:
@@ -689,16 +655,87 @@ func _apply_new_ui_assets() -> void:
 	# the verified StageCard/content layout.
 	_apply_content_card_skin($SafeArea/Layout/Content/ContentFrame)
 
-	var title_label := $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/Title
-	if title_label != null:
-		title_label.visible = false
+	title_label.visible = false
 
-	var header := $SafeArea/Layout/Header
+	var header := $SafeArea/Layout/Header as PanelContainer
 	_apply_header_card_skin(header)
 
-	var old_logo := header.get_node_or_null("HeaderLogo")
-	if old_logo != null:
-		old_logo.queue_free()
+	var header_margin := $SafeArea/Layout/Header/HeaderMargin as MarginContainer
+	header_margin.visible = false
+
+	for stale_name in ["HeaderGoldPlate", "HeaderProgressPlate", "HeaderLogo"]:
+		var stale := header.get_node_or_null(stale_name)
+		if stale != null:
+			header.remove_child(stale)
+			stale.free()
+
+	var side_plate_style := _make_hud_panel_style(
+		Color(0.030, 0.020, 0.050, 0.96),
+		Color(0.86, 0.61, 0.20, 0.96),
+		2,
+		7
+	)
+	side_plate_style.anti_aliasing = false
+
+	var gold_plate := Panel.new()
+	gold_plate.name = "HeaderGoldPlate"
+	gold_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	gold_plate.anchor_left = 0.015
+	gold_plate.anchor_top = 0.22
+	gold_plate.anchor_right = 0.355
+	gold_plate.anchor_bottom = 0.62
+	gold_plate.add_theme_stylebox_override("panel", side_plate_style)
+	gold_plate.z_index = 1
+	header.add_child(gold_plate)
+
+	var progress_plate := Panel.new()
+	progress_plate.name = "HeaderProgressPlate"
+	progress_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	progress_plate.anchor_left = 0.645
+	progress_plate.anchor_top = 0.22
+	progress_plate.anchor_right = 0.985
+	progress_plate.anchor_bottom = 0.62
+	progress_plate.add_theme_stylebox_override("panel", side_plate_style.duplicate())
+	progress_plate.z_index = 1
+	header.add_child(progress_plate)
+
+	for plate in [gold_plate, progress_plate]:
+		var top_glint := ColorRect.new()
+		top_glint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		top_glint.color = Color(1.0, 0.78, 0.28, 0.52)
+		top_glint.anchor_left = 0.08
+		top_glint.anchor_top = 0.0
+		top_glint.anchor_right = 0.92
+		top_glint.anchor_bottom = 0.0
+		top_glint.offset_top = 2.0
+		top_glint.offset_bottom = 4.0
+		plate.add_child(top_glint)
+
+	var resource_parent := resource_label.get_parent()
+	if resource_parent != gold_plate:
+		resource_parent.remove_child(resource_label)
+		gold_plate.add_child(resource_label)
+	resource_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	resource_label.offset_left = 18.0
+	resource_label.offset_top = 2.0
+	resource_label.offset_right = -78.0
+	resource_label.offset_bottom = -2.0
+	resource_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	resource_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	resource_label.z_index = 2
+
+	var progress_parent := progress_label.get_parent()
+	if progress_parent != progress_plate:
+		progress_parent.remove_child(progress_label)
+		progress_plate.add_child(progress_label)
+	progress_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	progress_label.offset_left = 78.0
+	progress_label.offset_top = 2.0
+	progress_label.offset_right = -18.0
+	progress_label.offset_bottom = -2.0
+	progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	progress_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	progress_label.z_index = 2
 
 	var logo_texture := _load_png_texture_direct(UI_LOGO_PATH)
 	if logo_texture != null:
@@ -709,13 +746,12 @@ func _apply_new_ui_assets() -> void:
 		logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo.set_anchors_preset(Control.PRESET_TOP_WIDE)
-		logo.offset_left = 104.0
-		logo.offset_top = 0.0
-		logo.offset_right = -104.0
-		logo.offset_bottom = 94.0
+		logo.anchor_left = 0.205
+		logo.anchor_top = 0.0
+		logo.anchor_right = 0.795
+		logo.anchor_bottom = 0.76
+		logo.z_index = 4
 		header.add_child(logo)
-		header.move_child(logo, 0)
 
 	var stage_card := $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard
 	# Dungeon entry uses a dedicated clean outer frame.
@@ -1258,20 +1294,11 @@ func _apply_lobby_visual_polish() -> void:
 	var nav_buttons := $BottomNav/NavMargin/NavButtons as HBoxContainer
 	nav_buttons.add_theme_constant_override("separation", 6)
 
-	var header_margin := $SafeArea/Layout/Header/HeaderMargin as MarginContainer
-	header_margin.add_theme_constant_override("margin_left", 72)
-	header_margin.add_theme_constant_override("margin_top", 116)
-	header_margin.add_theme_constant_override("margin_right", 72)
-	header_margin.add_theme_constant_override("margin_bottom", 8)
-
-	var resource_row := $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow as HBoxContainer
-	resource_row.add_theme_constant_override("separation", 36)
-
-	resource_label.add_theme_font_size_override("font_size", 21)
-	resource_label.add_theme_color_override("font_color", Color("f3cf72"))
+	resource_label.add_theme_font_size_override("font_size", 22)
+	resource_label.add_theme_color_override("font_color", Color("f5d16d"))
 	resource_label.remove_theme_stylebox_override("normal")
-	progress_label.add_theme_font_size_override("font_size", 20)
-	progress_label.add_theme_color_override("font_color", Color("d8c8df"))
+	progress_label.add_theme_font_size_override("font_size", 21)
+	progress_label.add_theme_color_override("font_color", Color("ded1e4"))
 	progress_label.remove_theme_stylebox_override("normal")
 
 	_set_lobby_label_style(
