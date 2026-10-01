@@ -8,6 +8,8 @@ const MONSTERS := {
 		"id": "slime",
 		"name": "슬라임",
 		"role": "swarm",
+		"species": "liquid",
+		"grade": "normal",
 		"base_cost": 3.0,
 		"summon_exp": 3.0,
 		"base_stats": {
@@ -43,12 +45,28 @@ const MONSTERS := {
 				"death": {"prefix": "death", "count": 4, "fps": 10.0, "loop": false},
 			},
 		},
+		"elite_skills": [
+			{
+				"id": "elite_slime_proliferation",
+				"name": "분열증식",
+				"initial_cooldown": 3.0,
+				"cooldown": 20.0,
+				"spawn_count": 12,
+				"spawn_interval": 0.25,
+				"launch_distance_min": 105.0,
+				"launch_distance_max": 190.0,
+				"arc_duration": 0.55,
+				"arc_height": 82.0,
+			},
+		],
 		"scene": preload("res://src/monsters/Slime.tscn"),
 	},
 	"spider": {
 		"id": "spider",
 		"name": "거미",
 		"role": "controller",
+		"species": "beast",
+		"grade": "normal",
 		"base_cost": 7.0,
 		"summon_exp": 7.0,
 		"base_stats": {
@@ -85,12 +103,28 @@ const MONSTERS := {
 				"death": {"start": 19, "count": 4, "fps": 10.0, "loop": false},
 			},
 		},
+		"elite_skills": [
+			{
+				"id": "elite_spider_web_nest",
+				"name": "거미집",
+				"initial_cooldown": 3.0,
+				"cooldown": 25.0,
+				"duration": 5.0,
+				"radius": 250.0,
+				"hero_slow_multiplier": 0.50,
+				"monster_speed_multiplier": 1.15,
+				"tick_interval": 0.20,
+				"effect_path": "res://assets/art/monsters/spider/frames/effect/frame_07.png",
+			},
+		],
 		"scene": preload("res://src/monsters/Spider.tscn"),
 	},
 	"orc": {
 		"id": "orc",
 		"name": "오크",
 		"role": "tank",
+		"species": "beast",
+		"grade": "normal",
 		"base_cost": 18.0,
 		"summon_exp": 18.0,
 		"base_stats": {
@@ -126,12 +160,27 @@ const MONSTERS := {
 				"death": {"start": 21, "count": 3, "fps": 10.0, "loop": false},
 			},
 		},
+		"elite_skills": [
+			{
+				"id": "elite_orc_frenzy",
+				"name": "광분",
+				"initial_cooldown": 0.0,
+				"cooldown": 20.0,
+				"charge_speed_multiplier": 5.0,
+				"max_charge_duration": 2.5,
+				"damage_multiplier": 1.50,
+				"slow_multiplier": 0.01,
+				"slow_duration": 1.0,
+			},
+		],
 		"scene": preload("res://src/monsters/Orc.tscn"),
 	},
 	"bomb_rat": {
 		"id": "bomb_rat",
 		"name": "폭탄쥐",
 		"role": "burst",
+		"species": "beast",
+		"grade": "normal",
 		"base_cost": 12.0,
 		"summon_exp": 12.0,
 		"base_stats": {
@@ -167,6 +216,17 @@ const MONSTERS := {
 				"death": {"start": 17, "count": 4, "fps": 10.0, "loop": false},
 			},
 		},
+		"elite_skills": [
+			{
+				"id": "elite_bomb_rat_vibration",
+				"name": "진동감지",
+				"initial_cooldown": 0.0,
+				"cooldown": 20.0,
+				"duration": 4.0,
+				"move_speed_multiplier": 3.0,
+				"shield_max_hp_multiplier": 1.50,
+			},
+		],
 		"scene": preload("res://src/monsters/BombRat.tscn"),
 	},
 }
@@ -176,6 +236,15 @@ const ROLE_LABELS := {
 	"controller": "제어",
 	"tank": "탱커",
 	"burst": "폭발",
+}
+
+const SPECIES_LABELS := {
+	"beast": "짐승",
+	"liquid": "액체",
+}
+
+const GRADE_LABELS := {
+	"normal": "일반",
 }
 
 static func get_monster(monster_id: String) -> Dictionary:
@@ -188,6 +257,13 @@ static func get_elite_visual_profile(monster_id: String) -> Dictionary:
 	if typeof(profile) != TYPE_DICTIONARY:
 		return {}
 	return Dictionary(profile).duplicate(true)
+
+static func get_elite_skills(monster_id: String) -> Array:
+	var data: Dictionary = MONSTERS.get(monster_id, {})
+	var raw_skills = data.get("elite_skills", [])
+	if typeof(raw_skills) != TYPE_ARRAY:
+		return []
+	return Array(raw_skills).duplicate(true)
 
 static func get_ground_shadow_config(monster_id: String) -> Dictionary:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
@@ -209,6 +285,14 @@ static func get_role(monster_id: String) -> String:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
 	return String(data.get("role", "unknown"))
 
+static func get_species(monster_id: String) -> String:
+	var data: Dictionary = MONSTERS.get(monster_id, {})
+	return String(data.get("species", "unknown"))
+
+static func get_grade(monster_id: String) -> String:
+	var data: Dictionary = MONSTERS.get(monster_id, {})
+	return String(data.get("grade", "normal"))
+
 static func get_base_cost(monster_id: String) -> float:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
 	return float(data.get("base_cost", 0.0))
@@ -226,6 +310,12 @@ static func get_base_stats(monster_id: String) -> Dictionary:
 
 static func get_role_label(role_id: String) -> String:
 	return String(ROLE_LABELS.get(role_id, role_id))
+
+static func get_species_label(species_id: String) -> String:
+	return String(SPECIES_LABELS.get(species_id, species_id))
+
+static func get_grade_label(grade_id: String) -> String:
+	return String(GRADE_LABELS.get(grade_id, grade_id))
 
 static func get_ids() -> Array[String]:
 	var result: Array[String] = []

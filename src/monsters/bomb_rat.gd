@@ -260,8 +260,26 @@ func take_damage(amount: int) -> void:
 	if current_hp <= 0 or dying:
 		return
 
+	var remaining_damage := maxi(amount, 0)
+	var elite_shield_hp := maxi(
+		int(get_meta("elite_shield_hp", 0)),
+		0
+	)
+	if elite_shield_hp > 0 and remaining_damage > 0:
+		var absorbed := mini(elite_shield_hp, remaining_damage)
+		elite_shield_hp -= absorbed
+		remaining_damage -= absorbed
+		set_meta("elite_shield_hp", elite_shield_hp)
+		hit_flash_timer = 0.10
+		_ensure_hit_flash_material()
+		if hit_flash_material != null:
+			hit_flash_material.set_shader_parameter("flash_strength", 1.0)
+		queue_redraw()
+		if remaining_damage <= 0:
+			return
+
 	var previous_hp := current_hp
-	current_hp = maxi(current_hp - amount, 0)
+	current_hp = maxi(current_hp - remaining_damage, 0)
 	var applied_damage := previous_hp - current_hp
 	DAMAGE_NUMBERS.show(self, applied_damage)
 	hit_flash_timer = 0.10
@@ -666,3 +684,28 @@ func _draw() -> void:
 		Color(0.3, 0.9, 0.45),
 		true
 	)
+
+	var elite_shield_hp := maxf(
+		float(get_meta("elite_shield_hp", 0.0)),
+		0.0
+	)
+	var elite_shield_max := maxf(
+		float(get_meta("elite_shield_max_hp", 0.0)),
+		0.0
+	)
+	if elite_shield_hp > 0.0 and elite_shield_max > 0.0:
+		var shield_ratio := clampf(
+			elite_shield_hp / elite_shield_max,
+			0.0,
+			1.0
+		)
+		draw_rect(
+			Rect2(-bar_width / 2.0, -57.0, bar_width, 5.0),
+			Color(0.10, 0.15, 0.20),
+			true
+		)
+		draw_rect(
+			Rect2(-bar_width / 2.0, -57.0, bar_width * shield_ratio, 5.0),
+			Color(0.35, 0.80, 1.0),
+			true
+		)

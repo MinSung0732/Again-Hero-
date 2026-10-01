@@ -41,6 +41,9 @@ const STAGE_DIRECTOR := preload("res://src/systems/stage_director.gd")
 const MUTATION_DIRECTOR := preload("res://src/systems/mutation_director.gd")
 const FLOW_PAUSE_MANAGER := preload("res://src/systems/flow_pause_manager.gd")
 const GROUND_SHADOW_SCRIPT := preload("res://src/battle/ground_shadow.gd")
+const ELITE_MONSTER_SKILL_RUNTIME := preload(
+	"res://src/systems/elite_monster_skill_runtime.gd"
+)
 
 const DEFAULT_MAP_SIZE := Vector2(3200, 3200)
 const AUTO_SPAWN_MIN_DISTANCE := 560.0
@@ -95,6 +98,7 @@ var run_metrics = RUN_METRICS.new()
 var stage_director = STAGE_DIRECTOR.new()
 var mutation_director = MUTATION_DIRECTOR.new()
 var flow_pause_manager = FLOW_PAUSE_MANAGER.new()
+var elite_monster_skill_runtime = ELITE_MONSTER_SKILL_RUNTIME.new()
 
 const PAUSE_REASON_EXTERNAL := "external_pause"
 const PAUSE_REASON_DEMON_AUGMENT := "demon_augment"
@@ -521,6 +525,7 @@ func query_monsters_in_rect(world_rect: Rect2) -> Array:
 
 func _ready() -> void:
 	queue_redraw()
+	elite_monster_skill_runtime.setup(self)
 	_cache_demon_ultimate_runtime_data()
 	_start_battle()
 
@@ -538,6 +543,7 @@ func _process(delta: float) -> void:
 	if not flow_pause_manager.is_paused(
 		FLOW_PAUSE_MANAGER.DOMAIN_DEMON_RUNTIME
 	):
+		elite_monster_skill_runtime.tick(delta)
 		_process_demon_ultimate_spawn_queue(delta)
 		_process_stage_reinforcement_queue(delta)
 		_update_demon_ultimate_cooldowns(delta)
@@ -654,6 +660,7 @@ func _cache_demon_ultimate_runtime_data() -> void:
 
 func _start_battle() -> void:
 	battle_over = false
+	elite_monster_skill_runtime.reset()
 	active_heal_items.clear()
 	active_treasure_chests.clear()
 	active_magnet_items.clear()
@@ -1161,6 +1168,14 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 	var detail := {
 		"monster_id": monster_id,
 		"name": MONSTER_CATALOG.get_name(monster_id),
+		"species": MONSTER_CATALOG.get_species(monster_id),
+		"species_label": MONSTER_CATALOG.get_species_label(
+			MONSTER_CATALOG.get_species(monster_id)
+		),
+		"grade": MONSTER_CATALOG.get_grade(monster_id),
+		"grade_label": MONSTER_CATALOG.get_grade_label(
+			MONSTER_CATALOG.get_grade(monster_id)
+		),
 		"cost": get_monster_cost(monster_id),
 		"summon_exp": MONSTER_CATALOG.get_summon_exp(monster_id),
 		"demon_level": demon_level,
@@ -1523,6 +1538,16 @@ func _spawn_monster(
 	# their positions with older/general map margins.
 	spawn_position = _clamp_manual_spawn_position(spawn_position)
 	var monster := scene.instantiate() as Node2D
+	if monster == null:
+		return null
+	monster.set_meta(
+		"monster_species",
+		MONSTER_CATALOG.get_species(monster_type)
+	)
+	monster.set_meta(
+		"monster_grade",
+		MONSTER_CATALOG.get_grade(monster_type)
+	)
 	var is_giant := bool(spawn_modifiers.get("giant_monster", false))
 	if is_giant and not split_child:
 		_apply_giant_monster_base_stats(monster, monster_type)
@@ -1754,6 +1779,26 @@ func _spawn_monster(
 	monster_spatial_grid_physics_frame = -1
 	monsters_alive += 1
 	return monster
+
+
+func spawn_elite_slime_minion(
+	spawn_position: Vector2,
+	landing_position: Vector2
+) -> Node2D:
+	var slime := _spawn_monster(
+		"slime",
+		_clamp_manual_spawn_position(spawn_position),
+		0.0,
+		true
+	) as Node2D
+	if not is_instance_valid(slime):
+		return null
+	slime.set_meta("spawn_source", "elite_skill")
+	slime.set_meta(
+		"elite_arc_landing_position",
+		_clamp_manual_spawn_position(landing_position)
+	)
+	return slime
 
 
 func _ensure_monster_ground_shadow(
@@ -3222,6 +3267,14 @@ func _apply_special_monster_modifiers(
 	monster.set_meta("stage_event_name", special_name)
 	monster.set_meta("visual_variant", "elite")
 	_apply_elite_monster_visual(monster, monster_id)
+	var elite_skills := MONSTER_CATALOG.get_elite_skills(monster_id)
+	monster.set_meta("elite_skill_count", elite_skills.size())
+	if not elite_skills.is_empty():
+		elite_monster_skill_runtime.register_elite(
+			monster as Node2D,
+			monster_id,
+			elite_skills
+		)
 
 	if monster.has_method("queue_redraw"):
 		monster.call("queue_redraw")

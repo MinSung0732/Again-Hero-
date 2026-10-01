@@ -16579,7 +16579,7 @@ func apply_slow(multiplier: float, duration: float) -> void:
 	record_status_effect_event("slow")
 
 	var resistance := get_status_resistance("slow")
-	var raw_multiplier := clampf(multiplier, 0.30, 1.0)
+	var raw_multiplier := clampf(multiplier, 0.01, 1.0)
 	var effective_multiplier := lerpf(
 		raw_multiplier,
 		1.0,

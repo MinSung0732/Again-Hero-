@@ -291,12 +291,26 @@ static func get_external_movement_multiplier(owner: Node) -> float:
 				1.0
 			)
 		)
+	if int(owner.get_meta("elite_spider_web_speed_until", 0)) > now_msec:
+		multiplier *= clampf(
+			float(owner.get_meta("elite_spider_web_speed_multiplier", 1.15)),
+			1.0,
+			2.0
+		)
+	if bool(owner.get_meta("elite_vibration_speed_active", false)):
+		multiplier *= clampf(
+			float(owner.get_meta("elite_vibration_speed_multiplier", 3.0)),
+			1.0,
+			4.0
+		)
 	return multiplier
 
 
 static func is_forced_movement_locked(owner: Node) -> bool:
 	if owner == null or not is_instance_valid(owner):
 		return false
+	if bool(owner.get_meta("elite_skill_movement_lock", false)):
+		return true
 	return int(owner.get_meta("forced_movement_lock_until", 0)) > Time.get_ticks_msec()
 
 
