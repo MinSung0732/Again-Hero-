@@ -22,8 +22,8 @@ const UI_HEADER_CARD_PATH := UI_CARD_FRAME_DIR + "/ui1.png"
 const UI_CONTENT_CARD_PATH := UI_CARD_FRAME_DIR + "/ui9.png"
 const UI_STAGE_CARD_FRAME_PATH := UI_CARD_FRAME_DIR + "/ui10_clean_frame.png"
 const UI_BATTLE_HUD_DIR := "res://assets/art/UI/battle_hud_v2"
-const UI_HEADER_TOP_BACKDROP_PATH := UI_BATTLE_HUD_DIR + "/top_hud_backdrop.svg"
 const UI_HEADER_SIDE_FRAME_PATH := UI_BATTLE_HUD_DIR + "/side_frame.svg"
+const UI_HEADER_LOGO_BACKPLATE_PATH := UI_BATTLE_HUD_DIR + "/logo_backplate.svg"
 const UI_LOGO_PATH := "res://assets/art/UI/logo/AgainHeroLogo.png"
 const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_background.png"
 
@@ -698,44 +698,30 @@ func _apply_new_ui_assets() -> void:
 			header.remove_child(stale)
 			stale.free()
 
-	var top_backdrop_texture := _load_ui_texture_resource(
-		UI_HEADER_TOP_BACKDROP_PATH
-	)
 	var side_frame_texture := _load_ui_texture_resource(
 		UI_HEADER_SIDE_FRAME_PATH
 	)
-
-	if top_backdrop_texture != null:
-		var backdrop := TextureRect.new()
-		backdrop.name = "HeaderBackdrop"
-		backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		backdrop.texture = top_backdrop_texture
-		backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-		backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		backdrop.modulate = Color(1.0, 1.0, 1.0, 0.42)
-		backdrop.z_index = 0
-		header.add_child(backdrop)
-		header.move_child(backdrop, 0)
+	var logo_backplate_texture := _load_ui_texture_resource(
+		UI_HEADER_LOGO_BACKPLATE_PATH
+	)
 
 	var gold_plate := Control.new()
 	gold_plate.name = "HeaderGoldPlate"
 	gold_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	gold_plate.anchor_left = 0.015
-	gold_plate.anchor_top = 0.305
-	gold_plate.anchor_right = 0.405
-	gold_plate.anchor_bottom = 0.655
+	gold_plate.anchor_left = 0.010
+	gold_plate.anchor_top = 0.335
+	gold_plate.anchor_right = 0.420
+	gold_plate.anchor_bottom = 0.575
 	gold_plate.z_index = 1
 	header.add_child(gold_plate)
 
 	var progress_plate := Control.new()
 	progress_plate.name = "HeaderProgressPlate"
 	progress_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	progress_plate.anchor_left = 0.595
-	progress_plate.anchor_top = 0.305
-	progress_plate.anchor_right = 0.985
-	progress_plate.anchor_bottom = 0.655
+	progress_plate.anchor_left = 0.580
+	progress_plate.anchor_top = 0.335
+	progress_plate.anchor_right = 0.990
+	progress_plate.anchor_bottom = 0.575
 	progress_plate.z_index = 1
 	header.add_child(progress_plate)
 
@@ -759,26 +745,41 @@ func _apply_new_ui_assets() -> void:
 		resource_parent.remove_child(resource_label)
 		gold_plate.add_child(resource_label)
 	resource_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	resource_label.offset_left = 34.0
-	resource_label.offset_top = 2.0
-	resource_label.offset_right = -118.0
-	resource_label.offset_bottom = -2.0
+	resource_label.offset_left = 32.0
+	resource_label.offset_top = 0.0
+	resource_label.offset_right = -182.0
+	resource_label.offset_bottom = 0.0
 	resource_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	resource_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	resource_label.z_index = 2
+	resource_label.z_index = 4
 
 	var progress_parent := progress_label.get_parent()
 	if progress_parent != progress_plate:
 		progress_parent.remove_child(progress_label)
 		progress_plate.add_child(progress_label)
 	progress_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	progress_label.offset_left = 118.0
-	progress_label.offset_top = 2.0
-	progress_label.offset_right = -34.0
-	progress_label.offset_bottom = -2.0
+	progress_label.offset_left = 182.0
+	progress_label.offset_top = 0.0
+	progress_label.offset_right = -32.0
+	progress_label.offset_bottom = 0.0
 	progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	progress_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	progress_label.z_index = 2
+	progress_label.z_index = 4
+
+	if logo_backplate_texture != null:
+		var logo_backplate := TextureRect.new()
+		logo_backplate.name = "HeaderLogoBackplate"
+		logo_backplate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		logo_backplate.texture = logo_backplate_texture
+		logo_backplate.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		logo_backplate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		logo_backplate.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		logo_backplate.anchor_left = 0.235
+		logo_backplate.anchor_top = 0.055
+		logo_backplate.anchor_right = 0.765
+		logo_backplate.anchor_bottom = 0.760
+		logo_backplate.z_index = 2
+		header.add_child(logo_backplate)
 
 	var logo_texture := _load_png_texture_direct(UI_LOGO_PATH)
 	if logo_texture != null:
@@ -789,10 +790,10 @@ func _apply_new_ui_assets() -> void:
 		logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		logo.anchor_left = 0.245
-		logo.anchor_top = 0.035
-		logo.anchor_right = 0.755
-		logo.anchor_bottom = 0.705
+		logo.anchor_left = 0.195
+		logo.anchor_top = 0.000
+		logo.anchor_right = 0.805
+		logo.anchor_bottom = 0.765
 		logo.z_index = 3
 		header.add_child(logo)
 
