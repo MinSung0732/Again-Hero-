@@ -856,9 +856,9 @@ func _apply_new_ui_assets() -> void:
 		coin_icon.anchor_top = 0.52
 		coin_icon.anchor_right = 0.0
 		coin_icon.anchor_bottom = 0.52
-		coin_icon.offset_left = 16.0
+		coin_icon.offset_left = 24.0
 		coin_icon.offset_top = -17.0
-		coin_icon.offset_right = 50.0
+		coin_icon.offset_right = 58.0
 		coin_icon.offset_bottom = 17.0
 		coin_icon.z_index = 3
 		gold_plate.add_child(coin_icon)
