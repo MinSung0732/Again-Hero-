@@ -1063,9 +1063,9 @@ func _install_stage_entry_hud() -> void:
 		hero_name_plate.name = "HeroNamePlate"
 		hero_name_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		hero_name_plate.anchor_left = 0.24
-		hero_name_plate.anchor_top = 0.518
+		hero_name_plate.anchor_top = 0.515
 		hero_name_plate.anchor_right = 0.76
-		hero_name_plate.anchor_bottom = 0.590
+		hero_name_plate.anchor_bottom = 0.580
 		hero_name_plate.add_theme_stylebox_override(
 			"panel",
 			_make_hud_panel_style(
@@ -1099,9 +1099,9 @@ func _install_stage_entry_hud() -> void:
 			hero_name_plate.add_child(gem)
 
 	hero_name_label.anchor_left = 0.20
-	hero_name_label.anchor_top = 0.520
+	hero_name_label.anchor_top = 0.518
 	hero_name_label.anchor_right = 0.80
-	hero_name_label.anchor_bottom = 0.590
+	hero_name_label.anchor_bottom = 0.578
 	hero_name_label.z_index = 3
 
 	if portrait_inner != null:
@@ -1115,7 +1115,7 @@ func _install_stage_entry_hud() -> void:
 		var portrait_backdrop := ColorRect.new()
 		portrait_backdrop.name = "PortraitBackdrop"
 		portrait_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		portrait_backdrop.color = Color(0.035, 0.025, 0.055, 0.98)
+		portrait_backdrop.color = Color(0.045, 0.030, 0.070, 0.98)
 		portrait_backdrop.set_anchors_and_offsets_preset(
 			Control.PRESET_FULL_RECT
 		)
@@ -1125,11 +1125,11 @@ func _install_stage_entry_hud() -> void:
 		var portrait_glow := ColorRect.new()
 		portrait_glow.name = "PortraitGlow"
 		portrait_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		portrait_glow.color = Color(0.16, 0.08, 0.22, 0.20)
-		portrait_glow.anchor_left = 0.10
-		portrait_glow.anchor_top = 0.06
-		portrait_glow.anchor_right = 0.90
-		portrait_glow.anchor_bottom = 0.94
+		portrait_glow.color = Color(0.22, 0.10, 0.30, 0.24)
+		portrait_glow.anchor_left = 0.18
+		portrait_glow.anchor_top = 0.10
+		portrait_glow.anchor_right = 0.82
+		portrait_glow.anchor_bottom = 0.90
 		portrait_backdrop.add_child(portrait_glow)
 
 	portrait_texture.z_index = 1
@@ -1137,7 +1137,7 @@ func _install_stage_entry_hud() -> void:
 	portrait_badge.z_index = 2
 
 	bottom_panel.anchor_left = 0.075
-	bottom_panel.anchor_top = 0.600
+	bottom_panel.anchor_top = 0.608
 	bottom_panel.anchor_right = 0.925
 	bottom_panel.anchor_bottom = 0.938
 
@@ -1155,7 +1155,7 @@ func _install_stage_entry_hud() -> void:
 		description_backing.add_theme_stylebox_override(
 			"panel",
 			_make_hud_panel_style(
-				Color(0.045, 0.032, 0.065, 0.88),
+				Color(0.045, 0.032, 0.065, 0.78),
 				Color(0, 0, 0, 0),
 				0,
 				10
@@ -1166,7 +1166,7 @@ func _install_stage_entry_hud() -> void:
 
 		var description_highlight := ColorRect.new()
 		description_highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		description_highlight.color = Color(0.58, 0.37, 0.70, 0.34)
+		description_highlight.color = Color(0.58, 0.37, 0.70, 0.22)
 		description_highlight.anchor_left = 0.10
 		description_highlight.anchor_top = 0.0
 		description_highlight.anchor_right = 0.90
@@ -1187,7 +1187,7 @@ func _install_stage_entry_hud() -> void:
 		info_backing.add_theme_stylebox_override(
 			"panel",
 			_make_hud_panel_style(
-				Color(0.060, 0.040, 0.082, 0.92),
+				Color(0.060, 0.040, 0.082, 0.80),
 				Color(0, 0, 0, 0),
 				0,
 				8
@@ -1198,7 +1198,7 @@ func _install_stage_entry_hud() -> void:
 
 		var info_highlight := ColorRect.new()
 		info_highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		info_highlight.color = Color(0.73, 0.52, 0.24, 0.28)
+		info_highlight.color = Color(0.73, 0.52, 0.24, 0.18)
 		info_highlight.anchor_left = 0.08
 		info_highlight.anchor_top = 0.0
 		info_highlight.anchor_right = 0.92
@@ -1210,7 +1210,7 @@ func _install_stage_entry_hud() -> void:
 		for split_ratio in [0.333, 0.666]:
 			var divider := ColorRect.new()
 			divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			divider.color = Color(0.55, 0.39, 0.19, 0.46)
+			divider.color = Color(0.55, 0.39, 0.19, 0.34)
 			divider.anchor_left = split_ratio
 			divider.anchor_top = 0.16
 			divider.anchor_right = split_ratio
@@ -1269,10 +1269,10 @@ func _install_stage_entry_hud() -> void:
 		footer = Control.new()
 		footer.name = "StageFooterOrnament"
 		footer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		footer.anchor_left = 0.24
-		footer.anchor_top = 0.835
-		footer.anchor_right = 0.76
-		footer.anchor_bottom = 0.885
+		footer.anchor_left = 0.26
+		footer.anchor_top = 0.815
+		footer.anchor_right = 0.74
+		footer.anchor_bottom = 0.865
 		footer.z_index = 2
 		main_tab_control.add_child(footer)
 
