@@ -117,14 +117,14 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 18.0
-offset_top = 26.0
-offset_right = -18.0
-offset_bottom = -24.0
+offset_left = 28.0
+offset_top = 22.0
+offset_right = -28.0
+offset_bottom = -26.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 18
-theme_override_constants/margin_right = 18
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_right = 14
 
 [node name="ShopLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin"]
 layout_mode = 2
@@ -156,7 +156,7 @@ horizontal_scroll_mode = 0
 vertical_scroll_mode = 1
 
 [node name="ShopContent" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll"]
-custom_minimum_size = Vector2(0, 1760)
+custom_minimum_size = Vector2(0, 1600)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 18
@@ -282,7 +282,7 @@ theme_override_font_sizes/font_size = 26
 text = "›"
 
 [node name="MonsterSection" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent"]
-custom_minimum_size = Vector2(0, 470)
+custom_minimum_size = Vector2(0, 390)
 layout_mode = 2
 
 [node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection"]
@@ -338,24 +338,13 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="ResultTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
+[node name="HistoryButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
+custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.74, 0.84, 1)
+focus_mode = 0
 theme_override_font_sizes/font_size = 20
-text = "최근 소환 결과"
-
-[node name="ResultPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
-custom_minimum_size = Vector2(0, 110)
-layout_mode = 2
-
-[node name="Result" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/ResultPanel"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.88, 0.83, 0.91, 1)
-theme_override_font_sizes/font_size = 18
-text = "몬스터를 소환하면 최근 결과가 여기에 표시됩니다."
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 2
+text = "소환 내역"
+disabled = true
 
 [node name="RelicSection" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent"]
 custom_minimum_size = Vector2(0, 300)
@@ -396,6 +385,7 @@ size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 24
 text = "유물 소환 1회\n준비 중"
+disabled = true
 
 [node name="MultiButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox/BuyRow"]
 layout_mode = 2
@@ -403,6 +393,7 @@ size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 24
 text = "유물 소환 10+1회\n준비 중"
+disabled = true
 
 [node name="Notice" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox"]
 layout_mode = 2
@@ -1147,6 +1138,103 @@ theme_override_font_sizes/font_size = 32
 text = "앱 로그인 · 준비 중"
 disabled = true
 
+
+
+[node name="ShopResultOverlay" type="Control" parent="."]
+visible = false
+z_index = 105
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Dim" type="ColorRect" parent="ShopResultOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.01, 0.008, 0.015, 0.88)
+mouse_filter = 0
+
+[node name="Panel" type="PanelContainer" parent="ShopResultOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -410.0
+offset_top = -390.0
+offset_right = 410.0
+offset_bottom = 390.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="ShopResultOverlay/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 44
+theme_override_constants/margin_top = 38
+theme_override_constants/margin_right = 44
+theme_override_constants/margin_bottom = 34
+
+[node name="VBox" type="VBoxContainer" parent="ShopResultOverlay/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Header" type="HBoxContainer" parent="ShopResultOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="ShopResultOverlay/Panel/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.9, 0.66, 1)
+theme_override_font_sizes/font_size = 38
+text = "소환 결과"
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="ShopResultOverlay/Panel/Margin/VBox/Header"]
+custom_minimum_size = Vector2(112, 66)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 26
+text = "닫기"
+
+[node name="Guide" type="Label" parent="ShopResultOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.65, 0.75, 1)
+theme_override_font_sizes/font_size = 21
+text = "최근 몬스터 소환 결과입니다."
+horizontal_alignment = 1
+
+[node name="ResultScroll" type="ScrollContainer" parent="ShopResultOverlay/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 500)
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 1
+
+[node name="Result" type="Label" parent="ShopResultOverlay/Panel/Margin/VBox/ResultScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.86, 0.93, 1)
+theme_override_font_sizes/font_size = 23
+text = "아직 소환 내역이 없습니다."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Footer" type="Label" parent="ShopResultOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.55, 0.64, 1)
+theme_override_font_sizes/font_size = 18
+text = "획득한 조각과 해금 상태는 즉시 몬스터 컬렉션에 반영됩니다."
+horizontal_alignment = 1
+autowrap_mode = 2
 
 [node name="MonsterDetailOverlay" type="Control" parent="."]
 visible = false

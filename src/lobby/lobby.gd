@@ -64,8 +64,12 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var shop_relic_single_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox/BuyRow/SingleButton
 @onready var shop_relic_multi_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox/BuyRow/MultiButton
 @onready var shop_rates_label: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/Rates
-@onready var shop_result_label: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/ResultPanel/Result
+@onready var shop_history_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/HistoryButton
 @onready var shop_status_label: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/Status
+@onready var shop_result_overlay: Control = $ShopResultOverlay
+@onready var shop_result_panel: PanelContainer = $ShopResultOverlay/Panel
+@onready var shop_result_label: Label = $ShopResultOverlay/Panel/Margin/VBox/ResultScroll/Result
+@onready var shop_result_close_button: Button = $ShopResultOverlay/Panel/Margin/VBox/Header/CloseButton
 @onready var shop_banner_badge: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerTop/Badge
 @onready var shop_banner_dots: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerTop/Dots
 @onready var shop_banner_title: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerTitle
@@ -157,6 +161,7 @@ var current_tab: String = "main"
 const SHOP_BANNER_AUTO_SECONDS := 5.5
 var shop_banner_index: int = 0
 var shop_banner_timer: float = SHOP_BANNER_AUTO_SECONDS
+var shop_last_result_text: String = ""
 
 const STAGE_SWIPE_THRESHOLD := 72.0
 const STAGE_SLIDE_DISTANCE := 118.0
@@ -427,10 +432,6 @@ func _apply_styles() -> void:
 		"panel",
 		StyleBoxEmpty.new()
 	)
-	$SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/ResultPanel.add_theme_stylebox_override(
-		"panel",
-		dark_backing
-	)
 	$BottomNav.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 
 	var stage_nav_style := _make_style(
@@ -539,6 +540,18 @@ func _apply_asset_frames() -> void:
 	# 팝업만 별도 프레임을 사용한다. 카드 내부 중첩 장식은 피한다.
 	_add_asset_frame(
 		monster_detail_panel,
+		UI_FRAME_MEDIUM_DIR,
+		Vector2(62.0, 61.0),
+		Vector2(62.0, 61.0),
+		Vector2(62.0, 60.0),
+		Vector2(62.0, 60.0),
+		38.0,
+		37.0,
+		34.0,
+		34.0
+	)
+	_add_asset_frame(
+		shop_result_panel,
 		UI_FRAME_MEDIUM_DIR,
 		Vector2(62.0, 61.0),
 		Vector2(62.0, 61.0),
@@ -2005,6 +2018,12 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 
 
 func _input(event: InputEvent) -> void:
+	if shop_result_overlay.visible:
+		_stage_swipe_active = false
+		if event.is_action_pressed("ui_cancel"):
+			_close_shop_result_modal()
+		return
+
 	if stage_select_overlay.visible:
 		_stage_swipe_active = false
 		if event.is_action_pressed("ui_cancel"):
@@ -2079,6 +2098,9 @@ func _connect_navigation() -> void:
 	)
 	shop_banner_prev_button.pressed.connect(_change_shop_banner.bind(-1))
 	shop_banner_next_button.pressed.connect(_change_shop_banner.bind(1))
+	shop_history_button.pressed.connect(_show_shop_result_modal)
+	shop_result_close_button.pressed.connect(_close_shop_result_modal)
+	$ShopResultOverlay/Dim.gui_input.connect(_on_shop_result_dim_input)
 
 	team_slot_1_button.pressed.connect(_on_team_slot_pressed.bind(0))
 	team_slot_2_button.pressed.connect(_on_team_slot_pressed.bind(1))
@@ -2101,6 +2123,7 @@ func _on_team_tab_pressed() -> void:
 	current_tab = "team"
 	formation_mode = "team"
 	_close_monster_detail()
+	_close_shop_result_modal()
 
 	shop_tab.hide()
 	team_tab.show()
@@ -2124,6 +2147,8 @@ func _on_team_tab_pressed() -> void:
 
 func _switch_tab(tab_id: String) -> void:
 	current_tab = tab_id
+	if tab_id != "shop":
+		_close_shop_result_modal()
 
 	shop_tab.visible = tab_id == "shop"
 	team_tab.visible = tab_id == "team"
@@ -2242,9 +2267,9 @@ func _apply_shop_storefront_skin() -> void:
 		18
 	)
 	var relic_style := _make_hud_panel_style(
-		Color(0.060, 0.044, 0.092, 0.96),
-		Color(0.55, 0.35, 0.70, 0.95),
-		3,
+		Color(0.050, 0.041, 0.064, 0.96),
+		Color(0.34, 0.30, 0.38, 0.92),
+		2,
 		18
 	)
 	var package_style := _make_hud_panel_style(
@@ -2253,13 +2278,6 @@ func _apply_shop_storefront_skin() -> void:
 		2,
 		18
 	)
-	var result_style := _make_hud_panel_style(
-		Color(0.035, 0.030, 0.052, 0.92),
-		Color(0.30, 0.23, 0.36, 0.88),
-		1,
-		10
-	)
-
 	for data in [
 		[
 			^"SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel",
@@ -2280,10 +2298,6 @@ func _apply_shop_storefront_skin() -> void:
 		[
 			^"SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection",
 			package_style,
-		],
-		[
-			^"SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/ResultPanel",
-			result_style,
 		],
 	]:
 		var panel := get_node_or_null(data[0]) as PanelContainer
@@ -2325,8 +2339,26 @@ func _apply_shop_storefront_skin() -> void:
 	_apply_lobby_button_skin(shop_banner_next_button, false, 24)
 	_apply_lobby_button_skin(shop_single_button, false, 23)
 	_apply_lobby_button_skin(shop_multi_button, true, 23)
+	_apply_lobby_button_skin(shop_history_button, false, 21)
 	_apply_lobby_button_skin(shop_relic_single_button, false, 23)
-	_apply_lobby_button_skin(shop_relic_multi_button, true, 23)
+	_apply_lobby_button_skin(shop_relic_multi_button, false, 23)
+	shop_relic_single_button.add_theme_stylebox_override(
+		"disabled",
+		secondary_button_disabled_style
+	)
+	shop_relic_multi_button.add_theme_stylebox_override(
+		"disabled",
+		secondary_button_disabled_style
+	)
+
+	var result_modal_style := _make_hud_panel_style(
+		Color(0.045, 0.035, 0.060, 0.98),
+		Color("c99843"),
+		3,
+		20
+	)
+	shop_result_panel.add_theme_stylebox_override("panel", result_modal_style)
+	_apply_lobby_button_skin(shop_result_close_button, false, 22)
 
 
 func _tick_shop_banner(delta: float) -> void:
@@ -2391,6 +2423,7 @@ func _rebuild_shop_packages() -> void:
 		var button := Button.new()
 		var featured := bool(data.get("featured", false))
 		var enabled := bool(data.get("enabled", false))
+		var emphasized := enabled and featured
 		button.custom_minimum_size = Vector2(0.0, 148.0)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.focus_mode = Control.FOCUS_NONE
@@ -2400,15 +2433,11 @@ func _rebuild_shop_packages() -> void:
 			String(data.get("reward_text", "")),
 			String(data.get("price_text", "준비 중")),
 		]
-		_apply_lobby_button_skin(button, featured, 20)
+		_apply_lobby_button_skin(button, emphasized, 20)
 		button.disabled = not enabled
 		button.add_theme_stylebox_override(
 			"disabled",
-			(
-				primary_button_disabled_style
-				if featured
-				else secondary_button_disabled_style
-			)
+			secondary_button_disabled_style
 		)
 		if enabled:
 			button.pressed.connect(
@@ -2455,7 +2484,7 @@ func _rebuild_shop_list() -> void:
 	shop_single_button.text = "몬스터 소환 1회\n%s 골드" % _format_shop_number(
 		SHOP_CATALOG.SINGLE_DRAW_COST
 	)
-	shop_multi_button.text = "몬스터 소환 10+1회\n%s 골드" % _format_shop_number(
+	shop_multi_button.text = "추천 · 몬스터 소환 10+1회\n%s 골드" % _format_shop_number(
 		SHOP_CATALOG.MULTI_DRAW_COST
 	)
 	shop_relic_single_button.text = "유물 소환 1회\n준비 중"
@@ -2488,9 +2517,30 @@ func _rebuild_shop_list() -> void:
 		"몬스터 소환은 테스트 골드 %s를 표시하며 실제 골드는 차감하지 않습니다."
 		% _format_shop_number(SHOP_CATALOG.TEST_GOLD)
 	)
+	shop_history_button.disabled = shop_last_result_text.is_empty()
 	shop_banner_timer = SHOP_BANNER_AUTO_SECONDS
 	_refresh_shop_banner()
 	_rebuild_shop_packages()
+
+
+func _show_shop_result_modal() -> void:
+	if shop_last_result_text.is_empty():
+		return
+	shop_result_label.text = shop_last_result_text
+	shop_result_overlay.show()
+
+
+func _close_shop_result_modal() -> void:
+	if is_instance_valid(shop_result_overlay):
+		shop_result_overlay.hide()
+
+
+func _on_shop_result_dim_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		_close_shop_result_modal()
+	elif event is InputEventScreenTouch and event.pressed:
+		_close_shop_result_modal()
+
 
 func _open_monster_boxes(draw_count: int) -> void:
 	if draw_count <= 0:
@@ -2566,12 +2616,15 @@ func _open_monster_boxes(draw_count: int) -> void:
 			"해금: %s" % " / ".join(unlock_names)
 		)
 
-	shop_result_label.text = "\n".join(result_lines)
+	shop_last_result_text = "\n".join(result_lines)
+	shop_result_label.text = shop_last_result_text
+	shop_history_button.disabled = false
 	shop_status_label.text = (
 		"골드 차감 없음 · 표시 골드 %s 유지"
 		% _format_shop_number(SHOP_CATALOG.TEST_GOLD)
 	)
 	_refresh_header()
+	_show_shop_result_modal()
 
 func _roll_monster_shard() -> Dictionary:
 	var rarity_id := _roll_shop_rarity()
