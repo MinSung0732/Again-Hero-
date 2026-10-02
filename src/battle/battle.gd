@@ -1937,11 +1937,7 @@ func _spawn_monster(
 
 
 func _try_fuse_nearby_kobolts(primary_monster: Node2D) -> Node2D:
-	if not is_instance_valid(primary_monster):
-		return primary_monster
-	if String(primary_monster.get_meta("visual_variant", "")) == "elite":
-		return primary_monster
-	if bool(primary_monster.get_meta("giant_monster", false)):
+	if not _is_normal_kobolt_fusion_candidate(primary_monster):
 		return primary_monster
 
 	var config: Dictionary = _get_special_augment_config(
@@ -1962,17 +1958,7 @@ func _try_fuse_nearby_kobolts(primary_monster: Node2D) -> Node2D:
 	var radius_sq := radius * radius
 	for raw_monster in kobolt_fusion_scratch:
 		var candidate := raw_monster as Node2D
-		if not is_instance_valid(candidate):
-			continue
-		if candidate.is_queued_for_deletion():
-			continue
-		if String(candidate.get("monster_type")) != "kobolt":
-			continue
-		if String(candidate.get_meta("visual_variant", "")) == "elite":
-			continue
-		if bool(candidate.get_meta("giant_monster", false)):
-			continue
-		if int(candidate.get("current_hp")) <= 0:
+		if not _is_normal_kobolt_fusion_candidate(candidate):
 			continue
 		if candidate.global_position.distance_squared_to(
 			primary_monster.global_position
@@ -2017,6 +2003,26 @@ func _try_fuse_nearby_kobolts(primary_monster: Node2D) -> Node2D:
 		fused.set_meta("spawn_source", "kobolt_fusion")
 		return fused
 	return null
+
+
+func _is_normal_kobolt_fusion_candidate(monster: Node2D) -> bool:
+	if not is_instance_valid(monster) or monster.is_queued_for_deletion():
+		return false
+	if String(monster.get("monster_type")) != "kobolt":
+		return false
+	if int(monster.get("current_hp")) <= 0:
+		return false
+	if String(monster.get_meta("visual_variant", "")) == "elite":
+		return false
+	if bool(monster.get_meta("giant_monster", false)):
+		return false
+	if bool(monster.get_meta("kobolt_fusion", false)):
+		return false
+	if String(monster.get_meta("spawn_source", "")) == "kobolt_fusion":
+		return false
+	if float(monster.get_meta("giant_size_multiplier", 1.0)) > 1.001:
+		return false
+	return true
 
 
 func _consume_monster_for_fusion(monster: Node2D) -> void:

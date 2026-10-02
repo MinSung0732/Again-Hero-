@@ -303,7 +303,7 @@ const SPECIAL_AUGMENTS := [
 		"id": "kobolt_giant_fusion",
 		"monster_id": "kobolt",
 		"name": "거대 융합",
-		"description": "근처 일반 코볼트 4기 → 대형 1기",
+		"description": "근처 일반 코볼트 4기 → 대형 1기 · 대형/엘리트는 집계 제외",
 		"augment_type": TYPE_SPECIAL,
 		"max_stack": SPECIAL_MAX_LEVEL,
 		"icon": "",

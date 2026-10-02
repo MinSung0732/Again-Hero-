@@ -2000,6 +2000,13 @@ Build AI는 전체/주변 몬스터 수, 최근 공세, 역할 비율, 거리, �
 - 이 조정은 시각 크기만 바꾸며 충돌/피해/속도/사거리 수치는 변경하지 않는다.
 
 
+## Kobolt Giant Fusion Rule (2026-10-03)
+
+- `kobolt_giant_fusion`은 살아 있는 일반 코볼트만 재료로 사용한다.
+- 이미 대형화된 코볼트(`giant_monster`, `kobolt_fusion`, 대형 size meta)와 엘리트 코볼트는 4기 조건에 포함하지 않는다.
+- 융합 결과 대형 코볼트는 다시 융합 재료가 될 수 없다.
+
+
 ## Shop Storefront UI Rules (2026-10-03)
 
 - 상점 탭의 본문은 내부 `ScrollContainer`로 스크롤하고 공통 로비 헤더와 하단 5탭 네비게이션은 화면에 고정한다.
