@@ -69,3 +69,8 @@ Mix update:
 - previous runtime mix: `HERO_SFX_DB_REGULAR_SKILL - 5.0` (effective -17 dB), pitch 0.72
 - current runtime mix: `HERO_SFX_DB_REGULAR_SKILL + 1.0` (effective -11 dB), pitch 1.0
 - The +6 dB increase brings the relatively quiet mechanical reload closer to the established hero SFX band without touching the global SFX bus.
+
+
+## Reload timing trim revision
+
+The requested Clean Revolver Reload source is about 3.392 seconds long, while the Stage 4 in-game reload is 2.4 seconds. Instead of pitch-shifting the sound, runtime playback now starts 1.05 seconds into the source clip. This preserves the later cylinder/revolver mechanism section at natural pitch and gives about 2.34 seconds of audible reload, fitting the animation window without editing the source MP3 bytes.

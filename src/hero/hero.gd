@@ -118,6 +118,7 @@ const STAGE3_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_hit_pixaba
 const STAGE3_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_death_pixabay.mp3"
 const STAGE4_GUNSHOT_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_gunshot_clean.wav"
 const STAGE4_RELOAD_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_reload_pixabay.mp3"
+const STAGE4_RELOAD_AUDIO_START_OFFSET := 1.05
 const STAGE4_BACKSTEP_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_backstep_pixabay.mp3"
 const STAGE4_CYLINDER_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_cylinder_clean.wav"
 const STAGE4_DEADEYE_START_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_deadeye_start_pixabay.mp3"
@@ -9361,7 +9362,13 @@ func _play_gunner_audio(player: AudioStreamPlayer) -> void:
 
 func _play_gunner_reload_audio() -> void:
 	_ensure_gunner_audio_runtime()
-	_play_gunner_audio(gunner_reload_audio)
+	if (
+		not is_instance_valid(gunner_reload_audio)
+		or gunner_reload_audio.stream == null
+	):
+		return
+	gunner_reload_audio.stop()
+	gunner_reload_audio.play(STAGE4_RELOAD_AUDIO_START_OFFSET)
 
 
 func _play_gunner_backstep_audio() -> void:
