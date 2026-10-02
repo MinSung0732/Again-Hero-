@@ -71,7 +71,7 @@ const GIANT_MONSTER_CHANCE_PER_STEP := 0.01
 const GIANT_MONSTER_STAT_MULTIPLIER := 1.28
 const GIANT_MONSTER_HP_MULTIPLIER := 1.54
 const GIANT_MONSTER_SIZE_MULTIPLIER := 2.0
-const GIANT_RANGED_MONSTER_IDS := ["spider", "skeleton_archer", "kobolt"]
+const GIANT_RANGED_MONSTER_IDS := ["spider", "skeleton_archer", "kobolt", "ghost"]
 const HEAL_ITEM_KILLS_REQUIRED := 30
 const MAX_ACTIVE_HEAL_ITEMS := 2
 const CHEST_KILLS_REQUIRED := 50
@@ -126,6 +126,8 @@ var monster_spatial_stale_ids: Array[int] = []
 var monster_spatial_grid_physics_frame: int = -1
 var kobolt_fusion_scratch: Array = []
 var kobolt_fusion_candidates: Array = []
+var ghost_shared_hit_count: int = 0
+var ghost_death_buff_candidates: Array = []
 var exp_orb_pool: Array[Node2D] = []
 var projectile_pools: Dictionary = {}
 var transient_fx_pools: Dictionary = {}
@@ -685,6 +687,8 @@ func _start_battle() -> void:
 	monster_spatial_stale_ids.clear()
 	kobolt_fusion_scratch.clear()
 	kobolt_fusion_candidates.clear()
+	ghost_shared_hit_count = 0
+	ghost_death_buff_candidates.clear()
 	monster_spatial_grid_physics_frame = -1
 	external_pause = false
 	flow_pause_manager.reset()
@@ -1474,6 +1478,7 @@ func _apply_giant_monster_base_stats(
 		"kobolt",
 		"bat",
 		"goblin",
+		"ghost",
 	]:
 		var damage_value = monster.get("attack_damage")
 		if damage_value != null:
@@ -2234,6 +2239,112 @@ func _on_hero_augment_selected(level: int, candidates: Array, chosen_name: Strin
 	run_metrics.record_hero_augment(level, chosen_name, reason)
 	hero_augment_selected.emit(level, candidates, chosen_name, reason, build_summary)
 
+
+func register_ghost_projectile_hit() -> void:
+	ghost_shared_hit_count += 1
+	if ghost_shared_hit_count < 10:
+		return
+
+	ghost_shared_hit_count -= 10
+	if (
+		is_instance_valid(hero)
+		and hero.has_method("add_random_skill_cooldown_delay")
+	):
+		hero.call("add_random_skill_cooldown_delay", 0.5)
+
+	var slow_config: Dictionary = _get_special_augment_config("ghost").get(
+		"ghost_stack_slow",
+		{}
+	)
+	if (
+		not slow_config.is_empty()
+		and is_instance_valid(hero)
+		and hero.has_method("apply_slow")
+	):
+		hero.call(
+			"apply_slow",
+			clampf(
+				float(slow_config.get("slow_multiplier", 0.70)),
+				0.01,
+				1.0
+			),
+			maxf(float(slow_config.get("duration", 2.0)), 0.05)
+		)
+
+
+func _apply_ghost_death_empower(dead_monster: Node) -> void:
+	var config: Dictionary = _get_special_augment_config("ghost").get(
+		"ghost_death_empower",
+		{}
+	)
+	if config.is_empty():
+		return
+
+	ghost_death_buff_candidates.clear()
+	for raw_id in active_monsters:
+		var candidate = active_monsters.get(raw_id)
+		if (
+			not is_instance_valid(candidate)
+			or candidate == dead_monster
+			or candidate.is_queued_for_deletion()
+		):
+			continue
+		var hp_value = candidate.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		ghost_death_buff_candidates.append(candidate)
+
+	if ghost_death_buff_candidates.is_empty():
+		return
+
+	var target = ghost_death_buff_candidates[
+		randi() % ghost_death_buff_candidates.size()
+	]
+	ghost_death_buff_candidates.clear()
+	if not is_instance_valid(target):
+		return
+
+	var multiplier := maxf(
+		float(config.get("stat_multiplier", 1.10)),
+		1.0
+	)
+	var raw_hp = target.get_meta("augment_raw_max_hp", null)
+	if raw_hp != null:
+		target.set_meta(
+			"augment_raw_max_hp",
+			maxf(float(raw_hp) * multiplier, 1.0)
+		)
+	var raw_damage = target.get_meta("augment_raw_attack_damage", null)
+	if raw_damage != null:
+		target.set_meta(
+			"augment_raw_attack_damage",
+			maxf(float(raw_damage) * multiplier, 1.0)
+		)
+	var raw_speed = target.get_meta("augment_raw_move_speed", null)
+	if raw_speed != null:
+		target.set_meta(
+			"augment_raw_move_speed",
+			maxf(float(raw_speed) * multiplier, 1.0)
+		)
+	var raw_cooldown = target.get_meta(
+		"augment_raw_attack_cooldown",
+		null
+	)
+	if raw_cooldown != null:
+		target.set_meta(
+			"augment_raw_attack_cooldown",
+			maxf(float(raw_cooldown) / multiplier, 0.10)
+		)
+
+	target.set_meta(
+		"ghost_death_empower_stacks",
+		int(target.get_meta("ghost_death_empower_stacks", 0)) + 1
+	)
+	_apply_normal_augments_to_existing_monster(
+		target,
+		String(target.get("monster_type"))
+	)
+
 func _on_monster_died(monster: Node) -> void:
 	if battle_over:
 		return
@@ -2265,6 +2376,9 @@ func _on_monster_died(monster: Node) -> void:
 			)),
 			0
 		)
+
+	if monster_type == "ghost" and is_instance_valid(monster):
+		_apply_ghost_death_empower(monster)
 
 	if reward > 0:
 		_spawn_exp_orb(drop_position, reward)

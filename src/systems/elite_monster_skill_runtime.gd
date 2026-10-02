@@ -205,6 +205,8 @@ func _cast_skill(monster: Node2D, skill: Dictionary) -> void:
 			_begin_skeleton_archer_arrow_rain(monster, skill)
 		"elite_kobolt_fighting_spirit":
 			_begin_kobolt_fighting_spirit(monster, skill)
+		"elite_ghost_fear":
+			_cast_ghost_fear(monster, skill)
 
 
 func _tick_active_skill(
@@ -230,6 +232,23 @@ func _tick_active_skill(
 		_:
 			skill["_active"] = false
 
+
+
+func _cast_ghost_fear(
+	monster: Node2D,
+	skill: Dictionary
+) -> void:
+	if not is_instance_valid(battle):
+		return
+	var hero := battle.get("hero") as Node2D
+	if not is_instance_valid(hero) or not hero.has_method("apply_fear"):
+		return
+	hero.call(
+		"apply_fear",
+		monster,
+		maxf(float(skill.get("duration", 1.5)), 0.05),
+		maxf(float(skill.get("move_speed_multiplier", 1.50)), 1.0)
+	)
 
 func _begin_goblin_commander(monster: Node2D, skill: Dictionary) -> void:
 	skill["_active"] = true

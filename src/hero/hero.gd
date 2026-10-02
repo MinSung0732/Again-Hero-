@@ -780,6 +780,10 @@ var poison_flash_timer: float = 0.0
 var poison_flash_active: bool = false
 var poison_flash_restore_color: Color = Color.WHITE
 var poison_source: Node
+var fear_timer: float = 0.0
+var fear_source: Node2D
+var fear_origin: Vector2 = Vector2.ZERO
+var fear_speed_multiplier: float = 1.0
 var move_multiplier: float = 1.0
 var strafe_sign: float = 1.0
 var combat_strafe_burst_timer: float = 0.0
@@ -837,6 +841,11 @@ func configure_profile(profile: Dictionary) -> void:
 	status_resistances.clear()
 	offensive_memory_events.clear()
 	status_effect_events.clear()
+	fear_timer = 0.0
+	fear_source = null
+	fear_origin = Vector2.ZERO
+	fear_speed_multiplier = 1.0
+	set_meta("fear_active", false)
 	_movement_monster_scratch.clear()
 	_combat_monster_scratch.clear()
 	ai_observed_context.clear()
@@ -1507,6 +1516,7 @@ func configure_battlefield(size: Vector2) -> void:
 func _ready() -> void:
 	add_to_group("hero")
 	_attach_status_effect_visual("slow")
+	_attach_status_effect_visual("fear")
 	_apply_camera_limits()
 	_apply_profile_visual()
 	_apply_ground_shadow_profile()
@@ -1666,6 +1676,8 @@ func _physics_process(delta: float) -> void:
 	_update_poison(delta)
 	if current_hp <= 0 or is_dying:
 		velocity = Vector2.ZERO
+		return
+	if _tick_fear_state(delta):
 		return
 	_update_combat_reposition(delta)
 
@@ -16601,6 +16613,200 @@ func apply_poison(
 	set_meta("poison_active", true)
 
 
+
+func apply_fear(
+	source: Node2D,
+	duration: float,
+	speed_multiplier: float = 1.50
+) -> void:
+	if current_hp <= 0 or is_dying:
+		return
+
+	record_status_effect_event("fear")
+	var resistance := get_status_resistance("fear")
+	var effective_duration := maxf(
+		duration * (1.0 - resistance),
+		0.05
+	)
+	fear_timer = maxf(fear_timer, effective_duration)
+	fear_speed_multiplier = maxf(speed_multiplier, 1.0)
+	fear_source = source if is_instance_valid(source) else null
+	fear_origin = (
+		fear_source.global_position
+		if is_instance_valid(fear_source)
+		else global_position - Vector2.RIGHT
+	)
+	set_meta("fear_active", true)
+	queue_redraw()
+
+
+func _get_external_skill_cooldown_properties() -> Array:
+	var properties: Array = []
+	match hero_archetype:
+		"grand_sage_astra":
+			properties = [
+				&"sage_skill1_cooldown_timer",
+				&"sage_skill2_cooldown_timer",
+				&"sage_skill3_cooldown_timer",
+				&"sage_skill4_cooldown_timer",
+			]
+			if is_conditional_skill_unlocked("sage_skill_5"):
+				properties.append(&"sage_skill5_cooldown_timer")
+		"cleric_purifier":
+			properties = [
+				&"purifier_crown_cooldown",
+				&"purifier_orb_cooldown",
+				&"purifier_cleansing_cooldown",
+			]
+			if is_conditional_skill_unlocked("purifier_fourth_skill"):
+				properties.append(&"purifier_gungnir_cooldown")
+		"summoner_gatekeeper":
+			properties = [
+				&"summoner_gatekeeper_cooldown",
+				&"summoner_scout_cooldown",
+				&"summoner_hound_cooldown",
+				&"summoner_watcher_cooldown",
+			]
+			if summoner_open_gate_unlocked:
+				properties.append(&"summoner_open_gate_cooldown")
+		"alchemist_chemical":
+			properties = [
+				&"alchemist_mixture_field_cooldown",
+				&"alchemist_mystery_cauldron_cooldown",
+				&"alchemist_emergency_cooldown",
+			]
+		"ranged_kiter":
+			properties = [
+				&"ultimate_cooldown_timer",
+				&"shield_cooldown_timer",
+				&"channel_cooldown_timer",
+			]
+		"rogue_combo":
+			properties = [
+				&"rogue_slash_cooldown_timer",
+				&"ultimate_cooldown_timer",
+			]
+		"sword_shield":
+			properties = [&"fighter_charge_cooldown_timer"]
+		"pistol_gunner":
+			properties = [
+				&"gunner_backstep_cooldown",
+				&"gunner_cylinder_cooldown",
+				&"gunner_deadeye_cooldown",
+			]
+		"berserker_madness":
+			properties = [
+				&"berserker_skill1_cooldown",
+				&"berserker_skill2_cooldown",
+				&"berserker_skill3_cooldown",
+				&"berserker_skill4_cooldown",
+			]
+	return properties
+
+
+func add_random_skill_cooldown_delay(seconds: float) -> bool:
+	var delay := maxf(seconds, 0.0)
+	if delay <= 0.0 or current_hp <= 0 or is_dying:
+		return false
+
+	if hero_archetype == "archmage_elementalist":
+		var keys: Array[String] = []
+		for key in ARCHMAGE_SKILL_KEYS:
+			var config_value = archmage_skill_config.get(key, {})
+			if (
+				typeof(config_value) == TYPE_DICTIONARY
+				and not Dictionary(config_value).is_empty()
+			):
+				keys.append(key)
+		if keys.is_empty():
+			return false
+		var key := keys[randi() % keys.size()]
+		archmage_skill_cooldowns[key] = (
+			maxf(
+				float(archmage_skill_cooldowns.get(key, 0.0)),
+				0.0
+			)
+			+ delay
+		)
+		queue_redraw()
+		return true
+
+	var properties := _get_external_skill_cooldown_properties()
+	if properties.is_empty():
+		return false
+	var property_name = properties[randi() % properties.size()]
+	var current_value = get(property_name)
+	if current_value == null:
+		return false
+	set(
+		property_name,
+		maxf(float(current_value), 0.0) + delay
+	)
+	queue_redraw()
+	return true
+
+
+func _tick_fear_skill_cooldowns(delta: float) -> void:
+	if hero_archetype == "archmage_elementalist":
+		for key in ARCHMAGE_SKILL_KEYS:
+			archmage_skill_cooldowns[key] = maxf(
+				float(archmage_skill_cooldowns.get(key, 0.0)) - delta,
+				0.0
+			)
+		return
+
+	for property_name in _get_external_skill_cooldown_properties():
+		var current_value = get(property_name)
+		if current_value == null:
+			continue
+		set(
+			property_name,
+			maxf(float(current_value) - delta, 0.0)
+		)
+
+
+func _tick_fear_state(delta: float) -> bool:
+	if fear_timer <= 0.0:
+		return false
+
+	ai_memory_clock += delta
+	_prune_offensive_memory()
+	_prune_status_memory()
+	attack_timer = maxf(attack_timer - delta, 0.0)
+	retarget_timer = maxf(retarget_timer - delta, 0.0)
+	wander_timer = maxf(wander_timer - delta, 0.0)
+	_tick_fear_skill_cooldowns(delta)
+	_update_invulnerability(delta)
+
+	if slow_timer > 0.0:
+		slow_timer = maxf(slow_timer - delta, 0.0)
+		if slow_timer <= 0.0:
+			move_multiplier = 1.0
+
+	fear_timer = maxf(fear_timer - delta, 0.0)
+	if is_instance_valid(fear_source):
+		fear_origin = fear_source.global_position
+
+	var escape_direction := fear_origin.direction_to(global_position)
+	if escape_direction.length_squared() <= 0.0001:
+		escape_direction = Vector2.RIGHT
+	velocity = (
+		escape_direction.normalized()
+		* move_speed
+		* move_multiplier
+		* fear_speed_multiplier
+		* _get_purifier_move_speed_multiplier()
+	)
+	_move_and_slide_with_obstacle_escape()
+	_clamp_to_battlefield()
+
+	if fear_timer <= 0.0:
+		fear_source = null
+		fear_speed_multiplier = 1.0
+		set_meta("fear_active", false)
+		queue_redraw()
+	return true
+
 func apply_slow(multiplier: float, duration: float) -> void:
 	if current_hp <= 0:
 		return
@@ -19683,6 +19889,10 @@ func _begin_death_sequence() -> void:
 		return
 
 	is_dying = true
+	fear_timer = 0.0
+	fear_source = null
+	fear_speed_multiplier = 1.0
+	set_meta("fear_active", false)
 	poison_timer = 0.0
 	poison_tick_timer = 0.0
 	poison_damage_remaining = 0

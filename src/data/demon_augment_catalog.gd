@@ -17,6 +17,7 @@ const MONSTER_NAMES := {
 	"kobolt": "코볼트",
 	"bat": "박쥐",
 	"goblin": "고블린",
+	"ghost": "유령",
 }
 
 const MONSTER_NORMAL_EXCLUDED_KEYS := {
@@ -199,6 +200,39 @@ const SPECIAL_AUGMENTS := [
 		"icon": "",
 		"effect_type": "goblin_pack_mastery",
 		"effect_values": {"large_pack_multiplier": 1.30},
+	},
+	{
+		"id": "ghost_phase_shift",
+		"monster_id": "ghost",
+		"name": "위상도약",
+		"description": "공격 후 1초 동안 반투명해지며 용사 주변 무작위 위치로 이동한 뒤 원래 색으로 돌아옵니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "ghost_phase_shift",
+		"effect_values": {"duration": 1.0, "fade_alpha": 0.22, "min_distance": 150.0, "max_distance": 260.0},
+	},
+	{
+		"id": "ghost_stack_slow",
+		"monster_id": "ghost",
+		"name": "얼어붙은 공포",
+		"description": "공유 적중 10중첩을 소모할 때 용사에게 2초간 30% 둔화를 적용합니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "ghost_stack_slow",
+		"effect_values": {"slow_multiplier": 0.70, "duration": 2.0},
+	},
+	{
+		"id": "ghost_death_empower",
+		"monster_id": "ghost",
+		"name": "망자의 유산",
+		"description": "유령 사망 시 살아 있는 무작위 아군 몬스터 1마리의 체력·공격력·이동속도·공격속도를 10% 강화합니다. 여러 번 받으면 누적됩니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "ghost_death_empower",
+		"effect_values": {"stat_multiplier": 1.10},
 	},
 	{
 		"id": "kobolt_projectile_speed",
@@ -477,6 +511,7 @@ static func get_augment(augment_id: String) -> Dictionary:
 		"kobolt",
 		"bat",
 		"goblin",
+		"ghost",
 	]:
 		for augment in get_monster_normal_augments(monster_id, ""):
 			if String(augment.get("id", "")) == augment_id:

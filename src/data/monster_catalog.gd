@@ -11,6 +11,7 @@ const ORDER := [
 	"kobolt",
 	"bat",
 	"goblin",
+	"ghost",
 ]
 
 const MONSTERS := {
@@ -494,6 +495,62 @@ const MONSTERS := {
 		],
 		"scene": preload("res://src/monsters/Goblin.tscn"),
 	},
+	"ghost": {
+		"id": "ghost",
+		"name": "유령",
+		"role": "controller",
+		"species": "gas",
+		"grade": "normal",
+		"attack_type": "ranged",
+		"base_cost": 6.1,
+		"summon_exp": 6.1,
+		"base_stats": {
+			"max_hp": 92,
+			"move_speed": 54.0,
+			"attack_damage": 4,
+			"attack_range": 275.0,
+			"attack_range_diameter": 550.0,
+			"attack_cooldown": 2.40,
+			"projectile_speed": 500.0,
+			"projectile_range": 360.0,
+		},
+		"default_unlocked": true,
+		"shards_required": 20,
+		"rarity": "common",
+		"card_icon_path": "res://assets/art/monsters/ghost/frames/idle_01.png",
+		"ground_shadow": {
+			"size": Vector2(58.0, 18.0),
+			"offset_y": 29.0,
+			"opacity": 0.34,
+		},
+		"special_augment_ids": [
+			"ghost_phase_shift",
+			"ghost_stack_slow",
+			"ghost_death_empower",
+		],
+		"elite_visual": {
+			"mode": "frames",
+			"asset_dir": "res://assets/art/elitemonster/ghost/frames",
+			"target_height": 118.0,
+			"animations": {
+				"idle": {"prefix": "idle", "count": 5, "fps": 7.0, "loop": true},
+				"move": {"prefix": "walk", "count": 5, "fps": 8.0, "loop": true},
+				"attack": {"prefix": "atk", "count": 5, "fps": 10.0, "loop": false},
+				"hit": {"prefix": "hit", "count": 3, "fps": 12.0, "loop": false},
+				"death": {"prefix": "dead", "count": 4, "fps": 9.0, "loop": false},
+			},
+		},
+		"elite_skills": [{
+			"id": "elite_ghost_fear",
+			"name": "공포",
+			"description": "선쿨 3초/재사용 15초. 용사를 1.5초간 공포 상태로 만들어 평타와 기술을 봉인하고 시전자에게서 달아나게 하며 이동속도를 50% 증가시킵니다.",
+			"initial_cooldown": 3.0,
+			"cooldown": 15.0,
+			"duration": 1.5,
+			"move_speed_multiplier": 1.50,
+		}],
+		"scene": preload("res://src/monsters/Ghost.tscn"),
+	},
 	"bomb_rat": {
 		"id": "bomb_rat",
 		"name": "폭탄쥐",
@@ -563,6 +620,7 @@ const SPECIES_LABELS := {
 	"beast": "짐승",
 	"liquid": "액체",
 	"undead": "언데드",
+	"gas": "기체",
 }
 
 const ATTACK_TYPE_LABELS := {

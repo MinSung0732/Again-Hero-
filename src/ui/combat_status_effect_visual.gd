@@ -37,6 +37,14 @@ func setup(new_target: Node, new_effect_type: String) -> void:
 					)
 					if texture != null:
 						frames.add_frame("fx", texture)
+			"fear":
+				frames.set_animation_speed("fx", 10.0)
+				for index in range(1, 7):
+					var texture := _load_texture(
+						"res://assets/art/effects/debuff/frames/slow_%02d.png" % index
+					)
+					if texture != null:
+						frames.add_frame("fx", texture)
 			"orc_rage":
 				frames.set_animation_speed("fx", 14.0)
 				for index in range(1, 9):
@@ -64,6 +72,10 @@ func setup(new_target: Node, new_effect_type: String) -> void:
 			else:
 				scale = Vector2(0.30, 0.30)
 				position = Vector2(0.0, 18.0)
+		"fear":
+			scale = Vector2(0.34, 0.34)
+			position = Vector2(0.0, -6.0)
+			modulate = Color(0.72, 0.52, 0.92, 0.92)
 		"orc_rage":
 			scale = Vector2(0.34, 0.34)
 			position = Vector2(0.0, -10.0)
@@ -99,6 +111,8 @@ func _process(delta: float) -> void:
 	match effect_type:
 		"slow":
 			active = _is_slow_active()
+		"fear":
+			active = _is_fear_active()
 		"orc_rage":
 			active = bool(target.get_meta("orc_berserk_visual_active", false))
 
@@ -132,6 +146,16 @@ func _is_slow_active() -> bool:
 	if int(target.get_meta("sage_radiance_slow_until", 0)) > now:
 		return true
 	return false
+
+
+func _is_fear_active() -> bool:
+	if not is_instance_valid(target):
+		return false
+	var fear_value = target.get("fear_timer")
+	if fear_value != null and float(fear_value) > 0.0:
+		return true
+	return bool(target.get_meta("fear_active", false))
+
 
 func _load_texture(path: String) -> Texture2D:
 	if ResourceLoader.exists(path):
