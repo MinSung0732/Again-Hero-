@@ -1,3 +1,7 @@
+### 2026-10-02 — 용사정보 MonsterCatalog get_name 충돌 수정
+- 용사정보 팝업에서 몬스터 런 상세를 만들 때 `MonsterCatalog.get_name(monster_id)`가 Godot 기본 `GDScript.get_name()`과 충돌해 "Expected 0 argument(s)" 디버거 오류가 발생하던 문제를 수정.
+- 카탈로그 헬퍼를 `get_monster_name(monster_id)`으로 변경하고 Battle의 두 호출부를 함께 교체해 엔진 기본 메서드명과 충돌하지 않도록 정리.
+
 ### 2026-10-02 — 스켈레톤 2타 Hero 무적시간 예외 처리
 - 스켈레톤의 첫 타격이 Hero 무적시간(약 0.28~0.35초)을 발생시켜 0.14초 뒤 두 번째 타격이 막히던 문제를 수정.
 - Hero에 연속타 전용 `take_followup_damage` 진입점을 추가하고, 스켈레톤의 같은 공격 사이클 두 번째 타격만 현재 무적시간을 무시하도록 제한.

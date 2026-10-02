@@ -1169,7 +1169,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 
 	var detail := {
 		"monster_id": monster_id,
-		"name": MONSTER_CATALOG.get_name(monster_id),
+		"name": MONSTER_CATALOG.get_monster_name(monster_id),
 		"species": MONSTER_CATALOG.get_species(monster_id),
 		"species_label": MONSTER_CATALOG.get_species_label(
 			MONSTER_CATALOG.get_species(monster_id)
@@ -1259,7 +1259,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 	var normal_augments: Array = []
 	for raw_augment in DEMON_AUGMENTS.get_monster_normal_augments(
 		monster_id,
-		MONSTER_CATALOG.get_name(monster_id)
+		MONSTER_CATALOG.get_monster_name(monster_id)
 	):
 		var augment: Dictionary = raw_augment
 		var augment_id := String(augment.get("id", ""))

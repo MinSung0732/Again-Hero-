@@ -347,7 +347,7 @@ static func get_scene(monster_id: String) -> PackedScene:
 	var scene = data.get("scene")
 	return scene as PackedScene
 
-static func get_name(monster_id: String) -> String:
+static func get_monster_name(monster_id: String) -> String:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
 	return String(data.get("name", monster_id))
 
