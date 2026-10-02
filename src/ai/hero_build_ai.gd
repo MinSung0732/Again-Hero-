@@ -388,7 +388,7 @@ static func _describe_rule(rule: Dictionary, context: Dictionary) -> String:
 	match source:
 		"current_type_ratio":
 			return "관측 전장 %s 비중 %.0f%%" % [
-				MONSTER_CATALOG.get_name(key),
+				MONSTER_CATALOG.get_monster_name(key),
 				_current_ratio(context, "type_counts", key) * 100.0,
 			]
 		"current_role_ratio":
@@ -399,7 +399,7 @@ static func _describe_rule(rule: Dictionary, context: Dictionary) -> String:
 		"recent_type_ratio":
 			return "최근 %.0f초 %s 공세 %.0f%%" % [
 				window,
-				MONSTER_CATALOG.get_name(key),
+				MONSTER_CATALOG.get_monster_name(key),
 				_recent_ratio(
 					context,
 					"recent_type_weights",

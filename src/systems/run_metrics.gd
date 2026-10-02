@@ -287,7 +287,7 @@ func get_result_summary() -> String:
 		if count <= 0:
 			continue
 		summon_parts.append("%s %d" % [
-			MONSTER_CATALOG.get_name(monster_type),
+			MONSTER_CATALOG.get_monster_name(monster_type),
 			count,
 		])
 	if summon_parts.is_empty():
@@ -303,7 +303,7 @@ func get_result_summary() -> String:
 		if exp_value <= 0.0:
 			continue
 		exp_parts.append("%s %.1f" % [
-			MONSTER_CATALOG.get_name(monster_type),
+			MONSTER_CATALOG.get_monster_name(monster_type),
 			exp_value,
 		])
 	if not exp_parts.is_empty():
@@ -320,7 +320,7 @@ func get_result_summary() -> String:
 			lines.append("전략 전환: 분석할 공세가 부족함")
 		else:
 			lines.append("전략 전환: 없음 · 주력 %s" % [
-				MONSTER_CATALOG.get_name(current_strategy_type)
+				MONSTER_CATALOG.get_monster_name(current_strategy_type)
 			])
 	else:
 		var switch_parts: PackedStringArray = []
@@ -328,8 +328,8 @@ func get_result_summary() -> String:
 			var switch: Dictionary = raw_switch
 			switch_parts.append("%s %s→%s" % [
 				_format_time(float(switch.get("time", 0.0))),
-				MONSTER_CATALOG.get_name(String(switch.get("from", ""))),
-				MONSTER_CATALOG.get_name(String(switch.get("to", ""))),
+				MONSTER_CATALOG.get_monster_name(String(switch.get("from", ""))),
+				MONSTER_CATALOG.get_monster_name(String(switch.get("to", ""))),
 			])
 		lines.append("전략 전환: %s" % " / ".join(switch_parts))
 

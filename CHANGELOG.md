@@ -1,3 +1,9 @@
+### 2026-10-02 — MonsterCatalog get_name 전역 잔여 호출 정리
+- 프로젝트 전체 GDScript를 직접 전수검색해 `MONSTER_CATALOG.get_name(...)` 잔여 호출 7개를 추가로 발견하고 모두 `get_monster_name(...)`으로 교체.
+- `hero_build_ai.gd` 391/402행의 2개 호출을 수정해 Hero 빌드 AI 의존 스크립트 Parse error를 제거.
+- `run_metrics.gd`의 5개 호출을 수정해 Battle이 `RUN_METRICS.new()`를 만들 때 의존 스크립트 컴파일 실패로 `.new()` 연쇄 오류가 발생하던 원인을 제거.
+- 이번 수정 전 기준 `src/**/*.gd` 88개를 나눠 직접 검사했으며 MonsterCatalog 구식 호출은 위 7개가 전부였음.
+
 ### 2026-10-02 — 용사 최근 공세 요약 get_name 잔여 호출 수정
 - `hero.gd`의 최근 공세 요약에서 남아 있던 `MONSTER_CATALOG.get_name(dominant_type)` 호출을 `get_monster_name(dominant_type)`으로 교체.
 - 용사정보 팝업에서 최근 공세 요약을 만들 때 Godot 기본 `GDScript.get_name()`과 충돌해 발생하던 정적 호출 오류를 제거.
