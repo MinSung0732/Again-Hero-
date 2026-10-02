@@ -3279,7 +3279,7 @@ func spawn_special_monster(
 		return false
 
 	var spawn_position := (
-		_get_farthest_stage_event_spawn_position()
+		_get_farthest_kobolt_attack_spawn_position(monster_id)
 		if monster_id == "kobolt"
 		else _get_stage_event_spawn_position(
 			float(special_data.get("spawn_distance", 720.0))
@@ -3524,6 +3524,30 @@ func _get_farthest_stage_event_spawn_position() -> Vector2:
 			farthest = candidate
 			farthest_distance_sq = distance_sq
 	return farthest
+
+
+func _get_farthest_kobolt_attack_spawn_position(
+	monster_id: String
+) -> Vector2:
+	if not is_instance_valid(hero):
+		return current_map_size * 0.5
+
+	var base_stats := MONSTER_CATALOG.get_base_stats(monster_id)
+	var attack_range := maxf(
+		float(base_stats.get("attack_range", 1.0)),
+		1.0
+	)
+	var farthest_map_position := _get_farthest_stage_event_spawn_position()
+	var offset := farthest_map_position - hero.position
+	if offset.length_squared() <= 0.001:
+		return _clamp_manual_spawn_position(hero.position)
+
+	# Keep a one-pixel safety margin so floating-point rounding cannot place
+	# the stationary kobolt just outside its own attack check.
+	var spawn_distance := minf(maxf(attack_range - 1.0, 1.0), offset.length())
+	return _clamp_manual_spawn_position(
+		hero.position + offset.normalized() * spawn_distance
+	)
 
 func _gain_demon_exp(amount: float) -> void:
 	if amount <= 0.0 or battle_over:
