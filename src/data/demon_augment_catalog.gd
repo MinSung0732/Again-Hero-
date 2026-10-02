@@ -16,6 +16,7 @@ const MONSTER_NAMES := {
 	"skeleton_archer": "스켈레톤 궁병",
 	"kobolt": "코볼트",
 	"bat": "박쥐",
+	"goblin": "고블린",
 }
 
 const MONSTER_NORMAL_EXCLUDED_KEYS := {
@@ -161,6 +162,43 @@ const SPECIAL_AUGMENTS := [
 			"min_extra_count": 1,
 			"max_extra_count": 3,
 		},
+	},
+	{
+		"id": "goblin_spawn_stealth",
+		"monster_id": "goblin",
+		"name": "겁쟁이 은신",
+		"description": "소환 후 1초간 반투명 은신 상태가 되어 받는 피해가 50% 감소합니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "goblin_spawn_stealth",
+		"effect_values": {
+			"duration": 1.0,
+			"damage_taken_multiplier": 0.50,
+			"opacity": 0.42,
+		},
+	},
+	{
+		"id": "goblin_survivor_growth",
+		"monster_id": "goblin",
+		"name": "생존 진화",
+		"description": "소환된 고블린이 전장에서 8초 이상 살아남으면 그 개체가 대형 개체로 변합니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "goblin_survivor_growth",
+		"effect_values": {"survival_time": 8.0},
+	},
+	{
+		"id": "goblin_pack_mastery",
+		"monster_id": "goblin",
+		"name": "대무리 결속",
+		"description": "고블린 10마리 이상이 뭉쳤을 때 무리 보너스가 10%에서 30%로 강화됩니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "goblin_pack_mastery",
+		"effect_values": {"large_pack_multiplier": 1.30},
 	},
 	{
 		"id": "kobolt_projectile_speed",
@@ -438,6 +476,7 @@ static func get_augment(augment_id: String) -> Dictionary:
 		"skeleton_archer",
 		"kobolt",
 		"bat",
+		"goblin",
 	]:
 		for augment in get_monster_normal_augments(monster_id, ""):
 			if String(augment.get("id", "")) == augment_id:

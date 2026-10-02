@@ -297,6 +297,12 @@ static func get_external_movement_multiplier(owner: Node) -> float:
 			1.0,
 			2.0
 		)
+	if int(owner.get_meta("elite_goblin_commander_speed_until", 0)) > now_msec:
+		multiplier *= clampf(
+			float(owner.get_meta("elite_goblin_commander_speed_multiplier", 1.15)),
+			1.0,
+			2.0
+		)
 	if bool(owner.get_meta("elite_vibration_speed_active", false)):
 		multiplier *= clampf(
 			float(owner.get_meta("elite_vibration_speed_multiplier", 3.0)),

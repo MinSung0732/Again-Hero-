@@ -1473,6 +1473,7 @@ func _apply_giant_monster_base_stats(
 		"skeleton_archer",
 		"kobolt",
 		"bat",
+		"goblin",
 	]:
 		var damage_value = monster.get("attack_damage")
 		if damage_value != null:
@@ -1590,6 +1591,72 @@ func _apply_giant_monster_base_stats(
 	# CollisionShape2D together. This keeps the collision footprint matched to
 	# the requested 2x body size without mutating shared Shape2D resources.
 	monster.scale *= GIANT_MONSTER_SIZE_MULTIPLIER
+
+
+func promote_monster_to_giant(
+	monster: Node2D,
+	monster_type: String
+) -> bool:
+	if (
+		not is_instance_valid(monster)
+		or monster.is_queued_for_deletion()
+		or bool(monster.get_meta("giant_monster", false))
+		or String(monster.get_meta("visual_variant", "")) == "elite"
+	):
+		return false
+	if String(monster.get("monster_type")) != monster_type:
+		return false
+
+	monster.set_meta("giant_monster", true)
+	monster.set_meta("giant_stat_multiplier", GIANT_MONSTER_STAT_MULTIPLIER)
+	monster.set_meta("giant_hp_multiplier", GIANT_MONSTER_HP_MULTIPLIER)
+	monster.set_meta("giant_size_multiplier", GIANT_MONSTER_SIZE_MULTIPLIER)
+
+	var raw_hp = monster.get_meta("augment_raw_max_hp", null)
+	if raw_hp != null:
+		monster.set_meta(
+			"augment_raw_max_hp",
+			maxf(float(raw_hp) * GIANT_MONSTER_HP_MULTIPLIER, 1.0)
+		)
+	var raw_speed = monster.get_meta("augment_raw_move_speed", null)
+	if raw_speed != null:
+		monster.set_meta(
+			"augment_raw_move_speed",
+			maxf(float(raw_speed) * GIANT_MONSTER_STAT_MULTIPLIER, 1.0)
+		)
+	var raw_damage = monster.get_meta("augment_raw_attack_damage", null)
+	if raw_damage != null:
+		monster.set_meta(
+			"augment_raw_attack_damage",
+			maxf(float(raw_damage) * GIANT_MONSTER_STAT_MULTIPLIER, 1.0)
+		)
+	var raw_cooldown = monster.get_meta("augment_raw_attack_cooldown", null)
+	if raw_cooldown != null:
+		monster.set_meta(
+			"augment_raw_attack_cooldown",
+			maxf(float(raw_cooldown) / GIANT_MONSTER_STAT_MULTIPLIER, 0.10)
+		)
+
+	var attack_range_value = monster.get("attack_range")
+	if attack_range_value != null:
+		var range_multiplier := GIANT_MONSTER_STAT_MULTIPLIER
+		if monster_type in GIANT_RANGED_MONSTER_IDS:
+			range_multiplier = GIANT_MONSTER_SIZE_MULTIPLIER
+		monster.set("attack_range", float(attack_range_value) * range_multiplier)
+
+	var exp_value = monster.get("exp_reward")
+	if exp_value != null:
+		monster.set(
+			"exp_reward",
+			maxi(1, int(round(float(exp_value) * GIANT_MONSTER_STAT_MULTIPLIER)))
+		)
+
+	monster.scale *= GIANT_MONSTER_SIZE_MULTIPLIER
+	_apply_normal_augments_to_existing_monster(monster, monster_type)
+	monster_spatial_grid_physics_frame = -1
+	if monster.has_method("queue_redraw"):
+		monster.call("queue_redraw")
+	return true
 
 
 func _spawn_monster(

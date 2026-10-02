@@ -4,6 +4,7 @@ class_name EliteMonsterSkillRuntime
 const SPIDER_WEB_POOL_KEY := "elite_spider_web"
 const SKELETON_ARCHER_RAIN_LINE_POOL_KEY := "elite_skeleton_archer_rain_line"
 const SKELETON_ARCHER_RAIN_ARROW_POOL_KEY := "elite_skeleton_archer_rain_arrow"
+const GOBLIN_COMMANDER_AURA_POOL_KEY := "elite_goblin_commander_aura"
 
 var battle: Node
 
@@ -75,6 +76,11 @@ func register_elite(
 		var skill: Dictionary = Dictionary(raw_skill).duplicate(true)
 		if bool(skill.get("passive", false)):
 			_activate_passive_skill(monster, skill)
+			if bool(skill.get("runtime_tick", false)):
+				skill["_timer"] = 0.0
+				skill["_active"] = true
+				skill["_active_timer"] = 0.0
+				skills.append(skill)
 			continue
 		skill["_timer"] = maxf(
 			float(skill.get("initial_cooldown", 0.0)),
@@ -116,6 +122,8 @@ func _activate_passive_skill(
 				"elite_bat_poison_tick_interval",
 				maxf(float(skill.get("tick_interval", 0.50)), 0.05)
 			)
+		"elite_goblin_commander":
+			_begin_goblin_commander(monster, skill)
 
 
 func tick(delta: float) -> void:
@@ -217,8 +225,122 @@ func _tick_active_skill(
 			_tick_skeleton_archer_arrow_rain(monster, skill, delta)
 		"elite_kobolt_fighting_spirit":
 			_tick_kobolt_fighting_spirit(monster, skill, delta)
+		"elite_goblin_commander":
+			_tick_goblin_commander(monster, skill, delta)
 		_:
 			skill["_active"] = false
+
+
+func _begin_goblin_commander(monster: Node2D, skill: Dictionary) -> void:
+	skill["_active"] = true
+	skill["_tick_timer"] = 0.0
+	skill["_shield_timer"] = 0.0
+	skill["_line_fx"] = _create_goblin_commander_aura(monster, skill)
+
+
+func _create_goblin_commander_aura(
+	monster: Node2D,
+	skill: Dictionary
+) -> Line2D:
+	if not is_instance_valid(battle) or not battle.has_method("acquire_transient_fx"):
+		return null
+	var pooled = battle.call("acquire_transient_fx", GOBLIN_COMMANDER_AURA_POOL_KEY, "line")
+	if not (pooled is Line2D):
+		return null
+	var line := pooled as Line2D
+	line.clear_points()
+	line.global_position = monster.global_position
+	line.z_index = 1
+	line.width = maxf(float(skill.get("line_width", 2.0)), 1.0)
+	line.default_color = Color(0.48, 0.92, 0.42, 0.72)
+	line.antialiased = false
+	var radius := maxf(float(skill.get("radius", 300.0)), 1.0)
+	var segments := maxi(int(skill.get("line_segments", 48)), 16)
+	for index in range(segments + 1):
+		var angle := TAU * float(index) / float(segments)
+		line.add_point(Vector2.from_angle(angle) * radius)
+	return line
+
+
+func _tick_goblin_commander(
+	monster: Node2D,
+	skill: Dictionary,
+	delta: float
+) -> void:
+	if not is_instance_valid(monster):
+		return
+
+	var line := skill.get("_line_fx") as Line2D
+	if is_instance_valid(line):
+		line.global_position = monster.global_position
+
+	var aura_timer := maxf(float(skill.get("_tick_timer", 0.0)) - delta, 0.0)
+	var shield_timer := maxf(float(skill.get("_shield_timer", 0.0)) - delta, 0.0)
+	skill["_tick_timer"] = aura_timer
+	skill["_shield_timer"] = shield_timer
+	if aura_timer > 0.0 and shield_timer > 0.0:
+		return
+
+	var radius := maxf(float(skill.get("radius", 300.0)), 1.0)
+	var radius_sq := radius * radius
+	var aura_interval := maxf(float(skill.get("aura_tick_interval", 0.20)), 0.05)
+	var refresh_shield := shield_timer <= 0.0
+	if aura_timer <= 0.0:
+		skill["_tick_timer"] = aura_interval
+	if refresh_shield:
+		skill["_shield_timer"] = maxf(
+			float(skill.get("shield_refresh_interval", 5.0)),
+			0.10
+		)
+
+	_monster_scratch.clear()
+	if battle.has_method("fill_monsters_near"):
+		battle.call("fill_monsters_near", monster.global_position, radius, _monster_scratch)
+
+	var speed_multiplier := maxf(float(skill.get("speed_multiplier", 1.15)), 1.0)
+	var speed_until := Time.get_ticks_msec() + int(round(aura_interval * 1.50 * 1000.0))
+	var shield_ratio := maxf(float(skill.get("shield_max_hp_ratio", 0.10)), 0.0)
+
+	for raw_monster in _monster_scratch:
+		var target := raw_monster as Node2D
+		if (
+			not is_instance_valid(target)
+			or target.is_queued_for_deletion()
+			or String(target.get("monster_type")) != "goblin"
+		):
+			continue
+		var hp_value = target.get("current_hp")
+		if hp_value != null and int(hp_value) <= 0:
+			continue
+		if monster.global_position.distance_squared_to(target.global_position) > radius_sq:
+			continue
+
+		target.set_meta("elite_goblin_commander_speed_until", speed_until)
+		target.set_meta("elite_goblin_commander_speed_multiplier", speed_multiplier)
+		if refresh_shield and shield_ratio > 0.0:
+			var max_hp_value = target.get("max_hp")
+			if max_hp_value != null:
+				var shield_amount := maxi(
+					int(round(float(max_hp_value) * shield_ratio)),
+					1
+				)
+				target.set_meta("elite_shield_max_hp", shield_amount)
+				target.set_meta("elite_shield_hp", shield_amount)
+				if target.has_method("queue_redraw"):
+					target.call("queue_redraw")
+	_monster_scratch.clear()
+
+
+func _finish_goblin_commander(skill: Dictionary) -> void:
+	var line := skill.get("_line_fx") as Line2D
+	if (
+		is_instance_valid(line)
+		and is_instance_valid(battle)
+		and battle.has_method("recycle_transient_fx")
+	):
+		battle.call("recycle_transient_fx", line, GOBLIN_COMMANDER_AURA_POOL_KEY)
+	skill["_line_fx"] = null
+	skill["_active"] = false
 
 
 func _begin_slime_proliferation(
@@ -999,3 +1121,5 @@ func _cleanup_state(state: Dictionary) -> void:
 			"elite_kobolt_fighting_spirit":
 				if bool(skill.get("_active", false)):
 					_finish_kobolt_fighting_spirit(monster, skill)
+			"elite_goblin_commander":
+				_finish_goblin_commander(skill)
