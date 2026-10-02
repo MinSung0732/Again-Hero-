@@ -1893,3 +1893,13 @@ Build AI는 전체/주변 몬스터 수, 최근 공세, 역할 비율, 거리, �
 - 특수증강 「망자의 귀환」: 개체당 1회, 첫 사망 2초 뒤 제자리 풀 HP 부활. 첫 사망에는 died를 발생시키지 않아 EXP/킬 보상은 최종 사망 1회만 처리.
 - 특수증강 「뼈의 결속」: 반경 75 안에 자신 포함 스켈레톤 3마리 이상일 때 공격력/이동속도/공격속도 ×1.10. 0.12초 캐시 갱신 및 Battle 공간그리드 사용.
 - 특수증강 「사령의 가호」: 엘리트 스켈레톤 생존 중 모든 스켈레톤 받는 피해 ×0.75. 엘리트 생존은 Battle 레지스트리로 관리.
+
+
+### 스켈레톤 궁병 v1 (2026-10-02)
+- ID: `skeleton_archer`, 일반/언데드/원거리. 테스트 기본값은 HP 48, 이동속도 88, 공격력 8, 공격간격 1.55초, 코스트 7.5, 공격 사거리 지름 275(코드 반경 137.5), 투사체 속도 300.
+- 일반 공격 투사체는 `skelletonarcher/frames/effect1`의 normal 4프레임을 사용하고, 기본 적중 시퀀스는 `normalhit_01 → normalhit_02 → hitdelete_01`.
+- 특수증강: `skeleton_archer_power_shot`(강령 사격, 0.25초 windup + 160% power 화살), `skeleton_archer_revive`(불사의 사수, 2초 뒤 풀피 1회 부활/EXP 최종 사망 1회), `skeleton_archer_triple_shot`(삼연사, 0.4초 간격 3발 후 쿨다운). 강령 사격+삼연사는 한 번의 windup 뒤 power 화살 3발을 발사.
+- 엘리트 스킬 `elite_skeleton_archer_arrow_rain`(화살비): 선쿨 2초/쿨 17초, 시전 당시 Hero 위치 중심 반경 137.5, 0.25초 예고선 후 0.35초 간격 3웨이브. 웨이브마다 화살 비주얼 12개, Hero가 범위 안이면 공격력 130% 피해 1회와 25% 둔화 1초.
+- 화살비 후속 웨이브는 Hero 무적시간 0.28~0.35초와 정확히 겹쳐 누락되지 않도록 같은 스킬 연속타로 `take_followup_damage`를 사용한다.
+- 궁병 투사체는 Battle projectile pool, 화살비 선/화살 비주얼은 transient FX pool을 사용한다. 화살비 범위 판정은 Hero 1개 좌표만 확인하며 몬스터 전체 스캔을 하지 않는다.
+- 엘리트 부활 중에는 `elite_skill_reviving` 메타로 EliteMonsterSkillRuntime 상태를 보존한다. 이 규칙은 기존 엘리트 스켈레톤 부활에도 동일하게 적용.

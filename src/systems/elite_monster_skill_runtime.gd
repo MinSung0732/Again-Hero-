@@ -2,6 +2,8 @@ extends RefCounted
 class_name EliteMonsterSkillRuntime
 
 const SPIDER_WEB_POOL_KEY := "elite_spider_web"
+const SKELETON_ARCHER_RAIN_LINE_POOL_KEY := "elite_skeleton_archer_rain_line"
+const SKELETON_ARCHER_RAIN_ARROW_POOL_KEY := "elite_skeleton_archer_rain_arrow"
 
 var battle: Node
 
@@ -9,9 +11,12 @@ var _skill_states: Dictionary = {}
 var _stale_skill_ids: Array[int] = []
 var _slime_arcs: Array = []
 var _spider_webs: Array = []
+var _skeleton_archer_rain_arrows: Array = []
 var _monster_scratch: Array = []
 
 var _spider_web_texture: Texture2D
+var _skeleton_archer_rain_arrow_texture: Texture2D
+var _skeleton_archer_rain_arrow_texture_path: String = ""
 
 
 func setup(authority: Node) -> void:
@@ -38,6 +43,12 @@ func reset() -> void:
 			continue
 		_recycle_web_visual(Dictionary(raw_web))
 	_spider_webs.clear()
+
+	for raw_arrow in _skeleton_archer_rain_arrows:
+		if typeof(raw_arrow) != TYPE_DICTIONARY:
+			continue
+		_recycle_skeleton_archer_rain_arrow(Dictionary(raw_arrow))
+	_skeleton_archer_rain_arrows.clear()
 
 	for raw_id in _skill_states:
 		var state_value = _skill_states.get(raw_id, {})
@@ -86,6 +97,7 @@ func tick(delta: float) -> void:
 
 	_tick_slime_arcs(delta)
 	_tick_spider_webs(delta)
+	_tick_skeleton_archer_rain_arrows(delta)
 
 	_stale_skill_ids.clear()
 	for raw_id in _skill_states:
@@ -99,8 +111,15 @@ func tick(delta: float) -> void:
 		if (
 			not is_instance_valid(monster)
 			or monster.is_queued_for_deletion()
-			or int(monster.get("current_hp")) <= 0
 		):
+			_cleanup_state(state)
+			_stale_skill_ids.append(int(raw_id))
+			continue
+
+		var current_hp_value = monster.get("current_hp")
+		if current_hp_value != null and int(current_hp_value) <= 0:
+			if bool(monster.get_meta("elite_skill_reviving", false)):
+				continue
 			_cleanup_state(state)
 			_stale_skill_ids.append(int(raw_id))
 			continue
@@ -147,6 +166,8 @@ func _cast_skill(monster: Node2D, skill: Dictionary) -> void:
 			_begin_bomb_rat_vibration(monster, skill)
 		"elite_skeleton_ambush":
 			_begin_skeleton_ambush(monster, skill)
+		"elite_skeleton_archer_arrow_rain":
+			_begin_skeleton_archer_arrow_rain(monster, skill)
 
 
 func _tick_active_skill(
@@ -163,6 +184,8 @@ func _tick_active_skill(
 			_tick_bomb_rat_vibration(monster, skill, delta)
 		"elite_skeleton_ambush":
 			_tick_skeleton_ambush(monster, skill, delta)
+		"elite_skeleton_archer_arrow_rain":
+			_tick_skeleton_archer_arrow_rain(monster, skill, delta)
 		_:
 			skill["_active"] = false
 
@@ -615,6 +638,259 @@ func _finish_skeleton_ambush(
 		visual.modulate = Color.WHITE
 
 
+func _begin_skeleton_archer_arrow_rain(
+	monster: Node2D,
+	skill: Dictionary
+) -> void:
+	var hero := battle.get("hero") as Node2D
+	if not is_instance_valid(hero):
+		return
+	skill["_active"] = true
+	skill["_center"] = hero.global_position
+	skill["_remaining_waves"] = maxi(int(skill.get("wave_count", 3)), 1)
+	skill["_wave_index"] = 0
+	skill["_wave_timer"] = maxf(
+		float(skill.get("telegraph_delay", 0.25)),
+		0.0
+	)
+	skill["_line_fx"] = _create_skeleton_archer_rain_line(
+		hero.global_position,
+		skill
+	)
+
+
+func _tick_skeleton_archer_arrow_rain(
+	monster: Node2D,
+	skill: Dictionary,
+	delta: float
+) -> void:
+	var remaining := maxi(int(skill.get("_remaining_waves", 0)), 0)
+	if remaining <= 0:
+		_finish_skeleton_archer_arrow_rain(skill)
+		return
+
+	var wave_timer := maxf(
+		float(skill.get("_wave_timer", 0.0)) - delta,
+		0.0
+	)
+	if wave_timer > 0.0:
+		skill["_wave_timer"] = wave_timer
+		return
+
+	var center: Vector2 = skill.get("_center", monster.global_position)
+	var radius := maxf(float(skill.get("radius", 137.5)), 1.0)
+	var wave_index := maxi(int(skill.get("_wave_index", 0)), 0)
+	_spawn_skeleton_archer_rain_visuals(center, radius, skill)
+	_apply_skeleton_archer_rain_hit(
+		monster,
+		center,
+		radius,
+		skill,
+		wave_index
+	)
+
+	remaining -= 1
+	skill["_remaining_waves"] = remaining
+	skill["_wave_index"] = wave_index + 1
+	if remaining <= 0:
+		_finish_skeleton_archer_arrow_rain(skill)
+		return
+	skill["_wave_timer"] = maxf(
+		float(skill.get("wave_interval", 0.35)),
+		0.01
+	)
+
+
+func _create_skeleton_archer_rain_line(
+	center: Vector2,
+	skill: Dictionary
+) -> Line2D:
+	if not battle.has_method("acquire_transient_fx"):
+		return null
+	var pooled = battle.call(
+		"acquire_transient_fx",
+		SKELETON_ARCHER_RAIN_LINE_POOL_KEY,
+		"line"
+	)
+	if not pooled is Line2D:
+		return null
+	var line := pooled as Line2D
+	line.clear_points()
+	line.global_position = center
+	line.z_index = 5
+	line.width = maxf(float(skill.get("line_width", 2.0)), 1.0)
+	line.default_color = Color(0.95, 0.78, 0.42, 0.78)
+	var radius := maxf(float(skill.get("radius", 137.5)), 1.0)
+	var segments := maxi(int(skill.get("line_segments", 32)), 12)
+	for index in range(segments + 1):
+		var angle := TAU * float(index) / float(segments)
+		line.add_point(Vector2.from_angle(angle) * radius)
+	return line
+
+
+func _spawn_skeleton_archer_rain_visuals(
+	center: Vector2,
+	radius: float,
+	skill: Dictionary
+) -> void:
+	var texture := _get_skeleton_archer_rain_arrow_texture(skill)
+	if texture == null:
+		return
+	var arrow_count := maxi(int(skill.get("arrows_per_wave", 12)), 1)
+	var fall_distance := maxf(
+		float(skill.get("arrow_fall_distance", 170.0)),
+		1.0
+	)
+	var fall_duration := maxf(
+		float(skill.get("arrow_fall_duration", 0.22)),
+		0.05
+	)
+	var source_size := maxf(
+		float(maxi(texture.get_width(), texture.get_height())),
+		1.0
+	)
+	var target_size := maxf(float(skill.get("arrow_target_size", 52.0)), 1.0)
+	var visual_scale := target_size / source_size
+
+	for index in range(arrow_count):
+		if not battle.has_method("acquire_transient_fx"):
+			break
+		var pooled = battle.call(
+			"acquire_transient_fx",
+			SKELETON_ARCHER_RAIN_ARROW_POOL_KEY,
+			"sprite"
+		)
+		if not pooled is Sprite2D:
+			continue
+		var sprite := pooled as Sprite2D
+		var angle := randf_range(0.0, TAU)
+		var distance := sqrt(randf()) * radius
+		var landing := center + Vector2.from_angle(angle) * distance
+		var start := landing + Vector2(0.0, -fall_distance)
+		sprite.texture = texture
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sprite.global_position = start
+		sprite.rotation = PI * 0.5
+		sprite.scale = Vector2.ONE * visual_scale
+		sprite.modulate = Color.WHITE
+		sprite.z_index = 6
+		_skeleton_archer_rain_arrows.append({
+			"sprite": sprite,
+			"start": start,
+			"landing": landing,
+			"elapsed": 0.0,
+			"duration": fall_duration,
+		})
+
+
+func _tick_skeleton_archer_rain_arrows(delta: float) -> void:
+	for index in range(_skeleton_archer_rain_arrows.size() - 1, -1, -1):
+		var raw_arrow = _skeleton_archer_rain_arrows[index]
+		if typeof(raw_arrow) != TYPE_DICTIONARY:
+			_skeleton_archer_rain_arrows.remove_at(index)
+			continue
+		var arrow: Dictionary = raw_arrow
+		var sprite := arrow.get("sprite") as Sprite2D
+		if not is_instance_valid(sprite):
+			_skeleton_archer_rain_arrows.remove_at(index)
+			continue
+		var duration := maxf(float(arrow.get("duration", 0.22)), 0.01)
+		var elapsed := minf(float(arrow.get("elapsed", 0.0)) + delta, duration)
+		arrow["elapsed"] = elapsed
+		var t := clampf(elapsed / duration, 0.0, 1.0)
+		var start: Vector2 = arrow.get("start", sprite.global_position)
+		var landing: Vector2 = arrow.get("landing", sprite.global_position)
+		sprite.global_position = start.lerp(landing, t)
+		if t + 0.0001 < 1.0:
+			continue
+		_recycle_skeleton_archer_rain_arrow(arrow)
+		_skeleton_archer_rain_arrows.remove_at(index)
+
+
+func _apply_skeleton_archer_rain_hit(
+	monster: Node2D,
+	center: Vector2,
+	radius: float,
+	skill: Dictionary,
+	wave_index: int
+) -> void:
+	var hero := battle.get("hero") as Node2D
+	if not is_instance_valid(hero):
+		return
+	if center.distance_squared_to(hero.global_position) > radius * radius:
+		return
+	var damage := maxi(
+		int(round(
+			float(maxi(int(monster.get("attack_damage")), 1))
+			* maxf(float(skill.get("damage_multiplier", 1.30)), 0.0)
+		)),
+		1
+	)
+	var damage_applied := false
+	if wave_index > 0 and hero.has_method("take_followup_damage"):
+		damage_applied = bool(hero.call(
+			"take_followup_damage",
+			damage,
+			monster
+		))
+	elif hero.has_method("take_damage"):
+		damage_applied = bool(hero.call("take_damage", damage, monster))
+	if damage_applied and hero.has_method("apply_slow"):
+		hero.call(
+			"apply_slow",
+			clampf(float(skill.get("slow_multiplier", 0.75)), 0.01, 1.0),
+			maxf(float(skill.get("slow_duration", 1.0)), 0.05)
+		)
+
+
+func _get_skeleton_archer_rain_arrow_texture(
+	skill: Dictionary
+) -> Texture2D:
+	var path := String(skill.get("arrow_texture_path", ""))
+	if path.is_empty():
+		return null
+	if (
+		_skeleton_archer_rain_arrow_texture != null
+		and _skeleton_archer_rain_arrow_texture_path == path
+	):
+		return _skeleton_archer_rain_arrow_texture
+	_skeleton_archer_rain_arrow_texture = ResourceLoader.load(path) as Texture2D
+	_skeleton_archer_rain_arrow_texture_path = path
+	return _skeleton_archer_rain_arrow_texture
+
+
+func _recycle_skeleton_archer_rain_arrow(arrow: Dictionary) -> void:
+	var sprite = arrow.get("sprite")
+	if (
+		is_instance_valid(sprite)
+		and is_instance_valid(battle)
+		and battle.has_method("recycle_transient_fx")
+	):
+		battle.call(
+			"recycle_transient_fx",
+			sprite,
+			SKELETON_ARCHER_RAIN_ARROW_POOL_KEY
+		)
+
+
+func _finish_skeleton_archer_arrow_rain(skill: Dictionary) -> void:
+	skill["_active"] = false
+	skill["_remaining_waves"] = 0
+	skill["_wave_timer"] = 0.0
+	var line = skill.get("_line_fx")
+	if (
+		is_instance_valid(line)
+		and is_instance_valid(battle)
+		and battle.has_method("recycle_transient_fx")
+	):
+		battle.call(
+			"recycle_transient_fx",
+			line,
+			SKELETON_ARCHER_RAIN_LINE_POOL_KEY
+		)
+	skill["_line_fx"] = null
+
+
 func _cleanup_state(state: Dictionary) -> void:
 	var monster := state.get("monster") as Node2D
 	var skills_value = state.get("skills", [])
@@ -634,3 +910,6 @@ func _cleanup_state(state: Dictionary) -> void:
 			"elite_skeleton_ambush":
 				if bool(skill.get("_active", false)):
 					_finish_skeleton_ambush(monster, skill)
+			"elite_skeleton_archer_arrow_rain":
+				if bool(skill.get("_active", false)):
+					_finish_skeleton_archer_arrow_rain(skill)

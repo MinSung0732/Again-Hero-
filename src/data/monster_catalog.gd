@@ -1,7 +1,7 @@
 extends RefCounted
 class_name MonsterCatalog
 
-const ORDER := ["slime", "spider", "orc", "bomb_rat", "skeleton"]
+const ORDER := ["slime", "spider", "orc", "bomb_rat", "skeleton", "skeleton_archer"]
 
 const MONSTERS := {
 	"slime": {
@@ -238,6 +238,76 @@ const MONSTERS := {
 		],
 		"scene": preload("res://src/monsters/Skeleton.tscn"),
 	},
+	"skeleton_archer": {
+		"id": "skeleton_archer",
+		"name": "스켈레톤 궁병",
+		"role": "ranged",
+		"species": "undead",
+		"grade": "normal",
+		"attack_type": "ranged",
+		"base_cost": 7.5,
+		"summon_exp": 7.5,
+		"base_stats": {
+			"max_hp": 48,
+			"move_speed": 88.0,
+			"attack_damage": 8,
+			"attack_range": 137.5,
+			"attack_range_diameter": 275.0,
+			"attack_cooldown": 1.55,
+			"projectile_speed": 300.0,
+			"projectile_range": 190.0,
+		},
+		"default_unlocked": true,
+		"shards_required": 20,
+		"rarity": "common",
+		"card_icon_path": "res://assets/art/monsters/skelletonarcher/frames/idle_01.png",
+		"ground_shadow": {
+			"size": Vector2(64.0, 20.0),
+			"offset_y": 29.0,
+			"opacity": 0.48,
+		},
+		"special_augment_ids": [
+			"skeleton_archer_power_shot",
+			"skeleton_archer_revive",
+			"skeleton_archer_triple_shot",
+		],
+		"elite_visual": {
+			"mode": "frames",
+			"asset_dir": "res://assets/art/elitemonster/skelletonarcher/frames",
+			"target_height": 112.0,
+			"animations": {
+				"idle": {"prefix": "idle", "count": 4, "fps": 6.0, "loop": true},
+				"move": {"prefix": "walk", "count": 5, "fps": 9.0, "loop": true},
+				"attack": {"prefix": "atk", "count": 7, "fps": 14.0, "loop": false},
+				"hit": {"prefix": "hit", "count": 3, "fps": 14.0, "loop": false},
+				"death": {"prefix": "dead", "count": 5, "fps": 10.0, "loop": false},
+			},
+		},
+		"elite_skills": [
+			{
+				"id": "elite_skeleton_archer_arrow_rain",
+				"name": "화살비",
+				"description": "선쿨 2초/재사용 17초. 시전 시 용사 위치 중심 지름 275 범위를 얇은 선으로 표시하고, 0.35초 간격으로 12발의 화살비를 총 3회 내립니다. 각 회차는 공격력의 130% 피해를 1회 주고 1초간 25% 둔화시킵니다.",
+				"initial_cooldown": 2.0,
+				"cooldown": 17.0,
+				"radius": 137.5,
+				"telegraph_delay": 0.25,
+				"wave_interval": 0.35,
+				"wave_count": 3,
+				"arrows_per_wave": 12,
+				"damage_multiplier": 1.30,
+				"slow_multiplier": 0.75,
+				"slow_duration": 1.0,
+				"line_width": 2.0,
+				"line_segments": 32,
+				"arrow_fall_distance": 170.0,
+				"arrow_fall_duration": 0.22,
+				"arrow_target_size": 52.0,
+				"arrow_texture_path": "res://assets/art/elitemonster/skelletonarcher/frames/effect1/normal_01.png",
+			},
+		],
+		"scene": preload("res://src/monsters/SkeletonArcher.tscn"),
+	},
 	"bomb_rat": {
 		"id": "bomb_rat",
 		"name": "폭탄쥐",
@@ -299,6 +369,7 @@ const ROLE_LABELS := {
 	"swarm": "물량",
 	"controller": "제어",
 	"tank": "탱커",
+	"ranged": "원거리",
 	"burst": "폭발",
 }
 

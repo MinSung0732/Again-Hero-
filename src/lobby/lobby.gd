@@ -2980,8 +2980,20 @@ func _build_normal_detail_text(
 		lines.append("자폭 준비  %.2f초" % float(fuse_value))
 
 	var range_value = stats.get("attack_range")
+	var range_diameter = stats.get("attack_range_diameter")
 	if range_value != null and monster_id != "bomb_rat":
-		lines.append("공격 사거리  %.0f" % float(range_value))
+		if range_diameter != null:
+			lines.append(
+				"공격 사거리  지름 %.0f" % float(range_diameter)
+			)
+		else:
+			lines.append("공격 사거리  %.0f" % float(range_value))
+
+	var projectile_speed_value = stats.get("projectile_speed")
+	if projectile_speed_value != null:
+		lines.append(
+			"투사체 속도  %.0f" % float(projectile_speed_value)
+		)
 
 	var explosion_radius = stats.get("explosion_radius")
 	if explosion_radius != null:

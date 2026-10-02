@@ -1445,7 +1445,7 @@ func _apply_giant_monster_base_stats(
 			)
 		)
 
-	if monster_type in ["slime", "orc", "spider", "skeleton"]:
+	if monster_type in ["slime", "orc", "spider", "skeleton", "skeleton_archer"]:
 		var damage_value = monster.get("attack_damage")
 		if damage_value != null:
 			monster.set(
@@ -1478,7 +1478,7 @@ func _apply_giant_monster_base_stats(
 				)
 			)
 
-	if monster_type == "spider":
+	if monster_type in ["spider", "skeleton_archer"]:
 		monster.set(
 			"projectile_speed",
 			float(monster.get("projectile_speed"))
@@ -1489,6 +1489,8 @@ func _apply_giant_monster_base_stats(
 			float(monster.get("projectile_range"))
 			* GIANT_MONSTER_STAT_MULTIPLIER
 		)
+
+	if monster_type == "spider":
 		monster.set(
 			"slow_duration",
 			float(monster.get("slow_duration"))

@@ -417,6 +417,7 @@ func _can_revive() -> bool:
 func _begin_revival() -> void:
 	revive_used = true
 	reviving = true
+	set_meta("elite_skill_reviving", true)
 	velocity = Vector2.ZERO
 	pending_second_hit_timer = -1.0
 	pending_second_hit_target = null
@@ -460,6 +461,7 @@ func _tick_revival(delta: float) -> void:
 		1
 	)
 	reviving = false
+	set_meta("elite_skill_reviving", false)
 	if is_instance_valid(collision_shape):
 		collision_shape.set_deferred("disabled", false)
 	if is_instance_valid(visual):

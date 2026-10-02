@@ -13,6 +13,7 @@ const MONSTER_NAMES := {
 	"orc": "오크",
 	"bomb_rat": "폭탄쥐",
 	"skeleton": "스켈레톤",
+	"skeleton_archer": "스켈레톤 궁병",
 }
 
 const NORMAL_AUGMENTS := [
@@ -118,6 +119,39 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{
+		"id": "skeleton_archer_power_shot",
+		"monster_id": "skeleton_archer",
+		"name": "강령 사격",
+		"description": "기본공격에 0.25초 시전 지연이 생기고 피해가 160%로 강화됩니다. 투사체는 power 프레임, 적중은 normalhit_01 → powerhit_01 → hitdelete_01 순서로 표시됩니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "skeleton_archer_power_shot",
+		"effect_values": {"windup_delay": 0.25, "damage_multiplier": 1.60},
+	},
+	{
+		"id": "skeleton_archer_revive",
+		"monster_id": "skeleton_archer",
+		"name": "불사의 사수",
+		"description": "스켈레톤 궁병이 처음 사망하면 2초 뒤 그 자리에서 체력 100%로 1회 부활합니다. 경험치 스톤은 최종 사망 시에만 1번 생성됩니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "skeleton_archer_revive",
+		"effect_values": {"revive_delay": 2.0, "revive_hp_ratio": 1.0},
+	},
+	{
+		"id": "skeleton_archer_triple_shot",
+		"monster_id": "skeleton_archer",
+		"name": "삼연사",
+		"description": "기본공격이 0.4초 간격의 3연발로 변경됩니다. 3발을 모두 발사한 뒤 공격 쿨다운이 시작되며, 강령 사격과 함께 선택하면 3발 모두 강화 화살이 됩니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "skeleton_archer_triple_shot",
+		"effect_values": {"shot_count": 3, "shot_interval": 0.40},
+	},
 	{
 		"id": "skeleton_return_of_dead",
 		"monster_id": "skeleton",
@@ -319,7 +353,7 @@ static func get_augment(augment_id: String) -> Dictionary:
 		if String(augment.get("id", "")) == augment_id:
 			return augment.duplicate(true)
 
-	for monster_id in ["slime", "spider", "orc", "bomb_rat", "skeleton"]:
+	for monster_id in ["slime", "spider", "orc", "bomb_rat", "skeleton", "skeleton_archer"]:
 		for augment in get_monster_normal_augments(monster_id, ""):
 			if String(augment.get("id", "")) == augment_id:
 				return augment.duplicate(true)
