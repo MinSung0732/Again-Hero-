@@ -1692,6 +1692,10 @@ func _spawn_monster(
 		return null
 	var monster_species := MONSTER_CATALOG.get_species(monster_type)
 	monster.set_meta("monster_species", monster_species)
+	monster.set_meta(
+		"monster_family",
+		MONSTER_CATALOG.get_family(monster_type)
+	)
 	# Compatibility flag for older runtime code. Canonical classification stays
 	# in MonsterCatalog/species and should be queried through node_has_species().
 	monster.set_meta("is_undead", monster_species == "undead")

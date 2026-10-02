@@ -435,7 +435,7 @@ func _tick_goblin_commander(
 		if (
 			not is_instance_valid(target)
 			or target.is_queued_for_deletion()
-			or String(target.get("monster_type")) != "goblin"
+			or String(target.get_meta("monster_family", "")) != "goblin"
 		):
 			continue
 		var hp_value = target.get("current_hp")

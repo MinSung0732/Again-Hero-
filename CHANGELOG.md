@@ -1,3 +1,9 @@
+### 2026-10-02 — 고블린 계열 지휘관 버프 통일
+- `monster_type`과 별도로 `family` 분류를 추가하고 고블린/고블린투척병을 모두 `family = "goblin"`으로 등록.
+- Battle이 몬스터 생성 시 Catalog family를 `monster_family` 메타로 캐시.
+- 엘리트 고블린의 「지휘관」 오라는 이제 정확한 `monster_type == "goblin"` 검사 대신 `monster_family == "goblin"`을 사용하므로 고블린투척병도 동일하게 이동속도 +15%와 5초마다 최대 HP 10% 쉴드 갱신을 받음.
+- 계열 판정은 이미 캐시된 메타 문자열 비교만 사용하므로 지휘관 주기 처리에 Catalog 탐색/SceneTree 전체 탐색을 추가하지 않음.
+
 ### 2026-10-02 — 신규 몬스터 고블린투척병 / 엘리트 폭탄 투하
 - 일반·짐승·원거리 몬스터 `goblin_thrower` 추가. 테스트 기본값은 코스트 5.4, HP 56, 이동속도 82, 공격력 7, 공격간격 1.20초, 공격 사거리 지름 550(반경 275), 투사체속도 380.
 - 저장소의 `assets/art/monsters/goblinthrower` 일반 프레임과 `assets/art/elitemonster/goblinthrower` 엘리트/투사체/폭발 프레임을 실제 전투 비주얼에 연결.

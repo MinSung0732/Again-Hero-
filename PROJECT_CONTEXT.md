@@ -1981,3 +1981,12 @@ Build AI는 전체/주변 몬스터 수, 최근 공세, 역할 비율, 거리, �
 - 엘리트 스킬의 중심은 시전 시작 순간 용사 위치로 고정한다. 이미 발사된 폭탄은 엘리트가 이후 사망해도 자신의 퓨즈/폭발을 마친다.
 - 일반 돌과 엘리트 폭탄은 Battle의 projectile pool을 재사용한다. 개체 AI에는 `get_nodes_in_group` 기반 매프레임 전수 탐색을 추가하지 않는다.
 - 기존 `elite_goblin_commander` 대상은 정확한 `goblin` ID만 유지한다. 고블린투척병을 고블린 패밀리 버프 대상으로 확장하려면 별도 family/tag 규칙을 추가한다.
+
+
+## Monster Family Rules (2026-10-02)
+
+- `species`는 짐승/액체/언데드/기체 같은 생물학적/속성 분류이고, `family`는 같은 계열 몬스터 묶음이다. 두 축은 겹치지 않고 독립적으로 사용한다.
+- 현재 `goblin`과 `goblin_thrower`는 모두 `species = "beast"`, `family = "goblin"`이다.
+- Battle은 소환 시 Catalog의 family를 `monster_family` 메타로 캐시한다.
+- `elite_goblin_commander`는 `monster_family == "goblin"`인 살아 있는 몬스터를 대상으로 한다. 따라서 일반 고블린과 고블린투척병 모두 지휘관의 이동속도 +15% 및 5초마다 최대 HP 10% 쉴드 갱신을 받는다.
+- 향후 고블린 계열 몬스터를 추가할 때 Catalog에 `family = "goblin"`만 지정하면 지휘관 버프 대상에 자동 포함된다.

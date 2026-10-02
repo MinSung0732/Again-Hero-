@@ -440,6 +440,7 @@ const MONSTERS := {
 		"name": "고블린",
 		"role": "swarm",
 		"species": "beast",
+		"family": "goblin",
 		"grade": "normal",
 		"attack_type": "melee",
 		"base_cost": 5.4,
@@ -501,6 +502,7 @@ const MONSTERS := {
 		"name": "고블린투척병",
 		"role": "ranged",
 		"species": "beast",
+		"family": "goblin",
 		"grade": "normal",
 		"attack_type": "ranged",
 		"base_cost": 5.4,
@@ -737,6 +739,11 @@ static func get_role(monster_id: String) -> String:
 static func get_species(monster_id: String) -> String:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
 	return String(data.get("species", "unknown"))
+
+
+static func get_family(monster_id: String) -> String:
+	var data: Dictionary = MONSTERS.get(monster_id, {})
+	return String(data.get("family", ""))
 
 
 static func node_has_species(
