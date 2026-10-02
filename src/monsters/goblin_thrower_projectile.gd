@@ -7,7 +7,7 @@ const ELITE_EFFECT_DIR := (
 	"res://assets/art/elitemonster/goblinthrower/frames/effect1"
 )
 const POOL_KEY := "goblin_thrower_projectile"
-const VISUAL_TARGET_SIZE := 52.0
+const VISUAL_TARGET_SIZE := 104.0
 const FLY_FPS := 14.0
 
 static var _frames_cache: Dictionary = {}

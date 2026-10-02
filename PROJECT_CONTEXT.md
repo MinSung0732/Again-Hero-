@@ -1990,3 +1990,11 @@ Build AI는 전체/주변 몬스터 수, 최근 공세, 역할 비율, 거리, �
 - Battle은 소환 시 Catalog의 family를 `monster_family` 메타로 캐시한다.
 - `elite_goblin_commander`는 `monster_family == "goblin"`인 살아 있는 몬스터를 대상으로 한다. 따라서 일반 고블린과 고블린투척병 모두 지휘관의 이동속도 +15% 및 5초마다 최대 HP 10% 쉴드 갱신을 받는다.
 - 향후 고블린 계열 몬스터를 추가할 때 Catalog에 `family = "goblin"`만 지정하면 지휘관 버프 대상에 자동 포함된다.
+
+
+## Goblin Thrower Visual Size Tuning (2026-10-02)
+
+- 일반 돌 투사체 `VISUAL_TARGET_SIZE`: 52 → 104 (+100%, 2배).
+- 엘리트 폭탄 비행체 `PROJECTILE_TARGET_SIZE`: 58 → 145 (+150%, 2.5배).
+- 엘리트 폭발 이펙트 `EXPLOSION_TARGET_SIZE = 104`는 유지한다.
+- 이 조정은 시각 크기만 바꾸며 충돌/피해/속도/사거리 수치는 변경하지 않는다.

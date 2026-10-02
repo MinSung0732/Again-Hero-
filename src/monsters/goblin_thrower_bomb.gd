@@ -7,7 +7,7 @@ const EXPLOSION_DIR := (
 	"res://assets/art/elitemonster/goblinthrower/frames/effect2"
 )
 const POOL_KEY := "goblin_thrower_elite_bomb"
-const PROJECTILE_TARGET_SIZE := 58.0
+const PROJECTILE_TARGET_SIZE := 145.0
 const EXPLOSION_TARGET_SIZE := 104.0
 const FLY_FPS := 14.0
 const EXPLOSION_FPS := 16.0
