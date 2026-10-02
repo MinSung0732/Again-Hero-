@@ -21,6 +21,7 @@ signal died
 @export var attack_cooldown: float = 1.55
 @export var projectile_speed: float = 300.0
 @export var projectile_range: float = 190.0
+@export var projectile_size_multiplier: float = 1.0
 @export var exp_reward: int = 24
 
 @onready var visual = get_node_or_null("Visual")
@@ -36,6 +37,7 @@ var dying: bool = false
 var reviving: bool = false
 var revive_used: bool = false
 var revive_timer: float = 0.0
+var revive_reverse_started: bool = false
 var visual_moving_state: int = -1
 var visual_facing_sign: int = 0
 var far_ai_tick_timer: float = 0.0
@@ -359,7 +361,8 @@ func _fire_projectile(direction_to_hero: Vector2) -> void:
 			projectile_speed,
 			projectile_range,
 			attack_power_mode,
-			is_elite
+			is_elite,
+			projectile_size_multiplier
 		)
 
 
@@ -404,20 +407,53 @@ func _begin_revival() -> void:
 		{}
 	)
 	revive_timer = maxf(float(config.get("revive_delay", 2.0)), 0.05)
+	revive_reverse_started = false
 	if is_instance_valid(collision_shape):
 		collision_shape.set_deferred("disabled", true)
 	if is_instance_valid(visual):
-		visual.modulate = Color(0.38, 0.42, 0.46, 0.45)
-		_visual_call(&"stop")
+		visual.modulate = Color.WHITE
+		_visual_call(&"play_revival_death_pose")
 	queue_redraw()
 
 
 func _tick_revival(delta: float) -> void:
 	revive_timer = maxf(revive_timer - delta, 0.0)
 	velocity = Vector2.ZERO
-	if revive_timer > 0.0:
+	if revive_timer > 0.0 or revive_reverse_started:
 		return
 
+	if (
+		is_instance_valid(visual)
+		and visual.has_method("is_revival_death_pose_ready")
+		and not bool(visual.call("is_revival_death_pose_ready"))
+	):
+		return
+
+	revive_reverse_started = true
+	if (
+		is_instance_valid(visual)
+		and visual.has_signal("revival_animation_finished")
+		and visual.has_method("play_revival_reverse")
+	):
+		var revive_finished := Callable(self, "_complete_revival")
+		if not visual.is_connected(
+			"revival_animation_finished",
+			revive_finished
+		):
+			visual.connect(
+				"revival_animation_finished",
+				revive_finished,
+				Object.CONNECT_ONE_SHOT
+			)
+		visual.call("play_revival_reverse")
+		return
+
+	_complete_revival()
+
+
+func _complete_revival() -> void:
+	if not reviving:
+		return
 	var config: Dictionary = special_augment_configs.get(
 		"skeleton_archer_revive",
 		{}
@@ -430,13 +466,13 @@ func _tick_revival(delta: float) -> void:
 		1
 	)
 	reviving = false
+	revive_reverse_started = false
 	set_meta("elite_skill_reviving", false)
 	attack_timer = maxf(attack_cooldown, 0.10)
 	if is_instance_valid(collision_shape):
 		collision_shape.set_deferred("disabled", false)
 	if is_instance_valid(visual):
 		visual.modulate = Color.WHITE
-	_visual_call(&"play_locomotion", [false])
 	queue_redraw()
 
 

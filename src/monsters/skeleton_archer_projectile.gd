@@ -34,7 +34,8 @@ func setup(
 	new_speed: float,
 	new_max_range: float,
 	use_power_visual: bool,
-	use_elite_visual: bool
+	use_elite_visual: bool,
+	new_size_multiplier: float = 1.0
 ) -> void:
 	direction = new_direction.normalized()
 	if direction == Vector2.ZERO:
@@ -48,6 +49,7 @@ func setup(
 	active = true
 	impacting = false
 	rotation = direction.angle()
+	scale = Vector2.ONE * maxf(new_size_multiplier, 0.1)
 	if not is_in_group("monster_projectiles"):
 		add_to_group("monster_projectiles")
 	visible = true
@@ -195,6 +197,7 @@ func deactivate_for_pool() -> void:
 	power_visual = false
 	elite_visual = false
 	rotation = 0.0
+	scale = Vector2.ONE
 	if is_in_group("monster_projectiles"):
 		remove_from_group("monster_projectiles")
 	monitoring = false

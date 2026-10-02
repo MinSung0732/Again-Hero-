@@ -21,6 +21,7 @@ signal died
 @export var attack_cooldown: float = 1.35
 @export var projectile_speed: float = 320.0
 @export var projectile_range: float = 360.0
+@export var projectile_size_multiplier: float = 1.0
 @export var exp_reward: int = 30
 @export var slow_multiplier: float = 0.72
 @export var slow_duration: float = 1.5
@@ -332,7 +333,8 @@ func _fire_projectile(
 			projectile_slow_multiplier,
 			projectile_slow_duration,
 			is_elite,
-			binding
+			binding,
+			projectile_size_multiplier
 		)
 
 func take_damage(amount: int) -> void:

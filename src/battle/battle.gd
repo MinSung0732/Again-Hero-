@@ -70,6 +70,7 @@ const GIANT_MONSTER_CHANCE_PER_STEP := 0.01
 const GIANT_MONSTER_STAT_MULTIPLIER := 1.28
 const GIANT_MONSTER_HP_MULTIPLIER := 1.54
 const GIANT_MONSTER_SIZE_MULTIPLIER := 2.0
+const GIANT_RANGED_MONSTER_IDS := ["spider", "skeleton_archer"]
 const HEAL_ITEM_KILLS_REQUIRED := 30
 const MAX_ACTIVE_HEAL_ITEMS := 2
 const CHEST_KILLS_REQUIRED := 50
@@ -1461,10 +1462,12 @@ func _apply_giant_monster_base_stats(
 
 		var attack_range_value = monster.get("attack_range")
 		if attack_range_value != null:
+			var attack_range_multiplier := GIANT_MONSTER_STAT_MULTIPLIER
+			if monster_type in GIANT_RANGED_MONSTER_IDS:
+				attack_range_multiplier = GIANT_MONSTER_SIZE_MULTIPLIER
 			monster.set(
 				"attack_range",
-				float(attack_range_value)
-				* GIANT_MONSTER_STAT_MULTIPLIER
+				float(attack_range_value) * attack_range_multiplier
 			)
 
 		var attack_cooldown_value = monster.get("attack_cooldown")
@@ -1478,7 +1481,7 @@ func _apply_giant_monster_base_stats(
 				)
 			)
 
-	if monster_type in ["spider", "skeleton_archer"]:
+	if monster_type in GIANT_RANGED_MONSTER_IDS:
 		monster.set(
 			"projectile_speed",
 			float(monster.get("projectile_speed"))
@@ -1487,8 +1490,17 @@ func _apply_giant_monster_base_stats(
 		monster.set(
 			"projectile_range",
 			float(monster.get("projectile_range"))
-			* GIANT_MONSTER_STAT_MULTIPLIER
+			* GIANT_MONSTER_SIZE_MULTIPLIER
 		)
+		var projectile_size_value = monster.get(
+			"projectile_size_multiplier"
+		)
+		if projectile_size_value != null:
+			monster.set(
+				"projectile_size_multiplier",
+				float(projectile_size_value)
+				* GIANT_MONSTER_SIZE_MULTIPLIER
+			)
 
 	if monster_type == "spider":
 		monster.set(

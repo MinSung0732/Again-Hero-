@@ -2,6 +2,7 @@ extends AnimatedSprite2D
 class_name MonsterVisual
 
 signal death_animation_finished
+signal revival_animation_finished
 
 @export var asset_dir: String = ""
 @export var target_height: float = 88.0
@@ -23,6 +24,9 @@ static var _hit_flash_shader: Shader
 var _visual_ready: bool = false
 var _one_shot_locked: bool = false
 var _death_playing: bool = false
+var _revival_death_pose_playing: bool = false
+var _revival_death_pose_ready: bool = false
+var _revival_reverse_playing: bool = false
 var _desired_locomotion: StringName = &"idle"
 var _flash_timer: float = 0.0
 var _hit_flash_material: ShaderMaterial
@@ -109,6 +113,9 @@ func play_death() -> void:
 
 	set_lod_suspended(false)
 	_death_playing = true
+	_revival_death_pose_playing = false
+	_revival_death_pose_ready = false
+	_revival_reverse_playing = false
 	_one_shot_locked = true
 	_flash_timer = 0.0
 	if _hit_flash_material != null:
@@ -119,6 +126,72 @@ func play_death() -> void:
 		play(&"death")
 	else:
 		call_deferred("_emit_death_finished")
+
+
+func play_revival_death_pose() -> void:
+	set_lod_suspended(false)
+	_death_playing = false
+	_revival_death_pose_playing = true
+	_revival_death_pose_ready = false
+	_revival_reverse_playing = false
+	_one_shot_locked = true
+	_flash_timer = 0.0
+	if _hit_flash_material != null:
+		_hit_flash_material.set_shader_parameter("flash_strength", 0.0)
+	self_modulate = Color.WHITE
+
+	if _visual_ready and sprite_frames.has_animation(&"death"):
+		play(&"death")
+	else:
+		call_deferred("_hold_revival_death_pose")
+
+
+func is_revival_death_pose_ready() -> bool:
+	return _revival_death_pose_ready
+
+
+func play_revival_reverse() -> void:
+	if _revival_reverse_playing:
+		return
+
+	set_lod_suspended(false)
+	_death_playing = false
+	_revival_death_pose_playing = false
+	_revival_death_pose_ready = false
+	_revival_reverse_playing = true
+	_one_shot_locked = true
+	self_modulate = Color.WHITE
+
+	if _visual_ready and sprite_frames.has_animation(&"death"):
+		play(&"death", -1.0, true)
+	else:
+		call_deferred("_finish_revival_reverse")
+
+
+func _hold_revival_death_pose() -> void:
+	if not _revival_death_pose_playing:
+		return
+	stop()
+	if _visual_ready and sprite_frames.has_animation(&"death"):
+		var frame_count := sprite_frames.get_frame_count(&"death")
+		if frame_count > 0:
+			animation = &"death"
+			frame = frame_count - 1
+			frame_progress = 1.0
+	_revival_death_pose_ready = true
+
+
+func _finish_revival_reverse() -> void:
+	_revival_reverse_playing = false
+	_revival_death_pose_playing = false
+	_revival_death_pose_ready = false
+	_death_playing = false
+	_one_shot_locked = false
+	self_modulate = Color.WHITE
+	_desired_locomotion = &"idle"
+	if _visual_ready and sprite_frames.has_animation(_desired_locomotion):
+		play(_desired_locomotion)
+	revival_animation_finished.emit()
 
 func set_lod_suspended(suspended: bool) -> void:
 	if suspended == _lod_suspended:
@@ -156,6 +229,12 @@ func _play_one_shot(animation_name: StringName) -> void:
 
 func _on_animation_finished() -> void:
 	if animation == &"death":
+		if _revival_reverse_playing:
+			_finish_revival_reverse()
+			return
+		if _revival_death_pose_playing:
+			_hold_revival_death_pose()
+			return
 		_emit_death_finished()
 		return
 
@@ -258,6 +337,9 @@ func apply_visual_profile(profile: Dictionary) -> bool:
 	_visual_ready = true
 	_one_shot_locked = false
 	_death_playing = false
+	_revival_death_pose_playing = false
+	_revival_death_pose_ready = false
+	_revival_reverse_playing = false
 	_desired_locomotion = &"idle"
 	self_modulate = Color.WHITE
 	play(&"idle")
