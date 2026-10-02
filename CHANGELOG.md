@@ -1,3 +1,7 @@
+### 2026-10-02 — 용사 최근 공세 요약 get_name 잔여 호출 수정
+- `hero.gd`의 최근 공세 요약에서 남아 있던 `MONSTER_CATALOG.get_name(dominant_type)` 호출을 `get_monster_name(dominant_type)`으로 교체.
+- 용사정보 팝업에서 최근 공세 요약을 만들 때 Godot 기본 `GDScript.get_name()`과 충돌해 발생하던 정적 호출 오류를 제거.
+
 ### 2026-10-02 — 용사정보 MonsterCatalog get_name 충돌 수정
 - 용사정보 팝업에서 몬스터 런 상세를 만들 때 `MonsterCatalog.get_name(monster_id)`가 Godot 기본 `GDScript.get_name()`과 충돌해 "Expected 0 argument(s)" 디버거 오류가 발생하던 문제를 수정.
 - 카탈로그 헬퍼를 `get_monster_name(monster_id)`으로 변경하고 Battle의 두 호출부를 함께 교체해 엔진 기본 메서드명과 충돌하지 않도록 정리.

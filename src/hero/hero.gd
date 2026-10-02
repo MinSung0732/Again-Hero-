@@ -15681,7 +15681,7 @@ func get_recent_offense_summary() -> String:
 			dominant_weight = weight
 			dominant_type = monster_type
 
-	var dominant_name := MONSTER_CATALOG.get_name(dominant_type)
+	var dominant_name := MONSTER_CATALOG.get_monster_name(dominant_type)
 	var dominant_ratio := maxf(dominant_weight, 0.0) / total_weight
 
 	return "최근 %.0f초: %s %.0f%% · 소환 %d회" % [
