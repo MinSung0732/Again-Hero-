@@ -1822,6 +1822,19 @@ func _apply_lobby_visual_polish() -> void:
 		40,
 		Color("fff4dd")
 	)
+	var team_title_plate := (
+		$SafeArea/Layout/Content/TeamTab/TitlePlate as Panel
+	)
+	var team_title_plate_style := _make_style(
+		Color("171020"),
+		Color("c99136"),
+		3,
+		18
+	)
+	team_title_plate_style.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+	team_title_plate_style.shadow_size = 8
+	team_title_plate_style.shadow_offset = Vector2(0.0, 4.0)
+	team_title_plate.add_theme_stylebox_override("panel", team_title_plate_style)
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/TeamTab/TeamLayout/Guide",
 		23,
