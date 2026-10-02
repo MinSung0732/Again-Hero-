@@ -636,26 +636,6 @@ static func roll_normal_candidates(
 
 	var result: Array = []
 	var selected_monster_counts: Dictionary = {}
-
-	var priority_monster_id := _least_invested_loadout_monster_id(
-		loadout_ids,
-		build_counts
-	)
-	if not priority_monster_id.is_empty() and count > 0:
-		var priority_indices: Array[int] = []
-		for index in range(pool.size()):
-			var candidate: Dictionary = pool[index]
-			if String(
-				candidate.get("target_monster_id", "")
-			) == priority_monster_id:
-				priority_indices.append(index)
-		if not priority_indices.is_empty():
-			var selected_index := int(priority_indices.pick_random())
-			var selected: Dictionary = pool[selected_index]
-			result.append(selected)
-			selected_monster_counts[priority_monster_id] = 1
-			pool.remove_at(selected_index)
-
 	while not pool.is_empty() and result.size() < count:
 		var eligible_indices: Array[int] = []
 		for index in range(pool.size()):
@@ -708,28 +688,6 @@ static func roll_normal_candidates(
 		pool.remove_at(selected_index)
 
 	return result
-
-static func _least_invested_loadout_monster_id(
-	loadout_ids: Array,
-	build_counts: Dictionary
-) -> String:
-	var best_id := ""
-	var best_investment := 2147483647
-	for raw_monster_id in loadout_ids:
-		var monster_id := String(raw_monster_id)
-		if monster_id.is_empty():
-			continue
-		var investment := 0
-		var prefix := "%s_" % monster_id
-		for raw_id in build_counts.keys():
-			var build_id := String(raw_id)
-			if build_id.begins_with(prefix):
-				investment += int(build_counts.get(build_id, 0))
-		if investment < best_investment:
-			best_investment = investment
-			best_id = monster_id
-	return best_id
-
 
 static func _weighted_candidate_index(
 	pool: Array,
@@ -819,25 +777,8 @@ static func roll_special_candidates(
 			options.shuffle()
 			per_monster[monster_id] = options[0]
 
-	var monster_pool: Array = []
-	for raw_monster_id in loadout_ids:
-		var monster_id := String(raw_monster_id)
-		if per_monster.has(monster_id):
-			monster_pool.append(monster_id)
-
-	monster_pool.sort_custom(
-		func(a, b):
-			var a_count := _acquired_special_count_for_monster(
-				String(a),
-				acquired_special_ids
-			)
-			var b_count := _acquired_special_count_for_monster(
-				String(b),
-				acquired_special_ids
-			)
-			return a_count < b_count
-	)
-
+	var monster_pool: Array = per_monster.keys()
+	monster_pool.shuffle()
 	var result: Array = []
 	for raw_monster_id in monster_pool:
 		var monster_id := String(raw_monster_id)
@@ -845,18 +786,6 @@ static func roll_special_candidates(
 		if result.size() >= count:
 			break
 	return result
-
-static func _acquired_special_count_for_monster(
-	monster_id: String,
-	acquired_special_ids: Array
-) -> int:
-	var count := 0
-	for raw_id in acquired_special_ids:
-		var augment := get_augment(String(raw_id))
-		if String(augment.get("monster_id", "")) == monster_id:
-			count += 1
-	return count
-
 
 static func get_special_augments_for_monster(monster_id: String) -> Array:
 	var result: Array = []

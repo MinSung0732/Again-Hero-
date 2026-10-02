@@ -1304,11 +1304,8 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 	detail["normal_augments"] = normal_augments
 
 	var special_augments: Array = []
-	for raw_id in demon_special_augments:
-		var augment_id := String(raw_id)
+	for augment_id in _get_selected_special_augment_ids_for_monster(monster_id):
 		var augment := DEMON_AUGMENTS.get_augment(augment_id)
-		if String(augment.get("monster_id", "")) != monster_id:
-			continue
 		special_augments.append({
 			"id": augment_id,
 			"name": String(augment.get("name", augment_id)),
@@ -3933,6 +3930,7 @@ func choose_demon_augment(augment_id: String) -> bool:
 
 		_apply_demon_augment(augment)
 		demon_build_counts[augment_id] = current_stack + 1
+		_rebuild_monster_augment_modifiers_from_build_counts()
 		_refresh_alive_monsters_for_augments()
 
 	demon_pending_augments = maxi(demon_pending_augments - 1, 0)
@@ -4024,6 +4022,28 @@ func _apply_demon_augment_effect(effect: Dictionary) -> void:
 		_:
 			push_warning("Unknown Demon augment effect op: %s" % op)
 
+func _rebuild_monster_augment_modifiers_from_build_counts() -> void:
+	monster_augment_modifiers.clear()
+	for raw_augment_id in demon_build_counts.keys():
+		var augment_id := String(raw_augment_id)
+		var stack_count := maxi(
+			int(demon_build_counts.get(augment_id, 0)),
+			0
+		)
+		if stack_count <= 0:
+			continue
+
+		var augment := DEMON_AUGMENTS.get_augment(augment_id)
+		if augment.is_empty():
+			continue
+		for raw_effect in augment.get("effects", []):
+			var effect: Dictionary = raw_effect
+			if String(effect.get("op", "")) != "monster_multiplier":
+				continue
+			for _stack_index in range(stack_count):
+				_apply_demon_augment_effect(effect)
+
+
 func _get_monster_augment_multiplier(
 	monster_id: String,
 	stat: String
@@ -4031,14 +4051,25 @@ func _get_monster_augment_multiplier(
 	var modifiers: Dictionary = monster_augment_modifiers.get(monster_id, {})
 	return maxf(float(modifiers.get(stat, 1.0)), 0.01)
 
+func _get_selected_special_augment_ids_for_monster(
+	monster_id: String
+) -> Array[String]:
+	var result: Array[String] = []
+	for raw_id in demon_special_augments:
+		var augment_id := String(raw_id)
+		var augment := DEMON_AUGMENTS.get_augment(augment_id)
+		if String(augment.get("monster_id", "")) != monster_id:
+			continue
+		result.append(augment_id)
+	return result
+
+
 func _get_special_augment_config(
 	monster_id: String
 ) -> Dictionary:
 	var result: Dictionary = {}
-	for augment_id in demon_special_augments:
-		var augment := DEMON_AUGMENTS.get_augment(String(augment_id))
-		if String(augment.get("monster_id", "")) != monster_id:
-			continue
+	for augment_id in _get_selected_special_augment_ids_for_monster(monster_id):
+		var augment := DEMON_AUGMENTS.get_augment(augment_id)
 		var effect_type := String(augment.get("effect_type", ""))
 		if effect_type.is_empty():
 			continue

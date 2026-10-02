@@ -2188,6 +2188,20 @@ func _refresh_monster_info_panel() -> void:
 	)
 
 func _build_monster_info_direct(monster_id: String) -> Dictionary:
+	if (
+		is_instance_valid(battle)
+		and battle.has_method("get_monster_run_detail")
+	):
+		var runtime_detail = battle.call(
+			"get_monster_run_detail",
+			monster_id
+		)
+		if (
+			typeof(runtime_detail) == TYPE_DICTIONARY
+			and not Dictionary(runtime_detail).is_empty()
+		):
+			return Dictionary(runtime_detail).duplicate(true)
+
 	var catalog_entry = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
 	if typeof(catalog_entry) != TYPE_DICTIONARY:
 		return {
