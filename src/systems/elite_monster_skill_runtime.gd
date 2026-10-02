@@ -168,6 +168,8 @@ func _cast_skill(monster: Node2D, skill: Dictionary) -> void:
 			_begin_skeleton_ambush(monster, skill)
 		"elite_skeleton_archer_arrow_rain":
 			_begin_skeleton_archer_arrow_rain(monster, skill)
+		"elite_kobolt_fighting_spirit":
+			_begin_kobolt_fighting_spirit(monster, skill)
 
 
 func _tick_active_skill(
@@ -186,6 +188,8 @@ func _tick_active_skill(
 			_tick_skeleton_ambush(monster, skill, delta)
 		"elite_skeleton_archer_arrow_rain":
 			_tick_skeleton_archer_arrow_rain(monster, skill, delta)
+		"elite_kobolt_fighting_spirit":
+			_tick_kobolt_fighting_spirit(monster, skill, delta)
 		_:
 			skill["_active"] = false
 
@@ -638,6 +642,58 @@ func _finish_skeleton_ambush(
 		visual.modulate = Color.WHITE
 
 
+func _begin_kobolt_fighting_spirit(
+	monster: Node2D,
+	skill: Dictionary
+) -> void:
+	skill["_active"] = true
+	skill["_active_timer"] = maxf(
+		float(skill.get("duration", 5.0)),
+		0.05
+	)
+	monster.set_meta("elite_kobolt_fighting_spirit_active", true)
+	monster.set_meta(
+		"elite_kobolt_fighting_spirit_attack_speed_multiplier",
+		maxf(float(skill.get("attack_speed_multiplier", 1.60)), 1.0)
+	)
+	var visual := monster.get_node_or_null("Visual") as CanvasItem
+	if is_instance_valid(visual):
+		var tint: Color = skill.get(
+			"tint",
+			Color(1.0, 0.68, 0.68, 1.0)
+		)
+		visual.modulate = tint
+
+
+func _tick_kobolt_fighting_spirit(
+	monster: Node2D,
+	skill: Dictionary,
+	delta: float
+) -> void:
+	var active_timer := maxf(
+		float(skill.get("_active_timer", 0.0)) - delta,
+		0.0
+	)
+	skill["_active_timer"] = active_timer
+	if active_timer > 0.0:
+		return
+	_finish_kobolt_fighting_spirit(monster, skill)
+
+
+func _finish_kobolt_fighting_spirit(
+	monster: Node2D,
+	skill: Dictionary
+) -> void:
+	skill["_active"] = false
+	skill["_active_timer"] = 0.0
+	if not is_instance_valid(monster):
+		return
+	monster.set_meta("elite_kobolt_fighting_spirit_active", false)
+	var visual := monster.get_node_or_null("Visual") as CanvasItem
+	if is_instance_valid(visual):
+		visual.modulate = Color.WHITE
+
+
 func _begin_skeleton_archer_arrow_rain(
 	monster: Node2D,
 	skill: Dictionary
@@ -913,3 +969,6 @@ func _cleanup_state(state: Dictionary) -> void:
 			"elite_skeleton_archer_arrow_rain":
 				if bool(skill.get("_active", false)):
 					_finish_skeleton_archer_arrow_rain(skill)
+			"elite_kobolt_fighting_spirit":
+				if bool(skill.get("_active", false)):
+					_finish_kobolt_fighting_spirit(monster, skill)

@@ -71,7 +71,7 @@ const GIANT_MONSTER_CHANCE_PER_STEP := 0.01
 const GIANT_MONSTER_STAT_MULTIPLIER := 1.28
 const GIANT_MONSTER_HP_MULTIPLIER := 1.54
 const GIANT_MONSTER_SIZE_MULTIPLIER := 2.0
-const GIANT_RANGED_MONSTER_IDS := ["spider", "skeleton_archer"]
+const GIANT_RANGED_MONSTER_IDS := ["spider", "skeleton_archer", "kobolt"]
 const HEAL_ITEM_KILLS_REQUIRED := 30
 const MAX_ACTIVE_HEAL_ITEMS := 2
 const CHEST_KILLS_REQUIRED := 50
@@ -123,6 +123,8 @@ var monster_spatial_grid: Dictionary = {}
 var monster_spatial_used_cells: Array[Vector2i] = []
 var monster_spatial_stale_ids: Array[int] = []
 var monster_spatial_grid_physics_frame: int = -1
+var kobolt_fusion_scratch: Array = []
+var kobolt_fusion_candidates: Array = []
 var exp_orb_pool: Array[Node2D] = []
 var projectile_pools: Dictionary = {}
 var transient_fx_pools: Dictionary = {}
@@ -679,6 +681,8 @@ func _start_battle() -> void:
 	monster_spatial_grid.clear()
 	monster_spatial_used_cells.clear()
 	monster_spatial_stale_ids.clear()
+	kobolt_fusion_scratch.clear()
+	kobolt_fusion_candidates.clear()
 	monster_spatial_grid_physics_frame = -1
 	external_pause = false
 	flow_pause_manager.reset()
@@ -1027,6 +1031,8 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 		{"giant_monster": giant_spawn}
 	)
 	_spawn_extra_normal_summon_monsters(monster_type, spawn_position)
+	if monster_type == "kobolt" and is_instance_valid(primary_monster):
+		primary_monster = _try_fuse_nearby_kobolts(primary_monster)
 	run_metrics.record_summon(monster_type, cost)
 
 	if is_instance_valid(hero) and hero.has_method("record_offensive_event"):
@@ -1447,7 +1453,14 @@ func _apply_giant_monster_base_stats(
 			)
 		)
 
-	if monster_type in ["slime", "orc", "spider", "skeleton", "skeleton_archer"]:
+	if monster_type in [
+		"slime",
+		"orc",
+		"spider",
+		"skeleton",
+		"skeleton_archer",
+		"kobolt",
+	]:
 		var damage_value = monster.get("attack_damage")
 		if damage_value != null:
 			monster.set(
@@ -1824,6 +1837,101 @@ func _spawn_monster(
 	monster_spatial_grid_physics_frame = -1
 	monsters_alive += 1
 	return monster
+
+
+func _try_fuse_nearby_kobolts(primary_monster: Node2D) -> Node2D:
+	if not is_instance_valid(primary_monster):
+		return primary_monster
+	if String(primary_monster.get_meta("visual_variant", "")) == "elite":
+		return primary_monster
+	if bool(primary_monster.get_meta("giant_monster", false)):
+		return primary_monster
+
+	var config: Dictionary = _get_special_augment_config(
+		"kobolt"
+	).get("kobolt_giant_fusion", {})
+	if config.is_empty():
+		return primary_monster
+
+	var required_count := maxi(int(config.get("required_count", 4)), 2)
+	var radius := maxf(float(config.get("radius", 180.0)), 1.0)
+	kobolt_fusion_scratch.clear()
+	kobolt_fusion_candidates.clear()
+	fill_monsters_near(
+		primary_monster.global_position,
+		radius,
+		kobolt_fusion_scratch
+	)
+	var radius_sq := radius * radius
+	for raw_monster in kobolt_fusion_scratch:
+		var candidate := raw_monster as Node2D
+		if not is_instance_valid(candidate):
+			continue
+		if candidate.is_queued_for_deletion():
+			continue
+		if String(candidate.get("monster_type")) != "kobolt":
+			continue
+		if String(candidate.get_meta("visual_variant", "")) == "elite":
+			continue
+		if bool(candidate.get_meta("giant_monster", false)):
+			continue
+		if int(candidate.get("current_hp")) <= 0:
+			continue
+		if candidate.global_position.distance_squared_to(
+			primary_monster.global_position
+		) > radius_sq:
+			continue
+		kobolt_fusion_candidates.append(candidate)
+		if kobolt_fusion_candidates.size() >= required_count:
+			break
+
+	if kobolt_fusion_candidates.size() < required_count:
+		kobolt_fusion_scratch.clear()
+		kobolt_fusion_candidates.clear()
+		return primary_monster
+
+	var fusion_position := Vector2.ZERO
+	var fused_summon_cost := 0.0
+	for raw_candidate in kobolt_fusion_candidates:
+		var candidate := raw_candidate as Node2D
+		if not is_instance_valid(candidate):
+			continue
+		fusion_position += candidate.global_position
+		fused_summon_cost += float(
+			monster_summon_costs.get(candidate.get_instance_id(), 0.0)
+		)
+	fusion_position /= float(required_count)
+
+	for raw_candidate in kobolt_fusion_candidates:
+		var candidate := raw_candidate as Node2D
+		_consume_monster_for_fusion(candidate)
+	kobolt_fusion_scratch.clear()
+	kobolt_fusion_candidates.clear()
+
+	var fused := _spawn_monster(
+		"kobolt",
+		_clamp_manual_spawn_position(fusion_position),
+		fused_summon_cost,
+		false,
+		{"giant_monster": true}
+	) as Node2D
+	if is_instance_valid(fused):
+		fused.set_meta("kobolt_fusion", true)
+		fused.set_meta("spawn_source", "kobolt_fusion")
+		return fused
+	return null
+
+
+func _consume_monster_for_fusion(monster: Node2D) -> void:
+	if not is_instance_valid(monster) or monster.is_queued_for_deletion():
+		return
+	var instance_id := monster.get_instance_id()
+	monster_summon_costs.erase(instance_id)
+	active_monsters.erase(instance_id)
+	active_elite_skeletons.erase(instance_id)
+	monster_spatial_grid_physics_frame = -1
+	monsters_alive = maxi(monsters_alive - 1, 0)
+	monster.queue_free()
 
 
 func spawn_elite_slime_minion(
@@ -3170,8 +3278,12 @@ func spawn_special_monster(
 	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
 		return false
 
-	var spawn_position := _get_stage_event_spawn_position(
-		float(special_data.get("spawn_distance", 720.0))
+	var spawn_position := (
+		_get_farthest_stage_event_spawn_position()
+		if monster_id == "kobolt"
+		else _get_stage_event_spawn_position(
+			float(special_data.get("spawn_distance", 720.0))
+		)
 	)
 	var monster = _spawn_monster(
 		monster_id,
@@ -3391,6 +3503,27 @@ func _get_stage_event_spawn_position(
 		+ Vector2.from_angle(angle) * maxf(spawn_distance, 1.0)
 	)
 	return _clamp_manual_spawn_position(candidate)
+
+
+func _get_farthest_stage_event_spawn_position() -> Vector2:
+	if not is_instance_valid(hero):
+		return current_map_size * 0.5
+	var left := MANUAL_SPAWN_MARGIN
+	var right := current_map_size.x - MANUAL_SPAWN_MARGIN
+	var top := _get_spawn_top_margin()
+	var bottom := current_map_size.y - MANUAL_SPAWN_MARGIN
+	var farthest := Vector2(left, top)
+	var farthest_distance_sq := hero.position.distance_squared_to(farthest)
+	for candidate in [
+		Vector2(right, top),
+		Vector2(left, bottom),
+		Vector2(right, bottom),
+	]:
+		var distance_sq := hero.position.distance_squared_to(candidate)
+		if distance_sq > farthest_distance_sq:
+			farthest = candidate
+			farthest_distance_sq = distance_sq
+	return farthest
 
 func _gain_demon_exp(amount: float) -> void:
 	if amount <= 0.0 or battle_over:

@@ -1,7 +1,15 @@
 extends RefCounted
 class_name MonsterCatalog
 
-const ORDER := ["slime", "spider", "orc", "bomb_rat", "skeleton", "skeleton_archer"]
+const ORDER := [
+	"slime",
+	"spider",
+	"orc",
+	"bomb_rat",
+	"skeleton",
+	"skeleton_archer",
+	"kobolt",
+]
 
 const MONSTERS := {
 	"slime": {
@@ -307,6 +315,63 @@ const MONSTERS := {
 			},
 		],
 		"scene": preload("res://src/monsters/SkeletonArcher.tscn"),
+	},
+	"kobolt": {
+		"id": "kobolt",
+		"name": "코볼트",
+		"role": "ranged",
+		"species": "beast",
+		"grade": "normal",
+		"attack_type": "ranged",
+		"base_cost": 10.0,
+		"summon_exp": 10.0,
+		"base_stats": {
+			"max_hp": 95,
+			"attack_damage": 28,
+			"attack_range": 750.0,
+			"attack_range_diameter": 1500.0,
+			"attack_cooldown": 1.55,
+			"projectile_speed": 385.0,
+			"projectile_range": 750.0,
+		},
+		"default_unlocked": true,
+		"shards_required": 30,
+		"rarity": "rare",
+		"card_icon_path": "res://assets/art/monsters/kobolt/frames/idle_01.png",
+		"ground_shadow": {
+			"size": Vector2(70.0, 22.0),
+			"offset_y": 32.0,
+			"opacity": 0.50,
+		},
+		"special_augment_ids": [
+			"kobolt_projectile_speed",
+			"kobolt_unlimited_range",
+			"kobolt_giant_fusion",
+		],
+		"elite_visual": {
+			"mode": "frames",
+			"asset_dir": "res://assets/art/elitemonster/kobolt/frames",
+			"target_height": 124.0,
+			"animations": {
+				"idle": {"prefix": "idle", "count": 4, "fps": 6.0, "loop": true},
+				"attack": {"prefix": "atk", "count": 4, "fps": 14.0, "loop": false},
+				"hit": {"prefix": "hit", "count": 2, "fps": 14.0, "loop": false},
+				"death": {"prefix": "dead", "count": 3, "fps": 10.0, "loop": false},
+			},
+		},
+		"elite_skills": [
+			{
+				"id": "elite_kobolt_fighting_spirit",
+				"name": "투쟁심",
+				"description": "선쿨 2초/재사용 10초. 5초간 옅은 붉은색으로 변하며 공격속도가 60% 증가합니다.",
+				"initial_cooldown": 2.0,
+				"cooldown": 10.0,
+				"duration": 5.0,
+				"attack_speed_multiplier": 1.60,
+				"tint": Color(1.0, 0.68, 0.68, 1.0),
+			},
+		],
+		"scene": preload("res://src/monsters/Kobolt.tscn"),
 	},
 	"bomb_rat": {
 		"id": "bomb_rat",

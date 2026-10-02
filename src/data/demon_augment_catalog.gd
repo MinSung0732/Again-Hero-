@@ -14,6 +14,11 @@ const MONSTER_NAMES := {
 	"bomb_rat": "폭탄쥐",
 	"skeleton": "스켈레톤",
 	"skeleton_archer": "스켈레톤 궁병",
+	"kobolt": "코볼트",
+}
+
+const MONSTER_NORMAL_EXCLUDED_KEYS := {
+	"kobolt": ["speed"],
 }
 
 const NORMAL_AUGMENTS := [
@@ -119,6 +124,39 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{
+		"id": "kobolt_projectile_speed",
+		"monster_id": "kobolt",
+		"name": "고속 투창",
+		"description": "창 투사체 속도가 20% 증가합니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "kobolt_projectile_speed",
+		"effect_values": {"speed_multiplier": 1.20},
+	},
+	{
+		"id": "kobolt_unlimited_range",
+		"monster_id": "kobolt",
+		"name": "무제한 조준",
+		"description": "코볼트의 공격 사거리 제한이 사라집니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "kobolt_unlimited_range",
+		"effect_values": {"unlimited_range": true},
+	},
+	{
+		"id": "kobolt_giant_fusion",
+		"monster_id": "kobolt",
+		"name": "거대 융합",
+		"description": "가까운 일반 코볼트 4마리를 합쳐 대형 코볼트 1마리로 변환합니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "kobolt_giant_fusion",
+		"effect_values": {"radius": 180.0, "required_count": 4},
+	},
 	{
 		"id": "skeleton_archer_power_shot",
 		"monster_id": "skeleton_archer",
@@ -353,7 +391,15 @@ static func get_augment(augment_id: String) -> Dictionary:
 		if String(augment.get("id", "")) == augment_id:
 			return augment.duplicate(true)
 
-	for monster_id in ["slime", "spider", "orc", "bomb_rat", "skeleton", "skeleton_archer"]:
+	for monster_id in [
+		"slime",
+		"spider",
+		"orc",
+		"bomb_rat",
+		"skeleton",
+		"skeleton_archer",
+		"kobolt",
+	]:
 		for augment in get_monster_normal_augments(monster_id, ""):
 			if String(augment.get("id", "")) == augment_id:
 				return augment.duplicate(true)
@@ -380,6 +426,12 @@ static func get_monster_normal_augments(
 	for raw_template in MONSTER_NORMAL_TEMPLATES:
 		var template: Dictionary = raw_template
 		var key := String(template.get("key", ""))
+		var excluded_keys: Array = MONSTER_NORMAL_EXCLUDED_KEYS.get(
+			monster_id,
+			[]
+		)
+		if key in excluded_keys:
+			continue
 		var effect: Dictionary = template.get("effect", {}).duplicate(true)
 		effect["monster_id"] = monster_id
 		result.append({
