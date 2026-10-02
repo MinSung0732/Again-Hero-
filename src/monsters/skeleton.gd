@@ -10,6 +10,7 @@ const DAMAGE_NUMBERS := preload(
 	"res://src/ui/damage_number_spawner.gd"
 )
 
+const NORMAL_FRAME_DIR := "res://assets/art/monsters/skelleton/frames"
 const FAR_NAV_DISTANCE := 900.0
 const VISUAL_LOD_DISTANCE := 1400.0
 
@@ -69,12 +70,34 @@ func _ready() -> void:
 		hero = get_tree().get_first_node_in_group("hero") as Node2D
 	if not is_instance_valid(combat_authority):
 		combat_authority = get_parent()
+	_apply_normal_visual_profile()
 	MONSTER_RUNTIME_COMMON.attach_status_effect_visual(
 		self,
 		COMBAT_STATUS_EFFECT_VISUAL,
 		"slow"
 	)
 	queue_redraw()
+
+
+func _apply_normal_visual_profile() -> void:
+	if not is_instance_valid(visual):
+		return
+	if not visual.has_method("apply_visual_profile"):
+		return
+	var target_height := float(visual.get("target_height"))
+	var profile := {
+		"mode": "frames",
+		"asset_dir": NORMAL_FRAME_DIR,
+		"target_height": target_height,
+		"animations": {
+			"idle": {"prefix": "idle", "count": 4, "fps": 6.0, "loop": true},
+			"move": {"prefix": "walk", "count": 6, "fps": 10.0, "loop": true},
+			"attack": {"prefix": "attack", "count": 6, "fps": 14.0, "loop": false},
+			"hit": {"prefix": "hit", "count": 3, "fps": 14.0, "loop": false},
+			"death": {"prefix": "dead", "count": 4, "fps": 10.0, "loop": false},
+		},
+	}
+	visual.call("apply_visual_profile", profile)
 
 
 func configure_combat_context(
