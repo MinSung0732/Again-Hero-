@@ -61,7 +61,7 @@ const MONSTERS := {
 			{
 				"id": "elite_slime_proliferation",
 				"name": "분열증식",
-				"description": "사용 시 자신 주변으로 일반 슬라임을 0.25초 간격으로 총 12마리 무작위 방향에 포물선으로 투척합니다.",
+				"description": "일반 슬라임 12기 투척 · 0.25초 간격",
 				"initial_cooldown": 3.0,
 				"cooldown": 20.0,
 				"spawn_count": 12,
@@ -120,7 +120,7 @@ const MONSTERS := {
 			{
 				"id": "elite_spider_web_nest",
 				"name": "거미집",
-				"description": "지름 500 거미집을 5초간 설치합니다. 범위 내 용사는 이동속도 50% 둔화, 몬스터는 이동속도 15% 증가합니다.",
+				"description": "지름 500 · 5초 · 용사 이속 -50% · 아군 이속 +15%",
 				"initial_cooldown": 3.0,
 				"cooldown": 25.0,
 				"duration": 5.0,
@@ -178,7 +178,7 @@ const MONSTERS := {
 			{
 				"id": "elite_orc_frenzy",
 				"name": "광분",
-				"description": "몸이 붉게 변하며 용사에게 빠르게 돌진해 기본 공격력의 150% 피해를 주고 1초간 이동속도를 99% 둔화시킵니다.",
+				"description": "돌진 피해 150% · 1초간 99% 둔화",
 				"initial_cooldown": 0.0,
 				"cooldown": 20.0,
 				"charge_speed_multiplier": 5.0,
@@ -239,7 +239,7 @@ const MONSTERS := {
 			{
 				"id": "elite_skeleton_ambush",
 				"name": "암습",
-				"description": "2초간 반투명 은신 상태가 되어 받는 피해가 50% 감소합니다. 공격 시 은신이 해제되고 해당 공격의 2타 모두 50% 추가 피해를 줍니다.",
+				"description": "2초 은신 · 받는 피해 -50% · 다음 2타 피해 +50%",
 				"initial_cooldown": 2.0,
 				"cooldown": 15.0,
 				"duration": 2.0,
@@ -299,7 +299,7 @@ const MONSTERS := {
 			{
 				"id": "elite_skeleton_archer_arrow_rain",
 				"name": "화살비",
-				"description": "선쿨 2초/재사용 17초. 시전 시 용사 위치 중심 지름 275 범위를 얇은 선으로 표시하고, 0.35초 간격으로 12발의 화살비를 총 3회 내립니다. 각 회차는 공격력의 130% 피해를 1회 주고 1초간 25% 둔화시킵니다.",
+				"description": "지름 275 · 화살 12발×3회 · 피해 130% · 1초간 25% 둔화",
 				"initial_cooldown": 2.0,
 				"cooldown": 17.0,
 				"radius": 137.5,
@@ -367,7 +367,7 @@ const MONSTERS := {
 			{
 				"id": "elite_kobolt_fighting_spirit",
 				"name": "투쟁심",
-				"description": "선쿨 2초/재사용 10초. 5초간 옅은 붉은색으로 변하며 공격속도가 60% 증가합니다.",
+				"description": "5초간 공격속도 +60%",
 				"initial_cooldown": 2.0,
 				"cooldown": 10.0,
 				"duration": 5.0,
@@ -425,7 +425,7 @@ const MONSTERS := {
 			{
 				"id": "elite_bat_poison_fang",
 				"name": "독이빨",
-				"description": "상시 패시브. 타격 시 3초간 현재 체력의 5%만큼 독 피해를 줍니다. 다시 타격하면 지속시간과 피해량을 갱신합니다.",
+				"description": "타격 시 3초 독 · 현재 HP의 5% 피해 · 재타격 갱신",
 				"passive": true,
 				"initial_cooldown": 0.0,
 				"duration": 3.0,
@@ -482,7 +482,7 @@ const MONSTERS := {
 			{
 				"id": "elite_goblin_commander",
 				"name": "지휘관",
-				"description": "상시 패시브. 자신 중심 지름 600 지휘 범위를 표시합니다. 범위 안 고블린의 이동속도가 15% 증가하며, 5초마다 최대 체력의 10%만큼 쉴드를 갱신합니다.",
+				"description": "지름 600 · 고블린 이속 +15% · 5초마다 HP 10% 쉴드",
 				"passive": true,
 				"runtime_tick": true,
 				"initial_cooldown": 0.0,
@@ -547,7 +547,7 @@ const MONSTERS := {
 			{
 				"id": "elite_goblin_thrower_bombardment",
 				"name": "폭탄 투하",
-				"description": "선쿨 3초/재사용 20초. 용사 중심 지름 220 범위에 0.15초 간격으로 폭탄 10개를 투척합니다. 폭탄은 도착 후 1초간 흰색으로 깜빡인 뒤 공격력의 150% 피해로 폭발합니다.",
+				"description": "지름 220 · 폭탄 10개 · 1초 후 공격력 150% 폭발",
 				"initial_cooldown": 3.0,
 				"cooldown": 20.0,
 				"radius": 110.0,
@@ -609,7 +609,7 @@ const MONSTERS := {
 		"elite_skills": [{
 			"id": "elite_ghost_fear",
 			"name": "공포",
-			"description": "선쿨 3초/재사용 15초. 용사를 1.5초간 공포 상태로 만들어 평타와 기술을 봉인하고 시전자에게서 달아나게 하며 이동속도를 50% 증가시킵니다.",
+			"description": "1.5초 공포 · 공격 봉인 · 도주 이속 +50%",
 			"initial_cooldown": 3.0,
 			"cooldown": 15.0,
 			"duration": 1.5,
@@ -662,7 +662,7 @@ const MONSTERS := {
 			{
 				"id": "elite_bomb_rat_vibration",
 				"name": "진동감지",
-				"description": "4초간 이동속도가 200% 증가하고 자신의 최대 체력 150%만큼 쉴드를 획득합니다.",
+				"description": "4초간 이속 +200% · 최대 HP 150% 쉴드",
 				"initial_cooldown": 0.0,
 				"cooldown": 20.0,
 				"duration": 4.0,

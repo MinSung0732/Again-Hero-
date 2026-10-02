@@ -3022,31 +3022,26 @@ func _build_normal_detail_text(
 	stats: Dictionary
 ) -> String:
 	var lines: PackedStringArray = []
-	lines.append("기본 스탯")
-	lines.append("역할  %s" % role_label)
-	lines.append(
-		"종류  %s" % MONSTER_CATALOG.get_species_label(
-			String(data.get("species", ""))
-		)
-	)
-	lines.append(
-		"등급  %s" % MONSTER_CATALOG.get_grade_label(
-			String(data.get("grade", "normal"))
-		)
-	)
+	var identity_parts: PackedStringArray = [
+		MONSTER_CATALOG.get_grade_label(String(data.get("grade", "normal"))),
+		MONSTER_CATALOG.get_species_label(String(data.get("species", ""))),
+		role_label,
+	]
 	var attack_type := String(data.get("attack_type", ""))
 	if not attack_type.is_empty():
-		lines.append(
-			"공격 종류  %s" % MONSTER_CATALOG.get_attack_type_label(
-				attack_type
-			)
+		identity_parts.append(
+			MONSTER_CATALOG.get_attack_type_label(attack_type)
 		)
-	lines.append("소환 코스트  %.1f" % float(data.get("base_cost", 0.0)))
-	lines.append("마왕 EXP  %.1f" % float(data.get("summon_exp", 0.0)))
+	lines.append(" · ".join(identity_parts))
+	lines.append("코스트 %.1f  |  마왕 EXP %.1f" % [
+		float(data.get("base_cost", 0.0)),
+		float(data.get("summon_exp", 0.0)),
+	])
 
+	var core_parts: PackedStringArray = []
 	var hp_value = stats.get("max_hp")
 	if hp_value != null:
-		lines.append("최대 HP  %d" % int(hp_value))
+		core_parts.append("HP %d" % int(hp_value))
 
 	var damage_value = stats.get("attack_damage")
 	if damage_value != null:
@@ -3055,60 +3050,63 @@ func _build_normal_detail_text(
 			1
 		)
 		if hits_per_attack > 1:
-			lines.append(
-				"공격력  %d × %d타" % [
+			core_parts.append(
+				"공격 %d×%d타" % [
 					int(damage_value),
 					hits_per_attack,
 				]
 			)
 		else:
-			lines.append("공격력  %d" % int(damage_value))
+			core_parts.append("공격 %d" % int(damage_value))
 
 	var explosion_damage = stats.get("explosion_damage")
 	if explosion_damage != null:
-		lines.append("자폭 피해  %d" % int(explosion_damage))
+		core_parts.append("자폭 %d" % int(explosion_damage))
 
 	var speed_value = stats.get("move_speed")
 	if speed_value != null:
-		lines.append("이동속도  %.0f" % float(speed_value))
+		core_parts.append("이속 %.0f" % float(speed_value))
+	if not core_parts.is_empty():
+		lines.append("  |  ".join(core_parts))
 
+	var attack_parts: PackedStringArray = []
 	var cooldown_value = stats.get("attack_cooldown")
 	if cooldown_value != null:
-		lines.append("공격 간격  %.2f초" % float(cooldown_value))
-
-	var fuse_value = stats.get("self_destruct_fuse")
-	if fuse_value != null:
-		lines.append("자폭 준비  %.2f초" % float(fuse_value))
+		attack_parts.append("공격간격 %.2f초" % float(cooldown_value))
 
 	var range_value = stats.get("attack_range")
 	var range_diameter = stats.get("attack_range_diameter")
 	if range_value != null and monster_id != "bomb_rat":
 		if range_diameter != null:
-			lines.append(
-				"공격 사거리  지름 %.0f" % float(range_diameter)
-			)
+			attack_parts.append("사거리 Ø%.0f" % float(range_diameter))
 		else:
-			lines.append("공격 사거리  %.0f" % float(range_value))
+			attack_parts.append("사거리 %.0f" % float(range_value))
 
 	var projectile_speed_value = stats.get("projectile_speed")
 	if projectile_speed_value != null:
-		lines.append(
-			"투사체 속도  %.0f" % float(projectile_speed_value)
-		)
+		attack_parts.append("투사체 %.0f" % float(projectile_speed_value))
+	if not attack_parts.is_empty():
+		lines.append("  |  ".join(attack_parts))
 
+	var extra_parts: PackedStringArray = []
+	var fuse_value = stats.get("self_destruct_fuse")
+	if fuse_value != null:
+		extra_parts.append("자폭 준비 %.2f초" % float(fuse_value))
 	var explosion_radius = stats.get("explosion_radius")
 	if explosion_radius != null:
-		lines.append("폭발 반경  %.0f" % float(explosion_radius))
+		extra_parts.append("폭발 반경 %.0f" % float(explosion_radius))
 
 	var slow_value = stats.get("slow_multiplier")
 	var slow_duration = stats.get("slow_duration")
 	if slow_value != null and slow_duration != null:
-		lines.append(
-			"거미줄 둔화  %.0f%% · %.1f초" % [
+		extra_parts.append(
+			"둔화 %.0f%% / %.1f초" % [
 				(1.0 - float(slow_value)) * 100.0,
 				float(slow_duration),
 			]
 		)
+	if not extra_parts.is_empty():
+		lines.append("  |  ".join(extra_parts))
 
 	return "\n".join(lines)
 
@@ -3118,8 +3116,10 @@ func _build_special_augment_text(monster_id: String) -> String:
 		monster_id
 	):
 		var augment: Dictionary = raw_augment
-		lines.append("◆ %s" % String(augment.get("name", "특수증강")))
-		lines.append("  %s" % String(augment.get("description", "")))
+		lines.append("◆ %s  |  %s" % [
+			String(augment.get("name", "특수증강")),
+			String(augment.get("description", "")),
+		])
 
 	if lines.is_empty():
 		return "등록된 특수증강이 없습니다."
@@ -3141,18 +3141,22 @@ func _build_elite_detail_text(
 	var visual_scale := float(mutation.get("visual_scale", 1.0))
 
 	var lines: PackedStringArray = []
-	lines.append("기본 돌연변이 기준")
-	lines.append("HP 배율  ×%.2f" % hp_multiplier)
-	lines.append("공격력 배율  ×%.2f" % damage_multiplier)
-	lines.append("이동속도 배율  ×%.2f" % speed_multiplier)
-	lines.append("공격속도 배율  ×%.2f" % attack_speed_multiplier)
-	lines.append("크기 배율  ×%.2f" % visual_scale)
-	lines.append("")
+	lines.append("엘리트 보정")
+	lines.append("HP ×%.2f  |  공격 ×%.2f  |  크기 ×%.2f" % [
+		hp_multiplier,
+		damage_multiplier,
+		visual_scale,
+	])
+	lines.append("이속 ×%.2f  |  공속 ×%.2f" % [
+		speed_multiplier,
+		attack_speed_multiplier,
+	])
 
+	var combat_parts: PackedStringArray = []
 	var hp_value = stats.get("max_hp")
 	if hp_value != null:
-		lines.append(
-			"기본 HP  %d → %d" % [
+		combat_parts.append(
+			"HP %d→%d" % [
 				int(hp_value),
 				int(round(float(hp_value) * hp_multiplier)),
 			]
@@ -3160,8 +3164,8 @@ func _build_elite_detail_text(
 
 	var damage_value = stats.get("attack_damage")
 	if damage_value != null:
-		lines.append(
-			"공격력  %d → %d" % [
+		combat_parts.append(
+			"공격 %d→%d" % [
 				int(damage_value),
 				int(round(float(damage_value) * damage_multiplier)),
 			]
@@ -3169,19 +3173,22 @@ func _build_elite_detail_text(
 
 	var explosion_damage = stats.get("explosion_damage")
 	if explosion_damage != null:
-		lines.append(
-			"자폭 피해  %d → %d" % [
+		combat_parts.append(
+			"자폭 %d→%d" % [
 				int(explosion_damage),
 				int(round(
 					float(explosion_damage) * damage_multiplier
 				)),
 			]
 		)
+	if not combat_parts.is_empty():
+		lines.append("  |  ".join(combat_parts))
 
+	var speed_parts: PackedStringArray = []
 	var speed_value = stats.get("move_speed")
 	if speed_value != null:
-		lines.append(
-			"이동속도  %.0f → %.0f" % [
+		speed_parts.append(
+			"이속 %.0f→%.0f" % [
 				float(speed_value),
 				float(speed_value) * speed_multiplier,
 			]
@@ -3189,8 +3196,8 @@ func _build_elite_detail_text(
 
 	var cooldown_value = stats.get("attack_cooldown")
 	if cooldown_value != null:
-		lines.append(
-			"공격 간격  %.2f초 → %.2f초" % [
+		speed_parts.append(
+			"공격간격 %.2f→%.2f초" % [
 				float(cooldown_value),
 				float(cooldown_value) / maxf(
 					attack_speed_multiplier,
@@ -3202,8 +3209,8 @@ func _build_elite_detail_text(
 	if monster_id == "bomb_rat":
 		var fuse_value = stats.get("self_destruct_fuse")
 		if fuse_value != null:
-			lines.append(
-				"자폭 준비  %.2f초 → %.2f초" % [
+			speed_parts.append(
+				"자폭 준비 %.2f→%.2f초" % [
 					float(fuse_value),
 					float(fuse_value) / maxf(
 						attack_speed_multiplier,
@@ -3211,6 +3218,8 @@ func _build_elite_detail_text(
 					),
 				]
 			)
+	if not speed_parts.is_empty():
+		lines.append("  |  ".join(speed_parts))
 
 	lines.append("")
 	lines.append("엘리트 기술")
@@ -3225,18 +3234,20 @@ func _build_elite_detail_text(
 			lines.append(
 				"◆ %s" % String(skill.get("name", "엘리트 기술"))
 			)
-			lines.append(
-				"  선쿨 %.1f초 · 재사용 %.1f초" % [
-					maxf(float(skill.get("initial_cooldown", 0.0)), 0.0),
-					maxf(float(skill.get("cooldown", 0.0)), 0.0),
-				]
-			)
+			if bool(skill.get("passive", false)):
+				lines.append("  상시 패시브")
+			else:
+				lines.append(
+					"  선쿨 %.1f초  |  쿨 %.1f초" % [
+						maxf(float(skill.get("initial_cooldown", 0.0)), 0.0),
+						maxf(float(skill.get("cooldown", 0.0)), 0.0),
+					]
+				)
 			var description := String(skill.get("description", ""))
 			if not description.is_empty():
 				lines.append("  %s" % description)
 
-	lines.append("")
-	lines.append("※ 마왕 레벨/연구/Run 증강은 제외한 기준치")
+	lines.append("※ 레벨·연구·Run 증강 제외")
 	return "\n".join(lines)
 
 func _load_elite_preview(monster_id: String) -> Texture2D:
