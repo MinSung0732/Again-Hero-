@@ -3076,6 +3076,7 @@ func _build_normal_detail_text(
 	])
 	lines.append("")
 	lines.append("[color=#8f8098]전투 능력[/color]")
+	lines.append("[table=2]")
 
 	var hp_value = stats.get("max_hp")
 	if hp_value != null:
@@ -3134,6 +3135,7 @@ func _build_normal_detail_text(
 			_stat_level(float(range_value), [70.0, 140.0, 260.0, 500.0]),
 			"b68ae8"
 		))
+	lines.append("[/table]")
 
 	var extra_parts: PackedStringArray = []
 	var fuse_value = stats.get("self_destruct_fuse")
@@ -3177,7 +3179,7 @@ func _format_stat_meter(
 	var filled := "■".repeat(filled_count)
 	var empty := "■".repeat(5 - filled_count)
 	var suffix := "  [color=#9b90a2]%s[/color]" % note if not note.is_empty() else ""
-	return "[color=#d8cedd]%s[/color]  [color=#%s]%s[/color][color=#403747]%s[/color]%s" % [
+	return "[cell][color=#d8cedd]%s[/color]  [/cell][cell][color=#%s]%s[/color][color=#403747]%s[/color]%s[/cell]" % [
 		label,
 		fill_color,
 		filled,
@@ -3230,6 +3232,7 @@ func _build_elite_detail_text(
 	lines.append("[center][color=#bdb0c5]기본 돌연변이 · 기술 %d개[/color][/center]" % MONSTER_CATALOG.get_elite_skills(monster_id).size())
 	lines.append("")
 	lines.append("[color=#d9b45b]엘리트 전투 능력[/color]")
+	lines.append("[table=2]")
 	var hp_value = stats.get("max_hp")
 	if hp_value != null:
 		lines.append(_format_stat_meter(
@@ -3295,6 +3298,7 @@ func _build_elite_detail_text(
 			_stat_level(float(range_value), [70.0, 140.0, 260.0, 500.0]),
 			"b68ae8"
 		))
+	lines.append("[/table]")
 
 	lines.append("[color=#8f8495]크기 ×%.2f[/color]" % visual_scale)
 	return "\n".join(lines)
