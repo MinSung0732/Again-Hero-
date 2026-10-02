@@ -10,6 +10,7 @@ const MUTATION_CATALOG := preload("res://src/data/mutation_catalog.gd")
 const SHOP_CATALOG := preload("res://src/data/shop_catalog.gd")
 const MONSTER_COLLECTION_STORE := preload("res://src/systems/monster_collection_store.gd")
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
+const FORMATION_DRAG_CARD := preload("res://src/ui/formation_drag_card.gd")
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 const DEMON_SKILL_LOADOUT_STORE := preload(
 	"res://src/systems/demon_skill_loadout_store.gd"
@@ -2047,6 +2048,8 @@ func _connect_navigation() -> void:
 	team_slot_1_button.pressed.connect(_on_team_slot_pressed.bind(0))
 	team_slot_2_button.pressed.connect(_on_team_slot_pressed.bind(1))
 	team_slot_3_button.pressed.connect(_on_team_slot_pressed.bind(2))
+	for slot_button in [team_slot_1_button, team_slot_2_button, team_slot_3_button]:
+		slot_button.connect("formation_item_dropped", _on_formation_item_dropped)
 	team_mode_button.pressed.connect(_show_formation_mode.bind("team"))
 	skill_mode_button.pressed.connect(_show_formation_mode.bind("skill"))
 	formation_cost_low_button.pressed.connect(
@@ -2503,11 +2506,11 @@ func _refresh_formation_mode() -> void:
 	if showing_team:
 		formation_list_title.text = "몬스터 목록 · 코스트"
 		_refresh_team_preview()
-		team_status_label.text = "몬스터 카드를 위아래로 스크롤해 편성을 변경할 수 있습니다."
+		team_status_label.text = "버튼 또는 카드를 길게 눌러 원하는 슬롯에 놓아 편성합니다."
 	else:
 		formation_list_title.text = "마왕 스킬 목록 · 코스트"
 		_refresh_demon_skill_preview()
-		team_status_label.text = "마왕 스킬 카드를 위아래로 스크롤해 편성을 변경할 수 있습니다."
+		team_status_label.text = "버튼 또는 스킬 카드를 길게 눌러 원하는 슬롯에 놓아 편성합니다."
 
 
 func _refresh_team_preview() -> void:
@@ -2549,15 +2552,23 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	var selected := monster_id in team_selected_ids
 	var data := MONSTER_CATALOG.get_monster(monster_id)
 
-	var card := PanelContainer.new()
+	var card := FORMATION_DRAG_CARD.new()
 	card.custom_minimum_size = Vector2(0.0, 246.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if available:
+		card.configure_drag(
+			"monster",
+			monster_id,
+			_team_monster_name(monster_id),
+			_team_monster_card_icon(monster_id)
+		)
 	card.add_theme_stylebox_override(
 		"panel",
 		formation_card_selected_style if selected else formation_card_style
 	)
 
 	var margin := MarginContainer.new()
+	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	margin.add_theme_constant_override("margin_left", 10)
 	margin.add_theme_constant_override("margin_top", 10)
 	margin.add_theme_constant_override("margin_right", 10)
@@ -2565,10 +2576,12 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	card.add_child(margin)
 
 	var vbox := VBoxContainer.new()
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_theme_constant_override("separation", 6)
 	margin.add_child(vbox)
 
 	var portrait := TextureRect.new()
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	portrait.custom_minimum_size = Vector2(0.0, 78.0)
 	portrait.texture = _team_monster_card_icon(monster_id)
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -2577,6 +2590,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	vbox.add_child(portrait)
 
 	var title := Label.new()
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.text = _team_monster_name(monster_id)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 24)
@@ -2587,6 +2601,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	vbox.add_child(title)
 
 	var info := Label.new()
+	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	info.custom_minimum_size = Vector2(0.0, 26.0)
 	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	info.add_theme_font_size_override("font_size", 18)
@@ -2608,6 +2623,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	vbox.add_child(info)
 
 	var actions := HBoxContainer.new()
+	actions.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	actions.custom_minimum_size = Vector2(0.0, 50.0)
 	actions.add_theme_constant_override("separation", 6)
 	vbox.add_child(actions)
@@ -2665,11 +2681,11 @@ func _refresh_team_slot(button: Button, slot_index: int) -> void:
 			_team_monster_name(monster_id),
 			_team_monster_role_label(monster_id),
 		]
-		button.disabled = team_selected_ids.size() <= 1
+		button.disabled = false
 	else:
 		button.icon = null
 		button.text = "%d\n빈 슬롯" % (slot_index + 1)
-		button.disabled = true
+		button.disabled = false
 
 func _on_team_slot_pressed(slot_index: int) -> void:
 	if formation_mode == "skill":
@@ -2720,33 +2736,41 @@ func _refresh_demon_skill_slot(button: Button, slot_index: int) -> void:
 			String(skill.get("name", skill_id)),
 			int(round(float(skill.get("mana_cost", 0.0)))),
 		]
-		button.disabled = demon_skill_selected_ids.size() <= 1
+		button.disabled = false
 	else:
 		button.text = "%d\n빈 슬롯" % (slot_index + 1)
-		button.disabled = true
+		button.disabled = false
 
 
 func _create_demon_skill_card(skill_id: String) -> Control:
 	var skill := DEMON_ULTIMATES.get_skill(skill_id)
 	var selected := skill_id in demon_skill_selected_ids
-	var card := PanelContainer.new()
+	var card := FORMATION_DRAG_CARD.new()
 	card.custom_minimum_size = Vector2(0.0, 246.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.configure_drag(
+		"skill",
+		skill_id,
+		String(skill.get("name", skill_id))
+	)
 	card.add_theme_stylebox_override(
 		"panel",
 		formation_card_selected_style if selected else formation_card_style
 	)
 
 	var margin := MarginContainer.new()
+	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for side in ["margin_left", "margin_top", "margin_right", "margin_bottom"]:
 		margin.add_theme_constant_override(side, 10)
 	card.add_child(margin)
 
 	var vbox := VBoxContainer.new()
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_theme_constant_override("separation", 6)
 	margin.add_child(vbox)
 
 	var symbol := Label.new()
+	symbol.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	symbol.text = "◆"
 	symbol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	symbol.add_theme_font_size_override("font_size", 46)
@@ -2754,6 +2778,7 @@ func _create_demon_skill_card(skill_id: String) -> Control:
 	vbox.add_child(symbol)
 
 	var title := Label.new()
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.text = String(skill.get("name", skill_id))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 23)
@@ -2764,6 +2789,7 @@ func _create_demon_skill_card(skill_id: String) -> Control:
 	vbox.add_child(title)
 
 	var info := Label.new()
+	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	info.text = "코스트 %d · 쿨 %.0f초\n%s" % [
 		int(round(float(skill.get("mana_cost", 0.0)))),
 		float(skill.get("cooldown", 0.0)),
@@ -2813,6 +2839,68 @@ func _on_demon_skill_slot_pressed(slot_index: int) -> void:
 	if slot_index < 0 or slot_index >= demon_skill_selected_ids.size():
 		return
 	_remove_demon_skill(String(demon_skill_selected_ids[slot_index]))
+
+
+func _on_formation_item_dropped(
+	slot_index: int,
+	dropped_kind: String,
+	item_id: String
+) -> void:
+	if slot_index < 0 or slot_index >= TEAM_MAX_SLOTS:
+		return
+	if dropped_kind == "monster":
+		if formation_mode != "team":
+			return
+		_place_monster_in_slot(item_id, slot_index)
+	elif dropped_kind == "skill":
+		if formation_mode != "skill":
+			return
+		_place_demon_skill_in_slot(item_id, slot_index)
+
+
+func _place_monster_in_slot(monster_id: String, slot_index: int) -> void:
+	if monster_id not in team_available_ids:
+		team_status_label.text = "아직 사용할 수 없는 몬스터입니다."
+		return
+	_move_or_replace_slot(team_selected_ids, monster_id, slot_index)
+	var saved := TEAM_LOADOUT_STORE.save_ids(
+		team_selected_ids,
+		team_available_ids
+	)
+	team_status_label.text = "%d번 슬롯에 %s 편성 · %s" % [
+		slot_index + 1,
+		_team_monster_name(monster_id),
+		"저장 완료" if saved else "저장 실패",
+	]
+	_refresh_team_preview()
+
+
+func _place_demon_skill_in_slot(skill_id: String, slot_index: int) -> void:
+	if skill_id not in demon_skill_catalog_ids:
+		team_status_label.text = "사용할 수 없는 마왕 스킬입니다."
+		return
+	_move_or_replace_slot(demon_skill_selected_ids, skill_id, slot_index)
+	var saved := DEMON_SKILL_LOADOUT_STORE.save_ids(
+		demon_skill_selected_ids,
+		demon_skill_catalog_ids
+	)
+	team_status_label.text = "%d번 슬롯에 %s 스킬 편성 · %s" % [
+		slot_index + 1,
+		String(DEMON_ULTIMATES.get_skill(skill_id).get("name", skill_id)),
+		"저장 완료" if saved else "저장 실패",
+	]
+	_refresh_demon_skill_preview()
+
+
+func _move_or_replace_slot(selected_ids: Array, item_id: String, slot_index: int) -> void:
+	var previous_index := selected_ids.find(item_id)
+	if previous_index >= 0:
+		selected_ids.remove_at(previous_index)
+	elif slot_index < selected_ids.size():
+		selected_ids.remove_at(slot_index)
+
+	var insertion_index := mini(slot_index, selected_ids.size())
+	selected_ids.insert(insertion_index, item_id)
 
 
 func _toggle_demon_skill(skill_id: String) -> void:

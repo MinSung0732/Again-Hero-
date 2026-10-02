@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/lobby/lobby.gd" id="1_lobby"]
 [ext_resource type="Theme" path="res://src/ui/game_theme.tres" id="3_game_theme"]
+[ext_resource type="Script" path="res://src/ui/formation_drop_slot.gd" id="4_formation_drop_slot"]
 
 [node name="Lobby" type="Control"]
 theme = ExtResource("3_game_theme")
@@ -269,6 +270,8 @@ theme_override_font_sizes/font_size = 20
 expand_icon = true
 theme_override_constants/icon_max_width = 48
 text = "1\n빈 슬롯"
+script = ExtResource("4_formation_drop_slot")
+slot_index = 0
 
 [node name="Slot2Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
 custom_minimum_size = Vector2(0, 146)
@@ -279,6 +282,8 @@ theme_override_font_sizes/font_size = 20
 expand_icon = true
 theme_override_constants/icon_max_width = 48
 text = "2\n빈 슬롯"
+script = ExtResource("4_formation_drop_slot")
+slot_index = 1
 
 [node name="Slot3Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
 custom_minimum_size = Vector2(0, 146)
@@ -289,6 +294,8 @@ theme_override_font_sizes/font_size = 20
 expand_icon = true
 theme_override_constants/icon_max_width = 48
 text = "3\n빈 슬롯"
+script = ExtResource("4_formation_drop_slot")
+slot_index = 2
 
 [node name="ModeTabs" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 custom_minimum_size = Vector2(0, 62)
