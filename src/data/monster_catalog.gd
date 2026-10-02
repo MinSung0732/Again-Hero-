@@ -9,6 +9,7 @@ const ORDER := [
 	"skeleton",
 	"skeleton_archer",
 	"kobolt",
+	"bat",
 ]
 
 const MONSTERS := {
@@ -372,6 +373,64 @@ const MONSTERS := {
 			},
 		],
 		"scene": preload("res://src/monsters/Kobolt.tscn"),
+	},
+	"bat": {
+		"id": "bat",
+		"name": "박쥐",
+		"role": "swarm",
+		"species": "beast",
+		"grade": "normal",
+		"attack_type": "melee",
+		"base_cost": 3.0,
+		"summon_exp": 3.0,
+		"base_stats": {
+			"max_hp": 72,
+			"move_speed": 72.0,
+			"attack_damage": 6,
+			"attack_range": 62.0,
+			"attack_cooldown": 0.62,
+			"detection_range": 420.0,
+			"charge_speed_multiplier": 1.75,
+		},
+		"default_unlocked": true,
+		"shards_required": 20,
+		"rarity": "common",
+		"card_icon_path": "res://assets/art/monsters/bat/frames/idle_01.png",
+		"ground_shadow": {
+			"size": Vector2(58.0, 18.0),
+			"offset_y": 27.0,
+			"opacity": 0.42,
+		},
+		"special_augment_ids": [
+			"bat_lifesteal",
+			"bat_permanent_charge",
+			"bat_echo_summon",
+		],
+		"elite_visual": {
+			"mode": "frames",
+			"asset_dir": "res://assets/art/elitemonster/bat/frames",
+			"target_height": 112.0,
+			"animations": {
+				"idle": {"prefix": "idle", "count": 4, "fps": 8.0, "loop": true},
+				"move": {"prefix": "walk", "count": 6, "fps": 11.0, "loop": true},
+				"attack": {"prefix": "atk", "count": 6, "fps": 16.0, "loop": false},
+				"hit": {"prefix": "hit", "count": 3, "fps": 14.0, "loop": false},
+				"death": {"prefix": "dead", "count": 4, "fps": 10.0, "loop": false},
+			},
+		},
+		"elite_skills": [
+			{
+				"id": "elite_bat_poison_fang",
+				"name": "독이빨",
+				"description": "상시 패시브. 타격 시 3초간 현재 체력의 5%만큼 독 피해를 줍니다. 다시 타격하면 지속시간과 피해량을 갱신합니다.",
+				"passive": true,
+				"initial_cooldown": 0.0,
+				"duration": 3.0,
+				"total_current_hp_ratio": 0.05,
+				"tick_interval": 0.50,
+			},
+		],
+		"scene": preload("res://src/monsters/Bat.tscn"),
 	},
 	"bomb_rat": {
 		"id": "bomb_rat",

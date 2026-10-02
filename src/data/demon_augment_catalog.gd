@@ -15,6 +15,7 @@ const MONSTER_NAMES := {
 	"skeleton": "스켈레톤",
 	"skeleton_archer": "스켈레톤 궁병",
 	"kobolt": "코볼트",
+	"bat": "박쥐",
 }
 
 const MONSTER_NORMAL_EXCLUDED_KEYS := {
@@ -124,6 +125,43 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{
+		"id": "bat_lifesteal",
+		"monster_id": "bat",
+		"name": "흡혈",
+		"description": "박쥐가 실제로 준 피해의 70%만큼 체력을 회복합니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "bat_lifesteal",
+		"effect_values": {"heal_ratio": 0.70},
+	},
+	{
+		"id": "bat_permanent_charge",
+		"monster_id": "bat",
+		"name": "피의 추적",
+		"description": "박쥐가 배회하지 않고 항상 용사를 향해 돌진합니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "bat_permanent_charge",
+		"effect_values": {"always_charge": true},
+	},
+	{
+		"id": "bat_echo_summon",
+		"monster_id": "bat",
+		"name": "메아리 군집",
+		"description": "박쥐 소환 시 15% 확률로 같은 위치에 1~3마리를 추가 소환합니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "bat_echo_summon",
+		"effect_values": {
+			"chance": 0.15,
+			"min_extra_count": 1,
+			"max_extra_count": 3,
+		},
+	},
 	{
 		"id": "kobolt_projectile_speed",
 		"monster_id": "kobolt",
@@ -399,6 +437,7 @@ static func get_augment(augment_id: String) -> Dictionary:
 		"skeleton",
 		"skeleton_archer",
 		"kobolt",
+		"bat",
 	]:
 		for augment in get_monster_normal_augments(monster_id, ""):
 			if String(augment.get("id", "")) == augment_id:

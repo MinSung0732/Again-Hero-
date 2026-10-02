@@ -1152,6 +1152,11 @@ func _clamp_manual_spawn_position(spawn_position: Vector2) -> Vector2:
 		)
 	)
 
+
+func clamp_monster_wander_position(candidate: Vector2) -> Vector2:
+	return _clamp_manual_spawn_position(candidate)
+
+
 func get_monster_cost(monster_type: String) -> float:
 	var base_cost: float = MONSTER_CATALOG.get_base_cost(monster_type)
 	if base_cost <= 0.0:
@@ -1460,6 +1465,7 @@ func _apply_giant_monster_base_stats(
 		"skeleton",
 		"skeleton_archer",
 		"kobolt",
+		"bat",
 	]:
 		var damage_value = monster.get("attack_damage")
 		if damage_value != null:
@@ -3941,24 +3947,53 @@ func _spawn_extra_normal_summon_monsters(
 	monster_type: String,
 	spawn_position: Vector2
 ) -> void:
-	if monster_type != "slime":
+	if monster_type == "slime":
+		var slime_config: Dictionary = _get_special_augment_config(
+			"slime"
+		).get("slime_cell_division", {})
+		var slime_extra_count := maxi(
+			int(slime_config.get("extra_count", 0)),
+			0
+		)
+		for index in range(slime_extra_count):
+			var angle := (
+				TAU * float(index + 1) / float(slime_extra_count + 1)
+			)
+			var offset := Vector2.from_angle(angle) * 36.0
+			var extra_slime = _spawn_monster(
+				"slime",
+				_clamp_manual_spawn_position(spawn_position + offset),
+				0.0,
+				true
+			)
+			if is_instance_valid(extra_slime):
+				extra_slime.set_meta("allow_special_death_split", true)
 		return
-	var config: Dictionary = _get_special_augment_config("slime").get(
-		"slime_cell_division",
+
+	if monster_type != "bat":
+		return
+	var bat_config: Dictionary = _get_special_augment_config("bat").get(
+		"bat_echo_summon",
 		{}
 	)
-	var extra_count := maxi(int(config.get("extra_count", 0)), 0)
-	for index in range(extra_count):
-		var angle := TAU * float(index + 1) / float(extra_count + 1)
-		var offset := Vector2.from_angle(angle) * 36.0
-		var extra_slime = _spawn_monster(
-			"slime",
-			_clamp_manual_spawn_position(spawn_position + offset),
+	if bat_config.is_empty():
+		return
+	var chance := clampf(float(bat_config.get("chance", 0.15)), 0.0, 1.0)
+	if randf() > chance:
+		return
+	var min_count := maxi(int(bat_config.get("min_extra_count", 1)), 1)
+	var max_count := maxi(
+		int(bat_config.get("max_extra_count", 3)),
+		min_count
+	)
+	var bat_extra_count := randi_range(min_count, max_count)
+	for _index in range(bat_extra_count):
+		_spawn_monster(
+			"bat",
+			_clamp_manual_spawn_position(spawn_position),
 			0.0,
 			true
 		)
-		if is_instance_valid(extra_slime):
-			extra_slime.set_meta("allow_special_death_split", true)
 
 func is_combat_simulation_paused() -> bool:
 	return (

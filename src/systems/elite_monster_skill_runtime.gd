@@ -73,6 +73,9 @@ func register_elite(
 		if typeof(raw_skill) != TYPE_DICTIONARY:
 			continue
 		var skill: Dictionary = Dictionary(raw_skill).duplicate(true)
+		if bool(skill.get("passive", false)):
+			_activate_passive_skill(monster, skill)
+			continue
 		skill["_timer"] = maxf(
 			float(skill.get("initial_cooldown", 0.0)),
 			0.0
@@ -89,6 +92,30 @@ func register_elite(
 		"monster_id": monster_id,
 		"skills": skills,
 	}
+
+
+func _activate_passive_skill(
+	monster: Node2D,
+	skill: Dictionary
+) -> void:
+	match String(skill.get("id", "")):
+		"elite_bat_poison_fang":
+			monster.set_meta("elite_bat_poison_fang_active", true)
+			monster.set_meta(
+				"elite_bat_poison_duration",
+				maxf(float(skill.get("duration", 3.0)), 0.1)
+			)
+			monster.set_meta(
+				"elite_bat_poison_hp_ratio",
+				maxf(
+					float(skill.get("total_current_hp_ratio", 0.05)),
+					0.0
+				)
+			)
+			monster.set_meta(
+				"elite_bat_poison_tick_interval",
+				maxf(float(skill.get("tick_interval", 0.50)), 0.05)
+			)
 
 
 func tick(delta: float) -> void:

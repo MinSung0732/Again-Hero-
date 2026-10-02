@@ -6,6 +6,10 @@ const STATUS_EFFECTS := {
 		"id": "slow",
 		"name": "둔화",
 	},
+	"poison": {
+		"id": "poison",
+		"name": "독",
+	},
 }
 
 static func get_status(status_id: String) -> Dictionary:

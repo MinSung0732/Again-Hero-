@@ -771,6 +771,13 @@ var hero_animation_last_restart_msec: int = -1000000
 var invulnerability_timer: float = 0.0
 var is_dying: bool = false
 var slow_timer: float = 0.0
+var poison_timer: float = 0.0
+var poison_tick_timer: float = 0.0
+var poison_tick_interval: float = 0.50
+var poison_damage_remaining: int = 0
+var poison_ticks_remaining: int = 0
+var poison_flash_timer: float = 0.0
+var poison_source: Node
 var move_multiplier: float = 1.0
 var strafe_sign: float = 1.0
 var combat_strafe_burst_timer: float = 0.0
@@ -1654,6 +1661,10 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_update_hero_hit_flash(delta)
+	_update_poison(delta)
+	if current_hp <= 0 or is_dying:
+		velocity = Vector2.ZERO
+		return
 	_update_combat_reposition(delta)
 
 	if hero_archetype == "rogue_combo":
@@ -16572,6 +16583,41 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 		_:
 			push_warning("Unknown Hero augment effect op: %s" % op)
 
+func apply_poison(
+	duration: float,
+	total_current_hp_ratio: float,
+	tick_interval: float = 0.50,
+	source: Node = null
+) -> void:
+	if current_hp <= 0 or is_dying:
+		return
+
+	record_status_effect_event("poison")
+	var was_active := poison_timer > 0.0 and poison_ticks_remaining > 0
+	poison_timer = maxf(duration, 0.1)
+	poison_tick_interval = maxf(tick_interval, 0.05)
+	poison_ticks_remaining = maxi(
+		int(ceil(poison_timer / poison_tick_interval)),
+		1
+	)
+	poison_damage_remaining = maxi(
+		int(round(
+			float(current_hp)
+			* maxf(total_current_hp_ratio, 0.0)
+		)),
+		1
+	)
+	if was_active:
+		poison_tick_timer = minf(
+			poison_tick_timer,
+			poison_tick_interval
+		)
+	else:
+		poison_tick_timer = poison_tick_interval
+	poison_source = source if is_instance_valid(source) else null
+	set_meta("poison_active", true)
+
+
 func apply_slow(multiplier: float, duration: float) -> void:
 	if current_hp <= 0:
 		return
@@ -19414,17 +19460,22 @@ func _required_exp_for_level(target_level: int) -> int:
 	return 50 + maxi(target_level - 1, 0) * 25
 
 func take_damage(amount: int, source: Node = null) -> bool:
-	return _take_damage_internal(amount, source, false)
+	return _take_damage_internal(amount, source, false, true)
 
 
 func take_followup_damage(amount: int, source: Node = null) -> bool:
-	return _take_damage_internal(amount, source, true)
+	return _take_damage_internal(amount, source, true, true)
+
+
+func take_status_damage(amount: int, source: Node = null) -> bool:
+	return _take_damage_internal(amount, source, true, false)
 
 
 func _take_damage_internal(
 	amount: int,
 	source: Node,
-	ignore_invulnerability: bool
+	ignore_invulnerability: bool,
+	grant_invulnerability: bool
 ) -> bool:
 	if (
 		amount <= 0
@@ -19535,10 +19586,12 @@ func _take_damage_internal(
 		else:
 			_begin_death_sequence()
 	else:
-		invulnerability_timer = invulnerability_duration
+		if grant_invulnerability:
+			invulnerability_timer = invulnerability_duration
 		if hero_archetype == "pistol_gunner" and _gunner_should_backstep_on_hit():
 			_start_gunner_backstep()
-		_refresh_invulnerability_visual()
+		if grant_invulnerability:
+			_refresh_invulnerability_visual()
 
 	return true
 
@@ -19548,6 +19601,71 @@ func _update_hero_hit_flash(delta: float) -> void:
 	hit_flash_timer = maxf(hit_flash_timer - delta, 0.0)
 	if hit_flash_timer <= 0.0:
 		queue_redraw()
+
+
+func _update_poison(delta: float) -> void:
+	if poison_flash_timer > 0.0:
+		poison_flash_timer = maxf(poison_flash_timer - delta, 0.0)
+		if poison_flash_timer <= 0.0:
+			_set_poison_flash(false)
+
+	if poison_timer <= 0.0 or poison_ticks_remaining <= 0:
+		return
+
+	poison_timer = maxf(poison_timer - delta, 0.0)
+	poison_tick_timer -= delta
+	while (
+		poison_tick_timer <= 0.0
+		and poison_ticks_remaining > 0
+		and current_hp > 0
+		and not is_dying
+	):
+		var tick_damage := maxi(
+			int(ceil(
+				float(poison_damage_remaining)
+				/ float(poison_ticks_remaining)
+			)),
+			1
+		)
+		poison_damage_remaining = maxi(
+			poison_damage_remaining - tick_damage,
+			0
+		)
+		poison_ticks_remaining -= 1
+		poison_tick_timer += poison_tick_interval
+		var active_source: Node = (
+			poison_source
+			if is_instance_valid(poison_source)
+			else null
+		)
+		var damage_applied := take_status_damage(
+			tick_damage,
+			active_source
+		)
+		if damage_applied and current_hp > 0:
+			poison_flash_timer = 0.10
+			_set_poison_flash(true)
+
+	if poison_timer <= 0.0 or poison_ticks_remaining <= 0 or current_hp <= 0:
+		poison_timer = 0.0
+		poison_tick_timer = 0.0
+		poison_damage_remaining = 0
+		poison_ticks_remaining = 0
+		poison_source = null
+		set_meta("poison_active", false)
+
+
+func _set_poison_flash(active: bool) -> void:
+	var current_modulate := modulate
+	if active:
+		current_modulate.r = 0.72
+		current_modulate.g = 0.30
+		current_modulate.b = 0.92
+	else:
+		current_modulate.r = 1.0
+		current_modulate.g = 1.0
+		current_modulate.b = 1.0
+	modulate = current_modulate
 
 
 func _update_invulnerability(delta: float) -> void:
@@ -19574,6 +19692,14 @@ func _begin_death_sequence() -> void:
 		return
 
 	is_dying = true
+	poison_timer = 0.0
+	poison_tick_timer = 0.0
+	poison_damage_remaining = 0
+	poison_ticks_remaining = 0
+	poison_flash_timer = 0.0
+	poison_source = null
+	set_meta("poison_active", false)
+	_set_poison_flash(false)
 	if hero_archetype == "ranged_kiter":
 		_play_stage1_audio(&"death")
 	elif hero_archetype == "rogue_combo":
