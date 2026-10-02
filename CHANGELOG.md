@@ -1,3 +1,9 @@
+### 2026-10-03 — 모바일 상점 전영역 스와이프 스크롤 고정
+- 자식 Button/Label/Panel의 mouse_filter 상태와 무관하게 상점 내부에서 시작한 ScreenTouch/ScreenDrag를 Lobby 루트 입력에서 직접 추적하도록 변경.
+- 터치 시작점이 ShopScroll 영역이면 손가락 이동량만큼 `scroll_vertical`을 직접 갱신하므로 몬스터/유물/패키지/배너 어느 위치에서 시작해도 위·아래 스와이프가 동일하게 동작.
+- 버튼 탭은 기존 GUI 입력을 그대로 사용하고 드래그 이벤트만 별도로 스크롤에 반영해 상점 버튼 기능을 유지.
+- 소환/조각/해금/재화/배너/전투 로직은 변경하지 않음.
+
 ### 2026-10-03 — 모바일 상점 스와이프 복귀 수정
 - Android 터치에서 ScrollContainer 내부 Button이 스와이프 시작점을 가로막지 않도록 상점의 활성 버튼은 `MOUSE_FILTER_PASS`, 준비 중/비활성 버튼은 `MOUSE_FILTER_IGNORE`로 정리.
 - 동적 패키지 버튼도 enabled 상태에 따라 PASS/IGNORE를 적용해 하단 패키지 영역에서 위로 되돌아가는 스와이프가 막히지 않도록 수정.

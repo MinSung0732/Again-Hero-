@@ -57,6 +57,7 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var progress_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ProgressLabel
 
 @onready var shop_tab: Control = $SafeArea/Layout/Content/ShopTab
+@onready var shop_scroll: ScrollContainer = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll
 @onready var shop_gold_label: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel/BalanceMargin/BalanceRow/Gold
 @onready var shop_research_points_label: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel/BalanceMargin/BalanceRow/ResearchPoints
 @onready var shop_single_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/BuyRow/SingleButton
@@ -162,6 +163,7 @@ const SHOP_BANNER_AUTO_SECONDS := 5.5
 var shop_banner_index: int = 0
 var shop_banner_timer: float = SHOP_BANNER_AUTO_SECONDS
 var shop_last_result_text: String = ""
+var _shop_scroll_touch_index: int = -1
 
 const STAGE_SWIPE_THRESHOLD := 72.0
 const STAGE_SLIDE_DISTANCE := 118.0
@@ -2019,10 +2021,13 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 
 func _input(event: InputEvent) -> void:
 	if shop_result_overlay.visible:
+		_shop_scroll_touch_index = -1
 		_stage_swipe_active = false
 		if event.is_action_pressed("ui_cancel"):
 			_close_shop_result_modal()
 		return
+
+	_handle_shop_touch_scroll(event)
 
 	if stage_select_overlay.visible:
 		_stage_swipe_active = false
@@ -2053,6 +2058,33 @@ func _input(event: InputEvent) -> void:
 		elif _stage_swipe_active:
 			_try_stage_swipe(event.position)
 			_stage_swipe_active = false
+
+
+func _handle_shop_touch_scroll(event: InputEvent) -> void:
+	if (
+		current_tab != "shop"
+		or not is_instance_valid(shop_tab)
+		or not shop_tab.visible
+		or not is_instance_valid(shop_scroll)
+	):
+		_shop_scroll_touch_index = -1
+		return
+
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			if shop_scroll.get_global_rect().has_point(event.position):
+				_shop_scroll_touch_index = event.index
+			else:
+				_shop_scroll_touch_index = -1
+		elif event.index == _shop_scroll_touch_index:
+			_shop_scroll_touch_index = -1
+		return
+
+	if (
+		event is InputEventScreenDrag
+		and event.index == _shop_scroll_touch_index
+	):
+		shop_scroll.scroll_vertical -= int(round(event.relative.y))
 
 
 func _try_stage_swipe(end_position: Vector2) -> void:
@@ -2148,6 +2180,7 @@ func _on_team_tab_pressed() -> void:
 func _switch_tab(tab_id: String) -> void:
 	current_tab = tab_id
 	if tab_id != "shop":
+		_shop_scroll_touch_index = -1
 		_close_shop_result_modal()
 
 	shop_tab.visible = tab_id == "shop"
@@ -2428,7 +2461,7 @@ func _rebuild_shop_packages() -> void:
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.focus_mode = Control.FOCUS_NONE
 		button.mouse_filter = (
-			Control.MOUSE_FILTER_PASS
+			Control.MOUSE_FILTER_STOP
 			if enabled
 			else Control.MOUSE_FILTER_IGNORE
 		)
@@ -2526,7 +2559,7 @@ func _rebuild_shop_list() -> void:
 	shop_history_button.mouse_filter = (
 		Control.MOUSE_FILTER_IGNORE
 		if shop_history_button.disabled
-		else Control.MOUSE_FILTER_PASS
+		else Control.MOUSE_FILTER_STOP
 	)
 	shop_banner_timer = SHOP_BANNER_AUTO_SECONDS
 	_refresh_shop_banner()
@@ -2629,7 +2662,7 @@ func _open_monster_boxes(draw_count: int) -> void:
 	shop_last_result_text = "\n".join(result_lines)
 	shop_result_label.text = shop_last_result_text
 	shop_history_button.disabled = false
-	shop_history_button.mouse_filter = Control.MOUSE_FILTER_PASS
+	shop_history_button.mouse_filter = Control.MOUSE_FILTER_STOP
 	shop_status_label.text = (
 		"골드 차감 없음 · 표시 골드 %s 유지"
 		% _format_shop_number(SHOP_CATALOG.TEST_GOLD)
