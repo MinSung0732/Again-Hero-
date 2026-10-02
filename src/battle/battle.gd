@@ -61,6 +61,7 @@ const DEMON_EXP_GROWTH_PER_LEVEL := 4.0
 const BASE_DEMON_REROLLS := 3
 const DEMON_LEVEL_MONSTER_HP_GROWTH := 1.05
 const DEMON_LEVEL_MONSTER_DAMAGE_GROWTH := 1.05
+const DEMON_LEVEL_MONSTER_EXP_GROWTH := 1.05
 const DEMON_LEVEL_MONSTER_SPEED_GROWTH := 1.02
 const DEMON_LEVEL_MONSTER_SPEED_MAX_MULTIPLIER := 1.25
 const GIANT_MONSTER_UNLOCK_LEVEL := 10
@@ -1909,6 +1910,10 @@ func _get_demon_level_monster_damage_multiplier() -> float:
 	var growth_steps := maxi(demon_level - 1, 0)
 	return pow(DEMON_LEVEL_MONSTER_DAMAGE_GROWTH, float(growth_steps))
 
+func _get_demon_level_monster_exp_multiplier() -> float:
+	var growth_steps := maxi(demon_level - 1, 0)
+	return pow(DEMON_LEVEL_MONSTER_EXP_GROWTH, float(growth_steps))
+
 func _get_demon_level_monster_speed_multiplier() -> float:
 	var growth_steps := maxi(demon_level - 1, 0)
 	return minf(
@@ -2064,7 +2069,13 @@ func _on_monster_died(monster: Node) -> void:
 			monster.get_meta("allow_special_death_split", false)
 		)
 		death_type = String(monster.get_meta("death_type", "normal"))
-		reward = int(monster.get("exp_reward"))
+		reward = maxi(
+			int(round(
+				float(monster.get("exp_reward"))
+				* _get_demon_level_monster_exp_multiplier()
+			)),
+			0
+		)
 
 	if reward > 0:
 		_spawn_exp_orb(drop_position, reward)
