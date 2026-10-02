@@ -139,7 +139,7 @@ func _physics_process(delta: float) -> void:
 	if distance_sq > 0.001:
 		_set_facing_direction(offset_to_hero.x)
 
-	var unlimited_range := not special_augment_configs.get(
+	var unlimited_range: bool = not special_augment_configs.get(
 		"kobolt_unlimited_range",
 		{}
 	).is_empty()
