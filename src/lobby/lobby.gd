@@ -57,12 +57,23 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var progress_label: Label = $SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow/ProgressLabel
 
 @onready var shop_tab: Control = $SafeArea/Layout/Content/ShopTab
-@onready var shop_gold_label: Label = $SafeArea/Layout/Content/ShopTab/ShopLayout/Gold
-@onready var shop_single_button: Button = $SafeArea/Layout/Content/ShopTab/ShopLayout/BuyRow/SingleButton
-@onready var shop_multi_button: Button = $SafeArea/Layout/Content/ShopTab/ShopLayout/BuyRow/MultiButton
-@onready var shop_rates_label: Label = $SafeArea/Layout/Content/ShopTab/ShopLayout/Rates
-@onready var shop_result_label: Label = $SafeArea/Layout/Content/ShopTab/ShopLayout/ResultPanel/Result
-@onready var shop_status_label: Label = $SafeArea/Layout/Content/ShopTab/ShopLayout/Status
+@onready var shop_gold_label: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel/BalanceMargin/BalanceRow/Gold
+@onready var shop_research_points_label: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel/BalanceMargin/BalanceRow/ResearchPoints
+@onready var shop_single_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/BuyRow/SingleButton
+@onready var shop_multi_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/BuyRow/MultiButton
+@onready var shop_relic_single_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox/BuyRow/SingleButton
+@onready var shop_relic_multi_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox/BuyRow/MultiButton
+@onready var shop_rates_label: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/Rates
+@onready var shop_result_label: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/ResultPanel/Result
+@onready var shop_status_label: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/Status
+@onready var shop_banner_badge: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerTop/Badge
+@onready var shop_banner_dots: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerTop/Dots
+@onready var shop_banner_title: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerTitle
+@onready var shop_banner_description: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerDescription
+@onready var shop_banner_footer: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerFooter/FooterText
+@onready var shop_banner_prev_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerFooter/PrevButton
+@onready var shop_banner_next_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerFooter/NextButton
+@onready var shop_package_grid: GridContainer = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin/VBox/PackageGrid
 
 @onready var team_tab: Control = $SafeArea/Layout/Content/TeamTab
 @onready var main_tab: Control = $SafeArea/Layout/Content/MainTab
@@ -143,6 +154,10 @@ var stage_ids: Array[String] = []
 var selected_stage_index: int = 0
 var current_tab: String = "main"
 
+const SHOP_BANNER_AUTO_SECONDS := 5.5
+var shop_banner_index: int = 0
+var shop_banner_timer: float = SHOP_BANNER_AUTO_SECONDS
+
 const STAGE_SWIPE_THRESHOLD := 72.0
 const STAGE_SLIDE_DISTANCE := 118.0
 const STAGE_SLIDE_OUT_DURATION := 0.16
@@ -192,7 +207,8 @@ var stage_selector_item_style := StyleBoxFlat.new()
 var stage_selector_current_style := StyleBoxFlat.new()
 var stage_selector_disabled_style := StyleBoxFlat.new()
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_tick_shop_banner(delta)
 	if not _scene_load_pending:
 		return
 
@@ -411,7 +427,7 @@ func _apply_styles() -> void:
 		"panel",
 		StyleBoxEmpty.new()
 	)
-	$SafeArea/Layout/Content/ShopTab/ShopLayout/ResultPanel.add_theme_stylebox_override(
+	$SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/ResultPanel.add_theme_stylebox_override(
 		"panel",
 		dark_backing
 	)
@@ -1827,30 +1843,7 @@ func _apply_lobby_visual_polish() -> void:
 	stage_reward_label.add_theme_color_override("font_color", Color("e6c66d"))
 	_apply_enter_stage_button_skin()
 
-	_set_lobby_label_style(
-		^"SafeArea/Layout/Content/ShopTab/ShopLayout/Title",
-		40,
-		Color("fff4dd")
-	)
-	_set_lobby_label_style(
-		^"SafeArea/Layout/Content/ShopTab/ShopLayout/Guide",
-		23,
-		Color("aa9bb4")
-	)
-	_set_lobby_label_style(
-		^"SafeArea/Layout/Content/ShopTab/ShopLayout/Gold",
-		30,
-		Color("f3cf72")
-	)
-	_set_lobby_label_style(
-		^"SafeArea/Layout/Content/ShopTab/ShopLayout/ResultTitle",
-		28,
-		Color("ead8ef")
-	)
-	shop_rates_label.add_theme_color_override("font_color", Color("cfc3d5"))
-	shop_status_label.add_theme_color_override("font_color", Color("918799"))
-	_apply_lobby_button_skin(shop_single_button, false, 25)
-	_apply_lobby_button_skin(shop_multi_button, true, 25)
+	_apply_shop_storefront_skin()
 
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/TeamTab/TeamLayout/Title",
@@ -2078,6 +2071,14 @@ func _connect_navigation() -> void:
 	shop_multi_button.pressed.connect(
 		_open_monster_boxes.bind(SHOP_CATALOG.MULTI_DRAW_COUNT)
 	)
+	shop_relic_single_button.pressed.connect(
+		_show_shop_placeholder.bind("유물 소환 시스템은 아직 준비 중입니다.")
+	)
+	shop_relic_multi_button.pressed.connect(
+		_show_shop_placeholder.bind("유물 10+1 소환 시스템은 아직 준비 중입니다.")
+	)
+	shop_banner_prev_button.pressed.connect(_change_shop_banner.bind(-1))
+	shop_banner_next_button.pressed.connect(_change_shop_banner.bind(1))
 
 	team_slot_1_button.pressed.connect(_on_team_slot_pressed.bind(0))
 	team_slot_2_button.pressed.connect(_on_team_slot_pressed.bind(1))
@@ -2217,6 +2218,220 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 		icon.modulate = Color.WHITE if selected else Color("b7adc2")
 
 
+func _apply_shop_storefront_skin() -> void:
+	var banner_style := _make_hud_panel_style(
+		Color("25122f"),
+		Color("d3a043"),
+		3,
+		18
+	)
+	banner_style.shadow_color = Color(0.0, 0.0, 0.0, 0.52)
+	banner_style.shadow_size = 8
+	banner_style.shadow_offset = Vector2(0.0, 4.0)
+
+	var balance_style := _make_hud_panel_style(
+		Color(0.055, 0.040, 0.075, 0.94),
+		Color(0.47, 0.35, 0.55, 0.92),
+		2,
+		12
+	)
+	var summon_style := _make_hud_panel_style(
+		Color(0.075, 0.047, 0.092, 0.96),
+		Color(0.75, 0.55, 0.23, 0.95),
+		3,
+		18
+	)
+	var relic_style := _make_hud_panel_style(
+		Color(0.060, 0.044, 0.092, 0.96),
+		Color(0.55, 0.35, 0.70, 0.95),
+		3,
+		18
+	)
+	var package_style := _make_hud_panel_style(
+		Color(0.050, 0.037, 0.068, 0.96),
+		Color(0.45, 0.34, 0.52, 0.95),
+		2,
+		18
+	)
+	var result_style := _make_hud_panel_style(
+		Color(0.035, 0.030, 0.052, 0.92),
+		Color(0.30, 0.23, 0.36, 0.88),
+		1,
+		10
+	)
+
+	for data in [
+		[
+			^"SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel",
+			balance_style,
+		],
+		[
+			^"SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel",
+			banner_style,
+		],
+		[
+			^"SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection",
+			summon_style,
+		],
+		[
+			^"SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection",
+			relic_style,
+		],
+		[
+			^"SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection",
+			package_style,
+		],
+		[
+			^"SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/ResultPanel",
+			result_style,
+		],
+	]:
+		var panel := get_node_or_null(data[0]) as PanelContainer
+		if panel != null:
+			panel.add_theme_stylebox_override("panel", data[1] as StyleBox)
+
+	_set_lobby_label_style(
+		^"SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/Title",
+		40,
+		Color("fff4dd")
+	)
+	_set_lobby_label_style(
+		^"SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/Guide",
+		21,
+		Color("aa9bb4")
+	)
+	shop_gold_label.add_theme_color_override("font_color", Color("f4cf68"))
+	shop_research_points_label.add_theme_color_override(
+		"font_color",
+		Color("d5a9ef")
+	)
+	shop_rates_label.add_theme_color_override("font_color", Color("cfc3d5"))
+	shop_status_label.add_theme_color_override("font_color", Color("918799"))
+
+	var badge_style := _make_hud_panel_style(
+		Color("4c293f"),
+		Color("d6a64c"),
+		1,
+		8
+	)
+	shop_banner_badge.add_theme_stylebox_override("normal", badge_style)
+	shop_banner_badge.add_theme_constant_override("outline_size", 2)
+	shop_banner_badge.add_theme_color_override(
+		"font_outline_color",
+		Color("160d1b")
+	)
+
+	_apply_lobby_button_skin(shop_banner_prev_button, false, 24)
+	_apply_lobby_button_skin(shop_banner_next_button, false, 24)
+	_apply_lobby_button_skin(shop_single_button, false, 23)
+	_apply_lobby_button_skin(shop_multi_button, true, 23)
+	_apply_lobby_button_skin(shop_relic_single_button, false, 23)
+	_apply_lobby_button_skin(shop_relic_multi_button, true, 23)
+
+
+func _tick_shop_banner(delta: float) -> void:
+	if (
+		current_tab != "shop"
+		or not is_instance_valid(shop_tab)
+		or not shop_tab.visible
+		or SHOP_CATALOG.get_banner_count() <= 1
+	):
+		return
+	shop_banner_timer = maxf(shop_banner_timer - delta, 0.0)
+	if shop_banner_timer > 0.0:
+		return
+	_change_shop_banner(1)
+
+
+func _change_shop_banner(direction: int) -> void:
+	var count := SHOP_CATALOG.get_banner_count()
+	if count <= 0:
+		return
+	shop_banner_index = (
+		((shop_banner_index + direction) % count) + count
+	) % count
+	shop_banner_timer = SHOP_BANNER_AUTO_SECONDS
+	_refresh_shop_banner()
+
+
+func _refresh_shop_banner() -> void:
+	var count := SHOP_CATALOG.get_banner_count()
+	if count <= 0:
+		shop_banner_badge.text = "NOTICE"
+		shop_banner_title.text = "상점 준비 중"
+		shop_banner_description.text = "표시할 상점 배너가 없습니다."
+		shop_banner_footer.text = ""
+		shop_banner_dots.text = ""
+		return
+
+	shop_banner_index = (
+		(shop_banner_index % count) + count
+	) % count
+	var data := SHOP_CATALOG.get_banner(shop_banner_index)
+	shop_banner_badge.text = String(data.get("badge", "EVENT"))
+	shop_banner_title.text = String(data.get("title", "마왕 상점"))
+	shop_banner_description.text = String(data.get("description", ""))
+	shop_banner_footer.text = String(data.get("footer", ""))
+
+	var dots := PackedStringArray()
+	for index in range(count):
+		dots.append("◆" if index == shop_banner_index else "◇")
+	shop_banner_dots.text = "  ".join(dots)
+
+
+func _rebuild_shop_packages() -> void:
+	for child in shop_package_grid.get_children():
+		shop_package_grid.remove_child(child)
+		child.free()
+
+	for raw_data in SHOP_CATALOG.get_packages():
+		if typeof(raw_data) != TYPE_DICTIONARY:
+			continue
+		var data: Dictionary = raw_data
+		var button := Button.new()
+		var featured := bool(data.get("featured", false))
+		var enabled := bool(data.get("enabled", false))
+		button.custom_minimum_size = Vector2(0.0, 148.0)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.focus_mode = Control.FOCUS_NONE
+		button.text = "%s  %s\n%s\n%s" % [
+			String(data.get("badge", "PACKAGE")),
+			String(data.get("title", "상품")),
+			String(data.get("reward_text", "")),
+			String(data.get("price_text", "준비 중")),
+		]
+		_apply_lobby_button_skin(button, featured, 20)
+		button.disabled = not enabled
+		button.add_theme_stylebox_override(
+			"disabled",
+			(
+				primary_button_disabled_style
+				if featured
+				else secondary_button_disabled_style
+			)
+		)
+		if enabled:
+			button.pressed.connect(
+				_on_shop_package_pressed.bind(
+					String(data.get("id", ""))
+				)
+			)
+		shop_package_grid.add_child(button)
+
+
+func _on_shop_package_pressed(package_id: String) -> void:
+	var data := SHOP_CATALOG.get_package(package_id)
+	if data.is_empty():
+		return
+	shop_status_label.text = "%s · 실제 구매 시스템 연결 전입니다." % String(
+		data.get("title", "패키지")
+	)
+
+
+func _show_shop_placeholder(message: String) -> void:
+	shop_status_label.text = message
+
+
 func _format_shop_number(value: int) -> String:
 	var digits := str(maxi(value, 0))
 	var result := ""
@@ -2231,9 +2446,20 @@ func _format_shop_number(value: int) -> String:
 	return result
 
 func _rebuild_shop_list() -> void:
-	shop_gold_label.text = "보유 골드  %s" % _format_shop_number(SHOP_CATALOG.TEST_GOLD)
-	shop_single_button.text = "상자 1회\n%s 골드" % _format_shop_number(SHOP_CATALOG.SINGLE_DRAW_COST)
-	shop_multi_button.text = "상자 10+1회\n%s 골드" % _format_shop_number(SHOP_CATALOG.MULTI_DRAW_COST)
+	shop_gold_label.text = "골드  %s" % _format_shop_number(
+		SHOP_CATALOG.TEST_GOLD
+	)
+	shop_research_points_label.text = "연구 포인트  %s" % _format_shop_number(
+		STAGE_PROGRESS.get_research_points()
+	)
+	shop_single_button.text = "몬스터 소환 1회\n%s 골드" % _format_shop_number(
+		SHOP_CATALOG.SINGLE_DRAW_COST
+	)
+	shop_multi_button.text = "몬스터 소환 10+1회\n%s 골드" % _format_shop_number(
+		SHOP_CATALOG.MULTI_DRAW_COST
+	)
+	shop_relic_single_button.text = "유물 소환 1회\n준비 중"
+	shop_relic_multi_button.text = "유물 소환 10+1회\n준비 중"
 
 	var rate_lines: PackedStringArray = []
 	for raw_rarity in SHOP_CATALOG.RARITY_ORDER:
@@ -2257,11 +2483,14 @@ func _rebuild_shop_list() -> void:
 			]
 		)
 
-	shop_rates_label.text = "\n".join(rate_lines)
+	shop_rates_label.text = "  ·  ".join(rate_lines)
 	shop_status_label.text = (
-		"테스트 골드 %s · 구매 시 골드 차감 없음"
+		"몬스터 소환은 테스트 골드 %s를 표시하며 실제 골드는 차감하지 않습니다."
 		% _format_shop_number(SHOP_CATALOG.TEST_GOLD)
 	)
+	shop_banner_timer = SHOP_BANNER_AUTO_SECONDS
+	_refresh_shop_banner()
+	_rebuild_shop_packages()
 
 func _open_monster_boxes(draw_count: int) -> void:
 	if draw_count <= 0:

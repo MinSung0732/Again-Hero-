@@ -110,92 +110,358 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+clip_contents = true
 
-[node name="ShopLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab"]
+[node name="ShopMargin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 20.0
-offset_top = 38.0
-offset_right = -20.0
-offset_bottom = -34.0
+offset_left = 18.0
+offset_top = 26.0
+offset_right = -18.0
+offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 12
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
 
-[node name="Title" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
+[node name="ShopLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.87, 1, 1)
-theme_override_font_sizes/font_size = 42
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.93, 0.84, 1)
+theme_override_font_sizes/font_size = 40
 text = "마왕 상점"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="Guide" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
+[node name="Guide" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout"]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
-theme_override_font_sizes/font_size = 24
-text = "상자에서 무작위 몬스터 조각을 획득합니다. 테스트 버전에서는 골드가 차감되지 않습니다."
-horizontal_alignment = 1
-autowrap_mode = 2
-
-[node name="Gold" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
-theme_override_font_sizes/font_size = 30
-text = "보유 골드  99,999"
-horizontal_alignment = 1
-
-[node name="BuyRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
-custom_minimum_size = Vector2(0, 150)
-layout_mode = 2
-theme_override_constants/separation = 18
-
-[node name="SingleButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopLayout/BuyRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 30
-text = "상자 1회\n100 골드"
-
-[node name="MultiButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopLayout/BuyRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 30
-text = "상자 10+1회\n1,000 골드"
-
-[node name="Rates" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.76, 0.7, 0.81, 1)
-theme_override_font_sizes/font_size = 24
-text = "일반 70% · 조각 10~30\n희귀 25% · 조각 3~8\n최고등급 5% · 조각 1"
-horizontal_alignment = 1
-
-[node name="ResultTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "최근 상자 결과"
-horizontal_alignment = 1
-
-[node name="ResultPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
-custom_minimum_size = Vector2(0, 290)
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Result" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout/ResultPanel"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.85, 0.94, 1)
-theme_override_font_sizes/font_size = 24
-text = "상자를 구매하면 결과가 여기에 표시됩니다."
+theme_override_colors/font_color = Color(0.67, 0.61, 0.71, 1)
+theme_override_font_sizes/font_size = 21
+text = "소환 · 유물 · 성장 재화를 한 곳에서 확인합니다."
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="Status" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopLayout"]
+[node name="ShopScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 1
+
+[node name="ShopContent" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll"]
+custom_minimum_size = Vector2(0, 1760)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="BalancePanel" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent"]
+custom_minimum_size = Vector2(0, 78)
+layout_mode = 2
+
+[node name="BalanceMargin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 10
+
+[node name="BalanceRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel/BalanceMargin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Gold" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel/BalanceMargin/BalanceRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.96, 0.79, 0.34, 1)
+theme_override_font_sizes/font_size = 24
+text = "골드  99,999"
+vertical_alignment = 1
+
+[node name="ResearchPoints" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel/BalanceMargin/BalanceRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.82, 0.67, 0.95, 1)
+theme_override_font_sizes/font_size = 24
+text = "연구 포인트  0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="BannerPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent"]
+custom_minimum_size = Vector2(0, 270)
+layout_mode = 2
+clip_contents = true
+
+[node name="BannerMargin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 22
+
+[node name="BannerVBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BannerTop" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+
+[node name="Badge" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerTop"]
+custom_minimum_size = Vector2(122, 34)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.58, 1)
+theme_override_font_sizes/font_size = 18
+text = "EVENT"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Spacer" type="Control" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerTop"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Dots" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerTop"]
+custom_minimum_size = Vector2(160, 34)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.89, 0.72, 0.35, 1)
+theme_override_font_sizes/font_size = 17
+text = "◆  ◇  ◇"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="BannerTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.83, 1)
+theme_override_font_sizes/font_size = 31
+text = "신규 몬스터 전력 보급"
+vertical_alignment = 1
+
+[node name="BannerDescription" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.85, 0.8, 0.88, 1)
+theme_override_font_sizes/font_size = 21
+text = "몬스터 소환에서 전력을 확충하고 새로운 편성을 준비하세요."
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="BannerFooter" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox"]
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
+theme_override_constants/separation = 12
+
+[node name="PrevButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerFooter"]
+custom_minimum_size = Vector2(76, 50)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 26
+text = "‹"
+
+[node name="FooterText" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerFooter"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.72, 0.64, 0.77, 1)
+theme_override_font_sizes/font_size = 18
+text = "마왕군 확장 이벤트"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="NextButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerFooter"]
+custom_minimum_size = Vector2(76, 50)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 26
+text = "›"
+
+[node name="MonsterSection" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent"]
+custom_minimum_size = Vector2(0, 470)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.97, 0.88, 0.66, 1)
+theme_override_font_sizes/font_size = 30
+text = "몬스터 소환"
+
+[node name="SectionDesc" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
+theme_override_font_sizes/font_size = 19
+text = "무작위 몬스터 조각을 획득해 전투 편성을 확장합니다."
+autowrap_mode = 2
+
+[node name="BuyRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
+custom_minimum_size = Vector2(0, 142)
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="SingleButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/BuyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
 theme_override_font_sizes/font_size = 24
-text = "테스트 골드 99,999 · 구매 시 골드 차감 없음"
+text = "몬스터 소환 1회\n100 골드"
+
+[node name="MultiButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/BuyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+text = "몬스터 소환 10+1회\n1,000 골드"
+
+[node name="Rates" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.69, 0.8, 1)
+theme_override_font_sizes/font_size = 18
+text = "일반 70% · 희귀 25% · 최고등급 5%"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="ResultTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.74, 0.84, 1)
+theme_override_font_sizes/font_size = 20
+text = "최근 소환 결과"
+
+[node name="ResultPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+
+[node name="Result" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/ResultPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.83, 0.91, 1)
+theme_override_font_sizes/font_size = 18
+text = "몬스터를 소환하면 최근 결과가 여기에 표시됩니다."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="RelicSection" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.72, 0.98, 1)
+theme_override_font_sizes/font_size = 30
+text = "유물 소환"
+
+[node name="SectionDesc" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
+theme_override_font_sizes/font_size = 19
+text = "마왕군 전체 빌드를 보조하는 유물 소환 영역입니다."
+autowrap_mode = 2
+
+[node name="BuyRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox"]
+custom_minimum_size = Vector2(0, 142)
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="SingleButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox/BuyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+text = "유물 소환 1회\n준비 중"
+
+[node name="MultiButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox/BuyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+text = "유물 소환 10+1회\n준비 중"
+
+[node name="Notice" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.52, 0.63, 1)
+theme_override_font_sizes/font_size = 18
+text = "유물 데이터/확률/재화가 확정되면 이 버튼에 바로 연결됩니다."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="PackageSection" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent"]
+custom_minimum_size = Vector2(0, 455)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.97, 0.88, 0.66, 1)
+theme_override_font_sizes/font_size = 30
+text = "성장 재화 · 패키지"
+
+[node name="SectionDesc" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
+theme_override_font_sizes/font_size = 19
+text = "골드와 연구 포인트 상품을 추가할 수 있도록 확장형 카드 영역으로 구성했습니다."
+autowrap_mode = 2
+
+[node name="PackageGrid" type="GridContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin/VBox"]
+custom_minimum_size = Vector2(0, 320)
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 14
+
+[node name="PackageNotice" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.52, 0.63, 1)
+theme_override_font_sizes/font_size = 17
+text = "결제/프리미엄 재화 정책 확정 전에는 실제 구매가 발생하지 않습니다."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Status" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.53, 0.62, 1)
+theme_override_font_sizes/font_size = 17
+text = "상점 준비 완료 · 몬스터 소환은 기존 테스트 규칙을 유지합니다."
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
