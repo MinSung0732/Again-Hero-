@@ -62,10 +62,11 @@ func _ensure_hit_flash_material() -> void:
 		_hit_flash_shader.code = """
 shader_type canvas_item;
 uniform float flash_strength : hint_range(0.0, 1.0) = 0.0;
+uniform vec4 flash_color : source_color = vec4(1.0);
 
 void fragment() {
 	vec4 base = texture(TEXTURE, UV) * COLOR;
-	base.rgb = mix(base.rgb, vec3(1.0), flash_strength);
+	base.rgb = mix(base.rgb, flash_color.rgb, flash_strength);
 	COLOR = base;
 }
 """
@@ -98,14 +99,28 @@ func play_hit() -> void:
 	if _death_playing or _lod_suspended:
 		return
 
-	_flash_timer = 0.12
-	_ensure_hit_flash_material()
-	if _hit_flash_material != null:
-		_hit_flash_material.set_shader_parameter("flash_strength", 1.0)
-	set_process(true)
+	_start_damage_flash(Color.WHITE, 0.12)
 
 	if _visual_ready and sprite_frames.has_animation(&"hit"):
 		_play_one_shot(&"hit")
+
+
+func play_poison_hit() -> void:
+	if _death_playing or _lod_suspended:
+		return
+	_start_damage_flash(Color(0.72, 0.30, 0.92), 0.10)
+
+
+func _start_damage_flash(flash_color: Color, duration: float) -> void:
+	_flash_timer = maxf(duration, 0.01)
+	_ensure_hit_flash_material()
+	if _hit_flash_material != null:
+		_hit_flash_material.set_shader_parameter(
+			"flash_color",
+			flash_color
+		)
+		_hit_flash_material.set_shader_parameter("flash_strength", 1.0)
+	set_process(true)
 
 func play_death() -> void:
 	if _death_playing:

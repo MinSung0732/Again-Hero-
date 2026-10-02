@@ -453,6 +453,6 @@ func _draw() -> void:
 	)
 	draw_rect(
 		Rect2(-bar_width / 2.0, -47.0, bar_width * hp_ratio, 7.0),
-		Color(0.68, 0.28, 0.84),
+		Color(0.3, 0.9, 0.45),
 		true
 	)

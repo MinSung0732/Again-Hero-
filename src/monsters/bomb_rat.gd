@@ -211,10 +211,11 @@ func _ensure_hit_flash_material() -> void:
 		_hit_flash_shader.code = """
 shader_type canvas_item;
 uniform float flash_strength : hint_range(0.0, 1.0) = 0.0;
+uniform vec4 flash_color : source_color = vec4(1.0);
 
 void fragment() {
 	vec4 base = texture(TEXTURE, UV) * COLOR;
-	base.rgb = mix(base.rgb, vec3(1.0), flash_strength);
+	base.rgb = mix(base.rgb, flash_color.rgb, flash_strength);
 	COLOR = base;
 }
 """
@@ -273,6 +274,10 @@ func take_damage(amount: int) -> void:
 		hit_flash_timer = 0.10
 		_ensure_hit_flash_material()
 		if hit_flash_material != null:
+			hit_flash_material.set_shader_parameter(
+				"flash_color",
+				Color.WHITE
+			)
 			hit_flash_material.set_shader_parameter("flash_strength", 1.0)
 		queue_redraw()
 		if remaining_damage <= 0:
@@ -285,6 +290,10 @@ func take_damage(amount: int) -> void:
 	hit_flash_timer = 0.10
 	_ensure_hit_flash_material()
 	if hit_flash_material != null:
+		hit_flash_material.set_shader_parameter(
+			"flash_color",
+			Color.WHITE
+		)
 		hit_flash_material.set_shader_parameter("flash_strength", 1.0)
 
 	if current_hp <= 0:
@@ -294,6 +303,20 @@ func take_damage(amount: int) -> void:
 	if not self_destructing:
 		_restart_visual_animation(&"hit")
 	queue_redraw()
+
+
+func play_poison_hit_flash() -> void:
+	if current_hp <= 0 or dying:
+		return
+	hit_flash_timer = 0.10
+	_ensure_hit_flash_material()
+	if hit_flash_material != null:
+		hit_flash_material.set_shader_parameter(
+			"flash_color",
+			Color(0.72, 0.30, 0.92)
+		)
+		hit_flash_material.set_shader_parameter("flash_strength", 1.0)
+
 
 func heal_direct(amount: int) -> int:
 	var recovered := MONSTER_RUNTIME_COMMON.apply_direct_heal(

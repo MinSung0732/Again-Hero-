@@ -777,6 +777,8 @@ var poison_tick_interval: float = 0.50
 var poison_damage_remaining: int = 0
 var poison_ticks_remaining: int = 0
 var poison_flash_timer: float = 0.0
+var poison_flash_active: bool = false
+var poison_flash_restore_color: Color = Color.WHITE
 var poison_source: Node
 var move_multiplier: float = 1.0
 var strafe_sign: float = 1.0
@@ -3332,7 +3334,11 @@ func _on_alchemist_equivalent_exchange_kill() -> void:
 		health_changed.emit(current_hp, max_hp)
 
 
-func _deal_alchemist_dot_damage(monster: Node, base_damage: int) -> void:
+func _deal_alchemist_dot_damage(
+	monster: Node,
+	base_damage: int,
+	poison_tick: bool = false
+) -> void:
 	if not is_instance_valid(monster) or not monster.has_method("take_damage"):
 		return
 	var before_hp_value = monster.get("current_hp")
@@ -3343,10 +3349,24 @@ func _deal_alchemist_dot_damage(monster: Node, base_damage: int) -> void:
 	)
 	var final_damage := maxi(1, int(round(float(base_damage) * multiplier)))
 	monster.call("take_damage", final_damage)
+	if poison_tick and is_instance_valid(monster):
+		_play_monster_poison_flash(monster)
 	if before_hp > 0:
 		var after_hp_value = monster.get("current_hp")
 		if after_hp_value != null and int(after_hp_value) <= 0:
 			_on_alchemist_equivalent_exchange_kill()
+
+
+func _play_monster_poison_flash(monster: Node) -> void:
+	if monster.has_method("play_poison_hit_flash"):
+		monster.call("play_poison_hit_flash")
+		return
+	var monster_visual := monster.get_node_or_null("Visual")
+	if (
+		is_instance_valid(monster_visual)
+		and monster_visual.has_method("play_poison_hit")
+	):
+		monster_visual.call("play_poison_hit")
 
 
 func _get_alchemist_mystery_cauldron_cooldown_total() -> float:
@@ -4849,7 +4869,7 @@ func _on_alchemist_poison_tick(origin: Vector2, radius: float, damage: int) -> v
 			continue
 		if origin.distance_squared_to(monster.global_position) > radius_sq:
 			continue
-		_deal_alchemist_dot_damage(monster, damage)
+		_deal_alchemist_dot_damage(monster, damage, true)
 	alchemist_damage_query_candidates.clear()
 
 
@@ -19656,15 +19676,23 @@ func _update_poison(delta: float) -> void:
 
 
 func _set_poison_flash(active: bool) -> void:
+	if active and not poison_flash_active:
+		poison_flash_restore_color = modulate
+		poison_flash_active = true
+	elif not active:
+		if not poison_flash_active:
+			return
+		poison_flash_active = false
+
 	var current_modulate := modulate
 	if active:
 		current_modulate.r = 0.72
 		current_modulate.g = 0.30
 		current_modulate.b = 0.92
 	else:
-		current_modulate.r = 1.0
-		current_modulate.g = 1.0
-		current_modulate.b = 1.0
+		current_modulate.r = poison_flash_restore_color.r
+		current_modulate.g = poison_flash_restore_color.g
+		current_modulate.b = poison_flash_restore_color.b
 	modulate = current_modulate
 
 
