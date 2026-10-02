@@ -145,6 +145,8 @@ func _cast_skill(monster: Node2D, skill: Dictionary) -> void:
 			_begin_orc_frenzy(monster, skill)
 		"elite_bomb_rat_vibration":
 			_begin_bomb_rat_vibration(monster, skill)
+		"elite_skeleton_ambush":
+			_begin_skeleton_ambush(monster, skill)
 
 
 func _tick_active_skill(
@@ -159,6 +161,8 @@ func _tick_active_skill(
 			_tick_orc_frenzy(monster, skill, delta)
 		"elite_bomb_rat_vibration":
 			_tick_bomb_rat_vibration(monster, skill, delta)
+		"elite_skeleton_ambush":
+			_tick_skeleton_ambush(monster, skill, delta)
 		_:
 			skill["_active"] = false
 
@@ -554,6 +558,63 @@ func _tick_bomb_rat_vibration(
 		monster.set_meta("elite_vibration_speed_active", false)
 
 
+func _begin_skeleton_ambush(
+	monster: Node2D,
+	skill: Dictionary
+) -> void:
+	skill["_active"] = true
+	skill["_active_timer"] = maxf(
+		float(skill.get("duration", 2.0)),
+		0.05
+	)
+	monster.set_meta("elite_skeleton_ambush_active", true)
+	monster.set_meta(
+		"elite_skeleton_ambush_damage_taken_multiplier",
+		clampf(float(skill.get("damage_taken_multiplier", 0.50)), 0.0, 1.0)
+	)
+	monster.set_meta(
+		"elite_skeleton_ambush_attack_multiplier",
+		maxf(float(skill.get("attack_damage_multiplier", 1.50)), 1.0)
+	)
+	var visual := monster.get_node_or_null("Visual") as CanvasItem
+	if is_instance_valid(visual):
+		var opacity := clampf(float(skill.get("opacity", 0.32)), 0.05, 1.0)
+		visual.modulate = Color(0.38, 0.42, 0.55, opacity)
+
+
+func _tick_skeleton_ambush(
+	monster: Node2D,
+	skill: Dictionary,
+	delta: float
+) -> void:
+	if not bool(monster.get_meta("elite_skeleton_ambush_active", false)):
+		skill["_active"] = false
+		skill["_active_timer"] = 0.0
+		return
+	var active_timer := maxf(
+		float(skill.get("_active_timer", 0.0)) - delta,
+		0.0
+	)
+	skill["_active_timer"] = active_timer
+	if active_timer > 0.0:
+		return
+	_finish_skeleton_ambush(monster, skill)
+
+
+func _finish_skeleton_ambush(
+	monster: Node2D,
+	skill: Dictionary
+) -> void:
+	skill["_active"] = false
+	skill["_active_timer"] = 0.0
+	if not is_instance_valid(monster):
+		return
+	monster.set_meta("elite_skeleton_ambush_active", false)
+	var visual := monster.get_node_or_null("Visual") as CanvasItem
+	if is_instance_valid(visual):
+		visual.modulate = Color.WHITE
+
+
 func _cleanup_state(state: Dictionary) -> void:
 	var monster := state.get("monster") as Node2D
 	var skills_value = state.get("skills", [])
@@ -570,3 +631,6 @@ func _cleanup_state(state: Dictionary) -> void:
 			"elite_bomb_rat_vibration":
 				if is_instance_valid(monster):
 					monster.set_meta("elite_vibration_speed_active", false)
+			"elite_skeleton_ambush":
+				if bool(skill.get("_active", false)):
+					_finish_skeleton_ambush(monster, skill)

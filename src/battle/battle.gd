@@ -116,6 +116,7 @@ const MONSTER_SPATIAL_CELL_SIZE := 256.0
 
 var active_monsters: Dictionary = {}
 var active_hero_summons: Dictionary = {}
+var active_elite_skeletons: Dictionary = {}
 var monster_spatial_grid: Dictionary = {}
 var monster_spatial_used_cells: Array[Vector2i] = []
 var monster_spatial_stale_ids: Array[int] = []
@@ -672,6 +673,7 @@ func _start_battle() -> void:
 	exp_orb_pool = valid_orb_pool
 	active_monsters.clear()
 	active_hero_summons.clear()
+	active_elite_skeletons.clear()
 	monster_spatial_grid.clear()
 	monster_spatial_used_cells.clear()
 	monster_spatial_stale_ids.clear()
@@ -1176,6 +1178,10 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 		"grade_label": MONSTER_CATALOG.get_grade_label(
 			MONSTER_CATALOG.get_grade(monster_id)
 		),
+		"attack_type": MONSTER_CATALOG.get_attack_type(monster_id),
+		"attack_type_label": MONSTER_CATALOG.get_attack_type_label(
+			MONSTER_CATALOG.get_attack_type(monster_id)
+		),
 		"cost": get_monster_cost(monster_id),
 		"summon_exp": MONSTER_CATALOG.get_summon_exp(monster_id),
 		"demon_level": demon_level,
@@ -1279,6 +1285,30 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 	detail["special_augments"] = special_augments
 
 	return detail
+
+
+func set_elite_skeleton_alive(monster: Node, alive: bool) -> void:
+	if not is_instance_valid(monster):
+		return
+	var instance_id := monster.get_instance_id()
+	if alive:
+		active_elite_skeletons[instance_id] = monster
+		var cleanup := Callable(
+			self,
+			"_on_elite_skeleton_tree_exited"
+		).bind(instance_id)
+		if not monster.tree_exited.is_connected(cleanup):
+			monster.tree_exited.connect(cleanup, Object.CONNECT_ONE_SHOT)
+	else:
+		active_elite_skeletons.erase(instance_id)
+
+
+func _on_elite_skeleton_tree_exited(instance_id: int) -> void:
+	active_elite_skeletons.erase(instance_id)
+
+
+func has_living_elite_skeleton() -> bool:
+	return not active_elite_skeletons.is_empty()
 
 
 func set_hero_summon_active(
@@ -1415,7 +1445,7 @@ func _apply_giant_monster_base_stats(
 			)
 		)
 
-	if monster_type in ["slime", "orc", "spider"]:
+	if monster_type in ["slime", "orc", "spider", "skeleton"]:
 		var damage_value = monster.get("attack_damage")
 		if damage_value != null:
 			monster.set(
@@ -2056,6 +2086,7 @@ func _on_monster_died(monster: Node) -> void:
 	var original_cost: float = float(monster_summon_costs.get(instance_id, 0.0))
 	monster_summon_costs.erase(instance_id)
 	active_monsters.erase(instance_id)
+	active_elite_skeletons.erase(instance_id)
 	monster_spatial_grid_physics_frame = -1
 
 	if death_refund_ratio > 0.0 and original_cost > 0.0:
@@ -3267,6 +3298,8 @@ func _apply_special_monster_modifiers(
 	monster.set_meta("stage_event_name", special_name)
 	monster.set_meta("visual_variant", "elite")
 	_apply_elite_monster_visual(monster, monster_id)
+	if monster_id == "skeleton":
+		set_elite_skeleton_alive(monster, true)
 	var elite_skills := MONSTER_CATALOG.get_elite_skills(monster_id)
 	monster.set_meta("elite_skill_count", elite_skills.size())
 	if not elite_skills.is_empty():

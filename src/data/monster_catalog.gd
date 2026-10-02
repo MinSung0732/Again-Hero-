@@ -1,7 +1,7 @@
 extends RefCounted
 class_name MonsterCatalog
 
-const ORDER := ["slime", "spider", "orc", "bomb_rat"]
+const ORDER := ["slime", "spider", "orc", "bomb_rat", "skeleton"]
 
 const MONSTERS := {
 	"slime": {
@@ -178,6 +178,66 @@ const MONSTERS := {
 		],
 		"scene": preload("res://src/monsters/Orc.tscn"),
 	},
+	"skeleton": {
+		"id": "skeleton",
+		"name": "스켈레톤",
+		"role": "tank",
+		"species": "undead",
+		"grade": "normal",
+		"attack_type": "melee",
+		"base_cost": 9.0,
+		"summon_exp": 9.0,
+		"base_stats": {
+			"max_hp": 105,
+			"move_speed": 112.0,
+			"attack_damage": 10,
+			"attack_range": 78.0,
+			"attack_cooldown": 1.25,
+			"hits_per_attack": 2,
+			"hit_damage_multiplier": 1.0,
+			"second_hit_delay": 0.14,
+		},
+		"default_unlocked": true,
+		"shards_required": 20,
+		"rarity": "common",
+		"card_icon_path": "res://assets/art/monsters/skelleton/frames/idle_01.png",
+		"ground_shadow": {
+			"size": Vector2(72.0, 23.0),
+			"offset_y": 34.0,
+			"opacity": 0.50,
+		},
+		"special_augment_ids": [
+			"skeleton_return_of_dead",
+			"skeleton_bone_bond",
+			"skeleton_necrotic_guard",
+		],
+		"elite_visual": {
+			"mode": "frames",
+			"asset_dir": "res://assets/art/elitemonster/skelleton/frames",
+			"target_height": 124.0,
+			"animations": {
+				"idle": {"prefix": "idle", "count": 4, "fps": 6.0, "loop": true},
+				"move": {"prefix": "walk", "count": 6, "fps": 10.0, "loop": true},
+				"attack": {"prefix": "attack", "count": 6, "fps": 14.0, "loop": false},
+				"hit": {"prefix": "hit", "count": 3, "fps": 14.0, "loop": false},
+				"death": {"prefix": "dead", "count": 4, "fps": 10.0, "loop": false},
+			},
+		},
+		"elite_skills": [
+			{
+				"id": "elite_skeleton_ambush",
+				"name": "암습",
+				"description": "2초간 반투명 은신 상태가 되어 받는 피해가 50% 감소합니다. 공격 시 은신이 해제되고 해당 공격의 2타 모두 50% 추가 피해를 줍니다.",
+				"initial_cooldown": 2.0,
+				"cooldown": 15.0,
+				"duration": 2.0,
+				"damage_taken_multiplier": 0.50,
+				"attack_damage_multiplier": 1.50,
+				"opacity": 0.32,
+			},
+		],
+		"scene": preload("res://src/monsters/Skeleton.tscn"),
+	},
 	"bomb_rat": {
 		"id": "bomb_rat",
 		"name": "폭탄쥐",
@@ -245,6 +305,12 @@ const ROLE_LABELS := {
 const SPECIES_LABELS := {
 	"beast": "짐승",
 	"liquid": "액체",
+	"undead": "언데드",
+}
+
+const ATTACK_TYPE_LABELS := {
+	"melee": "근접",
+	"ranged": "원거리",
 }
 
 const GRADE_LABELS := {
@@ -297,6 +363,10 @@ static func get_grade(monster_id: String) -> String:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
 	return String(data.get("grade", "normal"))
 
+static func get_attack_type(monster_id: String) -> String:
+	var data: Dictionary = MONSTERS.get(monster_id, {})
+	return String(data.get("attack_type", ""))
+
 static func get_base_cost(monster_id: String) -> float:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
 	return float(data.get("base_cost", 0.0))
@@ -320,6 +390,11 @@ static func get_species_label(species_id: String) -> String:
 
 static func get_grade_label(grade_id: String) -> String:
 	return String(GRADE_LABELS.get(grade_id, grade_id))
+
+static func get_attack_type_label(attack_type_id: String) -> String:
+	return String(
+		ATTACK_TYPE_LABELS.get(attack_type_id, attack_type_id)
+	)
 
 static func get_ids() -> Array[String]:
 	var result: Array[String] = []

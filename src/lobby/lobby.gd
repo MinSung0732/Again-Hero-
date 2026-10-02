@@ -2933,6 +2933,13 @@ func _build_normal_detail_text(
 			String(data.get("grade", "normal"))
 		)
 	)
+	var attack_type := String(data.get("attack_type", ""))
+	if not attack_type.is_empty():
+		lines.append(
+			"공격 종류  %s" % MONSTER_CATALOG.get_attack_type_label(
+				attack_type
+			)
+		)
 	lines.append("소환 코스트  %.1f" % float(data.get("base_cost", 0.0)))
 	lines.append("마왕 EXP  %.1f" % float(data.get("summon_exp", 0.0)))
 
@@ -2942,7 +2949,19 @@ func _build_normal_detail_text(
 
 	var damage_value = stats.get("attack_damage")
 	if damage_value != null:
-		lines.append("공격력  %d" % int(damage_value))
+		var hits_per_attack := maxi(
+			int(stats.get("hits_per_attack", 1)),
+			1
+		)
+		if hits_per_attack > 1:
+			lines.append(
+				"공격력  %d × %d타" % [
+					int(damage_value),
+					hits_per_attack,
+				]
+			)
+		else:
+			lines.append("공격력  %d" % int(damage_value))
 
 	var explosion_damage = stats.get("explosion_damage")
 	if explosion_damage != null:

@@ -12,6 +12,7 @@ const MONSTER_NAMES := {
 	"spider": "거미",
 	"orc": "오크",
 	"bomb_rat": "폭탄쥐",
+	"skeleton": "스켈레톤",
 }
 
 const NORMAL_AUGMENTS := [
@@ -117,6 +118,46 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{
+		"id": "skeleton_return_of_dead",
+		"monster_id": "skeleton",
+		"name": "망자의 귀환",
+		"description": "스켈레톤이 처음 사망하면 2초 뒤 그 자리에서 체력 100%로 1회 부활합니다. 경험치 스톤은 최종 사망 시에만 1번 생성됩니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "skeleton_return_of_dead",
+		"effect_values": {"revive_delay": 2.0, "revive_hp_ratio": 1.0},
+	},
+	{
+		"id": "skeleton_bone_bond",
+		"monster_id": "skeleton",
+		"name": "뼈의 결속",
+		"description": "지름 150 범위 안에 자신을 포함한 스켈레톤이 3마리 이상이면 공격력·이동속도·공격속도가 10% 증가합니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "skeleton_bone_bond",
+		"effect_values": {
+			"radius": 75.0,
+			"required_count": 3,
+			"damage_multiplier": 1.10,
+			"move_speed_multiplier": 1.10,
+			"attack_speed_multiplier": 1.10,
+			"refresh_interval": 0.12,
+		},
+	},
+	{
+		"id": "skeleton_necrotic_guard",
+		"monster_id": "skeleton",
+		"name": "사령의 가호",
+		"description": "엘리트 스켈레톤이 살아 있는 동안 모든 스켈레톤과 엘리트 스켈레톤이 받는 피해가 25% 감소합니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "skeleton_necrotic_guard",
+		"effect_values": {"damage_taken_multiplier": 0.75},
+	},
 	{
 		"id": "slime_cell_division",
 		"monster_id": "slime",
@@ -278,7 +319,7 @@ static func get_augment(augment_id: String) -> Dictionary:
 		if String(augment.get("id", "")) == augment_id:
 			return augment.duplicate(true)
 
-	for monster_id in ["slime", "spider", "orc", "bomb_rat"]:
+	for monster_id in ["slime", "spider", "orc", "bomb_rat", "skeleton"]:
 		for augment in get_monster_normal_augments(monster_id, ""):
 			if String(augment.get("id", "")) == augment_id:
 				return augment.duplicate(true)
