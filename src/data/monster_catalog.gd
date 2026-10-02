@@ -616,6 +616,54 @@ static func get_species(monster_id: String) -> String:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
 	return String(data.get("species", "unknown"))
 
+
+static func node_has_species(
+	target_node: Node,
+	species_id: String
+) -> bool:
+	if not is_instance_valid(target_node):
+		return false
+
+	var normalized_species := species_id.strip_edges().to_lower()
+	if normalized_species.is_empty():
+		return false
+
+	var runtime_species := String(
+		target_node.get_meta("monster_species", "")
+	).strip_edges().to_lower()
+	if runtime_species == normalized_species:
+		return true
+
+	var monster_type_value = target_node.get("monster_type")
+	if monster_type_value != null:
+		var monster_id := String(monster_type_value)
+		if get_species(monster_id).strip_edges().to_lower() == normalized_species:
+			return true
+
+	# Legacy compatibility only. New monsters should be classified by species
+	# in this catalog so every species-based effect picks them up automatically.
+	if normalized_species == "undead":
+		if (
+			bool(target_node.get_meta("undead", false))
+			or bool(target_node.get_meta("is_undead", false))
+			or target_node.is_in_group("undead")
+		):
+			return true
+		if monster_type_value != null:
+			var legacy_type := String(monster_type_value).to_lower()
+			return (
+				"undead" in legacy_type
+				or "skeleton" in legacy_type
+				or "zombie" in legacy_type
+				or "ghoul" in legacy_type
+			)
+	return false
+
+
+static func is_undead_node(target_node: Node) -> bool:
+	return node_has_species(target_node, "undead")
+
+
 static func get_grade(monster_id: String) -> String:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
 	return String(data.get("grade", "normal"))

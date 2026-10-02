@@ -11423,9 +11423,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 				continue
 
 			var dealt: int = base_damage
-			if bool(monster.get_meta("undead", false)) or bool(
-				monster.get_meta("is_undead", false)
-			):
+			if MONSTER_CATALOG.is_undead_node(monster):
 				dealt = maxi(
 					1,
 					int(round(
@@ -12693,24 +12691,7 @@ func _get_purifier_move_speed_multiplier() -> float:
 	return multiplier
 
 func _is_purifier_undead_target(target_node: Node) -> bool:
-	if not is_instance_valid(target_node):
-		return false
-	if (
-		bool(target_node.get_meta("undead", false))
-		or bool(target_node.get_meta("is_undead", false))
-		or target_node.is_in_group("undead")
-	):
-		return true
-	var monster_type_value = target_node.get("monster_type")
-	if monster_type_value == null:
-		return false
-	var monster_type := String(monster_type_value).to_lower()
-	return (
-		"undead" in monster_type
-		or "skeleton" in monster_type
-		or "zombie" in monster_type
-		or "ghoul" in monster_type
-	)
+	return MONSTER_CATALOG.is_undead_node(target_node)
 
 
 func get_purifier_holy_damage_multiplier(target_node: Node = null) -> float:

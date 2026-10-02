@@ -5,6 +5,7 @@ static var _chest_nodes_cache: Array = []
 static var _chest_nodes_cache_physics_frame: int = -1
 
 const STATUS_SCRIPT := preload("res://src/hero/archmage_element_status.gd")
+const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const POOL_KEY := "archmage_projectile"
 const ORB_FRAME_PATHS := [
 	"res://assets/art/heroes/stage5_archmage/frames/effect6/orb_01.png",
@@ -274,7 +275,7 @@ func _apply_wind(body: Node2D) -> void:
 
 func _apply_holy(body: Node2D) -> void:
 	var holy_damage := base_damage
-	if bool(body.get_meta("undead", false)) or bool(body.get_meta("is_undead", false)):
+	if MONSTER_CATALOG.is_undead_node(body):
 		holy_damage = maxi(
 			1,
 			int(round(float(base_damage) * maxf(float(config.get("holy_undead_damage_multiplier", 1.50)), 1.0)))

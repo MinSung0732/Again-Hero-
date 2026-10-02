@@ -1942,3 +1942,13 @@ Build AI는 전체/주변 몬스터 수, 최근 공세, 역할 비율, 거리, �
 - 엘리트 `elite_goblin_commander`는 상시 패시브다. 지름 600(반경 300) 범위를 얇은 Line2D로 표시하고, 범위 안 정확한 `monster_type == "goblin"` 대상만 이동속도 ×1.15를 받는다.
 - 지휘관 쉴드는 범위 안 고블린에게 즉시 적용 후 5초마다 최대 HP 10%로 갱신한다. 쉴드는 중첩하지 않고 현재 값을 새 수치로 교체한다.
 - 무리/지휘관 판정은 SceneTree 전체 그룹 스캔 대신 Battle 공간그리드 `fill_monsters_near()`와 재사용 스크래치 배열을 사용한다.
+
+
+## Monster Species Runtime Rule (2026-10-02)
+
+- 몬스터의 종족 판정 원본은 `MonsterCatalog.MONSTERS[monster_id].species`다.
+- Battle 소환 시 해당 값을 `monster_species` 메타로 캐시한다.
+- 런타임 종족 기반 효과는 `MonsterCatalog.node_has_species(node, species_id)`를 사용한다.
+- 언데드 판정은 `MonsterCatalog.is_undead_node(node)`를 사용하며, 직접 `monster_type` 문자열에 skeleton/zombie 등을 검사하는 코드를 새로 추가하지 않는다.
+- `undead`, `is_undead`, `undead` 그룹, 이름 기반 판정은 기존 데이터 호환용 fallback일 뿐이며 신규 몬스터는 반드시 카탈로그 `species = "undead"`로 등록한다.
+- 대마법사 신성 기본탄/신성력과 정화의 용사 신성 계열은 동일한 공용 언데드 판정을 사용한다.

@@ -1678,10 +1678,11 @@ func _spawn_monster(
 	var monster := scene.instantiate() as Node2D
 	if monster == null:
 		return null
-	monster.set_meta(
-		"monster_species",
-		MONSTER_CATALOG.get_species(monster_type)
-	)
+	var monster_species := MONSTER_CATALOG.get_species(monster_type)
+	monster.set_meta("monster_species", monster_species)
+	# Compatibility flag for older runtime code. Canonical classification stays
+	# in MonsterCatalog/species and should be queried through node_has_species().
+	monster.set_meta("is_undead", monster_species == "undead")
 	monster.set_meta(
 		"monster_grade",
 		MONSTER_CATALOG.get_grade(monster_type)
