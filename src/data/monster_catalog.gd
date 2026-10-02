@@ -531,7 +531,7 @@ const MONSTERS := {
 		"elite_visual": {
 			"mode": "frames",
 			"asset_dir": "res://assets/art/elitemonster/ghost/frames",
-			"target_height": 118.0,
+			"target_height": 138.0,
 			"animations": {
 				"idle": {"prefix": "idle", "count": 5, "fps": 7.0, "loop": true},
 				"move": {"prefix": "walk", "count": 5, "fps": 8.0, "loop": true},

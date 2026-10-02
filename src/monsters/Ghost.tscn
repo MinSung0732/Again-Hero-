@@ -1,22 +1,21 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://c7mov0nbb8a5q"]
 
-[ext_resource type="Script" path="res://src/monsters/ghost.gd" id="1_ghost"]
-[ext_resource type="Script" path="res://src/monsters/monster_visual.gd" id="2_visual"]
+[ext_resource type="Script" uid="uid://cuyvfxr86241b" path="res://src/monsters/ghost.gd" id="1_ghost"]
+[ext_resource type="Script" uid="uid://chhlfdvml06ye" path="res://src/monsters/monster_visual.gd" id="2_visual"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ghost"]
 radius = 22.0
 
-[node name="Ghost" type="CharacterBody2D"]
+[node name="Ghost" type="CharacterBody2D" unique_id=1959424091]
 z_index = 2
 collision_layer = 2
-collision_mask = 1
 script = ExtResource("1_ghost")
 
-[node name="Visual" type="AnimatedSprite2D" parent="."]
+[node name="Visual" type="AnimatedSprite2D" parent="." unique_id=1963679106]
 z_index = -1
 texture_filter = 1
 script = ExtResource("2_visual")
-target_height = 94.0
+target_height = 115.0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=765211023]
 shape = SubResource("CircleShape2D_ghost")

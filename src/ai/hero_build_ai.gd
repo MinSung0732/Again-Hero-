@@ -423,7 +423,7 @@ static func _describe_rule(rule: Dictionary, context: Dictionary) -> String:
 			)
 			return "최근 %.0f초 %s %d회" % [
 				status_window,
-				STATUS_EFFECT_CATALOG.get_name(key),
+				STATUS_EFFECT_CATALOG.get_status_name(key),
 				int(status_counts.get(key, 0)),
 			]
 		"nearby_linear", "nearby_count_max", "nearby_count_eq":

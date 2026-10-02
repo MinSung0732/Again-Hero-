@@ -86,10 +86,13 @@ func _apply_normal_visual_profile() -> void:
 		or not visual.has_method("apply_visual_profile")
 	):
 		return
+		
+	var target_height := float(visual.get("target_height"))
+	
 	visual.call("apply_visual_profile", {
 		"mode": "frames",
 		"asset_dir": NORMAL_FRAME_DIR,
-		"target_height": 94.0,
+		"target_height": target_height,
 		"animations": {
 			"idle": {
 				"prefix": "idle", "count": 5, "fps": 7.0, "loop": true
