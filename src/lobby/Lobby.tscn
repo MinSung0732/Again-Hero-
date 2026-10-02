@@ -931,12 +931,17 @@ theme_override_constants/separation = 14
 [node name="Header" type="HBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox"]
 layout_mode = 2
 
+[node name="LeftSpacer" type="Control" parent="MonsterDetailOverlay/Panel/Margin/VBox/Header"]
+custom_minimum_size = Vector2(120, 74)
+layout_mode = 2
+
 [node name="Title" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.88, 0.62, 1)
 theme_override_font_sizes/font_size = 42
 text = "몬스터 상세"
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="CloseButton" type="Button" parent="MonsterDetailOverlay/Panel/Margin/VBox/Header"]

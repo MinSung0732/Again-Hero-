@@ -524,14 +524,14 @@ func _apply_asset_frames() -> void:
 	_add_asset_frame(
 		monster_detail_panel,
 		UI_FRAME_MEDIUM_DIR,
-		Vector2(31.0, 30.0),
-		Vector2(31.0, 30.0),
-		Vector2(31.0, 30.0),
-		Vector2(31.0, 30.0),
-		18.0,
-		18.0,
-		16.0,
-		16.0
+		Vector2(62.0, 61.0),
+		Vector2(62.0, 61.0),
+		Vector2(62.0, 60.0),
+		Vector2(62.0, 60.0),
+		38.0,
+		37.0,
+		34.0,
+		34.0
 	)
 
 
@@ -711,7 +711,7 @@ func _add_frame_piece(
 	piece.texture = load(texture_path)
 	piece.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	piece.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	piece.stretch_mode = TextureRect.STRETCH_KEEP
+	piece.stretch_mode = TextureRect.STRETCH_SCALE
 	piece.anchor_left = anchor.x
 	piece.anchor_top = anchor.y
 	piece.anchor_right = anchor.x
