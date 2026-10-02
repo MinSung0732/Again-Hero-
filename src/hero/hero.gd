@@ -118,7 +118,8 @@ const STAGE3_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_hit_pixaba
 const STAGE3_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_death_pixabay.mp3"
 const STAGE4_GUNSHOT_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_gunshot_clean.wav"
 const STAGE4_RELOAD_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_reload_pixabay.mp3"
-const STAGE4_RELOAD_AUDIO_START_OFFSET := 1.05
+# Keep only the final cylinder-spin ("drrrrk") section of the source reload.
+const STAGE4_RELOAD_AUDIO_START_OFFSET := 2.58
 const STAGE4_BACKSTEP_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_backstep_pixabay.mp3"
 const STAGE4_CYLINDER_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_cylinder_clean.wav"
 const STAGE4_DEADEYE_START_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_deadeye_start_pixabay.mp3"

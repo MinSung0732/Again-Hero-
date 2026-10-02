@@ -74,3 +74,8 @@ Mix update:
 ## Reload timing trim revision
 
 The requested Clean Revolver Reload source is about 3.392 seconds long, while the Stage 4 in-game reload is 2.4 seconds. Instead of pitch-shifting the sound, runtime playback now starts 1.05 seconds into the source clip. This preserves the later cylinder/revolver mechanism section at natural pitch and gives about 2.34 seconds of audible reload, fitting the animation window without editing the source MP3 bytes.
+
+
+## Final cylinder-spin-only revision
+
+The reload playback now starts at 2.58 seconds in the 3.392-second Clean Revolver Reload source. This intentionally removes the earlier casing/bullet-loading sequence and keeps only the final roughly 0.81-second cylinder-spin/mechanical tail at natural pitch. The source MP3 itself remains unchanged; trimming is done by playback offset.
