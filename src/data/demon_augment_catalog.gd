@@ -17,6 +17,7 @@ const MONSTER_NAMES := {
 	"kobolt": "코볼트",
 	"bat": "박쥐",
 	"goblin": "고블린",
+	"goblin_thrower": "고블린투척병",
 	"ghost": "유령",
 }
 
@@ -200,6 +201,48 @@ const SPECIAL_AUGMENTS := [
 		"icon": "",
 		"effect_type": "goblin_pack_mastery",
 		"effect_values": {"large_pack_multiplier": 1.30},
+	},
+	{
+		"id": "goblin_thrower_heavy_rock",
+		"monster_id": "goblin_thrower",
+		"name": "대형 투석",
+		"description": "기본공격 시 15% 확률로 커다란 돌을 던져 공격력의 150% 피해를 줍니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "goblin_thrower_heavy_rock",
+		"effect_values": {
+			"chance": 0.15,
+			"damage_multiplier": 1.50,
+			"size_multiplier": 1.65,
+		},
+	},
+	{
+		"id": "goblin_thrower_retreat_heal",
+		"monster_id": "goblin_thrower",
+		"name": "겁쟁이 후퇴",
+		"description": "체력이 35% 이하가 되면 용사에게서 도망치며 초당 최대 체력의 6%를 회복하고, 체력 60% 이상에서 전투로 복귀합니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "goblin_thrower_retreat_heal",
+		"effect_values": {
+			"trigger_hp_ratio": 0.35,
+			"resume_hp_ratio": 0.60,
+			"heal_max_hp_per_second": 0.06,
+			"retreat_speed_multiplier": 1.25,
+		},
+	},
+	{
+		"id": "goblin_thrower_rapid_fire",
+		"monster_id": "goblin_thrower",
+		"name": "난사",
+		"description": "상시 공격속도가 100% 증가해 공격 간격이 절반이 됩니다.",
+		"augment_type": TYPE_SPECIAL,
+		"max_stack": SPECIAL_MAX_LEVEL,
+		"icon": "",
+		"effect_type": "goblin_thrower_rapid_fire",
+		"effect_values": {"attack_speed_multiplier": 2.0},
 	},
 	{
 		"id": "ghost_phase_shift",
@@ -511,6 +554,7 @@ static func get_augment(augment_id: String) -> Dictionary:
 		"kobolt",
 		"bat",
 		"goblin",
+		"goblin_thrower",
 		"ghost",
 	]:
 		for augment in get_monster_normal_augments(monster_id, ""):

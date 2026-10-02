@@ -1966,3 +1966,18 @@ Build AI는 전체/주변 몬스터 수, 최근 공세, 역할 비율, 거리, �
 - `fear`: 용사에게 기록되는 상태이상이다. 지속 중 평타/기술 사용을 봉인하고 공포 시전자 반대 방향으로 강제 도주하며 이동속도는 ×1.50이다.
 - 엘리트 `elite_ghost_fear`: 선쿨 3초 / 재사용 15초 / 지속 1.5초.
 - 공포 전용 PNG가 아직 없으므로 현재는 기존 둔화 상태이상 프레임을 보라색으로 재사용한다. 전용 리소스 추가 시 시각 경로만 교체한다.
+
+
+## Goblin Thrower Runtime Rules (2026-10-02)
+
+- ID: `goblin_thrower`, 표시명: 고블린투척병, species: `beast`, role: `ranged`.
+- 기본 테스트 스탯: 코스트 5.4 / HP 56 / 이속 82 / 공격력 7 / 공격간격 1.20초 / 공격반경 275 / 투사체속도 380.
+- 일반/엘리트 아트는 각각 `assets/art/monsters/goblinthrower`, `assets/art/elitemonster/goblinthrower`를 사용한다.
+- `goblin_thrower_heavy_rock`: 기본공격마다 15% 독립 확률로 공격력 x1.50, 투사체 크기 x1.65.
+- `goblin_thrower_retreat_heal`: HP 35% 이하에서 후퇴 시작, 용사 반대 방향으로 이속 x1.25 이동하면서 초당 최대 HP 6% 회복, HP 60%에서 종료. 회복은 float 누적 버퍼를 사용해 프레임 수에 따라 과회복하지 않는다.
+- `goblin_thrower_rapid_fire`: 공격속도 x2.0, 즉 현재 최종 공격간격을 절반으로 사용.
+- 엘리트 `elite_goblin_thrower_bombardment`: 선쿨 3초 / 쿨 20초 / 10발 / 발사간격 0.15초 / 용사 중심 반경 110 / 투사체속도 650 / 착탄 후 퓨즈 1초 / 피해 x1.50.
+- 폭탄 폭발 반경은 명시값이 없어 테스트값 52를 사용한다. 퓨즈 동안 0.10초 간격으로 밝기/알파를 바꿔 흰색 점멸감을 준다.
+- 엘리트 스킬의 중심은 시전 시작 순간 용사 위치로 고정한다. 이미 발사된 폭탄은 엘리트가 이후 사망해도 자신의 퓨즈/폭발을 마친다.
+- 일반 돌과 엘리트 폭탄은 Battle의 projectile pool을 재사용한다. 개체 AI에는 `get_nodes_in_group` 기반 매프레임 전수 탐색을 추가하지 않는다.
+- 기존 `elite_goblin_commander` 대상은 정확한 `goblin` ID만 유지한다. 고블린투척병을 고블린 패밀리 버프 대상으로 확장하려면 별도 family/tag 규칙을 추가한다.

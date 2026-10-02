@@ -71,7 +71,13 @@ const GIANT_MONSTER_CHANCE_PER_STEP := 0.01
 const GIANT_MONSTER_STAT_MULTIPLIER := 1.28
 const GIANT_MONSTER_HP_MULTIPLIER := 1.54
 const GIANT_MONSTER_SIZE_MULTIPLIER := 2.0
-const GIANT_RANGED_MONSTER_IDS := ["spider", "skeleton_archer", "kobolt", "ghost"]
+const GIANT_RANGED_MONSTER_IDS := [
+	"spider",
+	"skeleton_archer",
+	"kobolt",
+	"goblin_thrower",
+	"ghost",
+]
 const HEAL_ITEM_KILLS_REQUIRED := 30
 const MAX_ACTIVE_HEAL_ITEMS := 2
 const CHEST_KILLS_REQUIRED := 50
@@ -1478,6 +1484,7 @@ func _apply_giant_monster_base_stats(
 		"kobolt",
 		"bat",
 		"goblin",
+		"goblin_thrower",
 		"ghost",
 	]:
 		var damage_value = monster.get("attack_damage")

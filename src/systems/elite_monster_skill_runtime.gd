@@ -5,6 +5,10 @@ const SPIDER_WEB_POOL_KEY := "elite_spider_web"
 const SKELETON_ARCHER_RAIN_LINE_POOL_KEY := "elite_skeleton_archer_rain_line"
 const SKELETON_ARCHER_RAIN_ARROW_POOL_KEY := "elite_skeleton_archer_rain_arrow"
 const GOBLIN_COMMANDER_AURA_POOL_KEY := "elite_goblin_commander_aura"
+const GOBLIN_THROWER_BOMB_POOL_KEY := "goblin_thrower_elite_bomb"
+const GOBLIN_THROWER_BOMB_SCENE := preload(
+	"res://src/monsters/GoblinThrowerBomb.tscn"
+)
 
 var battle: Node
 
@@ -207,6 +211,8 @@ func _cast_skill(monster: Node2D, skill: Dictionary) -> void:
 			_begin_kobolt_fighting_spirit(monster, skill)
 		"elite_ghost_fear":
 			_cast_ghost_fear(monster, skill)
+		"elite_goblin_thrower_bombardment":
+			_begin_goblin_thrower_bombardment(monster, skill)
 
 
 func _tick_active_skill(
@@ -229,10 +235,114 @@ func _tick_active_skill(
 			_tick_kobolt_fighting_spirit(monster, skill, delta)
 		"elite_goblin_commander":
 			_tick_goblin_commander(monster, skill, delta)
+		"elite_goblin_thrower_bombardment":
+			_tick_goblin_thrower_bombardment(monster, skill, delta)
 		_:
 			skill["_active"] = false
 
 
+
+
+func _begin_goblin_thrower_bombardment(
+	monster: Node2D,
+	skill: Dictionary
+) -> void:
+	if not is_instance_valid(battle):
+		return
+	var hero := battle.get("hero") as Node2D
+	if not is_instance_valid(hero):
+		return
+	skill["_active"] = true
+	skill["_remaining_bombs"] = maxi(
+		int(skill.get("bomb_count", 10)),
+		1
+	)
+	skill["_bomb_timer"] = 0.0
+	skill["_center"] = hero.global_position
+	_tick_goblin_thrower_bombardment(monster, skill, 0.0)
+
+
+func _tick_goblin_thrower_bombardment(
+	monster: Node2D,
+	skill: Dictionary,
+	delta: float
+) -> void:
+	var remaining := maxi(
+		int(skill.get("_remaining_bombs", 0)),
+		0
+	)
+	if remaining <= 0:
+		skill["_active"] = false
+		return
+
+	var bomb_timer := maxf(
+		float(skill.get("_bomb_timer", 0.0)) - delta,
+		0.0
+	)
+	if bomb_timer > 0.0:
+		skill["_bomb_timer"] = bomb_timer
+		return
+
+	var hero := battle.get("hero") as Node2D
+	if not is_instance_valid(hero):
+		skill["_active"] = false
+		return
+	if not battle.has_method("acquire_projectile"):
+		skill["_active"] = false
+		return
+
+	var pooled = battle.call(
+		"acquire_projectile",
+		GOBLIN_THROWER_BOMB_SCENE,
+		GOBLIN_THROWER_BOMB_POOL_KEY
+	)
+	if pooled is Area2D:
+		var bomb := pooled as Area2D
+		var center: Vector2 = skill.get(
+			"_center",
+			hero.global_position
+		)
+		var radius := maxf(
+			float(skill.get("radius", 110.0)),
+			1.0
+		)
+		var angle := randf_range(0.0, TAU)
+		var distance := sqrt(randf()) * radius
+		var landing := (
+			center
+			+ Vector2.from_angle(angle) * distance
+		)
+		var damage := maxi(
+			int(round(
+				float(maxi(int(monster.get("attack_damage")), 1))
+				* maxf(
+					float(skill.get("damage_multiplier", 1.50)),
+					0.0
+				)
+			)),
+			1
+		)
+		bomb.call(
+			"setup",
+			monster.global_position,
+			landing,
+			damage,
+			maxf(float(skill.get("projectile_speed", 650.0)), 1.0),
+			maxf(float(skill.get("fuse_duration", 1.0)), 0.05),
+			maxf(float(skill.get("explosion_radius", 52.0)), 1.0),
+			monster,
+			hero
+		)
+
+	remaining -= 1
+	skill["_remaining_bombs"] = remaining
+	if remaining <= 0:
+		skill["_active"] = false
+		return
+	skill["_bomb_timer"] = maxf(
+		float(skill.get("bomb_interval", 0.15)),
+		0.01
+	)
 
 func _cast_ghost_fear(
 	monster: Node2D,
