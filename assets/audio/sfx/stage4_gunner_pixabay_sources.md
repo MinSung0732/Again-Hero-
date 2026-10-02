@@ -54,3 +54,18 @@ Runtime explosion/impact aliases in this stage now use the already-tracked Kenne
 - `explosionCrunch_001` / `alchemist_failed_boom_skill3.wav` for larger/heavier impacts.
 
 Any older mapping in this document that names `Loud Explosion` is historical and is superseded by this revision.
+
+
+## Clean Revolver Reload replacement revision
+
+The Stage 4 gunner reload now uses the requested Pixabay asset directly instead of the older placeholder/reused cue:
+
+- Clean Revolver Reload — Dredile (Freesound)
+  - https://pixabay.com/sound-effects/film-special-effects-clean-revolver-reload-6889/
+  - Pixabay asset ID: 6889
+  - Runtime file: `stage4_gunner_reload_pixabay.mp3`
+
+Mix update:
+- previous runtime mix: `HERO_SFX_DB_REGULAR_SKILL - 5.0` (effective -17 dB), pitch 0.72
+- current runtime mix: `HERO_SFX_DB_REGULAR_SKILL + 1.0` (effective -11 dB), pitch 1.0
+- The +6 dB increase brings the relatively quiet mechanical reload closer to the established hero SFX band without touching the global SFX bus.

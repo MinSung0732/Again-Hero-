@@ -9277,8 +9277,8 @@ func _ensure_gunner_audio_runtime() -> void:
 	if not is_instance_valid(gunner_reload_audio):
 		gunner_reload_audio = _create_hero_sfx_player(
 			STAGE4_RELOAD_AUDIO_PATH,
-			HERO_SFX_DB_REGULAR_SKILL - 5.0,
-			0.72
+			HERO_SFX_DB_REGULAR_SKILL + 1.0,
+			1.0
 		)
 
 	if not is_instance_valid(gunner_backstep_audio):
