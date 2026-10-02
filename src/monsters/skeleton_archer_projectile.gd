@@ -77,7 +77,7 @@ func _on_body_entered(body: Node) -> void:
 		return
 
 	impacting = true
-	monitoring = false
+	set_deferred("monitoring", false)
 	set_physics_process(false)
 	if body.has_method("take_damage"):
 		body.call("take_damage", damage)

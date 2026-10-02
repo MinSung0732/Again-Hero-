@@ -150,7 +150,7 @@ func is_revival_death_pose_ready() -> bool:
 	return _revival_death_pose_ready
 
 
-func play_revival_reverse() -> void:
+func play_revival_reverse(duration: float = 0.0) -> void:
 	if _revival_reverse_playing:
 		return
 
@@ -163,7 +163,14 @@ func play_revival_reverse() -> void:
 	self_modulate = Color.WHITE
 
 	if _visual_ready and sprite_frames.has_animation(&"death"):
-		play(&"death", -1.0, true)
+		var reverse_speed := 1.0
+		if duration > 0.0:
+			var frame_count := sprite_frames.get_frame_count(&"death")
+			var fps := sprite_frames.get_animation_speed(&"death")
+			if frame_count > 0 and fps > 0.0:
+				var base_duration := float(frame_count) / fps
+				reverse_speed = maxf(base_duration / duration, 0.01)
+		play(&"death", -reverse_speed, true)
 	else:
 		call_deferred("_finish_revival_reverse")
 
@@ -189,8 +196,11 @@ func _finish_revival_reverse() -> void:
 	_one_shot_locked = false
 	self_modulate = Color.WHITE
 	_desired_locomotion = &"idle"
-	if _visual_ready and sprite_frames.has_animation(_desired_locomotion):
-		play(_desired_locomotion)
+	stop()
+	if _visual_ready and sprite_frames.has_animation(&"death"):
+		animation = &"death"
+		frame = 0
+		frame_progress = 0.0
 	revival_animation_finished.emit()
 
 func set_lod_suspended(suspended: bool) -> void:

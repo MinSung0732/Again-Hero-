@@ -411,30 +411,27 @@ func _begin_revival() -> void:
 	if is_instance_valid(collision_shape):
 		collision_shape.set_deferred("disabled", true)
 	if is_instance_valid(visual):
-		visual.modulate = Color.WHITE
+		visual.modulate = Color(0.38, 0.42, 0.46, 0.45)
 		_visual_call(&"play_revival_death_pose")
 	queue_redraw()
 
 
 func _tick_revival(delta: float) -> void:
-	revive_timer = maxf(revive_timer - delta, 0.0)
 	velocity = Vector2.ZERO
-	if revive_timer > 0.0 or revive_reverse_started:
+	if revive_reverse_started:
 		return
 
-	if (
+	revive_timer = maxf(revive_timer - delta, 0.0)
+	var can_reverse_visual := (
 		is_instance_valid(visual)
 		and visual.has_method("is_revival_death_pose_ready")
-		and not bool(visual.call("is_revival_death_pose_ready"))
-	):
-		return
-
-	revive_reverse_started = true
-	if (
-		is_instance_valid(visual)
 		and visual.has_signal("revival_animation_finished")
 		and visual.has_method("play_revival_reverse")
-	):
+	)
+	if can_reverse_visual:
+		if not bool(visual.call("is_revival_death_pose_ready")):
+			return
+		revive_reverse_started = true
 		var revive_finished := Callable(self, "_complete_revival")
 		if not visual.is_connected(
 			"revival_animation_finished",
@@ -445,9 +442,15 @@ func _tick_revival(delta: float) -> void:
 				revive_finished,
 				Object.CONNECT_ONE_SHOT
 			)
-		visual.call("play_revival_reverse")
+		visual.call(
+			"play_revival_reverse",
+			maxf(revive_timer, 0.05)
+		)
 		return
 
+	if revive_timer > 0.0:
+		return
+	revive_reverse_started = true
 	_complete_revival()
 
 
@@ -473,6 +476,7 @@ func _complete_revival() -> void:
 		collision_shape.set_deferred("disabled", false)
 	if is_instance_valid(visual):
 		visual.modulate = Color.WHITE
+	_visual_call(&"play_locomotion", [false])
 	queue_redraw()
 
 
