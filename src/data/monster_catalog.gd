@@ -222,7 +222,7 @@ const MONSTERS := {
 		"elite_visual": {
 			"mode": "frames",
 			"asset_dir": "res://assets/art/elitemonster/skelleton/frames",
-			"target_height": 124.0,
+			"target_height": 170.0,
 			"animations": {
 				"idle": {"prefix": "idle", "count": 4, "fps": 6.0, "loop": true},
 				"move": {"prefix": "walk", "count": 6, "fps": 10.0, "loop": true},

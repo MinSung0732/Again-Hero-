@@ -14,10 +14,10 @@ signal died
 
 @export var monster_type: String = "skeleton_archer"
 @export var monster_role: String = "ranged"
-@export var max_hp: int = 48
+@export var max_hp: int = 55
 @export var move_speed: float = 88.0
 @export var attack_damage: int = 8
-@export var attack_range: float = 137.5
+@export var attack_range: float = 300.0
 @export var attack_cooldown: float = 1.55
 @export var projectile_speed: float = 300.0
 @export var projectile_range: float = 190.0

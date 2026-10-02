@@ -16,7 +16,7 @@ script = ExtResource("1_skeleton")
 z_index = -1
 texture_filter = 1
 script = ExtResource("2_visual")
-target_height = 114.0
+target_height = 152.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_skeleton")
