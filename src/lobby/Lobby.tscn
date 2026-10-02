@@ -154,6 +154,7 @@ layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 3
+scroll_deadzone = 14
 
 [node name="ShopContent" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll"]
 custom_minimum_size = Vector2(0, 1800)
@@ -259,6 +260,7 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="PrevButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerFooter"]
+mouse_filter = 1
 custom_minimum_size = Vector2(76, 50)
 layout_mode = 2
 focus_mode = 0
@@ -275,6 +277,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="NextButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerFooter"]
+mouse_filter = 1
 custom_minimum_size = Vector2(76, 50)
 layout_mode = 2
 focus_mode = 0
@@ -315,6 +318,7 @@ layout_mode = 2
 theme_override_constants/separation = 16
 
 [node name="SingleButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/BuyRow"]
+mouse_filter = 1
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
@@ -322,6 +326,7 @@ theme_override_font_sizes/font_size = 24
 text = "몬스터 소환 1회\n100 골드"
 
 [node name="MultiButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/BuyRow"]
+mouse_filter = 1
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
@@ -339,6 +344,7 @@ vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="HistoryButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
+mouse_filter = 1
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
 focus_mode = 0
@@ -380,6 +386,7 @@ layout_mode = 2
 theme_override_constants/separation = 16
 
 [node name="SingleButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox/BuyRow"]
+mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
@@ -388,6 +395,7 @@ text = "유물 소환 1회\n준비 중"
 disabled = true
 
 [node name="MultiButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox/BuyRow"]
+mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0

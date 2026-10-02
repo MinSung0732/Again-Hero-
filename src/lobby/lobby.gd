@@ -2427,6 +2427,11 @@ func _rebuild_shop_packages() -> void:
 		button.custom_minimum_size = Vector2(0.0, 148.0)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.focus_mode = Control.FOCUS_NONE
+		button.mouse_filter = (
+			Control.MOUSE_FILTER_PASS
+			if enabled
+			else Control.MOUSE_FILTER_IGNORE
+		)
 		button.text = "%s  %s\n%s\n%s" % [
 			String(data.get("badge", "PACKAGE")),
 			String(data.get("title", "상품")),
@@ -2518,6 +2523,11 @@ func _rebuild_shop_list() -> void:
 		% _format_shop_number(SHOP_CATALOG.TEST_GOLD)
 	)
 	shop_history_button.disabled = shop_last_result_text.is_empty()
+	shop_history_button.mouse_filter = (
+		Control.MOUSE_FILTER_IGNORE
+		if shop_history_button.disabled
+		else Control.MOUSE_FILTER_PASS
+	)
 	shop_banner_timer = SHOP_BANNER_AUTO_SECONDS
 	_refresh_shop_banner()
 	_rebuild_shop_packages()
@@ -2619,6 +2629,7 @@ func _open_monster_boxes(draw_count: int) -> void:
 	shop_last_result_text = "\n".join(result_lines)
 	shop_result_label.text = shop_last_result_text
 	shop_history_button.disabled = false
+	shop_history_button.mouse_filter = Control.MOUSE_FILTER_PASS
 	shop_status_label.text = (
 		"골드 차감 없음 · 표시 골드 %s 유지"
 		% _format_shop_number(SHOP_CATALOG.TEST_GOLD)
