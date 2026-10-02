@@ -114,6 +114,7 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var monster_detail_elite_portrait: TextureRect = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/PortraitFrame/PortraitMargin/Portrait
 @onready var monster_detail_elite_name: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Name
 @onready var monster_detail_elite_stats: RichTextLabel = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Stats
+@onready var monster_detail_elite_skills: RichTextLabel = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Skills
 
 @onready var stage_card: PanelContainer = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard
 @onready var prev_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/PrevButton
@@ -3040,9 +3041,12 @@ func _populate_monster_detail(monster_id: String) -> void:
 	monster_detail_specials.text = _build_special_augment_text(monster_id)
 	monster_detail_elite_stats.text = _build_elite_detail_text(
 		monster_id,
+		role_label,
+		data,
 		base_stats,
 		mutation
 	)
+	monster_detail_elite_skills.text = _build_elite_skill_text(monster_id)
 
 func _read_monster_base_stats(monster_id: String) -> Dictionary:
 	return MONSTER_CATALOG.get_base_stats(monster_id)
@@ -3198,6 +3202,8 @@ func _build_special_augment_text(monster_id: String) -> String:
 
 func _build_elite_detail_text(
 	monster_id: String,
+	role_label: String,
+	data: Dictionary,
 	stats: Dictionary,
 	mutation: Dictionary
 ) -> String:
@@ -3212,6 +3218,17 @@ func _build_elite_detail_text(
 	var visual_scale := float(mutation.get("visual_scale", 1.0))
 
 	var lines: PackedStringArray = []
+	var identity_parts: PackedStringArray = [
+		"엘리트",
+		MONSTER_CATALOG.get_species_label(String(data.get("species", ""))),
+		role_label,
+	]
+	var attack_type := String(data.get("attack_type", ""))
+	if not attack_type.is_empty():
+		identity_parts.append(MONSTER_CATALOG.get_attack_type_label(attack_type))
+	lines.append("[center][color=#e3bd64]%s[/color][/center]" % " · ".join(identity_parts))
+	lines.append("[center][color=#bdb0c5]기본 돌연변이 · 기술 %d개[/color][/center]" % MONSTER_CATALOG.get_elite_skills(monster_id).size())
+	lines.append("")
 	lines.append("[color=#d9b45b]엘리트 전투 능력[/color]")
 	var hp_value = stats.get("max_hp")
 	if hp_value != null:
@@ -3280,9 +3297,11 @@ func _build_elite_detail_text(
 		))
 
 	lines.append("[color=#8f8495]크기 ×%.2f[/color]" % visual_scale)
+	return "\n".join(lines)
 
-	lines.append("")
-	lines.append("[color=#d9b45b]엘리트 기술[/color]")
+
+func _build_elite_skill_text(monster_id: String) -> String:
+	var lines: PackedStringArray = []
 	var elite_skills := MONSTER_CATALOG.get_elite_skills(monster_id)
 	if elite_skills.is_empty():
 		lines.append("등록된 엘리트 기술이 없습니다.")
@@ -3306,9 +3325,6 @@ func _build_elite_detail_text(
 			var description := String(skill.get("description", ""))
 			if not description.is_empty():
 				lines.append("  %s" % description)
-
-	lines.append("")
-	lines.append("[color=#766d7d]※ 레벨·연구·Run 증강 제외[/color]")
 	return "\n".join(lines)
 
 func _load_elite_preview(monster_id: String) -> Texture2D:
