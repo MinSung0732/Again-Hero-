@@ -712,7 +712,7 @@ func _create_skeleton_archer_rain_line(
 		SKELETON_ARCHER_RAIN_LINE_POOL_KEY,
 		"line"
 	)
-	if not pooled is Line2D:
+	if not (pooled is Line2D):
 		return null
 	var line := pooled as Line2D
 	line.clear_points()
@@ -760,7 +760,7 @@ func _spawn_skeleton_archer_rain_visuals(
 			SKELETON_ARCHER_RAIN_ARROW_POOL_KEY,
 			"sprite"
 		)
-		if not pooled is Sprite2D:
+		if not (pooled is Sprite2D):
 			continue
 		var sprite := pooled as Sprite2D
 		var angle := randf_range(0.0, TAU)
