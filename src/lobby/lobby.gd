@@ -103,15 +103,17 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var monster_detail_close_button: Button = $MonsterDetailOverlay/Panel/Margin/VBox/Header/CloseButton
 @onready var monster_detail_normal_panel: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel
 @onready var monster_detail_normal_badge: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Badge
-@onready var monster_detail_normal_portrait: TextureRect = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Portrait
+@onready var monster_detail_normal_portrait_frame: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/PortraitFrame
+@onready var monster_detail_normal_portrait: TextureRect = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/PortraitFrame/PortraitMargin/Portrait
 @onready var monster_detail_normal_name: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Name
-@onready var monster_detail_normal_stats: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Stats
+@onready var monster_detail_normal_stats: RichTextLabel = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Stats
 @onready var monster_detail_specials: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Specials
 @onready var monster_detail_elite_panel: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel
 @onready var monster_detail_elite_badge: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Badge
-@onready var monster_detail_elite_portrait: TextureRect = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Portrait
+@onready var monster_detail_elite_portrait_frame: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/PortraitFrame
+@onready var monster_detail_elite_portrait: TextureRect = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/PortraitFrame/PortraitMargin/Portrait
 @onready var monster_detail_elite_name: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Name
-@onready var monster_detail_elite_stats: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Stats
+@onready var monster_detail_elite_stats: RichTextLabel = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Stats
 
 @onready var stage_card: PanelContainer = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard
 @onready var prev_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/PrevButton
@@ -475,9 +477,40 @@ func _apply_styles() -> void:
 		button.add_theme_stylebox_override("hover", stage_card_style)
 		button.add_theme_stylebox_override("pressed", primary_button_style)
 
+	var detail_normal_style := _make_style(
+		Color("211629"),
+		Color("76528a"),
+		2,
+		24
+	)
+	var detail_elite_style := _make_style(
+		Color("11172a"),
+		Color("a57938"),
+		2,
+		24
+	)
+	var detail_portrait_style := _make_style(
+		Color("0d0a14"),
+		Color("9c7534"),
+		2,
+		16
+	)
 	monster_detail_panel.add_theme_stylebox_override("panel", header_backing)
-	monster_detail_normal_panel.add_theme_stylebox_override("panel", card_backing)
-	monster_detail_elite_panel.add_theme_stylebox_override("panel", dark_backing)
+	monster_detail_normal_panel.add_theme_stylebox_override("panel", detail_normal_style)
+	monster_detail_elite_panel.add_theme_stylebox_override("panel", detail_elite_style)
+	monster_detail_normal_portrait_frame.add_theme_stylebox_override(
+		"panel",
+		detail_portrait_style
+	)
+	monster_detail_elite_portrait_frame.add_theme_stylebox_override(
+		"panel",
+		detail_portrait_style
+	)
+	monster_detail_title.add_theme_color_override("font_outline_color", Color("2a132d"))
+	monster_detail_title.add_theme_constant_override("outline_size", 6)
+	for badge in [monster_detail_normal_badge, monster_detail_elite_badge]:
+		badge.add_theme_color_override("font_outline_color", Color("0b0710"))
+		badge.add_theme_constant_override("outline_size", 4)
 	monster_detail_close_button.add_theme_stylebox_override("normal", secondary_button_style)
 	monster_detail_close_button.add_theme_stylebox_override("hover", primary_button_style)
 	monster_detail_close_button.add_theme_stylebox_override("pressed", primary_button_style)
@@ -3032,61 +3065,71 @@ func _build_normal_detail_text(
 		identity_parts.append(
 			MONSTER_CATALOG.get_attack_type_label(attack_type)
 		)
-	lines.append(" · ".join(identity_parts))
-	lines.append("코스트 %.1f  |  마왕 EXP %.1f" % [
+	lines.append("[center][color=#c9b6d3]%s[/color][/center]" % " · ".join(identity_parts))
+	lines.append("[center][color=#f0cb68]코스트 %.1f[/color]   [color=#bdb0c5]마왕 EXP %.1f[/color][/center]" % [
 		float(data.get("base_cost", 0.0)),
 		float(data.get("summon_exp", 0.0)),
 	])
+	lines.append("")
+	lines.append("[color=#8f8098]전투 능력[/color]")
 
-	var core_parts: PackedStringArray = []
 	var hp_value = stats.get("max_hp")
 	if hp_value != null:
-		core_parts.append("HP %d" % int(hp_value))
+		lines.append(_format_stat_meter(
+			"체력",
+			_stat_level(float(hp_value), [60.0, 90.0, 130.0, 180.0]),
+			"69d88a"
+		))
 
 	var damage_value = stats.get("attack_damage")
+	var explosion_damage = stats.get("explosion_damage")
 	if damage_value != null:
 		var hits_per_attack := maxi(
 			int(stats.get("hits_per_attack", 1)),
 			1
 		)
-		if hits_per_attack > 1:
-			core_parts.append(
-				"공격 %d×%d타" % [
-					int(damage_value),
-					hits_per_attack,
-				]
-			)
-		else:
-			core_parts.append("공격 %d" % int(damage_value))
-
-	var explosion_damage = stats.get("explosion_damage")
-	if explosion_damage != null:
-		core_parts.append("자폭 %d" % int(explosion_damage))
+		var total_damage := float(damage_value) * float(hits_per_attack)
+		lines.append(_format_stat_meter(
+			"공격",
+			_stat_level(total_damage, [6.0, 10.0, 18.0, 30.0]),
+			"e36d73"
+		))
+	elif explosion_damage != null:
+		lines.append(_format_stat_meter(
+			"자폭",
+			_stat_level(float(explosion_damage), [12.0, 24.0, 40.0, 65.0]),
+			"e36d73"
+		))
 
 	var speed_value = stats.get("move_speed")
 	if speed_value != null:
-		core_parts.append("이속 %.0f" % float(speed_value))
-	if not core_parts.is_empty():
-		lines.append("  |  ".join(core_parts))
+		var speed_number := float(speed_value)
+		lines.append(_format_stat_meter(
+			"기동",
+			0 if speed_number <= 0.0 else _stat_level(
+				speed_number,
+				[70.0, 110.0, 150.0, 210.0]
+			),
+			"61c7df",
+			"고정" if speed_number <= 0.0 else ""
+		))
 
-	var attack_parts: PackedStringArray = []
 	var cooldown_value = stats.get("attack_cooldown")
 	if cooldown_value != null:
-		attack_parts.append("공격간격 %.2f초" % float(cooldown_value))
+		var attacks_per_second := 1.0 / maxf(float(cooldown_value), 0.01)
+		lines.append(_format_stat_meter(
+			"공속",
+			_stat_level(attacks_per_second, [0.7, 1.0, 1.35, 1.8]),
+			"f0c85b"
+		))
 
 	var range_value = stats.get("attack_range")
-	var range_diameter = stats.get("attack_range_diameter")
 	if range_value != null and monster_id != "bomb_rat":
-		if range_diameter != null:
-			attack_parts.append("사거리 Ø%.0f" % float(range_diameter))
-		else:
-			attack_parts.append("사거리 %.0f" % float(range_value))
-
-	var projectile_speed_value = stats.get("projectile_speed")
-	if projectile_speed_value != null:
-		attack_parts.append("투사체 %.0f" % float(projectile_speed_value))
-	if not attack_parts.is_empty():
-		lines.append("  |  ".join(attack_parts))
+		lines.append(_format_stat_meter(
+			"사거리",
+			_stat_level(float(range_value), [70.0, 140.0, 260.0, 500.0]),
+			"b68ae8"
+		))
 
 	var extra_parts: PackedStringArray = []
 	var fuse_value = stats.get("self_destruct_fuse")
@@ -3106,9 +3149,37 @@ func _build_normal_detail_text(
 			]
 		)
 	if not extra_parts.is_empty():
-		lines.append("  |  ".join(extra_parts))
+		lines.append("")
+		lines.append("[color=#aaa0b0]%s[/color]" % " · ".join(extra_parts))
 
 	return "\n".join(lines)
+
+
+func _stat_level(value: float, thresholds: Array) -> int:
+	var level := 1
+	for threshold in thresholds:
+		if value >= float(threshold):
+			level += 1
+	return clampi(level, 1, 5)
+
+
+func _format_stat_meter(
+	label: String,
+	level: int,
+	fill_color: String,
+	note: String = ""
+) -> String:
+	var filled_count := clampi(level, 0, 5)
+	var filled := "■".repeat(filled_count)
+	var empty := "■".repeat(5 - filled_count)
+	var suffix := "  [color=#9b90a2]%s[/color]" % note if not note.is_empty() else ""
+	return "[color=#d8cedd]%s[/color]  [color=#%s]%s[/color][color=#403747]%s[/color]%s" % [
+		label,
+		fill_color,
+		filled,
+		empty,
+		suffix,
+	]
 
 func _build_special_augment_text(monster_id: String) -> String:
 	var lines: PackedStringArray = []
@@ -3116,7 +3187,7 @@ func _build_special_augment_text(monster_id: String) -> String:
 		monster_id
 	):
 		var augment: Dictionary = raw_augment
-		lines.append("◆ %s  |  %s" % [
+		lines.append("◆ %s\n  %s" % [
 			String(augment.get("name", "특수증강")),
 			String(augment.get("description", "")),
 		])
@@ -3141,88 +3212,77 @@ func _build_elite_detail_text(
 	var visual_scale := float(mutation.get("visual_scale", 1.0))
 
 	var lines: PackedStringArray = []
-	lines.append("엘리트 보정")
-	lines.append("HP ×%.2f  |  공격 ×%.2f  |  크기 ×%.2f" % [
-		hp_multiplier,
-		damage_multiplier,
-		visual_scale,
-	])
-	lines.append("이속 ×%.2f  |  공속 ×%.2f" % [
-		speed_multiplier,
-		attack_speed_multiplier,
-	])
-
-	var combat_parts: PackedStringArray = []
+	lines.append("[color=#d9b45b]엘리트 전투 능력[/color]")
 	var hp_value = stats.get("max_hp")
 	if hp_value != null:
-		combat_parts.append(
-			"HP %d→%d" % [
-				int(hp_value),
-				int(round(float(hp_value) * hp_multiplier)),
-			]
-		)
+		lines.append(_format_stat_meter(
+			"체력",
+			_stat_level(
+				float(hp_value) * hp_multiplier,
+				[60.0, 90.0, 130.0, 180.0]
+			),
+			"69d88a"
+		))
 
 	var damage_value = stats.get("attack_damage")
-	if damage_value != null:
-		combat_parts.append(
-			"공격 %d→%d" % [
-				int(damage_value),
-				int(round(float(damage_value) * damage_multiplier)),
-			]
-		)
-
 	var explosion_damage = stats.get("explosion_damage")
-	if explosion_damage != null:
-		combat_parts.append(
-			"자폭 %d→%d" % [
-				int(explosion_damage),
-				int(round(
-					float(explosion_damage) * damage_multiplier
-				)),
-			]
-		)
-	if not combat_parts.is_empty():
-		lines.append("  |  ".join(combat_parts))
+	if damage_value != null:
+		var hits_per_attack := maxi(int(stats.get("hits_per_attack", 1)), 1)
+		lines.append(_format_stat_meter(
+			"공격",
+			_stat_level(
+				float(damage_value) * float(hits_per_attack) * damage_multiplier,
+				[6.0, 10.0, 18.0, 30.0]
+			),
+			"e36d73"
+		))
+	elif explosion_damage != null:
+		lines.append(_format_stat_meter(
+			"자폭",
+			_stat_level(
+				float(explosion_damage) * damage_multiplier,
+				[12.0, 24.0, 40.0, 65.0]
+			),
+			"e36d73"
+		))
 
-	var speed_parts: PackedStringArray = []
 	var speed_value = stats.get("move_speed")
 	if speed_value != null:
-		speed_parts.append(
-			"이속 %.0f→%.0f" % [
-				float(speed_value),
-				float(speed_value) * speed_multiplier,
-			]
-		)
+		var elite_speed := float(speed_value) * speed_multiplier
+		lines.append(_format_stat_meter(
+			"기동",
+			0 if elite_speed <= 0.0 else _stat_level(
+				elite_speed,
+				[70.0, 110.0, 150.0, 210.0]
+			),
+			"61c7df",
+			"고정" if elite_speed <= 0.0 else ""
+		))
 
 	var cooldown_value = stats.get("attack_cooldown")
 	if cooldown_value != null:
-		speed_parts.append(
-			"공격간격 %.2f→%.2f초" % [
-				float(cooldown_value),
-				float(cooldown_value) / maxf(
-					attack_speed_multiplier,
-					0.01
-				),
-			]
+		var attacks_per_second := attack_speed_multiplier / maxf(
+			float(cooldown_value),
+			0.01
 		)
+		lines.append(_format_stat_meter(
+			"공속",
+			_stat_level(attacks_per_second, [0.7, 1.0, 1.35, 1.8]),
+			"f0c85b"
+		))
 
-	if monster_id == "bomb_rat":
-		var fuse_value = stats.get("self_destruct_fuse")
-		if fuse_value != null:
-			speed_parts.append(
-				"자폭 준비 %.2f→%.2f초" % [
-					float(fuse_value),
-					float(fuse_value) / maxf(
-						attack_speed_multiplier,
-						0.01
-					),
-				]
-			)
-	if not speed_parts.is_empty():
-		lines.append("  |  ".join(speed_parts))
+	var range_value = stats.get("attack_range")
+	if range_value != null and monster_id != "bomb_rat":
+		lines.append(_format_stat_meter(
+			"사거리",
+			_stat_level(float(range_value), [70.0, 140.0, 260.0, 500.0]),
+			"b68ae8"
+		))
+
+	lines.append("[color=#8f8495]크기 ×%.2f[/color]" % visual_scale)
 
 	lines.append("")
-	lines.append("엘리트 기술")
+	lines.append("[color=#d9b45b]엘리트 기술[/color]")
 	var elite_skills := MONSTER_CATALOG.get_elite_skills(monster_id)
 	if elite_skills.is_empty():
 		lines.append("등록된 엘리트 기술이 없습니다.")
@@ -3231,14 +3291,14 @@ func _build_elite_detail_text(
 			if typeof(raw_skill) != TYPE_DICTIONARY:
 				continue
 			var skill: Dictionary = raw_skill
-			lines.append(
-				"◆ %s" % String(skill.get("name", "엘리트 기술"))
-			)
+			lines.append("[color=#ffe29a]◆ %s[/color]" % String(
+				skill.get("name", "엘리트 기술")
+			))
 			if bool(skill.get("passive", false)):
-				lines.append("  상시 패시브")
+				lines.append("  [color=#b89ac7]상시 패시브[/color]")
 			else:
 				lines.append(
-					"  선쿨 %.1f초  |  쿨 %.1f초" % [
+					"  [color=#b89ac7]선쿨 %.1f초 · 쿨 %.1f초[/color]" % [
 						maxf(float(skill.get("initial_cooldown", 0.0)), 0.0),
 						maxf(float(skill.get("cooldown", 0.0)), 0.0),
 					]
@@ -3247,7 +3307,8 @@ func _build_elite_detail_text(
 			if not description.is_empty():
 				lines.append("  %s" % description)
 
-	lines.append("※ 레벨·연구·Run 증강 제외")
+	lines.append("")
+	lines.append("[color=#766d7d]※ 레벨·연구·Run 증강 제외[/color]")
 	return "\n".join(lines)
 
 func _load_elite_preview(monster_id: String) -> Texture2D:

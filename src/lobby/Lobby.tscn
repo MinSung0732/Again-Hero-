@@ -949,7 +949,7 @@ text = "닫기"
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.65, 0.75, 1)
 theme_override_font_sizes/font_size = 24
-text = "왼쪽은 기본 몬스터, 오른쪽은 기본 돌연변이 기준입니다."
+text = "일반과 엘리트의 전투 능력을 한눈에 비교합니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
@@ -980,8 +980,20 @@ theme_override_font_sizes/font_size = 24
 text = "일반"
 horizontal_alignment = 1
 
-[node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 180)
+[node name="PortraitFrame" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 190)
+layout_mode = 2
+clip_contents = true
+
+[node name="PortraitMargin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/PortraitFrame"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 18
+
+[node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/PortraitFrame/PortraitMargin"]
+custom_minimum_size = Vector2(0, 154)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
@@ -993,13 +1005,17 @@ theme_override_font_sizes/font_size = 36
 text = "몬스터"
 horizontal_alignment = 1
 
-[node name="Stats" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
+[node name="Stats" type="RichTextLabel" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 310)
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.9, 0.86, 0.93, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/normal_font_size = 24
+theme_override_font_sizes/bold_font_size = 24
+bbcode_enabled = true
 text = "기본 스탯"
-autowrap_mode = 2
+fit_content = true
+scroll_active = false
 
 [node name="SpecialTitle" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
 layout_mode = 2
@@ -1036,8 +1052,20 @@ theme_override_font_sizes/font_size = 24
 text = "엘리트 · 기본 돌연변이"
 horizontal_alignment = 1
 
-[node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 180)
+[node name="PortraitFrame" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 190)
+layout_mode = 2
+clip_contents = true
+
+[node name="PortraitMargin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/PortraitFrame"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 18
+
+[node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/PortraitFrame/PortraitMargin"]
+custom_minimum_size = Vector2(0, 154)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
@@ -1049,13 +1077,17 @@ theme_override_font_sizes/font_size = 36
 text = "돌연변이 몬스터"
 horizontal_alignment = 1
 
-[node name="Stats" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
+[node name="Stats" type="RichTextLabel" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 390)
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.92, 0.86, 0.76, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/normal_font_size = 24
+theme_override_font_sizes/bold_font_size = 24
+bbcode_enabled = true
 text = "엘리트 스탯"
-autowrap_mode = 2
+fit_content = true
+scroll_active = false
 
 [node name="Note" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
 layout_mode = 2
