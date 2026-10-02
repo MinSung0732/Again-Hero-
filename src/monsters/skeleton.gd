@@ -270,11 +270,21 @@ func _tick_pending_second_hit(delta: float) -> void:
 	var target := pending_second_hit_target
 	pending_second_hit_target = null
 	if is_instance_valid(target):
-		_apply_attack_hit(target, pending_second_hit_damage)
+		_apply_attack_hit(target, pending_second_hit_damage, true)
 
 
-func _apply_attack_hit(target: Node2D, damage: int) -> void:
+func _apply_attack_hit(
+	target: Node2D,
+	damage: int,
+	is_followup_hit: bool = false
+) -> void:
 	if not is_instance_valid(target) or damage <= 0:
+		return
+	if (
+		is_followup_hit
+		and target.has_method("take_followup_damage")
+	):
+		target.call("take_followup_damage", damage, self)
 		return
 	if target.has_method("take_damage"):
 		target.call("take_damage", damage, self)

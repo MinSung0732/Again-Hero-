@@ -19414,11 +19414,26 @@ func _required_exp_for_level(target_level: int) -> int:
 	return 50 + maxi(target_level - 1, 0) * 25
 
 func take_damage(amount: int, source: Node = null) -> bool:
+	return _take_damage_internal(amount, source, false)
+
+
+func take_followup_damage(amount: int, source: Node = null) -> bool:
+	return _take_damage_internal(amount, source, true)
+
+
+func _take_damage_internal(
+	amount: int,
+	source: Node,
+	ignore_invulnerability: bool
+) -> bool:
 	if (
 		amount <= 0
 		or current_hp <= 0
 		or is_dying
-		or invulnerability_timer > 0.0
+		or (
+			not ignore_invulnerability
+			and invulnerability_timer > 0.0
+		)
 	):
 		return false
 
