@@ -14,6 +14,7 @@ script = ExtResource("1_bat")
 
 [node name="Visual" type="AnimatedSprite2D" parent="."]
 z_index = -1
+position = Vector2(0, -18)
 texture_filter = 1
 script = ExtResource("2_visual")
 

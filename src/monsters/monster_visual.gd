@@ -329,19 +329,31 @@ func apply_visual_profile(profile: Dictionary) -> bool:
 	if typeof(animations) != TYPE_DICTIONARY:
 		return false
 
-	var built := SpriteFrames.new()
-	if built.has_animation(&"default"):
-		built.remove_animation(&"default")
+	var cache_key := _get_profile_cache_key(mode, profile, animations)
+	var cached = _frames_cache.get(cache_key)
+	var built: SpriteFrames
+	if cached is SpriteFrames:
+		built = cached
+	else:
+		built = SpriteFrames.new()
+		if built.has_animation(&"default"):
+			built.remove_animation(&"default")
 
-	match mode:
-		"frames":
-			_build_profile_frames(built, profile, animations)
-		"sequence":
-			_build_profile_sequence(built, profile, animations)
-		"sheet":
-			_build_profile_sheet(built, profile, animations)
-		_:
+		match mode:
+			"frames":
+				_build_profile_frames(built, profile, animations)
+			"sequence":
+				_build_profile_sequence(built, profile, animations)
+			"sheet":
+				_build_profile_sheet(built, profile, animations)
+			_:
+				return false
+
+		if not built.has_animation(&"idle"):
 			return false
+		if built.get_frame_count(&"idle") <= 0:
+			return false
+		_frames_cache[cache_key] = built
 
 	if not built.has_animation(&"idle"):
 		return false
@@ -369,6 +381,22 @@ func apply_visual_profile(profile: Dictionary) -> bool:
 	self_modulate = Color.WHITE
 	play(&"idle")
 	return true
+
+
+func _get_profile_cache_key(
+	mode: String,
+	profile: Dictionary,
+	animations: Dictionary
+) -> String:
+	return "profile|%s|%s|%s|%d|%d|%s" % [
+		mode,
+		String(profile.get("asset_dir", "")),
+		String(profile.get("sheet_path", "")),
+		int(profile.get("columns", 0)),
+		int(profile.get("rows", 0)),
+		var_to_str(animations),
+	]
+
 
 func _build_profile_frames(
 	frames: SpriteFrames,

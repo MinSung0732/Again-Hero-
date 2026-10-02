@@ -390,7 +390,7 @@ const MONSTERS := {
 			"attack_range": 62.0,
 			"attack_cooldown": 0.62,
 			"detection_range": 420.0,
-			"charge_speed_multiplier": 1.75,
+			"charge_speed_multiplier": 3.75,
 		},
 		"default_unlocked": true,
 		"shards_required": 20,

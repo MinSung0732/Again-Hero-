@@ -3334,11 +3334,7 @@ func _on_alchemist_equivalent_exchange_kill() -> void:
 		health_changed.emit(current_hp, max_hp)
 
 
-func _deal_alchemist_dot_damage(
-	monster: Node,
-	base_damage: int,
-	poison_tick: bool = false
-) -> void:
+func _deal_alchemist_dot_damage(monster: Node, base_damage: int) -> void:
 	if not is_instance_valid(monster) or not monster.has_method("take_damage"):
 		return
 	var before_hp_value = monster.get("current_hp")
@@ -3349,24 +3345,10 @@ func _deal_alchemist_dot_damage(
 	)
 	var final_damage := maxi(1, int(round(float(base_damage) * multiplier)))
 	monster.call("take_damage", final_damage)
-	if poison_tick and is_instance_valid(monster):
-		_play_monster_poison_flash(monster)
 	if before_hp > 0:
 		var after_hp_value = monster.get("current_hp")
 		if after_hp_value != null and int(after_hp_value) <= 0:
 			_on_alchemist_equivalent_exchange_kill()
-
-
-func _play_monster_poison_flash(monster: Node) -> void:
-	if monster.has_method("play_poison_hit_flash"):
-		monster.call("play_poison_hit_flash")
-		return
-	var monster_visual := monster.get_node_or_null("Visual")
-	if (
-		is_instance_valid(monster_visual)
-		and monster_visual.has_method("play_poison_hit")
-	):
-		monster_visual.call("play_poison_hit")
 
 
 func _get_alchemist_mystery_cauldron_cooldown_total() -> float:
@@ -4869,7 +4851,7 @@ func _on_alchemist_poison_tick(origin: Vector2, radius: float, damage: int) -> v
 			continue
 		if origin.distance_squared_to(monster.global_position) > radius_sq:
 			continue
-		_deal_alchemist_dot_damage(monster, damage, true)
+		_deal_alchemist_dot_damage(monster, damage)
 	alchemist_damage_query_candidates.clear()
 
 

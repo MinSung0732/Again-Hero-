@@ -25,7 +25,7 @@ signal died
 @export var attack_range: float = 62.0
 @export var attack_cooldown: float = 0.62
 @export var detection_range: float = 420.0
-@export var charge_speed_multiplier: float = 1.75
+@export var charge_speed_multiplier: float = 3.75
 @export var exp_reward: int = 20
 
 @onready var visual = get_node_or_null("Visual")
@@ -447,12 +447,12 @@ func _draw() -> void:
 	var bar_width := 62.0
 	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
 	draw_rect(
-		Rect2(-bar_width / 2.0, -47.0, bar_width, 7.0),
+		Rect2(-bar_width / 2.0, -65.0, bar_width, 7.0),
 		Color(0.12, 0.12, 0.14),
 		true
 	)
 	draw_rect(
-		Rect2(-bar_width / 2.0, -47.0, bar_width * hp_ratio, 7.0),
+		Rect2(-bar_width / 2.0, -65.0, bar_width * hp_ratio, 7.0),
 		Color(0.3, 0.9, 0.45),
 		true
 	)

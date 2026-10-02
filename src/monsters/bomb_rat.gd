@@ -12,6 +12,7 @@ const BOMBRAT_EFFECT_TARGET_DIAMETER := 300.0
 
 static var _default_visual_frames_cache: SpriteFrames
 static var _explosion_frames_cache: SpriteFrames
+static var _profile_visual_frames_cache: Dictionary = {}
 static var _hit_flash_shader: Shader
 
 const FAR_NAV_DISTANCE := 900.0
@@ -449,9 +450,12 @@ func _apply_bomb_rat_sequence_visual(profile: Dictionary) -> bool:
 	if dir_path.is_empty() or typeof(animations) != TYPE_DICTIONARY:
 		return false
 
-	var use_default_cache := dir_path == BOMBRAT_FRAME_DIR
-	var frames := _default_visual_frames_cache if use_default_cache else null
-	if frames == null:
+	var cache_key := "%s|%s" % [dir_path, var_to_str(animations)]
+	var cached = _profile_visual_frames_cache.get(cache_key)
+	var frames: SpriteFrames
+	if cached is SpriteFrames:
+		frames = cached
+	else:
 		frames = SpriteFrames.new()
 		if frames.has_animation(&"default"):
 			frames.remove_animation(&"default")
@@ -490,8 +494,7 @@ func _apply_bomb_rat_sequence_visual(profile: Dictionary) -> bool:
 			for texture in textures:
 				frames.add_frame(animation_name, texture)
 
-		if use_default_cache:
-			_default_visual_frames_cache = frames
+		_profile_visual_frames_cache[cache_key] = frames
 
 	if not frames.has_animation(&"idle"):
 		return false

@@ -86,6 +86,7 @@ const CHEST_EXP_VALUE_MAX := 30
 const MAX_EXP_ORB_POOL := 128
 const MAX_PROJECTILE_POOL_PER_TYPE := 96
 const MAX_TRANSIENT_FX_POOL_PER_TYPE := 48
+const STAGE_REINFORCEMENT_MAX_SPAWNS_PER_FRAME := 2
 
 
 var hero: Node2D
@@ -159,6 +160,7 @@ var demon_ultimate_skill_ids: Array[String] = []
 var demon_ultimate_cheapest_cost: float = DEMON_ULTIMATES.CHARGE_MAX
 
 var stage_reinforcement_queue: Array[Dictionary] = []
+var stage_reinforcement_queue_index: int = 0
 var stage_reinforcement_timer: float = 0.0
 var stage_reinforcement_interval: float = 0.12
 var stage_reinforcement_batch_size: int = 2
@@ -712,6 +714,7 @@ func _start_battle() -> void:
 		demon_ultimate_cooldowns[skill_id] = 0.0
 	demon_ultimate_cooldown_emit_timer = 0.0
 	stage_reinforcement_queue.clear()
+	stage_reinforcement_queue_index = 0
 	stage_reinforcement_timer = 0.0
 	stage_reinforcement_interval = 0.12
 	stage_reinforcement_batch_size = 2
@@ -852,17 +855,21 @@ func _warm_monster_spawn_resources() -> void:
 		if warmup == null:
 			continue
 
-		# _ready() still runs and fills the static visual/effect caches, while
-		# disabled processing prevents this temporary instance from joining
-		# combat simulation for a physics frame.
+		# _ready() fills the normal visual/effect caches. Disabled processing
+		# prevents this temporary instance from joining combat simulation.
 		warmup.process_mode = Node.PROCESS_MODE_DISABLED
 		warmup.visible = false
+		warmup.position = Vector2(-10000.0, -10000.0)
 		add_child(warmup)
+
+		# Build normal and elite visual profiles on separate frames so the first
+		# stage event never has to synchronously assemble those SpriteFrames.
+		await get_tree().process_frame
+		_apply_elite_monster_visual(warmup, monster_id)
+		await get_tree().process_frame
+
 		remove_child(warmup)
 		warmup.free()
-
-		# Spread first-time texture/SpriteFrames work over multiple frames.
-		await get_tree().process_frame
 
 	_monster_spawn_resources_warmed = true
 	_monster_spawn_warmup_running = false
@@ -3042,15 +3049,17 @@ func _queue_stage_event_reinforcements(event: Dictionary) -> void:
 	if pool.is_empty():
 		return
 
-	stage_reinforcement_batch_size = maxi(
+	stage_reinforcement_batch_size = clampi(
 		int(event.get("reinforcement_batch_size", 2)),
-		1
+		1,
+		STAGE_REINFORCEMENT_MAX_SPAWNS_PER_FRAME
 	)
 	stage_reinforcement_interval = maxf(
 		float(event.get("reinforcement_interval", 0.12)),
 		0.04
 	)
-	stage_reinforcement_timer = 0.0
+	# Let the elite finish its own scene/visual setup before starting the pack.
+	stage_reinforcement_timer = stage_reinforcement_interval
 
 	var spawn_min := maxf(
 		float(event.get("reinforcement_spawn_min", 330.0)),
@@ -3092,7 +3101,9 @@ func _queue_stage_event_reinforcements(event: Dictionary) -> void:
 		})
 
 func _process_stage_reinforcement_queue(delta: float) -> void:
-	if stage_reinforcement_queue.is_empty():
+	if stage_reinforcement_queue_index >= stage_reinforcement_queue.size():
+		stage_reinforcement_queue.clear()
+		stage_reinforcement_queue_index = 0
 		return
 
 	stage_reinforcement_timer = maxf(
@@ -3105,9 +3116,13 @@ func _process_stage_reinforcement_queue(delta: float) -> void:
 	var spawned_this_batch := 0
 	while (
 		spawned_this_batch < stage_reinforcement_batch_size
-		and not stage_reinforcement_queue.is_empty()
+		and stage_reinforcement_queue_index
+		< stage_reinforcement_queue.size()
 	):
-		var entry: Dictionary = stage_reinforcement_queue.pop_front()
+		var entry: Dictionary = stage_reinforcement_queue[
+			stage_reinforcement_queue_index
+		]
+		stage_reinforcement_queue_index += 1
 		var monster_id := String(entry.get("monster_id", ""))
 		var spawn_position: Vector2 = entry.get(
 			"position",
@@ -3136,7 +3151,9 @@ func _process_stage_reinforcement_queue(delta: float) -> void:
 	if spawned_this_batch > 0:
 		_emit_stats()
 
-	if stage_reinforcement_queue.is_empty():
+	if stage_reinforcement_queue_index >= stage_reinforcement_queue.size():
+		stage_reinforcement_queue.clear()
+		stage_reinforcement_queue_index = 0
 		stage_reinforcement_timer = 0.0
 	else:
 		stage_reinforcement_timer = stage_reinforcement_interval
