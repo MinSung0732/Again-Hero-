@@ -8,6 +8,9 @@ const RESEARCH = {
 		"id": "monster_power",
 		"name": "군단 화력 연구",
 		"description": "공격력 연구. 고레벨 구간일수록 효율이 감소합니다.",
+		"effect_label": "몬스터 공격력",
+		"effect_per_point": 1.0,
+		"effect_suffix": "%",
 		"max_level": 70,
 		"base_cost": 25,
 		"cost_growth": 1.155,
@@ -22,6 +25,9 @@ const RESEARCH = {
 		"id": "monster_vitality",
 		"name": "군단 생체 강화",
 		"description": "최대 HP 연구. 고레벨 구간일수록 효율이 감소합니다.",
+		"effect_label": "몬스터 최대 HP",
+		"effect_per_point": 1.0,
+		"effect_suffix": "%",
 		"max_level": 70,
 		"base_cost": 25,
 		"cost_growth": 1.155,
@@ -36,6 +42,10 @@ const RESEARCH = {
 		"id": "monster_mobility",
 		"name": "군단 기동 연구",
 		"description": "이동속도 연구. 고레벨 구간에서 효율이 크게 감소합니다.",
+		"effect_label": "몬스터 이동속도",
+		"effect_per_point": 0.35,
+		"effect_suffix": "%",
+		"effect_decimals": 2,
 		"max_level": 70,
 		"base_cost": 20,
 		"cost_growth": 1.165,
@@ -50,6 +60,10 @@ const RESEARCH = {
 		"id": "monster_attack_speed",
 		"name": "군단 공격 훈련",
 		"description": "공격속도 연구. 고레벨 구간에서 효율이 크게 감소합니다.",
+		"effect_label": "몬스터 공격속도",
+		"effect_per_point": 0.5,
+		"effect_suffix": "%",
+		"effect_decimals": 2,
 		"max_level": 70,
 		"base_cost": 25,
 		"cost_growth": 1.155,
@@ -64,6 +78,10 @@ const RESEARCH = {
 		"id": "summon_efficiency",
 		"name": "소환 효율화",
 		"description": "소환 코스트 감소 연구. 고레벨 구간일수록 효율이 감소합니다.",
+		"effect_label": "소환 코스트",
+		"effect_per_point": -1.0,
+		"effect_suffix": "%",
+		"effect_min": -20.0,
 		"max_level": 20,
 		"base_cost": 100,
 		"cost_growth": 1.15,
@@ -78,6 +96,10 @@ const RESEARCH = {
 		"id": "mana_cycle",
 		"name": "마력 순환",
 		"description": "지휘력 회복 연구. 고레벨 구간일수록 효율이 감소합니다.",
+		"effect_label": "초당 지휘력 회복",
+		"effect_per_point": 0.15,
+		"effect_suffix": "",
+		"effect_decimals": 2,
 		"max_level": 30,
 		"base_cost": 110,
 		"cost_growth": 1.125,
@@ -91,6 +113,9 @@ const RESEARCH = {
 		"id": "mana_reservoir",
 		"name": "마력 저장고",
 		"description": "최대 지휘력 연구. 고레벨 구간일수록 효율이 감소합니다.",
+		"effect_label": "최대 지휘력",
+		"effect_per_point": 5.0,
+		"effect_suffix": "",
 		"max_level": 30,
 		"base_cost": 100,
 		"cost_growth": 1.125,
@@ -104,6 +129,9 @@ const RESEARCH = {
 		"id": "rapid_experiment",
 		"name": "고속 실험법",
 		"description": "마왕 EXP 획득 연구. 고레벨 구간일수록 효율이 감소합니다.",
+		"effect_label": "마왕 EXP 획득량",
+		"effect_per_point": 3.0,
+		"effect_suffix": "%",
 		"max_level": 20,
 		"base_cost": 130,
 		"cost_growth": 1.15,
@@ -118,6 +146,9 @@ const RESEARCH = {
 		"id": "tactical_notebook",
 		"name": "전술 기록 노트",
 		"description": "Run당 마왕 증강 새로고침 +1회",
+		"effect_label": "Run당 증강 새로고침",
+		"effect_per_point": 1.0,
+		"effect_suffix": "회",
 		"max_level": 3,
 		"costs": [1500, 4500, 8000],
 	},
@@ -203,3 +234,26 @@ static func get_cost(research_id: String, current_level: int) -> int:
 		(raw_cost + COST_ROUNDING - 0.001) / COST_ROUNDING
 	)
 	return maxi(rounded_steps * int(COST_ROUNDING), 1)
+
+
+static func get_effect_summary(research_id: String, level: int) -> String:
+	var data: Dictionary = RESEARCH.get(research_id, {})
+	if data.is_empty():
+		return "효과 정보 없음"
+
+	var points := get_effective_level_points(research_id, level)
+	var value := points * float(data.get("effect_per_point", 0.0))
+	if data.has("effect_min"):
+		value = maxf(value, float(data.get("effect_min", value)))
+	if data.has("effect_max"):
+		value = minf(value, float(data.get("effect_max", value)))
+
+	var decimals := maxi(int(data.get("effect_decimals", 0)), 0)
+	var value_text := String.num(absf(value), decimals)
+	var sign_text := "-" if value < 0.0 else "+"
+	return "%s %s%s%s" % [
+		String(data.get("effect_label", "연구 효과")),
+		sign_text,
+		value_text,
+		String(data.get("effect_suffix", "")),
+	]

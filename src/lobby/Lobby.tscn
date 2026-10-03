@@ -955,42 +955,290 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+clip_contents = true
+
+[node name="TitlePlate" type="Panel" parent="SafeArea/Layout/Content/ResearchTab"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -230.0
+offset_top = 18.0
+offset_right = 230.0
+offset_bottom = 84.0
+grow_horizontal = 2
+mouse_filter = 2
 
 [node name="ResearchLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 20.0
-offset_top = 38.0
-offset_right = -20.0
-offset_bottom = -34.0
+offset_left = 82.0
+offset_top = 32.0
+offset_right = -82.0
+offset_bottom = -28.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="Title" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.87, 1, 1)
-theme_override_font_sizes/font_size = 42
+theme_override_font_sizes/font_size = 38
 text = "마왕 연구실"
 horizontal_alignment = 1
 
 [node name="Points" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 25
 text = "보유 연구 포인트  0"
 horizontal_alignment = 1
 
-[node name="ResearchScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
+[node name="ModeTabs" type="HBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
+custom_minimum_size = Vector2(0, 58)
 layout_mode = 2
-size_flags_vertical = 3
+theme_override_constants/separation = 10
 
-[node name="ResearchList" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchScroll"]
+[node name="ResearchModeButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ModeTabs"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 14
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "군단 연구"
+
+[node name="RelicModeButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ModeTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "유물"
+
+[node name="ResearchContent" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="DetailPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent"]
+custom_minimum_size = Vector2(0, 310)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Name" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.48, 1)
+theme_override_font_sizes/font_size = 30
+text = "연구를 선택하세요"
+horizontal_alignment = 1
+
+[node name="Level" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.7, 0.82, 1)
+theme_override_font_sizes/font_size = 21
+text = "Lv.0 / 0"
+horizontal_alignment = 1
+
+[node name="Effect" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.93, 0.76, 1)
+theme_override_font_sizes/font_size = 23
+text = "현재 효과를 표시합니다."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Description" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.78, 0.73, 0.82, 1)
+theme_override_font_sizes/font_size = 19
+text = "연구 상세 설명"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="ActionRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Cost" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox/ActionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.79, 0.35, 1)
+theme_override_font_sizes/font_size = 22
+text = "필요 포인트  -"
+vertical_alignment = 1
+
+[node name="UpgradeButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox/ActionRow"]
+custom_minimum_size = Vector2(230, 62)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "강화하기"
+disabled = true
+
+[node name="ResearchScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+scroll_deadzone = 14
+
+[node name="ResearchList" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/ResearchScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="RelicContent" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="DetailPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent"]
+custom_minimum_size = Vector2(0, 310)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 20
+
+[node name="HBox" type="HBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 22
+
+[node name="IconPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox"]
+custom_minimum_size = Vector2(174, 174)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Icon" type="TextureRect" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/IconPanel"]
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Placeholder" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/IconPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.48, 0.6, 1)
+theme_override_font_sizes/font_size = 56
+text = "?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Info" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 7
+
+[node name="Name" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.48, 1)
+theme_override_font_sizes/font_size = 30
+text = "유물을 선택하세요"
+
+[node name="Level" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.7, 0.82, 1)
+theme_override_font_sizes/font_size = 21
+text = "Lv.0"
+
+[node name="Effect" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.55, 0.93, 0.76, 1)
+theme_override_font_sizes/font_size = 21
+text = "유물 소환에서 조각을 획득하면 효과를 확인할 수 있습니다."
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="GaugeText" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.73, 0.82, 1)
+theme_override_font_sizes/font_size = 19
+text = "[ 0 / 30 ]"
+
+[node name="UpgradeButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 21
+text = "조각 부족"
+disabled = true
+
+[node name="FilterTabs" type="HBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="AllButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "전체"
+
+[node name="AttackButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "공격"
+
+[node name="DefenseButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "방어"
+
+[node name="UtilityButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "보조"
+
+[node name="RelicScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+scroll_deadzone = 14
+
+[node name="RelicList" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/RelicScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="RelicGrid" type="GridContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/RelicScroll/RelicList"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 4
+
+[node name="Empty" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/RelicScroll/RelicList"]
+custom_minimum_size = Vector2(0, 250)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.53, 0.62, 1)
+theme_override_font_sizes/font_size = 22
+text = "등록된 유물이 없습니다.\n상점 유물 소환 시스템 추가 후 이곳에 표시됩니다."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="Status" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
 custom_minimum_size = Vector2(0, 54)

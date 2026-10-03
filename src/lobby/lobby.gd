@@ -4,6 +4,7 @@ const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
 const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
+const RELIC_CATALOG := preload("res://src/data/relic_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const MUTATION_CATALOG := preload("res://src/data/mutation_catalog.gd")
@@ -161,11 +162,43 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 
 @onready var research_points_label: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/Points
 @onready var research_status_label: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/Status
-@onready var research_list: VBoxContainer = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchScroll/ResearchList
+@onready var research_mode_button: Button = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/ModeTabs/ResearchModeButton
+@onready var relic_mode_button: Button = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/ModeTabs/RelicModeButton
+@onready var research_content: VBoxContainer = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent
+@onready var research_detail_panel: PanelContainer = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel
+@onready var research_detail_name: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox/Name
+@onready var research_detail_level: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox/Level
+@onready var research_detail_effect: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox/Effect
+@onready var research_detail_description: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox/Description
+@onready var research_detail_cost: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox/ActionRow/Cost
+@onready var research_upgrade_button: Button = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox/ActionRow/UpgradeButton
+@onready var research_list: VBoxContainer = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/ResearchScroll/ResearchList
+@onready var relic_content: VBoxContainer = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent
+@onready var relic_detail_panel: PanelContainer = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel
+@onready var relic_detail_icon: TextureRect = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/IconPanel/Icon
+@onready var relic_detail_placeholder: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/IconPanel/Placeholder
+@onready var relic_detail_name: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info/Name
+@onready var relic_detail_level: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info/Level
+@onready var relic_detail_effect: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info/Effect
+@onready var relic_detail_gauge: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info/GaugeText
+@onready var relic_upgrade_button: Button = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info/UpgradeButton
+@onready var relic_grid: GridContainer = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/RelicScroll/RelicList/RelicGrid
+@onready var relic_empty_label: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/RelicScroll/RelicList/Empty
+@onready var relic_filter_buttons: Array[Button] = [
+	$SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs/AllButton,
+	$SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs/AttackButton,
+	$SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs/DefenseButton,
+	$SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs/UtilityButton,
+]
 
 var stage_ids: Array[String] = []
 var selected_stage_index: int = 0
 var current_tab: String = "main"
+var research_view_mode: String = "research"
+var selected_research_id: String = ""
+var selected_relic_id: String = ""
+var selected_relic_category: String = "all"
+var relic_progress_state: Dictionary = {}
 
 const SHOP_BANNER_AUTO_SECONDS := 5.5
 const SHOP_BANNER_SLIDE_DISTANCE := 150.0
@@ -1929,9 +1962,50 @@ func _apply_lobby_visual_polish() -> void:
 		40,
 		Color("fff4dd")
 	)
+	var research_title_plate := (
+		$SafeArea/Layout/Content/ResearchTab/TitlePlate as Panel
+	)
+	var research_title_plate_style := _make_style(
+		Color("171020"),
+		Color("c99136"),
+		3,
+		18
+	)
+	research_title_plate_style.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+	research_title_plate_style.shadow_size = 8
+	research_title_plate_style.shadow_offset = Vector2(0.0, 4.0)
+	research_title_plate.add_theme_stylebox_override(
+		"panel",
+		research_title_plate_style
+	)
 	research_points_label.add_theme_font_size_override("font_size", 28)
 	research_points_label.add_theme_color_override("font_color", Color("f3cf72"))
 	research_status_label.add_theme_color_override("font_color", Color("918799"))
+	var research_detail_style := _make_hud_panel_style(
+		Color(0.055, 0.040, 0.075, 0.97),
+		Color("c99136"),
+		3,
+		18
+	)
+	var relic_detail_style := _make_hud_panel_style(
+		Color(0.050, 0.038, 0.070, 0.97),
+		Color("8d629d"),
+		3,
+		18
+	)
+	research_detail_panel.add_theme_stylebox_override("panel", research_detail_style)
+	relic_detail_panel.add_theme_stylebox_override("panel", relic_detail_style)
+	var relic_icon_panel := relic_detail_icon.get_parent() as PanelContainer
+	relic_icon_panel.add_theme_stylebox_override(
+		"panel",
+		_make_hud_panel_style(Color("100b17"), Color("a77cbd"), 2, 14)
+	)
+	_apply_lobby_button_skin(research_mode_button, true, 22)
+	_apply_lobby_button_skin(relic_mode_button, false, 22)
+	_apply_lobby_button_skin(research_upgrade_button, true, 22)
+	_apply_lobby_button_skin(relic_upgrade_button, true, 21)
+	for filter_button in relic_filter_buttons:
+		_apply_lobby_button_skin(filter_button, false, 18)
 
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/Title",
@@ -2139,6 +2213,15 @@ func _connect_navigation() -> void:
 
 	other_settings_tab_button.pressed.connect(_show_other_settings)
 	other_account_tab_button.pressed.connect(_show_other_account)
+	research_mode_button.pressed.connect(_show_research_mode.bind("research"))
+	relic_mode_button.pressed.connect(_show_research_mode.bind("relic"))
+	research_upgrade_button.pressed.connect(_purchase_selected_research)
+	relic_upgrade_button.pressed.connect(_show_relic_upgrade_placeholder)
+	var relic_categories: Array[String] = RELIC_CATALOG.CATEGORY_ORDER
+	for index in range(mini(relic_filter_buttons.size(), relic_categories.size())):
+		relic_filter_buttons[index].pressed.connect(
+			_select_relic_category.bind(relic_categories[index])
+		)
 	bgm_slider.value_changed.connect(_on_bgm_level_changed)
 	sfx_slider.value_changed.connect(_on_sfx_level_changed)
 	bgm_mute_check.toggled.connect(_on_bgm_mute_toggled)
@@ -4563,10 +4646,13 @@ func _rebuild_research_list() -> void:
 		child.free()
 
 	var research_points := STAGE_PROGRESS.get_research_points()
-	research_points_label.text = "보유 연구 포인트  %d" % research_points
+	research_points_label.text = "보유 연구 포인트  %s" % _format_shop_number(
+		research_points
+	)
 
 	var research_ids: Array[String] = RESEARCH_CATALOG.get_ordered_ids()
-	research_status_label.text = "영구 연구 %d종" % research_ids.size()
+	if selected_research_id.is_empty() and not research_ids.is_empty():
+		selected_research_id = research_ids[0]
 
 	for research_id in research_ids:
 		var data := RESEARCH_CATALOG.get_research(research_id)
@@ -4576,51 +4662,127 @@ func _rebuild_research_list() -> void:
 		var level := STAGE_PROGRESS.get_research_level(research_id)
 		var max_level := int(data.get("max_level", 0))
 		var button := Button.new()
-		button.custom_minimum_size = Vector2(0, 124)
-		button.add_theme_font_size_override("font_size", 24)
-		button.add_theme_stylebox_override("normal", secondary_button_style)
-		button.add_theme_stylebox_override("hover", secondary_button_style)
-		button.add_theme_stylebox_override("pressed", secondary_button_style)
+		button.custom_minimum_size = Vector2(0, 112)
+		button.focus_mode = Control.FOCUS_NONE
+		button.mouse_filter = Control.MOUSE_FILTER_PASS
+		var selected := research_id == selected_research_id
+		_apply_lobby_button_skin(button, selected, 21)
 
 		if level >= max_level:
-			button.disabled = true
-			button.text = "%s  Lv.%d / %d\n%s\n연구 완료" % [
+			button.text = "%s    Lv.%d / %d\n%s    ·    연구 완료" % [
 				String(data.get("name", research_id)),
 				level,
 				max_level,
-				String(data.get("description", "")),
+				RESEARCH_CATALOG.get_effect_summary(research_id, level),
 			]
 		else:
 			var cost := RESEARCH_CATALOG.get_cost(research_id, level)
-			button.disabled = research_points < cost
-			button.text = "%s  Lv.%d / %d\n%s\n비용 %d" % [
+			button.text = "%s    Lv.%d / %d\n%s    ·    비용 %s" % [
 				String(data.get("name", research_id)),
 				level,
 				max_level,
-				String(data.get("description", "")),
-				cost,
+				RESEARCH_CATALOG.get_effect_summary(research_id, level),
+				_format_shop_number(cost),
 			]
-			button.pressed.connect(_purchase_research.bind(research_id))
+		button.pressed.connect(_select_research.bind(research_id))
 
 		research_list.add_child(button)
 
-func _purchase_research(research_id: String) -> void:
-	var data := RESEARCH_CATALOG.get_research(research_id)
+	_refresh_research_detail()
+	_rebuild_relic_grid()
+	_refresh_research_mode_buttons()
+
+
+func _show_research_mode(mode: String) -> void:
+	research_view_mode = "relic" if mode == "relic" else "research"
+	research_content.visible = research_view_mode == "research"
+	relic_content.visible = research_view_mode == "relic"
+	_refresh_research_mode_buttons()
+	if research_view_mode == "research":
+		research_status_label.text = "연구를 선택하고 상단에서 강화합니다."
+		_refresh_research_detail()
+	else:
+		research_status_label.text = "유물 데이터·소환·강화 시스템 추가 대기 중"
+		_rebuild_relic_grid()
+
+
+func _refresh_research_mode_buttons() -> void:
+	_apply_lobby_button_skin(
+		research_mode_button,
+		research_view_mode == "research",
+		22
+	)
+	_apply_lobby_button_skin(
+		relic_mode_button,
+		research_view_mode == "relic",
+		22
+	)
+
+
+func _select_research(research_id: String) -> void:
+	if RESEARCH_CATALOG.get_research(research_id).is_empty():
+		return
+	selected_research_id = research_id
+	_rebuild_research_list()
+
+
+func _refresh_research_detail() -> void:
+	var data := RESEARCH_CATALOG.get_research(selected_research_id)
+	if data.is_empty():
+		research_detail_name.text = "연구를 선택하세요"
+		research_detail_level.text = "Lv.0 / 0"
+		research_detail_effect.text = "현재 효과를 표시합니다."
+		research_detail_description.text = "아래 연구 목록에서 항목을 선택하세요."
+		research_detail_cost.text = "필요 포인트  -"
+		research_upgrade_button.disabled = true
+		return
+
+	var level := STAGE_PROGRESS.get_research_level(selected_research_id)
+	var max_level := int(data.get("max_level", 0))
+	research_detail_name.text = String(data.get("name", selected_research_id))
+	research_detail_level.text = "Lv.%d / %d" % [level, max_level]
+	research_detail_description.text = String(data.get("description", ""))
+	if level >= max_level:
+		research_detail_effect.text = RESEARCH_CATALOG.get_effect_summary(
+			selected_research_id,
+			level
+		)
+		research_detail_cost.text = "최대 레벨 달성"
+		research_upgrade_button.text = "연구 완료"
+		research_upgrade_button.disabled = true
+		return
+
+	var cost := RESEARCH_CATALOG.get_cost(selected_research_id, level)
+	research_detail_effect.text = "현재  %s\n다음  %s" % [
+		RESEARCH_CATALOG.get_effect_summary(selected_research_id, level),
+		RESEARCH_CATALOG.get_effect_summary(selected_research_id, level + 1),
+	]
+	research_detail_cost.text = "필요 포인트  %s" % _format_shop_number(cost)
+	research_upgrade_button.text = "강화하기"
+	research_upgrade_button.disabled = STAGE_PROGRESS.get_research_points() < cost
+	research_upgrade_button.add_theme_stylebox_override(
+		"disabled",
+		primary_button_disabled_style
+	)
+
+
+func _purchase_selected_research() -> void:
+	var data := RESEARCH_CATALOG.get_research(selected_research_id)
 	if data.is_empty():
 		return
 
-	var level := STAGE_PROGRESS.get_research_level(research_id)
+	var level := STAGE_PROGRESS.get_research_level(selected_research_id)
 	var max_level := int(data.get("max_level", 0))
-	var cost := RESEARCH_CATALOG.get_cost(research_id, level)
+	var cost := RESEARCH_CATALOG.get_cost(selected_research_id, level)
 	var result := STAGE_PROGRESS.try_purchase_research(
-		research_id,
+		selected_research_id,
 		cost,
 		max_level
 	)
 
 	if bool(result.get("success", false)):
 		research_status_label.text = "%s Lv.%d 연구 완료" % [
-			String(data.get("name", research_id)),
+			String(data.get("name", selected_research_id)),
 			int(result.get("level", level + 1)),
 		]
 	else:
@@ -4628,3 +4790,178 @@ func _purchase_research(research_id: String) -> void:
 
 	_refresh_header()
 	_rebuild_research_list.call_deferred()
+
+
+func _select_relic_category(category_id: String) -> void:
+	if category_id not in RELIC_CATALOG.CATEGORY_ORDER:
+		return
+	selected_relic_category = category_id
+	_rebuild_relic_grid()
+
+
+func _rebuild_relic_grid() -> void:
+	for child in relic_grid.get_children():
+		relic_grid.remove_child(child)
+		child.free()
+
+	for index in range(mini(
+		relic_filter_buttons.size(),
+		RELIC_CATALOG.CATEGORY_ORDER.size()
+	)):
+		var category_id := String(RELIC_CATALOG.CATEGORY_ORDER[index])
+		_apply_lobby_button_skin(
+			relic_filter_buttons[index],
+			category_id == selected_relic_category,
+			18
+		)
+
+	var relic_ids := RELIC_CATALOG.get_ordered_ids(selected_relic_category)
+	relic_empty_label.visible = relic_ids.is_empty()
+	for relic_id in relic_ids:
+		var data := RELIC_CATALOG.get_relic(relic_id)
+		if data.is_empty():
+			continue
+		relic_grid.add_child(_create_relic_card(relic_id, data))
+
+	if not selected_relic_id.is_empty():
+		var selected_data := RELIC_CATALOG.get_relic(selected_relic_id)
+		if (
+			selected_data.is_empty()
+			or (
+				selected_relic_category != "all"
+				and String(selected_data.get("category", "utility"))
+				!= selected_relic_category
+			)
+		):
+			selected_relic_id = ""
+	_refresh_relic_detail()
+
+
+func _create_relic_card(relic_id: String, data: Dictionary) -> Button:
+	var progress := _get_relic_progress(relic_id)
+	var fragments := maxi(int(progress.get("fragments", 0)), 0)
+	var required := maxi(int(data.get("required_fragments", 30)), 1)
+	var can_upgrade := fragments >= required
+
+	var card := Button.new()
+	card.custom_minimum_size = Vector2(0, 220)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.focus_mode = Control.FOCUS_NONE
+	card.mouse_filter = Control.MOUSE_FILTER_PASS
+	_apply_lobby_button_skin(card, relic_id == selected_relic_id, 16)
+	card.pressed.connect(_select_relic.bind(relic_id))
+
+	var content := VBoxContainer.new()
+	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(content)
+	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	content.offset_left = 12.0
+	content.offset_top = 12.0
+	content.offset_right = -12.0
+	content.offset_bottom = -12.0
+	content.add_theme_constant_override("separation", 5)
+
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(0, 104)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var icon_path := String(data.get("icon_path", ""))
+	if not icon_path.is_empty():
+		icon.texture = _load_texture(icon_path)
+	content.add_child(icon)
+
+	var name_label := Label.new()
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	name_label.add_theme_font_size_override("font_size", 17)
+	name_label.text = String(data.get("name", relic_id))
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	content.add_child(name_label)
+
+	var gauge := ProgressBar.new()
+	gauge.custom_minimum_size = Vector2(0, 24)
+	gauge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	gauge.max_value = float(required)
+	gauge.value = float(mini(fragments, required))
+	gauge.show_percentage = false
+	gauge.add_theme_stylebox_override(
+		"background",
+		_make_hud_panel_style(Color("17131d"), Color("51485a"), 1, 7)
+	)
+	gauge.add_theme_stylebox_override(
+		"fill",
+		_make_hud_panel_style(
+			Color("4faa70") if can_upgrade else Color("77727d"),
+			Color("7de09b") if can_upgrade else Color("9a949f"),
+			1,
+			7
+		)
+	)
+	content.add_child(gauge)
+
+	var gauge_label := Label.new()
+	gauge_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	gauge_label.add_theme_font_size_override("font_size", 15)
+	gauge_label.text = "[ %d / %d ]" % [fragments, required]
+	gauge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	content.add_child(gauge_label)
+	return card
+
+
+func _get_relic_progress(relic_id: String) -> Dictionary:
+	var progress = relic_progress_state.get(relic_id, {})
+	if typeof(progress) != TYPE_DICTIONARY:
+		return {"level": 0, "fragments": 0}
+	return progress
+
+
+func _select_relic(relic_id: String) -> void:
+	if RELIC_CATALOG.get_relic(relic_id).is_empty():
+		return
+	selected_relic_id = relic_id
+	_rebuild_relic_grid()
+
+
+func _refresh_relic_detail() -> void:
+	var data := RELIC_CATALOG.get_relic(selected_relic_id)
+	if data.is_empty():
+		relic_detail_icon.texture = null
+		relic_detail_placeholder.show()
+		relic_detail_name.text = "유물을 선택하세요"
+		relic_detail_level.text = "Lv.0"
+		relic_detail_effect.text = (
+			"유물 소환에서 조각을 획득하면 효과를 확인할 수 있습니다."
+		)
+		relic_detail_gauge.text = "[ 0 / 30 ]"
+		relic_upgrade_button.text = "조각 부족"
+		relic_upgrade_button.disabled = true
+		return
+
+	var progress := _get_relic_progress(selected_relic_id)
+	var level := maxi(int(progress.get("level", 0)), 0)
+	var fragments := maxi(int(progress.get("fragments", 0)), 0)
+	var required := maxi(int(data.get("required_fragments", 30)), 1)
+	var icon_path := String(data.get("icon_path", ""))
+	relic_detail_icon.texture = (
+		_load_texture(icon_path) if not icon_path.is_empty() else null
+	)
+	relic_detail_placeholder.visible = relic_detail_icon.texture == null
+	relic_detail_name.text = String(data.get("name", selected_relic_id))
+	relic_detail_level.text = "Lv.%d" % level
+	relic_detail_effect.text = String(data.get("effect_text", "효과 정보 준비 중"))
+	relic_detail_gauge.text = "[ %d / %d ]" % [fragments, required]
+	relic_upgrade_button.disabled = fragments < required
+	relic_upgrade_button.text = (
+		"완성하기" if level <= 0 and fragments >= required
+		else "레벨업" if fragments >= required
+		else "조각 부족"
+	)
+	relic_upgrade_button.add_theme_stylebox_override(
+		"disabled",
+		primary_button_disabled_style
+	)
+
+
+func _show_relic_upgrade_placeholder() -> void:
+	research_status_label.text = "유물 강화 저장 시스템은 다음 단계에서 연결합니다."
