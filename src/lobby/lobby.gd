@@ -2961,6 +2961,7 @@ func _setup_team_preview() -> void:
 	team_catalog_ids.clear()
 	team_available_ids.clear()
 	team_selected_ids.clear()
+	monster_collection_state = MONSTER_COLLECTION_STORE.load_state()
 	_clear_team_monster_cards()
 
 	team_status_label.text = "Catalog 원본 데이터 확인 중"
@@ -3149,7 +3150,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	var data := MONSTER_CATALOG.get_monster(monster_id)
 
 	var card := FORMATION_DRAG_CARD.new()
-	card.custom_minimum_size = Vector2(0.0, 246.0)
+	card.custom_minimum_size = Vector2(0.0, 326.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if available:
 		card.configure_drag(
@@ -3203,20 +3204,61 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	info.add_theme_font_size_override("font_size", 18)
 	info.autowrap_mode = TextServer.AUTOWRAP_OFF
 	info.clip_text = true
+	var required := MONSTER_CATALOG.get_shards_required(monster_id)
+	var shards := MONSTER_COLLECTION_STORE.get_shards(
+		monster_id,
+		monster_collection_state
+	)
+	var upgrade_level := MONSTER_COLLECTION_STORE.get_upgrade_level(
+		monster_id,
+		monster_collection_state
+	)
 	if available:
-		info.text = "%s · 코스트 %.1f" % [
+		info.text = "Lv.%d · %s · 코스트 %.1f" % [
+			upgrade_level,
 			_team_monster_role_label(monster_id),
 			float(data.get("base_cost", 0.0)),
 		]
 	else:
-		var required := maxi(int(data.get("shards_required", 1)), 1)
-		var shards := MONSTER_COLLECTION_STORE.get_shards(
-			monster_id,
-			monster_collection_state
-		)
-		info.text = "[잠김] · 조각 %d / %d" % [shards, required]
+		info.text = "[잠김] · %s · 코스트 %.1f" % [
+			_team_monster_role_label(monster_id),
+			float(data.get("base_cost", 0.0)),
+		]
 		info.add_theme_color_override("font_color", Color("8c8590"))
 	vbox.add_child(info)
+
+	var shard_bar := ProgressBar.new()
+	shard_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shard_bar.custom_minimum_size = Vector2(0.0, 28.0)
+	shard_bar.min_value = 0.0
+	shard_bar.max_value = float(required)
+	shard_bar.value = float(mini(shards, required))
+	shard_bar.show_percentage = false
+	var shard_background := StyleBoxFlat.new()
+	shard_background.bg_color = Color("25222d")
+	shard_background.corner_radius_top_left = 5
+	shard_background.corner_radius_top_right = 5
+	shard_background.corner_radius_bottom_left = 5
+	shard_background.corner_radius_bottom_right = 5
+	var shard_fill := StyleBoxFlat.new()
+	shard_fill.bg_color = Color("58bf78") if shards >= required else Color("77727d")
+	shard_fill.corner_radius_top_left = 5
+	shard_fill.corner_radius_top_right = 5
+	shard_fill.corner_radius_bottom_left = 5
+	shard_fill.corner_radius_bottom_right = 5
+	shard_bar.add_theme_stylebox_override("background", shard_background)
+	shard_bar.add_theme_stylebox_override("fill", shard_fill)
+	vbox.add_child(shard_bar)
+
+	var shard_label := Label.new()
+	shard_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shard_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shard_label.text = "[ %d / %d ]" % [shards, required]
+	shard_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	shard_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	shard_label.add_theme_font_size_override("font_size", 17)
+	shard_label.add_theme_color_override("font_color", Color("f4eff7"))
+	shard_bar.add_child(shard_label)
 
 	var actions := HBoxContainer.new()
 	actions.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -3266,7 +3308,54 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	detail_button.pressed.connect(_open_monster_detail.bind(monster_id))
 	actions.add_child(detail_button)
 
+	var upgrade_profile := MONSTER_CATALOG.get_rarity_upgrade_profile(monster_id)
+	var upgrade_configured := bool(upgrade_profile.get("configured", false))
+	var upgrade_button := Button.new()
+	upgrade_button.custom_minimum_size = Vector2(0.0, 44.0)
+	upgrade_button.add_theme_font_size_override("font_size", 18)
+	upgrade_button.text = "강화하기"
+	if not upgrade_configured:
+		upgrade_button.text = "강화 준비 중"
+	elif not available:
+		upgrade_button.text = "해금 필요"
+	elif shards < required:
+		upgrade_button.text = "조각 부족"
+	upgrade_button.disabled = (
+		not upgrade_configured
+		or not available
+		or shards < required
+	)
+	upgrade_button.add_theme_stylebox_override("normal", primary_button_style)
+	upgrade_button.add_theme_stylebox_override("hover", primary_button_style)
+	upgrade_button.add_theme_stylebox_override("pressed", primary_button_style)
+	upgrade_button.add_theme_stylebox_override("disabled", primary_button_disabled_style)
+	upgrade_button.add_theme_color_override("font_disabled_color", Color("9a8fa1"))
+	upgrade_button.pressed.connect(_upgrade_team_monster.bind(monster_id))
+	vbox.add_child(upgrade_button)
+
 	return card
+
+
+func _upgrade_team_monster(monster_id: String) -> void:
+	var result := MONSTER_COLLECTION_STORE.try_upgrade(monster_id)
+	var updated_state = result.get("state", {})
+	if typeof(updated_state) == TYPE_DICTIONARY:
+		monster_collection_state = updated_state
+	if bool(result.get("success", false)):
+		team_status_label.text = "%s 강화 완료 · Lv.%d" % [
+			_team_monster_name(monster_id),
+			int(result.get("level", 0)),
+		]
+	else:
+		var reason := String(result.get("reason", ""))
+		var reason_text := {
+			"locked": "먼저 몬스터를 해금해야 합니다.",
+			"not_configured": "이 등급의 강화 효과는 준비 중입니다.",
+			"not_enough_shards": "강화에 필요한 조각이 부족합니다.",
+			"save_failed": "강화 정보 저장에 실패했습니다.",
+		}.get(reason, "몬스터를 강화할 수 없습니다.")
+		team_status_label.text = String(reason_text)
+	_refresh_team_preview()
 
 func _refresh_team_slot(button: Button, slot_index: int) -> void:
 	if slot_index < team_selected_ids.size():

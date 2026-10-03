@@ -719,6 +719,48 @@ const RARITY_COMBAT_PROFILES := {
 	},
 }
 
+# Collection upgrades are intentionally separate from the base rarity combat
+# profiles above. Legendary/transcendent keep their data slots but remain
+# disabled until their bespoke rules are designed.
+const RARITY_UPGRADE_PROFILES := {
+	"common": {
+		"label": "일반",
+		"hp_per_level": 0.01,
+		"damage_per_level": 0.01,
+		"configured": true,
+	},
+	"advanced": {
+		"label": "고급",
+		"hp_per_level": 0.025,
+		"damage_per_level": 0.025,
+		"configured": true,
+	},
+	"uncommon": {
+		"label": "고급",
+		"hp_per_level": 0.025,
+		"damage_per_level": 0.025,
+		"configured": true,
+	},
+	"rare": {
+		"label": "희귀",
+		"hp_per_level": 0.05,
+		"damage_per_level": 0.05,
+		"configured": true,
+	},
+	"legendary": {
+		"label": "전설",
+		"hp_per_level": 0.0,
+		"damage_per_level": 0.0,
+		"configured": false,
+	},
+	"transcendent": {
+		"label": "초월",
+		"hp_per_level": 0.0,
+		"damage_per_level": 0.0,
+		"configured": false,
+	},
+}
+
 static func get_monster(monster_id: String) -> Dictionary:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
 	return data.duplicate(true)
@@ -830,6 +872,14 @@ static func get_rarity_combat_profile(monster_id: String) -> Dictionary:
 		rarity,
 		RARITY_COMBAT_PROFILES["common"]
 	)
+	return Dictionary(profile).duplicate(true)
+
+
+static func get_rarity_upgrade_profile(monster_id: String) -> Dictionary:
+	var rarity := get_rarity(monster_id)
+	var profile = RARITY_UPGRADE_PROFILES.get(rarity, {})
+	if typeof(profile) != TYPE_DICTIONARY:
+		return {}
 	return Dictionary(profile).duplicate(true)
 
 

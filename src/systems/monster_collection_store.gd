@@ -20,6 +20,7 @@ static func load_state() -> Dictionary:
 
 		var unlocked := bool(data.get("default_unlocked", false))
 		var shards := 0
+		var level := 0
 		var required := maxi(int(data.get("shards_required", 1)), 1)
 
 		if has_saved_data:
@@ -40,6 +41,16 @@ static func load_state() -> Dictionary:
 				),
 				0
 			)
+			level = maxi(
+				int(
+					config.get_value(
+						"monsters",
+						"%s_level" % monster_id,
+						0
+					)
+				),
+				0
+			)
 
 		if shards >= required:
 			unlocked = true
@@ -47,6 +58,7 @@ static func load_state() -> Dictionary:
 		result[monster_id] = {
 			"unlocked": unlocked,
 			"shards": shards,
+			"level": level,
 		}
 
 	return result
@@ -65,12 +77,14 @@ static func save_state(state: Dictionary) -> bool:
 
 		var unlocked := bool(data.get("default_unlocked", false))
 		var shards := 0
+		var level := 0
 		var required := maxi(int(data.get("shards_required", 1)), 1)
 		var entry = state.get(monster_id, {})
 
 		if typeof(entry) == TYPE_DICTIONARY:
 			unlocked = bool(entry.get("unlocked", unlocked))
 			shards = maxi(int(entry.get("shards", 0)), 0)
+			level = maxi(int(entry.get("level", 0)), 0)
 
 		if shards >= required:
 			unlocked = true
@@ -84,6 +98,11 @@ static func save_state(state: Dictionary) -> bool:
 			"monsters",
 			"%s_shards" % monster_id,
 			shards
+		)
+		config.set_value(
+			"monsters",
+			"%s_level" % monster_id,
+			level
 		)
 
 	return config.save(SAVE_PATH) == OK
@@ -124,6 +143,47 @@ static func get_shards(monster_id: String, state: Dictionary = {}) -> int:
 		return 0
 	return maxi(int(entry.get("shards", 0)), 0)
 
+
+static func get_upgrade_level(monster_id: String, state: Dictionary = {}) -> int:
+	var source := state
+	if source.is_empty():
+		source = load_state()
+
+	var entry = source.get(monster_id, {})
+	if typeof(entry) != TYPE_DICTIONARY:
+		return 0
+	return maxi(int(entry.get("level", 0)), 0)
+
+
+static func try_upgrade(monster_id: String) -> Dictionary:
+	var state := load_state()
+	var entry = state.get(monster_id, {})
+	if typeof(entry) != TYPE_DICTIONARY:
+		return {"success": false, "state": state, "reason": "unknown_monster"}
+	if not bool(entry.get("unlocked", false)):
+		return {"success": false, "state": state, "reason": "locked"}
+
+	var profile := MONSTER_CATALOG.get_rarity_upgrade_profile(monster_id)
+	if not bool(profile.get("configured", false)):
+		return {"success": false, "state": state, "reason": "not_configured"}
+
+	var required := MONSTER_CATALOG.get_shards_required(monster_id)
+	var shards := maxi(int(entry.get("shards", 0)), 0)
+	if shards < required:
+		return {"success": false, "state": state, "reason": "not_enough_shards"}
+
+	entry["shards"] = shards - required
+	entry["level"] = maxi(int(entry.get("level", 0)), 0) + 1
+	state[monster_id] = entry
+	if not save_state(state):
+		return {"success": false, "state": load_state(), "reason": "save_failed"}
+	return {
+		"success": true,
+		"state": state,
+		"level": int(entry["level"]),
+		"shards": int(entry["shards"]),
+	}
+
 static func add_shards(monster_id: String, amount: int) -> Dictionary:
 	var state := load_state()
 	if not state.has(monster_id):
@@ -138,6 +198,7 @@ static func add_shards(monster_id: String, amount: int) -> Dictionary:
 		entry = {
 			"unlocked": bool(data.get("default_unlocked", false)),
 			"shards": 0,
+			"level": 0,
 		}
 
 	var shards := maxi(

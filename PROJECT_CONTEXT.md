@@ -1,5 +1,14 @@
 # PROJECT_CONTEXT.md
 
+## Monster Collection Upgrades (2026-10-04)
+
+- Team-formation monster cards show the current shard balance as `[ n / required ]`.
+- The shard gauge is gray below the requirement and green when an upgrade is available.
+- Each upgrade consumes that monster's existing `shards_required` amount, persists an unlimited collection level, and applies additive HP/attack growth per level.
+- Common gains HP/attack +1% per level, Advanced +2.5%, Rare +5%.
+- Legendary and Transcendent profiles are reserved in data but remain disabled until their bespoke effects are specified.
+- Battle loads collection levels once at Run start and reuses the cache for detail calculations, spawning, and live augment recalculation; spawning never rereads the save file.
+
 > **새 개발 채팅/AI 세션은 이 파일을 가장 먼저 읽는다.**
 > 이 저장소의 프로젝트는 모바일 게임 **「용사, 또 너야? / Again, Hero?」** 이다.
 

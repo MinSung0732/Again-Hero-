@@ -36,6 +36,9 @@ const DEMON_SKILL_LOADOUT_STORE := preload(
 )
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
+const MONSTER_COLLECTION_STORE := preload(
+	"res://src/systems/monster_collection_store.gd"
+)
 const RUN_METRICS := preload("res://src/systems/run_metrics.gd")
 const STAGE_DIRECTOR := preload("res://src/systems/stage_director.gd")
 const MUTATION_DIRECTOR := preload("res://src/systems/mutation_director.gd")
@@ -201,6 +204,7 @@ var monster_augment_modifiers: Dictionary = {}
 
 var monster_summon_costs: Dictionary = {}
 var permanent_research_levels: Dictionary = {}
+var monster_collection_upgrade_levels: Dictionary = {}
 
 var allowed_monster_ids: Array = []
 var loadout_restriction_enabled: bool = false
@@ -756,6 +760,7 @@ func _start_battle() -> void:
 	monster_augment_modifiers.clear()
 	mutation_director.reset()
 	monster_summon_costs.clear()
+	_load_monster_collection_upgrades()
 
 	_apply_permanent_research()
 
@@ -1005,6 +1010,36 @@ func _apply_permanent_research() -> void:
 	demon_exp_gain_multiplier += 0.03 * experiment_points
 	demon_reroll_max += notebook_level
 	demon_rerolls_left = demon_reroll_max
+
+
+func _load_monster_collection_upgrades() -> void:
+	monster_collection_upgrade_levels.clear()
+	var collection_state := MONSTER_COLLECTION_STORE.load_state()
+	for raw_id in MONSTER_CATALOG.ORDER:
+		var monster_id := String(raw_id)
+		var level := MONSTER_COLLECTION_STORE.get_upgrade_level(
+			monster_id,
+			collection_state
+		)
+		if level > 0:
+			monster_collection_upgrade_levels[monster_id] = level
+
+
+func _get_monster_collection_upgrade_multiplier(
+	monster_id: String,
+	stat_key: String
+) -> float:
+	var level := maxi(
+		int(monster_collection_upgrade_levels.get(monster_id, 0)),
+		0
+	)
+	if level <= 0:
+		return 1.0
+	var profile := MONSTER_CATALOG.get_rarity_upgrade_profile(monster_id)
+	if not bool(profile.get("configured", false)):
+		return 1.0
+	var rate := maxf(float(profile.get(stat_key, 0.0)), 0.0)
+	return 1.0 + rate * float(level)
 
 func get_permanent_research_summary() -> String:
 	var active: PackedStringArray = []
@@ -1272,10 +1307,21 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 		float(rarity_combat.get("attack_cooldown_multiplier", 1.0)),
 		0.01
 	)
+	var collection_hp_multiplier := _get_monster_collection_upgrade_multiplier(
+		monster_id,
+		"hp_per_level"
+	)
+	var collection_damage_multiplier := _get_monster_collection_upgrade_multiplier(
+		monster_id,
+		"damage_per_level"
+	)
 
 	var detail := {
 		"monster_id": monster_id,
 		"name": MONSTER_CATALOG.get_monster_name(monster_id),
+		"collection_upgrade_level": int(
+			monster_collection_upgrade_levels.get(monster_id, 0)
+		),
 		"species": MONSTER_CATALOG.get_species(monster_id),
 		"species_label": MONSTER_CATALOG.get_species_label(
 			MONSTER_CATALOG.get_species(monster_id)
@@ -1300,6 +1346,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 		var hp_value := (
 			float(base_stats["max_hp"])
 			* rarity_hp_multiplier
+			* collection_hp_multiplier
 			* monster_hp_multiplier
 			* _get_monster_augment_multiplier(monster_id, "hp")
 		)
@@ -1319,6 +1366,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 			int(round(
 				float(base_stats["attack_damage"])
 				* rarity_damage_multiplier
+				* collection_damage_multiplier
 				* monster_damage_multiplier
 				* _get_monster_augment_multiplier(monster_id, "damage")
 				* _get_demon_level_monster_damage_multiplier()
@@ -1352,6 +1400,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 			int(round(
 				float(base_stats["explosion_damage"])
 				* rarity_damage_multiplier
+				* collection_damage_multiplier
 				* monster_damage_multiplier
 				* _get_monster_augment_multiplier(monster_id, "damage")
 				* _get_demon_level_monster_damage_multiplier()
@@ -1804,6 +1853,18 @@ func _spawn_monster(
 		float(rarity_combat.get("attack_cooldown_multiplier", 1.0)),
 		0.01
 	)
+	var collection_hp_multiplier := _get_monster_collection_upgrade_multiplier(
+		monster_type,
+		"hp_per_level"
+	)
+	var collection_damage_multiplier := _get_monster_collection_upgrade_multiplier(
+		monster_type,
+		"damage_per_level"
+	)
+	monster.set_meta(
+		"monster_collection_upgrade_level",
+		int(monster_collection_upgrade_levels.get(monster_type, 0))
+	)
 	var is_giant := bool(spawn_modifiers.get("giant_monster", false))
 	if is_giant and not split_child:
 		_apply_giant_monster_base_stats(monster, monster_type)
@@ -1888,6 +1949,7 @@ func _spawn_monster(
 				1.0,
 				float(damage_value)
 				* rarity_damage_multiplier
+				* collection_damage_multiplier
 				* monster_damage_multiplier
 				* _get_monster_augment_multiplier(monster_type, "damage")
 			)
@@ -1903,6 +1965,7 @@ func _spawn_monster(
 					int(round(
 						float(explosion_damage_value)
 						* rarity_damage_multiplier
+						* collection_damage_multiplier
 						* monster_damage_multiplier
 						* _get_monster_augment_multiplier(
 							monster_type,
@@ -1926,6 +1989,7 @@ func _spawn_monster(
 		var level_base_hp := (
 			float(max_hp_value)
 			* rarity_hp_multiplier
+			* collection_hp_multiplier
 			* monster_hp_multiplier
 			* _get_monster_augment_multiplier(monster_type, "hp")
 		)
@@ -4233,6 +4297,14 @@ func _apply_normal_augments_to_existing_monster(
 		float(rarity_combat.get("attack_cooldown_multiplier", 1.0)),
 		0.01
 	)
+	var collection_hp_multiplier := _get_monster_collection_upgrade_multiplier(
+		monster_id,
+		"hp_per_level"
+	)
+	var collection_damage_multiplier := _get_monster_collection_upgrade_multiplier(
+		monster_id,
+		"damage_per_level"
+	)
 
 	var raw_speed = monster.get_meta("augment_raw_move_speed", null)
 	if raw_speed != null:
@@ -4251,6 +4323,7 @@ func _apply_normal_augments_to_existing_monster(
 			maxf(
 				float(raw_damage)
 				* rarity_damage_multiplier
+				* collection_damage_multiplier
 				* monster_damage_multiplier
 				* _get_monster_augment_multiplier(monster_id, "damage"),
 				1.0
@@ -4262,6 +4335,7 @@ func _apply_normal_augments_to_existing_monster(
 		var base_hp := (
 			float(raw_hp)
 			* rarity_hp_multiplier
+			* collection_hp_multiplier
 			* monster_hp_multiplier
 			* _get_monster_augment_multiplier(monster_id, "hp")
 		)
@@ -4322,6 +4396,7 @@ func _apply_normal_augments_to_existing_monster(
 					int(round(
 						float(raw_explosion)
 						* rarity_damage_multiplier
+						* collection_damage_multiplier
 						* monster_damage_multiplier
 						* _get_monster_augment_multiplier(
 							monster_id,
