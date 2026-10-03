@@ -2000,6 +2000,15 @@ Build AI는 전체/주변 몬스터 수, 최근 공세, 역할 비율, 거리, �
 - 이 조정은 시각 크기만 바꾸며 충돌/피해/속도/사거리 수치는 변경하지 않는다.
 
 
+## Skeleton Display Name / Ground Shadow Rule (2026-10-03)
+
+- 사용자에게 보이는 이름은 `skeleton = 해골 전사`, `skeleton_archer = 해골 궁병`으로 통일한다. 내부 monster_id와 기존 에셋 폴더명 `skelleton*`은 호환성을 위해 변경하지 않는다.
+- 해골 계열 GroundShadow는 캐릭터 중심이 아니라 프레임 manifest의 발 앵커를 기준으로 배치한다.
+  - 해골 전사: `offset_y = 60`
+  - 해골 궁병: `offset_y = 44`
+- 그림자 위치 조정은 비주얼 전용이며 충돌 중심, 전투 스탯, 이동/공격 로직을 바꾸지 않는다.
+
+
 ## Kobolt Unlimited Range Falloff Rule (2026-10-03)
 
 - `kobolt_unlimited_range`는 공격 사거리 제한을 제거하지만 장거리 화력에는 거리 비례 피해 감쇠를 적용한다.

@@ -192,7 +192,7 @@ const MONSTERS := {
 	},
 	"skeleton": {
 		"id": "skeleton",
-		"name": "스켈레톤",
+		"name": "해골 전사",
 		"role": "tank",
 		"species": "undead",
 		"grade": "normal",
@@ -215,7 +215,7 @@ const MONSTERS := {
 		"card_icon_path": "res://assets/art/monsters/skelleton/frames/idle_01.png",
 		"ground_shadow": {
 			"size": Vector2(72.0, 23.0),
-			"offset_y": 34.0,
+			"offset_y": 60.0,
 			"opacity": 0.50,
 		},
 		"special_augment_ids": [
@@ -252,7 +252,7 @@ const MONSTERS := {
 	},
 	"skeleton_archer": {
 		"id": "skeleton_archer",
-		"name": "스켈레톤 궁병",
+		"name": "해골 궁병",
 		"role": "ranged",
 		"species": "undead",
 		"grade": "normal",
@@ -275,7 +275,7 @@ const MONSTERS := {
 		"card_icon_path": "res://assets/art/monsters/skelletonarcher/frames/idle_01.png",
 		"ground_shadow": {
 			"size": Vector2(64.0, 20.0),
-			"offset_y": 29.0,
+			"offset_y": 44.0,
 			"opacity": 0.48,
 		},
 		"special_augment_ids": [
