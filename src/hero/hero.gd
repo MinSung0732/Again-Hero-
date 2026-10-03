@@ -9834,15 +9834,12 @@ func _fire_sage_projectile(current_target: Node2D) -> void:
 	sage_attack_serial += 1
 	var third_interval := maxi(int(sage_config.get("third_attack_interval", 3)), 1)
 	var is_piercing := sage_attack_serial % third_interval == 0
-	var pool_key := "sage_piercing_projectile" if is_piercing else "sage_basic_projectile"
-	var projectile := _acquire_projectile(SAGE_PROJECTILE_SCENE, pool_key)
-	if projectile == null:
-		return
 	var shot_damage := attack_damage
 	var shot_speed := maxf(float(sage_config.get("basic_projectile_speed", 800.0)), 1.0)
 	var shot_range := maxf(float(sage_config.get("basic_range", 650.0)), 1.0)
-	var diameter := 26.4 # Stage 10 basic projectile hit size: 40% smaller than the previous 44px.
+	var diameter := 26.4
 	var projectile_mode := 0
+
 	if is_piercing:
 		projectile_mode = 1
 		var celestial_pierce_stacks := _get_sage_augment_stacks(
@@ -9853,24 +9850,61 @@ func _fire_sage_projectile(current_target: Node2D) -> void:
 			* maxf(float(sage_config.get("piercing_damage_ratio", 0.90)), 0.0)
 			* (1.0 + 0.08 * float(celestial_pierce_stacks))
 		)))
-		shot_speed = maxf(float(sage_config.get("piercing_projectile_speed", 800.0)), 1.0)
+		shot_speed = maxf(
+			float(sage_config.get("piercing_projectile_speed", 800.0)),
+			1.0
+		)
 		shot_range = maxf(
 			float(sage_config.get("piercing_range", 1200.0))
 			+ 80.0 * float(celestial_pierce_stacks),
 			1.0
 		)
-		diameter = maxf(float(sage_config.get("piercing_diameter", 220.0)), 2.0)
-	projectile.global_position = global_position + shot_direction * 54.0
-	projectile.call(
-		"setup",
-		shot_direction,
-		shot_damage,
-		shot_speed,
-		shot_range,
-		projectile_mode,
-		diameter,
-		self
+		diameter = maxf(
+			float(sage_config.get("piercing_diameter", 220.0)),
+			2.0
+		)
+
+	# 탄환 강화는 1·2번째 일반 평타에만 적용한다.
+	# 3번째 관통 평타는 천체관통 전용 단일탄을 유지한다.
+	var projectile_count := (
+		1
+		if is_piercing
+		else 1 + clampi(projectile_count_bonus, 0, 4)
 	)
+	var spread_step := deg_to_rad(12.0)
+	var center_index := float(projectile_count - 1) * 0.5
+	var pool_key := (
+		"sage_piercing_projectile"
+		if is_piercing
+		else "sage_basic_projectile"
+	)
+
+	for index in range(projectile_count):
+		var projectile_direction := shot_direction
+		if not is_piercing and projectile_count > 1:
+			var angle_offset := (float(index) - center_index) * spread_step
+			projectile_direction = shot_direction.rotated(angle_offset).normalized()
+
+		var projectile := _acquire_projectile(
+			SAGE_PROJECTILE_SCENE,
+			pool_key
+		)
+		if projectile == null:
+			continue
+		projectile.global_position = (
+			global_position + projectile_direction * 54.0
+		)
+		projectile.call(
+			"setup",
+			projectile_direction,
+			shot_damage,
+			shot_speed,
+			shot_range,
+			projectile_mode,
+			diameter,
+			self
+		)
+
 	if is_piercing:
 		_play_sage_audio(sage_third_audio)
 	else:
@@ -16371,6 +16405,30 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 
 		"advance_projectile_fan":
 			projectile_count_bonus = mini(projectile_count_bonus + 1, 4)
+
+		"grow_max_hp_ratio":
+			var growth_ratio := maxf(float(effect.get("value", 0.0)), 0.0)
+			if growth_ratio <= 0.0:
+				return
+			var previous_max_hp := maxi(max_hp, 1)
+			var hp_gain := maxi(
+				int(round(float(previous_max_hp) * growth_ratio)),
+				1
+			)
+			max_hp = previous_max_hp + hp_gain
+			current_hp = mini(current_hp + hp_gain, max_hp)
+
+		"heal_max_hp_ratio":
+			var heal_ratio := maxf(float(effect.get("value", 0.0)), 0.0)
+			if heal_ratio <= 0.0:
+				return
+			current_hp = mini(
+				current_hp + maxi(
+					int(round(float(max_hp) * heal_ratio)),
+					1
+				),
+				max_hp
+			)
 
 		"advance_common_attack_speed":
 			common_attack_speed_bonus = minf(

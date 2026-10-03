@@ -698,6 +698,27 @@ const GRADE_LABELS := {
 	"normal": "일반",
 }
 
+const RARITY_COMBAT_PROFILES := {
+	"common": {
+		"hp_multiplier": 1.00,
+		"damage_multiplier": 1.00,
+		"move_speed_multiplier": 1.00,
+		"attack_cooldown_multiplier": 1.00,
+	},
+	"rare": {
+		"hp_multiplier": 1.10,
+		"damage_multiplier": 1.12,
+		"move_speed_multiplier": 1.03,
+		"attack_cooldown_multiplier": 0.96,
+	},
+	"legendary": {
+		"hp_multiplier": 1.22,
+		"damage_multiplier": 1.25,
+		"move_speed_multiplier": 1.05,
+		"attack_cooldown_multiplier": 0.92,
+	},
+}
+
 static func get_monster(monster_id: String) -> Dictionary:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
 	return data.duplicate(true)
@@ -796,6 +817,21 @@ static func is_undead_node(target_node: Node) -> bool:
 static func get_grade(monster_id: String) -> String:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
 	return String(data.get("grade", "normal"))
+
+
+static func get_rarity(monster_id: String) -> String:
+	var data: Dictionary = MONSTERS.get(monster_id, {})
+	return String(data.get("rarity", "common"))
+
+
+static func get_rarity_combat_profile(monster_id: String) -> Dictionary:
+	var rarity := get_rarity(monster_id)
+	var profile = RARITY_COMBAT_PROFILES.get(
+		rarity,
+		RARITY_COMBAT_PROFILES["common"]
+	)
+	return Dictionary(profile).duplicate(true)
+
 
 static func get_attack_type(monster_id: String) -> String:
 	var data: Dictionary = MONSTERS.get(monster_id, {})

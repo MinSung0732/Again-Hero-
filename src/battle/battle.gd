@@ -59,8 +59,10 @@ const MANUAL_SPAWN_WARNING_DURATION := 0.70
 const DEMON_BASE_EXP_TO_NEXT := 15.0
 const DEMON_EXP_GROWTH_PER_LEVEL := 4.0
 const BASE_DEMON_REROLLS := 3
-const DEMON_LEVEL_MONSTER_HP_GROWTH := 1.05
-const DEMON_LEVEL_MONSTER_DAMAGE_GROWTH := 1.05
+const DEMON_LEVEL_MONSTER_HP_GROWTH := 1.03
+const DEMON_LEVEL_MONSTER_HP_MAX_MULTIPLIER := 2.50
+const DEMON_LEVEL_MONSTER_DAMAGE_GROWTH := 1.028
+const DEMON_LEVEL_MONSTER_DAMAGE_MAX_MULTIPLIER := 2.35
 const DEMON_LEVEL_MONSTER_EXP_GROWTH := 1.02
 const DEMON_LEVEL_MONSTER_EXP_MAX_MULTIPLIER := 2.0
 const DEMON_LEVEL_MONSTER_SPEED_GROWTH := 1.02
@@ -791,7 +793,10 @@ func _start_battle() -> void:
 	stage_director.reset(current_stage_data)
 
 	var hero_id: String = String(current_stage_data.get("hero_id", "ranged_rookie"))
-	current_hero_profile = HERO_PROFILES.get_profile(hero_id)
+	current_hero_profile = _apply_stage_hero_balance(
+		HERO_PROFILES.get_profile(hero_id),
+		current_stage_data
+	)
 
 	var hero_ai_profile_id := String(
 		current_stage_data.get("hero_ai_profile_id", "")
@@ -884,6 +889,56 @@ func _warm_monster_spawn_resources() -> void:
 
 	_monster_spawn_resources_warmed = true
 	_monster_spawn_warmup_running = false
+
+
+func _apply_stage_hero_balance(
+	profile: Dictionary,
+	stage_data: Dictionary
+) -> Dictionary:
+	if profile.is_empty():
+		return {}
+
+	var balanced := profile.duplicate(true)
+	var raw_balance = stage_data.get("hero_balance", {})
+	if typeof(raw_balance) != TYPE_DICTIONARY:
+		return balanced
+	var balance: Dictionary = raw_balance
+	if balance.is_empty():
+		return balanced
+
+	if balanced.has("max_hp"):
+		balanced["max_hp"] = maxi(
+			1,
+			int(round(
+				float(balanced["max_hp"])
+				* maxf(float(balance.get("hp_multiplier", 1.0)), 0.01)
+			))
+		)
+	if balanced.has("attack_damage"):
+		balanced["attack_damage"] = maxi(
+			1,
+			int(round(
+				float(balanced["attack_damage"])
+				* maxf(float(balance.get("damage_multiplier", 1.0)), 0.01)
+			))
+		)
+	if balanced.has("move_speed"):
+		balanced["move_speed"] = maxf(
+			float(balanced["move_speed"])
+			* maxf(float(balance.get("move_speed_multiplier", 1.0)), 0.01),
+			1.0
+		)
+	if balanced.has("attack_cooldown"):
+		balanced["attack_cooldown"] = maxf(
+			float(balanced["attack_cooldown"])
+			* maxf(
+				float(balance.get("attack_cooldown_multiplier", 1.0)),
+				0.01
+			),
+			0.10
+		)
+	balanced["stage_balance"] = balance.duplicate(true)
+	return balanced
 
 
 func _apply_permanent_research() -> void:
@@ -1197,6 +1252,26 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 	var base_stats := MONSTER_CATALOG.get_base_stats(monster_id)
 	if base_stats.is_empty():
 		return {}
+	var rarity := MONSTER_CATALOG.get_rarity(monster_id)
+	var rarity_combat := MONSTER_CATALOG.get_rarity_combat_profile(
+		monster_id
+	)
+	var rarity_hp_multiplier := maxf(
+		float(rarity_combat.get("hp_multiplier", 1.0)),
+		0.01
+	)
+	var rarity_damage_multiplier := maxf(
+		float(rarity_combat.get("damage_multiplier", 1.0)),
+		0.01
+	)
+	var rarity_speed_multiplier := maxf(
+		float(rarity_combat.get("move_speed_multiplier", 1.0)),
+		0.01
+	)
+	var rarity_attack_cooldown_multiplier := maxf(
+		float(rarity_combat.get("attack_cooldown_multiplier", 1.0)),
+		0.01
+	)
 
 	var detail := {
 		"monster_id": monster_id,
@@ -1209,6 +1284,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 		"grade_label": MONSTER_CATALOG.get_grade_label(
 			MONSTER_CATALOG.get_grade(monster_id)
 		),
+		"rarity": rarity,
 		"attack_type": MONSTER_CATALOG.get_attack_type(monster_id),
 		"attack_type_label": MONSTER_CATALOG.get_attack_type_label(
 			MONSTER_CATALOG.get_attack_type(monster_id)
@@ -1223,6 +1299,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 	if base_stats.has("max_hp"):
 		var hp_value := (
 			float(base_stats["max_hp"])
+			* rarity_hp_multiplier
 			* monster_hp_multiplier
 			* _get_monster_augment_multiplier(monster_id, "hp")
 		)
@@ -1241,6 +1318,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 			1,
 			int(round(
 				float(base_stats["attack_damage"])
+				* rarity_damage_multiplier
 				* monster_damage_multiplier
 				* _get_monster_augment_multiplier(monster_id, "damage")
 				* _get_demon_level_monster_damage_multiplier()
@@ -1250,6 +1328,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 	if base_stats.has("move_speed"):
 		detail["move_speed"] = (
 			float(base_stats["move_speed"])
+			* rarity_speed_multiplier
 			* monster_speed_multiplier
 			* _get_monster_augment_multiplier(monster_id, "speed")
 			* _get_demon_level_monster_speed_multiplier()
@@ -1259,6 +1338,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 		detail["attack_cooldown"] = maxf(
 			0.10,
 			float(base_stats["attack_cooldown"])
+			* rarity_attack_cooldown_multiplier
 			* monster_attack_speed_multiplier
 			* _get_monster_augment_multiplier(
 				monster_id,
@@ -1271,6 +1351,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 			1,
 			int(round(
 				float(base_stats["explosion_damage"])
+				* rarity_damage_multiplier
 				* monster_damage_multiplier
 				* _get_monster_augment_multiplier(monster_id, "damage")
 				* _get_demon_level_monster_damage_multiplier()
@@ -1284,6 +1365,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 		detail["self_destruct_fuse"] = maxf(
 			0.10,
 			float(base_stats["self_destruct_fuse"])
+			* rarity_attack_cooldown_multiplier
 			* monster_attack_speed_multiplier
 		)
 
@@ -1701,6 +1783,27 @@ func _spawn_monster(
 		"monster_grade",
 		MONSTER_CATALOG.get_grade(monster_type)
 	)
+	var monster_rarity := MONSTER_CATALOG.get_rarity(monster_type)
+	var rarity_combat := MONSTER_CATALOG.get_rarity_combat_profile(
+		monster_type
+	)
+	monster.set_meta("monster_rarity", monster_rarity)
+	var rarity_hp_multiplier := maxf(
+		float(rarity_combat.get("hp_multiplier", 1.0)),
+		0.01
+	)
+	var rarity_damage_multiplier := maxf(
+		float(rarity_combat.get("damage_multiplier", 1.0)),
+		0.01
+	)
+	var rarity_speed_multiplier := maxf(
+		float(rarity_combat.get("move_speed_multiplier", 1.0)),
+		0.01
+	)
+	var rarity_attack_cooldown_multiplier := maxf(
+		float(rarity_combat.get("attack_cooldown_multiplier", 1.0)),
+		0.01
+	)
 	var is_giant := bool(spawn_modifiers.get("giant_monster", false))
 	if is_giant and not split_child:
 		_apply_giant_monster_base_stats(monster, monster_type)
@@ -1739,6 +1842,7 @@ func _spawn_monster(
 		monster.set_meta(
 			"demon_level_base_move_speed",
 			float(speed_value)
+			* rarity_speed_multiplier
 			* monster_speed_multiplier
 			* _get_monster_augment_multiplier(monster_type, "speed")
 		)
@@ -1750,6 +1854,7 @@ func _spawn_monster(
 			maxf(
 				0.10,
 				float(attack_cooldown_value)
+				* rarity_attack_cooldown_multiplier
 				* monster_attack_speed_multiplier
 				* _get_monster_augment_multiplier(
 					monster_type,
@@ -1766,6 +1871,7 @@ func _spawn_monster(
 				maxf(
 					0.10,
 					float(fuse_value)
+					* rarity_attack_cooldown_multiplier
 					* monster_attack_speed_multiplier
 					* _get_monster_augment_multiplier(
 						monster_type,
@@ -1781,6 +1887,7 @@ func _spawn_monster(
 			maxf(
 				1.0,
 				float(damage_value)
+				* rarity_damage_multiplier
 				* monster_damage_multiplier
 				* _get_monster_augment_multiplier(monster_type, "damage")
 			)
@@ -1795,6 +1902,7 @@ func _spawn_monster(
 					1,
 					int(round(
 						float(explosion_damage_value)
+						* rarity_damage_multiplier
 						* monster_damage_multiplier
 						* _get_monster_augment_multiplier(
 							monster_type,
@@ -1817,6 +1925,7 @@ func _spawn_monster(
 	if max_hp_value != null:
 		var level_base_hp := (
 			float(max_hp_value)
+			* rarity_hp_multiplier
 			* monster_hp_multiplier
 			* _get_monster_augment_multiplier(monster_type, "hp")
 		)
@@ -2113,11 +2222,17 @@ func _ensure_monster_ground_shadow(
 
 func _get_demon_level_monster_hp_multiplier() -> float:
 	var growth_steps := maxi(demon_level - 1, 0)
-	return pow(DEMON_LEVEL_MONSTER_HP_GROWTH, float(growth_steps))
+	return minf(
+		pow(DEMON_LEVEL_MONSTER_HP_GROWTH, float(growth_steps)),
+		DEMON_LEVEL_MONSTER_HP_MAX_MULTIPLIER
+	)
 
 func _get_demon_level_monster_damage_multiplier() -> float:
 	var growth_steps := maxi(demon_level - 1, 0)
-	return pow(DEMON_LEVEL_MONSTER_DAMAGE_GROWTH, float(growth_steps))
+	return minf(
+		pow(DEMON_LEVEL_MONSTER_DAMAGE_GROWTH, float(growth_steps)),
+		DEMON_LEVEL_MONSTER_DAMAGE_MAX_MULTIPLIER
+	)
 
 func _get_demon_level_monster_exp_multiplier() -> float:
 	var growth_steps := maxi(demon_level - 1, 0)

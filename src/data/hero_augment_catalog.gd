@@ -101,13 +101,12 @@ const AUGMENTS = [
 	{
 		"id": "iron_body",
 		"name": "강인한 육체",
-		"description": "최대 HP +20, HP +20",
+		"description": "최대 HP +4% · 증가량만큼 HP 회복 (최대 10중첩)",
 		"base_score": 7.0,
 		"max_stack": 10,
 		"tags": ["durability", "survival"],
 		"effects": [
-			{"op": "add_stat", "target": "max_hp", "value": 20},
-			{"op": "heal", "value": 20},
+			{"op": "grow_max_hp_ratio", "value": 0.04},
 		],
 		"ai_rules": [
 			{"source": "hp_missing", "weight": 5.0},
@@ -144,12 +143,12 @@ const AUGMENTS = [
 	{
 		"id": "pursuit",
 		"name": "민첩한 발놀림",
-		"description": "이동속도 +8",
+		"description": "이동속도 +10",
 		"base_score": 6.0,
 		"max_stack": 10,
 		"tags": ["mobility", "kite"],
 		"effects": [
-			{"op": "add_stat", "target": "move_speed", "value": 8.0},
+			{"op": "add_stat", "target": "move_speed", "value": 10.0},
 		],
 		"ai_rules": [
 			{"source": "distance", "divisor": 220.0, "cap": 2.3},
@@ -167,12 +166,12 @@ const AUGMENTS = [
 	{
 		"id": "slow_resistance",
 		"name": "둔화 적응",
-		"description": "둔화 저항 +5%",
+		"description": "둔화 저항 +7% (최대 56%)",
 		"base_score": 4.8,
 		"max_stack": 10,
 		"tags": ["resistance", "mobility", "survival"],
 		"effects": [
-			{"op": "add_status_resistance", "status": "slow", "value": 0.05, "max": 0.50},
+			{"op": "add_status_resistance", "status": "slow", "value": 0.07, "max": 0.56},
 		],
 		"ai_rules": [
 			{"source": "recent_status_weight", "key": "slow", "weight": 1.10, "cap": 6.6},
@@ -235,12 +234,12 @@ const AUGMENTS = [
 	{
 		"id": "battle_recovery",
 		"name": "전투 회복",
-		"description": "즉시 HP 90 회복",
+		"description": "즉시 최대 HP의 8% 회복",
 		"base_score": 5.0,
 		"max_stack": 3,
 		"tags": ["recovery", "survival"],
 		"effects": [
-			{"op": "heal", "value": 90},
+			{"op": "heal_max_hp_ratio", "value": 0.08},
 		],
 		"ai_rules": [
 			{"source": "hp_missing", "weight": 8.0},
