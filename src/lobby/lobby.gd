@@ -71,13 +71,14 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var shop_result_panel: PanelContainer = $ShopResultOverlay/Panel
 @onready var shop_result_label: Label = $ShopResultOverlay/Panel/Margin/VBox/ResultScroll/Result
 @onready var shop_result_close_button: Button = $ShopResultOverlay/Panel/Margin/VBox/Header/CloseButton
-@onready var shop_banner_badge: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerTop/Badge
-@onready var shop_banner_dots: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerTop/Dots
-@onready var shop_banner_title: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerTitle
-@onready var shop_banner_description: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerDescription
-@onready var shop_banner_footer: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerFooter/FooterText
-@onready var shop_banner_prev_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerFooter/PrevButton
-@onready var shop_banner_next_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerFooter/NextButton
+@onready var shop_banner_slide: Control = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide
+@onready var shop_banner_badge: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerTop/Badge
+@onready var shop_banner_dots: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerTop/Dots
+@onready var shop_banner_title: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerTitle
+@onready var shop_banner_description: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerDescription
+@onready var shop_banner_footer: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerFooter/FooterText
+@onready var shop_banner_prev_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerFooter/PrevButton
+@onready var shop_banner_next_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerFooter/NextButton
 @onready var shop_package_grid: GridContainer = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin/VBox/PackageGrid
 
 @onready var team_tab: Control = $SafeArea/Layout/Content/TeamTab
@@ -160,10 +161,15 @@ var selected_stage_index: int = 0
 var current_tab: String = "main"
 
 const SHOP_BANNER_AUTO_SECONDS := 5.5
+const SHOP_BANNER_SLIDE_DISTANCE := 150.0
+const SHOP_BANNER_SLIDE_OUT_SECONDS := 0.18
+const SHOP_BANNER_SLIDE_IN_SECONDS := 0.24
 var shop_banner_index: int = 0
 var shop_banner_timer: float = SHOP_BANNER_AUTO_SECONDS
 var shop_last_result_text: String = ""
 var _shop_scroll_touch_index: int = -1
+var _shop_banner_transitioning := false
+var _shop_banner_tween: Tween
 
 const STAGE_SWIPE_THRESHOLD := 72.0
 const STAGE_SLIDE_DISTANCE := 118.0
@@ -2181,6 +2187,7 @@ func _switch_tab(tab_id: String) -> void:
 	current_tab = tab_id
 	if tab_id != "shop":
 		_shop_scroll_touch_index = -1
+		_reset_shop_banner_motion()
 		_close_shop_result_modal()
 
 	shop_tab.visible = tab_id == "shop"
@@ -2277,6 +2284,18 @@ func _refresh_nav_button(button: Button, selected: bool) -> void:
 
 
 func _apply_shop_storefront_skin() -> void:
+	var title_plate := $SafeArea/Layout/Content/ShopTab/TitlePlate as Panel
+	var title_plate_style := _make_style(
+		Color("171020"),
+		Color("c99136"),
+		3,
+		18
+	)
+	title_plate_style.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+	title_plate_style.shadow_size = 8
+	title_plate_style.shadow_offset = Vector2(0.0, 4.0)
+	title_plate.add_theme_stylebox_override("panel", title_plate_style)
+
 	var banner_style := _make_hud_panel_style(
 		Color("25122f"),
 		Color("d3a043"),
@@ -2399,6 +2418,8 @@ func _tick_shop_banner(delta: float) -> void:
 		current_tab != "shop"
 		or not is_instance_valid(shop_tab)
 		or not shop_tab.visible
+		or shop_result_overlay.visible
+		or _shop_banner_transitioning
 		or SHOP_CATALOG.get_banner_count() <= 1
 	):
 		return
@@ -2410,13 +2431,78 @@ func _tick_shop_banner(delta: float) -> void:
 
 func _change_shop_banner(direction: int) -> void:
 	var count := SHOP_CATALOG.get_banner_count()
-	if count <= 0:
+	if count <= 0 or _shop_banner_transitioning:
 		return
-	shop_banner_index = (
+	var next_index := (
 		((shop_banner_index + direction) % count) + count
 	) % count
 	shop_banner_timer = SHOP_BANNER_AUTO_SECONDS
+	if next_index == shop_banner_index:
+		return
+
+	_shop_banner_transitioning = true
+	var slide_direction := 1 if direction >= 0 else -1
+	_shop_banner_tween = create_tween()
+	_shop_banner_tween.set_trans(Tween.TRANS_QUAD)
+	_shop_banner_tween.set_ease(Tween.EASE_IN)
+	_shop_banner_tween.tween_property(
+		shop_banner_slide,
+		"position",
+		Vector2(-slide_direction * SHOP_BANNER_SLIDE_DISTANCE, 0.0),
+		SHOP_BANNER_SLIDE_OUT_SECONDS
+	)
+	_shop_banner_tween.parallel().tween_property(
+		shop_banner_slide,
+		"modulate:a",
+		0.0,
+		SHOP_BANNER_SLIDE_OUT_SECONDS
+	)
+	_shop_banner_tween.tween_callback(
+		Callable(self, "_prepare_shop_banner_slide_in").bind(
+			next_index,
+			slide_direction
+		)
+	)
+	_shop_banner_tween.set_ease(Tween.EASE_OUT)
+	_shop_banner_tween.tween_property(
+		shop_banner_slide,
+		"position",
+		Vector2.ZERO,
+		SHOP_BANNER_SLIDE_IN_SECONDS
+	)
+	_shop_banner_tween.parallel().tween_property(
+		shop_banner_slide,
+		"modulate:a",
+		1.0,
+		SHOP_BANNER_SLIDE_IN_SECONDS
+	)
+	_shop_banner_tween.finished.connect(_finish_shop_banner_slide)
+
+
+func _prepare_shop_banner_slide_in(
+	next_index: int,
+	direction: int
+) -> void:
+	shop_banner_index = next_index
 	_refresh_shop_banner()
+	shop_banner_slide.position = Vector2(
+		direction * SHOP_BANNER_SLIDE_DISTANCE,
+		0.0
+	)
+
+
+func _finish_shop_banner_slide() -> void:
+	shop_banner_slide.position = Vector2.ZERO
+	shop_banner_slide.modulate.a = 1.0
+	_shop_banner_transitioning = false
+
+
+func _reset_shop_banner_motion() -> void:
+	if _shop_banner_tween != null and _shop_banner_tween.is_valid():
+		_shop_banner_tween.kill()
+	_shop_banner_transitioning = false
+	shop_banner_slide.position = Vector2.ZERO
+	shop_banner_slide.modulate.a = 1.0
 
 
 func _refresh_shop_banner() -> void:
@@ -2561,6 +2647,7 @@ func _rebuild_shop_list() -> void:
 		if shop_history_button.disabled
 		else Control.MOUSE_FILTER_STOP
 	)
+	_reset_shop_banner_motion()
 	shop_banner_timer = SHOP_BANNER_AUTO_SECONDS
 	_refresh_shop_banner()
 	_rebuild_shop_packages()

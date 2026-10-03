@@ -112,6 +112,17 @@ grow_horizontal = 2
 grow_vertical = 2
 clip_contents = true
 
+[node name="TitlePlate" type="Panel" parent="SafeArea/Layout/Content/ShopTab"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -250.0
+offset_top = 10.0
+offset_right = 250.0
+offset_bottom = 82.0
+grow_horizontal = 2
+mouse_filter = 2
+
 [node name="ShopMargin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab"]
 layout_mode = 1
 anchors_preset = 15
@@ -199,22 +210,39 @@ custom_minimum_size = Vector2(0, 455)
 layout_mode = 2
 clip_contents = true
 
-[node name="BannerMargin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel"]
+[node name="BannerViewport" type="Control" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel"]
 layout_mode = 2
+clip_contents = true
+
+[node name="BannerSlide" type="Control" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BannerMargin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/margin_left = 30
 theme_override_constants/margin_top = 24
 theme_override_constants/margin_right = 30
 theme_override_constants/margin_bottom = 22
 
-[node name="BannerVBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin"]
+[node name="BannerVBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="BannerTop" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox"]
+[node name="BannerTop" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox"]
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 
-[node name="Badge" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerTop"]
+[node name="Badge" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerTop"]
 custom_minimum_size = Vector2(122, 34)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.9, 0.58, 1)
@@ -223,11 +251,11 @@ text = "EVENT"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Spacer" type="Control" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerTop"]
+[node name="Spacer" type="Control" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerTop"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Dots" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerTop"]
+[node name="Dots" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerTop"]
 custom_minimum_size = Vector2(160, 34)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.89, 0.72, 0.35, 1)
@@ -236,7 +264,7 @@ text = "◆  ◇  ◇"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="BannerTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox"]
+[node name="BannerTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox"]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.95, 0.83, 1)
@@ -244,7 +272,7 @@ theme_override_font_sizes/font_size = 31
 text = "신규 몬스터 전력 보급"
 vertical_alignment = 1
 
-[node name="BannerDescription" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox"]
+[node name="BannerDescription" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox"]
 custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_vertical = 3
@@ -254,19 +282,19 @@ text = "몬스터 소환에서 전력을 확충하고 새로운 편성을 준비
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="BannerFooter" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox"]
+[node name="BannerFooter" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox"]
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="PrevButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerFooter"]
+[node name="PrevButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerFooter"]
 custom_minimum_size = Vector2(76, 50)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 26
 text = "‹"
 
-[node name="FooterText" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerFooter"]
+[node name="FooterText" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerFooter"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.72, 0.64, 0.77, 1)
@@ -275,7 +303,7 @@ text = "마왕군 확장 이벤트"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="NextButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerMargin/BannerVBox/BannerFooter"]
+[node name="NextButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerFooter"]
 custom_minimum_size = Vector2(76, 50)
 layout_mode = 2
 focus_mode = 0
