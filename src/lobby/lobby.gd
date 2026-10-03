@@ -196,6 +196,7 @@ var selected_stage_index: int = 0
 var current_tab: String = "main"
 var research_view_mode: String = "research"
 var selected_research_id: String = ""
+var research_buttons_by_id: Dictionary = {}
 var selected_relic_id: String = ""
 var selected_relic_category: String = "all"
 var relic_progress_state: Dictionary = {}
@@ -4644,6 +4645,7 @@ func _rebuild_research_list() -> void:
 	for child in research_list.get_children():
 		research_list.remove_child(child)
 		child.free()
+	research_buttons_by_id.clear()
 
 	var research_points := STAGE_PROGRESS.get_research_points()
 	research_points_label.text = "보유 연구 포인트  %s" % _format_shop_number(
@@ -4687,6 +4689,7 @@ func _rebuild_research_list() -> void:
 		button.pressed.connect(_select_research.bind(research_id))
 
 		research_list.add_child(button)
+		research_buttons_by_id[research_id] = button
 
 	_refresh_research_detail()
 	_rebuild_relic_grid()
@@ -4723,7 +4726,21 @@ func _select_research(research_id: String) -> void:
 	if RESEARCH_CATALOG.get_research(research_id).is_empty():
 		return
 	selected_research_id = research_id
-	_rebuild_research_list()
+	_refresh_research_card_styles()
+	_refresh_research_detail()
+
+
+func _refresh_research_card_styles() -> void:
+	for raw_id in research_buttons_by_id:
+		var research_id := String(raw_id)
+		var button := research_buttons_by_id.get(research_id) as Button
+		if not is_instance_valid(button):
+			continue
+		_apply_lobby_button_skin(
+			button,
+			research_id == selected_research_id,
+			21
+		)
 
 
 func _refresh_research_detail() -> void:
