@@ -292,12 +292,16 @@ const SPECIAL_AUGMENTS := [
 		"id": "kobolt_unlimited_range",
 		"monster_id": "kobolt",
 		"name": "무제한 조준",
-		"description": "공격 사거리 제한 제거",
+		"description": "사거리 제한 제거 · 기본 사거리 밖 피해 거리 비례 감소(최대 -50%)",
 		"augment_type": TYPE_SPECIAL,
 		"max_stack": SPECIAL_MAX_LEVEL,
 		"icon": "",
 		"effect_type": "kobolt_unlimited_range",
-		"effect_values": {"unlimited_range": true},
+		"effect_values": {
+			"unlimited_range": true,
+			"damage_falloff_distance": 1050.0,
+			"min_damage_multiplier": 0.50,
+		},
 	},
 	{
 		"id": "kobolt_giant_fusion",

@@ -13,6 +13,9 @@ var speed: float = 385.0
 var max_range: float = 750.0
 var damage: int = 28
 var traveled_distance: float = 0.0
+var damage_falloff_start: float = -1.0
+var damage_falloff_distance: float = 0.0
+var min_damage_multiplier: float = 1.0
 var active: bool = false
 var elite_visual: bool = false
 
@@ -30,7 +33,10 @@ func setup(
 	new_speed: float,
 	new_max_range: float,
 	use_elite_visual: bool,
-	new_size_multiplier: float = 1.0
+	new_size_multiplier: float = 1.0,
+	new_damage_falloff_start: float = -1.0,
+	new_damage_falloff_distance: float = 0.0,
+	new_min_damage_multiplier: float = 1.0
 ) -> void:
 	direction = new_direction.normalized()
 	if direction == Vector2.ZERO:
@@ -40,6 +46,9 @@ func setup(
 	max_range = maxf(new_max_range, 1.0)
 	elite_visual = use_elite_visual
 	traveled_distance = 0.0
+	damage_falloff_start = new_damage_falloff_start
+	damage_falloff_distance = maxf(new_damage_falloff_distance, 0.0)
+	min_damage_multiplier = clampf(new_min_damage_multiplier, 0.0, 1.0)
 	active = true
 	rotation = direction.angle()
 	scale = Vector2.ONE * maxf(new_size_multiplier, 0.1)
@@ -67,8 +76,30 @@ func _on_body_entered(body: Node) -> void:
 	if not body.is_in_group("hero") and not body.is_in_group("hero_summons"):
 		return
 	if body.has_method("take_damage"):
-		body.call("take_damage", damage)
+		body.call("take_damage", _get_impact_damage())
 	_finish_projectile()
+
+
+func _get_impact_damage() -> int:
+	if (
+		damage_falloff_start < 0.0
+		or damage_falloff_distance <= 0.0
+		or traveled_distance <= damage_falloff_start
+	):
+		return damage
+
+	var falloff_ratio := clampf(
+		(traveled_distance - damage_falloff_start)
+		/ damage_falloff_distance,
+		0.0,
+		1.0
+	)
+	var damage_multiplier := lerpf(
+		1.0,
+		min_damage_multiplier,
+		falloff_ratio
+	)
+	return maxi(int(round(float(damage) * damage_multiplier)), 1)
 
 
 func _apply_visual() -> void:
@@ -139,6 +170,9 @@ func deactivate_for_pool() -> void:
 	speed = 385.0
 	max_range = 750.0
 	damage = 28
+	damage_falloff_start = -1.0
+	damage_falloff_distance = 0.0
+	min_damage_multiplier = 1.0
 	elite_visual = false
 	rotation = 0.0
 	scale = Vector2.ONE

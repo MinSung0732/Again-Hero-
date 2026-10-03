@@ -140,10 +140,11 @@ func _physics_process(delta: float) -> void:
 	if distance_sq > 0.001:
 		_set_facing_direction(offset_to_hero.x)
 
-	var unlimited_range: bool = not special_augment_configs.get(
+	var unlimited_range_config: Dictionary = special_augment_configs.get(
 		"kobolt_unlimited_range",
 		{}
-	).is_empty()
+	)
+	var unlimited_range := not unlimited_range_config.is_empty()
 	if not unlimited_range and distance_sq > attack_range * attack_range:
 		return
 	if attack_timer > 0.0:
@@ -151,7 +152,7 @@ func _physics_process(delta: float) -> void:
 
 	attack_timer = _get_effective_attack_cooldown()
 	_visual_call(&"play_attack")
-	_fire_projectile(offset_to_hero, unlimited_range)
+	_fire_projectile(offset_to_hero, unlimited_range_config)
 
 
 func _get_effective_attack_cooldown() -> float:
@@ -167,7 +168,10 @@ func _get_effective_attack_cooldown() -> float:
 	return maxf(attack_cooldown / attack_speed_multiplier, 0.10)
 
 
-func _fire_projectile(offset_to_hero: Vector2, unlimited_range: bool) -> void:
+func _fire_projectile(
+	offset_to_hero: Vector2,
+	unlimited_range_config: Dictionary
+) -> void:
 	if offset_to_hero.length_squared() <= 0.001:
 		return
 	var direction_to_hero := offset_to_hero.normalized()
@@ -184,9 +188,29 @@ func _fire_projectile(offset_to_hero: Vector2, unlimited_range: bool) -> void:
 		float(speed_config.get("speed_multiplier", 1.0)),
 		0.01
 	)
+	var unlimited_range := not unlimited_range_config.is_empty()
 	var max_travel_range := projectile_range
+	var falloff_start_range := -1.0
+	var falloff_distance := 0.0
+	var minimum_damage_multiplier := 1.0
 	if unlimited_range:
 		max_travel_range = maxf(offset_to_hero.length() + 96.0, projectile_range)
+		falloff_start_range = projectile_range
+		falloff_distance = maxf(
+			float(unlimited_range_config.get(
+				"damage_falloff_distance",
+				1050.0
+			)),
+			1.0
+		)
+		minimum_damage_multiplier = clampf(
+			float(unlimited_range_config.get(
+				"min_damage_multiplier",
+				0.50
+			)),
+			0.0,
+			1.0
+		)
 
 	if projectile.has_method("setup"):
 		projectile.call(
@@ -196,7 +220,10 @@ func _fire_projectile(offset_to_hero: Vector2, unlimited_range: bool) -> void:
 			projectile_speed * speed_multiplier,
 			max_travel_range,
 			String(get_meta("visual_variant", "")) == "elite",
-			projectile_size_multiplier
+			projectile_size_multiplier,
+			falloff_start_range,
+			falloff_distance,
+			minimum_damage_multiplier
 		)
 
 
