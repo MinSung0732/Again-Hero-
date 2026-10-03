@@ -3348,13 +3348,13 @@ func _upgrade_team_monster(monster_id: String) -> void:
 		]
 	else:
 		var reason := String(result.get("reason", ""))
-		var reason_text := {
+		var reason_text: String = String({
 			"locked": "먼저 몬스터를 해금해야 합니다.",
 			"not_configured": "이 등급의 강화 효과는 준비 중입니다.",
 			"not_enough_shards": "강화에 필요한 조각이 부족합니다.",
 			"save_failed": "강화 정보 저장에 실패했습니다.",
-		}.get(reason, "몬스터를 강화할 수 없습니다.")
-		team_status_label.text = String(reason_text)
+		}.get(reason, "몬스터를 강화할 수 없습니다."))
+		team_status_label.text = reason_text
 	_refresh_team_preview()
 
 func _refresh_team_slot(button: Button, slot_index: int) -> void:
