@@ -25,7 +25,7 @@ signal died
 @export var move_speed: float = 0.0
 @export var attack_damage: int = 28
 @export var attack_range: float = 750.0
-@export var attack_cooldown: float = 1.55
+@export var attack_cooldown: float = 1.80
 @export var projectile_speed: float = 385.0
 @export var projectile_range: float = 750.0
 @export var projectile_size_multiplier: float = 1.0
@@ -49,6 +49,7 @@ var special_augment_configs: Dictionary = {}
 func _ready() -> void:
 	add_to_group("monsters")
 	current_hp = max_hp
+	attack_timer = randf_range(0.15, 0.75)
 	if not is_instance_valid(hero):
 		hero = get_tree().get_first_node_in_group("hero") as Node2D
 	if not is_instance_valid(combat_authority):

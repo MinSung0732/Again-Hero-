@@ -233,6 +233,9 @@ const OBSTACLE_STUCK_TRIGGER_SECONDS := 0.30
 const OBSTACLE_ESCAPE_SECONDS := 0.65
 const OBSTACLE_MIN_INTENDED_SPEED := 36.0
 const OBSTACLE_STUCK_PROGRESS_RATIO := 0.26
+const RANGED_PRESSURE_RADIUS := 850.0
+const RANGED_PRESSURE_TRIGGER_COUNT := 4
+const RANGED_PRESSURE_REFRESH_SECONDS := 0.20
 
 static var _archmage_fx_frames_cache: Dictionary = {}
 static var _purifier_protection_frames_cache: SpriteFrames
@@ -790,6 +793,9 @@ var move_multiplier: float = 1.0
 var strafe_sign: float = 1.0
 var combat_strafe_burst_timer: float = 0.0
 var combat_strafe_cooldown_timer: float = 0.0
+var ranged_pressure_refresh_timer: float = 0.0
+var ranged_pressure_count: int = 0
+var ranged_pressure_center: Vector2 = Vector2.ZERO
 var wander_target: Vector2 = Vector2.ZERO
 var wander_timer: float = 0.0
 var obstacle_stuck_timer: float = 0.0
@@ -850,6 +856,9 @@ func configure_profile(profile: Dictionary) -> void:
 	set_meta("fear_active", false)
 	_movement_monster_scratch.clear()
 	_combat_monster_scratch.clear()
+	ranged_pressure_refresh_timer = 0.0
+	ranged_pressure_count = 0
+	ranged_pressure_center = Vector2.ZERO
 	ai_observed_context.clear()
 	ai_observed_context_time = 0.0
 
@@ -7771,6 +7780,7 @@ func _pick_new_wander_target() -> void:
 	wander_timer = randf_range(2.6, 5.0)
 
 func _update_combat_reposition(delta: float) -> void:
+	_update_ranged_pressure_cache(delta)
 	combat_strafe_burst_timer = maxf(
 		combat_strafe_burst_timer - delta,
 		0.0
@@ -7786,8 +7796,83 @@ func _update_combat_reposition(delta: float) -> void:
 	):
 		if randf() < 0.55:
 			strafe_sign *= -1.0
-		combat_strafe_burst_timer = randf_range(0.22, 0.38)
-		combat_strafe_cooldown_timer = randf_range(0.75, 1.30)
+		if _has_ranged_pressure():
+			combat_strafe_burst_timer = randf_range(0.55, 0.90)
+			combat_strafe_cooldown_timer = randf_range(0.16, 0.34)
+		else:
+			combat_strafe_burst_timer = randf_range(0.22, 0.38)
+			combat_strafe_cooldown_timer = randf_range(0.75, 1.30)
+
+
+func _update_ranged_pressure_cache(delta: float) -> void:
+	ranged_pressure_refresh_timer = maxf(
+		ranged_pressure_refresh_timer - delta,
+		0.0
+	)
+	if ranged_pressure_refresh_timer > 0.0:
+		return
+
+	ranged_pressure_refresh_timer = RANGED_PRESSURE_REFRESH_SECONDS
+	ranged_pressure_count = 0
+	ranged_pressure_center = Vector2.ZERO
+
+	if not _is_ranged_ai_archetype():
+		return
+
+	_fill_monster_nodes_near(
+		global_position,
+		RANGED_PRESSURE_RADIUS,
+		_combat_monster_scratch
+	)
+	for node in _combat_monster_scratch:
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var monster := node as Node2D
+		if monster == null:
+			continue
+		var current_hp_value = monster.get("current_hp")
+		if current_hp_value != null and int(current_hp_value) <= 0:
+			continue
+		if String(monster.get("monster_role")) != "ranged":
+			continue
+		ranged_pressure_count += 1
+		ranged_pressure_center += monster.global_position
+
+	if ranged_pressure_count > 0:
+		ranged_pressure_center /= float(ranged_pressure_count)
+	_combat_monster_scratch.clear()
+
+
+func _has_ranged_pressure() -> bool:
+	return (
+		_is_ranged_ai_archetype()
+		and ranged_pressure_count >= RANGED_PRESSURE_TRIGGER_COUNT
+	)
+
+
+func _get_ranged_pressure_strafe_direction() -> Vector2:
+	if not _has_ranged_pressure():
+		return Vector2.ZERO
+
+	var away := ranged_pressure_center.direction_to(global_position)
+	if away.length_squared() <= 0.001:
+		away = Vector2.RIGHT
+
+	var tangent := Vector2(-away.y, away.x) * strafe_sign
+	var overload := clampf(
+		float(ranged_pressure_count - RANGED_PRESSURE_TRIGGER_COUNT) / 6.0,
+		0.0,
+		1.0
+	)
+	var desired := (
+		tangent * lerpf(0.92, 1.05, overload)
+		+ away * lerpf(0.28, 0.44, overload)
+	)
+	return (
+		desired.normalized()
+		if desired.length_squared() > 0.001
+		else tangent.normalized()
+	)
 
 
 func _choose_melee_spacing_direction(
@@ -7856,6 +7941,10 @@ func _choose_move_direction(nearest_target: Node2D, nearest_distance: float) -> 
 	if avoidance.length_squared() > 0.01:
 		return avoidance.normalized()
 
+	var pressure_direction := _get_ranged_pressure_strafe_direction()
+	if pressure_direction.length_squared() > 0.01:
+		return pressure_direction
+
 	if not is_instance_valid(nearest_target):
 		return Vector2.ZERO
 
@@ -7904,7 +7993,7 @@ func _get_combat_strafe_scale(to_target: Vector2) -> float:
 
 func _is_ranged_ai_archetype() -> bool:
 	match hero_archetype:
-		"ranged_kiter", "pistol_gunner", "archmage_elementalist", "alchemist_chemical", "summoner_gatekeeper", "cleric_purifier":
+		"ranged_kiter", "pistol_gunner", "archmage_elementalist", "alchemist_chemical", "summoner_gatekeeper", "cleric_purifier", "grand_sage_astra":
 			return true
 		_:
 			return false

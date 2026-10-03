@@ -334,7 +334,7 @@ const MONSTERS := {
 			"attack_damage": 28,
 			"attack_range": 750.0,
 			"attack_range_diameter": 1500.0,
-			"attack_cooldown": 1.55,
+			"attack_cooldown": 1.80,
 			"projectile_speed": 385.0,
 			"projectile_range": 750.0,
 		},
