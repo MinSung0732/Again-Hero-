@@ -4216,11 +4216,30 @@ func _apply_normal_augments_to_existing_monster(
 	monster: Node,
 	monster_id: String
 ) -> void:
+	var rarity_combat := MONSTER_CATALOG.get_rarity_combat_profile(monster_id)
+	var rarity_hp_multiplier := maxf(
+		float(rarity_combat.get("hp_multiplier", 1.0)),
+		0.01
+	)
+	var rarity_damage_multiplier := maxf(
+		float(rarity_combat.get("damage_multiplier", 1.0)),
+		0.01
+	)
+	var rarity_speed_multiplier := maxf(
+		float(rarity_combat.get("move_speed_multiplier", 1.0)),
+		0.01
+	)
+	var rarity_attack_cooldown_multiplier := maxf(
+		float(rarity_combat.get("attack_cooldown_multiplier", 1.0)),
+		0.01
+	)
+
 	var raw_speed = monster.get_meta("augment_raw_move_speed", null)
 	if raw_speed != null:
 		monster.set_meta(
 			"demon_level_base_move_speed",
 			float(raw_speed)
+			* rarity_speed_multiplier
 			* monster_speed_multiplier
 			* _get_monster_augment_multiplier(monster_id, "speed")
 		)
@@ -4231,6 +4250,7 @@ func _apply_normal_augments_to_existing_monster(
 			"demon_level_base_attack_damage",
 			maxf(
 				float(raw_damage)
+				* rarity_damage_multiplier
 				* monster_damage_multiplier
 				* _get_monster_augment_multiplier(monster_id, "damage"),
 				1.0
@@ -4241,6 +4261,7 @@ func _apply_normal_augments_to_existing_monster(
 	if raw_hp != null:
 		var base_hp := (
 			float(raw_hp)
+			* rarity_hp_multiplier
 			* monster_hp_multiplier
 			* _get_monster_augment_multiplier(monster_id, "hp")
 		)
@@ -4261,6 +4282,7 @@ func _apply_normal_augments_to_existing_monster(
 			maxf(
 				0.10,
 				float(raw_cooldown)
+				* rarity_attack_cooldown_multiplier
 				* monster_attack_speed_multiplier
 				* _get_monster_augment_multiplier(
 					monster_id,
@@ -4280,6 +4302,7 @@ func _apply_normal_augments_to_existing_monster(
 				maxf(
 					0.10,
 					float(raw_fuse)
+					* rarity_attack_cooldown_multiplier
 					* monster_attack_speed_multiplier
 					* _get_monster_augment_multiplier(
 						monster_id,
@@ -4298,6 +4321,7 @@ func _apply_normal_augments_to_existing_monster(
 					1,
 					int(round(
 						float(raw_explosion)
+						* rarity_damage_multiplier
 						* monster_damage_multiplier
 						* _get_monster_augment_multiplier(
 							monster_id,
@@ -4308,6 +4332,7 @@ func _apply_normal_augments_to_existing_monster(
 			)
 
 	_apply_demon_level_scaling_to_monster(monster, true)
+
 
 func _spawn_extra_normal_summon_monsters(
 	monster_type: String,
