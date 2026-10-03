@@ -357,23 +357,25 @@ focus_mode = 0
 theme_override_font_sizes/font_size = 24
 text = "몬스터 소환 10+1회\n1,000 골드"
 
-[node name="Rates" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
+[node name="InfoRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.75, 0.69, 0.8, 1)
-theme_override_font_sizes/font_size = 18
-text = "일반 70% · 희귀 25% · 최고등급 5%"
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 2
+theme_override_constants/separation = 14
 
-[node name="HistoryButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
-custom_minimum_size = Vector2(0, 62)
+[node name="HistoryButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/InfoRow"]
 layout_mode = 2
+size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 20
 text = "소환 내역"
 disabled = true
+
+[node name="RatesButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/InfoRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 20
+text = "상품 확률"
 
 [node name="RelicSection" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent"]
 custom_minimum_size = Vector2(0, 300)
@@ -1226,7 +1228,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.9, 0.66, 1)
 theme_override_font_sizes/font_size = 38
-text = "소환 결과"
+text = "최근 소환 내역"
 vertical_alignment = 1
 
 [node name="CloseButton" type="Button" parent="ShopResultOverlay/Panel/Margin/VBox/Header"]
@@ -1240,7 +1242,7 @@ text = "닫기"
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.65, 0.75, 1)
 theme_override_font_sizes/font_size = 21
-text = "최근 몬스터 소환 결과입니다."
+text = "현재 계정의 최근 몬스터 소환 최대 100회를 표시합니다."
 horizontal_alignment = 1
 
 [node name="ResultScroll" type="ScrollContainer" parent="ShopResultOverlay/Panel/Margin/VBox"]
@@ -1263,7 +1265,108 @@ autowrap_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.55, 0.64, 1)
 theme_override_font_sizes/font_size = 18
-text = "획득한 조각과 해금 상태는 즉시 몬스터 컬렉션에 반영됩니다."
+text = "최신 순 · 최대 100회 저장 · 획득 조각은 즉시 컬렉션에 반영"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="ShopRatesOverlay" type="Control" parent="."]
+visible = false
+z_index = 106
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Dim" type="ColorRect" parent="ShopRatesOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.01, 0.008, 0.015, 0.88)
+mouse_filter = 0
+
+[node name="Panel" type="PanelContainer" parent="ShopRatesOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -410.0
+offset_top = -330.0
+offset_right = 410.0
+offset_bottom = 330.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="ShopRatesOverlay/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 44
+theme_override_constants/margin_top = 38
+theme_override_constants/margin_right = 44
+theme_override_constants/margin_bottom = 34
+
+[node name="VBox" type="VBoxContainer" parent="ShopRatesOverlay/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Header" type="HBoxContainer" parent="ShopRatesOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="ShopRatesOverlay/Panel/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.9, 0.66, 1)
+theme_override_font_sizes/font_size = 38
+text = "상품 확률"
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="ShopRatesOverlay/Panel/Margin/VBox/Header"]
+custom_minimum_size = Vector2(112, 66)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 26
+text = "닫기"
+
+[node name="Guide" type="Label" parent="ShopRatesOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.65, 0.75, 1)
+theme_override_font_sizes/font_size = 21
+text = "몬스터 소환 상품의 등급별 확률과 조각 수량입니다."
+horizontal_alignment = 1
+
+[node name="RatesPanel" type="PanelContainer" parent="ShopRatesOverlay/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 360)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Margin" type="MarginContainer" parent="ShopRatesOverlay/Panel/Margin/VBox/RatesPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 24
+
+[node name="Rates" type="Label" parent="ShopRatesOverlay/Panel/Margin/VBox/RatesPanel/Margin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.86, 0.93, 1)
+theme_override_font_sizes/font_size = 25
+text = "일반        70%        조각 10~30\n희귀        25%        조각 3~8\n최고등급     5%        조각 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Notice" type="Label" parent="ShopRatesOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.55, 0.64, 1)
+theme_override_font_sizes/font_size = 18
+text = "각 소환의 등급 추첨은 독립적으로 적용됩니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 

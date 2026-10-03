@@ -9,6 +9,9 @@ const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const MUTATION_CATALOG := preload("res://src/data/mutation_catalog.gd")
 const SHOP_CATALOG := preload("res://src/data/shop_catalog.gd")
 const MONSTER_COLLECTION_STORE := preload("res://src/systems/monster_collection_store.gd")
+const SHOP_SUMMON_HISTORY_STORE := preload(
+	"res://src/systems/shop_summon_history_store.gd"
+)
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 const FORMATION_DRAG_CARD := preload("res://src/ui/formation_drag_card.gd")
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
@@ -64,13 +67,17 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var shop_multi_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/BuyRow/MultiButton
 @onready var shop_relic_single_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox/BuyRow/SingleButton
 @onready var shop_relic_multi_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox/BuyRow/MultiButton
-@onready var shop_rates_label: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/Rates
-@onready var shop_history_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/HistoryButton
+@onready var shop_history_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/InfoRow/HistoryButton
+@onready var shop_rates_button: Button = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/InfoRow/RatesButton
 @onready var shop_status_label: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/Status
 @onready var shop_result_overlay: Control = $ShopResultOverlay
 @onready var shop_result_panel: PanelContainer = $ShopResultOverlay/Panel
 @onready var shop_result_label: Label = $ShopResultOverlay/Panel/Margin/VBox/ResultScroll/Result
 @onready var shop_result_close_button: Button = $ShopResultOverlay/Panel/Margin/VBox/Header/CloseButton
+@onready var shop_rates_overlay: Control = $ShopRatesOverlay
+@onready var shop_rates_panel: PanelContainer = $ShopRatesOverlay/Panel
+@onready var shop_rates_text: Label = $ShopRatesOverlay/Panel/Margin/VBox/RatesPanel/Margin/Rates
+@onready var shop_rates_close_button: Button = $ShopRatesOverlay/Panel/Margin/VBox/Header/CloseButton
 @onready var shop_banner_slide: Control = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide
 @onready var shop_banner_badge: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerTop/Badge
 @onready var shop_banner_dots: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerTop/Dots
@@ -167,6 +174,7 @@ const SHOP_BANNER_SLIDE_IN_SECONDS := 0.24
 var shop_banner_index: int = 0
 var shop_banner_timer: float = SHOP_BANNER_AUTO_SECONDS
 var shop_last_result_text: String = ""
+var shop_summon_history: Array = []
 var _shop_scroll_touch_index: int = -1
 var _shop_banner_transitioning := false
 var _shop_banner_tween: Tween
@@ -253,6 +261,8 @@ func _ready() -> void:
 	_apply_new_ui_assets()
 	_apply_lobby_visual_polish()
 	_connect_navigation()
+	shop_summon_history = SHOP_SUMMON_HISTORY_STORE.load_entries()
+	_refresh_shop_summon_history()
 
 	stage_ids = STAGE_CATALOG.get_ordered_stage_ids()
 	if stage_ids.is_empty():
@@ -560,6 +570,18 @@ func _apply_asset_frames() -> void:
 	)
 	_add_asset_frame(
 		shop_result_panel,
+		UI_FRAME_MEDIUM_DIR,
+		Vector2(62.0, 61.0),
+		Vector2(62.0, 61.0),
+		Vector2(62.0, 60.0),
+		Vector2(62.0, 60.0),
+		38.0,
+		37.0,
+		34.0,
+		34.0
+	)
+	_add_asset_frame(
+		shop_rates_panel,
 		UI_FRAME_MEDIUM_DIR,
 		Vector2(62.0, 61.0),
 		Vector2(62.0, 61.0),
@@ -2026,6 +2048,12 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 
 
 func _input(event: InputEvent) -> void:
+	if shop_rates_overlay.visible:
+		_shop_scroll_touch_index = -1
+		_stage_swipe_active = false
+		if event.is_action_pressed("ui_cancel"):
+			_close_shop_rates_modal()
+		return
 	if shop_result_overlay.visible:
 		_shop_scroll_touch_index = -1
 		_stage_swipe_active = false
@@ -2137,8 +2165,11 @@ func _connect_navigation() -> void:
 	shop_banner_prev_button.pressed.connect(_change_shop_banner.bind(-1))
 	shop_banner_next_button.pressed.connect(_change_shop_banner.bind(1))
 	shop_history_button.pressed.connect(_show_shop_result_modal)
+	shop_rates_button.pressed.connect(_show_shop_rates_modal)
 	shop_result_close_button.pressed.connect(_close_shop_result_modal)
 	$ShopResultOverlay/Dim.gui_input.connect(_on_shop_result_dim_input)
+	shop_rates_close_button.pressed.connect(_close_shop_rates_modal)
+	$ShopRatesOverlay/Dim.gui_input.connect(_on_shop_rates_dim_input)
 
 	team_slot_1_button.pressed.connect(_on_team_slot_pressed.bind(0))
 	team_slot_2_button.pressed.connect(_on_team_slot_pressed.bind(1))
@@ -2162,6 +2193,7 @@ func _on_team_tab_pressed() -> void:
 	formation_mode = "team"
 	_close_monster_detail()
 	_close_shop_result_modal()
+	_close_shop_rates_modal()
 
 	shop_tab.hide()
 	team_tab.show()
@@ -2189,6 +2221,7 @@ func _switch_tab(tab_id: String) -> void:
 		_shop_scroll_touch_index = -1
 		_reset_shop_banner_motion()
 		_close_shop_result_modal()
+		_close_shop_rates_modal()
 
 	shop_tab.visible = tab_id == "shop"
 	team_tab.visible = tab_id == "team"
@@ -2371,7 +2404,6 @@ func _apply_shop_storefront_skin() -> void:
 		"font_color",
 		Color("d5a9ef")
 	)
-	shop_rates_label.add_theme_color_override("font_color", Color("cfc3d5"))
 	shop_status_label.add_theme_color_override("font_color", Color("918799"))
 
 	var badge_style := _make_hud_panel_style(
@@ -2392,6 +2424,7 @@ func _apply_shop_storefront_skin() -> void:
 	_apply_lobby_button_skin(shop_single_button, false, 23)
 	_apply_lobby_button_skin(shop_multi_button, true, 23)
 	_apply_lobby_button_skin(shop_history_button, false, 21)
+	_apply_lobby_button_skin(shop_rates_button, false, 21)
 	_apply_lobby_button_skin(shop_relic_single_button, false, 23)
 	_apply_lobby_button_skin(shop_relic_multi_button, false, 23)
 	shop_relic_single_button.add_theme_stylebox_override(
@@ -2411,6 +2444,18 @@ func _apply_shop_storefront_skin() -> void:
 	)
 	shop_result_panel.add_theme_stylebox_override("panel", result_modal_style)
 	_apply_lobby_button_skin(shop_result_close_button, false, 22)
+	shop_rates_panel.add_theme_stylebox_override("panel", result_modal_style)
+	_apply_lobby_button_skin(shop_rates_close_button, false, 22)
+	var rates_content_style := _make_hud_panel_style(
+		Color(0.035, 0.027, 0.047, 0.96),
+		Color(0.45, 0.34, 0.52, 0.9),
+		2,
+		14
+	)
+	$ShopRatesOverlay/Panel/Margin/VBox/RatesPanel.add_theme_stylebox_override(
+		"panel",
+		rates_content_style
+	)
 
 
 func _tick_shop_banner(delta: float) -> void:
@@ -2419,6 +2464,7 @@ func _tick_shop_banner(delta: float) -> void:
 		or not is_instance_valid(shop_tab)
 		or not shop_tab.visible
 		or shop_result_overlay.visible
+		or shop_rates_overlay.visible
 		or _shop_banner_transitioning
 		or SHOP_CATALOG.get_banner_count() <= 1
 	):
@@ -2636,7 +2682,7 @@ func _rebuild_shop_list() -> void:
 			]
 		)
 
-	shop_rates_label.text = "  ·  ".join(rate_lines)
+	shop_rates_text.text = "\n\n".join(rate_lines)
 	shop_status_label.text = (
 		"몬스터 소환은 테스트 골드 %s를 표시하며 실제 골드는 차감하지 않습니다."
 		% _format_shop_number(SHOP_CATALOG.TEST_GOLD)
@@ -2656,6 +2702,7 @@ func _rebuild_shop_list() -> void:
 func _show_shop_result_modal() -> void:
 	if shop_last_result_text.is_empty():
 		return
+	_close_shop_rates_modal()
 	shop_result_label.text = shop_last_result_text
 	shop_result_overlay.show()
 
@@ -2665,6 +2712,16 @@ func _close_shop_result_modal() -> void:
 		shop_result_overlay.hide()
 
 
+func _show_shop_rates_modal() -> void:
+	_close_shop_result_modal()
+	shop_rates_overlay.show()
+
+
+func _close_shop_rates_modal() -> void:
+	if is_instance_valid(shop_rates_overlay):
+		shop_rates_overlay.hide()
+
+
 func _on_shop_result_dim_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
 		_close_shop_result_modal()
@@ -2672,13 +2729,53 @@ func _on_shop_result_dim_input(event: InputEvent) -> void:
 		_close_shop_result_modal()
 
 
+func _on_shop_rates_dim_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		_close_shop_rates_modal()
+	elif event is InputEventScreenTouch and event.pressed:
+		_close_shop_rates_modal()
+
+
+func _refresh_shop_summon_history() -> void:
+	var lines: PackedStringArray = []
+	var display_number := 1
+	for index in range(shop_summon_history.size() - 1, -1, -1):
+		var entry = shop_summon_history[index]
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var monster_id := String(entry.get("monster_id", ""))
+		var rarity_id := String(entry.get("rarity", ""))
+		var unlock_text := " · 신규 해금" if bool(entry.get("unlocked", false)) else ""
+		lines.append(
+			"%03d. %s [%s]  +%d 조각%s" % [
+				display_number,
+				_team_monster_name(monster_id),
+				SHOP_CATALOG.get_rarity_label(rarity_id),
+				maxi(int(entry.get("shards", 0)), 0),
+				unlock_text,
+			]
+		)
+		display_number += 1
+
+	shop_last_result_text = "\n".join(lines)
+	shop_result_label.text = (
+		shop_last_result_text
+		if not shop_last_result_text.is_empty()
+		else "아직 소환 내역이 없습니다."
+	)
+	shop_history_button.disabled = shop_last_result_text.is_empty()
+	shop_history_button.mouse_filter = (
+		Control.MOUSE_FILTER_IGNORE
+		if shop_history_button.disabled
+		else Control.MOUSE_FILTER_STOP
+	)
+
+
 func _open_monster_boxes(draw_count: int) -> void:
 	if draw_count <= 0:
 		return
 
-	var aggregated: Dictionary = {}
-	var rarity_counts: Dictionary = {}
-	var unlock_names: PackedStringArray = []
+	var new_history_entries: Array = []
 
 	for _draw_index in range(draw_count):
 		var roll := _roll_monster_shard()
@@ -2705,51 +2802,19 @@ func _open_monster_boxes(draw_count: int) -> void:
 			updated_state
 		)
 
-		aggregated[monster_id] = (
-			int(aggregated.get(monster_id, 0)) + shard_amount
-		)
-		rarity_counts[rarity_id] = (
-			int(rarity_counts.get(rarity_id, 0)) + 1
-		)
-
-		if not was_unlocked and is_unlocked:
-			unlock_names.append(_team_monster_name(monster_id))
+		new_history_entries.append({
+			"monster_id": monster_id,
+			"rarity": rarity_id,
+			"shards": shard_amount,
+			"unlocked": not was_unlocked and is_unlocked,
+		})
 
 		monster_collection_state = updated_state
 
-	var result_lines: PackedStringArray = []
-	result_lines.append(
-		"상자 %d회 결과" % draw_count
+	shop_summon_history = SHOP_SUMMON_HISTORY_STORE.append_entries(
+		new_history_entries
 	)
-
-	for raw_id in MONSTER_CATALOG.ORDER:
-		var monster_id := String(raw_id)
-		var total_shards := int(aggregated.get(monster_id, 0))
-		if total_shards <= 0:
-			continue
-
-		var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
-		var rarity_id := ""
-		if typeof(data) == TYPE_DICTIONARY:
-			rarity_id = String(data.get("rarity", ""))
-
-		result_lines.append(
-			"%s [%s]  +%d 조각" % [
-				_team_monster_name(monster_id),
-				SHOP_CATALOG.get_rarity_label(rarity_id),
-				total_shards,
-			]
-		)
-
-	if not unlock_names.is_empty():
-		result_lines.append(
-			"해금: %s" % " / ".join(unlock_names)
-		)
-
-	shop_last_result_text = "\n".join(result_lines)
-	shop_result_label.text = shop_last_result_text
-	shop_history_button.disabled = false
-	shop_history_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	_refresh_shop_summon_history()
 	shop_status_label.text = (
 		"골드 차감 없음 · 표시 골드 %s 유지"
 		% _format_shop_number(SHOP_CATALOG.TEST_GOLD)
