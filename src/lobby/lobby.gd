@@ -4181,6 +4181,8 @@ func _team_monster_cost(monster_id: String) -> float:
 	return float(data.get("base_cost", 0.0))
 
 func _refresh_header() -> void:
+	# The shop has its own full-width storefront; retain the shared frame elsewhere.
+	$SafeArea/Layout/Content/ContentFrame.visible = current_tab != "shop"
 	var state := STAGE_PROGRESS.load_state()
 	var highest := int(state.get("highest_unlocked_stage", 1))
 	var gold_text := _format_shop_number(SHOP_CATALOG.TEST_GOLD)
