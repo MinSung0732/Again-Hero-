@@ -50,6 +50,9 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_check(startup.phase == startup.Phase.TITLE, "Starts at title")
+	_check(startup.start_button.text == "터치하여 게임 시작", "Text-only start prompt")
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+		_check(startup.start_button.get_theme_stylebox(state) is StyleBoxEmpty, "Start prompt has no frame: " + state)
 	_check(not startup.login_screen.visible, "Login cannot bypass loading")
 	await _capture("startup-title")
 	# Any-screen mouse/touch release should start once, even repeated/emulated input.

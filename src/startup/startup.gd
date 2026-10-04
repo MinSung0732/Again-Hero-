@@ -47,7 +47,17 @@ func _build_title() -> void:
 	title_screen = Control.new()
 	VIEW.place(self, title_screen, Rect2(0, 0, 1, 1))
 	VIEW.texture(title_screen, load("res://assets/art/UI/startup/touch_start.png") as Texture2D, Rect2(0, 0, 1, 1), true)
-	start_button = _button(title_screen, "터치하여 계속 진행하기", Rect2(0.15, 0.80, 0.70, 0.07), Color(0.1, 0.045, 0.2, 0.88))
+	start_button = Button.new()
+	VIEW.place(title_screen, start_button, Rect2(0.15, 0.80, 0.70, 0.07))
+	start_button.text = "터치하여 게임 시작"
+	start_button.add_theme_font_size_override("font_size", 34)
+	start_button.add_theme_color_override("font_color", Color("fff4fc"))
+	start_button.add_theme_color_override("font_hover_color", Color("fff4fc"))
+	start_button.add_theme_color_override("font_pressed_color", Color("fff4fc"))
+	start_button.add_theme_color_override("font_outline_color", Color("241035"))
+	start_button.add_theme_constant_override("outline_size", 4)
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+		start_button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
 	start_button.name = "TouchStart"
 	start_button.pressed.connect(begin_startup)
 	VIEW.label(title_screen, "용사는 성장하고, 마왕은 학습한다.", 26, Rect2(0.12, 0.89, 0.76, 0.035), Color("dcc5ed"))
