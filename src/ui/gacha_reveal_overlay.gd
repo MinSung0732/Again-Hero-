@@ -297,9 +297,7 @@ func _create_result_card(entry: Dictionary) -> Control:
 	var rarity_color: Color = rarity_data.get("color", Color.WHITE)
 	var card := PanelContainer.new()
 	card.custom_minimum_size = Vector2(160.0, 246.0)
-	card.add_theme_stylebox_override("panel", _make_panel_style(
-		Color("171220"), rarity_color, 3, 18
-	))
+	card.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	_add_frame_texture(card, CARD_FRAME_PATH, rarity_color)
 
 	var margin := MarginContainer.new()
@@ -393,14 +391,32 @@ func _notification(what: int) -> void:
 
 
 func _apply_reveal_panel_color(color: Color) -> void:
-	_reveal_panel.add_theme_stylebox_override("panel", _make_panel_style(
-		Color("120d1b", 0.91), color, 0, 0
-	))
+	_reveal_badge.add_theme_color_override("font_color", color)
 
 
 func _add_frame_texture(target: Control, path: String, tint: Color = Color.WHITE) -> void:
 	if not ResourceLoader.exists(path):
 		return
+	# Keep the fill within the transparent frame's opening. Panel-wide fills
+	# otherwise cover the chamber outside the stepped corners and gold edges.
+	var decoration := Control.new()
+	decoration.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	decoration.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	target.add_child(decoration)
+	var fill := ColorRect.new()
+	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	fill.color = Color("120d1b", 0.94)
+	if path == PANEL_FRAME_PATH:
+		fill.anchor_left = 0.10
+		fill.anchor_right = 0.90
+		fill.anchor_top = 0.08
+		fill.anchor_bottom = 0.92
+	else:
+		fill.anchor_left = 0.04
+		fill.anchor_right = 0.96
+		fill.anchor_top = 0.04
+		fill.anchor_bottom = 0.96
+	decoration.add_child(fill)
 	var frame := TextureRect.new()
 	frame.texture = load(path) as Texture2D
 	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -408,9 +424,8 @@ func _add_frame_texture(target: Control, path: String, tint: Color = Color.WHITE
 	frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	frame.modulate = tint
-	frame.z_index = 1
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	target.add_child(frame)
+	decoration.add_child(frame)
 
 
 func _style_decorated_button(button: Button) -> void:
@@ -521,15 +536,16 @@ func _build_reveal_panel() -> void:
 	_reveal_panel.anchor_right = 0.90
 	_reveal_panel.anchor_bottom = 0.76
 	_reveal_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_reveal_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	_reveal_panel.z_index = 30
 	add_child(_reveal_panel)
 	_add_frame_texture(_reveal_panel, PANEL_FRAME_PATH)
 
 	var margin := MarginContainer.new()
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	margin.add_theme_constant_override("margin_left", 120)
+	margin.add_theme_constant_override("margin_left", 140)
 	margin.add_theme_constant_override("margin_top", 140)
-	margin.add_theme_constant_override("margin_right", 120)
+	margin.add_theme_constant_override("margin_right", 140)
 	margin.add_theme_constant_override("margin_bottom", 140)
 	_reveal_panel.add_child(margin)
 
@@ -584,17 +600,15 @@ func _build_result_panel() -> void:
 	_result_panel.anchor_top = 0.18
 	_result_panel.anchor_right = 0.95
 	_result_panel.anchor_bottom = 0.90
-	_result_panel.add_theme_stylebox_override(
-		"panel", _make_panel_style(Color("100c18", 0.94), Color("d7ad47"), 0, 0)
-	)
+	_result_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	_result_panel.z_index = 50
 	add_child(_result_panel)
 	_add_frame_texture(_result_panel, PANEL_FRAME_PATH)
 
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 120)
+	margin.add_theme_constant_override("margin_left", 140)
 	margin.add_theme_constant_override("margin_top", 140)
-	margin.add_theme_constant_override("margin_right", 120)
+	margin.add_theme_constant_override("margin_right", 140)
 	margin.add_theme_constant_override("margin_bottom", 140)
 	_result_panel.add_child(margin)
 
@@ -630,7 +644,8 @@ func _build_result_panel() -> void:
 	result_center.add_child(_result_grid)
 
 	_confirm_button = Button.new()
-	_confirm_button.custom_minimum_size = Vector2(0.0, 82.0)
+	_confirm_button.custom_minimum_size = Vector2(400.0, 82.0)
+	_confirm_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_confirm_button.text = "확인"
 	_confirm_button.add_theme_font_size_override("font_size", 30)
 	_confirm_button.add_theme_color_override("font_color", Color("fff1ba"))
