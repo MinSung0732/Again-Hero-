@@ -7,6 +7,10 @@ const SHOP := preload("res://src/data/shop_catalog.gd")
 const PROGRESS := preload("res://src/systems/stage_progress.gd")
 const HISTORY := preload("res://src/systems/shop_summon_history_store.gd")
 var failed := false
+var test_gold := 0
+
+func read_test_gold() -> int:
+	return test_gold
 
 func _initialize() -> void:
 	call_deferred("run")
@@ -98,6 +102,31 @@ func run() -> void:
 	overlay._results = [{"monster_id": "slime", "name": "슬라임", "rarity": "common", "shards": 1}, {"monster_id": "orc", "name": "오크", "rarity": "common", "shards": 2, "research_points": 2}]
 	overlay._show_final_results()
 	check(overlay._result_summary.text.contains("총 1조각") and overlay._result_summary.text.contains("연구 +2"), "mixed batch shows both reward types")
+	# Retry preserves the requested draw count, including mixed/fewer displayed results.
+	check(overlay._confirm_button.get_parent() == overlay._retry_button.get_parent(), "result actions share one row")
+	check(overlay._confirm_button.get_index() < overlay._retry_button.get_index(), "retry is right of confirm")
+	overlay.configure_retry(11, SHOP.MULTI_DRAW_COST, read_test_gold)
+	check(overlay._retry_button.disabled, "insufficient gold disables retry")
+	overlay._retry()
+	check(overlay._phase == "result" and HISTORY.load_entries().size() == 11, "disabled retry grants nothing")
+	test_gold = SHOP.MULTI_DRAW_COST
+	overlay._refresh_retry_button()
+	check(not overlay._retry_button.disabled, "exact cost enables retry")
+	test_gold -= 1
+	overlay._retry()
+	check(overlay._phase == "result" and overlay._retry_button.disabled, "click rechecks stale balance")
+	test_gold = SHOP.MULTI_DRAW_COST
+	overlay._retry()
+	check(overlay._phase == "door" and overlay._results.size() == 11 and HISTORY.load_entries().size() == 22, "retry starts full opening and same batch")
+	overlay._retry()
+	check(HISTORY.load_entries().size() == 22, "double retry blocked during animation")
+	overlay.skip_to_results()
+	overlay._confirm()
+	lobby._open_monster_boxes(1)
+	overlay.skip_to_results()
+	check(overlay._retry_draw_count == 1 and overlay._retry_cost == SHOP.SINGLE_DRAW_COST, "single retry configured")
+	overlay._retry()
+	check(overlay._phase == "door" and overlay._results.size() == 1 and HISTORY.load_entries().size() == 24, "single retry retains full animation")
 	lobby.queue_free()
 	await process_frame
 	# Never touch the player's guest cfg files: reuse this random fixture folder.

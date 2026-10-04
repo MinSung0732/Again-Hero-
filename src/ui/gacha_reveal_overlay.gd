@@ -2,6 +2,7 @@ extends Control
 class_name GachaRevealOverlay
 
 signal confirmed
+signal retry_requested(draw_count: int)
 
 const SHOP_CATALOG := preload("res://src/data/shop_catalog.gd")
 const REVEAL_AURA := preload("res://src/ui/gacha_reveal_aura.gd")
@@ -43,6 +44,10 @@ var _result_summary: Label
 var _result_panel: PanelContainer
 var _result_grid: GridContainer
 var _confirm_button: Button
+var _retry_button: Button
+var _retry_draw_count := 0
+var _retry_cost := 0
+var _gold_reader: Callable
 var _button_texture: Texture2D
 
 
@@ -56,6 +61,23 @@ func _ready() -> void:
 
 func is_presenting() -> bool:
 	return visible and _phase != "idle"
+
+
+func configure_retry(draw_count: int, cost: int, gold_reader: Callable) -> void:
+	_retry_draw_count = draw_count
+	_retry_cost = cost
+	_gold_reader = gold_reader
+	_refresh_retry_button()
+
+
+func _refresh_retry_button() -> void:
+	if not is_instance_valid(_retry_button):
+		return
+	var configured := _retry_draw_count > 0 and _retry_cost > 0 and _gold_reader.is_valid()
+	var affordable := configured and int(_gold_reader.call()) >= _retry_cost
+	_retry_button.disabled = not affordable
+	_retry_button.text = "다시 뽑기\n%d 골드" % _retry_cost
+	_retry_button.tooltip_text = "동일한 횟수로 다시 소환합니다." if affordable else "골드가 부족합니다."
 
 
 func present(results: Array) -> void:
@@ -290,6 +312,7 @@ func _show_final_results() -> void:
 	if total_points > 0:
 		_result_summary.text += " · 연구 +%d" % total_points
 	_rebuild_result_grid()
+	_refresh_retry_button()
 
 
 func _rebuild_result_grid() -> void:
@@ -358,6 +381,18 @@ func _create_result_card(entry: Dictionary) -> Control:
 		unlock_label.add_theme_color_override("font_color", Color("72e29a"))
 		vbox.add_child(unlock_label)
 	return card
+
+
+func _retry() -> void:
+	if _phase != "result":
+		return
+	# Recheck the balance at click time, not just when the result panel opens.
+	_refresh_retry_button()
+	if _retry_button.disabled:
+		return
+	var count := _retry_draw_count
+	_confirm()
+	retry_requested.emit(count)
 
 
 func _confirm() -> void:
@@ -466,7 +501,7 @@ func _style_decorated_button(button: Button) -> void:
 	if _button_texture == null:
 		_button_texture = load(BUTTON_FRAME_PATH) as Texture2D
 	button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	for state in ["normal", "hover", "pressed"]:
+	for state in ["normal", "hover", "pressed", "disabled"]:
 		var style := StyleBoxTexture.new()
 		style.texture = _button_texture
 		style.content_margin_left = 38.0
@@ -476,6 +511,8 @@ func _style_decorated_button(button: Button) -> void:
 		style.modulate_color = Color("cba1db") if state == "pressed" else Color.WHITE
 		if state == "hover":
 			style.modulate_color = Color(1.15, 1.10, 1.15)
+		if state == "disabled":
+			style.modulate_color = Color("65576e")
 		button.add_theme_stylebox_override(state, style)
 	button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 
@@ -708,8 +745,12 @@ func _build_result_panel() -> void:
 	_result_grid.add_theme_constant_override("v_separation", 12)
 	result_center.add_child(_result_grid)
 
+	var actions := HBoxContainer.new()
+	actions.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	actions.add_theme_constant_override("separation", 20)
+	vbox.add_child(actions)
 	_confirm_button = Button.new()
-	_confirm_button.custom_minimum_size = Vector2(400.0, 82.0)
+	_confirm_button.custom_minimum_size = Vector2(280.0, 96.0)
 	_confirm_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_confirm_button.text = "확인"
 	_confirm_button.add_theme_font_size_override("font_size", 30)
@@ -725,4 +766,13 @@ func _build_result_panel() -> void:
 	)
 	_confirm_button.pressed.connect(_confirm)
 	_style_decorated_button(_confirm_button)
-	vbox.add_child(_confirm_button)
+	actions.add_child(_confirm_button)
+	_retry_button = Button.new()
+	_retry_button.custom_minimum_size = Vector2(280.0, 96.0)
+	_retry_button.add_theme_font_size_override("font_size", 26)
+	_retry_button.add_theme_color_override("font_color", Color("fff1ba"))
+	_retry_button.add_theme_color_override("font_disabled_color", Color("a99cae"))
+	_retry_button.pressed.connect(_retry)
+	_style_decorated_button(_retry_button)
+	actions.add_child(_retry_button)
+	_refresh_retry_button()

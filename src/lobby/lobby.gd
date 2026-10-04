@@ -2357,6 +2357,7 @@ func _setup_gacha_reveal_overlay() -> void:
 	gacha_reveal_overlay = GACHA_REVEAL_OVERLAY.new()
 	gacha_reveal_overlay.name = "GachaRevealOverlay"
 	add_child(gacha_reveal_overlay)
+	gacha_reveal_overlay.retry_requested.connect(_open_monster_boxes)
 
 
 func _on_team_tab_pressed() -> void:
@@ -2955,8 +2956,19 @@ func _refresh_shop_summon_history() -> void:
 	)
 
 
+func _get_shop_gold() -> int:
+	# The current shop is intentionally test-only; replace this reader when gold is persisted.
+	return SHOP_CATALOG.TEST_GOLD
+
+
 func _open_monster_boxes(draw_count: int) -> void:
-	if draw_count <= 0:
+	if draw_count != 1 and draw_count != SHOP_CATALOG.MULTI_DRAW_COUNT:
+		return
+	if is_instance_valid(gacha_reveal_overlay) and gacha_reveal_overlay.is_presenting():
+		return
+	var cost: int = SHOP_CATALOG.SINGLE_DRAW_COST if draw_count == 1 else SHOP_CATALOG.MULTI_DRAW_COST
+	if _get_shop_gold() < cost:
+		shop_status_label.text = "골드가 부족합니다."
 		return
 
 	var new_history_entries: Array = []
@@ -3021,6 +3033,7 @@ func _open_monster_boxes(draw_count: int) -> void:
 	if not reveal_entries.is_empty() and is_instance_valid(gacha_reveal_overlay):
 		_close_shop_result_modal()
 		_close_shop_rates_modal()
+		gacha_reveal_overlay.configure_retry(draw_count, cost, _get_shop_gold)
 		gacha_reveal_overlay.present(reveal_entries)
 
 func _roll_monster_shard() -> Dictionary:
