@@ -242,8 +242,11 @@ func refresh_banner(data: Dictionary) -> void:
 
 func _product(button: Button, featured: bool) -> void:
 	button.custom_minimum_size.y = 570.0
-	# Keep the existing node/path as the passive card, not a purchase target.
-	button.disabled = true
+	# Keep the existing node/path as a passive visual card. Do not disable the
+	# parent BaseButton: a disabled ancestor can make child-button input brittle
+	# across desktop/mobile GUI routing. IGNORE is enough to make the card inert.
+	button.disabled = false
+	button.focus_mode = Control.FOCUS_NONE
 	button.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_frame(button, featured)
 	var art := _image(button, "res://assets/art/UI/shop/summon_gate.png")
@@ -276,6 +279,7 @@ func _product(button: Button, featured: bool) -> void:
 	cta.name = "SummonButton"
 	cta.text = "소환하기"
 	cta.mouse_filter = Control.MOUSE_FILTER_PASS
+	cta.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	cta.add_theme_font_size_override("font_size", 30)
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		var style := _plate_style()
