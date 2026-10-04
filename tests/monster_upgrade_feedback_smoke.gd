@@ -32,8 +32,11 @@ func run() -> void:
 	var effect: Node2D = lobby._team_upgrade_feedback
 	check(is_instance_valid(effect) and effect.visible and effect.level == 1, "success feedback")
 	check(effect.get_parent().formation_id == "slime", "on upgraded card")
+	check(is_instance_valid(effect._portrait) and is_instance_valid(effect._badge), "portrait and badge resolved")
+	check(effect._caption.modulate.a == 0.0 and effect._badge.modulate.a == 0.0, "gather reserves copy space")
 	await create_timer(0.15).timeout
 	check(effect.elapsed > 0.0, "animation advances")
+	check(effect._caption.modulate.a > 0.0 and effect._portrait.scale.x > 1.0, "copy and portrait share burst")
 	lobby._upgrade_team_monster("slime")
 	check(lobby._team_upgrade_feedback == effect and effect.elapsed == 0.0 and effect.level == 2, "rapid upgrade restarts same effect")
 	await process_frame
@@ -43,14 +46,26 @@ func run() -> void:
 	check(effect._caption.mouse_filter == Control.MOUSE_FILTER_IGNORE, "caption input transparent")
 	lobby._upgrade_team_monster("slime")
 	check(effect.visible and effect.level == 3, "third upgrade during effect")
+	var portrait: TextureRect = effect._portrait
+	var badge: Label = effect._badge
 	if "--capture" in OS.get_cmdline_user_args():
-		await create_timer(0.08).timeout
+		await create_timer(0.16).timeout
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("res://upgrade-feedback-preview.png")
 	await create_timer(0.75).timeout
 	check(not effect.visible and not effect.is_processing(), "expires without idle processing")
+	check(portrait.scale == Vector2.ONE and portrait.self_modulate == Color.WHITE, "portrait restored")
+	check(badge.modulate.a == 1.0, "badge restored without resizing")
 	lobby._upgrade_team_monster("slime")
 	check(not effect.visible and STORE.get_upgrade_level("slime") == 3, "failure never shows success")
+	# Presentation-only max-level fixture also checks cancellation restores the card.
+	effect.restart(30)
+	portrait = effect._portrait
+	badge = effect._badge
+	await process_frame
+	check(effect._caption.get_minimum_size().x <= badge.size.x, "max-level caption fits badge")
+	lobby._refresh_team_preview()
+	check(not effect.visible and portrait.scale == Vector2.ONE and badge.modulate.a == 1.0, "refresh cancels and restores")
 	lobby.free()
 	SCOPE.select_guest()
 	for file in DirAccess.get_files_at(folder):

@@ -3323,6 +3323,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	vbox.add_child(top_row)
 
 	var portrait := TextureRect.new()
+	portrait.name = "MonsterPortrait"
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	portrait.custom_minimum_size = Vector2(104.0, 116.0)
 	portrait.texture = _team_monster_card_icon(monster_id)
@@ -3485,6 +3486,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 		card_style.bg_color = Color("171020", 0.96)
 		card_style.set_corner_radius_all(14)
 	var badge := _team_formation_view.label(vbox, "최대강화" if maxed else ("강화 가능" if not upgrade_button.disabled else ("편성 중" if selected else "")), 19)
+	badge.name = "UpgradeBadge"
 	badge.custom_minimum_size.y = 26.0
 	badge.add_theme_color_override("font_color", Color("ffe09a"))
 	vbox.move_child(badge, 0)
