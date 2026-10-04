@@ -218,7 +218,8 @@ func _draw_floor() -> void:
 					),
 					FLOOR_DRAW_SIZE
 				),
-				false
+				false,
+				Color(0.65, 0.59, 0.77, 1.0)
 			)
 
 
@@ -707,6 +708,15 @@ func _draw() -> void:
 	)
 	_draw_floor()
 	_draw_royal_carpet()
+	# Faint inlaid seal remains in world space under every actor/projectile.
+	var seal_center := battlefield_size * 0.5
+	var seal_color := Color(0.53, 0.39, 0.69, 0.17)
+	draw_arc(seal_center, 280.0, 0.0, TAU, 64, seal_color, 4.0)
+	draw_arc(seal_center, 252.0, 0.0, TAU, 64, seal_color, 2.0)
+	for index in range(8):
+		var direction := Vector2.from_angle(index * TAU / 8.0)
+		draw_line(seal_center + direction * 220.0, seal_center + direction * 310.0, seal_color, 3.0)
+		draw_line(seal_center + direction * 190.0, seal_center + direction.rotated(TAU * 3.0 / 8.0) * 190.0, seal_color, 2.0)
 	draw_rect(
 		Rect2(Vector2.ZERO, battlefield_size),
 		Color(0.24, 0.17, 0.28, 0.86),

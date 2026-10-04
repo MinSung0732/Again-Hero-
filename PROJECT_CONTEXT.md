@@ -1,5 +1,12 @@
 # PROJECT_CONTEXT.md
 
+## Battle Castle Chrome (2026-10-05)
+
+- `castle_battle_chrome.gd` arranges the existing top HUD and icon bookmarks, drawing shipped castle stone/flag/pillar/brazier art once in a passive HUD shell. No input children, physics or per-frame processing. Character art and lower summon/ultimate behavior remain unchanged.
+- BattleViewportContainer starts at y=350 with 64px reserved side decoration bands and the existing bottom inset. Manual placement/camera coordinate conversion must always derive from its actual rect and SubViewport dimensions, never the old 1080-wide/270-top assumptions. Skill cutscene frame continues to follow its real rect.
+- Stage1Battlefield floor receives a cool purple tint and faint world-space inlay below actors. Existing stage destruction progression and collision geometry are preserved. Screen-border ornaments are UI framing, not physical map boundaries.
+- Actual OpenGL checks cover the first-stage presentation and manual summon screen-to-world position agreement; real Android aspect ratios/manual touch placement remain user/device QA.
+
 ## Battle Result Readability (2026-10-05)
 
 - Victory/defeat share the responsive ResultPanel and a full-HUD dimming/input backdrop. Localized title, outcome and granted research rewards remain outside the internal analysis scroll, with fixed next-stage and lobby/retry actions. Primary action is next stage when available, otherwise retry.

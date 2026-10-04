@@ -541,6 +541,7 @@ func _apply_battle_pixel_asset_frames() -> void:
 	PIXEL_PANEL_SKIN.apply_tree(stage_intro_cutscene)
 	PIXEL_PANEL_SKIN.apply_tree(hero_reveal_cutscene)
 	PIXEL_PANEL_SKIN.apply_tree(skill_unlock_cutscene)
+	preload("res://src/ui/castle_battle_chrome.gd").rebuild(self)
 
 
 func _replace_texture_frame(
