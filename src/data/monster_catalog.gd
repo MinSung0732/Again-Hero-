@@ -22,6 +22,7 @@ const MONSTERS := {
 		"role": "swarm",
 		"species": "liquid",
 		"grade": "normal",
+		"attack_type": "melee",
 		"base_cost": 3.0,
 		"summon_exp": 3.0,
 		"base_stats": {
@@ -80,6 +81,7 @@ const MONSTERS := {
 		"role": "controller",
 		"species": "beast",
 		"grade": "normal",
+		"attack_type": "ranged",
 		"base_cost": 7.0,
 		"summon_exp": 7.0,
 		"base_stats": {
@@ -139,6 +141,7 @@ const MONSTERS := {
 		"role": "tank",
 		"species": "beast",
 		"grade": "normal",
+		"attack_type": "melee",
 		"base_cost": 18.0,
 		"summon_exp": 18.0,
 		"base_stats": {
@@ -623,6 +626,7 @@ const MONSTERS := {
 		"role": "burst",
 		"species": "beast",
 		"grade": "normal",
+		"attack_type": "self_destruct",
 		"base_cost": 12.0,
 		"summon_exp": 12.0,
 		"base_stats": {
@@ -692,6 +696,7 @@ const SPECIES_LABELS := {
 const ATTACK_TYPE_LABELS := {
 	"melee": "근접",
 	"ranged": "원거리",
+	"self_destruct": "자폭",
 }
 
 const GRADE_LABELS := {
