@@ -1,0 +1,485 @@
+{
+  "cell_size": [
+    512,
+    512
+  ],
+  "sheet_size": [
+    3072,
+    2560
+  ],
+  "columns": 6,
+  "rows": 5,
+  "sheet": "monster_rare/monster_rare_sheet.png",
+  "frame_order": "row_major",
+  "frames": [
+    {
+      "file": "monster_rare/monster_rare_01.png",
+      "rect": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 0,
+      "door_free_edge_depth_px": -0.0,
+      "stage": "prepare",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_02.png",
+      "rect": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 0,
+      "door_free_edge_depth_px": -0.0,
+      "stage": "prepare",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_03.png",
+      "rect": [
+        1024,
+        0,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 0,
+      "door_free_edge_depth_px": -0.0,
+      "stage": "prepare",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_04.png",
+      "rect": [
+        1536,
+        0,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 0,
+      "door_free_edge_depth_px": -0.0,
+      "stage": "prepare",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_05.png",
+      "rect": [
+        2048,
+        0,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 0,
+      "door_free_edge_depth_px": -0.0,
+      "stage": "prepare",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_06.png",
+      "rect": [
+        2560,
+        0,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 0,
+      "door_free_edge_depth_px": -0.0,
+      "stage": "prepare",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_07.png",
+      "rect": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 0,
+      "door_free_edge_depth_px": -0.0,
+      "stage": "prepare",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_08.png",
+      "rect": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 0.698,
+      "door_free_edge_depth_px": -0.853,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_09.png",
+      "rect": [
+        1024,
+        512,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 2.679,
+      "door_free_edge_depth_px": -3.271,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_10.png",
+      "rect": [
+        1536,
+        512,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 5.77,
+      "door_free_edge_depth_px": -7.038,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_11.png",
+      "rect": [
+        2048,
+        512,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 9.803,
+      "door_free_edge_depth_px": -11.918,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_12.png",
+      "rect": [
+        2560,
+        512,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 14.604,
+      "door_free_edge_depth_px": -17.65,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_13.png",
+      "rect": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 20.004,
+      "door_free_edge_depth_px": -23.946,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_14.png",
+      "rect": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 25.831,
+      "door_free_edge_depth_px": -30.501,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_15.png",
+      "rect": [
+        1024,
+        1024,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 31.915,
+      "door_free_edge_depth_px": -37.007,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_16.png",
+      "rect": [
+        1536,
+        1024,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 38.085,
+      "door_free_edge_depth_px": -43.178,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_17.png",
+      "rect": [
+        2048,
+        1024,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 44.169,
+      "door_free_edge_depth_px": -48.774,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_18.png",
+      "rect": [
+        2560,
+        1024,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 49.996,
+      "door_free_edge_depth_px": -53.62,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_19.png",
+      "rect": [
+        0,
+        1536,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 55.396,
+      "door_free_edge_depth_px": -57.617,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_20.png",
+      "rect": [
+        512,
+        1536,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 60.197,
+      "door_free_edge_depth_px": -60.742,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_21.png",
+      "rect": [
+        1024,
+        1536,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 64.23,
+      "door_free_edge_depth_px": -63.038,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_22.png",
+      "rect": [
+        1536,
+        1536,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 67.321,
+      "door_free_edge_depth_px": -64.588,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_23.png",
+      "rect": [
+        2048,
+        1536,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 69.302,
+      "door_free_edge_depth_px": -65.482,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_24.png",
+      "rect": [
+        2560,
+        1536,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 70,
+      "door_free_edge_depth_px": -65.778,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_25.png",
+      "rect": [
+        0,
+        2048,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 70,
+      "door_free_edge_depth_px": -65.778,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_26.png",
+      "rect": [
+        512,
+        2048,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 70,
+      "door_free_edge_depth_px": -65.778,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_27.png",
+      "rect": [
+        1024,
+        2048,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 70,
+      "door_free_edge_depth_px": -65.778,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_28.png",
+      "rect": [
+        1536,
+        2048,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": false,
+      "door_angle_deg": 70,
+      "door_free_edge_depth_px": -65.778,
+      "stage": "opening",
+      "fixed_structure_occlusion_by_doors_allowed": true
+    },
+    {
+      "file": "monster_rare/monster_rare_29.png",
+      "rect": [
+        2048,
+        2048,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": true,
+      "stage": "transition_flash"
+    },
+    {
+      "file": "monster_rare/monster_rare_30.png",
+      "rect": [
+        2560,
+        2048,
+        512,
+        512
+      ],
+      "duration_ms": 100,
+      "fill_viewport": true,
+      "stage": "transition_flash"
+    }
+  ],
+  "anchor": [
+    264,
+    386
+  ],
+  "hinges": {
+    "left_x": 194,
+    "right_x": 336
+  },
+  "duration_ms": 3000,
+  "loop": false,
+  "result_transition_ms": 3000,
+  "result_transition_event": "animation_finished",
+  "gif_size": [
+    540,
+    960
+  ],
+  "gif_scale": 2,
+  "gif_loop_preview_only": true,
+  "dynamic_layers": [
+    "left_door",
+    "right_door",
+    "door_side",
+    "light_source_texture",
+    "fog_source_texture"
+  ]
+}

@@ -1,0 +1,487 @@
+{
+  "cell_size": [
+    512,
+    512
+  ],
+  "sheet_size": [
+    2560,
+    2560
+  ],
+  "columns": 5,
+  "rows": 5,
+  "sheet": "relic_box/relic_box_sheet.png",
+  "frame_order": "row_major",
+  "frames": [
+    {
+      "file": "relic_box/relic_box_01.png",
+      "rect": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "shake",
+      "lid_angle_deg": 0,
+      "whole_object_translation": [
+        0,
+        0
+      ],
+      "body_fixed": false
+    },
+    {
+      "file": "relic_box/relic_box_02.png",
+      "rect": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "shake",
+      "lid_angle_deg": 0,
+      "whole_object_translation": [
+        1,
+        0
+      ],
+      "body_fixed": false
+    },
+    {
+      "file": "relic_box/relic_box_03.png",
+      "rect": [
+        1024,
+        0,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "shake",
+      "lid_angle_deg": 0,
+      "whole_object_translation": [
+        -1,
+        0
+      ],
+      "body_fixed": false
+    },
+    {
+      "file": "relic_box/relic_box_04.png",
+      "rect": [
+        1536,
+        0,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "shake",
+      "lid_angle_deg": 0,
+      "whole_object_translation": [
+        1,
+        0
+      ],
+      "body_fixed": false
+    },
+    {
+      "file": "relic_box/relic_box_05.png",
+      "rect": [
+        2048,
+        0,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "shake",
+      "lid_angle_deg": 0,
+      "whole_object_translation": [
+        -1,
+        0
+      ],
+      "body_fixed": false
+    },
+    {
+      "file": "relic_box/relic_box_06.png",
+      "rect": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "shake",
+      "lid_angle_deg": 0,
+      "whole_object_translation": [
+        2,
+        0
+      ],
+      "body_fixed": false
+    },
+    {
+      "file": "relic_box/relic_box_07.png",
+      "rect": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "shake",
+      "lid_angle_deg": 0,
+      "whole_object_translation": [
+        -2,
+        0
+      ],
+      "body_fixed": false
+    },
+    {
+      "file": "relic_box/relic_box_08.png",
+      "rect": [
+        1024,
+        512,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "shake",
+      "lid_angle_deg": 0,
+      "whole_object_translation": [
+        3,
+        0
+      ],
+      "body_fixed": false
+    },
+    {
+      "file": "relic_box/relic_box_09.png",
+      "rect": [
+        1536,
+        512,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "shake",
+      "lid_angle_deg": 0,
+      "whole_object_translation": [
+        -3,
+        0
+      ],
+      "body_fixed": false
+    },
+    {
+      "file": "relic_box/relic_box_10.png",
+      "rect": [
+        2048,
+        512,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "shake",
+      "lid_angle_deg": 0,
+      "whole_object_translation": [
+        2,
+        0
+      ],
+      "body_fixed": false
+    },
+    {
+      "file": "relic_box/relic_box_11.png",
+      "rect": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "shake",
+      "lid_angle_deg": 0,
+      "whole_object_translation": [
+        -2,
+        0
+      ],
+      "body_fixed": false
+    },
+    {
+      "file": "relic_box/relic_box_12.png",
+      "rect": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "shake",
+      "lid_angle_deg": 0,
+      "whole_object_translation": [
+        0,
+        0
+      ],
+      "body_fixed": false
+    },
+    {
+      "file": "relic_box/relic_box_13.png",
+      "rect": [
+        1024,
+        1024,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "settle",
+      "lid_angle_deg": 0,
+      "whole_object_translation": [
+        0,
+        0
+      ],
+      "body_fixed": true
+    },
+    {
+      "file": "relic_box/relic_box_14.png",
+      "rect": [
+        1536,
+        1024,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "opening",
+      "lid_angle_deg": 0.0,
+      "whole_object_translation": [
+        0,
+        0
+      ],
+      "body_fixed": true
+    },
+    {
+      "file": "relic_box/relic_box_15.png",
+      "rect": [
+        2048,
+        1024,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "opening",
+      "lid_angle_deg": 3.223,
+      "whole_object_translation": [
+        0,
+        0
+      ],
+      "body_fixed": true
+    },
+    {
+      "file": "relic_box/relic_box_16.png",
+      "rect": [
+        0,
+        1536,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "opening",
+      "lid_angle_deg": 11.719,
+      "whole_object_translation": [
+        0,
+        0
+      ],
+      "body_fixed": true
+    },
+    {
+      "file": "relic_box/relic_box_17.png",
+      "rect": [
+        512,
+        1536,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "opening",
+      "lid_angle_deg": 23.73,
+      "whole_object_translation": [
+        0,
+        0
+      ],
+      "body_fixed": true
+    },
+    {
+      "file": "relic_box/relic_box_18.png",
+      "rect": [
+        1024,
+        1536,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "opening",
+      "lid_angle_deg": 37.5,
+      "whole_object_translation": [
+        0,
+        0
+      ],
+      "body_fixed": true
+    },
+    {
+      "file": "relic_box/relic_box_19.png",
+      "rect": [
+        1536,
+        1536,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "opening",
+      "lid_angle_deg": 51.27,
+      "whole_object_translation": [
+        0,
+        0
+      ],
+      "body_fixed": true
+    },
+    {
+      "file": "relic_box/relic_box_20.png",
+      "rect": [
+        2048,
+        1536,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "opening",
+      "lid_angle_deg": 63.281,
+      "whole_object_translation": [
+        0,
+        0
+      ],
+      "body_fixed": true
+    },
+    {
+      "file": "relic_box/relic_box_21.png",
+      "rect": [
+        0,
+        2048,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "opening",
+      "lid_angle_deg": 71.777,
+      "whole_object_translation": [
+        0,
+        0
+      ],
+      "body_fixed": true
+    },
+    {
+      "file": "relic_box/relic_box_22.png",
+      "rect": [
+        512,
+        2048,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "opening",
+      "lid_angle_deg": 75,
+      "whole_object_translation": [
+        0,
+        0
+      ],
+      "body_fixed": true
+    },
+    {
+      "file": "relic_box/relic_box_23.png",
+      "rect": [
+        1024,
+        2048,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": false,
+      "stage": "opening",
+      "lid_angle_deg": 75,
+      "whole_object_translation": [
+        0,
+        0
+      ],
+      "body_fixed": true
+    },
+    {
+      "file": "relic_box/relic_box_24.png",
+      "rect": [
+        1536,
+        2048,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": true,
+      "stage": "transition_flash"
+    },
+    {
+      "file": "relic_box/relic_box_25.png",
+      "rect": [
+        2048,
+        2048,
+        512,
+        512
+      ],
+      "duration_ms": 80,
+      "fill_viewport": true,
+      "stage": "transition_flash"
+    }
+  ],
+  "anchor": [
+    259,
+    369
+  ],
+  "hinges": {
+    "rear_line": [
+      [
+        187,
+        251
+      ],
+      [
+        331,
+        251
+      ]
+    ]
+  },
+  "duration_ms": 2000,
+  "loop": false,
+  "result_transition_ms": 2000,
+  "result_transition_event": "animation_finished",
+  "gif_size": [
+    540,
+    960
+  ],
+  "gif_scale": 2,
+  "gif_loop_preview_only": true,
+  "dynamic_layers": [
+    "lid_exterior",
+    "lid_inside",
+    "lid_rim",
+    "opening_emission",
+    "light_rays"
+  ]
+}

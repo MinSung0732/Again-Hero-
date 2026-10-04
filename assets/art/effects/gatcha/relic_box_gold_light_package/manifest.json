@@ -1,0 +1,581 @@
+{
+  "chest_camera": {
+    "focal_length_px": 400.0,
+    "pitch_deg": 11.536959032815489,
+    "rear_hinge_y": 250.51172395152514,
+    "physical_depth_px": 100.0,
+    "exterior_face_never_flips": true
+  },
+  "draw_order_chest": [
+    "chest_cavity",
+    "opening_emission",
+    "lid_inside",
+    "lid_rim",
+    "lid_exterior",
+    "light_rays",
+    "chest_body"
+  ],
+  "format_version": 9,
+  "cell_size": [
+    512,
+    512
+  ],
+  "filter": "nearest",
+  "alpha_values": [
+    0,
+    255
+  ],
+  "source_scale": 1,
+  "construction": "single_reference_parts_with_pinhole_outward_projection",
+  "animations": {
+    "relic_box": {
+      "cell_size": [
+        512,
+        512
+      ],
+      "sheet_size": [
+        2560,
+        2560
+      ],
+      "columns": 5,
+      "rows": 5,
+      "sheet": "relic_box/relic_box_sheet.png",
+      "frame_order": "row_major",
+      "frames": [
+        {
+          "file": "relic_box/relic_box_01.png",
+          "rect": [
+            0,
+            0,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "shake",
+          "lid_angle_deg": 0,
+          "whole_object_translation": [
+            0,
+            0
+          ],
+          "body_fixed": false
+        },
+        {
+          "file": "relic_box/relic_box_02.png",
+          "rect": [
+            512,
+            0,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "shake",
+          "lid_angle_deg": 0,
+          "whole_object_translation": [
+            1,
+            0
+          ],
+          "body_fixed": false
+        },
+        {
+          "file": "relic_box/relic_box_03.png",
+          "rect": [
+            1024,
+            0,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "shake",
+          "lid_angle_deg": 0,
+          "whole_object_translation": [
+            -1,
+            0
+          ],
+          "body_fixed": false
+        },
+        {
+          "file": "relic_box/relic_box_04.png",
+          "rect": [
+            1536,
+            0,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "shake",
+          "lid_angle_deg": 0,
+          "whole_object_translation": [
+            1,
+            0
+          ],
+          "body_fixed": false
+        },
+        {
+          "file": "relic_box/relic_box_05.png",
+          "rect": [
+            2048,
+            0,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "shake",
+          "lid_angle_deg": 0,
+          "whole_object_translation": [
+            -1,
+            0
+          ],
+          "body_fixed": false
+        },
+        {
+          "file": "relic_box/relic_box_06.png",
+          "rect": [
+            0,
+            512,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "shake",
+          "lid_angle_deg": 0,
+          "whole_object_translation": [
+            2,
+            0
+          ],
+          "body_fixed": false
+        },
+        {
+          "file": "relic_box/relic_box_07.png",
+          "rect": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "shake",
+          "lid_angle_deg": 0,
+          "whole_object_translation": [
+            -2,
+            0
+          ],
+          "body_fixed": false
+        },
+        {
+          "file": "relic_box/relic_box_08.png",
+          "rect": [
+            1024,
+            512,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "shake",
+          "lid_angle_deg": 0,
+          "whole_object_translation": [
+            3,
+            0
+          ],
+          "body_fixed": false
+        },
+        {
+          "file": "relic_box/relic_box_09.png",
+          "rect": [
+            1536,
+            512,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "shake",
+          "lid_angle_deg": 0,
+          "whole_object_translation": [
+            -3,
+            0
+          ],
+          "body_fixed": false
+        },
+        {
+          "file": "relic_box/relic_box_10.png",
+          "rect": [
+            2048,
+            512,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "shake",
+          "lid_angle_deg": 0,
+          "whole_object_translation": [
+            2,
+            0
+          ],
+          "body_fixed": false
+        },
+        {
+          "file": "relic_box/relic_box_11.png",
+          "rect": [
+            0,
+            1024,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "shake",
+          "lid_angle_deg": 0,
+          "whole_object_translation": [
+            -2,
+            0
+          ],
+          "body_fixed": false
+        },
+        {
+          "file": "relic_box/relic_box_12.png",
+          "rect": [
+            512,
+            1024,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "shake",
+          "lid_angle_deg": 0,
+          "whole_object_translation": [
+            0,
+            0
+          ],
+          "body_fixed": false
+        },
+        {
+          "file": "relic_box/relic_box_13.png",
+          "rect": [
+            1024,
+            1024,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "settle",
+          "lid_angle_deg": 0,
+          "whole_object_translation": [
+            0,
+            0
+          ],
+          "body_fixed": true
+        },
+        {
+          "file": "relic_box/relic_box_14.png",
+          "rect": [
+            1536,
+            1024,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "opening",
+          "lid_angle_deg": 0.0,
+          "whole_object_translation": [
+            0,
+            0
+          ],
+          "body_fixed": true
+        },
+        {
+          "file": "relic_box/relic_box_15.png",
+          "rect": [
+            2048,
+            1024,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "opening",
+          "lid_angle_deg": 3.223,
+          "whole_object_translation": [
+            0,
+            0
+          ],
+          "body_fixed": true
+        },
+        {
+          "file": "relic_box/relic_box_16.png",
+          "rect": [
+            0,
+            1536,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "opening",
+          "lid_angle_deg": 11.719,
+          "whole_object_translation": [
+            0,
+            0
+          ],
+          "body_fixed": true
+        },
+        {
+          "file": "relic_box/relic_box_17.png",
+          "rect": [
+            512,
+            1536,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "opening",
+          "lid_angle_deg": 23.73,
+          "whole_object_translation": [
+            0,
+            0
+          ],
+          "body_fixed": true
+        },
+        {
+          "file": "relic_box/relic_box_18.png",
+          "rect": [
+            1024,
+            1536,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "opening",
+          "lid_angle_deg": 37.5,
+          "whole_object_translation": [
+            0,
+            0
+          ],
+          "body_fixed": true
+        },
+        {
+          "file": "relic_box/relic_box_19.png",
+          "rect": [
+            1536,
+            1536,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "opening",
+          "lid_angle_deg": 51.27,
+          "whole_object_translation": [
+            0,
+            0
+          ],
+          "body_fixed": true
+        },
+        {
+          "file": "relic_box/relic_box_20.png",
+          "rect": [
+            2048,
+            1536,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "opening",
+          "lid_angle_deg": 63.281,
+          "whole_object_translation": [
+            0,
+            0
+          ],
+          "body_fixed": true
+        },
+        {
+          "file": "relic_box/relic_box_21.png",
+          "rect": [
+            0,
+            2048,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "opening",
+          "lid_angle_deg": 71.777,
+          "whole_object_translation": [
+            0,
+            0
+          ],
+          "body_fixed": true
+        },
+        {
+          "file": "relic_box/relic_box_22.png",
+          "rect": [
+            512,
+            2048,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "opening",
+          "lid_angle_deg": 75,
+          "whole_object_translation": [
+            0,
+            0
+          ],
+          "body_fixed": true
+        },
+        {
+          "file": "relic_box/relic_box_23.png",
+          "rect": [
+            1024,
+            2048,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": false,
+          "stage": "opening",
+          "lid_angle_deg": 75,
+          "whole_object_translation": [
+            0,
+            0
+          ],
+          "body_fixed": true
+        },
+        {
+          "file": "relic_box/relic_box_24.png",
+          "rect": [
+            1536,
+            2048,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": true,
+          "stage": "transition_flash"
+        },
+        {
+          "file": "relic_box/relic_box_25.png",
+          "rect": [
+            2048,
+            2048,
+            512,
+            512
+          ],
+          "duration_ms": 80,
+          "fill_viewport": true,
+          "stage": "transition_flash"
+        }
+      ],
+      "anchor": [
+        259,
+        369
+      ],
+      "hinges": {
+        "rear_line": [
+          [
+            187,
+            251
+          ],
+          [
+            331,
+            251
+          ]
+        ]
+      },
+      "duration_ms": 2000,
+      "loop": false,
+      "result_transition_ms": 2000,
+      "result_transition_event": "animation_finished",
+      "gif_size": [
+        540,
+        960
+      ],
+      "gif_scale": 2,
+      "gif_loop_preview_only": true,
+      "dynamic_layers": [
+        "lid_exterior",
+        "lid_inside",
+        "lid_rim",
+        "opening_emission",
+        "light_rays"
+      ]
+    }
+  },
+  "new_content": [
+    "5-pixel door side face; door sides use original dark wood/iron palette.",
+    "Chest lid reconstructed as separate original exterior and inner surfaces around one fixed rear hinge; no texture flip.",
+    "Chest underside wood inset reconstructed from source wood, with a thin wooden bevel; original underside is not available as a separate painted view.",
+    "Gold opening rim sampled from actual cavity silhouette, plus opaque RGB reflection on original wood; flame core remains original texture.",
+    "Chest gold surface glow and pixel particles newly drawn with opaque pixel palette; original wood grain stays visible."
+  ],
+  "restored_effects": "Original source light texture; near-black alpha gaps inside the emission core repaired with nearest valid source pixels.",
+  "door_camera": {
+    "focal_length_px": 220,
+    "projection_center": [
+      264,
+      292
+    ],
+    "closed_plane_z": 0,
+    "opening_direction": "toward_camera_negative_z",
+    "door_thickness_px": 5
+  },
+  "result_ui_included": false,
+  "draw_order_gate": [
+    "fog_source_texture",
+    "light_source_texture",
+    "gate_static",
+    "door_side",
+    "left_door",
+    "right_door"
+  ],
+  "limitations": [
+    "Some exterior fog was masked to avoid carrying source stonework into the effect layer.",
+    "Door inner surfaces reuse the original front texture and simplified side faces rather than a fully modeled 3D back."
+  ],
+  "validation": {
+    "gate_static_layer_sha256": "2c0e62f1455bcf1570ed0d10d9d48ccb85df36bde809c23b2370f85cebf70335",
+    "fixed_layer_reused_without_redraw": true,
+    "chest_body_exact_during_opening": true,
+    "alpha_binary": true,
+    "no_sprite_clipping_at_cell_edges": true,
+    "sheet_matches_frames": true,
+    "accepted_door_geometry_unchanged": true,
+    "no_black_gaps_in_emission_core": true,
+    "chest_lid_exterior_never_flips": true,
+    "gate_arch_emission_coverage": true,
+    "effect_black_pixel_threshold_max_rgb": 45,
+    "gate_effect_opaque_pixels_below_threshold": 0,
+    "visible_opening_dark_pixels_below_threshold": 0,
+    "chest_emission_matches_cavity_mask": true,
+    "all_resource_pngs_decoded": true,
+    "door_resources_byte_identical_to_approved": true
+  },
+  "interior_revision": {
+    "gate": "Source glow texture mirrored with nearest integer sampling to fill the complete arch interior, behind unchanged doors and architecture.",
+    "chest": "Underside wood surface reconstructed from original central wood grain, removing rectangular hatched inset frame and inward duplicate exterior metal straps. Exterior rim and body unchanged."
+  },
+  "effect_fit_revision": {
+    "gate": "Obsolete shadow plate transparent; emission strictly clipped to arch silhouette; zero opaque black pixels in effect layers.",
+    "chest": "Old frame-shaped glow removed. Opening emission uses actual cavity mask; original flame core isolated into an independent plume. Separate lid wood reflection."
+  },
+  "final_cleanup": {
+    "gate": "Only contaminated right-side architecture remnants and bottom horizontal source line replaced using adjacent clean source light pixels; every other effect pixel preserved.",
+    "chest": "Original bright flame colors reused inside a branched pixel-flame silhouette with fully opaque support; no dark holes; opening rim unchanged."
+  },
+  "gold_light_revision": "Flame texture replaced by gold RGB illumination on the existing wood surface and tiny light particles; no opaque beam blocks. Gate animations and chest rig unchanged."
+}
