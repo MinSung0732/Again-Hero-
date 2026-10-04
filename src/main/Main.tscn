@@ -2427,6 +2427,26 @@ text = "전투 종료"
 horizontal_alignment = 1
 autowrap_mode = 2
 
+[node name="BattleFrame" type="CheckBox" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Gameplay"]
+theme_override_icons/unchecked_disabled = ExtResource("29_settings_check_off")
+theme_override_icons/checked_disabled = ExtResource("28_settings_check_on")
+theme_override_icons/unchecked = ExtResource("29_settings_check_off")
+theme_override_icons/checked = ExtResource("28_settings_check_on")
+theme_override_colors/font_hover_color = Color(1, 0.86, 0.55, 1)
+theme_override_colors/font_color = Color(0.94, 0.9, 1, 1)
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+button_pressed = true
+text = "전투 프레임 표시"
+
+[node name="FrameGuide" type="Label" parent="HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Gameplay"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.71, 0.82, 1)
+theme_override_font_sizes/font_size = 20
+text = "켜짐: 성벽과 횃불 장식을 표시합니다.\n꺼짐: 장식 없이 전투 화면을 넓게 표시합니다.\n변경 즉시 적용 · 자동 저장"
+autowrap_mode = 2
+
 [node name="ResultMessage" type="Label" parent="HUD/ResultPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.94, 0.92, 1, 1)

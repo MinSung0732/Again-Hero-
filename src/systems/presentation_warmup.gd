@@ -68,7 +68,7 @@ func prepare_scene(scene_path: String) -> bool:
 		# Shared height reference used by every hero profile during _ready().
 		paths.append("res://assets/art/heroes/stage1_mage/stage1_mage_spritesheet.png")
 		paths.append("res://assets/art/UI/diagonal_battle_30_frames/effect_30.png")
-		dirs.assign(["ui_gagebar_frames", "01_large_left_panel", "02_top_right_panel", "03_middle_right_panel", "05_right_bars"])
+		dirs.assign(["ui_gagebar_frames", "01_large_left_panel", "02_top_right_panel", "03_middle_right_panel", "05_right_bars", "battle_castle_v3"])
 	else:
 		return true
 	for dir_name in dirs:
@@ -161,6 +161,13 @@ func _prepare(paths: Array[String], shared: bool) -> bool:
 
 func _load_texture(path: String) -> Texture2D:
 	if not ResourceLoader.exists(path):
+		# New raw PNGs can be used in the desktop/editor before import finishes.
+		# Decode here during loading, not on the first frame of combat.
+		if path.get_extension().to_lower() == "png" and FileAccess.file_exists(path):
+			var image := Image.load_from_file(path)
+			if image != null and not image.is_empty():
+				texture_load_count += 1
+				return ImageTexture.create_from_image(image)
 		push_warning("Optional presentation resource missing: " + path)
 		return null
 	if ResourceLoader.load_threaded_request(path, "Texture2D") != OK:

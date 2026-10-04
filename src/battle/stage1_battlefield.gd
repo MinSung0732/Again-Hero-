@@ -35,6 +35,7 @@ const WALL_ROOT := TILE_ROOT + "/again_hero_B_walls"
 const OBJECT_ROOT := TILE_ROOT + "/again_hero_C_objects"
 
 const TEXTURE_PATHS := {
+	"illustrated_floor": "res://assets/art/UI/battle_castle_v3/flagstone_floor.png",
 	"floor": FLOOR_ROOT + "/tile_001.png",
 	"floor_damage_1": FLOOR_ROOT + "/tile_014.png",
 	"floor_damage_2": FLOOR_ROOT + "/tile_015.png",
@@ -166,7 +167,18 @@ func _ensure_textures() -> void:
 		return
 	for key in TEXTURE_PATHS.keys():
 		var path := String(TEXTURE_PATHS[key])
+		var warmup := get_node_or_null("/root/PresentationWarmup")
+		if warmup != null:
+			var cached: Texture2D = warmup.get_texture(path)
+			if cached != null:
+				textures[String(key)] = cached
+				continue
 		if not ResourceLoader.exists(path):
+			if String(key) == "illustrated_floor" and FileAccess.file_exists(path):
+				var image := Image.load_from_file(path)
+				if image != null and not image.is_empty():
+					textures[String(key)] = ImageTexture.create_from_image(image)
+					continue
 			push_warning("Castle battlefield texture missing: %s" % path)
 			continue
 		var resource = load(path)
@@ -201,12 +213,20 @@ func _draw_floor() -> void:
 	var floor_texture := _texture("floor")
 	if floor_texture == null:
 		return
+	var illustrated := _texture("illustrated_floor")
+	if illustrated != null:
+		var step := FLOOR_STEP * 4.0
+		for y in range(ceili(battlefield_size.y / step.y)):
+			for x in range(ceili(battlefield_size.x / step.x)):
+				draw_texture_rect(illustrated, Rect2(Vector2(x,y)*step, step), false, Color(0.60,0.54,0.72,1))
 
 	var columns := ceili(battlefield_size.x / FLOOR_STEP.x)
 	var rows := ceili(battlefield_size.y / FLOOR_STEP.y)
 	for row in range(rows):
 		for column in range(columns):
 			var cell_texture := _floor_texture_for_cell(column, row)
+			if illustrated != null and cell_texture == floor_texture:
+				continue
 			if cell_texture == null:
 				cell_texture = floor_texture
 			draw_texture_rect(
@@ -264,7 +284,8 @@ func _draw_royal_carpet() -> void:
 				),
 				FLOOR_DRAW_SIZE
 			),
-			false
+			false,
+			Color(0.48, 0.30, 0.65, 0.22) if _texture("illustrated_floor") != null else Color.WHITE
 		)
 		y += CARPET_STEP_Y
 		segment_index += 1

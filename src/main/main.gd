@@ -131,6 +131,7 @@ const BATTLE_PIXEL_BAR_BACKGROUND := "res://assets/art/UI/05_right_bars/part_02.
 @onready var settings_sfx_value: Label = $HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/SFXRow/Value
 @onready var settings_sfx_mute: CheckBox = $HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Sound/SFXMute
 @onready var settings_camera_lock: CheckBox = $HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Gameplay/CameraLock
+@onready var settings_battle_frame: CheckBox = $HUD/SettingsOverlay/Panel/Margin/VBox/SettingsTabs/Gameplay/BattleFrame
 @onready var bgm_player_a: AudioStreamPlayer = $HeroBGMManager/PlayerA
 @onready var bgm_player_b: AudioStreamPlayer = $HeroBGMManager/PlayerB
 
@@ -209,6 +210,8 @@ var _touch_hold_frame_index: int = 0
 var _touch_hold_position: Vector2 = Vector2.ZERO
 var _touch_pointer_id: int = -1
 var camera_view_locked: bool = true
+var battle_frame_enabled: bool = true
+var gameplay_settings_path: String = GAMEPLAY_SETTINGS_PATH
 var _camera_drag_active: bool = false
 var _camera_drag_pointer_id: int = -1
 var _camera_drag_distance: float = 0.0
@@ -288,6 +291,7 @@ func _ready() -> void:
 	settings_bgm_mute.toggled.connect(_on_settings_bgm_mute_toggled)
 	settings_sfx_mute.toggled.connect(_on_settings_sfx_mute_toggled)
 	settings_camera_lock.toggled.connect(_on_settings_camera_lock_toggled)
+	settings_battle_frame.toggled.connect(_on_settings_battle_frame_toggled)
 	_load_gameplay_settings()
 	_sync_audio_settings_ui()
 	_sync_gameplay_settings_ui()
@@ -1371,22 +1375,35 @@ func _sync_audio_settings_ui() -> void:
 
 func _load_gameplay_settings() -> void:
 	var config := ConfigFile.new()
-	if config.load(GAMEPLAY_SETTINGS_PATH) != OK:
+	if config.load(gameplay_settings_path) != OK:
 		camera_view_locked = true
+		battle_frame_enabled = true
 		return
 	camera_view_locked = bool(
 		config.get_value("gameplay", "camera_view_locked", true)
 	)
+	battle_frame_enabled = bool(config.get_value("gameplay", "battle_frame_enabled", true))
 
 
 func _save_gameplay_settings() -> void:
 	var config := ConfigFile.new()
+	config.load(gameplay_settings_path)
 	config.set_value("gameplay", "camera_view_locked", camera_view_locked)
-	config.save(GAMEPLAY_SETTINGS_PATH)
+	config.set_value("gameplay", "battle_frame_enabled", battle_frame_enabled)
+	config.save(gameplay_settings_path)
 
 
 func _sync_gameplay_settings_ui() -> void:
 	settings_camera_lock.set_pressed_no_signal(camera_view_locked)
+	settings_battle_frame.set_pressed_no_signal(battle_frame_enabled)
+	preload("res://src/ui/castle_battle_chrome.gd").apply_visibility(self, battle_frame_enabled)
+
+func _on_settings_battle_frame_toggled(enabled: bool) -> void:
+	battle_frame_enabled = enabled
+	_clear_pending_manual_spawn()
+	_end_camera_drag()
+	preload("res://src/ui/castle_battle_chrome.gd").apply_visibility(self, enabled)
+	_save_gameplay_settings()
 
 
 func _on_settings_camera_lock_toggled(enabled: bool) -> void:
