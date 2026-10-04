@@ -308,6 +308,9 @@ func _ready() -> void:
 	_setup_gacha_reveal_overlay()
 	_connect_navigation()
 	_setup_cloud_account()
+	var normalization := MONSTER_COLLECTION_STORE.normalize_maxed()
+	if not bool(normalization.get("success", false)):
+		push_warning("최대 강화 조각의 연구 포인트 전환을 저장하지 못했습니다.")
 	shop_summon_history = SHOP_SUMMON_HISTORY_STORE.load_entries()
 	_refresh_shop_summon_history()
 
@@ -2924,6 +2927,9 @@ func _refresh_shop_summon_history() -> void:
 		var monster_id := String(entry.get("monster_id", ""))
 		var rarity_id := String(entry.get("rarity", ""))
 		var unlock_text := " · 신규 해금" if bool(entry.get("unlocked", false)) else ""
+		var converted := int(entry.get("research_points", 0))
+		if converted > 0:
+			unlock_text += " → 연구 포인트 +%d" % converted
 		lines.append(
 			"%03d. %s [%s]  +%d 조각%s" % [
 				display_number,
@@ -2955,6 +2961,7 @@ func _open_monster_boxes(draw_count: int) -> void:
 
 	var new_history_entries: Array = []
 	var reveal_entries: Array = []
+	var save_failed := false
 
 	for _draw_index in range(draw_count):
 		var roll := _roll_monster_shard()
@@ -2972,16 +2979,21 @@ func _open_monster_boxes(draw_count: int) -> void:
 			monster_id,
 			before_state
 		)
-		var updated_state := MONSTER_COLLECTION_STORE.add_shards(
+		var award := MONSTER_COLLECTION_STORE.award_shards(
 			monster_id,
 			shard_amount
 		)
+		if not bool(award.get("success", false)):
+			save_failed = true
+			continue
+		var updated_state: Dictionary = award.state
 		var is_unlocked := MONSTER_COLLECTION_STORE.is_unlocked(
 			monster_id,
 			updated_state
 		)
 
 		var history_entry := {
+			"research_points": int(award.get("research_points", 0)),
 			"monster_id": monster_id,
 			"rarity": rarity_id,
 			"shards": shard_amount,
@@ -3003,6 +3015,8 @@ func _open_monster_boxes(draw_count: int) -> void:
 		"골드 차감 없음 · 표시 골드 %s 유지"
 		% _format_shop_number(SHOP_CATALOG.TEST_GOLD)
 	)
+	if save_failed:
+		shop_status_label.text = "일부 소환 보상 저장 실패 · 저장 공간을 확인해 주세요."
 	_refresh_header()
 	if not reveal_entries.is_empty() and is_instance_valid(gacha_reveal_overlay):
 		_close_shop_result_modal()
@@ -3331,6 +3345,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 		monster_id,
 		monster_collection_state
 	)
+	var maxed := MONSTER_COLLECTION_STORE.is_maxed(monster_id, monster_collection_state)
 	if available:
 		info.text = "Lv.%d · %s\n코스트 %.1f" % [
 			upgrade_level,
@@ -3350,7 +3365,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	shard_bar.custom_minimum_size = Vector2(0.0, 28.0)
 	shard_bar.min_value = 0.0
 	shard_bar.max_value = float(required)
-	shard_bar.value = float(mini(shards, required))
+	shard_bar.value = float(required if maxed else mini(shards, required))
 	shard_bar.show_percentage = false
 	var shard_background := StyleBoxFlat.new()
 	shard_background.bg_color = Color("25222d")
@@ -3359,7 +3374,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	shard_background.corner_radius_bottom_left = 5
 	shard_background.corner_radius_bottom_right = 5
 	var shard_fill := StyleBoxFlat.new()
-	shard_fill.bg_color = Color("58bf78") if shards >= required else Color("77727d")
+	shard_fill.bg_color = Color("58bf78") if maxed or shards >= required else Color("77727d")
 	shard_fill.corner_radius_top_left = 5
 	shard_fill.corner_radius_top_right = 5
 	shard_fill.corner_radius_bottom_left = 5
@@ -3371,7 +3386,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	var shard_label := Label.new()
 	shard_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	shard_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shard_label.text = "[ %d / %d ]" % [shards, required]
+	shard_label.text = "최대강화" if maxed else "[ %d / %d ]" % [shards, required]
 	shard_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shard_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	shard_label.add_theme_font_size_override("font_size", 17)
@@ -3425,13 +3440,16 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	upgrade_button.add_theme_font_size_override("font_size", 22)
 	upgrade_button.text = "강화하기"
 	upgrade_button.clip_text = true
-	if not upgrade_configured:
+	if maxed:
+		upgrade_button.text = "최대강화"
+		upgrade_button.tooltip_text = "Lv.30 · 이후 조각은 1개당 연구 포인트 1로 전환됩니다."
+	elif not upgrade_configured:
 		upgrade_button.text = "준비 중"
 		upgrade_button.tooltip_text = "이 등급의 강화 효과는 준비 중입니다."
 	elif not available:
 		upgrade_button.text = "해금 필요"
 	upgrade_button.disabled = (
-		not upgrade_configured
+		maxed or not upgrade_configured
 		or not available
 		or shards < required
 	)
@@ -3447,7 +3465,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 		card_style.border_color = Color("d8ad55")
 		card_style.bg_color = Color("171020", 0.96)
 		card_style.set_corner_radius_all(14)
-	var badge := _team_formation_view.label(vbox, "강화 가능" if not upgrade_button.disabled else ("편성 중" if selected else ""), 19)
+	var badge := _team_formation_view.label(vbox, "최대강화" if maxed else ("강화 가능" if not upgrade_button.disabled else ("편성 중" if selected else "")), 19)
 	badge.custom_minimum_size.y = 26.0
 	badge.add_theme_color_override("font_color", Color("ffe09a"))
 	vbox.move_child(badge, 0)
@@ -3465,6 +3483,9 @@ func _upgrade_team_monster(monster_id: String) -> void:
 			_team_monster_name(monster_id),
 			int(result.get("level", 0)),
 		]
+		if int(result.get("research_points", 0)) > 0:
+			team_status_label.text += " · 연구 +%d P" % int(result.research_points)
+		_refresh_header()
 	else:
 		var reason := String(result.get("reason", ""))
 		var reason_text: String = String({
@@ -3472,6 +3493,7 @@ func _upgrade_team_monster(monster_id: String) -> void:
 			"not_configured": "이 등급의 강화 효과는 준비 중입니다.",
 			"not_enough_shards": "강화에 필요한 조각이 부족합니다.",
 			"save_failed": "강화 정보 저장에 실패했습니다.",
+			"max_level": "최대강화 Lv.30에 도달했습니다.",
 		}.get(reason, "몬스터를 강화할 수 없습니다."))
 		team_status_label.text = reason_text
 	_refresh_team_preview()
@@ -4193,7 +4215,7 @@ func _team_collection_card_text(monster_id: String) -> String:
 		var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
 		var required := 1
 		if typeof(data) == TYPE_DICTIONARY:
-			required = maxi(int(data.get("shards_required", 1)), 1)
+			required = MONSTER_CATALOG.get_shards_required(monster_id)
 
 		var shards := MONSTER_COLLECTION_STORE.get_shards(
 			monster_id,

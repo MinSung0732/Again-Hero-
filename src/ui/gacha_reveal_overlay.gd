@@ -281,9 +281,14 @@ func _show_final_results() -> void:
 	_skip_button.hide()
 	_result_panel.show()
 	var total_shards := 0
+	var total_points := 0
 	for entry in _results:
-		total_shards += maxi(int(entry.get("shards", 0)), 0)
+		var converted := maxi(int(entry.get("research_points", 0)), 0)
+		total_points += converted
+		total_shards += maxi(int(entry.get("shards", 0)) - converted, 0)
 	_result_summary.text = "%d회 소환 · 총 %d조각 획득" % [_results.size(), total_shards]
+	if total_points > 0:
+		_result_summary.text += " · 연구 +%d" % total_points
 	_rebuild_result_grid()
 
 
@@ -338,6 +343,8 @@ func _create_result_card(entry: Dictionary) -> Control:
 
 	var shard_label := Label.new()
 	shard_label.text = "+%d 조각" % maxi(int(entry.get("shards", 0)), 0)
+	if int(entry.get("research_points", 0)) > 0:
+		shard_label.text = "연구 +%d P" % int(entry.research_points)
 	shard_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shard_label.add_theme_font_size_override("font_size", 20)
 	shard_label.add_theme_color_override("font_color", Color("f6e3aa"))
@@ -681,6 +688,7 @@ func _build_result_panel() -> void:
 	vbox.add_child(title)
 	_result_summary = Label.new()
 	_result_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_result_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_result_summary.add_theme_font_size_override("font_size", 24)
 	_result_summary.add_theme_color_override("font_color", Color("e4cdec"))
 	vbox.add_child(_result_summary)

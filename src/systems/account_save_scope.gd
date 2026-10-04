@@ -8,6 +8,11 @@ static var revision := 0
 static var dirty := false
 static var serial := 0
 static var saved_callback := Callable()
+const GUEST_TRANSACTION := "user://gameplay_transaction.json"
+static var guest_directory := "user://" # Tests use an isolated directory.
+
+static func _guest_path(path: String) -> String:
+	return guest_directory.path_join(path.get_file())
 
 static func select_account(id: String) -> bool:
 	var pattern := RegEx.new()
@@ -50,7 +55,10 @@ static func resolve(legacy_path: String) -> String:
 
 static func load_config(config: ConfigFile, path: String) -> Error:
 	if user_id.is_empty():
-		return config.load(path)
+		var recovery := _recover_guest_transaction()
+		if recovery != OK:
+			return recovery
+		return config.load(_guest_path(path))
 	config.clear()
 	var name := path.get_file()
 	if not files.has(name):
@@ -62,7 +70,10 @@ static func load_config(config: ConfigFile, path: String) -> Error:
 
 static func save_config(config: ConfigFile, path: String) -> Error:
 	if user_id.is_empty():
-		return config.save(path)
+		var recovery := _recover_guest_transaction()
+		if recovery != OK:
+			return recovery
+		return config.save(_guest_path(path))
 	var name := path.get_file()
 	if name not in FILES:
 		return ERR_INVALID_PARAMETER
@@ -79,6 +90,60 @@ static func save_config(config: ConfigFile, path: String) -> Error:
 	elif saved_callback.is_valid():
 		saved_callback.call()
 	return error
+
+# Award conversions change collection and research together. Account bundles
+# commit once; guest cfg files use a replayable write-ahead journal.
+static func save_configs(configs: Dictionary) -> Error:
+	var data := {}
+	for name in configs:
+		if name not in FILES or not configs[name] is ConfigFile:
+			return ERR_INVALID_PARAMETER
+		data[name] = _config_data(configs[name])
+	if not valid_payload(data):
+		return ERR_INVALID_DATA
+	if user_id.is_empty():
+		var recovery := _recover_guest_transaction()
+		if recovery != OK:
+			return recovery
+		var journal := _guest_path(GUEST_TRANSACTION)
+		var file := FileAccess.open(journal + ".tmp", FileAccess.WRITE)
+		if file == null:
+			return FileAccess.get_open_error()
+		file.store_string(JSON.stringify(data))
+		file.flush()
+		file.close()
+		var error := DirAccess.rename_absolute(journal + ".tmp", journal)
+		return _recover_guest_transaction() if error == OK else error
+	var previous := files.duplicate(true)
+	var was_dirty := dirty
+	files.merge(data, true)
+	dirty = true
+	serial += 1
+	var error := persist()
+	if error != OK:
+		files = previous
+		dirty = was_dirty
+		serial -= 1
+	elif saved_callback.is_valid():
+		saved_callback.call()
+	return error
+
+static func _recover_guest_transaction() -> Error:
+	var journal := _guest_path(GUEST_TRANSACTION)
+	if not FileAccess.file_exists(journal):
+		return OK
+	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(journal))
+	if not valid_payload(data):
+		return ERR_INVALID_DATA
+	for name in data:
+		var config := ConfigFile.new()
+		for section in data[name]:
+			for key in data[name][section]:
+				config.set_value(section, key, data[name][section][key])
+		var error := config.save(_guest_path(name))
+		if error != OK:
+			return error
+	return DirAccess.remove_absolute(journal)
 
 static func _config_data(config: ConfigFile) -> Dictionary:
 	var data := {}

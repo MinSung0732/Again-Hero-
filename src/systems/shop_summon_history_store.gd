@@ -59,4 +59,5 @@ static func _normalize_entry(raw_entry) -> Dictionary:
 		"rarity": rarity_id,
 		"shards": shards,
 		"unlocked": bool(raw_entry.get("unlocked", false)),
+		"research_points": maxi(int(raw_entry.get("research_points", 0)), 0),
 	}

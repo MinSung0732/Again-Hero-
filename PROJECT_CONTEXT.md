@@ -50,9 +50,10 @@
 
 - Team-formation monster cards show the current shard balance as `[ n / required ]`.
 - The shard gauge is gray below the requirement and green when an upgrade is available.
-- Each upgrade consumes that monster's existing `shards_required` amount, persists an unlimited collection level, and applies additive HP/attack growth per level.
-- Common gains HP/attack +1% per level, Advanced +2.5%, Rare +5%.
-- Legendary and Transcendent profiles are reserved in data but remain disabled until their bespoke effects are specified.
+- Every monster caps at Lv.30; card badges, shard bars and disabled upgrade buttons display `최대강화`. Existing levels above 30 normalize to 30 on lobby entry. Growth remains additive to base HP/attack: Common +2%, Advanced/Uncommon +3.5%, Rare +5%, Legendary +7%, Transcendent +10% per level.
+- `RARITY_UPGRADE_PROFILES` is the sole shard-cost source: Common/Advanced/Uncommon/Rare = 30, Legendary = 25, Transcendent = 15. All five grade growth profiles are configured; draw weights/content availability remain unchanged.
+- Common draws now award 1–3 shards. Reaching Lv.30 converts any remaining inventory shards to research points 1:1; subsequent draws award points instead of stockpiling shards. Legacy capped inventories convert once on lobby entry. History retains rolled shard count plus actual converted points; final result cards/summary show points and do not count converted shards as shard inventory awards.
+- Collection + research conversion commits once in an authenticated atomic bundle. Guest saves use a replayable `gameplay_transaction.json` journal before either cfg changes. Invalid/corrupt journals fail closed; successful replay removes the journal. Tests use randomized account folders and isolated guest directories, never player guest data.
 - Battle loads collection levels once at Run start and reuses the cache for detail calculations, spawning, and live augment recalculation; spawning never rereads the save file.
 
 > **새 개발 채팅/AI 세션은 이 파일을 가장 먼저 읽는다.**

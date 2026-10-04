@@ -33,7 +33,6 @@ const MONSTERS := {
 			"attack_cooldown": 1.10,
 		},
 		"default_unlocked": true,
-		"shards_required": 20,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/slime/frames/idle_01.png",
 		"ground_shadow": {
@@ -94,7 +93,6 @@ const MONSTERS := {
 			"slow_duration": 1.5,
 		},
 		"default_unlocked": true,
-		"shards_required": 30,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/spider/frames/idle_01.png",
 		"ground_shadow": {
@@ -152,7 +150,6 @@ const MONSTERS := {
 			"attack_cooldown": 1.45,
 		},
 		"default_unlocked": true,
-		"shards_required": 40,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/orc/frames/idle_01.png",
 		"ground_shadow": {
@@ -213,7 +210,6 @@ const MONSTERS := {
 			"second_hit_delay": 0.14,
 		},
 		"default_unlocked": true,
-		"shards_required": 20,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/skelleton/frames/idle_01.png",
 		"ground_shadow": {
@@ -273,7 +269,6 @@ const MONSTERS := {
 			"projectile_range": 190.0,
 		},
 		"default_unlocked": true,
-		"shards_required": 20,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/skelletonarcher/frames/idle_01.png",
 		"ground_shadow": {
@@ -342,7 +337,6 @@ const MONSTERS := {
 			"projectile_range": 750.0,
 		},
 		"default_unlocked": true,
-		"shards_required": 30,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/kobolt/frames/idle_01.png",
 		"ground_shadow": {
@@ -399,7 +393,6 @@ const MONSTERS := {
 			"charge_speed_multiplier": 3.75,
 		},
 		"default_unlocked": true,
-		"shards_required": 20,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/bat/frames/idle_01.png",
 		"ground_shadow": {
@@ -456,7 +449,6 @@ const MONSTERS := {
 			"attack_cooldown": 0.72,
 		},
 		"default_unlocked": true,
-		"shards_required": 20,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/goblin/frames/idle_01.png",
 		"ground_shadow": {
@@ -521,7 +513,6 @@ const MONSTERS := {
 			"projectile_range": 340.0,
 		},
 		"default_unlocked": true,
-		"shards_required": 20,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/goblinthrower/frames/idle_01.png",
 		"ground_shadow": {
@@ -584,7 +575,6 @@ const MONSTERS := {
 			"projectile_range": 360.0,
 		},
 		"default_unlocked": true,
-		"shards_required": 20,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/ghost/frames/idle_01.png",
 		"ground_shadow": {
@@ -638,7 +628,6 @@ const MONSTERS := {
 			"explosion_damage": 28,
 		},
 		"default_unlocked": false,
-		"shards_required": 30,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/bombrat/frames/frame_01.png",
 		"ground_shadow": {
@@ -724,45 +713,51 @@ const RARITY_COMBAT_PROFILES := {
 	},
 }
 
-# Collection upgrades are intentionally separate from the base rarity combat
-# profiles above. Legendary/transcendent keep their data slots but remain
-# disabled until their bespoke rules are designed.
+# Permanent growth remains additive and separate from base rarity combat stats.
+const MAX_UPGRADE_LEVEL := 30
+const SHARD_RESEARCH_POINTS := 1
 const RARITY_UPGRADE_PROFILES := {
 	"common": {
 		"label": "일반",
-		"hp_per_level": 0.01,
-		"damage_per_level": 0.01,
+		"hp_per_level": 0.02,
+		"damage_per_level": 0.02,
+		"shards_required": 30,
 		"configured": true,
 	},
 	"advanced": {
 		"label": "고급",
-		"hp_per_level": 0.025,
-		"damage_per_level": 0.025,
+		"hp_per_level": 0.035,
+		"damage_per_level": 0.035,
+		"shards_required": 30,
 		"configured": true,
 	},
 	"uncommon": {
 		"label": "고급",
-		"hp_per_level": 0.025,
-		"damage_per_level": 0.025,
+		"hp_per_level": 0.035,
+		"damage_per_level": 0.035,
+		"shards_required": 30,
 		"configured": true,
 	},
 	"rare": {
 		"label": "희귀",
 		"hp_per_level": 0.05,
 		"damage_per_level": 0.05,
+		"shards_required": 30,
 		"configured": true,
 	},
 	"legendary": {
 		"label": "전설",
-		"hp_per_level": 0.0,
-		"damage_per_level": 0.0,
-		"configured": false,
+		"hp_per_level": 0.07,
+		"damage_per_level": 0.07,
+		"shards_required": 25,
+		"configured": true,
 	},
 	"transcendent": {
 		"label": "초월",
-		"hp_per_level": 0.0,
-		"damage_per_level": 0.0,
-		"configured": false,
+		"hp_per_level": 0.10,
+		"damage_per_level": 0.10,
+		"shards_required": 15,
+		"configured": true,
 	},
 }
 
@@ -933,5 +928,4 @@ static func is_default_unlocked(monster_id: String) -> bool:
 	return bool(data.get("default_unlocked", false))
 
 static func get_shards_required(monster_id: String) -> int:
-	var data: Dictionary = MONSTERS.get(monster_id, {})
-	return maxi(int(data.get("shards_required", 1)), 1)
+	return maxi(int(get_rarity_upgrade_profile(monster_id).get("shards_required", 30)), 1)

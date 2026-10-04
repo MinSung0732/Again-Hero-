@@ -1,4 +1,5 @@
 extends SceneTree
+const SAVE_SCOPE := preload("res://src/systems/account_save_scope.gd")
 
 # Run with: godot --headless --path . --script res://tests/startup_smoke.gd
 # With -- --capture-dir=<absolute directory>, also captures real rendered screens.
@@ -39,6 +40,9 @@ func _run() -> void:
 	root.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
 	var gateway := root.get_node("LoginGateway")
 	gateway.remember_session_enabled = false
+	var fixture_folder := "user://startup_test_" + Crypto.new().generate_random_bytes(16).hex_encode()
+	DirAccess.make_dir_recursive_absolute(fixture_folder)
+	SAVE_SCOPE.guest_directory = fixture_folder
 	gateway.reset_local_guest()
 	var startup: Control = load("res://src/startup/Startup.tscn").instantiate()
 	root.add_child(startup)
@@ -142,4 +146,9 @@ func _run() -> void:
 	print("STARTUP_SMOKE_%s: title, 30 preloaded frames, PKCE vector, retry, guest, duplicate guard, warmed dungeon transition" % ("FAILED" if _failed else "OK"))
 	current_scene.queue_free()
 	await process_frame
+	for name in SAVE_SCOPE.FILES + ["gameplay_transaction.json", "gameplay_transaction.json.tmp"]:
+		if FileAccess.file_exists(fixture_folder.path_join(name)):
+			DirAccess.remove_absolute(fixture_folder.path_join(name))
+	DirAccess.remove_absolute(fixture_folder)
+	SAVE_SCOPE.guest_directory = "user://"
 	quit(1 if _failed else 0)
