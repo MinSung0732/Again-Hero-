@@ -54,6 +54,9 @@ func _run() -> void:
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		_check(startup.start_button.get_theme_stylebox(state) is StyleBoxEmpty, "Start prompt has no frame: " + state)
 	_check(not startup.login_screen.visible, "Login cannot bypass loading")
+	var login_frame: Control = startup.login_screen.get_node("LoginPanel/PixelAssetFrame")
+	_check(login_frame.get_child_count() == 9, "Login frame assembled from eight pixel pieces and center fill")
+	_check(login_frame.mouse_filter == Control.MOUSE_FILTER_IGNORE, "Login decoration cannot intercept input")
 	await _capture("startup-title")
 	# Any-screen mouse/touch release should start once, even repeated/emulated input.
 	var touch := InputEventScreenTouch.new()

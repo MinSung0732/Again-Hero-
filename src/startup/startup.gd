@@ -2,6 +2,7 @@ extends Control
 
 const CATALOG := preload("res://src/data/startup_catalog.gd")
 const VIEW := preload("res://src/ui/startup_loading_view.gd")
+const PIXEL_FRAME := preload("res://src/ui/battle_pixel_frame_assembler.gd")
 enum Phase { TITLE, RESOURCES, LOADING, LOGIN, ENTERING, ERROR }
 
 var phase := Phase.TITLE
@@ -158,19 +159,21 @@ func _load_resource(path: String, show_progress: bool = false) -> Resource:
 func _build_login() -> void:
 	login_screen = _screen()
 	var panel := Panel.new()
-	panel.add_theme_stylebox_override("panel", VIEW.plate(Color(0.04, 0.025, 0.085, 0.94)))
-	VIEW.place(login_screen, panel, Rect2(0.12, 0.49, 0.76, 0.415))
-	VIEW.label(panel, "마왕의 성에 오신 것을 환영합니다", 32, Rect2(0.05, 0.04, 0.9, 0.10))
+	panel.name = "LoginPanel"
+	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	VIEW.place(login_screen, panel, Rect2(0.10, 0.49, 0.80, 0.43))
+	PIXEL_FRAME.add_split_frame(panel, "res://assets/art/UI/01_large_left_panel", 0.9, "", 20, Color(0.04, 0.025, 0.085, 0.96), 24.0)
+	VIEW.label(panel, "마왕의 성에 오신 것을 환영합니다", 32, Rect2(0.10, 0.08, 0.80, 0.09))
 	for index in range(CATALOG.PROVIDERS.size()):
 		var data: Dictionary = CATALOG.PROVIDERS[index]
-		var button := _button(panel, String(data.label), Rect2(0.07, 0.18 + index * 0.17, 0.86, 0.13), data.color, data.ink)
+		var button := _button(panel, String(data.label), Rect2(0.10, 0.21 + index * 0.17, 0.80, 0.13), data.color, data.ink)
 		button.name = "%sLogin" % String(data.id).capitalize()
 		button.pressed.connect(_request_login.bind(String(data.id)))
-	VIEW.label(panel, "──  또는  ──", 23, Rect2(0.10, 0.50, 0.8, 0.055), Color("baa6ca"))
-	guest_button = _button(panel, "게스트로 시작", Rect2(0.07, 0.585, 0.86, 0.13), Color("522b75"))
+	VIEW.label(panel, "──  또는  ──", 23, Rect2(0.10, 0.54, 0.8, 0.055), Color("baa6ca"))
+	guest_button = _button(panel, "게스트로 시작", Rect2(0.10, 0.61, 0.80, 0.13), Color("522b75"))
 	guest_button.name = "GuestLogin"
 	guest_button.pressed.connect(_request_guest)
-	status_label = VIEW.label(panel, "계정 로그인은 브라우저에서 진행합니다.\n게스트 데이터는 계정 데이터와 분리됩니다.", 23, Rect2(0.08, 0.76, 0.84, 0.18), Color("c7b0d7"))
+	status_label = VIEW.label(panel, "계정 로그인은 브라우저에서 진행합니다.\n게스트 데이터는 계정 데이터와 분리됩니다.", 23, Rect2(0.10, 0.79, 0.80, 0.12), Color("c7b0d7"))
 	retry_button = _button(self, "다시 시도", Rect2(0.28, 0.64, 0.44, 0.06), Color("522b75"))
 	retry_button.pressed.connect(begin_startup)
 	retry_button.hide()
