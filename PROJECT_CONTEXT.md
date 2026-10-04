@@ -42,6 +42,8 @@
 - Sequence: anticipation door → shake/open using the uploaded composite sheet → highest-rarity color flash → one monster reveal per tap → final icon/shard summary.
 - Multi-draws select the door animation by the highest rarity in that batch. `SKIP` jumps directly to the final summary.
 - Collection and history rewards are persisted before presentation so skipping or leaving the visual sequence cannot lose rewards.
+- Draws never exclude max-level monsters. Collection/shard-to-research awards for a single/11-draw batch commit together; invalid rolls or failed storage abort without a shortened result. Legacy PackedStringArray encounter cfg values normalize to JSON arrays at the local save boundary; future encounter writes use plain arrays.
+- Max-level result cards initially show the monster and rolled shards, then a diagonal `변환` stamp settles over the icon and the amount changes to research points (1 point per shard). This is presentation only; closing/skipping/retrying cannot re-award the stored points.
 - Current monsters are all Common. Uncommon, Rare, Legendary, and Transcendent catalog entries and door assets are reserved with zero draw weight until their content is introduced.
 - Only the selected door sheet is threaded-loaded for a sequence, and the reusable overlay releases its frame references after confirmation.
 - The user's castle-themed visual references drive a shared portrait summoning-chamber background, dedicated generated gold/violet panel, button and reward-card assets, and native rarity-colored reveal rays, circles, and stars. Text, monsters, animated doors, and controls remain separate UI layers. Decorative violet gems are a theme element, not a rarity indicator; current draws remain Common.

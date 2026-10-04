@@ -163,7 +163,7 @@ static func record_hero_encounter(
 
 	if stage_id not in stages:
 		stages.append(stage_id)
-	config.set_value("hero_identity_stages", identity_id, stages)
+	config.set_value("hero_identity_stages", identity_id, Array(stages))
 	ACCOUNT_SCOPE.save_config(config, SAVE_PATH)
 
 	return {

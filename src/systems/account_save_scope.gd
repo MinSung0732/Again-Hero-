@@ -150,7 +150,9 @@ static func _config_data(config: ConfigFile) -> Dictionary:
 	for section in config.get_sections():
 		data[section] = {}
 		for key in config.get_section_keys(section):
-			data[section][key] = config.get_value(section, key)
+			var value = config.get_value(section, key)
+			# Legacy encounter cfgs use packed strings; JSON stores plain arrays.
+			data[section][key] = Array(value) if value is PackedStringArray else value
 	return data
 
 static func valid_payload(value: Variant) -> bool:

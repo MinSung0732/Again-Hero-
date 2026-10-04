@@ -2975,51 +2975,26 @@ func _open_monster_boxes(draw_count: int) -> void:
 
 	var new_history_entries: Array = []
 	var reveal_entries: Array = []
-	var save_failed := false
+	var rolls: Array = []
 
 	for _draw_index in range(draw_count):
 		var roll := _roll_monster_shard()
 		if roll.is_empty():
-			continue
-
-		var monster_id := String(roll.get("monster_id", ""))
-		var rarity_id := String(roll.get("rarity", ""))
-		var shard_amount := int(roll.get("shards", 0))
-		if monster_id.is_empty() or shard_amount <= 0:
-			continue
-
-		var before_state := MONSTER_COLLECTION_STORE.load_state()
-		var was_unlocked := MONSTER_COLLECTION_STORE.is_unlocked(
-			monster_id,
-			before_state
-		)
-		var award := MONSTER_COLLECTION_STORE.award_shards(
-			monster_id,
-			shard_amount
-		)
-		if not bool(award.get("success", false)):
-			save_failed = true
-			continue
-		var updated_state: Dictionary = award.state
-		var is_unlocked := MONSTER_COLLECTION_STORE.is_unlocked(
-			monster_id,
-			updated_state
-		)
-
-		var history_entry := {
-			"research_points": int(award.get("research_points", 0)),
-			"monster_id": monster_id,
-			"rarity": rarity_id,
-			"shards": shard_amount,
-			"unlocked": not was_unlocked and is_unlocked,
-		}
+			shop_status_label.text = "소환 데이터 오류 · 보상은 지급되지 않았습니다."
+			return
+		rolls.append(roll)
+	var batch := MONSTER_COLLECTION_STORE.award_shard_batch(rolls)
+	if not bool(batch.get("success", false)):
+		shop_status_label.text = "소환 보상 저장 실패 · 저장 공간을 확인해 주세요."
+		return
+	monster_collection_state = batch.state
+	for history_entry in batch.awards:
+		var monster_id := String(history_entry.monster_id)
 		new_history_entries.append(history_entry)
-		var reveal_entry := history_entry.duplicate()
+		var reveal_entry: Dictionary = history_entry.duplicate()
 		reveal_entry["name"] = MONSTER_CATALOG.get_monster_name(monster_id)
 		reveal_entry["icon"] = _team_monster_card_icon(monster_id)
 		reveal_entries.append(reveal_entry)
-
-		monster_collection_state = updated_state
 
 	shop_summon_history = SHOP_SUMMON_HISTORY_STORE.append_entries(
 		new_history_entries
@@ -3029,8 +3004,6 @@ func _open_monster_boxes(draw_count: int) -> void:
 		"골드 차감 없음 · 표시 골드 %s 유지"
 		% _format_shop_number(SHOP_CATALOG.TEST_GOLD)
 	)
-	if save_failed:
-		shop_status_label.text = "일부 소환 보상 저장 실패 · 저장 공간을 확인해 주세요."
 	_refresh_header()
 	if not reveal_entries.is_empty() and is_instance_valid(gacha_reveal_overlay):
 		_close_shop_result_modal()
@@ -3077,17 +3050,22 @@ func _roll_shop_rarity() -> String:
 	if total_weight <= 0.0:
 		return ""
 
-	var roll := randf_range(0.0, total_weight)
+	var roll := randf() * total_weight
 	var cumulative := 0.0
+	var last_eligible := ""
 
 	for raw_rarity in SHOP_CATALOG.RARITY_ORDER:
 		var rarity_id := String(raw_rarity)
 		var rarity_data := SHOP_CATALOG.get_rarity(rarity_id)
-		cumulative += maxf(float(rarity_data.get("weight", 0.0)), 0.0)
-		if roll <= cumulative:
+		var weight := maxf(float(rarity_data.get("weight", 0.0)), 0.0)
+		if weight <= 0.0:
+			continue
+		last_eligible = rarity_id
+		cumulative += weight
+		if roll < cumulative:
 			return rarity_id
 
-	return String(SHOP_CATALOG.RARITY_ORDER.back())
+	return last_eligible
 
 func _setup_team_preview() -> void:
 	team_catalog_ids.clear()

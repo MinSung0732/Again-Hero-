@@ -227,36 +227,36 @@ static func add_shards(monster_id: String, amount: int) -> Dictionary:
 	return award_shards(monster_id, amount).state
 
 static func award_shards(monster_id: String, amount: int) -> Dictionary:
+	return award_shard_batch([{"monster_id": monster_id, "shards": amount}])
+
+# A multi-draw is one collection/research transaction, never a partial award.
+static func award_shard_batch(rolls: Array) -> Dictionary:
 	var state := load_state()
-	if not state.has(monster_id) or amount <= 0:
-		return {"success": false, "state": state, "research_points": 0}
-	if is_maxed(monster_id, state):
-		var points := amount * MONSTER_CATALOG.SHARD_RESEARCH_POINTS
-		var success := _save_with_research(state, points)
-		return {"success": success, "state": state, "research_points": points if success else 0}
-
-	var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
-	if typeof(data) != TYPE_DICTIONARY:
-		return {"success": false, "state": state, "research_points": 0}
-
-	var entry = state.get(monster_id, {})
-	if typeof(entry) != TYPE_DICTIONARY:
-		entry = {
-			"unlocked": bool(data.get("default_unlocked", false)),
-			"shards": 0,
-			"level": 0,
-		}
-
-	var shards := maxi(
-		int(entry.get("shards", 0)) + maxi(amount, 0),
-		0
-	)
-	entry["shards"] = shards
-
-	var required := MONSTER_CATALOG.get_shards_required(monster_id)
-	if shards >= required:
-		entry["unlocked"] = true
-
-	state[monster_id] = entry
-	var success := save_state(state)
-	return {"success": success, "state": state if success else load_state(), "research_points": 0}
+	var awards: Array = []
+	var total_points := 0
+	if rolls.is_empty():
+		return {"success": false, "state": state, "research_points": 0, "awards": []}
+	for roll in rolls:
+		if not roll is Dictionary:
+			return {"success": false, "state": load_state(), "research_points": 0, "awards": []}
+		var monster_id := String(roll.get("monster_id", ""))
+		var amount := int(roll.get("shards", 0))
+		if not state.has(monster_id) or amount <= 0:
+			return {"success": false, "state": load_state(), "research_points": 0, "awards": []}
+		var entry: Dictionary = state[monster_id]
+		var was_unlocked := bool(entry.unlocked)
+		var points := 0
+		if is_maxed(monster_id, state):
+			points = amount * MONSTER_CATALOG.SHARD_RESEARCH_POINTS
+		else:
+			entry.shards = int(entry.shards) + amount
+			if int(entry.shards) >= MONSTER_CATALOG.get_shards_required(monster_id):
+				entry.unlocked = true
+		total_points += points
+		var award: Dictionary = roll.duplicate()
+		award["research_points"] = points
+		award["unlocked"] = not was_unlocked and bool(entry.unlocked)
+		awards.append(award)
+	var success := _save_with_research(state, total_points)
+	return {"success": success, "state": state if success else load_state(),
+		"research_points": total_points if success else 0, "awards": awards if success else []}

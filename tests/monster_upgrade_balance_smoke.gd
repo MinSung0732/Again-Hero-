@@ -96,8 +96,8 @@ func run() -> void:
 	var card: Control = overlay._create_result_card({"monster_id": "slime", "name": "슬라임", "rarity": "common", "shards": 3, "research_points": 3})
 	var point_label := false
 	for label in card.find_children("*", "Label", true, false):
-		point_label = point_label or label.text == "연구 +3 P"
-	check(point_label, "converted card label")
+		point_label = point_label or label.text == "+3 조각"
+	check(point_label and card.has_node("ConversionFeedback"), "converted card starts with shards before stamp")
 	card.free()
 	overlay._results = [{"monster_id": "slime", "name": "슬라임", "rarity": "common", "shards": 1}, {"monster_id": "orc", "name": "오크", "rarity": "common", "shards": 2, "research_points": 2}]
 	overlay._show_final_results()

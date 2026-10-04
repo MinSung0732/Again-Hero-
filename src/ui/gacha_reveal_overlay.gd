@@ -6,6 +6,7 @@ signal retry_requested(draw_count: int)
 
 const SHOP_CATALOG := preload("res://src/data/shop_catalog.gd")
 const REVEAL_AURA := preload("res://src/ui/gacha_reveal_aura.gd")
+const CONVERSION_FEEDBACK := preload("res://src/ui/gacha_conversion_feedback.gd")
 const CHAMBER_PATH := "res://assets/art/effects/gatcha/summoning_chamber.png"
 const PANEL_FRAME_PATH := "res://assets/art/effects/gatcha/gacha_panel_frame.png"
 const BUTTON_FRAME_PATH := "res://assets/art/effects/gatcha/gacha_button_texture.tres"
@@ -412,9 +413,8 @@ func _create_result_card(entry: Dictionary) -> Control:
 	vbox.add_child(name_label)
 
 	var shard_label := Label.new()
+	shard_label.name = "RewardAmount"
 	shard_label.text = "+%d 조각" % maxi(int(entry.get("shards", 0)), 0)
-	if int(entry.get("research_points", 0)) > 0:
-		shard_label.text = "연구 +%d P" % int(entry.research_points)
 	shard_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shard_label.add_theme_font_size_override("font_size", 20)
 	shard_label.add_theme_color_override("font_color", Color("f6e3aa"))
@@ -427,6 +427,13 @@ func _create_result_card(entry: Dictionary) -> Control:
 		unlock_label.add_theme_font_size_override("font_size", 16)
 		unlock_label.add_theme_color_override("font_color", Color("72e29a"))
 		vbox.add_child(unlock_label)
+	if int(entry.get("research_points", 0)) > 0:
+		var conversion := CONVERSION_FEEDBACK.new()
+		conversion.name = "ConversionFeedback"
+		conversion.points = int(entry.research_points)
+		conversion.amount_label = shard_label
+		conversion.icon = icon
+		card.add_child(conversion)
 	return card
 
 
