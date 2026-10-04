@@ -9,6 +9,7 @@ const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const MUTATION_CATALOG := preload("res://src/data/mutation_catalog.gd")
 const SHOP_CATALOG := preload("res://src/data/shop_catalog.gd")
+const SHOP_STOREFRONT_ART := preload("res://src/ui/shop_storefront_art.gd")
 const MONSTER_COLLECTION_STORE := preload("res://src/systems/monster_collection_store.gd")
 const SHOP_SUMMON_HISTORY_STORE := preload(
 	"res://src/systems/shop_summon_history_store.gd"
@@ -195,6 +196,7 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 var stage_ids: Array[String] = []
 var selected_stage_index: int = 0
 var current_tab: String = "main"
+var _shop_storefront_art = SHOP_STOREFRONT_ART.new()
 var research_view_mode: String = "research"
 var selected_research_id: String = ""
 var research_buttons_by_id: Dictionary = {}
@@ -2294,6 +2296,7 @@ func _setup_gacha_reveal_overlay() -> void:
 
 func _on_team_tab_pressed() -> void:
 	current_tab = "team"
+	_refresh_header()
 	formation_mode = "team"
 	_close_monster_detail()
 	_close_shop_result_modal()
@@ -2346,6 +2349,7 @@ func _switch_tab(tab_id: String) -> void:
 	_refresh_nav_button(main_button, tab_id == "main")
 	_refresh_nav_button(research_button, tab_id == "research")
 	_refresh_nav_button(other_button, tab_id == "other")
+	_refresh_header()
 
 func _show_other_settings() -> void:
 	other_settings_panel.show()
@@ -2560,6 +2564,7 @@ func _apply_shop_storefront_skin() -> void:
 		"panel",
 		rates_content_style
 	)
+	_shop_storefront_art.apply(self)
 
 
 func _tick_shop_banner(delta: float) -> void:
@@ -2669,6 +2674,7 @@ func _refresh_shop_banner() -> void:
 		(shop_banner_index % count) + count
 	) % count
 	var data := SHOP_CATALOG.get_banner(shop_banner_index)
+	_shop_storefront_art.refresh_banner(data)
 	shop_banner_badge.text = String(data.get("badge", "EVENT"))
 	shop_banner_title.text = String(data.get("title", "마왕 상점"))
 	shop_banner_description.text = String(data.get("description", ""))
@@ -2720,6 +2726,7 @@ func _rebuild_shop_packages() -> void:
 				)
 			)
 		shop_package_grid.add_child(button)
+		_shop_storefront_art.decorate_package(button, data)
 
 
 func _on_shop_package_pressed(package_id: String) -> void:
@@ -2760,6 +2767,11 @@ func _rebuild_shop_list() -> void:
 	)
 	shop_multi_button.text = "추천 · 몬스터 소환 10+1회\n%s 골드" % _format_shop_number(
 		SHOP_CATALOG.MULTI_DRAW_COST
+	)
+	_shop_storefront_art.set_product_copy(shop_single_button, shop_single_button.text)
+	_shop_storefront_art.set_product_copy(
+		shop_multi_button,
+		"몬스터 소환 10+1회\n%s 골드" % _format_shop_number(SHOP_CATALOG.MULTI_DRAW_COST)
 	)
 	shop_relic_single_button.text = "유물 소환 1회\n준비 중"
 	shop_relic_multi_button.text = "유물 소환 10+1회\n준비 중"
@@ -4187,7 +4199,15 @@ func _refresh_header() -> void:
 		^"SafeArea/Layout/Header/HeaderSlots/HeaderProgressPlate/HeaderProgressValue"
 	) as Label
 	if progress_value != null:
-		progress_value.text = "Stage %d" % highest
+		progress_value.text = (
+			_format_shop_number(STAGE_PROGRESS.get_research_points())
+			if current_tab == "shop" else "Stage %d" % highest
+		)
+	var progress_title := get_node_or_null(
+		^"SafeArea/Layout/Header/HeaderSlots/HeaderProgressPlate/HeaderProgressTitle"
+	) as Label
+	if progress_title != null:
+		progress_title.text = "연구 포인트" if current_tab == "shop" else "최고 해금"
 
 func _change_stage(direction: int) -> void:
 	if stage_ids.is_empty() or _stage_transition_running:

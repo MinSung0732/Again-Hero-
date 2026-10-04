@@ -10,22 +10,25 @@ const BANNERS := [
 	{
 		"id": "monster_reinforcement",
 		"badge": "EVENT",
-		"title": "신규 몬스터 전력 보급",
-		"description": "몬스터 소환에서 조각을 모아 새로운 전투 편성을 준비하세요.",
+		"title": "어둠의 군단 소환",
+		"description": "몬스터 조각을 모아\n새로운 전력을 편성하세요.",
+		"art_path": "res://assets/art/UI/shop/monster_banner.png",
 		"footer": "마왕군 확장 이벤트",
 	},
 	{
 		"id": "relic_preview",
 		"badge": "COMING SOON",
 		"title": "유물 소환 준비 중",
-		"description": "마왕군 전체 빌드를 보조하는 유물 시스템이 이 상점에 합류합니다.",
+		"description": "마왕군을 강화할 유물,\n곧 찾아옵니다.",
+		"art_path": "res://assets/art/UI/shop/relic_banner.png",
 		"footer": "유물 데이터 · 확률 · 재화 설계 중",
 	},
 	{
 		"id": "growth_packages",
 		"badge": "PACKAGE",
 		"title": "성장 재화 패키지",
-		"description": "골드와 연구 포인트 상품을 한 화면에서 확인하도록 패키지 영역을 확장했습니다.",
+		"description": "골드 · 연구 포인트 보급\n상품을 준비하고 있습니다.",
+		"art_path": "res://assets/art/UI/shop/monster_banner.png",
 		"footer": "결제/상품 정책 확정 후 활성화",
 	},
 ]
@@ -33,6 +36,7 @@ const BANNERS := [
 const PACKAGES := [
 	{
 		"id": "gold_supply_small",
+		"art_path": "res://assets/art/UI/shop/gold_supply.png",
 		"badge": "GOLD",
 		"title": "골드 보급 I",
 		"reward_text": "골드 5,000",
@@ -42,6 +46,7 @@ const PACKAGES := [
 	},
 	{
 		"id": "gold_supply_large",
+		"art_path": "res://assets/art/UI/shop/gold_supply.png",
 		"badge": "GOLD",
 		"title": "골드 보급 II",
 		"reward_text": "골드 25,000",
@@ -51,6 +56,7 @@ const PACKAGES := [
 	},
 	{
 		"id": "research_supply_small",
+		"art_path": "res://assets/art/UI/shop/research_supply.png",
 		"badge": "RESEARCH",
 		"title": "연구 지원팩",
 		"reward_text": "연구 포인트 100",
@@ -60,6 +66,7 @@ const PACKAGES := [
 	},
 	{
 		"id": "research_supply_large",
+		"art_path": "res://assets/art/UI/shop/research_supply.png",
 		"badge": "RESEARCH",
 		"title": "심화 연구팩",
 		"reward_text": "연구 포인트 500",

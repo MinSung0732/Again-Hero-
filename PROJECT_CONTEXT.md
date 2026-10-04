@@ -1,5 +1,12 @@
 # PROJECT_CONTEXT.md
 
+## Illustrated Shop Storefront (2026-10-04)
+
+- `src/ui/shop_storefront_art.gd` decorates existing shop controls without changing reward rolls, persistence, history or summon signal bindings. Generated art lives in `assets/art/UI/shop/`; prompts/provenance are recorded there.
+- The reference-inspired storefront uses a gold/violet title sign, illustrated sliding banner, two gate summon cards, history/rates buttons, a disabled relic preview and four package cards. Text and prices remain runtime labels.
+- Shop textures are cached, banner navigation stays outside the animated slide, and all content stays in the existing frame-safe internal scroll area.
+- The shared header shows research points in the shop and returns to highest unlocked stage elsewhere. Existing test gold, draw prices and Common-only draw weights remain unchanged. Future relic/payment products remain disabled; no unimplemented rarity-rate promotion or cash price is advertised.
+
 ## Fullscreen Monster Gacha Reveal (2026-10-04)
 
 - Monster summons use a dedicated fullscreen overlay instead of showing the lobby behind the animation.
