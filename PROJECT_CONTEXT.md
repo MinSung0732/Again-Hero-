@@ -1,5 +1,14 @@
 # PROJECT_CONTEXT.md
 
+## Fullscreen Monster Gacha Reveal (2026-10-04)
+
+- Monster summons use a dedicated fullscreen overlay instead of showing the lobby behind the animation.
+- Sequence: anticipation door → shake/open using the uploaded composite sheet → highest-rarity color flash → one monster reveal per tap → final icon/shard summary.
+- Multi-draws select the door animation by the highest rarity in that batch. `SKIP` jumps directly to the final summary.
+- Collection and history rewards are persisted before presentation so skipping or leaving the visual sequence cannot lose rewards.
+- Current monsters are all Common. Uncommon, Rare, Legendary, and Transcendent catalog entries and door assets are reserved with zero draw weight until their content is introduced.
+- Only the selected door sheet is threaded-loaded for a sequence, and the reusable overlay releases its frame references after confirmation.
+
 ## Monster Collection Upgrades (2026-10-04)
 
 - Team-formation monster cards show the current shard balance as `[ n / required ]`.

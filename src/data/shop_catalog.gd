@@ -69,26 +69,59 @@ const PACKAGES := [
 	},
 ]
 
-const RARITY_ORDER := ["common", "rare", "legendary"]
+const RARITY_ORDER := [
+	"common",
+	"uncommon",
+	"rare",
+	"legendary",
+	"transcendent",
+]
 
 const RARITIES := {
 	"common": {
 		"label": "일반",
-		"weight": 70.0,
+		"rank": 0,
+		"weight": 100.0,
 		"shard_min": 10,
 		"shard_max": 30,
+		"color": Color("f4f4f4"),
+		"door_sheet_path": "res://assets/art/effects/gatcha/gacha_gold_light/monster_common/monster_common_sheet.png",
+	},
+	"uncommon": {
+		"label": "고급",
+		"rank": 1,
+		"weight": 0.0,
+		"shard_min": 6,
+		"shard_max": 15,
+		"color": Color("ffd84f"),
+		"door_sheet_path": "res://assets/art/effects/gatcha/gacha_gold_light/monster_uncommon/monster_uncommon_sheet.png",
 	},
 	"rare": {
 		"label": "희귀",
-		"weight": 25.0,
+		"rank": 2,
+		"weight": 0.0,
 		"shard_min": 3,
 		"shard_max": 8,
+		"color": Color("54a8ff"),
+		"door_sheet_path": "res://assets/art/effects/gatcha/gacha_gold_light/monster_rare/monster_rare_sheet.png",
 	},
 	"legendary": {
-		"label": "최고등급",
-		"weight": 5.0,
+		"label": "전설",
+		"rank": 3,
+		"weight": 0.0,
+		"shard_min": 1,
+		"shard_max": 3,
+		"color": Color("bc70ff"),
+		"door_sheet_path": "res://assets/art/effects/gatcha/gacha_gold_light/monster_legendary/monster_legendary_sheet.png",
+	},
+	"transcendent": {
+		"label": "초월",
+		"rank": 4,
+		"weight": 0.0,
 		"shard_min": 1,
 		"shard_max": 1,
+		"color": Color("61e887"),
+		"door_sheet_path": "res://assets/art/effects/gatcha/gacha_gold_light/monster_transcendent/monster_transcendent_sheet.png",
 	},
 }
 
@@ -101,6 +134,11 @@ static func get_rarity(rarity_id: String) -> Dictionary:
 static func get_rarity_label(rarity_id: String) -> String:
 	var data := get_rarity(rarity_id)
 	return String(data.get("label", rarity_id))
+
+
+static func get_rarity_rank(rarity_id: String) -> int:
+	var data := get_rarity(rarity_id)
+	return maxi(int(data.get("rank", 0)), 0)
 
 
 static func get_banner_count() -> int:

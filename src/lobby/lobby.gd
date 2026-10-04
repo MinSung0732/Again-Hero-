@@ -15,6 +15,7 @@ const SHOP_SUMMON_HISTORY_STORE := preload(
 )
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 const FORMATION_DRAG_CARD := preload("res://src/ui/formation_drag_card.gd")
+const GACHA_REVEAL_OVERLAY := preload("res://src/ui/gacha_reveal_overlay.gd")
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 const DEMON_SKILL_LOADOUT_STORE := preload(
 	"res://src/systems/demon_skill_loadout_store.gd"
@@ -209,6 +210,7 @@ var shop_banner_index: int = 0
 var shop_banner_timer: float = SHOP_BANNER_AUTO_SECONDS
 var shop_last_result_text: String = ""
 var shop_summon_history: Array = []
+var gacha_reveal_overlay: GachaRevealOverlay
 var _shop_scroll_touch_index: int = -1
 var _shop_banner_transitioning := false
 var _shop_banner_tween: Tween
@@ -294,6 +296,7 @@ func _ready() -> void:
 	_apply_asset_frames()
 	_apply_new_ui_assets()
 	_apply_lobby_visual_polish()
+	_setup_gacha_reveal_overlay()
 	_connect_navigation()
 	shop_summon_history = SHOP_SUMMON_HISTORY_STORE.load_entries()
 	_refresh_shop_summon_history()
@@ -2123,6 +2126,15 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 
 
 func _input(event: InputEvent) -> void:
+	if (
+		is_instance_valid(gacha_reveal_overlay)
+		and gacha_reveal_overlay.is_presenting()
+	):
+		_shop_scroll_touch_index = -1
+		_stage_swipe_active = false
+		if event.is_action_pressed("ui_cancel"):
+			gacha_reveal_overlay.skip_to_results()
+		return
 	if shop_rates_overlay.visible:
 		_shop_scroll_touch_index = -1
 		_stage_swipe_active = false
@@ -2270,6 +2282,14 @@ func _connect_navigation() -> void:
 	)
 	monster_detail_close_button.pressed.connect(_close_monster_detail)
 	$MonsterDetailOverlay/Dim.gui_input.connect(_on_monster_detail_dim_input)
+
+
+func _setup_gacha_reveal_overlay() -> void:
+	if is_instance_valid(gacha_reveal_overlay):
+		return
+	gacha_reveal_overlay = GACHA_REVEAL_OVERLAY.new()
+	gacha_reveal_overlay.name = "GachaRevealOverlay"
+	add_child(gacha_reveal_overlay)
 
 
 func _on_team_tab_pressed() -> void:
@@ -2860,6 +2880,7 @@ func _open_monster_boxes(draw_count: int) -> void:
 		return
 
 	var new_history_entries: Array = []
+	var reveal_entries: Array = []
 
 	for _draw_index in range(draw_count):
 		var roll := _roll_monster_shard()
@@ -2886,12 +2907,17 @@ func _open_monster_boxes(draw_count: int) -> void:
 			updated_state
 		)
 
-		new_history_entries.append({
+		var history_entry := {
 			"monster_id": monster_id,
 			"rarity": rarity_id,
 			"shards": shard_amount,
 			"unlocked": not was_unlocked and is_unlocked,
-		})
+		}
+		new_history_entries.append(history_entry)
+		var reveal_entry := history_entry.duplicate()
+		reveal_entry["name"] = MONSTER_CATALOG.get_monster_name(monster_id)
+		reveal_entry["icon"] = _team_monster_card_icon(monster_id)
+		reveal_entries.append(reveal_entry)
 
 		monster_collection_state = updated_state
 
@@ -2904,7 +2930,10 @@ func _open_monster_boxes(draw_count: int) -> void:
 		% _format_shop_number(SHOP_CATALOG.TEST_GOLD)
 	)
 	_refresh_header()
-	_show_shop_result_modal()
+	if not reveal_entries.is_empty() and is_instance_valid(gacha_reveal_overlay):
+		_close_shop_result_modal()
+		_close_shop_rates_modal()
+		gacha_reveal_overlay.present(reveal_entries)
 
 func _roll_monster_shard() -> Dictionary:
 	var rarity_id := _roll_shop_rarity()

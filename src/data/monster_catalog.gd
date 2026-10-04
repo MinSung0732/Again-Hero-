@@ -93,7 +93,7 @@ const MONSTERS := {
 		},
 		"default_unlocked": true,
 		"shards_required": 30,
-		"rarity": "rare",
+		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/spider/frames/idle_01.png",
 		"ground_shadow": {
 			"size": Vector2(68.0, 22.0),
@@ -150,7 +150,7 @@ const MONSTERS := {
 		},
 		"default_unlocked": true,
 		"shards_required": 40,
-		"rarity": "legendary",
+		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/orc/frames/idle_01.png",
 		"ground_shadow": {
 			"size": Vector2(82.0, 26.0),
@@ -340,7 +340,7 @@ const MONSTERS := {
 		},
 		"default_unlocked": true,
 		"shards_required": 30,
-		"rarity": "rare",
+		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/kobolt/frames/idle_01.png",
 		"ground_shadow": {
 			"size": Vector2(70.0, 22.0),
@@ -635,7 +635,7 @@ const MONSTERS := {
 		},
 		"default_unlocked": false,
 		"shards_required": 30,
-		"rarity": "rare",
+		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/bombrat/frames/frame_01.png",
 		"ground_shadow": {
 			"size": Vector2(60.0, 20.0),
