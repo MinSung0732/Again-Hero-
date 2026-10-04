@@ -6,6 +6,11 @@ const SINGLE_DRAW_COST := 100
 const MULTI_DRAW_COST := 1000
 const MULTI_DRAW_COUNT := 11
 
+const GACHA_SOUNDS := {
+	"door": {"path": "res://assets/audio/sfx/gacha/door_open.mp3", "volume_db": -5.0},
+	"reveal": {"path": "res://assets/audio/sfx/gacha/monster_reveal.mp3", "volume_db": -8.0},
+}
+
 const BANNERS := [
 	{
 		"id": "monster_reinforcement",

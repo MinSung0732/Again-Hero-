@@ -49,6 +49,8 @@ var _retry_draw_count := 0
 var _retry_cost := 0
 var _gold_reader: Callable
 var _button_texture: Texture2D
+var _door_sound: AudioStreamPlayer
+var _reveal_sound: AudioStreamPlayer
 
 
 func _ready() -> void:
@@ -56,7 +58,43 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	z_index = 500
 	_build_ui()
+	_door_sound = _build_sound("door")
+	_reveal_sound = _build_sound("reveal")
+	visibility_changed.connect(_on_visibility_changed)
 	hide()
+
+
+func _build_sound(cue: String) -> AudioStreamPlayer:
+	var player := AudioStreamPlayer.new()
+	player.name = "GachaSound_" + cue
+	player.bus = &"SFX"
+	var data: Dictionary = SHOP_CATALOG.GACHA_SOUNDS[cue]
+	player.volume_db = float(data.volume_db)
+	var path := String(data.path)
+	if ResourceLoader.exists(path):
+		player.stream = load(path) as AudioStream
+	# Fail-soft for optional audio if the editor import cache is not ready yet.
+	elif FileAccess.file_exists(path):
+		player.stream = AudioStreamMP3.load_from_file(path)
+	add_child(player)
+	return player
+
+
+func _stop_sounds() -> void:
+	for player in [_door_sound, _reveal_sound]:
+		if is_instance_valid(player):
+			player.stop()
+
+
+func _on_visibility_changed() -> void:
+	if not is_visible_in_tree():
+		_stop_sounds()
+
+
+func _play_sound(player: AudioStreamPlayer) -> void:
+	if is_instance_valid(player) and player.stream != null:
+		player.stop()
+		player.play()
 
 
 func is_presenting() -> bool:
@@ -136,6 +174,7 @@ func _play_opening(token: int) -> void:
 
 	if sheet != null:
 		_start_door_shake()
+		_play_sound(_door_sound)
 		_door_sprite.play("open")
 		await get_tree().create_timer(float(DOOR_FRAME_COUNT) / DOOR_FPS).timeout
 	else:
@@ -264,6 +303,8 @@ func _show_reveal(index: int) -> void:
 	]
 	_apply_reveal_panel_color(rarity_color)
 	_reveal_aura.set_accent(rarity_color)
+	_door_sound.stop()
+	_play_sound(_reveal_sound)
 	_play_reveal_emphasis()
 
 
@@ -293,6 +334,7 @@ func _play_reveal_emphasis() -> void:
 
 func _show_final_results() -> void:
 	_phase = "result"
+	_stop_sounds()
 	_stop_active_tweens()
 	_door_sprite.stop()
 	_door_sprite.hide()
@@ -409,6 +451,7 @@ func _confirm() -> void:
 
 
 func _reset_visual_state() -> void:
+	_stop_sounds()
 	_stop_active_tweens()
 	_door_sprite.stop()
 	_door_sprite.hide()
