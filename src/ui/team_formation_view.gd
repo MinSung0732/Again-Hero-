@@ -104,3 +104,12 @@ func refresh_slot(button: Button, icon: Texture2D, title: String, info: String, 
 
 func heading(lobby: Control, text: String) -> void:
 	(lobby.get_node(PATH + "/EquippedArea/Margin/Content/EquippedHeading") as Label).text = text
+
+func fit_action(button: Button) -> void:
+	# Shared large lobby buttons have excessive padding for half-width card actions.
+	# Duplicate overrides so the shared theme and other screens remain untouched.
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		var style := button.get_theme_stylebox(state).duplicate() as StyleBox
+		style.content_margin_left = 4.0
+		style.content_margin_right = 4.0
+		button.add_theme_stylebox_override(state, style)

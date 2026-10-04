@@ -3359,6 +3359,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	team_button.add_theme_stylebox_override("pressed", primary_button_style)
 	team_button.pressed.connect(_toggle_team_monster.bind(monster_id))
 	actions.add_child(team_button)
+	_team_formation_view.fit_action(team_button)
 
 	var upgrade_profile := MONSTER_CATALOG.get_rarity_upgrade_profile(monster_id)
 	var upgrade_configured := bool(upgrade_profile.get("configured", false))
@@ -3369,7 +3370,8 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	upgrade_button.text = "강화하기"
 	upgrade_button.clip_text = true
 	if not upgrade_configured:
-		upgrade_button.text = "강화 준비 중"
+		upgrade_button.text = "준비 중"
+		upgrade_button.tooltip_text = "이 등급의 강화 효과는 준비 중입니다."
 	elif not available:
 		upgrade_button.text = "해금 필요"
 	upgrade_button.disabled = (
@@ -3384,6 +3386,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	upgrade_button.add_theme_color_override("font_disabled_color", Color("9a8fa1"))
 	upgrade_button.pressed.connect(_upgrade_team_monster.bind(monster_id))
 	actions.add_child(upgrade_button)
+	_team_formation_view.fit_action(upgrade_button)
 	if not upgrade_button.disabled:
 		card_style.border_color = Color("d8ad55")
 		card_style.bg_color = Color("171020", 0.96)
