@@ -13,6 +13,7 @@ const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const HERO_AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
 const HERO_SKILL_COOLDOWN_BADGE := preload("res://src/ui/hero_skill_cooldown_badge.gd")
 const BATTLE_PIXEL_FRAME_ASSEMBLER := preload("res://src/ui/battle_pixel_frame_assembler.gd")
+const PIXEL_PANEL_SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const STAGE_INTRO_DIALOGUES := preload("res://src/data/stage_intro_dialogues.gd")
 const HERO_REVEAL_CATALOG := preload("res://src/data/hero_reveal_catalog.gd")
@@ -533,6 +534,11 @@ func _apply_battle_pixel_asset_frames() -> void:
 		0.0,
 		4.0
 	)
+	# Keep existing split-art outer frames; theme the remaining plain inner boxes.
+	PIXEL_PANEL_SKIN.apply_tree(hud_layer)
+	PIXEL_PANEL_SKIN.apply_tree(stage_intro_cutscene)
+	PIXEL_PANEL_SKIN.apply_tree(hero_reveal_cutscene)
+	PIXEL_PANEL_SKIN.apply_tree(skill_unlock_cutscene)
 
 
 func _replace_texture_frame(

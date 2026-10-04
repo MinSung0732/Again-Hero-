@@ -1,5 +1,11 @@
 # PROJECT_CONTEXT.md
 
+## Shared Placeholder Panel Skin (2026-10-05)
+
+- `src/ui/pixel_panel_skin.gd` replaces bordered, filled StyleBoxFlat panels/buttons with cached palette-specific SVG nine-patches (stepped metal corners and bevels). Existing illustrated StyleBoxTexture, empty/transparent styles and borderless backing plates remain unchanged.
+- Preserve effective content margins and inherited font texture filters; never add decorative input nodes or per-frame traversal. Apply once at construction, and reapply only to refreshed dynamic cards/buttons. Lobby cards, research/detail internals, battle HUD/cutscene internals, drag previews and loading TIP share the finish. Gameplay, art, save/auth rules remain unchanged.
+- `tests/pixel_panel_skin_smoke.gd` checks palette reuse, idempotency, minimum-size/filter/child-count invariants, refreshed cards/tabs and upgrade grid stability using an isolated account.
+
 ## Account Cloud Saves / Windows Persistent Sessions (2026-10-04)
 
 - `CloudStore` gates authenticated lobby entry on account-owned Supabase snapshot read/install/sync. `account_save_snapshots` and invoker RPCs use auth.uid ownership and revision CAS. Never modify another UUID or silently replace newer remote progress. Legacy player_progress is preserved and read when no snapshot exists; legacy monster/team tables were empty at rollout.

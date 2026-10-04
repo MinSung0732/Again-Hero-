@@ -18,6 +18,7 @@ const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 const FORMATION_DRAG_CARD := preload("res://src/ui/formation_drag_card.gd")
 const TEAM_FORMATION_VIEW := preload("res://src/ui/team_formation_view.gd")
 const MONSTER_UPGRADE_FEEDBACK := preload("res://src/ui/monster_upgrade_feedback.gd")
+const PIXEL_PANEL_SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const FORMATION_PRESET_MODEL := preload("res://src/systems/formation_preset_model.gd")
 const GACHA_REVEAL_OVERLAY := preload("res://src/ui/gacha_reveal_overlay.gd")
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
@@ -326,6 +327,7 @@ func _ready() -> void:
 	var saved_index := stage_ids.find(saved_stage_id)
 	selected_stage_index = saved_index if saved_index >= 0 else 0
 	_setup_stage_selector_buttons()
+	PIXEL_PANEL_SKIN.apply_tree(self)
 
 	_switch_tab("main")
 	_refresh_header()
@@ -1352,9 +1354,9 @@ func _apply_lobby_button_skin(
 		return
 
 	var normal_style := primary_button_style if primary else secondary_button_style
-	button.add_theme_stylebox_override("normal", normal_style)
-	button.add_theme_stylebox_override("hover", primary_button_style)
-	button.add_theme_stylebox_override("pressed", primary_button_style)
+	button.add_theme_stylebox_override("normal", PIXEL_PANEL_SKIN.skin_style(normal_style))
+	button.add_theme_stylebox_override("hover", PIXEL_PANEL_SKIN.skin_style(primary_button_style))
+	button.add_theme_stylebox_override("pressed", PIXEL_PANEL_SKIN.skin_style(primary_button_style))
 	button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	button.add_theme_font_size_override("font_size", font_size)
 	button.add_theme_color_override(
@@ -2435,7 +2437,7 @@ func _show_other_account() -> void:
 	other_account_tab_button.disabled = true
 	_apply_lobby_button_skin(other_settings_tab_button, false, 24)
 	_apply_lobby_button_skin(other_account_tab_button, true, 24)
-	other_account_tab_button.add_theme_stylebox_override("disabled", primary_button_style)
+	other_account_tab_button.add_theme_stylebox_override("disabled", PIXEL_PANEL_SKIN.skin_style(primary_button_style))
 	other_account_tab_button.add_theme_color_override(
 		"font_disabled_color",
 		Color("ffe7a8")
@@ -3210,8 +3212,8 @@ func _refresh_formation_mode() -> void:
 	_apply_lobby_button_skin(skill_mode_button, not showing_team, 23)
 	team_mode_button.disabled = showing_team
 	skill_mode_button.disabled = not showing_team
-	team_mode_button.add_theme_stylebox_override("disabled", primary_button_style)
-	skill_mode_button.add_theme_stylebox_override("disabled", primary_button_style)
+	team_mode_button.add_theme_stylebox_override("disabled", PIXEL_PANEL_SKIN.skin_style(primary_button_style))
+	skill_mode_button.add_theme_stylebox_override("disabled", PIXEL_PANEL_SKIN.skin_style(primary_button_style))
 	team_mode_button.add_theme_color_override("font_disabled_color", Color("fff0d2"))
 	skill_mode_button.add_theme_color_override("font_disabled_color", Color("fff0d2"))
 	if showing_team:
@@ -3469,6 +3471,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	badge.add_theme_color_override("font_color", Color("ffe09a"))
 	vbox.move_child(badge, 0)
 
+	PIXEL_PANEL_SKIN.apply_tree(card)
 	return card
 
 
@@ -3686,6 +3689,7 @@ func _create_demon_skill_card(skill_id: String) -> Control:
 	select_button.add_theme_stylebox_override("pressed", primary_button_style)
 	select_button.pressed.connect(_toggle_demon_skill.bind(skill_id))
 	vbox.add_child(select_button)
+	PIXEL_PANEL_SKIN.apply_tree(card)
 	return card
 
 
@@ -4616,6 +4620,7 @@ func _refresh_stage_selector_buttons(max_browsable_index: int) -> void:
 		button.add_theme_color_override("font_hover_color", Color("ffffff"))
 		button.add_theme_color_override("font_pressed_color", Color("ffe079"))
 		button.add_theme_color_override("font_disabled_color", Color("6f6673"))
+		PIXEL_PANEL_SKIN.apply(button)
 
 
 func _set_stage_arrow_visual(button: Button, enabled: bool) -> void:
@@ -5063,7 +5068,7 @@ func _refresh_research_detail() -> void:
 	research_upgrade_button.disabled = STAGE_PROGRESS.get_research_points() < cost
 	research_upgrade_button.add_theme_stylebox_override(
 		"disabled",
-		primary_button_disabled_style
+		PIXEL_PANEL_SKIN.skin_style(primary_button_disabled_style)
 	)
 
 
@@ -5207,6 +5212,7 @@ func _create_relic_card(relic_id: String, data: Dictionary) -> Button:
 	gauge_label.text = "[ %d / %d ]" % [fragments, required]
 	gauge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	content.add_child(gauge_label)
+	PIXEL_PANEL_SKIN.apply_tree(card)
 	return card
 
 

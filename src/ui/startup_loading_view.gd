@@ -4,6 +4,7 @@ const CATALOG := preload("res://src/data/startup_catalog.gd")
 const CASTLE := preload("res://assets/art/UI/startup/moon_castle.png")
 const CAMP := preload("res://assets/art/UI/startup/moon_camp.png")
 const LOGO := preload("res://assets/art/UI/logo/AgainHeroLogo.png")
+const PIXEL_PANEL_SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 
 var background: TextureRect
 var heading: Label
@@ -37,6 +38,7 @@ func _ready() -> void:
 	place(self, tip_panel, Rect2(0.1, 0.8, 0.8, 0.115))
 	label(tip_panel, "◆  TIP  ◆", 27, Rect2(0.07, 0.10, 0.86, 0.28), Color("e8c2ff"))
 	tip_label = label(tip_panel, CATALOG.TIPS[0], 24, Rect2(0.08, 0.40, 0.84, 0.47))
+	PIXEL_PANEL_SKIN.apply(tip_panel)
 	_tip_timer = Timer.new()
 	_tip_timer.wait_time = 4.0
 	_tip_timer.timeout.connect(_next_tip)

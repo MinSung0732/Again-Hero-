@@ -125,6 +125,7 @@ func _build_drag_preview() -> Control:
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_theme_constant_override("separation", 10)
 	preview.add_child(row)
+	preload("res://src/ui/pixel_panel_skin.gd").apply(preview)
 
 	if preview_icon != null:
 		var icon_rect := TextureRect.new()
