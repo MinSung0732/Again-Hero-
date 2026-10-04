@@ -17,6 +17,7 @@ const SHOP_SUMMON_HISTORY_STORE := preload(
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 const FORMATION_DRAG_CARD := preload("res://src/ui/formation_drag_card.gd")
 const TEAM_FORMATION_VIEW := preload("res://src/ui/team_formation_view.gd")
+const MONSTER_UPGRADE_FEEDBACK := preload("res://src/ui/monster_upgrade_feedback.gd")
 const FORMATION_PRESET_MODEL := preload("res://src/systems/formation_preset_model.gd")
 const GACHA_REVEAL_OVERLAY := preload("res://src/ui/gacha_reveal_overlay.gd")
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
@@ -199,6 +200,7 @@ var stage_ids: Array[String] = []
 var selected_stage_index: int = 0
 var current_tab: String = "main"
 var _team_formation_view = TEAM_FORMATION_VIEW.new()
+var _team_upgrade_feedback: Node2D
 var _shop_storefront_art = SHOP_STOREFRONT_ART.new()
 var research_view_mode: String = "research"
 var selected_research_id: String = ""
@@ -3266,6 +3268,10 @@ func _refresh_team_preview() -> void:
 	_rebuild_team_monster_cards()
 
 func _clear_team_monster_cards() -> void:
+	# Preserve the decoration when the existing collection refresh replaces cards.
+	if is_instance_valid(_team_upgrade_feedback):
+		_team_upgrade_feedback.stop()
+		_team_upgrade_feedback.reparent(self, false)
 	for child in team_monster_grid.get_children():
 		team_monster_grid.remove_child(child)
 		child.queue_free()
@@ -3510,6 +3516,20 @@ func _upgrade_team_monster(monster_id: String) -> void:
 		}.get(reason, "몬스터를 강화할 수 없습니다."))
 		team_status_label.text = reason_text
 	_refresh_team_preview()
+	if bool(result.get("success", false)):
+		_play_team_upgrade_feedback(monster_id, int(result.get("level", 0)))
+
+func _play_team_upgrade_feedback(monster_id: String, new_level: int) -> void:
+	for card in team_monster_grid.get_children():
+		if card.get("formation_id") != monster_id:
+			continue
+		if not is_instance_valid(_team_upgrade_feedback):
+			_team_upgrade_feedback = MONSTER_UPGRADE_FEEDBACK.new()
+			card.add_child(_team_upgrade_feedback)
+		else:
+			_team_upgrade_feedback.reparent(card, false)
+		_team_upgrade_feedback.restart(new_level)
+		return
 
 func _refresh_team_slot(button: Button, slot_index: int) -> void:
 	if slot_index < team_selected_ids.size():
