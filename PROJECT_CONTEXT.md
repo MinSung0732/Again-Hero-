@@ -1,5 +1,12 @@
 # PROJECT_CONTEXT.md
 
+## Startup / Local Login Shell (2026-10-04)
+
+- The default app entry is `src/startup/Startup.tscn`: touch title → bundled-resource preparation → actual threaded Lobby preload → login selection. Generated castle/camp backgrounds and the existing logo are separate from native runtime controls.
+- No fake download bytes/speed or fabricated progress is displayed. Resource preparation checks/loads catalog paths; lobby/dungeon progress comes from ResourceLoader. Scene initialization stays covered by the persistent shared fullscreen SceneTransition.
+- `LoginGateway` is a disconnected authentication boundary. Google/Kakao show an unavailable notice; guest enters the existing local save without inventing a Supabase identity or changing save paths. Actual OAuth/anonymous auth/session persistence/account linking/save migration remain unimplemented. Emit `authenticated` only after real session validation and account data selection.
+- Source prompts live in `assets/art/UI/startup/STARTUP_ART_SOURCE.md`; implementation boundaries and deferred backend work in `docs/STARTUP_LOGIN_FLOW.md`. `tests/startup_smoke.gd` exercises real startup/preload/retry/guest/dungeon transitions. Supabase config/client and Main gameplay remain unchanged.
+
 ## Team Formation Presentation / Reserved Presets (2026-10-04)
 
 - Existing monster sprites and catalog/progression values remain authoritative. `team_formation_view.gd` builds the equipped-slot presentation once; collection cards retain three columns, actual shard progress (gray/green) and explicit formation/upgrade actions.

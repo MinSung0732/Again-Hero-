@@ -302,6 +302,9 @@
 - [ ] 기타 콘텐츠 정의 및 구현
 
 ### Backend / Account Foundation
+- [x] 시작 4단계 화면 / 실제 리소스 준비·로비 미리 로딩 / 로컬 게스트 진입
+- [x] 카카오·구글 로그인 UI와 서버 미연결 안내 / 인증 어댑터 경계
+- [ ] Supabase 익명 게스트 / 소셜 계정 연결 / 계정별 저장 이전
 - [x] Supabase DB foundation (profiles / progress / monster collection / team loadout + RLS)
 - [x] Godot Supabase REST client config foundation (publishable key only)
 - [ ] Email/Password 자체 계정 로그인
