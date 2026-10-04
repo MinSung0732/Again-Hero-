@@ -6,6 +6,7 @@
 - The reference-inspired storefront uses a gold/violet title sign, illustrated sliding banner, two gate summon cards, history/rates buttons, a disabled relic preview and four package cards. Text and prices remain runtime labels.
 - The shop alone hides the generic outer content frame and uses the expanded width. Section bars and separators replace nested ornamental borders; static gradient textures blend gate illustrations into their price/button pedestal and shade banner copy. Single draws use muted stone borders, multi-draws use gold borders and restrained glow. Relic art and disabled buttons share one stage. Other tabs restore the original outer frame.
 - Shop textures are cached, banner navigation stays outside the animated slide, and all content stays in the existing frame-safe internal scroll area.
+- Summon cards are passive: only their child `SummonButton` can summon. `drag_safe_button.gd` forwards a `confirmed` signal on release, cancelling after 24 canvas pixels of movement, leaving the button, touch cancellation or an additional touch. Emulated mouse events cannot reset a cancelled touch. Lobby connects reward rolls to `confirmed`, never the whole card's `pressed` signal.
 - The shared header shows research points in the shop and returns to highest unlocked stage elsewhere. Existing test gold, draw prices and Common-only draw weights remain unchanged. Future relic/payment products remain disabled; no unimplemented rarity-rate promotion or cash price is advertised.
 
 ## Fullscreen Monster Gacha Reveal (2026-10-04)

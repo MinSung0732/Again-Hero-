@@ -3,6 +3,7 @@ extends RefCounted
 # Presentation only: reward rolls, persistence and account history stay in Lobby.
 const CONTENT := "SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/"
 const BUTTON := "res://assets/art/effects/gatcha/gacha_button_texture.tres"
+const DRAG_SAFE_BUTTON := preload("res://src/ui/drag_safe_button.gd")
 var _textures: Dictionary = {}
 var _banner_art: TextureRect
 
@@ -241,6 +242,9 @@ func refresh_banner(data: Dictionary) -> void:
 
 func _product(button: Button, featured: bool) -> void:
 	button.custom_minimum_size.y = 570.0
+	# Keep the existing node/path as the passive card, not a purchase target.
+	button.disabled = true
+	button.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_frame(button, featured)
 	var art := _image(button, "res://assets/art/UI/shop/summon_gate.png")
 	art.offset_left = 6.0
@@ -268,14 +272,23 @@ func _product(button: Button, featured: bool) -> void:
 	price.anchor_bottom = 0.81
 	price.offset_left = 18.0
 	price.offset_right = -18.0
-	var cta := _image(button, BUTTON)
-	cta.stretch_mode = TextureRect.STRETCH_SCALE
+	var cta := DRAG_SAFE_BUTTON.new()
+	cta.name = "SummonButton"
+	cta.text = "소환하기"
+	cta.mouse_filter = Control.MOUSE_FILTER_PASS
+	cta.add_theme_font_size_override("font_size", 30)
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		var style := _plate_style()
+		if state == "pressed":
+			style.modulate_color = Color("bc93d2")
+		cta.add_theme_stylebox_override(state, style)
+	cta.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	button.add_child(cta)
+	cta.anchor_right = 1.0
 	cta.anchor_top = 0.84
 	cta.anchor_bottom = 0.96
 	cta.offset_left = 16.0
 	cta.offset_right = -16.0
-	var cta_text := _label(cta, "소환하기", 30, Color.WHITE)
-	cta_text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	if featured:
 		var badge := _label(button, "추천 · 10+1회", 22, Color("fff09c"))
 		badge.anchor_left = 0.12

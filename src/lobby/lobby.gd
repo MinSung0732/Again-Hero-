@@ -2250,9 +2250,11 @@ func _connect_navigation() -> void:
 	$StageSelectOverlay/Dim.gui_input.connect(_on_stage_selector_dim_input)
 	enter_stage_button.pressed.connect(_enter_selected_stage)
 
-	shop_single_button.pressed.connect(_open_monster_boxes.bind(1))
-	shop_multi_button.pressed.connect(
-		_open_monster_boxes.bind(SHOP_CATALOG.MULTI_DRAW_COUNT)
+	shop_single_button.get_node("SummonButton").connect(
+		"confirmed", _open_monster_boxes.bind(1)
+	)
+	shop_multi_button.get_node("SummonButton").connect(
+		"confirmed", _open_monster_boxes.bind(SHOP_CATALOG.MULTI_DRAW_COUNT)
 	)
 	shop_relic_single_button.pressed.connect(
 		_show_shop_placeholder.bind("유물 소환 시스템은 아직 준비 중입니다.")
