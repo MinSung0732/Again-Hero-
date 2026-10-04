@@ -1,5 +1,11 @@
 # PROJECT_CONTEXT.md
 
+## Battle Result Readability (2026-10-05)
+
+- Victory/defeat share the responsive ResultPanel and a full-HUD dimming/input backdrop. Localized title, outcome and granted research rewards remain outside the internal analysis scroll, with fixed next-stage and lobby/retry actions. Primary action is next stage when available, otherwise retry.
+- `battle_result_copy.gd` is presentation only: separate the existing outcome/reward message, preserve calculations in the scroll, and space/localize analysis rows. Never calculate or grant points from formatted copy; Battle/StageProgress remain authoritative. Failed reward writes must not appear as a granted reward.
+- The analysis starts with combat metrics, followed by reward details. Long builds scroll without growing the screen or moving action buttons. Test fixtures use a randomized guest directory, not player progress.
+
 ## Hero Dialogue Playback Controls (2026-10-05)
 
 - All ten stage conversations use `StageIntroCutscene`. SKIP is always visible/enabled, including first encounters; `intro_seen`/clear flags no longer gate its UI. Skipping still finishes the conversation once and continues through the existing hero reveal. Unvisited dialogue events are not newly granted by skipping.

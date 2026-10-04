@@ -156,11 +156,13 @@ const BATTLE_PIXEL_BAR_BACKGROUND := "res://assets/art/UI/05_right_bars/part_02.
 
 @onready var result_panel: PanelContainer = $HUD/ResultPanel
 @onready var result_title: Label = $HUD/ResultPanel/Margin/VBox/ResultTitle
+@onready var result_reward: Label = $HUD/ResultPanel/Margin/VBox/ResultReward
 @onready var result_message: Label = $HUD/ResultPanel/Margin/VBox/ResultMessage
 @onready var result_analysis: Label = $HUD/ResultPanel/Margin/VBox/ResultAnalysisScroll/ResultAnalysis
 @onready var next_stage_button: Button = $HUD/ResultPanel/Margin/VBox/NextStageButton
-@onready var stage_select_result_button: Button = $HUD/ResultPanel/Margin/VBox/StageSelectResultButton
-@onready var restart_button: Button = $HUD/ResultPanel/Margin/VBox/RestartButton
+@onready var stage_select_result_button: Button = $HUD/ResultPanel/Margin/VBox/ResultActions/StageSelectResultButton
+@onready var restart_button: Button = $HUD/ResultPanel/Margin/VBox/ResultActions/RestartButton
+var _result_reward_details := ""
 
 var auto_placement: bool = true
 var selected_monster_type: String = ""
@@ -3242,20 +3244,44 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	placement_toggle.disabled = true
 
 	if player_won:
-		result_title.text = "STAGE CLEAR"
+		result_title.text = "승리 · 스테이지 클리어"
+		result_title.add_theme_color_override("font_color", Color("ffe09a"))
 		status_label.text = "용사를 쓰러뜨렸습니다. 스테이지 클리어!"
 		next_stage_button.visible = battle.can_go_to_next_stage()
 	else:
-		result_title.text = "EXPERIMENT FAILED"
+		result_title.text = "패배 · 실험 종료"
+		result_title.add_theme_color_override("font_color", Color("ffb2b8"))
 		status_label.text = "이번 실험이 종료되었습니다."
 		next_stage_button.visible = false
 
-	result_message.text = message
-	result_analysis.text = "Run 분석 불러오는 중..."
+	var copy := preload("res://src/ui/battle_result_copy.gd").format_message(message)
+	result_message.text = copy.headline
+	result_reward.text = copy.reward
+	result_reward.visible = not result_reward.text.is_empty()
+	_result_reward_details = copy.details
+	result_analysis.text = "전투 분석 불러오는 중..."
+	$HUD/ResultPanel/Margin/VBox/ResultAnalysisScroll.scroll_vertical = 0
+	$HUD/ResultBackdrop.show()
+	_style_result_actions()
 	result_panel.show()
 	result_panel.move_to_front()
 
 	call_deferred("_populate_run_result_analysis")
+
+func _style_result_actions() -> void:
+	var primary: Button = next_stage_button if next_stage_button.visible else restart_button
+	for button in [next_stage_button, stage_select_result_button, restart_button]:
+		var emphasized: bool = button == primary
+		button.add_theme_color_override("font_color", Color("fff0c9") if emphasized else Color("eee8f5"))
+		for state in ["normal", "hover", "pressed"]:
+			var style := StyleBoxFlat.new()
+			style.bg_color = Color("50246e") if emphasized else Color("21182f")
+			if state != "normal":
+				style.bg_color = style.bg_color.lightened(0.15)
+			style.border_color = Color("e9be62") if emphasized else Color("89739e")
+			style.set_border_width_all(2)
+			style.set_content_margin_all(12)
+			button.add_theme_stylebox_override(state, PIXEL_PANEL_SKIN.skin_style(style))
 
 func _populate_run_result_analysis() -> void:
 	if not is_instance_valid(result_analysis):
@@ -3264,7 +3290,7 @@ func _populate_run_result_analysis() -> void:
 	if battle != null and battle.has_method("get_run_analysis_summary"):
 		var summary = battle.call("get_run_analysis_summary")
 		if summary != null:
-			result_analysis.text = String(summary)
+			result_analysis.text = preload("res://src/ui/battle_result_copy.gd").format_analysis(String(summary), _result_reward_details)
 			return
 
 	result_analysis.text = "Run 분석을 불러오지 못했습니다."

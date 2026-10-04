@@ -1,0 +1,70 @@
+extends SceneTree
+
+const COPY := preload("res://src/ui/battle_result_copy.gd")
+const SCOPE := preload("res://src/systems/account_save_scope.gd")
+const PROGRESS := preload("res://src/systems/stage_progress.gd")
+var failed := false
+
+func _initialize() -> void:
+	call_deferred("run")
+
+func check(condition: bool, message: String) -> void:
+	if not condition:
+		failed = true
+		push_error("RESULT_TEST: " + message)
+
+func capture(name: String) -> void:
+	if "--capture" in OS.get_cmdline_user_args() and DisplayServer.get_name() != "headless":
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png("res://battle-result-" + name + ".png")
+
+func run() -> void:
+	root.get_node("LoginGateway").remember_session_enabled = false
+	var folder := "user://result_test_" + Crypto.new().generate_random_bytes(16).hex_encode()
+	DirAccess.make_dir_recursive_absolute(folder)
+	SCOPE.guest_directory = folder
+	SCOPE.select_guest()
+	var main = load("res://src/main/Main.tscn").instantiate()
+	root.add_child(main)
+	current_scene = main
+	var deadline := Time.get_ticks_msec() + 20000
+	while not main._presentation_ready and Time.get_ticks_msec() < deadline:
+		await process_frame
+	main.stage_intro_cutscene._finish(true)
+	await process_frame
+	main.hero_reveal_cutscene._active = false
+	main.hero_reveal_cutscene.hide()
+	main.hud_layer.show()
+	main.battle.set_external_pause(true)
+	PROGRESS.complete_stage("stage_1", 1, "stage_2", 2, 0)
+	var victory := "Stage 1 클리어!\n첫 번째 침입자 · 견습 마법용사 처치 성공.\n최초 클리어 보상 · 연구 포인트 +100\nRun 연구 +141 · 산정 141 × Stage 1.00\n기본 +50 · 피해 +30 · 마왕Lv +15 · 용사Lv +6 · 소환 +10 · 신속 +24 · 관찰/전환 +6"
+	for won in [true, false]:
+		var message := victory if won else "시간 초과!\n견습 마법용사가 제한시간을 버텨냈습니다.\nRun 연구 +41\n기본 +10 · 피해 +20 · 마왕Lv +3 · 용사Lv +2 · 소환 +3 · 신속 +0 · 관찰/전환 +3"
+		main._on_battle_finished(message, won)
+		await process_frame
+		await process_frame
+		check(main.result_title.text.begins_with("승리" if won else "패배"), "localized result title")
+		check(main.result_reward.text.contains("+141" if won else "+41"), "actual granted reward shown")
+		check(not main.result_message.text.contains("산정"), "calculation separated from headline")
+		check(main.result_analysis.text.contains("◆ 전투 분석") and main.result_analysis.text.contains("◆ 보상 상세"), "analysis/reward sections preserved")
+		check(main.result_panel.get_global_rect().end.y <= 1920 and main.restart_button.get_global_rect().end.y <= main.result_panel.get_global_rect().end.y, "panel/actions stay in screen")
+		check(main.restart_button.pressed.is_connected(main._on_restart_pressed) and main.stage_select_result_button.pressed.is_connected(main._on_lobby_pressed), "existing actions connected")
+		check(won or not main.next_stage_button.visible, "no next-stage action on defeat")
+		check(not won or main.next_stage_button.visible, "unlocked next stage shown on victory")
+		await capture("victory" if won else "defeat")
+	var failed_reward := COPY.format_message("시간 초과!\nRun 연구 보상 저장 실패")
+	check(failed_reward.reward.is_empty() and failed_reward.details.contains("저장 실패"), "failed award never shown as granted")
+	main.result_analysis.text += "\n긴 증강 정보\n".repeat(60)
+	await process_frame
+	await process_frame
+	var scroll = main.get_node("HUD/ResultPanel/Margin/VBox/ResultAnalysisScroll")
+	scroll.scroll_vertical = 100000
+	await process_frame
+	check(scroll.scroll_vertical > 0 and main.restart_button.is_visible_in_tree(), "long analysis scrolls while actions remain fixed")
+	main.free()
+	for file in DirAccess.get_files_at(folder):
+		DirAccess.remove_absolute(folder.path_join(file))
+	DirAccess.remove_absolute(folder)
+	SCOPE.guest_directory = "user://"
+	print("BATTLE_RESULT_READABILITY_FAILED" if failed else "BATTLE_RESULT_READABILITY_OK")
+	quit(1 if failed else 0)

@@ -2387,49 +2387,64 @@ text = "선택"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="ResultBackdrop" type="ColorRect" parent="HUD"]
+visible = false
+z_index = 339
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.01, 0.005, 0.025, 0.78)
+
 [node name="ResultPanel" type="PanelContainer" parent="HUD"]
 theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
 visible = false
 z_index = 340
 anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -420.0
-offset_top = -520.0
-offset_right = 420.0
-offset_bottom = 520.0
+anchor_left = 0.06
+anchor_top = 0.12
+anchor_right = 0.94
+anchor_bottom = 0.88
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Margin" type="MarginContainer" parent="HUD/ResultPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 48
-theme_override_constants/margin_top = 48
-theme_override_constants/margin_right = 48
-theme_override_constants/margin_bottom = 48
+theme_override_constants/margin_left = 52
+theme_override_constants/margin_top = 52
+theme_override_constants/margin_right = 52
+theme_override_constants/margin_bottom = 52
 
 [node name="VBox" type="VBoxContainer" parent="HUD/ResultPanel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 26
-alignment = 1
+theme_override_constants/separation = 22
 
 [node name="ResultTitle" type="Label" parent="HUD/ResultPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 50
+theme_override_font_sizes/font_size = 48
 text = "전투 종료"
 horizontal_alignment = 1
+autowrap_mode = 2
 
 [node name="ResultMessage" type="Label" parent="HUD/ResultPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_colors/font_color = Color(0.94, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 31
 text = "결과"
 horizontal_alignment = 1
 autowrap_mode = 2
 
+[node name="ResultReward" type="Label" parent="HUD/ResultPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.49, 1)
+theme_override_font_sizes/font_size = 38
+text = "전투 연구 포인트 +0"
+horizontal_alignment = 1
+autowrap_mode = 2
+
 [node name="ResultAnalysisScroll" type="ScrollContainer" parent="HUD/ResultPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 320)
+custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
@@ -2438,7 +2453,9 @@ vertical_scroll_mode = 1
 [node name="ResultAnalysis" type="Label" parent="HUD/ResultPanel/Margin/VBox/ResultAnalysisScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.92, 0.91, 0.98, 1)
+theme_override_constants/line_spacing = 8
+theme_override_font_sizes/font_size = 30
 text = "Run 분석"
 horizontal_alignment = 0
 vertical_alignment = 0
@@ -2450,27 +2467,33 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
 visible = false
-custom_minimum_size = Vector2(0, 115)
+custom_minimum_size = Vector2(0, 88)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "다음 스테이지"
 
-[node name="StageSelectResultButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
-focus_mode = 0
-theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
-theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
-theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
-custom_minimum_size = Vector2(0, 103)
+[node name="ResultActions" type="HBoxContainer" parent="HUD/ResultPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 29
-text = "로비로 돌아가기"
+theme_override_constants/separation = 20
 
-[node name="RestartButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
+[node name="StageSelectResultButton" type="Button" parent="HUD/ResultPanel/Margin/VBox/ResultActions"]
 focus_mode = 0
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
-custom_minimum_size = Vector2(0, 115)
+custom_minimum_size = Vector2(0, 88)
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 29
-text = "같은 스테이지 다시 도전"
+text = "로비로"
+
+[node name="RestartButton" type="Button" parent="HUD/ResultPanel/Margin/VBox/ResultActions"]
+focus_mode = 0
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 29
+text = "다시 도전"
