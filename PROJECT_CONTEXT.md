@@ -1,5 +1,12 @@
 # PROJECT_CONTEXT.md
 
+## Hero Dialogue Playback Controls (2026-10-05)
+
+- All ten stage conversations use `StageIntroCutscene`. SKIP is always visible/enabled, including first encounters; `intro_seen`/clear flags no longer gate its UI. Skipping still finishes the conversation once and continues through the existing hero reveal. Unvisited dialogue events are not newly granted by skipping.
+- `Label.visible_characters` reveals Korean/text progressively with punctuation pauses. Tap during typing completes only that sentence; the next debounced tap advances. Speaker focus/name events remain on entering the line.
+- `>> A ON/OFF` next to SKIP toggles auto progression. Default OFF, shared only within the app session (no account save mutation). ON waits for text completion plus a bounded reading hold, OFF holds indefinitely. Enabling after a manual hold starts a fresh interval. Processing stops at skip/finish; no delayed timer can finish an old dialogue.
+- `tests/dialogue_controls_smoke.gd` covers all stage skip availability, typing/manual/auto boundaries, actual AUTO input and lifecycle cancellation; startup smoke also checks first-entry skip → hero reveal.
+
 ## Shared Placeholder Panel Skin (2026-10-05)
 
 - `src/ui/pixel_panel_skin.gd` replaces bordered, filled StyleBoxFlat panels/buttons with cached palette-specific SVG nine-patches (stepped metal corners and bevels). Existing illustrated StyleBoxTexture, empty/transparent styles and borderless backing plates remain unchanged.

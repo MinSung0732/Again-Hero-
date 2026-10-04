@@ -145,6 +145,14 @@ func _run() -> void:
 	_check(not transition.is_transitioning() and current_scene.name == "Main", "Actual dungeon scene opens")
 	_check(current_scene._presentation_ready, "Render warmup finishes before dungeon entry")
 	_check(current_scene.battle._monster_spawn_resources_warmed, "Monster caches finish beneath loading")
+	var intro = current_scene.stage_intro_cutscene
+	await process_frame
+	_check(intro._active and intro.skip_button.visible and not intro.skip_button.disabled, "First encounter has SKIP")
+	_check(intro.auto_button.visible and not intro.auto_enabled, "Dialogue defaults to manual with AUTO available")
+	intro._on_skip_pressed()
+	await process_frame
+	await process_frame
+	_check(current_scene.hero_reveal_cutscene._active, "Dialogue skip continues to existing hero reveal")
 	var loads_before: int = warmup.texture_load_count
 	await warmup.prepare_common()
 	_check(warmup.texture_load_count == loads_before, "Reveal cache reuse performs no texture reload")

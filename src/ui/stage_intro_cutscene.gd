@@ -15,7 +15,9 @@ const HERO_SPEAKER_COLOR := Color(0.58, 0.82, 1.0, 1.0)
 const DEMON_ACCENT_COLOR := Color(0.94, 0.57, 0.22, 0.95)
 const HERO_ACCENT_COLOR := Color(0.30, 0.64, 1.0, 0.95)
 const SPEAKER_TWEEN_SECONDS := 0.20
-const TEXT_FADE_SECONDS := 0.10
+const CHARACTER_SECONDS := 0.035
+# Shared within this application session, not a gameplay/account save setting.
+static var auto_enabled := false
 const INTRO_FADE_SECONDS := 0.24
 const ADVANCE_DEBOUNCE_MSEC := 140
 const DEMON_ACTIVE_SHIFT := Vector2(14.0, -6.0)
@@ -49,6 +51,7 @@ const HERO_DIALOGUE_TOP_GAP := 1046.0
 @onready var speaker_accent: ColorRect = $Root/DialoguePanel/SpeakerAccent
 @onready var next_hint: Label = $Root/DialoguePanel/NextHint
 @onready var skip_button: Button = $Root/SkipButton
+@onready var auto_button: Button = $Root/AutoButton
 
 var _lines: Array = []
 var _line_index: int = -1
@@ -56,7 +59,10 @@ var _hero_display_name: String = "용사"
 var _active: bool = false
 var _current_speaker: String = ""
 var _speaker_tween: Tween
-var _text_tween: Tween
+var _typing := false
+var _character_wait := 0.0
+var _auto_wait := 0.0
+var _character_seconds := CHARACTER_SECONDS
 var _intro_tween: Tween
 var _demon_base_position: Vector2 = Vector2.ZERO
 var _hero_base_position: Vector2 = Vector2.ZERO
@@ -79,10 +85,16 @@ func _ready() -> void:
 	hero_name.z_index = 9
 	root.gui_input.connect(_on_root_gui_input)
 	skip_button.pressed.connect(_on_skip_pressed)
+	auto_button.toggled.connect(_on_auto_toggled)
 	root.resized.connect(_on_root_resized)
+	var skin := preload("res://src/ui/pixel_panel_skin.gd")
+	skin.apply(skip_button)
+	skin.apply(auto_button)
+	auto_button.add_theme_stylebox_override("hover_pressed", skin.skin_style(auto_button.get_theme_stylebox("pressed")))
+	set_process(false)
 
 
-func play_dialogue(dialogue: Dictionary, allow_skip: bool) -> void:
+func play_dialogue(dialogue: Dictionary) -> void:
 	var raw_lines = dialogue.get("lines", [])
 	_lines = raw_lines.duplicate(true) if raw_lines is Array else []
 	if _lines.is_empty():
@@ -113,14 +125,17 @@ func play_dialogue(dialogue: Dictionary, allow_skip: bool) -> void:
 	hero_name_plate.self_modulate = ACTIVE_NAME_COLOR
 	demon_name.modulate = ACTIVE_NAME_COLOR
 	hero_name.modulate = ACTIVE_NAME_COLOR
-	skip_button.visible = allow_skip
-	skip_button.disabled = not allow_skip
+	skip_button.visible = true
+	skip_button.disabled = false
+	auto_button.set_pressed_no_signal(auto_enabled)
+	_refresh_next_hint()
 	next_hint.text = "화면을 터치하여 계속  ▶"
 
 	_line_index = 0
 	_current_speaker = ""
 	_last_advance_msec = -1000000
 	_active = true
+	set_process(true)
 	visible = true
 	call_deferred("_apply_initial_responsive_layout")
 
@@ -235,6 +250,9 @@ func _request_advance() -> void:
 		return
 
 	_last_advance_msec = now_msec
+	if _typing:
+		_complete_text()
+		return
 	_advance()
 
 
@@ -273,6 +291,7 @@ func _show_current_line() -> void:
 		_hero_display_name = hero_name_override
 		hero_name.text = _hero_display_name
 	dialogue_text.text = String(entry.get("text", ""))
+	_character_seconds = clampf(float(entry.get("character_seconds", CHARACTER_SECONDS)), 0.015, 0.12)
 	_animate_dialogue_text()
 
 	if speaker == "demon":
@@ -308,19 +327,68 @@ func _show_current_line() -> void:
 
 
 func _animate_dialogue_text() -> void:
-	if _text_tween != null and _text_tween.is_valid():
-		_text_tween.kill()
+	dialogue_text.modulate = Color.WHITE
+	dialogue_text.visible_characters = 0
+	_character_wait = _character_seconds
+	_auto_wait = 0.0
+	_typing = not dialogue_text.text.is_empty()
+	if not _typing:
+		_complete_text()
+	_refresh_next_hint()
 
-	dialogue_text.modulate = Color(1.0, 1.0, 1.0, 0.34)
-	_text_tween = create_tween()
-	_text_tween.set_trans(Tween.TRANS_QUAD)
-	_text_tween.set_ease(Tween.EASE_OUT)
-	_text_tween.tween_property(
-		dialogue_text,
-		"modulate:a",
-		1.0,
-		TEXT_FADE_SECONDS
-	)
+
+func _process(delta: float) -> void:
+	if not _active or _line_index < 0 or _current_speaker.is_empty():
+		return
+	if _typing:
+		_character_wait -= delta
+		while _typing and _character_wait <= 0.0:
+			var index := dialogue_text.visible_characters
+			dialogue_text.visible_characters = index + 1
+			_character_wait += _character_delay(dialogue_text.text.substr(index, 1))
+			if dialogue_text.visible_characters >= dialogue_text.text.length():
+				_complete_text()
+		# Never spend typing-frame delta on the newly started reading hold.
+		return
+	if auto_enabled:
+		_auto_wait -= delta
+		if _auto_wait <= 0.0:
+			_advance()
+
+
+func _character_delay(character: String) -> float:
+	if character in ["…", ".", "!", "?", "。", "！", "？"]:
+		return _character_seconds + 0.16
+	if character in [",", "，", "\n"]:
+		return _character_seconds + 0.09
+	return _character_seconds
+
+
+func _complete_text() -> void:
+	_typing = false
+	dialogue_text.visible_characters = -1
+	_auto_wait = _reading_hold()
+	_refresh_next_hint()
+
+
+func _reading_hold() -> float:
+	return clampf(0.8 + dialogue_text.text.length() * 0.018, 0.8, 1.8)
+
+
+func _on_auto_toggled(enabled: bool) -> void:
+	auto_enabled = enabled
+	# Turning on after a manual hold grants a fresh reading interval.
+	_auto_wait = _reading_hold()
+	_refresh_next_hint()
+
+
+func _refresh_next_hint() -> void:
+	auto_button.text = ">> A  ON" if auto_enabled else ">> A  OFF"
+	auto_button.tooltip_text = "대사 자동 진행 켜기 / 끄기"
+	if _typing:
+		next_hint.text = "터치하면 문장 전체 표시"
+	else:
+		next_hint.text = "자동으로 다음 대사 진행  >>" if auto_enabled else "화면을 터치하여 계속  ▶"
 
 
 func _focus_speaker(demon_is_speaking: bool) -> void:
@@ -502,13 +570,15 @@ func _finish(skipped: bool) -> void:
 	if not _active:
 		return
 	_active = false
+	_typing = false
+	_auto_wait = 0.0
+	set_process(false)
 
-	for tween in [_speaker_tween, _text_tween, _intro_tween]:
+	for tween in [_speaker_tween, _intro_tween]:
 		if tween != null and tween.is_valid():
 			tween.kill()
 
 	_speaker_tween = null
-	_text_tween = null
 	_intro_tween = null
 	visible = false
 	finished.emit(skipped)

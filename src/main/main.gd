@@ -753,13 +753,8 @@ func _begin_stage_entry(snapshot: Dictionary) -> void:
 	_stage_intro_stage_id = stage_id
 	hud_layer.visible = false
 
-	# Existing saves may predate the intro_seen flag. A cleared stage is
-	# therefore treated as a repeat run and gets the SKIP control immediately.
-	var allow_skip := (
-		STAGE_PROGRESS.has_seen_stage_intro(stage_id)
-		or STAGE_PROGRESS.is_stage_cleared(stage_id)
-	)
-	stage_intro_cutscene.call("play_dialogue", dialogue, allow_skip)
+	# Dialogue can always be skipped, including the first encounter.
+	stage_intro_cutscene.call("play_dialogue", dialogue)
 
 
 func _on_stage_intro_dialogue_event(
