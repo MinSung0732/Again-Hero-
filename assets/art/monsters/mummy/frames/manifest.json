@@ -1,0 +1,434 @@
+{
+  "source": "14(1).png",
+  "frame_count": 23,
+  "canvas_size": [
+    512,
+    206
+  ],
+  "anchor": [
+    256,
+    194
+  ],
+  "order": "left_to_right_top_to_bottom",
+  "frames": [
+    {
+      "file": "frame_001.png",
+      "row": 1,
+      "column": 1,
+      "source_rect": [
+        51,
+        38,
+        135,
+        171
+      ],
+      "source_anchor_x": 146,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 252,
+        "target_x": 256,
+        "translation_px": 4
+      }
+    },
+    {
+      "file": "frame_002.png",
+      "row": 1,
+      "column": 2,
+      "source_rect": [
+        266,
+        41,
+        139,
+        169
+      ],
+      "source_anchor_x": 364,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 256,
+        "target_x": 256,
+        "translation_px": 0
+      }
+    },
+    {
+      "file": "frame_003.png",
+      "row": 1,
+      "column": 3,
+      "source_rect": [
+        494,
+        38,
+        136,
+        172
+      ],
+      "source_anchor_x": 587,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 257,
+        "target_x": 256,
+        "translation_px": -1
+      }
+    },
+    {
+      "file": "frame_004.png",
+      "row": 1,
+      "column": 4,
+      "source_rect": [
+        709,
+        38,
+        129,
+        174
+      ],
+      "source_anchor_x": 794,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 257,
+        "target_x": 256,
+        "translation_px": -1
+      }
+    },
+    {
+      "file": "frame_005.png",
+      "row": 2,
+      "column": 1,
+      "source_rect": [
+        54,
+        263,
+        149,
+        164
+      ],
+      "source_anchor_x": 162,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 256,
+        "target_x": 256,
+        "translation_px": 0
+      }
+    },
+    {
+      "file": "frame_006.png",
+      "row": 2,
+      "column": 2,
+      "source_rect": [
+        290,
+        262,
+        159,
+        167
+      ],
+      "source_anchor_x": 409,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 254,
+        "target_x": 256,
+        "translation_px": 2
+      }
+    },
+    {
+      "file": "frame_007.png",
+      "row": 2,
+      "column": 3,
+      "source_rect": [
+        525,
+        259,
+        164,
+        170
+      ],
+      "source_anchor_x": 663,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 234,
+        "target_x": 256,
+        "translation_px": 22
+      }
+    },
+    {
+      "file": "frame_008.png",
+      "row": 2,
+      "column": 4,
+      "source_rect": [
+        770,
+        256,
+        164,
+        173
+      ],
+      "source_anchor_x": 891,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 256,
+        "target_x": 256,
+        "translation_px": 0
+      }
+    },
+    {
+      "file": "frame_009.png",
+      "row": 2,
+      "column": 5,
+      "source_rect": [
+        1007,
+        259,
+        156,
+        170
+      ],
+      "source_anchor_x": 1122,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 256,
+        "target_x": 256,
+        "translation_px": 0
+      }
+    },
+    {
+      "file": "frame_010.png",
+      "row": 2,
+      "column": 6,
+      "source_rect": [
+        1247,
+        256,
+        150,
+        173
+      ],
+      "source_anchor_x": 1357,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 257,
+        "target_x": 256,
+        "translation_px": -1
+      }
+    },
+    {
+      "file": "frame_011.png",
+      "row": 3,
+      "column": 1,
+      "source_rect": [
+        52,
+        478,
+        166,
+        166
+      ],
+      "source_anchor_x": 154,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 257,
+        "target_x": 256,
+        "translation_px": -1
+      }
+    },
+    {
+      "file": "frame_012.png",
+      "row": 3,
+      "column": 2,
+      "source_rect": [
+        267,
+        479,
+        205,
+        167
+      ],
+      "source_anchor_x": 385,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 258,
+        "target_x": 256,
+        "translation_px": -2
+      }
+    },
+    {
+      "file": "frame_013.png",
+      "row": 3,
+      "column": 3,
+      "source_rect": [
+        522,
+        487,
+        231,
+        158
+      ],
+      "source_anchor_x": 667,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 259,
+        "target_x": 256,
+        "translation_px": -3
+      }
+    },
+    {
+      "file": "frame_014.png",
+      "row": 3,
+      "column": 4,
+      "source_rect": [
+        770,
+        480,
+        215,
+        167
+      ],
+      "source_anchor_x": 890,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 258,
+        "target_x": 256,
+        "translation_px": -2
+      }
+    },
+    {
+      "file": "frame_015.png",
+      "row": 3,
+      "column": 5,
+      "source_rect": [
+        1009,
+        484,
+        204,
+        163
+      ],
+      "source_anchor_x": 1134,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 256,
+        "target_x": 256,
+        "translation_px": 0
+      }
+    },
+    {
+      "file": "frame_016.png",
+      "row": 3,
+      "column": 6,
+      "source_rect": [
+        1260,
+        483,
+        150,
+        164
+      ],
+      "source_anchor_x": 1360,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 252,
+        "target_x": 256,
+        "translation_px": 4
+      }
+    },
+    {
+      "file": "frame_017.png",
+      "row": 4,
+      "column": 1,
+      "source_rect": [
+        54,
+        697,
+        179,
+        167
+      ],
+      "source_anchor_x": 146,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 256,
+        "target_x": 256,
+        "translation_px": 0
+      }
+    },
+    {
+      "file": "frame_018.png",
+      "row": 4,
+      "column": 2,
+      "source_rect": [
+        264,
+        681,
+        184,
+        182
+      ],
+      "source_anchor_x": 350,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 255,
+        "target_x": 256,
+        "translation_px": 1
+      }
+    },
+    {
+      "file": "frame_019.png",
+      "row": 4,
+      "column": 3,
+      "source_rect": [
+        511,
+        708,
+        157,
+        153
+      ],
+      "source_anchor_x": 642,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 240,
+        "target_x": 256,
+        "translation_px": 16
+      }
+    },
+    {
+      "file": "frame_020.png",
+      "row": 5,
+      "column": 1,
+      "source_rect": [
+        53,
+        900,
+        191,
+        155
+      ],
+      "source_anchor_x": 168,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 255,
+        "target_x": 256,
+        "translation_px": 1
+      }
+    },
+    {
+      "file": "frame_021.png",
+      "row": 5,
+      "column": 2,
+      "source_rect": [
+        289,
+        926,
+        220,
+        126
+      ],
+      "source_anchor_x": 460,
+      "x_alignment": {
+        "landmark": "eye",
+        "measured_x": 254,
+        "target_x": 256,
+        "translation_px": 2
+      }
+    },
+    {
+      "file": "frame_022.png",
+      "row": 5,
+      "column": 3,
+      "source_rect": [
+        536,
+        958,
+        249,
+        96
+      ],
+      "source_anchor_x": 656,
+      "x_alignment": {
+        "landmark": "fallen_body",
+        "measured_x": 253,
+        "target_x": 256,
+        "translation_px": 3
+      }
+    },
+    {
+      "file": "frame_023.png",
+      "row": 5,
+      "column": 4,
+      "source_rect": [
+        807,
+        977,
+        276,
+        81
+      ],
+      "source_anchor_x": 926,
+      "x_alignment": {
+        "landmark": "fallen_body",
+        "measured_x": 245,
+        "target_x": 256,
+        "translation_px": 11
+      }
+    }
+  ],
+  "alignment_note": "All frames retain their original resolution, pixel colors, and shared Y position; only integer X translations were applied.",
+  "fixed_playback_anchor": [
+    256,
+    194
+  ]
+}

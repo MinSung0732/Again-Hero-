@@ -1,0 +1,326 @@
+{
+  "source": "17.png",
+  "frame_count": 17,
+  "canvas_size": [
+    512,
+    322
+  ],
+  "anchor": [
+    256,
+    310
+  ],
+  "order": "left_to_right_top_to_bottom",
+  "frames": [
+    {
+      "file": "frame_001.png",
+      "row": 1,
+      "column": 1,
+      "source_rect": [
+        65,
+        20,
+        235,
+        235
+      ],
+      "source_anchor_x": 165,
+      "x_alignment": {
+        "landmark": "gold_helmet",
+        "measured_x": 256,
+        "target_x": 255,
+        "translation_px": -1
+      }
+    },
+    {
+      "file": "frame_002.png",
+      "row": 1,
+      "column": 2,
+      "source_rect": [
+        336,
+        16,
+        254,
+        239
+      ],
+      "source_anchor_x": 450,
+      "x_alignment": {
+        "landmark": "gold_helmet",
+        "measured_x": 262,
+        "target_x": 255,
+        "translation_px": -7
+      }
+    },
+    {
+      "file": "frame_003.png",
+      "row": 1,
+      "column": 3,
+      "source_rect": [
+        634,
+        21,
+        265,
+        234
+      ],
+      "source_anchor_x": 867,
+      "x_alignment": {
+        "landmark": "gold_helmet",
+        "measured_x": 134,
+        "target_x": 255,
+        "translation_px": 121
+      }
+    },
+    {
+      "file": "frame_004.png",
+      "row": 1,
+      "column": 4,
+      "source_rect": [
+        937,
+        19,
+        260,
+        236
+      ],
+      "source_anchor_x": 1047,
+      "x_alignment": {
+        "landmark": "gold_helmet",
+        "measured_x": 264,
+        "target_x": 255,
+        "translation_px": -9
+      }
+    },
+    {
+      "file": "frame_005.png",
+      "row": 2,
+      "column": 1,
+      "source_rect": [
+        42,
+        275,
+        278,
+        222
+      ],
+      "source_anchor_x": 192,
+      "x_alignment": {
+        "landmark": "gold_helmet",
+        "measured_x": 254,
+        "target_x": 255,
+        "translation_px": 1
+      }
+    },
+    {
+      "file": "frame_006.png",
+      "row": 2,
+      "column": 2,
+      "source_rect": [
+        344,
+        279,
+        261,
+        217
+      ],
+      "source_anchor_x": 477,
+      "x_alignment": {
+        "landmark": "gold_helmet",
+        "measured_x": 254,
+        "target_x": 255,
+        "translation_px": 1
+      }
+    },
+    {
+      "file": "frame_007.png",
+      "row": 2,
+      "column": 3,
+      "source_rect": [
+        636,
+        273,
+        265,
+        223
+      ],
+      "source_anchor_x": 763,
+      "x_alignment": {
+        "landmark": "gold_helmet",
+        "measured_x": 260,
+        "target_x": 255,
+        "translation_px": -5
+      }
+    },
+    {
+      "file": "frame_008.png",
+      "row": 2,
+      "column": 4,
+      "source_rect": [
+        932,
+        278,
+        282,
+        218
+      ],
+      "source_anchor_x": 1077,
+      "x_alignment": {
+        "landmark": "gold_helmet",
+        "measured_x": 248,
+        "target_x": 255,
+        "translation_px": 7
+      }
+    },
+    {
+      "file": "frame_009.png",
+      "row": 3,
+      "column": 1,
+      "source_rect": [
+        51,
+        498,
+        255,
+        232
+      ],
+      "source_anchor_x": 270,
+      "x_alignment": {
+        "landmark": "gold_helmet",
+        "measured_x": 140,
+        "target_x": 255,
+        "translation_px": 115
+      }
+    },
+    {
+      "file": "frame_010.png",
+      "row": 3,
+      "column": 2,
+      "source_rect": [
+        319,
+        508,
+        235,
+        222
+      ],
+      "source_anchor_x": 465,
+      "x_alignment": {
+        "landmark": "gold_helmet",
+        "measured_x": 213,
+        "target_x": 255,
+        "translation_px": 42
+      }
+    },
+    {
+      "file": "frame_011.png",
+      "row": 3,
+      "column": 3,
+      "source_rect": [
+        559,
+        500,
+        331,
+        227
+      ],
+      "source_anchor_x": 661,
+      "x_alignment": {
+        "landmark": "gold_helmet",
+        "measured_x": 296,
+        "target_x": 255,
+        "translation_px": -41
+      }
+    },
+    {
+      "file": "frame_012.png",
+      "row": 3,
+      "column": 4,
+      "source_rect": [
+        921,
+        526,
+        252,
+        148
+      ],
+      "source_anchor_x": 1057,
+      "x_alignment": {
+        "landmark": "projectile_core",
+        "measured_x": 319,
+        "target_x": 322,
+        "translation_px": 3
+      }
+    },
+    {
+      "file": "frame_013.png",
+      "row": 3,
+      "column": 5,
+      "source_rect": [
+        1203,
+        550,
+        300,
+        160
+      ],
+      "source_anchor_x": 1382,
+      "x_alignment": {
+        "landmark": "projectile_core",
+        "measured_x": 325,
+        "target_x": 322,
+        "translation_px": -3
+      }
+    },
+    {
+      "file": "frame_014.png",
+      "row": 4,
+      "column": 1,
+      "source_rect": [
+        49,
+        730,
+        302,
+        264
+      ],
+      "source_anchor_x": 161,
+      "x_alignment": {
+        "landmark": "gold_helmet",
+        "measured_x": 255,
+        "target_x": 255,
+        "translation_px": 0
+      }
+    },
+    {
+      "file": "frame_015.png",
+      "row": 4,
+      "column": 2,
+      "source_rect": [
+        386,
+        730,
+        332,
+        275
+      ],
+      "source_anchor_x": 509,
+      "x_alignment": {
+        "landmark": "gold_helmet",
+        "measured_x": 257,
+        "target_x": 255,
+        "translation_px": -2
+      }
+    },
+    {
+      "file": "frame_016.png",
+      "row": 4,
+      "column": 3,
+      "source_rect": [
+        752,
+        737,
+        333,
+        268
+      ],
+      "source_anchor_x": 926,
+      "x_alignment": {
+        "landmark": "gold_helmet",
+        "measured_x": 253,
+        "target_x": 255,
+        "translation_px": 2
+      }
+    },
+    {
+      "file": "frame_017.png",
+      "row": 4,
+      "column": 4,
+      "source_rect": [
+        1107,
+        709,
+        401,
+        298
+      ],
+      "source_anchor_x": 1282,
+      "x_alignment": {
+        "landmark": "gold_helmet",
+        "measured_x": 254,
+        "target_x": 255,
+        "translation_px": 1
+      }
+    }
+  ],
+  "alignment_note": "All frames retain their original resolution, pixel colors, and shared Y position; only integer X translations were applied.",
+  "fixed_playback_anchor": [
+    256,
+    310
+  ]
+}

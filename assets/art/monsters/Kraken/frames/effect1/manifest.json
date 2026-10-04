@@ -1,0 +1,111 @@
+{
+  "source": "5(2).png",
+  "frame_count": 8,
+  "canvas_size": [
+    604,
+    456
+  ],
+  "anchor": [
+    302,
+    444
+  ],
+  "order": "left_to_right_top_to_bottom",
+  "frames": [
+    {
+      "file": "frame_001.png",
+      "row": 1,
+      "column": 1,
+      "source_rect": [
+        44,
+        460,
+        278,
+        122
+      ],
+      "source_anchor_x": 188
+    },
+    {
+      "file": "frame_002.png",
+      "row": 1,
+      "column": 2,
+      "source_rect": [
+        378,
+        373,
+        310,
+        216
+      ],
+      "source_anchor_x": 541
+    },
+    {
+      "file": "frame_003.png",
+      "row": 1,
+      "column": 3,
+      "source_rect": [
+        769,
+        246,
+        294,
+        336
+      ],
+      "source_anchor_x": 923
+    },
+    {
+      "file": "frame_004.png",
+      "row": 1,
+      "column": 4,
+      "source_rect": [
+        1131,
+        150,
+        284,
+        432
+      ],
+      "source_anchor_x": 1277
+    },
+    {
+      "file": "frame_005.png",
+      "row": 2,
+      "column": 1,
+      "source_rect": [
+        38,
+        676,
+        364,
+        352
+      ],
+      "source_anchor_x": 182
+    },
+    {
+      "file": "frame_006.png",
+      "row": 2,
+      "column": 2,
+      "source_rect": [
+        373,
+        769,
+        430,
+        259
+      ],
+      "source_anchor_x": 513
+    },
+    {
+      "file": "frame_007.png",
+      "row": 2,
+      "column": 3,
+      "source_rect": [
+        816,
+        758,
+        299,
+        269
+      ],
+      "source_anchor_x": 964
+    },
+    {
+      "file": "frame_008.png",
+      "row": 2,
+      "column": 4,
+      "source_rect": [
+        1155,
+        897,
+        259,
+        130
+      ],
+      "source_anchor_x": 1289
+    }
+  ]
+}
