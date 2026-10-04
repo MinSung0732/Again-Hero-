@@ -535,6 +535,7 @@ func _build_ui() -> void:
 
 	_skip_button = Button.new()
 	_skip_button.text = "SKIP  »"
+	_skip_button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_skip_button.anchor_left = 1.0
 	_skip_button.anchor_top = 0.0
 	_skip_button.anchor_right = 1.0
@@ -546,17 +547,22 @@ func _build_ui() -> void:
 	_skip_button.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_skip_button.add_theme_font_size_override("font_size", 25)
 	_skip_button.add_theme_color_override("font_color", Color("fff0bd"))
-	_skip_button.add_theme_stylebox_override(
-		"normal", _make_panel_style(Color("261d31"), Color("d7ad47"), 2, 16)
-	)
-	_skip_button.add_theme_stylebox_override(
-		"hover", _make_panel_style(Color("4a3158"), Color("ffd45f"), 3, 16)
-	)
-	_skip_button.add_theme_stylebox_override(
-		"pressed", _make_panel_style(Color("17101e"), Color("ffd45f"), 3, 16)
-	)
+	# The wide summon-button texture has a central ornament that overlaps SKIP.
+	# Give this compact control symmetric padding and a clean themed frame.
+	for state in ["normal", "hover", "pressed"]:
+		var fill := Color("56316e")
+		if state == "hover":
+			fill = Color("71408f")
+		elif state == "pressed":
+			fill = Color("3d254d")
+		var style := _make_panel_style(fill, Color("e1b94e"), 3, 8)
+		style.content_margin_left = 18.0
+		style.content_margin_right = 18.0
+		style.content_margin_top = 10.0
+		style.content_margin_bottom = 10.0
+		_skip_button.add_theme_stylebox_override(state, style)
+	_skip_button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	_skip_button.z_index = 60
-	_style_decorated_button(_skip_button)
 	_skip_button.pressed.connect(skip_to_results)
 	add_child(_skip_button)
 
