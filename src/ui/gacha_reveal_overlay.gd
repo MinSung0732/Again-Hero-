@@ -12,6 +12,7 @@ const CARD_FRAME_PATH := "res://assets/art/UI/lobby_stage/portrait_frame.svg"
 const DOOR_FRAME_SIZE := Vector2(512.0, 512.0)
 const DOOR_COLUMNS := 6
 const DOOR_FRAME_COUNT := 30
+const DOOR_FLASH_FIRST_FRAME := 28 # Sheet manifest: frames 29–30 fill the viewport.
 const DOOR_FPS := 10.0
 const ANTICIPATION_SECONDS := 0.75
 
@@ -28,6 +29,7 @@ var _background: ColorRect
 var _chamber: TextureRect
 var _ambient_glow: ColorRect
 var _door_sprite: AnimatedSprite2D
+var _door_flash: TextureRect
 var _flash: ColorRect
 var _skip_button: Button
 var _continue_button: Button
@@ -201,7 +203,8 @@ func _play_flash(color: Color) -> void:
 	_flash.color = Color(color.r, color.g, color.b, 0.0)
 	_flash.show()
 	_flash_tween = create_tween()
-	_flash_tween.tween_property(_flash, "color:a", 0.96, 0.11)
+	_flash_tween.tween_property(_flash, "color:a", 1.0, 0.11)
+	_flash_tween.tween_callback(_door_flash.hide)
 	_flash_tween.tween_property(_flash, "color:a", 0.0, 0.34)
 	await get_tree().create_timer(0.45).timeout
 
@@ -211,6 +214,7 @@ func _show_reveal(index: int) -> void:
 		_show_final_results()
 		return
 	_phase = "reveal"
+	_door_flash.hide()
 	_flash.hide()
 	_reveal_index = index
 	_door_sprite.hide()
@@ -267,6 +271,7 @@ func _show_final_results() -> void:
 	_door_sprite.stop()
 	_door_sprite.hide()
 	_flash.hide()
+	_door_flash.hide()
 	_reveal_panel.hide()
 	_continue_button.hide()
 	_skip_button.hide()
@@ -351,6 +356,7 @@ func _confirm() -> void:
 	_phase = "idle"
 	_stop_active_tweens()
 	_results.clear()
+	_door_flash.texture = null
 	_door_sprite.sprite_frames = SpriteFrames.new()
 	hide()
 	confirmed.emit()
@@ -360,6 +366,8 @@ func _reset_visual_state() -> void:
 	_stop_active_tweens()
 	_door_sprite.stop()
 	_door_sprite.hide()
+	_door_flash.hide()
+	_door_flash.texture = null
 	_flash.hide()
 	_reveal_panel.hide()
 	_result_panel.hide()
@@ -374,6 +382,19 @@ func _stop_active_tweens() -> void:
 	_layout_door()
 	if _chamber != null:
 		_chamber.position = Vector2.ZERO
+
+
+func _on_door_frame_changed() -> void:
+	if _phase != "door" or _door_sprite.animation != "open":
+		return
+	if _door_sprite.frame < DOOR_FLASH_FIRST_FRAME:
+		return
+	# Reuse the existing atlas frame; only the light, not the gate, fills the screen.
+	_door_flash.texture = _door_sprite.sprite_frames.get_frame_texture(
+		"open", _door_sprite.frame
+	)
+	_door_flash.show()
+	_door_sprite.hide()
 
 
 func _layout_door() -> void:
@@ -481,7 +502,18 @@ func _build_ui() -> void:
 	_door_sprite = AnimatedSprite2D.new()
 	_door_sprite.centered = true
 	_door_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_door_sprite.frame_changed.connect(_on_door_frame_changed)
 	add_child(_door_sprite)
+
+	_door_flash = TextureRect.new()
+	_door_flash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_door_flash.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_door_flash.stretch_mode = TextureRect.STRETCH_SCALE
+	_door_flash.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_door_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_door_flash.z_index = 19
+	_door_flash.hide()
+	add_child(_door_flash)
 
 	_flash = ColorRect.new()
 	_flash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
