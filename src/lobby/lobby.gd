@@ -3205,9 +3205,15 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	card.configure_drag("monster", monster_id, _team_monster_name(monster_id), _team_monster_card_icon(monster_id))
 	card.drag_enabled = available
 	card.tapped.connect(_open_monster_detail.bind(monster_id))
+	var card_style := (
+		formation_card_selected_style if selected else formation_card_style
+	).duplicate() as StyleBoxFlat
+	# Every visual state reserves the same padding; border accents are cosmetic.
+	for side in ["left", "right", "top", "bottom"]:
+		card_style.set("content_margin_" + side, 2.0)
 	card.add_theme_stylebox_override(
 		"panel",
-		formation_card_selected_style if selected else formation_card_style
+		card_style
 	)
 
 	var margin := MarginContainer.new()
@@ -3244,6 +3250,8 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.text = _team_monster_name(monster_id)
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.clip_text = true
+	title.custom_minimum_size.y = 58.0
 	title.add_theme_font_size_override("font_size", 23)
 	title.add_theme_color_override(
 		"font_color",
@@ -3325,6 +3333,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	team_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	team_button.add_theme_font_size_override("font_size", 22)
 	team_button.text = "편성 해제" if selected else "팀 편성"
+	team_button.clip_text = true
 	team_button.disabled = (
 		not available
 		or (selected and team_selected_ids.size() <= 1)
@@ -3358,6 +3367,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	upgrade_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	upgrade_button.add_theme_font_size_override("font_size", 22)
 	upgrade_button.text = "강화하기"
+	upgrade_button.clip_text = true
 	if not upgrade_configured:
 		upgrade_button.text = "강화 준비 중"
 	elif not available:
@@ -3375,7 +3385,9 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	upgrade_button.pressed.connect(_upgrade_team_monster.bind(monster_id))
 	actions.add_child(upgrade_button)
 	if not upgrade_button.disabled:
-		card.add_theme_stylebox_override("panel", _team_formation_view.panel_style(true))
+		card_style.border_color = Color("d8ad55")
+		card_style.bg_color = Color("171020", 0.96)
+		card_style.set_corner_radius_all(14)
 	var badge := _team_formation_view.label(vbox, "강화 가능" if not upgrade_button.disabled else ("편성 중" if selected else ""), 19)
 	badge.custom_minimum_size.y = 26.0
 	badge.add_theme_color_override("font_color", Color("ffe09a"))

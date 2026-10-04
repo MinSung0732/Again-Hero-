@@ -13,6 +13,8 @@ func panel_style(gold: bool = false) -> StyleBoxFlat:
 func label(parent: Control, text: String, size: int) -> Label:
 	var result := Label.new()
 	result.text = text
+	# Slot copy must not push the parent layout wider when an empty slot appears.
+	result.clip_text = true
 	result.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	result.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	result.add_theme_font_size_override("font_size", size)
@@ -26,6 +28,7 @@ func apply(lobby: Control) -> void:
 	layout.offset_right = -78.0
 	layout.add_theme_constant_override("separation", 12)
 	(layout.get_node("Guide") as Label).text = "몬스터와 마왕 스킬을 각각 최대 3종 편성합니다."
+	(layout.get_node("Summary") as Label).clip_text = true
 	var slots := layout.get_node("SlotRow") as HBoxContainer
 	var area := PanelContainer.new()
 	area.name = "EquippedArea"
