@@ -96,7 +96,7 @@ func _finish_after_scene_change() -> void:
 	await get_tree().process_frame
 	var scene := get_tree().current_scene
 	if scene != null and scene.has_method("prepare_presentation"):
-		_view.detail.text = "소개 연출의 화면 표시를 준비합니다."
+		_view.detail.text = "카드와 연출의 첫 화면 표시를 준비합니다."
 		await scene.call("prepare_presentation")
 	await get_tree().process_frame
 	_view.set_progress(1.0)

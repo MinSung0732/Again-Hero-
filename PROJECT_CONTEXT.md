@@ -2,6 +2,8 @@
 
 ## Startup / Windows OAuth / Destination Warmup (2026-10-04)
 
+- Lobby preparation includes every currently browsable stage portrait plus the first locked preview. `Lobby.prepare_presentation()` builds normalized final textures, caches the reference alpha bounds, and draws each final portrait underneath SceneTransition before revealing the lobby. Navigation must reuse these final textures without first-use PNG loading/alpha scanning/resizing; combat frame preloading remains current-stage-only. User confirmed both Kakao and Google login reach the lobby successfully.
+
 - The default app entry is `src/startup/Startup.tscn`: touch title → bundled-resource preparation → actual threaded Lobby preload → login selection. Generated castle/camp backgrounds and the existing logo are separate from native runtime controls.
 - No fake download bytes/speed or fabricated progress is displayed. Resource preparation checks/loads catalog paths; lobby/dungeon progress comes from ResourceLoader. Scene initialization stays covered by the persistent shared fullscreen SceneTransition.
 - `LoginGateway` uses Windows browser OAuth through `windows_oauth.gd`: PKCE S256, nonce-bearing loopback callback, bounded requests, cancel/timeout guards, token exchange and server `/user` validation before account selection and `authenticated`. Tokens are memory-only with refresh during this run. Redirect allowlist: `http://127.0.0.1:43817/auth/callback/**`. Providers were confirmed enabled on the existing project. User login success remains manual verification.

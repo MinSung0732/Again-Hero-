@@ -235,6 +235,10 @@ var _stage_pending_direction := 0
 var _stage_card_origin := Vector2.ZERO
 var _stage_card_base_modulate := Color.WHITE
 var _portrait_texture_cache: Dictionary = {}
+var _portrait_reference_image: Image
+var _portrait_reference_rect := Rect2i()
+var _presentation_ready := false
+var _portrait_normalization_count := 0
 var _monster_icon_texture_cache: Dictionary = {}
 var stage_selector_buttons: Array[Button] = []
 var _scene_load_path: String = ""
@@ -4616,6 +4620,14 @@ func _refresh_stage_card() -> void:
 	portrait_badge.visible = false
 	_apply_portrait(String(stage.get("portrait_path", "")), hero_name)
 
+func prepare_presentation() -> void:
+	if _presentation_ready:
+		return
+	await _precache_stage_portraits()
+	_refresh_stage_card()
+	_presentation_ready = true
+
+
 func _precache_stage_portraits() -> void:
 	if stage_ids.is_empty():
 		return
@@ -4624,16 +4636,21 @@ func _precache_stage_portraits() -> void:
 	for index in range(max_index + 1):
 		var stage := STAGE_CATALOG.get_stage(stage_ids[index])
 		var portrait_path := String(stage.get("portrait_path", ""))
-		if portrait_path.is_empty() or _portrait_texture_cache.has(portrait_path):
+		if portrait_path.is_empty():
 			continue
-
-		var texture := _load_texture(portrait_path)
-		if texture == null:
-			continue
-
-		_portrait_texture_cache[portrait_path] = _normalize_hero_portrait_texture(
-			texture
-		)
+		if not _portrait_texture_cache.has(portrait_path):
+			var texture := _load_texture(portrait_path)
+			if texture == null:
+				continue
+			_portrait_texture_cache[portrait_path] = _normalize_hero_portrait_texture(texture)
+		# Upload/render the FINAL normalized texture below the transition cover.
+		# Preloading the original PNG alone does not prepare this derived image.
+		portrait_texture.texture = _portrait_texture_cache[portrait_path] as Texture2D
+		portrait_texture.visible = portrait_texture.texture != null
+		if DisplayServer.get_name() == "headless":
+			await get_tree().process_frame
+		else:
+			await RenderingServer.frame_post_draw
 
 
 func _apply_portrait(path: String, hero_name: String) -> void:
@@ -4658,23 +4675,23 @@ func _normalize_hero_portrait_texture(
 ) -> Texture2D:
 	if source_texture == null:
 		return null
+	_portrait_normalization_count += 1
 
 	var source_image := source_texture.get_image()
 	if source_image == null or source_image.is_empty():
 		return source_texture
 
-	var reference_texture := _load_texture(
-		HERO_PORTRAIT_REFERENCE_PATH
-	)
-	if reference_texture == null:
-		return source_texture
-
-	var reference_image := reference_texture.get_image()
+	if _portrait_reference_image == null:
+		var reference_texture := _load_texture(HERO_PORTRAIT_REFERENCE_PATH)
+		if reference_texture != null:
+			_portrait_reference_image = reference_texture.get_image()
+			_portrait_reference_rect = _get_alpha_visible_rect(_portrait_reference_image)
+	var reference_image := _portrait_reference_image
 	if reference_image == null or reference_image.is_empty():
 		return source_texture
 
 	var source_rect := _get_alpha_visible_rect(source_image)
-	var reference_rect := _get_alpha_visible_rect(reference_image)
+	var reference_rect := _portrait_reference_rect
 	if (
 		source_rect.size.x <= 0
 		or source_rect.size.y <= 0

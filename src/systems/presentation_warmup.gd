@@ -77,6 +77,14 @@ func prepare_scene(scene_path: String) -> bool:
 			if filename.get_extension().to_lower() in ["png", "svg"]:
 				paths.append(dir_path.path_join(filename))
 	var state := PROGRESS.load_state()
+	if scene_path == STARTUP.LOBBY_PATH:
+		# Lobby browsing includes the first locked preview card, not just the
+		# currently selected stage. Only portraits, never all combat frames.
+		var preview_number := int(state.get("highest_unlocked_stage", 1)) + 1
+		for id in STAGES.get_ordered_stage_ids():
+			var browse_stage := STAGES.get_stage(id)
+			if int(browse_stage.get("number", 1)) <= preview_number:
+				paths.append(String(browse_stage.get("portrait_path", "")))
 	var stage_id := String(state.get("current_stage_id", "stage_1"))
 	var stage := STAGES.get_stage(stage_id)
 	var portrait := String(stage.get("portrait_path", ""))

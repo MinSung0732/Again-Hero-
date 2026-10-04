@@ -104,6 +104,24 @@ func _run() -> void:
 	_check(gateway.local_guest_active, "Guest remains explicitly local-only")
 	_check(not transition.is_transitioning(), "Transition clears after new scene is ready")
 	_check(not transition.is_processing(), "No idle per-frame transition polling")
+	_check(current_scene._presentation_ready, "Lobby portrait preparation finishes under loading")
+	var lobby := current_scene
+	var original_index: int = lobby.selected_stage_index
+	var normalized_before: int = lobby._portrait_normalization_count
+	var texture_loads_before: int = warmup.texture_load_count
+	var portraits: Dictionary = lobby._portrait_texture_cache.duplicate()
+	for index in range(lobby._get_max_browsable_stage_index() + 1):
+		var stage: Dictionary = load("res://src/data/stage_catalog.gd").get_stage(lobby.stage_ids[index])
+		var path := String(stage.get("portrait_path", ""))
+		_check(portraits.has(path), "Every browsable portrait is ready before first navigation")
+		lobby.selected_stage_index = index
+		lobby._refresh_stage_card()
+		_check(lobby.portrait_texture.texture == portraits.get(path), "First card navigation reuses prepared final texture")
+		await process_frame
+	_check(lobby._portrait_normalization_count == normalized_before, "Card navigation performs no image normalization")
+	_check(warmup.texture_load_count == texture_loads_before, "Card navigation performs no warmup texture loads")
+	lobby.selected_stage_index = original_index
+	lobby._refresh_stage_card()
 	await _capture("startup-lobby")
 	# Dungeon entry uses the same real threaded scene transition, not a timed fake.
 	_check(transition.change_scene("res://src/main/Main.tscn", "던전 불러오는 중..."), "Dungeon load accepted")
