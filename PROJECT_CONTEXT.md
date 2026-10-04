@@ -1,5 +1,12 @@
 # PROJECT_CONTEXT.md
 
+## Team Formation Presentation / Reserved Presets (2026-10-04)
+
+- Existing monster sprites and catalog/progression values remain authoritative. `team_formation_view.gd` builds the equipped-slot presentation once; collection cards retain three columns, actual shard progress (gray/green) and explicit formation/upgrade actions.
+- Monster cards open details on a short tap. The shared drag card emits `tapped` only for an unmoved short gesture; a 0.28-second hold still starts the existing monster/skill drag payload, and scrolling or dragging suppresses the tap. Locked monsters allow details but not drag formation.
+- Equipped monster slots open details from the body, and their X removes the selection subject to the existing minimum-one constraint. Skill drag/drop semantics remain unchanged.
+- `formation_preset_model.gd` reserves `preset_1`, `preset_2`, `preset_3`, with schema-versioned ordered `monster_ids` and `skill_ids`. `Lobby.get_formation_snapshot()` returns independent copies. Normalize against the current available catalogs before future application; storage, switching UI and legacy-loadout migration are intentionally deferred. Existing active monster/skill save paths are unchanged.
+
 ## Illustrated Shop Storefront (2026-10-04)
 
 - `src/ui/shop_storefront_art.gd` decorates existing shop controls without changing reward rolls, persistence, history or summon signal bindings. Generated art lives in `assets/art/UI/shop/`; prompts/provenance are recorded there.

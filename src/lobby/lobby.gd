@@ -16,6 +16,8 @@ const SHOP_SUMMON_HISTORY_STORE := preload(
 )
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 const FORMATION_DRAG_CARD := preload("res://src/ui/formation_drag_card.gd")
+const TEAM_FORMATION_VIEW := preload("res://src/ui/team_formation_view.gd")
+const FORMATION_PRESET_MODEL := preload("res://src/systems/formation_preset_model.gd")
 const GACHA_REVEAL_OVERLAY := preload("res://src/ui/gacha_reveal_overlay.gd")
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 const DEMON_SKILL_LOADOUT_STORE := preload(
@@ -196,6 +198,7 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 var stage_ids: Array[String] = []
 var selected_stage_index: int = 0
 var current_tab: String = "main"
+var _team_formation_view = TEAM_FORMATION_VIEW.new()
 var _shop_storefront_art = SHOP_STOREFRONT_ART.new()
 var research_view_mode: String = "research"
 var selected_research_id: String = ""
@@ -1962,6 +1965,7 @@ func _apply_lobby_visual_polish() -> void:
 	_apply_lobby_button_skin(team_mode_button, true, 23)
 	_apply_lobby_button_skin(skill_mode_button, false, 23)
 	_refresh_formation_cost_sort_buttons()
+	_team_formation_view.apply(self)
 
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/ResearchTab/ResearchLayout/Title",
@@ -3084,7 +3088,7 @@ func _restore_saved_team_selection() -> void:
 
 	_refresh_team_preview()
 	if formation_mode == "team":
-		team_status_label.text = "컬렉션/편성 복원 완료 · 각 카드의 버튼으로 편성 또는 상세정보를 확인하세요."
+		team_status_label.text = "카드 터치: 상세정보 · 길게 누르기: 드래그 편성"
 
 
 func _show_formation_mode(mode: String) -> void:
@@ -3143,12 +3147,18 @@ func _refresh_formation_mode() -> void:
 	_apply_lobby_button_skin(skill_mode_button, not showing_team, 23)
 	team_mode_button.disabled = showing_team
 	skill_mode_button.disabled = not showing_team
+	team_mode_button.add_theme_stylebox_override("disabled", primary_button_style)
+	skill_mode_button.add_theme_stylebox_override("disabled", primary_button_style)
+	team_mode_button.add_theme_color_override("font_disabled_color", Color("fff0d2"))
+	skill_mode_button.add_theme_color_override("font_disabled_color", Color("fff0d2"))
 	if showing_team:
-		formation_list_title.text = "몬스터 목록 · 코스트"
+		formation_list_title.text = "보유 몬스터 목록"
+		_team_formation_view.heading(self, "◇  편성된 몬스터  ◇")
 		_refresh_team_preview()
-		team_status_label.text = "버튼 또는 카드를 길게 눌러 원하는 슬롯에 놓아 편성합니다."
+		team_status_label.text = "카드 터치: 상세정보 · 길게 누르기: 드래그 편성"
 	else:
 		formation_list_title.text = "마왕 스킬 목록 · 코스트"
+		_team_formation_view.heading(self, "◇  편성된 스킬  ◇")
 		_refresh_demon_skill_preview()
 		team_status_label.text = "버튼 또는 스킬 카드를 길게 눌러 원하는 슬롯에 놓아 편성합니다."
 
@@ -3160,18 +3170,15 @@ func _refresh_team_preview() -> void:
 	_refresh_team_slot(team_slot_2_button, 1)
 	_refresh_team_slot(team_slot_3_button, 2)
 
-	var selected_names := ""
-	for raw_id in team_selected_ids:
-		var monster_id := String(raw_id)
-		if not selected_names.is_empty():
-			selected_names += " / "
-		selected_names += _team_monster_name(monster_id)
-
-	team_summary_label.text = "편성 %d / %d · %s" % [
-		team_selected_ids.size(),
-		TEAM_MAX_SLOTS,
-		selected_names,
+	var skill_names := PackedStringArray()
+	for skill_id in demon_skill_selected_ids:
+		skill_names.append(String(DEMON_ULTIMATES.get_skill(String(skill_id)).get("name", skill_id)))
+	team_summary_label.text = "스킬 %d / %d · %s" % [
+		demon_skill_selected_ids.size(), TEAM_MAX_SLOTS, " / ".join(skill_names)
 	]
+	_team_formation_view.heading(
+		self, "◇  편성된 몬스터  %d / %d  ◇" % [team_selected_ids.size(), TEAM_MAX_SLOTS]
+	)
 
 	_rebuild_team_monster_cards()
 
@@ -3193,15 +3200,11 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	var data := MONSTER_CATALOG.get_monster(monster_id)
 
 	var card := FORMATION_DRAG_CARD.new()
-	card.custom_minimum_size = Vector2(0.0, 326.0)
+	card.custom_minimum_size = Vector2(0.0, 300.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	if available:
-		card.configure_drag(
-			"monster",
-			monster_id,
-			_team_monster_name(monster_id),
-			_team_monster_card_icon(monster_id)
-		)
+	card.configure_drag("monster", monster_id, _team_monster_name(monster_id), _team_monster_card_icon(monster_id))
+	card.drag_enabled = available
+	card.tapped.connect(_open_monster_detail.bind(monster_id))
 	card.add_theme_stylebox_override(
 		"panel",
 		formation_card_selected_style if selected else formation_card_style
@@ -3219,31 +3222,39 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_theme_constant_override("separation", 6)
 	margin.add_child(vbox)
+	var top_row := HBoxContainer.new()
+	top_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_row.add_theme_constant_override("separation", 8)
+	vbox.add_child(top_row)
 
 	var portrait := TextureRect.new()
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	portrait.custom_minimum_size = Vector2(0.0, 78.0)
+	portrait.custom_minimum_size = Vector2(104.0, 116.0)
 	portrait.texture = _team_monster_card_icon(monster_id)
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	vbox.add_child(portrait)
+	top_row.add_child(portrait)
+	var copy := VBoxContainer.new()
+	copy.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_row.add_child(copy)
 
 	var title := Label.new()
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.text = _team_monster_name(monster_id)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 24)
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.add_theme_font_size_override("font_size", 23)
 	title.add_theme_color_override(
 		"font_color",
 		Color("ffe29a") if selected else Color("f0e9f3")
 	)
-	vbox.add_child(title)
+	copy.add_child(title)
 
 	var info := Label.new()
 	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	info.custom_minimum_size = Vector2(0.0, 26.0)
-	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	info.add_theme_font_size_override("font_size", 18)
 	info.autowrap_mode = TextServer.AUTOWRAP_OFF
 	info.clip_text = true
@@ -3257,18 +3268,18 @@ func _create_team_monster_card(monster_id: String) -> Control:
 		monster_collection_state
 	)
 	if available:
-		info.text = "Lv.%d · %s · 코스트 %.1f" % [
+		info.text = "Lv.%d · %s\n코스트 %.1f" % [
 			upgrade_level,
-			_team_monster_role_label(monster_id),
+			SHOP_CATALOG.get_rarity_label(MONSTER_CATALOG.get_rarity(monster_id)),
 			float(data.get("base_cost", 0.0)),
 		]
 	else:
-		info.text = "[잠김] · %s · 코스트 %.1f" % [
-			_team_monster_role_label(monster_id),
+		info.text = "잠김 · %s\n코스트 %.1f" % [
+			SHOP_CATALOG.get_rarity_label(MONSTER_CATALOG.get_rarity(monster_id)),
 			float(data.get("base_cost", 0.0)),
 		]
 		info.add_theme_color_override("font_color", Color("8c8590"))
-	vbox.add_child(info)
+	copy.add_child(info)
 
 	var shard_bar := ProgressBar.new()
 	shard_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -3312,7 +3323,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	var team_button := Button.new()
 	team_button.custom_minimum_size = Vector2(0.0, 50.0)
 	team_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	team_button.add_theme_font_size_override("font_size", 18)
+	team_button.add_theme_font_size_override("font_size", 22)
 	team_button.text = "편성 해제" if selected else "팀 편성"
 	team_button.disabled = (
 		not available
@@ -3340,29 +3351,17 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	team_button.pressed.connect(_toggle_team_monster.bind(monster_id))
 	actions.add_child(team_button)
 
-	var detail_button := Button.new()
-	detail_button.custom_minimum_size = Vector2(0.0, 50.0)
-	detail_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	detail_button.add_theme_font_size_override("font_size", 18)
-	detail_button.text = "상세정보"
-	detail_button.add_theme_stylebox_override("normal", secondary_button_style)
-	detail_button.add_theme_stylebox_override("hover", primary_button_style)
-	detail_button.add_theme_stylebox_override("pressed", primary_button_style)
-	detail_button.pressed.connect(_open_monster_detail.bind(monster_id))
-	actions.add_child(detail_button)
-
 	var upgrade_profile := MONSTER_CATALOG.get_rarity_upgrade_profile(monster_id)
 	var upgrade_configured := bool(upgrade_profile.get("configured", false))
 	var upgrade_button := Button.new()
 	upgrade_button.custom_minimum_size = Vector2(0.0, 44.0)
-	upgrade_button.add_theme_font_size_override("font_size", 18)
+	upgrade_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	upgrade_button.add_theme_font_size_override("font_size", 22)
 	upgrade_button.text = "강화하기"
 	if not upgrade_configured:
 		upgrade_button.text = "강화 준비 중"
 	elif not available:
 		upgrade_button.text = "해금 필요"
-	elif shards < required:
-		upgrade_button.text = "조각 부족"
 	upgrade_button.disabled = (
 		not upgrade_configured
 		or not available
@@ -3374,7 +3373,13 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	upgrade_button.add_theme_stylebox_override("disabled", primary_button_disabled_style)
 	upgrade_button.add_theme_color_override("font_disabled_color", Color("9a8fa1"))
 	upgrade_button.pressed.connect(_upgrade_team_monster.bind(monster_id))
-	vbox.add_child(upgrade_button)
+	actions.add_child(upgrade_button)
+	if not upgrade_button.disabled:
+		card.add_theme_stylebox_override("panel", _team_formation_view.panel_style(true))
+	var badge := _team_formation_view.label(vbox, "강화 가능" if not upgrade_button.disabled else ("편성 중" if selected else ""), 19)
+	badge.custom_minimum_size.y = 26.0
+	badge.add_theme_color_override("font_color", Color("ffe09a"))
+	vbox.move_child(badge, 0)
 
 	return card
 
@@ -3403,17 +3408,21 @@ func _upgrade_team_monster(monster_id: String) -> void:
 func _refresh_team_slot(button: Button, slot_index: int) -> void:
 	if slot_index < team_selected_ids.size():
 		var monster_id := String(team_selected_ids[slot_index])
-		button.icon = _team_monster_card_icon(monster_id)
-		button.text = "%d  %s\n%s\n탭해서 해제" % [
-			slot_index + 1,
-			_team_monster_name(monster_id),
-			_team_monster_role_label(monster_id),
-		]
 		button.disabled = false
+		var info := "Lv.%d · %s\n코스트 %.1f" % [
+			MONSTER_COLLECTION_STORE.get_upgrade_level(monster_id, monster_collection_state),
+			SHOP_CATALOG.get_rarity_label(MONSTER_CATALOG.get_rarity(monster_id)),
+			_team_monster_cost(monster_id)
+		]
+		_team_formation_view.refresh_slot(
+			button, _team_monster_card_icon(monster_id), _team_monster_name(monster_id),
+			info, team_selected_ids.size() > 1
+		)
 	else:
 		button.icon = null
 		button.text = "%d\n빈 슬롯" % (slot_index + 1)
 		button.disabled = false
+		_team_formation_view.refresh_slot(button, null, "빈 슬롯", "길게 눌러 놓으세요", false)
 
 func _on_team_slot_pressed(slot_index: int) -> void:
 	if formation_mode == "skill":
@@ -3421,7 +3430,16 @@ func _on_team_slot_pressed(slot_index: int) -> void:
 		return
 	if slot_index < 0 or slot_index >= team_selected_ids.size():
 		return
-	_remove_team_monster(String(team_selected_ids[slot_index]))
+	_open_monster_detail(String(team_selected_ids[slot_index]))
+
+func _remove_formation_slot(slot_index: int) -> void:
+	if formation_mode == "skill":
+		_on_demon_skill_slot_pressed(slot_index)
+	elif slot_index >= 0 and slot_index < team_selected_ids.size():
+		_remove_team_monster(String(team_selected_ids[slot_index]))
+
+func get_formation_snapshot() -> Dictionary:
+	return FORMATION_PRESET_MODEL.snapshot(team_selected_ids, demon_skill_selected_ids)
 
 func _toggle_team_monster(monster_id: String) -> void:
 	if monster_id in team_selected_ids:
@@ -3465,9 +3483,11 @@ func _refresh_demon_skill_slot(button: Button, slot_index: int) -> void:
 			int(round(float(skill.get("mana_cost", 0.0)))),
 		]
 		button.disabled = false
+		_team_formation_view.refresh_slot(button, null, String(skill.get("name", skill_id)), "마왕 스킬\n코스트 %d" % int(skill.get("mana_cost", 0)), demon_skill_selected_ids.size() > 1)
 	else:
 		button.text = "%d\n빈 슬롯" % (slot_index + 1)
 		button.disabled = false
+		_team_formation_view.refresh_slot(button, null, "빈 슬롯", "스킬을 놓으세요", false)
 
 
 func _create_demon_skill_card(skill_id: String) -> Control:

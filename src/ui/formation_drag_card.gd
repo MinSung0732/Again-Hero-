@@ -2,6 +2,8 @@ extends PanelContainer
 
 const HOLD_DURATION := 0.28
 const CANCEL_DISTANCE := 18.0
+signal tapped
+var drag_enabled := true
 
 var formation_kind := ""
 var formation_id := ""
@@ -34,12 +36,15 @@ func _gui_input(event: InputEvent) -> void:
 		if event.pressed:
 			_begin_hold(event.position)
 		else:
-			_cancel_hold()
+			_finish_tap(event.position)
 	elif event is InputEventScreenTouch:
 		if event.pressed:
 			_begin_hold(event.position)
 		else:
-			_cancel_hold()
+			if event.canceled:
+				_cancel_hold()
+			else:
+				_finish_tap(event.position)
 	elif event is InputEventMouseMotion:
 		_cancel_hold_after_move(event.position)
 	elif event is InputEventScreenDrag:
@@ -65,19 +70,28 @@ func _process(delta: float) -> void:
 	)
 
 
+func _finish_tap(pointer_position: Vector2) -> void:
+	var valid := _hold_active and Rect2(Vector2.ZERO, size).has_point(pointer_position)
+	if (get_global_transform() * pointer_position).distance_to(_hold_start) > CANCEL_DISTANCE:
+		valid = false
+	_cancel_hold()
+	if valid:
+		tapped.emit()
+
+
 func _begin_hold(pointer_position: Vector2) -> void:
 	if formation_kind.is_empty() or formation_id.is_empty():
 		return
 	_hold_active = true
 	_hold_elapsed = 0.0
-	_hold_start = pointer_position
-	set_process(true)
+	_hold_start = get_global_transform() * pointer_position
+	set_process(drag_enabled)
 
 
 func _cancel_hold_after_move(pointer_position: Vector2) -> void:
 	if not _hold_active:
 		return
-	if pointer_position.distance_to(_hold_start) > CANCEL_DISTANCE:
+	if (get_global_transform() * pointer_position).distance_to(_hold_start) > CANCEL_DISTANCE:
 		_cancel_hold()
 
 
