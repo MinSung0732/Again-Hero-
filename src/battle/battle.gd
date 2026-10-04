@@ -857,6 +857,13 @@ func _start_battle() -> void:
 	call_deferred("_warm_monster_spawn_resources")
 
 
+func prepare_spawn_resources() -> void:
+	if not _monster_spawn_warmup_running:
+		await _warm_monster_spawn_resources()
+	while _monster_spawn_warmup_running and is_inside_tree():
+		await get_tree().process_frame
+
+
 func _warm_monster_spawn_resources() -> void:
 	if _monster_spawn_resources_warmed or _monster_spawn_warmup_running:
 		return

@@ -128,6 +128,9 @@ func _play_opening(token: int) -> void:
 
 
 func _load_texture_threaded(path: String) -> Texture2D:
+	var prepared := PresentationWarmup.get_texture(path)
+	if prepared != null:
+		return prepared
 	if path.is_empty() or not ResourceLoader.exists(path):
 		return null
 	var request_error := ResourceLoader.load_threaded_request(path, "Texture2D")

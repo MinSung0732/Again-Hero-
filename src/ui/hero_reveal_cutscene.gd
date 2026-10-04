@@ -235,7 +235,33 @@ func _load_reveal_stinger() -> AudioStreamOggVorbis:
 
 
 func _load_texture(path: String) -> Texture2D:
+	var cached := PresentationWarmup.get_texture(path)
+	if cached != null:
+		return cached
 	if path.is_empty() or not ResourceLoader.exists(path):
 		return null
 	var resource = load(path)
 	return resource as Texture2D if resource is Texture2D else null
+
+
+func warm_render_resources(portrait_path: String) -> void:
+	# Render the actual additive/silhouette materials beneath SceneTransition,
+	# not merely load files: first shader use/GPU work must precede the reveal.
+	_ensure_frame_cache()
+	hero_portrait.texture = _load_texture(portrait_path)
+	visible = true
+	hero_portrait.visible = true
+	effect_frame.visible = true
+	loading_logo.visible = false
+	loading_text.visible = false
+	title_panel.visible = false
+	title_label.modulate.a = 0.0
+	true_name_label.modulate.a = 0.0
+	for frame in _effect_frames:
+		effect_frame.texture = frame
+		if DisplayServer.get_name() == "headless":
+			await get_tree().process_frame
+		else:
+			await RenderingServer.frame_post_draw
+	visible = false
+	effect_frame.texture = null

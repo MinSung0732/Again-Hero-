@@ -850,6 +850,9 @@ func _add_frame_piece_stretched(
 	parent.add_child(piece)
 
 func _load_png_texture_direct(path: String) -> Texture2D:
+	var cached := PresentationWarmup.get_texture(path)
+	if cached != null:
+		return cached
 	var image := Image.new()
 	var load_error := image.load(path)
 	if load_error != OK or image.is_empty():
@@ -869,6 +872,9 @@ func _load_ui_texture_resource(path: String) -> Texture2D:
 
 
 func _load_svg_texture_direct(path: String) -> Texture2D:
+	var cached := PresentationWarmup.get_texture(path)
+	if cached != null:
+		return cached
 	if not FileAccess.file_exists(path):
 		push_warning("UI SVG file missing: %s" % path)
 		return null
@@ -885,6 +891,9 @@ func _load_svg_texture_direct(path: String) -> Texture2D:
 
 
 func _load_png_texture_cropped(path: String) -> Texture2D:
+	var cached := PresentationWarmup.get_cropped(path)
+	if cached != null:
+		return cached
 	var image := Image.new()
 	var load_error := image.load(path)
 	if load_error != OK or image.is_empty():
@@ -4755,6 +4764,9 @@ func _get_alpha_visible_rect(
 	)
 
 func _load_texture(path: String) -> Texture2D:
+	var prepared := PresentationWarmup.get_texture(path)
+	if prepared != null:
+		return prepared
 	if path.is_empty():
 		return null
 

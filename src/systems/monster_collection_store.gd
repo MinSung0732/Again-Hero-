@@ -1,12 +1,13 @@
 extends RefCounted
 class_name MonsterCollectionStore
+const ACCOUNT_SCOPE := preload("res://src/systems/account_save_scope.gd")
 
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const SAVE_PATH := "user://monster_collection.cfg"
 
 static func load_state() -> Dictionary:
 	var config := ConfigFile.new()
-	var has_saved_data := config.load(SAVE_PATH) == OK
+	var has_saved_data := config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH)) == OK
 	var result: Dictionary = {}
 
 	for raw_id in MONSTER_CATALOG.ORDER:
@@ -105,7 +106,7 @@ static func save_state(state: Dictionary) -> bool:
 			level
 		)
 
-	return config.save(SAVE_PATH) == OK
+	return config.save(ACCOUNT_SCOPE.resolve(SAVE_PATH)) == OK
 
 static func get_unlocked_ids(state: Dictionary = {}) -> Array:
 	var source := state

@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+signal transition_completed
+
 const LOADING_VIEW := preload("res://src/ui/startup_loading_view.gd")
 
 var _pending := false
@@ -58,7 +60,7 @@ func _process(_delta: float) -> void:
 		return
 	var status := ResourceLoader.load_threaded_get_status(_scene_path, _progress)
 	if not _progress.is_empty():
-		_view.set_progress(float(_progress[0]))
+		_view.set_progress(float(_progress[0]) * 0.5)
 	if status == ResourceLoader.THREAD_LOAD_LOADED:
 		var packed := ResourceLoader.load_threaded_get(_scene_path) as PackedScene
 		_pending = false
@@ -66,24 +68,43 @@ func _process(_delta: float) -> void:
 		if packed == null:
 			_fail_transition(ERR_INVALID_DATA)
 			return
-		_view.set_progress(1.0)
-		var error := get_tree().change_scene_to_packed(packed)
-		if error == OK:
-			call_deferred("_finish_after_scene_change")
-		else:
-			_fail_transition(error)
+		call_deferred("_prepare_destination_and_change", packed)
 	elif status == ResourceLoader.THREAD_LOAD_FAILED or status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
 		_fail_transition(ERR_CANT_OPEN)
+
+
+func _prepare_destination_and_change(packed: PackedScene) -> void:
+	_view.detail.text = "이미지와 화면 표시 리소스를 미리 준비합니다."
+	PresentationWarmup.progress_changed.connect(_on_warmup_progress)
+	await PresentationWarmup.prepare_common()
+	await PresentationWarmup.prepare_scene(_scene_path)
+	PresentationWarmup.progress_changed.disconnect(_on_warmup_progress)
+	_view.set_progress(0.9)
+	var error := get_tree().change_scene_to_packed(packed)
+	if error == OK:
+		call_deferred("_finish_after_scene_change")
+	else:
+		_fail_transition(error)
+
+
+func _on_warmup_progress(completed: int, total: int) -> void:
+	_view.set_progress(0.5 + 0.4 * float(completed) / maxi(total, 1))
 
 
 func _finish_after_scene_change() -> void:
 	# New scene _ready() finishes beneath this persistent full-screen overlay.
 	await get_tree().process_frame
+	var scene := get_tree().current_scene
+	if scene != null and scene.has_method("prepare_presentation"):
+		_view.detail.text = "소개 연출의 화면 표시를 준비합니다."
+		await scene.call("prepare_presentation")
 	await get_tree().process_frame
+	_view.set_progress(1.0)
 	visible = false
 	_view.hide()
 	_scene_path = ""
 	_progress.clear()
+	transition_completed.emit()
 
 
 func _fail_transition(error: int) -> void:

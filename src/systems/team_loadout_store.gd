@@ -1,5 +1,6 @@
 extends RefCounted
 class_name TeamLoadoutStore
+const ACCOUNT_SCOPE := preload("res://src/systems/account_save_scope.gd")
 
 const SAVE_PATH := "user://team_loadout.cfg"
 const MAX_SLOTS := 3
@@ -8,7 +9,7 @@ static func load_ids(valid_ids: Array, fallback_ids: Array) -> Array:
 	var raw_ids: Array = []
 	var config := ConfigFile.new()
 
-	if config.load(SAVE_PATH) == OK:
+	if config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH)) == OK:
 		var encoded := String(
 			config.get_value("team", "monster_ids", "")
 		)
@@ -35,7 +36,7 @@ static func save_ids(monster_ids: Array, valid_ids: Array) -> bool:
 
 	var config := ConfigFile.new()
 	config.set_value("team", "monster_ids", encoded)
-	return config.save(SAVE_PATH) == OK
+	return config.save(ACCOUNT_SCOPE.resolve(SAVE_PATH)) == OK
 
 static func _normalize_ids(raw_ids: Array, valid_ids: Array) -> Array:
 	var result: Array = []

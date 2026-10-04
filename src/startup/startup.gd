@@ -43,7 +43,9 @@ func _screen() -> Control:
 
 
 func _build_title() -> void:
-	title_screen = _screen()
+	title_screen = Control.new()
+	VIEW.place(self, title_screen, Rect2(0, 0, 1, 1))
+	VIEW.texture(title_screen, load("res://assets/art/UI/startup/touch_start.png") as Texture2D, Rect2(0, 0, 1, 1), true)
 	start_button = _button(title_screen, "터치하여 계속 진행하기", Rect2(0.15, 0.80, 0.70, 0.07), Color(0.1, 0.045, 0.2, 0.88))
 	start_button.name = "TouchStart"
 	start_button.pressed.connect(begin_startup)
@@ -83,6 +85,10 @@ func begin_startup() -> void:
 		loading_view.set_progress(float(index + 1) / CATALOG.CORE_RESOURCES.size())
 		# Short readability interval only; progress always comes from completed work.
 		await get_tree().create_timer(0.15).timeout
+	loading_view.configure("용사 소개 리소스 준비 중", "소개 연출의 이미지와 로딩 프레임을 미리 불러옵니다.", true)
+	PresentationWarmup.progress_changed.connect(_on_warmup_progress)
+	await PresentationWarmup.prepare_common()
+	PresentationWarmup.progress_changed.disconnect(_on_warmup_progress)
 	phase = Phase.LOADING
 	loading_view.configure("로비 불러오는 중", "몬스터와 로비 화면을 미리 준비합니다.")
 	_lobby = await _load_resource(CATALOG.LOBBY_PATH, true) as PackedScene
@@ -96,6 +102,10 @@ func begin_startup() -> void:
 	loading_view.hide()
 	phase = Phase.LOGIN
 	login_screen.show()
+
+
+func _on_warmup_progress(completed: int, total: int) -> void:
+	loading_view.set_progress(float(completed) / maxi(total, 1))
 
 
 func _load_resource(path: String, show_progress: bool = false) -> Resource:
@@ -132,7 +142,7 @@ func _build_login() -> void:
 	guest_button = _button(panel, "게스트로 시작", Rect2(0.07, 0.585, 0.86, 0.13), Color("522b75"))
 	guest_button.name = "GuestLogin"
 	guest_button.pressed.connect(_request_guest)
-	status_label = VIEW.label(panel, "계정 로그인 연동 준비 중\n게스트는 이 기기의 기존 로컬 데이터를 사용합니다.", 23, Rect2(0.08, 0.76, 0.84, 0.18), Color("c7b0d7"))
+	status_label = VIEW.label(panel, "계정 로그인은 브라우저에서 진행합니다.\n게스트 데이터는 계정 데이터와 분리됩니다.", 23, Rect2(0.08, 0.76, 0.84, 0.18), Color("c7b0d7"))
 	retry_button = _button(self, "다시 시도", Rect2(0.28, 0.64, 0.44, 0.06), Color("522b75"))
 	retry_button.pressed.connect(begin_startup)
 	retry_button.hide()
@@ -152,10 +162,10 @@ func _request_guest() -> void:
 		return
 	guest_button.disabled = true
 	# Guest is local-only, deliberately not a Supabase anonymous identity.
-	if LoginGateway.local_guest_active:
+	var was_guest: bool = LoginGateway.local_guest_active
+	LoginGateway.begin_local_guest() # Also cancels any in-flight browser login.
+	if was_guest:
 		_enter_lobby()
-	else:
-		LoginGateway.begin_local_guest()
 
 
 func _enter_lobby() -> void:

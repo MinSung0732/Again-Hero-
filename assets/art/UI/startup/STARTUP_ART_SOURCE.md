@@ -1,5 +1,11 @@
 # Startup backgrounds — 2026-10-04
 
+## touch_start.png (user-provided)
+
+Copied unchanged from the user's `프레임픽셀시트/loadingscreen.png`.
+The logo and mage are already part of this finished image. It is used only for
+the touch-start screen; no AI transformation or second logo is overlaid.
+
 Generated with the built-in image-generation tool from the user's four-screen
 startup/loading/login reference board. These are original environment-only
 backgrounds, not screenshots with baked-in controls. Existing game logo, text,

@@ -73,11 +73,16 @@ func _run() -> void:
 		return
 	_check(startup._lobby is PackedScene, "Real lobby scene is cached")
 	_check(startup._resources.size() == 3, "Core resources actually loaded")
-	startup.login_screen.find_child("GoogleLogin", true, false).pressed.emit()
-	_check(startup.phase == startup.Phase.LOGIN and not gateway.local_guest_active, "Google placeholder must not authenticate")
-	_check(startup.status_label.text.contains("서버 복구"), "Unavailable provider gives an explanation")
-	startup.login_screen.find_child("KakaoLogin", true, false).pressed.emit()
-	_check(not gateway.local_guest_active, "Kakao placeholder must not create a guest account")
+	var warmup := root.get_node("PresentationWarmup")
+	for index in range(1, 31):
+		_check(warmup.get_texture("res://assets/art/UI/talk_light_only_30_frames/effect_%02d.png" % index) != null, "Reveal frame preloaded before login")
+	var oauth := load("res://src/network/windows_oauth.gd")
+	var verifier := "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+	var url: String = oauth.authorize_url("google", verifier, "test-nonce")
+	_check(url.contains("E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"), "RFC7636 S256 test vector")
+	_check(url.contains("code_challenge_method=s256"), "PKCE enabled")
+	_check(oauth.parse_query("/auth/callback/x?code=a&code=b").is_empty(), "Duplicate auth code rejected")
+	_check(not gateway.local_guest_active and gateway.access_token.is_empty(), "Loading cannot fabricate authentication")
 	await _capture("startup-login")
 	# Error/retry must leave the screen usable and reload cleanly.
 	startup.loading_view.show()
@@ -109,8 +114,13 @@ func _run() -> void:
 	while transition.is_transitioning() and Time.get_ticks_msec() < deadline:
 		await process_frame
 	_check(not transition.is_transitioning() and current_scene.name == "Main", "Actual dungeon scene opens")
+	_check(current_scene._presentation_ready, "Render warmup finishes before dungeon entry")
+	_check(current_scene.battle._monster_spawn_resources_warmed, "Monster caches finish beneath loading")
+	var loads_before: int = warmup.texture_load_count
+	await warmup.prepare_common()
+	_check(warmup.texture_load_count == loads_before, "Reveal cache reuse performs no texture reload")
 	_check(not transition.change_scene("res://missing-scene.tscn"), "Invalid scene rejected safely")
-	print("STARTUP_SMOKE_%s: title, real resources, lobby preload, provider placeholders, retry, guest, duplicate guard, dungeon transition" % ("FAILED" if _failed else "OK"))
+	print("STARTUP_SMOKE_%s: title, 30 preloaded frames, PKCE vector, retry, guest, duplicate guard, warmed dungeon transition" % ("FAILED" if _failed else "OK"))
 	current_scene.queue_free()
 	await process_frame
 	quit(1 if _failed else 0)

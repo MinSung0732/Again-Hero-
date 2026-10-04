@@ -7239,6 +7239,9 @@ func _apply_stage1_channel_visual() -> void:
 func _load_stage1_texture(path: String) -> Texture2D:
 	if path.is_empty():
 		return null
+	var prepared := PresentationWarmup.get_texture(path)
+	if prepared != null:
+		return prepared
 
 	# Stage 1 art is intentionally loaded from the source PNG first.
 	# Some moved effect PNGs still carry stale .import metadata pointing at

@@ -1,5 +1,6 @@
 extends RefCounted
 class_name StageProgress
+const ACCOUNT_SCOPE := preload("res://src/systems/account_save_scope.gd")
 
 const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
 const TESTER_UNLOCK_ALL_STAGES := true
@@ -14,7 +15,7 @@ static func load_state() -> Dictionary:
 		"research_points": 0,
 	}
 
-	var error := config.load(SAVE_PATH)
+	var error := config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH))
 	if error != OK:
 		if TESTER_UNLOCK_ALL_STAGES:
 			state["highest_unlocked_stage"] = STAGE_CATALOG.get_ordered_stage_ids().size()
@@ -47,7 +48,7 @@ static func complete_stage(
 ) -> Dictionary:
 	var state := load_state()
 	var config := ConfigFile.new()
-	config.load(SAVE_PATH)
+	config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH))
 
 	var was_cleared := bool(config.get_value("cleared", stage_id, false))
 	var reward_claimed := bool(config.get_value("reward_claimed", stage_id, false))
@@ -82,7 +83,7 @@ static func complete_stage(
 		"research_points",
 		int(state.get("research_points", 0))
 	)
-	config.save(SAVE_PATH)
+	config.save(ACCOUNT_SCOPE.resolve(SAVE_PATH))
 
 	return {
 		"was_cleared": was_cleared,
@@ -100,13 +101,13 @@ static func is_stage_unlocked(stage_number: int) -> bool:
 
 static func is_stage_cleared(stage_id: String) -> bool:
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH)) != OK:
 		return false
 	return bool(config.get_value("cleared", stage_id, false))
 
 static func is_reward_claimed(stage_id: String) -> bool:
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH)) != OK:
 		return false
 	return bool(config.get_value("reward_claimed", stage_id, false))
 
@@ -115,7 +116,7 @@ static func has_seen_stage_intro(stage_id: String) -> bool:
 	if stage_id.is_empty():
 		return false
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH)) != OK:
 		return false
 	return bool(config.get_value("intro_seen", stage_id, false))
 
@@ -124,9 +125,9 @@ static func mark_stage_intro_seen(stage_id: String) -> bool:
 	if stage_id.is_empty():
 		return false
 	var config := ConfigFile.new()
-	config.load(SAVE_PATH)
+	config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH))
 	config.set_value("intro_seen", stage_id, true)
-	return config.save(SAVE_PATH) == OK
+	return config.save(ACCOUNT_SCOPE.resolve(SAVE_PATH)) == OK
 
 
 static func record_hero_encounter(
@@ -141,7 +142,7 @@ static func record_hero_encounter(
 		}
 
 	var config := ConfigFile.new()
-	config.load(SAVE_PATH)
+	config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH))
 
 	var stage_count := int(
 		config.get_value("hero_stage_encounters", stage_id, 0)
@@ -163,7 +164,7 @@ static func record_hero_encounter(
 	if stage_id not in stages:
 		stages.append(stage_id)
 	config.set_value("hero_identity_stages", identity_id, stages)
-	config.save(SAVE_PATH)
+	config.save(ACCOUNT_SCOPE.resolve(SAVE_PATH))
 
 	return {
 		"stage_encounters": stage_count,
@@ -176,9 +177,9 @@ static func reveal_hero_true_name(identity_id: String) -> bool:
 	if identity_id.is_empty():
 		return false
 	var config := ConfigFile.new()
-	config.load(SAVE_PATH)
+	config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH))
 	config.set_value("hero_true_names", identity_id, true)
-	return config.save(SAVE_PATH) == OK
+	return config.save(ACCOUNT_SCOPE.resolve(SAVE_PATH)) == OK
 
 
 static func is_hero_true_name_unlocked(
@@ -188,7 +189,7 @@ static func is_hero_true_name_unlocked(
 	if identity_id.is_empty():
 		return false
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH)) != OK:
 		return false
 
 	if bool(config.get_value("hero_true_names", identity_id, false)):
@@ -226,7 +227,7 @@ static func add_research_points(amount: int) -> Dictionary:
 		}
 
 	var config := ConfigFile.new()
-	config.load(SAVE_PATH)
+	config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH))
 
 	var state := load_state()
 	var research_points := int(state.get("research_points", 0)) + amount
@@ -241,7 +242,7 @@ static func add_research_points(amount: int) -> Dictionary:
 		int(state.get("highest_unlocked_stage", 1))
 	)
 	config.set_value("meta", "research_points", research_points)
-	var save_error := config.save(SAVE_PATH)
+	var save_error := config.save(ACCOUNT_SCOPE.resolve(SAVE_PATH))
 
 	return {
 		"success": save_error == OK,
@@ -262,7 +263,7 @@ static func try_spend_research_points(cost: int) -> Dictionary:
 		}
 
 	var config := ConfigFile.new()
-	config.load(SAVE_PATH)
+	config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH))
 
 	var state := load_state()
 	var research_points := int(state.get("research_points", 0))
@@ -285,7 +286,7 @@ static func try_spend_research_points(cost: int) -> Dictionary:
 		int(state.get("highest_unlocked_stage", 1))
 	)
 	config.set_value("meta", "research_points", research_points)
-	var save_error := config.save(SAVE_PATH)
+	var save_error := config.save(ACCOUNT_SCOPE.resolve(SAVE_PATH))
 
 	return {
 		"success": save_error == OK,
@@ -300,7 +301,7 @@ static func try_spend_research_points(cost: int) -> Dictionary:
 
 static func get_research_level(research_id: String) -> int:
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH)) != OK:
 		return 0
 	return int(config.get_value("research", research_id, 0))
 
@@ -324,7 +325,7 @@ static func try_purchase_research(
 		}
 
 	var config := ConfigFile.new()
-	config.load(SAVE_PATH)
+	config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH))
 
 	var current_level := int(config.get_value("research", research_id, 0))
 	var research_points := int(config.get_value("meta", "research_points", 0))
@@ -350,7 +351,7 @@ static func try_purchase_research(
 
 	config.set_value("research", research_id, current_level)
 	config.set_value("meta", "research_points", research_points)
-	config.save(SAVE_PATH)
+	config.save(ACCOUNT_SCOPE.resolve(SAVE_PATH))
 
 	return {
 		"success": true,
@@ -361,7 +362,7 @@ static func try_purchase_research(
 
 static func _save_state(state: Dictionary) -> void:
 	var config := ConfigFile.new()
-	config.load(SAVE_PATH)
+	config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH))
 	config.set_value(
 		"progress",
 		"current_stage_id",
@@ -377,4 +378,4 @@ static func _save_state(state: Dictionary) -> void:
 		"research_points",
 		int(state.get("research_points", 0))
 	)
-	config.save(SAVE_PATH)
+	config.save(ACCOUNT_SCOPE.resolve(SAVE_PATH))

@@ -515,6 +515,9 @@ func _finish(skipped: bool) -> void:
 
 
 func _load_texture(path: String) -> Texture2D:
+	var cached := PresentationWarmup.get_texture(path)
+	if cached != null:
+		return cached
 	if path.is_empty() or not ResourceLoader.exists(path):
 		return null
 	var resource = load(path)

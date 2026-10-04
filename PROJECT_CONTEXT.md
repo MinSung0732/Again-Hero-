@@ -1,11 +1,13 @@
 # PROJECT_CONTEXT.md
 
-## Startup / Local Login Shell (2026-10-04)
+## Startup / Windows OAuth / Destination Warmup (2026-10-04)
 
 - The default app entry is `src/startup/Startup.tscn`: touch title → bundled-resource preparation → actual threaded Lobby preload → login selection. Generated castle/camp backgrounds and the existing logo are separate from native runtime controls.
 - No fake download bytes/speed or fabricated progress is displayed. Resource preparation checks/loads catalog paths; lobby/dungeon progress comes from ResourceLoader. Scene initialization stays covered by the persistent shared fullscreen SceneTransition.
-- `LoginGateway` is a disconnected authentication boundary. Google/Kakao show an unavailable notice; guest enters the existing local save without inventing a Supabase identity or changing save paths. Actual OAuth/anonymous auth/session persistence/account linking/save migration remain unimplemented. Emit `authenticated` only after real session validation and account data selection.
-- Source prompts live in `assets/art/UI/startup/STARTUP_ART_SOURCE.md`; implementation boundaries and deferred backend work in `docs/STARTUP_LOGIN_FLOW.md`. `tests/startup_smoke.gd` exercises real startup/preload/retry/guest/dungeon transitions. Supabase config/client and Main gameplay remain unchanged.
+- `LoginGateway` uses Windows browser OAuth through `windows_oauth.gd`: PKCE S256, nonce-bearing loopback callback, bounded requests, cancel/timeout guards, token exchange and server `/user` validation before account selection and `authenticated`. Tokens are memory-only with refresh during this run. Redirect allowlist: `http://127.0.0.1:43817/auth/callback/**`. Providers were confirmed enabled on the existing project. User login success remains manual verification.
+- `AccountSaveScope` preserves legacy guest paths but namespaces authenticated progression/research/collection/team/skills/history under the validated UUID. No automatic guest migration, cloud save sync, persistent credentials, account linking, Android callback or anonymous Supabase identity is implemented.
+- `PresentationWarmup` retains shared entry frames plus the current destination's needed textures, including current hero frames/effects and active shop rarity sheets, not every stage. Cache-first consumers avoid repeated PNG decode. Main waits for monster normal/elite cache preparation and renders all 30 entry frames under SceneTransition before releasing the intro. Missing optional art stays fail-soft; this is not a guarantee of zero frame drops on every device.
+- Source/provenance lives in `assets/art/UI/startup/STARTUP_ART_SOURCE.md`; implementation boundaries and deferred work in `docs/STARTUP_LOGIN_FLOW.md`. `tests/startup_smoke.gd` exercises real prepared transitions; `tests/windows_oauth_smoke.gd` checks loopback callback handling and fixture-based exchange validation without signing in a human account. Gameplay rules are unchanged.
 
 ## Team Formation Presentation / Reserved Presets (2026-10-04)
 

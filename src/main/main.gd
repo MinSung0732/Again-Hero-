@@ -364,11 +364,39 @@ func _ready() -> void:
 	debug_balance_label.text = String(snapshot.get("debug_balance_summary", "[DEBUG]"))
 	placement_toggle.button_pressed = true
 	_on_placement_mode_toggled(true)
-	_begin_stage_entry(snapshot)
-	call_deferred("_warm_touch_hold_frames")
+	call_deferred("_begin_prepared_stage_entry", snapshot)
 
 	print("Again, Hero? stage/camera prototype loaded.")
 	print("Finite world camera + persistent stage progression enabled.")
+
+var _presentation_ready := false
+
+
+func prepare_presentation() -> void:
+	if _presentation_ready:
+		return
+	await PresentationWarmup.prepare_common()
+	await PresentationWarmup.prepare_scene("res://src/main/Main.tscn")
+	await _warm_touch_hold_frames()
+	await battle.prepare_spawn_resources()
+	var snapshot: Dictionary = battle.get_snapshot()
+	var reveal := HERO_REVEAL_CATALOG.get_reveal_data(
+		String(snapshot.get("hero_id", "")), "", String(snapshot.get("hero_portrait_path", ""))
+	)
+	await hero_reveal_cutscene.warm_render_resources(String(reveal.get("portrait_path", "")))
+	_presentation_ready = true
+
+
+func _begin_prepared_stage_entry(snapshot: Dictionary) -> void:
+	var transition := get_node_or_null("/root/SceneTransition")
+	if transition != null and transition.is_transitioning():
+		await transition.transition_completed
+	else:
+		# Running Main directly from the editor must also prepare the frames.
+		await prepare_presentation()
+	if is_inside_tree():
+		_begin_stage_entry(snapshot)
+
 
 func _apply_battle_pixel_asset_frames() -> void:
 	# Use the original split PNG assets as tiled frame pieces.
@@ -2073,6 +2101,9 @@ func _get_visible_alpha_rect(
 	return image.get_used_rect()
 
 func _load_ui_texture(path: String) -> Texture2D:
+	var cached := PresentationWarmup.get_texture(path)
+	if cached != null:
+		return cached
 	if path.is_empty():
 		return null
 	# Prefer Godot's imported/resource cache. Raw PNG decoding is kept only

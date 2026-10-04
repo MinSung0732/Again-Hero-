@@ -1,5 +1,6 @@
 extends RefCounted
 class_name ShopSummonHistoryStore
+const ACCOUNT_SCOPE := preload("res://src/systems/account_save_scope.gd")
 
 const SAVE_PATH := "user://shop_summon_history.cfg"
 const MAX_HISTORY := 100
@@ -7,7 +8,7 @@ const MAX_HISTORY := 100
 
 static func load_entries() -> Array:
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH)) != OK:
 		return []
 
 	var saved = config.get_value("summons", "entries", [])
@@ -39,7 +40,7 @@ static func append_entries(new_entries: Array) -> Array:
 
 	var config := ConfigFile.new()
 	config.set_value("summons", "entries", entries)
-	config.save(SAVE_PATH)
+	config.save(ACCOUNT_SCOPE.resolve(SAVE_PATH))
 	return entries
 
 
