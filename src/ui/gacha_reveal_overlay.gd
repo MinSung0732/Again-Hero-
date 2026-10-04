@@ -13,6 +13,7 @@ const CARD_FRAME_PATH := "res://assets/art/effects/gatcha/gacha_reward_card.png"
 const DOOR_FRAME_SIZE := Vector2(512.0, 512.0)
 const DOOR_COLUMNS := 6
 const DOOR_FRAME_COUNT := 30
+const DOOR_OPEN_FIRST_FRAME := 7 # Manifest: frame 8 is the first moving hinge.
 const DOOR_FLASH_FIRST_FRAME := 28 # Sheet manifest: frames 29–30 fill the viewport.
 const DOOR_FPS := 10.0
 const ANTICIPATION_SECONDS := 0.75
@@ -50,6 +51,8 @@ var _retry_cost := 0
 var _gold_reader: Callable
 var _button_texture: Texture2D
 var _door_sound: AudioStreamPlayer
+var _creak_sound: AudioStreamPlayer
+var _creak_played := false
 var _reveal_sound: AudioStreamPlayer
 
 
@@ -59,6 +62,7 @@ func _ready() -> void:
 	z_index = 500
 	_build_ui()
 	_door_sound = _build_sound("door")
+	_creak_sound = _build_sound("creak")
 	_reveal_sound = _build_sound("reveal")
 	visibility_changed.connect(_on_visibility_changed)
 	hide()
@@ -74,14 +78,14 @@ func _build_sound(cue: String) -> AudioStreamPlayer:
 	if ResourceLoader.exists(path):
 		player.stream = load(path) as AudioStream
 	# Fail-soft for optional audio if the editor import cache is not ready yet.
-	elif FileAccess.file_exists(path):
+	if player.stream == null and FileAccess.file_exists(path):
 		player.stream = AudioStreamMP3.load_from_file(path)
 	add_child(player)
 	return player
 
 
 func _stop_sounds() -> void:
-	for player in [_door_sound, _reveal_sound]:
+	for player in [_door_sound, _creak_sound, _reveal_sound]:
 		if is_instance_valid(player):
 			player.stop()
 
@@ -304,6 +308,7 @@ func _show_reveal(index: int) -> void:
 	_apply_reveal_panel_color(rarity_color)
 	_reveal_aura.set_accent(rarity_color)
 	_door_sound.stop()
+	_creak_sound.stop()
 	_play_sound(_reveal_sound)
 	_play_reveal_emphasis()
 
@@ -452,6 +457,7 @@ func _confirm() -> void:
 
 func _reset_visual_state() -> void:
 	_stop_sounds()
+	_creak_played = false
 	_stop_active_tweens()
 	_door_sprite.stop()
 	_door_sprite.hide()
@@ -474,10 +480,14 @@ func _stop_active_tweens() -> void:
 
 
 func _on_door_frame_changed() -> void:
-	if _phase != "door" or _door_sprite.animation != "open":
+	if not is_visible_in_tree() or _phase != "door" or _door_sprite.animation != "open":
 		return
+	if _door_sprite.frame >= DOOR_OPEN_FIRST_FRAME and not _creak_played:
+		_creak_played = true
+		_play_sound(_creak_sound)
 	if _door_sprite.frame < DOOR_FLASH_FIRST_FRAME:
 		return
+	_creak_sound.stop()
 	# Reuse the existing atlas frame; only the light, not the gate, fills the screen.
 	_door_flash.texture = _door_sprite.sprite_frames.get_frame_texture(
 		"open", _door_sprite.frame

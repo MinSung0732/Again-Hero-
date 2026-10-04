@@ -1,3 +1,9 @@
+### 2026-10-05 — 가챠 문 삐걱거림 / 등장음 교체
+- 사용자가 올린 도트 커밋 `6086735`를 fast-forward 반영하고 원본은 변경하지 않음.
+- 기존 흔들림 충격음은 유지. Pixabay Universfield `Creepy Creaking Door` (402155)를 문이 움직이기 시작하는 8번째 프레임에 한 번 재생하고 전체화면 빛에서 정지.
+- 등장음을 ShidenBeatsMusic `Sound Effect: Twinkle/Sparkle` (115095)로 교체하고 상대 음량을 -8dB→0dB로 높임. 기존 SFX 설정과 스킵/닫기/재소환 시 정지·초기화 유지. 출처/라이선스 기록 갱신.
+- Godot 4.7.2 headless/실제 OpenGL에서 문 첫 이동 프레임 재생·중복 방지·초기/개방 중 스킵·재소환 검사 통과. 기존 강화·다시 뽑기 회귀도 격리 테스트 계정 저장 권한으로 재실행해 통과. 실제 청감/모바일 음량은 사용자 확인 필요. 기존 raw PNG export 경고는 별도.
+
 ### 2026-10-05 — 가챠 문 열림 / 몬스터 등장 효과음
 - Pixabay RescopicSound `Elemental Magic Spell Impact Outgoing` (228342), Universfield `Magic Twinkle` (244951)을 실제 MP3 게임 에셋으로 추가. 출처/Content License/재배포 제한은 `assets/audio/sfx/gacha/SOURCES.md`에 기록.
 - 문 열림 시작과 몬스터별 등장에 SFX 버스의 재사용 플레이어 연결. 기존 효과음 음량/음소거 적용, 빠른 터치 중첩 방지, 스킵/결과/닫기/숨김/새 연출 시작 시 정지. 보상/확률/연출 순서는 유지.

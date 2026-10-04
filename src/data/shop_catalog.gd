@@ -8,7 +8,8 @@ const MULTI_DRAW_COUNT := 11
 
 const GACHA_SOUNDS := {
 	"door": {"path": "res://assets/audio/sfx/gacha/door_open.mp3", "volume_db": -5.0},
-	"reveal": {"path": "res://assets/audio/sfx/gacha/monster_reveal.mp3", "volume_db": -8.0},
+	"creak": {"path": "res://assets/audio/sfx/gacha/door_creak.mp3", "volume_db": -2.0},
+	"reveal": {"path": "res://assets/audio/sfx/gacha/monster_reveal.mp3", "volume_db": 0.0},
 }
 
 const BANNERS := [
