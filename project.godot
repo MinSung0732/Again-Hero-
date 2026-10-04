@@ -24,6 +24,7 @@ GameFontManager="*res://src/ui/game_font_manager.gd"
 AudioSettings="*res://src/audio/audio_settings.gd"
 PresentationWarmup="*res://src/systems/presentation_warmup.gd"
 SceneTransition="*res://src/systems/scene_transition.gd"
+CloudStore="*res://src/network/cloud_store.gd"
 LoginGateway="*res://src/network/login_gateway.gd"
 
 [display]

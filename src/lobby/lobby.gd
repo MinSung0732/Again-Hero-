@@ -307,6 +307,7 @@ func _ready() -> void:
 	_apply_lobby_visual_polish()
 	_setup_gacha_reveal_overlay()
 	_connect_navigation()
+	_setup_cloud_account()
 	shop_summon_history = SHOP_SUMMON_HISTORY_STORE.load_entries()
 	_refresh_shop_summon_history()
 
@@ -324,6 +325,48 @@ func _ready() -> void:
 	_switch_tab("main")
 	_refresh_header()
 	_refresh_stage_card()
+
+func _setup_cloud_account() -> void:
+	var guide := other_account_panel.get_node("Guide") as Label
+	guide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	guide.text = "게스트 저장은 이 기기에만 보관됩니다." if LoginGateway.local_guest_active else "계정 저장 · 변경 후 자동 동기화됩니다."
+	CloudStore.status_changed.connect(func(message: String): guide.text = message)
+	LoginGateway.login_unavailable.connect(func(message: String): guide.text = message)
+	var sync := other_account_panel.get_node("KakaoLogin") as Button
+	sync.text = "클라우드 저장 동기화"
+	sync.disabled = LoginGateway.local_guest_active
+	sync.pressed.connect(func():
+		sync.disabled = true
+		if CloudStore.conflict:
+			get_tree().change_scene_to_file("res://src/startup/Startup.tscn")
+		else:
+			await CloudStore.flush()
+			sync.disabled = false
+	)
+	var logout_button := other_account_panel.get_node("GoogleLogin") as Button
+	logout_button.text = "계정 로그인" if LoginGateway.local_guest_active else "로그아웃 / 계정 변경"
+	logout_button.disabled = false
+	logout_button.pressed.connect(func():
+		logout_button.disabled = true
+		var cover := ColorRect.new()
+		cover.color = Color(0, 0, 0, 0.65)
+		cover.mouse_filter = Control.MOUSE_FILTER_STOP
+		add_child(cover)
+		cover.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		var message := Label.new()
+		message.text = "저장 확인 후 계정을 종료합니다…"
+		message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		message.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		message.add_theme_font_size_override("font_size", 30)
+		cover.add_child(message)
+		message.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		if await LoginGateway.logout():
+			get_tree().change_scene_to_file("res://src/startup/Startup.tscn")
+		else:
+			cover.queue_free()
+			logout_button.disabled = false
+	)
+	other_account_panel.get_node("AppLogin").hide()
 
 func _build_styles() -> void:
 	panel_style = _make_style(

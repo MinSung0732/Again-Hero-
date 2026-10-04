@@ -28,6 +28,7 @@ func _ready() -> void:
 	LoginGateway.login_unavailable.connect(_show_auth_notice)
 	LoginGateway.local_guest_started.connect(_enter_lobby)
 	LoginGateway.authenticated.connect(_enter_lobby)
+	CloudStore.conflict_detected.connect(_show_cloud_conflict)
 	_pulse = create_tween().set_loops()
 	_pulse.tween_property(start_button, "modulate:a", 0.6, 1.1)
 	_pulse.tween_property(start_button, "modulate:a", 1.0, 1.1)
@@ -102,6 +103,23 @@ func begin_startup() -> void:
 	loading_view.hide()
 	phase = Phase.LOGIN
 	login_screen.show()
+	if not LoginGateway.user_id.is_empty():
+		await LoginGateway.retry_cloud()
+	else:
+		await LoginGateway.try_auto_login()
+
+func _show_cloud_conflict() -> void:
+	var dialog := ConfirmationDialog.new()
+	dialog.title = "저장 데이터 선택"
+	dialog.dialog_text = "서버와 이 기기의 진행도가 다릅니다.\n서버 저장을 불러오면 이 기기의 저장은 백업됩니다."
+	dialog.ok_button_text = "서버 저장 사용"
+	dialog.cancel_button_text = "취소"
+	dialog.add_button("이 기기 저장 사용", true, "local")
+	add_child(dialog)
+	dialog.confirmed.connect(func(): LoginGateway.retry_cloud("remote"); dialog.queue_free())
+	dialog.custom_action.connect(func(_action: StringName): LoginGateway.retry_cloud("local"); dialog.queue_free())
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.popup_centered(Vector2i(800, 280))
 
 
 func _on_warmup_progress(completed: int, total: int) -> void:

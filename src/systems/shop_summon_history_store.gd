@@ -8,7 +8,7 @@ const MAX_HISTORY := 100
 
 static func load_entries() -> Array:
 	var config := ConfigFile.new()
-	if config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH)) != OK:
+	if ACCOUNT_SCOPE.load_config(config, SAVE_PATH) != OK:
 		return []
 
 	var saved = config.get_value("summons", "entries", [])
@@ -40,7 +40,7 @@ static func append_entries(new_entries: Array) -> Array:
 
 	var config := ConfigFile.new()
 	config.set_value("summons", "entries", entries)
-	config.save(ACCOUNT_SCOPE.resolve(SAVE_PATH))
+	ACCOUNT_SCOPE.save_config(config, SAVE_PATH)
 	return entries
 
 

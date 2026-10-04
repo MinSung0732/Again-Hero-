@@ -9,7 +9,7 @@ static func load_ids(valid_ids: Array, fallback_ids: Array) -> Array:
 	var raw_ids: Array = []
 	var config := ConfigFile.new()
 
-	if config.load(ACCOUNT_SCOPE.resolve(SAVE_PATH)) == OK:
+	if ACCOUNT_SCOPE.load_config(config, SAVE_PATH) == OK:
 		var encoded := String(
 			config.get_value("team", "monster_ids", "")
 		)
@@ -36,7 +36,7 @@ static func save_ids(monster_ids: Array, valid_ids: Array) -> bool:
 
 	var config := ConfigFile.new()
 	config.set_value("team", "monster_ids", encoded)
-	return config.save(ACCOUNT_SCOPE.resolve(SAVE_PATH)) == OK
+	return ACCOUNT_SCOPE.save_config(config, SAVE_PATH) == OK
 
 static func _normalize_ids(raw_ids: Array, valid_ids: Array) -> Array:
 	var result: Array = []

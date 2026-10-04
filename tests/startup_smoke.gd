@@ -38,6 +38,7 @@ func _run() -> void:
 	root.content_scale_size = Vector2i(1080, 1920)
 	root.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
 	var gateway := root.get_node("LoginGateway")
+	gateway.remember_session_enabled = false
 	gateway.reset_local_guest()
 	var startup: Control = load("res://src/startup/Startup.tscn").instantiate()
 	root.add_child(startup)
