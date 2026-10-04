@@ -6,9 +6,9 @@ signal confirmed
 const SHOP_CATALOG := preload("res://src/data/shop_catalog.gd")
 const REVEAL_AURA := preload("res://src/ui/gacha_reveal_aura.gd")
 const CHAMBER_PATH := "res://assets/art/effects/gatcha/summoning_chamber.png"
-const PANEL_FRAME_PATH := "res://assets/art/UI/uicardframes/ui10_clean_frame.png"
-const BUTTON_FRAME_PATH := "res://assets/art/UI/lobby_stage/enter_button.svg"
-const CARD_FRAME_PATH := "res://assets/art/UI/lobby_stage/portrait_frame.svg"
+const PANEL_FRAME_PATH := "res://assets/art/effects/gatcha/gacha_panel_frame.png"
+const BUTTON_FRAME_PATH := "res://assets/art/effects/gatcha/gacha_button_texture.tres"
+const CARD_FRAME_PATH := "res://assets/art/effects/gatcha/gacha_reward_card.png"
 const DOOR_FRAME_SIZE := Vector2(512.0, 512.0)
 const DOOR_COLUMNS := 6
 const DOOR_FRAME_COUNT := 30
@@ -43,6 +43,7 @@ var _result_summary: Label
 var _result_panel: PanelContainer
 var _result_grid: GridContainer
 var _confirm_button: Button
+var _button_texture: Texture2D
 
 
 func _ready() -> void:
@@ -428,10 +429,10 @@ func _add_frame_texture(target: Control, path: String, tint: Color = Color.WHITE
 	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fill.color = Color("120d1b", 0.94)
 	if path == PANEL_FRAME_PATH:
-		fill.anchor_left = 0.10
-		fill.anchor_right = 0.90
-		fill.anchor_top = 0.08
-		fill.anchor_bottom = 0.92
+		fill.anchor_left = 0.12
+		fill.anchor_right = 0.88
+		fill.anchor_top = 0.12
+		fill.anchor_bottom = 0.90
 	else:
 		fill.anchor_left = 0.04
 		fill.anchor_right = 0.96
@@ -452,16 +453,21 @@ func _add_frame_texture(target: Control, path: String, tint: Color = Color.WHITE
 func _style_decorated_button(button: Button) -> void:
 	if not ResourceLoader.exists(BUTTON_FRAME_PATH):
 		return
-	var texture := load(BUTTON_FRAME_PATH) as Texture2D
-	for state in ["normal", "hover", "pressed", "focus"]:
+	if _button_texture == null:
+		_button_texture = load(BUTTON_FRAME_PATH) as Texture2D
+	button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	for state in ["normal", "hover", "pressed"]:
 		var style := StyleBoxTexture.new()
-		style.texture = texture
-		style.texture_margin_left = 52.0
-		style.texture_margin_right = 52.0
-		style.texture_margin_top = 24.0
-		style.texture_margin_bottom = 24.0
-		style.modulate_color = Color("d9a7e7") if state == "pressed" else Color.WHITE
+		style.texture = _button_texture
+		style.content_margin_left = 38.0
+		style.content_margin_right = 38.0
+		style.content_margin_top = 12.0
+		style.content_margin_bottom = 12.0
+		style.modulate_color = Color("cba1db") if state == "pressed" else Color.WHITE
+		if state == "hover":
+			style.modulate_color = Color(1.15, 1.10, 1.15)
 		button.add_theme_stylebox_override(state, style)
+	button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 
 
 func _make_panel_style(
@@ -540,10 +546,10 @@ func _build_ui() -> void:
 	_skip_button.anchor_top = 0.0
 	_skip_button.anchor_right = 1.0
 	_skip_button.anchor_bottom = 0.0
-	_skip_button.offset_left = -220.0
+	_skip_button.offset_left = -282.0
 	_skip_button.offset_top = 54.0
 	_skip_button.offset_right = -34.0
-	_skip_button.offset_bottom = 124.0
+	_skip_button.offset_bottom = 130.0
 	_skip_button.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_skip_button.add_theme_font_size_override("font_size", 25)
 	_skip_button.add_theme_color_override("font_color", Color("fff0bd"))
@@ -563,6 +569,7 @@ func _build_ui() -> void:
 		_skip_button.add_theme_stylebox_override(state, style)
 	_skip_button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	_skip_button.z_index = 60
+	_style_decorated_button(_skip_button)
 	_skip_button.pressed.connect(skip_to_results)
 	add_child(_skip_button)
 
@@ -582,9 +589,9 @@ func _build_reveal_panel() -> void:
 	var margin := MarginContainer.new()
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	margin.add_theme_constant_override("margin_left", 140)
-	margin.add_theme_constant_override("margin_top", 140)
+	margin.add_theme_constant_override("margin_top", 210)
 	margin.add_theme_constant_override("margin_right", 140)
-	margin.add_theme_constant_override("margin_bottom", 140)
+	margin.add_theme_constant_override("margin_bottom", 160)
 	_reveal_panel.add_child(margin)
 
 	var vbox := VBoxContainer.new()
@@ -595,10 +602,19 @@ func _build_reveal_panel() -> void:
 	_reveal_badge = Label.new()
 	_reveal_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_reveal_badge.add_theme_font_size_override("font_size", 28)
+	_reveal_badge.custom_minimum_size = Vector2(300.0, 60.0)
+	_reveal_badge.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_reveal_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var badge_style := _make_panel_style(Color("21132f"), Color("e1b94e"), 2, 10)
+	badge_style.content_margin_left = 24.0
+	badge_style.content_margin_right = 24.0
+	badge_style.content_margin_top = 8.0
+	badge_style.content_margin_bottom = 8.0
+	_reveal_badge.add_theme_stylebox_override("normal", badge_style)
 	vbox.add_child(_reveal_badge)
 
 	var stage := Control.new()
-	stage.custom_minimum_size = Vector2(0.0, 470.0)
+	stage.custom_minimum_size = Vector2(0.0, 430.0)
 	stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(stage)
@@ -645,9 +661,9 @@ func _build_result_panel() -> void:
 
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 140)
-	margin.add_theme_constant_override("margin_top", 140)
+	margin.add_theme_constant_override("margin_top", 220)
 	margin.add_theme_constant_override("margin_right", 140)
-	margin.add_theme_constant_override("margin_bottom", 140)
+	margin.add_theme_constant_override("margin_bottom", 180)
 	_result_panel.add_child(margin)
 
 	var vbox := VBoxContainer.new()

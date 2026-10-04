@@ -8,7 +8,7 @@
 - Collection and history rewards are persisted before presentation so skipping or leaving the visual sequence cannot lose rewards.
 - Current monsters are all Common. Uncommon, Rare, Legendary, and Transcendent catalog entries and door assets are reserved with zero draw weight until their content is introduced.
 - Only the selected door sheet is threaded-loaded for a sequence, and the reusable overlay releases its frame references after confirmation.
-- The user's castle-themed visual references now drive a shared portrait summoning-chamber background, existing gold pixel frames/purple buttons, and native rarity-colored reveal rays, circles, and stars. Text, monsters, animated doors, and controls remain separate UI layers.
+- The user's castle-themed visual references drive a shared portrait summoning-chamber background, dedicated generated gold/violet panel, button and reward-card assets, and native rarity-colored reveal rays, circles, and stars. Text, monsters, animated doors, and controls remain separate UI layers. Decorative violet gems are a theme element, not a rarity indicator; current draws remain Common.
 - Final results show individual draws in four columns and report both draw count and the actual total shards; frame-safe padding keeps labels/buttons inside the decorations.
 
 ## Monster Collection Upgrades (2026-10-04)
