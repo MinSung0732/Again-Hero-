@@ -1,5 +1,13 @@
 # PROJECT_CONTEXT.md
 
+## Five-Page Lobby Settings (2026-10-05)
+
+- Other navigation now opens Settings with game/sound/notifications/account/misc pages in lobby_settings_view.gd. Existing audio and account controls/signals are retained and reparented, not rebound. Scrollable pages use frame-safe margins and native runtime labels; current sound content fits the viewport. The generated transparent amethyst slider thumb is passive, cache-first, and documented at assets/art/UI/settings_v2/README.md. Native switch icons share four cached textures.
+- Gameplay preferences read/write the same device-level user://gameplay_settings.cfg section/keys as Main: camera_view_locked and battle_frame_enabled, both default true. Saves retain other sections/keys. Audio uses existing buses/levels/mute; config_path defaults to the existing audio_settings.cfg and permits isolated tests. These preferences are not account gameplay/cloud snapshot data.
+- Notification opt-ins persist locally in notification_settings.cfg: push_enabled/lunch_enabled/dinner_enabled all default false. Disabling the master opt-in disables schedule controls without erasing choices. This is app-level preference only: no OS permission claim, token registration, scheduling or push service is implemented; UI explicitly says delivery/OS integration is pending.
+- Account presentation uses provider/email/name from the existing validated /user response for display only, never authorization. It is memory-only and clears on guest/test/logout transitions; cloud state comes from existing ready/busy/conflict/token state and last status signals, not metadata. Existing flush-before-account-switch flow is preserved; coupon modal lives under AccountPanel. Local testing cannot masquerade as cloud-linked and login change is disabled until normaltest exits.
+- lobby_settings_smoke covers rendered layout, persistence/new instance recovery, battle key compatibility, native audio buses, notification consent gating, guest/Kakao/Google display, cloud status signals and moved coupon. Cloud/auto-login, OAuth, progression/coupon, startup and battle chrome fixtures remain regression checks. Actual human OAuth and Android touch/native notification permission need separate QA.
+
 ## Hero Introduction Presentation V2 (2026-10-05)
 
 - The introduction uses an AI-generated opaque castle chamber at assets/art/UI/hero_reveal_v2/reveal_chamber.png, with provenance in the adjacent README. Existing hero portraits are unchanged. Dedicated architecture replaces stacked generic panel skins; names remain native text without a rectangular backing.

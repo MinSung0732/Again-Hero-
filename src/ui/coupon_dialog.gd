@@ -6,7 +6,7 @@ func install(lobby: Control) -> void:
 	button.text = "쿠폰 입력"
 	button.custom_minimum_size.y = 82
 	button.add_theme_font_size_override("font_size", 30)
-	lobby.other_settings_panel.add_child(button)
+	lobby.other_account_panel.add_child(button)
 	var overlay := ColorRect.new()
 	overlay.name = "CouponOverlay"
 	overlay.color = Color(0,0,0,0.78)

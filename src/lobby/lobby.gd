@@ -241,6 +241,8 @@ var _portrait_texture_cache: Dictionary = {}
 var _portrait_reference_image: Image
 var _portrait_reference_rect := Rect2i()
 var _presentation_ready := false
+var settings_view: RefCounted
+var gameplay_settings_path := "user://gameplay_settings.cfg"
 var _portrait_normalization_count := 0
 var _monster_icon_texture_cache: Dictionary = {}
 var stage_selector_buttons: Array[Button] = []
@@ -313,6 +315,8 @@ func _ready() -> void:
 	_connect_navigation()
 	_setup_cloud_account()
 	load("res://src/ui/coupon_dialog.gd").new().install(self)
+	settings_view = load("res://src/ui/lobby_settings_view.gd").new()
+	settings_view.install(self)
 	var normalization := MONSTER_COLLECTION_STORE.normalize_maxed()
 	if not bool(normalization.get("success", false)):
 		push_warning("최대 강화 조각의 연구 포인트 전환을 저장하지 못했습니다.")
@@ -338,7 +342,7 @@ func _ready() -> void:
 func _setup_cloud_account() -> void:
 	var guide := other_account_panel.get_node("Guide") as Label
 	guide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	guide.text = "게스트 저장은 이 기기에만 보관됩니다." if LoginGateway.local_guest_active else "계정 저장 · 변경 후 자동 동기화됩니다."
+	guide.text = "게스트 저장은 이 기기에만 보관됩니다." if LoginGateway.user_id.is_empty() else "계정 저장 · 변경 후 자동 동기화됩니다."
 	CloudStore.status_changed.connect(func(message: String): guide.text = message)
 	LoginGateway.login_unavailable.connect(func(message: String): guide.text = message)
 	var sync := other_account_panel.get_node("KakaoLogin") as Button
@@ -2417,7 +2421,10 @@ func _switch_tab(tab_id: String) -> void:
 		_rebuild_research_list()
 	elif tab_id == "other":
 		_sync_audio_settings_ui()
-		_show_other_settings()
+		if settings_view != null:
+			settings_view.show_page(settings_view.selected)
+		else:
+			_show_other_settings()
 
 	_refresh_nav_button(shop_button, tab_id == "shop")
 	_refresh_nav_button(team_button, tab_id == "team")
@@ -2427,6 +2434,9 @@ func _switch_tab(tab_id: String) -> void:
 	_refresh_header()
 
 func _show_other_settings() -> void:
+	if settings_view != null:
+		settings_view.show_page("sound")
+		return
 	other_settings_panel.show()
 	other_account_panel.hide()
 	other_settings_tab_button.disabled = true
@@ -2436,6 +2446,9 @@ func _show_other_settings() -> void:
 
 
 func _show_other_account() -> void:
+	if settings_view != null:
+		settings_view.show_page("account")
+		return
 	other_settings_panel.hide()
 	other_account_panel.show()
 	other_settings_tab_button.disabled = false

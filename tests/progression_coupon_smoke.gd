@@ -60,9 +60,9 @@ func run() -> void:
 	PROGRESS.complete_stage("stage_1",1,"stage_2",2,100)
 	check(PROGRESS.is_stage_unlocked(2) and not PROGRESS.is_stage_unlocked(3), "clear unlocks one stage")
 	check(lobby._get_max_browsable_stage_index() == 3, "clear reveals one more preview")
-	check(lobby.other_settings_panel.has_node("CouponButton") and lobby.has_node("CouponOverlay"), "coupon UI installed")
+	check(lobby.other_account_panel.has_node("CouponButton") and lobby.has_node("CouponOverlay"), "coupon UI installed in account")
 	lobby._switch_tab("other")
-	lobby.other_settings_panel.get_node("CouponButton").pressed.emit()
+	lobby.other_account_panel.get_node("CouponButton").pressed.emit()
 	check(lobby.get_node("CouponOverlay").visible, "coupon button opens modal")
 	var coupon_entry := lobby.get_node("CouponOverlay").find_child("CouponNumber", true, false) as LineEdit
 	coupon_entry.text = "invalid"

@@ -10,6 +10,8 @@ signal authenticated
 
 var local_guest_active := false
 var user_id := ""
+var account_provider := ""
+var account_label := ""
 var access_token := ""
 var _refresh_token := ""
 var _expires_at := 0.0
@@ -43,6 +45,7 @@ func _on_validated(session: Dictionary, user: Dictionary) -> void:
 		return
 	_session_generation += 1
 	user_id = id
+	_set_account_display(user)
 	_set_session(session)
 	local_guest_active = false
 	_refresh_timer.start()
@@ -107,6 +110,26 @@ func _set_session(session: Dictionary) -> void:
 	_refresh_token = String(session.get("refresh_token", ""))
 	_expires_at = Time.get_unix_time_from_system() + float(session.get("expires_in", 3600))
 
+
+func _set_account_display(user: Dictionary) -> void:
+	# Display-only fields from the already validated /user response. Never
+	# use metadata as authorization, save ownership or cloud connection proof.
+	var metadata: Dictionary = user.get("app_metadata", {})
+	account_provider = String(metadata.get("provider", ""))
+	var details: Dictionary = user.get("user_metadata", {})
+	account_label = String(user.get("email", ""))
+	if account_label.is_empty():
+		account_label = String(details.get("name", details.get("nickname", "")))
+	account_label = account_label.strip_edges().left(80)
+
+
+func get_account_display() -> String:
+	if user_id.is_empty():
+		return "게스트 계정 · 이 기기"
+	var provider := String({"kakao": "카카오", "google": "Google"}.get(account_provider, "연결된 계정"))
+	var identity := account_label if not account_label.is_empty() else "ID " + user_id.left(8)
+	return provider + " 로그인\n" + identity
+
 func _refresh_if_needed() -> void:
 	if _refresh_token.is_empty() or Time.get_unix_time_from_system() < _expires_at - 90:
 		return
@@ -141,6 +164,8 @@ func begin_login(provider: String) -> void:
 
 
 func begin_local_guest(preserve_session: bool = false) -> void:
+	account_provider = ""
+	account_label = ""
 	_session_generation += 1
 	_cloud.stop()
 	if remember_session_enabled and not preserve_session:
@@ -162,6 +187,8 @@ func reset_local_guest() -> void:
 	SCOPE.select_guest()
 
 func suspend_for_local_test() -> void:
+	account_provider = ""
+	account_label = ""
 	_session_generation += 1
 	_cloud.stop()
 	_oauth.cancel()
@@ -189,4 +216,6 @@ func logout() -> bool:
 	_refresh_token = ""
 	local_guest_active = false
 	SCOPE.select_guest()
+	account_provider = ""
+	account_label = ""
 	return true

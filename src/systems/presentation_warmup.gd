@@ -51,6 +51,7 @@ func prepare_scene(scene_path: String) -> bool:
 		])
 		dirs.assign(["lobby_header", "lobby_footer", "lobby_stage", "shop", "01_large_left_panel", "03_middle_right_panel"])
 		paths.append("res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png")
+		paths.append("res://assets/art/UI/settings_v2/amethyst_thumb.png")
 		paths.append("res://assets/art/effects/gatcha/summoning_chamber.png")
 		paths.append("res://assets/art/effects/gatcha/gacha_button_texture.tres")
 		paths.append("res://assets/art/effects/gatcha/gacha_panel_frame.png")

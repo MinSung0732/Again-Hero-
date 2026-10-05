@@ -26,6 +26,7 @@ var bgm_level: int = DEFAULT_LEVEL
 var sfx_level: int = DEFAULT_LEVEL
 var bgm_muted: bool = false
 var sfx_muted: bool = false
+var config_path := CONFIG_PATH
 
 
 func _ready() -> void:
@@ -65,7 +66,7 @@ func apply_settings() -> void:
 
 func load_settings() -> void:
 	var config := ConfigFile.new()
-	if config.load(CONFIG_PATH) != OK:
+	if config.load(config_path) != OK:
 		return
 
 	bgm_level = clampi(
@@ -146,5 +147,5 @@ func _save_and_emit() -> void:
 	config.set_value("audio", "sfx_level", sfx_level)
 	config.set_value("audio", "bgm_muted", bgm_muted)
 	config.set_value("audio", "sfx_muted", sfx_muted)
-	config.save(CONFIG_PATH)
+	config.save(config_path)
 	settings_changed.emit()
