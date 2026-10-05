@@ -3002,7 +3002,9 @@ func _refresh_shop_summon_buttons() -> void:
 		if button == null:
 			continue
 		button.disabled = gold < int(pair[1])
-		button.tooltip_text = "골드가 부족합니다." if button.disabled else ""
+		# Spending can disable the button while an emulated touch pointer is still
+		# over it. A new tooltip then leaks onto the successful reveal overlay.
+		button.tooltip_text = ""
 		button.mouse_default_cursor_shape = Control.CURSOR_ARROW if button.disabled else Control.CURSOR_POINTING_HAND
 
 

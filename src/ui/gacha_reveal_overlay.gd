@@ -120,7 +120,9 @@ func _refresh_retry_button() -> void:
 	var affordable := configured and int(_gold_reader.call()) >= _retry_cost
 	_retry_button.disabled = not affordable
 	_retry_button.text = "다시 뽑기\n%d 골드" % _retry_cost
-	_retry_button.tooltip_text = "동일한 횟수로 다시 소환합니다." if affordable else "골드가 부족합니다."
+	# Disabled retry already displays its cost. Do not create a funds tooltip
+	# underneath the door/reveal sequence when the just-completed draw spent it.
+	_retry_button.tooltip_text = "동일한 횟수로 다시 소환합니다." if affordable else ""
 
 
 func present(results: Array) -> void:
