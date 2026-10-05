@@ -10,6 +10,12 @@ The authored Korean sequence lives in `src/data/prologue_catalog.gd`. Touch firs
 
 Nickname rules: 1–6 precomposed Korean syllables, ASCII letters or digits, without whitespace/symbols. Global case-insensitive uniqueness; the same account retrying its confirmed name/gender is idempotent. A duplicate random suggestion can occur before Confirm and does not reserve somebody else's name. Gender keys are `male`/`female`, mapped centrally to the existing portraits. All StageIntroCutscene demon labels use `마왕(닉네임)`; legacy/unconfigured profiles fall back to `마왕`/male.
 
+## Mobile nickname entry
+
+The name form tracks the physical virtual-keyboard inset and converts it through the canvas-to-screen transform. The unobscured bottom is captured before input focus; an OS-resized viewport is capped rather than subtracting the inset twice. Mobile focus initially places the form in the upper half while keyboard height is unavailable. After a reported keyboard closes, the original modal placement returns. A fixed readable content height inside a ScrollContainer keeps Confirm accessible on unusually short visible areas without recreating controls or losing typed text. Gender selection and nickname registration semantics remain unchanged.
+
+`tests/player_prologue_keyboard_smoke.gd` exercises several physical pixel scales and keyboard heights, OS resize/insets, scroll access to Confirm, input/validation retention and layout restoration in the headless Godot engine. Real Android keyboard timing and touch/rendering still require device QA.
+
 ## Storage and security
 
 Deployment SQL: `docs/sql/player_profile_prologue.sql`, applied through Supabase migration `player_profile_prologue` on 2026-10-05 to the existing Again-Hero project. Do not reapply CREATE statements manually to an already-migrated project.
