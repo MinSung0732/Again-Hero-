@@ -242,6 +242,7 @@ var _portrait_reference_image: Image
 var _portrait_reference_rect := Rect2i()
 var _presentation_ready := false
 var settings_view: RefCounted
+var main_modes_view: RefCounted
 var gameplay_settings_path := "user://gameplay_settings.cfg"
 var _portrait_normalization_count := 0
 var _monster_icon_texture_cache: Dictionary = {}
@@ -334,6 +335,8 @@ func _ready() -> void:
 	selected_stage_index = saved_index if saved_index >= 0 else 0
 	_setup_stage_selector_buttons()
 	PIXEL_PANEL_SKIN.apply_tree(self)
+	main_modes_view = load("res://src/ui/lobby_main_modes_view.gd").new()
+	main_modes_view.install(self)
 
 	_switch_tab("main")
 	_refresh_header()
@@ -4397,6 +4400,9 @@ func _refresh_header() -> void:
 		progress_title.text = "연구 포인트" if current_tab == "shop" else "최고 해금"
 
 func _change_stage(direction: int) -> void:
+	if main_modes_view != null and main_modes_view.ranked:
+		main_modes_view.change_character(direction)
+		return
 	if stage_ids.is_empty() or _stage_transition_running:
 		return
 
@@ -4412,6 +4418,8 @@ func _change_stage(direction: int) -> void:
 
 
 func _open_stage_selector() -> void:
+	if main_modes_view != null and main_modes_view.ranked:
+		return
 	if stage_ids.is_empty() or _stage_transition_running:
 		return
 	_refresh_stage_selector_buttons(_get_max_browsable_stage_index())
@@ -4695,6 +4703,7 @@ func _set_stage_arrow_visual(button: Button, enabled: bool) -> void:
 
 
 func _refresh_stage_card() -> void:
+	stage_selector_button.disabled = false
 	if stage_ids.is_empty():
 		return
 
@@ -4780,6 +4789,8 @@ func _refresh_stage_card() -> void:
 		hero_name_label.text = "???"
 		stage_name_label.text = "미지의 침입자"
 		stage_description_label.text = "앞선 스테이지를 클리어하면 정체가 밝혀집니다."
+	if main_modes_view != null:
+		main_modes_view.refresh()
 
 func prepare_presentation() -> void:
 	if _presentation_ready:
@@ -4964,6 +4975,8 @@ func _load_texture(path: String) -> Texture2D:
 	return null
 
 func _enter_selected_stage() -> void:
+	if main_modes_view != null and main_modes_view.blocks_entry():
+		return
 	if stage_ids.is_empty():
 		return
 

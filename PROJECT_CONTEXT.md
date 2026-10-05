@@ -1,5 +1,9 @@
 # PROJECT_CONTEXT.md
 
+## Main Mode Preview Structure (2026-10-05)
+- 메인에 난이도(easy/hard), 시점(demon/hero), 랭킹 페이지 토글을 추가했으나 게임 로직은 기존 demon/easy만 연결. 나머지는 준비 안내만 표시. 실제 PvP·시즌·랭킹 점수·용사 조작 기능은 아직 없음.
+- 랭킹 초상화는 선택 성별의 마왕 또는 현재 해금 스테이지의 용사 선택. 닉네임은 canonical player_profile을 사용하며 없는 경우 게스트. 점수·등급은 미배치, 시즌은 준비 중. UI 선택은 세션 전용이며 계정 저장/해금/보상에 영향을 주지 않음. lobby_main_modes_view.request_data()가 추후 연결용 모드 정보를 반환.
+
 ## First-Account Prologue / Canonical Demon Profile (2026-10-05)
 
 - Authenticated startup reads canonical player_profiles after cloud initialization; required/incomplete profiles enter the authored prologue before lobby. The additive migration seeds existing snapshot/legacy owners as optional/completed without changing gameplay. Future accounts stay required even if an empty snapshot was created just before the profile read. Guest/local test entry stays local and does not claim nicknames. Legacy users can voluntarily configure through Other→Account.
