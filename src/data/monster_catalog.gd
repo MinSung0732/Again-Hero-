@@ -209,7 +209,7 @@ const MONSTERS := {
 			"hit_damage_multiplier": 1.0,
 			"second_hit_delay": 0.14,
 		},
-		"default_unlocked": true,
+		"default_unlocked": false,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/skelleton/frames/idle_01.png",
 		"ground_shadow": {
@@ -268,7 +268,7 @@ const MONSTERS := {
 			"projectile_speed": 300.0,
 			"projectile_range": 190.0,
 		},
-		"default_unlocked": true,
+		"default_unlocked": false,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/skelletonarcher/frames/idle_01.png",
 		"ground_shadow": {
@@ -336,7 +336,7 @@ const MONSTERS := {
 			"projectile_speed": 385.0,
 			"projectile_range": 750.0,
 		},
-		"default_unlocked": true,
+		"default_unlocked": false,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/kobolt/frames/idle_01.png",
 		"ground_shadow": {
@@ -392,7 +392,7 @@ const MONSTERS := {
 			"detection_range": 420.0,
 			"charge_speed_multiplier": 3.75,
 		},
-		"default_unlocked": true,
+		"default_unlocked": false,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/bat/frames/idle_01.png",
 		"ground_shadow": {
@@ -448,7 +448,7 @@ const MONSTERS := {
 			"attack_range": 68.0,
 			"attack_cooldown": 0.72,
 		},
-		"default_unlocked": true,
+		"default_unlocked": false,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/goblin/frames/idle_01.png",
 		"ground_shadow": {
@@ -512,7 +512,7 @@ const MONSTERS := {
 			"projectile_speed": 380.0,
 			"projectile_range": 340.0,
 		},
-		"default_unlocked": true,
+		"default_unlocked": false,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/goblinthrower/frames/idle_01.png",
 		"ground_shadow": {
@@ -574,7 +574,7 @@ const MONSTERS := {
 			"projectile_speed": 500.0,
 			"projectile_range": 360.0,
 		},
-		"default_unlocked": true,
+		"default_unlocked": false,
 		"rarity": "common",
 		"card_icon_path": "res://assets/art/monsters/ghost/frames/idle_01.png",
 		"ground_shadow": {

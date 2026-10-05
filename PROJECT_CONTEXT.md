@@ -1,5 +1,11 @@
 # PROJECT_CONTEXT.md
 
+## Monster First Unlock (2026-10-05)
+
+- Only slime/spider/orc have `default_unlocked=true`. Existing saved ownership is preserved; do not revoke old unlocks or reset progress when changing starter defaults.
+- First unlock automatically uses `MonsterCatalog.get_shards_required`, shared with fixed upgrade cost: common/advanced/uncommon/rare 30, legendary 25, transcendent 15. Collection load/save/award consistently use this same function; no parallel unlock-price table. Unlock does not consume shards (existing semantics); upgrading does. Locked cards label progress as unlock progress and cannot be equipped/upgraded.
+- `tests/monster_first_unlock_smoke.gd` covers fresh guest/account defaults, all current nonstarter threshold boundaries and ownership persistence; higher-rarity profile values are checked without introducing unreleased monsters.
+
 ## Battle Castle Chrome (2026-10-05)
 
 - V3 supersedes the original skinny pillar repetition: generated castle surround, flagstone floor, and gold panel sources live under `assets/art/UI/battle_castle_v3/`, with prompts in SOURCE.md. Header/rails are separate source regions; panel corners/rails/jewels are assembled behind native text. Original character sprites, stage geometry, collision and destruction progression remain authoritative.

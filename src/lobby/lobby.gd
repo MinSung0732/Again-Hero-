@@ -3387,6 +3387,8 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	shard_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	shard_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	shard_label.text = "최대강화" if maxed else "[ %d / %d ]" % [shards, required]
+	if not available:
+		shard_label.text = "해금 %d / %d" % [shards, required]
 	shard_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shard_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	shard_label.add_theme_font_size_override("font_size", 17)
@@ -3448,6 +3450,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 		upgrade_button.tooltip_text = "이 등급의 강화 효과는 준비 중입니다."
 	elif not available:
 		upgrade_button.text = "해금 필요"
+		upgrade_button.tooltip_text = "조각 %d개를 모으면 자동 해금됩니다." % required
 	upgrade_button.disabled = (
 		maxed or not upgrade_configured
 		or not available
