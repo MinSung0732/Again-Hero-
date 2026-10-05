@@ -1,5 +1,10 @@
 # PROJECT_CONTEXT.md
 
+## Main Mode Unlock Gates (2026-10-05)
+- ModeUnlockCatalog/Store gates hero and ranked on easy stage_10 clear, hard on the selected stage's easy clear. Existing stage_progress cleared entries were earned on easy and are preserved; unlocked/browsed Stage 10 is insufficient. Buttons show disabled padlocks/condition tooltips and handlers enforce the same gates. localtest keeps all modes available.
+- Lobby waits for presentation/transition/tutorial completion, then plays a modal padlock-opening animation for each newly eligible mode. Confirmation is saved per account in stage_progress.cfg `[mode_unlock_seen]`, covered by existing cloud snapshots; no new schema or reward change. Hard announcements are per stage. Disk failure is suppressed only within that session to avoid a popup loop.
+- This unlocks UI previews only: actual hero controls, PvP matchmaking and hard battle rules remain preparation-only. Future hard clears must use a distinct difficulty-aware clear ledger, never write easy clears. Tutorial secondary/Skip is gray; primary/Proceed retains violet/gold emphasis. See docs/MODE_UNLOCKS.md.
+
 ## Demon Appearance / Dialogue Cosmetics (2026-10-05)
 - Canonical identity (gender/nickname) is unchanged. demon_appearance_catalog owns stable IDs and separate avatar/dialogue/expression paths; demon_appearance_store stores equipped_id in stage_progress.cfg under a separate section, covered by existing per-account cloud snapshots. Missing selection uses the profile gender default. Current original_male/original_female are both free baseline choices through Other→Account; visual selection does not change identity or battle stats.
 - Profile.avatar, stage dialogue (optional demon_expression), ranked demon preview and resumed prologue resolve the same selected ID through PlayerProfile; destination warmup prepares only that appearance's resources/fallback, not the entire future skin catalog. Canonical profile refresh preserves cosmetics. Raw Texture2D set_profile_avatar is display-only; equip_profile_appearance is the persistent selection hook.

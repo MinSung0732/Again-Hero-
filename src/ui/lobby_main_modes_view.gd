@@ -2,6 +2,9 @@ extends RefCounted
 
 # Preview state is session-local: it must not unlock stages or save fake rankings.
 const PROFILE := preload("res://src/systems/player_profile.gd")
+const UNLOCKS := preload("res://src/systems/mode_unlock_store.gd")
+const UNLOCK_DATA := preload("res://src/data/mode_unlock_catalog.gd")
+const UNLOCK_FEEDBACK := preload("res://src/ui/mode_unlock_feedback.gd")
 const ART := "res://assets/art/UI/main_modes/"
 var idle_style: StyleBoxTexture
 var active_style: StyleBoxTexture
@@ -21,12 +24,15 @@ var easy_button: Button
 var hard_button: Button
 var character_button: Button
 var notice: AcceptDialog
+var unlock_feedback: CanvasLayer
+var _unlock_scheduled := false
+var _announced_this_session: Dictionary = {}
 
 func install(host) -> void:
 	lobby = host
 	idle_style = lobby._make_svg_style(ART + "selector_idle.svg", 22, 22, 18, 10)
 	active_style = lobby._make_svg_style(ART + "selector_active.svg", 22, 22, 18, 10)
-	for id in ["demon", "hero", "rank", "easy", "hard"]:
+	for id in ["demon", "hero", "rank", "easy", "hard", "lock"]:
 		icons[id] = lobby._load_svg_texture_direct(ART + "icon_" + id + ".svg")
 	var top: Control = lobby.hero_name_label.get_parent()
 	var bottom: Control = lobby.stage_description_label.get_parent()
@@ -75,6 +81,12 @@ func install(host) -> void:
 	bottom.move_child(tray, 0)
 	place(tray, 0.01, 0.78, 0.99, 1.05)
 	tray.add_theme_stylebox_override("panel", idle_style)
+	var transition: Node = lobby.get_node("/root/SceneTransition")
+	var on_complete := Callable(self, "schedule_unlock")
+	transition.transition_completed.connect(on_complete)
+	lobby.tree_exiting.connect(func():
+		if transition.transition_completed.is_connected(on_complete):
+			transition.transition_completed.disconnect(on_complete))
 
 func style_button(target: Button, selected: bool, icon_id: String = "", font_size: int = 25) -> void:
 	var style: StyleBoxTexture = active_style if selected else idle_style
@@ -114,6 +126,9 @@ func button(parent: Control, text: String, action: Callable) -> Button:
 	return result
 
 func choose_difficulty(value: String) -> void:
+	if value not in ["easy", "hard"] or (value == "hard" and not UNLOCKS.unlocked("hard", current_stage())):
+		refresh()
+		return
 	if lobby._stage_transition_running:
 		refresh()
 		return
@@ -121,6 +136,9 @@ func choose_difficulty(value: String) -> void:
 	lobby._refresh_stage_card()
 
 func choose_perspective(value: String) -> void:
+	if value not in ["demon", "hero"] or (value == "hero" and not UNLOCKS.unlocked("hero", current_stage())):
+		refresh()
+		return
 	if lobby._stage_transition_running:
 		refresh()
 		return
@@ -128,6 +146,9 @@ func choose_perspective(value: String) -> void:
 	lobby._refresh_stage_card()
 
 func toggle_ranked() -> void:
+	if not UNLOCKS.unlocked("rank", current_stage()):
+		refresh()
+		return
 	if lobby._stage_transition_running:
 		refresh()
 		return
@@ -141,6 +162,8 @@ func change_character(direction: int) -> void:
 	lobby._refresh_stage_card()
 
 func open_characters() -> void:
+	if not UNLOCKS.unlocked("hero", current_stage()):
+		return
 	var picker := AcceptDialog.new()
 	picker.title = "용사 선택 · 미리보기"
 	picker.min_size = Vector2i(650, 440)
@@ -176,6 +199,8 @@ func request_data() -> Dictionary:
 		"hero_id": String(heroes[hero_index].hero_id) if not heroes.is_empty() else ""}
 
 func blocks_entry() -> bool:
+	if (ranked and not UNLOCKS.unlocked("rank", current_stage())) or (perspective == "hero" and not UNLOCKS.unlocked("hero", current_stage())) or (not ranked and difficulty == "hard" and not UNLOCKS.unlocked("hard", current_stage())):
+		return true
 	if not ranked and perspective == "demon" and difficulty == "easy":
 		return false
 	notice.dialog_text = "랭킹 매칭은 준비 중입니다. 실제 매칭은 아직 시작되지 않습니다." if ranked else "용사 시점과 어려움 난이도는 준비 중입니다. 현재는 마왕 · 쉬움으로 입장할 수 있습니다."
@@ -183,9 +208,24 @@ func blocks_entry() -> bool:
 	return true
 
 func refresh() -> void:
+	# Changing stages or accounts must not carry an unlocked selection into a
+	# locked context. UI-disabled states and direct handlers both enforce gates.
+	if not UNLOCKS.unlocked("rank", current_stage()):
+		ranked = false
+	if not UNLOCKS.unlocked("hero", current_stage()):
+		perspective = "demon"
+	if not UNLOCKS.unlocked("hard", current_stage()):
+		difficulty = "easy"
 	for item in [[demon_button, perspective == "demon", "demon"], [hero_button, perspective == "hero", "hero"], [ranked_button, ranked, "rank"], [easy_button, difficulty == "easy", "easy"], [hard_button, difficulty == "hard", "hard"]]:
 		item[0].set_pressed_no_signal(item[1])
 		style_button(item[0], item[1], item[2])
+	for item in [[hard_button, "hard"], [hero_button, "hero"], [ranked_button, "rank"]]:
+		var locked := not UNLOCKS.unlocked(item[1], current_stage())
+		item[0].disabled = locked
+		item[0].tooltip_text = String(UNLOCK_DATA.RULES[item[1]].condition) if locked else ""
+		if locked:
+			item[0].icon = icons.lock
+	schedule_unlock()
 	difficulty_row.visible = not ranked
 	character_button.visible = ranked and perspective == "hero"
 	var section: Control = lobby.get_node("SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox")
@@ -218,3 +258,39 @@ func refresh() -> void:
 	lobby.next_stage_button.disabled = not navigable
 	lobby._set_stage_arrow_visual(lobby.prev_stage_button, navigable)
 	lobby._set_stage_arrow_visual(lobby.next_stage_button, navigable)
+
+func current_stage() -> String:
+	return String(lobby.stage_ids[lobby.selected_stage_index])
+
+func schedule_unlock() -> void:
+	if _unlock_scheduled or is_instance_valid(unlock_feedback):
+		return
+	_unlock_scheduled = true
+	lobby.call_deferred("_check_mode_unlock_feedback")
+
+func show_pending_unlock() -> void:
+	_unlock_scheduled = false
+	if is_instance_valid(unlock_feedback) or not lobby._presentation_ready or lobby.current_tab != "main" or UNLOCKS.is_test_override():
+		return
+	if lobby.get_node("/root/SceneTransition").is_transitioning() or lobby.get_node("/root/TutorialFlow").modal_visible:
+		return
+	var stage_id := current_stage()
+	var owner := PROFILE.SCOPE.user_id + ":" + PROFILE.SCOPE.guest_directory
+	for key in UNLOCK_DATA.ORDER:
+		var session_key := owner + ":" + UNLOCK_DATA.announcement_key(key, stage_id)
+		if not UNLOCKS.unlocked(key, stage_id) or UNLOCKS.announcement_seen(key, stage_id) or _announced_this_session.has(session_key):
+			continue
+		unlock_feedback = UNLOCK_FEEDBACK.new()
+		lobby.add_child(unlock_feedback)
+		unlock_feedback.dismissed.connect(func():
+			if owner == PROFILE.SCOPE.user_id + ":" + PROFILE.SCOPE.guest_directory:
+				_announced_this_session[session_key] = true
+				if not UNLOCKS.mark_announced(key, stage_id):
+					push_warning("Mode unlock announcement could not be saved; retry next session.")
+			unlock_feedback = null
+			schedule_unlock())
+		var description := String(UNLOCK_DATA.RULES[key].condition).replace("후 개방", "완료")
+		if key == "hard":
+			description = "쉬움 Stage %d 클리어 완료" % int(stage_id.trim_prefix("stage_"))
+		unlock_feedback.present(String(UNLOCK_DATA.RULES[key].name), description)
+		return

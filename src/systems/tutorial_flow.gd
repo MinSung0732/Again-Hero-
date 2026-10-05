@@ -78,6 +78,11 @@ func bind_host(node: Node) -> void:
 	actions.add_theme_constant_override("separation", 20)
 	column.add_child(actions)
 	secondary = _button(actions)
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		secondary.add_theme_stylebox_override(state, _style(Color("44414b") if state == "hover" else Color("34313a"), Color("827e8b"), 2, 16))
+	secondary.add_theme_color_override("font_color", Color("c8c4ce"))
+	secondary.add_theme_color_override("font_hover_color", Color("e5e1eb"))
+	secondary.add_theme_color_override("font_pressed_color", Color("d5d0df"))
 	primary = _button(actions)
 	primary.pressed.connect(func(): _invoke(primary_action))
 	secondary.pressed.connect(func(): _invoke(secondary_action))
@@ -165,6 +170,8 @@ func clear_guide() -> void:
 	if modal_visible and is_instance_valid(host) and host.get("battle") != null:
 		host.battle.set_external_pause(previous_pause or host.pause_menu.visible or host.result_panel.visible or host._stage_intro_active)
 	modal_visible = false
+	if is_instance_valid(host) and host.get("main_modes_view") != null:
+		host.main_modes_view.schedule_unlock()
 
 func point_to(target: Control, message: String) -> void:
 	clear_guide()

@@ -2205,6 +2205,8 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 
 
 func _input(event: InputEvent) -> void:
+	if main_modes_view != null and is_instance_valid(main_modes_view.unlock_feedback):
+		return
 	if TutorialFlow.modal_visible:
 		return
 	if (
@@ -4801,6 +4803,12 @@ func prepare_presentation() -> void:
 	await _precache_stage_portraits()
 	_refresh_stage_card()
 	_presentation_ready = true
+	if main_modes_view != null:
+		main_modes_view.schedule_unlock()
+
+func _check_mode_unlock_feedback() -> void:
+	if main_modes_view != null:
+		main_modes_view.show_pending_unlock()
 
 
 func _precache_stage_portraits() -> void:

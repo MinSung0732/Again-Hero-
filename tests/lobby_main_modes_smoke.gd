@@ -24,6 +24,7 @@ func run() -> void:
 	root.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
 	root.get_node("LoginGateway").remember_session_enabled = false
 	root.get_node("LocalTestMode").active = false
+	root.get_node("LocalTestMode").tutorial_preview = false
 	root.get_node("CloudStore").stop()
 	var folder := "user://main_modes_test_" + Crypto.new().generate_random_bytes(16).hex_encode()
 	DirAccess.make_dir_recursive_absolute(folder)
@@ -31,6 +32,11 @@ func run() -> void:
 	SCOPE.select_guest()
 	var cfg := ConfigFile.new()
 	cfg.set_value("player_profile", "value", {"nickname": "달빛마왕", "gender": "female"})
+	# This fixture tests already-unlocked preview navigation, not gating.
+	for id in ["stage_1", "stage_10"]:
+		cfg.set_value("cleared", id, true)
+	for key in ["hard:stage_1", "hero", "rank"]:
+		cfg.set_value("mode_unlock_seen", key, true)
 	SCOPE.save_config(cfg, "user://stage_progress.cfg")
 	root.get_node("AudioSettings").config_path = folder.path_join("audio.cfg")
 	await root.get_node("PresentationWarmup").prepare_scene("res://src/lobby/Lobby.tscn")
