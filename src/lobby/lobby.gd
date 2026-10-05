@@ -341,6 +341,7 @@ func _ready() -> void:
 	_switch_tab("main")
 	_refresh_header()
 	_refresh_stage_card()
+	TutorialFlow.call_deferred("install_lobby", self)
 
 func _setup_cloud_account() -> void:
 	var guide := other_account_panel.get_node("Guide") as Label
@@ -2204,6 +2205,8 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 
 
 func _input(event: InputEvent) -> void:
+	if TutorialFlow.modal_visible:
+		return
 	if (
 		is_instance_valid(gacha_reveal_overlay)
 		and gacha_reveal_overlay.is_presenting()

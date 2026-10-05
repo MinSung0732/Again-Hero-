@@ -27,6 +27,7 @@ SceneTransition="*res://src/systems/scene_transition.gd"
 CloudStore="*res://src/network/cloud_store.gd"
 LocalTestMode="*res://src/systems/local_test_mode.gd"
 LoginGateway="*res://src/network/login_gateway.gd"
+TutorialFlow="*res://src/systems/tutorial_flow.gd"
 
 [display]
 

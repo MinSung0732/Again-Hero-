@@ -86,6 +86,40 @@ func initialize(choice: String = "") -> bool:
 	status_changed.emit("클라우드 저장 불러오기 완료")
 	return true
 
+# Serialize reward claims with normal snapshot writes. Install the server's
+# atomic ledger + wallet response only if the account and local serial match.
+func tutorial_operation(action: String) -> Dictionary:
+	if not ready_for_play or conflict or SCOPE.user_id.is_empty():
+		return {}
+	var owner := SCOPE.user_id
+	var generation := _generation
+	if action in ["complete", "skip"] and not await flush():
+		return {}
+	while busy:
+		await get_tree().process_frame
+	if owner != SCOPE.user_id or generation != _generation or conflict or not ready_for_play:
+		return {}
+	busy = true
+	_timer.stop()
+	var serial := SCOPE.serial
+	var result := await request_rpc("account_tutorial", {"action": action, "expected_revision": SCOPE.revision})
+	busy = false
+	if owner != SCOPE.user_id or generation != _generation:
+		return {}
+	if bool(result.get("conflict", false)):
+		conflict = true
+		status_changed.emit("튜토리얼 보상 저장이 다른 기기와 충돌했습니다. 다시 로그인해 주세요.")
+		return {}
+	if bool(result.get("ok", false)) and action in ["complete", "skip"]:
+		if serial != SCOPE.serial or not SCOPE.valid_payload(result.get("payload")):
+			conflict = true
+			return {}
+		if not SCOPE.install(result.payload, int(result.get("revision", -1))):
+			return {}
+	if SCOPE.dirty:
+		_queue_save()
+	return result
+
 func flush() -> bool:
 	while busy:
 		await get_tree().process_frame

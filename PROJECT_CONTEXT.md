@@ -1,5 +1,9 @@
 # PROJECT_CONTEXT.md
 
+## First-Account Tutorial / Once-Only Draw Reward (2026-10-05)
+- New social accounts after deployment receive Proceed/Skip after the profile prologue. Existing account owners are seeded legacy; guests/localtest excluded. TutorialFlow owns lobby offer, Stage 1 entry highlight and event-driven battle coach; actual successful summon, camera unlock, timed elite selection, explicit augment confirmation are taught using existing battle rules. Guides pause field simulation/block accidental input; interruption can resume or skip, early exit/defeat retains equal reward.
+- Supabase account_tutorial invoker + private authenticated helper atomically claims ledger and adds 1000 gold to owner snapshot with revision lock. Reward is once per account, regardless of Skip/Complete; client flush/install protects concurrent writes and account changes, offline never awards optimistically. Existing saves/profile/unlocks unchanged; no reset. Source and QA: docs/FIRST_ACCOUNT_TUTORIAL.md, docs/sql/first_account_tutorial.sql.
+
 ## Main Mode Preview Structure (2026-10-05)
 - 메인에 난이도(easy/hard), 시점(demon/hero), 랭킹 페이지 토글을 추가했으나 게임 로직은 기존 demon/easy만 연결. 나머지는 준비 안내만 표시. 실제 PvP·시즌·랭킹 점수·용사 조작 기능은 아직 없음.
 - 랭킹 초상화는 선택 성별의 마왕 또는 현재 해금 스테이지의 용사 선택. 닉네임은 canonical player_profile을 사용하며 없는 경우 게스트. 점수·등급은 미배치, 시즌은 준비 중. UI 선택은 세션 전용이며 계정 저장/해금/보상에 영향을 주지 않음. lobby_main_modes_view.request_data()가 추후 연결용 모드 정보를 반환.

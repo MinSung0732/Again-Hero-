@@ -858,6 +858,7 @@ func _start_battle_after_intro(_stage_id: String) -> void:
 	_stage_intro_active = false
 	hud_layer.visible = true
 	battle.set_external_pause(false)
+	TutorialFlow.battle_started(self)
 
 
 func _sync_skill_unlock_cutscene_frame() -> void:
@@ -946,6 +947,8 @@ func _handle_camera_pan_input(event: InputEvent) -> bool:
 
 
 func _input(event: InputEvent) -> void:
+	if TutorialFlow.modal_visible:
+		return
 	if _guard_demon_choice_pointer(event):
 		get_viewport().set_input_as_handled()
 		return
@@ -1370,6 +1373,8 @@ func _close_pause_menu() -> void:
 	pause_menu.hide()
 	if not result_panel.visible:
 		battle.set_external_pause(false)
+	if TutorialFlow.active() and TutorialFlow.coach != null:
+		TutorialFlow.coach.show_next()
 
 
 func _open_settings_overlay() -> void:
@@ -3428,6 +3433,7 @@ func _on_next_stage_pressed() -> void:
 		get_tree().reload_current_scene()
 
 func _on_lobby_pressed() -> void:
+	TutorialFlow.returning_to_lobby()
 	_begin_threaded_scene_change("res://src/lobby/Lobby.tscn", "로비 이동 중...")
 
 
