@@ -222,11 +222,23 @@ func guide(id: String, action: Callable) -> void:
 	var data: Array = DATA.GUIDES[id]
 	show_modal(data[0], data[1], "알겠어요", action)
 
-func advance(next_step: String, praise: String, action: Callable) -> void:
+func advance(next_step: String, praise: String, action: Callable, result_target: Control = null) -> void:
 	if not CHECKPOINT.save(next_step):
-		show_modal("진행 저장 실패", "저장 공간을 확인해 주세요. 완료한 행동을 다시 요구하지 않도록 진행을 먼저 저장합니다.", "다시 시도", advance.bind(next_step, praise, action))
+		show_modal("진행 저장 실패", "저장 공간을 확인해 주세요. 완료한 행동을 다시 요구하지 않도록 진행을 먼저 저장합니다.", "다시 시도", advance.bind(next_step, praise, action, result_target))
 		return
 	step = next_step
+	if is_instance_valid(result_target) and result_target.is_visible_in_tree():
+		focus_targets([result_target], "소환 성공! 전장에 나타난 몬스터를 잠깐 살펴보세요.")
+		spotlight.input_locked = true
+		primary_action = Callable()
+		secondary_action = Callable()
+		var generation := guide_generation
+		var result_host := host
+		var owner := account_owner
+		await get_tree().create_timer(DATA.SUMMON_RESULT_SECONDS, true, false, true).timeout
+		# The controller outlives scenes/accounts. Never show an old result there.
+		if generation != guide_generation or not is_instance_valid(result_host) or host != result_host or account_owner != owner or not active() or step != next_step:
+			return
 	show_modal("잘했어요!", praise, "다음", action)
 
 func install_lobby(lobby: Node) -> void:

@@ -115,7 +115,13 @@ func run() -> void:
 	var coach = flow.coach
 	main.battle.command_power = 30
 	main.battle.try_summon(main.battle_loadout_ids[0])
-	check(flow.step == "augment" and flow.title.text == "잘했어요!", "summon checkpoints next step with praise")
+	check(flow.step == "augment" and not flow.modal_visible and flow.spotlight.input_locked, "summon saves next step and shows locked battlefield first")
+	check(not main.demon_augment_panel.visible and main.battle.active_monsters.size() > 0, "summoned result visible before chooser")
+	flow.coach.on_summon(main.battle_loadout_ids[0], true, "duplicate signal")
+	await create_timer(0.4).timeout
+	check(not flow.modal_visible, "summon result not immediately covered")
+	await create_timer(1.7).timeout
+	check(flow.title.text == "잘했어요!" and flow.modal_visible, "summon praise after result interval")
 	flow.primary_action.call()
 	check(main.demon_augment_panel.visible and flow.title.text == "마왕 증강 선택", "normal augment forcibly follows summon")
 	check(not flow.secondary.visible, "no intermediate skip")
@@ -155,7 +161,12 @@ func run() -> void:
 	check(main.mutation_panel.visible and flow.title.text == "엘리트 몬스터 소환", "restart opens elite, does not repeat summon/augment")
 	flow.primary_action.call()
 	main._on_mutation_choice_pressed(0)
-	check(flow.step == "special", "elite checkpoints special")
+	check(flow.step == "special" and not flow.modal_visible and flow.spotlight.input_locked, "elite saves next step and shows locked battlefield first")
+	check(not main.mutation_panel.visible and not main.demon_augment_panel.visible, "elite result unobscured by choice panels")
+	await create_timer(0.4).timeout
+	check(not flow.modal_visible, "elite result not immediately covered")
+	await create_timer(1.7).timeout
+	check(flow.modal_visible and flow.title.text == "잘했어요!", "elite praise after result interval")
 	flow.primary_action.call()
 	check(main.demon_augment_panel.visible and String(main.current_demon_candidates[0].get("augment_type")) == "special", "real special candidates")
 	flow.primary_action.call()

@@ -103,3 +103,7 @@ Actual new Kakao/Google signup and Android touch are manual QA still required.
 Security advisor found no new tutorial issues. The project retains an unrelated
 [disabled leaked-password protection warning](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection);
 password Auth settings were not changed as part of the tutorial feature.
+
+## Summon result observation (2026-10-06)
+
+After a successful normal or elite summon, the next lesson is checkpointed immediately. The battlefield remains bright for `TutorialCatalog.SUMMON_RESULT_SECONDS` (2 seconds), with all input blocked and the practice simulation still paused. Praise follows, then the existing next lesson. Failed summons do not advance. A host/account/guide change cancels the old delayed presentation; restarting during observation opens the already-saved next lesson without requiring another summon.

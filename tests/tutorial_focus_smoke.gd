@@ -47,6 +47,12 @@ func run() -> void:
 	event.pressed = false
 	check(not mask.blocks(event), "inside release allowed")
 	check(mask.blocks(InputEventKey.new()), "keyboard cannot escape tutorial")
+	mask.input_locked = true
+	check(mask.allows(Vector2(120, 120)) and mask._has_point(Vector2(120, 120)) and mask.blocks(event), "result stays bright but consumes GUI and touch input")
+	check(mask.blocks(InputEventJoypadMotion.new()), "result observation blocks gamepad")
+	mask.configure([target])
+	mask.guard_until = 0
+	check(not mask.input_locked and not mask.blocks(event), "next target guide restores allowed input")
 	target.hide()
 	await process_frame
 	check(mask.holes.is_empty(), "hidden target fails closed without stale outline")
@@ -68,5 +74,28 @@ func run() -> void:
 	result = COLLECTION.award_shard_batch([{"monster_id": "slime", "shards": 2}], 1000, true)
 	check(not result.success and CHECKPOINT.read() == "draw_done", "insufficient retry cannot award or erase completion")
 	check(CHECKPOINT.save("done") and CHECKPOINT.read() == "done", "final completion persisted")
+	# Delayed callbacks must not open a stale result on a replacement host.
+	var hex := Crypto.new().generate_random_bytes(16).hex_encode()
+	var owner := "%s-%s-%s-%s-%s" % [hex.substr(0,8),hex.substr(8,4),hex.substr(12,4),hex.substr(16,4),hex.substr(20,12)]
+	check(SCOPE.select_account(owner), "isolated active account for cancellation")
+	var flow := root.get_node("TutorialFlow")
+	flow.account_owner = owner
+	flow.status = "active"
+	check(flow.active(), "cancellation fixture is active")
+	var old_host := Control.new()
+	root.add_child(old_host)
+	var result_target := Control.new()
+	old_host.add_child(result_target)
+	flow.bind_host(old_host)
+	flow.advance("augment", "old result", Callable(), result_target)
+	check(CHECKPOINT.read() == "augment", "checkpoint precedes observation timer")
+	var replacement := Control.new()
+	root.add_child(replacement)
+	flow.bind_host(replacement)
+	flow.show_modal("replacement", "new scene", "OK", Callable())
+	old_host.queue_free()
+	await create_timer(2.1).timeout
+	check(flow.title.text == "replacement", "old result timer cannot replace new scene guide")
+	SCOPE.select_guest()
 	print("TUTORIAL_FOCUS: " + ("FAILED" if failed else "OK"))
 	quit(1 if failed else 0)

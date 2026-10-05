@@ -2,6 +2,7 @@ extends RefCounted
 
 const SHOP := preload("res://src/data/shop_catalog.gd")
 const REWARD := SHOP.MULTI_DRAW_COST
+const SUMMON_RESULT_SECONDS := 2.0
 const GUIDES := {
 	"entry": ["첫 던전 입장", "마왕 · 쉬움의 Stage 1에서 시작합니다.\n아래 던전 입장 버튼을 눌러 용사를 관찰해 보세요."],
 	"summon": ["몬스터 소환", "하단 몬스터 카드를 선택하고 전장을 터치하면 소환됩니다.\n자동 배치를 켜면 카드만 눌러 용사 주변에 소환할 수 있어요.\n소환에는 지휘력이 필요하며 시간이 지나면 회복됩니다."],

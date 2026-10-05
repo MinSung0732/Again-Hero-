@@ -6,6 +6,7 @@ var holes: Array[Rect2] = []
 var tiles: Array[Rect2] = []
 var blocked_pointers: Dictionary = {}
 var guard_until := 0
+var input_locked := false
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -14,6 +15,7 @@ func _ready() -> void:
 
 func configure(controls: Array[Control]) -> void:
 	targets = controls
+	input_locked = false
 	blocked_pointers.clear()
 	guard_until = Time.get_ticks_msec() + 450
 	_refresh()
@@ -64,7 +66,7 @@ func allows(point: Vector2) -> bool:
 	return false
 
 func _has_point(point: Vector2) -> bool:
-	return not allows(point)
+	return input_locked or not allows(point)
 
 func _draw() -> void:
 	for tile in tiles:
@@ -73,6 +75,8 @@ func _draw() -> void:
 		draw_rect(hole.grow(4), Color("ffe79b"), false, 4)
 
 func blocks(event: InputEvent) -> bool:
+	if input_locked:
+		return true
 	if event is InputEventKey or event is InputEventJoypadButton or event is InputEventJoypadMotion:
 		return true
 	var pointer := -1

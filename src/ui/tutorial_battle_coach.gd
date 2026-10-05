@@ -41,7 +41,7 @@ func on_summon(_id: String, success: bool, _message: String) -> void:
 	_advancing = true
 	main._end_touch_hold()
 	main._clear_pending_manual_spawn()
-	flow.advance("augment", "몬스터 소환에 성공했어요! 소환으로 마왕 EXP를 얻고, 레벨업하면 군단을 강화하는 증강을 선택해요.", show_next)
+	flow.advance("augment", "몬스터 소환에 성공했어요! 소환으로 마왕 EXP를 얻고, 레벨업하면 군단을 강화하는 증강을 선택해요.", show_next, main.battle_viewport_container)
 
 func on_augment(_name: String, _summary: String) -> void:
 	if _advancing or flow.step not in ["augment", "special"]:
@@ -57,7 +57,7 @@ func on_elite(success: bool, _message: String) -> void:
 	if not success or flow.step != "elite" or _advancing:
 		return
 	_advancing = true
-	flow.advance("special", "엘리트 소환 성공! 이제 편성 몬스터의 고유 능력을 강화하는 특수증강을 골라 볼게요.", show_next)
+	flow.advance("special", "엘리트 소환 성공! 이제 편성 몬스터의 고유 능력을 강화하는 특수증강을 골라 볼게요.", show_next, main.battle_viewport_container)
 
 func finish_practice() -> void:
 	flow.coach_completed = true
