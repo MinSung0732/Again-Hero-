@@ -2,6 +2,10 @@ extends RefCounted
 
 # Preview state is session-local: it must not unlock stages or save fake rankings.
 const PROFILE := preload("res://src/systems/player_profile.gd")
+const ART := "res://assets/art/UI/main_modes/"
+var idle_style: StyleBoxTexture
+var active_style: StyleBoxTexture
+var icons: Dictionary = {}
 var lobby
 var ranked := false
 var perspective := "demon"
@@ -20,12 +24,17 @@ var notice: AcceptDialog
 
 func install(host) -> void:
 	lobby = host
+	idle_style = lobby._make_svg_style(ART + "selector_idle.svg", 22, 22, 18, 10)
+	active_style = lobby._make_svg_style(ART + "selector_active.svg", 22, 22, 18, 10)
+	for id in ["demon", "hero", "rank", "easy", "hard"]:
+		icons[id] = lobby._load_svg_texture_direct(ART + "icon_" + id + ".svg")
 	var top: Control = lobby.hero_name_label.get_parent()
 	var bottom: Control = lobby.stage_description_label.get_parent()
 	difficulty_row = HBoxContainer.new()
 	difficulty_row.name = "DifficultySelector"
 	top.add_child(difficulty_row)
-	place(difficulty_row, 0.23, 0.0, 0.77, 0.065)
+	place(difficulty_row, 0.18, 0.0, 0.82, 0.065)
+	difficulty_row.add_theme_constant_override("separation", 10)
 	easy_button = button(difficulty_row, "쉬움", func(): choose_difficulty("easy"))
 	hard_button = button(difficulty_row, "어려움", func(): choose_difficulty("hard"))
 	mode_row = HBoxContainer.new()
@@ -35,6 +44,7 @@ func install(host) -> void:
 	place(mode_row, 0.03, 0.81, 0.97, 1.02)
 	var sides := HBoxContainer.new()
 	sides.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sides.add_theme_constant_override("separation", 6)
 	mode_row.add_child(sides)
 	demon_button = button(sides, "마왕", func(): choose_perspective("demon"))
 	hero_button = button(sides, "용사", func(): choose_perspective("hero"))
@@ -45,7 +55,7 @@ func install(host) -> void:
 	character_button.z_index = 4
 	top.add_child(character_button)
 	place(character_button, 0.52, 0.45, 0.86, 0.51)
-	lobby._apply_lobby_button_skin(character_button, false, 22)
+	style_button(character_button, false, "hero", 22)
 	character_button.pressed.connect(open_characters)
 	notice = AcceptDialog.new()
 	notice.title = "준비 중"
@@ -55,6 +65,33 @@ func install(host) -> void:
 		var stage: Dictionary = lobby.STAGE_CATALOG.get_stage(id)
 		if lobby.STAGE_PROGRESS.is_stage_unlocked(int(stage.get("number", 999))):
 			heroes.append(stage)
+	for label in [lobby.stage_description_label, lobby.stage_status_label, lobby.stage_reward_label, bottom.get_node("RepeatReward")]:
+		label.add_theme_font_size_override("font_size", 21 if label == lobby.stage_description_label else 20)
+	# A single framed tray visually groups the two perspectives and ranked toggle.
+	var tray := Panel.new()
+	tray.name = "ModeSelectorTray"
+	tray.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bottom.add_child(tray)
+	bottom.move_child(tray, 0)
+	place(tray, 0.01, 0.78, 0.99, 1.05)
+	tray.add_theme_stylebox_override("panel", idle_style)
+
+func style_button(target: Button, selected: bool, icon_id: String = "", font_size: int = 25) -> void:
+	var style: StyleBoxTexture = active_style if selected else idle_style
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		target.add_theme_stylebox_override(state, style)
+	target.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	target.add_theme_font_size_override("font_size", font_size)
+	target.add_theme_color_override("font_color", Color("fff0b5") if selected else Color("cbb6dd"))
+	target.add_theme_color_override("font_hover_color", Color("fff6dc"))
+	target.add_theme_color_override("font_pressed_color", Color("ffe390"))
+	target.add_theme_color_override("font_disabled_color", Color("87768f"))
+	target.add_theme_color_override("icon_normal_color", Color.WHITE if selected else Color(0.77, 0.66, 0.87))
+	target.add_theme_constant_override("h_separation", 10)
+	target.add_theme_constant_override("icon_max_width", 40)
+	target.expand_icon = true
+	if icons.has(icon_id):
+		target.icon = icons[icon_id]
 
 func place(node: Control, left: float, top: float, right: float, bottom: float) -> void:
 	node.anchor_left = left
@@ -122,7 +159,7 @@ func open_characters() -> void:
 			hero_index = index
 			lobby._refresh_stage_card()
 			picker.queue_free())
-		lobby._apply_lobby_button_skin(option, index == hero_index, 22)
+		style_button(option, index == hero_index, "hero", 24)
 	picker.confirmed.connect(picker.queue_free)
 	picker.canceled.connect(picker.queue_free)
 	lobby.add_child(picker)
@@ -131,7 +168,7 @@ func open_characters() -> void:
 func skin_dialog(dialog: AcceptDialog) -> void:
 	dialog.add_theme_stylebox_override("panel", lobby._make_style(Color("170e25"), Color("eac14d"), 3, 8))
 	dialog.add_theme_font_size_override("font_size", 24)
-	lobby._apply_lobby_button_skin(dialog.get_ok_button(), false, 22)
+	style_button(dialog.get_ok_button(), true, "", 24)
 
 func request_data() -> Dictionary:
 	return {"page": "ranked" if ranked else "stage", "perspective": perspective,
@@ -146,9 +183,9 @@ func blocks_entry() -> bool:
 	return true
 
 func refresh() -> void:
-	for item in [[demon_button, perspective == "demon"], [hero_button, perspective == "hero"], [ranked_button, ranked], [easy_button, difficulty == "easy"], [hard_button, difficulty == "hard"]]:
+	for item in [[demon_button, perspective == "demon", "demon"], [hero_button, perspective == "hero", "hero"], [ranked_button, ranked, "rank"], [easy_button, difficulty == "easy", "easy"], [hard_button, difficulty == "hard", "hard"]]:
 		item[0].set_pressed_no_signal(item[1])
-		lobby._apply_lobby_button_skin(item[0], item[1], 21)
+		style_button(item[0], item[1], item[2])
 	difficulty_row.visible = not ranked
 	character_button.visible = ranked and perspective == "hero"
 	var section: Control = lobby.get_node("SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox")

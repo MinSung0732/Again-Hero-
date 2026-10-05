@@ -52,7 +52,7 @@ func prepare_scene(scene_path: String) -> bool:
 			"res://assets/art/UI/uicardframes/ui10_clean_frame.png",
 			"res://assets/art/UI/uicardframes/ui8.png",
 		])
-		dirs.assign(["lobby_header", "lobby_footer", "lobby_stage", "shop", "01_large_left_panel", "03_middle_right_panel"])
+		dirs.assign(["lobby_header", "lobby_footer", "lobby_stage", "main_modes", "shop", "01_large_left_panel", "03_middle_right_panel"])
 		paths.append("res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png")
 		paths.append("res://assets/art/UI/settings_v2/amethyst_thumb.png")
 		paths.append(preload("res://src/systems/player_profile.gd").portrait_path())
