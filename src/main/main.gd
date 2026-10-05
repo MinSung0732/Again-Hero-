@@ -147,7 +147,9 @@ const BATTLE_PIXEL_BAR_BACKGROUND := "res://assets/art/UI/05_right_bars/part_02.
 	$HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice1/Icon,
 	$HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice2/Icon,
 ]
-@onready var demon_reroll_button: Button = $HUD/DemonAugmentPanel/Margin/VBox/RerollButton
+@onready var demon_reroll_button: Button = $HUD/DemonAugmentPanel/Margin/VBox/Actions/RerollButton
+@onready var demon_confirm_button: Button = $HUD/DemonAugmentPanel/Margin/VBox/Actions/ConfirmButton
+@onready var _demon_choice_buttons: Array[Button] = [demon_choice_0, demon_choice_1, demon_choice_2]
 
 @onready var mutation_panel: PanelContainer = $HUD/MutationPanel
 @onready var mutation_title: Label = $HUD/MutationPanel/Margin/VBox/Title
@@ -169,6 +171,14 @@ var _result_reward_details := ""
 var auto_placement: bool = true
 var selected_monster_type: String = ""
 var current_demon_candidates: Array = []
+const DEMON_CHOICE_OPEN_GUARD_MS := 600
+const DEMON_CHOICE_CONFIRM_GUARD_MS := 250
+var _demon_choice_guard_until: int = 0
+var _demon_confirm_guard_until: int = 0
+var _demon_selected_index: int = -1
+var _demon_rerolls_left: int = 0
+var _pressed_choice_pointers: Dictionary = {}
+var _blocked_choice_pointers: Dictionary = {}
 var current_mutation_candidates: Array = []
 var debug_refresh_timer: float = 0.0
 var battle_loadout_ids: Array = []
@@ -326,6 +336,7 @@ func _ready() -> void:
 	demon_choice_1.pressed.connect(_on_demon_choice_pressed.bind(1))
 	demon_choice_2.pressed.connect(_on_demon_choice_pressed.bind(2))
 	demon_reroll_button.pressed.connect(_on_demon_reroll_pressed)
+	demon_confirm_button.pressed.connect(_on_demon_confirm_pressed)
 	mutation_choice_0.pressed.connect(_on_mutation_choice_pressed.bind(0))
 	mutation_choice_1.pressed.connect(_on_mutation_choice_pressed.bind(1))
 	mutation_choice_2.pressed.connect(_on_mutation_choice_pressed.bind(2))
@@ -672,6 +683,7 @@ func _on_pixel_asset_button_up(button: BaseButton) -> void:
 
 
 func _process(delta: float) -> void:
+	_update_demon_choice_guard()
 	_update_touch_hold_feedback(delta)
 	if _battle_toast_timer > 0.0:
 		_battle_toast_timer = maxf(_battle_toast_timer - delta, 0.0)
@@ -931,6 +943,9 @@ func _handle_camera_pan_input(event: InputEvent) -> bool:
 
 
 func _input(event: InputEvent) -> void:
+	if _guard_demon_choice_pointer(event):
+		get_viewport().set_input_as_handled()
+		return
 	var camera_pan_consumed := _handle_camera_pan_input(event)
 	_update_touch_hold_input(event)
 	_finish_camera_drag_on_release(event)
@@ -3009,6 +3024,13 @@ func _on_demon_ultimate_used(
 
 func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: int) -> void:
 	current_demon_candidates = candidates.duplicate(true)
+	_demon_selected_index = -1
+	_demon_rerolls_left = rerolls_left
+	_demon_choice_guard_until = Time.get_ticks_msec() + DEMON_CHOICE_OPEN_GUARD_MS
+	_demon_confirm_guard_until = 0
+	_blocked_choice_pointers = _pressed_choice_pointers.duplicate()
+	_end_touch_hold()
+	_clear_pending_manual_spawn()
 	demon_augment_panel.show()
 
 	var is_special := false
@@ -3035,6 +3057,9 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 
 	var buttons: Array[Button] = [demon_choice_0, demon_choice_1, demon_choice_2]
 	for index in range(buttons.size()):
+		buttons[index].toggle_mode = true
+		buttons[index].set_pressed_no_signal(false)
+		buttons[index].disabled = true
 		if index >= current_demon_candidates.size():
 			buttons[index].visible = false
 			continue
@@ -3114,12 +3139,15 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 	if battle.has_method("get_demon_reroll_max"):
 		reroll_max = int(battle.call("get_demon_reroll_max"))
 	demon_reroll_button.text = "↻ 새로고침 %d / %d" % [rerolls_left, reroll_max]
-	demon_reroll_button.disabled = rerolls_left <= 0
+	demon_reroll_button.disabled = true
+	demon_confirm_button.disabled = true
+	demon_confirm_button.text = "증강을 먼저 선택하세요"
 	demon_augment_guide.text = (
 		"특수증강 레벨입니다. 편성 몬스터의 전투 방식을 강화하세요."
 		if is_special
 		else "일반증강 레벨입니다. 마왕 운영 또는 편성 몬스터를 강화하세요."
 	)
+	demon_augment_guide.text += "\n카드 선택 후 ‘적용’을 눌러 확정하세요."
 	status_label.text = "특수증강 선택 중" if is_special else "일반증강 선택 중"
 
 func _apply_augment_monster_icon(
@@ -3192,22 +3220,83 @@ func _wrap_augment_card_text(
 	return "\n".join(lines)
 
 func _on_demon_choice_pressed(index: int) -> void:
+	if not _can_select_demon_choice() or index < 0 or index >= current_demon_candidates.size():
+		return
+	_demon_selected_index = index
+	_demon_confirm_guard_until = Time.get_ticks_msec() + DEMON_CHOICE_CONFIRM_GUARD_MS
+	for button_index in range(_demon_choice_buttons.size()):
+		_demon_choice_buttons[button_index].set_pressed_no_signal(button_index == index)
+	demon_confirm_button.text = "선택한 증강 적용"
+	demon_confirm_button.disabled = true
+
+func _on_demon_confirm_pressed() -> void:
+	if not _can_select_demon_choice() or Time.get_ticks_msec() < _demon_confirm_guard_until:
+		return
+	var index := _demon_selected_index
 	if index < 0 or index >= current_demon_candidates.size():
 		return
 
 	var candidate: Dictionary = current_demon_candidates[index]
 	var augment_id: String = String(candidate.get("id", ""))
+	# Applying can synchronously open a queued level's next modal. Never hide it
+	# after choose_demon_augment returns, or erase its newly generated candidates.
+	var previous_candidates := current_demon_candidates
+	demon_augment_panel.hide()
+	current_demon_candidates = []
+	_demon_selected_index = -1
 	if battle.choose_demon_augment(augment_id):
-		demon_augment_panel.hide()
-		current_demon_candidates.clear()
 		if battle.has_method("get_command_hud_state"):
 			var command_state: Vector2 = battle.call(
 				"get_command_hud_state"
 			)
 			_on_command_changed(command_state.x, command_state.y)
+	else:
+		_on_demon_augment_ready(previous_candidates, _demon_rerolls_left, battle.demon_level)
 
 func _on_demon_reroll_pressed() -> void:
+	if not _can_select_demon_choice() or _demon_rerolls_left <= 0:
+		return
 	battle.reroll_demon_augments()
+
+func _can_select_demon_choice() -> bool:
+	return demon_augment_panel.visible and Time.get_ticks_msec() >= _demon_choice_guard_until and _blocked_choice_pointers.is_empty()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		# The OS may swallow finger/mouse release while switching applications.
+		_pressed_choice_pointers.clear()
+		_blocked_choice_pointers.clear()
+		_demon_choice_guard_until = Time.get_ticks_msec() + DEMON_CHOICE_OPEN_GUARD_MS
+
+func _update_demon_choice_guard() -> void:
+	if not demon_augment_panel.visible:
+		return
+	var ready := _can_select_demon_choice()
+	for button in _demon_choice_buttons:
+		button.disabled = not ready
+	demon_reroll_button.disabled = not ready or _demon_rerolls_left <= 0
+	demon_confirm_button.disabled = not ready or _demon_selected_index < 0 or Time.get_ticks_msec() < _demon_confirm_guard_until
+
+func _guard_demon_choice_pointer(event: InputEvent) -> bool:
+	var pointer_id := -2
+	var pressed := false
+	if event is InputEventScreenTouch:
+		pointer_id = event.index
+		pressed = event.pressed
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		pressed = event.pressed
+	else:
+		return false
+	var blocked := _blocked_choice_pointers.has(pointer_id)
+	var guarding := demon_augment_panel.visible and Time.get_ticks_msec() < maxi(_demon_choice_guard_until, _demon_confirm_guard_until)
+	if pressed:
+		_pressed_choice_pointers[pointer_id] = true
+		if guarding:
+			_blocked_choice_pointers[pointer_id] = true
+	else:
+		_pressed_choice_pointers.erase(pointer_id)
+		_blocked_choice_pointers.erase(pointer_id)
+	return demon_augment_panel.visible and (blocked or guarding)
 
 func _on_demon_augment_applied(augment_name: String, _build_summary: String) -> void:
 	_show_battle_toast("마왕 증강 · %s" % augment_name, 1.6)

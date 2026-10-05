@@ -1,5 +1,11 @@
 # PROJECT_CONTEXT.md
 
+## Defeat Gold and Demon Choice Confirmation (2026-10-05)
+
+- Victory and defeat both grant floor(actual combat research reward × RUN_REWARD_RULES.combat_gold_ratio), currently 0.60, atomically with research through StageProgress. Victory still uses the existing stage multiplier; defeat does not. First-clear bonuses and shard conversion never enter this calculation. Result presentation calls it combat gold and never grants rewards itself.
+- Demon augment cards now only select/highlight a candidate. A separate Apply action confirms it. Opening/queued opening/reroll clears selection, blocks input for 600ms and consumes pointers held before/during the guard until release. Selecting arms a 250ms confirm guard. Both UI disabled states and handlers enforce the gate; reroll retains existing costs. Focus loss clears stranded pointer records. Pending manual spawn/hold feedback is cancelled on opening.
+- Applying a choice may synchronously open another pending level's modal; hide/clear the previous UI before applying, never after the battle signal can generate the next candidates. `demon_choice_guard_smoke` exercises real viewport mouse input plus held-touch bookkeeping, queued levels and rerolls; device multitouch remains QA.
+
 ## Basic Projectile Fan Hit Policy (2026-10-05)
 
 - `projectile_power` adds crowd coverage, not same-target shotgun damage. Generic basic fans (rookie/purifier) and sage normal fans share one `projectile_volley.gd` RefCounted hit record per firing when count > 1. Each monster receives only its first damage event in that firing, including splash; a later direct hit does not top up an earlier splash hit. Duplicate bullets keep flying to other targets. A new attack owns a new record; there is no global target cooldown.
@@ -9,7 +15,7 @@
 ## Normal Progress, Local Test Coupons and Clear Gold (2026-10-05)
 
 - Normal progression no longer globally unlocks stages or displays unlimited tester gold. Stage 1 starts playable; highest unlocked + 1 is dark/locked with previous-stage clear condition; + 2 is a black silhouette with hidden identity; further navigation is blocked. Clearing extends both unlock and preview horizon by one. Destination warmup includes both preview portraits.
-- Gold lives in stage_progress meta, defaults to 0, and is saved atomically with research rewards or collection awards/summon cost. Clear gold is floor(combat research reward after stage multiplier × RUN_REWARD_RULES.clear_gold_ratio), currently 0.60. Never include first-clear bonus, shard conversion or defeat rewards in gold calculation. Result copy only displays rewards, never grants them.
+- Gold lives in stage_progress meta, defaults to 0, and is saved atomically with research rewards or collection awards/summon cost. Combat gold is floor(combat research reward × RUN_REWARD_RULES.combat_gold_ratio), currently 0.60, for victory and defeat. Victory applies the stage multiplier before this calculation; defeat keeps its original research calculation. Never include first-clear bonus or shard conversion in gold calculation. Result copy only displays rewards, never grants them.
 - LocalTestMode autoload persists a local mode marker, isolates test data under user://local_test, and stops CloudStore/detaches in-memory login credentials while preserving the session vault. localtest provides 99,999 funds/all stages and free summons. normaltest resets progression, returns normal save scope, and only resets the original authenticated account after matching validated identity; pending reset persists until successful cloud sync. Test data must never be uploaded to authenticated account saves.
 - Coupon input is installed in Other Settings with a blocking themed modal. Only these two development coupons are recognized. normaltest is destructive by explicit user-entered intent. No general remote coupon redemption system is implied.
 - Requested existing local saves and the two current social accounts' gameplay data were backed up outside the repository and reset; Auth identities/settings remain. No account IDs, backup payloads or tokens are committed. Future releases must not reset players on startup.

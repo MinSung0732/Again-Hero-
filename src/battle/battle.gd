@@ -4666,8 +4666,8 @@ func _grant_run_research_reward(apply_clear_multiplier: bool) -> String:
 	if requested <= 0:
 		return ""
 
-	var gold_ratio := float(STAGE_CATALOG.RUN_REWARD_RULES.get("clear_gold_ratio", 0.60))
-	var gold_reward := int(floor(float(requested) * gold_ratio)) if apply_clear_multiplier else 0
+	var gold_ratio := float(STAGE_CATALOG.RUN_REWARD_RULES.get("combat_gold_ratio", 0.60))
+	var gold_reward := maxi(int(floor(float(requested) * gold_ratio)), 0)
 	var grant_result: Dictionary = STAGE_PROGRESS.add_research_points(requested, gold_reward)
 	var granted := int(grant_result.get("granted", 0))
 	if granted <= 0:
@@ -4678,8 +4678,9 @@ func _grant_run_research_reward(apply_clear_multiplier: bool) -> String:
 			"\nRun 연구 +%d · 산정 %d × Stage %.2f\nRun 골드 +%d · 전투 연구 보상의 60%%%s"
 			% [granted, base_total, stage_multiplier, int(grant_result.get("gold_granted", 0)), _format_run_reward_detail(breakdown)]
 		)
-	return "\nRun 연구 +%d%s" % [
+	return "\nRun 연구 +%d\nRun 골드 +%d · 전투 연구 보상의 60%%%s" % [
 		granted,
+		int(grant_result.get("gold_granted", 0)),
 		_format_run_reward_detail(breakdown),
 	]
 

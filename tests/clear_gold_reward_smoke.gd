@@ -17,6 +17,7 @@ func run() -> void:
 	SCOPE.select_guest()
 	await root.get_node("PresentationWarmup").prepare_scene("res://src/main/Main.tscn")
 	var main = load("res://src/main/Main.tscn").instantiate()
+	main.gameplay_settings_path = folder.path_join("options.cfg")
 	root.add_child(main)
 	current_scene = main
 	var deadline := Time.get_ticks_msec()+20000
@@ -31,12 +32,21 @@ func run() -> void:
 	if match_result != null:
 		var expected := int(floor(float(match_result.get_string(1).to_int())*0.60))
 		check(PROGRESS.get_gold() == expected, "60 percent of granted run research")
-		check(COPY.format_message(message).reward.contains("클리어 골드 +%d" % expected), "gold result label")
+		check(COPY.format_message(message).reward.contains("전투 골드 +%d" % expected), "gold result label")
 	var gold := PROGRESS.get_gold()
 	PROGRESS.complete_stage("stage_1",1,"stage_2",2,450)
 	check(PROGRESS.get_gold() == gold, "first clear reward excluded")
-	main.battle._grant_run_research_reward(false)
-	check(PROGRESS.get_gold() == gold, "defeat has no clear gold")
+	main.battle.current_stage_data["run_reward_multiplier"] = 3.0
+	var defeat_research_before := PROGRESS.get_research_points()
+	main.battle._on_run_time_up()
+	var defeat_research := PROGRESS.get_research_points() - defeat_research_before
+	var defeat_gold := int(floor(float(defeat_research) * 0.60))
+	check(defeat_research > 0 and PROGRESS.get_gold() == gold + defeat_gold, "defeat grants 60 percent of its research reward")
+	check(main.result_reward.text.contains("전투 골드 +%d" % defeat_gold), "defeat result displays granted gold")
+	check(not main.result_reward.text.contains("최초 클리어"), "defeat has no first-clear reward")
+	check(not main.result_analysis.text.contains("Stage 3.00"), "defeat ignores victory stage multiplier")
+	main.battle._on_run_time_up()
+	check(PROGRESS.get_gold() == gold + defeat_gold, "repeated finish signal cannot grant gold twice")
 	main.free()
 	for file in DirAccess.get_files_at(folder):
 		DirAccess.remove_absolute(folder.path_join(file))
