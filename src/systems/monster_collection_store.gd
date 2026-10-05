@@ -113,8 +113,8 @@ static func _state_config(state: Dictionary) -> ConfigFile:
 static func save_state(state: Dictionary) -> bool:
 	return ACCOUNT_SCOPE.save_config(_state_config(state), SAVE_PATH) == OK
 
-static func _save_with_research(state: Dictionary, points: int, gold_cost: int = 0) -> bool:
-	if points <= 0 and gold_cost == 0:
+static func _save_with_research(state: Dictionary, points: int, gold_cost: int = 0, tutorial_draw: bool = false) -> bool:
+	if points <= 0 and gold_cost == 0 and not tutorial_draw:
 		return save_state(state)
 	var progress := ConfigFile.new()
 	var error := ACCOUNT_SCOPE.load_config(progress, PROGRESS_PATH)
@@ -125,6 +125,9 @@ static func _save_with_research(state: Dictionary, points: int, gold_cost: int =
 		return false
 	if gold_cost > 0:
 		progress.set_value("meta", "gold", gold-gold_cost)
+	if tutorial_draw:
+		progress.set_value("tutorial_flow", "version", 2)
+		progress.set_value("tutorial_flow", "step", "draw_done")
 	progress.set_value("meta", "research_points", maxi(int(progress.get_value("meta", "research_points", 0)), 0) + points)
 	return ACCOUNT_SCOPE.save_configs({SAVE_PATH.get_file(): _state_config(state), PROGRESS_PATH.get_file(): progress}) == OK
 
@@ -235,7 +238,7 @@ static func award_shards(monster_id: String, amount: int) -> Dictionary:
 	return award_shard_batch([{"monster_id": monster_id, "shards": amount}])
 
 # A multi-draw is one collection/research transaction, never a partial award.
-static func award_shard_batch(rolls: Array, gold_cost: int = 0) -> Dictionary:
+static func award_shard_batch(rolls: Array, gold_cost: int = 0, tutorial_draw: bool = false) -> Dictionary:
 	var state := load_state()
 	var awards: Array = []
 	var total_points := 0
@@ -262,6 +265,6 @@ static func award_shard_batch(rolls: Array, gold_cost: int = 0) -> Dictionary:
 		award["research_points"] = points
 		award["unlocked"] = not was_unlocked and bool(entry.unlocked)
 		awards.append(award)
-	var success := _save_with_research(state, total_points, gold_cost)
+	var success := _save_with_research(state, total_points, gold_cost, tutorial_draw)
 	return {"success": success, "state": state if success else load_state(),
 		"research_points": total_points if success else 0, "awards": awards if success else []}

@@ -1,3 +1,8 @@
+## Sequential First-Account Tutorial V2 (2026-10-06)
+- Skip appears only in the initial offer. Fixed order: entry → summon → normal augment → elite → special augment → camera-setting information → practice exit → shop → real 10+1 draw. Successful actions save the next step before praise; other input/tabs are dimmed and blocked by a cached target spotlight.
+- Practice pauses combat/timers/natural stage events/demon runtime but retains real summon/choice APIs and command regeneration. Forced lesson choices are practice-only, never normal Run rewards or stage clears. Camera information does not change device preferences. Ordinary battles retain their existing rules.
+- Account-scoped versioned checkpoints use stage_progress.cfg and existing snapshots. Restart opens the unfinished lesson in a fresh Stage 1 practice; completed steps are not repeated. The once-only existing reward RPC precedes the shop lesson. Draw cost, shard awards and draw_done checkpoint commit together; interrupted presentation never requires another purchase. Existing/legacy accounts and rewards are not reset. See docs/FIRST_ACCOUNT_TUTORIAL.md.
+
 # PROJECT_CONTEXT.md
 
 ## Main Mode Unlock Gates (2026-10-05)

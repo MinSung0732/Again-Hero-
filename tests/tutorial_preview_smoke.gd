@@ -137,27 +137,35 @@ func run() -> void:
 	main._start_battle_after_intro("stage_1")
 	check(flow.modal_visible and flow.title.text == "몬스터 소환", "preview installs actual battle coach")
 	flow.primary_action.call()
-	# Fixture-only acceleration: production battle timing/resources are unchanged.
 	main.battle.command_power = 30
 	main.battle.try_summon(main.battle_loadout_ids[0])
-	await process_frame
-	check(flow.coach.summoned and flow.title.text == "화면 고정 해제", "summon taught")
+	check(flow.step == "augment" and flow.title.text == "잘했어요!", "summon checkpoints next step with praise")
 	flow.primary_action.call()
-	main._open_pause_menu()
-	main._open_settings_overlay()
-	main.settings_camera_lock.button_pressed = false
-	main._close_pause_menu()
-	main.battle._open_mutation_choice({"type":"elite", "name":"테스트", "mutation_profile_id":"mutation_1"})
-	flow.primary_action.call()
-	main._on_mutation_choice_pressed(0)
-	await process_frame
-	main.battle._gain_demon_exp(main.battle.demon_exp_to_next_level)
+	check(main.demon_augment_panel.visible and flow.title.text == "마왕 증강 선택", "normal augment forcibly follows summon")
+	check(not flow.secondary.visible, "no intermediate skip")
 	flow.primary_action.call()
 	main._demon_choice_guard_until = 0
 	main._on_demon_choice_pressed(0)
 	main._demon_confirm_guard_until = 0
 	main._on_demon_confirm_pressed()
-	check(flow.coach_completed and flow.title.text == "튜토리얼 완료", "all actual actions taught in preview")
+	check(flow.step == "elite", "normal augment before elite")
+	flow.primary_action.call()
+	check(main.mutation_panel.visible, "elite is immediate, no timer wait")
+	flow.primary_action.call()
+	main._on_mutation_choice_pressed(0)
+	check(flow.step == "special", "elite checkpoints special")
+	flow.primary_action.call()
+	check(main.demon_augment_panel.visible and String(main.current_demon_candidates[0].get("augment_type")) == "special", "real special candidates")
+	flow.primary_action.call()
+	main._demon_choice_guard_until = 0
+	main._on_demon_choice_pressed(0)
+	main._demon_confirm_guard_until = 0
+	main._on_demon_confirm_pressed()
+	check(flow.step == "camera", "special follows elite and precedes camera hint")
+	flow.primary_action.call()
+	check(flow.title.text == "화면 고정 설정", "camera is final information, no setting mutation")
+	flow.primary_action.call()
+	check(flow.coach_completed and flow.step == "shop", "practice ends before shop")
 	flow.returning_to_lobby()
 	main.queue_free()
 	await process_frame

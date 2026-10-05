@@ -89,7 +89,9 @@ func run() -> void:
 	await shot("entry")
 	flow.primary_action.call()
 	await shot("entry-highlight")
-	check(not flow.modal_visible and flow.highlight.visible, "real entry target highlighted")
+	check(not flow.modal_visible and flow.spotlight.visible, "real entry target highlighted")
+	lobby._on_team_tab_pressed()
+	check(lobby.current_tab == "main", "direct tab switch blocked")
 	flow.clear_guide()
 	lobby.queue_free()
 	await process_frame
@@ -111,34 +113,61 @@ func run() -> void:
 	check(flow.modal_visible and main.battle.external_pause and flow.title.text == "몬스터 소환", "summon guide pauses real battle")
 	flow.primary_action.call()
 	var coach = flow.coach
-	# Only the fixture accelerates resource recovery; live game rules are unchanged.
-	main.battle.command_power = 30.0
+	main.battle.command_power = 30
 	main.battle.try_summon(main.battle_loadout_ids[0])
-	await process_frame
-	check(coach.summoned and flow.title.text == "화면 고정 해제", "successful summon advances")
+	check(flow.step == "augment" and flow.title.text == "잘했어요!", "summon checkpoints next step with praise")
 	flow.primary_action.call()
-	main._open_pause_menu()
-	main._open_settings_overlay()
-	main.settings_camera_lock.button_pressed = false
-	check(coach.camera and not main.camera_view_locked, "real camera checkbox works")
-	main._close_pause_menu()
-	# Use the normal event APIs, not timer polling or alternate tutorial battle rules.
-	main.battle._open_mutation_choice({"type":"elite", "name":"튜토리얼 테스트", "mutation_profile_id":"mutation_1"})
-	await shot("elite")
-	check(flow.title.text == "엘리트 몬스터 소환" and main.mutation_panel.visible, "elite guide at real event")
-	flow.primary_action.call()
-	main._on_mutation_choice_pressed(0)
-	await process_frame
-	check(coach.elite, "real elite spawn completes lesson")
-	main.battle._gain_demon_exp(main.battle.demon_exp_to_next_level)
-	await shot("augment")
-	check(flow.title.text == "마왕 증강 선택", "augment instructions include explicit confirmation")
+	check(main.demon_augment_panel.visible and flow.title.text == "마왕 증강 선택", "normal augment forcibly follows summon")
+	check(not flow.secondary.visible, "no intermediate skip")
 	flow.primary_action.call()
 	main._demon_choice_guard_until = 0
 	main._on_demon_choice_pressed(0)
 	main._demon_confirm_guard_until = 0
 	main._on_demon_confirm_pressed()
-	check(flow.coach_completed and flow.title.text == "튜토리얼 완료", "all actions complete tutorial")
+	check(flow.step == "elite", "normal augment before elite")
+	# Simulate process/session loss: new controller state reads the durable step.
+	main.queue_free()
+	await process_frame
+	flow.account_owner = ""
+	flow.status = ""
+	flow.step = ""
+	lobby = load("res://src/lobby/Lobby.tscn").instantiate()
+	lobby.gameplay_settings_path = folder.path_join("options.cfg")
+	root.add_child(lobby)
+	current_scene = lobby
+	await shot("resume-entry")
+	check(flow.active() and flow.step == "elite" and not flow.secondary.visible, "restart keeps next lesson without offering Skip")
+	flow.clear_guide()
+	lobby.queue_free()
+	await process_frame
+	main = load("res://src/main/Main.tscn").instantiate()
+	main.gameplay_settings_path = folder.path_join("options.cfg")
+	root.add_child(main)
+	current_scene = main
+	deadline = Time.get_ticks_msec() + 20000
+	while not main._presentation_ready and Time.get_ticks_msec() < deadline:
+		await process_frame
+	main.stage_intro_cutscene._finish(true)
+	await process_frame
+	main.hero_reveal_cutscene._active = false
+	main.hero_reveal_cutscene.hide()
+	main._start_battle_after_intro("stage_1")
+	check(main.mutation_panel.visible and flow.title.text == "엘리트 몬스터 소환", "restart opens elite, does not repeat summon/augment")
+	flow.primary_action.call()
+	main._on_mutation_choice_pressed(0)
+	check(flow.step == "special", "elite checkpoints special")
+	flow.primary_action.call()
+	check(main.demon_augment_panel.visible and String(main.current_demon_candidates[0].get("augment_type")) == "special", "real special candidates")
+	flow.primary_action.call()
+	main._demon_choice_guard_until = 0
+	main._on_demon_choice_pressed(0)
+	main._demon_confirm_guard_until = 0
+	main._on_demon_confirm_pressed()
+	check(flow.step == "camera", "special follows elite and precedes camera hint")
+	flow.primary_action.call()
+	check(flow.title.text == "화면 고정 설정", "camera is final information, no setting mutation")
+	flow.primary_action.call()
+	check(flow.coach_completed and flow.step == "shop", "practice ends before shop")
 	flow.returning_to_lobby()
 	main.queue_free()
 	await process_frame
@@ -153,7 +182,15 @@ func run() -> void:
 	check(PROGRESS.get_gold() == 1023 and fake.grants == 1, "retry does not grant twice")
 	flow.clear_guide()
 	await flow.install_lobby(lobby)
-	check(not flow.modal_visible, "completed account no repeat offer")
+	check(flow.title.text == "첫 군단 10+1회 소환", "completed reward resumes unfinished shop")
+	flow.primary_action.call()
+	await process_frame
+	lobby._open_monster_boxes(11)
+	check(flow.step == "draw_done" and PROGRESS.get_gold() == 23, "draw cost and checkpoint committed once")
+	flow.clear_guide()
+	lobby.gacha_reveal_overlay._confirm()
+	await flow.install_lobby(lobby)
+	check(flow.step == "done", "restart after draw never charges again")
 	fake.tutorial_status = "legacy"
 	await flow.install_lobby(lobby)
 	check(not flow.modal_visible, "legacy account excluded")

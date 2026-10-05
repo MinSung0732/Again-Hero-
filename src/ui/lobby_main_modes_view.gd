@@ -272,7 +272,7 @@ func show_pending_unlock() -> void:
 	_unlock_scheduled = false
 	if is_instance_valid(unlock_feedback) or not lobby._presentation_ready or lobby.current_tab != "main" or UNLOCKS.is_test_override():
 		return
-	if lobby.get_node("/root/SceneTransition").is_transitioning() or lobby.get_node("/root/TutorialFlow").modal_visible:
+	if lobby.get_node("/root/SceneTransition").is_transitioning() or lobby.get_node("/root/TutorialFlow").modal_visible or lobby.get_node("/root/TutorialFlow").locks_lobby():
 		return
 	var stage_id := current_stage()
 	var owner := PROFILE.SCOPE.user_id + ":" + PROFILE.SCOPE.guest_directory

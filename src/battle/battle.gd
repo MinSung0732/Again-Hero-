@@ -126,6 +126,7 @@ const FULL_MODAL_PAUSE_DOMAINS := [
 	FLOW_PAUSE_MANAGER.DOMAIN_DEMON_RUNTIME,
 ]
 
+var tutorial_mode := false
 var monsters_alive: int = 0
 const MONSTER_SPATIAL_CELL_SIZE := 256.0
 
@@ -3959,6 +3960,8 @@ func _get_farthest_kobolt_attack_spawn_position(
 	)
 
 func _gain_demon_exp(amount: float) -> void:
+	if tutorial_mode:
+		return
 	if amount <= 0.0 or battle_over:
 		return
 
@@ -4596,6 +4599,8 @@ func get_debug_balance_summary() -> String:
 	return "%s\n%s\n%s" % [level_line, augment_line, sample_line]
 
 func _on_hero_died() -> void:
+	if tutorial_mode:
+		return
 	if battle_over:
 		return
 
@@ -4634,6 +4639,8 @@ func _on_hero_died() -> void:
 	_finish_battle(result_text, true)
 
 func _on_run_time_up() -> void:
+	if tutorial_mode:
+		return
 	if battle_over:
 		return
 
@@ -4643,6 +4650,8 @@ func _on_run_time_up() -> void:
 	_finish_battle(result_text, false)
 
 func _grant_run_research_reward(apply_clear_multiplier: bool) -> String:
+	if tutorial_mode:
+		return ""
 	var hero_level := 1
 	if is_instance_valid(hero):
 		hero_level = maxi(int(hero.get("level")), 1)
@@ -5178,3 +5187,31 @@ func _draw() -> void:
 			false,
 			6.0
 		)
+
+# First-account practice uses real summon/choice APIs, with the simulation and
+# natural event timer paused. No practice action clears stages or grants rewards.
+func begin_tutorial_practice() -> void:
+	tutorial_mode = true
+	flow_pause_manager.request_pause("tutorial_practice", [
+		FLOW_PAUSE_MANAGER.DOMAIN_COMBAT,
+		FLOW_PAUSE_MANAGER.DOMAIN_RUN_TIMER,
+		FLOW_PAUSE_MANAGER.DOMAIN_STAGE_EVENTS,
+		FLOW_PAUSE_MANAGER.DOMAIN_DEMON_RUNTIME,
+	])
+	_sync_combat_pause_state()
+
+func open_tutorial_augment(special: bool) -> void:
+	if not tutorial_mode or demon_augment_selection_active or battle_over:
+		return
+	demon_pending_augments = 1
+	demon_pending_augment_levels.assign([10 if special else 2])
+	_open_next_demon_augment_if_needed()
+
+func open_tutorial_elite() -> void:
+	if not tutorial_mode or mutation_director.is_active() or battle_over:
+		return
+	var events: Array = current_stage_data.get("event_timeline", [])
+	for event in events:
+		if String(event.get("type", "")) == "elite":
+			_open_mutation_choice(event.duplicate(true))
+			return

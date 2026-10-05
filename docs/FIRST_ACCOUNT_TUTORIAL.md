@@ -1,27 +1,42 @@
 # First-account tutorial
 
-New social accounts (created after deployment) enter the existing mandatory
-profile prologue, then receive a Skip / Proceed offer in the lobby.
-Existing profile/snapshot/legacy-progress owners are seeded `legacy`; guests
-and localtest do not receive a cloud account reward. No existing data is reset.
+## Fixed practice sequence (2026-10-06)
 
-Proceed persists `active`, returns the main UI to Stage 1 / demon / easy,
-then highlights the actual entry button. After the dialogue and hero reveal:
-- first successful summon teaches the existing manual and auto placement;
-- camera guide uses Menu → Settings → Gameplay → camera lock checkbox;
-- real mutation selection event (Stage 1: 75 seconds) teaches elite summoning;
-- real demon level-up event teaches card selection + explicit confirmation.
+New social accounts receive Proceed / Skip only in the initial offer. Existing
+legacy/completed accounts remain excluded, except a completed reward ledger
+with a saved unfinished shop step resumes that step. `tutorialtest` exercises
+the same sequence in its isolated local namespace. No account is reset.
 
-The guide pauses the existing battle with external_pause. Normal mutation and
-augment pause reasons remain independent. Full overlays block field input;
-target outlines and compact hints do not consume clicks. A short input guard
-prevents the opening click from dismissing a guide. Lesson events queue rather
-than replacing a guide being read. No alternate battle timer, forced augment,
-free monster, victory, unlock or cheat currency is introduced in the live game.
+Proceed runs: dungeon entry → successful summon → normal augment confirmation
+→ elite summon → special augment confirmation → camera settings information
+→ leave practice → shop → actual 10+1 draw → completion. Every successful action
+saves the next checkpoint before a praise modal. Later guides have no Skip or
+Exit action. Menu/other tabs and keyboard navigation are blocked outside the
+current target; dim tiles leave only the allowed controls visible. Target
+rectangles are cached and refreshed only on layout/visibility changes. Hidden
+targets fail closed. Held fingers and opening clicks cannot release into targets.
 
-All four learned actions offer return to lobby. An ordinary victory/defeat also
-offers return. Early exit is treated as Skip; rewards are equal. Restart/crash
-keeps `active` on the server and offers Proceed / Skip on the next lobby entry.
+The coach explicitly opens the existing normal/special/elite choosers in order,
+without waiting for Run level/timer triggers. Only this practice battle pauses
+combat, Run time, natural stage events and demon runtime while retaining command
+regeneration and real summon/choice APIs. Practice does not grant Run rewards,
+clear stages or persist selected Run augments. Ordinary battles are unchanged.
+The camera lesson explains Menu → Settings → Gameplay → camera lock; it does not
+force a permanent preference change. The practice ends by returning to the lobby.
+
+`stage_progress.cfg [tutorial_flow]` stores version=2 and the next step in the
+existing account snapshot/guest transaction. On restart unfinished combat returns
+to Stage 1 entry, then opens the saved lesson rather than replaying completed
+lessons. This is lesson continuation, not a restored battle simulation. Saves
+are account-scoped; a save failure blocks advancement with Retry.
+
+The once-only server reward is claimed before the shop lesson through the same
+existing authenticated RPC. The shop is forced and only its 10+1 purchase is
+available. Cost, shard awards and draw_done checkpoint commit in one gameplay
+transaction. Interrupted presentation resumes completion without another cost
+or draw. Failed purchases keep the shop step. Final acknowledgement saves done.
+The existing reward ledger/RLS/revision protections and SQL remain unchanged;
+a client checkpoint is not authorization to receive gold.
 
 ## Reward consistency
 

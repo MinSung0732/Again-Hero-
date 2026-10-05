@@ -947,6 +947,8 @@ func _handle_camera_pan_input(event: InputEvent) -> bool:
 
 
 func _input(event: InputEvent) -> void:
+	if TutorialFlow.blocks_input(event):
+		return
 	if TutorialFlow.modal_visible:
 		return
 	if _guard_demon_choice_pointer(event):

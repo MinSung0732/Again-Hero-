@@ -2205,6 +2205,8 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 
 
 func _input(event: InputEvent) -> void:
+	if TutorialFlow.blocks_input(event):
+		return
 	if main_modes_view != null and is_instance_valid(main_modes_view.unlock_feedback):
 		return
 	if TutorialFlow.modal_visible:
@@ -2379,9 +2381,14 @@ func _setup_gacha_reveal_overlay() -> void:
 	gacha_reveal_overlay.name = "GachaRevealOverlay"
 	add_child(gacha_reveal_overlay)
 	gacha_reveal_overlay.retry_requested.connect(_open_monster_boxes)
+	gacha_reveal_overlay.confirmed.connect(func():
+		if TutorialFlow.step == "draw_done" and TutorialFlow.locks_lobby():
+			TutorialFlow.draw_presented())
 
 
 func _on_team_tab_pressed() -> void:
+	if not TutorialFlow.permits_tab("team"):
+		return
 	current_tab = "team"
 	_refresh_header()
 	formation_mode = "team"
@@ -2410,6 +2417,8 @@ func _on_team_tab_pressed() -> void:
 	_refresh_nav_button(other_button, false)
 
 func _switch_tab(tab_id: String) -> void:
+	if not TutorialFlow.permits_tab(tab_id):
+		return
 	current_tab = tab_id
 	if tab_id != "shop":
 		_shop_scroll_touch_index = -1
@@ -2998,6 +3007,8 @@ func _refresh_shop_summon_buttons() -> void:
 
 
 func _open_monster_boxes(draw_count: int) -> void:
+	if TutorialFlow.locks_lobby() and (not TutorialFlow.tutorial_draw_pending() or draw_count != SHOP_CATALOG.MULTI_DRAW_COUNT):
+		return
 	if draw_count != 1 and draw_count != SHOP_CATALOG.MULTI_DRAW_COUNT:
 		return
 	if is_instance_valid(gacha_reveal_overlay) and gacha_reveal_overlay.is_presenting():
@@ -3018,7 +3029,7 @@ func _open_monster_boxes(draw_count: int) -> void:
 			shop_status_label.text = "소환 데이터 오류 · 보상은 지급되지 않았습니다."
 			return
 		rolls.append(roll)
-	var batch := MONSTER_COLLECTION_STORE.award_shard_batch(rolls, 0 if LocalTestMode.active else cost)
+	var batch := MONSTER_COLLECTION_STORE.award_shard_batch(rolls, 0 if LocalTestMode.active else cost, TutorialFlow.tutorial_draw_pending())
 	if not bool(batch.get("success", false)):
 		shop_status_label.text = "소환 보상 저장 실패 · 저장 공간을 확인해 주세요."
 		return
@@ -3042,6 +3053,10 @@ func _open_monster_boxes(draw_count: int) -> void:
 		_close_shop_rates_modal()
 		gacha_reveal_overlay.configure_retry(draw_count, cost, _get_shop_gold)
 		gacha_reveal_overlay.present(reveal_entries)
+		if TutorialFlow.tutorial_draw_pending():
+			gacha_reveal_overlay._skip_button.hide()
+			gacha_reveal_overlay._retry_draw_count = 0
+			TutorialFlow.draw_started()
 
 func _roll_monster_shard() -> Dictionary:
 	var rarity_id := _roll_shop_rarity()
