@@ -25,6 +25,7 @@ AudioSettings="*res://src/audio/audio_settings.gd"
 PresentationWarmup="*res://src/systems/presentation_warmup.gd"
 SceneTransition="*res://src/systems/scene_transition.gd"
 CloudStore="*res://src/network/cloud_store.gd"
+LocalTestMode="*res://src/systems/local_test_mode.gd"
 LoginGateway="*res://src/network/login_gateway.gd"
 
 [display]

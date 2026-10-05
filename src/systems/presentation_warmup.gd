@@ -78,9 +78,9 @@ func prepare_scene(scene_path: String) -> bool:
 				paths.append(dir_path.path_join(filename))
 	var state := PROGRESS.load_state()
 	if scene_path == STARTUP.LOBBY_PATH:
-		# Lobby browsing includes the first locked preview card, not just the
-		# currently selected stage. Only portraits, never all combat frames.
-		var preview_number := int(state.get("highest_unlocked_stage", 1)) + 1
+		# Warm both future previews: dark locked portrait, then silhouette.
+		# Only portraits, never all combat frames.
+		var preview_number := int(state.get("highest_unlocked_stage", 1)) + 2
 		for id in STAGES.get_ordered_stage_ids():
 			var browse_stage := STAGES.get_stage(id)
 			if int(browse_stage.get("number", 1)) <= preview_number:

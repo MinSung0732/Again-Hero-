@@ -6,7 +6,10 @@ static func format_message(message: String) -> Dictionary:
 	var rewards: PackedStringArray = []
 	var details: PackedStringArray = []
 	for line in message.split("\n", false):
-		if line.begins_with("Run 연구 +"):
+		if line.begins_with("Run 골드 +"):
+			rewards.append(line.split(" · ")[0].replace("Run 골드", "클리어 골드"))
+			details.append(line)
+		elif line.begins_with("Run 연구 +"):
 			rewards.insert(0, line.split(" · ")[0].replace("Run 연구", "전투 연구 포인트"))
 			details.append(line.replace(" · ", "\n").replace("Run 연구", "전투 연구"))
 		elif line.begins_with("최초 클리어 보상"):

@@ -56,10 +56,26 @@ func _on_validated(session: Dictionary, user: Dictionary) -> void:
 
 func retry_cloud(choice: String = "") -> void:
 	var generation := _session_generation
-	if await _cloud.initialize(choice) and generation == _session_generation:
+	var mode := get_node("/root/LocalTestMode")
+	var resetting: bool = mode.pending_reset_id == user_id and not user_id.is_empty()
+	if resetting and not mode.reset_progress():
+		login_unavailable.emit("일반 플레이 초기화 저장 실패. 다시 시도해 주세요.")
+		return
+	if await _cloud.initialize("local" if resetting else choice) and generation == _session_generation:
+		if resetting:
+			mode.pending_reset_id = ""
+			if not mode.persist():
+				login_unavailable.emit("초기화 상태 기록 실패. 저장 공간을 확인해 주세요.")
+				return
 		authenticated.emit()
 
 func try_auto_login() -> void:
+	if get_node("/root/LocalTestMode").active:
+		begin_local_guest(true)
+		return
+	if not user_id.is_empty():
+		await retry_cloud()
+		return
 	if not remember_session_enabled or _auth_busy or not user_id.is_empty():
 		return
 	_auth_busy = true
@@ -124,10 +140,10 @@ func begin_login(provider: String) -> void:
 	_oauth.begin(provider)
 
 
-func begin_local_guest() -> void:
+func begin_local_guest(preserve_session: bool = false) -> void:
 	_session_generation += 1
 	_cloud.stop()
-	if remember_session_enabled:
+	if remember_session_enabled and not preserve_session:
 		await _vault.clear_session()
 	_oauth.cancel()
 	_refresh_timer.stop()
@@ -144,6 +160,16 @@ func begin_local_guest() -> void:
 func reset_local_guest() -> void:
 	local_guest_active = false
 	SCOPE.select_guest()
+
+func suspend_for_local_test() -> void:
+	_session_generation += 1
+	_cloud.stop()
+	_oauth.cancel()
+	_refresh_timer.stop()
+	user_id = ""
+	access_token = ""
+	_refresh_token = ""
+	local_guest_active = false
 
 func logout() -> bool:
 	if not user_id.is_empty() and (_cloud.conflict or not await _cloud.flush()):

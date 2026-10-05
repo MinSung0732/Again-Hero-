@@ -311,6 +311,7 @@ func _ready() -> void:
 	_setup_gacha_reveal_overlay()
 	_connect_navigation()
 	_setup_cloud_account()
+	load("res://src/ui/coupon_dialog.gd").new().install(self)
 	var normalization := MONSTER_COLLECTION_STORE.normalize_maxed()
 	if not bool(normalization.get("success", false)):
 		push_warning("최대 강화 조각의 연구 포인트 전환을 저장하지 못했습니다.")
@@ -1178,7 +1179,7 @@ func _apply_new_ui_assets() -> void:
 	var gold_value := Label.new()
 	gold_value.name = "HeaderGoldValue"
 	gold_value.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	gold_value.text = _format_shop_number(SHOP_CATALOG.TEST_GOLD)
+	gold_value.text = _format_shop_number(_get_shop_gold())
 	gold_value.anchor_left = 0.0
 	gold_value.anchor_top = 0.52
 	gold_value.anchor_right = 0.53
@@ -2827,7 +2828,7 @@ func _format_shop_number(value: int) -> String:
 
 func _rebuild_shop_list() -> void:
 	shop_gold_label.text = "골드  %s" % _format_shop_number(
-		SHOP_CATALOG.TEST_GOLD
+		_get_shop_gold()
 	)
 	shop_research_points_label.text = "연구 포인트  %s" % _format_shop_number(
 		STAGE_PROGRESS.get_research_points()
@@ -2869,10 +2870,7 @@ func _rebuild_shop_list() -> void:
 		)
 
 	shop_rates_text.text = "\n\n".join(rate_lines)
-	shop_status_label.text = (
-		"몬스터 소환은 테스트 골드 %s를 표시하며 실제 골드는 차감하지 않습니다."
-		% _format_shop_number(SHOP_CATALOG.TEST_GOLD)
-	)
+	shop_status_label.text = "로컬 테스트 · 골드 차감 없음" if LocalTestMode.active else "소환 비용만큼 골드가 사용됩니다."
 	shop_history_button.disabled = shop_last_result_text.is_empty()
 	shop_history_button.mouse_filter = (
 		Control.MOUSE_FILTER_IGNORE
@@ -2961,8 +2959,7 @@ func _refresh_shop_summon_history() -> void:
 
 
 func _get_shop_gold() -> int:
-	# The current shop is intentionally test-only; replace this reader when gold is persisted.
-	return SHOP_CATALOG.TEST_GOLD
+	return SHOP_CATALOG.TEST_GOLD if LocalTestMode.active else STAGE_PROGRESS.get_gold()
 
 
 func _open_monster_boxes(draw_count: int) -> void:
@@ -2985,7 +2982,7 @@ func _open_monster_boxes(draw_count: int) -> void:
 			shop_status_label.text = "소환 데이터 오류 · 보상은 지급되지 않았습니다."
 			return
 		rolls.append(roll)
-	var batch := MONSTER_COLLECTION_STORE.award_shard_batch(rolls)
+	var batch := MONSTER_COLLECTION_STORE.award_shard_batch(rolls, 0 if LocalTestMode.active else cost)
 	if not bool(batch.get("success", false)):
 		shop_status_label.text = "소환 보상 저장 실패 · 저장 공간을 확인해 주세요."
 		return
@@ -3002,10 +2999,7 @@ func _open_monster_boxes(draw_count: int) -> void:
 		new_history_entries
 	)
 	_refresh_shop_summon_history()
-	shop_status_label.text = (
-		"골드 차감 없음 · 표시 골드 %s 유지"
-		% _format_shop_number(SHOP_CATALOG.TEST_GOLD)
-	)
+	shop_status_label.text = "로컬 테스트 · 골드 차감 없음" if LocalTestMode.active else "%s 골드 사용" % _format_shop_number(cost)
 	_refresh_header()
 	if not reveal_entries.is_empty() and is_instance_valid(gacha_reveal_overlay):
 		_close_shop_result_modal()
@@ -4320,7 +4314,7 @@ func _refresh_header() -> void:
 	$SafeArea/Layout/Content/ContentFrame.visible = current_tab != "shop"
 	var state := STAGE_PROGRESS.load_state()
 	var highest := int(state.get("highest_unlocked_stage", 1))
-	var gold_text := _format_shop_number(SHOP_CATALOG.TEST_GOLD)
+	var gold_text := _format_shop_number(_get_shop_gold())
 
 	title_label.text = "용사, 또 너야?"
 	resource_label.text = "골드  %s" % gold_text
@@ -4531,7 +4525,7 @@ func _get_max_browsable_stage_index() -> int:
 	var highest_unlocked := int(
 		progress_state.get("highest_unlocked_stage", 1)
 	)
-	var preview_stage_number := highest_unlocked + 1
+	var preview_stage_number := highest_unlocked + 2
 	var max_index := 0
 
 	for index in range(stage_ids.size()):
@@ -4587,6 +4581,8 @@ func _refresh_stage_selector_buttons(max_browsable_index: int) -> void:
 		var stage := STAGE_CATALOG.get_stage(stage_ids[index])
 		var stage_number := int(stage.get("number", index + 1))
 		var display_name := String(stage.get("display_name", "미지의 침입자"))
+		if stage_number > int(STAGE_PROGRESS.load_state().get("highest_unlocked_stage", 1)) + 1:
+			display_name = "???"
 		var button := stage_selector_buttons[index]
 		var unlocked := STAGE_PROGRESS.is_stage_unlocked(stage_number)
 		var cleared := STAGE_PROGRESS.is_stage_cleared(stage_ids[index])
@@ -4705,6 +4701,29 @@ func _refresh_stage_card() -> void:
 
 	portrait_badge.visible = false
 	_apply_portrait(String(stage.get("portrait_path", "")), hero_name)
+	var highest := int(STAGE_PROGRESS.load_state().get("highest_unlocked_stage", 1))
+	var silhouette := stage_number > highest + 1
+	portrait_texture.self_modulate = Color.BLACK if silhouette else (Color(0.28,0.25,0.33,1) if not unlocked else Color.WHITE)
+	portrait_badge.visible = not unlocked
+	portrait_badge.text = "미지의 침입자" if silhouette else "잠김 · Stage %d 클리어 필요" % (stage_number-1)
+	var lock_icon := portrait_texture.get_node_or_null("StageLock")
+	if lock_icon == null:
+		lock_icon = load("res://src/ui/stage_lock_icon.gd").new()
+		lock_icon.name = "StageLock"
+		portrait_texture.add_child(lock_icon)
+		lock_icon.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+		lock_icon.offset_left = -32
+		lock_icon.offset_right = 32
+		lock_icon.offset_top = -120
+		lock_icon.offset_bottom = -40
+	lock_icon.visible = not unlocked and not silhouette
+	if not unlocked:
+		enter_stage_button.text = "Stage %d 클리어 필요" % (stage_number-1)
+		stage_status_label.text = "잠김\nStage %d 클리어 필요" % (stage_number-1)
+	if silhouette:
+		hero_name_label.text = "???"
+		stage_name_label.text = "미지의 침입자"
+		stage_description_label.text = "앞선 스테이지를 클리어하면 정체가 밝혀집니다."
 
 func prepare_presentation() -> void:
 	if _presentation_ready:

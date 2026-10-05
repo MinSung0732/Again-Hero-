@@ -3,7 +3,7 @@ class_name StageProgress
 const ACCOUNT_SCOPE := preload("res://src/systems/account_save_scope.gd")
 
 const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
-const TESTER_UNLOCK_ALL_STAGES := true
+const TESTER_UNLOCK_ALL_STAGES := false
 
 const SAVE_PATH := "user://stage_progress.cfg"
 
@@ -98,6 +98,11 @@ static func is_stage_unlocked(stage_number: int) -> bool:
 		return true
 	var state := load_state()
 	return stage_number <= int(state.get("highest_unlocked_stage", 1))
+
+static func get_gold() -> int:
+	var config := ConfigFile.new()
+	ACCOUNT_SCOPE.load_config(config, SAVE_PATH)
+	return maxi(int(config.get_value("meta", "gold", 0)), 0)
 
 static func is_stage_cleared(stage_id: String) -> bool:
 	var config := ConfigFile.new()
@@ -218,8 +223,8 @@ static func get_research_points() -> int:
 	var state := load_state()
 	return int(state.get("research_points", 0))
 
-static func add_research_points(amount: int) -> Dictionary:
-	if amount <= 0:
+static func add_research_points(amount: int, gold_amount: int = 0) -> Dictionary:
+	if amount <= 0 or gold_amount < 0:
 		return {
 			"success": false,
 			"granted": 0,
@@ -242,11 +247,14 @@ static func add_research_points(amount: int) -> Dictionary:
 		int(state.get("highest_unlocked_stage", 1))
 	)
 	config.set_value("meta", "research_points", research_points)
+	if gold_amount > 0:
+		config.set_value("meta", "gold", maxi(int(config.get_value("meta", "gold", 0)), 0) + gold_amount)
 	var save_error := ACCOUNT_SCOPE.save_config(config, SAVE_PATH)
 
 	return {
 		"success": save_error == OK,
 		"granted": amount if save_error == OK else 0,
+		"gold_granted": gold_amount if save_error == OK else 0,
 		"research_points": (
 			research_points
 			if save_error == OK

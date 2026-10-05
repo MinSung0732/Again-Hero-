@@ -1,5 +1,14 @@
 # PROJECT_CONTEXT.md
 
+## Normal Progress, Local Test Coupons and Clear Gold (2026-10-05)
+
+- Normal progression no longer globally unlocks stages or displays unlimited tester gold. Stage 1 starts playable; highest unlocked + 1 is dark/locked with previous-stage clear condition; + 2 is a black silhouette with hidden identity; further navigation is blocked. Clearing extends both unlock and preview horizon by one. Destination warmup includes both preview portraits.
+- Gold lives in stage_progress meta, defaults to 0, and is saved atomically with research rewards or collection awards/summon cost. Clear gold is floor(combat research reward after stage multiplier × RUN_REWARD_RULES.clear_gold_ratio), currently 0.60. Never include first-clear bonus, shard conversion or defeat rewards in gold calculation. Result copy only displays rewards, never grants them.
+- LocalTestMode autoload persists a local mode marker, isolates test data under user://local_test, and stops CloudStore/detaches in-memory login credentials while preserving the session vault. localtest provides 99,999 funds/all stages and free summons. normaltest resets progression, returns normal save scope, and only resets the original authenticated account after matching validated identity; pending reset persists until successful cloud sync. Test data must never be uploaded to authenticated account saves.
+- Coupon input is installed in Other Settings with a blocking themed modal. Only these two development coupons are recognized. normaltest is destructive by explicit user-entered intent. No general remote coupon redemption system is implied.
+- Requested existing local saves and the two current social accounts' gameplay data were backed up outside the repository and reset; Auth identities/settings remain. No account IDs, backup payloads or tokens are committed. Future releases must not reset players on startup.
+- progression_coupon_smoke covers guest and mock authenticated cloud isolation/reset/CAS flows; clear_gold_reward_smoke exercises actual battle reward granting. Real Android touch and human OAuth return after coupon reset remain device/user QA.
+
 ## Monster First Unlock (2026-10-05)
 
 - Only slime/spider/orc have `default_unlocked=true`. Existing saved ownership is preserved; do not revoke old unlocks or reset progress when changing starter defaults.
