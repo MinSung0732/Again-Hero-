@@ -6,6 +6,7 @@ const ROOT := "res://assets/art/UI/battle_castle_v3/"
 const PLAY_TOP := 420.0
 const SIDE_INSET := 120.0
 var surround: Texture2D
+var floor_backing: Texture2D
 
 static func texture(main: Node, path: String) -> Texture2D:
 	var warmup := main.get_node_or_null("/root/PresentationWarmup")
@@ -56,6 +57,7 @@ static func rebuild(main: Node) -> void:
 	main.hud_layer.add_child(chrome)
 	chrome.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	chrome.surround = texture(main, ROOT + "castle_surround.png")
+	chrome.floor_backing = texture(main, ROOT + "flagstone_floor.png")
 	chrome.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	chrome.resized.connect(chrome.queue_redraw)
 	chrome.queue_redraw()
@@ -102,12 +104,16 @@ func _draw() -> void:
 	draw_rect(Rect2(0, 0, width, PLAY_TOP), Color("141020"))
 	if surround == null:
 		return
+	# Transparent gaps beside the pillars reveal stone, not the empty window.
+	if floor_backing != null:
+		for x in [0.0, width-SIDE_INSET]:
+			draw_texture_rect_region(floor_backing, Rect2(x, PLAY_TOP, SIDE_INSET, bottom-PLAY_TOP), Rect2(0,0,180,1254), Color(0.60,0.54,0.72,1))
 	# Split architectural bands, never squash a full pillar into a thin repeat.
 	# Fill alpha gaps behind the battlements/HUD with the same opaque masonry.
-	draw_texture_rect_region(surround, Rect2(0, 0, width, PLAY_TOP), Rect2(198, 105, 140, 70))
+	draw_texture_rect_region(surround, Rect2(0, 0, width, PLAY_TOP), Rect2(215, 505, 130, 30))
 	# Crop away the transparent skyline, moving the castle upward rather than
 	# leaving empty sky above the live header or squeezing its full elevation.
-	draw_texture_rect_region(surround, Rect2(0, 0, width, PLAY_TOP), Rect2(0, 130, 1024, 420))
+	draw_texture_rect_region(surround, Rect2(0, 0, width, PLAY_TOP), Rect2(0, 190, 1024, 360))
 	var rail_height := maxf(bottom - PLAY_TOP, 1.0)
 	draw_texture_rect_region(surround, Rect2(0, PLAY_TOP, SIDE_INSET, rail_height), Rect2(0, 550, 196, 920))
 	draw_texture_rect_region(surround, Rect2(width-SIDE_INSET, PLAY_TOP, SIDE_INSET, rail_height), Rect2(828, 550, 196, 920))

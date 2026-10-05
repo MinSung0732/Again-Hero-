@@ -29,6 +29,8 @@ func run() -> void:
 		check(view._typing and view.dialogue_text.visible_characters == 0, "starts typing stage %d" % stage)
 		view._on_skip_pressed()
 	check(completions == 10 and not view.is_processing(), "skip finishes once and stops typing")
+	check(events == 1, "stage 10 skip applies only the marked true-name milestone")
+	events = 0
 	var dialogue := {"hero_name": "용사", "lines": [
 		{"speaker": "hero", "text": "가나다… 기다려!"},
 		{"speaker": "demon", "text": "둘째 대사", "event": "test_event"},
@@ -81,6 +83,17 @@ func run() -> void:
 	view._on_skip_pressed()
 	view._process(10.0)
 	check(completions == 12 and not view._active, "skip cancels auto/typing")
+	events = 0
+	view.play_dialogue({"lines": [
+		{"text": "공개", "event": "test_event", "apply_on_skip": true},
+		{"text": "일반 이벤트", "event": "unmarked_event"},
+	]})
+	await process_frame
+	view.set_process(false)
+	check(events == 1, "visited milestone fires once")
+	view._on_skip_pressed()
+	view._on_skip_pressed()
+	check(events == 1, "skip does not replay visited milestone or grant unmarked events")
 	view.free()
 	print("DIALOGUE_CONTROLS_FAILED" if failed else "DIALOGUE_CONTROLS_OK")
 	quit(1 if failed else 0)

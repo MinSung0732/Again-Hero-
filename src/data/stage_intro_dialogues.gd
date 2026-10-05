@@ -1258,6 +1258,7 @@ static func _stage_10() -> Dictionary:
 				"text": "아스트라.",
 				"hero_name": "아스트라",
 				"event": "reveal_hero_true_name",
+				"apply_on_skip": true,
 				"true_name": "아스트라",
 				"identity_id": "returning_magic_hero",
 			},

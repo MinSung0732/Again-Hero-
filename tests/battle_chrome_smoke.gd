@@ -29,6 +29,12 @@ func run() -> void:
 	main.stage_intro_cutscene._finish(true)
 	await process_frame
 	await process_frame
+	var progress = preload("res://src/systems/stage_progress.gd")
+	if stage_number == 10:
+		check(progress.is_hero_true_name_unlocked("stage_10", "returning_magic_hero"), "skip persists stage 10 true name")
+		check(main.hero_reveal_cutscene.true_name_label.text == "진명 : 아스트라", "post-skip reveal displays true name")
+	else:
+		check(not progress.is_hero_true_name_unlocked("stage_%d" % stage_number, "returning_magic_hero"), "earlier-stage skip does not unlock returning hero name")
 	main.hero_reveal_cutscene._active = false
 	main.hero_reveal_cutscene.hide()
 	main.hud_layer.show()
@@ -40,6 +46,7 @@ func run() -> void:
 	check(chrome.get_child_count() == 0, "no props/collision/input nodes in shell")
 	check(main.battle_viewport_container.position.y == 420, "expanded play area below raised wall")
 	check(chrome.surround != null, "generated surround present")
+	check(chrome.floor_backing != null, "stone fills transparent rail gaps")
 	check(root.get_node("PresentationWarmup").get_texture("res://assets/art/UI/battle_castle_v3/flagstone_floor.png") != null, "new floor preloaded")
 	check(main.settings_battle_frame.toggled.is_connected(main._on_settings_battle_frame_toggled), "frame checkbox wired")
 	check(main.hero_info_bookmark.size == Vector2(144,142), "matching icon bookmarks")

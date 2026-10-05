@@ -570,6 +570,15 @@ func _finish(skipped: bool) -> void:
 	if not _active:
 		return
 	_active = false
+	if skipped:
+		# Only explicitly marked story milestones survive skipping. Do not replay
+		# the current/already visited line or unrelated future dialogue events.
+		for index in range(_line_index + 1, _lines.size()):
+			var entry = _lines[index]
+			if entry is Dictionary and bool(entry.get("apply_on_skip", false)):
+				var event_id := String(entry.get("event", ""))
+				if not event_id.is_empty():
+					dialogue_event.emit(event_id, entry.duplicate(true))
 	_typing = false
 	_auto_wait = 0.0
 	set_process(false)
