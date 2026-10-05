@@ -42,7 +42,7 @@ func install(lobby: Control) -> void:
 	box.add_child(entry)
 	var notice := Label.new()
 	notice.name = "Notice"
-	notice.text = "normaltest는 진행도를 초기화합니다."
+	notice.text = "tutorialtest: 첫 가입 테스트\nnormaltest: 일반 진행도 초기화 (첫 가입 테스트에서는 원래 저장으로 복귀)"
 	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	notice.add_theme_font_size_override("font_size",25)
 	box.add_child(notice)
@@ -70,8 +70,15 @@ func install(lobby: Control) -> void:
 	close.pressed.connect(overlay.hide)
 	submit.pressed.connect(func():
 		var code := entry.text.strip_edges().to_lower()
-		if code not in ["localtest","normaltest"]:
+		if code not in ["localtest","normaltest","tutorialtest"]:
 			notice.text = "사용할 수 없는 쿠폰입니다."
+			return
+		var mode := lobby.get_node("/root/LocalTestMode")
+		if code == "tutorialtest" and (mode.active or not mode.pending_reset_id.is_empty()):
+			notice.text = "기존 localtest/초기화를 먼저 완료해 주세요.\nnormaltest 종료 및 원래 계정 재로그인 후 사용할 수 있습니다."
+			return
+		if code == "localtest" and mode.tutorial_preview:
+			notice.text = "normaltest로 첫 가입 테스트를 종료한 뒤 사용할 수 있습니다."
 			return
 		submit.disabled = true
 		close.disabled = true

@@ -437,7 +437,8 @@ func _sync_account() -> void:
 	profile_avatar_frame.visible = not nickname.is_empty()
 	profile_setup.visible = nickname.is_empty() and not guest and not mode.active
 	profile_setup.disabled = cloud.busy or gateway.access_token.is_empty()
-	account_identity.text = "로컬 테스트 모드" if mode.active else gateway.get_account_display()
+	var testing: bool = mode.active or mode.tutorial_preview
+	account_identity.text = "첫 가입 테스트 · 로컬 전용" if mode.tutorial_preview else ("로컬 테스트 모드" if mode.active else gateway.get_account_display())
 	if mode.active or guest:
 		cloud_status.text = "클라우드 연결 안 됨 · 기기 저장"
 	elif cloud.conflict:
@@ -450,8 +451,8 @@ func _sync_account() -> void:
 		cloud_status.text = "클라우드 저장 사용 중" if cloud.ready_for_play else "클라우드 연결 확인 필요"
 	pages.account.get_node("KakaoLogin").disabled = guest or mode.active or cloud.busy or gateway.access_token.is_empty()
 	pages.account.get_node("GoogleLogin").text = "계정 로그인" if guest else "로그아웃 / 계정 변경"
-	pages.account.get_node("GoogleLogin").disabled = mode.active or cloud.busy
-	if mode.active:
+	pages.account.get_node("GoogleLogin").disabled = testing or cloud.busy
+	if testing:
 		pages.account.get_node("Guide").text = "일반 계정 로그인은 normaltest 쿠폰으로 테스트 모드 종료 후 가능합니다."
 
 func show_page(id: String) -> void:

@@ -42,6 +42,39 @@ Explicit save conflicts require re-login/normal conflict recovery.
 
 ## Checks
 
+### Repeatable local first-account preview
+
+Other → Account → Coupon → `tutorialtest` restarts into the same real startup
+prologue, then the Proceed/Skip offer and battle coach. It uses a fresh random
+guest directory under `user://local_test_tutorial_*`, Stage 1, the three starter
+monsters and zero currency, without localtest's free draws/cheat unlocks.
+Every invocation starts a new preview; app restart resumes the current preview.
+The profile choices are saved only in that directory. Name syntax is validated,
+but global nickname duplication/reservation is deliberately not performed;
+the input UI explicitly labels that limitation. Real social registration and
+server uniqueness still require a real new-account QA test.
+
+Skip/Complete adds the catalog's draw cost to gold and records the claim in the
+same local config save; repeat claims do not add gold. No tutorial/profile RPC
+is sent in this mode. Normal guest/social accounts remain excluded from this
+local reward route unless the isolated preview is active and its namespace
+matches. Social progress is flushed before entry, the session vault is preserved,
+and late OAuth callbacks/social login buttons cannot leave the preview.
+
+`normaltest` **while inside this preview** restores the original guest namespace
+and normal startup/login; it does not reset guest/social progress and never
+sets pending_reset_id. Outside preview its old destructive reset meaning is
+unchanged. To enter from localtest or a pending social reset, finish that old
+workflow first. Settings such as sound/camera remain ordinary device settings.
+
+`tests/tutorial_preview_smoke.gd` exercises the real startup and prologue choice
+controls, persisted resume, Skip/Complete equality and idempotency, actual
+battle coaching actions, fresh re-entry and non-destructive exit, no-profile-RPC
+transport, and byte-identical original guest/social snapshots. No human saves
+or server fixtures are reset. Existing tutorial/progression/settings tests are
+run separately as regression checks. Android touch and real social session
+restore remain manual QA.
+
 `tests/tutorial_smoke.gd` uses random isolated UUID saves and a fake transport
 through the real CloudStore operation. It renders offers, entry, battle guides,
 reward return; tests successful actual summon, camera checkbox, mutation API,

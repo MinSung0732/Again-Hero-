@@ -140,7 +140,7 @@ func _build_choice(kind: String) -> void:
 	VIEW.place(choice, name_input, Rect2(0.08, 0.31, 0.68, 0.19))
 	name_input.mouse_filter = Control.MOUSE_FILTER_STOP
 	dice = _button(choice, "⚄", Rect2(0.79, 0.31, 0.13, 0.19))
-	dice.tooltip_text = "무작위 닉네임 (결정 시 중복 검사)"
+	dice.tooltip_text = "무작위 테스트 이름 (서버 등록 없음)" if PROFILE._preview() else "무작위 닉네임 (결정 시 중복 검사)"
 	dice.pressed.connect(func(): name_input.text = PROFILE.random_name(name_input.text); _validate_name(name_input.text))
 	confirm = _button(choice, "결정", Rect2(0.25, 0.70, 0.50, 0.19))
 	confirm.disabled = true
@@ -149,10 +149,13 @@ func _build_choice(kind: String) -> void:
 	name_input.text_changed.connect(_validate_name)
 	name_input.text_submitted.connect(func(_text: String): _register_name())
 	name_input.grab_focus()
+	_validate_name(name_input.text)
 
 func _validate_name(value: String) -> void:
 	confirm.disabled = busy or not PROFILE.valid_name(value)
 	error_label.text = "한글·영문·숫자 1~6글자 · 결정 시 중복 검사"
+	if PROFILE._preview():
+		error_label.text = "로컬 테스트 이름 · 서버 등록/중복 검사 없음"
 
 func _select_gender(value: String) -> void:
 	if busy or not is_instance_valid(choice) or String(DATA.LINES[index].get("kind", "")) != "gender":
@@ -183,7 +186,7 @@ func _register_name() -> void:
 	confirm.disabled = true
 	dice.disabled = true
 	name_input.editable = false
-	error_label.text = "중복 확인 및 프로필 저장 중…"
+	error_label.text = "테스트 프로필 로컬 저장 중…" if PROFILE._preview() else "중복 확인 및 프로필 저장 중…"
 	var result := await PROFILE.register(cloud, name_input.text, gender)
 	if not is_inside_tree():
 		return

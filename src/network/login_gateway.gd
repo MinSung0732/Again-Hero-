@@ -38,6 +38,8 @@ func _ready() -> void:
 	add_child(_refresh_timer)
 
 func _on_validated(session: Dictionary, user: Dictionary) -> void:
+	if get_node("/root/LocalTestMode").tutorial_preview:
+		return # A late OAuth callback must never leave the isolated preview.
 	_cloud.stop()
 	var id := String(user.get("id", ""))
 	if not SCOPE.select_account(id):
@@ -73,7 +75,7 @@ func retry_cloud(choice: String = "") -> void:
 		authenticated.emit()
 
 func try_auto_login() -> void:
-	if get_node("/root/LocalTestMode").active:
+	if get_node("/root/LocalTestMode").active or get_node("/root/LocalTestMode").tutorial_preview:
 		begin_local_guest(true)
 		return
 	if not user_id.is_empty():
@@ -151,6 +153,9 @@ func _refresh_if_needed() -> void:
 
 
 func begin_login(provider: String) -> void:
+	if get_node("/root/LocalTestMode").tutorial_preview:
+		login_unavailable.emit("normaltest 쿠폰으로 첫 가입 테스트를 종료한 뒤 로그인해 주세요.")
+		return
 	if _auth_busy:
 		return
 	if not access_token.is_empty():

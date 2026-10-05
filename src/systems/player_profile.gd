@@ -57,6 +57,11 @@ static func _store_response(result: Dictionary) -> Dictionary:
 	return result
 
 static func refresh(cloud: Node) -> Dictionary:
+	if _preview():
+		var profile := get_profile()
+		if profile.is_empty():
+			profile = {"nickname": "", "gender": "male", "required": true, "completed": false}
+		return _store_response({"ok": true, "profile": profile})
 	var owner := SCOPE.user_id
 	var result: Dictionary = await cloud.request_rpc("read_player_profile", {})
 	if owner.is_empty() or owner != SCOPE.user_id:
@@ -66,6 +71,12 @@ static func refresh(cloud: Node) -> Dictionary:
 static func register(cloud: Node, nickname: String, gender: String) -> Dictionary:
 	if not valid_name(nickname) or not PORTRAITS.has(gender):
 		return {"ok": false, "error": "invalid"}
+	if _preview():
+		# Preview names are local only: do not reserve or check server nicknames.
+		var profile := get_profile()
+		if String(profile.get("nickname", "")).is_empty():
+			profile = {"nickname": nickname, "gender": gender, "required": true, "completed": false}
+		return _store_response({"ok": true, "profile": profile})
 	var owner := SCOPE.user_id
 	var result: Dictionary = await cloud.request_rpc("register_player_profile", {"chosen_name": nickname, "chosen_gender": gender})
 	if owner.is_empty() or owner != SCOPE.user_id:
@@ -73,6 +84,12 @@ static func register(cloud: Node, nickname: String, gender: String) -> Dictionar
 	return _store_response(result)
 
 static func complete(cloud: Node) -> bool:
+	if _preview():
+		var profile := get_profile()
+		if not valid_name(String(profile.get("nickname", ""))):
+			return false
+		profile.completed = true
+		return bool(_store_response({"ok": true, "profile": profile}).get("ok", false))
 	var owner := SCOPE.user_id
 	var result: Dictionary = await cloud.request_rpc("complete_player_prologue", {})
 	if owner.is_empty() or owner != SCOPE.user_id:
@@ -80,3 +97,8 @@ static func complete(cloud: Node) -> bool:
 	if not bool(_store_response(result).get("ok", false)):
 		return false
 	return await cloud.flush()
+
+static func _preview() -> bool:
+	var tree := Engine.get_main_loop() as SceneTree
+	var mode := tree.root.get_node_or_null("LocalTestMode") if tree != null else null
+	return mode != null and mode.is_tutorial_preview()

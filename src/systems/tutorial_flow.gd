@@ -24,9 +24,16 @@ var previous_pause := false
 var guide_generation := 0
 
 func active() -> bool:
-	return account_owner == SCOPE.user_id and not account_owner.is_empty() and status == "active"
+	return account_owner == _owner() and not account_owner.is_empty() and status == "active"
+
+func _owner() -> String:
+	var mode := get_node("/root/LocalTestMode")
+	return "preview:" + mode.preview_directory if mode.is_tutorial_preview() else SCOPE.user_id
 
 func _rpc(action: String) -> Dictionary:
+	var mode := get_node("/root/LocalTestMode")
+	if mode.is_tutorial_preview():
+		return mode.tutorial_operation(action)
 	var cloud: Node = transport if transport != null else get_node("/root/CloudStore")
 	return await cloud.tutorial_operation(action)
 
@@ -173,18 +180,19 @@ func guide(id: String, action: Callable) -> void:
 	show_modal(guide_data[0], guide_data[1], "직접 해보기" if id != "complete" else "로비로 돌아가기", action, "튜토리얼 종료", leave_battle)
 
 func install_lobby(lobby: Node) -> void:
-	if SCOPE.user_id.is_empty() or get_node("/root/LocalTestMode").active:
+	var preview: bool = get_node("/root/LocalTestMode").is_tutorial_preview()
+	if not preview and (SCOPE.user_id.is_empty() or get_node("/root/LocalTestMode").active):
 		account_owner = ""
 		status = ""
 		pending_exit = false
 		return
 	var cloud: Node = transport if transport != null else get_node("/root/CloudStore")
-	if transport == null and not cloud.ready_for_play:
+	if not preview and transport == null and not cloud.ready_for_play:
 		return
-	if account_owner != SCOPE.user_id:
+	if account_owner != _owner():
 		pending_exit = false
 		status = ""
-	account_owner = SCOPE.user_id
+	account_owner = _owner()
 	bind_host(lobby)
 	if pending_exit:
 		await finish_lobby()
@@ -194,7 +202,7 @@ func install_lobby(lobby: Node) -> void:
 	show_modal("첫 걸음 확인 중", "계정의 튜토리얼과 보상 기록을 확인하고 있습니다…", "확인 중", Callable())
 	var result := await _rpc("read")
 	busy = false
-	if account != SCOPE.user_id or not is_instance_valid(lobby):
+	if account != _owner() or not is_instance_valid(lobby):
 		return
 	if not bool(result.get("ok", false)):
 		show_modal("튜토리얼 확인 실패", "네트워크 또는 저장 상태를 확인하고 다시 시도해 주세요.\n지급 여부를 확인하기 전에는 보상을 중복 지급하지 않습니다.", "다시 시도", install_lobby.bind(lobby), "나중에", clear_guide)
@@ -203,6 +211,8 @@ func install_lobby(lobby: Node) -> void:
 	clear_guide()
 	if status in ["pending", "active"]:
 		show_modal("마왕의 첫 걸음", "던전 입장, 몬스터 소환, 카메라 이동, 엘리트와 증강 선택을 배워 볼까요?\n\n진행하거나 스킵해도 10+1회 소환 비용 %d골드를 계정당 한 번 지급합니다." % DATA.REWARD, "진행", start_lobby, "스킵", finish_lobby)
+		if preview:
+			copy.text += "\n\n첫 가입 테스트 · 보상은 로컬 테스트 저장에만 지급됩니다."
 
 func start_lobby() -> void:
 	busy = true
@@ -210,7 +220,7 @@ func start_lobby() -> void:
 	var target := host
 	var result := await _rpc("start")
 	busy = false
-	if account != SCOPE.user_id or not is_instance_valid(target) or host != target:
+	if account != _owner() or not is_instance_valid(target) or host != target:
 		return
 	if not bool(result.get("ok", false)):
 		show_modal("시작 저장 실패", "튜토리얼 시작을 저장하지 못했습니다.", "다시 시도", start_lobby, "취소", clear_guide)
@@ -236,7 +246,7 @@ func finish_lobby() -> void:
 	var action := "complete" if pending_exit and coach_completed else "skip"
 	var result := await _rpc(action)
 	busy = false
-	if account != SCOPE.user_id or not is_instance_valid(target) or host != target:
+	if account != _owner() or not is_instance_valid(target) or host != target:
 		return
 	if not bool(result.get("ok", false)):
 		show_modal("보상 저장 실패", "보상은 아직 확인되지 않았습니다. 재시도해도 중복 지급되지 않습니다.\n저장 충돌이라면 다시 로그인해 주세요.", "다시 시도", finish_lobby, "나중에", clear_guide)
