@@ -67,6 +67,8 @@
 
 ## Team Formation Presentation / Reserved Presets (2026-10-04)
 
+- Monster collection defaults to all, unlocked-first grouping, then existing cost sort within each group. Whole-session all/unlocked/locked filters affect only monster presentation, survive team/skill switching, and never mutate formation or ownership. Rebuilds use current unlocked IDs; empty results have a separate label, not a fake draggable card. Skills keep the original cost order and no unlock filter.
+- Shop affordability applies to child SummonButton only; keep the passive card parent enabled/ignoring input. Refresh on storefront entry/header refresh and after purchase; existing transaction guards remain authoritative. Disabled buttons use muted texture/text colors. No per-frame save polling.
 - Existing monster sprites and catalog/progression values remain authoritative. `team_formation_view.gd` builds the equipped-slot presentation once; collection cards retain three columns, actual shard progress (gray/green) and explicit formation/upgrade actions.
 - Monster cards open details on a short tap. The shared drag card emits `tapped` only for an unmoved short gesture; a 0.28-second hold still starts the existing monster/skill drag payload, and scrolling or dragging suppresses the tap. Locked monsters allow details but not drag formation.
 - Equipped monster slots open details from the body, and their X removes the selection subject to the existing minimum-one constraint. Skill drag/drop semantics remain unchanged.

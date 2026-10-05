@@ -255,6 +255,7 @@ var demon_skill_catalog_ids: Array = []
 var demon_skill_selected_ids: Array = []
 var formation_mode: String = "team"
 var formation_cost_descending := false
+var formation_unlock_filter := "all"
 
 var panel_style := StyleBoxFlat.new()
 var header_style := StyleBoxFlat.new()
@@ -2352,6 +2353,9 @@ func _connect_navigation() -> void:
 	formation_cost_high_button.pressed.connect(
 		_on_formation_cost_sort_selected.bind(true)
 	)
+	var unlock_filters := $SafeArea/Layout/Content/TeamTab/TeamLayout/UnlockFilters
+	for pair in [["AllButton", "all"], ["UnlockedButton", "unlocked"], ["LockedButton", "locked"]]:
+		unlock_filters.get_node(pair[0]).pressed.connect(_on_formation_unlock_filter_selected.bind(pair[1]))
 	monster_detail_close_button.pressed.connect(_close_monster_detail)
 	$MonsterDetailOverlay/Dim.gui_input.connect(_on_monster_detail_dim_input)
 
@@ -2961,6 +2965,16 @@ func _refresh_shop_summon_history() -> void:
 func _get_shop_gold() -> int:
 	return SHOP_CATALOG.TEST_GOLD if LocalTestMode.active else STAGE_PROGRESS.get_gold()
 
+func _refresh_shop_summon_buttons() -> void:
+	var gold := _get_shop_gold()
+	for pair in [[shop_single_button, SHOP_CATALOG.SINGLE_DRAW_COST], [shop_multi_button, SHOP_CATALOG.MULTI_DRAW_COST]]:
+		var button := pair[0].get_node_or_null("SummonButton") as Button
+		if button == null:
+			continue
+		button.disabled = gold < int(pair[1])
+		button.tooltip_text = "골드가 부족합니다." if button.disabled else ""
+		button.mouse_default_cursor_shape = Control.CURSOR_ARROW if button.disabled else Control.CURSOR_POINTING_HAND
+
 
 func _open_monster_boxes(draw_count: int) -> void:
 	if draw_count != 1 and draw_count != SHOP_CATALOG.MULTI_DRAW_COUNT:
@@ -2969,6 +2983,7 @@ func _open_monster_boxes(draw_count: int) -> void:
 		return
 	var cost: int = SHOP_CATALOG.SINGLE_DRAW_COST if draw_count == 1 else SHOP_CATALOG.MULTI_DRAW_COST
 	if _get_shop_gold() < cost:
+		_refresh_shop_summon_buttons()
 		shop_status_label.text = "골드가 부족합니다."
 		return
 
@@ -3177,10 +3192,30 @@ func _refresh_formation_cost_sort_buttons() -> void:
 		19
 	)
 
+func _on_formation_unlock_filter_selected(filter_id: String) -> void:
+	if filter_id not in ["all", "unlocked", "locked"] or formation_unlock_filter == filter_id:
+		return
+	formation_unlock_filter = filter_id
+	_refresh_formation_mode()
+	($SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterScroll as ScrollContainer).scroll_vertical = 0
+
+func _refresh_formation_unlock_filters(showing_team: bool) -> void:
+	var row := $SafeArea/Layout/Content/TeamTab/TeamLayout/UnlockFilters
+	row.visible = showing_team
+	for pair in [["AllButton", "all"], ["UnlockedButton", "unlocked"], ["LockedButton", "locked"]]:
+		_apply_lobby_button_skin(row.get_node(pair[0]), formation_unlock_filter == pair[1], 23)
+	if not showing_team:
+		$SafeArea/Layout/Content/TeamTab/TeamLayout/EmptyCollection.hide()
+
 
 func _formation_cost_before(left_id: Variant, right_id: Variant) -> bool:
 	var left := String(left_id)
 	var right := String(right_id)
+	if formation_mode == "team":
+		var left_unlocked := left in team_available_ids
+		var right_unlocked := right in team_available_ids
+		if left_unlocked != right_unlocked:
+			return left_unlocked
 	var left_cost := _formation_item_cost(left)
 	var right_cost := _formation_item_cost(right)
 	if is_equal_approx(left_cost, right_cost):
@@ -3202,6 +3237,7 @@ func _sorted_formation_ids(source_ids: Array) -> Array:
 
 func _refresh_formation_mode() -> void:
 	var showing_team := formation_mode == "team"
+	_refresh_formation_unlock_filters(showing_team)
 	_apply_lobby_button_skin(team_mode_button, showing_team, 23)
 	_apply_lobby_button_skin(skill_mode_button, not showing_team, 23)
 	team_mode_button.disabled = showing_team
@@ -3255,7 +3291,13 @@ func _rebuild_team_monster_cards() -> void:
 
 	for raw_id in _sorted_formation_ids(team_catalog_ids):
 		var monster_id := String(raw_id)
+		var unlocked := monster_id in team_available_ids
+		if formation_unlock_filter == "unlocked" and not unlocked:
+			continue
+		if formation_unlock_filter == "locked" and unlocked:
+			continue
 		team_monster_grid.add_child(_create_team_monster_card(monster_id))
+	$SafeArea/Layout/Content/TeamTab/TeamLayout/EmptyCollection.visible = team_monster_grid.get_child_count() == 0
 
 func _create_team_monster_card(monster_id: String) -> Control:
 	var available := monster_id in team_available_ids
@@ -4310,6 +4352,7 @@ func _team_monster_cost(monster_id: String) -> float:
 	return float(data.get("base_cost", 0.0))
 
 func _refresh_header() -> void:
+	_refresh_shop_summon_buttons()
 	# The shop has its own full-width storefront; retain the shared frame elsewhere.
 	$SafeArea/Layout/Content/ContentFrame.visible = current_tab != "shop"
 	var state := STAGE_PROGRESS.load_state()

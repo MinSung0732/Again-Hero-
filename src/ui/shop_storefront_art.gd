@@ -285,7 +285,10 @@ func _product(button: Button, featured: bool) -> void:
 		var style := _plate_style()
 		if state == "pressed":
 			style.modulate_color = Color("bc93d2")
+		elif state == "disabled":
+			style.modulate_color = Color("62536d")
 		cta.add_theme_stylebox_override(state, style)
+	cta.add_theme_color_override("font_disabled_color", Color("a99eae"))
 	cta.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	button.add_child(cta)
 	cta.anchor_right = 1.0

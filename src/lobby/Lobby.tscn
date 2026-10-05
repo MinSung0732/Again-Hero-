@@ -637,6 +637,38 @@ focus_mode = 0
 theme_override_font_sizes/font_size = 19
 text = "높은순"
 
+[node name="UnlockFilters" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="AllButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/UnlockFilters"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+text = "전체"
+
+[node name="UnlockedButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/UnlockFilters"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+text = "해금"
+
+[node name="LockedButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/UnlockFilters"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+text = "미해금"
+
+[node name="EmptyCollection" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+visible = false
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 25
+text = "조건에 맞는 몬스터가 없습니다."
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="MonsterScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
 layout_mode = 2
 size_flags_vertical = 3
