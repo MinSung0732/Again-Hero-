@@ -3,7 +3,9 @@ extends Control
 const CATALOG := preload("res://src/data/startup_catalog.gd")
 const VIEW := preload("res://src/ui/startup_loading_view.gd")
 const PIXEL_FRAME := preload("res://src/ui/battle_pixel_frame_assembler.gd")
-enum Phase { TITLE, RESOURCES, LOADING, LOGIN, ENTERING, ERROR }
+const PROFILE := preload("res://src/systems/player_profile.gd")
+const PROLOGUE := preload("res://src/ui/player_prologue.gd")
+enum Phase { TITLE, RESOURCES, LOADING, LOGIN, ENTERING, ERROR, PROLOGUE }
 
 var phase := Phase.TITLE
 var title_screen: Control
@@ -17,6 +19,8 @@ var _pulse: Tween
 var _resources: Array[Resource] = []
 var _lobby: PackedScene
 var _entering := false
+var prologue: Control
+var profile_cloud: Node # Optional isolated test transport; production uses CloudStore.
 
 
 func _ready() -> void:
@@ -205,6 +209,38 @@ func _enter_lobby() -> void:
 	_entering = true
 	phase = Phase.ENTERING
 	login_screen.hide()
+	if not LoginGateway.user_id.is_empty():
+		loading_view.configure("마왕의 기록 확인 중", "계정의 프로필을 불러옵니다.")
+		loading_view.show()
+		var owner: String = LoginGateway.user_id
+		var profile_transport: Node = CloudStore if profile_cloud == null else profile_cloud
+		var result := await PROFILE.refresh(profile_transport)
+		if owner != LoginGateway.user_id:
+			_entering = false
+			phase = Phase.LOGIN
+			loading_view.hide()
+			login_screen.show()
+			return
+		if not bool(result.get("ok", false)):
+			_entering = false
+			phase = Phase.LOGIN
+			loading_view.hide()
+			login_screen.show()
+			guest_button.disabled = false
+			_show_auth_notice("프로필을 확인하지 못했습니다. 로그인 버튼으로 다시 시도해 주세요.")
+			return
+		if PROFILE.needs_prologue(result.profile):
+			phase = Phase.PROLOGUE
+			loading_view.hide()
+			prologue = PROLOGUE.new()
+			prologue.cloud = profile_transport
+			add_child(prologue)
+			prologue.finished.connect(func(): prologue.queue_free(); _transition_lobby())
+			return
+	_transition_lobby()
+
+func _transition_lobby() -> void:
+	phase = Phase.ENTERING
 	loading_view.configure("마왕의 성으로 이동 중", "로비 화면을 준비합니다.")
 	loading_view.set_progress(1.0)
 	loading_view.show()

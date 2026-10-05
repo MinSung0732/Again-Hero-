@@ -1,6 +1,8 @@
 extends RefCounted
 
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
+const PROFILE := preload("res://src/systems/player_profile.gd")
+const PROLOGUE := preload("res://src/ui/player_prologue.gd")
 const NOTICE_PATH := "user://notification_settings.cfg"
 const TABS := [["game", "게임"], ["sound", "소리"], ["notice", "알림"], ["account", "계정"], ["misc", "기타"]]
 const GAME_OPTIONS := [
@@ -15,6 +17,9 @@ var game_checks := {}
 var notice_checks := {}
 var account_identity: Label
 var cloud_status: Label
+var profile_label: Label
+var profile_portrait: TextureRect
+var profile_setup: Button
 var scroll: ScrollContainer
 var notice_path := NOTICE_PATH
 static var _switch_icons := {}
@@ -317,6 +322,26 @@ func _build_account() -> void:
 	page.move_child(account_identity, 3)
 	cloud_status = _label(page, "", 28, Color("d6bbf4"))
 	page.move_child(cloud_status, 4)
+	var profile_row := HBoxContainer.new()
+	profile_row.name = "DemonProfile"
+	profile_row.add_theme_constant_override("separation", 24)
+	page.add_child(profile_row)
+	page.move_child(profile_row, 5)
+	profile_portrait = TextureRect.new()
+	profile_portrait.custom_minimum_size = Vector2(180, 200)
+	profile_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	profile_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	profile_row.add_child(profile_portrait)
+	profile_label = _label(profile_row, "", 30)
+	profile_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	profile_setup = Button.new()
+	profile_setup.text = "마왕 프로필 설정"
+	profile_setup.custom_minimum_size.y = 88
+	profile_setup.add_theme_font_size_override("font_size", 30)
+	page.add_child(profile_setup)
+	page.move_child(profile_setup, 6)
+	SKIN.apply(profile_setup)
+	profile_setup.pressed.connect(_open_profile)
 	for name in ["KakaoLogin", "GoogleLogin", "CouponButton"]:
 		var button := page.get_node(name) as Button
 		button.custom_minimum_size.y = 104
@@ -324,6 +349,24 @@ func _build_account() -> void:
 		for state in ["normal", "hover", "pressed", "disabled"]:
 			button.add_theme_stylebox_override(state, _style(Color("28163e"), Color("b5964b")))
 	_info(page, "게스트 진행은 이 기기에만 저장됩니다.\n계정 변경 전에는 현재 진행도의 저장을 확인합니다.")
+	var withdrawal := Button.new()
+	withdrawal.name = "AccountWithdrawal"
+	withdrawal.text = "계정 탈퇴 · 준비 중"
+	withdrawal.disabled = true
+	withdrawal.tooltip_text = "아직 탈퇴 기능이 연결되지 않았습니다. 계정이나 저장 데이터는 삭제되지 않습니다."
+	withdrawal.custom_minimum_size.y = 88
+	withdrawal.add_theme_font_size_override("font_size", 28)
+	page.add_child(withdrawal)
+	SKIN.apply(withdrawal)
+
+func _open_profile() -> void:
+	var gateway := lobby.get_node("/root/LoginGateway")
+	if gateway.user_id.is_empty() or not String(PROFILE.get_profile().get("nickname", "")).is_empty() or profile_setup.disabled:
+		return
+	profile_setup.disabled = true
+	var view := PROLOGUE.new()
+	lobby.add_child(view)
+	view.finished.connect(func(): view.queue_free(); _sync_account())
 
 func _on_cloud_status(_message: String) -> void:
 	_sync_account()
@@ -333,6 +376,13 @@ func _sync_account() -> void:
 	var cloud := lobby.get_node("/root/CloudStore")
 	var mode := lobby.get_node("/root/LocalTestMode")
 	var guest: bool = gateway.user_id.is_empty()
+	var profile := PROFILE.get_profile()
+	var nickname := String(profile.get("nickname", ""))
+	profile_label.text = "내 마왕 프로필\n%s\n%s" % [PROFILE.display_name(), "여성" if profile.get("gender", "male") == "female" else "남성"] if not nickname.is_empty() else "내 마왕 프로필\n미설정"
+	profile_portrait.texture = load(PROFILE.portrait_path()) as Texture2D
+	profile_portrait.visible = not nickname.is_empty()
+	profile_setup.visible = nickname.is_empty() and not guest and not mode.active
+	profile_setup.disabled = cloud.busy or gateway.access_token.is_empty()
 	account_identity.text = "로컬 테스트 모드" if mode.active else gateway.get_account_display()
 	if mode.active or guest:
 		cloud_status.text = "클라우드 연결 안 됨 · 기기 저장"

@@ -1,5 +1,6 @@
 extends CanvasLayer
 class_name StageIntroCutscene
+const PLAYER_PROFILE := preload("res://src/systems/player_profile.gd")
 
 signal finished(skipped: bool)
 signal dialogue_event(event_id: String, payload: Dictionary)
@@ -115,7 +116,8 @@ func play_dialogue(dialogue: Dictionary) -> void:
 			"flip_h",
 			1.0 if bool(dialogue.get("hero_portrait_flip_h", false)) else 0.0
 		)
-	demon_name.text = "마왕"
+	demon_portrait.texture = _load_texture(PLAYER_PROFILE.portrait_path())
+	demon_name.text = PLAYER_PROFILE.display_name()
 	hero_name.text = _hero_display_name
 	demon_name.visible = true
 	hero_name.visible = true
@@ -148,7 +150,7 @@ func _apply_initial_responsive_layout() -> void:
 	# The name plates split the screen at 50%. Reassert the stage hero name
 	# after the responsive layout pass so no container/resize update can leave
 	# the right label stale or visually empty.
-	demon_name.text = "마왕"
+	demon_name.text = PLAYER_PROFILE.display_name()
 	hero_name.text = _hero_display_name
 	demon_name.visible = true
 	hero_name.visible = true
@@ -295,7 +297,7 @@ func _show_current_line() -> void:
 	_animate_dialogue_text()
 
 	if speaker == "demon":
-		dialogue_speaker.text = "마왕"
+		dialogue_speaker.text = PLAYER_PROFILE.display_name()
 		dialogue_speaker.add_theme_color_override(
 			"font_color",
 			DEMON_SPEAKER_COLOR

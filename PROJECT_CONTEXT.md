@@ -1,5 +1,13 @@
 # PROJECT_CONTEXT.md
 
+## First-Account Prologue / Canonical Demon Profile (2026-10-05)
+
+- Authenticated startup reads canonical player_profiles after cloud initialization; required/incomplete profiles enter the authored prologue before lobby. The additive migration seeds existing snapshot/legacy owners as optional/completed without changing gameplay. Future accounts stay required even if an empty snapshot was created just before the profile read. Guest/local test entry stays local and does not claim nicknames. Legacy users can voluntarily configure through Other→Account.
+- prologue_catalog.gd holds the exact dialogue/choice sequence; player_prologue.gd handles typewriter, mandatory gender/name gates, dark-to-lit ruined throne and existing portraits. Candidate nickname is editable/dice-randomized until Confirm. Registration is idempotent and immutable after confirmation; restart resumes final act. Complete+snapshot flush succeeds before lobby. Profile read/save failure is retryable and never silently bypasses onboarding.
+- player_profile.gd centralizes portrait paths, native speaker `마왕(닉네임)`, 1–6 precomposed Hangul/ASCII alphanumeric validation and config mirroring in stage_progress.cfg while preserving all other sections. Canonical identity is independent of game snapshot/coupon resets; cached values/Auth metadata are not authorization. Later stage dialogue and destination warmup select this profile's portrait; legacy fallback is male/마왕.
+- Supabase player_profiles has own-row read RLS/no direct client mutations and case-insensitive unique nickname index. Private authenticated-only definer helper uses empty search_path, row lock, auth.uid() and no target owner argument; public invoker RPCs expose read/register/complete. No deletion implementation. Account panel shows profile, optional setup and disabled withdrawal placeholder. SQL/security/QA details: docs/PLAYER_PROFILE_PROLOGUE.md.
+- Generated UI/prologue/ruined_throne.png and both existing portraits are retained before login; source prompt is adjacent SOURCE.md. No new character art or combat hot path work. Isolated actual Godot and rollback DB tests pass; real new social signup and Android keyboard/touch remain QA.
+
 ## Five-Page Lobby Settings (2026-10-05)
 
 - Other navigation now opens Settings with game/sound/notifications/account/misc pages in lobby_settings_view.gd. Existing audio and account controls/signals are retained and reparented, not rebound. Scrollable pages use frame-safe margins and native runtime labels; current sound content fits the viewport. The generated transparent amethyst slider thumb is passive, cache-first, and documented at assets/art/UI/settings_v2/README.md. Native switch icons share four cached textures.

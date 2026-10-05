@@ -31,6 +31,9 @@ func get_cropped(path: String) -> Texture2D:
 
 func prepare_common() -> bool:
 	var paths: Array[String] = []
+	for portrait_path in preload("res://src/systems/player_profile.gd").PORTRAITS.values():
+		paths.append(portrait_path)
+	paths.append("res://assets/art/UI/prologue/ruined_throne.png")
 	for index in range(1, 9):
 		paths.append("%s/loading_logo_%02d.png" % [LOADING_DIR, index])
 	return await _prepare(paths, true)
@@ -96,7 +99,7 @@ func prepare_scene(scene_path: String) -> bool:
 		paths.append(String(reveal.get("portrait_path", "")))
 		var dialogue := DIALOGUES.get_dialogue(stage_id)
 		paths.append(String(dialogue.get("hero_dialogue_portrait_path", dialogue.get("hero_portrait_path", ""))))
-		paths.append("res://assets/art/demonking/demonking_portrait_male.png")
+		paths.append(preload("res://src/systems/player_profile.gd").portrait_path())
 	# Drop the old destination only; references held by the current scene survive.
 	var retained: Dictionary = {}
 	for path in paths:
