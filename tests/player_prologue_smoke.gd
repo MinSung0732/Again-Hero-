@@ -164,6 +164,14 @@ func run() -> void:
 	check(lobby.settings_view.profile_label.text.contains("달빛마왕7") and lobby.settings_view.profile_label.text.contains("여성"), "account profile display")
 	await process_frame
 	await process_frame
+	var avatar_frame: Control = lobby.settings_view.profile_avatar_frame
+	check(avatar_frame.visible and avatar_frame.size.x == avatar_frame.size.y, "square themed avatar frame")
+	check(lobby.settings_view.profile_portrait.get_parent() == avatar_frame, "avatar image replaceable independently of frame")
+	check(avatar_frame.mouse_filter == Control.MOUSE_FILTER_IGNORE and lobby.settings_view.profile_portrait.mouse_filter == Control.MOUSE_FILTER_IGNORE, "avatar decoration does not consume scrolling input")
+	var saved_avatar: Texture2D = lobby.settings_view.profile_portrait.texture
+	lobby.settings_view.set_profile_avatar(load(PROFILE.PORTRAITS.male))
+	check(lobby.settings_view.profile_avatar_frame == avatar_frame and PROFILE.get_profile().gender == "female", "avatar presentation replacement preserves frame and dialogue gender")
+	lobby.settings_view.set_profile_avatar(saved_avatar)
 	var profile_row: Control = lobby.settings_view.profile_label.get_parent()
 	var card: Control = lobby.settings_view.profile_card
 	check(absf(profile_row.get_global_rect().get_center().x - card.get_global_rect().get_center().x) <= 1.0, "profile group centered in card")

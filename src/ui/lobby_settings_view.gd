@@ -19,6 +19,7 @@ var account_identity: Label
 var cloud_status: Label
 var profile_label: Label
 var profile_portrait: TextureRect
+var profile_avatar_frame: PanelContainer
 var profile_setup: Button
 var account_heading: MarginContainer
 var account_inset: MarginContainer
@@ -364,11 +365,20 @@ func _build_account() -> void:
 	profile_row.name = "DemonProfile"
 	profile_row.add_theme_constant_override("separation", 36)
 	profile_center.add_child(profile_row)
+	profile_avatar_frame = PanelContainer.new()
+	profile_avatar_frame.name = "ProfileAvatarFrame"
+	profile_avatar_frame.custom_minimum_size = Vector2(212, 212)
+	profile_avatar_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	profile_avatar_frame.add_theme_stylebox_override("panel", _style(Color("21102f"), Color("eac14d"), 3))
+	profile_row.add_child(profile_avatar_frame)
 	profile_portrait = TextureRect.new()
-	profile_portrait.custom_minimum_size = Vector2(180, 200)
+	profile_portrait.name = "ProfileAvatarImage"
+	profile_portrait.custom_minimum_size = Vector2(180, 180)
 	profile_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	profile_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	profile_row.add_child(profile_portrait)
+	profile_portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	profile_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	profile_avatar_frame.add_child(profile_portrait)
 	profile_label = _label(profile_row, "", 30)
 	profile_label.custom_minimum_size.x = 380
 	profile_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -410,6 +420,10 @@ func _open_profile() -> void:
 func _on_cloud_status(_message: String) -> void:
 	_sync_account()
 
+func set_profile_avatar(texture: Texture2D) -> void:
+	# Presentation hook for a future avatar picker; never changes dialogue gender.
+	profile_portrait.texture = texture
+
 func _sync_account() -> void:
 	var gateway := lobby.get_node("/root/LoginGateway")
 	var cloud := lobby.get_node("/root/CloudStore")
@@ -418,8 +432,9 @@ func _sync_account() -> void:
 	var profile := PROFILE.get_profile()
 	var nickname := String(profile.get("nickname", ""))
 	profile_label.text = "내 마왕 프로필\n%s\n%s" % [PROFILE.display_name(), "여성" if profile.get("gender", "male") == "female" else "남성"] if not nickname.is_empty() else "내 마왕 프로필\n미설정"
-	profile_portrait.texture = load(PROFILE.portrait_path()) as Texture2D
+	set_profile_avatar(load(PROFILE.portrait_path()) as Texture2D)
 	profile_portrait.visible = not nickname.is_empty()
+	profile_avatar_frame.visible = not nickname.is_empty()
 	profile_setup.visible = nickname.is_empty() and not guest and not mode.active
 	profile_setup.disabled = cloud.busy or gateway.access_token.is_empty()
 	account_identity.text = "로컬 테스트 모드" if mode.active else gateway.get_account_display()
