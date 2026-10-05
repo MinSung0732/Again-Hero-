@@ -11,6 +11,7 @@ const STAGE9_EFFECT_DIR := "res://assets/art/heroes/stage9_prist/frames/effect1"
 const STAGE9_PROJECTILE_FPS := 14.0
 const STAGE9_IMPACT_FPS := 18.0
 const POOL_KEY := "hero_basic_projectile"
+const VOLLEY := preload("res://src/hero/projectile_volley.gd")
 
 static var _stage1_frames_cache: SpriteFrames
 static var _stage9_frames_cache: SpriteFrames
@@ -28,6 +29,7 @@ var splash_damage_ratio: float = 0.0
 var has_impacted: bool = false
 var source_hero: Node
 var active: bool = true
+var volley: VOLLEY
 
 @onready var projectile_sprite: AnimatedSprite2D = $ProjectileSprite
 
@@ -47,7 +49,8 @@ func setup(
 	new_max_range: float,
 	new_source_hero_id: String = "",
 	new_splash_radius: float = 0.0,
-	new_splash_damage_ratio: float = 0.0
+	new_splash_damage_ratio: float = 0.0,
+	new_volley: VOLLEY = null
 ) -> void:
 	active = true
 	visible = true
@@ -56,6 +59,7 @@ func setup(
 		add_to_group("hero_projectiles")
 	traveled_distance = 0.0
 	has_impacted = false
+	volley = new_volley
 	source_hero = get_tree().get_first_node_in_group("hero")
 	direction = new_direction.normalized()
 	damage = new_damage
@@ -132,6 +136,8 @@ func _on_body_entered(body: Node) -> void:
 		return
 	if not (body.is_in_group("monsters") or body.is_in_group("treasure_chests")) or not body.has_method("take_damage"):
 		return
+	if volley != null and not volley.claim_target(body):
+		return # Keep flying so extra bullets can still find a different monster.
 
 	has_impacted = true
 	var dealt_damage := damage
@@ -203,6 +209,7 @@ func _finish_projectile() -> void:
 
 func deactivate_for_pool() -> void:
 	active = false
+	volley = null
 	traveled_distance = 0.0
 	has_impacted = false
 	direction = Vector2.RIGHT
@@ -232,6 +239,8 @@ func _apply_splash_damage(direct_target: Node) -> void:
 		if monster == null:
 			continue
 		if global_position.distance_squared_to(monster.global_position) > splash_radius * splash_radius:
+			continue
+		if volley != null and not volley.claim_target(monster):
 			continue
 
 		var dealt_damage := splash_damage

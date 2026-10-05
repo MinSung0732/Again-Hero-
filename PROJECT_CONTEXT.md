@@ -1,5 +1,11 @@
 # PROJECT_CONTEXT.md
 
+## Basic Projectile Fan Hit Policy (2026-10-05)
+
+- `projectile_power` adds crowd coverage, not same-target shotgun damage. Generic basic fans (rookie/purifier) and sage normal fans share one `projectile_volley.gd` RefCounted hit record per firing when count > 1. Each monster receives only its first damage event in that firing, including splash; a later direct hit does not top up an earlier splash hit. Duplicate bullets keep flying to other targets. A new attack owns a new record; there is no global target cooldown.
+- Single bullets, sage third-attack piercing, independent burst/skill projectiles and treasure-chest hits retain existing behavior. Pool setup replaces the record and release drops only its reference, never clears a sibling's record. No per-frame allocation or new scene-wide scan is introduced.
+- `tests/projectile_volley_smoke.gd` runs actual projectile callbacks and hero fan firing, covering five-bullet overlaps, different targets, new volleys, splash, purifier multiplier, chests, pool reuse and sage piercing. This isolated runtime fixture never loads or writes player progress; Android combat/touch QA remains separate.
+
 ## Normal Progress, Local Test Coupons and Clear Gold (2026-10-05)
 
 - Normal progression no longer globally unlocks stages or displays unlimited tester gold. Stage 1 starts playable; highest unlocked + 1 is dark/locked with previous-stage clear condition; + 2 is a black silhouette with hidden identity; further navigation is blocked. Clearing extends both unlock and preview horizon by one. Destination warmup includes both preview portraits.

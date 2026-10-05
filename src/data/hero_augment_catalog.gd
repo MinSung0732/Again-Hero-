@@ -43,7 +43,7 @@ const AUGMENTS = [
 	{
 		"id": "projectile_power",
 		"name": "탄환 강화",
-		"description": "기본 공격 투사체 +1, 부채꼴 확산 (최대 4중첩)",
+		"description": "기본 공격 투사체 +1, 부채꼴 확산 (최대 4중첩). 같은 발사에서 동일 몬스터는 1회만 피해",
 		"base_score": 8.0,
 		"max_stack": 4,
 		"tags": ["projectile", "area"],

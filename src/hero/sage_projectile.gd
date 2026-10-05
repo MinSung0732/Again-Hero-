@@ -13,6 +13,7 @@ const BASIC_FLY_FPS := 16.0
 const BASIC_IMPACT_FPS := 18.0
 const PIERCING_FLY_FPS := 15.0
 const PIERCING_EXPIRE_FPS := 15.0
+const VOLLEY := preload("res://src/hero/projectile_volley.gd")
 
 static var _basic_frames_cache: SpriteFrames
 static var _piercing_frames_cache: SpriteFrames
@@ -30,6 +31,7 @@ var expiring: bool = false
 var visual_diameter: float = 44.0
 var hit_ids: Dictionary = {}
 var caster: Node2D
+var volley: VOLLEY
 
 @onready var projectile_sprite: AnimatedSprite2D = $ProjectileSprite
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -53,7 +55,8 @@ func setup(
 	new_max_range: float,
 	new_mode: int,
 	new_diameter: float,
-	caster_node: Node2D
+	caster_node: Node2D,
+	new_volley: VOLLEY = null
 ) -> void:
 	active = true
 	expiring = false
@@ -69,6 +72,7 @@ func setup(
 	projectile_mode = clampi(new_mode, ProjectileMode.BASIC, ProjectileMode.PIERCING)
 	visual_diameter = maxf(new_diameter, 2.0)
 	caster = caster_node
+	volley = new_volley
 	traveled_distance = 0.0
 	hit_ids.clear()
 	rotation = direction.angle()
@@ -147,6 +151,8 @@ func _try_hit_target(body: Node) -> bool:
 	var instance_id := body.get_instance_id()
 	if hit_ids.has(instance_id):
 		return false
+	if volley != null and not volley.claim_target(body):
+		return false
 	hit_ids[instance_id] = true
 	var hit_position := (
 		(body as Node2D).global_position
@@ -206,6 +212,7 @@ func _finish_projectile() -> void:
 
 func deactivate_for_pool() -> void:
 	active = false
+	volley = null
 	expiring = false
 	traveled_distance = 0.0
 	hit_ids.clear()

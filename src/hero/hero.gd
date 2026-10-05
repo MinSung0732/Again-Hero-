@@ -11,6 +11,7 @@ signal conditional_skill_unlocked(skill_id: String, skill_name: String, payload:
 const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
 const PROJECTILE_SCENE := preload("res://src/hero/HeroProjectile.tscn")
+const PROJECTILE_VOLLEY := preload("res://src/hero/projectile_volley.gd")
 const GUNNER_PROJECTILE_SCENE := preload("res://src/hero/GunnerProjectile.tscn")
 const ARCHMAGE_PROJECTILE_SCENE := preload("res://src/hero/ArchmageProjectile.tscn")
 const ARCHMAGE_SKILL_PROJECTILE_SCENE := preload("res://src/hero/ArchmageSkillProjectile.tscn")
@@ -8761,6 +8762,7 @@ func _fire_projectile(current_target: Node2D) -> void:
 		_play_purifier_basic_audio()
 
 	var projectile_count := 1 + clampi(projectile_count_bonus, 0, 4)
+	var volley := PROJECTILE_VOLLEY.new() if projectile_count > 1 else null
 	var spread_step := deg_to_rad(12.0)
 	var center_index := float(projectile_count - 1) * 0.5
 	for index in range(projectile_count):
@@ -8781,7 +8783,8 @@ func _fire_projectile(current_target: Node2D) -> void:
 			attack_range,
 			hero_id,
 			projectile_splash_radius,
-			projectile_splash_damage_ratio
+			projectile_splash_damage_ratio,
+			volley
 		)
 
 	_add_ultimate_charge(
@@ -9874,6 +9877,7 @@ func _fire_sage_projectile(current_target: Node2D) -> void:
 		if is_piercing
 		else 1 + clampi(projectile_count_bonus, 0, 4)
 	)
+	var volley := PROJECTILE_VOLLEY.new() if projectile_count > 1 else null
 	var spread_step := deg_to_rad(12.0)
 	var center_index := float(projectile_count - 1) * 0.5
 	var pool_key := (
@@ -9905,7 +9909,8 @@ func _fire_sage_projectile(current_target: Node2D) -> void:
 			shot_range,
 			projectile_mode,
 			diameter,
-			self
+			self,
+			volley
 		)
 
 	if is_piercing:
