@@ -162,6 +162,13 @@ func run() -> void:
 	lobby._switch_tab("other")
 	lobby.settings_view.show_page("account")
 	check(lobby.settings_view.profile_label.text.contains("달빛마왕7") and lobby.settings_view.profile_label.text.contains("여성"), "account profile display")
+	await process_frame
+	await process_frame
+	var profile_row: Control = lobby.settings_view.profile_label.get_parent()
+	var card: Control = lobby.settings_view.profile_card
+	check(absf(profile_row.get_global_rect().get_center().x - card.get_global_rect().get_center().x) <= 1.0, "profile group centered in card")
+	check(lobby.settings_view.profile_portrait.global_position.x - card.global_position.x >= 40.0, "portrait has frame-safe left padding")
+	check(absf(lobby.settings_view.profile_label.get_global_rect().get_center().y - lobby.settings_view.profile_portrait.get_global_rect().get_center().y) <= 1.0, "portrait and profile text vertically centered")
 	var withdrawal: Button = lobby.settings_view.pages.account.get_node("AccountWithdrawal")
 	check(withdrawal.disabled and withdrawal.pressed.get_connections().is_empty(), "withdrawal presentation only, no deletion handler")
 	await shot("account")

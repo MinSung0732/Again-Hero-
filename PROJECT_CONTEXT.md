@@ -10,6 +10,8 @@
 
 ## Five-Page Lobby Settings (2026-10-05)
 
+- AccountHeading is a fixed sibling immediately above SettingsScroll, with explicit vertical padding; only account body scrolls, so the heading cannot be partially clipped by dragging. AccountPanel remains the original control/signals but is reparented into AccountContentInset with balanced horizontal margins. The demon profile is centered as a portrait/text group inside a padded card; no identity/save behavior changes.
+
 - Other navigation now opens Settings with game/sound/notifications/account/misc pages in lobby_settings_view.gd. Existing audio and account controls/signals are retained and reparented, not rebound. Scrollable pages use frame-safe margins and native runtime labels; current sound content fits the viewport. The generated transparent amethyst slider thumb is passive, cache-first, and documented at assets/art/UI/settings_v2/README.md. Native switch icons share four cached textures.
 - Gameplay preferences read/write the same device-level user://gameplay_settings.cfg section/keys as Main: camera_view_locked and battle_frame_enabled, both default true. Saves retain other sections/keys. Audio uses existing buses/levels/mute; config_path defaults to the existing audio_settings.cfg and permits isolated tests. These preferences are not account gameplay/cloud snapshot data.
 - Notification opt-ins persist locally in notification_settings.cfg: push_enabled/lunch_enabled/dinner_enabled all default false. Disabling the master opt-in disables schedule controls without erasing choices. This is app-level preference only: no OS permission claim, token registration, scheduling or push service is implemented; UI explicitly says delivery/OS integration is pending.

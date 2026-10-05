@@ -20,6 +20,9 @@ var cloud_status: Label
 var profile_label: Label
 var profile_portrait: TextureRect
 var profile_setup: Button
+var account_heading: MarginContainer
+var account_inset: MarginContainer
+var profile_card: PanelContainer
 var scroll: ScrollContainer
 var notice_path := NOTICE_PATH
 static var _switch_icons := {}
@@ -314,32 +317,68 @@ func _build_account() -> void:
 	var guide: Label = page.get_node("Guide")
 	guide.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	guide.add_theme_font_size_override("font_size", 26)
-	_header(page, "계정 및 저장", "◇")
-	var header_children: Array[Node] = page.get_children().slice(-3)
-	for i in range(header_children.size()):
-		page.move_child(header_children[i], i)
+	# Keep this title outside the clipped/scrolling body, including while dragging.
+	account_heading = MarginContainer.new()
+	account_heading.name = "AccountHeading"
+	for side in ["left", "right"]:
+		account_heading.add_theme_constant_override("margin_" + side, 24)
+	for side in ["top", "bottom"]:
+		account_heading.add_theme_constant_override("margin_" + side, 16)
+	scroll.get_parent().add_child(account_heading)
+	scroll.get_parent().move_child(account_heading, scroll.get_index())
+	var heading_row := HBoxContainer.new()
+	heading_row.custom_minimum_size.y = 60
+	heading_row.add_theme_constant_override("separation", 24)
+	account_heading.add_child(heading_row)
+	var heading_icon := _label(heading_row, "◇", 44, Color("eac14d"))
+	heading_icon.custom_minimum_size.x = 60
+	heading_icon.size_flags_horizontal = Control.SIZE_FILL
+	_label(heading_row, "계정 및 저장", 44, Color("f4d174"))
+	account_inset = MarginContainer.new()
+	account_inset.name = "AccountContentInset"
+	account_inset.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for side in ["left", "right"]:
+		account_inset.add_theme_constant_override("margin_" + side, 28)
+	account_inset.add_theme_constant_override("margin_top", 18)
+	account_inset.add_theme_constant_override("margin_bottom", 32)
+	page.get_parent().add_child(account_inset)
+	page.reparent(account_inset)
 	account_identity = _label(page, "", 34)
-	page.move_child(account_identity, 3)
+	page.move_child(account_identity, 0)
 	cloud_status = _label(page, "", 28, Color("d6bbf4"))
-	page.move_child(cloud_status, 4)
+	page.move_child(cloud_status, 1)
+	profile_card = PanelContainer.new()
+	profile_card.name = "DemonProfileCard"
+	profile_card.add_theme_stylebox_override("panel", _style(Color(0.07, 0.035, 0.12, 0.88), Color("705885")))
+	page.add_child(profile_card)
+	page.move_child(profile_card, 2)
+	var profile_padding := MarginContainer.new()
+	for side in ["left", "right"]:
+		profile_padding.add_theme_constant_override("margin_" + side, 24)
+	for side in ["top", "bottom"]:
+		profile_padding.add_theme_constant_override("margin_" + side, 16)
+	profile_card.add_child(profile_padding)
+	var profile_center := CenterContainer.new()
+	profile_padding.add_child(profile_center)
 	var profile_row := HBoxContainer.new()
 	profile_row.name = "DemonProfile"
-	profile_row.add_theme_constant_override("separation", 24)
-	page.add_child(profile_row)
-	page.move_child(profile_row, 5)
+	profile_row.add_theme_constant_override("separation", 36)
+	profile_center.add_child(profile_row)
 	profile_portrait = TextureRect.new()
 	profile_portrait.custom_minimum_size = Vector2(180, 200)
 	profile_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	profile_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	profile_row.add_child(profile_portrait)
 	profile_label = _label(profile_row, "", 30)
+	profile_label.custom_minimum_size.x = 380
 	profile_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	profile_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	profile_setup = Button.new()
 	profile_setup.text = "마왕 프로필 설정"
 	profile_setup.custom_minimum_size.y = 88
 	profile_setup.add_theme_font_size_override("font_size", 30)
 	page.add_child(profile_setup)
-	page.move_child(profile_setup, 6)
+	page.move_child(profile_setup, 3)
 	SKIN.apply(profile_setup)
 	profile_setup.pressed.connect(_open_profile)
 	for name in ["KakaoLogin", "GoogleLogin", "CouponButton"]:
@@ -405,6 +444,8 @@ func show_page(id: String) -> void:
 		return
 	var changing := selected != id
 	selected = id
+	account_heading.visible = id == "account"
+	account_inset.visible = id == "account"
 	for key in pages:
 		pages[key].visible = key == id
 		var button: Button = buttons[key]

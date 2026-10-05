@@ -88,6 +88,16 @@ func run() -> void:
 	view.notice_checks.push_enabled.button_pressed = true
 	check(not view.notice_checks.lunch_enabled.disabled, "master opt-in restores schedule control")
 	view.show_page("account")
+	await process_frame
+	await process_frame
+	var heading_y: float = view.account_heading.global_position.y
+	check(view.account_heading.get_parent() == view.scroll.get_parent(), "account title outside scroll clipping")
+	check(view.account_heading.get_global_rect().end.y <= view.scroll.global_position.y, "title has full-height safe space")
+	check(view.account_inset.get_theme_constant("margin_left") >= 28 and view.account_inset.get_theme_constant("margin_right") >= 28, "account body balanced inset")
+	view.scroll.scroll_vertical = 200
+	await process_frame
+	check(is_equal_approx(view.account_heading.global_position.y, heading_y), "dragging cannot clip account title")
+	view.scroll.scroll_vertical = 0
 	check(view.account_identity.text.begins_with("게스트") and view.cloud_status.text.contains("연결 안 됨"), "guest is not shown as cloud-linked")
 	check(lobby.other_account_panel.has_node("CouponButton") and not lobby.other_settings_panel.has_node("CouponButton"), "coupon moved to account")
 	lobby.other_account_panel.get_node("CouponButton").pressed.emit()
