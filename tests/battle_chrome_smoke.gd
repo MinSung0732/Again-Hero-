@@ -13,6 +13,11 @@ func run() -> void:
 	DirAccess.make_dir_recursive_absolute(folder)
 	SCOPE.guest_directory = folder
 	SCOPE.select_guest()
+	var stage_number := 1
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--stage="):
+			stage_number = clampi(argument.trim_prefix("--stage=").to_int(), 1, 10)
+	preload("res://src/systems/stage_progress.gd").set_current_stage("stage_%d" % stage_number)
 	await root.get_node("PresentationWarmup").prepare_scene("res://src/main/Main.tscn")
 	var main = load("res://src/main/Main.tscn").instantiate()
 	main.gameplay_settings_path = folder.path_join("options.cfg")
@@ -33,7 +38,7 @@ func run() -> void:
 	var chrome = main.hud_layer.get_node("CastleBattleChrome")
 	check(chrome.mouse_filter == Control.MOUSE_FILTER_IGNORE and not chrome.is_processing(), "decor is passive and static")
 	check(chrome.get_child_count() == 0, "no props/collision/input nodes in shell")
-	check(main.battle_viewport_container.position.y == 540, "play area below illustrated wall")
+	check(main.battle_viewport_container.position.y == 420, "expanded play area below raised wall")
 	check(chrome.surround != null, "generated surround present")
 	check(root.get_node("PresentationWarmup").get_texture("res://assets/art/UI/battle_castle_v3/flagstone_floor.png") != null, "new floor preloaded")
 	check(main.settings_battle_frame.toggled.is_connected(main._on_settings_battle_frame_toggled), "frame checkbox wired")
@@ -41,9 +46,31 @@ func run() -> void:
 	check(main.hero_info_bookmark.pressed.is_connected(main._toggle_hero_info), "hero information action retained")
 	check(main.stage_menu_button.pressed.is_connected(main._on_stage_menu_pressed), "menu action retained")
 	check(main.demon_ultimate_1.get_node("IllustratedBattlePanel").show_behind_parent, "art behind native skill text")
+	var field = main.battle.get_node("Stage1Battlefield")
+	var carpet: Image = field._texture("rug_torn_1").get_image()
+	check(carpet.get_pixel(0, 0).a == 0.0, "baked stone backing removed from carpet")
+	var opaque_red := false
+	for y in range(carpet.get_height()):
+		for x in range(carpet.get_width()):
+			var pixel := carpet.get_pixel(x, y)
+			if pixel.r > pixel.g * 1.5 and pixel.a == 1.0:
+				opaque_red = true
+	check(opaque_red, "red carpet remains opaque")
+	var previous_paths: Array[PackedVector2Array] = []
+	for stage in range(1, 11):
+		field.current_stage_number = stage
+		field._build_floor_damage_paths()
+		check(field.floor_damage_paths.size() >= previous_paths.size(), "damage grows across stages")
+		for path in previous_paths:
+			check(path in field.floor_damage_paths, "existing cracks remain at stable coordinates")
+		previous_paths = field.floor_damage_paths.duplicate()
+	field.current_stage_number = stage_number
+	field._build_floor_damage_paths()
+	field.queue_redraw()
 	if "--capture" in OS.get_cmdline_user_args() and DisplayServer.get_name() != "headless":
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("res://battle-chrome-preview.png")
+		root.get_texture().get_image().save_png("res://battle-castle-stage-%d.png" % stage_number)
 	main.settings_battle_frame.button_pressed = false
 	await process_frame
 	check(not chrome.visible and main.battle_viewport_container.offset_left == 0 and main.battle_viewport_container.position.y == 350, "off hides surround and restores wide viewport")
@@ -62,7 +89,7 @@ func run() -> void:
 		main._close_settings_overlay()
 	main.settings_battle_frame.button_pressed = true
 	await process_frame
-	check(chrome.visible and main.battle_viewport_container.offset_left == 140, "on restores framing")
+	check(chrome.visible and main.battle_viewport_container.offset_left == 120, "on restores framing")
 	# Exercise the existing screen-to-world path against the narrower viewport.
 	main._stage_intro_active = false
 	main.battle.set_external_pause(false)

@@ -3,8 +3,8 @@ extends Control
 # Static presentation shell using the shipped castle artwork. No collision,
 # camera tracking, per-frame animation, or gameplay input nodes.
 const ROOT := "res://assets/art/UI/battle_castle_v3/"
-const PLAY_TOP := 540.0
-const SIDE_INSET := 140.0
+const PLAY_TOP := 420.0
+const SIDE_INSET := 120.0
 var surround: Texture2D
 
 static func texture(main: Node, path: String) -> Texture2D:
@@ -40,7 +40,7 @@ static func rebuild(main: Node) -> void:
 	place(top.get_node("MonsterIcon"), Rect2(772, 256, 46, 46))
 	place(top.get_node("Monsters"), Rect2(824, 244, 218, 68), 34)
 	top.offset_bottom = 350
-	place(main.get_node("HUD/HeroSkillCooldownBar"), Rect2(150, 550, 470, 68))
+	place(main.get_node("HUD/HeroSkillCooldownBar"), Rect2(130, PLAY_TOP+10, 470, 68))
 	for index in range(2):
 		var button: Button = main.monster_info_bookmark if index == 0 else main.hero_info_bookmark
 		button.offset_left = -166
@@ -87,7 +87,7 @@ static func apply_visibility(main: Node, enabled: bool) -> void:
 	main.battle_viewport_container.offset_top = PLAY_TOP if enabled else 350.0
 	main.battle_viewport_container.offset_left = SIDE_INSET if enabled else 0.0
 	main.battle_viewport_container.offset_right = -SIDE_INSET if enabled else 0.0
-	place(main.get_node("HUD/HeroSkillCooldownBar"), Rect2(150 if enabled else 30, PLAY_TOP+10 if enabled else 360, 470, 68))
+	place(main.get_node("HUD/HeroSkillCooldownBar"), Rect2(130 if enabled else 30, PLAY_TOP+10 if enabled else 360, 470, 68))
 	main._sync_skill_unlock_cutscene_frame()
 
 static func place(control: Control, rect: Rect2, font_size: int = 0) -> void:
@@ -103,7 +103,11 @@ func _draw() -> void:
 	if surround == null:
 		return
 	# Split architectural bands, never squash a full pillar into a thin repeat.
-	draw_texture_rect_region(surround, Rect2(0, 0, width, PLAY_TOP), Rect2(0, 0, 1024, 550))
+	# Fill alpha gaps behind the battlements/HUD with the same opaque masonry.
+	draw_texture_rect_region(surround, Rect2(0, 0, width, PLAY_TOP), Rect2(198, 105, 140, 70))
+	# Crop away the transparent skyline, moving the castle upward rather than
+	# leaving empty sky above the live header or squeezing its full elevation.
+	draw_texture_rect_region(surround, Rect2(0, 0, width, PLAY_TOP), Rect2(0, 130, 1024, 420))
 	var rail_height := maxf(bottom - PLAY_TOP, 1.0)
 	draw_texture_rect_region(surround, Rect2(0, PLAY_TOP, SIDE_INSET, rail_height), Rect2(0, 550, 196, 920))
 	draw_texture_rect_region(surround, Rect2(width-SIDE_INSET, PLAY_TOP, SIDE_INSET, rail_height), Rect2(828, 550, 196, 920))

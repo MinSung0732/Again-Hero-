@@ -84,6 +84,8 @@ var textures: Dictionary = {}
 var background_decor_layer: Node2D
 var collision_layer_root: Node2D
 var depth_prop_roots: Array[Node2D] = []
+var floor_damage_paths: Array[PackedVector2Array] = []
+const PROP_TINT := Color(0.68, 0.60, 0.79, 1.0)
 
 
 func _ready() -> void:
@@ -131,6 +133,7 @@ func configure(stage_id: String, map_size: Vector2) -> void:
 		maxf(map_size.y, 800.0)
 	)
 	_ensure_textures()
+	_build_floor_damage_paths()
 	_build_castle_decor()
 	queue_redraw()
 
@@ -184,6 +187,26 @@ func _ensure_textures() -> void:
 		var resource = load(path)
 		if resource is Texture2D:
 			textures[String(key)] = resource
+	# Original carpet tiles include a grey stone backing. Strip that backing
+	# once during covered scene preparation, not during drawing/combat, so
+	# torn holes reveal the actual floor rather than a mismatched square tile.
+	for key in ["rug_long", "rug_torn_1", "rug_torn_2", "rug_torn_3", "rug_torn_4"]:
+		var carpet := _texture(key)
+		if carpet == null:
+			continue
+		var image := carpet.get_image()
+		if image == null or image.is_empty():
+			continue
+		image.convert(Image.FORMAT_RGBA8)
+		for y in range(image.get_height()):
+			for x in range(image.get_width()):
+				var pixel := image.get_pixel(x, y)
+				if pixel.a == 0.0 or pixel.s < 0.18 or pixel.r <= pixel.b * 1.15 or pixel.r < pixel.g * 0.95:
+					pixel.a = 0.0
+				else:
+					pixel.a = 1.0
+				image.set_pixel(x, y, pixel)
+		textures[key] = ImageTexture.create_from_image(image)
 
 
 func _texture(key: String) -> Texture2D:
@@ -219,14 +242,18 @@ func _draw_floor() -> void:
 		for y in range(ceili(battlefield_size.y / step.y)):
 			for x in range(ceili(battlefield_size.x / step.x)):
 				draw_texture_rect(illustrated, Rect2(Vector2(x,y)*step, step), false, Color(0.60,0.54,0.72,1))
+		# Keep one coherent stone surface. Only cracks are layered, never the
+		# old four-square tile's backing/mortar grid over the new large slabs.
+		for path in floor_damage_paths:
+			draw_polyline(path, Color("100d19"), 5.0)
+			draw_polyline(path, Color("31243c"), 2.0)
+		return
 
 	var columns := ceili(battlefield_size.x / FLOOR_STEP.x)
 	var rows := ceili(battlefield_size.y / FLOOR_STEP.y)
 	for row in range(rows):
 		for column in range(columns):
 			var cell_texture := _floor_texture_for_cell(column, row)
-			if illustrated != null and cell_texture == floor_texture:
-				continue
 			if cell_texture == null:
 				cell_texture = floor_texture
 			draw_texture_rect(
@@ -241,6 +268,28 @@ func _draw_floor() -> void:
 				false,
 				Color(0.65, 0.59, 0.77, 1.0)
 			)
+
+func _build_floor_damage_paths() -> void:
+	floor_damage_paths.clear()
+	var destruction := _destruction_level()
+	if destruction <= 0 or _texture("illustrated_floor") == null:
+		return
+	for row in range(ceili(battlefield_size.y / FLOOR_STEP.y)):
+		for column in range(ceili(battlefield_size.x / FLOOR_STEP.x)):
+			if _stable_roll(column, row, 3) >= mini(27, destruction * 3):
+				continue
+			var origin := Vector2(column, row) * FLOOR_STEP
+			var points := PackedVector2Array()
+			for index in range(7):
+				var x := 0.12 + index * 0.125
+				var y := 0.18 + index * 0.08 + float(_stable_roll(column, row, 80+index) % 21) / 100.0
+				points.append((origin + Vector2(x,y) * FLOOR_STEP).round())
+			floor_damage_paths.append(points)
+			# Branches unlock in place, preserving accumulated rather than shuffled damage.
+			for branch in range(1 + mini(3, destruction / 3)):
+				var start := points[2 + branch]
+				var direction := -1.0 if branch % 2 == 0 else 1.0
+				floor_damage_paths.append(PackedVector2Array([start, start+Vector2(12,14*direction), start+Vector2(28,23*direction), start+Vector2(33,38*direction)]))
 
 
 func _carpet_texture_for_segment(segment_index: int) -> Texture2D:
@@ -285,7 +334,7 @@ func _draw_royal_carpet() -> void:
 				FLOOR_DRAW_SIZE
 			),
 			false,
-			Color(0.48, 0.30, 0.65, 0.22) if _texture("illustrated_floor") != null else Color.WHITE
+			Color.WHITE
 		)
 		y += CARPET_STEP_Y
 		segment_index += 1
@@ -311,6 +360,7 @@ func _add_background_visual(
 	sprite.flip_h = flip_h
 	sprite.z_index = z_offset
 	sprite.rotation = rotation_radians
+	sprite.modulate = PROP_TINT
 	background_decor_layer.add_child(sprite)
 	return sprite
 
@@ -341,6 +391,7 @@ func _add_depth_prop_visual(
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.scale = Vector2(scale_factor, scale_factor)
 	sprite.flip_h = flip_h
+	sprite.modulate = PROP_TINT
 	sprite.position = Vector2(
 		0.0,
 		-float(texture.get_height()) * scale_factor * 0.5
