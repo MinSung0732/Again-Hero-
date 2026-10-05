@@ -167,7 +167,9 @@ func _select_gender(value: String) -> void:
 	_show_line()
 
 func _reveal_portrait() -> void:
-	portrait.texture = FEMALE if gender == "female" else MALE
+	# Before registration the explicit gender choice owns the reveal. On resume
+	# the saved cosmetic owns it, just like every later dialogue.
+	portrait.texture = load(PROFILE.portrait_path()) if not nickname.is_empty() else (FEMALE if gender == "female" else MALE)
 	portrait.show()
 	portrait.modulate.a = 0
 	create_tween().tween_property(portrait, "modulate:a", 1.0, 0.8)

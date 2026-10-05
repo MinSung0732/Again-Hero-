@@ -55,7 +55,7 @@ func prepare_scene(scene_path: String) -> bool:
 		dirs.assign(["lobby_header", "lobby_footer", "lobby_stage", "main_modes", "shop", "01_large_left_panel", "03_middle_right_panel"])
 		paths.append("res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png")
 		paths.append("res://assets/art/UI/settings_v2/amethyst_thumb.png")
-		paths.append(preload("res://src/systems/player_profile.gd").portrait_path())
+		paths.append_array(preload("res://src/systems/player_profile.gd").appearance_resource_paths())
 		paths.append("res://assets/art/effects/gatcha/summoning_chamber.png")
 		paths.append("res://assets/art/effects/gatcha/gacha_button_texture.tres")
 		paths.append("res://assets/art/effects/gatcha/gacha_panel_frame.png")
@@ -100,7 +100,7 @@ func prepare_scene(scene_path: String) -> bool:
 		paths.append(String(reveal.get("portrait_path", "")))
 		var dialogue := DIALOGUES.get_dialogue(stage_id)
 		paths.append(String(dialogue.get("hero_dialogue_portrait_path", dialogue.get("hero_portrait_path", ""))))
-		paths.append(preload("res://src/systems/player_profile.gd").portrait_path())
+		paths.append_array(preload("res://src/systems/player_profile.gd").appearance_resource_paths())
 	# Drop the old destination only; references held by the current scene survive.
 	var retained: Dictionary = {}
 	for path in paths:

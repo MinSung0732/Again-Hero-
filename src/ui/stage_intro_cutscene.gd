@@ -297,6 +297,10 @@ func _show_current_line() -> void:
 	_animate_dialogue_text()
 
 	if speaker == "demon":
+		# Expressions are optional catalog variants; absent art uses neutral.
+		var appearance_texture := _load_texture(PLAYER_PROFILE.portrait_path("dialogue", String(entry.get("demon_expression", "neutral"))))
+		if appearance_texture != null:
+			demon_portrait.texture = appearance_texture
 		dialogue_speaker.text = PLAYER_PROFILE.display_name()
 		dialogue_speaker.add_theme_color_override(
 			"font_color",

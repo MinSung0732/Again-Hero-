@@ -23,6 +23,7 @@ func run() -> void:
 	var gateway := root.get_node("LoginGateway")
 	gateway.remember_session_enabled = false
 	root.get_node("LocalTestMode").active = false
+	root.get_node("LocalTestMode").tutorial_preview = false
 	var folder := "user://settings_test_" + Crypto.new().generate_random_bytes(16).hex_encode()
 	DirAccess.make_dir_recursive_absolute(folder)
 	SCOPE.guest_directory = folder

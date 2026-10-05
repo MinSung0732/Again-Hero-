@@ -2,6 +2,8 @@ extends RefCounted
 
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const PATH := "user://stage_progress.cfg"
+const APPEARANCE := preload("res://src/systems/demon_appearance_store.gd")
+const APPEARANCE_CATALOG := preload("res://src/data/demon_appearance_catalog.gd")
 const PORTRAITS := {
 	"male": "res://assets/art/demonking/demonking_portrait_male.png",
 	"female": "res://assets/art/demonking/demonking_portrait_female.png",
@@ -30,8 +32,21 @@ static func display_name() -> String:
 	var nickname := String(get_profile().get("nickname", ""))
 	return "마왕(%s)" % nickname if valid_name(nickname) else "마왕"
 
-static func portrait_path() -> String:
+static func appearance_id() -> String:
+	return APPEARANCE.equipped_id(String(get_profile().get("gender", "male")))
+
+static func portrait_path(purpose: String = "dialogue", expression: String = "neutral") -> String:
+	var selected := APPEARANCE_CATALOG.path(appearance_id(), purpose, expression)
+	if not selected.is_empty():
+		return selected
 	return PORTRAITS.get(String(get_profile().get("gender", "male")), PORTRAITS.male)
+
+static func appearance_resource_paths() -> Array[String]:
+	var paths := APPEARANCE_CATALOG.resource_paths(appearance_id())
+	var fallback: String = PORTRAITS.get(String(get_profile().get("gender", "male")), PORTRAITS.male)
+	if fallback not in paths:
+		paths.append(fallback)
+	return paths
 
 static func needs_prologue(profile: Dictionary) -> bool:
 	return bool(profile.get("required", false)) and not bool(profile.get("completed", false))
