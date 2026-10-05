@@ -1,5 +1,12 @@
 # PROJECT_CONTEXT.md
 
+## Hero Introduction Presentation V2 (2026-10-05)
+
+- The introduction uses an AI-generated opaque castle chamber at assets/art/UI/hero_reveal_v2/reveal_chamber.png, with provenance in the adjacent README. Existing hero portraits are unchanged. Dedicated architecture replaces stacked generic panel skins; names remain native text without a rectangular backing.
+- hero_reveal_magic.gdshader draws a restrained violet ring/sigil and eight sparks at screen resolution. Thirty timing segments are interpolated at display refresh rate; no talk_light_only_30_frames PNG swapping or blur shader remains in this path. Portrait silhouette and residual magic fade share the reveal timing.
+- PresentationWarmup caches the destination background; warm_render_resources renders the actual magic/silhouette shaders beneath SceneTransition. Removed obsolete 30 PNG common loads. The short preparation bar is cinematic pacing, not a network/download claim. Existing stinger, identity rules, BGM-before-finished ordering and battle pause remain.
+- tests/hero_reveal_presentation_smoke.gd uses isolated saves and covers Stage 1/10 full sequence, duplicate starts, identity, no additional destination cache loads, and real-render captures. Android device quality/performance still needs QA.
+
 ## Defeat Gold and Demon Choice Confirmation (2026-10-05)
 
 - Victory and defeat both grant floor(actual combat research reward × RUN_REWARD_RULES.combat_gold_ratio), currently 0.60, atomically with research through StageProgress. Victory still uses the existing stage multiplier; defeat does not. First-clear bonuses and shard conversion never enter this calculation. Result presentation calls it combat gold and never grants rewards itself.

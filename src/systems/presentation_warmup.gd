@@ -12,7 +12,6 @@ const REVEAL := preload("res://src/data/hero_reveal_catalog.gd")
 const HEROES := preload("res://src/data/hero_profiles.gd")
 const SHOP := preload("res://src/data/shop_catalog.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
-const COMMON_EFFECT_DIR := "res://assets/art/UI/talk_light_only_30_frames"
 const LOADING_DIR := "res://assets/art/UI/loading/loadingframes"
 
 var _common: Dictionary = {}
@@ -32,8 +31,6 @@ func get_cropped(path: String) -> Texture2D:
 
 func prepare_common() -> bool:
 	var paths: Array[String] = []
-	for index in range(1, 31):
-		paths.append("%s/effect_%02d.png" % [COMMON_EFFECT_DIR, index])
 	for index in range(1, 9):
 		paths.append("%s/loading_logo_%02d.png" % [LOADING_DIR, index])
 	return await _prepare(paths, true)
@@ -65,9 +62,9 @@ func prepare_scene(scene_path: String) -> bool:
 		for monster_id in MONSTERS.ORDER:
 			paths.append(String(MONSTERS.get_monster(monster_id).get("card_icon_path", "")))
 	elif scene_path == "res://src/main/Main.tscn":
+		paths.append("res://assets/art/UI/hero_reveal_v2/reveal_chamber.png")
 		# Shared height reference used by every hero profile during _ready().
 		paths.append("res://assets/art/heroes/stage1_mage/stage1_mage_spritesheet.png")
-		paths.append("res://assets/art/UI/diagonal_battle_30_frames/effect_30.png")
 		dirs.assign(["ui_gagebar_frames", "01_large_left_panel", "02_top_right_panel", "03_middle_right_panel", "05_right_bars", "battle_castle_v3"])
 	else:
 		return true

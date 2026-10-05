@@ -557,7 +557,8 @@ func _apply_battle_pixel_asset_frames() -> void:
 	# Keep existing split-art outer frames; theme the remaining plain inner boxes.
 	PIXEL_PANEL_SKIN.apply_tree(hud_layer)
 	PIXEL_PANEL_SKIN.apply_tree(stage_intro_cutscene)
-	PIXEL_PANEL_SKIN.apply_tree(hero_reveal_cutscene)
+	# Hero reveal has dedicated illustrated architecture; do not stack the
+	# generic modal frame over its clean title/loading presentation.
 	PIXEL_PANEL_SKIN.apply_tree(skill_unlock_cutscene)
 	preload("res://src/ui/castle_battle_chrome.gd").rebuild(self)
 

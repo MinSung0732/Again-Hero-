@@ -1,8 +1,9 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://src/ui/hero_reveal_cutscene.gd" id="1_script"]
 [ext_resource type="Theme" path="res://src/ui/game_theme.tres" id="2_theme"]
-[ext_resource type="Texture2D" path="res://assets/art/UI/diagonal_battle_30_frames/effect_30.png" id="3_static_bg"]
+[ext_resource type="Texture2D" path="res://assets/art/UI/hero_reveal_v2/reveal_chamber.png" id="3_static_bg"]
+[ext_resource type="Shader" path="res://src/ui/hero_reveal_magic.gdshader" id="4_magic"]
 
 [sub_resource type="Shader" id="Shader_silhouette"]
 code = "shader_type canvas_item;\nuniform float silhouette_strength : hint_range(0.0, 1.0) = 1.0;\n\nvoid fragment() {\n\tvec4 base = texture(TEXTURE, UV) * COLOR;\n\tvec3 shadow = vec3(0.008, 0.006, 0.018);\n\tbase.rgb = mix(base.rgb, shadow, silhouette_strength);\n\tCOLOR = base;\n}\n"
@@ -11,39 +12,19 @@ code = "shader_type canvas_item;\nuniform float silhouette_strength : hint_range
 shader = SubResource("Shader_silhouette")
 shader_parameter/silhouette_strength = 1.0
 
-[sub_resource type="Shader" id="Shader_light_add"]
-code = "shader_type canvas_item;\nrender_mode blend_add;\n\nuniform float blur_radius : hint_range(0.5, 3.0) = 1.35;\nuniform float blur_mix : hint_range(0.0, 1.0) = 0.48;\nuniform float glow_strength : hint_range(0.0, 2.5) = 0.72;\nuniform float glow_threshold : hint_range(0.0, 1.0) = 0.16;\nuniform float glow_softness : hint_range(0.01, 0.5) = 0.20;\nuniform float alpha_boost : hint_range(0.5, 1.5) = 0.96;\n\nfloat luma(vec3 color) {\n\treturn dot(color, vec3(0.299, 0.587, 0.114));\n}\n\nvoid fragment() {\n\tvec2 px = TEXTURE_PIXEL_SIZE * blur_radius;\n\tvec4 center = texture(TEXTURE, UV);\n\tvec4 blur = center * 0.24;\n\tblur += texture(TEXTURE, UV + vec2(px.x, 0.0)) * 0.11;\n\tblur += texture(TEXTURE, UV - vec2(px.x, 0.0)) * 0.11;\n\tblur += texture(TEXTURE, UV + vec2(0.0, px.y)) * 0.11;\n\tblur += texture(TEXTURE, UV - vec2(0.0, px.y)) * 0.11;\n\tblur += texture(TEXTURE, UV + px) * 0.08;\n\tblur += texture(TEXTURE, UV - px) * 0.08;\n\tblur += texture(TEXTURE, UV + vec2(px.x, -px.y)) * 0.08;\n\tblur += texture(TEXTURE, UV + vec2(-px.x, px.y)) * 0.08;\n\n\tvec4 softened = mix(center, blur, blur_mix);\n\tfloat brightness = luma(blur.rgb);\n\tfloat glow_mask = smoothstep(\n\t\tglow_threshold,\n\t\tglow_threshold + glow_softness,\n\t\tbrightness\n\t);\n\tvec3 glow = blur.rgb * glow_mask * glow_strength;\n\tvec3 final_rgb = softened.rgb + glow;\n\tfloat final_alpha = clamp(\n\t\tmax(softened.a, blur.a * 0.82) * alpha_boost,\n\t\t0.0,\n\t\t1.0\n\t);\n\tCOLOR = vec4(final_rgb, final_alpha) * COLOR;\n}\n"
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_light_add"]
-shader = SubResource("Shader_light_add")
-shader_parameter/blur_radius = 1.35
-shader_parameter/blur_mix = 0.48
-shader_parameter/glow_strength = 0.72
-shader_parameter/glow_threshold = 0.16
-shader_parameter/glow_softness = 0.2
-shader_parameter/alpha_boost = 0.96
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_magic"]
+shader = ExtResource("4_magic")
+shader_parameter/phase = 0.0
+shader_parameter/fade = 1.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_title"]
-bg_color = Color(0.015, 0.018, 0.038, 0.80)
-border_width_top = 2
-border_width_bottom = 2
-border_color = Color(0.72, 0.54, 0.26, 0.86)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
+bg_color = Color(0.015, 0.012, 0.03, 0.0)
 
-[sub_resource type="StyleBoxFlat" id="StyleBox_loading"]
-bg_color = Color(0.012, 0.014, 0.028, 0.76)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.32, 0.38, 0.56, 0.42)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
+[sub_resource type="StyleBoxFlat" id="StyleBox_track"]
+bg_color = Color(0.11, 0.07, 0.19, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_fill"]
+bg_color = Color(0.67, 0.35, 0.94, 1)
 
 [node name="HeroRevealCutscene" type="CanvasLayer"]
 layer = 105
@@ -80,7 +61,7 @@ mouse_filter = 2
 texture = ExtResource("3_static_bg")
 expand_mode = 1
 stretch_mode = 6
-texture_filter = 2
+texture_filter = 1
 
 [node name="StaticDim" type="ColorRect" parent="Root"]
 z_index = 1
@@ -91,9 +72,24 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.01, 0.008, 0.016, 0.28)
+color = Color(0.01, 0.008, 0.016, 0.08)
 
-[node name="EffectFrame" type="TextureRect" parent="Root"]
+[node name="Header" type="Label" parent="Root"]
+z_index = 9
+offset_left = 160.0
+offset_top = 142.0
+offset_right = 920.0
+offset_bottom = 198.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.84, 0.73, 0.51, 1)
+theme_override_colors/font_outline_color = Color(0.025, 0.018, 0.05, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 28
+text = "침입자 발견"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EffectFrame" type="ColorRect" parent="Root"]
 z_index = 2
 layout_mode = 1
 anchors_preset = 15
@@ -102,20 +98,16 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-material = SubResource("ShaderMaterial_light_add")
-modulate = Color(1, 1, 1, 0.94)
-expand_mode = 1
-stretch_mode = 6
-texture_filter = 2
+material = SubResource("ShaderMaterial_magic")
 
 [node name="HeroPortrait" type="TextureRect" parent="Root"]
 z_index = 5
 layout_mode = 0
-offset_left = 170.0
-offset_top = 200.0
-offset_right = 910.0
-offset_bottom = 1270.0
-pivot_offset = Vector2(370, 535)
+offset_left = 190.0
+offset_top = 240.0
+offset_right = 890.0
+offset_bottom = 1230.0
+pivot_offset = Vector2(350, 495)
 mouse_filter = 2
 material = SubResource("ShaderMaterial_silhouette")
 expand_mode = 1
@@ -126,10 +118,10 @@ texture_filter = 1
 visible = false
 z_index = 8
 layout_mode = 0
-offset_left = 104.0
-offset_top = 1280.0
-offset_right = 976.0
-offset_bottom = 1516.0
+offset_left = 150.0
+offset_top = 1252.0
+offset_right = 930.0
+offset_bottom = 1488.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBox_title")
 
@@ -137,9 +129,10 @@ theme_override_styles/panel = SubResource("StyleBox_title")
 z_index = 9
 layout_mode = 0
 offset_left = 130.0
-offset_top = 1310.0
+offset_top = 1280.0
 offset_right = 950.0
-offset_bottom = 1400.0
+offset_bottom = 1366.0
+mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.82, 0.42, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.96)
 theme_override_constants/outline_size = 6
@@ -152,9 +145,10 @@ vertical_alignment = 1
 z_index = 9
 layout_mode = 0
 offset_left = 130.0
-offset_top = 1408.0
+offset_top = 1378.0
 offset_right = 950.0
-offset_bottom = 1486.0
+offset_bottom = 1438.0
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.72, 0.76, 0.88, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.96)
 theme_override_constants/outline_size = 5
@@ -163,42 +157,39 @@ text = "진명 : ???"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="LoadingPanel" type="Panel" parent="Root"]
-visible = false
-z_index = 10
-layout_mode = 0
-offset_left = 272.0
-offset_top = 1540.0
-offset_right = 808.0
-offset_bottom = 1880.0
+[node name="NameDivider" type="ColorRect" parent="Root"]
+z_index = 9
+offset_left = 300.0
+offset_top = 1460.0
+offset_right = 780.0
+offset_bottom = 1462.0
 mouse_filter = 2
-modulate = Color(1, 1, 1, 0)
-theme_override_styles/panel = SubResource("StyleBox_loading")
+color = Color(0.61, 0.43, 0.23, 0.65)
 
-[node name="LoadingLogo" type="TextureRect" parent="Root"]
-z_index = 11
+[node name="LoadingProgress" type="ProgressBar" parent="Root"]
 visible = false
-layout_mode = 0
-offset_left = 420.0
-offset_top = 1515.0
-offset_right = 660.0
-offset_bottom = 1755.0
+z_index = 11
+offset_left = 260.0
+offset_top = 1732.0
+offset_right = 820.0
+offset_bottom = 1740.0
 mouse_filter = 2
-expand_mode = 1
-stretch_mode = 5
-texture_filter = 1
+theme_override_styles/background = SubResource("StyleBox_track")
+theme_override_styles/fill = SubResource("StyleBox_fill")
+show_percentage = false
 
 [node name="LoadingText" type="Label" parent="Root"]
 z_index = 11
 visible = false
 layout_mode = 0
 offset_left = 260.0
-offset_top = 1768.0
+offset_top = 1660.0
 offset_right = 820.0
-offset_bottom = 1816.0
+offset_bottom = 1710.0
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.70, 0.76, 0.90, 0.9)
-theme_override_font_sizes/font_size = 23
-text = "침입 기록 동기화 중..."
+theme_override_font_sizes/font_size = 26
+text = "전투 준비 중..."
 horizontal_alignment = 1
 vertical_alignment = 1
 

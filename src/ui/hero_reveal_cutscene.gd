@@ -4,8 +4,6 @@ class_name HeroRevealCutscene
 signal bgm_start_requested(stage_id: String)
 signal finished
 
-const EFFECT_DIR := "res://assets/art/UI/talk_light_only_30_frames"
-const LOADING_DIR := "res://assets/art/UI/loading/loadingframes"
 const EFFECT_FRAME_COUNT := 30
 const LOADING_FRAME_COUNT := 8
 const EFFECT_FRAME_SECONDS := 0.038
@@ -23,29 +21,46 @@ const STINGER_PARTS := [
 ]
 
 @onready var root: Control = $Root
-@onready var effect_frame: TextureRect = $Root/EffectFrame
+@onready var effect_frame: ColorRect = $Root/EffectFrame
 @onready var hero_portrait: TextureRect = $Root/HeroPortrait
 @onready var title_panel: Panel = $Root/TitlePanel
 @onready var title_label: Label = $Root/Title
+@onready var header_label: Label = $Root/Header
 @onready var true_name_label: Label = $Root/TrueName
-@onready var loading_panel: Panel = $Root/LoadingPanel
-@onready var loading_logo: TextureRect = $Root/LoadingLogo
+@onready var loading_progress: ProgressBar = $Root/LoadingProgress
+@onready var name_divider: ColorRect = $Root/NameDivider
 @onready var loading_text: Label = $Root/LoadingText
 @onready var reveal_stinger: AudioStreamPlayer = $RevealStinger
 
-static var _effect_frames: Array[Texture2D] = []
-static var _loading_frames: Array[Texture2D] = []
 static var _stinger_stream: AudioStreamOggVorbis
 
 var _active: bool = false
 var _stage_id: String = ""
 var _portrait_material: ShaderMaterial
+var _magic_material: ShaderMaterial
+var _reveal_tween: Tween
 
 
 func _ready() -> void:
 	visible = false
 	_portrait_material = hero_portrait.material as ShaderMaterial
+	_magic_material = effect_frame.material as ShaderMaterial
+	root.resized.connect(_sync_magic_size)
+	_sync_magic_size()
 	reveal_stinger.stream = _load_reveal_stinger()
+
+
+func _sync_magic_size() -> void:
+	if _magic_material != null:
+		_magic_material.set_shader_parameter("viewport_size", root.size)
+
+
+func _set_magic_phase(phase: float) -> void:
+	if _magic_material != null:
+		_magic_material.set_shader_parameter("phase", phase)
+	if _portrait_material != null:
+		var reveal := smoothstep(0.55, 1.0, phase)
+		_portrait_material.set_shader_parameter("silhouette_strength", 1.0 - reveal * 0.82)
 
 
 func play_reveal(data: Dictionary) -> void:
@@ -53,6 +68,7 @@ func play_reveal(data: Dictionary) -> void:
 		return
 
 	_stage_id = String(data.get("stage_id", ""))
+	header_label.text = "STAGE %02d · 침입자 발견" % maxi(_stage_id.trim_prefix("stage_").to_int(), 1)
 	title_label.text = String(data.get("title", "용사"))
 	var unlocked := bool(data.get("true_name_unlocked", false))
 	var true_name := String(data.get("true_name", ""))
@@ -67,23 +83,20 @@ func play_reveal(data: Dictionary) -> void:
 		finished.emit()
 		return
 
-	_ensure_frame_cache()
 	_active = true
 	visible = true
 	root.modulate = Color.WHITE
-	effect_frame.texture = (
-		_effect_frames[0]
-		if not _effect_frames.is_empty()
-		else null
-	)
+	_set_magic_phase(0.0)
+	_magic_material.set_shader_parameter("fade", 1.0)
 	effect_frame.visible = true
 	hero_portrait.visible = true
 	hero_portrait.scale = Vector2(0.84, 0.84)
 	title_panel.visible = false
 	title_label.modulate.a = 0.0
 	true_name_label.modulate.a = 0.0
-	loading_panel.visible = false
-	loading_logo.visible = false
+	loading_progress.visible = false
+	loading_progress.value = 0.0
+	name_divider.visible = false
 	loading_text.visible = false
 	if _portrait_material != null:
 		_portrait_material.set_shader_parameter("silhouette_strength", 1.0)
@@ -95,11 +108,17 @@ func _run_sequence() -> void:
 	if reveal_stinger.stream != null:
 		reveal_stinger.play()
 
-	for frame in _effect_frames:
-		if not _active:
-			return
-		effect_frame.texture = frame
-		await get_tree().create_timer(EFFECT_FRAME_SECONDS).timeout
+	# Thirty authored timing steps, interpolated at the actual display rate.
+	# No frame PNG swapping/decoding and no stretched low-resolution flash.
+	_reveal_tween = create_tween()
+	for index in range(EFFECT_FRAME_COUNT):
+		_reveal_tween.tween_method(
+			_set_magic_phase,
+			float(index) / EFFECT_FRAME_COUNT,
+			float(index + 1) / EFFECT_FRAME_COUNT,
+			EFFECT_FRAME_SECONDS
+		)
+	await _reveal_tween.finished
 
 	if not _active:
 		return
@@ -136,6 +155,7 @@ func _run_sequence() -> void:
 
 func _reveal_hero() -> void:
 	title_panel.visible = true
+	name_divider.visible = true
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.set_trans(Tween.TRANS_QUAD)
@@ -158,6 +178,11 @@ func _reveal_hero() -> void:
 		1.0,
 		REVEAL_SECONDS
 	)
+	tween.tween_method(
+		func(value: float) -> void:
+			_magic_material.set_shader_parameter("fade", value),
+		1.0, 0.35, REVEAL_SECONDS
+	)
 	if _portrait_material != null:
 		tween.tween_method(
 			func(value: float) -> void:
@@ -165,7 +190,7 @@ func _reveal_hero() -> void:
 					"silhouette_strength",
 					value
 				),
-			1.0,
+			0.18,
 			0.0,
 			REVEAL_SECONDS
 		)
@@ -184,33 +209,16 @@ func _reveal_hero() -> void:
 
 
 func _play_fake_loading() -> void:
-	loading_panel.visible = false
-	loading_logo.visible = true
+	loading_progress.visible = true
 	loading_text.visible = true
 	var total_steps := LOADING_FRAME_COUNT * LOADING_LOOPS
 	for index in range(total_steps):
 		if not _active:
 			return
-		loading_logo.texture = _loading_frames[index % LOADING_FRAME_COUNT]
 		var dot_count := (index % 3) + 1
-		loading_text.text = "침입 기록 동기화 중%s" % ".".repeat(dot_count)
+		loading_text.text = "전투 준비 중%s" % ".".repeat(dot_count)
+		loading_progress.value = float(index + 1) / float(total_steps) * 100.0
 		await get_tree().create_timer(LOADING_FRAME_SECONDS).timeout
-
-
-func _ensure_frame_cache() -> void:
-	if _effect_frames.is_empty():
-		for index in range(1, EFFECT_FRAME_COUNT + 1):
-			var path := "%s/effect_%02d.png" % [EFFECT_DIR, index]
-			var texture := _load_texture(path)
-			if texture != null:
-				_effect_frames.append(texture)
-
-	if _loading_frames.is_empty():
-		for index in range(1, LOADING_FRAME_COUNT + 1):
-			var path := "%s/loading_logo_%02d.png" % [LOADING_DIR, index]
-			var texture := _load_texture(path)
-			if texture != null:
-				_loading_frames.append(texture)
 
 
 func _load_reveal_stinger() -> AudioStreamOggVorbis:
@@ -245,23 +253,28 @@ func _load_texture(path: String) -> Texture2D:
 
 
 func warm_render_resources(portrait_path: String) -> void:
-	# Render the actual additive/silhouette materials beneath SceneTransition,
-	# not merely load files: first shader use/GPU work must precede the reveal.
-	_ensure_frame_cache()
+	# Compile/render the real procedural and silhouette materials while covered.
 	hero_portrait.texture = _load_texture(portrait_path)
 	visible = true
 	hero_portrait.visible = true
 	effect_frame.visible = true
-	loading_logo.visible = false
+	name_divider.visible = false
 	loading_text.visible = false
+	loading_progress.visible = false
 	title_panel.visible = false
 	title_label.modulate.a = 0.0
 	true_name_label.modulate.a = 0.0
-	for frame in _effect_frames:
-		effect_frame.texture = frame
+	for phase in [0.0, 0.5, 1.0]:
+		_set_magic_phase(phase)
 		if DisplayServer.get_name() == "headless":
 			await get_tree().process_frame
 		else:
 			await RenderingServer.frame_post_draw
 	visible = false
-	effect_frame.texture = null
+	_set_magic_phase(0.0)
+
+
+func _exit_tree() -> void:
+	_active = false
+	if _reveal_tween != null and _reveal_tween.is_valid():
+		_reveal_tween.kill()

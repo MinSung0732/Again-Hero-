@@ -40,6 +40,8 @@ func _run() -> void:
 	root.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
 	var gateway := root.get_node("LoginGateway")
 	gateway.remember_session_enabled = false
+	# Test mode must not auto-enter the lobby before this isolated login fixture.
+	root.get_node("LocalTestMode").active = false
 	var fixture_folder := "user://startup_test_" + Crypto.new().generate_random_bytes(16).hex_encode()
 	DirAccess.make_dir_recursive_absolute(fixture_folder)
 	SAVE_SCOPE.guest_directory = fixture_folder
@@ -85,8 +87,7 @@ func _run() -> void:
 	_check(startup._lobby is PackedScene, "Real lobby scene is cached")
 	_check(startup._resources.size() == 3, "Core resources actually loaded")
 	var warmup := root.get_node("PresentationWarmup")
-	for index in range(1, 31):
-		_check(warmup.get_texture("res://assets/art/UI/talk_light_only_30_frames/effect_%02d.png" % index) != null, "Reveal frame preloaded before login")
+	_check(warmup.get_texture("res://assets/art/UI/talk_light_only_30_frames/effect_01.png") == null, "Obsolete reveal PNGs replaced by procedural geometry")
 	var oauth := load("res://src/network/windows_oauth.gd")
 	var verifier := "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
 	var url: String = oauth.authorize_url("google", verifier, "test-nonce")
@@ -157,7 +158,7 @@ func _run() -> void:
 	await warmup.prepare_common()
 	_check(warmup.texture_load_count == loads_before, "Reveal cache reuse performs no texture reload")
 	_check(not transition.change_scene("res://missing-scene.tscn"), "Invalid scene rejected safely")
-	print("STARTUP_SMOKE_%s: title, 30 preloaded frames, PKCE vector, retry, guest, duplicate guard, warmed dungeon transition" % ("FAILED" if _failed else "OK"))
+	print("STARTUP_SMOKE_%s: title, procedural reveal, PKCE vector, retry, guest, duplicate guard, warmed dungeon transition" % ("FAILED" if _failed else "OK"))
 	current_scene.queue_free()
 	await process_frame
 	for name in SAVE_SCOPE.FILES + ["gameplay_transaction.json", "gameplay_transaction.json.tmp"]:
