@@ -34,7 +34,7 @@ func run() -> void:
 		check(profile.shards_required == expected[rarity][1] and profile.configured, rarity + " cost/enabled")
 	for monster_id in CATALOG.ORDER:
 		check(CATALOG.get_shards_required(monster_id) == 30, "common cost " + monster_id)
-	check(SHOP.RARITIES.common.shard_min == 1 and SHOP.RARITIES.common.shard_max == 3, "common roll range")
+	check(SHOP.RARITIES.common.shard_min == 2 and SHOP.RARITIES.common.shard_max == 5, "common roll range")
 	var state := STORE.load_state()
 	state.slime = {"unlocked": true, "level": 29, "shards": 35}
 	check(STORE.save_state(state), "seed level29")
@@ -88,7 +88,7 @@ func run() -> void:
 	var converted := 0
 	check(history.size() == 11, "11 individual results retained")
 	for entry in history:
-		check(entry.shards >= 1 and entry.shards <= 3 and entry.research_points == entry.shards, "draw range and converted history")
+		check(entry.shards >= 2 and entry.shards <= 5 and entry.research_points == entry.shards, "draw range and converted history")
 		converted += int(entry.research_points)
 	check(PROGRESS.get_research_points() - before == converted, "batch research award exact")
 	var overlay: Control = lobby.gacha_reveal_overlay
