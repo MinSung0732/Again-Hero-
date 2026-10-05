@@ -138,6 +138,7 @@ const BATTLE_PIXEL_BAR_BACKGROUND := "res://assets/art/UI/05_right_bars/part_02.
 @onready var demon_augment_panel: PanelContainer = $HUD/DemonAugmentPanel
 @onready var demon_augment_title: Label = $HUD/DemonAugmentPanel/Margin/VBox/Title
 @onready var demon_augment_trigger: Label = $HUD/DemonAugmentPanel/Margin/VBox/Trigger
+@onready var demon_augment_guide: Label = $HUD/DemonAugmentPanel/Margin/VBox/Guide
 @onready var demon_choice_0: Button = $HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice0
 @onready var demon_choice_1: Button = $HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice1
 @onready var demon_choice_2: Button = $HUD/DemonAugmentPanel/Margin/VBox/Choices/Choice2
@@ -3114,11 +3115,12 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 		reroll_max = int(battle.call("get_demon_reroll_max"))
 	demon_reroll_button.text = "↻ 새로고침 %d / %d" % [rerolls_left, reroll_max]
 	demon_reroll_button.disabled = rerolls_left <= 0
-	status_label.text = (
+	demon_augment_guide.text = (
 		"특수증강 레벨입니다. 편성 몬스터의 전투 방식을 강화하세요."
 		if is_special
 		else "일반증강 레벨입니다. 마왕 운영 또는 편성 몬스터를 강화하세요."
 	)
+	status_label.text = "특수증강 선택 중" if is_special else "일반증강 선택 중"
 
 func _apply_augment_monster_icon(
 	icon_rect: TextureRect,
