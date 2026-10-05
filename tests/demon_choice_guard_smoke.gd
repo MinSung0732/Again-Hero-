@@ -16,6 +16,11 @@ func tap(button: Button) -> void:
 		root.push_input(event, true)
 		await process_frame
 		await process_frame
+		if current_scene._can_select_demon_choice() and current_scene._demon_selected_index >= 0:
+			for index in range(current_scene._demon_choice_buttons.size()):
+				var card: Button = current_scene._demon_choice_buttons[index]
+				check(card.button_pressed == (index == current_scene._demon_selected_index), "exactly one stable highlight during press and release")
+				check(not card.disabled, "confirmation guard never disables cards")
 func run() -> void:
 	root.get_node("LoginGateway").remember_session_enabled = false
 	var folder := "user://choice_guard_" + Crypto.new().generate_random_bytes(16).hex_encode()
@@ -60,6 +65,13 @@ func run() -> void:
 	await tap(main.demon_choice_0)
 	check(main._demon_selected_index == 0 and main.battle.demon_pending_augments == 2, "card tap previews only, no augment applied")
 	check(main.demon_choice_0.button_pressed, "selection visibly highlighted")
+	var original_deadline: int = main._demon_confirm_guard_until
+	for repeat in range(5):
+		await tap(main.demon_choice_0)
+		check(main._demon_selected_index == 0 and main._demon_confirm_guard_until == original_deadline, "same card repeat leaves selection and deadline unchanged")
+	# A genuine different choice remains responsive during confirmation delay.
+	await tap(main.demon_choice_1)
+	check(main._demon_selected_index == 1 and not main.demon_choice_0.button_pressed, "different card changes radio selection immediately")
 	await tap(main.demon_confirm_button)
 	main._on_demon_confirm_pressed()
 	check(main.battle.demon_pending_augments == 2, "same rapid input cannot confirm")

@@ -179,6 +179,8 @@ var _demon_selected_index: int = -1
 var _demon_rerolls_left: int = 0
 var _pressed_choice_pointers: Dictionary = {}
 var _blocked_choice_pointers: Dictionary = {}
+var _blocked_confirm_pointers: Dictionary = {}
+var _demon_choice_group := ButtonGroup.new()
 var current_mutation_candidates: Array = []
 var debug_refresh_timer: float = 0.0
 var battle_loadout_ids: Array = []
@@ -3029,6 +3031,7 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 	_demon_choice_guard_until = Time.get_ticks_msec() + DEMON_CHOICE_OPEN_GUARD_MS
 	_demon_confirm_guard_until = 0
 	_blocked_choice_pointers = _pressed_choice_pointers.duplicate()
+	_blocked_confirm_pointers.clear()
 	_end_touch_hold()
 	_clear_pending_manual_spawn()
 	demon_augment_panel.show()
@@ -3058,6 +3061,10 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 	var buttons: Array[Button] = [demon_choice_0, demon_choice_1, demon_choice_2]
 	for index in range(buttons.size()):
 		buttons[index].toggle_mode = true
+		buttons[index].button_group = _demon_choice_group
+		# Radio selection changes on press, without a transient second highlight
+		# or unchecking/rechecking the already selected card on release.
+		buttons[index].action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		buttons[index].set_pressed_no_signal(false)
 		buttons[index].disabled = true
 		if index >= current_demon_candidates.size():
@@ -3222,6 +3229,8 @@ func _wrap_augment_card_text(
 func _on_demon_choice_pressed(index: int) -> void:
 	if not _can_select_demon_choice() or index < 0 or index >= current_demon_candidates.size():
 		return
+	if _demon_selected_index == index:
+		return
 	_demon_selected_index = index
 	_demon_confirm_guard_until = Time.get_ticks_msec() + DEMON_CHOICE_CONFIRM_GUARD_MS
 	for button_index in range(_demon_choice_buttons.size()):
@@ -3230,7 +3239,7 @@ func _on_demon_choice_pressed(index: int) -> void:
 	demon_confirm_button.disabled = true
 
 func _on_demon_confirm_pressed() -> void:
-	if not _can_select_demon_choice() or Time.get_ticks_msec() < _demon_confirm_guard_until:
+	if not _can_select_demon_choice() or not _blocked_confirm_pointers.is_empty() or Time.get_ticks_msec() < _demon_confirm_guard_until:
 		return
 	var index := _demon_selected_index
 	if index < 0 or index >= current_demon_candidates.size():
@@ -3266,6 +3275,7 @@ func _notification(what: int) -> void:
 		# The OS may swallow finger/mouse release while switching applications.
 		_pressed_choice_pointers.clear()
 		_blocked_choice_pointers.clear()
+		_blocked_confirm_pointers.clear()
 		_demon_choice_guard_until = Time.get_ticks_msec() + DEMON_CHOICE_OPEN_GUARD_MS
 
 func _update_demon_choice_guard() -> void:
@@ -3275,7 +3285,7 @@ func _update_demon_choice_guard() -> void:
 	for button in _demon_choice_buttons:
 		button.disabled = not ready
 	demon_reroll_button.disabled = not ready or _demon_rerolls_left <= 0
-	demon_confirm_button.disabled = not ready or _demon_selected_index < 0 or Time.get_ticks_msec() < _demon_confirm_guard_until
+	demon_confirm_button.disabled = not ready or _demon_selected_index < 0 or not _blocked_confirm_pointers.is_empty() or Time.get_ticks_msec() < _demon_confirm_guard_until
 
 func _guard_demon_choice_pointer(event: InputEvent) -> bool:
 	var pointer_id := -2
@@ -3287,16 +3297,24 @@ func _guard_demon_choice_pointer(event: InputEvent) -> bool:
 		pressed = event.pressed
 	else:
 		return false
-	var blocked := _blocked_choice_pointers.has(pointer_id)
-	var guarding := demon_augment_panel.visible and Time.get_ticks_msec() < maxi(_demon_choice_guard_until, _demon_confirm_guard_until)
+	var blocked := _blocked_choice_pointers.has(pointer_id) or _blocked_confirm_pointers.has(pointer_id)
+	var guarding := demon_augment_panel.visible and Time.get_ticks_msec() < _demon_choice_guard_until
+	var confirm_guarding := (
+		demon_augment_panel.visible
+		and Time.get_ticks_msec() < _demon_confirm_guard_until
+		and demon_confirm_button.get_global_rect().has_point(event.position)
+	)
 	if pressed:
 		_pressed_choice_pointers[pointer_id] = true
 		if guarding:
 			_blocked_choice_pointers[pointer_id] = true
+		elif confirm_guarding:
+			_blocked_confirm_pointers[pointer_id] = true
 	else:
 		_pressed_choice_pointers.erase(pointer_id)
 		_blocked_choice_pointers.erase(pointer_id)
-	return demon_augment_panel.visible and (blocked or guarding)
+		_blocked_confirm_pointers.erase(pointer_id)
+	return demon_augment_panel.visible and (blocked or guarding or confirm_guarding)
 
 func _on_demon_augment_applied(augment_name: String, _build_summary: String) -> void:
 	_show_battle_toast("마왕 증강 · %s" % augment_name, 1.6)
