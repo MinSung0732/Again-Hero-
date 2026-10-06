@@ -15,11 +15,24 @@ const ORDER := [
 	"ghost",
 	"banshee",
 	"dullahan",
+	"kraken",
 ]
 
 const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd")
 
+const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MONSTERS := {
+	"kraken": {
+		"id":"kraken", "name":"크라켄", "role":"ranged", "family":"kraken", "species":"beast", "grade":"legendary", "rarity":"legendary", "attack_type":"ranged",
+		"base_cost":15.0, "summon_exp":15.0, "default_unlocked":false,
+		"can_be_elite":false, "can_be_giant":false, "spawn_at_max_range":true,
+		"description":"고정형 · 지름 2000 사거리. 용사 주변 지름 200 안에 촉수 3개를 2초간 순차 타격 (각 공격력의 1/3). 실제 적중 3회마다 개체 공격력 +0.1%. 사망 시 자신 중심 8방향 촉수 일격. 엘리트·대형몹 없음.",
+		"base_stats":KRAKEN_BEHAVIOR.BASE,
+		"card_icon_path":"res://assets/art/monsters/Kraken/frames/idle_01.png",
+		"ground_shadow":{"size":Vector2(160,40), "offset_y":65.0, "opacity":0.38},
+		"special_augment_ids":["kraken_abyss_escape", "kraken_tentacle_barrage", "kraken_abyss_titan"],
+		"scene":preload("res://src/monsters/Kraken.tscn"),
+	},
 	"dullahan": {
 		"id": "dullahan", "name": "망령 기사", "role": "tank", "family": "dullahan", "species": "undead", "grade": "legendary", "rarity": "legendary", "attack_type": "melee",
 		"base_cost": 12.0, "summon_exp": 12.0, "default_unlocked": false,

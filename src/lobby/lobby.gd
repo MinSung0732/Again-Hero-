@@ -3865,6 +3865,9 @@ func _populate_monster_detail(monster_id: String) -> void:
 	var grade_label := MONSTER_CATALOG.get_grade_label(
 		String(data.get("grade", "normal"))
 	)
+	var elite_allowed := bool(data.get("can_be_elite", true))
+	$MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel.visible = elite_allowed
+	$MonsterDetailOverlay/Panel/Margin/VBox/Guide.text = "일반과 엘리트의 전투 능력을 한눈에 비교합니다." if elite_allowed else "엘리트·대형몹 없음 · 기본 능력과 특수증강"
 	var elite_skills := MONSTER_CATALOG.get_elite_skills(monster_id)
 	var base_stats := _read_monster_base_stats(monster_id)
 	var mutation := MUTATION_CATALOG.get_profile("mutation_1")

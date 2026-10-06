@@ -131,6 +131,8 @@ var monsters_alive: int = 0
 const MONSTER_SPATIAL_CELL_SIZE := 256.0
 
 var active_monsters: Dictionary = {}
+var monster_population_counts: Dictionary = {}
+var monster_population_ids: Dictionary = {}
 var active_hero_summons: Dictionary = {}
 var active_elite_skeletons: Dictionary = {}
 var monster_spatial_grid: Dictionary = {}
@@ -319,7 +321,7 @@ func _rebuild_monster_spatial_grid() -> void:
 		bucket.append(monster)
 
 	for raw_id in monster_spatial_stale_ids:
-		active_monsters.erase(raw_id)
+		_unregister_monster(raw_id)
 
 	monster_spatial_grid_physics_frame = Engine.get_physics_frames()
 
@@ -695,6 +697,8 @@ func _start_battle() -> void:
 			valid_orb_pool.append(pooled_orb)
 	exp_orb_pool = valid_orb_pool
 	active_monsters.clear()
+	monster_population_counts.clear()
+	monster_population_ids.clear()
 	active_hero_summons.clear()
 	active_elite_skeletons.clear()
 	monster_spatial_grid.clear()
@@ -1131,6 +1135,10 @@ func _can_attempt_summon(monster_type: String) -> bool:
 		)
 		return false
 
+	if _monster_population_limit_reached(monster_type):
+		summon_result.emit(monster_type, false, "최대 소환 개체 수에 도달했습니다.")
+		return false
+
 	if get_monster_cost(monster_type) <= 0.0:
 		summon_result.emit(monster_type, false, "알 수 없는 몬스터입니다.")
 		return false
@@ -1140,7 +1148,7 @@ func _can_attempt_summon(monster_type: String) -> bool:
 func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float, manual: bool) -> bool:
 	command_power = maxf(command_power - cost, 0.0)
 
-	var giant_spawn := _roll_giant_monster_for_normal_summon()
+	var giant_spawn := bool(MONSTER_CATALOG.MONSTERS[monster_type].get("can_be_giant", true)) and _roll_giant_monster_for_normal_summon()
 	var primary_monster = _spawn_monster(
 		monster_type,
 		spawn_position,
@@ -1148,6 +1156,9 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 		false,
 		{"giant_monster": giant_spawn}
 	)
+	if not is_instance_valid(primary_monster):
+		command_power += cost
+		return false
 	_spawn_extra_normal_summon_monsters(monster_type, spawn_position)
 	if monster_type == "kobolt" and is_instance_valid(primary_monster):
 		primary_monster = _try_fuse_nearby_kobolts(primary_monster)
@@ -1366,7 +1377,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 			1,
 			int(round(
 				hp_value
-				* _get_demon_level_monster_hp_multiplier()
+				* _get_demon_level_monster_hp_multiplier() * _get_special_stat_multiplier(monster_id, "hp")
 			))
 		)
 
@@ -1379,7 +1390,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 				* collection_damage_multiplier
 				* monster_damage_multiplier
 				* _get_monster_augment_multiplier(monster_id, "damage")
-				* _get_demon_level_monster_damage_multiplier()
+				* _get_demon_level_monster_damage_multiplier() * _get_special_stat_multiplier(monster_id, "damage")
 			))
 		)
 
@@ -1398,6 +1409,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 			float(base_stats["attack_cooldown"])
 			* rarity_attack_cooldown_multiplier
 			* monster_attack_speed_multiplier
+			* _get_special_stat_multiplier(monster_id, "attack_cooldown")
 			* _get_monster_augment_multiplier(
 				monster_id,
 				"attack_cooldown"
@@ -1413,7 +1425,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 				* collection_damage_multiplier
 				* monster_damage_multiplier
 				* _get_monster_augment_multiplier(monster_id, "damage")
-				* _get_demon_level_monster_damage_multiplier()
+				* _get_demon_level_monster_damage_multiplier() * _get_special_stat_multiplier(monster_id, "damage")
 			))
 		)
 
@@ -1822,6 +1834,10 @@ func _spawn_monster(
 		push_warning("Unknown monster id: %s" % monster_type)
 		return null
 
+	if _monster_population_limit_reached(monster_type):
+		return null
+	if bool(MONSTER_CATALOG.MONSTERS[monster_type].get("spawn_at_max_range", false)) and is_instance_valid(hero):
+		spawn_position = get_stationary_spawn_position(monster_type, hero.global_position, spawn_position)
 	# Never instantiate a monster inside the solid upper castle wall. This is
 	# also the catch-all for queued ultimates/reinforcements that precomputed
 	# their positions with older/general map margins.
@@ -1878,7 +1894,7 @@ func _spawn_monster(
 		"monster_collection_upgrade_level",
 		int(monster_collection_upgrade_levels.get(monster_type, 0))
 	)
-	var is_giant := bool(spawn_modifiers.get("giant_monster", false))
+	var is_giant := bool(spawn_modifiers.get("giant_monster", false)) and bool(MONSTER_CATALOG.MONSTERS[monster_type].get("can_be_giant", true))
 	if is_giant and not split_child:
 		_apply_giant_monster_base_stats(monster, monster_type)
 	_ensure_monster_ground_shadow(monster, monster_type)
@@ -1930,6 +1946,7 @@ func _spawn_monster(
 				float(attack_cooldown_value)
 				* rarity_attack_cooldown_multiplier
 				* monster_attack_speed_multiplier
+				* _get_special_stat_multiplier(monster_type, "attack_cooldown")
 				* _get_monster_augment_multiplier(
 					monster_type,
 					"attack_cooldown"
@@ -2117,10 +2134,48 @@ func _spawn_monster(
 	var monster_instance_id := monster.get_instance_id()
 	monster_summon_costs[monster_instance_id] = summon_cost
 	active_monsters[monster_instance_id] = monster
+	monster_population_ids[monster_instance_id] = monster_type
+	monster_population_counts[monster_type] = int(monster_population_counts.get(monster_type, 0)) + 1
+	monster.tree_exited.connect(_unregister_monster.bind(monster_instance_id), CONNECT_ONE_SHOT)
 	monster_spatial_grid_physics_frame = -1
 	monsters_alive += 1
 	return monster
 
+
+func _unregister_monster(instance_id: int) -> void:
+	if monster_population_ids.has(instance_id):
+		var monster_id := String(monster_population_ids[instance_id])
+		monster_population_counts[monster_id] = maxi(int(monster_population_counts.get(monster_id, 0)) - 1, 0)
+		monster_population_ids.erase(instance_id)
+	active_monsters.erase(instance_id)
+
+func _monster_population_limit_reached(monster_id: String) -> bool:
+	for config in _get_special_augment_config(monster_id).values():
+		var limit := int(config.get("max_population", 0))
+		if limit > 0 and int(monster_population_counts.get(monster_id, 0)) >= limit:
+			return true
+	return false
+
+func _get_special_stat_multiplier(monster_id: String, key: String) -> float:
+	var multiplier := 1.0
+	for config in _get_special_augment_config(monster_id).values():
+		multiplier *= float(config.get("stat_multipliers", {}).get(key, 1.0))
+	return multiplier
+
+func get_stationary_spawn_position(monster_id: String, origin: Vector2, preferred: Vector2) -> Vector2:
+	var radius := float(MONSTER_CATALOG.get_base_stats(monster_id).get("attack_range", 1000.0)) * _get_special_stat_multiplier(monster_id, "range")
+	var start_angle := (preferred - origin).angle()
+	var best := _clamp_manual_spawn_position(origin)
+	var best_distance := -1.0
+	for index in range(32):
+		var candidate := _clamp_manual_spawn_position(origin + Vector2.from_angle(start_angle + TAU * index / 32.0) * radius)
+		var distance := origin.distance_squared_to(candidate)
+		if distance > best_distance:
+			best_distance = distance
+			best = candidate
+		if distance >= radius * radius - 1.0:
+			break
+	return best
 
 func _try_fuse_nearby_kobolts(primary_monster: Node2D) -> Node2D:
 	if not _is_normal_kobolt_fusion_candidate(primary_monster):
@@ -2216,7 +2271,7 @@ func _consume_monster_for_fusion(monster: Node2D) -> void:
 		return
 	var instance_id := monster.get_instance_id()
 	monster_summon_costs.erase(instance_id)
-	active_monsters.erase(instance_id)
+	_unregister_monster(instance_id)
 	active_elite_skeletons.erase(instance_id)
 	monster_spatial_grid_physics_frame = -1
 	monsters_alive = maxi(monsters_alive - 1, 0)
@@ -2334,6 +2389,11 @@ func _apply_demon_level_scaling_to_monster(
 	if not is_instance_valid(monster) or bool(monster.get_meta("fixed_base_stats", false)):
 		return
 
+	var content_id := String(monster.get("monster_type"))
+	var excluded := bool(monster.get_meta("exclude_all_augments", false))
+	var hp_special := 1.0 if excluded else _get_special_stat_multiplier(content_id, "hp")
+	var damage_special := 1.0 if excluded else _get_special_stat_multiplier(content_id, "damage")
+	var growth := float(monster.call("get_attack_growth_multiplier")) if monster.has_method("get_attack_growth_multiplier") else 1.0
 	var base_hp_value = monster.get_meta("demon_level_base_max_hp", null)
 	if base_hp_value != null:
 		var old_max_hp := maxi(int(monster.get("max_hp")), 1)
@@ -2349,7 +2409,7 @@ func _apply_demon_level_scaling_to_monster(
 		var new_max_hp := maxi(
 			1,
 			int(round(
-				float(base_hp_value) * _get_demon_level_monster_hp_multiplier()
+				float(base_hp_value) * _get_demon_level_monster_hp_multiplier() * hp_special
 			))
 		)
 		monster.set("max_hp", new_max_hp)
@@ -2375,7 +2435,7 @@ func _apply_demon_level_scaling_to_monster(
 				1,
 				int(round(
 					float(base_damage_value)
-					* _get_demon_level_monster_damage_multiplier()
+					* _get_demon_level_monster_damage_multiplier() * damage_special * growth
 				))
 			)
 		)
@@ -2403,7 +2463,7 @@ func _get_active_monsters_snapshot() -> Array:
 			continue
 		result.append(node)
 	for raw_id in stale_ids:
-		active_monsters.erase(raw_id)
+		_unregister_monster(raw_id)
 	return result
 
 
@@ -2634,7 +2694,7 @@ func _on_monster_died(monster: Node) -> void:
 
 	var original_cost: float = float(monster_summon_costs.get(instance_id, 0.0))
 	monster_summon_costs.erase(instance_id)
-	active_monsters.erase(instance_id)
+	_unregister_monster(instance_id)
 	active_elite_skeletons.erase(instance_id)
 	monster_spatial_grid_physics_frame = -1
 
@@ -3603,13 +3663,13 @@ func _get_random_stage_event_team_monster_id() -> String:
 	var candidates: Array[String] = []
 	for raw_id in allowed_monster_ids:
 		var monster_id := String(raw_id)
-		if MONSTER_CATALOG.MONSTERS.has(monster_id):
+		if MONSTER_CATALOG.MONSTERS.has(monster_id) and bool(MONSTER_CATALOG.MONSTERS[monster_id].get("can_be_elite", true)):
 			candidates.append(monster_id)
 
 	if candidates.is_empty():
 		for raw_id in MONSTER_CATALOG.ORDER:
 			var fallback_id := String(raw_id)
-			if MONSTER_CATALOG.MONSTERS.has(fallback_id):
+			if MONSTER_CATALOG.MONSTERS.has(fallback_id) and bool(MONSTER_CATALOG.MONSTERS[fallback_id].get("can_be_elite", true)):
 				candidates.append(fallback_id)
 
 	if candidates.is_empty():
@@ -3625,13 +3685,13 @@ func _open_mutation_choice(event: Dictionary) -> void:
 	var candidates: Array = []
 	for raw_id in allowed_monster_ids:
 		var monster_id := String(raw_id)
-		if MONSTER_CATALOG.MONSTERS.has(monster_id):
+		if MONSTER_CATALOG.MONSTERS.has(monster_id) and bool(MONSTER_CATALOG.MONSTERS[monster_id].get("can_be_elite", true)):
 			candidates.append(monster_id)
 
 	if candidates.is_empty():
 		for raw_id in MONSTER_CATALOG.ORDER:
 			var fallback_id := String(raw_id)
-			if not MONSTER_CATALOG.MONSTERS.has(fallback_id):
+			if not MONSTER_CATALOG.MONSTERS.has(fallback_id) or not bool(MONSTER_CATALOG.MONSTERS[fallback_id].get("can_be_elite", true)):
 				continue
 			candidates.append(fallback_id)
 			if candidates.size() >= 3:
@@ -3704,6 +3764,9 @@ func spawn_special_monster(
 	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
 		return false
 
+	if not bool(MONSTER_CATALOG.MONSTERS[monster_id].get("can_be_elite", true)):
+		return false
+
 	var spawn_position := (
 		_get_farthest_kobolt_attack_spawn_position(monster_id)
 		if monster_id == "kobolt"
@@ -3734,6 +3797,9 @@ func _apply_special_monster_modifiers(
 	special_data: Dictionary
 ) -> void:
 	if not is_instance_valid(monster):
+		return
+
+	if not bool(MONSTER_CATALOG.MONSTERS.get(monster_id, {}).get("can_be_elite", true)):
 		return
 
 	var hp_multiplier := maxf(
@@ -4386,6 +4452,7 @@ func _apply_normal_augments_to_existing_monster(
 				float(raw_cooldown)
 				* rarity_attack_cooldown_multiplier
 				* monster_attack_speed_multiplier
+				* _get_special_stat_multiplier(monster_id, "attack_cooldown")
 				* _get_monster_augment_multiplier(
 					monster_id,
 					"attack_cooldown"

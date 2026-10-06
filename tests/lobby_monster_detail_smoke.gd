@@ -26,15 +26,18 @@ func run() -> void:
 		check(scroll.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_SHOW_NEVER, "hidden scrollbar")
 		check(compare.size.x <= scroll.size.x + 1, "columns fit viewport " + id)
 		for label in [lobby.monster_detail_normal_stats, lobby.monster_detail_elite_stats, lobby.monster_detail_elite_skills]:
-			check(label.size.y >= label.get_content_height(), "entire rich text laid out " + id)
+			if label.is_visible_in_tree():
+				check(label.size.y >= label.get_content_height(), "entire rich text laid out " + id)
+		check(compare.get_node("ElitePanel").visible == bool(CATALOG.MONSTERS[id].get("can_be_elite",true)), "elite capability shown " + id)
 		check(lobby.monster_detail_close_button.get_global_rect().end.y < scroll.get_global_rect().position.y, "close stays above scroll")
-		if id in ["banshee", "goblin_thrower", "dullahan"] and "--capture" in OS.get_cmdline_user_args():
+		if id in ["banshee", "goblin_thrower", "dullahan", "kraken"] and "--capture" in OS.get_cmdline_user_args():
 			await RenderingServer.frame_post_draw
 			root.get_texture().get_image().save_png(OS.get_cmdline_user_args()[-1].replace("{id}", id))
 		scroll.scroll_vertical = 100000
 		await settle()
 		var last: Control = compare.get_node("ElitePanel/Margin/VBox/Note")
-		check(last.get_global_rect().end.y <= scroll.get_global_rect().end.y + 1, "last note reachable " + id)
+		if last.is_visible_in_tree():
+			check(last.get_global_rect().end.y <= scroll.get_global_rect().end.y + 1, "last note reachable " + id)
 		check(lobby.monster_detail_specials.get_global_rect().end.y <= scroll.get_global_rect().end.y + 1, "last special reachable " + id)
 		if id == "banshee" and "--capture" in OS.get_cmdline_user_args():
 			await RenderingServer.frame_post_draw

@@ -8,6 +8,7 @@ const NORMAL_MAX_LEVEL := 10
 const SPECIAL_MAX_LEVEL := 1
 
 const MONSTER_NAMES := {
+	"kraken": "크라켄",
 	"dullahan": "망령 기사",
 	"banshee": "밴시",
 	"slime": "슬라임",
@@ -24,6 +25,7 @@ const MONSTER_NAMES := {
 }
 
 const MONSTER_NORMAL_EXCLUDED_KEYS := {
+	"kraken": ["speed"],
 	"kobolt": ["speed"],
 }
 
@@ -130,6 +132,9 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{"id":"kraken_abyss_escape", "monster_id":"kraken", "name":"심연 잠항", "description":"용사 접근 시 개체당 1회 잠항해 최대 사거리의 다른 위치로 회피", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"kraken_abyss_escape", "effect_values":{"trigger_radius":220.0}},
+	{"id":"kraken_tentacle_barrage", "monster_id":"kraken", "name":"촉수의 대홍수", "description":"공격력 2배. 2초간 촉수 6회로 분산 타격", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"kraken_tentacle_barrage", "effect_values":{"tentacle_count":6, "stat_multipliers":{"damage":2.0}}},
+	{"id":"kraken_abyss_titan", "monster_id":"kraken", "name":"심해의 거신", "description":"최대 3개체. 체력·공격력·공속·사거리 2배, 크기 1.5배 (고정형 유지)", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"kraken_abyss_titan", "effect_values":{"max_population":3, "range_multiplier":2.0, "visual_scale":1.5, "stat_multipliers":{"hp":2.0, "damage":2.0, "attack_cooldown":0.5, "range":2.0}}},
 	{"id":"dullahan_dead_wall", "monster_id":"dullahan", "name":"망자의 성벽", "description":"접근 이속 -30%. 첫 실제 피해 전 최대 HP 200% 보호막", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"dullahan_dead_wall", "effect_values":{"approach_multiplier":0.70, "shield_hp_ratio":2.0}},
 	{"id":"dullahan_soul_shackles", "monster_id":"dullahan", "name":"열두 원혼의 족쇄", "description":"적중마다 대상에 기사 공용 스택. 12스택 소모 시 2초 기절", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"dullahan_soul_shackles", "effect_values":{"stacks_required":12, "stun_duration":2.0}},
 	{"id":"dullahan_immortal_thirst", "monster_id":"dullahan", "name":"불멸의 갈망", "description":"부활 체력 30%, 실제 준 피해의 50% 회복", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"dullahan_immortal_thirst", "effect_values":{"revive_hp_ratio":0.30, "lifesteal_ratio":0.50}},
