@@ -56,6 +56,7 @@ func run() -> void:
 	configs = battle._get_special_augment_config("dullahan")
 	var knight = spawn()
 	check(knight.visual.sprite_frames.get_frame_count("attack") == 6, "normal frames")
+	check(is_equal_approx(knight.visual.sprite_frames.get_frame_texture("idle",0).get_height() * knight.visual.scale.y, 230), "normal two-times combat height")
 	check(knight.shield_hp == knight.max_hp * 2, "wall uses effective maximum HP")
 	var initial_hp: int = knight.current_hp
 	knight.take_damage(100)
@@ -155,6 +156,7 @@ func run() -> void:
 	armored_elite.shield_hp = 0
 	armored_elite.take_damage(armored_elite.max_hp)
 	armored_elite.free()
+	check(is_equal_approx(elite.visual.sprite_frames.get_frame_texture("idle",0).get_height() * elite.visual.scale.y, 280), "elite two-times combat height")
 	var runtime = battle.elite_monster_skill_runtime
 	runtime.tick(0.01)
 	check(elite.charge_timer == 5, "elite charge immediate once")

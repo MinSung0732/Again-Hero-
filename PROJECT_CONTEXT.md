@@ -1,3 +1,6 @@
+## Dullahan Scale / Team Rarity Borders (2026-10-06)
+- Dullahan normal/elite combat visuals use 230/280px target height (2x), with expanded ground shadow and HP/shield bars above the sprite. Combat collision/range/stats remain. Team collection cards and equipped monster slots use gray/yellow/blue/purple/green rarity borders, preserving rarity during selection, upgrade availability and disabled states; empty/skill slots use neutral borders.
+
 ## Dullahan / Stun (2026-10-06)
 - Dullahan (망령 기사): legendary undead melee tank, cost 12. Base HP 420/speed 58/damage 32/attack interval 1.2s; existing rarity/research/collection/demon growth remain. One revival per unit at 15% HP; lifesteal 40% of actual HP/shield damage. HP<=20% danger sense: +225% escape, distance 300 or 2s timeout, 3s recovery to 50%, cooldown 20s.
 - Specials: 망자의 성벽 (approach -30%, 2x maxHP shield until first damage to hero), 열두 원혼의 족쇄 (target-shared 12-hit stacks consumed for 2s stun), 불멸의 갈망 (revive30%, lifesteal50%). Shield cannot refill on config refresh/revival. Final death alone awards death accounting.

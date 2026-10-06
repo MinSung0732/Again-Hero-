@@ -305,7 +305,17 @@ func _cancel_slam() -> void:
 			visual.animation_finished.disconnect(_finish_slam)
 
 func _draw() -> void:
-	super._draw()
-	if shield_hp > 0 and not dying and not reviving:
+	if dying or reviving or not is_instance_valid(visual):
+		return
+	var height := 230.0
+	if visual.sprite_frames != null and visual.sprite_frames.has_animation("idle"):
+		var texture: Texture2D = visual.sprite_frames.get_frame_texture("idle", 0)
+		if texture != null:
+			height = texture.get_height() * visual.scale.y
+	var bar_y := -height * 0.5 - 12.0
+	var width := 120.0
+	draw_rect(Rect2(-width * 0.5, bar_y, width, 8), Color("202024"), true)
+	draw_rect(Rect2(-width * 0.5, bar_y, width * clampf(float(current_hp) / maxi(max_hp, 1), 0.0, 1.0), 8), Color("4de673"), true)
+	if shield_hp > 0:
 		var ratio := minf(float(shield_hp) / float(max_hp * 2), 1.0)
-		draw_rect(Rect2(-43, -70, 86 * ratio, 6), Color("a4b8ff"), true)
+		draw_rect(Rect2(-width * 0.5, bar_y - 10, width * ratio, 6), Color("a4b8ff"), true)

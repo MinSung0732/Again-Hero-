@@ -28,9 +28,9 @@ const MONSTERS := {
 		"passive": DULLAHAN_BEHAVIOR.PASSIVE,
 		"danger_sense": DULLAHAN_BEHAVIOR.DANGER,
 		"card_icon_path": "res://assets/art/monsters/Dullahan/frames/idle_01.png",
-		"ground_shadow": {"size": Vector2(74, 22), "offset_y": 37.0, "opacity": 0.38},
+		"ground_shadow": {"size": Vector2(148, 44), "offset_y": 74.0, "opacity": 0.38},
 		"special_augment_ids": ["dullahan_dead_wall", "dullahan_soul_shackles", "dullahan_immortal_thirst"],
-		"elite_visual": {"mode": "frames", "asset_dir": "res://assets/art/elitemonster/Dullahan/frames", "target_height": 140.0, "animations": {
+		"elite_visual": {"mode": "frames", "asset_dir": "res://assets/art/elitemonster/Dullahan/frames", "target_height": 280.0, "animations": {
 			"idle": {"prefix":"idle", "count":4, "fps":6.0, "loop":true}, "move": {"prefix":"walk", "count":6, "fps":9.0, "loop":true},
 			"attack": {"prefix":"atk", "count":4, "fps":10.0, "loop":false}, "hit": {"files":["hit_01.png", "hit-02.png"], "count":2, "fps":12.0, "loop":false},
 			"death": {"prefix":"dead", "count":7, "fps":10.0, "loop":false}}},

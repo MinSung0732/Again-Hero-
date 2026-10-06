@@ -3482,7 +3482,6 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	actions.add_child(upgrade_button)
 	_team_formation_view.fit_action(upgrade_button)
 	if not upgrade_button.disabled:
-		card_style.border_color = Color("d8ad55")
 		card_style.bg_color = Color("171020", 0.96)
 		card_style.set_corner_radius_all(14)
 	var badge := _team_formation_view.label(vbox, "최대강화" if maxed else ("강화 가능" if not upgrade_button.disabled else ("편성 중" if selected else "")), 19)
@@ -3492,6 +3491,10 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	vbox.move_child(badge, 0)
 
 	PIXEL_PANEL_SKIN.apply_tree(card)
+	# Apply after the common panel skin so the authored gold cannot override rarity.
+	card_style.border_color = _team_formation_view.rarity_border_color(MONSTER_CATALOG.get_rarity(monster_id))
+	card_style.set_corner_radius_all(0)
+	card.add_theme_stylebox_override("panel", card_style)
 	return card
 
 
@@ -3545,7 +3548,7 @@ func _refresh_team_slot(button: Button, slot_index: int) -> void:
 		]
 		_team_formation_view.refresh_slot(
 			button, _team_monster_card_icon(monster_id), _team_monster_name(monster_id),
-			info, team_selected_ids.size() > 1
+			info, team_selected_ids.size() > 1, MONSTER_CATALOG.get_rarity(monster_id)
 		)
 	else:
 		button.icon = null

@@ -1,5 +1,17 @@
 extends RefCounted
 
+const SHOP := preload("res://src/data/shop_catalog.gd")
+const PIXEL := preload("res://src/ui/pixel_panel_skin.gd")
+
+static func rarity_border_color(rarity: String) -> Color:
+	return Color("92929c") if rarity == "common" else SHOP.get_rarity(rarity).get("color", Color("685276"))
+
+func apply_slot_border(button: Button, rarity: String) -> void:
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		var style := PIXEL.button_style(button.get_theme_stylebox(state)) as StyleBoxFlat
+		style.border_color = rarity_border_color(rarity) if not rarity.is_empty() else Color("685276")
+		button.add_theme_stylebox_override(state, style)
+
 const PATH := "SafeArea/Layout/Content/TeamTab/TeamLayout"
 
 func panel_style(gold: bool = false) -> StyleBoxFlat:
@@ -92,7 +104,8 @@ func apply(lobby: Control) -> void:
 	grid.add_theme_constant_override("h_separation", 14)
 	grid.add_theme_constant_override("v_separation", 14)
 
-func refresh_slot(button: Button, icon: Texture2D, title: String, info: String, can_remove: bool) -> void:
+func refresh_slot(button: Button, icon: Texture2D, title: String, info: String, can_remove: bool, rarity: String = "") -> void:
+	apply_slot_border(button, rarity)
 	button.text = ""
 	button.icon = null
 	(button.get_node("SlotBody/Portrait") as TextureRect).texture = icon
