@@ -1,3 +1,9 @@
+### 2026-10-06 — Android Godot 실행 Google·카카오 브라우저 로그인 연결
+- Windows 전용 차단을 Android까지 확장. 기존 Supabase PKCE/무작위 복귀 경로·서버 사용자 확인·계정 저장/클라우드 경로를 재사용하고, 브라우저 인증 응답 후 Godot/게임으로 직접 돌아오는 안내 제공.
+- Android 로그인 중에만 bounded loopback worker가 응답 수신. scene 정지 상태에서도 응답하고, 계정/토큰 처리는 복귀 후 main thread에서 실행. 취소/종료 시 join, 시간·크기·Host·nonce 제한과 늦은 응답 차단 유지.
+- 현재 Android 자동 로그인 저장은 끄고 refresh token은 실행 중 메모리에서만 보관. Windows DPAPI 유지. 네이티브 딥링크/Keystore 및 APK 내보내기는 별도 작업.
+- 검증: 공개 Auth settings에서 Google/Kakao 활성화 확인; 변경 GDScript 파싱·diff 검사 및 Godot headless 모바일 receiver/Windows OAuth·클라우드 회귀. Linux에서는 Windows DPAPI 실행을 명시적으로 제외하고 미지원 플랫폼의 평문 저장 거절을 검사. 실제 Android 브라우저·사람 계정 로그인/OS 프로세스 수명·APK는 미검증.
+
 ### 2026-10-06 — 정확히 1000골드 소환 후 부족 툴팁 잔류 수정
 - 비용 차감으로 비활성화된 상점 소환 버튼·다시 뽑기 버튼에 골드 부족 툴팁을 새로 붙이지 않음. 모바일의 남아 있는 마우스 포인터 위치에서 정상 소환 연출 위로 부족 안내가 뜨는 경로 제거.
 - 1000골드의 10+1 소환·비용 차감·보상·재소환 조건 유지. 실제 잔액 부족 요청에는 기존 상점 상태 안내 유지.

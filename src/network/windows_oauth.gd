@@ -3,6 +3,7 @@ extends Node
 const CONFIG := preload("res://src/network/supabase_config.gd")
 const PORT := 43817
 const CALLBACK := "http://127.0.0.1:43817/auth/callback/"
+const ANDROID_LISTENER := preload("res://src/network/android_oauth_listener.gd")
 signal notice(message: String)
 signal validated(session: Dictionary, user: Dictionary)
 
@@ -15,6 +16,7 @@ var _verifier := ""
 var _deadline := 0
 var busy := false
 var _generation := 0
+var _android_listener: RefCounted
 
 func _ready() -> void:
 	set_process(false)
@@ -28,25 +30,43 @@ static func authorize_url(provider: String, verifier: String, nonce: String) -> 
 func begin(provider: String) -> void:
 	if busy:
 		return
-	if provider not in ["google", "kakao"] or OS.get_name() != "Windows":
-		notice.emit("실제 계정 로그인은 현재 Windows 테스트를 지원합니다.")
-		return
-	if _server.listen(PORT, "127.0.0.1") != OK:
-		notice.emit("로그인 복귀 주소를 열지 못했습니다. 다른 게임 창을 닫고 다시 시도해 주세요.")
+	if provider not in ["google", "kakao"] or OS.get_name() not in ["Windows", "Android"]:
+		notice.emit("실제 계정 로그인은 Windows와 Android를 지원합니다.")
 		return
 	_generation += 1
-	busy = true
 	_verifier = base64_url(Crypto.new().generate_random_bytes(32))
 	_nonce = Crypto.new().generate_random_bytes(24).hex_encode()
 	_deadline = Time.get_ticks_msec() + 300000
+	var error: Error
+	if OS.get_name() == "Android":
+		_android_listener = ANDROID_LISTENER.new()
+		error = _android_listener.start(PORT, _nonce, _deadline)
+	else:
+		error = _server.listen(PORT, "127.0.0.1")
+	if error != OK:
+		cancel()
+		notice.emit("로그인 복귀 주소를 열지 못했습니다. 다른 게임 창을 닫고 다시 시도해 주세요.")
+		return
+	busy = true
 	set_process(true)
-	notice.emit("브라우저에서 로그인해 주세요.\n취소하려면 게스트로 시작을 눌러 주세요.")
+	notice.emit("브라우저에서 로그인 후 Godot 또는 게임 앱으로 돌아와 주세요.\n취소하려면 게스트로 시작을 눌러 주세요." if OS.get_name() == "Android" else "브라우저에서 로그인해 주세요.\n취소하려면 게스트로 시작을 눌러 주세요.")
 	if OS.shell_open(authorize_url(provider, _verifier, _nonce)) != OK:
 		_fail("브라우저를 열지 못했습니다. 다시 시도해 주세요.")
 
 func _process(_delta: float) -> void:
+	if _android_listener != null and _android_listener.is_finished():
+		var response: Dictionary = _android_listener.finish()
+		_android_listener = null
+		set_process(false)
+		if response.has("target"):
+			_complete_callback(parse_query(String(response.target)))
+		else:
+			_fail("로그인 대기 시간이 지났습니다. 다시 시도해 주세요.")
+		return
 	if Time.get_ticks_msec() > _deadline:
-		_fail("로그인 대기 시간이 지났습니다.\nSupabase의 Windows 복귀 주소 설정도 확인해 주세요.")
+		_fail("로그인 대기 시간이 지났습니다.\nSupabase의 로그인 복귀 주소 설정도 확인해 주세요.")
+		return
+	if _android_listener != null:
 		return
 	if _peer == null and _server.is_connection_available():
 		_peer = _server.take_connection()
@@ -82,6 +102,9 @@ func _process(_delta: float) -> void:
 	_reply("200 OK", "Login response received. Return to Again, Hero. You may close this tab.")
 	_server.stop()
 	set_process(false)
+	_complete_callback(params)
+
+func _complete_callback(params: Dictionary) -> void:
 	if params.has("error") or String(params.get("code", "")).is_empty():
 		_fail("로그인이 취소되었거나 인증에 실패했습니다. 다시 시도해 주세요.")
 		return
@@ -145,6 +168,9 @@ func _drop_peer() -> void:
 
 func cancel() -> void:
 	_generation += 1
+	if _android_listener != null:
+		_android_listener.cancel()
+		_android_listener = null
 	_server.stop()
 	_drop_peer()
 	set_process(false)

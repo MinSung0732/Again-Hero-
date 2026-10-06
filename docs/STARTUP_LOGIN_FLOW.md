@@ -1,10 +1,10 @@
-# 시작 / 로딩 / Windows 로그인
+# 시작 / 로딩 / Windows·Android 로그인
 
 앱 기본 시작 씬은 `src/startup/Startup.tscn`입니다.
 
 1. 터치 시작: 제공된 loadingscreen.png를 그대로 사용합니다. 로고를 중복 배치하지 않습니다.
 2. 리소스 준비: 실제 공통 리소스, 소개 효과 30장과 로딩 8장을 비동기로 불러옵니다. 가짜 다운로드 용량/속도를 표시하지 않습니다.
-3. 로그인 선택: 카카오·구글은 Windows 기본 브라우저에서 실제 Supabase 인증을 진행합니다. 게스트는 기존 기기 로컬 저장으로 진입합니다.
+3. 로그인 선택: 카카오·구글은 Windows/Android 기본 브라우저에서 실제 Supabase 인증을 진행합니다. Android는 인증 응답 페이지를 본 뒤 Godot/게임 앱으로 직접 돌아옵니다. 게스트는 기존 기기 로컬 저장으로 진입합니다.
 4. 로비 진입: 목적지 UI/카드/상점/활성 등급 가챠 이미지 및 넘겨볼 수 있는 모든 스테이지 초상화를 미리 읽습니다. 초상화 알파 영역/크기 보정/최종 텍스처 생성/첫 렌더까지 전체화면 로딩 아래에서 완료한 뒤 로비를 표시합니다. 던전 프레임 전체를 미리 읽는 것은 아닙니다.
 5. 던전 진입: 현재 용사 프레임·효과/초상화, 공통 UI, 몬스터 일반/엘리트 캐시, 터치 효과와 소개 효과의 실제 렌더 준비를 마친 뒤 소개 연출을 시작합니다.
 
@@ -32,6 +32,18 @@ http://127.0.0.1:43817/auth/callback/**
 
 공개 Publishable key만 사용합니다. secret/service_role/Client Secret, 인증 코드, 토큰은 저장소/로그에 기록하지 않습니다. Windows refresh token은 DPAPI로 암호화 보관하며 다음 실행의 시작 로딩 후 서버 검증으로 자동 로그인합니다. 계정 저장 복구가 끝나야 로비에 진입합니다. 상세 사항은 `CLOUD_SAVE_FLOW.md`를 참고합니다.
 
+## Android Godot 편집기 실행 테스트 (2026-10-06)
+
+프로젝트를 최신화하고 Godot 앱에서 실행 → 구글/카카오 버튼 → 기본 브라우저 인증 → ‘인증 응답을 받았습니다’ 페이지 → 최근 앱에서 Godot/게임으로 돌아오면 인증 코드 교환·서버 사용자 확인·기존 계정 저장 복구가 진행됩니다. 다른 게임 실행 창은 닫아 동일한 loopback 포트의 중복 사용을 피하세요. 브라우저 쿠키/인증 정보가 유지돼 있으면 계정 선택이 생략될 수 있습니다.
+
+Windows와 같은 PKCE/무작위 nonce/127.0.0.1 콜백 주소를 사용하므로 현재 PC에서 성공한 Redirect URL 설정을 그대로 사용합니다. Google/Kakao 개발자 콘솔의 Supabase HTTPS callback도 유지합니다. Google/Kakao의 네이티브 SDK나 앱 서명 키를 사용하는 흐름이 아닙니다.
+
+Android가 외부 브라우저를 보여 주는 동안 scene processing이 멈출 수 있으므로 `android_oauth_listener.gd`가 로그인 중에만 별도 수신 스레드를 유지합니다. 소켓은 127.0.0.1에 한정, 8KB 요청/3초 연결/5분 로그인 제한과 Host·nonce 검사를 적용합니다. 스레드는 인증 응답만 반환하고 Node/계정/토큰을 건드리지 않습니다. 게임 복귀 후 main thread에서 기존 PKCE 교환 및 `/user` 검증을 수행합니다. 게스트 전환·취소·종료는 worker를 종료/join하며 이후 인증이 들어올 수 없습니다. 게임 프로세스가 OS에 의해 종료되면 다시 로그인해야 합니다.
+
+현재 영구 세션 보관은 Windows DPAPI만 지원합니다. Android는 refresh token을 디스크에 저장하지 않고 실행 중 메모리에서만 세션 갱신합니다. 앱을 다시 실행하면 로그인 버튼을 다시 눌러 주세요. 네이티브 앱 자동 복귀 딥링크와 Android Keystore 기반 자동 로그인은 후속 기능입니다. APK에서 같은 수동 복귀 테스트를 하려면 내보내기 Internet 권한이 필요하며, 현재 Godot 편집기 실행 검증과 APK 실기기 검증은 구분합니다.
+
+`tests/android_oauth_smoke.gd`: headless 엔진에서 scene process를 정지한 상태의 실제 loopback HTTP 응답, 잘못된 Host/nonce 거부, 복귀 후 PKCE·사용자 검증, 포트 재사용·취소/join·시간 초과·포트 충돌 검사. 실제 Android 브라우저/사람 계정 인증은 사용자의 기기에서 확인해야 합니다.
+
 ## 데이터 경계 / 아직 미구현
 
 - 게스트는 Supabase 익명 계정이 아니며 기존 `user://*.cfg` 저장을 그대로 유지합니다.
@@ -45,6 +57,7 @@ http://127.0.0.1:43817/auth/callback/**
 ```text
 godot --headless --path . --script res://tests/startup_smoke.gd
 godot --headless --path . --script res://tests/windows_oauth_smoke.gd
+godot --headless --path . --script res://tests/android_oauth_smoke.gd
 ```
 
 첫 검사는 실제 시작/리소스/게스트/로비/던전 전환과 캐시를 확인합니다. 두 번째는 실제 loopback HTTP의 잘못된 nonce/취소/idle 종료 및 전송 fixture를 사용한 토큰만으로 성공하지 않음·서버 사용자 확인·취소된 늦은 응답 차단을 검사합니다. 사람의 카카오·구글 계정을 자동 로그인하지 않습니다.
