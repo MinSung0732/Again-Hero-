@@ -1395,34 +1395,16 @@ func _apply_enter_stage_button_skin() -> void:
 	if enter_stage_button == null:
 		return
 
-	var normal := _make_svg_style(
-		UI_LOBBY_STAGE_ENTER_PATH,
-		28.0,
-		24.0,
-		18.0,
-		12.0
-	)
-	var pressed := _make_svg_style(
-		UI_LOBBY_STAGE_ENTER_PRESSED_PATH,
-		28.0,
-		24.0,
-		18.0,
-		12.0
-	)
-	var disabled := _make_style(
-		Color("302638"),
-		Color("68576e"),
-		3,
-		8
-	)
-	if normal == null or pressed == null:
-		return
-	disabled.content_margin_top = 10.0
-	disabled.content_margin_bottom = 10.0
-	disabled.anti_aliasing = false
+	# A single cached nine-patch frame avoids baked-in lines behind the label.
+	var frames = preload("res://src/ui/commerce_frame_skin.gd")
+	var normal := frames.style("shop_button_frame", 18)
+	var hover := frames.style("shop_button_frame", 18, Color("fff8df"))
+	var pressed := frames.style("shop_button_frame", 18, Color("c5a6d7"))
+	var disabled := frames.style("shop_button_frame", 18, Color("827489"))
+	enter_stage_button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 	enter_stage_button.add_theme_stylebox_override("normal", normal)
-	enter_stage_button.add_theme_stylebox_override("hover", normal)
+	enter_stage_button.add_theme_stylebox_override("hover", hover)
 	enter_stage_button.add_theme_stylebox_override("pressed", pressed)
 	enter_stage_button.add_theme_stylebox_override("disabled", disabled)
 	enter_stage_button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
@@ -1431,28 +1413,6 @@ func _apply_enter_stage_button_skin() -> void:
 	enter_stage_button.add_theme_color_override("font_hover_color", Color("fff8df"))
 	enter_stage_button.add_theme_color_override("font_pressed_color", Color("ffe3a0"))
 	enter_stage_button.add_theme_color_override("font_disabled_color", Color("8f8495"))
-
-	for data in [
-		["EnterGemLeft", 0.065],
-		["EnterGemRight", 0.935],
-	]:
-		var node_name := String(data[0])
-		var gem := enter_stage_button.get_node_or_null(node_name) as ColorRect
-		if gem == null:
-			gem = ColorRect.new()
-			gem.name = node_name
-			gem.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			gem.color = Color("d98bea")
-			gem.anchor_left = float(data[1])
-			gem.anchor_top = 0.5
-			gem.anchor_right = float(data[1])
-			gem.anchor_bottom = 0.5
-			gem.offset_left = -6.0
-			gem.offset_top = -6.0
-			gem.offset_right = 6.0
-			gem.offset_bottom = 6.0
-			gem.rotation = PI * 0.25
-			enter_stage_button.add_child(gem)
 
 
 func _install_lobby_background() -> void:

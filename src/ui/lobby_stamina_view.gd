@@ -10,6 +10,8 @@ var overlay: Control
 var timer: Timer
 var product: Control
 var _refreshing := false
+var _entry_center: CenterContainer
+var _entry_title: Label
 var _entry_cost: HBoxContainer
 var _entry_amount: Label
 var _entry_blocker: Control
@@ -260,15 +262,27 @@ func _scroll_to_product(scroll: ScrollContainer) -> void:
 
 func _build_entry_feedback() -> void:
 	var button: Button = lobby.enter_stage_button
-	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_entry_center = CenterContainer.new()
+	_entry_center.name = "StaminaEntryContent"
+	_place(button, _entry_center, Rect2(0, 0, 1, 1))
 	_entry_cost = HBoxContainer.new()
 	_entry_cost.name = "StaminaEntryCost"
 	_entry_cost.add_theme_constant_override("separation", 8)
-	_place(button, _entry_cost, Rect2(0.64, 0.14, 0.30, 0.72))
+	_entry_cost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_entry_center.add_child(_entry_cost)
+	_entry_title = Label.new()
+	_entry_title.text = "던전 입장"
+	_entry_title.add_theme_font_size_override("font_size", 34)
+	_entry_title.add_theme_color_override("font_color", Color("fff1ca"))
+	_entry_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_entry_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_entry_cost.add_child(_entry_title)
 	var icon := TextureRect.new()
 	icon.texture = lobby._load_svg_texture_direct(RULES.ICON_PATH)
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	icon.custom_minimum_size.x = 30
+	icon.custom_minimum_size = Vector2(30, 38)
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -304,19 +318,22 @@ func configure_entry(unlocked: bool, cost: int) -> void:
 	if _entry_cost == null:
 		return
 	var modes = lobby.main_modes_view
-	_entry_cost.visible = unlocked and not modes.ranked and modes.perspective == "demon" and modes.difficulty == "easy"
+	_entry_center.visible = unlocked and not modes.ranked and modes.perspective == "demon" and modes.difficulty == "easy"
+	if _entry_center.visible:
+		lobby.enter_stage_button.text = ""
 	_entry_amount.text = "-%d" % cost if cost > 0 else "무료"
 
 func play_entry_cost(amount: int) -> void:
 	refresh()
 	if amount <= 0:
+		_entry_center.hide()
 		return
 	if _spend_tween != null and _spend_tween.is_valid():
 		_spend_tween.kill()
 	_entry_blocker.show()
 	_entry_blocker.grab_focus()
 	_spend_label.text = "-%d" % amount
-	var rect := _entry_cost.get_global_rect()
+	var rect := _entry_amount.get_global_rect()
 	_spend_label.position = rect.get_center() - Vector2(80, 48)
 	_spend_label.modulate = Color.WHITE
 	_spend_label.show()
@@ -326,4 +343,4 @@ func play_entry_cost(amount: int) -> void:
 	await _spend_tween.finished
 	_spend_label.hide()
 	_entry_blocker.hide()
-	_entry_cost.hide()
+	_entry_center.hide()
