@@ -13,9 +13,43 @@ const ORDER := [
 	"goblin",
 	"goblin_thrower",
 	"ghost",
+	"banshee",
 ]
 
 const MONSTERS := {
+	"banshee": {
+		"id": "banshee", "name": "밴시", "role": "controller",
+		"family": "banshee", "species": "undead", "grade": "advanced", "rarity": "uncommon",
+		"attack_type": "melee", "base_cost": 6.5, "summon_exp": 6.5,
+		"default_unlocked": false,
+		"description": "빠르게 배회하다 공격 예고 후 3배속 돌진. 적중 시 1초간 10% 둔화와 현재 체력 0.5% 추가 피해.",
+		"base_stats": {
+			"max_hp": 88, "move_speed": 110.0, "attack_damage": 4,
+			"attack_range": 62.0, "attack_cooldown": 1.0, "exp_reward": 26,
+			"detection_range": 420.0, "charge_speed_multiplier": 3.0,
+			"slow_multiplier": 0.90, "slow_duration": 1.0,
+		},
+		"card_icon_path": "res://assets/art/monsters/Banshee/frames/idle_01.png",
+		"ground_shadow": {"size": Vector2(58, 18), "offset_y": 27.0, "opacity": 0.34},
+		"special_augment_ids": ["banshee_bleeding", "banshee_charge_stealth", "banshee_death_possession"],
+		"elite_visual": {
+			"mode": "frames", "asset_dir": "res://assets/art/elitemonster/Banshee/frames", "target_height": 112.0,
+			"animations": {
+				"idle": {"prefix": "idle", "count": 4, "fps": 8.0, "loop": true},
+				"move": {"prefix": "walk", "count": 6, "fps": 11.0, "loop": true},
+				"attack": {"prefix": "atk", "count": 6, "fps": 12.0, "loop": false},
+				"hit": {"prefix": "hit", "count": 2, "fps": 14.0, "loop": false},
+				"death": {"prefix": "dead", "count": 5, "fps": 10.0, "loop": false},
+			},
+		},
+		"elite_skills": [{
+			"id": "elite_banshee_possession", "name": "빙의",
+			"description": "최대 체력 20%를 소모해 2초 공포. 공포 종료 후 3초간 빙의 불가.",
+			"initial_cooldown": 5.0, "cooldown": 20.0,
+			"duration": 2.0, "self_max_hp_cost": 0.20,
+		}],
+		"scene": preload("res://src/monsters/Banshee.tscn"),
+	},
 	"slime": {
 		"id": "slime",
 		"name": "슬라임",
@@ -689,10 +723,12 @@ const ATTACK_TYPE_LABELS := {
 }
 
 const GRADE_LABELS := {
+	"advanced": "고급",
 	"normal": "일반",
 }
 
 const RARITY_COMBAT_PROFILES := {
+	"uncommon": {"hp_multiplier": 1.0, "damage_multiplier": 1.0, "move_speed_multiplier": 1.0, "attack_cooldown_multiplier": 1.0},
 	"common": {
 		"hp_multiplier": 1.00,
 		"damage_multiplier": 1.00,

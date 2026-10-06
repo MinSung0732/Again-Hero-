@@ -786,6 +786,14 @@ var poison_flash_timer: float = 0.0
 var poison_flash_active: bool = false
 var poison_flash_restore_color: Color = Color.WHITE
 var poison_source: Node
+var bleed_timer: float = 0.0
+var bleed_elapsed: float = 0.0
+var bleed_tick_timer: float = 0.0
+var bleed_total_damage: int = 0
+var bleed_damage_applied: int = 0
+var bleed_duration: float = 0.0
+var bleed_source: Node
+var possession_immunity_timer: float = 0.0
 var fear_timer: float = 0.0
 var fear_source: Node2D
 var fear_origin: Vector2 = Vector2.ZERO
@@ -850,6 +858,8 @@ func configure_profile(profile: Dictionary) -> void:
 	status_resistances.clear()
 	offensive_memory_events.clear()
 	status_effect_events.clear()
+	_clear_bleed()
+	possession_immunity_timer = 0.0
 	fear_timer = 0.0
 	fear_source = null
 	fear_origin = Vector2.ZERO
@@ -1686,6 +1696,8 @@ func _physics_process(delta: float) -> void:
 
 	_update_hero_hit_flash(delta)
 	_update_poison(delta)
+	_update_bleed(delta)
+	possession_immunity_timer = maxf(possession_immunity_timer - delta, 0.0)
 	if current_hp <= 0 or is_dying:
 		velocity = Vector2.ZERO
 		return
@@ -16777,6 +16789,53 @@ func apply_poison(
 
 
 
+func apply_bleed(duration: float = 5.0, source: Node = null) -> bool:
+	if current_hp <= 0 or is_dying or bleed_timer > 0.0 or duration <= 0.0:
+		return false
+	record_status_effect_event("bleed")
+	bleed_duration = duration
+	bleed_timer = duration
+	bleed_elapsed = 0.0
+	bleed_tick_timer = minf(0.5, duration)
+	bleed_total_damage = int(round(float(max_hp) * 0.004 * duration))
+	bleed_damage_applied = 0
+	bleed_source = source if is_instance_valid(source) else null
+	set_meta("bleed_active", true)
+	return true
+
+
+func _update_bleed(delta: float) -> void:
+	if bleed_timer <= 0.0:
+		return
+	var elapsed := minf(delta, bleed_timer)
+	bleed_timer = maxf(bleed_timer - delta, 0.0)
+	bleed_elapsed += elapsed
+	bleed_tick_timer -= delta
+	if bleed_tick_timer <= 0.0 or bleed_timer <= 0.0:
+		var cumulative := int(round(float(bleed_total_damage) * minf(bleed_elapsed / bleed_duration, 1.0)))
+		var damage := maxi(cumulative - bleed_damage_applied, 0)
+		bleed_damage_applied = cumulative
+		bleed_tick_timer = minf(0.5, bleed_timer)
+		if damage > 0:
+			take_status_damage(damage, bleed_source if is_instance_valid(bleed_source) else null)
+	if bleed_timer <= 0.0 or current_hp <= 0:
+		_clear_bleed()
+
+
+func _clear_bleed() -> void:
+	bleed_timer = 0.0
+	bleed_elapsed = 0.0
+	bleed_tick_timer = 0.0
+	bleed_total_damage = 0
+	bleed_damage_applied = 0
+	bleed_source = null
+	set_meta("bleed_active", false)
+
+
+func can_receive_possession() -> bool:
+	return current_hp > 0 and not is_dying and fear_timer <= 0.0 and possession_immunity_timer <= 0.0
+
+
 func apply_fear(
 	source: Node2D,
 	duration: float,
@@ -16792,6 +16851,7 @@ func apply_fear(
 		0.05
 	)
 	fear_timer = maxf(fear_timer, effective_duration)
+	possession_immunity_timer = maxf(possession_immunity_timer, fear_timer + 3.0)
 	fear_speed_multiplier = maxf(speed_multiplier, 1.0)
 	fear_source = source if is_instance_valid(source) else null
 	fear_origin = (
@@ -20052,6 +20112,8 @@ func _begin_death_sequence() -> void:
 		return
 
 	is_dying = true
+	_clear_bleed()
+	possession_immunity_timer = 0.0
 	fear_timer = 0.0
 	fear_source = null
 	fear_speed_multiplier = 1.0

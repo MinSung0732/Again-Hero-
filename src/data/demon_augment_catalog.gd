@@ -8,6 +8,7 @@ const NORMAL_MAX_LEVEL := 10
 const SPECIAL_MAX_LEVEL := 1
 
 const MONSTER_NAMES := {
+	"banshee": "밴시",
 	"slime": "슬라임",
 	"spider": "거미",
 	"orc": "오크",
@@ -128,6 +129,9 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{"id": "banshee_bleeding", "monster_id": "banshee", "name": "찢어진 상처", "description": "공격 적중 시 20% 확률로 3초 출혈 (중첩·갱신 불가)", "augment_type": TYPE_SPECIAL, "max_stack": SPECIAL_MAX_LEVEL, "icon": "", "effect_type": "banshee_bleeding", "effect_values": {"chance": 0.20, "duration": 3.0}},
+	{"id": "banshee_charge_stealth", "monster_id": "banshee", "name": "핏빛 은신", "description": "돌진 중 은신 및 받는 피해 50% 감소", "augment_type": TYPE_SPECIAL, "max_stack": SPECIAL_MAX_LEVEL, "icon": "", "effect_type": "banshee_charge_stealth", "effect_values": {"damage_taken_multiplier": 0.50}},
+	{"id": "banshee_death_possession", "monster_id": "banshee", "name": "서른 번째 원혼", "description": "밴시 30마리 사망마다 증강이 적용되지 않은 엘리트 밴시 소환", "augment_type": TYPE_SPECIAL, "max_stack": SPECIAL_MAX_LEVEL, "icon": "", "effect_type": "banshee_death_possession", "effect_values": {"deaths_required": 30}},
 	{
 		"id": "bat_lifesteal",
 		"monster_id": "bat",

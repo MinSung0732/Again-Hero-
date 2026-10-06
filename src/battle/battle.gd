@@ -185,6 +185,7 @@ var hero_kills_toward_magnet: int = 0
 
 var summon_cost_multiplier: float = 1.0
 var demon_exp_gain_multiplier: float = 1.0
+var banshee_deaths_toward_elite: int = 0
 var monster_speed_multiplier: float = 1.0
 var monster_damage_multiplier: float = 1.0
 var monster_hp_multiplier: float = 1.0
@@ -742,6 +743,7 @@ func _start_battle() -> void:
 
 	summon_cost_multiplier = 1.0
 	demon_exp_gain_multiplier = 1.0
+	banshee_deaths_toward_elite = 0
 	monster_speed_multiplier = 1.0
 	monster_damage_multiplier = 1.0
 	monster_hp_multiplier = 1.0
@@ -1827,6 +1829,7 @@ func _spawn_monster(
 	var monster := scene.instantiate() as Node2D
 	if monster == null:
 		return null
+	monster.set_meta("exclude_all_augments", bool(spawn_modifiers.get("exclude_all_augments", false)))
 	var monster_species := MONSTER_CATALOG.get_species(monster_type)
 	monster.set_meta("monster_species", monster_species)
 	monster.set_meta(
@@ -2104,6 +2107,8 @@ func _spawn_monster(
 		"spawn_source",
 		"augment" if split_child else "normal"
 	)
+	if bool(monster.get_meta("exclude_all_augments", false)):
+		_apply_augment_free_base_stats(monster, monster_type)
 	_apply_special_augments_to_monster(monster, monster_type)
 	monster.connect("died", Callable(self, "_on_monster_died").bind(monster))
 
@@ -2582,6 +2587,15 @@ func _on_monster_died(monster: Node) -> void:
 			0
 		)
 
+	if monster_type == "banshee" and is_instance_valid(monster) and not bool(monster.get_meta("exclude_all_augments", false)):
+		var config: Dictionary = _get_special_augment_config("banshee").get("banshee_death_possession", {})
+		if not config.is_empty():
+			banshee_deaths_toward_elite += 1
+			if banshee_deaths_toward_elite >= int(config.get("deaths_required", 30)):
+				banshee_deaths_toward_elite = 0
+				var elite = _spawn_monster("banshee", drop_position, 0.0, false, {"exclude_all_augments": true})
+				if is_instance_valid(elite):
+					_apply_special_monster_modifiers(elite, "banshee", {"type": "elite", "name": "엘리트 밴시"})
 	if monster_type == "ghost" and is_instance_valid(monster):
 		_apply_ghost_death_empower(monster)
 
@@ -4273,7 +4287,7 @@ func _apply_special_augments_to_monster(
 ) -> void:
 	if not is_instance_valid(monster):
 		return
-	var configs := _get_special_augment_config(monster_id)
+	var configs := {} if bool(monster.get_meta("exclude_all_augments", false)) else _get_special_augment_config(monster_id)
 	monster.set_meta("special_augment_configs", configs)
 	if monster.has_method("configure_special_augments"):
 		monster.call("configure_special_augments", configs)
@@ -4290,6 +4304,8 @@ func _apply_normal_augments_to_existing_monster(
 	monster: Node,
 	monster_id: String
 ) -> void:
+	if bool(monster.get_meta("exclude_all_augments", false)):
+		return
 	var rarity_combat := MONSTER_CATALOG.get_rarity_combat_profile(monster_id)
 	var rarity_hp_multiplier := maxf(
 		float(rarity_combat.get("hp_multiplier", 1.0)),
@@ -5215,3 +5231,37 @@ func open_tutorial_elite() -> void:
 		if String(event.get("type", "")) == "elite":
 			_open_mutation_choice(event.duplicate(true))
 			return
+
+
+func _apply_augment_free_base_stats(monster: Node, monster_id: String) -> void:
+	var rarity := MONSTER_CATALOG.get_rarity_combat_profile(monster_id)
+	monster.set_meta("demon_level_base_max_hp",
+		float(monster.get_meta("augment_raw_max_hp"))
+		* float(rarity.get("hp_multiplier", 1.0))
+		* _get_augment_free_research_multiplier("monster_vitality", 0.01)
+		* _get_monster_collection_upgrade_multiplier(monster_id, "hp_per_level")
+	)
+	monster.set_meta("demon_level_base_attack_damage",
+		float(monster.get_meta("augment_raw_attack_damage"))
+		* float(rarity.get("damage_multiplier", 1.0))
+		* _get_augment_free_research_multiplier("monster_power", 0.01)
+		* _get_monster_collection_upgrade_multiplier(monster_id, "damage_per_level")
+	)
+	monster.set_meta("demon_level_base_move_speed",
+		float(monster.get_meta("augment_raw_move_speed"))
+		* float(rarity.get("move_speed_multiplier", 1.0))
+		* _get_augment_free_research_multiplier("monster_mobility", 0.0035)
+	)
+	monster.set("attack_cooldown",
+		float(monster.get_meta("augment_raw_attack_cooldown"))
+		* float(rarity.get("attack_cooldown_multiplier", 1.0))
+		/ _get_augment_free_research_multiplier("monster_attack_speed", 0.005)
+	)
+	_apply_demon_level_scaling_to_monster(monster, false)
+	monster.set("current_hp", int(monster.get("max_hp")))
+
+
+func _get_augment_free_research_multiplier(research_id: String, per_point: float) -> float:
+	return 1.0 + per_point * RESEARCH_CATALOG.get_effective_level_points(
+		research_id, int(permanent_research_levels.get(research_id, 0))
+	)

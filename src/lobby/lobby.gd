@@ -4023,6 +4023,10 @@ func _build_normal_detail_text(
 		lines.append("")
 		lines.append("[color=#aaa0b0]%s[/color]" % " · ".join(extra_parts))
 
+	var description := String(data.get("description", ""))
+	if not description.is_empty():
+		lines.append("")
+		lines.append("[color=#aaa0b0]%s[/color]" % description)
 	return "\n".join(lines)
 
 

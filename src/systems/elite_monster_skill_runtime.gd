@@ -193,6 +193,11 @@ func _cast_skill(monster: Node2D, skill: Dictionary) -> void:
 	if skill_id.is_empty():
 		return
 
+	# A blocked possession retains readiness; it does not spend HP/cooldown.
+	if skill_id == "elite_banshee_possession":
+		var target := battle.get("hero") as Node2D
+		if not is_instance_valid(target) or not target.has_method("can_receive_possession") or not bool(target.call("can_receive_possession")):
+			return
 	skill["_timer"] = maxf(float(skill.get("cooldown", 0.0)), 0.01)
 	match skill_id:
 		"elite_slime_proliferation":
@@ -211,6 +216,12 @@ func _cast_skill(monster: Node2D, skill: Dictionary) -> void:
 			_begin_kobolt_fighting_spirit(monster, skill)
 		"elite_ghost_fear":
 			_cast_ghost_fear(monster, skill)
+		"elite_banshee_possession":
+			var target := battle.get("hero") as Node2D
+			var cost := int(round(float(monster.get("max_hp")) * float(skill.get("self_max_hp_cost", 0.20))))
+			monster.set("current_hp", maxi(int(monster.get("current_hp")) - cost, 1))
+			target.call("apply_fear", monster, float(skill.get("duration", 2.0)), 1.0)
+			monster.queue_redraw()
 		"elite_goblin_thrower_bombardment":
 			_begin_goblin_thrower_bombardment(monster, skill)
 

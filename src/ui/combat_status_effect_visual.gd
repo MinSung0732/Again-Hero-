@@ -39,9 +39,9 @@ func setup(new_target: Node, new_effect_type: String) -> void:
 						frames.add_frame("fx", texture)
 			"fear":
 				frames.set_animation_speed("fx", 10.0)
-				for index in range(1, 7):
+				for index in range(1, 5):
 					var texture := _load_texture(
-						"res://assets/art/effects/debuff/frames/slow_%02d.png" % index
+						"res://assets/art/effects/debuff/fear_frames/fear_%02d.png" % index
 					)
 					if texture != null:
 						frames.add_frame("fx", texture)
@@ -75,7 +75,7 @@ func setup(new_target: Node, new_effect_type: String) -> void:
 		"fear":
 			scale = Vector2(0.34, 0.34)
 			position = Vector2(0.0, -6.0)
-			modulate = Color(0.72, 0.52, 0.92, 0.92)
+			modulate = Color.WHITE
 		"orc_rage":
 			scale = Vector2(0.34, 0.34)
 			position = Vector2(0.0, -10.0)
