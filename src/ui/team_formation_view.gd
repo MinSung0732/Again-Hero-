@@ -1,5 +1,17 @@
 extends RefCounted
 
+const CARD_FRAME := preload("res://assets/art/UI/clean_frames/rarity_card_frame.tres")
+
+func rarity_card_style(rarity: String, source: StyleBoxFlat) -> StyleBoxFlat:
+	var style := CARD_FRAME.duplicate() as StyleBoxFlat
+	var color := rarity_border_color(rarity)
+	style.bg_color = source.bg_color
+	style.border_color = color
+	style.shadow_color = Color(color, 0.16)
+	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+		style.set_content_margin(side, source.get_margin(side))
+	return style
+
 const SHOP := preload("res://src/data/shop_catalog.gd")
 const PIXEL := preload("res://src/ui/pixel_panel_skin.gd")
 
@@ -10,7 +22,7 @@ func apply_slot_border(button: Button, rarity: String) -> void:
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		var style := PIXEL.button_style(button.get_theme_stylebox(state)) as StyleBoxFlat
 		style.border_color = rarity_border_color(rarity) if not rarity.is_empty() else Color("685276")
-		button.add_theme_stylebox_override(state, style)
+		button.add_theme_stylebox_override(state, rarity_card_style(rarity, style) if not rarity.is_empty() else style)
 
 const PATH := "SafeArea/Layout/Content/TeamTab/TeamLayout"
 

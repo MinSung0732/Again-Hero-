@@ -90,11 +90,12 @@ func install(owner: RefCounted, parent: Control) -> void:
 	gallery = _button(column, "", true)
 	gallery.name = "IllustrationGallery"
 	gallery.custom_minimum_size.y = 182
-	var gallery_art := _image(gallery)
+	var gallery_viewport := _art_viewport(gallery)
+	var gallery_art := _image(gallery_viewport)
 	gallery_art.name = "GalleryArt"
 	gallery_art.modulate = Color(0.4, 0.3, 0.5)
 	_full(gallery_art)
-	_full_shade(gallery)
+	_full_shade(gallery_viewport)
 	var gallery_text := _label(gallery, "일러스트 감상", 36, Color("f2ddff"))
 	_rect(gallery_text, Vector2(30, 32), Vector2(460, 56))
 	var gallery_info := _label(gallery, "수집한 일러스트를 감상하세요. · 준비 중", 23)
@@ -113,10 +114,11 @@ func _build_card(parent: Control) -> void:
 	card.name = "ProfileCard"
 	card.custom_minimum_size.y = 650
 	parent.add_child(card)
-	banner = _image(card)
+	var banner_viewport := _art_viewport(card)
+	banner = _image(banner_viewport)
 	banner.name = "ProfileBanner"
 	_full(banner)
-	_full_shade(card)
+	_full_shade(banner_viewport)
 	var info := Control.new()
 	info.name = "ProfileInformation"
 	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -246,7 +248,7 @@ func refresh() -> void:
 		nickname.text = "마왕"
 	banner.texture = _texture(CATALOG.path(STORE.selected_id("banner"), "banner"))
 	portrait.texture = _texture(CATALOG.path(STORE.selected_id("avatar"), "avatar"))
-	(gallery.get_node("GalleryArt") as TextureRect).texture = banner.texture
+	(gallery.get_node("ArtViewport/GalleryArt") as TextureRect).texture = banner.texture
 	for id in ["avatar", "banner", "representative"]:
 		actions[id].disabled = _blocked()
 	(card.get_node("ProfileInformation/PortraitEdit") as Button).disabled = _blocked()
@@ -294,6 +296,19 @@ func _button(parent: Control, text: String, disabled: bool) -> Button:
 	button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	parent.add_child(button)
 	return button
+
+func _art_viewport(parent: Control) -> Control:
+	var viewport := Control.new()
+	viewport.name = "ArtViewport"
+	viewport.clip_contents = true
+	viewport.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(viewport)
+	_full(viewport)
+	viewport.offset_left = 16
+	viewport.offset_top = 16
+	viewport.offset_right = -16
+	viewport.offset_bottom = -16
+	return viewport
 
 func _image(parent: Control) -> TextureRect:
 	var image := TextureRect.new()

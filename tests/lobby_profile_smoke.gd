@@ -82,6 +82,8 @@ func run() -> void:
 	lobby._switch_tab("other")
 	lobby.settings_view.other_menu_buttons.profile.pressed.emit()
 	var view = lobby.settings_view.profile_view
+	check(view.banner.get_parent().clip_contents and view.banner.get_parent().offset_left == 16 and view.banner.get_parent().offset_right == -16, "profile art clipped inside frame")
+	check(view.gallery.get_node("ArtViewport").clip_contents, "gallery art clipped inside frame")
 	await frames()
 	check(view.root.visible and not lobby.settings_view.settings_root.visible, "profile opens separately")
 	check(view.nickname.text == "테스트" and view.banner.texture != null and view.portrait.texture != null, "actual identity and supplied artwork")

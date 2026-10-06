@@ -2,6 +2,7 @@ extends RefCounted
 
 # Reuse the lobby's authored gold/purple pixel frame. Compose its atlas pieces
 # once, then cache nine-patch textures by fill; controls retain their hit regions.
+const CLEAN_BUTTON_FRAME := preload("res://assets/art/UI/clean_frames/button_frame.tres")
 static var _textures: Dictionary = {}
 static var _frame: Image
 static var _outside := PackedByteArray()
@@ -93,7 +94,7 @@ static func button_style(source: StyleBox) -> StyleBox:
 	# One continuous border; panel artwork and invisible input hit regions stay separate.
 	if source is StyleBoxEmpty:
 		return source
-	var result := StyleBoxFlat.new()
+	var result := CLEAN_BUTTON_FRAME.duplicate() as StyleBoxFlat
 	result.bg_color = Color("281832")
 	result.border_color = Color("d9b45b")
 	result.set_border_width_all(2)

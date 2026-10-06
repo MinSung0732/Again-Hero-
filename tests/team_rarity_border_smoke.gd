@@ -22,6 +22,12 @@ func run() -> void:
 	await process_frame
 	await process_frame
 	var expected := {"common":Color("92929c"),"uncommon":Color("ffd84f"),"rare":Color("54a8ff"),"legendary":Color("bc70ff"),"transcendent":Color("61e887")}
+	check(load("res://assets/art/UI/clean_frames/button_frame.tres") is StyleBoxFlat and load("res://assets/art/UI/clean_frames/rarity_card_frame.tres") is StyleBoxFlat, "native frame assets")
+	for plate_name in ["HeaderGoldPlate", "HeaderStaminaPlate"]:
+		var plate: Node = lobby.get_node("SafeArea/Layout/Header/HeaderSlots/" + plate_name)
+		for child in plate.get_children():
+			if child is Button and child.text == "+":
+				check(child.anchor_left >= 0.7799 and child.anchor_right <= 0.9401 and child.anchor_top >= 0.2399 and child.anchor_bottom <= 0.7601, "plus inset " + plate_name)
 	var slot: Button = lobby.team_slot_1_button
 	for rarity in expected:
 		check(VIEW.rarity_border_color(rarity) == expected[rarity], "five-rarity palette " + rarity)

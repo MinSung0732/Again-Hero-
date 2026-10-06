@@ -61,8 +61,8 @@ func _icon(parent: Control, texture: Texture2D, rect: Rect2) -> void:
 func _plus(parent: Control, action: Callable) -> Button:
 	var button := Button.new()
 	button.text = "+"
-	button.add_theme_font_size_override("font_size", 36)
-	_place(parent, button, Rect2(0.76, 0.17, 0.21, 0.66))
+	button.add_theme_font_size_override("font_size", 30)
+	_place(parent, button, Rect2(0.78, 0.24, 0.16, 0.52))
 	button.mouse_filter = Control.MOUSE_FILTER_STOP
 	button.tooltip_text = "상점 충전 상품"
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
