@@ -424,6 +424,7 @@ var sage_attack_serial: int = 0
 var sage_phase_cooldown_timer: float = 25.0
 var sage_phase_remaining: float = 0.0
 var sage_phase_active: bool = false
+var sage_phase_entry_position := Vector2.ZERO
 var sage_saved_collision_mask: int = -1
 var sage_afterimage_timer: float = 0.0
 var sage_afterimage_pool: Array[AnimatedSprite2D] = []
@@ -10857,6 +10858,7 @@ func _start_sage_phase() -> void:
 	if sage_phase_active or hero_archetype != "grand_sage_astra":
 		return
 	_ensure_sage_runtime()
+	sage_phase_entry_position = position
 	sage_phase_active = true
 	sage_phase_remaining = maxf(float(sage_config.get("phase_duration", 7.0)), 0.1)
 	sage_afterimage_timer = 0.0
@@ -10879,6 +10881,8 @@ func _end_sage_phase() -> void:
 	if sage_saved_collision_mask >= 0:
 		collision_mask = sage_saved_collision_mask
 	sage_saved_collision_mask = -1
+	# Resolve after the physics action wrapper, including its petrify anchor lock.
+	call_deferred("_resolve_sage_phase_obstacle_overlap")
 	var interval := maxf(float(sage_config.get("phase_interval", 25.0)), 0.1)
 	var duration := maxf(float(sage_config.get("phase_duration", 7.0)), 0.0)
 	sage_phase_cooldown_timer = maxf(interval - duration, 0.1)
@@ -10887,6 +10891,72 @@ func _end_sage_phase() -> void:
 	shield_hp = shield_max_hp
 	sage_post_phase_shield_timer = maxf(float(sage_config.get("post_phase_shield_duration", 3.0)), 0.0)
 	queue_redraw()
+
+
+func _resolve_sage_phase_obstacle_overlap() -> void:
+	if hero_archetype != "grand_sage_astra" or sage_phase_active or is_dying or current_hp <= 0 or not is_inside_tree():
+		return
+	var body_shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if body_shape == null or body_shape.disabled or body_shape.shape == null:
+		return
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = body_shape.shape
+	query.transform = body_shape.global_transform
+	query.collision_mask = collision_mask & (
+		HERO_DECOR_COLLISION_LAYER | SAGE_PHASE_BOUNDARY_COLLISION_MASK
+	)
+	query.exclude = [get_rid()]
+	query.margin = 2.0
+	var space := get_world_2d().direct_space_state
+	if space.intersect_shape(query, 1).is_empty():
+		return
+	var origin := position
+	var shape_offset := body_shape.global_position - global_position
+	# Bounded one-shot search, only on expiry inside a prop; no frame/group scan.
+	for ring in range(1, 33):
+		for direction_index in range(16):
+			var direction := Vector2.RIGHT.rotated(TAU * float(direction_index) / 16.0)
+			var candidate := origin + direction * float(ring) * 24.0
+			if not _sage_phase_landing_is_clear(candidate, query, space, shape_offset):
+				continue
+			var blocked_distance := float(ring - 1) * 24.0
+			var clear_distance := float(ring) * 24.0
+			for refinement in range(6):
+				var midpoint := (blocked_distance + clear_distance) * 0.5
+				if _sage_phase_landing_is_clear(origin + direction * midpoint, query, space, shape_offset):
+					clear_distance = midpoint
+				else:
+					blocked_distance = midpoint
+			_apply_sage_phase_landing(origin + direction * clear_distance)
+			return
+	# The phase entry is a checked fallback for unusually large/concave props.
+	if _sage_phase_landing_is_clear(sage_phase_entry_position, query, space, shape_offset):
+		_apply_sage_phase_landing(sage_phase_entry_position)
+
+
+func _sage_phase_landing_is_clear(
+	candidate: Vector2,
+	query: PhysicsShapeQueryParameters2D,
+	space: PhysicsDirectSpaceState2D,
+	shape_offset: Vector2
+) -> bool:
+	if (
+		candidate.x < FIELD_MARGIN or candidate.y < FIELD_MARGIN
+		or candidate.x > battlefield_size.x - FIELD_MARGIN
+		or candidate.y > battlefield_size.y - FIELD_MARGIN
+	):
+		return false
+	query.transform.origin = get_parent().to_global(candidate) + shape_offset
+	return space.intersect_shape(query, 1).is_empty()
+
+
+func _apply_sage_phase_landing(candidate: Vector2) -> void:
+	position = candidate
+	velocity = Vector2.ZERO
+	obstacle_stuck_timer = 0.0
+	obstacle_escape_timer = 0.0
+	if petrify_timer > 0.0:
+		petrify_anchor = global_position
 
 
 func _emit_sage_afterimage() -> void:

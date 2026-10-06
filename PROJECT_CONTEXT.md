@@ -1,3 +1,6 @@
+## Sage Phase Expiry Obstacle Recovery (2026-10-07)
+- Stage10 Astra restores collision on phase expiry, then defers a one-shot body-shape overlap check until after the physics/petrify wrapper. Only decor/hard-wall layers trigger ejection; monster overlap does not. A bounded 32-ring/16-direction search with 2px margin chooses a nearby map-valid landing and refines the distance; a checked phase-entry position is the fallback for oversized props. Clears stale velocity/obstacle escape and updates the petrify anchor. Normal expiry position, boundary mask, cooldown and post-phase shield remain. Physics runtime coverage: tests/sage_phase_escape_smoke.gd.
+
 ## Demon Ultimate Actual Damage Charging (2026-10-07)
 - Hero combat_damage_received emits actual HP loss once from the incoming damage pipeline, including DOT and fatal hits. Battle uses it for damage metrics and HP-damage demon charge (existing0.25 coefficient); health_changed updates HP/lowest-HP observations only. Berserker blood-art HP costs and other self-cost/transform/heal health changes do not charge or masquerade as dealt damage. Full shields/invulnerability produce no HP-damage charge; overkill counts actual HP only. Hero's own madness gauge remains unchanged.
 
