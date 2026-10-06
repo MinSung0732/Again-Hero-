@@ -1,12 +1,14 @@
 extends RefCounted
 
 const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
-const OTHER_ENTRIES := [["demon_book", "마왕도감"], ["hero_book", "용사도감"], ["daily", "일일미션"], ["weekly", "주간미션"], ["friends", "친구목록"], ["rank_history", "랭킹기록"], ["settings", "설정"]]
+const OTHER_ENTRIES := [["profile", "프로필"], ["demon_book", "마왕도감"], ["hero_book", "용사도감"], ["daily", "일일미션"], ["weekly", "주간미션"], ["friends", "친구목록"], ["rank_history", "랭킹기록"], ["settings", "설정"]]
 
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const PROFILE := preload("res://src/systems/player_profile.gd")
 const APPEARANCE := preload("res://src/systems/demon_appearance_store.gd")
 const APPEARANCES := preload("res://src/data/demon_appearance_catalog.gd")
+const PROFILE_COSMETICS := preload("res://src/systems/profile_cosmetic_store.gd")
+const PROFILE_CATALOG := preload("res://src/data/profile_cosmetic_catalog.gd")
 const PROLOGUE := preload("res://src/ui/player_prologue.gd")
 const NOTICE_PATH := "user://notification_settings.cfg"
 const TABS := [["game", "게임"], ["sound", "소리"], ["notice", "알림"], ["account", "계정"], ["misc", "기타"]]
@@ -17,6 +19,7 @@ const GAME_OPTIONS := [
 var other_menu: VBoxContainer
 var other_menu_buttons := {}
 var settings_root: VBoxContainer
+var profile_view: RefCounted
 var other_back_button: Button
 var other_backdrop: Panel
 var settings_title_plate: PanelContainer
@@ -106,6 +109,8 @@ func install(target: Control) -> void:
 	lobby.get_node("/root/LoginGateway").login_unavailable.connect(_on_cloud_status)
 	show_page("game")
 	_build_other_menu(box)
+	profile_view = preload("res://src/ui/lobby_profile_view.gd").new()
+	profile_view.install(self, box)
 	show_menu()
 
 func _install_tab_backdrops() -> void:
@@ -207,11 +212,11 @@ func _build_other_menu(box: VBoxContainer) -> void:
 	for entry in OTHER_ENTRIES:
 		var button := Button.new()
 		button.name = String(entry[0]).to_pascal_case()
-		button.text = String(entry[1]) + ("  ›" if entry[0] == "settings" else "\n준비 중")
+		button.text = String(entry[1]) + ("  ›" if entry[0] in ["settings", "profile"] else "\n준비 중")
 		button.custom_minimum_size.y = 132
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		button.disabled = entry[0] != "settings"
+		button.disabled = entry[0] not in ["settings", "profile"]
 		button.add_theme_font_size_override("font_size", 30)
 		button.add_theme_color_override("font_color", Color("fff0c2"))
 		button.add_theme_color_override("font_disabled_color", Color("b9a7c6"))
@@ -222,6 +227,15 @@ func _build_other_menu(box: VBoxContainer) -> void:
 		other_menu_buttons[entry[0]] = button
 		if entry[0] == "settings":
 			button.pressed.connect(_open_settings)
+		elif entry[0] == "profile":
+			button.pressed.connect(show_profile)
+
+func show_profile() -> void:
+	settings_root.hide()
+	settings_title_plate.hide()
+	other_menu.hide()
+	menu_title_plate.hide()
+	profile_view.show()
 
 func _open_settings() -> void:
 	show_page(selected)
@@ -229,6 +243,8 @@ func _open_settings() -> void:
 func show_menu() -> void:
 	if other_menu == null:
 		return
+	if profile_view != null:
+		profile_view.hide()
 	settings_root.hide()
 	settings_title_plate.hide()
 	menu_title_plate.show()
@@ -539,7 +555,7 @@ func _build_account() -> void:
 	profile_setup.pressed.connect(_open_profile)
 	appearance_button = Button.new()
 	appearance_button.name = "ChangeDemonAppearance"
-	appearance_button.text = "마왕 초상화 변경"
+	appearance_button.text = "대표 마왕 외형 변경"
 	appearance_button.custom_minimum_size.y = 88
 	appearance_button.add_theme_font_size_override("font_size", 30)
 	page.add_child(appearance_button)
@@ -608,8 +624,8 @@ func _open_appearance_picker() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 24)
 	panel.add_child(column)
-	_label(column, "마왕 초상화 선택", 38, Color("ffdf91"))
-	appearance_notice = _label(column, "프로필과 이후 대사 컷신에 함께 적용됩니다.\n계정 성별과 닉네임은 변경되지 않습니다.", 26)
+	_label(column, "대표 마왕 외형 선택", 38, Color("ffdf91"))
+	appearance_notice = _label(column, "대표 캐릭터와 이후 대사에 적용됩니다.\n별도로 선택한 프로필 초상화·배너와 계정 성별·닉네임은 유지됩니다.", 26)
 	appearance_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var choices_scroll := ScrollContainer.new()
 	choices_scroll.custom_minimum_size.y = 320
@@ -672,7 +688,7 @@ func _sync_account() -> void:
 		_close_appearance_picker()
 	var nickname := String(profile.get("nickname", ""))
 	profile_label.text = "내 마왕 프로필\n%s\n%s" % [PROFILE.display_name(), "여성" if profile.get("gender", "male") == "female" else "남성"] if not nickname.is_empty() else "내 마왕 프로필\n미설정"
-	set_profile_avatar(load(PROFILE.portrait_path("avatar")) as Texture2D)
+	set_profile_avatar(load(PROFILE_CATALOG.path(PROFILE_COSMETICS.selected_id("avatar"), "avatar")) as Texture2D)
 	appearance_button.disabled = nickname.is_empty() or cloud.busy or cloud.conflict
 	profile_portrait.visible = not nickname.is_empty()
 	profile_avatar_frame.visible = not nickname.is_empty()
@@ -695,10 +711,14 @@ func _sync_account() -> void:
 	pages.account.get_node("GoogleLogin").disabled = testing or cloud.busy
 	if testing:
 		pages.account.get_node("Guide").text = "일반 계정 로그인은 normaltest 쿠폰으로 테스트 모드 종료 후 가능합니다."
+	if profile_view != null:
+		profile_view.refresh()
 
 func show_page(id: String) -> void:
 	if not pages.has(id):
 		return
+	if profile_view != null:
+		profile_view.hide()
 	if settings_root != null:
 		other_menu.hide()
 		menu_title_plate.hide()

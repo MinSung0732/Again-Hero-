@@ -55,6 +55,9 @@ func prepare_scene(scene_path: String) -> bool:
 		dirs.assign(["lobby_header", "lobby_footer", "lobby_stage", "main_modes", "shop", "01_large_left_panel", "03_middle_right_panel"])
 		paths.append("res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png")
 		paths.append("res://assets/art/UI/settings_v2/amethyst_thumb.png")
+		for banner_path in preload("res://src/data/profile_cosmetic_catalog.gd").BANNERS.values():
+			paths.append(banner_path)
+		dirs.append("profile_v1")
 		paths.append_array(preload("res://src/systems/player_profile.gd").appearance_resource_paths())
 		paths.append("res://assets/art/effects/gatcha/summoning_chamber.png")
 		paths.append("res://assets/art/effects/gatcha/gacha_button_texture.tres")
