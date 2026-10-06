@@ -89,6 +89,29 @@ static func skin_style(source: StyleBox) -> StyleBox:
 		result.set_content_margin(side, flat.get_margin(side))
 	return result
 
+static func button_style(source: StyleBox) -> StyleBox:
+	# One continuous border; panel artwork and invisible input hit regions stay separate.
+	if source is StyleBoxEmpty:
+		return source
+	var result := StyleBoxFlat.new()
+	result.bg_color = Color("281832")
+	result.border_color = Color("d9b45b")
+	result.set_border_width_all(2)
+	if source is StyleBoxFlat:
+		var flat := source as StyleBoxFlat
+		if not flat.draw_center or flat.bg_color.a <= 0.0:
+			return source
+		result.bg_color = flat.bg_color
+		if flat.border_color.a > 0:
+			result.border_color = flat.border_color
+	elif source is StyleBoxTexture:
+		var tint := (source as StyleBoxTexture).modulate_color
+		result.bg_color *= tint
+		result.border_color *= tint
+	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+		result.set_content_margin(side, source.get_margin(side))
+	return result
+
 static func apply(control: Control) -> void:
 	var keys: Array[String] = []
 	if control is PanelContainer or control is Panel:
@@ -110,7 +133,7 @@ static func apply(control: Control) -> void:
 			input.set_content_margin_all(16)
 			control.add_theme_stylebox_override(key, input)
 		var source := control.get_theme_stylebox(key)
-		var style := skin_style(source)
+		var style := button_style(source) if control is Button else skin_style(source)
 		if style != source:
 			control.add_theme_stylebox_override(key, style)
 

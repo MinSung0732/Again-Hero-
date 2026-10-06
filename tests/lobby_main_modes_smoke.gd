@@ -51,7 +51,7 @@ func run() -> void:
 	for target in [view.demon_button, view.hero_button, view.ranked_button, view.easy_button, view.hard_button, view.character_button]:
 		check(target.icon != null and target.icon.get_width() == 64, "crisp native icon installed")
 		check(target.icon.get_image().get_pixel(0, 0).a == 0, "transparent icon padding")
-	check(view.demon_button.get_theme_stylebox("normal") == view.active_style and view.hero_button.get_theme_stylebox("normal") == view.idle_style, "selected state uses purple gold frame")
+	check(view.demon_button.get_theme_stylebox("normal").bg_color == Color("523068") and view.hero_button.get_theme_stylebox("normal").bg_color == Color("281832"), "continuous frame preserves selected state")
 	check(lobby.get_node("/root/PresentationWarmup").get_texture("res://assets/art/UI/main_modes/icon_rank.svg") != null, "new icon preloaded before lobby")
 	await capture("stage")
 	check(view.mode_row.get_global_rect().end.y < 1720, "mode controls above navigation")
@@ -65,7 +65,7 @@ func run() -> void:
 	view.notice.hide()
 	view.toggle_ranked()
 	check(view.ranked_button.button_pressed and lobby.enter_stage_button.text == "매칭 시작", "ranked pressed and entry relabeled")
-	check(view.ranked_button.get_theme_stylebox("normal") == view.active_style, "ranked skin follows toggle")
+	check(view.ranked_button.get_theme_stylebox("normal").bg_color == Color("523068"), "ranked skin follows toggle")
 	check(lobby.hero_name_label.text == "달빛마왕" and lobby.stage_status_label.text.contains("미배치"), "real nickname and no fabricated ranking")
 	check(view.character_button.visible and view.heroes.size() == 1, "only known unlocked hero selectable")
 	var selected: int = lobby.selected_stage_index
@@ -85,7 +85,7 @@ func run() -> void:
 	await capture("ranked-demon")
 	view.toggle_ranked()
 	check(not view.ranked_button.button_pressed and lobby.stage_selector_button.text.begins_with("STAGE"), "second click restores stages")
-	check(view.ranked_button.get_theme_stylebox("normal") == view.idle_style, "idle skin restored after ranked")
+	check(view.ranked_button.get_theme_stylebox("normal").bg_color == Color("281832"), "idle skin restored after ranked")
 	check(lobby.selected_stage_index == selected and lobby.STAGE_PROGRESS.load_state() == before, "toggles preserve saved progression and profile")
 	check(not view.blocks_entry(), "roundtrip restores real battle route")
 	await capture("return")

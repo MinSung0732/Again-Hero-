@@ -1376,9 +1376,9 @@ func _apply_lobby_button_skin(
 		return
 
 	var normal_style := primary_button_style if primary else secondary_button_style
-	button.add_theme_stylebox_override("normal", PIXEL_PANEL_SKIN.skin_style(normal_style))
-	button.add_theme_stylebox_override("hover", PIXEL_PANEL_SKIN.skin_style(primary_button_style))
-	button.add_theme_stylebox_override("pressed", PIXEL_PANEL_SKIN.skin_style(primary_button_style))
+	button.add_theme_stylebox_override("normal", PIXEL_PANEL_SKIN.button_style(normal_style))
+	button.add_theme_stylebox_override("hover", PIXEL_PANEL_SKIN.button_style(primary_button_style))
+	button.add_theme_stylebox_override("pressed", PIXEL_PANEL_SKIN.button_style(primary_button_style))
 	button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	button.add_theme_font_size_override("font_size", font_size)
 	button.add_theme_color_override(
@@ -2436,7 +2436,7 @@ func _show_other_account() -> void:
 	other_account_tab_button.disabled = true
 	_apply_lobby_button_skin(other_settings_tab_button, false, 24)
 	_apply_lobby_button_skin(other_account_tab_button, true, 24)
-	other_account_tab_button.add_theme_stylebox_override("disabled", PIXEL_PANEL_SKIN.skin_style(primary_button_style))
+	other_account_tab_button.add_theme_stylebox_override("disabled", PIXEL_PANEL_SKIN.button_style(primary_button_style))
 	other_account_tab_button.add_theme_color_override(
 		"font_disabled_color",
 		Color("ffe7a8")
@@ -2473,7 +2473,9 @@ func _on_sfx_mute_toggled(enabled: bool) -> void:
 
 
 func _refresh_nav_button(button: Button, selected: bool) -> void:
-	var style := nav_button_active_style if selected else nav_button_style
+	var style := PIXEL_PANEL_SKIN.button_style(nav_button_active_style if selected else nav_button_style)
+	if style is StyleBoxFlat:
+		style.bg_color = Color("523068") if selected else Color("281832")
 	button.add_theme_stylebox_override("normal", style)
 	button.add_theme_stylebox_override("hover", style)
 	button.add_theme_stylebox_override("pressed", style)
@@ -3221,8 +3223,8 @@ func _refresh_formation_mode() -> void:
 	_apply_lobby_button_skin(skill_mode_button, not showing_team, 23)
 	team_mode_button.disabled = showing_team
 	skill_mode_button.disabled = not showing_team
-	team_mode_button.add_theme_stylebox_override("disabled", PIXEL_PANEL_SKIN.skin_style(primary_button_style))
-	skill_mode_button.add_theme_stylebox_override("disabled", PIXEL_PANEL_SKIN.skin_style(primary_button_style))
+	team_mode_button.add_theme_stylebox_override("disabled", PIXEL_PANEL_SKIN.button_style(primary_button_style))
+	skill_mode_button.add_theme_stylebox_override("disabled", PIXEL_PANEL_SKIN.button_style(primary_button_style))
 	team_mode_button.add_theme_color_override("font_disabled_color", Color("fff0d2"))
 	skill_mode_button.add_theme_color_override("font_disabled_color", Color("fff0d2"))
 	if showing_team:
@@ -5166,7 +5168,7 @@ func _refresh_research_detail() -> void:
 	research_upgrade_button.disabled = STAGE_PROGRESS.get_research_points() < cost
 	research_upgrade_button.add_theme_stylebox_override(
 		"disabled",
-		PIXEL_PANEL_SKIN.skin_style(primary_button_disabled_style)
+		PIXEL_PANEL_SKIN.button_style(primary_button_disabled_style)
 	)
 
 

@@ -45,11 +45,16 @@ func run() -> void:
 	var victory := "Stage 1 클리어!\n첫 번째 침입자 · 견습 마법용사 처치 성공.\n최초 클리어 보상 · 연구 포인트 +100\nRun 연구 +141 · 산정 141 × Stage 1.00\n기본 +50 · 피해 +30 · 마왕Lv +15 · 용사Lv +6 · 소환 +10 · 신속 +24 · 관찰/전환 +6"
 	for won in [true, false]:
 		var message := victory if won else "시간 초과!\n견습 마법용사가 제한시간을 버텨냈습니다.\nRun 연구 +41\n기본 +10 · 피해 +20 · 마왕Lv +3 · 용사Lv +2 · 소환 +3 · 신속 +0 · 관찰/전환 +3"
+		message += "\nRun 골드 +%d · 전투 연구 보상의 60%%" % (84 if won else 24)
 		main._on_battle_finished(message, won)
 		await process_frame
 		await process_frame
 		check(main.result_title.text.begins_with("승리" if won else "패배"), "localized result title")
 		check(main.result_reward.text.contains("+141" if won else "+41"), "actual granted reward shown")
+		check(main.result_reward.text.contains("전투 골드 +84" if won else "전투 골드 +24"), "gold reward explicitly shown")
+		for button in [main.restart_button, main.stage_select_result_button, main.next_stage_button]:
+			var frame := button.get_theme_stylebox("normal") as StyleBoxFlat
+			check(frame != null and frame.border_width_top == 2 and frame.border_width_left == 2, "continuous uniform button border")
 		check(not main.result_message.text.contains("산정"), "calculation separated from headline")
 		check(main.result_analysis.text.contains("◆ 전투 기록") and not main.result_analysis.text.contains("◆ 보상 상세"), "compact battle record")
 		for hidden in ["용사 증강", "전략 전환", "마왕 최종", "일반증강", "특수증강", "직접 소환"]:

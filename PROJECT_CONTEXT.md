@@ -1,3 +1,6 @@
+## Continuous Button Frames (2026-10-06)
+- PixelPanelSkin.button_style supplies a continuous 2px border with no segmented corner artwork for framed buttons. Common lobby/main/gacha/navigation/mode controls and commerce shop_button_frame callers share it; state fills/tints, margins and touch geometry remain. Panel/title artwork and invisible icon hit areas retain their existing treatment. Result reward includes already granted combat gold (floor(combat research * 0.60), excluding first-clear research).
+
 ## Dungeon Formation Gate / Compact Results (2026-10-06)
 - Ordinary lobby entry, retry and next-stage require three equipped monsters and three demon skills before stamina debit/transition. Shared DungeonEntryPolicy supplies missing-slot messages. Localtest and active tutorial practice bypass this requirement.
 - Result presentation retains granted reward totals and time/lowest hero HP/cumulative HP damage/demon EXP contribution only. No result scroll, hero augments/strategy switches/demon final level/normal or special augments/manual summon listings or verbose reward calculations. Full metrics and reward computation remain unchanged.

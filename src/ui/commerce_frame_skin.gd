@@ -13,7 +13,7 @@ static func texture(name: String) -> Texture2D:
 			_textures[name] = load(path) as Texture2D if ResourceLoader.exists(path) else null
 	return _textures[name] as Texture2D
 
-static func style(name: String = "shop_panel_frame", padding: float = 18.0, tint: Color = Color.WHITE) -> StyleBoxTexture:
+static func style(name: String = "shop_panel_frame", padding: float = 18.0, tint: Color = Color.WHITE) -> StyleBox:
 	var box := StyleBoxTexture.new()
 	box.texture = texture(name)
 	box.modulate_color = tint
@@ -25,4 +25,4 @@ static func style(name: String = "shop_panel_frame", padding: float = 18.0, tint
 	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
 		box.set_texture_margin(side, patch)
 		box.set_content_margin(side, padding)
-	return box
+	return preload("res://src/ui/pixel_panel_skin.gd").button_style(box) if name == "shop_button_frame" else box

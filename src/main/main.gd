@@ -3428,7 +3428,7 @@ func _style_result_actions() -> void:
 			style.border_color = Color("e9be62") if emphasized else Color("89739e")
 			style.set_border_width_all(2)
 			style.set_content_margin_all(12)
-			button.add_theme_stylebox_override(state, PIXEL_PANEL_SKIN.skin_style(style))
+			button.add_theme_stylebox_override(state, PIXEL_PANEL_SKIN.button_style(style))
 
 func _populate_run_result_analysis() -> void:
 	if not is_instance_valid(result_analysis):
@@ -3530,7 +3530,7 @@ func _show_stamina_notice(message: String) -> void:
 		button.add_theme_font_size_override("font_size", 27)
 		button.custom_minimum_size.y = 72
 		for state in ["normal", "hover", "pressed"]:
-			button.add_theme_stylebox_override(state, PIXEL_PANEL_SKIN.skin_style(style))
+			button.add_theme_stylebox_override(state, PIXEL_PANEL_SKIN.button_style(style))
 		add_child(panel)
 	panel.dialog_text = message
 	panel.popup_centered(Vector2i(700, 230))

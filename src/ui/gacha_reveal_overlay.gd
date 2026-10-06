@@ -590,7 +590,7 @@ func _style_decorated_button(button: Button) -> void:
 			style.modulate_color = Color(1.15, 1.10, 1.15)
 		if state == "disabled":
 			style.modulate_color = Color("65576e")
-		button.add_theme_stylebox_override(state, style)
+		button.add_theme_stylebox_override(state, preload("res://src/ui/pixel_panel_skin.gd").button_style(style))
 	button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 
 

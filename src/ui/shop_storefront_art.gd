@@ -93,7 +93,7 @@ func _section(panel: PanelContainer) -> void:
 	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 
-func _plate_style() -> StyleBoxTexture:
+func _plate_style() -> StyleBox:
 	return FRAMES.style("shop_button_frame", 12)
 
 
@@ -262,9 +262,9 @@ func _product(button: Button, featured: bool) -> void:
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		var style := _plate_style()
 		if state == "pressed":
-			style.modulate_color = Color("bc93d2")
+			style.bg_color = Color("3b224b")
 		elif state == "disabled":
-			style.modulate_color = Color("62536d")
+			style.bg_color = Color("211729")
 		cta.add_theme_stylebox_override(state, style)
 	cta.add_theme_color_override("font_disabled_color", Color("a99eae"))
 	cta.add_theme_stylebox_override("focus", StyleBoxEmpty.new())

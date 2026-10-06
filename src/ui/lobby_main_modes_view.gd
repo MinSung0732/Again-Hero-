@@ -90,8 +90,10 @@ func install(host) -> void:
 
 func style_button(target: Button, selected: bool, icon_id: String = "", font_size: int = 25) -> void:
 	var style: StyleBoxTexture = active_style if selected else idle_style
+	var frame := preload("res://src/ui/pixel_panel_skin.gd").button_style(style) as StyleBoxFlat
+	frame.bg_color = Color("523068") if selected else Color("281832")
 	for state in ["normal", "hover", "pressed", "disabled"]:
-		target.add_theme_stylebox_override(state, style)
+		target.add_theme_stylebox_override(state, frame)
 	target.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	target.add_theme_font_size_override("font_size", font_size)
 	target.add_theme_color_override("font_color", Color("fff0b5") if selected else Color("cbb6dd"))
