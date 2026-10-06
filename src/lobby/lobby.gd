@@ -2152,9 +2152,10 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 		return
 
 	button.text = ""
-	button.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
-	button.add_theme_stylebox_override("hover", StyleBoxEmpty.new())
-	button.add_theme_stylebox_override("pressed", StyleBoxEmpty.new())
+	# ArrowSkin owns the artwork in every state; native button boxes must stay clear.
+	var empty := StyleBoxEmpty.new()
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+		button.add_theme_stylebox_override(state, empty)
 
 	var old := button.get_node_or_null("ArrowSkin")
 	if old != null:
