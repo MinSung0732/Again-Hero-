@@ -175,6 +175,18 @@ func run() -> void:
 	check(hero.current_hp < before_hp and hero.stun_timer == 1.5 and elite.visual.modulate == Color.WHITE, "slam damage stun and red restored after animation")
 	runtime.tick(4.9)
 	check(elite.march_remaining == 10, "march initial ten seconds")
+	# Deliberately exaggerate every inherited growth source before reinforcements.
+	battle.demon_level = 30
+	battle.monster_hp_multiplier = 10
+	battle.monster_damage_multiplier = 10
+	battle.monster_speed_multiplier = 10
+	battle.monster_attack_speed_multiplier = 0.1
+	for id in ["skeleton", "skeleton_archer"]:
+		battle.monster_collection_upgrade_levels[id] = 20
+		battle.monster_augment_modifiers[id] = {"hp":10.0,"damage":10.0,"speed":10.0,"attack_cooldown":0.1}
+		battle.demon_special_augments.append_array(CATALOG.MONSTERS[id].special_augment_ids)
+	for id in ["monster_power", "monster_vitality", "monster_mobility", "monster_attack_speed"]:
+		battle.permanent_research_levels[id] = 50
 	var before_count: int = battle.active_monsters.size()
 	elite._tick_march(0.5)
 	var child
@@ -191,6 +203,28 @@ func run() -> void:
 		check(not COMMON.is_forced_movement_locked(child), "summon reverse ends before action")
 	elite._tick_march(4.5)
 	check(elite.march_remaining == 0 and battle.active_monsters.size() == before_count + 10, "exactly ten over five seconds")
+	for id in ["skeleton", "skeleton_archer"]:
+		var seen := false
+		for monster in battle.active_monsters.values():
+			if monster.monster_type != id or not monster.get_meta("fixed_base_stats", false):
+				continue
+			seen = true
+			monster.set_physics_process(false)
+			for stat in CATALOG.get_base_stats(id):
+				if stat != "exp_reward" and monster.get(stat) != null:
+					check(is_equal_approx(float(monster.get(stat)), float(CATALOG.get_base_stats(id)[stat])), "level zero base stat " + id + ":" + stat)
+			check(monster.special_augment_configs.is_empty() and monster.get_meta("monster_collection_upgrade_level") == 0 and monster.exp_reward == 0, "no augment/collection growth or extra summon EXP")
+			monster.take_damage(1)
+			var hp: int = monster.current_hp
+			battle._apply_normal_augments_to_existing_monster(monster,id)
+			battle._apply_special_augments_to_monster(monster,id)
+			battle._apply_demon_level_scaling_to_monster(monster,true)
+			check(monster.current_hp == hp and monster.max_hp == CATALOG.get_base_stats(id).max_hp and monster.attack_damage == CATALOG.get_base_stats(id).attack_damage and monster.special_augment_configs.is_empty(), "later growth refresh stays excluded " + id)
+		# Deterministically cover either type if the random ten selected only the other.
+		if not seen:
+			var fixture = battle._spawn_monster(id, Vector2(600,1000),0.0,true,{"fixed_base_stats":true})
+			fixture.set_physics_process(false)
+			check(fixture.max_hp == CATALOG.get_base_stats(id).max_hp and fixture.attack_damage == CATALOG.get_base_stats(id).attack_damage and fixture.special_augment_configs.is_empty(), "missing random type fixed-base fixture " + id)
 	runtime.tick(29)
 	check(elite.march_remaining == 0, "march waits forty-second cooldown")
 	if "--capture" in OS.get_cmdline_user_args() and DisplayServer.get_name() != "headless":

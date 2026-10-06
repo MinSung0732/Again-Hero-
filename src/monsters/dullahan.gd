@@ -275,7 +275,7 @@ func _tick_march(delta: float) -> void:
 		var position_to_use := global_position + Vector2.from_angle(randf() * TAU) * sqrt(randf()) * float(march_config.radius)
 		position_to_use = combat_authority.clamp_monster_wander_position(position_to_use)
 		var ids: Array = march_config.summon_ids
-		var child = combat_authority._spawn_monster(String(ids[randi_range(0, ids.size() - 1)]), position_to_use, 0.0, true)
+		var child = combat_authority._spawn_monster(String(ids[randi_range(0, ids.size() - 1)]), position_to_use, 0.0, true, march_config.get("summon_modifiers", {}))
 		if is_instance_valid(child):
 			MONSTER_RUNTIME_COMMON.begin_summon_animation(child)
 

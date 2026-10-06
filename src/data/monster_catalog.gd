@@ -35,7 +35,7 @@ const MONSTERS := {
 			"attack": {"prefix":"atk", "count":4, "fps":10.0, "loop":false}, "hit": {"files":["hit_01.png", "hit-02.png"], "count":2, "fps":12.0, "loop":false},
 			"death": {"prefix":"dead", "count":7, "fps":10.0, "loop":false}}},
 		"elite_skills": [
-			{"runtime":"monster", "id":"elite_dullahan_march", "name":"진격", "description":"반경 250 내 해골 전사/궁병 10마리를 5초간 순차 소환. 죽음 역재생 후 행동 시작.", "initial_cooldown":10.0, "cooldown":40.0, "count":10, "interval":0.5, "radius":250.0, "summon_ids":["skeleton", "skeleton_archer"]},
+			{"runtime":"monster", "id":"elite_dullahan_march", "name":"진격", "description":"반경 250 내 0레벨·무증강 해골 전사/궁병 10마리를 5초간 순차 소환. 죽음 역재생 후 행동 시작.", "initial_cooldown":10.0, "cooldown":40.0, "count":10, "interval":0.5, "radius":250.0, "summon_ids":["skeleton", "skeleton_archer"], "summon_modifiers":{"fixed_base_stats":true}},
 			{"runtime":"monster", "id":"elite_dullahan_charge", "name":"망령돌진", "description":"소환 시 1회, 5초간 접근 이동속도 200%.", "initial_cooldown":0.0, "cooldown":0.0, "once":true, "duration":5.0, "speed_multiplier":2.0},
 			{"runtime":"monster", "id":"elite_dullahan_slam", "name":"강타", "description":"붉은 예고 후 공격 프레임 종료 시 공격력 2배 피해와 1.5초 기절.", "initial_cooldown":5.0, "cooldown":30.0, "windup":0.35, "damage_multiplier":2.0, "stun_duration":1.5}
 		],

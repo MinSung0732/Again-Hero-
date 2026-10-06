@@ -1829,7 +1829,9 @@ func _spawn_monster(
 	var monster := scene.instantiate() as Node2D
 	if monster == null:
 		return null
-	monster.set_meta("exclude_all_augments", bool(spawn_modifiers.get("exclude_all_augments", false)))
+	var fixed_base_stats := bool(spawn_modifiers.get("fixed_base_stats", false))
+	monster.set_meta("fixed_base_stats", fixed_base_stats)
+	monster.set_meta("exclude_all_augments", fixed_base_stats or bool(spawn_modifiers.get("exclude_all_augments", false)))
 	var monster_species := MONSTER_CATALOG.get_species(monster_type)
 	monster.set_meta("monster_species", monster_species)
 	monster.set_meta(
@@ -2329,7 +2331,7 @@ func _apply_demon_level_scaling_to_monster(
 	monster: Node,
 	preserve_hp_ratio: bool
 ) -> void:
-	if not is_instance_valid(monster):
+	if not is_instance_valid(monster) or bool(monster.get_meta("fixed_base_stats", false)):
 		return
 
 	var base_hp_value = monster.get_meta("demon_level_base_max_hp", null)
@@ -5234,6 +5236,16 @@ func open_tutorial_elite() -> void:
 
 
 func _apply_augment_free_base_stats(monster: Node, monster_id: String) -> void:
+	if bool(monster.get_meta("fixed_base_stats", false)):
+		# Skill reinforcements keep level-zero catalog stats for their lifetime.
+		# Preserve spawn accounting such as split-child EXP instead of resetting it.
+		var base_stats := MONSTER_CATALOG.get_base_stats(monster_id)
+		for stat in base_stats:
+			if stat != "exp_reward" and monster.get(stat) != null:
+				monster.set(stat, base_stats[stat])
+		monster.set_meta("monster_collection_upgrade_level", 0)
+		monster.set("current_hp", int(monster.get("max_hp")))
+		return
 	var rarity := MONSTER_CATALOG.get_rarity_combat_profile(monster_id)
 	monster.set_meta("demon_level_base_max_hp",
 		float(monster.get_meta("augment_raw_max_hp"))
