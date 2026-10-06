@@ -2180,6 +2180,9 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 func _input(event: InputEvent) -> void:
 	if TutorialFlow.blocks_input(event):
 		return
+	if stamina_view != null and stamina_view.handle_info_input(event):
+		get_viewport().set_input_as_handled()
+		return
 	if main_modes_view != null and is_instance_valid(main_modes_view.unlock_feedback):
 		return
 	if TutorialFlow.modal_visible:
@@ -2390,6 +2393,8 @@ func _on_team_tab_pressed() -> void:
 	_refresh_nav_button(other_button, false)
 
 func _switch_tab(tab_id: String) -> void:
+	if stamina_view != null:
+		stamina_view.close_info()
 	if not TutorialFlow.permits_tab(tab_id):
 		return
 	current_tab = tab_id

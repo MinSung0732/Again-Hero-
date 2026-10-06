@@ -7,6 +7,9 @@ var lobby: Control
 var value: Label
 var details: Label
 var overlay: Control
+var _info_button: Button
+var _info_pinned := false
+var _info_title: Label
 var timer: Timer
 var product: Control
 var _refreshing := false
@@ -101,10 +104,13 @@ func install(host: Control) -> void:
 	info.name = "StaminaInfoButton"
 	_place(stamina, info, Rect2(0.02, 0.05, 0.71, 0.90))
 	info.mouse_filter = Control.MOUSE_FILTER_STOP
-	info.tooltip_text = "스테미너 회복 시간"
-	for state in ["normal", "hover", "pressed"]:
+	_info_button = info
+	info.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		info.add_theme_stylebox_override(state, StyleBoxEmpty.new())
-	info.pressed.connect(show_info.bind(""))
+	info.pressed.connect(_toggle_info)
+	info.mouse_entered.connect(_hover_info)
+	info.mouse_exited.connect(_leave_info)
 	_plus(stamina, open_shop).name = "StaminaShopButton"
 	var progress := _plate(root, "HeaderProgressPlate", 0.71, 0.29)
 	var title := _label(progress, "최고 해금", Rect2(0.12, 0.13, 0.80, 0.30), 26)
@@ -127,58 +133,76 @@ func _build_overlay() -> void:
 	layer.name = "StaminaLayer"
 	layer.layer = 130 # Tutorial spotlight (150) keeps authority over its input.
 	lobby.add_child(layer)
-	overlay = ColorRect.new()
-	overlay.name = "StaminaOverlay"
-	overlay.color = Color(0, 0, 0, 0.80)
-	layer.add_child(overlay)
-	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# One reusable anchored card; no screen dimmer or modal input blocker.
+	overlay = PanelContainer.new()
+	overlay.name = "StaminaInfoCard"
+	overlay.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	overlay.add_theme_stylebox_override("panel", FRAMES.style("shop_panel_frame", 24))
 	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	layer.add_child(overlay)
 	overlay.hide()
-	var center := CenterContainer.new()
-	center.name = "CenterContainer"
-	overlay.add_child(center)
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var panel := PanelContainer.new()
-	panel.name = "PanelContainer"
-	panel.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	panel.custom_minimum_size = Vector2(800, 0)
-	panel.add_theme_stylebox_override("panel", _frame())
-	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	center.add_child(panel)
 	var column := VBoxContainer.new()
-	column.name = "VBoxContainer"
-	column.add_theme_constant_override("separation", 22)
-	panel.add_child(column)
-	var title := Label.new()
-	title.text = "스테미너"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 34)
-	column.add_child(title)
+	column.add_theme_constant_override("separation", 16)
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.add_child(column)
+	_info_title = Label.new()
+	_info_title.add_theme_font_size_override("font_size", 30)
+	_info_title.add_theme_color_override("font_color", Color("ffe298"))
+	_info_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(_info_title)
 	details = Label.new()
-	details.custom_minimum_size.x = 730
 	details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	details.add_theme_font_size_override("font_size", 27)
+	details.add_theme_font_size_override("font_size", 24)
+	details.add_theme_constant_override("line_spacing", 6)
+	details.add_theme_color_override("font_color", Color("e8dcf0"))
+	details.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(details)
-	var row := HBoxContainer.new()
-	row.name = "HBoxContainer"
-	row.add_theme_constant_override("separation", 20)
-	column.add_child(row)
-	for heading in ["닫기", "충전 상품 보기"]:
-		var button := Button.new()
-		button.text = heading
-		button.custom_minimum_size.y = 80
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.add_theme_font_size_override("font_size", 28)
-		for state in ["normal", "hover", "pressed"]:
-			button.add_theme_stylebox_override(state, _frame(Color("482264")))
-		row.add_child(button)
-		button.pressed.connect(close_info if heading == "닫기" else open_shop)
-		if heading == "닫기":
-			button.name = "Close"
-	overlay.gui_input.connect(func(event: InputEvent):
-		if (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT) or (event is InputEventScreenTouch and event.pressed):
-			close_info())
+	lobby.resized.connect(_position_info)
+
+func _hover_info() -> void:
+	# Mobile touch emulates mouse entry: it must not open then immediately toggle shut.
+	if not OS.has_feature("mobile") and not _info_pinned:
+		show_info("", false)
+
+func _leave_info() -> void:
+	if not _info_pinned:
+		close_info()
+
+func _toggle_info() -> void:
+	if overlay.visible and _info_pinned:
+		close_info()
+	else:
+		show_info()
+
+func _position_info() -> void:
+	if not is_instance_valid(overlay) or not overlay.visible:
+		return
+	var viewport := lobby.get_viewport_rect()
+	var target := _info_button.get_global_rect()
+	var width := minf(650, viewport.size.x - 32)
+	overlay.custom_minimum_size.x = width
+	overlay.size = Vector2(width, overlay.get_combined_minimum_size().y)
+	var x := clampf(target.get_center().x - width * 0.5, 16, viewport.size.x - width - 16)
+	var y := minf(target.end.y + 12, viewport.size.y - overlay.size.y - 16)
+	overlay.position = Vector2(x, maxf(16, y))
+
+func handle_info_input(event: InputEvent) -> bool:
+	if not overlay.visible:
+		return false
+	if event.is_action_pressed("ui_cancel"):
+		close_info()
+		return true
+	var point := Vector2.ZERO
+	if event is InputEventScreenTouch and event.pressed:
+		point = event.position
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		point = event.position
+	else:
+		return false
+	if not overlay.get_global_rect().has_point(point) and not _info_button.get_global_rect().has_point(point):
+		close_info()
+	# Outside clicks still activate the requested lobby control.
+	return false
 
 var _notice := ""
 
@@ -192,27 +216,31 @@ func refresh() -> void:
 	var state := STORE.read_state()
 	value.text = "%s / %d" % [lobby._format_shop_number(int(state.amount)), RULES.MAX_NATURAL] if bool(state.get("success", false)) else "확인 필요"
 	if is_instance_valid(overlay) and overlay.visible:
-		var copy := "%s\n\n현재 스테미너  %d / %d\n던전 입장  %d 소모\n자연회복  1시간마다 1" % [_notice, int(state.amount), RULES.MAX_NATURAL, RULES.ENTRY_COST]
-		copy += "\n전투 시작 %d초 이내 로비 복귀 시 %d 반환" % [RULES.EARLY_EXIT_WINDOW_MS / 1000, RULES.EARLY_EXIT_REFUND]
+		_info_title.text = "스테미너  %d / %d" % [int(state.amount), RULES.MAX_NATURAL]
+		var copy := "입장 · %d 소모\n로비 복귀 · 전투 시작 %d초 이내 +%d" % [RULES.ENTRY_COST, RULES.EARLY_EXIT_WINDOW_MS / 1000, RULES.EARLY_EXIT_REFUND]
+		copy += "\n\n자연회복 · 1시간마다 +1 (최대 %d)" % RULES.MAX_NATURAL
 		if not bool(state.get("success", false)):
 			copy = "저장 상태를 확인하지 못했습니다. 다시 시도해 주세요."
 		elif int(state.amount) >= RULES.MAX_NATURAL:
-			copy += "\n\n자연회복 한도에 도달했습니다.\n30 이상에서는 자연회복이 멈춥니다."
+			copy += "\n회복 완료 · 자연회복이 멈춰 있습니다."
 		else:
-			copy += "\n\n다음 1 회복까지  %s\n30까지 충전 완료  %s" % [format_duration(int(state.next_seconds)), format_duration(int(state.full_seconds))]
-		copy += "\n\n선물·구매 충전분은 30을 넘겨 보유할 수 있습니다."
-		details.text = copy.strip_edges()
+			copy += "\n다음 +1까지  %s\n최대 충전까지  %s" % [format_duration(int(state.next_seconds)), format_duration(int(state.full_seconds))]
+		copy += "\n\n선물·구매분은 %d을 넘겨 보유할 수 있어요.\n충전 상품은 재화 칸의 +에서 확인하세요." % RULES.MAX_NATURAL
+		details.text = (_notice + "\n\n" if not _notice.is_empty() else "") + copy
+
 	_refreshing = false
 
-func show_info(message: String = "") -> void:
+func show_info(message: String = "", pinned: bool = true) -> void:
 	if lobby.get_node("/root/TutorialFlow").locks_lobby() or lobby.get_node("/root/SceneTransition").is_transitioning():
 		return
 	_notice = message
+	_info_pinned = pinned
 	overlay.show()
 	refresh()
-	overlay.get_node("CenterContainer/PanelContainer/VBoxContainer/HBoxContainer/Close").grab_focus()
+	_position_info.call_deferred()
 
 func close_info() -> void:
+	_info_pinned = false
 	overlay.hide()
 
 func _build_product() -> void:
