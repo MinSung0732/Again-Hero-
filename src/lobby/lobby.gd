@@ -4984,6 +4984,10 @@ func _enter_selected_stage() -> void:
 	if not ResourceLoader.exists(BATTLE_SCENE_PATH):
 		return
 	var exempt := LocalTestMode.active or TutorialFlow.active()
+	var formation_reason := preload("res://src/systems/dungeon_entry_policy.gd").blocked_reason(team_selected_ids, demon_skill_selected_ids, exempt)
+	if not formation_reason.is_empty():
+		stamina_view.show_info(formation_reason)
+		return
 	_stamina_entry = STAMINA.try_enter(stage_id, exempt)
 	if not bool(_stamina_entry.get("success", false)):
 		stamina_view.show_info("스테미너가 부족합니다." if _stamina_entry.get("reason") == "insufficient" else "저장을 확인하고 다시 시도해 주세요.")

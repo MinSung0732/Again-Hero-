@@ -131,6 +131,22 @@ func run() -> void:
 	var lobby = load("res://src/lobby/Lobby.tscn").instantiate()
 	lobby.gameplay_settings_path = folder.path_join("gameplay.cfg")
 	root.add_child(lobby)
+	await settle()
+	# Incomplete ordinary formation must fail before any stamina debit or transition.
+	var skills: Array = preload("res://src/data/demon_ultimate_catalog.gd").get_ordered_ids()
+	for counts in [[1,3], [3,1], [2,2]]:
+		lobby.team_selected_ids = ["slime", "spider", "orc"].slice(0, counts[0])
+		lobby.demon_skill_selected_ids = skills.slice(0, counts[1])
+		var stamina_before: int = STORE.read_state().amount
+		lobby._enter_selected_stage()
+		check(not lobby._battle_entry_pending and STORE.read_state().amount == stamina_before, "incomplete formation never debits")
+		check(lobby.stamina_view.details.text.contains("편성"), "formation notice explains missing slots")
+	lobby.team_selected_ids = ["slime", "spider", "orc"]
+	lobby.demon_skill_selected_ids = skills.duplicate()
+	preload("res://src/systems/team_loadout_store.gd").save_ids(lobby.team_selected_ids, lobby.team_catalog_ids)
+	preload("res://src/systems/demon_skill_loadout_store.gd").save_ids(skills, lobby.demon_skill_catalog_ids)
+	check(preload("res://src/systems/dungeon_entry_policy.gd").blocked_reason(["slime"], [], true).is_empty(), "test/tutorial formation exemption")
+	lobby.stamina_view.close_info()
 	current_scene = lobby
 	await settle()
 	await capture("main")
@@ -189,6 +205,8 @@ func run() -> void:
 		await settle()
 		await capture("shop")
 	lobby._switch_tab("main")
+	lobby.team_selected_ids = ["slime", "spider", "orc"]
+	lobby.demon_skill_selected_ids = skills.duplicate()
 	seed_wallet(5, int(Time.get_unix_time_from_system()))
 	var transition := root.get_node("SceneTransition")
 	root.remove_child(transition)
@@ -203,6 +221,14 @@ func run() -> void:
 	check(deferred.requests == 1 and STORE.read_state().amount == 0, "actual double-tap entry charges once")
 	lobby._refund_failed_stamina_entry()
 	check(STORE.read_state().amount == 5, "actual lobby load failure refunds")
+	mode.active = true
+	lobby.team_selected_ids = ["slime"]
+	lobby.demon_skill_selected_ids = skills.slice(0, 1)
+	lobby._enter_selected_stage()
+	await create_timer(0.1).timeout
+	check(deferred.requests == 2 and STORE.read_state().amount == 5, "actual localtest bypasses formation and debit")
+	lobby._refund_failed_stamina_entry()
+	mode.active = false
 	root.remove_child(deferred)
 	deferred.free()
 	root.add_child(transition)

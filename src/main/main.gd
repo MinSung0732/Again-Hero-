@@ -169,7 +169,7 @@ const BATTLE_PIXEL_BAR_BACKGROUND := "res://assets/art/UI/05_right_bars/part_02.
 @onready var result_title: Label = $HUD/ResultPanel/Margin/VBox/ResultTitle
 @onready var result_reward: Label = $HUD/ResultPanel/Margin/VBox/ResultReward
 @onready var result_message: Label = $HUD/ResultPanel/Margin/VBox/ResultMessage
-@onready var result_analysis: Label = $HUD/ResultPanel/Margin/VBox/ResultAnalysisScroll/ResultAnalysis
+@onready var result_analysis: Label = $HUD/ResultPanel/Margin/VBox/ResultAnalysisArea/ResultAnalysis
 @onready var next_stage_button: Button = $HUD/ResultPanel/Margin/VBox/NextStageButton
 @onready var stage_select_result_button: Button = $HUD/ResultPanel/Margin/VBox/ResultActions/StageSelectResultButton
 @onready var restart_button: Button = $HUD/ResultPanel/Margin/VBox/ResultActions/RestartButton
@@ -3408,7 +3408,6 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	result_reward.visible = not result_reward.text.is_empty()
 	_result_reward_details = copy.details
 	result_analysis.text = "전투 분석 불러오는 중..."
-	$HUD/ResultPanel/Margin/VBox/ResultAnalysisScroll.scroll_vertical = 0
 	$HUD/ResultBackdrop.show()
 	_style_result_actions()
 	result_panel.show()
@@ -3493,7 +3492,14 @@ func _on_restart_pressed() -> void:
 func _restart_with_stamina(stage_id: String) -> void:
 	if _stamina_entry_pending or _scene_load_pending or SceneTransition.is_transitioning():
 		return
-	var entry := STAMINA.try_enter(stage_id, LocalTestMode.active or TutorialFlow.active())
+	var exempt := LocalTestMode.active or TutorialFlow.active()
+	var skill_ids := DEMON_ULTIMATES.get_ordered_ids()
+	var selected_skills := DEMON_SKILL_LOADOUT_STORE.load_ids(skill_ids, skill_ids)
+	var formation_reason := preload("res://src/systems/dungeon_entry_policy.gd").blocked_reason(battle_loadout_ids, selected_skills, exempt)
+	if not formation_reason.is_empty():
+		_show_stamina_notice(formation_reason)
+		return
+	var entry := STAMINA.try_enter(stage_id, exempt)
 	if not bool(entry.get("success", false)):
 		var message := "스테미너가 부족합니다. 로비의 + 버튼에서 충전 상품을 확인하세요." if entry.get("reason") == "insufficient" else "저장을 확인하고 다시 시도해 주세요."
 		_show_stamina_notice(message)

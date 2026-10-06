@@ -1,3 +1,7 @@
+## Dungeon Formation Gate / Compact Results (2026-10-06)
+- Ordinary lobby entry, retry and next-stage require three equipped monsters and three demon skills before stamina debit/transition. Shared DungeonEntryPolicy supplies missing-slot messages. Localtest and active tutorial practice bypass this requirement.
+- Result presentation retains granted reward totals and time/lowest hero HP/cumulative HP damage/demon EXP contribution only. No result scroll, hero augments/strategy switches/demon final level/normal or special augments/manual summon listings or verbose reward calculations. Full metrics and reward computation remain unchanged.
+
 ## Monster Detail Content Layout (2026-10-06)
 - Lobby monster detail retains its fixed title/close controls and two-column normal/elite comparison. Stats use content-fit height; the entire comparison scrolls inside DetailScroll with hidden bars, preserving full behavior/special/skill descriptions. Long names/badges wrap; each open resets to the top.
 

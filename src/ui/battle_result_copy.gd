@@ -23,9 +23,10 @@ static func format_message(message: String) -> Dictionary:
 			headline.append(line)
 	return {"headline": "\n".join(headline), "reward": "\n".join(rewards), "details": "\n".join(details)}
 
-static func format_analysis(summary: String, reward_details: String) -> String:
-	var body := "◆ 전투 분석\n" + "\n\n".join(summary.replace("Hero", "용사").replace("Run ", "전투 시간 ").split("\n", false))
-	if not reward_details.is_empty():
-		body += "\n\n◆ 보상 상세\n" + reward_details
-	# Explicit whitespace separates each metric; long builds still wrap naturally.
-	return body
+static func format_analysis(summary: String, _reward_details: String) -> String:
+	# Keep the result bounded; detailed metrics remain available to reward logic.
+	var lines: PackedStringArray = ["◆ 전투 기록", ""]
+	for line in summary.split("\n", false):
+		if line.begins_with("Run ") or line.begins_with("Hero 최저 HP:") or line.begins_with("Hero 누적 HP 피해:") or line.begins_with("마왕 EXP 기여:"):
+			lines.append(line.replace("Hero", "용사").replace("Run ", "전투 시간 "))
+	return "\n".join(lines)
