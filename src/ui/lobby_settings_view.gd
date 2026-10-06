@@ -52,7 +52,7 @@ func install(target: Control) -> void:
 	margin.add_theme_constant_override("margin_right", 88)
 	margin.add_theme_constant_override("margin_top", 84)
 	margin.add_theme_constant_override("margin_bottom", 72)
-	_install_other_backdrop()
+	_install_tab_backdrops()
 	box.add_theme_constant_override("separation", 28)
 	box.get_node("Title").text = "설정"
 	var tabs := box.get_node("Tabs") as HBoxContainer
@@ -108,31 +108,41 @@ func install(target: Control) -> void:
 	_build_other_menu(box)
 	show_menu()
 
-func _install_other_backdrop() -> void:
-	# Opaque backing stays inside the shared outer rails and follows both subpages.
-	other_backdrop = Panel.new()
-	other_backdrop.name = "OtherContentBackdrop"
-	other_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	lobby.other_tab.add_child(other_backdrop)
-	lobby.other_tab.move_child(other_backdrop, 0)
-	other_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	other_backdrop.offset_left = 80
-	other_backdrop.offset_top = 80
-	other_backdrop.offset_right = -80
-	other_backdrop.offset_bottom = -80
+func _install_tab_backdrops() -> void:
+	# The same passive backing belongs to each tab and stays inside its outer rails.
 	var background := StyleBoxFlat.new()
 	background.bg_color = Color("140d22")
 	background.set_corner_radius_all(8)
-	other_backdrop.add_theme_stylebox_override("panel", background)
+	for tab in [lobby.other_tab, lobby.team_tab, lobby.research_tab]:
+		var backdrop := Panel.new()
+		backdrop.name = "OtherContentBackdrop" if tab == lobby.other_tab else "ContentBackdrop"
+		backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tab.add_child(backdrop)
+		tab.move_child(backdrop, 0)
+		backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		backdrop.offset_left = 80
+		backdrop.offset_top = 80
+		backdrop.offset_right = -80
+		backdrop.offset_bottom = -80
+		backdrop.add_theme_stylebox_override("panel", background)
+		if tab == lobby.other_tab:
+			other_backdrop = backdrop
 
 func _title_plate(parent: Control, title: Label) -> PanelContainer:
 	var plate := PanelContainer.new()
 	plate.name = "TitlePlate"
-	plate.custom_minimum_size = Vector2(560, 88)
+	plate.custom_minimum_size = Vector2(460, 66)
 	plate.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	plate.add_theme_stylebox_override("panel", FRAMES.style("shop_featured_frame", 18))
+	plate.add_theme_stylebox_override("panel", FRAMES.style("shop_featured_frame", 8))
 	parent.add_child(plate)
+	# Match TeamTab/ResearchTab title plaques crossing the upper rail.
+	plate.anchor_left = 0.5
+	plate.anchor_right = 0.5
+	plate.offset_left = -230
+	plate.offset_right = 230
+	plate.offset_top = 18
+	plate.offset_bottom = 84
 	if title.get_parent() != null:
 		title.reparent(plate)
 	else:
@@ -173,26 +183,17 @@ func _build_other_menu(box: VBoxContainer) -> void:
 	heading.add_child(other_back_button)
 	other_back_button.pressed.connect(show_menu)
 	var title := settings_root.get_node("Title") as Label
-	var title_center := CenterContainer.new()
-	title_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	heading.add_child(title_center)
-	settings_title_plate = _title_plate(title_center, title)
-	var balance := Control.new()
-	balance.custom_minimum_size.x = 80
-	balance.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	heading.add_child(balance)
+	settings_title_plate = _title_plate(lobby.other_tab, title)
+	settings_title_plate.name = "SettingsTitlePlate"
 	other_menu = VBoxContainer.new()
 	other_menu.name = "OtherMenu"
 	other_menu.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	other_menu.add_theme_constant_override("separation", 24)
 	box.add_child(other_menu)
-	var menu_heading := CenterContainer.new()
-	menu_heading.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	other_menu.add_child(menu_heading)
 	var menu_title := Label.new()
 	menu_title.text = "기타"
-	menu_title_plate = _title_plate(menu_heading, menu_title)
+	menu_title_plate = _title_plate(lobby.other_tab, menu_title)
+	menu_title_plate.name = "OtherTitlePlate"
 	var menu_scroll := ScrollContainer.new()
 	menu_scroll.name = "OtherMenuScroll"
 	menu_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -229,6 +230,8 @@ func show_menu() -> void:
 	if other_menu == null:
 		return
 	settings_root.hide()
+	settings_title_plate.hide()
+	menu_title_plate.show()
 	other_menu.show()
 
 func _style(fill: Color, edge: Color, width: int = 2) -> StyleBox:
@@ -698,6 +701,8 @@ func show_page(id: String) -> void:
 		return
 	if settings_root != null:
 		other_menu.hide()
+		menu_title_plate.hide()
+		settings_title_plate.show()
 		settings_root.show()
 	var changing := selected != id
 	selected = id

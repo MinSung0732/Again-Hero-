@@ -44,7 +44,11 @@ func run() -> void:
 	check(view.other_menu_buttons.size() == 7, "seven categories are present")
 	var outer: Rect2 = lobby.other_tab.get_global_rect()
 	var menu_title_rect: Rect2 = view.menu_title_plate.get_global_rect()
-	check(menu_title_rect.position.y >= outer.position.y + 80 and outer.encloses(menu_title_rect), "menu title stays below upper decorative rail")
+	var team_title_rect: Rect2 = lobby.team_tab.get_node("TitlePlate").get_global_rect()
+	check(menu_title_rect.is_equal_approx(team_title_rect), "other title matches team title across upper rail")
+	for tab in [lobby.team_tab, lobby.research_tab]:
+		var backing: Panel = tab.get_node("ContentBackdrop")
+		check(backing.get_theme_stylebox("panel") == view.other_backdrop.get_theme_stylebox("panel") and backing.mouse_filter == Control.MOUSE_FILTER_IGNORE, "team and research use the same passive opaque background")
 	check(view.other_backdrop.mouse_filter == Control.MOUSE_FILTER_IGNORE and view.other_backdrop.get_theme_stylebox("panel").bg_color.a == 1.0, "shared opaque backdrop is passive")
 	var previous_bottom := 0.0
 	for entry in view.OTHER_ENTRIES:
@@ -60,7 +64,8 @@ func run() -> void:
 	var back_rect: Rect2 = view.other_back_button.get_global_rect()
 	var settings_title_rect: Rect2 = view.settings_title_plate.get_global_rect()
 	check(back_rect.position.y >= outer.position.y + 80 and outer.encloses(back_rect), "back arrow stays within outer frame")
-	check(settings_title_rect.position.x >= back_rect.end.x and settings_title_rect.position.y >= outer.position.y + 80, "settings title does not overlap back arrow or upper rail")
+	check(settings_title_rect.is_equal_approx(team_title_rect) and not settings_title_rect.intersects(back_rect), "settings title matches rail position while back arrow stays inside")
+	check(view.settings_title_plate.visible and not view.menu_title_plate.visible, "only active subpage title is shown")
 	view.other_back_button.pressed.emit()
 	check(view.other_menu.visible and not view.settings_root.visible, "back returns to category list")
 	view.other_menu_buttons.settings.pressed.emit()
