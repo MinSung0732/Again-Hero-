@@ -299,7 +299,7 @@ func resume_lobby() -> void:
 	host.selected_stage_index = 0
 	host._switch_tab("main")
 	host._refresh_stage_card()
-	guide("entry", func(): point_to(host.enter_stage_button, "빛나는 ‘던전 입장’ 버튼을 눌러 주세요. 완료한 단계 다음부터 이어집니다."))
+	guide("entry", func(): point_to(host.enter_stage_button, "빛나는 ‘던전 입장’ 버튼을 눌러 주세요.\n튜토리얼은 스테미너를 소모하지 않습니다. 완료한 단계 다음부터 이어집니다."))
 
 
 func start_lobby() -> void:

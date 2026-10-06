@@ -1,10 +1,17 @@
 extends SceneTree
 
+const STAMINA := preload("res://src/systems/stamina_store.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const PROFILE := preload("res://src/systems/player_profile.gd")
 const PROGRESS := preload("res://src/systems/stage_progress.gd")
 const LINES := preload("res://src/data/prologue_catalog.gd")
 var failed := false
+
+class EntryTransition extends Node:
+	var requests := 0
+	func change_scene(_path: String, _message: String) -> bool:
+		requests += 1
+		return true
 
 class NoNetwork extends Node:
 	var calls := 0
@@ -118,6 +125,27 @@ func run() -> void:
 	await flow.install_lobby(lobby)
 	await flow.start_lobby()
 	check(flow.active(), "proceed activates existing battle coach")
+	var wallet := ConfigFile.new()
+	SCOPE.load_config(wallet, "user://stage_progress.cfg")
+	wallet.set_value("stamina", "amount", 0)
+	wallet.set_value("stamina", "recovery_at", int(Time.get_unix_time_from_system()))
+	check(SCOPE.save_configs({"stage_progress.cfg": wallet}) == OK, "zero-stamina tutorial fixture saved")
+	STAMINA.invalidate()
+	lobby._refresh_stage_card()
+	check(lobby.stamina_view._entry_amount.text == "무료", "tutorial entry displays free instead of negative cost")
+	var transition := root.get_node("SceneTransition")
+	root.remove_child(transition)
+	var entry_transition := EntryTransition.new()
+	entry_transition.name = "SceneTransition"
+	root.add_child(entry_transition)
+	lobby._enter_selected_stage()
+	lobby._enter_selected_stage()
+	check(entry_transition.requests == 1 and lobby._battle_entry_pending, "actual tutorial lobby entry succeeds once with zero stamina")
+	check(lobby._stamina_entry.charged == 0 and STAMINA.read_state().amount == 0, "tutorial accepted entry leaves stamina untouched")
+	check(not lobby.stamina_view._spend_label.visible, "free tutorial entry has no deduction animation")
+	root.remove_child(entry_transition)
+	entry_transition.free()
+	root.add_child(transition)
 	flow.clear_guide()
 	lobby.queue_free()
 	await process_frame
@@ -187,6 +215,9 @@ func run() -> void:
 	await create_timer(0.7).timeout
 	await flow.finish_lobby()
 	check(PROGRESS.get_gold() == 1000 and flow.status == "completed", "complete equals skip")
+	lobby._refresh_stage_card()
+	check(lobby.stamina_view._entry_amount.text == "-5" and not flow.active(), "completed tutorial restores ordinary entry price")
+	check(not STAMINA.try_enter("stage_1", flow.active()).success, "completed tutorial cannot enter ordinary battle with zero stamina")
 	await flow.finish_lobby()
 	check(PROGRESS.get_gold() == 1000, "complete retry once")
 	check(await mode.apply_coupon("normaltest"), "exit preview")
