@@ -29,6 +29,31 @@ func run() -> void:
 	hero.invulnerability_timer = 0
 	check(CATALOG.get_base_cost("banshee") == 6.5 and CATALOG.get_rarity("banshee") == "uncommon" and CATALOG.get_species("banshee") == "undead", "catalog cost/rarity/species")
 	check(CATALOG.get_base_stats("banshee").attack_cooldown == 1.0, "normal attack speed")
+	# Every generated choice must resolve when clicked and when build counts rebuild.
+	for monster_id in CATALOG.ORDER:
+		for candidate in AUGMENTS.get_monster_normal_augments(monster_id, ""):
+			check(AUGMENTS.get_augment(candidate.id) == candidate, "normal choice resolves: " + candidate.id)
+	var normal_choices := AUGMENTS.get_monster_normal_augments("banshee", "")
+	for candidate in normal_choices:
+		battle.demon_augment_selection_active = true
+		battle.demon_augment_candidates.assign([candidate])
+		battle.demon_pending_augments = 1
+		check(battle.choose_demon_augment(candidate.id), "banshee normal click accepted: " + candidate.id)
+		check(battle.demon_build_counts.get(candidate.id, 0) == 1, "normal count recorded")
+	var augmented = battle._spawn_monster("banshee", Vector2(500,1000))
+	augmented.set_physics_process(false)
+	check(augmented.max_hp > 88 and augmented.move_speed > 110.0 and augmented.attack_cooldown < 1.0, "normal HP/speed/attack speed applied to new banshee")
+	check(battle.monster_augment_modifiers.banshee.damage > 1.0, "normal damage retained after rebuild")
+	for candidate in normal_choices:
+		battle.demon_augment_selection_active = true
+		battle.demon_augment_candidates.assign([candidate])
+		battle.demon_pending_augments = 1
+		check(battle.choose_demon_augment(candidate.id), "second normal choice accepted")
+		check(battle.demon_build_counts.get(candidate.id, 0) == 2, "normal stacks increment")
+	check(is_equal_approx(augmented.move_speed, 110.0 * 1.04 * 1.04), "later normal choice updates living banshee")
+	augmented.free()
+	battle.demon_build_counts.clear()
+	battle.monster_augment_modifiers.clear()
 	for id in CATALOG.MONSTERS.banshee.special_augment_ids:
 		check(not AUGMENTS.get_augment(id).is_empty(), "augment registered: " + id)
 	for duration in [3.0, 5.0, 10.0, 0.75]:

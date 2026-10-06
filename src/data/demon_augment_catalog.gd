@@ -552,19 +552,7 @@ static func get_augment(augment_id: String) -> Dictionary:
 		if String(augment.get("id", "")) == augment_id:
 			return augment.duplicate(true)
 
-	for monster_id in [
-		"slime",
-		"spider",
-		"orc",
-		"bomb_rat",
-		"skeleton",
-		"skeleton_archer",
-		"kobolt",
-		"bat",
-		"goblin",
-		"goblin_thrower",
-		"ghost",
-	]:
+	for monster_id in MONSTER_NAMES:
 		for augment in get_monster_normal_augments(monster_id, ""):
 			if String(augment.get("id", "")) == augment_id:
 				return augment.duplicate(true)
