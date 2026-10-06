@@ -1,5 +1,6 @@
 extends Node
 
+const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const CHECKPOINT := preload("res://src/systems/tutorial_checkpoint.gd")
 const SPOTLIGHT := preload("res://src/ui/tutorial_spotlight.gd")
@@ -118,13 +119,13 @@ func bind_host(node: Node) -> void:
 			spotlight = null
 			host = null)
 
-func _style(bg: Color, edge: Color, width: int, padding: int) -> StyleBoxFlat:
+func _style(bg: Color, edge: Color, width: int, padding: int) -> StyleBox:
 	var result := StyleBoxFlat.new()
 	result.bg_color = bg
 	result.border_color = edge
 	result.set_border_width_all(width)
 	result.set_content_margin_all(padding)
-	return result
+	return SKIN.skin_style(result)
 
 func _button(parent: Control) -> Button:
 	var button := Button.new()

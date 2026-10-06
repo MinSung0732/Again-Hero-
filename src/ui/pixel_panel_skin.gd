@@ -1,19 +1,33 @@
 extends RefCounted
 
-# Compact nine-patch metalwork for formerly plain UI boxes. Existing illustrated
-# frames and transparent backings are left alone. No decorative nodes/hit regions.
+# Reuse the lobby's authored gold/purple pixel frame. Compose its atlas pieces
+# once, then cache nine-patch textures by fill; controls retain their hit regions.
 static var _textures: Dictionary = {}
+static var _frame: Image
 const PATCH := 16.0
-const TEMPLATE := """<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-<path d="M8 0H56V2H62V8H64V56H62V62H56V64H8V62H2V56H0V8H2V2H8Z" fill="#$SHADOW"/>
-<path d="M8 2H56V4H60V8H62V56H60V60H56V62H8V60H4V56H2V8H4V4H8Z" fill="#$EDGE"/>
-<path d="M10 5H54V7H57V10H59V54H57V57H54V59H10V57H7V54H5V10H7V7H10Z" fill="#$SHADOW"/>
-<path d="M11 7H53V9H55V11H57V53H55V55H53V57H11V55H9V53H7V11H9V9H11Z" fill="#$FILL" fill-opacity="$ALPHA"/>
-<path d="M8 2H56V3H8ZM4 8H5V56H4ZM8 5H13V6H8ZM5 8H6V13H5ZM51 5H56V6H51ZM58 8H59V13H58Z" fill="#$LIGHT"/>
-<path d="M8 60H56V62H8ZM60 8H62V56H60Z" fill="#$LOW"/>
-<path d="M8 8H12V10H10V12H8ZM52 8H56V12H54V10H52ZM8 52H10V54H12V56H8ZM54 52H56V56H52V54H54Z" fill="#$LIGHT"/>
-<path d="M10 14H14V15H10ZM50 14H54V15H50ZM10 49H14V50H10ZM50 49H54V50H50Z" fill="#$LOW"/>
-</svg>"""
+const FRAME_PATH := "res://assets/art/UI/newUI_frame/frame_06.png"
+
+static func _frame_image() -> Image:
+	if _frame != null:
+		return _frame
+	var texture := load(FRAME_PATH) as Texture2D
+	var sheet := texture.get_image() if texture != null else null
+	if sheet == null:
+		return null
+	_frame = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	_frame.fill(Color.TRANSPARENT)
+	# Atlas gutters are excluded; only corners and edge strips are stretched.
+	var regions := [Rect2i(0, 0, 56, 58), Rect2i(64, 0, 204, 58), Rect2i(276, 0, 56, 58),
+		Rect2i(0, 66, 56, 71), Rect2i(276, 66, 56, 71),
+		Rect2i(0, 144, 56, 64), Rect2i(64, 144, 204, 64), Rect2i(276, 144, 56, 64)]
+	var destinations := [Rect2i(0, 0, 16, 16), Rect2i(16, 0, 32, 16), Rect2i(48, 0, 16, 16),
+		Rect2i(0, 16, 16, 32), Rect2i(48, 16, 16, 32),
+		Rect2i(0, 48, 16, 16), Rect2i(16, 48, 32, 16), Rect2i(48, 48, 16, 16)]
+	for index in regions.size():
+		var piece := sheet.get_region(regions[index])
+		piece.resize(destinations[index].size.x, destinations[index].size.y, Image.INTERPOLATE_NEAREST)
+		_frame.blit_rect(piece, Rect2i(Vector2i.ZERO, piece.get_size()), destinations[index].position)
+	return _frame
 
 static func skin_style(source: StyleBox) -> StyleBox:
 	if not source is StyleBoxFlat:
@@ -21,18 +35,20 @@ static func skin_style(source: StyleBox) -> StyleBox:
 	var flat := source as StyleBoxFlat
 	if not flat.draw_center or flat.bg_color.a <= 0.0 or flat.border_color.a <= 0.0 or flat.get_border_width_min() <= 0:
 		return source
-	var key := flat.bg_color.to_html() + ":" + flat.border_color.to_html()
+	var key := flat.bg_color.to_html()
 	if not _textures.has(key):
-		var edge := flat.border_color
-		var svg := TEMPLATE.replace("$FILL", flat.bg_color.to_html(false)).replace("$ALPHA", str(flat.bg_color.a))
-		svg = svg.replace("$EDGE", edge.to_html(false)).replace("$SHADOW", edge.darkened(0.72).to_html(false))
-		svg = svg.replace("$LIGHT", edge.lightened(0.28).to_html(false)).replace("$LOW", edge.darkened(0.35).to_html(false))
-		var image := Image.new()
-		if image.load_svg_from_string(svg) != OK:
-			return source # Optional presentation must never disable a control.
+		var frame := _frame_image()
+		if frame == null:
+			return source # Optional decoration must never disable a control.
+		var image := Image.create(64, 64, false, Image.FORMAT_RGBA8)
+		image.fill(flat.bg_color)
+		image.blend_rect(frame, Rect2i(0, 0, 64, 64), Vector2i.ZERO)
 		_textures[key] = ImageTexture.create_from_image(image)
 	var result := StyleBoxTexture.new()
 	result.texture = _textures[key]
+	# Retain a subdued frame for disabled/secondary states and a bright focus.
+	if flat.border_color.s < 0.15:
+		result.modulate_color = Color(0.65, 0.65, 0.72, 1.0)
 	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
 		result.set_texture_margin(side, PATCH)
 		# Preserve effective margins even when the old box used border defaults.
@@ -45,11 +61,20 @@ static func apply(control: Control) -> void:
 		keys = ["panel"]
 	elif control is Button:
 		keys = ["normal", "hover", "pressed", "disabled", "focus"]
+	elif control is LineEdit:
+		keys = ["normal", "focus", "read_only"]
 	elif control is TabContainer:
 		keys = ["panel", "tab_selected", "tab_unselected", "tab_hovered"]
 	elif control is Label and control.has_theme_stylebox_override("normal"):
 		keys = ["normal"]
 	for key in keys:
+		if control is LineEdit and not control.has_theme_stylebox_override(key):
+			var input := StyleBoxFlat.new()
+			input.bg_color = Color("241430") if key != "focus" else Color("38204d")
+			input.border_color = Color("eac14d")
+			input.set_border_width_all(2)
+			input.set_content_margin_all(16)
+			control.add_theme_stylebox_override(key, input)
 		var source := control.get_theme_stylebox(key)
 		var style := skin_style(source)
 		if style != source:

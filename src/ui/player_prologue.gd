@@ -162,6 +162,7 @@ func _build_choice(kind: String) -> void:
 	name_input.placeholder_text = "최대 6글자"
 	name_input.add_theme_font_size_override("font_size", 36)
 	VIEW.place(_name_content, name_input, Rect2(0.08, 0.31, 0.68, 0.19))
+	SKIN.apply(name_input)
 	name_input.mouse_filter = Control.MOUSE_FILTER_STOP
 	dice = _button(_name_content, "⚄", Rect2(0.79, 0.31, 0.13, 0.19))
 	dice.tooltip_text = "무작위 테스트 이름 (서버 등록 없음)" if PROFILE._preview() else "무작위 닉네임 (결정 시 중복 검사)"
