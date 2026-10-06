@@ -34,7 +34,7 @@ func run() -> void:
 		check(profile.shards_required == expected[rarity][1] and profile.configured, rarity + " cost/enabled")
 	for monster_id in CATALOG.ORDER:
 		check(CATALOG.get_shards_required(monster_id) == 30, "common cost " + monster_id)
-	check(SHOP.RARITIES.common.shard_min == 2 and SHOP.RARITIES.common.shard_max == 5, "common roll range")
+	check(SHOP.RARITIES.common.shard_min == 5 and SHOP.RARITIES.common.shard_max == 8, "common roll range")
 	var state := STORE.load_state()
 	state.slime = {"unlocked": true, "level": 29, "shards": 35}
 	check(STORE.save_state(state), "seed level29")

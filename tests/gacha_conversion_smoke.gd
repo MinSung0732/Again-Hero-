@@ -43,9 +43,9 @@ func run() -> void:
 	var total := 0
 	for entry in history:
 		total += int(entry.research_points)
-	check(total >= 22 and total <= 165 and PROGRESS.get_research_points() == 100 + total, "exact conversion once")
+	check(total >= 33 and total <= 88 and PROGRESS.get_research_points() == 100 + total, "exact conversion once")
 	lobby._rebuild_shop_list()
-	check(lobby.shop_rates_text.text.contains("조각 2~5"), "rates UI uses updated common range")
+	check(lobby.shop_rates_text.text.contains("조각 5~8") and lobby.shop_rates_text.text.contains("조각 3~5") and lobby.shop_rates_text.text.contains("조각 1~5"), "rates UI uses updated shard ranges")
 	var overlay: Control = lobby.gacha_reveal_overlay
 	if history.size() == 11:
 		await create_timer(0.3).timeout
@@ -77,7 +77,7 @@ func run() -> void:
 			check(roll.shards >= rarity.shard_min and roll.shards <= rarity.shard_max, "draw within rarity range")
 			if roll.rarity == "common":
 				shard_amounts[int(roll.shards)] = true
-	for amount in range(2, 6):
+	for amount in range(5, 9):
 		check(shard_amounts.has(amount), "inclusive shard amount reachable: " + str(amount))
 	for monster_id in CATALOG.ORDER:
 		if CATALOG.get_rarity(monster_id) == "common":

@@ -15,7 +15,7 @@ func run() -> void:
 	SCOPE.guest_directory = "user://gacha_policy_" + Crypto.new().generate_random_bytes(16).hex_encode()
 	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
 	SCOPE.select_guest()
-	var expected := {"common":[30,2,5], "uncommon":[30,6,15], "rare":[30,3,8], "legendary":[9,2,4], "transcendent":[1,1,2]}
+	var expected := {"common":[30,5,8], "uncommon":[30,3,5], "rare":[30,1,5], "legendary":[9,2,4], "transcendent":[1,1,2]}
 	var sum := 0.0
 	for id in expected:
 		var data := SHOP.get_rarity(id)

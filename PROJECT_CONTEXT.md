@@ -6,7 +6,7 @@
 
 ## Five-Rarity Summon Policy (2026-10-06)
 - Target weights common/uncommon/rare/legendary/transcendent = 30/30/30/9/1. Empty content pools cannot win; current common/uncommon effective chances are 50/50. Rates UI distinguishes target/current/preparation. Adding a monster in a missing rarity automatically activates that rarity and recalculates effective odds without fake content/rewards.
-- Transcendent first summon unlocks the character immediately, awards zero shards, and persists first_draw_unlock in reward history. Later summons give 1–2 shards. Legendary gives 2–4 shards and requires the existing 25-shard unlock threshold. Common/uncommon/rare retain 2–5/6–15/3–8 shards and 30-shard thresholds. Unlocking still does not consume shards; upgrade rules unchanged.
+- Transcendent first summon unlocks the character immediately, awards zero shards, and persists first_draw_unlock in reward history. Later summons give 1–2 shards. Legendary gives 2–4 shards and requires the existing 25-shard unlock threshold. Common/uncommon/rare give 5–8/3–5/1–5 shards and retain 30-shard thresholds. Unlocking still does not consume shards; upgrade rules unchanged.
 - Reward calculation uses canonical monster rarity and staged entry ownership, so repeated transcendent results in one batch unlock only once. Existing atomic save/rollback and maxed shard-to-research conversion remain. Generic non-summon shard awards do not trigger the first-summon rule.
 
 ## Banshee / Bleed (2026-10-06)
