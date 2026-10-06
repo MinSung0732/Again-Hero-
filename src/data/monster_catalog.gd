@@ -19,6 +19,7 @@ const ORDER := [
 	"medusa",
 	"mummy",
 	"powwow_mummy",
+	"scorpion",
 ]
 
 const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd")
@@ -26,6 +27,18 @@ const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd"
 const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const MONSTERS := {
+	"scorpion": {
+		"id":"scorpion", "name":"전갈", "role":"swarm", "family":"scorpion", "species":"beast", "grade":"normal", "rarity":"common", "attack_type":"melee",
+		"base_cost":3.0, "summon_exp":3.0, "default_unlocked":false,
+		"description":"빠른 근접 물량 몬스터. 실제 준 피해만큼 10초간 중독 추가 피해. 같은 개체·타격별 중독 중첩/갱신 없음.",
+		"base_stats":preload("res://src/data/scorpion_behavior_catalog.gd").BASE,
+		"card_icon_path":"res://assets/art/monsters/Scorpion/frames/idle_01.png",
+		"ground_shadow":{"size":Vector2(76,20), "offset_y":34.0, "opacity":0.35},
+		"special_augment_ids":["scorpion_rapid_venom","scorpion_twin_sting","scorpion_death_swamp"],
+		"elite_visual":preload("res://src/data/scorpion_behavior_catalog.gd").ELITE_VISUAL,
+		"elite_skills":[{"runtime":"monster", "id":"elite_scorpion_consume", "name":"약육강식", "description":"반경 250 내 가까운 일반 전갈 1마리 섭취. 최대 체력·공격력·이속·초당 공격횟수 합산. 섭취 사망은 경험치·킬 없음.", "initial_cooldown":3.0, "cooldown":7.0, "radius":250.0, "retry_interval":0.25}],
+		"scene":preload("res://src/monsters/Scorpion.tscn"),
+	},
 	"powwow_mummy": {
 		"id":"powwow_mummy", "name":"미라 주술사", "role":"ranged", "family":"powwow_mummy", "species":"undead", "grade":"rare", "rarity":"rare", "attack_type":"ranged",
 		"base_cost":4.5, "summon_exp":4.5, "default_unlocked":false,

@@ -1,14 +1,14 @@
 extends RefCounted
 
 var entries: Dictionary = {}
-var expired_ids: Array[int] = []
+var expired_ids: Array = []
 var ticking := false
 var clear_requested := false
 
-func apply(source: Node, total_damage: int, duration: float) -> bool:
+func apply(source: Node, total_damage: int, duration: float, channel: int = 0) -> bool:
 	if not is_instance_valid(source) or total_damage <= 0 or duration <= 0.0:
 		return false
-	var id := source.get_instance_id()
+	var id: Variant = source.get_instance_id() if channel == 0 else "%d:%d" % [source.get_instance_id(), channel]
 	if entries.has(id):
 		return false
 	entries[id] = {"source":weakref(source), "total":total_damage, "duration":duration, "elapsed":0.0, "applied":0, "tick":minf(0.5,duration)}

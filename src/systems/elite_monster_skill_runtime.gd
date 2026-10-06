@@ -202,6 +202,8 @@ func _cast_skill(monster: Node2D, skill: Dictionary) -> void:
 		if monster.has_method("try_cast_elite_skill") and bool(monster.call("try_cast_elite_skill", skill)):
 			skill["_timer"] = maxf(float(skill.get("cooldown", 0.0)), 0.01)
 			skill["_used"] = bool(skill.get("once", false))
+		else:
+			skill["_timer"] = maxf(float(skill.get("retry_interval", 0.0)), 0.0)
 		return
 
 	# A blocked possession retains readiness; it does not spend HP/cooldown.

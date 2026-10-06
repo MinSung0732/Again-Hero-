@@ -21,6 +21,7 @@ signal run_time_changed(elapsed_seconds: float, remaining_seconds: float)
 signal battle_finished(message: String, player_won: bool)
 
 const HERO_SCENE := preload("res://src/hero/Hero.tscn")
+const SCORPION_SWAMP_RUNTIME := preload("res://src/systems/scorpion_swamp_runtime.gd")
 const SUPPORT_BUFF_RUNTIME := preload("res://src/systems/monster_support_buff_runtime.gd")
 const MONSTER_SUPPORT_COMMON := preload("res://src/monsters/monster_runtime_common.gd")
 const EXP_ORB_SCENE := preload("res://src/battle/ExpOrb.tscn")
@@ -135,6 +136,7 @@ const MONSTER_SPATIAL_CELL_SIZE := 256.0
 
 var active_monsters: Dictionary = {}
 var support_buff_runtime = SUPPORT_BUFF_RUNTIME.new()
+var scorpion_swamp_runtime = SCORPION_SWAMP_RUNTIME.new()
 var monster_population_counts: Dictionary = {}
 var monster_population_ids: Dictionary = {}
 var active_hero_summons: Dictionary = {}
@@ -555,6 +557,7 @@ func query_monsters_in_rect(world_rect: Rect2) -> Array:
 func _ready() -> void:
 	queue_redraw()
 	elite_monster_skill_runtime.setup(self)
+	scorpion_swamp_runtime.setup(self)
 	_cache_demon_ultimate_runtime_data()
 	_start_battle()
 
@@ -574,6 +577,7 @@ func _process(delta: float) -> void:
 	):
 		elite_monster_skill_runtime.tick(delta)
 		support_buff_runtime.tick(delta)
+		scorpion_swamp_runtime.tick(delta)
 		_process_demon_ultimate_spawn_queue(delta)
 		_process_stage_reinforcement_queue(delta)
 		_update_demon_ultimate_cooldowns(delta)
@@ -2392,6 +2396,7 @@ func _apply_demon_level_scaling_to_monster(
 	if not is_instance_valid(monster) or bool(monster.get_meta("fixed_base_stats", false)):
 		return
 
+	var runtime_additions: Dictionary = monster.call("get_runtime_stat_additions") if monster.has_method("get_runtime_stat_additions") else {}
 	var content_id := String(monster.get("monster_type"))
 	var excluded := bool(monster.get_meta("exclude_all_augments", false))
 	var hp_special := 1.0 if excluded else _get_special_stat_multiplier(content_id, "hp")
@@ -2413,6 +2418,7 @@ func _apply_demon_level_scaling_to_monster(
 			1,
 			int(round(
 				float(base_hp_value) * _get_demon_level_monster_hp_multiplier() * hp_special
+				+ float(runtime_additions.get("hp", 0.0))
 			))
 		)
 		monster.set("max_hp", new_max_hp)
@@ -2439,6 +2445,7 @@ func _apply_demon_level_scaling_to_monster(
 				int(round(
 					float(base_damage_value)
 					* _get_demon_level_monster_damage_multiplier() * damage_special * growth
+					+ float(runtime_additions.get("damage", 0.0))
 				))
 			)
 		)
@@ -2451,7 +2458,14 @@ func _apply_demon_level_scaling_to_monster(
 		monster.set(
 			"move_speed",
 			float(base_speed_value) * _get_demon_level_monster_speed_multiplier()
+			+ float(runtime_additions.get("speed", 0.0))
 		)
+
+	if monster.has_method("get_runtime_stat_additions"):
+		if not monster.has_meta("runtime_base_attack_cooldown"):
+			monster.set_meta("runtime_base_attack_cooldown", float(monster.get("attack_cooldown")))
+		var base_interval := maxf(float(monster.get_meta("runtime_base_attack_cooldown")), 0.01)
+		monster.set("attack_cooldown", 1.0 / (1.0 / base_interval + maxf(float(runtime_additions.get("attack_rate", 0.0)), 0.0)))
 
 	if preserve_hp_ratio and monster.has_method("queue_redraw"):
 		monster.call("queue_redraw")
@@ -2648,6 +2662,11 @@ func _on_monster_died(monster: Node) -> void:
 			0
 		)
 
+	# Ally consumption is a death, but never a hero kill or an EXP reward.
+	var rewardless_death := death_type == "consumed"
+	if rewardless_death:
+		reward = 0
+
 	if monster_type == "banshee" and is_instance_valid(monster) and not bool(monster.get_meta("exclude_all_augments", false)):
 		var config: Dictionary = _get_special_augment_config("banshee").get("banshee_death_possession", {})
 		if not config.is_empty():
@@ -2666,15 +2685,16 @@ func _on_monster_died(monster: Node) -> void:
 	# Passive resources are driven from the authoritative monster-death registry
 	# instead of polling monster groups from Hero every frame.
 	if (
-		death_type != "self_destruct"
+		death_type != "self_destruct" and not rewardless_death
 		and is_instance_valid(hero)
 		and hero.has_method("notify_monster_kill")
 	):
 		hero.call("notify_monster_kill", monster_type)
 
-	run_metrics.record_monster_death(monster_type)
+	if not rewardless_death:
+		run_metrics.record_monster_death(monster_type)
 
-	if death_type != "self_destruct":
+	if death_type != "self_destruct" and not rewardless_death:
 		hero_kills_toward_heal_item = mini(
 			hero_kills_toward_heal_item + 1,
 			HEAL_ITEM_KILLS_REQUIRED
@@ -3883,6 +3903,11 @@ func _apply_special_monster_modifiers(
 				)
 			)
 
+	if monster.has_method("get_runtime_stat_additions"):
+		monster.set_meta("runtime_variant_stats", {"hp":hp_multiplier, "damage":damage_multiplier, "speed":speed_multiplier, "attack_speed":attack_speed_multiplier})
+		var base_interval := float(monster.get_meta("runtime_base_attack_cooldown", monster.get("attack_cooldown")))
+		monster.set_meta("runtime_base_attack_cooldown", base_interval / attack_speed_multiplier)
+
 	_apply_demon_level_scaling_to_monster(monster, false)
 
 	var current_hp_value = monster.get("current_hp")
@@ -4382,6 +4407,7 @@ func _apply_normal_augments_to_existing_monster(
 ) -> void:
 	if bool(monster.get_meta("exclude_all_augments", false)):
 		return
+	var runtime_variant: Dictionary = monster.get_meta("runtime_variant_stats", {})
 	var rarity_combat := MONSTER_CATALOG.get_rarity_combat_profile(monster_id)
 	var rarity_hp_multiplier := maxf(
 		float(rarity_combat.get("hp_multiplier", 1.0)),
@@ -4416,6 +4442,7 @@ func _apply_normal_augments_to_existing_monster(
 			* rarity_speed_multiplier
 			* monster_speed_multiplier
 			* _get_monster_augment_multiplier(monster_id, "speed")
+			* float(runtime_variant.get("speed", 1.0))
 		)
 
 	var raw_damage = monster.get_meta("augment_raw_attack_damage", null)
@@ -4427,7 +4454,8 @@ func _apply_normal_augments_to_existing_monster(
 				* rarity_damage_multiplier
 				* collection_damage_multiplier
 				* monster_damage_multiplier
-				* _get_monster_augment_multiplier(monster_id, "damage"),
+				* _get_monster_augment_multiplier(monster_id, "damage")
+				* float(runtime_variant.get("damage", 1.0)),
 				1.0
 			)
 		)
@@ -4440,6 +4468,7 @@ func _apply_normal_augments_to_existing_monster(
 			* collection_hp_multiplier
 			* monster_hp_multiplier
 			* _get_monster_augment_multiplier(monster_id, "hp")
+			* float(runtime_variant.get("hp", 1.0))
 		)
 		if monster_id == "orc":
 			base_hp *= orc_hp_multiplier
@@ -4509,6 +4538,8 @@ func _apply_normal_augments_to_existing_monster(
 				)
 			)
 
+	if monster.has_method("get_runtime_stat_additions"):
+		monster.set_meta("runtime_base_attack_cooldown", float(monster.get("attack_cooldown")) / maxf(float(runtime_variant.get("attack_speed", 1.0)), 0.01))
 	_apply_demon_level_scaling_to_monster(monster, true)
 
 

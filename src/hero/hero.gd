@@ -17026,10 +17026,10 @@ func _tick_petrify(delta: float) -> void:
 		if petrify_release_slow_duration > 0.0:
 			apply_slow(petrify_release_slow,petrify_release_slow_duration)
 
-func apply_damage_poison(duration: float, total_damage: int, source: Node) -> bool:
+func apply_damage_poison(duration: float, total_damage: int, source: Node, channel: int = 0) -> bool:
 	if current_hp <= 0 or is_dying:
 		return false
-	if not damage_poison_tracker.apply(source,total_damage,duration):
+	if not damage_poison_tracker.apply(source,total_damage,duration,channel):
 		return false
 	record_status_effect_event("poison")
 	set_meta("poison_active",true)

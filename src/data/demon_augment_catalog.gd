@@ -8,6 +8,7 @@ const NORMAL_MAX_LEVEL := 10
 const SPECIAL_MAX_LEVEL := 1
 
 const MONSTER_NAMES := {
+	"scorpion":"전갈",
 	"powwow_mummy":"미라 주술사",
 	"mummy": "미라",
 	"medusa": "메두사",
@@ -135,6 +136,9 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{"id":"scorpion_rapid_venom", "monster_id":"scorpion", "name":"속효성 맹독", "description":"중독 총 피해를 유지하며 지속시간 10초 → 3초", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"scorpion_rapid_venom", "effect_values":{"duration":3.0}},
+	{"id":"scorpion_twin_sting", "monster_id":"scorpion", "name":"쌍독침", "description":"공격력 +20%, 2연격. 2타는 무적시간 무시, 각 타격 중독 별도 적용", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"scorpion_twin_sting", "effect_values":{"stat_multipliers":{"damage":1.2}}},
+	{"id":"scorpion_death_swamp", "monster_id":"scorpion", "name":"사멸의 독늪", "description":"사망 위치 지름 150 독늪 3초. 머무는 대상에 공격력 200%의 총 피해", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"scorpion_death_swamp", "effect_values":{"radius":75.0,"duration":3.0,"damage_multiplier":2.0}},
 	{"id":"powwow_mummy_brave_chant","monster_id":"powwow_mummy","name":"불굴의 찬가","description":"용기 버프 효과 +50%: 공격 +22.5%, 최대 HP 15% 실드","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"powwow_mummy_brave_chant","effect_values":{"effect_multiplier":1.5}},
 	{"id":"powwow_mummy_restoring_chant","monster_id":"powwow_mummy","name":"재생의 기도","description":"회복 버프 효과 +100%: 잃은 HP 10% 회복","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"powwow_mummy_restoring_chant","effect_values":{"effect_multiplier":2.0}},
 	{"id":"powwow_mummy_quick_ritual","monster_id":"powwow_mummy","name":"신속한 의식","description":"버프 주기 -5초 (20초 → 15초)","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"powwow_mummy_quick_ritual","effect_values":{"interval_reduction":5.0}},
