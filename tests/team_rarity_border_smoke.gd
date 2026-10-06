@@ -28,6 +28,8 @@ func run() -> void:
 		for child in plate.get_children():
 			if child is Button and child.text == "+":
 				check(child.anchor_left >= 0.7799 and child.anchor_right <= 0.9401 and child.anchor_top >= 0.2399 and child.anchor_bottom <= 0.7601, "plus inset " + plate_name)
+	var authored := load("res://assets/art/UI/clean_frames/button_frame.tres") as StyleBoxFlat
+	check(authored.border_width_left == 4 and authored.corner_radius_top_left == 8 and authored.border_blend, "visible authored bevel preserved")
 	var slot: Button = lobby.team_slot_1_button
 	for rarity in expected:
 		check(VIEW.rarity_border_color(rarity) == expected[rarity], "five-rarity palette " + rarity)

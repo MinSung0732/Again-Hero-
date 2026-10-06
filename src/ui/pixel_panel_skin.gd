@@ -97,7 +97,7 @@ static func button_style(source: StyleBox) -> StyleBox:
 	var result := CLEAN_BUTTON_FRAME.duplicate() as StyleBoxFlat
 	result.bg_color = Color("281832")
 	result.border_color = Color("d9b45b")
-	result.set_border_width_all(2)
+	# Keep the authored chamfered bevel instead of overwriting it with a thin line.
 	if source is StyleBoxFlat:
 		var flat := source as StyleBoxFlat
 		if not flat.draw_center or flat.bg_color.a <= 0.0:

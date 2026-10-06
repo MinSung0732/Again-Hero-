@@ -1,5 +1,5 @@
 ## Clean Frame Assets / Profile Art Inset (2026-10-06)
-- Common buttons use clean_frames/button_frame.tres; formation cards/monster slots use rarity_card_frame.tres with gray/yellow/blue/purple/green thin borders and a subtle same-color shadow. Header + controls are smaller and inset. Profile/gallery illustrations render in a clipped 16px inset viewport beneath their frame.
+- Common buttons use clean_frames/button_frame.tres with a 4px beveled border and chamfered corners; formation cards/monster slots use rarity_card_frame.tres with gray/yellow/blue/purple/green 3px beveled chamfered borders and a subtle same-color shadow. Header + controls are smaller and inset. Profile/gallery illustrations render in a clipped 16px inset viewport beneath their frame.
 
 ## Dullahan Retreat Overlap Fix (2026-10-06)
 - Danger sense fixes its retreat destination at activation, side-steps co-direction/overlapping hero movement and chooses map-valid destinations. Crossing hero positions no longer reverse the retreat every frame. Movement locks cannot suspend the 2s escape deadline or 3s rest recovery.
