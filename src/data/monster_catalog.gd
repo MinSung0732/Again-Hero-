@@ -18,6 +18,7 @@ const ORDER := [
 	"kraken",
 	"medusa",
 	"mummy",
+	"powwow_mummy",
 ]
 
 const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd")
@@ -25,6 +26,18 @@ const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd"
 const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const MONSTERS := {
+	"powwow_mummy": {
+		"id":"powwow_mummy", "name":"미라 주술사", "role":"ranged", "family":"powwow_mummy", "species":"undead", "grade":"rare", "rarity":"rare", "attack_type":"ranged",
+		"base_cost":4.5, "summon_exp":4.5, "default_unlocked":false,
+		"description":"사거리 지름 475, 투사체 속도 275. 20초마다 다른 아군 1개체에 무작위 버프: 용기(10초 공격 +15%, 실드 최대 HP 10%) / 회복(잃은 HP 5%) / 날렵(10초 이속 +50%). 같은 버프 중첩 없이 갱신.",
+		"base_stats":preload("res://src/data/powwow_mummy_behavior_catalog.gd").BASE,
+		"card_icon_path":"res://assets/art/monsters/powwowmummy/frames/idle_01.png",
+		"ground_shadow":{"size":Vector2(68,22),"offset_y":41.0,"opacity":0.35},
+		"special_augment_ids":["powwow_mummy_brave_chant","powwow_mummy_restoring_chant","powwow_mummy_quick_ritual"],
+		"elite_visual":preload("res://src/data/powwow_mummy_behavior_catalog.gd").ELITE_VISUAL,
+		"elite_skills":[{"runtime":"monster","passive":true,"id":"elite_powwow_mummy_multicast","name":"다중시전","description":"버프 주기마다 3종을 서로 다른 아군에게 시전. 실제 기본공격 적중마다 다음 버프 대기 -1초.","initial_cooldown":0.0,"cooldown":0.0,"hit_cooldown_reduction":1.0}],
+		"scene":preload("res://src/monsters/PowwowMummy.tscn"),
+	},
 	"mummy": {
 		"id":"mummy", "name":"미라", "role":"tank", "family":"mummy", "species":"undead", "grade":"advanced", "rarity":"uncommon", "attack_type":"melee",
 		"base_cost":7.0, "summon_exp":7.0, "default_unlocked":false,

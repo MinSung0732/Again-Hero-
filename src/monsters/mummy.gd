@@ -87,6 +87,9 @@ func take_damage(amount: int) -> void:
 	if amount <= 0 or dying or current_hp <= 0:
 		return
 	_sync_shield_capacity()
+	amount = MONSTER_RUNTIME_COMMON.consume_support_shield(self,amount)
+	if amount <= 0:
+		return
 	var absorbed := mini(shield_hp,amount)
 	shield_hp -= absorbed
 	var health_damage := mini(current_hp,amount - absorbed)

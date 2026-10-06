@@ -163,6 +163,9 @@ func take_damage(amount: int) -> void:
 	_sync_wall_capacity()
 	if amount <= 0 or dying or reviving or current_hp <= 0:
 		return
+	amount = MONSTER_RUNTIME_COMMON.consume_support_shield(self,amount)
+	if amount <= 0:
+		return
 	var absorbed := mini(shield_hp, amount)
 	shield_hp -= absorbed
 	var applied := mini(current_hp, amount - absorbed)

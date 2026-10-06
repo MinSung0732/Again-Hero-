@@ -21,6 +21,8 @@ signal run_time_changed(elapsed_seconds: float, remaining_seconds: float)
 signal battle_finished(message: String, player_won: bool)
 
 const HERO_SCENE := preload("res://src/hero/Hero.tscn")
+const SUPPORT_BUFF_RUNTIME := preload("res://src/systems/monster_support_buff_runtime.gd")
+const MONSTER_SUPPORT_COMMON := preload("res://src/monsters/monster_runtime_common.gd")
 const EXP_ORB_SCENE := preload("res://src/battle/ExpOrb.tscn")
 const HEAL_ITEM_SCENE := preload("res://src/battle/HealItem.tscn")
 const TREASURE_CHEST_SCENE := preload("res://src/battle/TreasureChest.tscn")
@@ -132,6 +134,7 @@ var monsters_alive: int = 0
 const MONSTER_SPATIAL_CELL_SIZE := 256.0
 
 var active_monsters: Dictionary = {}
+var support_buff_runtime = SUPPORT_BUFF_RUNTIME.new()
 var monster_population_counts: Dictionary = {}
 var monster_population_ids: Dictionary = {}
 var active_hero_summons: Dictionary = {}
@@ -571,6 +574,7 @@ func _process(delta: float) -> void:
 		FLOW_PAUSE_MANAGER.DOMAIN_DEMON_RUNTIME
 	):
 		elite_monster_skill_runtime.tick(delta)
+		support_buff_runtime.tick(delta)
 		_process_demon_ultimate_spawn_queue(delta)
 		_process_stage_reinforcement_queue(delta)
 		_update_demon_ultimate_cooldowns(delta)
@@ -2038,7 +2042,7 @@ func _spawn_monster(
 	var base_damage_meta = monster.get_meta(
 		"demon_level_base_attack_damage",
 		null
-	)
+	) if monster.has_meta("demon_level_base_attack_damage") else null
 	if base_damage_meta != null:
 		monster.set_meta(
 			"demon_level_base_attack_damage",
@@ -2428,10 +2432,10 @@ func _apply_demon_level_scaling_to_monster(
 	var base_damage_value = monster.get_meta(
 		"demon_level_base_attack_damage",
 		null
-	)
+	) if monster.has_meta("demon_level_base_attack_damage") else null
 	if base_damage_value != null:
-		monster.set(
-			"attack_damage",
+		MONSTER_SUPPORT_COMMON.set_unbuffed_attack_damage(
+			monster,
 			maxi(
 				1,
 				int(round(

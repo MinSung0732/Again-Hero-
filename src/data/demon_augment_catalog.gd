@@ -8,6 +8,7 @@ const NORMAL_MAX_LEVEL := 10
 const SPECIAL_MAX_LEVEL := 1
 
 const MONSTER_NAMES := {
+	"powwow_mummy":"미라 주술사",
 	"mummy": "미라",
 	"medusa": "메두사",
 	"kraken": "크라켄",
@@ -134,6 +135,9 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{"id":"powwow_mummy_brave_chant","monster_id":"powwow_mummy","name":"불굴의 찬가","description":"용기 버프 효과 +50%: 공격 +22.5%, 최대 HP 15% 실드","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"powwow_mummy_brave_chant","effect_values":{"effect_multiplier":1.5}},
+	{"id":"powwow_mummy_restoring_chant","monster_id":"powwow_mummy","name":"재생의 기도","description":"회복 버프 효과 +100%: 잃은 HP 10% 회복","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"powwow_mummy_restoring_chant","effect_values":{"effect_multiplier":2.0}},
+	{"id":"powwow_mummy_quick_ritual","monster_id":"powwow_mummy","name":"신속한 의식","description":"버프 주기 -5초 (20초 → 15초)","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"powwow_mummy_quick_ritual","effect_values":{"interval_reduction":5.0}},
 	{"id":"mummy_eternal_bandage", "monster_id":"mummy", "name":"불멸의 붕대", "description":"최대 체력 +70%", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"mummy_eternal_bandage", "effect_values":{"stat_multipliers":{"hp":1.70}}},
 	{"id":"mummy_broken_seal", "monster_id":"mummy", "name":"깨진 봉인", "description":"소환 실드 파괴 시 개체당 1회 실드 전체 용량만큼 반격 (무적에 막힘)", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"mummy_broken_seal", "effect_values":{"once":true}},
 	{"id":"mummy_dry_wound", "monster_id":"mummy", "name":"메마른 상처", "description":"실제 타격 시 2초간 치유감소 30% (갱신)", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"mummy_dry_wound", "effect_values":{"duration":2.0,"reduction":0.30}},

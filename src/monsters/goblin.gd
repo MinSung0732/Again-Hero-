@@ -358,6 +358,9 @@ func take_damage(amount: int) -> void:
 			1
 		)
 
+	remaining_damage = MONSTER_RUNTIME_COMMON.consume_support_shield(self,remaining_damage)
+	if remaining_damage <= 0:
+		return
 	var shield_hp := maxi(int(get_meta("elite_shield_hp", 0)), 0)
 	if shield_hp > 0:
 		var absorbed := mini(shield_hp, remaining_damage)

@@ -263,6 +263,9 @@ func take_damage(amount: int) -> void:
 		return
 
 	var remaining_damage := maxi(amount, 0)
+	remaining_damage = MONSTER_RUNTIME_COMMON.consume_support_shield(self,remaining_damage)
+	if remaining_damage <= 0:
+		return
 	var elite_shield_hp := maxi(
 		int(get_meta("elite_shield_hp", 0)),
 		0
@@ -411,7 +414,7 @@ func _trigger_death_explosion() -> void:
 	):
 		return
 
-	var effective_damage := float(explosion_damage)
+	var effective_damage := float(explosion_damage) * float(get_meta("support_damage_multiplier",1.0))
 	var unstable: Dictionary = special_augment_configs.get(
 		"bomb_rat_unstable_powder",
 		{}

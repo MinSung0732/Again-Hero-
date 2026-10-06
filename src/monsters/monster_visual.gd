@@ -31,6 +31,7 @@ var _desired_locomotion: StringName = &"idle"
 var _flash_timer: float = 0.0
 var _hit_flash_material: ShaderMaterial
 var _lod_suspended: bool = false
+var _death_fade_duration := 0.0
 
 func _ready() -> void:
 	animation_finished.connect(_on_animation_finished)
@@ -95,6 +96,10 @@ func play_attack() -> void:
 		return
 	_play_one_shot(&"attack")
 
+func play_skill() -> void:
+	if not _death_playing and not _lod_suspended:
+		_play_one_shot(&"skill")
+
 func play_hit() -> void:
 	if _death_playing or _lod_suspended or _revival_reverse_playing or _revival_death_pose_playing:
 		return
@@ -136,6 +141,15 @@ func play_death() -> void:
 	if _hit_flash_material != null:
 		_hit_flash_material.set_shader_parameter("flash_strength", 0.0)
 	self_modulate = Color.WHITE
+
+	if _death_fade_duration > 0.0 and _visual_ready:
+		play(&"idle")
+		stop()
+		frame = 0
+		var fade := create_tween()
+		fade.tween_property(self,"self_modulate:a",0.0,_death_fade_duration)
+		fade.tween_callback(_emit_death_finished)
+		return
 
 	if _visual_ready and sprite_frames.has_animation(&"death"):
 		play(&"death")
@@ -263,7 +277,7 @@ func _on_animation_finished() -> void:
 		_emit_death_finished()
 		return
 
-	if animation == &"attack" or animation == &"hit":
+	if animation == &"attack" or animation == &"hit" or animation == &"skill":
 		_one_shot_locked = false
 		if _lod_suspended:
 			return
@@ -323,6 +337,7 @@ func _setup_sprite_frames() -> void:
 func apply_visual_profile(profile: Dictionary) -> bool:
 	if profile.is_empty():
 		return false
+	_death_fade_duration = maxf(float(profile.get("death_fade_duration",0.0)),0.0)
 
 	var mode := String(profile.get("mode", ""))
 	var animations = profile.get("animations", {})

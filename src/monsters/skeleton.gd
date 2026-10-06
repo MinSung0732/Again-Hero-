@@ -409,6 +409,9 @@ func take_damage(amount: int) -> void:
 		int(round(float(amount) * damage_multiplier)),
 		1
 	)
+	reduced_damage = MONSTER_RUNTIME_COMMON.consume_support_shield(self,reduced_damage)
+	if reduced_damage <= 0:
+		return
 	var previous_hp := current_hp
 	current_hp = maxi(current_hp - reduced_damage, 0)
 	var applied_damage := previous_hp - current_hp

@@ -162,6 +162,9 @@ func take_damage(amount: int) -> void:
 	if bool(get_meta("banshee_charge_stealth_active", false)):
 		var config: Dictionary = special_augment_configs.get("banshee_charge_stealth", {})
 		amount = maxi(int(round(float(amount) * float(config.get("damage_taken_multiplier", 0.50)))), 0)
+	amount = MONSTER_RUNTIME_COMMON.consume_support_shield(self,amount)
+	if amount <= 0:
+		return
 	current_hp = maxi(current_hp - amount, 0)
 	var applied_damage := previous_hp - current_hp
 	DAMAGE_NUMBERS.show(self, applied_damage)

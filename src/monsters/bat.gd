@@ -374,6 +374,9 @@ func _update_visual_motion(direction_x: float, moving: bool) -> void:
 func take_damage(amount: int) -> void:
 	if current_hp <= 0 or dying:
 		return
+	amount = MONSTER_RUNTIME_COMMON.consume_support_shield(self,amount)
+	if amount <= 0:
+		return
 	var previous_hp := current_hp
 	current_hp = maxi(current_hp - amount, 0)
 	var applied_damage := previous_hp - current_hp
