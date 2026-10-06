@@ -1,3 +1,6 @@
+## Support Shield Bar (2026-10-07)
+- Courage support shield metadata now includes support_shield_capacity for display normalization. Shared draw_support_shield_bar draws a cyan 6px row 23px above each actor's HP row, separate from innate shields. All base actor HP drawing paths and Dullahan's override call it; inherited actors reuse their base. Full received shield spans full width even at10% maxHP, absorption redraws/shrinks it and zero hides it. Actual shield strength, priority, persistence and refresh unchanged. Windows rendered-pixel regression: tests/support_shield_visual_smoke.gd.
+
 ## Sage Phase Expiry Obstacle Recovery (2026-10-07)
 - Stage10 Astra restores collision on phase expiry, then defers a one-shot body-shape overlap check until after the physics/petrify wrapper. Only decor/hard-wall layers trigger ejection; monster overlap does not. A bounded 32-ring/16-direction search with 2px margin chooses a nearby map-valid landing and refines the distance; a checked phase-entry position is the fallback for oversized props. Clears stale velocity/obstacle escape and updates the petrify anchor. Normal expiry position, boundary mask, cooldown and post-phase shield remain. Physics runtime coverage: tests/sage_phase_escape_smoke.gd.
 

@@ -473,3 +473,15 @@ static func apply_direct_heal(
 	DAMAGE_NUMBERS.show_heal(owner, recovered)
 	owner.queue_redraw()
 	return recovered
+
+
+static func draw_support_shield_bar(owner: Node2D, width: float, hp_bar_y: float) -> void:
+	var shield := int(owner.get_meta("support_shield_hp", 0))
+	if shield <= 0:
+		return
+	var capacity := maxi(int(owner.get_meta("support_shield_capacity", shield)), 1)
+	var ratio := clampf(float(shield) / float(capacity), 0.0, 1.0)
+	# Separate row above innate shields; full received shield starts at full width.
+	var rect := Rect2(-width * 0.5, hp_bar_y - 23.0, width, 6.0)
+	owner.draw_rect(rect, Color("202c40"), true)
+	owner.draw_rect(Rect2(rect.position, Vector2(width * ratio, 6.0)), Color("61ddff"), true)

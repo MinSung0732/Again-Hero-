@@ -20,6 +20,7 @@ func apply_courage(target: Node2D, duration: float, damage_ratio: float, shield_
 	COMMON.set_unbuffed_attack_damage(target,base_damage)
 	var shield := int(round(float(target.get("max_hp")) * shield_ratio))
 	target.set_meta("support_shield_hp",maxi(int(target.get_meta("support_shield_hp",0)),shield))
+	target.set_meta("support_shield_capacity",maxi(int(target.get_meta("support_shield_capacity",0)),int(target.get_meta("support_shield_hp",0))))
 	target.queue_redraw()
 
 func apply_agility(target: Node2D, duration: float, speed_ratio: float) -> void:

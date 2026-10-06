@@ -421,6 +421,7 @@ func _draw() -> void:
 	if dying:
 		return
 	var bar_width := 58.0
+	MONSTER_RUNTIME_COMMON.draw_support_shield_bar(self, bar_width, -58.0)
 	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
 	draw_rect(Rect2(-bar_width / 2.0, -58.0, bar_width, 7.0), Color(0.12, 0.12, 0.14), true)
 	draw_rect(

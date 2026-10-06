@@ -347,6 +347,7 @@ func _draw() -> void:
 			height = texture.get_height() * visual.scale.y
 	var bar_y := -height * 0.5 - 12.0
 	var width := 120.0
+	MONSTER_RUNTIME_COMMON.draw_support_shield_bar(self, width, bar_y)
 	draw_rect(Rect2(-width * 0.5, bar_y, width, 8), Color("202024"), true)
 	draw_rect(Rect2(-width * 0.5, bar_y, width * clampf(float(current_hp) / maxi(max_hp, 1), 0.0, 1.0), 8), Color("4de673"), true)
 	if shield_hp > 0:
