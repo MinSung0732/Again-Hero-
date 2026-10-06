@@ -18,6 +18,9 @@ var other_menu: VBoxContainer
 var other_menu_buttons := {}
 var settings_root: VBoxContainer
 var other_back_button: Button
+var other_backdrop: Panel
+var settings_title_plate: PanelContainer
+var menu_title_plate: PanelContainer
 var lobby: Control
 var buttons := {}
 var pages := {}
@@ -45,9 +48,11 @@ func install(target: Control) -> void:
 	lobby = target
 	var box := lobby.other_settings_panel.get_parent() as VBoxContainer
 	var margin := box.get_parent() as MarginContainer
-	margin.add_theme_constant_override("margin_left", 72)
-	margin.add_theme_constant_override("margin_right", 72)
+	margin.add_theme_constant_override("margin_left", 88)
+	margin.add_theme_constant_override("margin_right", 88)
+	margin.add_theme_constant_override("margin_top", 84)
 	margin.add_theme_constant_override("margin_bottom", 72)
+	_install_other_backdrop()
 	box.add_theme_constant_override("separation", 28)
 	box.get_node("Title").text = "설정"
 	var tabs := box.get_node("Tabs") as HBoxContainer
@@ -103,35 +108,78 @@ func install(target: Control) -> void:
 	_build_other_menu(box)
 	show_menu()
 
+func _install_other_backdrop() -> void:
+	# Opaque backing stays inside the shared outer rails and follows both subpages.
+	other_backdrop = Panel.new()
+	other_backdrop.name = "OtherContentBackdrop"
+	other_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lobby.other_tab.add_child(other_backdrop)
+	lobby.other_tab.move_child(other_backdrop, 0)
+	other_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	other_backdrop.offset_left = 80
+	other_backdrop.offset_top = 80
+	other_backdrop.offset_right = -80
+	other_backdrop.offset_bottom = -80
+	var background := StyleBoxFlat.new()
+	background.bg_color = Color("140d22")
+	background.set_corner_radius_all(8)
+	other_backdrop.add_theme_stylebox_override("panel", background)
+
+func _title_plate(parent: Control, title: Label) -> PanelContainer:
+	var plate := PanelContainer.new()
+	plate.name = "TitlePlate"
+	plate.custom_minimum_size = Vector2(560, 88)
+	plate.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	plate.add_theme_stylebox_override("panel", FRAMES.style("shop_featured_frame", 18))
+	parent.add_child(plate)
+	if title.get_parent() != null:
+		title.reparent(plate)
+	else:
+		plate.add_child(title)
+	title.add_theme_font_size_override("font_size", 40)
+	title.add_theme_color_override("font_color", Color("ffe7a3"))
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return plate
+
 func _build_other_menu(box: VBoxContainer) -> void:
 	# Keep all existing settings nodes/signals and move them once into a subpage.
 	settings_root = VBoxContainer.new()
 	settings_root.name = "SettingsContent"
 	settings_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	settings_root.add_theme_constant_override("separation", 28)
+	settings_root.add_theme_constant_override("separation", 20)
 	var original := box.get_children()
 	box.add_child(settings_root)
 	for child in original:
 		child.reparent(settings_root)
 	var heading := HBoxContainer.new()
 	heading.name = "SettingsNavigation"
+	heading.add_theme_constant_override("separation", 12)
 	settings_root.add_child(heading)
 	settings_root.move_child(heading, 0)
 	other_back_button = Button.new()
 	other_back_button.name = "BackToOther"
-	other_back_button.text = "‹ 기타 목록"
-	other_back_button.custom_minimum_size = Vector2(180, 76)
-	other_back_button.add_theme_font_size_override("font_size", 24)
+	other_back_button.text = "‹"
+	other_back_button.tooltip_text = "기타 목록으로 돌아가기"
+	other_back_button.custom_minimum_size = Vector2(80, 88)
+	other_back_button.add_theme_font_size_override("font_size", 54)
+	other_back_button.add_theme_color_override("font_color", Color("ffe298"))
+	other_back_button.add_theme_color_override("font_hover_color", Color("fff8df"))
 	for state in ["normal", "hover", "pressed"]:
-		other_back_button.add_theme_stylebox_override(state, FRAMES.style("shop_button_frame", 12))
+		other_back_button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
 	other_back_button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	heading.add_child(other_back_button)
 	other_back_button.pressed.connect(show_menu)
 	var title := settings_root.get_node("Title") as Label
-	title.reparent(heading)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var title_center := CenterContainer.new()
+	title_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	heading.add_child(title_center)
+	settings_title_plate = _title_plate(title_center, title)
 	var balance := Control.new()
-	balance.custom_minimum_size.x = 180
+	balance.custom_minimum_size.x = 80
 	balance.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	heading.add_child(balance)
 	other_menu = VBoxContainer.new()
@@ -139,8 +187,12 @@ func _build_other_menu(box: VBoxContainer) -> void:
 	other_menu.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	other_menu.add_theme_constant_override("separation", 24)
 	box.add_child(other_menu)
-	var menu_title := _label(other_menu, "기타", 40, Color("ffe298"))
-	menu_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var menu_heading := CenterContainer.new()
+	menu_heading.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	other_menu.add_child(menu_heading)
+	var menu_title := Label.new()
+	menu_title.text = "기타"
+	menu_title_plate = _title_plate(menu_heading, menu_title)
 	var menu_scroll := ScrollContainer.new()
 	menu_scroll.name = "OtherMenuScroll"
 	menu_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -309,7 +361,7 @@ func _sync_game() -> void:
 
 func _build_sound() -> void:
 	var page: VBoxContainer = pages.sound
-	page.add_theme_constant_override("separation", 16)
+	page.add_theme_constant_override("separation", 12)
 	# Keep original controls and signal bindings, replace only their layout.
 	var keep := [lobby.bgm_slider, lobby.bgm_value_label, lobby.sfx_slider, lobby.sfx_value_label, lobby.bgm_mute_check, lobby.sfx_mute_check]
 	for node in keep:

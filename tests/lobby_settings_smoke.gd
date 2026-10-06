@@ -42,6 +42,10 @@ func run() -> void:
 	await process_frame
 	check(view.other_menu.visible and not view.settings_root.visible, "other tab opens category list instead of settings")
 	check(view.other_menu_buttons.size() == 7, "seven categories are present")
+	var outer: Rect2 = lobby.other_tab.get_global_rect()
+	var menu_title_rect: Rect2 = view.menu_title_plate.get_global_rect()
+	check(menu_title_rect.position.y >= outer.position.y + 80 and outer.encloses(menu_title_rect), "menu title stays below upper decorative rail")
+	check(view.other_backdrop.mouse_filter == Control.MOUSE_FILTER_IGNORE and view.other_backdrop.get_theme_stylebox("panel").bg_color.a == 1.0, "shared opaque backdrop is passive")
 	var previous_bottom := 0.0
 	for entry in view.OTHER_ENTRIES:
 		var item: Button = view.other_menu_buttons[entry[0]]
@@ -51,6 +55,12 @@ func run() -> void:
 		previous_bottom = rect.end.y
 	view.other_menu_buttons.settings.pressed.emit()
 	check(view.settings_root.visible and not view.other_menu.visible, "settings category opens existing settings")
+	await process_frame
+	await process_frame
+	var back_rect: Rect2 = view.other_back_button.get_global_rect()
+	var settings_title_rect: Rect2 = view.settings_title_plate.get_global_rect()
+	check(back_rect.position.y >= outer.position.y + 80 and outer.encloses(back_rect), "back arrow stays within outer frame")
+	check(settings_title_rect.position.x >= back_rect.end.x and settings_title_rect.position.y >= outer.position.y + 80, "settings title does not overlap back arrow or upper rail")
 	view.other_back_button.pressed.emit()
 	check(view.other_menu.visible and not view.settings_root.visible, "back returns to category list")
 	view.other_menu_buttons.settings.pressed.emit()
