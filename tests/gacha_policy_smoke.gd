@@ -15,19 +15,19 @@ func run() -> void:
 	SCOPE.guest_directory = "user://gacha_policy_" + Crypto.new().generate_random_bytes(16).hex_encode()
 	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
 	SCOPE.select_guest()
-	var expected := {"common":[30,5,8], "uncommon":[30,3,5], "rare":[30,1,5], "legendary":[9,2,4], "transcendent":[1,1,2]}
+	var expected := {"common":[50,5,8], "uncommon":[30,3,5], "rare":[14.5,1,5], "legendary":[5,2,4], "transcendent":[0.5,1,2]}
 	var sum := 0.0
 	for id in expected:
 		var data := SHOP.get_rarity(id)
 		check(data.weight == expected[id][0] and data.shard_min == expected[id][1] and data.shard_max == expected[id][2], "rarity policy " + id)
 		sum += data.weight
 	check(sum == 100, "weights total one hundred")
-	check(is_equal_approx(SHOP.get_effective_probability("common"), 3000.0/99.0) and is_equal_approx(SHOP.get_effective_probability("legendary"), 900.0/99.0), "four available pools normalized")
-	check(is_equal_approx(SHOP.get_effective_probability("rare"), 3000.0/99.0) and SHOP.get_effective_probability("transcendent") == 0, "Medusa enables rare pool, empty transcendent pool cannot win")
+	check(is_equal_approx(SHOP.get_effective_probability("common"), 5000.0/99.5) and is_equal_approx(SHOP.get_effective_probability("legendary"), 500.0/99.5), "four available pools normalized")
+	check(is_equal_approx(SHOP.get_effective_probability("rare"), 1450.0/99.5) and SHOP.get_effective_probability("transcendent") == 0, "Medusa enables rare pool, empty transcendent pool cannot win")
 	# Only in-memory pool sentinels: no pretend monsters in content or saves.
 	var real_pools: Dictionary = SHOP._rarity_pools
 	SHOP._rarity_pools = {"common":["fixture"],"uncommon":["fixture"],"rare":["fixture"],"legendary":["fixture"],"transcendent":["fixture"]}
-	var boundaries := {0.0:"common",0.29999:"common",0.3:"uncommon",0.59999:"uncommon",0.6:"rare",0.89999:"rare",0.9:"legendary",0.98999:"legendary",0.99:"transcendent",1.0:"transcendent"}
+	var boundaries := {0.0:"common",0.49999:"common",0.5:"uncommon",0.79999:"uncommon",0.8:"rare",0.94499:"rare",0.945:"legendary",0.99499:"legendary",0.995:"transcendent",1.0:"transcendent"}
 	for value in boundaries:
 		check(SHOP.roll_rarity(value) == boundaries[value], "exact weighted boundary " + str(value))
 	SHOP._rarity_pools = real_pools

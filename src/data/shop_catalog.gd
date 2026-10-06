@@ -99,7 +99,7 @@ const RARITIES := {
 	"common": {
 		"label": "일반",
 		"rank": 0,
-		"weight": 30.0,
+		"weight": 50.0,
 		"shard_min": 5,
 		"shard_max": 8,
 		"color": Color("f4f4f4"),
@@ -117,7 +117,7 @@ const RARITIES := {
 	"rare": {
 		"label": "희귀",
 		"rank": 2,
-		"weight": 30.0,
+		"weight": 14.5,
 		"shard_min": 1,
 		"shard_max": 5,
 		"color": Color("54a8ff"),
@@ -126,7 +126,7 @@ const RARITIES := {
 	"legendary": {
 		"label": "전설",
 		"rank": 3,
-		"weight": 9.0,
+		"weight": 5.0,
 		"shard_min": 2,
 		"shard_max": 4,
 		"color": Color("bc70ff"),
@@ -135,7 +135,7 @@ const RARITIES := {
 	"transcendent": {
 		"label": "초월",
 		"rank": 4,
-		"weight": 1.0,
+		"weight": 0.5,
 		"shard_min": 1,
 		"shard_max": 2,
 		"color": Color("61e887"),
