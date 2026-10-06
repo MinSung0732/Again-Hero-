@@ -38,6 +38,22 @@ func run() -> void:
 	var view = lobby.settings_view
 	view.notice_path = folder.path_join("notice.cfg")
 	lobby._switch_tab("other")
+	await process_frame
+	await process_frame
+	check(view.other_menu.visible and not view.settings_root.visible, "other tab opens category list instead of settings")
+	check(view.other_menu_buttons.size() == 7, "seven categories are present")
+	var previous_bottom := 0.0
+	for entry in view.OTHER_ENTRIES:
+		var item: Button = view.other_menu_buttons[entry[0]]
+		var rect := item.get_global_rect()
+		check(rect.position.y >= previous_bottom and rect.size.y >= 132, "one full-width category per touch-sized row")
+		check(item.disabled == (entry[0] != "settings"), "only settings is connected")
+		previous_bottom = rect.end.y
+	view.other_menu_buttons.settings.pressed.emit()
+	check(view.settings_root.visible and not view.other_menu.visible, "settings category opens existing settings")
+	view.other_back_button.pressed.emit()
+	check(view.other_menu.visible and not view.settings_root.visible, "back returns to category list")
+	view.other_menu_buttons.settings.pressed.emit()
 	check(view.buttons.size() == 5 and view.pages.size() == 5, "five expandable settings pages")
 	check(view.selected == "game", "game is default")
 	for id in view.pages:

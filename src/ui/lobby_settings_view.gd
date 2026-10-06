@@ -1,5 +1,8 @@
 extends RefCounted
 
+const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
+const OTHER_ENTRIES := [["demon_book", "마왕도감"], ["hero_book", "용사도감"], ["daily", "일일미션"], ["weekly", "주간미션"], ["friends", "친구목록"], ["rank_history", "랭킹기록"], ["settings", "설정"]]
+
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const PROFILE := preload("res://src/systems/player_profile.gd")
 const APPEARANCE := preload("res://src/systems/demon_appearance_store.gd")
@@ -11,6 +14,10 @@ const GAME_OPTIONS := [
 	{"key": "camera_view_locked", "title": "화면 고정", "description": "켜면 용사를 따라갑니다. 끄면 드래그로 화면을 이동합니다.", "default": true},
 	{"key": "battle_frame_enabled", "title": "배틀 프레임", "description": "전장 주변의 마왕성 장식 프레임을 표시합니다.", "default": true},
 ]
+var other_menu: VBoxContainer
+var other_menu_buttons := {}
+var settings_root: VBoxContainer
+var other_back_button: Button
 var lobby: Control
 var buttons := {}
 var pages := {}
@@ -93,6 +100,84 @@ func install(target: Control) -> void:
 	lobby.get_node("/root/CloudStore").status_changed.connect(_on_cloud_status)
 	lobby.get_node("/root/LoginGateway").login_unavailable.connect(_on_cloud_status)
 	show_page("game")
+	_build_other_menu(box)
+	show_menu()
+
+func _build_other_menu(box: VBoxContainer) -> void:
+	# Keep all existing settings nodes/signals and move them once into a subpage.
+	settings_root = VBoxContainer.new()
+	settings_root.name = "SettingsContent"
+	settings_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	settings_root.add_theme_constant_override("separation", 28)
+	var original := box.get_children()
+	box.add_child(settings_root)
+	for child in original:
+		child.reparent(settings_root)
+	var heading := HBoxContainer.new()
+	heading.name = "SettingsNavigation"
+	settings_root.add_child(heading)
+	settings_root.move_child(heading, 0)
+	other_back_button = Button.new()
+	other_back_button.name = "BackToOther"
+	other_back_button.text = "‹ 기타 목록"
+	other_back_button.custom_minimum_size = Vector2(180, 76)
+	other_back_button.add_theme_font_size_override("font_size", 24)
+	for state in ["normal", "hover", "pressed"]:
+		other_back_button.add_theme_stylebox_override(state, FRAMES.style("shop_button_frame", 12))
+	other_back_button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	heading.add_child(other_back_button)
+	other_back_button.pressed.connect(show_menu)
+	var title := settings_root.get_node("Title") as Label
+	title.reparent(heading)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var balance := Control.new()
+	balance.custom_minimum_size.x = 180
+	balance.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	heading.add_child(balance)
+	other_menu = VBoxContainer.new()
+	other_menu.name = "OtherMenu"
+	other_menu.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	other_menu.add_theme_constant_override("separation", 24)
+	box.add_child(other_menu)
+	var menu_title := _label(other_menu, "기타", 40, Color("ffe298"))
+	menu_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var menu_scroll := ScrollContainer.new()
+	menu_scroll.name = "OtherMenuScroll"
+	menu_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	menu_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	other_menu.add_child(menu_scroll)
+	var rows := VBoxContainer.new()
+	rows.name = "Categories"
+	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rows.add_theme_constant_override("separation", 16)
+	menu_scroll.add_child(rows)
+	for entry in OTHER_ENTRIES:
+		var button := Button.new()
+		button.name = String(entry[0]).to_pascal_case()
+		button.text = String(entry[1]) + ("  ›" if entry[0] == "settings" else "\n준비 중")
+		button.custom_minimum_size.y = 132
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		button.disabled = entry[0] != "settings"
+		button.add_theme_font_size_override("font_size", 30)
+		button.add_theme_color_override("font_color", Color("fff0c2"))
+		button.add_theme_color_override("font_disabled_color", Color("b9a7c6"))
+		for state in ["normal", "hover", "pressed", "disabled"]:
+			button.add_theme_stylebox_override(state, FRAMES.style("shop_button_frame", 18, Color("ba9dca") if state == "disabled" else Color.WHITE))
+		button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+		rows.add_child(button)
+		other_menu_buttons[entry[0]] = button
+		if entry[0] == "settings":
+			button.pressed.connect(_open_settings)
+
+func _open_settings() -> void:
+	show_page(selected)
+
+func show_menu() -> void:
+	if other_menu == null:
+		return
+	settings_root.hide()
+	other_menu.show()
 
 func _style(fill: Color, edge: Color, width: int = 2) -> StyleBox:
 	var style := StyleBoxFlat.new()
@@ -559,6 +644,9 @@ func _sync_account() -> void:
 func show_page(id: String) -> void:
 	if not pages.has(id):
 		return
+	if settings_root != null:
+		other_menu.hide()
+		settings_root.show()
 	var changing := selected != id
 	selected = id
 	account_heading.visible = id == "account"

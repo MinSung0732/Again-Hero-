@@ -2417,7 +2417,7 @@ func _switch_tab(tab_id: String) -> void:
 	elif tab_id == "other":
 		_sync_audio_settings_ui()
 		if settings_view != null:
-			settings_view.show_page(settings_view.selected)
+			settings_view.show_menu()
 		else:
 			_show_other_settings()
 
