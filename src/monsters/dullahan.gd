@@ -12,6 +12,7 @@ var shield_hp := 0
 var wall_max_hp := 0
 var danger_cooldown := 0.0
 var danger_state := 0 # combat / escape / rest
+var escape_target := Vector2.ZERO
 var state_timer := 0.0
 var rest_heal_elapsed := 0.0
 var rest_heal_total := 0
@@ -77,6 +78,8 @@ func _physics_process(delta: float) -> void:
 	charge_timer = maxf(charge_timer - delta, 0.0)
 	if MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self):
 		velocity = Vector2.ZERO
+		if danger_state != 0:
+			_tick_danger(delta, false)
 		return
 	_tick_march(delta)
 	hero_target_refresh_timer = maxf(hero_target_refresh_timer - delta, 0.0)
@@ -211,13 +214,36 @@ func _start_danger() -> void:
 	danger_state = 1
 	danger_cooldown = float(DANGER.cooldown)
 	state_timer = float(DANGER.escape_timeout)
+	escape_target = _choose_escape_target()
 	_cancel_slam()
 
-func _tick_danger(delta: float) -> void:
+func _choose_escape_target() -> Vector2:
+	var away := global_position - hero.global_position if is_instance_valid(hero) else Vector2.RIGHT
+	var hero_motion := Vector2.ZERO
+	if hero is CharacterBody2D:
+		hero_motion = hero.velocity
+	var direction := away.normalized()
+	if direction.length_squared() < 0.001:
+		direction = hero_motion.normalized() if hero_motion.length_squared() > 0.001 else Vector2.RIGHT
+	# Side-step a hero travelling with us instead of following its moving
+	# position and repeatedly reversing while the bodies overlap.
+	if away.length_squared() < 0.001 or (hero_motion.length_squared() > 0.001 and direction.dot(hero_motion.normalized()) > 0.5):
+		direction = Vector2(-direction.y, direction.x)
+	var distance := float(DANGER.escape_distance)
+	var target := global_position + direction * distance
+	if is_instance_valid(combat_authority) and combat_authority.has_method("clamp_monster_wander_position"):
+		target = combat_authority.clamp_monster_wander_position(target)
+		# Choose the opposite side if the first route runs into a map edge.
+		var alternate: Vector2 = combat_authority.clamp_monster_wander_position(global_position - direction * distance)
+		if global_position.distance_squared_to(alternate) > global_position.distance_squared_to(target) + 1.0:
+			target = alternate
+	return target
+
+func _tick_danger(delta: float, can_move: bool = true) -> void:
 	state_timer = maxf(state_timer - delta, 0.0)
 	if danger_state == 1:
 		var away := global_position - hero.global_position if is_instance_valid(hero) else Vector2.RIGHT
-		if away.length_squared() >= float(DANGER.escape_distance) * float(DANGER.escape_distance) or state_timer <= 0.0:
+		if away.length_squared() >= float(DANGER.escape_distance) * float(DANGER.escape_distance) or global_position.distance_squared_to(escape_target) <= 16.0 * 16.0 or state_timer <= 0.0:
 			danger_state = 2
 			state_timer = float(DANGER.rest_duration)
 			rest_heal_elapsed = 0.0
@@ -226,10 +252,14 @@ func _tick_danger(delta: float) -> void:
 			velocity = Vector2.ZERO
 			_update_visual_motion(away.x, false)
 			return
-		velocity = away.normalized() * move_speed * float(DANGER.speed_multiplier) * MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
-		if away.length_squared() < 0.001:
-			velocity = Vector2.RIGHT * move_speed * float(DANGER.speed_multiplier)
-		_update_visual_motion(away.x, true)
+		if not can_move:
+			velocity = Vector2.ZERO
+			_update_visual_motion(0.0, false)
+			return
+		var direction := global_position.direction_to(escape_target)
+		var speed := move_speed * float(DANGER.speed_multiplier) * MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
+		velocity = direction * minf(speed, global_position.distance_to(escape_target) / maxf(delta, 0.001))
+		_update_visual_motion(direction.x, true)
 		move_and_slide()
 	else:
 		velocity = Vector2.ZERO

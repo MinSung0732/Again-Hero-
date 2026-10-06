@@ -109,6 +109,31 @@ func run() -> void:
 	check(hero.stun_timer == 1, "stun resistance")
 	hero._clear_stun()
 	hero.status_resistances.clear()
+	# Regression: hero moving in the same direction, then crossing the knight,
+	# must not keep redirecting the retreat or suspend the rest deadline.
+	var retreat = spawn(Vector2(1000,1000))
+	hero.position = Vector2(970,1000)
+	hero.velocity = Vector2(100,0)
+	retreat.current_hp = 1
+	retreat._start_danger()
+	var target: Vector2 = retreat.escape_target
+	check(absf(target.y - retreat.position.y) > 100, "co-direction retreat side-steps hero")
+	hero.position = retreat.position
+	retreat._tick_danger(0.01)
+	check(retreat.escape_target == target and absf(retreat.velocity.y) > absf(retreat.velocity.x), "crossing/overlap keeps fixed escape route")
+	retreat.set_meta("forced_movement_lock_until",Time.get_ticks_msec()+10000)
+	for i in range(20):
+		hero.position = retreat.position
+		retreat._physics_process(0.1)
+	check(retreat.danger_state == 2, "blocked overlapping retreat expires into rest")
+	for i in range(31):
+		retreat._physics_process(0.1)
+	check(retreat.danger_state == 0 and retreat.current_hp == int(round(retreat.max_hp * 0.5)), "blocked rest finishes on schedule")
+	retreat.revive_used = true
+	retreat.take_damage(retreat.max_hp)
+	retreat.free()
+	hero.position = Vector2(1000,1000)
+	hero.velocity = Vector2.ZERO
 	plain.current_hp = int(plain.max_hp * 0.2)
 	plain.position = Vector2(850,1000)
 	plain._physics_process(0.01)

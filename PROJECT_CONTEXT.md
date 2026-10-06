@@ -1,3 +1,6 @@
+## Dullahan Retreat Overlap Fix (2026-10-06)
+- Danger sense fixes its retreat destination at activation, side-steps co-direction/overlapping hero movement and chooses map-valid destinations. Crossing hero positions no longer reverse the retreat every frame. Movement locks cannot suspend the 2s escape deadline or 3s rest recovery.
+
 ## Dullahan Scale / Team Rarity Borders (2026-10-06)
 - Dullahan normal/elite combat visuals use 230/280px target height (2x), with expanded ground shadow and HP/shield bars above the sprite. Combat collision/range/stats remain. Team collection cards and equipped monster slots use gray/yellow/blue/purple/green rarity borders, preserving rarity during selection, upgrade availability and disabled states; empty/skill slots use neutral borders.
 
