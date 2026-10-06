@@ -41,6 +41,15 @@ func run() -> void:
 	var first := button.get_theme_stylebox("normal") as StyleBoxTexture
 	var again := SKIN.skin_style(source) as StyleBoxTexture
 	check(first.texture == again.texture, "same palette reuses texture")
+	for color in [Color("171020"), Color("8543c8"), Color("ef3f96")]:
+		var colored := source.duplicate() as StyleBoxFlat
+		colored.bg_color = color
+		var colored_skin := SKIN.skin_style(colored) as StyleBoxTexture
+		var pixels := colored_skin.texture.get_image()
+		for corner in [Vector2i(0, 0), Vector2i(63, 0), Vector2i(0, 63), Vector2i(63, 63)]:
+			check(pixels.get_pixelv(corner).a == 0.0, "highlight palette preserves transparent outer corners")
+		check(pixels.get_pixel(32, 32).is_equal_approx(color), "interior keeps requested highlight color")
+		check(pixels.get_pixel(32, 1).a > 0.0, "authored top edge remains visible")
 	SKIN.apply(button)
 	check(button.get_theme_stylebox("normal") == first, "idempotent application")
 	check(SKIN.skin_style(StyleBoxEmpty.new()) is StyleBoxEmpty, "transparent style preserved")

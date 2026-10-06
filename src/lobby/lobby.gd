@@ -1978,21 +1978,16 @@ func _apply_lobby_visual_polish() -> void:
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/TeamTab/TeamLayout/Title",
 		40,
-		Color("fff4dd")
+		Color("ffe7a3")
 	)
 	var team_title_plate := (
 		$SafeArea/Layout/Content/TeamTab/TitlePlate as Panel
 	)
-	var team_title_plate_style := _make_style(
-		Color("171020"),
-		Color("c99136"),
-		3,
-		18
-	)
-	team_title_plate_style.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
-	team_title_plate_style.shadow_size = 8
-	team_title_plate_style.shadow_offset = Vector2(0.0, 4.0)
-	team_title_plate.add_theme_stylebox_override("panel", team_title_plate_style)
+	var title_frames = preload("res://src/ui/commerce_frame_skin.gd")
+	team_title_plate.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	team_title_plate.add_theme_stylebox_override("panel", title_frames.style("shop_featured_frame", 8))
+	$SafeArea/Layout/Content/TeamTab/TeamLayout.offset_top = 27.0
+
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/TeamTab/TeamLayout/Guide",
 		23,
@@ -2015,24 +2010,15 @@ func _apply_lobby_visual_polish() -> void:
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/ResearchTab/ResearchLayout/Title",
 		40,
-		Color("fff4dd")
+		Color("ffe7a3")
 	)
 	var research_title_plate := (
 		$SafeArea/Layout/Content/ResearchTab/TitlePlate as Panel
 	)
-	var research_title_plate_style := _make_style(
-		Color("171020"),
-		Color("c99136"),
-		3,
-		18
-	)
-	research_title_plate_style.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
-	research_title_plate_style.shadow_size = 8
-	research_title_plate_style.shadow_offset = Vector2(0.0, 4.0)
-	research_title_plate.add_theme_stylebox_override(
-		"panel",
-		research_title_plate_style
-	)
+	research_title_plate.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	research_title_plate.add_theme_stylebox_override("panel", title_frames.style("shop_featured_frame", 8))
+	$SafeArea/Layout/Content/ResearchTab/ResearchLayout.offset_top = 27.0
+
 	research_points_label.add_theme_font_size_override("font_size", 28)
 	research_points_label.add_theme_color_override("font_color", Color("f3cf72"))
 	research_status_label.add_theme_color_override("font_color", Color("918799"))

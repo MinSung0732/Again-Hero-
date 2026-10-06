@@ -4,6 +4,7 @@ extends RefCounted
 # once, then cache nine-patch textures by fill; controls retain their hit regions.
 static var _textures: Dictionary = {}
 static var _frame: Image
+static var _outside := PackedByteArray()
 const PATCH := 16.0
 const FRAME_PATH := "res://assets/art/UI/newUI_frame/frame_06.png"
 
@@ -27,7 +28,36 @@ static func _frame_image() -> Image:
 		var piece := sheet.get_region(regions[index])
 		piece.resize(destinations[index].size.x, destinations[index].size.y, Image.INTERPOLATE_NEAREST)
 		_frame.blit_rect(piece, Rect2i(Vector2i.ZERO, piece.get_size()), destinations[index].position)
+	_build_fill_mask()
 	return _frame
+
+static func _build_fill_mask() -> void:
+	# Flood only transparent pixels connected to the outside. Interior gaps and
+	# the center retain their fill; cut corners keep the authored transparency.
+	# This bounded 64x64 mask is built once, not per control or per frame.
+	_outside.resize(4096)
+	_outside.fill(0)
+	var queue := PackedInt32Array()
+	for y in 64:
+		for x in 64:
+			if (x == 0 or x == 63 or y == 0 or y == 63) and _frame.get_pixel(x, y).a <= 0.5:
+				var index := y * 64 + x
+				_outside[index] = 1
+				queue.append(index)
+	var offsets := PackedInt32Array([-1, 1, -64, 64])
+	var head := 0
+	while head < queue.size():
+		var index := queue[head]
+		head += 1
+		for offset in offsets:
+			var next := index + offset
+			if next < 0 or next >= 4096 or _outside[next] != 0:
+				continue
+			if absi(next % 64 - index % 64) + absi(next / 64 - index / 64) != 1:
+				continue
+			if _frame.get_pixel(next % 64, next / 64).a <= 0.5:
+				_outside[next] = 1
+				queue.append(next)
 
 static func skin_style(source: StyleBox) -> StyleBox:
 	if not source is StyleBoxFlat:
@@ -41,7 +71,11 @@ static func skin_style(source: StyleBox) -> StyleBox:
 		if frame == null:
 			return source # Optional decoration must never disable a control.
 		var image := Image.create(64, 64, false, Image.FORMAT_RGBA8)
-		image.fill(flat.bg_color)
+		image.fill(Color.TRANSPARENT)
+		for y in 64:
+			for x in 64:
+				if _outside[y * 64 + x] == 0:
+					image.set_pixel(x, y, flat.bg_color)
 		image.blend_rect(frame, Rect2i(0, 0, 64, 64), Vector2i.ZERO)
 		_textures[key] = ImageTexture.create_from_image(image)
 	var result := StyleBoxTexture.new()

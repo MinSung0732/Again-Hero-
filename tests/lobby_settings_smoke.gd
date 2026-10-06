@@ -47,6 +47,9 @@ func run() -> void:
 	var team_title_rect: Rect2 = lobby.team_tab.get_node("TitlePlate").get_global_rect()
 	check(menu_title_rect.is_equal_approx(team_title_rect), "other title matches team title across upper rail")
 	for tab in [lobby.team_tab, lobby.research_tab]:
+		var title_style: StyleBoxTexture = tab.get_node("TitlePlate").get_theme_stylebox("panel")
+		check(title_style.texture == view.menu_title_plate.get_theme_stylebox("panel").texture, "formation and research use same title artwork as other")
+	for tab in [lobby.team_tab, lobby.research_tab]:
 		var backing: Panel = tab.get_node("ContentBackdrop")
 		check(backing.get_theme_stylebox("panel") == view.other_backdrop.get_theme_stylebox("panel") and backing.mouse_filter == Control.MOUSE_FILTER_IGNORE, "team and research use the same passive opaque background")
 	check(view.other_backdrop.mouse_filter == Control.MOUSE_FILTER_IGNORE and view.other_backdrop.get_theme_stylebox("panel").bg_color.a == 1.0, "shared opaque backdrop is passive")
