@@ -1,3 +1,7 @@
+## Exhausted Special Augment Rewards (2026-10-06)
+- When an equipped-monster special reward slot has no unacquired candidates, consume that opportunity and open the existing elite choice using mutation_1 stats with elite title/name. Normal slots retain ordinary augments; reroll exclusion alone is not exhaustion. Existing elite-capability filters apply.
+- Active mutation choices defer pending level rewards; selection completion resumes the queue after UI callbacks. Candidate IDs are validated before resetting selection/pause. Replacement rewards neither spend rerolls nor record a fictitious special augment.
+
 ## Clean Frame Assets / Profile Art Inset (2026-10-06)
 - Common buttons use clean_frames/button_frame.tres with a 4px beveled border and chamfered corners; formation cards/monster slots use rarity_card_frame.tres with gray/yellow/blue/purple/green 3px beveled chamfered borders and a subtle same-color shadow. Header + controls are smaller and inset. Profile/gallery illustrations render in a clipped 16px inset viewport beneath their frame.
 

@@ -1565,7 +1565,7 @@ func _on_mutation_choice_ready(
 		name_label.text = _get_catalog_monster_name(monster_id)
 		select_label.text = "선택"
 
-	status_label.text = "Stage 이벤트: 돌연변이로 투입할 편성 몬스터를 선택하세요."
+	status_label.text = String(event_data.get("status_message", "Stage 이벤트: 돌연변이로 투입할 편성 몬스터를 선택하세요."))
 
 func _on_mutation_choice_pressed(index: int) -> void:
 	if index < 0 or index >= current_mutation_candidates.size():

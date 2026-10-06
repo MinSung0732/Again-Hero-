@@ -1,6 +1,13 @@
 extends RefCounted
 class_name MutationCatalog
 
+const SPECIAL_AUGMENT_EXHAUSTED_EVENT := {
+	"type": "elite", "selection_mode": "team", "mutation_profile_id": "mutation_1",
+	"name_prefix": "엘리트", "ui_title": "엘리트 소환",
+	"ui_description": "편성 몬스터의 특수증강을 모두 획득했습니다. 엘리트 1종을 선택해 소환하세요.",
+	"status_message": "특수증강 완료 보상: 소환할 엘리트 몬스터를 선택하세요.",
+}
+
 const PROFILES := {
 	"mutation_1": {
 		"id": "mutation_1",

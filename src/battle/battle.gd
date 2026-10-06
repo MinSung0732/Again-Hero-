@@ -42,6 +42,7 @@ const MONSTER_COLLECTION_STORE := preload(
 const RUN_METRICS := preload("res://src/systems/run_metrics.gd")
 const STAGE_DIRECTOR := preload("res://src/systems/stage_director.gd")
 const MUTATION_DIRECTOR := preload("res://src/systems/mutation_director.gd")
+const MUTATION_CATALOG := preload("res://src/data/mutation_catalog.gd")
 const FLOW_PAUSE_MANAGER := preload("res://src/systems/flow_pause_manager.gd")
 const GROUND_SHADOW_SCRIPT := preload("res://src/battle/ground_shadow.gd")
 const ELITE_MONSTER_SKILL_RUNTIME := preload(
@@ -3711,10 +3712,14 @@ func _open_mutation_choice(event: Dictionary) -> void:
 	)
 
 func spawn_selected_mutation(monster_id: String) -> void:
+	if not mutation_director.is_active() or monster_id not in mutation_director.get_candidates():
+		return
 	var event := mutation_director.get_event()
 	mutation_director.reset()
 	flow_pause_manager.release_pause(PAUSE_REASON_MUTATION_CHOICE)
 	_sync_combat_pause_state()
+	# Resume queued level rewards after this choice and its UI callbacks finish.
+	call_deferred("_open_next_demon_augment_if_needed")
 
 	if event.is_empty():
 		event = {
@@ -4072,7 +4077,7 @@ func _required_demon_exp_for_level(current_level: int) -> float:
 	return DEMON_BASE_EXP_TO_NEXT + float(maxi(current_level - 1, 0)) * DEMON_EXP_GROWTH_PER_LEVEL
 
 func _open_next_demon_augment_if_needed() -> void:
-	if battle_over or demon_augment_selection_active or demon_pending_augments <= 0:
+	if battle_over or demon_augment_selection_active or mutation_director.is_active() or demon_pending_augments <= 0:
 		return
 
 	demon_active_augment_level = (
@@ -4082,10 +4087,15 @@ func _open_next_demon_augment_if_needed() -> void:
 	)
 	demon_augment_candidates = _roll_demon_augment_candidates(false)
 	if demon_augment_candidates.is_empty():
+		var replace_with_elite := DEMON_AUGMENTS.is_special_level(demon_active_augment_level)
 		demon_pending_augments = maxi(demon_pending_augments - 1, 0)
 		if not demon_pending_augment_levels.is_empty():
 			demon_pending_augment_levels.pop_front()
 		demon_active_augment_level = 0
+		if replace_with_elite:
+			_open_mutation_choice(MUTATION_CATALOG.SPECIAL_AUGMENT_EXHAUSTED_EVENT)
+			if mutation_director.is_active():
+				return
 		_open_next_demon_augment_if_needed()
 		return
 
