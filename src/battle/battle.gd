@@ -170,7 +170,6 @@ var demon_pending_augment_levels: Array[int] = []
 var demon_active_augment_level: int = 0
 var demon_ultimate_charge: float = 0.0
 var demon_ultimate_emit_timer: float = 0.0
-var last_hero_hp_for_ultimate: int = 0
 var demon_ultimate_spawn_queue: Array[Dictionary] = []
 var demon_ultimate_spawn_timer: float = 0.0
 var demon_ultimate_spawn_interval: float = 0.04
@@ -732,7 +731,6 @@ func _start_battle() -> void:
 	demon_active_augment_level = 0
 	demon_ultimate_charge = 0.0
 	demon_ultimate_emit_timer = 0.0
-	last_hero_hp_for_ultimate = 0
 	demon_ultimate_spawn_queue.clear()
 	demon_ultimate_spawn_timer = 0.0
 	demon_ultimate_spawn_interval = 0.04
@@ -835,7 +833,6 @@ func _start_battle() -> void:
 	# restores HeroSprite.z_index. Normalize Demon Castle depth only after _ready()
 	# so the hero participates in Battle's Y-sort just like monsters/props.
 	_configure_castle_depth_actor(hero, "HeroSprite")
-	last_hero_hp_for_ultimate = int(hero.get("current_hp"))
 
 	run_metrics.reset(
 		run_time_limit_seconds,
@@ -843,6 +840,7 @@ func _start_battle() -> void:
 		int(hero.get("max_hp"))
 	)
 	hero.connect("health_changed", Callable(self, "_on_hero_health_changed"))
+	hero.connect("combat_damage_received", Callable(self, "_on_hero_combat_damage_received"))
 	hero.connect("progression_changed", Callable(self, "_on_hero_progression_changed"))
 	hero.connect("leveled_up", Callable(self, "_on_hero_leveled_up"))
 	hero.connect("augment_selected", Callable(self, "_on_hero_augment_selected"))
@@ -2494,17 +2492,13 @@ func _get_monster_name(monster_type: String) -> String:
 
 func _on_hero_health_changed(current_hp: int, max_hp_value: int) -> void:
 	run_metrics.record_hero_hp(current_hp, max_hp_value)
-
-	if last_hero_hp_for_ultimate > current_hp:
-		var dealt_damage := last_hero_hp_for_ultimate - current_hp
-		run_metrics.record_hero_damage(dealt_damage)
-		_add_demon_ultimate_charge(
-			float(dealt_damage)
-			* DEMON_ULTIMATES.HERO_DAMAGE_CHARGE_MULTIPLIER
-		)
-	last_hero_hp_for_ultimate = current_hp
-
 	stats_changed.emit(current_hp, max_hp_value, monsters_alive)
+
+func _on_hero_combat_damage_received(hp_damage: int) -> void:
+	if hp_damage <= 0:
+		return
+	run_metrics.record_hero_damage(hp_damage)
+	_add_demon_ultimate_charge(float(hp_damage) * DEMON_ULTIMATES.HERO_DAMAGE_CHARGE_MULTIPLIER)
 
 func _on_hero_progression_changed(level: int, current_exp: int, exp_to_next_level: int) -> void:
 	progression_changed.emit(level, current_exp, exp_to_next_level)

@@ -2,6 +2,7 @@ extends CharacterBody2D
 
 signal died
 signal health_changed(current_hp: int, max_hp_value: int)
+signal combat_damage_received(hp_damage: int)
 signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
 signal leveled_up(new_level: int)
 signal augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String)
@@ -20181,6 +20182,8 @@ func _take_damage_internal(
 	health_changed.emit(current_hp, max_hp)
 	queue_redraw()
 
+	if applied_damage > 0:
+		combat_damage_received.emit(applied_damage)
 	if current_hp <= 0:
 		if (
 			hero_archetype == "berserker_madness"
