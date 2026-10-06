@@ -85,6 +85,10 @@ static func try_enter(stage_id: String, exempt: bool = false, at: int = -1) -> D
 	state.amount -= cost
 	var entry_id := int(config.get_value(SECTION, "entry_serial", 0)) + 1
 	config.set_value(SECTION, "entry_serial", entry_id)
+	config.set_value(SECTION, "active_entry", entry_id)
+	config.set_value(SECTION, "active_charged", cost)
+	config.set_value(SECTION, "active_stage", stage_id)
+	config.set_value(SECTION, "active_claimed", false)
 	config.set_value("progress", "current_stage_id", stage_id)
 	if not _commit(config, state):
 		return {"success": false, "reason": "save_failed"}
@@ -132,3 +136,40 @@ static func refund_failed_entry(entry: Dictionary, at: int = -1) -> bool:
 		config.set_value("progress", "current_stage_id", String(entry.get("previous_stage", "stage_1")))
 	config.set_value("stamina_grants", key, cost)
 	return _commit(config, state)
+
+# Consume the accepted entry ticket only once when the destination Main is ready.
+# Direct F6/reloads cannot attach themselves to an already used entry.
+static func claim_battle_entry(stage_id: String) -> Dictionary:
+	var config := ConfigFile.new()
+	if _load(config) != OK or bool(config.get_value(SECTION, "active_claimed", true)):
+		return {}
+	var id := int(config.get_value(SECTION, "active_entry", 0))
+	if id <= 0 or String(config.get_value(SECTION, "active_stage", "")) != stage_id or config.has_section_key("stamina_grants", "entry_refund:" + str(id)):
+		return {}
+	var cost := int(config.get_value(SECTION, "active_charged", 0))
+	config.set_value(SECTION, "active_claimed", true)
+	if SCOPE.save_configs({"stage_progress.cfg": config}) != OK:
+		return {}
+	return {"entry_id": id, "charged": cost, "owner": _owner()}
+
+static func refund_early_exit(entry: Dictionary, elapsed_ms: int, at: int = -1) -> Dictionary:
+	if entry.is_empty() or String(entry.get("owner", "")) != _owner() or int(entry.get("charged", 0)) != RULES.ENTRY_COST or elapsed_ms < 0 or elapsed_ms > RULES.EARLY_EXIT_WINDOW_MS:
+		return {"success": true, "refunded": 0}
+	var config := ConfigFile.new()
+	if _load(config) != OK:
+		return {"success": false, "refunded": 0}
+	var id := int(entry.get("entry_id", 0))
+	if id <= 0 or int(config.get_value(SECTION, "active_entry", 0)) != id or not bool(config.get_value(SECTION, "active_claimed", false)):
+		return {"success": true, "refunded": 0}
+	var key := "entry_refund:" + str(id) # Full load-failure and early refunds share a receipt.
+	if config.has_section_key("stamina_grants", key):
+		return {"success": true, "refunded": 0}
+	var now := _now(at)
+	var state := _from_config(config, now)
+	state.amount += RULES.EARLY_EXIT_REFUND
+	if int(state.amount) >= RULES.MAX_NATURAL:
+		state.recovery_at = now
+	config.set_value("stamina_grants", key, RULES.EARLY_EXIT_REFUND)
+	if not _commit(config, state):
+		return {"success": false, "refunded": 0}
+	return {"success": true, "refunded": RULES.EARLY_EXIT_REFUND}

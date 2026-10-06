@@ -2,6 +2,10 @@ extends Control
 
 const STAMINA := preload("res://src/systems/stamina_store.gd")
 var _stamina_entry_pending := false
+var _battle_stamina_entry: Dictionary = {}
+var _battle_started_ms := -1
+var _battle_started_unix := -1.0
+var _lobby_exit_pending := false
 
 signal demon_action_choice_selected(context: String, choice_id: String)
 
@@ -246,6 +250,7 @@ func _ready() -> void:
 	# Stage entry begins frozen and silent. The intro sequence owns the handoff
 	# to gameplay so combat AI, cooldowns and the run timer cannot advance early.
 	battle.set_external_pause(true)
+	_battle_stamina_entry = STAMINA.claim_battle_entry(String(battle.current_stage_id))
 	hud_layer.visible = false
 	stage_intro_cutscene.finished.connect(_on_stage_intro_finished)
 	stage_intro_cutscene.dialogue_event.connect(
@@ -701,6 +706,7 @@ func _process(delta: float) -> void:
 		if load_status == ResourceLoader.THREAD_LOAD_LOADED:
 			var packed = ResourceLoader.load_threaded_get(_scene_load_path)
 			_scene_load_pending = false
+			_lobby_exit_pending = false
 			if packed is PackedScene:
 				get_tree().change_scene_to_packed(packed)
 				return
@@ -709,11 +715,13 @@ func _process(delta: float) -> void:
 				battle.set_external_pause(false)
 		elif load_status == ResourceLoader.THREAD_LOAD_FAILED:
 			_scene_load_pending = false
+			_lobby_exit_pending = false
 			status_label.text = "화면 전환에 실패했습니다."
 			if is_instance_valid(battle):
 				battle.set_external_pause(false)
 		elif load_status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
 			_scene_load_pending = false
+			_lobby_exit_pending = false
 			status_label.text = "화면 전환에 실패했습니다."
 			if is_instance_valid(battle):
 				battle.set_external_pause(false)
@@ -858,6 +866,9 @@ func _on_hero_reveal_finished() -> void:
 
 
 func _start_battle_after_intro(_stage_id: String) -> void:
+	if _battle_started_ms < 0:
+		_battle_started_ms = Time.get_ticks_msec()
+		_battle_started_unix = Time.get_unix_time_from_system()
 	_stage_intro_active = false
 	hud_layer.visible = true
 	battle.set_external_pause(false)
@@ -3437,6 +3448,17 @@ func _on_next_stage_pressed() -> void:
 		_restart_with_stamina(String(battle.current_stage_data.get("next_stage_id", "")))
 
 func _on_lobby_pressed() -> void:
+	if _lobby_exit_pending or _scene_load_pending or SceneTransition.is_transitioning():
+		return
+	var elapsed := Time.get_ticks_msec() - _battle_started_ms if _battle_started_ms >= 0 else -1
+	if _battle_started_unix >= 0.0 and elapsed >= 0:
+		# Monotonic protects clock rollback; wall time also counts Android deep sleep.
+		elapsed = maxi(elapsed, int((Time.get_unix_time_from_system() - _battle_started_unix) * 1000.0))
+	var refund := STAMINA.refund_early_exit(_battle_stamina_entry, elapsed)
+	if not bool(refund.get("success", false)):
+		_show_stamina_notice("스테미너 반환을 저장하지 못했습니다. 다시 눌러 주세요.")
+		return
+	_lobby_exit_pending = true
 	TutorialFlow.returning_to_lobby()
 	_begin_threaded_scene_change("res://src/lobby/Lobby.tscn", "로비 이동 중...")
 

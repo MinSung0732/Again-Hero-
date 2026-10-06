@@ -1,8 +1,8 @@
 extends RefCounted
 
 # Presentation only: reward rolls, persistence and account history stay in Lobby.
+const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
 const CONTENT := "SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/"
-const BUTTON := "res://assets/art/effects/gatcha/gacha_button_texture.tres"
 const DRAG_SAFE_BUTTON := preload("res://src/ui/drag_safe_button.gd")
 var _textures: Dictionary = {}
 var _banner_art: TextureRect
@@ -24,16 +24,6 @@ func _fade(parent: Control, horizontal: bool, colors: PackedColorArray, stops: P
 	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	parent.add_child(rect)
 	return rect
-
-
-func _stone(fill: Color, border: Color, width: int = 2) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = fill
-	style.border_color = border
-	style.set_border_width_all(width)
-	style.set_corner_radius_all(6)
-	style.corner_detail = 1
-	return style
 
 
 func _texture(path: String) -> Texture2D:
@@ -70,25 +60,23 @@ func _label(parent: Control, text: String, font_size: int, color: Color) -> Labe
 
 
 func _frame(target: Control, featured: bool = false) -> void:
+	target.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	for state in ["normal", "hover", "pressed", "disabled"]:
-		var style := _stone(Color("130e20"), Color("e6b955") if featured else Color("756287"), 4)
+		var tint := Color.WHITE
 		if state == "hover":
-			style.border_color = Color("fff0b5")
+			tint = Color(1.08, 1.05, 1.12)
 		elif state == "pressed":
-			style.border_color = Color("b795df")
-		if featured:
-			style.shadow_color = Color(0.75, 0.35, 0.95, 0.28)
-			style.shadow_size = 10
+			tint = Color("c3a0d8")
+		elif state == "disabled":
+			tint = Color("8c8198")
+		var style := FRAMES.style("shop_featured_frame" if featured else "shop_panel_frame", 12, tint)
 		target.add_theme_stylebox_override(state, style)
 	target.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 
 
 func _section(panel: PanelContainer) -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("100c1a", 0.92)
-	style.border_color = Color("9f783a")
-	style.border_width_top = 2
-	panel.add_theme_stylebox_override("panel", style)
+	panel.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	panel.add_theme_stylebox_override("panel", FRAMES.style("shop_panel_frame", 12))
 	var margin := panel.get_node("Margin") as MarginContainer
 	margin.add_theme_constant_override("margin_left", 18)
 	margin.add_theme_constant_override("margin_right", 18)
@@ -98,9 +86,7 @@ func _section(panel: PanelContainer) -> void:
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", Color("fff0cc"))
-	var title_style := _stone(Color("21162e"), Color("7d5c93"), 1)
-	title_style.border_width_bottom = 2
-	title.add_theme_stylebox_override("normal", title_style)
+	title.add_theme_stylebox_override("normal", FRAMES.style("shop_button_frame", 8))
 	title.add_theme_font_size_override("font_size", 34)
 	title.text = "◇  %s  ◇" % title.text
 	var desc := panel.get_node("Margin/VBox/SectionDesc") as Label
@@ -108,13 +94,7 @@ func _section(panel: PanelContainer) -> void:
 
 
 func _plate_style() -> StyleBoxTexture:
-	var style := StyleBoxTexture.new()
-	style.texture = _texture(BUTTON)
-	style.content_margin_left = 38.0
-	style.content_margin_right = 38.0
-	style.content_margin_top = 8.0
-	style.content_margin_bottom = 8.0
-	return style
+	return FRAMES.style("shop_button_frame", 12)
 
 
 func apply(lobby: Control) -> void:
@@ -130,8 +110,9 @@ func apply(lobby: Control) -> void:
 	var title := shop_margin.get_node("ShopLayout/Title") as Label
 	title.custom_minimum_size.y = 76.0
 	title.text = "◆  마왕 상점  ◆"
+	title.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	title.add_theme_font_size_override("font_size", 46)
-	title.add_theme_stylebox_override("normal", _stone(Color("1b1128"), Color("b79352"), 2))
+	title.add_theme_stylebox_override("normal", FRAMES.style("shop_button_frame", 12))
 	(shop_margin.get_node("ShopLayout/Guide") as Label).text = "소환 · 유물 · 성장 재화를 한 곳에서 만나세요."
 	var content := lobby.get_node(CONTENT.trim_suffix("/")) as VBoxContainer
 	content.custom_minimum_size.y = 0.0
@@ -142,7 +123,7 @@ func apply(lobby: Control) -> void:
 	var package_panel := content.get_node("PackageSection") as PanelContainer
 	package_panel.custom_minimum_size.y = 0.0
 	var grid := lobby.get("shop_package_grid") as GridContainer
-	grid.columns = 4
+	grid.columns = 2
 	grid.custom_minimum_size.y = 0.0
 	var package_desc := package_panel.get_node("Margin/VBox/SectionDesc") as Label
 	package_desc.text = "골드 · 연구 포인트 보급 상품입니다."
@@ -169,6 +150,10 @@ func apply(lobby: Control) -> void:
 		_frame(button)
 		button.custom_minimum_size.y = 76.0
 		button.add_theme_font_size_override("font_size", 25)
+	for path in ["ShopResultOverlay/Panel", "ShopRatesOverlay/Panel"]:
+		var panel := lobby.get_node(path) as Control
+		panel.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		panel.add_theme_stylebox_override("panel", FRAMES.style("shop_panel_frame", 18))
 	_configure_banner(lobby)
 	_product(lobby.get("shop_single_button") as Button, false)
 	_product(lobby.get("shop_multi_button") as Button, true)
@@ -182,15 +167,8 @@ func _configure_banner(lobby: Control) -> void:
 	slide.move_child(shade, 1)
 	var panel := slide.get_parent().get_parent() as PanelContainer
 	panel.custom_minimum_size.y = 320.0
-	var banner_style := StyleBoxFlat.new()
-	banner_style.bg_color = Color("100b1b")
-	banner_style.border_color = Color("d6a344")
-	banner_style.set_border_width_all(4)
-	banner_style.content_margin_left = 4.0
-	banner_style.content_margin_right = 4.0
-	banner_style.content_margin_top = 4.0
-	banner_style.content_margin_bottom = 4.0
-	panel.add_theme_stylebox_override("panel", banner_style)
+	panel.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	panel.add_theme_stylebox_override("panel", FRAMES.style("shop_panel_frame", 16))
 	var margin := slide.get_node("BannerMargin") as MarginContainer
 	margin.anchor_right = 0.68
 	margin.add_theme_constant_override("margin_left", 66)

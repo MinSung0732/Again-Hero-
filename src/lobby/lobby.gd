@@ -4797,7 +4797,9 @@ func _refresh_stage_card() -> void:
 
 	enter_stage_button.disabled = not unlocked
 	var entry_cost: int = 0 if LocalTestMode.active or TutorialFlow.active() else STAMINA_RULES.ENTRY_COST
-	enter_stage_button.text = ("던전 입장  ·  스테미너 %d" % entry_cost) if unlocked else "스테이지 잠김"
+	enter_stage_button.text = "던전 입장" if unlocked else "스테이지 잠김"
+	if stamina_view != null:
+		stamina_view.configure_entry(unlocked, entry_cost)
 
 	_refresh_stage_nav_buttons()
 
@@ -5053,7 +5055,10 @@ func _enter_selected_stage() -> void:
 		stamina_view.show_info("스테미너가 부족합니다." if _stamina_entry.get("reason") == "insufficient" else "저장을 확인하고 다시 시도해 주세요.")
 		return
 	_battle_entry_pending = true
-	_begin_threaded_scene_change(BATTLE_SCENE_PATH)
+	enter_stage_button.disabled = true
+	await stamina_view.play_entry_cost(int(_stamina_entry.get("charged", 0)))
+	if is_inside_tree():
+		_begin_threaded_scene_change(BATTLE_SCENE_PATH)
 
 
 func _begin_threaded_scene_change(path: String) -> void:

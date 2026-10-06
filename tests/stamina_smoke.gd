@@ -26,6 +26,7 @@ func check(value: bool, message: String) -> void:
 func seed_wallet(amount: int, anchor: int) -> void:
 	var config := ConfigFile.new()
 	SCOPE.load_config(config, "user://stage_progress.cfg")
+	config.set_value("progress", "current_stage_id", "stage_1")
 	config.set_value("stamina", "amount", amount)
 	config.set_value("stamina", "recovery_at", anchor)
 	config.set_value("meta", "gold", 1000)
@@ -38,6 +39,11 @@ func settle() -> void:
 	await process_frame
 	await process_frame
 	await process_frame
+
+func capture(name: String) -> void:
+	if "--capture" in OS.get_cmdline_user_args() and DisplayServer.get_name() != "headless":
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png("/tmp/commerce-" + name + ".png")
 
 func run() -> void:
 	root.get_node("CloudStore").stop()
@@ -83,6 +89,25 @@ func run() -> void:
 	check(STORE.read_state(T+40004).next_seconds == 3600, "cross below cap starts fresh timer")
 	STORE.invalidate()
 	check(STORE.read_state(T+43604).amount == 30, "reload recovers from persisted anchor")
+	# A paid ticket is bound to exactly one destination battle. Real elapsed time
+	# includes pauses; full-load refunds and partial exits share one receipt.
+	for elapsed in [29999, 30000, 30001]:
+		seed_wallet(30,T)
+		STORE.try_enter("stage_1",false,T)
+		var ticket := STORE.claim_battle_entry("stage_1")
+		check(not ticket.is_empty() and STORE.claim_battle_entry("stage_1").is_empty(), "battle claims ticket once")
+		var result := STORE.refund_early_exit(ticket,elapsed,T+31)
+		var expected := 4 if elapsed <= 30000 else 0
+		check(result.success and result.refunded == expected and STORE.read_state(T+31).amount == 25+expected, "30 second refund boundary")
+		check(STORE.refund_early_exit(ticket,elapsed,T+31).refunded == 0, "exit refund retry deduped")
+	seed_wallet(30,T)
+	STORE.try_enter("stage_1",true,T)
+	check(STORE.refund_early_exit(STORE.claim_battle_entry("stage_1"),1000,T).refunded == 0, "free practice cannot claim refund")
+	seed_wallet(30,T)
+	STORE.try_enter("stage_1",false,T)
+	var old_ticket := STORE.claim_battle_entry("stage_1")
+	STORE.try_enter("stage_2",false,T)
+	check(STORE.refund_early_exit(old_ticket,1000,T).refunded == 0, "stale battle cannot refund new run")
 	var original := SCOPE.guest_directory
 	SCOPE.guest_directory = folder.path_join("missing")
 	check(not STORE.try_enter("stage_2",false,T).success, "disk error denies battle")
@@ -108,15 +133,20 @@ func run() -> void:
 	root.add_child(lobby)
 	current_scene = lobby
 	await settle()
+	await capture("main")
 	var slots: Control = lobby.get_node("SafeArea/Layout/Header/HeaderSlots")
 	var previous_end := 0.0
 	for name in ["HeaderGoldPlate","HeaderStaminaPlate","HeaderProgressPlate"]:
 		var rect := (slots.get_node(name) as Control).get_global_rect()
 		check(rect.position.x >= previous_end and rect.end.x <= slots.get_global_rect().end.x+1, "header slots do not overlap")
 		previous_end = rect.end.x
-	check(lobby.enter_stage_button.text.contains("5"), "entry shows cost")
+	check(lobby.get_node("SafeArea/Layout/Header").custom_minimum_size.y == 244, "header uses readable second row")
+	check(lobby.shop_package_grid.columns == 2, "packages use readable two columns")
+	check((slots.get_node("HeaderStaminaPlate") as Panel).get_theme_stylebox("panel").texture != null, "new header frame loads")
+	check(lobby.enter_stage_button.text == "던전 입장" and lobby.stamina_view._entry_amount.text == "-5", "entry shows icon and negative cost")
 	lobby._enter_selected_stage()
 	check(lobby.stamina_view.overlay.visible and not lobby._battle_entry_pending and STORE.read_state().amount == 4, "actual insufficient lobby request stays put")
+	await capture("recovery")
 	check(lobby.stamina_view.details.text.contains("다음 1 회복") and lobby.stamina_view.details.text.contains("30까지"), "overlay shows both recovery times")
 	lobby.stamina_view.open_shop()
 	await settle()
@@ -124,6 +154,10 @@ func run() -> void:
 	var scroll := lobby.get_node("SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll") as ScrollContainer
 	check(scroll.get_global_rect().intersects(lobby.stamina_view.product.get_global_rect()), "stamina product scrolls into view")
 	check(lobby.stamina_view.product.get_node("VBoxContainer/StaminaPurchase").disabled, "unconfigured payment never charges")
+	if "--capture" in OS.get_cmdline_user_args():
+		scroll.scroll_vertical = 0
+		await settle()
+		await capture("shop")
 	lobby._switch_tab("main")
 	seed_wallet(5, int(Time.get_unix_time_from_system()))
 	var transition := root.get_node("SceneTransition")
@@ -133,6 +167,9 @@ func run() -> void:
 	root.add_child(deferred)
 	lobby._enter_selected_stage()
 	lobby._enter_selected_stage()
+	check(lobby.stamina_view._spend_label.visible and lobby.stamina_view._spend_label.text == "-5" and lobby.stamina_view._entry_blocker.visible, "deduction feedback appears before loading")
+	await create_timer(0.55).timeout
+	check(not lobby.stamina_view._spend_label.visible and not lobby.stamina_view._entry_blocker.visible, "deduction feedback recycles controls")
 	check(deferred.requests == 1 and STORE.read_state().amount == 0, "actual double-tap entry charges once")
 	lobby._refund_failed_stamina_entry()
 	check(STORE.read_state().amount == 5, "actual lobby load failure refunds")
@@ -156,6 +193,22 @@ func run() -> void:
 	main.get_node("StaminaNotice").hide()
 	main._on_next_stage_pressed()
 	check(STORE.read_state().amount == 4 and PROGRESS.load_state().current_stage_id == "stage_1", "next stage gate cannot bypass debit")
+	seed_wallet(30,int(Time.get_unix_time_from_system()))
+	STORE.try_enter("stage_1")
+	main._battle_stamina_entry = STORE.claim_battle_entry("stage_1")
+	main._start_battle_after_intro("stage_1")
+	main._battle_started_ms = maxi(Time.get_ticks_msec() - 1000, 0)
+	main.battle.set_external_pause(true) # Menu time is included in the real-time window.
+	root.remove_child(transition)
+	var exit_transition := DeferredTransition.new()
+	exit_transition.name = "SceneTransition"
+	root.add_child(exit_transition)
+	main._on_lobby_pressed()
+	main._on_lobby_pressed()
+	check(STORE.read_state().amount == 29 and exit_transition.requests == 1, "actual early lobby exit returns four once")
+	root.remove_child(exit_transition)
+	exit_transition.free()
+	root.add_child(transition)
 	main.queue_free()
 	await settle()
 	print("STAMINA_SMOKE_" + ("FAILED" if failed else "OK"))

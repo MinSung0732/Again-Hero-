@@ -2,7 +2,7 @@ extends RefCounted
 
 const STORE := preload("res://src/systems/stamina_store.gd")
 const RULES := preload("res://src/data/stamina_catalog.gd")
-const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
+const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
 var lobby: Control
 var value: Label
 var details: Label
@@ -10,14 +10,14 @@ var overlay: Control
 var timer: Timer
 var product: Control
 var _refreshing := false
+var _entry_cost: HBoxContainer
+var _entry_amount: Label
+var _entry_blocker: Control
+var _spend_label: Label
+var _spend_tween: Tween
 
 func _frame(fill: Color = Color("130d21")) -> StyleBox:
-	var flat := StyleBoxFlat.new()
-	flat.bg_color = fill
-	flat.border_color = Color("eac14d")
-	flat.set_border_width_all(2)
-	flat.set_content_margin_all(18)
-	return SKIN.skin_style(flat)
+	return FRAMES.style("shop_panel_frame", 22)
 
 func _place(parent: Control, child: Control, rect: Rect2) -> void:
 	parent.add_child(child)
@@ -40,9 +40,9 @@ func _label(parent: Control, text: String, rect: Rect2, font_size: int = 25) -> 
 func _plate(root: Control, name: String, left: float, width: float) -> Panel:
 	var panel := Panel.new()
 	panel.name = name
-	_place(root, panel, Rect2(left, 0.27, width, 0.47))
+	_place(root, panel, Rect2(left, 0.48, width, 0.48))
 	panel.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	panel.add_theme_stylebox_override("panel", _frame())
+	panel.add_theme_stylebox_override("panel", FRAMES.style("header_frame", 16))
 	return panel
 
 func _icon(parent: Control, texture: Texture2D, rect: Rect2) -> void:
@@ -57,18 +57,19 @@ func _plus(parent: Control, action: Callable) -> Button:
 	var button := Button.new()
 	button.text = "+"
 	button.add_theme_font_size_override("font_size", 36)
-	_place(parent, button, Rect2(0.72, 0.20, 0.24, 0.60))
+	_place(parent, button, Rect2(0.76, 0.17, 0.21, 0.66))
 	button.mouse_filter = Control.MOUSE_FILTER_STOP
 	button.tooltip_text = "상점 충전 상품"
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	for state in ["normal", "hover", "pressed"]:
-		button.add_theme_stylebox_override(state, _frame(Color("482264") if state != "normal" else Color("21152e")))
+		button.add_theme_stylebox_override(state, FRAMES.style("shop_button_frame", 0, Color("c8abe0") if state == "pressed" else Color.WHITE))
 	button.pressed.connect(action)
 	return button
 
 func install(host: Control) -> void:
 	lobby = host
 	STORE.invalidate() # New scene/coupon namespace may have replaced guest files.
+	lobby.get_node("SafeArea/Layout/Header").custom_minimum_size.y = 244
 	var root := lobby.get_node("SafeArea/Layout/Header/HeaderSlots") as Control
 	# The old center logo and wings own no gameplay controls. Replace once;
 	# retain the gold/progress label names used by the existing refresh path.
@@ -81,35 +82,36 @@ func install(host: Control) -> void:
 	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	logo.name = "HeaderLogo"
-	_place(root, logo, Rect2(0.0, 0.04, 0.39, 0.88))
-	var gold := _plate(root, "HeaderGoldPlate", 0.40, 0.17)
+	_place(root, logo, Rect2(0.17, 0.0, 0.66, 0.45))
+	var gold := _plate(root, "HeaderGoldPlate", 0.0, 0.32)
 	_icon(gold, lobby._load_ui_texture_resource(lobby.UI_HEADER_COIN_PATH), Rect2(0.07, 0.29, 0.19, 0.42))
-	_label(gold, "골드", Rect2(0.28, 0.10, 0.43, 0.34), 21)
-	var gold_value := _label(gold, "0", Rect2(0.28, 0.45, 0.43, 0.40))
+	_label(gold, "골드", Rect2(0.25, 0.13, 0.48, 0.30), 26)
+	var gold_value := _label(gold, "0", Rect2(0.25, 0.46, 0.48, 0.42), 32)
 	gold_value.name = "HeaderGoldValue"
 	_plus(gold, lobby._switch_tab.bind("shop"))
-	var stamina := _plate(root, "HeaderStaminaPlate", 0.58, 0.23)
+	var stamina := _plate(root, "HeaderStaminaPlate", 0.335, 0.36)
 	_icon(stamina, lobby._load_svg_texture_direct(RULES.ICON_PATH), Rect2(0.06, 0.20, 0.15, 0.60))
-	_label(stamina, "스테미너", Rect2(0.24, 0.10, 0.47, 0.34), 21)
-	value = _label(stamina, "30 / 30", Rect2(0.24, 0.45, 0.47, 0.40), 25)
+	_label(stamina, "스테미너", Rect2(0.24, 0.13, 0.49, 0.30), 26)
+	value = _label(stamina, "30 / 30", Rect2(0.24, 0.46, 0.49, 0.42), 32)
 	value.name = "HeaderStaminaValue"
 	# One touch target covers both icon and number; + has a separate sibling hitbox.
 	var info := Button.new()
 	info.name = "StaminaInfoButton"
-	_place(stamina, info, Rect2(0.02, 0.05, 0.68, 0.90))
+	_place(stamina, info, Rect2(0.02, 0.05, 0.71, 0.90))
 	info.mouse_filter = Control.MOUSE_FILTER_STOP
 	info.tooltip_text = "스테미너 회복 시간"
 	for state in ["normal", "hover", "pressed"]:
 		info.add_theme_stylebox_override(state, StyleBoxEmpty.new())
 	info.pressed.connect(show_info.bind(""))
 	_plus(stamina, open_shop).name = "StaminaShopButton"
-	var progress := _plate(root, "HeaderProgressPlate", 0.82, 0.18)
-	var title := _label(progress, "최고 해금", Rect2(0.12, 0.12, 0.80, 0.32), 21)
+	var progress := _plate(root, "HeaderProgressPlate", 0.71, 0.29)
+	var title := _label(progress, "최고 해금", Rect2(0.12, 0.13, 0.80, 0.30), 26)
 	title.name = "HeaderProgressTitle"
-	var highest := _label(progress, "Stage 1", Rect2(0.12, 0.45, 0.80, 0.42), 25)
+	var highest := _label(progress, "Stage 1", Rect2(0.12, 0.46, 0.80, 0.42), 32)
 	highest.name = "HeaderProgressValue"
 	_build_overlay()
 	_build_product()
+	_build_entry_feedback()
 	timer = Timer.new()
 	timer.name = "StaminaDisplayTimer"
 	timer.wait_time = 1.0
@@ -137,6 +139,7 @@ func _build_overlay() -> void:
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var panel := PanelContainer.new()
 	panel.name = "PanelContainer"
+	panel.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	panel.custom_minimum_size = Vector2(800, 0)
 	panel.add_theme_stylebox_override("panel", _frame())
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -188,6 +191,7 @@ func refresh() -> void:
 	value.text = "%s / %d" % [lobby._format_shop_number(int(state.amount)), RULES.MAX_NATURAL] if bool(state.get("success", false)) else "확인 필요"
 	if is_instance_valid(overlay) and overlay.visible:
 		var copy := "%s\n\n현재 스테미너  %d / %d\n던전 입장  %d 소모\n자연회복  1시간마다 1" % [_notice, int(state.amount), RULES.MAX_NATURAL, RULES.ENTRY_COST]
+		copy += "\n전투 시작 %d초 이내 로비 복귀 시 %d 반환" % [RULES.EARLY_EXIT_WINDOW_MS / 1000, RULES.EARLY_EXIT_REFUND]
 		if not bool(state.get("success", false)):
 			copy = "저장 상태를 확인하지 못했습니다. 다시 시도해 주세요."
 		elif int(state.amount) >= RULES.MAX_NATURAL:
@@ -214,6 +218,7 @@ func _build_product() -> void:
 	var parent: Node = content.get_parent()
 	product = PanelContainer.new()
 	product.name = "StaminaSupply"
+	product.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	product.add_theme_stylebox_override("panel", _frame())
 	parent.add_child(product)
 	# Place with existing packages, while keeping the monster tutorial draw first.
@@ -252,3 +257,73 @@ func open_shop() -> void:
 func _scroll_to_product(scroll: ScrollContainer) -> void:
 	if is_instance_valid(scroll) and is_instance_valid(product):
 		scroll.ensure_control_visible(product)
+
+func _build_entry_feedback() -> void:
+	var button: Button = lobby.enter_stage_button
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_entry_cost = HBoxContainer.new()
+	_entry_cost.name = "StaminaEntryCost"
+	_entry_cost.add_theme_constant_override("separation", 8)
+	_place(button, _entry_cost, Rect2(0.64, 0.14, 0.30, 0.72))
+	var icon := TextureRect.new()
+	icon.texture = lobby._load_svg_texture_direct(RULES.ICON_PATH)
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.custom_minimum_size.x = 30
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_entry_cost.add_child(icon)
+	_entry_amount = Label.new()
+	_entry_amount.text = "-5"
+	_entry_amount.add_theme_font_size_override("font_size", 32)
+	_entry_amount.add_theme_color_override("font_color", Color("ffe298"))
+	_entry_amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_entry_amount.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_entry_cost.add_child(_entry_amount)
+	var layer := lobby.get_node("StaminaLayer") as CanvasLayer
+	_entry_blocker = Control.new()
+	_entry_blocker.name = "EntryFeedbackBlocker"
+	layer.add_child(_entry_blocker)
+	_entry_blocker.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_entry_blocker.mouse_filter = Control.MOUSE_FILTER_STOP
+	_entry_blocker.focus_mode = Control.FOCUS_ALL
+	_entry_blocker.hide()
+	_spend_label = Label.new()
+	_spend_label.name = "StaminaSpendFeedback"
+	_spend_label.custom_minimum_size = Vector2(160, 78)
+	_spend_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_spend_label.add_theme_font_size_override("font_size", 54)
+	_spend_label.add_theme_color_override("font_color", Color("ffdb8b"))
+	_spend_label.add_theme_color_override("font_outline_color", Color("1a092b"))
+	_spend_label.add_theme_constant_override("outline_size", 5)
+	_spend_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(_spend_label)
+	_spend_label.hide()
+
+func configure_entry(unlocked: bool, cost: int) -> void:
+	if _entry_cost == null:
+		return
+	var modes = lobby.main_modes_view
+	_entry_cost.visible = unlocked and not modes.ranked and modes.perspective == "demon" and modes.difficulty == "easy"
+	_entry_amount.text = "-%d" % cost if cost > 0 else "무료"
+
+func play_entry_cost(amount: int) -> void:
+	refresh()
+	if amount <= 0:
+		return
+	if _spend_tween != null and _spend_tween.is_valid():
+		_spend_tween.kill()
+	_entry_blocker.show()
+	_entry_blocker.grab_focus()
+	_spend_label.text = "-%d" % amount
+	var rect := _entry_cost.get_global_rect()
+	_spend_label.position = rect.get_center() - Vector2(80, 48)
+	_spend_label.modulate = Color.WHITE
+	_spend_label.show()
+	_spend_tween = lobby.create_tween().set_parallel(true)
+	_spend_tween.tween_property(_spend_label, "position:y", _spend_label.position.y - 74, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_spend_tween.tween_property(_spend_label, "modulate:a", 0.0, 0.23).set_delay(0.22)
+	await _spend_tween.finished
+	_spend_label.hide()
+	_entry_blocker.hide()
+	_entry_cost.hide()
