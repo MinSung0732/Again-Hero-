@@ -1285,7 +1285,7 @@ mouse_filter = 2
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
-vertical_scroll_mode = 1
+vertical_scroll_mode = 3
 
 [node name="Margin" type="MarginContainer" parent="HUD/MonsterInfoPanel/Root/Scroll"]
 layout_mode = 2
@@ -1445,7 +1445,7 @@ mouse_filter = 2
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
-vertical_scroll_mode = 1
+vertical_scroll_mode = 3
 
 [node name="Margin" type="MarginContainer" parent="HUD/HeroInfoPanel/Root/Scroll"]
 layout_mode = 2
@@ -2497,7 +2497,7 @@ custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
-vertical_scroll_mode = 1
+vertical_scroll_mode = 3
 
 [node name="ResultAnalysis" type="Label" parent="HUD/ResultPanel/Margin/VBox/ResultAnalysisScroll"]
 layout_mode = 2

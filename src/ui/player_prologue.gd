@@ -151,6 +151,7 @@ func _build_choice(kind: String) -> void:
 	_name_scroll.offset_bottom = -16
 	_name_scroll.mouse_filter = Control.MOUSE_FILTER_STOP
 	_name_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_name_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	_name_content = Control.new()
 	_name_content.custom_minimum_size.y = NAME_CONTENT_HEIGHT
 	_name_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL

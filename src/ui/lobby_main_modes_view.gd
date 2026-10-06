@@ -171,6 +171,7 @@ func open_characters() -> void:
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(600, 320)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	picker.add_child(scroll)
 	var list := VBoxContainer.new()
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL

@@ -78,6 +78,7 @@ func install(target: Control) -> void:
 	scroll.name = "SettingsScroll"
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	box.add_child(scroll)
 	var stack := VBoxContainer.new()
 	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -203,6 +204,7 @@ func _build_other_menu(box: VBoxContainer) -> void:
 	menu_scroll.name = "OtherMenuScroll"
 	menu_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	menu_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	menu_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	other_menu.add_child(menu_scroll)
 	var rows := VBoxContainer.new()
 	rows.name = "Categories"
@@ -630,6 +632,7 @@ func _open_appearance_picker() -> void:
 	var choices_scroll := ScrollContainer.new()
 	choices_scroll.custom_minimum_size.y = 320
 	choices_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	choices_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	column.add_child(choices_scroll)
 	var grid := GridContainer.new()
 	grid.columns = 2

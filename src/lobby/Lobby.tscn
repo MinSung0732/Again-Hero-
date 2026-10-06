@@ -673,7 +673,7 @@ vertical_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
-vertical_scroll_mode = 1
+vertical_scroll_mode = 3
 
 [node name="MonsterGrid" type="GridContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterScroll"]
 layout_mode = 2
@@ -1530,7 +1530,7 @@ custom_minimum_size = Vector2(0, 500)
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
-vertical_scroll_mode = 1
+vertical_scroll_mode = 3
 
 [node name="Result" type="Label" parent="ShopResultOverlay/Panel/Margin/VBox/ResultScroll"]
 layout_mode = 2
