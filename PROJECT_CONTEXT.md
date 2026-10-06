@@ -1,3 +1,6 @@
+## Monster Detail Content Layout (2026-10-06)
+- Lobby monster detail retains its fixed title/close controls and two-column normal/elite comparison. Stats use content-fit height; the entire comparison scrolls inside DetailScroll with hidden bars, preserving full behavior/special/skill descriptions. Long names/badges wrap; each open resets to the top.
+
 ## Gacha Door Palette Binding (2026-10-06)
 - Opening uses the highest rarity actually present in the reward batch; empty content pools remain excluded. Authored door sheet names retain the old palette order: monster_uncommon is green, monster_legendary yellow, monster_transcendent purple. ShopCatalog binds uncommon→monster_legendary, legendary→monster_transcendent, transcendent→monster_uncommon by actual pixels, so opening and final flash match current white/yellow/blue/purple/green rarity colors. Original art is unchanged.
 

@@ -1726,59 +1726,67 @@ text = "일반과 엘리트의 전투 능력을 한눈에 비교합니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="Compare" type="HBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox"]
+[node name="DetailScroll" type="ScrollContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="Compare" type="HBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 18
 
-[node name="NormalPanel" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare"]
+[node name="NormalPanel" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Margin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel"]
+[node name="Margin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel"]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 22
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 22
 
-[node name="VBox" type="VBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Badge" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
+[node name="Badge" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.9, 1, 1)
 theme_override_font_sizes/font_size = 24
 text = "일반"
 horizontal_alignment = 1
+autowrap_mode = 3
 
-[node name="PortraitFrame" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
+[node name="PortraitFrame" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 190)
 layout_mode = 2
 clip_contents = true
 
-[node name="PortraitMargin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/PortraitFrame"]
+[node name="PortraitMargin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox/PortraitFrame"]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 18
 
-[node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/PortraitFrame/PortraitMargin"]
+[node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox/PortraitFrame/PortraitMargin"]
 custom_minimum_size = Vector2(0, 154)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 
-[node name="Name" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
+[node name="Name" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
 text = "몬스터"
 horizontal_alignment = 1
+autowrap_mode = 3
 
-[node name="Stats" type="RichTextLabel" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
+[node name="Stats" type="RichTextLabel" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 310)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.86, 0.93, 1)
@@ -1786,69 +1794,72 @@ theme_override_font_sizes/normal_font_size = 24
 theme_override_font_sizes/bold_font_size = 24
 bbcode_enabled = true
 text = "기본 스탯"
+fit_content = true
 scroll_active = false
 
-[node name="SpecialTitle" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
+[node name="SpecialTitle" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
 theme_override_font_sizes/font_size = 24
 text = "획득 가능한 특수증강"
 
-[node name="Specials" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox"]
+[node name="Specials" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.82, 0.77, 0.86, 1)
 theme_override_font_sizes/font_size = 24
 text = "특수증강"
 autowrap_mode = 2
 
-[node name="ElitePanel" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare"]
+[node name="ElitePanel" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Margin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel"]
+[node name="Margin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel"]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 22
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 22
 
-[node name="VBox" type="VBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Badge" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
+[node name="Badge" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.7, 0.36, 1)
 theme_override_font_sizes/font_size = 24
 text = "엘리트 · 기본 돌연변이"
 horizontal_alignment = 1
+autowrap_mode = 3
 
-[node name="PortraitFrame" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
+[node name="PortraitFrame" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 190)
 layout_mode = 2
 clip_contents = true
 
-[node name="PortraitMargin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/PortraitFrame"]
+[node name="PortraitMargin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox/PortraitFrame"]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 18
 
-[node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/PortraitFrame/PortraitMargin"]
+[node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox/PortraitFrame/PortraitMargin"]
 custom_minimum_size = Vector2(0, 154)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 
-[node name="Name" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
+[node name="Name" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
 text = "돌연변이 몬스터"
 horizontal_alignment = 1
+autowrap_mode = 3
 
-[node name="Stats" type="RichTextLabel" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
+[node name="Stats" type="RichTextLabel" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 310)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.92, 0.86, 0.76, 1)
@@ -1856,15 +1867,16 @@ theme_override_font_sizes/normal_font_size = 24
 theme_override_font_sizes/bold_font_size = 24
 bbcode_enabled = true
 text = "엘리트 스탯"
+fit_content = true
 scroll_active = false
 
-[node name="SkillTitle" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
+[node name="SkillTitle" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
 theme_override_font_sizes/font_size = 24
 text = "엘리트 기술"
 
-[node name="Skills" type="RichTextLabel" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
+[node name="Skills" type="RichTextLabel" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.82, 0.77, 0.86, 1)
@@ -1875,7 +1887,7 @@ text = "엘리트 기술"
 fit_content = true
 scroll_active = false
 
-[node name="Note" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox"]
+[node name="Note" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.6, 0.69, 1)
 theme_override_font_sizes/font_size = 24

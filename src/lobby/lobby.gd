@@ -138,20 +138,20 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var monster_detail_panel: PanelContainer = $MonsterDetailOverlay/Panel
 @onready var monster_detail_title: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Header/Title
 @onready var monster_detail_close_button: Button = $MonsterDetailOverlay/Panel/Margin/VBox/Header/CloseButton
-@onready var monster_detail_normal_panel: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel
-@onready var monster_detail_normal_badge: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Badge
-@onready var monster_detail_normal_portrait_frame: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/PortraitFrame
-@onready var monster_detail_normal_portrait: TextureRect = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/PortraitFrame/PortraitMargin/Portrait
-@onready var monster_detail_normal_name: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Name
-@onready var monster_detail_normal_stats: RichTextLabel = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Stats
-@onready var monster_detail_specials: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/NormalPanel/Margin/VBox/Specials
-@onready var monster_detail_elite_panel: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel
-@onready var monster_detail_elite_badge: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Badge
-@onready var monster_detail_elite_portrait_frame: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/PortraitFrame
-@onready var monster_detail_elite_portrait: TextureRect = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/PortraitFrame/PortraitMargin/Portrait
-@onready var monster_detail_elite_name: Label = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Name
-@onready var monster_detail_elite_stats: RichTextLabel = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Stats
-@onready var monster_detail_elite_skills: RichTextLabel = $MonsterDetailOverlay/Panel/Margin/VBox/Compare/ElitePanel/Margin/VBox/Skills
+@onready var monster_detail_normal_panel: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel
+@onready var monster_detail_normal_badge: Label = $MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox/Badge
+@onready var monster_detail_normal_portrait_frame: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox/PortraitFrame
+@onready var monster_detail_normal_portrait: TextureRect = $MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox/PortraitFrame/PortraitMargin/Portrait
+@onready var monster_detail_normal_name: Label = $MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox/Name
+@onready var monster_detail_normal_stats: RichTextLabel = $MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox/Stats
+@onready var monster_detail_specials: Label = $MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox/Specials
+@onready var monster_detail_elite_panel: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel
+@onready var monster_detail_elite_badge: Label = $MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox/Badge
+@onready var monster_detail_elite_portrait_frame: PanelContainer = $MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox/PortraitFrame
+@onready var monster_detail_elite_portrait: TextureRect = $MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox/PortraitFrame/PortraitMargin/Portrait
+@onready var monster_detail_elite_name: Label = $MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox/Name
+@onready var monster_detail_elite_stats: RichTextLabel = $MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox/Stats
+@onready var monster_detail_elite_skills: RichTextLabel = $MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox/Skills
 
 @onready var stage_card: PanelContainer = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard
 @onready var prev_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/PrevButton
@@ -3832,6 +3832,7 @@ func _open_monster_detail(monster_id: String) -> void:
 		return
 
 	_populate_monster_detail(monster_id)
+	$MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll.scroll_vertical = 0
 	monster_detail_overlay.show()
 	monster_detail_overlay.move_to_front()
 
