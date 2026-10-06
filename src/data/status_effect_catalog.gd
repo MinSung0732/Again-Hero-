@@ -2,6 +2,7 @@ extends RefCounted
 class_name StatusEffectCatalog
 
 const STATUS_EFFECTS := {
+	"stun": {"id": "stun", "name": "기절"},
 	"bleed": {"id": "bleed", "name": "출혈"},
 	"slow": {
 		"id": "slow",

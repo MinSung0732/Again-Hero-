@@ -28,7 +28,7 @@ func run() -> void:
 		for label in [lobby.monster_detail_normal_stats, lobby.monster_detail_elite_stats, lobby.monster_detail_elite_skills]:
 			check(label.size.y >= label.get_content_height(), "entire rich text laid out " + id)
 		check(lobby.monster_detail_close_button.get_global_rect().end.y < scroll.get_global_rect().position.y, "close stays above scroll")
-		if id in ["banshee", "goblin_thrower"] and "--capture" in OS.get_cmdline_user_args():
+		if id in ["banshee", "goblin_thrower", "dullahan"] and "--capture" in OS.get_cmdline_user_args():
 			await RenderingServer.frame_post_draw
 			root.get_texture().get_image().save_png(OS.get_cmdline_user_args()[-1].replace("{id}", id))
 		scroll.scroll_vertical = 100000

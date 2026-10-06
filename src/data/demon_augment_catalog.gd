@@ -8,6 +8,7 @@ const NORMAL_MAX_LEVEL := 10
 const SPECIAL_MAX_LEVEL := 1
 
 const MONSTER_NAMES := {
+	"dullahan": "망령 기사",
 	"banshee": "밴시",
 	"slime": "슬라임",
 	"spider": "거미",
@@ -129,6 +130,9 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{"id":"dullahan_dead_wall", "monster_id":"dullahan", "name":"망자의 성벽", "description":"접근 이속 -30%. 첫 실제 피해 전 최대 HP 200% 보호막", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"dullahan_dead_wall", "effect_values":{"approach_multiplier":0.70, "shield_hp_ratio":2.0}},
+	{"id":"dullahan_soul_shackles", "monster_id":"dullahan", "name":"열두 원혼의 족쇄", "description":"적중마다 대상에 기사 공용 스택. 12스택 소모 시 2초 기절", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"dullahan_soul_shackles", "effect_values":{"stacks_required":12, "stun_duration":2.0}},
+	{"id":"dullahan_immortal_thirst", "monster_id":"dullahan", "name":"불멸의 갈망", "description":"부활 체력 30%, 실제 준 피해의 50% 회복", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"dullahan_immortal_thirst", "effect_values":{"revive_hp_ratio":0.30, "lifesteal_ratio":0.50}},
 	{"id": "banshee_bleeding", "monster_id": "banshee", "name": "찢어진 상처", "description": "공격 적중 시 20% 확률로 3초 출혈 (중첩·갱신 불가)", "augment_type": TYPE_SPECIAL, "max_stack": SPECIAL_MAX_LEVEL, "icon": "", "effect_type": "banshee_bleeding", "effect_values": {"chance": 0.20, "duration": 3.0}},
 	{"id": "banshee_charge_stealth", "monster_id": "banshee", "name": "핏빛 은신", "description": "돌진 중 은신 및 받는 피해 50% 감소", "augment_type": TYPE_SPECIAL, "max_stack": SPECIAL_MAX_LEVEL, "icon": "", "effect_type": "banshee_charge_stealth", "effect_values": {"damage_taken_multiplier": 0.50}},
 	{"id": "banshee_death_possession", "monster_id": "banshee", "name": "서른 번째 원혼", "description": "밴시 30마리 사망마다 증강이 적용되지 않은 엘리트 밴시 소환", "augment_type": TYPE_SPECIAL, "max_stack": SPECIAL_MAX_LEVEL, "icon": "", "effect_type": "banshee_death_possession", "effect_values": {"deaths_required": 30}},

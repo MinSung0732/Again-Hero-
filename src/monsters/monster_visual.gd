@@ -91,12 +91,12 @@ func play_locomotion(moving: bool) -> void:
 			play(_desired_locomotion)
 
 func play_attack() -> void:
-	if _death_playing or _lod_suspended:
+	if _death_playing or _lod_suspended or _revival_reverse_playing or _revival_death_pose_playing:
 		return
 	_play_one_shot(&"attack")
 
 func play_hit() -> void:
-	if _death_playing or _lod_suspended:
+	if _death_playing or _lod_suspended or _revival_reverse_playing or _revival_death_pose_playing:
 		return
 
 	_start_damage_flash(Color.WHITE, 0.12)
@@ -106,7 +106,7 @@ func play_hit() -> void:
 
 
 func play_poison_hit() -> void:
-	if _death_playing or _lod_suspended:
+	if _death_playing or _lod_suspended or _revival_reverse_playing or _revival_death_pose_playing:
 		return
 	_start_damage_flash(Color(0.72, 0.30, 0.92), 0.10)
 
@@ -416,9 +416,11 @@ func _build_profile_frames(
 			continue
 
 		var textures: Array[Texture2D] = []
+		var files: Array = config.get("files", [])
 		for frame_index in range(1, count + 1):
+			var filename := String(files[frame_index - 1]) if files.size() >= frame_index else "%s_%02d.png" % [prefix, frame_index]
 			var texture := _load_texture(
-				"%s/%s_%02d.png" % [dir_path, prefix, frame_index]
+				"%s/%s" % [dir_path, filename]
 			)
 			if texture != null:
 				textures.append(texture)

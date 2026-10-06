@@ -146,7 +146,8 @@ func tick(delta: float) -> void:
 			continue
 
 		var state: Dictionary = state_value
-		var monster := state.get("monster") as Node2D
+		var monster_value = state.get("monster")
+		var monster: Node2D = monster_value if is_instance_valid(monster_value) else null
 		if (
 			not is_instance_valid(monster)
 			or monster.is_queued_for_deletion()
@@ -191,6 +192,13 @@ func tick(delta: float) -> void:
 func _cast_skill(monster: Node2D, skill: Dictionary) -> void:
 	var skill_id := String(skill.get("id", ""))
 	if skill_id.is_empty():
+		return
+	if bool(skill.get("_used", false)):
+		return
+	if String(skill.get("runtime", "")) == "monster":
+		if monster.has_method("try_cast_elite_skill") and bool(monster.call("try_cast_elite_skill", skill)):
+			skill["_timer"] = maxf(float(skill.get("cooldown", 0.0)), 0.01)
+			skill["_used"] = bool(skill.get("once", false))
 		return
 
 	# A blocked possession retains readiness; it does not spend HP/cooldown.
@@ -1237,7 +1245,8 @@ func _finish_skeleton_archer_arrow_rain(skill: Dictionary) -> void:
 
 
 func _cleanup_state(state: Dictionary) -> void:
-	var monster := state.get("monster") as Node2D
+	var monster_value = state.get("monster")
+	var monster: Node2D = monster_value if is_instance_valid(monster_value) else null
 	var skills_value = state.get("skills", [])
 	if typeof(skills_value) != TYPE_ARRAY:
 		return

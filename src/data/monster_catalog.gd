@@ -14,9 +14,33 @@ const ORDER := [
 	"goblin_thrower",
 	"ghost",
 	"banshee",
+	"dullahan",
 ]
 
+const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd")
+
 const MONSTERS := {
+	"dullahan": {
+		"id": "dullahan", "name": "망령 기사", "role": "tank", "family": "dullahan", "species": "undead", "grade": "legendary", "rarity": "legendary", "attack_type": "melee",
+		"base_cost": 12.0, "summon_exp": 12.0, "default_unlocked": false,
+		"description": "사망 시 1회 15% 체력으로 부활. 실제 준 피해의 40% 회복. HP 20% 이하에서 위험감지: 이속 +225%로 이탈 후 3초간 휴식하며 HP 50%까지 회복 (쿨 20초).",
+		"base_stats": DULLAHAN_BEHAVIOR.BASE,
+		"passive": DULLAHAN_BEHAVIOR.PASSIVE,
+		"danger_sense": DULLAHAN_BEHAVIOR.DANGER,
+		"card_icon_path": "res://assets/art/monsters/Dullahan/frames/idle_01.png",
+		"ground_shadow": {"size": Vector2(74, 22), "offset_y": 37.0, "opacity": 0.38},
+		"special_augment_ids": ["dullahan_dead_wall", "dullahan_soul_shackles", "dullahan_immortal_thirst"],
+		"elite_visual": {"mode": "frames", "asset_dir": "res://assets/art/elitemonster/Dullahan/frames", "target_height": 140.0, "animations": {
+			"idle": {"prefix":"idle", "count":4, "fps":6.0, "loop":true}, "move": {"prefix":"walk", "count":6, "fps":9.0, "loop":true},
+			"attack": {"prefix":"atk", "count":4, "fps":10.0, "loop":false}, "hit": {"files":["hit_01.png", "hit-02.png"], "count":2, "fps":12.0, "loop":false},
+			"death": {"prefix":"dead", "count":7, "fps":10.0, "loop":false}}},
+		"elite_skills": [
+			{"runtime":"monster", "id":"elite_dullahan_march", "name":"진격", "description":"반경 250 내 해골 전사/궁병 10마리를 5초간 순차 소환. 죽음 역재생 후 행동 시작.", "initial_cooldown":10.0, "cooldown":40.0, "count":10, "interval":0.5, "radius":250.0, "summon_ids":["skeleton", "skeleton_archer"]},
+			{"runtime":"monster", "id":"elite_dullahan_charge", "name":"망령돌진", "description":"소환 시 1회, 5초간 접근 이동속도 200%.", "initial_cooldown":0.0, "cooldown":0.0, "once":true, "duration":5.0, "speed_multiplier":2.0},
+			{"runtime":"monster", "id":"elite_dullahan_slam", "name":"강타", "description":"붉은 예고 후 공격 프레임 종료 시 공격력 2배 피해와 1.5초 기절.", "initial_cooldown":5.0, "cooldown":30.0, "windup":0.35, "damage_multiplier":2.0, "stun_duration":1.5}
+		],
+		"scene": preload("res://src/monsters/Dullahan.tscn"),
+	},
 	"banshee": {
 		"id": "banshee", "name": "밴시", "role": "controller",
 		"family": "banshee", "species": "undead", "grade": "advanced", "rarity": "uncommon",
@@ -723,6 +747,7 @@ const ATTACK_TYPE_LABELS := {
 }
 
 const GRADE_LABELS := {
+	"legendary": "전설",
 	"advanced": "고급",
 	"normal": "일반",
 }

@@ -1,3 +1,9 @@
+## Dullahan / Stun (2026-10-06)
+- Dullahan (망령 기사): legendary undead melee tank, cost 12. Base HP 420/speed 58/damage 32/attack interval 1.2s; existing rarity/research/collection/demon growth remain. One revival per unit at 15% HP; lifesteal 40% of actual HP/shield damage. HP<=20% danger sense: +225% escape, distance 300 or 2s timeout, 3s recovery to 50%, cooldown 20s.
+- Specials: 망자의 성벽 (approach -30%, 2x maxHP shield until first damage to hero), 열두 원혼의 족쇄 (target-shared 12-hit stacks consumed for 2s stun), 불멸의 갈망 (revive30%, lifesteal50%). Shield cannot refill on config refresh/revival. Final death alone awards death accounting.
+- Elite march 10s/40s: 10 skeleton warriors/archers sequentially over 5s in radius250, reverse-death summon animation locks action. Charge once on spawn: 5s approach x2. Slam 5s/30s: red windup/attack then x2 damage and 1.5s stun at frame completion.
+- Stun pauses all hero archetype actions/body animation; ailments and invulnerability continue. Resistance/refresh/reset and cached existing stun pixel FX are wired. Existing Dullahan artwork is unchanged; explicit frame filenames support elite hit-02.png. See docs/DULLAHAN.md for tuning and exact semantics.
+
 ## Continuous Button Frames (2026-10-06)
 - PixelPanelSkin.button_style supplies a continuous 2px border with no segmented corner artwork for framed buttons. Common lobby/main/gacha/navigation/mode controls and commerce shop_button_frame callers share it; state fills/tints, margins and touch geometry remain. Panel/title artwork and invisible icon hit areas retain their existing treatment. Result reward includes already granted combat gold (floor(combat research * 0.60), excluding first-clear research).
 
@@ -15,7 +21,7 @@
 - Localtest's isolated guest scope reports every MonsterCatalog entry unlocked, including old test saves and future content. Collection read override does not rewrite files or add shards/levels. Guard requires active localtest, matching test_directory, no account owner and no tutorial preview. Normal accounts/guests and tutorial preview retain normal unlock rules; normaltest reset/cloud isolation unchanged.
 
 ## Five-Rarity Summon Policy (2026-10-06)
-- Target weights common/uncommon/rare/legendary/transcendent = 30/30/30/9/1. Empty content pools cannot win; current common/uncommon effective chances are 50/50. Rates UI distinguishes target/current/preparation. Adding a monster in a missing rarity automatically activates that rarity and recalculates effective odds without fake content/rewards.
+- Target weights common/uncommon/rare/legendary/transcendent = 30/30/30/9/1. Empty content pools cannot win; current common/uncommon/legendary effective chances are 30/69, 30/69 and 9/69 after Dullahan registration. Rates UI distinguishes target/current/preparation. Adding a monster in a missing rarity automatically activates that rarity and recalculates effective odds without fake content/rewards.
 - Transcendent first summon unlocks the character immediately, awards zero shards, and persists first_draw_unlock in reward history. Later summons give 1–2 shards. Legendary gives 2–4 shards and requires the existing 25-shard unlock threshold. Common/uncommon/rare give 5–8/3–5/1–5 shards and retain 30-shard thresholds. Unlocking still does not consume shards; upgrade rules unchanged.
 - Reward calculation uses canonical monster rarity and staged entry ownership, so repeated transcendent results in one batch unlock only once. Existing atomic save/rollback and maxed shard-to-research conversion remain. Generic non-summon shard awards do not trigger the first-summon rule.
 

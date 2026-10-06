@@ -312,6 +312,22 @@ static func get_external_movement_multiplier(owner: Node) -> float:
 	return multiplier
 
 
+static func begin_summon_animation(monster: Node2D) -> void:
+	var visual := monster.get_node_or_null("Visual")
+	if visual == null or not visual.has_method("play_revival_reverse"):
+		return
+	monster.set_meta("summon_animation_active", true)
+	monster.set_meta("elite_skill_movement_lock", true)
+	visual.revival_animation_finished.connect(_finish_summon_animation.bind(weakref(monster)), CONNECT_ONE_SHOT)
+	visual.play_revival_reverse()
+
+static func _finish_summon_animation(reference: WeakRef) -> void:
+	var monster = reference.get_ref()
+	if not is_instance_valid(monster):
+		return
+	monster.set_meta("summon_animation_active", false)
+	monster.set_meta("elite_skill_movement_lock", false)
+
 static func is_forced_movement_locked(owner: Node) -> bool:
 	if owner == null or not is_instance_valid(owner):
 		return false

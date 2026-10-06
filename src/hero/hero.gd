@@ -794,6 +794,8 @@ var bleed_damage_applied: int = 0
 var bleed_duration: float = 0.0
 var bleed_source: Node
 var possession_immunity_timer: float = 0.0
+var stun_timer: float = 0.0
+var stun_sprite_speed: float = 1.0
 var fear_timer: float = 0.0
 var fear_source: Node2D
 var fear_origin: Vector2 = Vector2.ZERO
@@ -859,6 +861,8 @@ func configure_profile(profile: Dictionary) -> void:
 	offensive_memory_events.clear()
 	status_effect_events.clear()
 	_clear_bleed()
+	_clear_stun()
+	set_meta("dullahan_soul_stacks", 0)
 	possession_immunity_timer = 0.0
 	fear_timer = 0.0
 	fear_source = null
@@ -1539,6 +1543,7 @@ func _ready() -> void:
 	add_to_group("hero")
 	_attach_status_effect_visual("slow")
 	_attach_status_effect_visual("fear")
+	_attach_status_effect_visual("stun")
 	_apply_camera_limits()
 	_apply_profile_visual()
 	_apply_ground_shadow_profile()
@@ -1700,6 +1705,8 @@ func _physics_process(delta: float) -> void:
 	possession_immunity_timer = maxf(possession_immunity_timer - delta, 0.0)
 	if current_hp <= 0 or is_dying:
 		velocity = Vector2.ZERO
+		return
+	if _tick_stun_state(delta):
 		return
 	if _tick_fear_state(delta):
 		return
@@ -16836,6 +16843,45 @@ func can_receive_possession() -> bool:
 	return current_hp > 0 and not is_dying and fear_timer <= 0.0 and possession_immunity_timer <= 0.0
 
 
+func apply_stun(duration: float) -> void:
+	if duration <= 0.0 or current_hp <= 0 or is_dying:
+		return
+	record_status_effect_event("stun")
+	if stun_timer <= 0.0 and is_instance_valid(hero_sprite):
+		stun_sprite_speed = hero_sprite.speed_scale
+		hero_sprite.speed_scale = 0.0
+	stun_timer = maxf(stun_timer, maxf(duration * (1.0 - get_status_resistance("stun")), 0.05))
+	velocity = Vector2.ZERO
+	set_meta("stun_active", true)
+
+func _clear_stun() -> void:
+	if stun_timer > 0.0 and is_instance_valid(hero_sprite):
+		hero_sprite.speed_scale = stun_sprite_speed
+	stun_timer = 0.0
+	set_meta("stun_active", false)
+
+func _tick_stun_state(delta: float) -> bool:
+	if stun_timer <= 0.0:
+		return false
+	velocity = Vector2.ZERO
+	_update_invulnerability(delta)
+	if slow_timer > 0.0:
+		slow_timer = maxf(slow_timer - delta, 0.0)
+		if slow_timer <= 0.0:
+			move_multiplier = 1.0
+	if fear_timer > 0.0:
+		fear_timer = maxf(fear_timer - delta, 0.0)
+		if fear_timer <= 0.0:
+			fear_source = null
+			fear_speed_multiplier = 1.0
+			set_meta("fear_active", false)
+	if stun_timer <= delta:
+		_clear_stun()
+	else:
+		stun_timer -= delta
+	return true
+
+
 func apply_fear(
 	source: Node2D,
 	duration: float,
@@ -20113,6 +20159,8 @@ func _begin_death_sequence() -> void:
 
 	is_dying = true
 	_clear_bleed()
+	_clear_stun()
+	set_meta("dullahan_soul_stacks", 0)
 	possession_immunity_timer = 0.0
 	fear_timer = 0.0
 	fear_source = null

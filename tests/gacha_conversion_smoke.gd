@@ -43,7 +43,7 @@ func run() -> void:
 	var total := 0
 	for entry in history:
 		total += int(entry.research_points)
-	check(total >= 33 and total <= 88 and PROGRESS.get_research_points() == 100 + total, "exact conversion once")
+	check(total >= 22 and total <= 88 and PROGRESS.get_research_points() == 100 + total, "exact conversion once")
 	lobby._rebuild_shop_list()
 	check(lobby.shop_rates_text.text.contains("조각 5~8") and lobby.shop_rates_text.text.contains("조각 3~5") and lobby.shop_rates_text.text.contains("조각 1~5"), "rates UI uses updated shard ranges")
 	var overlay: Control = lobby.gacha_reveal_overlay

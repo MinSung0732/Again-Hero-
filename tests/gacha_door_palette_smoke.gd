@@ -28,7 +28,7 @@ func run() -> void:
 				"transcendent": check(light.g > light.r + 0.05 and light.g > light.b + 0.05, "green beam")
 	var overlay = load("res://src/ui/gacha_reveal_overlay.gd").new()
 	root.add_child(overlay)
-	for id in ["common", "uncommon"]:
+	for id in ["common", "uncommon", "legendary"]:
 		overlay.present([{"monster_id":"slime", "name":"테스트", "rarity":id, "shards":2}])
 		check(overlay._highest_rarity_id() == id, "actual result determines opening")
 		var deadline := Time.get_ticks_msec() + 15000
@@ -47,7 +47,7 @@ func run() -> void:
 		overlay.skip_to_results()
 		overlay._confirm()
 	for i in range(1000):
-		check(SHOP.roll_rarity(float(i)/1000.0) in ["common", "uncommon"], "empty rarity cannot select opening")
+		check(SHOP.roll_rarity(float(i)/1000.0) in ["common", "uncommon", "legendary"], "empty rarity cannot select opening")
 	overlay.free()
 	await create_timer(0.2).timeout
 	print("GACHA_DOOR_PALETTE_SMOKE_FAILED" if failed else "GACHA_DOOR_PALETTE_SMOKE_OK")
