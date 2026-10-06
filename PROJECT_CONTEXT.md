@@ -1,3 +1,6 @@
+## Hero Approach Against Stationary Turrets (2026-10-06)
+- Ranged-pressure sensing validates the true 850px radius after broad-phase spatial queries. After local avoidance, stationary targets outside the hero's attack range receive approach priority over pressure strafing; inside-range spacing and mobile-monster behavior remain. Kraken tentacles are pooled AnimatedSprite2D visuals, absent from monster registry/groups and collision/targeting.
+
 ## Exhausted Special Augment Rewards (2026-10-06)
 - When an equipped-monster special reward slot has no unacquired candidates, consume that opportunity and open the existing elite choice using mutation_1 stats with elite title/name. Normal slots retain ordinary augments; reroll exclusion alone is not exhaustion. Existing elite-capability filters apply.
 - Active mutation choices defer pending level rewards; selection completion resumes the queue after UI callbacks. Candidate IDs are validated before resetting selection/pause. Replacement rewards neither spend rerolls nor record a fictitious special augment.

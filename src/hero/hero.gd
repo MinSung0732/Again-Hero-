@@ -7858,6 +7858,9 @@ func _update_ranged_pressure_cache(delta: float) -> void:
 			continue
 		if String(monster.get("monster_role")) != "ranged":
 			continue
+		# Spatial queries return broad-phase buckets; apply the sensing radius.
+		if global_position.distance_squared_to(monster.global_position) > RANGED_PRESSURE_RADIUS * RANGED_PRESSURE_RADIUS:
+			continue
 		ranged_pressure_count += 1
 		ranged_pressure_center += monster.global_position
 
@@ -7963,6 +7966,13 @@ func _choose_move_direction(nearest_target: Node2D, nearest_distance: float) -> 
 
 	if avoidance.length_squared() > 0.01:
 		return avoidance.normalized()
+
+	# A stationary turret will never close the range itself. Pressure strafing
+	# must not keep us outside our own firing range indefinitely.
+	if is_instance_valid(nearest_target) and nearest_distance > attack_range:
+		var target_speed = nearest_target.get("move_speed")
+		if target_speed != null and float(target_speed) <= 0.0:
+			return global_position.direction_to(nearest_target.global_position)
 
 	var pressure_direction := _get_ranged_pressure_strafe_direction()
 	if pressure_direction.length_squared() > 0.01:
