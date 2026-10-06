@@ -8,6 +8,7 @@ const NORMAL_MAX_LEVEL := 10
 const SPECIAL_MAX_LEVEL := 1
 
 const MONSTER_NAMES := {
+	"succubus":"서큐버스",
 	"scorpion":"전갈",
 	"powwow_mummy":"미라 주술사",
 	"mummy": "미라",
@@ -136,6 +137,9 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{"id":"succubus_shadow_recovery", "monster_id":"succubus", "name":"그늘의 안식", "description":"잠입 진입 시 최대 체력30%까지 회복", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"succubus_shadow_recovery", "effect_values":{"hp_ratio":0.3}},
+	{"id":"succubus_shadow_ambush", "monster_id":"succubus", "name":"그림자 반격", "description":"잠입 해제 후 공격력20% 상승", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"succubus_shadow_ambush", "effect_values":{"damage_multiplier":1.2}},
+	{"id":"succubus_danger_sense", "monster_id":"succubus", "name":"위기의 장막", "description":"1회 잠입 조건을 체력30% 이하로 변경", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"succubus_danger_sense", "effect_values":{"hp_ratio":0.3}},
 	{"id":"scorpion_rapid_venom", "monster_id":"scorpion", "name":"속효성 맹독", "description":"중독 총 피해를 유지하며 지속시간 10초 → 3초", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"scorpion_rapid_venom", "effect_values":{"duration":3.0}},
 	{"id":"scorpion_twin_sting", "monster_id":"scorpion", "name":"쌍독침", "description":"공격력 +20%, 2연격. 2타는 무적시간 무시, 각 타격 중독 별도 적용", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"scorpion_twin_sting", "effect_values":{"stat_multipliers":{"damage":1.2}}},
 	{"id":"scorpion_death_swamp", "monster_id":"scorpion", "name":"사멸의 독늪", "description":"사망 위치 지름 150 독늪 3초. 머무는 대상에 공격력 200%의 총 피해", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"scorpion_death_swamp", "effect_values":{"radius":75.0,"duration":3.0,"damage_multiplier":2.0}},

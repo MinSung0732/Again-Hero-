@@ -20,6 +20,7 @@ const ORDER := [
 	"mummy",
 	"powwow_mummy",
 	"scorpion",
+	"succubus",
 ]
 
 const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd")
@@ -27,6 +28,22 @@ const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd"
 const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const MONSTERS := {
+	"succubus": {
+		"id":"succubus", "name":"서큐버스", "role":"controller", "family":"succubus", "species":"humanoid", "grade":"legendary", "rarity":"legendary", "attack_type":"melee",
+		"base_cost":13.5, "summon_exp":13.5, "default_unlocked":false,
+		"description":"공용 적중 15회에 2초 매혹(공격·기술 봉인, 시전자 접근, 이속 -40%). 종료 후 7초 면역. 매혹 대상 추가 피해15%. 치명 피해 시1회 생존하고3초 잠입(행동 정지·무적·반투명).",
+		"base_stats":preload("res://src/data/succubus_behavior_catalog.gd").BASE,
+		"card_icon_path":"res://assets/art/monsters/Succubus/frames/idle_01.png",
+		"ground_shadow":{"size":Vector2(72,22), "offset_y":43.0, "opacity":0.35},
+		"special_augment_ids":["succubus_shadow_recovery","succubus_shadow_ambush","succubus_danger_sense"],
+		"elite_visual":preload("res://src/data/succubus_behavior_catalog.gd").ELITE_VISUAL,
+		"elite_skills":[
+			{"runtime":"monster", "id":"elite_succubus_cut", "kind":"cut", "name":"절개", "description":"용사 뒤로 순간이동 후 공격력150% 타격.", "initial_cooldown":0.0, "cooldown":15.0, "damage_multiplier":1.5, "retry_interval":0.25},
+			{"runtime":"monster", "id":"elite_succubus_drain", "kind":"drain", "name":"정기흡수", "description":"이전 흡수 이후 실제 준 피해를 비우고55% 회복.", "initial_cooldown":6.0, "cooldown":20.0, "heal_ratio":0.55, "retry_interval":0.25},
+			{"runtime":"monster", "id":"elite_succubus_waltz", "kind":"waltz", "name":"유혹의 왈츠", "description":"받는 피해50% 감소.2.5초간0.5초마다 무작위 각도로 순간이동·타격(총 공격력200%), 실제 준 피해40% 회복.", "initial_cooldown":10.0, "cooldown":60.0, "duration":2.5, "interval":0.5, "damage_multiplier":2.0, "heal_ratio":0.4, "damage_taken_multiplier":0.5, "alpha":0.5, "retry_interval":0.25}
+		],
+		"scene":preload("res://src/monsters/Succubus.tscn"),
+	},
 	"scorpion": {
 		"id":"scorpion", "name":"전갈", "role":"swarm", "family":"scorpion", "species":"beast", "grade":"normal", "rarity":"common", "attack_type":"melee",
 		"base_cost":3.0, "summon_exp":3.0, "default_unlocked":false,

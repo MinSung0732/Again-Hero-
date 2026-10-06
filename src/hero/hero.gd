@@ -10,6 +10,7 @@ signal ultimate_used(ultimate_id: String, ultimate_name: String)
 signal conditional_skill_unlocked(skill_id: String, skill_name: String, payload: Dictionary)
 
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
+const SUCCUBUS_BEHAVIOR := preload("res://src/data/succubus_behavior_catalog.gd")
 const DAMAGE_POISON_TRACKER := preload("res://src/systems/damage_poison_tracker.gd")
 const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
@@ -810,6 +811,11 @@ var petrify_anchor := Vector2.ZERO
 var petrify_release_slow := 1.0
 var petrify_release_slow_duration := 0.0
 var petrify_restore_tint := Color.WHITE
+var charm_stacks := 0
+var charm_timer := 0.0
+var charm_immunity_timer := 0.0
+var charm_source: WeakRef
+var charm_cooldown_properties: Array = []
 var stun_timer: float = 0.0
 var stun_sprite_speed: float = 1.0
 var fear_timer: float = 0.0
@@ -879,6 +885,7 @@ func configure_profile(profile: Dictionary) -> void:
 	_clear_bleed()
 	_clear_stun()
 	_clear_medusa_statuses()
+	_clear_charm()
 	_clear_received_modifiers()
 	set_meta("dullahan_soul_stacks", 0)
 	possession_immunity_timer = 0.0
@@ -1733,12 +1740,16 @@ func _physics_process_actions(delta: float) -> void:
 	_tick_petrify(delta)
 	_tick_received_modifiers(delta)
 	possession_immunity_timer = maxf(possession_immunity_timer - delta, 0.0)
+	var charm_was_active := _tick_charm_timers(delta)
 	if current_hp <= 0 or is_dying:
 		velocity = Vector2.ZERO
 		return
 	if _tick_stun_state(delta):
 		return
 	if _tick_fear_state(delta):
+		return
+	if charm_was_active:
+		_tick_charm_state(delta)
 		return
 	_update_combat_reposition(delta)
 
@@ -4279,6 +4290,8 @@ func _acquire_alchemist_mystery_vial() -> Node2D:
 
 
 func _spawn_alchemist_mystery_vial(origin: Vector2) -> void:
+	if charm_timer > 0.0:
+		return
 	var vial := _acquire_alchemist_mystery_vial()
 	if vial == null:
 		return
@@ -11236,6 +11249,8 @@ func _cast_archmage_skill_internal(
 	consume_gauge: bool,
 	trigger_multicast: bool
 ) -> bool:
+	if charm_timer > 0.0:
+		return false
 	var config: Dictionary = archmage_skill_config.get(skill_key, {})
 	if config.is_empty():
 		return false
@@ -16988,6 +17003,83 @@ func _clear_received_modifiers() -> void:
 	damage_taken_increase_timer = 0.0
 	damage_taken_increase_ratio = 0.0
 
+
+func register_succubus_hit(source: Node2D) -> bool:
+	if current_hp <= 0 or is_dying or charm_timer > 0.0 or charm_immunity_timer > 0.0:
+		return false
+	charm_stacks += 1
+	if charm_stacks < int(SUCCUBUS_BEHAVIOR.CHARM.stacks):
+		return false
+	return apply_charm(source, float(SUCCUBUS_BEHAVIOR.CHARM.duration))
+
+func apply_charm(source: Node2D, duration: float) -> bool:
+	if current_hp <= 0 or is_dying or charm_timer > 0.0 or charm_immunity_timer > 0.0 or not is_instance_valid(source):
+		return false
+	charm_stacks = 0
+	charm_timer = maxf(duration * (1.0 - get_status_resistance("charm")), 0.05)
+	charm_source = weakref(source)
+	charm_cooldown_properties = _get_external_skill_cooldown_properties()
+	set_meta("charm_active", true)
+	record_status_effect_event("charm")
+	if channeling:
+		_end_channel_skill()
+	velocity = Vector2.ZERO
+	return true
+
+func _tick_charm_timers(delta: float) -> bool:
+	charm_immunity_timer = maxf(charm_immunity_timer - delta, 0.0)
+	if charm_timer <= 0.0:
+		return false
+	var source := charm_source.get_ref() as Node2D if charm_source != null else null
+	var previous := charm_timer
+	charm_timer = maxf(charm_timer - delta, 0.0)
+	if charm_timer <= 0.0 or not is_instance_valid(source) or bool(source.get("dying")):
+		charm_timer = 0.0
+		charm_source = null
+		charm_immunity_timer = maxf(float(SUCCUBUS_BEHAVIOR.CHARM.immunity) - maxf(delta - previous, 0.0), 0.0)
+		set_meta("charm_active", false)
+	return true
+
+func _tick_charm_state(delta: float) -> void:
+	attack_timer = maxf(attack_timer - delta, 0.0)
+	if hero_archetype == "archmage_elementalist":
+		for key in ARCHMAGE_SKILL_KEYS:
+			archmage_skill_cooldowns[key] = maxf(float(archmage_skill_cooldowns.get(key, 0.0)) - delta, 0.0)
+	else:
+		for property_name in charm_cooldown_properties:
+			var value = get(property_name)
+			if value != null:
+				set(property_name, maxf(float(value) - delta, 0.0))
+	_update_invulnerability(delta)
+	if slow_timer > 0.0:
+		slow_timer = maxf(slow_timer - delta, 0.0)
+		if slow_timer <= 0.0:
+			move_multiplier = 1.0
+	# Active phase still expires while casts are sealed; recovery checks remain.
+	if sage_phase_active:
+		sage_phase_remaining = maxf(sage_phase_remaining - delta, 0.0)
+		if sage_phase_remaining <= 0.0:
+			_end_sage_phase()
+	velocity = Vector2.ZERO
+	var source := charm_source.get_ref() as Node2D if charm_source != null else null
+	if charm_timer <= 0.0 or not is_instance_valid(source):
+		return
+	var offset := source.global_position - global_position
+	if offset.length_squared() > 32.0 * 32.0:
+		velocity = offset.normalized() * move_speed * minf(move_multiplier, float(SUCCUBUS_BEHAVIOR.CHARM.slow_multiplier)) * _get_purifier_move_speed_multiplier()
+	_move_and_slide_with_obstacle_escape()
+	_clamp_to_battlefield()
+	_update_stage1_pose_visual(delta)
+
+func _clear_charm() -> void:
+	charm_stacks = 0
+	charm_timer = 0.0
+	charm_immunity_timer = 0.0
+	charm_source = null
+	charm_cooldown_properties.clear()
+	set_meta("charm_active", false)
+
+
 func register_medusa_hit(duration: float, release_slow: float = 1.0, release_duration: float = 0.0) -> bool:
 	if current_hp <= 0 or is_dying:
 		return false
@@ -20381,6 +20473,7 @@ func _begin_death_sequence() -> void:
 	_clear_bleed()
 	_clear_stun()
 	_clear_medusa_statuses()
+	_clear_charm()
 	_clear_received_modifiers()
 	set_meta("dullahan_soul_stacks", 0)
 	possession_immunity_timer = 0.0
