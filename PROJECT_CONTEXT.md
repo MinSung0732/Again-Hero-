@@ -1,3 +1,8 @@
+## Mummy / Received Modifiers (2026-10-07)
+- Uncommon undead melee tank, cost7; HP125/speed92/damage13/interval1.1s before common growth. One spawn shield at50% final maxHP; preserves remaining fraction across HP growth and never refills through config refresh after damage/break.
+- Specials 불멸의 붕대 (HPx1.7), 깨진 봉인 (one shield-break retaliation for whole capacity, blocked/consumed by invulnerability), 메마른 상처 (actual hit: healing -30% for2s, refresh). Elite 미라의 저주: approach x1.3, actual hit increases target received damage20% for2s. Normal attacks and shield retaliation share actual-damage checks.
+- Generic timed healing reduction and received damage increase keep strongest ratio/longest remaining duration without additive stacking; tick even while action-locked, clear on death/profile reset, no dedicated FX. Heal items/common skill heals and legacy direct skill heals share reduction; HP growth/transform/revival are not healing. Received increase applies before mitigation/shields; already recorded Medusa poison budgets are not multiplied again. See docs/MUMMY.md.
+
 ## Medusa / Petrify / Damage Poison (2026-10-07)
 - Rare humanoid melee controller, cost 7. Per-unit pursuit speed grows 10%/second up to x2 and resets on actual damage. Monster collision/separation excluded. Hero-shared hits petrify at 10, then 11, 12 etc; 2.5s movement-only lock preserves attacks/skills and darkens body without dedicated FX.
 - Specials: 뱀의 가속 (actual speed *5% extra damage), 석상의 균열 (petrified target x1.5), 돌가루의 잔재 (after own petrify, 30% slow for 3s). Numerical defaults live in data.

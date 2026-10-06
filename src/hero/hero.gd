@@ -797,6 +797,10 @@ var bleed_duration: float = 0.0
 var bleed_source: Node
 var possession_immunity_timer: float = 0.0
 var damage_poison_tracker = DAMAGE_POISON_TRACKER.new()
+var healing_reduction_timer := 0.0
+var healing_reduction_ratio := 0.0
+var damage_taken_increase_timer := 0.0
+var damage_taken_increase_ratio := 0.0
 var medusa_hit_stacks := 0
 var medusa_stone_threshold := int(MEDUSA_BEHAVIOR.STONE.initial_stacks)
 var petrify_timer := 0.0
@@ -873,6 +877,7 @@ func configure_profile(profile: Dictionary) -> void:
 	_clear_bleed()
 	_clear_stun()
 	_clear_medusa_statuses()
+	_clear_received_modifiers()
 	set_meta("dullahan_soul_stacks", 0)
 	possession_immunity_timer = 0.0
 	fear_timer = 0.0
@@ -1724,6 +1729,7 @@ func _physics_process_actions(delta: float) -> void:
 	_update_bleed(delta)
 	_update_damage_poison(delta)
 	_tick_petrify(delta)
+	_tick_received_modifiers(delta)
 	possession_immunity_timer = maxf(possession_immunity_timer - delta, 0.0)
 	if current_hp <= 0 or is_dying:
 		velocity = Vector2.ZERO
@@ -3394,7 +3400,7 @@ func _on_alchemist_equivalent_exchange_kill() -> void:
 		alchemist_materials_collected = mini(alchemist_materials_collected + 1, required)
 	if stacks >= 5 and alchemist_equivalent_exchange_paid_hp > 0:
 		var heal_amount := int(round(float(alchemist_equivalent_exchange_paid_hp) * 0.50))
-		current_hp = mini(current_hp + maxi(heal_amount, 1), max_hp)
+		current_hp = mini(current_hp + _get_reduced_healing(maxi(heal_amount, 1)), max_hp)
 		alchemist_equivalent_exchange_paid_hp = 0
 		health_changed.emit(current_hp, max_hp)
 
@@ -10745,7 +10751,7 @@ func _on_sage_blackspot_kill() -> void:
 		1
 	)
 	var previous_hp := current_hp
-	current_hp = mini(current_hp + heal_amount, max_hp)
+	current_hp = mini(current_hp + _get_reduced_healing(heal_amount), max_hp)
 	if current_hp != previous_hp:
 		health_changed.emit(current_hp, max_hp)
 		queue_redraw()
@@ -12291,7 +12297,7 @@ func heal_direct(amount: int) -> int:
 			1
 		)
 	var previous_hp := current_hp
-	current_hp = mini(current_hp + adjusted_amount, max_hp)
+	current_hp = mini(current_hp + _get_reduced_healing(adjusted_amount), max_hp)
 	var recovered := current_hp - previous_hp
 	if recovered > 0:
 		DAMAGE_NUMBERS.show_heal(self, recovered)
@@ -16489,10 +16495,10 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 			if heal_ratio <= 0.0:
 				return
 			current_hp = mini(
-				current_hp + maxi(
+				current_hp + _get_reduced_healing(maxi(
 					int(round(float(max_hp) * heal_ratio)),
 					1
-				),
+				)),
 				max_hp
 			)
 
@@ -16877,6 +16883,39 @@ func _clear_bleed() -> void:
 	bleed_source = null
 	set_meta("bleed_active", false)
 
+
+func apply_healing_reduction(duration: float, reduction: float) -> bool:
+	if current_hp <= 0 or is_dying or duration <= 0.0:
+		return false
+	healing_reduction_ratio = maxf(healing_reduction_ratio,clampf(reduction,0.0,1.0))
+	healing_reduction_timer = maxf(healing_reduction_timer,duration)
+	record_status_effect_event("healing_reduction")
+	return true
+
+func apply_damage_taken_increase(duration: float, increase: float) -> bool:
+	if current_hp <= 0 or is_dying or duration <= 0.0:
+		return false
+	damage_taken_increase_ratio = maxf(damage_taken_increase_ratio,maxf(increase,0.0))
+	damage_taken_increase_timer = maxf(damage_taken_increase_timer,duration)
+	record_status_effect_event("damage_taken_increase")
+	return true
+
+func _get_reduced_healing(amount: int) -> int:
+	return maxi(int(round(float(amount) * (1.0 - healing_reduction_ratio))),0)
+
+func _tick_received_modifiers(delta: float) -> void:
+	healing_reduction_timer = maxf(healing_reduction_timer - delta,0.0)
+	damage_taken_increase_timer = maxf(damage_taken_increase_timer - delta,0.0)
+	if healing_reduction_timer <= 0.0:
+		healing_reduction_ratio = 0.0
+	if damage_taken_increase_timer <= 0.0:
+		damage_taken_increase_ratio = 0.0
+
+func _clear_received_modifiers() -> void:
+	healing_reduction_timer = 0.0
+	healing_reduction_ratio = 0.0
+	damage_taken_increase_timer = 0.0
+	damage_taken_increase_ratio = 0.0
 
 func register_medusa_hit(duration: float, release_slow: float = 1.0, release_duration: float = 0.0) -> bool:
 	if current_hp <= 0 or is_dying:
@@ -20053,7 +20092,7 @@ func _take_damage_internal(
 	):
 		return false
 
-	var raw_damage := float(amount)
+	var raw_damage := float(amount) if damage_already_mitigated else float(amount) * (1.0 + damage_taken_increase_ratio)
 	if (
 		not damage_already_mitigated
 		and hero_archetype == "alchemist_chemical"
@@ -20269,6 +20308,7 @@ func _begin_death_sequence() -> void:
 	_clear_bleed()
 	_clear_stun()
 	_clear_medusa_statuses()
+	_clear_received_modifiers()
 	set_meta("dullahan_soul_stacks", 0)
 	possession_immunity_timer = 0.0
 	fear_timer = 0.0

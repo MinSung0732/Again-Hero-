@@ -17,6 +17,7 @@ const ORDER := [
 	"dullahan",
 	"kraken",
 	"medusa",
+	"mummy",
 ]
 
 const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd")
@@ -24,6 +25,18 @@ const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd"
 const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const MONSTERS := {
+	"mummy": {
+		"id":"mummy", "name":"미라", "role":"tank", "family":"mummy", "species":"undead", "grade":"advanced", "rarity":"uncommon", "attack_type":"melee",
+		"base_cost":7.0, "summon_exp":7.0, "default_unlocked":false,
+		"description":"소환 시 최대 체력 50%의 실드. 체력·공격·이속·공속 중간인 근거리 탱커.",
+		"base_stats":preload("res://src/data/mummy_behavior_catalog.gd").BASE,
+		"card_icon_path":"res://assets/art/monsters/mummy/frames/idle_01.png",
+		"ground_shadow":{"size":Vector2(70,22), "offset_y":41.0, "opacity":0.35},
+		"special_augment_ids":["mummy_eternal_bandage","mummy_broken_seal","mummy_dry_wound"],
+		"elite_visual":preload("res://src/data/mummy_behavior_catalog.gd").ELITE_VISUAL,
+		"elite_skills":[{"runtime":"monster", "passive":true, "id":"elite_mummy_curse", "name":"미라의 저주", "description":"실제 타격 시 2초간 대상 받는 피해 +20% (갱신). 접근 이동속도 상시 +30%.", "initial_cooldown":0.0, "cooldown":0.0, "duration":2.0, "damage_increase":0.20, "move_speed_multiplier":1.30}],
+		"scene":preload("res://src/monsters/Mummy.tscn"),
+	},
 	"medusa": {
 		"id":"medusa", "name":"메두사", "role":"controller", "family":"medusa", "species":"humanoid", "grade":"rare", "rarity":"rare", "attack_type":"melee",
 		"base_cost":7.0, "summon_exp":7.0, "default_unlocked":false,

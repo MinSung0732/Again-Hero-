@@ -219,7 +219,10 @@ func _physics_process(delta: float) -> void:
 			attack_timer = effective_attack_cooldown
 			_visual_call(&"play_attack")
 			if hero.has_method("take_damage"):
-				hero.call("take_damage", attack_damage, self)
+				_attack_target(hero)
+
+func _attack_target(target: Node2D) -> void:
+	target.call("take_damage", attack_damage, self)
 
 func take_damage(amount: int) -> void:
 	if current_hp <= 0 or dying:

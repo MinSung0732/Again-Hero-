@@ -8,6 +8,7 @@ const NORMAL_MAX_LEVEL := 10
 const SPECIAL_MAX_LEVEL := 1
 
 const MONSTER_NAMES := {
+	"mummy": "미라",
 	"medusa": "메두사",
 	"kraken": "크라켄",
 	"dullahan": "망령 기사",
@@ -133,6 +134,9 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{"id":"mummy_eternal_bandage", "monster_id":"mummy", "name":"불멸의 붕대", "description":"최대 체력 +70%", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"mummy_eternal_bandage", "effect_values":{"stat_multipliers":{"hp":1.70}}},
+	{"id":"mummy_broken_seal", "monster_id":"mummy", "name":"깨진 봉인", "description":"소환 실드 파괴 시 개체당 1회 실드 전체 용량만큼 반격 (무적에 막힘)", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"mummy_broken_seal", "effect_values":{"once":true}},
+	{"id":"mummy_dry_wound", "monster_id":"mummy", "name":"메마른 상처", "description":"실제 타격 시 2초간 치유감소 30% (갱신)", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"mummy_dry_wound", "effect_values":{"duration":2.0,"reduction":0.30}},
 	{"id":"medusa_serpent_momentum", "monster_id":"medusa", "name":"뱀의 가속", "description":"실제 이동속도의 5%만큼 추가 타격 피해", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"medusa_serpent_momentum", "effect_values":{"speed_damage_ratio":0.05}},
 	{"id":"medusa_stone_shatter", "monster_id":"medusa", "name":"석상의 균열", "description":"석화 중인 대상에게 타격 피해 +50%", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"medusa_stone_shatter", "effect_values":{"damage_multiplier":1.5}},
 	{"id":"medusa_stone_residue", "monster_id":"medusa", "name":"돌가루의 잔재", "description":"석화가 풀리면 3초간 30% 둔화", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"medusa_stone_residue", "effect_values":{"slow_multiplier":0.70, "slow_duration":3.0}},

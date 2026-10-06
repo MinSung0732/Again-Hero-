@@ -30,7 +30,7 @@ func run() -> void:
 				check(label.size.y >= label.get_content_height(), "entire rich text laid out " + id)
 		check(compare.get_node("ElitePanel").visible == bool(CATALOG.MONSTERS[id].get("can_be_elite",true)), "elite capability shown " + id)
 		check(lobby.monster_detail_close_button.get_global_rect().end.y < scroll.get_global_rect().position.y, "close stays above scroll")
-		if id in ["banshee", "goblin_thrower", "dullahan", "kraken", "medusa"] and "--capture" in OS.get_cmdline_user_args():
+		if id in ["banshee", "goblin_thrower", "dullahan", "kraken", "medusa", "mummy"] and "--capture" in OS.get_cmdline_user_args():
 			await RenderingServer.frame_post_draw
 			root.get_texture().get_image().save_png(OS.get_cmdline_user_args()[-1].replace("{id}", id))
 		scroll.scroll_vertical = 100000
