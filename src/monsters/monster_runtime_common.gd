@@ -86,7 +86,7 @@ static func compute_soft_separation_bias(
 	owner: CharacterBody2D,
 	combat_authority: Node
 ) -> Vector2:
-	if owner == null or not is_instance_valid(owner):
+	if owner == null or not is_instance_valid(owner) or bool(owner.get_meta("ignore_monster_separation", false)):
 		return Vector2.ZERO
 	if (
 		not is_instance_valid(combat_authority)
@@ -130,6 +130,7 @@ static func compute_soft_separation_bias(
 		if (
 			not is_instance_valid(raw_node)
 			or raw_node == owner
+			or bool(raw_node.get_meta("ignore_monster_separation", false))
 			or raw_node.is_queued_for_deletion()
 		):
 			continue

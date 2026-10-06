@@ -8,6 +8,7 @@ const NORMAL_MAX_LEVEL := 10
 const SPECIAL_MAX_LEVEL := 1
 
 const MONSTER_NAMES := {
+	"medusa": "메두사",
 	"kraken": "크라켄",
 	"dullahan": "망령 기사",
 	"banshee": "밴시",
@@ -132,6 +133,9 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{"id":"medusa_serpent_momentum", "monster_id":"medusa", "name":"뱀의 가속", "description":"실제 이동속도의 5%만큼 추가 타격 피해", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"medusa_serpent_momentum", "effect_values":{"speed_damage_ratio":0.05}},
+	{"id":"medusa_stone_shatter", "monster_id":"medusa", "name":"석상의 균열", "description":"석화 중인 대상에게 타격 피해 +50%", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"medusa_stone_shatter", "effect_values":{"damage_multiplier":1.5}},
+	{"id":"medusa_stone_residue", "monster_id":"medusa", "name":"돌가루의 잔재", "description":"석화가 풀리면 3초간 30% 둔화", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"medusa_stone_residue", "effect_values":{"slow_multiplier":0.70, "slow_duration":3.0}},
 	{"id":"kraken_abyss_escape", "monster_id":"kraken", "name":"심연 잠항", "description":"용사 접근 시 개체당 1회 잠항해 최대 사거리의 다른 위치로 회피", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"kraken_abyss_escape", "effect_values":{"trigger_radius":220.0}},
 	{"id":"kraken_tentacle_barrage", "monster_id":"kraken", "name":"촉수의 대홍수", "description":"공격력 2배. 2초간 촉수 6회로 분산 타격", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"kraken_tentacle_barrage", "effect_values":{"tentacle_count":6, "stat_multipliers":{"damage":2.0}}},
 	{"id":"kraken_abyss_titan", "monster_id":"kraken", "name":"심해의 거신", "description":"최대 3개체. 체력·공격력·공속·사거리 2배, 크기 1.5배 (고정형 유지)", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"kraken_abyss_titan", "effect_values":{"max_population":3, "range_multiplier":2.0, "visual_scale":1.5, "stat_multipliers":{"hp":2.0, "damage":2.0, "attack_cooldown":0.5, "range":2.0}}},

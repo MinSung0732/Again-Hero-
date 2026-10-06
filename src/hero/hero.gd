@@ -8,6 +8,8 @@ signal augment_selected(level: int, candidates: Array, chosen_name: String, reas
 signal ultimate_used(ultimate_id: String, ultimate_name: String)
 signal conditional_skill_unlocked(skill_id: String, skill_name: String, payload: Dictionary)
 
+const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
+const DAMAGE_POISON_TRACKER := preload("res://src/systems/damage_poison_tracker.gd")
 const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
 const PROJECTILE_SCENE := preload("res://src/hero/HeroProjectile.tscn")
@@ -794,6 +796,14 @@ var bleed_damage_applied: int = 0
 var bleed_duration: float = 0.0
 var bleed_source: Node
 var possession_immunity_timer: float = 0.0
+var damage_poison_tracker = DAMAGE_POISON_TRACKER.new()
+var medusa_hit_stacks := 0
+var medusa_stone_threshold := int(MEDUSA_BEHAVIOR.STONE.initial_stacks)
+var petrify_timer := 0.0
+var petrify_anchor := Vector2.ZERO
+var petrify_release_slow := 1.0
+var petrify_release_slow_duration := 0.0
+var petrify_restore_tint := Color.WHITE
 var stun_timer: float = 0.0
 var stun_sprite_speed: float = 1.0
 var fear_timer: float = 0.0
@@ -862,6 +872,7 @@ func configure_profile(profile: Dictionary) -> void:
 	status_effect_events.clear()
 	_clear_bleed()
 	_clear_stun()
+	_clear_medusa_statuses()
 	set_meta("dullahan_soul_stacks", 0)
 	possession_immunity_timer = 0.0
 	fear_timer = 0.0
@@ -1544,6 +1555,7 @@ func _ready() -> void:
 	_attach_status_effect_visual("slow")
 	_attach_status_effect_visual("fear")
 	_attach_status_effect_visual("stun")
+	_attach_status_effect_visual("poison")
 	_apply_camera_limits()
 	_apply_profile_visual()
 	_apply_ground_shadow_profile()
@@ -1695,6 +1707,14 @@ func _attach_status_effect_visual(effect_type: String) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	var immobilized := petrify_timer > 0.0
+	var anchor := global_position
+	_physics_process_actions(delta)
+	if immobilized and current_hp > 0 and not is_dying:
+		global_position = anchor
+		velocity = Vector2.ZERO
+
+func _physics_process_actions(delta: float) -> void:
 	if current_hp <= 0:
 		velocity = Vector2.ZERO
 		return
@@ -1702,6 +1722,8 @@ func _physics_process(delta: float) -> void:
 	_update_hero_hit_flash(delta)
 	_update_poison(delta)
 	_update_bleed(delta)
+	_update_damage_poison(delta)
+	_tick_petrify(delta)
 	possession_immunity_timer = maxf(possession_immunity_timer - delta, 0.0)
 	if current_hp <= 0 or is_dying:
 		velocity = Vector2.ZERO
@@ -8093,6 +8115,9 @@ func _apply_ranged_boundary_escape(
 
 
 func _move_and_slide_with_obstacle_escape() -> void:
+	if petrify_timer > 0.0:
+		velocity = Vector2.ZERO
+		return
 	var intended_velocity := velocity
 	var intended_speed := intended_velocity.length()
 	var delta := maxf(float(get_physics_process_delta_time()), 0.001)
@@ -8238,6 +8263,10 @@ func _start_obstacle_escape(
 
 
 func _clamp_to_battlefield() -> void:
+	if petrify_timer > 0.0:
+		global_position = petrify_anchor
+		velocity = Vector2.ZERO
+		return
 	var clamped_position := position
 	var hit_edge := false
 
@@ -16849,6 +16878,73 @@ func _clear_bleed() -> void:
 	set_meta("bleed_active", false)
 
 
+func register_medusa_hit(duration: float, release_slow: float = 1.0, release_duration: float = 0.0) -> bool:
+	if current_hp <= 0 or is_dying:
+		return false
+	medusa_hit_stacks += 1
+	if medusa_hit_stacks < medusa_stone_threshold or petrify_timer > 0.0:
+		return false
+	if not apply_petrify(duration,release_slow,release_duration):
+		return false
+	medusa_hit_stacks = 0
+	medusa_stone_threshold += int(MEDUSA_BEHAVIOR.STONE.threshold_growth)
+	return true
+
+func apply_petrify(duration: float, release_slow: float = 1.0, release_duration: float = 0.0) -> bool:
+	if current_hp <= 0 or is_dying or petrify_timer > 0.0 or duration <= 0.0:
+		return false
+	record_status_effect_event("petrify")
+	petrify_timer = maxf(duration * (1.0 - get_status_resistance("petrify")),0.05)
+	petrify_anchor = global_position
+	petrify_release_slow = release_slow
+	petrify_release_slow_duration = release_duration
+	velocity = Vector2.ZERO
+	if is_instance_valid(hero_sprite):
+		petrify_restore_tint = hero_sprite.self_modulate
+		hero_sprite.self_modulate = petrify_restore_tint * MEDUSA_BEHAVIOR.STONE.tint
+	set_meta("petrify_active",true)
+	return true
+
+func _tick_petrify(delta: float) -> void:
+	if petrify_timer <= 0.0:
+		return
+	petrify_timer = maxf(petrify_timer - delta,0.0)
+	if petrify_timer <= 0.0:
+		if is_instance_valid(hero_sprite):
+			hero_sprite.self_modulate = petrify_restore_tint
+		set_meta("petrify_active",false)
+		if petrify_release_slow_duration > 0.0:
+			apply_slow(petrify_release_slow,petrify_release_slow_duration)
+
+func apply_damage_poison(duration: float, total_damage: int, source: Node) -> bool:
+	if current_hp <= 0 or is_dying:
+		return false
+	if not damage_poison_tracker.apply(source,total_damage,duration):
+		return false
+	record_status_effect_event("poison")
+	set_meta("poison_active",true)
+	return true
+
+func _update_damage_poison(delta: float) -> void:
+	if not damage_poison_tracker.entries.is_empty():
+		damage_poison_tracker.tick(self,delta)
+	set_meta("poison_active",poison_timer > 0.0 or not damage_poison_tracker.entries.is_empty())
+
+func take_recorded_poison_damage(amount: int, source: Node) -> bool:
+	# The stored budget already includes the original hit's mitigation.
+	return _take_damage_internal(amount,source,true,false,true)
+
+func _clear_medusa_statuses() -> void:
+	if petrify_timer > 0.0 and is_instance_valid(hero_sprite):
+		hero_sprite.self_modulate = petrify_restore_tint
+	petrify_timer = 0.0
+	petrify_release_slow_duration = 0.0
+	medusa_hit_stacks = 0
+	medusa_stone_threshold = int(MEDUSA_BEHAVIOR.STONE.initial_stacks)
+	damage_poison_tracker.clear()
+	set_meta("petrify_active",false)
+	set_meta("poison_active",poison_timer > 0.0)
+
 func can_receive_possession() -> bool:
 	return current_hp > 0 and not is_dying and fear_timer <= 0.0 and possession_immunity_timer <= 0.0
 
@@ -19943,7 +20039,8 @@ func _take_damage_internal(
 	amount: int,
 	source: Node,
 	ignore_invulnerability: bool,
-	grant_invulnerability: bool
+	grant_invulnerability: bool,
+	damage_already_mitigated: bool = false
 ) -> bool:
 	if (
 		amount <= 0
@@ -19958,7 +20055,8 @@ func _take_damage_internal(
 
 	var raw_damage := float(amount)
 	if (
-		hero_archetype == "alchemist_chemical"
+		not damage_already_mitigated
+		and hero_archetype == "alchemist_chemical"
 		and alchemist_equivalent_exchange_damage_reduction_timer > 0.0
 	):
 		var exchange_stacks := _get_alchemist_augment_stacks(
@@ -19971,12 +20069,12 @@ func _take_damage_internal(
 				0.0,
 				0.90
 			)
-	if hero_archetype == "grand_sage_astra":
+	if not damage_already_mitigated and hero_archetype == "grand_sage_astra":
 		raw_damage = _apply_sage_mana_conversion(raw_damage)
 	var remaining_damage := raw_damage
 	var absorbed_damage := 0
 
-	if hero_archetype == "sword_shield" and fighter_guard_active:
+	if not damage_already_mitigated and hero_archetype == "sword_shield" and fighter_guard_active:
 		fighter_guard_stored_damage += raw_damage
 		var damage_reduction := clampf(
 			float(ultimate_config.get("damage_reduction", 0.30))
@@ -20170,6 +20268,7 @@ func _begin_death_sequence() -> void:
 	is_dying = true
 	_clear_bleed()
 	_clear_stun()
+	_clear_medusa_statuses()
 	set_meta("dullahan_soul_stacks", 0)
 	possession_immunity_timer = 0.0
 	fear_timer = 0.0

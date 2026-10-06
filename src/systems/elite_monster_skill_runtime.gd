@@ -108,6 +108,9 @@ func _activate_passive_skill(
 	monster: Node2D,
 	skill: Dictionary
 ) -> void:
+	if String(skill.get("runtime", "")) == "monster" and monster.has_method("configure_elite_passive"):
+		monster.call("configure_elite_passive", skill)
+		return
 	match String(skill.get("id", "")):
 		"elite_bat_poison_fang":
 			monster.set_meta("elite_bat_poison_fang_active", true)

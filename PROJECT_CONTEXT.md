@@ -1,3 +1,8 @@
+## Medusa / Petrify / Damage Poison (2026-10-07)
+- Rare humanoid melee controller, cost 7. Per-unit pursuit speed grows 10%/second up to x2 and resets on actual damage. Monster collision/separation excluded. Hero-shared hits petrify at 10, then 11, 12 etc; 2.5s movement-only lock preserves attacks/skills and darkens body without dedicated FX.
+- Specials: 뱀의 가속 (actual speed *5% extra damage), 석상의 균열 (petrified target x1.5), 돌가루의 잔재 (after own petrify, 30% slow for 3s). Numerical defaults live in data.
+- Elite hidden poison: thin radius250 aura, spatial-grid updates every 0.2s, 0.35s buff grace. Medusa hits record actual HP/shield damage as independent source poison over5s; same source cannot stack/refresh, different sources coexist, source death does not remove poison. Ticks bypass invulnerability and repeat neither mitigation nor on-hit stacking. Existing poison pixel FX shared with legacy poison. See docs/MEDUSA.md.
+
 ## Hero Approach Against Stationary Turrets (2026-10-06)
 - Ranged-pressure sensing validates the true 850px radius after broad-phase spatial queries. After local avoidance, stationary targets outside the hero's attack range receive approach priority over pressure strafing; inside-range spacing and mobile-monster behavior remain. Kraken tentacles are pooled AnimatedSprite2D visuals, absent from monster registry/groups and collision/targeting.
 

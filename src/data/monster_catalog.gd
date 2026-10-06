@@ -16,12 +16,26 @@ const ORDER := [
 	"banshee",
 	"dullahan",
 	"kraken",
+	"medusa",
 ]
 
 const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd")
 
 const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
+const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const MONSTERS := {
+	"medusa": {
+		"id":"medusa", "name":"메두사", "role":"controller", "family":"medusa", "species":"humanoid", "grade":"rare", "rarity":"rare", "attack_type":"melee",
+		"base_cost":7.0, "summon_exp":7.0, "default_unlocked":false,
+		"description":"몬스터와 충돌·밀어내기 없음. 추적 중 초당 이속 +10%, 최대 2배. 실제 적중 시 초기화. 메두사 공용 적중 10스택에 2.5초 석화 (이동만 불가). 석화마다 필요 스택 +1.",
+		"base_stats":MEDUSA_BEHAVIOR.BASE,
+		"card_icon_path":"res://assets/art/monsters/medusa/frames/idle_01.png",
+		"ground_shadow":{"size":Vector2(66,20), "offset_y":39.0, "opacity":0.35},
+		"special_augment_ids":["medusa_serpent_momentum","medusa_stone_shatter","medusa_stone_residue"],
+		"elite_visual":MEDUSA_BEHAVIOR.ELITE_VISUAL,
+		"elite_skills":[{"runtime":"monster", "passive":true, "id":"elite_medusa_hidden_poison", "name":"숨겨진 독", "description":"반경 250 내 메두사에 중독 타격 부여. 실제 피해를 5초에 걸쳐 추가 적용. 같은 개체 중첩·갱신 없음, 다른 개체는 별도 중독.", "initial_cooldown":0.0, "cooldown":0.0, "radius":250.0, "duration":5.0, "refresh_interval":0.2, "buff_linger":0.35}],
+		"scene":preload("res://src/monsters/Medusa.tscn"),
+	},
 	"kraken": {
 		"id":"kraken", "name":"크라켄", "role":"ranged", "family":"kraken", "species":"beast", "grade":"legendary", "rarity":"legendary", "attack_type":"ranged",
 		"base_cost":15.0, "summon_exp":15.0, "default_unlocked":false,
@@ -747,6 +761,7 @@ const ROLE_LABELS := {
 }
 
 const SPECIES_LABELS := {
+	"humanoid": "인간형",
 	"beast": "짐승",
 	"liquid": "액체",
 	"undead": "언데드",
@@ -760,6 +775,7 @@ const ATTACK_TYPE_LABELS := {
 }
 
 const GRADE_LABELS := {
+	"rare": "희귀",
 	"legendary": "전설",
 	"advanced": "고급",
 	"normal": "일반",

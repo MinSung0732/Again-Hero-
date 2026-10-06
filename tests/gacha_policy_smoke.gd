@@ -22,8 +22,8 @@ func run() -> void:
 		check(data.weight == expected[id][0] and data.shard_min == expected[id][1] and data.shard_max == expected[id][2], "rarity policy " + id)
 		sum += data.weight
 	check(sum == 100, "weights total one hundred")
-	check(is_equal_approx(SHOP.get_effective_probability("common"), 3000.0/69.0) and is_equal_approx(SHOP.get_effective_probability("legendary"), 900.0/69.0), "three available pools normalized")
-	check(SHOP.get_effective_probability("rare") == 0 and SHOP.get_effective_probability("transcendent") == 0, "empty pool cannot win")
+	check(is_equal_approx(SHOP.get_effective_probability("common"), 3000.0/99.0) and is_equal_approx(SHOP.get_effective_probability("legendary"), 900.0/99.0), "four available pools normalized")
+	check(is_equal_approx(SHOP.get_effective_probability("rare"), 3000.0/99.0) and SHOP.get_effective_probability("transcendent") == 0, "Medusa enables rare pool, empty transcendent pool cannot win")
 	# Only in-memory pool sentinels: no pretend monsters in content or saves.
 	var real_pools: Dictionary = SHOP._rarity_pools
 	SHOP._rarity_pools = {"common":["fixture"],"uncommon":["fixture"],"rare":["fixture"],"legendary":["fixture"],"transcendent":["fixture"]}

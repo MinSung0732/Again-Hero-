@@ -37,6 +37,12 @@ func setup(new_target: Node, new_effect_type: String) -> void:
 					)
 					if texture != null:
 						frames.add_frame("fx", texture)
+			"poison":
+				frames.set_animation_speed("fx",10.0)
+				for index in range(1,5):
+					var texture := _load_texture("res://assets/art/effects/debuff/poison_frames/poison_%02d.png" % index)
+					if texture != null:
+						frames.add_frame("fx",texture)
 			"stun":
 				frames.set_animation_speed("fx", 10.0)
 				for index in range(1, 5):
@@ -78,6 +84,9 @@ func setup(new_target: Node, new_effect_type: String) -> void:
 			else:
 				scale = Vector2(0.30, 0.30)
 				position = Vector2(0.0, 18.0)
+		"poison":
+			scale = Vector2(0.34,0.34)
+			position = Vector2(0,-10)
 		"stun":
 			scale = Vector2(0.34, 0.34)
 			position = Vector2(0.0, -34.0)
@@ -120,6 +129,8 @@ func _process(delta: float) -> void:
 	match effect_type:
 		"slow":
 			active = _is_slow_active()
+		"poison":
+			active = bool(target.get_meta("poison_active",false))
 		"stun":
 			active = bool(target.get_meta("stun_active", false))
 		"fear":
