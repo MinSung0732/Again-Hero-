@@ -1,3 +1,6 @@
+## Gacha Door Palette Binding (2026-10-06)
+- Opening uses the highest rarity actually present in the reward batch; empty content pools remain excluded. Authored door sheet names retain the old palette order: monster_uncommon is green, monster_legendary yellow, monster_transcendent purple. ShopCatalog binds uncommon→monster_legendary, legendary→monster_transcendent, transcendent→monster_uncommon by actual pixels, so opening and final flash match current white/yellow/blue/purple/green rarity colors. Original art is unchanged.
+
 ## Localtest Monster Access (2026-10-06)
 - Localtest's isolated guest scope reports every MonsterCatalog entry unlocked, including old test saves and future content. Collection read override does not rewrite files or add shards/levels. Guard requires active localtest, matching test_directory, no account owner and no tutorial preview. Normal accounts/guests and tutorial preview retain normal unlock rules; normaltest reset/cloud isolation unchanged.
 

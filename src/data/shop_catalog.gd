@@ -93,6 +93,8 @@ const RARITY_ORDER := [
 	"transcendent",
 ]
 
+# Authored sheet names use the old palette order: uncommon=green,
+# legendary=yellow, transcendent=purple. Bind by actual light color.
 const RARITIES := {
 	"common": {
 		"label": "일반",
@@ -110,7 +112,7 @@ const RARITIES := {
 		"shard_min": 6,
 		"shard_max": 15,
 		"color": Color("ffd84f"),
-		"door_sheet_path": "res://assets/art/effects/gatcha/gacha_gold_light/monster_uncommon/monster_uncommon_sheet.png",
+		"door_sheet_path": "res://assets/art/effects/gatcha/gacha_gold_light/monster_legendary/monster_legendary_sheet.png",
 	},
 	"rare": {
 		"label": "희귀",
@@ -128,7 +130,7 @@ const RARITIES := {
 		"shard_min": 2,
 		"shard_max": 4,
 		"color": Color("bc70ff"),
-		"door_sheet_path": "res://assets/art/effects/gatcha/gacha_gold_light/monster_legendary/monster_legendary_sheet.png",
+		"door_sheet_path": "res://assets/art/effects/gatcha/gacha_gold_light/monster_transcendent/monster_transcendent_sheet.png",
 	},
 	"transcendent": {
 		"label": "초월",
@@ -137,7 +139,7 @@ const RARITIES := {
 		"shard_min": 1,
 		"shard_max": 2,
 		"color": Color("61e887"),
-		"door_sheet_path": "res://assets/art/effects/gatcha/gacha_gold_light/monster_transcendent/monster_transcendent_sheet.png",
+		"door_sheet_path": "res://assets/art/effects/gatcha/gacha_gold_light/monster_uncommon/monster_uncommon_sheet.png",
 		"unlock_on_first_draw": true,
 	},
 }
