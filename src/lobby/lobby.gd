@@ -2860,12 +2860,18 @@ func _rebuild_shop_list() -> void:
 			else "%d~%d" % [min_shards, max_shards]
 		)
 		rate_lines.append(
-			"%s %.0f%% · 조각 %s" % [
+			"%s 목표 %.0f%% · 조각 %s" % [
 				SHOP_CATALOG.get_rarity_label(rarity_id),
 				float(rarity_data.get("weight", 0.0)),
 				shard_text,
 			]
 		)
+		if SHOP_CATALOG.get_monster_pool(rarity_id).is_empty():
+			rate_lines[-1] += " · 제작 준비 중"
+		else:
+			rate_lines[-1] += " · 현재 %.0f%%" % SHOP_CATALOG.get_effective_probability(rarity_id)
+		if bool(rarity_data.get("unlock_on_first_draw", false)):
+			rate_lines[-1] += "\n첫 획득 즉시 해금 · 이후 조각 지급"
 
 	shop_rates_text.text = "\n\n".join(rate_lines)
 	shop_status_label.text = "로컬 테스트 · 골드 차감 없음" if LocalTestMode.active else "소환 비용만큼 골드가 사용됩니다."
@@ -2932,11 +2938,11 @@ func _refresh_shop_summon_history() -> void:
 		if converted > 0:
 			unlock_text += " → 연구 포인트 +%d" % converted
 		lines.append(
-			"%03d. %s [%s]  +%d 조각%s" % [
+			"%03d. %s [%s]  %s%s" % [
 				display_number,
 				_team_monster_name(monster_id),
 				SHOP_CATALOG.get_rarity_label(rarity_id),
-				maxi(int(entry.get("shards", 0)), 0),
+				"첫 획득" if bool(entry.get("first_draw_unlock", false)) else "+%d 조각" % maxi(int(entry.get("shards", 0)), 0),
 				unlock_text,
 			]
 		)
@@ -3029,14 +3035,7 @@ func _roll_monster_shard() -> Dictionary:
 	if rarity_id.is_empty():
 		return {}
 
-	var candidates: Array = []
-	for raw_id in MONSTER_CATALOG.ORDER:
-		var monster_id := String(raw_id)
-		var data = MONSTER_CATALOG.MONSTERS.get(monster_id, {})
-		if typeof(data) != TYPE_DICTIONARY:
-			continue
-		if String(data.get("rarity", "")) == rarity_id:
-			candidates.append(monster_id)
+	var candidates := SHOP_CATALOG.get_monster_pool(rarity_id)
 
 	if candidates.is_empty():
 		return {}
@@ -3052,33 +3051,11 @@ func _roll_monster_shard() -> Dictionary:
 		"monster_id": selected_id,
 		"rarity": rarity_id,
 		"shards": randi_range(min_shards, max_shards),
+		"source": "summon",
 	}
 
 func _roll_shop_rarity() -> String:
-	var total_weight := 0.0
-	for raw_rarity in SHOP_CATALOG.RARITY_ORDER:
-		var rarity_data := SHOP_CATALOG.get_rarity(String(raw_rarity))
-		total_weight += maxf(float(rarity_data.get("weight", 0.0)), 0.0)
-
-	if total_weight <= 0.0:
-		return ""
-
-	var roll := randf() * total_weight
-	var cumulative := 0.0
-	var last_eligible := ""
-
-	for raw_rarity in SHOP_CATALOG.RARITY_ORDER:
-		var rarity_id := String(raw_rarity)
-		var rarity_data := SHOP_CATALOG.get_rarity(rarity_id)
-		var weight := maxf(float(rarity_data.get("weight", 0.0)), 0.0)
-		if weight <= 0.0:
-			continue
-		last_eligible = rarity_id
-		cumulative += weight
-		if roll < cumulative:
-			return rarity_id
-
-	return last_eligible
+	return SHOP_CATALOG.roll_rarity(randf())
 
 func _setup_team_preview() -> void:
 	team_catalog_ids.clear()

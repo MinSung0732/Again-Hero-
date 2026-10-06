@@ -1,6 +1,9 @@
 extends RefCounted
 class_name ShopCatalog
 
+const MONSTERS := preload("res://src/data/monster_catalog.gd")
+static var _rarity_pools: Dictionary = {}
+
 const TEST_GOLD := 99999
 const SINGLE_DRAW_COST := 100
 const MULTI_DRAW_COST := 1000
@@ -94,7 +97,7 @@ const RARITIES := {
 	"common": {
 		"label": "일반",
 		"rank": 0,
-		"weight": 100.0,
+		"weight": 30.0,
 		"shard_min": 2,
 		"shard_max": 5,
 		"color": Color("f4f4f4"),
@@ -103,7 +106,7 @@ const RARITIES := {
 	"uncommon": {
 		"label": "고급",
 		"rank": 1,
-		"weight": 0.0,
+		"weight": 30.0,
 		"shard_min": 6,
 		"shard_max": 15,
 		"color": Color("ffd84f"),
@@ -112,7 +115,7 @@ const RARITIES := {
 	"rare": {
 		"label": "희귀",
 		"rank": 2,
-		"weight": 0.0,
+		"weight": 30.0,
 		"shard_min": 3,
 		"shard_max": 8,
 		"color": Color("54a8ff"),
@@ -121,20 +124,21 @@ const RARITIES := {
 	"legendary": {
 		"label": "전설",
 		"rank": 3,
-		"weight": 0.0,
-		"shard_min": 1,
-		"shard_max": 3,
+		"weight": 9.0,
+		"shard_min": 2,
+		"shard_max": 4,
 		"color": Color("bc70ff"),
 		"door_sheet_path": "res://assets/art/effects/gatcha/gacha_gold_light/monster_legendary/monster_legendary_sheet.png",
 	},
 	"transcendent": {
 		"label": "초월",
 		"rank": 4,
-		"weight": 0.0,
+		"weight": 1.0,
 		"shard_min": 1,
-		"shard_max": 1,
+		"shard_max": 2,
 		"color": Color("61e887"),
 		"door_sheet_path": "res://assets/art/effects/gatcha/gacha_gold_light/monster_transcendent/monster_transcendent_sheet.png",
+		"unlock_on_first_draw": true,
 	},
 }
 
@@ -181,3 +185,49 @@ static func get_package(package_id: String) -> Dictionary:
 		if String(data.get("id", "")) == package_id:
 			return data.duplicate(true)
 	return {}
+
+
+static func get_monster_pool(rarity_id: String) -> Array:
+	if _rarity_pools.is_empty():
+		for id in RARITY_ORDER:
+			_rarity_pools[id] = []
+		for id in MONSTERS.ORDER:
+			var rarity := MONSTERS.get_rarity(id)
+			if _rarity_pools.has(rarity):
+				_rarity_pools[rarity].append(id)
+		for pool in _rarity_pools.values():
+			pool.make_read_only()
+	return _rarity_pools.get(rarity_id, [])
+
+
+static func get_effective_weight(rarity_id: String) -> float:
+	if get_monster_pool(rarity_id).is_empty():
+		return 0.0
+	return maxf(float(get_rarity(rarity_id).get("weight", 0.0)), 0.0)
+
+
+static func get_effective_probability(rarity_id: String) -> float:
+	var total := 0.0
+	for id in RARITY_ORDER:
+		total += get_effective_weight(id)
+	return get_effective_weight(rarity_id) * 100.0 / total if total > 0.0 else 0.0
+
+
+static func roll_rarity(unit_roll: float) -> String:
+	var total := 0.0
+	for id in RARITY_ORDER:
+		total += get_effective_weight(id)
+	if total <= 0.0:
+		return ""
+	var roll := clampf(unit_roll, 0.0, 1.0) * total
+	var cumulative := 0.0
+	var last := ""
+	for id in RARITY_ORDER:
+		var weight := get_effective_weight(id)
+		if weight <= 0.0:
+			continue
+		last = id
+		cumulative += weight
+		if roll < cumulative:
+			return id
+	return last

@@ -88,7 +88,8 @@ func run() -> void:
 	var converted := 0
 	check(history.size() == 11, "11 individual results retained")
 	for entry in history:
-		check(entry.shards >= 2 and entry.shards <= 5 and entry.research_points == entry.shards, "draw range and converted history")
+		var rarity: Dictionary = SHOP.get_rarity(entry.rarity)
+		check(entry.shards >= rarity.shard_min and entry.shards <= rarity.shard_max and entry.research_points == entry.shards, "draw range and converted history")
 		converted += int(entry.research_points)
 	check(PROGRESS.get_research_points() - before == converted, "batch research award exact")
 	var overlay: Control = lobby.gacha_reveal_overlay

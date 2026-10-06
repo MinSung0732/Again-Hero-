@@ -2,6 +2,7 @@ extends RefCounted
 class_name MonsterCollectionStore
 const ACCOUNT_SCOPE := preload("res://src/systems/account_save_scope.gd")
 
+const SHOP_CATALOG := preload("res://src/data/shop_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const SAVE_PATH := "user://monster_collection.cfg"
 const PROGRESS_PATH := "user://stage_progress.cfg"
@@ -252,19 +253,38 @@ static func award_shard_batch(rolls: Array, gold_cost: int = 0, tutorial_draw: b
 		if not state.has(monster_id) or amount <= 0:
 			return {"success": false, "state": load_state(), "research_points": 0, "awards": []}
 		var entry: Dictionary = state[monster_id]
-		var was_unlocked := bool(entry.unlocked)
-		var points := 0
-		if is_maxed(monster_id, state):
-			points = amount * MONSTER_CATALOG.SHARD_RESEARCH_POINTS
-		else:
-			entry.shards = int(entry.shards) + amount
-			if int(entry.shards) >= MONSTER_CATALOG.get_shards_required(monster_id):
-				entry.unlocked = true
-		total_points += points
-		var award: Dictionary = roll.duplicate()
-		award["research_points"] = points
-		award["unlocked"] = not was_unlocked and bool(entry.unlocked)
+		var award := _apply_draw_reward(
+			entry, roll, SHOP_CATALOG.get_rarity(MONSTER_CATALOG.get_rarity(monster_id)),
+			MONSTER_CATALOG.get_shards_required(monster_id), is_maxed(monster_id, state)
+		)
+		total_points += int(award.research_points)
 		awards.append(award)
 	var success := _save_with_research(state, total_points, gold_cost, tutorial_draw)
 	return {"success": success, "state": state if success else load_state(),
 		"research_points": total_points if success else 0, "awards": awards if success else []}
+
+
+# Pure reward calculation also supports future rarities without shipping fake monsters.
+static func _apply_draw_reward(entry: Dictionary, roll: Dictionary, rarity: Dictionary, required: int, maxed: bool) -> Dictionary:
+	var award: Dictionary = roll.duplicate()
+	var was_unlocked := bool(entry.get("unlocked", false))
+	var first_unlock := (
+		not was_unlocked
+		and String(roll.get("source", "")) == "summon"
+		and bool(rarity.get("unlock_on_first_draw", false))
+	)
+	var amount := int(roll.get("shards", 0))
+	var points := 0
+	if first_unlock:
+		entry.unlocked = true
+		award["shards"] = 0
+		award["first_draw_unlock"] = true
+	elif maxed:
+		points = amount * MONSTER_CATALOG.SHARD_RESEARCH_POINTS
+	else:
+		entry.shards = int(entry.get("shards", 0)) + amount
+		if int(entry.shards) >= required:
+			entry.unlocked = true
+	award["research_points"] = points
+	award["unlocked"] = not was_unlocked and bool(entry.get("unlocked", false))
+	return award

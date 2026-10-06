@@ -4,6 +4,9 @@ class_name GachaRevealOverlay
 signal confirmed
 signal retry_requested(draw_count: int)
 
+const CARD_GLOW_SHADER := preload("res://src/ui/gacha_card_glow.gdshader")
+static var _card_glow_materials: Dictionary = {}
+
 const SHOP_CATALOG := preload("res://src/data/shop_catalog.gd")
 const REVEAL_AURA := preload("res://src/ui/gacha_reveal_aura.gd")
 const CONVERSION_FEEDBACK := preload("res://src/ui/gacha_conversion_feedback.gd")
@@ -416,7 +419,7 @@ func _create_result_card(entry: Dictionary) -> Control:
 
 	var shard_label := Label.new()
 	shard_label.name = "RewardAmount"
-	shard_label.text = "+%d 조각" % maxi(int(entry.get("shards", 0)), 0)
+	shard_label.text = "첫 획득 · 즉시 해금" if bool(entry.get("first_draw_unlock", false)) else "+%d 조각" % maxi(int(entry.get("shards", 0)), 0)
 	shard_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shard_label.add_theme_font_size_override("font_size", 20)
 	shard_label.add_theme_color_override("font_color", Color("f6e3aa"))
@@ -553,6 +556,18 @@ func _add_frame_texture(target: Control, path: String, tint: Color = Color.WHITE
 	frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	frame.modulate = tint
+	if path == CARD_FRAME_PATH:
+		# Five shared materials, GPU time animation, no per-card process/tweens.
+		var key := tint.to_html()
+		if not _card_glow_materials.has(key):
+			var glow := ShaderMaterial.new()
+			glow.shader = CARD_GLOW_SHADER
+			glow.set_shader_parameter("rarity_color", tint)
+			glow.set_shader_parameter("pulse_phase", float(_card_glow_materials.size()) * 0.7)
+			_card_glow_materials[key] = glow
+		frame.name = "RarityGlowFrame"
+		frame.modulate = Color.WHITE
+		frame.material = _card_glow_materials[key]
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	decoration.add_child(frame)
 

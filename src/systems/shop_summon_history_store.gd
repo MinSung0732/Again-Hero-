@@ -51,13 +51,15 @@ static func _normalize_entry(raw_entry) -> Dictionary:
 	var monster_id := String(raw_entry.get("monster_id", ""))
 	var rarity_id := String(raw_entry.get("rarity", ""))
 	var shards := maxi(int(raw_entry.get("shards", 0)), 0)
-	if monster_id.is_empty() or rarity_id.is_empty() or shards <= 0:
+	var first_unlock := rarity_id == "transcendent" and bool(raw_entry.get("first_draw_unlock", false)) and bool(raw_entry.get("unlocked", false))
+	if monster_id.is_empty() or rarity_id.is_empty() or (shards <= 0 and not first_unlock):
 		return {}
 
 	return {
 		"monster_id": monster_id,
 		"rarity": rarity_id,
 		"shards": shards,
+		"first_draw_unlock": first_unlock,
 		"unlocked": bool(raw_entry.get("unlocked", false)),
 		"research_points": maxi(int(raw_entry.get("research_points", 0)), 0),
 	}

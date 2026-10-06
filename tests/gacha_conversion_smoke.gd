@@ -1,6 +1,7 @@
 extends SceneTree
 
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
+const SHOP := preload("res://src/data/shop_catalog.gd")
 const STORE := preload("res://src/systems/monster_collection_store.gd")
 const CATALOG := preload("res://src/data/monster_catalog.gd")
 const PROGRESS := preload("res://src/systems/stage_progress.gd")
@@ -42,7 +43,7 @@ func run() -> void:
 	var total := 0
 	for entry in history:
 		total += int(entry.research_points)
-	check(total >= 22 and total <= 55 and PROGRESS.get_research_points() == 100 + total, "exact conversion once")
+	check(total >= 22 and total <= 165 and PROGRESS.get_research_points() == 100 + total, "exact conversion once")
 	lobby._rebuild_shop_list()
 	check(lobby.shop_rates_text.text.contains("조각 2~5"), "rates UI uses updated common range")
 	var overlay: Control = lobby.gacha_reveal_overlay
@@ -72,8 +73,10 @@ func run() -> void:
 		check(not roll.is_empty(), "valid roll")
 		if not roll.is_empty():
 			seen[roll.monster_id] = true
-			check(roll.shards >= 2 and roll.shards <= 5, "common random draw within 2..5")
-			shard_amounts[int(roll.shards)] = true
+			var rarity: Dictionary = SHOP.get_rarity(roll.rarity)
+			check(roll.shards >= rarity.shard_min and roll.shards <= rarity.shard_max, "draw within rarity range")
+			if roll.rarity == "common":
+				shard_amounts[int(roll.shards)] = true
 	for amount in range(2, 6):
 		check(shard_amounts.has(amount), "inclusive shard amount reachable: " + str(amount))
 	for monster_id in CATALOG.ORDER:
