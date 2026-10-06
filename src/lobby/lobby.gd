@@ -26,6 +26,12 @@ const DEMON_SKILL_LOADOUT_STORE := preload(
 	"res://src/systems/demon_skill_loadout_store.gd"
 )
 
+const STAMINA := preload("res://src/systems/stamina_store.gd")
+const STAMINA_RULES := preload("res://src/data/stamina_catalog.gd")
+var stamina_view: RefCounted
+var _battle_entry_pending := false
+var _stamina_entry: Dictionary = {}
+
 const BATTLE_SCENE_PATH := "res://src/main/Main.tscn"
 const TEAM_MAX_SLOTS := 3
 const HERO_PORTRAIT_REFERENCE_PATH := "res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png"
@@ -290,8 +296,11 @@ func _process(delta: float) -> void:
 		var packed = ResourceLoader.load_threaded_get(_scene_load_path)
 		_scene_load_pending = false
 		if packed is PackedScene:
-			get_tree().change_scene_to_packed(packed)
+			var error := get_tree().change_scene_to_packed(packed)
+			if error != OK:
+				_refund_failed_stamina_entry()
 			return
+		_refund_failed_stamina_entry()
 		enter_stage_button.disabled = false
 		_refresh_stage_card()
 	elif (
@@ -299,6 +308,7 @@ func _process(delta: float) -> void:
 		or status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE
 	):
 		_scene_load_pending = false
+		_refund_failed_stamina_entry()
 		enter_stage_button.disabled = false
 		_refresh_stage_card()
 
@@ -337,6 +347,8 @@ func _ready() -> void:
 	PIXEL_PANEL_SKIN.apply_tree(self)
 	main_modes_view = load("res://src/ui/lobby_main_modes_view.gd").new()
 	main_modes_view.install(self)
+	stamina_view = load("res://src/ui/lobby_stamina_view.gd").new()
+	stamina_view.install(self)
 
 	_switch_tab("main")
 	_refresh_header()
@@ -4391,6 +4403,8 @@ func _team_monster_cost(monster_id: String) -> float:
 
 func _refresh_header() -> void:
 	_refresh_shop_summon_buttons()
+	if stamina_view != null:
+		stamina_view.refresh()
 	# The shop has its own full-width storefront; retain the shared frame elsewhere.
 	$SafeArea/Layout/Content/ContentFrame.visible = current_tab != "shop"
 	var state := STAGE_PROGRESS.load_state()
@@ -4782,7 +4796,8 @@ func _refresh_stage_card() -> void:
 		repeat_label.text = "반복 보상\n×%.2f" % run_reward_multiplier
 
 	enter_stage_button.disabled = not unlocked
-	enter_stage_button.text = "던전 입장" if unlocked else "스테이지 잠김"
+	var entry_cost: int = 0 if LocalTestMode.active or TutorialFlow.active() else STAMINA_RULES.ENTRY_COST
+	enter_stage_button.text = ("던전 입장  ·  스테미너 %d" % entry_cost) if unlocked else "스테이지 잠김"
 
 	_refresh_stage_nav_buttons()
 
@@ -5002,7 +5017,20 @@ func _load_texture(path: String) -> Texture2D:
 
 	return null
 
+func _refund_failed_stamina_entry() -> void:
+	if not _battle_entry_pending:
+		return
+	if not STAMINA.refund_failed_entry(_stamina_entry):
+		push_warning("입장 실패 스테미너 복원 저장 실패")
+	_battle_entry_pending = false
+	_stamina_entry = {}
+	_refresh_stage_card()
+	if stamina_view != null:
+		stamina_view.refresh()
+
 func _enter_selected_stage() -> void:
+	if _battle_entry_pending or _scene_load_pending or SceneTransition.is_transitioning():
+		return
 	if main_modes_view != null and main_modes_view.blocks_entry():
 		return
 	if stage_ids.is_empty():
@@ -5017,7 +5045,14 @@ func _enter_selected_stage() -> void:
 	if not STAGE_PROGRESS.is_stage_unlocked(stage_number):
 		return
 
-	STAGE_PROGRESS.set_current_stage(stage_id)
+	if not ResourceLoader.exists(BATTLE_SCENE_PATH):
+		return
+	var exempt := LocalTestMode.active or TutorialFlow.active()
+	_stamina_entry = STAMINA.try_enter(stage_id, exempt)
+	if not bool(_stamina_entry.get("success", false)):
+		stamina_view.show_info("스테미너가 부족합니다." if _stamina_entry.get("reason") == "insufficient" else "저장을 확인하고 다시 시도해 주세요.")
+		return
+	_battle_entry_pending = true
 	_begin_threaded_scene_change(BATTLE_SCENE_PATH)
 
 
@@ -5041,7 +5076,8 @@ func _begin_threaded_scene_change(path: String) -> void:
 
 	var error := ResourceLoader.load_threaded_request(path, "PackedScene")
 	if error != OK:
-		get_tree().change_scene_to_file(path)
+		if get_tree().change_scene_to_file(path) != OK:
+			_refund_failed_stamina_entry()
 		return
 
 	_scene_load_path = path

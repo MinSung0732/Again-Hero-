@@ -1,5 +1,8 @@
 extends Control
 
+const STAMINA := preload("res://src/systems/stamina_store.gd")
+var _stamina_entry_pending := false
+
 signal demon_action_choice_selected(context: String, choice_id: String)
 
 const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
@@ -1494,8 +1497,7 @@ func _on_settings_sfx_mute_toggled(enabled: bool) -> void:
 
 
 func _on_pause_restart_pressed() -> void:
-	pause_menu.hide()
-	get_tree().reload_current_scene()
+	_restart_with_stamina(String(battle.current_stage_id))
 
 func _on_stage_event_triggered(
 	event_type: String,
@@ -3431,8 +3433,8 @@ func _populate_run_result_analysis() -> void:
 	result_analysis.text = "Run 분석을 불러오지 못했습니다."
 
 func _on_next_stage_pressed() -> void:
-	if battle.go_to_next_stage():
-		get_tree().reload_current_scene()
+	if battle.can_go_to_next_stage():
+		_restart_with_stamina(String(battle.current_stage_data.get("next_stage_id", "")))
 
 func _on_lobby_pressed() -> void:
 	TutorialFlow.returning_to_lobby()
@@ -3464,4 +3466,43 @@ func _begin_threaded_scene_change(path: String, message: String) -> void:
 	_scene_load_pending = true
 
 func _on_restart_pressed() -> void:
-	get_tree().reload_current_scene()
+	_restart_with_stamina(String(battle.current_stage_id))
+
+func _restart_with_stamina(stage_id: String) -> void:
+	if _stamina_entry_pending or _scene_load_pending or SceneTransition.is_transitioning():
+		return
+	var entry := STAMINA.try_enter(stage_id, LocalTestMode.active or TutorialFlow.active())
+	if not bool(entry.get("success", false)):
+		var message := "스테미너가 부족합니다. 로비의 + 버튼에서 충전 상품을 확인하세요." if entry.get("reason") == "insufficient" else "저장을 확인하고 다시 시도해 주세요."
+		_show_stamina_notice(message)
+		return
+	_stamina_entry_pending = true
+	var error := get_tree().reload_current_scene()
+	if error != OK:
+		STAMINA.refund_failed_entry(entry)
+		_stamina_entry_pending = false
+		_show_stamina_notice("전투를 불러오지 못했습니다. 다시 시도해 주세요.")
+
+func _show_stamina_notice(message: String) -> void:
+	var panel := get_node_or_null("StaminaNotice") as AcceptDialog
+	if panel == null:
+		panel = AcceptDialog.new()
+		panel.name = "StaminaNotice"
+		panel.title = "스테미너"
+		panel.dialog_autowrap = true
+		panel.ok_button_text = "확인"
+		panel.add_theme_font_size_override("font_size", 27)
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color("160e24")
+		style.border_color = Color("eac14d")
+		style.set_border_width_all(3)
+		style.set_content_margin_all(20)
+		panel.add_theme_stylebox_override("panel", PIXEL_PANEL_SKIN.skin_style(style))
+		var button := panel.get_ok_button()
+		button.add_theme_font_size_override("font_size", 27)
+		button.custom_minimum_size.y = 72
+		for state in ["normal", "hover", "pressed"]:
+			button.add_theme_stylebox_override(state, PIXEL_PANEL_SKIN.skin_style(style))
+		add_child(panel)
+	panel.dialog_text = message
+	panel.popup_centered(Vector2i(700, 230))
