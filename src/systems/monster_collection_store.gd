@@ -11,6 +11,10 @@ static func load_state() -> Dictionary:
 	var config := ConfigFile.new()
 	var has_saved_data := ACCOUNT_SCOPE.load_config(config, SAVE_PATH) == OK
 	var result: Dictionary = {}
+	# View-only override in the isolated sandbox also covers old saves/new content.
+	var tree := Engine.get_main_loop() as SceneTree
+	var mode := tree.root.get_node_or_null("LocalTestMode") if tree != null else null
+	var unlock_all := mode != null and bool(mode.call("has_all_monsters_unlocked"))
 
 	for raw_id in MONSTER_CATALOG.ORDER:
 		var monster_id := String(raw_id)
@@ -55,7 +59,7 @@ static func load_state() -> Dictionary:
 				0
 			)
 
-		if shards >= required:
+		if unlock_all or shards >= required:
 			unlocked = true
 		level = clampi(level, 0, MONSTER_CATALOG.MAX_UPGRADE_LEVEL)
 

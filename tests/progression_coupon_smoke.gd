@@ -77,6 +77,18 @@ func run() -> void:
 	check(SCOPE.user_id.is_empty() and SCOPE.guest_directory == mode.test_directory, "test isolated namespace")
 	check(PROGRESS.is_stage_unlocked(10) and PROGRESS.get_gold() == 99999 and PROGRESS.get_research_points() == 99999, "test funds/all stages")
 	check(not root.get_node("CloudStore").ready_for_play, "test cannot upload")
+	check(COLLECTION.get_unlocked_ids() == preload("res://src/data/monster_catalog.gd").ORDER, "localtest all catalog monsters unlocked")
+	var legacy_test := COLLECTION.load_state()
+	legacy_test.banshee = {"unlocked":false,"shards":7,"level":2}
+	check(COLLECTION.save_state(legacy_test), "seed old locked localtest entry")
+	var refreshed := COLLECTION.load_state()
+	check(refreshed.banshee.unlocked and refreshed.banshee.shards == 7 and refreshed.banshee.level == 2, "old localtest unlock without shard or level inflation")
+	var raw_test := ConfigFile.new()
+	SCOPE.load_config(raw_test,COLLECTION.SAVE_PATH)
+	check(not raw_test.get_value("monsters","banshee_unlocked",true), "read-only override does not rewrite save")
+	mode.tutorial_preview = true
+	check(not mode.has_all_monsters_unlocked() and not COLLECTION.is_unlocked("banshee"), "tutorial preview excluded")
+	mode.tutorial_preview = false
 	check(await mode.apply_coupon("normaltest"), "return normal/reset")
 	check(not mode.active and PROGRESS.get_gold() == 0 and PROGRESS.get_research_points() == 0 and not PROGRESS.is_stage_unlocked(2), "normal values reset")
 	check(COLLECTION.get_unlocked_ids() == ["slime","spider","orc"], "normal starter monsters")
@@ -103,6 +115,9 @@ func run() -> void:
 	var hex := Crypto.new().generate_random_bytes(16).hex_encode()
 	var id := "%s-%s-%s-%s-%s" % [hex.substr(0,8),hex.substr(8,4),hex.substr(12,4),hex.substr(16,4),hex.substr(20,12)]
 	check(SCOPE.select_account(id), "isolated normal account")
+	mode.active = true
+	check(not mode.has_all_monsters_unlocked() and not COLLECTION.is_unlocked("banshee"), "active flag cannot unlock normal account")
+	mode.active = false
 	var account_folder := SCOPE.resolve("user://save_bundle.json").get_base_dir()
 	check(SCOPE.install(cloud.payload,7), "seed normal account")
 	cloud.ready_for_play = true

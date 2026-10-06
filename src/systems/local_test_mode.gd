@@ -187,3 +187,11 @@ func tutorial_operation(action: String) -> Dictionary:
 	if SCOPE.save_config(progress, "user://stage_progress.cfg") != OK:
 		return {}
 	return {"ok": true, "status": status, "reward_claimed": claimed}
+
+
+func has_all_monsters_unlocked() -> bool:
+	return (
+		active and not tutorial_preview
+		and SCOPE.user_id.is_empty()
+		and SCOPE.guest_directory == test_directory
+	)

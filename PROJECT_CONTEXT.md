@@ -1,3 +1,6 @@
+## Localtest Monster Access (2026-10-06)
+- Localtest's isolated guest scope reports every MonsterCatalog entry unlocked, including old test saves and future content. Collection read override does not rewrite files or add shards/levels. Guard requires active localtest, matching test_directory, no account owner and no tutorial preview. Normal accounts/guests and tutorial preview retain normal unlock rules; normaltest reset/cloud isolation unchanged.
+
 ## Five-Rarity Summon Policy (2026-10-06)
 - Target weights common/uncommon/rare/legendary/transcendent = 30/30/30/9/1. Empty content pools cannot win; current common/uncommon effective chances are 50/50. Rates UI distinguishes target/current/preparation. Adding a monster in a missing rarity automatically activates that rarity and recalculates effective odds without fake content/rewards.
 - Transcendent first summon unlocks the character immediately, awards zero shards, and persists first_draw_unlock in reward history. Later summons give 1–2 shards. Legendary gives 2–4 shards and requires the existing 25-shard unlock threshold. Common/uncommon/rare retain 2–5/6–15/3–8 shards and 30-shard thresholds. Unlocking still does not consume shards; upgrade rules unchanged.
