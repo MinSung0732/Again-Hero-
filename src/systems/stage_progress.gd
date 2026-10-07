@@ -48,7 +48,9 @@ static func complete_stage(
 ) -> Dictionary:
 	var state := load_state()
 	var config := ConfigFile.new()
-	ACCOUNT_SCOPE.load_config(config, SAVE_PATH)
+	var load_error := ACCOUNT_SCOPE.load_config(config, SAVE_PATH)
+	if load_error != OK and load_error != ERR_FILE_NOT_FOUND:
+		return {"success": false, "reward": 0, "gold_reward": 0, "easy_all_clear_gold": 0}
 
 	var was_cleared := bool(config.get_value("cleared", stage_id, false))
 	var reward_claimed := bool(config.get_value("reward_claimed", stage_id, false))
@@ -60,6 +62,26 @@ static func complete_stage(
 		granted_reward = first_clear_reward
 		state["research_points"] = int(state.get("research_points", 0)) + granted_reward
 		config.set_value("reward_claimed", stage_id, true)
+
+	# All currently playable stages are easy. Separate flags preserve legacy
+	# research claims and allow previously cleared stages to earn new gold once.
+	var gold_reward := 0
+	var all_clear_gold := 0
+	if STAGE_CATALOG.STAGES.has(stage_id):
+		if not bool(config.get_value("gold_reward_claimed", stage_id, false)):
+			gold_reward = int(STAGE_CATALOG.CLEAR_GOLD_REWARDS.stage_first_clear)
+			config.set_value("gold_reward_claimed", stage_id, true)
+		if not bool(config.get_value("milestone_reward_claimed", "easy_all_clear", false)):
+			var all_cleared := not STAGE_CATALOG.ORDER.is_empty()
+			for required_stage in STAGE_CATALOG.ORDER:
+				if not bool(config.get_value("cleared", required_stage, false)):
+					all_cleared = false
+					break
+			if all_cleared:
+				all_clear_gold = int(STAGE_CATALOG.CLEAR_GOLD_REWARDS.easy_all_clear)
+				config.set_value("milestone_reward_claimed", "easy_all_clear", true)
+	var gold := maxi(int(config.get_value("meta", "gold", 0)), 0)
+	config.set_value("meta", "gold", gold + gold_reward + all_clear_gold)
 
 	if not next_stage_id.is_empty() and next_stage_number > 0:
 		state["highest_unlocked_stage"] = maxi(
@@ -83,12 +105,15 @@ static func complete_stage(
 		"research_points",
 		int(state.get("research_points", 0))
 	)
-	ACCOUNT_SCOPE.save_config(config, SAVE_PATH)
+	var save_error := ACCOUNT_SCOPE.save_config(config, SAVE_PATH)
 
 	return {
+		"success": save_error == OK,
 		"was_cleared": was_cleared,
-		"first_clear": not was_cleared,
-		"reward": granted_reward,
+		"first_clear": not was_cleared and save_error == OK,
+		"reward": granted_reward if save_error == OK else 0,
+		"gold_reward": gold_reward if save_error == OK else 0,
+		"easy_all_clear_gold": all_clear_gold if save_error == OK else 0,
 		"research_points": int(state.get("research_points", 0)),
 		"highest_unlocked_stage": int(state.get("highest_unlocked_stage", 1)),
 	}
@@ -115,6 +140,12 @@ static func is_reward_claimed(stage_id: String) -> bool:
 	if ACCOUNT_SCOPE.load_config(config, SAVE_PATH) != OK:
 		return false
 	return bool(config.get_value("reward_claimed", stage_id, false))
+
+static func is_gold_reward_claimed(stage_id: String) -> bool:
+	var config := ConfigFile.new()
+	if ACCOUNT_SCOPE.load_config(config, SAVE_PATH) != OK:
+		return false
+	return bool(config.get_value("gold_reward_claimed", stage_id, false))
 
 
 static func has_seen_stage_intro(stage_id: String) -> bool:

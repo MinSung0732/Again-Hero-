@@ -95,7 +95,7 @@ func run() -> void:
 	var grant := PROGRESS.add_research_points(141, 84)
 	check(grant.success and grant.gold_granted == 84 and PROGRESS.get_gold() == 84, "research/gold same save")
 	PROGRESS.complete_stage("stage_1",1,"stage_2",2,450)
-	check(PROGRESS.get_gold() == 84, "first clear adds no gold")
+	check(PROGRESS.get_gold() == 1084, "first clear adds separate gold")
 	var progress := ConfigFile.new()
 	SCOPE.load_config(progress, PROGRESS.SAVE_PATH)
 	progress.set_value("meta", "gold", 100)

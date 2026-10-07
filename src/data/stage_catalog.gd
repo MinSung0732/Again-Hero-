@@ -3,6 +3,11 @@ class_name StageCatalog
 
 const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4", "stage_5", "stage_6", "stage_7", "stage_8", "stage_9", "stage_10"]
 
+const CLEAR_GOLD_REWARDS := {
+	"stage_first_clear": 1000,
+	"easy_all_clear": 3000,
+}
+
 const RUN_REWARD_RULES := {
 	"combat_gold_ratio": 0.60,
 	"base_reward": 30,

@@ -35,7 +35,8 @@ func run() -> void:
 		check(COPY.format_message(message).reward.contains("전투 골드 +%d" % expected), "gold result label")
 	var gold := PROGRESS.get_gold()
 	PROGRESS.complete_stage("stage_1",1,"stage_2",2,450)
-	check(PROGRESS.get_gold() == gold, "first clear reward excluded")
+	check(PROGRESS.get_gold() == gold + 1000, "first clear gold added separately")
+	gold = PROGRESS.get_gold()
 	main.battle.current_stage_data["run_reward_multiplier"] = 3.0
 	var defeat_research_before := PROGRESS.get_research_points()
 	main.battle._on_run_time_up()

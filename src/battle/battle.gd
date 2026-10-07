@@ -4851,6 +4851,14 @@ func _on_hero_died() -> void:
 	var granted_reward: int = int(clear_result.get("reward", 0))
 	if granted_reward > 0:
 		result_text += "\n최초 클리어 보상 · 연구 포인트 +%d" % granted_reward
+	if not bool(clear_result.get("success", false)):
+		result_text += "\n클리어 보상 저장 실패"
+	var first_gold := int(clear_result.get("gold_reward", 0))
+	if first_gold > 0:
+		result_text += "\n최초 클리어 골드 +%d" % first_gold
+	var all_clear_gold := int(clear_result.get("easy_all_clear_gold", 0))
+	if all_clear_gold > 0:
+		result_text += "\n쉬움 전체 클리어 골드 +%d" % all_clear_gold
 
 	result_text += _grant_run_research_reward(true)
 	_finish_battle(result_text, true)

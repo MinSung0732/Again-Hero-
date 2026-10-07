@@ -4786,7 +4786,11 @@ func _refresh_stage_card() -> void:
 	var time_text := "제한 %d분" % minutes if minutes > 0 else "시간 제한 없음"
 	stage_status_label.text = "%s\n%s" % [entry_state, time_text]
 
-	if reward_claimed:
+	if not STAGE_PROGRESS.is_gold_reward_claimed(stage_id):
+		stage_reward_label.text = "최초 보상\n골드 +%d" % int(STAGE_CATALOG.CLEAR_GOLD_REWARDS.stage_first_clear)
+		if not reward_claimed and reward > 0:
+			stage_reward_label.text += "\n연구 +%d" % reward
+	elif reward_claimed:
 		stage_reward_label.text = "최초 보상\n획득 완료"
 	elif reward > 0:
 		stage_reward_label.text = "최초 보상\n연구 +%d" % reward

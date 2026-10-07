@@ -12,6 +12,9 @@ static func format_message(message: String) -> Dictionary:
 		elif line.begins_with("Run 연구 +"):
 			rewards.insert(0, line.split(" · ")[0].replace("Run 연구", "전투 연구 포인트"))
 			details.append(line.replace(" · ", "\n").replace("Run 연구", "전투 연구"))
+		elif line.begins_with("최초 클리어 골드 +") or line.begins_with("쉬움 전체 클리어 골드 +"):
+			rewards.append(line)
+			details.append(line)
 		elif line.begins_with("최초 클리어 보상"):
 			rewards.append(line.replace("최초 클리어 보상 · 연구 포인트", "최초 클리어 연구"))
 			details.append(line)
