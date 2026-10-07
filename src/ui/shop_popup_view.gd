@@ -158,7 +158,7 @@ func show_rates(pickup_id: String) -> void:
 	if active_pickup:
 		var feature := _panel(rates, SHOP.get_rarity(MONSTERS.get_rarity(pickup_id)).color, true)
 		feature.get_parent().name = "PickupFeature"
-		_label(feature, "픽업 몬스터 · 등급 내 가중치 %s배" % str(SHOP.monster_weight(pickup_id, pickup_id)), Color("ffe6a4"), 25)
+		_label(feature, "픽업 몬스터 · 등급 내 가중치 %s배" % str(SHOP.monster_weight(pickup_id, pickup_id)).trim_suffix(".0"), Color("ffe6a4"), 25)
 		_monster_rate(feature, pickup_id, pickup_id)
 	_label(rates, "몬스터별 등장 확률", Color("ffe6a4"), 28)
 	for rarity in SHOP.RARITY_ORDER:
