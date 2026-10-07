@@ -212,6 +212,7 @@ var current_tab: String = "main"
 var _team_formation_view = TEAM_FORMATION_VIEW.new()
 var _team_upgrade_feedback: Node2D
 var _shop_storefront_art = SHOP_STOREFRONT_ART.new()
+var _shop_test_draw_view = preload("res://src/ui/shop_test_draw_view.gd").new()
 var _shop_pickup_view = preload("res://src/ui/shop_pickup_view.gd").new()
 var research_view_mode: String = "research"
 var selected_research_id: String = ""
@@ -2693,6 +2694,7 @@ func _apply_shop_storefront_skin() -> void:
 	)
 	_shop_storefront_art.apply(self)
 	_shop_pickup_view.install(self)
+	_shop_test_draw_view.install(self)
 
 
 func _tick_shop_banner(delta: float) -> void:
@@ -2884,6 +2886,7 @@ func _format_shop_number(value: int) -> String:
 	return result
 
 func _rebuild_shop_list() -> void:
+	_shop_test_draw_view.refresh()
 	_shop_pickup_view.refresh()
 	shop_gold_label.text = "골드  %s" % _format_shop_number(
 		_get_shop_gold()
@@ -3014,6 +3017,7 @@ func _get_shop_gold() -> int:
 	return SHOP_CATALOG.TEST_GOLD if LocalTestMode.active else STAGE_PROGRESS.get_gold()
 
 func _refresh_shop_summon_buttons() -> void:
+	_shop_test_draw_view.refresh()
 	_shop_pickup_view.refresh()
 	var gold := _get_shop_gold()
 	for pair in [[shop_single_button, SHOP_CATALOG.SINGLE_DRAW_COST], [shop_multi_button, SHOP_CATALOG.MULTI_DRAW_COST]]:
@@ -3088,7 +3092,10 @@ func _open_monster_boxes(draw_count: int, pickup_id: String = "") -> void:
 			TutorialFlow.draw_started()
 
 func _roll_monster_shard(pickup_id: String = "") -> Dictionary:
-	var rarity_id := _roll_shop_rarity()
+	var forced_id: String = LocalTestMode.forced_gacha_monster(_shop_test_draw_view.selected_id)
+	if TutorialFlow.locks_lobby():
+		forced_id = ""
+	var rarity_id := "transcendent" if not forced_id.is_empty() else _roll_shop_rarity()
 	if rarity_id.is_empty():
 		return {}
 
@@ -3097,7 +3104,7 @@ func _roll_monster_shard(pickup_id: String = "") -> Dictionary:
 	if candidates.is_empty():
 		return {}
 
-	var selected_id := SHOP_CATALOG.roll_monster(rarity_id, randf(), pickup_id)
+	var selected_id := forced_id if not forced_id.is_empty() else SHOP_CATALOG.roll_monster(rarity_id, randf(), pickup_id)
 	var rarity_data := SHOP_CATALOG.get_rarity(rarity_id)
 	var min_shards := maxi(int(rarity_data.get("shard_min", 1)), 1)
 	var max_shards := maxi(int(rarity_data.get("shard_max", min_shards)), min_shards)

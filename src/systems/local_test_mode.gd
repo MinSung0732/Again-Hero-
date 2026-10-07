@@ -195,3 +195,11 @@ func has_all_monsters_unlocked() -> bool:
 		and SCOPE.user_id.is_empty()
 		and SCOPE.guest_directory == test_directory
 	)
+
+
+# Revalidate at draw time: a stale UI selection must never affect real saves.
+func forced_gacha_monster(selected_id: String) -> String:
+	if not has_all_monsters_unlocked():
+		return ""
+	var pool := preload("res://src/data/shop_catalog.gd").get_monster_pool("transcendent")
+	return selected_id if selected_id in pool else ""
