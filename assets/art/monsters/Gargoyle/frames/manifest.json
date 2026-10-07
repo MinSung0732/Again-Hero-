@@ -1,0 +1,904 @@
+{
+  "source": "D:\\Download\\가고일 픽셀 아트 스프라이트 시트.png",
+  "source_sha256": "dde9481417d4006e6d290d195d4b50d0fad0f6d213797aba1935d55dd4ffd149",
+  "source_size": [
+    1448,
+    1086
+  ],
+  "source_mode": "RGB",
+  "frame_count": 23,
+  "resized": false,
+  "frames": [
+    {
+      "file": "gargoyle/idle_01.png",
+      "animation": "idle",
+      "frame": 1,
+      "row": 1,
+      "column": 1,
+      "source_rect": [
+        20,
+        0,
+        295,
+        220
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        43,
+        23,
+        253,
+        195
+      ],
+      "source_anchor": [
+        162,
+        196
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        69,
+        8
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/idle_02.png",
+      "animation": "idle",
+      "frame": 2,
+      "row": 1,
+      "column": 2,
+      "source_rect": [
+        295,
+        0,
+        580,
+        220
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        338,
+        26,
+        545,
+        195
+      ],
+      "source_anchor": [
+        450,
+        196
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        71,
+        9
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/idle_03.png",
+      "animation": "idle",
+      "frame": 3,
+      "row": 1,
+      "column": 3,
+      "source_rect": [
+        580,
+        0,
+        850,
+        220
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        616,
+        31,
+        821,
+        195
+      ],
+      "source_anchor": [
+        734,
+        196
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        72,
+        12
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/idle_04.png",
+      "animation": "idle",
+      "frame": 4,
+      "row": 1,
+      "column": 4,
+      "source_rect": [
+        850,
+        0,
+        1115,
+        220
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        881,
+        31,
+        1097,
+        196
+      ],
+      "source_anchor": [
+        1003,
+        196
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        66,
+        11
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/walk_01.png",
+      "animation": "walk",
+      "frame": 1,
+      "row": 2,
+      "column": 1,
+      "source_rect": [
+        15,
+        220,
+        250,
+        430
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        31,
+        232,
+        231,
+        410
+      ],
+      "source_anchor": [
+        141,
+        411
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        74,
+        5
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/walk_02.png",
+      "animation": "walk",
+      "frame": 2,
+      "row": 2,
+      "column": 2,
+      "source_rect": [
+        250,
+        220,
+        495,
+        430
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        268,
+        234,
+        474,
+        411
+      ],
+      "source_anchor": [
+        386,
+        411
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        71,
+        5
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/walk_03.png",
+      "animation": "walk",
+      "frame": 3,
+      "row": 2,
+      "column": 3,
+      "source_rect": [
+        495,
+        220,
+        730,
+        430
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        515,
+        234,
+        713,
+        411
+      ],
+      "source_anchor": [
+        626,
+        411
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        75,
+        5
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/walk_04.png",
+      "animation": "walk",
+      "frame": 4,
+      "row": 2,
+      "column": 4,
+      "source_rect": [
+        730,
+        220,
+        965,
+        430
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        748,
+        234,
+        948,
+        411
+      ],
+      "source_anchor": [
+        858,
+        411
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        74,
+        5
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/walk_05.png",
+      "animation": "walk",
+      "frame": 5,
+      "row": 2,
+      "column": 5,
+      "source_rect": [
+        965,
+        220,
+        1185,
+        430
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        986,
+        238,
+        1169,
+        411
+      ],
+      "source_anchor": [
+        1081,
+        411
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        83,
+        7
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/walk_06.png",
+      "animation": "walk",
+      "frame": 6,
+      "row": 2,
+      "column": 6,
+      "source_rect": [
+        1185,
+        220,
+        1435,
+        430
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        1201,
+        235,
+        1415,
+        411
+      ],
+      "source_anchor": [
+        1319,
+        411
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        67,
+        6
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/attack_01.png",
+      "animation": "attack",
+      "frame": 1,
+      "row": 3,
+      "column": 1,
+      "source_rect": [
+        15,
+        430,
+        253,
+        640
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        31,
+        455,
+        235,
+        621
+      ],
+      "source_anchor": [
+        133,
+        626
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        72,
+        11
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/attack_02.png",
+      "animation": "attack",
+      "frame": 2,
+      "row": 3,
+      "column": 2,
+      "source_rect": [
+        253,
+        430,
+        525,
+        640
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        273,
+        446,
+        522,
+        621
+      ],
+      "source_anchor": [
+        375,
+        626
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        50,
+        6
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/attack_03.png",
+      "animation": "attack",
+      "frame": 3,
+      "row": 3,
+      "column": 3,
+      "source_rect": [
+        525,
+        430,
+        787,
+        640
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        525,
+        454,
+        784,
+        623
+      ],
+      "source_anchor": [
+        615,
+        626
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        45,
+        9
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/attack_04.png",
+      "animation": "attack",
+      "frame": 4,
+      "row": 3,
+      "column": 4,
+      "source_rect": [
+        787,
+        430,
+        1006,
+        640
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        787,
+        451,
+        1006,
+        623
+      ],
+      "source_anchor": [
+        869,
+        626
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        65,
+        8
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/attack_05.png",
+      "animation": "attack",
+      "frame": 5,
+      "row": 3,
+      "column": 5,
+      "source_rect": [
+        1006,
+        430,
+        1205,
+        640
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        1006,
+        451,
+        1194,
+        626
+      ],
+      "source_anchor": [
+        1102,
+        626
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        80,
+        6
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/attack_06.png",
+      "animation": "attack",
+      "frame": 6,
+      "row": 3,
+      "column": 6,
+      "source_rect": [
+        1205,
+        430,
+        1435,
+        640
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        1216,
+        446,
+        1415,
+        624
+      ],
+      "source_anchor": [
+        1325,
+        626
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        75,
+        5
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/hit_01.png",
+      "animation": "hit",
+      "frame": 1,
+      "row": 4,
+      "column": 1,
+      "source_rect": [
+        20,
+        640,
+        260,
+        845
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        43,
+        652,
+        239,
+        831
+      ],
+      "source_anchor": [
+        154,
+        831
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        76,
+        4
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/hit_02.png",
+      "animation": "hit",
+      "frame": 2,
+      "row": 4,
+      "column": 2,
+      "source_rect": [
+        260,
+        640,
+        510,
+        845
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        278,
+        657,
+        471,
+        831
+      ],
+      "source_anchor": [
+        383,
+        831
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        78,
+        7
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/hit_03.png",
+      "animation": "hit",
+      "frame": 3,
+      "row": 4,
+      "column": 3,
+      "source_rect": [
+        510,
+        640,
+        740,
+        845
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        525,
+        676,
+        728,
+        831
+      ],
+      "source_anchor": [
+        627,
+        831
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        73,
+        16
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/death_01.png",
+      "animation": "death",
+      "frame": 1,
+      "row": 5,
+      "column": 1,
+      "source_rect": [
+        20,
+        845,
+        300,
+        1086
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        57,
+        859,
+        272,
+        1024
+      ],
+      "source_anchor": [
+        156,
+        1035
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        67,
+        11
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/death_02.png",
+      "animation": "death",
+      "frame": 2,
+      "row": 5,
+      "column": 2,
+      "source_rect": [
+        300,
+        845,
+        575,
+        1086
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        321,
+        894,
+        561,
+        1026
+      ],
+      "source_anchor": [
+        439,
+        1035
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        54,
+        28
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/death_03.png",
+      "animation": "death",
+      "frame": 3,
+      "row": 5,
+      "column": 3,
+      "source_rect": [
+        575,
+        845,
+        895,
+        1086
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        590,
+        926,
+        880,
+        1029
+      ],
+      "source_anchor": [
+        762,
+        1035
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        29,
+        42
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "gargoyle/death_04.png",
+      "animation": "death",
+      "frame": 4,
+      "row": 5,
+      "column": 4,
+      "source_rect": [
+        895,
+        845,
+        1245,
+        1086
+      ],
+      "size": [
+        349,
+        188
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        907,
+        919,
+        1225,
+        1035
+      ],
+      "source_anchor": [
+        1061,
+        1035
+      ],
+      "anchor": [
+        174,
+        94
+      ],
+      "content_offset": [
+        15,
+        36
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    }
+  ],
+  "background": "fully transparent",
+  "alpha_values": [
+    0,
+    255
+  ],
+  "layout": "all frame PNGs directly in one folder per sheet",
+  "cell_size": [
+    349,
+    188
+  ],
+  "anchor": [
+    174,
+    94
+  ],
+  "resampling": "none",
+  "antialiasing": false,
+  "alignment": "visible bounds centered horizontally and vertically"
+}

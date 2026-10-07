@@ -1,0 +1,334 @@
+{
+  "source": "D:\\Download\\전기 충격 이펙트 스프라이트 시트.png",
+  "source_sha256": "a16fb516b2b0e902df62cfe431faacb17aa2d455624392dad7cb844152d736c0",
+  "source_size": [
+    1774,
+    887
+  ],
+  "source_mode": "RGBA",
+  "frame_count": 8,
+  "resized": false,
+  "frames": [
+    {
+      "file": "electric_shock/effect_01.png",
+      "animation": "effect",
+      "frame": 1,
+      "row": 1,
+      "column": 1,
+      "source_rect": [
+        0,
+        78,
+        444,
+        436
+      ],
+      "size": [
+        363,
+        350
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        154,
+        172,
+        276,
+        291
+      ],
+      "source_anchor": [
+        222,
+        222
+      ],
+      "anchor": [
+        181,
+        175
+      ],
+      "content_offset": [
+        120,
+        115
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "electric_shock/effect_02.png",
+      "animation": "effect",
+      "frame": 2,
+      "row": 1,
+      "column": 2,
+      "source_rect": [
+        444,
+        39,
+        887,
+        444
+      ],
+      "size": [
+        363,
+        350
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        561,
+        110,
+        783,
+        331
+      ],
+      "source_anchor": [
+        665,
+        222
+      ],
+      "anchor": [
+        181,
+        175
+      ],
+      "content_offset": [
+        70,
+        64
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "electric_shock/effect_03.png",
+      "animation": "effect",
+      "frame": 3,
+      "row": 1,
+      "column": 3,
+      "source_rect": [
+        892,
+        31,
+        1331,
+        444
+      ],
+      "size": [
+        363,
+        350
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        954,
+        109,
+        1257,
+        368
+      ],
+      "source_anchor": [
+        1109,
+        222
+      ],
+      "anchor": [
+        181,
+        175
+      ],
+      "content_offset": [
+        30,
+        45
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "electric_shock/effect_04.png",
+      "animation": "effect",
+      "frame": 4,
+      "row": 1,
+      "column": 4,
+      "source_rect": [
+        1331,
+        74,
+        1760,
+        405
+      ],
+      "size": [
+        363,
+        350
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        1378,
+        78,
+        1718,
+        391
+      ],
+      "source_anchor": [
+        1552,
+        222
+      ],
+      "anchor": [
+        181,
+        175
+      ],
+      "content_offset": [
+        11,
+        18
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "electric_shock/effect_05.png",
+      "animation": "effect",
+      "frame": 5,
+      "row": 2,
+      "column": 1,
+      "source_rect": [
+        0,
+        455,
+        444,
+        841
+      ],
+      "size": [
+        363,
+        350
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        41,
+        492,
+        396,
+        833
+      ],
+      "source_anchor": [
+        222,
+        665
+      ],
+      "anchor": [
+        181,
+        175
+      ],
+      "content_offset": [
+        4,
+        4
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "electric_shock/effect_06.png",
+      "animation": "effect",
+      "frame": 6,
+      "row": 2,
+      "column": 2,
+      "source_rect": [
+        444,
+        444,
+        887,
+        863
+      ],
+      "size": [
+        363,
+        350
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        510,
+        517,
+        831,
+        800
+      ],
+      "source_anchor": [
+        665,
+        665
+      ],
+      "anchor": [
+        181,
+        175
+      ],
+      "content_offset": [
+        21,
+        33
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "electric_shock/effect_07.png",
+      "animation": "effect",
+      "frame": 7,
+      "row": 2,
+      "column": 3,
+      "source_rect": [
+        888,
+        444,
+        1331,
+        887
+      ],
+      "size": [
+        363,
+        350
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        992,
+        553,
+        1247,
+        764
+      ],
+      "source_anchor": [
+        1109,
+        665
+      ],
+      "anchor": [
+        181,
+        175
+      ],
+      "content_offset": [
+        54,
+        69
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "electric_shock/effect_08.png",
+      "animation": "effect",
+      "frame": 8,
+      "row": 2,
+      "column": 4,
+      "source_rect": [
+        1331,
+        447,
+        1758,
+        887
+      ],
+      "size": [
+        363,
+        350
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        1476,
+        583,
+        1611,
+        748
+      ],
+      "source_anchor": [
+        1552,
+        665
+      ],
+      "anchor": [
+        181,
+        175
+      ],
+      "content_offset": [
+        114,
+        92
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    }
+  ],
+  "background": "fully transparent",
+  "alpha_values": [
+    0,
+    255
+  ],
+  "layout": "all frame PNGs directly in one folder per sheet",
+  "cell_size": [
+    363,
+    350
+  ],
+  "anchor": [
+    181,
+    175
+  ],
+  "resampling": "none",
+  "antialiasing": false,
+  "alignment": "visible bounds centered horizontally and vertically"
+}

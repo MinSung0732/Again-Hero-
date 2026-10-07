@@ -1,0 +1,906 @@
+{
+  "source": "D:\\Download\\고블린 전사의 픽셀 아트 스프라이트 시트.png",
+  "source_sha256": "9818c215538e032d05c9695ca035d047e77c8d4f5039647773c28dc4cf84b815",
+  "source_size": [
+    1448,
+    1086
+  ],
+  "source_mode": "RGBA",
+  "frame_count": 23,
+  "resized": false,
+  "frames": [
+    {
+      "file": "goblin_warrior/idle_01.png",
+      "animation": "idle",
+      "frame": 1,
+      "row": 1,
+      "column": 1,
+      "source_rect": [
+        23,
+        16,
+        225,
+        213
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        29,
+        23,
+        215,
+        201
+      ],
+      "source_anchor": [
+        140,
+        201
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        91,
+        21
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/idle_02.png",
+      "animation": "idle",
+      "frame": 2,
+      "row": 1,
+      "column": 2,
+      "source_rect": [
+        252,
+        14,
+        457,
+        213
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        261,
+        24,
+        452,
+        201
+      ],
+      "source_anchor": [
+        380,
+        201
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        88,
+        22
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/idle_03.png",
+      "animation": "idle",
+      "frame": 3,
+      "row": 1,
+      "column": 3,
+      "source_rect": [
+        496,
+        16,
+        695,
+        219
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        501,
+        26,
+        690,
+        201
+      ],
+      "source_anchor": [
+        618,
+        201
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        89,
+        23
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/idle_04.png",
+      "animation": "idle",
+      "frame": 4,
+      "row": 1,
+      "column": 4,
+      "source_rect": [
+        723,
+        17,
+        933,
+        219
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        734,
+        26,
+        930,
+        201
+      ],
+      "source_anchor": [
+        853,
+        201
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        86,
+        23
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/walk_01.png",
+      "animation": "walk",
+      "frame": 1,
+      "row": 2,
+      "column": 1,
+      "source_rect": [
+        15,
+        228,
+        231,
+        428
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        22,
+        239,
+        226,
+        419
+      ],
+      "source_anchor": [
+        150,
+        422
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        82,
+        20
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/walk_02.png",
+      "animation": "walk",
+      "frame": 2,
+      "row": 2,
+      "column": 2,
+      "source_rect": [
+        250,
+        228,
+        479,
+        440
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        261,
+        239,
+        469,
+        422
+      ],
+      "source_anchor": [
+        394,
+        422
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        80,
+        19
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/walk_03.png",
+      "animation": "walk",
+      "frame": 3,
+      "row": 2,
+      "column": 3,
+      "source_rect": [
+        484,
+        220,
+        704,
+        425
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        494,
+        236,
+        699,
+        422
+      ],
+      "source_anchor": [
+        630,
+        422
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        81,
+        17
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/walk_04.png",
+      "animation": "walk",
+      "frame": 4,
+      "row": 2,
+      "column": 4,
+      "source_rect": [
+        725,
+        226,
+        967,
+        436
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        739,
+        239,
+        949,
+        422
+      ],
+      "source_anchor": [
+        872,
+        422
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        79,
+        19
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/walk_05.png",
+      "animation": "walk",
+      "frame": 5,
+      "row": 2,
+      "column": 5,
+      "source_rect": [
+        974,
+        226,
+        1207,
+        436
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        985,
+        236,
+        1202,
+        422
+      ],
+      "source_anchor": [
+        1120,
+        422
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        75,
+        17
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/walk_06.png",
+      "animation": "walk",
+      "frame": 6,
+      "row": 2,
+      "column": 6,
+      "source_rect": [
+        1216,
+        221,
+        1432,
+        428
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        1225,
+        242,
+        1421,
+        421
+      ],
+      "source_anchor": [
+        1350,
+        422
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        86,
+        21
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/attack_01.png",
+      "animation": "attack",
+      "frame": 1,
+      "row": 3,
+      "column": 1,
+      "source_rect": [
+        15,
+        450,
+        245,
+        673
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        22,
+        454,
+        234,
+        667
+      ],
+      "source_anchor": [
+        145,
+        667
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        78,
+        4
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/attack_02.png",
+      "animation": "attack",
+      "frame": 2,
+      "row": 3,
+      "column": 2,
+      "source_rect": [
+        258,
+        440,
+        525,
+        675
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "corrected_from_original": true,
+      "source_content_rect": [
+        267,
+        496,
+        531,
+        667
+      ],
+      "source_anchor": [
+        393,
+        667
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        52,
+        25
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/attack_03.png",
+      "animation": "attack",
+      "frame": 3,
+      "row": 3,
+      "column": 3,
+      "source_rect": [
+        505,
+        449,
+        766,
+        685
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "corrected_from_original": true,
+      "source_content_rect": [
+        514,
+        489,
+        748,
+        667
+      ],
+      "source_anchor": [
+        631,
+        667
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        67,
+        21
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/attack_04.png",
+      "animation": "attack",
+      "frame": 4,
+      "row": 3,
+      "column": 4,
+      "source_rect": [
+        767,
+        447,
+        1070,
+        677
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "source_content_rect": [
+        784,
+        496,
+        1065,
+        667
+      ],
+      "source_anchor": [
+        886,
+        667
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        43,
+        25
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/attack_05.png",
+      "animation": "attack",
+      "frame": 5,
+      "row": 3,
+      "column": 5,
+      "source_rect": [
+        1008,
+        471,
+        1238,
+        675
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "source_content_rect": [
+        1017,
+        483,
+        1237,
+        667
+      ],
+      "source_anchor": [
+        1116,
+        667
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        74,
+        18
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/attack_06.png",
+      "animation": "attack",
+      "frame": 6,
+      "row": 3,
+      "column": 6,
+      "source_rect": [
+        1238,
+        483,
+        1434,
+        675
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        1239,
+        492,
+        1426,
+        667
+      ],
+      "source_anchor": [
+        1350,
+        667
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        90,
+        23
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/hit_01.png",
+      "animation": "hit",
+      "frame": 1,
+      "row": 4,
+      "column": 1,
+      "source_rect": [
+        30,
+        693,
+        255,
+        881
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        42,
+        707,
+        228,
+        876
+      ],
+      "source_anchor": [
+        145,
+        876
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        91,
+        26
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/hit_02.png",
+      "animation": "hit",
+      "frame": 2,
+      "row": 4,
+      "column": 2,
+      "source_rect": [
+        255,
+        687,
+        516,
+        881
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        286,
+        723,
+        498,
+        876
+      ],
+      "source_anchor": [
+        398,
+        876
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        78,
+        34
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/hit_03.png",
+      "animation": "hit",
+      "frame": 3,
+      "row": 4,
+      "column": 3,
+      "source_rect": [
+        532,
+        685,
+        772,
+        888
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        544,
+        737,
+        750,
+        874
+      ],
+      "source_anchor": [
+        645,
+        876
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        81,
+        42
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/death_01.png",
+      "animation": "death",
+      "frame": 1,
+      "row": 5,
+      "column": 1,
+      "source_rect": [
+        33,
+        897,
+        275,
+        1054
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        43,
+        912,
+        272,
+        1041
+      ],
+      "source_anchor": [
+        150,
+        1046
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        69,
+        46
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/death_02.png",
+      "animation": "death",
+      "frame": 2,
+      "row": 5,
+      "column": 2,
+      "source_rect": [
+        303,
+        915,
+        600,
+        1062
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        309,
+        928,
+        588,
+        1041
+      ],
+      "source_anchor": [
+        405,
+        1046
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        44,
+        54
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/death_03.png",
+      "animation": "death",
+      "frame": 3,
+      "row": 5,
+      "column": 3,
+      "source_rect": [
+        600,
+        907,
+        915,
+        1064
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        612,
+        957,
+        905,
+        1041
+      ],
+      "source_anchor": [
+        695,
+        1046
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        37,
+        68
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "goblin_warrior/death_04.png",
+      "animation": "death",
+      "frame": 4,
+      "row": 5,
+      "column": 4,
+      "source_rect": [
+        915,
+        896,
+        1287,
+        1058
+      ],
+      "size": [
+        368,
+        221
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        925,
+        968,
+        1274,
+        1046
+      ],
+      "source_anchor": [
+        1050,
+        1046
+      ],
+      "anchor": [
+        184,
+        110
+      ],
+      "content_offset": [
+        9,
+        71
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    }
+  ],
+  "background": "fully transparent",
+  "alpha_values": [
+    0,
+    255
+  ],
+  "layout": "all frame PNGs directly in one folder per sheet",
+  "cell_size": [
+    368,
+    221
+  ],
+  "anchor": [
+    184,
+    110
+  ],
+  "resampling": "none",
+  "antialiasing": false,
+  "alignment": "visible bounds centered horizontally and vertically"
+}

@@ -1,0 +1,905 @@
+{
+  "source": "D:\\Download\\창을 든 도마뱀 전사 스프라이트 시트.png",
+  "source_sha256": "dca97b2d59894eabf239f9b3bd0a6df4a50660a6e2bb97b2a1fc6991e5a05b55",
+  "source_size": [
+    1448,
+    1086
+  ],
+  "source_mode": "RGB",
+  "frame_count": 23,
+  "resized": false,
+  "frames": [
+    {
+      "file": "lizard_spearman/idle_01.png",
+      "animation": "idle",
+      "frame": 1,
+      "row": 1,
+      "column": 1,
+      "source_rect": [
+        10,
+        0,
+        280,
+        240
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        28,
+        54,
+        271,
+        214
+      ],
+      "source_anchor": [
+        98,
+        214
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        129,
+        5
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/idle_02.png",
+      "animation": "idle",
+      "frame": 2,
+      "row": 1,
+      "column": 2,
+      "source_rect": [
+        280,
+        0,
+        522,
+        240
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        286,
+        53,
+        514,
+        214
+      ],
+      "source_anchor": [
+        361,
+        214
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        136,
+        4
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/idle_03.png",
+      "animation": "idle",
+      "frame": 3,
+      "row": 1,
+      "column": 3,
+      "source_rect": [
+        522,
+        0,
+        766,
+        240
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        529,
+        52,
+        766,
+        214
+      ],
+      "source_anchor": [
+        603,
+        214
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        132,
+        4
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/idle_04.png",
+      "animation": "idle",
+      "frame": 4,
+      "row": 1,
+      "column": 4,
+      "source_rect": [
+        766,
+        0,
+        1025,
+        240
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        767,
+        55,
+        1011,
+        214
+      ],
+      "source_anchor": [
+        830,
+        214
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        128,
+        5
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/walk_01.png",
+      "animation": "walk",
+      "frame": 1,
+      "row": 2,
+      "column": 1,
+      "source_rect": [
+        5,
+        240,
+        244,
+        450
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        22,
+        262,
+        244,
+        423
+      ],
+      "source_anchor": [
+        91,
+        423
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        139,
+        4
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/walk_02.png",
+      "animation": "walk",
+      "frame": 2,
+      "row": 2,
+      "column": 2,
+      "source_rect": [
+        244,
+        240,
+        496,
+        450
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "source_content_rect": [
+        244,
+        265,
+        487,
+        421
+      ],
+      "source_anchor": [
+        377,
+        423
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        129,
+        7
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/walk_03.png",
+      "animation": "walk",
+      "frame": 3,
+      "row": 2,
+      "column": 3,
+      "source_rect": [
+        476,
+        240,
+        715,
+        450
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "source_content_rect": [
+        480,
+        264,
+        711,
+        422
+      ],
+      "source_anchor": [
+        564,
+        423
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        135,
+        6
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/walk_04.png",
+      "animation": "walk",
+      "frame": 4,
+      "row": 2,
+      "column": 4,
+      "source_rect": [
+        715,
+        240,
+        959,
+        450
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        715,
+        262,
+        957,
+        423
+      ],
+      "source_anchor": [
+        792,
+        423
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        129,
+        4
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/walk_05.png",
+      "animation": "walk",
+      "frame": 5,
+      "row": 2,
+      "column": 5,
+      "source_rect": [
+        959,
+        240,
+        1191,
+        450
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        959,
+        262,
+        1191,
+        423
+      ],
+      "source_anchor": [
+        1072,
+        423
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        134,
+        4
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/walk_06.png",
+      "animation": "walk",
+      "frame": 6,
+      "row": 2,
+      "column": 6,
+      "source_rect": [
+        1191,
+        240,
+        1448,
+        450
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        1193,
+        262,
+        1430,
+        423
+      ],
+      "source_anchor": [
+        1276,
+        423
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        132,
+        4
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/attack_01.png",
+      "animation": "attack",
+      "frame": 1,
+      "row": 3,
+      "column": 1,
+      "source_rect": [
+        5,
+        450,
+        249,
+        655
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "source_content_rect": [
+        18,
+        478,
+        227,
+        631
+      ],
+      "source_anchor": [
+        92,
+        631
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        146,
+        8
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/attack_02.png",
+      "animation": "attack",
+      "frame": 2,
+      "row": 3,
+      "column": 2,
+      "source_rect": [
+        219,
+        450,
+        521,
+        655
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "source_content_rect": [
+        224,
+        482,
+        506,
+        631
+      ],
+      "source_anchor": [
+        298,
+        631
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        109,
+        10
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/attack_03.png",
+      "animation": "attack",
+      "frame": 3,
+      "row": 3,
+      "column": 3,
+      "source_rect": [
+        478,
+        450,
+        848,
+        655
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "source_content_rect": [
+        498,
+        481,
+        848,
+        628
+      ],
+      "source_anchor": [
+        557,
+        631
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        75,
+        11
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/attack_04.png",
+      "animation": "attack",
+      "frame": 4,
+      "row": 3,
+      "column": 4,
+      "source_rect": [
+        848,
+        450,
+        990,
+        655
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "note": "창 투사체만 있는 원본 프레임",
+      "source_content_rect": [
+        848,
+        517,
+        984,
+        542
+      ],
+      "source_anchor": [
+        944,
+        631
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        182,
+        72
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/attack_05.png",
+      "animation": "attack",
+      "frame": 5,
+      "row": 3,
+      "column": 5,
+      "source_rect": [
+        960,
+        450,
+        1240,
+        655
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "source_content_rect": [
+        960,
+        481,
+        1224,
+        631
+      ],
+      "source_anchor": [
+        1045,
+        631
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        118,
+        10
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/attack_06.png",
+      "animation": "attack",
+      "frame": 6,
+      "row": 3,
+      "column": 6,
+      "source_rect": [
+        1240,
+        450,
+        1448,
+        655
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        1240,
+        474,
+        1432,
+        631
+      ],
+      "source_anchor": [
+        1284,
+        631
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        154,
+        6
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/hit_01.png",
+      "animation": "hit",
+      "frame": 1,
+      "row": 4,
+      "column": 1,
+      "source_rect": [
+        15,
+        655,
+        248,
+        870
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        33,
+        685,
+        229,
+        844
+      ],
+      "source_anchor": [
+        105,
+        844
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        152,
+        5
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/hit_02.png",
+      "animation": "hit",
+      "frame": 2,
+      "row": 4,
+      "column": 2,
+      "source_rect": [
+        248,
+        655,
+        480,
+        870
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        252,
+        701,
+        471,
+        844
+      ],
+      "source_anchor": [
+        311,
+        844
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        141,
+        13
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/hit_03.png",
+      "animation": "hit",
+      "frame": 3,
+      "row": 4,
+      "column": 3,
+      "source_rect": [
+        480,
+        655,
+        715,
+        870
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        488,
+        722,
+        700,
+        844
+      ],
+      "source_anchor": [
+        547,
+        844
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        144,
+        24
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/death_01.png",
+      "animation": "death",
+      "frame": 1,
+      "row": 5,
+      "column": 1,
+      "source_rect": [
+        5,
+        870,
+        251,
+        1086
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "source_content_rect": [
+        25,
+        889,
+        246,
+        1037
+      ],
+      "source_anchor": [
+        97,
+        1044
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        140,
+        11
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/death_02.png",
+      "animation": "death",
+      "frame": 2,
+      "row": 5,
+      "column": 2,
+      "source_rect": [
+        251,
+        870,
+        485,
+        1086
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "source_content_rect": [
+        251,
+        908,
+        471,
+        1044
+      ],
+      "source_anchor": [
+        332,
+        1044
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        140,
+        17
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/death_03.png",
+      "animation": "death",
+      "frame": 3,
+      "row": 5,
+      "column": 3,
+      "source_rect": [
+        485,
+        870,
+        807,
+        1086
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        499,
+        940,
+        796,
+        1029
+      ],
+      "source_anchor": [
+        632,
+        1044
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        102,
+        40
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_spearman/death_04.png",
+      "animation": "death",
+      "frame": 4,
+      "row": 5,
+      "column": 4,
+      "source_rect": [
+        807,
+        870,
+        1195,
+        1086
+      ],
+      "size": [
+        501,
+        170
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        812,
+        958,
+        1177,
+        1028
+      ],
+      "source_anchor": [
+        1014,
+        1044
+      ],
+      "anchor": [
+        250,
+        85
+      ],
+      "content_offset": [
+        68,
+        50
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    }
+  ],
+  "background": "fully transparent",
+  "alpha_values": [
+    0,
+    255
+  ],
+  "layout": "all frame PNGs directly in one folder per sheet",
+  "cell_size": [
+    501,
+    170
+  ],
+  "anchor": [
+    250,
+    85
+  ],
+  "resampling": "none",
+  "antialiasing": false,
+  "alignment": "visible bounds centered horizontally and vertically"
+}

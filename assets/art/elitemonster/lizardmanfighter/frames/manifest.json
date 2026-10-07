@@ -1,0 +1,866 @@
+{
+  "source": "D:\\Download\\16비트 리자드 전사 스프라이트 시트.png",
+  "source_sha256": "94cd6ba90f58c6fb3d55c793e0acd6ba3f54134938fd9694584bd61da4a50064",
+  "source_size": [
+    1448,
+    1086
+  ],
+  "source_mode": "RGBA",
+  "frame_count": 22,
+  "resized": false,
+  "frames": [
+    {
+      "file": "lizard_armored/idle_01.png",
+      "animation": "idle",
+      "frame": 1,
+      "row": 1,
+      "column": 1,
+      "source_rect": [
+        17,
+        11,
+        260,
+        223
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        23,
+        14,
+        249,
+        214
+      ],
+      "source_anchor": [
+        175,
+        214
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        138,
+        22
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/idle_02.png",
+      "animation": "idle",
+      "frame": 2,
+      "row": 1,
+      "column": 2,
+      "source_rect": [
+        271,
+        12,
+        503,
+        225
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        274,
+        15,
+        499,
+        213
+      ],
+      "source_anchor": [
+        407,
+        214
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        138,
+        23
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/idle_03.png",
+      "animation": "idle",
+      "frame": 3,
+      "row": 1,
+      "column": 3,
+      "source_rect": [
+        510,
+        11,
+        743,
+        225
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        516,
+        14,
+        739,
+        214
+      ],
+      "source_anchor": [
+        633,
+        214
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        139,
+        22
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/walk_01.png",
+      "animation": "walk",
+      "frame": 1,
+      "row": 2,
+      "column": 1,
+      "source_rect": [
+        0,
+        238,
+        255,
+        455
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        16,
+        244,
+        250,
+        445
+      ],
+      "source_anchor": [
+        167,
+        446
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        134,
+        22
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/walk_02.png",
+      "animation": "walk",
+      "frame": 2,
+      "row": 2,
+      "column": 2,
+      "source_rect": [
+        255,
+        225,
+        495,
+        455
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        264,
+        244,
+        488,
+        444
+      ],
+      "source_anchor": [
+        405,
+        446
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        139,
+        22
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/walk_03.png",
+      "animation": "walk",
+      "frame": 3,
+      "row": 2,
+      "column": 3,
+      "source_rect": [
+        495,
+        225,
+        722,
+        455
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        503,
+        243,
+        717,
+        444
+      ],
+      "source_anchor": [
+        635,
+        446
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        144,
+        22
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/walk_04.png",
+      "animation": "walk",
+      "frame": 4,
+      "row": 2,
+      "column": 4,
+      "source_rect": [
+        722,
+        225,
+        957,
+        455
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        730,
+        240,
+        950,
+        445
+      ],
+      "source_anchor": [
+        885,
+        446
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        141,
+        20
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/walk_05.png",
+      "animation": "walk",
+      "frame": 5,
+      "row": 2,
+      "column": 5,
+      "source_rect": [
+        957,
+        225,
+        1198,
+        455
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        966,
+        234,
+        1189,
+        445
+      ],
+      "source_anchor": [
+        1099,
+        446
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        139,
+        17
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/walk_06.png",
+      "animation": "walk",
+      "frame": 6,
+      "row": 2,
+      "column": 6,
+      "source_rect": [
+        1198,
+        226,
+        1436,
+        455
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        1207,
+        238,
+        1433,
+        446
+      ],
+      "source_anchor": [
+        1331,
+        446
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        138,
+        18
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/attack_01.png",
+      "animation": "attack",
+      "frame": 1,
+      "row": 3,
+      "column": 1,
+      "source_rect": [
+        15,
+        455,
+        240,
+        710
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        21,
+        466,
+        226,
+        698
+      ],
+      "source_anchor": [
+        127,
+        703
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        148,
+        6
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/attack_02.png",
+      "animation": "attack",
+      "frame": 2,
+      "row": 3,
+      "column": 2,
+      "source_rect": [
+        240,
+        455,
+        495,
+        710
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "source_content_rect": [
+        254,
+        466,
+        488,
+        698
+      ],
+      "source_anchor": [
+        356,
+        703
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        134,
+        6
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/attack_03.png",
+      "animation": "attack",
+      "frame": 3,
+      "row": 3,
+      "column": 3,
+      "source_rect": [
+        465,
+        455,
+        778,
+        710
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "source_content_rect": [
+        474,
+        514,
+        778,
+        702
+      ],
+      "source_anchor": [
+        528,
+        703
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        99,
+        28
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/attack_04.png",
+      "animation": "attack",
+      "frame": 4,
+      "row": 3,
+      "column": 4,
+      "source_rect": [
+        721,
+        455,
+        1018,
+        710
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "source_content_rect": [
+        724,
+        513,
+        1012,
+        703
+      ],
+      "source_anchor": [
+        776,
+        703
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        107,
+        27
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/attack_05.png",
+      "animation": "attack",
+      "frame": 5,
+      "row": 3,
+      "column": 5,
+      "source_rect": [
+        940,
+        455,
+        1268,
+        710
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "source_content_rect": [
+        941,
+        524,
+        1263,
+        702
+      ],
+      "source_anchor": [
+        1061,
+        703
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        90,
+        33
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/attack_06.png",
+      "animation": "attack",
+      "frame": 6,
+      "row": 3,
+      "column": 6,
+      "source_rect": [
+        1181,
+        455,
+        1436,
+        710
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": true,
+      "source_content_rect": [
+        1189,
+        507,
+        1433,
+        702
+      ],
+      "source_anchor": [
+        1266,
+        703
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        129,
+        25
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/hit_01.png",
+      "animation": "hit",
+      "frame": 1,
+      "row": 4,
+      "column": 1,
+      "source_rect": [
+        0,
+        710,
+        250,
+        920
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        17,
+        721,
+        234,
+        913
+      ],
+      "source_anchor": [
+        185,
+        913
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        142,
+        26
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/hit_02.png",
+      "animation": "hit",
+      "frame": 2,
+      "row": 4,
+      "column": 2,
+      "source_rect": [
+        250,
+        710,
+        500,
+        920
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        258,
+        731,
+        484,
+        913
+      ],
+      "source_anchor": [
+        341,
+        913
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        138,
+        31
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/hit_03.png",
+      "animation": "hit",
+      "frame": 3,
+      "row": 4,
+      "column": 3,
+      "source_rect": [
+        500,
+        710,
+        755,
+        920
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        516,
+        741,
+        740,
+        913
+      ],
+      "source_anchor": [
+        604,
+        913
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        139,
+        36
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/death_01.png",
+      "animation": "death",
+      "frame": 1,
+      "row": 5,
+      "column": 1,
+      "source_rect": [
+        0,
+        920,
+        275,
+        1073
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        16,
+        930,
+        271,
+        1065
+      ],
+      "source_anchor": [
+        150,
+        1066
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        123,
+        55
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/death_02.png",
+      "animation": "death",
+      "frame": 2,
+      "row": 5,
+      "column": 2,
+      "source_rect": [
+        293,
+        920,
+        595,
+        1074
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        296,
+        936,
+        585,
+        1065
+      ],
+      "source_anchor": [
+        462,
+        1066
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        106,
+        58
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/death_03.png",
+      "animation": "death",
+      "frame": 3,
+      "row": 5,
+      "column": 3,
+      "source_rect": [
+        595,
+        920,
+        962,
+        1074
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        606,
+        972,
+        952,
+        1066
+      ],
+      "source_anchor": [
+        850,
+        1066
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        78,
+        75
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_armored/death_04.png",
+      "animation": "death",
+      "frame": 4,
+      "row": 5,
+      "column": 4,
+      "source_rect": [
+        962,
+        920,
+        1437,
+        1072
+      ],
+      "size": [
+        502,
+        245
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        974,
+        992,
+        1434,
+        1064
+      ],
+      "source_anchor": [
+        1189,
+        1066
+      ],
+      "anchor": [
+        251,
+        122
+      ],
+      "content_offset": [
+        21,
+        86
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    }
+  ],
+  "background": "fully transparent",
+  "alpha_values": [
+    0,
+    255
+  ],
+  "layout": "all frame PNGs directly in one folder per sheet",
+  "cell_size": [
+    502,
+    245
+  ],
+  "anchor": [
+    251,
+    122
+  ],
+  "resampling": "none",
+  "antialiasing": false,
+  "alignment": "visible bounds centered horizontally and vertically"
+}

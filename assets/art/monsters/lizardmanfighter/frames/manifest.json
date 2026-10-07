@@ -1,0 +1,904 @@
+{
+  "source": "D:\\Download\\초록 도마뱀 전사 픽셀 스프라이트 시트.png",
+  "source_sha256": "feb6a3060f6f71cfef323014569ec60b76ccc7e46c74fb8adff199637b87b9a2",
+  "source_size": [
+    1448,
+    1086
+  ],
+  "source_mode": "RGBA",
+  "frame_count": 23,
+  "resized": false,
+  "frames": [
+    {
+      "file": "lizard_green/idle_01.png",
+      "animation": "idle",
+      "frame": 1,
+      "row": 1,
+      "column": 1,
+      "source_rect": [
+        15,
+        31,
+        247,
+        250
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        25,
+        45,
+        230,
+        226
+      ],
+      "source_anchor": [
+        150,
+        226
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        97,
+        21
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/idle_02.png",
+      "animation": "idle",
+      "frame": 2,
+      "row": 1,
+      "column": 2,
+      "source_rect": [
+        252,
+        32,
+        483,
+        229
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        268,
+        46,
+        462,
+        226
+      ],
+      "source_anchor": [
+        355,
+        226
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        102,
+        21
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/idle_03.png",
+      "animation": "idle",
+      "frame": 3,
+      "row": 1,
+      "column": 3,
+      "source_rect": [
+        492,
+        32,
+        711,
+        250
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        506,
+        44,
+        689,
+        226
+      ],
+      "source_anchor": [
+        624,
+        226
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        108,
+        20
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/idle_04.png",
+      "animation": "idle",
+      "frame": 4,
+      "row": 1,
+      "column": 4,
+      "source_rect": [
+        711,
+        39,
+        941,
+        249
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        732,
+        44,
+        937,
+        226
+      ],
+      "source_anchor": [
+        801,
+        226
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        97,
+        20
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/walk_01.png",
+      "animation": "walk",
+      "frame": 1,
+      "row": 2,
+      "column": 1,
+      "source_rect": [
+        13,
+        250,
+        239,
+        468
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        19,
+        280,
+        226,
+        456
+      ],
+      "source_anchor": [
+        107,
+        458
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        96,
+        23
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/walk_02.png",
+      "animation": "walk",
+      "frame": 2,
+      "row": 2,
+      "column": 2,
+      "source_rect": [
+        240,
+        258,
+        476,
+        470
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        253,
+        280,
+        462,
+        458
+      ],
+      "source_anchor": [
+        344,
+        458
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        95,
+        22
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/walk_03.png",
+      "animation": "walk",
+      "frame": 3,
+      "row": 2,
+      "column": 3,
+      "source_rect": [
+        476,
+        250,
+        723,
+        470
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        488,
+        280,
+        716,
+        458
+      ],
+      "source_anchor": [
+        623,
+        458
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        85,
+        22
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/walk_04.png",
+      "animation": "walk",
+      "frame": 4,
+      "row": 2,
+      "column": 4,
+      "source_rect": [
+        723,
+        250,
+        941,
+        470
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        732,
+        280,
+        930,
+        458
+      ],
+      "source_anchor": [
+        814,
+        458
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        100,
+        22
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/walk_05.png",
+      "animation": "walk",
+      "frame": 5,
+      "row": 2,
+      "column": 5,
+      "source_rect": [
+        962,
+        266,
+        1192,
+        470
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        968,
+        280,
+        1188,
+        458
+      ],
+      "source_anchor": [
+        1039,
+        458
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        89,
+        22
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/walk_06.png",
+      "animation": "walk",
+      "frame": 6,
+      "row": 2,
+      "column": 6,
+      "source_rect": [
+        1204,
+        250,
+        1426,
+        470
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        1211,
+        280,
+        1418,
+        458
+      ],
+      "source_anchor": [
+        1338,
+        458
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        96,
+        22
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/attack_01.png",
+      "animation": "attack",
+      "frame": 1,
+      "row": 3,
+      "column": 1,
+      "source_rect": [
+        25,
+        477,
+        241,
+        702
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        33,
+        497,
+        229,
+        692
+      ],
+      "source_anchor": [
+        104,
+        696
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        101,
+        14
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/attack_02.png",
+      "animation": "attack",
+      "frame": 2,
+      "row": 3,
+      "column": 2,
+      "source_rect": [
+        250,
+        470,
+        467,
+        701
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        261,
+        481,
+        450,
+        692
+      ],
+      "source_anchor": [
+        327,
+        696
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        105,
+        6
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/attack_03.png",
+      "animation": "attack",
+      "frame": 3,
+      "row": 3,
+      "column": 3,
+      "source_rect": [
+        482,
+        470,
+        728,
+        713
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        502,
+        528,
+        713,
+        692
+      ],
+      "source_anchor": [
+        585,
+        696
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        94,
+        29
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/attack_04.png",
+      "animation": "attack",
+      "frame": 4,
+      "row": 3,
+      "column": 4,
+      "source_rect": [
+        735,
+        470,
+        949,
+        709
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        746,
+        523,
+        937,
+        696
+      ],
+      "source_anchor": [
+        812,
+        696
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        104,
+        25
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/attack_05.png",
+      "animation": "attack",
+      "frame": 5,
+      "row": 3,
+      "column": 5,
+      "source_rect": [
+        954,
+        495,
+        1227,
+        709
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        961,
+        533,
+        1225,
+        693
+      ],
+      "source_anchor": [
+        1102,
+        696
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        67,
+        31
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/attack_06.png",
+      "animation": "attack",
+      "frame": 6,
+      "row": 3,
+      "column": 6,
+      "source_rect": [
+        1227,
+        499,
+        1423,
+        699
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        1230,
+        504,
+        1418,
+        693
+      ],
+      "source_anchor": [
+        1291,
+        696
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        105,
+        17
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/hit_01.png",
+      "animation": "hit",
+      "frame": 1,
+      "row": 4,
+      "column": 1,
+      "source_rect": [
+        29,
+        722,
+        237,
+        913
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        33,
+        744,
+        217,
+        902
+      ],
+      "source_anchor": [
+        133,
+        902
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        107,
+        32
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/hit_02.png",
+      "animation": "hit",
+      "frame": 2,
+      "row": 4,
+      "column": 2,
+      "source_rect": [
+        252,
+        760,
+        453,
+        910
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        263,
+        763,
+        445,
+        902
+      ],
+      "source_anchor": [
+        330,
+        902
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        108,
+        42
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/hit_03.png",
+      "animation": "hit",
+      "frame": 3,
+      "row": 4,
+      "column": 3,
+      "source_rect": [
+        480,
+        722,
+        708,
+        912
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        495,
+        775,
+        696,
+        902
+      ],
+      "source_anchor": [
+        590,
+        902
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        99,
+        48
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/death_01.png",
+      "animation": "death",
+      "frame": 1,
+      "row": 5,
+      "column": 1,
+      "source_rect": [
+        15,
+        921,
+        242,
+        1062
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        29,
+        929,
+        229,
+        1054
+      ],
+      "source_anchor": [
+        140,
+        1068
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        99,
+        49
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/death_02.png",
+      "animation": "death",
+      "frame": 2,
+      "row": 5,
+      "column": 2,
+      "source_rect": [
+        242,
+        915,
+        513,
+        1072
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        255,
+        954,
+        501,
+        1068
+      ],
+      "source_anchor": [
+        452,
+        1068
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        76,
+        54
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/death_03.png",
+      "animation": "death",
+      "frame": 3,
+      "row": 5,
+      "column": 3,
+      "source_rect": [
+        513,
+        931,
+        827,
+        1086
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        524,
+        972,
+        819,
+        1059
+      ],
+      "source_anchor": [
+        717,
+        1068
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        52,
+        68
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    },
+    {
+      "file": "lizard_green/death_04.png",
+      "animation": "death",
+      "frame": 4,
+      "row": 5,
+      "column": 4,
+      "source_rect": [
+        837,
+        915,
+        1199,
+        1073
+      ],
+      "size": [
+        399,
+        223
+      ],
+      "original_background_preserved": false,
+      "irregular_weapon_boundary": false,
+      "source_content_rect": [
+        849,
+        986,
+        1182,
+        1059
+      ],
+      "source_anchor": [
+        1091,
+        1068
+      ],
+      "anchor": [
+        199,
+        111
+      ],
+      "content_offset": [
+        33,
+        75
+      ],
+      "alignment": "visible bounds centered horizontally and vertically"
+    }
+  ],
+  "background": "fully transparent",
+  "alpha_values": [
+    0,
+    255
+  ],
+  "layout": "all frame PNGs directly in one folder per sheet",
+  "cell_size": [
+    399,
+    223
+  ],
+  "anchor": [
+    199,
+    111
+  ],
+  "resampling": "none",
+  "antialiasing": false,
+  "alignment": "visible bounds centered horizontally and vertically"
+}
