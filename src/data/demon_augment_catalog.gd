@@ -603,7 +603,7 @@ static func get_monster_normal_augments(
 	monster_id: String,
 	monster_name: String
 ) -> Array:
-	if monster_id.is_empty():
+	if monster_id.is_empty() or not bool(preload("res://src/data/monster_catalog.gd").MONSTERS.get(monster_id, {}).get("normal_augments_enabled", true)):
 		return []
 
 	var display_name := (

@@ -36,6 +36,9 @@ static func save_ids(monster_ids: Array, valid_ids: Array) -> bool:
 		encoded += String(monster_id)
 
 	var config := ConfigFile.new()
+	var result := ACCOUNT_SCOPE.load_config(config,SAVE_PATH)
+	if result != OK and result != ERR_FILE_NOT_FOUND:
+		return false
 	config.set_value("team", "monster_ids", encoded)
 	return ACCOUNT_SCOPE.save_config(config, SAVE_PATH) == OK
 

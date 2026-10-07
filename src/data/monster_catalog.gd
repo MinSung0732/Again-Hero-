@@ -32,14 +32,19 @@ const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const MONSTERS := {
 	"zeus": {
-		"id": "zeus", "name": "제우스", "rarity": "transcendent", "grade": "transcendent",
-		"default_unlocked": false, "combat_enabled": false,
-		"can_be_elite": false, "can_be_giant": false,
-		"description": "초월 제우스. 첫 획득 즉시 해금 및 프로필 초상화·배너 제공. 수집·등록 준비 단계이며 전투 능력은 추후 적용됩니다.",
-		"card_icon_path": "res://assets/art/Transcendent_monster/zeus/frames/idle_01.png",
-		"display_icon_path": "res://assets/art/Transcendent_monster/zeus/zeus_icon.png",
-		"base_stats": {}, "special_augment_ids": [],
-		"scene": preload("res://src/monsters/ZeusPreview.tscn"),
+		"id":"zeus","name":"제우스","rarity":"transcendent","grade":"transcendent",
+		"role":"ranged","species":"divine_humanoid","family":"zeus","attack_type":"ranged",
+		"combat_style":preload("res://src/data/zeus_behavior_catalog.gd").COMBAT_STYLE,
+		"summon_growth":{"max_hp":preload("res://src/data/zeus_behavior_catalog.gd").HP_PER_SUMMON,"attack_damage":preload("res://src/data/zeus_behavior_catalog.gd").DAMAGE_PER_SUMMON},
+		"default_unlocked":false,"combat_enabled":true,"base_cost":0.0,"summon_exp":0.0,
+		"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,
+		"description":"지휘력500과 마력250 소모 후 전투당1회 무료 소환. 소환 전 실제 생성 수에 따라 HP1200+수×2.5 / 공격150+수×0.6. 심판: 지름475 즉시 번개, 50%확률2초75% 마비(공속 저하). 천둥구체:2초 충전 후200%(2초월235%·무적무시), 둔화/마비30%. 왕관:15초,5초마다HP3%회복·마비효과50%증가(3초월 모든 기술CD최소10초). 천둥가르기:650속도·1500직선·150%(2초월175%·무적무시)·마비20%. 과전압:지름550 아군사망 구슬당 게이지0.01(4초월0.02),5초월 잃은HP0.07%회복. 게이지100·지휘력회복50%·초당최대10. 일반/특수증강·엘리트·대형몹 제외.",
+		"card_icon_path":"res://assets/art/Transcendent_monster/zeus/frames/idle_01.png",
+		"display_icon_path":"res://assets/art/Transcendent_monster/zeus/zeus_icon.png",
+		"base_stats":preload("res://src/data/zeus_behavior_catalog.gd").BASE,
+		"transcendence":preload("res://src/data/zeus_behavior_catalog.gd").RULES,
+		"special_augment_ids":[],"ground_shadow":{"size":Vector2(76,20),"offset_y":43.0,"opacity":0.35},
+		"scene":preload("res://src/monsters/Zeus.tscn"),
 	},
 	"yuki_onna": {
 		"id":"yuki_onna","name":"설녀","role":"control","family":"yuki_onna","species":"humanoid","grade":"rare","rarity":"rare","attack_type":"ranged",
@@ -855,6 +860,7 @@ const ROLE_LABELS := {
 
 const SPECIES_LABELS := {
 	"humanoid": "인간형",
+	"divine_humanoid": "신인형",
 	"beast": "짐승",
 	"liquid": "액체",
 	"undead": "언데드",

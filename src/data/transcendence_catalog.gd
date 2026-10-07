@@ -29,6 +29,8 @@ static func describe(id: String) -> String:
 		var amount := float(condition.get("amount", 0))
 		if metric == "monsters_summoned":
 			parts.append("몬스터 %d마리 소환" % int(amount))
+		elif metric == "command_spent":
+			parts.append("지휘력 %s 사용" % String.num(amount,1))
 		elif metric == "mana_spent":
 			parts.append("마력 %s 사용" % String.num(amount,1))
 	return (" 및 " if rules.get("mode", "any") == "all" else " 또는 ").join(parts)

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://src/monsters/zeus_slash.gd" id="1"]
+[node name="ZeusSlash" type="Node2D"]
+z_index = 6
+texture_filter = 1
+script = ExtResource("1")

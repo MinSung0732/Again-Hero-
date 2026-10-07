@@ -785,6 +785,9 @@ var hit_pose_timer: float = 0.0
 var hero_animation_last_restart_name: StringName = &""
 var hero_animation_last_restart_msec: int = -1000000
 var invulnerability_timer: float = 0.0
+var imposed_skill_cooldown := 0.0
+var paralysis_timer := 0.0
+var paralysis_ratio := 0.0
 var is_dying: bool = false
 var slow_timer: float = 0.0
 var poison_timer: float = 0.0
@@ -887,6 +890,9 @@ func configure_profile(profile: Dictionary) -> void:
 	status_resistances.clear()
 	offensive_memory_events.clear()
 	status_effect_events.clear()
+	imposed_skill_cooldown = 0.0
+	paralysis_timer = 0.0
+	paralysis_ratio = 0.0
 	_clear_bleed()
 	_clear_stun()
 	_clear_medusa_statuses()
@@ -1727,6 +1733,10 @@ func _attach_status_effect_visual(effect_type: String) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	imposed_skill_cooldown = maxf(imposed_skill_cooldown-delta,0.0)
+	paralysis_timer = maxf(paralysis_timer-delta,0.0)
+	if paralysis_timer <= 0.0:
+		paralysis_ratio = 0.0
 	var immobilized := petrify_timer > 0.0
 	var anchor := global_position
 	_physics_process_actions(delta)
@@ -1797,7 +1807,7 @@ func _physics_process_actions(delta: float) -> void:
 	if ai_observation_timer <= 0.0:
 		_refresh_ai_observation()
 
-	attack_timer = maxf(attack_timer - delta, 0.0)
+	attack_timer = maxf(attack_timer - delta * get_paralysis_attack_multiplier(), 0.0)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
 	wander_timer = maxf(wander_timer - delta, 0.0)
 	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
@@ -2118,7 +2128,7 @@ func _physics_process_summoner(delta: float) -> void:
 	if ai_observation_timer <= 0.0:
 		_refresh_ai_observation()
 
-	attack_timer = maxf(attack_timer - delta, 0.0)
+	attack_timer = maxf(attack_timer - delta * get_paralysis_attack_multiplier(), 0.0)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
 	wander_timer = maxf(wander_timer - delta, 0.0)
 	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
@@ -2976,7 +2986,7 @@ func _physics_process_alchemist(delta: float) -> void:
 	if ai_observation_timer <= 0.0:
 		_refresh_ai_observation()
 
-	attack_timer = maxf(attack_timer - delta, 0.0)
+	attack_timer = maxf(attack_timer - delta * get_paralysis_attack_multiplier(), 0.0)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
 	wander_timer = maxf(wander_timer - delta, 0.0)
 	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
@@ -4985,7 +4995,7 @@ func _physics_process_gunner(delta: float) -> void:
 	if ai_observation_timer <= 0.0:
 		_refresh_ai_observation()
 
-	attack_timer = maxf(attack_timer - delta, 0.0)
+	attack_timer = maxf(attack_timer - delta * get_paralysis_attack_multiplier(), 0.0)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
 	wander_timer = maxf(wander_timer - delta, 0.0)
 	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
@@ -5683,7 +5693,7 @@ func _physics_process_rogue(delta: float) -> void:
 	if ai_observation_timer <= 0.0:
 		_refresh_ai_observation()
 
-	attack_timer = maxf(attack_timer - delta, 0.0)
+	attack_timer = maxf(attack_timer - delta * get_paralysis_attack_multiplier(), 0.0)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
 	wander_timer = maxf(wander_timer - delta, 0.0)
 	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
@@ -5694,7 +5704,7 @@ func _physics_process_rogue(delta: float) -> void:
 		0.0
 	)
 	rogue_slash_cooldown_timer = maxf(
-		rogue_slash_cooldown_timer - delta,
+		rogue_slash_cooldown_timer - delta * get_paralysis_attack_multiplier(),
 		0.0
 	)
 	_update_rogue_attack_collision_ignore(delta)
@@ -17076,7 +17086,7 @@ func _tick_charm_timers(delta: float) -> bool:
 	return true
 
 func _tick_charm_state(delta: float) -> void:
-	attack_timer = maxf(attack_timer - delta, 0.0)
+	attack_timer = maxf(attack_timer - delta * get_paralysis_attack_multiplier(), 0.0)
 	if hero_archetype == "archmage_elementalist":
 		for key in ARCHMAGE_SKILL_KEYS:
 			archmage_skill_cooldowns[key] = maxf(float(archmage_skill_cooldowns.get(key, 0.0)) - delta, 0.0)
@@ -17385,7 +17395,7 @@ func _tick_fear_state(delta: float) -> bool:
 	ai_memory_clock += delta
 	_prune_offensive_memory()
 	_prune_status_memory()
-	attack_timer = maxf(attack_timer - delta, 0.0)
+	attack_timer = maxf(attack_timer - delta * get_paralysis_attack_multiplier(), 0.0)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
 	wander_timer = maxf(wander_timer - delta, 0.0)
 	_tick_fear_skill_cooldowns(delta)
@@ -17472,7 +17482,7 @@ func _physics_process_berserker(delta: float) -> void:
 	if ai_observation_timer <= 0.0:
 		_refresh_ai_observation()
 
-	attack_timer = maxf(attack_timer - delta, 0.0)
+	attack_timer = maxf(attack_timer - delta * get_paralysis_attack_multiplier(), 0.0)
 	berserker_skill1_cooldown = maxf(
 		berserker_skill1_cooldown - delta,
 		0.0
@@ -19176,7 +19186,7 @@ func _physics_process_fighter(delta: float) -> void:
 	if ai_observation_timer <= 0.0:
 		_refresh_ai_observation()
 
-	attack_timer = maxf(attack_timer - delta, 0.0)
+	attack_timer = maxf(attack_timer - delta * get_paralysis_attack_multiplier(), 0.0)
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
 	wander_timer = maxf(wander_timer - delta, 0.0)
 	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
@@ -19848,6 +19858,8 @@ func _update_fighter_guard(delta: float) -> void:
 	queue_redraw()
 
 func _fighter_can_activate_guard() -> bool:
+	if imposed_skill_cooldown > 0.0:
+		return false
 	var trigger := HERO_FIGHTER_RUNTIME.get_guard_trigger(
 		ultimate_config
 	)
@@ -20753,3 +20765,33 @@ func _draw() -> void:
 			Color(0.20, 0.65, 1.0),
 			true
 		)
+
+# Stronger paralysis replaces weaker; weaker applications cannot prolong it.
+func apply_paralysis(ratio: float, duration: float) -> bool:
+	if current_hp <= 0 or is_dying or duration <= 0.0 or ratio <= 0.0:
+		return false
+	var strength := clampf(ratio,0.0,1.0)
+	if paralysis_timer > 0.0 and strength < paralysis_ratio:
+		return false
+	paralysis_ratio = strength
+	paralysis_timer = duration
+	if strength >= 1.0:
+		attack_timer = maxf(attack_timer,0.0001)
+		rogue_slash_cooldown_timer = maxf(rogue_slash_cooldown_timer,0.0001)
+	return true
+
+func get_paralysis_attack_multiplier() -> float:
+	return 1.0-paralysis_ratio if paralysis_timer > 0.0 else 1.0
+
+func impose_all_skill_cooldowns(seconds: float) -> void:
+	if current_hp <= 0 or is_dying or seconds <= 0.0:
+		return
+	imposed_skill_cooldown = maxf(imposed_skill_cooldown,seconds)
+	archmage_blink_cooldown_timer = maxf(archmage_blink_cooldown_timer,seconds)
+	if hero_archetype == "archmage_elementalist":
+		for key in ARCHMAGE_SKILL_KEYS:
+			archmage_skill_cooldowns[key] = maxf(float(archmage_skill_cooldowns.get(key,0.0)),seconds)
+	else:
+		for property_name in _get_external_skill_cooldown_properties():
+			set(property_name,maxf(float(get(property_name)),seconds))
+	queue_redraw()

@@ -13,6 +13,8 @@ signal summon_result(monster_type: String, success: bool, message: String)
 signal transcendence_changed(monster_id: String, ready: bool, used: bool)
 const TRANSCENDENCE_DATA := preload("res://src/data/transcendence_catalog.gd")
 const TRANSCENDENCE_STORE := preload("res://src/systems/transcendence_loadout_store.gd")
+var transcendent_actor: Node2D
+var raw_allied_summons := 0
 var transcendence = preload("res://src/systems/transcendence_runtime.gd").new()
 signal demon_progression_changed(level: int, current_exp: float, exp_to_next_level: float)
 signal demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: int)
@@ -736,6 +738,8 @@ func _cache_demon_ultimate_runtime_data() -> void:
 
 func _start_battle() -> void:
 	var registered_id := TRANSCENDENCE_STORE.load_id()
+	transcendent_actor = null
+	raw_allied_summons = 0
 	transcendence.configure(registered_id, TRANSCENDENCE_DATA.get_rules(registered_id) if bool(MONSTER_CATALOG.MONSTERS.get(registered_id, {}).get("combat_enabled", true)) else {})
 	transcendence_changed.emit(registered_id, false, false)
 	battle_over = false
@@ -1216,7 +1220,7 @@ func _can_attempt_summon(monster_type: String, transcendence_attempt: bool = fal
 		summon_result.emit(monster_type, false, "최대 소환 개체 수에 도달했습니다.")
 		return false
 
-	if get_monster_cost(monster_type) <= 0.0:
+	if get_monster_cost(monster_type) <= 0.0 and not (transcendence_attempt and TRANSCENDENCE_DATA.is_transcendent(monster_type)):
 		summon_result.emit(monster_type, false, "알 수 없는 몬스터입니다.")
 		return false
 
@@ -1237,6 +1241,8 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 	if not is_instance_valid(primary_monster):
 		command_power += cost
 		return false
+	if transcendence.record_command(cost):
+		transcendence_changed.emit(transcendence.monster_id, true, false)
 	if not is_transcendent:
 		_spawn_extra_normal_summon_monsters(monster_type, spawn_position)
 	if is_transcendent:
@@ -1444,6 +1450,18 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 		"normal_augments": [],
 		"special_augments": [],
 	}
+
+	if TRANSCENDENCE_DATA.is_transcendent(monster_id):
+		var count := raw_allied_summons
+		if is_instance_valid(transcendent_actor) and String(transcendent_actor.monster_type) == monster_id:
+			count = transcendent_actor.summon_snapshot
+		var growth: Dictionary = MONSTER_CATALOG.MONSTERS[monster_id].get("summon_growth",{})
+		detail.merge(base_stats, true)
+		for stat in growth:
+			detail[stat] = int(round(float(base_stats.get(stat,0))+count*float(growth[stat])))
+		detail["combat_style"] = MONSTER_CATALOG.MONSTERS[monster_id].get("combat_style","")
+		detail["summon_snapshot"] = count
+		return detail
 
 	if base_stats.has("max_hp"):
 		var hp_value := (
@@ -1932,7 +1950,7 @@ func _spawn_monster(
 	var monster := scene.instantiate() as Node2D
 	if monster == null:
 		return null
-	var fixed_base_stats := bool(spawn_modifiers.get("fixed_base_stats", false))
+	var fixed_base_stats := TRANSCENDENCE_DATA.is_transcendent(monster_type) or bool(spawn_modifiers.get("fixed_base_stats", false))
 	monster.set_meta("fixed_base_stats", fixed_base_stats)
 	monster.set_meta("exclude_all_augments", fixed_base_stats or bool(spawn_modifiers.get("exclude_all_augments", false)))
 	var monster_species := MONSTER_CATALOG.get_species(monster_type)
@@ -2204,6 +2222,9 @@ func _spawn_monster(
 			self
 		)
 
+	if monster.has_method("configure_transcendence"):
+		monster.configure_transcendence(raw_allied_summons,int(monster_collection_upgrade_levels.get(monster_type,0)))
+		transcendent_actor = monster
 	add_child(monster)
 	monster.position = spawn_position
 	# Keep depth normalization after the monster's _ready() for consistency.
@@ -2228,6 +2249,8 @@ func _spawn_monster(
 	monster.tree_exited.connect(_unregister_monster.bind(monster_instance_id), CONNECT_ONE_SHOT)
 	monster_spatial_grid_physics_frame = -1
 	monsters_alive += 1
+	if not TRANSCENDENCE_DATA.is_transcendent(monster_type):
+		raw_allied_summons += 1
 	if not split_child and not TRANSCENDENCE_DATA.is_transcendent(monster_type) and transcendence.record_summon():
 		transcendence_changed.emit(transcendence.monster_id, true, false)
 	return monster
@@ -2719,6 +2742,8 @@ func _apply_ghost_death_empower(dead_monster: Node) -> void:
 	)
 
 func _on_monster_died(monster: Node) -> void:
+	if not battle_over and is_instance_valid(monster) and is_instance_valid(transcendent_actor) and monster != transcendent_actor:
+		transcendent_actor.on_ally_death((monster as Node2D).global_position)
 	if battle_over:
 		return
 
@@ -5492,6 +5517,8 @@ func open_tutorial_elite() -> void:
 
 
 func _apply_augment_free_base_stats(monster: Node, monster_id: String) -> void:
+	if TRANSCENDENCE_DATA.is_transcendent(monster_id):
+		return # Snapshot stats and transcendence abilities have their own rules.
 	if bool(monster.get_meta("fixed_base_stats", false)):
 		# Skill reinforcements keep level-zero catalog stats for their lifetime.
 		# Preserve spawn accounting such as split-child EXP instead of resetting it.
