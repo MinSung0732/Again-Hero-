@@ -27,8 +27,13 @@ func _run() -> void:
 	await _wait_ready(player)
 	player.set_process(false)
 	player.advance(4.15)
-	assert(player._name_label.text == "제우스" and player._name_label.modulate.a == 1.0)
-	assert(player._name_label.get_theme_font_size("font_size") >= 16)
+	var active: Control = player._active_view
+	assert(active != null and not active.is_processing() and not active.is_processing_input())
+	assert(not player._name_label.visible and not player._effects.visible)
+	assert(active.name_label.text == "제우스" and active.name_label.modulate.a == 1.0)
+	assert(active.name_label.get_theme_font_size("font_size") >= 18)
+	assert(active.reveal_material.get_shader_parameter("reveal_edge") > 1.0)
+	assert(player._impact_played)
 	for dimensions in [Vector2(32, 256), Vector2(400, 60), Vector2(128, 128)]:
 		var box := Rect2(20, 30, 300, 900)
 		var fitted := EFFECT_LAYER.fitted_rect(dimensions, box)
@@ -38,8 +43,15 @@ func _run() -> void:
 	assert(_completed == 1 and not player.visible)
 	player.play("zeus")
 	await _wait_ready(player)
-	player.advance(2.5)
+	assert(player._active_view == active and player._views.size() == 1)
+	assert(active.elapsed == 0.0 and active.rig.modulate.a == 0.0)
+	player.advance(1.0)
+	assert(is_equal_approx(float(active.reveal_material.get_shader_parameter("reveal_edge")), -0.08))
+	assert(not player._impact_played)
+	player.advance(1.5)
+	assert(player._impact_played)
 	player.skip()
+	assert(not player._impact_sound.playing and not active.visible)
 	player.advance(5.0)
 	assert(_completed == 2 and not player.visible)
 	# Cancellation during asynchronous loading must not resurrect the player.
@@ -57,17 +69,19 @@ func _run() -> void:
 	var data := CATALOG.get_entry("zeus")
 	assert(data.character_count == 1 and data.character_region.size == Vector2(768, 1280))
 	assert(data.feet_y == [1200.0])
+	player.play("zeus")
+	await _wait_ready(player)
+	player.set_process(false)
 	for viewport_size in [Vector2(1280,720), Vector2(2340,1080), Vector2(1024,768), Vector2(1080,1920), Vector2(1080,2400), Vector2(720,1280)]:
-		var stage: Rect2 = PLAYER.stage_rect(viewport_size, data.stage_size)
-		var factor: float = stage.size.x / data.stage_size.x
-		for feet in data.feet_y:
-			var region: Rect2 = data.character_region
-			var anchor: Vector2 = data.anchor
-			var extent := region.size * float(data.character_scale)
-			var origin := anchor - Vector2(region.size.x * 0.5, feet - region.position.y) * float(data.character_scale)
-			var body := Rect2(stage.position + origin * factor, extent * factor)
-			assert(Rect2(Vector2.ZERO, viewport_size).encloses(body))
-			assert(body.end.y < stage.position.y + data.name_rect.position.y * factor, "name overlaps feet")
+		player.size = viewport_size
+		await process_frame
+		assert(active.size == viewport_size)
+		assert(Rect2(Vector2.ZERO, viewport_size).encloses(Rect2(active.name_label.position, active.name_label.size)), str(viewport_size, " name:", active.name_label.position, " size:",active.name_label.size))
+		assert((active.rig.global_transform * Vector2(384,1200)).y < active.name_label.global_position.y)
+		assert(player._skip.get_index() > active.get_index())
+	player.cancel()
+	player.play("unregistered_monster")
+	assert(not player._running and not player.visible)
 	player.queue_free()
 	var overlay = OVERLAY.new()
 	root.add_child(overlay)
@@ -103,6 +117,8 @@ func _run() -> void:
 			assert(overlay._phase == "cutscene")
 			seen.append(index)
 			await _wait_ready(overlay._cutscene)
+			assert(overlay._cutscene._active_view != null)
+			assert(overlay._cutscene._active_view.elapsed == 0.0)
 			if index == 5:
 				overlay._cutscene.skip()
 			else:

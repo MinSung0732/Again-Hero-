@@ -22,6 +22,11 @@ var _running := false
 var _generation := 0
 var _name_label: Label
 var _skip: Button
+var _views: Dictionary = {}
+var _active_view: Control
+var _impact_sound: AudioStreamPlayer
+var _impact_sound_path := ""
+var _impact_played := false
 
 
 func _ready() -> void:
@@ -53,6 +58,9 @@ func _ready() -> void:
 	_skip.custom_minimum_size = Vector2(120, 56)
 	_skip.pressed.connect(skip)
 	add_child(_skip)
+	_impact_sound = AudioStreamPlayer.new()
+	_impact_sound.bus = &"SFX"
+	add_child(_impact_sound)
 	resized.connect(_layout)
 	set_process(false)
 	hide()
@@ -64,6 +72,8 @@ func play(monster_id: String) -> void:
 	if _data.is_empty():
 		finished.emit()
 		return
+	_effects.show()
+	_name_label.show()
 	var token := _generation
 	_character.clear()
 	_circle.clear()
@@ -77,6 +87,13 @@ func play(monster_id: String) -> void:
 	show()
 	move_to_front()
 	_layout()
+	var view_path := String(_data.get("presentation_view", ""))
+	if not view_path.is_empty() and _activate_view(view_path):
+		_last_tick_usec = Time.get_ticks_usec()
+		_running = true
+		set_process(true)
+		queue_redraw()
+		return
 	var character_frames := await _load_frames("character", token)
 	if token != _generation:
 		return
@@ -108,7 +125,43 @@ func play(monster_id: String) -> void:
 	_effects.queue_redraw()
 
 
+
+func _activate_view(path: String) -> bool:
+	if not _views.has(path):
+		var script := load(path) as Script
+		if script == null:
+			return false # Existing generic presentation is the fallback.
+		var view: Control = script.new()
+		add_child(view)
+		view.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+		view.set_process(false)
+		view.set_process_input(false)
+		_views[path] = view
+	_active_view = _views[path]
+	_active_view.size = size
+	_active_view._layout()
+	_active_view.show()
+	_active_view.set_time(0.0)
+	_effects.hide()
+	_name_label.hide()
+	_skip.move_to_front()
+	var sound_path := String(_data.get("impact_sound_path", ""))
+	if sound_path != _impact_sound_path:
+		_impact_sound_path = sound_path
+		_impact_sound.stream = null
+		if not sound_path.is_empty() and FileAccess.file_exists(sound_path):
+			_impact_sound.stream = AudioStreamMP3.load_from_file(sound_path)
+	_impact_sound.volume_db = float(_data.get("impact_volume_db", -6.0))
+	return true
+
+
 func cancel() -> void:
+	if is_instance_valid(_active_view):
+		_active_view.hide()
+	_active_view = null
+	if is_instance_valid(_impact_sound):
+		_impact_sound.stop()
+	_impact_played = false
 	_generation += 1
 	_running = false
 	set_process(false)
@@ -139,9 +192,16 @@ func advance(delta: float) -> void:
 	if not _running:
 		return
 	_elapsed += maxf(delta, 0.0)
-	_name_label.modulate.a = smoothstep(3.75, 4.05, _elapsed)
-	queue_redraw()
-	_effects.queue_redraw()
+	if is_instance_valid(_active_view):
+		_active_view.set_time(_elapsed)
+		if not _impact_played and _elapsed >= float(_data.get("impact_sound_at", 1.9)):
+			_impact_played = true
+			if _elapsed < float(_data.duration) and _impact_sound.stream != null:
+				_impact_sound.play()
+	else:
+		_name_label.modulate.a = smoothstep(3.75, 4.05, _elapsed)
+		queue_redraw()
+		_effects.queue_redraw()
 	if _elapsed >= float(_data.duration):
 		cancel()
 		finished.emit()
@@ -162,6 +222,9 @@ static func cover_region(texture_size: Vector2, target_size: Vector2) -> Rect2:
 func _layout() -> void:
 	if not is_instance_valid(_name_label):
 		return
+	if is_instance_valid(_active_view):
+		_active_view.size = size
+		_active_view._layout()
 	var stage_size: Vector2 = _data.get("stage_size", STAGE_SIZE)
 	var stage := stage_rect(size, stage_size)
 	var factor := stage.size.x / stage_size.x
@@ -215,7 +278,7 @@ func _load_texture(path: String) -> Texture2D:
 
 
 func _draw() -> void:
-	if _data.is_empty():
+	if _active_view != null or _data.is_empty():
 		return
 	var t := _elapsed
 	var light := lerpf(0.13, 0.92, smoothstep(1.0, 3.7, t))

@@ -1,6 +1,6 @@
 # 제우스 Godot 리깅 시안
 
-F6: `src/dev/ZeusRigPreview.tscn`. 5초 동작 +0.7초 유지 후 반복, Space 일시정지. 기존 뽑기 컷신과 독립된 검토 씬이며 확률·재화·저장·보상을 호출하지 않는다.
+F6: `src/dev/ZeusRigPreview.tscn`. 5초 동작 +0.7초 유지 후 반복, Space 일시정지. 실제 뽑기와 같은 ZeusRigCutsceneView를 사용하는 검토 씬이며 확률·재화·저장·보상을 호출하지 않는다. 개발용 래퍼에서만 루프/Space 입력을 추가한다.
 
 ## 실제 구현과 범위
 - Skeleton2D / Bone2D8개, Polygon2D8개, AnimationPlayer cubic 보간으로 연속 동작. 이미지 교체/키포즈 crossfade 없음.
@@ -21,9 +21,14 @@ Godot4.6 headless tests/zeus_rig_smoke.gd: 정점/삼각형/8파츠/8본·공유
 - `assets/art/effects/gatcha/zeus/lightning_v2/`: 1024×1024 2×2 시트와 동일512×512 개별4장, 모두 RGBA 투명 PNG. 생성 원본1254×1254를 정확히2×2 분할하고 nearest로416×416에 맞춘 뒤512캔버스 중앙/상단48px에 배치했다. 새로운 번개 생성은 기본 imagegen 도구를 사용했다. 그림 변경/블러 없이 프레임 분할·리사이즈·투명 여백만 처리했다.
 - 최종 프롬프트: “transparent PNG 2×2 four-frame lightning sheet; stable top/bottom center origin/end, white jagged core, cyan inner/deep cobalt outer branching thunder, sharp pixel edges, consecutive varied branches, transparent gutters, no background/characters/text/blur.” 전체 생성 목표는1024×1024였으며 실제 결과를 위 규격으로 정리했다.
 - 충전0.3–1.65초 → 방출1.72–2.75초(정점1.9초) → 충격파/입자2–3.2초 → 제우스 이름3.8–4.1초. 섬광은 정점±0.07초, 배경 진동은 정점 이후0.35초만 적용. 캐릭터에는 화면 진동을 적용하지 않는다. 후광은 캐릭터 뒤, 번개/입자는 앞, 이름은 마지막 계층이다.
-- 검증 실행: `godot --headless --path . --script tests/zeus_lightning_smoke.gd`, 기존 `tests/zeus_rig_smoke.gd`. 테스트는 RNG/재화/보상 저장 없이 실제미리보기4비율·301시점·발생점/캐시/셀 여백을 확인한다. PC OpenGL540×960 실제5초 영상 검수 완료; 모바일 실기기/성능 미검증. 기존 뽑기 적용은 시안 승인 후 연결하며 현재도 F6 ZeusRigPreview에서 확인한다.
+- 검증 실행: `godot --headless --path . --script tests/zeus_lightning_smoke.gd`, 기존 `tests/zeus_rig_smoke.gd`. 테스트는 RNG/재화/보상 저장 없이 실제미리보기4비율·301시점·발생점/캐시/셀 여백을 확인한다. PC OpenGL540×960 실제5초 영상 검수 완료; 모바일 실기기/성능 미검증. 실제 뽑기는 이제 동일 공통 뷰를 재생하며 F6 ZeusRigPreview에서도 확인한다.
 
 ## 실루엣 등장(v3)
 - 첫0.4초 캐릭터를 숨긴 후0.4–0.85초 어두운 실루엣으로 등장.1.35초까지 색상을 공개하지 않고 기다린 뒤1.35–2.45초 원본UV의 위에서 아래로 본모습을 공개한다.1.9초 기존 PNG 방출과 겹치며 전체5초·전신 구도·연속 동작 유지.
 - `zeus_silhouette_reveal.gdshader`와 공유 ShaderMaterial1개를8개 메시가 사용한다. PNG 원본/alpha를 유지하고 공개 경계의 색만 바꾸므로 경계 연결과 원본 색상이 유지된다. 초기화와set_time 모두 동일 함수로 alpha/공개 위치/이름을 갱신해 루프 또는 역방향seek에서도 앞선 상태가 남지 않는다. 새 이미지/재추첨/보상 지급 경로 없음.
 - 하단 이름은3.55–3.9초 등장, stage36px·외곽선3px·그림자·배경 음영. 이름 시작Y850은 발바닥Y800보다 아래이며 화면 비율에 따라 공통contain 배치된다. 테스트에서4비율 영역 포함/발 여백/재질 공유/공개 단조 진행/숨김 대기/완전 공개/루프 초기화 확인. Godot PC 실제 렌더로 실루엣/중간 공개/번개/최종 이름 확인; 모바일 실기기는 미검증.
+
+## 실제 뽑기 연결
+`TranscendentCutsceneCatalog.presentation_view` → `TranscendentCutscenePlayer` → `ZeusRigCutsceneView`. 일반/픽업/테스트 확정 결과는 원래 GachaRevealOverlay 경로를 그대로 사용한다. View는 실제 시간 진행/자동 반복/Space 입력을 자체 실행하지 않는다. 부모 플레이어가advance/set_time을 호출하고5초 후 기존 획득 카드로 복귀한다. 스킵 버튼은뷰 위에 유지한다. 취소 시 숨김·오디오 정지·기존 토큰 무효화를 수행한다. 반복당첨은 캐시한뷰1개를0초부터 재사용하며 추가 보상을 지급하지 않는다.
+- 파일 이동: 렌더링 본체는 `src/ui/zeus_rig_cutscene_view.gd`, F6 전용 루프/Space는 `src/dev/zeus_rig_preview.gd`. 실제 뽑기와 미리보기의 시각 코드가 갈라지지 않는다.
+- PC 실제 overlay 검수와 기존원자적 보상/확률/강제 소환 회귀 PASS.6비율 전환에서폰트 최소높이가 남지 않도록폰트 변경 후 이름 영역크기를 적용한다. Android 실기기는미검증.

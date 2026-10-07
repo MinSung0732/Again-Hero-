@@ -5,6 +5,9 @@ const ROOT := "res://assets/art/Transcendent_monster/zeus/frames/"
 const ENTRIES := {
 	"zeus": {
 		"name": "제우스", "duration": 5.0,
+		"presentation_view": "res://src/ui/zeus_rig_cutscene_view.gd",
+		"impact_sound_path": "res://assets/audio/sfx/gacha/door_open.mp3",
+		"impact_sound_at": 1.9, "impact_volume_db": -6.0,
 		"background_path": "res://assets/art/effects/gatcha/zeus/celestial_temple.png",
 		"halo_path": "", # Optional transparent full halo PNG; geometric fallback.
 		"stage_size": Vector2(1080, 1920),
