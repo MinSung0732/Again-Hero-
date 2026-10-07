@@ -695,30 +695,7 @@ func _apply_asset_frames() -> void:
 		34.0,
 		34.0
 	)
-	_add_asset_frame(
-		shop_result_panel,
-		UI_FRAME_MEDIUM_DIR,
-		Vector2(62.0, 61.0),
-		Vector2(62.0, 61.0),
-		Vector2(62.0, 60.0),
-		Vector2(62.0, 60.0),
-		38.0,
-		37.0,
-		34.0,
-		34.0
-	)
-	_add_asset_frame(
-		shop_rates_panel,
-		UI_FRAME_MEDIUM_DIR,
-		Vector2(62.0, 61.0),
-		Vector2(62.0, 61.0),
-		Vector2(62.0, 60.0),
-		Vector2(62.0, 60.0),
-		38.0,
-		37.0,
-		34.0,
-		34.0
-	)
+
 
 
 func _install_bottom_nav_frame() -> void:
@@ -2686,7 +2663,7 @@ func _apply_shop_storefront_skin() -> void:
 	_apply_lobby_button_skin(shop_rates_close_button, false, 22)
 	$ShopRatesOverlay/Panel/Margin/VBox/RatesPanel.add_theme_stylebox_override(
 		"panel",
-		preload("res://src/ui/shop_frame_skin.gd").style("shop_panel_frame", 14)
+		preload("res://src/ui/shop_frame_skin.gd").plain_content_style(14)
 	)
 	_shop_storefront_art.apply(self)
 	_shop_pickup_view.install(self)

@@ -1,5 +1,6 @@
 ## Shop Dedicated Frames (2026-10-07)
 - Shop-only SVG/PNG assets in shop_frames_v1: continuous gold bevels, amethyst corner studs, dark purple interior and brighter primary CTA. shop_frame_skin caches four textures and uses24px nine-patch margins; labels/prices remain native Godot UI. Storefront, pickup, relic/package/stamina supply and shop modals use this skin while global commerce_v2/header/other tabs remain unchanged.
+- Shop titles/section headings use a separate flat ribbon title texture; bevel button assets remain for actions. Shop history/rates no longer create the legacy AssetFrame overlay; outer shop frame is sole border and rates inner content is margin-only.
 - preserve_authored_skin metadata opts explicitly authored shop button/card skins out of the generic PixelPanelSkin tree pass, preventing flattening. Existing hit regions, drag-safe controls, rewards/odds/gold remain. Actual PC render and focused shop-funds/current pickup checks passed; historical tests with pre-transcendent catalog/texture assumptions remain stale. Android unverified.
 
 ## Zeus Rig Production Gacha Integration (2026-10-07)

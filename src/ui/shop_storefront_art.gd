@@ -90,7 +90,7 @@ func _section(panel: PanelContainer) -> void:
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", Color("fff0cc"))
-	title.add_theme_stylebox_override("normal", FRAMES.style("shop_button_frame", 8))
+	title.add_theme_stylebox_override("normal", FRAMES.style("shop_title_frame", 8))
 	title.add_theme_font_size_override("font_size", 34)
 	title.text = "◇  %s  ◇" % title.text
 	var desc := panel.get_node("Margin/VBox/SectionDesc") as Label
@@ -116,7 +116,7 @@ func apply(lobby: Control) -> void:
 	title.text = "◆  마왕 상점  ◆"
 	title.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	title.add_theme_font_size_override("font_size", 46)
-	title.add_theme_stylebox_override("normal", FRAMES.style("shop_button_frame", 12))
+	title.add_theme_stylebox_override("normal", FRAMES.style("shop_title_frame", 12))
 	(shop_margin.get_node("ShopLayout/Guide") as Label).text = "소환 · 유물 · 성장 재화를 한 곳에서 만나세요."
 	var content := lobby.get_node(CONTENT.trim_suffix("/")) as VBoxContainer
 	content.custom_minimum_size.y = 0.0

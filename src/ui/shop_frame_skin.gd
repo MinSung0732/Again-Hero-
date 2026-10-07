@@ -20,6 +20,11 @@ static func style(name: String = "shop_panel_frame", padding: float = 18.0, tint
 		box.set_content_margin(side, padding)
 	return box
 
+static func plain_content_style(padding: float = 14.0) -> StyleBoxEmpty:
+	var box := StyleBoxEmpty.new()
+	box.set_content_margin_all(padding)
+	return box
+
 static func apply_button(button: Button, primary: bool = false) -> void:
 	button.set_meta("preserve_authored_skin", true)
 	button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

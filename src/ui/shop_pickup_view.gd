@@ -47,7 +47,7 @@ func install(host: Control) -> void:
 	var title := _label(column, "◇  픽업 몬스터 소환  ◇", 34)
 	title.custom_minimum_size.y = 56
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title.add_theme_stylebox_override("normal", FRAMES.style("shop_button_frame", 8))
+	title.add_theme_stylebox_override("normal", FRAMES.style("shop_title_frame", 8))
 	var stage := AspectRatioContainer.new()
 	stage.name = "Banner"
 	stage.ratio = 1939.0 / 811.0
