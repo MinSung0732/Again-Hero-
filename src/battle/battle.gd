@@ -11,6 +11,7 @@ signal conditional_skill_unlocked(skill_id: String, skill_name: String, payload:
 signal command_changed(current_value: float, max_value: float)
 signal summon_result(monster_type: String, success: bool, message: String)
 signal transcendent_summoned(monster_id: String, actor: Node2D)
+signal transcendent_died(monster_id: String, actor: Node2D)
 signal transcendence_changed(monster_id: String, ready: bool, used: bool)
 const TRANSCENDENCE_DATA := preload("res://src/data/transcendence_catalog.gd")
 const TRANSCENDENCE_STORE := preload("res://src/systems/transcendence_loadout_store.gd")
@@ -969,6 +970,7 @@ func _warm_monster_spawn_resources() -> void:
 		remove_child(warmup)
 		warmup.free()
 
+	await _warm_transcendent_exp_drop()
 	_monster_spawn_resources_warmed = true
 	_monster_spawn_warmup_running = false
 
@@ -2759,10 +2761,14 @@ func _apply_ghost_death_empower(dead_monster: Node) -> void:
 	)
 
 func _on_monster_died(monster: Node) -> void:
-	if not battle_over and is_instance_valid(monster) and is_instance_valid(transcendent_actor) and monster != transcendent_actor:
-		transcendent_actor.on_ally_death((monster as Node2D).global_position)
 	if battle_over:
 		return
+	if is_instance_valid(monster) and TRANSCENDENCE_DATA.is_transcendent(String(monster.get("monster_type"))):
+		if bool(monster.get_meta("transcendent_death_handled", false)):
+			return
+		monster.set_meta("transcendent_death_handled", true)
+	if is_instance_valid(monster) and is_instance_valid(transcendent_actor) and monster != transcendent_actor:
+		transcendent_actor.on_ally_death((monster as Node2D).global_position)
 
 	var drop_position := Vector2.ZERO
 	var monster_type := "slime"
@@ -2770,6 +2776,7 @@ func _on_monster_died(monster: Node) -> void:
 	var allow_special_death_split := false
 	var death_type := "normal"
 	var reward := 0
+	var transcendent_drop: Dictionary = {}
 	var instance_id := 0
 
 	if is_instance_valid(monster):
@@ -2779,6 +2786,7 @@ func _on_monster_died(monster: Node) -> void:
 
 		instance_id = monster.get_instance_id()
 		monster_type = String(monster.get("monster_type"))
+		transcendent_drop = TRANSCENDENCE_DATA.get_death_drop(monster_type)
 		is_split_child = bool(monster.get_meta("split_child", false))
 		allow_special_death_split = bool(
 			monster.get_meta("allow_special_death_split", false)
@@ -2786,7 +2794,7 @@ func _on_monster_died(monster: Node) -> void:
 		death_type = String(monster.get_meta("death_type", "normal"))
 		reward = maxi(
 			int(round(
-				float(monster.get("exp_reward"))
+				float(transcendent_drop.get("total_exp", monster.get("exp_reward")))
 				* _get_demon_level_monster_exp_multiplier()
 			)),
 			0
@@ -2810,7 +2818,10 @@ func _on_monster_died(monster: Node) -> void:
 		_apply_ghost_death_empower(monster)
 
 	if reward > 0:
-		_spawn_exp_orb(drop_position, reward)
+		if transcendent_drop.is_empty():
+			_spawn_exp_orb(drop_position, reward)
+		else:
+			_spawn_transcendent_exp_drop(drop_position, reward, transcendent_drop)
 
 	# Passive resources are driven from the authoritative monster-death registry
 	# instead of polling monster groups from Hero every frame.
@@ -2875,6 +2886,10 @@ func _on_monster_died(monster: Node) -> void:
 		allow_special_death_split,
 		death_type
 	)
+
+	# Visual-only cue after authoritative death rewards/registry cleanup.
+	if is_instance_valid(monster) and TRANSCENDENCE_DATA.is_transcendent(monster_type):
+		transcendent_died.emit(monster_type, monster as Node2D)
 
 	monsters_alive = maxi(monsters_alive - 1, 0)
 	_emit_stats()
@@ -3089,10 +3104,38 @@ func _spawn_random_heal_item() -> void:
 	item.global_position = spawn_position
 	_register_heal_item(item)
 
+func _warm_transcendent_exp_drop() -> void:
+	var drop := TRANSCENDENCE_DATA.get_death_drop(transcendence.monster_id)
+	if drop.is_empty():
+		return
+	var count := clampi(int(drop.pieces), 1, MAX_EXP_ORB_POOL)
+	var value := maxi(int(drop.total_exp) / count, 1)
+	while exp_orb_pool.size() < count and is_inside_tree() and not battle_over:
+		var orb := EXP_ORB_SCENE.instantiate() as Node2D
+		add_child(orb)
+		orb.call("setup", value)
+		recycle_exp_orb(orb)
+		if exp_orb_pool.size() % 4 == 0:
+			await get_tree().process_frame
+
+func _spawn_transcendent_exp_drop(drop_position: Vector2, total_exp: int, drop: Dictionary) -> void:
+	if total_exp <= 0:
+		return
+	var count := mini(clampi(int(drop.pieces), 1, MAX_EXP_ORB_POOL), total_exp)
+	var portion := total_exp / count
+	var remainder := total_exp % count
+	for index in range(count):
+		var angle := TAU * float(index) / count + randf_range(-0.15, 0.15)
+		var direction := Vector2.from_angle(angle)
+		var point := _clamp_manual_spawn_position(drop_position + direction * randf_range(8.0, 20.0))
+		_spawn_exp_orb(point, portion + (1 if index < remainder else 0),
+			direction * randf_range(float(drop.speed_min), float(drop.speed_max)), float(drop.pickup_delay))
+
 func _spawn_exp_orb(
 	drop_position: Vector2,
 	exp_value: int,
-	initial_velocity: Vector2 = Vector2.ZERO
+	initial_velocity: Vector2 = Vector2.ZERO,
+	pickup_delay: float = 0.0
 ) -> void:
 	if exp_value <= 0:
 		return
@@ -3108,7 +3151,7 @@ func _spawn_exp_orb(
 		add_child(orb)
 
 	orb.global_position = drop_position
-	orb.call("setup", exp_value, initial_velocity)
+	orb.call("setup", exp_value, initial_velocity, pickup_delay)
 	var magnet_remaining := _remaining_exp_magnet_seconds()
 	if (
 		magnet_remaining > 0.0

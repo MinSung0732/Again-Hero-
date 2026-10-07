@@ -57,6 +57,7 @@ var magnetized: bool = false
 var pulse_time: float = 0.0
 var burst_velocity: Vector2 = Vector2.ZERO
 var burst_time: float = 0.0
+var pickup_delay_left: float = 0.0
 var idle_sense_timer: float = 0.0
 var global_magnet_time_left: float = 0.0
 var global_magnet_elapsed: float = 0.0
@@ -72,7 +73,7 @@ func _ready() -> void:
 	visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	queue_redraw()
 
-func setup(value: int, initial_velocity: Vector2 = Vector2.ZERO) -> void:
+func setup(value: int, initial_velocity: Vector2 = Vector2.ZERO, pickup_delay: float = 0.0) -> void:
 	if not is_in_group("exp_orbs"):
 		add_to_group("exp_orbs")
 	visible = true
@@ -80,6 +81,7 @@ func setup(value: int, initial_velocity: Vector2 = Vector2.ZERO) -> void:
 	hero = get_tree().get_first_node_in_group("hero") as Node2D
 	pulse_time = 0.0
 	exp_value = maxi(value, 0)
+	pickup_delay_left = maxf(pickup_delay, 0.0)
 	burst_velocity = initial_velocity
 	burst_time = 0.30 if initial_velocity.length_squared() > 0.01 else 0.0
 	magnetized = false
@@ -104,6 +106,12 @@ func _physics_process(delta: float) -> void:
 
 	if not visual.visible:
 		queue_redraw()
+
+	# Allow a boss drop to scatter before nearby melee pickup. Ordinary drops use zero.
+	if pickup_delay_left > 0.0:
+		pickup_delay_left = maxf(pickup_delay_left - delta, 0.0)
+		if pickup_delay_left > 0.0:
+			return
 
 	if not is_instance_valid(hero):
 		hero = get_tree().get_first_node_in_group("hero") as Node2D
@@ -216,6 +224,7 @@ func activate_global_magnet(
 ) -> void:
 	if is_instance_valid(target_hero):
 		hero = target_hero
+	pickup_delay_left = 0.0
 	global_magnet_time_left = maxf(duration, 0.0)
 	global_magnet_elapsed = 0.0
 	magnetized = false
@@ -225,6 +234,7 @@ func activate_global_magnet(
 
 
 func deactivate_for_pool() -> void:
+	pickup_delay_left = 0.0
 	magnetized = false
 	global_magnet_time_left = 0.0
 	global_magnet_elapsed = 0.0

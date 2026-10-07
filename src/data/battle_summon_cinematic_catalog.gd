@@ -11,3 +11,10 @@ const ENTRIES := {
 const ZEUS_RADIAL := {
 	"rays": 8, "radius": 240.0, "bursts": [1.9, 2.08, 2.26], "burst_duration": 0.48,
 }
+
+# Applied to every transcendent death; an entry may override this with a "death" profile.
+const DEATH_DEFAULT := {
+	"duration": 2.8, "zoom": 1.65, "return_start": 2.0,
+	"slow_motion": {"initial": 0.45, "minimum": 0.12, "approach_end": 0.35,
+		"recover_start": 1.6, "recover_end": 2.15},
+}

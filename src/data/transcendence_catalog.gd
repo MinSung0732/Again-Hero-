@@ -1,5 +1,15 @@
 extends RefCounted
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
+# Chest-like default: 15 stones, 20 EXP each. Kept separate from ordinary kill EXP.
+const DEATH_DROP_DEFAULT := {
+	"pieces": 15, "total_exp": 300, "speed_min": 220.0, "speed_max": 420.0,
+	"pickup_delay": 0.30,
+}
+
+static func get_death_drop(id: String) -> Dictionary:
+	if not is_transcendent(id):
+		return {}
+	return MONSTERS.MONSTERS[id].get("death_drop", DEATH_DROP_DEFAULT)
 
 static func is_transcendent(id: String) -> bool:
 	return MONSTERS.MONSTERS.has(id) and MONSTERS.get_rarity(id) == "transcendent"

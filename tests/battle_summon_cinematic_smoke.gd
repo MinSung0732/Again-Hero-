@@ -2,6 +2,7 @@ extends SceneTree
 
 class BattleStub extends Node2D:
 	signal transcendent_summoned(id: String, actor: Node2D)
+	signal transcendent_died(id: String, actor: Node2D)
 	signal battle_finished(message: String, won: bool)
 	var battle_over := false
 	var external_pause := false
