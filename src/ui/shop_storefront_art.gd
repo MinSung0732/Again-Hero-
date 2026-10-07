@@ -1,7 +1,7 @@
 extends RefCounted
 
 # Presentation only: reward rolls, persistence and account history stay in Lobby.
-const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
+const FRAMES := preload("res://src/ui/shop_frame_skin.gd")
 const CONTENT := "SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/"
 const DRAG_SAFE_BUTTON := preload("res://src/ui/drag_safe_button.gd")
 var _textures: Dictionary = {}
@@ -59,7 +59,11 @@ func _label(parent: Control, text: String, font_size: int, color: Color) -> Labe
 	return label
 
 
-func _frame(target: Control, featured: bool = false) -> void:
+func _frame(target: Control, featured: bool = false, card: bool = false) -> void:
+	if target is Button and not card:
+		FRAMES.apply_button(target as Button, featured)
+		return
+	target.set_meta("preserve_authored_skin", true)
 	target.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		var tint := Color.WHITE
@@ -226,19 +230,19 @@ func _product(button: Button, featured: bool) -> void:
 	button.disabled = false
 	button.focus_mode = Control.FOCUS_NONE
 	button.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_frame(button, featured)
+	_frame(button, featured, true)
 	var art := _image(button, "res://assets/art/UI/shop/summon_gate.png")
-	art.offset_left = 6.0
-	art.offset_right = -6.0
-	art.offset_top = 6.0
+	art.offset_left = 24.0
+	art.offset_right = -24.0
+	art.offset_top = 24.0
 	art.anchor_bottom = 0.82
 	art.offset_bottom = 0.0
 	art.modulate = Color("e6caff") if featured else Color("a69caf")
 	var shade := _fade(button, false, PackedColorArray([Color("130e20", 0.0), Color("130e20", 0.0), Color("130e20", 0.95), Color("130e20")]), PackedFloat32Array([0.0, 0.40, 0.72, 1.0]))
-	shade.offset_left = 6.0
-	shade.offset_right = -6.0
-	shade.offset_top = 6.0
-	shade.offset_bottom = -6.0
+	shade.offset_left = 24.0
+	shade.offset_right = -24.0
+	shade.offset_top = 24.0
+	shade.offset_bottom = -24.0
 	var copy := _label(button, "", 27, Color("fff2d5"))
 	copy.name = "ProductCopy"
 	copy.anchor_right = 1.0
@@ -259,13 +263,7 @@ func _product(button: Button, featured: bool) -> void:
 	cta.mouse_filter = Control.MOUSE_FILTER_PASS
 	cta.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	cta.add_theme_font_size_override("font_size", 30)
-	for state in ["normal", "hover", "pressed", "disabled"]:
-		var style := _plate_style()
-		if state == "pressed":
-			style.bg_color = Color("3b224b")
-		elif state == "disabled":
-			style.bg_color = Color("211729")
-		cta.add_theme_stylebox_override(state, style)
+	FRAMES.apply_button(cta, featured)
 	cta.add_theme_color_override("font_disabled_color", Color("a99eae"))
 	cta.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	button.add_child(cta)
@@ -294,7 +292,7 @@ func set_product_copy(button: Button, text: String) -> void:
 func decorate_package(button: Button, data: Dictionary) -> void:
 	button.text = ""
 	button.custom_minimum_size.y = 254.0
-	_frame(button, bool(data.get("featured", false)))
+	_frame(button, bool(data.get("featured", false)), true)
 	var icon := _image(button, String(data.get("art_path", "")))
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.anchor_bottom = 0.49

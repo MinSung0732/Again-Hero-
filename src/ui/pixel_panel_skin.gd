@@ -114,6 +114,8 @@ static func button_style(source: StyleBox) -> StyleBox:
 	return result
 
 static func apply(control: Control) -> void:
+	if bool(control.get_meta("preserve_authored_skin", false)):
+		return
 	var keys: Array[String] = []
 	if control is PanelContainer or control is Panel:
 		keys = ["panel"]

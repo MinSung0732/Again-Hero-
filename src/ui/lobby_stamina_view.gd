@@ -249,7 +249,7 @@ func _build_product() -> void:
 	product = PanelContainer.new()
 	product.name = "StaminaSupply"
 	product.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	product.add_theme_stylebox_override("panel", _frame())
+	product.add_theme_stylebox_override("panel", preload("res://src/ui/shop_frame_skin.gd").style("shop_panel_frame", 22))
 	parent.add_child(product)
 	# Place with existing packages, while keeping the monster tutorial draw first.
 	parent.move_child(product, content.get_index())
@@ -272,7 +272,7 @@ func _build_product() -> void:
 	buy.disabled = true
 	buy.custom_minimum_size.y = 80
 	buy.add_theme_font_size_override("font_size", 28)
-	buy.add_theme_stylebox_override("disabled", _frame(Color("21172b")))
+	preload("res://src/ui/shop_frame_skin.gd").apply_button(buy)
 	box.add_child(buy)
 
 func open_shop() -> void:

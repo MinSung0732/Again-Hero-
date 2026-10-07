@@ -2,7 +2,7 @@ extends RefCounted
 
 const CATALOG := preload("res://src/data/pickup_catalog.gd")
 const SHOP := preload("res://src/data/shop_catalog.gd")
-const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
+const FRAMES := preload("res://src/ui/shop_frame_skin.gd")
 var lobby: Control
 var rates_button: Button
 var art: TextureRect

@@ -1397,6 +1397,8 @@ func _apply_lobby_button_skin(
 	button.add_theme_color_override("font_hover_color", Color("fff5d7"))
 	button.add_theme_color_override("font_pressed_color", Color("ffe29a"))
 	button.add_theme_color_override("font_disabled_color", Color("756f7c"))
+	if shop_tab.is_ancestor_of(button) or shop_result_overlay.is_ancestor_of(button) or shop_rates_overlay.is_ancestor_of(button):
+		preload("res://src/ui/shop_frame_skin.gd").apply_button(button, primary)
 
 
 
@@ -2682,15 +2684,9 @@ func _apply_shop_storefront_skin() -> void:
 	_apply_lobby_button_skin(shop_result_close_button, false, 22)
 	shop_rates_panel.add_theme_stylebox_override("panel", result_modal_style)
 	_apply_lobby_button_skin(shop_rates_close_button, false, 22)
-	var rates_content_style := _make_hud_panel_style(
-		Color(0.035, 0.027, 0.047, 0.96),
-		Color(0.45, 0.34, 0.52, 0.9),
-		2,
-		14
-	)
 	$ShopRatesOverlay/Panel/Margin/VBox/RatesPanel.add_theme_stylebox_override(
 		"panel",
-		rates_content_style
+		preload("res://src/ui/shop_frame_skin.gd").style("shop_panel_frame", 14)
 	)
 	_shop_storefront_art.apply(self)
 	_shop_pickup_view.install(self)
