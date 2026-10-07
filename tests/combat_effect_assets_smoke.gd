@@ -57,6 +57,22 @@ func run() -> void:
 	for kind in ["charm", "petrify", "bleed", "healing_reduction"]:
 		flush(effect(hero, kind))
 		check(not effect(hero, kind).visible and not effect(hero, kind).is_processing(), "expired status stops polling " + kind)
+	check(hero.apply_paralysis(0.3, 2.0), "actual paralysis accepted")
+	var paralysis = effect(hero, "paralysis")
+	check(paralysis != null and paralysis.visible and paralysis.sprite_frames.get_frame_count("fx") == 8, "uploaded eight-frame paralysis immediately visible")
+	check(paralysis.texture_filter == CanvasItem.TEXTURE_FILTER_NEAREST and paralysis.speed_scale == 0.0, "paralysis uses nearest and respects actor pause")
+	var paralysis_children: int = hero.get_child_count()
+	check(not hero.apply_paralysis(0.2, 5.0) and hero.paralysis_timer == 2.0, "weaker paralysis cannot extend or restart")
+	check(hero.apply_paralysis(0.75, 2.0) and effect(hero, "paralysis") == paralysis and hero.get_child_count() == paralysis_children, "stronger paralysis reuses the same visual")
+	hero.paralysis_timer = 0.0
+	flush(paralysis)
+	check(not paralysis.visible and not paralysis.is_processing(), "paralysis expiry hides and sleeps")
+	hero.apply_paralysis(0.3, 2.0)
+	hero.current_hp = 0
+	flush(paralysis)
+	check(not paralysis.visible, "death hides paralysis")
+	hero.current_hp = 10000
+	hero.paralysis_timer = 0.0
 	shaman._apply_buff(ally, 0)
 	shaman._apply_buff(ally, 2)
 	check(effect(ally, "support_courage").visible and effect(ally, "support_agility").visible, "actual courage and agility")

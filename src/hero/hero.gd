@@ -20791,6 +20791,7 @@ func apply_paralysis(ratio: float, duration: float) -> bool:
 		return false
 	paralysis_ratio = strength
 	paralysis_timer = duration
+	COMBAT_STATUS_EFFECT_VISUAL.show_on(self, "paralysis")
 	if strength >= 1.0:
 		attack_timer = maxf(attack_timer,0.0001)
 		rogue_slash_cooldown_timer = maxf(rogue_slash_cooldown_timer,0.0001)
