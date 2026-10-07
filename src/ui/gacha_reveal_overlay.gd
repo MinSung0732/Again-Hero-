@@ -4,6 +4,12 @@ class_name GachaRevealOverlay
 signal confirmed
 signal retry_requested(draw_count: int)
 
+const CUTSCENE_CATALOG := preload("res://src/data/transcendent_cutscene_catalog.gd")
+const CUTSCENE_PLAYER := preload("res://src/ui/transcendent_cutscene_player.gd")
+var _cutscene
+var _cutscene_seen: Dictionary = {}
+var _cutscene_token := -1
+
 const CARD_GLOW_SHADER := preload("res://src/ui/gacha_card_glow.gdshader")
 static var _card_glow_materials: Dictionary = {}
 
@@ -65,6 +71,9 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	z_index = 500
 	_build_ui()
+	_cutscene = CUTSCENE_PLAYER.new()
+	add_child(_cutscene)
+	_cutscene.finished.connect(_on_cutscene_finished)
 	_door_sound = _build_sound("door")
 	_creak_sound = _build_sound("creak")
 	_reveal_sound = _build_sound("reveal")
@@ -97,6 +106,8 @@ func _stop_sounds() -> void:
 func _on_visibility_changed() -> void:
 	if not is_visible_in_tree():
 		_stop_sounds()
+		if is_instance_valid(_cutscene):
+			_cutscene.cancel()
 
 
 func _play_sound(player: AudioStreamPlayer) -> void:
@@ -132,6 +143,8 @@ func present(results: Array) -> void:
 	if results.is_empty():
 		return
 	_sequence_token += 1
+	_cutscene.cancel()
+	_cutscene_seen.clear()
 	_results = results.duplicate(true)
 	_reveal_index = -1
 	_phase = "door"
@@ -145,6 +158,7 @@ func skip_to_results() -> void:
 	if not is_presenting() or _phase == "result":
 		return
 	_sequence_token += 1
+	_cutscene.cancel()
 	_stop_active_tweens()
 	_door_sprite.stop()
 	_show_final_results()
@@ -199,7 +213,8 @@ func _play_opening(token: int) -> void:
 
 
 func _load_texture_threaded(path: String) -> Texture2D:
-	var prepared := PresentationWarmup.get_texture(path)
+	var warmup := get_node_or_null("/root/PresentationWarmup")
+	var prepared: Texture2D = warmup.get_texture(path) if warmup != null else null
 	if prepared != null:
 		return prepared
 	if path.is_empty() or not ResourceLoader.exists(path):
@@ -288,6 +303,19 @@ func _show_reveal(index: int) -> void:
 	if index < 0 or index >= _results.size():
 		_show_final_results()
 		return
+	_reveal_index = index
+	if CUTSCENE_CATALOG.has_cutscene(_results[index]) and not _cutscene_seen.has(index):
+		_cutscene_seen[index] = true
+		_phase = "cutscene"
+		_cutscene_token = _sequence_token
+		_stop_sounds()
+		_stop_active_tweens()
+		_reveal_panel.hide()
+		_continue_button.hide()
+		_skip_button.hide()
+		_door_sprite.hide()
+		_cutscene.play(String(_results[index].get("monster_id", "")))
+		return
 	_phase = "reveal"
 	_door_flash.hide()
 	_flash.hide()
@@ -319,6 +347,11 @@ func _show_reveal(index: int) -> void:
 	_play_reveal_emphasis()
 
 
+func _on_cutscene_finished() -> void:
+	if _phase == "cutscene" and _cutscene_token == _sequence_token:
+		_show_reveal(_reveal_index)
+
+
 func _advance_reveal() -> void:
 	if _phase != "reveal":
 		return
@@ -344,6 +377,7 @@ func _play_reveal_emphasis() -> void:
 
 
 func _show_final_results() -> void:
+	_cutscene.cancel()
 	_phase = "result"
 	_stop_sounds()
 	_stop_active_tweens()
