@@ -4,6 +4,8 @@ class_name CombatStatusEffectVisual
 const CATALOG := preload("res://src/data/combat_effect_catalog.gd")
 
 static var _frames_cache: Dictionary = {}
+static var _texture_bounds_cache: Dictionary = {}
+static var _effect_bounds_cache: Dictionary = {}
 
 const VISIBILITY_CHECK_INTERVAL := 0.10
 
@@ -13,6 +15,14 @@ var _visibility_check_timer: float = 0.0
 var _last_active: bool = false
 var _profile: Dictionary = {}
 var _pulse_active := false
+var _buff_visual: AnimatedSprite2D
+var _fit_valid := false
+var _fit_frames: SpriteFrames
+var _fit_transform: Transform2D
+var _fit_offset: Vector2
+var _fit_centered := true
+var _fit_flip_h := false
+var _fit_flip_v := false
 
 
 static func show_on(owner: Node2D, kind: String, mirrored: bool = false) -> CombatStatusEffectVisual:
@@ -26,6 +36,7 @@ static func show_on(owner: Node2D, kind: String, mirrored: bool = false) -> Comb
 		owner.add_child(effect)
 		effect.setup(owner, kind)
 	effect.flip_h = mirrored
+	effect._sync_monster_buff_layout()
 	effect._pulse_active = bool(effect._profile.get("pulse", false))
 	if effect._pulse_active:
 		effect.stop()
@@ -146,6 +157,9 @@ func setup(new_target: Node, new_effect_type: String) -> void:
 				scale = Vector2(size, size)
 
 	sprite_frames = frames
+	if not target.is_in_group("hero") and CATALOG.MONSTER_BUFF_LAYOUTS.has(effect_type):
+		_buff_visual = target.get_node_or_null("Visual") as AnimatedSprite2D
+		_sync_monster_buff_layout()
 	visible = false
 	stop()
 	_visibility_check_timer = randf_range(0.0, VISIBILITY_CHECK_INTERVAL)
@@ -191,6 +205,7 @@ func _process(delta: float) -> void:
 		return
 
 	var active := false
+	_sync_monster_buff_layout()
 	match effect_type:
 		"slow":
 			active = _is_slow_active()
@@ -229,6 +244,78 @@ func _is_configured_effect_active() -> bool:
 	if _profile.has("meta"):
 		return float(target.get_meta(String(_profile["meta"]), 0.0)) > float(_profile.get("threshold", 0.0))
 	return _pulse_active
+
+
+static func _visible_texture_rect(texture: Texture2D) -> Rect2:
+	# Scan alpha once per shared texture; never retain decoded image copies.
+	var key := texture.get_instance_id()
+	if not _texture_bounds_cache.has(key):
+		var bounds := Rect2(Vector2.ZERO, texture.get_size())
+		var pixels := texture.get_image()
+		if pixels != null and not pixels.is_empty():
+			var used := pixels.get_used_rect()
+			if used.has_area():
+				bounds = Rect2(used)
+		_texture_bounds_cache[key] = bounds
+	return _texture_bounds_cache[key]
+
+
+func _sync_monster_buff_layout() -> void:
+	# Body and FX share actor scale, so fit in actor-local space only.
+	if not is_instance_valid(_buff_visual) or sprite_frames == null:
+		return
+	var body_frames := _buff_visual.sprite_frames
+	if body_frames == null or not body_frames.has_animation("idle") or body_frames.get_frame_count("idle") == 0:
+		return
+	var body_transform := _buff_visual.transform
+	if _fit_valid and _fit_frames == body_frames and _fit_transform == body_transform and _fit_offset == _buff_visual.offset and _fit_centered == _buff_visual.centered and _fit_flip_h == _buff_visual.flip_h and _fit_flip_v == _buff_visual.flip_v:
+		return
+	_fit_valid = true
+	_fit_frames = body_frames
+	_fit_transform = body_transform
+	_fit_offset = _buff_visual.offset
+	_fit_centered = _buff_visual.centered
+	_fit_flip_h = _buff_visual.flip_h
+	_fit_flip_v = _buff_visual.flip_v
+	var body_texture := body_frames.get_frame_texture("idle", 0)
+	if body_texture == null:
+		return
+	var body := _visible_texture_rect(body_texture)
+	if _fit_flip_h:
+		body.position.x = body_texture.get_width() - body.end.x
+	if _fit_flip_v:
+		body.position.y = body_texture.get_height() - body.end.y
+	if _fit_centered:
+		body.position -= body_texture.get_size() * 0.5
+	body.position += _fit_offset
+	var local_body := Rect2(body_transform * body.position, Vector2.ZERO)
+	local_body = local_body.expand(body_transform * Vector2(body.end.x, body.position.y))
+	local_body = local_body.expand(body_transform * body.end)
+	local_body = local_body.expand(body_transform * Vector2(body.position.x, body.end.y))
+	var key := sprite_frames.get_instance_id()
+	if not _effect_bounds_cache.has(key):
+		var visible_bounds := Rect2()
+		for index in range(sprite_frames.get_frame_count("fx")):
+			var texture := sprite_frames.get_frame_texture("fx", index)
+			if texture == null:
+				continue
+			var bounds := _visible_texture_rect(texture)
+			bounds.position -= texture.get_size() * 0.5
+			visible_bounds = visible_bounds.merge(bounds) if visible_bounds.has_area() else bounds
+		_effect_bounds_cache[key] = visible_bounds
+	var effect_bounds: Rect2 = _effect_bounds_cache[key]
+	if not effect_bounds.has_area() or not local_body.has_area():
+		return
+	var layout: Dictionary = CATALOG.MONSTER_BUFF_LAYOUTS[effect_type]
+	var factor := maxf(local_body.size.x, local_body.size.y * 0.9) * float(layout["width_ratio"]) / effect_bounds.size.x
+	if String(layout["anchor"]) == "body":
+		factor = maxf(factor, local_body.size.y * 1.15 / effect_bounds.size.y)
+	scale = Vector2(factor, factor)
+	position.x = local_body.get_center().x - effect_bounds.get_center().x * factor
+	if String(layout["anchor"]) == "feet":
+		position.y = local_body.end.y + local_body.size.y * 0.08 - effect_bounds.end.y * factor
+	else:
+		position.y = local_body.get_center().y - effect_bounds.get_center().y * factor
 
 func _is_slow_active() -> bool:
 	var slow_value = target.get("slow_timer")

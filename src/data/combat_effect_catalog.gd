@@ -16,3 +16,12 @@ const FRAME_COUNT := 8
 const FPS := 12.0
 const MONSTER_SCALE := 0.22
 const HERO_SCALE := 0.28
+
+# Fit visible pixels, not the large transparent asset canvas.
+const MONSTER_BUFF_LAYOUTS := {
+	"dullahan_regen": {"anchor": "feet", "width_ratio": 1.45},
+	"support_courage": {"anchor": "feet", "width_ratio": 1.45},
+	"support_agility": {"anchor": "feet", "width_ratio": 1.45},
+	"support_heal": {"anchor": "body", "width_ratio": 1.20},
+	"orc_rage": {"anchor": "body", "width_ratio": 1.25},
+}
