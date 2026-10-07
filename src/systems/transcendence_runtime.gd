@@ -7,6 +7,7 @@ var mana_spent := 0.0
 var command_spent := 0.0
 var ready := false
 var used := false
+var test_unlock_confirmed := false
 
 func configure(id: String, rules: Dictionary) -> void:
 	monster_id = id
@@ -17,6 +18,7 @@ func configure(id: String, rules: Dictionary) -> void:
 	command_spent = 0.0
 	ready = false
 	used = false
+	test_unlock_confirmed = false
 
 func record_summon() -> bool:
 	if monster_id.is_empty() or used:
@@ -57,8 +59,11 @@ func consume() -> void:
 
 # Caller must enforce local-test authorization. Only condition counters change.
 func satisfy_conditions_for_test() -> bool:
-	if monster_id.is_empty() or used or ready:
+	if monster_id.is_empty() or used or test_unlock_confirmed:
 		return false
+	if ready:
+		test_unlock_confirmed = true
+		return true
 	for condition in conditions:
 		var amount := float(condition.get("amount", 0))
 		match String(condition.get("metric", "")):
@@ -68,4 +73,6 @@ func satisfy_conditions_for_test() -> bool:
 				command_spent = maxf(command_spent, amount)
 			"mana_spent":
 				mana_spent = maxf(mana_spent, amount)
-	return _evaluate()
+	var unlocked := _evaluate()
+	test_unlock_confirmed = unlocked
+	return unlocked

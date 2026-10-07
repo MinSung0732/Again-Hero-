@@ -1,0 +1,22 @@
+{
+  "status": "generated_single_battle_cast_pose_not_complete_live2d",
+  "canvas": [
+    971,
+    1620
+  ],
+  "visible_bbox": [
+    0,
+    65,
+    924,
+    1620
+  ],
+  "spell_anchor": [
+    817,
+    320
+  ],
+  "source_reference": "zeus_reassembled.png",
+  "sha256": "13a1e1e8f766d31df80ce4fd4cd4cf0800a67429f7ff4dcdde8c352e3fb91ff7",
+  "filter": "nearest",
+  "animation": "single pose with small continuous mesh motion and independent lightning; not a sequential frame sheet",
+  "generation": "built-in ImageGen; original identity reference, distinct raised-staff pose, then uniform framing margin edit"
+}

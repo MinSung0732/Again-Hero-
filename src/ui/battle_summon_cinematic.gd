@@ -84,10 +84,9 @@ func _layout() -> void:
 	global_position = panel.position
 	size = panel.size
 	spotlight.size = size
-	# Keep the entire portrait inside the battle area, above the lower battle HUD.
-	var h := minf(size.y * 0.68, size.x * 0.78)
-	view.size = Vector2(h * 540.0 / 960.0, h)
-	view.position = size - view.size - Vector2(16, 24)
+	# Flush with the actual lower-right battle corner; backdrop is a diagonal triangle.
+	view.size = Vector2(size.x*0.60,size.y*0.66)
+	view.position = size-view.size
 	shade.set_shader_parameter("panel_size", size)
 
 func _process(delta: float) -> void:

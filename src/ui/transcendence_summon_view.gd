@@ -2,6 +2,7 @@ extends Control
 var host: Control
 var button: Button
 var unlock_button: Button
+var title: Label
 var icon: TextureRect
 var tween: Tween
 var shown_id := ""
@@ -45,7 +46,7 @@ func install(main: Control) -> void:
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	body.add_child(icon)
-	var title := Label.new()
+	title = Label.new()
 	title.text = "초월 소환"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size",20)
@@ -107,7 +108,11 @@ func refresh() -> void:
 		return
 	show()
 	unlock_button.visible = local_test
-	unlock_button.disabled = state.ready or host.battle.external_pause or host.battle.demon_augment_selection_active
+	var unlocked: bool = state.ready and (not local_test or state.test_unlock_confirmed)
+	unlock_button.text = "해제 완료" if state.test_unlock_confirmed else "잠금 해제"
+	title.text = "초월 소환" if unlocked else "잠김"
+	icon.modulate = Color.WHITE if unlocked else Color(0.45, 0.45, 0.45, 0.65)
+	unlock_button.disabled = state.test_unlock_confirmed or host.battle.external_pause or host.battle.demon_augment_selection_active
 	if not visible_once:
 		visible_once = true
 		icon.texture = host._load_monster_card_icon(state.monster_id)
@@ -115,4 +120,4 @@ func refresh() -> void:
 		tween.set_parallel(true)
 		tween.tween_property(button,"offset_left",-WIDTH-12,0.24)
 		tween.tween_property(button,"offset_right",-12.0,0.24)
-	button.disabled = not state.ready or host.battle.external_pause or host.battle.demon_augment_selection_active or host.battle.command_power + 0.001 < host.battle.get_monster_cost(state.monster_id)
+	button.disabled = not unlocked or host.battle.external_pause or host.battle.demon_augment_selection_active or host.battle.command_power + 0.001 < host.battle.get_monster_cost(state.monster_id)

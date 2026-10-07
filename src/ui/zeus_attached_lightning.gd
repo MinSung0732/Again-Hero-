@@ -59,7 +59,10 @@ func _draw() -> void:
 			Color(0.6, 0.9, 1.0, impact * 0.8))
 	var flash := FX.flash(t)
 	if flash > 0.0:
-		draw_rect(Rect2(Vector2.ZERO, size), Color(0.85, 0.95, 1.0, flash))
+		if host.get("corner_triangle") == true:
+			draw_colored_polygon(host.border, Color(0.85, 0.95, 1.0, flash))
+		else:
+			draw_rect(Rect2(Vector2.ZERO, size), Color(0.85, 0.95, 1.0, flash))
 
 func _draw_bolt(target: Vector2, t: float, index: int, alpha: float) -> void:
 	var direction := target - origin
