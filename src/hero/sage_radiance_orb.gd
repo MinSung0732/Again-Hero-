@@ -1,5 +1,7 @@
 extends Area2D
 
+const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
+
 const EFFECT_DIR := "res://assets/art/heroes/stage10_sage/frames/effect3"
 const POOL_KEY := "sage_radiance_orb"
 const CREATE_FPS := 14.0
@@ -78,6 +80,8 @@ func setup(
 
 
 func _physics_process(delta: float) -> void:
+	if is_instance_valid(tracked_target) and not HERO_TARGET_POLICY.is_detectable(tracked_target):
+		tracked_target = null
 	match state:
 		OrbState.TRAVEL:
 			if (

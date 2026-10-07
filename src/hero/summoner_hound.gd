@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
+
 signal released(hound: Node2D)
 
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
@@ -134,8 +136,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if (
-		not is_instance_valid(target)
-		or target.is_queued_for_deletion()
+		not HERO_TARGET_POLICY.is_detectable(target)
 		or retarget_timer <= 0.0
 	):
 		target = _find_nearest_target()
@@ -186,7 +187,7 @@ func _update_pending_hits(delta: float) -> void:
 	if hit_timer > 0.0:
 		return
 
-	if is_instance_valid(attack_target) and not attack_target.is_queued_for_deletion():
+	if HERO_TARGET_POLICY.is_detectable(attack_target):
 		if attack_target.has_method("take_damage"):
 			var dealt_damage := float(attack_damage)
 			var raw_hp = attack_target.get("current_hp")
@@ -226,7 +227,7 @@ func _find_nearest_target() -> Node2D:
 	var nearest: Node2D = null
 	var nearest_distance_sq := sense_range * sense_range
 	for raw_node in get_tree().get_nodes_in_group("monsters"):
-		if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(raw_node):
 			continue
 		var monster := raw_node as Node2D
 		if monster == null:

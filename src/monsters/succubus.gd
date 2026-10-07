@@ -1,10 +1,16 @@
 extends "res://src/monsters/orc.gd"
 
+const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
+
 const EMPTY_CONFIG: Dictionary = {}
 const BEHAVIOR := preload("res://src/data/succubus_behavior_catalog.gd")
 var infiltration_used := false
 var infiltration_timer := 0.0
 var infiltration_finished := false
+var infiltration_collision_layer := 0
+var infiltration_collision_mask := 0
+var infiltration_shape_disabled := false
+var infiltration_ignore_separation := false
 var damage_bank := 0
 var runtime_additions: Dictionary = {}
 var teleport_query: PhysicsShapeQueryParameters2D
@@ -113,12 +119,23 @@ func take_damage(amount: int) -> void:
 	queue_redraw()
 
 func _start_infiltration() -> void:
+	if infiltration_used or dying or current_hp <= 0:
+		return
 	infiltration_used = true
 	infiltration_timer = float(BEHAVIOR.INFILTRATION.duration)
 	_cancel_waltz()
 	velocity = Vector2.ZERO
 	set_meta("elite_skill_movement_lock", true)
 	set_meta("succubus_infiltration_active", true)
+	HERO_TARGET_POLICY.set_hidden(self, true)
+	infiltration_collision_layer = collision_layer
+	infiltration_collision_mask = collision_mask
+	infiltration_shape_disabled = collision_shape.disabled
+	infiltration_ignore_separation = bool(get_meta("ignore_monster_separation", false))
+	collision_layer = 0
+	collision_mask = 0
+	collision_shape.set_deferred("disabled", true)
+	set_meta("ignore_monster_separation", true)
 	visual.play_locomotion(false)
 	visual.modulate.a = float(BEHAVIOR.INFILTRATION.alpha)
 	var recovery: Dictionary = special_augment_configs.get("succubus_shadow_recovery", EMPTY_CONFIG)
@@ -134,6 +151,11 @@ func _tick_infiltration(delta: float) -> void:
 	infiltration_finished = true
 	set_meta("elite_skill_movement_lock", false)
 	set_meta("succubus_infiltration_active", false)
+	HERO_TARGET_POLICY.set_hidden(self, false)
+	collision_layer = infiltration_collision_layer
+	collision_mask = infiltration_collision_mask
+	collision_shape.set_deferred("disabled", infiltration_shape_disabled)
+	set_meta("ignore_monster_separation", infiltration_ignore_separation)
 	visual.modulate.a = 1.0
 	visual_moving_state = -1
 	if is_instance_valid(combat_authority):

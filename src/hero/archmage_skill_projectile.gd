@@ -1,5 +1,7 @@
 extends Area2D
 
+const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
+
 static var _frames_cache: Dictionary = {}
 
 const DEFAULT_SPRITE_SCALE := Vector2(0.60, 0.60)
@@ -70,6 +72,8 @@ func setup(
 func _physics_process(delta: float) -> void:
 	if not active:
 		return
+	if is_instance_valid(current_target) and not HERO_TARGET_POLICY.is_detectable(current_target):
+		current_target = null
 	if skill_type == "berserker_wave":
 		var previous_position: Vector2 = global_position
 		var wave_step: Vector2 = direction * speed * delta

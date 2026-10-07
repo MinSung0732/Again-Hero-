@@ -1,5 +1,7 @@
 extends Node2D
 
+const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
+
 signal released(projectile: Node2D)
 
 const FLY_TEXTURE_PATH := "res://assets/art/heroes/stage8_summoner/frames/effect1/projectile_01.png"
@@ -60,6 +62,8 @@ func activate(
 func _physics_process(delta: float) -> void:
 	if not active:
 		return
+	if is_instance_valid(target) and not HERO_TARGET_POLICY.is_detectable(target):
+		target = null
 
 	if impact_timer > 0.0:
 		impact_timer = maxf(impact_timer - delta, 0.0)
@@ -80,7 +84,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _impact_target() -> void:
-	if is_instance_valid(target) and target.has_method("take_damage"):
+	if HERO_TARGET_POLICY.is_detectable(target) and target.has_method("take_damage"):
 		target.call("take_damage", damage)
 	sprite.texture = hit_texture
 	sprite.scale = Vector2(0.48, 0.48)

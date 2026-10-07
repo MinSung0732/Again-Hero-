@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
+
 signal died
 signal health_changed(current_hp: int, max_hp_value: int)
 signal combat_damage_received(hp_damage: int)
@@ -1729,6 +1731,12 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 
 func _physics_process_actions(delta: float) -> void:
+	# Drop cached targets before any archetype, skill or movement decision.
+	if is_instance_valid(target) and not HERO_TARGET_POLICY.is_detectable(target):
+		target = null
+		retarget_timer = 0.0
+	if fighter_charge_active and not HERO_TARGET_POLICY.is_detectable(fighter_charge_target):
+		_finish_fighter_charge()
 	if current_hp <= 0:
 		velocity = Vector2.ZERO
 		return
@@ -3836,7 +3844,7 @@ func _move_alchemist_philosopher_form(delta: float) -> void:
 		alchemist_movement_query_candidates
 	)
 	for node in alchemist_movement_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -4505,7 +4513,7 @@ func _on_alchemist_mixture_field_tick(origin: Vector2, radius: float) -> void:
 	)
 
 	for node in alchemist_damage_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null or origin.distance_squared_to(monster.global_position) > radius_sq:
@@ -4549,7 +4557,7 @@ func _update_alchemist_emergency_escape(delta: float) -> bool:
 	alchemist_emergency_threats.clear()
 	var radius_sq := trigger_radius * trigger_radius
 	for node in alchemist_emergency_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -4930,7 +4938,7 @@ func _on_alchemist_poison_tick(origin: Vector2, radius: float, damage: int) -> v
 		alchemist_damage_query_candidates
 	)
 	for node in alchemist_damage_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -5351,7 +5359,7 @@ func _find_gunner_escape_direction() -> Vector2:
 	)
 
 	for node in gunner_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -5474,7 +5482,7 @@ func _use_gunner_cylinder_strike() -> void:
 		gunner_query_candidates
 	)
 	for node in gunner_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if (
@@ -5516,7 +5524,7 @@ func _update_gunner_deadeye_aim_analysis() -> void:
 	gunner_deadeye_monster_offsets.clear()
 
 	for node in _get_monster_nodes_cached():
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -5647,7 +5655,7 @@ func _count_monsters_near(
 	var count := 0
 	var radius_sq := radius * radius
 	for node in _get_monster_nodes_cached():
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if (
@@ -5905,7 +5913,7 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 	)
 
 	for node in _get_monster_nodes_cached():
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -6215,7 +6223,7 @@ func _apply_rogue_slash_tick() -> void:
 	)
 
 	for node in rogue_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -6433,7 +6441,7 @@ func _update_rogue_assassination(delta: float) -> void:
 	)
 
 	for node in rogue_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -6489,7 +6497,7 @@ func _find_rogue_assassination_target() -> Node2D:
 	)
 
 	for node in rogue_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -7891,7 +7899,7 @@ func _update_ranged_pressure_cache(delta: float) -> void:
 		_combat_monster_scratch
 	)
 	for node in _combat_monster_scratch:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -7993,7 +8001,7 @@ func _choose_move_direction(nearest_target: Node2D, nearest_distance: float) -> 
 		)
 
 	for node in _movement_monster_scratch:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 
 		var monster := node as Node2D
@@ -8409,7 +8417,7 @@ func _estimate_monster_danger(at_position: Vector2, radius: float) -> float:
 		_movement_monster_scratch
 	)
 	for node in _movement_monster_scratch:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -8432,7 +8440,7 @@ func _get_crowd_avoidance_direction(radius: float = 230.0) -> Vector2:
 		_movement_monster_scratch
 	)
 	for node in _movement_monster_scratch:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -8754,7 +8762,7 @@ func _find_nearest_monster() -> Node2D:
 	var nearest_distance := INF
 	for group_name in ["monsters", "treasure_chests"]:
 		for node in get_tree().get_nodes_in_group(group_name):
-			if not is_instance_valid(node) or node.is_queued_for_deletion():
+			if not HERO_TARGET_POLICY.is_detectable(node):
 				continue
 			var combat_target := node as Node2D
 			if combat_target == null:
@@ -11641,7 +11649,7 @@ func _find_archmage_holy_cluster_target(config: Dictionary) -> Node2D:
 	)
 
 	for node in archmage_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -11715,7 +11723,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 			archmage_query_candidates
 		)
 		for node in archmage_query_candidates:
-			if not is_instance_valid(node) or node.is_queued_for_deletion():
+			if not HERO_TARGET_POLICY.is_detectable(node):
 				continue
 			var monster := node as Node2D
 			if monster == null or not monster.has_method("take_damage"):
@@ -11773,7 +11781,7 @@ func _get_archmage_chain_dagger_targets(
 		archmage_query_candidates
 	)
 	for node in archmage_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if (
@@ -11790,7 +11798,7 @@ func _get_archmage_chain_dagger_targets(
 		return archmage_chain_target_results
 
 	if (
-		is_instance_valid(target)
+		HERO_TARGET_POLICY.is_detectable(target)
 		and target.is_in_group("monsters")
 		and global_position.distance_squared_to(target.global_position)
 		<= radius_sq
@@ -11954,7 +11962,7 @@ func _cast_archmage_blink() -> void:
 		archmage_query_candidates
 	)
 	for node in archmage_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -12275,7 +12283,7 @@ func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int) -> 
 	var radius_sq := radius * radius
 	_fill_monster_nodes_near(origin, radius, _combat_monster_scratch)
 	for node in _combat_monster_scratch:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null or not monster.has_method("take_damage"):
@@ -12293,7 +12301,7 @@ func _damage_monsters_in_radius_once(
 	var radius_sq := radius * radius
 	_fill_monster_nodes_near(origin, radius, _combat_monster_scratch)
 	for node in _combat_monster_scratch:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null or not monster.has_method("take_damage"):
@@ -12327,7 +12335,7 @@ func _damage_monsters_in_corridor(
 	_fill_monster_nodes_in_rect(query_rect, _combat_monster_scratch)
 
 	for node in _combat_monster_scratch:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null or not monster.has_method("take_damage"):
@@ -12342,7 +12350,7 @@ func _find_farthest_monster_from_point(origin: Vector2) -> Node2D:
 	var best: Node2D = null
 	var best_distance := -1.0
 	for node in _get_monster_nodes_cached():
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -12358,7 +12366,7 @@ func _find_nearest_monster_from_point(origin: Vector2) -> Node2D:
 	var best: Node2D = null
 	var best_distance := INF
 	for node in _get_monster_nodes_cached():
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -12550,7 +12558,7 @@ func _apply_channel_damage() -> void:
 		_combat_monster_scratch
 	)
 	for node in _combat_monster_scratch:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		if not node.has_method("take_damage"):
 			continue
@@ -13126,7 +13134,7 @@ func _trigger_purifier_protection_break_pulse() -> void:
 		_combat_monster_scratch
 	)
 	for node in _combat_monster_scratch:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if (
@@ -13504,7 +13512,7 @@ func _choose_purifier_orb_target_position() -> Vector2:
 	var monsters := _get_monster_nodes_near(global_position, throw_range)
 	var monster_sample_count := 0
 	for node in monsters:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -13996,7 +14004,7 @@ func _detonate_purifier_orb(
 	var cleansing_proc_positions: Array[Vector2] = []
 
 	for node in _get_monster_nodes_near(orb.global_position, radius):
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if (
@@ -14322,8 +14330,7 @@ func _collect_purifier_cleansing_targets(
 		return result
 
 	if (
-		is_instance_valid(target)
-		and not target.is_queued_for_deletion()
+		HERO_TARGET_POLICY.is_detectable(target)
 		and target.is_in_group("monsters")
 	):
 		var hp_value = target.get("current_hp")
@@ -14895,7 +14902,7 @@ func _find_best_piercing_direction() -> Vector2:
 	)
 	for index in range(_combat_monster_scratch.size() - 1, -1, -1):
 		var node = _combat_monster_scratch[index]
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			_combat_monster_scratch.remove_at(index)
 			continue
 		var monster := node as Node2D
@@ -14975,7 +14982,7 @@ func _use_area_burst_ultimate() -> void:
 		_combat_monster_scratch
 	)
 	for node in _combat_monster_scratch:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 
 		var monster := node as Node2D
@@ -16296,7 +16303,7 @@ func _build_ai_context() -> Dictionary:
 	var role_counts: Dictionary = {}
 
 	for node in _get_monster_nodes_cached():
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 
 		var monster := node as Node2D
@@ -17062,7 +17069,7 @@ func _tick_charm_state(delta: float) -> void:
 			_end_sage_phase()
 	velocity = Vector2.ZERO
 	var source := charm_source.get_ref() as Node2D if charm_source != null else null
-	if charm_timer <= 0.0 or not is_instance_valid(source):
+	if charm_timer <= 0.0 or not HERO_TARGET_POLICY.is_detectable(source):
 		return
 	var offset := source.global_position - global_position
 	if offset.length_squared() > 32.0 * 32.0:
@@ -18127,7 +18134,7 @@ func _damage_berserker_skill2_segment(
 	)
 
 	for node in berserker_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null or not monster.has_method("take_damage"):
@@ -18201,7 +18208,7 @@ func _heal_berserker_from_blood_path(
 		)
 
 		for node in berserker_query_candidates:
-			if not is_instance_valid(node) or node.is_queued_for_deletion():
+			if not HERO_TARGET_POLICY.is_detectable(node):
 				continue
 			var monster := node as Node2D
 			if monster == null:
@@ -18347,7 +18354,7 @@ func _execute_berserker_skill3(
 		berserker_query_candidates
 	)
 	for node in berserker_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -18532,7 +18539,7 @@ func _start_berserker_skill4() -> void:
 		berserker_query_candidates
 	)
 	for node in berserker_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null or not monster.has_method("take_damage"):
@@ -18759,7 +18766,7 @@ func _berserker_basic_attack(current_target: Node2D) -> void:
 	)
 
 	for node in berserker_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null or not monster.has_method("take_damage"):
@@ -18902,7 +18909,7 @@ func _find_berserker_madness_target() -> Node2D:
 		berserker_query_candidates
 	)
 	for node in berserker_query_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -19345,7 +19352,7 @@ func _complete_fighter_charge_dash() -> void:
 		fighter_charge_impact_candidates
 	)
 	for node in fighter_charge_impact_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -19712,7 +19719,7 @@ func _fighter_apply_slash(direction: Vector2, bonus_hit: bool = false) -> int:
 		fighter_combat_candidates
 	)
 	for node in fighter_combat_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -19773,7 +19780,7 @@ func _fighter_apply_thrust(direction: Vector2) -> void:
 		fighter_combat_candidates
 	)
 	for node in fighter_combat_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:
@@ -19881,7 +19888,7 @@ func _end_fighter_guard() -> void:
 		)
 		var release_radius_sq := release_radius * release_radius
 		for node in fighter_combat_candidates:
-			if not is_instance_valid(node) or node.is_queued_for_deletion():
+			if not HERO_TARGET_POLICY.is_detectable(node):
 				continue
 			var monster := node as Node2D
 			if monster == null:
@@ -19931,7 +19938,7 @@ func _fighter_reflect_damage(raw_damage: float, source: Node) -> void:
 		fighter_combat_candidates
 	)
 	for node in fighter_combat_candidates:
-		if not is_instance_valid(node) or node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
 		if monster == null:

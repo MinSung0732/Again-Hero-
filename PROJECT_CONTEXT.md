@@ -1,3 +1,7 @@
+## Infiltration Detection / Collision (2026-10-07)
+- Shared HeroTargetPolicy hides infiltrating actors from all hero archetypes, summons, current population/skill/avoidance queries and active homing. Same-frame revision invalidates reused caches on entry/exit; registry/spatial-grid membership and historical AI memory remain. Collision layer/mask zero plus deferred shape disable and separation exclusion last for the existing3s; original settings restore on expiry. Waltz remains unchanged.
+- Regression test covers profiles, retained targets, same-frame queries, physical pass-through and restoration; runtime validation status is recorded in CHANGELOG.
+
 ## Succubus / Charm / Infiltration (2026-10-07)
 - Legendary humanoid melee controller, cost13.5. Base HP240/speed155/damage28/range76/interval0.65/EXP70. Existing normal/elite sprites unchanged, registered through catalog-driven collection/gacha/formation/normal-special augment paths.
 - Actual hit HP+shield damage adds one shared target stack; fifteen consumes all and charms toward last caster for2s, seals attacks/new casts and applies40% slow. Charmed targets take15% extra Succubus damage. Immunity7s starts after charm ends; immune hits do not bank stacks. Dead/deleted caster ends charm. Common gate precedes every hero archetype; already released projectiles/fields persist. Cooldown property list cached on entry, petrify freezes approach, stun/fear override movement; active sage phase still expires safely.

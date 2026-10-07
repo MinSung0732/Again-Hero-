@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
+
 signal released(gatekeeper: Node2D)
 
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
@@ -138,7 +140,7 @@ func _find_nearest_target() -> Node2D:
 	var nearest: Node2D = null
 	var nearest_distance_sq := attack_range * attack_range
 	for raw_node in get_tree().get_nodes_in_group("monsters"):
-		if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
+		if not HERO_TARGET_POLICY.is_detectable(raw_node):
 			continue
 		var monster := raw_node as Node2D
 		if monster == null:

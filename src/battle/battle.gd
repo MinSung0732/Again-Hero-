@@ -1,5 +1,7 @@
 extends Node2D
 
+const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
+
 signal stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int)
 signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
 signal hero_leveled_up(new_level: int)
@@ -419,7 +421,7 @@ func count_monsters_near(
 			if typeof(bucket) != TYPE_ARRAY:
 				continue
 			for node in bucket:
-				if not is_instance_valid(node) or node.is_queued_for_deletion():
+				if not HERO_TARGET_POLICY.is_detectable(node):
 					continue
 				var monster := node as Node2D
 				if monster == null:
@@ -439,7 +441,7 @@ func get_nearest_hostile_target_for_hero(origin: Vector2) -> Node2D:
 	for raw_id in active_monsters:
 		var raw_node = active_monsters.get(raw_id)
 		if (
-			not is_instance_valid(raw_node)
+			not HERO_TARGET_POLICY.is_detectable(raw_node)
 			or raw_node.is_queued_for_deletion()
 		):
 			continue
@@ -459,7 +461,7 @@ func get_nearest_hostile_target_for_hero(origin: Vector2) -> Node2D:
 	for raw_id in active_treasure_chests:
 		var raw_node = active_treasure_chests.get(raw_id)
 		if (
-			not is_instance_valid(raw_node)
+			not HERO_TARGET_POLICY.is_detectable(raw_node)
 			or raw_node.is_queued_for_deletion()
 		):
 			continue
@@ -507,7 +509,7 @@ func get_nearest_monster_target(
 				continue
 			for raw_node in bucket:
 				if (
-					not is_instance_valid(raw_node)
+					not HERO_TARGET_POLICY.is_detectable(raw_node)
 					or raw_node.is_queued_for_deletion()
 				):
 					continue
