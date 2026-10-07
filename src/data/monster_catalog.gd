@@ -22,6 +22,7 @@ const ORDER := [
 	"scorpion",
 	"succubus",
 	"wolf",
+	"yuki_onna",
 ]
 
 const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd")
@@ -29,6 +30,18 @@ const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd"
 const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const MONSTERS := {
+	"yuki_onna": {
+		"id":"yuki_onna","name":"설녀","role":"control","family":"yuki_onna","species":"humanoid","grade":"rare","rarity":"rare","attack_type":"ranged",
+		"base_cost":5.5,"summon_exp":5.5,"default_unlocked":false,
+		"description":"사거리 지름400, 투사체속도250. 적중마다5초간10% 곱연산 둔화, 대상별 설녀 공용 최대10중첩. 사망 시 반경250 아군 설녀에5초 한기, 최대5중첩: 중첩마다 공속×1.10/투사체속도×1.05/둔화강도×1.02.",
+		"base_stats":preload("res://src/data/yuki_onna_behavior_catalog.gd").BASE,
+		"card_icon_path":"res://assets/art/monsters/Yuki-onna/frames/idle_01.png",
+		"ground_shadow":{"size":Vector2(72,20),"offset_y":44.0,"opacity":0.35},
+		"special_augment_ids":["yuki_eternal_chill","yuki_endless_winter","yuki_threefold_snow"],
+		"elite_visual":preload("res://src/data/yuki_onna_behavior_catalog.gd").ELITE_VISUAL,
+		"elite_skills":[{"runtime":"monster","passive":true,"id":"elite_yuki_snowflake","name":"설화","description":"설녀 공용 둔화가 최대중첩에 도달하면 전부 소모, 공격력200% 즉시 피해와2초99% 둔화.","initial_cooldown":0.0,"cooldown":0.0}],
+		"scene":preload("res://src/monsters/YukiOnna.tscn"),
+	},
 	"wolf": {
 		"id":"wolf", "name":"늑대", "role":"swarm", "family":"wolf", "species":"beast", "grade":"advanced", "rarity":"uncommon", "attack_type":"melee",
 		"base_cost":5.0, "summon_exp":5.0, "default_unlocked":false,

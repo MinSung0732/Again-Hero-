@@ -41,6 +41,7 @@ func _ready() -> void:
 
 
 func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) -> void:
+	preload("res://src/systems/yuki_onna_runtime.gd").start_target_life(self)
 	global_position = world_position
 	owner_hero = new_owner
 	max_hp = maxi(int(config.get("max_hp", 1050)), 1)
@@ -143,7 +144,7 @@ func _physics_process(delta: float) -> void:
 			elif owner_hero.has_method("get_summoner_scout_swarm_multipliers"):
 				var swarm: Dictionary = owner_hero.call("get_summoner_scout_swarm_multipliers")
 				move_multiplier *= maxf(float(swarm.get("move_speed", 1.0)), 0.1)
-		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier
+		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier * float(get_meta("yuki_slow_multiplier",1.0))
 		move_and_slide()
 		if visual.animation != &"move":
 			visual.play(&"move")

@@ -27,6 +27,7 @@ const HERO_SCENE := preload("res://src/hero/Hero.tscn")
 const SCORPION_SWAMP_RUNTIME := preload("res://src/systems/scorpion_swamp_runtime.gd")
 const SUPPORT_BUFF_RUNTIME := preload("res://src/systems/monster_support_buff_runtime.gd")
 const WOLF_PACK_RUNTIME := preload("res://src/systems/wolf_pack_runtime.gd")
+const YUKI_RUNTIME := preload("res://src/systems/yuki_onna_runtime.gd")
 const MONSTER_SUPPORT_COMMON := preload("res://src/monsters/monster_runtime_common.gd")
 const EXP_ORB_SCENE := preload("res://src/battle/ExpOrb.tscn")
 const HEAL_ITEM_SCENE := preload("res://src/battle/HealItem.tscn")
@@ -141,6 +142,7 @@ const MONSTER_SPATIAL_CELL_SIZE := 256.0
 var active_monsters: Dictionary = {}
 var support_buff_runtime = SUPPORT_BUFF_RUNTIME.new()
 var wolf_pack_runtime = WOLF_PACK_RUNTIME.new()
+var yuki_runtime = YUKI_RUNTIME.new()
 var scorpion_swamp_runtime = SCORPION_SWAMP_RUNTIME.new()
 var monster_population_counts: Dictionary = {}
 var monster_population_ids: Dictionary = {}
@@ -612,6 +614,7 @@ func _process(delta: float) -> void:
 		elite_monster_skill_runtime.tick(delta)
 		support_buff_runtime.tick(delta)
 		wolf_pack_runtime.tick(delta)
+		yuki_runtime.tick(delta)
 		scorpion_swamp_runtime.tick(delta)
 		_process_demon_ultimate_spawn_queue(delta)
 		_process_stage_reinforcement_queue(delta)
@@ -731,6 +734,7 @@ func _start_battle() -> void:
 	battle_over = false
 	elite_monster_skill_runtime.reset()
 	wolf_pack_runtime.reset()
+	yuki_runtime.reset()
 	active_heal_items.clear()
 	active_treasure_chests.clear()
 	active_magnet_items.clear()

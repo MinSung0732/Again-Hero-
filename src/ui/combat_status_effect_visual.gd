@@ -110,7 +110,7 @@ func setup(new_target: Node, new_effect_type: String) -> void:
 					var frame_path := String(_profile["path"])
 					if not frame_path.begins_with("res://"):
 						frame_path = "res://assets/art/effects/" + frame_path
-					for index in range(1, CATALOG.FRAME_COUNT + 1):
+					for index in range(1, int(_profile.get("frame_count",CATALOG.FRAME_COUNT)) + 1):
 						var texture := _load_texture(frame_path % index)
 						if texture != null:
 							frames.add_frame("fx", texture)
@@ -318,6 +318,8 @@ func _sync_monster_buff_layout() -> void:
 		position.y = local_body.get_center().y - effect_bounds.get_center().y * factor
 
 func _is_slow_active() -> bool:
+	if bool(target.get_meta("yuki_slow_active",false)):
+		return true
 	var slow_value = target.get("slow_timer")
 	if slow_value != null and float(slow_value) > 0.0:
 		return true

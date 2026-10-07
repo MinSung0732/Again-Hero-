@@ -11,6 +11,7 @@ const SPECIAL_MAX_LEVEL := 1
 static var augment_lookup: Dictionary = {}
 
 const MONSTER_NAMES := {
+	"yuki_onna":"설녀",
 	"wolf":"늑대",
 	"succubus":"서큐버스",
 	"scorpion":"전갈",
@@ -141,6 +142,9 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{"id":"yuki_eternal_chill","monster_id":"yuki_onna","name":"영원의 한기","description":"한기 최대중첩5→8","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"yuki_eternal_chill","effect_values":{"extra_stacks":3}},
+	{"id":"yuki_endless_winter","monster_id":"yuki_onna","name":"끝없는 겨울","description":"둔화 최대중첩10→15","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"yuki_endless_winter","effect_values":{"extra_stacks":5}},
+	{"id":"yuki_threefold_snow","monster_id":"yuki_onna","name":"삼중 설풍","description":"공격 투사체가15도 부채꼴3갈래로 발사","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"yuki_threefold_snow","effect_values":{}},
 	{"id":"wolf_crushing_fang", "monster_id":"wolf", "name":"분쇄의 송곳니", "description":"2연격의 두 번째 피해가 공격력100%로 증가", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"wolf_crushing_fang", "effect_values":{}},
 	{"id":"wolf_blood_scent", "monster_id":"wolf", "name":"피의 추적", "description":"개체별 같은 대상3회 실제 적중마다3초간 최대HP1% 총 출혈 피해. 갱신, 중첩 없음", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"wolf_blood_scent", "effect_values":{"hits":3, "duration":3.0, "total_max_hp_ratio":0.01}},
 	{"id":"wolf_iron_howl", "monster_id":"wolf", "name":"강철의 울음", "description":"하울링 시전1초 동안 받는 피해50% 감소", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"wolf_iron_howl", "effect_values":{}},

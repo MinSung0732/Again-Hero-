@@ -36,6 +36,7 @@ func _ready() -> void:
 
 
 func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) -> void:
+	preload("res://src/systems/yuki_onna_runtime.gd").start_target_life(self)
 	global_position = world_position
 	owner_hero = new_owner
 	max_hp = maxi(int(config.get("max_hp", 100)), 1)
@@ -115,6 +116,7 @@ func _physics_process(delta: float) -> void:
 	global_position += (
 		global_position.direction_to(target.global_position)
 		* move_speed
+		* float(get_meta("yuki_slow_multiplier",1.0))
 		* delta
 	)
 

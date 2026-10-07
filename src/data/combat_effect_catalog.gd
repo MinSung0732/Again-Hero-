@@ -2,6 +2,8 @@ extends RefCounted
 
 # Per-actor, cached animations. Paths retain the uploaded asset spelling.
 const EFFECTS := {
+	"yuki_chill":{"path":"debuff/freezing_frames/freezing_%02d.png","frame_count":4,"property":"chill_stacks","offset":Vector2.ZERO},
+	"yuki_slow":{"path":"debuff/frames/slow_%02d.png","meta":"yuki_slow_active","offset":Vector2(0,18)},
 	"wolf_howl": {"path":"buff/gold_attack_ring/gold_attack_ring_frame_%02d.png", "property":"howl_buff_timer", "offset":Vector2.ZERO},
 	"wolf_pack_agility": {"path":"buff/speed_up/speed_up_frame_%02d.png", "meta":"wolf_pack_speed_multiplier", "threshold":1.0, "offset":Vector2.ZERO},
 	"charm": {"path": "buff/heart_magic/heart_magic_frame_%02d.png", "property": "charm_timer", "offset": Vector2(0, -40)},
@@ -21,6 +23,7 @@ const HERO_SCALE := 0.28
 
 # Fit visible pixels, not the large transparent asset canvas.
 const MONSTER_BUFF_LAYOUTS := {
+	"yuki_chill":{"anchor":"body","width_ratio":1.20},
 	"wolf_howl": {"anchor":"feet", "width_ratio":1.45},
 	"wolf_pack_agility": {"anchor":"feet", "width_ratio":1.45},
 	"dullahan_regen": {"anchor": "feet", "width_ratio": 1.45},

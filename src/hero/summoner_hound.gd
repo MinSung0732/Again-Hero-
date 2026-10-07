@@ -52,6 +52,7 @@ func _ready() -> void:
 
 
 func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) -> void:
+	preload("res://src/systems/yuki_onna_runtime.gd").start_target_life(self)
 	global_position = world_position
 	owner_hero = new_owner
 	owner_attack_damage = maxi(int(config.get("owner_attack_damage", 1)), 1)
@@ -167,7 +168,7 @@ func _physics_process(delta: float) -> void:
 			elif owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
 				var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
 				move_multiplier *= maxf(float(support.get("move_speed", 1.0)), 0.1)
-		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier
+		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier * float(get_meta("yuki_slow_multiplier",1.0))
 		move_and_slide()
 		if visual.animation != &"move":
 			visual.play(&"move")

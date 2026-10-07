@@ -102,7 +102,8 @@ func run() -> void:
 		if child is FX and child.effect_type == "slow":
 			check(child.sprite_frames.get_frame_count("fx") == 8 and child.scale == Vector2(0.2, 0.2), "updated eight-frame slow and canvas scaling")
 	for kind in FX.CATALOG.EFFECTS:
-		check(FX._frames_cache[kind].get_frame_count("fx") == 8, "all uploaded frames loaded " + kind)
+		FX.show_on(hero,kind)
+		check(FX._frames_cache[kind].get_frame_count("fx") == int(FX.CATALOG.EFFECTS[kind].get("frame_count",8)), "all uploaded frames loaded " + kind)
 	# AnimatedSprite2D itself completes the one-shot clips and keeps their nodes.
 	ally.move_speed = 0.0
 	ally.attack_timer = 1000.0

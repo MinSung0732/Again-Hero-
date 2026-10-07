@@ -1856,7 +1856,7 @@ func _physics_process_actions(delta: float) -> void:
 	velocity = (
 		move_direction
 		* move_speed
-		* move_multiplier
+		* _get_effective_move_multiplier()
 		* _get_purifier_move_speed_multiplier()
 	)
 	_move_and_slide_with_obstacle_escape()
@@ -2207,7 +2207,7 @@ func _physics_process_summoner(delta: float) -> void:
 	move_direction = _apply_chest_steering(move_direction, delta)
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	move_direction = _apply_ranged_boundary_escape(move_direction)
-	velocity = move_direction * move_speed * move_multiplier
+	velocity = move_direction * move_speed * _get_effective_move_multiplier()
 	_move_and_slide_with_obstacle_escape()
 	_clamp_to_battlefield()
 
@@ -3065,7 +3065,7 @@ func _physics_process_alchemist(delta: float) -> void:
 							+ escape_direction * 1.25
 						).normalized()
 			recovery_direction = _apply_ranged_boundary_escape(recovery_direction)
-			velocity = recovery_direction * alchemist_move_speed * move_multiplier
+			velocity = recovery_direction * alchemist_move_speed * _get_effective_move_multiplier()
 			_move_and_slide_with_obstacle_escape()
 			_clamp_to_battlefield()
 			_update_alchemist_pose_visual(delta)
@@ -3090,7 +3090,7 @@ func _physics_process_alchemist(delta: float) -> void:
 	move_direction = _apply_chest_steering(move_direction, delta)
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	move_direction = _apply_ranged_boundary_escape(move_direction)
-	velocity = move_direction * alchemist_move_speed * move_multiplier
+	velocity = move_direction * alchemist_move_speed * _get_effective_move_multiplier()
 	_move_and_slide_with_obstacle_escape()
 	_clamp_to_battlefield()
 
@@ -3891,7 +3891,7 @@ func _move_alchemist_philosopher_form(delta: float) -> void:
 	var speed := (
 		move_speed
 		* _get_alchemist_field_speed_multiplier()
-		* move_multiplier
+		* _get_effective_move_multiplier()
 	)
 	velocity = desired.normalized() * speed
 	_move_and_slide_with_obstacle_escape()
@@ -5042,7 +5042,7 @@ func _physics_process_gunner(delta: float) -> void:
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	move_direction = _apply_gunner_boundary_steering(move_direction)
 	var gunner_speed_scale := 1.0 + (gunner_reload_move_speed_bonus if gunner_reloading else 0.0)
-	velocity = move_direction * move_speed * move_multiplier * gunner_speed_scale
+	velocity = move_direction * move_speed * _get_effective_move_multiplier() * gunner_speed_scale
 	_move_and_slide_with_obstacle_escape()
 	_clamp_to_battlefield()
 
@@ -5623,7 +5623,7 @@ func _start_gunner_deadeye() -> void:
 func _update_gunner_deadeye(delta: float) -> void:
 	var speed_bonus := maxf(float(gunner_config.get("deadeye_move_speed_multiplier", 1.30)), 1.0)
 	var deadeye_move_direction := _apply_gunner_boundary_steering(gunner_deadeye_direction)
-	velocity = deadeye_move_direction * move_speed * move_multiplier * speed_bonus
+	velocity = deadeye_move_direction * move_speed * _get_effective_move_multiplier() * speed_bonus
 	_move_and_slide_with_obstacle_escape()
 	_clamp_to_battlefield()
 	gunner_deadeye_shot_timer = maxf(gunner_deadeye_shot_timer - delta, 0.0)
@@ -5779,7 +5779,7 @@ func _physics_process_rogue(delta: float) -> void:
 		velocity = (
 			move_direction
 			* move_speed
-			* move_multiplier
+			* _get_effective_move_multiplier()
 			* speed_scale
 		)
 		_move_and_slide_with_obstacle_escape()
@@ -7747,7 +7747,7 @@ func _move_without_monsters() -> void:
 		var heal_direction := _apply_heal_item_steering(Vector2.ZERO, 0.016)
 		if heal_direction.length_squared() > 0.01:
 			heal_direction = _apply_ranged_boundary_escape(heal_direction)
-			velocity = heal_direction * current_move_speed * 0.90 * move_multiplier
+			velocity = heal_direction * current_move_speed * 0.90 * _get_effective_move_multiplier()
 			_move_and_slide_with_obstacle_escape()
 			_clamp_to_battlefield()
 			return
@@ -7763,7 +7763,7 @@ func _move_without_monsters() -> void:
 				magnet_direction
 				* current_move_speed
 				* 0.82
-				* move_multiplier
+				* _get_effective_move_multiplier()
 			)
 			_move_and_slide_with_obstacle_escape()
 			_clamp_to_battlefield()
@@ -7779,7 +7779,7 @@ func _move_without_monsters() -> void:
 				var chest_direction := _apply_chest_steering(Vector2.ZERO, 0.016)
 				if chest_direction.length_squared() > 0.01:
 					chest_direction = _apply_ranged_boundary_escape(chest_direction)
-					velocity = chest_direction * current_move_speed * 0.72 * move_multiplier
+					velocity = chest_direction * current_move_speed * 0.72 * _get_effective_move_multiplier()
 					_move_and_slide_with_obstacle_escape()
 					_clamp_to_battlefield()
 			else:
@@ -7794,7 +7794,7 @@ func _move_without_monsters() -> void:
 		var chest_direction := _apply_chest_steering(Vector2.ZERO, 0.016)
 		if chest_direction.length_squared() > 0.01:
 			chest_direction = _apply_ranged_boundary_escape(chest_direction)
-			velocity = chest_direction * current_move_speed * 0.72 * move_multiplier
+			velocity = chest_direction * current_move_speed * 0.72 * _get_effective_move_multiplier()
 			_move_and_slide_with_obstacle_escape()
 			_clamp_to_battlefield()
 			if (
@@ -7810,7 +7810,7 @@ func _move_without_monsters() -> void:
 	if is_instance_valid(nearest_exp_orb):
 		var exp_direction := global_position.direction_to(nearest_exp_orb.global_position)
 		exp_direction = _apply_ranged_boundary_escape(exp_direction)
-		velocity = exp_direction * current_move_speed * 0.90 * move_multiplier
+		velocity = exp_direction * current_move_speed * 0.90 * _get_effective_move_multiplier()
 		_move_and_slide_with_obstacle_escape()
 		_clamp_to_battlefield()
 		return
@@ -7824,7 +7824,7 @@ func _move_without_monsters() -> void:
 
 	var direction := position.direction_to(wander_target)
 	direction = _apply_ranged_boundary_escape(direction)
-	velocity = direction * current_move_speed * 0.72 * move_multiplier
+	velocity = direction * current_move_speed * 0.72 * _get_effective_move_multiplier()
 	_move_and_slide_with_obstacle_escape()
 	_clamp_to_battlefield()
 
@@ -17101,7 +17101,7 @@ func _tick_charm_state(delta: float) -> void:
 		return
 	var offset := source.global_position - global_position
 	if offset.length_squared() > 32.0 * 32.0:
-		velocity = offset.normalized() * move_speed * minf(move_multiplier, float(SUCCUBUS_BEHAVIOR.CHARM.slow_multiplier)) * _get_purifier_move_speed_multiplier()
+		velocity = offset.normalized() * move_speed * minf(move_multiplier, float(SUCCUBUS_BEHAVIOR.CHARM.slow_multiplier)) * float(get_meta("yuki_slow_multiplier",1.0)) * _get_purifier_move_speed_multiplier()
 	_move_and_slide_with_obstacle_escape()
 	_clamp_to_battlefield()
 	_update_stage1_pose_visual(delta)
@@ -17406,7 +17406,7 @@ func _tick_fear_state(delta: float) -> bool:
 	velocity = (
 		escape_direction.normalized()
 		* move_speed
-		* move_multiplier
+		* _get_effective_move_multiplier()
 		* fear_speed_multiplier
 		* _get_purifier_move_speed_multiplier()
 	)
@@ -17419,6 +17419,9 @@ func _tick_fear_state(delta: float) -> bool:
 		set_meta("fear_active", false)
 		queue_redraw()
 	return true
+
+func _get_effective_move_multiplier() -> float:
+	return move_multiplier * float(get_meta("yuki_slow_multiplier",1.0))
 
 func apply_slow(multiplier: float, duration: float) -> void:
 	if current_hp <= 0:
@@ -17550,7 +17553,7 @@ func _physics_process_berserker(delta: float) -> void:
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
 
 	if move_direction.length_squared() > 0.01:
-		velocity = move_direction * move_speed * move_multiplier
+		velocity = move_direction * move_speed * _get_effective_move_multiplier()
 		_move_and_slide_with_obstacle_escape()
 		_clamp_to_battlefield()
 	else:
@@ -19240,7 +19243,7 @@ func _physics_process_fighter(delta: float) -> void:
 		velocity = (
 			move_direction
 			* move_speed
-			* move_multiplier
+			* _get_effective_move_multiplier()
 			* guard_move_scale
 		)
 		_move_and_slide_with_obstacle_escape()
@@ -19538,7 +19541,7 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 				heal_direction
 				* move_speed
 				* 0.90
-				* move_multiplier
+				* _get_effective_move_multiplier()
 				* speed_scale
 			)
 			_move_and_slide_with_obstacle_escape()
@@ -19555,7 +19558,7 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 				magnet_direction
 				* move_speed
 				* 0.82
-				* move_multiplier
+				* _get_effective_move_multiplier()
 				* speed_scale
 			)
 			_move_and_slide_with_obstacle_escape()
@@ -19569,7 +19572,7 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 				chest_direction
 				* move_speed
 				* 0.72
-				* move_multiplier
+				* _get_effective_move_multiplier()
 				* speed_scale
 			)
 			_move_and_slide_with_obstacle_escape()
@@ -19590,7 +19593,7 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 			exp_direction
 			* move_speed
 			* 0.90
-			* move_multiplier
+			* _get_effective_move_multiplier()
 			* speed_scale
 		)
 		_move_and_slide_with_obstacle_escape()
@@ -19609,7 +19612,7 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 		direction
 		* move_speed
 		* 0.72
-		* move_multiplier
+		* _get_effective_move_multiplier()
 		* speed_scale
 	)
 	_move_and_slide_with_obstacle_escape()
