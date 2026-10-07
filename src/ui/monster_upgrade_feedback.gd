@@ -3,6 +3,9 @@ extends Node2D
 # One clock drives portrait, light and copy without changing layout or hit regions.
 const DURATION := 0.65
 const GATHER_TIME := 0.09
+const TRANSCEND_DURATION := 1.1
+var transcendent := false
+var _card_tint := Color.WHITE
 var elapsed := DURATION
 var level := 0
 var _caption: Label
@@ -26,9 +29,11 @@ func _ready() -> void:
 	add_child(_caption)
 	stop()
 
-func restart(new_level: int) -> void:
+func restart(new_level: int, is_transcendence: bool = false) -> void:
 	stop()
+	transcendent = is_transcendence
 	var card := get_parent() as Control
+	_card_tint = card.self_modulate
 	_portrait = card.find_child("MonsterPortrait", true, false) as TextureRect
 	_badge = card.find_child("UpgradeBadge", true, false) as Label
 	if is_instance_valid(_portrait):
@@ -41,13 +46,15 @@ func restart(new_level: int) -> void:
 		_badge.modulate.a = 0.0
 	level = new_level
 	elapsed = 0.0
-	_caption.text = "강화 성공 · Lv.%d" % level
+	_caption.text = ("초월 성공 · Lv.%d" if transcendent else "강화 성공 · Lv.%d") % level
 	show()
 	set_process(true)
 	_update_visuals()
 	queue_redraw()
 
 func stop() -> void:
+	if transcendent and is_instance_valid(get_parent()):
+		(get_parent() as CanvasItem).self_modulate = _card_tint
 	if is_instance_valid(_portrait):
 		_portrait.self_modulate = _portrait_tint
 		_portrait.scale = _portrait_scale
@@ -64,17 +71,22 @@ func _process(delta: float) -> void:
 	if not (get_parent() as CanvasItem).is_visible_in_tree():
 		stop()
 		return
-	elapsed = minf(elapsed + delta, DURATION)
-	if elapsed >= DURATION:
+	elapsed = minf(elapsed + delta, _duration())
+	if elapsed >= _duration():
 		stop()
 		return
 	_update_visuals()
 	queue_redraw()
 
+func _duration() -> float:
+	return TRANSCEND_DURATION if transcendent else DURATION
+
 func _burst() -> float:
-	return clampf((elapsed - GATHER_TIME) / (DURATION - GATHER_TIME), 0.0, 1.0)
+	return clampf((elapsed - GATHER_TIME) / (_duration() - GATHER_TIME), 0.0, 1.0)
 
 func _pulse() -> float:
+	if transcendent:
+		return maxf(1.0 - absf(elapsed - 0.80) / 0.30, 0.0)
 	if elapsed < GATHER_TIME:
 		return elapsed / GATHER_TIME * 0.35
 	return pow(1.0 - _burst(), 2.0)
@@ -89,8 +101,11 @@ func _update_visuals() -> void:
 		_center = inverse * (_portrait.get_global_transform() * (_portrait.size * 0.5))
 		_radius = minf(_portrait.size.x, _portrait.size.y) * 0.40
 		_portrait.pivot_offset = _portrait.size * 0.5
-		_portrait.scale = _portrait_scale * (1.0 + 0.045 * pulse)
+		_portrait.scale = _portrait_scale if transcendent else _portrait_scale * (1.0 + 0.045 * pulse)
 		_portrait.self_modulate = _portrait_tint * Color(1.0 + 0.7 * pulse, 1.0 + 0.5 * pulse, 1.0 + 0.2 * pulse)
+	if transcendent:
+		var charge := maxf(1.0 - elapsed / 0.38, 0.0)
+		card.self_modulate = _card_tint * Color(1.0 + charge * 3.0, 1.0 + charge * 2.5, 1.0 + charge * 3.5)
 	_caption.position = Vector2(8.0, 8.0)
 	_caption.size = Vector2(maxf(card.size.x - 16.0, 0.0), 30.0)
 	if is_instance_valid(_badge):
@@ -100,7 +115,10 @@ func _update_visuals() -> void:
 	_caption.modulate.a = 0.0 if elapsed < GATHER_TIME else minf((1.0 - _burst()) * 2.2, 1.0)
 
 func _draw() -> void:
-	if elapsed >= DURATION:
+	if elapsed >= _duration():
+		return
+	if transcendent:
+		_draw_transcendence()
 		return
 	var pulse := _pulse()
 	var burst := _burst()
@@ -122,3 +140,31 @@ func _draw() -> void:
 		var color := Color(1.0, 0.94, 0.70, pulse * 0.9)
 		draw_rect(Rect2(point - Vector2(radius, 1), Vector2(radius * 2.0, 2)), color)
 		draw_rect(Rect2(point - Vector2(1, radius), Vector2(2, radius * 2.0)), color)
+
+# Rectangular, opaque glints on snapped coordinates; the original sprite never scales.
+func _draw_transcendence() -> void:
+	var card := get_parent() as Control
+	var charge := clampf(elapsed / 0.28, 0.0, 1.0)
+	var absorb := clampf((elapsed - 0.28) / 0.60, 0.0, 1.0)
+	var bounds := Rect2(Vector2(4, 4), (card.size - Vector2(8, 8)).max(Vector2.ZERO))
+	if elapsed < 0.38:
+		draw_rect(bounds, Color("fff2c0"), false, 4.0)
+		for index in range(18):
+			var point := Vector2(8 + fmod(float(index * 47), maxf(card.size.x - 20, 1)), 10 + fmod(float(index * 71), maxf(card.size.y - 20, 1)))
+			if float(index % 5) / 5.0 <= charge:
+				draw_rect(Rect2(point.snapped(Vector2(2, 2)), Vector2(4, 4)), Color("fff8dd"))
+	if absorb > 0.0 and absorb < 1.0:
+		for index in range(24):
+			var start := Vector2(8 + fmod(float(index * 53), maxf(card.size.x - 20, 1)), 10 + fmod(float(index * 83), maxf(card.size.y - 20, 1)))
+			var t := clampf(absorb * 1.35 - float(index % 4) * 0.10, 0.0, 1.0)
+			if t >= 1.0:
+				continue
+			var point := start.lerp(_center, t * t).snapped(Vector2(2, 2))
+			var tail := start.lerp(_center, maxf(t * t - 0.06, 0.0)).snapped(Vector2(2, 2))
+			draw_line(tail, point, Color("cba6ff"), 2.0, false)
+			draw_rect(Rect2(point - Vector2(2, 2), Vector2(4, 4)), Color("fff4c9"))
+	if absorb > 0.70 and elapsed < 1.02:
+		var reach := 6.0 + 10.0 * (1.0 - absorb)
+		var center := _center.snapped(Vector2(2, 2))
+		draw_rect(Rect2(center - Vector2(reach, 2), Vector2(reach * 2, 4)), Color("fff8dd"))
+		draw_rect(Rect2(center - Vector2(2, reach), Vector2(4, reach * 2)), Color("fff8dd"))

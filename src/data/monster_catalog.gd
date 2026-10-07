@@ -940,7 +940,9 @@ const RARITY_UPGRADE_PROFILES := {
 		"label": "초월",
 		"hp_per_level": 0.10,
 		"damage_per_level": 0.10,
-		"shards_required": 15,
+		"shards_required": 1,
+		"max_level": 5,
+		"shard_research_points": 1000,
 		"configured": true,
 	},
 }
@@ -1113,3 +1115,9 @@ static func is_default_unlocked(monster_id: String) -> bool:
 
 static func get_shards_required(monster_id: String) -> int:
 	return maxi(int(get_rarity_upgrade_profile(monster_id).get("shards_required", 30)), 1)
+
+static func get_max_upgrade_level(monster_id: String) -> int:
+	return maxi(int(get_rarity_upgrade_profile(monster_id).get("max_level", MAX_UPGRADE_LEVEL)), 0)
+
+static func get_shard_research_points(monster_id: String) -> int:
+	return maxi(int(get_rarity_upgrade_profile(monster_id).get("shard_research_points", SHARD_RESEARCH_POINTS)), 0)

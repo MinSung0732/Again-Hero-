@@ -28,10 +28,10 @@ func _initialize() -> void:
 	assert(SHOP.weighted_id([], 0.5, "zeus") == "")
 	for source in ["summon", "pickup"]:
 		var entry := {"unlocked": false, "shards": 0, "level": 0}
-		var roll := {"monster_id": "zeus", "source": source, "shards": 2}
-		var first := COLLECTION._apply_draw_reward(entry, roll, SHOP.get_rarity("transcendent"), 15, false)
+		var roll := {"monster_id": "zeus", "source": source, "shards": 1}
+		var first := COLLECTION._apply_draw_reward(entry, roll, SHOP.get_rarity("transcendent"), 1, false)
 		assert(entry.unlocked and entry.shards == 0 and first.first_draw_unlock)
-		var second := COLLECTION._apply_draw_reward(entry, roll, SHOP.get_rarity("transcendent"), 15, false)
-		assert(entry.shards == 2 and not bool(second.get("first_draw_unlock", false)))
+		var second := COLLECTION._apply_draw_reward(entry, roll, SHOP.get_rarity("transcendent"), 1, false)
+		assert(entry.shards == 1 and not bool(second.get("first_draw_unlock", false)))
 	print("pickup probability / first-unlock PASS")
 	quit()

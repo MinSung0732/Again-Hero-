@@ -12,6 +12,7 @@ var heading: Label
 var empty: Label
 var descending := true
 var collection_state: Dictionary = {}
+var feedback: Node2D
 
 func panel(parent: Control, gold: bool = false, rarity: String = "") -> VBoxContainer:
 	var frame := PanelContainer.new()
@@ -75,6 +76,7 @@ func install(host: Control) -> void:
 	registered.hide()
 	var guide := panel(content)
 	label(guide,"초월 몬스터는 일반 팀 편성에 등장하지 않습니다.",22)
+	label(guide,"첫 획득 + 조각 1개씩 5회 초월 → 최대 Lv.5\n초과 조각 1개당 연구 포인트 1,000",22)
 	label(guide,"전투 중 개체별 조건을 달성하면 오른쪽에서 소환 버튼이 나타납니다.\n전투당 한 번만 소환할 수 있습니다.",22)
 	var header := HBoxContainer.new()
 	content.add_child(header)
@@ -95,6 +97,9 @@ func install(host: Control) -> void:
 	content.hide()
 
 func refresh(showing: bool) -> void:
+	if is_instance_valid(feedback):
+		feedback.stop()
+		feedback.reparent(lobby, false)
 	content.visible = showing
 	lobby._apply_lobby_button_skin(tab,showing,22)
 	tab.add_theme_stylebox_override("disabled",lobby.PIXEL_PANEL_SKIN.button_style(lobby.primary_button_style))
@@ -110,9 +115,11 @@ func refresh(showing: bool) -> void:
 		return
 	collection_state = COLLECTION.load_state()
 	for child in registered.get_children():
-		child.free()
+		child.get_parent().remove_child(child)
+		child.queue_free()
 	for child in grid.get_children():
-		child.free()
+		child.get_parent().remove_child(child)
+		child.queue_free()
 	var selected := STORE.load_id()
 	heading.text = "◇  등록된 초월 몬스터  %d / 1  ◇" % (0 if selected.is_empty() else 1)
 	if selected.is_empty():
@@ -135,7 +142,11 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 	var unlocked := COLLECTION.is_unlocked(id,state)
 	var row := HBoxContainer.new()
 	box.add_child(row)
+	var frame := box.get_parent().get_parent() as Control
+	frame.set_meta("monster_id", id)
 	var portrait := TextureRect.new()
+	portrait.name = "MonsterPortrait"
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	portrait.custom_minimum_size = Vector2(110,130)
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -161,7 +172,15 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 	register_button.disabled = not unlocked or (not chosen and DATA.MONSTERS.get_scene(id) == null)
 	button(actions,"상세정보",lobby._open_monster_detail.bind(id))
 	if not registered_card:
-		button(actions,"강화",_upgrade.bind(id)).disabled = not unlocked
+		var maxed := COLLECTION.is_maxed(id, state)
+		var action := button(actions,"최대 초월" if maxed else "초월",_upgrade.bind(id))
+		action.name = "TranscendButton"
+		action.disabled = not unlocked or maxed or COLLECTION.get_shards(id, state) < lobby.MONSTER_CATALOG.get_shards_required(id)
+		action.tooltip_text = "최대 Lv.5 · 초월 조각 1개 · 초과 조각 1개당 연구 1,000 P"
+		var badge := label(box, "최대 초월" if maxed else "초월 가능" if not action.disabled else "", 19)
+		badge.name = "UpgradeBadge"
+		badge.custom_minimum_size.y = 28.0
+		box.move_child(badge, 0)
 	if not unlocked:
 		box.modulate = Color(0.52,0.52,0.52,1)
 
@@ -173,9 +192,21 @@ func _register(id: String) -> void:
 		lobby.team_status_label.show()
 
 func _upgrade(id: String) -> void:
-	lobby._upgrade_team_monster(id)
+	var result: Dictionary = lobby._upgrade_team_monster(id)
 	refresh(true)
 	lobby.team_status_label.show()
+	if not bool(result.get("success", false)):
+		return
+	for card in grid.get_children():
+		if card.get_meta("monster_id", "") != id:
+			continue
+		if not is_instance_valid(feedback):
+			feedback = lobby.MONSTER_UPGRADE_FEEDBACK.new()
+			card.add_child(feedback)
+		else:
+			feedback.reparent(card, false)
+		feedback.restart(int(result.get("level", 0)), true)
+		return
 
 func _toggle_sort() -> void:
 	descending = not descending

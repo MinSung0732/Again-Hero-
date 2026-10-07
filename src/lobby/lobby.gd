@@ -3524,7 +3524,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	upgrade_button.clip_text = true
 	if maxed:
 		upgrade_button.text = "최대강화"
-		upgrade_button.tooltip_text = "Lv.30 · 이후 조각은 1개당 연구 포인트 1로 전환됩니다."
+		upgrade_button.tooltip_text = "Lv.%d · 이후 조각은 1개당 연구 포인트 %d로 전환됩니다." % [MONSTER_CATALOG.get_max_upgrade_level(monster_id), MONSTER_CATALOG.get_shard_research_points(monster_id)]
 	elif not upgrade_configured:
 		upgrade_button.text = "준비 중"
 		upgrade_button.tooltip_text = "이 등급의 강화 효과는 준비 중입니다."
@@ -3561,14 +3561,15 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	return card
 
 
-func _upgrade_team_monster(monster_id: String) -> void:
+func _upgrade_team_monster(monster_id: String) -> Dictionary:
 	var result := MONSTER_COLLECTION_STORE.try_upgrade(monster_id)
 	var updated_state = result.get("state", {})
 	if typeof(updated_state) == TYPE_DICTIONARY:
 		monster_collection_state = updated_state
 	if bool(result.get("success", false)):
-		team_status_label.text = "%s 강화 완료 · Lv.%d" % [
+		team_status_label.text = "%s %s 완료 · Lv.%d" % [
 			_team_monster_name(monster_id),
+			"초월" if MONSTER_CATALOG.get_rarity(monster_id) == "transcendent" else "강화",
 			int(result.get("level", 0)),
 		]
 		if int(result.get("research_points", 0)) > 0:
@@ -3581,12 +3582,13 @@ func _upgrade_team_monster(monster_id: String) -> void:
 			"not_configured": "이 등급의 강화 효과는 준비 중입니다.",
 			"not_enough_shards": "강화에 필요한 조각이 부족합니다.",
 			"save_failed": "강화 정보 저장에 실패했습니다.",
-			"max_level": "최대강화 Lv.30에 도달했습니다.",
+			"max_level": "최대 %s Lv.%d에 도달했습니다." % ["초월" if MONSTER_CATALOG.get_rarity(monster_id) == "transcendent" else "강화", MONSTER_CATALOG.get_max_upgrade_level(monster_id)],
 		}.get(reason, "몬스터를 강화할 수 없습니다."))
 		team_status_label.text = reason_text
 	_refresh_team_preview()
 	if bool(result.get("success", false)):
 		_play_team_upgrade_feedback(monster_id, int(result.get("level", 0)))
+	return result
 
 func _play_team_upgrade_feedback(monster_id: String, new_level: int) -> void:
 	for card in team_monster_grid.get_children():

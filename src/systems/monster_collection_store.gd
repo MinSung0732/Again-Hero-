@@ -61,7 +61,7 @@ static func load_state() -> Dictionary:
 
 		if unlock_all or shards >= required:
 			unlocked = true
-		level = clampi(level, 0, MONSTER_CATALOG.MAX_UPGRADE_LEVEL)
+		level = clampi(level, 0, MONSTER_CATALOG.get_max_upgrade_level(monster_id))
 
 		result[monster_id] = {
 			"unlocked": unlocked,
@@ -92,7 +92,7 @@ static func _state_config(state: Dictionary) -> ConfigFile:
 		if typeof(entry) == TYPE_DICTIONARY:
 			unlocked = bool(entry.get("unlocked", unlocked))
 			shards = maxi(int(entry.get("shards", 0)), 0)
-			level = clampi(int(entry.get("level", 0)), 0, MONSTER_CATALOG.MAX_UPGRADE_LEVEL)
+			level = clampi(int(entry.get("level", 0)), 0, MONSTER_CATALOG.get_max_upgrade_level(monster_id))
 
 		if shards >= required:
 			unlocked = true
@@ -143,14 +143,14 @@ static func normalize_maxed() -> Dictionary:
 	ACCOUNT_SCOPE.load_config(raw, SAVE_PATH)
 	var changed := false
 	for id in state:
-		changed = changed or int(raw.get_value("monsters", "%s_level" % id, 0)) > MONSTER_CATALOG.MAX_UPGRADE_LEVEL
+		changed = changed or int(raw.get_value("monsters", "%s_level" % id, 0)) > MONSTER_CATALOG.get_max_upgrade_level(id)
 		if is_maxed(id, state):
-			points += int(state[id].shards) * MONSTER_CATALOG.SHARD_RESEARCH_POINTS
+			points += int(state[id].shards) * MONSTER_CATALOG.get_shard_research_points(id)
 			state[id].shards = 0
 	return {"success": (points == 0 and not changed) or _save_with_research(state, points), "research_points": points}
 
 static func is_maxed(monster_id: String, state: Dictionary = {}) -> bool:
-	return get_upgrade_level(monster_id, state) >= MONSTER_CATALOG.MAX_UPGRADE_LEVEL
+	return get_upgrade_level(monster_id, state) >= MONSTER_CATALOG.get_max_upgrade_level(monster_id)
 
 static func get_unlocked_ids(state: Dictionary = {}) -> Array:
 	var source := state
@@ -197,7 +197,7 @@ static func get_upgrade_level(monster_id: String, state: Dictionary = {}) -> int
 	var entry = source.get(monster_id, {})
 	if typeof(entry) != TYPE_DICTIONARY:
 		return 0
-	return clampi(int(entry.get("level", 0)), 0, MONSTER_CATALOG.MAX_UPGRADE_LEVEL)
+	return clampi(int(entry.get("level", 0)), 0, MONSTER_CATALOG.get_max_upgrade_level(monster_id))
 
 
 static func try_upgrade(monster_id: String) -> Dictionary:
@@ -224,7 +224,7 @@ static func try_upgrade(monster_id: String) -> Dictionary:
 	state[monster_id] = entry
 	var points := 0
 	if is_maxed(monster_id, state):
-		points = int(entry.shards) * MONSTER_CATALOG.SHARD_RESEARCH_POINTS
+		points = int(entry.shards) * MONSTER_CATALOG.get_shard_research_points(monster_id)
 		entry.shards = 0
 	if not _save_with_research(state, points):
 		return {"success": false, "state": load_state(), "reason": "save_failed"}
@@ -284,7 +284,7 @@ static func _apply_draw_reward(entry: Dictionary, roll: Dictionary, rarity: Dict
 		award["shards"] = 0
 		award["first_draw_unlock"] = true
 	elif maxed:
-		points = amount * MONSTER_CATALOG.SHARD_RESEARCH_POINTS
+		points = amount * MONSTER_CATALOG.get_shard_research_points(String(roll.get("monster_id", "")))
 	else:
 		entry.shards = int(entry.get("shards", 0)) + amount
 		if int(entry.shards) >= required:

@@ -138,7 +138,7 @@ const RARITIES := {
 		"rank": 4,
 		"weight": 0.5,
 		"shard_min": 1,
-		"shard_max": 2,
+		"shard_max": 1,
 		"color": Color("61e887"),
 		"door_sheet_path": "res://assets/art/effects/gatcha/gacha_gold_light/monster_uncommon/monster_uncommon_sheet.png",
 		"unlock_on_first_draw": true,
