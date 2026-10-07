@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://ck6wuago8tvbh"
+path="res://.godot/imported/Stage5_Hero_MainTheme(Star Beyond Defeat).wav-df8afe7c4bfc394a6c15d8cc8d16153b.sample"
+
+[deps]
+
+source_file="res://assets/audio/bgm/hero_main_theme/Stage5_Hero_MainTheme(Star Beyond Defeat).wav"
+dest_files=["res://.godot/imported/Stage5_Hero_MainTheme(Star Beyond Defeat).wav-df8afe7c4bfc394a6c15d8cc8d16153b.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2
