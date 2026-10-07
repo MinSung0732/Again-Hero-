@@ -1,7 +1,8 @@
 extends Control
 
 const RIG := preload("res://src/ui/zeus_portrait_rig.gd")
-const ENERGY := preload("res://src/ui/transcendent_cutscene_energy.gd")
+const EFFECTS := preload("res://src/ui/zeus_attached_lightning.gd")
+const FX := preload("res://src/data/zeus_lightning_catalog.gd")
 var rig: Node2D
 var background: Texture2D
 var effects: Control
@@ -10,37 +11,12 @@ var elapsed := 0.0
 var paused := false
 var _last_tick := 0
 
-class AttachedEffects extends Control:
-	var host: Control
-	func _draw() -> void:
-		if host == null:
-			return
-		var t: float = host.elapsed
-		var origin: Vector2 = host.rig.spell_origin()
-		origin = get_global_transform().affine_inverse() * origin
-		var charge := smoothstep(0.4,1.4,t)*(1.0-smoothstep(1.8,2.3,t))
-		for index in range(3):
-			var radius := 12.0 + index*7.0 + sin(t*9+index)*2
-			draw_arc(origin,radius,t*3+index,t*3+index+TAU*0.8,32,Color(0.5,0.85,1,charge),2,false)
-		var release := smoothstep(1.7,1.88,t)*(1.0-smoothstep(2.35,2.8,t))
-		var target := Vector2(size.x*0.84,size.y*0.88)
-		host.ENERGY.bolt(self,origin,target,1,t,release,6)
-		host.ENERGY.bolt(self,origin,Vector2(size.x*0.92,0),2,t,release*0.65,4)
-		for index in range(20):
-			var age := maxf(0,t-1.9)
-			var direction := Vector2(cos(index*2.399),sin(index*2.399))
-			var point := origin + direction*age*(70+index*4)
-			draw_rect(Rect2(point.floor(),Vector2(3,3)),Color(0.7,0.9,1,release*0.7))
-		var flash := maxf(0,1.0-absf(t-1.9)/0.11)*0.65
-		if flash>0:
-			draw_rect(Rect2(Vector2.ZERO,size),Color(0.8,0.93,1,flash))
-
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	background = ImageTexture.create_from_image(Image.load_from_file("res://assets/art/effects/gatcha/zeus/celestial_temple.png"))
 	rig = RIG.new()
 	add_child(rig)
-	effects = AttachedEffects.new()
+	effects = EFFECTS.new()
 	effects.host = self
 	effects.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(effects)
@@ -88,5 +64,19 @@ func _draw() -> void:
 	if background == null:
 		return
 	var region := preload("res://src/ui/transcendent_cutscene_player.gd").cover_region(background.get_size(),size)
-	var light := lerpf(0.4,0.9,smoothstep(0.2,2.2,elapsed))
-	draw_texture_rect_region(background,Rect2(Vector2.ZERO,size),region,Color(light,light,light))
+	var light := lerpf(0.23,0.9,smoothstep(1.8,2.2,elapsed))
+	var factor := minf(size.x/540.0,size.y/960.0)
+	var shake := FX.shake(elapsed)*factor
+	draw_texture_rect_region(background,Rect2(shake-Vector2.ONE*6*factor,size+Vector2.ONE*12*factor),region,Color(light,light,light))
+	# Behind the portrait: gold halo opens on release; foreground bolts stay gem-attached.
+	var halo := smoothstep(1.8,2.15,elapsed)*(1.0-smoothstep(4.6,5.0,elapsed))
+	var offset := (size-Vector2(540,960)*factor)*0.5
+	var center := offset+Vector2(270,430)*factor
+	for index in range(3):
+		draw_arc(center,(110+index*14)*factor,elapsed*0.35+index,
+			elapsed*0.35+index+TAU*0.9,80,Color(1,0.79,0.3,halo*(0.65-index*0.14)),2*factor,false)
+	for index in range(16):
+		var angle := index*TAU/16+elapsed*0.1
+		var direction := Vector2(cos(angle),sin(angle))
+		draw_line(center+direction*148*factor,center+direction*(165+halo*24)*factor,
+			Color(1,0.82,0.4,halo*0.5),2*factor,false)

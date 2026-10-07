@@ -15,3 +15,10 @@ Godot4.6 headless tests/zeus_rig_smoke.gd: 정점/삼각형/8파츠/8본·공유
 
 ## 다음 완성 단계
 원본 스타일 그대로 분리된 앞/뒤 머리·얼굴/눈·팔/손·지팡이·몸통·앞/뒤 옷 PNG와 가려진 부분 재작화가 필요하다. 이를 적용해 관절 부근 겹침, 독립 움직임과 큰 스킬 제스처를 확대한다. 이번 영상은 연속 변형/효과 추종을 확인하는 제한된 리깅 시안이다.
+
+## PNG 번개 강화(v2)
+- `src/data/zeus_lightning_catalog.gd`: 시트·셀/발생점/끝점·24fps·방출1.9초·세 방향 목적지. `src/ui/zeus_attached_lightning.gd`는 이를 캐시해 사용한다. 스프라이트는 start(256,48)/end(256,464) 기준이며 가장자리 생성 오차는1px 이내다. 발생점/끝점 간 길이에 맞춰 **균일 확대·회전**하며 가로세로를 따로 늘이지 않는다. 프레임 선택은 전체 연출 시간 기준이며 멈춤/seek/루프에도 동기화한다.
+- `assets/art/effects/gatcha/zeus/lightning_v2/`: 1024×1024 2×2 시트와 동일512×512 개별4장, 모두 RGBA 투명 PNG. 생성 원본1254×1254를 정확히2×2 분할하고 nearest로416×416에 맞춘 뒤512캔버스 중앙/상단48px에 배치했다. 새로운 번개 생성은 기본 imagegen 도구를 사용했다. 그림 변경/블러 없이 프레임 분할·리사이즈·투명 여백만 처리했다.
+- 최종 프롬프트: “transparent PNG 2×2 four-frame lightning sheet; stable top/bottom center origin/end, white jagged core, cyan inner/deep cobalt outer branching thunder, sharp pixel edges, consecutive varied branches, transparent gutters, no background/characters/text/blur.” 전체 생성 목표는1024×1024였으며 실제 결과를 위 규격으로 정리했다.
+- 충전0.3–1.65초 → 방출1.72–2.75초(정점1.9초) → 충격파/입자2–3.2초 → 제우스 이름3.8–4.1초. 섬광은 정점±0.07초, 배경 진동은 정점 이후0.35초만 적용. 캐릭터에는 화면 진동을 적용하지 않는다. 후광은 캐릭터 뒤, 번개/입자는 앞, 이름은 마지막 계층이다.
+- 검증 실행: `godot --headless --path . --script tests/zeus_lightning_smoke.gd`, 기존 `tests/zeus_rig_smoke.gd`. 테스트는 RNG/재화/보상 저장 없이 실제미리보기4비율·301시점·발생점/캐시/셀 여백을 확인한다. PC OpenGL540×960 실제5초 영상 검수 완료; 모바일 실기기/성능 미검증. 기존 뽑기 적용은 시안 승인 후 연결하며 현재도 F6 ZeusRigPreview에서 확인한다.
