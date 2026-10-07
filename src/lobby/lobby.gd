@@ -1751,13 +1751,16 @@ func _install_stage_entry_hud() -> void:
 		for split_ratio in [0.280, 0.720]:
 			var divider := ColorRect.new()
 			divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			divider.color = Color(0.67, 0.48, 0.22, 0.22)
+			divider.color = Color(0.67, 0.48, 0.22, 0.55)
+			divider.z_index = 1
 			divider.anchor_left = split_ratio
 			divider.anchor_top = 0.24
 			divider.anchor_right = split_ratio
 			divider.anchor_bottom = 0.76
-			divider.offset_left = -0.5
-			divider.offset_right = 0.5
+			divider.offset_left = -1.0
+			divider.offset_right = 1.0
+			divider.offset_top = 0.0
+			divider.offset_bottom = 0.0
 			info_backing.add_child(divider)
 	var info_style := _make_svg_style(
 		UI_LOBBY_STAGE_INFO_PATH,
@@ -1784,13 +1787,9 @@ func _install_stage_entry_hud() -> void:
 		TextServer.OVERRUN_TRIM_ELLIPSIS
 	)
 
-	stage_status_label.anchor_left = 0.060
 	stage_status_label.anchor_top = 0.355
-	stage_status_label.anchor_right = 0.270
 	stage_status_label.anchor_bottom = 0.525
-	stage_reward_label.anchor_left = 0.310
 	stage_reward_label.anchor_top = 0.355
-	stage_reward_label.anchor_right = 0.690
 	stage_reward_label.anchor_bottom = 0.525
 	stage_status_label.clip_text = true
 	stage_reward_label.clip_text = true
@@ -1804,12 +1803,24 @@ func _install_stage_entry_hud() -> void:
 		repeat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		repeat_label.add_theme_color_override("font_color", Color("d7c8df"))
 		bottom_panel.add_child(repeat_label)
-	repeat_label.anchor_left = 0.730
 	repeat_label.anchor_top = 0.355
-	repeat_label.anchor_right = 0.940
 	repeat_label.anchor_bottom = 0.525
 	repeat_label.add_theme_font_size_override("font_size", 17)
 	repeat_label.clip_text = true
+	# Share the panel's column boundaries; outer columns get symmetric inset padding.
+	var info_width := info_backing.anchor_right - info_backing.anchor_left
+	for column in [
+		[stage_status_label, 0.0, 0.280, 24.0, 8.0],
+		[stage_reward_label, 0.280, 0.720, 8.0, 8.0],
+		[repeat_label, 0.720, 1.0, 8.0, 24.0],
+	]:
+		var label: Label = column[0]
+		label.anchor_left = info_backing.anchor_left + info_width * float(column[1])
+		label.anchor_right = info_backing.anchor_left + info_width * float(column[2])
+		label.offset_left = float(column[3])
+		label.offset_right = -float(column[4])
+		label.offset_top = 0.0
+		label.offset_bottom = 0.0
 
 	enter_stage_button.anchor_left = 0.090
 	enter_stage_button.anchor_top = 0.580
