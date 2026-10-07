@@ -73,7 +73,7 @@ func install(host: Control) -> void:
 	registered.hide()
 	var guide := panel(content)
 	label(guide,"초월 몬스터는 일반 팀 편성에 등장하지 않습니다.",22)
-	label(guide,"전투 중 개체별 조건을 달성하면 오른쪽에서 소환 버튼이 나타납니다. 전투당 한 번만 소환할 수 있습니다.",22)
+	label(guide,"전투 중 개체별 조건을 달성하면 오른쪽에서 소환 버튼이 나타납니다.\n전투당 한 번만 소환할 수 있습니다.",22)
 	var header := HBoxContainer.new()
 	content.add_child(header)
 	label(header,"◇  초월 몬스터 목록",26).size_flags_horizontal = Control.SIZE_EXPAND_FILL

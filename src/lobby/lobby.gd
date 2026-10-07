@@ -16,6 +16,7 @@ const SHOP_SUMMON_HISTORY_STORE := preload(
 )
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 const TRANSCENDENCE_DATA := preload("res://src/data/transcendence_catalog.gd")
+var _transcendence_entry_confirm = null
 var transcendence_view = preload("res://src/ui/transcendence_formation_view.gd").new()
 const FORMATION_DRAG_CARD := preload("res://src/ui/formation_drag_card.gd")
 const TEAM_FORMATION_VIEW := preload("res://src/ui/team_formation_view.gd")
@@ -2181,6 +2182,12 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 
 
 func _input(event: InputEvent) -> void:
+	if is_instance_valid(_transcendence_entry_confirm) and _transcendence_entry_confirm.visible:
+		_stage_swipe_active = false
+		if event.is_action_pressed("ui_cancel"):
+			_transcendence_entry_confirm.hide()
+			get_viewport().set_input_as_handled()
+		return
 	if TutorialFlow.blocks_input(event):
 		return
 	if stamina_view != null and stamina_view.handle_info_input(event):
@@ -5059,7 +5066,7 @@ func _refund_failed_stamina_entry() -> void:
 	if stamina_view != null:
 		stamina_view.refresh()
 
-func _enter_selected_stage() -> void:
+func _enter_selected_stage(allow_unregistered: bool = false) -> void:
 	if _battle_entry_pending or _scene_load_pending or SceneTransition.is_transitioning():
 		return
 	if main_modes_view != null and main_modes_view.blocks_entry():
@@ -5082,6 +5089,12 @@ func _enter_selected_stage() -> void:
 	var formation_reason := preload("res://src/systems/dungeon_entry_policy.gd").blocked_reason(team_selected_ids, demon_skill_selected_ids, exempt)
 	if not formation_reason.is_empty():
 		stamina_view.show_info(formation_reason)
+		return
+	if not allow_unregistered and not TutorialFlow.active() and preload("res://src/systems/transcendence_loadout_store.gd").load_id().is_empty():
+		if not is_instance_valid(_transcendence_entry_confirm):
+			_transcendence_entry_confirm = preload("res://src/ui/transcendence_entry_confirm.gd").new()
+			_transcendence_entry_confirm.install(self)
+		_transcendence_entry_confirm.open(_enter_selected_stage.bind(true))
 		return
 	_stamina_entry = STAMINA.try_enter(stage_id, exempt)
 	if not bool(_stamina_entry.get("success", false)):

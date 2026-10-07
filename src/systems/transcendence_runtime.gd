@@ -29,7 +29,7 @@ func record_mana(amount: float) -> bool:
 	return _evaluate()
 
 func _evaluate() -> bool:
-	if ready or conditions.is_empty() or (condition_mode != "any" and condition_mode != "all"):
+	if monster_id.is_empty() or ready or conditions.is_empty() or (condition_mode != "any" and condition_mode != "all"):
 		return false
 	var matched := 0
 	for condition in conditions:

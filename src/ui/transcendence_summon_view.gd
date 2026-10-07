@@ -82,7 +82,7 @@ func refresh() -> void:
 			tween.kill()
 		button.offset_left = 0
 		button.offset_right = WIDTH
-	if not state.ready or state.used or host.battle.battle_over:
+	if state.monster_id.is_empty() or not state.ready or state.used or host.battle.battle_over:
 		hide()
 		return
 	show()
