@@ -2,6 +2,7 @@ extends Control
 
 signal finished
 
+const ENERGY := preload("res://src/ui/transcendent_cutscene_energy.gd")
 const CATALOG := preload("res://src/data/transcendent_cutscene_catalog.gd")
 const EFFECT_LAYER := preload("res://src/ui/transcendent_cutscene_effect_layer.gd")
 const EFFECT_SHADER := preload("res://src/ui/transcendent_cutscene_effects.gdshader")
@@ -39,9 +40,12 @@ func _ready() -> void:
 	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_name_label.add_theme_font_size_override("font_size", 24)
 	_name_label.add_theme_color_override("font_color", Color("e9d9ac"))
-	_name_label.add_theme_color_override("font_shadow_color", Color("101b30", 0.8))
+	_name_label.add_theme_color_override("font_shadow_color", Color("101b30", 1.0))
 	_name_label.add_theme_constant_override("shadow_offset_x", 1)
 	_name_label.add_theme_constant_override("shadow_offset_y", 1)
+	_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_name_label.add_theme_color_override("font_outline_color", Color("111727"))
+	_name_label.add_theme_constant_override("outline_size", 5)
 	_name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_name_label)
 	_skip = Button.new()
@@ -135,7 +139,7 @@ func advance(delta: float) -> void:
 	if not _running:
 		return
 	_elapsed += maxf(delta, 0.0)
-	_name_label.modulate.a = smoothstep(4.15, 4.65, _elapsed)
+	_name_label.modulate.a = smoothstep(3.75, 4.05, _elapsed)
 	queue_redraw()
 	_effects.queue_redraw()
 	if _elapsed >= float(_data.duration):
@@ -214,18 +218,26 @@ func _draw() -> void:
 	if _data.is_empty():
 		return
 	var t := _elapsed
-	var light := lerpf(0.24, 1.0, smoothstep(1.0, 3.7, t))
+	var light := lerpf(0.13, 0.92, smoothstep(1.0, 3.7, t))
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.09, 0.16, 0.28) * Color(light, light, light))
 	var stage_size: Vector2 = _data.get("stage_size", STAGE_SIZE)
 	var stage := stage_rect(size, stage_size)
 	var factor := stage.size.x / stage_size.x
 	if _background != null:
 		# Cover only the environment. The character stage always uses contain.
-		draw_texture_rect_region(_background, Rect2(Vector2.ZERO, size), cover_region(_background.get_size(), size), Color(light, light, light))
+		var camera_scale := 1.0 + 0.035 * smoothstep(0.0, 3.8, t)
+		var impact := maxf(0.0, 1.0 - absf(t - 1.22) / 0.3)
+		var drift := Vector2(sin(t * 64) * 5.0, cos(t * 51) * 3.0) * impact
+		var environment := Rect2((size - size * camera_scale) * 0.5 + drift, size * camera_scale)
+		draw_texture_rect_region(_background, environment, cover_region(_background.get_size(), size), Color(light, light, light))
 	draw_set_transform(stage.position, 0.0, Vector2.ONE * factor)
 	if _background == null:
 		_draw_temporary_temple(light, t)
-	var halo_alpha := smoothstep(3.0, 3.7, t)
+
+	# Local energy coordinates; restore the contain transform after elliptical rings.
+	draw_set_transform(stage.position, 0.0, Vector2.ONE * factor)
+	_draw_energy_behind(t, stage.position, factor)
+	var halo_alpha := smoothstep(2.8, 3.55, t)
 	if halo_alpha > 0.0:
 		# Thin geometric halo, not a badge/title; independent of the character.
 		if _halo != null:
@@ -234,7 +246,7 @@ func _draw() -> void:
 			draw_arc(_data.get("halo_center", Vector2(640, 330)), float(_data.get("halo_radius", 242)), 0, TAU, 80, Color(1, 0.81, 0.38, halo_alpha * 0.7), 3, false)
 	if t >= 2.0 and not _character.is_empty():
 		var index := int(t * float(_data.character_fps)) % _character.size()
-		var reveal := smoothstep(3.0, 3.9, t)
+		var reveal := smoothstep(2.7, 3.65, t)
 		var opacity := smoothstep(2.0, 2.6, t)
 		var region: Rect2 = _data.character_region
 		var feet: Array = _data.feet_y
@@ -243,19 +255,17 @@ func _draw() -> void:
 		var position := anchor - Vector2(region.size.x * 0.5, feet[index] - region.position.y) * uniform_scale
 		var color := Color(0.05, 0.09, 0.18, opacity).lerp(Color(1, 1, 1, opacity), reveal)
 		draw_texture_rect_region(_character[index], Rect2(position, region.size * uniform_scale), region, color)
-	var electric_alpha := (0.25 + 0.65 * smoothstep(0.4, 1.1, t)) * (1.0 - 0.75 * smoothstep(4.0, 4.8, t))
-	# Fixed particle count, deterministic trajectories, no per-frame nodes/arrays.
-	var particle_center: Vector2 = _data.get("particle_center", Vector2(640, 560))
-	var particle_height := float(_data.get("particle_height", 390))
-	for index in range(18):
-		var phase := t * 0.4 + float(index) * 0.61
-		var x := particle_center.x + sin(phase) * (210 + index * 7)
-		var y := particle_center.y - fmod(t * 72 + index * 61, particle_height)
-		draw_rect(Rect2(Vector2(x, y).floor(), Vector2(3, 3)), Color(0.65, 0.88, 1, electric_alpha))
+	ENERGY.front(self, t, _data)
 	draw_set_transform(Vector2.ZERO)
-	var flash := maxf(0.0, 1.0 - absf(t - 1.18) / 0.17) * 0.75
+	var flash := maxf(0.0, 1.0 - absf(t - 1.18) / 0.14) * 0.82
+	flash = maxf(flash, maxf(0.0, 1.0 - absf(t - 2.95) / 0.13) * 0.32)
 	if flash > 0.0:
 		draw_rect(Rect2(Vector2.ZERO, size), Color(0.8, 0.92, 1, flash))
+
+
+func _draw_energy_behind(t: float, origin: Vector2, factor: float) -> void:
+	ENERGY.behind(self, t, _data, origin, factor)
+	draw_set_transform(origin, 0.0, Vector2.ONE * factor)
 
 
 func _draw_temporary_temple(light: float, t: float) -> void:
