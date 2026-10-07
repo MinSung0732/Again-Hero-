@@ -1735,7 +1735,7 @@ func _install_stage_entry_hud() -> void:
 		info_backing.anchor_left = 0.035
 		info_backing.anchor_top = 0.295
 		info_backing.anchor_right = 0.965
-		info_backing.anchor_bottom = 0.575
+		info_backing.anchor_bottom = 0.625
 		info_backing.add_theme_stylebox_override(
 			"panel",
 			_make_hud_panel_style(
@@ -1785,13 +1785,14 @@ func _install_stage_entry_hud() -> void:
 	)
 
 	stage_status_label.anchor_left = 0.060
-	stage_status_label.anchor_top = 0.355
+	stage_status_label.anchor_top = 0.375
 	stage_status_label.anchor_right = 0.320
-	stage_status_label.anchor_bottom = 0.525
+	stage_status_label.anchor_bottom = 0.545
 	stage_reward_label.anchor_left = 0.370
-	stage_reward_label.anchor_top = 0.320
+	stage_reward_label.anchor_top = 0.345
 	stage_reward_label.anchor_right = 0.630
-	stage_reward_label.anchor_bottom = 0.550
+	stage_reward_label.anchor_bottom = 0.575
+	stage_reward_label.add_theme_constant_override("line_spacing", 0)
 	stage_status_label.clip_text = true
 	stage_reward_label.clip_text = true
 
@@ -1805,21 +1806,21 @@ func _install_stage_entry_hud() -> void:
 		repeat_label.add_theme_color_override("font_color", Color("d7c8df"))
 		bottom_panel.add_child(repeat_label)
 	repeat_label.anchor_left = 0.680
-	repeat_label.anchor_top = 0.355
+	repeat_label.anchor_top = 0.375
 	repeat_label.anchor_right = 0.940
-	repeat_label.anchor_bottom = 0.525
+	repeat_label.anchor_bottom = 0.545
 	repeat_label.add_theme_font_size_override("font_size", 17)
 	repeat_label.clip_text = true
 
 	enter_stage_button.anchor_left = 0.090
-	enter_stage_button.anchor_top = 0.580
+	enter_stage_button.anchor_top = 0.665
 	enter_stage_button.anchor_right = 0.910
-	enter_stage_button.anchor_bottom = 0.730
+	enter_stage_button.anchor_bottom = 0.815
 	enter_stage_button.custom_minimum_size = Vector2(0.0, 76.0)
 
 	stage_description_label.add_theme_font_size_override("font_size", 18)
 	stage_status_label.add_theme_font_size_override("font_size", 17)
-	stage_reward_label.add_theme_font_size_override("font_size", 17)
+	stage_reward_label.add_theme_font_size_override("font_size", 16)
 	stage_status_label.add_theme_color_override("font_color", Color("ded3e4"))
 	stage_reward_label.add_theme_color_override("font_color", Color("f0cb68"))
 
@@ -1972,7 +1973,7 @@ func _apply_lobby_visual_polish() -> void:
 	stage_description_label.add_theme_color_override("font_color", Color("eee7f0"))
 	stage_status_label.add_theme_font_size_override("font_size", 17)
 	stage_status_label.add_theme_color_override("font_color", Color("d6cadc"))
-	stage_reward_label.add_theme_font_size_override("font_size", 17)
+	stage_reward_label.add_theme_font_size_override("font_size", 16)
 	stage_reward_label.add_theme_color_override("font_color", Color("e6c66d"))
 	_apply_enter_stage_button_skin()
 
