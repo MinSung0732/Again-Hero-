@@ -1,10 +1,12 @@
 extends Node2D
 
+const SUMMONER_SFX := preload("res://src/audio/summoner_audio.gd")
+
 signal released(open_gate: Node2D)
 
 const DRONE_SCENE := preload("res://src/hero/SummonerSuicideDrone.tscn")
 const DEFAULT_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames/effect5"
-const DEFAULT_OPENING_AUDIO_PATH := "res://assets/audio/sfx/summoner_gatekeeper_summon_pixabay.mp3"
+const DEFAULT_OPENING_AUDIO_PATH := "res://assets/audio/sfx/summoner_clean/portal.wav"
 const DEFAULT_DRONE_SPAWN_AUDIO_PATH := "res://assets/audio/sfx/summoner_drone_spawn.mp3"
 
 static var _frames_cache_by_dir: Dictionary = {}
@@ -117,9 +119,7 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 	visual.visible = true
 	visual.stop()
 	visual.play(&"opening")
-	if opening_audio.stream != null:
-		opening_audio.stop()
-		opening_audio.play()
+	SUMMONER_SFX.play_portal(owner_hero, opening_audio)
 
 
 func _physics_process(delta: float) -> void:

@@ -19,3 +19,5 @@ Check the linked Pixabay pages/license terms when redistributing outside this pr
 - `summoner_drone_spawn.mp3`
   - Dedicated short, faint dimensional pop used only for rapid suicide-drone spawns.
   - This is a separate custom-generated SFX, not a duplicate of the gate-opening sound.
+
+2026-10-08: Runtime basic/portal/follower attack now use edited WAVs in summoner_clean. See summoner_clean/SOURCES.md and manifest.json; original MP3s above remain preserved.

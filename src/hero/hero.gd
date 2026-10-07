@@ -186,7 +186,8 @@ const SUMMONER_SCOUT_SCENE := preload("res://src/hero/SummonerScout.tscn")
 const SUMMONER_HOUND_SCENE := preload("res://src/hero/SummonerHound.tscn")
 const SUMMONER_WATCHER_SCENE := preload("res://src/hero/SummonerWatcher.tscn")
 const SUMMONER_OPEN_GATE_SCENE := preload("res://src/hero/SummonerOpenGate.tscn")
-const SUMMONER_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/summoner_basic_attack_pixabay.mp3"
+const SUMMONER_AUDIO := preload("res://src/data/summoner_audio_catalog.gd")
+const SUMMONER_BASIC_ATTACK_AUDIO_PATH := SUMMONER_AUDIO.BASIC
 const PURIFIER_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/purifier_basic_attack_pixabay.mp3"
 const PURIFIER_SHIELD_CREATE_AUDIO_PATH := "res://assets/audio/sfx/purifier_shield_create_pixabay.mp3"
 const PURIFIER_SHIELD_BREAK_AUDIO_PATH := "res://assets/audio/sfx/purifier_shield_break_pixabay.mp3"
@@ -559,6 +560,7 @@ var summoner_ai_query_candidates: Array = []
 var summoner_runtime_ready: bool = false
 var summoner_basic_effect: AnimatedSprite2D = null
 var summoner_basic_audio: AudioStreamPlayer = null
+var summoner_basic_audio_next_ms := 0
 var stage1_basic_audio: AudioStreamPlayer = null
 var stage1_barrier_audio: AudioStreamPlayer = null
 var stage1_arcane_field_audio: AudioStreamPlayer = null
@@ -2086,7 +2088,8 @@ func _ensure_summoner_runtime() -> void:
 
 	summoner_basic_audio = AudioStreamPlayer.new()
 	summoner_basic_audio.bus = &"SFX"
-	summoner_basic_audio.volume_db = -10.0
+	summoner_basic_audio.volume_db = SUMMONER_AUDIO.BASIC_DB
+	summoner_basic_audio.max_polyphony = 1
 	var audio_path := String(
 		summoner_config.get(
 			"basic_attack_audio_path",
@@ -2949,8 +2952,10 @@ func _summoner_basic_attack(current_target: Node2D) -> void:
 	if (
 		is_instance_valid(summoner_basic_audio)
 		and summoner_basic_audio.stream != null
+		and not summoner_basic_audio.playing
+		and Time.get_ticks_msec() >= summoner_basic_audio_next_ms
 	):
-		summoner_basic_audio.stop()
+		summoner_basic_audio_next_ms = Time.get_ticks_msec()+SUMMONER_AUDIO.BASIC_INTERVAL_MS
 		summoner_basic_audio.play()
 
 	# Hitscan: damage is decided immediately; the summon_01~02 frames are

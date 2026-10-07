@@ -16,4 +16,4 @@ volume_db = -28.0
 
 [node name="SummonAudio" type="AudioStreamPlayer" parent="."]
 bus = &"SFX"
-volume_db = -20.0
+volume_db = -21.0

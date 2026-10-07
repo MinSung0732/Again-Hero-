@@ -996,7 +996,7 @@ const PROFILES = {
 				"shield_hp_ratio": 0.15,
 			},
 			"basic_effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect2",
-			"basic_attack_audio_path": "res://assets/audio/sfx/summoner_basic_attack_pixabay.mp3",
+			"basic_attack_audio_path": "res://assets/audio/sfx/summoner_clean/basic.wav",
 			"gatekeeper": {
 				"id": "summoner_gatekeeper",
 				"name": "이계의 문 - 문지기",
@@ -1022,8 +1022,8 @@ const PROFILES = {
 				"sense_range": 760.0,
 				"duration": 60.0,
 				"frame_dir": "res://assets/art/heroes/stage8_summoner/frames/effect2",
-				"summon_audio_path": "res://assets/audio/sfx/summoner_gatekeeper_summon_pixabay.mp3",
-				"attack_audio_path": "res://assets/audio/sfx/summoner_gatekeeper_attack_pixabay.mp3",
+				"summon_audio_path": "res://assets/audio/sfx/summoner_clean/portal.wav",
+				"attack_audio_path": "res://assets/audio/sfx/summoner_clean/follower_attack.wav",
 			},
 			"hound": {
 				"id": "summoner_hound",
@@ -1043,8 +1043,8 @@ const PROFILES = {
 				"visual_scale": 0.55,
 				"visual_offset_x": 9.2,
 				"visual_offset_y": -61.0,
-				"summon_audio_path": "res://assets/audio/sfx/summoner_gatekeeper_summon_pixabay.mp3",
-				"attack_audio_path": "res://assets/audio/sfx/summoner_gatekeeper_attack_pixabay.mp3",
+				"summon_audio_path": "res://assets/audio/sfx/summoner_clean/portal.wav",
+				"attack_audio_path": "res://assets/audio/sfx/summoner_clean/follower_attack.wav",
 			},
 			"watcher": {
 				"id": "summoner_watcher",
@@ -1063,8 +1063,8 @@ const PROFILES = {
 				"visual_scale": 0.50,
 				"visual_offset_x": 24.0,
 				"visual_offset_y": -8.0,
-				"summon_audio_path": "res://assets/audio/sfx/summoner_gatekeeper_summon_pixabay.mp3",
-				"attack_audio_path": "res://assets/audio/sfx/summoner_gatekeeper_attack_pixabay.mp3",
+				"summon_audio_path": "res://assets/audio/sfx/summoner_clean/portal.wav",
+				"attack_audio_path": "res://assets/audio/sfx/summoner_clean/follower_attack.wav",
 			},
 			"open_gate": {
 				"id": "summoner_open_gate",
@@ -1092,7 +1092,7 @@ const PROFILES = {
 				"drone_spawn_half_width": 90.0,
 				"drone_spawn_y_min": -220.0,
 				"drone_spawn_y_max": -70.0,
-				"opening_audio_path": "res://assets/audio/sfx/summoner_gatekeeper_summon_pixabay.mp3",
+				"opening_audio_path": "res://assets/audio/sfx/summoner_clean/portal.wav",
 				"drone_spawn_audio_path": "res://assets/audio/sfx/summoner_drone_spawn.mp3",
 				"drone": {
 					"max_hp": 70,

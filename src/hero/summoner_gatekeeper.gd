@@ -2,13 +2,15 @@ extends CharacterBody2D
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
+const SUMMONER_SFX := preload("res://src/audio/summoner_audio.gd")
+
 signal released(gatekeeper: Node2D)
 
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const PROJECTILE_SCENE := preload("res://src/hero/SummonerGatekeeperProjectile.tscn")
 const FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames/effect1"
-const ATTACK_AUDIO_PATH := "res://assets/audio/sfx/summoner_gatekeeper_attack_pixabay.mp3"
-const SUMMON_AUDIO_PATH := "res://assets/audio/sfx/summoner_gatekeeper_summon_pixabay.mp3"
+const ATTACK_AUDIO_PATH := "res://assets/audio/sfx/summoner_clean/follower_attack.wav"
+const SUMMON_AUDIO_PATH := "res://assets/audio/sfx/summoner_clean/portal.wav"
 const PROJECTILE_POOL_SIZE := 6
 
 static var _frames_cache: SpriteFrames
@@ -77,9 +79,7 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 	visual.visible = true
 	visual.speed_scale = 1.0
 	visual.play(&"birth")
-	if summon_audio.stream != null:
-		summon_audio.stop()
-		summon_audio.play()
+	SUMMONER_SFX.play_portal(owner_hero, summon_audio)
 	queue_redraw()
 
 

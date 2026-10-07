@@ -12,9 +12,9 @@ texture_filter = 1
 
 [node name="OpeningAudio" type="AudioStreamPlayer" parent="."]
 bus = &"SFX"
-volume_db = -13.0
+volume_db = -21.0
 
 [node name="DroneSpawnAudio" type="AudioStreamPlayer" parent="."]
 bus = &"SFX"
 volume_db = -32.0
-max_polyphony = 4
+max_polyphony = 1

@@ -1,0 +1,44 @@
+[
+  {
+    "file": "basic.wav",
+    "source_file": "summoner_basic_attack_pixabay.mp3",
+    "source_id": "228342",
+    "creator": "RescopicSound",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-elemental-magic-spell-impact-outgoing-228342/",
+    "source_sha256": "02ab5c0879fe6ed60ee4b458bc500341ef1e385cd311bd86c00de165b94c1dc6",
+    "sha256": "f98940edec2212acb28a8bb4fd982c48b9a5b824a0b5754b6d81efd229b9b777",
+    "trim_start_s": 0.05,
+    "duration_s": 0.2,
+    "peak_dbfs": -12,
+    "filters": "atrim=start=0.05:duration=0.2,asetpts=PTS-STARTPTS,highpass=f=110,lowpass=f=1700:p=2,acompressor=threshold=0.12:ratio=3:attack=3:release=55,afade=t=in:d=0.006,afade=t=out:st=0.15500000000000003:d=0.045",
+    "final_gain": 0.9183252771137557
+  },
+  {
+    "file": "portal.wav",
+    "source_file": "summoner_gatekeeper_summon_pixabay.mp3",
+    "source_id": "90750",
+    "creator": "CeebFrack (Freesound)",
+    "url": "https://pixabay.com/sound-effects/film-special-effects-the-portal-90750/",
+    "source_sha256": "87c1a32ccffcef9ee1825622478e05c5e36efd79e1443782ea3d173675e76ac0",
+    "sha256": "5230651b5bf9ae99c5401c69a1ec3bb3bfce102bd179c1e97c250bbbd4ad7f2d",
+    "trim_start_s": 0.26,
+    "duration_s": 0.7,
+    "peak_dbfs": -12,
+    "filters": "atrim=start=0.26:duration=0.7,asetpts=PTS-STARTPTS,highpass=f=110,lowpass=f=2400:p=2,acompressor=threshold=0.12:ratio=3:attack=3:release=55,afade=t=in:d=0.006,afade=t=out:st=0.6549999999999999:d=0.045",
+    "final_gain": 0.8203059057973482
+  },
+  {
+    "file": "follower_attack.wav",
+    "source_file": "summoner_gatekeeper_attack_pixabay.mp3",
+    "source_id": "213833",
+    "creator": "SingularitysMarauder",
+    "url": "https://pixabay.com/sound-effects/powerful-spell-213833/",
+    "source_sha256": "fd5337f15f8d824d25d86d1b46e84b49f272c18c4783b689cbbea2884cf9b3bd",
+    "sha256": "2f58394807a014f85315716f72bef84f082733de974967b198948979213e749e",
+    "trim_start_s": 0.03,
+    "duration_s": 0.18,
+    "peak_dbfs": -12,
+    "filters": "atrim=start=0.03:duration=0.18,asetpts=PTS-STARTPTS,highpass=f=110,lowpass=f=2000:p=2,acompressor=threshold=0.12:ratio=3:attack=3:release=55,afade=t=in:d=0.006,afade=t=out:st=0.135:d=0.045",
+    "final_gain": 0.8665069437594054
+  }
+]
