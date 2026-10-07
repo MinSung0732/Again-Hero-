@@ -1,0 +1,124 @@
+{
+  "date": "2026-10-08",
+  "license": "https://pixabay.com/service/license-summary/",
+  "bus": "SFX",
+  "sources": [
+    {
+      "id": "147352",
+      "creator": "Universfield",
+      "title": "Soft UI Click",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-soft-ui-click-147352/",
+      "raw_sha256": "b4c15c383ed6efb57ff160b1ebe2d64ef56f768c8156fa91ec43a091488274e6"
+    },
+    {
+      "id": "352764",
+      "creator": "Universfield",
+      "title": "Magic Teleport Whoosh",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-magic-teleport-whoosh-352764/",
+      "raw_sha256": "6c8d8571811ee60219c4425707bb2c9e9ba299ec683356501f50eff581fd5cb5"
+    },
+    {
+      "id": "151765",
+      "creator": "Universfield",
+      "title": "Level Up Fanfare",
+      "url": "https://pixabay.com/sound-effects/musical-level-up-fanfare-151765/",
+      "raw_sha256": "f43a92d3a74ae72c3e3d1de15b8d840c998c786e9bbdf77bc658786379d041f5"
+    },
+    {
+      "id": "467468",
+      "creator": "DRAGON-STUDIO",
+      "title": "Coins Dropping into Wooden Box",
+      "url": "https://pixabay.com/sound-effects/coins-dropping-into-wooden-box-467468/",
+      "raw_sha256": "29064838f01b9eb0ffa51d8d845793469a0c6170ec25fe29c19b749ccd1c69ae"
+    },
+    {
+      "id": "250960",
+      "creator": "Universfield",
+      "title": "Marimba Game Over",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-marimba-game-over-250960/",
+      "raw_sha256": "fea96aa1b00e05d92481de03ab761881fede8e66567558c2ccbe25e7f7913fdc"
+    }
+  ],
+  "assets": {
+    "click": {
+      "file": "click.wav",
+      "source_id": "147352",
+      "filters": "atrim=0:0.20,asetpts=PTS-STARTPTS,afade=t=in:d=0.003,afade=t=out:st=0.16:d=0.04",
+      "duration": 0.2,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -26.39,
+      "sha256": "b64a062e76bc22163f033a6de7608b2b58e8d5b9670149ab9e2535ffda238447"
+    },
+    "summon": {
+      "file": "summon.wav",
+      "source_id": "352764",
+      "filters": "atempo=1.6,atrim=0:0.55,asetpts=PTS-STARTPTS,afade=t=in:d=0.01,afade=t=out:st=0.42:d=0.13",
+      "duration": 0.55,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -16.42,
+      "sha256": "66f815880c146dc29aeee484323d0390e51c7ba36b8d14c574e025b6903d1c23"
+    },
+    "ultimate": {
+      "file": "ultimate.wav",
+      "source_id": "352764",
+      "filters": "atrim=0:1.15,asetpts=PTS-STARTPTS,afade=t=in:d=0.015,afade=t=out:st=0.92:d=0.23",
+      "duration": 1.15,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -17.98,
+      "sha256": "197d0f7352f0fedb23dad9a1a798e4b52ac8f2bbef0d9ef90a2247ec40487141"
+    },
+    "success": {
+      "file": "success.wav",
+      "source_id": "151765",
+      "filters": "atrim=0:0.9,asetpts=PTS-STARTPTS,afade=t=in:d=0.01,afade=t=out:st=0.70:d=0.20",
+      "duration": 0.9,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -15.39,
+      "sha256": "1f4a340fefde4646f8b8f08400981141073fd860dce678360446c698b88007f2"
+    },
+    "victory": {
+      "file": "victory.wav",
+      "source_id": "151765",
+      "filters": "atrim=0:3.2,asetpts=PTS-STARTPTS,afade=t=in:d=0.01,afade=t=out:st=2.5:d=0.7",
+      "duration": 2.9518,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -18.01,
+      "sha256": "fae6478d8094894024f3e1bf8ce4bd3028973486982027c56fe16570bfcbea29"
+    },
+    "reward": {
+      "file": "reward.wav",
+      "source_id": "467468",
+      "filters": "atrim=0:0.85,asetpts=PTS-STARTPTS,afade=t=in:d=0.008,afade=t=out:st=0.65:d=0.20",
+      "duration": 0.85,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -22.97,
+      "sha256": "ef7000830bdc3c0223ca596b0c6ea8f8c67935a784cd37997b35a13f78a51184"
+    },
+    "defeat": {
+      "file": "defeat.wav",
+      "source_id": "250960",
+      "filters": "atrim=0:2.7,asetpts=PTS-STARTPTS,afade=t=in:d=0.01,afade=t=out:st=2.25:d=0.45",
+      "duration": 2.7,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -17.55,
+      "sha256": "f41f8bf49785183cb69dd1c633bcd5abd73c3a553d389c8b8b7d2e1a1e3914bb"
+    },
+    "denied": {
+      "file": "denied.wav",
+      "source_id": "250960",
+      "filters": "atrim=0:0.25,asetpts=PTS-STARTPTS,afade=t=in:d=0.005,afade=t=out:st=0.16:d=0.09",
+      "duration": 0.25,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -17.09,
+      "sha256": "2943f480612f6a5f288c28add65ec63df702cf936e16f91ec8f3029f8bbde40d"
+    }
+  },
+  "bgm": {
+    "path": "res://assets/audio/bgm/frontend_loop.ogg",
+    "source": "existing project-provided mainlobby.wav (no new licensing claim)",
+    "source_sha256": "712d9c5dcc362635fea386dc6c9882e189e0be300542c431c1addab9fc8d4c4a",
+    "sha256": "ebbe87cffb9f3b1fb28a0b5582c1093ccd4fe00b601a95455e1b256a54f6b077",
+    "processing": "body from 2s, final 1s crossfade into original first 2s, -18 LUFS / -3dBTP, stereo Vorbis quality1",
+    "bus": "BGM"
+  }
+}

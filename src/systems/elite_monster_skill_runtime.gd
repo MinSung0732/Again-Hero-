@@ -200,6 +200,7 @@ func _cast_skill(monster: Node2D, skill: Dictionary) -> void:
 		return
 	if String(skill.get("runtime", "")) == "monster":
 		if monster.has_method("try_cast_elite_skill") and bool(monster.call("try_cast_elite_skill", skill)):
+			battle.get_node("/root/GameAudio").play_battle("elite_skill", battle)
 			skill["_timer"] = maxf(float(skill.get("cooldown", 0.0)), 0.01)
 			skill["_used"] = bool(skill.get("once", false))
 		else:
@@ -237,6 +238,9 @@ func _cast_skill(monster: Node2D, skill: Dictionary) -> void:
 			monster.queue_redraw()
 		"elite_goblin_thrower_bombardment":
 			_begin_goblin_thrower_bombardment(monster, skill)
+		_:
+			return
+	battle.get_node("/root/GameAudio").play_battle("elite_skill", battle)
 
 
 func _tick_active_skill(

@@ -244,6 +244,7 @@ var current_stage_hero_name: String = "용사"
 var _battle_toast_timer: float = 0.0
 
 func _ready() -> void:
+	GameAudio.attach_battle(battle)
 	_cache_demon_ultimate_ui_data()
 	_ensure_demon_action_choice_capacity(5)
 	if DisplayServer.has_feature(DisplayServer.FEATURE_ORIENTATION):
@@ -3382,6 +3383,7 @@ func _on_hero_augment_selected(
 
 func _on_battle_finished(message: String, player_won: bool) -> void:
 	hero_bgm_manager.stop_bgm()
+	GameAudio.battle_result(self, player_won)
 	settings_overlay.hide()
 	pause_menu.hide()
 	hero_skill_cooldown_bar.hide()

@@ -7,6 +7,7 @@ var cooldowns: Dictionary = {}
 var authority: Node
 var scaled_clock := false
 var application_paused := false
+var honor_tree_pause := true
 var played_count := 0
 
 func configure(data: Dictionary, battle: Node = null, combat_clock: bool = false) -> void:
@@ -30,7 +31,7 @@ func configure(data: Dictionary, battle: Node = null, combat_clock: bool = false
 		cooldowns[id] = 0.0
 
 func is_blocked() -> bool:
-	return application_paused or get_tree().paused or (is_instance_valid(authority) and (authority.battle_over or authority.external_pause or authority.demon_augment_selection_active))
+	return application_paused or (honor_tree_pause and get_tree().paused) or (is_instance_valid(authority) and (authority.battle_over or authority.external_pause or authority.demon_augment_selection_active))
 
 func play_cue(id: String) -> bool:
 	if not players.has(id) or is_blocked() or float(cooldowns[id]) > 0.0:

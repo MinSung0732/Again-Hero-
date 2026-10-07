@@ -48,6 +48,7 @@ func _ready() -> void:
 	root.resized.connect(_sync_magic_size)
 	_sync_magic_size()
 	reveal_stinger.stream = _load_reveal_stinger()
+	reveal_stinger.bus = &"SFX"
 
 
 func _sync_magic_size() -> void:

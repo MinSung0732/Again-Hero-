@@ -2983,6 +2983,7 @@ func _on_treasure_chest_destroyed(
 	drop_position: Vector2,
 	chest: Node = null
 ) -> void:
+	GameAudio.play_battle("chest", self)
 	if is_instance_valid(chest):
 		active_treasure_chests.erase(chest.get_instance_id())
 

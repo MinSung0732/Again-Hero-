@@ -2477,3 +2477,9 @@ Build AI는 전체/주변 몬스터 수, 최근 공세, 역할 비율, 거리, �
 - 유물 조각이 부족하면 게이지 fill은 회색, 완성 또는 레벨업 가능한 수량이면 초록색을 사용한다.
 - 현재 유물 콘텐츠/소환/저장/강화 효과는 미구현 상태다. 임의 유물이나 효과를 만들지 않고 `RelicCatalog`는 빈 데이터 골격만 제공하며, 실제 데이터가 추가되면 같은 4열 UI가 자동 생성되도록 유지한다.
 - 연구/유물 본문은 외곽 장식과 겹치지 않도록 좌우 82px 안전영역을 유지한다.
+
+
+## 전체 게임 오디오 소유권 (2026-10-08)
+- `GameAudio` autoload가 타이틀/로비/결과 BGM와 공통 UI·게임 피드백 SFX를 관리. 데이터는 `src/data/game_audio_catalog.gd`; 출처·믹스·의도적 무음 목록은 `assets/audio/sfx/interface/SOURCES.md`와 manifest.
+- 전투 BGM는 기존 HeroBGMManager가 계속 소유하며 입장 시 frontend fade-out. 전용 Zeus/용사/뽑기 음원을 중복하지 않음. 모든 신규 SFX는 실제 WAV, 음악은 기존 mainlobby 기반 OGG. 저장된 BGM/SFX 설정을 따름.
+- 이벤트당 고정 플레이어·공유 캐시, 소환/엘리트 억제, 버튼 생성 시 연결·reparent 중복 방어. hover/EXP/발걸음/추가 잡몹 사망음은 의도적 제외. 결과 SFX는 battle_over와 분리, 전투 종료/씬 이탈/백그라운드에서 소유권 정리.

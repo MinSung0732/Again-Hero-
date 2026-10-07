@@ -24,6 +24,7 @@ var profile_cloud: Node # Optional isolated test transport; production uses Clou
 
 
 func _ready() -> void:
+	GameAudio.enter_frontend(self, "title")
 	_build_title()
 	loading_view = VIEW.new()
 	add_child(loading_view)
