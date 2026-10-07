@@ -47,7 +47,7 @@ func install(host) -> void:
 	mode_row.name = "MainModeSelector"
 	mode_row.add_theme_constant_override("separation", 12)
 	bottom.add_child(mode_row)
-	place(mode_row, 0.03, 0.87, 0.97, 1.08)
+	place(mode_row, 0.03, 0.81, 0.97, 1.02)
 	var sides := HBoxContainer.new()
 	sides.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sides.add_theme_constant_override("separation", 6)

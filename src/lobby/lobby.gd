@@ -1733,9 +1733,9 @@ func _install_stage_entry_hud() -> void:
 		info_backing.name = "EntryInfoBacking"
 		info_backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		info_backing.anchor_left = 0.035
-		info_backing.anchor_top = 0.295
+		info_backing.anchor_top = 0.315
 		info_backing.anchor_right = 0.965
-		info_backing.anchor_bottom = 0.625
+		info_backing.anchor_bottom = 0.565
 		info_backing.add_theme_stylebox_override(
 			"panel",
 			_make_hud_panel_style(
@@ -1748,7 +1748,7 @@ func _install_stage_entry_hud() -> void:
 		bottom_panel.add_child(info_backing)
 		bottom_panel.move_child(info_backing, 1)
 
-		for split_ratio in [0.333, 0.666]:
+		for split_ratio in [0.280, 0.720]:
 			var divider := ColorRect.new()
 			divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			divider.color = Color(0.67, 0.48, 0.22, 0.22)
@@ -1785,14 +1785,13 @@ func _install_stage_entry_hud() -> void:
 	)
 
 	stage_status_label.anchor_left = 0.060
-	stage_status_label.anchor_top = 0.375
-	stage_status_label.anchor_right = 0.320
-	stage_status_label.anchor_bottom = 0.545
-	stage_reward_label.anchor_left = 0.370
-	stage_reward_label.anchor_top = 0.345
-	stage_reward_label.anchor_right = 0.630
-	stage_reward_label.anchor_bottom = 0.575
-	stage_reward_label.add_theme_constant_override("line_spacing", 0)
+	stage_status_label.anchor_top = 0.355
+	stage_status_label.anchor_right = 0.270
+	stage_status_label.anchor_bottom = 0.525
+	stage_reward_label.anchor_left = 0.310
+	stage_reward_label.anchor_top = 0.355
+	stage_reward_label.anchor_right = 0.690
+	stage_reward_label.anchor_bottom = 0.525
 	stage_status_label.clip_text = true
 	stage_reward_label.clip_text = true
 
@@ -1805,22 +1804,22 @@ func _install_stage_entry_hud() -> void:
 		repeat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		repeat_label.add_theme_color_override("font_color", Color("d7c8df"))
 		bottom_panel.add_child(repeat_label)
-	repeat_label.anchor_left = 0.680
-	repeat_label.anchor_top = 0.375
+	repeat_label.anchor_left = 0.730
+	repeat_label.anchor_top = 0.355
 	repeat_label.anchor_right = 0.940
-	repeat_label.anchor_bottom = 0.545
+	repeat_label.anchor_bottom = 0.525
 	repeat_label.add_theme_font_size_override("font_size", 17)
 	repeat_label.clip_text = true
 
 	enter_stage_button.anchor_left = 0.090
-	enter_stage_button.anchor_top = 0.665
+	enter_stage_button.anchor_top = 0.580
 	enter_stage_button.anchor_right = 0.910
-	enter_stage_button.anchor_bottom = 0.815
+	enter_stage_button.anchor_bottom = 0.730
 	enter_stage_button.custom_minimum_size = Vector2(0.0, 76.0)
 
 	stage_description_label.add_theme_font_size_override("font_size", 18)
 	stage_status_label.add_theme_font_size_override("font_size", 17)
-	stage_reward_label.add_theme_font_size_override("font_size", 16)
+	stage_reward_label.add_theme_font_size_override("font_size", 17)
 	stage_status_label.add_theme_color_override("font_color", Color("ded3e4"))
 	stage_reward_label.add_theme_color_override("font_color", Color("f0cb68"))
 
@@ -1973,7 +1972,7 @@ func _apply_lobby_visual_polish() -> void:
 	stage_description_label.add_theme_color_override("font_color", Color("eee7f0"))
 	stage_status_label.add_theme_font_size_override("font_size", 17)
 	stage_status_label.add_theme_color_override("font_color", Color("d6cadc"))
-	stage_reward_label.add_theme_font_size_override("font_size", 16)
+	stage_reward_label.add_theme_font_size_override("font_size", 17)
 	stage_reward_label.add_theme_color_override("font_color", Color("e6c66d"))
 	_apply_enter_stage_button_skin()
 
@@ -4788,9 +4787,9 @@ func _refresh_stage_card() -> void:
 	stage_status_label.text = "%s\n%s" % [entry_state, time_text]
 
 	if not STAGE_PROGRESS.is_gold_reward_claimed(stage_id):
-		stage_reward_label.text = "최초 보상\n골드 +%d" % int(STAGE_CATALOG.CLEAR_GOLD_REWARDS.stage_first_clear)
+		stage_reward_label.text = "최초 보상\n골드%d" % int(STAGE_CATALOG.CLEAR_GOLD_REWARDS.stage_first_clear)
 		if not reward_claimed and reward > 0:
-			stage_reward_label.text += "\n연구 +%d" % reward
+			stage_reward_label.text += " · 연구%d" % reward
 	elif reward_claimed:
 		stage_reward_label.text = "최초 보상\n획득 완료"
 	elif reward > 0:
