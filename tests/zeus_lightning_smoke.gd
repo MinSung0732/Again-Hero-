@@ -21,10 +21,16 @@ func _run() -> void:
 	preview.set_process(false)
 	await process_frame
 	assert(preview.effects.frames.size() == 4)
+	assert(preview.rig.modulate.a == 0.0 and preview.name_label.modulate.a == 0.0)
+	for mesh in preview.rig.meshes:
+		assert(mesh.material == preview.reveal_material)
 	var cached: Texture2D = preview.effects.frames[0].atlas
 	for view_size in [Vector2(540, 960), Vector2(360, 800), Vector2(1080, 1920), Vector2(960, 540)]:
 		preview.size = view_size
 		preview._layout()
+		assert(Rect2(Vector2.ZERO, view_size).encloses(Rect2(preview.name_label.position, preview.name_label.size)))
+		assert((preview.rig.global_transform * Vector2(384, 1200)).y < preview.name_label.position.y)
+		var previous_edge := -0.08
 		for frame in range(301):
 			var t := float(frame) / 60.0
 			preview.set_time(t)
@@ -34,11 +40,23 @@ func _run() -> void:
 			assert(FX.discharge(t) >= 0.0 and FX.discharge(t) <= 1.0)
 			assert(FX.shake(t).length() <= 8.0)
 			assert(preview.rig.bones[0].scale == Vector2.ONE)
+			var edge: float = preview.reveal_material.get_shader_parameter("reveal_edge")
+			assert(edge >= previous_edge and edge >= -0.081 and edge <= 1.081)
+			previous_edge = edge
+			if t <= 1.35:
+				assert(is_equal_approx(edge, -0.08))
+			if t >= 2.45:
+				assert(is_equal_approx(edge, 1.08))
+			if t < 3.55:
+				assert(preview.name_label.modulate.a == 0.0)
 		preview.set_time(4.2)
 		assert(preview.name_label.modulate.a == 1.0)
 	assert(FX.discharge(0.0) == 0.0 and FX.discharge(5.0) == 0.0)
 	assert(FX.discharge(FX.RELEASE) > 0.99)
 	assert(FX.shake(1.89) == Vector2.ZERO and FX.shake(3.0) == Vector2.ZERO)
+	preview.set_time(0.0)
+	assert(preview.rig.modulate.a == 0.0 and preview.name_label.modulate.a == 0.0)
+	assert(is_equal_approx(float(preview.reveal_material.get_shader_parameter("reveal_edge")), -0.08))
 	preview.free()
-	print("Zeus lightning PNG/alpha/gutters/atlas cache/tip tracking/timeline/4 aspect ratios PASS")
+	print("Zeus lightning PNG/cache/tip/timeline/4 ratios/silhouette wipe/name margins/reset PASS")
 	quit()

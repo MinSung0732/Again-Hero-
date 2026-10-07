@@ -3,10 +3,12 @@ extends Control
 const RIG := preload("res://src/ui/zeus_portrait_rig.gd")
 const EFFECTS := preload("res://src/ui/zeus_attached_lightning.gd")
 const FX := preload("res://src/data/zeus_lightning_catalog.gd")
+const REVEAL := preload("res://src/ui/zeus_silhouette_reveal.gdshader")
 var rig: Node2D
 var background: Texture2D
 var effects: Control
 var name_label: Label
+var reveal_material: ShaderMaterial
 var elapsed := 0.0
 var paused := false
 var _last_tick := 0
@@ -16,6 +18,10 @@ func _ready() -> void:
 	background = ImageTexture.create_from_image(Image.load_from_file("res://assets/art/effects/gatcha/zeus/celestial_temple.png"))
 	rig = RIG.new()
 	add_child(rig)
+	reveal_material = ShaderMaterial.new()
+	reveal_material.shader = REVEAL
+	for mesh in rig.meshes:
+		mesh.material = reveal_material
 	effects = EFFECTS.new()
 	effects.host = self
 	effects.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -23,12 +29,17 @@ func _ready() -> void:
 	name_label = Label.new()
 	name_label.text = "제우스"
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_color_override("font_color",Color("fff0bf"))
-	name_label.add_theme_color_override("font_outline_color",Color("102039"))
-	name_label.add_theme_constant_override("outline_size",4)
+	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	name_label.add_theme_color_override("font_color",Color("fff3d2"))
+	name_label.add_theme_color_override("font_outline_color",Color("080d20"))
+	name_label.add_theme_color_override("font_shadow_color",Color(0,0,0,0.85))
+	name_label.add_theme_constant_override("outline_size",3)
+	name_label.add_theme_constant_override("shadow_offset_y",3)
 	add_child(name_label)
 	resized.connect(_layout)
 	_layout()
+	set_time(0.0)
 	_last_tick = Time.get_ticks_usec()
 
 func _layout() -> void:
@@ -39,9 +50,9 @@ func _layout() -> void:
 	rig.scale = Vector2.ONE*0.72*factor
 	rig.position = offset+Vector2(270-384*0.72,800-1200*0.72)*factor
 	effects.size = size
-	name_label.position = offset+Vector2(120,865)*factor
-	name_label.size = Vector2(300,60)*factor
-	name_label.add_theme_font_size_override("font_size",maxi(16,int(28*factor)))
+	name_label.position = offset+Vector2(90,850)*factor
+	name_label.size = Vector2(360,76)*factor
+	name_label.add_theme_font_size_override("font_size",maxi(18,int(36*factor)))
 
 func _process(_delta: float) -> void:
 	var tick := Time.get_ticks_usec()
@@ -52,7 +63,9 @@ func _process(_delta: float) -> void:
 func set_time(seconds: float) -> void:
 	elapsed = seconds
 	rig.set_time(minf(elapsed,5.0))
-	name_label.modulate.a = smoothstep(3.8,4.1,elapsed)
+	rig.modulate.a = FX.silhouette_alpha(elapsed)
+	reveal_material.set_shader_parameter("reveal_edge",FX.reveal_edge(elapsed))
+	name_label.modulate.a = FX.name_alpha(elapsed)
 	queue_redraw()
 	effects.queue_redraw()
 
@@ -71,6 +84,11 @@ func _draw() -> void:
 	# Behind the portrait: gold halo opens on release; foreground bolts stay gem-attached.
 	var halo := smoothstep(1.8,2.15,elapsed)*(1.0-smoothstep(4.6,5.0,elapsed))
 	var offset := (size-Vector2(540,960)*factor)*0.5
+	# Native name has its own dark lower backing; no text baked into character art.
+	for index in range(12):
+		var fade := float(index+1)/12.0
+		draw_rect(Rect2(offset+Vector2(0,828+index*11)*factor,Vector2(540,11)*factor),
+			Color(0.02,0.025,0.065,fade*0.72*FX.name_alpha(elapsed)))
 	var center := offset+Vector2(270,430)*factor
 	for index in range(3):
 		draw_arc(center,(110+index*14)*factor,elapsed*0.35+index,

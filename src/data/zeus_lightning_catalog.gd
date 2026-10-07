@@ -8,6 +8,16 @@ const FPS := 24.0
 const RELEASE := 1.9
 const TARGETS := [Vector2(474, 842), Vector2(510, 30), Vector2(520, 500)]
 
+# Shared reveal timing keeps the original small-angle rig and lightning in phase.
+static func silhouette_alpha(t: float) -> float:
+	return smoothstep(0.4, 0.85, t)
+
+static func reveal_edge(t: float) -> float:
+	return lerpf(-0.08, 1.08, smoothstep(1.35, 2.45, t))
+
+static func name_alpha(t: float) -> float:
+	return smoothstep(3.55, 3.9, t)
+
 static func discharge(t: float) -> float:
 	return smoothstep(1.72, RELEASE, t) * (1.0 - smoothstep(2.22, 2.75, t))
 

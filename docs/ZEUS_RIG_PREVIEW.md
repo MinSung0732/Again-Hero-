@@ -22,3 +22,8 @@ Godot4.6 headless tests/zeus_rig_smoke.gd: 정점/삼각형/8파츠/8본·공유
 - 최종 프롬프트: “transparent PNG 2×2 four-frame lightning sheet; stable top/bottom center origin/end, white jagged core, cyan inner/deep cobalt outer branching thunder, sharp pixel edges, consecutive varied branches, transparent gutters, no background/characters/text/blur.” 전체 생성 목표는1024×1024였으며 실제 결과를 위 규격으로 정리했다.
 - 충전0.3–1.65초 → 방출1.72–2.75초(정점1.9초) → 충격파/입자2–3.2초 → 제우스 이름3.8–4.1초. 섬광은 정점±0.07초, 배경 진동은 정점 이후0.35초만 적용. 캐릭터에는 화면 진동을 적용하지 않는다. 후광은 캐릭터 뒤, 번개/입자는 앞, 이름은 마지막 계층이다.
 - 검증 실행: `godot --headless --path . --script tests/zeus_lightning_smoke.gd`, 기존 `tests/zeus_rig_smoke.gd`. 테스트는 RNG/재화/보상 저장 없이 실제미리보기4비율·301시점·발생점/캐시/셀 여백을 확인한다. PC OpenGL540×960 실제5초 영상 검수 완료; 모바일 실기기/성능 미검증. 기존 뽑기 적용은 시안 승인 후 연결하며 현재도 F6 ZeusRigPreview에서 확인한다.
+
+## 실루엣 등장(v3)
+- 첫0.4초 캐릭터를 숨긴 후0.4–0.85초 어두운 실루엣으로 등장.1.35초까지 색상을 공개하지 않고 기다린 뒤1.35–2.45초 원본UV의 위에서 아래로 본모습을 공개한다.1.9초 기존 PNG 방출과 겹치며 전체5초·전신 구도·연속 동작 유지.
+- `zeus_silhouette_reveal.gdshader`와 공유 ShaderMaterial1개를8개 메시가 사용한다. PNG 원본/alpha를 유지하고 공개 경계의 색만 바꾸므로 경계 연결과 원본 색상이 유지된다. 초기화와set_time 모두 동일 함수로 alpha/공개 위치/이름을 갱신해 루프 또는 역방향seek에서도 앞선 상태가 남지 않는다. 새 이미지/재추첨/보상 지급 경로 없음.
+- 하단 이름은3.55–3.9초 등장, stage36px·외곽선3px·그림자·배경 음영. 이름 시작Y850은 발바닥Y800보다 아래이며 화면 비율에 따라 공통contain 배치된다. 테스트에서4비율 영역 포함/발 여백/재질 공유/공개 단조 진행/숨김 대기/완전 공개/루프 초기화 확인. Godot PC 실제 렌더로 실루엣/중간 공개/번개/최종 이름 확인; 모바일 실기기는 미검증.
