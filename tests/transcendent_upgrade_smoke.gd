@@ -84,6 +84,9 @@ func run() -> void:
 	check(not rejected.success and rejected.research_points == 0 and rejected.awards.is_empty(), "failed draw conversion reports no payout")
 	SCOPE.files.erase("unexpected.cfg")
 	check(STORE.get_shards("zeus") == 0 and PROGRESS.get_research_points() == before, "failed draw leaves balances unchanged")
+	SCOPE.guest_directory = "user://transcend_layout_" + hex
+	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
+	SCOPE.select_guest()
 	state = STORE.load_state()
 	state.zeus = {"unlocked": true, "level": 0, "shards": 2}
 	STORE.save_state(state)
@@ -130,6 +133,29 @@ func run() -> void:
 	await settle()
 	action = view.grid.get_child(0).find_child("TranscendButton", true, false)
 	check(action.text == "최대 초월" and action.disabled, "max cap disabled in UI")
+
+	# Registration must not steal height from the monster list or move mode tabs.
+	for viewport_size in [Vector2i(540, 960), Vector2i(360, 800)]:
+		root.size = viewport_size
+		view._register("")
+		await settle()
+		var list_rect: Rect2 = view.content.get_node("TranscendenceScroll").get_global_rect()
+		var tabs_rect: Rect2 = view.layout.get_node("ModeTabs").get_global_rect()
+		var grid_rect: Rect2 = view.grid.get_global_rect()
+		await capture("unregistered" + str(viewport_size.x))
+		for cycle in range(3):
+			view._register("zeus")
+			await settle()
+			check(preload("res://src/systems/transcendence_loadout_store.gd").load_id() == "zeus", "actual registration saved")
+			check(view.content.get_node("TranscendenceScroll").get_global_rect().is_equal_approx(list_rect), "registered list position/height fixed " + str(viewport_size))
+			check(view.layout.get_node("ModeTabs").get_global_rect().is_equal_approx(tabs_rect), "registered tabs fixed")
+			check(view.grid.get_global_rect().is_equal_approx(grid_rect), "registered grid bounds fixed")
+			check(view.registered.get_combined_minimum_size().y <= view.registered_area.size.y + 1, "registered card fits viewport")
+			if cycle == 0:
+				await capture("registered" + str(viewport_size.x))
+			view._register("")
+			await settle()
+			check(view.content.get_node("TranscendenceScroll").get_global_rect().is_equal_approx(list_rect), "unregistration restores same list height")
 	root.size = Vector2i(360, 800)
 	await settle()
 	card = view.grid.get_child(0)
@@ -141,5 +167,9 @@ func run() -> void:
 	for file in DirAccess.get_files_at(folder):
 		DirAccess.remove_absolute(folder.path_join(file))
 	DirAccess.remove_absolute(folder)
+	for file in DirAccess.get_files_at(SCOPE.guest_directory):
+		DirAccess.remove_absolute(SCOPE.guest_directory.path_join(file))
+	DirAccess.remove_absolute(SCOPE.guest_directory)
+	SCOPE.guest_directory = "user://"
 	print("TRANSCEND_UPGRADE: FAIL" if failed else "TRANSCEND_UPGRADE: PASS")
 	quit(1 if failed else 0)

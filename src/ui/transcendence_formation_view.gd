@@ -6,6 +6,7 @@ var lobby: Control
 var layout: VBoxContainer
 var tab: Button
 var content: VBoxContainer
+var registered_area: ScrollContainer
 var registered: VBoxContainer
 var grid: GridContainer
 var heading: Label
@@ -66,14 +67,22 @@ func install(host: Control) -> void:
 	# guide, summary and mode tabs at the same positions in every mode.
 	var equipped := layout.get_node("EquippedArea/Margin/Content") as VBoxContainer
 	heading = equipped.get_node("EquippedHeading") as Label
+	# The viewport reserves the ordinary slot height regardless of child minimums.
+	registered_area = ScrollContainer.new()
+	registered_area.name = "TranscendenceRegisteredArea"
+	registered_area.custom_minimum_size.y = 244.0
+	registered_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	registered_area.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	registered_area.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	equipped.add_child(registered_area)
 	registered = VBoxContainer.new()
 	registered.name = "TranscendenceRegistered"
 	registered.custom_minimum_size.y = 244.0
 	registered.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	registered.alignment = BoxContainer.ALIGNMENT_CENTER
 	registered.add_theme_constant_override("separation",16)
-	equipped.add_child(registered)
-	registered.hide()
+	registered_area.add_child(registered)
+	registered_area.hide()
 	var guide := panel(content)
 	label(guide,"초월 몬스터는 일반 팀 편성에 등장하지 않습니다.",22)
 	label(guide,"첫 획득 + 조각 1개씩 5회 초월 → 최대 Lv.5\n초과 조각 1개당 연구 포인트 1,000",22)
@@ -105,7 +114,7 @@ func refresh(showing: bool) -> void:
 	tab.add_theme_stylebox_override("disabled",lobby.PIXEL_PANEL_SKIN.button_style(lobby.primary_button_style))
 	tab.add_theme_color_override("font_disabled_color",Color("fff0d2"))
 	tab.disabled = showing
-	registered.visible = showing
+	registered_area.visible = showing
 	layout.get_node("EquippedArea/Margin/Content/SlotRow").visible = not showing
 	for name in ["ListHeader","UnlockFilters","MonsterScroll","Status"]:
 		layout.get_node(name).visible = not showing
@@ -144,10 +153,15 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 	box.add_child(row)
 	var frame := box.get_parent().get_parent() as Control
 	frame.set_meta("monster_id", id)
+	if registered_card:
+		var margin := box.get_parent() as MarginContainer
+		for side in ["left", "right", "top", "bottom"]:
+			margin.add_theme_constant_override("margin_" + side, 12)
+		box.add_theme_constant_override("separation", 8)
 	var portrait := TextureRect.new()
 	portrait.name = "MonsterPortrait"
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	portrait.custom_minimum_size = Vector2(110,130)
+	portrait.custom_minimum_size = Vector2(110,106 if registered_card else 130)
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -170,7 +184,10 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 	var chosen := id == selected
 	var register_button := button(actions,"등록 해제" if chosen else "등록하기",_register.bind("" if chosen else id))
 	register_button.disabled = not unlocked or (not chosen and DATA.MONSTERS.get_scene(id) == null)
-	button(actions,"상세정보",lobby._open_monster_detail.bind(id))
+	var detail_button := button(actions,"상세정보",lobby._open_monster_detail.bind(id))
+	if registered_card:
+		register_button.custom_minimum_size.y = 52
+		detail_button.custom_minimum_size.y = 52
 	if not registered_card:
 		var maxed := COLLECTION.is_maxed(id, state)
 		var action := button(actions,"최대 초월" if maxed else "초월",_upgrade.bind(id))

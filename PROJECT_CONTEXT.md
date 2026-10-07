@@ -1,3 +1,6 @@
+## Transcendence Formation Fixed Slot (2026-10-07)
+- Registration uses a fixed244px inner viewport, matching ordinary slots. Registered cards fit compact margins/106px portrait/52px buttons; long future content scrolls internally. Register/unregister never changes list/grid bounds or mode-tab positions. Verified real guest registration and three toggles at540×960/360×800 in native PC render; Android unverified.
+
 ## Transcendent Growth (2026-10-07)
 - Transcendent first ordinary/pickup acquisition unlocks Lv0 and consumes that acquisition. Each later draw grants exactly1 shard; each manual transcendence consumes1, maximum Lv5 (six acquisitions total). Ordinary rarity costs/caps remain unchanged.
 - Transcendent excess shards at Lv5 convert1000 research each, including last-upgrade leftovers, future draws and legacy-save normalization. Conversion shares the existing atomic collection/research save; legacy levels clamp5 with idempotent normalization. Catalog owns cap and conversion by rarity.
