@@ -37,6 +37,19 @@ static func sample_results(multi: bool) -> Array:
 			"monster_id": "zeus" if zeus else "slime",
 			"name": "제우스" if zeus else "슬라임",
 			"rarity": "transcendent" if zeus else "common",
-			"shards": 1, "icon": load(path) if not path.is_empty() else null,
+			"shards": 1, "icon": _preview_icon(path),
 		})
 	return results
+
+static func _preview_icon(path: String) -> Texture2D:
+	if path.is_empty():
+		return null
+	if ResourceLoader.exists(path):
+		var texture := load(path) as Texture2D
+		if texture != null:
+			return texture
+	if FileAccess.file_exists(path):
+		var image := Image.load_from_file(path)
+		if image != null and not image.is_empty():
+			return ImageTexture.create_from_image(image)
+	return null

@@ -45,9 +45,11 @@ func _run() -> void:
 	assert(Time.get_ticks_msec() - started >= 4900)
 	assert(_completed == 3 and not player.visible)
 	var data := CATALOG.get_entry("zeus")
-	for viewport_size in [Vector2(1280,720), Vector2(2340,1080), Vector2(1024,768), Vector2(1080,1920)]:
-		var stage: Rect2 = PLAYER.stage_rect(viewport_size)
-		var factor := stage.size.x / 1280.0
+	assert(data.character_count == 1 and data.character_region.size == Vector2(768, 1280))
+	assert(data.feet_y == [1200.0])
+	for viewport_size in [Vector2(1280,720), Vector2(2340,1080), Vector2(1024,768), Vector2(1080,1920), Vector2(1080,2400), Vector2(720,1280)]:
+		var stage: Rect2 = PLAYER.stage_rect(viewport_size, data.stage_size)
+		var factor: float = stage.size.x / data.stage_size.x
 		for feet in data.feet_y:
 			var region: Rect2 = data.character_region
 			var anchor: Vector2 = data.anchor
@@ -55,7 +57,7 @@ func _run() -> void:
 			var origin := anchor - Vector2(region.size.x * 0.5, feet - region.position.y) * float(data.character_scale)
 			var body := Rect2(stage.position + origin * factor, extent * factor)
 			assert(Rect2(Vector2.ZERO, viewport_size).encloses(body))
-			assert(body.end.y < stage.position.y + 630 * factor, "name overlaps feet")
+			assert(body.end.y < stage.position.y + data.name_rect.position.y * factor, "name overlaps feet")
 	player.queue_free()
 	var overlay = OVERLAY.new()
 	root.add_child(overlay)

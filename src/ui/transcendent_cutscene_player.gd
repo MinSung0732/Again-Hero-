@@ -16,6 +16,7 @@ var _halo: Texture2D
 var _background: Texture2D
 var _effects: Control
 var _elapsed := 0.0
+var _last_tick_usec := 0
 var _running := false
 var _generation := 0
 var _name_label: Label
@@ -96,6 +97,7 @@ func play(monster_id: String) -> void:
 	if token != _generation:
 		return
 	_halo = halo_texture
+	_last_tick_usec = Time.get_ticks_usec()
 	_running = true
 	set_process(true)
 	queue_redraw()
@@ -121,8 +123,11 @@ func _exit_tree() -> void:
 	cancel()
 
 
-func _process(delta: float) -> void:
-	advance(delta)
+func _process(_delta: float) -> void:
+	# Visual duration uses real time, independent of combat time_scale or headless FPS.
+	var now := Time.get_ticks_usec()
+	advance(float(now - _last_tick_usec) / 1000000.0)
+	_last_tick_usec = now
 
 
 # Deterministic clock also used by the presentation regression fixture.
@@ -138,20 +143,28 @@ func advance(delta: float) -> void:
 		finished.emit()
 
 
-static func stage_rect(view_size: Vector2) -> Rect2:
-	var factor := minf(view_size.x / STAGE_SIZE.x, view_size.y / STAGE_SIZE.y)
-	var extent := STAGE_SIZE * factor
+static func stage_rect(view_size: Vector2, stage_size: Vector2 = STAGE_SIZE) -> Rect2:
+	var factor := minf(view_size.x / stage_size.x, view_size.y / stage_size.y)
+	var extent := stage_size * factor
 	return Rect2((view_size - extent) * 0.5, extent)
+
+
+static func cover_region(texture_size: Vector2, target_size: Vector2) -> Rect2:
+	var factor := maxf(target_size.x / texture_size.x, target_size.y / texture_size.y)
+	var region_size := target_size / factor
+	return Rect2((texture_size - region_size) * 0.5, region_size)
 
 
 func _layout() -> void:
 	if not is_instance_valid(_name_label):
 		return
-	var stage := stage_rect(size)
-	var factor := stage.size.x / STAGE_SIZE.x
-	_name_label.position = stage.position + Vector2(340, 630) * factor
-	_name_label.size = Vector2(600, 54) * factor
-	_name_label.add_theme_font_size_override("font_size", maxi(12, int(24 * factor)))
+	var stage_size: Vector2 = _data.get("stage_size", STAGE_SIZE)
+	var stage := stage_rect(size, stage_size)
+	var factor := stage.size.x / stage_size.x
+	var name_rect: Rect2 = _data.get("name_rect", Rect2(340, 630, 600, 54))
+	_name_label.position = stage.position + name_rect.position * factor
+	_name_label.size = name_rect.size * factor
+	_name_label.add_theme_font_size_override("font_size", maxi(12, int(float(_data.get("name_font_size", 24)) * factor)))
 	var ui_scale := maxf(1.0, factor)
 	_skip.position = Vector2(size.x - 192 * ui_scale, 16 * ui_scale)
 	_skip.size = Vector2(176, 88) * ui_scale
@@ -203,20 +216,22 @@ func _draw() -> void:
 	var t := _elapsed
 	var light := lerpf(0.24, 1.0, smoothstep(1.0, 3.7, t))
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.09, 0.16, 0.28) * Color(light, light, light))
-	var stage := stage_rect(size)
-	var factor := stage.size.x / STAGE_SIZE.x
-	draw_set_transform(stage.position, 0.0, Vector2.ONE * factor)
+	var stage_size: Vector2 = _data.get("stage_size", STAGE_SIZE)
+	var stage := stage_rect(size, stage_size)
+	var factor := stage.size.x / stage_size.x
 	if _background != null:
-		draw_texture_rect(_background, Rect2(Vector2.ZERO, STAGE_SIZE), false, Color(light, light, light))
-	else:
+		# Cover only the environment. The character stage always uses contain.
+		draw_texture_rect_region(_background, Rect2(Vector2.ZERO, size), cover_region(_background.get_size(), size), Color(light, light, light))
+	draw_set_transform(stage.position, 0.0, Vector2.ONE * factor)
+	if _background == null:
 		_draw_temporary_temple(light, t)
 	var halo_alpha := smoothstep(3.0, 3.7, t)
 	if halo_alpha > 0.0:
 		# Thin geometric halo, not a badge/title; independent of the character.
 		if _halo != null:
-			draw_texture_rect(_halo, Rect2(378, 68, 524, 524), false, Color(1, 1, 1, halo_alpha))
+			draw_texture_rect(_halo, _data.get("halo_rect", Rect2(378, 68, 524, 524)), false, Color(1, 1, 1, halo_alpha))
 		else:
-			draw_arc(Vector2(640, 330), 242, 0, TAU, 80, Color(1, 0.81, 0.38, halo_alpha * 0.7), 3, false)
+			draw_arc(_data.get("halo_center", Vector2(640, 330)), float(_data.get("halo_radius", 242)), 0, TAU, 80, Color(1, 0.81, 0.38, halo_alpha * 0.7), 3, false)
 	if t >= 2.0 and not _character.is_empty():
 		var index := int(t * float(_data.character_fps)) % _character.size()
 		var reveal := smoothstep(3.0, 3.9, t)
@@ -230,10 +245,12 @@ func _draw() -> void:
 		draw_texture_rect_region(_character[index], Rect2(position, region.size * uniform_scale), region, color)
 	var electric_alpha := (0.25 + 0.65 * smoothstep(0.4, 1.1, t)) * (1.0 - 0.75 * smoothstep(4.0, 4.8, t))
 	# Fixed particle count, deterministic trajectories, no per-frame nodes/arrays.
+	var particle_center: Vector2 = _data.get("particle_center", Vector2(640, 560))
+	var particle_height := float(_data.get("particle_height", 390))
 	for index in range(18):
 		var phase := t * 0.4 + float(index) * 0.61
-		var x := 640 + sin(phase) * (210 + index * 7)
-		var y := 560 - fmod(t * 34 + index * 31, 390.0)
+		var x := particle_center.x + sin(phase) * (210 + index * 7)
+		var y := particle_center.y - fmod(t * 72 + index * 61, particle_height)
 		draw_rect(Rect2(Vector2(x, y).floor(), Vector2(3, 3)), Color(0.65, 0.88, 1, electric_alpha))
 	draw_set_transform(Vector2.ZERO)
 	var flash := maxf(0.0, 1.0 - absf(t - 1.18) / 0.17) * 0.75
