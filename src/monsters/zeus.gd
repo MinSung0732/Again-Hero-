@@ -7,6 +7,8 @@ var transcend_level := 0
 var summon_snapshot := 0
 var keeping_distance := false
 var visual_head_y := -35.0
+@onready var crown_layer: Node2D = $CrownLayer
+@onready var status_layer: Node2D = $StatusLayer
 var gauge := 0.0
 var orb_heal_buffer := 0.0
 var skill_cooldowns := PackedFloat32Array([0,0,0])
@@ -60,6 +62,8 @@ func _apply_normal_visual_profile() -> void:
 	visual_head_y = visual.position.y+(bounds.position.y-canvas_center.y)*factor
 
 func _ready() -> void:
+	crown_layer.draw.connect(_draw_crown_layer)
+	status_layer.draw.connect(_draw_status_layer)
 	super._ready()
 	for kind in DATA.EFFECTS:
 		FX.get_pack(kind)
@@ -239,19 +243,15 @@ func _show_pillar(kind: String, point: Vector2) -> void:
 	pillar_remaining = 0.30 if kind == "judgment" else 0.50
 
 func _draw() -> void:
-	draw_set_transform(Vector2(0,visual_head_y-30.0+54.0))
-	super._draw()
-	draw_set_transform(Vector2.ZERO)
+	crown_layer.queue_redraw()
+	status_layer.queue_redraw()
+	if not visual.is_visual_ready():
+		draw_circle(Vector2(0,-8),20,Color.WHITE if hit_flash_timer > 0 else Color(0.42,0.74,0.34))
 	if dying:
 		return
-	draw_rect(Rect2(-29,visual_head_y-41.0,58,6),Color("241c13"))
-	draw_rect(Rect2(-29,visual_head_y-41.0,58*gauge/DATA.GAUGE_MAX,6),Color("ffdb3b"))
 	if charge_remaining > 0.0:
 		var progress := 1.0-charge_remaining/DATA.CHARGE_SECONDS
 		FX.draw_frame(self,"charge",mini(int(progress*7),6),Vector2(0,visual_head_y+ART.BATTLE_VISIBLE_HEIGHT*0.55),lerpf(0.35,1.0,progress))
-	if crown_remaining > 0.0:
-		var frame := mini(int(crown_elapsed*10),3) if crown_elapsed < 0.4 else (6+mini(int((0.2-crown_remaining)*10),1) if crown_remaining < 0.2 else 4+int(crown_elapsed*10)%2)
-		FX.draw_frame(self,"crown",frame,Vector2(0,visual_head_y))
 	if pillar_remaining > 0.0:
 		var lifetime := 0.30 if pillar_kind == "judgment" else 0.50
 		FX.draw_frame(self,pillar_kind,int((lifetime-pillar_remaining)*10),to_local(pillar_position))
@@ -262,3 +262,23 @@ func _draw() -> void:
 		var progress := clampf((age-0.35)/(DATA.ORB_SECONDS-0.35),0.0,1.0)
 		var point := orb_origins[index].lerp(global_position+Vector2(0,visual_head_y+ART.BATTLE_VISIBLE_HEIGHT*0.55),progress*progress)
 		FX.draw_frame(self,"orb",mini(int(age*14),4) if age < 0.35 else 5+int(age*14)%2,to_local(point))
+
+func _draw_crown_layer() -> void:
+	if dying or crown_remaining <= 0.0:
+		return
+	var frame := mini(int(crown_elapsed*10),3) if crown_elapsed < 0.4 else (6+mini(int((0.2-crown_remaining)*10),1) if crown_remaining < 0.2 else 4+int(crown_elapsed*10)%2)
+	FX.draw_frame(crown_layer,"crown",frame,Vector2(0,visual_head_y))
+
+func _draw_status_layer() -> void:
+	if dying:
+		return
+	var hp_y := visual_head_y-30.0
+	status_layer.draw_rect(Rect2(-29,hp_y,58,7),Color(0.12,0.12,0.14))
+	status_layer.draw_rect(Rect2(-29,hp_y,58*float(current_hp)/maxi(max_hp,1),7),Color(0.3,0.9,0.45))
+	status_layer.draw_rect(Rect2(-29,visual_head_y-41.0,58,6),Color("241c13"))
+	status_layer.draw_rect(Rect2(-29,visual_head_y-41.0,58*gauge/DATA.GAUGE_MAX,6),Color("ffdb3b"))
+	var shield := int(get_meta("support_shield_hp",0))
+	if shield > 0:
+		var ratio := clampf(float(shield)/maxi(int(get_meta("support_shield_capacity",shield)),1),0.0,1.0)
+		status_layer.draw_rect(Rect2(-29,hp_y-23.0,58,6),Color("202c40"))
+		status_layer.draw_rect(Rect2(-29,hp_y-23.0,58*ratio,6),Color("61ddff"))
