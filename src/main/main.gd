@@ -12,6 +12,7 @@ signal demon_action_choice_selected(context: String, choice_id: String)
 const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
+var summon_cinematic = preload("res://src/ui/battle_summon_cinematic.gd").new()
 var transcendence_view = preload("res://src/ui/transcendence_summon_view.gd").new()
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 const DEMON_SKILL_LOADOUT_STORE := preload(
@@ -277,6 +278,7 @@ func _ready() -> void:
 	battle.demon_progression_changed.connect(_on_demon_progression_changed)
 	battle.summon_result.connect(_on_summon_result)
 	transcendence_view.install(self)
+	summon_cinematic.install(self)
 	battle.demon_augment_ready.connect(_on_demon_augment_ready)
 	battle.demon_augment_applied.connect(_on_demon_augment_applied)
 	battle.demon_ultimate_changed.connect(_on_demon_ultimate_changed)
@@ -1125,6 +1127,7 @@ func _try_manual_spawn_at_screen_position(pointer_position: Vector2) -> void:
 func _camera_pan_blocked() -> bool:
 	return (
 		_stage_intro_active
+		or summon_cinematic.active
 		or _skill_unlock_cutscene_active
 		or result_panel.visible
 		or pause_menu.visible

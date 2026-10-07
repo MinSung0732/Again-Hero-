@@ -11,11 +11,7 @@ var stage_offset := Vector2.ZERO
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var image := Image.load_from_file(FX.SHEET)
-	if image == null:
-		push_warning("Zeus lightning sheet missing; preview continues without bolts")
-		return
-	_sheet = ImageTexture.create_from_image(image)
+	_sheet = preload("res://assets/art/effects/gatcha/zeus/lightning_v2/lightning_sheet.png")
 	for index in range(4):
 		var frame := AtlasTexture.new()
 		frame.atlas = _sheet

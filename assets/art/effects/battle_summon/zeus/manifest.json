@@ -1,0 +1,195 @@
+{
+  "status": "static_visible_region_partition_not_complete_live2d_model",
+  "canvas": [
+    768,
+    1280
+  ],
+  "cell_size": [
+    768,
+    1280
+  ],
+  "sheet_size": [
+    3072,
+    2560
+  ],
+  "sheet_columns": 4,
+  "sheet_cell_order": [
+    "body_remaining_visible",
+    "staff_upper",
+    "head_visible",
+    "front_hand_sleeve_visible",
+    "left_hair_visible",
+    "left_cloth_visible",
+    "right_cloth_visible"
+  ],
+  "assembly_origin": [
+    0,
+    0
+  ],
+  "verified_visible_rgba_matches_source": true,
+  "different_pixels": 0,
+  "source": "zeus_idle_01.png",
+  "layers": [
+    {
+      "name": "body_remaining_visible",
+      "file": "parts/body_remaining_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "visible_bbox": [
+        46,
+        363,
+        593,
+        1200
+      ],
+      "occluded_pixels_reconstructed": false
+    },
+    {
+      "name": "staff_upper",
+      "file": "parts/staff_upper.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "visible_bbox": [
+        453,
+        254,
+        599,
+        526
+      ],
+      "occluded_pixels_reconstructed": false
+    },
+    {
+      "name": "head_visible",
+      "file": "parts/head_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "visible_bbox": [
+        241,
+        312,
+        422,
+        464
+      ],
+      "occluded_pixels_reconstructed": false
+    },
+    {
+      "name": "front_hand_sleeve_visible",
+      "file": "parts/front_hand_sleeve_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "visible_bbox": [
+        128,
+        477,
+        290,
+        668
+      ],
+      "occluded_pixels_reconstructed": false
+    },
+    {
+      "name": "left_hair_visible",
+      "file": "parts/left_hair_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "visible_bbox": [
+        36,
+        363,
+        278,
+        712
+      ],
+      "occluded_pixels_reconstructed": false
+    },
+    {
+      "name": "left_cloth_visible",
+      "file": "parts/left_cloth_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "visible_bbox": [
+        36,
+        620,
+        297,
+        1132
+      ],
+      "occluded_pixels_reconstructed": false
+    },
+    {
+      "name": "right_cloth_visible",
+      "file": "parts/right_cloth_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "visible_bbox": [
+        458,
+        713,
+        607,
+        1135
+      ],
+      "occluded_pixels_reconstructed": false
+    }
+  ]
+}

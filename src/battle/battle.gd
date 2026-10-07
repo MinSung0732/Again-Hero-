@@ -10,6 +10,7 @@ signal hero_augment_selected(level: int, candidates: Array, chosen_name: String,
 signal conditional_skill_unlocked(skill_id: String, skill_name: String, payload: Dictionary)
 signal command_changed(current_value: float, max_value: float)
 signal summon_result(monster_type: String, success: bool, message: String)
+signal transcendent_summoned(monster_id: String, actor: Node2D)
 signal transcendence_changed(monster_id: String, ready: bool, used: bool)
 const TRANSCENDENCE_DATA := preload("res://src/data/transcendence_catalog.gd")
 const TRANSCENDENCE_STORE := preload("res://src/systems/transcendence_loadout_store.gd")
@@ -1248,6 +1249,7 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 	if is_transcendent:
 		transcendence.consume()
 		transcendence_changed.emit(transcendence.monster_id, false, true)
+		transcendent_summoned.emit(monster_type, primary_monster)
 	if monster_type == "kobolt" and is_instance_valid(primary_monster):
 		primary_monster = _try_fuse_nearby_kobolts(primary_monster)
 	run_metrics.record_summon(monster_type, cost)

@@ -14,11 +14,11 @@ var elapsed := 0.0
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	background = ImageTexture.create_from_image(Image.load_from_file("res://assets/art/effects/gatcha/zeus/celestial_temple.png"))
-	rig = RIG.new()
+	background = preload("res://assets/art/effects/gatcha/zeus/celestial_temple.png")
+	rig = _create_rig()
 	add_child(rig)
 	reveal_material = ShaderMaterial.new()
-	reveal_material.shader = REVEAL
+	reveal_material.shader = _reveal_shader()
 	for mesh in rig.meshes:
 		mesh.material = reveal_material
 	effects = EFFECTS.new()
@@ -91,3 +91,9 @@ static func _cover_region(texture_size: Vector2, target_size: Vector2) -> Rect2:
 	var factor := maxf(target_size.x/texture_size.x,target_size.y/texture_size.y)
 	var extent := target_size/factor
 	return Rect2((texture_size-extent)*0.5,extent)
+
+func _create_rig() -> Node2D:
+	return RIG.new()
+
+func _reveal_shader() -> Shader:
+	return REVEAL

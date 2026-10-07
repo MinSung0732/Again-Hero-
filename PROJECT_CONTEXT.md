@@ -1,3 +1,7 @@
+## Zeus battle summon presentation (2026-10-07)
+- Separate from gacha: successful consumed transcendence summon emits actual actor to a cached lower-right battle-panel cut-in, temporary camera focus/zoom/spotlight, then restores untouched original follow/manual camera. Presentation never mutates actors or battle judgement; interrupt on death/removal/end/menu/hidden panel.
+- Uploaded seven visible-region PNGs are assembled at identical 768x1280 coordinates. Static scene paths corrected; part sheet is not animation. Shared tiny distal deformation preserves seams, but this is not complete Live2D. Remaining occlusion/joint/expression/staff requirements and verification: docs/ZEUS_BATTLE_SUMMON.md. PC isolated rendering/headless checked; real combat/Android/export unverified.
+
 ## Zeus Combat and Transcendent Styles (2026-10-07)
 - CrownLayer(z1) and StatusLayer(z2) draw separately from the castle-normalized body(z0). HP/gauge/support shield render above crown, crown above Zeus body. Parent redraw invalidates both persistent layers, clearing expired/dead overlays without node churn. Native overlap/death and combat regressions verified.
 - Battle-only visual normalization targets108px of actual Zeus idle artwork, matching hero body mass rather than the transparent384px canvas. One shared scale across animations preserves the original foot/body reference point; collection/gacha profile and raw PNGs remain unchanged. HP/gauge/crown/charge/orb core positions follow the enlarged body. Native Stage10 comparison and anchor/scale/runtime verification passed.

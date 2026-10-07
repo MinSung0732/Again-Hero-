@@ -1,0 +1,40 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/art/effects/battle_summon/zeus/parts/body_remaining_visible.png" id="1"]
+[ext_resource type="Texture2D" path="res://assets/art/effects/battle_summon/zeus/parts/staff_upper.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/art/effects/battle_summon/zeus/parts/head_visible.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/art/effects/battle_summon/zeus/parts/front_hand_sleeve_visible.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/art/effects/battle_summon/zeus/parts/left_hair_visible.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/art/effects/battle_summon/zeus/parts/left_cloth_visible.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/art/effects/battle_summon/zeus/parts/right_cloth_visible.png" id="7"]
+
+[node name="ZeusReassembled" type="Node2D"]
+texture_filter = 1
+
+[node name="body_remaining_visible" type="Sprite2D" parent="."]
+texture = ExtResource("1")
+centered = false
+
+[node name="staff_upper" type="Sprite2D" parent="."]
+texture = ExtResource("2")
+centered = false
+
+[node name="head_visible" type="Sprite2D" parent="."]
+texture = ExtResource("3")
+centered = false
+
+[node name="front_hand_sleeve_visible" type="Sprite2D" parent="."]
+texture = ExtResource("4")
+centered = false
+
+[node name="left_hair_visible" type="Sprite2D" parent="."]
+texture = ExtResource("5")
+centered = false
+
+[node name="left_cloth_visible" type="Sprite2D" parent="."]
+texture = ExtResource("6")
+centered = false
+
+[node name="right_cloth_visible" type="Sprite2D" parent="."]
+texture = ExtResource("7")
+centered = false
