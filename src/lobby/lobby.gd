@@ -17,6 +17,7 @@ const SHOP_SUMMON_HISTORY_STORE := preload(
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 const TRANSCENDENCE_DATA := preload("res://src/data/transcendence_catalog.gd")
 var _transcendence_entry_confirm = null
+var shop_popup_view = preload("res://src/ui/shop_popup_view.gd").new()
 var transcendence_view = preload("res://src/ui/transcendence_formation_view.gd").new()
 const FORMATION_DRAG_CARD := preload("res://src/ui/formation_drag_card.gd")
 const TEAM_FORMATION_VIEW := preload("res://src/ui/team_formation_view.gd")
@@ -2668,6 +2669,7 @@ func _apply_shop_storefront_skin() -> void:
 	_shop_storefront_art.apply(self)
 	_shop_pickup_view.install(self)
 	_shop_test_draw_view.install(self)
+	shop_popup_view.install(self)
 
 
 func _tick_shop_banner(delta: float) -> void:
@@ -2915,6 +2917,7 @@ func _show_shop_result_modal() -> void:
 		return
 	_close_shop_rates_modal()
 	shop_result_label.text = shop_last_result_text
+	shop_popup_view.show_history(shop_summon_history)
 	shop_result_overlay.show()
 
 
@@ -2925,6 +2928,7 @@ func _close_shop_result_modal() -> void:
 
 func _show_shop_rates_modal(pickup_id: String = "") -> void:
 	shop_rates_text.text = _build_shop_rate_text(pickup_id)
+	shop_popup_view.show_rates(pickup_id)
 	_close_shop_result_modal()
 	shop_rates_overlay.show()
 

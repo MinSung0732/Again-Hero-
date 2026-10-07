@@ -37,6 +37,7 @@ const MONSTERS := {
 		"can_be_elite": false, "can_be_giant": false,
 		"description": "초월 제우스. 첫 획득 즉시 해금 및 프로필 초상화·배너 제공. 수집·등록 준비 단계이며 전투 능력은 추후 적용됩니다.",
 		"card_icon_path": "res://assets/art/Transcendent_monster/zeus/frames/idle_01.png",
+		"display_icon_path": "res://assets/art/Transcendent_monster/zeus/zeus_icon.png",
 		"base_stats": {}, "special_augment_ids": [],
 		"scene": preload("res://src/monsters/ZeusPreview.tscn"),
 	},
