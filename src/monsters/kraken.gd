@@ -49,6 +49,7 @@ func _physics_process(delta: float) -> void:
 	if dodge_state != 0:
 		if dodge_state == 1 and visual.is_revival_death_pose_ready():
 			global_position = dodge_destination
+			MONSTER_RUNTIME_COMMON.notify_forced_position_change(self)
 			dodge_state = 2
 			visual.play_revival_reverse()
 		return

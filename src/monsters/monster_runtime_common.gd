@@ -19,6 +19,12 @@ const SOFT_SEPARATION_IDLE_SPEED_MAX := 26.0
 static var _soft_separation_scratch: Array = []
 
 
+static func notify_forced_position_change(actor: Node2D) -> void:
+	var battle := actor.get_parent()
+	if is_instance_valid(battle) and battle.has_method("invalidate_monster_spatial_snapshot"):
+		battle.call("invalidate_monster_spatial_snapshot")
+
+
 static func tick_countdown(timer: float, delta: float) -> float:
 	return maxf(timer - delta, 0.0)
 
@@ -114,6 +120,9 @@ static func compute_soft_separation_bias(
 				SOFT_SEPARATION_RADIUS_MIN,
 				SOFT_SEPARATION_RADIUS_MAX
 			)
+
+	if combat_authority.has_method("get_monster_separation_bias"):
+		return combat_authority.call("get_monster_separation_bias", owner, separation_radius)
 
 	_soft_separation_scratch.clear()
 	combat_authority.call(

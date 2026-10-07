@@ -240,6 +240,7 @@ func _teleport_near(target: Node2D, direction: Vector2) -> bool:
 		if not space.intersect_shape(teleport_query, 1).is_empty():
 			continue
 		global_position = candidate
+		MONSTER_RUNTIME_COMMON.notify_forced_position_change(self)
 		velocity = Vector2.ZERO
 		return true
 	return false

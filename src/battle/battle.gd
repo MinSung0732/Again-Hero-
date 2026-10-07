@@ -1,6 +1,7 @@
 extends Node2D
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
+const MONSTER_LOCAL_GRID := preload("res://src/systems/monster_local_grid.gd")
 
 signal stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int)
 signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
@@ -147,6 +148,9 @@ var monster_spatial_grid: Dictionary = {}
 var monster_spatial_used_cells: Array[Vector2i] = []
 var monster_spatial_stale_ids: Array[int] = []
 var monster_spatial_grid_physics_frame: int = -1
+var monster_spatial_snapshot_revision := 0
+var monster_query_registration_order := 0
+var monster_local_grid = MONSTER_LOCAL_GRID.new()
 var kobolt_fusion_scratch: Array = []
 var kobolt_fusion_candidates: Array = []
 var ghost_shared_hit_count: int = 0
@@ -331,12 +335,35 @@ func _rebuild_monster_spatial_grid() -> void:
 		_unregister_monster(raw_id)
 
 	monster_spatial_grid_physics_frame = Engine.get_physics_frames()
+	monster_spatial_snapshot_revision += 1
 
 
 func _ensure_monster_spatial_grid() -> void:
 	var physics_frame := Engine.get_physics_frames()
 	if monster_spatial_grid_physics_frame != physics_frame:
 		_rebuild_monster_spatial_grid()
+
+
+func invalidate_monster_spatial_snapshot() -> void:
+	monster_spatial_grid_physics_frame = -1
+
+
+func get_monster_separation_bias(owner: Node2D, radius: float) -> Vector2:
+	_ensure_monster_spatial_grid()
+	monster_local_grid.ensure(active_monsters, monster_spatial_snapshot_revision)
+	return monster_local_grid.separation_bias(owner, radius)
+
+
+func count_monster_group_near(origin: Vector2, radius: float, group: StringName, excluded: Node, stop_after: int) -> int:
+	_ensure_monster_spatial_grid()
+	monster_local_grid.ensure(active_monsters, monster_spatial_snapshot_revision)
+	return monster_local_grid.count_group_near(origin, radius, group, excluded, stop_after)
+
+
+func fill_local_monsters_in_rect(world_rect: Rect2, result: Array) -> void:
+	_ensure_monster_spatial_grid()
+	monster_local_grid.ensure(active_monsters, monster_spatial_snapshot_revision)
+	monster_local_grid.fill_rect(world_rect, result)
 
 
 func fill_active_monsters(result: Array) -> void:
@@ -707,11 +734,13 @@ func _start_battle() -> void:
 			valid_orb_pool.append(pooled_orb)
 	exp_orb_pool = valid_orb_pool
 	active_monsters.clear()
+	monster_query_registration_order = 0
 	monster_population_counts.clear()
 	monster_population_ids.clear()
 	active_hero_summons.clear()
 	active_elite_skeletons.clear()
 	monster_spatial_grid.clear()
+	monster_local_grid.clear()
 	monster_spatial_used_cells.clear()
 	monster_spatial_stale_ids.clear()
 	kobolt_fusion_scratch.clear()
@@ -2143,6 +2172,8 @@ func _spawn_monster(
 	var monster_instance_id := monster.get_instance_id()
 	monster_summon_costs[monster_instance_id] = summon_cost
 	active_monsters[monster_instance_id] = monster
+	monster.set_meta("query_registration_order", monster_query_registration_order)
+	monster_query_registration_order += 1
 	monster_population_ids[monster_instance_id] = monster_type
 	monster_population_counts[monster_type] = int(monster_population_counts.get(monster_type, 0)) + 1
 	monster.tree_exited.connect(_unregister_monster.bind(monster_instance_id), CONNECT_ONE_SHOT)

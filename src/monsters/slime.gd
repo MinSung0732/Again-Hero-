@@ -39,6 +39,9 @@ var visual_lod_suspended: bool = false
 var special_augment_configs: Dictionary = {}
 var pack_bonus_cache: Dictionary = {}
 var pack_bonus_refresh_timer: float = 0.0
+var pack_config_cache: Dictionary = {}
+var pack_active_bonuses: Dictionary = {}
+var pack_empty_bonuses: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("monsters")
@@ -123,7 +126,7 @@ func _physics_process(delta: float) -> void:
 
 	attack_timer = maxf(attack_timer - delta, 0.0)
 	pack_bonus_refresh_timer = maxf(pack_bonus_refresh_timer - delta, 0.0)
-	if pack_bonus_refresh_timer <= 0.0:
+	if not pack_config_cache.is_empty() and pack_bonus_refresh_timer <= 0.0:
 		pack_bonus_refresh_timer = 0.25
 		pack_bonus_cache = _get_pack_bonuses()
 	var pack_bonuses := pack_bonus_cache
@@ -237,24 +240,33 @@ func _update_visual_motion(direction_x: float, moving: bool) -> void:
 
 func configure_special_augments(configs: Dictionary) -> void:
 	special_augment_configs = configs.duplicate(true)
+	pack_config_cache = special_augment_configs.get("slime_pack_instinct", {})
+	pack_active_bonuses.clear()
+	if not pack_config_cache.is_empty():
+		pack_active_bonuses["move_speed_multiplier"] = float(pack_config_cache.get("move_speed_multiplier", 1.0))
+		pack_active_bonuses["attack_speed_multiplier"] = float(pack_config_cache.get("attack_speed_multiplier", 1.0))
+	# Preserve the existing staggered refresh timer; clear obsolete bonuses
+	# immediately if this configuration no longer has the pack effect.
+	if pack_config_cache.is_empty():
+		pack_bonus_cache = pack_empty_bonuses
 
 func _get_pack_bonuses() -> Dictionary:
-	var config: Dictionary = special_augment_configs.get(
-		"slime_pack_instinct",
-		{}
-	)
+	var config: Dictionary = pack_config_cache
 	if config.is_empty():
-		return {}
+		return pack_empty_bonuses
 
 	var radius := maxf(float(config.get("radius", 0.0)), 0.0)
 	var required_nearby := maxi(int(config.get("required_nearby", 0)), 0)
 	if radius <= 0.0 or required_nearby <= 0:
-		return {}
+		return pack_empty_bonuses
 
 	var nearby := 0
+	var battle := get_parent()
+	if is_instance_valid(battle) and battle.has_method("count_monster_group_near"):
+		nearby = int(battle.call("count_monster_group_near", global_position, radius, &"slimes", self, required_nearby))
+		return pack_active_bonuses if nearby >= required_nearby else pack_empty_bonuses
 	var candidates: Array = []
 	var used_spatial_query := false
-	var battle := get_parent()
 	if (
 		is_instance_valid(battle)
 		and battle.has_method("query_monsters_near")
@@ -282,15 +294,8 @@ func _get_pack_bonuses() -> Dictionary:
 		if global_position.distance_squared_to(other.global_position) <= radius_sq:
 			nearby += 1
 			if nearby >= required_nearby:
-				return {
-					"move_speed_multiplier": float(
-						config.get("move_speed_multiplier", 1.0)
-					),
-					"attack_speed_multiplier": float(
-						config.get("attack_speed_multiplier", 1.0)
-					),
-				}
-	return {}
+				return pack_active_bonuses
+	return pack_empty_bonuses
 
 func take_damage(amount: int) -> void:
 	if current_hp <= 0 or dying:

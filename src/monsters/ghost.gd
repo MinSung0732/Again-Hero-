@@ -365,6 +365,7 @@ func _tick_phase_shift(delta: float) -> void:
 		if not phase_shift_teleported:
 			phase_shift_teleported = true
 			global_position = phase_shift_target
+			MONSTER_RUNTIME_COMMON.notify_forced_position_change(self)
 		var fade_in := clampf(
 			(phase_shift_elapsed - half) / maxf(half, 0.01),
 			0.0,

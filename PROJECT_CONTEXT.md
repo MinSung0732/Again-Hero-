@@ -1,3 +1,7 @@
+## Swarm Local Queries (2026-10-07)
+- Reusable32px local grid supplements the existing256px grid for exact soft separation, group threshold counts and Stage2 rogue combo bounds. Bucket storage is retained, queries traverse cells without candidate arrays where possible, and the local snapshot follows battle spatial revision. Forced movement invalidates the snapshot; ordinary movement has cell padding extended from recorded velocity. No neighbor cap or approximation of separation pressure. Full overlap still requires exact pair work.
+- Rogue combo retains capsule geometry, damage/lifesteal/knockback and registration hit order; hidden targets remain excluded. Pack bonuses/configuration reuse storage; no-pack actors skip periodic lookup. EXP and AI/balance rules remain unchanged. Regression and PC benchmark results are recorded in CHANGELOG; Android long-run profiling remains pending.
+
 ## Infiltration Detection / Collision (2026-10-07)
 - Shared HeroTargetPolicy hides infiltrating actors from all hero archetypes, summons, current population/skill/avoidance queries and active homing. Same-frame revision invalidates reused caches on entry/exit; registry/spatial-grid membership and historical AI memory remain. Collision layer/mask zero plus deferred shape disable and separation exclusion last for the existing3s; original settings restore on expiry. Waltz remains unchanged.
 - Regression test covers profiles, retained targets, same-frame queries, physical pass-through and restoration; runtime validation status is recorded in CHANGELOG.

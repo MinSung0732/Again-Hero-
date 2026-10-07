@@ -1,4 +1,5 @@
 extends Area2D
+const LOCAL_GRID_MOVEMENT := preload("res://src/monsters/monster_runtime_common.gd")
 
 static var _orb_frames_cache: SpriteFrames
 static var _chest_nodes_cache: Array = []
@@ -272,6 +273,7 @@ func _apply_wind(body: Node2D) -> void:
 	var monster := body as Node2D
 	if monster != null and knockback > 0.0:
 		monster.global_position += direction.normalized() * knockback
+		LOCAL_GRID_MOVEMENT.notify_forced_position_change(monster)
 
 func _apply_holy(body: Node2D) -> void:
 	var holy_damage := base_damage

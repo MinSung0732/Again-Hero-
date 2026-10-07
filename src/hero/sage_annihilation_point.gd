@@ -264,6 +264,7 @@ func _apply_global_pull() -> void:
 			continue
 		var step := minf(pull_step, distance - 6.0)
 		monster.global_position += offset / distance * step
+		MONSTER_RUNTIME_COMMON.notify_forced_position_change(monster)
 
 
 func _apply_damage_tick() -> void:
@@ -334,6 +335,7 @@ func _execute_monster(monster: Node2D, current_hp: int, max_hp: int) -> void:
 			global_position,
 			0.72
 		)
+		MONSTER_RUNTIME_COMMON.notify_forced_position_change(monster)
 		if monster is CharacterBody2D:
 			(monster as CharacterBody2D).velocity = Vector2.ZERO
 

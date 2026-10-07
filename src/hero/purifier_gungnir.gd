@@ -559,6 +559,7 @@ func _drag_captured(movement: Vector2) -> void:
 		if monster is CharacterBody2D:
 			(monster as CharacterBody2D).velocity = Vector2.ZERO
 		monster.global_position += movement
+		MONSTER_RUNTIME_COMMON.notify_forced_position_change(monster)
 
 
 func _lock_captured_monster(monster: Node2D) -> void:

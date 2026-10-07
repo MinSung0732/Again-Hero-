@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const LOCAL_GRID_MOVEMENT := preload("res://src/monsters/monster_runtime_common.gd")
+
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
 signal died
@@ -306,6 +308,7 @@ var rogue_combo_direction: Vector2 = Vector2.RIGHT
 var rogue_attack_collision_ignore_timer: float = 0.0
 var rogue_saved_collision_mask: int = -1
 var rogue_query_candidates: Array = []
+var rogue_combo_candidates: Array = []
 var fighter_basic_config: Dictionary = {}
 var fighter_guard_active: bool = false
 var fighter_guard_duration_timer: float = 0.0
@@ -1312,6 +1315,7 @@ func configure_profile(profile: Dictionary) -> void:
 	rogue_attack_collision_ignore_timer = 0.0
 	rogue_saved_collision_mask = -1
 	rogue_query_candidates.clear()
+	rogue_combo_candidates.clear()
 	fighter_guard_active = false
 	fighter_guard_duration_timer = 0.0
 	fighter_guard_stored_damage = 0.0
@@ -4715,6 +4719,7 @@ func _cast_alchemist_emergency_escape(
 				- escape_direction * 0.30
 			).normalized()
 		monster.global_position += push_direction * knockback
+		LOCAL_GRID_MOVEMENT.notify_forced_position_change(monster)
 		if monster.has_method("take_damage"):
 			monster.call("take_damage", enemy_damage)
 		var current_until := int(monster.get_meta("gunner_slow_until", 0))
@@ -5495,6 +5500,7 @@ func _use_gunner_cylinder_strike() -> void:
 		if dir.length_squared() <= 0.0:
 			dir = Vector2.RIGHT
 		monster.global_position += dir.normalized() * knockback
+		LOCAL_GRID_MOVEMENT.notify_forced_position_change(monster)
 		var damage_ratio := maxf(float(gunner_config.get("cylinder_damage_ratio", 0.0)), 0.0)
 		if damage_ratio > 0.0 and monster.has_method("take_damage"):
 			monster.call("take_damage", maxi(1, int(round(float(attack_damage) * damage_ratio))))
@@ -5790,6 +5796,10 @@ func _physics_process_rogue(delta: float) -> void:
 
 	_update_rogue_pose_visual(delta)
 
+func _rogue_compare_registration_order(a: Node, b: Node) -> bool:
+	return int(a.get_meta("query_registration_order", a.get_instance_id())) < int(b.get_meta("query_registration_order", b.get_instance_id()))
+
+
 func _rogue_combo_attack(current_target: Node2D) -> void:
 	if not is_instance_valid(current_target):
 		return
@@ -5912,7 +5922,15 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 		1.0
 	)
 
-	for node in _get_monster_nodes_cached():
+	var corridor_bounds := Rect2(lunge_start, Vector2.ZERO).expand(corridor_end).grow(aoe_radius)
+	var battle := get_parent()
+	if is_instance_valid(battle) and battle.has_method("fill_local_monsters_in_rect"):
+		battle.call("fill_local_monsters_in_rect", corridor_bounds, rogue_combo_candidates)
+		HERO_TARGET_POLICY.filter_detectable(rogue_combo_candidates)
+	else:
+		_fill_monster_nodes_in_rect(corridor_bounds, rogue_combo_candidates)
+	rogue_combo_candidates.sort_custom(_rogue_compare_registration_order)
+	for node in rogue_combo_candidates:
 		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
@@ -5955,6 +5973,7 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 			knockback_distance
 		)
 
+	rogue_combo_candidates.clear()
 	# Stage 2 rogue deals +200% bonus damage to treasure chests
 	# (300% total) so the fast combo can realistically break them.
 	_damage_treasure_chests(
@@ -6110,6 +6129,7 @@ func _rogue_apply_knockback(
 		return
 
 	current_target.global_position += direction.normalized() * distance
+	LOCAL_GRID_MOVEMENT.notify_forced_position_change(current_target)
 
 func _rogue_should_use_slash() -> bool:
 	if rogue_slash_config.is_empty():
@@ -13146,6 +13166,7 @@ func _trigger_purifier_protection_break_pulse() -> void:
 		if push_direction.length_squared() <= 0.001:
 			push_direction = Vector2.RIGHT
 		monster.global_position += push_direction.normalized() * knockback
+		LOCAL_GRID_MOVEMENT.notify_forced_position_change(monster)
 		var current_until := int(monster.get_meta("gunner_slow_until", 0))
 		var current_multiplier := float(
 			monster.get_meta("gunner_slow_multiplier", 1.0)
@@ -18584,6 +18605,7 @@ func _start_berserker_skill4() -> void:
 					battlefield_size.y - FIELD_MARGIN
 				)
 			)
+			LOCAL_GRID_MOVEMENT.notify_forced_position_change(monster)
 
 		if hp_before <= 0:
 			continue
