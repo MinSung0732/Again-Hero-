@@ -20,8 +20,6 @@ var _running := false
 var _generation := 0
 var _name_label: Label
 var _skip: Button
-var _orientation_changed := false
-var _saved_orientation: DisplayServer.ScreenOrientation = DisplayServer.SCREEN_PORTRAIT
 
 
 func _ready() -> void:
@@ -74,11 +72,6 @@ func play(monster_id: String) -> void:
 	show()
 	move_to_front()
 	_layout()
-	# Android alone requests landscape; all cancellation paths restore the prior policy.
-	if OS.has_feature("android"):
-		_saved_orientation = DisplayServer.screen_get_orientation()
-		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_LANDSCAPE)
-		_orientation_changed = true
 	var character_frames := await _load_frames("character", token)
 	if token != _generation:
 		return
@@ -114,9 +107,7 @@ func cancel() -> void:
 	_running = false
 	set_process(false)
 	hide()
-	if _orientation_changed:
-		DisplayServer.screen_set_orientation(_saved_orientation)
-		_orientation_changed = false
+
 
 
 func skip() -> void:
