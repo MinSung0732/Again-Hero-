@@ -189,7 +189,7 @@ func _build_picker() -> void:
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 20)
 	column.add_child(grid)
-	for id in APPEARANCES.ORDER:
+	for id in CATALOG.ids():
 		var button := _button(grid, "", false)
 		button.custom_minimum_size = Vector2(350, 292)
 		button.expand_icon = true
@@ -215,7 +215,7 @@ func open_picker(slot: String) -> void:
 	for id in picker_buttons:
 		var button: Button = picker_buttons[id]
 		button.visible = id in available
-		button.text = String(APPEARANCES.get_entry(id).name) + ("\n사용 중" if id == selected else "\n선택")
+		button.text = CATALOG.display_name(id) + ("\n사용 중" if id == selected else "\n선택")
 		button.icon = _texture(CATALOG.path(id, "banner" if slot == "banner" else "avatar"))
 		button.disabled = id == selected
 	picker.show()

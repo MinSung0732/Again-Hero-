@@ -212,6 +212,7 @@ var current_tab: String = "main"
 var _team_formation_view = TEAM_FORMATION_VIEW.new()
 var _team_upgrade_feedback: Node2D
 var _shop_storefront_art = SHOP_STOREFRONT_ART.new()
+var _shop_pickup_view = preload("res://src/ui/shop_pickup_view.gd").new()
 var research_view_mode: String = "research"
 var selected_research_id: String = ""
 var research_buttons_by_id: Dictionary = {}
@@ -2690,6 +2691,7 @@ func _apply_shop_storefront_skin() -> void:
 		rates_content_style
 	)
 	_shop_storefront_art.apply(self)
+	_shop_pickup_view.install(self)
 
 
 func _tick_shop_banner(delta: float) -> void:
@@ -2881,6 +2883,7 @@ func _format_shop_number(value: int) -> String:
 	return result
 
 func _rebuild_shop_list() -> void:
+	_shop_pickup_view.refresh()
 	shop_gold_label.text = "골드  %s" % _format_shop_number(
 		_get_shop_gold()
 	)

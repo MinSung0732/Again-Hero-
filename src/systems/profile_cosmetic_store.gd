@@ -3,6 +3,8 @@ extends RefCounted
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const PROFILE := preload("res://src/systems/player_profile.gd")
 const APPEARANCE := preload("res://src/systems/demon_appearance_store.gd")
+const COLLECTION := preload("res://src/systems/monster_collection_store.gd")
+const MONSTERS := preload("res://src/data/monster_catalog.gd")
 const CATALOG := preload("res://src/data/profile_cosmetic_catalog.gd")
 const PATH := "user://stage_progress.cfg"
 const SECTION := "profile_cosmetics"
@@ -16,6 +18,15 @@ static func choices(slot: String) -> Array[String]:
 		var path := CATALOG.path(id, slot)
 		if not path.is_empty() and FileAccess.file_exists(path):
 			result.append(id)
+	var state := COLLECTION.load_state()
+	for id in CATALOG.MONSTER_REWARDS:
+		var reward: Dictionary = CATALOG.MONSTER_REWARDS[id]
+		var monster_id := String(reward.get("monster_id", ""))
+		if MONSTERS.get_rarity(monster_id) != "transcendent" or not COLLECTION.is_unlocked(monster_id, state):
+			continue
+		var path := CATALOG.path(String(id), slot)
+		if not path.is_empty() and FileAccess.file_exists(path) and String(id) not in result:
+			result.append(String(id))
 	return result
 
 static func selected_id(slot: String) -> String:
