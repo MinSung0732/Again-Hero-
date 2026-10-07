@@ -1,3 +1,5 @@
+> Superseded for growth/result on 2026-10-08: see `../contextual/SOURCES.md`. Shared fanfare, marimba denial/defeat and duplicate augment-open feedback below describe the previous revision and are no longer active. Click/summon/ultimate/chest and frontend BGM remain active.
+
 # Frontend and gameplay audio polish — 2026-10-08
 
 Edited game-integrated effects downloaded from Pixabay. Source recordings are not shipped as a standalone library. [Pixabay Content License summary](https://pixabay.com/service/license-summary/) permits free use and modification; attribution is optional. Titles, IDs, creators, SHA256, trims, fades, peaks and RMS are recorded in `manifest.json`.

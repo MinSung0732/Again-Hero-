@@ -105,35 +105,36 @@ const STAGE7_FRAME_DIR := "res://assets/art/heroes/stage7_alchemist/frames"
 const STAGE8_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames"
 const STAGE9_FRAME_DIR := "res://assets/art/heroes/stage9_prist/frames"
 const STAGE10_FRAME_DIR := "res://assets/art/heroes/stage10_sage/frames"
+const CONTEXT_AUDIO := preload("res://src/data/contextual_audio_catalog.gd")
 const STAGE1_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_basic_attack_pixabay.mp3"
 const STAGE1_BARRIER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_barrier_pixabay.mp3"
 const STAGE1_ARCANE_FIELD_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_arcane_field_pixabay.mp3"
 const STAGE1_ARCANE_PIERCER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_arcane_piercer_clean.wav"
-const STAGE1_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_hit_pixabay.mp3"
+const STAGE1_HIT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"mage_hit.wav"
 const STAGE1_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_death_pixabay.mp3"
 const STAGE1_LEVEL_UP_AUDIO_PATH := "res://assets/audio/sfx/level_up_rise07_cc0.mp3"
 const STAGE2_COMBO_SLASH_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_combo_slash_pixabay.mp3"
 const STAGE2_BLADE_STORM_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_blade_storm_pixabay.mp3"
 const STAGE2_ASSASSINATION_START_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_assassination_start_pixabay.mp3"
 const STAGE2_ASSASSINATION_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_assassination_hit_pixabay.mp3"
-const STAGE2_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_hit_pixabay.mp3"
+const STAGE2_HIT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"rogue_hit.wav"
 const STAGE2_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_death_pixabay.mp3"
 const STAGE3_SLASH_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_slash_pixabay.mp3"
 const STAGE3_THRUST_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_thrust_pixabay.mp3"
 const STAGE3_GUARD_START_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_guard_start_pixabay.mp3"
 const STAGE3_GUARD_RELEASE_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_guard_release_pixabay.mp3"
 const STAGE3_CHARGE_IMPACT_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_charge_impact_clean.wav"
-const STAGE3_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_hit_pixabay.mp3"
+const STAGE3_HIT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"fighter_hit.wav"
 const STAGE3_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_death_pixabay.mp3"
-const STAGE4_GUNSHOT_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_gunshot_clean.wav"
+const STAGE4_GUNSHOT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"gunner_shot.wav"
 const STAGE4_RELOAD_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_reload_pixabay.mp3"
 # Keep only the final cylinder-spin ("drrrrk") section of the source reload.
 const STAGE4_RELOAD_AUDIO_START_OFFSET := 2.58
 const STAGE4_BACKSTEP_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_backstep_pixabay.mp3"
 const STAGE4_CYLINDER_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_cylinder_clean.wav"
-const STAGE4_DEADEYE_START_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_deadeye_start_pixabay.mp3"
-const STAGE4_DEADEYE_SHOT_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_deadeye_shot_clean.wav"
-const STAGE4_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_hit_pixabay.mp3"
+const STAGE4_DEADEYE_START_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"deadeye_cock.wav"
+const STAGE4_DEADEYE_SHOT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"deadeye_shot.wav"
+const STAGE4_HIT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"gunner_hit.wav"
 const STAGE4_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_death_pixabay.mp3"
 const STAGE5_BASIC_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_basic_pixabay.mp3"
 const STAGE5_COMBUSTION_CHARGE_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_combustion_charge_pixabay.mp3"
@@ -147,15 +148,15 @@ const STAGE5_CHAIN_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_cha
 const STAGE5_HARMONY_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_harmony_pixabay.mp3"
 const STAGE5_STORM_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_storm_pixabay.mp3"
 const STAGE5_BLINK_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_blink_pixabay.mp3"
-const STAGE5_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_hit_pixabay.mp3"
+const STAGE5_HIT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"archmage_hit.wav"
 const STAGE5_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_death_pixabay.mp3"
 const STAGE6_BASIC_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_basic_slash_pixabay.mp3"
 const STAGE6_SKILL1_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_blood_wave_pixabay.mp3"
 const STAGE6_SKILL2_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_ground_slam_clean.wav"
 const STAGE6_SKILL3_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_dash_pixabay.mp3"
 const STAGE6_SKILL4_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_spin_slash_pixabay.mp3"
-const STAGE6_MADNESS_ROAR_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_madness_roar_pixabay.mp3"
-const STAGE6_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_hit_pixabay.mp3"
+const STAGE6_MADNESS_ROAR_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"berserker_roar.wav"
+const STAGE6_HIT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"berserker_hit.wav"
 const STAGE6_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage6_berserker_death_pixabay.mp3"
 
 # Hero SFX loudness defaults are anchored to the established Stage 7-10 mix.
@@ -562,6 +563,9 @@ var stage1_basic_audio: AudioStreamPlayer = null
 var stage1_barrier_audio: AudioStreamPlayer = null
 var stage1_arcane_field_audio: AudioStreamPlayer = null
 var stage1_arcane_piercer_audio: AudioStreamPlayer = null
+var contextual_hit_next_ms := 0
+var fighter_block_audio: AudioStreamPlayer
+var magic_block_audio: AudioStreamPlayer
 var stage1_hit_audio: AudioStreamPlayer = null
 var stage1_death_audio: AudioStreamPlayer = null
 var stage1_level_up_audio: AudioStreamPlayer = null
@@ -1598,6 +1602,7 @@ func _ready() -> void:
 	_apply_stage3_fighter_effect_visuals()
 	_apply_stage4_gunner_effect_visuals()
 	_apply_stage6_berserker_effect_visuals()
+	_prepare_contextual_damage_audio()
 	_apply_level_up_effect_visual()
 	if (
 		not rogue_attack_effect.animation_finished.is_connected(
@@ -9140,7 +9145,7 @@ func _ensure_stage1_audio_runtime() -> void:
 		)
 	if not is_instance_valid(stage1_hit_audio):
 		stage1_hit_audio = _create_stage1_audio_player(
-			STAGE1_HIT_AUDIO_PATH, HERO_SFX_DB_HIT, 1.55
+			STAGE1_HIT_AUDIO_PATH, CONTEXT_AUDIO.HIT_DB, 1.0
 		)
 	if not is_instance_valid(stage1_death_audio):
 		stage1_death_audio = _create_stage1_audio_player(
@@ -9233,9 +9238,7 @@ func _ensure_rogue_audio_runtime() -> void:
 
 	if not is_instance_valid(rogue_hit_audio):
 		rogue_hit_audio = _create_hero_sfx_player(
-			STAGE2_HIT_AUDIO_PATH,
-			HERO_SFX_DB_HIT,
-			1.30
+			STAGE2_HIT_AUDIO_PATH, CONTEXT_AUDIO.HIT_DB, 1.0
 		)
 
 	if not is_instance_valid(rogue_death_audio):
@@ -9364,9 +9367,7 @@ func _ensure_fighter_audio_runtime() -> void:
 
 	if not is_instance_valid(fighter_hit_audio):
 		fighter_hit_audio = _create_hero_sfx_player(
-			STAGE3_HIT_AUDIO_PATH,
-			HERO_SFX_DB_HIT,
-			0.86
+			STAGE3_HIT_AUDIO_PATH, CONTEXT_AUDIO.HIT_DB, 1.0
 		)
 
 	if not is_instance_valid(fighter_death_audio):
@@ -9476,9 +9477,7 @@ func _ensure_gunner_audio_runtime() -> void:
 		for index in range(3):
 			gunner_shot_audio_pool.append(
 				_create_hero_sfx_player(
-					STAGE4_GUNSHOT_AUDIO_PATH,
-					HERO_SFX_DB_PRIMARY_ATTACK - 6.0,
-					1.55
+					STAGE4_GUNSHOT_AUDIO_PATH, HERO_SFX_DB_PRIMARY_ATTACK - 3.0, 1.0
 				)
 			)
 
@@ -9486,9 +9485,7 @@ func _ensure_gunner_audio_runtime() -> void:
 		for index in range(4):
 			gunner_deadeye_shot_audio_pool.append(
 				_create_hero_sfx_player(
-					STAGE4_DEADEYE_SHOT_AUDIO_PATH,
-					HERO_SFX_DB_HIT - 4.0,
-					1.68
+					STAGE4_DEADEYE_SHOT_AUDIO_PATH, HERO_SFX_DB_HIT - 2.0, 1.0
 				)
 			)
 
@@ -9515,16 +9512,12 @@ func _ensure_gunner_audio_runtime() -> void:
 
 	if not is_instance_valid(gunner_deadeye_start_audio):
 		gunner_deadeye_start_audio = _create_hero_sfx_player(
-			STAGE4_DEADEYE_START_AUDIO_PATH,
-			HERO_SFX_DB_REGULAR_SKILL - 3.0,
-			0.92
+			STAGE4_DEADEYE_START_AUDIO_PATH, HERO_SFX_DB_REGULAR_SKILL - 3.0, 1.0
 		)
 
 	if not is_instance_valid(gunner_hit_audio):
 		gunner_hit_audio = _create_hero_sfx_player(
-			STAGE4_HIT_AUDIO_PATH,
-			HERO_SFX_DB_HIT,
-			1.22
+			STAGE4_HIT_AUDIO_PATH, CONTEXT_AUDIO.HIT_DB, 1.0
 		)
 
 	if not is_instance_valid(gunner_death_audio):
@@ -9547,7 +9540,7 @@ func _play_gunner_basic_shot_audio() -> void:
 	) % gunner_shot_audio_pool.size()
 	if not is_instance_valid(player) or player.stream == null:
 		return
-	player.pitch_scale = 1.48 + 0.05 * float(gunner_shot_audio_cursor % 3)
+	player.pitch_scale = 1.0
 	player.stop()
 	player.play()
 
@@ -9565,7 +9558,7 @@ func _play_gunner_deadeye_shot_audio() -> void:
 	) % gunner_deadeye_shot_audio_pool.size()
 	if not is_instance_valid(player) or player.stream == null:
 		return
-	player.pitch_scale = 1.62 + 0.04 * float(gunner_deadeye_shot_audio_cursor % 4)
+	player.pitch_scale = 1.0
 	player.stop()
 	player.play()
 
@@ -9708,9 +9701,7 @@ func _ensure_archmage_audio_runtime() -> void:
 		)
 	if not is_instance_valid(archmage_hit_audio):
 		archmage_hit_audio = _create_hero_sfx_player(
-			STAGE5_HIT_AUDIO_PATH,
-			HERO_SFX_DB_HIT,
-			1.24
+			STAGE5_HIT_AUDIO_PATH, CONTEXT_AUDIO.HIT_DB, 1.0
 		)
 	if not is_instance_valid(archmage_death_audio):
 		archmage_death_audio = _create_hero_sfx_player(
@@ -9854,15 +9845,11 @@ func _ensure_berserker_audio_runtime() -> void:
 		)
 	if not is_instance_valid(berserker_madness_roar_audio):
 		berserker_madness_roar_audio = _create_hero_sfx_player(
-			STAGE6_MADNESS_ROAR_AUDIO_PATH,
-			HERO_SFX_DB_HEAVY_SKILL - 1.0,
-			0.56
+			STAGE6_MADNESS_ROAR_AUDIO_PATH, HERO_SFX_DB_HEAVY_SKILL - 5.0, 1.0
 		)
 	if not is_instance_valid(berserker_hit_audio):
 		berserker_hit_audio = _create_hero_sfx_player(
-			STAGE6_HIT_AUDIO_PATH,
-			HERO_SFX_DB_HIT,
-			0.92
+			STAGE6_HIT_AUDIO_PATH, CONTEXT_AUDIO.HIT_DB, 1.0
 		)
 	if not is_instance_valid(berserker_death_audio):
 		berserker_death_audio = _create_hero_sfx_player(
@@ -20307,6 +20294,9 @@ func _take_damage_internal(
 	):
 		return false
 
+	# Snapshot material before a shield can break during this hit. Status ticks are not collisions.
+	var physical_block := grant_invulnerability and not damage_already_mitigated and hero_archetype == "sword_shield" and fighter_guard_active
+	var magical_block := grant_invulnerability and not damage_already_mitigated and shield_hp > 0.0 and hero_archetype != "sword_shield"
 	var raw_damage := float(amount) if damage_already_mitigated else float(amount) * (1.0 + damage_taken_increase_ratio)
 	if (
 		not damage_already_mitigated
@@ -20371,19 +20361,8 @@ func _take_damage_internal(
 	hit_flash_timer = 0.12
 	hit_pose_timer = 0.23
 	_restart_stage1_animation("hit")
-	if current_hp > 0:
-		if hero_archetype == "ranged_kiter":
-			_play_stage1_audio(&"hit")
-		elif hero_archetype == "rogue_combo":
-			_play_rogue_hit_audio()
-		elif hero_archetype == "sword_shield":
-			_play_fighter_hit_audio()
-		elif hero_archetype == "pistol_gunner":
-			_play_gunner_hit_audio()
-		elif hero_archetype == "archmage_elementalist":
-			_play_archmage_hit_audio()
-		elif hero_archetype == "berserker_madness":
-			_play_berserker_hit_audio()
+	if current_hp > 0 and grant_invulnerability:
+		_play_contextual_damage_audio(physical_block, magical_block)
 
 	if current_hp > 0 and applied_damage > 0:
 		_add_ultimate_charge(
@@ -20416,6 +20395,38 @@ func _take_damage_internal(
 			_refresh_invulnerability_visual()
 
 	return true
+
+func _prepare_contextual_damage_audio() -> void:
+	if not CONTEXT_AUDIO.HITS.has(hero_archetype):
+		return
+	call(String(CONTEXT_AUDIO.HITS[hero_archetype].ensure))
+	if hero_archetype == "sword_shield" and not is_instance_valid(fighter_block_audio):
+		fighter_block_audio = _create_hero_sfx_player(CONTEXT_AUDIO.ROOT+"fighter_block.wav", CONTEXT_AUDIO.BLOCK_DB)
+	elif hero_archetype in ["ranged_kiter", "archmage_elementalist"] and not is_instance_valid(magic_block_audio):
+		magic_block_audio = _create_hero_sfx_player(CONTEXT_AUDIO.ROOT+"magic_block.wav", CONTEXT_AUDIO.MAGIC_BLOCK_DB)
+
+
+func _play_contextual_damage_audio(physical_block: bool, magical_block: bool) -> void:
+	if Time.get_ticks_msec() < contextual_hit_next_ms or not CONTEXT_AUDIO.HITS.has(hero_archetype):
+		return
+	var player: AudioStreamPlayer
+	if physical_block:
+		if not is_instance_valid(fighter_block_audio):
+			fighter_block_audio = _create_hero_sfx_player(CONTEXT_AUDIO.ROOT+"fighter_block.wav", CONTEXT_AUDIO.BLOCK_DB)
+		player = fighter_block_audio
+	elif magical_block:
+		if not is_instance_valid(magic_block_audio):
+			magic_block_audio = _create_hero_sfx_player(CONTEXT_AUDIO.ROOT+"magic_block.wav", CONTEXT_AUDIO.MAGIC_BLOCK_DB)
+		player = magic_block_audio
+	else:
+		var cue: Dictionary = CONTEXT_AUDIO.HITS[hero_archetype]
+		call(String(cue.ensure))
+		player = get(String(cue.player)) as AudioStreamPlayer
+	if is_instance_valid(player) and player.stream != null:
+		contextual_hit_next_ms = Time.get_ticks_msec()+CONTEXT_AUDIO.HIT_INTERVAL_MS
+		player.stop()
+		player.play()
+
 
 func _update_hero_hit_flash(delta: float) -> void:
 	if hit_flash_timer <= 0.0:

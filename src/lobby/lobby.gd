@@ -3815,7 +3815,7 @@ func _place_monster_in_slot(monster_id: String, slot_index: int) -> void:
 		team_selected_ids,
 		team_available_ids
 	)
-	get_node("/root/GameAudio").feedback("success" if saved else "denied")
+	get_node("/root/GameAudio").feedback("formation" if saved else "denied")
 	team_status_label.text = "%d번 슬롯에 %s 편성 · %s" % [
 		slot_index + 1,
 		_team_monster_name(monster_id),
@@ -3833,7 +3833,7 @@ func _place_demon_skill_in_slot(skill_id: String, slot_index: int) -> void:
 		demon_skill_selected_ids,
 		demon_skill_catalog_ids
 	)
-	get_node("/root/GameAudio").feedback("success" if saved else "denied")
+	get_node("/root/GameAudio").feedback("formation" if saved else "denied")
 	team_status_label.text = "%d번 슬롯에 %s 스킬 편성 · %s" % [
 		slot_index + 1,
 		String(DEMON_ULTIMATES.get_skill(skill_id).get("name", skill_id)),
@@ -3871,7 +3871,7 @@ func _remove_demon_skill(skill_id: String) -> void:
 		demon_skill_selected_ids,
 		demon_skill_catalog_ids
 	)
-	get_node("/root/GameAudio").feedback("success" if saved else "denied")
+	get_node("/root/GameAudio").feedback("formation" if saved else "denied")
 	team_status_label.text = "%s 스킬 해제 · %s" % [
 		String(DEMON_ULTIMATES.get_skill(skill_id).get("name", skill_id)),
 		"저장 완료" if saved else "저장 실패",
@@ -3893,7 +3893,7 @@ func _add_demon_skill(skill_id: String) -> void:
 		demon_skill_selected_ids,
 		demon_skill_catalog_ids
 	)
-	get_node("/root/GameAudio").feedback("success" if saved else "denied")
+	get_node("/root/GameAudio").feedback("formation" if saved else "denied")
 	team_status_label.text = "%s 스킬 편성 · %s" % [
 		String(DEMON_ULTIMATES.get_skill(skill_id).get("name", skill_id)),
 		"저장 완료" if saved else "저장 실패",
@@ -4311,7 +4311,7 @@ func _remove_team_monster(monster_id: String) -> void:
 		team_selected_ids,
 		team_available_ids
 	)
-	get_node("/root/GameAudio").feedback("success" if saved else "denied")
+	get_node("/root/GameAudio").feedback("formation" if saved else "denied")
 	team_status_label.text = (
 		"%s 편성 해제 · 저장 완료" % _team_monster_name(monster_id)
 		if saved
@@ -4336,7 +4336,7 @@ func _add_team_monster(monster_id: String) -> void:
 		team_selected_ids,
 		team_available_ids
 	)
-	get_node("/root/GameAudio").feedback("success" if saved else "denied")
+	get_node("/root/GameAudio").feedback("formation" if saved else "denied")
 	team_status_label.text = (
 		"%s 편성 추가 · 저장 완료" % _team_monster_name(monster_id)
 		if saved
@@ -5295,7 +5295,7 @@ func _purchase_selected_research() -> void:
 		]
 	else:
 		research_status_label.text = "연구 포인트가 부족하거나 이미 완료된 연구입니다."
-	GameAudio.feedback("upgrade" if bool(result.get("success", false)) else "denied")
+	GameAudio.feedback("research" if bool(result.get("success", false)) else "denied")
 
 	_refresh_header()
 	_rebuild_research_list.call_deferred()

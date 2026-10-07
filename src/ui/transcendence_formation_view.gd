@@ -203,7 +203,7 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 
 func _register(id: String) -> void:
 	if STORE.save_id(id):
-		lobby.get_node("/root/GameAudio").feedback("success")
+		lobby.get_node("/root/GameAudio").feedback("formation")
 		refresh(true)
 	else:
 		lobby.team_status_label.text = "초월 등록을 저장하지 못했습니다. 다시 시도해 주세요."

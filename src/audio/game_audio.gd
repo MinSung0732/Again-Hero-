@@ -18,7 +18,7 @@ func _ready() -> void:
 	ui_bank = BANK.new()
 	add_child(ui_bank)
 	ui_bank.honor_tree_pause = false
-	ui_bank.configure(DATA.UI_CUES)
+	ui_bank.configure(DATA.ui_cues())
 	battle_bank = BANK.new()
 	add_child(battle_bank)
 	battle_bank.configure(DATA.BATTLE_CUES, null, true)
@@ -53,7 +53,8 @@ func feedback(cue: String) -> void:
 	if cue != "click":
 		suppress_click_until = Time.get_ticks_msec()+100
 		ui_bank.stop_cue("click")
-	ui_bank.play_cue(cue)
+	if cue not in DATA.CONTEXT.SILENT_UI:
+		ui_bank.play_cue(cue)
 
 func enter_frontend(owner: Node, mode: String) -> void:
 	music_owner = weakref(owner)
@@ -88,7 +89,6 @@ func attach_battle(battle: Node) -> void:
 	last_demon_level = int(battle.demon_level)
 	battle.summon_result.connect(_summon)
 	battle.demon_ultimate_used.connect(_ultimate)
-	battle.demon_augment_ready.connect(_augment_ready)
 	battle.demon_augment_applied.connect(_augment_applied)
 	battle.demon_progression_changed.connect(_demon_progression)
 	battle.mutation_selected.connect(_mutation_selected)
@@ -116,19 +116,16 @@ func _ultimate(_id: String, _name: String, _message: String) -> void:
 	battle_bank.stop_cue("summon")
 	battle_bank.play_cue("ultimate")
 
-func _augment_ready(_candidates: Array, _rerolls: int, _level: int) -> void:
-	feedback("success")
-
 func _augment_applied(_name: String, _summary: String) -> void:
-	feedback("upgrade")
+	feedback("click")
 
 func _demon_progression(level: int, _exp: float, _next_exp: float) -> void:
 	if level > last_demon_level:
-		feedback("success")
+		feedback("demon_level")
 	last_demon_level = level
 
 func _mutation_selected(_type: String, _name: String) -> void:
-	feedback("upgrade")
+	feedback("click")
 
 func battle_result(owner: Node, won: bool) -> void:
 	battle_bank.stop_all()

@@ -1,0 +1,343 @@
+{
+  "date": "2026-10-08",
+  "license": "https://pixabay.com/service/license-summary/",
+  "bus": "SFX",
+  "sources": [
+    {
+      "name": "mage_hit",
+      "id": "352040",
+      "creator": "Universfield",
+      "title": "Punch 03",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-punch-03-352040/",
+      "raw_sha256": "3fcc2dc1ec003ffe5d88a2ce238b66ce6d815d4c9ab114a891fd5d62337db1b2"
+    },
+    {
+      "name": "rogue_hit",
+      "id": "123106",
+      "creator": "Universfield",
+      "title": "Punch 02",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-punch-02-123106/",
+      "raw_sha256": "c70216a3ed9a8231c75b1978d3b8105c17e6fcb8d168cd02c71b36a3317dcb55"
+    },
+    {
+      "name": "fighter_block",
+      "id": "143940",
+      "creator": "SectionSound",
+      "title": "Shield Block Shortsword",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-shield-block-shortsword-143940/",
+      "raw_sha256": "c7028380d7c363e207c934cbfc56f5d5e1e52f122d424b2f0ce5537ae5f6cdb2"
+    },
+    {
+      "name": "gunner_shot",
+      "id": "233473",
+      "creator": "mrfriends",
+      "title": "pistol shot",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-pistol-shot-233473/",
+      "raw_sha256": "d11776d7b3e15a24b9eaacd825b87c6f2e11602a9ed13b6bb42960c1e17b8356"
+    },
+    {
+      "name": "berserker_roar",
+      "id": "250239",
+      "creator": "Universfield",
+      "title": "Human Roar",
+      "url": "https://pixabay.com/sound-effects/people-human-roar-250239/",
+      "raw_sha256": "5bfd829be2ef579f649ec73a6f73d73fbbafd256a97ba4fd4db6afbd7876b40a"
+    },
+    {
+      "name": "upgrade",
+      "id": "186628",
+      "creator": "FxProSound",
+      "title": "Magic charge mana 2",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-magic-charge-mana-2-186628/",
+      "raw_sha256": "8c922452edcdb2b668e9a3766adddf0da1df10c61f4cfe7c97a32bed2c211b2c"
+    },
+    {
+      "name": "confirm",
+      "id": "126517",
+      "creator": "Universfield",
+      "title": "Soft Interface Click",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-soft-interface-click-126517/",
+      "raw_sha256": "91685f927b82ac1ba8c18e9f81461088970ca32cd202aef026cfb8599e3ec81d"
+    },
+    {
+      "name": "fighter_hit",
+      "id": "140236",
+      "creator": "Universfield",
+      "title": "Punch",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-punch-140236/",
+      "raw_sha256": "c630d23f9542dda52b53e3b162a0b98a2d29e5b3c3bf390b84b6c0279766b7b6"
+    },
+    {
+      "name": "gunner_hit",
+      "id": "383965",
+      "creator": "Universfield",
+      "title": "Punch 04",
+      "url": "https://pixabay.com/sv/sound-effects/film-och-specialeffekter-punch-04-383965/",
+      "raw_sha256": "6c8ba21c363ccea13c49c5665391429479ca4aef78a9e5b0a1d074e356ca7cec"
+    },
+    {
+      "name": "berserker_hit",
+      "id": "515251",
+      "creator": "DRAGON-STUDIO",
+      "title": "Hard Punch SFX",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-hard-punch-sfx-515251/",
+      "raw_sha256": "07fc45c6ef91b6e78dfd7024d5307ecd4ba3009e22441f43df167f8ee9420928"
+    },
+    {
+      "name": "demon_level",
+      "id": "378650",
+      "creator": "Yodguard",
+      "title": "Dark magic (1)",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-dark-magic-1-378650/",
+      "raw_sha256": "9101017ee2a194b8e9670aaac1bcfca71f71c5a9f54615742aba1d63e5d2f984"
+    },
+    {
+      "name": "victory",
+      "id": "352465",
+      "creator": "Universfield",
+      "title": "Cinematic Impact Boom 05",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-cinematic-impact-boom-05-352465/",
+      "raw_sha256": "824993119db92d61141199500533294aac3ea01b83e3410396a4c5f65aa54183"
+    },
+    {
+      "name": "deadeye_shot",
+      "id": "7152",
+      "creator": "gattoangus (Freesound)",
+      "title": "9mm pistol shoot short reverb",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-9mm-pistol-shoot-short-reverb-7152/",
+      "raw_sha256": "0472482a9d3a8d5303ab1a3a5b402a57c8ac94ada9f4b8caba20ac705bacfbfd"
+    },
+    {
+      "name": "archmage_hit",
+      "id": "567196",
+      "creator": "Universfield",
+      "title": "Punch Impact Hit",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-punch-impact-hit-567196/",
+      "raw_sha256": "661562fd21b18ae07300ab9b715fbd772902ef89cf992669cd46dfe2e0f8cf3c"
+    },
+    {
+      "name": "deadeye_cock",
+      "id": "6279",
+      "creator": "acidsnowflake (Freesound)",
+      "title": "Cocking a revolver",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-cocking-a-revolver-6279/",
+      "raw_sha256": "3eb64b713ed222f07a768c91171e134a31978288d6c3872799fba620e0570dbe"
+    },
+    {
+      "name": "research",
+      "id": "499646",
+      "creator": "DRAGON-STUDIO",
+      "title": "Flipping Book Page",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-flipping-book-page-499646/",
+      "raw_sha256": "600be61dd4591f09cdc1711fa8e07098fd3d948f619a7e096513ed6ab5aa82d8"
+    },
+    {
+      "name": "magic_block",
+      "id": "601137",
+      "creator": "Vadim_Makes_Sound",
+      "title": "Impact Plasma Sci-Fi Energy Hit",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-impact-plasma-sci-fi-energy-hit-601137/",
+      "raw_sha256": "577e6354cb77a1a6e0a5b590f49354e04ad3fc0a6fadb09de73b31afb5995276"
+    }
+  ],
+  "assets": {
+    "mage_hit": {
+      "file": "mage_hit.wav",
+      "source_id": "352040",
+      "start": 0.284,
+      "end": 0.604,
+      "duration": 0.32,
+      "peak_dbfs": -9.0,
+      "rms_dbfs": -21.38,
+      "filters": "atrim=start=0.284:end=0.604,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=4200,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=0.27:d=0.05",
+      "sha256": "bd5518b9fd60f3f1352e5cc6b554b6f4f3e2417b527a3056cfa6cf73567020f8"
+    },
+    "rogue_hit": {
+      "file": "rogue_hit.wav",
+      "source_id": "123106",
+      "start": 0.254,
+      "end": 0.554,
+      "duration": 0.3,
+      "peak_dbfs": -9.0,
+      "rms_dbfs": -22.48,
+      "filters": "atrim=start=0.254:end=0.554,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=4200,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=0.25000000000000006:d=0.05",
+      "sha256": "f2ce2c530a6a8b0f4a826d34d0a447d0e8ca0d9b0df8ce2fe5f5cad4b9b1ead6"
+    },
+    "fighter_block": {
+      "file": "fighter_block.wav",
+      "source_id": "143940",
+      "start": 0.014,
+      "end": 0.335,
+      "duration": 0.321,
+      "peak_dbfs": -9.0,
+      "rms_dbfs": -25.94,
+      "filters": "atrim=start=0.014:end=0.335,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=4200,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=0.271:d=0.05",
+      "sha256": "631cdf260e80353177e5c5abe08b772869404bd9449d184bbd1b3cfd1d285113"
+    },
+    "gunner_shot": {
+      "file": "gunner_shot.wav",
+      "source_id": "233473",
+      "start": 0.164,
+      "end": 0.644,
+      "duration": 0.48,
+      "peak_dbfs": -9.0,
+      "rms_dbfs": -21.28,
+      "filters": "atrim=start=0.164:end=0.644,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=4200,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=0.43:d=0.05",
+      "sha256": "9bbac121163cccaebf75917d58b86b415f6483583f1a87571dd28009aac47083"
+    },
+    "berserker_roar": {
+      "file": "berserker_roar.wav",
+      "source_id": "250239",
+      "start": 0.0,
+      "end": 0.905,
+      "duration": 0.905,
+      "peak_dbfs": -12.0,
+      "rms_dbfs": -24.1,
+      "filters": "atrim=start=0.0:end=0.905,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=5500,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=0.855:d=0.05",
+      "sha256": "6fe428024fff39ac6be00e8ae0888df4ade9e20db12b193c5249347783d4b7e3"
+    },
+    "upgrade": {
+      "file": "upgrade.wav",
+      "source_id": "186628",
+      "start": 0.044,
+      "end": 1.495,
+      "duration": 1.451,
+      "peak_dbfs": -12.0,
+      "rms_dbfs": -26.2,
+      "filters": "atrim=start=0.044000000000000004:end=1.4949999999999999,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=5500,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=1.4009999999999998:d=0.05",
+      "sha256": "228f3736950d7c9908cfec5b27482564c935f0ced1dd8b1226ba2efca6600f56"
+    },
+    "confirm": {
+      "file": "confirm.wav",
+      "source_id": "126517",
+      "start": 0.034,
+      "end": 0.384,
+      "duration": 0.35,
+      "peak_dbfs": -12.0,
+      "rms_dbfs": -24.82,
+      "filters": "atrim=start=0.034:end=0.384,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=2600,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=0.3:d=0.05",
+      "sha256": "5ef63fcbb6907926cf919e397d8b07d26730ce74c084400570a29750e194a238"
+    },
+    "fighter_hit": {
+      "file": "fighter_hit.wav",
+      "source_id": "140236",
+      "start": 0.074,
+      "end": 0.434,
+      "duration": 0.36,
+      "peak_dbfs": -9.0,
+      "rms_dbfs": -22.88,
+      "filters": "atrim=start=0.074:end=0.434,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=4200,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=0.31:d=0.05",
+      "sha256": "330b361463eb12c605e57c4c3d3f271d2c0e9e31a11aa14bc8c2a2dba3c5fd4c"
+    },
+    "gunner_hit": {
+      "file": "gunner_hit.wav",
+      "source_id": "383965",
+      "start": 0.064,
+      "end": 0.364,
+      "duration": 0.3,
+      "peak_dbfs": -9.0,
+      "rms_dbfs": -21.88,
+      "filters": "atrim=start=0.064:end=0.364,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=4200,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=0.25:d=0.05",
+      "sha256": "9452d590f23e7b7fd63eba2865f60e5a5e2e19bd734341ca344ed4e3d15f5237"
+    },
+    "berserker_hit": {
+      "file": "berserker_hit.wav",
+      "source_id": "515251",
+      "start": 0.014,
+      "end": 0.414,
+      "duration": 0.4,
+      "peak_dbfs": -9.0,
+      "rms_dbfs": -21.75,
+      "filters": "atrim=start=0.014:end=0.41400000000000003,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=4200,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=0.35000000000000003:d=0.05",
+      "sha256": "7d881bac1efd711af0c2ce38c0d0b37aafdae0f22c796bdd50d9c32d792c6a21"
+    },
+    "demon_level": {
+      "file": "demon_level.wav",
+      "source_id": "378650",
+      "start": 0.014,
+      "end": 1.575,
+      "duration": 1.561,
+      "peak_dbfs": -12.0,
+      "rms_dbfs": -24.21,
+      "filters": "atrim=start=0.014:end=1.575,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=2600,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=1.511:d=0.05",
+      "sha256": "e79b1cc46cb58514bf4186ff893a4165067648606f83731963d613afa33b1599"
+    },
+    "victory": {
+      "file": "victory.wav",
+      "source_id": "352465",
+      "start": 0.074,
+      "end": 1.725,
+      "duration": 1.651,
+      "peak_dbfs": -12.0,
+      "rms_dbfs": -23.13,
+      "filters": "atrim=start=0.074:end=1.7249999999999999,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=2600,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=1.6009999999999998:d=0.05",
+      "sha256": "09c01c7af9c9c377df44a27d22d1b7541867dab18a6615d2531f439d97c92f61"
+    },
+    "deadeye_shot": {
+      "file": "deadeye_shot.wav",
+      "source_id": "7152",
+      "start": 0.014,
+      "end": 0.174,
+      "duration": 0.16,
+      "peak_dbfs": -9.0,
+      "rms_dbfs": -19.73,
+      "filters": "atrim=start=0.014:end=0.17400000000000002,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=4200,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=0.11:d=0.05",
+      "sha256": "6d98ec5954289c20f3a4673ab8a80a4f5adac75ed6852ebea64933b92fc66f04"
+    },
+    "archmage_hit": {
+      "file": "archmage_hit.wav",
+      "source_id": "567196",
+      "start": 0.044,
+      "end": 0.394,
+      "duration": 0.35,
+      "peak_dbfs": -9.0,
+      "rms_dbfs": -20.58,
+      "filters": "atrim=start=0.044000000000000004:end=0.39399999999999996,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=4200,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=0.3:d=0.05",
+      "sha256": "270ee0eae5d8068db0fda06302be780451f462e9f6d0dadd63d6c5b50fd306b7"
+    },
+    "deadeye_cock": {
+      "file": "deadeye_cock.wav",
+      "source_id": "6279",
+      "start": 0.764,
+      "end": 1.085,
+      "duration": 0.321,
+      "peak_dbfs": -12.0,
+      "rms_dbfs": -39.47,
+      "filters": "atrim=start=0.764:end=1.085,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=5500,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=0.27099999999999996:d=0.05",
+      "sha256": "285e922a5873c9b9d3f0594b2f715d25e20f85440cbec992db9e59bd9dcd08f0"
+    },
+    "research": {
+      "file": "research.wav",
+      "source_id": "499646",
+      "start": 0.044,
+      "end": 0.875,
+      "duration": 0.831,
+      "peak_dbfs": -12.0,
+      "rms_dbfs": -33.32,
+      "filters": "atrim=start=0.044000000000000004:end=0.875,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=5500,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=0.7809999999999999:d=0.05",
+      "sha256": "be9beb07da269cec1c333bba2ce287849fd00cc813bc287127dcc7dc45d6f36a"
+    },
+    "magic_block": {
+      "file": "magic_block.wav",
+      "source_id": "601137",
+      "start": 0.014,
+      "end": 0.1567,
+      "duration": 0.1427,
+      "peak_dbfs": -12.0,
+      "rms_dbfs": -27.95,
+      "filters": "atrim=start=0.014:end=0.156734693877551,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=2600,acompressor=threshold=0.18:ratio=2:attack=1:release=65,afade=t=in:d=0.002,afade=t=out:st=0.092734693877551:d=0.047578231292517",
+      "sha256": "4fa3047697ce56344456538c30383eefbb34912b0ea00807e348fe446ce43b34"
+    }
+  },
+  "selection_policy": {
+    "unique_sources": 17,
+    "natural_pitch": true,
+    "retired_runtime": "shared sword/magic damage, explosion gunfire, low-pitched portal roar, shared fanfare/marimba UI",
+    "deliberately_silent": [
+      "augment_ready",
+      "denied",
+      "defeat"
+    ],
+    "audit": "source descriptions, animation/event hook inspection, PCM envelope analysis and real WASAPI output; no subjective listening claim"
+  }
+}

@@ -61,8 +61,8 @@ func run() -> void:
 	check(audio.battle_bank.players.ultimate.stream_paused, "battle pause holds combat sound")
 	paused = true
 	audio.ui_bank.stop_all()
-	audio.feedback("success")
-	check(audio.ui_bank.players.success.playing, "pause-menu UI remains responsive")
+	audio.feedback("formation")
+	check(audio.ui_bank.players.formation.playing, "pause-menu UI remains responsive")
 	paused = false
 	battle.external_pause = false
 	audio.battle_bank.stop_all()

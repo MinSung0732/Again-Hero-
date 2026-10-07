@@ -2483,3 +2483,9 @@ Build AI는 전체/주변 몬스터 수, 최근 공세, 역할 비율, 거리, �
 - `GameAudio` autoload가 타이틀/로비/결과 BGM와 공통 UI·게임 피드백 SFX를 관리. 데이터는 `src/data/game_audio_catalog.gd`; 출처·믹스·의도적 무음 목록은 `assets/audio/sfx/interface/SOURCES.md`와 manifest.
 - 전투 BGM는 기존 HeroBGMManager가 계속 소유하며 입장 시 frontend fade-out. 전용 Zeus/용사/뽑기 음원을 중복하지 않음. 모든 신규 SFX는 실제 WAV, 음악은 기존 mainlobby 기반 OGG. 저장된 BGM/SFX 설정을 따름.
 - 이벤트당 고정 플레이어·공유 캐시, 소환/엘리트 억제, 버튼 생성 시 연결·reparent 중복 방어. hover/EXP/발걸음/추가 잡몹 사망음은 의도적 제외. 결과 SFX는 battle_over와 분리, 전투 종료/씬 이탈/백그라운드에서 소유권 정리.
+
+
+## 오디오 동작·재질 분리 기준 (2026-10-08)
+- 피격은 공격/주문 발사 소스와 분리. Stage1–6은 각각 별도의 신체 타격 소스, 물리 방패는 guard 중에만, 마법 보호막은 에너지 접촉 소스. 파괴되는 타격도 이전 재질을 사용. 상태이상/거절/사망과 일반 충돌을 구분.
+- `contextual_audio_catalog.gd` 및 `assets/audio/sfx/contextual/SOURCES.md`/manifest가 신규 동작별 출처·믹스 기준. 권총·연사·준비·광기와 강화·연구·편성·마왕 레벨업·승리를 서로 다른 실제 소스로 표현. 임의 피치 변경으로 다른 행동을 흉내 내지 않음. 원래 동작·시각 이벤트에 재생.
+- GameAudio는 실제 마왕 레벨 증가 때만 에너지 음. 추가 증강창 팡파르와 마림바 실패/패배는 제외, 선택 버튼은 간결한 UI 피드백. 배경음/전용 Zeus/기존 재장전은 유지. 고정 플레이어·반복 간격·독립 SFX 설정 사용.
