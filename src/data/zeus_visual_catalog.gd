@@ -1,4 +1,5 @@
 extends RefCounted
+const BATTLE_VISIBLE_HEIGHT := 108.0
 
 # Original uploaded filenames and common 512x384 canvas are preserved.
 const PROFILE := {

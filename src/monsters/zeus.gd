@@ -6,6 +6,7 @@ const SLASH_SCENE := preload("res://src/monsters/ZeusSlash.tscn")
 var transcend_level := 0
 var summon_snapshot := 0
 var keeping_distance := false
+var visual_head_y := -35.0
 var gauge := 0.0
 var orb_heal_buffer := 0.0
 var skill_cooldowns := PackedFloat32Array([0,0,0])
@@ -41,6 +42,22 @@ func configure_transcendence(count: int, level: int) -> void:
 
 func _apply_normal_visual_profile() -> void:
 	visual.apply_visual_profile(ART.PROFILE)
+	var texture: Texture2D = visual.sprite_frames.get_frame_texture(&"idle",0)
+	if texture == null:
+		return
+	var image := texture.get_image()
+	if image == null or image.is_empty():
+		return
+	var bounds := image.get_used_rect()
+	if bounds.size.y <= 0:
+		return
+	var canvas_center := Vector2(texture.get_size())*0.5
+	var anchor := Vector2(bounds.get_center().x,bounds.end.y)-canvas_center
+	var original_anchor: Vector2 = visual.position+anchor*visual.scale
+	var factor := ART.BATTLE_VISIBLE_HEIGHT/float(bounds.size.y)
+	visual.scale = Vector2.ONE*factor
+	visual.position = original_anchor-anchor*factor
+	visual_head_y = visual.position.y+(bounds.position.y-canvas_center.y)*factor
 
 func _ready() -> void:
 	super._ready()
@@ -222,17 +239,19 @@ func _show_pillar(kind: String, point: Vector2) -> void:
 	pillar_remaining = 0.30 if kind == "judgment" else 0.50
 
 func _draw() -> void:
+	draw_set_transform(Vector2(0,visual_head_y-30.0+54.0))
 	super._draw()
+	draw_set_transform(Vector2.ZERO)
 	if dying:
 		return
-	draw_rect(Rect2(-29,-65,58,6),Color("241c13"))
-	draw_rect(Rect2(-29,-65,58*gauge/DATA.GAUGE_MAX,6),Color("ffdb3b"))
+	draw_rect(Rect2(-29,visual_head_y-41.0,58,6),Color("241c13"))
+	draw_rect(Rect2(-29,visual_head_y-41.0,58*gauge/DATA.GAUGE_MAX,6),Color("ffdb3b"))
 	if charge_remaining > 0.0:
 		var progress := 1.0-charge_remaining/DATA.CHARGE_SECONDS
-		FX.draw_frame(self,"charge",mini(int(progress*7),6),Vector2(0,-25),lerpf(0.35,1.0,progress))
+		FX.draw_frame(self,"charge",mini(int(progress*7),6),Vector2(0,visual_head_y+ART.BATTLE_VISIBLE_HEIGHT*0.55),lerpf(0.35,1.0,progress))
 	if crown_remaining > 0.0:
 		var frame := mini(int(crown_elapsed*10),3) if crown_elapsed < 0.4 else (6+mini(int((0.2-crown_remaining)*10),1) if crown_remaining < 0.2 else 4+int(crown_elapsed*10)%2)
-		FX.draw_frame(self,"crown",frame,Vector2(0,-48))
+		FX.draw_frame(self,"crown",frame,Vector2(0,visual_head_y))
 	if pillar_remaining > 0.0:
 		var lifetime := 0.30 if pillar_kind == "judgment" else 0.50
 		FX.draw_frame(self,pillar_kind,int((lifetime-pillar_remaining)*10),to_local(pillar_position))
@@ -241,5 +260,5 @@ func _draw() -> void:
 		if age < 0.0:
 			continue
 		var progress := clampf((age-0.35)/(DATA.ORB_SECONDS-0.35),0.0,1.0)
-		var point := orb_origins[index].lerp(global_position+Vector2(0,-25),progress*progress)
+		var point := orb_origins[index].lerp(global_position+Vector2(0,visual_head_y+ART.BATTLE_VISIBLE_HEIGHT*0.55),progress*progress)
 		FX.draw_frame(self,"orb",mini(int(age*14),4) if age < 0.35 else 5+int(age*14)%2,to_local(point))
