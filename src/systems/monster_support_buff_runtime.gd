@@ -1,5 +1,6 @@
 extends RefCounted
 const COMMON := preload("res://src/monsters/monster_runtime_common.gd")
+const EFFECTS := preload("res://src/ui/combat_status_effect_visual.gd")
 var entries: Dictionary = {}
 var expired_ids: Array[int] = []
 
@@ -22,6 +23,7 @@ func apply_courage(target: Node2D, duration: float, damage_ratio: float, shield_
 	target.set_meta("support_shield_hp",maxi(int(target.get_meta("support_shield_hp",0)),shield))
 	target.set_meta("support_shield_capacity",maxi(int(target.get_meta("support_shield_capacity",0)),int(target.get_meta("support_shield_hp",0))))
 	target.queue_redraw()
+	EFFECTS.show_on(target, "support_courage")
 
 func apply_agility(target: Node2D, duration: float, speed_ratio: float) -> void:
 	if not _alive(target):
@@ -29,6 +31,7 @@ func apply_agility(target: Node2D, duration: float, speed_ratio: float) -> void:
 	var entry := _entry(target)
 	entry.speed_timer = maxf(float(entry.speed_timer),duration)
 	target.set_meta("support_speed_multiplier",maxf(float(target.get_meta("support_speed_multiplier",1.0)),1.0 + speed_ratio))
+	EFFECTS.show_on(target, "support_agility")
 
 func tick(delta: float) -> void:
 	expired_ids.clear()

@@ -1,3 +1,7 @@
+## Uploaded Combat Effect Hooks (2026-10-07)
+- CombatEffectCatalog owns the nine new frame paths and status/buff bindings; updated slow uses eight frames and compensates for its enlarged768px canvas. Shared SpriteFrames caches and one lazily attached reusable child per actor/effect avoid repeated creation/free. Idle effects stop processing. New playback freezes when actor physics is paused; LOD hides effects and resumes still-active statuses, while offscreen one-shots are discarded.
+- Hero accepted charm/petrify/bleed/healing-reduction show their real timers. Shaman courage/agility show actual support multipliers until expiry, positive healing shows one shot. Dullahan's danger escape-to-rest transition shows regeneration until rest ends. Successful elite Succubus cut teleport shows mirrored target slash. Existing damage/healing/status/AI calculations are unchanged. Tests: combat_effect_assets_smoke.gd with optional native --capture gallery; Android GPU memory and mass-effect timings remain unverified.
+
 ## Augment Refresh Cost (2026-10-07)
 - DemonAugmentCatalog indexes static/global, generated monster-normal and special entries once by ID. get_augment still returns a deep copy, preserving caller isolation and all candidate/stack rules.
 - Battle caches selected special configurations by monster type and compares the full selected-ID list to invalidate append, clear and same-size replacements; fresh battle clears both caches. Internal consumers read the cached view, while each actor's metadata/configuration gets an isolated copy.

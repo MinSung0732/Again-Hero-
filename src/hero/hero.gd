@@ -16971,6 +16971,7 @@ func apply_bleed(duration: float = 5.0, source: Node = null) -> bool:
 	bleed_damage_applied = 0
 	bleed_source = source if is_instance_valid(source) else null
 	set_meta("bleed_active", true)
+	COMBAT_STATUS_EFFECT_VISUAL.show_on(self, "bleed")
 	return true
 
 
@@ -17008,6 +17009,7 @@ func apply_healing_reduction(duration: float, reduction: float) -> bool:
 	healing_reduction_ratio = maxf(healing_reduction_ratio,clampf(reduction,0.0,1.0))
 	healing_reduction_timer = maxf(healing_reduction_timer,duration)
 	record_status_effect_event("healing_reduction")
+	COMBAT_STATUS_EFFECT_VISUAL.show_on(self, "healing_reduction")
 	return true
 
 func apply_damage_taken_increase(duration: float, increase: float) -> bool:
@@ -17052,6 +17054,7 @@ func apply_charm(source: Node2D, duration: float) -> bool:
 	charm_source = weakref(source)
 	charm_cooldown_properties = _get_external_skill_cooldown_properties()
 	set_meta("charm_active", true)
+	COMBAT_STATUS_EFFECT_VISUAL.show_on(self, "charm")
 	record_status_effect_event("charm")
 	if channeling:
 		_end_channel_skill()
@@ -17137,6 +17140,7 @@ func apply_petrify(duration: float, release_slow: float = 1.0, release_duration:
 		petrify_restore_tint = hero_sprite.self_modulate
 		hero_sprite.self_modulate = petrify_restore_tint * MEDUSA_BEHAVIOR.STONE.tint
 	set_meta("petrify_active",true)
+	COMBAT_STATUS_EFFECT_VISUAL.show_on(self, "petrify")
 	return true
 
 func _tick_petrify(delta: float) -> void:

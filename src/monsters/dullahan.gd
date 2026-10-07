@@ -248,6 +248,7 @@ func _tick_danger(delta: float, can_move: bool = true) -> void:
 		var away := global_position - hero.global_position if is_instance_valid(hero) else Vector2.RIGHT
 		if away.length_squared() >= float(DANGER.escape_distance) * float(DANGER.escape_distance) or global_position.distance_squared_to(escape_target) <= 16.0 * 16.0 or state_timer <= 0.0:
 			danger_state = 2
+			COMBAT_STATUS_EFFECT_VISUAL.show_on(self, "dullahan_regen")
 			state_timer = float(DANGER.rest_duration)
 			rest_heal_elapsed = 0.0
 			rest_heal_total = maxi(int(round(max_hp * float(DANGER.recover_hp_ratio))) - current_hp, 0)

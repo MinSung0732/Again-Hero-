@@ -184,6 +184,7 @@ func try_cast_elite_skill(skill: Dictionary) -> bool:
 		if not _teleport_near(target, -facing):
 			return false
 		visual.play_attack()
+		COMBAT_STATUS_EFFECT_VISUAL.show_on(target, "succubus_cut", facing.x < 0.0)
 		_deal_hit(target, int(round(attack_damage * float(skill.damage_multiplier))))
 		return true
 	if String(skill.get("kind", "")) == "waltz":

@@ -87,7 +87,9 @@ func _apply_buff(target: Node2D, kind: int) -> void:
 			var missing := maxi(int(target.get("max_hp")) - int(target.get("current_hp")),0)
 			var amount := int(round(missing * float(BEHAVIOR.BUFF.heal_missing_ratio) * float(config.get("effect_multiplier",1.0))))
 			if target.has_method("heal_direct"):
-				target.call("heal_direct",amount)
+				var recovered := int(target.call("heal_direct",amount))
+				if recovered > 0:
+					COMBAT_STATUS_EFFECT_VISUAL.show_on(target, "support_heal")
 		2:
 			combat_authority.support_buff_runtime.apply_agility(target,float(BEHAVIOR.BUFF.duration),float(BEHAVIOR.BUFF.speed_ratio))
 
