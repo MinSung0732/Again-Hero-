@@ -23,6 +23,7 @@ const ORDER := [
 	"succubus",
 	"wolf",
 	"yuki_onna",
+	"zeus",
 ]
 
 const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd")
@@ -30,6 +31,15 @@ const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd"
 const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const MONSTERS := {
+	"zeus": {
+		"id": "zeus", "name": "제우스", "rarity": "transcendent", "grade": "transcendent",
+		"default_unlocked": false, "combat_enabled": false,
+		"can_be_elite": false, "can_be_giant": false,
+		"description": "초월 제우스. 첫 획득 즉시 해금 및 프로필 초상화·배너 제공. 수집·등록 준비 단계이며 전투 능력은 추후 적용됩니다.",
+		"card_icon_path": "res://assets/art/Transcendent_monster/zeus/frames/idle_01.png",
+		"base_stats": {}, "special_augment_ids": [],
+		"scene": preload("res://src/monsters/ZeusPreview.tscn"),
+	},
 	"yuki_onna": {
 		"id":"yuki_onna","name":"설녀","role":"control","family":"yuki_onna","species":"humanoid","grade":"rare","rarity":"rare","attack_type":"ranged",
 		"base_cost":5.5,"summon_exp":5.5,"default_unlocked":false,
@@ -857,6 +867,7 @@ const ATTACK_TYPE_LABELS := {
 }
 
 const GRADE_LABELS := {
+	"transcendent": "초월",
 	"rare": "희귀",
 	"legendary": "전설",
 	"advanced": "고급",

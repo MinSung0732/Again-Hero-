@@ -92,7 +92,7 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var shop_result_close_button: Button = $ShopResultOverlay/Panel/Margin/VBox/Header/CloseButton
 @onready var shop_rates_overlay: Control = $ShopRatesOverlay
 @onready var shop_rates_panel: PanelContainer = $ShopRatesOverlay/Panel
-@onready var shop_rates_text: Label = $ShopRatesOverlay/Panel/Margin/VBox/RatesPanel/Margin/Rates
+@onready var shop_rates_text: Label = $ShopRatesOverlay/Panel/Margin/VBox/RatesPanel/Margin/Scroll/Rates
 @onready var shop_rates_close_button: Button = $ShopRatesOverlay/Panel/Margin/VBox/Header/CloseButton
 @onready var shop_banner_slide: Control = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide
 @onready var shop_banner_badge: Label = $SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerTop/Badge
@@ -228,6 +228,7 @@ var shop_banner_index: int = 0
 var shop_banner_timer: float = SHOP_BANNER_AUTO_SECONDS
 var shop_last_result_text: String = ""
 var shop_summon_history: Array = []
+var _shop_reveal_pickup_id := ""
 var gacha_reveal_overlay: GachaRevealOverlay
 var _shop_scroll_touch_index: int = -1
 var _detail_scroll_touch_index := -1
@@ -2397,7 +2398,7 @@ func _setup_gacha_reveal_overlay() -> void:
 	gacha_reveal_overlay = GACHA_REVEAL_OVERLAY.new()
 	gacha_reveal_overlay.name = "GachaRevealOverlay"
 	add_child(gacha_reveal_overlay)
-	gacha_reveal_overlay.retry_requested.connect(_open_monster_boxes)
+	gacha_reveal_overlay.retry_requested.connect(_retry_monster_boxes)
 	gacha_reveal_overlay.confirmed.connect(func():
 		if TutorialFlow.step == "draw_done" and TutorialFlow.locks_lobby():
 			TutorialFlow.draw_presented())
@@ -2904,35 +2905,7 @@ func _rebuild_shop_list() -> void:
 	shop_relic_single_button.text = "유물 소환 1회\n준비 중"
 	shop_relic_multi_button.text = "유물 소환 10+1회\n준비 중"
 
-	var rate_lines: PackedStringArray = []
-	for raw_rarity in SHOP_CATALOG.RARITY_ORDER:
-		var rarity_id := String(raw_rarity)
-		var rarity_data := SHOP_CATALOG.get_rarity(rarity_id)
-		if rarity_data.is_empty():
-			continue
-
-		var min_shards := int(rarity_data.get("shard_min", 1))
-		var max_shards := int(rarity_data.get("shard_max", min_shards))
-		var shard_text := (
-			"%d" % min_shards
-			if min_shards == max_shards
-			else "%d~%d" % [min_shards, max_shards]
-		)
-		rate_lines.append(
-			"%s 목표 %.0f%% · 조각 %s" % [
-				SHOP_CATALOG.get_rarity_label(rarity_id),
-				float(rarity_data.get("weight", 0.0)),
-				shard_text,
-			]
-		)
-		if SHOP_CATALOG.get_monster_pool(rarity_id).is_empty():
-			rate_lines[-1] += " · 제작 준비 중"
-		else:
-			rate_lines[-1] += " · 현재 %.0f%%" % SHOP_CATALOG.get_effective_probability(rarity_id)
-		if bool(rarity_data.get("unlock_on_first_draw", false)):
-			rate_lines[-1] += "\n첫 획득 즉시 해금 · 이후 조각 지급"
-
-	shop_rates_text.text = "\n\n".join(rate_lines)
+	shop_rates_text.text = _build_shop_rate_text()
 	shop_status_label.text = "로컬 테스트 · 골드 차감 없음" if LocalTestMode.active else "소환 비용만큼 골드가 사용됩니다."
 	shop_history_button.disabled = shop_last_result_text.is_empty()
 	shop_history_button.mouse_filter = (
@@ -2944,6 +2917,21 @@ func _rebuild_shop_list() -> void:
 	shop_banner_timer = SHOP_BANNER_AUTO_SECONDS
 	_refresh_shop_banner()
 	_rebuild_shop_packages()
+
+
+func _build_shop_rate_text(pickup_id: String = "") -> String:
+	var lines := PackedStringArray()
+	if not pickup_id.is_empty():
+		lines.append("픽업: %s · 초월 내 가중치 3배\n초월 등급 확률 0.5%%는 일반 소환과 같습니다." % MONSTER_CATALOG.get_monster_name(pickup_id))
+	for rarity in SHOP_CATALOG.RARITY_ORDER:
+		var probability := SHOP_CATALOG.get_effective_probability(rarity)
+		var data := SHOP_CATALOG.get_rarity(rarity)
+		lines.append("%s %.3f%% · 조각 %d~%d" % [SHOP_CATALOG.get_rarity_label(rarity), probability, data.get("shard_min", 1), data.get("shard_max", 1)])
+		for id in SHOP_CATALOG.get_monster_pool(rarity):
+			lines.append("  %s %.3f%%" % [MONSTER_CATALOG.get_monster_name(id), SHOP_CATALOG.get_monster_probability(id, pickup_id)])
+		if bool(data.get("unlock_on_first_draw", false)):
+			lines.append("첫 획득 즉시 해금 · 이후 조각 지급")
+	return "\n".join(lines)
 
 
 func _show_shop_result_modal() -> void:
@@ -2959,7 +2947,8 @@ func _close_shop_result_modal() -> void:
 		shop_result_overlay.hide()
 
 
-func _show_shop_rates_modal() -> void:
+func _show_shop_rates_modal(pickup_id: String = "") -> void:
+	shop_rates_text.text = _build_shop_rate_text(pickup_id)
 	_close_shop_result_modal()
 	shop_rates_overlay.show()
 
@@ -3025,6 +3014,7 @@ func _get_shop_gold() -> int:
 	return SHOP_CATALOG.TEST_GOLD if LocalTestMode.active else STAGE_PROGRESS.get_gold()
 
 func _refresh_shop_summon_buttons() -> void:
+	_shop_pickup_view.refresh()
 	var gold := _get_shop_gold()
 	for pair in [[shop_single_button, SHOP_CATALOG.SINGLE_DRAW_COST], [shop_multi_button, SHOP_CATALOG.MULTI_DRAW_COST]]:
 		var button := pair[0].get_node_or_null("SummonButton") as Button
@@ -3037,7 +3027,14 @@ func _refresh_shop_summon_buttons() -> void:
 		button.mouse_default_cursor_shape = Control.CURSOR_ARROW if button.disabled else Control.CURSOR_POINTING_HAND
 
 
-func _open_monster_boxes(draw_count: int) -> void:
+func _retry_monster_boxes(draw_count: int) -> void:
+	_open_monster_boxes(draw_count, _shop_reveal_pickup_id)
+
+func _open_monster_boxes(draw_count: int, pickup_id: String = "") -> void:
+	if not pickup_id.is_empty():
+		var pickup := preload("res://src/data/pickup_catalog.gd")
+		if not pickup.can_draw() or pickup_id != String(pickup.current().get("monster_id", "")) or TutorialFlow.locks_lobby():
+			return
 	if TutorialFlow.locks_lobby() and (not TutorialFlow.tutorial_draw_pending() or draw_count != SHOP_CATALOG.MULTI_DRAW_COUNT):
 		return
 	if draw_count != 1 and draw_count != SHOP_CATALOG.MULTI_DRAW_COUNT:
@@ -3055,7 +3052,7 @@ func _open_monster_boxes(draw_count: int) -> void:
 	var rolls: Array = []
 
 	for _draw_index in range(draw_count):
-		var roll := _roll_monster_shard()
+		var roll := _roll_monster_shard(pickup_id)
 		if roll.is_empty():
 			shop_status_label.text = "소환 데이터 오류 · 보상은 지급되지 않았습니다."
 			return
@@ -3064,6 +3061,7 @@ func _open_monster_boxes(draw_count: int) -> void:
 	if not bool(batch.get("success", false)):
 		shop_status_label.text = "소환 보상 저장 실패 · 저장 공간을 확인해 주세요."
 		return
+	_shop_reveal_pickup_id = pickup_id
 	monster_collection_state = batch.state
 	for history_entry in batch.awards:
 		var monster_id := String(history_entry.monster_id)
@@ -3089,7 +3087,7 @@ func _open_monster_boxes(draw_count: int) -> void:
 			gacha_reveal_overlay._retry_draw_count = 0
 			TutorialFlow.draw_started()
 
-func _roll_monster_shard() -> Dictionary:
+func _roll_monster_shard(pickup_id: String = "") -> Dictionary:
 	var rarity_id := _roll_shop_rarity()
 	if rarity_id.is_empty():
 		return {}
@@ -3099,9 +3097,7 @@ func _roll_monster_shard() -> Dictionary:
 	if candidates.is_empty():
 		return {}
 
-	var selected_id := String(
-		candidates[randi_range(0, candidates.size() - 1)]
-	)
+	var selected_id := SHOP_CATALOG.roll_monster(rarity_id, randf(), pickup_id)
 	var rarity_data := SHOP_CATALOG.get_rarity(rarity_id)
 	var min_shards := maxi(int(rarity_data.get("shard_min", 1)), 1)
 	var max_shards := maxi(int(rarity_data.get("shard_max", min_shards)), min_shards)
@@ -3110,7 +3106,8 @@ func _roll_monster_shard() -> Dictionary:
 		"monster_id": selected_id,
 		"rarity": rarity_id,
 		"shards": randi_range(min_shards, max_shards),
-		"source": "summon",
+		"source": "pickup" if not pickup_id.is_empty() else "summon",
+		"pickup_id": pickup_id,
 	}
 
 func _roll_shop_rarity() -> String:
@@ -4002,6 +3999,8 @@ func _build_normal_detail_text(
 	data: Dictionary,
 	stats: Dictionary
 ) -> String:
+	if not bool(data.get("combat_enabled", true)):
+		return "[center][color=#f0cb68]초월 · 전투 능력 준비 중[/color]\n\n%s[/center]" % data.get("description", "")
 	var lines: PackedStringArray = []
 	var identity_parts: PackedStringArray = [
 		MONSTER_CATALOG.get_grade_label(String(data.get("grade", "normal"))),

@@ -736,7 +736,7 @@ func _cache_demon_ultimate_runtime_data() -> void:
 
 func _start_battle() -> void:
 	var registered_id := TRANSCENDENCE_STORE.load_id()
-	transcendence.configure(registered_id, TRANSCENDENCE_DATA.get_rules(registered_id))
+	transcendence.configure(registered_id, TRANSCENDENCE_DATA.get_rules(registered_id) if bool(MONSTER_CATALOG.MONSTERS.get(registered_id, {}).get("combat_enabled", true)) else {})
 	transcendence_changed.emit(registered_id, false, false)
 	battle_over = false
 	elite_monster_skill_runtime.reset()
@@ -1183,6 +1183,9 @@ func try_summon_transcendent() -> bool:
 	return _perform_summon(id, _get_auto_spawn_position(), cost, false)
 
 func _can_attempt_summon(monster_type: String, transcendence_attempt: bool = false) -> bool:
+	if not bool(MONSTER_CATALOG.MONSTERS.get(monster_type, {}).get("combat_enabled", true)):
+		summon_result.emit(monster_type, false, "전투 능력을 준비 중인 몬스터입니다.")
+		return false
 	if battle_over:
 		summon_result.emit(monster_type, false, "전투가 종료되어 소환할 수 없습니다.")
 		return false
@@ -1908,6 +1911,8 @@ func _spawn_monster(
 	split_child: bool = false,
 	spawn_modifiers: Dictionary = {}
 ):
+	if not bool(MONSTER_CATALOG.MONSTERS.get(monster_type, {}).get("combat_enabled", true)):
+		return null
 	var scene := MONSTER_CATALOG.get_scene(monster_type)
 	if TRANSCENDENCE_DATA.is_transcendent(monster_type):
 		if not bool(spawn_modifiers.get("transcendence_summon",false)) or monster_type != transcendence.monster_id or not transcendence.ready or transcendence.used:

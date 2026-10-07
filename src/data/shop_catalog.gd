@@ -1,6 +1,7 @@
 extends RefCounted
 class_name ShopCatalog
 
+const PICKUP := preload("res://src/data/pickup_catalog.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
 static var _rarity_pools: Dictionary = {}
 
@@ -233,3 +234,35 @@ static func roll_rarity(unit_roll: float) -> String:
 		if roll < cumulative:
 			return id
 	return last
+
+# Stage 1 selects rarity; stage 2 normalizes weights within that rarity.
+# Pickup boosts only the featured transcendent, never the 0.5% rarity chance.
+static func monster_weight(id: String, pickup_id: String = "") -> float:
+	return PICKUP.FEATURED_WEIGHT if not pickup_id.is_empty() and id == pickup_id and MONSTERS.get_rarity(id) == "transcendent" else 1.0
+
+static func roll_monster(rarity: String, unit_roll: float, pickup_id: String = "") -> String:
+	return weighted_id(get_monster_pool(rarity), unit_roll, pickup_id)
+
+static func weighted_id(pool: Array, unit_roll: float, pickup_id: String = "") -> String:
+	if pool.is_empty():
+		return ""
+	var total := 0.0
+	for id in pool:
+		total += monster_weight(String(id), pickup_id)
+	var roll := clampf(unit_roll, 0.0, 1.0) * total
+	var cumulative := 0.0
+	for id in pool:
+		cumulative += monster_weight(String(id), pickup_id)
+		if roll < cumulative:
+			return String(id)
+	return String(pool[-1])
+
+static func get_monster_probability(id: String, pickup_id: String = "") -> float:
+	var rarity := MONSTERS.get_rarity(id)
+	var pool := get_monster_pool(rarity)
+	if id not in pool:
+		return 0.0
+	var total := 0.0
+	for candidate in pool:
+		total += monster_weight(String(candidate), pickup_id)
+	return get_effective_probability(rarity) * monster_weight(id, pickup_id) / total if total > 0.0 else 0.0

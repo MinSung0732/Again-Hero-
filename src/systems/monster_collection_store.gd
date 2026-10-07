@@ -274,7 +274,7 @@ static func _apply_draw_reward(entry: Dictionary, roll: Dictionary, rarity: Dict
 	var was_unlocked := bool(entry.get("unlocked", false))
 	var first_unlock := (
 		not was_unlocked
-		and String(roll.get("source", "")) == "summon"
+		and String(roll.get("source", "")) in ["summon", "pickup"]
 		and bool(rarity.get("unlock_on_first_draw", false))
 	)
 	var amount := int(roll.get("shards", 0))

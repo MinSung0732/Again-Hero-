@@ -144,9 +144,12 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 	details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(details)
 	label(details,"초월 · " + lobby.MONSTER_CATALOG.get_monster_name(id),24)
-	label(details,"Lv.%d · 코스트 %.1f" % [COLLECTION.get_upgrade_level(id,state),lobby.MONSTER_CATALOG.get_base_cost(id)],20)
+	if not bool(lobby.MONSTER_CATALOG.MONSTERS[id].get("combat_enabled", true)):
+		label(details,"Lv.%d · 전투 능력 준비 중" % COLLECTION.get_upgrade_level(id,state),20)
+	else:
+		label(details,"Lv.%d · 코스트 %.1f" % [COLLECTION.get_upgrade_level(id,state),lobby.MONSTER_CATALOG.get_base_cost(id)],20)
 	label(details,"전투 중 1회 소환",20).add_theme_color_override("font_color",Color("f0cb68"))
-	label(box,"해금: " + DATA.describe(id),20)
+	label(box,"전투 소환 준비 중" if not bool(lobby.MONSTER_CATALOG.MONSTERS[id].get("combat_enabled", true)) else "해금: " + DATA.describe(id),20)
 	if not registered_card:
 		label(box,"조각 %d / %d" % [COLLECTION.get_shards(id,state),lobby.MONSTER_CATALOG.get_shards_required(id)],20)
 	var actions := HBoxContainer.new()
