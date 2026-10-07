@@ -59,9 +59,18 @@ func install(host: Control) -> void:
 	content.add_theme_constant_override("separation",16)
 	layout.add_child(content)
 	layout.move_child(content,layout.get_node("ModeTabs").get_index()+1)
-	heading = label(content,"◇  등록된 초월 몬스터  0 / 1  ◇",26)
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	registered = panel(content,true)
+	# Replace the slot contents inside the shared equipped area, keeping the
+	# guide, summary and mode tabs at the same positions in every mode.
+	var equipped := layout.get_node("EquippedArea/Margin/Content") as VBoxContainer
+	heading = equipped.get_node("EquippedHeading") as Label
+	registered = VBoxContainer.new()
+	registered.name = "TranscendenceRegistered"
+	registered.custom_minimum_size.y = 244.0
+	registered.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	registered.alignment = BoxContainer.ALIGNMENT_CENTER
+	registered.add_theme_constant_override("separation",16)
+	equipped.add_child(registered)
+	registered.hide()
 	var guide := panel(content)
 	label(guide,"초월 몬스터는 일반 팀 편성에 등장하지 않습니다.",22)
 	label(guide,"전투 중 개체별 조건을 달성하면 오른쪽에서 소환 버튼이 나타납니다. 전투당 한 번만 소환할 수 있습니다.",22)
@@ -89,7 +98,9 @@ func refresh(showing: bool) -> void:
 	tab.add_theme_stylebox_override("disabled",lobby.PIXEL_PANEL_SKIN.button_style(lobby.primary_button_style))
 	tab.add_theme_color_override("font_disabled_color",Color("fff0d2"))
 	tab.disabled = showing
-	for name in ["EquippedArea","Guide","Summary","ListHeader","UnlockFilters","MonsterScroll","Status"]:
+	registered.visible = showing
+	layout.get_node("EquippedArea/Margin/Content/SlotRow").visible = not showing
+	for name in ["ListHeader","UnlockFilters","MonsterScroll","Status"]:
 		layout.get_node(name).visible = not showing
 	if showing:
 		layout.get_node("EmptyCollection").hide()
@@ -103,7 +114,7 @@ func refresh(showing: bool) -> void:
 	var selected := STORE.load_id()
 	heading.text = "◇  등록된 초월 몬스터  %d / 1  ◇" % (0 if selected.is_empty() else 1)
 	if selected.is_empty():
-		label(registered,"등록된 초월 몬스터 없음",26).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label(registered,"등록된 초월몬스터가 없습니다",28).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label(registered,"아래 목록에서 한 종류를 등록하세요.",22).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	else:
 		_build_card(registered,selected,selected,true)
