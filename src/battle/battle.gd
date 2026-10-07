@@ -216,6 +216,8 @@ var demon_build_counts: Dictionary = {}
 var demon_last_candidate_ids: Array[String] = []
 var demon_special_augments: Array[String] = []
 var monster_augment_modifiers: Dictionary = {}
+var special_augment_cache_ids: Array[String] = []
+var special_augment_config_cache: Dictionary = {}
 
 var monster_summon_costs: Dictionary = {}
 var permanent_research_levels: Dictionary = {}
@@ -803,6 +805,8 @@ func _start_battle() -> void:
 	demon_last_candidate_ids.clear()
 	demon_special_augments.clear()
 	monster_augment_modifiers.clear()
+	special_augment_cache_ids.clear()
+	special_augment_config_cache.clear()
 	mutation_director.reset()
 	monster_summon_costs.clear()
 	_load_monster_collection_upgrades()
@@ -2190,7 +2194,9 @@ func _unregister_monster(instance_id: int) -> void:
 	active_monsters.erase(instance_id)
 
 func _monster_population_limit_reached(monster_id: String) -> bool:
-	for config in _get_special_augment_config(monster_id).values():
+	var configs := _get_special_augment_config(monster_id)
+	for effect_type in configs:
+		var config: Dictionary = configs[effect_type]
 		var limit := int(config.get("max_population", 0))
 		if limit > 0 and int(monster_population_counts.get(monster_id, 0)) >= limit:
 			return true
@@ -2198,7 +2204,9 @@ func _monster_population_limit_reached(monster_id: String) -> bool:
 
 func _get_special_stat_multiplier(monster_id: String, key: String) -> float:
 	var multiplier := 1.0
-	for config in _get_special_augment_config(monster_id).values():
+	var configs := _get_special_augment_config(monster_id)
+	for effect_type in configs:
+		var config: Dictionary = configs[effect_type]
 		multiplier *= float(config.get("stat_multipliers", {}).get(key, 1.0))
 	return multiplier
 
@@ -4258,7 +4266,7 @@ func choose_demon_augment(augment_id: String) -> bool:
 			return false
 		demon_special_augments.append(augment_id)
 		run_metrics.record_special_augment_acquired()
-		_refresh_alive_monsters_for_augments()
+		_refresh_monsters_for_selected_augment(augment)
 	else:
 		var current_stack := int(demon_build_counts.get(augment_id, 0))
 		var max_stack := int(augment.get("max_stack", 0))
@@ -4268,7 +4276,7 @@ func choose_demon_augment(augment_id: String) -> bool:
 		_apply_demon_augment(augment)
 		demon_build_counts[augment_id] = current_stack + 1
 		_rebuild_monster_augment_modifiers_from_build_counts()
-		_refresh_alive_monsters_for_augments()
+		_refresh_monsters_for_selected_augment(augment)
 
 	demon_pending_augments = maxi(demon_pending_augments - 1, 0)
 	if not demon_pending_augment_levels.is_empty():
@@ -4404,16 +4412,25 @@ func _get_selected_special_augment_ids_for_monster(
 func _get_special_augment_config(
 	monster_id: String
 ) -> Dictionary:
-	var result: Dictionary = {}
-	for augment_id in _get_selected_special_augment_ids_for_monster(monster_id):
-		var augment := DEMON_AUGMENTS.get_augment(augment_id)
-		var effect_type := String(augment.get("effect_type", ""))
-		if effect_type.is_empty():
-			continue
-		result[effect_type] = Dictionary(
-			augment.get("effect_values", {})
-		).duplicate(true)
-	return result
+	# Also detects direct assignment by debug tools/tests and same-size changes.
+	if special_augment_cache_ids != demon_special_augments:
+		special_augment_cache_ids.assign(demon_special_augments)
+		special_augment_config_cache.clear()
+		for augment_id in demon_special_augments:
+			var augment := DEMON_AUGMENTS.get_augment(augment_id)
+			var owner_id := String(augment.get("monster_id", ""))
+			var effect_type := String(augment.get("effect_type", ""))
+			if owner_id.is_empty() or effect_type.is_empty():
+				continue
+			if not special_augment_config_cache.has(owner_id):
+				special_augment_config_cache[owner_id] = {}
+			special_augment_config_cache[owner_id][effect_type] = Dictionary(
+				augment.get("effect_values", {})
+			).duplicate(true)
+	if not special_augment_config_cache.has(monster_id):
+		special_augment_config_cache[monster_id] = {}
+	# Internal read-only view. Actor configuration receives its own deep copy.
+	return special_augment_config_cache[monster_id]
 
 func _apply_special_augments_to_monster(
 	monster: Node,
@@ -4421,27 +4438,76 @@ func _apply_special_augments_to_monster(
 ) -> void:
 	if not is_instance_valid(monster):
 		return
-	var configs := {} if bool(monster.get_meta("exclude_all_augments", false)) else _get_special_augment_config(monster_id)
+	var configs := {} if bool(monster.get_meta("exclude_all_augments", false)) else _get_special_augment_config(monster_id).duplicate(true)
 	monster.set_meta("special_augment_configs", configs)
 	if monster.has_method("configure_special_augments"):
 		monster.call("configure_special_augments", configs)
 
-func _refresh_alive_monsters_for_augments() -> void:
+func _refresh_monsters_for_selected_augment(augment: Dictionary) -> void:
+	var affected_ids: Array[String] = []
+	if String(augment.get("augment_type", "")) == DEMON_AUGMENTS.TYPE_SPECIAL:
+		var owner_id := String(augment.get("monster_id", ""))
+		if not owner_id.is_empty():
+			affected_ids.append(owner_id)
+	else:
+		for effect in augment.get("effects", []):
+			var op := String(effect.get("op", ""))
+			if op == "monster_multiplier":
+				# Cost is consumed by summon pricing, not existing combat stats.
+				if String(effect.get("stat", "")) == "cost":
+					continue
+				var owner_id := String(effect.get("monster_id", ""))
+				if not owner_id.is_empty() and owner_id not in affected_ids:
+					affected_ids.append(owner_id)
+			elif op == "add_runtime" or op == "multiply_runtime":
+				# Future global runtime effects keep the full-refresh fallback.
+				if String(effect.get("target", "")) in [
+					"command_regen_per_second", "death_refund_ratio",
+					"summon_cost_multiplier", "demon_exp_gain_multiplier",
+				]:
+					continue
+				_refresh_alive_monsters_for_augments()
+				return
+			elif op != "add_command_capacity":
+				_refresh_alive_monsters_for_augments()
+				return
+	if not affected_ids.is_empty():
+		_refresh_alive_monsters_for_augments(affected_ids)
+
+
+func _refresh_alive_monsters_for_augments(affected_ids: Array[String] = []) -> void:
+	var shared_profiles: Dictionary = {}
 	for node in _get_active_monsters_snapshot():
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster_id := String(node.get("monster_type"))
-		_apply_normal_augments_to_existing_monster(node, monster_id)
+		if not affected_ids.is_empty() and monster_id not in affected_ids:
+			continue
+		if not shared_profiles.has(monster_id):
+			shared_profiles[monster_id] = _get_augment_refresh_profile(monster_id)
+		_apply_normal_augments_to_existing_monster(node, monster_id, shared_profiles[monster_id])
 		_apply_special_augments_to_monster(node, monster_id)
+
+
+func _get_augment_refresh_profile(monster_id: String) -> Dictionary:
+	return {
+		"rarity": MONSTER_CATALOG.get_rarity_combat_profile(monster_id),
+		"collection_hp": _get_monster_collection_upgrade_multiplier(monster_id, "hp_per_level"),
+		"collection_damage": _get_monster_collection_upgrade_multiplier(monster_id, "damage_per_level"),
+	}
+
 
 func _apply_normal_augments_to_existing_monster(
 	monster: Node,
-	monster_id: String
+	monster_id: String,
+	shared_profile: Dictionary = {}
 ) -> void:
 	if bool(monster.get_meta("exclude_all_augments", false)):
 		return
 	var runtime_variant: Dictionary = monster.get_meta("runtime_variant_stats", {})
-	var rarity_combat := MONSTER_CATALOG.get_rarity_combat_profile(monster_id)
+	if shared_profile.is_empty():
+		shared_profile = _get_augment_refresh_profile(monster_id)
+	var rarity_combat: Dictionary = shared_profile["rarity"]
 	var rarity_hp_multiplier := maxf(
 		float(rarity_combat.get("hp_multiplier", 1.0)),
 		0.01
@@ -4458,14 +4524,8 @@ func _apply_normal_augments_to_existing_monster(
 		float(rarity_combat.get("attack_cooldown_multiplier", 1.0)),
 		0.01
 	)
-	var collection_hp_multiplier := _get_monster_collection_upgrade_multiplier(
-		monster_id,
-		"hp_per_level"
-	)
-	var collection_damage_multiplier := _get_monster_collection_upgrade_multiplier(
-		monster_id,
-		"damage_per_level"
-	)
+	var collection_hp_multiplier := float(shared_profile["collection_hp"])
+	var collection_damage_multiplier := float(shared_profile["collection_damage"])
 
 	var raw_speed = monster.get_meta("augment_raw_move_speed", null)
 	if raw_speed != null:

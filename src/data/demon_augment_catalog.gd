@@ -7,6 +7,9 @@ const TYPE_SPECIAL := "special"
 const NORMAL_MAX_LEVEL := 10
 const SPECIAL_MAX_LEVEL := 1
 
+# Index immutable catalog entries once; callers still receive isolated copies.
+static var augment_lookup: Dictionary = {}
+
 const MONSTER_NAMES := {
 	"succubus":"서큐버스",
 	"scorpion":"전갈",
@@ -577,20 +580,16 @@ static func is_special_level(level: int) -> bool:
 	return level >= 10 and level % 5 == 0
 
 static func get_augment(augment_id: String) -> Dictionary:
-	for augment in NORMAL_AUGMENTS:
-		if String(augment.get("id", "")) == augment_id:
-			return augment.duplicate(true)
-
-	for monster_id in MONSTER_NAMES:
-		for augment in get_monster_normal_augments(monster_id, ""):
-			if String(augment.get("id", "")) == augment_id:
-				return augment.duplicate(true)
-
-	for augment in SPECIAL_AUGMENTS:
-		if String(augment.get("id", "")) == augment_id:
-			return augment.duplicate(true)
-
-	return {}
+	if augment_lookup.is_empty():
+		for augment in NORMAL_AUGMENTS:
+			augment_lookup[String(augment.get("id", ""))] = augment
+		for monster_id in MONSTER_NAMES:
+			for augment in get_monster_normal_augments(monster_id, ""):
+				augment_lookup[String(augment.get("id", ""))] = augment
+		for augment in SPECIAL_AUGMENTS:
+			augment_lookup[String(augment.get("id", ""))] = augment
+	var found: Dictionary = augment_lookup.get(augment_id, {})
+	return found.duplicate(true)
 
 static func get_monster_normal_augments(
 	monster_id: String,
