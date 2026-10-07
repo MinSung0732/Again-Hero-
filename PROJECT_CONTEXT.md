@@ -1,3 +1,6 @@
+## Lobby First Reward Layout (2026-10-07)
+- Stage card EntryInfoBacking vertical anchors0.295..0.575 and reward label0.320..0.550 accommodate three lines (title/gold/research), preserving17px text and existing claim copy. Native Windows portrait540x960/360x800 checks cover all four independent gold/research claim states with8px interior clearance. Android unverified.
+
 ## Yuki-onna / Shared Slow and Chill (2026-10-07)
 - Rare humanoid ranged control cost5.5; baseHP100/speed100/damage12/radius200/interval1.6/projectile250/EXP30. Accepted HP/shield hit adds shared target10% multiplicative slow, cap10/15, refreshed5s. Independent from existing ordinary slow; Hero effective movement helper covers every movement path. Damageable summoned units reset metadata/FX and increment life generation on activation; stale pooled-life entries cannot leak status. HP-less immune summons excluded.
 - Deaths within250 grant allied Yuki independently expiring5s chill, cap5/8. Each stack attack rate1.10, projectile speed1.05, slow strength1.02. Fixed8 timers, powers only on count change; actual-alpha-sized four-frame freezing FX. Three specials: eternal chill cap+3, endless winter slow cap+5, threefold snow fan center/±15 degrees. Normal/elite uploaded art and8-frame projectile caches prewarmed; projectile pool and weak source snapshots survive caster deletion.

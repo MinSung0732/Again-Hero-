@@ -1733,9 +1733,9 @@ func _install_stage_entry_hud() -> void:
 		info_backing.name = "EntryInfoBacking"
 		info_backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		info_backing.anchor_left = 0.035
-		info_backing.anchor_top = 0.315
+		info_backing.anchor_top = 0.295
 		info_backing.anchor_right = 0.965
-		info_backing.anchor_bottom = 0.565
+		info_backing.anchor_bottom = 0.575
 		info_backing.add_theme_stylebox_override(
 			"panel",
 			_make_hud_panel_style(
@@ -1789,9 +1789,9 @@ func _install_stage_entry_hud() -> void:
 	stage_status_label.anchor_right = 0.320
 	stage_status_label.anchor_bottom = 0.525
 	stage_reward_label.anchor_left = 0.370
-	stage_reward_label.anchor_top = 0.355
+	stage_reward_label.anchor_top = 0.320
 	stage_reward_label.anchor_right = 0.630
-	stage_reward_label.anchor_bottom = 0.525
+	stage_reward_label.anchor_bottom = 0.550
 	stage_status_label.clip_text = true
 	stage_reward_label.clip_text = true
 
