@@ -36,14 +36,25 @@ func run() -> void:
 	owner.add_child(button)
 	var count: int = audio.ui_bank.played_count
 	button.pressed.emit()
-	check(audio.ui_bank.played_count == count+1, "newly-created button is audible")
+	await process_frame
+	check(audio.ui_bank.played_count == count, "unmarked buttons including popup close are silent")
+	button.set_meta("audio_cue", "click")
+	button.pressed.emit()
+	await process_frame
+	check(audio.ui_bank.played_count == count+1, "explicit selection button has quiet feedback")
+	button.pressed.emit()
+	await process_frame
+	check(audio.ui_bank.played_count == count+1, "rapid selection presses are coalesced")
 	button.mouse_entered.emit()
 	check(audio.ui_bank.played_count == count+1, "hover stays silent")
 	owner.remove_child(button)
 	owner.add_child(button)
 	check(button.pressed.get_connections().size() == 1, "reparented UI retains one audio connection")
+	audio.ui_bank.stop_all()
+	button.pressed.emit()
 	audio.feedback("upgrade")
-	check(not audio.ui_bank.players.click.playing, "committed success replaces generic click")
+	await process_frame
+	check(not audio.ui_bank.players.click.playing and audio.ui_bank.players.upgrade.playing, "committed action suppresses deferred generic press")
 	var battle := BattleStub.new()
 	root.add_child(battle)
 	audio.attach_battle(battle)
@@ -92,6 +103,13 @@ func run() -> void:
 	battle.battle_over = true
 	audio.battle_result(owner, true)
 	check(audio.ui_bank.players.victory.playing and not audio.battle_bank.players.ultimate.playing and audio.music_mode == "result", "battle-over permits result cue and clears combat sound")
+	count = audio.ui_bank.played_count
+	audio.battle_result(owner, true)
+	check(audio.ui_bank.played_count == count, "repeated result callback does not replay jingle")
+	audio.result_owner = null
+	audio.battle_result(owner, false)
+	check(audio.ui_bank.players.defeat.playing and not audio.ui_bank.players.victory.playing, "user-selected defeat plays once and replaces victory")
+
 	audio._notification(Node.NOTIFICATION_APPLICATION_PAUSED)
 	audio._process(0.1)
 	check(audio.music.stream_paused, "background holds music")

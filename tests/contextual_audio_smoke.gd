@@ -45,6 +45,7 @@ func run() -> void:
 		check(player.bus == &"SFX" and player.pitch_scale == 1.0 and player.max_polyphony == 1,stage+": natural pitch, fixed voice, independent SFX")
 		var children: int = player_count(actor)
 		check(actor.take_damage(5) and player.playing,stage+": actual damage dispatch plays body hit")
+		check(actor.contextual_hit_next_ms-Time.get_ticks_msec() >= 600 and player.stream.get_length() <= 0.121 and player.volume_db == -21.0,stage+": short quiet damage feedback with sparse cadence")
 		var deadline: int = actor.contextual_hit_next_ms
 		actor.take_followup_damage(5)
 		check(actor.contextual_hit_next_ms == deadline and player_count(actor) == children,stage+": rapid hits neither restart nor allocate")
@@ -62,6 +63,14 @@ func run() -> void:
 			reset_hit(actor)
 			actor.shield_hp = 1
 			check(actor.take_damage(5) and actor.magic_block_audio.playing and not player.playing,"breaking magical shield retains pre-impact material")
+		if actor.hero_archetype == "rogue_combo":
+			actor.rogue_combo_audio_next_ms = 0
+			actor._play_rogue_combo_audio(3)
+			var cursor: int = actor.rogue_combo_audio_cursor
+			actor._play_rogue_combo_audio(0)
+			check(actor.rogue_combo_audio_cursor == cursor and actor.rogue_combo_audio_pool[0].pitch_scale == 1.0 and actor.rogue_combo_audio_pool[0].stream.get_length() <= .161,"rogue attacks have no pitch ladder or overlapping long tails")
+			actor._play_rogue_blade_storm_audio()
+			check(actor.rogue_blade_storm_audio.playing,"major rogue skill remains audible")
 		if actor.hero_archetype == "pistol_gunner":
 			actor._start_gunner_deadeye()
 			check(actor.gunner_deadeye_start_audio.playing and actor.gunner_deadeye_start_audio.stream.resource_path == DATA.ROOT+"deadeye_cock.wav","actual Deadeye start uses mechanical cock instead of sword")
@@ -83,8 +92,8 @@ func run() -> void:
 	audio._demon_progression(2,10,100)
 	check(audio.ui_bank.played_count == count+1,"ordinary EXP progress doesn't play level cue")
 	audio.feedback("denied")
-	audio.feedback("defeat")
-	check(audio.ui_bank.played_count == count+1,"out-of-theme negative jingles deliberately omitted")
+	check(audio.ui_bank.played_count == count+1,"rejected-action jingle deliberately omitted")
+	check(audio.ui_bank.players.victory.stream.resource_path == DATA.ROOT+"victory.wav" and audio.ui_bank.players.defeat.stream.resource_path == DATA.ROOT+"defeat.wav","user-selected result assets are both connected")
 	if "--mix-capture" in OS.get_cmdline_user_args():
 		var bus := AudioServer.get_bus_index(&"Master")
 		var saved_db := AudioServer.get_bus_volume_db(bus)
@@ -116,6 +125,34 @@ func run() -> void:
 				peak = maxf(peak,maxf(absf(sample.x),absf(sample.y)))
 		check(peak>0.0001 and peak<1,"actual dense SFX output nonzero and unclipped")
 		print("CONTEXT_AUDIO_MIX peak=",peak)
+		for actor in actors:
+			stop_players(actor)
+		audio.ui_bank.stop_all()
+		capture.clear_buffer()
+		var rogue = actors[1]
+		rogue.rogue_combo_audio_next_ms = 0
+		rogue.contextual_hit_next_ms = 0
+		var body_events := 0
+		var attack_events := 0
+		var rogue_peak := 0.0
+		# 20 contact/attack requests per second; audio coalesces without changing damage.
+		for i in range(40):
+			var previous_body: int = rogue.contextual_hit_next_ms
+			var previous_attack: int = rogue.rogue_combo_audio_cursor
+			rogue.invulnerability_timer = 0
+			rogue.take_damage(1)
+			rogue._play_rogue_combo_audio(i%4)
+			if rogue.contextual_hit_next_ms != previous_body:
+				body_events += 1
+			if rogue.rogue_combo_audio_cursor != previous_attack:
+				attack_events += 1
+			if i == 20:
+				rogue._play_rogue_blade_storm_audio()
+			await create_timer(.05).timeout
+			for sample in capture.get_buffer(capture.get_frames_available()):
+				rogue_peak = maxf(rogue_peak,maxf(absf(sample.x),absf(sample.y)))
+		check(body_events <= 4 and attack_events <= 8 and rogue_peak > .0001 and rogue_peak < 1,"Stage2 dense requests retain sparse audible attacks/hits and major skill")
+		print("STAGE2_AUDIO_MIX body_events=",body_events," attack_events=",attack_events," peak=",rogue_peak)
 		AudioServer.remove_bus_effect(bus,index)
 		AudioServer.set_bus_volume_db(bus,saved_db)
 		AudioServer.set_bus_mute(bus,saved_mute)

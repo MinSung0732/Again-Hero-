@@ -113,10 +113,10 @@ const STAGE1_ARCANE_PIERCER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_ar
 const STAGE1_HIT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"mage_hit.wav"
 const STAGE1_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_death_pixabay.mp3"
 const STAGE1_LEVEL_UP_AUDIO_PATH := "res://assets/audio/sfx/level_up_rise07_cc0.mp3"
-const STAGE2_COMBO_SLASH_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_combo_slash_pixabay.mp3"
-const STAGE2_BLADE_STORM_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_blade_storm_pixabay.mp3"
+const STAGE2_COMBO_SLASH_AUDIO_PATH := "res://assets/audio/sfx/contextual/rogue_combo_short.wav"
+const STAGE2_BLADE_STORM_AUDIO_PATH := "res://assets/audio/sfx/contextual/rogue_storm_short.wav"
 const STAGE2_ASSASSINATION_START_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_assassination_start_pixabay.mp3"
-const STAGE2_ASSASSINATION_HIT_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_assassination_hit_pixabay.mp3"
+const STAGE2_ASSASSINATION_HIT_AUDIO_PATH := "res://assets/audio/sfx/contextual/rogue_assassination_short.wav"
 const STAGE2_HIT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"rogue_hit.wav"
 const STAGE2_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_death_pixabay.mp3"
 const STAGE3_SLASH_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_slash_pixabay.mp3"
@@ -571,6 +571,8 @@ var stage1_death_audio: AudioStreamPlayer = null
 var stage1_level_up_audio: AudioStreamPlayer = null
 var rogue_combo_audio_pool: Array[AudioStreamPlayer] = []
 var rogue_combo_audio_cursor: int = 0
+var rogue_combo_audio_next_ms := 0
+var rogue_assassination_audio_next_ms := 0
 var rogue_blade_storm_audio: AudioStreamPlayer = null
 var rogue_assassination_start_audio: AudioStreamPlayer = null
 var rogue_assassination_hit_audio_pool: Array[AudioStreamPlayer] = []
@@ -9207,7 +9209,7 @@ func _ensure_rogue_audio_runtime() -> void:
 			rogue_combo_audio_pool.append(
 				_create_hero_sfx_player(
 					STAGE2_COMBO_SLASH_AUDIO_PATH,
-					HERO_SFX_DB_PRIMARY_ATTACK - 6.0,
+					HERO_SFX_DB_PRIMARY_ATTACK - 10.0,
 					1.0
 				)
 			)
@@ -9216,7 +9218,7 @@ func _ensure_rogue_audio_runtime() -> void:
 		rogue_blade_storm_audio = _create_hero_sfx_player(
 			STAGE2_BLADE_STORM_AUDIO_PATH,
 			HERO_SFX_DB_REGULAR_SKILL,
-			0.92
+			1.0
 		)
 
 	if not is_instance_valid(rogue_assassination_start_audio):
@@ -9231,8 +9233,8 @@ func _ensure_rogue_audio_runtime() -> void:
 			rogue_assassination_hit_audio_pool.append(
 				_create_hero_sfx_player(
 					STAGE2_ASSASSINATION_HIT_AUDIO_PATH,
-					HERO_SFX_DB_HIT,
-					0.98
+					HERO_SFX_DB_HIT - 3.0,
+					1.0
 				)
 			)
 
@@ -9249,7 +9251,9 @@ func _ensure_rogue_audio_runtime() -> void:
 		)
 
 
-func _play_rogue_combo_audio(combo_index: int) -> void:
+func _play_rogue_combo_audio(_combo_index: int) -> void:
+	if Time.get_ticks_msec() < rogue_combo_audio_next_ms:
+		return
 	_ensure_rogue_audio_runtime()
 	if rogue_combo_audio_pool.is_empty():
 		return
@@ -9261,10 +9265,8 @@ func _play_rogue_combo_audio(combo_index: int) -> void:
 	) % rogue_combo_audio_pool.size()
 	if not is_instance_valid(player) or player.stream == null:
 		return
-	var pitch_steps: Array[float] = [1.14, 1.06, 0.98, 0.92]
-	player.pitch_scale = pitch_steps[
-		clampi(combo_index, 0, pitch_steps.size() - 1)
-	]
+	rogue_combo_audio_next_ms = Time.get_ticks_msec()+CONTEXT_AUDIO.ROGUE_ATTACK_INTERVAL_MS
+	player.pitch_scale = 1.0
 	player.stop()
 	player.play()
 
@@ -9287,6 +9289,8 @@ func _play_rogue_assassination_start_audio() -> void:
 
 
 func _play_rogue_assassination_hit_audio() -> void:
+	if Time.get_ticks_msec() < rogue_assassination_audio_next_ms:
+		return
 	_ensure_rogue_audio_runtime()
 	if rogue_assassination_hit_audio_pool.is_empty():
 		return
@@ -9297,6 +9301,7 @@ func _play_rogue_assassination_hit_audio() -> void:
 	rogue_assassination_hit_audio_cursor = (
 		rogue_assassination_hit_audio_cursor + 1
 	) % rogue_assassination_hit_audio_pool.size()
+	rogue_assassination_audio_next_ms = Time.get_ticks_msec()+CONTEXT_AUDIO.ROGUE_ASSASSINATION_INTERVAL_MS
 	if not is_instance_valid(player) or player.stream == null:
 		return
 	player.stop()

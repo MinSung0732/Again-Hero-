@@ -44,3 +44,21 @@ The source action/material and actual event determine the sound. These are 17 ne
 - Godot 4.7.2 actual Stage 1–6 hero profiles: damage dispatch, guard/body separation, shield-breaking contact, status/rejected hits silent, bounded rapid hits, real Deadeye preparation/shot and madness entry. Growth sources differ; ordinary EXP does not trigger level sound.
 - WASAPI actual Master capture with Master/SFX/BGM buses at 0 dB: six hero contacts, existing mage attack and sword swing, existing frontend BGM, growth and 12.5 shots/second. Peak 0.40833277 (-7.78 dBFS), nonzero and unclipped in this sampled interval. Test restores all temporary bus settings without persisting them.
 - GameAudio ownership/pause/buttons/result, lobby settings save/restore, startup transition and Zeus SFX regression checks. Existing raw-image warnings and some fixture resource-leak exit warnings remain. This is event/source/waveform/output verification; subjective listening, full manual gameplay, Android and export are not verified.
+
+
+## 2026-10-08 repetition correction (supersedes mix/cadence above)
+
+User gameplay feedback supersedes source-title matching: automatic all-button beeps were excessive. UI is silent by default, with explicit navigation/selection opt-in. Quiet presses now use the existing interface-confirm recording 126517 at -20dB / 220ms, not the previous 147352 beep. Closing, details, sorting, placeholder actions and sliders remain unmarked/silent. Committed formation is -18dB; successful growth remains event-specific. Deferred presses are suppressed by committed feedback.
+
+Six existing body recordings are now 120ms / lowpass1600Hz / -21dB / 650ms minimum interval. Source IDs are unchanged; manifest SHA/duration/levels are updated. This reduces repetition and tails without changing HP or attack timing.
+
+Rogue combo, storm and assassination now reference offline trimmed sword assets (160/500/180ms) derived from the existing licensed Sword Slash and Swing / DavidDumaisAudio / [185432](https://pixabay.com/sound-effects/film-special-effects-sword-slash-and-swing-185432/). These share an existing source deliberately because they are blade actions; they are not advertised as three new recordings. `repetition_edits.json` records source/output hashes, filters, trim and durations. Combo pitch is fixed at 1.0, with 280ms sound cadence; assassination contacts 220ms. Main skill activation remains audible.
+
+Ordinary monsters have no per-attack or per-hit audio dispatch. Existing occasional elite activations and Zeus basic/major-skill cues are preserved. No generic monster collision sounds were added. Subjective listening and full manual battle verification remain unverified.
+
+
+## User-selected results — 2026-10-08
+
+The earlier victory/defeat descriptions are historical. Current victory is [Gaming victory / 464016](https://pixabay.com/ko/sound-effects/gaming-victory-464016/) by EAGLAXLE, and current defeat is [fail / 234710](https://pixabay.com/ko/sound-effects/영화-및-특수-효과-fail-234710/) by u_8g40a9z0la. Both were explicitly supplied by the user; actual browser pages state free use under Pixabay Content License. Raw files downloaded successfully, decoded to mono44.1k PCM16, full cues retained at natural pitch; no melody substitution. Offline50Hz highpass/limiter and runtime -12/-14dB provide headroom. Result dispatch is once per owner and resets for the next battle. Manifest records source/output hashes, full durations and levels.
+
+Verification for this correction: Godot runtime button opt-in/default silence/rapid coalescing/deferred committed feedback and once-only victory/defeat PASS; actual first six hero damage paths and rogue major-skill retention PASS. WASAPI Master mixture peak 0.37634721; Stage2 40 contact/attack requests in 2s emitted 4 body and 7 attack cues, peak 0.35714665. Separate result/SFX mixture peak 0.17663352. All sampled output unclipped. Startup, lobby settings and Zeus regression PASS; existing fixture resource-in-use exit warnings remain. Full manual gameplay, subjective listening, Android/export not verified. Result files additionally normalized offline to -9dBFS peak; natural timing preserved.

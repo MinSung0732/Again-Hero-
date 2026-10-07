@@ -12,6 +12,7 @@ var fade: Tween
 var suppress_click_until := 0
 var backgrounded := false
 var last_demon_level := 0
+var result_owner: WeakRef
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -45,9 +46,15 @@ func _button_pressed(reference: WeakRef) -> void:
 	var button: BaseButton = reference.get_ref()
 	if not is_instance_valid(button) or button.disabled or Time.get_ticks_msec() < suppress_click_until:
 		return
-	var cue := String(button.get_meta("audio_cue", "click"))
+	var cue := String(button.get_meta("audio_cue", ""))
 	if not cue.is_empty():
-		ui_bank.play_cue(cue)
+		# Run after the action so committed feedback can suppress this press.
+		call_deferred("_play_button_feedback", reference, cue)
+
+func _play_button_feedback(reference: WeakRef, cue: String) -> void:
+	if reference.get_ref() == null or Time.get_ticks_msec() < suppress_click_until:
+		return
+	ui_bank.play_cue(cue)
 
 func feedback(cue: String) -> void:
 	if cue != "click":
@@ -82,6 +89,7 @@ func stop_frontend() -> void:
 func attach_battle(battle: Node) -> void:
 	if battle_owner != null and battle_owner.get_ref() == battle:
 		return
+	result_owner = null
 	stop_frontend()
 	battle_bank.stop_all()
 	battle_bank.authority = battle
@@ -128,6 +136,9 @@ func _mutation_selected(_type: String, _name: String) -> void:
 	feedback("click")
 
 func battle_result(owner: Node, won: bool) -> void:
+	if result_owner != null and result_owner.get_ref() == owner:
+		return
+	result_owner = weakref(owner)
 	battle_bank.stop_all()
 	ui_bank.stop_all()
 	feedback("victory" if won else "defeat")

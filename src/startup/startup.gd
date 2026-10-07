@@ -65,6 +65,7 @@ func _build_title() -> void:
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		start_button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
 	start_button.name = "TouchStart"
+	start_button.set_meta("audio_cue", "click")
 	start_button.pressed.connect(begin_startup)
 	VIEW.label(title_screen, "용사는 성장하고, 마왕은 학습한다.", 26, Rect2(0.12, 0.89, 0.76, 0.035), Color("dcc5ed"))
 	VIEW.label(title_screen, "v%s" % ProjectSettings.get_setting("application/config/version", "0.0.0"), 22, Rect2(0.07, 0.95, 0.86, 0.025), Color("bba9c8"))

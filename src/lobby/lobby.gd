@@ -2299,6 +2299,9 @@ func _try_stage_swipe(end_position: Vector2) -> void:
 
 
 func _connect_navigation() -> void:
+	# Only intentional navigation/selection controls opt into quiet feedback.
+	for button in [shop_button, team_button, main_button, research_button, other_button, other_settings_tab_button, other_account_tab_button, research_mode_button, relic_mode_button, prev_stage_button, next_stage_button, stage_selector_button, enter_stage_button, team_mode_button, skill_mode_button]:
+		button.set_meta("audio_cue", "click")
 	shop_button.pressed.connect(_switch_tab.bind("shop"))
 	team_button.pressed.connect(_on_team_tab_pressed)
 	main_button.pressed.connect(_switch_tab.bind("main"))
@@ -4697,6 +4700,7 @@ func _setup_stage_selector_buttons() -> void:
 		button.add_theme_color_override("font_outline_color", Color("0a0610"))
 		button.add_theme_constant_override("outline_size", 3)
 		button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+		button.set_meta("audio_cue", "click")
 		button.pressed.connect(_on_stage_selected.bind(index))
 		stage_select_grid.add_child(button)
 		stage_selector_buttons.append(button)
@@ -5177,6 +5181,7 @@ func _rebuild_research_list() -> void:
 				RESEARCH_CATALOG.get_effect_summary(research_id, level),
 				_format_shop_number(cost),
 			]
+		button.set_meta("audio_cue", "click")
 		button.pressed.connect(_select_research.bind(research_id))
 
 		research_list.add_child(button)
@@ -5358,6 +5363,7 @@ func _create_relic_card(relic_id: String, data: Dictionary) -> Button:
 	card.focus_mode = Control.FOCUS_NONE
 	card.mouse_filter = Control.MOUSE_FILTER_PASS
 	_apply_lobby_button_skin(card, relic_id == selected_relic_id, 16)
+	card.set_meta("audio_cue", "click")
 	card.pressed.connect(_select_relic.bind(relic_id))
 
 	var content := VBoxContainer.new()

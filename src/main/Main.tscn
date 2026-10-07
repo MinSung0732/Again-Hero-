@@ -629,6 +629,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="StageMenuButton" type="Button" parent="HUD/TopBar"]
+metadata/audio_cue = "click"
 offset_left = 790.0
 offset_top = 126.0
 offset_right = 1050.0
@@ -939,6 +940,7 @@ vertical_alignment = 1
 clip_text = true
 
 [node name="PlacementModeToggle" type="CheckButton" parent="HUD/BottomBar"]
+metadata/audio_cue = "click"
 offset_left = 838.0
 offset_top = 15.0
 offset_right = 1028.0
@@ -1625,6 +1627,7 @@ theme_override_font_sizes/font_size = 28
 text = "설정"
 
 [node name="RestartButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
+metadata/audio_cue = "click"
 focus_mode = 0
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
@@ -1635,6 +1638,7 @@ theme_override_font_sizes/font_size = 29
 text = "이 스테이지 다시 도전"
 
 [node name="LobbyButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
+metadata/audio_cue = "click"
 focus_mode = 0
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
@@ -2162,6 +2166,7 @@ layout_mode = 2
 theme_override_constants/separation = 24
 
 [node name="RerollButton" type="Button" parent="HUD/DemonAugmentPanel/Margin/VBox/Actions"]
+metadata/audio_cue = "click"
 focus_mode = 0
 theme_override_styles/disabled = SubResource("StyleBoxFlat_action_disabled")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
@@ -2510,6 +2515,7 @@ vertical_alignment = 0
 autowrap_mode = 2
 
 [node name="NextStageButton" type="Button" parent="HUD/ResultPanel/Margin/VBox"]
+metadata/audio_cue = "click"
 focus_mode = 0
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
@@ -2525,6 +2531,7 @@ layout_mode = 2
 theme_override_constants/separation = 20
 
 [node name="StageSelectResultButton" type="Button" parent="HUD/ResultPanel/Margin/VBox/ResultActions"]
+metadata/audio_cue = "click"
 focus_mode = 0
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
@@ -2536,6 +2543,7 @@ theme_override_font_sizes/font_size = 29
 text = "로비로"
 
 [node name="RestartButton" type="Button" parent="HUD/ResultPanel/Margin/VBox/ResultActions"]
+metadata/audio_cue = "click"
 focus_mode = 0
 theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")

@@ -1,0 +1,49 @@
+{
+  "rogue_weapon_edits": [
+    {
+      "file": "rogue_combo_short.wav",
+      "source_id": "185432",
+      "source_url": "https://pixabay.com/sound-effects/film-special-effects-sword-slash-and-swing-185432/",
+      "creator": "DavidDumaisAudio",
+      "source_sha256": "2e4742e14585772e8f0c2ea0834150df95f0c973f97b540a88370e109b0135e5",
+      "sha256": "9fda8f94454e085940cedaeef6debac646b7d8daff5a00f714703e280b1c113a",
+      "trim_start_s": 0.14,
+      "duration_s": 0.16,
+      "lowpass_hz": 1900,
+      "pitch": 1.0
+    },
+    {
+      "file": "rogue_storm_short.wav",
+      "source_id": "185432",
+      "source_url": "https://pixabay.com/sound-effects/film-special-effects-sword-slash-and-swing-185432/",
+      "creator": "DavidDumaisAudio",
+      "source_sha256": "2e4742e14585772e8f0c2ea0834150df95f0c973f97b540a88370e109b0135e5",
+      "sha256": "3589eedb6d35048d76863bed43bddc2c622b8abc3f99d2c3d9577e660843ede5",
+      "trim_start_s": 0.14,
+      "duration_s": 0.5,
+      "lowpass_hz": 2600,
+      "pitch": 1.0
+    },
+    {
+      "file": "rogue_assassination_short.wav",
+      "source_id": "185432",
+      "source_url": "https://pixabay.com/sound-effects/film-special-effects-sword-slash-and-swing-185432/",
+      "creator": "DavidDumaisAudio",
+      "source_sha256": "2e4742e14585772e8f0c2ea0834150df95f0c973f97b540a88370e109b0135e5",
+      "sha256": "8768b7e1fd51039dbf6a3600ef959a3f114d25fef84ada03eb3d7638688772ff",
+      "trim_start_s": 0.14,
+      "duration_s": 0.18,
+      "lowpass_hz": 1900,
+      "pitch": 1.0
+    }
+  ],
+  "body_hit_policy": "Six existing body WAVs shortened to 120ms with 1600Hz lowpass, runtime -21dB, 650ms cooldown",
+  "body_sha256": {
+    "mage_hit": "f1524ce6b2b1e36312046e446048edd2be1a6843ee5aa8eacf60e33bded423e9",
+    "rogue_hit": "002e78bb15ce46622ef06f570f0a123bf8224377e00744c17729c8b753b35912",
+    "fighter_hit": "89cc5d3befef733de0e55420ab64a1f41ded389748bf1d12a2a586c79bf99527",
+    "gunner_hit": "203ce6b032a7870a37fab630e08f6519199d1e57d149037f83d1176409a0944f",
+    "berserker_hit": "b253dd94ece88a2b118f8dbe6d0c79be69e5451a2b3b928b512063d11b1d62f2",
+    "archmage_hit": "77b0496d2a5832ff504644d0a129af0a8672c9fc93cb0bed2c911aae4491a15c"
+  }
+}
