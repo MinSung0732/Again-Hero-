@@ -1,10 +1,13 @@
 extends RefCounted
+const ZEUS_AUDIO := preload("res://src/data/zeus_audio_catalog.gd")
 
 # Presentation only; no skill, damage, summoning or reward authority.
 const ENTRIES := {
 	"zeus": {"view": "res://src/ui/zeus_battle_summon_view.gd", "duration": 5.0, "zoom": 1.3,
 		"slow_motion": {"minimum": 0.18, "approach_end": 0.95, "recover_start": 2.65, "recover_end": 3.3},
-		"world_effect": "res://src/ui/zeus_summon_radial_lightning.gd"},
+		"world_effect": "res://src/ui/zeus_summon_radial_lightning.gd",
+		"audio_cues": ZEUS_AUDIO.CUES, "audio_timeline": ZEUS_AUDIO.SUMMON_TIMELINE,
+		"death_audio_timeline": ZEUS_AUDIO.DEATH_TIMELINE},
 }
 
 # World-space presentation only, separate from Zeus combat skills/damage.

@@ -149,8 +149,8 @@ func _activate_view(path: String) -> bool:
 	if sound_path != _impact_sound_path:
 		_impact_sound_path = sound_path
 		_impact_sound.stream = null
-		if not sound_path.is_empty() and FileAccess.file_exists(sound_path):
-			_impact_sound.stream = AudioStreamMP3.load_from_file(sound_path)
+		if not sound_path.is_empty() and (ResourceLoader.exists(sound_path) if sound_path.get_extension() == "wav" else FileAccess.file_exists(sound_path)):
+			_impact_sound.stream = load(sound_path) if sound_path.get_extension() == "wav" else AudioStreamMP3.load_from_file(sound_path)
 	_impact_sound.volume_db = float(_data.get("impact_volume_db", -6.0))
 	return true
 

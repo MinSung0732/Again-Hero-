@@ -146,11 +146,13 @@ func run() -> void:
 	zeus.skill_cooldowns = PackedFloat32Array([0,100,100])
 	zeus._try_cast()
 	check(zeus.charge_remaining == 2 and zeus.gauge == 70 and zeus.skill_cooldowns[0] == 20,"skill1 cost/charge/cooldown")
+	check(zeus.combat_sfx.players.charge.playing,"real cast starts charging audio")
 	var position_before: Vector2 = zeus.position
 	zeus._physics_process(1)
 	check(zeus.position == position_before and zeus.charge_remaining == 1,"charge stationary")
 	zeus._physics_process(1)
 	check(hero.current_hp == hero.max_hp-zeus.attack_damage*2 and is_equal_approx(hero.paralysis_ratio,0.3),"thunder200/status")
+	check(not zeus.combat_sfx.players.charge.playing and zeus.combat_sfx.players.thunder.playing,"actual release stops charge and starts strike audio")
 	hit_reset()
 	zeus.transcend_level = 2
 	hero.invulnerability_timer = 1
@@ -161,6 +163,7 @@ func run() -> void:
 	zeus.skill_cooldowns = PackedFloat32Array([100,0,100])
 	zeus._try_cast()
 	check(zeus.gauge == 70 and zeus.crown_remaining == 15 and zeus.skill_cooldowns[1] == 45,"crown cost/duration/cooldown")
+	check(zeus.combat_sfx.players.crown.playing,"buff start plays crown once")
 	zeus.current_hp = 500
 	zeus._tick_crown(15)
 	check(zeus.current_hp == 500+3*int(round(zeus.max_hp*0.03)) and zeus.crown_heals == 3,"three crown healing beats")
@@ -184,6 +187,7 @@ func run() -> void:
 	zeus.skill_cooldowns = PackedFloat32Array([100,100,0])
 	zeus._try_cast()
 	check(zeus.gauge == 50 and zeus.skill_cooldowns[2] == 15,"slash cost/cooldown")
+	check(zeus.combat_sfx.players.slash.playing,"real pooled slash launch sound")
 	var shot
 	for child in battle.get_children():
 		if child.get_script() == preload("res://src/monsters/zeus_slash.gd") and child.active:
@@ -193,6 +197,7 @@ func run() -> void:
 	hero.invulnerability_timer = 1
 	shot._physics_process(0.4)
 	check(hero.current_hp == hero.max_hp-int(round(zeus.attack_damage*1.75)) and hero.paralysis_ratio == 0.20,"swept slash175/ignore immunity/paralysis")
+	check(zeus.combat_sfx.players.slash_hit.playing,"accepted projectile hit sound")
 	var after_hit: int = hero.current_hp
 	shot._physics_process(0.1)
 	check(hero.current_hp == after_hit,"one hit per projectile")

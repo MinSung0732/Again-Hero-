@@ -25,6 +25,7 @@ func _run() -> void:
 	player.finished.connect(func(): _completed += 1)
 	player.play("zeus")
 	await _wait_ready(player)
+	assert(player._impact_sound.stream is AudioStreamWAV and player._impact_sound.bus == &"SFX", "Zeus reveal uses imported lightning on SFX")
 	player.set_process(false)
 	player.advance(4.15)
 	var active: Control = player._active_view

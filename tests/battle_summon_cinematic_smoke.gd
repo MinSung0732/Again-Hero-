@@ -74,6 +74,18 @@ func run() -> void:
 		host.battle.transcendent_summoned.emit("zeus", actor)
 		cinematic.set_process(false)
 		check(cinematic.active, "success signal starts presentation")
+		var audio = cinematic.sound_bank
+		var audio_start: int = audio.played_count
+		check(cinematic.next_audio_cue == 1 and audio.players.charge.playing, "summon starts real-time charge cue")
+		cinematic.elapsed = 1.9
+		cinematic._advance_audio()
+		check(audio.played_count == audio_start+1 and not audio.players.charge.playing, "first radial lightning releases sound and stops charge")
+		cinematic.elapsed = 2.26
+		cinematic._advance_audio()
+		check(audio.played_count == audio_start+3, "all three radial bursts have cues")
+		cinematic._advance_audio()
+		check(audio.played_count == audio_start+3, "timeline cues never repeat on redraw")
+		cinematic.elapsed = 0.0
 		check(cinematic.world_effect.frames.size() == 4, "PNG lightning frames cached once")
 		check(int(cinematic.world_effect.CONFIG.rays) == 8 and cinematic.world_effect.CONFIG.bursts.size() == 3, "eight directions with three bursts")
 		check(cinematic.view.rig.modulate.a == 1.0, "visible full-color pose at time zero")

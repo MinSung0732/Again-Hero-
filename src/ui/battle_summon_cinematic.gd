@@ -1,6 +1,11 @@
 extends Control
 
 const CATALOG := preload("res://src/data/battle_summon_cinematic_catalog.gd")
+const SFX_BANK := preload("res://src/audio/event_sfx_bank.gd")
+var sound_banks: Dictionary = {}
+var sound_bank: Node
+var audio_timeline: Array = []
+var next_audio_cue := 0
 var host: Control
 var active := false
 var actor: Node2D
@@ -56,6 +61,13 @@ func install(main: Control) -> void:
 		if not effect_path.is_empty():
 			_cached_world_effect(effect_path)
 		_cached_view(String(entry.view))
+	for id in CATALOG.ENTRIES:
+		var entry: Dictionary = CATALOG.ENTRIES[id]
+		if entry.has("audio_cues"):
+			var bank := SFX_BANK.new()
+			add_child(bank)
+			bank.configure(entry.audio_cues)
+			sound_banks[id] = bank
 
 func play(monster_id: String, summoned: Node2D) -> void:
 	cancel()
@@ -66,6 +78,8 @@ func play(monster_id: String, summoned: Node2D) -> void:
 	if view == null:
 		return
 	death_mode = false
+	sound_bank = sound_banks.get(monster_id)
+	audio_timeline = entry.get("audio_timeline", [])
 	_begin_focus(summoned, entry)
 
 func play_death(monster_id: String, dying_actor: Node2D) -> void:
@@ -78,6 +92,8 @@ func play_death(monster_id: String, dying_actor: Node2D) -> void:
 	var entry: Dictionary = CATALOG.ENTRIES.get(monster_id, {}).get("death", CATALOG.DEATH_DEFAULT)
 	view = null
 	death_mode = true
+	sound_bank = sound_banks.get(monster_id)
+	audio_timeline = CATALOG.ENTRIES.get(monster_id, {}).get("death_audio_timeline", [])
 	_begin_focus(dying_actor, entry)
 
 func _begin_focus(summoned: Node2D, entry: Dictionary) -> void:
@@ -115,6 +131,8 @@ func _begin_focus(summoned: Node2D, entry: Dictionary) -> void:
 	camera.enabled = true
 	camera.make_current()
 	active = true
+	next_audio_cue = 0
+	_advance_audio()
 	host._end_camera_drag()
 	_layout()
 	if is_instance_valid(view):
@@ -161,6 +179,7 @@ func advance(real_delta: float) -> void:
 		cancel()
 		return
 	elapsed = minf(elapsed + maxf(real_delta, 0.0), duration)
+	_advance_audio()
 	var approach_time := float(slow_profile.get("approach_end", 0.95))
 	var approach := 1.0 - pow(1.0 - clampf(elapsed / approach_time, 0.0, 1.0), 3.0)
 	if owns_time_scale:
@@ -202,6 +221,11 @@ func advance(real_delta: float) -> void:
 		cancel()
 
 func cancel() -> void:
+	if is_instance_valid(sound_bank):
+		sound_bank.stop_all()
+	sound_bank = null
+	audio_timeline = []
+	next_audio_cue = 0
 	if owns_time_scale:
 		Engine.time_scale = previous_time_scale
 		owns_time_scale = false
@@ -224,6 +248,15 @@ func cancel() -> void:
 	actor = null
 	original = null
 	hide()
+
+func _advance_audio() -> void:
+	if not is_instance_valid(sound_bank):
+		return
+	while next_audio_cue < audio_timeline.size() and float(audio_timeline[next_audio_cue].at) <= elapsed:
+		if audio_timeline[next_audio_cue].has("stop"):
+			sound_bank.stop_cue(String(audio_timeline[next_audio_cue].stop))
+		sound_bank.play_cue(String(audio_timeline[next_audio_cue].cue))
+		next_audio_cue += 1
 
 func _finished(_message: String, _won: bool) -> void:
 	cancel()

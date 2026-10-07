@@ -1,0 +1,100 @@
+{
+  "format": "mono PCM16 WAV 44100 Hz",
+  "bus": "SFX",
+  "normalized_peak_dbfs": -3,
+  "assets": {
+    "judgment": {
+      "file": "judgment.wav",
+      "source_id": "386163",
+      "processing": "atrim=0:0.55,asetpts=PTS-STARTPTS,afade=t=in:d=0.005,afade=t=out:st=0.45:d=0.10",
+      "duration_seconds": 0.55,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -19.07,
+      "sha256": "923df78a9a6cb56bda458002cdd3575be5c312b8cf74882ec198d4557db8498f"
+    },
+    "charge": {
+      "file": "charge.wav",
+      "source_id": "482504",
+      "processing": "atempo=1.5,atrim=0:2,asetpts=PTS-STARTPTS,afade=t=in:d=0.03,afade=t=out:st=1.88:d=0.12",
+      "duration_seconds": 2.0,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -14.7,
+      "sha256": "26c1bdd597ac4bc6f8626dbf6152b3839e03b403e1923bf5213e5f2fa33930c6"
+    },
+    "thunder": {
+      "file": "thunder.wav",
+      "source_id": "386161",
+      "processing": "atrim=0:1.05,asetpts=PTS-STARTPTS,afade=t=in:d=0.003,afade=t=out:st=0.85:d=0.20",
+      "duration_seconds": 1.05,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -18.98,
+      "sha256": "4b523e243e2e1a4643949cc49ad4f853e9b69f8a8e340a0ef00b2c73b0c99152"
+    },
+    "crown": {
+      "file": "crown.wav",
+      "source_id": "244951",
+      "processing": "atrim=0:1.4,asetpts=PTS-STARTPTS,afade=t=in:d=0.01,afade=t=out:st=1.15:d=0.25",
+      "duration_seconds": 1.4,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -25.77,
+      "sha256": "3c9ef569227709f5dc3adb3741bf6c58eac0933dc79942a37f40871f229c5696"
+    },
+    "orb": {
+      "file": "orb.wav",
+      "source_id": "244951",
+      "processing": "atrim=0.12:0.38,asetpts=PTS-STARTPTS,afade=t=in:d=0.008,afade=t=out:st=0.18:d=0.08",
+      "duration_seconds": 0.26,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -21.56,
+      "sha256": "97c83103b33c47dc531e62a80b068139d2d7fc29936a96ebb25aa48dfc2315d8"
+    },
+    "slash": {
+      "file": "slash.wav",
+      "source_id": "386163",
+      "processing": "asetrate=39690,aresample=44100,atrim=0:0.72,asetpts=PTS-STARTPTS,afade=t=in:d=0.005,afade=t=out:st=0.57:d=0.15",
+      "duration_seconds": 0.72,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -18.83,
+      "sha256": "e1157b8c5a5f4f778489ed42c1641f51d078e7a5a46519777aedfc3534aaaf95"
+    },
+    "death": {
+      "file": "death.wav",
+      "source_id": "386161",
+      "processing": "asetrate=30870,aresample=44100,atrim=0:1.5,asetpts=PTS-STARTPTS,afade=t=in:d=0.015,afade=t=out:st=1.15:d=0.35",
+      "duration_seconds": 1.5,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -18.93,
+      "sha256": "43cf3d4b505af048c34b9f8c6f08973888a97d5677abfe355c2cfa17908ef33d"
+    }
+  },
+  "sources": [
+    {
+      "title": "Lightning Spell",
+      "creator": "DRAGON-STUDIO",
+      "content_id": "386163",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-lightning-spell-386163/",
+      "raw_sha256": "261c63b74d97a82f4a259a7305c05aee2af3bf3ff0becbcdcd41419d276ed9f1"
+    },
+    {
+      "title": "energy charge (4)",
+      "creator": "Yodguard",
+      "content_id": "482504",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-energy-charge-4-482504/",
+      "raw_sha256": "3af34a2f9615ef613412f77d4696b999dad1746ec40efd509357bf41cd9ea38d"
+    },
+    {
+      "title": "Lightning Strike",
+      "creator": "DRAGON-STUDIO",
+      "content_id": "386161",
+      "url": "https://pixabay.com/sound-effects/nature-lightning-strike-386161/",
+      "raw_sha256": "3947ebcdf2f2a5c42df2cb0aea4cf149773e3f96e3b443143f98bc001b8aa9d9"
+    },
+    {
+      "title": "Magic Twinkle",
+      "creator": "Universfield",
+      "content_id": "244951",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-magic-twinkle-244951/",
+      "raw_sha256": "d527b2abe7dcdcce7f0a9145b98d6545060367f89260e5b4384799a554e2f35d"
+    }
+  ]
+}

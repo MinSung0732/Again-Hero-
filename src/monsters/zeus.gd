@@ -3,6 +3,9 @@ const DATA := preload("res://src/data/zeus_behavior_catalog.gd")
 const ART := preload("res://src/data/zeus_visual_catalog.gd")
 const FX := preload("res://src/ui/zeus_combat_effects.gd")
 const SLASH_SCENE := preload("res://src/monsters/ZeusSlash.tscn")
+const AUDIO := preload("res://src/data/zeus_audio_catalog.gd")
+const SFX_BANK := preload("res://src/audio/event_sfx_bank.gd")
+var combat_sfx: Node
 var transcend_level := 0
 var summon_snapshot := 0
 var keeping_distance := false
@@ -65,6 +68,9 @@ func _ready() -> void:
 	crown_layer.draw.connect(_draw_crown_layer)
 	status_layer.draw.connect(_draw_status_layer)
 	super._ready()
+	combat_sfx = SFX_BANK.new()
+	add_child(combat_sfx)
+	combat_sfx.configure(AUDIO.CUES, combat_authority, true)
 	for kind in DATA.EFFECTS:
 		FX.get_pack(kind)
 
@@ -151,13 +157,16 @@ func _try_cast() -> void:
 	skill_cooldowns[chosen] = DATA.COOLDOWNS[chosen]
 	if chosen == 0:
 		charge_remaining = DATA.CHARGE_SECONDS
+		play_combat_sound("charge")
 		visual.play_skill()
 	elif chosen == 1:
 		crown_remaining = DATA.CROWN_SECONDS
+		play_combat_sound("crown")
 		crown_elapsed = 0.0
 		crown_heals = 0
 	else:
 		var shot = combat_authority.acquire_projectile(SLASH_SCENE,"zeus_slash")
+		play_combat_sound("slash")
 		shot.global_position = global_position
 		shot.setup((hero.global_position-global_position).normalized(),self,hero)
 		visual.play_skill()
@@ -166,6 +175,7 @@ func _fire_projectile(_offset: Vector2) -> void:
 	if not is_instance_valid(hero):
 		return
 	_show_pillar("judgment",hero.global_position)
+	play_combat_sound("judgment")
 	var immune := float(hero.invulnerability_timer) > 0.0
 	var amount := attack_damage
 	var chance := DATA.BASIC_CHANCE
@@ -181,9 +191,12 @@ func _fire_projectile(_offset: Vector2) -> void:
 		apply_paralysis_to(hero,paralysis)
 
 func _release_thunder() -> void:
+	if is_instance_valid(combat_sfx):
+		combat_sfx.stop_cue("charge")
 	if not is_instance_valid(hero) or int(hero.current_hp) <= 0:
 		return
 	_show_pillar("thunder",hero.global_position)
+	play_combat_sound("thunder")
 	var amount := int(round(attack_damage*(DATA.THUNDER_UPGRADED_DAMAGE if transcend_level >= 2 else DATA.THUNDER_DAMAGE)))
 	var accepted: bool = hero.take_followup_damage(amount,self) if transcend_level >= 2 else hero.take_damage(amount,self)
 	if accepted:
@@ -229,6 +242,7 @@ func _tick_orbs(delta: float) -> void:
 			absorb_orb()
 
 func absorb_orb() -> void:
+	play_combat_sound("orb")
 	gauge = minf(DATA.GAUGE_MAX,gauge+DATA.ORB_GAUGE*(2.0 if transcend_level >= 4 else 1.0))
 	if transcend_level >= 5:
 		orb_heal_buffer += float(max_hp-current_hp)*DATA.ORB_HEAL_MISSING_RATIO
@@ -236,6 +250,22 @@ func absorb_orb() -> void:
 		if whole > 0:
 			heal_direct(whole)
 			orb_heal_buffer -= whole
+
+func play_combat_sound(cue: String) -> void:
+	if not dying and is_instance_valid(combat_sfx):
+		combat_sfx.play_cue(cue)
+
+func take_damage(amount: int) -> void:
+	var before := current_hp
+	super.take_damage(amount)
+	if current_hp > 0 and current_hp < before:
+		play_combat_sound("hit")
+
+func _begin_death() -> void:
+	if is_instance_valid(combat_sfx):
+		combat_sfx.stop_all()
+	# The cinematic owns the death sound so natural actor removal cannot cut it off.
+	super._begin_death()
 
 func _show_pillar(kind: String, point: Vector2) -> void:
 	pillar_kind = kind

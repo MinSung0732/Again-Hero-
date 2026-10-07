@@ -1,3 +1,7 @@
+## Zeus SFX production (2026-10-08)
+- Real Pixabay electric spell/charge/lightning/twinkle sources edited for all Zeus combat, summon, reveal and death events. Provenance, license, processing and waveform measurements: assets/audio/sfx/zeus/SOURCES.md and manifest.json; event gains/timeline: src/data/zeus_audio_catalog.gd.
+- Existing SFX settings remain authoritative. Shared streams/fixed players, throttled dense orb/hit cues, combat-clock charging and pause/resume; real-time cinematic cues with cancellation cleanup. Cinematic-owned death sound survives actor removal. Gameplay/rewards unchanged. Godot/WASAPI waveform checked; subjective listening, Android, full-combat mix/export unverified.
+
 ## Transcendent Presentation Standard (2026-10-08)
 - User approved completed Zeus as the required presentation baseline for future transcendent monsters: production gacha reveal, triangle battle summon/eye focus/camera slow motion/world release, and death focus/return. Customize artwork, palette, elemental effects and combat style per character. Follow docs/TRANSCENDENT_PRESENTATION_STANDARD.md and existing Catalog-driven controllers, cancellation restoration and cached resources.
 

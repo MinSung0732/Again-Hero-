@@ -70,6 +70,7 @@ func _physics_process(delta: float) -> void:
 			var source = source_ref.get_ref() if source_ref != null else null
 			var accepted: bool = target.take_followup_damage(damage,source) if ignore_invulnerability else target.take_damage(damage,source)
 			if accepted and is_instance_valid(source):
+				source.play_combat_sound("slash_hit")
 				source.apply_paralysis_to(target,DATA.SLASH_PARALYSIS)
 			elif accepted:
 				target.apply_paralysis(DATA.SLASH_PARALYSIS,DATA.STATUS_SECONDS)

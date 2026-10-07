@@ -87,6 +87,7 @@ func run() -> void:
 	actor.take_damage(1000000)
 	cinematic.set_process(false)
 	check(actor.dying and cinematic.active and cinematic.death_mode, "actual lethal damage starts death focus")
+	check(not actor.combat_sfx.players.charge.playing and cinematic.sound_bank.players.death.playing, "death stops actor charge and uses cinematic-owned sound")
 	check(cinematic.view == null and cinematic.world_effect == null, "death focuses world animation without living portrait or summon bolts")
 	check(is_equal_approx(Engine.time_scale, 0.8 * 0.45), "death replaces summon slow with original baseline")
 	check(not host.battle.active_monsters.has(actor.get_instance_id()), "dead actor immediately removed from targeting registry")
@@ -115,6 +116,7 @@ func run() -> void:
 	var death_point: Vector2 = actor.global_position
 	actor.free()
 	cinematic.advance(0.8)
+	check(cinematic.sound_bank.players.death.playing, "actor deletion does not delete death audio player")
 	check(cinematic.active and cinematic.focus_position == death_point, "natural actor removal keeps remembered death focus")
 	cinematic.advance(0.6)
 	check(is_equal_approx(Engine.time_scale, 0.8), "death speed smoothly recovers before cue ends")
