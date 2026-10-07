@@ -618,6 +618,23 @@ theme_override_font_sizes/font_size = 30
 text = "몬스터 컬렉션"
 vertical_alignment = 1
 
+[node name="SortCriteria" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader"]
+custom_minimum_size = Vector2(216, 54)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CostButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/SortCriteria"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+text = "코스트"
+
+[node name="RarityButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/SortCriteria"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+text = "등급"
+
 [node name="CostSortButtons" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader"]
 custom_minimum_size = Vector2(300, 54)
 layout_mode = 2

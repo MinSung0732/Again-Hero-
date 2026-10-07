@@ -266,6 +266,7 @@ var demon_skill_catalog_ids: Array = []
 var demon_skill_selected_ids: Array = []
 var formation_mode: String = "team"
 var formation_cost_descending := false
+var formation_sort_criterion := "cost"
 var formation_unlock_filter := "all"
 
 var panel_style := StyleBoxFlat.new()
@@ -2357,6 +2358,9 @@ func _connect_navigation() -> void:
 	formation_cost_high_button.pressed.connect(
 		_on_formation_cost_sort_selected.bind(true)
 	)
+	var criteria := $SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/SortCriteria
+	criteria.get_node("CostButton").pressed.connect(_on_formation_sort_criterion_selected.bind("cost"))
+	criteria.get_node("RarityButton").pressed.connect(_on_formation_sort_criterion_selected.bind("rarity"))
 	var unlock_filters := $SafeArea/Layout/Content/TeamTab/TeamLayout/UnlockFilters
 	for pair in [["AllButton", "all"], ["UnlockedButton", "unlocked"], ["LockedButton", "locked"]]:
 		unlock_filters.get_node(pair[0]).pressed.connect(_on_formation_unlock_filter_selected.bind(pair[1]))
@@ -3186,11 +3190,14 @@ func _on_formation_cost_sort_selected(descending: bool) -> void:
 	if formation_cost_descending == descending:
 		return
 	formation_cost_descending = descending
-	_refresh_formation_cost_sort_buttons()
 	_refresh_formation_mode()
 
 
 func _refresh_formation_cost_sort_buttons() -> void:
+	var criteria := $SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/SortCriteria
+	criteria.visible = formation_mode == "team"
+	_apply_lobby_button_skin(criteria.get_node("CostButton"), formation_sort_criterion == "cost", 19)
+	_apply_lobby_button_skin(criteria.get_node("RarityButton"), formation_sort_criterion == "rarity", 19)
 	_apply_lobby_button_skin(
 		formation_cost_low_button,
 		not formation_cost_descending,
@@ -3201,6 +3208,14 @@ func _refresh_formation_cost_sort_buttons() -> void:
 		formation_cost_descending,
 		19
 	)
+
+func _on_formation_sort_criterion_selected(criterion: String) -> void:
+	if criterion not in ["cost", "rarity"] or criterion == formation_sort_criterion:
+		return
+	formation_sort_criterion = criterion
+	_refresh_formation_mode()
+	($SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterScroll as ScrollContainer).scroll_vertical = 0
+
 
 func _on_formation_unlock_filter_selected(filter_id: String) -> void:
 	if filter_id not in ["all", "unlocked", "locked"] or formation_unlock_filter == filter_id:
@@ -3226,6 +3241,11 @@ func _formation_cost_before(left_id: Variant, right_id: Variant) -> bool:
 		var right_unlocked := right in team_available_ids
 		if left_unlocked != right_unlocked:
 			return left_unlocked
+		if formation_sort_criterion == "rarity":
+			var left_rank := SHOP_CATALOG.get_rarity_rank(MONSTER_CATALOG.get_rarity(left))
+			var right_rank := SHOP_CATALOG.get_rarity_rank(MONSTER_CATALOG.get_rarity(right))
+			if left_rank != right_rank:
+				return left_rank > right_rank if formation_cost_descending else left_rank < right_rank
 	var left_cost := _formation_item_cost(left)
 	var right_cost := _formation_item_cost(right)
 	if is_equal_approx(left_cost, right_cost):
@@ -3247,6 +3267,7 @@ func _sorted_formation_ids(source_ids: Array) -> Array:
 
 func _refresh_formation_mode() -> void:
 	var showing_team := formation_mode == "team"
+	_refresh_formation_cost_sort_buttons()
 	_refresh_formation_unlock_filters(showing_team)
 	_apply_lobby_button_skin(team_mode_button, showing_team, 23)
 	_apply_lobby_button_skin(skill_mode_button, not showing_team, 23)
@@ -3319,6 +3340,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.configure_drag("monster", monster_id, _team_monster_name(monster_id), _team_monster_card_icon(monster_id))
 	card.drag_enabled = available
+	card.modulate = Color.WHITE if available else Color(0.52, 0.52, 0.52, 1.0)
 	card.tapped.connect(_open_monster_detail.bind(monster_id))
 	var card_style := (
 		formation_card_selected_style if selected else formation_card_style
