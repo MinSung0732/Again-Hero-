@@ -15,6 +15,8 @@ const SHOP_SUMMON_HISTORY_STORE := preload(
 	"res://src/systems/shop_summon_history_store.gd"
 )
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
+const TRANSCENDENCE_DATA := preload("res://src/data/transcendence_catalog.gd")
+var transcendence_view = preload("res://src/ui/transcendence_formation_view.gd").new()
 const FORMATION_DRAG_CARD := preload("res://src/ui/formation_drag_card.gd")
 const TEAM_FORMATION_VIEW := preload("res://src/ui/team_formation_view.gd")
 const MONSTER_UPGRADE_FEEDBACK := preload("res://src/ui/monster_upgrade_feedback.gd")
@@ -2020,6 +2022,7 @@ func _apply_lobby_visual_polish() -> void:
 	_apply_lobby_button_skin(skill_mode_button, false, 23)
 	_refresh_formation_cost_sort_buttons()
 	_team_formation_view.apply(self)
+	transcendence_view.install(self)
 
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/ResearchTab/ResearchLayout/Title",
@@ -3116,6 +3119,8 @@ func _setup_team_preview() -> void:
 		var monster_id := String(raw_id)
 		if not MONSTER_CATALOG.MONSTERS.has(monster_id):
 			continue
+		if TRANSCENDENCE_DATA.is_transcendent(monster_id):
+			continue
 
 		team_catalog_ids.append(monster_id)
 		team_available_ids.append(monster_id)
@@ -3159,7 +3164,8 @@ func _restore_saved_team_selection() -> void:
 		monster_collection_state = saved_collection
 		team_available_ids.clear()
 		for raw_id in unlocked_ids:
-			team_available_ids.append(String(raw_id))
+			if not TRANSCENDENCE_DATA.is_transcendent(String(raw_id)):
+				team_available_ids.append(String(raw_id))
 
 	var fallback_ids: Array = []
 	for raw_id in team_selected_ids:
@@ -3191,7 +3197,7 @@ func _restore_saved_team_selection() -> void:
 
 
 func _show_formation_mode(mode: String) -> void:
-	if mode != "team" and mode != "skill":
+	if mode not in ["team", "skill", "transcendence"]:
 		return
 	formation_mode = mode
 	_refresh_formation_mode()
@@ -3278,16 +3284,20 @@ func _sorted_formation_ids(source_ids: Array) -> Array:
 
 func _refresh_formation_mode() -> void:
 	var showing_team := formation_mode == "team"
+	var showing_transcendence := formation_mode == "transcendence"
 	_refresh_formation_cost_sort_buttons()
 	_refresh_formation_unlock_filters(showing_team)
 	_apply_lobby_button_skin(team_mode_button, showing_team, 23)
-	_apply_lobby_button_skin(skill_mode_button, not showing_team, 23)
+	_apply_lobby_button_skin(skill_mode_button, formation_mode == "skill", 23)
 	team_mode_button.disabled = showing_team
-	skill_mode_button.disabled = not showing_team
+	skill_mode_button.disabled = formation_mode == "skill"
 	team_mode_button.add_theme_stylebox_override("disabled", PIXEL_PANEL_SKIN.button_style(primary_button_style))
 	skill_mode_button.add_theme_stylebox_override("disabled", PIXEL_PANEL_SKIN.button_style(primary_button_style))
 	team_mode_button.add_theme_color_override("font_disabled_color", Color("fff0d2"))
 	skill_mode_button.add_theme_color_override("font_disabled_color", Color("fff0d2"))
+	transcendence_view.refresh(showing_transcendence)
+	if showing_transcendence:
+		return
 	if showing_team:
 		formation_list_title.text = "보유 몬스터 목록"
 		_team_formation_view.heading(self, "◇  편성된 몬스터  ◇")

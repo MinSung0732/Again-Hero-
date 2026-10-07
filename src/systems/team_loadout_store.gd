@@ -1,6 +1,7 @@
 extends RefCounted
 class_name TeamLoadoutStore
 const ACCOUNT_SCOPE := preload("res://src/systems/account_save_scope.gd")
+const MONSTERS := preload("res://src/data/monster_catalog.gd")
 
 const SAVE_PATH := "user://team_loadout.cfg"
 const MAX_SLOTS := 3
@@ -46,6 +47,8 @@ static func _normalize_ids(raw_ids: Array, valid_ids: Array) -> Array:
 		if monster_id.is_empty():
 			continue
 		if monster_id not in valid_ids:
+			continue
+		if MONSTERS.get_rarity(monster_id) == "transcendent":
 			continue
 		if monster_id in result:
 			continue

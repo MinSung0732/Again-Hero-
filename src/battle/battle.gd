@@ -10,6 +10,10 @@ signal hero_augment_selected(level: int, candidates: Array, chosen_name: String,
 signal conditional_skill_unlocked(skill_id: String, skill_name: String, payload: Dictionary)
 signal command_changed(current_value: float, max_value: float)
 signal summon_result(monster_type: String, success: bool, message: String)
+signal transcendence_changed(monster_id: String, ready: bool, used: bool)
+const TRANSCENDENCE_DATA := preload("res://src/data/transcendence_catalog.gd")
+const TRANSCENDENCE_STORE := preload("res://src/systems/transcendence_loadout_store.gd")
+var transcendence = preload("res://src/systems/transcendence_runtime.gd").new()
 signal demon_progression_changed(level: int, current_exp: float, exp_to_next_level: float)
 signal demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: int)
 signal demon_augment_applied(augment_name: String, build_summary: String)
@@ -731,6 +735,9 @@ func _cache_demon_ultimate_runtime_data() -> void:
 
 
 func _start_battle() -> void:
+	var registered_id := TRANSCENDENCE_STORE.load_id()
+	transcendence.configure(registered_id, TRANSCENDENCE_DATA.get_rules(registered_id))
+	transcendence_changed.emit(registered_id, false, false)
 	battle_over = false
 	elite_monster_skill_runtime.reset()
 	wolf_pack_runtime.reset()
@@ -1165,7 +1172,17 @@ func try_summon_at_position(monster_type: String, spawn_position: Vector2) -> bo
 		true
 	)
 
-func _can_attempt_summon(monster_type: String) -> bool:
+func try_summon_transcendent() -> bool:
+	var id: String = transcendence.monster_id
+	if not _can_attempt_summon(id, true):
+		return false
+	var cost: float = get_monster_cost(id)
+	if command_power + 0.001 < cost:
+		summon_result.emit(id, false, "초월 소환에 필요한 지휘력이 부족합니다.")
+		return false
+	return _perform_summon(id, _get_auto_spawn_position(), cost, false)
+
+func _can_attempt_summon(monster_type: String, transcendence_attempt: bool = false) -> bool:
 	if battle_over:
 		summon_result.emit(monster_type, false, "전투가 종료되어 소환할 수 없습니다.")
 		return false
@@ -1178,7 +1195,13 @@ func _can_attempt_summon(monster_type: String) -> bool:
 		summon_result.emit(monster_type, false, "마왕 증강을 먼저 선택해 주세요.")
 		return false
 
-	if loadout_restriction_enabled and monster_type not in allowed_monster_ids:
+	if TRANSCENDENCE_DATA.is_transcendent(monster_type):
+		if not transcendence_attempt or monster_type != transcendence.monster_id or not transcendence.ready or transcendence.used:
+			summon_result.emit(monster_type, false, "등록된 초월 몬스터의 해금 조건을 달성해야 합니다.")
+			return false
+	elif transcendence_attempt:
+		return false
+	if not transcendence_attempt and loadout_restriction_enabled and monster_type not in allowed_monster_ids:
 		summon_result.emit(
 			monster_type,
 			false,
@@ -1199,18 +1222,23 @@ func _can_attempt_summon(monster_type: String) -> bool:
 func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float, manual: bool) -> bool:
 	command_power = maxf(command_power - cost, 0.0)
 
-	var giant_spawn := bool(MONSTER_CATALOG.MONSTERS[monster_type].get("can_be_giant", true)) and _roll_giant_monster_for_normal_summon()
+	var is_transcendent := TRANSCENDENCE_DATA.is_transcendent(monster_type)
+	var giant_spawn := not is_transcendent and bool(MONSTER_CATALOG.MONSTERS[monster_type].get("can_be_giant", true)) and _roll_giant_monster_for_normal_summon()
 	var primary_monster = _spawn_monster(
 		monster_type,
 		spawn_position,
 		cost,
 		false,
-		{"giant_monster": giant_spawn}
+		{"giant_monster": giant_spawn, "transcendence_summon": is_transcendent}
 	)
 	if not is_instance_valid(primary_monster):
 		command_power += cost
 		return false
-	_spawn_extra_normal_summon_monsters(monster_type, spawn_position)
+	if not is_transcendent:
+		_spawn_extra_normal_summon_monsters(monster_type, spawn_position)
+	if is_transcendent:
+		transcendence.consume()
+		transcendence_changed.emit(transcendence.monster_id, false, true)
 	if monster_type == "kobolt" and is_instance_valid(primary_monster):
 		primary_monster = _try_fuse_nearby_kobolts(primary_monster)
 	run_metrics.record_summon(monster_type, cost)
@@ -1881,6 +1909,9 @@ func _spawn_monster(
 	spawn_modifiers: Dictionary = {}
 ):
 	var scene := MONSTER_CATALOG.get_scene(monster_type)
+	if TRANSCENDENCE_DATA.is_transcendent(monster_type):
+		if not bool(spawn_modifiers.get("transcendence_summon",false)) or monster_type != transcendence.monster_id or not transcendence.ready or transcendence.used:
+			return null
 	if scene == null:
 		push_warning("Unknown monster id: %s" % monster_type)
 		return null
@@ -2192,6 +2223,8 @@ func _spawn_monster(
 	monster.tree_exited.connect(_unregister_monster.bind(monster_instance_id), CONNECT_ONE_SHOT)
 	monster_spatial_grid_physics_frame = -1
 	monsters_alive += 1
+	if not split_child and not TRANSCENDENCE_DATA.is_transcendent(monster_type) and transcendence.record_summon():
+		transcendence_changed.emit(transcendence.monster_id, true, false)
 	return monster
 
 
@@ -3265,6 +3298,8 @@ func try_use_demon_ultimate(
 		return false
 
 	demon_ultimate_charge = maxf(demon_ultimate_charge - mana_cost, 0.0)
+	if transcendence.record_mana(mana_cost):
+		transcendence_changed.emit(transcendence.monster_id, true, false)
 	demon_ultimate_cooldowns[skill_id] = maxf(
 		float(skill.get("cooldown", 0.0)),
 		0.0

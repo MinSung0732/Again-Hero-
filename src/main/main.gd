@@ -12,6 +12,7 @@ signal demon_action_choice_selected(context: String, choice_id: String)
 const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
+var transcendence_view = preload("res://src/ui/transcendence_summon_view.gd").new()
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 const DEMON_SKILL_LOADOUT_STORE := preload(
 	"res://src/systems/demon_skill_loadout_store.gd"
@@ -275,6 +276,7 @@ func _ready() -> void:
 	battle.command_changed.connect(_on_command_changed)
 	battle.demon_progression_changed.connect(_on_demon_progression_changed)
 	battle.summon_result.connect(_on_summon_result)
+	transcendence_view.install(self)
 	battle.demon_augment_ready.connect(_on_demon_augment_ready)
 	battle.demon_augment_applied.connect(_on_demon_augment_applied)
 	battle.demon_ultimate_changed.connect(_on_demon_ultimate_changed)
@@ -1141,6 +1143,8 @@ func _can_use_battle_pointer(pointer_position: Vector2) -> bool:
 
 
 func _is_pointer_over_battle_ui(pointer_position: Vector2) -> bool:
+	if is_instance_valid(transcendence_view.button) and transcendence_view.is_visible_in_tree() and transcendence_view.button.get_global_rect().has_point(pointer_position):
+		return true
 	# Detail panels must win the initial touch before locked-camera manual
 	# placement can consume it in _input(). Otherwise ScrollContainer misses
 	# the press and only begins scrolling after a long hold/secondary drag.
@@ -1705,7 +1709,8 @@ func _load_battle_loadout() -> void:
 	for raw_id in MONSTER_CATALOG.ORDER:
 		var monster_id := String(raw_id)
 		if MONSTER_CATALOG.MONSTERS.has(monster_id):
-			valid_ids.append(monster_id)
+			if MONSTER_CATALOG.get_rarity(monster_id) != "transcendent":
+				valid_ids.append(monster_id)
 
 	var fallback_ids: Array = []
 	for monster_id in valid_ids:
