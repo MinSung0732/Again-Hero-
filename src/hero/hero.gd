@@ -16959,15 +16959,15 @@ func apply_poison(
 
 
 
-func apply_bleed(duration: float = 5.0, source: Node = null) -> bool:
-	if current_hp <= 0 or is_dying or bleed_timer > 0.0 or duration <= 0.0:
+func apply_bleed(duration: float = 5.0, source: Node = null, total_max_hp_ratio: float = -1.0, refresh: bool = false) -> bool:
+	if current_hp <= 0 or is_dying or (bleed_timer > 0.0 and not refresh) or duration <= 0.0:
 		return false
 	record_status_effect_event("bleed")
 	bleed_duration = duration
 	bleed_timer = duration
 	bleed_elapsed = 0.0
 	bleed_tick_timer = minf(0.5, duration)
-	bleed_total_damage = int(round(float(max_hp) * 0.004 * duration))
+	bleed_total_damage = int(round(float(max_hp) * (total_max_hp_ratio if total_max_hp_ratio >= 0.0 else 0.004 * duration)))
 	bleed_damage_applied = 0
 	bleed_source = source if is_instance_valid(source) else null
 	set_meta("bleed_active", true)

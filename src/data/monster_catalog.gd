@@ -21,6 +21,7 @@ const ORDER := [
 	"powwow_mummy",
 	"scorpion",
 	"succubus",
+	"wolf",
 ]
 
 const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd")
@@ -28,6 +29,18 @@ const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd"
 const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const MONSTERS := {
+	"wolf": {
+		"id":"wolf", "name":"늑대", "role":"swarm", "family":"wolf", "species":"beast", "grade":"advanced", "rarity":"uncommon", "attack_type":"melee",
+		"base_cost":5.0, "summon_exp":5.0, "default_unlocked":false,
+		"description":"빠른 근접 2연격(공격력을 절반씩 분배). 반경250 내 아군 늑대 사망 시1초 하울링 후10초 공격력+15%. 중첩 없이 갱신, 남은 버프2초 이하에서만 재시전.",
+		"base_stats":preload("res://src/data/wolf_behavior_catalog.gd").BASE,
+		"card_icon_path":"res://assets/art/monsters/wolf/frames/idle_01.png",
+		"ground_shadow":{"size":Vector2(80,20), "offset_y":43.0, "opacity":0.35},
+		"special_augment_ids":["wolf_crushing_fang","wolf_blood_scent","wolf_iron_howl"],
+		"elite_visual":preload("res://src/data/wolf_behavior_catalog.gd").ELITE_VISUAL,
+		"elite_skills":[{"runtime":"monster", "id":"elite_wolf_pack_hunt", "name":"무리사냥", "description":"1초간 시전 후 뒤쪽에서 이속+30% 일반 늑대12마리 소환. 증강 적용, 분산 생성.", "initial_cooldown":5.0, "cooldown":20.0, "retry_interval":0.25}],
+		"scene":preload("res://src/monsters/Wolf.tscn"),
+	},
 	"succubus": {
 		"id":"succubus", "name":"서큐버스", "role":"controller", "family":"succubus", "species":"humanoid", "grade":"legendary", "rarity":"legendary", "attack_type":"melee",
 		"base_cost":13.5, "summon_exp":13.5, "default_unlocked":false,

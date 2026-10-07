@@ -2,6 +2,8 @@ extends RefCounted
 
 # Per-actor, cached animations. Paths retain the uploaded asset spelling.
 const EFFECTS := {
+	"wolf_howl": {"path":"buff/gold_attack_ring/gold_attack_ring_frame_%02d.png", "property":"howl_buff_timer", "offset":Vector2.ZERO},
+	"wolf_pack_agility": {"path":"buff/speed_up/speed_up_frame_%02d.png", "meta":"wolf_pack_speed_multiplier", "threshold":1.0, "offset":Vector2.ZERO},
 	"charm": {"path": "buff/heart_magic/heart_magic_frame_%02d.png", "property": "charm_timer", "offset": Vector2(0, -40)},
 	"petrify": {"path": "debuff/stone_explosion/stone_explosion_frame_%02d.png", "property": "petrify_timer", "offset": Vector2(0, 18)},
 	"bleed": {"path": "debuff/blood_splash/blood_splash_frame_%02d.png", "property": "bleed_timer", "offset": Vector2(0, -10)},
@@ -19,6 +21,8 @@ const HERO_SCALE := 0.28
 
 # Fit visible pixels, not the large transparent asset canvas.
 const MONSTER_BUFF_LAYOUTS := {
+	"wolf_howl": {"anchor":"feet", "width_ratio":1.45},
+	"wolf_pack_agility": {"anchor":"feet", "width_ratio":1.45},
 	"dullahan_regen": {"anchor": "feet", "width_ratio": 1.45},
 	"support_courage": {"anchor": "feet", "width_ratio": 1.45},
 	"support_agility": {"anchor": "feet", "width_ratio": 1.45},

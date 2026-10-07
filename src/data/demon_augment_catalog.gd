@@ -11,6 +11,7 @@ const SPECIAL_MAX_LEVEL := 1
 static var augment_lookup: Dictionary = {}
 
 const MONSTER_NAMES := {
+	"wolf":"늑대",
 	"succubus":"서큐버스",
 	"scorpion":"전갈",
 	"powwow_mummy":"미라 주술사",
@@ -140,6 +141,9 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{"id":"wolf_crushing_fang", "monster_id":"wolf", "name":"분쇄의 송곳니", "description":"2연격의 두 번째 피해가 공격력100%로 증가", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"wolf_crushing_fang", "effect_values":{}},
+	{"id":"wolf_blood_scent", "monster_id":"wolf", "name":"피의 추적", "description":"개체별 같은 대상3회 실제 적중마다3초간 최대HP1% 총 출혈 피해. 갱신, 중첩 없음", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"wolf_blood_scent", "effect_values":{"hits":3, "duration":3.0, "total_max_hp_ratio":0.01}},
+	{"id":"wolf_iron_howl", "monster_id":"wolf", "name":"강철의 울음", "description":"하울링 시전1초 동안 받는 피해50% 감소", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"wolf_iron_howl", "effect_values":{}},
 	{"id":"succubus_shadow_recovery", "monster_id":"succubus", "name":"그늘의 안식", "description":"잠입 진입 시 최대 체력30%까지 회복", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"succubus_shadow_recovery", "effect_values":{"hp_ratio":0.3}},
 	{"id":"succubus_shadow_ambush", "monster_id":"succubus", "name":"그림자 반격", "description":"잠입 해제 후 공격력20% 상승", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"succubus_shadow_ambush", "effect_values":{"damage_multiplier":1.2}},
 	{"id":"succubus_danger_sense", "monster_id":"succubus", "name":"위기의 장막", "description":"1회 잠입 조건을 체력30% 이하로 변경", "augment_type":TYPE_SPECIAL, "max_stack":SPECIAL_MAX_LEVEL, "icon":"", "effect_type":"succubus_danger_sense", "effect_values":{"hp_ratio":0.3}},
