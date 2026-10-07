@@ -13,11 +13,13 @@ var empty: Label
 var descending := true
 var collection_state: Dictionary = {}
 
-func panel(parent: Control, gold: bool = false) -> VBoxContainer:
+func panel(parent: Control, gold: bool = false, rarity: String = "") -> VBoxContainer:
 	var frame := PanelContainer.new()
 	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var style = lobby._team_formation_view.panel_style(gold)
 	style.set_corner_radius_all(0)
+	if not rarity.is_empty():
+		style = lobby._team_formation_view.rarity_card_style(rarity, style)
 	frame.add_theme_stylebox_override("panel",style)
 	parent.add_child(frame)
 	var margin := MarginContainer.new()
@@ -117,7 +119,7 @@ func refresh(showing: bool) -> void:
 		label(registered,"등록된 초월몬스터가 없습니다",28).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label(registered,"아래 목록에서 한 종류를 등록하세요.",22).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	else:
-		_build_card(registered,selected,selected,true)
+		_build_card(panel(registered,false,"transcendent"),selected,selected,true)
 	var state := collection_state
 	var ids := DATA.get_ids()
 	ids.sort_custom(func(a,b):
@@ -126,7 +128,7 @@ func refresh(showing: bool) -> void:
 		return a < b if left == right else (left > right if descending else left < right))
 	empty.visible = ids.is_empty()
 	for id in ids:
-		_build_card(panel(grid,true),String(id),selected,false)
+		_build_card(panel(grid,false,"transcendent"),String(id),selected,false)
 
 func _build_card(box: VBoxContainer, id: String, selected: String, registered_card: bool) -> void:
 	var state := collection_state
