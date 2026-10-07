@@ -7392,10 +7392,14 @@ func _is_current_hero_animation_protected(requested_animation: StringName) -> bo
 		&"attack":
 			return attack_pose_timer > 0.0 or hero_sprite.is_playing()
 		&"dash_start", &"dash_finish":
+			# Looping dash poses are held by skill state, not playback forever.
 			return (
 				berserker_skill3_active
 				or fighter_charge_active
-				or hero_sprite.is_playing()
+				or (
+					not hero_sprite.sprite_frames.get_animation_loop(current_animation)
+					and hero_sprite.is_playing()
+				)
 			)
 		_:
 			if hero_sprite.sprite_frames.has_animation(current_animation):
