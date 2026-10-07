@@ -226,6 +226,8 @@ var shop_last_result_text: String = ""
 var shop_summon_history: Array = []
 var gacha_reveal_overlay: GachaRevealOverlay
 var _shop_scroll_touch_index: int = -1
+var _detail_scroll_touch_index := -1
+var _detail_scroll_position := 0.0
 var _shop_banner_transitioning := false
 var _shop_banner_tween: Tween
 
@@ -2195,6 +2197,9 @@ func _input(event: InputEvent) -> void:
 			_close_shop_result_modal()
 		return
 
+	if monster_detail_overlay.visible:
+		_handle_monster_detail_touch_scroll(event)
+		return
 	_handle_shop_touch_scroll(event)
 
 	if stage_select_overlay.visible:
@@ -2253,6 +2258,29 @@ func _handle_shop_touch_scroll(event: InputEvent) -> void:
 		and event.index == _shop_scroll_touch_index
 	):
 		shop_scroll.scroll_vertical -= int(round(event.relative.y))
+
+
+func _handle_monster_detail_touch_scroll(event: InputEvent) -> void:
+	var scroll := $MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll as ScrollContainer
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			if _detail_scroll_touch_index < 0 and scroll.get_global_rect().has_point(event.position):
+				_detail_scroll_touch_index = event.index
+				_detail_scroll_position = float(scroll.scroll_vertical)
+				scroll.scroll_vertical = scroll.scroll_vertical
+				get_viewport().set_input_as_handled()
+		elif event.index == _detail_scroll_touch_index:
+			_detail_scroll_touch_index = -1
+			get_viewport().set_input_as_handled()
+	elif event is InputEventScreenDrag and event.index == _detail_scroll_touch_index:
+		var bar := scroll.get_v_scroll_bar()
+		_detail_scroll_position = clampf(_detail_scroll_position - event.relative.y, 0.0, maxf(bar.max_value - bar.page, 0.0))
+		scroll.scroll_vertical = int(round(_detail_scroll_position))
+		get_viewport().set_input_as_handled()
+	elif (event is InputEventMouseButton or event is InputEventMouseMotion) and event.device == InputEvent.DEVICE_ID_EMULATION:
+		# Raw touch owns this region. Its emulated mouse must not scroll twice.
+		if _detail_scroll_touch_index >= 0 or scroll.get_global_rect().has_point(event.position):
+			get_viewport().set_input_as_handled()
 
 
 func _try_stage_swipe(end_position: Vector2) -> void:
@@ -2333,6 +2361,7 @@ func _connect_navigation() -> void:
 	for pair in [["AllButton", "all"], ["UnlockedButton", "unlocked"], ["LockedButton", "locked"]]:
 		unlock_filters.get_node(pair[0]).pressed.connect(_on_formation_unlock_filter_selected.bind(pair[1]))
 	monster_detail_close_button.pressed.connect(_close_monster_detail)
+	_ignore_monster_detail_content_input($MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare)
 	$MonsterDetailOverlay/Dim.gui_input.connect(_on_monster_detail_dim_input)
 
 
@@ -3830,6 +3859,13 @@ func _add_demon_skill(skill_id: String) -> void:
 	_refresh_demon_skill_preview()
 
 
+func _ignore_monster_detail_content_input(node: Node) -> void:
+	if node is Control:
+		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for child in node.get_children():
+		_ignore_monster_detail_content_input(child)
+
+
 func _open_monster_detail(monster_id: String) -> void:
 	if monster_id.is_empty():
 		return
@@ -3837,11 +3873,15 @@ func _open_monster_detail(monster_id: String) -> void:
 		return
 
 	_populate_monster_detail(monster_id)
+	_detail_scroll_touch_index = -1
+	var list := $SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterScroll as ScrollContainer
+	list.scroll_vertical = list.scroll_vertical
 	$MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll.scroll_vertical = 0
 	monster_detail_overlay.show()
 	monster_detail_overlay.move_to_front()
 
 func _close_monster_detail() -> void:
+	_detail_scroll_touch_index = -1
 	monster_detail_overlay.hide()
 
 func _on_monster_detail_dim_input(event: InputEvent) -> void:

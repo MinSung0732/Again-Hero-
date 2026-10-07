@@ -13,6 +13,10 @@ var preview_icon: Texture2D
 var _hold_active := false
 var _hold_elapsed := 0.0
 var _hold_start := Vector2.ZERO
+var _drag_scroll: ScrollContainer
+var _scroll_mouse_filter := Control.MOUSE_FILTER_STOP
+var _locked_scroll_position := Vector2i.ZERO
+var _restoring_scroll := false
 
 
 func configure_drag(
@@ -61,6 +65,7 @@ func _process(delta: float) -> void:
 
 	_hold_active = false
 	set_process(false)
+	_lock_parent_scroll()
 	force_drag(
 		{
 			"formation_kind": formation_kind,
@@ -68,6 +73,48 @@ func _process(delta: float) -> void:
 		},
 		_build_drag_preview()
 	)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_SCROLL_BEGIN:
+		_cancel_hold()
+	elif what == NOTIFICATION_DRAG_END or what == NOTIFICATION_EXIT_TREE:
+		_restore_parent_scroll()
+
+
+func _lock_parent_scroll() -> void:
+	var ancestor := get_parent()
+	while ancestor != null and not ancestor is ScrollContainer:
+		ancestor = ancestor.get_parent()
+	if not ancestor is ScrollContainer:
+		return
+	_drag_scroll = ancestor as ScrollContainer
+	_scroll_mouse_filter = _drag_scroll.mouse_filter
+	_locked_scroll_position = Vector2i(_drag_scroll.scroll_horizontal, _drag_scroll.scroll_vertical)
+	# Setting the current value cancels the native touch gesture/inertia
+	# without changing the list's position or its minimum size.
+	_drag_scroll.scroll_vertical = _drag_scroll.scroll_vertical
+	_drag_scroll.scroll_horizontal = _drag_scroll.scroll_horizontal
+	_drag_scroll.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_drag_scroll.get_v_scroll_bar().value_changed.connect(_on_locked_scroll_changed)
+	_drag_scroll.get_h_scroll_bar().value_changed.connect(_on_locked_scroll_changed)
+
+
+func _on_locked_scroll_changed(_value: float) -> void:
+	if _restoring_scroll or not is_instance_valid(_drag_scroll):
+		return
+	_restoring_scroll = true
+	_drag_scroll.scroll_vertical = _locked_scroll_position.y
+	_drag_scroll.scroll_horizontal = _locked_scroll_position.x
+	_restoring_scroll = false
+
+
+func _restore_parent_scroll() -> void:
+	if is_instance_valid(_drag_scroll):
+		_drag_scroll.mouse_filter = _scroll_mouse_filter
+		_drag_scroll.get_v_scroll_bar().value_changed.disconnect(_on_locked_scroll_changed)
+		_drag_scroll.get_h_scroll_bar().value_changed.disconnect(_on_locked_scroll_changed)
+	_drag_scroll = null
 
 
 func _finish_tap(pointer_position: Vector2) -> void:
