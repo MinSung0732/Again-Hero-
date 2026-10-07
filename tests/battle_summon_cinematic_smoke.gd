@@ -76,6 +76,8 @@ func run() -> void:
 		check(cinematic.view.name_label.modulate.a > 0.99, "name after returning to full body")
 		cinematic.view.set_time(0.0)
 		check(cinematic.view.background.polygon.size() == 3, "triangle backdrop only")
+		check(not cinematic.view.portrait_window.clip_contents, "portrait may extend left of the corner cut-in")
+		check(cinematic.clip_contents, "outer battle panel still clips HUD overflow")
 		check(cinematic.view.position + cinematic.view.size == cinematic.size, "flush lower right battle corner")
 		for frame in range(300):
 			cinematic._process(1.0 / 60.0)

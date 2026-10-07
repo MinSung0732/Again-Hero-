@@ -22,7 +22,8 @@ func _ready() -> void:
 	add_child(background)
 	portrait_window = Control.new()
 	portrait_window.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	portrait_window.clip_contents = true
+	# Let the portrait extend beyond the corner backdrop; the battle panel clips it.
+	portrait_window.clip_contents = false
 	add_child(portrait_window)
 	rig = POSE.new()
 	portrait_window.add_child(rig)
