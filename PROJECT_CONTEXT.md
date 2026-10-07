@@ -1,3 +1,7 @@
+## Zeus Continuous Rig Preview (2026-10-07)
+- Standalone F6 ZeusRigPreview:8 Bone2D/8 Polygon2D semantic regions of the original portrait share UV vertices/normalized skin weights;1025 vertices/1920 triangles, AnimationPlayer cubic continuous small-angle cast/recoil with fixed root/feet. No texture replacement or pose crossfade. StaffArm child Marker2D drives charge/discharge effects at the moving gem.
+- This is a connected merged-image mesh prototype, NOT independent repainted PNG parts or occlusion reconstruction. Large gestures/occlusion changes require layered source artwork. It never mutates gacha/rewards; existing cutscene remains intact. Godot4.6 headless numerical and PC render verified; Android/performance unverified.
+
 ## Zeus Cutscene Energy Polish (2026-10-07)
 - Five-second portrait fixed full-body presentation adds bounded procedural converging/split lightning, ground shockwaves, gold release rays, rotating halo/energy orbits and48 particles. Only environment moves slowly/briefly shakes; portrait is still a single untouched frame at the same scale/feet/body anchor. Further hair/clothing motion requires idle02..08.
 - Existing transparent PNG effects share cached union alpha bounds across frames and aspect-preserving contain (ground circle intentionally projected). Native name appears3.75–4.05s at48 stage px with dark outline. No odds/reward changes; normal/skip/cancel/multi/aspect and name/FX ratio headless+PC regression verified, Android/performance unverified.
