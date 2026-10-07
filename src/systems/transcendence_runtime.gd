@@ -54,3 +54,18 @@ func _evaluate() -> bool:
 func consume() -> void:
 	used = true
 	ready = false
+
+# Caller must enforce local-test authorization. Only condition counters change.
+func satisfy_conditions_for_test() -> bool:
+	if monster_id.is_empty() or used or ready:
+		return false
+	for condition in conditions:
+		var amount := float(condition.get("amount", 0))
+		match String(condition.get("metric", "")):
+			"monsters_summoned":
+				monsters_summoned = maxi(monsters_summoned, int(ceil(amount)))
+			"command_spent":
+				command_spent = maxf(command_spent, amount)
+			"mana_spent":
+				mana_spent = maxf(mana_spent, amount)
+	return _evaluate()

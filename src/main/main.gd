@@ -1146,7 +1146,9 @@ func _can_use_battle_pointer(pointer_position: Vector2) -> bool:
 
 
 func _is_pointer_over_battle_ui(pointer_position: Vector2) -> bool:
-	if is_instance_valid(transcendence_view.button) and transcendence_view.is_visible_in_tree() and transcendence_view.button.get_global_rect().has_point(pointer_position):
+	if is_instance_valid(transcendence_view.button) and transcendence_view.button.is_visible_in_tree() and transcendence_view.button.get_global_rect().has_point(pointer_position):
+		return true
+	if is_instance_valid(transcendence_view.unlock_button) and transcendence_view.unlock_button.is_visible_in_tree() and transcendence_view.unlock_button.get_global_rect().has_point(pointer_position):
 		return true
 	# Detail panels must win the initial touch before locked-camera manual
 	# placement can consume it in _input(). Otherwise ScrollContainer misses

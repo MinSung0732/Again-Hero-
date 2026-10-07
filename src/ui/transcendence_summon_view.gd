@@ -1,6 +1,7 @@
 extends Control
 var host: Control
 var button: Button
+var unlock_button: Button
 var icon: TextureRect
 var tween: Tween
 var shown_id := ""
@@ -51,6 +52,24 @@ func install(main: Control) -> void:
 	title.add_theme_color_override("font_color",Color("f0cb68"))
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	body.add_child(title)
+	unlock_button = Button.new()
+	unlock_button.name = "TestUnlock"
+	unlock_button.text = "잠금 해제"
+	unlock_button.focus_mode = Control.FOCUS_NONE
+	unlock_button.anchor_left = 1.0
+	unlock_button.anchor_right = 1.0
+	unlock_button.anchor_top = 0.63
+	unlock_button.anchor_bottom = 0.63
+	unlock_button.offset_left = -WIDTH - 12
+	unlock_button.offset_right = -12
+	unlock_button.offset_top = -66
+	unlock_button.offset_bottom = -10
+	unlock_button.add_theme_font_size_override("font_size", 20)
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		unlock_button.add_theme_stylebox_override(state, button.get_theme_stylebox(state).duplicate())
+	add_child(unlock_button)
+	host._replace_button_frame(unlock_button,host.BATTLE_PIXEL_FRAME_MEDIUM_DIR,0.25,host.BATTLE_PIXEL_CENTER_DARK,18)
+	unlock_button.pressed.connect(host.battle.debug_unlock_transcendence)
 	button.pressed.connect(host.battle.try_summon_transcendent)
 	host.battle.transcendence_changed.connect(_changed)
 	host.battle.command_changed.connect(_command_changed)
@@ -75,17 +94,20 @@ func refresh() -> void:
 	if not is_instance_valid(host) or not is_instance_valid(host.battle):
 		return
 	var state = host.battle.transcendence
-	if state.monster_id != shown_id or (not state.ready and not state.used and visible_once):
+	var local_test := LocalTestMode.active
+	if state.monster_id != shown_id or (not state.ready and not state.used and visible_once and not local_test):
 		shown_id = state.monster_id
 		visible_once = false
 		if tween != null and tween.is_valid():
 			tween.kill()
 		button.offset_left = 0
 		button.offset_right = WIDTH
-	if state.monster_id.is_empty() or not state.ready or state.used or host.battle.battle_over:
+	if state.monster_id.is_empty() or (not state.ready and not local_test) or state.used or host.battle.battle_over:
 		hide()
 		return
 	show()
+	unlock_button.visible = local_test
+	unlock_button.disabled = state.ready or host.battle.external_pause or host.battle.demon_augment_selection_active
 	if not visible_once:
 		visible_once = true
 		icon.texture = host._load_monster_card_icon(state.monster_id)
@@ -93,4 +115,4 @@ func refresh() -> void:
 		tween.set_parallel(true)
 		tween.tween_property(button,"offset_left",-WIDTH-12,0.24)
 		tween.tween_property(button,"offset_right",-12.0,0.24)
-	button.disabled = host.battle.external_pause or host.battle.demon_augment_selection_active or host.battle.command_power + 0.001 < host.battle.get_monster_cost(state.monster_id)
+	button.disabled = not state.ready or host.battle.external_pause or host.battle.demon_augment_selection_active or host.battle.command_power + 0.001 < host.battle.get_monster_cost(state.monster_id)

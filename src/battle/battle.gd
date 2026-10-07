@@ -1177,6 +1177,18 @@ func try_summon_at_position(monster_type: String, spawn_position: Vector2) -> bo
 		true
 	)
 
+func debug_unlock_transcendence() -> bool:
+	if not LocalTestMode.active or battle_over or external_pause or demon_augment_selection_active:
+		return false
+	var id: String = transcendence.monster_id
+	if not TRANSCENDENCE_DATA.is_transcendent(id) or not bool(MONSTER_CATALOG.MONSTERS.get(id, {}).get("combat_enabled", true)):
+		return false
+	if not transcendence.satisfy_conditions_for_test():
+		return false
+	transcendence_changed.emit(id, true, false)
+	return true
+
+
 func try_summon_transcendent() -> bool:
 	var id: String = transcendence.monster_id
 	if not _can_attempt_summon(id, true):
