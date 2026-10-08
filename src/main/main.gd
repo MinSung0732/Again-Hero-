@@ -888,6 +888,7 @@ func _on_hero_reveal_finished() -> void:
 
 func _start_battle_after_intro(_stage_id: String) -> void:
 	if _battle_started_ms < 0:
+		battle.hero.center_camera_on_hero()
 		_battle_started_ms = Time.get_ticks_msec()
 		_battle_started_unix = Time.get_unix_time_from_system()
 	_stage_intro_active = false

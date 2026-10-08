@@ -874,6 +874,7 @@ var magnet_item_steering_direction: Vector2 = Vector2.ZERO
 var exp_orb_target: Node2D
 var exp_orb_retarget_until_msec: int = 0
 
+var status_overlay: Node2D
 @onready var follow_camera: Camera2D = $Camera2D
 @onready var ground_shadow: Sprite2D = $GroundShadow
 @onready var hero_sprite: AnimatedSprite2D = $HeroSprite
@@ -1585,6 +1586,12 @@ func configure_battlefield(size: Vector2) -> void:
 	)
 
 func _ready() -> void:
+	status_overlay = Node2D.new()
+	status_overlay.name = "CombatStatusOverlay"
+	status_overlay.z_as_relative = false
+	status_overlay.z_index = 100
+	add_child(status_overlay)
+	status_overlay.draw.connect(_draw_combat_status_overlay)
 	add_to_group("hero")
 	_attach_status_effect_visual("slow")
 	_attach_status_effect_visual("fear")
@@ -7711,13 +7718,22 @@ func set_camera_view_locked(locked: bool) -> void:
 		follow_camera.top_level = false
 		follow_camera.position = Vector2.ZERO
 	else:
-		var current_center := follow_camera.get_screen_center_position()
+		var current_center := follow_camera.global_position if not follow_camera.top_level else follow_camera.get_screen_center_position()
 		follow_camera.top_level = true
 		follow_camera.global_position = _clamp_manual_camera_center(
 			current_center
 		)
 	follow_camera.force_update_scroll()
 
+
+func center_camera_on_hero() -> void:
+	if not is_instance_valid(follow_camera):
+		return
+	if follow_camera.top_level:
+		follow_camera.global_position = _clamp_manual_camera_center(global_position)
+	else:
+		follow_camera.position = Vector2.ZERO
+	follow_camera.force_update_scroll()
 
 func pan_camera_by_screen_delta(screen_delta: Vector2) -> void:
 	if (
@@ -20606,6 +20622,8 @@ func _begin_death_sequence() -> void:
 	queue_free()
 
 func _draw() -> void:
+	if is_instance_valid(status_overlay):
+		status_overlay.queue_redraw()
 	if ultimate_flash_timer > 0.0:
 		var flash_ratio := clampf(
 			ultimate_flash_timer / 0.28,
@@ -20634,6 +20652,9 @@ func _draw() -> void:
 		draw_line(Vector2(22, 13), Vector2(44, -12), Color(0.82, 0.72, 0.48), 7.0)
 		draw_circle(Vector2(49, -17), 8.0, Color(0.95, 0.86, 0.32))
 
+func _draw_combat_status_overlay() -> void:
+	if is_dying:
+		return
 	var bar_width := 92.0
 	var bar_x_offset := 0.0
 	var resource_bar_y := -79.0
@@ -20671,9 +20692,9 @@ func _draw() -> void:
 			displayed_cells = clampi(int(floor(reload_progress * float(gunner_magazine_size))), 0, gunner_magazine_size)
 		for index in range(gunner_magazine_size):
 			var x := -bar_width / 2.0 + float(index) * (cell_width + gap)
-			draw_rect(Rect2(x, resource_bar_y, cell_width, 8.0), Color(0.12, 0.12, 0.14), true)
+			status_overlay.draw_rect(Rect2(x, resource_bar_y, cell_width, 8.0), Color(0.12, 0.12, 0.14), true)
 			if index < displayed_cells:
-				draw_rect(Rect2(x, resource_bar_y, cell_width, 8.0), Color(1.0, 0.77, 0.16), true)
+				status_overlay.draw_rect(Rect2(x, resource_bar_y, cell_width, 8.0), Color(1.0, 0.77, 0.16), true)
 	elif hero_archetype == "summoner_gatekeeper":
 		var slot_count := _get_summoner_slot_capacity()
 		var active_summons := _get_active_summon_count()
@@ -20683,21 +20704,21 @@ func _draw() -> void:
 		) / float(slot_count)
 		for index in range(slot_count):
 			var x := -bar_width / 2.0 + float(index) * (cell_width + gap)
-			draw_rect(
+			status_overlay.draw_rect(
 				Rect2(x, resource_bar_y, cell_width, 8.0),
 				Color(0.12, 0.12, 0.14),
 				true
 			)
 			if index < active_summons:
-				draw_rect(
+				status_overlay.draw_rect(
 					Rect2(x, resource_bar_y, cell_width, 8.0),
 					Color(0.55, 0.40, 0.95),
 					true
 				)
 	elif hero_archetype == "alchemist_chemical":
 		var gas_ratio := clampf(alchemist_gas / maxf(alchemist_gas_max, 1.0), 0.0, 1.0)
-		draw_rect(Rect2(-bar_width / 2.0, resource_bar_y, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
-		draw_rect(
+		status_overlay.draw_rect(Rect2(-bar_width / 2.0, resource_bar_y, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
+		status_overlay.draw_rect(
 			Rect2(-bar_width / 2.0, -79.0, bar_width * gas_ratio, 8.0),
 			Color(0.68, 0.28, 0.92),
 			true
@@ -20712,12 +20733,12 @@ func _draw() -> void:
 			0.0,
 			1.0
 		)
-		draw_rect(
+		status_overlay.draw_rect(
 			Rect2(bar_left_x, resource_bar_y, bar_width, 8.0),
 			Color(0.12, 0.12, 0.14),
 			true
 		)
-		draw_rect(
+		status_overlay.draw_rect(
 			Rect2(bar_left_x, resource_bar_y, bar_width * purifier_ratio, 8.0),
 			Color(1.0, 0.77, 0.16),
 			true
@@ -20732,12 +20753,12 @@ func _draw() -> void:
 			0.0,
 			1.0
 		)
-		draw_rect(
+		status_overlay.draw_rect(
 			Rect2(-bar_width / 2.0, resource_bar_y, bar_width, 8.0),
 			Color(0.12, 0.12, 0.14),
 			true
 		)
-		draw_rect(
+		status_overlay.draw_rect(
 			Rect2(
 				-bar_width / 2.0,
 				resource_bar_y,
@@ -20750,16 +20771,16 @@ func _draw() -> void:
 	else:
 		var ultimate_max := maxf(float(ultimate_config.get("charge_max", 100.0)), 1.0)
 		var ultimate_ratio := clampf(ultimate_charge / ultimate_max, 0.0, 1.0)
-		draw_rect(Rect2(-bar_width / 2.0, resource_bar_y, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
-		draw_rect(Rect2(-bar_width / 2.0, resource_bar_y, bar_width * ultimate_ratio, 8.0), Color(1.0, 0.77, 0.16), true)
+		status_overlay.draw_rect(Rect2(-bar_width / 2.0, resource_bar_y, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
+		status_overlay.draw_rect(Rect2(-bar_width / 2.0, resource_bar_y, bar_width * ultimate_ratio, 8.0), Color(1.0, 0.77, 0.16), true)
 
 	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
-	draw_rect(
+	status_overlay.draw_rect(
 		Rect2(bar_left_x, hp_bar_y, bar_width, 10.0),
 		Color(0.12, 0.12, 0.14),
 		true
 	)
-	draw_rect(
+	status_overlay.draw_rect(
 		Rect2(
 			bar_left_x,
 			hp_bar_y,
@@ -20776,12 +20797,12 @@ func _draw() -> void:
 			0.0,
 			1.0
 		)
-		draw_rect(
+		status_overlay.draw_rect(
 			Rect2(bar_left_x, shield_bar_y, bar_width, 8.0),
 			Color(0.10, 0.12, 0.18),
 			true
 		)
-		draw_rect(
+		status_overlay.draw_rect(
 			Rect2(
 				bar_left_x,
 				shield_bar_y,

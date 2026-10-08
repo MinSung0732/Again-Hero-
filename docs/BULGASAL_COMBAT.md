@@ -53,3 +53,9 @@ localtest 게스트의 기타 → 연습전투. 진입 전 초월등록한 몬�
 성 전투의 몸체Z0 정규화와 독립적으로 불가살 생애에 한 번 생성한 CombatEffects(Z1)/CombatGauges(Z3)를 사용한다. 모든 기존 기술 draw는 FX층, HP/노란 게이지/받은 쉴드/정신집중은 HUD층으로 이동했다. 갱신은 기존 전투 tick과 사망 정리에서만 발생한다. 프레임별 노드 생성·그룹 탐색을 추가하지 않는다. 쉴드/노란/HP는4px 간격이며 정신집중은 예열 시 계산한 idle 가시폭의 현재 반전 방향 오른쪽+8px에 놓는다.
 
 몸체 높이118×1.27×1.18, 비행 바위 가시폭120×1.35. 비행 PNG6장은 공통 union 중심을 pivot으로 사용하여 회전 중 바닥 anchor 주위를 흔들리지 않도록 한다. 투사체 방향은 발사 스냅샷 벡터의 angle을 한 번 저장한다. 피해 영역/속도870/기둥 선분 판정은 유지한다. 실제 Godot OpenGL에서 정신집중·바위 뽑기·대각 비행 렌더 확인, 전투/연습 smoke 통과. Android 미검증.
+
+## 2026-10-08 depth and movement polish
+- Rock flight width: 120 × 1.35 × 2.65; pillar width: 200. Visual scale only; existing hit radius/collision/damage unchanged.
+- Burrow: intro indices0–2 then indices3–8 loop at12fps, oriented native +X toward travel. Idle restores on stopped attacks, missing target, blocked movement and cast transitions.
+- Castle body/decoration depth uses each floor Y at shared Z0. Fixed8 pillar sprites are Battle children with collision bodies; no runtime instantiate/free loop added. Hero HP/resource/shield draw uses stable absoluteZ100 overlay above world FX.
+- Free camera centers once on Hero at entry, preserving subsequent manual pan. Isolated Godot runtime tests and Linux rendered front/back pillar checks passed; Android/full app not tested.

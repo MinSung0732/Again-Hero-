@@ -39,6 +39,10 @@ func run() -> void:
 	var dummy = battle.hero
 	dummy.set_physics_process(false)
 	check(battle.practice_mode and not mode.practice_requested and not mode.consume_practice_request(),"one-shot request consumed")
+	check(dummy.status_overlay.z_index==100 and not dummy.status_overlay.z_as_relative,"Hero bars above bodies and world FX")
+	dummy.set_camera_view_locked(false)
+	dummy.center_camera_on_hero()
+	check(dummy.follow_camera.top_level and dummy.follow_camera.global_position==dummy._clamp_manual_camera_center(dummy.global_position),"unlocked entry centered on Hero")
 	check(dummy.get_meta("practice_dummy",false) and dummy.attack_damage==1 and dummy.practice_attack_enabled,"real Hero adapter, 1-damage attacks enabled")
 	check(dummy.take_damage(2000000000,null) and dummy.take_status_damage(2000000000,null),"ordinary/status hits accepted")
 	check(dummy.current_hp==dummy.INFINITE_HP and not dummy.is_dying,"cannot die from lethal hits")
@@ -53,6 +57,13 @@ func run() -> void:
 	var actor = battle.transcendent_actor
 	actor.set_physics_process(false)
 	actor.pillars.set_physics_process(false)
+	check(actor.pillars.bodies[0].get_parent()==battle and actor.pillars.bodies[0].z_index==actor.z_index,"each pillar shares Battle foot-depth sorting")
+	check(is_equal_approx(float(preload("res://src/ui/bulgasal_combat_effects.gd").SPECS.rock_fly[3]),120.0*1.35*2.65),"rock current size2.65x")
+	check(is_equal_approx(float(preload("res://src/ui/bulgasal_combat_effects.gd").SPECS.pillar[3]),200.0),"pillar visual2x")
+	actor.phase_elapsed=0.5
+	var smoke_frame: int=actor.get_burrow_frame()
+	actor.phase_elapsed+=float(DATA.BURROW_LOOP_COUNT)/DATA.BURROW_FPS
+	check(actor.get_burrow_frame()==smoke_frame,"burrow smoke loops steady segment")
 	actor.position=dummy.position-Vector2(100,0)
 	actor._set_phase("idle")
 	dummy.decision_remaining=0

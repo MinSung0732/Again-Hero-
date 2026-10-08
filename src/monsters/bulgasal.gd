@@ -10,6 +10,7 @@ var gauge_layer: Node2D
 var channel_left_extent := 0.0
 var channel_right_extent := 0.0
 var rock_rotation := 0.0
+var burrow_rotation := 0.0
 const CHANNEL := preload("res://src/systems/channel_runtime.gd")
 var pillars: Node2D
 var channel = CHANNEL.new()
@@ -207,11 +208,14 @@ func _physics_process(delta: float) -> void:
 		"idle":
 			if stun_remaining <= 0.0 and not bool(get_meta("stun_active",false)) and not MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self):
 				_tick_idle(delta)
+			else:
+				_update_visual_motion(0.0,false)
 	effect_layer.queue_redraw()
 	gauge_layer.queue_redraw()
 
 func _tick_idle(delta: float) -> void:
 	if not _hero_alive():
+		_update_visual_motion(0.0,false)
 		return
 	if retreat_pending > 0:
 		retreat_pending -= 1
@@ -224,6 +228,7 @@ func _tick_idle(delta: float) -> void:
 		return
 	var pillar_index: int = pillars.nearest(global_position,DATA.PILLAR_INTERACTION)
 	if pillar_index >= 0 and interaction_timer <= 0.0:
+		_update_visual_motion(0.0,false)
 		interaction_timer = 0.75
 		visual.play_attack()
 		pillars.shatter(pillar_index,true,randf()<DATA.EAT_CHANCE)
@@ -231,10 +236,12 @@ func _tick_idle(delta: float) -> void:
 	var offset := hero.global_position-global_position
 	if offset.length_squared() > attack_range*attack_range:
 		_move_towards(hero.global_position,delta)
-	elif attack_timer <= 0.0:
-		attack_timer = attack_cooldown
-		visual.play_attack()
-		hero.take_damage(attack_damage,self)
+	else:
+		_update_visual_motion(offset.x,false)
+		if attack_timer <= 0.0:
+			attack_timer = attack_cooldown
+			visual.play_attack()
+			hero.take_damage(attack_damage,self)
 
 func _move_towards(point: Vector2, delta: float, speed_ratio: float = 1.0) -> void:
 	var offset := point-global_position
@@ -243,6 +250,8 @@ func _move_towards(point: Vector2, delta: float, speed_ratio: float = 1.0) -> vo
 func _move_direction(direction: Vector2, speed: float, _delta: float) -> void:
 	if stun_remaining > 0.0 or MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self):
 		return
+	if phase == "burrow" and not direction.is_zero_approx():
+		burrow_rotation = direction.angle()
 	velocity = direction*speed*MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
 	move_and_slide()
 	_update_visual_motion(direction.x,not velocity.is_zero_approx())
@@ -260,6 +269,7 @@ func _try_cast() -> bool:
 		if index == 0:
 			_set_phase("pick")
 		elif index == 1:
+			burrow_rotation = (hero.global_position-global_position).angle()
 			_set_phase("burrow")
 			visual.visible = false
 		else:
@@ -272,6 +282,9 @@ func _set_phase(next: String) -> void:
 	if next == "launch":
 		TARGET_POLICY.set_hidden(self,true)
 	phase = next
+	visual_moving_state = -1
+	if next != "burrow" and next != "air":
+		_update_visual_motion(0.0,false)
 	phase_elapsed = 0.0
 	velocity = Vector2.ZERO
 
@@ -422,7 +435,7 @@ func draw_combat_overlay(target: Node2D) -> void:
 	if phase == "pick":
 		FX.draw_frame(target,"rock_pick",mini(int(phase_elapsed/DATA.ROCK_PICK_SECONDS*9),8),Vector2.ZERO)
 	elif phase == "burrow":
-		FX.draw_frame(target,"burrow",mini(int(phase_elapsed/DATA.BURROW_SECONDS*9),8),Vector2.ZERO)
+		FX.draw_frame(target,"burrow",get_burrow_frame(),Vector2.ZERO,burrow_rotation)
 	elif phase == "launch":
 		FX.draw_frame(target,"leap",mini(int(phase_elapsed/0.35*7),6),Vector2.ZERO)
 	elif phase == "quake":
@@ -447,3 +460,7 @@ func draw_combat_overlay(target: Node2D) -> void:
 				if distance < 0.0 or distance > DATA.WAVE_RANGE:
 					continue
 				FX.draw_frame(target,"wave",mini(int(distance/DATA.WAVE_RANGE*11),10),to_local(wave_origin+direction*distance),direction.angle())
+
+func get_burrow_frame() -> int:
+	var tick := int(phase_elapsed*DATA.BURROW_FPS)
+	return tick if tick<DATA.BURROW_LOOP_FIRST else DATA.BURROW_LOOP_FIRST+(tick-DATA.BURROW_LOOP_FIRST)%DATA.BURROW_LOOP_COUNT

@@ -5,6 +5,7 @@ const FX := preload("res://src/ui/bulgasal_combat_effects.gd")
 var actor: Node2D
 var authority: Node
 var bodies: Array[StaticBody2D] = []
+var visuals: Array[Sprite2D] = []
 var states := PackedInt32Array()
 var ages := PackedFloat32Array()
 var retiring := false
@@ -25,7 +26,17 @@ func _ready() -> void:
 		shape.radius = DATA.PILLAR_RADIUS
 		collider.shape = shape
 		body.add_child(collider)
-		add_child(body)
+		body.z_index = 0
+		authority.add_child(body) # Direct Battle child: sort by each pillar's floor Y.
+		var sprite := Sprite2D.new()
+		var pack := FX.get_pack("pillar")
+		sprite.centered = false
+		sprite.offset = -pack.anchor
+		sprite.scale = Vector2.ONE*float(pack.scale)
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sprite.visible = false
+		body.add_child(sprite)
+		visuals.append(sprite)
 		bodies.append(body)
 
 func regenerate() -> void:
@@ -51,7 +62,7 @@ func regenerate() -> void:
 		states[index] = 1
 		ages[index] = 0.0
 		bodies[index].collision_layer = 3
-	queue_redraw()
+	_refresh_visuals()
 
 func nearest(point: Vector2, radius: float) -> int:
 	var chosen := -1
@@ -76,7 +87,7 @@ func shatter(index: int, damage: bool, eaten: bool = false) -> bool:
 			actor.add_stacking_shield(DATA.EAT_SHIELD)
 		elif damage:
 			actor.hit_aftershock(bodies[index].global_position)
-	queue_redraw()
+	_refresh_visuals()
 	return true
 
 func shatter_all(damage: bool) -> void:
@@ -113,11 +124,20 @@ func _physics_process(delta: float) -> void:
 		retire_remaining -= delta
 		if retire_remaining <= 0.0:
 			queue_free()
-	queue_redraw()
+	_refresh_visuals()
 
-func _draw() -> void:
+func _refresh_visuals() -> void:
+	var pack := FX.get_pack("pillar")
 	for index in range(DATA.PILLAR_MAX):
+		visuals[index].visible = states[index] != 0
 		if states[index] == 0:
 			continue
 		var frame := mini(int(ages[index]*10.0),4) if states[index] == 1 else 5 if states[index] == 2 else 6+mini(int(ages[index]*10.0),14)
-		FX.draw_frame(self,"pillar",frame,to_local(bodies[index].global_position))
+		var texture: Texture2D = pack.frames[frame]
+		if visuals[index].texture != texture:
+			visuals[index].texture = texture
+
+func _exit_tree() -> void:
+	for body in bodies:
+		if is_instance_valid(body) and not body.is_queued_for_deletion():
+			body.queue_free()

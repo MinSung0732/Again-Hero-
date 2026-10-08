@@ -6,7 +6,7 @@ const SPECS := {
 	"rock_pick":[1,1,9,120.0], "rock_fly":[1,10,15,120.0*DATA.ROCK_VISUAL_SCALE], "impact":[1,16,20,400.0],
 	"burrow":[2,1,9,135.0], "emerge":[2,10,18,180.0],
 	"leap":[3,1,7,180.0], "leap_impact":[3,8,9,250.0], "wave":[3,10,20,135.0],
-	"retreat":[3,1,9,180.0], "pillar":[4,1,21,100.0],
+	"retreat":[3,1,9,180.0], "pillar":[4,1,21,100.0*DATA.PILLAR_VISUAL_SCALE],
 }
 
 static func warm() -> void:

@@ -1,3 +1,9 @@
+## Free camera entry and Bulgasal depth (2026-10-08)
+- Center camera on Hero once at playable battle start, including unlocked top-level camera; later manual panning remains free. Unlocking an attached camera snapshots its global position rather than stale initial screen center.
+- Rock visible width120*1.35*2.65; pillar visible width200. Damage/collider geometry unchanged. Burrow native +X rotates toward movement, first3 frames then frames4–9 loop12fps. Stopped/cast phases request idle without repeated move/idle toggles while moving.
+- Fixed8 pillar collider/sprite pool now belongs directly to Battle for existing castle floorY sorting. Manager owns cleanup and death destruction duration. Hero resource/HP/shield primitive bars use one stable absoluteZ100 child; bodies remain depth sorted and FX retain existing foreground layers.
+- Godot4.5.1 isolated import/parse and practice/Bulgasal/Zeus regression passed; native Linux OpenGL front/back pillar and Hero status render checked. Full app/Android unverified; fixture exit-resource warnings remain.
+
 ## Zeus hit layering and circular warning phase1 (2026-10-09)
 - Zeus combat FX render in lifetime-stable absolute world Z8 above target bodies. Judgment/thunder release snapshot Hero profile GroundShadow world position via get_combat_feet_position; damage remains on existing single Hero target. Slash visual size130*1.75 only, original speed/range/swept radius/damage preserved.
 - CircularAttackTelegraph shared primitive draw adds exact radius/progress during existing preparation: bomb rat fuse (shared overload radius), elite thrower bomb flight/fuse, Bulgasal leap channel, alchemist basic poison vial flight (compressed range). No gameplay delay introduced.
