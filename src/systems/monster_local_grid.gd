@@ -2,6 +2,7 @@ extends RefCounted
 
 const COMMON := preload("res://src/monsters/monster_runtime_common.gd")
 const CELL_SIZE := 32.0
+const MAX_DENSE_SEPARATION_SAMPLES := 48
 var buckets: Dictionary = {}
 var used_cells: Array[Vector2i] = []
 var revision := -1
@@ -56,7 +57,12 @@ func separation_bias(owner: Node2D, radius: float) -> Vector2:
 			var bucket = buckets.get(Vector2i(x, y))
 			if bucket == null:
 				continue
-			for other in bucket:
+			# Steering only: dense piles use different stable neighbors per owner.
+			# Damage/target queries below always retain the complete hit set.
+			var sample_count := mini(bucket.size(), MAX_DENSE_SEPARATION_SAMPLES)
+			var sample_start := int(owner_id % bucket.size()) if bucket.size() > sample_count else 0
+			for sample in range(sample_count):
+				var other = bucket[(sample_start + sample) % bucket.size()]
 				if other == owner or not is_instance_valid(other) or other.is_queued_for_deletion() or bool(other.get_meta("ignore_monster_separation", false)):
 					continue
 				var offset: Vector2 = origin - other.global_position

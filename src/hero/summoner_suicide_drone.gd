@@ -23,6 +23,8 @@ var current_hp: int = 100
 var max_hp: int = 100
 var attack_damage: int = 1
 var attack_range: float = 100.0
+var explosion_radius: float = 100.0
+var _blast_candidates: Array = []
 var move_speed: float = 360.0
 var sense_range: float = 1200.0
 var lifetime_remaining: float = 12.0
@@ -61,6 +63,7 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 		1
 	)
 	attack_range = maxf(float(config.get("attack_range", 100.0)), 1.0)
+	explosion_radius = maxf(float(config.get("explosion_radius", attack_range)), 1.0)
 	move_speed = maxf(float(config.get("move_speed", 360.0)), 1.0)
 	sense_range = maxf(float(config.get("sense_range", 1200.0)), attack_range)
 	lifetime_remaining = maxf(float(config.get("max_lifetime", 12.0)), 0.1)
@@ -163,9 +166,18 @@ func _explode_on_target() -> void:
 	exploding = true
 	set_physics_process(false)
 
-	if HERO_TARGET_POLICY.is_detectable(target):
-		if target.has_method("take_damage"):
-			target.call("take_damage", attack_damage)
+	var battle := get_parent()
+	if battle.has_method("fill_monsters_near"):
+		battle.fill_monsters_near(global_position, explosion_radius, _blast_candidates)
+	else:
+		_blast_candidates.assign(get_tree().get_nodes_in_group("monsters"))
+	var radius_sq := explosion_radius * explosion_radius
+	for victim in _blast_candidates:
+		if not HERO_TARGET_POLICY.is_detectable(victim) or not victim.has_method("take_damage"):
+			continue
+		if global_position.distance_squared_to(victim.global_position) <= radius_sq:
+			victim.call("take_damage", attack_damage)
+	_blast_candidates.clear()
 
 	visual.visible = false
 	spawn_effect.visible = false

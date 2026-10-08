@@ -39,7 +39,7 @@ func run() -> void:
 	lobby._show_formation_mode("transcendence")
 	await process_frame
 	var fixtures := "--fixtures" in OS.get_cmdline_user_args()
-	check(lobby.transcendence_view.content.visible and lobby.transcendence_view.empty.visible == (not fixtures),"empty/fixture catalog screen")
+	check(lobby.transcendence_view.content.visible and lobby.transcendence_view.empty.visible == DATA.get_ids().is_empty(),"catalog emptiness reflects shipping or fixture entries")
 	check(not lobby.skill_mode_button.disabled and not lobby.team_mode_button.disabled,"other tabs usable")
 	if not fixtures:
 		await capture("res://../transcendence_empty.png")

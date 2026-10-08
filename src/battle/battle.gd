@@ -154,6 +154,10 @@ var yuki_runtime = YUKI_RUNTIME.new()
 var scorpion_swamp_runtime = SCORPION_SWAMP_RUNTIME.new()
 var monster_population_counts: Dictionary = {}
 var monster_population_ids: Dictionary = {}
+# Living units created by player summons; skill/augment children never reserve slots.
+var direct_population_ids: Dictionary = {}
+signal population_changed(count: int, capacity: int)
+var _population_update_pending := false
 var active_hero_summons: Dictionary = {}
 var active_elite_skeletons: Dictionary = {}
 var monster_spatial_grid: Dictionary = {}
@@ -761,6 +765,7 @@ func _start_battle() -> void:
 	monster_query_registration_order = 0
 	monster_population_counts.clear()
 	monster_population_ids.clear()
+	direct_population_ids.clear()
 	active_hero_summons.clear()
 	active_elite_skeletons.clear()
 	monster_spatial_grid.clear()
@@ -1234,6 +1239,10 @@ func _can_attempt_summon(monster_type: String, transcendence_attempt: bool = fal
 		)
 		return false
 
+	if is_population_full():
+		summon_result.emit(monster_type, false, "인구수가 가득 찼습니다. 직접 소환은 최대 지휘력만큼 가능합니다.")
+		return false
+
 	if _monster_population_limit_reached(monster_type):
 		summon_result.emit(monster_type, false, "최대 소환 개체 수에 도달했습니다.")
 		return false
@@ -1254,7 +1263,7 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 		spawn_position,
 		cost,
 		false,
-		{"giant_monster": giant_spawn, "transcendence_summon": is_transcendent}
+		{"giant_monster": giant_spawn, "transcendence_summon": is_transcendent, "counts_population": true}
 	)
 	if not is_instance_valid(primary_monster):
 		command_power += cost
@@ -1948,6 +1957,8 @@ func _spawn_monster(
 	split_child: bool = false,
 	spawn_modifiers: Dictionary = {}
 ):
+	if bool(spawn_modifiers.get("counts_population", false)) and is_population_full():
+		return null
 	if not bool(MONSTER_CATALOG.MONSTERS.get(monster_type, {}).get("combat_enabled", true)):
 		return null
 	var scene := MONSTER_CATALOG.get_scene(monster_type)
@@ -2263,6 +2274,13 @@ func _spawn_monster(
 	active_monsters[monster_instance_id] = monster
 	monster.set_meta("query_registration_order", monster_query_registration_order)
 	monster_query_registration_order += 1
+	if bool(spawn_modifiers.get("counts_population", false)):
+		direct_population_ids[monster_instance_id] = true
+		_queue_population_update()
+	monster.set_meta("counts_population", direct_population_ids.has(monster_instance_id))
+	# Stagger common target refreshes instead of waking the entire army together.
+	if monster.get("hero_target_refresh_timer") != null:
+		monster.set("hero_target_refresh_timer", fmod(float(monster_query_registration_order) * 0.0954915, 0.25))
 	monster_population_ids[monster_instance_id] = monster_type
 	monster_population_counts[monster_type] = int(monster_population_counts.get(monster_type, 0)) + 1
 	monster.tree_exited.connect(_unregister_monster.bind(monster_instance_id), CONNECT_ONE_SHOT)
@@ -2275,7 +2293,28 @@ func _spawn_monster(
 	return monster
 
 
+func _queue_population_update() -> void:
+	if _population_update_pending:
+		return
+	_population_update_pending = true
+	_emit_population_changed.call_deferred()
+
+func _emit_population_changed() -> void:
+	_population_update_pending = false
+	population_changed.emit(get_population_count(), get_population_limit())
+
+func get_population_count() -> int:
+	return direct_population_ids.size()
+
+func get_population_limit() -> int:
+	return maxi(floori(max_command), 0)
+
+func is_population_full() -> bool:
+	return get_population_count() >= get_population_limit()
+
 func _unregister_monster(instance_id: int) -> void:
+	if direct_population_ids.erase(instance_id):
+		_queue_population_update()
 	if monster_population_ids.has(instance_id):
 		var monster_id := String(monster_population_ids[instance_id])
 		monster_population_counts[monster_id] = maxi(int(monster_population_counts.get(monster_id, 0)) - 1, 0)
@@ -2353,10 +2392,12 @@ func _try_fuse_nearby_kobolts(primary_monster: Node2D) -> Node2D:
 
 	var fusion_position := Vector2.ZERO
 	var fused_summon_cost := 0.0
+	var fused_counts_population := false
 	for raw_candidate in kobolt_fusion_candidates:
 		var candidate := raw_candidate as Node2D
 		if not is_instance_valid(candidate):
 			continue
+		fused_counts_population = fused_counts_population or direct_population_ids.has(candidate.get_instance_id())
 		fusion_position += candidate.global_position
 		fused_summon_cost += float(
 			monster_summon_costs.get(candidate.get_instance_id(), 0.0)
@@ -2374,7 +2415,7 @@ func _try_fuse_nearby_kobolts(primary_monster: Node2D) -> Node2D:
 		_clamp_manual_spawn_position(fusion_position),
 		fused_summon_cost,
 		false,
-		{"giant_monster": true}
+		{"giant_monster": true, "counts_population": fused_counts_population}
 	) as Node2D
 	if is_instance_valid(fused):
 		fused.set_meta("kobolt_fusion", true)

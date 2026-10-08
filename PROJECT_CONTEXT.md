@@ -1,3 +1,8 @@
+## Population and crowded combat (2026-10-08)
+- Population = living player-summoned units (one per unit, including transcendents), capped at floor(maximum command). Augment/monster-skill/army generated units are exempt. Block at capacity without consuming resources; death releases immediately. Kobolt fusion inherits one slot when any material used a slot.
+- Dense movement separation samples at most 48 neighbors per local cell; damage and area target queries remain complete. Invulnerable Stage 8 watchers are support effects, never attack targets. Moving Stage 8 followers do not body-block actors and retain terrain-wall masks. Suicide drones deal AoE at the explosion origin, radius from profile data (100).
+- Transcendent registration uses the existing profile banner, mirrored to the right with a central fade and readable left-side information. Preserve fixed registered viewport height; use the common long-hold drag and scroll locking behavior. Future transcendent banners use ProfileCosmeticCatalog resources.
+
 ## Zeus SFX production (2026-10-08)
 - Real Pixabay electric spell/charge/lightning/twinkle sources edited for all Zeus combat, summon, reveal and death events. Provenance, license, processing and waveform measurements: assets/audio/sfx/zeus/SOURCES.md and manifest.json; event gains/timeline: src/data/zeus_audio_catalog.gd.
 - Existing SFX settings remain authoritative. Shared streams/fixed players, throttled dense orb/hit cues, combat-clock charging and pause/resume; real-time cinematic cues with cancellation cleanup. Cinematic-owned death sound survives actor removal. Gameplay/rewards unchanged. Godot/WASAPI waveform checked; subjective listening, Android, full-combat mix/export unverified.

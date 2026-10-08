@@ -375,3 +375,8 @@ func _draw() -> void:
 	var duration_ratio := clampf(duration_remaining / maxf(duration_total, 0.1), 0.0, 1.0)
 	draw_rect(Rect2(-bar_width / 2.0, -54.0, bar_width, 5.0), Color(0.10, 0.10, 0.12), true)
 	draw_rect(Rect2(-bar_width / 2.0, -54.0, bar_width * duration_ratio, 5.0), Color(1.0, 1.0, 1.0), true)
+
+
+func is_combat_targetable() -> bool:
+	# Immortal support effects must not trap the army in an unwinnable target.
+	return false

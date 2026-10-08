@@ -74,6 +74,7 @@ func install(main: Control) -> void:
 	button.pressed.connect(host.battle.try_summon_transcendent)
 	host.battle.transcendence_changed.connect(_changed)
 	host.battle.command_changed.connect(_command_changed)
+	host.battle.population_changed.connect(func(_count, _capacity): refresh())
 	host.battle.stats_changed.connect(_stats_changed)
 	host.battle.battle_finished.connect(_finished)
 	hide()
@@ -120,4 +121,4 @@ func refresh() -> void:
 		tween.set_parallel(true)
 		tween.tween_property(button,"offset_left",-WIDTH-12,0.24)
 		tween.tween_property(button,"offset_right",-12.0,0.24)
-	button.disabled = not unlocked or host.battle.external_pause or host.battle.demon_augment_selection_active or host.battle.command_power + 0.001 < host.battle.get_monster_cost(state.monster_id)
+	button.disabled = host.battle.is_population_full() or not unlocked or host.battle.external_pause or host.battle.demon_augment_selection_active or host.battle.command_power + 0.001 < host.battle.get_monster_cost(state.monster_id)

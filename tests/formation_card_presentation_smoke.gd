@@ -91,7 +91,34 @@ func run() -> void:
 	check(card.find_child("RarityLabel", true, false).text == "초월  ·  Lv.2 / 5", "rarity and progression explicit")
 	check(card.get_global_rect().end.x <= lobby.size.x - 60, "card fits mobile width")
 	await capture("transcendent-card-unregistered")
-	view._register("zeus")
+	check(card.formation_kind == "transcendence" and card.drag_enabled, "owned transcendent supports long hold")
+	var scroll: ScrollContainer = view.grid.get_parent()
+	var filler := Control.new()
+	filler.custom_minimum_size.y = 1800
+	view.grid.add_child(filler)
+	await process_frame
+	var old_filter := scroll.mouse_filter
+	card._begin_hold(Vector2(40, 40))
+	card._process(0.30)
+	check(root.gui_is_dragging(), "transcendent starts a real drag")
+	check(scroll.mouse_filter == Control.MOUSE_FILTER_IGNORE, "drag suspends panel scrolling")
+	var saved_position := scroll.scroll_vertical
+	scroll.get_v_scroll_bar().value += 100
+	check(scroll.scroll_vertical == saved_position, "drag locks inertia/edge scrolling")
+	check(not view.registered_area._can_drop_data(Vector2.ZERO, {"formation_kind": "monster", "formation_id": "slime"}), "ordinary units cannot enter transcendence slot")
+	var target: Vector2 = view.registered_area.get_global_rect().get_center()
+	var motion := InputEventMouseMotion.new()
+	motion.position = target
+	motion.button_mask = MOUSE_BUTTON_MASK_LEFT
+	root.push_input(motion, true)
+	await process_frame
+	var release := InputEventMouseButton.new()
+	release.position = target
+	release.button_index = MOUSE_BUTTON_LEFT
+	root.push_input(release, true)
+	await process_frame
+	check(preload("res://src/systems/transcendence_loadout_store.gd").load_id() == "zeus", "viewport drop registers actual monster")
+	check(not root.gui_is_dragging() and scroll.mouse_filter == old_filter, "drop restores scroll")
 	await process_frame
 	await process_frame
 	check(absf(view.grid.global_position.y - grid_y) <= 1, "registration never shifts list")
@@ -99,6 +126,8 @@ func run() -> void:
 	var equipped: Control = view.registered.get_child(0)
 	check(equipped.get_combined_minimum_size().y <= 244, "equipped card fits fixed viewport")
 	check(equipped.find_child("MonsterPortrait", true, false).texture == icon, "shared icon texture cached")
+	check(equipped.find_child("ProfileBanner", true, false) is TextureRect, "original profile banner attached")
+	check(not equipped.find_child("MonsterPortrait", true, false).visible, "banner replaces compact portrait")
 	await capture("transcendent-card-registered")
 	view._upgrade("zeus")
 	check(COLLECTION.get_upgrade_level("zeus") == 3, "card action preserves actual transcendence")

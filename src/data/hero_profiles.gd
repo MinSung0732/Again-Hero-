@@ -1095,6 +1095,7 @@ const PROFILES = {
 				"opening_audio_path": "res://assets/audio/sfx/summoner_clean/portal.wav",
 				"drone_spawn_audio_path": "res://assets/audio/sfx/summoner_drone_spawn.mp3",
 				"drone": {
+					"explosion_radius": 100.0,
 					"max_hp": 70,
 					"damage_ratio": 0.30,
 					"attack_range": 100.0,

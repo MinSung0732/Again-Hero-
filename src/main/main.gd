@@ -276,6 +276,7 @@ func _ready() -> void:
 		_on_conditional_skill_unlocked
 	)
 	battle.command_changed.connect(_on_command_changed)
+	battle.population_changed.connect(_on_population_changed)
 	battle.demon_progression_changed.connect(_on_demon_progression_changed)
 	battle.summon_result.connect(_on_summon_result)
 	transcendence_view.install(self)
@@ -1622,7 +1623,8 @@ func _on_stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int) -> vo
 	hero_hp_bar.max_value = maxf(float(hero_max_hp), 1.0)
 	hero_hp_bar.value = float(hero_hp)
 	hero_hp_label.text = "HP %d / %d" % [hero_hp, hero_max_hp]
-	monsters_label.text = "몬스터 %d" % monsters_left
+	_update_population_label()
+	monsters_label.tooltip_text = "전체 몬스터 %d · 증강/기술 추가 소환은 인구수 제외" % monsters_left
 	hero_bgm_manager.update_hero_hp(hero_hp, hero_max_hp)
 	if hero_info_panel.visible:
 		_refresh_hero_info_panel()
@@ -1647,7 +1649,20 @@ func _on_demon_progression_changed(level: int, current_exp: float, exp_to_next_l
 	if monster_info_panel.visible:
 		_refresh_monster_info_panel()
 
+func _on_population_changed(_count: int, _capacity: int) -> void:
+	_update_population_label()
+	for index in range(mini(summon_slot_buttons.size(), battle_loadout_ids.size())):
+		var cost: float = battle.get_monster_cost(String(battle_loadout_ids[index]))
+		var cost_blocked: bool = battle.command_power + 0.001 < cost
+		var blocked: bool = mutation_panel.visible or battle.is_population_full() or cost_blocked
+		summon_slot_buttons[index].disabled = blocked
+		_apply_summon_slot_availability(index, blocked, cost_blocked)
+
+func _update_population_label() -> void:
+	monsters_label.text = "인구 %d / %d" % [battle.get_population_count(), battle.get_population_limit()]
+
 func _on_command_changed(current_value: float, max_value: float) -> void:
+	_update_population_label()
 	command_label.text = "지휘력 %d / %d" % [int(round(current_value)), int(round(max_value))]
 	command_bar.max_value = maxf(max_value, 1.0)
 	command_bar.value = current_value
@@ -1674,8 +1689,9 @@ func _on_command_changed(current_value: float, max_value: float) -> void:
 			)
 		if slot_index < summon_slot_cost_labels.size():
 			summon_slot_cost_labels[slot_index].text = "코스트 %.1f" % cost
-		var cannot_summon := (
+		var cannot_summon: bool = (
 			mutation_panel.visible
+			or battle.is_population_full()
 			or current_value + 0.001 < cost
 		)
 		button.disabled = cannot_summon

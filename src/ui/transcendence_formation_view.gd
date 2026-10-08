@@ -15,10 +15,14 @@ var descending := true
 var collection_state: Dictionary = {}
 var feedback: Node2D
 var _frame_texture: Texture2D
+const DRAG_CARD := preload("res://src/ui/formation_drag_card.gd")
+const DROP_AREA := preload("res://src/ui/transcendence_drop_area.gd")
+const COSMETICS := preload("res://src/data/profile_cosmetic_catalog.gd")
+const BANNER_SHADER := preload("res://src/ui/transcendence_banner.gdshader")
 const EMERALD := Color("61e887")
 
-func panel(parent: Control, gold: bool = false, rarity: String = "") -> VBoxContainer:
-	var frame := PanelContainer.new()
+func panel(parent: Control, gold: bool = false, rarity: String = "", draggable: bool = false) -> VBoxContainer:
+	var frame: PanelContainer = DRAG_CARD.new() if draggable else PanelContainer.new()
 	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	frame.mouse_filter = Control.MOUSE_FILTER_PASS
 	var style = lobby._team_formation_view.panel_style(gold)
@@ -33,10 +37,13 @@ func panel(parent: Control, gold: bool = false, rarity: String = "") -> VBoxCont
 	if rarity == "transcendent":
 		_add_frame(frame)
 	var margin := MarginContainer.new()
+	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	margin.z_index = 2
 	for side in ["left","right","top","bottom"]:
 		margin.add_theme_constant_override("margin_"+side,24 if rarity == "transcendent" else 16)
 	frame.add_child(margin)
 	var box := VBoxContainer.new()
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_theme_constant_override("separation",10)
 	margin.add_child(box)
 	return box
@@ -69,6 +76,7 @@ func _add_frame(parent: Control) -> void:
 		return
 	var border := NinePatchRect.new()
 	border.name = "TranscendentFrame"
+	border.z_index = 1
 	border.texture = _frame_texture
 	border.draw_center = false
 	border.patch_margin_left = 32
@@ -94,7 +102,9 @@ func install(host: Control) -> void:
 	var equipped := layout.get_node("EquippedArea/Margin/Content") as VBoxContainer
 	heading = equipped.get_node("EquippedHeading") as Label
 	# The viewport reserves the ordinary slot height regardless of child minimums.
-	registered_area = ScrollContainer.new()
+	registered_area = DROP_AREA.new()
+	registered_area.accepts_monster = _can_register
+	registered_area.monster_dropped.connect(_register)
 	registered_area.name = "TranscendenceRegisteredArea"
 	registered_area.custom_minimum_size.y = 244.0
 	registered_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -160,7 +170,7 @@ func refresh(showing: bool) -> void:
 	heading.text = "◇  등록된 초월 몬스터  %d / 1  ◇" % (0 if selected.is_empty() else 1)
 	if selected.is_empty():
 		label(registered,"등록된 초월몬스터가 없습니다",28).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label(registered,"아래 목록에서 한 종류를 등록하세요.",22).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label(registered,"아래 카드를 꾹 눌러 이곳에 놓거나 등록하기를 누르세요.",22).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	else:
 		_build_card(panel(registered,false,"transcendent"),selected,selected,true)
 	var state := collection_state
@@ -171,7 +181,7 @@ func refresh(showing: bool) -> void:
 		return a < b if left == right else (left > right if descending else left < right))
 	empty.visible = ids.is_empty()
 	for id in ids:
-		_build_card(panel(grid,false,"transcendent"),String(id),selected,false)
+		_build_card(panel(grid,false,"transcendent",true),String(id),selected,false)
 
 func _build_card(box: VBoxContainer, id: String, selected: String, registered_card: bool) -> void:
 	var state := collection_state
@@ -182,12 +192,17 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 	var level := COLLECTION.get_upgrade_level(id, state)
 	var frame := box.get_parent().get_parent() as Control
 	frame.set_meta("monster_id", id)
+	if not registered_card:
+		frame.configure_drag("transcendence", id, lobby.MONSTER_CATALOG.get_monster_name(id), lobby._team_monster_card_icon(id))
+		frame.drag_enabled = _can_register(id)
+		frame.tapped.connect(lobby._open_monster_detail.bind(id))
 	var margin := box.get_parent() as MarginContainer
 	if registered_card:
 		for side in ["top", "bottom"]:
 			margin.add_theme_constant_override("margin_" + side, 14)
 		box.add_theme_constant_override("separation", 6)
 	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_theme_constant_override("separation", 16)
 	box.add_child(row)
 	var portrait := TextureRect.new()
@@ -199,7 +214,12 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	portrait.texture = lobby._team_monster_card_icon(id)
 	row.add_child(portrait)
+	if registered_card and _add_banner(frame, id):
+		portrait.hide()
+		# Reserve the right half for the portrait; no overlapping text/buttons.
+		margin.add_theme_constant_override("margin_right", 360)
 	var details := VBoxContainer.new()
+	details.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	details.add_theme_constant_override("separation", 4)
 	row.add_child(details)
@@ -223,6 +243,7 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 		var maxed := COLLECTION.is_maxed(id, state)
 		var can_upgrade: bool = unlocked and not maxed and COLLECTION.get_shards(id, state) >= lobby.MONSTER_CATALOG.get_shards_required(id)
 		var progress := HBoxContainer.new()
+		progress.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(progress)
 		var shards := label(progress, "조각 %d / %d" % [COLLECTION.get_shards(id, state), lobby.MONSTER_CATALOG.get_shards_required(id)], 22)
 		shards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -233,6 +254,7 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 		badge.autowrap_mode = TextServer.AUTOWRAP_OFF
 		badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	var actions := HBoxContainer.new()
+	actions.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	actions.add_theme_constant_override("separation", 8)
 	box.add_child(actions)
 	var register_button := button(actions, "등록 해제" if chosen else "등록하기", _register.bind("" if chosen else id))
@@ -251,6 +273,41 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 	if not unlocked:
 		portrait.self_modulate = Color(0.45, 0.45, 0.45, 1)
 		# The identity and summon rule stay readable even before acquisition.
+
+func _add_banner(frame: Control, id: String) -> bool:
+	var path := COSMETICS.path(id, "banner")
+	if path.is_empty():
+		return false
+	var texture: Texture2D = lobby.get_node("/root/PresentationWarmup").get_texture(path)
+	if texture == null:
+		texture = load(path) as Texture2D
+	if texture == null:
+		return false
+	var background := Control.new()
+	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_child(background)
+	var art := TextureRect.new()
+	art.name = "ProfileBanner"
+	art.texture = texture
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	background.add_child(art)
+	art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	art.offset_left = 16
+	art.offset_top = 16
+	art.offset_right = -16
+	art.offset_bottom = -16
+	var shader_material := ShaderMaterial.new()
+	shader_material.shader = BANNER_SHADER
+	art.material = shader_material
+	art.resized.connect(func():
+		if art.size.x > 0:
+			shader_material.set_shader_parameter("crop_height", clampf(art.size.y / art.size.x * texture.get_width() / texture.get_height(), 0.01, 0.90)))
+	return true
+
+func _can_register(id: String) -> bool:
+	return id in DATA.get_ids() and COLLECTION.is_unlocked(id, collection_state) and DATA.MONSTERS.get_scene(id) != null
 
 func _register(id: String) -> void:
 	if STORE.save_id(id):
