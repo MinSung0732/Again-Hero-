@@ -1,13 +1,13 @@
 extends RefCounted
-const BASE := {"max_hp":1200,"attack_damage":150,"move_speed":285.0,"attack_range":237.5,"attack_cooldown":2.0/3.0,"projectile_speed":0.0,"projectile_range":0.0,"exp_reward":0}
+const BASE := {"max_hp":1200,"attack_damage":150,"move_speed":290.0,"attack_range":237.5,"attack_cooldown":1.3,"projectile_speed":0.0,"projectile_range":0.0,"exp_reward":0}
 const HP_PER_SUMMON := 2.5
 const DAMAGE_PER_SUMMON := 0.6
 const COMBAT_STYLE := "ranged_harasser"
 const RETREAT_START_DISTANCE := 170.0
 const HOLD_DISTANCE := 210.0
 const GAUGE_MAX := 100.0
-const REGEN_RATIO := 0.5
-const REGEN_CAP := 10.0
+const REGEN_RATIO := 1.0
+const REGEN_CAP := 15.0
 const COSTS := [30.0,30.0,50.0]
 const COOLDOWNS := [20.0,45.0,15.0]
 const CAST_PRIORITY := [1,0,2]

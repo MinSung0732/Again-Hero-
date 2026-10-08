@@ -1,0 +1,47 @@
+extends RefCounted
+# Unspecified design values are provisional and centrally adjustable.
+const BASE := {"max_hp":1850,"attack_damage":150,"move_speed":270.0,"attack_range":85.0,"attack_cooldown":1.6,"exp_reward":0}
+const RULES := {"mode":"all","conditions":[{"metric":"tanks_summoned","amount":65},{"metric":"allies_died","amount":100}]}
+const GAUGE_MAX := 60.0
+const REGEN_RATIO := 1.0
+const REGEN_CAP := 15.0
+const CAST_PRIORITY := [2,0,1]
+const LEAP_CAST_RANGE := 185.0
+const EAT_CHANCE := 0.5
+const COSTS := [15.0,15.0,20.0]
+const COOLDOWNS := [20.0,25.0,20.0]
+const PILLAR_MAX := 8
+const PILLAR_RADIUS := 26.0
+const PILLAR_INTERACTION := 105.0
+const AFTERSHOCK_RADIUS := 150.0
+const AFTERSHOCK_DAMAGE := 1.5
+const EAT_SHIELD := 0.05
+const RETREAT_SHIELD := 0.03
+const RETREAT_DISTANCE := 240.0
+const RETREAT_SECONDS := 0.9
+const ROCK_SPEED := 870.0
+const ROCK_PICK_SECONDS := 0.9
+const ROCK_HOLD_SECONDS := 0.4
+const ROCK_INNER_RADIUS := 150.0
+const ROCK_OUTER_RADIUS := 300.0
+const ROCK_INNER_DAMAGE := 3.0
+const ROCK_OUTER_DAMAGE := 1.75
+const BURROW_SECONDS := 7.0
+const BURROW_SPEED_RATIO := 1.5
+const BURROW_DAMAGE_RATIO := 0.4
+const BURROW_DAMAGE := 1.35
+const CHANNEL_SECONDS := 2.0
+const AIR_SECONDS := 1.0
+const LEAP_RADIUS := 125.0
+const LEAP_DAMAGE := 4.5
+const WAVE_RANGE := 700.0
+const WAVE_SPEED := 900.0
+const WAVE_RADIUS := 28.0
+const WAVE_DAMAGE := 1.3
+const SPAWN_FALL_SECONDS := 0.55
+const VISIBLE_HEIGHT := 118.0
+const ROOT := "res://assets/art/Transcendent_monster/Bulgasal/frames/"
+# Verified against uploaded effect manifests; export does not depend on JSON inclusion.
+const EFFECT_ANCHORS := {1:Vector2(276,243),2:Vector2(231,268),3:Vector2(268,240),4:Vector2(237,302)}
+const PROFILE := {"mode":"frames","asset_dir":ROOT,"target_height":VISIBLE_HEIGHT,
+	"animations":{"idle":{"count":4,"fps":6.0,"loop":true},"move":{"prefix":"walk","count":6,"fps":10.0,"loop":true},"attack":{"count":6,"fps":12.0,"loop":false},"hit":{"count":3,"fps":12.0,"loop":false},"death":{"count":4,"fps":10.0,"loop":false}}}

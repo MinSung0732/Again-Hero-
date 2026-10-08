@@ -1,3 +1,9 @@
+## Bulgasal playable transcendent (2026-10-09)
+- Bulgasal is enabled in normal/pickup gacha, profile cosmetics and transcendence registration. Shared approved original-art mesh rig is now production UI; corner battle cut-in focuses shoulders/face, reveals silhouette and opens eyes, reusing camera/slow-motion restoration. No reward authority in presentation.
+- Actual player tank summons65 AND allied deaths100; HP1850+death count, further deaths+1maxHP without healing. Gauge60, augmented command regen100% capped15/s. Fixed8 decoration collider pool, rock/burrow/channel leap/one-hit8-ray waves/10-hit retreat; no ordinary/special augments or elite/giant.
+- Transcendent rarity remains0.5%, current Zeus pickup weight3. Zeus speed290, attack interval1.3, regen100%/15cap. Provisional Bulgasal base attack150 and unspecified pattern timings/geometry live in BehaviorCatalog.
+- Godot4.5.1 isolated real Battle/Hero and catalog/store regression plus native OpenGL presentation passed; whole app/Android/export and sustained dense-combat performance unverified. See docs/BULGASAL_COMBAT.md.
+
 ## Bulgasal original-art mesh rig (2026-10-09)
 - User rejected the manually assembled16 generated parts. Restore unchanged original PNG and use native Godot Skeleton2D/Polygon2D with3969 shared vertices/10 bones for local mane/cloth/tail motion and subtle chest/arm breathing. Original anatomy/ornaments and neutral UV/rest are preserved; fullbody scale and protected face/legs remain fixed. Rejected draft parts/joint plates are never loaded.
 - This is a native original-art region rig, not Cubism or complete occluded-part reconstruction. Large gestures/expressions need actual original-aligned parts and restored occlusion. Development scene only; production gacha/combat/rewards unchanged. docs/BULGASAL_RIG_PREVIEW.md.

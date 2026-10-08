@@ -77,7 +77,7 @@ func run() -> void:
 	check(battle.command_power == cost_before and battle.transcendence.used,"free once")
 	check(not battle.try_summon_transcendent() and battle._spawn_monster("zeus",Vector2.ZERO) == null,"one per battle and bypass rejection")
 	check(zeus.summon_snapshot == 9 and zeus.max_hp == int(round(1200+9*2.5)) and zeus.attack_damage == int(round(150+9*0.6)),"raw snapshot formula")
-	check(zeus.move_speed == 285 and is_equal_approx(zeus.attack_range,237.5) and is_equal_approx(zeus.attack_cooldown,2.0/3),"movement/range/1.5Hz")
+	check(zeus.move_speed == 290 and is_equal_approx(zeus.attack_range,237.5) and is_equal_approx(zeus.attack_cooldown,1.3),"movement/range/1.3-second interval")
 	var hp_before: int = zeus.max_hp
 	var attack_before: int = zeus.attack_damage
 	battle.monster_hp_multiplier = 100
@@ -90,16 +90,16 @@ func run() -> void:
 	zeus.skill_cooldowns.fill(100)
 	zeus.gauge = 0
 	battle.command_regen_per_second = 6
-	check(zeus.get_gauge_regen() == 3,"buffed command regen halved")
+	check(zeus.get_gauge_regen() == 6,"buffed command regen100%")
 	battle.command_regen_per_second = 40
-	check(zeus.get_gauge_regen() == 10,"regen cap10")
+	check(zeus.get_gauge_regen() == 15,"regen cap15")
 	battle.external_pause = true
 	zeus._physics_process(1)
 	check(zeus.gauge == 0,"pause freezes gauge")
 	battle.external_pause = false
 	zeus.attack_timer = 100
 	zeus._physics_process(1)
-	check(zeus.gauge == 10,"one second regen")
+	check(zeus.gauge == 15,"one second regen")
 	# Harassment keeps a hysteresis band and still attacks while retreating.
 	check(CATALOG.MONSTERS.zeus.combat_style == "ranged_harasser","data driven combat style")
 	hit_reset()

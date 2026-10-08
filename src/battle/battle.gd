@@ -17,6 +17,7 @@ const TRANSCENDENCE_DATA := preload("res://src/data/transcendence_catalog.gd")
 const TRANSCENDENCE_STORE := preload("res://src/systems/transcendence_loadout_store.gd")
 var transcendent_actor: Node2D
 var raw_allied_summons := 0
+var raw_allied_deaths := 0
 var transcendence = preload("res://src/systems/transcendence_runtime.gd").new()
 signal demon_progression_changed(level: int, current_exp: float, exp_to_next_level: float)
 signal demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: int)
@@ -746,6 +747,7 @@ func _start_battle() -> void:
 	var registered_id := TRANSCENDENCE_STORE.load_id()
 	transcendent_actor = null
 	raw_allied_summons = 0
+	raw_allied_deaths = 0
 	transcendence.configure(registered_id, TRANSCENDENCE_DATA.get_rules(registered_id) if bool(MONSTER_CATALOG.MONSTERS.get(registered_id, {}).get("combat_enabled", true)) else {})
 	transcendence_changed.emit(registered_id, false, false)
 	battle_over = false
@@ -1485,7 +1487,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 	}
 
 	if TRANSCENDENCE_DATA.is_transcendent(monster_id):
-		var count := raw_allied_summons
+		var count := _transcendence_growth_count(monster_id)
 		if is_instance_valid(transcendent_actor) and String(transcendent_actor.monster_type) == monster_id:
 			count = transcendent_actor.summon_snapshot
 		var growth: Dictionary = MONSTER_CATALOG.MONSTERS[monster_id].get("summon_growth",{})
@@ -2258,7 +2260,7 @@ func _spawn_monster(
 		)
 
 	if monster.has_method("configure_transcendence"):
-		monster.configure_transcendence(raw_allied_summons,int(monster_collection_upgrade_levels.get(monster_type,0)))
+		monster.configure_transcendence(_transcendence_growth_count(monster_type),int(monster_collection_upgrade_levels.get(monster_type,0)))
 		transcendent_actor = monster
 	add_child(monster)
 	monster.position = spawn_position
@@ -2293,7 +2295,7 @@ func _spawn_monster(
 	monsters_alive += 1
 	if not TRANSCENDENCE_DATA.is_transcendent(monster_type):
 		raw_allied_summons += 1
-	if not split_child and not TRANSCENDENCE_DATA.is_transcendent(monster_type) and transcendence.record_summon():
+	if not split_child and not TRANSCENDENCE_DATA.is_transcendent(monster_type) and transcendence.record_summon(MONSTER_CATALOG.get_role(monster_type) if bool(spawn_modifiers.get("counts_population", false)) else ""):
 		transcendence_changed.emit(transcendence.monster_id, true, false)
 	return monster
 
@@ -2806,6 +2808,9 @@ func _apply_ghost_death_empower(dead_monster: Node) -> void:
 		String(target.get("monster_type"))
 	)
 
+func _transcendence_growth_count(id: String) -> int:
+	return raw_allied_deaths if MONSTER_CATALOG.MONSTERS.get(id, {}).get("growth_metric", "summons") == "allies_died" else raw_allied_summons
+
 func _on_monster_died(monster: Node) -> void:
 	if battle_over:
 		return
@@ -2813,8 +2818,13 @@ func _on_monster_died(monster: Node) -> void:
 		if bool(monster.get_meta("transcendent_death_handled", false)):
 			return
 		monster.set_meta("transcendent_death_handled", true)
-	if is_instance_valid(monster) and is_instance_valid(transcendent_actor) and monster != transcendent_actor:
-		transcendent_actor.on_ally_death((monster as Node2D).global_position)
+	if is_instance_valid(monster) and not bool(monster.get_meta("allied_death_recorded", false)):
+		monster.set_meta("allied_death_recorded", true)
+		raw_allied_deaths += 1
+		if transcendence.record_ally_death():
+			transcendence_changed.emit(transcendence.monster_id, true, false)
+		if is_instance_valid(transcendent_actor) and monster != transcendent_actor:
+			transcendent_actor.on_ally_death((monster as Node2D).global_position)
 
 	var drop_position := Vector2.ZERO
 	var monster_type := "slime"

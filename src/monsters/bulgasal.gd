@@ -1,0 +1,387 @@
+extends "res://src/monsters/orc.gd"
+const DATA := preload("res://src/data/bulgasal_behavior_catalog.gd")
+const FX := preload("res://src/ui/bulgasal_combat_effects.gd")
+const PILLARS := preload("res://src/monsters/bulgasal_pillars.gd")
+const CHANNEL := preload("res://src/systems/channel_runtime.gd")
+var pillars: Node2D
+var channel = CHANNEL.new()
+var summon_snapshot := 0
+var transcend_level := 0
+var gauge := 0.0
+var skill_cooldowns := PackedFloat32Array([0.0,0.0,0.0])
+var phase := "fall"
+var phase_elapsed := 0.0
+var visual_rest := Vector2.ZERO
+var visual_head_y := -118.0
+var landing_position := Vector2.ZERO
+var interaction_timer := 0.0
+var received_hits := 0
+var retreat_pending := 0
+var retreat_direction := Vector2.ZERO
+var stun_remaining := 0.0
+var silence_remaining := 0.0
+var rock_active := false
+var rock_position := Vector2.ZERO
+var rock_target := Vector2.ZERO
+var rock_origin := Vector2.ZERO
+var rock_distance := 0.0
+var rock_total_distance := 0.0
+var impact_position := Vector2.ZERO
+var impact_remaining := 0.0
+var impact_kind := "impact"
+var wave_active := false
+var wave_origin := Vector2.ZERO
+var wave_distance := 0.0
+var wave_hit := false
+var wave_primary_hit := false
+var saved_collision_layer := 2
+var saved_collision_mask := 3
+var wave_directions := PackedVector2Array()
+
+func _init() -> void:
+	monster_type = "bulgasal"
+	monster_role = "tank"
+	for stat in DATA.BASE:
+		set(stat, DATA.BASE[stat])
+	for index in range(8):
+		wave_directions.append(Vector2.RIGHT.rotated(float(index)*TAU/8.0))
+
+func configure_transcendence(deaths: int, level: int) -> void:
+	summon_snapshot = maxi(deaths,0)
+	transcend_level = clampi(level,0,5)
+	max_hp = int(DATA.BASE.max_hp)+summon_snapshot
+	current_hp = max_hp
+
+func on_ally_death(_point: Vector2) -> void:
+	if dying or current_hp <= 0:
+		return
+	summon_snapshot += 1
+	max_hp += 1 # Cumulative death growth; does not heal previous damage.
+
+func _ready() -> void:
+	super._ready()
+	visual.apply_visual_profile(DATA.PROFILE)
+	var texture: Texture2D = visual.sprite_frames.get_frame_texture(&"idle",0)
+	var union := Rect2i()
+	for animation_name in visual.sprite_frames.get_animation_names():
+		for index in range(visual.sprite_frames.get_frame_count(animation_name)):
+			var bounds: Rect2i = visual.sprite_frames.get_frame_texture(animation_name,index).get_image().get_used_rect()
+			union = bounds if union.size == Vector2i.ZERO else union.merge(bounds)
+	var factor := DATA.VISIBLE_HEIGHT/maxf(float(union.size.y),1.0)
+	visual.scale = Vector2.ONE*factor
+	# All uploaded body frames have the same fixed feet anchor, not per-frame bounds.
+	visual.position = -(Vector2(229,223)-texture.get_size()*0.5)*factor
+	visual_rest = visual.position
+	visual_head_y = visual_rest.y+(union.position.y-texture.get_height()*0.5)*factor
+	FX.warm()
+	pillars = PILLARS.new()
+	pillars.actor = self
+	pillars.authority = combat_authority
+	add_child(pillars)
+	visual.position.y = visual_rest.y-360.0
+
+func get_gauge_regen() -> float:
+	return minf(maxf(float(combat_authority.command_regen_per_second),0.0)*DATA.REGEN_RATIO,DATA.REGEN_CAP) if is_instance_valid(combat_authority) else 0.0
+
+func _paused() -> bool:
+	return is_instance_valid(combat_authority) and (combat_authority.battle_over or combat_authority.external_pause or combat_authority.demon_augment_selection_active)
+
+func _physics_process(delta: float) -> void:
+	if dying or current_hp <= 0 or _paused():
+		return
+	if is_instance_valid(combat_authority):
+		hero = combat_authority.hero
+	gauge = minf(DATA.GAUGE_MAX,gauge+get_gauge_regen()*delta)
+	for index in range(3):
+		skill_cooldowns[index] -= delta
+	interaction_timer = maxf(interaction_timer-delta,0.0)
+	attack_timer = maxf(attack_timer-delta,0.0)
+	hit_flash_timer = maxf(hit_flash_timer-delta,0.0)
+	impact_remaining = maxf(impact_remaining-delta,0.0)
+	_tick_rock(delta)
+	_tick_waves(delta)
+	var blocked := stun_remaining > 0.0 or silence_remaining > 0.0 or bool(get_meta("stun_active",false)) or bool(get_meta("silence_active",false)) or MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self)
+	stun_remaining = maxf(stun_remaining-delta,0.0)
+	silence_remaining = maxf(silence_remaining-delta,0.0)
+	phase_elapsed += delta
+	velocity = Vector2.ZERO
+	match phase:
+		"fall":
+			var progress := clampf(phase_elapsed/DATA.SPAWN_FALL_SECONDS,0.0,1.0)
+			visual.position.y = visual_rest.y-360.0*(1.0-progress*progress)
+			if progress >= 1.0:
+				_set_phase("idle")
+				_show_impact("impact",global_position)
+				pillars.regenerate()
+		"pick":
+			if phase_elapsed >= DATA.ROCK_PICK_SECONDS+DATA.ROCK_HOLD_SECONDS:
+				if _hero_alive():
+					_launch_rock(hero.global_position)
+				_set_phase("idle")
+		"burrow":
+			if _hero_alive() and stun_remaining <= 0.0 and not bool(get_meta("stun_active",false)):
+				_move_towards(hero.global_position,delta,DATA.BURROW_SPEED_RATIO)
+				if global_position.distance_squared_to(hero.global_position) <= attack_range*attack_range:
+					if hero.take_damage(int(round(attack_damage*DATA.BURROW_DAMAGE)),self):
+						hero.apply_healing_reduction(3.0,0.25)
+					_show_impact("emerge",global_position)
+					_end_burrow()
+			if phase == "burrow" and phase_elapsed >= DATA.BURROW_SECONDS:
+				_end_burrow()
+		"channel":
+			if channel.tick(delta,blocked):
+				landing_position = global_position
+				_set_phase("launch")
+			elif not channel.active:
+				_set_phase("idle")
+		"launch":
+			visual.position.y = visual_rest.y-phase_elapsed/0.35*360.0
+			if phase_elapsed >= 0.35:
+				visual.visible = false
+				saved_collision_layer = collision_layer
+				saved_collision_mask = collision_mask
+				collision_layer = 0
+				collision_mask = 0
+				_set_phase("air")
+		"air":
+			if phase_elapsed >= DATA.AIR_SECONDS:
+				visual.visible = true
+				collision_layer = saved_collision_layer
+				collision_mask = saved_collision_mask
+				_set_phase("land")
+		"land":
+			visual.position.y = visual_rest.y-360.0*(1.0-clampf(phase_elapsed/0.25,0.0,1.0))
+			if phase_elapsed >= 0.25:
+				global_position = landing_position
+				visual.position = visual_rest
+				wave_primary_hit = _hero_in(landing_position,DATA.LEAP_RADIUS) and hero.take_damage(int(round(attack_damage*DATA.LEAP_DAMAGE)),self)
+				if wave_primary_hit:
+					hero.apply_stun(3.0)
+				_show_impact("leap_impact",landing_position)
+				wave_active = true
+				wave_origin = landing_position
+				wave_distance = 0.0
+				wave_hit = false
+				_set_phase("idle")
+		"retreat":
+			_move_direction(retreat_direction,DATA.RETREAT_DISTANCE/DATA.RETREAT_SECONDS,delta)
+			if phase_elapsed >= DATA.RETREAT_SECONDS:
+				_set_phase("quake")
+		"quake":
+			if phase_elapsed >= 0.9:
+				pillars.shatter_all(true)
+				add_stacking_shield(DATA.RETREAT_SHIELD)
+				_set_phase("regenerate")
+		"regenerate":
+			if phase_elapsed >= 1.55:
+				pillars.regenerate()
+				_set_phase("idle")
+		"idle":
+			if stun_remaining <= 0.0 and not bool(get_meta("stun_active",false)) and not MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self):
+				_tick_idle(delta)
+	queue_redraw()
+
+func _tick_idle(delta: float) -> void:
+	if not _hero_alive():
+		return
+	if retreat_pending > 0:
+		retreat_pending -= 1
+		retreat_direction = (global_position-hero.global_position).normalized()
+		if retreat_direction.is_zero_approx():
+			retreat_direction = Vector2.LEFT
+		_set_phase("retreat")
+		return
+	if _try_cast():
+		return
+	var pillar_index: int = pillars.nearest(global_position,DATA.PILLAR_INTERACTION)
+	if pillar_index >= 0 and interaction_timer <= 0.0:
+		interaction_timer = 0.75
+		visual.play_attack()
+		pillars.shatter(pillar_index,true,randf()<DATA.EAT_CHANCE)
+		return
+	var offset := hero.global_position-global_position
+	if offset.length_squared() > attack_range*attack_range:
+		_move_towards(hero.global_position,delta)
+	elif attack_timer <= 0.0:
+		attack_timer = attack_cooldown
+		visual.play_attack()
+		hero.take_damage(attack_damage,self)
+
+func _move_towards(point: Vector2, delta: float, speed_ratio: float = 1.0) -> void:
+	var offset := point-global_position
+	_move_direction(offset.normalized(),minf(move_speed*speed_ratio,offset.length()/maxf(delta,0.0001)),delta)
+
+func _move_direction(direction: Vector2, speed: float, _delta: float) -> void:
+	if stun_remaining > 0.0 or MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self):
+		return
+	velocity = direction*speed*MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
+	move_and_slide()
+	_update_visual_motion(direction.x,not velocity.is_zero_approx())
+
+func _try_cast() -> bool:
+	if silence_remaining > 0.0 or bool(get_meta("silence_active",false)):
+		return false
+	for index in DATA.CAST_PRIORITY:
+		if index == 2 and global_position.distance_squared_to(hero.global_position) > DATA.LEAP_CAST_RANGE*DATA.LEAP_CAST_RANGE:
+			continue
+		if skill_cooldowns[index] > 0.0 or gauge+0.0001 < DATA.COSTS[index] or (index == 0 and rock_active):
+			continue
+		gauge = maxf(gauge-DATA.COSTS[index],0.0)
+		skill_cooldowns[index] = DATA.COOLDOWNS[index]
+		if index == 0:
+			_set_phase("pick")
+		elif index == 1:
+			_set_phase("burrow")
+			visual.visible = false
+		else:
+			channel.begin(DATA.CHANNEL_SECONDS)
+			_set_phase("channel")
+		return true
+	return false
+
+func _set_phase(next: String) -> void:
+	phase = next
+	phase_elapsed = 0.0
+	velocity = Vector2.ZERO
+
+func _end_burrow() -> void:
+	visual.visible = true
+	visual.position = visual_rest
+	visual_moving_state = -1
+	_set_phase("idle")
+
+func apply_stun(seconds: float) -> void:
+	stun_remaining = maxf(stun_remaining,seconds)
+	if phase == "channel":
+		channel.cancel()
+		_set_phase("idle")
+
+func apply_silence(seconds: float) -> void:
+	silence_remaining = maxf(silence_remaining,seconds)
+	if phase == "channel":
+		channel.cancel()
+		_set_phase("idle")
+
+func _launch_rock(point: Vector2) -> void:
+	rock_origin = global_position
+	rock_position = rock_origin
+	rock_target = point # Target snapshot; never retargets the moving hero.
+	rock_total_distance = rock_origin.distance_to(point)
+	rock_distance = 0.0
+	rock_active = true
+	visual.play_attack()
+
+func _tick_rock(delta: float) -> void:
+	if not rock_active:
+		return
+	var previous := rock_position
+	rock_distance = minf(rock_distance+DATA.ROCK_SPEED*delta,rock_total_distance)
+	rock_position = rock_origin.lerp(rock_target,rock_distance/maxf(rock_total_distance,0.001))
+	pillars.shatter_segment(previous,rock_position)
+	if rock_distance >= rock_total_distance:
+		rock_active = false
+		_show_impact("impact",rock_target)
+		resolve_rock_impact(rock_target)
+
+func resolve_rock_impact(point: Vector2) -> void:
+	if not _hero_in(point,DATA.ROCK_OUTER_RADIUS):
+		return
+	if _hero_in(point,DATA.ROCK_INNER_RADIUS):
+		if hero.take_damage(int(round(attack_damage*DATA.ROCK_INNER_DAMAGE)),self):
+			hero.apply_stun(2.0)
+	elif hero.take_damage(int(round(attack_damage*DATA.ROCK_OUTER_DAMAGE)),self):
+		hero.apply_slow(0.5,2.0)
+
+func _tick_waves(delta: float) -> void:
+	if not wave_active:
+		return
+	var previous := wave_distance
+	wave_distance = minf(wave_distance+DATA.WAVE_SPEED*delta,DATA.WAVE_RANGE)
+	if not wave_hit and _hero_alive():
+		for direction in wave_directions:
+			var closest := Geometry2D.get_closest_point_to_segment(hero.global_position,wave_origin+direction*previous,wave_origin+direction*wave_distance)
+			if closest.distance_squared_to(hero.global_position) <= DATA.WAVE_RADIUS*DATA.WAVE_RADIUS:
+				wave_hit = true # Shared across all rays and future frames, even if immune.
+				var damage := int(round(attack_damage*DATA.WAVE_DAMAGE))
+				# Follow up only our accepted landing hit; preserve immunity for other cases.
+				var accepted: bool = hero.take_followup_damage(damage,self) if wave_primary_hit else hero.take_damage(damage,self)
+				if accepted:
+					hero.apply_slow(0.7,2.0)
+				break
+	if wave_distance >= DATA.WAVE_RANGE:
+		wave_active = false
+
+func hit_aftershock(point: Vector2) -> void:
+	if _hero_in(point,DATA.AFTERSHOCK_RADIUS):
+		hero.take_damage(int(round(attack_damage*DATA.AFTERSHOCK_DAMAGE)),self)
+
+func add_stacking_shield(ratio: float) -> void:
+	var total := int(get_meta("support_shield_hp",0))+int(round(max_hp*ratio))
+	set_meta("support_shield_hp",total)
+	set_meta("support_shield_capacity",total)
+
+func _hero_alive() -> bool:
+	return is_instance_valid(hero) and int(hero.current_hp)>0
+
+func _hero_in(point: Vector2, radius: float) -> bool:
+	return _hero_alive() and hero.global_position.distance_squared_to(point) <= radius*radius
+
+func take_damage(amount: int) -> void:
+	if dying or current_hp<=0 or phase == "air" or amount <= 0:
+		return
+	received_hits += 1
+	if received_hits >= 10:
+		received_hits -= 10
+		retreat_pending += 1
+	super.take_damage(int(round(amount*DATA.BURROW_DAMAGE_RATIO)) if phase == "burrow" else amount)
+
+func _begin_death() -> void:
+	channel.cancel()
+	rock_active = false
+	wave_active = false
+	visual.visible = true
+	visual.position = visual_rest
+	if is_instance_valid(pillars):
+		pillars.finish_death()
+	super._begin_death()
+
+func _show_impact(kind: String, point: Vector2) -> void:
+	impact_kind = kind
+	impact_position = point
+	impact_remaining = float(FX.get_pack(kind).frames.size())/10.0
+
+func _draw() -> void:
+	if dying or not is_instance_valid(visual):
+		return
+	if phase != "air":
+		var hp_y := visual_head_y-17.0
+		draw_rect(Rect2(-35,hp_y,70,7),Color("202024"))
+		draw_rect(Rect2(-35,hp_y,70*float(current_hp)/maxi(max_hp,1),7),Color("4cd965"))
+		draw_rect(Rect2(-35,hp_y-10,70,6),Color("332709"))
+		draw_rect(Rect2(-35,hp_y-10,70*gauge/DATA.GAUGE_MAX,6),Color("ffdb3b"))
+		MONSTER_RUNTIME_COMMON.draw_support_shield_bar(self,70,hp_y-17)
+	if phase == "channel":
+		draw_rect(Rect2(43,visual_head_y,6,DATA.VISIBLE_HEIGHT),Color("292426"))
+		var filled: float = DATA.VISIBLE_HEIGHT*channel.progress()
+		draw_rect(Rect2(43,visual_head_y+DATA.VISIBLE_HEIGHT-filled,6,filled),Color("ffe693"))
+	elif phase == "pick":
+		FX.draw_frame(self,"rock_pick",mini(int(phase_elapsed*10),8),Vector2.ZERO)
+	elif phase == "burrow":
+		FX.draw_frame(self,"burrow",mini(int(phase_elapsed/DATA.BURROW_SECONDS*9),8),Vector2.ZERO)
+	elif phase == "launch":
+		FX.draw_frame(self,"leap",mini(int(phase_elapsed/0.35*7),6),Vector2.ZERO)
+	elif phase == "quake":
+		FX.draw_frame(self,"retreat",mini(int(phase_elapsed*10),8),Vector2.ZERO)
+	if phase == "air" or phase == "land":
+		draw_arc(to_local(landing_position),DATA.LEAP_RADIUS,0,TAU,64,Color("ffcc80"),1.0,false)
+	if rock_active:
+		var progress := rock_distance/maxf(rock_total_distance,0.001)
+		FX.draw_frame(self,"rock_fly",mini(int(progress*6),5),to_local(rock_position))
+		draw_arc(to_local(rock_target),DATA.ROCK_OUTER_RADIUS,0,TAU,72,Color("ffcc80"),1.0,false)
+		draw_arc(to_local(rock_target),DATA.ROCK_INNER_RADIUS,0,TAU,64,Color("ffee99"),1.0,false)
+	if impact_remaining > 0.0:
+		var duration := float(FX.get_pack(impact_kind).frames.size())/10.0
+		FX.draw_frame(self,impact_kind,int((duration-impact_remaining)*10.0),to_local(impact_position))
+	if wave_active:
+		for direction in wave_directions:
+			FX.draw_frame(self,"wave",mini(int(wave_distance/DATA.WAVE_RANGE*11),10),to_local(wave_origin+direction*wave_distance),direction.angle())
