@@ -5,6 +5,18 @@ const PILLARS := preload("res://src/monsters/bulgasal_pillars.gd")
 const TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 const TELEGRAPH := preload("res://src/ui/circular_attack_telegraph.gd")
 const DRAW_LAYER := preload("res://src/ui/bulgasal_combat_draw_layer.gd")
+const AUDIO := preload("res://src/data/bulgasal_audio_catalog.gd")
+const SFX_BANK := preload("res://src/audio/event_sfx_bank.gd")
+var audio_bank: Node
+var burrow_phased := false
+var burrow_saved_layer := 0
+var burrow_saved_mask := 0
+var body_radius := 0.0
+var fragment_origin := Vector2.ZERO
+var fragment_distances := PackedFloat32Array()
+var fragment_positions := PackedVector2Array()
+var fragment_states := PackedInt32Array() # 0 inactive, 1 flying, 2 bursting
+var fragment_ages := PackedFloat32Array()
 var effect_layer: Node2D
 var gauge_layer: Node2D
 var channel_left_extent := 0.0
@@ -54,7 +66,11 @@ func _init() -> void:
 	monster_role = "tank"
 	for stat in DATA.BASE:
 		set(stat, DATA.BASE[stat])
-	for index in range(8):
+	fragment_distances.resize(DATA.FRAGMENT_COUNT)
+	fragment_positions.resize(DATA.FRAGMENT_COUNT)
+	fragment_states.resize(DATA.FRAGMENT_COUNT)
+	fragment_ages.resize(DATA.FRAGMENT_COUNT)
+	for index in range(DATA.FRAGMENT_COUNT):
 		wave_directions.append(Vector2.RIGHT.rotated(float(index)*TAU/8.0))
 
 func configure_transcendence(deaths: int, level: int) -> void:
@@ -75,6 +91,7 @@ func on_ally_death(_point: Vector2) -> void:
 
 func _ready() -> void:
 	super._ready()
+	body_radius = $CollisionShape2D.shape.radius
 	visual.apply_visual_profile(DATA.PROFILE)
 	var texture: Texture2D = visual.sprite_frames.get_frame_texture(&"idle",0)
 	var union := Rect2i()
@@ -104,6 +121,9 @@ func _ready() -> void:
 	gauge_layer.status = true
 	gauge_layer.z_index = 3
 	add_child(gauge_layer)
+	audio_bank = SFX_BANK.new()
+	add_child(audio_bank)
+	audio_bank.configure(AUDIO.CUES,combat_authority,true)
 	FX.warm()
 	pillars = PILLARS.new()
 	pillars.actor = self
@@ -131,7 +151,9 @@ func _physics_process(delta: float) -> void:
 	impact_remaining = maxf(impact_remaining-delta,0.0)
 	_tick_rock(delta)
 	_tick_waves(delta)
+	_tick_fragments(delta)
 	var blocked := stun_remaining > 0.0 or silence_remaining > 0.0 or bool(get_meta("stun_active",false)) or bool(get_meta("silence_active",false)) or MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self)
+	blocked = blocked and not is_action_control_immune()
 	stun_remaining = maxf(stun_remaining-delta,0.0)
 	silence_remaining = maxf(silence_remaining-delta,0.0)
 	phase_elapsed += delta
@@ -142,7 +164,7 @@ func _physics_process(delta: float) -> void:
 			visual.position.y = visual_rest.y-360.0*(1.0-progress*progress)
 			if progress >= 1.0:
 				_set_phase("idle")
-				_show_impact("impact",global_position)
+				_show_impact("impact",global_position,"land")
 				pillars.regenerate()
 		"pick":
 			if phase_elapsed >= DATA.ROCK_PICK_SECONDS+DATA.ROCK_HOLD_SECONDS:
@@ -153,7 +175,7 @@ func _physics_process(delta: float) -> void:
 			if _hero_alive() and stun_remaining <= 0.0 and not bool(get_meta("stun_active",false)):
 				_move_towards(hero.global_position,delta,DATA.BURROW_SPEED_RATIO)
 				if global_position.distance_squared_to(hero.global_position) <= attack_range*attack_range:
-					if hero.take_damage(int(round(attack_damage*DATA.BURROW_DAMAGE)),self):
+					if _deal_hero_damage(int(round(attack_damage*DATA.BURROW_DAMAGE)),transcend_level>=4):
 						hero.apply_healing_reduction(3.0,0.25)
 					_show_impact("emerge",global_position)
 					_end_burrow()
@@ -187,7 +209,7 @@ func _physics_process(delta: float) -> void:
 				TARGET_POLICY.set_hidden(self,false)
 				global_position = landing_position
 				visual.position = visual_rest
-				wave_primary_hit = _hero_in(landing_position,DATA.LEAP_RADIUS) and hero.take_damage(int(round(attack_damage*DATA.LEAP_DAMAGE)),self)
+				wave_primary_hit = _hero_in(landing_position,get_leap_radius()) and hero.take_damage(int(round(attack_damage*DATA.LEAP_DAMAGE)),self)
 				if wave_primary_hit:
 					hero.apply_stun(3.0)
 				_show_impact("leap_impact",landing_position)
@@ -258,6 +280,9 @@ func _move_direction(direction: Vector2, speed: float, _delta: float) -> void:
 	if phase == "burrow" and not direction.is_zero_approx():
 		burrow_rotation = direction.angle()
 	velocity = direction*speed*MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
+	if phase == "burrow":
+		# Clear only pillars reached along this bounded movement sweep before collision.
+		pillars.shatter_segment(global_position,global_position+velocity*_delta,body_radius)
 	move_and_slide()
 	_update_visual_motion(direction.x,not velocity.is_zero_approx())
 
@@ -284,6 +309,18 @@ func _try_cast() -> bool:
 	return false
 
 func _set_phase(next: String) -> void:
+	if burrow_phased and next != "burrow":
+		_restore_burrow_collision()
+	if next == "burrow" and transcend_level >= 4 and not burrow_phased:
+		burrow_saved_layer = collision_layer
+		burrow_saved_mask = collision_mask
+		burrow_phased = true
+		collision_layer = 0
+		collision_mask = 12 # Keep terrain/arena walls; phase through actors and pillars.
+		TARGET_POLICY.set_hidden(self,true)
+	if is_instance_valid(audio_bank):
+		if next == "burrow": audio_bank.play_cue("burrow")
+		if phase == "burrow" and next != "burrow": audio_bank.stop_cue("burrow")
 	if next == "launch":
 		TARGET_POLICY.set_hidden(self,true)
 	phase = next
@@ -300,12 +337,14 @@ func _end_burrow() -> void:
 	_set_phase("idle")
 
 func apply_stun(seconds: float) -> void:
+	if is_action_control_immune(): return
 	stun_remaining = maxf(stun_remaining,seconds)
 	if phase == "channel":
 		channel.cancel()
 		_set_phase("idle")
 
 func apply_silence(seconds: float) -> void:
+	if is_action_control_immune(): return
 	silence_remaining = maxf(silence_remaining,seconds)
 	if phase == "channel":
 		channel.cancel()
@@ -333,14 +372,78 @@ func _tick_rock(delta: float) -> void:
 		_show_impact("impact",rock_target)
 		resolve_rock_impact(rock_target)
 
+func get_pillar_capacity() -> int:
+	return DATA.PILLAR_MAX+(DATA.UPGRADED_PILLAR_BONUS if transcend_level>=3 else 0)
+
+func get_eat_shield_ratio() -> float:
+	return DATA.UPGRADED_EAT_SHIELD if transcend_level>=3 else DATA.EAT_SHIELD
+
+func get_leap_radius() -> float:
+	return DATA.LEAP_RADIUS*(DATA.UPGRADED_LEAP_RADIUS_RATIO if transcend_level>=5 else 1.0)
+
+func is_action_control_immune() -> bool:
+	return transcend_level>=5 and phase=="channel" and channel.active
+
+func is_forced_movement_immune() -> bool:
+	return is_action_control_immune()
+
+func is_movement_effect_immune() -> bool:
+	return is_action_control_immune()
+
+func _restore_burrow_collision() -> void:
+	collision_layer = burrow_saved_layer
+	collision_mask = burrow_saved_mask
+	burrow_phased = false
+	TARGET_POLICY.set_hidden(self,false)
+
+func _deal_hero_damage(amount: int, ignore_invulnerability: bool) -> bool:
+	return hero.take_followup_damage(amount,self) if ignore_invulnerability else hero.take_damage(amount,self)
+
 func resolve_rock_impact(point: Vector2) -> void:
-	if not _hero_in(point,DATA.ROCK_OUTER_RADIUS):
-		return
-	if _hero_in(point,DATA.ROCK_INNER_RADIUS):
-		if hero.take_damage(int(round(attack_damage*DATA.ROCK_INNER_DAMAGE)),self):
-			hero.apply_stun(2.0)
-	elif hero.take_damage(int(round(attack_damage*DATA.ROCK_OUTER_DAMAGE)),self):
-		hero.apply_slow(0.5,2.0)
+	_resolve_rock_area(point,1.0)
+	if transcend_level>=2:
+		# Eight preallocated independent projectiles; never recurse into another split.
+		fragment_origin = point
+		for index in range(DATA.FRAGMENT_COUNT):
+			fragment_distances[index] = 0.0
+			fragment_positions[index] = point
+			fragment_states[index] = 1
+			fragment_ages[index] = 0.0
+
+func _resolve_rock_area(point: Vector2, ratio: float) -> void:
+	if not _hero_in(point,DATA.ROCK_OUTER_RADIUS*ratio): return
+	if _hero_in(point,DATA.ROCK_INNER_RADIUS*ratio):
+		if _deal_hero_damage(int(round(attack_damage*DATA.ROCK_INNER_DAMAGE*ratio)),transcend_level>=1):
+			hero.apply_stun(2.0*ratio)
+	elif _deal_hero_damage(int(round(attack_damage*DATA.ROCK_OUTER_DAMAGE*ratio)),transcend_level>=1):
+		# apply_slow takes speed multiplier, so halve the reduction (50% -> 25%).
+		hero.apply_slow(1.0-0.5*ratio,2.0*ratio)
+
+func _tick_fragments(delta: float) -> void:
+	for index in range(DATA.FRAGMENT_COUNT):
+		if fragment_states[index]==0: continue
+		fragment_ages[index] += delta
+		if fragment_states[index]==2:
+			if fragment_ages[index]>=0.5: fragment_states[index]=0
+			continue
+		var previous := fragment_positions[index]
+		fragment_distances[index] = minf(fragment_distances[index]+DATA.ROCK_SPEED*delta,DATA.FRAGMENT_RANGE)
+		var point := fragment_origin+wave_directions[index]*fragment_distances[index]
+		var collided := false
+		if _hero_alive():
+			var closest := Geometry2D.get_closest_point_to_segment(hero.global_position,previous,point)
+			if closest.distance_squared_to(hero.global_position)<=pow(DATA.ROCK_INNER_RADIUS*DATA.FRAGMENT_RATIO,2):
+				point = closest
+				collided = true
+		fragment_positions[index] = point
+		pillars.shatter_segment(previous,point)
+		if collided or fragment_distances[index]>=DATA.FRAGMENT_RANGE:
+			fragment_states[index] = 2
+			fragment_ages[index] = 0.0
+			_resolve_rock_area(point,DATA.FRAGMENT_RATIO)
+
+func play_pillar_sound(eaten: bool) -> void:
+	if is_instance_valid(audio_bank): audio_bank.play_cue("eat" if eaten else "pillar")
 
 func _tick_waves(delta: float) -> void:
 	if wave_visual_distance >= 0.0:
@@ -381,7 +484,7 @@ func _hero_in(point: Vector2, radius: float) -> bool:
 	return _hero_alive() and hero.global_position.distance_squared_to(point) <= radius*radius
 
 func take_damage(amount: int) -> void:
-	if dying or current_hp<=0 or phase == "air" or amount <= 0:
+	if dying or current_hp<=0 or phase == "air" or (phase == "burrow" and transcend_level>=4) or amount <= 0:
 		return
 	received_hits += 1
 	if received_hits >= 10:
@@ -390,6 +493,9 @@ func take_damage(amount: int) -> void:
 	super.take_damage(int(round(amount*DATA.BURROW_DAMAGE_RATIO)) if phase == "burrow" else amount)
 
 func _begin_death() -> void:
+	if burrow_phased: _restore_burrow_collision()
+	fragment_states.fill(0)
+	if is_instance_valid(audio_bank): audio_bank.stop_all()
 	TARGET_POLICY.set_hidden(self,false)
 	channel.cancel()
 	rock_active = false
@@ -403,7 +509,9 @@ func _begin_death() -> void:
 	effect_layer.queue_redraw()
 	gauge_layer.queue_redraw()
 
-func _show_impact(kind: String, point: Vector2) -> void:
+func _show_impact(kind: String, point: Vector2, cue: String = "") -> void:
+	if is_instance_valid(audio_bank):
+		audio_bank.play_cue(cue if not cue.is_empty() else "land" if kind=="leap_impact" else "emerge" if kind=="emerge" else "rock")
 	impact_kind = kind
 	impact_position = point
 	impact_remaining = float(FX.get_pack(kind).frames.size())/10.0
@@ -446,9 +554,9 @@ func draw_combat_overlay(target: Node2D) -> void:
 	elif phase == "quake":
 		FX.draw_frame(target,"retreat",mini(int(phase_elapsed*10),8),Vector2.ZERO)
 	if phase == "channel":
-		TELEGRAPH.draw_area(target,Vector2.ZERO,DATA.LEAP_RADIUS,channel.progress())
+		TELEGRAPH.draw_area(target,Vector2.ZERO,get_leap_radius(),channel.progress())
 	if phase == "air" or phase == "land":
-		target.draw_arc(to_local(landing_position),DATA.LEAP_RADIUS,0,TAU,64,Color("ffcc80"),1.0,false)
+		target.draw_arc(to_local(landing_position),get_leap_radius(),0,TAU,64,Color("ffcc80"),1.0,false)
 	if rock_active:
 		var progress := rock_distance/maxf(rock_total_distance,0.001)
 		FX.draw_frame(target,"rock_fly",mini(int(progress*6),5),to_local(rock_position),rock_rotation)
@@ -456,7 +564,12 @@ func draw_combat_overlay(target: Node2D) -> void:
 		target.draw_arc(to_local(rock_target),DATA.ROCK_INNER_RADIUS,0,TAU,64,Color("ffee99"),1.0,false)
 	if impact_remaining > 0.0:
 		var duration := float(FX.get_pack(impact_kind).frames.size())/10.0
-		FX.draw_frame(target,impact_kind,int((duration-impact_remaining)*10.0),to_local(impact_position))
+		FX.draw_frame(target,impact_kind,int((duration-impact_remaining)*10.0),to_local(impact_position),0.0,DATA.UPGRADED_LEAP_RADIUS_RATIO if impact_kind=="leap_impact" and transcend_level>=5 else 1.0)
+	for index in range(DATA.FRAGMENT_COUNT):
+		if fragment_states[index]==1:
+			FX.draw_frame(target,"rock_fly",mini(int(fragment_distances[index]/DATA.FRAGMENT_RANGE*6),5),to_local(fragment_positions[index]),wave_directions[index].angle(),DATA.FRAGMENT_RATIO)
+		elif fragment_states[index]==2:
+			FX.draw_frame(target,"impact",mini(int(fragment_ages[index]*10),4),to_local(fragment_positions[index]),0.0,DATA.FRAGMENT_RATIO)
 	if wave_visual_distance >= 0.0:
 		# Staggered visual train only; the leading damage sweep remains unchanged.
 		for direction in wave_directions:

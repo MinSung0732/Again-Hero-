@@ -138,7 +138,7 @@ const STAGE4_HIT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"gunner_hit.wav"
 const STAGE4_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage4_gunner_death_pixabay.mp3"
 const STAGE5_BASIC_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_basic_pixabay.mp3"
 const STAGE5_COMBUSTION_CHARGE_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_combustion_charge_pixabay.mp3"
-const STAGE5_COMBUSTION_RELEASE_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_combustion_release_clean.wav"
+const STAGE5_COMBUSTION_RELEASE_AUDIO_PATH := "res://assets/audio/sfx/bulgasal/archmage_fire_burst.wav"
 const STAGE5_ICE_BOLT_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_ice_crystal_launch.wav"
 const STAGE5_ICE_IMPACT_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_ice_crystal_impact.wav"
 const STAGE5_EARTH_SPIKE_AUDIO_PATH := "res://assets/audio/sfx/stage5_archmage_earth_spike_clean.wav"
@@ -9675,8 +9675,8 @@ func _ensure_archmage_audio_runtime() -> void:
 	if not is_instance_valid(archmage_combustion_release_audio):
 		archmage_combustion_release_audio = _create_hero_sfx_player(
 			STAGE5_COMBUSTION_RELEASE_AUDIO_PATH,
-			HERO_SFX_DB_HEAVY_SKILL - 1.0,
-			0.88
+			HERO_SFX_DB_HEAVY_SKILL - 3.0,
+			1.0
 		)
 	if not is_instance_valid(archmage_ice_bolt_audio):
 		archmage_ice_bolt_audio = _create_hero_sfx_player(

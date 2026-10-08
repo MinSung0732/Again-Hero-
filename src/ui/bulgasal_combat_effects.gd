@@ -39,12 +39,12 @@ static func get_pack(kind: String) -> Dictionary:
 	packs[kind] = {"frames":frames,"scale":factor,"anchor":anchor}
 	return packs[kind]
 
-static func draw_frame(target: Node2D, kind: String, index: int, point: Vector2, rotation: float = 0.0) -> void:
+static func draw_frame(target: Node2D, kind: String, index: int, point: Vector2, rotation: float = 0.0, size_ratio: float = 1.0) -> void:
 	var pack := get_pack(kind)
 	if pack.frames.is_empty():
 		return
 	var texture: Texture2D = pack.frames[clampi(index, 0, pack.frames.size()-1)]
-	var factor := float(pack.scale)
+	var factor := float(pack.scale)*size_ratio
 	target.draw_set_transform(point, rotation, Vector2.ONE)
 	target.draw_texture_rect(texture, Rect2(-pack.anchor*factor, texture.get_size()*factor), false)
 	target.draw_set_transform(Vector2.ZERO)

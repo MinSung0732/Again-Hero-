@@ -111,6 +111,18 @@ func run() -> void:
 	var hp_wave: int=battle.hero.current_hp
 	actor._tick_waves(1)
 	check(battle.hero.current_hp==hp_wave,"remaining rays do not hit again")
+	actor.transcend_level=1
+	battle.hero.invulnerability_timer=5
+	hp_before=battle.hero.current_hp
+	actor.resolve_rock_impact(battle.hero.position)
+	check(battle.hero.current_hp<hp_before,"Lv1 actual Hero invulnerability bypass")
+	actor.transcend_level=4
+	actor.position=battle.hero.position+Vector2(10,0)
+	actor._set_phase("burrow")
+	battle.hero.invulnerability_timer=5
+	hp_before=battle.hero.current_hp
+	actor._physics_process(0.01)
+	check(battle.hero.current_hp<hp_before and actor.phase=="idle","Lv4 actual burrow hit ignores immunity and restores phase")
 	battle.queue_free()
 	await process_frame
 	print("BULGASAL_INTEGRATION: ","PASS" if failures==0 else "FAIL"," failures=",failures)

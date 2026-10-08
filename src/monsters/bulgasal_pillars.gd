@@ -14,9 +14,9 @@ var retire_remaining := 1.7
 func _ready() -> void:
 	top_level = true
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	states.resize(DATA.PILLAR_MAX)
-	ages.resize(DATA.PILLAR_MAX)
-	for index in range(DATA.PILLAR_MAX):
+	states.resize(actor.get_pillar_capacity())
+	ages.resize(states.size())
+	for index in range(states.size()):
 		var body := StaticBody2D.new()
 		body.collision_layer = 0
 		body.collision_mask = 0
@@ -43,12 +43,12 @@ func regenerate() -> void:
 	if not is_instance_valid(actor) or retiring:
 		return
 	var map_size: Vector2 = authority.current_map_size
-	for index in range(DATA.PILLAR_MAX):
+	for index in range(states.size()):
 		if states[index] != 0:
 			continue
 		var column := index % 4
 		var row := index / 4
-		var candidate := Vector2((float(column)+randf_range(0.2,0.8))/4.0, (float(row)+randf_range(0.25,0.75))/2.0) * map_size
+		var candidate := Vector2((float(column)+randf_range(0.2,0.8))/4.0, (float(row)+randf_range(0.25,0.75))/ceilf(float(states.size())/4.0)) * map_size
 		if authority.has_method("_clamp_manual_spawn_position"):
 			candidate = authority._clamp_manual_spawn_position(candidate)
 		# A bounded terrain/actor check prevents spawning a collider in a wall or actor.
@@ -67,7 +67,7 @@ func regenerate() -> void:
 func nearest(point: Vector2, radius: float) -> int:
 	var chosen := -1
 	var best := radius*radius
-	for index in range(DATA.PILLAR_MAX):
+	for index in range(states.size()):
 		if states[index] != 1 and states[index] != 2:
 			continue
 		var distance := bodies[index].global_position.distance_squared_to(point)
@@ -77,29 +77,32 @@ func nearest(point: Vector2, radius: float) -> int:
 	return chosen
 
 func shatter(index: int, damage: bool, eaten: bool = false) -> bool:
-	if index < 0 or index >= DATA.PILLAR_MAX or (states[index] != 1 and states[index] != 2):
+	if index < 0 or index >= states.size() or (states[index] != 1 and states[index] != 2):
 		return false
 	states[index] = 3
 	ages[index] = 0.0
 	bodies[index].collision_layer = 0
 	if is_instance_valid(actor):
 		if eaten:
-			actor.add_stacking_shield(DATA.EAT_SHIELD)
+			actor.add_stacking_shield(actor.get_eat_shield_ratio())
 		elif damage:
 			actor.hit_aftershock(bodies[index].global_position)
+	if is_instance_valid(actor) and (damage or eaten):
+		actor.play_pillar_sound(eaten)
 	_refresh_visuals()
 	return true
 
 func shatter_all(damage: bool) -> void:
-	for index in range(DATA.PILLAR_MAX):
+	for index in range(states.size()):
 		shatter(index, damage)
 
-func shatter_segment(start: Vector2, finish: Vector2) -> void:
-	for index in range(DATA.PILLAR_MAX):
+func shatter_segment(start: Vector2, finish: Vector2, padding: float = 0.0) -> void:
+	var radius := DATA.PILLAR_RADIUS+padding
+	for index in range(states.size()):
 		if (states[index] != 1 and states[index] != 2):
 			continue
 		var closest := Geometry2D.get_closest_point_to_segment(bodies[index].global_position, start, finish)
-		if closest.distance_squared_to(bodies[index].global_position) <= DATA.PILLAR_RADIUS*DATA.PILLAR_RADIUS:
+		if closest.distance_squared_to(bodies[index].global_position) <= radius*radius:
 			shatter(index, true)
 
 func finish_death() -> void:
@@ -112,7 +115,7 @@ func finish_death() -> void:
 func _physics_process(delta: float) -> void:
 	if is_instance_valid(authority) and (authority.battle_over or authority.external_pause or authority.demon_augment_selection_active):
 		return
-	for index in range(DATA.PILLAR_MAX):
+	for index in range(states.size()):
 		if states[index] == 0:
 			continue
 		ages[index] += delta
@@ -128,7 +131,7 @@ func _physics_process(delta: float) -> void:
 
 func _refresh_visuals() -> void:
 	var pack := FX.get_pack("pillar")
-	for index in range(DATA.PILLAR_MAX):
+	for index in range(states.size()):
 		visuals[index].visible = states[index] != 0
 		if states[index] == 0:
 			continue

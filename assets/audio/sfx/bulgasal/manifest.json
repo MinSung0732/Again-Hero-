@@ -1,0 +1,163 @@
+{
+  "license_url": "https://pixabay.com/service/license-summary/",
+  "license_checked": "2026-10-09",
+  "format": "mono PCM16 WAV 44100 Hz",
+  "bus": "SFX",
+  "sources": [
+    {
+      "name": "impact",
+      "title": "Boulder Impact",
+      "creator": "DRAGON-STUDIO",
+      "content_id": "487673",
+      "url": "https://pixabay.com/sound-effects/horror-boulder-impact-487673/",
+      "raw_sha256": "d7ced61ba76977873c50b667015e3bbafee48192e258b6a38a90e3a85a392357",
+      "raw_stats": {
+        "seconds": 2.112,
+        "peak_dbfs": 0.0,
+        "rms_dbfs": -11.24,
+        "full_scale_samples": 437
+      }
+    },
+    {
+      "name": "break",
+      "title": "Rock Break Hard",
+      "creator": "LordSonny",
+      "content_id": "184891",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-rock-break-hard-184891/",
+      "raw_sha256": "ece00e07ede13f837353adc1a3a90eca6d1c02f5a8350a3eb76b35519a05fc98",
+      "raw_stats": {
+        "seconds": 3.422,
+        "peak_dbfs": 0.0,
+        "rms_dbfs": -12.093,
+        "full_scale_samples": 248
+      }
+    },
+    {
+      "name": "rolling",
+      "title": "Heavy Rock Rolling",
+      "creator": "DRAGON-STUDIO",
+      "content_id": "515254",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-heavy-rock-rolling-515254/",
+      "raw_sha256": "de66f2ebcb18ee0a6dea921585a4b4f026f14d65deaf9b7247454204379cf3da",
+      "raw_stats": {
+        "seconds": 2.112,
+        "peak_dbfs": 0.0,
+        "rms_dbfs": -15.558,
+        "full_scale_samples": 87
+      }
+    },
+    {
+      "name": "fire",
+      "title": "Fire Spell Impact",
+      "creator": "DRAGON-STUDIO",
+      "content_id": "393921",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-fire-spell-impact-393921/",
+      "raw_sha256": "8370ae9cf09b3332836c9a359602e2a5d8e72bc5074b4b0aeb2f91718ee0ee4c",
+      "raw_stats": {
+        "seconds": 2.8996,
+        "peak_dbfs": -1.888,
+        "rms_dbfs": -16.795,
+        "full_scale_samples": 0
+      }
+    }
+  ],
+  "assets": {
+    "rock": {
+      "source": "break",
+      "file": "rock.wav",
+      "filters": "atrim=start=0:duration=1.25,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=6000,acompressor=threshold=0.2:ratio=2:attack=8:release=90:makeup=1,afade=t=in:d=0.008,afade=t=out:st=1.0:d=0.25",
+      "peak_gain_db": -3.377,
+      "stats": {
+        "seconds": 1.25,
+        "peak_dbfs": -6.0,
+        "rms_dbfs": -20.165,
+        "full_scale_samples": 0
+      },
+      "sha256": "84394c727b61185ee90d834bf0baa7b93a7eb17854c5c4aa6cb702ca8a0ca249"
+    },
+    "burrow": {
+      "source": "rolling",
+      "file": "burrow.wav",
+      "filters": "atrim=start=0:duration=1.85,asetpts=PTS-STARTPTS,highpass=f=55,lowpass=f=4000,acompressor=threshold=0.2:ratio=2:attack=8:release=90:makeup=1,afade=t=in:d=0.04,afade=t=out:st=1.5:d=0.35",
+      "peak_gain_db": -3.717,
+      "stats": {
+        "seconds": 1.85,
+        "peak_dbfs": -6.0,
+        "rms_dbfs": -24.524,
+        "full_scale_samples": 0
+      },
+      "sha256": "8f550615c0466609322987faba12718e3443463f06b433343004cf4ccc1e7d4d"
+    },
+    "land": {
+      "source": "impact",
+      "file": "land.wav",
+      "filters": "atrim=start=0:duration=1.35,asetpts=PTS-STARTPTS,highpass=f=55,lowpass=f=5500,acompressor=threshold=0.2:ratio=2:attack=8:release=90:makeup=1,afade=t=in:d=0.005,afade=t=out:st=1.05:d=0.3",
+      "peak_gain_db": -3.77,
+      "stats": {
+        "seconds": 1.35,
+        "peak_dbfs": -6.0,
+        "rms_dbfs": -21.978,
+        "full_scale_samples": 0
+      },
+      "sha256": "a6cec7515b87a2cc705650de9bbcd9c8b24d72fce39a041a23958c50ce6e9810"
+    },
+    "pillar": {
+      "source": "break",
+      "file": "pillar.wav",
+      "filters": "atrim=start=0.1:duration=0.55,asetpts=PTS-STARTPTS,highpass=f=130,lowpass=f=4800,acompressor=threshold=0.2:ratio=2:attack=8:release=90:makeup=1,afade=t=in:d=0.01,afade=t=out:st=0.4:d=0.15",
+      "peak_gain_db": -4.198,
+      "stats": {
+        "seconds": 0.55,
+        "peak_dbfs": -6.0,
+        "rms_dbfs": -23.494,
+        "full_scale_samples": 0
+      },
+      "sha256": "ee611b9914cfd2594fabff91e5117ed39b76ab7b7cd33fc1fd866396b3421310"
+    },
+    "eat": {
+      "source": "break",
+      "file": "eat.wav",
+      "filters": "atrim=start=0.3:duration=0.4,asetpts=PTS-STARTPTS,highpass=f=220,lowpass=f=4000,acompressor=threshold=0.2:ratio=2:attack=8:release=90:makeup=1,afade=t=in:d=0.015,afade=t=out:st=0.28:d=0.12",
+      "peak_gain_db": -4.468,
+      "stats": {
+        "seconds": 0.4,
+        "peak_dbfs": -6.0,
+        "rms_dbfs": -24.93,
+        "full_scale_samples": 0
+      },
+      "sha256": "f65a7f4645b2e6e18e76794aa40bb6c7c56637e6a9a72f1c0bb52e3156cc20b8"
+    },
+    "emerge": {
+      "source": "rolling",
+      "file": "emerge.wav",
+      "filters": "atrim=start=0.55:duration=0.85,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=4500,acompressor=threshold=0.2:ratio=2:attack=8:release=90:makeup=1,afade=t=in:d=0.015,afade=t=out:st=0.6499999999999999:d=0.2",
+      "peak_gain_db": -1.838,
+      "stats": {
+        "seconds": 0.85,
+        "peak_dbfs": -5.999,
+        "rms_dbfs": -29.544,
+        "full_scale_samples": 0
+      },
+      "sha256": "cd299dca0662f9d91e2ef1699b0f022ca7f2156bff379c2942b158d14c20f4c0"
+    },
+    "archmage_fire_burst": {
+      "source": "fire",
+      "file": "archmage_fire_burst.wav",
+      "filters": "atrim=start=0:duration=1.45,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=5200,acompressor=threshold=0.2:ratio=2:attack=8:release=90:makeup=1,afade=t=in:d=0.008,afade=t=out:st=1.13:d=0.32",
+      "peak_gain_db": -0.367,
+      "stats": {
+        "seconds": 1.45,
+        "peak_dbfs": -6.0,
+        "rms_dbfs": -18.973,
+        "full_scale_samples": 0
+      },
+      "sha256": "7cf39b703649441cc1bc2ae9be7a8eddf88ab4ca78c8e1e1345a59763c00423f"
+    }
+  },
+  "replaced_archmage_file_stats": {
+    "seconds": 1.3568,
+    "peak_dbfs": -1.349,
+    "rms_dbfs": -12.458,
+    "full_scale_samples": 0
+  }
+}
