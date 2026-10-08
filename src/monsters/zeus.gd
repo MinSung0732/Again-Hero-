@@ -1,4 +1,5 @@
 extends "res://src/monsters/goblin_thrower.gd"
+const TELEGRAPH := preload("res://src/ui/circular_attack_telegraph.gd")
 const DATA := preload("res://src/data/zeus_behavior_catalog.gd")
 const ART := preload("res://src/data/zeus_visual_catalog.gd")
 const FX := preload("res://src/ui/zeus_combat_effects.gd")
@@ -23,6 +24,15 @@ var crown_heals := 0
 var pillar_remaining := 0.0
 var pillar_position := Vector2.ZERO
 var pillar_kind := "judgment"
+var thunder_elapsed := -1.0
+var thunder_center := Vector2.ZERO
+var thunder_warned := 0
+var thunder_struck := 0
+var thunder_tracks := 0
+var thunder_damage := 0
+var thunder_ignore_immunity := false
+var thunder_points := PackedVector2Array()
+var thunder_targets: Array[Node2D] = []
 var orb_origins := PackedVector2Array()
 var orb_ages := PackedFloat32Array()
 
@@ -31,6 +41,7 @@ func _init() -> void:
 	monster_role = "ranged"
 	for stat in DATA.BASE:
 		set(stat,DATA.BASE[stat])
+	thunder_points.resize(DATA.THUNDER_STRIKES)
 	orb_origins.resize(DATA.MAX_ORBS)
 	orb_ages.resize(DATA.MAX_ORBS)
 	orb_ages.fill(-1.0)
@@ -92,6 +103,7 @@ func _physics_process(delta: float) -> void:
 		skill_cooldowns[index] -= delta
 	_tick_crown(delta)
 	_tick_orbs(delta)
+	_tick_thunder(delta)
 	pillar_remaining = maxf(pillar_remaining-delta,0.0)
 	if charge_remaining > 0.0:
 		charge_remaining = maxf(charge_remaining-delta,0.0)
@@ -194,7 +206,12 @@ func _fire_projectile(_offset: Vector2) -> void:
 		amount = int(round(amount*DATA.IMMUNE_DAMAGE_RATIO))
 		chance = DATA.IMMUNE_CHANCE
 		paralysis = DATA.IMMUNE_PARALYSIS
+	var was_paralyzed := float(hero.paralysis_timer) > 0.0
 	var accepted: bool = hero.take_followup_damage(amount,self) if immune else hero.take_damage(amount,self)
+	if accepted and was_paralyzed:
+		var total := int(get_meta("support_shield_hp",0))+int(round(max_hp*DATA.BASIC_SHIELD_RATIO))
+		set_meta("support_shield_hp",total)
+		set_meta("support_shield_capacity",total)
 	if accepted and randf() < chance:
 		apply_paralysis_to(hero,paralysis)
 
@@ -203,13 +220,61 @@ func _release_thunder() -> void:
 		combat_sfx.stop_cue("charge")
 	if not is_instance_valid(hero) or int(hero.current_hp) <= 0:
 		return
-	_show_pillar("thunder",_target_feet_position())
+	thunder_elapsed = 0.0
+	thunder_center = hero.global_position
+	thunder_warned = 0
+	thunder_struck = 0
+	thunder_tracks = 0
+	thunder_damage = int(round(attack_damage*(DATA.THUNDER_UPGRADED_DAMAGE if transcend_level >= 2 else DATA.THUNDER_DAMAGE)))
+	thunder_ignore_immunity = transcend_level >= 2
+
+func _tick_thunder(delta: float) -> void:
+	if thunder_elapsed < 0.0:
+		return
+	var end := thunder_elapsed+delta
+	var interval := DATA.THUNDER_SECONDS/DATA.THUNDER_STRIKES
+	var tracking_interval := DATA.THUNDER_SECONDS/(DATA.THUNDER_TRACK_UPDATES+1)
+	# Process scheduled events chronologically even when a slow frame crosses several.
+	while thunder_struck < DATA.THUNDER_STRIKES:
+		var warning := (thunder_warned+1)*interval-DATA.THUNDER_WARNING_SECONDS if thunder_warned < DATA.THUNDER_STRIKES else INF
+		var impact := (thunder_struck+1)*interval
+		var tracking := (thunder_tracks+1)*tracking_interval if thunder_tracks < DATA.THUNDER_TRACK_UPDATES else INF
+		var next := minf(warning,minf(impact,tracking))
+		if next > end+0.00001:
+			break
+		if tracking <= next:
+			if is_instance_valid(hero) and int(hero.current_hp) > 0:
+				thunder_center = hero.global_position
+			thunder_tracks += 1
+		elif warning <= next:
+			# Uniform area sampling; the full impact circle stays inside the500 diameter.
+			thunder_points[thunder_warned] = thunder_center+Vector2.from_angle(randf()*TAU)*sqrt(randf())*(DATA.THUNDER_AREA_RADIUS-DATA.THUNDER_HIT_RADIUS)
+			thunder_warned += 1
+		else:
+			_strike_thunder(thunder_points[thunder_struck])
+			thunder_struck += 1
+	thunder_elapsed = end
+	if thunder_elapsed >= DATA.THUNDER_SECONDS+0.5:
+		thunder_elapsed = -1.0
+
+func _strike_thunder(point: Vector2) -> void:
 	play_combat_sound("thunder")
-	var amount := int(round(attack_damage*(DATA.THUNDER_UPGRADED_DAMAGE if transcend_level >= 2 else DATA.THUNDER_DAMAGE)))
-	var accepted: bool = hero.take_followup_damage(amount,self) if transcend_level >= 2 else hero.take_damage(amount,self)
-	if accepted:
-		hero.apply_slow(1.0-DATA.THUNDER_SLOW,DATA.STATUS_SECONDS)
-		apply_paralysis_to(hero,DATA.THUNDER_PARALYSIS)
+	thunder_targets.clear()
+	if is_instance_valid(hero):
+		thunder_targets.append(hero)
+	if is_instance_valid(combat_authority):
+		for id in combat_authority.active_hero_summons:
+			var summon = combat_authority.active_hero_summons[id]
+			if is_instance_valid(summon) and bool(summon.get("active")) and (not summon.has_method("is_combat_targetable") or summon.is_combat_targetable()):
+				thunder_targets.append(summon)
+	for target in thunder_targets:
+		if not is_instance_valid(target) or int(target.current_hp) <= 0 or point.distance_squared_to(target.global_position) > DATA.THUNDER_HIT_RADIUS*DATA.THUNDER_HIT_RADIUS:
+			continue
+		var accepted: bool = target.take_followup_damage(thunder_damage,self) if thunder_ignore_immunity and target.has_method("take_followup_damage") else target.take_damage(thunder_damage,self)
+		if accepted:
+			if target.has_method("apply_slow"):
+				target.apply_slow(1.0-DATA.THUNDER_SLOW,DATA.STATUS_SECONDS)
+			apply_paralysis_to(target,DATA.THUNDER_PARALYSIS)
 
 func apply_paralysis_to(target_node: Node, strength: float) -> bool:
 	var ratio := strength*(DATA.CROWN_PARALYSIS_MULTIPLIER if crown_remaining > 0.0 else 1.0)
@@ -298,7 +363,18 @@ func _draw_combat_effects() -> void:
 		return
 	if charge_remaining > 0.0:
 		var progress := 1.0-charge_remaining/DATA.CHARGE_SECONDS
-		FX.draw_frame(effect_layer,"charge",mini(int(progress*7),6),Vector2(0,visual_head_y+ART.BATTLE_VISIBLE_HEIGHT*0.55),lerpf(0.35,1.0,progress))
+		FX.draw_frame(effect_layer,"charge",mini(int(progress*7),6),Vector2(0,visual_head_y+ART.BATTLE_VISIBLE_HEIGHT*0.5),lerpf(0.35,1.0,progress)*DATA.CHARGE_SCALE)
+		if is_instance_valid(hero):
+			TELEGRAPH.draw_area(effect_layer,to_local(hero.global_position),DATA.THUNDER_AREA_RADIUS,progress)
+	if thunder_elapsed >= 0.0:
+		var interval := DATA.THUNDER_SECONDS/DATA.THUNDER_STRIKES
+		for index in range(thunder_warned):
+			var age := thunder_elapsed-(index+1)*interval
+			var point := to_local(thunder_points[index])
+			if index >= thunder_struck:
+				TELEGRAPH.draw_area(effect_layer,point,DATA.THUNDER_HIT_RADIUS,1.0+age/DATA.THUNDER_WARNING_SECONDS)
+			elif age < 0.5:
+				FX.draw_frame(effect_layer,"thunder",int(maxf(age,0.0)*10),point)
 	if pillar_remaining > 0.0:
 		var lifetime := 0.30 if pillar_kind == "judgment" else 0.50
 		FX.draw_frame(effect_layer,pillar_kind,int((lifetime-pillar_remaining)*10),to_local(pillar_position))

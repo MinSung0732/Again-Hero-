@@ -1,3 +1,7 @@
+## Zeus focused random lightning storm (2026-10-09)
+- Thunder orb: stationary2s focus, original charge1.7x at body center on worldZ8,500diameter progress warning. Release12 strikes over3s,200% each (Lv2 235% each/ignore immunity), center tracks five times at0.5s intervals. Each random strike has its own120diameter fixed0.2s warning; only that circle deals damage. Full small circle stays within main circle. Original audio/fixed player,12 fixed draw slots and simulation pause preserved.
+- Accepted basic hits on targets already paralyzed grant stacking1% own maxHP shield, no cap/expiry; existing shield consumption/bar. New paralysis from same hit and rejected/skill hits do not grant shield. docs/ZEUS_COMBAT.md.
+
 ## Shared locomotion and Hero containment (2026-10-09)
 - MonsterVisual caps locomotion at8fps by default, debounces move/idle for0.12 simulation seconds, and preserves walking frame/progress across attack/hit/skill/LOD interruptions. Profile locomotion_max_fps/locomotion_transition_seconds override; cached SpriteFrames remain immutable, one-shot timing unchanged. Transition-only physics processing supports callers that send state changes once.
 - Hero outer physics wrapper clamps after all archetype/practice/forced/immobilized action paths. Castle safe top uses actual top-wall collision extent plus existing field margin, and preserves hard-boundary mask8. Practice steering and movement use the same bounds and common obstacle escape. Petrify anchor is corrected when outside; gameplay damage/cooldowns unchanged.
@@ -9,7 +13,7 @@
 - Godot4.5.1 isolated import/parse and practice/Bulgasal/Zeus regression passed; native Linux OpenGL front/back pillar and Hero status render checked. Full app/Android unverified; fixture exit-resource warnings remain.
 
 ## Zeus hit layering and circular warning phase1 (2026-10-09)
-- Zeus combat FX render in lifetime-stable absolute world Z8 above target bodies. Judgment/thunder release snapshot Hero profile GroundShadow world position via get_combat_feet_position; damage remains on existing single Hero target. Slash visual size130*1.75 only, original speed/range/swept radius/damage preserved.
+- Zeus combat FX render in lifetime-stable absolute world Z8 above target bodies. Judgment/thunder release snapshot Hero profile GroundShadow world position via get_combat_feet_position; judgment damage remains on existing single Hero target; thunder now uses the separate random area storm above. Slash visual size130*1.75 only, original speed/range/swept radius/damage preserved.
 - CircularAttackTelegraph shared primitive draw adds exact radius/progress during existing preparation: bomb rat fuse (shared overload radius), elite thrower bomb flight/fuse, Bulgasal leap channel, alchemist basic poison vial flight (compressed range). No gameplay delay introduced.
 - Not all circular attacks are updated. Source audit distinguishes damage from buff/search radii and records existing/remaining instant-impact and area skills in docs/CIRCULAR_ATTACK_TELEGRAPHS.md.
 - Godot4.5.1 isolated import/parse, Zeus/Bulgasal/practice regression and diff checks passed before execution environment disconnected. Additional native screenshots and Android unverified.

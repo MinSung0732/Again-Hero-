@@ -55,7 +55,7 @@ const MONSTERS := {
 		"summon_growth":{"max_hp":preload("res://src/data/zeus_behavior_catalog.gd").HP_PER_SUMMON,"attack_damage":preload("res://src/data/zeus_behavior_catalog.gd").DAMAGE_PER_SUMMON},
 		"default_unlocked":false,"combat_enabled":true,"base_cost":0.0,"summon_exp":0.0,
 		"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,
-		"description":"지휘력500과 마력250 소모 후 전투당1회 무료 소환. 소환 전 실제 생성 수에 따라 HP1200+수×2.5 / 공격150+수×0.6. 심판: 지름475 즉시 번개, 50%확률2초75% 마비(공속 저하). 천둥구체:2초 충전 후200%(2초월235%·무적무시), 둔화/마비30%. 왕관:15초,5초마다HP3%회복·마비효과50%증가(3초월 모든 기술CD최소10초). 천둥가르기:650속도·1500직선·150%(2초월175%·무적무시)·마비20%. 과전압:지름550 아군사망 구슬당 게이지0.01(4초월0.02),5초월 잃은HP0.07%회복. 게이지100·지휘력회복100%(증강 적용)·초당최대15. 일반/특수증강·엘리트·대형몹 제외.",
+		"description":"지휘력500과 마력250 소모 후 전투당1회 무료 소환. 소환 전 실제 생성 수에 따라 HP1200+수×2.5 / 공격150+수×0.6. 심판: 지름475 즉시 번개, 50%확률2초75% 마비(공속 저하). 천둥구체:2초 정신집중 후 지름500 영역에서3초간 무작위12회 낙뢰·중심5회 추적. 각 낙뢰 지름120·200%(2초월235%·무적무시)·둔화/마비30%. 마비 대상 기본공격 적중 시 최대HP1% 중첩 쉴드. 왕관:15초,5초마다HP3%회복·마비효과50%증가(3초월 모든 기술CD최소10초). 천둥가르기:650속도·1500직선·150%(2초월175%·무적무시)·마비20%. 과전압:지름550 아군사망 구슬당 게이지0.01(4초월0.02),5초월 잃은HP0.07%회복. 게이지100·지휘력회복100%(증강 적용)·초당최대15. 일반/특수증강·엘리트·대형몹 제외.",
 		"card_icon_path":"res://assets/art/Transcendent_monster/zeus/frames/idle_01.png",
 
 		"base_stats":preload("res://src/data/zeus_behavior_catalog.gd").BASE,

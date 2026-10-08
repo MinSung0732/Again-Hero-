@@ -151,14 +151,63 @@ func run() -> void:
 	zeus._physics_process(1)
 	check(zeus.position == position_before and zeus.charge_remaining == 1,"charge stationary")
 	zeus._physics_process(1)
-	check(hero.current_hp == hero.max_hp-zeus.attack_damage*2 and is_equal_approx(hero.paralysis_ratio,0.3),"thunder200/status")
-	check(not zeus.combat_sfx.players.charge.playing and zeus.combat_sfx.players.thunder.playing,"actual release stops charge and starts strike audio")
+	check(zeus.thunder_elapsed == 0 and hero.current_hp == hero.max_hp,"focus ends before warned strike")
+	check(not zeus.combat_sfx.players.charge.playing,"release stops focus audio")
+	zeus._tick_thunder(0.05)
+	check(zeus.thunder_warned == 1 and zeus.thunder_struck == 0,"warning before first impact")
+	hero.global_position = zeus.thunder_points[0]
+	zeus._tick_thunder(0.20)
+	check(hero.current_hp == hero.max_hp-zeus.attack_damage*2 and is_equal_approx(hero.paralysis_ratio,0.3),"each thunder200/status within radius")
+	check(zeus.combat_sfx.players.thunder.playing,"existing lightning sound on impact")
+	var frozen_elapsed: float = zeus.thunder_elapsed
+	battle.external_pause = true
+	zeus._physics_process(1)
+	check(zeus.thunder_elapsed == frozen_elapsed,"pause freezes storm")
+	battle.external_pause = false
+	for index in range(1,12):
+		zeus._tick_thunder(0.05)
+		var warning_point: Vector2 = zeus.thunder_points[index]
+		check(warning_point.distance_to(zeus.thunder_center) <= DATA.THUNDER_AREA_RADIUS-DATA.THUNDER_HIT_RADIUS+0.001,"random full hit circle contained")
+		hero.global_position = warning_point
+		hero.invulnerability_timer = 0
+		zeus._tick_thunder(0.20)
+		check(zeus.thunder_points[index] == warning_point,"announced strike stays fixed while tracking")
+	check(hero.current_hp == hero.max_hp-zeus.attack_damage*2*12,"all12 individually use200% coefficient")
+	check(zeus.thunder_struck == 12 and zeus.thunder_tracks == 5,"12 strikes and five tracking updates in three seconds")
+	zeus._tick_thunder(0.5)
+	check(zeus.thunder_elapsed < 0,"storm cleanup")
 	hit_reset()
 	zeus.transcend_level = 2
 	hero.invulnerability_timer = 1
 	zeus._release_thunder()
-	check(hero.current_hp == hero.max_hp-int(round(zeus.attack_damage*2.35)),"Lv2 thunder235 ignores immunity")
+	zeus._strike_thunder(hero.global_position)
+	check(hero.current_hp == hero.max_hp-int(round(zeus.attack_damage*2.35)),"Lv2 each thunder235 ignores immunity")
+	zeus.thunder_elapsed = -1
 	hit_reset()
+	zeus.set_meta("support_shield_hp",0)
+	hero.apply_paralysis(0.3,2)
+	zeus._fire_projectile(Vector2.LEFT)
+	hero.invulnerability_timer = 0
+	zeus._fire_projectile(Vector2.LEFT)
+	var shield_gain := int(round(zeus.max_hp*0.01))
+	check(int(zeus.get_meta("support_shield_hp")) == shield_gain*2,"paralyzed basic hits stack1% own maxHP shield")
+	var saved_hp: int = zeus.current_hp
+	zeus.take_damage(shield_gain)
+	check(zeus.current_hp == saved_hp and int(zeus.get_meta("support_shield_hp")) == shield_gain,"shield absorbs damage before HP")
+	hit_reset()
+	zeus.transcend_level = 0
+	hero.apply_paralysis(0.3,2)
+	hero.invulnerability_timer = 1
+	zeus._fire_projectile(Vector2.LEFT)
+	check(int(zeus.get_meta("support_shield_hp")) == shield_gain,"rejected hit grants no shield")
+	hit_reset()
+	zeus._strike_thunder(hero.global_position+Vector2(60.1,0))
+	check(hero.current_hp == hero.max_hp,"outside individual circle misses")
+	hit_reset()
+	hero.position = Vector2(1000,1000)
+	zeus.position = hero.position+Vector2(180,0)
+	zeus.set_meta("support_shield_hp",0)
+	zeus.transcend_level = 2
 	zeus.gauge = 100
 	zeus.skill_cooldowns = PackedFloat32Array([100,0,100])
 	zeus._try_cast()
@@ -251,6 +300,10 @@ func run() -> void:
 		zeus.pillar_remaining = 0.25
 		zeus.queue_redraw()
 		await capture("thunder")
+		zeus._release_thunder()
+		zeus._tick_thunder(0.6)
+		zeus.queue_redraw()
+		await capture("storm")
 		var preview = battle.acquire_projectile(load("res://src/monsters/ZeusSlash.tscn"),"zeus_slash")
 		preview.global_position = zeus.global_position
 		preview.setup(Vector2.RIGHT,zeus,hero)
