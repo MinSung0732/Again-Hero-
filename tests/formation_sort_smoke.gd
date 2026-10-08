@@ -24,6 +24,8 @@ func run() -> void:
 	root.add_child(lobby)
 	current_scene = lobby
 	lobby._on_team_tab_pressed()
+	while lobby._formation_card_cache.pending:
+		await process_frame
 	for i in range(8):
 		await process_frame
 	var header: Control = lobby.get_node("SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader")

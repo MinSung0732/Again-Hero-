@@ -75,6 +75,10 @@ func _process(delta: float) -> void:
 	)
 
 
+func reset_for_cache() -> void:
+	_cancel_hold()
+	_restore_parent_scroll()
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_SCROLL_BEGIN:
 		_cancel_hold()

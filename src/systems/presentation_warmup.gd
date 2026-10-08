@@ -55,6 +55,7 @@ func prepare_scene(scene_path: String) -> bool:
 		dirs.assign(["lobby_header", "lobby_footer", "lobby_stage", "main_modes", "shop", "01_large_left_panel", "03_middle_right_panel"])
 		paths.append("res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png")
 		paths.append("res://assets/art/UI/settings_v2/amethyst_thumb.png")
+		paths.append("res://assets/art/UI/clean_frames/transcendent_card_frame.png")
 		for banner_path in preload("res://src/data/profile_cosmetic_catalog.gd").BANNERS.values():
 			paths.append(banner_path)
 		dirs.append("profile_v1")
@@ -68,7 +69,8 @@ func prepare_scene(scene_path: String) -> bool:
 			if float(rarity.get("weight", 0.0)) > 0.0:
 				paths.append(String(rarity.get("door_sheet_path", "")))
 		for monster_id in MONSTERS.ORDER:
-			paths.append(String(MONSTERS.get_monster(monster_id).get("card_icon_path", "")))
+			var monster := MONSTERS.get_monster(monster_id)
+			paths.append(String(monster.get("display_icon_path", monster.get("card_icon_path", ""))))
 	elif scene_path == "res://src/main/Main.tscn":
 		paths.append("res://assets/art/UI/hero_reveal_v2/reveal_chamber.png")
 		# Shared height reference used by every hero profile during _ready().
@@ -114,6 +116,7 @@ func prepare_scene(scene_path: String) -> bool:
 	var ready := await _prepare(paths, false)
 	if scene_path == STARTUP.LOBBY_PATH:
 		# The old raw-PNG crop created another GPU texture inside Lobby._ready().
+		_busy = true
 		var source := get_texture("res://assets/art/UI/uicardframes/ui9.png")
 		if source != null:
 			var image := source.get_image()
@@ -123,6 +126,24 @@ func prepare_scene(scene_path: String) -> bool:
 				cropped.atlas = source
 				cropped.region = Rect2(used)
 				_cropped[source.resource_path] = cropped
+		# Collection icons used to be decoded/cropped again on the team button's
+		# input frame. Prepare atlas regions here; reuse the imported GPU textures.
+		for monster_id in MONSTERS.ORDER:
+			var monster := MONSTERS.get_monster(monster_id)
+			var icon_path := String(monster.get("display_icon_path", monster.get("card_icon_path", "")))
+			var icon := get_texture(icon_path)
+			if icon == null or monster.has("card_icon_region"):
+				continue
+			var icon_image := icon.get_image()
+			if icon_image != null:
+				var used := icon_image.get_used_rect()
+				var cropped := AtlasTexture.new()
+				cropped.atlas = icon
+				cropped.filter_clip = true
+				cropped.region = Rect2(used) if used.has_area() else Rect2(Vector2.ZERO, icon.get_size())
+				_cropped[icon_path] = cropped
+			await get_tree().process_frame
+		_busy = false
 	return ready
 
 

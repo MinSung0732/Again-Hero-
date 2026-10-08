@@ -35,6 +35,7 @@ const MONSTERS := {
 		"id":"zeus","name":"제우스","rarity":"transcendent","grade":"transcendent",
 		"role":"ranged","species":"divine_humanoid","family":"zeus","attack_type":"ranged",
 		"combat_style":preload("res://src/data/zeus_behavior_catalog.gd").COMBAT_STYLE,
+		"collection_card":{"style_label":"원거리 견제형","identity":"천둥의 군주","feature":"즉시 낙뢰 · 마비 · 거리 유지"},
 		"summon_growth":{"max_hp":preload("res://src/data/zeus_behavior_catalog.gd").HP_PER_SUMMON,"attack_damage":preload("res://src/data/zeus_behavior_catalog.gd").DAMAGE_PER_SUMMON},
 		"default_unlocked":false,"combat_enabled":true,"base_cost":0.0,"summon_exp":0.0,
 		"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,

@@ -25,6 +25,8 @@ func run() -> void:
 	root.add_child(lobby)
 	current_scene = lobby
 	lobby._on_team_tab_pressed()
+	while lobby._formation_card_cache.pending:
+		await process_frame
 	await process_frame
 	await process_frame
 	var grid_size: Vector2 = lobby.team_monster_grid.size

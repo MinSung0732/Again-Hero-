@@ -212,6 +212,7 @@ var selected_stage_index: int = 0
 var current_tab: String = "main"
 var _team_formation_view = TEAM_FORMATION_VIEW.new()
 var _team_upgrade_feedback: Node2D
+var _formation_card_cache = preload("res://src/ui/formation_card_cache.gd").new()
 var _shop_storefront_art = SHOP_STOREFRONT_ART.new()
 var _shop_test_draw_view = preload("res://src/ui/shop_test_draw_view.gd").new()
 var _shop_pickup_view = preload("res://src/ui/shop_pickup_view.gd").new()
@@ -361,6 +362,7 @@ func _ready() -> void:
 	stamina_view = load("res://src/ui/lobby_stamina_view.gd").new()
 	stamina_view.install(self)
 
+	_formation_card_cache.install(self)
 	_switch_tab("main")
 	_refresh_header()
 	_refresh_stage_card()
@@ -2405,10 +2407,6 @@ func _on_team_tab_pressed() -> void:
 	research_tab.hide()
 	other_tab.hide()
 
-	# Update this immediately so a device screenshot tells us the handler ran.
-	team_summary_label.text = "컬렉션 생성 중…"
-	team_status_label.text = "MonsterCatalog 목록을 만드는 중입니다."
-
 	_setup_team_preview()
 	_setup_demon_skill_preview()
 	_refresh_formation_mode()
@@ -3130,9 +3128,7 @@ func _setup_team_preview() -> void:
 		team_status_label.text = "MonsterCatalog ORDER/MONSTERS에 등록된 몬스터가 없습니다."
 		return
 
-	_refresh_team_preview()
-	team_status_label.text = "컬렉션 %d종 표시 완료 · 저장 편성 확인 중" % team_catalog_ids.size()
-	call_deferred("_restore_saved_team_selection")
+	_restore_saved_team_selection(false, monster_collection_state)
 
 
 func _setup_demon_skill_preview() -> void:
@@ -3149,8 +3145,9 @@ func _setup_demon_skill_preview() -> void:
 		demon_skill_catalog_ids
 	)
 
-func _restore_saved_team_selection() -> void:
-	var saved_collection := MONSTER_COLLECTION_STORE.load_state()
+func _restore_saved_team_selection(refresh: bool = true, saved_collection: Dictionary = {}) -> void:
+	if saved_collection.is_empty():
+		saved_collection = MONSTER_COLLECTION_STORE.load_state()
 	var unlocked_ids := MONSTER_COLLECTION_STORE.get_unlocked_ids(
 		saved_collection
 	)
@@ -3186,7 +3183,8 @@ func _restore_saved_team_selection() -> void:
 	for raw_id in saved_ids:
 		team_selected_ids.append(String(raw_id))
 
-	_refresh_team_preview()
+	if refresh:
+		_refresh_team_preview()
 	if formation_mode == "team":
 		team_status_label.text = "카드 터치: 상세정보 · 길게 누르기: 드래그 편성"
 
@@ -3292,6 +3290,7 @@ func _refresh_formation_mode() -> void:
 	skill_mode_button.add_theme_color_override("font_disabled_color", Color("fff0d2"))
 	transcendence_view.refresh(showing_transcendence)
 	if showing_transcendence:
+		_clear_team_monster_cards()
 		return
 	if showing_team:
 		formation_list_title.text = "보유 몬스터 목록"
@@ -3325,26 +3324,10 @@ func _refresh_team_preview() -> void:
 	_rebuild_team_monster_cards()
 
 func _clear_team_monster_cards() -> void:
-	# Preserve the decoration when the existing collection refresh replaces cards.
-	if is_instance_valid(_team_upgrade_feedback):
-		_team_upgrade_feedback.stop()
-		_team_upgrade_feedback.reparent(self, false)
-	for child in team_monster_grid.get_children():
-		team_monster_grid.remove_child(child)
-		child.queue_free()
+	_formation_card_cache.clear_grid()
 
 func _rebuild_team_monster_cards() -> void:
-	_clear_team_monster_cards()
-
-	for raw_id in _sorted_formation_ids(team_catalog_ids):
-		var monster_id := String(raw_id)
-		var unlocked := monster_id in team_available_ids
-		if formation_unlock_filter == "unlocked" and not unlocked:
-			continue
-		if formation_unlock_filter == "locked" and unlocked:
-			continue
-		team_monster_grid.add_child(_create_team_monster_card(monster_id))
-	$SafeArea/Layout/Content/TeamTab/TeamLayout/EmptyCollection.visible = team_monster_grid.get_child_count() == 0
+	_formation_card_cache.rebuild(_sorted_formation_ids(team_catalog_ids))
 
 func _create_team_monster_card(monster_id: String) -> Control:
 	var available := monster_id in team_available_ids
@@ -3486,6 +3469,8 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	vbox.add_child(actions)
 
 	var team_button := Button.new()
+	team_button.name = "TeamAction"
+	card.set_meta("team_action", team_button)
 	team_button.custom_minimum_size = Vector2(0.0, 50.0)
 	team_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	team_button.add_theme_font_size_override("font_size", 22)
@@ -4381,7 +4366,7 @@ func _team_monster_card_icon(monster_id: String) -> Texture2D:
 	if typeof(data) != TYPE_DICTIONARY:
 		return null
 
-	var icon_path := String(data.get("card_icon_path", ""))
+	var icon_path := String(data.get("display_icon_path", data.get("card_icon_path", "")))
 	if icon_path.is_empty():
 		return null
 	var icon_region = data.get("card_icon_region")
