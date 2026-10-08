@@ -41,7 +41,7 @@ func run() -> void:
 	await process_frame
 	await process_frame
 	check(view.other_menu.visible and not view.settings_root.visible, "other tab opens category list instead of settings")
-	check(view.other_menu_buttons.size() == 8, "eight categories include profile")
+	check(view.other_menu_buttons.size() == 9, "nine categories include profile and gated practice")
 	var outer: Rect2 = lobby.other_tab.get_global_rect()
 	var menu_title_rect: Rect2 = view.menu_title_plate.get_global_rect()
 	var team_title_rect: Rect2 = lobby.team_tab.get_node("TitlePlate").get_global_rect()
@@ -56,9 +56,10 @@ func run() -> void:
 	var previous_bottom := 0.0
 	for entry in view.OTHER_ENTRIES:
 		var item: Button = view.other_menu_buttons[entry[0]]
+		if not item.visible: continue
 		var rect := item.get_global_rect()
 		check(rect.position.y >= previous_bottom and rect.size.y >= 132, "one full-width category per touch-sized row")
-		check(item.disabled == (entry[0] not in ["settings", "profile"]), "settings and profile are connected")
+		check(item.disabled == (entry[0] not in ["settings", "profile", "practice"]), "available settings, profile and practice are connected")
 		previous_bottom = rect.end.y
 	view.other_menu_buttons.settings.pressed.emit()
 	check(view.settings_root.visible and not view.other_menu.visible, "settings category opens existing settings")

@@ -120,6 +120,13 @@ func run() -> void:
 	check(network.calls == 0 and not root.get_node("CloudStore").ready_for_play, "no server calls or writes")
 	check(FileAccess.get_file_as_string(folder.path_join("stage_progress.cfg")) == original, "original guest unchanged")
 	check(not await mode.apply_coupon("localtest"), "cannot accidentally switch cheat mode")
+	lobby._switch_tab("shop")
+	lobby._open_monster_boxes(11)
+	check(lobby.monster_collection_state.bulgasal.unlocked and lobby.gacha_reveal_overlay._results[9].monster_id=="bulgasal","skip ordinary10+1 guarantees tenth Bulgasal")
+	check(PROGRESS.get_gold()==0,"skip draw pays normal1000 cost")
+	check(FileAccess.get_file_as_string(folder.path_join("stage_progress.cfg"))==original,"skip draw keeps original guest isolated")
+	lobby.gacha_reveal_overlay.queue_free()
+	lobby.gacha_reveal_overlay=null
 	check(await mode.apply_coupon("tutorialtest"), "repeat coupon creates fresh first user")
 	check(mode.preview_directory != first_directory and PROFILE.get_profile().is_empty() and PROGRESS.get_gold() == 0, "profile and reward reset only in fresh preview")
 	await flow.install_lobby(lobby)

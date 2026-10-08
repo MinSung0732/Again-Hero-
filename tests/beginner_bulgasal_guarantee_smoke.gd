@@ -48,6 +48,11 @@ func run() -> void:
 	for file in DirAccess.get_files_at(SCOPE.guest_directory): DirAccess.remove_absolute(SCOPE.guest_directory.path_join(file))
 	batch=STORE.award_shard_batch(rolls(11))
 	check(not batch.state.bulgasal.unlocked,"ordinary or old account never enrolled by draws alone")
+	check(STORE.enroll_beginner_guarantee(),"verified preview enrolls missed cohort")
+	batch=STORE.award_shard_batch(rolls(11))
+	check(batch.awards[0].monster_id=="bulgasal" and batch.awards[1].monster_id=="slime","already passed tenth grants once on next draw")
+	batch=STORE.award_shard_batch(rolls(11))
+	for award in batch.awards: check(award.monster_id=="slime","catchup guarantee never repeats")
 	for file in DirAccess.get_files_at(SCOPE.guest_directory): DirAccess.remove_absolute(SCOPE.guest_directory.path_join(file))
 	DirAccess.remove_absolute(SCOPE.guest_directory)
 	SCOPE.guest_directory="user://"

@@ -242,6 +242,17 @@ static func add_shards(monster_id: String, amount: int) -> Dictionary:
 static func award_shards(monster_id: String, amount: int) -> Dictionary:
 	return award_shard_batch([{"monster_id": monster_id, "shards": amount}])
 
+# Called only after TutorialFlow has verified a newcomer or isolated first-user preview.
+# Persist before the user chooses proceed/skip; draws keep reward/counters atomic.
+static func enroll_beginner_guarantee() -> bool:
+	var progress := ConfigFile.new()
+	var error := ACCOUNT_SCOPE.load_config(progress, PROGRESS_PATH)
+	if error not in [OK,ERR_FILE_NOT_FOUND]: return false
+	if bool(progress.get_value("monster_gacha","beginner_bulgasal_eligible",false)) or bool(progress.get_value("monster_gacha","beginner_bulgasal_claimed",false)):
+		return true
+	progress.set_value("monster_gacha","beginner_bulgasal_eligible",true)
+	return ACCOUNT_SCOPE.save_config(progress, PROGRESS_PATH)==OK
+
 # A multi-draw is one collection/research transaction, never a partial award.
 static func award_shard_batch(rolls: Array, gold_cost: int = 0, tutorial_draw: bool = false) -> Dictionary:
 	var state := load_state()
@@ -256,7 +267,7 @@ static func award_shard_batch(rolls: Array, gold_cost: int = 0, tutorial_draw: b
 	var draw_total := maxi(int(progress.get_value("monster_gacha","total_draws",0)),0)
 	var claimed := bool(progress.get_value("monster_gacha","beginner_bulgasal_claimed",false))
 	var eligible := bool(progress.get_value("monster_gacha","beginner_bulgasal_eligible",false))
-	# Only the actual new-account tutorial draw authorizes this cohort.
+	# Tutorial draw also supports enrolled newcomers resuming older checkpoints.
 	if tutorial_draw and draw_total < SHOP_CATALOG.BEGINNER_GUARANTEE_DRAW and not claimed:
 		eligible = true
 	for roll in rolls:
@@ -268,7 +279,7 @@ static func award_shard_batch(rolls: Array, gold_cost: int = 0, tutorial_draw: b
 			return {"success": false, "state": load_state(), "research_points": 0, "awards": []}
 		if String(roll.get("source","")) in ["summon","pickup"]:
 			draw_total += 1
-			if eligible and not claimed and draw_total == SHOP_CATALOG.BEGINNER_GUARANTEE_DRAW:
+			if eligible and not claimed and draw_total >= SHOP_CATALOG.BEGINNER_GUARANTEE_DRAW:
 				roll = {"monster_id":SHOP_CATALOG.BEGINNER_GUARANTEE_MONSTER,"rarity":"transcendent","shards":1,"source":roll.source,"pickup_id":"","beginner_guarantee":true}
 				monster_id = SHOP_CATALOG.BEGINNER_GUARANTEE_MONSTER
 				claimed = true

@@ -189,7 +189,10 @@ func _build_picker() -> void:
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 20)
 	column.add_child(grid)
-	for id in CATALOG.ids():
+	var ids := CATALOG.ids()
+	for appearance_id in APPEARANCES.ORDER:
+		if appearance_id not in ids: ids.append(appearance_id)
+	for id in ids:
 		var button := _button(grid, "", false)
 		button.custom_minimum_size = Vector2(350, 292)
 		button.expand_icon = true
@@ -215,8 +218,9 @@ func open_picker(slot: String) -> void:
 	for id in picker_buttons:
 		var button: Button = picker_buttons[id]
 		button.visible = id in available
-		button.text = CATALOG.display_name(id) + ("\n사용 중" if id == selected else "\n선택")
-		button.icon = _texture(CATALOG.path(id, "banner" if slot == "banner" else "avatar"))
+		var display_name := String(APPEARANCES.get_entry(id).get("name",id)) if slot == "representative" else CATALOG.display_name(id)
+		button.text = display_name + ("\n사용 중" if id == selected else "\n선택")
+		button.icon = _texture(APPEARANCES.path(id,"avatar") if slot == "representative" else CATALOG.path(id, "banner" if slot == "banner" else "avatar"))
 		button.disabled = id == selected
 	picker.show()
 
@@ -224,12 +228,19 @@ func _choose(id: String) -> void:
 	if picker_owner != _scope_key() or _blocked() or not picker.visible:
 		close_picker()
 		return
-	var saved: bool = settings.equip_profile_appearance(id) if picker_slot == "representative" else STORE.select(picker_slot, id)
+	var saved: bool = equip_representative(id) if picker_slot == "representative" else STORE.select(picker_slot, id)
 	if not saved:
 		picker_notice.text = "변경을 저장하지 못했습니다. 다시 시도해 주세요."
 		return
 	refresh()
 	close_picker()
+
+func equip_representative(id: String) -> bool:
+	if _blocked() or not APPEARANCE.equip(id):
+		return false
+	settings._sync_account()
+	lobby._refresh_stage_card()
+	return true
 
 func close_picker() -> void:
 	picker.hide()

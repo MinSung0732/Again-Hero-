@@ -4,6 +4,7 @@ const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const CHECKPOINT := preload("res://src/systems/tutorial_checkpoint.gd")
 const SPOTLIGHT := preload("res://src/ui/tutorial_spotlight.gd")
+const COLLECTION := preload("res://src/systems/monster_collection_store.gd")
 const DATA := preload("res://src/data/tutorial_catalog.gd")
 var transport: Node # Isolated tests can inject a fake server.
 var account_owner := ""
@@ -270,6 +271,11 @@ func install_lobby(lobby: Node) -> void:
 		show_modal("튜토리얼 확인 실패", "네트워크 또는 저장 상태를 확인하고 다시 시도해 주세요.\n지급 여부를 확인하기 전에는 보상을 중복 지급하지 않습니다.", "다시 시도", install_lobby.bind(lobby), "", Callable())
 		return
 	status = String(result.get("status", ""))
+	# Verified pending/active accounts qualify even when skipping; never enroll
+	# ordinary completed/skipped accounts. Preview namespace is always a fresh user.
+	if (preview or status in ["pending","active"]) and not COLLECTION.enroll_beginner_guarantee():
+		show_modal("첫 소환 저장 실패", "신규 계정의 확정 소환 기록을 저장하지 못했습니다.", "다시 시도", install_lobby.bind(lobby))
+		return
 	clear_guide()
 	if status == "active":
 		if step.is_empty() or step == "done":
@@ -279,7 +285,7 @@ func install_lobby(lobby: Node) -> void:
 		resume_lobby()
 	elif status == "pending":
 		step = ""
-		show_modal("마왕의 첫 걸음", "던전 입장부터 군단 소환까지 차근차근 배워 볼까요?\n진행 중 앱을 종료해도 완료한 단계 다음부터 이어집니다.\n\n진행하거나 스킵해도 10+1회 소환 비용 %d골드를 계정당 한 번 지급합니다." % DATA.REWARD, "진행", start_lobby, "스킵", finish_lobby)
+		show_modal("마왕의 첫 걸음", "던전 입장부터 군단 소환까지 차근차근 배워 볼까요?\n진행 중 앱을 종료해도 완료한 단계 다음부터 이어집니다.\n\n진행하거나 스킵해도 10+1회 소환 비용 %d골드를 계정당 한 번 지급합니다.\n첫 몬스터 소환 누적10회째에 불가살을 확정 획득합니다." % DATA.REWARD, "진행", start_lobby, "스킵", finish_lobby)
 		if preview:
 			copy.text += "\n첫 가입 테스트 · 보상은 로컬 저장에만 지급됩니다."
 	else:

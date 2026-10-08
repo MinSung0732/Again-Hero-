@@ -66,15 +66,17 @@ func run() -> void:
 	lobby._switch_tab("other")
 	lobby.settings_view.show_page("account")
 	check(lobby.settings_view.profile_portrait.texture.resource_path == PROFILE.PORTRAITS.male, "profile view selected art")
-	lobby.settings_view._open_appearance_picker()
+	check(lobby.settings_view.pages.account.find_child("ChangeDemonAppearance",true,false)==null,"duplicate account appearance action removed")
+	lobby.settings_view.show_profile()
+	lobby.settings_view.profile_view.open_picker("representative")
 	await process_frame
-	check(is_instance_valid(lobby.settings_view.appearance_overlay), "owned picker opens")
-	check(lobby.settings_view.appearance_overlay.find_child("original_female",true,false) != null, "owned choice available")
+	check(lobby.settings_view.profile_view.picker.visible, "owned picker opens")
+	check(lobby.settings_view.profile_view.picker_buttons.original_female.visible, "owned choice available")
 	if "--capture" in OS.get_cmdline_user_args() and DisplayServer.get_name() != "headless":
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("res://demon-appearance-picker.png")
-	lobby.settings_view._choose_appearance("original_female")
-	check(PROFILE.appearance_id() == "original_female" and lobby.settings_view.appearance_overlay == null, "UI equips and closes")
+	lobby.settings_view.profile_view._choose("original_female")
+	check(PROFILE.appearance_id() == "original_female" and not lobby.settings_view.profile_view.picker.visible, "UI equips and closes")
 	check(lobby.settings_view.profile_portrait.texture.resource_path == PROFILE.PORTRAITS.female, "profile refresh")
 	STORE.equip("original_male")
 	await root.get_node("PresentationWarmup").prepare_scene("res://src/main/Main.tscn")

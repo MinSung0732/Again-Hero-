@@ -221,6 +221,9 @@ func run() -> void:
 	check(PROGRESS.get_gold() == 1000 and fake.grants == 1 and fake.tutorial_status == "skipped", "immediate skip grants same draw cost")
 	await flow.finish_lobby()
 	check(PROGRESS.get_gold() == 1000 and fake.grants == 1, "skip retry exactly once")
+	flow.clear_guide()
+	lobby._open_monster_boxes(11)
+	check(lobby.monster_collection_state.bulgasal.unlocked and lobby.gacha_reveal_overlay._results[9].monster_id=="bulgasal","real account skip preserves cohort through cloud flush and guarantees tenth")
 	flow.transport = null
 	print("TUTORIAL_TEST: " + ("FAILED" if failed else "OK"))
 	quit(1 if failed else 0)

@@ -5,8 +5,6 @@ const OTHER_ENTRIES := [["profile", "프로필"], ["demon_book", "마왕도감"]
 
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const PROFILE := preload("res://src/systems/player_profile.gd")
-const APPEARANCE := preload("res://src/systems/demon_appearance_store.gd")
-const APPEARANCES := preload("res://src/data/demon_appearance_catalog.gd")
 const PROFILE_COSMETICS := preload("res://src/systems/profile_cosmetic_store.gd")
 const PROFILE_CATALOG := preload("res://src/data/profile_cosmetic_catalog.gd")
 const PROLOGUE := preload("res://src/ui/player_prologue.gd")
@@ -36,10 +34,6 @@ var profile_label: Label
 var profile_portrait: TextureRect
 var profile_avatar_frame: PanelContainer
 var profile_setup: Button
-var appearance_button: Button
-var appearance_overlay: Control
-var appearance_notice: Label
-var appearance_owner := ""
 var account_heading: MarginContainer
 var account_inset: MarginContainer
 var profile_card: PanelContainer
@@ -561,15 +555,6 @@ func _build_account() -> void:
 	page.move_child(profile_setup, 3)
 	SKIN.apply(profile_setup)
 	profile_setup.pressed.connect(_open_profile)
-	appearance_button = Button.new()
-	appearance_button.name = "ChangeDemonAppearance"
-	appearance_button.text = "대표 마왕 외형 변경"
-	appearance_button.custom_minimum_size.y = 88
-	appearance_button.add_theme_font_size_override("font_size", 30)
-	page.add_child(appearance_button)
-	page.move_child(appearance_button, 3)
-	SKIN.apply(appearance_button)
-	appearance_button.pressed.connect(_open_appearance_picker)
 	for name in ["KakaoLogin", "GoogleLogin", "CouponButton"]:
 		var button := page.get_node(name) as Button
 		button.custom_minimum_size.y = 104
@@ -600,92 +585,8 @@ func _on_cloud_status(_message: String) -> void:
 	_sync_account()
 
 func set_profile_avatar(texture: Texture2D) -> void:
-	# Display-only preview hook. Use equip_profile_appearance for saved selection.
+	# Display-only preview hook. Profile view owns saved representative selection.
 	profile_portrait.texture = texture
-
-func equip_profile_appearance(id: String) -> bool:
-	if not APPEARANCE.equip(id):
-		return false
-	_sync_account()
-	lobby._refresh_stage_card()
-	return true
-
-func _open_appearance_picker() -> void:
-	if appearance_button.disabled or is_instance_valid(appearance_overlay):
-		return
-	appearance_owner = PROFILE.SCOPE.user_id + ":" + PROFILE.SCOPE.guest_directory
-	appearance_overlay = ColorRect.new()
-	appearance_overlay.name = "DemonAppearanceOverlay"
-	appearance_overlay.color = Color(0, 0, 0, 0.82)
-	appearance_overlay.z_index = 100
-	lobby.add_child(appearance_overlay)
-	appearance_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var center := CenterContainer.new()
-	appearance_overlay.add_child(center)
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(800, 0)
-	var panel_style := _style(Color("160e24"), Color("eac14d"), 3)
-	panel_style.set_content_margin_all(24)
-	panel.add_theme_stylebox_override("panel", panel_style)
-	center.add_child(panel)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 24)
-	panel.add_child(column)
-	_label(column, "대표 마왕 외형 선택", 38, Color("ffdf91"))
-	appearance_notice = _label(column, "대표 캐릭터와 이후 대사에 적용됩니다.\n별도로 선택한 프로필 초상화·배너와 계정 성별·닉네임은 유지됩니다.", 26)
-	appearance_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	var choices_scroll := ScrollContainer.new()
-	choices_scroll.custom_minimum_size.y = 320
-	choices_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	choices_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
-	column.add_child(choices_scroll)
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 20)
-	grid.add_theme_constant_override("v_separation", 20)
-	choices_scroll.add_child(grid)
-	for id in APPEARANCE.owned_ids():
-		var entry := APPEARANCES.get_entry(id)
-		var button := Button.new()
-		button.name = id
-		button.custom_minimum_size = Vector2(360, 280)
-		button.expand_icon = true
-		button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		button.add_theme_constant_override("icon_max_width", 160)
-		button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
-		button.text = String(entry.name) + ("\n사용 중" if id == PROFILE.appearance_id() else "\n선택")
-		button.icon = load(APPEARANCES.path(id, "avatar")) as Texture2D
-		button.add_theme_font_size_override("font_size", 28)
-		for state in ["normal", "hover", "pressed", "disabled"]:
-			button.add_theme_stylebox_override(state, _style(Color("482264") if id == PROFILE.appearance_id() else Color("241430"), Color("eac14d"), 2))
-		grid.add_child(button)
-		SKIN.apply(button)
-		button.pressed.connect(_choose_appearance.bind(id))
-	var close := Button.new()
-	close.text = "닫기"
-	close.custom_minimum_size.y = 82
-	close.add_theme_font_size_override("font_size", 30)
-	for state in ["normal", "hover", "pressed", "disabled"]:
-		close.add_theme_stylebox_override(state, _style(Color("482264"), Color("eac14d"), 2))
-	column.add_child(close)
-	SKIN.apply(close)
-	close.pressed.connect(_close_appearance_picker)
-
-func _choose_appearance(id: String) -> void:
-	if appearance_owner != PROFILE.SCOPE.user_id + ":" + PROFILE.SCOPE.guest_directory or appearance_button.disabled:
-		_close_appearance_picker()
-		return
-	if equip_profile_appearance(id):
-		_close_appearance_picker()
-	else:
-		appearance_notice.text = "변경을 저장하지 못했습니다. 보유 상태/저장 공간을 확인해 주세요."
-
-func _close_appearance_picker() -> void:
-	if is_instance_valid(appearance_overlay):
-		appearance_overlay.hide()
-		appearance_overlay.queue_free()
-	appearance_overlay = null
 
 func _sync_account() -> void:
 	var gateway := lobby.get_node("/root/LoginGateway")
@@ -693,12 +594,9 @@ func _sync_account() -> void:
 	var mode := lobby.get_node("/root/LocalTestMode")
 	var guest: bool = gateway.user_id.is_empty()
 	var profile := PROFILE.get_profile()
-	if is_instance_valid(appearance_overlay) and appearance_owner != PROFILE.SCOPE.user_id + ":" + PROFILE.SCOPE.guest_directory:
-		_close_appearance_picker()
 	var nickname := String(profile.get("nickname", ""))
 	profile_label.text = "내 마왕 프로필\n%s\n%s" % [PROFILE.display_name(), "여성" if profile.get("gender", "male") == "female" else "남성"] if not nickname.is_empty() else "내 마왕 프로필\n미설정"
 	set_profile_avatar(load(PROFILE_CATALOG.path(PROFILE_COSMETICS.selected_id("avatar"), "avatar")) as Texture2D)
-	appearance_button.disabled = nickname.is_empty() or cloud.busy or cloud.conflict
 	profile_portrait.visible = not nickname.is_empty()
 	profile_avatar_frame.visible = not nickname.is_empty()
 	profile_setup.visible = nickname.is_empty() and not guest and not mode.active
