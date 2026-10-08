@@ -54,6 +54,7 @@ func _ready() -> void:
 	_name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_name_label)
 	_skip = Button.new()
+	_skip.z_index = 10
 	_skip.text = "스킵 ››"
 	_skip.custom_minimum_size = Vector2(120, 56)
 	_skip.pressed.connect(skip)

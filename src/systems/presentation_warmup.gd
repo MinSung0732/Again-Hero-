@@ -76,7 +76,7 @@ func prepare_scene(scene_path: String) -> bool:
 				paths.append(String(rarity.get("door_sheet_path", "")))
 		for monster_id in MONSTERS.ORDER:
 			var monster := MONSTERS.get_monster(monster_id)
-			paths.append(String(monster.get("display_icon_path", monster.get("card_icon_path", ""))))
+			paths.append(MONSTERS.get_ui_icon_path(monster_id))
 	elif scene_path == "res://src/main/Main.tscn":
 		paths.append("res://assets/art/UI/hero_reveal_v2/reveal_chamber.png")
 		# Shared height reference used by every hero profile during _ready().
@@ -139,7 +139,7 @@ func prepare_scene(scene_path: String) -> bool:
 		var crop_slice_start := Time.get_ticks_usec()
 		for monster_id in MONSTERS.ORDER:
 			var monster := MONSTERS.get_monster(monster_id)
-			var icon_path := String(monster.get("display_icon_path", monster.get("card_icon_path", "")))
+			var icon_path := MONSTERS.get_ui_icon_path(monster_id)
 			var icon := get_texture(icon_path)
 			if icon == null or monster.has("card_icon_region") or _cropped.has(icon_path):
 				continue

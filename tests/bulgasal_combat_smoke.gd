@@ -3,6 +3,7 @@ const SCENE := preload("res://src/monsters/Bulgasal.tscn")
 const DATA := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const RUNTIME := preload("res://src/systems/transcendence_runtime.gd")
 const ZEUS := preload("res://src/data/zeus_behavior_catalog.gd")
+const TARGETS := preload("res://src/systems/hero_target_policy.gd")
 var failures := 0
 
 class Target extends Node2D:
@@ -116,18 +117,18 @@ func run() -> void:
 	actor.channel.begin(2)
 	actor._set_phase("channel")
 	actor._physics_process(2)
-	check(actor.phase=="launch","channel completes in combat time")
+	check(actor.phase=="launch" and not TARGETS.is_detectable(actor),"channel completes; takeoff hidden from target queries")
 	actor.collision_mask=15
 	actor._physics_process(0.35)
 	check(actor.phase=="air" and actor.collision_mask==0 and not actor.visual.visible,"air hides body and disables collision")
 	hp_before=actor.current_hp
 	actor.take_damage(9999)
-	check(actor.current_hp==hp_before,"airborne invulnerability")
+	check(actor.current_hp==hp_before and not TARGETS.is_detectable(actor),"airborne invulnerability and target exclusion")
 	actor._physics_process(1)
 	check(actor.phase=="land" and actor.collision_mask==15 and actor.visual.visible,"restore original castle mask")
 	target.position=actor.landing_position
 	actor._physics_process(0.25)
-	check(actor.wave_active and target.stunned==3,"leap impact and waves")
+	check(actor.wave_active and target.stunned==3 and TARGETS.is_detectable(actor),"landing restores detectability and launches waves")
 	var wave_hits: int = target.hits
 	actor._tick_waves(0.01)
 	actor._tick_waves(1)

@@ -2,6 +2,7 @@ extends "res://src/monsters/orc.gd"
 const DATA := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const FX := preload("res://src/ui/bulgasal_combat_effects.gd")
 const PILLARS := preload("res://src/monsters/bulgasal_pillars.gd")
+const TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 const CHANNEL := preload("res://src/systems/channel_runtime.gd")
 var pillars: Node2D
 var channel = CHANNEL.new()
@@ -32,6 +33,7 @@ var impact_kind := "impact"
 var wave_active := false
 var wave_origin := Vector2.ZERO
 var wave_distance := 0.0
+var wave_visual_distance := -1.0
 var wave_hit := false
 var wave_primary_hit := false
 var saved_collision_layer := 2
@@ -142,6 +144,7 @@ func _physics_process(delta: float) -> void:
 				saved_collision_mask = collision_mask
 				collision_layer = 0
 				collision_mask = 0
+				TARGET_POLICY.set_hidden(self,true)
 				_set_phase("air")
 		"air":
 			if phase_elapsed >= DATA.AIR_SECONDS:
@@ -152,6 +155,7 @@ func _physics_process(delta: float) -> void:
 		"land":
 			visual.position.y = visual_rest.y-360.0*(1.0-clampf(phase_elapsed/0.25,0.0,1.0))
 			if phase_elapsed >= 0.25:
+				TARGET_POLICY.set_hidden(self,false)
 				global_position = landing_position
 				visual.position = visual_rest
 				wave_primary_hit = _hero_in(landing_position,DATA.LEAP_RADIUS) and hero.take_damage(int(round(attack_damage*DATA.LEAP_DAMAGE)),self)
@@ -161,6 +165,7 @@ func _physics_process(delta: float) -> void:
 				wave_active = true
 				wave_origin = landing_position
 				wave_distance = 0.0
+				wave_visual_distance = 0.0
 				wave_hit = false
 				_set_phase("idle")
 		"retreat":
@@ -240,6 +245,8 @@ func _try_cast() -> bool:
 	return false
 
 func _set_phase(next: String) -> void:
+	if next == "launch":
+		TARGET_POLICY.set_hidden(self,true)
 	phase = next
 	phase_elapsed = 0.0
 	velocity = Vector2.ZERO
@@ -293,6 +300,10 @@ func resolve_rock_impact(point: Vector2) -> void:
 		hero.apply_slow(0.5,2.0)
 
 func _tick_waves(delta: float) -> void:
+	if wave_visual_distance >= 0.0:
+		wave_visual_distance += DATA.WAVE_SPEED*delta
+		if wave_visual_distance > DATA.WAVE_RANGE+DATA.WAVE_TRAIL_SPACING*(DATA.WAVE_TRAIL_COUNT-1):
+			wave_visual_distance = -1.0
 	if not wave_active:
 		return
 	var previous := wave_distance
@@ -336,9 +347,11 @@ func take_damage(amount: int) -> void:
 	super.take_damage(int(round(amount*DATA.BURROW_DAMAGE_RATIO)) if phase == "burrow" else amount)
 
 func _begin_death() -> void:
+	TARGET_POLICY.set_hidden(self,false)
 	channel.cancel()
 	rock_active = false
 	wave_active = false
+	wave_visual_distance = -1.0
 	visual.visible = true
 	visual.position = visual_rest
 	if is_instance_valid(pillars):
@@ -365,7 +378,7 @@ func _draw() -> void:
 		var filled: float = DATA.VISIBLE_HEIGHT*channel.progress()
 		draw_rect(Rect2(43,visual_head_y+DATA.VISIBLE_HEIGHT-filled,6,filled),Color("ffe693"))
 	elif phase == "pick":
-		FX.draw_frame(self,"rock_pick",mini(int(phase_elapsed*10),8),Vector2.ZERO)
+		FX.draw_frame(self,"rock_pick",mini(int(phase_elapsed/DATA.ROCK_PICK_SECONDS*9),8),Vector2.ZERO)
 	elif phase == "burrow":
 		FX.draw_frame(self,"burrow",mini(int(phase_elapsed/DATA.BURROW_SECONDS*9),8),Vector2.ZERO)
 	elif phase == "launch":
@@ -382,6 +395,11 @@ func _draw() -> void:
 	if impact_remaining > 0.0:
 		var duration := float(FX.get_pack(impact_kind).frames.size())/10.0
 		FX.draw_frame(self,impact_kind,int((duration-impact_remaining)*10.0),to_local(impact_position))
-	if wave_active:
+	if wave_visual_distance >= 0.0:
+		# Staggered visual train only; the leading damage sweep remains unchanged.
 		for direction in wave_directions:
-			FX.draw_frame(self,"wave",mini(int(wave_distance/DATA.WAVE_RANGE*11),10),to_local(wave_origin+direction*wave_distance),direction.angle())
+			for trail in range(DATA.WAVE_TRAIL_COUNT):
+				var distance := wave_visual_distance-float(trail)*DATA.WAVE_TRAIL_SPACING
+				if distance < 0.0 or distance > DATA.WAVE_RANGE:
+					continue
+				FX.draw_frame(self,"wave",mini(int(distance/DATA.WAVE_RANGE*11),10),to_local(wave_origin+direction*distance),direction.angle())

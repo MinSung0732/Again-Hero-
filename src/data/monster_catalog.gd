@@ -41,7 +41,7 @@ const MONSTERS := {
 		"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,"special_augment_ids":[],
 		"description":"탱커 실제65마리 소환 및 아군100마리 사망 후 전투당1회. HP1850+아군 누적 사망 수, 공격 간격1.6초·이속270. 게이지60·증강 적용 지휘력 회복100%, 초당최대15. 바위던지기:15/20초, 지름300내300%·기절2초, 지름600내175%·둔화50%2초. 잠입:15/25초,7초 이속+50%·피해60%감소·도달135%/치유감소25%3초. 강철도약:20/20초,2초 정신집중(기절/침묵 취소),지름250 450%·기절3초/8갈래700거리130%·둔화30%2초(파동1회). 돌기둥 파괴150%여진/섭취HP5%쉴드.10피격마다 후퇴·기둥 교체·HP3%쉴드. 일반/특수증강·엘리트·대형몹 제외.",
 		"card_icon_path":"res://assets/art/Transcendent_monster/Bulgasal/frames/idle_01.png",
-		"display_icon_path":"res://assets/art/Transcendent_monster/Bulgasal/bulgasal_icon.png",
+
 		"base_stats":preload("res://src/data/bulgasal_behavior_catalog.gd").BASE,
 		"transcendence":preload("res://src/data/bulgasal_behavior_catalog.gd").RULES,
 		"ground_shadow":{"size":Vector2(88,22),"offset_y":0.0,"opacity":0.35},
@@ -57,7 +57,7 @@ const MONSTERS := {
 		"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,
 		"description":"지휘력500과 마력250 소모 후 전투당1회 무료 소환. 소환 전 실제 생성 수에 따라 HP1200+수×2.5 / 공격150+수×0.6. 심판: 지름475 즉시 번개, 50%확률2초75% 마비(공속 저하). 천둥구체:2초 충전 후200%(2초월235%·무적무시), 둔화/마비30%. 왕관:15초,5초마다HP3%회복·마비효과50%증가(3초월 모든 기술CD최소10초). 천둥가르기:650속도·1500직선·150%(2초월175%·무적무시)·마비20%. 과전압:지름550 아군사망 구슬당 게이지0.01(4초월0.02),5초월 잃은HP0.07%회복. 게이지100·지휘력회복100%(증강 적용)·초당최대15. 일반/특수증강·엘리트·대형몹 제외.",
 		"card_icon_path":"res://assets/art/Transcendent_monster/zeus/frames/idle_01.png",
-		"display_icon_path":"res://assets/art/Transcendent_monster/zeus/zeus_icon.png",
+
 		"base_stats":preload("res://src/data/zeus_behavior_catalog.gd").BASE,
 		"transcendence":preload("res://src/data/zeus_behavior_catalog.gd").RULES,
 		"special_augment_ids":[],"ground_shadow":{"size":Vector2(76,20),"offset_y":43.0,"opacity":0.35},
@@ -1144,3 +1144,11 @@ static func get_max_upgrade_level(monster_id: String) -> int:
 
 static func get_shard_research_points(monster_id: String) -> int:
 	return maxi(int(get_rarity_upgrade_profile(monster_id).get("shard_research_points", SHARD_RESEARCH_POINTS)), 0)
+
+# Collection, reveal results and detail previews share the real battle sprite.
+# Profile rewards retain their independent portrait/banner catalog.
+static func get_ui_icon_path(monster_id: String) -> String:
+	var data := get_monster(monster_id)
+	if get_rarity(monster_id) == "transcendent":
+		return String(data.get("card_icon_path",""))
+	return String(data.get("display_icon_path",data.get("card_icon_path","")))

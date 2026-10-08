@@ -4371,7 +4371,7 @@ func _team_monster_card_icon(monster_id: String) -> Texture2D:
 	if typeof(data) != TYPE_DICTIONARY:
 		return null
 
-	var icon_path := String(data.get("display_icon_path", data.get("card_icon_path", "")))
+	var icon_path := MONSTER_CATALOG.get_ui_icon_path(monster_id)
 	if icon_path.is_empty():
 		return null
 	var icon_region = data.get("card_icon_region")
@@ -5471,3 +5471,11 @@ func _refresh_relic_detail() -> void:
 
 func _show_relic_upgrade_placeholder() -> void:
 	research_status_label.text = "유물 강화 저장 시스템은 다음 단계에서 연결합니다."
+
+func _enter_practice_battle() -> void:
+	if _scene_load_pending or _battle_entry_pending or SceneTransition.is_transitioning():
+		return
+	if not LocalTestMode.request_practice_battle():
+		return
+	if not SceneTransition.change_scene(BATTLE_SCENE_PATH,"연습전투 준비 중..."):
+		LocalTestMode.practice_requested = false

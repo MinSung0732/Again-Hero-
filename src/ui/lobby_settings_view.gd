@@ -1,7 +1,7 @@
 extends RefCounted
 
 const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
-const OTHER_ENTRIES := [["profile", "프로필"], ["demon_book", "마왕도감"], ["hero_book", "용사도감"], ["daily", "일일미션"], ["weekly", "주간미션"], ["friends", "친구목록"], ["rank_history", "랭킹기록"], ["settings", "설정"]]
+const OTHER_ENTRIES := [["profile", "프로필"], ["demon_book", "마왕도감"], ["hero_book", "용사도감"], ["daily", "일일미션"], ["weekly", "주간미션"], ["friends", "친구목록"], ["rank_history", "랭킹기록"], ["practice", "연습전투"], ["settings", "설정"]]
 
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const PROFILE := preload("res://src/systems/player_profile.gd")
@@ -214,11 +214,11 @@ func _build_other_menu(box: VBoxContainer) -> void:
 	for entry in OTHER_ENTRIES:
 		var button := Button.new()
 		button.name = String(entry[0]).to_pascal_case()
-		button.text = String(entry[1]) + ("  ›" if entry[0] in ["settings", "profile"] else "\n준비 중")
+		button.text = String(entry[1]) + ("  ›" if entry[0] in ["settings", "profile", "practice"] else "\n준비 중")
 		button.custom_minimum_size.y = 132
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		button.disabled = entry[0] not in ["settings", "profile"]
+		button.disabled = entry[0] not in ["settings", "profile", "practice"]
 		button.add_theme_font_size_override("font_size", 30)
 		button.add_theme_color_override("font_color", Color("fff0c2"))
 		button.add_theme_color_override("font_disabled_color", Color("b9a7c6"))
@@ -229,6 +229,10 @@ func _build_other_menu(box: VBoxContainer) -> void:
 		other_menu_buttons[entry[0]] = button
 		if entry[0] == "settings":
 			button.pressed.connect(_open_settings)
+		elif entry[0] == "practice":
+			button.visible = LocalTestMode.is_practice_allowed()
+			button.text = "연습전투  ›\n무한 체력 도망 더미 · 등록한 초월 기술 확인"
+			button.pressed.connect(lobby._enter_practice_battle)
 		elif entry[0] == "profile":
 			button.pressed.connect(show_profile)
 
@@ -243,6 +247,8 @@ func _open_settings() -> void:
 	show_page(selected)
 
 func show_menu() -> void:
+	if other_menu_buttons.has("practice"):
+		other_menu_buttons.practice.visible = LocalTestMode.is_practice_allowed()
 	if other_menu == null:
 		return
 	if profile_view != null:

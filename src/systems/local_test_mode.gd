@@ -3,6 +3,7 @@ extends Node
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
 const TEST_FUNDS := 99999
+var practice_requested := false # One-shot request, never persisted or uploaded.
 var active := false
 var tutorial_preview := false
 var preview_directory := ""
@@ -203,3 +204,17 @@ func forced_gacha_monster(selected_id: String) -> String:
 		return ""
 	var pool := preload("res://src/data/shop_catalog.gd").get_monster_pool("transcendent")
 	return selected_id if selected_id in pool else ""
+
+func is_practice_allowed() -> bool:
+	return active and not tutorial_preview and SCOPE.user_id.is_empty()
+
+func request_practice_battle() -> bool:
+	if not is_practice_allowed():
+		return false
+	practice_requested = true
+	return true
+
+func consume_practice_request() -> bool:
+	var requested := practice_requested
+	practice_requested = false
+	return requested and is_practice_allowed()

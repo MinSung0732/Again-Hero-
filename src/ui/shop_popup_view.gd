@@ -117,7 +117,7 @@ func _icon(parent: Control, id: String, color: Color) -> void:
 	parent.add_child(frame)
 	var rect := TextureRect.new()
 	var data := MONSTERS.get_monster(id)
-	var path := String(data.get("display_icon_path", ""))
+	var path := MONSTERS.get_ui_icon_path(id)
 	var texture: Texture2D
 	if not path.is_empty():
 		if not icon_cache.has(path):

@@ -1,3 +1,9 @@
+## Transcendent display and local practice (2026-10-08)
+- Standard gacha reveals/results, collection/detail and odds list use actual combat idle sprites via MonsterCatalog.get_ui_icon_path; cutscene/profile cosmetics retain illustration. Production cutscene now layers above door flash; Bulgasal background/name visible.
+- Bulgasal body display1.27x, rock pick3s plus existing0.4s hold. Hero detection hidden from launch until grounded. Eight-ray wave adds5 staggered visual segments per ray,90spacing; original leading damage sweep/hit-once unchanged.
+- Localtest guest only: Other → Practice battle, registered transcendent + existing test unlock. InfiniteHP fleeing real Hero adapter, pooled1-damage basic shots, HUD Attack ON/OFF; OFF retains fleeing and already flying shots. No EXP/time limit/stage events/rewards/stamina entry/restart spend. Ephemeral one-shot entry request, normal/tutorial/authenticated account isolation.
+- Isolated Godot4.5.1 actual combat/production overlay/HUD tests and native OpenGL screenshot passed. Full application and Android device unverified; fixture resource-exit warnings remain. docs/BULGASAL_COMBAT.md.
+
 ## Bulgasal playable transcendent (2026-10-09)
 - Bulgasal is enabled in normal/pickup gacha, profile cosmetics and transcendence registration. Shared approved original-art mesh rig is now production UI; corner battle cut-in focuses shoulders/face, reveals silhouette and opens eyes, reusing camera/slow-motion restoration. No reward authority in presentation.
 - Actual player tank summons65 AND allied deaths100; HP1850+death count, further deaths+1maxHP without healing. Gauge60, augmented command regen100% capped15/s. Fixed8 decoration collider pool, rock/burrow/channel leap/one-hit8-ray waves/10-hit retreat; no ordinary/special augments or elite/giant.

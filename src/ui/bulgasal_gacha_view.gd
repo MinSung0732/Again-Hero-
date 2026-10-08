@@ -16,21 +16,23 @@ func _ready() -> void:
 	stage = Node2D.new()
 	add_child(stage)
 	background = Sprite2D.new()
-	background.z_index = -3
+	background.z_index = 0
 	background.texture = _texture(ROOT + "forge_background.png")
 	background.position = Vector2(270, 480)
 	background.scale = Vector2(540, 960) / background.texture.get_size()
 	stage.add_child(background)
 	rig = RIG.new()
+	rig.z_index = 2
 	rig.scale = Vector2.ONE * 0.58
 	rig.position = Vector2(47.28, 35.8)
 	stage.add_child(rig)
 	var tex := _texture(ROOT + "forge_vfx_atlas.png")
 	for i in range(4):
-		effects_behind.append(_fx_sprite(tex, i, -1))
+		effects_behind.append(_fx_sprite(tex, i, 1))
 	for i in range(10):
-		effects_front.append(_fx_sprite(tex, 3 if i < 6 else 1, 2))
+		effects_front.append(_fx_sprite(tex, 3 if i < 6 else 1, 3))
 	label = Label.new()
+	label.z_index = 4
 	label.text = "불가살"
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

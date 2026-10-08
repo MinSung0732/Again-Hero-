@@ -13,6 +13,7 @@ const FLOATING_TEXT := preload("res://src/ui/damage_number_spawner.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 var summon_cinematic = preload("res://src/ui/battle_summon_cinematic.gd").new()
+var practice_controls = preload("res://src/ui/practice_battle_controls.gd").new()
 var transcendence_view = preload("res://src/ui/transcendence_summon_view.gd").new()
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
 const DEMON_SKILL_LOADOUT_STORE := preload(
@@ -258,7 +259,7 @@ func _ready() -> void:
 		and String(entry_options.get("stage_id", "")) == String(battle.current_stage_id)
 	)
 	battle.set_external_pause(true)
-	_battle_stamina_entry = STAMINA.claim_battle_entry(String(battle.current_stage_id))
+	_battle_stamina_entry = {} if battle.practice_mode else STAMINA.claim_battle_entry(String(battle.current_stage_id))
 	hud_layer.visible = false
 	stage_intro_cutscene.finished.connect(_on_stage_intro_finished)
 	stage_intro_cutscene.dialogue_event.connect(
@@ -284,6 +285,7 @@ func _ready() -> void:
 	battle.population_changed.connect(_on_population_changed)
 	battle.demon_progression_changed.connect(_on_demon_progression_changed)
 	battle.summon_result.connect(_on_summon_result)
+	practice_controls.install(self)
 	transcendence_view.install(self)
 	summon_cinematic.install(self)
 	battle.demon_augment_ready.connect(_on_demon_augment_ready)
@@ -775,6 +777,9 @@ func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 
 
 func _begin_stage_entry(snapshot: Dictionary) -> void:
+	if battle.practice_mode:
+		_start_battle_after_intro(String(battle.current_stage_id))
+		return
 	var stage_id := String(snapshot.get("stage_id", ""))
 	if _skip_entry_dialogue:
 		_skip_entry_dialogue = false
@@ -1622,7 +1627,7 @@ func _on_mutation_selected(
 		status_label.text = "%s 출현!" % mutation_name
 
 func _on_run_time_changed(_elapsed_seconds: float, remaining_seconds: float) -> void:
-	run_timer_label.text = "남은 시간 %s" % _format_run_time(remaining_seconds)
+	run_timer_label.text = "연습전투 · 제한 없음" if battle.practice_mode else "남은 시간 %s" % _format_run_time(remaining_seconds)
 
 func _format_run_time(seconds: float) -> String:
 	var total := maxi(int(ceil(seconds)), 0)
@@ -1633,7 +1638,7 @@ func _format_run_time(seconds: float) -> String:
 func _on_stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int) -> void:
 	hero_hp_bar.max_value = maxf(float(hero_max_hp), 1.0)
 	hero_hp_bar.value = float(hero_hp)
-	hero_hp_label.text = "HP %d / %d" % [hero_hp, hero_max_hp]
+	hero_hp_label.text = "HP ∞ · 연습 더미" if battle.practice_mode else "HP %d / %d" % [hero_hp, hero_max_hp]
 	_update_population_label()
 	monsters_label.tooltip_text = "전체 몬스터 %d · 증강/기술 추가 소환은 인구수 제외" % monsters_left
 	hero_bgm_manager.update_hero_hp(hero_hp, hero_max_hp)
@@ -3530,6 +3535,11 @@ func _on_restart_pressed() -> void:
 
 func _restart_with_stamina(stage_id: String, skip_dialogue: bool = false) -> void:
 	if _stamina_entry_pending or _scene_load_pending or SceneTransition.is_transitioning():
+		return
+	if battle.practice_mode:
+		if LocalTestMode.request_practice_battle():
+			if not SceneTransition.change_scene("res://src/main/Main.tscn","연습전투 다시 시작..."):
+				LocalTestMode.practice_requested = false
 		return
 	var exempt := LocalTestMode.active or TutorialFlow.active()
 	var skill_ids := DEMON_ULTIMATES.get_ordered_ids()

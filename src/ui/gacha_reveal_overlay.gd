@@ -72,6 +72,7 @@ func _ready() -> void:
 	z_index = 500
 	_build_ui()
 	_cutscene = CUTSCENE_PLAYER.new()
+	_cutscene.z_index = 100 # Above door flash, reward panels and reveal buttons.
 	add_child(_cutscene)
 	_cutscene.finished.connect(_on_cutscene_finished)
 	_door_sound = _build_sound("door")
@@ -310,6 +311,9 @@ func _show_reveal(index: int) -> void:
 		_cutscene_token = _sequence_token
 		_stop_sounds()
 		_stop_active_tweens()
+		_door_flash.hide()
+		_flash.hide()
+		_result_panel.hide()
 		_reveal_panel.hide()
 		_continue_button.hide()
 		_skip_button.hide()

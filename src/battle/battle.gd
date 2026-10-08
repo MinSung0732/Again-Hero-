@@ -18,6 +18,8 @@ const TRANSCENDENCE_STORE := preload("res://src/systems/transcendence_loadout_st
 var transcendent_actor: Node2D
 var raw_allied_summons := 0
 var raw_allied_deaths := 0
+var practice_mode := false
+const PRACTICE_HERO := preload("res://src/hero/practice_hero.gd")
 var transcendence = preload("res://src/systems/transcendence_runtime.gd").new()
 signal demon_progression_changed(level: int, current_exp: float, exp_to_next_level: float)
 signal demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: int)
@@ -603,6 +605,8 @@ func query_monsters_in_rect(world_rect: Rect2) -> Array:
 
 
 func _ready() -> void:
+	var test_mode := get_node_or_null("/root/LocalTestMode")
+	practice_mode = test_mode != null and test_mode.consume_practice_request()
 	queue_redraw()
 	elite_monster_skill_runtime.setup(self)
 	scorpion_swamp_runtime.setup(self)
@@ -662,7 +666,8 @@ func _process(delta: float) -> void:
 		if not flow_pause_manager.is_paused(
 			FLOW_PAUSE_MANAGER.DOMAIN_STAGE_EVENTS
 		):
-			_process_stage_director_events()
+			if not practice_mode:
+				_process_stage_director_events()
 
 		run_time_emit_timer -= delta
 		if run_time_emit_timer <= 0.0:
@@ -672,7 +677,7 @@ func _process(delta: float) -> void:
 				run_metrics.get_remaining_seconds()
 			)
 
-		if run_metrics.is_time_up():
+		if not practice_mode and run_metrics.is_time_up():
 			_on_run_time_up()
 			return
 
@@ -843,7 +848,7 @@ func _start_battle() -> void:
 	_apply_permanent_research()
 
 	var progress_state: Dictionary = STAGE_PROGRESS.load_state()
-	current_stage_id = String(progress_state.get("current_stage_id", "stage_1"))
+	current_stage_id = "stage_1" if practice_mode else String(progress_state.get("current_stage_id", "stage_1"))
 	current_stage_data = STAGE_CATALOG.get_stage(current_stage_id)
 
 	if current_stage_data.is_empty():
@@ -888,7 +893,12 @@ func _start_battle() -> void:
 	if not hero_ai_settings.is_empty():
 		current_hero_profile["ai_settings"] = hero_ai_settings
 
+	if practice_mode:
+		current_hero_profile = HERO_PROFILES.get_profile("ranged_rookie").duplicate(true)
+		current_hero_profile["display_name"] = "연습 더미 · HP ∞"
 	hero = HERO_SCENE.instantiate() as Node2D
+	if practice_mode:
+		hero.set_script(PRACTICE_HERO)
 	if hero.has_method("configure_profile"):
 		hero.call("configure_profile", current_hero_profile)
 	if hero.has_method("configure_battlefield"):
@@ -5007,7 +5017,7 @@ func get_debug_balance_summary() -> String:
 	return "%s\n%s\n%s" % [level_line, augment_line, sample_line]
 
 func _on_hero_died() -> void:
-	if tutorial_mode:
+	if practice_mode or tutorial_mode:
 		return
 	if battle_over:
 		return
@@ -5055,7 +5065,7 @@ func _on_hero_died() -> void:
 	_finish_battle(result_text, true)
 
 func _on_run_time_up() -> void:
-	if tutorial_mode:
+	if practice_mode or tutorial_mode:
 		return
 	if battle_over:
 		return
@@ -5066,7 +5076,7 @@ func _on_run_time_up() -> void:
 	_finish_battle(result_text, false)
 
 func _grant_run_research_reward(apply_clear_multiplier: bool) -> String:
-	if tutorial_mode:
+	if practice_mode or tutorial_mode:
 		return ""
 	var hero_level := 1
 	if is_instance_valid(hero):
