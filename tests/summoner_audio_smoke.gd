@@ -62,6 +62,28 @@ func run() -> void:
 		AudioServer.add_bus_effect(0,capture)
 		var effect_index := AudioServer.get_bus_effect_count(0)-1
 		var game_audio = root.get_node("GameAudio")
+		# Verify each corrected cue itself, rather than mistaking BGM for SFX output.
+		for voice in voices:
+			voice.stop()
+		hero.summoner_basic_audio.stop()
+		hero.summoner_basic_audio_next_ms = 0
+		capture.clear_buffer()
+		hero._summoner_basic_attack(target)
+		var basic_peak := 0.0
+		for i in range(7):
+			await create_timer(.04).timeout
+			for sample in capture.get_buffer(capture.get_frames_available()):
+				basic_peak = maxf(basic_peak,maxf(absf(sample.x),absf(sample.y)))
+		capture.clear_buffer()
+		hero.set_meta("summoner_portal_next_ms",0)
+		AUDIO.play_portal(hero,voices[0])
+		var portal_peak := 0.0
+		for i in range(20):
+			await create_timer(.04).timeout
+			for sample in capture.get_buffer(capture.get_frames_available()):
+				portal_peak = maxf(portal_peak,maxf(absf(sample.x),absf(sample.y)))
+		check(basic_peak > .035 and portal_peak > .035,"individual attack and portal have meaningful output without BGM masking the measurement")
+		print("SUMMONER_INDIVIDUAL basic_peak=",basic_peak," portal_peak=",portal_peak)
 		game_audio.enter_frontend(hero,"lobby")
 		var peak := 0.0
 		for i in range(30):

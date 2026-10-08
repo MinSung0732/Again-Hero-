@@ -17,3 +17,6 @@ The actual HeroProfile points to basic.wav; fallback points to the same file. Ba
 Subjective listening, full manual playthrough, Android/export remain unverified. Runtime tests reproduce actual Stage8 hitscan damage and five summon activations, then combine basic/follower attacks, portals, ordinary summoning and BGM with Master/SFX/BGM at0dB to check output and headroom.
 
 Verification: actual Godot Stage8 profile basic attack retains all three damage events while coalescing sound. Five summon/open-gate activate calls emit one shared portal; later portal still plays. WASAPI Master capture at Master/SFX/BGM 0dB combines basic + portal + four follower attacks + ordinary summon + BGM: peak0.37999848 (-8.40dBFS), nonzero/unclipped. SUMMONER_AUDIO PASS and common GAME_AUDIO_SMOKE PASS. Common fixture resource-use exit warning remains; no summoner runtime errors in the final run.
+
+## Audibility correction — 2026-10-08
+User reports inaudible basic/portal feedback. Previous source peak -12dBFS plus player -20/-21dB attenuated twice. Current basic/portal peaks -6dBFS with player -12/-13dB: both14dB louder than the previous revision, combined nominal peaks -18/-19dBFS. Follower effects unchanged. Original filters, durations, damage cadence and shared portal voice gate remain. Manifest hashes/normalization updated.
