@@ -3,6 +3,7 @@ const DATA := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const FX := preload("res://src/ui/bulgasal_combat_effects.gd")
 const PILLARS := preload("res://src/monsters/bulgasal_pillars.gd")
 const TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
+const TELEGRAPH := preload("res://src/ui/circular_attack_telegraph.gd")
 const DRAW_LAYER := preload("res://src/ui/bulgasal_combat_draw_layer.gd")
 var effect_layer: Node2D
 var gauge_layer: Node2D
@@ -426,6 +427,8 @@ func draw_combat_overlay(target: Node2D) -> void:
 		FX.draw_frame(target,"leap",mini(int(phase_elapsed/0.35*7),6),Vector2.ZERO)
 	elif phase == "quake":
 		FX.draw_frame(target,"retreat",mini(int(phase_elapsed*10),8),Vector2.ZERO)
+	if phase == "channel":
+		TELEGRAPH.draw_area(target,Vector2.ZERO,DATA.LEAP_RADIUS,channel.progress())
 	if phase == "air" or phase == "land":
 		target.draw_arc(to_local(landing_position),DATA.LEAP_RADIUS,0,TAU,64,Color("ffcc80"),1.0,false)
 	if rock_active:

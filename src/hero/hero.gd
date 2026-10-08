@@ -1641,6 +1641,10 @@ func _ready() -> void:
 	progression_changed.emit(level, current_exp, exp_to_next_level)
 	queue_redraw()
 
+func get_combat_feet_position() -> Vector2:
+	# Profile-authored shadow offset is the shared floor contact point.
+	return ground_shadow.global_position if is_instance_valid(ground_shadow) else global_position
+
 func _apply_ground_shadow_profile() -> void:
 	if not is_instance_valid(ground_shadow):
 		return
@@ -4903,6 +4907,7 @@ func _launch_alchemist_vial(
 			continue
 		if not bool(vial.call("is_available")):
 			continue
+		vial.set("warning_radius",maxf(float(alchemist_config.get("poison_radius",275.0))*_get_alchemist_compressed_range_multiplier(),1.0))
 		vial.call(
 			"launch",
 			global_position,

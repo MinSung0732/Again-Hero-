@@ -1,3 +1,9 @@
+## Zeus hit layering and circular warning phase1 (2026-10-09)
+- Zeus combat FX render in lifetime-stable absolute world Z8 above target bodies. Judgment/thunder release snapshot Hero profile GroundShadow world position via get_combat_feet_position; damage remains on existing single Hero target. Slash visual size130*1.75 only, original speed/range/swept radius/damage preserved.
+- CircularAttackTelegraph shared primitive draw adds exact radius/progress during existing preparation: bomb rat fuse (shared overload radius), elite thrower bomb flight/fuse, Bulgasal leap channel, alchemist basic poison vial flight (compressed range). No gameplay delay introduced.
+- Not all circular attacks are updated. Source audit distinguishes damage from buff/search radii and records existing/remaining instant-impact and area skills in docs/CIRCULAR_ATTACK_TELEGRAPHS.md.
+- Godot4.5.1 isolated import/parse, Zeus/Bulgasal/practice regression and diff checks passed before execution environment disconnected. Additional native screenshots and Android unverified.
+
 ## Bulgasal combat draw layers (2026-10-09)
 - Castle normalizes body Z0; actor-owned primitive draws now use lifetime-stable CombatEffects Z1 and CombatGauges Z3. HUD stays above body/FX, death clears both. HP/yellow/support shield rows share4px gaps. Channel bar uses cached idle bounds, facing-aware right edge plus8px.
 - Body height118*1.27*1.18; rock flight visible width120*1.35, shared union-center anchor and cached travel angle. Existing combat authority, collision, rock speed/snapshot and damage unchanged.

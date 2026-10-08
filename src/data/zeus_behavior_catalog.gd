@@ -46,5 +46,5 @@ const EFFECTS := {
 	"orb":{"folder":"effect3","prefix":"orb","first":1,"last":7,"size":24.0},
 	"judgment":{"folder":"effect5","prefix":"pillar","first":1,"last":3,"size":160.0,"feet":true},
 	"thunder":{"folder":"effect5","prefix":"pillar","first":4,"last":8,"size":220.0,"feet":true},
-	"slash":{"folder":"effect6","prefix":"slash","first":1,"last":7,"size":130.0},
+	"slash":{"folder":"effect6","prefix":"slash","first":1,"last":7,"size":130.0*1.75},
 }

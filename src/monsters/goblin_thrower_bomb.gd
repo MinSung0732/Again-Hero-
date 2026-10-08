@@ -6,6 +6,7 @@ const PROJECTILE_DIR := (
 const EXPLOSION_DIR := (
 	"res://assets/art/elitemonster/goblinthrower/frames/effect2"
 )
+const TELEGRAPH := preload("res://src/ui/circular_attack_telegraph.gd")
 const POOL_KEY := "goblin_thrower_elite_bomb"
 const PROJECTILE_TARGET_SIZE := 145.0
 const EXPLOSION_TARGET_SIZE := 104.0
@@ -60,6 +61,7 @@ func setup(
 	blink_on = false
 	visible = true
 	set_physics_process(true)
+	queue_redraw()
 	_apply_frames()
 	sprite.scale = Vector2.ONE * _get_scale_for_animation(&"fly")
 	sprite.modulate = Color.WHITE
@@ -74,6 +76,7 @@ func _physics_process(delta: float) -> void:
 			_tick_fuse(delta)
 		3:
 			_tick_explosion(delta)
+	queue_redraw()
 
 
 func _tick_flying(delta: float) -> void:
@@ -227,3 +230,7 @@ func _load_texture(path: String) -> Texture2D:
 		if image.load(path) == OK:
 			return ImageTexture.create_from_image(image)
 	return null
+
+func _draw() -> void:
+	if state==1 or state==2:
+		TELEGRAPH.draw_area(self,to_local(target_position),explosion_radius,0.0 if state==1 else 1.0-fuse_timer/fuse_duration)

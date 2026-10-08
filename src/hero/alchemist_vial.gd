@@ -1,5 +1,7 @@
 extends Node2D
 
+const TELEGRAPH := preload("res://src/ui/circular_attack_telegraph.gd")
+var warning_radius := 0.0
 signal landed(world_position: Vector2, direct_target: Node)
 
 const PROJECTILE_TEXTURE := preload("res://assets/art/heroes/stage7_alchemist/frames/effect1/effect_01.png")
@@ -68,6 +70,7 @@ func launch(
 	direct_hit_target = direct_target
 	auto_free_after_break = auto_free
 	phase = 1
+	queue_redraw()
 	global_position = origin
 	visible = true
 	projectile_sprite.visible = true
@@ -84,6 +87,7 @@ func _physics_process(delta: float) -> void:
 	var t := clampf(flight_elapsed / flight_duration, 0.0, 1.0)
 	global_position = flight_origin.lerp(flight_target, t)
 	global_position.y -= 4.0 * arc_height * t * (1.0 - t)
+	queue_redraw()
 	if t < 1.0:
 		return
 	global_position = flight_target
@@ -116,3 +120,7 @@ func _deactivate() -> void:
 	projectile_sprite.visible = false
 	break_sprite.visible = false
 	set_physics_process(false)
+
+func _draw() -> void:
+	if phase==1 and warning_radius>0.0:
+		TELEGRAPH.draw_area(self,to_local(flight_target),warning_radius,flight_elapsed/flight_duration,TELEGRAPH.HERO)

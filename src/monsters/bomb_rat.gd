@@ -3,6 +3,8 @@ extends CharacterBody2D
 const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
 const MONSTER_RUNTIME_COMMON := preload("res://src/monsters/monster_runtime_common.gd")
 
+const TELEGRAPH := preload("res://src/ui/circular_attack_telegraph.gd")
+var warning_layer: Node2D
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const BOMBRAT_FRAME_DIR := "res://assets/art/monsters/bombrat/frames"
 const BOMBRAT_TARGET_HEIGHT := 78.0
@@ -74,6 +76,11 @@ func _ready() -> void:
 		COMBAT_STATUS_EFFECT_VISUAL,
 		"slow"
 	)
+	warning_layer = Node2D.new()
+	warning_layer.name = "ExplosionWarning"
+	warning_layer.z_index = 1
+	add_child(warning_layer)
+	warning_layer.draw.connect(_draw_explosion_warning)
 	_apply_bomb_rat_visual()
 	_apply_bomb_rat_explosion_visual()
 	queue_redraw()
@@ -150,6 +157,7 @@ func _physics_process(delta: float) -> void:
 		if hit_flash_timer <= 0.0:
 			queue_redraw()
 
+	warning_layer.queue_redraw()
 	if self_destructing:
 		velocity = Vector2.ZERO
 		self_destruct_timer = maxf(self_destruct_timer - delta, 0.0)
@@ -352,6 +360,7 @@ func _complete_self_destruct() -> void:
 
 	_resume_visual_from_lod()
 	dying = true
+	warning_layer.queue_redraw()
 	self_destructing = false
 	set_meta("death_type", "self_destruct")
 	self_destruct_hp_ratio = clampf(
@@ -375,6 +384,7 @@ func _die_from_hero() -> void:
 
 	_resume_visual_from_lod()
 	dying = true
+	warning_layer.queue_redraw()
 	self_destructing = false
 	set_meta("death_type", "normal")
 	velocity = Vector2.ZERO
@@ -395,18 +405,7 @@ func _trigger_death_explosion() -> void:
 	if not is_instance_valid(hero):
 		return
 
-	var effective_radius := explosion_radius
-	var overload: Dictionary = special_augment_configs.get(
-		"bomb_rat_powder_overload",
-		{}
-	)
-	if not overload.is_empty():
-		var interval := maxf(float(overload.get("interval", 1.0)), 0.01)
-		var steps := floori(survival_time / interval)
-		effective_radius += minf(
-			float(steps) * float(overload.get("radius_per_interval", 0.0)),
-			float(overload.get("max_bonus_radius", 0.0))
-		)
+	var effective_radius := get_explosion_radius()
 
 	if (
 		global_position.distance_squared_to(hero.global_position)
@@ -739,3 +738,23 @@ func _draw() -> void:
 			Color(0.35, 0.80, 1.0),
 			true
 		)
+
+func get_explosion_radius() -> float:
+	var effective_radius := explosion_radius
+	var overload: Dictionary = special_augment_configs.get(
+		"bomb_rat_powder_overload",
+		{}
+	)
+	if not overload.is_empty():
+		var interval := maxf(float(overload.get("interval", 1.0)), 0.01)
+		var steps := floori(survival_time / interval)
+		effective_radius += minf(
+			float(steps) * float(overload.get("radius_per_interval", 0.0)),
+			float(overload.get("max_bonus_radius", 0.0))
+		)
+
+	return effective_radius
+
+func _draw_explosion_warning() -> void:
+	if not dying and self_destructing:
+		TELEGRAPH.draw_area(warning_layer,Vector2.ZERO,get_explosion_radius()/maxf(absf(global_scale.x),0.01),1.0-self_destruct_timer/maxf(self_destruct_fuse,0.001))

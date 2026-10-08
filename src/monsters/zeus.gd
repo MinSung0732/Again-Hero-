@@ -6,6 +6,7 @@ const SLASH_SCENE := preload("res://src/monsters/ZeusSlash.tscn")
 const AUDIO := preload("res://src/data/zeus_audio_catalog.gd")
 const SFX_BANK := preload("res://src/audio/event_sfx_bank.gd")
 var combat_sfx: Node
+var effect_layer: Node2D
 var transcend_level := 0
 var summon_snapshot := 0
 var keeping_distance := false
@@ -68,6 +69,13 @@ func _ready() -> void:
 	crown_layer.draw.connect(_draw_crown_layer)
 	status_layer.draw.connect(_draw_status_layer)
 	super._ready()
+	effect_layer = Node2D.new()
+	effect_layer.name = "CombatEffects"
+	effect_layer.z_as_relative = false
+	effect_layer.z_index = 8 # Above target bodies in castle and legacy maps.
+	effect_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(effect_layer)
+	effect_layer.draw.connect(_draw_combat_effects)
 	combat_sfx = SFX_BANK.new()
 	add_child(combat_sfx)
 	combat_sfx.configure(AUDIO.CUES, combat_authority, true)
@@ -174,7 +182,7 @@ func _try_cast() -> void:
 func _fire_projectile(_offset: Vector2) -> void:
 	if not is_instance_valid(hero):
 		return
-	_show_pillar("judgment",hero.global_position)
+	_show_pillar("judgment",_target_feet_position())
 	play_combat_sound("judgment")
 	var immune := float(hero.invulnerability_timer) > 0.0
 	var amount := attack_damage
@@ -195,7 +203,7 @@ func _release_thunder() -> void:
 		combat_sfx.stop_cue("charge")
 	if not is_instance_valid(hero) or int(hero.current_hp) <= 0:
 		return
-	_show_pillar("thunder",hero.global_position)
+	_show_pillar("thunder",_target_feet_position())
 	play_combat_sound("thunder")
 	var amount := int(round(attack_damage*(DATA.THUNDER_UPGRADED_DAMAGE if transcend_level >= 2 else DATA.THUNDER_DAMAGE)))
 	var accepted: bool = hero.take_followup_damage(amount,self) if transcend_level >= 2 else hero.take_damage(amount,self)
@@ -266,6 +274,10 @@ func _begin_death() -> void:
 		combat_sfx.stop_all()
 	# The cinematic owns the death sound so natural actor removal cannot cut it off.
 	super._begin_death()
+	effect_layer.queue_redraw()
+
+func _target_feet_position() -> Vector2:
+	return hero.get_combat_feet_position() if hero.has_method("get_combat_feet_position") else hero.global_position
 
 func _show_pillar(kind: String, point: Vector2) -> void:
 	pillar_kind = kind
@@ -273,25 +285,30 @@ func _show_pillar(kind: String, point: Vector2) -> void:
 	pillar_remaining = 0.30 if kind == "judgment" else 0.50
 
 func _draw() -> void:
+	effect_layer.queue_redraw()
 	crown_layer.queue_redraw()
 	status_layer.queue_redraw()
 	if not visual.is_visual_ready():
 		draw_circle(Vector2(0,-8),20,Color.WHITE if hit_flash_timer > 0 else Color(0.42,0.74,0.34))
 	if dying:
 		return
+
+func _draw_combat_effects() -> void:
+	if dying:
+		return
 	if charge_remaining > 0.0:
 		var progress := 1.0-charge_remaining/DATA.CHARGE_SECONDS
-		FX.draw_frame(self,"charge",mini(int(progress*7),6),Vector2(0,visual_head_y+ART.BATTLE_VISIBLE_HEIGHT*0.55),lerpf(0.35,1.0,progress))
+		FX.draw_frame(effect_layer,"charge",mini(int(progress*7),6),Vector2(0,visual_head_y+ART.BATTLE_VISIBLE_HEIGHT*0.55),lerpf(0.35,1.0,progress))
 	if pillar_remaining > 0.0:
 		var lifetime := 0.30 if pillar_kind == "judgment" else 0.50
-		FX.draw_frame(self,pillar_kind,int((lifetime-pillar_remaining)*10),to_local(pillar_position))
+		FX.draw_frame(effect_layer,pillar_kind,int((lifetime-pillar_remaining)*10),to_local(pillar_position))
 	for index in range(DATA.MAX_ORBS):
 		var age := float(orb_ages[index])
 		if age < 0.0:
 			continue
 		var progress := clampf((age-0.35)/(DATA.ORB_SECONDS-0.35),0.0,1.0)
 		var point := orb_origins[index].lerp(global_position+Vector2(0,visual_head_y+ART.BATTLE_VISIBLE_HEIGHT*0.55),progress*progress)
-		FX.draw_frame(self,"orb",mini(int(age*14),4) if age < 0.35 else 5+int(age*14)%2,to_local(point))
+		FX.draw_frame(effect_layer,"orb",mini(int(age*14),4) if age < 0.35 else 5+int(age*14)%2,to_local(point))
 
 func _draw_crown_layer() -> void:
 	if dying or crown_remaining <= 0.0:
