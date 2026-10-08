@@ -3335,7 +3335,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	var data := MONSTER_CATALOG.get_monster(monster_id)
 
 	var card := FORMATION_DRAG_CARD.new()
-	card.custom_minimum_size = Vector2(0.0, 300.0)
+	card.custom_minimum_size = Vector2(0.0, 400.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.configure_drag("monster", monster_id, _team_monster_name(monster_id), _team_monster_card_icon(monster_id))
 	card.drag_enabled = available
@@ -3354,10 +3354,10 @@ func _create_team_monster_card(monster_id: String) -> Control:
 
 	var margin := MarginContainer.new()
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	margin.add_theme_constant_override("margin_left", 10)
+	margin.add_theme_constant_override("margin_left", 22)
 	margin.add_theme_constant_override("margin_top", 10)
-	margin.add_theme_constant_override("margin_right", 10)
-	margin.add_theme_constant_override("margin_bottom", 10)
+	margin.add_theme_constant_override("margin_right", 22)
+	margin.add_theme_constant_override("margin_bottom", 24)
 	card.add_child(margin)
 
 	var vbox := VBoxContainer.new()
@@ -3462,18 +3462,20 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	shard_label.add_theme_color_override("font_color", Color("f4eff7"))
 	shard_bar.add_child(shard_label)
 
-	var actions := HBoxContainer.new()
+	var actions := VBoxContainer.new()
+	actions.name = "CardActions"
 	actions.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	actions.custom_minimum_size = Vector2(0.0, 50.0)
-	actions.add_theme_constant_override("separation", 6)
+	actions.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	actions.add_theme_constant_override("separation", 8)
 	vbox.add_child(actions)
 
 	var team_button := Button.new()
 	team_button.name = "TeamAction"
 	card.set_meta("team_action", team_button)
-	team_button.custom_minimum_size = Vector2(0.0, 50.0)
+	team_button.custom_minimum_size = Vector2(0.0, 84.0)
+	team_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	team_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	team_button.add_theme_font_size_override("font_size", 22)
+	team_button.add_theme_font_size_override("font_size", 28)
 	team_button.text = "편성 해제" if selected else "팀 편성"
 	team_button.clip_text = true
 	team_button.disabled = (
@@ -3506,9 +3508,11 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	var upgrade_profile := MONSTER_CATALOG.get_rarity_upgrade_profile(monster_id)
 	var upgrade_configured := bool(upgrade_profile.get("configured", false))
 	var upgrade_button := Button.new()
-	upgrade_button.custom_minimum_size = Vector2(0.0, 44.0)
+	upgrade_button.name = "UpgradeAction"
+	upgrade_button.custom_minimum_size = Vector2(0.0, 84.0)
+	upgrade_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	upgrade_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	upgrade_button.add_theme_font_size_override("font_size", 22)
+	upgrade_button.add_theme_font_size_override("font_size", 28)
 	upgrade_button.text = "강화하기"
 	upgrade_button.clip_text = true
 	if maxed:

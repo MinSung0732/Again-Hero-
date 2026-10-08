@@ -15,6 +15,7 @@ func check(ok: bool, message: String) -> void:
 
 func run() -> void:
 	root.size = Vector2i(540, 960)
+	if "--narrow" in OS.get_cmdline_user_args(): root.size = Vector2i(360, 800)
 	root.content_scale_size = Vector2i(1080, 1920)
 	root.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
 	root.get_node("LoginGateway").remember_session_enabled = false
@@ -46,6 +47,12 @@ func run() -> void:
 		check(border.texture.resource_path.ends_with("formation_%s_frame.png" % CATALOG.get_rarity(card.formation_id)), "authored PNG matches monster rarity")
 		check(card.get_global_rect().end.x <= lobby.size.x - 60, "ornament does not widen mobile grid")
 		check(border.mouse_filter == Control.MOUSE_FILTER_IGNORE, "frame leaves card drag and actions interactive")
+		var team: Button = card.find_child("TeamAction", true, false)
+		var upgrade: Button = card.find_child("UpgradeAction", true, false)
+		var inside: Rect2 = card.get_global_rect().grow(-16)
+		check(inside.encloses(team.get_global_rect()) and inside.encloses(upgrade.get_global_rect()), "large action buttons remain inside rarity border")
+		check(team.size.x >= card.size.x * 0.75 and upgrade.size.x == team.size.x, "each action uses most of card width")
+		check(team.size.y >= 84 and upgrade.size.y >= 84 and upgrade.global_position.y >= team.get_global_rect().end.y + 7, "separate full-width touch rows")
 	for slot in [lobby.team_slot_1_button, lobby.team_slot_2_button, lobby.team_slot_3_button]:
 		check(slot.get_node("FormationRarityFrame").visible, "equipped slots retain rarity art")
 	var slot: Button = lobby.team_slot_1_button
@@ -56,7 +63,7 @@ func run() -> void:
 	check(old_border.visible and old_border == slot.get_node("FormationRarityFrame"), "slot update reuses its frame")
 	if "--capture" in OS.get_cmdline_user_args() and DisplayServer.get_name() != "headless":
 		await RenderingServer.frame_post_draw
-		root.get_texture().get_image().save_png("res://../formation-rarity-cards.png")
+		root.get_texture().get_image().save_png("res://../formation-rarity-cards%s.png" % ("-narrow" if "--narrow" in OS.get_cmdline_user_args() else ""))
 	lobby.free()
 	await process_frame
 	print("FORMATION_RARITY: ", "FAIL" if failed else "PASS")

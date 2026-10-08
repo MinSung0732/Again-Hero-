@@ -133,7 +133,17 @@ func install(host: Control) -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	scroll.scroll_deadzone = 14
-	content.add_child(scroll)
+	# Reserve space inside the outer gold panel before clipping the list.
+	var inset := MarginContainer.new()
+	inset.name = "TranscendenceListInset"
+	inset.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	inset.add_theme_constant_override("margin_left", 12)
+	inset.add_theme_constant_override("margin_right", 12)
+	inset.add_theme_constant_override("margin_top", 8)
+	inset.add_theme_constant_override("margin_bottom", 36)
+	content.add_child(inset)
+	inset.add_child(scroll)
+	scroll.clip_contents = true
 	grid = GridContainer.new()
 	grid.columns = 2
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL

@@ -128,6 +128,12 @@ func run() -> void:
 	check(equipped.find_child("MonsterPortrait", true, false).texture == icon, "shared icon texture cached")
 	check(equipped.find_child("ProfileBanner", true, false) is TextureRect, "original profile banner attached")
 	check(not equipped.find_child("MonsterPortrait", true, false).visible, "banner replaces compact portrait")
+	var list_scroll: ScrollContainer = view.grid.get_parent()
+	var list_inset: MarginContainer = list_scroll.get_parent()
+	check(list_scroll.clip_contents and list_scroll.get_global_rect().end.y <= list_inset.get_global_rect().end.y - 36, "transcendent list clips inside outer panel clearance")
+	list_scroll.scroll_vertical = int(list_scroll.get_v_scroll_bar().max_value)
+	await process_frame
+	check(view.grid.get_child(0).get_global_rect().end.y <= list_scroll.get_global_rect().end.y + 1, "bottom action reachable by inner list scrolling")
 	var inner := equipped.get_global_rect().grow(-12)
 	var action: Button = equipped.find_child("RegisterButton", true, false)
 	for item in action.get_parent().get_children():
