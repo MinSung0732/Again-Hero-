@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 signal transition_completed
+signal destination_prepared
 
 const LOADING_VIEW := preload("res://src/ui/startup_loading_view.gd")
 
@@ -10,6 +11,9 @@ var _view: Control
 var _progress: Array = []
 var _message := ""
 var _retry: Button
+var _destination_ready := false
+var _destination_warming := false
+var _entry_options: Dictionary = {}
 
 
 func _ready() -> void:
@@ -33,9 +37,17 @@ func is_transitioning() -> bool:
 	return _pending or visible
 
 
-func change_scene(path: String, message: String = "불러오는 중...") -> bool:
+func consume_entry_options() -> Dictionary:
+	var options := _entry_options
+	_entry_options = {}
+	return options
+
+
+func change_scene(path: String, message: String = "불러오는 중...", entry_options: Dictionary = {}) -> bool:
 	if is_transitioning() or path.is_empty() or not ResourceLoader.exists(path):
 		return false
+	_entry_options = entry_options.duplicate()
+	_destination_ready = false
 	_scene_path = path
 	_message = message
 	return _start_load()
@@ -52,6 +64,10 @@ func _start_load() -> bool:
 		return true # Accepted: keep retry UI instead of triggering caller's fallback.
 	_pending = true
 	set_process(true)
+	# Texture requests can run while the PackedScene is being read.
+	if not _destination_ready and not _destination_warming:
+		_destination_warming = true
+		call_deferred("_warm_destination")
 	return true
 
 
@@ -73,12 +89,20 @@ func _process(_delta: float) -> void:
 		_fail_transition(ERR_CANT_OPEN)
 
 
-func _prepare_destination_and_change(packed: PackedScene) -> void:
+func _warm_destination() -> void:
 	_view.detail.text = "이미지와 화면 표시 리소스를 미리 준비합니다."
 	PresentationWarmup.progress_changed.connect(_on_warmup_progress)
 	await PresentationWarmup.prepare_common()
 	await PresentationWarmup.prepare_scene(_scene_path)
 	PresentationWarmup.progress_changed.disconnect(_on_warmup_progress)
+	_destination_ready = true
+	_destination_warming = false
+	destination_prepared.emit()
+
+
+func _prepare_destination_and_change(packed: PackedScene) -> void:
+	if not _destination_ready:
+		await destination_prepared
 	_view.set_progress(0.9)
 	var error := get_tree().change_scene_to_packed(packed)
 	if error == OK:

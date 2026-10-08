@@ -1,3 +1,7 @@
+## Dungeon entry and restart (2026-10-08)
+- SceneTransition overlaps PackedScene threaded loading with the existing complete destination warmup, then joins both before instantiation. Monster normal/elite/effect caches still finish under the loading overlay, yielding after ~4ms work rather than two unconditional display frames per monster; touch hold preparation shares this budget.
+- Pause-menu/result restart uses the shared transition after successful stamina debit, carrying a consumed-once stage-matched skip_stage_dialogue option. Skip dialogue only; keep the existing30-step hero reveal/BGM/playable-battle handoff. Ordinary lobby entry and next-stage retain dialogue; no forced seen/true-name mutations. Rejected/insufficient requests carry no restart intent.
+
 ## Preloading budget (2026-10-08)
 - PresentationWarmup keeps the existing complete destination resource set and loads at most four textures concurrently. Yield main-thread preparation after approximately 4ms, without unconditional per-resource frame waits. Headless dummy texture rendering uses one in-flight request.
 - Reuse retained destination icon AtlasTextures; evict crop references when their destination resource leaves the retained set. Keep icon crop work under the same loading-frame budget. Screen transitions still await complete preparation; first combat/UI actions do not receive deferred resource work. Startup has no decorative fixed-duration loading delays.

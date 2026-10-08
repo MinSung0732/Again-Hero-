@@ -252,6 +252,11 @@ func _ready() -> void:
 
 	# Stage entry begins frozen and silent. The intro sequence owns the handoff
 	# to gameplay so combat AI, cooldowns and the run timer cannot advance early.
+	var entry_options := SceneTransition.consume_entry_options()
+	_skip_entry_dialogue = (
+		bool(entry_options.get("skip_stage_dialogue", false))
+		and String(entry_options.get("stage_id", "")) == String(battle.current_stage_id)
+	)
 	battle.set_external_pause(true)
 	_battle_stamina_entry = STAMINA.claim_battle_entry(String(battle.current_stage_id))
 	hud_layer.visible = false
@@ -405,6 +410,7 @@ func _ready() -> void:
 	print("Finite world camera + persistent stage progression enabled.")
 
 var _presentation_ready := false
+var _skip_entry_dialogue := false
 
 
 func prepare_presentation() -> void:
@@ -770,6 +776,10 @@ func _apply_stage_snapshot(snapshot: Dictionary) -> void:
 
 func _begin_stage_entry(snapshot: Dictionary) -> void:
 	var stage_id := String(snapshot.get("stage_id", ""))
+	if _skip_entry_dialogue:
+		_skip_entry_dialogue = false
+		_begin_hero_reveal(snapshot)
+		return
 	var dialogue := STAGE_INTRO_DIALOGUES.get_dialogue(stage_id)
 	if stage_id in ["stage_1", "stage_5"] and not dialogue.is_empty():
 		var hero_id := String(snapshot.get("hero_id", ""))
@@ -1247,6 +1257,7 @@ func _warm_touch_hold_frames() -> void:
 	if not _touch_hold_frames.is_empty():
 		return
 	_touch_hold_frames.clear()
+	var slice_start := Time.get_ticks_usec()
 	for index in range(1, TOUCH_HOLD_FRAME_COUNT + 1):
 		if not is_inside_tree():
 			return
@@ -1255,9 +1266,9 @@ func _warm_touch_hold_frames() -> void:
 		)
 		if texture != null:
 			_touch_hold_frames.append(texture)
-		# Spread first-time UI texture creation over several rendered frames
-		# instead of blocking the first battle frame with all eight images.
-		await get_tree().process_frame
+		if Time.get_ticks_usec() - slice_start >= PresentationWarmup.MAIN_THREAD_BUDGET_US:
+			await get_tree().process_frame
+			slice_start = Time.get_ticks_usec()
 
 
 func _update_touch_hold_input(event: InputEvent) -> void:
@@ -1519,7 +1530,7 @@ func _on_settings_sfx_mute_toggled(enabled: bool) -> void:
 
 
 func _on_pause_restart_pressed() -> void:
-	_restart_with_stamina(String(battle.current_stage_id))
+	_restart_with_stamina(String(battle.current_stage_id), true)
 
 func _on_stage_event_triggered(
 	event_type: String,
@@ -3515,9 +3526,9 @@ func _begin_threaded_scene_change(path: String, message: String) -> void:
 	_scene_load_pending = true
 
 func _on_restart_pressed() -> void:
-	_restart_with_stamina(String(battle.current_stage_id))
+	_restart_with_stamina(String(battle.current_stage_id), true)
 
-func _restart_with_stamina(stage_id: String) -> void:
+func _restart_with_stamina(stage_id: String, skip_dialogue: bool = false) -> void:
 	if _stamina_entry_pending or _scene_load_pending or SceneTransition.is_transitioning():
 		return
 	var exempt := LocalTestMode.active or TutorialFlow.active()
@@ -3533,8 +3544,11 @@ func _restart_with_stamina(stage_id: String) -> void:
 		_show_stamina_notice(message)
 		return
 	_stamina_entry_pending = true
-	var error := get_tree().reload_current_scene()
-	if error != OK:
+	var accepted := SceneTransition.change_scene(
+		"res://src/main/Main.tscn", "전투 불러오는 중...",
+		{"stage_id": stage_id, "skip_stage_dialogue": skip_dialogue}
+	)
+	if not accepted:
 		STAMINA.refund_failed_entry(entry)
 		_stamina_entry_pending = false
 		_show_stamina_notice("전투를 불러오지 못했습니다. 다시 시도해 주세요.")

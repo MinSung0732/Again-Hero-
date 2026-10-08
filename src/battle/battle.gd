@@ -928,7 +928,7 @@ func _start_battle() -> void:
 	)
 
 	# Defer until Hero and battle tree are fully ready. Each monster type warms
-	# on its own frame so startup stays responsive instead of moving one hitch
+	# within a loading-frame budget so startup stays responsive instead of moving one hitch
 	# from the first summon to a single battle-start frame.
 	call_deferred("_warm_monster_spawn_resources")
 
@@ -944,6 +944,7 @@ func _warm_monster_spawn_resources() -> void:
 	if _monster_spawn_resources_warmed or _monster_spawn_warmup_running:
 		return
 	_monster_spawn_warmup_running = true
+	var slice_start := Time.get_ticks_usec()
 
 	for raw_id in MONSTER_CATALOG.ORDER:
 		if not is_inside_tree() or battle_over:
@@ -966,14 +967,18 @@ func _warm_monster_spawn_resources() -> void:
 		warmup.position = Vector2(-10000.0, -10000.0)
 		add_child(warmup)
 
-		# Build normal and elite visual profiles on separate frames so the first
-		# stage event never has to synchronously assemble those SpriteFrames.
-		await get_tree().process_frame
+		# Keep every normal/elite cache ready before combat, yielding by work
+		# budget instead of paying two display frames for each monster type.
+		if Time.get_ticks_usec() - slice_start >= PresentationWarmup.MAIN_THREAD_BUDGET_US:
+			await get_tree().process_frame
+			slice_start = Time.get_ticks_usec()
 		_apply_elite_monster_visual(warmup, monster_id)
-		await get_tree().process_frame
 
 		remove_child(warmup)
 		warmup.free()
+		if Time.get_ticks_usec() - slice_start >= PresentationWarmup.MAIN_THREAD_BUDGET_US:
+			await get_tree().process_frame
+			slice_start = Time.get_ticks_usec()
 
 	await _warm_transcendent_exp_drop()
 	_monster_spawn_resources_warmed = true
