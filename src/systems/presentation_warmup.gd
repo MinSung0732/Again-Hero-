@@ -56,6 +56,8 @@ func prepare_scene(scene_path: String) -> bool:
 		paths.append("res://assets/art/heroes/stage1_mage/stage1_hero_portrait.png")
 		paths.append("res://assets/art/UI/settings_v2/amethyst_thumb.png")
 		paths.append("res://assets/art/UI/clean_frames/transcendent_card_frame.png")
+		for frame_path in preload("res://src/ui/formation_rarity_frames.gd").PATHS.values():
+			paths.append(frame_path)
 		for monster_id in preload("res://src/data/transcendence_catalog.gd").get_ids():
 			paths.append(preload("res://src/data/profile_cosmetic_catalog.gd").path(monster_id, "banner"))
 		for banner_path in preload("res://src/data/profile_cosmetic_catalog.gd").BANNERS.values():

@@ -1,6 +1,10 @@
 extends RefCounted
 
 const CARD_FRAME := preload("res://assets/art/UI/clean_frames/rarity_card_frame.tres")
+const RARITY_FRAMES := preload("res://src/ui/formation_rarity_frames.gd")
+
+func apply_card_frame(card: Control, rarity: String) -> void:
+	RARITY_FRAMES.apply(card, rarity)
 
 func rarity_card_style(rarity: String, source: StyleBoxFlat) -> StyleBoxFlat:
 	var style := CARD_FRAME.duplicate() as StyleBoxFlat
@@ -22,7 +26,9 @@ func apply_slot_border(button: Button, rarity: String) -> void:
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		var style := PIXEL.button_style(button.get_theme_stylebox(state)) as StyleBoxFlat
 		style.border_color = rarity_border_color(rarity) if not rarity.is_empty() else Color("685276")
+		if rarity.is_empty(): style.set_border_width_all(3)
 		button.add_theme_stylebox_override(state, rarity_card_style(rarity, style) if not rarity.is_empty() else style)
+	RARITY_FRAMES.apply(button, rarity)
 
 const PATH := "SafeArea/Layout/Content/TeamTab/TeamLayout"
 

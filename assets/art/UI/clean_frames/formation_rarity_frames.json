@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "authoring": "Native offline Godot pixel rectangles, build_formation_rarity_frames.gd",
+  "filter": "nearest",
+  "alpha_values": [
+    0,
+    255
+  ],
+  "draw_center": false,
+  "frames": [
+    {
+      "rarity": "common",
+      "label": "일반",
+      "color": "#92929c",
+      "file": "formation_common_frame.png",
+      "size": [
+        128,
+        128
+      ],
+      "patch_margins": [
+        32,
+        32,
+        32,
+        32
+      ],
+      "ornament": "iron brackets",
+      "sha256": "698c04291802e470776ab070e45472f4443f37b85ae413ca400a688059af37ff"
+    },
+    {
+      "rarity": "uncommon",
+      "label": "고급",
+      "color": "#ffd84f",
+      "file": "formation_uncommon_frame.png",
+      "size": [
+        128,
+        128
+      ],
+      "patch_margins": [
+        32,
+        32,
+        32,
+        32
+      ],
+      "ornament": "brass plates and rivets",
+      "sha256": "f4f96a5a46dfc6e1a07424f80c6c77fa9c952e30c06f91eaa52e1f9e0f781cb7"
+    },
+    {
+      "rarity": "rare",
+      "label": "희귀",
+      "color": "#54a8ff",
+      "file": "formation_rare_frame.png",
+      "size": [
+        128,
+        128
+      ],
+      "patch_margins": [
+        32,
+        32,
+        32,
+        32
+      ],
+      "ornament": "blue faceted corner jewels",
+      "sha256": "3718c0ea3306fc866ae823b0feef1d22afa06bbbe7b4cccac90bd34562ea23a1"
+    },
+    {
+      "rarity": "legendary",
+      "label": "전설",
+      "color": "#bc70ff",
+      "file": "formation_legendary_frame.png",
+      "size": [
+        128,
+        128
+      ],
+      "patch_margins": [
+        32,
+        32,
+        32,
+        32
+      ],
+      "ornament": "gilded amethyst and stepped filigree",
+      "sha256": "0ec92dc462b1abade37e562f71fe3e7519a9cd2e8a5b0b26e43b4432a9a16819"
+    }
+  ],
+  "transcendent_frame": "transcendent_card_frame.png (existing emerald asset)"
+}

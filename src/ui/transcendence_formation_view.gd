@@ -198,8 +198,9 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 		frame.tapped.connect(lobby._open_monster_detail.bind(id))
 	var margin := box.get_parent() as MarginContainer
 	if registered_card:
-		for side in ["top", "bottom"]:
-			margin.add_theme_constant_override("margin_" + side, 14)
+		margin.add_theme_constant_override("margin_left", 36)
+		margin.add_theme_constant_override("margin_top", 22)
+		margin.add_theme_constant_override("margin_bottom", 26)
 		box.add_theme_constant_override("separation", 6)
 	var row := HBoxContainer.new()
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -262,8 +263,8 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 	register_button.disabled = not unlocked or (not chosen and DATA.MONSTERS.get_scene(id) == null)
 	var detail_button := button(actions, "상세정보", lobby._open_monster_detail.bind(id))
 	if registered_card:
-		register_button.custom_minimum_size.y = 52
-		detail_button.custom_minimum_size.y = 52
+		register_button.custom_minimum_size.y = 48
+		detail_button.custom_minimum_size.y = 48
 	else:
 		var maxed := COLLECTION.is_maxed(id, state)
 		var action := button(box, "최대 초월 완료" if maxed else "초월  ·  조각 1개", _upgrade.bind(id))

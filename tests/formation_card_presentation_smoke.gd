@@ -128,6 +128,15 @@ func run() -> void:
 	check(equipped.find_child("MonsterPortrait", true, false).texture == icon, "shared icon texture cached")
 	check(equipped.find_child("ProfileBanner", true, false) is TextureRect, "original profile banner attached")
 	check(not equipped.find_child("MonsterPortrait", true, false).visible, "banner replaces compact portrait")
+	var inner := equipped.get_global_rect().grow(-12)
+	var action: Button = equipped.find_child("RegisterButton", true, false)
+	for item in action.get_parent().get_children():
+		var draw: Rect2 = item.get_global_rect()
+		var style: StyleBox = item.get_theme_stylebox("normal")
+		if style is StyleBoxFlat or style is StyleBoxTexture:
+			draw.position -= Vector2(style.expand_margin_left, style.expand_margin_top)
+			draw.size += Vector2(style.expand_margin_left + style.expand_margin_right, style.expand_margin_top + style.expand_margin_bottom)
+		check(inner.encloses(draw), "registered action artwork stays inside frame")
 	await capture("transcendent-card-registered")
 	view._upgrade("zeus")
 	check(COLLECTION.get_upgrade_level("zeus") == 3, "card action preserves actual transcendence")

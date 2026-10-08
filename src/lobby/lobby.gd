@@ -3547,6 +3547,7 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	card_style.border_color = _team_formation_view.rarity_border_color(MONSTER_CATALOG.get_rarity(monster_id))
 	card_style.set_corner_radius_all(0)
 	card.add_theme_stylebox_override("panel", _team_formation_view.rarity_card_style(MONSTER_CATALOG.get_rarity(monster_id), card_style))
+	_team_formation_view.apply_card_frame(card, MONSTER_CATALOG.get_rarity(monster_id))
 	return card
 
 
