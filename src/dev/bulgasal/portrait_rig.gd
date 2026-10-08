@@ -1,141 +1,129 @@
 extends Node2D
-## Development rig: actual 16 uploaded PNGs, no single-image stretch.
-const ROOT := "res://assets/art/effects/gatcha/bulgasal/rig_v1/"
-var upper: Node2D
-var limbs: Array[Sprite2D] = []
-var flexible_bones: Array[Array] = []
-var flexible_kinds: Array[String] = []
-var parts: Array[Node2D] = []
-var layout: Dictionary
-var _textures: Dictionary = {}
+## Native original-art mesh rig. Not a Cubism model or generated replacement anatomy.
+const ORIGINAL := "res://assets/art/effects/gatcha/bulgasal/rig_v1/approved_fullbody.png"
+const CANVAS := Vector2(768, 1280)
+const COLUMNS := 49
+const ROWS := 81
+var portrait: Node2D
+var mesh: Polygon2D
+var bones: Array[Bone2D] = []
+var vertex_weights: Array[PackedFloat32Array] = []
+var mane_outline := PackedVector2Array([Vector2(490, 220), Vector2(710, 245), Vector2(850, 350), Vector2(971, 510), Vector2(971, 890), Vector2(750, 890), Vector2(700, 790), Vector2(760, 690), Vector2(700, 530), Vector2(540, 450)])
+var hand_outline := PackedVector2Array([Vector2(710, 600), Vector2(850, 605), Vector2(900, 780), Vector2(830, 850), Vector2(735, 820), Vector2(670, 690)])
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	layout = JSON.parse_string(FileAccess.get_file_as_string(ROOT + "layout.json"))
-	upper = Node2D.new()
-	upper.name = "BreathingUpperBody"
-	upper.position = Vector2(380, 640)
-	add_child(upper)
-	for spec: Dictionary in layout.parts:
-		var host: Node2D = upper if spec.parent == "upper" else self
-		var layer := Node2D.new()
-		layer.name = spec.id
-		layer.position = Vector2(spec.center[0], spec.center[1]) - (upper.position if host == upper else Vector2.ZERO)
-		layer.rotation = deg_to_rad(float(spec.rotation_degrees))
-		layer.scale = Vector2.ONE * float(layout.uniform_scale)
-		layer.z_index = int(spec.z)
-		host.add_child(layer)
-		parts.append(layer)
-		var rect := Rect2(float(spec.region[0]), float(spec.region[1]), float(spec.region[2]), float(spec.region[3]))
-		var tex := _load_texture(ROOT + String(spec.file))
-		if tex == null:
-			continue
-		if not String(spec.motion).is_empty():
-			_build_flexible(layer, tex, rect, String(spec.motion))
-		else:
-			var sprite := Sprite2D.new()
-			sprite.texture = tex
-			sprite.region_enabled = true
-			sprite.region_rect = rect
-			layer.add_child(sprite)
-			limbs.append(sprite)
-	_add_joint_overlays()
-	set_time(0.0)
-
-func _load_texture(path: String) -> Texture2D:
-	if _textures.has(path):
-		return _textures[path]
-	var tex := load(path) as Texture2D
-	if tex == null:
-		push_error("Missing imported texture: " + path)
-		return null
-	_textures[path] = tex
-	return tex
-
-func _build_flexible(layer: Node2D, tex: Texture2D, rect: Rect2, kind: String) -> void:
+	var texture := load(ORIGINAL) as Texture2D
+	if texture == null:
+		push_error("Missing original Bulgasal artwork")
+		return
+	var source_size := texture.get_size()
+	portrait = Node2D.new()
+	portrait.name = "OriginalArtworkRig"
+	var factor := minf(CANVAS.x / source_size.x, CANVAS.y / source_size.y)
+	portrait.scale = Vector2.ONE * factor
+	portrait.position = (CANVAS - source_size * factor) * 0.5
+	add_child(portrait)
 	var skeleton := Skeleton2D.new()
-	layer.add_child(skeleton)
-	var bones: Array[Bone2D] = []
-	for i in range(3):
+	portrait.add_child(skeleton)
+	var pivots := [Vector2.ZERO, Vector2(555, 335), Vector2(690, 490), Vector2(450, 865), Vector2(505, 1110), Vector2(785, 990), Vector2(830, 1170), Vector2(480, 665), Vector2(290, 600), Vector2(720, 630)]
+	for index in range(pivots.size()):
 		var bone := Bone2D.new()
-		bone.name = "PinnedRoot" if i == 0 else "Flow_%d" % i
-		bone.position = Vector2(0, -rect.size.y * 0.5 + rect.size.y * i * 0.28)
+		bone.name = ["FixedBody", "ManeRoot", "ManeTip", "ClothRoot", "ClothTip", "TailRoot", "TailTip", "BreathingChest", "LeftArmBreath", "RightArmBreath"][index]
+		bone.position = pivots[index]
 		bone.rest = Transform2D(0.0, bone.position)
 		bone.set_autocalculate_length_and_angle(false)
-		bone.length = 40.0
+		bone.length = 30.0
 		skeleton.add_child(bone)
 		bones.append(bone)
+		vertex_weights.append(PackedFloat32Array())
 	var vertices := PackedVector2Array()
-	var uv := PackedVector2Array()
 	var triangles: Array[PackedInt32Array] = []
-	var weights: Array[PackedFloat32Array] = [PackedFloat32Array(), PackedFloat32Array(), PackedFloat32Array()]
-	for y in range(19):
-		for x in range(13):
-			var fraction := Vector2(float(x) / 12.0, float(y) / 18.0)
-			vertices.append(fraction * rect.size - rect.size * 0.5)
-			uv.append(rect.position + fraction * rect.size)
-			# Roots are genuinely pinned. Tips move with lag, no whole-part scale.
-			var middle := smoothstep(0.18, 0.55, fraction.y)
-			var tip := smoothstep(0.55, 0.94, fraction.y)
-			weights[0].append(1.0 - middle)
-			weights[1].append(middle * (1.0 - tip))
-			weights[2].append(middle * tip)
-	for y in range(18):
-		for x in range(12):
-			var a := y * 13 + x
-			triangles.append(PackedInt32Array([a, a + 1, a + 14]))
-			triangles.append(PackedInt32Array([a, a + 14, a + 13]))
-	var mesh := Polygon2D.new()
-	mesh.texture = tex
+	for y in range(ROWS):
+		for x in range(COLUMNS):
+			var point := Vector2(float(x) / float(COLUMNS - 1), float(y) / float(ROWS - 1)) * source_size
+			vertices.append(point)
+			var weights := _weights_at(point)
+			for bone in range(bones.size()):
+				vertex_weights[bone].append(weights[bone])
+	for y in range(ROWS - 1):
+		for x in range(COLUMNS - 1):
+			var first := y * COLUMNS + x
+			triangles.append(PackedInt32Array([first, first + 1, first + COLUMNS + 1]))
+			triangles.append(PackedInt32Array([first, first + COLUMNS + 1, first + COLUMNS]))
+	mesh = Polygon2D.new()
+	mesh.name = "SharedSeamOriginalMesh"
+	mesh.texture = texture
 	mesh.polygon = vertices
-	mesh.uv = uv
+	mesh.uv = vertices
 	mesh.polygons = triangles
 	mesh.antialiased = false
-	layer.add_child(mesh)
+	portrait.add_child(mesh)
 	mesh.skeleton = mesh.get_path_to(skeleton)
-	for i in range(3):
-		mesh.add_bone(skeleton.get_path_to(bones[i]), weights[i])
-	flexible_bones.append(bones)
-	flexible_kinds.append(kind)
+	for index in range(bones.size()):
+		mesh.add_bone(skeleton.get_path_to(bones[index]), vertex_weights[index])
+	set_time(0.0)
 
-func _add_joint_overlays() -> void:
-	var tex := _load_texture(ROOT + "joint_patch_atlas.png")
-	if tex == null:
-		return
-	var size_half := tex.get_size() * 0.5
-	# Generated patch plates conceal draft tube-end cuts. Not original-pixel-identical art.
-	var patches := [
-		[Vector2(135, 547), Vector2(120, 118), 0, true, 0.2],
-		[Vector2(546, 596), Vector2(155, 140), 0, true, -0.4],
-		[Vector2(704, 577), Vector2(73, 86), 1, true, -0.2],
-		[Vector2(185, 887), Vector2(158, 134), 2, false, -0.2],
-		[Vector2(483, 884), Vector2(130, 122), 2, false, 0.2],
-		[Vector2(236, 1102), Vector2(115, 76), 3, false, 0.2],
-	]
-	for patch: Array in patches:
-		var sprite := Sprite2D.new()
-		var host: Node2D = upper if patch[3] else self
-		sprite.texture = tex
-		sprite.region_enabled = true
-		var cell := int(patch[2])
-		sprite.region_rect = Rect2(Vector2(cell % 2, cell / 2) * size_half, size_half)
-		sprite.scale = Vector2(patch[1]) / size_half
-		sprite.position = Vector2(patch[0]) - (upper.position if host == upper else Vector2.ZERO)
-		sprite.rotation = float(patch[4])
-		sprite.z_index = 24
-		host.add_child(sprite)
+func _weights_at(point: Vector2) -> PackedFloat32Array:
+	var result := PackedFloat32Array()
+	result.resize(10)
+	# Protect the original face/horns and load-bearing feet/legs from wind deformation.
+	var right_leg := PackedVector2Array([Vector2(585, 910), Vector2(730, 980), Vector2(820, 1120), Vector2(940, 1290), Vector2(971, 1540), Vector2(770, 1540), Vector2(680, 1235), Vector2(610, 1080)])
+	if (point.x < 540.0 and point.y < 510.0) or point.y > 1280.0 or (point.x < 390.0 and point.y > 960.0) or Geometry2D.is_point_in_polygon(point, right_leg):
+		result[0] = 1.0
+		return result
+	# Original visible regions share vertices; fixed anatomy stays continuous with flexible tips.
+	if Geometry2D.is_point_in_polygon(point, mane_outline) and not Geometry2D.is_point_in_polygon(point, hand_outline):
+		var weight := _feather(point, mane_outline, 38.0) * smoothstep(510.0, 690.0, point.x)
+		var tip := smoothstep(490.0, 790.0, point.y)
+		result[1] = weight * (1.0 - tip)
+		result[2] = weight * tip
+	var cloth := PackedVector2Array([Vector2(405, 790), Vector2(555, 840), Vector2(645, 1270), Vector2(465, 1200), Vector2(345, 900)])
+	if Geometry2D.is_point_in_polygon(point, cloth):
+		var weight := _feather(point, cloth, 24.0) * smoothstep(815.0, 930.0, point.y)
+		var tip := smoothstep(955.0, 1200.0, point.y)
+		result[3] = weight * (1.0 - tip)
+		result[4] = weight * tip
+	var tail := PackedVector2Array([Vector2(790, 920), Vector2(965, 840), Vector2(971, 1165), Vector2(910, 1270), Vector2(775, 1130)])
+	if Geometry2D.is_point_in_polygon(point, tail):
+		var weight := _feather(point, tail, 30.0)
+		var tip := smoothstep(1030.0, 1210.0, point.y)
+		result[5] = weight * (1.0 - tip)
+		result[6] = weight * tip
+	if point.y > 490.0 and point.y < 815.0 and point.x > 350.0 and point.x < 680.0:
+		result[7] = sin((point.y - 490.0) / 325.0 * PI) * sin((point.x - 350.0) / 330.0 * PI) * 0.8
+	if point.y > 545.0 and point.y < 775.0:
+		if point.x > 130.0 and point.x < 350.0:
+			result[8] = sin((point.x - 130.0) / 220.0 * PI) * sin((point.y - 545.0) / 230.0 * PI) * 0.5
+		elif point.x > 650.0 and point.x < 795.0:
+			result[9] = sin((point.x - 650.0) / 145.0 * PI) * sin((point.y - 545.0) / 230.0 * PI) * 0.35
+	var total := 0.0
+	for index in range(1, 10):
+		total += result[index]
+	if total > 1.0:
+		for index in range(1, 10):
+			result[index] /= total
+		total = 1.0
+	result[0] = 1.0 - total
+	return result
+
+func _feather(point: Vector2, outline: PackedVector2Array, distance: float) -> float:
+	var nearest := INF
+	for index in range(outline.size()):
+		nearest = minf(nearest, point.distance_to(Geometry2D.get_closest_point_to_segment(point, outline[index], outline[(index + 1) % outline.size()])))
+	return smoothstep(0.0, distance, nearest)
 
 func set_time(seconds: float) -> void:
-	if upper == null:
+	if bones.is_empty():
 		return
-	# Foot/leg positions and every calibrated scale stay untouched.
-	upper.position.y = 640.0 - sin(seconds * TAU / 3.6) * 1.8
-	upper.rotation = deg_to_rad(sin(seconds * TAU / 3.6 - 0.2) * 0.10)
-	for index in range(flexible_bones.size()):
-		var bones: Array = flexible_bones[index]
-		var kind := flexible_kinds[index]
-		var amplitude := 1.8 if kind == "hair" else 1.2 if kind == "cloth" else 0.45
-		var phase := 0.4 if kind == "hair" else 1.2 if kind == "cloth" else 2.0
-		bones[0].rotation = 0.0
-		bones[1].rotation = deg_to_rad(sin(seconds * 2.0 - phase) * amplitude)
-		bones[2].rotation = deg_to_rad(sin(seconds * 2.0 - phase - 0.65) * amplitude * 1.7)
+	var wind := seconds * 1.9
+	bones[1].rotation = deg_to_rad(sin(wind) * 0.8)
+	bones[2].rotation = deg_to_rad((sin(wind - 0.55) + sin(0.55)) * 1.05)
+	bones[3].rotation = deg_to_rad(sin(wind - 0.2) + sin(0.2)) * 0.45
+	bones[4].rotation = deg_to_rad((sin(wind - 0.75) + sin(0.75)) * 0.7)
+	bones[5].rotation = deg_to_rad(sin(seconds * 1.4) * 0.3)
+	bones[6].rotation = deg_to_rad((sin(seconds * 1.4 - 0.5) + sin(0.5)) * 0.45)
+	var breathing := sin(seconds * TAU / 3.6)
+	bones[7].position.y = 665.0 - breathing * 1.1
+	bones[8].position.y = 600.0 - breathing * 0.65
+	bones[9].position.y = 630.0 - breathing * 0.5

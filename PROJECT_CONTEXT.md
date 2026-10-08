@@ -1,7 +1,7 @@
-## Bulgasal layered rig review (2026-10-08)
-- Development-only scene: src/dev/bulgasal/cutscene_preview.tscn. The16 uploaded384×512 PNG drafts have no assembly coordinates; manually calibrated layout with a shared0.92 scale, fixed legs and small upper-body breathing. Mane/cloth/tail use pinned-root3-bone meshes. New forge/VFX/joint-cover assets are review prototypes, not original-pixel-identical reconstruction or a Cubism model.
-- Production gacha/combat/reward Catalogs are unchanged. Do not register this draft without visual review. Original-aligned common-canvas parts, occluded joint restoration and expression layers are still needed. Details/tests: docs/BULGASAL_RIG_PREVIEW.md.
-- Native isolated Godot4.5.1 PC capture and rig/time/layout fixtures passed; full game/Android/export unverified.
+## Bulgasal original-art mesh rig (2026-10-09)
+- User rejected the manually assembled16 generated parts. Restore unchanged original PNG and use native Godot Skeleton2D/Polygon2D with3969 shared vertices/10 bones for local mane/cloth/tail motion and subtle chest/arm breathing. Original anatomy/ornaments and neutral UV/rest are preserved; fullbody scale and protected face/legs remain fixed. Rejected draft parts/joint plates are never loaded.
+- This is a native original-art region rig, not Cubism or complete occluded-part reconstruction. Large gestures/expressions need actual original-aligned parts and restored occlusion. Development scene only; production gacha/combat/rewards unchanged. docs/BULGASAL_RIG_PREVIEW.md.
+- Isolated Godot4.5.1 fixture and native PC capture; full game/Android/export unverified.
 
 ## Dungeon entry and restart (2026-10-08)
 - SceneTransition overlaps PackedScene threaded loading with the existing complete destination warmup, then joins both before instantiation. Monster normal/elite/effect caches still finish under the loading overlay, yielding after ~4ms work rather than two unconditional display frames per monster; touch hold preparation shares this budget.

@@ -150,5 +150,5 @@ func _capture_frames() -> void:
 			push_error("Capture failed")
 			get_tree().quit(1)
 			return
-	print("BULGASAL_NATIVE_CAPTURE PASS: 150 frames, 16 actual PNG parts, fixed legs and scale")
+	print("BULGASAL_NATIVE_CAPTURE PASS: 150 frames, original-art mesh rig, 10 bones, no draft parts or joint overlays")
 	get_tree().quit()
