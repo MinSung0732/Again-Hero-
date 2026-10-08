@@ -1,3 +1,8 @@
+## Bulgasal combat draw layers (2026-10-09)
+- Castle normalizes body Z0; actor-owned primitive draws now use lifetime-stable CombatEffects Z1 and CombatGauges Z3. HUD stays above body/FX, death clears both. HP/yellow/support shield rows share4px gaps. Channel bar uses cached idle bounds, facing-aware right edge plus8px.
+- Body height118*1.27*1.18; rock flight visible width120*1.35, shared union-center anchor and cached travel angle. Existing combat authority, collision, rock speed/snapshot and damage unchanged.
+- Isolated Godot4.5.1 combat/practice regression and native OpenGL draw verification passed; whole application/Android unverified.
+
 ## Transcendent display and local practice (2026-10-08)
 - Standard gacha reveals/results, collection/detail and odds list use actual combat idle sprites via MonsterCatalog.get_ui_icon_path; cutscene/profile cosmetics retain illustration. Production cutscene now layers above door flash; Bulgasal background/name visible.
 - Bulgasal body display1.27x, rock pick3s plus existing0.4s hold. Hero detection hidden from launch until grounded. Eight-ray wave adds5 staggered visual segments per ray,90spacing; original leading damage sweep/hit-once unchanged.

@@ -3,6 +3,12 @@ const DATA := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const FX := preload("res://src/ui/bulgasal_combat_effects.gd")
 const PILLARS := preload("res://src/monsters/bulgasal_pillars.gd")
 const TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
+const DRAW_LAYER := preload("res://src/ui/bulgasal_combat_draw_layer.gd")
+var effect_layer: Node2D
+var gauge_layer: Node2D
+var channel_left_extent := 0.0
+var channel_right_extent := 0.0
+var rock_rotation := 0.0
 const CHANNEL := preload("res://src/systems/channel_runtime.gd")
 var pillars: Node2D
 var channel = CHANNEL.new()
@@ -65,16 +71,32 @@ func _ready() -> void:
 	visual.apply_visual_profile(DATA.PROFILE)
 	var texture: Texture2D = visual.sprite_frames.get_frame_texture(&"idle",0)
 	var union := Rect2i()
+	var idle_union := Rect2i()
 	for animation_name in visual.sprite_frames.get_animation_names():
 		for index in range(visual.sprite_frames.get_frame_count(animation_name)):
 			var bounds: Rect2i = visual.sprite_frames.get_frame_texture(animation_name,index).get_image().get_used_rect()
 			union = bounds if union.size == Vector2i.ZERO else union.merge(bounds)
+			if animation_name == &"idle":
+				idle_union = bounds if idle_union.size == Vector2i.ZERO else idle_union.merge(bounds)
 	var factor := DATA.VISIBLE_HEIGHT/maxf(float(union.size.y),1.0)
 	visual.scale = Vector2.ONE*factor
 	# All uploaded body frames have the same fixed feet anchor, not per-frame bounds.
 	visual.position = -(Vector2(229,223)-texture.get_size()*0.5)*factor
 	visual_rest = visual.position
 	visual_head_y = visual_rest.y+(union.position.y-texture.get_height()*0.5)*factor
+	channel_left_extent = (229.0-float(idle_union.position.x))*factor
+	channel_right_extent = (float(idle_union.end.x)-229.0)*factor
+	effect_layer = DRAW_LAYER.new()
+	effect_layer.name = "CombatEffects"
+	effect_layer.actor = self
+	effect_layer.z_index = 1
+	add_child(effect_layer)
+	gauge_layer = DRAW_LAYER.new()
+	gauge_layer.name = "CombatGauges"
+	gauge_layer.actor = self
+	gauge_layer.status = true
+	gauge_layer.z_index = 3
+	add_child(gauge_layer)
 	FX.warm()
 	pillars = PILLARS.new()
 	pillars.actor = self
@@ -184,7 +206,8 @@ func _physics_process(delta: float) -> void:
 		"idle":
 			if stun_remaining <= 0.0 and not bool(get_meta("stun_active",false)) and not MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self):
 				_tick_idle(delta)
-	queue_redraw()
+	effect_layer.queue_redraw()
+	gauge_layer.queue_redraw()
 
 func _tick_idle(delta: float) -> void:
 	if not _hero_alive():
@@ -273,6 +296,7 @@ func _launch_rock(point: Vector2) -> void:
 	rock_origin = global_position
 	rock_position = rock_origin
 	rock_target = point # Target snapshot; never retargets the moving hero.
+	rock_rotation = (point-rock_origin).angle()
 	rock_total_distance = rock_origin.distance_to(point)
 	rock_distance = 0.0
 	rock_active = true
@@ -357,6 +381,8 @@ func _begin_death() -> void:
 	if is_instance_valid(pillars):
 		pillars.finish_death()
 	super._begin_death()
+	effect_layer.queue_redraw()
+	gauge_layer.queue_redraw()
 
 func _show_impact(kind: String, point: Vector2) -> void:
 	impact_kind = kind
@@ -364,37 +390,52 @@ func _show_impact(kind: String, point: Vector2) -> void:
 	impact_remaining = float(FX.get_pack(kind).frames.size())/10.0
 
 func _draw() -> void:
+	# Body is normalized to Z0 by castle depth sorting. Draw in explicit front layers.
+	pass
+
+func draw_status_overlay(target: Node2D) -> void:
 	if dying or not is_instance_valid(visual):
 		return
 	if phase != "air":
 		var hp_y := visual_head_y-17.0
-		draw_rect(Rect2(-35,hp_y,70,7),Color("202024"))
-		draw_rect(Rect2(-35,hp_y,70*float(current_hp)/maxi(max_hp,1),7),Color("4cd965"))
-		draw_rect(Rect2(-35,hp_y-10,70,6),Color("332709"))
-		draw_rect(Rect2(-35,hp_y-10,70*gauge/DATA.GAUGE_MAX,6),Color("ffdb3b"))
-		MONSTER_RUNTIME_COMMON.draw_support_shield_bar(self,70,hp_y-17)
+		var gauge_y := hp_y-6.0-DATA.BAR_GAP
+		target.draw_rect(Rect2(-35,hp_y,70,7),Color("202024"))
+		target.draw_rect(Rect2(-35,hp_y,70*float(current_hp)/maxi(max_hp,1),7),Color("4cd965"))
+		target.draw_rect(Rect2(-35,gauge_y,70,6),Color("332709"))
+		target.draw_rect(Rect2(-35,gauge_y,70*gauge/DATA.GAUGE_MAX,6),Color("ffdb3b"))
+		if int(get_meta("support_shield_hp",0)) > 0:
+			var shield: float = float(get_meta("support_shield_hp",0))
+			var capacity := maxf(float(get_meta("support_shield_capacity",shield)),1.0)
+			var shield_y := gauge_y-6.0-DATA.BAR_GAP
+			target.draw_rect(Rect2(-35,shield_y,70,6),Color("202c40"))
+			target.draw_rect(Rect2(-35,shield_y,70*clampf(shield/capacity,0.0,1.0),6),Color("61ddff"))
 	if phase == "channel":
-		draw_rect(Rect2(43,visual_head_y,6,DATA.VISIBLE_HEIGHT),Color("292426"))
+		var channel_x := (channel_left_extent if visual.flip_h else channel_right_extent)+DATA.CHANNEL_MARGIN
+		target.draw_rect(Rect2(channel_x,visual_head_y,6,DATA.VISIBLE_HEIGHT),Color("292426"))
 		var filled: float = DATA.VISIBLE_HEIGHT*channel.progress()
-		draw_rect(Rect2(43,visual_head_y+DATA.VISIBLE_HEIGHT-filled,6,filled),Color("ffe693"))
-	elif phase == "pick":
-		FX.draw_frame(self,"rock_pick",mini(int(phase_elapsed/DATA.ROCK_PICK_SECONDS*9),8),Vector2.ZERO)
+		target.draw_rect(Rect2(channel_x,visual_head_y+DATA.VISIBLE_HEIGHT-filled,6,filled),Color("ffe693"))
+
+func draw_combat_overlay(target: Node2D) -> void:
+	if dying or not is_instance_valid(visual):
+		return
+	if phase == "pick":
+		FX.draw_frame(target,"rock_pick",mini(int(phase_elapsed/DATA.ROCK_PICK_SECONDS*9),8),Vector2.ZERO)
 	elif phase == "burrow":
-		FX.draw_frame(self,"burrow",mini(int(phase_elapsed/DATA.BURROW_SECONDS*9),8),Vector2.ZERO)
+		FX.draw_frame(target,"burrow",mini(int(phase_elapsed/DATA.BURROW_SECONDS*9),8),Vector2.ZERO)
 	elif phase == "launch":
-		FX.draw_frame(self,"leap",mini(int(phase_elapsed/0.35*7),6),Vector2.ZERO)
+		FX.draw_frame(target,"leap",mini(int(phase_elapsed/0.35*7),6),Vector2.ZERO)
 	elif phase == "quake":
-		FX.draw_frame(self,"retreat",mini(int(phase_elapsed*10),8),Vector2.ZERO)
+		FX.draw_frame(target,"retreat",mini(int(phase_elapsed*10),8),Vector2.ZERO)
 	if phase == "air" or phase == "land":
-		draw_arc(to_local(landing_position),DATA.LEAP_RADIUS,0,TAU,64,Color("ffcc80"),1.0,false)
+		target.draw_arc(to_local(landing_position),DATA.LEAP_RADIUS,0,TAU,64,Color("ffcc80"),1.0,false)
 	if rock_active:
 		var progress := rock_distance/maxf(rock_total_distance,0.001)
-		FX.draw_frame(self,"rock_fly",mini(int(progress*6),5),to_local(rock_position))
-		draw_arc(to_local(rock_target),DATA.ROCK_OUTER_RADIUS,0,TAU,72,Color("ffcc80"),1.0,false)
-		draw_arc(to_local(rock_target),DATA.ROCK_INNER_RADIUS,0,TAU,64,Color("ffee99"),1.0,false)
+		FX.draw_frame(target,"rock_fly",mini(int(progress*6),5),to_local(rock_position),rock_rotation)
+		target.draw_arc(to_local(rock_target),DATA.ROCK_OUTER_RADIUS,0,TAU,72,Color("ffcc80"),1.0,false)
+		target.draw_arc(to_local(rock_target),DATA.ROCK_INNER_RADIUS,0,TAU,64,Color("ffee99"),1.0,false)
 	if impact_remaining > 0.0:
 		var duration := float(FX.get_pack(impact_kind).frames.size())/10.0
-		FX.draw_frame(self,impact_kind,int((duration-impact_remaining)*10.0),to_local(impact_position))
+		FX.draw_frame(target,impact_kind,int((duration-impact_remaining)*10.0),to_local(impact_position))
 	if wave_visual_distance >= 0.0:
 		# Staggered visual train only; the leading damage sweep remains unchanged.
 		for direction in wave_directions:
@@ -402,4 +443,4 @@ func _draw() -> void:
 				var distance := wave_visual_distance-float(trail)*DATA.WAVE_TRAIL_SPACING
 				if distance < 0.0 or distance > DATA.WAVE_RANGE:
 					continue
-				FX.draw_frame(self,"wave",mini(int(distance/DATA.WAVE_RANGE*11),10),to_local(wave_origin+direction*distance),direction.angle())
+				FX.draw_frame(target,"wave",mini(int(distance/DATA.WAVE_RANGE*11),10),to_local(wave_origin+direction*distance),direction.angle())

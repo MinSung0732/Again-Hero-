@@ -66,7 +66,8 @@ func run() -> void:
 	dummy.set_practice_attack_enabled(true)
 	dummy._physics_process_actions(0.1)
 	check(dummy.attack_timer>0,"ON resumes attacks")
-	check(actor.visual.scale.x>0 and is_equal_approx(DATA.VISIBLE_HEIGHT,118.0*1.27),"visual1.27 uniform enlargement")
+	check(actor.effect_layer.z_index>actor.visual.z_index and actor.gauge_layer.z_index>actor.effect_layer.z_index,"effects and channel HUD above normalized castle body")
+	check(actor.visual.scale.x>0 and is_equal_approx(DATA.VISIBLE_HEIGHT,118.0*1.27*1.18),"visual1.27x1.18 uniform enlargement")
 	actor.gauge=0
 	actor._set_phase("pick")
 	actor._physics_process(2.99)

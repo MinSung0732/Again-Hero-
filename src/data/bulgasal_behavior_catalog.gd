@@ -41,7 +41,10 @@ const WAVE_DAMAGE := 1.3
 const WAVE_TRAIL_COUNT := 5
 const WAVE_TRAIL_SPACING := 90.0
 const SPAWN_FALL_SECONDS := 0.55
-const VISIBLE_HEIGHT := 118.0 * 1.27
+const VISIBLE_HEIGHT := 118.0 * 1.27 * 1.18
+const ROCK_VISUAL_SCALE := 1.35
+const BAR_GAP := 4.0
+const CHANNEL_MARGIN := 8.0
 const ROOT := "res://assets/art/Transcendent_monster/Bulgasal/frames/"
 # Verified against uploaded effect manifests; export does not depend on JSON inclusion.
 const EFFECT_ANCHORS := {1:Vector2(276,243),2:Vector2(231,268),3:Vector2(268,240),4:Vector2(237,302)}

@@ -3,7 +3,7 @@ const DATA := preload("res://src/data/bulgasal_behavior_catalog.gd")
 static var textures: Dictionary = {}
 static var packs: Dictionary = {}
 const SPECS := {
-	"rock_pick":[1,1,9,120.0], "rock_fly":[1,10,15,120.0], "impact":[1,16,20,400.0],
+	"rock_pick":[1,1,9,120.0], "rock_fly":[1,10,15,120.0*DATA.ROCK_VISUAL_SCALE], "impact":[1,16,20,400.0],
 	"burrow":[2,1,9,135.0], "emerge":[2,10,18,180.0],
 	"leap":[3,1,7,180.0], "leap_impact":[3,8,9,250.0], "wave":[3,10,20,135.0],
 	"retreat":[3,1,9,180.0], "pillar":[4,1,21,100.0],
@@ -33,6 +33,9 @@ static func get_pack(kind: String) -> Dictionary:
 		if kind != "pillar" or index == 6:
 			union = bounds if union.size == Vector2i.ZERO else union.merge(bounds)
 	var factor := float(spec[3]) / maxf(float(union.size.x), 1.0)
+	if kind == "rock_fly":
+		# Fixed union center across all flight frames; rotation must not orbit a ground anchor.
+		anchor = Vector2(union.position)+Vector2(union.size)*0.5
 	packs[kind] = {"frames":frames,"scale":factor,"anchor":anchor}
 	return packs[kind]
 
