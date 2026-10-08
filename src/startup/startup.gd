@@ -101,8 +101,7 @@ func begin_startup() -> void:
 			return
 		_resources.append(resource)
 		loading_view.set_progress(float(index + 1) / CATALOG.CORE_RESOURCES.size())
-		# Short readability interval only; progress always comes from completed work.
-		await get_tree().create_timer(0.15).timeout
+		await get_tree().process_frame
 	loading_view.configure("용사 소개 리소스 준비 중", "소개 연출의 이미지와 로딩 프레임을 미리 불러옵니다.", true)
 	PresentationWarmup.progress_changed.connect(_on_warmup_progress)
 	await PresentationWarmup.prepare_common()
@@ -116,7 +115,6 @@ func begin_startup() -> void:
 		return
 	loading_view.set_progress(1.0)
 	await get_tree().process_frame
-	await get_tree().create_timer(0.35).timeout
 	loading_view.hide()
 	phase = Phase.LOGIN
 	login_screen.show()

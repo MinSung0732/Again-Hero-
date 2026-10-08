@@ -12,6 +12,8 @@ const REVEAL := preload("res://src/data/hero_reveal_catalog.gd")
 const HEROES := preload("res://src/data/hero_profiles.gd")
 const SHOP := preload("res://src/data/shop_catalog.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
+const LOAD_BATCH_SIZE := 4
+const MAIN_THREAD_BUDGET_US := 4000
 const LOADING_DIR := "res://assets/art/UI/loading/loadingframes"
 
 var _common: Dictionary = {}
@@ -116,7 +118,9 @@ func prepare_scene(scene_path: String) -> bool:
 		if _destination.has(path):
 			retained[path] = _destination[path]
 	_destination = retained
-	_cropped.clear()
+	for cached_path in _cropped.keys():
+		if not retained.has(cached_path):
+			_cropped.erase(cached_path)
 	var ready := await _prepare(paths, false)
 	if scene_path == STARTUP.LOBBY_PATH:
 		# The old raw-PNG crop created another GPU texture inside Lobby._ready().
@@ -132,11 +136,12 @@ func prepare_scene(scene_path: String) -> bool:
 				_cropped[source.resource_path] = cropped
 		# Collection icons used to be decoded/cropped again on the team button's
 		# input frame. Prepare atlas regions here; reuse the imported GPU textures.
+		var crop_slice_start := Time.get_ticks_usec()
 		for monster_id in MONSTERS.ORDER:
 			var monster := MONSTERS.get_monster(monster_id)
 			var icon_path := String(monster.get("display_icon_path", monster.get("card_icon_path", "")))
 			var icon := get_texture(icon_path)
-			if icon == null or monster.has("card_icon_region"):
+			if icon == null or monster.has("card_icon_region") or _cropped.has(icon_path):
 				continue
 			var icon_image := icon.get_image()
 			if icon_image != null:
@@ -146,7 +151,9 @@ func prepare_scene(scene_path: String) -> bool:
 				cropped.filter_clip = true
 				cropped.region = Rect2(used) if used.has_area() else Rect2(Vector2.ZERO, icon.get_size())
 				_cropped[icon_path] = cropped
-			await get_tree().process_frame
+			if Time.get_ticks_usec() - crop_slice_start >= MAIN_THREAD_BUDGET_US:
+				await get_tree().process_frame
+				crop_slice_start = Time.get_ticks_usec()
 		_busy = false
 	return ready
 
@@ -171,25 +178,38 @@ func _prepare(paths: Array[String], shared: bool) -> bool:
 			unique.append(path)
 	var completed := 0
 	progress_changed.emit(0, unique.size())
-	for path in unique:
-		var was_cached := get_texture(path) != null
-		if not was_cached:
-			var texture := await _load_texture(path)
-			if texture != null:
-				if shared:
-					_common[path] = texture
-				else:
-					_destination[path] = texture
-		completed += 1
-		progress_changed.emit(completed, unique.size())
-		# Spread GPU texture creation/cold cache work across rendered loading frames.
-		if not was_cached:
-			await get_tree().process_frame
+	# Bound in-flight reads and GPU work. Preserve every previously warmed path.
+	# The headless dummy texture backend cannot initialize concurrent Images.
+	var batch_size := 1 if DisplayServer.get_name() == "headless" else LOAD_BATCH_SIZE
+	for batch_start in range(0, unique.size(), batch_size):
+		var batch_end := mini(batch_start + batch_size, unique.size())
+		var requested: Dictionary = {}
+		for index in range(batch_start, batch_end):
+			var path := unique[index]
+			if get_texture(path) == null and ResourceLoader.exists(path):
+				var error := ResourceLoader.load_threaded_request(path, "Texture2D")
+				if error == OK:
+					requested[path] = true
+		var slice_start := Time.get_ticks_usec()
+		for index in range(batch_start, batch_end):
+			var path := unique[index]
+			if get_texture(path) == null:
+				var texture := await _load_texture(path, requested.has(path))
+				if texture != null:
+					if shared:
+						_common[path] = texture
+					else:
+						_destination[path] = texture
+			completed += 1
+			progress_changed.emit(completed, unique.size())
+			if Time.get_ticks_usec() - slice_start >= MAIN_THREAD_BUDGET_US:
+				await get_tree().process_frame
+				slice_start = Time.get_ticks_usec()
 	_busy = false
 	return true
 
 
-func _load_texture(path: String) -> Texture2D:
+func _load_texture(path: String, already_requested: bool = false) -> Texture2D:
 	if not ResourceLoader.exists(path):
 		# New raw PNGs can be used in the desktop/editor before import finishes.
 		# Decode here during loading, not on the first frame of combat.
@@ -200,7 +220,7 @@ func _load_texture(path: String) -> Texture2D:
 				return ImageTexture.create_from_image(image)
 		push_warning("Optional presentation resource missing: " + path)
 		return null
-	if ResourceLoader.load_threaded_request(path, "Texture2D") != OK:
+	if not already_requested and ResourceLoader.load_threaded_request(path, "Texture2D") != OK:
 		return null
 	while is_inside_tree():
 		var status := ResourceLoader.load_threaded_get_status(path)

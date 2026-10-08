@@ -1,3 +1,7 @@
+## Preloading budget (2026-10-08)
+- PresentationWarmup keeps the existing complete destination resource set and loads at most four textures concurrently. Yield main-thread preparation after approximately 4ms, without unconditional per-resource frame waits. Headless dummy texture rendering uses one in-flight request.
+- Reuse retained destination icon AtlasTextures; evict crop references when their destination resource leaves the retained set. Keep icon crop work under the same loading-frame budget. Screen transitions still await complete preparation; first combat/UI actions do not receive deferred resource work. Startup has no decorative fixed-duration loading delays.
+
 ## Population and crowded combat (2026-10-08)
 - Population = living player-summoned units (one per unit, including transcendents), capped at floor(maximum command). Augment/monster-skill/army generated units are exempt. Block at capacity without consuming resources; death releases immediately. Kobolt fusion inherits one slot when any material used a slot.
 - Dense movement separation samples at most 48 neighbors per local cell; damage and area target queries remain complete. Invulnerable Stage 8 watchers are support effects, never attack targets. Moving Stage 8 followers do not body-block actors and retain terrain-wall masks. Suicide drones deal AoE at the explosion origin, radius from profile data (100).
