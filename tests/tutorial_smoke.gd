@@ -198,6 +198,7 @@ func run() -> void:
 	await process_frame
 	lobby._open_monster_boxes(11)
 	check(flow.step == "draw_done" and PROGRESS.get_gold() == 23, "draw cost and checkpoint committed once")
+	check(lobby.monster_collection_state.bulgasal.unlocked and lobby.gacha_reveal_overlay._results[9].monster_id == "bulgasal", "actual tutorial caller guarantees tenth Bulgasal reveal and ownership")
 	flow.clear_guide()
 	lobby.gacha_reveal_overlay._confirm()
 	await flow.install_lobby(lobby)

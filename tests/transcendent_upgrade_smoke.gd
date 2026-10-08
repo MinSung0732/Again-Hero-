@@ -97,7 +97,15 @@ func run() -> void:
 	lobby._show_formation_mode("transcendence")
 	await settle()
 	var view = lobby.transcendence_view
-	var card: Control = view.grid.get_child(0)
+	var card: Control
+	for candidate in view.grid.get_children():
+		if candidate.get_meta("monster_id","") == "zeus":
+			card = candidate
+			break
+	check(card != null,"select actual Zeus card independently of collection order")
+	if card == null:
+		quit(1)
+		return
 	var action: Button = card.find_child("TranscendButton", true, false)
 	check(action.text == "초월  ·  조각 1개" and not action.disabled, "transcend action enabled")
 	action.pressed.emit()
@@ -131,7 +139,10 @@ func run() -> void:
 	STORE.save_state(state)
 	lobby._show_formation_mode("transcendence")
 	await settle()
-	action = view.grid.get_child(0).find_child("TranscendButton", true, false)
+	for candidate in view.grid.get_children():
+		if candidate.get_meta("monster_id","") == "zeus":
+			action = candidate.find_child("TranscendButton",true,false)
+			break
 	check(action.text == "최대 초월 완료" and action.disabled, "max cap disabled in UI")
 
 	# Registration must not steal height from the monster list or move mode tabs.
@@ -139,7 +150,7 @@ func run() -> void:
 		root.size = viewport_size
 		view._register("")
 		await settle()
-		var list_rect: Rect2 = view.content.get_node("TranscendenceScroll").get_global_rect()
+		var list_rect: Rect2 = view.grid.get_parent().get_global_rect()
 		var tabs_rect: Rect2 = view.layout.get_node("ModeTabs").get_global_rect()
 		var grid_rect: Rect2 = view.grid.get_global_rect()
 		await capture("unregistered" + str(viewport_size.x))
@@ -147,7 +158,7 @@ func run() -> void:
 			view._register("zeus")
 			await settle()
 			check(preload("res://src/systems/transcendence_loadout_store.gd").load_id() == "zeus", "actual registration saved")
-			check(view.content.get_node("TranscendenceScroll").get_global_rect().is_equal_approx(list_rect), "registered list position/height fixed " + str(viewport_size))
+			check(view.grid.get_parent().get_global_rect().is_equal_approx(list_rect), "registered list position/height fixed " + str(viewport_size))
 			check(view.layout.get_node("ModeTabs").get_global_rect().is_equal_approx(tabs_rect), "registered tabs fixed")
 			check(view.grid.get_global_rect().is_equal_approx(grid_rect), "registered grid bounds fixed")
 			check(view.registered.get_combined_minimum_size().y <= view.registered_area.size.y + 1, "registered card fits viewport")
@@ -155,7 +166,7 @@ func run() -> void:
 				await capture("registered" + str(viewport_size.x))
 			view._register("")
 			await settle()
-			check(view.content.get_node("TranscendenceScroll").get_global_rect().is_equal_approx(list_rect), "unregistration restores same list height")
+			check(view.grid.get_parent().get_global_rect().is_equal_approx(list_rect), "unregistration restores same list height")
 	root.size = Vector2i(360, 800)
 	await settle()
 	card = view.grid.get_child(0)

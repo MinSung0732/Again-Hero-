@@ -15,15 +15,15 @@ func run() -> void:
 	SCOPE.guest_directory = "user://gacha_policy_" + Crypto.new().generate_random_bytes(16).hex_encode()
 	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
 	SCOPE.select_guest()
-	var expected := {"common":[50,5,8], "uncommon":[30,3,5], "rare":[14.5,1,5], "legendary":[5,2,4], "transcendent":[0.5,1,2]}
+	var expected := {"common":[50,5,8], "uncommon":[30,3,5], "rare":[14.5,1,5], "legendary":[5,2,4], "transcendent":[0.5,1,1]}
 	var sum := 0.0
 	for id in expected:
 		var data := SHOP.get_rarity(id)
 		check(data.weight == expected[id][0] and data.shard_min == expected[id][1] and data.shard_max == expected[id][2], "rarity policy " + id)
 		sum += data.weight
 	check(sum == 100, "weights total one hundred")
-	check(is_equal_approx(SHOP.get_effective_probability("common"), 5000.0/99.5) and is_equal_approx(SHOP.get_effective_probability("legendary"), 500.0/99.5), "four available pools normalized")
-	check(is_equal_approx(SHOP.get_effective_probability("rare"), 1450.0/99.5) and SHOP.get_effective_probability("transcendent") == 0, "Medusa enables rare pool, empty transcendent pool cannot win")
+	check(is_equal_approx(SHOP.get_effective_probability("common"), 50.0) and is_equal_approx(SHOP.get_effective_probability("legendary"), 5.0), "five available pools normalized")
+	check(is_equal_approx(SHOP.get_effective_probability("rare"), 14.5) and is_equal_approx(SHOP.get_effective_probability("transcendent"),0.5), "rare and playable transcendent probabilities")
 	# Only in-memory pool sentinels: no pretend monsters in content or saves.
 	var real_pools: Dictionary = SHOP._rarity_pools
 	SHOP._rarity_pools = {"common":["fixture"],"uncommon":["fixture"],"rare":["fixture"],"legendary":["fixture"],"transcendent":["fixture"]}

@@ -31,15 +31,17 @@ const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd"
 
 const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
+const BULGASAL_BEHAVIOR := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const MONSTERS := {
 	"bulgasal": {
 		"id":"bulgasal","name":"불가살","rarity":"transcendent","grade":"transcendent",
 		"role":"tank","species":"beast","family":"bulgasal","attack_type":"melee",
 		"combat_style":"melee_tank","collection_card":{"style_label":"근접 탱커형","identity":"강철의 짐승","feature":"돌기둥 · 중첩 쉴드 · 강철도약"},
 		"growth_metric":"allies_died","summon_growth":{"max_hp":1.0},
+		"attack_growth":{"metric":"tanks_died","multiplier":BULGASAL_BEHAVIOR.DAMAGE_PER_TANK_DEATH},
 		"default_unlocked":false,"combat_enabled":true,"base_cost":0.0,"summon_exp":0.0,
 		"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,"special_augment_ids":[],
-		"description":"탱커 실제65마리 소환 및 아군100마리 사망 후 전투당1회. HP1850+아군 누적 사망 수, 공격 간격1.6초·이속270. 게이지60·증강 적용 지휘력 회복100%, 초당최대15. 바위던지기:15/20초, 지름300내300%·기절2초, 지름600내175%·둔화50%2초. 잠입:15/25초,7초 이속+50%·피해60%감소·도달135%/치유감소25%3초. 강철도약:20/20초,2초 정신집중(기절/침묵 취소),지름250 450%·기절3초/8갈래700거리130%·둔화30%2초(파동1회). 돌기둥 파괴150%여진/섭취HP5%쉴드.10피격마다 후퇴·기둥 교체·HP3%쉴드. 일반/특수증강·엘리트·대형몹 제외.",
+		"description":"탱커 실제65마리 소환 및 아군100마리 사망 후 전투당1회. HP1850+아군 누적 사망 수, 공격130+소환 전 탱커 사망 수×0.6(소환 시 고정), 공격 간격1.6초·이속270. 게이지60·증강 적용 지휘력 회복100%, 초당최대15. 바위던지기:15/20초, 지름300내300%·기절2초, 지름600내175%·둔화50%2초. 잠입:15/25초,7초 이속+50%·피해60%감소·도달135%/치유감소25%3초. 강철도약:20/20초,2초 정신집중(기절/침묵 취소),지름250 450%·기절3초/8갈래700거리130%·둔화30%2초(파동1회). 돌기둥 파괴150%여진/섭취HP5%쉴드.10피격마다 후퇴·기둥 교체·HP3%쉴드. 일반/특수증강·엘리트·대형몹 제외.",
 		"card_icon_path":"res://assets/art/Transcendent_monster/Bulgasal/frames/idle_01.png",
 
 		"base_stats":preload("res://src/data/bulgasal_behavior_catalog.gd").BASE,

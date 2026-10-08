@@ -118,11 +118,11 @@ static func _state_config(state: Dictionary) -> ConfigFile:
 static func save_state(state: Dictionary) -> bool:
 	return ACCOUNT_SCOPE.save_config(_state_config(state), SAVE_PATH) == OK
 
-static func _save_with_research(state: Dictionary, points: int, gold_cost: int = 0, tutorial_draw: bool = false) -> bool:
-	if points <= 0 and gold_cost == 0 and not tutorial_draw:
+static func _save_with_research(state: Dictionary, points: int, gold_cost: int = 0, tutorial_draw: bool = false, draw_progress: ConfigFile = null) -> bool:
+	if points <= 0 and gold_cost == 0 and not tutorial_draw and draw_progress == null:
 		return save_state(state)
-	var progress := ConfigFile.new()
-	var error := ACCOUNT_SCOPE.load_config(progress, PROGRESS_PATH)
+	var progress := draw_progress if draw_progress != null else ConfigFile.new()
+	var error := OK if draw_progress != null else ACCOUNT_SCOPE.load_config(progress, PROGRESS_PATH)
 	if error not in [OK, ERR_FILE_NOT_FOUND]:
 		return false
 	var gold := maxi(int(progress.get_value("meta", "gold", 0)), 0)
@@ -249,6 +249,16 @@ static func award_shard_batch(rolls: Array, gold_cost: int = 0, tutorial_draw: b
 	var total_points := 0
 	if rolls.is_empty():
 		return {"success": false, "state": state, "research_points": 0, "awards": []}
+	var progress := ConfigFile.new()
+	var progress_error := ACCOUNT_SCOPE.load_config(progress, PROGRESS_PATH)
+	if progress_error not in [OK, ERR_FILE_NOT_FOUND]:
+		return {"success": false, "state": state, "research_points": 0, "awards": []}
+	var draw_total := maxi(int(progress.get_value("monster_gacha","total_draws",0)),0)
+	var claimed := bool(progress.get_value("monster_gacha","beginner_bulgasal_claimed",false))
+	var eligible := bool(progress.get_value("monster_gacha","beginner_bulgasal_eligible",false))
+	# Only the actual new-account tutorial draw authorizes this cohort.
+	if tutorial_draw and draw_total < SHOP_CATALOG.BEGINNER_GUARANTEE_DRAW and not claimed:
+		eligible = true
 	for roll in rolls:
 		if not roll is Dictionary:
 			return {"success": false, "state": load_state(), "research_points": 0, "awards": []}
@@ -256,6 +266,12 @@ static func award_shard_batch(rolls: Array, gold_cost: int = 0, tutorial_draw: b
 		var amount := int(roll.get("shards", 0))
 		if not state.has(monster_id) or amount <= 0:
 			return {"success": false, "state": load_state(), "research_points": 0, "awards": []}
+		if String(roll.get("source","")) in ["summon","pickup"]:
+			draw_total += 1
+			if eligible and not claimed and draw_total == SHOP_CATALOG.BEGINNER_GUARANTEE_DRAW:
+				roll = {"monster_id":SHOP_CATALOG.BEGINNER_GUARANTEE_MONSTER,"rarity":"transcendent","shards":1,"source":roll.source,"pickup_id":"","beginner_guarantee":true}
+				monster_id = SHOP_CATALOG.BEGINNER_GUARANTEE_MONSTER
+				claimed = true
 		var entry: Dictionary = state[monster_id]
 		var award := _apply_draw_reward(
 			entry, roll, SHOP_CATALOG.get_rarity(MONSTER_CATALOG.get_rarity(monster_id)),
@@ -263,7 +279,10 @@ static func award_shard_batch(rolls: Array, gold_cost: int = 0, tutorial_draw: b
 		)
 		total_points += int(award.research_points)
 		awards.append(award)
-	var success := _save_with_research(state, total_points, gold_cost, tutorial_draw)
+	progress.set_value("monster_gacha","total_draws",draw_total)
+	progress.set_value("monster_gacha","beginner_bulgasal_eligible",eligible)
+	progress.set_value("monster_gacha","beginner_bulgasal_claimed",claimed)
+	var success := _save_with_research(state, total_points, gold_cost, tutorial_draw, progress)
 	return {"success": success, "state": state if success else load_state(),
 		"research_points": total_points if success else 0, "awards": awards if success else []}
 

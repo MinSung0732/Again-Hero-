@@ -9,6 +9,8 @@ const TEST_GOLD := 99999
 const SINGLE_DRAW_COST := 100
 const MULTI_DRAW_COST := 1000
 const MULTI_DRAW_COUNT := 11
+const BEGINNER_GUARANTEE_DRAW := 10
+const BEGINNER_GUARANTEE_MONSTER := "bulgasal"
 
 const GACHA_SOUNDS := {
 	"door": {"path": "res://assets/audio/sfx/gacha/door_open.mp3", "volume_db": -5.0},

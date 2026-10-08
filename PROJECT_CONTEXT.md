@@ -1,3 +1,7 @@
+## Bulgasal attack and newcomer tenth summon (2026-10-09)
+- Bulgasal attack130 +0.6 per tank death before summon, rounded once and frozen. Authoritative tank death counter uses Catalog role and duplicate death guard, reset each battle. Existing all-allied-death HP growth remains. Catalog attack_growth drives spawn/detail counts; live detail uses frozen attack_snapshot.
+- Actual tutorial draw enrolls newcomer-only guarantee: cumulative monster summon tenth outcome replaced with Bulgasal1 acquisition, once/account. Includes normal/pickup source outcomes, not direct shard grants. Store total_draws/eligible/claimed in stage_progress.cfg monster_gacha together with collection/gold/research in existing atomic snapshot; failed transactions commit nothing. Existing/ordinary accounts and skipped tutorials are not enrolled; normal probabilities and later outcomes unchanged. Current tutorial batch11 includes guaranteed index9. No new backend schema/deployment. docs/BULGASAL_COMBAT.md.
+
 ## Zeus focused random lightning storm (2026-10-09)
 - Thunder orb: stationary2s focus, original charge1.7x at body center on worldZ8,500diameter progress warning. Release12 strikes over3s,200% each (Lv2 235% each/ignore immunity), center tracks five times at0.5s intervals. Each random strike has its own120diameter fixed0.2s warning; only that circle deals damage. Full small circle stays within main circle. Original audio/fixed player,12 fixed draw slots and simulation pause preserved.
 - Accepted basic hits on targets already paralyzed grant stacking1% own maxHP shield, no cap/expiry; existing shield consumption/bar. New paralysis from same hit and rejected/skill hits do not grant shield. docs/ZEUS_COMBAT.md.
@@ -32,7 +36,7 @@
 ## Bulgasal playable transcendent (2026-10-09)
 - Bulgasal is enabled in normal/pickup gacha, profile cosmetics and transcendence registration. Shared approved original-art mesh rig is now production UI; corner battle cut-in focuses shoulders/face, reveals silhouette and opens eyes, reusing camera/slow-motion restoration. No reward authority in presentation.
 - Actual player tank summons65 AND allied deaths100; HP1850+death count, further deaths+1maxHP without healing. Gauge60, augmented command regen100% capped15/s. Fixed8 decoration collider pool, rock/burrow/channel leap/one-hit8-ray waves/10-hit retreat; no ordinary/special augments or elite/giant.
-- Transcendent rarity remains0.5%, current Zeus pickup weight3. Zeus speed290, attack interval1.3, regen100%/15cap. Provisional Bulgasal base attack150 and unspecified pattern timings/geometry live in BehaviorCatalog.
+- Transcendent rarity remains0.5%, current Zeus pickup weight3. Zeus speed290, attack interval1.3, regen100%/15cap. Bulgasal attack130 + pre-summon tank deaths*0.6; provisional and unspecified pattern timings/geometry live in BehaviorCatalog.
 - Godot4.5.1 isolated real Battle/Hero and catalog/store regression plus native OpenGL presentation passed; whole app/Android/export and sustained dense-combat performance unverified. See docs/BULGASAL_COMBAT.md.
 
 ## Bulgasal original-art mesh rig (2026-10-09)

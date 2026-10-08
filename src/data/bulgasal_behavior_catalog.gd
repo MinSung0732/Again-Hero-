@@ -1,6 +1,7 @@
 extends RefCounted
 # Unspecified design values are provisional and centrally adjustable.
-const BASE := {"max_hp":1850,"attack_damage":150,"move_speed":270.0,"attack_range":85.0,"attack_cooldown":1.6,"exp_reward":0}
+const BASE := {"max_hp":1850,"attack_damage":130,"move_speed":270.0,"attack_range":85.0,"attack_cooldown":1.6,"exp_reward":0}
+const DAMAGE_PER_TANK_DEATH := 0.6
 const RULES := {"mode":"all","conditions":[{"metric":"tanks_summoned","amount":65},{"metric":"allies_died","amount":100}]}
 const GAUGE_MAX := 60.0
 const REGEN_RATIO := 1.0

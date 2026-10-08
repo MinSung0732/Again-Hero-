@@ -15,6 +15,7 @@ const CHANNEL := preload("res://src/systems/channel_runtime.gd")
 var pillars: Node2D
 var channel = CHANNEL.new()
 var summon_snapshot := 0
+var attack_snapshot := 0
 var transcend_level := 0
 var gauge := 0.0
 var skill_cooldowns := PackedFloat32Array([0.0,0.0,0.0])
@@ -61,6 +62,10 @@ func configure_transcendence(deaths: int, level: int) -> void:
 	transcend_level = clampi(level,0,5)
 	max_hp = int(DATA.BASE.max_hp)+summon_snapshot
 	current_hp = max_hp
+
+func configure_attack_snapshot(tank_deaths: int) -> void:
+	attack_snapshot = maxi(tank_deaths,0)
+	attack_damage = int(round(DATA.BASE.attack_damage+attack_snapshot*DATA.DAMAGE_PER_TANK_DEATH))
 
 func on_ally_death(_point: Vector2) -> void:
 	if dying or current_hp <= 0:
