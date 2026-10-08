@@ -218,7 +218,7 @@ func refresh() -> void:
 	if is_instance_valid(overlay) and overlay.visible:
 		_info_title.text = "스테미너  %d / %d" % [int(state.amount), RULES.MAX_NATURAL]
 		var copy := "입장 · %d 소모\n로비 복귀 · 전투 시작 %d초 이내 +%d" % [RULES.ENTRY_COST, RULES.EARLY_EXIT_WINDOW_MS / 1000, RULES.EARLY_EXIT_REFUND]
-		copy += "\n\n자연회복 · 1시간마다 +1 (최대 %d)" % RULES.MAX_NATURAL
+		copy += "\n\n자연회복 · %d분마다 +1 (최대 %d)" % [RULES.RECOVERY_SECONDS / 60, RULES.MAX_NATURAL]
 		if not bool(state.get("success", false)):
 			copy = "저장 상태를 확인하지 못했습니다. 다시 시도해 주세요."
 		elif int(state.amount) >= RULES.MAX_NATURAL:
