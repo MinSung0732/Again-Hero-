@@ -13,6 +13,7 @@ var burrow_saved_layer := 0
 var burrow_saved_mask := 0
 var body_radius := 0.0
 var fragment_origin := Vector2.ZERO
+var fragment_hit := false # Shared across the entire eight-fragment cast.
 var fragment_distances := PackedFloat32Array()
 var fragment_positions := PackedVector2Array()
 var fragment_states := PackedInt32Array() # 0 inactive, 1 flying, 2 bursting
@@ -402,8 +403,9 @@ func _deal_hero_damage(amount: int, ignore_invulnerability: bool) -> bool:
 func resolve_rock_impact(point: Vector2) -> void:
 	_resolve_rock_area(point,1.0)
 	if transcend_level>=2:
-		# Eight preallocated independent projectiles; never recurse into another split.
+		# Eight visual projectiles share one target hit; never recurse into another split.
 		fragment_origin = point
+		fragment_hit = false
 		for index in range(DATA.FRAGMENT_COUNT):
 			fragment_distances[index] = 0.0
 			fragment_positions[index] = point
@@ -440,7 +442,9 @@ func _tick_fragments(delta: float) -> void:
 		if collided or fragment_distances[index]>=DATA.FRAGMENT_RANGE:
 			fragment_states[index] = 2
 			fragment_ages[index] = 0.0
-			_resolve_rock_area(point,DATA.FRAGMENT_RATIO)
+			if not fragment_hit and _hero_in(point,DATA.ROCK_OUTER_RADIUS*DATA.FRAGMENT_RATIO):
+				fragment_hit = true
+				_resolve_rock_area(point,DATA.FRAGMENT_RATIO)
 
 func play_pillar_sound(eaten: bool) -> void:
 	if is_instance_valid(audio_bank): audio_bank.play_cue("eat" if eaten else "pillar")
@@ -495,6 +499,7 @@ func take_damage(amount: int) -> void:
 func _begin_death() -> void:
 	if burrow_phased: _restore_burrow_collision()
 	fragment_states.fill(0)
+	fragment_hit = false
 	if is_instance_valid(audio_bank): audio_bank.stop_all()
 	TARGET_POLICY.set_hidden(self,false)
 	channel.cancel()

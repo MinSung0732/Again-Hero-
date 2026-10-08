@@ -106,6 +106,16 @@ func run() -> void:
 		actor._set_phase("idle")
 		if level>=2:
 			target.invulnerable=true
+			target.position=Vector2(500,500)
+			actor.resolve_rock_impact(target.position)
+			var overlap_hits: int=target.hits
+			before=target.damage_taken
+			actor._tick_fragments(0.1)
+			check(target.hits==overlap_hits+1 and target.damage_taken==before+195,"eight overlapping fragments share exactly one damage hit")
+			check(actor.fragment_states.count(2)==8,"all eight fragment effects still burst")
+			actor.resolve_rock_impact(Vector2(500,500))
+			check(not actor.fragment_hit,"next cast resets shared hit guard")
+			target.invulnerable=true
 			target.position=Vector2(800,500)
 			actor.resolve_rock_impact(Vector2(500,500))
 			before=target.damage_taken
@@ -114,6 +124,9 @@ func run() -> void:
 			before=target.damage_taken
 			actor._tick_fragments(0.1)
 			check(target.damage_taken==before,"fragment hits once")
+			target.position=Vector2(500,200)
+			actor._tick_fragments(0.3)
+			check(target.damage_taken==before,"moving into another ray later cannot receive a second hit")
 			target.position=Vector2(625,500)
 			actor._resolve_rock_area(Vector2(500,500),0.5)
 			check(target.slowed==0.75 and target.slow_seconds==1,"halved slow reduction and duration")
