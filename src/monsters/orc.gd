@@ -258,9 +258,9 @@ func _update_visual_lod(distance_sq: float) -> void:
 
 func _update_visual_motion(direction_x: float, moving: bool) -> void:
 	var facing_sign := 0
-	if direction_x > 0.01:
+	if direction_x > 0.15:
 		facing_sign = 1
-	elif direction_x < -0.01:
+	elif direction_x < -0.15:
 		facing_sign = -1
 
 	if facing_sign != 0 and facing_sign != visual_facing_sign:

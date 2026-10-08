@@ -14,6 +14,8 @@ signal revival_animation_finished
 
 @export var idle_fps: float = 6.0
 @export var move_fps: float = 10.0
+@export var locomotion_max_fps: float = 8.0
+@export var locomotion_transition_seconds: float = 0.12
 @export var attack_fps: float = 14.0
 @export var hit_fps: float = 14.0
 @export var death_fps: float = 10.0
@@ -28,6 +30,10 @@ var _revival_death_pose_playing: bool = false
 var _revival_death_pose_ready: bool = false
 var _revival_reverse_playing: bool = false
 var _desired_locomotion: StringName = &"idle"
+var _pending_locomotion: StringName = &"idle"
+var _locomotion_request_seconds := 0.0
+var _saved_move_frame := 0
+var _saved_move_progress := 0.0
 var _flash_timer: float = 0.0
 var _hit_flash_material: ShaderMaterial
 var _lod_suspended: bool = false
@@ -38,6 +44,7 @@ func _ready() -> void:
 	_setup_sprite_frames()
 	_ensure_hit_flash_material()
 	set_process(false)
+	set_physics_process(false)
 
 	if _visual_ready:
 		play(&"idle")
@@ -81,15 +88,35 @@ func is_visual_ready() -> bool:
 	return _visual_ready
 
 func play_locomotion(moving: bool) -> void:
-	_desired_locomotion = &"move" if moving else &"idle"
-	if _lod_suspended:
-		return
-	if not _visual_ready or _one_shot_locked or _death_playing:
-		return
+	var requested: StringName = &"move" if moving else &"idle"
+	if requested != _pending_locomotion:
+		_pending_locomotion = requested
+		_locomotion_request_seconds = 0.0
+	if requested == _desired_locomotion:
+		set_physics_process(false)
+		_apply_locomotion()
+	else:
+		# Also supports callers that submit only state changes, not every tick.
+		set_physics_process(true)
 
+
+func _physics_process(delta: float) -> void:
+	_locomotion_request_seconds += delta
+	if _locomotion_request_seconds < locomotion_transition_seconds:
+		return
+	_remember_move_phase()
+	_desired_locomotion = _pending_locomotion
+	set_physics_process(false)
+	_apply_locomotion()
+
+
+func _apply_locomotion() -> void:
+	if _lod_suspended or not _visual_ready or _one_shot_locked or _death_playing:
+		return
 	if sprite_frames.has_animation(_desired_locomotion):
 		if animation != _desired_locomotion or not is_playing():
-			play(_desired_locomotion)
+			_resume_locomotion()
+
 
 func play_attack() -> void:
 	if _death_playing or _lod_suspended or _revival_reverse_playing or _revival_death_pose_playing:
@@ -152,6 +179,7 @@ func play_death() -> void:
 		return
 
 	if _visual_ready and sprite_frames.has_animation(&"death"):
+		speed_scale = 1.0
 		play(&"death")
 	else:
 		call_deferred("_emit_death_finished")
@@ -170,6 +198,7 @@ func play_revival_death_pose() -> void:
 	self_modulate = Color.WHITE
 
 	if _visual_ready and sprite_frames.has_animation(&"death"):
+		speed_scale = 1.0
 		play(&"death")
 	else:
 		call_deferred("_hold_revival_death_pose")
@@ -199,6 +228,7 @@ func play_revival_reverse(duration: float = 0.0) -> void:
 			if frame_count > 0 and fps > 0.0:
 				var base_duration := float(frame_count) / fps
 				reverse_speed = maxf(base_duration / duration, 0.01)
+		speed_scale = 1.0
 		play(&"death", -reverse_speed, true)
 	else:
 		call_deferred("_finish_revival_reverse")
@@ -238,6 +268,7 @@ func set_lod_suspended(suspended: bool) -> void:
 
 	_lod_suspended = suspended
 	if suspended:
+		_remember_move_phase()
 		# Let a current attack/hit one-shot finish so it cannot remain
 		# permanently locked while offscreen.
 		if _one_shot_locked:
@@ -249,7 +280,7 @@ func set_lod_suspended(suspended: bool) -> void:
 	if not _visual_ready or _death_playing or _one_shot_locked:
 		return
 	if sprite_frames.has_animation(_desired_locomotion):
-		play(_desired_locomotion)
+		_resume_locomotion()
 
 
 func set_facing_direction(horizontal_direction: float) -> void:
@@ -257,12 +288,28 @@ func set_facing_direction(horizontal_direction: float) -> void:
 		return
 	flip_h = horizontal_direction < 0.0
 
+func _remember_move_phase() -> void:
+	if animation == &"move":
+		_saved_move_frame = frame
+		_saved_move_progress = frame_progress
+
+
+func _resume_locomotion() -> void:
+	var fps := sprite_frames.get_animation_speed(_desired_locomotion)
+	speed_scale = minf(locomotion_max_fps / maxf(fps, 0.01), 1.0) if _desired_locomotion == &"move" else 1.0
+	play(_desired_locomotion)
+	if _desired_locomotion == &"move":
+		set_frame_and_progress(mini(_saved_move_frame, sprite_frames.get_frame_count(&"move") - 1), _saved_move_progress)
+
+
 func _play_one_shot(animation_name: StringName) -> void:
 	if not _visual_ready:
 		return
 	if not sprite_frames.has_animation(animation_name):
 		return
 
+	_remember_move_phase()
+	speed_scale = 1.0
 	_one_shot_locked = true
 	play(animation_name)
 
@@ -282,7 +329,7 @@ func _on_animation_finished() -> void:
 		if _lod_suspended:
 			return
 		if sprite_frames.has_animation(_desired_locomotion):
-			play(_desired_locomotion)
+			_resume_locomotion()
 
 func _emit_death_finished() -> void:
 	death_animation_finished.emit()
@@ -338,6 +385,14 @@ func apply_visual_profile(profile: Dictionary) -> bool:
 	if profile.is_empty():
 		return false
 	_death_fade_duration = maxf(float(profile.get("death_fade_duration",0.0)),0.0)
+	locomotion_max_fps = maxf(float(profile.get("locomotion_max_fps",8.0)),1.0)
+	locomotion_transition_seconds = maxf(float(profile.get("locomotion_transition_seconds",0.12)),0.0)
+	_saved_move_frame = 0
+	_saved_move_progress = 0.0
+	_pending_locomotion = &"idle"
+	_locomotion_request_seconds = 0.0
+	set_physics_process(false)
+	speed_scale = 1.0
 
 	var mode := String(profile.get("mode", ""))
 	var animations = profile.get("animations", {})

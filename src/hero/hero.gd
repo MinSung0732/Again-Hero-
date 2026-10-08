@@ -1763,6 +1763,8 @@ func _physics_process(delta: float) -> void:
 	if immobilized and current_hp > 0 and not is_dying:
 		global_position = anchor
 		velocity = Vector2.ZERO
+	# Covers practice adapters, forced movement and early-return skill paths.
+	_clamp_to_battlefield()
 
 func _physics_process_actions(delta: float) -> void:
 	# Drop cached targets before any archetype, skill or movement decision.
@@ -8358,22 +8360,35 @@ func _start_obstacle_escape(
 	)
 
 
+func _get_battlefield_movement_bounds() -> Rect2:
+	var minimum := Vector2.ONE * FIELD_MARGIN
+	var battle := get_parent()
+	if is_instance_valid(battle) and battle.get("y_sort_enabled") == true:
+		var field := battle.get_node_or_null("Stage1Battlefield")
+		if field != null:
+			collision_mask |= SAGE_PHASE_BOUNDARY_COLLISION_MASK
+			minimum.y = field.TOP_WALL_COLLISION_BOTTOM + field.TOP_WALL_COLLISION_HEIGHT * 0.5 + FIELD_MARGIN
+	return Rect2(minimum, battlefield_size - Vector2.ONE * FIELD_MARGIN - minimum)
+
+
 func _clamp_to_battlefield() -> void:
 	if petrify_timer > 0.0:
 		global_position = petrify_anchor
 		velocity = Vector2.ZERO
-		return
+	var minimum := _get_battlefield_movement_bounds().position
 	var clamped_position := position
 	var hit_edge := false
 
-	if clamped_position.x < FIELD_MARGIN or clamped_position.x > battlefield_size.x - FIELD_MARGIN:
+	if clamped_position.x < minimum.x or clamped_position.x > battlefield_size.x - FIELD_MARGIN:
 		hit_edge = true
-	if clamped_position.y < FIELD_MARGIN or clamped_position.y > battlefield_size.y - FIELD_MARGIN:
+	if clamped_position.y < minimum.y or clamped_position.y > battlefield_size.y - FIELD_MARGIN:
 		hit_edge = true
 
-	clamped_position.x = clampf(clamped_position.x, FIELD_MARGIN, battlefield_size.x - FIELD_MARGIN)
-	clamped_position.y = clampf(clamped_position.y, FIELD_MARGIN, battlefield_size.y - FIELD_MARGIN)
+	clamped_position.x = clampf(clamped_position.x, minimum.x, battlefield_size.x - FIELD_MARGIN)
+	clamped_position.y = clampf(clamped_position.y, minimum.y, battlefield_size.y - FIELD_MARGIN)
 	position = clamped_position
+	if petrify_timer > 0.0:
+		petrify_anchor = global_position
 
 	if hit_edge:
 		strafe_sign *= -1.0

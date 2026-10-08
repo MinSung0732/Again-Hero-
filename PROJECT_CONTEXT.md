@@ -1,3 +1,7 @@
+## Shared locomotion and Hero containment (2026-10-09)
+- MonsterVisual caps locomotion at8fps by default, debounces move/idle for0.12 simulation seconds, and preserves walking frame/progress across attack/hit/skill/LOD interruptions. Profile locomotion_max_fps/locomotion_transition_seconds override; cached SpriteFrames remain immutable, one-shot timing unchanged. Transition-only physics processing supports callers that send state changes once.
+- Hero outer physics wrapper clamps after all archetype/practice/forced/immobilized action paths. Castle safe top uses actual top-wall collision extent plus existing field margin, and preserves hard-boundary mask8. Practice steering and movement use the same bounds and common obstacle escape. Petrify anchor is corrected when outside; gameplay damage/cooldowns unchanged.
+
 ## Free camera entry and Bulgasal depth (2026-10-08)
 - Center camera on Hero once at playable battle start, including unlocked top-level camera; later manual panning remains free. Unlocking an attached camera snapshots its global position rather than stale initial screen center.
 - Rock visible width120*1.35*2.65; pillar visible width200. Damage/collider geometry unchanged. Burrow native +X rotates toward movement, first3 frames then frames4–9 loop12fps. Stopped/cast phases request idle without repeated move/idle toggles while moving.

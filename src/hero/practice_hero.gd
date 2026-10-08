@@ -45,15 +45,15 @@ func _physics_process_actions(delta: float) -> void:
 		flee_direction = (global_position-nearest.global_position).normalized() if is_instance_valid(nearest) else Vector2.RIGHT.rotated(practice_clock*0.35)
 		if flee_direction.is_zero_approx():
 			flee_direction = Vector2.RIGHT
-		var map_size: Vector2 = get_parent().current_map_size
-		var margin := 150.0
-		if global_position.x < margin and flee_direction.x < 0: flee_direction.x = absf(flee_direction.x)
-		if global_position.x > map_size.x-margin and flee_direction.x > 0: flee_direction.x = -absf(flee_direction.x)
-		if global_position.y < margin and flee_direction.y < 0: flee_direction.y = absf(flee_direction.y)
-		if global_position.y > map_size.y-margin and flee_direction.y > 0: flee_direction.y = -absf(flee_direction.y)
+		var bounds := _get_battlefield_movement_bounds().grow(-78.0)
+		if position.x < bounds.position.x and flee_direction.x < 0: flee_direction.x = absf(flee_direction.x)
+		if position.x > bounds.end.x and flee_direction.x > 0: flee_direction.x = -absf(flee_direction.x)
+		if position.y < bounds.position.y and flee_direction.y < 0: flee_direction.y = absf(flee_direction.y)
+		if position.y > bounds.end.y and flee_direction.y > 0: flee_direction.y = -absf(flee_direction.y)
 		flee_direction = flee_direction.normalized()
 	velocity = flee_direction*FLEE_SPEED*move_multiplier
-	move_and_slide()
+	_move_and_slide_with_obstacle_escape()
+	_clamp_to_battlefield()
 	if get_slide_collision_count() > 0:
 		# Turn tangentially rather than repeatedly running into a pillar/wall.
 		var normal := get_slide_collision(0).get_normal()
