@@ -10,6 +10,8 @@ var overlay: Control
 var _info_button: Button
 var _info_pinned := false
 var _info_title: Label
+var _info_layout_serial := 0
+var _info_position_pending := false
 var timer: Timer
 var product: Control
 var _refreshing := false
@@ -157,7 +159,8 @@ func _build_overlay() -> void:
 	details.add_theme_color_override("font_color", Color("e8dcf0"))
 	details.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(details)
-	lobby.resized.connect(_position_info)
+	lobby.resized.connect(_queue_info_position)
+	overlay.minimum_size_changed.connect(_queue_info_position)
 
 func _hover_info() -> void:
 	# Mobile touch emulates mouse entry: it must not open then immediately toggle shut.
@@ -173,6 +176,29 @@ func _toggle_info() -> void:
 		close_info()
 	else:
 		show_info()
+
+func _queue_info_position() -> void:
+	if _info_position_pending or not is_instance_valid(overlay) or not overlay.visible:
+		return
+	_info_position_pending = true
+	_apply_info_position.call_deferred()
+
+func _apply_info_position() -> void:
+	_info_position_pending = false
+	_position_info()
+
+func _reveal_info(serial: int) -> void:
+	# Wrapped labels and nested containers need their width before measuring height.
+	# Keep the reusable card transparent until both container sorts have settled.
+	var tree := lobby.get_tree()
+	await tree.process_frame
+	await tree.process_frame
+	if not is_instance_valid(lobby) or not is_instance_valid(overlay):
+		return
+	if serial != _info_layout_serial or not overlay.visible:
+		return
+	_position_info()
+	overlay.self_modulate.a = 1.0
 
 func _position_info() -> void:
 	if not is_instance_valid(overlay) or not overlay.visible:
@@ -235,11 +261,16 @@ func show_info(message: String = "", pinned: bool = true) -> void:
 		return
 	_notice = message
 	_info_pinned = pinned
+	_info_layout_serial += 1
+	overlay.self_modulate.a = 0.0
 	overlay.show()
+	_position_info() # Establish wrapping width before assigning the text.
 	refresh()
-	_position_info.call_deferred()
+	_queue_info_position()
+	_reveal_info(_info_layout_serial)
 
 func close_info() -> void:
+	_info_layout_serial += 1
 	_info_pinned = false
 	overlay.hide()
 
