@@ -1,0 +1,534 @@
+{
+  "source": "C:\\Users\\MINSEO~1\\AppData\\Local\\Temp\\codex-clipboard-ab5a5268-3b52-4d5a-8078-a12ab3395b5c.png",
+  "cell_size": [
+    384,
+    254
+  ],
+  "anchor": [
+    192,
+    245
+  ],
+  "alignment": "fixed body root X at cell center, fixed ground Y; effects do not recenter frames",
+  "resampling": "none",
+  "antialiasing": false,
+  "alpha_values": [
+    0,
+    255
+  ],
+  "frames": [
+    {
+      "animation": "idle",
+      "frame": 1,
+      "source_anchor": [
+        190,
+        241
+      ],
+      "source_rect": [
+        70,
+        10,
+        320,
+        241
+      ],
+      "file": "idle_01.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        72,
+        14
+      ]
+    },
+    {
+      "animation": "idle",
+      "frame": 2,
+      "source_anchor": [
+        535,
+        241
+      ],
+      "source_rect": [
+        408,
+        9,
+        649,
+        241
+      ],
+      "file": "idle_02.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        65,
+        13
+      ]
+    },
+    {
+      "animation": "idle",
+      "frame": 3,
+      "source_anchor": [
+        885,
+        241
+      ],
+      "source_rect": [
+        756,
+        9,
+        1007,
+        241
+      ],
+      "file": "idle_03.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        63,
+        13
+      ]
+    },
+    {
+      "animation": "idle",
+      "frame": 4,
+      "source_anchor": [
+        1250,
+        241
+      ],
+      "source_rect": [
+        1132,
+        11,
+        1393,
+        241
+      ],
+      "file": "idle_04.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        74,
+        15
+      ]
+    },
+    {
+      "animation": "walk",
+      "frame": 1,
+      "source_anchor": [
+        175,
+        511
+      ],
+      "source_rect": [
+        16,
+        285,
+        236,
+        511
+      ],
+      "file": "walk_01.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        33,
+        19
+      ]
+    },
+    {
+      "animation": "walk",
+      "frame": 2,
+      "source_anchor": [
+        415,
+        511
+      ],
+      "source_rect": [
+        249,
+        285,
+        484,
+        511
+      ],
+      "file": "walk_02.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        26,
+        19
+      ]
+    },
+    {
+      "animation": "walk",
+      "frame": 3,
+      "source_anchor": [
+        650,
+        511
+      ],
+      "source_rect": [
+        496,
+        284,
+        718,
+        511
+      ],
+      "file": "walk_03.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        38,
+        18
+      ]
+    },
+    {
+      "animation": "walk",
+      "frame": 4,
+      "source_anchor": [
+        890,
+        511
+      ],
+      "source_rect": [
+        730,
+        287,
+        945,
+        511
+      ],
+      "file": "walk_04.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        32,
+        21
+      ]
+    },
+    {
+      "animation": "walk",
+      "frame": 5,
+      "source_anchor": [
+        1125,
+        511
+      ],
+      "source_rect": [
+        971,
+        285,
+        1188,
+        511
+      ],
+      "file": "walk_05.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        38,
+        19
+      ]
+    },
+    {
+      "animation": "walk",
+      "frame": 6,
+      "source_anchor": [
+        1370,
+        511
+      ],
+      "source_rect": [
+        1211,
+        285,
+        1438,
+        511
+      ],
+      "file": "walk_06.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        33,
+        19
+      ]
+    },
+    {
+      "animation": "cast",
+      "frame": 1,
+      "source_anchor": [
+        185,
+        790
+      ],
+      "source_rect": [
+        38,
+        553,
+        343,
+        785
+      ],
+      "file": "cast_01.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        45,
+        8
+      ]
+    },
+    {
+      "animation": "cast",
+      "frame": 2,
+      "source_anchor": [
+        560,
+        790
+      ],
+      "source_rect": [
+        402,
+        560,
+        712,
+        786
+      ],
+      "file": "cast_02.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        34,
+        15
+      ]
+    },
+    {
+      "animation": "cast",
+      "frame": 3,
+      "source_anchor": [
+        890,
+        790
+      ],
+      "source_rect": [
+        739,
+        553,
+        1074,
+        791
+      ],
+      "file": "cast_03.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        41,
+        8
+      ]
+    },
+    {
+      "animation": "cast",
+      "frame": 4,
+      "source_anchor": [
+        1250,
+        790
+      ],
+      "source_rect": [
+        1108,
+        554,
+        1423,
+        786
+      ],
+      "file": "cast_04.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        50,
+        9
+      ]
+    },
+    {
+      "animation": "hit",
+      "frame": 1,
+      "source_anchor": [
+        175,
+        1050
+      ],
+      "source_rect": [
+        23,
+        827,
+        280,
+        1050
+      ],
+      "file": "hit_01.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        40,
+        22
+      ]
+    },
+    {
+      "animation": "hit",
+      "frame": 2,
+      "source_anchor": [
+        420,
+        1050
+      ],
+      "source_rect": [
+        296,
+        846,
+        529,
+        1050
+      ],
+      "file": "hit_02.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        68,
+        41
+      ]
+    },
+    {
+      "animation": "death",
+      "frame": 1,
+      "source_anchor": [
+        670,
+        1043
+      ],
+      "source_rect": [
+        542,
+        910,
+        812,
+        1043
+      ],
+      "file": "death_01.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        64,
+        112
+      ]
+    },
+    {
+      "animation": "death",
+      "frame": 2,
+      "source_anchor": [
+        970,
+        1047
+      ],
+      "source_rect": [
+        826,
+        910,
+        1123,
+        1047
+      ],
+      "file": "death_02.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        48,
+        108
+      ]
+    },
+    {
+      "animation": "death",
+      "frame": 3,
+      "source_anchor": [
+        1290,
+        1047
+      ],
+      "source_rect": [
+        1135,
+        945,
+        1435,
+        1047
+      ],
+      "file": "death_03.png",
+      "size": [
+        384,
+        254
+      ],
+      "anchor": [
+        192,
+        245
+      ],
+      "content_offset": [
+        37,
+        143
+      ]
+    }
+  ],
+  "frame_count": 19
+}

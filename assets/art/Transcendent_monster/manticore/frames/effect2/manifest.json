@@ -1,0 +1,237 @@
+{
+  "source": "C:\\Users\\Minseong_Desktop\\Documents\\Codex\\2026-10-06\\https-github-com-minsung0732-again-hero-2\\work\\effect_sources_17\\manticore_effect2_spritesheet.png",
+  "frame_count": 8,
+  "cell_size": [
+    544,
+    412
+  ],
+  "anchor": [
+    272,
+    394
+  ],
+  "alignment": "fixed inspected source root X/Y; ground anchor for ground effects, core anchor for floating effects",
+  "order": "left to right, top to bottom",
+  "alpha_threshold": 16,
+  "alpha_mode": "preserve original source alpha above background noise threshold",
+  "resampling": "none",
+  "antialiasing": false,
+  "all_threshold_visible_source_pixels_preserved": true,
+  "frames": [
+    {
+      "file": "effect_01.png",
+      "row": 1,
+      "column": 1,
+      "source_rect": [
+        39,
+        414,
+        335,
+        532
+      ],
+      "source_anchor": [
+        240,
+        575
+      ],
+      "size": [
+        544,
+        412
+      ],
+      "anchor": [
+        272,
+        394
+      ],
+      "content_offset": [
+        71,
+        233
+      ]
+    },
+    {
+      "file": "effect_02.png",
+      "row": 1,
+      "column": 2,
+      "source_rect": [
+        356,
+        363,
+        723,
+        550
+      ],
+      "source_anchor": [
+        620,
+        575
+      ],
+      "size": [
+        544,
+        412
+      ],
+      "anchor": [
+        272,
+        394
+      ],
+      "content_offset": [
+        8,
+        182
+      ]
+    },
+    {
+      "file": "effect_03.png",
+      "row": 1,
+      "column": 3,
+      "source_rect": [
+        744,
+        293,
+        1079,
+        585
+      ],
+      "source_anchor": [
+        922,
+        575
+      ],
+      "size": [
+        544,
+        412
+      ],
+      "anchor": [
+        272,
+        394
+      ],
+      "content_offset": [
+        94,
+        112
+      ]
+    },
+    {
+      "file": "effect_04.png",
+      "row": 1,
+      "column": 4,
+      "source_rect": [
+        1086,
+        189,
+        1435,
+        581
+      ],
+      "source_anchor": [
+        1260,
+        575
+      ],
+      "size": [
+        544,
+        412
+      ],
+      "anchor": [
+        272,
+        394
+      ],
+      "content_offset": [
+        98,
+        8
+      ]
+    },
+    {
+      "file": "effect_05.png",
+      "row": 2,
+      "column": 1,
+      "source_rect": [
+        17,
+        666,
+        432,
+        1011
+      ],
+      "source_anchor": [
+        218,
+        1005
+      ],
+      "size": [
+        544,
+        412
+      ],
+      "anchor": [
+        272,
+        394
+      ],
+      "content_offset": [
+        71,
+        55
+      ]
+    },
+    {
+      "file": "effect_06.png",
+      "row": 2,
+      "column": 2,
+      "source_rect": [
+        439,
+        681,
+        815,
+        1008
+      ],
+      "source_anchor": [
+        620,
+        1005
+      ],
+      "size": [
+        544,
+        412
+      ],
+      "anchor": [
+        272,
+        394
+      ],
+      "content_offset": [
+        91,
+        70
+      ]
+    },
+    {
+      "file": "effect_07.png",
+      "row": 2,
+      "column": 3,
+      "source_rect": [
+        814,
+        706,
+        1156,
+        1012
+      ],
+      "source_anchor": [
+        980,
+        1005
+      ],
+      "size": [
+        544,
+        412
+      ],
+      "anchor": [
+        272,
+        394
+      ],
+      "content_offset": [
+        106,
+        95
+      ]
+    },
+    {
+      "file": "effect_08.png",
+      "row": 2,
+      "column": 4,
+      "source_rect": [
+        1161,
+        723,
+        1420,
+        1004
+      ],
+      "source_anchor": [
+        1300,
+        1005
+      ],
+      "size": [
+        544,
+        412
+      ],
+      "anchor": [
+        272,
+        394
+      ],
+      "content_offset": [
+        133,
+        112
+      ]
+    }
+  ]
+}

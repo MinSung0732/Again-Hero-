@@ -1,0 +1,564 @@
+{
+  "source": "C:\\Users\\Minseong_Desktop\\Desktop\\용사, 또 너냐\\프레임픽셀시트\\ChatGPT 이미지 2026년 10월 8일 오후 11_43_54-3.png",
+  "frame_count": 20,
+  "cell_size": [
+    536,
+    300
+  ],
+  "anchor": [
+    268,
+    240
+  ],
+  "alignment": "fixed impact/core X and ground Y; source positions manually inspected",
+  "order": "left to right, top to bottom",
+  "alpha_threshold": 128,
+  "alpha_values": [
+    0,
+    255
+  ],
+  "resampling": "none",
+  "antialiasing": false,
+  "all_threshold_visible_source_pixels_preserved": true,
+  "frames": [
+    {
+      "file": "effect_01.png",
+      "row": 1,
+      "column": 1,
+      "source_rect": [
+        68,
+        183,
+        167,
+        232
+      ],
+      "source_anchor": [
+        110,
+        220
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        226,
+        203
+      ]
+    },
+    {
+      "file": "effect_02.png",
+      "row": 1,
+      "column": 2,
+      "source_rect": [
+        213,
+        172,
+        353,
+        250
+      ],
+      "source_anchor": [
+        280,
+        224
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        201,
+        188
+      ]
+    },
+    {
+      "file": "effect_03.png",
+      "row": 1,
+      "column": 3,
+      "source_rect": [
+        372,
+        157,
+        540,
+        260
+      ],
+      "source_anchor": [
+        450,
+        224
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        190,
+        173
+      ]
+    },
+    {
+      "file": "effect_04.png",
+      "row": 1,
+      "column": 4,
+      "source_rect": [
+        562,
+        104,
+        740,
+        266
+      ],
+      "source_anchor": [
+        645,
+        230
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        185,
+        114
+      ]
+    },
+    {
+      "file": "effect_05.png",
+      "row": 1,
+      "column": 5,
+      "source_rect": [
+        753,
+        73,
+        952,
+        271
+      ],
+      "source_anchor": [
+        850,
+        235
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        171,
+        78
+      ]
+    },
+    {
+      "file": "effect_06.png",
+      "row": 1,
+      "column": 6,
+      "source_rect": [
+        964,
+        66,
+        1180,
+        268
+      ],
+      "source_anchor": [
+        1065,
+        235
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        167,
+        71
+      ]
+    },
+    {
+      "file": "effect_07.png",
+      "row": 1,
+      "column": 7,
+      "source_rect": [
+        1189,
+        20,
+        1435,
+        276
+      ],
+      "source_anchor": [
+        1305,
+        244
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        152,
+        16
+      ]
+    },
+    {
+      "file": "effect_08.png",
+      "row": 2,
+      "column": 1,
+      "source_rect": [
+        17,
+        288,
+        480,
+        559
+      ],
+      "source_anchor": [
+        220,
+        520
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        65,
+        8
+      ]
+    },
+    {
+      "file": "effect_09.png",
+      "row": 2,
+      "column": 2,
+      "source_rect": [
+        475,
+        317,
+        857,
+        553
+      ],
+      "source_anchor": [
+        650,
+        520
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        93,
+        37
+      ]
+    },
+    {
+      "file": "effect_10.png",
+      "row": 2,
+      "column": 3,
+      "source_rect": [
+        836,
+        318,
+        1202,
+        545
+      ],
+      "source_anchor": [
+        1040,
+        525
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        64,
+        33
+      ]
+    },
+    {
+      "file": "effect_11.png",
+      "row": 2,
+      "column": 4,
+      "source_rect": [
+        1182,
+        332,
+        1431,
+        541
+      ],
+      "source_anchor": [
+        1300,
+        525
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        150,
+        47
+      ]
+    },
+    {
+      "file": "effect_12.png",
+      "row": 3,
+      "column": 1,
+      "source_rect": [
+        18,
+        594,
+        462,
+        832
+      ],
+      "source_anchor": [
+        230,
+        780
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        56,
+        54
+      ]
+    },
+    {
+      "file": "effect_13.png",
+      "row": 3,
+      "column": 2,
+      "source_rect": [
+        444,
+        633,
+        767,
+        827
+      ],
+      "source_anchor": [
+        590,
+        780
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        122,
+        93
+      ]
+    },
+    {
+      "file": "effect_14.png",
+      "row": 3,
+      "column": 3,
+      "source_rect": [
+        748,
+        639,
+        1061,
+        832
+      ],
+      "source_anchor": [
+        910,
+        780
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        106,
+        99
+      ]
+    },
+    {
+      "file": "effect_15.png",
+      "row": 3,
+      "column": 4,
+      "source_rect": [
+        1066,
+        657,
+        1426,
+        826
+      ],
+      "source_anchor": [
+        1245,
+        780
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        89,
+        117
+      ]
+    },
+    {
+      "file": "effect_16.png",
+      "row": 4,
+      "column": 1,
+      "source_rect": [
+        18,
+        883,
+        358,
+        1051
+      ],
+      "source_anchor": [
+        180,
+        1005
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        106,
+        118
+      ]
+    },
+    {
+      "file": "effect_17.png",
+      "row": 4,
+      "column": 2,
+      "source_rect": [
+        387,
+        909,
+        662,
+        1044
+      ],
+      "source_anchor": [
+        510,
+        1005
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        145,
+        144
+      ]
+    },
+    {
+      "file": "effect_18.png",
+      "row": 4,
+      "column": 3,
+      "source_rect": [
+        689,
+        928,
+        936,
+        1024
+      ],
+      "source_anchor": [
+        810,
+        1005
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        147,
+        163
+      ]
+    },
+    {
+      "file": "effect_19.png",
+      "row": 4,
+      "column": 4,
+      "source_rect": [
+        967,
+        944,
+        1141,
+        1024
+      ],
+      "source_anchor": [
+        1050,
+        1005
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        185,
+        179
+      ]
+    },
+    {
+      "file": "effect_20.png",
+      "row": 4,
+      "column": 5,
+      "source_rect": [
+        1228,
+        990,
+        1307,
+        1005
+      ],
+      "source_anchor": [
+        1270,
+        1005
+      ],
+      "size": [
+        536,
+        300
+      ],
+      "anchor": [
+        268,
+        240
+      ],
+      "content_offset": [
+        226,
+        225
+      ]
+    }
+  ]
+}
