@@ -1,0 +1,422 @@
+{
+  "status": "generated_cutout_parts_draft",
+  "parts_count": 16,
+  "cell_size": [
+    384,
+    512
+  ],
+  "sheet_size": [
+    1536,
+    2048
+  ],
+  "columns": 4,
+  "rows": 4,
+  "parts": [
+    {
+      "index": 1,
+      "name": "head_horns_front_hair",
+      "file": "parts/01_head_horns_front_hair.png",
+      "atlas_crop": [
+        7,
+        48,
+        299,
+        343
+      ],
+      "cell_offset": [
+        46,
+        108
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        0,
+        0
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    },
+    {
+      "index": 2,
+      "name": "back_mane",
+      "file": "parts/02_back_mane.png",
+      "atlas_crop": [
+        314,
+        7,
+        666,
+        446
+      ],
+      "cell_offset": [
+        16,
+        36
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        1,
+        0
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    },
+    {
+      "index": 3,
+      "name": "torso_belt",
+      "file": "parts/03_torso_belt.png",
+      "atlas_crop": [
+        610,
+        40,
+        937,
+        399
+      ],
+      "cell_offset": [
+        28,
+        76
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        2,
+        0
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    },
+    {
+      "index": 4,
+      "name": "waistcloth",
+      "file": "parts/04_waistcloth.png",
+      "atlas_crop": [
+        974,
+        86,
+        1189,
+        411
+      ],
+      "cell_offset": [
+        84,
+        93
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        3,
+        0
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    },
+    {
+      "index": 5,
+      "name": "blocking_upper_arm",
+      "file": "parts/05_blocking_upper_arm.png",
+      "atlas_crop": [
+        57,
+        349,
+        276,
+        667
+      ],
+      "cell_offset": [
+        82,
+        97
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        0,
+        1
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    },
+    {
+      "index": 6,
+      "name": "blocking_forearm",
+      "file": "parts/06_blocking_forearm.png",
+      "atlas_crop": [
+        341,
+        424,
+        553,
+        661
+      ],
+      "cell_offset": [
+        86,
+        137
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        1,
+        1
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    },
+    {
+      "index": 7,
+      "name": "blocking_fist",
+      "file": "parts/07_blocking_fist.png",
+      "atlas_crop": [
+        648,
+        468,
+        845,
+        617
+      ],
+      "cell_offset": [
+        93,
+        181
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        2,
+        1
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    },
+    {
+      "index": 8,
+      "name": "rear_upper_arm",
+      "file": "parts/08_rear_upper_arm.png",
+      "atlas_crop": [
+        947,
+        372,
+        1169,
+        663
+      ],
+      "cell_offset": [
+        81,
+        110
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        3,
+        1
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    },
+    {
+      "index": 9,
+      "name": "rear_forearm",
+      "file": "parts/09_rear_forearm.png",
+      "atlas_crop": [
+        34,
+        690,
+        307,
+        911
+      ],
+      "cell_offset": [
+        55,
+        145
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        0,
+        2
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    },
+    {
+      "index": 10,
+      "name": "rear_hand",
+      "file": "parts/10_rear_hand.png",
+      "atlas_crop": [
+        364,
+        723,
+        531,
+        894
+      ],
+      "cell_offset": [
+        108,
+        170
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        1,
+        2
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    },
+    {
+      "index": 11,
+      "name": "left_thigh",
+      "file": "parts/11_left_thigh.png",
+      "atlas_crop": [
+        598,
+        638,
+        872,
+        930
+      ],
+      "cell_offset": [
+        55,
+        110
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        2,
+        2
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    },
+    {
+      "index": 12,
+      "name": "left_shin",
+      "file": "parts/12_left_shin.png",
+      "atlas_crop": [
+        970,
+        649,
+        1159,
+        931
+      ],
+      "cell_offset": [
+        97,
+        115
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        3,
+        2
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    },
+    {
+      "index": 13,
+      "name": "left_foot",
+      "file": "parts/13_left_foot.png",
+      "atlas_crop": [
+        35,
+        1023,
+        289,
+        1247
+      ],
+      "cell_offset": [
+        65,
+        144
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        0,
+        3
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    },
+    {
+      "index": 14,
+      "name": "right_thigh",
+      "file": "parts/14_right_thigh.png",
+      "atlas_crop": [
+        373,
+        933,
+        615,
+        1266
+      ],
+      "cell_offset": [
+        71,
+        89
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        1,
+        3
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    },
+    {
+      "index": 15,
+      "name": "right_lower_leg_foot",
+      "file": "parts/15_right_lower_leg_foot.png",
+      "atlas_crop": [
+        648,
+        932,
+        884,
+        1268
+      ],
+      "cell_offset": [
+        74,
+        88
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        2,
+        3
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    },
+    {
+      "index": 16,
+      "name": "tail",
+      "file": "parts/16_tail.png",
+      "atlas_crop": [
+        890,
+        937,
+        1187,
+        1245
+      ],
+      "cell_offset": [
+        43,
+        102
+      ],
+      "cell_size": [
+        384,
+        512
+      ],
+      "sheet_cell": [
+        3,
+        3
+      ],
+      "scale": 1,
+      "character_joint_position": null
+    }
+  ],
+  "notes": [
+    "Parts are extracted from AI-generated atlas, not from approved_fullbody.",
+    "assembly_concept_preview is AI-generated, not a composite of these PNGs.",
+    "No verified character placement, pivots, rig, deformers, mesh or animations.",
+    "All extracted parts preserve atlas pixel scale; no resizing."
+  ]
+}

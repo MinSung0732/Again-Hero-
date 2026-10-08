@@ -1,0 +1,302 @@
+{
+  "status": "manual_calibrated_generated_parts_prototype_not_original_pixel_match",
+  "canvas": [
+    768,
+    1280
+  ],
+  "uniform_scale": 0.92,
+  "upper_pivot": [
+    380,
+    640
+  ],
+  "parts": [
+    {
+      "id": "back_mane",
+      "file": "parts/02_back_mane.png",
+      "region": [
+        16,
+        36,
+        352,
+        439
+      ],
+      "center": [
+        490,
+        330
+      ],
+      "rotation_degrees": 0,
+      "parent": "upper",
+      "z": 0,
+      "motion": "hair"
+    },
+    {
+      "id": "tail",
+      "file": "parts/16_tail.png",
+      "region": [
+        43,
+        102,
+        297,
+        308
+      ],
+      "center": [
+        605,
+        900
+      ],
+      "rotation_degrees": 0,
+      "parent": "root",
+      "z": 1,
+      "motion": "tail"
+    },
+    {
+      "id": "right_thigh",
+      "file": "parts/14_right_thigh.png",
+      "region": [
+        71,
+        89,
+        242,
+        333
+      ],
+      "center": [
+        475,
+        770
+      ],
+      "rotation_degrees": 0,
+      "parent": "root",
+      "z": 5,
+      "motion": ""
+    },
+    {
+      "id": "left_thigh",
+      "file": "parts/11_left_thigh.png",
+      "region": [
+        55,
+        110,
+        274,
+        292
+      ],
+      "center": [
+        250,
+        775
+      ],
+      "rotation_degrees": 0,
+      "parent": "root",
+      "z": 6,
+      "motion": ""
+    },
+    {
+      "id": "right_lower_leg_foot",
+      "file": "parts/15_right_lower_leg_foot.png",
+      "region": [
+        74,
+        88,
+        236,
+        336
+      ],
+      "center": [
+        608,
+        1020
+      ],
+      "rotation_degrees": 0,
+      "parent": "root",
+      "z": 2,
+      "motion": ""
+    },
+    {
+      "id": "left_shin",
+      "file": "parts/12_left_shin.png",
+      "region": [
+        97,
+        115,
+        189,
+        282
+      ],
+      "center": [
+        210,
+        978
+      ],
+      "rotation_degrees": 0,
+      "parent": "root",
+      "z": 4,
+      "motion": ""
+    },
+    {
+      "id": "left_foot",
+      "file": "parts/13_left_foot.png",
+      "region": [
+        65,
+        144,
+        254,
+        224
+      ],
+      "center": [
+        172,
+        1140
+      ],
+      "rotation_degrees": 0,
+      "parent": "root",
+      "z": 3,
+      "motion": ""
+    },
+    {
+      "id": "torso_belt",
+      "file": "parts/03_torso_belt.png",
+      "region": [
+        28,
+        76,
+        327,
+        359
+      ],
+      "center": [
+        380,
+        485
+      ],
+      "rotation_degrees": 0,
+      "parent": "upper",
+      "z": 7,
+      "motion": ""
+    },
+    {
+      "id": "waistcloth",
+      "file": "parts/04_waistcloth.png",
+      "region": [
+        84,
+        93,
+        215,
+        325
+      ],
+      "center": [
+        376,
+        770
+      ],
+      "rotation_degrees": 0,
+      "parent": "root",
+      "z": 8,
+      "motion": "cloth"
+    },
+    {
+      "id": "rear_upper_arm",
+      "file": "parts/08_rear_upper_arm.png",
+      "region": [
+        81,
+        110,
+        222,
+        291
+      ],
+      "center": [
+        510,
+        465
+      ],
+      "rotation_degrees": 0,
+      "parent": "upper",
+      "z": 9,
+      "motion": ""
+    },
+    {
+      "id": "rear_forearm",
+      "file": "parts/09_rear_forearm.png",
+      "region": [
+        55,
+        145,
+        273,
+        221
+      ],
+      "center": [
+        595,
+        610
+      ],
+      "rotation_degrees": -52,
+      "parent": "upper",
+      "z": 10,
+      "motion": ""
+    },
+    {
+      "id": "rear_hand",
+      "file": "parts/10_rear_hand.png",
+      "region": [
+        108,
+        170,
+        167,
+        171
+      ],
+      "center": [
+        657,
+        650
+      ],
+      "rotation_degrees": -8,
+      "parent": "upper",
+      "z": 11,
+      "motion": ""
+    },
+    {
+      "id": "head_horns_front_hair",
+      "file": "parts/01_head_horns_front_hair.png",
+      "region": [
+        46,
+        108,
+        292,
+        295
+      ],
+      "center": [
+        335,
+        230
+      ],
+      "rotation_degrees": 0,
+      "parent": "upper",
+      "z": 12,
+      "motion": ""
+    },
+    {
+      "id": "blocking_upper_arm",
+      "file": "parts/05_blocking_upper_arm.png",
+      "region": [
+        82,
+        97,
+        219,
+        318
+      ],
+      "center": [
+        185,
+        450
+      ],
+      "rotation_degrees": 10,
+      "parent": "upper",
+      "z": 15,
+      "motion": ""
+    },
+    {
+      "id": "blocking_forearm",
+      "file": "parts/06_blocking_forearm.png",
+      "region": [
+        86,
+        137,
+        212,
+        237
+      ],
+      "center": [
+        220,
+        535
+      ],
+      "rotation_degrees": -70,
+      "parent": "upper",
+      "z": 13,
+      "motion": ""
+    },
+    {
+      "id": "blocking_fist",
+      "file": "parts/07_blocking_fist.png",
+      "region": [
+        93,
+        181,
+        197,
+        149
+      ],
+      "center": [
+        338,
+        530
+      ],
+      "rotation_degrees": 0,
+      "parent": "upper",
+      "z": 14,
+      "motion": ""
+    }
+  ]
+}

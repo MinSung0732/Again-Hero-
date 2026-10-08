@@ -1,3 +1,8 @@
+## Bulgasal layered rig review (2026-10-08)
+- Development-only scene: src/dev/bulgasal/cutscene_preview.tscn. The16 uploaded384×512 PNG drafts have no assembly coordinates; manually calibrated layout with a shared0.92 scale, fixed legs and small upper-body breathing. Mane/cloth/tail use pinned-root3-bone meshes. New forge/VFX/joint-cover assets are review prototypes, not original-pixel-identical reconstruction or a Cubism model.
+- Production gacha/combat/reward Catalogs are unchanged. Do not register this draft without visual review. Original-aligned common-canvas parts, occluded joint restoration and expression layers are still needed. Details/tests: docs/BULGASAL_RIG_PREVIEW.md.
+- Native isolated Godot4.5.1 PC capture and rig/time/layout fixtures passed; full game/Android/export unverified.
+
 ## Dungeon entry and restart (2026-10-08)
 - SceneTransition overlaps PackedScene threaded loading with the existing complete destination warmup, then joins both before instantiation. Monster normal/elite/effect caches still finish under the loading overlay, yielding after ~4ms work rather than two unconditional display frames per monster; touch hold preparation shares this budget.
 - Pause-menu/result restart uses the shared transition after successful stamina debit, carrying a consumed-once stage-matched skip_stage_dialogue option. Skip dialogue only; keep the existing30-step hero reveal/BGM/playable-battle handoff. Ordinary lobby entry and next-stage retain dialogue; no forced seen/true-name mutations. Rejected/insufficient requests carry no restart intent.
