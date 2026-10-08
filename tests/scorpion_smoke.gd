@@ -99,15 +99,41 @@ func run() -> void:
 	check(zone.position == death_position and zone.radius_sq == 75 * 75 and zone.total == dying_attack * 2, "diameter one fifty and snapshot total damage")
 	var swamp_line = zone.line
 	check(swamp_line.visible and swamp_line.points.size() == 40 and swamp_line.closed, "visible pooled range ring")
+	var swamp_sprite: Sprite2D = zone.sprite
+	var frames: Array = battle.scorpion_swamp_runtime.textures
+	check(frames.size() == 8 and swamp_sprite.texture == frames[0], "new poison ground effect starts first frame")
+	for texture in frames:
+		check(texture is Texture2D and texture.get_size() == Vector2(406,366), "all eight full transparent cells loaded")
+	check(not swamp_sprite.centered and swamp_sprite.offset == Vector2(-203,-341), "manifest ground anchor used")
+	var scale_before := swamp_sprite.scale
+	check(is_equal_approx(scale_before.x * 386.0, 150.0) and scale_before.x == scale_before.y, "same scale fits damage diameter")
+	for sample in [[0.25,2],[0.37,3],[0.49,4],[0.61,3],[2.65,5],[2.78,6],[2.9,7]]:
+		zone.elapsed = sample[0]
+		battle.scorpion_swamp_runtime._update_visual(zone)
+		check(swamp_sprite.texture == frames[sample[1]], "intro loop outro frame selection")
+		check(swamp_sprite.scale == scale_before and swamp_sprite.global_position == death_position and swamp_sprite.offset == Vector2(-203,-341), "fixed size and ground position across all phases")
+	zone.elapsed = 0.49
+	battle.scorpion_swamp_runtime._update_visual(zone)
+	var paused_texture := swamp_sprite.texture
+	await process_frame
+	await process_frame
+	check(swamp_sprite.texture == paused_texture, "visual uses paused combat clock without autonomous animation")
+	if "--capture" in OS.get_cmdline_user_args() and DisplayServer.get_name() != "headless":
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png("res://../scorpion-swamp-render.png")
+	zone.elapsed = 0.0
+	battle.scorpion_swamp_runtime._update_visual(zone)
+
 	upgraded.free()
 	hp = hero.current_hp
 	hero.invulnerability_timer = 100
 	for i in range(6):
 		battle.scorpion_swamp_runtime.tick(0.5)
 	check(hero.current_hp == hp - dying_attack * 2, "swamp exact three-second total after source freed")
-	check(battle.scorpion_swamp_runtime.zones.is_empty() and not swamp_line.visible, "swamp expires and recycles")
+	check(battle.scorpion_swamp_runtime.zones.is_empty() and not swamp_line.visible and not swamp_sprite.visible, "swamp expires and recycles both visuals")
 	var outside = spawn(hero.position + Vector2(76, 0))
 	outside.take_damage(100000)
+	check(battle.scorpion_swamp_runtime.zones[0].sprite == swamp_sprite and swamp_sprite.visible and swamp_sprite.texture == frames[0], "pooled sprite resets on reuse")
 	hp = hero.current_hp
 	battle.scorpion_swamp_runtime.tick(3)
 	check(hero.current_hp == hp, "outside radius no damage")

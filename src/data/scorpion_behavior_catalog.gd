@@ -16,3 +16,12 @@ const ELITE_VISUAL := {"mode":"frames", "asset_dir":"res://assets/art/elitemonst
 	"attack":{"prefix":"atk","count":6,"fps":16.0,"loop":false},
 	"hit":{"prefix":"hit","count":3,"fps":14.0,"loop":false},
 	"death":{"prefix":"dead","count":3,"fps":10.0,"loop":false}}}
+
+# Source manifest: common406x366 cells, ground anchor(203,341).
+# Largest visible union width386; one scale across all eight frames.
+const SWAMP_VISUAL := {
+	"directory":"res://assets/art/monsters/Scorpion/frames/effect1",
+	"frame_count":8, "anchor":Vector2(203,341), "reference_width":386.0,
+	"frame_seconds":0.12, "intro_count":3, "loop_first":3, "loop_count":2,
+	"outro_first":5, "outro_count":3,
+}
