@@ -139,11 +139,11 @@ func refresh() -> void:
 		return
 	show()
 	unlock_button.visible = local_test
-	var unlocked: bool = state.ready and (not local_test or state.test_unlock_confirmed)
-	unlock_button.text = "해제 완료" if state.test_unlock_confirmed else "잠금 해제"
+	var unlocked: bool = state.ready
+	unlock_button.text = "해제 완료" if unlocked else "잠금 해제"
 	title.text = "초월 소환" if unlocked else "잠김"
 	icon.modulate = Color.WHITE if unlocked else Color(0.45, 0.45, 0.45, 0.65)
-	unlock_button.disabled = state.test_unlock_confirmed or host.battle.external_pause or host.battle.demon_augment_selection_active
+	unlock_button.disabled = unlocked or host.battle.external_pause or host.battle.demon_augment_selection_active
 	if not visible_once:
 		visible_once = true
 		icon.texture = host._load_monster_card_icon(state.monster_id)

@@ -22,6 +22,6 @@ MonsterCatalog 등록으로 일반/픽업 초월 풀에 추가. 초월 합계0.5
 
 ## 확인 방법
 
-localtest에서 이자나미를 확정 획득→초월등록→연습전투. 처음은 잠김; 명시적 잠금해제 버튼 후 실제 소환. 공격 on/off 더미로 결박/장판/원혼/토리이 확인. F6 `IzanamiCutscenePreview.tscn` / `IzanamiBattleSummonPreview.tscn`은 확률·보상 변경 없는 연출 전용 예시.
+localtest에서 이자나미를 확정 획득→초월등록→연습전투. 처음은 잠김; 실제 해금조건 달성 또는 명시적 잠금해제 버튼 후 실제 소환. 공격 on/off 더미로 결박/장판/원혼/토리이 확인. F6 `IzanamiCutscenePreview.tscn` / `IzanamiBattleSummonPreview.tscn`은 확률·보상 변경 없는 연출 전용 예시.
 
 `tests/izanami_combat_smoke.gd`는 경계/단계/피해 총량/수명/통과·정지·사망 정리, `tests/izanami_integration_smoke.gd`는 실제 풀/원자적 저장/프로필/등록/복수 컷신 스킵·정상복귀/실제 Battle 상태 집계를 검사한다.

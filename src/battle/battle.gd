@@ -1245,9 +1245,6 @@ func _can_attempt_summon(monster_type: String, transcendence_attempt: bool = fal
 		return false
 
 	if TRANSCENDENCE_DATA.is_transcendent(monster_type):
-		if LocalTestMode.active and not transcendence.test_unlock_confirmed:
-			summon_result.emit(monster_type, false, "로컬 테스트 잠금 해제를 먼저 눌러 주세요.")
-			return false
 		if not transcendence_attempt or monster_type != transcendence.monster_id or not transcendence.ready or transcendence.used:
 			summon_result.emit(monster_type, false, "등록된 초월 몬스터의 해금 조건을 달성해야 합니다.")
 			return false
@@ -1992,7 +1989,7 @@ func _spawn_monster(
 		return null
 	var scene := MONSTER_CATALOG.get_scene(monster_type)
 	if TRANSCENDENCE_DATA.is_transcendent(monster_type):
-		if (LocalTestMode.active and not transcendence.test_unlock_confirmed) or not bool(spawn_modifiers.get("transcendence_summon",false)) or monster_type != transcendence.monster_id or not transcendence.ready or transcendence.used:
+		if not bool(spawn_modifiers.get("transcendence_summon",false)) or monster_type != transcendence.monster_id or not transcendence.ready or transcendence.used:
 			return null
 	if scene == null:
 		push_warning("Unknown monster id: %s" % monster_type)

@@ -84,10 +84,10 @@ func run() -> void:
 	battle.transcendence.satisfy_conditions_for_test()
 	battle.transcendence.test_unlock_confirmed = false
 	view.refresh()
-	check(view.visible and not view.ready_light.visible,"local test needs explicit unlock confirmation")
+	check(view.visible and view.ready_light.visible and not view.button.disabled,"local natural readiness enables summon and attention cue")
 	battle.transcendence.test_unlock_confirmed = true
 	view.refresh()
-	check(view.ready_light.visible and view.ready_elapsed==0,"confirmed local unlock gets fresh attention cue")
+	check(view.ready_light.visible and view.ready_elapsed==0,"click confirmation is not required and does not restart cue")
 	battle.battle_over = true
 	view.refresh()
 	check(not view.visible and not view.is_processing(),"battle end stops cue")

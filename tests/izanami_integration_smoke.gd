@@ -52,6 +52,7 @@ func run() -> void:
 		overlay._advance_reveal()
 	check(saved==FileAccess.get_file_as_string(SCOPE.guest_directory.path_join("monster_collection.cfg")),"no second award")
 	overlay.free()
+	root.get_node("LocalTestMode").active = "--local-unlock" in OS.get_cmdline_user_args()
 	var battle = load("res://src/battle/Battle.tscn").instantiate()
 	battle._monster_spawn_resources_warmed = true # Other monsters are outside this isolated fixture.
 	root.add_child(battle)
@@ -65,6 +66,7 @@ func run() -> void:
 	battle.hero.apply_silence(0.1)
 	check(battle.raw_statuses_applied==3 and not battle.transcendence.ready,"authority accepted statuses,49 stilllocked")
 	check(battle.transcendence.record_summon("control"),"50/3 ready")
+	check(not battle.transcendence.test_unlock_confirmed,"natural readiness without test click")
 	check(battle.try_summon_transcendent(),"real summon dispatch and condition consumption")
 	var actor = battle.transcendent_actor
 	actor.set_physics_process(false)
