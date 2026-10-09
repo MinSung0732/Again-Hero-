@@ -1,3 +1,7 @@
+## Transcendent plus-banner reward policy (2026-10-09)
+- Uploaded plus_banner assets are profile banner rewards at monster upgrade level5, separate from first-unlock cosmetics. Zeus zeus_plus_banner registered with min_upgrade_level5 and banner-only slot; display name5초월 · 제우스. Cosmetic eligibility reads the existing collection ownership/level with the generic Catalog gate, so existing level5 saves gain access without duplicate grant flags or a save migration. Other plus_banner files require their own future Catalog registration.
+- Godot4.5.1 isolated actual upgrade4→5, original avatar/banner retention, equip/reload, restored collection, account isolation and PNG decode passed; Android/profile UI render unverified.
+
 ## Izanami torii stacking shield and background layer (2026-10-09)
 - Each actual torii creation, including replacement of one of4 slots, adds rounded4% of current maximumHP to Izanami support shield. No cap/time expiry; normal shared incoming-damage path consumes shield before HP. Both passive thresholds in one tick grant once; no repeated grant on lifetime ticks. Death clears shield and prevents new gates.
 - Dedicated fixed ToriiEffects child uses absoluteZ-1: above castle floorZ-20 and below normalized actor bodiesZ0. Torii sprite and aura ring move together; original size/ground anchor unchanged. Other spellFXZ8/statusZ12 unchanged; no per-gate node creation.

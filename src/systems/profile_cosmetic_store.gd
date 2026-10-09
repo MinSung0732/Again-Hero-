@@ -24,6 +24,8 @@ static func choices(slot: String) -> Array[String]:
 		var monster_id := String(reward.get("monster_id", ""))
 		if MONSTERS.get_rarity(monster_id) != "transcendent" or not COLLECTION.is_unlocked(monster_id, state):
 			continue
+		if COLLECTION.get_upgrade_level(monster_id,state) < int(reward.get("min_upgrade_level",0)):
+			continue
 		var path := CATALOG.path(String(id), slot)
 		if not path.is_empty() and FileAccess.file_exists(path) and String(id) not in result:
 			result.append(String(id))
