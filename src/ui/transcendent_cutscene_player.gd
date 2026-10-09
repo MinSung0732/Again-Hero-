@@ -27,6 +27,8 @@ var _active_view: Control
 var _impact_sound: AudioStreamPlayer
 var _impact_sound_path := ""
 var _impact_played := false
+var _charge_sound: AudioStreamPlayer
+var _charge_played := false
 
 
 func _ready() -> void:
@@ -128,6 +130,13 @@ func play(monster_id: String) -> void:
 
 
 func _activate_view(path: String) -> bool:
+	if _charge_sound == null:
+		_charge_sound = AudioStreamPlayer.new()
+		_charge_sound.bus = &"SFX"
+		add_child(_charge_sound)
+	var charge_path := String(_data.get("charge_sound_path", ""))
+	_charge_sound.stream = load(charge_path) if not charge_path.is_empty() else null
+	_charge_sound.volume_db = float(_data.get("charge_volume_db", -18.0))
 	if not _views.has(path):
 		var script := load(path) as Script
 		if script == null:
@@ -163,6 +172,9 @@ func cancel() -> void:
 	if is_instance_valid(_impact_sound):
 		_impact_sound.stop()
 	_impact_played = false
+	_charge_played = false
+	if is_instance_valid(_charge_sound):
+		_charge_sound.stop()
 	_generation += 1
 	_running = false
 	set_process(false)
@@ -195,8 +207,13 @@ func advance(delta: float) -> void:
 	_elapsed += maxf(delta, 0.0)
 	if is_instance_valid(_active_view):
 		_active_view.set_time(_elapsed)
+		if not _charge_played and _elapsed >= float(_data.get("charge_sound_at", 0.0)):
+			_charge_played = true
+			if _charge_sound.stream != null and _elapsed < float(_data.get("impact_sound_at", 1.9)):
+				_charge_sound.play()
 		if not _impact_played and _elapsed >= float(_data.get("impact_sound_at", 1.9)):
 			_impact_played = true
+			_charge_sound.stop()
 			if _elapsed < float(_data.duration) and _impact_sound.stream != null:
 				_impact_sound.play()
 	else:

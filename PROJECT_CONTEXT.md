@@ -1,3 +1,10 @@
+## Izanami gacha presentation (2026-10-09)
+- Presentation-only Catalog entryizanami and F6 src/dev/IzanamiCutscenePreview.tscn. Actual MonsterCatalog/rarity pools/collection registration do not yet contain Izanami; no natural gacha availability/odds/reward or combat changes. Existing confirmed result dispatch handles it when subsequently registered.
+- Exact original11 visible partitions768×1280/RGBA reassembly0diff; one33×53 shared UV mesh,7bones with original visible masks: hair/sleeves/robe subtle wind; anatomy/face/crown/prayer hands/knees stay fixed. No big joint animation or eye opening until restored occlusion/eye assets supplied.
+-5s portrait: Yomi shrine/silhouette→sweeping reveal→prayer-charge→spirit release→small native name. Generated background/transparent4-piece atlas independent from rig, original effect1/3 secondary, no slideshow/body scaling. Shared stage contain keeps silhouette/name within variable aspects.
+- Optional charge cue added to existing cached cutscene player with two stable SFX players;0.7s/-18dB charge,2.4s/-12dB release, cancellation/skip/completion cleanup. Source/license/processing hashes in assets/audio/sfx/izanami/.
+- Isolated Godot4.5.1 import/parse and presentation/results/aspect/audio regressions passed; full game, Android and subjective listening unverified. docs/IZANAMI_GACHA_CUTSCENE.md.
+
 ## Bulgasal unlock and shared summon-ready cue (2026-10-09)
 - Natural unlock requires20 actual player tank summons AND50 allied deaths; generated tanks remain excluded from summon count, all allied death semantics unchanged. Catalog rules and visible description share the new thresholds.
 - All transcendent summon buttons share a12-frame transparent pixel light-band/star atlas (164x176, center82/88,6fps). Initial3simulation seconds bright, then restrained loop until summon. Menu/augment pauses hide/freeze; population/cost blockers dim; local test requires confirmation; consume/end/new locked run clears the cue. Fixed textures/one noninteractive child, no runtime resource loading or particle spawning.

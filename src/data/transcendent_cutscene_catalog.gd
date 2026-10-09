@@ -3,6 +3,7 @@ extends RefCounted
 # Presentation only: no probabilities, currency, inventory or reward mutations.
 const ROOT := "res://assets/art/Transcendent_monster/zeus/frames/"
 const ENTRIES := {
+	"izanami": {"name":"이자나미","duration":5.0,"presentation_view":"res://src/ui/izanami_gacha_view.gd", "impact_sound_path":"res://assets/audio/sfx/izanami/spirit_release.wav", "impact_sound_at":2.4,"impact_volume_db":-12.0, "charge_sound_path":"res://assets/audio/sfx/izanami/prayer_charge.wav","charge_sound_at":0.7,"charge_volume_db":-18.0},
 	"bulgasal": {"name":"불가살","duration":5.0,"presentation_view":"res://src/ui/bulgasal_gacha_view.gd"},
 	"zeus": {
 		"name": "제우스", "duration": 5.0,

@@ -1,0 +1,269 @@
+{
+  "status": "static_visible_partition_verified_not_complete_rig",
+  "source": "王冠 / uploaded Izanami prayer pose",
+  "source_size": [
+    971,
+    1620
+  ],
+  "cell_size": [
+    768,
+    1280
+  ],
+  "sheet_size": [
+    3072,
+    3840
+  ],
+  "columns": 4,
+  "rows": 3,
+  "parts_count": 11,
+  "source_uniform_scale": 0.7,
+  "source_uniform_translation": [
+    44,
+    73
+  ],
+  "different_visible_rgba_pixels": 0,
+  "parts": [
+    {
+      "index": 1,
+      "name": "body_remaining_visible",
+      "file": "parts/01_body_remaining_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        0,
+        0
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 2,
+      "name": "crown_visible",
+      "file": "parts/02_crown_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        1,
+        0
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 3,
+      "name": "head_face_front_hair_visible",
+      "file": "parts/03_head_face_front_hair_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        2,
+        0
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 4,
+      "name": "prayer_hands_forearms_visible",
+      "file": "parts/04_prayer_hands_forearms_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        3,
+        0
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 5,
+      "name": "left_sleeve_visible",
+      "file": "parts/05_left_sleeve_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        0,
+        1
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 6,
+      "name": "right_sleeve_visible",
+      "file": "parts/06_right_sleeve_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        1,
+        1
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 7,
+      "name": "left_hair_visible",
+      "file": "parts/07_left_hair_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        2,
+        1
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 8,
+      "name": "right_hair_visible",
+      "file": "parts/08_right_hair_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        3,
+        1
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 9,
+      "name": "knees_visible",
+      "file": "parts/09_knees_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        0,
+        2
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 10,
+      "name": "left_lower_robe_sashes_visible",
+      "file": "parts/10_left_lower_robe_sashes_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        1,
+        2
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 11,
+      "name": "right_lower_robe_sashes_visible",
+      "file": "parts/11_right_lower_robe_sashes_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        2,
+        2
+      ],
+      "occlusion_fill": false
+    }
+  ]
+}

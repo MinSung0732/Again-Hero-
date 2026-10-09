@@ -1,0 +1,36 @@
+{
+  "sources": [
+    {
+      "id": 482504,
+      "creator": "Yodguard",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-energy-charge-4-482504/",
+      "input": "existing assets/audio/sfx/zeus/charge.wav; original Pixabay processing provenance retained in zeus/manifest.json",
+      "processing": "1.7s, highpass180Hz lowpass4200Hz, fadein0.12s fadeout1.45/0.25s",
+      "cue": 0.7,
+      "volume_db": -18
+    },
+    {
+      "id": 148459,
+      "creator": "u_hyed0v3ux9",
+      "url": "https://pixabay.com/sound-effects/film-special-effects-magical-whoosh-148459/",
+      "download": "https://cdn.pixabay.com/download/audio/2023/05/01/audio_a05bd24253.mp3",
+      "processing": "1.1s, highpass110Hz lowpass7000Hz, fadein0.015s fadeout0.85/0.25s limiter0.5 no autolevel",
+      "cue": 2.4,
+      "volume_db": -12
+    }
+  ],
+  "files": [
+    {
+      "file": "prayer_charge.wav",
+      "duration": 1.7,
+      "peak": 0.547393798828125,
+      "sha256": "54d42b63f102a358b6615c9ce59637f8a433adcf5b43c2afb654f6d9ee1da5aa"
+    },
+    {
+      "file": "spirit_release.wav",
+      "duration": 1.1,
+      "peak": 0.315704345703125,
+      "sha256": "59cf11dd7b4ad59a11f7972723bdb554f2f29f3dfb212f175bb29d24fd8e6f09"
+    }
+  ]
+}
