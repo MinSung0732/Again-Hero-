@@ -882,6 +882,7 @@ const MONSTERS := {
 }
 
 const ROLE_LABELS := {
+	"control": "제어",
 	"swarm": "물량",
 	"controller": "제어",
 	"tank": "탱커",

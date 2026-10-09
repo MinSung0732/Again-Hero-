@@ -1,3 +1,7 @@
+## Monster detail five-stat presentation (2026-10-09)
+- Role aliases control/controller both label 제어; gameplay role IDs unchanged. Normal/elite details share five rows in order 체력/공격/공속/기동/사거리. Missing values show empty meter/—; stationary movement shows 고정. Self-destruct damage uses 공격 with 자폭 note, range uses existing self_destruct_range with 자폭 발동 note; fuse time is not fabricated as repeat attack speed. Existing elite multipliers/thresholds retained. Removed visual-scale line only, not actual monster scale.
+- Godot4.5.1 all Catalog detail-string checks pass for identity, exactly five rows/order and missing scale line; Android/full detail-panel layout unverified.
+
 ## Transcendent plus-banner reward policy (2026-10-09)
 - Uploaded plus_banner assets are profile banner rewards at monster upgrade level5, separate from first-unlock cosmetics. Zeus zeus_plus_banner registered with min_upgrade_level5 and banner-only slot; display name5초월 · 제우스. Cosmetic eligibility reads the existing collection ownership/level with the generic Catalog gate, so existing level5 saves gain access without duplicate grant flags or a save migration. Other plus_banner files require their own future Catalog registration.
 - Godot4.5.1 isolated actual upgrade4→5, original avatar/banner retention, equip/reload, restored collection, account isolation and PNG decode passed; Android/profile UI render unverified.

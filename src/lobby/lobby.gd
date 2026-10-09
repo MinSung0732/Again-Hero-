@@ -3984,8 +3984,6 @@ func _build_normal_detail_text(
 	data: Dictionary,
 	stats: Dictionary
 ) -> String:
-	if not bool(data.get("combat_enabled", true)):
-		return "[center][color=#f0cb68]초월 · 전투 능력 준비 중[/color]\n\n%s[/center]" % data.get("description", "")
 	var lines: PackedStringArray = []
 	var identity_parts: PackedStringArray = [
 		MONSTER_CATALOG.get_grade_label(String(data.get("grade", "normal"))),
@@ -4003,66 +4001,12 @@ func _build_normal_detail_text(
 		float(data.get("summon_exp", 0.0)),
 	])
 	lines.append("")
+	if not bool(data.get("combat_enabled",true)):
+		lines.append("[color=#f0cb68]전투 능력 준비 중[/color]")
 	lines.append("[color=#8f8098]전투 능력[/color]")
 	lines.append("[table=2]")
 
-	var hp_value = stats.get("max_hp")
-	if hp_value != null:
-		lines.append(_format_stat_meter(
-			"체력",
-			_stat_level(float(hp_value), [60.0, 90.0, 130.0, 180.0]),
-			"69d88a"
-		))
-
-	var damage_value = stats.get("attack_damage")
-	var explosion_damage = stats.get("explosion_damage")
-	if damage_value != null:
-		var hits_per_attack := maxi(
-			int(stats.get("hits_per_attack", 1)),
-			1
-		)
-		var total_damage := float(damage_value) * float(hits_per_attack)
-		lines.append(_format_stat_meter(
-			"공격",
-			_stat_level(total_damage, [6.0, 10.0, 18.0, 30.0]),
-			"e36d73"
-		))
-	elif explosion_damage != null:
-		lines.append(_format_stat_meter(
-			"자폭",
-			_stat_level(float(explosion_damage), [12.0, 24.0, 40.0, 65.0]),
-			"e36d73"
-		))
-
-	var speed_value = stats.get("move_speed")
-	if speed_value != null:
-		var speed_number := float(speed_value)
-		lines.append(_format_stat_meter(
-			"기동",
-			0 if speed_number <= 0.0 else _stat_level(
-				speed_number,
-				[70.0, 110.0, 150.0, 210.0]
-			),
-			"61c7df",
-			"고정" if speed_number <= 0.0 else ""
-		))
-
-	var cooldown_value = stats.get("attack_cooldown")
-	if cooldown_value != null:
-		var attacks_per_second := 1.0 / maxf(float(cooldown_value), 0.01)
-		lines.append(_format_stat_meter(
-			"공속",
-			_stat_level(attacks_per_second, [0.7, 1.0, 1.35, 1.8]),
-			"f0c85b"
-		))
-
-	var range_value = stats.get("attack_range")
-	if range_value != null and monster_id != "bomb_rat":
-		lines.append(_format_stat_meter(
-			"사거리",
-			_stat_level(float(range_value), [70.0, 140.0, 260.0, 500.0]),
-			"b68ae8"
-		))
+	lines.append_array(_detail_stat_meters(stats))
 	lines.append("[/table]")
 
 	var extra_parts: PackedStringArray = []
@@ -4091,6 +4035,29 @@ func _build_normal_detail_text(
 		lines.append("")
 		lines.append("[color=#aaa0b0]%s[/color]" % description)
 	return "\n".join(lines)
+
+
+
+func _detail_stat_meters(stats: Dictionary, mutation: Dictionary = {}) -> PackedStringArray:
+	var lines: PackedStringArray = []
+	var hp := float(stats.get("max_hp",0.0))*float(mutation.get("hp_multiplier",1.0))
+	lines.append(_format_stat_meter("체력",_stat_level(hp,[60.0,90.0,130.0,180.0]) if stats.has("max_hp") else 0,"69d88a","" if stats.has("max_hp") else "—"))
+	var explosive := not stats.has("attack_damage") and stats.has("explosion_damage")
+	var damage := float(stats.get("attack_damage",stats.get("explosion_damage",0.0)))*float(mutation.get("damage_multiplier",1.0))
+	if not explosive:
+		damage *= maxi(int(stats.get("hits_per_attack",1)),1)
+	var thresholds := [12.0,24.0,40.0,65.0] if explosive else [6.0,10.0,18.0,30.0]
+	var has_damage := stats.has("attack_damage") or explosive
+	lines.append(_format_stat_meter("공격",_stat_level(damage,thresholds) if has_damage else 0,"e36d73","자폭" if explosive else ("" if has_damage else "—")))
+	var has_cooldown := stats.has("attack_cooldown") and float(stats.get("attack_cooldown",0.0)) > 0.0
+	var rate := float(mutation.get("attack_speed_multiplier",1.0))/maxf(float(stats.get("attack_cooldown",0.0)),0.01)
+	lines.append(_format_stat_meter("공속",_stat_level(rate,[0.7,1.0,1.35,1.8]) if has_cooldown else 0,"f0c85b","" if has_cooldown else "—"))
+	var speed := float(stats.get("move_speed",0.0))*float(mutation.get("speed_multiplier",1.0))
+	lines.append(_format_stat_meter("기동",_stat_level(speed,[70.0,110.0,150.0,210.0]) if speed > 0.0 else 0,"61c7df","" if speed > 0.0 else ("고정" if stats.has("move_speed") else "—")))
+	var has_range := stats.has("attack_range") or stats.has("self_destruct_range")
+	var reach := float(stats.get("attack_range",stats.get("self_destruct_range",0.0)))
+	lines.append(_format_stat_meter("사거리",_stat_level(reach,[70.0,140.0,260.0,500.0]) if has_range else 0,"b68ae8","자폭 발동" if not stats.has("attack_range") and has_range else ("" if has_range else "—")))
+	return lines
 
 
 func _stat_level(value: float, thresholds: Array) -> int:
@@ -4141,16 +4108,6 @@ func _build_elite_detail_text(
 	stats: Dictionary,
 	mutation: Dictionary
 ) -> String:
-	var hp_multiplier := float(mutation.get("hp_multiplier", 1.0))
-	var damage_multiplier := float(
-		mutation.get("damage_multiplier", 1.0)
-	)
-	var speed_multiplier := float(mutation.get("speed_multiplier", 1.0))
-	var attack_speed_multiplier := float(
-		mutation.get("attack_speed_multiplier", 1.0)
-	)
-	var visual_scale := float(mutation.get("visual_scale", 1.0))
-
 	var lines: PackedStringArray = []
 	var identity_parts: PackedStringArray = [
 		"엘리트",
@@ -4165,74 +4122,8 @@ func _build_elite_detail_text(
 	lines.append("")
 	lines.append("[color=#d9b45b]엘리트 전투 능력[/color]")
 	lines.append("[table=2]")
-	var hp_value = stats.get("max_hp")
-	if hp_value != null:
-		lines.append(_format_stat_meter(
-			"체력",
-			_stat_level(
-				float(hp_value) * hp_multiplier,
-				[60.0, 90.0, 130.0, 180.0]
-			),
-			"69d88a"
-		))
-
-	var damage_value = stats.get("attack_damage")
-	var explosion_damage = stats.get("explosion_damage")
-	if damage_value != null:
-		var hits_per_attack := maxi(int(stats.get("hits_per_attack", 1)), 1)
-		lines.append(_format_stat_meter(
-			"공격",
-			_stat_level(
-				float(damage_value) * float(hits_per_attack) * damage_multiplier,
-				[6.0, 10.0, 18.0, 30.0]
-			),
-			"e36d73"
-		))
-	elif explosion_damage != null:
-		lines.append(_format_stat_meter(
-			"자폭",
-			_stat_level(
-				float(explosion_damage) * damage_multiplier,
-				[12.0, 24.0, 40.0, 65.0]
-			),
-			"e36d73"
-		))
-
-	var speed_value = stats.get("move_speed")
-	if speed_value != null:
-		var elite_speed := float(speed_value) * speed_multiplier
-		lines.append(_format_stat_meter(
-			"기동",
-			0 if elite_speed <= 0.0 else _stat_level(
-				elite_speed,
-				[70.0, 110.0, 150.0, 210.0]
-			),
-			"61c7df",
-			"고정" if elite_speed <= 0.0 else ""
-		))
-
-	var cooldown_value = stats.get("attack_cooldown")
-	if cooldown_value != null:
-		var attacks_per_second := attack_speed_multiplier / maxf(
-			float(cooldown_value),
-			0.01
-		)
-		lines.append(_format_stat_meter(
-			"공속",
-			_stat_level(attacks_per_second, [0.7, 1.0, 1.35, 1.8]),
-			"f0c85b"
-		))
-
-	var range_value = stats.get("attack_range")
-	if range_value != null and monster_id != "bomb_rat":
-		lines.append(_format_stat_meter(
-			"사거리",
-			_stat_level(float(range_value), [70.0, 140.0, 260.0, 500.0]),
-			"b68ae8"
-		))
+	lines.append_array(_detail_stat_meters(stats,mutation))
 	lines.append("[/table]")
-
-	lines.append("[color=#8f8495]크기 ×%.2f[/color]" % visual_scale)
 	return "\n".join(lines)
 
 
