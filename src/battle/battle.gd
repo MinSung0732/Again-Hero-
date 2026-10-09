@@ -922,7 +922,7 @@ func _start_battle() -> void:
 		int(hero.get("max_hp"))
 	)
 	hero.connect("health_changed", Callable(self, "_on_hero_health_changed"))
-	hero.connect("status_applied", Callable(self, "_on_enemy_status_applied"))
+	hero.connect("status_action_applied", Callable(self, "_on_enemy_status_applied"))
 	hero.connect("combat_damage_received", Callable(self, "_on_hero_combat_damage_received"))
 	hero.connect("progression_changed", Callable(self, "_on_hero_progression_changed"))
 	hero.connect("leveled_up", Callable(self, "_on_hero_leveled_up"))

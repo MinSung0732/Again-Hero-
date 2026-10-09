@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd")
 const PASSIVE: Dictionary = BEHAVIOR.PASSIVE
@@ -132,6 +133,12 @@ func _physics_process(delta: float) -> void:
 			_deal_hit(hero, attack_damage)
 
 func _deal_hit(target: Node2D, amount: int, stun_duration: float = 0.0) -> int:
+	var previous_action := STATUS_SCOPE.begin(target,STATUS_SCOPE.action_or_new(target))
+	var result := _status_scoped_deal_hit(target,amount,stun_duration)
+	STATUS_SCOPE.finish(target,previous_action)
+	return result
+
+func _status_scoped_deal_hit(target: Node2D, amount: int, stun_duration: float = 0.0) -> int:
 	if not is_instance_valid(target) or not target.has_method("take_damage"):
 		return 0
 	var before := int(target.get("current_hp"))

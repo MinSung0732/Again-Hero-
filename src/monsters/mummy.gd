@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const BEHAVIOR := preload("res://src/data/mummy_behavior_catalog.gd")
 var shield_hp := 0
@@ -67,6 +68,12 @@ func _deal_hit(target: Node2D) -> int:
 	return _deal_damage(target,attack_damage)
 
 func _deal_damage(target: Node2D, amount: int) -> int:
+	var previous_action := STATUS_SCOPE.begin(target,STATUS_SCOPE.action_or_new(target))
+	var result := _status_scoped_deal_damage(target,amount)
+	STATUS_SCOPE.finish(target,previous_action)
+	return result
+
+func _status_scoped_deal_damage(target: Node2D, amount: int) -> int:
 	if not is_instance_valid(target) or not target.has_method("take_damage"):
 		return 0
 	var before := int(target.get("current_hp"))

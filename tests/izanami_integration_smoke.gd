@@ -18,7 +18,7 @@ func run() -> void:
 	SCOPE.guest_directory = "user://izanami_test_"+str(Time.get_ticks_usec())
 	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
 	SCOPE.select_guest()
-	check(SHOP.get_monster_pool("transcendent").size()==3 and "izanami" in SHOP.get_monster_pool("transcendent"),"three member pool")
+	check(SHOP.get_monster_pool("transcendent").size()==5 and "izanami" in SHOP.get_monster_pool("transcendent"),"five member pool")
 	check(is_equal_approx(SHOP.get_effective_probability("transcendent"),0.5),"rarity stays0.5%")
 	check(SHOP.weighted_id(["zeus","bulgasal","izanami"],0.59,"zeus")=="zeus" and SHOP.weighted_id(["zeus","bulgasal","izanami"],0.81,"zeus")=="izanami","pickup3:1:1")
 	check(not LOADOUT.save_id("izanami"),"locked registration rejected")
@@ -70,7 +70,7 @@ func run() -> void:
 	check(battle.try_summon_transcendent(),"real summon dispatch and condition consumption")
 	var actor = battle.transcendent_actor
 	actor.set_physics_process(false)
-	check(actor.summon_snapshot==3 and actor.max_hp==1088 and actor.attack_damage==61,"real spawn growth snapshot")
+	check(actor.summon_snapshot==3 and actor.max_hp==1085 and actor.attack_damage==58,"real spawn growth snapshot")
 	check(not battle.try_summon_transcendent(),"once per battle")
 	actor._create_torii()
 	var shield_step := int(round(actor.max_hp*0.04))

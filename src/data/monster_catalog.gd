@@ -40,10 +40,11 @@ const MONSTERS := {
 		"id":"shuten_doji","name":"슈텐-도지","rarity":"transcendent","grade":"transcendent","role":"control","species":"humanoid","family":"shuten_doji","attack_type":"melee","combat_style":"melee_control",
 		"collection_card":{"style_label":"근접 제어형","identity":"혈주의 귀왕","feature":"술안개 · 발화 · 사슬 · 귀왕해방"},
 		"default_unlocked":false,"combat_enabled":true,"base_cost":0.0,"summon_exp":0.0,"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,"special_augment_ids":[],
+		"growth_metric":"statuses_applied","summon_growth":preload("res://src/data/shuten_doji_behavior_catalog.gd").STATUS_GROWTH,
 		"base_stats":preload("res://src/data/shuten_doji_behavior_catalog.gd").BASE,"transcendence":preload("res://src/data/shuten_doji_behavior_catalog.gd").RULES,
 		"card_icon_path":"res://assets/art/Transcendent_monster/Shuten-doji/frames/idle_01.png","ground_shadow":{"size":Vector2(80,22),"offset_y":0.0,"opacity":0.35},
 		"scene":preload("res://src/monsters/ShutenDoji.tscn"),
-		"description":"제어형 실제40회 소환 및 상태이상3회 후 전투당1회. 인간형 근접 제어. 공격220/체력2500부터 직접 부여한 상태이상 행동당 각1 성장(한 공격·기술1회). 이속310·공격간격2초. 게이지100·지휘력회복100%/초당최대15. 혈주연무30/20초:2초12안개·지름600/각200·5~10초·본인외아군도피해·둔화50%,본인둔화80%/피감70%. 귀염지폭0/0:잔여시간합10초이하발화·지름300/175%·현재HP6%출혈7초·기존출혈기절2초·안개당CD2초환급. 쇄혼귀면20/60초:느린유도·3초99%둔화/침묵/250%·이후10초면역·지연도달CD환급. 귀왕해방:첫치명상3초무적/100%회복·강화공격후15초절반안개·적중CD1초/잃은HP1%회복·20적중기절2.5초. 일반/특수증강·엘리트·대형몹 제외.",
+		"description":"제어형 실제40회 소환 및 상태이상3회 후 전투당1회. 인간형 근접 제어. 공격220/체력2500부터 소환 전 상태이상 행동당 각1 성장(한 공격·기술1회). 이속310·공격간격2초. 게이지100·지휘력회복100%/초당최대15. 혈주연무30/20초:2초12안개·지름600/각200·5~10초·본인외아군도피해·둔화50%,본인둔화80%/피감70%. 귀염지폭0/0:잔여시간합10초이하발화·지름300/175%·현재HP6%출혈7초·기존출혈기절2초·안개당CD2초환급. 쇄혼귀면20/60초:느린유도·3초99%둔화/침묵/250%·이후10초면역·지연도달CD환급. 귀왕해방:첫치명상3초무적/100%회복·강화공격후15초절반안개·적중CD1초/잃은HP1%회복·20적중기절2.5초. 일반/특수증강·엘리트·대형몹 제외.",
 	},
 
 	"manticore": {
@@ -60,12 +61,12 @@ const MONSTERS := {
 	"izanami": {
 		"id":"izanami","name":"이자나미","rarity":"transcendent","grade":"transcendent","role":"control","species":"divine_humanoid","family":"izanami","attack_type":"ranged","combat_style":"ranged_harasser",
 		"collection_card":{"style_label":"원거리 제어형","identity":"황천의 여신","feature":"원혼 · 침묵 · 도깨비불 · 토리이"},
-		"growth_metric":"statuses_applied","summon_growth":{"attack_damage":2.0,"max_hp":2.5},
+		"growth_metric":"statuses_applied","summon_growth":preload("res://src/data/izanami_behavior_catalog.gd").STATUS_GROWTH,
 		"default_unlocked":false,"combat_enabled":true,"base_cost":0.0,"summon_exp":0.0,"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,"special_augment_ids":[],
 		"base_stats":preload("res://src/data/izanami_behavior_catalog.gd").BASE,"transcendence":preload("res://src/data/izanami_behavior_catalog.gd").RULES,
 		"card_icon_path":"res://assets/art/Transcendent_monster/Izanami/frames/idle_01.png","ground_shadow":{"size":Vector2(78,20),"offset_y":0.0,"opacity":0.35},
 		"scene":preload("res://src/monsters/Izanami.tscn"),
-		"description":"제어형 실제50회 소환 및 상태이상3회 적중 후 전투당1회. 공격55+소환 전 상태이상×2, HP1080+×2.5. 사거리 지름550 즉시타격·공격간격1.5초·이속250·거리 유지. 게이지100/증강 적용 지휘력회복100%, 초당최대15. 황천윤무20/30초:7초 받는피해+15%·둔화12%,12피격 시155%·3초99%둔화/침묵. 명계귀화10/8초:0.75초 예고·지름180·170%,3초 장판200%·갱신 둔화30%. 원혼추살30/20초:2초간8개,5초 배회·120%/1.5초기절. 피해12회 또는 상태4회마다 본인 최대HP4% 쉴드 중첩 및 토리이10초·지름350:아군 주는피해+15%/받는피해-20%,용사 주는피해-15%/받는피해+20%. 1초월:귀화CD절반·즉시.2초월:추살소모절반·인식+80%.3초월:귀화CD추가-2초·범위+30%.4초월:토리이15초·아군피감40%.5초월:통과 시이속+40%5초·피감70%1초. 일반/특수증강·엘리트·대형몹 제외.",
+		"description":"제어형 실제50회 소환 및 상태이상3회 적중 후 전투당1회. 공격55+소환 전 상태이상 행동×1, HP1080+행동×1.5(한 공격·기술1회, 지속갱신·다중장판 중복 제외). 사거리 지름550 즉시타격·공격간격1.5초·이속250·거리 유지. 게이지100/증강 적용 지휘력회복100%, 초당최대15. 황천윤무20/30초:7초 받는피해+15%·둔화12%,12피격 시155%·3초99%둔화/침묵. 명계귀화10/8초:0.75초 예고·지름180·170%,3초 장판200%·갱신 둔화30%. 원혼추살30/20초:2초간8개,5초 배회·120%/1.5초기절. 피해12회 또는 상태4회마다 본인 최대HP4% 쉴드 중첩 및 토리이10초·지름350:아군 주는피해+15%/받는피해-20%,용사 주는피해-15%/받는피해+20%. 1초월:귀화CD절반·즉시.2초월:추살소모절반·인식+80%.3초월:귀화CD추가-2초·범위+30%.4초월:토리이15초·아군피감40%.5초월:통과 시이속+40%5초·피감70%1초. 일반/특수증강·엘리트·대형몹 제외.",
 	},
 
 	"bulgasal": {

@@ -1,4 +1,6 @@
 extends "res://src/monsters/orc.gd"
+var combo_status_action: RefCounted
+const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const BEHAVIOR := preload("res://src/data/scorpion_behavior_catalog.gd")
 var followup_target: WeakRef
@@ -31,6 +33,7 @@ func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
 
 func _attack_target(target: Node2D) -> void:
+	combo_status_action = STATUS_SCOPE.action_or_new(target)
 	_deal_hit(target, false)
 	if not dying and current_hp > 0 and special_augment_configs.has("scorpion_twin_sting") and is_instance_valid(target):
 		followup_target = weakref(target)
@@ -54,6 +57,12 @@ func _tick_followup(delta: float) -> void:
 	_deal_hit(target, true)
 
 func _deal_hit(target: Node2D, followup: bool = false) -> int:
+	var previous_action := STATUS_SCOPE.begin(target,combo_status_action if combo_status_action != null else STATUS_SCOPE.action_or_new(target))
+	var result := _status_scoped_deal_hit(target,followup)
+	STATUS_SCOPE.finish(target,previous_action)
+	return result
+
+func _status_scoped_deal_hit(target: Node2D, followup: bool = false) -> int:
 	if not is_instance_valid(target) or not target.has_method("take_damage"):
 		return 0
 	var before := int(target.get("current_hp"))

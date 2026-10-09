@@ -5,6 +5,8 @@ const AFFLICTIONS := preload("res://src/systems/received_afflictions.gd")
 const AUDIO := preload("res://src/data/shuten_doji_audio_catalog.gd")
 const SFX_BANK := preload("res://src/audio/event_sfx_bank.gd")
 var audio_bank: Node
+const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
+var summon_snapshot := 0
 var transcend_level := 0
 var gauge := 0.0
 var clock := 0.0
@@ -24,7 +26,7 @@ var fog_cast_total := 12
 var fog_cast_center := Vector2.ZERO
 var action_serial := 0
 var fog_cast_action := 0
-var credited_actions: Dictionary = {}
+var status_actions: Dictionary = {}
 var stale_actions: Array[int] = []
 var fog_age := PackedFloat32Array()
 var fog_life := PackedFloat32Array()
@@ -74,11 +76,11 @@ func _init() -> void:
 	chain_action.resize(DATA.CHAIN_CAPACITY)
 	chain_damage.resize(DATA.CHAIN_CAPACITY)
 	chain_paid.resize(DATA.CHAIN_CAPACITY)
-func configure_transcendence(_count: int, level: int) -> void:
+func configure_transcendence(count: int, level: int) -> void:
 	transcend_level = clampi(level,0,5)
-	# Growth comes from this actor's successful status actions, not DOT ticks.
-	max_hp = DATA.BASE.max_hp
-	attack_damage = DATA.BASE.attack_damage
+	summon_snapshot = maxi(count,0)
+	max_hp = int(round(DATA.BASE.max_hp+summon_snapshot*DATA.STATUS_GROWTH.max_hp))
+	attack_damage = int(round(DATA.BASE.attack_damage+summon_snapshot*DATA.STATUS_GROWTH.attack_damage))
 	current_hp = max_hp
 func _apply_normal_visual_profile() -> void:
 	visual.apply_visual_profile(DATA.PROFILE)
@@ -132,13 +134,12 @@ func _physics_process(delta: float) -> void:
 	status_layer.queue_redraw()
 func _next_action() -> int:
 	action_serial += 1
+	var token := STATUS_SCOPE.Token.new()
+	token.created_at = clock
+	status_actions[action_serial] = token
 	return action_serial
-func _credit_status(action: int) -> void:
-	if credited_actions.has(action): return
-	credited_actions[action] = clock
-	attack_damage += 1
-	max_hp += 1
-	current_hp += 1
+func _action_token(action: int) -> RefCounted:
+	return status_actions[action] if status_actions.has(action) else null
 func _record(target: Node2D) -> Dictionary:
 	var id := target.get_instance_id()
 	if not records.has(id):
@@ -157,9 +158,9 @@ func _refresh_targets(delta: float) -> void:
 			if not is_instance_valid(target) or target.current_hp <= 0 or ("active" in target and not target.active): stale_records.append(id)
 		for id in stale_records: records.erase(id)
 		stale_actions.clear()
-		for id in credited_actions:
-			if clock-float(credited_actions[id]) > 60: stale_actions.append(id)
-		for id in stale_actions: credited_actions.erase(id)
+		for id in status_actions:
+			if clock-float(status_actions[id].created_at) > 60: stale_actions.append(id)
+		for id in stale_actions: status_actions.erase(id)
 		stale_actions.clear()
 		for id in chain_immunity:
 			if float(chain_immunity[id]) <= clock: stale_actions.append(id)
@@ -295,7 +296,7 @@ func _apply_fog(target: Node2D, index: int, step: float) -> void:
 	if amount > 0:
 		record.fractions[index] -= amount
 		_damage(target,amount,true,true)
-	if target.current_hp > 0 and AFFLICTIONS.apply_slow(target,1-0.5*fog_power[index],0.3): _credit_status(fog_action[index])
+	if target.current_hp > 0: AFFLICTIONS.apply_slow(target,1-0.5*fog_power[index],0.3,_action_token(fog_action[index]))
 func _ignite() -> void:
 	_audio("ignite")
 	var action := _next_action()
@@ -318,11 +319,10 @@ func _blast_target(target: Node2D, point: Vector2, action: int) -> void:
 	_damage(target,int(round(attack_damage*1.75)),true)
 	if bleeding: _apply_stun(target,2,action)
 	elif target.current_hp > 0:
-		if AFFLICTIONS.apply_bleed_current(target,7,0.06,self): _credit_status(action)
+		AFFLICTIONS.apply_bleed_current(target,7,0.06,self,_action_token(action))
 func _apply_stun(target: Node2D, seconds: float, action: int) -> void:
 	if target.current_hp <= 0: return
-	AFFLICTIONS.apply_stun(target,seconds)
-	_credit_status(action)
+	AFFLICTIONS.apply_stun(target,seconds,_action_token(action))
 func _cast_chain(target: Node2D) -> bool:
 	for i in range(DATA.CHAIN_CAPACITY):
 		if chain_state[i] != 0: continue
@@ -372,9 +372,8 @@ func _bind_chain(index: int, target: Node2D) -> bool:
 	chain_immunity[id] = clock+13
 	chain_state[index] = 2
 	chain_age[index] = 0
-	AFFLICTIONS.apply_slow(target,0.01,3)
-	AFFLICTIONS.apply_silence(target,3)
-	_credit_status(chain_action[index])
+	AFFLICTIONS.apply_slow(target,0.01,3,_action_token(chain_action[index]))
+	AFFLICTIONS.apply_silence(target,3,_action_token(chain_action[index]))
 	return true
 func _damage(target: Node2D, amount: int, followup: bool = true, dot: bool = false) -> bool:
 	if not is_instance_valid(target) or target.current_hp <= 0: return false
@@ -457,8 +456,16 @@ func _draw_effects() -> void:
 			var remaining := fog_life[i]-fog_age[i]
 			var alpha := 0.5
 			if remaining < 1.5: alpha *= 0.35+0.65*absf(sin(8/maxf(remaining,0.15)))
-			FX.draw_frame(effect_layer,0,int(fog_age[i]*8)%8,fog_points[i]-global_position,1,alpha)
+			var point := fog_points[i]-global_position
+			FX.draw_frame(effect_layer,0,int(fog_age[i]*8)%8,point,1,alpha)
 		if blast_age[i] >= 0: FX.draw_frame(effect_layer,1,mini(7,int(blast_age[i]*10)),blast_points[i]-global_position)
+	# Draw every boundary after all overlapping smoke textures.
+	for i in range(DATA.FOG_CAPACITY):
+		if fog_age[i] < 0: continue
+		var remaining := fog_life[i]-fog_age[i]
+		var alpha := 0.8
+		if remaining < 1.5: alpha *= 0.35+0.65*absf(sin(8/maxf(remaining,0.15)))
+		effect_layer.draw_circle(fog_points[i]-global_position,DATA.FOG_RADIUS,Color(1.0,0.32,0.25,alpha),false,1.5,true)
 	for i in range(DATA.CHAIN_CAPACITY):
 		if chain_state[i] == 0: continue
 		var point := chain_points[i]

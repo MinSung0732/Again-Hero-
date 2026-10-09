@@ -142,7 +142,7 @@ func _pick_new_wander_target() -> void:
 			candidate = clamped
 	wander_target = candidate
 
-func _deal_attack_damage() -> int:
+func _status_scoped_deal_attack_damage() -> int:
 	if not is_instance_valid(hero) or not hero.has_method("take_damage"):
 		return 0
 	var damage := attack_damage + int(round(float(hero.get("current_hp")) * 0.005))

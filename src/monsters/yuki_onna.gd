@@ -1,4 +1,5 @@
 extends "res://src/monsters/goblin_thrower.gd"
+const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const DATA := preload("res://src/data/yuki_onna_behavior_catalog.gd")
 const YUKI_PROJECTILE := preload("res://src/monsters/YukiOnnaProjectile.tscn")
@@ -86,6 +87,7 @@ func _get_effective_attack_cooldown() -> float:
 func _fire_projectile(offset_to_hero: Vector2) -> void:
 	if offset_to_hero.length_squared() <= 0.001 or not is_instance_valid(combat_authority):
 		return
+	var action := STATUS_SCOPE.action_or_new(hero)
 	var count := 3 if special_augment_configs.has("yuki_threefold_snow") else 1
 	var direction := offset_to_hero.normalized()
 	for index in range(count):
@@ -94,6 +96,7 @@ func _fire_projectile(offset_to_hero: Vector2) -> void:
 		var projectile = combat_authority.acquire_projectile(YUKI_PROJECTILE,"yuki_onna_projectile")
 		projectile.global_position = global_position + shot_direction * 24.0
 		projectile.setup(shot_direction,attack_damage,projectile_speed * chill_projectile_speed,projectile_range,String(get_meta("visual_variant","")) == "elite")
+		projectile.status_action = action
 		projectile.source_ref = weakref(self)
 		projectile.slow_ratio = float(DATA.SLOW.ratio) * chill_slow_strength
 		projectile.slow_cap = max_slow_stacks

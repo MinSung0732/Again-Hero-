@@ -1,6 +1,11 @@
 extends "res://src/monsters/goblin_thrower.gd"
 const DATA := preload("res://src/data/izanami_behavior_catalog.gd")
 const FX := preload("res://src/ui/izanami_combat_effects.gd")
+const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
+var ghost_action: RefCounted
+var fan_action: RefCounted
+var fire_actions: Array[RefCounted] = []
+var spirit_actions: Array[RefCounted] = []
 var transcend_level := 0
 var summon_snapshot := 0
 var gauge := 0.0
@@ -49,6 +54,8 @@ var prune_tick := 0.0
 var stale_crossing_ids: Array[int] = []
 
 func _init() -> void:
+	fire_actions.resize(4)
+	spirit_actions.resize(8)
 	monster_type = "izanami"
 	monster_role = "control"
 	for stat in DATA.BASE:
@@ -69,8 +76,8 @@ func _init() -> void:
 func configure_transcendence(count: int, level: int) -> void:
 	summon_snapshot = maxi(count,0)
 	transcend_level = clampi(level,0,5)
-	max_hp = int(round(1080.0 + count*2.5))
-	attack_damage = int(round(55.0 + count*2.0))
+	max_hp = int(round(DATA.BASE.max_hp + summon_snapshot*DATA.STATUS_GROWTH.max_hp))
+	attack_damage = int(round(DATA.BASE.attack_damage + summon_snapshot*DATA.STATUS_GROWTH.attack_damage))
 	current_hp = max_hp
 
 func _apply_normal_visual_profile() -> void:
@@ -235,13 +242,14 @@ func _on_accepted_hit(source: Node) -> void:
 			ghost_remaining = 0.0
 			bind_remaining = 0.6
 			_hit(1.55,true)
-			_status("slow",0.01,3.0)
-			_status("silence",0.0,3.0)
+			_status("slow",0.01,3.0,true,ghost_action)
+			_status("silence",0.0,3.0,true,ghost_action)
 
-func _status(kind: String, strength: float, seconds: float, count_passive: bool = true) -> bool:
+func _status(kind: String, strength: float, seconds: float, count_passive: bool = true, action: RefCounted = null) -> bool:
 	if not is_instance_valid(hero) or hero.current_hp <= 0 or hero.is_dying:
 		return false
 	# Count only the authority's actual accepted events, not attempted casts.
+	var previous_action := STATUS_SCOPE.begin(hero,action)
 	status_depth = 0
 	if not hero.status_applied.is_connected(_count_own_status):
 		hero.status_applied.connect(_count_own_status)
@@ -251,6 +259,7 @@ func _status(kind: String, strength: float, seconds: float, count_passive: bool 
 		"silence": hero.apply_silence(seconds)
 		"vulnerability": hero.apply_damage_taken_increase(seconds,strength)
 	hero.status_applied.disconnect(_count_own_status)
+	STATUS_SCOPE.finish(hero,previous_action)
 	if count_passive:
 		passive_statuses += status_depth
 	return status_depth > 0
@@ -272,12 +281,14 @@ func _try_cast() -> void:
 		_visual_call(&"play_attack")
 		match i:
 			0:
+				ghost_action = STATUS_SCOPE.Token.new()
 				ghost_remaining = 7.0
 				ghost_hits = 0
-				_status("vulnerability",0.15,7.0)
-				_status("slow",0.88,7.0)
+				_status("vulnerability",0.15,7.0,true,ghost_action)
+				_status("slow",0.88,7.0,true,ghost_action)
 			1: _create_fire()
 			2:
+				fan_action = STATUS_SCOPE.Token.new()
 				fan_remaining = 2.0
 				fan_spawned = 0
 				fan_direction = (hero.global_position-global_position).normalized()
@@ -295,6 +306,7 @@ func _create_fire() -> void:
 	for i in range(4):
 		if fire_age[i] >= 0.0:
 			continue
+		fire_actions[i] = STATUS_SCOPE.Token.new()
 		fire_points[i] = hero.global_position
 		fire_age[i] = 0.0
 		fire_delay[i] = 0.0 if transcend_level >= 1 else 0.75
@@ -329,7 +341,7 @@ func _tick_fire(delta: float) -> void:
 				if amount > 0:
 					if _deal_damage(amount,true,fire_hit_counted[i] == 0):
 						fire_hit_counted[i] = 1
-				if _status("slow",0.7,2.0,fire_slow_counted[i] == 0):
+				if _status("slow",0.7,2.0,fire_slow_counted[i] == 0,fire_actions[i]):
 					fire_slow_counted[i] = 1
 		if age >= 3.0:
 			fire_age[i] = -1.0
@@ -341,6 +353,7 @@ func _tick_spirits(delta: float) -> void:
 		while fan_spawned < required:
 			var i := fan_spawned
 			var direction := fan_direction.rotated(lerpf(-0.65,0.65,float(i)/7.0))
+			spirit_actions[i] = fan_action
 			spirit_points[i] = global_position
 			spirit_destinations[i] = global_position + direction*randf_range(200.0,500.0)
 			spirit_age[i] = 0.0
@@ -370,7 +383,7 @@ func _tick_spirits(delta: float) -> void:
 				spirit_points[i] = spirit_points[i].move_toward(hero.global_position,DATA.SPIRIT_DASH_SPEED*delta)
 				if spirit_points[i].distance_squared_to(hero.global_position) < 16.0*16.0:
 					_hit(1.2,true)
-					_status("stun",0.0,1.5)
+					_status("stun",0.0,1.5,true,spirit_actions[i])
 					spirit_state[i] = 4
 					spirit_age[i] = 0.0
 			4:

@@ -1,6 +1,7 @@
 extends RefCounted
 const ROOT := "res://assets/art/Transcendent_monster/Shuten-doji/frames"
 const BASE := {"max_hp":2500,"attack_damage":220,"move_speed":310.0,"attack_range":70.0,"attack_cooldown":2.0,"projectile_speed":0.0,"projectile_range":0.0,"exp_reward":0}
+const STATUS_GROWTH := {"attack_damage":1.0,"max_hp":1.0}
 const RULES := {"mode":"all","conditions":[{"metric":"controls_summoned","amount":40},{"metric":"statuses_applied","amount":3}]}
 const PROFILE := {"mode":"frames","asset_dir":ROOT,"target_height":110.0,"animations":{
 "idle":{"prefix":"idle","count":4,"fps":6.0,"loop":true},"move":{"prefix":"walk","count":6,"fps":8.0,"loop":true},

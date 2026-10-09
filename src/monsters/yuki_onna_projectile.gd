@@ -1,11 +1,19 @@
 extends "res://src/monsters/goblin_thrower_projectile.gd"
+const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 const YUKI_POOL_KEY := "yuki_onna_projectile"
 static var yuki_frames: Dictionary = {}
+var status_action: RefCounted
 var source_ref: WeakRef
 var slow_ratio := 0.1
 var slow_cap := 10
 
 func _on_body_entered(body: Node) -> void:
+	if status_action == null: status_action = STATUS_SCOPE.action_or_new(body)
+	var previous_action := STATUS_SCOPE.begin(body,status_action)
+	_status_scoped_on_body_entered(body)
+	STATUS_SCOPE.finish(body,previous_action)
+
+func _status_scoped_on_body_entered(body: Node) -> void:
 	if not active or not is_instance_valid(body) or body.is_queued_for_deletion() or (not body.is_in_group("hero") and not body.is_in_group("hero_summons")):
 		return
 	active = false
@@ -51,6 +59,7 @@ func _finish_projectile() -> void:
 		queue_free()
 
 func deactivate_for_pool() -> void:
+	status_action = null
 	source_ref = null
 	slow_ratio = 0.1
 	slow_cap = 10

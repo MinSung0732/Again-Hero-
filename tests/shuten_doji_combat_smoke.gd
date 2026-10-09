@@ -56,11 +56,13 @@ func run() -> void:
 	authority.hero = target
 	var actor = SCENE.instantiate()
 	actor.configure_combat_context(target,authority)
-	actor.configure_transcendence(9999,0)
+	actor.configure_transcendence(10,0)
+	check(actor.attack_damage==230 and actor.max_hp==2510 and actor.summon_snapshot==10,"pre-summon status snapshot")
+	actor.configure_transcendence(0,0)
 	authority.add_child(actor)
 	actor.set_physics_process(false)
 	actor.visual.set_physics_process(false)
-	check(actor.attack_damage==220 and actor.max_hp==2500 and actor.get_gauge_regen()==15,"base stats, self growth, regen cap")
+	check(actor.attack_damage==220 and actor.max_hp==2500 and actor.get_gauge_regen()==15,"base stats, snapshot and regen cap")
 	actor.gauge = 100
 	actor._cast_fog()
 	for i in range(20): actor._tick_fogs(0.1)
@@ -69,7 +71,7 @@ func run() -> void:
 		if actor.fog_age[i]>=0:
 			active += 1
 			check(actor.fog_points[i].length()<=200 and actor.fog_life[i]>=5 and actor.fog_life[i]<=10,"radial fog and lifetime")
-	check(active==12 and actor.gauge==70 and actor.attack_damage==221,"twelve mists, cost and once-per-skill growth")
+	check(active==12 and actor.gauge==70 and actor.attack_damage==220,"twelve mists, cost and once-per-skill growth")
 	actor.fog_age.fill(-1)
 	actor.records.clear()
 	target.damage = 0
@@ -83,7 +85,7 @@ func run() -> void:
 	var own_hp: int = actor.current_hp
 	for i in range(50): actor._tick_fogs(0.1)
 	check(abs(target.damage-220)<=1 and ally.current_hp>=9779 and ally.current_hp<=9781,"total fog damage, allied friendly fire")
-	check(actor.current_hp==own_hp+1 and actor.attack_damage==221,"no self damage or repeated tick growth")
+	check(actor.current_hp==own_hp and actor.attack_damage==220,"no self damage or repeated tick growth")
 	check(int(actor.get_meta("support_shield_hp",0))>=249,"two percent shield per second")
 	check(is_equal_approx(float(ally.get_meta("received_slow_multiplier",1)),0.5),"allied slow applies")
 	actor.fog_age.fill(-1)

@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
@@ -81,6 +82,12 @@ func _attack_target(target: Node2D) -> void:
 	_deal_hit(target, attack_damage)
 
 func _deal_hit(target: Node2D, amount: int) -> int:
+	var previous_action := STATUS_SCOPE.begin(target,STATUS_SCOPE.action_or_new(target))
+	var result := _status_scoped_deal_hit(target,amount)
+	STATUS_SCOPE.finish(target,previous_action)
+	return result
+
+func _status_scoped_deal_hit(target: Node2D, amount: int) -> int:
 	if dying or infiltration_timer > 0.0 or not is_instance_valid(target) or not target.has_method("take_damage"):
 		return 0
 	if bool(target.get_meta("charm_active", false)):

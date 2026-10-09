@@ -86,7 +86,7 @@
 - Godot4.5.1 actual player/timeline/reuse/cancel checks pass; conservative four-voice peak sum<0.424. This is a calculated upper bound, not a captured full mix or subjective listening/Android test. Sources in assets/audio/sfx/bulgasal/SOURCES.md.
 
 ## Playable Izanami (2026-10-09)
-- MonsterCatalog izanami registered: transcendent/divine_humanoid/control, ranged instant radius275, speed250/interval1.5; ATK55+2 and HP1080+2.5 per accepted pre-summon status event, frozen at summon. Actual player control/controller summons50 AND accepted statuses3; explicit local unlock handles both counters.
+- 이자나미: 공격55+소환 전 상태이상 행동N×1, HP1080+N×1.5(최종 반올림). 아군의 용사 대상 성공한 공격/시전당1회, 다중 상태/장판/투사체/갱신 중복 제외. 소환 스냅샷 이후 수치 고정. 제어형 실제50회 AND 동일 행동 카운터3회 해금. 원본 AI 상태 이벤트와 패시브 카운터 유지.
 - Gauge100, augmented command regen100% capped15/sec;1.5s arrival idle→hit_02. Ghost7s/all-source12-hit bind/silence, warned snapshot fire/DOT budget,8 fixed wandering untargetable spirits,4 fixed torii slots with cached spatial placement/aura/crossing buffs. All0–5 transcend upgrades; excludes ordinary/special/elite/giant augments. Provisional range/speed/gate-capacity values are centralized/documented in docs/IZANAMI_COMBAT.md.
 - Hero accepted status/damage signals preserve HP/shield hit semantics. Silence gates actual skill entrypoints/readiness so basic attacks/movement/reload remain available; existing spawned effects continue. Shared torii modifiers at incoming/outgoing damage and monster movement; five pooled projectile paths now carry weak source attribution and clear it on return.
 - Normal/pickup0.5% unchanged; transcendent pool Zeus/Bulgasal/Izanami, current Zeus pickup3:1:1. Existing atomic reward/save/loadout and ownership-based icon/banner rewards. Approved gacha/battle cinematic registered/prewarmed in production; existing fixed-eye rig, independent shrine/spirit effects and Pixabay charge/release reused. Death uses common transcendent camera/drop flow.
@@ -2714,7 +2714,7 @@ Build AI는 전체/주변 몬스터 수, 최근 공세, 역할 비율, 거리, �
 
 ## 슈텐-도지 초월 등록 (2026-10-10)
 
-초월 풀은 제우스·불가살·이자나미·만티코어·슈텐-도지5종. `shuten_doji`는 인간형/근접/제어, 제어형 실제40회 소환 AND 적 상태이상3회로 전투당1회 무료 소환. 슈텐-도지 본인이 소환 후 상태이상을 부여한 공격·기술당 공격/최대HP 각1 성장한다(동일 시전의 대상 수·안개 수·DOT/지속갱신 횟수로 성장 중복 없음). 이전 전투 카운트는 해금 조건에만 쓰고 성장에 가져오지 않는다. 최소 공격220/HP2500, 이동310/공격간격2, 게이지100·증강 반영 지휘력 회복 최대15/초.
+초월 풀은 제우스·불가살·이자나미·만티코어·슈텐-도지5종. 슈텐-도지는 인간형/근접/제어, 제어형 실제40회 AND 적 상태이상 행동3회 해금. 소환 전 아군의 용사 대상 성공한 공격/기술 상태이상 행동N을 스냅샷으로 확정: 공격220+N/HP2500+N. 이후 수치 고정; 동일 시전의 다중 상태/장판/투사체/갱신은1회. 이동310/간격2/게이지100/회복최대15. 혈주연무 각 안개의 실제 반경100을 붉은 얇은 원형선으로 표시하고 연기 위에 그려 가림을 막는다.
 
 혈주연무는 본인 외 아군/용사/적 소환수 모두 피해·둔화, 자기둔화80%/피감70%, 초월1안개 내 쉴드2%/초·초월2안개19개. 귀염지폭은 모든 잔여 안개시간 합10초 이하, 안개별 폭발/현재HP 출혈과 기존 출혈 기절·쿨2초 반환. 쇄혼귀면은 유도/3초 결박·10초 면역·지연 도달 환급, 초월3무조건50%. 귀왕해방1회 치명상(초월5HP50%)·3초 무적/100%회복·역재생/전용 공격/반감안개; 초월4피감30%/20적중쉴드, 초월5초과회복쉴드. `docs/SHUTEN_DOJI.md`에 구현·미지정 튜닝·검증 및 리소스 출처를 기록한다.
 

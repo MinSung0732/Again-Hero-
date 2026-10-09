@@ -1,4 +1,5 @@
 extends Node
+const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 ## Lazy, retained status component for enemy summons lacking Hero's status methods.
 const BURN := preload("res://src/systems/burn_runtime.gd")
 const POISON := preload("res://src/systems/damage_poison_tracker.gd")
@@ -41,10 +42,12 @@ static func apply_poison(actor: Node2D, seconds: float, damage: int, source: Nod
 	var node := component(actor)
 	node.set_physics_process(true)
 	return bool(node.poison.apply(source,damage,seconds,channel))
-static func apply_slow(actor: Node2D, multiplier: float, seconds: float) -> bool:
+static func apply_slow(actor: Node2D, multiplier: float, seconds: float, action: RefCounted = null) -> bool:
 	if seconds <= 0 or actor.current_hp <= 0: return false
 	if actor.has_method("apply_slow"):
+		var previous := STATUS_SCOPE.begin(actor,action)
 		actor.apply_slow(multiplier,seconds)
+		STATUS_SCOPE.finish(actor,previous)
 		return true
 	var node := component(actor)
 	node.set_physics_process(true)
@@ -91,10 +94,12 @@ func take_status_damage(amount: int, source: Node) -> bool:
 func take_recorded_poison_damage(amount: int, source: Node) -> bool:
 	return take_status_damage(amount,source)
 
-static func apply_stun(actor: Node2D, seconds: float) -> void:
+static func apply_stun(actor: Node2D, seconds: float, action: RefCounted = null) -> void:
 	if actor.current_hp <= 0 or seconds <= 0: return
 	if actor.has_method("apply_stun"):
+		var previous := STATUS_SCOPE.begin(actor,action)
 		actor.apply_stun(seconds)
+		STATUS_SCOPE.finish(actor,previous)
 		return
 	var node := component(actor)
 	if node.stun_remaining <= 0: node.physics_before_stun = actor.is_physics_processing()
@@ -102,19 +107,24 @@ static func apply_stun(actor: Node2D, seconds: float) -> void:
 	actor.set_meta("stun_active",true)
 	actor.set_physics_process(false)
 	node.set_physics_process(true)
-static func apply_silence(actor: Node2D, seconds: float) -> void:
+static func apply_silence(actor: Node2D, seconds: float, action: RefCounted = null) -> void:
 	if actor.current_hp <= 0 or seconds <= 0: return
 	if actor.has_method("apply_silence"):
+		var previous := STATUS_SCOPE.begin(actor,action)
 		actor.apply_silence(seconds)
+		STATUS_SCOPE.finish(actor,previous)
 		return
 	var node := component(actor)
 	node.silence_remaining = maxf(node.silence_remaining,seconds)
 	actor.set_meta("silence_active",true)
 	node.set_physics_process(true)
-static func apply_bleed_current(actor: Node2D, seconds: float, ratio: float, source: Node) -> bool:
+static func apply_bleed_current(actor: Node2D, seconds: float, ratio: float, source: Node, action: RefCounted = null) -> bool:
 	if actor.current_hp <= 0 or bool(actor.get_meta("bleed_active",false)): return false
 	if actor.has_method("apply_bleed"):
-		return bool(actor.apply_bleed(seconds,source,float(actor.current_hp)*ratio/maxf(float(actor.max_hp),1),false))
+		var previous := STATUS_SCOPE.begin(actor,action)
+		var accepted := bool(actor.apply_bleed(seconds,source,float(actor.current_hp)*ratio/maxf(float(actor.max_hp),1),false))
+		STATUS_SCOPE.finish(actor,previous)
+		return accepted
 	var node := component(actor)
 	node.bleed_remaining = seconds
 	node.bleed_duration = seconds

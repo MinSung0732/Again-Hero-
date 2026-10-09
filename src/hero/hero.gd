@@ -7,6 +7,9 @@ const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 signal died
 signal health_changed(current_hp: int, max_hp_value: int)
 signal status_applied(status_id: String)
+signal status_action_applied(status_id: String)
+const STATUS_ACTION_SCOPE := preload("res://src/systems/status_action_scope.gd")
+var petrify_status_action: RefCounted
 signal accepted_damage_hit(source: Node)
 signal combat_damage_received(hp_damage: int)
 signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
@@ -16105,6 +16108,10 @@ func record_status_effect_event(status_id: String) -> void:
 	if status_id.is_empty():
 		return
 
+	var action := STATUS_ACTION_SCOPE.current(self)
+	if action == null or not action.counted:
+		if action != null: action.counted = true
+		status_action_applied.emit(status_id)
 	status_applied.emit(status_id)
 	status_effect_events.append({
 		"time": ai_memory_clock,
@@ -17214,6 +17221,7 @@ func register_medusa_hit(duration: float, release_slow: float = 1.0, release_dur
 func apply_petrify(duration: float, release_slow: float = 1.0, release_duration: float = 0.0) -> bool:
 	if current_hp <= 0 or is_dying or petrify_timer > 0.0 or duration <= 0.0:
 		return false
+	petrify_status_action = STATUS_ACTION_SCOPE.current(self)
 	record_status_effect_event("petrify")
 	petrify_timer = maxf(duration * (1.0 - get_status_resistance("petrify")),0.05)
 	petrify_anchor = global_position
@@ -17236,7 +17244,10 @@ func _tick_petrify(delta: float) -> void:
 			hero_sprite.self_modulate = petrify_restore_tint
 		set_meta("petrify_active",false)
 		if petrify_release_slow_duration > 0.0:
+			var previous_action := STATUS_ACTION_SCOPE.begin(self,petrify_status_action)
 			apply_slow(petrify_release_slow,petrify_release_slow_duration)
+			STATUS_ACTION_SCOPE.finish(self,previous_action)
+		petrify_status_action = null
 
 func apply_damage_poison(duration: float, total_damage: int, source: Node, channel: int = 0) -> bool:
 	if current_hp <= 0 or is_dying:
@@ -17257,6 +17268,7 @@ func take_recorded_poison_damage(amount: int, source: Node) -> bool:
 	return _take_damage_internal(amount,source,true,false,true)
 
 func _clear_medusa_statuses() -> void:
+	petrify_status_action = null
 	if petrify_timer > 0.0 and is_instance_valid(hero_sprite):
 		hero_sprite.self_modulate = petrify_restore_tint
 	petrify_timer = 0.0

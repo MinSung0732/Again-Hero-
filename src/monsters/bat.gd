@@ -1,4 +1,6 @@
 extends CharacterBody2D
+var attack_status_action: RefCounted
+const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const COMBAT_STATUS_EFFECT_VISUAL := preload(
 	"res://src/ui/combat_status_effect_visual.gd"
@@ -284,6 +286,13 @@ func _attack_target(offset_to_hero: Vector2) -> void:
 
 
 func _deal_attack_damage() -> int:
+	attack_status_action = STATUS_SCOPE.action_or_new(hero)
+	var previous_action := STATUS_SCOPE.begin(hero,attack_status_action)
+	var result := _status_scoped_deal_attack_damage()
+	STATUS_SCOPE.finish(hero,previous_action)
+	return result
+
+func _status_scoped_deal_attack_damage() -> int:
 	if not is_instance_valid(hero) or not hero.has_method("take_damage"):
 		return 0
 	var hp_before_value = hero.get("current_hp")
@@ -330,6 +339,11 @@ func _apply_lifesteal(damage_dealt: int) -> void:
 
 
 func _apply_elite_poison() -> void:
+	var previous_action := STATUS_SCOPE.begin(hero,attack_status_action)
+	_status_scoped_apply_elite_poison()
+	STATUS_SCOPE.finish(hero,previous_action)
+
+func _status_scoped_apply_elite_poison() -> void:
 	if not bool(get_meta("elite_bat_poison_fang_active", false)):
 		return
 	if not is_instance_valid(hero) or not hero.has_method("apply_poison"):

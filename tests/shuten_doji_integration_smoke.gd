@@ -69,7 +69,7 @@ func run() -> void:
 	check(battle.try_summon_transcendent(),"actual successful summon")
 	var actor = battle.transcendent_actor
 	actor.set_physics_process(false)
-	check(actor.monster_type==id and actor.transcend_level==5 and actor.attack_damage==220 and actor.max_hp==2500,"actual scene and tier with self-earned growth")
+	check(actor.monster_type==id and actor.transcend_level==5 and actor.attack_damage==223 and actor.max_hp==2503 and actor.summon_snapshot==3,"actual scene and tier with pre-summon status snapshot")
 	check(battle.command_power==command_before and not battle.try_summon_transcendent(),"free once per battle")
 	check(battle._spawn_monster(id,Vector2.ZERO)==null,"normal spawn cannot bypass unlock")
 	# Production Hero chain statuses, DOT and post-release immunity.
@@ -79,7 +79,7 @@ func run() -> void:
 	check(hero.silence_timer>0 and actor.chain_state[0]==2,"native Hero silence and bind")
 	var hp_before: int = hero.current_hp
 	actor._tick_chains(3)
-	check(hp_before-hero.current_hp==550,"native Hero total chain DOT")
+	check(hp_before-hero.current_hp==558,"native Hero total chain DOT")
 	hero._clear_bleed()
 	var current: int = hero.current_hp
 	preload("res://src/systems/received_afflictions.gd").apply_bleed_current(hero,7,.06,actor)
@@ -90,7 +90,7 @@ func run() -> void:
 	actor.cooldowns.fill(0)
 	hero.global_position = actor.global_position+Vector2(50,0)
 	for step in range(30): actor._physics_process(0.1)
-	check(actor.attack_damage>221 and actor.action_serial>2,"autonomous attacks and casts execute")
+	check(actor.attack_damage==223 and actor.action_serial>2,"autonomous casts preserve frozen growth snapshot")
 	actor.revival_used = true
 	actor.set_meta("support_shield_hp",0)
 	var drops: int = battle.get_tree().get_nodes_in_group("exp_orbs").size()

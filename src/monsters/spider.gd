@@ -1,4 +1,5 @@
 extends CharacterBody2D
+const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
 const MONSTER_RUNTIME_COMMON := preload("res://src/monsters/monster_runtime_common.gd")
@@ -232,12 +233,13 @@ func configure_special_augments(configs: Dictionary) -> void:
 	special_augment_configs = configs.duplicate(true)
 
 func _begin_projectile_attack(direction_to_hero: Vector2) -> void:
+	var action := STATUS_SCOPE.action_or_new(hero)
 	var triple: Dictionary = special_augment_configs.get(
 		"spider_triple_web",
 		{}
 	)
 	if triple.is_empty():
-		_fire_projectile(direction_to_hero, 1.0)
+		_fire_projectile(direction_to_hero, 1.0, action)
 		return
 
 	var shot_count := maxi(int(triple.get("shot_count", 3)), 1)
@@ -264,7 +266,8 @@ func _begin_projectile_attack(direction_to_hero: Vector2) -> void:
 		)
 		_fire_projectile(
 			direction_to_hero.rotated(angle_offset),
-			damage_multiplier
+			damage_multiplier,
+		action
 		)
 
 func _acquire_spider_projectile() -> Area2D:
@@ -290,7 +293,8 @@ func _acquire_spider_projectile() -> Area2D:
 
 func _fire_projectile(
 	direction_to_hero: Vector2,
-	damage_multiplier: float = 1.0
+	damage_multiplier: float = 1.0,
+	action: RefCounted = null
 ) -> void:
 	if SPIDER_PROJECTILE_SCENE == null:
 		return
@@ -337,6 +341,8 @@ func _fire_projectile(
 			binding,
 			projectile_size_multiplier
 		)
+
+	projectile.status_action = action if action != null else STATUS_SCOPE.Token.new()
 
 func take_damage(amount: int) -> void:
 	if current_hp <= 0 or dying:

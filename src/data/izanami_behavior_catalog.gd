@@ -1,5 +1,6 @@
 extends RefCounted
 const BASE := {"max_hp":1080,"attack_damage":55,"move_speed":250.0,"attack_range":275.0,"attack_cooldown":1.5,"projectile_speed":0.0,"projectile_range":0.0,"exp_reward":0}
+const STATUS_GROWTH := {"attack_damage":1.0,"max_hp":1.5}
 const RULES := {"mode":"all","conditions":[{"metric":"controls_summoned","amount":50},{"metric":"statuses_applied","amount":3}]}
 const ROOT := "res://assets/art/Transcendent_monster/Izanami/frames"
 const PROFILE := {"mode":"frames","asset_dir":ROOT,"target_height":110.0,"animations":{

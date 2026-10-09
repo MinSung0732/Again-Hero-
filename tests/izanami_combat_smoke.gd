@@ -70,11 +70,13 @@ func run() -> void:
 	authority.hero = target
 	var actor = SCENE.instantiate()
 	actor.configure_combat_context(target,authority)
+	actor.configure_transcendence(3,0)
+	check(actor.max_hp==1085 and actor.attack_damage==58,"cumulative1.5 HP rounding")
 	actor.configure_transcendence(10,0)
 	authority.add_child(actor)
 	actor.set_physics_process(false)
 	actor.visual.set_physics_process(false)
-	check(actor.max_hp==1105 and actor.attack_damage==75 and actor.summon_snapshot==10,"snapshot stats")
+	check(actor.max_hp==1095 and actor.attack_damage==65 and actor.summon_snapshot==10,"snapshot stats")
 	check(actor.get_gauge_regen()==15 and actor.attack_range==275,"regen/range diameter")
 	# A distant target must be approached, while close targets trigger sustained retreat.
 	actor.attack_timer = 100.0
@@ -101,7 +103,7 @@ func run() -> void:
 	target.position = actor.position+Vector2(250,0)
 	actor.attack_timer = 0.0
 	actor._tick_retreat_and_heal(1.0/60.0)
-	check(actor.velocity == Vector2.ZERO and target.damage == 75,"hold and basic attack within range")
+	check(actor.velocity == Vector2.ZERO and target.damage == 65,"hold and basic attack within range")
 	target.damage = 0
 	actor.position = Vector2.ZERO
 	target.position = Vector2.ZERO
@@ -113,7 +115,7 @@ func run() -> void:
 	actor.transcend_level = 0
 	actor.ghost_remaining = 7.0
 	for i in range(12): target.take_damage(1,null)
-	check(is_equal_approx(target.silence,3.0) and target.slow==0.01 and actor.ghost_remaining==0 and target.damage==128,"12 all-source hits bind once")
+	check(is_equal_approx(target.silence,3.0) and target.slow==0.01 and actor.ghost_remaining==0 and target.damage==113,"12 all-source hits bind once")
 	var before := target.damage
 	target.take_damage(1,null)
 	check(target.damage==before+1,"no recursive/repeated bind")
@@ -125,7 +127,7 @@ func run() -> void:
 	before = target.damage
 	for i in range(300): actor._tick_fire(0.01)
 	actor._tick_fire(0.01)
-	check(target.damage-before==278,"170% plus exactly200% DOT rounded budgets")
+	check(target.damage-before==241,"170% plus exactly200% DOT rounded budgets")
 	check(actor.passive_hits == 1 and actor.passive_statuses == 1,"one hit/status stack per entire fire lifetime")
 	check(target.slow_events-slow_before > 1,"slow refresh still applied every tick")
 	actor._create_fire()

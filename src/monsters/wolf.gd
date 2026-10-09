@@ -1,4 +1,6 @@
 extends "res://src/monsters/orc.gd"
+var combo_status_action: RefCounted
+const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const BEHAVIOR := preload("res://src/data/wolf_behavior_catalog.gd")
 var howl_timer := 0.0
@@ -87,6 +89,7 @@ func try_cast_elite_skill(_skill: Dictionary) -> bool:
 func _attack_target(target: Node2D) -> void:
 	if followup_target != null:
 		return
+	combo_status_action = STATUS_SCOPE.action_or_new(target)
 	var total := maxi(int(round(float(attack_damage) * (float(BEHAVIOR.HOWL.damage_multiplier) if howl_buff_timer > 0.0 else 1.0))), 1)
 	var first := maxi(int(ceil(float(total) * 0.5)), 1)
 	var accepted := _deal_hit(target, first, false)
@@ -107,6 +110,12 @@ func _tick_followup(delta: float) -> void:
 		_deal_hit(target, followup_damage, true)
 
 func _deal_hit(target: Node2D, damage: int, followup: bool) -> bool:
+	var previous_action := STATUS_SCOPE.begin(target,combo_status_action if combo_status_action != null else STATUS_SCOPE.action_or_new(target))
+	var result := _status_scoped_deal_hit(target,damage,followup)
+	STATUS_SCOPE.finish(target,previous_action)
+	return result
+
+func _status_scoped_deal_hit(target: Node2D, damage: int, followup: bool) -> bool:
 	if not is_instance_valid(target) or not target.has_method("take_damage"):
 		return false
 	var before := int(target.get("current_hp"))

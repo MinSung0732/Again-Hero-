@@ -1,5 +1,6 @@
 extends RefCounted
 class_name EliteMonsterSkillRuntime
+const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const SPIDER_WEB_POOL_KEY := "elite_spider_web"
 const SKELETON_ARCHER_RAIN_LINE_POOL_KEY := "elite_skeleton_archer_rain_line"
@@ -193,6 +194,17 @@ func tick(delta: float) -> void:
 
 
 func _cast_skill(monster: Node2D, skill: Dictionary) -> void:
+	if String(skill.get("id", "")).is_empty() or bool(skill.get("_used", false)): return
+	if not skill.has("_pending_status_action"):
+		skill["_pending_status_action"] = STATUS_SCOPE.Token.new()
+	skill["_status_action"] = skill["_pending_status_action"]
+	var previous_action := STATUS_SCOPE.begin(battle.get("hero") as Node,skill["_status_action"])
+	_status_scoped_cast_skill(monster,skill)
+	STATUS_SCOPE.finish(battle.get("hero") as Node,previous_action)
+	if float(skill.get("_timer",0.0)) > 0.0 or bool(skill.get("_active",false)):
+		skill.erase("_pending_status_action")
+
+func _status_scoped_cast_skill(monster: Node2D, skill: Dictionary) -> void:
 	var skill_id := String(skill.get("id", ""))
 	if skill_id.is_empty():
 		return
@@ -244,6 +256,15 @@ func _cast_skill(monster: Node2D, skill: Dictionary) -> void:
 
 
 func _tick_active_skill(
+	monster: Node2D,
+	skill: Dictionary,
+	delta: float
+) -> void:
+	var previous_action := STATUS_SCOPE.begin(battle.get("hero") as Node,skill.get("_status_action"))
+	_status_scoped_tick_active_skill(monster,skill,delta)
+	STATUS_SCOPE.finish(battle.get("hero") as Node,previous_action)
+
+func _status_scoped_tick_active_skill(
 	monster: Node2D,
 	skill: Dictionary,
 	delta: float
@@ -654,6 +675,7 @@ func _create_spider_web(center: Vector2, skill: Dictionary) -> void:
 			fx.scale = Vector2.ONE * scale_value
 
 	_spider_webs.append({
+		"status_action":skill["_status_action"] if skill.has("_status_action") else STATUS_SCOPE.Token.new(),
 		"center": center,
 		"radius": radius,
 		"remaining": maxf(float(skill.get("duration", 5.0)), 0.01),
@@ -703,11 +725,13 @@ func _tick_spider_webs(delta: float) -> void:
 			and center.distance_squared_to(hero.global_position) <= radius_sq
 			and hero.has_method("apply_slow")
 		):
+			var previous_action := STATUS_SCOPE.begin(hero,web.get("status_action"))
 			hero.call(
 				"apply_slow",
 				float(web.get("hero_slow_multiplier", 0.50)),
 				tick_interval * 1.35
 			)
+			STATUS_SCOPE.finish(hero,previous_action)
 
 		_monster_scratch.clear()
 		if battle.has_method("fill_monsters_near"):
@@ -1170,6 +1194,17 @@ func _tick_skeleton_archer_rain_arrows(delta: float) -> void:
 
 
 func _apply_skeleton_archer_rain_hit(
+	monster: Node2D,
+	center: Vector2,
+	radius: float,
+	skill: Dictionary,
+	wave_index: int
+) -> void:
+	var previous_action := STATUS_SCOPE.begin(battle.get("hero") as Node,skill.get("_status_action"))
+	_status_scoped_apply_skeleton_archer_rain_hit(monster,center,radius,skill,wave_index)
+	STATUS_SCOPE.finish(battle.get("hero") as Node,previous_action)
+
+func _status_scoped_apply_skeleton_archer_rain_hit(
 	monster: Node2D,
 	center: Vector2,
 	radius: float,

@@ -1,4 +1,5 @@
 extends Area2D
+const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const NORMAL_EFFECT_DIR := "res://assets/art/monsters/spider/frames/effect"
 const ELITE_EFFECT_DIR := "res://assets/art/elitemonster/spider/frames/effect"
@@ -10,6 +11,7 @@ const POOL_KEY := "spider_projectile"
 static var _normal_frames_cache: SpriteFrames
 static var _elite_frames_cache: SpriteFrames
 
+var status_action: RefCounted
 var direction: Vector2 = Vector2.RIGHT
 var speed: float = 320.0
 var max_range: float = 360.0
@@ -39,6 +41,7 @@ func setup(
 	new_binding_config: Dictionary = {},
 	new_size_multiplier: float = 1.0
 ) -> void:
+	status_action = null
 	direction = new_direction.normalized()
 	if direction == Vector2.ZERO:
 		direction = Vector2.RIGHT
@@ -74,6 +77,12 @@ func _physics_process(delta: float) -> void:
 		_finish_projectile()
 
 func _on_body_entered(body: Node) -> void:
+	if status_action == null: status_action = STATUS_SCOPE.action_or_new(body)
+	var previous_action := STATUS_SCOPE.begin(body,status_action)
+	_status_scoped_on_body_entered(body)
+	STATUS_SCOPE.finish(body,previous_action)
+
+func _status_scoped_on_body_entered(body: Node) -> void:
 	if not active or has_impacted:
 		return
 	if body == null or body.is_queued_for_deletion():
@@ -110,6 +119,7 @@ func _finish_projectile() -> void:
 
 
 func deactivate_for_pool() -> void:
+	status_action = null
 	if has_meta("combat_source"):
 		remove_meta("combat_source")
 	active = false
