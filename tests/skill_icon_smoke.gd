@@ -76,7 +76,7 @@ func run() -> void:
  lobby.gameplay_settings_path = SCOPE.guest_directory.path_join("options.cfg")
  root.add_child(lobby)
  current_scene = lobby
- for id in ["zeus","bulgasal","izanami","manticore"]:
+ for id in ["zeus","bulgasal","izanami","manticore","shuten_doji"]:
   lobby._populate_monster_detail(id)
   for i in range(lobby._transcendent_detail.rows.size()):
    if not lobby._transcendent_detail.rows[i].visible: continue

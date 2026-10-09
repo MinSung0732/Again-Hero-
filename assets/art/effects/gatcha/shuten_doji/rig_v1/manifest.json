@@ -1,0 +1,18 @@
+{
+  "status": "native_shared_mesh_visible_masks_not_cubism_model",
+  "canvas": [
+    768,
+    1280
+  ],
+  "original_source": "res://assets/art/Transcendent_monster/Shuten-doji/shuten-doji_actual_reassembly.png",
+  "partition_source": "res://assets/art/Transcendent_monster/Shuten-doji/shutendoji_parts_v1.zip",
+  "used_masks": [
+    "04_kanabo_handle_tassel_visible.png",
+    "09_back_hair_visible.png",
+    "12_sake_gourds_visible.png",
+    "15_left_coat_tails_visible.png",
+    "16_right_coat_tails_visible.png",
+    "17_waist_sashes_tassels_visible.png"
+  ],
+  "closed_eyes": "generated edit used only in eye regions; original body remains"
+}

@@ -44,7 +44,7 @@ func run() -> void:
 	check(view.pages.size() == 1,"lazy initial page")
 	for category in DATA.CATEGORIES: view.select_category(category[0])
 	check(view.pages.size() == 4,"four categories")
-	check(DATA.monster_ids(false).size() == 21 and DATA.monster_ids(true).size() == 4,"actual catalog counts")
+	check(DATA.monster_ids(false).size() == 21 and DATA.monster_ids(true).size() == 5,"actual catalog counts")
 	for total in [0,1,16,17,200,300]:
 		var ids: Array = []
 		for i in range(total): ids.append("fixture_%d" % i)

@@ -13,6 +13,7 @@ const ART := {
 	"zeus":{"illustration":"res://assets/art/effects/gatcha/zeus/portrait/idle_01.png"},
 	"bulgasal":{"illustration":"res://assets/art/Transcendent_monster/Bulgasal/bulgasal_illustration.png"},
 	"izanami":{"illustration":"res://assets/art/Transcendent_monster/Izanami/izanami_illustration.png"},
+	"shuten_doji":{"illustration":"res://assets/art/Transcendent_monster/Shuten-doji/shuten-doji_illustration.png"},
 	"manticore":{"illustration":"res://assets/art/Transcendent_monster/manticore/manticore_illustration.png"},
 }
 const STAT_FIELDS := [["max_hp","체력"],["attack_damage","공격력"],["move_speed","이동속도"],["attack_range","공격 판정 거리"],["attack_cooldown","공격 간격"],["base_cost","소환 지휘력"]]
