@@ -1,5 +1,14 @@
 extends Node
 
+const ANDROID_VAULT := preload("res://src/network/android_session_vault.gd")
+var _android: RefCounted
+
+func _android_store() -> RefCounted:
+	if _android == null:
+		_android = ANDROID_VAULT.new()
+	return _android
+
+
 # Windows DPAPI CurrentUser: no plaintext token file, hard-coded key, or token
 # in command-line arguments. The static helper exchanges JSON over pipes only.
 var PATH := "user://windows_session.dpapi"
@@ -29,6 +38,8 @@ var _busy := false
 var diagnostic := ""
 
 func read_session() -> Dictionary:
+	if OS.get_name() == "Android":
+		return _android_store().read_session()
 	if not FileAccess.file_exists(PATH):
 		return {}
 	var result := await _run("read", "")
@@ -36,10 +47,15 @@ func read_session() -> Dictionary:
 	return data if data is Dictionary else {}
 
 func save_session(id: String, refresh_token: String) -> bool:
+	if OS.get_name() == "Android":
+		return _android_store().save_session(id, refresh_token)
 	var result := await _run("save", JSON.stringify({"user_id": id, "refresh_token": refresh_token}))
 	return bool(result.get("ok", false))
 
 func clear_session() -> void:
+	if OS.get_name() == "Android":
+		_android_store().clear_session()
+		return
 	while _busy:
 		await get_tree().process_frame
 	if FileAccess.file_exists(PATH):
