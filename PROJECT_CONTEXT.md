@@ -1,3 +1,7 @@
+## Bulgasal presentation audio (2026-10-09)
+- Shared BulgasalAudioCatalog presentation cues reuse licensed burrow.wav(-18dB) and rock.wav(-12dB). Gacha charge1.75/reveal2.3; battle rumble0.25/eye impact1.8. Separate real-time fixed voices/SFX bus; existing simulation-clock landing unchanged. Reveal stops rumble, skip/cancel/completion clears players.
+- Godot4.5.1 actual player/timeline/reuse/cancel checks pass; conservative four-voice peak sum<0.424. This is a calculated upper bound, not a captured full mix or subjective listening/Android test. Sources in assets/audio/sfx/bulgasal/SOURCES.md.
+
 ## Playable Izanami (2026-10-09)
 - MonsterCatalog izanami registered: transcendent/divine_humanoid/control, ranged instant radius275, speed250/interval1.5; ATK55+2 and HP1080+2.5 per accepted pre-summon status event, frozen at summon. Actual player control/controller summons50 AND accepted statuses3; explicit local unlock handles both counters.
 - Gauge100, augmented command regen100% capped15/sec;1.5s arrival idle→hit_02. Ghost7s/all-source12-hit bind/silence, warned snapshot fire/DOT budget,8 fixed wandering untargetable spirits,4 fixed torii slots with cached spatial placement/aura/crossing buffs. All0–5 transcend upgrades; excludes ordinary/special/elite/giant augments. Provisional range/speed/gate-capacity values are centralized/documented in docs/IZANAMI_COMBAT.md.

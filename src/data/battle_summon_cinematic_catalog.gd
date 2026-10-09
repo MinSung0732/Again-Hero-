@@ -1,4 +1,5 @@
 extends RefCounted
+const BULGASAL_AUDIO := preload("res://src/data/bulgasal_audio_catalog.gd")
 const ZEUS_AUDIO := preload("res://src/data/zeus_audio_catalog.gd")
 
 # Presentation only; no skill, damage, summoning or reward authority.
@@ -11,7 +12,8 @@ const ENTRIES := {
 			"release":{"path":"res://assets/audio/sfx/izanami/spirit_release.wav","db":-12.0}},
 		"audio_timeline":[{"at":0.5,"cue":"prayer"},{"at":2.15,"cue":"release","stop":"prayer"}]},
 	"bulgasal": {"view":"res://src/ui/bulgasal_battle_summon_view.gd","duration":5.0,"zoom":1.3,
-		"slow_motion":{"minimum":0.18,"approach_end":0.95,"recover_start":2.65,"recover_end":3.3}},
+		"slow_motion":{"minimum":0.18,"approach_end":0.95,"recover_start":2.65,"recover_end":3.3},
+		"audio_cues":BULGASAL_AUDIO.PRESENTATION_CUES,"audio_timeline":BULGASAL_AUDIO.SUMMON_TIMELINE},
 	"zeus": {"view": "res://src/ui/zeus_battle_summon_view.gd", "duration": 5.0, "zoom": 1.3,
 		"slow_motion": {"minimum": 0.18, "approach_end": 0.95, "recover_start": 2.65, "recover_end": 3.3},
 		"world_effect": "res://src/ui/zeus_summon_radial_lightning.gd",

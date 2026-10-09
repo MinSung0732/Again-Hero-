@@ -10,3 +10,10 @@ const CUES := {
 	"pillar":{"path":ROOT+"pillar.wav","db":-19.0,"interval":0.25},
 	"eat":{"path":ROOT+"eat.wav","db":-20.0,"interval":0.4},
 }
+
+# Presentation uses real time and separate fixed voices, not the slowed combat bank.
+const PRESENTATION_CUES := {
+	"rumble":{"path":ROOT+"burrow.wav","db":-18.0},
+	"reveal":{"path":ROOT+"rock.wav","db":-12.0},
+}
+const SUMMON_TIMELINE := [{"at":0.25,"cue":"rumble"},{"at":1.8,"cue":"reveal","stop":"rumble"}]
