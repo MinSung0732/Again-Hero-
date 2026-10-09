@@ -18,6 +18,8 @@ var textures: Dictionary = {}
 var monster_pages: Dictionary = {}
 const CARD_HEIGHT := 160.0
 const DETAIL_CACHE_LIMIT := 8
+const PANEL_PADDING := 44.0
+const MODAL_PADDING := 32.0
 var detail_layer: CanvasLayer
 var detail_root: Control
 var detail_panel: PanelContainer
@@ -102,7 +104,7 @@ func _button(parent: Node, text: String, action: Callable) -> Button:
 func _panel(parent: Node) -> VBoxContainer:
 	var frame := PanelContainer.new()
 	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	frame.add_theme_stylebox_override("panel", FRAMES.style("shop_panel_frame", 16))
+	frame.add_theme_stylebox_override("panel", FRAMES.style("shop_panel_frame", PANEL_PADDING))
 	frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	parent.add_child(frame)
 	var column := VBoxContainer.new()
@@ -129,7 +131,7 @@ func _texture(path: String) -> Texture2D:
 
 func _skill(parent: Node, domain: String, owner: String, id: String, title: String, text: String) -> void:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
+	row.add_theme_constant_override("separation", 20)
 	parent.add_child(row)
 	var icon := ICON.new()
 	row.add_child(icon)
@@ -540,7 +542,7 @@ func _build_detail(host: Control) -> void:
 	detail_root.add_child(shade)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	detail_panel = PanelContainer.new()
-	detail_panel.add_theme_stylebox_override("panel",FRAMES.style("shop_featured_frame",20))
+	detail_panel.add_theme_stylebox_override("panel",FRAMES.style("shop_featured_frame",MODAL_PADDING))
 	detail_root.add_child(detail_panel)
 	detail_panel.anchor_left = 0.04
 	detail_panel.anchor_top = 0.04

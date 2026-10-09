@@ -143,6 +143,9 @@ func run() -> void:
 		check(view.detail_root.size.is_equal_approx(root.get_visible_rect().size),"modal overlay fills viewport")
 		check(view.detail_root.get_global_rect().encloses(view.detail_close.get_global_rect()),"modal close inside screen")
 		check(view.detail_root.get_global_rect().encloses(view.detail_panel.get_global_rect()),"detail panel fits screen")
+		var frame: PanelContainer = view.monster_pages.transcendent.detail_frame
+		var column: Control = frame.get_child(0)
+		check(column.global_position.x-frame.global_position.x >= 40 and frame.get_global_rect().end.x-column.get_global_rect().end.x >= 40,"detail text inset from both borders")
 		check(view.preview_root.get_global_rect().encloses(view.preview_exit.get_global_rect()),"art exit inside screen")
 	var escape := InputEventKey.new()
 	escape.keycode = KEY_ESCAPE
