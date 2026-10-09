@@ -17,6 +17,7 @@ const SHOP_SUMMON_HISTORY_STORE := preload(
 const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 const TRANSCENDENCE_DATA := preload("res://src/data/transcendence_catalog.gd")
 var _transcendence_entry_confirm = null
+var _transcendent_detail = null
 var shop_popup_view = preload("res://src/ui/shop_popup_view.gd").new()
 var transcendence_view = preload("res://src/ui/transcendence_formation_view.gd").new()
 const FORMATION_DRAG_CARD := preload("res://src/ui/formation_drag_card.gd")
@@ -3940,7 +3941,8 @@ func _populate_monster_detail(monster_id: String) -> void:
 	var grade_label := MONSTER_CATALOG.get_grade_label(
 		String(data.get("grade", "normal"))
 	)
-	var elite_allowed := bool(data.get("can_be_elite", true))
+	var is_transcendent := TRANSCENDENCE_DATA.is_transcendent(monster_id)
+	var elite_allowed := not is_transcendent and bool(data.get("can_be_elite", true))
 	$MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel.visible = elite_allowed
 	$MonsterDetailOverlay/Panel/Margin/VBox/Guide.text = "일반과 엘리트의 전투 능력을 한눈에 비교합니다." if elite_allowed else "엘리트·대형몹 없음 · 기본 능력과 특수증강"
 	var elite_skills := MONSTER_CATALOG.get_elite_skills(monster_id)
@@ -3956,7 +3958,7 @@ func _populate_monster_detail(monster_id: String) -> void:
 	monster_detail_normal_name.text = monster_name
 	monster_detail_elite_name.text = "엘리트 %s" % monster_name
 	monster_detail_normal_portrait.texture = _team_monster_card_icon(monster_id)
-	monster_detail_elite_portrait.texture = _load_elite_preview(monster_id)
+	monster_detail_elite_portrait.texture = _load_elite_preview(monster_id) if elite_allowed else null
 
 	monster_detail_normal_stats.text = _build_normal_detail_text(
 		monster_id,
@@ -3964,7 +3966,19 @@ func _populate_monster_detail(monster_id: String) -> void:
 		data,
 		base_stats
 	)
-	monster_detail_specials.text = _build_special_augment_text(monster_id)
+	var normal_column := monster_detail_specials.get_parent() as VBoxContainer
+	normal_column.get_node("SpecialTitle").visible = not is_transcendent
+	monster_detail_specials.visible = not is_transcendent
+	if _transcendent_detail == null:
+		_transcendent_detail = preload("res://src/ui/transcendent_monster_detail_view.gd").new()
+		_transcendent_detail.install(normal_column)
+	_transcendent_detail.root.visible = is_transcendent
+	if is_transcendent:
+		$MonsterDetailOverlay/Panel/Margin/VBox/Guide.text = ""
+		_transcendent_detail.present(monster_id)
+		return
+	else:
+		monster_detail_specials.text = _build_special_augment_text(monster_id)
 	monster_detail_elite_stats.text = _build_elite_detail_text(
 		monster_id,
 		role_label,
@@ -3996,10 +4010,11 @@ func _build_normal_detail_text(
 			MONSTER_CATALOG.get_attack_type_label(attack_type)
 		)
 	lines.append("[center][color=#c9b6d3]%s[/color][/center]" % " · ".join(identity_parts))
-	lines.append("[center][color=#f0cb68]코스트 %.1f[/color]   [color=#bdb0c5]마왕 EXP %.1f[/color][/center]" % [
-		float(data.get("base_cost", 0.0)),
-		float(data.get("summon_exp", 0.0)),
-	])
+	if not TRANSCENDENCE_DATA.is_transcendent(monster_id):
+		lines.append("[center][color=#f0cb68]코스트 %.1f[/color]   [color=#bdb0c5]마왕 EXP %.1f[/color][/center]" % [
+			float(data.get("base_cost", 0.0)),
+			float(data.get("summon_exp", 0.0)),
+		])
 	lines.append("")
 	if not bool(data.get("combat_enabled",true)):
 		lines.append("[color=#f0cb68]전투 능력 준비 중[/color]")
@@ -4031,7 +4046,7 @@ func _build_normal_detail_text(
 		lines.append("[color=#aaa0b0]%s[/color]" % " · ".join(extra_parts))
 
 	var description := String(data.get("description", ""))
-	if not description.is_empty():
+	if not description.is_empty() and not TRANSCENDENCE_DATA.is_transcendent(monster_id):
 		lines.append("")
 		lines.append("[color=#aaa0b0]%s[/color]" % description)
 	return "\n".join(lines)

@@ -1,3 +1,8 @@
+## Transcendent monster detail sections (2026-10-09)
+- Transcendent detail keeps actual battle dot portrait and five stat rows, omits cost/EXP/all-in-one combat description, elite comparison and special-augment sections. Dedicated reusable detail view adds combat notes → real Catalog unlock conditions/once per battle → skills including passive → five upgrade effects. Zeus/Bulgasal/Izanami structured descriptions in TranscendentDetailCatalog; no runtime combat changes.
+- Up to5 skill rows allocated once/reused; icon defaults to existing profile character SVG (temporary), each skill may override icon path, missing texture falls back to number/P. Unknown future content has preparation fallback rather than fabricated abilities. Ordinary details restore original special sections on switch.
+- Godot4.5.1 isolated actual Lobby detail-node binding checks and all-monster detail output regressions pass. Fixture misses unrelated portrait assets; full Lobby/Android layout not verified.
+
 ## Other subpage shared back navigation (2026-10-09)
 - One OtherNavigation row/Button outside settings/profile content, both show it and route to Other menu. Same position/style/80×88 on all settings pages and profile. Category list hides the row; profile picker cleanup unchanged. Future Other subpages reuse this row, not independent back buttons. Practice still opens actual Battle and keeps its battle navigation.
 - Godot4.5.1 isolated actual Lobby navigation assertions pass; fixture lacks unrelated frame/slider artwork so full settings test/render is incomplete. Android unverified.
