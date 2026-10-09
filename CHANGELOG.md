@@ -1,3 +1,9 @@
+## 2026-10-10 — 슈텐-도지 전용 Pixabay 행동·기술·연출 효과음
+
+- 최신 feature/stage10-astra33b552fc/main d968b2ae 확인. Pixabay 공개 원본7개 새 다운로드: DRAGON-STUDIO사슬515264/화염393921/스윙414580/물기포584723, Yodguard요기378650, floraphonic금속201909, PhatPhrogStudio오니웃음477923. 전용44.1kHz mono PCM16 WAV12개와무손실import. 출처/라이선스/원본SHA256/실제컷·필터·레이어는 assets/audio/sfx/shuten_doji/SOURCES.md/manifest.json. 원본MP3 독립 배포 없음.
+- 이자나미·불가살·만티코어 사운드 재활용 제거. 술안개/화염발화/사슬생성·결박/기본스윙·수락타격/귀왕해방/해방후별도화염공격, 실제뽑기·전투소환·사망 전용사운드 연결. 기존 실제 시전/판정/타이밍 유지; 다중안개·폭발은행동1음성, 틱무음. 고정9전투음성/공용캐시/재생제한/SFX설정·슬로우·메뉴중단 그대로.
+- 원래 음정/65Hz highpass·7.5kHz lowpass/진입5ms·레이어종료70ms·끝60ms페이드/파일피크−6dBFS. 정적 diff/import·PCM12파일·실제동작/거부타격·면역결박무음/12안개발화단일음/해방구분·중단·시계 검사. AudioEffectCapture 전큐반복피크0.22842/36,864샘플, 클리핑없음. 전투/통합/뽑기/소환 회귀. 기존 결과프레임 셰이더·종료리소스경고 유지. 실제 스피커/헤드폰청취·모바일/export 미검증.
+
 ## 2026-10-10 — 모바일 편성 길게 누르기 후 드래그 입력 충돌 수정
 
 - 최신 feature/stage10-astra1d6e6c69/main d968b2ae 확인. 길게 눌러 force_drag가 시작된 뒤에도 공용 MobileScrollRouter가 이전 ScrollContainer/손가락을 유지하여 ScreenDrag와 emulated mouse를 소비하던 문제 수정. 네이티브 GUI 드래그 또는 소스 목록 IGNORE 잠금이면 기존 제스처/관성/탄성 오프셋을 해제하고 이벤트를 편성 드래그로 전달한다. 기존 드롭/취소 스크롤 복구와 일반 스와이프/관성 유지.

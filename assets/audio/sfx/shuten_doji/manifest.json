@@ -1,0 +1,407 @@
+{
+  "license": "https://pixabay.com/service/license-summary/",
+  "sources": {
+    "chain": {
+      "download_url": "https://cdn.pixabay.com/download/audio/2026/04/06/audio_d959e9a7f9.mp3?filename=dragon-studio-heavy-chains-dragging-515264.mp3",
+      "sha256": "7ab54b82c9ca461b0582129221f71578c5d7abf9cef8c540832bfcc63e8be94d",
+      "title": "Heavy Chains Dragging",
+      "author": "DRAGON-STUDIO",
+      "page_url": "https://pixabay.com/sound-effects/film-special-effects-heavy-chains-dragging-515264/",
+      "id": 515264
+    },
+    "dark": {
+      "download_url": "https://cdn.pixabay.com/download/audio/2025/07/22/audio_c4097f3fea.mp3?filename=yodguard-dark-magic-1-378650.mp3",
+      "sha256": "9101017ee2a194b8e9670aaac1bcfca71f71c5a9f54615742aba1d63e5d2f984",
+      "title": "Dark magic (1)",
+      "author": "Yodguard",
+      "page_url": "https://pixabay.com/sound-effects/film-special-effects-dark-magic-1-378650/",
+      "id": 378650
+    },
+    "fire": {
+      "download_url": "https://cdn.pixabay.com/download/audio/2025/08/23/audio_f5f4f43bdf.mp3?filename=dragon-studio-fire-spell-impact-393921.mp3",
+      "sha256": "8370ae9cf09b3332836c9a359602e2a5d8e72bc5074b4b0aeb2f91718ee0ee4c",
+      "title": "Fire Spell Impact",
+      "author": "DRAGON-STUDIO",
+      "page_url": "https://pixabay.com/sound-effects/film-special-effects-fire-spell-impact-393921/",
+      "id": 393921
+    },
+    "swing": {
+      "download_url": "https://cdn.pixabay.com/download/audio/2025/10/10/audio_d4e4f5e6ab.mp3?filename=dragon-studio-heavy-whoosh-01-414580.mp3",
+      "sha256": "3f68801c30ea051f4c00d670c040d0e90fb6353ad9c894f3951d66d425d04897",
+      "title": "Heavy Whoosh 01",
+      "author": "DRAGON-STUDIO",
+      "page_url": "https://pixabay.com/sound-effects/film-special-effects-heavy-whoosh-01-414580/",
+      "id": 414580
+    },
+    "metal": {
+      "download_url": "https://cdn.pixabay.com/download/audio/2024/04/13/audio_3757a6dafd.mp3?filename=floraphonic-metal-whoosh-hit-9-201909.mp3",
+      "sha256": "4b4824ad832b124f9acbba7555500973ff993de95cd6805dd95bee973227ee3b",
+      "title": "Metal Whoosh Hit 9",
+      "author": "floraphonic",
+      "page_url": "https://pixabay.com/sound-effects/film-special-effects-metal-whoosh-hit-9-201909/",
+      "id": 201909
+    },
+    "liquid": {
+      "download_url": "https://cdn.pixabay.com/download/audio/2026/08/12/audio_1c0638d58d.mp3?filename=dragon-studio-gentle-water-bubbling-584723.mp3",
+      "sha256": "340bbb50157d0e505baf52a407bb9acdac961b0250da88b2b44e2b99016202da",
+      "title": "Gentle Water Bubbling",
+      "author": "DRAGON-STUDIO",
+      "page_url": "https://pixabay.com/sound-effects/film-special-effects-gentle-water-bubbling-584723/",
+      "id": 584723
+    },
+    "oni": {
+      "download_url": "https://cdn.pixabay.com/download/audio/2026/02/01/audio_91cd73024b.mp3?filename=phatphrogstudio-oni-demon-voice-demonic-laughter-477923.mp3",
+      "sha256": "40767e3347752283168e219dc17f23286c93199bb07c4a1490f46f8a7642242a",
+      "title": "Oni Demon Voice - Demonic Laughter",
+      "author": "PhatPhrogStudio",
+      "page_url": "https://pixabay.com/sound-effects/horror-oni-demon-voice-demonic-laughter-477923/",
+      "id": 477923
+    }
+  },
+  "sample_rate": 44100,
+  "channels": 1,
+  "format": "PCM16",
+  "peak_target_dbfs": -6,
+  "recipes": {
+    "mist": {
+      "seconds": 2.0,
+      "layers": [
+        {
+          "source": "liquid",
+          "start": 2.0,
+          "seconds": 2.0,
+          "gain": 0.65,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        },
+        {
+          "source": "dark",
+          "start": 0.15,
+          "seconds": 1.65,
+          "gain": 0.25,
+          "delay": 0.2,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        }
+      ],
+      "fade_in_ms": 5,
+      "fade_out_ms": 70,
+      "final_tail_ms": 60,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -21.07,
+      "sha256": "6ba13b3a9a7d36de1cce6547b3d01dfe5e87dd76e95bb94130b06dbfa37ab571"
+    },
+    "ignite": {
+      "seconds": 1.2,
+      "layers": [
+        {
+          "source": "fire",
+          "start": 0.05,
+          "seconds": 1.2,
+          "gain": 1,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        },
+        {
+          "source": "swing",
+          "start": 0.42,
+          "seconds": 0.65,
+          "gain": 0.25,
+          "delay": 0.05,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        }
+      ],
+      "fade_in_ms": 5,
+      "fade_out_ms": 70,
+      "final_tail_ms": 60,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -17.71,
+      "sha256": "bd02dd5701ced41e2d0bfdac04fe415e9158ab7ee04ed781808fe79a598ad405"
+    },
+    "chain": {
+      "seconds": 0.85,
+      "layers": [
+        {
+          "source": "chain",
+          "start": 0.7,
+          "seconds": 0.85,
+          "gain": 1,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        },
+        {
+          "source": "dark",
+          "start": 0.05,
+          "seconds": 0.7,
+          "gain": 0.18,
+          "delay": 0.08,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        }
+      ],
+      "fade_in_ms": 5,
+      "fade_out_ms": 70,
+      "final_tail_ms": 60,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -21.53,
+      "sha256": "ae6979d43f203c969840f8e55ae8e5c64e630d6048551c0597f74fa6adb6c75a"
+    },
+    "bind": {
+      "seconds": 0.5,
+      "layers": [
+        {
+          "source": "chain",
+          "start": 1.8,
+          "seconds": 0.5,
+          "gain": 1,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        },
+        {
+          "source": "metal",
+          "start": 0.1,
+          "seconds": 0.3,
+          "gain": 0.3,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        }
+      ],
+      "fade_in_ms": 5,
+      "fade_out_ms": 70,
+      "final_tail_ms": 60,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -22.26,
+      "sha256": "a5830b04cc9553fc146aed7a77edcadaef6c6d4ea2d6270645b617e6fa299229"
+    },
+    "swing": {
+      "seconds": 0.3,
+      "layers": [
+        {
+          "source": "swing",
+          "start": 0.06,
+          "seconds": 0.3,
+          "gain": 1,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        },
+        {
+          "source": "chain",
+          "start": 0.55,
+          "seconds": 0.3,
+          "gain": 0.16,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        }
+      ],
+      "fade_in_ms": 5,
+      "fade_out_ms": 70,
+      "final_tail_ms": 60,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -18.26,
+      "sha256": "cb85dd1fb47c69f9639e57a5c7c9781f9339563534f6dce2e1f992f8ac383bdd"
+    },
+    "hit": {
+      "seconds": 0.4,
+      "layers": [
+        {
+          "source": "metal",
+          "start": 0.08,
+          "seconds": 0.4,
+          "gain": 1,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        },
+        {
+          "source": "chain",
+          "start": 1.12,
+          "seconds": 0.3,
+          "gain": 0.2,
+          "delay": 0.02,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        }
+      ],
+      "fade_in_ms": 5,
+      "fade_out_ms": 70,
+      "final_tail_ms": 60,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -20.9,
+      "sha256": "97f316df48fe0d525c837d29f3f6b3df86cc8bf09966ef3b78494997229f1757"
+    },
+    "swing_released": {
+      "seconds": 0.3,
+      "layers": [
+        {
+          "source": "swing",
+          "start": 0.06,
+          "seconds": 0.3,
+          "gain": 0.75,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        },
+        {
+          "source": "fire",
+          "start": 0.45,
+          "seconds": 0.28,
+          "gain": 0.35,
+          "delay": 0.02,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        }
+      ],
+      "fade_in_ms": 5,
+      "fade_out_ms": 70,
+      "final_tail_ms": 60,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -18.86,
+      "sha256": "2b94a8d385e26c904e3bdea5b6257cc4e8edcce327a757b5cb1609f802b28105"
+    },
+    "hit_released": {
+      "seconds": 0.45,
+      "layers": [
+        {
+          "source": "metal",
+          "start": 0.08,
+          "seconds": 0.4,
+          "gain": 0.7,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        },
+        {
+          "source": "fire",
+          "start": 0.3,
+          "seconds": 0.4,
+          "gain": 0.45,
+          "delay": 0.02,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        }
+      ],
+      "fade_in_ms": 5,
+      "fade_out_ms": 70,
+      "final_tail_ms": 60,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -20.02,
+      "sha256": "3eb5ac3dca1c8ff275d311ab124077e7a711da403236c769ebabe1e9f841990e"
+    },
+    "release": {
+      "seconds": 2.6,
+      "layers": [
+        {
+          "source": "oni",
+          "start": 0.0,
+          "seconds": 2.6,
+          "gain": 0.8,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        },
+        {
+          "source": "dark",
+          "start": 0.0,
+          "seconds": 1.5,
+          "gain": 0.25,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        },
+        {
+          "source": "fire",
+          "start": 0.3,
+          "seconds": 1.0,
+          "gain": 0.17,
+          "delay": 0.35,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        }
+      ],
+      "fade_in_ms": 5,
+      "fade_out_ms": 70,
+      "final_tail_ms": 60,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -24.51,
+      "sha256": "58746763e6af2bd8a45a05bb80e95389ae7ce0de9e006da8b6bda5311a3422ba"
+    },
+    "presentation_mist": {
+      "seconds": 1.5,
+      "layers": [
+        {
+          "source": "liquid",
+          "start": 7.2,
+          "seconds": 1.5,
+          "gain": 0.6,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        },
+        {
+          "source": "dark",
+          "start": 0.0,
+          "seconds": 1.5,
+          "gain": 0.25,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        }
+      ],
+      "fade_in_ms": 5,
+      "fade_out_ms": 70,
+      "final_tail_ms": 60,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -21.97,
+      "sha256": "3636c19c19b9ad659280bc8710d398f6599371630241c775c01c97a26734f11d"
+    },
+    "reveal": {
+      "seconds": 2.0,
+      "layers": [
+        {
+          "source": "oni",
+          "start": 0.05,
+          "seconds": 2.0,
+          "gain": 0.85,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        },
+        {
+          "source": "fire",
+          "start": 0.2,
+          "seconds": 1.05,
+          "gain": 0.23,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        },
+        {
+          "source": "chain",
+          "start": 1.7,
+          "seconds": 0.5,
+          "gain": 0.25,
+          "delay": 0.1,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        }
+      ],
+      "fade_in_ms": 5,
+      "fade_out_ms": 70,
+      "final_tail_ms": 60,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -23.93,
+      "sha256": "daa3280bb5483938147636d9fff7c21f6e6eb8b21de74e7b7c6974d054ef0575"
+    },
+    "death": {
+      "seconds": 0.85,
+      "layers": [
+        {
+          "source": "dark",
+          "start": 0.65,
+          "seconds": 0.85,
+          "gain": 0.7,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        },
+        {
+          "source": "chain",
+          "start": 2.5,
+          "seconds": 0.85,
+          "gain": 0.45,
+          "delay": 0,
+          "filter": "highpass=f=65,lowpass=f=7500"
+        }
+      ],
+      "fade_in_ms": 5,
+      "fade_out_ms": 70,
+      "final_tail_ms": 60,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -21.13,
+      "sha256": "70113976c6cbf587eacacbcbfafb32aa3638557a0b6bc7118e289f2656c27821"
+    }
+  }
+}

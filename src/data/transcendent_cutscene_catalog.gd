@@ -3,11 +3,12 @@ extends RefCounted
 # Presentation only: no probabilities, currency, inventory or reward mutations.
 const ROOT := "res://assets/art/Transcendent_monster/zeus/frames/"
 const MANTICORE_AUDIO := preload("res://src/data/manticore_audio_catalog.gd")
+const SHUTEN_AUDIO := preload("res://src/data/shuten_doji_audio_catalog.gd")
 const BULGASAL_AUDIO := preload("res://src/data/bulgasal_audio_catalog.gd")
 const ENTRIES := {
 	"shuten_doji":{"name":"슈텐-도지","duration":5.0,"presentation_view":"res://src/ui/shuten_doji_gacha_view.gd",
-		"charge_sound_path":"res://assets/audio/sfx/izanami/prayer_charge.wav","charge_sound_at":0.7,"charge_volume_db":-22.0,
-		"impact_sound_path":"res://assets/audio/sfx/bulgasal/emerge.wav","impact_sound_at":2.2,"impact_volume_db":-13.0},
+		"charge_sound_path":SHUTEN_AUDIO.PRESENTATION_CUES.mist.path,"charge_sound_at":0.7,"charge_volume_db":SHUTEN_AUDIO.PRESENTATION_CUES.mist.db,
+		"impact_sound_path":SHUTEN_AUDIO.PRESENTATION_CUES.reveal.path,"impact_sound_at":2.2,"impact_volume_db":SHUTEN_AUDIO.PRESENTATION_CUES.reveal.db},
 	"manticore": {"name":"만티코어", "duration":5.0, "presentation_view":"res://src/ui/manticore_gacha_view.gd",
 		"charge_sound_path":MANTICORE_AUDIO.PRESENTATION_CUES.focus.path,"charge_sound_at":1.4,"charge_volume_db":-21.0,
 		"impact_sound_path":MANTICORE_AUDIO.PRESENTATION_CUES.reveal.path,"impact_sound_at":2.2,"impact_volume_db":-11.0},

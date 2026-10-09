@@ -186,7 +186,7 @@ func _tick_motion(delta: float) -> void:
 		if not attack_hit and attack_remaining <= 0.30:
 			attack_hit = true
 			if direction.length_squared() <= pow(attack_range+30,2) and _damage(hero,attack_damage,false):
-				_audio("hit")
+				_audio("hit_released" if released else "hit")
 				_on_basic_hit()
 		if attack_remaining <= 0:
 			if released: _spawn_fog(global_position,15,0.5,_next_action())
@@ -208,7 +208,7 @@ func _tick_motion(delta: float) -> void:
 		velocity = Vector2.ZERO
 		_update_visual_motion(direction.x,false)
 		if attack_timer <= 0:
-			_audio("swing")
+			_audio("swing_released" if released else "swing")
 			attack_remaining = 0.6
 			attack_hit = false
 			attack_point = global_position

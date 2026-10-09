@@ -1,3 +1,7 @@
+## Shuten-doji dedicated Pixabay audio (2026-10-10)
+- Replaces all borrowed Shuten sounds with seven newly downloaded attributed Pixabay sources / twelve dedicated PCM16 mono44.1kHz WAV edits. Sake bubbling+dark mist, fire ignition, chain cast/bind, iron swing/impact, Oni laughter revival, distinct released flame attacks, dedicated gacha/summon/death. Sources/SHA256/cut/filter/layer manifest under assets/audio/sfx/shuten_doji.
+- Nine fixed combat players, cached streams, unchanged SFX settings/scaled combat clock/pause and real-time cinematics. Fog/explosion batches share one sound; rejected hits and immune binds stay silent. Source peaks-6dBFS; headless dense capture peak0.22842/36864samples passes. Physical listening/mobile/export unverified.
+
 ## Mobile formation drag ownership (2026-10-10)
 - MobileScrollRouter yields cached touch tracking and fling/elastic motion once the viewport owns a native GUI drag or the source scroll is locked with MOUSE_FILTER_IGNORE. ScreenDrag and emulated mouse companions pass through to native card drag/drop. Existing FormationDragCard restores the source scroll on drop/cancel/cache reset; ordinary swipes retain inertia and edge spring. No per-frame UI scans or temporary objects added.
 - Real viewport regression reproduces the old failure and verifies monster/skill drop payloads, stationary source scroll, outside cancellation and next swipe. Physical Android device verification remains pending.
