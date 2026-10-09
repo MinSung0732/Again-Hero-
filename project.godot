@@ -18,6 +18,10 @@ run/main_scene="res://src/startup/Startup.tscn"
 config/features=PackedStringArray("4.7")
 config/icon="uid://bxdb4cg7dutw3"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/againhero_oauth/plugin.cfg")
+
 [autoload]
 
 GameFontManager="*res://src/ui/game_font_manager.gd"
