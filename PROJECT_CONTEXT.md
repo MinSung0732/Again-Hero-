@@ -2734,3 +2734,8 @@ Build AI는 전체/주변 몬스터 수, 최근 공세, 역할 비율, 거리, �
 - Hero 공세/원본 상태 관측과 RunMetrics 최근 소환은 공용 TimedEventBuffer. 시간 경계와 원래 기록 순서/가중치는 유지하고 만료 참조를 즉시 끊은 뒤 지연 압축한다. 실제 상태 행동별 해금/소환 스냅샷 정책과 원본 AI 상태 갱신은 변경하지 않는다.
 - Battle/로컬 그리드, 늑대/유키온나 사망 셀은 공용 SpatialBucketPool을 사용해 현재 셀만 Dictionary에 남기고 빈 버킷 최대128개를 재사용한다. 피해/대상/분리 정책과 순서를 보전한다.
 - 피해 숫자48개 풀은 제자리 정리와 현재 소유대상 확인으로 다른 대상 합산을 방지한다. BuildAI 최종 승자만 깊은 복사, 프리로드 first-occurrence 해시중복제거. 전체 분석·검증범위·롤백은 docs/OPTIMIZATION_AUDIT_20261010.md 참조.
+
+
+## 클라우드 비동기 경계 보완 (2026-10-10)
+
+CloudStore 직렬화 대기는 operation_released 신호로 한다. 정상 완료는 revision/conflict 적용 후 deferred 재개, stop은 즉시 깨워 이전 세대를 취소한다. 대기 전 owner/generation 캡처와 재개 후 검사를 유지한다. 서버 revision/read 타입 및 로컬 persist 결과를 검증한다. 일반 SupabaseClient는20초/2MB·one-shot·세션세대·transport/JSON 방어를 갖추지만 실제 LoginGateway transport와 별개다. 배포 서버/저장 스키마·RLS는 이번 패치에서 바꾸지 않았다.

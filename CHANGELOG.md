@@ -1,3 +1,10 @@
+## 2026-10-10 — 클라우드 대기·응답 및 일반 HTTP 수명 방어
+
+- CloudStore busy 대기의 매 프레임 재개를 완료/중단 신호로 교체. 응답의 revision/conflict 적용 뒤 deferred로 재개하며, 대기 전 계정·세대를 캡처해 중단/계정 전환 후 이전 대기를 취소한다. 기존 RPC/재시도/충돌 정책 유지.
+- read found/revision 타입, ack revision(비음수 정수·JSON float 정확성), local 선택 persist 결과를 검사. malformed JSON은 Error 확인 후 기존 실패 경로로 반환. 잘못된 응답이 로컬 dirty/revision을 잘못 확정하지 않도록 보완.
+- 일반 SupabaseClient에 기존 CloudStore와 같은20초/2MB 상한, one-shot 완료 연결·객체 해제, 세션세대 늦은 응답 차단, transport failure0/null, JSON parser Error 확인. 이 클래스는 현재 LoginGateway의 주 저장 transport와 별개이며 실제 OAuth/배포 서버 변경 없음.
+- Godot4.5.1 headless optimization_network_smoke(가짜 RPC 직렬화/상태적용 순서/중단/잘못된 read·ack/세션응답/JSON/transport) 및 기존 cloud_save_smoke 통과. 실계정/Windows DPAPI/Android vault/배포 RLS·서버 보상 미검증. 전체 보고서 docs/OPTIMIZATION_AUDIT_20261010.md.
+
 ## 2026-10-10 — 전 코드 성능 조사·기록/공간/표시 경로 최적화
 
 - 수정 전 main/feature/stage10-astra 최신 SHA 1d5ad4cedbadc72ea52c2c342946d75dcee96fe7 및 clean checkout 확인. 원격 backup/stage10-astra-before-optimization-20261010 보존, main 변경 없음. src의 GDScript287개/91,126줄/함수선언3,597개 정적 목록화; 빈번한 검색/할당/수명/비동기 후보와 실제 호출 경로 점검.
