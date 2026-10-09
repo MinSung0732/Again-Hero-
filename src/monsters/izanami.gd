@@ -515,6 +515,8 @@ func _draw_effects() -> void:
 		var frame := mini(7,int(torii_age[i]*10.0))
 		if torii_age[i] > torii_duration():
 			frame = maxi(0,7-int((torii_age[i]-torii_duration())*10.0))
-		FX.draw_frame(effect_layer,3,frame,point)
+		var factor := float(DATA.EFFECT_HEIGHTS[3])/DATA.EFFECT_CANVASES[3].y
+		var ground_aligned := point+(DATA.EFFECT_ANCHORS[3]-DATA.TORII_GROUND_CENTER)*factor
+		FX.draw_frame(effect_layer,3,frame,ground_aligned)
 		if torii_age[i] <= torii_duration():
 			effect_layer.draw_arc(point,175.0,0,TAU,64,Color(0.7,0.4,0.95,0.5),1.0,false)

@@ -15,8 +15,10 @@ const SPIRIT_DETECTION_RADIUS := 180.0
 const SPIRIT_DASH_SPEED := 900.0
 const SPIRIT_THROW_SPEED := 500.0
 const TORII_CAPACITY := 4
-const EFFECT_HEIGHTS := [150.0,450.0,135.0,460.0]
+const EFFECT_HEIGHTS := [150.0,180.0,135.0,460.0]
 # Visible bounds of original attachment/roaming frames, measured once from PNGs.
+# The authored torii anchor is the bottom edge, not the ground rune center.
+const TORII_GROUND_CENTER := Vector2(150,370)
 const GHOST_VISIBLE_CENTER := Vector2(140.5,190.0)
 const SPIRIT_VISIBLE_TOP := 81.0
 const SPIRIT_BAR_GAP := 7.0

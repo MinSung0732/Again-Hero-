@@ -1,3 +1,6 @@
+## Izanami fire size clarification / torii ground alignment (2026-10-09)
+- Skill2 ground fire restored to original180 visual height; only skill3 roaming spirits retain2.5x/135. Torii remains2x/460. Original torii manifest bottom anchor(154,390) retained; common draw offset aligns visible ground rune center(150,370) with the logical aura circle center across all8 frames. Damage, aura/crossing geometry, passive stack policy and spirit lifetime bar unchanged.
+
 ## Izanami effect readability / sustained-stack policy (2026-10-09)
 - Fire/spirit visual heights450/135 (2.5x), torii460 (2x); gameplay radii unchanged. Ghost visible center attaches to cached hero alpha-body center; sprite transform follows movement/scale/facing. Spirit lifetime bar above original roaming-frame alpha bounds, nearest/author anchor preserved.
 - One accepted damage stack and one accepted slow stack per fire cast for torii passive; fixed slot flags reset on reuse. Repeated DOT/status refreshes still apply gameplay effects and all accepted hits still progress ghost bind. New casts/basic attacks/spirit impacts/bind remain independent.
