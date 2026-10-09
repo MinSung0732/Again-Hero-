@@ -182,7 +182,7 @@ func refresh(showing: bool) -> void:
 		label(registered,"등록된 초월몬스터가 없습니다",28).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label(registered,"아래 카드를 꾹 눌러 이곳에 놓거나 등록하기를 누르세요.",22).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	else:
-		_build_card(panel(registered,false,"transcendent"),selected,selected,true)
+		_build_card(panel(registered,false,"transcendent",true),selected,selected,true)
 	var state := collection_state
 	var ids := DATA.get_ids()
 	ids.sort_custom(func(a,b):
@@ -202,10 +202,9 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 	var level := COLLECTION.get_upgrade_level(id, state)
 	var frame := box.get_parent().get_parent() as Control
 	frame.set_meta("monster_id", id)
-	if not registered_card:
-		frame.configure_drag("transcendence", id, lobby.MONSTER_CATALOG.get_monster_name(id), lobby._team_monster_card_icon(id))
-		frame.drag_enabled = _can_register(id)
-		frame.tapped.connect(lobby._open_monster_detail.bind(id))
+	frame.tapped.connect(lobby._open_monster_detail.bind(id))
+	frame.configure_drag("transcendence", id, lobby.MONSTER_CATALOG.get_monster_name(id), lobby._team_monster_card_icon(id))
+	frame.drag_enabled = not registered_card and _can_register(id)
 	var margin := box.get_parent() as MarginContainer
 	if registered_card:
 		margin.add_theme_constant_override("margin_left", 36)
@@ -271,10 +270,8 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 	var register_button := button(actions, "등록 해제" if chosen else "등록하기", _register.bind("" if chosen else id))
 	register_button.name = "RegisterButton"
 	register_button.disabled = not unlocked or (not chosen and DATA.MONSTERS.get_scene(id) == null)
-	var detail_button := button(actions, "상세정보", lobby._open_monster_detail.bind(id))
 	if registered_card:
 		register_button.custom_minimum_size.y = 48
-		detail_button.custom_minimum_size.y = 48
 	else:
 		var maxed := COLLECTION.is_maxed(id, state)
 		var action := button(box, "최대 초월 완료" if maxed else "초월  ·  조각 1개", _upgrade.bind(id))

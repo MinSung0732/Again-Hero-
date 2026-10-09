@@ -1,10 +1,16 @@
 extends RefCounted
 const DATA := preload("res://src/data/transcendent_detail_catalog.gd")
+const COLLECTION := preload("res://src/systems/monster_collection_store.gd")
 const RULES := preload("res://src/data/transcendence_catalog.gd")
 var root: VBoxContainer
 var unlock: Label
 var notes: Label
 var upgrades: Label
+var upgrade_panels: Array[PanelContainer] = []
+var upgrade_titles: Array[Label] = []
+var upgrade_descriptions: Array[Label] = []
+var active_style: StyleBoxFlat
+var locked_style: StyleBoxFlat
 var rows: Array[HBoxContainer] = []
 var titles: Array[Label] = []
 var descriptions: Array[Label] = []
@@ -58,11 +64,34 @@ func install(parent: Control) -> void:
 		descriptions.append(_label(column,"",24))
 	_label(root,"초월시 추가효과",30).add_theme_color_override("font_color",Color("f0cb68"))
 	upgrades = _label(root,"")
+	active_style = _upgrade_style(Color("30263d"),Color("cfaa5b"))
+	locked_style = _upgrade_style(Color("1a1723"),Color("494151"))
+	for i in range(5):
+		var panel := PanelContainer.new()
+		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		root.add_child(panel)
+		upgrade_panels.append(panel)
+		var column := VBoxContainer.new()
+		column.add_theme_constant_override("separation",8)
+		panel.add_child(column)
+		upgrade_titles.append(_label(column,"",26))
+		upgrade_descriptions.append(_label(column,"",24))
+func _upgrade_style(fill: Color, border: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill
+	style.border_color = border
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 16
+	style.content_margin_right = 16
+	style.content_margin_top = 14
+	style.content_margin_bottom = 14
+	return style
 func present(id: String) -> void:
 	var entry: Dictionary = DATA.ENTRIES.get(id,{})
 	root.show()
 	notes.text = String(entry.get("notes","전투 능력 준비 중입니다."))
-	unlock.text = RULES.describe(id)+"\n전투당 한 번 소환할 수 있습니다."
+	unlock.text = RULES.describe(id).replace(" 및 ","\n그리고 ").replace(" 또는 ","\n또는 ")+"\n\n전투당 한 번 소환할 수 있습니다."
 	var skills: Array = entry.get("skills",[])
 	for i in range(rows.size()):
 		rows[i].visible = i < skills.size()
@@ -76,8 +105,20 @@ func present(id: String) -> void:
 		icons[i].texture = textures[path]
 		placeholders[i].visible = icons[i].texture == null
 		placeholders[i].text = "P" if String(skill.kind)=="패시브" else str(i+1)
-	var lines := PackedStringArray()
+	# Read the current account once when opening, including after an upgrade.
+	var state := COLLECTION.load_state()
+	var owned := COLLECTION.is_unlocked(id,state)
+	var level := clampi(COLLECTION.get_upgrade_level(id,state),0,5) if owned else 0
 	var effects: Array = entry.get("upgrades",[])
-	for i in range(effects.size()):
-		lines.append("%d초월 · %s"%[i+1,String(effects[i])])
-	upgrades.text = "\n\n".join(lines) if not lines.is_empty() else "초월 효과 준비 중입니다."
+	upgrades.text = "현재 %d초월 · 5초월까지 강화할 수 있습니다." % level if owned else "미획득 · 획득 후 초월 효과를 해금할 수 있습니다."
+	if effects.is_empty(): upgrades.text = "초월 효과 준비 중입니다."
+	for i in range(upgrade_panels.size()):
+		upgrade_panels[i].visible = i < effects.size()
+		if i >= effects.size(): continue
+		var enabled := owned and level >= i+1
+		upgrade_panels[i].set_meta("active",enabled)
+		upgrade_panels[i].add_theme_stylebox_override("panel",active_style if enabled else locked_style)
+		upgrade_titles[i].text = "%d초월 · %s" % [i+1,"활성" if enabled else "잠김"]
+		upgrade_titles[i].add_theme_color_override("font_color",Color("f0cb68") if enabled else Color("938b9f"))
+		upgrade_descriptions[i].text = String(effects[i])
+		upgrade_descriptions[i].add_theme_color_override("font_color",Color("eee3ef") if enabled else Color("938b9f"))

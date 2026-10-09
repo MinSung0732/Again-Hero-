@@ -4,6 +4,11 @@
 - MobileScrollRouter shared between lobby and battle now coasts with exponential friction and bounds a spring edge displacement to 24px; search on touch-down only, O(1) per-frame motion.
 - Godot runtime/actual Android browser, Android Keystore/JNI and APK Gradle export remain unverified; manual test required.
 
+## Transcendent readable descriptions and owned upgrade display (2026-10-09)
+- Player-facing prose and explicit paragraphs separate casting, damage and status in the presentation-only Catalog. No combat/rarity/reward values changed. Dedicated detail reads account collection once on each open; up to five cached upgrade panels show gold active through owned level, dim locked above it. Unowned always locked; text labels supplement color. No per-frame polling.
+- Both registered/list transcendence cards open detail by tap without redundant detail buttons. Registered card uses shared drag-card input configured with an ID but drag disabled; list hold/drag and register/upgrade buttons unchanged.
+- gdtoolkit syntax parsing and diff/static checks pass. Regression script extends 0/2/5 and unowned checks; not executed in this environment without Godot. Android/layout unverified.
+
 ## Transcendent monster detail sections (2026-10-09)
 - Transcendent detail keeps actual battle dot portrait and five stat rows, omits cost/EXP/all-in-one combat description, elite comparison and special-augment sections. Dedicated reusable detail view adds combat notes → real Catalog unlock conditions/once per battle → skills including passive → five upgrade effects. Zeus/Bulgasal/Izanami structured descriptions in TranscendentDetailCatalog; no runtime combat changes.
 - Up to5 skill rows allocated once/reused; icon defaults to existing profile character SVG (temporary), each skill may override icon path, missing texture falls back to number/P. Unknown future content has preparation fallback rather than fabricated abilities. Ordinary details restore original special sections on switch.
