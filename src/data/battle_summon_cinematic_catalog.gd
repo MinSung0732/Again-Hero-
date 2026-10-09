@@ -1,4 +1,5 @@
 extends RefCounted
+const MANTICORE_AUDIO := preload("res://src/data/manticore_audio_catalog.gd")
 const BULGASAL_AUDIO := preload("res://src/data/bulgasal_audio_catalog.gd")
 const ZEUS_AUDIO := preload("res://src/data/zeus_audio_catalog.gd")
 
@@ -7,7 +8,8 @@ const ENTRIES := {
 	"manticore":{"view":"res://src/ui/manticore_battle_summon_view.gd","duration":5.0,"zoom":1.3,"prewarm":true,
 		"slow_motion":{"minimum":0.18,"approach_end":0.95,"recover_start":2.65,"recover_end":3.3},
 		"world_effect":"res://src/ui/manticore_summon_venom.gd",
-		"audio_cues":BULGASAL_AUDIO.PRESENTATION_CUES,"audio_timeline":BULGASAL_AUDIO.SUMMON_TIMELINE},
+		"audio_cues":MANTICORE_AUDIO.PRESENTATION_CUES,"audio_timeline":MANTICORE_AUDIO.SUMMON_TIMELINE,
+		"death_audio_timeline":MANTICORE_AUDIO.DEATH_TIMELINE},
 	"izanami": {"view":"res://src/ui/izanami_battle_summon_view.gd","duration":5.0,"zoom":1.25,"prewarm":true,
 		"slow_motion":{"minimum":0.22,"approach_end":1.0,"recover_start":3.0,"recover_end":3.6},
 		"world_effect":"res://src/ui/izanami_summon_spirits.gd",

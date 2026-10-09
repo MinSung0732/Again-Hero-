@@ -1,0 +1,277 @@
+{
+  "sample_rate": 44100,
+  "channels": 1,
+  "format": "PCM16",
+  "peak_target_dbfs": -6,
+  "recipes": {
+    "focus": {
+      "layers": [
+        {
+          "source": "lion",
+          "start": 0.32,
+          "seconds": 0.6,
+          "gain": 1,
+          "delay": 0
+        }
+      ],
+      "seconds": 0.6,
+      "fade_in_ms": 4,
+      "fade_out_ms": 70,
+      "rms_dbfs": -18.33,
+      "peak_dbfs": -6
+    },
+    "hunt": {
+      "layers": [
+        {
+          "source": "fire",
+          "start": 0.08,
+          "seconds": 0.48,
+          "gain": 1,
+          "delay": 0
+        }
+      ],
+      "seconds": 0.48,
+      "fade_in_ms": 4,
+      "fade_out_ms": 70,
+      "rms_dbfs": -18.84,
+      "peak_dbfs": -6
+    },
+    "hit": {
+      "layers": [
+        {
+          "source": "claw",
+          "start": 0.25,
+          "seconds": 0.115,
+          "gain": 1,
+          "delay": 0
+        }
+      ],
+      "seconds": 0.11498866213151927,
+      "fade_in_ms": 4,
+      "fade_out_ms": 25.3,
+      "rms_dbfs": -18.76,
+      "peak_dbfs": -6
+    },
+    "retreat": {
+      "layers": [
+        {
+          "source": "fire",
+          "start": 0.1,
+          "seconds": 0.3,
+          "gain": 1,
+          "delay": 0
+        }
+      ],
+      "seconds": 0.3,
+      "fade_in_ms": 4,
+      "fade_out_ms": 66.0,
+      "rms_dbfs": -18.97,
+      "peak_dbfs": -6
+    },
+    "flame_cast": {
+      "layers": [
+        {
+          "source": "lion",
+          "start": 1.27,
+          "seconds": 0.78,
+          "gain": 0.65,
+          "delay": 0
+        },
+        {
+          "source": "fire",
+          "start": 0.1,
+          "seconds": 0.62,
+          "gain": 1,
+          "delay": 0.04
+        }
+      ],
+      "seconds": 0.78,
+      "fade_in_ms": 4,
+      "fade_out_ms": 70,
+      "rms_dbfs": -20.3,
+      "peak_dbfs": -6
+    },
+    "flame_breath": {
+      "layers": [
+        {
+          "source": "fire",
+          "start": 0.06,
+          "seconds": 0.66,
+          "gain": 1,
+          "delay": 0
+        }
+      ],
+      "seconds": 0.66,
+      "fade_in_ms": 4,
+      "fade_out_ms": 70,
+      "rms_dbfs": -20.14,
+      "peak_dbfs": -6
+    },
+    "venom_launch": {
+      "layers": [
+        {
+          "source": "poison",
+          "start": 0.1,
+          "seconds": 0.2,
+          "gain": 1,
+          "delay": 0
+        }
+      ],
+      "seconds": 0.2,
+      "fade_in_ms": 4,
+      "fade_out_ms": 44.0,
+      "rms_dbfs": -19.48,
+      "peak_dbfs": -6
+    },
+    "venom_impact": {
+      "layers": [
+        {
+          "source": "poison",
+          "start": 0.23,
+          "seconds": 0.62,
+          "gain": 1,
+          "delay": 0
+        },
+        {
+          "source": "earth",
+          "start": 0.73,
+          "seconds": 0.38,
+          "gain": 0.23,
+          "delay": 0
+        }
+      ],
+      "seconds": 0.62,
+      "fade_in_ms": 4,
+      "fade_out_ms": 70,
+      "rms_dbfs": -18.13,
+      "peak_dbfs": -6
+    },
+    "wave": {
+      "layers": [
+        {
+          "source": "earth",
+          "start": 0.68,
+          "seconds": 1.32,
+          "gain": 1,
+          "delay": 0
+        }
+      ],
+      "seconds": 1.32,
+      "fade_in_ms": 4,
+      "fade_out_ms": 70,
+      "rms_dbfs": -19.33,
+      "peak_dbfs": -6
+    },
+    "escape": {
+      "layers": [
+        {
+          "source": "lion",
+          "start": 0.34,
+          "seconds": 0.5,
+          "gain": 0.65,
+          "delay": 0
+        },
+        {
+          "source": "fire",
+          "start": 0.08,
+          "seconds": 0.38,
+          "gain": 1,
+          "delay": 0
+        }
+      ],
+      "seconds": 0.5,
+      "fade_in_ms": 4,
+      "fade_out_ms": 70,
+      "rms_dbfs": -20.29,
+      "peak_dbfs": -6
+    },
+    "summon": {
+      "layers": [
+        {
+          "source": "lion",
+          "start": 1.25,
+          "seconds": 1.37,
+          "gain": 0.8,
+          "delay": 0
+        },
+        {
+          "source": "poison",
+          "start": 0.2,
+          "seconds": 0.75,
+          "gain": 0.45,
+          "delay": 0
+        },
+        {
+          "source": "earth",
+          "start": 0.73,
+          "seconds": 0.75,
+          "gain": 0.65,
+          "delay": 0
+        }
+      ],
+      "seconds": 1.37,
+      "fade_in_ms": 4,
+      "fade_out_ms": 70,
+      "rms_dbfs": -20.23,
+      "peak_dbfs": -6
+    },
+    "death": {
+      "layers": [
+        {
+          "source": "lion",
+          "start": 5.42,
+          "seconds": 0.51,
+          "gain": 1,
+          "delay": 0
+        }
+      ],
+      "seconds": 0.51,
+      "fade_in_ms": 4,
+      "fade_out_ms": 70,
+      "rms_dbfs": -18.15,
+      "peak_dbfs": -6
+    }
+  },
+  "sources": {
+    "lion": {
+      "title": "Lion Snarl Growl by SoundZee | Royalty-free Sound Effects",
+      "creator": "SoundZee",
+      "page": "https://pixabay.com/sound-effects/nature-lion-snarl-growl-354324/",
+      "download": "https://cdn.pixabay.com/download/audio/2025/06/04/audio_3fcd06c8de.mp3?filename=soundzee-lion-snarl-growl-354324.mp3",
+      "sha256": "37dd8d1f532f38f1a71cf030064bf5a497a5adb21155d5d28f5c91cde11cd012",
+      "license": "https://pixabay.com/service/license-summary/"
+    },
+    "poison": {
+      "title": "acid_spell_cast_bubble_poison_03 by ldc96 | Royalty-free Sound Effects",
+      "creator": "ldc96",
+      "page": "https://pixabay.com/sound-effects/film-special-effects-acid-spell-cast-bubble-poison-03-286746/",
+      "download": "https://cdn.pixabay.com/download/audio/2025/01/11/audio_2a3eec3170.mp3?filename=ldc96-acid_spell_cast_bubble_poison_03-286746.mp3",
+      "sha256": "a29f23bd14bd6e088077e5f9f0c7ddeb1589932af7e28a62d2fc596c959ba18c",
+      "license": "https://pixabay.com/service/license-summary/"
+    },
+    "claw": {
+      "title": "Scorpion Claw Attack (4) by Yodguard | Royalty-free Sound Effects",
+      "creator": "Yodguard",
+      "page": "https://pixabay.com/sound-effects/film-special-effects-scorpion-claw-attack-4-482507/",
+      "download": "https://cdn.pixabay.com/download/audio/2026/02/10/audio_3f3ff2c34f.mp3?filename=yodguard-scorpion-claw-attack-4-482507.mp3",
+      "sha256": "b7099e5497e94ed9b5cac231d61370234c422e1d41a12ec3d94e96a95a800ce1",
+      "license": "https://pixabay.com/service/license-summary/"
+    },
+    "earth": {
+      "title": "Earth Spell Impact 2 by DRAGON-STUDIO | Royalty-free Sound Effects",
+      "creator": "DRAGON-STUDIO",
+      "page": "https://pixabay.com/sound-effects/film-special-effects-earth-spell-impact-2-393922/",
+      "download": "https://cdn.pixabay.com/download/audio/2025/08/23/audio_de0622a67d.mp3?filename=dragon-studio-earth-spell-impact-2-393922.mp3",
+      "sha256": "9ca9e4e1c9cdf1edfdad1f553ddac34438ce69422a9829e5ec58fd702d59910c",
+      "license": "https://pixabay.com/service/license-summary/"
+    },
+    "fire": {
+      "title": "Fireball Whoosh 1 by floraphonic | Royalty-free Sound Effects",
+      "creator": "floraphonic",
+      "page": "https://pixabay.com/sound-effects/film-special-effects-fireball-whoosh-1-179125/",
+      "download": "https://cdn.pixabay.com/download/audio/2023/11/30/audio_689d3968ce.mp3?filename=floraphonic-fireball-whoosh-1-179125.mp3",
+      "sha256": "a6025edaef13359f9b80cf3eb985166e1ea4864302e2c9f8edb0b94ef76f97f4",
+      "license": "https://pixabay.com/service/license-summary/"
+    }
+  }
+}

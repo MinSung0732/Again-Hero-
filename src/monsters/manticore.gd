@@ -2,6 +2,10 @@ extends "res://src/monsters/goblin_thrower.gd"
 const DATA := preload("res://src/data/manticore_behavior_catalog.gd")
 const FX := preload("res://src/ui/manticore_combat_effects.gd")
 const AFFLICTIONS := preload("res://src/systems/received_afflictions.gd")
+const AUDIO := preload("res://src/data/manticore_audio_catalog.gd")
+const SFX_BANK := preload("res://src/audio/event_sfx_bank.gd")
+var audio_bank: Node
+var flame_audio_timer := 0.0
 const CHANNEL := preload("res://src/ui/channel_gauge.gd")
 enum Motion { REST, FOCUS, HUNT, COMBO, TRACK }
 var motion := Motion.REST
@@ -99,6 +103,9 @@ func _apply_normal_visual_profile() -> void:
 	channel_left = channel_right
 func _ready() -> void:
 	super._ready()
+	audio_bank = SFX_BANK.new()
+	add_child(audio_bank)
+	audio_bank.configure(AUDIO.CUES,combat_authority,true)
 	flight_collision_layer = collision_layer
 	flight_collision_mask = collision_mask
 	visual.frame_changed.connect(_sync_visual_anchor)
@@ -134,6 +141,7 @@ func flame_cost() -> float: return 25.0 if transcend_level >= 4 else 50.0
 func _physics_process(delta: float) -> void:
 	if dying or current_hp <= 0: return
 	if is_instance_valid(combat_authority) and (combat_authority.battle_over or combat_authority.external_pause or combat_authority.demon_augment_selection_active): return
+	flame_audio_timer = maxf(flame_audio_timer-delta,0.0)
 	clock += delta
 	gauge = minf(100.0,gauge+get_gauge_regen()*delta)
 	guard_remaining = maxf(guard_remaining-delta,0.0)
@@ -168,6 +176,7 @@ func _try_cast() -> void:
 		cooldowns[i] = DATA.COOLDOWNS[i]
 		match i:
 			0:
+				_sfx("flame_cast")
 				flame_remaining = DATA.FLAME_SECONDS
 				flame_contact.fill(0.0)
 				flame_paid.fill(0)
@@ -204,12 +213,14 @@ func _tick_motion(delta: float) -> void:
 					else:
 						motion = Motion.FOCUS
 						focus = DATA.CHANNEL_SECONDS
+						_sfx("focus")
 		Motion.FOCUS:
 			if bool(get_meta("silence_active",false)):
 				_end_motion()
 				return
 			focus = maxf(focus-delta,0.0)
 			if focus <= 0.0:
+				_sfx("hunt")
 				motion = Motion.HUNT
 				flight_age = 0.0
 				hunt_previous_target = hero.global_position
@@ -241,6 +252,7 @@ func _tick_motion(delta: float) -> void:
 			combo_timer -= delta
 			if combo_timer <= 0.0:
 				var accepted := _hit(0.5 if combo_hits == 2 else 1.0,combo_hits > 0)
+				if accepted: _sfx("hit")
 				combo_accepted = combo_accepted or accepted
 				triple_success = triple_success and accepted
 				combo_hits += 1
@@ -305,12 +317,14 @@ func _face_flight(direction: Vector2, frame_start: int) -> void:
 	_set_visual_facing(direction.x)
 	visual.frame = frame_start+int(clock*10.0)%3
 func _start_track(distance: float) -> void:
+	_sfx("retreat")
 	var away := (global_position-hero.global_position).normalized()
 	if away.length_squared() < 0.01: away = Vector2.LEFT
 	destination = _clamp_destination(global_position+away*distance)
 	motion = Motion.TRACK
 	_begin_flight()
 func _end_motion() -> void:
+	if is_instance_valid(audio_bank): audio_bank.stop_cue("focus")
 	motion = Motion.REST
 	visual_moving_state = -1
 	collision_layer = flight_collision_layer
@@ -335,6 +349,7 @@ func take_damage(amount: int) -> void:
 	var damage := MONSTER_RUNTIME_COMMON.consume_support_shield(self,int(round(amount*(0.6 if guard_remaining > 0.0 else 1.0))))
 	if damage <= 0: return
 	if damage >= current_hp and not escaped:
+		_sfx("escape")
 		escaped = true
 		current_hp = maxi(int(round(max_hp*0.15)),1)
 		if transcend_level >= 3:
@@ -347,6 +362,7 @@ func take_damage(amount: int) -> void:
 	if current_hp <= 0: _begin_death()
 func on_ally_death(_point: Vector2) -> void: pass
 func _arrival_explosion() -> void:
+	_sfx("summon")
 	_refresh_other_enemies(1.0)
 	var radius := DATA.ARRIVAL_RADIUS
 	if is_instance_valid(hero) and global_position.distance_squared_to(hero.global_position) <= radius*radius: _hit(1.35)
@@ -384,6 +400,7 @@ func _tick_flames(delta: float) -> void:
 			flame_paid[i] = 0
 			flame_stop[i] = maxf(flame_stop[i]-delta,0.0)
 			continue
+		_flame_breath_sfx()
 		flame_contact[i] += step
 		var total := int(round(attack_damage*flame_contact[i]))
 		var amount := total-flame_paid[i]
@@ -404,6 +421,7 @@ func _tick_meteors(delta: float) -> void:
 			meteor_age[i] = 0.0
 			meteor_state[i] = 1
 			cloud_fraction[i] = 0.0
+			_sfx("venom_launch")
 			meteor_spawned += 1
 		if meteor_spawned >= 10: meteor_cast = -1.0
 	for i in range(10):
@@ -412,6 +430,7 @@ func _tick_meteors(delta: float) -> void:
 		if meteor_state[i] == 1:
 			meteor_points[i] = meteor_points[i].move_toward(meteor_dest[i],DATA.METEOR_SPEED*delta)
 			if meteor_points[i].distance_squared_to(meteor_dest[i]) < 0.01:
+				_sfx("venom_impact")
 				meteor_state[i] = 2
 				meteor_age[i] = 0.0
 				for enemy in other_enemies:
@@ -435,6 +454,7 @@ func _inside_meteor(index: int) -> bool:
 func _shoot_wave(direction: Vector2) -> void:
 	for i in range(DATA.WAVE_CAPACITY):
 		if wave_age[i] >= 0.0: continue
+		_sfx("wave")
 		wave_age[i] = 0.0
 		wave_origin[i] = global_position
 		wave_direction[i] = direction
@@ -461,6 +481,9 @@ func _tick_waves(delta: float) -> void:
 				if _hit(2.0,true): hero.apply_slow(0.7,3.0)
 		if wave_age[i] >= _wave_end_age(i): wave_age[i] = -1.0
 func _begin_death() -> void:
+	if is_instance_valid(audio_bank):
+		audio_bank.stop_all()
+		audio_bank.play_cue("death")
 	flame_remaining = 0.0
 	wave_remaining = 0.0
 	meteor_state.fill(0)
@@ -561,6 +584,7 @@ func _tick_other_enemies(delta: float) -> void:
 				record.contact[head] = 0.0
 				record.paid[head] = 0
 				continue
+			_flame_breath_sfx()
 			record.contact[head] += delta
 			var total := int(round(attack_damage*float(record.contact[head])))
 			var amount := total-int(record.paid[head])
@@ -586,3 +610,12 @@ func _tick_other_enemies(delta: float) -> void:
 				record.wave_mask = int(record.wave_mask) | (1 << i)
 				enemy.take_damage(maxi(int(round(attack_damage*2.0)),1),self)
 				AFFLICTIONS.apply_slow(enemy,0.7,3.0)
+
+func _sfx(cue: String) -> void:
+	if not dying and is_instance_valid(audio_bank): audio_bank.play_cue(cue)
+
+func _flame_breath_sfx() -> void:
+	# One audible breath for both heads/all targets, never each damage tick.
+	if flame_audio_timer <= 0.0:
+		_sfx("flame_breath")
+		flame_audio_timer = AUDIO.FLAME_BREATH_INTERVAL
