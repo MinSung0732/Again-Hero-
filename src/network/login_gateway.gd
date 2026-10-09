@@ -24,10 +24,8 @@ var _auth_busy := false
 var _cloud: Node
 
 func _ready() -> void:
-	# The current vault is Windows DPAPI only. Android authentication is valid
-	# for this run; never fall back to plaintext refresh-token persistence.
-	if OS.get_name() == "Android":
-		remember_session_enabled = false
+	# Windows DPAPI and AndroidKeyStore store refresh tokens without plaintext.
+	# On unsupported Android editor builds the vault fails closed.
 	_cloud = get_node("/root/CloudStore")
 	_vault = VAULT.new()
 	add_child(_vault)
