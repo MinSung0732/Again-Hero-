@@ -40,7 +40,7 @@ func begin(provider: String) -> void:
 	var error: Error
 	if OS.get_name() == "Android":
 		_android_listener = ANDROID_LISTENER.new()
-		error = _android_listener.start(PORT, _nonce, _deadline)
+		error = _android_listener.start(PORT, _nonce, _deadline, _android_package_name())
 	else:
 		error = _server.listen(PORT, "127.0.0.1")
 	if error != OK:
@@ -49,7 +49,7 @@ func begin(provider: String) -> void:
 		return
 	busy = true
 	set_process(true)
-	notice.emit("브라우저에서 로그인 후 Godot 또는 게임 앱으로 돌아와 주세요.\n취소하려면 게스트로 시작을 눌러 주세요." if OS.get_name() == "Android" else "브라우저에서 로그인해 주세요.\n취소하려면 게스트로 시작을 눌러 주세요.")
+	notice.emit("로그인을 완료하면 게임으로 자동 복귀합니다.\n전환이 차단되면 복귀 버튼을 눌러 주세요." if OS.get_name() == "Android" else "브라우저에서 로그인해 주세요. 완료 시 게임 창으로 전환합니다.")
 	if OS.shell_open(authorize_url(provider, _verifier, _nonce)) != OK:
 		_fail("브라우저를 열지 못했습니다. 다시 시도해 주세요.")
 
@@ -99,12 +99,14 @@ func _process(_delta: float) -> void:
 		_reply("404 Not Found", "Not found")
 		return
 	var params := parse_query(target)
-	_reply("200 OK", "Login response received. Return to Again, Hero. You may close this tab.")
+	_reply("200 OK", _windows_return_page(), true)
 	_server.stop()
 	set_process(false)
 	_complete_callback(params)
 
 func _complete_callback(params: Dictionary) -> void:
+	if OS.get_name() == "Windows":
+		_focus_windows_game()
 	if params.has("error") or String(params.get("code", "")).is_empty():
 		_fail("로그인이 취소되었거나 인증에 실패했습니다. 다시 시도해 주세요.")
 		return
@@ -156,9 +158,39 @@ func request_json(path: String, body: Variant = null, token: String = "") -> Dic
 	var decoded: Variant = JSON.parse_string((response[3] as PackedByteArray).get_string_from_utf8())
 	return decoded if decoded is Dictionary else {}
 
-func _reply(status: String, body: String) -> void:
-	_peer.put_data(("HTTP/1.1 " + status + "\r\nContent-Type: text/plain; charset=utf-8\r\nCache-Control: no-store\r\nConnection: close\r\nContent-Length: %d\r\n\r\n" % body.to_utf8_buffer().size() + body).to_utf8_buffer())
+func _reply(status: String, body: String, html: bool = false) -> void:
+	var content_type := "text/html" if html else "text/plain"
+	_peer.put_data(("HTTP/1.1 " + status + "\r\nContent-Type: " + content_type + "; charset=utf-8\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\nConnection: close\r\nContent-Length: %d\r\n\r\n" % body.to_utf8_buffer().size() + body).to_utf8_buffer())
 	_drop_peer()
+
+
+static func _windows_return_page() -> String:
+	return """<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>용사, 또 너야?</title></head>
+<body style="font-family:sans-serif;text-align:center;padding:3em">
+<h2>로그인 응답 완료</h2><p>게임 창으로 복귀합니다.</p>
+<p>이 탭이 남아 있으면 닫아도 됩니다.</p>
+<script>window.close();</script>
+</body></html>"""
+
+
+func _android_package_name() -> String:
+	if OS.get_name() != "Android" or not Engine.has_singleton("AndroidRuntime"):
+		return ""
+	var runtime := Engine.get_singleton("AndroidRuntime")
+	var context: Variant = runtime.getApplicationContext()
+	if context == null:
+		return ""
+	return String(context.getPackageName())
+
+
+# Focus is requested only after the loopback callback has passed Host/nonce
+# checks. This transports no code/token and does not change OAuth verification.
+func _focus_windows_game() -> void:
+	var command := "$w=New-Object -ComObject WScript.Shell;[void]$w.AppActivate(%d)" % OS.get_process_id()
+	OS.create_process("powershell.exe", PackedStringArray([
+		"-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", command
+	]), false)
 
 func _drop_peer() -> void:
 	if _peer != null:
