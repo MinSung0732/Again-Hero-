@@ -3,6 +3,13 @@ const ZEUS_AUDIO := preload("res://src/data/zeus_audio_catalog.gd")
 
 # Presentation only; no skill, damage, summoning or reward authority.
 const ENTRIES := {
+	"izanami": {"view":"res://src/ui/izanami_battle_summon_view.gd","duration":5.0,"zoom":1.25,"prewarm":false,
+		"slow_motion":{"minimum":0.22,"approach_end":1.0,"recover_start":3.0,"recover_end":3.6},
+		"world_effect":"res://src/ui/izanami_summon_spirits.gd",
+		"audio_cues":{
+			"prayer":{"path":"res://assets/audio/sfx/izanami/prayer_charge.wav","db":-18.0},
+			"release":{"path":"res://assets/audio/sfx/izanami/spirit_release.wav","db":-12.0}},
+		"audio_timeline":[{"at":0.5,"cue":"prayer"},{"at":2.15,"cue":"release","stop":"prayer"}]},
 	"bulgasal": {"view":"res://src/ui/bulgasal_battle_summon_view.gd","duration":5.0,"zoom":1.3,
 		"slow_motion":{"minimum":0.18,"approach_end":0.95,"recover_start":2.65,"recover_end":3.3}},
 	"zeus": {"view": "res://src/ui/zeus_battle_summon_view.gd", "duration": 5.0, "zoom": 1.3,

@@ -1,3 +1,9 @@
+## Izanami battle summon example (2026-10-09)
+- F6 src/dev/IzanamiBattleSummonPreview.tscn: actual idle dot visual as preview pawn in a sandbox grid viewport. Signal dispatch through production cinematic; replay/cancel controls; no gameplay Battle, save, resources or rewards.
+-5s right-corner triangle Yomi shrine/full-color prayer rig→hand charge/pulse→actual pawn-centered talisman wreath/six rising spirits/wave→name. Subtle portrait face focus with closed original eyes; preserves original rig. Reuses existing Izanami atlas/background/Pixabay WAVs; no combat damage.
+- Catalog entry prewarm=false while monster remains unregistered. Optional typed preview_ids on install selects preview resources; default registered Zeus/Bulgasal prewarm unchanged. Cached audio bank helper supports deferred preview content without resource cost every live battle. Register/prewarm at actual future playable integration.
+- Godot4.5.1 isolated native/headless signal/camera/time-scale/cancel/audio/reuse/three-aspect checks; Linux OpenGL renders checked. Full game/Android/listening unverified, one fixture exit-resource warning remains.
+
 ## Izanami gacha presentation (2026-10-09)
 - Presentation-only Catalog entryizanami and F6 src/dev/IzanamiCutscenePreview.tscn. Actual MonsterCatalog/rarity pools/collection registration do not yet contain Izanami; no natural gacha availability/odds/reward or combat changes. Existing confirmed result dispatch handles it when subsequently registered.
 - Exact original11 visible partitions768×1280/RGBA reassembly0diff; one33×53 shared UV mesh,7bones with original visible masks: hair/sleeves/robe subtle wind; anatomy/face/crown/prayer hands/knees stay fixed. No big joint animation or eye opening until restored occlusion/eye assets supplied.

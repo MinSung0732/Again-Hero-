@@ -33,7 +33,7 @@ var death_mode := false
 var focus_position := Vector2.ZERO
 var return_start := 4.0
 
-func install(main: Control) -> void:
+func install(main: Control, preview_ids: Array[String] = []) -> void:
 	host = main
 	name = "BattleSummonCinematic"
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -56,18 +56,18 @@ func install(main: Control) -> void:
 	hide()
 	set_process(false)
 	# Prewarm once during installation; successful summon never allocates a new view.
-	for entry in CATALOG.ENTRIES.values():
+	for id in CATALOG.ENTRIES:
+		var entry: Dictionary = CATALOG.ENTRIES[id]
+		if not preview_ids.is_empty():
+			if not id in preview_ids:
+				continue
+		elif not bool(entry.get("prewarm",true)):
+			continue # Unregistered preview content must not tax every real battle.
 		var effect_path := String(entry.get("world_effect", ""))
 		if not effect_path.is_empty():
 			_cached_world_effect(effect_path)
 		_cached_view(String(entry.view))
-	for id in CATALOG.ENTRIES:
-		var entry: Dictionary = CATALOG.ENTRIES[id]
-		if entry.has("audio_cues"):
-			var bank := SFX_BANK.new()
-			add_child(bank)
-			bank.configure(entry.audio_cues)
-			sound_banks[id] = bank
+		_cached_sound_bank(id)
 
 func play(monster_id: String, summoned: Node2D) -> void:
 	cancel()
@@ -78,7 +78,7 @@ func play(monster_id: String, summoned: Node2D) -> void:
 	if view == null:
 		return
 	death_mode = false
-	sound_bank = sound_banks.get(monster_id)
+	sound_bank = _cached_sound_bank(monster_id)
 	audio_timeline = entry.get("audio_timeline", [])
 	_begin_focus(summoned, entry)
 
@@ -92,7 +92,7 @@ func play_death(monster_id: String, dying_actor: Node2D) -> void:
 	var entry: Dictionary = CATALOG.ENTRIES.get(monster_id, {}).get("death", CATALOG.DEATH_DEFAULT)
 	view = null
 	death_mode = true
-	sound_bank = sound_banks.get(monster_id)
+	sound_bank = _cached_sound_bank(monster_id)
 	audio_timeline = CATALOG.ENTRIES.get(monster_id, {}).get("death_audio_timeline", [])
 	_begin_focus(dying_actor, entry)
 
@@ -293,3 +293,15 @@ func _cached_world_effect(path: String) -> Node2D:
 	created.hide()
 	world_effects[path] = created
 	return created
+
+func _cached_sound_bank(monster_id: String) -> Node:
+	if sound_banks.has(monster_id):
+		return sound_banks[monster_id]
+	var entry: Dictionary = CATALOG.ENTRIES.get(monster_id,{})
+	if not entry.has("audio_cues"):
+		return null
+	var bank := SFX_BANK.new()
+	add_child(bank)
+	bank.configure(entry.audio_cues)
+	sound_banks[monster_id] = bank
+	return bank
