@@ -57,6 +57,22 @@ func run() -> void:
 					check(view.preview_root.visible and view.preview_image.texture != null,"artwork preview " + id + kind)
 					view.close_preview()
 				check(page.art_buttons.plus_banner.disabled == (id not in ["zeus","manticore"]),"no invented five-upgrade banners " + id)
+		# Cards preserve either state. A content switch must never toggle the disclosure.
+		if page.body.visible: page.toggle.confirmed.emit()
+		page.cards[page.ids[0]].confirmed.emit()
+		check(not page.body.visible,"card cannot auto-open " + category)
+		page.toggle.confirmed.emit()
+		page.cards[page.ids[-1]].confirmed.emit()
+		check(page.body.visible,"card preserves expanded state " + category)
+		page.toggle.confirmed.emit()
+		if category == "monsters":
+			for id in page.ids:
+				var groups := DATA.related_augment_groups(id)
+				var detail: Control = page.detail_cache[id]
+				check(detail.get_node("NormalAugments").get_meta("augment_ids") == groups.normal.map(func(entry): return String(entry.id)),"normal augment group " + id)
+				check(detail.get_node("SpecialAugments").get_meta("augment_ids") == groups.special.map(func(entry): return String(entry.id)),"special augment group " + id)
+				check(groups.normal.all(func(entry): return entry.augment_type == "normal"),"normal type " + id)
+				check(groups.special.all(func(entry): return entry.augment_type == "special"),"special type " + id)
 		page.search.text = "does-not-exist"
 		page.search.text_changed.emit(page.search.text)
 		check(page.cards.values().all(func(card): return not card.visible),"empty search")
@@ -68,6 +84,8 @@ func run() -> void:
 			await process_frame
 			await process_frame
 			check(view.root.get_combined_minimum_size().x <= width,"no horizontal overflow %s %d" % [category,width])
+			check(page.grid.columns == 1,"compact single-column list")
+			check(view.tabs.columns == (4 if width >= 460 else 2),"compact category navigation")
 			for card in page.cards.values(): check(card.size.x <= width and is_equal_approx(card.size.y,VIEW.CARD_HEIGHT),"complete cards fit width")
 	# Regression: all text lengths produce exactly the same collapsed list position.
 	for category in ["monsters","transcendent"]:
@@ -123,7 +141,7 @@ func run() -> void:
 	parent.show()
 	view.scroll.scroll_vertical = 400
 	view.monster_pages.transcendent.cards.zeus.confirmed.emit()
-	check(view.monster_pages.transcendent.selected == "zeus" and view.scroll.scroll_vertical == 0 and view.monster_pages.transcendent.body.visible,"card selects and returns to detail")
+	check(view.monster_pages.transcendent.selected == "zeus" and view.scroll.scroll_vertical == 0 and not view.monster_pages.transcendent.body.visible,"card selects while preserving collapsed detail")
 	view.select_category("skills")
 	check(not view.preview_root.visible,"category change closes preview")
 	for width in [360,540,740,1000]:
