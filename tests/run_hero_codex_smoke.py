@@ -17,6 +17,8 @@ files = [
     "src/data/hero_augment_catalog.gd", "src/data/stage_catalog.gd",
     "src/ui/lobby_hero_codex_view.gd", "src/ui/drag_safe_button.gd",
     "tests/hero_codex_smoke.gd",
+    "src/systems/stage_progress.gd", "src/systems/account_save_scope.gd",
+    "assets/art/UI/hero_codex/lock_closed.svg", "assets/art/UI/hero_codex/lock_open.svg",
 ]
 with tempfile.TemporaryDirectory(prefix="hero-codex-") as temp:
     fixture = Path(temp)

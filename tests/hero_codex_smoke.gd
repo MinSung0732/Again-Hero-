@@ -1,6 +1,8 @@
 extends SceneTree
 const DATA := preload("res://src/data/hero_codex_catalog.gd")
 const VIEW := preload("res://src/ui/lobby_hero_codex_view.gd")
+const PROGRESS := preload("res://src/systems/stage_progress.gd")
+const SCOPE := preload("res://src/systems/account_save_scope.gd")
 class CodexOwner extends RefCounted:
 	var lobby: Control
 	func _title_plate(parent: Control, title: Label) -> PanelContainer:
@@ -15,6 +17,9 @@ func check(ok: bool, message: String) -> void:
 		failures += 1
 		push_error("HERO_CODEX: "+message)
 func run() -> void:
+	SCOPE.select_guest()
+	SCOPE.guest_directory = "user://codex-fixture-%d" % Time.get_ticks_usec()
+	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
 	var font := FontFile.new()
 	if FileAccess.file_exists("res://assets/fonts/Galmuri11.ttf") and font.load_dynamic_font("res://assets/fonts/Galmuri11.ttf") == OK: ThemeDB.fallback_font = font
 	var owner := CodexOwner.new()
@@ -26,6 +31,44 @@ func run() -> void:
 	host.add_child(parent)
 	var view := VIEW.new()
 	view.install(owner,parent)
+	view.show()
+	check(view.locked_page.visible and view.hero_name.text == "?","new account has no discovered heroes")
+	check(view.list_names.all(func(label): return label.text == "?"),"unknown list names hidden")
+	check(view.list_portraits.all(func(image): return image.modulate.r < 0.1),"unknown dots shaded")
+	check(view.pages.all(func(page): return not page.visible and page.text.is_empty()),"locked details contain no information")
+	check(view.tabs.all(func(tab): return tab.disabled),"locked tabs disabled")
+	view.select_tab(4)
+	check(not view.resource_page.visible,"locked resource tab cannot reveal portraits")
+	check(view.locked_page.get_child(0).texture != null,"closed lock asset loads")
+	var config := ConfigFile.new()
+	config.set_value("progress","highest_unlocked_stage",10)
+	SCOPE.save_config(config,PROGRESS.SAVE_PATH)
+	view.show()
+	check(view.encountered_stages.is_empty(),"unlocking stages is not encountering heroes")
+	PROGRESS.record_hero_encounter("stage_5","returning_magic_hero")
+	view.show()
+	view.select_stage("stage_5")
+	check(view.reveal_active and view.unlock_page.visible,"first encounter starts lock opening")
+	check(not view.encountered_stages.has("stage_10"),"shared identity does not reveal unseen later stage")
+	view.hide()
+	await create_timer(1.1).timeout
+	check(not PROGRESS.get_hero_codex_state().revealed.has("stage_5"),"cancelled reveal is not acknowledged")
+	view.show()
+	view.select_stage("stage_5")
+	await create_timer(1.1).timeout
+	check(not view.reveal_active and view.pages[0].visible,"unlock animation restores information")
+	check(PROGRESS.get_hero_codex_state().revealed.has("stage_5"),"completed animation remembered")
+	view.hide()
+	view.show()
+	check(not view.reveal_active,"completed unlock not replayed")
+	SCOPE.load_config(config,PROGRESS.SAVE_PATH)
+	config.set_value("cleared","stage_3",true)
+	SCOPE.save_config(config,PROGRESS.SAVE_PATH)
+	check(PROGRESS.get_hero_codex_state().encountered.has("stage_3"),"legacy clear proves encounter")
+	for id in DATA.STAGES.ORDER:
+		config.set_value("hero_stage_encounters",id,1)
+		config.set_value("hero_codex_revealed",id,true)
+	SCOPE.save_config(config,PROGRESS.SAVE_PATH)
 	view.show()
 	check(view.list_scroll.visible and view.detail_root.visible,"opens to side-by-side hero list and details")
 	check(view.selectors.size() == 10 and view.list_portraits.size() == 10,"portrait rows for all heroes")
@@ -91,6 +134,22 @@ func run() -> void:
 	button._input(drag)
 	button._input(release)
 	check(view.selected_tab == 0,"drag does not select section")
+	SCOPE.guest_directory += "-other-account"
+	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
+	view.show()
+	check(view.locked_page.visible and view.list_names.all(func(label): return label.text == "?"),"account change refreshes cached names and lock")
+	check(view.portrait.texture == null and view.resource_images.all(func(image): return image.texture == null),"account change hides old portrait and resources")
+	check(view.pages.all(func(page): return page.text.is_empty()),"account change clears previous details")
+	SCOPE.user_id = "11111111-1111-4111-8111-111111111111"
+	SCOPE.files = {"stage_progress.cfg": {"hero_stage_encounters": {"stage_2": 1}}}
+	view.show()
+	view.select_stage("stage_2")
+	check(view.reveal_active,"signed-in account encounters loaded")
+	SCOPE.user_id = "22222222-2222-4222-8222-222222222222"
+	SCOPE.files = {}
+	await create_timer(1.1).timeout
+	check(SCOPE.files.is_empty() and not view.root.visible,"account switch during reveal cannot write another account")
+	SCOPE.select_guest()
 	view.hide()
 	check(not view.root.visible and not view.title_plate.visible,"subpage cleanup")
 	host.free()

@@ -2674,3 +2674,8 @@ Build AI는 전체/주변 몬스터 수, 최근 공세, 역할 비율, 거리, �
 - 라우터는 터치 시작 시에만 현재 보이는 ScrollContainer를 역순/깊이 우선으로 찾으므로 모달이 배경 스크롤보다 우선한다. 매 프레임 SceneTree 전체 탐색을 추가하지 않는다.
 - ScrollContainer가 실제로 overflow될 때만 후보가 된다. 스크롤 시작/종료 notification을 전파해 formation long-press drag와 스크롤 충돌을 취소하며, 실제 touch가 소유된 동안 emulated mouse companion은 소비한다.
 - Lobby와 Main 전투 HUD가 같은 라우터를 공유한다. 전투 상세 패널 스크롤이 소유되면 카메라 이동, 터치 홀드, 수동 소환 pending 상태를 즉시 취소한다.
+
+
+## Hero Codex Encounter Discovery (2026-10-09)
+- 용사도감은 실제 계정별 스테이지 조우 기록이 있는 용사만 공개한다. 기존 클리어는 과거 조우 증거로 인정, 최고 해금 스테이지나 동일 identity만으로 다른 스테이지 정보를 공개하지 않는다. 미조우 목록은 어두운 도트/이름 ?, 상세는 전용 보라·금색 픽셀 자물쇠.
+- 첫 상세 열람에서 0.95초 자물쇠 열림 연출. 완료 여부만 hero_codex_revealed로 계정 저장, 취소는 미기록. 재진입 시 한 번의 계정 데이터 조회와 캐시된 UI 재사용. 전투/조우 기록 의미 유지.

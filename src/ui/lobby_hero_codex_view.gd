@@ -1,6 +1,7 @@
 extends RefCounted
 const DATA := preload("res://src/data/hero_codex_catalog.gd")
 const TAP_BUTTON := preload("res://src/ui/drag_safe_button.gd")
+const PROGRESS := preload("res://src/systems/stage_progress.gd")
 const TABS := ["기본정보","기술·특성","증강","대응전략","리소스"]
 var settings_ref: WeakRef
 var root: VBoxContainer
@@ -12,6 +13,14 @@ var resource_images: Array[TextureRect] = []
 var list_scroll: ScrollContainer
 var detail_root: VBoxContainer
 var list_portraits: Array[TextureRect] = []
+var list_names: Array[Label] = []
+var encountered_stages: Dictionary = {}
+var locked_page: VBoxContainer
+var revealed_stages: Dictionary = {}
+var unlock_page: VBoxContainer
+var unlock_icon: TextureRect
+var unlock_tween: Tween
+var reveal_active := false
 var list_loaded := false
 var portrait: TextureRect
 var hero_name: Label
@@ -94,8 +103,8 @@ func install(owner: RefCounted, parent: Control) -> void:
 		var stage := DATA.STAGES.get_stage(id)
 		var name := String(DATA.HEROES.get_profile(String(stage.get("hero_id",""))).get("display_name","용사"))
 		var button := _button(rows,"",select_stage.bind(id),208)
-		button.name = String(stage.get("hero_id","")) + "Card"
-		button.tooltip_text = name + " 상세정보"
+		button.name = "HeroCard%d" % selectors.size()
+		button.tooltip_text = "잠긴 용사"
 		selectors.append(button)
 		var margin := MarginContainer.new()
 		margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -121,7 +130,8 @@ func install(owner: RefCounted, parent: Control) -> void:
 		column.add_theme_constant_override("separation",10)
 		row.add_child(column)
 		var name_label := _label(column,22,Color("ffe5a0"))
-		name_label.text = name
+		name_label.text = "?"
+		list_names.append(name_label)
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		# The card is a Button, so explicitly propagate its wrapping content's
 		# height instead of allowing long introductions to overlap the next row.
@@ -199,6 +209,35 @@ func install(owner: RefCounted, parent: Control) -> void:
 		image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		cell.add_child(image)
 		resource_images.append(image)
+	locked_page = VBoxContainer.new()
+	locked_page.name = "LockedHeroInformation"
+	locked_page.add_theme_constant_override("separation",24)
+	stack.add_child(locked_page)
+	var lock_icon := TextureRect.new()
+	lock_icon.custom_minimum_size = Vector2(112,112)
+	lock_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	lock_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	lock_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	lock_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lock_icon.texture = _portrait_texture("res://assets/art/UI/hero_codex/lock_closed.svg")
+	locked_page.add_child(lock_icon)
+	var lock_hint := _label(locked_page,26,Color("ded0e8"))
+	lock_hint.text = "아직 마주치지 않은 용사입니다.\n전투에서 만나면 정보가 열립니다."
+	lock_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	unlock_page = VBoxContainer.new()
+	unlock_page.name = "HeroInformationUnlock"
+	unlock_page.add_theme_constant_override("separation",24)
+	stack.add_child(unlock_page)
+	unlock_icon = TextureRect.new()
+	unlock_icon.custom_minimum_size = Vector2(128,128)
+	unlock_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	unlock_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	unlock_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	unlock_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	unlock_page.add_child(unlock_icon)
+	var unlock_hint := _label(unlock_page,28,Color("ffe5a0"))
+	unlock_hint.text = "용사 정보 해금"
+	unlock_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hide()
 
 func _fit_split() -> void:
@@ -210,12 +249,21 @@ func _fit_tabs() -> void:
 func show() -> void:
 	root.show()
 	title_plate.show()
+	var state := PROGRESS.get_hero_codex_state()
+	encountered_stages = state.encountered
+	revealed_stages = state.revealed
 	if not list_loaded:
 		for i in range(stage_ids.size()):
 			var paths := DATA.resource_paths(stage_ids[i])
 			list_portraits[i].texture = _portrait_texture(paths[2],true)
 			if list_portraits[i].texture == null: list_portraits[i].texture = _portrait_texture(paths[0])
 		list_loaded = true
+	for i in range(stage_ids.size()):
+		var known := encountered_stages.has(stage_ids[i])
+		var profile := DATA.HEROES.get_profile(String(DATA.STAGES.get_stage(stage_ids[i]).get("hero_id","")))
+		list_names[i].text = String(profile.get("display_name","용사")) if known else "?"
+		list_portraits[i].modulate = Color.WHITE if known else Color(0.08,0.08,0.08,1)
+		selectors[i].tooltip_text = list_names[i].text + " 상세정보" if known else "잠긴 용사"
 	list_scroll.show()
 	detail_root.show()
 	select_stage(selected_stage if not selected_stage.is_empty() else stage_ids[0])
@@ -247,11 +295,31 @@ func _portrait_texture(path: String, center_content: bool = false) -> Texture2D:
 	return cached_textures[cache_key] as Texture2D
 
 func hide() -> void:
+	_cancel_unlock()
 	root.hide()
 	title_plate.hide()
 
 func select_stage(id: String) -> void:
 	if id not in stage_ids: return
+	_cancel_unlock()
+	selected_stage = id
+	for i in range(selectors.size()):
+		selectors[i].add_theme_stylebox_override("normal",_style(stage_ids[i] == id))
+	var known := encountered_stages.has(id)
+	for tab in tabs: tab.disabled = not known
+	portrait.visible = known
+	locked_page.visible = not known
+	if not known:
+		hero_name.text = "?"
+		description.text = "용사 정보 잠김"
+		portrait.texture = null
+		for page in pages:
+			page.text = ""
+			page.hide()
+		for resource in resource_images: resource.texture = null
+		resource_page.hide()
+		scroll.scroll_vertical = 0
+		return
 	if not cached_entries.has(id): cached_entries[id] = DATA.get_entry(id)
 	var entry: Dictionary = cached_entries[id]
 	if entry.is_empty(): return
@@ -267,10 +335,46 @@ func select_stage(id: String) -> void:
 	for i in range(selectors.size()):
 		selectors[i].add_theme_stylebox_override("normal",_style(stage_ids[i] == id))
 	select_tab(selected_tab)
+	if not revealed_stages.has(id): _play_unlock(id)
+
+func _cancel_unlock() -> void:
+	if unlock_tween != null:
+		unlock_tween.kill()
+		unlock_tween = null
+	reveal_active = false
+	if unlock_page != null: unlock_page.hide()
+
+func _play_unlock(id: String) -> void:
+	reveal_active = true
+	for page in pages: page.hide()
+	resource_page.hide()
+	unlock_page.modulate = Color.WHITE
+	unlock_icon.modulate = Color.WHITE
+	unlock_icon.texture = _portrait_texture("res://assets/art/UI/hero_codex/lock_closed.svg")
+	unlock_page.show()
+	var scope := PROGRESS.ACCOUNT_SCOPE.user_id + "|" + PROGRESS.ACCOUNT_SCOPE.guest_directory
+	unlock_tween = root.create_tween()
+	unlock_tween.tween_property(unlock_icon,"modulate",Color(1.5,1.3,0.8,1),0.25)
+	unlock_tween.tween_callback(func(): unlock_icon.texture = _portrait_texture("res://assets/art/UI/hero_codex/lock_open.svg"))
+	unlock_tween.tween_property(unlock_icon,"modulate",Color.WHITE,0.2)
+	unlock_tween.tween_interval(0.3)
+	unlock_tween.tween_property(unlock_page,"modulate:a",0.0,0.2)
+	unlock_tween.tween_callback(func():
+		unlock_tween = null
+		reveal_active = false
+		unlock_page.hide()
+		if scope != PROGRESS.ACCOUNT_SCOPE.user_id + "|" + PROGRESS.ACCOUNT_SCOPE.guest_directory:
+			hide()
+			return
+		if PROGRESS.mark_hero_codex_revealed(id): revealed_stages[id] = true
+		select_tab(selected_tab)
+	)
 
 func select_tab(index: int) -> void:
+	if not encountered_stages.has(selected_stage): return
 	if index < 0 or index >= tabs.size(): return
 	selected_tab = index
+	if reveal_active: return
 	for i in range(pages.size()):
 		pages[i].visible = i == index
 	resource_page.visible = index == 4

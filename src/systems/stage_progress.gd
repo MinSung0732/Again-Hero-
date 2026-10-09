@@ -166,6 +166,28 @@ static func mark_stage_intro_seen(stage_id: String) -> bool:
 	return ACCOUNT_SCOPE.save_config(config, SAVE_PATH) == OK
 
 
+static func get_hero_codex_state() -> Dictionary:
+	var config := ConfigFile.new()
+	var state := {"encountered": {}, "revealed": {}}
+	if ACCOUNT_SCOPE.load_config(config, SAVE_PATH) != OK:
+		return state
+	for stage_id in STAGE_CATALOG.get_ordered_stage_ids():
+		if int(config.get_value("hero_stage_encounters", stage_id, 0)) > 0 or bool(config.get_value("cleared", stage_id, false)):
+			state.encountered[stage_id] = true
+		if bool(config.get_value("hero_codex_revealed", stage_id, false)):
+			state.revealed[stage_id] = true
+	return state
+
+
+static func mark_hero_codex_revealed(stage_id: String) -> bool:
+	if stage_id not in STAGE_CATALOG.get_ordered_stage_ids(): return false
+	var config := ConfigFile.new()
+	if ACCOUNT_SCOPE.load_config(config, SAVE_PATH) != OK: return false
+	if int(config.get_value("hero_stage_encounters", stage_id, 0)) <= 0 and not bool(config.get_value("cleared", stage_id, false)): return false
+	config.set_value("hero_codex_revealed", stage_id, true)
+	return ACCOUNT_SCOPE.save_config(config, SAVE_PATH) == OK
+
+
 static func record_hero_encounter(
 	stage_id: String,
 	identity_id: String
