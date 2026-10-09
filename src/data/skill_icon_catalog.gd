@@ -112,6 +112,14 @@ static func load_texture(location: String) -> Texture2D:
 	if result == null and FileAccess.file_exists(location):
 		var image := Image.new()
 		if image.load(location) == OK: result = ImageTexture.create_from_image(image)
+	# Large authored UI paintings alias badly under point sampling at tiny sizes.
+	# Downsample once; existing 128px pixel icons and source files stay intact.
+	if result != null and maxf(result.get_width(),result.get_height()) > 256:
+		var thumbnail := result.get_image()
+		if thumbnail != null:
+			var ratio := 128.0 / maxf(thumbnail.get_width(),thumbnail.get_height())
+			thumbnail.resize(maxi(1,roundi(thumbnail.get_width()*ratio)),maxi(1,roundi(thumbnail.get_height()*ratio)),Image.INTERPOLATE_LANCZOS)
+			result = ImageTexture.create_from_image(thumbnail)
 	textures[location] = result
 	return result
 

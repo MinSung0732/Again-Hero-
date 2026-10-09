@@ -42,7 +42,7 @@ func install(parent: Control) -> void:
 		root.add_child(row)
 		rows.append(row)
 		var badge := PanelContainer.new()
-		badge.custom_minimum_size = Vector2(64,64)
+		badge.custom_minimum_size = Vector2(80,80)
 		badge.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		badge.tooltip_text = "임시 기술 아이콘 · 추후 교체 예정"
 		row.add_child(badge)

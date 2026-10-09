@@ -209,6 +209,7 @@ var demon_ultimate_cooldowns: Dictionary = {}
 var demon_action_choice_active: bool = false
 var demon_ultimate_ui_skills: Array[Dictionary] = []
 var demon_ultimate_ui_buttons: Array[Button] = []
+var demon_ultimate_ui_content: Array[Control] = []
 var demon_ultimate_ui_cooldown_bars: Array[ProgressBar] = []
 var demon_action_choice_context: String = ""
 var demon_action_choice_ids: Array[String] = []
@@ -2760,9 +2761,14 @@ func _cache_demon_ultimate_ui_data() -> void:
 		var skill_id := String(
 			demon_ultimate_ui_skills[index].get("id", "")
 		)
-		button.icon = SKILL_ART.texture("demon","demon",skill_id)
-		button.expand_icon = true
-		button.add_theme_constant_override("icon_max_width",48)
+		button.icon = null
+		button.text = ""
+		var content := preload("res://src/ui/demon_skill_button_content.gd").new()
+		content.name = "SkillContent"
+		button.add_child(content)
+		content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		content.configure(SKILL_ART.texture("demon","demon",skill_id),"%d %s" % [index+1,String(demon_ultimate_ui_skills[index].get("name","마력 기술"))])
+		demon_ultimate_ui_content.append(content)
 		button.pressed.connect(
 			_on_demon_ultimate_pressed.bind(skill_id)
 		)
@@ -2923,34 +2929,17 @@ func _refresh_demon_ultimate_buttons() -> void:
 		bar.value = remaining
 		bar.visible = remaining > 0.001
 
+		var content: Control = demon_ultimate_ui_content[index]
 		if not implemented:
 			button.disabled = true
-			button.text = "%s\n준비중" % String(
-				skill.get("name", "마력 기술")
-			)
+			content.update_state("준비중",false)
 			continue
-
-		var mana_cost := maxf(float(skill.get("mana_cost", 100.0)), 0.0)
-		var ready := demon_mana_current + 0.001 >= mana_cost and remaining <= 0.001
+		var mana_cost := maxf(float(skill.get("mana_cost",100)),0)
+		var ready := demon_mana_current+0.001 >= mana_cost and remaining <= 0.001
 		button.disabled = not ready
-
-		var button_title := "%d %s" % [
-			index + 1,
-			String(skill.get("name", "마력 기술")),
-		]
-
-		if remaining > 0.001:
-			button.text = "%s\n쿨타임 %.1f초" % [
-				button_title,
-				remaining,
-			]
-		elif ready:
-			if skill_id == "line_assault":
-				button.text = "%s\n코스트 %d · 방향 선택" % [button_title, int(round(mana_cost))]
-			else:
-				button.text = "%s\n코스트 %d · 발동 가능" % [button_title, int(round(mana_cost))]
-		else:
-			button.text = "%s\n코스트 %d 필요" % [button_title, int(round(mana_cost))]
+		var status := "쿨 %.1f초" % remaining if remaining > 0.001 else "비용 %d · %s" % [roundi(mana_cost),("방향 선택" if skill_id == "line_assault" else "사용 가능") if ready else "부족"]
+		content.update_state(status,ready)
+		button.tooltip_text = "%s\n%s" % [String(skill.get("name","마력 기술")),status]
 
 func _on_demon_ultimate_pressed(skill_id: String) -> void:
 	for index in demon_ultimate_ui_skills.size():

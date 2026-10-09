@@ -3698,7 +3698,7 @@ func _create_demon_skill_card(skill_id: String) -> Control:
 	var skill := DEMON_ULTIMATES.get_skill(skill_id)
 	var selected := skill_id in demon_skill_selected_ids
 	var card := FORMATION_DRAG_CARD.new()
-	card.custom_minimum_size = Vector2(0.0, 246.0)
+	card.custom_minimum_size = Vector2(0.0, 274.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.configure_drag(
 		"skill",
@@ -3713,7 +3713,7 @@ func _create_demon_skill_card(skill_id: String) -> Control:
 	var margin := MarginContainer.new()
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for side in ["margin_left", "margin_top", "margin_right", "margin_bottom"]:
-		margin.add_theme_constant_override(side, 10)
+		margin.add_theme_constant_override(side, 24)
 	card.add_child(margin)
 
 	var vbox := VBoxContainer.new()
@@ -3722,6 +3722,7 @@ func _create_demon_skill_card(skill_id: String) -> Control:
 	margin.add_child(vbox)
 
 	var symbol := TextureRect.new()
+	symbol.name = "SkillIcon"
 	symbol.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	symbol.texture = SKILL_ART.texture("demon","demon",skill_id)
 	symbol.custom_minimum_size.y = 80

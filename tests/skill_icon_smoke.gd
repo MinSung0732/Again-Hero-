@@ -30,6 +30,7 @@ func run() -> void:
   slot.configure(fields[0],fields[1],fields[2])
   check(slot.image.texture != null and not slot.placeholder.visible,"provided art replaces placeholder " + key)
   var texture: Texture2D = slot.image.texture
+  check(maxf(texture.get_width(),texture.get_height()) <= 256,"large source downsampled once " + key)
   slot.configure(fields[0],fields[1],fields[2])
   check(slot.image.texture == texture,"cached texture reused " + key)
   if fields[0] == "hero":
@@ -55,7 +56,18 @@ func run() -> void:
  main.battle.set_external_pause(true)
  for i in range(main.demon_ultimate_ui_skills.size()):
   var id: String = main.demon_ultimate_ui_skills[i].id
-  check(main.demon_ultimate_ui_buttons[i].icon == ART.texture("demon","demon",id),"actual battle demon button " + id)
+  var content: Control = main.demon_ultimate_ui_content[i]
+  check(content.icon.texture == ART.texture("demon","demon",id),"actual battle demon button " + id)
+  check(main.demon_ultimate_ui_buttons[i].text.is_empty() and main.demon_ultimate_ui_buttons[i].icon == null,"native auto icon/text removed")
+  check(content.icon.get_rect().end.x < content.title.position.x,"icon cannot overlap title")
+  check(content.title.get_rect().end.y <= content.state.position.y,"two text lines cannot overlap")
+  check(content.get_rect().size.x <= main.demon_ultimate_ui_buttons[i].size.x,"content fits hitbox")
+ main.demon_mana_current = 100
+ main._refresh_demon_ultimate_buttons()
+ check(not main.demon_ultimate_2.disabled and main.demon_ultimate_ui_content[1].state.text.contains("방향 선택"),"direction choice retained")
+ main.demon_ultimate_cooldowns[main.demon_ultimate_ui_skills[0].id] = 3
+ main._refresh_demon_ultimate_buttons()
+ check(main.demon_ultimate_1.disabled and main.demon_ultimate_ui_content[0].state.text.contains("쿨"),"cooldown state retained")
  main.queue_free()
  await process_frame
  await process_frame
@@ -76,12 +88,22 @@ func run() -> void:
   lobby._populate_monster_detail(id)
   for entry in lobby._elite_detail_slots:
    if entry.row.visible: check(entry.icon.image.texture != null and not entry.icon.placeholder.visible,"actual elite detail icon " + id)
+ lobby._populate_monster_detail("manticore")
+ check(lobby._transcendent_detail.rows.filter(func(row):return row.visible).size() == 4,"manticore combined into four entries")
+ check(lobby._transcendent_detail.descriptions[3].text.contains("사냥 / 추적") and lobby._transcendent_detail.descriptions[3].text.contains("살을 찢는 공포"),"hunt and passive share description")
+ check(lobby._transcendent_detail.icons[3].texture == ART.texture("transcendent","manticore","살을 찢는 공포"),"combined entry shares passive icon")
  var first_row: Control = lobby._elite_detail_slots[0].row
  lobby._populate_monster_detail("slime")
  check(lobby._elite_detail_slots[0].row == first_row,"elite rows reused")
  for id in ["encirclement","line_assault","square_siege"]:
   var card: Control = lobby._create_demon_skill_card(id)
   check(card.find_children("*","TextureRect",true,false).any(func(image):return image.texture == ART.texture("demon","demon",id)),"actual formation card " + id)
+  root.add_child(card)
+  card.size = Vector2(264,274)
+  await process_frame
+  await process_frame
+  var icon: TextureRect = card.find_child("SkillIcon",true,false)
+  check(card.get_global_rect().grow(-24).encloses(icon.get_global_rect()),"formation icon clears decorative border " + id)
   card.free()
  lobby.queue_free()
  await process_frame

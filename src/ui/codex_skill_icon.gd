@@ -3,7 +3,7 @@ const ART := preload("res://src/data/skill_icon_catalog.gd")
 var image: TextureRect
 var placeholder: Label
 func _init() -> void:
-	custom_minimum_size = Vector2(76,76)
+	custom_minimum_size = Vector2(80,80)
 	size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
