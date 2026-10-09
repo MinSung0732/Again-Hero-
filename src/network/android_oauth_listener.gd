@@ -8,14 +8,14 @@ var _thread: Thread
 var _stop_mutex := Mutex.new()
 var _stop_requested := false
 
-func start(port: int, nonce: String, deadline: int) -> Error:
+func start(port: int, nonce: String, deadline: int, app_package: String = "") -> Error:
 	var server := TCPServer.new()
 	var error := server.listen(port, "127.0.0.1")
 	if error != OK:
 		return error
 	_stop_requested = false
 	_thread = Thread.new()
-	error = _thread.start(_receive.bind(server, port, nonce, deadline))
+	error = _thread.start(_receive.bind(server, port, nonce, deadline, app_package))
 	if error != OK:
 		server.stop()
 		_thread = null
@@ -43,7 +43,7 @@ func _stopping() -> bool:
 	_stop_mutex.unlock()
 	return stop
 
-func _receive(server: TCPServer, port: int, nonce: String, deadline: int) -> Dictionary:
+func _receive(server: TCPServer, port: int, nonce: String, deadline: int, app_package: String) -> Dictionary:
 	var peer: StreamPeerTCP
 	var buffer := ""
 	var peer_started := 0
@@ -69,9 +69,10 @@ func _receive(server: TCPServer, port: int, nonce: String, deadline: int) -> Dic
 				var parts := buffer.get_slice("\r\n", 0).split(" ")
 				var target := String(parts[1]) if parts.size() == 3 and parts[0] == "GET" else ""
 				var valid := buffer.to_lower().contains("\r\nhost: 127.0.0.1:%d\r\n" % port) and target.get_slice("?", 0) == "/auth/callback/" + nonce
-				var body := "인증 응답을 받았습니다. Godot 또는 게임 앱으로 돌아가 주세요. 이 창은 닫아도 됩니다." if valid else "Not found"
+				var body := _callback_page(app_package) if valid else "Not found"
 				var status := "200 OK" if valid else "404 Not Found"
-				peer.put_data(("HTTP/1.1 " + status + "\r\nContent-Type: text/plain; charset=utf-8\r\nCache-Control: no-store\r\nConnection: close\r\nContent-Length: %d\r\n\r\n" % body.to_utf8_buffer().size() + body).to_utf8_buffer())
+				var content_type := "text/html" if valid else "text/plain"
+				peer.put_data(("HTTP/1.1 " + status + "\r\nContent-Type: " + content_type + "; charset=utf-8\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\nConnection: close\r\nContent-Length: %d\r\n\r\n" % body.to_utf8_buffer().size() + body).to_utf8_buffer())
 				if valid:
 					result = {"target": target}
 					break
@@ -85,3 +86,19 @@ func _receive(server: TCPServer, port: int, nonce: String, deadline: int) -> Dic
 		peer.disconnect_from_host()
 	server.stop()
 	return result
+
+
+# Chrome may require a user gesture before launching an external app. Attempt
+# the automatic return first and keep an obvious one-tap fallback.
+static func _callback_page(app_package: String) -> String:
+	var return_uri := "againhero://resume"
+	if not app_package.is_empty():
+		return_uri = "intent://resume#Intent;scheme=againhero;package=" + app_package.uri_encode() + ";end"
+	return """<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>용사, 또 너야?</title></head><body style="font-family:sans-serif;text-align:center;padding:3em 1em">
+<h2>로그인 확인 완료</h2><p>게임으로 돌아가는 중입니다.</p>
+<p><a id="resume" href="%s" style="font-size:1.2em">게임으로 돌아가기</a></p>
+<p>자동 전환이 차단되면 위 링크를 눌러 주세요.</p>
+<script>setTimeout(function(){location.href=document.getElementById('resume').href},120);</script>
+</body></html>""" % return_uri
