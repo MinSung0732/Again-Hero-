@@ -1,3 +1,10 @@
+### 2026-10-09 — 로그인 복귀·Android 자동 로그인·관성 스크롤
+- OAuth PKCE/nonce/127.0.0.1 수신 경로 유지. Windows 콜백 HTML 탭 닫기 시도 + Godot 프로세스 창 활성화 시도. Android 콜백은 코드/토큰 없이 againhero://resume 또는 앱 패키지 지정 Intent로 자동 복귀 시도, 차단 시 수동 복귀 링크 제공.
+- Android Gradle export manifest의 VIEW/BROWSABLE 앱 복귀 스킴을 프로젝트 EditorExportPlugin으로 등록. Android Godot 편집기는 이 필터가 없어 자동 전환을 보장하지 않음.
+- Windows DPAPI 유지, Android는 JavaClassWrapper→AndroidKeyStore AES/GCM 키 기반 refresh token 인증 암호문만 디스크 보관. 로그아웃/게스트 전환 시 삭제하고 재실행 시 서버 refresh 및 /user 검증으로 계정 저장 복구. 미지원 기기는 저장 실패로 처리하고 평문으로 대체하지 않음.
+- 로비/전투 공통 모바일 스크롤: 드래그 속도로 프릭션 관성, 가장자리 최대 24px 탄성 이동 후 스프링 복귀. 누름·가로 스와이프·기존 스크롤 방향 구분 유지. 각 프레임 O(1), 노드 생성 없음.
+- 정적 코드·URL/보안 데이터 경로 검토. Windows/Android 브라우저 정책, Android KeyStore JNI, Gradle APK/모바일 스크롤 실제 기기 검증 필요.
+
 ### 2026-10-09 — 모바일 내부 스크롤 입력 안정화
 - 작업 기준을 원격 `feature/stage10-astra` 최신 HEAD에서 다시 확인한 뒤 적용.
 - `MobileScrollRouter`를 추가해 ScrollContainer 안의 Button/카드/모달 콘텐츠 위에서 시작한 손가락 드래그도 루트 입력 단계에서 직접 추적한다.
