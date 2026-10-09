@@ -13,6 +13,10 @@ var arrival := DATA.ARRIVAL_SECONDS
 var arrival_hit := false
 var focus := 0.0
 var flight_age := 0.0
+var hunt_previous_target := Vector2.ZERO
+var hunt_contact_radius := DATA.HUNT_BODY_RADIUS+DATA.HUNT_TARGET_RADIUS
+var flight_collision_layer := 2
+var flight_collision_mask := 3
 var destination := Vector2.ZERO
 var combo_timer := 0.0
 var combo_hits := 0
@@ -86,6 +90,8 @@ func _apply_normal_visual_profile() -> void:
 	channel_left = channel_right
 func _ready() -> void:
 	super._ready()
+	flight_collision_layer = collision_layer
+	flight_collision_mask = collision_mask
 	status_layer.z_as_relative = false
 	status_layer.z_index = 12
 	status_layer.draw.connect(_draw_status)
@@ -194,13 +200,21 @@ func _tick_motion(delta: float) -> void:
 			if focus <= 0.0:
 				motion = Motion.HUNT
 				flight_age = 0.0
+				hunt_previous_target = hero.global_position
+				hunt_contact_radius = _hunt_body_contact_radius()
 				_begin_flight()
 		Motion.HUNT:
 			flight_age += delta
 			_face_flight(direction,0)
 			var step := projectile_speed*delta
-			if offset.length() <= step+16.0:
-				global_position = hero.global_position-direction*16.0
+			var next_position := global_position+direction*minf(step,offset.length())
+			# Relative sweep includes both bodies moving between physics ticks.
+			var relative_start := global_position-hunt_previous_target
+			var relative_end := next_position-hero.global_position
+			var closest := Geometry2D.get_closest_point_to_segment(Vector2.ZERO,relative_start,relative_end)
+			hunt_previous_target = hero.global_position
+			if closest.length_squared() <= hunt_contact_radius*hunt_contact_radius:
+				global_position = hero.global_position-direction*hunt_contact_radius
 				motion = Motion.COMBO
 				combo_hits = 0
 				combo_accepted = false
@@ -208,7 +222,7 @@ func _tick_motion(delta: float) -> void:
 				triple = bool(hero.get_meta("bleed_active",false))
 				triple_success = true
 			else:
-				global_position += direction*step
+				global_position = next_position
 			MONSTER_RUNTIME_COMMON.notify_forced_position_change(self)
 			if flight_age >= 5.0: _end_motion()
 		Motion.COMBO:
@@ -232,8 +246,20 @@ func _tick_motion(delta: float) -> void:
 			global_position = global_position.move_toward(destination,projectile_speed*delta)
 			MONSTER_RUNTIME_COMMON.notify_forced_position_change(self)
 			if global_position.distance_squared_to(destination) < 0.01: _end_motion()
+func _hunt_body_contact_radius() -> float:
+	var own_shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	var target_shape := hero.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	var own_radius := DATA.HUNT_BODY_RADIUS
+	var target_radius := DATA.HUNT_TARGET_RADIUS
+	if own_shape != null and own_shape.shape is CircleShape2D:
+		own_radius = own_shape.shape.radius*maxf(absf(own_shape.global_scale.x),absf(own_shape.global_scale.y))
+	if target_shape != null and target_shape.shape is CircleShape2D:
+		target_radius = target_shape.shape.radius*maxf(absf(target_shape.global_scale.x),absf(target_shape.global_scale.y))
+	return own_radius+target_radius
+
 func _begin_flight() -> void:
 	velocity = Vector2.ZERO
+	collision_layer = 0
 	collision_mask = 0
 	set_meta("ignore_monster_separation",true)
 	visual.stop()
@@ -249,7 +275,8 @@ func _start_track(distance: float) -> void:
 	_begin_flight()
 func _end_motion() -> void:
 	motion = Motion.REST
-	collision_mask = 3
+	collision_layer = flight_collision_layer
+	collision_mask = flight_collision_mask
 	set_meta("ignore_monster_separation",false)
 	attack_timer = attack_cooldown/(1.5 if transcend_level >= 5 and wave_remaining > 0.0 else 1.0)
 	if not dying: visual.play(&"idle")
@@ -295,7 +322,7 @@ func _arrival_explosion() -> void:
 			if is_instance_valid(ally) and ally != self and ally.current_hp > 0 and global_position.distance_squared_to(ally.global_position) <= radius*radius:
 				ally.take_damage(maxi(int(round(attack_damage*1.35)),1))
 func _flame_point(index: int) -> Vector2:
-	return global_position+Vector2(-38.0 if index == 0 else 38.0,-30.0)*DATA.BODY_SCALE
+	return global_position+Vector2(-DATA.FLAME_SIDE_OFFSET if index == 0 else DATA.FLAME_SIDE_OFFSET,-30.0)*DATA.BODY_SCALE
 func _flame_direction(index: int) -> Vector2:
 	if not is_instance_valid(hero): return Vector2.RIGHT
 	var offset := hero.global_position-_flame_point(index)
@@ -424,7 +451,7 @@ func _draw_effects() -> void:
 		for i in range(flame_count()):
 			var point := _flame_point(i)-global_position
 			var frame := 1+int(clock*12.0)%4 if flame_contact[i] > 0.0 else (5+mini(2,int((0.3-flame_stop[i])*10.0)) if flame_stop[i] > 0.0 else 0)
-			FX.draw_oriented(effect_layer,0,frame,point,_flame_direction(i).angle() if is_instance_valid(hero) else 0.0,DATA.BODY_SCALE)
+			FX.draw_oriented(effect_layer,0,frame,point,_flame_direction(i).angle() if is_instance_valid(hero) else 0.0,DATA.BODY_SCALE/DATA.FLAME_VISUAL_DIVISOR)
 	for i in range(10):
 		if meteor_state[i] == 0: continue
 		var point := meteor_dest[i]-global_position

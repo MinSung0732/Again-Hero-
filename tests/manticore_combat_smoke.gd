@@ -91,7 +91,7 @@ func run() -> void:
 	actor._tick_motion(0.01)
 	check(actor.motion==actor.Motion.FOCUS and actor.focus==1.0,"1s concentration")
 	actor._tick_motion(1.0)
-	check(actor.motion==actor.Motion.HUNT and actor.collision_mask==0,"collision-free guided flight")
+	check(actor.motion==actor.Motion.HUNT and actor.collision_mask==0 and actor.collision_layer==0,"collision-free guided flight")
 	actor._tick_motion(1.0)
 	var before := target.damage
 	actor._tick_motion(0.01)
@@ -105,7 +105,7 @@ func run() -> void:
 		check(actor.destination.is_equal_approx(retreat_end),"moving hero never steers retreat destination")
 		check(absf((actor.position-retreat_start).cross(retreat_end-retreat_start))<0.1,"retreat follows straight path, no orbit")
 	actor._tick_motion(1.0)
-	check(actor.motion==actor.Motion.REST and actor.attack_timer==1.5 and actor.collision_mask==3,"interval only after retreat")
+	check(actor.motion==actor.Motion.REST and actor.attack_timer==1.5 and actor.collision_mask==3 and actor.collision_layer==2,"interval only after retreat")
 	var stopped: Vector2 = actor.position
 	target.position += Vector2(900,200)
 	for i in range(10): actor._tick_motion(0.1)
@@ -197,6 +197,41 @@ func run() -> void:
 	actor.set_meta("support_shield_hp",0)
 	actor.take_damage(100000)
 	check(actor.dying,"second lethal kills")
+	var sideways := Target.new()
+	authority.add_child(sideways)
+	var hit_shape := CollisionShape2D.new()
+	hit_shape.name = "CollisionShape2D"
+	hit_shape.shape = CircleShape2D.new()
+	hit_shape.shape.radius = 28.0
+	sideways.add_child(hit_shape)
+	var hunter = SCENE.instantiate()
+	hunter.configure_combat_context(sideways,authority)
+	authority.add_child(hunter)
+	hunter.set_physics_process(false)
+	hunter.visual.set_physics_process(false)
+	hunter.position = Vector2(44,0)
+	hunter.motion = hunter.Motion.FOCUS
+	hunter.focus = 0.0
+	hunter._tick_motion(0.0)
+	check(hunter.hunt_contact_radius==44.0,"combined actual circle radii16+28 cached per hunt")
+	sideways.position = Vector2(0,5)
+	hunter._tick_motion(1.0/60.0)
+	check(hunter.motion==hunter.Motion.COMBO,"tangential hero at body contact enters combo, no circular chase")
+	hunter._tick_motion(0.01)
+	hunter._tick_motion(0.12)
+	check(sideways.damage==70 and hunter.motion==hunter.Motion.TRACK,"contact still hits35x2 then retreats")
+	hunter._tick_motion(1.0)
+	check(hunter.collision_layer==2 and hunter.collision_mask==3,"flight restores both collision settings")
+	# A fast target crosses the flight path between samples without ending inside the contact radius.
+	hunter.position = Vector2.ZERO
+	sideways.position = Vector2(-100,0)
+	hunter.motion = hunter.Motion.FOCUS
+	hunter.focus = 0.0
+	hunter._tick_motion(0.0)
+	sideways.position = Vector2(100,0)
+	hunter._tick_motion(1.0/60.0)
+	check(hunter.motion==hunter.Motion.COMBO,"relative swept contact catches crossing target")
+	check(is_equal_approx(absf(hunter._flame_point(0).x-hunter.position.x),81.0),"heads spaced162 across body")
 	var burn = BURN.new()
 	burn.apply(1.0,49,target)
 	before = target.damage

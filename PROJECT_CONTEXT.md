@@ -1,3 +1,6 @@
+## Manticore hunt contact correction (2026-10-09)
+- Hunt uses combined real body radii and relative swept contact; radius lookup once per hunt. Flight disables both collision layer and mask, restoring prior settings after retreat. Preserve guided580/two-hit combo/bleed triple/stationary cooldown and Hero AI. Flame attachments now±81px, visual scale divided1.33 from previous size; logical125range/damage unchanged.
+
 ## Manticore attack/retreat correction (2026-10-09)
 - Straight fixed retreat destination, then stationary post-action cooldown before approaching/channeling again; original two-hit/bleed triple attack cycle preserved. Wave pillars stay upright and expire individually from oldest to newest; visual scales body/attachedFX1.35, wave1.5, meteor1.3. Meteor faces its fixed destination. Battle eye closure uses generated eye atlas regions only, preserving the original anatomy/rig texture. Headless checks; GPU/mobile unverified.
 
