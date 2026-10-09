@@ -4,6 +4,9 @@ extends RefCounted
 const ROOT := "res://assets/art/Transcendent_monster/zeus/frames/"
 const BULGASAL_AUDIO := preload("res://src/data/bulgasal_audio_catalog.gd")
 const ENTRIES := {
+	"manticore": {"name":"만티코어", "duration":5.0, "presentation_view":"res://src/ui/manticore_gacha_view.gd",
+		"charge_sound_path":BULGASAL_AUDIO.PRESENTATION_CUES.rumble.path,"charge_sound_at":1.4,"charge_volume_db":-20.0,
+		"impact_sound_path":BULGASAL_AUDIO.PRESENTATION_CUES.reveal.path,"impact_sound_at":2.2,"impact_volume_db":-14.0},
 	"izanami": {"name":"이자나미","duration":5.0,"presentation_view":"res://src/ui/izanami_gacha_view.gd", "impact_sound_path":"res://assets/audio/sfx/izanami/spirit_release.wav", "impact_sound_at":2.4,"impact_volume_db":-12.0, "charge_sound_path":"res://assets/audio/sfx/izanami/prayer_charge.wav","charge_sound_at":0.7,"charge_volume_db":-18.0},
 	"bulgasal": {"name":"불가살","duration":5.0,"presentation_view":"res://src/ui/bulgasal_gacha_view.gd",
 		"charge_sound_path":BULGASAL_AUDIO.PRESENTATION_CUES.rumble.path,"charge_sound_at":1.75,"charge_volume_db":-18.0,

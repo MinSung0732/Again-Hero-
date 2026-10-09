@@ -1,0 +1,308 @@
+{
+  "status": "verified_static_visible_partition_not_complete_live2d_rig",
+  "cell_size": [
+    768,
+    1280
+  ],
+  "sheet_size": [
+    3072,
+    5120
+  ],
+  "columns": 4,
+  "rows": 4,
+  "parts_count": 13,
+  "different_visible_rgba_pixels": 0,
+  "source_uniform_scale": 0.6,
+  "source_uniform_translation": [
+    30,
+    252
+  ],
+  "parts": [
+    {
+      "index": 1,
+      "name": "body_remaining_visible",
+      "file": "parts/01_body_remaining_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        0,
+        0
+      ],
+      "hidden_surfaces_completed": false
+    },
+    {
+      "index": 2,
+      "name": "scorpion_tail_visible",
+      "file": "parts/02_scorpion_tail_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        1,
+        0
+      ],
+      "hidden_surfaces_completed": false
+    },
+    {
+      "index": 3,
+      "name": "left_wing_visible",
+      "file": "parts/03_left_wing_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        2,
+        0
+      ],
+      "hidden_surfaces_completed": false
+    },
+    {
+      "index": 4,
+      "name": "right_wing_visible",
+      "file": "parts/04_right_wing_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        3,
+        0
+      ],
+      "hidden_surfaces_completed": false
+    },
+    {
+      "index": 5,
+      "name": "head_front_hair_ears_visible",
+      "file": "parts/05_head_front_hair_ears_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        0,
+        1
+      ],
+      "hidden_surfaces_completed": false
+    },
+    {
+      "index": 6,
+      "name": "raised_hand_arm_visible",
+      "file": "parts/06_raised_hand_arm_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        1,
+        1
+      ],
+      "hidden_surfaces_completed": false
+    },
+    {
+      "index": 7,
+      "name": "lowered_arm_hand_visible",
+      "file": "parts/07_lowered_arm_hand_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        2,
+        1
+      ],
+      "hidden_surfaces_completed": false
+    },
+    {
+      "index": 8,
+      "name": "back_hair_left_visible",
+      "file": "parts/08_back_hair_left_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        3,
+        1
+      ],
+      "hidden_surfaces_completed": false
+    },
+    {
+      "index": 9,
+      "name": "back_hair_right_visible",
+      "file": "parts/09_back_hair_right_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        0,
+        2
+      ],
+      "hidden_surfaces_completed": false
+    },
+    {
+      "index": 10,
+      "name": "left_cloth_visible",
+      "file": "parts/10_left_cloth_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        1,
+        2
+      ],
+      "hidden_surfaces_completed": false
+    },
+    {
+      "index": 11,
+      "name": "right_cloth_visible",
+      "file": "parts/11_right_cloth_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        2,
+        2
+      ],
+      "hidden_surfaces_completed": false
+    },
+    {
+      "index": 12,
+      "name": "front_leg_boot_visible",
+      "file": "parts/12_front_leg_boot_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        3,
+        2
+      ],
+      "hidden_surfaces_completed": false
+    },
+    {
+      "index": 13,
+      "name": "rear_leg_boot_visible",
+      "file": "parts/13_rear_leg_boot_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "sheet_cell": [
+        0,
+        3
+      ],
+      "hidden_surfaces_completed": false
+    }
+  ]
+}

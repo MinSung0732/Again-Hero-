@@ -1,3 +1,8 @@
+## Manticore gacha presentation (2026-10-09)
+- PresentationCatalog now accepts manticore transcendent results through the common five-second cutscene path. Native Skeleton2D/Polygon2D shared mesh derives seven flexible weights from the existing verified13-part ZIP; fixed face/hands/legs, continuous small wing/tail/hair/cloth motion. Live2D-style, no Cubism SDK/hidden-surface reconstruction.
+- Existing effect2/3/4 and sourced Pixabay earth cues reused, generated dark venom sanctuary backdrop. Cached view/weights/textures, deterministic transforms only. F6 src/dev/manticore_cutscene_preview.tscn uses synthetic outcomes and no awards/save.
+- Manticore is still absent from MonsterCatalog and actual gacha pools; gameplay/odds are untouched. Godot4.5.1 isolated headless cutscene/sequence/reuse/ratio/weights/audio-load checks pass; GPU/mobile/listening/performance/export unverified. docs/MANTICORE_GACHA.md.
+
 ## OAuth browser return and mobile inertia (2026-10-09)
 - OAuth code exchange, loopback Host/nonce/PKCE and /user validation unchanged. Callback page attempts Windows app focus/tab close or Android exported-game deep link (without auth code/token); browsers can block automatic external launches. Android manifest intent-filter injected by Gradle export EditorPlugin; Android Godot Editor itself cannot receive the new scheme.
 - Android refresh sessions are encrypted using an AndroidKeyStore AES-GCM key; only IV/ciphertext in user://, fail-closed on unsupported JNI/keystore, logout or explicit guest clears persisted file. Existing Windows DPAPI remains. On restart, validate refresh and same Supabase user before cloud restore.
