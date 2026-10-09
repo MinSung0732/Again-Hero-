@@ -36,9 +36,15 @@ func save_session(id: String, refresh_token: String) -> bool:
 		return false
 	var cipher = JavaClassWrapper.wrap("javax.crypto.Cipher").getInstance("AES/GCM/NoPadding")
 	cipher.init(1, key)
-	var encrypted: PackedByteArray = cipher.doFinal(JSON.stringify({"user_id": id, "refresh_token": refresh_token}).to_utf8_buffer())
-	var iv: PackedByteArray = cipher.getIV()
-	if JavaClassWrapper.get_exception() != null or iv.size() != 12 or encrypted.is_empty():
+	var encrypted_result: Variant = cipher.doFinal(JSON.stringify({"user_id": id, "refresh_token": refresh_token}).to_utf8_buffer())
+	if JavaClassWrapper.get_exception() != null or not encrypted_result is PackedByteArray:
+		return false
+	var encrypted: PackedByteArray = encrypted_result
+	var iv_result: Variant = cipher.getIV()
+	if JavaClassWrapper.get_exception() != null or not iv_result is PackedByteArray:
+		return false
+	var iv: PackedByteArray = iv_result
+	if iv.size() != 12 or encrypted.is_empty():
 		return false
 	var file := FileAccess.open(PATH + ".tmp", FileAccess.WRITE)
 	if file == null:
@@ -69,9 +75,10 @@ func read_session() -> Dictionary:
 	var cipher = JavaClassWrapper.wrap("javax.crypto.Cipher").getInstance("AES/GCM/NoPadding")
 	var spec = JavaClassWrapper.wrap("javax.crypto.spec.GCMParameterSpec").GCMParameterSpec(128, iv)
 	cipher.init(2, key, spec)
-	var plaintext: PackedByteArray = cipher.doFinal(encrypted)
-	if JavaClassWrapper.get_exception() != null:
+	var plaintext_result: Variant = cipher.doFinal(encrypted)
+	if JavaClassWrapper.get_exception() != null or not plaintext_result is PackedByteArray:
 		return {}
+	var plaintext: PackedByteArray = plaintext_result
 	var data: Variant = JSON.parse_string(plaintext.get_string_from_utf8())
 	return data if data is Dictionary and not String(data.get("user_id", "")).is_empty() and not String(data.get("refresh_token", "")).is_empty() else {}
 
