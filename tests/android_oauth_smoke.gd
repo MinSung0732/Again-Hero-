@@ -56,7 +56,9 @@ func run() -> void:
 	reply = await callback("/auth/callback/mobile-fixture?code=fixture", "untrusted.example")
 	check(reply.begins_with("HTTP/1.1 404"), "foreign Host rejected")
 	reply = await callback("/auth/callback/mobile-fixture?code=fixture")
-	check(reply.begins_with("HTTP/1.1 200") and reply.contains("돌아가"), "browser receives completion while scene paused")
+	check(reply.begins_with("HTTP/1.1 200") and reply.contains("게임으로 돌아가기"), "browser receives app-return page while scene paused")
+	check(reply.contains("againhero://resume") and not reply.contains("code=fixture"), "app return never leaks PKCE code")
+	check(LISTENER._callback_page("com.example.againhero").contains("intent://resume#Intent;scheme=againhero;package=com.example.againhero;end"), "package-scoped app return")
 	check(not accepted and oauth.calls.is_empty(), "worker does not mutate authentication")
 	oauth.set_process(true)
 	for i in range(10):
