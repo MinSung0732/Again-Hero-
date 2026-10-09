@@ -218,7 +218,7 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 	var portrait := TextureRect.new()
 	portrait.name = "MonsterPortrait"
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	portrait.custom_minimum_size = Vector2(124, 124) if registered_card else Vector2(148, 148)
+	portrait.custom_minimum_size = Vector2(124, 124) if registered_card else Vector2(128, 128)
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -244,10 +244,7 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 		var identity := label(box, String(copy.get("identity", "초월 몬스터")), 24)
 		identity.name = "Identity"
 		label(box, String(copy.get("feature", "전투당 한 번 소환하는 특수 몬스터")), 22).add_theme_color_override("font_color", Color("d4ccde"))
-		var stats: Dictionary = data.get("base_stats", {})
-		label(box, "기본 공격 %d  ·  체력 %d" % [int(stats.get("attack_damage", 0)), int(stats.get("max_hp", 0))], 23)
-		var divider := HSeparator.new()
-		box.add_child(divider)
+		# Full stats remain in the tapped detail view; keep the list card within its viewport.
 		label(box, "전투 소환 조건", 22).add_theme_color_override("font_color", EMERALD)
 		label(box, DATA.describe(id).replace(" 및 ", "\n+ ") + "\n조건 달성 후 무료 · 전투당 1회", 21)
 		var maxed := COLLECTION.is_maxed(id, state)
@@ -274,8 +271,11 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 		register_button.custom_minimum_size.y = 48
 	else:
 		var maxed := COLLECTION.is_maxed(id, state)
-		var action := button(box, "최대 초월 완료" if maxed else "초월  ·  조각 1개", _upgrade.bind(id))
+		var action := button(actions, "최대 초월" if maxed else "초월 · 조각 1개", _upgrade.bind(id))
 		action.name = "TranscendButton"
+		for item in [register_button,action]:
+			item.custom_minimum_size.y = 56
+			item.add_theme_font_size_override("font_size",20)
 		action.disabled = not unlocked or maxed or COLLECTION.get_shards(id, state) < lobby.MONSTER_CATALOG.get_shards_required(id)
 		action.tooltip_text = "최대 Lv.5 · 초월 조각 1개 · 초과 조각 1개당 연구 1,000 P"
 	if not unlocked:
