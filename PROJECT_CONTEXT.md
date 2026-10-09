@@ -1,3 +1,7 @@
+## Other subpage shared back navigation (2026-10-09)
+- One OtherNavigation row/Button outside settings/profile content, both show it and route to Other menu. Same position/style/80×88 on all settings pages and profile. Category list hides the row; profile picker cleanup unchanged. Future Other subpages reuse this row, not independent back buttons. Practice still opens actual Battle and keeps its battle navigation.
+- Godot4.5.1 isolated actual Lobby navigation assertions pass; fixture lacks unrelated frame/slider artwork so full settings test/render is incomplete. Android unverified.
+
 ## Monster detail five-stat presentation (2026-10-09)
 - Role aliases control/controller both label 제어; gameplay role IDs unchanged. Normal/elite details share five rows in order 체력/공격/공속/기동/사거리. Missing values show empty meter/—; stationary movement shows 고정. Self-destruct damage uses 공격 with 자폭 note, range uses existing self_destruct_range with 자폭 발동 note; fuse time is not fabricated as repeat attack speed. Existing elite multipliers/thresholds retained. Removed visual-scale line only, not actual monster scale.
 - Godot4.5.1 all Catalog detail-string checks pass for identity, exactly five rows/order and missing scale line; Android/full detail-panel layout unverified.

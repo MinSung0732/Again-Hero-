@@ -18,6 +18,7 @@ var other_menu: VBoxContainer
 var other_menu_buttons := {}
 var settings_root: VBoxContainer
 var profile_view: RefCounted
+var other_navigation: HBoxContainer
 var other_back_button: Button
 var other_backdrop: Panel
 var settings_title_plate: PanelContainer
@@ -165,10 +166,12 @@ func _build_other_menu(box: VBoxContainer) -> void:
 	for child in original:
 		child.reparent(settings_root)
 	var heading := HBoxContainer.new()
-	heading.name = "SettingsNavigation"
+	other_navigation = heading
+	heading.name = "OtherNavigation"
 	heading.add_theme_constant_override("separation", 12)
-	settings_root.add_child(heading)
-	settings_root.move_child(heading, 0)
+	# One navigation row shared by every Other subpage, outside their content.
+	box.add_child(heading)
+	box.move_child(heading, 0)
 	other_back_button = Button.new()
 	other_back_button.name = "BackToOther"
 	other_back_button.text = "‹"
@@ -231,6 +234,7 @@ func _build_other_menu(box: VBoxContainer) -> void:
 			button.pressed.connect(show_profile)
 
 func show_profile() -> void:
+	other_navigation.show()
 	settings_root.hide()
 	settings_title_plate.hide()
 	other_menu.hide()
@@ -250,6 +254,7 @@ func show_menu() -> void:
 	settings_root.hide()
 	settings_title_plate.hide()
 	menu_title_plate.show()
+	other_navigation.hide()
 	other_menu.show()
 
 func _style(fill: Color, edge: Color, width: int = 2) -> StyleBox:
@@ -631,6 +636,7 @@ func show_page(id: String) -> void:
 		menu_title_plate.hide()
 		settings_title_plate.show()
 		settings_root.show()
+		other_navigation.show()
 	var changing := selected != id
 	selected = id
 	account_heading.visible = id == "account"

@@ -41,6 +41,7 @@ func run() -> void:
 	await process_frame
 	await process_frame
 	check(view.other_menu.visible and not view.settings_root.visible, "other tab opens category list instead of settings")
+	check(not view.other_navigation.visible,"category list has no back button")
 	check(view.other_menu_buttons.size() == 9, "nine categories include profile and gated practice")
 	var outer: Rect2 = lobby.other_tab.get_global_rect()
 	var menu_title_rect: Rect2 = view.menu_title_plate.get_global_rect()
@@ -70,8 +71,14 @@ func run() -> void:
 	check(back_rect.position.y >= outer.position.y + 80 and outer.encloses(back_rect), "back arrow stays within outer frame")
 	check(settings_title_rect.is_equal_approx(team_title_rect) and not settings_title_rect.intersects(back_rect), "settings title matches rail position while back arrow stays inside")
 	check(view.settings_title_plate.visible and not view.menu_title_plate.visible, "only active subpage title is shown")
+	var shared_back: Button = view.other_back_button
+	view.show_profile()
+	await process_frame
+	check(view.other_navigation.visible and view.other_back_button == shared_back,"profile reuses same navigation button")
+	check(view.profile_view.root.find_children("BackToOther","Button",true,false).is_empty(),"profile has no duplicate back button")
 	view.other_back_button.pressed.emit()
 	check(view.other_menu.visible and not view.settings_root.visible, "back returns to category list")
+	check(not view.other_navigation.visible and not view.profile_view.root.visible,"shared back hides navigation and subpage")
 	view.other_menu_buttons.settings.pressed.emit()
 	check(view.buttons.size() == 5 and view.pages.size() == 5, "five expandable settings pages")
 	check(view.selected == "game", "game is default")
@@ -87,6 +94,11 @@ func run() -> void:
 		if id == "sound":
 			check(view.pages[id].size.y <= view.scroll.size.y + 1, "all sound controls and guide fit without clipping")
 		await capture(id)
+	if "--navigation-only" in OS.get_cmdline_user_args():
+		lobby.free()
+		print("OTHER_NAVIGATION: ","FAIL" if failed else "PASS")
+		quit(1 if failed else 0)
+		return
 	view.show_page("game")
 	view.game_checks.camera_view_locked.button_pressed = false
 	view.game_checks.battle_frame_enabled.button_pressed = false

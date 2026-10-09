@@ -51,14 +51,6 @@ func install(owner: RefCounted, parent: Control) -> void:
 	title.text = "프로필"
 	title_plate = settings._title_plate(lobby.other_tab, title)
 	title_plate.name = "ProfileTitlePlate"
-	var navigation := HBoxContainer.new()
-	root.add_child(navigation)
-	var back := _button(navigation, "‹", false)
-	back.name = "BackToOther"
-	back.custom_minimum_size = Vector2(80, 80)
-	back.size_flags_horizontal = Control.SIZE_FILL
-	back.add_theme_font_size_override("font_size", 54)
-	back.connect("confirmed", settings.show_menu)
 	scroll = ScrollContainer.new()
 	scroll.name = "ProfileScroll"
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
