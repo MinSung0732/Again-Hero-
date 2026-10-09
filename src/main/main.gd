@@ -6,6 +6,7 @@ var _battle_stamina_entry: Dictionary = {}
 var _battle_started_ms := -1
 var _battle_started_unix := -1.0
 var _lobby_exit_pending := false
+var _mobile_scroll_router := MOBILE_SCROLL_ROUTER.new()
 
 signal demon_action_choice_selected(context: String, choice_id: String)
 
@@ -24,6 +25,7 @@ const HERO_AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
 const HERO_SKILL_COOLDOWN_BADGE := preload("res://src/ui/hero_skill_cooldown_badge.gd")
 const BATTLE_PIXEL_FRAME_ASSEMBLER := preload("res://src/ui/battle_pixel_frame_assembler.gd")
 const PIXEL_PANEL_SKIN := preload("res://src/ui/pixel_panel_skin.gd")
+const MOBILE_SCROLL_ROUTER := preload("res://src/ui/mobile_scroll_router.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 const STAGE_INTRO_DIALOGUES := preload("res://src/data/stage_intro_dialogues.gd")
 const HERO_REVEAL_CATALOG := preload("res://src/data/hero_reveal_catalog.gd")
@@ -986,6 +988,12 @@ func _input(event: InputEvent) -> void:
 	if TutorialFlow.blocks_input(event):
 		return
 	if TutorialFlow.modal_visible:
+		return
+	if _mobile_scroll_router.handle_input(event, self):
+		_end_camera_drag()
+		_end_touch_hold()
+		_clear_pending_manual_spawn()
+		get_viewport().set_input_as_handled()
 		return
 	if _guard_demon_choice_pointer(event):
 		get_viewport().set_input_as_handled()

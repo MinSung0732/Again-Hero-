@@ -24,6 +24,7 @@ const FORMATION_DRAG_CARD := preload("res://src/ui/formation_drag_card.gd")
 const TEAM_FORMATION_VIEW := preload("res://src/ui/team_formation_view.gd")
 const MONSTER_UPGRADE_FEEDBACK := preload("res://src/ui/monster_upgrade_feedback.gd")
 const PIXEL_PANEL_SKIN := preload("res://src/ui/pixel_panel_skin.gd")
+const MOBILE_SCROLL_ROUTER := preload("res://src/ui/mobile_scroll_router.gd")
 const FORMATION_PRESET_MODEL := preload("res://src/systems/formation_preset_model.gd")
 const GACHA_REVEAL_OVERLAY := preload("res://src/ui/gacha_reveal_overlay.gd")
 const DEMON_ULTIMATES := preload("res://src/data/demon_ultimate_catalog.gd")
@@ -34,6 +35,7 @@ const DEMON_SKILL_LOADOUT_STORE := preload(
 const STAMINA := preload("res://src/systems/stamina_store.gd")
 const STAMINA_RULES := preload("res://src/data/stamina_catalog.gd")
 var stamina_view: RefCounted
+var _mobile_scroll_router := MOBILE_SCROLL_ROUTER.new()
 var _battle_entry_pending := false
 var _stamina_entry: Dictionary = {}
 
@@ -2177,12 +2179,18 @@ func _input(event: InputEvent) -> void:
 		return
 	if TutorialFlow.blocks_input(event):
 		return
+	if TutorialFlow.modal_visible:
+		return
+	if _mobile_scroll_router.handle_input(event, self):
+		_shop_scroll_touch_index = -1
+		_detail_scroll_touch_index = -1
+		_stage_swipe_active = false
+		get_viewport().set_input_as_handled()
+		return
 	if stamina_view != null and stamina_view.handle_info_input(event):
 		get_viewport().set_input_as_handled()
 		return
 	if main_modes_view != null and is_instance_valid(main_modes_view.unlock_feedback):
-		return
-	if TutorialFlow.modal_visible:
 		return
 	if (
 		is_instance_valid(gacha_reveal_overlay)
@@ -2207,9 +2215,7 @@ func _input(event: InputEvent) -> void:
 		return
 
 	if monster_detail_overlay.visible:
-		_handle_monster_detail_touch_scroll(event)
 		return
-	_handle_shop_touch_scroll(event)
 
 	if stage_select_overlay.visible:
 		_stage_swipe_active = false
