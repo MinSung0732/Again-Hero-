@@ -48,14 +48,14 @@ func run() -> void:
 			view.select_monster(category,id)
 			check(page.name.text == DATA.MONSTERS.get_monster_name(id),"real name " + id)
 			check(page.portrait.texture != null,"dot loaded " + id)
-			check(page.stats.text.contains(DATA.stats(id)),"real stats " + id)
+			check(page.stat_values.map(func(label): return label.text) == DATA.stat_values(id),"real structured stats " + id)
 			if category == "transcendent":
 				check(page.trans_view.unlock.text.contains(DATA.RULES.describe(id).split(" 및 ")[0].split(" 또는 ")[0]),"real unlock " + id)
 				for kind in ["illustration","banner"]:
 					check(not page.art_buttons[kind].disabled,"available artwork " + id + kind)
 					view.preview(category,kind)
-					check(view.popup.visible and view.preview_image.texture != null,"artwork preview " + id + kind)
-					view.popup.hide()
+					check(view.preview_root.visible and view.preview_image.texture != null,"artwork preview " + id + kind)
+					view.close_preview()
 				check(page.art_buttons.plus_banner.disabled == (id not in ["zeus","manticore"]),"no invented five-upgrade banners " + id)
 		page.search.text = "does-not-exist"
 		page.search.text_changed.emit(page.search.text)
@@ -68,20 +68,64 @@ func run() -> void:
 			await process_frame
 			await process_frame
 			check(view.root.get_combined_minimum_size().x <= width,"no horizontal overflow %s %d" % [category,width])
-			for card in page.cards.values(): check(card.size.x <= width and card.size.y >= 206,"complete cards fit width")
+			for card in page.cards.values(): check(card.size.x <= width and is_equal_approx(card.size.y,VIEW.CARD_HEIGHT),"complete cards fit width")
+	# Regression: all text lengths produce exactly the same collapsed list position.
+	for category in ["monsters","transcendent"]:
+		view.select_category(category)
+		var page: Dictionary = view.monster_pages[category]
+		for width in [360,540,740,1000]:
+			parent.size.x = width
+			if page.body.visible: page.toggle.confirmed.emit()
+			await process_frame
+			await process_frame
+			var list_top: float = page.grid.position.y
+			var summary_height: float = page.header.get_parent().size.y
+			for id in page.ids:
+				view.select_monster(category,id)
+				await process_frame
+				await process_frame
+				check(is_equal_approx(page.grid.position.y,list_top),"text cannot shift collapsed grid %s %d" % [id,width])
+				check(is_equal_approx(page.header.get_parent().size.y,summary_height),"fixed summary height " + id)
+				check(page.header.size.y == VIEW.SUMMARY_HEIGHT,"fixed header height " + id)
+				page.toggle.confirmed.emit()
+				await process_frame
+				await process_frame
+				check(page.body.visible and page.toggle.text.contains("접기"),"explicitly expands " + id)
+				check(view.root.get_combined_minimum_size().x <= width,"expanded detail fits %s %d" % [id,width])
+				page.toggle.confirmed.emit()
+				await process_frame
+				await process_frame
+				check(not page.body.visible and is_equal_approx(page.grid.position.y,list_top),"collapse restores list " + id)
 	view.select_category("transcendent")
 	view.select_monster("transcendent","manticore")
 	check(view.monster_pages.transcendent.identity.text.contains("폭발"),"localized role")
 	view.preview("transcendent","plus_banner")
 	check(view.preview_title.text.contains("5초월"),"five-upgrade preview")
+	for viewport_size in [Vector2i(360,800),Vector2i(540,960),Vector2i(1280,720)]:
+		root.size = viewport_size
+		await process_frame
+		await process_frame
+		check(view.preview_root.size.is_equal_approx(root.get_visible_rect().size),"artwork covers entire viewport")
+		check(Rect2(Vector2.ZERO,view.preview_root.size).encloses(view.preview_exit.get_rect()),"exit always inside screen")
+		check(view.preview_root.mouse_filter == Control.MOUSE_FILTER_STOP,"blocks underlying navigation")
+	view.preview_exit.confirmed.emit()
+	check(not view.preview_root.visible and view.preview_image.texture == null,"exit closes and releases display")
+	view.preview("transcendent","illustration")
+	check(view.preview_image.texture is AtlasTexture,"display trims transparent margins only")
+	var escape := InputEventKey.new()
+	escape.keycode = KEY_ESCAPE
+	escape.pressed = true
+	view.preview_root.gui_input.emit(escape)
+	check(not view.preview_root.visible,"Escape returns to codex")
+	view.preview("transcendent","plus_banner")
 	parent.hide()
-	check(not view.popup.visible,"parent tab hidden closes preview")
+	check(not view.preview_root.visible,"parent tab hidden closes preview")
 	parent.show()
 	view.scroll.scroll_vertical = 400
 	view.monster_pages.transcendent.cards.zeus.confirmed.emit()
-	check(view.monster_pages.transcendent.selected == "zeus" and view.scroll.scroll_vertical == 0,"card selects and returns to detail")
+	check(view.monster_pages.transcendent.selected == "zeus" and view.scroll.scroll_vertical == 0 and view.monster_pages.transcendent.body.visible,"card selects and returns to detail")
 	view.select_category("skills")
-	check(not view.popup.visible,"category change closes preview")
+	check(not view.preview_root.visible,"category change closes preview")
 	for width in [360,540,740,1000]:
 		parent.size.x = width
 		for category in DATA.CATEGORIES:
@@ -99,7 +143,8 @@ func run() -> void:
 	check(ordinary.extra.get_child_count() == cached,"details reused without reconstruction")
 	check(COLLECTION.load_state() == before,"read-only collection and upgrade progress")
 	view.hide()
-	check(not view.root.visible and not view.title_plate.visible and not view.popup.visible,"navigation cleanup")
+	check(not view.root.visible and not view.title_plate.visible and not view.preview_root.visible,"navigation cleanup")
 	host.free()
+	check(not root.size_changed.is_connected(view._resize_preview),"viewport signal disconnected when lobby is destroyed")
 	print("DEMON_CODEX: " + ("PASS" if failures == 0 else "FAIL"))
 	quit(0 if failures == 0 else 1)

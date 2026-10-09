@@ -14,6 +14,7 @@ const ART := {
 	"izanami":{"illustration":"res://assets/art/Transcendent_monster/Izanami/izanami_illustration.png"},
 	"manticore":{"illustration":"res://assets/art/Transcendent_monster/manticore/manticore_illustration.png"},
 }
+const STAT_FIELDS := [["max_hp","체력"],["attack_damage","공격력"],["move_speed","이동속도"],["attack_range","공격 판정 거리"],["attack_cooldown","공격 간격"],["base_cost","소환 지휘력"]]
 const AUGMENT_CATEGORIES := {"command":"지휘","growth":"성장","economy":"경제"}
 static func monster_ids(transcendent: bool) -> Array[String]:
 	var result: Array[String] = []
@@ -53,3 +54,12 @@ static func elite_portrait(id: String) -> String:
 	var idle: Dictionary = visual.get("animations", {}).get("idle", {})
 	if visual.get("mode", "") != "frames" or idle.is_empty(): return ""
 	return "%s/%s_01.png" % [visual.get("asset_dir", ""), idle.get("prefix", "idle")]
+
+static func stat_values(id: String) -> Array[String]:
+	var result: Array[String] = []
+	var stats := MONSTERS.get_base_stats(id)
+	for field in STAT_FIELDS:
+		var key: String = field[0]
+		var value = MONSTERS.get_base_cost(id) if key == "base_cost" else stats.get(key,null)
+		result.append("—" if value == null else (str(value) + ("초" if key == "attack_cooldown" else "")))
+	return result

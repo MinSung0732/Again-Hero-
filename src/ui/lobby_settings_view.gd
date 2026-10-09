@@ -244,6 +244,7 @@ func _build_other_menu(box: VBoxContainer) -> void:
 			button.pressed.connect(show_profile)
 
 func show_hero_codex() -> void:
+	if other_back_button != null: other_back_button.custom_minimum_size.y = 88
 	if demon_codex_view != null: demon_codex_view.hide()
 	other_navigation.show()
 	settings_root.hide()
@@ -254,6 +255,7 @@ func show_hero_codex() -> void:
 	hero_codex_view.show()
 
 func show_demon_codex() -> void:
+	other_back_button.custom_minimum_size.y = 56
 	other_navigation.show()
 	settings_root.hide()
 	settings_title_plate.hide()
@@ -264,6 +266,7 @@ func show_demon_codex() -> void:
 	demon_codex_view.show()
 
 func show_profile() -> void:
+	if other_back_button != null: other_back_button.custom_minimum_size.y = 88
 	if hero_codex_view != null: hero_codex_view.hide()
 	if demon_codex_view != null: demon_codex_view.hide()
 	other_navigation.show()
@@ -277,6 +280,7 @@ func _open_settings() -> void:
 	show_page(selected)
 
 func show_menu() -> void:
+	if other_back_button != null: other_back_button.custom_minimum_size.y = 88
 	if hero_codex_view != null: hero_codex_view.hide()
 	if demon_codex_view != null: demon_codex_view.hide()
 	if other_menu_buttons.has("practice"):
@@ -661,6 +665,7 @@ func _sync_account() -> void:
 		profile_view.refresh()
 
 func show_page(id: String) -> void:
+	if other_back_button != null: other_back_button.custom_minimum_size.y = 88
 	if not pages.has(id):
 		return
 	if hero_codex_view != null: hero_codex_view.hide()

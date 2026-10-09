@@ -64,8 +64,28 @@ func run() -> void:
 		previous_bottom = rect.end.y
 	view.other_menu_buttons.demon_book.pressed.emit()
 	check(view.demon_codex_view.root.visible and not view.other_menu.visible,"demon encyclopedia connected")
+	var codex = view.demon_codex_view
+	check(view.other_back_button.custom_minimum_size.y == 56,"compact codex navigation")
+	codex.select_category("monsters")
+	await process_frame
+	await process_frame
+	var list_top: float = codex.monster_pages.monsters.grid.global_position.y
+	codex.select_monster("monsters","bomb_rat")
+	await process_frame
+	await process_frame
+	check(is_equal_approx(codex.monster_pages.monsters.grid.global_position.y,list_top),"actual lobby list cannot move for shorter monster stats")
+	codex.select_category("transcendent")
+	codex.preview("transcendent","illustration")
+	await process_frame
+	await process_frame
+	check(codex.preview_root.size.is_equal_approx(root.get_visible_rect().size),"full art covers actual scaled lobby")
+	check(codex.preview_root.global_position.is_zero_approx(),"full art starts at viewport origin")
+	check(codex.preview_root.get_global_rect().encloses(codex.preview_exit.get_global_rect()),"exit not clipped in actual lobby")
+	codex.preview_exit.confirmed.emit()
+	check(not codex.preview_root.visible,"exit returns to same codex")
 	view.show_hero_codex()
 	check(not view.demon_codex_view.root.visible and view.hero_codex_view.root.visible,"codices are exclusive")
+	check(view.other_back_button.custom_minimum_size.y == 88,"other pages restore navigation size")
 	view.show_menu()
 	check(not view.demon_codex_view.root.visible,"return hides demon encyclopedia")
 	view.other_menu_buttons.settings.pressed.emit()
