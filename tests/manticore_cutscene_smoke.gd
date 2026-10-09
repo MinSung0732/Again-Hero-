@@ -40,6 +40,39 @@ func run():
 		var sum=0.0
 		for bone in range(bone_count):sum+=view.rig.mesh.get_bone_weights(bone)[vertex]
 		assert(absf(sum-1.0)<0.0001)
+	# Stronger skin must never fold or leave the stage at any reveal phase.
+	var weights: Array[PackedFloat32Array] = []
+	for bone in range(bone_count):
+		weights.append(view.rig.mesh.get_bone_weights(bone))
+	var deformed := PackedVector2Array()
+	deformed.resize(total)
+	var max_motion := 0.0
+	for frame in range(121):
+		var t := float(frame) / 24.0
+		view.set_time(t)
+		for vertex in range(total):
+			var point: Vector2 = initial_vertices[vertex]
+			var output := point * weights[0][vertex]
+			for bone in range(1, bone_count):
+				var pivot: Vector2 = view.rig.PIVOTS[bone]
+				var transform_bone: Bone2D = view.rig.bones[bone]
+				output += ((point - pivot).rotated(transform_bone.rotation) + transform_bone.position) * weights[bone][vertex]
+			deformed[vertex] = output
+			max_motion = maxf(max_motion, point.distance_to(output))
+			assert(Rect2(Vector2(0,0),Vector2(540,825)).has_point(view.rig.position + output * view.rig.scale) or not _visible_vertex(point, view))
+		for triangle in view.rig.mesh.polygons:
+			var a := deformed[triangle[1]] - deformed[triangle[0]]
+			var b := deformed[triangle[2]] - deformed[triangle[0]]
+			assert(a.cross(b) > 0.0)
+	assert(max_motion > 15.0)
+	assert(view.effects.size()==10 and view.aura_materials.size()==2)
+	view.set_time(2.25)
+	assert(view.impact_flash.modulate.a>0.0)
+	view.set_time(0.0)
+	assert(view.impact_flash.modulate.a==0.0)
+	assert(view.rig.position.is_equal_approx(view.RIG_ORIGIN))
+	for material in view.aura_materials:
+		assert(float(material.get_shader_parameter("clock"))==0.0)
 	player.advance(1.0)
 	assert(not player._impact_played)
 	assert(float(view.reveal_material.get_shader_parameter("reveal_edge"))<0)
@@ -111,3 +144,11 @@ func run():
 	await process_frame
 	print("MANTICORE_CUTSCENE PASS: normal/skip/cancel/reuse, both result sources, three transcendent order, four aspect ratios")
 	quit()
+
+func _visible_vertex(point: Vector2, view) -> bool:
+	# Source texture loaded once for this geometry regression check.
+	if _source_image==null:
+		_source_image=view.rig.mesh.texture.get_image()
+	return _source_image.get_pixel(mini(int(point.x),767),mini(int(point.y),1279)).a>0.1
+
+var _source_image: Image

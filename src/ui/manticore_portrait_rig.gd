@@ -7,7 +7,7 @@ const ROWS := 81
 const CANVAS := Vector2(768, 1280)
 const PARTS := ["02_scorpion_tail_visible.png", "03_left_wing_visible.png", "04_right_wing_visible.png", "08_back_hair_left_visible.png", "09_back_hair_right_visible.png", "10_left_cloth_visible.png", "11_right_cloth_visible.png"]
 const PIVOTS := [Vector2.ZERO, Vector2(205, 505), Vector2(240, 530), Vector2(485, 530), Vector2(340, 430), Vector2(475, 585), Vector2(300, 650), Vector2(435, 755)]
-const AMPLITUDES := [0.0, 1.5, 1.1, -1.1, 0.55, -0.55, 0.3, -0.3]
+const AMPLITUDES := [0.0, 4.4, 3.2, -3.2, 1.6, -1.6, 1.2, -1.2]
 var mesh: Polygon2D
 var bones: Array[Bone2D] = []
 
@@ -52,6 +52,7 @@ func _ready() -> void:
 				weights[i + 1].append(amount)
 				assigned += amount
 			weights[0].append(maxf(0.0, 1.0 - assigned))
+	_soften_weights(weights)
 	for y in range(ROWS - 1):
 		for x in range(COLS - 1):
 			var a := y * COLS + x
@@ -69,9 +70,33 @@ func _ready() -> void:
 		mesh.add_bone(skeleton.get_path_to(bones[i]), weights[i])
 	set_time(0.0)
 
+func _soften_weights(weights: Array[PackedFloat32Array]) -> void:
+	# Partition edges are sharp; stronger rotation needs a gradual shared skin.
+	# Only initialization: six diffusion passes prevent triangles folding at seams.
+	for bone in range(1, weights.size()):
+		for pass_index in range(6):
+			var source := weights[bone]
+			var softened := PackedFloat32Array()
+			softened.resize(COLS * ROWS)
+			for y in range(ROWS):
+				for x in range(COLS):
+					var index := y * COLS + x
+					softened[index] = (source[index] * 4.0 + source[y * COLS + maxi(x - 1, 0)] + source[y * COLS + mini(x + 1, COLS - 1)] + source[maxi(y - 1, 0) * COLS + x] + source[mini(y + 1, ROWS - 1) * COLS + x]) / 8.0
+			weights[bone] = softened
+	for index in range(COLS * ROWS):
+		var total := 0.0
+		for bone in range(1, weights.size()):
+			total += weights[bone][index]
+		weights[0][index] = maxf(0.0, 1.0 - total)
+
 func set_time(seconds: float) -> void:
-	# Fixed seven transforms only; mesh, weights and textures are built once.
+	# Roots stay pinned to the shared mesh; flexible tips carry the stronger motion.
+	# A reveal gust opens wings/tail, then decays into a slower living idle.
+	var gust := smoothstep(1.5, 2.2, seconds) * (1.0 - smoothstep(2.65, 3.55, seconds))
 	for i in range(1, bones.size()):
 		var phase := float(i) * 0.31
-		var wave := sin(seconds * 1.6 - phase) + sin(phase)
-		bones[i].rotation = deg_to_rad(wave * AMPLITUDES[i])
+		var wave := sin(seconds * 2.0 - phase) + sin(phase)
+		var opening := gust * (1.0 if i < 4 else 0.45)
+		bones[i].rotation = deg_to_rad(clampf((wave + opening) * AMPLITUDES[i], -8.0, 8.0))
+		var breath := sin(seconds * TAU / 3.2 - phase) + sin(phase)
+		bones[i].position = PIVOTS[i] + Vector2(0.0, -breath * (1.8 if i > 3 else 0.7))
