@@ -710,6 +710,7 @@ func _on_pixel_asset_button_up(button: BaseButton) -> void:
 
 
 func _process(delta: float) -> void:
+	_mobile_scroll_router.step(delta)
 	_update_demon_choice_guard()
 	_update_touch_hold_feedback(delta)
 	if _battle_toast_timer > 0.0:
