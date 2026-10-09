@@ -33,6 +33,11 @@ func reset() -> void:
 
 
 func step(delta: float) -> void:
+	if is_instance_valid(_target) and (
+		_target.mouse_filter == Control.MOUSE_FILTER_IGNORE or _target.get_viewport().gui_is_dragging()
+	):
+		reset()
+		return
 	if not is_instance_valid(_target) or (_touch_index >= 0 and not _dragging):
 		return
 	if _touch_index >= 0:
@@ -54,6 +59,14 @@ func step(delta: float) -> void:
 
 
 func handle_input(event: InputEvent, root: Node) -> bool:
+	# A long-press card owns the native GUI drag, including emulated mouse input.
+	# The cached scroll was acquired before the card changed its mouse_filter.
+	if is_instance_valid(root) and root.get_viewport().gui_is_dragging():
+		reset()
+		return false
+	if is_instance_valid(_target) and _target.mouse_filter == Control.MOUSE_FILTER_IGNORE:
+		reset()
+		return false
 	if event is InputEventScreenTouch:
 		var touch := event as InputEventScreenTouch
 		if touch.pressed:

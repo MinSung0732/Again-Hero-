@@ -60,7 +60,12 @@ func run() -> void:
 	touch(2, point, true)
 	for i in range(4):
 		drag(2, point, Vector2(0, -0.25))
-	check(detail.scroll_vertical == 1, "fractional touch motion is accumulated")
+	check(detail.scroll_vertical == 0, "sub-deadzone jitter does not begin scrolling")
+	drag(2, point - Vector2(0, 16), Vector2(0, -16))
+	var after_deadzone := detail.scroll_vertical
+	for i in range(4):
+		drag(2, point - Vector2(0, 17), Vector2(0, -0.25))
+	check(detail.scroll_vertical == after_deadzone + 1, "fractional touch motion is accumulated after swipe begins")
 	drag(2, point - Vector2(0, 160), Vector2(0, -160))
 	check(detail.scroll_vertical > 0, "raw touch scrolls popup")
 	check(list.scroll_vertical == initial_list, "popup touch leaves list stationary")
