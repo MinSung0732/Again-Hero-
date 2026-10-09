@@ -1,3 +1,8 @@
+## Demon codex (2026-10-09)
+- Other→Demon codex is active: four cached read-only categories for Demon skills, 21 ordinary monsters, Demon-wide augments and four registered transcendent monsters. Gameplay catalogs supply skill costs/cooldowns, charge conversion, basic stats, elite skills, augments and unlock/five-tier rules; reference mockup content is not gameplay data.
+- Search/rarity/role filters and width-responsive cards. Long skills/upgrades collapse independently. Artwork popup previews existing illustrations/banners and only registered tier5 banners (Zeus/Manticore), without granting/equipping rewards or writing collection state.
+- Shared skill_icon_catalog explicit domain:owner:skill registry covers demon/elite/transcendent/hero; empty framed slots until authored art is provided. Hero discovery and account locks also hide slots. No battle scans/process callbacks; pages/cards/ordinary details/textures reused. Headless UI/data/navigation regressions pass; GPU/mobile/export unverified. docs/DEMON_CODEX.md.
+
 ## Manticore visual facing and wave timing (2026-10-09)
 - Flight/locomotion share facing cache; mirror anchor with the sprite. HP/mana/shield/channel follow current visible frame bounds cached once across instances. Wave pillars each play01..04 from individual birth, hold04 then play05..08 in original order; no fade before full growth. Combat stats and previous flame spacing/scale preserved. Headless checks, GPU/mobile unverified.
 

@@ -38,7 +38,7 @@ func run() -> void:
 	check(view.pages.all(func(page): return not page.visible and page.text.is_empty()),"locked details contain no information")
 	check(view.tabs.all(func(tab): return tab.disabled),"locked tabs disabled")
 	view.select_tab(4)
-	check(not view.resource_page.visible,"locked resource tab cannot reveal portraits")
+	check(not view.resource_page.visible and not view.skill_icons.visible,"locked resource tab cannot reveal portraits or skill slots")
 	check(view.locked_page.get_child(0).texture != null,"closed lock asset loads")
 	var config := ConfigFile.new()
 	config.set_value("progress","highest_unlocked_stage",10)
@@ -92,6 +92,7 @@ func run() -> void:
 		for index in range(4):
 			view.select_tab(index)
 			check(view.pages[index].visible,"selected page visible")
+			check(view.skill_icons.visible == (index == 1 and not view.skill_slots.is_empty()),"skill slots confined to skills tab")
 			check(view.pages.filter(func(page): return page.visible).size() == 1,"one page visible")
 		check(view.hero_name.text == entry.name,"identity has no stage label")
 		check(view.list_scroll.visible and view.detail_root.visible,"selection preserves left list")
@@ -139,7 +140,7 @@ func run() -> void:
 	view.show()
 	check(view.locked_page.visible and view.list_names.all(func(label): return label.text == "?"),"account change refreshes cached names and lock")
 	check(view.portrait.texture == null and view.resource_images.all(func(image): return image.texture == null),"account change hides old portrait and resources")
-	check(view.pages.all(func(page): return page.text.is_empty()),"account change clears previous details")
+	check(view.pages.all(func(page): return page.text.is_empty()) and not view.skill_icons.visible,"account change clears previous details and skill icons")
 	SCOPE.user_id = "11111111-1111-4111-8111-111111111111"
 	SCOPE.files = {"stage_progress.cfg": {"hero_stage_encounters": {"stage_2": 1}}}
 	view.show()

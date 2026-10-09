@@ -60,8 +60,14 @@ func run() -> void:
 		if not item.visible: continue
 		var rect := item.get_global_rect()
 		check(rect.position.y >= previous_bottom and rect.size.y >= 132, "one full-width category per touch-sized row")
-		check(item.disabled == (entry[0] not in ["settings", "profile", "practice"]), "available settings, profile and practice are connected")
+		check(item.disabled == (entry[0] not in ["settings", "profile", "practice", "hero_book", "demon_book"]), "available settings, profile and practice are connected")
 		previous_bottom = rect.end.y
+	view.other_menu_buttons.demon_book.pressed.emit()
+	check(view.demon_codex_view.root.visible and not view.other_menu.visible,"demon encyclopedia connected")
+	view.show_hero_codex()
+	check(not view.demon_codex_view.root.visible and view.hero_codex_view.root.visible,"codices are exclusive")
+	view.show_menu()
+	check(not view.demon_codex_view.root.visible,"return hides demon encyclopedia")
 	view.other_menu_buttons.settings.pressed.emit()
 	check(view.settings_root.visible and not view.other_menu.visible, "settings category opens existing settings")
 	await process_frame

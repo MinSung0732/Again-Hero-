@@ -19,6 +19,7 @@ var other_menu_buttons := {}
 var settings_root: VBoxContainer
 var profile_view: RefCounted
 var hero_codex_view: RefCounted
+var demon_codex_view: RefCounted
 var other_navigation: HBoxContainer
 var other_back_button: Button
 var other_backdrop: Panel
@@ -110,6 +111,8 @@ func install(target: Control) -> void:
 	profile_view.install(self, box)
 	hero_codex_view = preload("res://src/ui/lobby_hero_codex_view.gd").new()
 	hero_codex_view.install(self,box)
+	demon_codex_view = preload("res://src/ui/lobby_demon_codex_view.gd").new()
+	demon_codex_view.install(self,box)
 	show_menu()
 
 func _install_tab_backdrops() -> void:
@@ -214,11 +217,11 @@ func _build_other_menu(box: VBoxContainer) -> void:
 	for entry in OTHER_ENTRIES:
 		var button := Button.new()
 		button.name = String(entry[0]).to_pascal_case()
-		button.text = String(entry[1]) + ("  ›" if entry[0] in ["settings", "profile", "practice", "hero_book"] else "\n준비 중")
+		button.text = String(entry[1]) + ("  ›" if entry[0] in ["settings", "profile", "practice", "hero_book", "demon_book"] else "\n준비 중")
 		button.custom_minimum_size.y = 132
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		button.disabled = entry[0] not in ["settings", "profile", "practice", "hero_book"]
+		button.disabled = entry[0] not in ["settings", "profile", "practice", "hero_book", "demon_book"]
 		button.add_theme_font_size_override("font_size", 30)
 		button.add_theme_color_override("font_color", Color("fff0c2"))
 		button.add_theme_color_override("font_disabled_color", Color("b9a7c6"))
@@ -233,12 +236,15 @@ func _build_other_menu(box: VBoxContainer) -> void:
 			button.visible = LocalTestMode.is_practice_allowed()
 			button.text = "연습전투  ›\n무한 체력 도망 더미 · 등록한 초월 기술 확인"
 			button.pressed.connect(lobby._enter_practice_battle)
+		elif entry[0] == "demon_book":
+			button.pressed.connect(show_demon_codex)
 		elif entry[0] == "hero_book":
 			button.pressed.connect(show_hero_codex)
 		elif entry[0] == "profile":
 			button.pressed.connect(show_profile)
 
 func show_hero_codex() -> void:
+	if demon_codex_view != null: demon_codex_view.hide()
 	other_navigation.show()
 	settings_root.hide()
 	settings_title_plate.hide()
@@ -247,8 +253,19 @@ func show_hero_codex() -> void:
 	profile_view.hide()
 	hero_codex_view.show()
 
+func show_demon_codex() -> void:
+	other_navigation.show()
+	settings_root.hide()
+	settings_title_plate.hide()
+	other_menu.hide()
+	menu_title_plate.hide()
+	profile_view.hide()
+	hero_codex_view.hide()
+	demon_codex_view.show()
+
 func show_profile() -> void:
 	if hero_codex_view != null: hero_codex_view.hide()
+	if demon_codex_view != null: demon_codex_view.hide()
 	other_navigation.show()
 	settings_root.hide()
 	settings_title_plate.hide()
@@ -261,6 +278,7 @@ func _open_settings() -> void:
 
 func show_menu() -> void:
 	if hero_codex_view != null: hero_codex_view.hide()
+	if demon_codex_view != null: demon_codex_view.hide()
 	if other_menu_buttons.has("practice"):
 		other_menu_buttons.practice.visible = LocalTestMode.is_practice_allowed()
 	if other_menu == null:
@@ -646,6 +664,7 @@ func show_page(id: String) -> void:
 	if not pages.has(id):
 		return
 	if hero_codex_view != null: hero_codex_view.hide()
+	if demon_codex_view != null: demon_codex_view.hide()
 	if profile_view != null:
 		profile_view.hide()
 	if settings_root != null:

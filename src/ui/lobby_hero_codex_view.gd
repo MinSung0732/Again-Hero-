@@ -8,6 +8,8 @@ var root: VBoxContainer
 var title_plate: PanelContainer
 var split: HBoxContainer
 var tab_grid: GridContainer
+var skill_icons: HFlowContainer
+var skill_slots: Array[PanelContainer] = []
 var resource_page: GridContainer
 var resource_images: Array[TextureRect] = []
 var list_scroll: ScrollContainer
@@ -177,6 +179,11 @@ func install(owner: RefCounted, parent: Control) -> void:
 	var stack := VBoxContainer.new()
 	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(stack)
+	skill_icons = HFlowContainer.new()
+	skill_icons.name = "HeroSkillIconSlots"
+	skill_icons.add_theme_constant_override("h_separation",12)
+	skill_icons.hide()
+	stack.add_child(skill_icons)
 	for i in range(4):
 		var page := RichTextLabel.new()
 		page.name = "CodexPage%d" % i
@@ -312,6 +319,7 @@ func select_stage(id: String) -> void:
 	description.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if known else HORIZONTAL_ALIGNMENT_CENTER
 	locked_page.visible = not known
 	if not known:
+		skill_icons.hide()
 		hero_name.text = "?"
 		description.text = "용사 정보 잠김"
 		portrait.texture = null
@@ -336,6 +344,7 @@ func select_stage(id: String) -> void:
 	for i in range(pages.size()): pages[i].text = String(entry.pages[i])
 	for i in range(selectors.size()):
 		selectors[i].add_theme_stylebox_override("normal",_style(stage_ids[i] == id))
+	_present_skill_slots(id)
 	select_tab(selected_tab)
 	if not revealed_stages.has(id): _play_unlock(id)
 
@@ -348,6 +357,7 @@ func _cancel_unlock() -> void:
 
 func _play_unlock(id: String) -> void:
 	reveal_active = true
+	skill_icons.hide()
 	for page in pages: page.hide()
 	resource_page.hide()
 	unlock_page.modulate = Color.WHITE
@@ -379,6 +389,22 @@ func select_tab(index: int) -> void:
 	if reveal_active: return
 	for i in range(pages.size()):
 		pages[i].visible = i == index
+	skill_icons.visible = index == 1 and not skill_slots.is_empty()
 	resource_page.visible = index == 4
 	for i in range(tabs.size()): tabs[i].add_theme_stylebox_override("normal",_style(i == index))
 	scroll.scroll_vertical = 0
+
+func _present_skill_slots(id: String) -> void:
+	var stage := DATA.STAGES.get_stage(id)
+	var profile := DATA.HEROES.get_profile(stage.hero_id)
+	var skills: Array = []
+	DATA.collect_skills(profile,skills)
+	while skill_slots.size() < skills.size():
+		var slot := preload("res://src/ui/codex_skill_icon.gd").new()
+		skill_icons.add_child(slot)
+		skill_slots.append(slot)
+	for i in range(skill_slots.size()):
+		skill_slots[i].visible = i < skills.size()
+		if i < skills.size():
+			skill_slots[i].configure("hero",String(stage.hero_id),String(skills[i].id))
+			skill_slots[i].tooltip_text = String(skills[i].name)+" · 스킬 아이콘 자리"

@@ -1,4 +1,5 @@
 extends RefCounted
+const SKILL_ICONS := preload("res://src/data/skill_icon_catalog.gd")
 const DATA := preload("res://src/data/transcendent_detail_catalog.gd")
 const COLLECTION := preload("res://src/systems/monster_collection_store.gd")
 const RULES := preload("res://src/data/transcendence_catalog.gd")
@@ -16,7 +17,6 @@ var titles: Array[Label] = []
 var descriptions: Array[Label] = []
 var icons: Array[TextureRect] = []
 var placeholders: Array[Label] = []
-var textures: Dictionary = {}
 func _label(parent: Node, text: String, font_size: int = 26) -> Label:
 	var label := Label.new()
 	label.text = text
@@ -99,10 +99,9 @@ func present(id: String) -> void:
 		var skill: Dictionary = skills[i]
 		titles[i].text = String(skill.name)+"\n"+String(skill.kind)
 		descriptions[i].text = String(skill.text)
-		var path := String(skill.get("icon",DATA.PLACEHOLDER_ICON))
-		if not textures.has(path):
-			textures[path] = load(path) as Texture2D if ResourceLoader.exists(path) else null
-		icons[i].texture = textures[path]
+		var skill_id := String(skill.get("id",skill.name))
+		icons[i].texture = SKILL_ICONS.texture("transcendent",id,skill_id)
+		icons[i].get_parent().set_meta("icon_key",SKILL_ICONS.key("transcendent",id,skill_id))
 		placeholders[i].visible = icons[i].texture == null
 		placeholders[i].text = "P" if String(skill.kind)=="패시브" else str(i+1)
 	# Read the current account once when opening, including after an upgrade.
