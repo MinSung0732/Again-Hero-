@@ -70,3 +70,12 @@ static func stat_values(id: String) -> Array[String]:
 		var value = MONSTERS.get_base_cost(id) if key == "base_cost" else stats.get(key,null)
 		result.append("—" if value == null else (str(value).trim_suffix(".0") + ("초" if key == "attack_cooldown" else "")))
 	return result
+
+const PAGE_SIZE := 16
+static func page_count(total: int) -> int:
+	return ceili(float(maxi(0,total))/PAGE_SIZE)
+static func page_ids(ids: Array, index: int) -> Array:
+	var count := page_count(ids.size())
+	if count == 0: return []
+	var start := clampi(index,0,count-1)*PAGE_SIZE
+	return ids.slice(start,mini(start+PAGE_SIZE,ids.size()))

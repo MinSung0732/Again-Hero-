@@ -70,11 +70,14 @@ func run() -> void:
 	await process_frame
 	await process_frame
 	var list_top: float = codex.monster_pages.monsters.grid.global_position.y
-	codex.select_monster("monsters","bomb_rat")
+	codex._select_card("monsters","bomb_rat")
 	await process_frame
 	await process_frame
 	check(is_equal_approx(codex.monster_pages.monsters.grid.global_position.y,list_top),"actual lobby list cannot move for shorter monster stats")
+	check(codex.detail_root.visible,"actual lobby detail modal opens")
+	codex.close_detail()
 	codex.select_category("transcendent")
+	codex._select_card("transcendent","zeus")
 	codex.preview("transcendent","illustration")
 	await process_frame
 	await process_frame

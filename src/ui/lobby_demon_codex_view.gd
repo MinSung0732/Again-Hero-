@@ -16,7 +16,16 @@ var pages: Dictionary = {}
 var selected := "skills"
 var textures: Dictionary = {}
 var monster_pages: Dictionary = {}
-const CARD_HEIGHT := 112.0
+const CARD_HEIGHT := 160.0
+const DETAIL_CACHE_LIMIT := 8
+var detail_layer: CanvasLayer
+var detail_root: Control
+var detail_panel: PanelContainer
+var detail_stack: VBoxContainer
+var detail_scroll: ScrollContainer
+var detail_close: Button
+var detail_title: Label
+var detail_category := ""
 const SUMMARY_HEIGHT := 132.0
 var preview_layer: CanvasLayer
 var preview_root: Control
@@ -56,10 +65,13 @@ func install(owner: RefCounted, parent: Control) -> void:
 	stack = VBoxContainer.new()
 	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(stack)
+	_build_detail(owner.lobby)
 	_build_preview(owner.lobby)
 	root.resized.connect(_resize)
 	root.visibility_changed.connect(func():
-		if not root.is_visible_in_tree(): close_preview())
+		if not root.is_visible_in_tree():
+			close_preview()
+			close_detail())
 	hide()
 
 func _label(parent: Node, text: String, size: int = 28) -> Label:
@@ -139,11 +151,14 @@ func hide() -> void:
 	root.hide()
 	title_plate.hide()
 	if preview_root != null: close_preview()
+	if detail_root != null: close_detail()
 
 func select_category(id: String) -> void:
 	if not DATA.CATEGORIES.any(func(entry): return entry[0] == id): return
+	if monster_pages.has(selected): monster_pages[selected].saved_scroll = scroll.scroll_vertical
 	selected = id
 	close_preview()
+	close_detail()
 	if not pages.has(id):
 		var page := VBoxContainer.new()
 		page.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -157,8 +172,9 @@ func select_category(id: String) -> void:
 	for key in pages: pages[key].visible = key == id
 	for index in range(tabs.get_child_count()):
 		tabs.get_child(index).modulate = Color.WHITE if DATA.CATEGORIES[index][0] == id else Color("b6a4c3")
-	if monster_pages.has(id): select_monster(id, monster_pages[id].selected)
-	scroll.scroll_vertical = 0
+	if monster_pages.has(id):
+		_restore_list_scroll.call_deferred(id,monster_pages[id].saved_scroll)
+	else: scroll.scroll_vertical = 0
 	_resize()
 
 func _build_skills(page: VBoxContainer) -> void:
@@ -222,7 +238,9 @@ func _build_monsters(page: VBoxContainer, category: String) -> void:
 		if not roles.has(role_label):
 			roles.append(role_label)
 			role.add_item(role_label)
-	var detail := _panel(page)
+	var detail := _panel(detail_stack)
+	var detail_frame := detail.get_parent() as PanelContainer
+	detail_frame.hide()
 	var header := Control.new()
 	header.name = "FixedMonsterSummary"
 	header.custom_minimum_size.y = SUMMARY_HEIGHT
@@ -241,9 +259,8 @@ func _build_monsters(page: VBoxContainer, category: String) -> void:
 	status.add_theme_color_override("font_color", Color("b9a8c9"))
 	var body := VBoxContainer.new()
 	body.add_theme_constant_override("separation",20)
-	var toggle := _button(detail, "상세 정보 펼치기  ▾", _toggle.bind(body))
 	detail.add_child(body)
-	body.hide()
+	body.show()
 	var description := _label(body, "", 28)
 	_label(body,"기본 능력",30).add_theme_color_override("font_color",Color("f0cb68"))
 	_label(body,"연구·증강 적용 전 · 공격 거리는 내부 판정 기준",24)
@@ -284,63 +301,105 @@ func _build_monsters(page: VBoxContainer, category: String) -> void:
 			label.add_theme_font_size_override("font_size",28)
 		for label in trans_view.descriptions + trans_view.upgrade_descriptions:
 			label.add_theme_font_size_override("font_size",28)
-	var count := _label(page, "")
+	var count := _label(page, "",24)
+	var pager := HBoxContainer.new()
+	pager.add_theme_constant_override("separation",8)
+	page.add_child(pager)
+	var previous := _button(pager,"‹ 이전",_change_page.bind(category,-1))
+	var page_label := _label(pager,"",26)
+	page_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	page_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var next := _button(pager,"다음 ›",_change_page.bind(category,1))
 	var grid := GridContainer.new()
-	grid.columns = 1
+	grid.columns = 4
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	grid.add_theme_constant_override("h_separation", 12)
-	grid.add_theme_constant_override("v_separation", 12)
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
 	page.add_child(grid)
-	var cards := {}
-	for id in ids:
-		var button := _button(grid, "", _select_card.bind(category, id))
+	var slots: Array[Dictionary] = []
+	for index in range(DATA.PAGE_SIZE):
+		var button := _button(grid,"",_select_slot.bind(category,index))
 		button.custom_minimum_size.y = CARD_HEIGHT
 		var card := Control.new()
-		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		card.clip_contents = true
+		clip_fixed(card)
 		button.add_child(card)
 		card.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		card.offset_left = 16
-		card.offset_right = -16
-		var dot := _image(card, 0)
-		dot.texture = _texture(DATA.MONSTERS.get_ui_icon_path(id))
-		dot.position = Vector2(0,16)
-		dot.size = Vector2(80,80)
-		var card_name := _fixed_label(card,DATA.MONSTERS.get_monster_name(id),28)
-		_place_card_label(card_name,14,42)
-		var card_role := _fixed_label(card,"%s · %s · %s" % [DATA.rarity_label(id),DATA.MONSTERS.get_role_label(DATA.MONSTERS.get_role(id)),DATA.MONSTERS.get_species_label(DATA.MONSTERS.get_species(id))],24)
-		_place_card_label(card_role,62,34)
-		button.tooltip_text = card_name.text+"\n"+card_role.text
-		cards[id] = button
-	monster_pages[category] = {"selected": ids[0], "ids": ids, "cards": cards, "grid": grid, "search": search, "grade": grade, "role": role, "grades": grades, "roles": roles, "count": count, "portrait": portrait, "name": name_label, "identity": identity, "status": status, "header": header, "body": body, "stat_values": stat_values, "stat_grid": stat_grid, "description": description, "extra": extra, "toggle": toggle, "trans_view": trans_view, "art_buttons": art_buttons, "detail_cache": {}}
+		card.offset_left = 8
+		card.offset_right = -8
+		var dot := _image(card,0)
+		dot.anchor_left = 0.5
+		dot.anchor_right = 0.5
+		dot.offset_left = -38
+		dot.offset_right = 38
+		dot.offset_top = 8
+		dot.offset_bottom = 86
+		var card_name := _fixed_label(card,"",24)
+		_place_card_label(card_name,92,32)
+		var card_role := _fixed_label(card,"",20)
+		_place_card_label(card_role,128,26)
+		slots.append({"button":button,"dot":dot,"name":card_name,"role":card_role,"id":""})
+	var search_entries := {}
+	for id in ids:
+		var role_label := DATA.MONSTERS.get_role_label(DATA.MONSTERS.get_role(id))
+		search_entries[id] = {"grade":DATA.rarity_label(id),"role":role_label,"text":(DATA.MONSTERS.get_monster_name(id)+" "+role_label+" "+DATA.MONSTERS.get_species_label(DATA.MONSTERS.get_species(id))).to_lower()}
+	monster_pages[category] = {"selected":ids[0],"ids":ids,"filtered":[],"page_index":0,"saved_scroll":0,"slots":slots,"cards":{},"grid":grid,"previous":previous,"next":next,"page_label":page_label,"search_entries":search_entries,"search":search,"grade":grade,"role":role,"grades":grades,"roles":roles,"count":count,"portrait":portrait,"name":name_label,"identity":identity,"status":status,"header":header,"body":body,"stat_values":stat_values,"stat_grid":stat_grid,"description":description,"extra":extra,"trans_view":trans_view,"art_buttons":art_buttons,"detail_cache":{},"detail_frame":detail_frame}
 	search.text_changed.connect(func(_text): filter_monsters(category))
 	grade.item_selected.connect(func(_index): filter_monsters(category))
 	role.item_selected.connect(func(_index): filter_monsters(category))
 	filter_monsters(category)
 
-func _toggle(extra: Control) -> void:
-	extra.visible = not extra.visible
-	for page in monster_pages.values():
-		if page.body == extra: page.toggle.text = "상세 정보 접기  ▴" if extra.visible else "상세 정보 펼치기  ▾"
-
 func filter_monsters(category: String) -> void:
 	var page: Dictionary = monster_pages[category]
 	var query: String = page.search.text.strip_edges().to_lower()
-	var count := 0
+	var filtered: Array[String] = []
 	for id in page.ids:
-		var grade := DATA.rarity_label(id)
-		var role := DATA.MONSTERS.get_role_label(DATA.MONSTERS.get_role(id))
-		var species := DATA.MONSTERS.get_species_label(DATA.MONSTERS.get_species(id))
-		var text := (DATA.MONSTERS.get_monster_name(id) + " " + role + " " + species).to_lower()
-		var matches: bool = (query.is_empty() or text.contains(query)) and (page.grade.selected == 0 or grade == page.grades[page.grade.selected]) and (page.role.selected == 0 or role == page.roles[page.role.selected])
-		page.cards[id].visible = matches
-		if matches: count += 1
-	page.count.text = "%d / %d종 · 몬스터를 눌러 선택" % [count, page.ids.size()] if count > 0 else "검색 결과가 없습니다."
+		var entry: Dictionary = page.search_entries[id]
+		if (query.is_empty() or entry.text.contains(query)) and (page.grade.selected == 0 or entry.grade == page.grades[page.grade.selected]) and (page.role.selected == 0 or entry.role == page.roles[page.role.selected]): filtered.append(id)
+	page.filtered = filtered
+	set_page(category,0)
+
+func set_page(category: String, index: int) -> void:
+	var page: Dictionary = monster_pages[category]
+	var total := DATA.page_count(page.filtered.size())
+	page.page_index = clampi(index,0,maxi(0,total-1))
+	page.cards.clear()
+	var visible_ids := DATA.page_ids(page.filtered,page.page_index)
+	for i in range(page.slots.size()):
+		var slot: Dictionary = page.slots[i]
+		slot.button.visible = i < visible_ids.size()
+		if i >= visible_ids.size():
+			slot.id = ""
+			slot.dot.texture = null
+			continue
+		var id: String = visible_ids[i]
+		slot.id = id
+		slot.name.text = DATA.MONSTERS.get_monster_name(id)
+		slot.role.text = DATA.MONSTERS.get_role_label(DATA.MONSTERS.get_role(id))
+		slot.dot.texture = _texture(DATA.MONSTERS.get_ui_icon_path(id))
+		slot.button.tooltip_text = slot.name.text+"\n"+page.search_entries[id].grade+" · "+slot.role.text
+		slot.button.modulate = Color.WHITE if id == page.selected else Color("b9aac5")
+		page.cards[id] = slot.button
+	page.previous.disabled = page.page_index == 0
+	page.next.disabled = total == 0 or page.page_index >= total-1
+	page.page_label.text = "%d / %d" % [page.page_index+1,total] if total > 0 else "0 / 0"
+	page.count.text = "%d종 · 16칸씩 보기 · 카드를 눌러 상세" % page.filtered.size() if total > 0 else "검색 결과가 없습니다."
+	page.saved_scroll = 0
+	if selected == category: scroll.scroll_vertical = 0
+
+func _change_page(category: String, delta: int) -> void:
+	set_page(category,int(monster_pages[category].page_index)+delta)
+
+func _select_slot(category: String, index: int) -> void:
+	var id: String = monster_pages[category].slots[index].id
+	if not id.is_empty(): _select_card(category,id)
+
+func _restore_list_scroll(category: String, offset: int) -> void:
+	if selected == category and root.is_visible_in_tree(): scroll.scroll_vertical = offset
 
 func select_monster(category: String, id: String) -> void:
 	if not monster_pages.has(category): return
 	var page: Dictionary = monster_pages[category]
-	if not page.cards.has(id): return
+	if not page.ids.has(id): return
 	page.selected = id
 	var monster := DATA.MONSTERS.get_monster(id)
 	page.name.text = monster.name
@@ -362,6 +421,13 @@ func select_monster(category: String, id: String) -> void:
 			page.art_buttons[kind].tooltip_text = "보상 미리보기 · 장착/해금되지 않습니다." if not page.art_buttons[kind].disabled else "등록된 리소스가 없습니다."
 	else:
 		if not page.detail_cache.has(id):
+			if page.detail_cache.size() >= DETAIL_CACHE_LIMIT:
+				var oldest: String = page.detail_cache.keys()[0]
+				var expired: Control = page.detail_cache[oldest]
+				expired.hide()
+				page.extra.remove_child(expired)
+				expired.queue_free()
+				page.detail_cache.erase(oldest)
 			var content := VBoxContainer.new()
 			content.add_theme_constant_override("separation", 16)
 			page.extra.add_child(content)
@@ -404,6 +470,7 @@ func _augment(parent: Node, entry: Dictionary) -> void:
 	_label(header,String(entry.name),28).add_theme_color_override("font_color",Color("e8d8ae"))
 	var level := _label(header,"최대 %d레벨" % int(entry.get("max_stack",1)),22)
 	level.size_flags_horizontal = Control.SIZE_SHRINK_END
+	level.autowrap_mode = TextServer.AUTOWRAP_OFF
 	level.add_theme_color_override("font_color",Color("b9a8c9"))
 	_label(column,String(entry.description).replace(" · ","\n"),26)
 	var divider := ColorRect.new()
@@ -413,12 +480,23 @@ func _augment(parent: Node, entry: Dictionary) -> void:
 	column.add_child(divider)
 
 func _select_card(category: String, id: String) -> void:
-	select_monster(category, id)
-	scroll.scroll_vertical = 0
+	if not monster_pages.has(category) or not monster_pages[category].ids.has(id): return
+	select_monster(category,id)
+	detail_category = category
+	for key in monster_pages: monster_pages[key].detail_frame.visible = key == category
+	detail_title.text = DATA.MONSTERS.get_monster_name(id)+" · 상세 정보"
+	detail_root.show()
+	detail_scroll.scroll_vertical = 0
+	detail_root.grab_focus()
+
+func close_detail() -> void:
+	if detail_root == null: return
+	detail_root.hide()
+	if root.is_visible_in_tree(): root.grab_focus()
 
 func _resize() -> void:
 	tabs.columns = 4 if root.size.x >= 460 else 2
-	for page in monster_pages.values(): page.grid.columns = 1
+	for page in monster_pages.values(): page.grid.columns = 4 if root.size.x >= 640 else (3 if root.size.x >= 460 else 2)
 
 func clip_fixed(control: Control) -> void:
 	control.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -441,11 +519,54 @@ func _place_summary_label(label: Label, top: float, height: float) -> void:
 
 func _place_card_label(label: Label, top: float, height: float) -> void:
 	label.anchor_right = 1.0
-	label.offset_left = 100
 	label.offset_top = top
 	label.offset_bottom = top + height
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+func _build_detail(host: Control) -> void:
+	detail_layer = CanvasLayer.new()
+	detail_layer.layer = 180
+	detail_layer.name = "CodexDetailLayer"
+	host.add_child(detail_layer)
+	detail_root = Control.new()
+	detail_root.name = "CodexDetailModal"
+	detail_root.focus_mode = Control.FOCUS_ALL
+	detail_root.mouse_filter = Control.MOUSE_FILTER_STOP
+	detail_layer.add_child(detail_root)
+	var shade := ColorRect.new()
+	shade.color = Color(0.02,0.01,0.04,0.88)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	detail_root.add_child(shade)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	detail_panel = PanelContainer.new()
+	detail_panel.add_theme_stylebox_override("panel",FRAMES.style("shop_featured_frame",20))
+	detail_root.add_child(detail_panel)
+	detail_panel.anchor_left = 0.04
+	detail_panel.anchor_top = 0.04
+	detail_panel.anchor_right = 0.96
+	detail_panel.anchor_bottom = 0.96
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation",12)
+	detail_panel.add_child(column)
+	var header := HBoxContainer.new()
+	column.add_child(header)
+	detail_title = _label(header,"몬스터 상세",30)
+	detail_close = _button(header,"닫기",close_detail)
+	detail_close.size_flags_horizontal = Control.SIZE_SHRINK_END
+	detail_close.custom_minimum_size.x = 140
+	detail_scroll = ScrollContainer.new()
+	detail_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	column.add_child(detail_scroll)
+	detail_stack = VBoxContainer.new()
+	detail_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_scroll.add_child(detail_stack)
+	detail_root.gui_input.connect(func(event):
+		if event.is_action_pressed("ui_cancel"):
+			close_detail()
+			detail_root.accept_event())
+	detail_root.hide()
 
 func _build_preview(host: Control) -> void:
 	preview_layer = CanvasLayer.new()
@@ -506,6 +627,7 @@ func _build_preview(host: Control) -> void:
 func _resize_preview() -> void:
 	preview_root.position = Vector2.ZERO
 	preview_root.size = root.get_viewport().get_visible_rect().size
+	if detail_root != null: detail_root.size = preview_root.size
 
 func _disconnect_preview_resize() -> void:
 	var viewport := root.get_viewport()
@@ -518,7 +640,9 @@ func close_preview() -> void:
 	preview_root.hide()
 	preview_image.texture = null
 	preview_background.texture = null
-	if was_open and root.is_visible_in_tree(): root.grab_focus()
+	if was_open and root.is_visible_in_tree():
+		if detail_root.visible: detail_root.grab_focus()
+		else: root.grab_focus()
 
 func _art_texture(path: String, trim: bool) -> Texture2D:
 	var key := path + (":trim" if trim else "")

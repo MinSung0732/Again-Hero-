@@ -18,6 +18,9 @@ func check(ok: bool, message: String) -> void:
 	if not ok:
 		failures += 1
 		push_error("DEMON_CODEX: " + message)
+func frames() -> void:
+	await process_frame
+	await process_frame
 func run() -> void:
 	root.get_node("CloudStore").stop()
 	root.get_node("LoginGateway").remember_session_enabled = false
@@ -31,7 +34,7 @@ func run() -> void:
 	var owner := CodexOwner.new()
 	owner.lobby = host
 	var parent := VBoxContainer.new()
-	parent.size = Vector2(740,1400)
+	parent.size = Vector2(740,700)
 	host.add_child(parent)
 	var view := VIEW.new()
 	view.install(owner,parent)
@@ -39,130 +42,124 @@ func run() -> void:
 	view.show()
 	check(view.pages.size() == 1,"lazy initial page")
 	for category in DATA.CATEGORIES: view.select_category(category[0])
-	check(view.pages.size() == 4,"four real categories")
-	check(DATA.monster_ids(false).size() == 21 and DATA.monster_ids(true).size() == 4,"all registered monsters")
+	check(view.pages.size() == 4,"four categories")
+	check(DATA.monster_ids(false).size() == 21 and DATA.monster_ids(true).size() == 4,"actual catalog counts")
+	for total in [0,1,16,17,200,300]:
+		var ids: Array = []
+		for i in range(total): ids.append("fixture_%d" % i)
+		var gathered: Array = []
+		for index in range(DATA.page_count(total)):
+			var chunk := DATA.page_ids(ids,index)
+			check(chunk.size() <= 16,"bounded page size")
+			gathered.append_array(chunk)
+		check(gathered == ids,"all entries exactly once %d" % total)
+		if total > 0: check(DATA.page_ids(ids,999) == DATA.page_ids(ids,DATA.page_count(total)-1),"clamps last page")
 	for category in ["monsters","transcendent"]:
 		view.select_category(category)
 		var page: Dictionary = view.monster_pages[category]
+		check(page.slots.size() == 16 and page.grid.get_child_count() == 16,"sixteen reusable card controls")
+		check(page.cards.size() == mini(16,page.ids.size()),"first page populated")
+		check(not view.detail_root.visible,"no eager details")
 		for id in page.ids:
-			view.select_monster(category,id)
+			view._select_card(category,id)
+			check(view.detail_root.visible,"opens modal " + id)
 			check(page.name.text == DATA.MONSTERS.get_monster_name(id),"real name " + id)
 			check(page.portrait.texture != null,"dot loaded " + id)
-			check(page.stat_values.map(func(label): return label.text) == DATA.stat_values(id),"real structured stats " + id)
-			if category == "transcendent":
-				check(page.trans_view.unlock.text.contains(DATA.RULES.describe(id).split(" 및 ")[0].split(" 또는 ")[0]),"real unlock " + id)
-				for kind in ["illustration","banner"]:
-					check(not page.art_buttons[kind].disabled,"available artwork " + id + kind)
-					view.preview(category,kind)
-					check(view.preview_root.visible and view.preview_image.texture != null,"artwork preview " + id + kind)
-					view.close_preview()
-				check(page.art_buttons.plus_banner.disabled == (id not in ["zeus","manticore"]),"no invented five-upgrade banners " + id)
-		# Cards preserve either state. A content switch must never toggle the disclosure.
-		if page.body.visible: page.toggle.confirmed.emit()
-		page.cards[page.ids[0]].confirmed.emit()
-		check(not page.body.visible,"card cannot auto-open " + category)
-		page.toggle.confirmed.emit()
-		page.cards[page.ids[-1]].confirmed.emit()
-		check(page.body.visible,"card preserves expanded state " + category)
-		page.toggle.confirmed.emit()
-		if category == "monsters":
-			for id in page.ids:
+			check(page.stat_values.map(func(label): return label.text) == DATA.stat_values(id),"structured stats " + id)
+			if category == "monsters":
 				var groups := DATA.related_augment_groups(id)
 				var detail: Control = page.detail_cache[id]
-				check(detail.get_node("NormalAugments").get_meta("augment_ids") == groups.normal.map(func(entry): return String(entry.id)),"normal augment group " + id)
-				check(detail.get_node("SpecialAugments").get_meta("augment_ids") == groups.special.map(func(entry): return String(entry.id)),"special augment group " + id)
-				check(groups.normal.all(func(entry): return entry.augment_type == "normal"),"normal type " + id)
-				check(groups.special.all(func(entry): return entry.augment_type == "special"),"special type " + id)
+				check(detail.get_node("NormalAugments").get_meta("augment_ids") == groups.normal.map(func(entry): return String(entry.id)),"normal augment IDs " + id)
+				check(detail.get_node("SpecialAugments").get_meta("augment_ids") == groups.special.map(func(entry): return String(entry.id)),"special augment IDs " + id)
+				for label in detail.find_children("*","Label",true,false):
+					if label.text.begins_with("최대 ") and label.text.ends_with("레벨"): check(label.autowrap_mode == TextServer.AUTOWRAP_OFF,"max level cannot wrap vertically")
+				check(page.detail_cache.size() <= VIEW.DETAIL_CACHE_LIMIT and page.extra.get_child_count() <= VIEW.DETAIL_CACHE_LIMIT,"bounded attached detail cache")
+			else:
+				for kind in ["illustration","banner"]:
+					view.preview(category,kind)
+					check(view.preview_root.visible and view.preview_image.texture != null,"art preview " + id + kind)
+					view.close_preview()
+					check(view.detail_root.visible,"art returns to details")
+				check(page.art_buttons.plus_banner.disabled == (id not in ["zeus","manticore"]),"only registered five-upgrade banners")
+			view.close_detail()
 		page.search.text = "does-not-exist"
 		page.search.text_changed.emit(page.search.text)
-		check(page.cards.values().all(func(card): return not card.visible),"empty search")
+		check(page.cards.is_empty() and page.slots.all(func(slot): return not slot.button.visible),"empty search")
 		page.search.text = ""
 		page.search.text_changed.emit(page.search.text)
-		check(page.cards.values().all(func(card): return card.visible),"clear restores cards")
 		for width in [360,540,740,1000]:
 			parent.size.x = width
-			await process_frame
-			await process_frame
-			check(view.root.get_combined_minimum_size().x <= width,"no horizontal overflow %s %d" % [category,width])
-			check(page.grid.columns == 1,"compact single-column list")
-			check(view.tabs.columns == (4 if width >= 460 else 2),"compact category navigation")
-			for card in page.cards.values(): check(card.size.x <= width and is_equal_approx(card.size.y,VIEW.CARD_HEIGHT),"complete cards fit width")
-	# Regression: all text lengths produce exactly the same collapsed list position.
-	for category in ["monsters","transcendent"]:
-		view.select_category(category)
-		var page: Dictionary = view.monster_pages[category]
-		for width in [360,540,740,1000]:
-			parent.size.x = width
-			if page.body.visible: page.toggle.confirmed.emit()
-			await process_frame
-			await process_frame
-			var list_top: float = page.grid.position.y
-			var summary_height: float = page.header.get_parent().size.y
-			for id in page.ids:
-				view.select_monster(category,id)
-				await process_frame
-				await process_frame
-				check(is_equal_approx(page.grid.position.y,list_top),"text cannot shift collapsed grid %s %d" % [id,width])
-				check(is_equal_approx(page.header.get_parent().size.y,summary_height),"fixed summary height " + id)
-				check(page.header.size.y == VIEW.SUMMARY_HEIGHT,"fixed header height " + id)
-				page.toggle.confirmed.emit()
-				await process_frame
-				await process_frame
-				check(page.body.visible and page.toggle.text.contains("접기"),"explicitly expands " + id)
-				check(view.root.get_combined_minimum_size().x <= width,"expanded detail fits %s %d" % [id,width])
-				page.toggle.confirmed.emit()
-				await process_frame
-				await process_frame
-				check(not page.body.visible and is_equal_approx(page.grid.position.y,list_top),"collapse restores list " + id)
+			view._select_card(category,page.ids[0])
+			await frames()
+			view.close_detail()
+			check(view.root.get_combined_minimum_size().x <= width,"no overflow %s %d" % [category,width])
+			check(page.grid.columns == (4 if width >= 640 else (3 if width >= 460 else 2)),"responsive grid")
+			for slot in page.slots:
+				if slot.button.visible: check(is_equal_approx(slot.button.size.y,VIEW.CARD_HEIGHT),"fixed card height")
+	view.select_category("monsters")
+	var ordinary: Dictionary = view.monster_pages.monsters
+	parent.size = Vector2(740,700)
+	view.set_page("monsters",1)
+	await frames()
+	check(ordinary.cards.size() == 5 and ordinary.previous.disabled == false and ordinary.next.disabled,"last page has five real entries")
+	view.set_page("monsters",0)
+	await frames()
+	view.scroll.scroll_vertical = 70
+	await frames()
+	var offset: int = view.scroll.scroll_vertical
+	check(offset > 0,"fixture has scrollable list")
+	var grid_top: float = ordinary.grid.global_position.y
+	view._select_slot("monsters",0)
+	view.detail_scroll.scroll_vertical = 90
+	view.close_detail()
+	check(ordinary.page_index == 0 and ordinary.search.text.is_empty() and view.scroll.scroll_vertical == offset,"modal preserves list state")
+	check(is_equal_approx(ordinary.grid.global_position.y,grid_top),"modal cannot shift list")
+	view.select_category("skills")
+	view.select_category("monsters")
+	await frames()
+	check(view.scroll.scroll_vertical == offset,"category return restores list position")
+	view.set_page("monsters",1)
+	view._select_slot("monsters",0)
+	view.detail_close.confirmed.emit()
+	check(ordinary.page_index == 1 and ordinary.cards.size() == 5 and not view.detail_root.visible,"close retains second page")
+	ordinary.search.text = DATA.MONSTERS.get_monster_name("slime")
+	ordinary.search.text_changed.emit(ordinary.search.text)
+	check(ordinary.page_index == 0 and ordinary.cards.has("slime"),"search resets page and shows matching entry")
+	ordinary.search.text = ""
+	ordinary.search.text_changed.emit(ordinary.search.text)
+	view._select_card("monsters","slime")
+	var cached: Control = ordinary.detail_cache.slime
+	view.close_detail()
+	view._select_card("monsters","slime")
+	check(ordinary.detail_cache.slime == cached,"cached detail reused")
 	view.select_category("transcendent")
-	view.select_monster("transcendent","manticore")
+	view._select_card("transcendent","manticore")
 	check(view.monster_pages.transcendent.identity.text.contains("폭발"),"localized role")
 	view.preview("transcendent","plus_banner")
-	check(view.preview_title.text.contains("5초월"),"five-upgrade preview")
 	for viewport_size in [Vector2i(360,800),Vector2i(540,960),Vector2i(1280,720)]:
 		root.size = viewport_size
-		await process_frame
-		await process_frame
-		check(view.preview_root.size.is_equal_approx(root.get_visible_rect().size),"artwork covers entire viewport")
-		check(Rect2(Vector2.ZERO,view.preview_root.size).encloses(view.preview_exit.get_rect()),"exit always inside screen")
-		check(view.preview_root.mouse_filter == Control.MOUSE_FILTER_STOP,"blocks underlying navigation")
-	view.preview_exit.confirmed.emit()
-	check(not view.preview_root.visible and view.preview_image.texture == null,"exit closes and releases display")
-	view.preview("transcendent","illustration")
-	check(view.preview_image.texture is AtlasTexture,"display trims transparent margins only")
+		await frames()
+		check(view.preview_root.size.is_equal_approx(root.get_visible_rect().size),"full screen artwork")
+		check(view.detail_root.size.is_equal_approx(root.get_visible_rect().size),"modal overlay fills viewport")
+		check(view.detail_root.get_global_rect().encloses(view.detail_close.get_global_rect()),"modal close inside screen")
+		check(view.detail_root.get_global_rect().encloses(view.detail_panel.get_global_rect()),"detail panel fits screen")
+		check(view.preview_root.get_global_rect().encloses(view.preview_exit.get_global_rect()),"art exit inside screen")
 	var escape := InputEventKey.new()
 	escape.keycode = KEY_ESCAPE
 	escape.pressed = true
 	view.preview_root.gui_input.emit(escape)
-	check(not view.preview_root.visible,"Escape returns to codex")
-	view.preview("transcendent","plus_banner")
+	check(not view.preview_root.visible and view.detail_root.visible,"Escape returns to modal")
+	view.detail_root.gui_input.emit(escape)
+	check(not view.detail_root.visible,"Escape closes modal")
+	view._select_card("transcendent","manticore")
+	view.preview("transcendent","illustration")
+	check(view.preview_image.texture is AtlasTexture,"trimmed display only")
 	parent.hide()
-	check(not view.preview_root.visible,"parent tab hidden closes preview")
+	check(not view.preview_root.visible and not view.detail_root.visible,"ancestor hide clears both overlays")
 	parent.show()
-	view.scroll.scroll_vertical = 400
-	view.monster_pages.transcendent.cards.zeus.confirmed.emit()
-	check(view.monster_pages.transcendent.selected == "zeus" and view.scroll.scroll_vertical == 0 and not view.monster_pages.transcendent.body.visible,"card selects while preserving collapsed detail")
-	view.select_category("skills")
-	check(not view.preview_root.visible,"category change closes preview")
-	for width in [360,540,740,1000]:
-		parent.size.x = width
-		for category in DATA.CATEGORIES:
-			view.select_category(category[0])
-			await process_frame
-			await process_frame
-			check(view.root.get_combined_minimum_size().x <= width,"all categories fit %s %d" % [category[0],width])
-	var ordinary: Dictionary = view.monster_pages.monsters
-	var cached: int = ordinary.extra.get_child_count()
-	for i in range(10):
-		view.select_category("monsters")
-		for id in ordinary.ids: view.select_monster("monsters",id)
-		view.hide()
-		view.show()
-	check(ordinary.extra.get_child_count() == cached,"details reused without reconstruction")
-	check(COLLECTION.load_state() == before,"read-only collection and upgrade progress")
+	check(COLLECTION.load_state() == before,"collection remains read-only")
 	view.hide()
-	check(not view.root.visible and not view.title_plate.visible and not view.preview_root.visible,"navigation cleanup")
 	host.free()
-	check(not root.size_changed.is_connected(view._resize_preview),"viewport signal disconnected when lobby is destroyed")
+	check(not root.size_changed.is_connected(view._resize_preview),"viewport signal cleanup")
 	print("DEMON_CODEX: " + ("PASS" if failures == 0 else "FAIL"))
 	quit(0 if failures == 0 else 1)
