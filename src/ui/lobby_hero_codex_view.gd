@@ -262,7 +262,7 @@ func show() -> void:
 		var known := encountered_stages.has(stage_ids[i])
 		var profile := DATA.HEROES.get_profile(String(DATA.STAGES.get_stage(stage_ids[i]).get("hero_id","")))
 		list_names[i].text = String(profile.get("display_name","용사")) if known else "?"
-		list_portraits[i].modulate = Color.WHITE if known else Color(0.08,0.08,0.08,1)
+		list_portraits[i].modulate = Color.WHITE if known else Color(0,0,0,1)
 		selectors[i].tooltip_text = list_names[i].text + " 상세정보" if known else "잠긴 용사"
 	list_scroll.show()
 	detail_root.show()
@@ -308,6 +308,8 @@ func select_stage(id: String) -> void:
 	var known := encountered_stages.has(id)
 	for tab in tabs: tab.disabled = not known
 	portrait.visible = known
+	hero_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if known else HORIZONTAL_ALIGNMENT_CENTER
+	description.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if known else HORIZONTAL_ALIGNMENT_CENTER
 	locked_page.visible = not known
 	if not known:
 		hero_name.text = "?"
