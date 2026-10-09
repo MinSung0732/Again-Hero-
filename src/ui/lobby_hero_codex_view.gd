@@ -213,7 +213,7 @@ func show() -> void:
 	if not list_loaded:
 		for i in range(stage_ids.size()):
 			var paths := DATA.resource_paths(stage_ids[i])
-			list_portraits[i].texture = _portrait_texture(paths[2])
+			list_portraits[i].texture = _portrait_texture(paths[2],true)
 			if list_portraits[i].texture == null: list_portraits[i].texture = _portrait_texture(paths[0])
 		list_loaded = true
 	list_scroll.show()
@@ -223,11 +223,28 @@ func show() -> void:
 func _fit_list_card(button: Button, margin: MarginContainer) -> void:
 	button.custom_minimum_size.y = maxf(208,margin.get_combined_minimum_size().y)
 
-func _portrait_texture(path: String) -> Texture2D:
-	if not cached_textures.has(path):
+func _portrait_texture(path: String, center_content: bool = false) -> Texture2D:
+	var cache_key := path + "#centered" if center_content else path
+	if not cached_textures.has(cache_key):
+		if center_content:
+			var source := _portrait_texture(path)
+			var source_image := source.get_image() if source != null else null
+			var used := source_image.get_used_rect() if source_image != null else Rect2i()
+			var centered: Texture2D = source
+			if used.has_area():
+				var atlas := AtlasTexture.new()
+				atlas.atlas = source
+				atlas.region = Rect2(used)
+				# Keep the original canvas/scale; redistribute only transparent padding.
+				var padding := source.get_size() - Vector2(used.size)
+				atlas.margin = Rect2(padding * 0.5,padding)
+				atlas.filter_clip = true
+				centered = atlas
+			cached_textures[cache_key] = centered
+			return centered
 		var image := Image.new()
-		cached_textures[path] = ImageTexture.create_from_image(image) if FileAccess.file_exists(path) and image.load(path) == OK else (load(path) as Texture2D if ResourceLoader.exists(path) else null)
-	return cached_textures[path] as Texture2D
+		cached_textures[cache_key] = ImageTexture.create_from_image(image) if FileAccess.file_exists(path) and image.load(path) == OK else (load(path) as Texture2D if ResourceLoader.exists(path) else null)
+	return cached_textures[cache_key] as Texture2D
 
 func hide() -> void:
 	root.hide()
@@ -245,7 +262,7 @@ func select_stage(id: String) -> void:
 	description.text = String(entry.description)
 	portrait.texture = _portrait_texture(String(entry.portrait))
 	var resource_paths := DATA.resource_paths(id)
-	for i in range(resource_images.size()): resource_images[i].texture = _portrait_texture(resource_paths[i])
+	for i in range(resource_images.size()): resource_images[i].texture = _portrait_texture(resource_paths[i],i >= 2)
 	for i in range(pages.size()): pages[i].text = String(entry.pages[i])
 	for i in range(selectors.size()):
 		selectors[i].add_theme_stylebox_override("normal",_style(stage_ids[i] == id))
