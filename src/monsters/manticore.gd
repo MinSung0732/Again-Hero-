@@ -78,7 +78,7 @@ func _apply_normal_visual_profile() -> void:
 	visual.apply_visual_profile(DATA.PROFILE)
 	var texture: Texture2D = visual.sprite_frames.get_frame_texture(&"idle",0)
 	var bounds := texture.get_image().get_used_rect()
-	var factor := 110.0/maxf(float(bounds.size.y),1.0)
+	var factor := 110.0*DATA.BODY_SCALE/maxf(float(bounds.size.y),1.0)
 	visual.scale = Vector2.ONE*factor
 	visual.position = -(Vector2(bounds.get_center().x,bounds.end.y)-texture.get_size()*0.5)*factor
 	visual_head_y = -float(bounds.size.y)*factor
@@ -169,6 +169,10 @@ func _tick_motion(delta: float) -> void:
 	match motion:
 		Motion.REST:
 			attack_timer = maxf(attack_timer-delta,0.0)
+			if attack_timer > 0.0:
+				velocity = Vector2.ZERO
+				_update_visual_motion(direction.x,false)
+				return
 			var radius := wave_range() if wave_remaining > 0.0 else effective_range()
 			if offset.length_squared() > radius*radius:
 				velocity = direction*move_speed*MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
@@ -229,6 +233,7 @@ func _tick_motion(delta: float) -> void:
 			MONSTER_RUNTIME_COMMON.notify_forced_position_change(self)
 			if global_position.distance_squared_to(destination) < 0.01: _end_motion()
 func _begin_flight() -> void:
+	velocity = Vector2.ZERO
 	collision_mask = 0
 	set_meta("ignore_monster_separation",true)
 	visual.stop()
@@ -290,7 +295,7 @@ func _arrival_explosion() -> void:
 			if is_instance_valid(ally) and ally != self and ally.current_hp > 0 and global_position.distance_squared_to(ally.global_position) <= radius*radius:
 				ally.take_damage(maxi(int(round(attack_damage*1.35)),1))
 func _flame_point(index: int) -> Vector2:
-	return global_position+Vector2(-38.0 if index == 0 else 38.0,-30.0)
+	return global_position+Vector2(-38.0 if index == 0 else 38.0,-30.0)*DATA.BODY_SCALE
 func _flame_direction(index: int) -> Vector2:
 	if not is_instance_valid(hero): return Vector2.RIGHT
 	var offset := hero.global_position-_flame_point(index)
@@ -384,12 +389,12 @@ func _tick_waves(delta: float) -> void:
 		var previous := minf(wave_age[i]*wave_speed(),wave_length[i])
 		wave_age[i] += delta
 		var distance := minf(wave_age[i]*wave_speed(),wave_length[i])
-		if wave_hit[i] == 0 and is_instance_valid(hero) and hero.current_hp > 0:
+		if previous < wave_length[i] and wave_hit[i] == 0 and is_instance_valid(hero) and hero.current_hp > 0:
 			var point := Geometry2D.get_closest_point_to_segment(hero.global_position,wave_origin[i]+wave_direction[i]*previous,wave_origin[i]+wave_direction[i]*distance)
 			if point.distance_squared_to(hero.global_position) <= DATA.WAVE_WIDTH*DATA.WAVE_WIDTH:
 				wave_hit[i] = 1
 				if _hit(2.0,true): hero.apply_slow(0.7,3.0)
-		if wave_age[i] >= wave_length[i]/wave_speed()+0.5: wave_age[i] = -1.0
+		if wave_age[i] >= _wave_end_age(i): wave_age[i] = -1.0
 func _begin_death() -> void:
 	flame_remaining = 0.0
 	wave_remaining = 0.0
@@ -414,18 +419,18 @@ func _draw_effects() -> void:
 	if dying: return
 	if arrival > 0.0: FX.draw_frame(effect_layer,1,2+mini(5,int((DATA.ARRIVAL_SECONDS-arrival)*6.0/DATA.ARRIVAL_SECONDS)),Vector2.ZERO)
 	if motion == Motion.HUNT or motion == Motion.TRACK:
-		FX.draw_frame(effect_layer,3,(int(clock*12.0)%4)+(4 if motion == Motion.TRACK else 0),Vector2.ZERO)
+		FX.draw_frame(effect_layer,3,(int(clock*12.0)%4)+(4 if motion == Motion.TRACK else 0),Vector2.ZERO,DATA.BODY_SCALE)
 	if flame_remaining > 0.0:
 		for i in range(flame_count()):
 			var point := _flame_point(i)-global_position
 			var frame := 1+int(clock*12.0)%4 if flame_contact[i] > 0.0 else (5+mini(2,int((0.3-flame_stop[i])*10.0)) if flame_stop[i] > 0.0 else 0)
-			FX.draw_oriented(effect_layer,0,frame,point,_flame_direction(i).angle() if is_instance_valid(hero) else 0.0)
+			FX.draw_oriented(effect_layer,0,frame,point,_flame_direction(i).angle() if is_instance_valid(hero) else 0.0,DATA.BODY_SCALE)
 	for i in range(10):
 		if meteor_state[i] == 0: continue
 		var point := meteor_dest[i]-global_position
 		if meteor_state[i] == 1:
 			effect_layer.draw_arc(point,DATA.METEOR_RADIUS,0,TAU,40,Color("b8ff87"),1.0,false)
-			FX.draw_frame(effect_layer,1,int(clock*12.0)%2,meteor_points[i]-global_position,0.45)
+			FX.draw_projectile(effect_layer,int(clock*12.0)%2,meteor_points[i]-global_position,(meteor_dest[i]-meteor_points[i]).angle(),0.45*DATA.METEOR_VISUAL_SCALE)
 		else:
 			if meteor_age[i] < 0.6: FX.draw_frame(effect_layer,1,2+mini(5,int(meteor_age[i]*10.0)),point)
 			if not cloud_frames.is_empty():
@@ -434,13 +439,23 @@ func _draw_effects() -> void:
 				effect_layer.draw_texture_rect(texture,Rect2(point-Vector2(203,341)*factor,texture.get_size()*factor),false,Color(1,1,1,0.6))
 	for i in range(DATA.WAVE_CAPACITY):
 		if wave_age[i] < 0.0: continue
-		var travel := wave_length[i]/wave_speed()
 		var distance := minf(wave_age[i]*wave_speed(),wave_length[i])
-		var segments := maxi(int(ceil(distance/55.0)),1)
+		var segments := maxi(int(ceil(distance/DATA.WAVE_SPACING)),1)
 		for segment in range(segments):
-			var fade := maxf(wave_age[i]-travel-float(segment)/maxf(segments,1)*0.18,0.0)
-			var frame := segment%4 if wave_age[i] < travel else 4+mini(3,int(fade*10.0))
-			FX.draw_oriented(effect_layer,2,frame,wave_origin[i]+wave_direction[i]*minf(segment*55.0,distance)-global_position,wave_direction[i].angle())
+			var frame := _wave_segment_frame(i,segment)
+			if frame < 0: continue
+			# Pillars stay upright, independently of the path direction.
+			FX.draw_frame(effect_layer,2,frame,wave_origin[i]+wave_direction[i]*minf(segment*DATA.WAVE_SPACING,distance)-global_position,DATA.WAVE_VISUAL_SCALE)
+
+func _wave_segment_frame(index: int, segment: int) -> int:
+	var fade := wave_age[index]-wave_length[index]/wave_speed()-segment*DATA.WAVE_FADE_DELAY
+	if fade < 0.0: return segment%4
+	var frame := int(floor(fade/DATA.WAVE_FADE_FRAME_SECONDS))
+	return -1 if frame >= 4 else 4+frame
+
+func _wave_end_age(index: int) -> float:
+	var segments := maxi(int(ceil(wave_length[index]/DATA.WAVE_SPACING)),1)
+	return wave_length[index]/wave_speed()+(segments-1)*DATA.WAVE_FADE_DELAY+4.0*DATA.WAVE_FADE_FRAME_SECONDS
 
 func _clamp_destination(point: Vector2) -> Vector2:
 	return combat_authority.clamp_monster_wander_position(point) if is_instance_valid(combat_authority) and combat_authority.has_method("clamp_monster_wander_position") else point
@@ -492,7 +507,7 @@ func _tick_other_enemies(delta: float) -> void:
 				record.cloud[i] -= amount
 				enemy.take_damage(amount,self)
 		for i in range(DATA.WAVE_CAPACITY):
-			if wave_age[i] < 0.0 or (int(record.wave_mask) & (1 << i)) != 0: continue
+			if wave_age[i] < 0.0 or wave_age[i]-delta >= wave_length[i]/wave_speed() or (int(record.wave_mask) & (1 << i)) != 0: continue
 			var distance := minf(wave_age[i]*wave_speed(),wave_length[i])
 			var previous := minf(maxf(wave_age[i]-delta,0.0)*wave_speed(),wave_length[i])
 			var point := Geometry2D.get_closest_point_to_segment(enemy.global_position,wave_origin[i]+wave_direction[i]*previous,wave_origin[i]+wave_direction[i]*distance)

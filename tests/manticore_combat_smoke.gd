@@ -97,8 +97,22 @@ func run() -> void:
 	actor._tick_motion(0.01)
 	actor._tick_motion(0.12)
 	check(target.damage-before==130 and actor.motion==actor.Motion.TRACK,"two65hits and retreat")
+	var retreat_start: Vector2 = actor.position
+	var retreat_end: Vector2 = actor.destination
+	target.position += Vector2(80,100)
+	for i in range(3):
+		actor._tick_motion(0.1)
+		check(actor.destination.is_equal_approx(retreat_end),"moving hero never steers retreat destination")
+		check(absf((actor.position-retreat_start).cross(retreat_end-retreat_start))<0.1,"retreat follows straight path, no orbit")
 	actor._tick_motion(1.0)
 	check(actor.motion==actor.Motion.REST and actor.attack_timer==1.5 and actor.collision_mask==3,"interval only after retreat")
+	var stopped: Vector2 = actor.position
+	target.position += Vector2(900,200)
+	for i in range(10): actor._tick_motion(0.1)
+	check(actor.position.is_equal_approx(stopped) and actor.motion==actor.Motion.REST,"retreat waits despite moving out-of-range target")
+	actor._tick_motion(0.6)
+	check(actor.velocity.length()>0.0,"approach resumes after complete cooldown")
+	check(is_equal_approx(-actor.visual_head_y,148.5),"body enlarged1.35 with feet anchored")
 	actor.basic_hits = 4
 	actor._register_basic_hit()
 	check(target.get_meta("bleed_active",false) and actor.basic_hits==0,"five hits bleed")
@@ -111,7 +125,7 @@ func run() -> void:
 	for i in range(3): actor._tick_motion(0.12)
 	check(target.damage-before==163 and actor.get_meta("support_shield_hp",0)==70,"triple 50% and stacking4%shield")
 	actor.position = Vector2.ZERO
-	target.position = Vector2(80,-30)
+	target.position = actor._flame_point(0)+Vector2(100,0)
 	actor.flame_remaining = 30.0
 	before = target.damage
 	for i in range(100): actor._tick_flames(0.01)
@@ -141,6 +155,14 @@ func run() -> void:
 	actor._tick_waves(0.1)
 	actor._tick_waves(0.1)
 	check(target.damage-before==130 and target.slow==0.7,"wave swept hit once200% and slow")
+	actor.wave_age[0] = actor.wave_length[0]/actor.wave_speed()+0.45
+	check(actor._wave_segment_frame(0,0)==-1 and actor._wave_segment_frame(0,3)>=4 and actor._wave_segment_frame(0,8)<4,"first pillars vanish while later pillars remain")
+	check(actor._wave_end_age(0)>actor.wave_age[0],"wave slot survives staggered disappearance")
+	var ended_damage := target.damage
+	target.position = actor.wave_origin[0]+actor.wave_direction[0]*actor.wave_length[0]
+	actor.wave_hit[0] = 0
+	actor._tick_waves(0.01)
+	check(target.damage==ended_damage,"fading wave does not hit again at endpoint")
 	actor.meteor_state.fill(0)
 	actor.meteor_cast = 0.0
 	actor.meteor_spawned = 0

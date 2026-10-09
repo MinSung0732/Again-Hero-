@@ -5,3 +5,7 @@
 - Existing character effects and sourced audio are referenced in place, without copied or runtime Base64 payloads. See `docs/MANTICORE_GACHA.md` and `assets/audio/sfx/bulgasal/SOURCES.md`.
 
 - `src/ui/manticore_venom_aura.gdshader`: original procedural Godot shader added2026-10-09 for venom runes/corona/charge rays/expanding shockwave/edge embers. No third-party images or audio added for this enhancement. Two reused quads; clock supplied by cutscene player.
+
+## Closed eyes expression (2026-10-09)
+- `rig_v1/closed_eyes_v1.png`: built-in imagegen edit of the existing `actual_reassembly.png`, transparent971×1619 PNG. Used only as two eye atlas samples by `manticore_focus.gdshader`; original body/face/hair/mesh texture is retained.
+- Prompt: preserve full-body framing, character design and transparent background; change only both eyes to completely closed natural eyelids/eyelashes with no visible iris/pupil/whites. Preserve every other element. Generated eye regions inspected before integration. Original assets remain unchanged.

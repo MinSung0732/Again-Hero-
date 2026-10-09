@@ -69,10 +69,10 @@ func run() -> void:
 	# Real pooled enemy summon: AoE status component and reuse cleanup.
 	var scout = load("res://src/hero/SummonerScout.tscn").instantiate()
 	battle.add_child(scout)
-	scout.activate(actor.position+Vector2(70,-30),hero,{"max_hp":10000,"owner_attack_damage":100})
+	scout.activate(actor._flame_point(0)+Vector2(85,0),hero,{"max_hp":10000,"owner_attack_damage":100})
 	scout.set_physics_process(false)
 	battle.set_hero_summon_active(scout,true)
-	hero.position = actor.position+Vector2(80,-30)
+	hero.position = actor._flame_point(0)+Vector2(100,0)
 	actor._refresh_other_enemies(1.0)
 	actor.flame_remaining = 30.0
 	actor.transcend_level = 0

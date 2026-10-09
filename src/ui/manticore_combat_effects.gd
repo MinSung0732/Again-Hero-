@@ -28,3 +28,12 @@ static func draw_oriented(owner: Node2D, kind: int, index: int, point: Vector2, 
 	owner.draw_set_transform(point,angle,Vector2.ONE)
 	draw_frame(owner,kind,index,Vector2.ZERO,enlargement)
 	owner.draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)
+
+static func draw_projectile(owner: Node2D, index: int, point: Vector2, angle: float, enlargement: float) -> void:
+	if not packs.has(1): return
+	var pack: Dictionary = packs[1]
+	var factor := float(pack.scale)*enlargement
+	# effect2 01/02 point right; center their luminous tip, not the smoke's ground anchor.
+	owner.draw_set_transform(point,angle,Vector2.ONE)
+	owner.draw_texture_rect(pack.frames[clampi(index,0,1)],Rect2(-DATA.METEOR_PROJECTILE_ANCHOR*factor,pack.canvas*factor),false)
+	owner.draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)

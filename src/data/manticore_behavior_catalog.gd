@@ -2,6 +2,13 @@ extends RefCounted
 const BASE := {"max_hp":1550,"attack_damage":35,"move_speed":235.0,"attack_range":325.0,"attack_cooldown":1.5,"projectile_speed":580.0,"projectile_range":680.0,"exp_reward":0}
 const RULES := {"mode":"all","conditions":[{"metric":"damage_dealt","amount":400}]}
 const ROOT := "res://assets/art/Transcendent_monster/manticore/frames"
+const BODY_SCALE := 1.35
+const WAVE_VISUAL_SCALE := 1.5
+const METEOR_VISUAL_SCALE := 1.3
+const METEOR_PROJECTILE_ANCHOR := Vector2(350,300)
+const WAVE_SPACING := 55.0
+const WAVE_FADE_DELAY := 0.10
+const WAVE_FADE_FRAME_SECONDS := 0.10
 const PROFILE := {"mode":"frames","asset_dir":ROOT,"target_height":110.0,"animations":{
 "idle":{"prefix":"idle","count":4,"fps":6.0,"loop":true},"move":{"prefix":"walk","count":6,"fps":8.0,"loop":true},
 "attack":{"prefix":"attack","count":6,"fps":10.0,"loop":false},"hit":{"prefix":"hit","count":3,"fps":12.0,"loop":false},"death":{"prefix":"death","count":4,"fps":8.0,"loop":false}}}

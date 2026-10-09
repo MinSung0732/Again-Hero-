@@ -2,6 +2,7 @@ extends Control
 ## Full-color battle cut-in; presentation clock is independent of combat time.
 const RIG := preload("res://src/ui/manticore_portrait_rig.gd")
 const BACKGROUND := preload("res://assets/art/effects/gatcha/manticore/venom_sanctuary.png")
+const CLOSED_EYES := preload("res://assets/art/effects/gatcha/manticore/rig_v1/closed_eyes_v1.png")
 const FOCUS := preload("res://src/ui/manticore_focus.gdshader")
 const FX := preload("res://src/ui/manticore_combat_effects.gd")
 var corner_triangle := true
@@ -23,6 +24,7 @@ func _ready() -> void:
 	add_child(rig)
 	eyes = ShaderMaterial.new()
 	eyes.shader = FOCUS
+	eyes.set_shader_parameter("closed_eyes",CLOSED_EYES)
 	rig.mesh.material = eyes
 	effects = Node2D.new()
 	effects.z_index = -1

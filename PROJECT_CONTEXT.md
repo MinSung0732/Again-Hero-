@@ -1,3 +1,6 @@
+## Manticore attack/retreat correction (2026-10-09)
+- Straight fixed retreat destination, then stationary post-action cooldown before approaching/channeling again; original two-hit/bleed triple attack cycle preserved. Wave pillars stay upright and expire individually from oldest to newest; visual scales body/attachedFX1.35, wave1.5, meteor1.3. Meteor faces its fixed destination. Battle eye closure uses generated eye atlas regions only, preserving the original anatomy/rig texture. Headless checks; GPU/mobile unverified.
+
 ## Manticore combat and ownership (2026-10-09)
 - Registered transcendent beast/exploder, actual grade pool0.5% unchanged, first unlock icon/banner and tier5 banner through existing collection eligibility. No ordinary/special augments, elite or giant.
 - Combat unlock400 cumulative actual Hero HP damage; pre-summon snapshot per hit35+D×0.075 and HP1550+D×0.5. Diameter650/radius325 basic hunt, explicit680 wave travel. Full3skills/5tiers/bleed/triple shields/one lethal escape; arrival smoke135% includes allies except self.
