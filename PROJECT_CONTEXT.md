@@ -1,3 +1,9 @@
+## OAuth browser return and mobile inertia (2026-10-09)
+- OAuth code exchange, loopback Host/nonce/PKCE and /user validation unchanged. Callback page attempts Windows app focus/tab close or Android exported-game deep link (without auth code/token); browsers can block automatic external launches. Android manifest intent-filter injected by Gradle export EditorPlugin; Android Godot Editor itself cannot receive the new scheme.
+- Android refresh sessions are encrypted using an AndroidKeyStore AES-GCM key; only IV/ciphertext in user://, fail-closed on unsupported JNI/keystore, logout or explicit guest clears persisted file. Existing Windows DPAPI remains. On restart, validate refresh and same Supabase user before cloud restore.
+- MobileScrollRouter shared between lobby and battle now coasts with exponential friction and bounds a spring edge displacement to 24px; search on touch-down only, O(1) per-frame motion.
+- Godot runtime/actual Android browser, Android Keystore/JNI and APK Gradle export remain unverified; manual test required.
+
 ## Transcendent monster detail sections (2026-10-09)
 - Transcendent detail keeps actual battle dot portrait and five stat rows, omits cost/EXP/all-in-one combat description, elite comparison and special-augment sections. Dedicated reusable detail view adds combat notes → real Catalog unlock conditions/once per battle → skills including passive → five upgrade effects. Zeus/Bulgasal/Izanami structured descriptions in TranscendentDetailCatalog; no runtime combat changes.
 - Up to5 skill rows allocated once/reused; icon defaults to existing profile character SVG (temporary), each skill may override icon path, missing texture falls back to number/P. Unknown future content has preparation fallback rather than fabricated abilities. Ordinary details restore original special sections on switch.
