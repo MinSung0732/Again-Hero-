@@ -329,3 +329,15 @@
 - [ ] 폭탄쥐 실제 도트 스프라이트 연결
 - [x] 용사 필살기 게이지/자동 발동 v1
 - [ ] 용사별 필살기 전용 이펙트/애니메이션 고도화
+
+
+## 성능 조사·수명 최적화 (2026-10-10)
+
+- [x] 전체 src GDScript 정적 목록화 및 주요 기록/공간/표시/로드 경로 최적화
+- [x] 동일 seed/시간 경계/대상 순서 회귀와 CPU 미세 벤치, 수정 전/후 코드·롤백 보존
+- [x] 저장 대기 신호화 및 응답/HTTP 수명 검사
+- [ ] Android/GPU 프레임·RAM 장기 프로파일 및 export의 raw PNG fallback 검증
+- [ ] 기존 smoke fixture의 현재 초월5종/최신 UI 기대값·headless 대기 정리
+- [ ] 프로파일 근거에 따라 Hero 직업 runtime 분리/넓은 범위 쿼리 개선
+
+상세: [OPTIMIZATION_AUDIT_20261010.md](OPTIMIZATION_AUDIT_20261010.md).

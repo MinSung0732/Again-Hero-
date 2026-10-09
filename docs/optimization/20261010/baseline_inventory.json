@@ -1,0 +1,8823 @@
+{
+  "revision": "1d5ad4cedbadc72ea52c2c342946d75dcee96fe7",
+  "scope": "tracked src/**/*.gd; lexical counts, including comments/fallbacks",
+  "scripts": 287,
+  "lines": 91126,
+  "functions": 3597,
+  "files": [
+    {
+      "path": "src/ai/hero_build_ai.gd",
+      "lines": 509,
+      "functions": 11,
+      "largest_functions": [
+        {
+          "name": "_evaluate_rule",
+          "line": 149,
+          "lines": 124
+        },
+        {
+          "name": "_describe_rule",
+          "line": 380,
+          "lines": 107
+        },
+        {
+          "name": "_build_reason",
+          "line": 273,
+          "lines": 62
+        },
+        {
+          "name": "choose_candidate",
+          "line": 8,
+          "lines": 55
+        },
+        {
+          "name": "_describe_best_synergy",
+          "line": 335,
+          "lines": 45
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/audio/audio_settings.gd",
+      "lines": 151,
+      "functions": 15,
+      "largest_functions": [
+        {
+          "name": "load_settings",
+          "line": 67,
+          "lines": 19
+        },
+        {
+          "name": "_apply_bus",
+          "line": 128,
+          "lines": 16
+        },
+        {
+          "name": "apply_bgm_level_to_bus",
+          "line": 114,
+          "lines": 14
+        },
+        {
+          "name": "_ensure_bus",
+          "line": 91,
+          "lines": 9
+        },
+        {
+          "name": "_save_and_emit",
+          "line": 144,
+          "lines": 8
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/audio/event_sfx_bank.gd",
+      "lines": 72,
+      "functions": 7,
+      "largest_functions": [
+        {
+          "name": "configure",
+          "line": 13,
+          "lines": 20
+        },
+        {
+          "name": "play_cue",
+          "line": 36,
+          "lines": 13
+        },
+        {
+          "name": "_process",
+          "line": 58,
+          "lines": 10
+        },
+        {
+          "name": "stop_all",
+          "line": 53,
+          "lines": 5
+        },
+        {
+          "name": "_notification",
+          "line": 68,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/audio/game_audio.gd",
+      "lines": 157,
+      "functions": 19,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 17,
+          "lines": 19
+        },
+        {
+          "name": "attach_battle",
+          "line": 89,
+          "lines": 16
+        },
+        {
+          "name": "enter_frontend",
+          "line": 66,
+          "lines": 10
+        },
+        {
+          "name": "_watch_button",
+          "line": 36,
+          "lines": 9
+        },
+        {
+          "name": "_button_pressed",
+          "line": 45,
+          "lines": 9
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/audio/hero_bgm_manager.gd",
+      "lines": 474,
+      "functions": 23,
+      "largest_functions": [
+        {
+          "name": "get_audio_debug_summary",
+          "line": 354,
+          "lines": 59
+        },
+        {
+          "name": "crossfade_to",
+          "line": 203,
+          "lines": 39
+        },
+        {
+          "name": "stop_bgm",
+          "line": 139,
+          "lines": 34
+        },
+        {
+          "name": "change_phase",
+          "line": 173,
+          "lines": 30
+        },
+        {
+          "name": "_apply_user_audio_state",
+          "line": 311,
+          "lines": 28
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/audio/summoner_audio.gd",
+      "lines": 21,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "play_portal",
+          "line": 5,
+          "lines": 17
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/battle/battle.gd",
+      "lines": 5734,
+      "functions": 188,
+      "largest_functions": [
+        {
+          "name": "_spawn_monster",
+          "line": 1979,
+          "lines": 346
+        },
+        {
+          "name": "_start_battle",
+          "line": 753,
+          "lines": 200
+        },
+        {
+          "name": "get_monster_run_detail",
+          "line": 1439,
+          "lines": 186
+        },
+        {
+          "name": "_apply_giant_monster_base_stats",
+          "line": 1727,
+          "lines": 186
+        },
+        {
+          "name": "_apply_special_monster_modifiers",
+          "line": 4096,
+          "lines": 155
+        }
+      ],
+      "group_scans": 2,
+      "pop_front": 3,
+      "await": 6,
+      "instantiate": 9,
+      "queue_free": 4
+    },
+    {
+      "path": "src/battle/exp_orb.gd",
+      "lines": 328,
+      "functions": 9,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 97,
+          "lines": 124
+        },
+        {
+          "name": "_apply_exp_stone_visual",
+          "line": 252,
+          "lines": 36
+        },
+        {
+          "name": "setup",
+          "line": 76,
+          "lines": 21
+        },
+        {
+          "name": "_draw",
+          "line": 312,
+          "lines": 17
+        },
+        {
+          "name": "deactivate_for_pool",
+          "line": 236,
+          "lines": 16
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 2
+    },
+    {
+      "path": "src/battle/ground_shadow.gd",
+      "lines": 69,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "_get_shared_texture",
+          "line": 39,
+          "lines": 31
+        },
+        {
+          "name": "configure",
+          "line": 22,
+          "lines": 9
+        },
+        {
+          "name": "_ready",
+          "line": 14,
+          "lines": 8
+        },
+        {
+          "name": "_apply_visual_settings",
+          "line": 31,
+          "lines": 8
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/battle/heal_item.gd",
+      "lines": 124,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "_apply_visual",
+          "line": 72,
+          "lines": 43
+        },
+        {
+          "name": "_physics_process",
+          "line": 25,
+          "lines": 42
+        },
+        {
+          "name": "_load_texture",
+          "line": 115,
+          "lines": 10
+        },
+        {
+          "name": "_ready",
+          "line": 20,
+          "lines": 5
+        },
+        {
+          "name": "set_temporary_lifetime",
+          "line": 67,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 2
+    },
+    {
+      "path": "src/battle/magnet_item.gd",
+      "lines": 67,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_apply_visual",
+          "line": 43,
+          "lines": 25
+        },
+        {
+          "name": "_physics_process",
+          "line": 22,
+          "lines": 21
+        },
+        {
+          "name": "_ready",
+          "line": 16,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/battle/stage1_battlefield.gd",
+      "lines": 797,
+      "functions": 28,
+      "largest_functions": [
+        {
+          "name": "_build_castle_decor",
+          "line": 647,
+          "lines": 125
+        },
+        {
+          "name": "_build_bottom_wall",
+          "line": 577,
+          "lines": 54
+        },
+        {
+          "name": "_ensure_textures",
+          "line": 168,
+          "lines": 44
+        },
+        {
+          "name": "_build_top_wall",
+          "line": 504,
+          "lines": 38
+        },
+        {
+          "name": "_draw_floor",
+          "line": 235,
+          "lines": 37
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/battle/treasure_chest.gd",
+      "lines": 160,
+      "functions": 7,
+      "largest_functions": [
+        {
+          "name": "_apply_visual",
+          "line": 88,
+          "lines": 55
+        },
+        {
+          "name": "_start_death_animation",
+          "line": 52,
+          "lines": 23
+        },
+        {
+          "name": "_draw",
+          "line": 143,
+          "lines": 18
+        },
+        {
+          "name": "take_damage",
+          "line": 26,
+          "lines": 15
+        },
+        {
+          "name": "_on_visual_animation_finished",
+          "line": 75,
+          "lines": 13
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 2
+    },
+    {
+      "path": "src/data/battle_summon_cinematic_catalog.gd",
+      "lines": 46,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/bulgasal_audio_catalog.gd",
+      "lines": 19,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/bulgasal_behavior_catalog.gd",
+      "lines": 63,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/combat_effect_catalog.gd",
+      "lines": 36,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/contextual_audio_catalog.gd",
+      "lines": 27,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/demon_appearance_catalog.gd",
+      "lines": 42,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "path",
+          "line": 27,
+          "lines": 9
+        },
+        {
+          "name": "resource_paths",
+          "line": 36,
+          "lines": 7
+        },
+        {
+          "name": "get_entry",
+          "line": 21,
+          "lines": 3
+        },
+        {
+          "name": "default_id",
+          "line": 24,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/demon_augment_catalog.gd",
+      "lines": 847,
+      "functions": 9,
+      "largest_functions": [
+        {
+          "name": "roll_normal_candidates",
+          "line": 640,
+          "lines": 84
+        },
+        {
+          "name": "get_monster_normal_augments",
+          "line": 602,
+          "lines": 38
+        },
+        {
+          "name": "roll_special_candidates",
+          "line": 788,
+          "lines": 34
+        },
+        {
+          "name": "_normal_candidate_weight",
+          "line": 755,
+          "lines": 33
+        },
+        {
+          "name": "_weighted_candidate_index",
+          "line": 724,
+          "lines": 31
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/demon_codex_catalog.gd",
+      "lines": 82,
+      "functions": 11,
+      "largest_functions": [
+        {
+          "name": "stat_values",
+          "line": 66,
+          "lines": 10
+        },
+        {
+          "name": "related_augment_groups",
+          "line": 33,
+          "lines": 9
+        },
+        {
+          "name": "stats",
+          "line": 26,
+          "lines": 7
+        },
+        {
+          "name": "ultimate_stats",
+          "line": 50,
+          "lines": 7
+        },
+        {
+          "name": "elite_portrait",
+          "line": 60,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/demon_ultimate_catalog.gd",
+      "lines": 63,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "get_ordered_ids",
+          "line": 59,
+          "lines": 5
+        },
+        {
+          "name": "get_skill",
+          "line": 55,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/dullahan_behavior_catalog.gd",
+      "lines": 13,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/game_audio_catalog.gd",
+      "lines": 15,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "ui_cues",
+          "line": 6,
+          "lines": 10
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/hero_ai_profiles.gd",
+      "lines": 193,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "get_profile",
+          "line": 191,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/hero_augment_catalog.gd",
+      "lines": 1502,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "roll_candidates",
+          "line": 1406,
+          "lines": 73
+        },
+        {
+          "name": "get_build_tag_counts",
+          "line": 1488,
+          "lines": 15
+        },
+        {
+          "name": "get_effective_max_stack",
+          "line": 1393,
+          "lines": 13
+        },
+        {
+          "name": "get_augment",
+          "line": 1479,
+          "lines": 6
+        },
+        {
+          "name": "get_tag_label",
+          "line": 1485,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/hero_codex_catalog.gd",
+      "lines": 209,
+      "functions": 9,
+      "largest_functions": [
+        {
+          "name": "skill_text",
+          "line": 152,
+          "lines": 21
+        },
+        {
+          "name": "strategy_text",
+          "line": 183,
+          "lines": 12
+        },
+        {
+          "name": "parameters",
+          "line": 124,
+          "lines": 11
+        },
+        {
+          "name": "augment_text",
+          "line": 173,
+          "lines": 10
+        },
+        {
+          "name": "overview",
+          "line": 143,
+          "lines": 9
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/hero_profiles.gd",
+      "lines": 1304,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "get_profile",
+          "line": 1302,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/hero_reveal_catalog.gd",
+      "lines": 36,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "get_reveal_data",
+          "line": 24,
+          "lines": 13
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/hero_skill_descriptions.gd",
+      "lines": 69,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "describe",
+          "line": 16,
+          "lines": 54
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/izanami_behavior_catalog.gd",
+      "lines": 32,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/kraken_behavior_catalog.gd",
+      "lines": 11,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/manticore_audio_catalog.gd",
+      "lines": 27,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/manticore_behavior_catalog.gd",
+      "lines": 39,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/medusa_behavior_catalog.gd",
+      "lines": 16,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/mode_unlock_catalog.gd",
+      "lines": 11,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "announcement_key",
+          "line": 10,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/monster_catalog.gd",
+      "lines": 1194,
+      "functions": 29,
+      "largest_functions": [
+        {
+          "name": "node_has_species",
+          "line": 1061,
+          "lines": 43
+        },
+        {
+          "name": "get_rarity_combat_profile",
+          "line": 1118,
+          "lines": 9
+        },
+        {
+          "name": "get_rarity_upgrade_profile",
+          "line": 1127,
+          "lines": 8
+        },
+        {
+          "name": "get_elite_visual_profile",
+          "line": 1017,
+          "lines": 7
+        },
+        {
+          "name": "get_elite_skills",
+          "line": 1024,
+          "lines": 7
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/mummy_behavior_catalog.gd",
+      "lines": 11,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/mutation_catalog.gd",
+      "lines": 73,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "resolve_event",
+          "line": 57,
+          "lines": 17
+        },
+        {
+          "name": "get_profile",
+          "line": 53,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/pickup_catalog.gd",
+      "lines": 22,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "can_draw",
+          "line": 19,
+          "lines": 4
+        },
+        {
+          "name": "current",
+          "line": 16,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/powwow_mummy_behavior_catalog.gd",
+      "lines": 14,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/profile_cosmetic_catalog.gd",
+      "lines": 52,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "path",
+          "line": 15,
+          "lines": 27
+        },
+        {
+          "name": "ids",
+          "line": 42,
+          "lines": 9
+        },
+        {
+          "name": "display_name",
+          "line": 51,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/prologue_catalog.gd",
+      "lines": 53,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/relic_catalog.gd",
+      "lines": 46,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "get_ordered_ids",
+          "line": 33,
+          "lines": 14
+        },
+        {
+          "name": "get_relic",
+          "line": 26,
+          "lines": 7
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/research_catalog.gd",
+      "lines": 259,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "get_cost",
+          "line": 207,
+          "lines": 32
+        },
+        {
+          "name": "get_effective_level_points",
+          "line": 179,
+          "lines": 28
+        },
+        {
+          "name": "get_effect_summary",
+          "line": 239,
+          "lines": 21
+        },
+        {
+          "name": "get_ordered_ids",
+          "line": 173,
+          "lines": 6
+        },
+        {
+          "name": "get_research",
+          "line": 169,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/scorpion_behavior_catalog.gd",
+      "lines": 27,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/shop_catalog.gd",
+      "lines": 270,
+      "functions": 15,
+      "largest_functions": [
+        {
+          "name": "roll_rarity",
+          "line": 221,
+          "lines": 21
+        },
+        {
+          "name": "weighted_id",
+          "line": 248,
+          "lines": 14
+        },
+        {
+          "name": "get_monster_pool",
+          "line": 195,
+          "lines": 13
+        },
+        {
+          "name": "get_banner",
+          "line": 170,
+          "lines": 11
+        },
+        {
+          "name": "get_package",
+          "line": 185,
+          "lines": 10
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/shuten_doji_audio_catalog.gd",
+      "lines": 19,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/shuten_doji_behavior_catalog.gd",
+      "lines": 26,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/skill_icon_catalog.gd",
+      "lines": 141,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "load_texture",
+          "line": 107,
+          "lines": 29
+        },
+        {
+          "name": "hero_hud_path",
+          "line": 136,
+          "lines": 6
+        },
+        {
+          "name": "texture",
+          "line": 104,
+          "lines": 3
+        },
+        {
+          "name": "key",
+          "line": 100,
+          "lines": 2
+        },
+        {
+          "name": "path",
+          "line": 102,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/stage_catalog.gd",
+      "lines": 743,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "get_ordered_stage_ids",
+          "line": 738,
+          "lines": 6
+        },
+        {
+          "name": "get_stage",
+          "line": 734,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/stage_intro_dialogues.gd",
+      "lines": 1295,
+      "functions": 11,
+      "largest_functions": [
+        {
+          "name": "_stage_9",
+          "line": 1001,
+          "lines": 230
+        },
+        {
+          "name": "_stage_7",
+          "line": 612,
+          "lines": 200
+        },
+        {
+          "name": "_stage_8",
+          "line": 812,
+          "lines": 189
+        },
+        {
+          "name": "_stage_6",
+          "line": 478,
+          "lines": 134
+        },
+        {
+          "name": "_stage_5",
+          "line": 351,
+          "lines": 127
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/stamina_catalog.gd",
+      "lines": 11,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/startup_catalog.gd",
+      "lines": 21,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/status_effect_catalog.gd",
+      "lines": 34,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "get_status_name",
+          "line": 22,
+          "lines": 4
+        },
+        {
+          "name": "get_name",
+          "line": 26,
+          "lines": 4
+        },
+        {
+          "name": "outgoing_multiplier",
+          "line": 30,
+          "lines": 3
+        },
+        {
+          "name": "movement_multiplier",
+          "line": 33,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/succubus_behavior_catalog.gd",
+      "lines": 19,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/summoner_audio_catalog.gd",
+      "lines": 9,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/transcendence_catalog.gd",
+      "lines": 56,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "describe",
+          "line": 34,
+          "lines": 23
+        },
+        {
+          "name": "get_rules",
+          "line": 24,
+          "lines": 10
+        },
+        {
+          "name": "get_ids",
+          "line": 17,
+          "lines": 7
+        },
+        {
+          "name": "get_death_drop",
+          "line": 9,
+          "lines": 5
+        },
+        {
+          "name": "is_transcendent",
+          "line": 14,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/transcendent_cutscene_catalog.gd",
+      "lines": 51,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "has_cutscene",
+          "line": 47,
+          "lines": 3
+        },
+        {
+          "name": "get_entry",
+          "line": 50,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/transcendent_detail_catalog.gd",
+      "lines": 48,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/tutorial_catalog.gd",
+      "lines": 15,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/wolf_behavior_catalog.gd",
+      "lines": 20,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/yuki_onna_behavior_catalog.gd",
+      "lines": 20,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/zeus_audio_catalog.gd",
+      "lines": 21,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/zeus_behavior_catalog.gd",
+      "lines": 58,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/zeus_lightning_catalog.gd",
+      "lines": 31,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "shake",
+          "line": 27,
+          "lines": 5
+        },
+        {
+          "name": "silhouette_alpha",
+          "line": 12,
+          "lines": 3
+        },
+        {
+          "name": "reveal_edge",
+          "line": 15,
+          "lines": 3
+        },
+        {
+          "name": "name_alpha",
+          "line": 18,
+          "lines": 3
+        },
+        {
+          "name": "discharge",
+          "line": 21,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/zeus_portrait_rig_catalog.gd",
+      "lines": 30,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/data/zeus_visual_catalog.gd",
+      "lines": 17,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/dev/bulgasal/cutscene_preview.gd",
+      "lines": 154,
+      "functions": 8,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 18,
+          "lines": 45
+        },
+        {
+          "name": "set_time",
+          "line": 99,
+          "lines": 43
+        },
+        {
+          "name": "_capture_frames",
+          "line": 142,
+          "lines": 13
+        },
+        {
+          "name": "_texture",
+          "line": 63,
+          "lines": 10
+        },
+        {
+          "name": "_fx_sprite",
+          "line": 73,
+          "lines": 10
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 2,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/dev/bulgasal/portrait_rig.gd",
+      "lines": 2,
+      "functions": 0,
+      "largest_functions": [],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/dev/bulgasal/verify_rig.gd",
+      "lines": 54,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "verify",
+          "line": 13,
+          "lines": 42
+        },
+        {
+          "name": "check",
+          "line": 8,
+          "lines": 5
+        },
+        {
+          "name": "_initialize",
+          "line": 5,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 1,
+      "instantiate": 1,
+      "queue_free": 0
+    },
+    {
+      "path": "src/dev/izanami_battle_summon_preview.gd",
+      "lines": 85,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 28,
+          "lines": 47
+        },
+        {
+          "name": "_layout",
+          "line": 75,
+          "lines": 4
+        },
+        {
+          "name": "replay",
+          "line": 79,
+          "lines": 3
+        },
+        {
+          "name": "_end_camera_drag",
+          "line": 82,
+          "lines": 2
+        },
+        {
+          "name": "_exit_tree",
+          "line": 84,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/dev/izanami_cutscene_preview.gd",
+      "lines": 57,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 8,
+          "lines": 19
+        },
+        {
+          "name": "sample_results",
+          "line": 33,
+          "lines": 13
+        },
+        {
+          "name": "_preview_icon",
+          "line": 46,
+          "lines": 12
+        },
+        {
+          "name": "_preview",
+          "line": 27,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/dev/manticore_battle_summon_preview.gd",
+      "lines": 85,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 28,
+          "lines": 47
+        },
+        {
+          "name": "_layout",
+          "line": 75,
+          "lines": 4
+        },
+        {
+          "name": "replay",
+          "line": 79,
+          "lines": 3
+        },
+        {
+          "name": "_end_camera_drag",
+          "line": 82,
+          "lines": 2
+        },
+        {
+          "name": "_exit_tree",
+          "line": 84,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/dev/manticore_cutscene_preview.gd",
+      "lines": 57,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 8,
+          "lines": 19
+        },
+        {
+          "name": "sample_results",
+          "line": 33,
+          "lines": 13
+        },
+        {
+          "name": "_preview_icon",
+          "line": 46,
+          "lines": 12
+        },
+        {
+          "name": "_preview",
+          "line": 27,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/dev/shuten_doji_battle_summon_preview.gd",
+      "lines": 85,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 28,
+          "lines": 47
+        },
+        {
+          "name": "_layout",
+          "line": 75,
+          "lines": 4
+        },
+        {
+          "name": "replay",
+          "line": 79,
+          "lines": 3
+        },
+        {
+          "name": "_end_camera_drag",
+          "line": 82,
+          "lines": 2
+        },
+        {
+          "name": "_exit_tree",
+          "line": 84,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/dev/shuten_doji_cutscene_preview.gd",
+      "lines": 57,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 8,
+          "lines": 19
+        },
+        {
+          "name": "sample_results",
+          "line": 33,
+          "lines": 13
+        },
+        {
+          "name": "_preview_icon",
+          "line": 46,
+          "lines": 12
+        },
+        {
+          "name": "_preview",
+          "line": 27,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/dev/zeus_cutscene_preview.gd",
+      "lines": 55,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 8,
+          "lines": 17
+        },
+        {
+          "name": "sample_results",
+          "line": 31,
+          "lines": 13
+        },
+        {
+          "name": "_preview_icon",
+          "line": 44,
+          "lines": 12
+        },
+        {
+          "name": "_preview",
+          "line": 25,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/dev/zeus_rig_preview.gd",
+      "lines": 19,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_process",
+          "line": 11,
+          "lines": 6
+        },
+        {
+          "name": "_ready",
+          "line": 7,
+          "lines": 4
+        },
+        {
+          "name": "_input",
+          "line": 17,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/alchemist_cauldron.gd",
+      "lines": 161,
+      "functions": 8,
+      "largest_functions": [
+        {
+          "name": "_process",
+          "line": 68,
+          "lines": 36
+        },
+        {
+          "name": "_draw",
+          "line": 126,
+          "lines": 26
+        },
+        {
+          "name": "activate",
+          "line": 41,
+          "lines": 19
+        },
+        {
+          "name": "play_result_sound",
+          "line": 104,
+          "lines": 14
+        },
+        {
+          "name": "_load_texture",
+          "line": 152,
+          "lines": 10
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/alchemist_mixture_field.gd",
+      "lines": 179,
+      "functions": 9,
+      "largest_functions": [
+        {
+          "name": "_draw",
+          "line": 138,
+          "lines": 42
+        },
+        {
+          "name": "_physics_process",
+          "line": 78,
+          "lines": 31
+        },
+        {
+          "name": "_get_shared_smoke_frames",
+          "line": 34,
+          "lines": 15
+        },
+        {
+          "name": "_spawn_smoke",
+          "line": 109,
+          "lines": 14
+        },
+        {
+          "name": "_ready",
+          "line": 49,
+          "lines": 13
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/alchemist_poison_pool.gd",
+      "lines": 86,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "activate",
+          "line": 48,
+          "lines": 22
+        },
+        {
+          "name": "_get_shared_poison_frames",
+          "line": 24,
+          "lines": 15
+        },
+        {
+          "name": "_physics_process",
+          "line": 70,
+          "lines": 11
+        },
+        {
+          "name": "_ready",
+          "line": 39,
+          "lines": 6
+        },
+        {
+          "name": "deactivate",
+          "line": 81,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/alchemist_vial.gd",
+      "lines": 126,
+      "functions": 8,
+      "largest_functions": [
+        {
+          "name": "launch",
+          "line": 57,
+          "lines": 26
+        },
+        {
+          "name": "_physics_process",
+          "line": 83,
+          "lines": 24
+        },
+        {
+          "name": "_get_shared_break_frames",
+          "line": 31,
+          "lines": 15
+        },
+        {
+          "name": "_deactivate",
+          "line": 115,
+          "lines": 9
+        },
+        {
+          "name": "_ready",
+          "line": 46,
+          "lines": 8
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/hero/alchemy_material.gd",
+      "lines": 169,
+      "functions": 7,
+      "largest_functions": [
+        {
+          "name": "_process",
+          "line": 127,
+          "lines": 30
+        },
+        {
+          "name": "activate",
+          "line": 81,
+          "lines": 24
+        },
+        {
+          "name": "_get_shared_material_frames",
+          "line": 54,
+          "lines": 20
+        },
+        {
+          "name": "launch_from_cauldron",
+          "line": 109,
+          "lines": 18
+        },
+        {
+          "name": "deactivate",
+          "line": 157,
+          "lines": 13
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/hero/archmage_element_status.gd",
+      "lines": 65,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "_process",
+          "line": 37,
+          "lines": 21
+        },
+        {
+          "name": "apply_burn",
+          "line": 15,
+          "lines": 11
+        },
+        {
+          "name": "apply_freeze",
+          "line": 26,
+          "lines": 11
+        },
+        {
+          "name": "_restore_target_physics",
+          "line": 58,
+          "lines": 5
+        },
+        {
+          "name": "setup",
+          "line": 11,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 2
+    },
+    {
+      "path": "src/hero/archmage_projectile.gd",
+      "lines": 414,
+      "functions": 23,
+      "largest_functions": [
+        {
+          "name": "_spawn_impact_feedback",
+          "line": 339,
+          "lines": 42
+        },
+        {
+          "name": "_on_body_entered",
+          "line": 177,
+          "lines": 37
+        },
+        {
+          "name": "_spawn_chain_line",
+          "line": 302,
+          "lines": 37
+        },
+        {
+          "name": "setup",
+          "line": 52,
+          "lines": 30
+        },
+        {
+          "name": "_apply_orb_visual",
+          "line": 381,
+          "lines": 24
+        }
+      ],
+      "group_scans": 2,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/hero/archmage_skill_projectile.gd",
+      "lines": 854,
+      "functions": 23,
+      "largest_functions": [
+        {
+          "name": "_on_body_entered",
+          "line": 277,
+          "lines": 108
+        },
+        {
+          "name": "_spawn_chain_current",
+          "line": 385,
+          "lines": 87
+        },
+        {
+          "name": "_damage_berserker_wave_sweep",
+          "line": 204,
+          "lines": 73
+        },
+        {
+          "name": "_physics_process",
+          "line": 72,
+          "lines": 70
+        },
+        {
+          "name": "_apply_visual",
+          "line": 689,
+          "lines": 65
+        }
+      ],
+      "group_scans": 1,
+      "pop_front": 0,
+      "await": 2,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/hero/deadeye_ricochet_fx.gd",
+      "lines": 70,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "_draw",
+          "line": 41,
+          "lines": 30
+        },
+        {
+          "name": "setup",
+          "line": 10,
+          "lines": 10
+        },
+        {
+          "name": "_finish",
+          "line": 27,
+          "lines": 8
+        },
+        {
+          "name": "_process",
+          "line": 20,
+          "lines": 7
+        },
+        {
+          "name": "deactivate_for_pool",
+          "line": 35,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/hero/gunner_projectile.gd",
+      "lines": 355,
+      "functions": 19,
+      "largest_functions": [
+        {
+          "name": "_spawn_hit_impact",
+          "line": 278,
+          "lines": 46
+        },
+        {
+          "name": "setup",
+          "line": 40,
+          "lines": 31
+        },
+        {
+          "name": "_on_body_entered",
+          "line": 123,
+          "lines": 29
+        },
+        {
+          "name": "_find_ricochet_target",
+          "line": 199,
+          "lines": 25
+        },
+        {
+          "name": "_spawn_deadeye_ricochet_fx",
+          "line": 177,
+          "lines": 22
+        }
+      ],
+      "group_scans": 2,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 2
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "lines": 20963,
+      "functions": 610,
+      "largest_functions": [
+        {
+          "name": "configure_profile",
+          "line": 897,
+          "lines": 696
+        },
+        {
+          "name": "_apply_profile_visual",
+          "line": 6765,
+          "lines": 386
+        },
+        {
+          "name": "_apply_augment_effect",
+          "line": 16643,
+          "lines": 374
+        },
+        {
+          "name": "_rogue_combo_attack",
+          "line": 5878,
+          "lines": 226
+        },
+        {
+          "name": "get_skill_cooldown_hud",
+          "line": 15248,
+          "lines": 206
+        }
+      ],
+      "group_scans": 1,
+      "pop_front": 4,
+      "await": 17,
+      "instantiate": 14,
+      "queue_free": 7
+    },
+    {
+      "path": "src/hero/hero_fighter_runtime.gd",
+      "lines": 71,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "find_farthest_charge_target",
+          "line": 43,
+          "lines": 29
+        },
+        {
+          "name": "get_slash_trigger",
+          "line": 19,
+          "lines": 14
+        },
+        {
+          "name": "get_guard_trigger",
+          "line": 33,
+          "lines": 10
+        },
+        {
+          "name": "get_charge_trigger",
+          "line": 5,
+          "lines": 7
+        },
+        {
+          "name": "get_charge_max_target_distance",
+          "line": 12,
+          "lines": 7
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/hero_projectile.gd",
+      "lines": 364,
+      "functions": 16,
+      "largest_functions": [
+        {
+          "name": "_apply_projectile_visual",
+          "line": 264,
+          "lines": 68
+        },
+        {
+          "name": "_apply_splash_damage",
+          "line": 224,
+          "lines": 40
+        },
+        {
+          "name": "_on_body_entered",
+          "line": 132,
+          "lines": 38
+        },
+        {
+          "name": "setup",
+          "line": 45,
+          "lines": 30
+        },
+        {
+          "name": "_load_texture_direct",
+          "line": 332,
+          "lines": 27
+        }
+      ],
+      "group_scans": 2,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/hero/hero_summoner_runtime.gd",
+      "lines": 632,
+      "functions": 31,
+      "largest_functions": [
+        {
+          "name": "score_ai_candidate",
+          "line": 95,
+          "lines": 74
+        },
+        {
+          "name": "build_augment_ai_settings",
+          "line": 169,
+          "lines": 60
+        },
+        {
+          "name": "ensure_pool_capacity",
+          "line": 229,
+          "lines": 47
+        },
+        {
+          "name": "build_gatekeeper_runtime_config",
+          "line": 370,
+          "lines": 40
+        },
+        {
+          "name": "are_runtime_pools_ready",
+          "line": 286,
+          "lines": 39
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 1,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/hero_world_query_runtime.gd",
+      "lines": 126,
+      "functions": 7,
+      "largest_functions": [
+        {
+          "name": "get_monster_nodes_cached",
+          "line": 21,
+          "lines": 27
+        },
+        {
+          "name": "get_aux_group_nodes_cached",
+          "line": 48,
+          "lines": 26
+        },
+        {
+          "name": "fill_monster_nodes_near",
+          "line": 74,
+          "lines": 22
+        },
+        {
+          "name": "fill_monster_nodes_in_rect",
+          "line": 102,
+          "lines": 21
+        },
+        {
+          "name": "get_monster_nodes_near",
+          "line": 96,
+          "lines": 6
+        }
+      ],
+      "group_scans": 2,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/practice_hero.gd",
+      "lines": 100,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "_physics_process_actions",
+          "line": 23,
+          "lines": 45
+        },
+        {
+          "name": "_take_damage_internal",
+          "line": 68,
+          "lines": 14
+        },
+        {
+          "name": "_fire_practice_projectile",
+          "line": 88,
+          "lines": 13
+        },
+        {
+          "name": "_ready",
+          "line": 14,
+          "lines": 9
+        },
+        {
+          "name": "gain_exp",
+          "line": 82,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/projectile_volley.gd",
+      "lines": 15,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "claim_target",
+          "line": 8,
+          "lines": 8
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/purifier_cleansing_fx.gd",
+      "lines": 50,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_get_or_build_frames",
+          "line": 30,
+          "lines": 21
+        },
+        {
+          "name": "setup",
+          "line": 8,
+          "lines": 18
+        },
+        {
+          "name": "_on_animation_finished",
+          "line": 26,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 2
+    },
+    {
+      "path": "src/hero/purifier_gungnir.gd",
+      "lines": 857,
+      "functions": 32,
+      "largest_functions": [
+        {
+          "name": "setup",
+          "line": 94,
+          "lines": 175
+        },
+        {
+          "name": "_apply_explosion",
+          "line": 590,
+          "lines": 86
+        },
+        {
+          "name": "_capture_nearby_monsters",
+          "line": 498,
+          "lines": 39
+        },
+        {
+          "name": "_update_trails",
+          "line": 753,
+          "lines": 36
+        },
+        {
+          "name": "_update_charge_aura",
+          "line": 676,
+          "lines": 34
+        }
+      ],
+      "group_scans": 2,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/hero/purifier_orb.gd",
+      "lines": 218,
+      "functions": 15,
+      "largest_functions": [
+        {
+          "name": "_get_or_build_frames",
+          "line": 171,
+          "lines": 43
+        },
+        {
+          "name": "setup",
+          "line": 28,
+          "lines": 32
+        },
+        {
+          "name": "_physics_process",
+          "line": 60,
+          "lines": 23
+        },
+        {
+          "name": "_begin_end",
+          "line": 122,
+          "lines": 22
+        },
+        {
+          "name": "_draw",
+          "line": 156,
+          "lines": 15
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/hero/purifier_orb_link.gd",
+      "lines": 177,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "_apply_damage_tick",
+          "line": 94,
+          "lines": 63
+        },
+        {
+          "name": "setup",
+          "line": 17,
+          "lines": 46
+        },
+        {
+          "name": "_get_or_build_frames",
+          "line": 157,
+          "lines": 21
+        },
+        {
+          "name": "configure_damage",
+          "line": 63,
+          "lines": 17
+        },
+        {
+          "name": "_physics_process",
+          "line": 80,
+          "lines": 14
+        }
+      ],
+      "group_scans": 1,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/sage_annihilation_point.gd",
+      "lines": 480,
+      "functions": 20,
+      "largest_functions": [
+        {
+          "name": "_apply_damage_tick",
+          "line": 270,
+          "lines": 60
+        },
+        {
+          "name": "setup",
+          "line": 61,
+          "lines": 51
+        },
+        {
+          "name": "_apply_global_pull",
+          "line": 233,
+          "lines": 37
+        },
+        {
+          "name": "_update_disappearing",
+          "line": 201,
+          "lines": 32
+        },
+        {
+          "name": "_draw",
+          "line": 402,
+          "lines": 29
+        }
+      ],
+      "group_scans": 2,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/hero/sage_blackspot_explosion.gd",
+      "lines": 229,
+      "functions": 9,
+      "largest_functions": [
+        {
+          "name": "_apply_damage",
+          "line": 110,
+          "lines": 65
+        },
+        {
+          "name": "_physics_process",
+          "line": 65,
+          "lines": 35
+        },
+        {
+          "name": "setup",
+          "line": 37,
+          "lines": 28
+        },
+        {
+          "name": "deactivate_for_pool",
+          "line": 215,
+          "lines": 15
+        },
+        {
+          "name": "_finish",
+          "line": 201,
+          "lines": 14
+        }
+      ],
+      "group_scans": 1,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/hero/sage_ice_pillar.gd",
+      "lines": 350,
+      "functions": 23,
+      "largest_functions": [
+        {
+          "name": "setup",
+          "line": 45,
+          "lines": 41
+        },
+        {
+          "name": "_build_frames",
+          "line": 298,
+          "lines": 30
+        },
+        {
+          "name": "deactivate_for_pool",
+          "line": 253,
+          "lines": 24
+        },
+        {
+          "name": "_apply_initial_damage",
+          "line": 143,
+          "lines": 20
+        },
+        {
+          "name": "_finish_pillar",
+          "line": 234,
+          "lines": 19
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 1,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/hero/sage_projectile.gd",
+      "lines": 327,
+      "functions": 19,
+      "largest_functions": [
+        {
+          "name": "setup",
+          "line": 51,
+          "lines": 32
+        },
+        {
+          "name": "_try_hit_target",
+          "line": 146,
+          "lines": 32
+        },
+        {
+          "name": "_physics_process",
+          "line": 83,
+          "lines": 24
+        },
+        {
+          "name": "_get_basic_frames",
+          "line": 257,
+          "lines": 24
+        },
+        {
+          "name": "_get_piercing_frames",
+          "line": 281,
+          "lines": 24
+        }
+      ],
+      "group_scans": 1,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/hero/sage_radiance_orb.gd",
+      "lines": 264,
+      "functions": 13,
+      "largest_functions": [
+        {
+          "name": "setup",
+          "line": 42,
+          "lines": 40
+        },
+        {
+          "name": "_explode",
+          "line": 107,
+          "lines": 34
+        },
+        {
+          "name": "_build_frames",
+          "line": 231,
+          "lines": 29
+        },
+        {
+          "name": "_physics_process",
+          "line": 82,
+          "lines": 25
+        },
+        {
+          "name": "_on_animation_finished",
+          "line": 168,
+          "lines": 19
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/hero/sage_starlight_meteor.gd",
+      "lines": 242,
+      "functions": 12,
+      "largest_functions": [
+        {
+          "name": "_apply_damage",
+          "line": 141,
+          "lines": 43
+        },
+        {
+          "name": "setup",
+          "line": 39,
+          "lines": 37
+        },
+        {
+          "name": "_update_explosion",
+          "line": 119,
+          "lines": 22
+        },
+        {
+          "name": "_update_fall",
+          "line": 86,
+          "lines": 17
+        },
+        {
+          "name": "_impact",
+          "line": 103,
+          "lines": 16
+        }
+      ],
+      "group_scans": 1,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/hero/summoner_gatekeeper.gd",
+      "lines": 342,
+      "functions": 16,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 87,
+          "lines": 40
+        },
+        {
+          "name": "activate",
+          "line": 51,
+          "lines": 36
+        },
+        {
+          "name": "_find_nearest_target",
+          "line": 127,
+          "lines": 36
+        },
+        {
+          "name": "_fire_at",
+          "line": 163,
+          "lines": 29
+        },
+        {
+          "name": "_setup_visual",
+          "line": 255,
+          "lines": 25
+        }
+      ],
+      "group_scans": 1,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 1,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/summoner_gatekeeper_projectile.gd",
+      "lines": 116,
+      "functions": 7,
+      "largest_functions": [
+        {
+          "name": "activate",
+          "line": 33,
+          "lines": 29
+        },
+        {
+          "name": "_physics_process",
+          "line": 62,
+          "lines": 24
+        },
+        {
+          "name": "deactivate",
+          "line": 95,
+          "lines": 12
+        },
+        {
+          "name": "_impact_target",
+          "line": 86,
+          "lines": 9
+        },
+        {
+          "name": "_ready",
+          "line": 26,
+          "lines": 7
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/summoner_hound.gd",
+      "lines": 412,
+      "functions": 15,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 115,
+          "lines": 70
+        },
+        {
+          "name": "activate",
+          "line": 57,
+          "lines": 58
+        },
+        {
+          "name": "_find_nearest_target",
+          "line": 214,
+          "lines": 36
+        },
+        {
+          "name": "_update_pending_hits",
+          "line": 185,
+          "lines": 29
+        },
+        {
+          "name": "_setup_visual",
+          "line": 335,
+          "lines": 25
+        }
+      ],
+      "group_scans": 1,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/summoner_open_gate.gd",
+      "lines": 306,
+      "functions": 16,
+      "largest_functions": [
+        {
+          "name": "activate",
+          "line": 76,
+          "lines": 49
+        },
+        {
+          "name": "_setup_visual",
+          "line": 226,
+          "lines": 46
+        },
+        {
+          "name": "prepare_pool",
+          "line": 42,
+          "lines": 34
+        },
+        {
+          "name": "_spawn_drone",
+          "line": 139,
+          "lines": 26
+        },
+        {
+          "name": "_ensure_drone_pool",
+          "line": 272,
+          "lines": 18
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 1,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/summoner_scout.gd",
+      "lines": 367,
+      "functions": 14,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 90,
+          "lines": 71
+        },
+        {
+          "name": "activate",
+          "line": 46,
+          "lines": 44
+        },
+        {
+          "name": "_attack_target",
+          "line": 197,
+          "lines": 40
+        },
+        {
+          "name": "_find_nearest_target",
+          "line": 161,
+          "lines": 36
+        },
+        {
+          "name": "_setup_visual",
+          "line": 294,
+          "lines": 24
+        }
+      ],
+      "group_scans": 1,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/summoner_suicide_drone.gd",
+      "lines": 302,
+      "functions": 12,
+      "largest_functions": [
+        {
+          "name": "_setup_frames",
+          "line": 239,
+          "lines": 58
+        },
+        {
+          "name": "activate",
+          "line": 41,
+          "lines": 50
+        },
+        {
+          "name": "_physics_process",
+          "line": 91,
+          "lines": 37
+        },
+        {
+          "name": "_find_nearest_target",
+          "line": 128,
+          "lines": 36
+        },
+        {
+          "name": "_explode_on_target",
+          "line": 164,
+          "lines": 26
+        }
+      ],
+      "group_scans": 2,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/summoner_watcher.gd",
+      "lines": 385,
+      "functions": 20,
+      "largest_functions": [
+        {
+          "name": "activate",
+          "line": 51,
+          "lines": 47
+        },
+        {
+          "name": "_physics_process",
+          "line": 98,
+          "lines": 42
+        },
+        {
+          "name": "_fire_at_target",
+          "line": 193,
+          "lines": 40
+        },
+        {
+          "name": "_find_nearest_target",
+          "line": 157,
+          "lines": 36
+        },
+        {
+          "name": "_setup_visual",
+          "line": 300,
+          "lines": 23
+        }
+      ],
+      "group_scans": 1,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 1,
+      "queue_free": 0
+    },
+    {
+      "path": "src/hero/ultimate_piercing_projectile.gd",
+      "lines": 169,
+      "functions": 9,
+      "largest_functions": [
+        {
+          "name": "_apply_visual",
+          "line": 112,
+          "lines": 34
+        },
+        {
+          "name": "setup",
+          "line": 26,
+          "lines": 25
+        },
+        {
+          "name": "deactivate_for_pool",
+          "line": 91,
+          "lines": 21
+        },
+        {
+          "name": "_on_body_entered",
+          "line": 62,
+          "lines": 15
+        },
+        {
+          "name": "_load_texture",
+          "line": 146,
+          "lines": 15
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/lobby/lobby.gd",
+      "lines": 5436,
+      "functions": 170,
+      "largest_functions": [
+        {
+          "name": "_install_stage_entry_hud",
+          "line": 1458,
+          "lines": 384
+        },
+        {
+          "name": "_apply_new_ui_assets",
+          "line": 1040,
+          "lines": 316
+        },
+        {
+          "name": "_create_team_monster_card",
+          "line": 3344,
+          "lines": 226
+        },
+        {
+          "name": "_apply_lobby_visual_polish",
+          "line": 1917,
+          "lines": 201
+        },
+        {
+          "name": "_apply_styles",
+          "line": 544,
+          "lines": 150
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 6,
+      "instantiate": 0,
+      "queue_free": 3
+    },
+    {
+      "path": "src/main/main.gd",
+      "lines": 3591,
+      "functions": 140,
+      "largest_functions": [
+        {
+          "name": "_build_monster_info_direct",
+          "line": 2336,
+          "lines": 197
+        },
+        {
+          "name": "_ready",
+          "line": 251,
+          "lines": 171
+        },
+        {
+          "name": "_apply_battle_pixel_asset_frames",
+          "line": 448,
+          "lines": 144
+        },
+        {
+          "name": "_on_demon_augment_ready",
+          "line": 3094,
+          "lines": 133
+        },
+        {
+          "name": "_input",
+          "line": 990,
+          "lines": 128
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 8,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/banshee.gd",
+      "lines": 175,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 40,
+          "lines": 89
+        },
+        {
+          "name": "_apply_normal_visual_profile",
+          "line": 22,
+          "lines": 18
+        },
+        {
+          "name": "take_damage",
+          "line": 158,
+          "lines": 18
+        },
+        {
+          "name": "_pick_new_wander_target",
+          "line": 129,
+          "lines": 16
+        },
+        {
+          "name": "_status_scoped_deal_attack_damage",
+          "line": 145,
+          "lines": 13
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/bat.gd",
+      "lines": 476,
+      "functions": 23,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 118,
+          "lines": 79
+        },
+        {
+          "name": "_draw",
+          "line": 436,
+          "lines": 41
+        },
+        {
+          "name": "_move_charging",
+          "line": 197,
+          "lines": 29
+        },
+        {
+          "name": "_status_scoped_deal_attack_damage",
+          "line": 295,
+          "lines": 27
+        },
+        {
+          "name": "_attack_target",
+          "line": 263,
+          "lines": 25
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/bomb_rat.gd",
+      "lines": 760,
+      "functions": 29,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 113,
+          "lines": 102
+        },
+        {
+          "name": "_apply_bomb_rat_sequence_visual",
+          "line": 449,
+          "lines": 82
+        },
+        {
+          "name": "_draw",
+          "line": 680,
+          "lines": 62
+        },
+        {
+          "name": "_apply_bomb_rat_explosion_visual",
+          "line": 549,
+          "lines": 56
+        },
+        {
+          "name": "take_damage",
+          "line": 269,
+          "lines": 51
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 2
+    },
+    {
+      "path": "src/monsters/bomb_rat_visual.gd",
+      "lines": 164,
+      "functions": 13,
+      "largest_functions": [
+        {
+          "name": "_setup_sprite_frames",
+          "line": 112,
+          "lines": 31
+        },
+        {
+          "name": "_add_row_animation",
+          "line": 143,
+          "lines": 22
+        },
+        {
+          "name": "play_death",
+          "line": 72,
+          "lines": 13
+        },
+        {
+          "name": "play_hit",
+          "line": 61,
+          "lines": 11
+        },
+        {
+          "name": "_on_animation_finished",
+          "line": 99,
+          "lines": 10
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/bulgasal.gd",
+      "lines": 589,
+      "functions": 42,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 141,
+          "lines": 103
+        },
+        {
+          "name": "_ready",
+          "line": 93,
+          "lines": 42
+        },
+        {
+          "name": "draw_combat_overlay",
+          "line": 550,
+          "lines": 37
+        },
+        {
+          "name": "_tick_idle",
+          "line": 244,
+          "lines": 30
+        },
+        {
+          "name": "_tick_fragments",
+          "line": 424,
+          "lines": 25
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/bulgasal_pillars.gd",
+      "lines": 146,
+      "functions": 10,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 14,
+          "lines": 28
+        },
+        {
+          "name": "regenerate",
+          "line": 42,
+          "lines": 25
+        },
+        {
+          "name": "_physics_process",
+          "line": 115,
+          "lines": 17
+        },
+        {
+          "name": "shatter",
+          "line": 79,
+          "lines": 16
+        },
+        {
+          "name": "nearest",
+          "line": 67,
+          "lines": 12
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 2
+    },
+    {
+      "path": "src/monsters/dullahan.gd",
+      "lines": 363,
+      "functions": 20,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 71,
+          "lines": 64
+        },
+        {
+          "name": "_tick_danger",
+          "line": 252,
+          "lines": 33
+        },
+        {
+          "name": "take_damage",
+          "line": 169,
+          "lines": 29
+        },
+        {
+          "name": "_status_scoped_deal_hit",
+          "line": 141,
+          "lines": 28
+        },
+        {
+          "name": "try_cast_elite_skill",
+          "line": 285,
+          "lines": 24
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/ghost.gd",
+      "lines": 513,
+      "functions": 19,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 139,
+          "lines": 112
+        },
+        {
+          "name": "_begin_phase_shift",
+          "line": 298,
+          "lines": 47
+        },
+        {
+          "name": "_tick_phase_shift",
+          "line": 345,
+          "lines": 46
+        },
+        {
+          "name": "_draw",
+          "line": 479,
+          "lines": 35
+        },
+        {
+          "name": "_apply_normal_visual_profile",
+          "line": 83,
+          "lines": 33
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 1,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/ghost_projectile.gd",
+      "lines": 169,
+      "functions": 9,
+      "largest_functions": [
+        {
+          "name": "_on_body_entered",
+          "line": 67,
+          "lines": 28
+        },
+        {
+          "name": "setup",
+          "line": 30,
+          "lines": 27
+        },
+        {
+          "name": "deactivate_for_pool",
+          "line": 145,
+          "lines": 22
+        },
+        {
+          "name": "_apply_visual",
+          "line": 95,
+          "lines": 18
+        },
+        {
+          "name": "_get_texture",
+          "line": 113,
+          "lines": 17
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/goblin.gd",
+      "lines": 446,
+      "functions": 19,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 143,
+          "lines": 108
+        },
+        {
+          "name": "_refresh_pack_state",
+          "line": 282,
+          "lines": 44
+        },
+        {
+          "name": "_draw",
+          "line": 409,
+          "lines": 38
+        },
+        {
+          "name": "take_damage",
+          "line": 351,
+          "lines": 33
+        },
+        {
+          "name": "_try_survivor_growth",
+          "line": 259,
+          "lines": 23
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/goblin_thrower.gd",
+      "lines": 490,
+      "functions": 18,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 131,
+          "lines": 111
+        },
+        {
+          "name": "_tick_retreat_and_heal",
+          "line": 242,
+          "lines": 62
+        },
+        {
+          "name": "_fire_projectile",
+          "line": 318,
+          "lines": 44
+        },
+        {
+          "name": "_apply_normal_visual_profile",
+          "line": 77,
+          "lines": 31
+        },
+        {
+          "name": "_draw",
+          "line": 463,
+          "lines": 28
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 1,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/goblin_thrower_bomb.gd",
+      "lines": 236,
+      "functions": 14,
+      "largest_functions": [
+        {
+          "name": "setup",
+          "line": 39,
+          "lines": 32
+        },
+        {
+          "name": "_build_frames",
+          "line": 142,
+          "lines": 30
+        },
+        {
+          "name": "deactivate_for_pool",
+          "line": 201,
+          "lines": 22
+        },
+        {
+          "name": "_get_scale_for_animation",
+          "line": 172,
+          "lines": 20
+        },
+        {
+          "name": "_tick_fuse",
+          "line": 95,
+          "lines": 16
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/goblin_thrower_projectile.gd",
+      "lines": 184,
+      "functions": 10,
+      "largest_functions": [
+        {
+          "name": "_get_frames",
+          "line": 100,
+          "lines": 37
+        },
+        {
+          "name": "setup",
+          "line": 31,
+          "lines": 27
+        },
+        {
+          "name": "deactivate_for_pool",
+          "line": 147,
+          "lines": 24
+        },
+        {
+          "name": "_on_body_entered",
+          "line": 68,
+          "lines": 19
+        },
+        {
+          "name": "_apply_visual",
+          "line": 87,
+          "lines": 13
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/izanami.gd",
+      "lines": 557,
+      "functions": 31,
+      "largest_functions": [
+        {
+          "name": "_tick_spirits",
+          "line": 349,
+          "lines": 44
+        },
+        {
+          "name": "_tick_torii",
+          "line": 423,
+          "lines": 42
+        },
+        {
+          "name": "_physics_process",
+          "line": 124,
+          "lines": 35
+        },
+        {
+          "name": "_draw_effects",
+          "line": 513,
+          "lines": 30
+        },
+        {
+          "name": "_tick_retreat_and_heal",
+          "line": 164,
+          "lines": 29
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/kobolt.gd",
+      "lines": 354,
+      "functions": 19,
+      "largest_functions": [
+        {
+          "name": "_fire_projectile",
+          "line": 171,
+          "lines": 60
+        },
+        {
+          "name": "_physics_process",
+          "line": 111,
+          "lines": 47
+        },
+        {
+          "name": "_draw",
+          "line": 329,
+          "lines": 26
+        },
+        {
+          "name": "_apply_normal_visual_profile",
+          "line": 68,
+          "lines": 20
+        },
+        {
+          "name": "_ready",
+          "line": 49,
+          "lines": 19
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 1,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/kobolt_projectile.gd",
+      "lines": 206,
+      "functions": 11,
+      "largest_functions": [
+        {
+          "name": "_get_frames",
+          "line": 118,
+          "lines": 37
+        },
+        {
+          "name": "setup",
+          "line": 30,
+          "lines": 33
+        },
+        {
+          "name": "deactivate_for_pool",
+          "line": 166,
+          "lines": 27
+        },
+        {
+          "name": "_get_impact_damage",
+          "line": 83,
+          "lines": 22
+        },
+        {
+          "name": "_apply_visual",
+          "line": 105,
+          "lines": 13
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/kraken.gd",
+      "lines": 140,
+      "functions": 11,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 45,
+          "lines": 34
+        },
+        {
+          "name": "_strike",
+          "line": 102,
+          "lines": 16
+        },
+        {
+          "name": "_tick_tentacle",
+          "line": 90,
+          "lines": 12
+        },
+        {
+          "name": "_start_burst",
+          "line": 79,
+          "lines": 11
+        },
+        {
+          "name": "_init",
+          "line": 16,
+          "lines": 10
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/kraken_tentacle_fx.gd",
+      "lines": 47,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "show_at",
+          "line": 24,
+          "lines": 21
+        },
+        {
+          "name": "warm_cache",
+          "line": 6,
+          "lines": 18
+        },
+        {
+          "name": "_finish",
+          "line": 45,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/manticore.gd",
+      "lines": 621,
+      "functions": 48,
+      "largest_functions": [
+        {
+          "name": "_tick_motion",
+          "line": 189,
+          "lines": 84
+        },
+        {
+          "name": "_tick_other_enemies",
+          "line": 574,
+          "lines": 40
+        },
+        {
+          "name": "_tick_meteors",
+          "line": 413,
+          "lines": 39
+        },
+        {
+          "name": "_draw_effects",
+          "line": 506,
+          "lines": 32
+        },
+        {
+          "name": "_physics_process",
+          "line": 141,
+          "lines": 28
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/medusa.gd",
+      "lines": 126,
+      "functions": 10,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 35,
+          "lines": 31
+        },
+        {
+          "name": "_status_scoped_deal_hit",
+          "line": 75,
+          "lines": 24
+        },
+        {
+          "name": "_tick_aura",
+          "line": 99,
+          "lines": 20
+        },
+        {
+          "name": "_init",
+          "line": 11,
+          "lines": 11
+        },
+        {
+          "name": "_ready",
+          "line": 22,
+          "lines": 8
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/monster_runtime_common.gd",
+      "lines": 502,
+      "functions": 27,
+      "largest_functions": [
+        {
+          "name": "compute_soft_separation_bias",
+          "line": 91,
+          "lines": 88
+        },
+        {
+          "name": "get_external_movement_multiplier",
+          "line": 258,
+          "lines": 69
+        },
+        {
+          "name": "begin_standard_death",
+          "line": 416,
+          "lines": 51
+        },
+        {
+          "name": "apply_direct_heal",
+          "line": 467,
+          "lines": 26
+        },
+        {
+          "name": "resolve_combat_target",
+          "line": 39,
+          "lines": 25
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/monster_visual.gd",
+      "lines": 640,
+      "functions": 34,
+      "largest_functions": [
+        {
+          "name": "apply_visual_profile",
+          "line": 384,
+          "lines": 72
+        },
+        {
+          "name": "_setup_sprite_frames",
+          "line": 337,
+          "lines": 47
+        },
+        {
+          "name": "_build_profile_sheet",
+          "line": 539,
+          "lines": 44
+        },
+        {
+          "name": "_build_profile_frames",
+          "line": 471,
+          "lines": 35
+        },
+        {
+          "name": "_build_profile_sequence",
+          "line": 506,
+          "lines": 33
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/mummy.gd",
+      "lines": 121,
+      "functions": 14,
+      "largest_functions": [
+        {
+          "name": "take_damage",
+          "line": 93,
+          "lines": 23
+        },
+        {
+          "name": "_status_scoped_deal_damage",
+          "line": 76,
+          "lines": 17
+        },
+        {
+          "name": "_ready",
+          "line": 22,
+          "lines": 14
+        },
+        {
+          "name": "_init",
+          "line": 12,
+          "lines": 10
+        },
+        {
+          "name": "_sync_shield_capacity",
+          "line": 36,
+          "lines": 8
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/orc.gd",
+      "lines": 420,
+      "functions": 17,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 97,
+          "lines": 127
+        },
+        {
+          "name": "_get_combat_bonuses",
+          "line": 306,
+          "lines": 48
+        },
+        {
+          "name": "_draw",
+          "line": 382,
+          "lines": 39
+        },
+        {
+          "name": "_ready",
+          "line": 47,
+          "lines": 26
+        },
+        {
+          "name": "take_damage",
+          "line": 227,
+          "lines": 20
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/powwow_mummy.gd",
+      "lines": 107,
+      "functions": 9,
+      "largest_functions": [
+        {
+          "name": "_cast_buffs",
+          "line": 55,
+          "lines": 22
+        },
+        {
+          "name": "_apply_buff",
+          "line": 77,
+          "lines": 19
+        },
+        {
+          "name": "_physics_process",
+          "line": 38,
+          "lines": 17
+        },
+        {
+          "name": "_init",
+          "line": 12,
+          "lines": 12
+        },
+        {
+          "name": "_fire_projectile",
+          "line": 96,
+          "lines": 9
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/powwow_mummy_projectile.gd",
+      "lines": 53,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "_on_body_entered",
+          "line": 6,
+          "lines": 19
+        },
+        {
+          "name": "_get_frames",
+          "line": 25,
+          "lines": 18
+        },
+        {
+          "name": "_finish_projectile",
+          "line": 43,
+          "lines": 8
+        },
+        {
+          "name": "deactivate_for_pool",
+          "line": 51,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/scorpion.gd",
+      "lines": 134,
+      "functions": 11,
+      "largest_functions": [
+        {
+          "name": "try_cast_elite_skill",
+          "line": 84,
+          "lines": 35
+        },
+        {
+          "name": "_tick_followup",
+          "line": 42,
+          "lines": 17
+        },
+        {
+          "name": "_status_scoped_deal_hit",
+          "line": 65,
+          "lines": 16
+        },
+        {
+          "name": "_init",
+          "line": 11,
+          "lines": 10
+        },
+        {
+          "name": "_ready",
+          "line": 21,
+          "lines": 10
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/shuten_doji.gd",
+      "lines": 486,
+      "functions": 34,
+      "largest_functions": [
+        {
+          "name": "_tick_motion",
+          "line": 177,
+          "lines": 40
+        },
+        {
+          "name": "_draw_effects",
+          "line": 452,
+          "lines": 33
+        },
+        {
+          "name": "_tick_fogs",
+          "line": 261,
+          "lines": 29
+        },
+        {
+          "name": "_refresh_targets",
+          "line": 150,
+          "lines": 27
+        },
+        {
+          "name": "_physics_process",
+          "line": 111,
+          "lines": 24
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/skeleton.gd",
+      "lines": 664,
+      "functions": 25,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 128,
+          "lines": 122
+        },
+        {
+          "name": "take_damage",
+          "line": 377,
+          "lines": 57
+        },
+        {
+          "name": "_tick_bone_bond",
+          "line": 317,
+          "lines": 50
+        },
+        {
+          "name": "_draw",
+          "line": 615,
+          "lines": 50
+        },
+        {
+          "name": "_tick_revival",
+          "line": 470,
+          "lines": 38
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/skeleton_archer.gd",
+      "lines": 589,
+      "functions": 26,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 122,
+          "lines": 108
+        },
+        {
+          "name": "_draw",
+          "line": 548,
+          "lines": 42
+        },
+        {
+          "name": "_tick_revival",
+          "line": 423,
+          "lines": 38
+        },
+        {
+          "name": "_begin_attack_sequence",
+          "line": 230,
+          "lines": 36
+        },
+        {
+          "name": "_complete_revival",
+          "line": 461,
+          "lines": 26
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 1,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/skeleton_archer_projectile.gd",
+      "lines": 228,
+      "functions": 12,
+      "largest_functions": [
+        {
+          "name": "_get_frames",
+          "line": 117,
+          "lines": 55
+        },
+        {
+          "name": "setup",
+          "line": 31,
+          "lines": 30
+        },
+        {
+          "name": "deactivate_for_pool",
+          "line": 189,
+          "lines": 26
+        },
+        {
+          "name": "_apply_visual",
+          "line": 87,
+          "lines": 17
+        },
+        {
+          "name": "_on_body_entered",
+          "line": 71,
+          "lines": 16
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/slime.gd",
+      "lines": 382,
+      "functions": 14,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 92,
+          "lines": 120
+        },
+        {
+          "name": "_get_pack_bonuses",
+          "line": 253,
+          "lines": 47
+        },
+        {
+          "name": "_draw",
+          "line": 346,
+          "lines": 37
+        },
+        {
+          "name": "_ready",
+          "line": 46,
+          "lines": 22
+        },
+        {
+          "name": "take_damage",
+          "line": 300,
+          "lines": 18
+        }
+      ],
+      "group_scans": 1,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/spider.gd",
+      "lines": 432,
+      "functions": 16,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 93,
+          "lines": 110
+        },
+        {
+          "name": "_fire_projectile",
+          "line": 294,
+          "lines": 53
+        },
+        {
+          "name": "_draw",
+          "line": 393,
+          "lines": 40
+        },
+        {
+          "name": "_begin_projectile_attack",
+          "line": 235,
+          "lines": 38
+        },
+        {
+          "name": "_acquire_spider_projectile",
+          "line": 273,
+          "lines": 21
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 1,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/spider_projectile.gd",
+      "lines": 258,
+      "functions": 11,
+      "largest_functions": [
+        {
+          "name": "_apply_projectile_visual",
+          "line": 189,
+          "lines": 54
+        },
+        {
+          "name": "_apply_binding_hit",
+          "line": 148,
+          "lines": 41
+        },
+        {
+          "name": "setup",
+          "line": 33,
+          "lines": 35
+        },
+        {
+          "name": "deactivate_for_pool",
+          "line": 121,
+          "lines": 27
+        },
+        {
+          "name": "_status_scoped_on_body_entered",
+          "line": 85,
+          "lines": 24
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/succubus.gd",
+      "lines": 266,
+      "functions": 18,
+      "largest_functions": [
+        {
+          "name": "try_cast_elite_skill",
+          "line": 172,
+          "lines": 40
+        },
+        {
+          "name": "_start_infiltration",
+          "line": 128,
+          "lines": 25
+        },
+        {
+          "name": "take_damage",
+          "line": 106,
+          "lines": 22
+        },
+        {
+          "name": "_tick_waltz",
+          "line": 212,
+          "lines": 22
+        },
+        {
+          "name": "_teleport_near",
+          "line": 234,
+          "lines": 22
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/wolf.gd",
+      "lines": 158,
+      "functions": 13,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 41,
+          "lines": 28
+        },
+        {
+          "name": "_status_scoped_deal_hit",
+          "line": 118,
+          "lines": 21
+        },
+        {
+          "name": "_ready",
+          "line": 24,
+          "lines": 17
+        },
+        {
+          "name": "_attack_target",
+          "line": 89,
+          "lines": 12
+        },
+        {
+          "name": "_tick_followup",
+          "line": 101,
+          "lines": 11
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/yuki_onna.gd",
+      "lines": 109,
+      "functions": 11,
+      "largest_functions": [
+        {
+          "name": "_fire_projectile",
+          "line": 87,
+          "lines": 17
+        },
+        {
+          "name": "_init",
+          "line": 15,
+          "lines": 14
+        },
+        {
+          "name": "_physics_process",
+          "line": 54,
+          "lines": 14
+        },
+        {
+          "name": "_ready",
+          "line": 29,
+          "lines": 12
+        },
+        {
+          "name": "apply_chill",
+          "line": 68,
+          "lines": 11
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/yuki_onna_projectile.gd",
+      "lines": 66,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "_status_scoped_on_body_entered",
+          "line": 16,
+          "lines": 19
+        },
+        {
+          "name": "_get_frames",
+          "line": 35,
+          "lines": 18
+        },
+        {
+          "name": "_finish_projectile",
+          "line": 53,
+          "lines": 8
+        },
+        {
+          "name": "_on_body_entered",
+          "line": 10,
+          "lines": 6
+        },
+        {
+          "name": "deactivate_for_pool",
+          "line": 61,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/monsters/zeus.gd",
+      "lines": 413,
+      "functions": 27,
+      "largest_functions": [
+        {
+          "name": "_try_cast",
+          "line": 166,
+          "lines": 32
+        },
+        {
+          "name": "_tick_retreat_and_heal",
+          "line": 136,
+          "lines": 30
+        },
+        {
+          "name": "_tick_thunder",
+          "line": 235,
+          "lines": 29
+        },
+        {
+          "name": "_draw_combat_effects",
+          "line": 365,
+          "lines": 28
+        },
+        {
+          "name": "_physics_process",
+          "line": 100,
+          "lines": 27
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/zeus_preview.gd",
+      "lines": 6,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 5,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/monsters/zeus_slash.gd",
+      "lines": 93,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "_physics_process",
+          "line": 48,
+          "lines": 34
+        },
+        {
+          "name": "setup",
+          "line": 23,
+          "lines": 17
+        },
+        {
+          "name": "_draw",
+          "line": 82,
+          "lines": 12
+        },
+        {
+          "name": "deactivate_for_pool",
+          "line": 40,
+          "lines": 8
+        },
+        {
+          "name": "_ready",
+          "line": 18,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/network/android_oauth_listener.gd",
+      "lines": 104,
+      "functions": 7,
+      "largest_functions": [
+        {
+          "name": "_receive",
+          "line": 46,
+          "lines": 47
+        },
+        {
+          "name": "start",
+          "line": 11,
+          "lines": 13
+        },
+        {
+          "name": "_callback_page",
+          "line": 93,
+          "lines": 12
+        },
+        {
+          "name": "cancel",
+          "line": 32,
+          "lines": 8
+        },
+        {
+          "name": "_stopping",
+          "line": 40,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/network/android_session_vault.gd",
+      "lines": 89,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "save_session",
+          "line": 31,
+          "lines": 28
+        },
+        {
+          "name": "read_session",
+          "line": 59,
+          "lines": 27
+        },
+        {
+          "name": "_key",
+          "line": 7,
+          "lines": 24
+        },
+        {
+          "name": "clear_session",
+          "line": 86,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/network/cloud_store.gd",
+      "lines": 155,
+      "functions": 7,
+      "largest_functions": [
+        {
+          "name": "initialize",
+          "line": 50,
+          "lines": 41
+        },
+        {
+          "name": "flush",
+          "line": 123,
+          "lines": 33
+        },
+        {
+          "name": "tutorial_operation",
+          "line": 91,
+          "lines": 32
+        },
+        {
+          "name": "request_rpc",
+          "line": 31,
+          "lines": 19
+        },
+        {
+          "name": "_ready",
+          "line": 13,
+          "lines": 7
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 8,
+      "instantiate": 0,
+      "queue_free": 2
+    },
+    {
+      "path": "src/network/login_gateway.gd",
+      "lines": 228,
+      "functions": 13,
+      "largest_functions": [
+        {
+          "name": "try_auto_login",
+          "line": 79,
+          "lines": 33
+        },
+        {
+          "name": "_on_validated",
+          "line": 42,
+          "lines": 22
+        },
+        {
+          "name": "logout",
+          "line": 208,
+          "lines": 21
+        },
+        {
+          "name": "_refresh_if_needed",
+          "line": 137,
+          "lines": 20
+        },
+        {
+          "name": "begin_local_guest",
+          "line": 173,
+          "lines": 19
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 15,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/network/session_vault.gd",
+      "lines": 98,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "_run",
+          "line": 64,
+          "lines": 35
+        },
+        {
+          "name": "_android_store",
+          "line": 6,
+          "lines": 34
+        },
+        {
+          "name": "read_session",
+          "line": 40,
+          "lines": 9
+        },
+        {
+          "name": "clear_session",
+          "line": 55,
+          "lines": 9
+        },
+        {
+          "name": "save_session",
+          "line": 49,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 5,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/network/supabase_client.gd",
+      "lines": 98,
+      "functions": 7,
+      "largest_functions": [
+        {
+          "name": "request_json",
+          "line": 37,
+          "lines": 44
+        },
+        {
+          "name": "_on_http_request_completed",
+          "line": 81,
+          "lines": 18
+        },
+        {
+          "name": "upsert_rows",
+          "line": 20,
+          "lines": 9
+        },
+        {
+          "name": "delete_rows",
+          "line": 29,
+          "lines": 8
+        },
+        {
+          "name": "get_rows",
+          "line": 16,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 2
+    },
+    {
+      "path": "src/network/supabase_config.gd",
+      "lines": 11,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "is_configured",
+          "line": 7,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/network/windows_oauth.gd",
+      "lines": 218,
+      "functions": 17,
+      "largest_functions": [
+        {
+          "name": "_process",
+          "line": 56,
+          "lines": 51
+        },
+        {
+          "name": "begin",
+          "line": 30,
+          "lines": 26
+        },
+        {
+          "name": "request_json",
+          "line": 142,
+          "lines": 19
+        },
+        {
+          "name": "_exchange",
+          "line": 124,
+          "lines": 18
+        },
+        {
+          "name": "_android_package_name",
+          "line": 177,
+          "lines": 12
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 3,
+      "instantiate": 0,
+      "queue_free": 2
+    },
+    {
+      "path": "src/startup/startup.gd",
+      "lines": 276,
+      "functions": 16,
+      "largest_functions": [
+        {
+          "name": "begin_startup",
+          "line": 82,
+          "lines": 44
+        },
+        {
+          "name": "_enter_lobby",
+          "line": 206,
+          "lines": 36
+        },
+        {
+          "name": "_build_login",
+          "line": 163,
+          "lines": 23
+        },
+        {
+          "name": "_build_title",
+          "line": 52,
+          "lines": 22
+        },
+        {
+          "name": "_load_resource",
+          "line": 144,
+          "lines": 19
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 10,
+      "instantiate": 0,
+      "queue_free": 3
+    },
+    {
+      "path": "src/systems/account_save_scope.gd",
+      "lines": 222,
+      "functions": 13,
+      "largest_functions": [
+        {
+          "name": "save_configs",
+          "line": 96,
+          "lines": 35
+        },
+        {
+          "name": "select_account",
+          "line": 17,
+          "lines": 29
+        },
+        {
+          "name": "save_config",
+          "line": 71,
+          "lines": 25
+        },
+        {
+          "name": "_json_safe",
+          "line": 169,
+          "lines": 20
+        },
+        {
+          "name": "install",
+          "line": 204,
+          "lines": 19
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/burn_runtime.gd",
+      "lines": 48,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "update",
+          "line": 23,
+          "lines": 18
+        },
+        {
+          "name": "apply",
+          "line": 11,
+          "lines": 12
+        },
+        {
+          "name": "clear",
+          "line": 41,
+          "lines": 8
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/channel_runtime.gd",
+      "lines": 35,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "tick",
+          "line": 16,
+          "lines": 13
+        },
+        {
+          "name": "begin",
+          "line": 9,
+          "lines": 7
+        },
+        {
+          "name": "cancel",
+          "line": 29,
+          "lines": 5
+        },
+        {
+          "name": "progress",
+          "line": 34,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/damage_poison_tracker.gd",
+      "lines": 49,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "tick",
+          "line": 17,
+          "lines": 27
+        },
+        {
+          "name": "apply",
+          "line": 8,
+          "lines": 9
+        },
+        {
+          "name": "clear",
+          "line": 44,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/demon_appearance_store.gd",
+      "lines": 52,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "grant_local_preview",
+          "line": 39,
+          "lines": 14
+        },
+        {
+          "name": "owned_ids",
+          "line": 8,
+          "lines": 13
+        },
+        {
+          "name": "equip",
+          "line": 27,
+          "lines": 12
+        },
+        {
+          "name": "equipped_id",
+          "line": 21,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/demon_skill_loadout_store.gd",
+      "lines": 53,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "load_ids",
+          "line": 9,
+          "lines": 17
+        },
+        {
+          "name": "save_ids",
+          "line": 26,
+          "lines": 16
+        },
+        {
+          "name": "_normalize_ids",
+          "line": 42,
+          "lines": 12
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/dungeon_entry_policy.gd",
+      "lines": 12,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "blocked_reason",
+          "line": 3,
+          "lines": 10
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/elite_monster_skill_runtime.gd",
+      "lines": 1318,
+      "functions": 45,
+      "largest_functions": [
+        {
+          "name": "_tick_spider_webs",
+          "line": 697,
+          "lines": 85
+        },
+        {
+          "name": "_tick_goblin_thrower_bombardment",
+          "line": 314,
+          "lines": 82
+        },
+        {
+          "name": "_tick_goblin_commander",
+          "line": 443,
+          "lines": 69
+        },
+        {
+          "name": "tick",
+          "line": 137,
+          "lines": 59
+        },
+        {
+          "name": "_tick_orc_frenzy",
+          "line": 804,
+          "lines": 57
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/flow_pause_manager.gd",
+      "lines": 57,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "request_pause",
+          "line": 15,
+          "lines": 17
+        },
+        {
+          "name": "get_reasons_for",
+          "line": 42,
+          "lines": 9
+        },
+        {
+          "name": "is_paused",
+          "line": 35,
+          "lines": 7
+        },
+        {
+          "name": "get_snapshot",
+          "line": 51,
+          "lines": 7
+        },
+        {
+          "name": "reset",
+          "line": 12,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/formation_preset_model.gd",
+      "lines": 32,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_ids",
+          "line": 20,
+          "lines": 13
+        },
+        {
+          "name": "snapshot",
+          "line": 7,
+          "lines": 7
+        },
+        {
+          "name": "normalize",
+          "line": 14,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/hero_target_policy.gd",
+      "lines": 31,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "filter_detectable",
+          "line": 22,
+          "lines": 10
+        },
+        {
+          "name": "is_detectable",
+          "line": 7,
+          "lines": 8
+        },
+        {
+          "name": "set_hidden",
+          "line": 15,
+          "lines": 7
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/local_test_mode.gd",
+      "lines": 220,
+      "functions": 12,
+      "largest_functions": [
+        {
+          "name": "apply_coupon",
+          "line": 56,
+          "lines": 72
+        },
+        {
+          "name": "_start_tutorial_preview",
+          "line": 131,
+          "lines": 39
+        },
+        {
+          "name": "tutorial_operation",
+          "line": 170,
+          "lines": 23
+        },
+        {
+          "name": "_ready",
+          "line": 16,
+          "lines": 18
+        },
+        {
+          "name": "reset_progress",
+          "line": 44,
+          "lines": 12
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 4,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/mode_unlock_store.gd",
+      "lines": 33,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "unlocked",
+          "line": 11,
+          "lines": 10
+        },
+        {
+          "name": "mark_announced",
+          "line": 26,
+          "lines": 8
+        },
+        {
+          "name": "announcement_seen",
+          "line": 21,
+          "lines": 5
+        },
+        {
+          "name": "is_test_override",
+          "line": 7,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/monster_collection_store.gd",
+      "lines": 324,
+      "functions": 16,
+      "largest_functions": [
+        {
+          "name": "load_state",
+          "line": 10,
+          "lines": 64
+        },
+        {
+          "name": "award_shard_batch",
+          "line": 257,
+          "lines": 45
+        },
+        {
+          "name": "_state_config",
+          "line": 74,
+          "lines": 44
+        },
+        {
+          "name": "try_upgrade",
+          "line": 203,
+          "lines": 36
+        },
+        {
+          "name": "_apply_draw_reward",
+          "line": 302,
+          "lines": 23
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/monster_local_grid.gd",
+      "lines": 120,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "separation_bias",
+          "line": 45,
+          "lines": 38
+        },
+        {
+          "name": "ensure",
+          "line": 22,
+          "lines": 23
+        },
+        {
+          "name": "count_group_near",
+          "line": 83,
+          "lines": 21
+        },
+        {
+          "name": "fill_rect",
+          "line": 104,
+          "lines": 17
+        },
+        {
+          "name": "clear",
+          "line": 12,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/monster_support_buff_runtime.gd",
+      "lines": 68,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "tick",
+          "line": 36,
+          "lines": 25
+        },
+        {
+          "name": "apply_courage",
+          "line": 13,
+          "lines": 15
+        },
+        {
+          "name": "apply_agility",
+          "line": 28,
+          "lines": 8
+        },
+        {
+          "name": "_entry",
+          "line": 7,
+          "lines": 6
+        },
+        {
+          "name": "_restore_damage",
+          "line": 61,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/mutation_director.gd",
+      "lines": 51,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "begin",
+          "line": 15,
+          "lines": 18
+        },
+        {
+          "name": "commit_selection",
+          "line": 42,
+          "lines": 10
+        },
+        {
+          "name": "reset",
+          "line": 10,
+          "lines": 5
+        },
+        {
+          "name": "is_active",
+          "line": 33,
+          "lines": 3
+        },
+        {
+          "name": "get_event",
+          "line": 36,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/player_profile.gd",
+      "lines": 119,
+      "functions": 13,
+      "largest_functions": [
+        {
+          "name": "_store_response",
+          "line": 54,
+          "lines": 20
+        },
+        {
+          "name": "register",
+          "line": 86,
+          "lines": 15
+        },
+        {
+          "name": "complete",
+          "line": 101,
+          "lines": 15
+        },
+        {
+          "name": "refresh",
+          "line": 74,
+          "lines": 12
+        },
+        {
+          "name": "appearance_resource_paths",
+          "line": 44,
+          "lines": 7
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 4,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/presentation_warmup.gd",
+      "lines": 235,
+      "functions": 7,
+      "largest_functions": [
+        {
+          "name": "prepare_scene",
+          "line": 44,
+          "lines": 117
+        },
+        {
+          "name": "_prepare",
+          "line": 171,
+          "lines": 41
+        },
+        {
+          "name": "_load_texture",
+          "line": 212,
+          "lines": 24
+        },
+        {
+          "name": "prepare_common",
+          "line": 34,
+          "lines": 10
+        },
+        {
+          "name": "_append_texture_directory",
+          "line": 161,
+          "lines": 10
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 6,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/profile_cosmetic_store.gd",
+      "lines": 55,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "choices",
+          "line": 13,
+          "lines": 21
+        },
+        {
+          "name": "selected_id",
+          "line": 34,
+          "lines": 13
+        },
+        {
+          "name": "select",
+          "line": 47,
+          "lines": 9
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/received_afflictions.gd",
+      "lines": 161,
+      "functions": 15,
+      "largest_functions": [
+        {
+          "name": "apply_bleed_current",
+          "line": 121,
+          "lines": 18
+        },
+        {
+          "name": "_tick_extra",
+          "line": 139,
+          "lines": 18
+        },
+        {
+          "name": "clear",
+          "line": 60,
+          "lines": 15
+        },
+        {
+          "name": "apply_stun",
+          "line": 97,
+          "lines": 13
+        },
+        {
+          "name": "apply_slow",
+          "line": 45,
+          "lines": 12
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/run_metrics.gd",
+      "lines": 414,
+      "functions": 17,
+      "largest_functions": [
+        {
+          "name": "get_research_reward_breakdown",
+          "line": 137,
+          "lines": 116
+        },
+        {
+          "name": "get_result_summary",
+          "line": 272,
+          "lines": 77
+        },
+        {
+          "name": "_update_strategy_state",
+          "line": 349,
+          "lines": 53
+        },
+        {
+          "name": "reset",
+          "line": 32,
+          "lines": 27
+        },
+        {
+          "name": "get_snapshot",
+          "line": 253,
+          "lines": 19
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 1,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/scene_transition.gd",
+      "lines": 144,
+      "functions": 12,
+      "largest_functions": [
+        {
+          "name": "_start_load",
+          "line": 56,
+          "lines": 18
+        },
+        {
+          "name": "_process",
+          "line": 74,
+          "lines": 18
+        },
+        {
+          "name": "_ready",
+          "line": 19,
+          "lines": 17
+        },
+        {
+          "name": "_finish_after_scene_change",
+          "line": 118,
+          "lines": 16
+        },
+        {
+          "name": "_warm_destination",
+          "line": 92,
+          "lines": 11
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 6,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/scorpion_swamp_runtime.gd",
+      "lines": 100,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "spawn",
+          "line": 53,
+          "lines": 27
+        },
+        {
+          "name": "tick",
+          "line": 80,
+          "lines": 21
+        },
+        {
+          "name": "_update_visual",
+          "line": 35,
+          "lines": 18
+        },
+        {
+          "name": "warm_resources",
+          "line": 19,
+          "lines": 16
+        },
+        {
+          "name": "setup",
+          "line": 12,
+          "lines": 7
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/shop_summon_history_store.gd",
+      "lines": 65,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "load_entries",
+          "line": 9,
+          "lines": 21
+        },
+        {
+          "name": "_normalize_entry",
+          "line": 47,
+          "lines": 19
+        },
+        {
+          "name": "append_entries",
+          "line": 30,
+          "lines": 17
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 2,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/stage_director.gd",
+      "lines": 33,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "collect_due_events",
+          "line": 11,
+          "lines": 18
+        },
+        {
+          "name": "get_fired_event_ids",
+          "line": 29,
+          "lines": 5
+        },
+        {
+          "name": "reset",
+          "line": 7,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/stage_progress.gd",
+      "lines": 442,
+      "functions": 22,
+      "largest_functions": [
+        {
+          "name": "complete_stage",
+          "line": 42,
+          "lines": 79
+        },
+        {
+          "name": "try_purchase_research",
+          "line": 375,
+          "lines": 49
+        },
+        {
+          "name": "try_spend_research_points",
+          "line": 318,
+          "lines": 45
+        },
+        {
+          "name": "record_hero_encounter",
+          "line": 191,
+          "lines": 43
+        },
+        {
+          "name": "add_research_points",
+          "line": 279,
+          "lines": 39
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/stamina_store.gd",
+      "lines": 175,
+      "functions": 13,
+      "largest_functions": [
+        {
+          "name": "try_enter",
+          "line": 73,
+          "lines": 27
+        },
+        {
+          "name": "refund_failed_entry",
+          "line": 118,
+          "lines": 24
+        },
+        {
+          "name": "refund_early_exit",
+          "line": 155,
+          "lines": 21
+        },
+        {
+          "name": "grant",
+          "line": 100,
+          "lines": 18
+        },
+        {
+          "name": "read_state",
+          "line": 46,
+          "lines": 17
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/status_action_scope.gd",
+      "lines": 21,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "begin",
+          "line": 15,
+          "lines": 5
+        },
+        {
+          "name": "action_or_new",
+          "line": 11,
+          "lines": 4
+        },
+        {
+          "name": "current",
+          "line": 8,
+          "lines": 3
+        },
+        {
+          "name": "finish",
+          "line": 20,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/team_loadout_store.gd",
+      "lines": 63,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_normalize_ids",
+          "line": 45,
+          "lines": 19
+        },
+        {
+          "name": "load_ids",
+          "line": 9,
+          "lines": 18
+        },
+        {
+          "name": "save_ids",
+          "line": 27,
+          "lines": 18
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/transcendence_loadout_store.gd",
+      "lines": 29,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "load_id",
+          "line": 9,
+          "lines": 12
+        },
+        {
+          "name": "save_id",
+          "line": 21,
+          "lines": 9
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/transcendence_runtime.gd",
+      "lines": 129,
+      "functions": 10,
+      "largest_functions": [
+        {
+          "name": "satisfy_conditions_for_test",
+          "line": 96,
+          "lines": 29
+        },
+        {
+          "name": "_evaluate",
+          "line": 67,
+          "lines": 24
+        },
+        {
+          "name": "configure",
+          "line": 17,
+          "lines": 16
+        },
+        {
+          "name": "record_summon",
+          "line": 33,
+          "lines": 10
+        },
+        {
+          "name": "record_status",
+          "line": 43,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/tutorial_checkpoint.gd",
+      "lines": 23,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "save",
+          "line": 14,
+          "lines": 10
+        },
+        {
+          "name": "read",
+          "line": 7,
+          "lines": 7
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/tutorial_flow.gd",
+      "lines": 422,
+      "functions": 28,
+      "largest_functions": [
+        {
+          "name": "bind_host",
+          "line": 46,
+          "lines": 77
+        },
+        {
+          "name": "install_lobby",
+          "line": 246,
+          "lines": 48
+        },
+        {
+          "name": "show_modal",
+          "line": 146,
+          "lines": 30
+        },
+        {
+          "name": "finish_lobby",
+          "line": 332,
+          "lines": 27
+        },
+        {
+          "name": "start_lobby",
+          "line": 311,
+          "lines": 21
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 7,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/systems/wolf_pack_runtime.gd",
+      "lines": 92,
+      "functions": 8,
+      "largest_functions": [
+        {
+          "name": "tick",
+          "line": 37,
+          "lines": 36
+        },
+        {
+          "name": "_has_near_death",
+          "line": 73,
+          "lines": 14
+        },
+        {
+          "name": "record_death",
+          "line": 24,
+          "lines": 10
+        },
+        {
+          "name": "reset",
+          "line": 87,
+          "lines": 6
+        },
+        {
+          "name": "register",
+          "line": 16,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/systems/yuki_onna_runtime.gd",
+      "lines": 180,
+      "functions": 13,
+      "largest_functions": [
+        {
+          "name": "tick",
+          "line": 108,
+          "lines": 38
+        },
+        {
+          "name": "apply_hit",
+          "line": 45,
+          "lines": 21
+        },
+        {
+          "name": "_try_snowflake",
+          "line": 66,
+          "lines": 20
+        },
+        {
+          "name": "_near_death_count",
+          "line": 146,
+          "lines": 17
+        },
+        {
+          "name": "_find_elite",
+          "line": 86,
+          "lines": 15
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/battle_pixel_frame_assembler.gd",
+      "lines": 448,
+      "functions": 12,
+      "largest_functions": [
+        {
+          "name": "add_split_frame",
+          "line": 6,
+          "lines": 133
+        },
+        {
+          "name": "add_top_right_split_frame",
+          "line": 139,
+          "lines": 127
+        },
+        {
+          "name": "_add_tiled_piece",
+          "line": 392,
+          "lines": 32
+        },
+        {
+          "name": "_add_center_panel",
+          "line": 326,
+          "lines": 25
+        },
+        {
+          "name": "_make_seamless_edge_strip",
+          "line": 424,
+          "lines": 25
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 2
+    },
+    {
+      "path": "src/ui/battle_result_copy.gd",
+      "lines": 35,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "format_message",
+          "line": 4,
+          "lines": 25
+        },
+        {
+          "name": "format_analysis",
+          "line": 29,
+          "lines": 7
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/battle_summon_cinematic.gd",
+      "lines": 307,
+      "functions": 15,
+      "largest_functions": [
+        {
+          "name": "advance",
+          "line": 161,
+          "lines": 62
+        },
+        {
+          "name": "_begin_focus",
+          "line": 99,
+          "lines": 45
+        },
+        {
+          "name": "install",
+          "line": 36,
+          "lines": 36
+        },
+        {
+          "name": "cancel",
+          "line": 223,
+          "lines": 29
+        },
+        {
+          "name": "play_death",
+          "line": 85,
+          "lines": 14
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 2,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/bulgasal_battle_summon_view.gd",
+      "lines": 91,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 17,
+          "lines": 33
+        },
+        {
+          "name": "set_time",
+          "line": 67,
+          "lines": 21
+        },
+        {
+          "name": "_layout",
+          "line": 50,
+          "lines": 17
+        },
+        {
+          "name": "_draw",
+          "line": 88,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/bulgasal_combat_draw_layer.gd",
+      "lines": 12,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "_draw",
+          "line": 6,
+          "lines": 7
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/bulgasal_combat_effects.gd",
+      "lines": 50,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "get_pack",
+          "line": 16,
+          "lines": 26
+        },
+        {
+          "name": "draw_frame",
+          "line": 42,
+          "lines": 9
+        },
+        {
+          "name": "warm",
+          "line": 12,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/bulgasal_gacha_view.gd",
+      "lines": 120,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "set_time",
+          "line": 79,
+          "lines": 42
+        },
+        {
+          "name": "_ready",
+          "line": 14,
+          "lines": 40
+        },
+        {
+          "name": "_texture",
+          "line": 54,
+          "lines": 10
+        },
+        {
+          "name": "_fx_sprite",
+          "line": 64,
+          "lines": 10
+        },
+        {
+          "name": "_layout",
+          "line": 74,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/bulgasal_portrait_rig.gd",
+      "lines": 129,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 14,
+          "lines": 53
+        },
+        {
+          "name": "_weights_at",
+          "line": 67,
+          "lines": 43
+        },
+        {
+          "name": "set_time",
+          "line": 116,
+          "lines": 14
+        },
+        {
+          "name": "_feather",
+          "line": 110,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/castle_battle_chrome.gd",
+      "lines": 120,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "rebuild",
+          "line": 22,
+          "lines": 63
+        },
+        {
+          "name": "_draw",
+          "line": 101,
+          "lines": 20
+        },
+        {
+          "name": "texture",
+          "line": 11,
+          "lines": 11
+        },
+        {
+          "name": "apply_visibility",
+          "line": 85,
+          "lines": 10
+        },
+        {
+          "name": "place",
+          "line": 95,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/channel_gauge.gd",
+      "lines": 7,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "draw_on",
+          "line": 3,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/circular_attack_telegraph.gd",
+      "lines": 16,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "draw_area",
+          "line": 5,
+          "lines": 12
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/codex_skill_icon.gd",
+      "lines": 35,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "_init",
+          "line": 5,
+          "lines": 26
+        },
+        {
+          "name": "configure",
+          "line": 31,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/combat_status_effect_visual.gd",
+      "lines": 361,
+      "functions": 10,
+      "largest_functions": [
+        {
+          "name": "setup",
+          "line": 50,
+          "lines": 121
+        },
+        {
+          "name": "_process",
+          "line": 179,
+          "lines": 59
+        },
+        {
+          "name": "_sync_monster_buff_layout",
+          "line": 263,
+          "lines": 57
+        },
+        {
+          "name": "_is_slow_active",
+          "line": 320,
+          "lines": 23
+        },
+        {
+          "name": "show_on",
+          "line": 28,
+          "lines": 22
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/ui/commerce_frame_skin.gd",
+      "lines": 28,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "style",
+          "line": 16,
+          "lines": 13
+        },
+        {
+          "name": "texture",
+          "line": 6,
+          "lines": 10
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/coupon_dialog.gd",
+      "lines": 97,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "install",
+          "line": 3,
+          "lines": 95
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 1,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/damage_number.gd",
+      "lines": 163,
+      "functions": 12,
+      "largest_functions": [
+        {
+          "name": "_process",
+          "line": 134,
+          "lines": 30
+        },
+        {
+          "name": "setup",
+          "line": 23,
+          "lines": 13
+        },
+        {
+          "name": "setup_heal",
+          "line": 36,
+          "lines": 13
+        },
+        {
+          "name": "setup_text",
+          "line": 49,
+          "lines": 13
+        },
+        {
+          "name": "add_damage",
+          "line": 84,
+          "lines": 13
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/damage_number_spawner.gd",
+      "lines": 158,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "show",
+          "line": 10,
+          "lines": 46
+        },
+        {
+          "name": "show_heal",
+          "line": 56,
+          "lines": 43
+        },
+        {
+          "name": "_acquire_popup",
+          "line": 117,
+          "lines": 32
+        },
+        {
+          "name": "show_text_at",
+          "line": 99,
+          "lines": 18
+        },
+        {
+          "name": "_get_compacted_pool",
+          "line": 149,
+          "lines": 10
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 1,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/demon_skill_button_content.gd",
+      "lines": 51,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "_init",
+          "line": 8,
+          "lines": 12
+        },
+        {
+          "name": "_label",
+          "line": 20,
+          "lines": 11
+        },
+        {
+          "name": "_layout",
+          "line": 42,
+          "lines": 10
+        },
+        {
+          "name": "update_state",
+          "line": 35,
+          "lines": 7
+        },
+        {
+          "name": "configure",
+          "line": 31,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/drag_safe_button.gd",
+      "lines": 108,
+      "functions": 8,
+      "largest_functions": [
+        {
+          "name": "_input",
+          "line": 79,
+          "lines": 30
+        },
+        {
+          "name": "_gui_input",
+          "line": 50,
+          "lines": 29
+        },
+        {
+          "name": "_finish_gesture",
+          "line": 38,
+          "lines": 8
+        },
+        {
+          "name": "_moved",
+          "line": 31,
+          "lines": 7
+        },
+        {
+          "name": "_reset_gesture",
+          "line": 20,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/formation_card_cache.gd",
+      "lines": 94,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "_populate",
+          "line": 58,
+          "lines": 37
+        },
+        {
+          "name": "rebuild",
+          "line": 37,
+          "lines": 21
+        },
+        {
+          "name": "clear_grid",
+          "line": 19,
+          "lines": 14
+        },
+        {
+          "name": "install",
+          "line": 12,
+          "lines": 7
+        },
+        {
+          "name": "_signature",
+          "line": 33,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 2,
+      "instantiate": 0,
+      "queue_free": 2
+    },
+    {
+      "path": "src/ui/formation_drag_card.gd",
+      "lines": 200,
+      "functions": 13,
+      "largest_functions": [
+        {
+          "name": "_build_drag_preview",
+          "line": 155,
+          "lines": 46
+        },
+        {
+          "name": "_gui_input",
+          "line": 36,
+          "lines": 22
+        },
+        {
+          "name": "_process",
+          "line": 58,
+          "lines": 20
+        },
+        {
+          "name": "_lock_parent_scroll",
+          "line": 89,
+          "lines": 18
+        },
+        {
+          "name": "configure_drag",
+          "line": 22,
+          "lines": 14
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/formation_drop_slot.gd",
+      "lines": 26,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "_can_drop_data",
+          "line": 8,
+          "lines": 10
+        },
+        {
+          "name": "_drop_data",
+          "line": 18,
+          "lines": 9
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/formation_rarity_frames.gd",
+      "lines": 48,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "apply",
+          "line": 12,
+          "lines": 37
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/gacha_conversion_feedback.gd",
+      "lines": 62,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 13,
+          "lines": 22
+        },
+        {
+          "name": "_process",
+          "line": 35,
+          "lines": 20
+        },
+        {
+          "name": "_draw",
+          "line": 55,
+          "lines": 8
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/gacha_reveal_aura.gd",
+      "lines": 50,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_draw",
+          "line": 17,
+          "lines": 34
+        },
+        {
+          "name": "set_accent",
+          "line": 7,
+          "lines": 5
+        },
+        {
+          "name": "_notification",
+          "line": 12,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/gacha_reveal_overlay.gd",
+      "lines": 894,
+      "functions": 37,
+      "largest_functions": [
+        {
+          "name": "_build_ui",
+          "line": 649,
+          "lines": 90
+        },
+        {
+          "name": "_build_result_panel",
+          "line": 813,
+          "lines": 82
+        },
+        {
+          "name": "_build_reveal_panel",
+          "line": 739,
+          "lines": 74
+        },
+        {
+          "name": "_create_result_card",
+          "line": 422,
+          "lines": 61
+        },
+        {
+          "name": "_show_reveal",
+          "line": 303,
+          "lines": 51
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 9,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/ui/game_font_manager.gd",
+      "lines": 89,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "_debug_report_fonts",
+          "line": 52,
+          "lines": 32
+        },
+        {
+          "name": "_ready",
+          "line": 9,
+          "lines": 29
+        },
+        {
+          "name": "_apply_font_to_tree",
+          "line": 42,
+          "lines": 10
+        },
+        {
+          "name": "_apply_font_to_control",
+          "line": 84,
+          "lines": 6
+        },
+        {
+          "name": "_on_node_added",
+          "line": 38,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/hero_reveal_cutscene.gd",
+      "lines": 281,
+      "functions": 11,
+      "largest_functions": [
+        {
+          "name": "_reveal_hero",
+          "line": 157,
+          "lines": 55
+        },
+        {
+          "name": "_run_sequence",
+          "line": 108,
+          "lines": 49
+        },
+        {
+          "name": "play_reveal",
+          "line": 67,
+          "lines": 41
+        },
+        {
+          "name": "warm_render_resources",
+          "line": 256,
+          "lines": 22
+        },
+        {
+          "name": "_load_reveal_stinger",
+          "line": 225,
+          "lines": 21
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 12,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/hero_skill_cooldown_badge.gd",
+      "lines": 355,
+      "functions": 19,
+      "largest_functions": [
+        {
+          "name": "_draw",
+          "line": 230,
+          "lines": 57
+        },
+        {
+          "name": "_draw_center_text",
+          "line": 321,
+          "lines": 35
+        },
+        {
+          "name": "_show_detail_popup",
+          "line": 203,
+          "lines": 27
+        },
+        {
+          "name": "_ensure_detail_popup",
+          "line": 155,
+          "lines": 25
+        },
+        {
+          "name": "update_state",
+          "line": 71,
+          "lines": 21
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/illustrated_battle_panel.gd",
+      "lines": 54,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "install",
+          "line": 8,
+          "lines": 26
+        },
+        {
+          "name": "_draw",
+          "line": 37,
+          "lines": 18
+        },
+        {
+          "name": "piece",
+          "line": 34,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/ui/izanami_battle_summon_view.gd",
+      "lines": 76,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 14,
+          "lines": 30
+        },
+        {
+          "name": "set_time",
+          "line": 57,
+          "lines": 20
+        },
+        {
+          "name": "_layout",
+          "line": 44,
+          "lines": 13
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/izanami_combat_effects.gd",
+      "lines": 25,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "prepare",
+          "line": 5,
+          "lines": 12
+        },
+        {
+          "name": "draw_frame",
+          "line": 17,
+          "lines": 9
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/izanami_gacha_view.gd",
+      "lines": 132,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 16,
+          "lines": 64
+        },
+        {
+          "name": "set_time",
+          "line": 85,
+          "lines": 46
+        },
+        {
+          "name": "_layout",
+          "line": 80,
+          "lines": 5
+        },
+        {
+          "name": "_draw",
+          "line": 131,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/izanami_portrait_rig.gd",
+      "lines": 66,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 12,
+          "lines": 48
+        },
+        {
+          "name": "set_time",
+          "line": 60,
+          "lines": 7
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/izanami_summon_spirits.gd",
+      "lines": 32,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_draw",
+          "line": 20,
+          "lines": 13
+        },
+        {
+          "name": "_ready",
+          "line": 7,
+          "lines": 10
+        },
+        {
+          "name": "set_time",
+          "line": 17,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/lobby_demon_codex_view.gd",
+      "lines": 675,
+      "functions": 34,
+      "largest_functions": [
+        {
+          "name": "_build_monsters",
+          "line": 213,
+          "lines": 140
+        },
+        {
+          "name": "select_monster",
+          "line": 401,
+          "lines": 64
+        },
+        {
+          "name": "_build_preview",
+          "line": 573,
+          "lines": 56
+        },
+        {
+          "name": "_build_detail",
+          "line": 529,
+          "lines": 44
+        },
+        {
+          "name": "install",
+          "line": 41,
+          "lines": 38
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/ui/lobby_hero_codex_view.gd",
+      "lines": 412,
+      "functions": 15,
+      "largest_functions": [
+        {
+          "name": "install",
+          "line": 76,
+          "lines": 175
+        },
+        {
+          "name": "select_stage",
+          "line": 310,
+          "lines": 42
+        },
+        {
+          "name": "_play_unlock",
+          "line": 359,
+          "lines": 27
+        },
+        {
+          "name": "_portrait_texture",
+          "line": 282,
+          "lines": 23
+        },
+        {
+          "name": "show",
+          "line": 257,
+          "lines": 22
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/lobby_main_modes_view.gd",
+      "lines": 299,
+      "functions": 16,
+      "largest_functions": [
+        {
+          "name": "install",
+          "line": 31,
+          "lines": 60
+        },
+        {
+          "name": "refresh",
+          "line": 213,
+          "lines": 52
+        },
+        {
+          "name": "open_characters",
+          "line": 166,
+          "lines": 28
+        },
+        {
+          "name": "show_pending_unlock",
+          "line": 274,
+          "lines": 26
+        },
+        {
+          "name": "style_button",
+          "line": 91,
+          "lines": 19
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/ui/lobby_profile_view.gd",
+      "lines": 354,
+      "functions": 21,
+      "largest_functions": [
+        {
+          "name": "install",
+          "line": 35,
+          "lines": 69
+        },
+        {
+          "name": "_build_card",
+          "line": 104,
+          "lines": 56
+        },
+        {
+          "name": "_build_picker",
+          "line": 160,
+          "lines": 41
+        },
+        {
+          "name": "open_picker",
+          "line": 201,
+          "lines": 18
+        },
+        {
+          "name": "_button",
+          "line": 287,
+          "lines": 16
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/lobby_settings_view.gd",
+      "lines": 704,
+      "functions": 32,
+      "largest_functions": [
+        {
+          "name": "_build_account",
+          "line": 522,
+          "lines": 96
+        },
+        {
+          "name": "_build_other_menu",
+          "line": 164,
+          "lines": 82
+        },
+        {
+          "name": "install",
+          "line": 47,
+          "lines": 71
+        },
+        {
+          "name": "_volume",
+          "line": 444,
+          "lines": 47
+        },
+        {
+          "name": "_toggle",
+          "line": 348,
+          "lines": 41
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 2
+    },
+    {
+      "path": "src/ui/lobby_stamina_view.gd",
+      "lines": 405,
+      "functions": 26,
+      "largest_functions": [
+        {
+          "name": "install",
+          "line": 76,
+          "lines": 57
+        },
+        {
+          "name": "_build_entry_feedback",
+          "line": 322,
+          "lines": 54
+        },
+        {
+          "name": "_build_overlay",
+          "line": 133,
+          "lines": 32
+        },
+        {
+          "name": "_build_product",
+          "line": 277,
+          "lines": 32
+        },
+        {
+          "name": "refresh",
+          "line": 238,
+          "lines": 21
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 3,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/manticore_battle_summon_view.gd",
+      "lines": 79,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 16,
+          "lines": 30
+        },
+        {
+          "name": "set_time",
+          "line": 58,
+          "lines": 13
+        },
+        {
+          "name": "_layout",
+          "line": 46,
+          "lines": 12
+        },
+        {
+          "name": "_draw_effects",
+          "line": 71,
+          "lines": 9
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/manticore_combat_effects.gd",
+      "lines": 39,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "prepare",
+          "line": 5,
+          "lines": 12
+        },
+        {
+          "name": "draw_frame",
+          "line": 17,
+          "lines": 10
+        },
+        {
+          "name": "draw_projectile",
+          "line": 32,
+          "lines": 8
+        },
+        {
+          "name": "draw_oriented",
+          "line": 27,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/manticore_gacha_view.gd",
+      "lines": 146,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 20,
+          "lines": 63
+        },
+        {
+          "name": "set_time",
+          "line": 102,
+          "lines": 43
+        },
+        {
+          "name": "_add_aura",
+          "line": 83,
+          "lines": 12
+        },
+        {
+          "name": "_layout",
+          "line": 95,
+          "lines": 7
+        },
+        {
+          "name": "_draw",
+          "line": 145,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/manticore_portrait_rig.gd",
+      "lines": 102,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 14,
+          "lines": 59
+        },
+        {
+          "name": "_soften_weights",
+          "line": 73,
+          "lines": 19
+        },
+        {
+          "name": "set_time",
+          "line": 92,
+          "lines": 11
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/manticore_summon_venom.gd",
+      "lines": 21,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_draw",
+          "line": 12,
+          "lines": 10
+        },
+        {
+          "name": "_ready",
+          "line": 5,
+          "lines": 4
+        },
+        {
+          "name": "set_time",
+          "line": 9,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/mobile_scroll_router.gd",
+      "lines": 212,
+      "functions": 11,
+      "largest_functions": [
+        {
+          "name": "handle_input",
+          "line": 61,
+          "lines": 69
+        },
+        {
+          "name": "step",
+          "line": 35,
+          "lines": 26
+        },
+        {
+          "name": "_find_scroll_recursive",
+          "line": 179,
+          "lines": 17
+        },
+        {
+          "name": "_scroll_by",
+          "line": 130,
+          "lines": 15
+        },
+        {
+          "name": "_stop_motion",
+          "line": 160,
+          "lines": 13
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/mode_unlock_feedback.gd",
+      "lines": 86,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "present",
+          "line": 26,
+          "lines": 56
+        },
+        {
+          "name": "close",
+          "line": 82,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/ui/monster_upgrade_feedback.gd",
+      "lines": 170,
+      "functions": 10,
+      "largest_functions": [
+        {
+          "name": "_draw",
+          "line": 117,
+          "lines": 28
+        },
+        {
+          "name": "_draw_transcendence",
+          "line": 145,
+          "lines": 26
+        },
+        {
+          "name": "restart",
+          "line": 32,
+          "lines": 23
+        },
+        {
+          "name": "_update_visuals",
+          "line": 94,
+          "lines": 23
+        },
+        {
+          "name": "stop",
+          "line": 55,
+          "lines": 15
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/pixel_panel_skin.gd",
+      "lines": 147,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "skin_style",
+          "line": 63,
+          "lines": 30
+        },
+        {
+          "name": "_build_fill_mask",
+          "line": 35,
+          "lines": 28
+        },
+        {
+          "name": "apply",
+          "line": 116,
+          "lines": 27
+        },
+        {
+          "name": "_frame_image",
+          "line": 12,
+          "lines": 23
+        },
+        {
+          "name": "button_style",
+          "line": 93,
+          "lines": 23
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/player_prologue.gd",
+      "lines": 299,
+      "functions": 17,
+      "largest_functions": [
+        {
+          "name": "_build_choice",
+          "line": 132,
+          "lines": 53
+        },
+        {
+          "name": "_ready",
+          "line": 37,
+          "lines": 32
+        },
+        {
+          "name": "_register_name",
+          "line": 263,
+          "lines": 23
+        },
+        {
+          "name": "_show_line",
+          "line": 101,
+          "lines": 20
+        },
+        {
+          "name": "_update_name_layout",
+          "line": 197,
+          "lines": 18
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 2,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/ui/practice_battle_controls.gd",
+      "lines": 39,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "install",
+          "line": 6,
+          "lines": 23
+        },
+        {
+          "name": "_layout",
+          "line": 29,
+          "lines": 7
+        },
+        {
+          "name": "_toggle_attack",
+          "line": 36,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/ui/shop_frame_skin.gd",
+      "lines": 41,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "apply_button",
+          "line": 28,
+          "lines": 14
+        },
+        {
+          "name": "style",
+          "line": 14,
+          "lines": 9
+        },
+        {
+          "name": "texture",
+          "line": 7,
+          "lines": 7
+        },
+        {
+          "name": "plain_content_style",
+          "line": 23,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/shop_pickup_view.gd",
+      "lines": 122,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "install",
+          "line": 31,
+          "lines": 64
+        },
+        {
+          "name": "refresh",
+          "line": 95,
+          "lines": 21
+        },
+        {
+          "name": "_label",
+          "line": 14,
+          "lines": 11
+        },
+        {
+          "name": "_texture",
+          "line": 25,
+          "lines": 6
+        },
+        {
+          "name": "_summon",
+          "line": 116,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/shop_popup_view.gd",
+      "lines": 230,
+      "functions": 12,
+      "largest_functions": [
+        {
+          "name": "install",
+          "line": 14,
+          "lines": 45
+        },
+        {
+          "name": "show_history",
+          "line": 194,
+          "lines": 37
+        },
+        {
+          "name": "show_rates",
+          "line": 145,
+          "lines": 33
+        },
+        {
+          "name": "_icon",
+          "line": 106,
+          "lines": 29
+        },
+        {
+          "name": "_monster_rate",
+          "line": 178,
+          "lines": 16
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 1
+    },
+    {
+      "path": "src/ui/shop_storefront_art.gd",
+      "lines": 314,
+      "functions": 13,
+      "largest_functions": [
+        {
+          "name": "apply",
+          "line": 104,
+          "lines": 62
+        },
+        {
+          "name": "_product",
+          "line": 225,
+          "lines": 59
+        },
+        {
+          "name": "_configure_banner",
+          "line": 166,
+          "lines": 54
+        },
+        {
+          "name": "decorate_package",
+          "line": 292,
+          "lines": 23
+        },
+        {
+          "name": "_frame",
+          "line": 62,
+          "lines": 19
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/shop_test_draw_view.gd",
+      "lines": 53,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "install",
+          "line": 10,
+          "lines": 30
+        },
+        {
+          "name": "refresh",
+          "line": 40,
+          "lines": 8
+        },
+        {
+          "name": "_select",
+          "line": 48,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/shuten_doji_battle_summon_view.gd",
+      "lines": 79,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 16,
+          "lines": 30
+        },
+        {
+          "name": "set_time",
+          "line": 58,
+          "lines": 13
+        },
+        {
+          "name": "_layout",
+          "line": 46,
+          "lines": 12
+        },
+        {
+          "name": "_draw_effects",
+          "line": 71,
+          "lines": 9
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/shuten_doji_combat_effects.gd",
+      "lines": 30,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "draw_frame",
+          "line": 17,
+          "lines": 14
+        },
+        {
+          "name": "prepare",
+          "line": 5,
+          "lines": 12
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/shuten_doji_gacha_view.gd",
+      "lines": 146,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 20,
+          "lines": 63
+        },
+        {
+          "name": "set_time",
+          "line": 102,
+          "lines": 43
+        },
+        {
+          "name": "_add_aura",
+          "line": 83,
+          "lines": 12
+        },
+        {
+          "name": "_layout",
+          "line": 95,
+          "lines": 7
+        },
+        {
+          "name": "_draw",
+          "line": 145,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/shuten_doji_portrait_rig.gd",
+      "lines": 93,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 14,
+          "lines": 50
+        },
+        {
+          "name": "_soften_weights",
+          "line": 64,
+          "lines": 19
+        },
+        {
+          "name": "set_time",
+          "line": 83,
+          "lines": 11
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/shuten_doji_summon_mist.gd",
+      "lines": 30,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_draw",
+          "line": 13,
+          "lines": 18
+        },
+        {
+          "name": "_ready",
+          "line": 5,
+          "lines": 5
+        },
+        {
+          "name": "set_time",
+          "line": 10,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/skill_unlock_cutscene.gd",
+      "lines": 132,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "_run_sequence",
+          "line": 56,
+          "lines": 67
+        },
+        {
+          "name": "play_unlock",
+          "line": 33,
+          "lines": 23
+        },
+        {
+          "name": "configure_battle_frame",
+          "line": 23,
+          "lines": 10
+        },
+        {
+          "name": "_ready",
+          "line": 18,
+          "lines": 5
+        },
+        {
+          "name": "_set_shader_value",
+          "line": 123,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 3,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/stage_intro_cutscene.gd",
+      "lines": 609,
+      "functions": 24,
+      "largest_functions": [
+        {
+          "name": "_focus_speaker",
+          "line": 400,
+          "lines": 93
+        },
+        {
+          "name": "_show_current_line",
+          "line": 269,
+          "lines": 66
+        },
+        {
+          "name": "_focus_narration",
+          "line": 493,
+          "lines": 60
+        },
+        {
+          "name": "play_dialogue",
+          "line": 98,
+          "lines": 47
+        },
+        {
+          "name": "_finish",
+          "line": 575,
+          "lines": 27
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/stage_lock_icon.gd",
+      "lines": 18,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_draw",
+          "line": 7,
+          "lines": 6
+        },
+        {
+          "name": "_body",
+          "line": 13,
+          "lines": 6
+        },
+        {
+          "name": "_ready",
+          "line": 3,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/startup_loading_view.gd",
+      "lines": 117,
+      "functions": 9,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 19,
+          "lines": 31
+        },
+        {
+          "name": "label",
+          "line": 93,
+          "lines": 14
+        },
+        {
+          "name": "plate",
+          "line": 107,
+          "lines": 11
+        },
+        {
+          "name": "texture",
+          "line": 83,
+          "lines": 10
+        },
+        {
+          "name": "place",
+          "line": 74,
+          "lines": 9
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/team_formation_view.gd",
+      "lines": 146,
+      "functions": 10,
+      "largest_functions": [
+        {
+          "name": "apply",
+          "line": 55,
+          "lines": 70
+        },
+        {
+          "name": "rarity_card_style",
+          "line": 9,
+          "lines": 13
+        },
+        {
+          "name": "label",
+          "line": 43,
+          "lines": 12
+        },
+        {
+          "name": "refresh_slot",
+          "line": 125,
+          "lines": 11
+        },
+        {
+          "name": "apply_slot_border",
+          "line": 25,
+          "lines": 10
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/transcendence_drop_area.gd",
+      "lines": 11,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "_can_drop_data",
+          "line": 6,
+          "lines": 3
+        },
+        {
+          "name": "_drop_data",
+          "line": 9,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/transcendence_entry_confirm.gd",
+      "lines": 71,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "install",
+          "line": 6,
+          "lines": 53
+        },
+        {
+          "name": "open",
+          "line": 59,
+          "lines": 7
+        },
+        {
+          "name": "_confirm",
+          "line": 66,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/transcendence_formation_view.gd",
+      "lines": 348,
+      "functions": 12,
+      "largest_functions": [
+        {
+          "name": "_build_card",
+          "line": 196,
+          "lines": 89
+        },
+        {
+          "name": "install",
+          "line": 90,
+          "lines": 65
+        },
+        {
+          "name": "refresh",
+          "line": 155,
+          "lines": 41
+        },
+        {
+          "name": "_add_banner",
+          "line": 285,
+          "lines": 32
+        },
+        {
+          "name": "panel",
+          "line": 24,
+          "lines": 27
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 2
+    },
+    {
+      "path": "src/ui/transcendence_summon_view.gd",
+      "lines": 189,
+      "functions": 8,
+      "largest_functions": [
+        {
+          "name": "install",
+          "line": 20,
+          "lines": 90
+        },
+        {
+          "name": "refresh",
+          "line": 123,
+          "lines": 42
+        },
+        {
+          "name": "_process",
+          "line": 173,
+          "lines": 17
+        },
+        {
+          "name": "_stop_ready_light",
+          "line": 165,
+          "lines": 8
+        },
+        {
+          "name": "_finished",
+          "line": 119,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/transcendent_cutscene_effect_layer.gd",
+      "lines": 45,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_draw_frame",
+          "line": 27,
+          "lines": 19
+        },
+        {
+          "name": "_draw",
+          "line": 6,
+          "lines": 16
+        },
+        {
+          "name": "fitted_rect",
+          "line": 22,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/transcendent_cutscene_energy.gd",
+      "lines": 91,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "behind",
+          "line": 25,
+          "lines": 50
+        },
+        {
+          "name": "bolt",
+          "line": 7,
+          "lines": 18
+        },
+        {
+          "name": "front",
+          "line": 75,
+          "lines": 17
+        },
+        {
+          "name": "strike_strength",
+          "line": 4,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/transcendent_cutscene_player.gd",
+      "lines": 371,
+      "functions": 16,
+      "largest_functions": [
+        {
+          "name": "play",
+          "line": 72,
+          "lines": 60
+        },
+        {
+          "name": "_draw",
+          "line": 298,
+          "lines": 49
+        },
+        {
+          "name": "_ready",
+          "line": 34,
+          "lines": 38
+        },
+        {
+          "name": "_activate_view",
+          "line": 132,
+          "lines": 36
+        },
+        {
+          "name": "_load_texture",
+          "line": 273,
+          "lines": 25
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 8,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/transcendent_monster_detail_view.gd",
+      "lines": 125,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "install",
+          "line": 30,
+          "lines": 50
+        },
+        {
+          "name": "present",
+          "line": 91,
+          "lines": 35
+        },
+        {
+          "name": "_upgrade_style",
+          "line": 80,
+          "lines": 11
+        },
+        {
+          "name": "_label",
+          "line": 20,
+          "lines": 10
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/tutorial_battle_coach.gd",
+      "lines": 64,
+      "functions": 7,
+      "largest_functions": [
+        {
+          "name": "show_next",
+          "line": 16,
+          "lines": 19
+        },
+        {
+          "name": "on_augment",
+          "line": 46,
+          "lines": 10
+        },
+        {
+          "name": "install",
+          "line": 7,
+          "lines": 9
+        },
+        {
+          "name": "on_summon",
+          "line": 38,
+          "lines": 8
+        },
+        {
+          "name": "on_elite",
+          "line": 56,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/tutorial_spotlight.gd",
+      "lines": 108,
+      "functions": 9,
+      "largest_functions": [
+        {
+          "name": "blocks",
+          "line": 77,
+          "lines": 26
+        },
+        {
+          "name": "_refresh",
+          "line": 37,
+          "lines": 25
+        },
+        {
+          "name": "_process",
+          "line": 23,
+          "lines": 14
+        },
+        {
+          "name": "configure",
+          "line": 16,
+          "lines": 7
+        },
+        {
+          "name": "allows",
+          "line": 62,
+          "lines": 6
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/zeus_assembled_portrait.gd",
+      "lines": 43,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 16,
+          "lines": 23
+        },
+        {
+          "name": "set_time",
+          "line": 39,
+          "lines": 3
+        },
+        {
+          "name": "spell_origin",
+          "line": 42,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/zeus_attached_lightning.gd",
+      "lines": 75,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "_draw",
+          "line": 27,
+          "lines": 40
+        },
+        {
+          "name": "_ready",
+          "line": 11,
+          "lines": 11
+        },
+        {
+          "name": "_draw_bolt",
+          "line": 67,
+          "lines": 9
+        },
+        {
+          "name": "update_origin",
+          "line": 22,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/zeus_battle_pose.gd",
+      "lines": 55,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 10,
+          "lines": 35
+        },
+        {
+          "name": "set_time",
+          "line": 45,
+          "lines": 3
+        },
+        {
+          "name": "spell_origin",
+          "line": 48,
+          "lines": 3
+        },
+        {
+          "name": "canvas_size",
+          "line": 51,
+          "lines": 3
+        },
+        {
+          "name": "set_eye_closed",
+          "line": 54,
+          "lines": 2
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/zeus_battle_summon_view.gd",
+      "lines": 95,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 16,
+          "lines": 30
+        },
+        {
+          "name": "_layout",
+          "line": 46,
+          "lines": 23
+        },
+        {
+          "name": "set_time",
+          "line": 69,
+          "lines": 22
+        },
+        {
+          "name": "_draw",
+          "line": 91,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/zeus_combat_effects.gd",
+      "lines": 35,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "get_pack",
+          "line": 5,
+          "lines": 24
+        },
+        {
+          "name": "draw_frame",
+          "line": 29,
+          "lines": 7
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/zeus_portrait_rig.gd",
+      "lines": 141,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "_build_mesh",
+          "line": 73,
+          "lines": 45
+        },
+        {
+          "name": "_weights",
+          "line": 41,
+          "lines": 32
+        },
+        {
+          "name": "_ready",
+          "line": 13,
+          "lines": 28
+        },
+        {
+          "name": "_build_animation",
+          "line": 118,
+          "lines": 18
+        },
+        {
+          "name": "set_time",
+          "line": 136,
+          "lines": 4
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/zeus_rig_cutscene_view.gd",
+      "lines": 99,
+      "functions": 7,
+      "largest_functions": [
+        {
+          "name": "_ready",
+          "line": 14,
+          "lines": 29
+        },
+        {
+          "name": "_draw",
+          "line": 64,
+          "lines": 26
+        },
+        {
+          "name": "_layout",
+          "line": 43,
+          "lines": 12
+        },
+        {
+          "name": "set_time",
+          "line": 55,
+          "lines": 9
+        },
+        {
+          "name": "_cover_region",
+          "line": 90,
+          "lines": 5
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    },
+    {
+      "path": "src/ui/zeus_summon_radial_lightning.gd",
+      "lines": 47,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "_draw",
+          "line": 26,
+          "lines": 22
+        },
+        {
+          "name": "_ready",
+          "line": 10,
+          "lines": 9
+        },
+        {
+          "name": "set_time",
+          "line": 19,
+          "lines": 4
+        },
+        {
+          "name": "burst_strength",
+          "line": 23,
+          "lines": 3
+        }
+      ],
+      "group_scans": 0,
+      "pop_front": 0,
+      "await": 0,
+      "instantiate": 0,
+      "queue_free": 0
+    }
+  ]
+}

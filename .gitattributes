@@ -1,0 +1,2 @@
+# Patch context contains intentional space prefixes before GDScript tabs.
+docs/optimization/20261010/changes.patch -whitespace

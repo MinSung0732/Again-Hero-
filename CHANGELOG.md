@@ -1,3 +1,10 @@
+## 2026-10-10 — 최적화 감사 보고서·전체 코드·검증 근거
+
+- docs/OPTIMIZATION_AUDIT_20261010.md에5관점 상세 분석, 복잡도/공간 tradeoff, 후속 구조·보안 제안, 우선순위 실기기 작업, 코드 커밋별 revert와 원격 백업을 기록. 전체13프로덕션 GDScript Before/After ZIP·SHA256 manifest·적용 diff 및 정적 목록/CPU JSON/전체 테스트 결과/압축 로그 제공.
+- Godot4.5.1 Linux headless 단독7회 중앙값:32768기록 생성+일괄만료507.628→19.449ms,4096로드경로 dedupe37.092→1.063ms,48개 정상 숫자풀 정리2만회112.376→56.074ms. 합성 미세작업 수치이며 전체 FPS/Android/GPU/장기RAM 개선률 아님.
+- 전체118smoke 종료0 97/종료1 13/timeout8. 종료0 중43도 리소스/셰이더 ERROR진단 있어 전체 무경고 통과로 표기하지 않음. 실패21격리 Before/After 비교에서20동일 재현, gacha_conversion 초기실패는 양쪽 재실행에서 재현되지 않아 불안정 검사로 보류. 새 성능/네트워크 및 기존cloud_save 마지막 격리3검사는 종료0·ERROR/WARNING0. 최종editor import/스크립트파싱/정적diff/Python도구·ZIP원본대조/patch reverse-check 통과.
+- README/ROADMAP에 보고서와 Android실기기·기존fixture·export 후속 항목 연결. main 변경 없음. 코드 커밋 b9cc83a/ca279f5와 원격 backup/stage10-astra-before-optimization-20261010 유지.
+
 ## 2026-10-10 — 클라우드 대기·응답 및 일반 HTTP 수명 방어
 
 - CloudStore busy 대기의 매 프레임 재개를 완료/중단 신호로 교체. 응답의 revision/conflict 적용 뒤 deferred로 재개하며, 대기 전 계정·세대를 캡처해 중단/계정 전환 후 이전 대기를 취소한다. 기존 RPC/재시도/충돌 정책 유지.

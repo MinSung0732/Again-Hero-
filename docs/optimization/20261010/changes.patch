@@ -1,0 +1,799 @@
+diff --git a/src/ai/hero_build_ai.gd b/src/ai/hero_build_ai.gd
+index c66e942..a42a3f2 100644
+--- a/src/ai/hero_build_ai.gd
++++ b/src/ai/hero_build_ai.gd
+@@ -43,8 +43,10 @@ static func choose_candidate(
+ 		if score > selected_score:
+ 			selected_score = score
+ 			selected_synergy_score = synergy_score
+-			selected = candidate.duplicate(true)
++			selected = candidate
+ 
++	# Only the winner needs an independent deep copy; preserve RNG/order/ties.
++	selected = selected.duplicate(true)
+ 	selected["decision_score"] = selected_score
+ 	selected["synergy_score"] = selected_synergy_score
+ 	selected["decision_reason"] = _build_reason(
+diff --git a/src/battle/battle.gd b/src/battle/battle.gd
+index 22e368b..842cbf6 100644
+--- a/src/battle/battle.gd
++++ b/src/battle/battle.gd
+@@ -1,6 +1,8 @@
+ extends Node2D
+ 
+ const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
++const SPATIAL_BUCKET_POOL := preload("res://src/systems/spatial_bucket_pool.gd")
++
+ const MONSTER_LOCAL_GRID := preload("res://src/systems/monster_local_grid.gd")
+ 
+ signal stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int)
+@@ -167,6 +169,8 @@ var active_hero_summons: Dictionary = {}
+ var active_elite_skeletons: Dictionary = {}
+ var monster_spatial_grid: Dictionary = {}
+ var monster_spatial_used_cells: Array[Vector2i] = []
++var monster_spatial_previous_cells: Array[Vector2i] = []
++var monster_spatial_spare_buckets: Array = []
+ var monster_spatial_stale_ids: Array[int] = []
+ var monster_spatial_grid_physics_frame: int = -1
+ var monster_spatial_snapshot_revision := 0
+@@ -319,6 +323,7 @@ func _rebuild_monster_spatial_grid() -> void:
+ 	# Keep cell Arrays alive and only clear buckets used by the previous
+ 	# physics frame. This avoids rebuilding Dictionary/Array storage every
+ 	# frame when large monster waves are active.
++	monster_spatial_previous_cells.assign(monster_spatial_used_cells)
+ 	for cell in monster_spatial_used_cells:
+ 		var previous_bucket = monster_spatial_grid.get(cell, null)
+ 		if typeof(previous_bucket) == TYPE_ARRAY:
+@@ -347,13 +352,15 @@ func _rebuild_monster_spatial_grid() -> void:
+ 		if typeof(raw_bucket) == TYPE_ARRAY:
+ 			bucket = raw_bucket
+ 		else:
+-			bucket = []
++			bucket = SPATIAL_BUCKET_POOL.acquire(monster_spatial_spare_buckets)
+ 			monster_spatial_grid[cell] = bucket
+ 
+ 		if bucket.is_empty():
+ 			monster_spatial_used_cells.append(cell)
+ 		bucket.append(monster)
+ 
++	SPATIAL_BUCKET_POOL.retire_empty(monster_spatial_grid, monster_spatial_previous_cells, monster_spatial_spare_buckets)
++
+ 	for raw_id in monster_spatial_stale_ids:
+ 		_unregister_monster(raw_id)
+ 
+@@ -780,6 +787,8 @@ func _start_battle() -> void:
+ 	active_hero_summons.clear()
+ 	active_elite_skeletons.clear()
+ 	monster_spatial_grid.clear()
++	monster_spatial_previous_cells.clear()
++	monster_spatial_spare_buckets.clear()
+ 	monster_local_grid.clear()
+ 	monster_spatial_used_cells.clear()
+ 	monster_spatial_stale_ids.clear()
+diff --git a/src/hero/hero.gd b/src/hero/hero.gd
+index a310f32..1859988 100644
+--- a/src/hero/hero.gd
++++ b/src/hero/hero.gd
+@@ -1,5 +1,7 @@
+ extends CharacterBody2D
+ 
++const TIMED_EVENT_BUFFER := preload("res://src/systems/timed_event_buffer.gd")
++
+ const LOCAL_GRID_MOVEMENT := preload("res://src/monsters/monster_runtime_common.gd")
+ 
+ const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
+@@ -863,8 +865,8 @@ var facing_candidate_sign: int = 0
+ var facing_candidate_timer: float = 0.0
+ 
+ var ai_memory_clock: float = 0.0
+-var offensive_memory_events: Array = []
+-var status_effect_events: Array = []
++var offensive_memory_events = TIMED_EVENT_BUFFER.new()
++var status_effect_events = TIMED_EVENT_BUFFER.new()
+ var status_resistances: Dictionary = {}
+ var ai_observation_timer: float = 0.0
+ var ai_observed_context: Dictionary = {}
+@@ -15208,15 +15210,7 @@ func record_offensive_event(monster_type: String, monster_role: String = "") ->
+ 	_prune_offensive_memory()
+ 
+ func _prune_offensive_memory() -> void:
+-	if offensive_memory_events.is_empty():
+-		return
+-
+-	var cutoff := ai_memory_clock - OFFENSE_MEMORY_WINDOW
+-	while not offensive_memory_events.is_empty():
+-		var event: Dictionary = offensive_memory_events[0]
+-		if float(event.get("time", 0.0)) >= cutoff:
+-			break
+-		offensive_memory_events.pop_front()
++	offensive_memory_events.prune_before(ai_memory_clock - OFFENSE_MEMORY_WINDOW)
+ 
+ func _build_recent_offense_memory() -> Dictionary:
+ 	_prune_offensive_memory()
+@@ -15225,8 +15219,8 @@ func _build_recent_offense_memory() -> Dictionary:
+ 	var role_weights := {}
+ 	var total_weight := 0.0
+ 
+-	for raw_event in offensive_memory_events:
+-		var event: Dictionary = raw_event
++	for event_index in range(offensive_memory_events.size()):
++		var event: Dictionary = offensive_memory_events.get_event(event_index)
+ 		var age := maxf(ai_memory_clock - float(event.get("time", ai_memory_clock)), 0.0)
+ 		var freshness := 1.0 - clampf(age / OFFENSE_MEMORY_WINDOW, 0.0, 1.0)
+ 		var weight := lerpf(OFFENSE_MEMORY_MIN_WEIGHT, 1.0, freshness)
+@@ -16087,7 +16081,7 @@ func get_recent_offense_summary() -> String:
+ 	var dominant_type := ""
+ 	var dominant_weight := -1.0
+ 
+-	for raw_type in type_weights.keys():
++	for raw_type in type_weights:
+ 		var monster_type := String(raw_type)
+ 		var weight := float(type_weights.get(monster_type, 0.0))
+ 		if weight > dominant_weight:
+@@ -16120,15 +16114,7 @@ func record_status_effect_event(status_id: String) -> void:
+ 	_prune_status_memory()
+ 
+ func _prune_status_memory() -> void:
+-	if status_effect_events.is_empty():
+-		return
+-
+-	var cutoff := ai_memory_clock - STATUS_MEMORY_WINDOW
+-	while not status_effect_events.is_empty():
+-		var event: Dictionary = status_effect_events[0]
+-		if float(event.get("time", 0.0)) >= cutoff:
+-			break
+-		status_effect_events.pop_front()
++	status_effect_events.prune_before(ai_memory_clock - STATUS_MEMORY_WINDOW)
+ 
+ func _build_recent_status_memory() -> Dictionary:
+ 	_prune_status_memory()
+@@ -16137,8 +16123,8 @@ func _build_recent_status_memory() -> Dictionary:
+ 	var status_counts := {}
+ 	var total_weight := 0.0
+ 
+-	for raw_event in status_effect_events:
+-		var event: Dictionary = raw_event
++	for event_index in range(status_effect_events.size()):
++		var event: Dictionary = status_effect_events.get_event(event_index)
+ 		var age := maxf(
+ 			ai_memory_clock - float(event.get("time", ai_memory_clock)),
+ 			0.0
+@@ -16182,7 +16168,7 @@ func get_recent_status_summary() -> String:
+ 	var dominant_status := ""
+ 	var dominant_weight := -1.0
+ 
+-	for raw_status in weights.keys():
++	for raw_status in weights:
+ 		var status_id := String(raw_status)
+ 		var weight := float(weights.get(status_id, 0.0))
+ 		if weight > dominant_weight:
+diff --git a/src/network/cloud_store.gd b/src/network/cloud_store.gd
+index e6dcaf1..ba3fb7a 100644
+--- a/src/network/cloud_store.gd
++++ b/src/network/cloud_store.gd
+@@ -4,6 +4,7 @@ const SCOPE := preload("res://src/systems/account_save_scope.gd")
+ const CONFIG := preload("res://src/network/supabase_config.gd")
+ signal status_changed(message: String)
+ signal conflict_detected
++signal operation_released
+ var ready_for_play := false
+ var conflict := false
+ var busy := false
+@@ -22,6 +23,7 @@ func stop() -> void:
+ 	ready_for_play = false
+ 	conflict = false
+ 	_timer.stop()
++	operation_released.emit() # Wake old-session waiters so they can cancel.
+ 
+ func _queue_save() -> void:
+ 	if ready_for_play and not conflict:
+@@ -44,8 +46,10 @@ func request_rpc(method: String, data: Dictionary) -> Dictionary:
+ 	request.queue_free()
+ 	if response[0] != HTTPRequest.RESULT_SUCCESS or response[1] != 200:
+ 		return {}
+-	var parsed: Variant = JSON.parse_string((response[3] as PackedByteArray).get_string_from_utf8())
+-	return parsed if parsed is Dictionary else {}
++	var parser := JSON.new()
++	if parser.parse((response[3] as PackedByteArray).get_string_from_utf8()) != OK:
++		return {} # Malformed server bodies follow the existing retry path.
++	return parser.data if parser.data is Dictionary else {}
+ 
+ func initialize(choice: String = "") -> bool:
+ 	if busy:
+@@ -55,11 +59,16 @@ func initialize(choice: String = "") -> bool:
+ 	status_changed.emit("계정의 클라우드 저장 확인 중…")
+ 	var remote := await request_rpc("read_game_save", {})
+ 	busy = false
++	# Resume queued work after this response has applied revision/conflict state.
++	operation_released.emit.call_deferred()
+ 	if generation != _generation:
+ 		return false
+ 	if remote.is_empty():
+ 		status_changed.emit("클라우드 저장 확인 실패. 로그인 버튼으로 다시 시도해 주세요.")
+ 		return false
++	if not _valid_revision(remote.get("revision")) or not remote.get("found") is bool:
++		status_changed.emit("지원하지 않는 서버 저장 응답입니다.")
++		return false
+ 	var version := int(remote.get("revision", 0))
+ 	if bool(remote.get("found", false)):
+ 		if not SCOPE.valid_payload(remote.get("payload")):
+@@ -76,7 +85,9 @@ func initialize(choice: String = "") -> bool:
+ 		elif choice == "local":
+ 			SCOPE.revision = version
+ 			SCOPE.dirty = true
+-			SCOPE.persist()
++			if SCOPE.persist() != OK:
++				status_changed.emit("저장 상태 기록 실패. 이 기기의 저장 공간을 확인해 주세요.")
++				return false
+ 	conflict = false
+ 	ready_for_play = true
+ 	if not bool(remote.get("found", false)) or bool(remote.get("legacy", false)):
+@@ -96,7 +107,9 @@ func tutorial_operation(action: String) -> Dictionary:
+ 	if action in ["complete", "skip"] and not await flush():
+ 		return {}
+ 	while busy:
+-		await get_tree().process_frame
++		await operation_released
++		if generation != _generation or owner != SCOPE.user_id:
++			return {}
+ 	if owner != SCOPE.user_id or generation != _generation or conflict or not ready_for_play:
+ 		return {}
+ 	busy = true
+@@ -104,6 +117,8 @@ func tutorial_operation(action: String) -> Dictionary:
+ 	var serial := SCOPE.serial
+ 	var result := await request_rpc("account_tutorial", {"action": action, "expected_revision": SCOPE.revision})
+ 	busy = false
++	# Resume queued work after this response has applied revision/conflict state.
++	operation_released.emit.call_deferred()
+ 	if owner != SCOPE.user_id or generation != _generation:
+ 		return {}
+ 	if bool(result.get("conflict", false)):
+@@ -111,7 +126,7 @@ func tutorial_operation(action: String) -> Dictionary:
+ 		status_changed.emit("튜토리얼 보상 저장이 다른 기기와 충돌했습니다. 다시 로그인해 주세요.")
+ 		return {}
+ 	if bool(result.get("ok", false)) and action in ["complete", "skip"]:
+-		if serial != SCOPE.serial or not SCOPE.valid_payload(result.get("payload")):
++		if serial != SCOPE.serial or not _valid_revision(result.get("revision")) or not SCOPE.valid_payload(result.get("payload")):
+ 			conflict = true
+ 			return {}
+ 		if not SCOPE.install(result.payload, int(result.get("revision", -1))):
+@@ -121,17 +136,23 @@ func tutorial_operation(action: String) -> Dictionary:
+ 	return result
+ 
+ func flush() -> bool:
++	# Capture before waiting: an old account waiter must not flush a new one.
++	var generation := _generation
++	var owner := SCOPE.user_id
+ 	while busy:
+-		await get_tree().process_frame
++		await operation_released
++		if generation != _generation or owner != SCOPE.user_id:
++			return false
+ 	if not ready_for_play or conflict:
+ 		return false
+ 	if not SCOPE.dirty:
+ 		return true
+ 	busy = true
+-	var generation := _generation
+ 	var serial := SCOPE.serial
+ 	var result := await request_rpc("save_game_snapshot", {"expected_revision": SCOPE.revision, "new_payload": SCOPE.files.duplicate(true)})
+ 	busy = false
++	# Resume queued work after this response has applied revision/conflict state.
++	operation_released.emit.call_deferred()
+ 	if generation != _generation:
+ 		return false
+ 	if bool(result.get("conflict", false)):
+@@ -139,7 +160,7 @@ func flush() -> bool:
+ 		status_changed.emit("다른 기기의 저장과 충돌했습니다. 계정 화면에서 다시 불러와 주세요.")
+ 		conflict_detected.emit()
+ 		return false
+-	if not bool(result.get("ok", false)):
++	if not bool(result.get("ok", false)) or not _valid_revision(result.get("revision")):
+ 		status_changed.emit("클라우드 저장 실패 · 이 기기에 보관 중, 재시도합니다")
+ 		_timer.start(30.0)
+ 		return false
+@@ -153,3 +174,13 @@ func flush() -> bool:
+ 	if SCOPE.dirty:
+ 		_queue_save()
+ 	return true
++
++
++static func _valid_revision(value: Variant) -> bool:
++	# JSON numbers may be floats. Never accept a missing, fractional, negative
++	# or non-finite acknowledgement and overwrite the local revision with it.
++	if value is int:
++		return value >= 0
++	if value is float:
++		return is_finite(value) and value >= 0.0 and value == floor(value) and value <= 9007199254740991.0
++	return false
+diff --git a/src/network/supabase_client.gd b/src/network/supabase_client.gd
+index 4707759..0efa2ae 100644
+--- a/src/network/supabase_client.gd
++++ b/src/network/supabase_client.gd
+@@ -2,15 +2,21 @@ extends Node
+ class_name SupabaseClient
+ 
+ const CONFIG := preload("res://src/network/supabase_config.gd")
++const REQUEST_TIMEOUT_SECONDS := 20.0
++const MAX_RESPONSE_BYTES := 2000000
+ 
+ signal request_completed(tag: String, status_code: int, payload: Variant)
+ 
+ var access_token: String = ""
++var _session_generation := 0
+ 
+ func set_access_token(token: String) -> void:
++	if token != access_token:
++		_session_generation += 1
+ 	access_token = token
+ 
+ func clear_session() -> void:
++	_session_generation += 1
+ 	access_token = ""
+ 
+ func get_rows(table_name: String, query: String = "", tag: String = "") -> Error:
+@@ -45,9 +51,13 @@ func request_json(
+ 		return ERR_UNCONFIGURED
+ 
+ 	var request := HTTPRequest.new()
++	# A stalled/oversized response must not retain a request indefinitely.
++	request.timeout = REQUEST_TIMEOUT_SECONDS
++	request.body_size_limit = MAX_RESPONSE_BYTES
+ 	add_child(request)
+ 	request.request_completed.connect(
+-		_on_http_request_completed.bind(request, tag)
++		_on_http_request_completed.bind(request, tag, _session_generation),
++		CONNECT_ONE_SHOT
+ 	)
+ 
+ 	var headers := PackedStringArray([
+@@ -79,20 +89,27 @@ func request_json(
+ 	return error
+ 
+ func _on_http_request_completed(
+-	_result: int,
++	result: int,
+ 	response_code: int,
+ 	_headers: PackedStringArray,
+ 	body: PackedByteArray,
+ 	request: HTTPRequest,
+-	tag: String
++	tag: String,
++	generation: int
+ ) -> void:
++	request.queue_free()
++	# A response started under another session cannot enter the current UI.
++	if generation != _session_generation:
++		return
++	if result != HTTPRequest.RESULT_SUCCESS:
++		request_completed.emit(tag, 0, null)
++		return
+ 	var body_text := body.get_string_from_utf8()
+ 	var payload: Variant = body_text
+ 
+ 	if not body_text.is_empty():
+-		var parsed: Variant = JSON.parse_string(body_text)
+-		if parsed != null:
+-			payload = parsed
++		var parser := JSON.new()
++		if parser.parse(body_text) == OK and parser.data != null:
++			payload = parser.data
+ 
+ 	request_completed.emit(tag, response_code, payload)
+-	request.queue_free()
+diff --git a/src/systems/monster_local_grid.gd b/src/systems/monster_local_grid.gd
+index f6d0a09..e7b9b38 100644
+--- a/src/systems/monster_local_grid.gd
++++ b/src/systems/monster_local_grid.gd
+@@ -1,10 +1,14 @@
+ extends RefCounted
+ 
++const BUCKET_POOL := preload("res://src/systems/spatial_bucket_pool.gd")
++
+ const COMMON := preload("res://src/monsters/monster_runtime_common.gd")
+ const CELL_SIZE := 32.0
+ const MAX_DENSE_SEPARATION_SAMPLES := 48
+ var buckets: Dictionary = {}
+ var used_cells: Array[Vector2i] = []
++var previous_cells: Array[Vector2i] = []
++var spare_buckets: Array = []
+ var revision := -1
+ var motion_padding := 1
+ 
+@@ -12,6 +16,8 @@ var motion_padding := 1
+ func clear() -> void:
+ 	buckets.clear()
+ 	used_cells.clear()
++	previous_cells.clear()
++	spare_buckets.clear()
+ 	revision = -1
+ 
+ 
+@@ -22,6 +28,7 @@ func cell_for(position: Vector2) -> Vector2i:
+ func ensure(actors: Dictionary, snapshot_revision: int) -> void:
+ 	if revision == snapshot_revision:
+ 		return
++	previous_cells.assign(used_cells)
+ 	for cell in used_cells:
+ 		buckets[cell].clear()
+ 	used_cells.clear()
+@@ -34,11 +41,12 @@ func ensure(actors: Dictionary, snapshot_revision: int) -> void:
+ 		if actor is CharacterBody2D:
+ 			motion_padding = maxi(motion_padding, ceili(actor.velocity.length() / Engine.physics_ticks_per_second / CELL_SIZE))
+ 		if not buckets.has(cell):
+-			buckets[cell] = []
++			buckets[cell] = BUCKET_POOL.acquire(spare_buckets)
+ 		var bucket: Array = buckets[cell]
+ 		if bucket.is_empty():
+ 			used_cells.append(cell)
+ 		bucket.append(actor)
++	BUCKET_POOL.retire_empty(buckets, previous_cells, spare_buckets)
+ 	revision = snapshot_revision
+ 
+ 
+diff --git a/src/systems/presentation_warmup.gd b/src/systems/presentation_warmup.gd
+index d2f6d24..a590ee8 100644
+--- a/src/systems/presentation_warmup.gd
++++ b/src/systems/presentation_warmup.gd
+@@ -168,14 +168,23 @@ func _append_texture_directory(directory: String, paths: Array[String]) -> void:
+ 		_append_texture_directory(directory.path_join(child), paths)
+ 
+ 
++# Expected O(p) membership checks, preserving first occurrence/load order.
++static func unique_paths(paths: Array[String]) -> Array[String]:
++	var unique: Array[String] = []
++	var seen: Dictionary = {}
++	for path in paths:
++		if path.is_empty() or seen.has(path):
++			continue
++		seen[path] = true
++		unique.append(path)
++	return unique
++
++
+ func _prepare(paths: Array[String], shared: bool) -> bool:
+ 	if _busy:
+ 		return false
+ 	_busy = true
+-	var unique: Array[String] = []
+-	for path in paths:
+-		if not path.is_empty() and not unique.has(path):
+-			unique.append(path)
++	var unique := unique_paths(paths)
+ 	var completed := 0
+ 	progress_changed.emit(0, unique.size())
+ 	# Bound in-flight reads and GPU work. Preserve every previously warmed path.
+diff --git a/src/systems/run_metrics.gd b/src/systems/run_metrics.gd
+index 8e4d1c7..d2438a9 100644
+--- a/src/systems/run_metrics.gd
++++ b/src/systems/run_metrics.gd
+@@ -1,6 +1,8 @@
+ extends RefCounted
+ class_name RunMetrics
+ 
++const TIMED_EVENT_BUFFER := preload("res://src/systems/timed_event_buffer.gd")
++
+ const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
+ 
+ const STRATEGY_WINDOW_SECONDS := 15.0
+@@ -23,7 +25,7 @@ var lowest_hero_hp: int = 0
+ var lowest_hero_hp_ratio: float = 1.0
+ 
+ var hero_augment_events: Array = []
+-var recent_summons: Array = []
++var recent_summons = TIMED_EVENT_BUFFER.new()
+ var strategy_switches: Array = []
+ 
+ var current_strategy_type: String = ""
+@@ -351,8 +353,8 @@ func _update_strategy_state() -> void:
+ 
+ 	var weights := {}
+ 	var total_weight := 0.0
+-	for raw_event in recent_summons:
+-		var event: Dictionary = raw_event
++	for event_index in range(recent_summons.size()):
++		var event: Dictionary = recent_summons.get_event(event_index)
+ 		var monster_type := String(event.get("type", ""))
+ 		var weight := float(event.get("weight", 0.0))
+ 		if monster_type.is_empty() or weight <= 0.0:
+@@ -366,7 +368,7 @@ func _update_strategy_state() -> void:
+ 
+ 	var dominant_type := ""
+ 	var dominant_weight := 0.0
+-	for raw_type in weights.keys():
++	for raw_type in weights:
+ 		var monster_type := String(raw_type)
+ 		var weight := float(weights.get(monster_type, 0.0))
+ 		if weight > dominant_weight:
+@@ -400,12 +402,7 @@ func _update_strategy_state() -> void:
+ 	last_strategy_change_time = elapsed_seconds
+ 
+ func _prune_recent_summons() -> void:
+-	var cutoff := elapsed_seconds - STRATEGY_WINDOW_SECONDS
+-	while not recent_summons.is_empty():
+-		var event: Dictionary = recent_summons[0]
+-		if float(event.get("time", 0.0)) >= cutoff:
+-			break
+-		recent_summons.pop_front()
++	recent_summons.prune_before(elapsed_seconds - STRATEGY_WINDOW_SECONDS)
+ 
+ static func _format_time(seconds: float) -> String:
+ 	var total := maxi(int(round(seconds)), 0)
+diff --git a/src/systems/spatial_bucket_pool.gd b/src/systems/spatial_bucket_pool.gd
+new file mode 100644
+index 0000000..ca0de8c
+--- /dev/null
++++ b/src/systems/spatial_bucket_pool.gd
+@@ -0,0 +1,20 @@
++extends RefCounted
++
++# Reuse moving actors' buckets without retaining every cell ever visited.
++# The previous-cell list is caller-owned scratch storage, not a keys() copy.
++const MAX_SPARE_BUCKETS := 128
++
++
++static func acquire(spares: Array) -> Array:
++	return spares.pop_back() if not spares.is_empty() else []
++
++
++static func retire_empty(buckets: Dictionary, previous_cells: Array[Vector2i], spares: Array) -> void:
++	for cell in previous_cells:
++		var bucket: Array = buckets[cell]
++		if not bucket.is_empty():
++			continue
++		buckets.erase(cell)
++		if spares.size() < MAX_SPARE_BUCKETS:
++			spares.append(bucket)
++	previous_cells.clear()
+diff --git a/src/systems/spatial_bucket_pool.gd.uid b/src/systems/spatial_bucket_pool.gd.uid
+new file mode 100644
+index 0000000..a7d0a9f
+--- /dev/null
++++ b/src/systems/spatial_bucket_pool.gd.uid
+@@ -0,0 +1 @@
++uid://b0t56jfikc6my
+diff --git a/src/systems/timed_event_buffer.gd b/src/systems/timed_event_buffer.gd
+new file mode 100644
+index 0000000..74dab82
+--- /dev/null
++++ b/src/systems/timed_event_buffer.gd
+@@ -0,0 +1,45 @@
++extends RefCounted
++
++# Chronological window. Expired references are released immediately; the head
++# advances without shifting the live suffix on every event. Compact only when
++# enough slots can be reclaimed, so removal is amortized O(1) per event.
++const COMPACT_MINIMUM := 64
++var _events: Array = []
++var _head := 0
++
++
++func append(event: Dictionary) -> void:
++	_events.append(event)
++
++
++func size() -> int:
++	return _events.size() - _head
++
++
++func is_empty() -> bool:
++	return _head == _events.size()
++
++
++func get_event(index: int) -> Dictionary:
++	return _events[_head + index]
++
++
++func clear() -> void:
++	_events.clear()
++	_head = 0
++
++
++func prune_before(cutoff: float) -> void:
++	while _head < _events.size():
++		if float(_events[_head].get("time", 0.0)) >= cutoff:
++			break # Exact boundary remains in the window, as before.
++		_events[_head] = null # Drop the expired event, including nested references.
++		_head += 1
++	if is_empty():
++		clear()
++	elif _head >= COMPACT_MINIMUM and _head * 2 >= _events.size():
++		var live_count := size()
++		for index in range(live_count):
++			_events[index] = _events[_head + index]
++		_events.resize(live_count)
++		_head = 0
+diff --git a/src/systems/timed_event_buffer.gd.uid b/src/systems/timed_event_buffer.gd.uid
+new file mode 100644
+index 0000000..caf7458
+--- /dev/null
++++ b/src/systems/timed_event_buffer.gd.uid
+@@ -0,0 +1 @@
++uid://dhf0sdffdsi8i
+diff --git a/src/systems/wolf_pack_runtime.gd b/src/systems/wolf_pack_runtime.gd
+index dd2dc87..bb20856 100644
+--- a/src/systems/wolf_pack_runtime.gd
++++ b/src/systems/wolf_pack_runtime.gd
+@@ -1,5 +1,6 @@
+ extends RefCounted
+ 
++const BUCKET_POOL := preload("res://src/systems/spatial_bucket_pool.gd")
+ const DATA := preload("res://src/data/wolf_behavior_catalog.gd")
+ const FX := preload("res://src/ui/combat_status_effect_visual.gd")
+ const CELL_SIZE := 125.0
+@@ -7,6 +8,7 @@ var battle: Node
+ var wolves: Dictionary = {}
+ var death_cells: Dictionary = {}
+ var used_cells: Array[Vector2i] = []
++var spare_death_buckets: Array = []
+ var stale_ids: Array[int] = []
+ var spawn_jobs: Array[Dictionary] = []
+ 
+@@ -25,7 +27,7 @@ func record_death(wolf: Node2D) -> void:
+ 	unregister(wolf.get_instance_id())
+ 	var cell := Vector2i(floori(wolf.global_position.x / CELL_SIZE), floori(wolf.global_position.y / CELL_SIZE))
+ 	if not death_cells.has(cell):
+-		death_cells[cell] = []
++		death_cells[cell] = BUCKET_POOL.acquire(spare_death_buckets)
+ 	var points: Array = death_cells[cell]
+ 	if points.is_empty():
+ 		used_cells.append(cell)
+@@ -50,7 +52,7 @@ func tick(_delta: float) -> void:
+ 			wolves.erase(id)
+ 		for cell in used_cells:
+ 			death_cells[cell].clear()
+-		used_cells.clear()
++		BUCKET_POOL.retire_empty(death_cells, used_cells, spare_death_buckets)
+ 	var budget := int(DATA.PACK.spawn_budget)
+ 	while budget > 0 and not spawn_jobs.is_empty():
+ 		var job: Dictionary = spawn_jobs[0]
+@@ -87,6 +89,7 @@ func _has_near_death(position: Vector2) -> bool:
+ func reset() -> void:
+ 	wolves.clear()
+ 	death_cells.clear()
++	spare_death_buckets.clear()
+ 	used_cells.clear()
+ 	stale_ids.clear()
+ 	spawn_jobs.clear()
+diff --git a/src/systems/yuki_onna_runtime.gd b/src/systems/yuki_onna_runtime.gd
+index 4d60a06..f7d30e0 100644
+--- a/src/systems/yuki_onna_runtime.gd
++++ b/src/systems/yuki_onna_runtime.gd
+@@ -1,4 +1,5 @@
+ extends RefCounted
++const BUCKET_POOL := preload("res://src/systems/spatial_bucket_pool.gd")
+ const DATA := preload("res://src/data/yuki_onna_behavior_catalog.gd")
+ const FX := preload("res://src/ui/combat_status_effect_visual.gd")
+ const CELL_SIZE := 125.0
+@@ -7,6 +8,7 @@ var elites: Dictionary = {}
+ var targets: Dictionary = {}
+ var death_cells: Dictionary = {}
+ var used_cells: Array[Vector2i] = []
++var spare_death_buckets: Array = []
+ var stale_ids: Array[int] = []
+ 
+ static func start_target_life(target: Node) -> void:
+@@ -36,7 +38,7 @@ func record_death(actor: Node2D) -> void:
+ 	unregister(actor.get_instance_id())
+ 	var cell := Vector2i(floori(actor.global_position.x / CELL_SIZE),floori(actor.global_position.y / CELL_SIZE))
+ 	if not death_cells.has(cell):
+-		death_cells[cell] = []
++		death_cells[cell] = BUCKET_POOL.acquire(spare_death_buckets)
+ 	var points: Array = death_cells[cell]
+ 	if points.is_empty():
+ 		used_cells.append(cell)
+@@ -116,7 +118,7 @@ func tick(delta: float) -> void:
+ 				actor.apply_chill(_near_death_count(actor.global_position,free_stacks))
+ 		for cell in used_cells:
+ 			death_cells[cell].clear()
+-		used_cells.clear()
++		BUCKET_POOL.retire_empty(death_cells, used_cells, spare_death_buckets)
+ 	stale_ids.clear()
+ 	for id in targets:
+ 		var entry: Dictionary = targets[id]
+@@ -176,5 +178,6 @@ func reset() -> void:
+ 	elites.clear()
+ 	targets.clear()
+ 	death_cells.clear()
++	spare_death_buckets.clear()
+ 	used_cells.clear()
+ 	stale_ids.clear()
+diff --git a/src/ui/damage_number_spawner.gd b/src/ui/damage_number_spawner.gd
+index baacf84..ee89ceb 100644
+--- a/src/ui/damage_number_spawner.gd
++++ b/src/ui/damage_number_spawner.gd
+@@ -4,6 +4,7 @@ class_name DamageNumberSpawner
+ const DAMAGE_NUMBER_SCENE := preload("res://src/ui/DamageNumber.tscn")
+ const WORLD_OFFSET := Vector2(0.0, -56.0)
+ const MAX_ACTIVE_POPUPS := 48
++const OWNER_META: StringName = &"_damage_number_owner_id"
+ const POOL_META: StringName = &"_damage_number_pool"
+ 
+ 
+@@ -30,6 +31,8 @@ static func show(
+ 		var existing = target.get_meta("damage_number_popup")
+ 		if (
+ 			is_instance_valid(existing)
++			and not existing.is_queued_for_deletion()
++			and int(existing.get_meta(OWNER_META, 0)) == target.get_instance_id()
+ 			and existing.has_method("can_merge_damage")
+ 			and bool(existing.call("can_merge_damage"))
+ 		):
+@@ -50,6 +53,7 @@ static func show(
+ 
+ 	popup.global_position = target.global_position + WORLD_OFFSET
+ 	popup.call("setup", displayed_damage, text_color)
++	popup.set_meta(OWNER_META, target.get_instance_id())
+ 	target.set_meta("damage_number_popup", popup)
+ 
+ 
+@@ -65,6 +69,8 @@ static func show_heal(target: Node2D, amount: int) -> void:
+ 		var existing = target.get_meta("heal_number_popup")
+ 		if (
+ 			is_instance_valid(existing)
++			and not existing.is_queued_for_deletion()
++			and int(existing.get_meta(OWNER_META, 0)) == target.get_instance_id()
+ 			and existing.has_method("can_merge_heal")
+ 			and bool(existing.call("can_merge_heal"))
+ 		):
+@@ -93,6 +99,7 @@ static func show_heal(target: Node2D, amount: int) -> void:
+ 		displayed_heal,
+ 		Color(0.32, 1.0, 0.42, 1.0)
+ 	)
++	popup.set_meta(OWNER_META, target.get_instance_id())
+ 	target.set_meta("heal_number_popup", popup)
+ 
+ 
+@@ -111,6 +118,7 @@ static func show_text_at(
+ 		return
+ 
+ 	popup.global_position = world_position
++	popup.set_meta(OWNER_META, 0)
+ 	popup.call("setup_text", message)
+ 
+ 
+@@ -131,6 +139,9 @@ static func _acquire_popup(parent: Node2D) -> Node2D:
+ 			active_count += 1
+ 			continue
+ 
++		if popup.is_queued_for_deletion():
++			active_count += 1
++			continue
+ 		return popup
+ 
+ 	if active_count >= MAX_ACTIVE_POPUPS:
+@@ -147,12 +158,26 @@ static func _acquire_popup(parent: Node2D) -> Node2D:
+ 
+ 
+ static func _get_compacted_pool(parent: Node2D) -> Array:
+-	var raw_pool = parent.get_meta(POOL_META, [])
+-	var pool: Array = []
+-	if raw_pool is Array:
+-		for entry in raw_pool:
+-			if is_instance_valid(entry):
+-				pool.append(entry)
+-
+-	parent.set_meta(POOL_META, pool)
++	var raw_pool = parent.get_meta(POOL_META) if parent.has_meta(POOL_META) else null
++	if not raw_pool is Array:
++		var new_pool: Array = []
++		parent.set_meta(POOL_META, new_pool)
++		return new_pool
++	# Healthy pools return directly: no copied array and no writes per hit.
++	var pool: Array = raw_pool
++	var first_invalid := -1
++	for index in range(pool.size()):
++		if not is_instance_valid(pool[index]):
++			first_invalid = index
++			break
++	if first_invalid < 0:
++		return pool
++	# Rare stale entries: stable in-place compaction of only the suffix.
++	var write_index := first_invalid
++	for read_index in range(first_invalid + 1, pool.size()):
++		var entry = pool[read_index]
++		if is_instance_valid(entry):
++			pool[write_index] = entry
++			write_index += 1
++	pool.resize(write_index)
+ 	return pool

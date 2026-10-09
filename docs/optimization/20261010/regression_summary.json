@@ -1,0 +1,2168 @@
+{
+  "baseline_revision": "1d5ad4cedbadc72ea52c2c342946d75dcee96fe7",
+  "code_revision": "ca279f54b8dbe8bfee7984fd807c495c2e9aca5d",
+  "engine": "4.5.1.stable.official.f62fdbde1",
+  "platform": "Linux headless/dummy",
+  "broad_suite": {
+    "tests": 118,
+    "exit_zero": 97,
+    "exit_one": 13,
+    "timeouts": 8,
+    "exit_zero_with_error_diagnostics": 43,
+    "rows": [
+      {
+        "test": "optimization_20261010_smoke",
+        "exit": 0,
+        "seconds": 2.48,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "optimization_network_smoke",
+        "exit": 0,
+        "seconds": 1.19,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "cloud_save_smoke",
+        "exit": 0,
+        "seconds": 1.08,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "slime_swarm_performance_smoke",
+        "exit": 0,
+        "seconds": 5.0,
+        "errors": [],
+        "warnings": 81
+      },
+      {
+        "test": "status_action_growth_smoke",
+        "exit": 0,
+        "seconds": 4.07,
+        "errors": [
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 82
+      },
+      {
+        "test": "wolf_smoke",
+        "exit": 0,
+        "seconds": 4.25,
+        "errors": [],
+        "warnings": 85
+      },
+      {
+        "test": "yuki_onna_smoke",
+        "exit": 0,
+        "seconds": 4.25,
+        "errors": [],
+        "warnings": 81
+      },
+      {
+        "test": "monster_buff_scale_smoke",
+        "exit": "timeout",
+        "seconds": 120,
+        "errors": []
+      },
+      {
+        "test": "projectile_volley_smoke",
+        "exit": 0,
+        "seconds": 2.02,
+        "errors": [
+          "ERROR: 4 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 61
+      },
+      {
+        "test": "population_summoner_smoke",
+        "exit": 0,
+        "seconds": 4.44,
+        "errors": [],
+        "warnings": 81
+      },
+      {
+        "test": "manticore_combat_smoke",
+        "exit": 0,
+        "seconds": 1.27,
+        "errors": [
+          "ERROR: 11 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1
+      },
+      {
+        "test": "shuten_doji_combat_smoke",
+        "exit": 0,
+        "seconds": 1.18,
+        "errors": [
+          "ERROR: 5 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1
+      },
+      {
+        "test": "izanami_combat_smoke",
+        "exit": 0,
+        "seconds": 1.09,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "manticore_integration_smoke",
+        "exit": 0,
+        "seconds": 4.06,
+        "errors": [
+          "ERROR: 3 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 82
+      },
+      {
+        "test": "shuten_doji_integration_smoke",
+        "exit": 0,
+        "seconds": 4.55,
+        "errors": [
+          "ERROR: 6 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 82
+      },
+      {
+        "test": "izanami_integration_smoke",
+        "exit": 0,
+        "seconds": 2.67,
+        "errors": [
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing.",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 45
+      },
+      {
+        "test": "formation_mobile_drag_smoke",
+        "exit": 0,
+        "seconds": 1.18,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "demon_codex_smoke",
+        "exit": 0,
+        "seconds": 2.67,
+        "errors": [],
+        "warnings": 3
+      },
+      {
+        "test": "skill_icon_smoke",
+        "exit": 0,
+        "seconds": 10.61,
+        "errors": [],
+        "warnings": 76
+      },
+      {
+        "test": "loading_pipeline_smoke",
+        "exit": 1,
+        "seconds": 8.44,
+        "errors": [],
+        "warnings": 1
+      },
+      {
+        "test": "battle_summon_cinematic_smoke",
+        "exit": 1,
+        "seconds": 6.96,
+        "errors": [
+          "ERROR: view cached across summons",
+          "ERROR: radial effect reused across summons",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1
+      },
+      {
+        "test": "startup_smoke",
+        "exit": 0,
+        "seconds": 10.24,
+        "errors": [],
+        "warnings": 55
+      },
+      {
+        "test": "android_oauth_smoke",
+        "exit": 0,
+        "seconds": 1.46,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "augment_refresh_performance_smoke",
+        "exit": 0,
+        "seconds": 4.44,
+        "errors": [],
+        "warnings": 81
+      },
+      {
+        "test": "banshee_smoke",
+        "exit": 0,
+        "seconds": 4.06,
+        "errors": [],
+        "warnings": 81
+      },
+      {
+        "test": "battle_chrome_smoke",
+        "exit": 0,
+        "seconds": 6.29,
+        "errors": [],
+        "warnings": 43
+      },
+      {
+        "test": "battle_hud_text_smoke",
+        "exit": 0,
+        "seconds": 6.39,
+        "errors": [],
+        "warnings": 43
+      },
+      {
+        "test": "battle_result_readability_smoke",
+        "exit": 1,
+        "seconds": 6.13,
+        "errors": [
+          "ERROR: Tween (bound to /root/Main/HeroBGMManager): started with no Tweeners.",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: Tween (bound to /root/Main/HeroBGMManager): started with no Tweeners.",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: RESULT_TEST: continuous uniform button border"
+        ],
+        "warnings": 81
+      },
+      {
+        "test": "beginner_bulgasal_guarantee_smoke",
+        "exit": 0,
+        "seconds": 1.08,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "berserker_demon_gauge_smoke",
+        "exit": 0,
+        "seconds": 4.25,
+        "errors": [],
+        "warnings": 113
+      },
+      {
+        "test": "berserker_skill3_animation_smoke",
+        "exit": 0,
+        "seconds": 8.53,
+        "errors": [],
+        "warnings": 87
+      },
+      {
+        "test": "bulgasal_audio_smoke",
+        "exit": 0,
+        "seconds": 1.83,
+        "errors": [
+          "ERROR: 3 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 45
+      },
+      {
+        "test": "bulgasal_combat_smoke",
+        "exit": 0,
+        "seconds": 1.27,
+        "errors": [
+          "ERROR: 118 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.",
+          "ERROR: 1 RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE' were leaked at exit.",
+          "ERROR: 147 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1
+      },
+      {
+        "test": "bulgasal_integration_smoke",
+        "exit": 0,
+        "seconds": 2.95,
+        "errors": [
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing.",
+          "ERROR: 1 RID allocations of type 'P12GodotShape2D' were leaked at exit.",
+          "ERROR: 7 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 45
+      },
+      {
+        "test": "bulgasal_presentation_audio_smoke",
+        "exit": 0,
+        "seconds": 1.18,
+        "errors": [
+          "ERROR: 2 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1
+      },
+      {
+        "test": "bulgasal_presentation_smoke",
+        "exit": 1,
+        "seconds": 1.64,
+        "errors": [
+          "ERROR: BULGASAL_PRESENTATION: one cached view per transcendent",
+          "ERROR: 2 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1
+      },
+      {
+        "test": "bulgasal_transcendence_smoke",
+        "exit": 0,
+        "seconds": 1.36,
+        "errors": [
+          "ERROR: 118 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.",
+          "ERROR: 1 RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE' were leaked at exit.",
+          "ERROR: 147 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1
+      },
+      {
+        "test": "clear_gold_reward_smoke",
+        "exit": 0,
+        "seconds": 6.48,
+        "errors": [],
+        "warnings": 43
+      },
+      {
+        "test": "collection_filter_shop_funds_smoke",
+        "exit": 1,
+        "seconds": 3.6,
+        "errors": [
+          "ERROR: FILTER_FUNDS_TEST: all monsters shown",
+          "ERROR: FILTER_FUNDS_TEST: locked filter count",
+          "ERROR: FILTER_FUNDS_TEST: skills not filtered",
+          "ERROR: FILTER_FUNDS_TEST: all filter recovers list",
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing."
+        ],
+        "warnings": 31
+      },
+      {
+        "test": "combat_effect_assets_smoke",
+        "exit": 0,
+        "seconds": 5.18,
+        "errors": [],
+        "warnings": 81
+      },
+      {
+        "test": "contextual_audio_smoke",
+        "exit": 0,
+        "seconds": 2.39,
+        "errors": [
+          "ERROR: 3 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 280
+      },
+      {
+        "test": "demon_appearance_smoke",
+        "exit": 0,
+        "seconds": 6.21,
+        "errors": [
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 12
+      },
+      {
+        "test": "demon_choice_guard_smoke",
+        "exit": 0,
+        "seconds": 9.93,
+        "errors": [],
+        "warnings": 43
+      },
+      {
+        "test": "dialogue_controls_smoke",
+        "exit": 0,
+        "seconds": 1.37,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "dullahan_smoke",
+        "exit": 0,
+        "seconds": 7.51,
+        "errors": [],
+        "warnings": 81
+      },
+      {
+        "test": "dungeon_entry_restart_smoke",
+        "exit": 0,
+        "seconds": 29.16,
+        "errors": [],
+        "warnings": 72
+      },
+      {
+        "test": "first_clear_gold_smoke",
+        "exit": 0,
+        "seconds": 6.79,
+        "errors": [],
+        "warnings": 43
+      },
+      {
+        "test": "formation_card_presentation_smoke",
+        "exit": 1,
+        "seconds": 6.41,
+        "errors": [
+          "ERROR: FORMATION_CARD: authored Zeus icon used, not idle sprite",
+          "ERROR: 2 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 12
+      },
+      {
+        "test": "formation_rarity_frames_smoke",
+        "exit": 0,
+        "seconds": 5.66,
+        "errors": [
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 12
+      },
+      {
+        "test": "formation_sort_smoke",
+        "exit": 0,
+        "seconds": 4.35,
+        "errors": [
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 41
+      },
+      {
+        "test": "formation_touch_scroll_smoke",
+        "exit": 0,
+        "seconds": 3.42,
+        "errors": [
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 24
+      },
+      {
+        "test": "gacha_audio_smoke",
+        "exit": 0,
+        "seconds": 7.89,
+        "errors": [
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing.",
+          "ERROR: 1 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.",
+          "ERROR: 4 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1
+      },
+      {
+        "test": "gacha_conversion_smoke",
+        "exit": 1,
+        "seconds": 5.37,
+        "errors": [
+          "ERROR: GACHA_CONVERSION: exact conversion once",
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing.",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 41
+      },
+      {
+        "test": "gacha_door_palette_smoke",
+        "exit": 1,
+        "seconds": 14.34,
+        "errors": [
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing.",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening"
+        ],
+        "warnings": 0
+      },
+      {
+        "test": "gacha_policy_smoke",
+        "exit": 0,
+        "seconds": 1.55,
+        "errors": [
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing."
+        ],
+        "warnings": 0
+      },
+      {
+        "test": "game_audio_smoke",
+        "exit": 0,
+        "seconds": 1.18,
+        "errors": [
+          "ERROR: 2 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1
+      },
+      {
+        "test": "hero_codex_smoke",
+        "exit": 0,
+        "seconds": 4.81,
+        "errors": [],
+        "warnings": 32
+      },
+      {
+        "test": "hero_reveal_presentation_smoke",
+        "exit": 0,
+        "seconds": 11.43,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "izanami_battle_summon_smoke",
+        "exit": 0,
+        "seconds": 1.28,
+        "errors": [
+          "ERROR: 2 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1
+      },
+      {
+        "test": "izanami_cutscene_smoke",
+        "exit": 0,
+        "seconds": 1.46,
+        "errors": [
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing."
+        ],
+        "warnings": 0
+      },
+      {
+        "test": "kraken_hero_target_smoke",
+        "exit": 0,
+        "seconds": 5.55,
+        "errors": [
+          "ERROR: Function blocked during in/out signal. Use set_deferred(\"monitoring\", true/false).",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 82
+      },
+      {
+        "test": "kraken_smoke",
+        "exit": 0,
+        "seconds": 5.74,
+        "errors": [],
+        "warnings": 81
+      },
+      {
+        "test": "lobby_main_modes_smoke",
+        "exit": 0,
+        "seconds": 5.39,
+        "errors": [
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 12
+      },
+      {
+        "test": "lobby_monster_detail_smoke",
+        "exit": 0,
+        "seconds": 6.69,
+        "errors": [],
+        "warnings": 66
+      },
+      {
+        "test": "lobby_profile_smoke",
+        "exit": 0,
+        "seconds": 5.56,
+        "errors": [
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 12
+      },
+      {
+        "test": "lobby_settings_smoke",
+        "exit": 0,
+        "seconds": 7.9,
+        "errors": [
+          "ERROR: 4 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 25
+      },
+      {
+        "test": "local_test_transcendence_unlock_smoke",
+        "exit": 0,
+        "seconds": 2.3,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "manticore_audio_smoke",
+        "exit": 0,
+        "seconds": 1.21,
+        "errors": [
+          "ERROR: 11 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1
+      },
+      {
+        "test": "manticore_battle_summon_smoke",
+        "exit": 0,
+        "seconds": 1.39,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "manticore_cutscene_smoke",
+        "exit": 0,
+        "seconds": 3.41,
+        "errors": [
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing."
+        ],
+        "warnings": 0
+      },
+      {
+        "test": "medusa_smoke",
+        "exit": 0,
+        "seconds": 4.16,
+        "errors": [],
+        "warnings": 82
+      },
+      {
+        "test": "mobile_scroll_inertia_smoke",
+        "exit": 0,
+        "seconds": 1.08,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "mode_unlock_smoke",
+        "exit": "timeout",
+        "seconds": 60,
+        "errors": []
+      },
+      {
+        "test": "monster_attack_type_smoke",
+        "exit": 0,
+        "seconds": 1.46,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "monster_first_unlock_smoke",
+        "exit": 1,
+        "seconds": 1.36,
+        "errors": [
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold zeus",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold bulgasal",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold izanami",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold manticore",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost"
+        ],
+        "warnings": 0
+      },
+      {
+        "test": "monster_upgrade_balance_smoke",
+        "exit": 1,
+        "seconds": 3.23,
+        "errors": [
+          "ERROR: UPGRADE_TEST: transcendent cost/enabled",
+          "ERROR: UPGRADE_TEST: common cost dullahan",
+          "ERROR: UPGRADE_TEST: common cost kraken",
+          "ERROR: UPGRADE_TEST: common cost succubus",
+          "ERROR: UPGRADE_TEST: common cost zeus",
+          "ERROR: UPGRADE_TEST: common cost bulgasal",
+          "ERROR: UPGRADE_TEST: common cost izanami",
+          "ERROR: UPGRADE_TEST: common cost manticore",
+          "ERROR: UPGRADE_TEST: common cost shuten_doji",
+          "ERROR: UPGRADE_TEST: max label shown",
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing."
+        ],
+        "warnings": 34
+      },
+      {
+        "test": "monster_upgrade_feedback_smoke",
+        "exit": 0,
+        "seconds": 4.63,
+        "errors": [
+          "ERROR: 2 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 41
+      },
+      {
+        "test": "movement_presentation_bounds_smoke",
+        "exit": 0,
+        "seconds": 4.34,
+        "errors": [],
+        "warnings": 125
+      },
+      {
+        "test": "mummy_smoke",
+        "exit": 0,
+        "seconds": 4.26,
+        "errors": [],
+        "warnings": 82
+      },
+      {
+        "test": "pickup_probability_smoke",
+        "exit": "timeout",
+        "seconds": 60,
+        "errors": []
+      },
+      {
+        "test": "pixel_panel_skin_smoke",
+        "exit": "timeout",
+        "seconds": 60,
+        "errors": []
+      },
+      {
+        "test": "player_prologue_keyboard_smoke",
+        "exit": 0,
+        "seconds": 1.56,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "player_prologue_smoke",
+        "exit": 1,
+        "seconds": 5.48,
+        "errors": [
+          "ERROR: PROLOGUE_TEST: withdrawal presentation only, no deletion handler",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 12
+      },
+      {
+        "test": "powwow_mummy_smoke",
+        "exit": "timeout",
+        "seconds": 60,
+        "errors": []
+      },
+      {
+        "test": "practice_battle_smoke",
+        "exit": 0,
+        "seconds": 3.14,
+        "errors": [
+          "ERROR: 2 RID allocations of type 'P12GodotShape2D' were leaked at exit.",
+          "ERROR: 7 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 89
+      },
+      {
+        "test": "practice_presentation_smoke",
+        "exit": "timeout",
+        "seconds": 60,
+        "errors": []
+      },
+      {
+        "test": "progression_coupon_smoke",
+        "exit": 0,
+        "seconds": 5.56,
+        "errors": [
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 12
+      },
+      {
+        "test": "sage_phase_escape_smoke",
+        "exit": 0,
+        "seconds": 2.11,
+        "errors": [
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 61
+      },
+      {
+        "test": "scorpion_smoke",
+        "exit": 0,
+        "seconds": 4.17,
+        "errors": [],
+        "warnings": 81
+      },
+      {
+        "test": "shop_popup_tables_smoke",
+        "exit": 0,
+        "seconds": 3.89,
+        "errors": [],
+        "warnings": 45
+      },
+      {
+        "test": "shuten_doji_audio_smoke",
+        "exit": 0,
+        "seconds": 1.18,
+        "errors": [
+          "ERROR: 9 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1
+      },
+      {
+        "test": "shuten_doji_battle_summon_smoke",
+        "exit": 0,
+        "seconds": 1.28,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "shuten_doji_cutscene_smoke",
+        "exit": 0,
+        "seconds": 3.03,
+        "errors": [
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing.",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1
+      },
+      {
+        "test": "special_exhausted_elite_smoke",
+        "exit": 0,
+        "seconds": 6.39,
+        "errors": [
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 44
+      },
+      {
+        "test": "stamina_info_layout_smoke",
+        "exit": 0,
+        "seconds": 1.55,
+        "errors": [],
+        "warnings": 1
+      },
+      {
+        "test": "stamina_smoke",
+        "exit": 1,
+        "seconds": 9.31,
+        "errors": [
+          "ERROR: STAMINA_TEST: actual insufficient lobby request stays put",
+          "ERROR: STAMINA_TEST: deduction feedback appears before loading",
+          "ERROR: STAMINA_TEST: actual double-tap entry charges once",
+          "ERROR: STAMINA_TEST: actual localtest bypasses formation and debit",
+          "ERROR: 1 RID allocations of type 'P12GodotShape2D' were leaked at exit.",
+          "ERROR: 1 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.",
+          "ERROR: 5 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 56
+      },
+      {
+        "test": "succubus_infiltration_smoke",
+        "exit": 0,
+        "seconds": 4.25,
+        "errors": [
+          "ERROR: 5 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 103
+      },
+      {
+        "test": "succubus_smoke",
+        "exit": 0,
+        "seconds": 4.15,
+        "errors": [],
+        "warnings": 81
+      },
+      {
+        "test": "summoner_audio_smoke",
+        "exit": 0,
+        "seconds": 1.92,
+        "errors": [
+          "ERROR: 2 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 33
+      },
+      {
+        "test": "support_shield_visual_smoke",
+        "exit": "timeout",
+        "seconds": 60,
+        "errors": []
+      },
+      {
+        "test": "team_rarity_border_smoke",
+        "exit": 0,
+        "seconds": 3.43,
+        "errors": [
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 46
+      },
+      {
+        "test": "test_forced_gacha_smoke",
+        "exit": "timeout",
+        "seconds": 60,
+        "errors": []
+      },
+      {
+        "test": "transcendence_layout_smoke",
+        "exit": 0,
+        "seconds": 4.54,
+        "errors": [
+          "ERROR: 2 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 25
+      },
+      {
+        "test": "transcendence_ready_light_smoke",
+        "exit": 0,
+        "seconds": 6.77,
+        "errors": [],
+        "warnings": 44
+      },
+      {
+        "test": "transcendence_smoke",
+        "exit": 0,
+        "seconds": 5.37,
+        "errors": [
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 12
+      },
+      {
+        "test": "transcendent_death_cinematic_smoke",
+        "exit": 0,
+        "seconds": 6.11,
+        "errors": [],
+        "warnings": 81
+      },
+      {
+        "test": "transcendent_detail_smoke",
+        "exit": 0,
+        "seconds": 2.02,
+        "errors": [],
+        "warnings": 7
+      },
+      {
+        "test": "transcendent_plus_banner_smoke",
+        "exit": 0,
+        "seconds": 1.17,
+        "errors": [],
+        "warnings": 1
+      },
+      {
+        "test": "transcendent_upgrade_smoke",
+        "exit": 1,
+        "seconds": 8.93,
+        "errors": [
+          "ERROR: TRANSCEND_UPGRADE: transcend action enabled",
+          "ERROR: TRANSCEND_UPGRADE: max cap disabled in UI",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 30
+      },
+      {
+        "test": "tutorial_focus_smoke",
+        "exit": 0,
+        "seconds": 3.33,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "tutorial_preview_smoke",
+        "exit": 0,
+        "seconds": 17.41,
+        "errors": [],
+        "warnings": 63
+      },
+      {
+        "test": "tutorial_smoke",
+        "exit": 0,
+        "seconds": 22.91,
+        "errors": [
+          "ERROR: 1 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 71
+      },
+      {
+        "test": "windows_oauth_smoke",
+        "exit": 0,
+        "seconds": 1.19,
+        "errors": [],
+        "warnings": 0
+      },
+      {
+        "test": "zeus_audio_smoke",
+        "exit": 0,
+        "seconds": 1.08,
+        "errors": [
+          "ERROR: 3 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1
+      },
+      {
+        "test": "zeus_combat_smoke",
+        "exit": 0,
+        "seconds": 4.34,
+        "errors": [],
+        "warnings": 87
+      },
+      {
+        "test": "zeus_cutscene_smoke",
+        "exit": 0,
+        "seconds": 6.49,
+        "errors": [
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing."
+        ],
+        "warnings": 2
+      },
+      {
+        "test": "zeus_lightning_smoke",
+        "exit": 0,
+        "seconds": 1.27,
+        "errors": [],
+        "warnings": 6
+      },
+      {
+        "test": "zeus_rig_smoke",
+        "exit": 0,
+        "seconds": 1.09,
+        "errors": [],
+        "warnings": 1
+      }
+    ]
+  },
+  "baseline_comparison": {
+    "timeout_seconds": 20,
+    "isolated_user_data": true,
+    "classification": [
+      {
+        "test": "monster_buff_scale_smoke",
+        "broad_exit": "timeout",
+        "isolated_before": "timeout",
+        "isolated_after": "timeout",
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "SCRIPT ERROR: Invalid call. Nonexistent function 'set_physics_process' in base 'Nil'."
+        ]
+      },
+      {
+        "test": "loading_pipeline_smoke",
+        "broad_exit": 1,
+        "isolated_before": 1,
+        "isolated_after": 1,
+        "classification": "reproduced_on_baseline",
+        "primary_errors": []
+      },
+      {
+        "test": "battle_summon_cinematic_smoke",
+        "broad_exit": 1,
+        "isolated_before": 1,
+        "isolated_after": 1,
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "ERROR: view cached across summons",
+          "ERROR: radial effect reused across summons"
+        ]
+      },
+      {
+        "test": "battle_result_readability_smoke",
+        "broad_exit": 1,
+        "isolated_before": 1,
+        "isolated_after": 1,
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "ERROR: Tween (bound to /root/Main/HeroBGMManager): started with no Tweeners.",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: Tween (bound to /root/Main/HeroBGMManager): started with no Tweeners."
+        ]
+      },
+      {
+        "test": "bulgasal_presentation_smoke",
+        "broad_exit": 1,
+        "isolated_before": 1,
+        "isolated_after": 1,
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "ERROR: BULGASAL_PRESENTATION: one cached view per transcendent"
+        ]
+      },
+      {
+        "test": "collection_filter_shop_funds_smoke",
+        "broad_exit": 1,
+        "isolated_before": 1,
+        "isolated_after": 1,
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "ERROR: FILTER_FUNDS_TEST: all monsters shown",
+          "ERROR: FILTER_FUNDS_TEST: locked filter count",
+          "ERROR: FILTER_FUNDS_TEST: skills not filtered",
+          "ERROR: FILTER_FUNDS_TEST: all filter recovers list"
+        ]
+      },
+      {
+        "test": "formation_card_presentation_smoke",
+        "broad_exit": 1,
+        "isolated_before": 1,
+        "isolated_after": 1,
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "ERROR: FORMATION_CARD: authored Zeus icon used, not idle sprite"
+        ]
+      },
+      {
+        "test": "gacha_conversion_smoke",
+        "broad_exit": 1,
+        "isolated_before": 0,
+        "isolated_after": 0,
+        "classification": "initial_failure_not_reproduced_in_isolation",
+        "primary_errors": []
+      },
+      {
+        "test": "gacha_door_palette_smoke",
+        "broad_exit": 1,
+        "isolated_before": 1,
+        "isolated_after": 1,
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening"
+        ]
+      },
+      {
+        "test": "mode_unlock_smoke",
+        "broad_exit": "timeout",
+        "isolated_before": "timeout",
+        "isolated_after": "timeout",
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "ERROR: MODE_UNLOCK_TEST: unlock feedback never changes rewards",
+          "SCRIPT ERROR: Invalid access to property or key 'bg_color' on a base object of type 'StyleBoxTexture'."
+        ]
+      },
+      {
+        "test": "monster_first_unlock_smoke",
+        "broad_exit": 1,
+        "isolated_before": 1,
+        "isolated_after": 1,
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold zeus"
+        ]
+      },
+      {
+        "test": "monster_upgrade_balance_smoke",
+        "broad_exit": 1,
+        "isolated_before": 1,
+        "isolated_after": 1,
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "ERROR: UPGRADE_TEST: transcendent cost/enabled",
+          "ERROR: UPGRADE_TEST: common cost dullahan",
+          "ERROR: UPGRADE_TEST: common cost kraken",
+          "ERROR: UPGRADE_TEST: common cost succubus",
+          "ERROR: UPGRADE_TEST: common cost zeus"
+        ]
+      },
+      {
+        "test": "pickup_probability_smoke",
+        "broad_exit": "timeout",
+        "isolated_before": "timeout",
+        "isolated_after": "timeout",
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "SCRIPT ERROR: Assertion failed."
+        ]
+      },
+      {
+        "test": "pixel_panel_skin_smoke",
+        "broad_exit": "timeout",
+        "isolated_before": "timeout",
+        "isolated_after": "timeout",
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "ERROR: PIXEL_PANEL: pixel nine-patch style",
+          "SCRIPT ERROR: Invalid access to property or key 'texture' on a base object of type 'Nil'."
+        ]
+      },
+      {
+        "test": "player_prologue_smoke",
+        "broad_exit": 1,
+        "isolated_before": 1,
+        "isolated_after": 1,
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "ERROR: PROLOGUE_TEST: withdrawal presentation only, no deletion handler"
+        ]
+      },
+      {
+        "test": "powwow_mummy_smoke",
+        "broad_exit": "timeout",
+        "isolated_before": "timeout",
+        "isolated_after": "timeout",
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "SCRIPT ERROR: Invalid call. Nonexistent function 'set_physics_process' in base 'Nil'.",
+          "SCRIPT ERROR: Invalid call. Nonexistent function 'set_meta' in base 'Nil'."
+        ]
+      },
+      {
+        "test": "practice_presentation_smoke",
+        "broad_exit": "timeout",
+        "isolated_before": "timeout",
+        "isolated_after": "timeout",
+        "classification": "reproduced_on_baseline",
+        "primary_errors": []
+      },
+      {
+        "test": "stamina_smoke",
+        "broad_exit": 1,
+        "isolated_before": 1,
+        "isolated_after": 1,
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "ERROR: STAMINA_TEST: actual insufficient lobby request stays put",
+          "ERROR: STAMINA_TEST: deduction feedback appears before loading",
+          "ERROR: STAMINA_TEST: actual double-tap entry charges once",
+          "ERROR: STAMINA_TEST: actual localtest bypasses formation and debit",
+          "ERROR: 1 RID allocations of type 'P12GodotShape2D' were leaked at exit."
+        ]
+      },
+      {
+        "test": "support_shield_visual_smoke",
+        "broad_exit": "timeout",
+        "isolated_before": "timeout",
+        "isolated_after": "timeout",
+        "classification": "reproduced_on_baseline",
+        "primary_errors": []
+      },
+      {
+        "test": "test_forced_gacha_smoke",
+        "broad_exit": "timeout",
+        "isolated_before": "timeout",
+        "isolated_after": "timeout",
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "SCRIPT ERROR: Assertion failed."
+        ]
+      },
+      {
+        "test": "transcendent_upgrade_smoke",
+        "broad_exit": 1,
+        "isolated_before": 1,
+        "isolated_after": 1,
+        "classification": "reproduced_on_baseline",
+        "primary_errors": [
+          "ERROR: TRANSCEND_UPGRADE: transcend action enabled",
+          "ERROR: TRANSCEND_UPGRADE: max cap disabled in UI"
+        ]
+      }
+    ],
+    "rows": [
+      {
+        "test": "battle_result_readability_smoke",
+        "project": "before",
+        "exit": 1,
+        "seconds": 6.116,
+        "errors": [
+          "ERROR: Tween (bound to /root/Main/HeroBGMManager): started with no Tweeners.",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: Tween (bound to /root/Main/HeroBGMManager): started with no Tweeners.",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: RESULT_TEST: continuous uniform button border"
+        ],
+        "warnings": 81,
+        "log": "before-battle_result_readability_smoke.log"
+      },
+      {
+        "test": "battle_result_readability_smoke",
+        "project": "after",
+        "exit": 1,
+        "seconds": 6.493,
+        "errors": [
+          "ERROR: Tween (bound to /root/Main/HeroBGMManager): started with no Tweeners.",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: Tween (bound to /root/Main/HeroBGMManager): started with no Tweeners.",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: RESULT_TEST: continuous uniform button border",
+          "ERROR: 2 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 82,
+        "log": "after-battle_result_readability_smoke.log"
+      },
+      {
+        "test": "battle_summon_cinematic_smoke",
+        "project": "before",
+        "exit": 1,
+        "seconds": 6.672,
+        "errors": [
+          "ERROR: view cached across summons",
+          "ERROR: radial effect reused across summons",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1,
+        "log": "before-battle_summon_cinematic_smoke.log"
+      },
+      {
+        "test": "battle_summon_cinematic_smoke",
+        "project": "after",
+        "exit": 1,
+        "seconds": 6.769,
+        "errors": [
+          "ERROR: view cached across summons",
+          "ERROR: radial effect reused across summons",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1,
+        "log": "after-battle_summon_cinematic_smoke.log"
+      },
+      {
+        "test": "bulgasal_presentation_smoke",
+        "project": "before",
+        "exit": 1,
+        "seconds": 1.738,
+        "errors": [
+          "ERROR: BULGASAL_PRESENTATION: one cached view per transcendent"
+        ],
+        "warnings": 0,
+        "log": "before-bulgasal_presentation_smoke.log"
+      },
+      {
+        "test": "bulgasal_presentation_smoke",
+        "project": "after",
+        "exit": 1,
+        "seconds": 1.738,
+        "errors": [
+          "ERROR: BULGASAL_PRESENTATION: one cached view per transcendent",
+          "ERROR: 2 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 1,
+        "log": "after-bulgasal_presentation_smoke.log"
+      },
+      {
+        "test": "collection_filter_shop_funds_smoke",
+        "project": "before",
+        "exit": 1,
+        "seconds": 3.511,
+        "errors": [
+          "ERROR: FILTER_FUNDS_TEST: all monsters shown",
+          "ERROR: FILTER_FUNDS_TEST: locked filter count",
+          "ERROR: FILTER_FUNDS_TEST: skills not filtered",
+          "ERROR: FILTER_FUNDS_TEST: all filter recovers list",
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing.",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 33,
+        "log": "before-collection_filter_shop_funds_smoke.log"
+      },
+      {
+        "test": "collection_filter_shop_funds_smoke",
+        "project": "after",
+        "exit": 1,
+        "seconds": 3.414,
+        "errors": [
+          "ERROR: FILTER_FUNDS_TEST: all monsters shown",
+          "ERROR: FILTER_FUNDS_TEST: locked filter count",
+          "ERROR: FILTER_FUNDS_TEST: skills not filtered",
+          "ERROR: FILTER_FUNDS_TEST: all filter recovers list",
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing.",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 32,
+        "log": "after-collection_filter_shop_funds_smoke.log"
+      },
+      {
+        "test": "formation_card_presentation_smoke",
+        "project": "before",
+        "exit": 1,
+        "seconds": 6.315,
+        "errors": [
+          "ERROR: FORMATION_CARD: authored Zeus icon used, not idle sprite",
+          "ERROR: 2 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 12,
+        "log": "before-formation_card_presentation_smoke.log"
+      },
+      {
+        "test": "formation_card_presentation_smoke",
+        "project": "after",
+        "exit": 1,
+        "seconds": 6.61,
+        "errors": [
+          "ERROR: FORMATION_CARD: authored Zeus icon used, not idle sprite",
+          "ERROR: 2 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 12,
+        "log": "after-formation_card_presentation_smoke.log"
+      },
+      {
+        "test": "gacha_conversion_smoke",
+        "project": "before",
+        "exit": 0,
+        "seconds": 5.287,
+        "errors": [
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing.",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 41,
+        "log": "before-gacha_conversion_smoke.log"
+      },
+      {
+        "test": "gacha_conversion_smoke",
+        "project": "after",
+        "exit": 0,
+        "seconds": 5.382,
+        "errors": [
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing."
+        ],
+        "warnings": 39,
+        "log": "after-gacha_conversion_smoke.log"
+      },
+      {
+        "test": "gacha_door_palette_smoke",
+        "project": "before",
+        "exit": 1,
+        "seconds": 14.416,
+        "errors": [
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing.",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening"
+        ],
+        "warnings": 1,
+        "log": "before-gacha_door_palette_smoke.log"
+      },
+      {
+        "test": "gacha_door_palette_smoke",
+        "project": "after",
+        "exit": 1,
+        "seconds": 14.324,
+        "errors": [
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing.",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening",
+          "ERROR: GACHA_DOOR_PALETTE: empty rarity cannot select opening"
+        ],
+        "warnings": 0,
+        "log": "after-gacha_door_palette_smoke.log"
+      },
+      {
+        "test": "loading_pipeline_smoke",
+        "project": "before",
+        "exit": 1,
+        "seconds": 8.342,
+        "errors": [],
+        "warnings": 0,
+        "log": "before-loading_pipeline_smoke.log"
+      },
+      {
+        "test": "loading_pipeline_smoke",
+        "project": "after",
+        "exit": 1,
+        "seconds": 8.441,
+        "errors": [],
+        "warnings": 0,
+        "log": "after-loading_pipeline_smoke.log"
+      },
+      {
+        "test": "mode_unlock_smoke",
+        "project": "before",
+        "exit": "timeout",
+        "seconds": 20.034,
+        "errors": [
+          "ERROR: MODE_UNLOCK_TEST: unlock feedback never changes rewards",
+          "SCRIPT ERROR: Invalid access to property or key 'bg_color' on a base object of type 'StyleBoxTexture'."
+        ],
+        "warnings": 11,
+        "log": "before-mode_unlock_smoke.log"
+      },
+      {
+        "test": "mode_unlock_smoke",
+        "project": "after",
+        "exit": "timeout",
+        "seconds": 20.033,
+        "errors": [
+          "ERROR: MODE_UNLOCK_TEST: unlock feedback never changes rewards",
+          "SCRIPT ERROR: Invalid access to property or key 'bg_color' on a base object of type 'StyleBoxTexture'."
+        ],
+        "warnings": 11,
+        "log": "after-mode_unlock_smoke.log"
+      },
+      {
+        "test": "monster_buff_scale_smoke",
+        "project": "before",
+        "exit": "timeout",
+        "seconds": 20.026,
+        "errors": [
+          "SCRIPT ERROR: Invalid call. Nonexistent function 'set_physics_process' in base 'Nil'."
+        ],
+        "warnings": 81,
+        "log": "before-monster_buff_scale_smoke.log"
+      },
+      {
+        "test": "monster_buff_scale_smoke",
+        "project": "after",
+        "exit": "timeout",
+        "seconds": 20.026,
+        "errors": [
+          "SCRIPT ERROR: Invalid call. Nonexistent function 'set_physics_process' in base 'Nil'."
+        ],
+        "warnings": 81,
+        "log": "after-monster_buff_scale_smoke.log"
+      },
+      {
+        "test": "monster_first_unlock_smoke",
+        "project": "before",
+        "exit": 1,
+        "seconds": 1.272,
+        "errors": [
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold zeus",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold bulgasal",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold izanami",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold manticore",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold shuten_doji",
+          "ERROR: FIRST_UNLOCK_TEST: shared rarity threshold transcendent",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold zeus",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold bulgasal",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold izanami",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold manticore",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold shuten_doji",
+          "ERROR: FIRST_UNLOCK_TEST: shared rarity threshold transcendent"
+        ],
+        "warnings": 0,
+        "log": "before-monster_first_unlock_smoke.log"
+      },
+      {
+        "test": "monster_first_unlock_smoke",
+        "project": "after",
+        "exit": 1,
+        "seconds": 1.267,
+        "errors": [
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold zeus",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold bulgasal",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold izanami",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold manticore",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold shuten_doji",
+          "ERROR: FIRST_UNLOCK_TEST: shared rarity threshold transcendent",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold zeus",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold bulgasal",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold izanami",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold manticore",
+          "ERROR: FIRST_UNLOCK_TEST: current common monster unlock cost",
+          "ERROR: FIRST_UNLOCK_TEST: locked below threshold shuten_doji",
+          "ERROR: FIRST_UNLOCK_TEST: shared rarity threshold transcendent"
+        ],
+        "warnings": 0,
+        "log": "after-monster_first_unlock_smoke.log"
+      },
+      {
+        "test": "monster_upgrade_balance_smoke",
+        "project": "before",
+        "exit": 1,
+        "seconds": 3.321,
+        "errors": [
+          "ERROR: UPGRADE_TEST: transcendent cost/enabled",
+          "ERROR: UPGRADE_TEST: common cost dullahan",
+          "ERROR: UPGRADE_TEST: common cost kraken",
+          "ERROR: UPGRADE_TEST: common cost succubus",
+          "ERROR: UPGRADE_TEST: common cost zeus",
+          "ERROR: UPGRADE_TEST: common cost bulgasal",
+          "ERROR: UPGRADE_TEST: common cost izanami",
+          "ERROR: UPGRADE_TEST: common cost manticore",
+          "ERROR: UPGRADE_TEST: common cost shuten_doji",
+          "ERROR: UPGRADE_TEST: max label shown",
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing."
+        ],
+        "warnings": 33,
+        "log": "before-monster_upgrade_balance_smoke.log"
+      },
+      {
+        "test": "monster_upgrade_balance_smoke",
+        "project": "after",
+        "exit": 1,
+        "seconds": 3.514,
+        "errors": [
+          "ERROR: UPGRADE_TEST: transcendent cost/enabled",
+          "ERROR: UPGRADE_TEST: common cost dullahan",
+          "ERROR: UPGRADE_TEST: common cost kraken",
+          "ERROR: UPGRADE_TEST: common cost succubus",
+          "ERROR: UPGRADE_TEST: common cost zeus",
+          "ERROR: UPGRADE_TEST: common cost bulgasal",
+          "ERROR: UPGRADE_TEST: common cost izanami",
+          "ERROR: UPGRADE_TEST: common cost manticore",
+          "ERROR: UPGRADE_TEST: common cost shuten_doji",
+          "ERROR: UPGRADE_TEST: max label shown",
+          "ERROR: Condition \"!actions.custom_samplers.has(function->arguments[j].tex_builtin)\" is true. Continuing.",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 35,
+        "log": "after-monster_upgrade_balance_smoke.log"
+      },
+      {
+        "test": "pickup_probability_smoke",
+        "project": "before",
+        "exit": "timeout",
+        "seconds": 20.026,
+        "errors": [
+          "SCRIPT ERROR: Assertion failed."
+        ],
+        "warnings": 0,
+        "log": "before-pickup_probability_smoke.log"
+      },
+      {
+        "test": "pickup_probability_smoke",
+        "project": "after",
+        "exit": "timeout",
+        "seconds": 20.011,
+        "errors": [
+          "SCRIPT ERROR: Assertion failed."
+        ],
+        "warnings": 0,
+        "log": "after-pickup_probability_smoke.log"
+      },
+      {
+        "test": "pixel_panel_skin_smoke",
+        "project": "before",
+        "exit": "timeout",
+        "seconds": 20.01,
+        "errors": [
+          "ERROR: PIXEL_PANEL: pixel nine-patch style",
+          "SCRIPT ERROR: Invalid access to property or key 'texture' on a base object of type 'Nil'."
+        ],
+        "warnings": 0,
+        "log": "before-pixel_panel_skin_smoke.log"
+      },
+      {
+        "test": "pixel_panel_skin_smoke",
+        "project": "after",
+        "exit": "timeout",
+        "seconds": 20.025,
+        "errors": [
+          "ERROR: PIXEL_PANEL: pixel nine-patch style",
+          "SCRIPT ERROR: Invalid access to property or key 'texture' on a base object of type 'Nil'."
+        ],
+        "warnings": 0,
+        "log": "after-pixel_panel_skin_smoke.log"
+      },
+      {
+        "test": "player_prologue_smoke",
+        "project": "before",
+        "exit": 1,
+        "seconds": 5.47,
+        "errors": [
+          "ERROR: PROLOGUE_TEST: withdrawal presentation only, no deletion handler"
+        ],
+        "warnings": 11,
+        "log": "before-player_prologue_smoke.log"
+      },
+      {
+        "test": "player_prologue_smoke",
+        "project": "after",
+        "exit": 1,
+        "seconds": 5.467,
+        "errors": [
+          "ERROR: PROLOGUE_TEST: withdrawal presentation only, no deletion handler"
+        ],
+        "warnings": 11,
+        "log": "after-player_prologue_smoke.log"
+      },
+      {
+        "test": "powwow_mummy_smoke",
+        "project": "before",
+        "exit": "timeout",
+        "seconds": 20.043,
+        "errors": [
+          "SCRIPT ERROR: Invalid call. Nonexistent function 'set_physics_process' in base 'Nil'.",
+          "SCRIPT ERROR: Invalid call. Nonexistent function 'set_meta' in base 'Nil'."
+        ],
+        "warnings": 81,
+        "log": "before-powwow_mummy_smoke.log"
+      },
+      {
+        "test": "powwow_mummy_smoke",
+        "project": "after",
+        "exit": "timeout",
+        "seconds": 20.035,
+        "errors": [
+          "SCRIPT ERROR: Invalid call. Nonexistent function 'set_physics_process' in base 'Nil'.",
+          "SCRIPT ERROR: Invalid call. Nonexistent function 'set_meta' in base 'Nil'."
+        ],
+        "warnings": 81,
+        "log": "after-powwow_mummy_smoke.log"
+      },
+      {
+        "test": "practice_presentation_smoke",
+        "project": "before",
+        "exit": "timeout",
+        "seconds": 20.024,
+        "errors": [],
+        "warnings": 0,
+        "log": "before-practice_presentation_smoke.log"
+      },
+      {
+        "test": "practice_presentation_smoke",
+        "project": "after",
+        "exit": "timeout",
+        "seconds": 20.027,
+        "errors": [],
+        "warnings": 0,
+        "log": "after-practice_presentation_smoke.log"
+      },
+      {
+        "test": "stamina_smoke",
+        "project": "before",
+        "exit": 1,
+        "seconds": 8.633,
+        "errors": [
+          "ERROR: STAMINA_TEST: actual insufficient lobby request stays put",
+          "ERROR: STAMINA_TEST: deduction feedback appears before loading",
+          "ERROR: STAMINA_TEST: actual double-tap entry charges once",
+          "ERROR: STAMINA_TEST: actual localtest bypasses formation and debit",
+          "ERROR: 1 RID allocations of type 'P12GodotShape2D' were leaked at exit.",
+          "ERROR: 1 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.",
+          "ERROR: 5 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 56,
+        "log": "before-stamina_smoke.log"
+      },
+      {
+        "test": "stamina_smoke",
+        "project": "after",
+        "exit": 1,
+        "seconds": 8.633,
+        "errors": [
+          "ERROR: STAMINA_TEST: actual insufficient lobby request stays put",
+          "ERROR: STAMINA_TEST: deduction feedback appears before loading",
+          "ERROR: STAMINA_TEST: actual double-tap entry charges once",
+          "ERROR: STAMINA_TEST: actual localtest bypasses formation and debit",
+          "ERROR: 1 RID allocations of type 'P12GodotShape2D' were leaked at exit.",
+          "ERROR: 1 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.",
+          "ERROR: 5 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 56,
+        "log": "after-stamina_smoke.log"
+      },
+      {
+        "test": "support_shield_visual_smoke",
+        "project": "before",
+        "exit": "timeout",
+        "seconds": 20.027,
+        "errors": [],
+        "warnings": 0,
+        "log": "before-support_shield_visual_smoke.log"
+      },
+      {
+        "test": "support_shield_visual_smoke",
+        "project": "after",
+        "exit": "timeout",
+        "seconds": 20.027,
+        "errors": [],
+        "warnings": 0,
+        "log": "after-support_shield_visual_smoke.log"
+      },
+      {
+        "test": "test_forced_gacha_smoke",
+        "project": "before",
+        "exit": "timeout",
+        "seconds": 20.027,
+        "errors": [
+          "SCRIPT ERROR: Assertion failed."
+        ],
+        "warnings": 0,
+        "log": "before-test_forced_gacha_smoke.log"
+      },
+      {
+        "test": "test_forced_gacha_smoke",
+        "project": "after",
+        "exit": "timeout",
+        "seconds": 20.027,
+        "errors": [
+          "SCRIPT ERROR: Assertion failed."
+        ],
+        "warnings": 0,
+        "log": "after-test_forced_gacha_smoke.log"
+      },
+      {
+        "test": "transcendent_upgrade_smoke",
+        "project": "before",
+        "exit": 1,
+        "seconds": 8.271,
+        "errors": [
+          "ERROR: TRANSCEND_UPGRADE: transcend action enabled",
+          "ERROR: TRANSCEND_UPGRADE: max cap disabled in UI"
+        ],
+        "warnings": 29,
+        "log": "before-transcendent_upgrade_smoke.log"
+      },
+      {
+        "test": "transcendent_upgrade_smoke",
+        "project": "after",
+        "exit": 1,
+        "seconds": 8.468,
+        "errors": [
+          "ERROR: TRANSCEND_UPGRADE: transcend action enabled",
+          "ERROR: TRANSCEND_UPGRADE: max cap disabled in UI",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "warnings": 30,
+        "log": "after-transcendent_upgrade_smoke.log"
+      }
+    ]
+  },
+  "final_targeted": {
+    "user_data": "isolated per invocation via XDG_DATA_HOME",
+    "rows": [
+      {
+        "test": "optimization_20261010_smoke",
+        "project": "after",
+        "exit": 0,
+        "seconds": 2.483,
+        "errors": [],
+        "warnings": 0,
+        "log": "after-optimization_20261010_smoke.log"
+      },
+      {
+        "test": "optimization_network_smoke",
+        "project": "after",
+        "exit": 0,
+        "seconds": 1.078,
+        "errors": [],
+        "warnings": 0,
+        "log": "after-optimization_network_smoke.log"
+      },
+      {
+        "test": "cloud_save_smoke",
+        "project": "after",
+        "exit": 0,
+        "seconds": 1.077,
+        "errors": [],
+        "warnings": 0,
+        "log": "after-cloud_save_smoke.log"
+      }
+    ]
+  },
+  "limitations": [
+    "broad suite reused common user-data; failures rechecked with isolated per-invocation XDG directories",
+    "headless CPU only; no GPU, Android, real OAuth/server, export or long-term RSS validation",
+    "exit0 with resource/shader diagnostics is not a warning-free pass"
+  ]
+}

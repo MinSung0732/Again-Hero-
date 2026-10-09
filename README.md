@@ -28,6 +28,7 @@
 - [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) — 새 채팅/새 개발 세션에서 가장 먼저 읽을 프로젝트 컨텍스트
 - [docs/GDD.md](docs/GDD.md) — 핵심 게임 디자인
 - [docs/ROADMAP.md](docs/ROADMAP.md) — 구현 순서와 프로토타입 범위
+- [최적화 감사 보고서](docs/OPTIMIZATION_AUDIT_20261010.md) — 성능/메모리/보안 분석, 전체 Before/After 코드, 검증 및 롤백
 
 ## 현재 상태
 

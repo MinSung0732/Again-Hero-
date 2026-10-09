@@ -1,0 +1,144 @@
+{
+  "baseline_revision": "1d5ad4cedbadc72ea52c2c342946d75dcee96fe7",
+  "after_code_revision": "ca279f54b8dbe8bfee7984fd807c495c2e9aca5d",
+  "scope": "complete contents of 13 changed production GDScript files; new files have no before version",
+  "files": [
+    {
+      "path": "src/ai/hero_build_ai.gd",
+      "before": {
+        "sha256": "5facbf3ca01c9a1aacc921f676015a3f71369f21b8ba55b85be8f94feefc747b",
+        "bytes": 14173
+      },
+      "after": {
+        "sha256": "e898a7dc2f615617aa7a37d07cd8892331d52ae8adb483faccf18060e74b26ee",
+        "bytes": 14270
+      }
+    },
+    {
+      "path": "src/battle/battle.gd",
+      "before": {
+        "sha256": "e793884f2ae40bad4f5adfc0faa24f90f633c0be7ba48585c8cd0d1875fda5ef",
+        "bytes": 175952
+      },
+      "after": {
+        "sha256": "87911b5f0a099dec0dec6a49724380a3a0c0a66ac136fc3a0333cd676d34300b",
+        "bytes": 176459
+      }
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "before": {
+        "sha256": "311fe0707c6c0e3abd3a7aa5f0f14a1f357cf53d6966fd467b99a9547ae23282",
+        "bytes": 613576
+      },
+      "after": {
+        "sha256": "63b2854b736c0f748b0d24578296c45b10e5b759a6a75bb67f55d9a131be2029",
+        "bytes": 613346
+      }
+    },
+    {
+      "path": "src/network/cloud_store.gd",
+      "before": {
+        "sha256": "e3a65b7c94539755647de42768d472567bc2ce7a99694c02d20c08e88a510654",
+        "bytes": 5549
+      },
+      "after": {
+        "sha256": "661c54e9d623d86b9c719f2bbc12278861cc8dbd4793155527918023231d6235",
+        "bytes": 7117
+      }
+    },
+    {
+      "path": "src/network/supabase_client.gd",
+      "before": {
+        "sha256": "3f5e53eded1ca9939259c5564c3c35af06e56f0f7c05a507e70f07a1a4dd40dc",
+        "bytes": 2319
+      },
+      "after": {
+        "sha256": "6c4ac0679e49393b2d0e136e125aaf81eaa174cd6aa83c0f9d7c7fccd65a302a",
+        "bytes": 2950
+      }
+    },
+    {
+      "path": "src/systems/monster_local_grid.gd",
+      "before": {
+        "sha256": "3899615404b9b627ca86854a700a12e458b4eb0cef137c75e4b95c88f4e33355",
+        "bytes": 4530
+      },
+      "after": {
+        "sha256": "e2fe15860f421cf92730085916e4b21d0d3aff25bd20263a2fc4bc221e166c07",
+        "bytes": 4855
+      }
+    },
+    {
+      "path": "src/systems/presentation_warmup.gd",
+      "before": {
+        "sha256": "d443f6745b086d41865e710988daa95aae0011cb210711b13679d8b4a1498d7c",
+        "bytes": 10400
+      },
+      "after": {
+        "sha256": "e7a2e4b51067df9f7b2ff6f8aa4638ba4776a888cc28369e904f26a9316f5861",
+        "bytes": 10639
+      }
+    },
+    {
+      "path": "src/systems/run_metrics.gd",
+      "before": {
+        "sha256": "66784cc5e3f1844ef7c6260e59455cbc47354c2216e896245b1ac3e45c1527a3",
+        "bytes": 11562
+      },
+      "after": {
+        "sha256": "abb04d2b95fcb2e69f775f681b1711835fb70d93ecd2f803539987234e4f84c2",
+        "bytes": 11543
+      }
+    },
+    {
+      "path": "src/systems/spatial_bucket_pool.gd",
+      "before": null,
+      "after": {
+        "sha256": "75a1681fffec02aa30f74149428a04c669e1762c7e81a5d133defa2a88454de0",
+        "bytes": 629
+      }
+    },
+    {
+      "path": "src/systems/timed_event_buffer.gd",
+      "before": null,
+      "after": {
+        "sha256": "3228db1bd2f26319ad9c8abdc12a697a4c1345034b803de84302687dc174a0f8",
+        "bytes": 1137
+      }
+    },
+    {
+      "path": "src/systems/wolf_pack_runtime.gd",
+      "before": {
+        "sha256": "ab27b363667ed28dc47498f7fd89b60a7d0931f6cbec7c489cf35ae2115d081e",
+        "bytes": 3477
+      },
+      "after": {
+        "sha256": "9f53be799a0447c6a8ad3960bd515a2d9c8b4ec94a072f884de53eba2e7e6583",
+        "bytes": 3705
+      }
+    },
+    {
+      "path": "src/systems/yuki_onna_runtime.gd",
+      "before": {
+        "sha256": "6b84b99df5cc7f8d5bf96e8299d660571ebe7e1577ffc59c5fe77b529012822d",
+        "bytes": 6882
+      },
+      "after": {
+        "sha256": "26a71ed6c8ea20ccf0707fcb3cafc81124dc000c0b65902b0eed8b10d3471ada",
+        "bytes": 7110
+      }
+    },
+    {
+      "path": "src/ui/damage_number_spawner.gd",
+      "before": {
+        "sha256": "c42be4b5e2f2afad077612c3752a36e6c1f8b1f6b1d8f7949ab040a193567bce",
+        "bytes": 3446
+      },
+      "after": {
+        "sha256": "499431de850c412fface049e6c662f02a86111ab62ed7b654cf1922d3dc09f73",
+        "bytes": 4507
+      }
+    }
+  ]
+}
