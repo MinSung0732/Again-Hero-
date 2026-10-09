@@ -1,3 +1,8 @@
+## Bulgasal unlock and shared summon-ready cue (2026-10-09)
+- Natural unlock requires20 actual player tank summons AND50 allied deaths; generated tanks remain excluded from summon count, all allied death semantics unchanged. Catalog rules and visible description share the new thresholds.
+- All transcendent summon buttons share a12-frame transparent pixel light-band/star atlas (164x176, center82/88,6fps). Initial3simulation seconds bright, then restrained loop until summon. Menu/augment pauses hide/freeze; population/cost blockers dim; local test requires confirmation; consume/end/new locked run clears the cue. Fixed textures/one noninteractive child, no runtime resource loading or particle spawning.
+- Godot4.7.2 core/actual Battle integration and actual Main HUD cue lifecycle tests pass; native PC screenshot checked. Android unverified; existing raw-image export/headless shader/fixture shutdown warnings remain.
+
 ## Representative appearance and newcomer skip (2026-10-09)
 - Settings/account no longer has a duplicate appearance action/picker. Profile/representative owns entitlement selection and equip, refreshes stage/account presentation, and retains independent avatar/banner and canonical identity.
 - Newcomer enrollment occurs at verified tutorial read before proceed/skip and survives existing cloud flush/reward snapshot. Isolated tutorialtest namespace is eligible even after an older skipped preview; overdue unclaimed guarantee recovers once on next draw. No new backend schema or deployment.
@@ -39,7 +44,7 @@
 
 ## Bulgasal playable transcendent (2026-10-09)
 - Bulgasal is enabled in normal/pickup gacha, profile cosmetics and transcendence registration. Shared approved original-art mesh rig is now production UI; corner battle cut-in focuses shoulders/face, reveals silhouette and opens eyes, reusing camera/slow-motion restoration. No reward authority in presentation.
-- Actual player tank summons65 AND allied deaths100; HP1850+death count, further deaths+1maxHP without healing. Gauge60, augmented command regen100% capped15/s. Fixed8 decoration collider pool, rock/burrow/channel leap/one-hit8-ray waves/10-hit retreat; no ordinary/special augments or elite/giant.
+- Actual player tank summons20 AND allied deaths50; HP1850+death count, further deaths+1maxHP without healing. Gauge60, augmented command regen100% capped15/s. Fixed8 decoration collider pool, rock/burrow/channel leap/one-hit8-ray waves/10-hit retreat; no ordinary/special augments or elite/giant.
 - Transcendent rarity remains0.5%, current Zeus pickup weight3. Zeus speed290, attack interval1.3, regen100%/15cap. Bulgasal attack130 + pre-summon tank deaths*0.6; provisional and unspecified pattern timings/geometry live in BehaviorCatalog.
 - Godot4.5.1 isolated real Battle/Hero and catalog/store regression plus native OpenGL presentation passed; whole app/Android/export and sustained dense-combat performance unverified. See docs/BULGASAL_COMBAT.md.
 

@@ -84,16 +84,16 @@ func run() -> void:
 	generated.current_hp=0
 	battle._on_monster_died(generated)
 	check(battle.raw_allied_deaths==1 and battle.transcendence.allies_died==1,"generated ally death counts")
-	battle.raw_allied_deaths=100
-	battle.transcendence.tanks_summoned=65
-	battle.transcendence.allies_died=100
+	battle.raw_allied_deaths=50
+	battle.transcendence.tanks_summoned=20
+	battle.transcendence.allies_died=50
 	battle.transcendence._evaluate()
 	check(battle.try_summon_transcendent(),"real Bulgasal summon")
 	var actor = battle.transcendent_actor
 	actor.set_physics_process(false)
 	actor.pillars.set_physics_process(false)
 	actor.position=battle.hero.position+Vector2(100,0)
-	check(actor.max_hp==1950 and actor.move_speed==270 and actor.attack_cooldown==1.6,"actual actor stats and death snapshot")
+	check(actor.max_hp==1900 and actor.move_speed==270 and actor.attack_cooldown==1.6,"actual actor stats and death snapshot")
 	check(not battle.try_summon_transcendent(),"once per battle")
 	battle.hero.invulnerability_timer=0
 	battle.hero.shield_hp=0

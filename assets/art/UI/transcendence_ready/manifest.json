@@ -1,0 +1,45 @@
+{
+  "cell_size": [
+    164,
+    176
+  ],
+  "sheet_size": [
+    1968,
+    176
+  ],
+  "columns": 12,
+  "frame_order": [
+    "ready_01",
+    "ready_02",
+    "ready_03",
+    "ready_04",
+    "ready_05",
+    "ready_06",
+    "ready_07",
+    "ready_08",
+    "ready_09",
+    "ready_10",
+    "ready_11",
+    "ready_12"
+  ],
+  "anchor": [
+    82,
+    88
+  ],
+  "fps": 6,
+  "loop": true,
+  "button_size": [
+    144,
+    156
+  ],
+  "button_top_left": [
+    10,
+    10
+  ],
+  "alpha_values": [
+    0,
+    255
+  ],
+  "sampling": "nearest",
+  "source": "Original procedural pixel UI light bands and four-point stars; no external art."
+}

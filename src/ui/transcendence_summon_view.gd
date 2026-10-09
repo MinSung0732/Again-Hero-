@@ -8,6 +8,14 @@ var tween: Tween
 var shown_id := ""
 var visible_once := false
 const WIDTH := 144.0
+const READY_SHEET := preload("res://assets/art/UI/transcendence_ready/ready_spritesheet.png")
+const READY_CELL := Vector2(164, 176)
+const READY_FPS := 6.0
+var ready_light: TextureRect
+var ready_frames: Array[AtlasTexture] = []
+var ready_elapsed := 0.0
+var ready_announced := false
+var ready_frame := -1
 
 func install(main: Control) -> void:
 	host = main
@@ -53,6 +61,25 @@ func install(main: Control) -> void:
 	title.add_theme_color_override("font_color",Color("f0cb68"))
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	body.add_child(title)
+	ready_light = TextureRect.new()
+	ready_light.name = "ReadyLight"
+	ready_light.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ready_light.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	ready_light.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	button.add_child(ready_light)
+	ready_light.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	ready_light.offset_left = -10
+	ready_light.offset_top = -10
+	ready_light.offset_right = 10
+	ready_light.offset_bottom = 10
+	for index in range(12):
+		var frame := AtlasTexture.new()
+		frame.atlas = READY_SHEET
+		frame.region = Rect2(Vector2(index * READY_CELL.x, 0), READY_CELL)
+		frame.filter_clip = true
+		ready_frames.append(frame)
+	ready_light.hide()
+	set_process(false)
 	unlock_button = Button.new()
 	unlock_button.name = "TestUnlock"
 	unlock_button.text = "잠금 해제"
@@ -90,6 +117,7 @@ func _stats_changed(_hp: int, _max_hp: int, _monsters: int) -> void:
 	refresh()
 
 func _finished(_message: String, _won: bool) -> void:
+	_stop_ready_light()
 	hide()
 
 func refresh() -> void:
@@ -98,6 +126,7 @@ func refresh() -> void:
 	var state = host.battle.transcendence
 	var local_test := LocalTestMode.active
 	if state.monster_id != shown_id or (not state.ready and not state.used and visible_once and not local_test):
+		_stop_ready_light()
 		shown_id = state.monster_id
 		visible_once = false
 		if tween != null and tween.is_valid():
@@ -105,6 +134,7 @@ func refresh() -> void:
 		button.offset_left = 0
 		button.offset_right = WIDTH
 	if state.monster_id.is_empty() or (not state.ready and not local_test) or state.used or host.battle.battle_over:
+		_stop_ready_light()
 		hide()
 		return
 	show()
@@ -122,3 +152,38 @@ func refresh() -> void:
 		tween.tween_property(button,"offset_left",-WIDTH-12,0.24)
 		tween.tween_property(button,"offset_right",-12.0,0.24)
 	button.disabled = host.battle.is_population_full() or not unlocked or host.battle.external_pause or host.battle.demon_augment_selection_active or host.battle.command_power + 0.001 < host.battle.get_monster_cost(state.monster_id)
+	if not unlocked:
+		_stop_ready_light()
+	else:
+		if not ready_announced:
+			ready_announced = true
+			ready_elapsed = 0.0
+			ready_frame = -1
+		set_process(true)
+		_process(0.0)
+
+func _stop_ready_light() -> void:
+	ready_announced = false
+	ready_elapsed = 0.0
+	ready_frame = -1
+	if is_instance_valid(ready_light):
+		ready_light.hide()
+	set_process(false)
+
+func _process(delta: float) -> void:
+	if not ready_announced or not is_visible_in_tree() or not is_instance_valid(host.battle):
+		return
+	if host.battle.battle_over or host.battle.transcendence.used:
+		_stop_ready_light()
+		return
+	if host.battle.external_pause or host.battle.demon_augment_selection_active:
+		ready_light.hide()
+		return
+	ready_elapsed += delta
+	ready_light.show()
+	var index := int(ready_elapsed * READY_FPS) % ready_frames.size()
+	if index != ready_frame:
+		ready_frame = index
+		ready_light.texture = ready_frames[index]
+	# First three seconds draw attention; later keep a restrained availability cue.
+	ready_light.modulate.a = (1.0 if ready_elapsed < 3.0 else 0.55) * (0.45 if button.disabled else 1.0)
