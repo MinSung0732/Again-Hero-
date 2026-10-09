@@ -1,4 +1,5 @@
 extends Node2D
+const RECEIVED_STATUS := preload("res://src/data/status_effect_catalog.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
@@ -212,6 +213,7 @@ func _fire_at_target(current_target: Node2D) -> void:
 			attack_speed_multiplier *= maxf(float(support.get("attack_speed", 1.0)), 0.1)
 	attack_timer = attack_cooldown / maxf(attack_speed_multiplier, 0.1)
 	var shot_damage := maxi(int(round(float(attack_damage) * (1.0 + (focus_damage_bonus if focus_active else 0.0)))), 1)
+	shot_damage = maxi(int(round(shot_damage*RECEIVED_STATUS.outgoing_multiplier(self))),1)
 	projectile.call(
 		"activate",
 		global_position,
@@ -252,6 +254,7 @@ func _begin_release() -> void:
 
 
 func deactivate(emit_signal: bool = true) -> void:
+	preload("res://src/systems/received_afflictions.gd").reset_on(self)
 	var was_active := active
 	active = false
 	dying = false

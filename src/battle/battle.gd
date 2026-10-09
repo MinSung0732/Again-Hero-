@@ -2712,6 +2712,8 @@ func _on_hero_combat_damage_received(hp_damage: int) -> void:
 	if hp_damage <= 0:
 		return
 	run_metrics.record_hero_damage(hp_damage)
+	if transcendence.record_damage(hp_damage):
+		transcendence_changed.emit(transcendence.monster_id,true,false)
 	_add_demon_ultimate_charge(float(hp_damage) * DEMON_ULTIMATES.HERO_DAMAGE_CHARGE_MULTIPLIER)
 
 func _on_hero_progression_changed(level: int, current_exp: int, exp_to_next_level: int) -> void:
@@ -2838,15 +2840,17 @@ func _on_enemy_status_applied(_status: String) -> void:
 		transcendence_changed.emit(transcendence.monster_id,true,false)
 
 func get_transcendent_aura_modifier(actor: Node2D, kind: String) -> float:
+	var burn := preload("res://src/data/status_effect_catalog.gd").outgoing_multiplier(actor) if kind == "outgoing" else 1.0
 	if is_instance_valid(transcendent_actor) and transcendent_actor.has_method("aura_modifier"):
-		return float(transcendent_actor.aura_modifier(actor,kind))
-	return 1.0
+		return burn * float(transcendent_actor.aura_modifier(actor,kind))
+	return burn
 
 func _transcendence_growth_count(id: String) -> int:
 	return _transcendence_metric_count(String(MONSTER_CATALOG.MONSTERS.get(id, {}).get("growth_metric", "summons")))
 
 func _transcendence_metric_count(metric: String) -> int:
 	match metric:
+		"damage_dealt": return int(run_metrics.total_damage_dealt)
 		"statuses_applied": return raw_statuses_applied
 		"allies_died": return raw_allied_deaths
 		"tanks_died": return raw_tank_deaths
@@ -5720,3 +5724,11 @@ func _get_augment_free_research_multiplier(research_id: String, per_point: float
 	return 1.0 + per_point * RESEARCH_CATALOG.get_effective_level_points(
 		research_id, int(permanent_research_levels.get(research_id, 0))
 	)
+
+# Reusable output; only active enemy summons, never inactive preallocated pools.
+func fill_active_enemy_summons(result: Array) -> void:
+	result.clear()
+	for id in active_hero_summons:
+		var actor: Node2D = active_hero_summons[id]
+		if is_instance_valid(actor) and not actor.is_queued_for_deletion() and bool(actor.get("active")) and int(actor.get("current_hp")) > 0:
+			result.append(actor)

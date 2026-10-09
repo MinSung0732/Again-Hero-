@@ -10,7 +10,7 @@
 
 `src/dev/manticore_cutscene_preview.tscn`을 F6 실행하면 컷신만/1회/10+1회(만티코어 3개) 미리보기를 선택할 수 있다. 합성 결과이며 보상·재화·저장 API를 호출하지 않는다.
 
-현재 `MonsterCatalog`/뽑기 풀에는 만티코어가 아직 없다. 결과에 `monster_id: manticore`, `rarity: transcendent`가 들어오면 공통 연출로 자동 연결되지만, 이번 작업은 실제 획득 확률이나 전투 수치를 임의로 등록하지 않는다.
+`MonsterCatalog`/실제 뽑기 풀과 전투 소환에 만티코어가 등록되었다. 확률은 기존 초월 등급0.5%를 유지한다. 전투·5초월·배너 연결은 `docs/MANTICORE_COMBAT.md` 참조.
 
 검사: `python tests/run_manticore_cutscene_smoke.py --godot <Godot4 실행파일>`.
 격리 프로젝트는 실제 UI/카탈로그/원본 리그/효과음과 효과 프레임을 실행한다. ShopCatalog가 preload하는 전투 PackedScene만 빈 노드로 대체하며 이 테스트에서 전투 개체를 생성하지 않는다. 저장·로그인 autoload를 실행하지 않는다.

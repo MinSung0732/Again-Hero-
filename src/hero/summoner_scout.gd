@@ -1,4 +1,5 @@
 extends CharacterBody2D
+const RECEIVED_STATUS := preload("res://src/data/status_effect_catalog.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
@@ -144,7 +145,7 @@ func _physics_process(delta: float) -> void:
 			elif owner_hero.has_method("get_summoner_scout_swarm_multipliers"):
 				var swarm: Dictionary = owner_hero.call("get_summoner_scout_swarm_multipliers")
 				move_multiplier *= maxf(float(swarm.get("move_speed", 1.0)), 0.1)
-		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier * float(get_meta("yuki_slow_multiplier",1.0))
+		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier * float(get_meta("yuki_slow_multiplier",1.0))*RECEIVED_STATUS.movement_multiplier(self)
 		move_and_slide()
 		if visual.animation != &"move":
 			visual.play(&"move")
@@ -230,7 +231,7 @@ func _attack_target(current_target: Node2D) -> void:
 		attack_audio.stop()
 		attack_audio.play()
 	if current_target.has_method("take_damage"):
-		current_target.call("take_damage", maxi(int(round(float(attack_damage) * damage_multiplier)), 1))
+		current_target.call("take_damage", maxi(int(round(float(attack_damage) * damage_multiplier * RECEIVED_STATUS.outgoing_multiplier(self))), 1))
 
 
 func take_damage(amount: int, _source: Node = null) -> bool:
@@ -261,6 +262,7 @@ func _begin_release() -> void:
 
 
 func deactivate(emit_signal: bool = true) -> void:
+	preload("res://src/systems/received_afflictions.gd").reset_on(self)
 	var was_active := active
 	active = false
 	dying = false

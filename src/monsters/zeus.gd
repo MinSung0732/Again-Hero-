@@ -11,6 +11,8 @@ var effect_layer: Node2D
 var transcend_level := 0
 var summon_snapshot := 0
 var keeping_distance := false
+var channel_right := 42.0
+var channel_left := 42.0
 var visual_head_y := -35.0
 @onready var crown_layer: Node2D = $CrownLayer
 @onready var status_layer: Node2D = $StatusLayer
@@ -75,6 +77,8 @@ func _apply_normal_visual_profile() -> void:
 	visual.scale = Vector2.ONE*factor
 	visual.position = original_anchor-anchor*factor
 	visual_head_y = visual.position.y+(bounds.position.y-canvas_center.y)*factor
+	channel_right = visual.position.x+(bounds.end.x-canvas_center.x)*factor+8.0
+	channel_left = visual.position.x+(canvas_center.x-bounds.position.x)*factor+8.0
 
 func _ready() -> void:
 	crown_layer.draw.connect(_draw_crown_layer)
@@ -393,6 +397,8 @@ func _draw_crown_layer() -> void:
 	FX.draw_frame(crown_layer,"crown",frame,Vector2(0,visual_head_y))
 
 func _draw_status_layer() -> void:
+	if not dying and charge_remaining > 0.0:
+		preload("res://src/ui/channel_gauge.gd").draw_on(status_layer,Vector2(channel_left if visual.flip_h else channel_right,visual_head_y+20),1.0-charge_remaining/DATA.CHARGE_SECONDS)
 	if dying:
 		return
 	var hp_y := visual_head_y-30.0

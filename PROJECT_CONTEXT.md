@@ -1,7 +1,13 @@
+## Manticore combat and ownership (2026-10-09)
+- Registered transcendent beast/exploder, actual grade pool0.5% unchanged, first unlock icon/banner and tier5 banner through existing collection eligibility. No ordinary/special augments, elite or giant.
+- Combat unlock400 cumulative actual Hero HP damage; pre-summon snapshot per hit35+D×0.075 and HP1550+D×0.5. Diameter650/radius325 basic hunt, explicit680 wave travel. Full3skills/5tiers/bleed/triple shields/one lethal escape; arrival smoke135% includes allies except self.
+- Fixed reusable combat slots, active enemy summons registry cache, lazy retained received-affliction component reset on pool reuse. Refreshable burn DOT/attackhalf; generic outgoing/movement status multipliers. Shared right concentration bar also added to Zeus.
+- Actual successful summon connects5sec triangle native rig/eyes/face zoom/venom corona to existing cinematic; standard death camera/drop unchanged. Headless combat/real award/upgrade/Battle/Hero/Scout/cinematics/regression checks; GPU/mobile/listening/performance/export unverified. docs/MANTICORE_COMBAT.md.
+
 ## Manticore gacha presentation (2026-10-09)
 - PresentationCatalog now accepts manticore transcendent results through the common five-second cutscene path. Native Skeleton2D/Polygon2D shared mesh derives seven flexible weights from the existing verified13-part ZIP; fixed face/hands/legs, continuous small wing/tail/hair/cloth motion. Live2D-style, no Cubism SDK/hidden-surface reconstruction.
 - Existing effect2/3/4 and sourced Pixabay earth cues reused, generated dark venom sanctuary backdrop. Cached view/weights/textures, deterministic transforms only. F6 src/dev/manticore_cutscene_preview.tscn uses synthetic outcomes and no awards/save.
-- Manticore is still absent from MonsterCatalog and actual gacha pools; gameplay/odds are untouched. Godot4.5.1 isolated headless cutscene/sequence/reuse/ratio/weights/audio-load checks pass; GPU/mobile/listening/performance/export unverified. docs/MANTICORE_GACHA.md.
+- Manticore combat/actual gacha/collection registration is now complete; see MANTICORE_COMBAT.md. Godot4.5.1 isolated headless cutscene/sequence/reuse/ratio/weights/audio-load checks pass; GPU/mobile/listening/performance/export unverified. docs/MANTICORE_GACHA.md.
 
 ## OAuth browser return and mobile inertia (2026-10-09)
 - OAuth code exchange, loopback Host/nonce/PKCE and /user validation unchanged. Callback page attempts Windows app focus/tab close or Android exported-game deep link (without auth code/token); browsers can block automatic external launches. Android manifest intent-filter injected by Gradle export EditorPlugin; Android Godot Editor itself cannot receive the new scheme.

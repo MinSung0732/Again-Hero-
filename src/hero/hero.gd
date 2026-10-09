@@ -17,6 +17,7 @@ signal conditional_skill_unlocked(skill_id: String, skill_name: String, payload:
 
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const SUCCUBUS_BEHAVIOR := preload("res://src/data/succubus_behavior_catalog.gd")
+const BURN_RUNTIME := preload("res://src/systems/burn_runtime.gd")
 const DAMAGE_POISON_TRACKER := preload("res://src/systems/damage_poison_tracker.gd")
 const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
 const BUILD_AI := preload("res://src/ai/hero_build_ai.gd")
@@ -818,6 +819,7 @@ var bleed_damage_applied: int = 0
 var bleed_duration: float = 0.0
 var bleed_source: Node
 var possession_immunity_timer: float = 0.0
+var burn_runtime = BURN_RUNTIME.new()
 var damage_poison_tracker = DAMAGE_POISON_TRACKER.new()
 var healing_reduction_timer := 0.0
 var healing_reduction_ratio := 0.0
@@ -908,6 +910,7 @@ func configure_profile(profile: Dictionary) -> void:
 	paralysis_timer = 0.0
 	paralysis_ratio = 0.0
 	_clear_bleed()
+	_clear_burn()
 	_clear_stun()
 	_clear_medusa_statuses()
 	_clear_charm()
@@ -1788,6 +1791,8 @@ func _physics_process_actions(delta: float) -> void:
 	_update_poison(delta)
 	_update_bleed(delta)
 	_update_damage_poison(delta)
+	burn_runtime.update(self,delta)
+	set_meta("burn_active",burn_runtime.remaining > 0.0)
 	_tick_petrify(delta)
 	_tick_received_modifiers(delta)
 	possession_immunity_timer = maxf(possession_immunity_timer - delta, 0.0)
@@ -20653,6 +20658,7 @@ func _begin_death_sequence() -> void:
 
 	is_dying = true
 	_clear_bleed()
+	_clear_burn()
 	_clear_stun()
 	_clear_medusa_statuses()
 	_clear_charm()
@@ -20931,3 +20937,15 @@ func impose_all_skill_cooldowns(seconds: float) -> void:
 		for property_name in _get_external_skill_cooldown_properties():
 			set(property_name,maxf(float(get(property_name)),seconds))
 	queue_redraw()
+
+func apply_burn(duration: float, total_damage: int, source: Node = null) -> bool:
+	if current_hp <= 0 or is_dying or not burn_runtime.apply(duration,total_damage,source):
+		return false
+	set_meta("burn_active",true)
+	record_status_effect_event("burn")
+	COMBAT_STATUS_EFFECT_VISUAL.show_on(self,"burn")
+	return true
+
+func _clear_burn() -> void:
+	burn_runtime.clear()
+	set_meta("burn_active",false)

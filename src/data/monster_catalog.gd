@@ -26,6 +26,7 @@ const ORDER := [
 	"zeus",
 	"bulgasal",
 	"izanami",
+	"manticore",
 ]
 
 const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd")
@@ -34,6 +35,17 @@ const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const BULGASAL_BEHAVIOR := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const MONSTERS := {
+	"manticore": {
+		"id":"manticore","name":"만티코어","rarity":"transcendent","grade":"transcendent","role":"exploder","species":"beast","family":"manticore","attack_type":"ranged","combat_style":"ranged_harasser",
+		"collection_card":{"style_label":"원거리(근접) 폭발형","identity":"살을 찢는 재앙","feature":"사냥 · 추적 · 불꽃 · 맹독유성"},
+		"growth_metric":"damage_dealt","summon_growth":{"attack_damage":0.075,"max_hp":0.5},
+		"default_unlocked":false,"combat_enabled":true,"base_cost":0.0,"summon_exp":0.0,"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,"special_augment_ids":[],
+		"base_stats":preload("res://src/data/manticore_behavior_catalog.gd").BASE,"transcendence":preload("res://src/data/manticore_behavior_catalog.gd").RULES,
+		"card_icon_path":"res://assets/art/Transcendent_monster/manticore/manticore_icon.png","ground_shadow":{"size":Vector2(78,20),"offset_y":0.0,"opacity":0.35},
+		"scene":preload("res://src/monsters/Manticore.tscn"),
+		"description":"누적 피해400 후 전투당1회. 2연격 각35+소환 전 피해×0.075, HP1550+피해×0.5. 이속235·지름650·580속도 사냥/추적·완료 후1.5초. 게이지100·지휘력회복100%/초당최대15. 등장 폭발135%는 본인 제외 아군도 피해. 불꽃50/60초·30초·접촉1초100%, 화상75%/1초·공격력절반. 유성35/35초·2초10발·175%·3초중독200%·2초현재HP6%독구름. 지각분쇄30/30초·5초·680거리/450속도·200%·3초30%둔화. 기본5적중 출혈10초/최대HP3%, 출혈대상3타50%·쉴드4%. 첫 치명상 후퇴2배·잃은HP15%회복. 일반/특수증강·엘리트·대형몹 제외.",
+	},
+
 	"izanami": {
 		"id":"izanami","name":"이자나미","rarity":"transcendent","grade":"transcendent","role":"control","species":"divine_humanoid","family":"izanami","attack_type":"ranged","combat_style":"ranged_harasser",
 		"collection_card":{"style_label":"원거리 제어형","identity":"황천의 여신","feature":"원혼 · 침묵 · 도깨비불 · 토리이"},

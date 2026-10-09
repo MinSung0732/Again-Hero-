@@ -37,7 +37,9 @@ static func describe(id: String) -> String:
 	for condition in rules.get("conditions", []):
 		var metric := String(condition.get("metric", ""))
 		var amount := float(condition.get("amount", 0))
-		if metric == "monsters_summoned":
+		if metric == "damage_dealt":
+			parts.append("누적 피해 %d" % int(amount))
+		elif metric == "monsters_summoned":
 			parts.append("몬스터 %d마리 소환" % int(amount))
 		elif metric == "controls_summoned":
 			parts.append("제어형 실제 %d회 소환" % int(amount))

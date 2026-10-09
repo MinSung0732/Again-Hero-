@@ -1,4 +1,5 @@
 extends Node2D
+const RECEIVED_STATUS := preload("res://src/data/status_effect_catalog.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
@@ -119,7 +120,7 @@ func _physics_process(delta: float) -> void:
 	global_position += (
 		global_position.direction_to(target.global_position)
 		* move_speed
-		* float(get_meta("yuki_slow_multiplier",1.0))
+		* float(get_meta("yuki_slow_multiplier",1.0))*RECEIVED_STATUS.movement_multiplier(self)
 		* delta
 	)
 
@@ -176,7 +177,7 @@ func _explode_on_target() -> void:
 		if not HERO_TARGET_POLICY.is_detectable(victim) or not victim.has_method("take_damage"):
 			continue
 		if global_position.distance_squared_to(victim.global_position) <= radius_sq:
-			victim.call("take_damage", attack_damage)
+			victim.call("take_damage", maxi(int(round(attack_damage*RECEIVED_STATUS.outgoing_multiplier(self))),1))
 	_blast_candidates.clear()
 
 	visual.visible = false
@@ -200,6 +201,7 @@ func take_damage(amount: int, _source: Node = null) -> bool:
 
 
 func deactivate(emit_signal: bool = true) -> void:
+	preload("res://src/systems/received_afflictions.gd").reset_on(self)
 	var was_active := active
 	active = false
 	exploding = false

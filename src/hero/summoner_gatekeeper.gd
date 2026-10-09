@@ -1,4 +1,5 @@
 extends CharacterBody2D
+const RECEIVED_STATUS := preload("res://src/data/status_effect_catalog.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
@@ -177,6 +178,7 @@ func _fire_at(target: Node2D) -> void:
 		consecutive_target_steps = 1
 	var bonus_steps := maxi(consecutive_target_steps - 1, 0)
 	var shot_damage := maxi(int(round(float(attack_damage) * (1.0 + consecutive_damage_bonus_per_step * float(bonus_steps)))), 1)
+	shot_damage = maxi(int(round(shot_damage*RECEIVED_STATUS.outgoing_multiplier(self))),1)
 	projectile.call(
 		"activate",
 		global_position + Vector2(0.0, -18.0),
@@ -223,6 +225,7 @@ func _begin_release() -> void:
 
 
 func deactivate(emit_signal: bool = true) -> void:
+	preload("res://src/systems/received_afflictions.gd").reset_on(self)
 	var was_active := active
 	active = false
 	dying = false

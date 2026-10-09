@@ -8,6 +8,7 @@ var statuses_applied := 0
 var tanks_summoned := 0
 var allies_died := 0
 var mana_spent := 0.0
+var damage_dealt := 0.0
 var command_spent := 0.0
 var ready := false
 var used := false
@@ -24,6 +25,7 @@ func configure(id: String, rules: Dictionary) -> void:
 	allies_died = 0
 	mana_spent = 0.0
 	command_spent = 0.0
+	damage_dealt = 0.0
 	ready = false
 	used = false
 	test_unlock_confirmed = false
@@ -69,10 +71,11 @@ func _evaluate() -> bool:
 	for condition in conditions:
 		var metric := String(condition.get("metric",""))
 		var required := float(condition.get("amount",0))
-		if (metric not in ["monsters_summoned", "mana_spent", "command_spent", "tanks_summoned", "allies_died", "controls_summoned", "statuses_applied"]) or required <= 0:
+		if (metric not in ["monsters_summoned", "mana_spent", "command_spent", "tanks_summoned", "allies_died", "controls_summoned", "statuses_applied", "damage_dealt"]) or required <= 0:
 			return false
 		var actual := 0.0
 		match metric:
+			"damage_dealt": actual = damage_dealt
 			"monsters_summoned": actual = monsters_summoned
 			"mana_spent": actual = mana_spent
 			"command_spent": actual = command_spent
@@ -109,6 +112,8 @@ func satisfy_conditions_for_test() -> bool:
 				allies_died = maxi(allies_died, int(ceil(amount)))
 			"monsters_summoned":
 				monsters_summoned = maxi(monsters_summoned, int(ceil(amount)))
+			"damage_dealt":
+				damage_dealt = maxf(damage_dealt, amount)
 			"command_spent":
 				command_spent = maxf(command_spent, amount)
 			"mana_spent":
@@ -116,3 +121,9 @@ func satisfy_conditions_for_test() -> bool:
 	var unlocked := _evaluate()
 	test_unlock_confirmed = unlocked
 	return unlocked
+
+func record_damage(amount: float) -> bool:
+	if monster_id.is_empty() or used:
+		return false
+	damage_dealt += maxf(amount,0.0)
+	return _evaluate()

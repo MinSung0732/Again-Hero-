@@ -1,0 +1,27 @@
+extends RefCounted
+const BASE := {"max_hp":1550,"attack_damage":35,"move_speed":235.0,"attack_range":325.0,"attack_cooldown":1.5,"projectile_speed":580.0,"projectile_range":680.0,"exp_reward":0}
+const RULES := {"mode":"all","conditions":[{"metric":"damage_dealt","amount":400}]}
+const ROOT := "res://assets/art/Transcendent_monster/manticore/frames"
+const PROFILE := {"mode":"frames","asset_dir":ROOT,"target_height":110.0,"animations":{
+"idle":{"prefix":"idle","count":4,"fps":6.0,"loop":true},"move":{"prefix":"walk","count":6,"fps":8.0,"loop":true},
+"attack":{"prefix":"attack","count":6,"fps":10.0,"loop":false},"hit":{"prefix":"hit","count":3,"fps":12.0,"loop":false},"death":{"prefix":"death","count":4,"fps":8.0,"loop":false}}}
+const COSTS := [50.0,35.0,30.0]
+const COOLDOWNS := [60.0,35.0,30.0]
+const CHANNEL_SECONDS := 1.0
+const FLAME_SECONDS := 30.0
+const FLAME_RADIUS := 125.0
+const METEOR_RADIUS := 87.5
+const METEOR_SCATTER := 300.0
+const METEOR_SPEED := 580.0
+const ARRIVAL_SECONDS := 0.9
+const ARRIVAL_RADIUS := 87.5
+const WAVE_RANGE := 680.0
+const WAVE_SPEED := 450.0
+const WAVE_SECONDS := 5.0
+const WAVE_CAPACITY := 12
+const WAVE_WIDTH := 24.0
+const COMBO_INTERVAL := 0.12
+const EFFECT_CANVASES := [Vector2(702,300),Vector2(544,412),Vector2(374,410),Vector2(466,407)]
+const EFFECT_ANCHORS := [Vector2(351,137),Vector2(272,394),Vector2(187,384),Vector2(233,354)]
+const EFFECT_HEIGHTS := [150.0,175.0,90.0,140.0]
+const EFFECT_COUNTS := [8,8,8,8]

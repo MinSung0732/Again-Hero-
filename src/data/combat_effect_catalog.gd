@@ -2,6 +2,7 @@ extends RefCounted
 
 # Per-actor, cached animations. Paths retain the uploaded asset spelling.
 const EFFECTS := {
+	"burn":{"path":"debuff/burn_frames/burn_%02d.png","frame_count":4,"meta":"burn_active","offset":Vector2(0,-10)},
 	"paralysis":{"path":"debuff/paralysis/effect_%02d.png","frame_count":8,"property":"paralysis_timer","offset":Vector2.ZERO},
 	"yuki_chill":{"path":"debuff/freezing_frames/freezing_%02d.png","frame_count":4,"property":"chill_stacks","offset":Vector2.ZERO},
 	"yuki_slow":{"path":"debuff/frames/slow_%02d.png","meta":"yuki_slow_active","offset":Vector2(0,18)},

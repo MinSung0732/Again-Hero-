@@ -1,4 +1,5 @@
 extends CharacterBody2D
+const RECEIVED_STATUS := preload("res://src/data/status_effect_catalog.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
@@ -168,7 +169,7 @@ func _physics_process(delta: float) -> void:
 			elif owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
 				var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
 				move_multiplier *= maxf(float(support.get("move_speed", 1.0)), 0.1)
-		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier * float(get_meta("yuki_slow_multiplier",1.0))
+		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier * float(get_meta("yuki_slow_multiplier",1.0))*RECEIVED_STATUS.movement_multiplier(self)
 		move_and_slide()
 		if visual.animation != &"move":
 			visual.play(&"move")
@@ -198,7 +199,7 @@ func _update_pending_hits(delta: float) -> void:
 			var hit_index := hits_per_attack - pending_hits + 1
 			if hit_index == 2 and second_hit_bonus_ratio > 0.0:
 				dealt_damage += float(owner_attack_damage) * second_hit_bonus_ratio
-			attack_target.call("take_damage", maxi(int(round(dealt_damage)), 1))
+			attack_target.call("take_damage", maxi(int(round(dealt_damage*RECEIVED_STATUS.outgoing_multiplier(self))), 1))
 		if attack_audio.stream != null:
 			attack_audio.stop()
 			attack_audio.play()
@@ -297,6 +298,7 @@ func _begin_release() -> void:
 
 
 func deactivate(emit_signal: bool = true) -> void:
+	preload("res://src/systems/received_afflictions.gd").reset_on(self)
 	var was_active := active
 	active = false
 	dying = false
