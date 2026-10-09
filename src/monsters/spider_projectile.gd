@@ -88,7 +88,7 @@ func _on_body_entered(body: Node) -> void:
 
 	var damage_applied := false
 	if body.has_method("take_damage"):
-		damage_applied = bool(body.call("take_damage", damage))
+		damage_applied = bool(body.call("take_damage", damage, _combat_source()))
 
 	if damage_applied and body.has_method("apply_slow"):
 		body.call("apply_slow", slow_multiplier, slow_duration)
@@ -110,6 +110,8 @@ func _finish_projectile() -> void:
 
 
 func deactivate_for_pool() -> void:
+	if has_meta("combat_source"):
+		remove_meta("combat_source")
 	active = false
 	traveled_distance = 0.0
 	has_impacted = false
@@ -240,3 +242,7 @@ func _load_texture(path: String) -> Texture2D:
 			return ImageTexture.create_from_image(image)
 
 	return null
+
+func _combat_source() -> Node:
+	var reference = get_meta("combat_source",null)
+	return reference.get_ref() if reference is WeakRef else null

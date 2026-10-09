@@ -319,6 +319,9 @@ static func get_external_movement_multiplier(owner: Node) -> float:
 			1.0,
 			4.0
 		)
+	var authority := owner.get_parent()
+	if is_instance_valid(authority) and authority.has_method("get_transcendent_aura_modifier"):
+		multiplier *= float(authority.get_transcendent_aura_modifier(owner,"speed"))
 	return multiplier * maxf(float(owner.get_meta("support_speed_multiplier",1.0)),1.0)
 
 static func set_unbuffed_attack_damage(owner: Node, amount: int) -> void:
@@ -331,6 +334,9 @@ static func get_attack_stat(owner: Node) -> int:
 	return int(value) if value != null else int(owner.get("explosion_damage"))
 
 static func consume_support_shield(owner: Node2D, amount: int) -> int:
+	var authority := owner.get_parent()
+	if amount > 0 and is_instance_valid(authority) and authority.has_method("get_transcendent_aura_modifier"):
+		amount = maxi(int(round(amount * float(authority.get_transcendent_aura_modifier(owner,"incoming")) * float(authority.get_transcendent_aura_modifier(authority.hero,"outgoing")))),1)
 	var shield := int(owner.get_meta("support_shield_hp",0))
 	if shield <= 0 or amount <= 0:
 		return amount

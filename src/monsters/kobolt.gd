@@ -178,6 +178,7 @@ func _fire_projectile(
 	var projectile := _acquire_projectile()
 	if projectile == null:
 		return
+	projectile.set_meta("combat_source",weakref(self))
 	projectile.global_position = global_position + direction_to_hero * 28.0
 
 	var speed_config: Dictionary = special_augment_configs.get(

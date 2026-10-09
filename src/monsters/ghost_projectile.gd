@@ -78,7 +78,7 @@ func _on_body_entered(body: Node) -> void:
 	set_physics_process(false)
 
 	if body.has_method("take_damage"):
-		body.call("take_damage", damage)
+		body.call("take_damage", damage, _combat_source())
 
 	var authority := get_parent()
 	if (
@@ -143,6 +143,8 @@ func _finish_projectile() -> void:
 
 
 func deactivate_for_pool() -> void:
+	if has_meta("combat_source"):
+		remove_meta("combat_source")
 	active = false
 	traveled_distance = 0.0
 	direction = Vector2.RIGHT
@@ -161,3 +163,7 @@ func deactivate_for_pool() -> void:
 		projectile_sprite.visible = false
 		projectile_sprite.texture = null
 		projectile_sprite.scale = Vector2.ONE
+
+func _combat_source() -> Node:
+	var reference = get_meta("combat_source",null)
+	return reference.get_ref() if reference is WeakRef else null

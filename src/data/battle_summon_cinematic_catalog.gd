@@ -3,7 +3,7 @@ const ZEUS_AUDIO := preload("res://src/data/zeus_audio_catalog.gd")
 
 # Presentation only; no skill, damage, summoning or reward authority.
 const ENTRIES := {
-	"izanami": {"view":"res://src/ui/izanami_battle_summon_view.gd","duration":5.0,"zoom":1.25,"prewarm":false,
+	"izanami": {"view":"res://src/ui/izanami_battle_summon_view.gd","duration":5.0,"zoom":1.25,"prewarm":true,
 		"slow_motion":{"minimum":0.22,"approach_end":1.0,"recover_start":3.0,"recover_end":3.6},
 		"world_effect":"res://src/ui/izanami_summon_spirits.gd",
 		"audio_cues":{

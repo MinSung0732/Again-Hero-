@@ -3,6 +3,8 @@ var monster_id := ""
 var conditions: Array = []
 var condition_mode := "any"
 var monsters_summoned := 0
+var controls_summoned := 0
+var statuses_applied := 0
 var tanks_summoned := 0
 var allies_died := 0
 var mana_spent := 0.0
@@ -16,6 +18,8 @@ func configure(id: String, rules: Dictionary) -> void:
 	conditions = rules.get("conditions", []).duplicate(true)
 	condition_mode = String(rules.get("mode", "any"))
 	monsters_summoned = 0
+	controls_summoned = 0
+	statuses_applied = 0
 	tanks_summoned = 0
 	allies_died = 0
 	mana_spent = 0.0
@@ -28,8 +32,16 @@ func record_summon(role: String = "") -> bool:
 	if monster_id.is_empty() or used:
 		return false
 	monsters_summoned += 1
+	if role in ["control","controller"]:
+		controls_summoned += 1
 	if role == "tank":
 		tanks_summoned += 1
+	return _evaluate()
+
+func record_status() -> bool:
+	if monster_id.is_empty() or used:
+		return false
+	statuses_applied += 1
 	return _evaluate()
 
 func record_ally_death() -> bool:
@@ -57,13 +69,15 @@ func _evaluate() -> bool:
 	for condition in conditions:
 		var metric := String(condition.get("metric",""))
 		var required := float(condition.get("amount",0))
-		if (metric not in ["monsters_summoned", "mana_spent", "command_spent", "tanks_summoned", "allies_died"]) or required <= 0:
+		if (metric not in ["monsters_summoned", "mana_spent", "command_spent", "tanks_summoned", "allies_died", "controls_summoned", "statuses_applied"]) or required <= 0:
 			return false
 		var actual := 0.0
 		match metric:
 			"monsters_summoned": actual = monsters_summoned
 			"mana_spent": actual = mana_spent
 			"command_spent": actual = command_spent
+			"controls_summoned": actual = controls_summoned
+			"statuses_applied": actual = statuses_applied
 			"tanks_summoned": actual = tanks_summoned
 			"allies_died": actual = allies_died
 		if actual + 0.0001 >= required:
@@ -85,6 +99,10 @@ func satisfy_conditions_for_test() -> bool:
 	for condition in conditions:
 		var amount := float(condition.get("amount", 0))
 		match String(condition.get("metric", "")):
+			"controls_summoned":
+				controls_summoned = maxi(controls_summoned,int(ceil(amount)))
+			"statuses_applied":
+				statuses_applied = maxi(statuses_applied,int(ceil(amount)))
 			"tanks_summoned":
 				tanks_summoned = maxi(tanks_summoned, int(ceil(amount)))
 			"allies_died":

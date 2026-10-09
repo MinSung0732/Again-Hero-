@@ -39,6 +39,10 @@ static func describe(id: String) -> String:
 		var amount := float(condition.get("amount", 0))
 		if metric == "monsters_summoned":
 			parts.append("몬스터 %d마리 소환" % int(amount))
+		elif metric == "controls_summoned":
+			parts.append("제어형 실제 %d회 소환" % int(amount))
+		elif metric == "statuses_applied":
+			parts.append("상태이상 %d회 적중" % int(amount))
 		elif metric == "tanks_summoned":
 			parts.append("탱커 실제 %d마리 소환" % int(amount))
 		elif metric == "allies_died":

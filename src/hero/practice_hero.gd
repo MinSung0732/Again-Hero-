@@ -70,6 +70,7 @@ func _take_damage_internal(amount: int, _source: Node, _ignore_invulnerability: 
 		return false
 	# No finite subtraction: even a lethal/status hit cannot trigger death.
 	observed_damage += amount
+	accepted_damage_hit.emit(_source)
 	DAMAGE_NUMBERS.show(self,amount)
 	hit_pose_timer = 0.12
 	current_hp = INFINITE_HP

@@ -1,3 +1,5 @@
+> 2026-10-09: 이자나미 전투·일반/픽업 풀·초월등록·프로필 보상에 실제 연결 완료. 이전의 미등록/연출 전용 설명은 당시 예시 단계의 기록이며, 현재 동작은 [IZANAMI_COMBAT.md](IZANAMI_COMBAT.md)를 따릅니다.
+
 # 이자나미 전투 소환 예시
 
 Godot `src/dev/IzanamiBattleSummonPreview.tscn` 열고 F6. 자동 재생 후 소환 재생 / 중단·복귀 버튼 사용. 격자 배경과 실제 idle 도트 소환체는 확인용 sandbox이며 실제 몬스터 스탯/스킬/소환조건이나 계정 저장이 없습니다.

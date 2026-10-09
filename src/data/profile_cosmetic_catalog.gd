@@ -21,6 +21,7 @@ static func path(id: String, slot: String) -> String:
 # Ownership follows the monster collection, so old saves and cloud restores
 # receive the cosmetics without a second grant transaction or duplicate flags.
 const MONSTER_REWARDS := {
+	"izanami":{"monster_id":"izanami","name":"초월 · 이자나미","avatar":"res://assets/art/Transcendent_monster/Izanami/izanami_icon.png","banner":"res://assets/art/Transcendent_monster/Izanami/izanami_banner.png"},
 	"bulgasal": {"monster_id":"bulgasal","name":"초월 · 불가살",
 		"avatar":"res://assets/art/Transcendent_monster/Bulgasal/bulgasal_icon.png",
 		"banner":"res://assets/art/Transcendent_monster/Bulgasal/bulgasal_banner.png"},

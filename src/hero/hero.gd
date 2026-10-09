@@ -6,6 +6,8 @@ const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
 signal died
 signal health_changed(current_hp: int, max_hp_value: int)
+signal status_applied(status_id: String)
+signal accepted_damage_hit(source: Node)
 signal combat_damage_received(hp_damage: int)
 signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
 signal leveled_up(new_level: int)
@@ -793,6 +795,7 @@ var hit_pose_timer: float = 0.0
 var hero_animation_last_restart_name: StringName = &""
 var hero_animation_last_restart_msec: int = -1000000
 var invulnerability_timer: float = 0.0
+var silence_timer := 0.0
 var imposed_skill_cooldown := 0.0
 var paralysis_timer := 0.0
 var paralysis_ratio := 0.0
@@ -899,6 +902,8 @@ func configure_profile(profile: Dictionary) -> void:
 	status_resistances.clear()
 	offensive_memory_events.clear()
 	status_effect_events.clear()
+	silence_timer = 0.0
+	set_meta("silence_active",false)
 	imposed_skill_cooldown = 0.0
 	paralysis_timer = 0.0
 	paralysis_ratio = 0.0
@@ -1753,6 +1758,8 @@ func _attach_status_effect_visual(effect_type: String) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	silence_timer = maxf(silence_timer-delta,0.0)
+	set_meta("silence_active", silence_timer > 0.0)
 	imposed_skill_cooldown = maxf(imposed_skill_cooldown-delta,0.0)
 	paralysis_timer = maxf(paralysis_timer-delta,0.0)
 	if paralysis_timer <= 0.0:
@@ -2415,6 +2422,8 @@ func _choose_summoner_ai_cast() -> String:
 
 
 func _try_cast_summoner_ai_choice(skill_id: String) -> bool:
+	if silence_timer > 0.0:
+		return false
 	match skill_id:
 		"gatekeeper":
 			if _try_cast_summoner_gatekeeper():
@@ -2639,6 +2648,8 @@ func _refresh_regular_summon_pending_after_release(
 
 
 func _try_cast_summoner_gatekeeper() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if summoner_gatekeeper_config.is_empty():
 		return false
 	if summoner_gatekeeper_cooldown > 0.0:
@@ -2690,6 +2701,8 @@ func _on_summoner_gatekeeper_released(_summon: Node2D) -> void:
 
 
 func _try_cast_summoner_scout() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if summoner_scout_config.is_empty():
 		return false
 	if summoner_scout_cooldown > 0.0:
@@ -2745,6 +2758,8 @@ func _on_summoner_scout_released(_summon: Node2D) -> void:
 
 
 func _try_cast_summoner_hound() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if summoner_hound_config.is_empty():
 		return false
 	if summoner_hound_cooldown > 0.0:
@@ -2803,6 +2818,8 @@ func _on_summoner_hound_released(_summon: Node2D) -> void:
 
 
 func _try_cast_summoner_watcher() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if summoner_watcher_config.is_empty():
 		return false
 	if summoner_watcher_cooldown > 0.0:
@@ -2904,6 +2921,8 @@ func _record_summoner_spawn_for_open_gate_unlock() -> void:
 
 
 func _try_cast_summoner_open_gate() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if summoner_open_gate_config.is_empty():
 		return false
 	if not summoner_open_gate_unlocked:
@@ -3692,6 +3711,8 @@ func get_conditional_skill_unlock_state() -> Dictionary:
 
 
 func _try_start_alchemist_philosopher_stone() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if (
 		alchemist_philosopher_config.is_empty()
 		or alchemist_philosopher_used
@@ -4100,6 +4121,8 @@ func _update_alchemist_mixture_field_hero_effects(delta: float) -> void:
 
 
 func _try_cast_alchemist_mixture_field() -> void:
+	if silence_timer > 0.0:
+		return
 	if alchemist_mixture_field_config.is_empty():
 		return
 	if alchemist_mixture_field_cooldown > 0.0:
@@ -4159,6 +4182,8 @@ func _count_active_alchemist_cauldrons() -> int:
 
 
 func _try_cast_alchemist_mystery_cauldron() -> void:
+	if silence_timer > 0.0:
+		return
 	if alchemist_mystery_cauldron_config.is_empty():
 		return
 	if alchemist_mystery_cauldron_cooldown > 0.0:
@@ -4699,6 +4724,8 @@ func _cast_alchemist_emergency_escape(
 	threats: Array[Node2D],
 	escape_direction: Vector2
 ) -> void:
+	if silence_timer > 0.0:
+		return
 	alchemist_emergency_cooldown = maxf(
 		_get_alchemist_effective_cooldown(
 			alchemist_emergency_config,
@@ -5613,6 +5640,8 @@ func _update_gunner_deadeye_aim_analysis() -> void:
 
 
 func _gunner_should_start_deadeye() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if gunner_reloading or gunner_deadeye_cooldown > 0.0:
 		return false
 	var min_ammo := maxi(int(gunner_config.get("deadeye_min_ammo", 3)), 1)
@@ -5634,6 +5663,8 @@ func _gunner_should_start_deadeye() -> bool:
 
 
 func _start_gunner_deadeye() -> void:
+	if silence_timer > 0.0:
+		return
 	if gunner_ammo <= 0:
 		return
 	var aim_direction := gunner_deadeye_analysis_direction
@@ -6168,6 +6199,8 @@ func _rogue_apply_knockback(
 	LOCAL_GRID_MOVEMENT.notify_forced_position_change(current_target)
 
 func _rogue_should_use_slash() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if rogue_slash_config.is_empty():
 		return false
 
@@ -6193,6 +6226,8 @@ func _rogue_should_use_slash() -> bool:
 	) >= required
 
 func _start_rogue_slash() -> void:
+	if silence_timer > 0.0:
+		return
 	rogue_combo_index = 0
 	rogue_slash_active = true
 	rogue_slash_duration_timer = maxf(
@@ -6305,6 +6340,8 @@ func _apply_rogue_slash_tick() -> void:
 		shield_effect.play(&"slash")
 
 func _rogue_can_start_assassination() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if ultimate_config.is_empty():
 		return false
 	if ultimate_cooldown_timer > 0.0:
@@ -6320,6 +6357,8 @@ func _rogue_can_start_assassination() -> bool:
 	return _find_rogue_assassination_target() != null
 
 func _start_rogue_assassination() -> void:
+	if silence_timer > 0.0:
+		return
 	rogue_combo_index = 0
 	rogue_assassination_active = true
 	rogue_assassination_hits_left = maxi(
@@ -10207,6 +10246,8 @@ func _update_sage_runtime(delta: float) -> void:
 
 
 func _try_cast_sage_ice_pillar() -> void:
+	if silence_timer > 0.0:
+		return
 	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
 		return
 	if not is_instance_valid(target) or target.is_queued_for_deletion():
@@ -10292,6 +10333,8 @@ func _try_cast_sage_ice_pillar() -> void:
 
 
 func _try_cast_sage_radiance_singularity() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
 		return false
 	var skill_value = sage_config.get("skill_2", {})
@@ -10409,6 +10452,8 @@ func _launch_sage_radiance_orb() -> void:
 
 
 func _try_cast_sage_annihilation() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
 		return false
 	if not is_conditional_skill_unlocked("sage_skill_5"):
@@ -10483,6 +10528,8 @@ func _try_cast_sage_annihilation() -> bool:
 
 
 func _try_cast_sage_starlight() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
 		return false
 	if sage_starlight_remaining > 0.0:
@@ -10603,6 +10650,8 @@ func _launch_sage_starlight_volley(skill: Dictionary) -> void:
 
 
 func _try_cast_sage_mana_condensation() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
 		return false
 	var skill_value = sage_config.get("skill_3", {})
@@ -11316,6 +11365,8 @@ func _archmage_skill_ready(skill_key: String) -> bool:
 
 
 func _use_archmage_skill(skill_key: String) -> void:
+	if silence_timer > 0.0:
+		return
 	_cast_archmage_skill_internal(skill_key, true, true)
 
 
@@ -11324,6 +11375,8 @@ func _cast_archmage_skill_internal(
 	consume_gauge: bool,
 	trigger_multicast: bool
 ) -> bool:
+	if silence_timer > 0.0:
+		return false
 	if charm_timer > 0.0:
 		return false
 	var config: Dictionary = archmage_skill_config.get(skill_key, {})
@@ -12018,6 +12071,8 @@ func _archmage_blink_cooldown() -> float:
 
 
 func _cast_archmage_blink() -> void:
+	if silence_timer > 0.0:
+		return
 	if archmage_blink_stacks <= 0:
 		return
 
@@ -12511,6 +12566,8 @@ func _update_channel_skill(delta: float) -> void:
 	channel_cooldown_timer = maxf(channel_cooldown_timer - delta, 0.0)
 
 func _should_cast_channel_skill() -> bool:
+	if silence_timer > 0.0:
+		return false
 	var radius := maxf(
 		float(channel_skill_config.get("radius", 210.0)),
 		0.0
@@ -12551,6 +12608,8 @@ func _should_cast_channel_skill() -> bool:
 	) >= close_required
 
 func _use_channel_as_charged_skill() -> void:
+	if silence_timer > 0.0:
+		return
 	if channel_skill_config.is_empty():
 		return
 	if channel_cooldown_timer > 0.0 or channeling:
@@ -12570,6 +12629,8 @@ func _use_channel_as_charged_skill() -> void:
 	queue_redraw()
 
 func _activate_channel_skill() -> void:
+	if silence_timer > 0.0:
+		return
 	channeling = true
 	channel_duration_timer = maxf(
 		float(channel_skill_config.get("duration", 2.5)),
@@ -12673,6 +12734,8 @@ func _update_shield_skill(delta: float) -> void:
 		_activate_shield()
 
 func _should_cast_shield() -> bool:
+	if silence_timer > 0.0:
+		return false
 	var hp_trigger_ratio := clampf(
 		float(shield_skill_config.get("hp_trigger_ratio", 0.75)),
 		0.0,
@@ -12700,6 +12763,8 @@ func _should_cast_shield() -> bool:
 	) >= danger_count
 
 func _activate_shield() -> void:
+	if silence_timer > 0.0:
+		return
 	var configured_hp := maxf(
 		float(shield_skill_config.get("shield_hp", 0.0)),
 		0.0
@@ -13132,6 +13197,8 @@ func _add_purifier_shield_layer() -> void:
 
 
 func _try_activate_purifier_protection() -> void:
+	if silence_timer > 0.0:
+		return
 	if (
 		hero_archetype != "cleric_purifier"
 		or purifier_protection_config.is_empty()
@@ -13247,6 +13314,8 @@ func _end_purifier_protection(broken: bool) -> void:
 
 
 func _cast_purifier_crown() -> void:
+	if silence_timer > 0.0:
+		return
 	if (
 		hero_archetype != "cleric_purifier"
 		or purifier_crown_config.is_empty()
@@ -13806,6 +13875,8 @@ func _spawn_purifier_network_orb(destination: Vector2) -> bool:
 
 
 func _cast_purifier_orb() -> void:
+	if silence_timer > 0.0:
+		return
 	if (
 		hero_archetype != "cleric_purifier"
 		or purifier_orb_config.is_empty()
@@ -13931,6 +14002,8 @@ func _sort_purifier_orbs_by_install_order(
 
 
 func _try_start_purifier_orb_chain_from(orb: Node2D) -> void:
+	if silence_timer > 0.0:
+		return
 	if purifier_orb_chain_active:
 		return
 	var component := _get_purifier_orb_component(orb)
@@ -13940,6 +14013,8 @@ func _try_start_purifier_orb_chain_from(orb: Node2D) -> void:
 
 
 func _try_start_any_purifier_orb_chain() -> void:
+	if silence_timer > 0.0:
+		return
 	if purifier_orb_chain_active:
 		return
 	for orb in purifier_orbs:
@@ -13952,6 +14027,8 @@ func _try_start_any_purifier_orb_chain() -> void:
 
 
 func _start_purifier_orb_chain(component: Array[Node2D]) -> void:
+	if silence_timer > 0.0:
+		return
 	if purifier_orb_chain_active or component.size() < 3:
 		return
 
@@ -14295,6 +14372,8 @@ func _advance_purifier_cleansing_stack() -> void:
 
 
 func _try_purifier_o_lord_heal(total_damage: int) -> void:
+	if silence_timer > 0.0:
+		return
 	var stacks := _get_purifier_augment_stacks("purifier_o_lord")
 	if stacks <= 0 or total_damage <= 0:
 		return
@@ -14507,6 +14586,8 @@ func _try_unlock_purifier_fourth_skill() -> void:
 
 
 func _cast_purifier_cleansing() -> void:
+	if silence_timer > 0.0:
+		return
 	if (
 		hero_archetype != "cleric_purifier"
 		or purifier_cleansing_config.is_empty()
@@ -14628,6 +14709,8 @@ func _choose_purifier_gungnir_direction() -> Vector2:
 
 
 func _try_start_purifier_gungnir() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if (
 		hero_archetype != "cleric_purifier"
 		or purifier_gungnir_config.is_empty()
@@ -14858,6 +14941,8 @@ func _add_ultimate_charge(amount: float) -> void:
 	queue_redraw()
 
 func _try_use_charged_skill() -> void:
+	if silence_timer > 0.0:
+		return
 	if ultimate_config.is_empty() or is_dying or current_hp <= 0:
 		return
 	if channeling:
@@ -14879,6 +14964,8 @@ func _try_use_charged_skill() -> void:
 		return
 
 func _use_ultimate() -> void:
+	if silence_timer > 0.0:
+		return
 	if ultimate_config.is_empty() or is_dying or current_hp <= 0:
 		return
 	if ultimate_cooldown_timer > 0.0:
@@ -16065,6 +16152,7 @@ func record_status_effect_event(status_id: String) -> void:
 	if status_id.is_empty():
 		return
 
+	status_applied.emit(status_id)
 	status_effect_events.append({
 		"time": ai_memory_clock,
 		"status": status_id,
@@ -17230,6 +17318,16 @@ func can_receive_possession() -> bool:
 	return current_hp > 0 and not is_dying and fear_timer <= 0.0 and possession_immunity_timer <= 0.0
 
 
+func apply_silence(duration: float) -> bool:
+	if duration <= 0.0 or current_hp <= 0 or is_dying:
+		return false
+	silence_timer = maxf(silence_timer,duration*(1.0-get_status_resistance("silence")))
+	set_meta("silence_active",silence_timer > 0.0)
+	if silence_timer <= 0.0:
+		return false
+	record_status_effect_event("silence")
+	return true
+
 func apply_stun(duration: float) -> void:
 	if duration <= 0.0 or current_hp <= 0 or is_dying:
 		return
@@ -17626,6 +17724,8 @@ func _try_use_berserker_contextual_skill(
 	current_target: Node2D,
 	distance: float
 ) -> bool:
+	if silence_timer > 0.0:
+		return false
 	if (
 		berserker_skill_global_cooldown > 0.0
 		or not is_instance_valid(current_target)
@@ -17761,6 +17861,8 @@ func notify_berserker_blood_art_hit() -> void:
 
 
 func _start_berserker_skill1(current_target: Node2D) -> void:
+	if silence_timer > 0.0:
+		return
 	if berserker_skill1_active or not is_instance_valid(current_target):
 		return
 
@@ -17954,6 +18056,8 @@ func _berserker_emit_skill1_wave(
 
 
 func _start_berserker_skill2(current_target: Node2D) -> void:
+	if silence_timer > 0.0:
+		return
 	if not is_instance_valid(current_target):
 		return
 
@@ -18311,6 +18415,8 @@ func _heal_berserker_from_blood_path(
 
 
 func _start_berserker_skill3(current_target: Node2D) -> void:
+	if silence_timer > 0.0:
+		return
 	if berserker_skill3_active or not is_instance_valid(current_target):
 		return
 
@@ -18546,6 +18652,8 @@ func _finish_berserker_blood_orb(
 
 
 func _start_berserker_skill4() -> void:
+	if silence_timer > 0.0:
+		return
 	var skill_config_value = berserker_config.get("skill_4", {})
 	if typeof(skill_config_value) != TYPE_DICTIONARY:
 		return
@@ -18906,6 +19014,8 @@ func _add_berserker_gauge(amount: float) -> void:
 
 
 func _start_berserker_madness() -> void:
+	if silence_timer > 0.0:
+		return
 	if berserker_madness_active or berserker_reviving or is_dying:
 		return
 	berserker_madness_active = true
@@ -19307,6 +19417,8 @@ func _physics_process_fighter(delta: float) -> void:
 	_update_fighter_pose_visual(delta)
 
 func _fighter_should_start_charge() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if fighter_charge_config.is_empty() or fighter_guard_active:
 		return false
 	var trigger := HERO_FIGHTER_RUNTIME.get_charge_trigger(
@@ -19321,6 +19433,8 @@ func _fighter_should_start_charge() -> bool:
 	) >= required
 
 func _start_fighter_charge() -> void:
+	if silence_timer > 0.0:
+		return
 	var charge_target := _find_fighter_charge_target()
 	if not is_instance_valid(charge_target):
 		return
@@ -19891,6 +20005,8 @@ func _update_fighter_guard(delta: float) -> void:
 	queue_redraw()
 
 func _fighter_can_activate_guard() -> bool:
+	if silence_timer > 0.0:
+		return false
 	if imposed_skill_cooldown > 0.0:
 		return false
 	var trigger := HERO_FIGHTER_RUNTIME.get_guard_trigger(
@@ -19906,6 +20022,8 @@ func _fighter_can_activate_guard() -> bool:
 
 
 func _start_fighter_guard() -> void:
+	if silence_timer > 0.0:
+		return
 	if fighter_guard_active:
 		return
 
@@ -20343,7 +20461,13 @@ func _take_damage_internal(
 	# Snapshot material before a shield can break during this hit. Status ticks are not collisions.
 	var physical_block := grant_invulnerability and not damage_already_mitigated and hero_archetype == "sword_shield" and fighter_guard_active
 	var magical_block := grant_invulnerability and not damage_already_mitigated and shield_hp > 0.0 and hero_archetype != "sword_shield"
-	var raw_damage := float(amount) if damage_already_mitigated else float(amount) * (1.0 + damage_taken_increase_ratio)
+	var aura := 1.0
+	var authority := get_parent()
+	if not damage_already_mitigated and is_instance_valid(authority) and authority.has_method("get_transcendent_aura_modifier"):
+		aura = float(authority.get_transcendent_aura_modifier(self,"incoming"))
+		if is_instance_valid(source) and source is Node2D:
+			aura *= float(authority.get_transcendent_aura_modifier(source,"outgoing"))
+	var raw_damage := float(amount) if damage_already_mitigated else float(amount) * (1.0 + damage_taken_increase_ratio) * aura
 	if (
 		not damage_already_mitigated
 		and hero_archetype == "alchemist_chemical"
@@ -20402,6 +20526,7 @@ func _take_damage_internal(
 	if total_hit <= 0:
 		return false
 
+	accepted_damage_hit.emit(source)
 	DAMAGE_NUMBERS.show(self, total_hit)
 
 	hit_flash_timer = 0.12

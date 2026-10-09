@@ -277,6 +277,7 @@ func _fire_projectile(direction_to_hero: Vector2) -> bool:
 	var projectile := _acquire_projectile()
 	if projectile == null:
 		return false
+	projectile.set_meta("combat_source",weakref(self))
 	projectile.global_position = (
 		global_position + direction_to_hero * 18.0
 	)

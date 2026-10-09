@@ -299,6 +299,7 @@ func _fire_projectile(
 	if projectile == null:
 		return
 
+	projectile.set_meta("combat_source",weakref(self))
 	projectile.global_position = global_position
 
 	var sticky: Dictionary = special_augment_configs.get(

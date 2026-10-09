@@ -76,7 +76,7 @@ func _on_body_entered(body: Node) -> void:
 	if not body.is_in_group("hero") and not body.is_in_group("hero_summons"):
 		return
 	if body.has_method("take_damage"):
-		body.call("take_damage", _get_impact_damage())
+		body.call("take_damage", _get_impact_damage(), _combat_source())
 	_finish_projectile()
 
 
@@ -164,6 +164,8 @@ func _finish_projectile() -> void:
 
 
 func deactivate_for_pool() -> void:
+	if has_meta("combat_source"):
+		remove_meta("combat_source")
 	active = false
 	traveled_distance = 0.0
 	direction = Vector2.RIGHT
@@ -198,3 +200,7 @@ func _load_texture(path: String) -> Texture2D:
 		if image.load(path) == OK:
 			return ImageTexture.create_from_image(image)
 	return null
+
+func _combat_source() -> Node:
+	var reference = get_meta("combat_source",null)
+	return reference.get_ref() if reference is WeakRef else null

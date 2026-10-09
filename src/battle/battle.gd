@@ -17,6 +17,7 @@ const TRANSCENDENCE_DATA := preload("res://src/data/transcendence_catalog.gd")
 const TRANSCENDENCE_STORE := preload("res://src/systems/transcendence_loadout_store.gd")
 var transcendent_actor: Node2D
 var raw_allied_summons := 0
+var raw_statuses_applied := 0
 var raw_allied_deaths := 0
 var raw_tank_deaths := 0
 var practice_mode := false
@@ -753,6 +754,7 @@ func _start_battle() -> void:
 	var registered_id := TRANSCENDENCE_STORE.load_id()
 	transcendent_actor = null
 	raw_allied_summons = 0
+	raw_statuses_applied = 0
 	raw_allied_deaths = 0
 	raw_tank_deaths = 0
 	transcendence.configure(registered_id, TRANSCENDENCE_DATA.get_rules(registered_id) if bool(MONSTER_CATALOG.MONSTERS.get(registered_id, {}).get("combat_enabled", true)) else {})
@@ -920,6 +922,7 @@ func _start_battle() -> void:
 		int(hero.get("max_hp"))
 	)
 	hero.connect("health_changed", Callable(self, "_on_hero_health_changed"))
+	hero.connect("status_applied", Callable(self, "_on_enemy_status_applied"))
 	hero.connect("combat_damage_received", Callable(self, "_on_hero_combat_damage_received"))
 	hero.connect("progression_changed", Callable(self, "_on_hero_progression_changed"))
 	hero.connect("leveled_up", Callable(self, "_on_hero_leveled_up"))
@@ -2830,11 +2833,24 @@ func _apply_ghost_death_empower(dead_monster: Node) -> void:
 		String(target.get("monster_type"))
 	)
 
+func _on_enemy_status_applied(_status: String) -> void:
+	if battle_over:
+		return
+	raw_statuses_applied += 1
+	if transcendence.record_status():
+		transcendence_changed.emit(transcendence.monster_id,true,false)
+
+func get_transcendent_aura_modifier(actor: Node2D, kind: String) -> float:
+	if is_instance_valid(transcendent_actor) and transcendent_actor.has_method("aura_modifier"):
+		return float(transcendent_actor.aura_modifier(actor,kind))
+	return 1.0
+
 func _transcendence_growth_count(id: String) -> int:
 	return _transcendence_metric_count(String(MONSTER_CATALOG.MONSTERS.get(id, {}).get("growth_metric", "summons")))
 
 func _transcendence_metric_count(metric: String) -> int:
 	match metric:
+		"statuses_applied": return raw_statuses_applied
 		"allies_died": return raw_allied_deaths
 		"tanks_died": return raw_tank_deaths
 	return raw_allied_summons

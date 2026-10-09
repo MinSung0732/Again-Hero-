@@ -346,6 +346,7 @@ func _fire_projectile(direction_to_hero: Vector2) -> void:
 	var projectile := _acquire_projectile()
 	if projectile == null:
 		return
+	projectile.set_meta("combat_source",weakref(self))
 	projectile.global_position = global_position + direction_to_hero * 18.0
 	var is_elite := String(get_meta("visual_variant", "")) == "elite"
 	if projectile.has_method("setup"):

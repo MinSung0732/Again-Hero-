@@ -25,6 +25,7 @@ const ORDER := [
 	"yuki_onna",
 	"zeus",
 	"bulgasal",
+	"izanami",
 ]
 
 const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd")
@@ -33,6 +34,17 @@ const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const BULGASAL_BEHAVIOR := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const MONSTERS := {
+	"izanami": {
+		"id":"izanami","name":"이자나미","rarity":"transcendent","grade":"transcendent","role":"control","species":"divine_humanoid","family":"izanami","attack_type":"ranged","combat_style":"ranged_harasser",
+		"collection_card":{"style_label":"원거리 제어형","identity":"황천의 여신","feature":"원혼 · 침묵 · 도깨비불 · 토리이"},
+		"growth_metric":"statuses_applied","summon_growth":{"attack_damage":2.0,"max_hp":2.5},
+		"default_unlocked":false,"combat_enabled":true,"base_cost":0.0,"summon_exp":0.0,"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,"special_augment_ids":[],
+		"base_stats":preload("res://src/data/izanami_behavior_catalog.gd").BASE,"transcendence":preload("res://src/data/izanami_behavior_catalog.gd").RULES,
+		"card_icon_path":"res://assets/art/Transcendent_monster/Izanami/frames/idle_01.png","ground_shadow":{"size":Vector2(78,20),"offset_y":0.0,"opacity":0.35},
+		"scene":preload("res://src/monsters/Izanami.tscn"),
+		"description":"제어형 실제50회 소환 및 상태이상3회 적중 후 전투당1회. 공격55+소환 전 상태이상×2, HP1080+×2.5. 사거리 지름550 즉시타격·공격간격1.5초·이속250·거리 유지. 게이지100/증강 적용 지휘력회복100%, 초당최대15. 황천윤무20/30초:7초 받는피해+15%·둔화12%,12피격 시155%·3초99%둔화/침묵. 명계귀화10/8초:0.75초 예고·지름180·170%,3초 장판200%·갱신 둔화30%. 원혼추살30/20초:2초간8개,5초 배회·120%/1.5초기절. 피해12회 또는 상태4회마다 토리이10초·지름350:아군 주는피해+15%/받는피해-20%,용사 주는피해-15%/받는피해+20%. 1초월:귀화CD절반·즉시.2초월:추살소모절반·인식+80%.3초월:귀화CD추가-2초·범위+30%.4초월:토리이15초·아군피감40%.5초월:통과 시이속+40%5초·피감70%1초. 일반/특수증강·엘리트·대형몹 제외.",
+	},
+
 	"bulgasal": {
 		"id":"bulgasal","name":"불가살","rarity":"transcendent","grade":"transcendent",
 		"role":"tank","species":"beast","family":"bulgasal","attack_type":"melee",

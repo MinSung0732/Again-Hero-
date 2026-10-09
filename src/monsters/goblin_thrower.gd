@@ -345,6 +345,7 @@ func _fire_projectile(offset_to_hero: Vector2) -> void:
 	var projectile := _acquire_projectile()
 	if projectile == null:
 		return
+	projectile.set_meta("combat_source",weakref(self))
 	projectile.global_position = global_position + direction_to_hero * 24.0
 	if projectile.has_method("setup"):
 		projectile.call(
