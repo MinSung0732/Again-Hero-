@@ -2,6 +2,17 @@ extends RefCounted
 ## Presentation-only registry. Keys: domain:owner_id:skill_id (or authored skill name).
 ## Domains: demon, elite, transcendent, hero. No guessed filenames or combat changes.
 const PATHS := {
+	"transcendent:bulgasal:전략후퇴": "res://assets/art/Icon/monster/Transcendent/bulgasal/devour.png",
+	"transcendent:bulgasal:강철도약": "res://assets/art/Icon/monster/Transcendent/bulgasal/immortal_rampage.png",
+	"transcendent:bulgasal:바위돌진": "res://assets/art/Icon/monster/Transcendent/bulgasal/thorn_charge.png",
+	"transcendent:bulgasal:바위던지기": "res://assets/art/Icon/monster/Transcendent/bulgasal/iron_bite.png",
+	"transcendent:izanami:황천윤무": "res://assets/art/Icon/monster/Transcendent/izanami/soul_lantern.png",
+	"transcendent:izanami:명계귀화": "res://assets/art/Icon/monster/Transcendent/izanami/death_blossom.png",
+	"transcendent:izanami:원혼추살": "res://assets/art/Icon/monster/Transcendent/izanami/yomi_wave.png",
+	"transcendent:manticore:재앙의 불꽃": "res://assets/art/Icon/monster/Transcendent/manticore/manticore_skill1_icon.png",
+	"transcendent:manticore:맹독유성": "res://assets/art/Icon/monster/Transcendent/manticore/manticore_skill2_icon.png",
+	"transcendent:manticore:지각분쇄": "res://assets/art/Icon/monster/Transcendent/manticore/manticore_skill3_icon.png",
+	"transcendent:manticore:살을 찢는 공포": "res://assets/art/Icon/monster/Transcendent/manticore/manticore_skill4_icon.png",
 	"demon:demon:encirclement": "res://assets/art/Icon/demonking/circular_siege.png",
 	"demon:demon:line_assault": "res://assets/art/Icon/demonking/line_assault.png",
 	"demon:demon:square_siege": "res://assets/art/Icon/demonking/square_siege.png",
@@ -87,10 +98,22 @@ static func key(domain: String, owner_id: String, skill_id: String) -> String:
 static func path(domain: String, owner_id: String, skill_id: String) -> String:
 	return String(PATHS.get(key(domain,owner_id,skill_id),""))
 static func texture(domain: String, owner_id: String, skill_id: String) -> Texture2D:
-	var location := path(domain,owner_id,skill_id)
+	return load_texture(path(domain,owner_id,skill_id))
+
+static func load_texture(location: String) -> Texture2D:
 	if location.is_empty(): return null
-	if not textures.has(location): textures[location] = load(location) as Texture2D if ResourceLoader.exists(location) else null
-	return textures[location]
+	if textures.has(location) and textures[location] != null: return textures[location]
+	var result: Texture2D
+	if ResourceLoader.exists(location):
+		var resource = load(location)
+		if resource is Texture2D: result = resource
+	# Editor import sidecars may not yet exist after pulling newly added PNGs.
+	# Exported builds use imported Texture2D; raw fallback is cached once per path.
+	if result == null and FileAccess.file_exists(location):
+		var image := Image.new()
+		if image.load(location) == OK: result = ImageTexture.create_from_image(image)
+	textures[location] = result
+	return result
 
 # UI-only entries for existing attacks/passives stored as scalar profile fields.
 const EXTRA_HERO_SLOTS := {

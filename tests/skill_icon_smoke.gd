@@ -19,6 +19,11 @@ func run() -> void:
  root.add_child(slot)
  var badge := BADGE.new()
  root.add_child(badge)
+ var fixture_image := Image.create(8,8,false,Image.FORMAT_RGBA8)
+ fixture_image.fill(Color.RED)
+ var raw_path := SCOPE.guest_directory.path_join("unimported-icon.png")
+ check(fixture_image.save_png(raw_path) == OK,"raw PNG fixture written")
+ check(ART.load_texture(raw_path) != null,"PNG without import can display")
  var hero_ids := {}
  for key in ART.PATHS:
   var fields: PackedStringArray = String(key).split(":")
@@ -32,7 +37,7 @@ func run() -> void:
    hero_ids[fields[2]] = true
    badge.configure({"id":fields[2],"icon_path":"res://missing-old-effect.png"})
    check(badge.icon_path == ART.PATHS[key] and badge.icon_texture != null,"battle badge selects authored icon " + key)
- slot.configure("transcendent","manticore","재앙의 불꽃")
+ slot.configure("transcendent","fixture_unprovided","fixture_skill")
  check(slot.image.texture == null and slot.placeholder.visible,"unprovided icon stays empty")
  badge.configure({"id":"fixture_unprovided","icon_path":ART.PATHS.values()[0]})
  check(badge.icon_texture != null,"legacy fallback preserved")
@@ -59,6 +64,21 @@ func run() -> void:
  lobby.gameplay_settings_path = SCOPE.guest_directory.path_join("options.cfg")
  root.add_child(lobby)
  current_scene = lobby
+ for id in ["zeus","bulgasal","izanami","manticore"]:
+  lobby._populate_monster_detail(id)
+  for i in range(lobby._transcendent_detail.rows.size()):
+   if not lobby._transcendent_detail.rows[i].visible: continue
+   var skill: Dictionary = load("res://src/data/transcendent_detail_catalog.gd").ENTRIES[id].skills[i]
+   var expected := ART.path("transcendent",id,String(skill.get("id",skill.name)))
+   if not expected.is_empty(): check(lobby._transcendent_detail.icons[i].texture != null and not lobby._transcendent_detail.placeholders[i].visible,"actual team detail icon " + id + skill.name)
+ for id in load("res://src/data/monster_catalog.gd").ORDER:
+  if load("res://src/data/monster_catalog.gd").get_elite_skills(id).is_empty(): continue
+  lobby._populate_monster_detail(id)
+  for entry in lobby._elite_detail_slots:
+   if entry.row.visible: check(entry.icon.image.texture != null and not entry.icon.placeholder.visible,"actual elite detail icon " + id)
+ var first_row: Control = lobby._elite_detail_slots[0].row
+ lobby._populate_monster_detail("slime")
+ check(lobby._elite_detail_slots[0].row == first_row,"elite rows reused")
  for id in ["encirclement","line_assault","square_siege"]:
   var card: Control = lobby._create_demon_skill_card(id)
   check(card.find_children("*","TextureRect",true,false).any(func(image):return image.texture == ART.texture("demon","demon",id)),"actual formation card " + id)

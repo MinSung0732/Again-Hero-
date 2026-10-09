@@ -21,7 +21,7 @@ const SKILLS = {
 	},
 	"line_assault": {
 		"id": "line_assault",
-		"name": "일직선 공세",
+		"name": "직선 포위",
 		"description": "동/서/남/북 한 면에서 일직선 소환",
 		"implemented": true,
 		"mana_cost": 40.0,

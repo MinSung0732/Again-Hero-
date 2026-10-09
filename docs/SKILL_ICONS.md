@@ -1,8 +1,8 @@
 # 기술 아이콘 연결
 
-사용자가 c5be225b 커밋으로 추가한89 PNG 중 실제 대응을 확인한78개를 원본 변경 없이 공용 SkillIconCatalog에 명시적으로 등록했다. 폴더명과 게임 ID가 다른 kobold/kobolt, skeleton_warrior/skeleton, specter_knight/dullahan 등의 차이를 경로표에서 처리한다. 런타임 디렉터리 검색·자동 파일명 추측·전투 데이터 변경은 없다.
+사용자가 c5be225b/0156ee4f 커밋으로 추가한93 PNG 중 실제 대응을 확인한89개를 원본 변경 없이 공용 SkillIconCatalog에 명시적으로 등록했다. 폴더명과 게임 ID가 다른 kobold/kobolt, skeleton_warrior/skeleton, specter_knight/dullahan 등의 차이를 경로표에서 처리한다. 런타임 디렉터리 검색·자동 파일명 추측·전투 데이터 변경은 없다.
 
-도감: 마왕/엘리트/초월/용사 기술 슬롯. 용사 HUD: 기존 ID의 전용 아이콘을 초기 configure 때 조회하며 미등록은 기존 효과 프레임으로 fallback. 마왕: 팀 편성 카드/선택 슬롯/전투 기술 버튼에 같은 캐시 텍스처를 사용한다. 권총 용사의4기술/검방 기본 공격2종은 기존 스칼라 프로필에 존재하는 표시용 슬롯만 추가하고 전투 기술이나 수치는 추가하지 않는다.
+도감: 마왕/엘리트/초월/용사 기술 슬롯. 팀 편성 상세: 초월 기술/패시브 및 엘리트 기술의 아이콘+이름/재사용/설명 행. 엘리트 행은 최초 최대 기술 수까지 생성하고 재사용한다. 용사 HUD: 기존 ID의 전용 아이콘을 초기 configure 때 조회하며 미등록은 기존 효과 프레임으로 fallback. 새 PNG의 import가 아직 없거나 null 로딩이면 원본 파일에서 한 번 로딩해 캐시하며 실패한 null은 영구 고정하지 않는다. 마왕: 팀 편성 카드/선택 슬롯/전투 기술 버튼에 같은 캐시 텍스처를 사용한다. 권총 용사의4기술/검방 기본 공격2종은 기존 스칼라 프로필에 존재하는 표시용 슬롯만 추가하고 전투 기술이나 수치는 추가하지 않는다.
 
 ## 연결된 경로
 
@@ -87,24 +87,25 @@
 | transcendent:zeus:과전압 | res://assets/art/Icon/monster/Transcendent/zeus/overcharge.png |
 | transcendent:izanami:요모츠히라사카 | res://assets/art/Icon/monster/Transcendent/izanami/yomi_gate.png |
 
-## 대응 확인이 필요한 파일
+## 추가 확정 연결
 
-- assets/art/Icon/monster/Transcendent/izanami/yomi_wave.png
-- assets/art/Icon/monster/Transcendent/izanami/soul_lantern.png
-- assets/art/Icon/monster/Transcendent/izanami/death_blossom.png
-- assets/art/Icon/monster/Transcendent/shuten-doji/shuten-doji_skill3_icon.png
-- assets/art/Icon/monster/Transcendent/shuten-doji/shuten-doji_skill4_icon.png
-- assets/art/Icon/monster/Transcendent/shuten-doji/shuten-doji_skill1_icon.png
-- assets/art/Icon/monster/Transcendent/shuten-doji/shuten-doji_skill2_icon.png
-- assets/art/Icon/monster/Transcendent/bulgasal/immortal_rampage.png
-- assets/art/Icon/monster/Transcendent/bulgasal/devour.png
-- assets/art/Icon/monster/Transcendent/bulgasal/iron_bite.png
-- assets/art/Icon/monster/Transcendent/bulgasal/thorn_charge.png
+| 몬스터 | 현재 기술 | 파일 |
+|---|---|---|
+| 불가살 | 바위던지기 | iron_bite.png |
+| 불가살 | 바위돌진 | thorn_charge.png |
+| 불가살 | 강철도약 | immortal_rampage.png |
+| 불가살 | 전략후퇴(패시브) | devour.png |
+| 이자나미 | 황천윤무 | soul_lantern.png |
+| 이자나미 | 명계귀화 | death_blossom.png |
+| 이자나미 | 원혼추살 | yomi_wave.png |
+| 이자나미 | 요모츠히라사카(패시브) | yomi_gate.png |
+| 만티코어 | 재앙의 불꽃 | manticore_skill1_icon.png |
+| 만티코어 | 맹독유성 | manticore_skill2_icon.png |
+| 만티코어 | 지각분쇄 | manticore_skill3_icon.png |
+| 만티코어 | 살을 찢는 공포(패시브) | manticore_skill4_icon.png |
 
-불가살 현재 기술: 바위던지기/바위돌진/강철도약/전략후퇴. 제공된 devour/iron_bite/thorn_charge/immortal_rampage는 이 기술명과 일치하지 않아 임의 순번 배정하지 않는다.
-이자나미 현재 기술: 황천윤무/명계귀화/원혼추살/요모츠히라사카. yomi_gate는 토리이 패시브에 연결했고 나머지3개는 대응 확인이 필요하다.
-슈텐도지는 아직 MonsterCatalog/TranscendentDetailCatalog 등록이 없어 기존 아이콘4개를 보관한다. 만티코어 아이콘은 이번 추가분에 없다.
+만티코어 기본 공격 사냥/추적 아이콘은 제공되지 않아 빈 슬롯을 유지한다. 슈텐도지4개는 아직 게임 등록이 없어 원본만 보관한다. 마왕 circular_siege→원형 포위, line_assault→직선 포위, square_siege→사각 포위이며 기존 기술 ID/판정/수치는 유지한다.
 
 ## 검증
 
-Godot4.5.1 헤드리스 tests/skill_icon_smoke.gd:78리소스 로딩/슬롯 placeholder 대체/캐시 재사용/용사 HUD ID 중복 없음·전용아트 우선·기존fallback/실제Main 초기화·마왕3전투버튼/실제Lobby 편성카드. 도감/용사 잠금·계정·기술 슬롯/초월 상세/실제Lobby 설정 회귀는 기존 smoke를 사용한다. 실제GPU 화면·모바일·export는 별도 검증 대상이다.
+Godot4.5.1 헤드리스 tests/skill_icon_smoke.gd:89리소스·import 없는 PNG fallback 로딩/슬롯 placeholder 대체/캐시 재사용/용사 HUD ID 중복 없음·전용아트 우선·기존fallback/실제Main 초기화·마왕3전투버튼/실제Lobby 편성카드·25종 팀 상세/엘리트 아이콘·행 재사용. 도감/용사 잠금·계정·기술 슬롯/초월 상세/실제Lobby 설정 회귀는 기존 smoke를 사용한다. 실제GPU 화면·모바일·export는 별도 검증 대상이다.

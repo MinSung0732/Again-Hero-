@@ -20,6 +20,8 @@ const TEAM_LOADOUT_STORE := preload("res://src/systems/team_loadout_store.gd")
 const TRANSCENDENCE_DATA := preload("res://src/data/transcendence_catalog.gd")
 var _transcendence_entry_confirm = null
 var _transcendent_detail = null
+var _elite_detail_column: VBoxContainer
+var _elite_detail_slots: Array[Dictionary] = []
 var shop_popup_view = preload("res://src/ui/shop_popup_view.gd").new()
 var transcendence_view = preload("res://src/ui/transcendence_formation_view.gd").new()
 const FORMATION_DRAG_CARD := preload("res://src/ui/formation_drag_card.gd")
@@ -3997,6 +3999,42 @@ func _populate_monster_detail(monster_id: String) -> void:
 		mutation
 	)
 	monster_detail_elite_skills.text = _build_elite_skill_text(monster_id)
+	_present_elite_detail_icons(monster_id)
+
+func _present_elite_detail_icons(monster_id: String) -> void:
+	if _elite_detail_column == null:
+		_elite_detail_column = VBoxContainer.new()
+		_elite_detail_column.name = "EliteSkillIconRows"
+		_elite_detail_column.add_theme_constant_override("separation",20)
+		monster_detail_elite_skills.get_parent().add_child(_elite_detail_column)
+	var skills := MONSTER_CATALOG.get_elite_skills(monster_id)
+	monster_detail_elite_skills.visible = skills.is_empty()
+	_elite_detail_column.visible = not skills.is_empty()
+	while _elite_detail_slots.size() < skills.size():
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation",20)
+		_elite_detail_column.add_child(row)
+		var icon := preload("res://src/ui/codex_skill_icon.gd").new()
+		row.add_child(icon)
+		var text := RichTextLabel.new()
+		text.bbcode_enabled = true
+		text.fit_content = true
+		text.scroll_active = false
+		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		text.add_theme_font_size_override("normal_font_size",26)
+		text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(text)
+		_elite_detail_slots.append({"row":row,"icon":icon,"text":text})
+	for i in range(_elite_detail_slots.size()):
+		var slot: Dictionary = _elite_detail_slots[i]
+		slot.row.visible = i < skills.size()
+		if i >= skills.size(): continue
+		var skill: Dictionary = skills[i]
+		slot.icon.configure("elite",monster_id,String(skill.get("id",skill.name)))
+		slot.icon.tooltip_text = String(skill.name)
+		var timing := "상시 패시브" if bool(skill.get("passive",false)) else "선쿨 %.1f초 · 쿨 %.1f초" % [maxf(float(skill.get("initial_cooldown",0)),0),maxf(float(skill.get("cooldown",0)),0)]
+		slot.text.text = "[color=#ffe29a]%s[/color]\n[color=#b89ac7]%s[/color]\n%s" % [String(skill.name),timing,String(skill.get("description",""))]
+
 
 func _read_monster_base_stats(monster_id: String) -> Dictionary:
 	return MONSTER_CATALOG.get_base_stats(monster_id)

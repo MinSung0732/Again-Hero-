@@ -1,3 +1,9 @@
+## 2026-10-09 — 만티코어·확정 초월 기술 연결 및 팀 상세 엘리트 아이콘
+
+- 최신 feature/stage10-astra0156ee4f/main d968b2ae·clean fast-forward 확인. 만티코어 skill1/2/3/4를 재앙의 불꽃/맹독유성/지각분쇄/패시브에 연결. 사용자 지정 불가살 iron_bite/thorn_charge/immortal_rampage/devour→기술1/2/3/패시브, 이자나미 soul_lantern/death_blossom/yomi_wave/yomi_gate→기술1/2/3/패시브 확정 반영. 공용89키, 원본 파일 변경 없음.
+- 팀 편성 일반 상세의 글자 전용 엘리트 기술을 아이콘+이름/재사용/설명 행으로 변경, 최대 기술 수까지 생성 후 재사용. 도감/초월팀 상세는 같은 공용 경로표 사용. PNG import 부재/null 로딩 시 원본 한번 로딩/캐시 fallback, 실패 null은 영구 고정하지 않음. 마왕 circular/line/square 연결 유지 및 line_assault 표시명 직선 포위 통일. 게임플레이·ID·수치·저장 의미 유지.
+- 정적 파싱/git diff --check/Godot4.5.1 import 및 헤드리스89리소스·import 없는 PNG·캐시/용사HUD fallback·실제Main 마왕버튼·실제Lobby 초월4종/엘리트 전종 상세 표시·행 재사용·편성카드/도감 실제 기술텍스처·페이지/저장/초월상세·설정 회귀 검사. 실제GPU 화면·모바일/export 미검증. 기존 이미지fallback/종료 리소스 경고 유지. 만티코어 기본 사냥/추적은 미제공, 슈텐도지4는 게임 미등록이라 빈자리/원본 보관 유지.
+
 ## 2026-10-09 — 제공된 기술 아이콘78개·공통 표시 연결
 
 - 최신 feature/stage10-astra c5be225b(사용자89 PNG 추가)/main d968b2ae 확인 및 clean fast-forward. 실제 Catalog 기술 ID와 원본 파일을 대조한78개를 공용 SkillIconCatalog에 명시적 연결. 원본 PNG·게임플레이/밸런스/저장 데이터 변경 없음.

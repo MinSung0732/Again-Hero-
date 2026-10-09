@@ -2,6 +2,7 @@ extends SceneTree
 const VIEW := preload("res://src/ui/lobby_demon_codex_view.gd")
 const DATA := preload("res://src/data/demon_codex_catalog.gd")
 const COLLECTION := preload("res://src/systems/monster_collection_store.gd")
+const SKILL_ART := preload("res://src/data/skill_icon_catalog.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 class CodexOwner extends RefCounted:
 	var lobby: Control
@@ -64,6 +65,9 @@ func run() -> void:
 			view._select_card(category,id)
 			check(view.detail_root.visible,"opens modal " + id)
 			check(page.name.text == DATA.MONSTERS.get_monster_name(id),"real name " + id)
+			for panel in page.body.find_children("*","PanelContainer",true,false):
+				if panel.has_meta("icon_key") and SKILL_ART.PATHS.has(String(panel.get_meta("icon_key"))):
+					check(panel.find_children("*","TextureRect",true,false).any(func(icon): return icon.texture != null),"actual codex skill art " + id)
 			check(page.portrait.texture != null,"dot loaded " + id)
 			check(page.stat_values.map(func(label): return label.text) == DATA.stat_values(id),"structured stats " + id)
 			if category == "monsters":
