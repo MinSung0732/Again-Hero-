@@ -12,12 +12,17 @@ class Target extends Node2D:
 	var stun := 0.0
 	var silence := 0.0
 	var slow := 1.0
+	var slow_events := 0
+	var reject_damage := false
 	func take_damage(amount: int, source: Node) -> bool:
+		if reject_damage:
+			return false
 		damage += amount
 		accepted_damage_hit.emit(source)
 		return true
 	func take_status_damage(amount: int, source: Node) -> bool: return take_damage(amount,source)
 	func apply_slow(ratio: float, _seconds: float) -> void:
+		slow_events += 1
 		slow = ratio
 		status_applied.emit("slow")
 	func apply_stun(seconds: float) -> void:
@@ -113,11 +118,38 @@ func run() -> void:
 	target.take_damage(1,null)
 	check(target.damage==before+1,"no recursive/repeated bind")
 	actor.transcend_level = 1
+	actor.passive_hits = 0
+	actor.passive_statuses = 0
+	var slow_before := target.slow_events
 	actor._create_fire()
 	before = target.damage
 	for i in range(300): actor._tick_fire(0.01)
 	actor._tick_fire(0.01)
 	check(target.damage-before==278,"170% plus exactly200% DOT rounded budgets")
+	check(actor.passive_hits == 1 and actor.passive_statuses == 1,"one hit/status stack per entire fire lifetime")
+	check(target.slow_events-slow_before > 1,"slow refresh still applied every tick")
+	actor._create_fire()
+	actor._tick_fire(0.5)
+	check(actor.passive_hits == 2 and actor.passive_statuses == 2,"new fire cast earns fresh stacks")
+	actor.fire_age.fill(-1.0)
+	actor._create_fire()
+	target.reject_damage = true
+	actor._tick_fire(0.5)
+	check(actor.passive_hits == 2 and actor.fire_hit_counted[0] == 0,"rejected hits do not consume first stack")
+	target.reject_damage = false
+	actor._tick_fire(0.5)
+	check(actor.passive_hits == 3 and actor.fire_hit_counted[0] == 1,"later accepted DOT earns first stack")
+	actor.fire_age.fill(-1.0)
+	actor.passive_hits = 0
+	actor.passive_statuses = 0
+	actor.ghost_remaining = 7.0
+	actor.ghost_hits = 0
+	for i in range(12): actor._deal_damage(1,true,false)
+	check(actor.ghost_remaining == 0 and actor.passive_hits == 1 and actor.passive_statuses == 2,"DOT ghost hits still trigger independent counted bind")
+	actor.passive_hits = 0
+	for i in range(12): actor._hit(1.0)
+	check(actor.passive_hits == 12,"separate basic attacks all count")
+
 	actor.transcend_level = 0
 	actor._create_fire()
 	before = target.damage

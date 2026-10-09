@@ -15,7 +15,12 @@ const SPIRIT_DETECTION_RADIUS := 180.0
 const SPIRIT_DASH_SPEED := 900.0
 const SPIRIT_THROW_SPEED := 500.0
 const TORII_CAPACITY := 4
-const EFFECT_HEIGHTS := [150.0,180.0,54.0,230.0]
+const EFFECT_HEIGHTS := [150.0,450.0,135.0,460.0]
+# Visible bounds of original attachment/roaming frames, measured once from PNGs.
+const GHOST_VISIBLE_CENTER := Vector2(140.5,190.0)
+const SPIRIT_VISIBLE_TOP := 81.0
+const SPIRIT_BAR_GAP := 7.0
+const TARGET_BODY_CENTER_FALLBACK := Vector2(0,-24)
 # Exact uploaded manifest coordinates; export-safe without runtime JSON dependency.
 const EFFECT_CANVASES := [Vector2(278,349),Vector2(414,368),Vector2(336,425),Vector2(308,405)]
 const EFFECT_ANCHORS := [Vector2(139,332),Vector2(207,356),Vector2(168,241),Vector2(154,390)]

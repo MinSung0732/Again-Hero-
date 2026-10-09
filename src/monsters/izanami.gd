@@ -39,6 +39,11 @@ var local_allies: Array = []
 # Entries allocated only when an ally enters a gate; reused across gate refreshes.
 var crossing_records: Dictionary = {}
 var status_depth := 0
+var count_current_hit := true
+var target_visual: AnimatedSprite2D
+var target_body_center := Vector2.ZERO
+var fire_hit_counted := PackedByteArray([0,0,0,0])
+var fire_slow_counted := PackedByteArray([0,0,0,0])
 var prune_tick := 0.0
 var stale_crossing_ids: Array[int] = []
 
@@ -96,6 +101,7 @@ func _ready() -> void:
 		FX.prepare(kind)
 	if is_instance_valid(hero):
 		hero.accepted_damage_hit.connect(_on_accepted_hit)
+		_cache_target_body_center()
 
 func get_gauge_regen() -> float:
 	return minf(maxf(float(combat_authority.command_regen_per_second),0.0),15.0) if is_instance_valid(combat_authority) else 0.0
@@ -171,15 +177,47 @@ func _tick_retreat_and_heal(delta: float) -> bool:
 func _fire_projectile(_offset: Vector2) -> void:
 	_hit(1.0)
 
+func _cache_target_body_center() -> void:
+	target_visual = hero.get_node_or_null("HeroSprite") as AnimatedSprite2D
+	if target_visual == null or target_visual.sprite_frames == null:
+		return
+	var texture := target_visual.sprite_frames.get_frame_texture(target_visual.animation,0)
+	if texture == null:
+		return
+	# Cache alpha bounds at setup, never read image pixels in draw/physics loops.
+	target_body_center = Vector2(texture.get_image().get_used_rect().get_center())
+	if target_visual.centered:
+		target_body_center -= texture.get_size()*0.5
+
+func _target_body_point() -> Vector2:
+	if is_instance_valid(target_visual):
+		var center := target_body_center
+		if target_visual.flip_h:
+			center.x = -center.x
+		if target_visual.flip_v:
+			center.y = -center.y
+		return target_visual.to_global(center+target_visual.offset)-global_position
+	return hero.global_position-global_position+DATA.TARGET_BODY_CENTER_FALLBACK
+
 func _hit(ratio: float, status_tick: bool = false) -> bool:
+	return _deal_damage(maxi(int(round(attack_damage*ratio)),1),status_tick)
+
+func _deal_damage(amount: int, status_tick: bool, count_passive: bool = true) -> bool:
 	if not is_instance_valid(hero) or hero.current_hp <= 0:
 		return false
-	return bool(hero.take_status_damage(maxi(int(round(attack_damage*ratio)),1),self)) if status_tick else bool(hero.take_damage(maxi(int(round(attack_damage*ratio)),1),self))
+	var previous := count_current_hit
+	count_current_hit = count_passive
+	var accepted := bool(hero.take_status_damage(amount,self)) if status_tick else bool(hero.take_damage(amount,self))
+	count_current_hit = previous
+	return accepted
 
 func _on_accepted_hit(source: Node) -> void:
+	var count_passive := count_current_hit
+	# A nested ghost bind is a new hit, even when triggered by an uncounted DOT tick.
+	count_current_hit = true
 	if dying:
 		return
-	if source == self:
+	if source == self and count_passive:
 		passive_hits += 1
 	if ghost_remaining > 0.0:
 		ghost_hits += 1
@@ -191,9 +229,9 @@ func _on_accepted_hit(source: Node) -> void:
 			_status("slow",0.01,3.0)
 			_status("silence",0.0,3.0)
 
-func _status(kind: String, strength: float, seconds: float) -> void:
+func _status(kind: String, strength: float, seconds: float, count_passive: bool = true) -> bool:
 	if not is_instance_valid(hero) or hero.current_hp <= 0 or hero.is_dying:
-		return
+		return false
 	# Count only the authority's actual accepted events, not attempted casts.
 	status_depth = 0
 	if not hero.status_applied.is_connected(_count_own_status):
@@ -204,7 +242,9 @@ func _status(kind: String, strength: float, seconds: float) -> void:
 		"silence": hero.apply_silence(seconds)
 		"vulnerability": hero.apply_damage_taken_increase(seconds,strength)
 	hero.status_applied.disconnect(_count_own_status)
-	passive_statuses += status_depth
+	if count_passive:
+		passive_statuses += status_depth
+	return status_depth > 0
 
 func _count_own_status(_kind: String) -> void:
 	status_depth += 1
@@ -252,6 +292,8 @@ func _create_fire() -> void:
 		fire_budget[i] = int(round(attack_damage*2.0))
 		fire_paid[i] = 0
 		fire_tick[i] = 0.0
+		fire_hit_counted[i] = 0
+		fire_slow_counted[i] = 0
 		return
 
 func _tick_fire(delta: float) -> void:
@@ -263,7 +305,8 @@ func _tick_fire(delta: float) -> void:
 		var inside := is_instance_valid(hero) and hero.global_position.distance_squared_to(fire_points[i]) <= fire_radius()*fire_radius()
 		if before <= fire_delay[i] and fire_age[i] >= fire_delay[i]:
 			if inside:
-				_hit(1.7,true)
+				if _deal_damage(maxi(int(round(attack_damage*1.7)),1),true,fire_hit_counted[i] == 0):
+					fire_hit_counted[i] = 1
 		if fire_age[i] < fire_delay[i]:
 			continue
 		fire_tick[i] -= delta
@@ -275,8 +318,10 @@ func _tick_fire(delta: float) -> void:
 			fire_tick[i] = 0.5
 			if inside:
 				if amount > 0:
-					hero.take_status_damage(amount,self)
-				_status("slow",0.7,2.0)
+					if _deal_damage(amount,true,fire_hit_counted[i] == 0):
+						fire_hit_counted[i] = 1
+				if _status("slow",0.7,2.0,fire_slow_counted[i] == 0):
+					fire_slow_counted[i] = 1
 		if age >= 3.0:
 			fire_age[i] = -1.0
 
@@ -440,7 +485,9 @@ func _draw_effects() -> void:
 	if is_instance_valid(hero):
 		var point := hero.global_position-global_position
 		if ghost_remaining > 0.0:
-			FX.draw_frame(effect_layer,0,int(clock*7.0)%2,point)
+			var factor := float(DATA.EFFECT_HEIGHTS[0])/DATA.EFFECT_CANVASES[0].y
+			var attachment := _target_body_point()+(DATA.EFFECT_ANCHORS[0]-DATA.GHOST_VISIBLE_CENTER)*factor
+			FX.draw_frame(effect_layer,0,int(clock*7.0)%2,attachment)
 		if bind_remaining > 0.0:
 			FX.draw_frame(effect_layer,0,2+int((0.6-bind_remaining)*10.0),point)
 	for i in range(4):
@@ -458,8 +505,9 @@ func _draw_effects() -> void:
 		var point := spirit_points[i]-global_position
 		FX.draw_frame(effect_layer,2,3+mini(4,int(spirit_age[i]*10.0)) if spirit_state[i] == 4 else int(spirit_age[i]*8.0)%3,point)
 		if spirit_state[i] == 2:
-			effect_layer.draw_rect(Rect2(point+Vector2(-15,8),Vector2(30,3)),Color(0.1,0.1,0.16))
-			effect_layer.draw_rect(Rect2(point+Vector2(-15,8),Vector2(30*(1.0-spirit_age[i]/5.0),3)),Color(0.7,0.5,1.0))
+			var bar_y := (DATA.SPIRIT_VISIBLE_TOP-DATA.EFFECT_ANCHORS[2].y)*float(DATA.EFFECT_HEIGHTS[2])/DATA.EFFECT_CANVASES[2].y-DATA.SPIRIT_BAR_GAP
+			effect_layer.draw_rect(Rect2(point+Vector2(-15,bar_y),Vector2(30,3)),Color(0.1,0.1,0.16))
+			effect_layer.draw_rect(Rect2(point+Vector2(-15,bar_y),Vector2(30*(1.0-spirit_age[i]/5.0),3)),Color(0.7,0.5,1.0))
 	for i in range(DATA.TORII_CAPACITY):
 		if torii_age[i] < 0.0:
 			continue

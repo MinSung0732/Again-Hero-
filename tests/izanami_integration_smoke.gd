@@ -93,6 +93,9 @@ func run() -> void:
 		actor.fire_points[0] = battle.hero.position
 		actor.fire_age[0] = 1.1
 		actor.fire_delay[0] = 0.75
+		actor.spirit_points[0] = battle.hero.position+Vector2(-120,-80)
+		actor.spirit_state[0] = 2
+		actor.spirit_age[0] = 1.0
 		actor.effect_layer.queue_redraw()
 		actor.queue_redraw()
 		await process_frame

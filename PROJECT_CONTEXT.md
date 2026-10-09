@@ -1,3 +1,7 @@
+## Izanami effect readability / sustained-stack policy (2026-10-09)
+- Fire/spirit visual heights450/135 (2.5x), torii460 (2x); gameplay radii unchanged. Ghost visible center attaches to cached hero alpha-body center; sprite transform follows movement/scale/facing. Spirit lifetime bar above original roaming-frame alpha bounds, nearest/author anchor preserved.
+- One accepted damage stack and one accepted slow stack per fire cast for torii passive; fixed slot flags reset on reuse. Repeated DOT/status refreshes still apply gameplay effects and all accepted hits still progress ghost bind. New casts/basic attacks/spirit impacts/bind remain independent.
+
 ## Izanami standoff movement correction (2026-10-09)
 - Approaches beyond attack radius275 and casts existing skills during approach once within their unchanged reach. Retreat starts below220, persists to240, then holds/attacks; face the target while retreating. Catalog thresholds, bounded movement and hysteresis; existing movement multipliers and arrival hold unchanged.
 
