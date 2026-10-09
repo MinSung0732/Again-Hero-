@@ -301,6 +301,7 @@ var stage_selector_current_style := StyleBoxFlat.new()
 var stage_selector_disabled_style := StyleBoxFlat.new()
 
 func _process(delta: float) -> void:
+	_mobile_scroll_router.step(delta)
 	_tick_shop_banner(delta)
 	if not _scene_load_pending:
 		return
