@@ -22,6 +22,7 @@ const DEMON_SKILL_LOADOUT_STORE := preload(
 )
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const HERO_AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
+const SKILL_ART := preload("res://src/data/skill_icon_catalog.gd")
 const HERO_SKILL_COOLDOWN_BADGE := preload("res://src/ui/hero_skill_cooldown_badge.gd")
 const BATTLE_PIXEL_FRAME_ASSEMBLER := preload("res://src/ui/battle_pixel_frame_assembler.gd")
 const PIXEL_PANEL_SKIN := preload("res://src/ui/pixel_panel_skin.gd")
@@ -2759,6 +2760,9 @@ func _cache_demon_ultimate_ui_data() -> void:
 		var skill_id := String(
 			demon_ultimate_ui_skills[index].get("id", "")
 		)
+		button.icon = SKILL_ART.texture("demon","demon",skill_id)
+		button.expand_icon = true
+		button.add_theme_constant_override("icon_max_width",48)
 		button.pressed.connect(
 			_on_demon_ultimate_pressed.bind(skill_id)
 		)

@@ -1,6 +1,7 @@
 extends Control
 class_name HeroSkillCooldownBadge
 
+const SKILL_ART := preload("res://src/data/skill_icon_catalog.gd")
 const BADGE_SIZE := Vector2(62.0, 62.0)
 const ICON_MARGIN := 7.0
 
@@ -45,7 +46,8 @@ func _process(delta: float) -> void:
 func configure(data: Dictionary) -> void:
 	skill_id = String(data.get("id", ""))
 	skill_name = String(data.get("name", skill_id))
-	var new_icon_path := String(data.get("icon_path", ""))
+	var new_icon_path := SKILL_ART.hero_hud_path(skill_id)
+	if new_icon_path.is_empty(): new_icon_path = String(data.get("icon_path", ""))
 	if new_icon_path != icon_path:
 		icon_path = new_icon_path
 		icon_texture = _load_icon_texture(icon_path)

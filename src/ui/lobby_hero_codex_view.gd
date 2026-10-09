@@ -1,4 +1,5 @@
 extends RefCounted
+const SKILL_ART := preload("res://src/data/skill_icon_catalog.gd")
 const DATA := preload("res://src/data/hero_codex_catalog.gd")
 const TAP_BUTTON := preload("res://src/ui/drag_safe_button.gd")
 const PROGRESS := preload("res://src/systems/stage_progress.gd")
@@ -399,6 +400,7 @@ func _present_skill_slots(id: String) -> void:
 	var profile := DATA.HEROES.get_profile(stage.hero_id)
 	var skills: Array = []
 	DATA.collect_skills(profile,skills)
+	skills.append_array(SKILL_ART.EXTRA_HERO_SLOTS.get(String(stage.hero_id),[]))
 	while skill_slots.size() < skills.size():
 		var slot := preload("res://src/ui/codex_skill_icon.gd").new()
 		skill_icons.add_child(slot)
@@ -407,4 +409,4 @@ func _present_skill_slots(id: String) -> void:
 		skill_slots[i].visible = i < skills.size()
 		if i < skills.size():
 			skill_slots[i].configure("hero",String(stage.hero_id),String(skills[i].id))
-			skill_slots[i].tooltip_text = String(skills[i].name)+" · 스킬 아이콘 자리"
+			skill_slots[i].tooltip_text = String(skills[i].name)

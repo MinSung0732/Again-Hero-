@@ -1,5 +1,7 @@
 extends Control
 
+const SKILL_ART := preload("res://src/data/skill_icon_catalog.gd")
+
 const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
 const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
@@ -3683,7 +3685,7 @@ func _refresh_demon_skill_slot(button: Button, slot_index: int) -> void:
 			int(round(float(skill.get("mana_cost", 0.0)))),
 		]
 		button.disabled = false
-		_team_formation_view.refresh_slot(button, null, String(skill.get("name", skill_id)), "마왕 스킬\n코스트 %d" % int(skill.get("mana_cost", 0)), demon_skill_selected_ids.size() > 1)
+		_team_formation_view.refresh_slot(button, SKILL_ART.texture("demon","demon",skill_id), String(skill.get("name", skill_id)), "마왕 스킬\n코스트 %d" % int(skill.get("mana_cost", 0)), demon_skill_selected_ids.size() > 1)
 	else:
 		button.text = "%d\n빈 슬롯" % (slot_index + 1)
 		button.disabled = false
@@ -3717,12 +3719,13 @@ func _create_demon_skill_card(skill_id: String) -> Control:
 	vbox.add_theme_constant_override("separation", 6)
 	margin.add_child(vbox)
 
-	var symbol := Label.new()
+	var symbol := TextureRect.new()
 	symbol.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	symbol.text = "◆"
-	symbol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	symbol.add_theme_font_size_override("font_size", 46)
-	symbol.add_theme_color_override("font_color", Color("f2c34f"))
+	symbol.texture = SKILL_ART.texture("demon","demon",skill_id)
+	symbol.custom_minimum_size.y = 80
+	symbol.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	symbol.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	symbol.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	vbox.add_child(symbol)
 
 	var title := Label.new()

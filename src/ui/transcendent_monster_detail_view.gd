@@ -50,6 +50,7 @@ func install(parent: Control) -> void:
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		badge.add_child(icon)
 		icons.append(icon)
 		var placeholder := _label(icon,str(i+1),24)
@@ -102,6 +103,7 @@ func present(id: String) -> void:
 		var skill_id := String(skill.get("id",skill.name))
 		icons[i].texture = SKILL_ICONS.texture("transcendent",id,skill_id)
 		icons[i].get_parent().set_meta("icon_key",SKILL_ICONS.key("transcendent",id,skill_id))
+		icons[i].get_parent().tooltip_text = String(skill.name)+(" · 스킬 아이콘 자리" if icons[i].texture == null else "")
 		placeholders[i].visible = icons[i].texture == null
 		placeholders[i].text = "P" if String(skill.kind)=="패시브" else str(i+1)
 	# Read the current account once when opening, including after an upgrade.
