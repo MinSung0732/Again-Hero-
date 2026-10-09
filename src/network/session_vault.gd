@@ -1,9 +1,9 @@
 extends Node
 
 const ANDROID_VAULT := preload("res://src/network/android_session_vault.gd")
-var _android: RefCounted
+var _android: Variant
 
-func _android_store() -> RefCounted:
+func _android_store() -> Variant:
 	if _android == null:
 		_android = ANDROID_VAULT.new()
 	return _android
