@@ -1,3 +1,8 @@
+## Izanami torii stacking shield and background layer (2026-10-09)
+- Each actual torii creation, including replacement of one of4 slots, adds rounded4% of current maximumHP to Izanami support shield. No cap/time expiry; normal shared incoming-damage path consumes shield before HP. Both passive thresholds in one tick grant once; no repeated grant on lifetime ticks. Death clears shield and prevents new gates.
+- Dedicated fixed ToriiEffects child uses absoluteZ-1: above castle floorZ-20 and below normalized actor bodiesZ0. Torii sprite and aura ring move together; original size/ground anchor unchanged. Other spellFXZ8/statusZ12 unchanged; no per-gate node creation.
+- Godot4.7.2 combat/actual Battle integration and native overlap screenshot passed. Android unverified; preexisting headless result-card shader and fixture exit-resource warnings remain.
+
 ## Local test natural-or-debug transcendence unlock (2026-10-09)
 - Removed click-confirmation gates from summon eligibility, actual spawn guard and summon-view readiness. Both natural Catalog thresholds and explicit debug button converge on runtime.ready; combat registration, use-once, command cost/population, pause/end restrictions stay enforced. Confirmation records only debug origin, never an extra summon requirement.
 - Godot4.5.1 actual Battle eligibility plus production summon view checks for Zeus/Bulgasal/Izanami, both paths/reset/used/pause/end; actual Izanami spawn/reward integration passed with local mode on and off. Full Android/Main UI scene unverified; isolated host supplies frame styling only.

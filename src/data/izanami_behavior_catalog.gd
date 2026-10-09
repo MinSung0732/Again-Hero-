@@ -15,6 +15,8 @@ const SPIRIT_DETECTION_RADIUS := 180.0
 const SPIRIT_DASH_SPEED := 900.0
 const SPIRIT_THROW_SPEED := 500.0
 const TORII_CAPACITY := 4
+const TORII_SHIELD_RATIO := 0.04
+const TORII_WORLD_Z := -1 # Above the floor (-20), behind all actor bodies (0+).
 const EFFECT_HEIGHTS := [150.0,180.0,135.0,460.0]
 # Visible bounds of original attachment/roaming frames, measured once from PNGs.
 # The authored torii anchor is the bottom edge, not the ground rune center.

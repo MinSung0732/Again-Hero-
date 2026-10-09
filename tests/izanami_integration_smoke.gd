@@ -72,6 +72,14 @@ func run() -> void:
 	actor.set_physics_process(false)
 	check(actor.summon_snapshot==3 and actor.max_hp==1088 and actor.attack_damage==61,"real spawn growth snapshot")
 	check(not battle.try_summon_transcendent(),"once per battle")
+	actor._create_torii()
+	var shield_step := int(round(actor.max_hp*0.04))
+	actor._create_torii()
+	check(int(actor.get_meta("support_shield_hp",0))==shield_step*2,"actual Battle gate creation stacks4% twice")
+	var actor_hp: int = actor.current_hp
+	actor.take_damage(10)
+	check(actor.current_hp==actor_hp and int(actor.get_meta("support_shield_hp")) < shield_step*2,"actual aura-adjusted damage consumes shield")
+	check(actor.torii_layer.z_index < actor.z_index and not actor.torii_layer.z_as_relative,"actual castle body normalization keeps gate behind monsters")
 	actor.torii_points[0] = battle.hero.global_position
 	actor.torii_age[0] = 1.0
 	actor.clock = 0.0
@@ -87,11 +95,18 @@ func run() -> void:
 	check(battle.hero.current_hp<hp,"real damage still accepted")
 	if "--capture" in OS.get_cmdline_user_args() and DisplayServer.get_name() != "headless":
 		root.size = Vector2i(540,960)
-		actor.position = battle.hero.position+Vector2(100,0)
+		battle.hero.position = Vector2(270,520)
+		actor.position = battle.hero.position+Vector2(70,0)
 		actor.gauge = 80.0
 		actor.ghost_remaining = 7.0
 		actor.torii_points[0] = battle.hero.position+Vector2(0,130)
 		actor.torii_age[0] = 1.0
+		for i in range(1,4): actor.torii_age[i] = -1.0
+		for point in [Vector2(120,470),Vector2(420,470)]:
+			var ally = battle._spawn_monster("slime",point)
+			ally.set_physics_process(false)
+			ally.visual.play(&"idle")
+			ally.visual.set_physics_process(false)
 		actor.fire_points[0] = battle.hero.position
 		actor.fire_age[0] = 1.1
 		actor.fire_delay[0] = 0.75
@@ -99,10 +114,11 @@ func run() -> void:
 		actor.spirit_state[0] = 2
 		actor.spirit_age[0] = 1.0
 		actor.effect_layer.queue_redraw()
+		actor.torii_layer.queue_redraw()
 		actor.queue_redraw()
 		await process_frame
 		await RenderingServer.frame_post_draw
-		root.get_texture().get_image().save_png("/tmp/izanami-combat-native.png")
+		root.get_texture().get_image().save_png("res://../izanami-torii-native.png")
 	battle.free()
 	print("IZANAMI_INTEGRATION: "+("PASS" if failures==0 else "FAILED"))
 	quit(0 if failures==0 else 1)

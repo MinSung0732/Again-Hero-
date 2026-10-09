@@ -165,6 +165,29 @@ func run() -> void:
 	check(actor.fan_spawned==8 and actor.spirit_state.size()==8,"bounded8 fan slots")
 	for i in range(100): actor._tick_spirits(0.1)
 	check(actor.spirit_state.count(0)==8,"spirits expire")
+	check(not actor.torii_layer.z_as_relative and actor.torii_layer.z_index < 0 and actor.torii_layer.z_index > -20,"gate behind normalized bodies and above castle floor")
+	check(actor.effect_layer.z_index==8 and actor.status_layer.z_index==12,"other effects and bars retain foreground layers")
+	actor.set_meta("support_shield_hp",7)
+	var shield_step := int(round(actor.max_hp*0.04))
+	for level in range(6):
+		actor.transcend_level = level
+		actor._create_torii()
+	check(int(actor.get_meta("support_shield_hp"))==7+6*shield_step,"every level stacks4% on existing shield; slot replacement also grants once")
+	actor.fire_age.fill(-1.0)
+	actor.ghost_remaining = 0.0
+	actor.passive_hits = 12
+	actor.passive_statuses = 4
+	actor._physics_process(0.01)
+	check(int(actor.get_meta("support_shield_hp"))==7+7*shield_step,"both passive thresholds create only one gate and one shield grant")
+	actor._physics_process(0.01)
+	actor._tick_torii(30.0)
+	check(int(actor.get_meta("support_shield_hp"))==7+7*shield_step,"ticks and gate expiration do not grant again or remove shield")
+	var hp_before: int = actor.current_hp
+	actor.take_damage(10)
+	check(actor.current_hp==hp_before and int(actor.get_meta("support_shield_hp"))==7+7*shield_step-10,"incoming damage consumes stacked shield before HP")
+	actor.take_damage(int(actor.get_meta("support_shield_hp"))+3)
+	check(actor.current_hp==hp_before-3 and int(actor.get_meta("support_shield_hp"))==0,"shield overflow reaches HP exactly")
+	actor.transcend_level = 0
 	actor.torii_points[0] = target.position
 	actor.torii_age[0] = 1.0
 	check(actor.aura_modifier(target,"incoming")==1.2 and actor.aura_modifier(target,"outgoing")==0.85,"enemy aura")
@@ -195,6 +218,8 @@ func run() -> void:
 	authority.external_pause = false
 	actor._begin_death()
 	check(actor.torii_age.count(-1.0)==4 and actor.aura_modifier(target,"incoming")==1.0,"death clears aura/helpers")
+	actor._create_torii()
+	check(int(actor.get_meta("support_shield_hp"))==0 and actor.torii_age.count(-1.0)==4,"dead actor cannot generate gates or regain shield")
 	authority.free()
 	print("IZANAMI_COMBAT: "+("PASS" if failures==0 else "FAILED"))
 	quit(0 if failures==0 else 1)

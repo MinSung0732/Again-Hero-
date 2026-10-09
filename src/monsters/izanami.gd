@@ -18,6 +18,7 @@ var fan_remaining := 0.0
 var fan_spawned := 0
 var fan_direction := Vector2.RIGHT
 var effect_layer: Node2D
+var torii_layer: Node2D
 var visual_head_y := -110.0
 @onready var status_layer: Node2D = $StatusLayer
 # Fixed reusable slots: no helper monsters, physics shapes or scene churn.
@@ -97,6 +98,13 @@ func _ready() -> void:
 	effect_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(effect_layer)
 	effect_layer.draw.connect(_draw_effects)
+	torii_layer = Node2D.new()
+	torii_layer.name = "ToriiEffects"
+	torii_layer.z_as_relative = false
+	torii_layer.z_index = DATA.TORII_WORLD_Z
+	torii_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(torii_layer)
+	torii_layer.draw.connect(_draw_torii)
 	for kind in range(4):
 		FX.prepare(kind)
 	if is_instance_valid(hero):
@@ -138,6 +146,7 @@ func _physics_process(delta: float) -> void:
 			_try_cast()
 		super._physics_process(delta)
 	effect_layer.queue_redraw()
+	torii_layer.queue_redraw()
 	queue_redraw()
 
 func _refresh_combat_target() -> void:
@@ -369,6 +378,8 @@ func _tick_spirits(delta: float) -> void:
 					spirit_state[i] = 0
 
 func _create_torii() -> void:
+	if dying or current_hp <= 0:
+		return
 	var point := global_position
 	if is_instance_valid(combat_authority) and combat_authority.has_method("_ensure_monster_spatial_grid"):
 		combat_authority._ensure_monster_spatial_grid()
@@ -387,6 +398,11 @@ func _create_torii() -> void:
 	torii_points[torii_next] = point
 	torii_age[torii_next] = 0.0
 	torii_next = (torii_next+1)%DATA.TORII_CAPACITY
+	var total := int(get_meta("support_shield_hp",0)) + int(round(max_hp*DATA.TORII_SHIELD_RATIO))
+	set_meta("support_shield_hp",total)
+	set_meta("support_shield_capacity",total)
+	status_layer.queue_redraw()
+	torii_layer.queue_redraw()
 
 func torii_duration() -> float:
 	return 15.0 if transcend_level >= 4 else 10.0
@@ -457,10 +473,12 @@ func _begin_death() -> void:
 	fire_age.fill(-1.0)
 	spirit_state.fill(0)
 	torii_age.fill(-1.0)
+	set_meta("support_shield_hp",0)
 	crossing_records.clear()
 	if is_instance_valid(hero) and hero.accepted_damage_hit.is_connected(_on_accepted_hit):
 		hero.accepted_damage_hit.disconnect(_on_accepted_hit)
 	effect_layer.queue_redraw()
+	torii_layer.queue_redraw()
 	super._begin_death()
 
 func _draw() -> void:
@@ -508,6 +526,10 @@ func _draw_effects() -> void:
 			var bar_y := (DATA.SPIRIT_VISIBLE_TOP-DATA.EFFECT_ANCHORS[2].y)*float(DATA.EFFECT_HEIGHTS[2])/DATA.EFFECT_CANVASES[2].y-DATA.SPIRIT_BAR_GAP
 			effect_layer.draw_rect(Rect2(point+Vector2(-15,bar_y),Vector2(30,3)),Color(0.1,0.1,0.16))
 			effect_layer.draw_rect(Rect2(point+Vector2(-15,bar_y),Vector2(30*(1.0-spirit_age[i]/5.0),3)),Color(0.7,0.5,1.0))
+
+func _draw_torii() -> void:
+	if dying:
+		return
 	for i in range(DATA.TORII_CAPACITY):
 		if torii_age[i] < 0.0:
 			continue
@@ -517,6 +539,6 @@ func _draw_effects() -> void:
 			frame = maxi(0,7-int((torii_age[i]-torii_duration())*10.0))
 		var factor := float(DATA.EFFECT_HEIGHTS[3])/DATA.EFFECT_CANVASES[3].y
 		var ground_aligned := point+(DATA.EFFECT_ANCHORS[3]-DATA.TORII_GROUND_CENTER)*factor
-		FX.draw_frame(effect_layer,3,frame,ground_aligned)
+		FX.draw_frame(torii_layer,3,frame,ground_aligned)
 		if torii_age[i] <= torii_duration():
-			effect_layer.draw_arc(point,175.0,0,TAU,64,Color(0.7,0.4,0.95,0.5),1.0,false)
+			torii_layer.draw_arc(point,175.0,0,TAU,64,Color(0.7,0.4,0.95,0.5),1.0,false)
