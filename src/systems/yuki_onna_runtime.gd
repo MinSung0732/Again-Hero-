@@ -1,4 +1,5 @@
 extends RefCounted
+const BUCKET_POOL := preload("res://src/systems/spatial_bucket_pool.gd")
 const DATA := preload("res://src/data/yuki_onna_behavior_catalog.gd")
 const FX := preload("res://src/ui/combat_status_effect_visual.gd")
 const CELL_SIZE := 125.0
@@ -7,6 +8,7 @@ var elites: Dictionary = {}
 var targets: Dictionary = {}
 var death_cells: Dictionary = {}
 var used_cells: Array[Vector2i] = []
+var spare_death_buckets: Array = []
 var stale_ids: Array[int] = []
 
 static func start_target_life(target: Node) -> void:
@@ -36,7 +38,7 @@ func record_death(actor: Node2D) -> void:
 	unregister(actor.get_instance_id())
 	var cell := Vector2i(floori(actor.global_position.x / CELL_SIZE),floori(actor.global_position.y / CELL_SIZE))
 	if not death_cells.has(cell):
-		death_cells[cell] = []
+		death_cells[cell] = BUCKET_POOL.acquire(spare_death_buckets)
 	var points: Array = death_cells[cell]
 	if points.is_empty():
 		used_cells.append(cell)
@@ -116,7 +118,7 @@ func tick(delta: float) -> void:
 				actor.apply_chill(_near_death_count(actor.global_position,free_stacks))
 		for cell in used_cells:
 			death_cells[cell].clear()
-		used_cells.clear()
+		BUCKET_POOL.retire_empty(death_cells, used_cells, spare_death_buckets)
 	stale_ids.clear()
 	for id in targets:
 		var entry: Dictionary = targets[id]
@@ -176,5 +178,6 @@ func reset() -> void:
 	elites.clear()
 	targets.clear()
 	death_cells.clear()
+	spare_death_buckets.clear()
 	used_cells.clear()
 	stale_ids.clear()

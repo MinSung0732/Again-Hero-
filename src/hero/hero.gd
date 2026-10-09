@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const TIMED_EVENT_BUFFER := preload("res://src/systems/timed_event_buffer.gd")
+
 const LOCAL_GRID_MOVEMENT := preload("res://src/monsters/monster_runtime_common.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
@@ -863,8 +865,8 @@ var facing_candidate_sign: int = 0
 var facing_candidate_timer: float = 0.0
 
 var ai_memory_clock: float = 0.0
-var offensive_memory_events: Array = []
-var status_effect_events: Array = []
+var offensive_memory_events = TIMED_EVENT_BUFFER.new()
+var status_effect_events = TIMED_EVENT_BUFFER.new()
 var status_resistances: Dictionary = {}
 var ai_observation_timer: float = 0.0
 var ai_observed_context: Dictionary = {}
@@ -15208,15 +15210,7 @@ func record_offensive_event(monster_type: String, monster_role: String = "") -> 
 	_prune_offensive_memory()
 
 func _prune_offensive_memory() -> void:
-	if offensive_memory_events.is_empty():
-		return
-
-	var cutoff := ai_memory_clock - OFFENSE_MEMORY_WINDOW
-	while not offensive_memory_events.is_empty():
-		var event: Dictionary = offensive_memory_events[0]
-		if float(event.get("time", 0.0)) >= cutoff:
-			break
-		offensive_memory_events.pop_front()
+	offensive_memory_events.prune_before(ai_memory_clock - OFFENSE_MEMORY_WINDOW)
 
 func _build_recent_offense_memory() -> Dictionary:
 	_prune_offensive_memory()
@@ -15225,8 +15219,8 @@ func _build_recent_offense_memory() -> Dictionary:
 	var role_weights := {}
 	var total_weight := 0.0
 
-	for raw_event in offensive_memory_events:
-		var event: Dictionary = raw_event
+	for event_index in range(offensive_memory_events.size()):
+		var event: Dictionary = offensive_memory_events.get_event(event_index)
 		var age := maxf(ai_memory_clock - float(event.get("time", ai_memory_clock)), 0.0)
 		var freshness := 1.0 - clampf(age / OFFENSE_MEMORY_WINDOW, 0.0, 1.0)
 		var weight := lerpf(OFFENSE_MEMORY_MIN_WEIGHT, 1.0, freshness)
@@ -16087,7 +16081,7 @@ func get_recent_offense_summary() -> String:
 	var dominant_type := ""
 	var dominant_weight := -1.0
 
-	for raw_type in type_weights.keys():
+	for raw_type in type_weights:
 		var monster_type := String(raw_type)
 		var weight := float(type_weights.get(monster_type, 0.0))
 		if weight > dominant_weight:
@@ -16120,15 +16114,7 @@ func record_status_effect_event(status_id: String) -> void:
 	_prune_status_memory()
 
 func _prune_status_memory() -> void:
-	if status_effect_events.is_empty():
-		return
-
-	var cutoff := ai_memory_clock - STATUS_MEMORY_WINDOW
-	while not status_effect_events.is_empty():
-		var event: Dictionary = status_effect_events[0]
-		if float(event.get("time", 0.0)) >= cutoff:
-			break
-		status_effect_events.pop_front()
+	status_effect_events.prune_before(ai_memory_clock - STATUS_MEMORY_WINDOW)
 
 func _build_recent_status_memory() -> Dictionary:
 	_prune_status_memory()
@@ -16137,8 +16123,8 @@ func _build_recent_status_memory() -> Dictionary:
 	var status_counts := {}
 	var total_weight := 0.0
 
-	for raw_event in status_effect_events:
-		var event: Dictionary = raw_event
+	for event_index in range(status_effect_events.size()):
+		var event: Dictionary = status_effect_events.get_event(event_index)
 		var age := maxf(
 			ai_memory_clock - float(event.get("time", ai_memory_clock)),
 			0.0
@@ -16182,7 +16168,7 @@ func get_recent_status_summary() -> String:
 	var dominant_status := ""
 	var dominant_weight := -1.0
 
-	for raw_status in weights.keys():
+	for raw_status in weights:
 		var status_id := String(raw_status)
 		var weight := float(weights.get(status_id, 0.0))
 		if weight > dominant_weight:

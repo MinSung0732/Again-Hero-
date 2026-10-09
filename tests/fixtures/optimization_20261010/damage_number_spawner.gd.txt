@@ -1,10 +1,8 @@
 extends RefCounted
-class_name DamageNumberSpawner
 
 const DAMAGE_NUMBER_SCENE := preload("res://src/ui/DamageNumber.tscn")
 const WORLD_OFFSET := Vector2(0.0, -56.0)
 const MAX_ACTIVE_POPUPS := 48
-const OWNER_META: StringName = &"_damage_number_owner_id"
 const POOL_META: StringName = &"_damage_number_pool"
 
 
@@ -31,8 +29,6 @@ static func show(
 		var existing = target.get_meta("damage_number_popup")
 		if (
 			is_instance_valid(existing)
-			and not existing.is_queued_for_deletion()
-			and int(existing.get_meta(OWNER_META, 0)) == target.get_instance_id()
 			and existing.has_method("can_merge_damage")
 			and bool(existing.call("can_merge_damage"))
 		):
@@ -53,7 +49,6 @@ static func show(
 
 	popup.global_position = target.global_position + WORLD_OFFSET
 	popup.call("setup", displayed_damage, text_color)
-	popup.set_meta(OWNER_META, target.get_instance_id())
 	target.set_meta("damage_number_popup", popup)
 
 
@@ -69,8 +64,6 @@ static func show_heal(target: Node2D, amount: int) -> void:
 		var existing = target.get_meta("heal_number_popup")
 		if (
 			is_instance_valid(existing)
-			and not existing.is_queued_for_deletion()
-			and int(existing.get_meta(OWNER_META, 0)) == target.get_instance_id()
 			and existing.has_method("can_merge_heal")
 			and bool(existing.call("can_merge_heal"))
 		):
@@ -99,7 +92,6 @@ static func show_heal(target: Node2D, amount: int) -> void:
 		displayed_heal,
 		Color(0.32, 1.0, 0.42, 1.0)
 	)
-	popup.set_meta(OWNER_META, target.get_instance_id())
 	target.set_meta("heal_number_popup", popup)
 
 
@@ -118,7 +110,6 @@ static func show_text_at(
 		return
 
 	popup.global_position = world_position
-	popup.set_meta(OWNER_META, 0)
 	popup.call("setup_text", message)
 
 
@@ -139,9 +130,6 @@ static func _acquire_popup(parent: Node2D) -> Node2D:
 			active_count += 1
 			continue
 
-		if popup.is_queued_for_deletion():
-			active_count += 1
-			continue
 		return popup
 
 	if active_count >= MAX_ACTIVE_POPUPS:
@@ -158,26 +146,12 @@ static func _acquire_popup(parent: Node2D) -> Node2D:
 
 
 static func _get_compacted_pool(parent: Node2D) -> Array:
-	var raw_pool = parent.get_meta(POOL_META) if parent.has_meta(POOL_META) else null
-	if not raw_pool is Array:
-		var new_pool: Array = []
-		parent.set_meta(POOL_META, new_pool)
-		return new_pool
-	# Healthy pools return directly: no copied array and no writes per hit.
-	var pool: Array = raw_pool
-	var first_invalid := -1
-	for index in range(pool.size()):
-		if not is_instance_valid(pool[index]):
-			first_invalid = index
-			break
-	if first_invalid < 0:
-		return pool
-	# Rare stale entries: stable in-place compaction of only the suffix.
-	var write_index := first_invalid
-	for read_index in range(first_invalid + 1, pool.size()):
-		var entry = pool[read_index]
-		if is_instance_valid(entry):
-			pool[write_index] = entry
-			write_index += 1
-	pool.resize(write_index)
+	var raw_pool = parent.get_meta(POOL_META, [])
+	var pool: Array = []
+	if raw_pool is Array:
+		for entry in raw_pool:
+			if is_instance_valid(entry):
+				pool.append(entry)
+
+	parent.set_meta(POOL_META, pool)
 	return pool

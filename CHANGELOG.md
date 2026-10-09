@@ -1,3 +1,11 @@
+## 2026-10-10 — 전 코드 성능 조사·기록/공간/표시 경로 최적화
+
+- 수정 전 main/feature/stage10-astra 최신 SHA 1d5ad4cedbadc72ea52c2c342946d75dcee96fe7 및 clean checkout 확인. 원격 backup/stage10-astra-before-optimization-20261010 보존, main 변경 없음. src의 GDScript287개/91,126줄/함수선언3,597개 정적 목록화; 빈번한 검색/할당/수명/비동기 후보와 실제 호출 경로 점검.
+- 공용 TimedEventBuffer로 Hero 공세·원본 상태 관측 및 RunMetrics15초 기록의 pop_front 반복 이동 제거. 만료 참조 즉시 해제·절반/64슬롯 기준 지연 압축, 제거당 amortized O(1). 원래 경계 포함/순서/가중치/시간/상태 행동 집계/AI 지연·성향·관성·난수 그대로. BuildAI는 순회 중 승자참조만 유지하고 최종 승자만 깊은 복사.
+- Battle256/로컬32 공간 그리드와 늑대·유키온나 사망 이벤트 셀은 빈 과거셀 제거 + 공용 최대128개 빈 버킷 재사용. 이동/사망 이력에 비례한 Dictionary 증가 제거; 대상·순서·분리이동·판정·같은프레임 갱신 보전. 기록/버킷 공통 책임을 작은 RefCounted 헬퍼로 분리.
+- 피해/회복 숫자 풀은 정상일 때 기존Array 반환, 무효 항목만 제자리 정리. 재사용 팝업의 소유대상 ID를 확인하여 다른 대상에게 합쳐지는 표시 오류 수정; 최대48개/기존 합산 창 유지. 프리로드 경로 중복 제거는 Array.has 반복 O(p²)에서 해시멤버십 expected O(p)로 변경, 첫 등장/로드순서 보전.
+- Godot4.5.1 실제 헤드리스 기준 구현 비교: AI100개 seed에서 결정·근거·debug·다음난수 동일, RunMetrics3천행 결과/전환시각 동일, 실제 Hero 가중치/경계·만료참조·메모리상한, 공간128이동 대상/순서·384과거셀→3활성셀, 사망256셀 재사용, 기존 팝업 표시오류 재현/수정 검증. CPU7회 중앙값 벤치와 추가 회귀의 최종 수치는 docs/OPTIMIZATION_AUDIT_20261010.md 및 JSON에 기록. Android/GPU/FPS·실기기 메모리 미측정.
+
 ## 2026-10-10 — 슈텐-도지 전용 Pixabay 행동·기술·연출 효과음
 
 - 최신 feature/stage10-astra33b552fc/main d968b2ae 확인. Pixabay 공개 원본7개 새 다운로드: DRAGON-STUDIO사슬515264/화염393921/스윙414580/물기포584723, Yodguard요기378650, floraphonic금속201909, PhatPhrogStudio오니웃음477923. 전용44.1kHz mono PCM16 WAV12개와무손실import. 출처/라이선스/원본SHA256/실제컷·필터·레이어는 assets/audio/sfx/shuten_doji/SOURCES.md/manifest.json. 원본MP3 독립 배포 없음.

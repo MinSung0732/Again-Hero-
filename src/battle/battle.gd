@@ -1,6 +1,8 @@
 extends Node2D
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
+const SPATIAL_BUCKET_POOL := preload("res://src/systems/spatial_bucket_pool.gd")
+
 const MONSTER_LOCAL_GRID := preload("res://src/systems/monster_local_grid.gd")
 
 signal stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int)
@@ -167,6 +169,8 @@ var active_hero_summons: Dictionary = {}
 var active_elite_skeletons: Dictionary = {}
 var monster_spatial_grid: Dictionary = {}
 var monster_spatial_used_cells: Array[Vector2i] = []
+var monster_spatial_previous_cells: Array[Vector2i] = []
+var monster_spatial_spare_buckets: Array = []
 var monster_spatial_stale_ids: Array[int] = []
 var monster_spatial_grid_physics_frame: int = -1
 var monster_spatial_snapshot_revision := 0
@@ -319,6 +323,7 @@ func _rebuild_monster_spatial_grid() -> void:
 	# Keep cell Arrays alive and only clear buckets used by the previous
 	# physics frame. This avoids rebuilding Dictionary/Array storage every
 	# frame when large monster waves are active.
+	monster_spatial_previous_cells.assign(monster_spatial_used_cells)
 	for cell in monster_spatial_used_cells:
 		var previous_bucket = monster_spatial_grid.get(cell, null)
 		if typeof(previous_bucket) == TYPE_ARRAY:
@@ -347,12 +352,14 @@ func _rebuild_monster_spatial_grid() -> void:
 		if typeof(raw_bucket) == TYPE_ARRAY:
 			bucket = raw_bucket
 		else:
-			bucket = []
+			bucket = SPATIAL_BUCKET_POOL.acquire(monster_spatial_spare_buckets)
 			monster_spatial_grid[cell] = bucket
 
 		if bucket.is_empty():
 			monster_spatial_used_cells.append(cell)
 		bucket.append(monster)
+
+	SPATIAL_BUCKET_POOL.retire_empty(monster_spatial_grid, monster_spatial_previous_cells, monster_spatial_spare_buckets)
 
 	for raw_id in monster_spatial_stale_ids:
 		_unregister_monster(raw_id)
@@ -780,6 +787,8 @@ func _start_battle() -> void:
 	active_hero_summons.clear()
 	active_elite_skeletons.clear()
 	monster_spatial_grid.clear()
+	monster_spatial_previous_cells.clear()
+	monster_spatial_spare_buckets.clear()
 	monster_local_grid.clear()
 	monster_spatial_used_cells.clear()
 	monster_spatial_stale_ids.clear()

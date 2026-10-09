@@ -1,5 +1,4 @@
 extends RefCounted
-class_name HeroBuildAI
 
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 const AUGMENT_CATALOG := preload("res://src/data/hero_augment_catalog.gd")
@@ -43,10 +42,8 @@ static func choose_candidate(
 		if score > selected_score:
 			selected_score = score
 			selected_synergy_score = synergy_score
-			selected = candidate
+			selected = candidate.duplicate(true)
 
-	# Only the winner needs an independent deep copy; preserve RNG/order/ties.
-	selected = selected.duplicate(true)
 	selected["decision_score"] = selected_score
 	selected["synergy_score"] = selected_synergy_score
 	selected["decision_reason"] = _build_reason(

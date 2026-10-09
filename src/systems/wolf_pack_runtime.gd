@@ -1,5 +1,6 @@
 extends RefCounted
 
+const BUCKET_POOL := preload("res://src/systems/spatial_bucket_pool.gd")
 const DATA := preload("res://src/data/wolf_behavior_catalog.gd")
 const FX := preload("res://src/ui/combat_status_effect_visual.gd")
 const CELL_SIZE := 125.0
@@ -7,6 +8,7 @@ var battle: Node
 var wolves: Dictionary = {}
 var death_cells: Dictionary = {}
 var used_cells: Array[Vector2i] = []
+var spare_death_buckets: Array = []
 var stale_ids: Array[int] = []
 var spawn_jobs: Array[Dictionary] = []
 
@@ -25,7 +27,7 @@ func record_death(wolf: Node2D) -> void:
 	unregister(wolf.get_instance_id())
 	var cell := Vector2i(floori(wolf.global_position.x / CELL_SIZE), floori(wolf.global_position.y / CELL_SIZE))
 	if not death_cells.has(cell):
-		death_cells[cell] = []
+		death_cells[cell] = BUCKET_POOL.acquire(spare_death_buckets)
 	var points: Array = death_cells[cell]
 	if points.is_empty():
 		used_cells.append(cell)
@@ -50,7 +52,7 @@ func tick(_delta: float) -> void:
 			wolves.erase(id)
 		for cell in used_cells:
 			death_cells[cell].clear()
-		used_cells.clear()
+		BUCKET_POOL.retire_empty(death_cells, used_cells, spare_death_buckets)
 	var budget := int(DATA.PACK.spawn_budget)
 	while budget > 0 and not spawn_jobs.is_empty():
 		var job: Dictionary = spawn_jobs[0]
@@ -87,6 +89,7 @@ func _has_near_death(position: Vector2) -> bool:
 func reset() -> void:
 	wolves.clear()
 	death_cells.clear()
+	spare_death_buckets.clear()
 	used_cells.clear()
 	stale_ids.clear()
 	spawn_jobs.clear()

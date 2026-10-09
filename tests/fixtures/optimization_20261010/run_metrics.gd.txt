@@ -1,7 +1,4 @@
 extends RefCounted
-class_name RunMetrics
-
-const TIMED_EVENT_BUFFER := preload("res://src/systems/timed_event_buffer.gd")
 
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 
@@ -25,7 +22,7 @@ var lowest_hero_hp: int = 0
 var lowest_hero_hp_ratio: float = 1.0
 
 var hero_augment_events: Array = []
-var recent_summons = TIMED_EVENT_BUFFER.new()
+var recent_summons: Array = []
 var strategy_switches: Array = []
 
 var current_strategy_type: String = ""
@@ -353,8 +350,8 @@ func _update_strategy_state() -> void:
 
 	var weights := {}
 	var total_weight := 0.0
-	for event_index in range(recent_summons.size()):
-		var event: Dictionary = recent_summons.get_event(event_index)
+	for raw_event in recent_summons:
+		var event: Dictionary = raw_event
 		var monster_type := String(event.get("type", ""))
 		var weight := float(event.get("weight", 0.0))
 		if monster_type.is_empty() or weight <= 0.0:
@@ -368,7 +365,7 @@ func _update_strategy_state() -> void:
 
 	var dominant_type := ""
 	var dominant_weight := 0.0
-	for raw_type in weights:
+	for raw_type in weights.keys():
 		var monster_type := String(raw_type)
 		var weight := float(weights.get(monster_type, 0.0))
 		if weight > dominant_weight:
@@ -402,7 +399,12 @@ func _update_strategy_state() -> void:
 	last_strategy_change_time = elapsed_seconds
 
 func _prune_recent_summons() -> void:
-	recent_summons.prune_before(elapsed_seconds - STRATEGY_WINDOW_SECONDS)
+	var cutoff := elapsed_seconds - STRATEGY_WINDOW_SECONDS
+	while not recent_summons.is_empty():
+		var event: Dictionary = recent_summons[0]
+		if float(event.get("time", 0.0)) >= cutoff:
+			break
+		recent_summons.pop_front()
 
 static func _format_time(seconds: float) -> String:
 	var total := maxi(int(round(seconds)), 0)

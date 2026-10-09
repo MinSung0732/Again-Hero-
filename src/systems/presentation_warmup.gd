@@ -168,14 +168,23 @@ func _append_texture_directory(directory: String, paths: Array[String]) -> void:
 		_append_texture_directory(directory.path_join(child), paths)
 
 
+# Expected O(p) membership checks, preserving first occurrence/load order.
+static func unique_paths(paths: Array[String]) -> Array[String]:
+	var unique: Array[String] = []
+	var seen: Dictionary = {}
+	for path in paths:
+		if path.is_empty() or seen.has(path):
+			continue
+		seen[path] = true
+		unique.append(path)
+	return unique
+
+
 func _prepare(paths: Array[String], shared: bool) -> bool:
 	if _busy:
 		return false
 	_busy = true
-	var unique: Array[String] = []
-	for path in paths:
-		if not path.is_empty() and not unique.has(path):
-			unique.append(path)
+	var unique := unique_paths(paths)
 	var completed := 0
 	progress_changed.emit(0, unique.size())
 	# Bound in-flight reads and GPU work. Preserve every previously warmed path.

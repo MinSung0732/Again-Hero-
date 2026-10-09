@@ -1,14 +1,10 @@
 extends RefCounted
 
-const BUCKET_POOL := preload("res://src/systems/spatial_bucket_pool.gd")
-
 const COMMON := preload("res://src/monsters/monster_runtime_common.gd")
 const CELL_SIZE := 32.0
 const MAX_DENSE_SEPARATION_SAMPLES := 48
 var buckets: Dictionary = {}
 var used_cells: Array[Vector2i] = []
-var previous_cells: Array[Vector2i] = []
-var spare_buckets: Array = []
 var revision := -1
 var motion_padding := 1
 
@@ -16,8 +12,6 @@ var motion_padding := 1
 func clear() -> void:
 	buckets.clear()
 	used_cells.clear()
-	previous_cells.clear()
-	spare_buckets.clear()
 	revision = -1
 
 
@@ -28,7 +22,6 @@ func cell_for(position: Vector2) -> Vector2i:
 func ensure(actors: Dictionary, snapshot_revision: int) -> void:
 	if revision == snapshot_revision:
 		return
-	previous_cells.assign(used_cells)
 	for cell in used_cells:
 		buckets[cell].clear()
 	used_cells.clear()
@@ -41,12 +34,11 @@ func ensure(actors: Dictionary, snapshot_revision: int) -> void:
 		if actor is CharacterBody2D:
 			motion_padding = maxi(motion_padding, ceili(actor.velocity.length() / Engine.physics_ticks_per_second / CELL_SIZE))
 		if not buckets.has(cell):
-			buckets[cell] = BUCKET_POOL.acquire(spare_buckets)
+			buckets[cell] = []
 		var bucket: Array = buckets[cell]
 		if bucket.is_empty():
 			used_cells.append(cell)
 		bucket.append(actor)
-	BUCKET_POOL.retire_empty(buckets, previous_cells, spare_buckets)
 	revision = snapshot_revision
 
 
