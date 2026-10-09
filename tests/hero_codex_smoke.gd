@@ -27,6 +27,8 @@ func run() -> void:
 	var view := VIEW.new()
 	view.install(owner,parent)
 	view.show()
+	check(view.list_scroll.visible and view.detail_root.visible,"opens to side-by-side hero list and details")
+	check(view.selectors.size() == 10 and view.list_portraits.size() == 10,"portrait rows for all heroes")
 	check(view.stage_ids.size() == DATA.STAGES.ORDER.size(),"all ordered stages registered")
 	check(view.stage_ids.size() == 10,"current ten heroes")
 	for id in view.stage_ids:
@@ -48,7 +50,11 @@ func run() -> void:
 			view.select_tab(index)
 			check(view.pages[index].visible,"selected page visible")
 			check(view.pages.filter(func(page): return page.visible).size() == 1,"one page visible")
-		check(view.hero_name.text.contains(entry.name),"identity updates")
+		check(view.hero_name.text == entry.name,"identity has no stage label")
+		check(view.list_scroll.visible and view.detail_root.visible,"selection preserves left list")
+		view.select_tab(4)
+		check(view.resource_page.visible and view.pages.all(func(page): return not page.visible),"resource preview replaces text page")
+		check(DATA.resource_paths(id).size() == 4,"all resource references")
 	check(DATA.get_entry("missing").is_empty(),"unknown stage has no fabricated data")
 	check(DATA.get_entry("stage_1").pages[0].contains("체력  375"),"stage-balanced starting HP")
 	check(DATA.get_entry("stage_1").pages[0].contains("공격력  37"),"rounded stage-balanced attack")
@@ -59,6 +65,7 @@ func run() -> void:
 		view.show()
 		view.select_stage("stage_1")
 	check(view.root.get_child_count() == node_count and view.cached_entries.size() == 10,"reopen reuses controls and cached entries")
+	view.select_stage("stage_1")
 	for width in [540,740,900]:
 		parent.size.x = width
 		await process_frame

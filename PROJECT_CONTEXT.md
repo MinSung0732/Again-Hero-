@@ -4,6 +4,11 @@
 - MobileScrollRouter shared between lobby and battle now coasts with exponential friction and bounds a spring edge displacement to 24px; search on touch-down only, O(1) per-frame motion.
 - Godot runtime/actual Android browser, Android Keystore/JNI and APK Gradle export remain unverified; manual test required.
 
+## Hero codex reference-layout update (2026-10-09)
+- Reattached design PNG became readable; hero codex now keeps left vertical dot/name list alongside right detail, no visible stage numbering/horizontal selector. Underlying stage balance/data order unchanged. Shared Other back still exits directly to menu.
+- Fifth resources tab reuses four static cells for portrait, portrait-reused miniature icon, native idle/movement first frames (fighter hero_idle/hero_move). Original pixels/nearest/contain; no fabricated new icon or animation. Lists/text/images/two styles cached; independent scrolls and width-triggered2/3/5-column tab layout.
+- Godot4.5.1 isolated data/view/selection/resources/reuse/narrow-width/touch regressions and reference/syntax/diff checks pass. Full Lobby render/real Android/inertia unverified.
+
 ## Hero encyclopedia in Other (2026-10-09)
 - Other hero_book now opens a reusable read-only codex using shared back navigation/title/backdrop. Ten ordered stages; original hero portraits, overview/skills+systems/actual augments/AI+strategy pages. HeroCodexCatalog projects StageCatalog/HeroProfiles/HeroAugmentCatalog/HeroAIProfiles; stage-balanced starting five stats preserve current Battle round/minimum formulas. Named nested skills and unlock conditions included, ammo/revival/gauges/element systems separate; gameplay technical render/pool parameters omitted.
 - Shared HeroSkillDescriptions extracted from Hero tooltip function with explicit profile description priority and added missing prose. No combat stats/decisions/save changes. Guides are suggestions, not guaranteed counters; current player battle values are distinguished from start stats. Four reusable text widgets and lazy per-hero text/portrait/two-style caches; drag-safe completed taps.

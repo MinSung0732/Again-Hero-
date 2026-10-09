@@ -147,7 +147,7 @@ static func overview(stage: Dictionary, profile: Dictionary) -> String:
 	var speed := maxf(1,float(profile.get("move_speed",0))*maxf(float(balance.get("move_speed_multiplier",1)),0.01))
 	var interval := maxf(0.1,float(profile.get("attack_cooldown",0))*maxf(float(balance.get("attack_cooldown_multiplier",1)),0.01))
 	var growth: Dictionary = profile.get("level_growth",{})
-	return "[color=#f0cb68]입장 기본 능력 · Lv.%d[/color]\n체력  %d\n공격력  %d\n공격 간격  %s초\n이동속도  %s\n사거리  %s (반경 기준)\n\n스테이지 보정이 적용된 시작 수치입니다. 전투 중 레벨·증강·기술로 달라집니다.\n\n[color=#f0cb68]성장[/color]\n레벨업마다 시작 공격력의 %s%%를 누적합니다.\n%d레벨마다 시작 공격력의 %s%%가 추가됩니다.\n\n[color=#f0cb68]전장[/color]\n전투 제한시간  %s초\n지도  %d × %d\n\n기술의 반경과 지름은 구분해서 표시합니다. 피해 비율은 별도 표기가 없으면 용사 공격력 기준입니다." % [int(stage.get("hero_level_start",1)),hp,damage,_number(interval),_number(speed),_number(float(profile.get("attack_range",0))),_number(float(growth.get("base_attack_growth_ratio",0))*100),int(growth.get("attack_milestone_interval",10)),_number(float(growth.get("attack_milestone_bonus",0))*100),_number(float(stage.get("run_duration_seconds",0))),int(stage.get("map_width",0)),int(stage.get("map_height",0))]
+	return "[color=#f0cb68]입장 기본 능력 · Lv.%d[/color]\n체력  %d\n공격력  %d\n공격 간격  %s초\n이동속도  %s\n사거리  %s (반경 기준)\n\n입장 보정이 적용된 시작 수치입니다. 전투 중 레벨·증강·기술로 달라집니다.\n\n[color=#f0cb68]성장[/color]\n레벨업마다 시작 공격력의 %s%%를 누적합니다.\n%d레벨마다 시작 공격력의 %s%%가 추가됩니다.\n\n[color=#f0cb68]전장[/color]\n전투 제한시간  %s초\n지도  %d × %d\n\n기술의 반경과 지름은 구분해서 표시합니다. 피해 비율은 별도 표기가 없으면 용사 공격력 기준입니다." % [int(stage.get("hero_level_start",1)),hp,damage,_number(interval),_number(speed),_number(float(profile.get("attack_range",0))),_number(float(growth.get("base_attack_growth_ratio",0))*100),int(growth.get("attack_milestone_interval",10)),_number(float(growth.get("attack_milestone_bonus",0))*100),_number(float(stage.get("run_duration_seconds",0))),int(stage.get("map_width",0)),int(stage.get("map_height",0))]
 
 static func skill_text(profile: Dictionary) -> String:
 	var result := PackedStringArray()
@@ -191,6 +191,15 @@ static func strategy_text(stage: Dictionary, profile: Dictionary) -> String:
 		if not entry.is_empty() and id in profile.get("augment_pool_ids",[]): favored.append(String(entry.get("name","")))
 	if not favored.is_empty(): lines.append("[color=#f0cb68]성향상 선호하는 증강[/color]\n"+" · ".join(favored)+"\n선호는 선택 확률을 보장하지 않습니다.")
 	return "\n\n".join(lines)
+
+static func resource_paths(stage_id: String) -> Array[String]:
+	var stage := STAGES.get_stage(stage_id)
+	var profile := HEROES.get_profile(String(stage.get("hero_id","")))
+	if profile.is_empty(): return []
+	var directory := String(profile.get("sprite_frame_dir",""))
+	var prefix := "hero_" if String(profile.get("archetype","")) == "sword_shield" else ""
+	var movement := "move" if not prefix.is_empty() else "walk"
+	return [String(stage.get("portrait_path","")),String(stage.get("portrait_path","")),directory+"/"+prefix+"idle_01.png",directory+"/"+prefix+movement+"_01.png"]
 
 static func get_entry(stage_id: String) -> Dictionary:
 	var stage := STAGES.get_stage(stage_id)
