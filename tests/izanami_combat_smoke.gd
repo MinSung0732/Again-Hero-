@@ -71,6 +71,35 @@ func run() -> void:
 	actor.visual.set_physics_process(false)
 	check(actor.max_hp==1105 and actor.attack_damage==75 and actor.summon_snapshot==10,"snapshot stats")
 	check(actor.get_gauge_regen()==15 and actor.attack_range==275,"regen/range diameter")
+	# A distant target must be approached, while close targets trigger sustained retreat.
+	actor.attack_timer = 100.0
+	target.position = Vector2(700,0)
+	actor._tick_retreat_and_heal(1.0/60.0)
+	check(actor.velocity.x > 0 and actor.cached_direction_to_hero.x > 0,"approach outside attack/skill range")
+	actor.gauge = 20.0
+	actor._try_cast()
+	check(actor.gauge == 20.0 and actor.ghost_remaining == 0.0,"no distant skill spend")
+	target.position = actor.position+Vector2(500,0)
+	actor._try_cast()
+	check(actor.ghost_remaining > 0 and actor.gauge == 0.0,"cast while approaching within skill range")
+	actor.ghost_remaining = 0.0
+	actor.ghost_hits = 0
+	target.damage = 0
+	target.silence = 0
+	target.slow = 1.0
+	target.position = actor.position+Vector2(200,0)
+	actor._tick_retreat_and_heal(1.0/60.0)
+	check(actor.velocity.x < 0 and actor.cached_direction_to_hero.x > 0,"retreat while facing target")
+	target.position = actor.position+Vector2(230,0)
+	actor._tick_retreat_and_heal(1.0/60.0)
+	check(actor.velocity.x < 0,"retreat continues through hysteresis band")
+	target.position = actor.position+Vector2(250,0)
+	actor.attack_timer = 0.0
+	actor._tick_retreat_and_heal(1.0/60.0)
+	check(actor.velocity == Vector2.ZERO and target.damage == 75,"hold and basic attack within range")
+	target.damage = 0
+	actor.position = Vector2.ZERO
+	target.position = Vector2.ZERO
 	for level in range(6):
 		actor.transcend_level = level
 		check(actor.skill_cooldown(1)==(2.0 if level>=3 else (4.0 if level>=1 else 8.0)),"level cooldown")

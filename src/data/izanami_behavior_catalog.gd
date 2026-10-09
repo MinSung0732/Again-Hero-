@@ -5,6 +5,8 @@ const ROOT := "res://assets/art/Transcendent_monster/Izanami/frames"
 const PROFILE := {"mode":"frames","asset_dir":ROOT,"target_height":110.0,"animations":{
 "idle":{"prefix":"idle","count":4,"fps":6.0,"loop":true},"move":{"prefix":"walk","count":6,"fps":8.0,"loop":true},
 "attack":{"prefix":"atk","count":4,"fps":10.0,"loop":false},"hit":{"prefix":"hit","count":2,"fps":12.0,"loop":false},"death":{"prefix":"death","count":3,"fps":8.0,"loop":false}}}
+const RETREAT_START_DISTANCE := 220.0
+const HOLD_DISTANCE := 240.0
 const GAUGE_MAX := 100.0
 const COSTS := [20.0,10.0,30.0]
 const COOLDOWNS := [30.0,8.0,20.0]

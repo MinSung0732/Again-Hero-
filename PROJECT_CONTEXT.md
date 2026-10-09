@@ -1,3 +1,6 @@
+## Izanami standoff movement correction (2026-10-09)
+- Approaches beyond attack radius275 and casts existing skills during approach once within their unchanged reach. Retreat starts below220, persists to240, then holds/attacks; face the target while retreating. Catalog thresholds, bounded movement and hysteresis; existing movement multipliers and arrival hold unchanged.
+
 ## Bulgasal presentation audio (2026-10-09)
 - Shared BulgasalAudioCatalog presentation cues reuse licensed burrow.wav(-18dB) and rock.wav(-12dB). Gacha charge1.75/reveal2.3; battle rumble0.25/eye impact1.8. Separate real-time fixed voices/SFX bus; existing simulation-clock landing unchanged. Reveal stops rumble, skip/cancel/completion clears players.
 - Godot4.5.1 actual player/timeline/reuse/cancel checks pass; conservative four-voice peak sum<0.424. This is a calculated upper bound, not a captured full mix or subjective listening/Android test. Sources in assets/audio/sfx/bulgasal/SOURCES.md.

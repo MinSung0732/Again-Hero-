@@ -7,6 +7,7 @@ var gauge := 0.0
 var clock := 0.0
 var arrival := 1.5
 var arrival_hit := false
+var keeping_distance := false
 var cooldowns := PackedFloat32Array([0.0,0.0,0.0])
 var passive_hits := 0
 var passive_statuses := 0
@@ -140,17 +141,31 @@ func _refresh_combat_target() -> void:
 
 func _tick_retreat_and_heal(delta: float) -> bool:
 	var offset := hero.global_position-global_position
-	var facing := offset.normalized() if offset.length_squared() > 0.001 else Vector2.RIGHT
+	var distance := offset.length()
+	var facing := offset.normalized() if distance > 0.001 else Vector2.RIGHT
 	cached_direction_to_hero = facing
-	# Never chase a distant hero. Hold at 240–275, retreat inside 220.
-	velocity = -facing*move_speed*MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self) if offset.length() < 220.0 else Vector2.ZERO
+	if distance < DATA.RETREAT_START_DISTANCE:
+		keeping_distance = true
+	elif distance >= DATA.HOLD_DISTANCE:
+		keeping_distance = false
+	var direction := Vector2.ZERO
+	var remaining := 0.0
+	if keeping_distance:
+		direction = -facing
+		remaining = DATA.HOLD_DISTANCE-distance
+	elif distance > attack_range:
+		direction = facing
+		remaining = distance-DATA.HOLD_DISTANCE
+	# Approach to cast/attack; hysteresis prevents retreat jitter at the boundary.
+	var speed := move_speed*MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
+	velocity = direction*minf(speed,remaining/maxf(delta,0.0001))
 	if velocity.length_squared() > 0.01:
 		move_and_slide()
 	_update_visual_motion(facing.x,velocity.length_squared() > 0.01)
-	if offset.length_squared() <= attack_range*attack_range and attack_timer <= 0.0:
+	if global_position.distance_squared_to(hero.global_position) <= attack_range*attack_range and attack_timer <= 0.0:
 		attack_timer = attack_cooldown
 		_visual_call(&"play_attack")
-		_fire_projectile(offset)
+		_fire_projectile(hero.global_position-global_position)
 	return true
 
 func _fire_projectile(_offset: Vector2) -> void:
