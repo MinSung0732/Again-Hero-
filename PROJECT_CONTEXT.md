@@ -4,6 +4,11 @@
 - MobileScrollRouter shared between lobby and battle now coasts with exponential friction and bounds a spring edge displacement to 24px; search on touch-down only, O(1) per-frame motion.
 - Godot runtime/actual Android browser, Android Keystore/JNI and APK Gradle export remain unverified; manual test required.
 
+## Hero encyclopedia in Other (2026-10-09)
+- Other hero_book now opens a reusable read-only codex using shared back navigation/title/backdrop. Ten ordered stages; original hero portraits, overview/skills+systems/actual augments/AI+strategy pages. HeroCodexCatalog projects StageCatalog/HeroProfiles/HeroAugmentCatalog/HeroAIProfiles; stage-balanced starting five stats preserve current Battle round/minimum formulas. Named nested skills and unlock conditions included, ammo/revival/gauges/element systems separate; gameplay technical render/pool parameters omitted.
+- Shared HeroSkillDescriptions extracted from Hero tooltip function with explicit profile description priority and added missing prose. No combat stats/decisions/save changes. Guides are suggestions, not guaranteed counters; current player battle values are distinguished from start stats. Four reusable text widgets and lazy per-hero text/portrait/two-style caches; drag-safe completed taps.
+- Godot4.5.1 isolated production data/view tests pass across all heroes/skills/augments, source immutability, stage balancing, reuse, narrow-width minimum-size and simulated touch/drag. Original Galmuri-font fixture also passes; GDScript parsing/diff checks pass. Full Lobby navigation/render/actual Android/inertia unverified. docs/HERO_CODEX.md and tests/run_hero_codex_smoke.py.
+
 ## Transcendent readable descriptions and owned upgrade display (2026-10-09)
 - Player-facing prose and explicit paragraphs separate casting, damage and status in the presentation-only Catalog. No combat/rarity/reward values changed. Dedicated detail reads account collection once on each open; up to five cached upgrade panels show gold active through owned level, dim locked above it. Unowned always locked; text labels supplement color. No per-frame polling.
 - Both registered/list transcendence cards open detail by tap without redundant detail buttons. Registered card uses shared drag-card input configured with an ID but drag disabled; list hold/drag and register/upgrade buttons unchanged.
