@@ -46,7 +46,7 @@ const ORB_GAUGE := GAUGE_MAX * 0.0001
 const ORB_HEAL_MISSING_RATIO := 0.0007
 const ORB_SECONDS := 0.9
 const MAX_ORBS := 64
-const RULES := {"mode":"all","conditions":[{"metric":"command_spent","amount":500},{"metric":"mana_spent","amount":250}]}
+const RULES := {"mode":"all","conditions":[{"metric":"command_spent","amount":300},{"metric":"mana_spent","amount":200}]}
 const EFFECT_ROOT := "res://assets/art/Transcendent_monster/zeus/frames/"
 const EFFECTS := {
 	"charge":{"folder":"effect1","prefix":"discharge","first":1,"last":7,"size":92.0},

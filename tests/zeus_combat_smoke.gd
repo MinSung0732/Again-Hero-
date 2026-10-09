@@ -1,6 +1,7 @@
 extends SceneTree
 const CATALOG := preload("res://src/data/monster_catalog.gd")
 const DATA := preload("res://src/data/zeus_behavior_catalog.gd")
+const RUNTIME := preload("res://src/systems/transcendence_runtime.gd")
 const FX := preload("res://src/ui/zeus_combat_effects.gd")
 const COLLECTION := preload("res://src/systems/monster_collection_store.gd")
 const LOADOUT := preload("res://src/systems/transcendence_loadout_store.gd")
@@ -30,6 +31,17 @@ func capture(name: String) -> void:
 		root.get_texture().get_image().save_png(OS.get_cmdline_user_args()[-1].replace("{name}",name))
 
 func run() -> void:
+	var gate = RUNTIME.new()
+	gate.configure("zeus",DATA.RULES)
+	gate.record_command(300)
+	gate.record_mana(199)
+	check(not gate.ready,"300 command still needs200 mana")
+	check(gate.record_mana(1),"exact300/200 boundary")
+	gate.configure("zeus",DATA.RULES)
+	gate.record_mana(200)
+	gate.record_command(299)
+	check(not gate.ready,"200 mana still needs300 command")
+	check(gate.record_command(1),"mana-first exact300/200 boundary")
 	root.size = Vector2i(540,960)
 	root.get_node("LoginGateway").remember_session_enabled = false
 	root.get_node("CloudStore").stop()
@@ -62,13 +74,13 @@ func run() -> void:
 		ally.set_physics_process(false)
 	check(battle.raw_allied_summons == 8,"raw successful spawn events")
 	check(not battle.try_summon_transcendent(),"locked before spending")
-	battle.transcendence.record_command(499)
-	battle.transcendence.record_mana(249)
+	battle.transcendence.record_command(299)
+	battle.transcendence.record_mana(199)
 	check(not battle.transcendence.ready,"AND boundaries")
 	battle.transcendence.record_mana(1)
 	check(not battle.transcendence.ready,"mana alone insufficient")
 	check(battle.try_summon("slime"),"actual command spending")
-	check(battle.transcendence.ready and battle.transcendence.command_spent >= 500,"successful paid summon unlocks")
+	check(battle.transcendence.ready and battle.transcendence.command_spent >= 300,"successful paid summon unlocks")
 	var cost_before: float = battle.command_power
 	check(battle.try_summon_transcendent(),"actual free Zeus summon")
 	zeus = battle.transcendent_actor

@@ -9,7 +9,7 @@ func _initialize() -> void:
 func run() -> void:
 	var mode := root.get_node("LocalTestMode")
 	var battle = load("res://src/battle/battle.gd").new()
-	var rules := {"mode":"all", "conditions":[{"metric":"command_spent", "amount":500}, {"metric":"mana_spent", "amount":250}]}
+	var rules := preload("res://src/data/zeus_behavior_catalog.gd").RULES
 	battle.transcendence.configure("zeus",rules)
 	var before_command: float = battle.command_power
 	var before_summons: int = battle.raw_allied_summons
@@ -17,8 +17,8 @@ func run() -> void:
 	check(not battle.debug_unlock_transcendence(),"normal account blocked")
 	mode.active = true
 	check(not battle._can_attempt_summon("zeus",true),"locked before test click")
-	battle.transcendence.record_command(500)
-	battle.transcendence.record_mana(250)
+	battle.transcendence.record_command(300)
+	battle.transcendence.record_mana(200)
 	check(battle.transcendence.ready and not battle.transcendence.test_unlock_confirmed,"natural ready does not confirm click")
 	check(not battle._can_attempt_summon("zeus",true),"natural readiness still needs test click")
 	check(battle._spawn_monster("zeus",Vector2.ZERO,0.0,false,{"transcendence_summon":true}) == null,"direct spawn cannot bypass test click")
@@ -37,8 +37,8 @@ func run() -> void:
 	check(not battle.debug_unlock_transcendence(),"battle end blocks unlock")
 	battle.battle_over = false
 	mode.active = false
-	battle.transcendence.record_command(500)
-	battle.transcendence.record_mana(250)
+	battle.transcendence.record_command(300)
+	battle.transcendence.record_mana(200)
 	check(battle._can_attempt_summon("zeus",true),"normal gameplay natural requirements preserved")
 	battle.free()
 	print("LOCAL_TEST_TRANSCENDENCE_UNLOCK ","FAIL" if failed else "PASS")
