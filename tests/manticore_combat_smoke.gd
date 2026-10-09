@@ -112,7 +112,7 @@ func run() -> void:
 	check(actor.position.is_equal_approx(stopped) and actor.motion==actor.Motion.REST,"retreat waits despite moving out-of-range target")
 	actor._tick_motion(0.6)
 	check(actor.velocity.length()>0.0,"approach resumes after complete cooldown")
-	check(is_equal_approx(-actor.visual_head_y,148.5),"body enlarged1.35 with feet anchored")
+	check(is_equal_approx(actor.visual.scale.y*actor.visual.sprite_frames.get_frame_texture(&"idle",0).get_image().get_used_rect().size.y,148.5),"body enlarged1.35 with feet anchored")
 	actor.basic_hits = 4
 	actor._register_basic_hit()
 	check(target.get_meta("bleed_active",false) and actor.basic_hits==0,"five hits bleed")
@@ -232,6 +232,40 @@ func run() -> void:
 	hunter._tick_motion(1.0/60.0)
 	check(hunter.motion==hunter.Motion.COMBO,"relative swept contact catches crossing target")
 	check(is_equal_approx(absf(hunter._flame_point(0).x-hunter.position.x),81.0),"heads spaced162 across body")
+	# Flight and locomotion share facing state, including a direction already cached by the parent.
+	hunter._update_visual_motion(1.0,true)
+	hunter._face_flight(Vector2.LEFT,0)
+	check(hunter.visual.flip_h and hunter.visual_facing_sign==-1,"flight updates cached facing left")
+	hunter._update_visual_motion(1.0,true)
+	check(not hunter.visual.flip_h,"walk faces right after left flight")
+	hunter._face_flight(Vector2.RIGHT,3)
+	hunter._update_visual_motion(-1.0,true)
+	check(hunter.visual.flip_h,"walk faces left after right flight")
+	for facing in [-1.0,1.0]:
+		hunter._set_visual_facing(facing)
+		for animation in [&"idle",&"move",&"attack"]:
+			hunter.visual.animation = animation
+			for frame in range(hunter.visual.sprite_frames.get_frame_count(animation)):
+				hunter.visual.frame = frame
+				hunter._sync_visual_anchor()
+				var texture: Texture2D = hunter.visual.sprite_frames.get_frame_texture(animation,frame)
+				var used := Rect2(texture.get_image().get_used_rect())
+				var sign_x := -1.0 if hunter.visual.flip_h else 1.0
+				var drawn_center: float = hunter.visual.position.x+(used.get_center().x-texture.get_width()*0.5)*hunter.visual.scale.x*sign_x
+				check(is_equal_approx(hunter.status_layer.position.x,drawn_center),"HP/mana centered on drawn frame in both facings")
+	hunter._end_motion()
+	hunter._update_visual_motion(1.0,true)
+	hunter.visual._physics_process(0.25)
+	check(hunter.visual.animation==&"move","walk animation resumes after flight cooldown")
+	# Each individual pillar finishes 01..04 instead of holding a different static frame per segment.
+	hunter.wave_length[0] = 680.0
+	for segment in range(13):
+		var birth: float = segment*DATA.WAVE_SPACING/hunter.wave_speed()
+		for frame in range(4):
+			hunter.wave_age[0] = birth+(frame+0.5)*DATA.WAVE_GROW_FRAME_SECONDS
+			check(hunter._wave_segment_frame(0,segment)==frame,"pillar plays entire growth sequence01..04")
+		hunter.wave_age[0] = birth-0.001
+		check(hunter._wave_segment_frame(0,segment)==-1,"unborn pillar not shown")
 	var burn = BURN.new()
 	burn.apply(1.0,49,target)
 	before = target.damage

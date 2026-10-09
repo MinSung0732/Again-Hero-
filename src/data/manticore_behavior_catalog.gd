@@ -7,6 +7,7 @@ const WAVE_VISUAL_SCALE := 1.5
 const METEOR_VISUAL_SCALE := 1.3
 const METEOR_PROJECTILE_ANCHOR := Vector2(350,300)
 const WAVE_SPACING := 55.0
+const WAVE_GROW_FRAME_SECONDS := 0.10
 const WAVE_FADE_DELAY := 0.10
 const WAVE_FADE_FRAME_SECONDS := 0.10
 const PROFILE := {"mode":"frames","asset_dir":ROOT,"target_height":110.0,"animations":{

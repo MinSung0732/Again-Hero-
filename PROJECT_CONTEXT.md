@@ -1,3 +1,6 @@
+## Manticore visual facing and wave timing (2026-10-09)
+- Flight/locomotion share facing cache; mirror anchor with the sprite. HP/mana/shield/channel follow current visible frame bounds cached once across instances. Wave pillars each play01..04 from individual birth, hold04 then play05..08 in original order; no fade before full growth. Combat stats and previous flame spacing/scale preserved. Headless checks, GPU/mobile unverified.
+
 ## Manticore hunt contact correction (2026-10-09)
 - Hunt uses combined real body radii and relative swept contact; radius lookup once per hunt. Flight disables both collision layer and mask, restoring prior settings after retreat. Preserve guided580/two-hit combo/bleed triple/stationary cooldown and Hero AI. Flame attachments now±81px, visual scale divided1.33 from previous size; logical125range/damage unchanged.
 

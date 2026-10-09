@@ -53,6 +53,8 @@ var stale_enemy_ids: Array[int] = []
 var enemy_refresh := 0.0
 var channel_right := 42.0
 var channel_left := 42.0
+static var visual_frame_bounds: Dictionary = {}
+var visual_anchor_x := 0.0
 var visual_head_y := -110.0
 var effect_layer: Node2D
 @onready var status_layer: Node2D = $StatusLayer
@@ -85,6 +87,13 @@ func _apply_normal_visual_profile() -> void:
 	var factor := 110.0*DATA.BODY_SCALE/maxf(float(bounds.size.y),1.0)
 	visual.scale = Vector2.ONE*factor
 	visual.position = -(Vector2(bounds.get_center().x,bounds.end.y)-texture.get_size()*0.5)*factor
+	visual_anchor_x = visual.position.x
+	if visual_frame_bounds.is_empty():
+		for animation in visual.sprite_frames.get_animation_names():
+			var rectangles: Array[Rect2] = []
+			for index in range(visual.sprite_frames.get_frame_count(animation)):
+				rectangles.append(Rect2(visual.sprite_frames.get_frame_texture(animation,index).get_image().get_used_rect()))
+			visual_frame_bounds[animation] = rectangles
 	visual_head_y = -float(bounds.size.y)*factor
 	channel_right = float(bounds.size.x)*factor*0.5+8.0
 	channel_left = channel_right
@@ -92,6 +101,9 @@ func _ready() -> void:
 	super._ready()
 	flight_collision_layer = collision_layer
 	flight_collision_mask = collision_mask
+	visual.frame_changed.connect(_sync_visual_anchor)
+	visual.animation_changed.connect(_sync_visual_anchor)
+	_sync_visual_anchor()
 	status_layer.z_as_relative = false
 	status_layer.z_index = 12
 	status_layer.draw.connect(_draw_status)
@@ -264,8 +276,33 @@ func _begin_flight() -> void:
 	set_meta("ignore_monster_separation",true)
 	visual.stop()
 	visual.animation = &"attack"
+func _update_visual_motion(direction_x: float, moving: bool) -> void:
+	super._update_visual_motion(direction_x,moving)
+	_set_visual_facing(direction_x)
+
+func _set_visual_facing(direction_x: float) -> void:
+	if absf(direction_x) <= 0.01: return
+	visual_facing_sign = 1 if direction_x > 0.0 else -1
+	visual.set_facing_direction(direction_x)
+	_sync_visual_anchor()
+
+func _sync_visual_anchor() -> void:
+	if not is_instance_valid(status_layer) or not visual_frame_bounds.has(visual.animation): return
+	var sign_x := -1.0 if visual.flip_h else 1.0
+	visual.position.x = visual_anchor_x*sign_x
+	var rectangles: Array = visual_frame_bounds[visual.animation]
+	if rectangles.is_empty(): return
+	var index := clampi(visual.frame,0,rectangles.size()-1)
+	var bounds: Rect2 = rectangles[index]
+	var texture: Texture2D = visual.sprite_frames.get_frame_texture(visual.animation,index)
+	status_layer.position.x = visual.position.x+(bounds.get_center().x-texture.get_width()*0.5)*visual.scale.x*sign_x
+	visual_head_y = visual.position.y+(bounds.position.y-texture.get_height()*0.5)*visual.scale.y
+	channel_right = bounds.size.x*visual.scale.x*0.5+8.0
+	channel_left = channel_right
+	status_layer.queue_redraw()
+
 func _face_flight(direction: Vector2, frame_start: int) -> void:
-	visual.flip_h = direction.x < 0.0
+	_set_visual_facing(direction.x)
 	visual.frame = frame_start+int(clock*10.0)%3
 func _start_track(distance: float) -> void:
 	var away := (global_position-hero.global_position).normalized()
@@ -275,6 +312,7 @@ func _start_track(distance: float) -> void:
 	_begin_flight()
 func _end_motion() -> void:
 	motion = Motion.REST
+	visual_moving_state = -1
 	collision_layer = flight_collision_layer
 	collision_mask = flight_collision_mask
 	set_meta("ignore_monster_separation",false)
@@ -475,14 +513,20 @@ func _draw_effects() -> void:
 			FX.draw_frame(effect_layer,2,frame,wave_origin[i]+wave_direction[i]*minf(segment*DATA.WAVE_SPACING,distance)-global_position,DATA.WAVE_VISUAL_SCALE)
 
 func _wave_segment_frame(index: int, segment: int) -> int:
-	var fade := wave_age[index]-wave_length[index]/wave_speed()-segment*DATA.WAVE_FADE_DELAY
-	if fade < 0.0: return segment%4
+	var birth := segment*DATA.WAVE_SPACING/wave_speed()
+	var age := wave_age[index]-birth
+	if age < 0.0: return -1
+	var fade_start := maxf(wave_length[index]/wave_speed()+segment*DATA.WAVE_FADE_DELAY,birth+4.0*DATA.WAVE_GROW_FRAME_SECONDS)
+	var fade := wave_age[index]-fade_start
+	if fade < 0.0: return mini(3,int(floor(age/DATA.WAVE_GROW_FRAME_SECONDS)))
 	var frame := int(floor(fade/DATA.WAVE_FADE_FRAME_SECONDS))
 	return -1 if frame >= 4 else 4+frame
 
 func _wave_end_age(index: int) -> float:
 	var segments := maxi(int(ceil(wave_length[index]/DATA.WAVE_SPACING)),1)
-	return wave_length[index]/wave_speed()+(segments-1)*DATA.WAVE_FADE_DELAY+4.0*DATA.WAVE_FADE_FRAME_SECONDS
+	var last := segments-1
+	var fade_start := maxf(wave_length[index]/wave_speed()+last*DATA.WAVE_FADE_DELAY,last*DATA.WAVE_SPACING/wave_speed()+4.0*DATA.WAVE_GROW_FRAME_SECONDS)
+	return fade_start+4.0*DATA.WAVE_FADE_FRAME_SECONDS
 
 func _clamp_destination(point: Vector2) -> Vector2:
 	return combat_authority.clamp_monster_wander_position(point) if is_instance_valid(combat_authority) and combat_authority.has_method("clamp_monster_wander_position") else point
