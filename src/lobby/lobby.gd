@@ -5032,6 +5032,8 @@ func _refund_failed_stamina_entry() -> void:
 func _enter_selected_stage(allow_unregistered: bool = false) -> void:
 	if _battle_entry_pending or _scene_load_pending or SceneTransition.is_transitioning():
 		return
+	if stamina_view != null:
+		stamina_view.close_info()
 	if main_modes_view != null and main_modes_view.blocks_entry():
 		return
 	if stage_ids.is_empty():
@@ -5051,7 +5053,7 @@ func _enter_selected_stage(allow_unregistered: bool = false) -> void:
 	var exempt := LocalTestMode.active or TutorialFlow.active()
 	var formation_reason := preload("res://src/systems/dungeon_entry_policy.gd").blocked_reason(team_selected_ids, demon_skill_selected_ids, exempt)
 	if not formation_reason.is_empty():
-		stamina_view.show_info(formation_reason)
+		stamina_view.show_entry_notice(formation_reason)
 		return
 	if not allow_unregistered and not TutorialFlow.active() and preload("res://src/systems/transcendence_loadout_store.gd").load_id().is_empty():
 		if not is_instance_valid(_transcendence_entry_confirm):
@@ -5061,7 +5063,7 @@ func _enter_selected_stage(allow_unregistered: bool = false) -> void:
 		return
 	_stamina_entry = STAMINA.try_enter(stage_id, exempt)
 	if not bool(_stamina_entry.get("success", false)):
-		stamina_view.show_info("스테미너가 부족합니다." if _stamina_entry.get("reason") == "insufficient" else "저장을 확인하고 다시 시도해 주세요.")
+		stamina_view.show_entry_notice("스테미너가 부족합니다." if _stamina_entry.get("reason") == "insufficient" else "저장을 확인하고 다시 시도해 주세요.")
 		return
 	_battle_entry_pending = true
 	enter_stage_button.disabled = true

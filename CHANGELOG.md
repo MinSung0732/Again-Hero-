@@ -1,3 +1,10 @@
+## 2026-10-10 — 던전 입장 입력/안내 긴급 수정
+
+- 사용자 요청으로 지연 스킬 다음 단계는 조사 상태에서 중단. 사용자 화면의 전체 재현은 미완료이나 열린 스테미너 상세카드(STOP)가 겹친 입장 버튼을 가로채는 경로를 독립 실제 GUI 입력으로 재현했다. 읽기 전용 카드를 IGNORE로 변경하고 입장 시 기존 상세창을 닫는다. 헤더 직접 클릭/hover/ESC/외부 클릭 동작은 유지.
+- 팀 편성 부족 및 스테미너 부족/저장 실패는 스테미너 설명 show_info를 재사용하지 않고 lazy/reused DungeonEntryNotice(던전 입장 안내)로 원문 사유를 표시. 스테미너 차감·편성 제한·테스트/튜토리얼 면제·초월 확인·입장 중복 gate/로딩 규칙 유지.
+- Godot4.5.1 독립 실제 카드+mouse push_input 및 추출 입장함수38검사 통과. 이전 STOP 카드 차단/수정 후 입장 버튼 수신, 직접 상세 토글, 밖 touch/ESC, 안내창 재사용, 정상/편성/스테미너/저장 실패/면제/중복 분기 확인. 로딩·저장은 spy. 전체 사용자 로비/실제 던전/모바일 미검증.
+- 기준 feature93a653a958b5cc8a649a46879cc359a4531fd3fb, main4122adb7 유지. gdparse/Pythoncompile/diff 및 독립editor import 확인. docs/DUNGEON_ENTRY_INPUT_FIX.md에 범위/한계/재현/롤백 기록. 지연 스킬 구현은 이번 커밋에 포함하지 않는다.
+
 ## 2026-10-10 — 체인 단검 타깃·공격자·타이머 수명 경계
 
 - archmage chain_dagger에 BattleTargetReference 재사용 객체3개(target/source/projectile) 연결. setup/연쇄 캡처, 이동·충돌·타격 callback·구간 tick에서 같은 epoch/slot/generation 확인. 미등록/반납/재사용/전투 교체는 거절하며 정상 가로채기 충돌과 매 tick 현재 구간 대상 조회는 유지.

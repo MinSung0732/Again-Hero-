@@ -19,6 +19,7 @@ var _entry_center: CenterContainer
 var _entry_title: Label
 var _entry_cost: HBoxContainer
 var _entry_amount: Label
+var _entry_notice: AcceptDialog
 var _entry_blocker: Control
 var _spend_label: Label
 var _spend_tween: Tween
@@ -140,7 +141,9 @@ func _build_overlay() -> void:
 	overlay.name = "StaminaInfoCard"
 	overlay.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	overlay.add_theme_stylebox_override("panel", FRAMES.style("shop_panel_frame", 24))
-	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	# This is a non-modal information card. Its hover/reveal rect must never
+	# steal clicks from dungeon entry or other controls underneath it.
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(overlay)
 	overlay.hide()
 	var column := VBoxContainer.new()
@@ -403,3 +406,19 @@ func play_entry_cost(amount: int) -> void:
 	_spend_label.hide()
 	_entry_blocker.hide()
 	_entry_center.hide()
+
+
+func show_entry_notice(message: String) -> void:
+	# Entry failures are not stamina tooltips (formation/save failure included).
+	close_info()
+	if not is_instance_valid(_entry_notice):
+		_entry_notice = AcceptDialog.new()
+		_entry_notice.name = "DungeonEntryNotice"
+		_entry_notice.title = "던전 입장 안내"
+		_entry_notice.dialog_autowrap = true
+		_entry_notice.get_ok_button().text = "확인"
+		_entry_notice.add_theme_font_size_override("font_size", 26)
+		lobby.add_child(_entry_notice)
+	_entry_notice.dialog_text = message
+	var width := mini(650, maxi(240, int(lobby.get_viewport_rect().size.x) - 48))
+	_entry_notice.popup_centered(Vector2i(width, 0))
