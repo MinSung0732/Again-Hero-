@@ -132,7 +132,10 @@ func _apply_mummy_damage(amount: int, receipt = null, receipt_revision: int = 0)
 			if is_instance_valid(target) and target.has_method("take_damage"):
 				_deal_damage(target,shield_capacity)
 	if current_hp <= 0:
-		_begin_death(receipt, receipt_revision)
+		if receipt == null:
+			_begin_death()
+		else:
+			_begin_death_with_result(receipt, receipt_revision)
 
 func _draw() -> void:
 	super._draw()

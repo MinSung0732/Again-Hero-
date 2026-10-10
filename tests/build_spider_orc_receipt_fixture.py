@@ -54,8 +54,11 @@ for name in ['spider', 'orc']:
                 'MONSTER_RUNTIME_COMMON._consume_support_shield(self,amount,receipt,receipt_revision)',
                 'MONSTER_RUNTIME_COMMON.consume_support_shield(self,amount)').replace(
                 '\tif receipt != null:\n\t\treceipt.record_hp(applied_damage, receipt_revision)\n', '').replace(
-                '_begin_death(receipt, receipt_revision)', '_begin_death()')
+                '_begin_death(receipt, receipt_revision)', '_begin_death()').replace('_begin_death_with_result(receipt, receipt_revision)', '_begin_death()')
+        body = body.replace('\t\t# Legacy derived actors keep their zero-argument death override.\n\t\tif receipt == null:\n\t\t\t_begin_death()\n\t\telse:\n\t\t\t_begin_death()', '\t\t_begin_death()')
         if method == '_begin_death':
+            if name == 'orc':
+                body = fn(new, '_begin_orc_standard_death').replace('func _begin_orc_standard_death', 'func _begin_death')
             body = body.replace('(receipt = null, receipt_revision: int = 0)', '()').replace(
                 'collision_shape, &"_on_death_animation_finished", receipt, receipt_revision', 'collision_shape').replace(
                 'collision_shape,\n\t\t&"_on_death_animation_finished",\n\t\treceipt,\n\t\treceipt_revision', 'collision_shape')
@@ -65,6 +68,7 @@ for name in ['spider', 'orc']:
         methods = ['take_damage', '_begin_death']
         if label == 'after':
             methods += ['supports_damage_receipt', 'take_damage_with_result', '_apply_'+name+'_damage']
+            if name == 'orc':methods += ['_begin_death_with_result','_begin_orc_standard_death']
         if name == 'orc':
             methods += ['_add_rage_stack', '_try_trigger_last_charge']
         path = out/(f'src/monsters/{name}.gd' if label == 'after' else f'tests/{name}_before.gd')

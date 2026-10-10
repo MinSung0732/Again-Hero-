@@ -262,7 +262,11 @@ func _apply_orc_damage(amount: int, receipt = null, receipt_revision: int = 0) -
 	queue_redraw()
 
 	if current_hp <= 0:
-		_begin_death(receipt, receipt_revision)
+		# Legacy derived actors keep their zero-argument death override.
+		if receipt == null:
+			_begin_death()
+		else:
+			_begin_death_with_result(receipt, receipt_revision)
 
 func _update_visual_lod(distance_sq: float) -> void:
 	visual_lod_suspended = (
@@ -382,7 +386,13 @@ func heal_direct(amount: int) -> int:
 	current_hp += recovered
 	return recovered
 
-func _begin_death(receipt = null, receipt_revision: int = 0) -> void:
+func _begin_death() -> void:
+	_begin_orc_standard_death()
+
+func _begin_death_with_result(receipt = null, receipt_revision: int = 0) -> void:
+	_begin_orc_standard_death(receipt, receipt_revision)
+
+func _begin_orc_standard_death(receipt = null, receipt_revision: int = 0) -> void:
 	MONSTER_RUNTIME_COMMON.begin_standard_death(
 		self,
 		visual,

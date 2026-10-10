@@ -67,7 +67,8 @@ for actor in ['bat', 'ghost', 'mummy']:
                 '\tif receipt != null:\n\t\treceipt.record_hp(applied_damage, receipt_revision)\n', '').replace(
                 '\tif receipt != null:\n\t\treceipt.record_hp(previous_hp - current_hp, receipt_revision)\n', '').replace(
                 '\tif receipt != null:\n\t\treceipt.record_shield(absorbed, receipt_revision)\n\t\treceipt.record_hp(health_damage, receipt_revision)\n', '').replace(
-                '_begin_death(receipt, receipt_revision)', '_begin_death()')
+                '_begin_death(receipt, receipt_revision)', '_begin_death()').replace(
+                '\t\tif receipt == null:\n\t\t\t_begin_death()\n\t\telse:\n\t\t\t_begin_death_with_result(receipt, receipt_revision)', '\t\t_begin_death()')
         if name == '_begin_death':
             body = body.replace('(receipt = null, receipt_revision: int = 0)', '()').replace(
                 'collision_shape,\n\t\t&"_on_death_animation_finished",\n\t\treceipt,\n\t\treceipt_revision', 'collision_shape')
@@ -97,9 +98,13 @@ var elite_curse: Dictionary = {}
         content += ''.join(function(source, method) for method in methods)
         if actor == 'mummy':
             # Mummy uses its real inherited Orc death method; no Orc rage damage.
-            death = function((ROOT/'src/monsters/orc.gd').read_text(), '_begin_death')
+            parent = (ROOT/'src/monsters/orc.gd').read_text()
             if label == 'before':
-                death = death.replace('collision_shape,\n\t\t&"_on_death_animation_finished",\n\t\treceipt,\n\t\treceipt_revision', 'collision_shape')
+                death = function(parent, '_begin_orc_standard_death').replace(
+                    'func _begin_orc_standard_death(receipt = null, receipt_revision: int = 0)', 'func _begin_death()').replace(
+                    'collision_shape,\n\t\t&"_on_death_animation_finished",\n\t\treceipt,\n\t\treceipt_revision', 'collision_shape')
+            else:
+                death = ''.join(function(parent,n) for n in ['_begin_death','_begin_death_with_result','_begin_orc_standard_death'])
             content += death
         p = out/(f'src/monsters/{actor}.gd' if label == 'after' else f'tests/{actor}_before.gd')
         p.write_text(content)

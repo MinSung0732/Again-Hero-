@@ -25,14 +25,18 @@ for actor in ['skeleton_archer','goblin_thrower','kobolt']:
     for name in names:
         body=fn(new,name)
         if name=='take_damage':
-            body=fn(new,'_apply_'+actor+'_damage').replace(f'func _apply_{actor}_damage(amount: int, receipt = null, receipt_revision: int = 0) -> void:','func take_damage(amount: int) -> void:').replace('MONSTER_RUNTIME_COMMON._consume_support_shield(self,amount,receipt,receipt_revision)','MONSTER_RUNTIME_COMMON.consume_support_shield(self,amount)').replace('\tif receipt != null:\n\t\treceipt.record_hp(applied_damage, receipt_revision)\n','').replace('\tif receipt != null:\n\t\treceipt.record_hp(previous_hp - current_hp, receipt_revision)\n','').replace('_begin_death(receipt, receipt_revision)','_begin_death()')
+            body=fn(new,'_apply_'+actor+'_damage').replace(f'func _apply_{actor}_damage(amount: int, receipt = null, receipt_revision: int = 0) -> void:','func take_damage(amount: int) -> void:').replace('MONSTER_RUNTIME_COMMON._consume_support_shield(self,amount,receipt,receipt_revision)','MONSTER_RUNTIME_COMMON.consume_support_shield(self,amount)').replace('\tif receipt != null:\n\t\treceipt.record_hp(applied_damage, receipt_revision)\n','').replace('\tif receipt != null:\n\t\treceipt.record_hp(previous_hp - current_hp, receipt_revision)\n','').replace('_begin_death(receipt, receipt_revision)','_begin_death()').replace('_begin_death_with_result(receipt, receipt_revision)','_begin_death()')
+        body = body.replace('\t\t# Legacy derived actors keep their zero-argument death override.\n\t\tif receipt == null:\n\t\t\t_begin_death()\n\t\telse:\n\t\t\t_begin_death()', '\t\t_begin_death()')
+        if name=='_begin_death' and actor=='goblin_thrower':body=fn(new,'_begin_thrower_standard_death').replace('func _begin_thrower_standard_death','func _begin_death')
         if name=='_begin_death':body=body.replace('(receipt = null, receipt_revision: int = 0)','()').replace('collision_shape,\n\t\t&"_on_death_animation_finished",\n\t\treceipt,\n\t\treceipt_revision','collision_shape')
         assert body==fn(old,name),(actor,name)
     print(actor,'original bodies preserved:',len(names))
     for label,source in [('before',old),('after',new)]:
         methods=['take_damage','_begin_death']
         if actor=='skeleton_archer':methods+=['_can_revive','_begin_revival','_tick_revival','_complete_revival','_cancel_attack_sequence','heal_direct']
-        if label=='after':methods+=['supports_damage_receipt','take_damage_with_result','_apply_'+actor+'_damage']
+        if label=='after':
+            methods+=['supports_damage_receipt','take_damage_with_result','_apply_'+actor+'_damage']
+            if actor=='goblin_thrower':methods+=['_begin_death_with_result','_begin_thrower_standard_death']
         path=out/(f'src/monsters/{actor}.gd' if label=='after' else f'tests/{actor}_before.gd')
         path.write_text(header.replace('common_after','common_'+label)+''.join(fn(source,n) for n in methods))
     (out/f'tests/{actor}_derived.gd').write_text(f'extends "res://src/monsters/{actor}.gd"\nfunc take_damage(_amount):\n\tcurrent_hp -= 1\n')
