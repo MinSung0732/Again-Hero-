@@ -144,7 +144,7 @@ func _activate(id: StringName) -> void:
 	if not is_instance_valid(_notice):
 		_notice = _dialog()
 	_notice.title = String(_entries[id].get("title", "도구"))
-	_notice.dialog_text = "이 기능은 준비 중입니다.\n업데이트 후 이 버튼에서 이용할 수 있습니다."
+	_notice.dialog_text = String(_entries[id].get("empty_message", "이 기능은 준비 중입니다.\n업데이트 후 이 버튼에서 이용할 수 있습니다."))
 	_notice.popup_centered(Vector2i(580, 220))
 
 func _dialog() -> AcceptDialog:
