@@ -347,6 +347,8 @@ var projectile_count_bonus: int = 0
 var fighter_charge_config: Dictionary = {}
 var fighter_charge_cooldown_timer: float = 0.0
 var fighter_charge_active: bool = false
+const BATTLE_TARGET_REFERENCE := preload("res://src/systems/battle_target_reference.gd")
+var fighter_charge_reference = BATTLE_TARGET_REFERENCE.new()
 var fighter_charge_target: Node2D
 var fighter_charge_start: Vector2 = Vector2.ZERO
 var fighter_charge_end: Vector2 = Vector2.ZERO
@@ -19397,7 +19399,8 @@ func _find_fighter_charge_target(exclude: Node = null) -> Node2D:
 	return charge_target
 
 func _begin_fighter_charge_dash(charge_target: Node2D) -> void:
-	if not is_instance_valid(charge_target):
+	# Capture the life once; a reused Node must not inherit this dash.
+	if not fighter_charge_reference.capture(charge_target, get_parent()):
 		_finish_fighter_charge()
 		return
 
@@ -19425,6 +19428,9 @@ func _begin_fighter_charge_dash(charge_target: Node2D) -> void:
 func _update_fighter_charge(delta: float) -> void:
 	if not fighter_charge_active:
 		return
+	if fighter_charge_reference.resolve(get_parent()) == null:
+		_finish_fighter_charge()
+		return
 
 	fighter_charge_elapsed = minf(
 		fighter_charge_elapsed + delta,
@@ -19451,6 +19457,11 @@ func _update_fighter_charge(delta: float) -> void:
 		_complete_fighter_charge_dash()
 
 func _complete_fighter_charge_dash() -> void:
+	# Revalidate immediately before damage, including callbacks during movement.
+	var live_target := fighter_charge_reference.resolve(get_parent()) as Node2D
+	if live_target == null:
+		_finish_fighter_charge()
+		return
 	var direction := fighter_charge_start.direction_to(global_position)
 	if direction.length_squared() <= 0.0:
 		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
@@ -19462,8 +19473,8 @@ func _complete_fighter_charge_dash() -> void:
 			* float(fighter_charge_config.get("dash_damage_ratio", 1.20))
 		))
 	)
-	if is_instance_valid(fighter_charge_target):
-		_fighter_charge_damage_target(fighter_charge_target, dash_damage)
+	if is_instance_valid(live_target):
+		_fighter_charge_damage_target(live_target, dash_damage)
 
 	var impact_damage := maxi(
 		1,
@@ -19543,6 +19554,7 @@ func _fighter_charge_damage_target(monster: Node2D, damage: int) -> void:
 	heal_direct(heal_amount)
 
 func _finish_fighter_charge() -> void:
+	fighter_charge_reference.clear()
 	fighter_charge_active = false
 	fighter_charge_target = null
 	fighter_charge_elapsed = 0.0

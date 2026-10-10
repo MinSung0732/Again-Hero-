@@ -3,6 +3,10 @@
 작성: 2026-10-10. 기준 feature `3a56af81f4f40e719ec6edd672bbfec94edd8d37`.
 작업 브랜치 `feature/stage10-astra`, main `4122adb73e14552aae7c0aa7edefb2827f5d08d0` 유지.
 
+## 후속 적용 — 용사 돌진 (2026-10-10)
+
+레지스트리 handle을 실제 예약 공격에 사용하기 시작했다. fighter charge 시작 시 캡처, 이동/타격 전 resolve, 연쇄마다 재캡처, 종료 시 clear한다. 아래 최초 sidecar 설명은 당시 구현 기록이며 현재 fighter charge에 한해 실제 피해 경계에 연결되어 있다. 상세는 [DELAYED_TARGET_FOUNDATION.md](DELAYED_TARGET_FOUNDATION.md). 다른 공격 전체에 적용된 것은 아니다.
+
 ## 변경 목적과 범위
 
 풀에서 같은 Node를 다시 꺼내면 로컬 instance ID는 그대로다. 이전 공격의 지연 결과가 새 투사체 수명에 적용되지 않도록, 별도 `Vector3i(전투 epoch, 슬롯 ID, generation)`을 부여한다. 슬롯 ID는 1부터 시작하며 ZERO는 무효다. 로컬 instance ID는 내부 Dictionary 조회 키로만 사용한다.

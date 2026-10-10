@@ -1,5 +1,13 @@
 ## 2026-10-10 — 무타깃·직업별 일반 이동/기본공격 포트 연결
 
+## 2026-10-10 — 지연 타깃 수명 검증 첫 적용: 용사 돌진
+
+- 재사용 BattleTargetReference를 추가하고 용사 fighter charge 시작/이동/완료/연쇄에 epoch-slot-generation 검증 연결. 풀 반납·같은 Node 재활성화·전투 epoch 교체·scope 교체·삭제 예약된 대상을 취소하며 종료 때 WeakRef/handle 해제. 등록 API가 없는 기존 독립 씬만 약한 참조 호환, 등록 API가 있는데 ZERO/불완전 인터페이스이면 거절.
+- 정상 직접 피해120%/착지 범위 피해170%, 이동 보간·연쇄·쿨타임·치유 유지. 착지 AoE는 현재 후보를 조회하므로 새로운 주변 몬스터도 기존대로 피해를 받는다. Hero당 참조 객체1개, 캡처 때 WeakRef 최대2개, 프레임 배열/Dictionary/전체 스캔 없음.
+- Godot4.5.1 독립 실제 돌진 함수+실제 registry/reference420검사 및 기존 행동6,255/이동6,143검사, 총12,818검사 실패0. 실제 Hero611함수는 정확히 검토한 guard 추가 외 동일 정적 확인. 효과/충돌/주변 조회는 spy. 전체 게임4.7·모바일·FPS/메모리 미검증.
+- 기준 feature e684443eb878f43bc438a8b95fdb1017ff37590b, main4122adb7 유지. 상세/롤백 docs/DELAYED_TARGET_FOUNDATION.md. chain dagger/다른 예약 공격·source 수명·서버 권한·네트워크 동기화는 다음 작업.
+
+
 - action_intent 이름 통일, 이동/기본공격 Kind와 6종 로컬 실행 연산 추가. 일반 이동18곳(직업/재료 회수7 + 무타깃11) 및 직업 기본공격·연금술사 상자 공격을 기존 함수에 위임. 타깃은 즉시 전달, 버퍼에 Node 보관 없음. 콜백 전 소비/종류 다른 executor 거절/unknown operation 안전 소비. 기존 아이템 우선순위·속도·공격 gate/스킬 우선순위·null alchemist 의미 유지.
 - 특수 이동/변신/스킬/증강/일반 상자 피해/상태·RNG는 기존 유지, 플레이어/서버 활성화 없음. Hero당 재사용 버퍼 하나, 새 프레임 객체/스캔 없음. docs/HERO_ACTION_PORT_FOUNDATION.md 후속/롤백 갱신.
 - Godot4.5.1 독립 실제 변경 tail/무타깃 before-after6,143 + 공통 원거리6,255 =12,398검사 통과(쿼리/충돌/효과/공격은 명시 spy, 직업 앞부분은 정적 비교). 원래611함수 전체 본문 복원 동일 확인, gdparse/Python compile/diff/import 확인. 전체 게임4.7/모바일/성능 미검증. 기준 feature51ebf2e, main4122adb7 유지.

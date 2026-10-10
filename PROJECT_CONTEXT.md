@@ -1,4 +1,12 @@
 ## Hero movement/basic-attack ports — specialized ordinary paths (2026-10-10)
+
+## 2026-10-10 — 지연 타깃 수명 검증 첫 적용: 용사 돌진
+
+- 재사용 BattleTargetReference를 추가하고 용사 fighter charge 시작/이동/완료/연쇄에 epoch-slot-generation 검증 연결. 풀 반납·같은 Node 재활성화·전투 epoch 교체·scope 교체·삭제 예약된 대상을 취소하며 종료 때 WeakRef/handle 해제. 등록 API가 없는 기존 독립 씬만 약한 참조 호환, 등록 API가 있는데 ZERO/불완전 인터페이스이면 거절.
+- 정상 직접 피해120%/착지 범위 피해170%, 이동 보간·연쇄·쿨타임·치유 유지. 착지 AoE는 현재 후보를 조회하므로 새로운 주변 몬스터도 기존대로 피해를 받는다. Hero당 참조 객체1개, 캡처 때 WeakRef 최대2개, 프레임 배열/Dictionary/전체 스캔 없음.
+- Godot4.5.1 독립 실제 돌진 함수+실제 registry/reference420검사 및 기존 행동6,255/이동6,143검사, 총12,818검사 실패0. 실제 Hero611함수는 정확히 검토한 guard 추가 외 동일 정적 확인. 효과/충돌/주변 조회는 spy. 전체 게임4.7·모바일·FPS/메모리 미검증.
+- 기준 feature e684443eb878f43bc438a8b95fdb1017ff37590b, main4122adb7 유지. 상세/롤백 docs/DELAYED_TARGET_FOUNDATION.md. chain dagger/다른 예약 공격·source 수명·서버 권한·네트워크 동기화는 다음 작업.
+
 - Reused buffer renamed action_intent, typed local Kind for ranged/movement/basic attack and AttackKind for six original executor operations. 18 move+clamp blocks (ordinary specialized/material7 + no-target11), six specialized basic attacks and no-target alchemist chest attack route through the port. Same existing conditions, speed/thresholds, item priorities, skill-before-attack order and alchemist null-target semantics. Target borrowed synchronously, no Node/Callable stored in buffer.
 - Consume before movement/attack callbacks, reject wrong executor without consumption, discard unknown operation safely. Existing special movements/stops/transformations/status/RNG/skill and attack bodies and ordinary chest contact damage remain. This is not player control/network authority/target-handle migration; modes still gated.
 - Actual changed tails/no-target functions before/after6143 + common physics/ranged6255 =12398 isolated Godot4.5.1 checks pass; queries/steering/collision/skill/attack are explicit spies. All611 original Hero function bodies canonical-equivalent after reversing port calls/field rename (601 directly unchanged). Specialized timer/status/special-action prefixes statically checked, not executed by fixture. gdparse/Python compile/diff + import without generated fixtures verified. Full game4.7/GPU/mobile/performance unverified.

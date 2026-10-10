@@ -3,6 +3,10 @@
 작성: 2026-10-10. 기준 소스: `4122adb73e14552aae7c0aa7edefb2827f5d08d0`.
 작업 브랜치: `feature/stage10-astra`. main 병합은 별도 요청 후 수행한다.
 
+## 후속 진행 — 예약 돌진 대상 수명 검증 (2026-10-10)
+
+용사 fighter charge에 재사용 대상 참조를 연결했다. 예약 당시 handle이 무효화되면 이동/타격을 취소하고, 연쇄마다 새 대상 수명을 캡처한다. 주변 AoE는 현재 대상 조회 규칙을 유지한다. 독립 검증12,818검사 통과. [DELAYED_TARGET_FOUNDATION.md](DELAYED_TARGET_FOUNDATION.md)에 범위·비용·검증·롤백 기록. 다른 예약 공격/효과의 source 수명·상태 직렬화·서버 동기화는 아직 남아 있고 전체 게임/모바일은 미검증이다.
+
 ## 후속 진행 — 무타깃·전용 직업 일반 행동 연결 (2026-10-10)
 
 18곳의 일반 이동 실행과 six specialized basic attack 및 연금술사 무타깃 상자 공격을 재사용 action_intent/port에 연결했다. 기존 속도·아이템 우선순위·직업별 공격 gate/스킬 우선순위는 유지한다. 독립 비교12,398검사 및 원래611함수 본문 복원 비교 통과. 상세는 [HERO_ACTION_PORT_FOUNDATION.md](HERO_ACTION_PORT_FOUNDATION.md) 후속 절. 특수 이동·스킬/증강 의도·타깃 handle·플레이어 입력/서버는 아직 남아 있고 전체 게임4.7/모바일은 미검증이다.
