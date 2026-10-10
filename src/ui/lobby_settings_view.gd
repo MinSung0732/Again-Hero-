@@ -1,7 +1,7 @@
 extends RefCounted
 
 const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
-const OTHER_ENTRIES := [["profile", "프로필"], ["demon_book", "마왕도감"], ["hero_book", "용사도감"], ["daily", "일일미션"], ["weekly", "주간미션"], ["friends", "친구목록"], ["rank_history", "랭킹기록"], ["practice", "연습전투"], ["settings", "설정"]]
+const OTHER_ENTRIES := [["profile", "프로필"], ["demon_book", "마왕도감"], ["hero_book", "용사도감"], ["rank_history", "랭킹기록"], ["practice", "연습전투"], ["settings", "설정"]]
 
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const PROFILE := preload("res://src/systems/player_profile.gd")
@@ -702,3 +702,4 @@ func show_page(id: String) -> void:
 	_sync_account()
 	for check in game_checks.values() + [lobby.bgm_mute_check, lobby.sfx_mute_check]:
 		check.resized.emit()
+

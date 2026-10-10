@@ -265,6 +265,7 @@ var _portrait_reference_image: Image
 var _portrait_reference_rect := Rect2i()
 var _presentation_ready := false
 var settings_view: RefCounted
+var main_tools_view: Control
 var main_modes_view: RefCounted
 var gameplay_settings_path := "user://gameplay_settings.cfg"
 var _portrait_normalization_count := 0
@@ -369,6 +370,8 @@ func _ready() -> void:
 	main_modes_view.install(self)
 	stamina_view = load("res://src/ui/lobby_stamina_view.gd").new()
 	stamina_view.install(self)
+	main_tools_view = preload("res://src/ui/lobby_tool_trays.gd").new()
+	main_tools_view.install(main_tab, _can_open_main_tool)
 
 	_formation_card_cache.install(self)
 	_switch_tab("main")
@@ -2185,6 +2188,9 @@ func _input(event: InputEvent) -> void:
 	if TutorialFlow.blocks_input(event):
 		return
 	if TutorialFlow.modal_visible:
+		return
+	if main_tools_view != null and main_tools_view.blocks_stage_input(event):
+		_stage_swipe_active = false
 		return
 	if _mobile_scroll_router.handle_input(event, self):
 		_shop_scroll_touch_index = -1
@@ -5434,3 +5440,7 @@ func _enter_practice_battle() -> void:
 		return
 	if not SceneTransition.change_scene(BATTLE_SCENE_PATH,"연습전투 준비 중..."):
 		LocalTestMode.practice_requested = false
+
+
+func _can_open_main_tool() -> bool:
+	return current_tab == "main" and not _battle_entry_pending and not TutorialFlow.locks_lobby()

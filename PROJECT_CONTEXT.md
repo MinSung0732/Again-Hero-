@@ -1,3 +1,6 @@
+## Main dungeon tool trays (2026-10-10)
+- MainTab owns bounded left mission/event and right community rails. Data: src/data/lobby_tool_catalog.gd; UI: src/ui/lobby_tool_trays.gd. register_action connects future screens; overflow uses a lazy scroll grid. Original daily/weekly/friends Other placeholders moved to main, still pending features. See docs/LOBBY_TOOL_TRAYS.md.
+
 ## Shuten-doji dedicated Pixabay audio (2026-10-10)
 - Replaces all borrowed Shuten sounds with seven newly downloaded attributed Pixabay sources / twelve dedicated PCM16 mono44.1kHz WAV edits. Sake bubbling+dark mist, fire ignition, chain cast/bind, iron swing/impact, Oni laughter revival, distinct released flame attacks, dedicated gacha/summon/death. Sources/SHA256/cut/filter/layer manifest under assets/audio/sfx/shuten_doji.
 - Nine fixed combat players, cached streams, unchanged SFX settings/scaled combat clock/pause and real-time cinematics. Fog/explosion batches share one sound; rejected hits and immune binds stay silent. Source peaks-6dBFS; headless dense capture peak0.22842/36864samples passes. Physical listening/mobile/export unverified.
@@ -2739,3 +2742,4 @@ Build AI는 전체/주변 몬스터 수, 최근 공세, 역할 비율, 거리, �
 ## 클라우드 비동기 경계 보완 (2026-10-10)
 
 CloudStore 직렬화 대기는 operation_released 신호로 한다. 정상 완료는 revision/conflict 적용 후 deferred 재개, stop은 즉시 깨워 이전 세대를 취소한다. 대기 전 owner/generation 캡처와 재개 후 검사를 유지한다. 서버 revision/read 타입 및 로컬 persist 결과를 검증한다. 일반 SupabaseClient는20초/2MB·one-shot·세션세대·transport/JSON 방어를 갖추지만 실제 LoginGateway transport와 별개다. 배포 서버/저장 스키마·RLS는 이번 패치에서 바꾸지 않았다.
+
