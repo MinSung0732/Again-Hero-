@@ -345,21 +345,46 @@ func _add_shield(ratio: float) -> void:
 	set_meta("support_shield_hp",total)
 	set_meta("support_shield_capacity",total)
 func take_damage(amount: int) -> void:
+	_apply_manticore_damage(amount)
+func supports_damage_receipt() -> bool:
+	return get_script().resource_path == "res://src/monsters/manticore.gd"
+func take_damage_with_result(amount: int, receipt) -> bool:
+	if receipt == null:
+		take_damage(amount)
+		return false
+	var receipt_revision: int = receipt.begin(self, amount)
+	if not supports_damage_receipt():
+		take_damage(amount)
+		return false
+	_apply_manticore_damage(amount, receipt, receipt_revision)
+	return receipt.finish(receipt_revision)
+func _apply_manticore_damage(amount: int, receipt = null, receipt_revision: int = 0) -> void:
 	if dying or amount <= 0: return
-	var damage := MONSTER_RUNTIME_COMMON.consume_support_shield(self,int(round(amount*(0.6 if guard_remaining > 0.0 else 1.0))))
+	var damage := MONSTER_RUNTIME_COMMON._consume_support_shield(self,int(round(amount*(0.6 if guard_remaining > 0.0 else 1.0))),receipt,receipt_revision)
 	if damage <= 0: return
 	if damage >= current_hp and not escaped:
 		_sfx("escape")
 		escaped = true
+		var escape_previous_hp := current_hp
 		current_hp = maxi(int(round(max_hp*0.15)),1)
+		# Immediate recovery may increase HP; record only the actual decrease.
+		if receipt != null:
+			receipt.record_hp(maxi(escape_previous_hp-current_hp,0), receipt_revision)
 		if transcend_level >= 3:
 			guard_remaining = 5.0
 			_add_shield(0.2)
 		if is_instance_valid(hero): _start_track(effective_range()*2.0)
 		return
+	var previous_hp := current_hp
 	current_hp = maxi(current_hp-damage,0)
+	if receipt != null:
+		receipt.record_hp(maxi(previous_hp-current_hp,0), receipt_revision)
 	DAMAGE_NUMBERS.show(self,damage)
-	if current_hp <= 0: _begin_death()
+	if current_hp <= 0:
+		if receipt == null:
+			_begin_death()
+		else:
+			_begin_death_with_result(receipt, receipt_revision)
 func on_ally_death(_point: Vector2) -> void: pass
 func _arrival_explosion() -> void:
 	_sfx("summon")
@@ -481,6 +506,10 @@ func _tick_waves(delta: float) -> void:
 				if _hit(2.0,true): hero.apply_slow(0.7,3.0)
 		if wave_age[i] >= _wave_end_age(i): wave_age[i] = -1.0
 func _begin_death() -> void:
+	_begin_manticore_death()
+func _begin_death_with_result(receipt = null, receipt_revision: int = 0) -> void:
+	_begin_manticore_death(receipt, receipt_revision)
+func _begin_manticore_death(receipt = null, receipt_revision: int = 0) -> void:
 	if is_instance_valid(audio_bank):
 		audio_bank.stop_all()
 		audio_bank.play_cue("death")
@@ -490,7 +519,7 @@ func _begin_death() -> void:
 	wave_age.fill(-1.0)
 	collision_mask = 0
 	if is_instance_valid(effect_layer): effect_layer.queue_redraw()
-	super._begin_death()
+	super._begin_death_with_result(receipt, receipt_revision)
 func _draw() -> void:
 	if is_instance_valid(status_layer): status_layer.queue_redraw()
 func _draw_status() -> void:

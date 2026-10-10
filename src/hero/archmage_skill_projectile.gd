@@ -353,7 +353,8 @@ func _damage_berserker_wave_sweep(
 				and _wave_damage_receipt.victim_life == victim_handle
 				and (not tracked_targets or _wave_damage_receipt.identity_verified)
 			):
-				killed = _wave_damage_receipt.accepted and _wave_damage_receipt.death_started
+				# Preserve the legacy reward gate for targets already at HP0.
+				killed = hp_before > 0 and _wave_damage_receipt.accepted and _wave_damage_receipt.death_started
 		else:
 			var observation := DAMAGE_OBSERVATION.observe_legacy_hit(
 				monster if is_instance_valid(monster) else null, scope, victim_handle, hp_before
