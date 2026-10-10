@@ -1,3 +1,10 @@
+## 2026-10-11 — 불가살 특수 피해·사망 결과
+
+- 불가살 opt-in receipt 연결. 공중/4초월 잠복은 피해와 피격 집계 거절, 하위 잠복40% round 후 부모 aura/보호막/HP 처리 유지. 감소 round0/보호막 완전 흡수 때도 피격 횟수 증가·10회 후퇴 예약 유지. 기존 void/파생 guard 및0인자 사망 override 유지.
+- 잠복 충돌/감지 복구·fragment 정리·오디오 중지·channel/바위/파동 취소·시각 복구·기둥 이관→부모 사망 순서 보존. callback guard 폐쇄/버퍼 overwrite 때 처치 오인·피해 재시도 없음. 부모/common/projectile·네트워크 시제품 변경 없음, 매 피해 객체/배열/스캔 추가 없음.
+- Godot4.5.1 신규9,970+회귀8,166 =18,136검사 실패0. 불가살 원래42함수 hook 역변환 비교, 실제 부모·기둥 retirement reparent/channel/policy/파동 독립 검사 및 gdparse/Python compile/import/diff 통과. 전체 게임4.7/모바일/실제 AI·물리·기둥 파괴·시각/청취·성능 미검증.
+- 기준 feature20c6b654609b88cb2c1918cf5424817f4315bcbb, main4122adb7 유지. docs/BULGASAL_DAMAGE_RECEIPT.md에 범위/재현/롤백. 다음은 만티코어 등 초월 생존/상태이상 결과 경계; 매칭·용사모드 확대 보류.
+
 ## 2026-10-10 — 서큐버스 잠입·회복·실제 사망 결과
 
 - 서큐버스 자체 incoming 피해에 opt-in receipt 연결. 최초 치명타/위험 감지는 HP1 제한 후 잠입이며 처치 아님. HP1에서 피해0인 전환과 회복 증강 직전 피해량을 구분. 왈츠 감소/최소0, 지원 보호막 완전 흡수, 잠입 중 피해 거절 및 종료 감지/충돌/separation/stat scaling 보존.

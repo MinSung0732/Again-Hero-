@@ -488,15 +488,39 @@ func _hero_in(point: Vector2, radius: float) -> bool:
 	return _hero_alive() and hero.global_position.distance_squared_to(point) <= radius*radius
 
 func take_damage(amount: int) -> void:
+	_apply_bulgasal_damage(amount)
+
+func supports_damage_receipt() -> bool:
+	return get_script().resource_path == "res://src/monsters/bulgasal.gd"
+
+func take_damage_with_result(amount: int, receipt) -> bool:
+	if receipt == null:
+		take_damage(amount)
+		return false
+	var receipt_revision: int = receipt.begin(self, amount)
+	if not supports_damage_receipt():
+		take_damage(amount)
+		return false
+	_apply_bulgasal_damage(amount, receipt, receipt_revision)
+	return receipt.finish(receipt_revision)
+
+func _apply_bulgasal_damage(amount: int, receipt = null, receipt_revision: int = 0) -> void:
 	if dying or current_hp<=0 or phase == "air" or (phase == "burrow" and transcend_level>=4) or amount <= 0:
 		return
 	received_hits += 1
 	if received_hits >= 10:
 		received_hits -= 10
 		retreat_pending += 1
-	super.take_damage(int(round(amount*DATA.BURROW_DAMAGE_RATIO)) if phase == "burrow" else amount)
+	# Count the incoming hit before shield absorption, as in the legacy path.
+	super._apply_orc_damage(int(round(amount*DATA.BURROW_DAMAGE_RATIO)) if phase == "burrow" else amount, receipt, receipt_revision)
 
 func _begin_death() -> void:
+	_begin_bulgasal_death()
+
+func _begin_death_with_result(receipt = null, receipt_revision: int = 0) -> void:
+	_begin_bulgasal_death(receipt, receipt_revision)
+
+func _begin_bulgasal_death(receipt = null, receipt_revision: int = 0) -> void:
 	if burrow_phased: _restore_burrow_collision()
 	fragment_states.fill(0)
 	fragment_hit = false
@@ -510,7 +534,7 @@ func _begin_death() -> void:
 	visual.position = visual_rest
 	if is_instance_valid(pillars):
 		pillars.finish_death()
-	super._begin_death()
+	super._begin_death_with_result(receipt, receipt_revision)
 	effect_layer.queue_redraw()
 	gauge_layer.queue_redraw()
 
