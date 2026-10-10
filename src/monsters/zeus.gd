@@ -333,16 +333,39 @@ func play_combat_sound(cue: String) -> void:
 		combat_sfx.play_cue(cue)
 
 func take_damage(amount: int) -> void:
+	_apply_zeus_damage(amount)
+
+func supports_damage_receipt() -> bool:
+	return get_script().resource_path == "res://src/monsters/zeus.gd"
+
+func take_damage_with_result(amount: int, receipt) -> bool:
+	if receipt == null:
+		take_damage(amount)
+		return false
+	var receipt_revision: int = receipt.begin(self, amount)
+	if not supports_damage_receipt():
+		take_damage(amount)
+		return false
+	_apply_zeus_damage(amount, receipt, receipt_revision)
+	return receipt.finish(receipt_revision)
+
+func _apply_zeus_damage(amount: int, receipt = null, receipt_revision: int = 0) -> void:
 	var before := current_hp
-	super.take_damage(amount)
+	super._apply_goblin_thrower_damage(amount, receipt, receipt_revision)
 	if current_hp > 0 and current_hp < before:
 		play_combat_sound("hit")
 
 func _begin_death() -> void:
+	_begin_zeus_death()
+
+func _begin_death_with_result(receipt = null, receipt_revision: int = 0) -> void:
+	_begin_zeus_death(receipt, receipt_revision)
+
+func _begin_zeus_death(receipt = null, receipt_revision: int = 0) -> void:
 	if is_instance_valid(combat_sfx):
 		combat_sfx.stop_all()
 	# The cinematic owns the death sound so natural actor removal cannot cut it off.
-	super._begin_death()
+	super._begin_death_with_result(receipt, receipt_revision)
 	effect_layer.queue_redraw()
 
 func _target_feet_position() -> Vector2:

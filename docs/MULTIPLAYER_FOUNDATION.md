@@ -1,5 +1,10 @@
 # 용사 모드·대전 모드 확장 설계 및 단계별 실행 계획
 
+## 후속 내부 구조 개선 — 제우스 (2026-10-11)
+
+제우스 부모 incoming 피해와 생존 피격음·사망 audio 정리 순서를 보존하며 결과 API에 연결했다. 파동 처치 결과와 callback revision을 검증했다. 신규/회귀29,473검사 통과. [ZEUS_DAMAGE_RECEIPT.md](ZEUS_DAMAGE_RECEIPT.md). 다음은 남은 incoming opt-in 누락·outgoing 상태이상 경계 조사. 전체 게임/모바일/성능 미검증, 매칭·용사모드 확대 보류.
+
+
 ## 후속 내부 구조 개선 — 이자나미·슈텐도지 (2026-10-11)
 
 이자나미 부모 피해·사망 정리와 슈텐도지 자체 피해·첫 부활/5초월 HP50% 조건을 결과 API에 연결했다. 실제 HP 감소·소비 보호막·실제 사망을 구분하며 기존 감소/회복/초과 회복 쉴드·정리 순서를 유지한다. 독립/회귀27,650검사 통과. [CONTROL_TRANSCENDENT_DAMAGE_RECEIPT.md](CONTROL_TRANSCENDENT_DAMAGE_RECEIPT.md). 다음은 제우스 등 남은 초월 incoming·상태이상 경계 조사. 전체 게임/모바일/성능 미검증, 매칭·용사모드 확대 보류.

@@ -1,3 +1,10 @@
+## 2026-10-11 — 제우스 피해·오디오·사망 결과
+
+- 제우스 void/result incoming을 공유 helper로 연결. 부모 Thrower aura/보호막/HP 처리 뒤 생존 HP 감소 시 hit cue, 사망 audio stop→부모 common→effect redraw 순서 유지. canonical opt-in/파생 override/0인자 사망 호환.
+- popup·hit/death audio callback 재진입 시 실제 HP/보호막 기록 및 revision 보존. 처치 추론/피해 재시도 없음. 기존 파동 결과 경로에 자동 연결. 부모/common/projectile·스킬/상태이상/카탈로그/연출 변경 없음, 매 피해 객체/배열/스캔 추가 없음.
+- Godot4.5.1 신규1,823+회귀27,650 =29,473검사 실패0. 제우스 원래27함수 hook 역변환 비교, gdparse/Python compile/fixture import/diff 통과. 전체 게임4.7/모바일/실제 AI·물리·시각·청취·성능 미검증.
+- 기준 featureea2e859996d20409f3d1e59bb74188bc8d87cc91, main4122adb7 유지. docs/ZEUS_DAMAGE_RECEIPT.md에 계약/재현/롤백. 다음은 남은 incoming opt-in 누락 조사와 outgoing 상태이상 결과 계약 검토; 매칭·용사모드 확대 보류.
+
 ## 2026-10-11 — 이자나미·슈텐도지 피해·부활·사망 결과
 
 - 이자나미는 Thrower 부모 피해 결과에 opt-in 연결하고, 소환 기술/배열·교차 기록·용사 피격 signal 정리를 실제 사망 전에 유지. 슈텐도지는 안개/귀왕해방 감소·지원 보호막·첫 치명타/5초월 HP50% 부활을 자체 결과 API에 연결.
