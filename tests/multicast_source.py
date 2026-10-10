@@ -1,5 +1,6 @@
 """Reverse exact multicast reset/start guards; unexpected changes fail comparison."""
 import re
+from ice_impact_source import without_ice_impact_guards
 REPLACEMENTS = {'configure_profile': [('\t_cancel_archmage_multicast()',
                         '\tarchmage_multicast_active = false\n'
                         '\tarchmage_multicast_candidates.clear()')],
@@ -29,6 +30,7 @@ REPLACEMENTS = {'configure_profile': [('\t_cancel_archmage_multicast()',
                                 '\tarchmage_multicast_candidates.clear()\n'
                                 '\tarchmage_multicast_active = false')]}
 def without_multicast_guards(source):
+    source = without_ice_impact_guards(source)
     for name, pairs in REPLACEMENTS.items():
         m = re.search(r"^func " + name + r"\(", source, re.M)
         if m is None: continue

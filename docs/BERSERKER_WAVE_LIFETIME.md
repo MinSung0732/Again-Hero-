@@ -1,5 +1,7 @@
 # 광전사 파동 수명 검증
 
+후속: 얼음 impact 내부 경계 적용은 [ICE_IMPACT_LIFETIME.md](ICE_IMPACT_LIFETIME.md)에 기록했다. 아래 다음 작업 설명은 작성 당시 이력이다.
+
 2026-10-10. 기준 feature `7739fa3d75c25e2fa13ee28e71c5659a7e77756b`, projectile blob `50f629b99cc0eddf1b4948473242dec0e5557257`. 작업 `feature/stage10-astra`. main `4122adb73e14552aae7c0aa7edefb2827f5d08d0` 유지.
 
 ## 문제와 변경

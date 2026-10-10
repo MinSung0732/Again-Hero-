@@ -1,3 +1,10 @@
+## 2026-10-10 — 얼음 충돌 범위 피해→기둥 source 수명 연결
+
+- resolve_archmage_ice_bolt_hit 시작 시 scalar source/battle 수명 캡처, 첫 범위 피해 후보별 검증 및 피해 종료 후 동일 수명 확인. damage callback에서 source 재사용/epoch/queued/retire 시 남은 피해와 새 수명으로 기둥을 재캡처하는 경로 차단. 현재 AoE 대상 조회/가로채기/null target·충돌 위치·피해·RNG·FX/음향 유지.
+- 이미 발사된 얼음의 HP0 충돌 피해는 유지한다. capture와 radius helper에 require_alive 기본true 인자를 추가하고 impact만 false 전달. 기존 지연 스킬의 HP0 취소·기둥 자체의 alive gate는 유지. 기존 캐시 배열/registry/scalar 값 재사용, 새 예약 객체/WeakRef/프레임 배열/그룹 스캔 없음.
+- Godot4.5.1 실제 함수/타이머 독립 신규240 + 기존 Hero 행동/이동/돌진/지연/holy/연소/multicast =14,216검사 실패0. 기준618함수 정확한 역변환 본문 비교 및 기존617/616/613/611 비교, gdparse/Pythoncompile/diff/독립 editor import 통과. 최종 impact verbose 스크립트 ERROR/WARNING/잔류 객체 없음. 전체 게임4.7·실제 충돌/시각/모바일·서버·실측 성능 미검증.
+- 기준 feature ce1da1b938a2bbc43b94ea3f5449a8ddd9ef2176, main4122adb7 유지. docs/ICE_IMPACT_LIFETIME.md에 범위·비용·한계·롤백 기록. 다음 후보 공통 전투 피해 결과/identity 계약 조사(광전사 retired victim 판정 포함). 전체 스킬 경계/직렬화/서버 권한/용사 입력은 미완료.
+
 ## 2026-10-10 — 광전사 파동 source/풀·피해 callback 수명 검증
 
 - berserker_wave setup에서 기존 source/self 참조를 캡처하고 이동/피해 전 및 take_damage·적중 회복·처치 보상 callback 뒤 수명을 재검증한다. 이전 콜백이 새 shot의 traveled를 덮거나 종료하지 못한다. 처치 결과는 적중 알림 전에 저장하여 callback 이후 다른 대상 수명의 HP를 보상 근거로 읽지 않는다.

@@ -11640,6 +11640,11 @@ func resolve_archmage_ice_bolt_hit(
 	hit_position: Vector2,
 	empowered: bool
 ) -> void:
+	# Already emitted ice keeps its impact at HP0 until this source life retires.
+	var source_life := _capture_delayed_skill_source(false)
+	if source_life.x < 0:
+		return
+	var source_scope_id := get_parent().get_instance_id()
 	_ensure_archmage_audio_runtime()
 	_play_archmage_player(archmage_ice_impact_audio)
 	var config: Dictionary = archmage_skill_config.get(
@@ -11663,14 +11668,16 @@ func resolve_archmage_ice_bolt_hit(
 	_damage_monsters_in_radius(
 		hit_position,
 		impact_radius,
-		impact_damage
+		impact_damage, source_life, source_scope_id, false
 	)
+	if not _is_delayed_skill_life_current(source_life, source_scope_id):
+		return
 	_resolve_archmage_ice_pillars(hit_position, empowered)
 
 
-func _capture_delayed_skill_source() -> Vector3i:
+func _capture_delayed_skill_source(require_alive: bool = true) -> Vector3i:
 	# Scalar reservation: no RefCounted locals retained by abandoned awaits.
-	if not is_inside_tree() or is_queued_for_deletion() or current_hp <= 0:
+	if not is_inside_tree() or is_queued_for_deletion() or (require_alive and current_hp <= 0):
 		return Vector3i(-1, -1, -1)
 	var scope := get_parent()
 	if not is_instance_valid(scope) or scope.is_queued_for_deletion():
@@ -12526,11 +12533,14 @@ func _recycle_archmage_fx(fx: AnimatedSprite2D) -> void:
 		fx.queue_free()
 
 
-func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int, source_life: Vector3i = Vector3i.ZERO, source_scope_id: int = 0) -> void:
+func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int, source_life: Vector3i = Vector3i.ZERO, source_scope_id: int = 0, require_alive: bool = true) -> void:
 	var radius_sq := radius * radius
 	_fill_monster_nodes_near(origin, radius, _combat_monster_scratch)
 	for node in _combat_monster_scratch:
-		if source_scope_id != 0 and not _is_delayed_skill_source_current(source_life, source_scope_id):
+		if source_scope_id != 0 and (
+			not _is_delayed_skill_life_current(source_life, source_scope_id)
+			or (require_alive and current_hp <= 0)
+		):
 			break
 		if not is_instance_valid(node):
 			continue

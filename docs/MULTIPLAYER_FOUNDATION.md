@@ -1,5 +1,10 @@
 # 용사 모드·대전 모드 확장 설계 및 단계별 실행 계획
 
+## 후속 진행 — 얼음 충돌 피해와 기둥 연결 (2026-10-10)
+
+충돌 시작의 source 수명을 범위 피해와 다음 기둥 시작 경계까지 유지한다. callback 뒤 새 수명의 기둥 생성과 나머지 피해를 차단하며 기존 emitted HP0 충돌/기둥 alive gate를 보존한다. 독립240+기존 Hero 회귀 합계14,216검사 통과. [ICE_IMPACT_LIFETIME.md](ICE_IMPACT_LIFETIME.md)에 범위·비용·검증·롤백 기록. 다음 후보 공통 피해 결과/identity 계약 조사. 전체 게임/모바일/서버 미검증.
+
+
 ## 후속 진행 — 광전사 파동 수명 경계 (2026-10-10)
 
 berserker_wave의 source/self와 damage/hit/kill callback 뒤 수명을 확인하고 처치 결과를 적중 알림 전에 고정했다. 정상 관통·피해·보상 유지. 독립926+얼음/폭풍634+연쇄759검사 통과. 범위·비용·한계·롤백은 [BERSERKER_WAVE_LIFETIME.md](BERSERKER_WAVE_LIFETIME.md). 다음 후보 Hero 얼음 impact 내부 경계. 전체 게임/모바일/서버·실측 성능 미검증.
