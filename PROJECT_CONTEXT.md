@@ -1,3 +1,10 @@
+## 2026-10-11 — 용사 화상·두 독 경로·출혈 결과
+
+- 화상/현재체력 비례 독/출처·채널 피해량 독/출혈에 재사용 상태 receipt API 추가. 기존 helper 공유, 최소 poison 시간·피해·tick/갱신, bleed default 비율·refresh 거절, burn refresh, damage poison dedupe 유지.
+- receipt에 int64 requested_damage/applied_damage_budget 추가. 적용 시 예약 DOT 예산을 기록하며 이미 입힌 HP 피해가 아님. 비DOT begin에서 예산 reset, 동일 버퍼 재진입 무효화, visual/신호 전후 기존 순서·기술당1회 집계 유지. 원래 burn/tracker/tick 본문 변경 없음.
+- Godot4.5.1 신규7,961+제어 상태32,450 =40,411검사 실패0, 최종 import/실행 로그 leak/error 없음. 초기618/직전 단계625/현재631 Hero함수 hook 역변환 비교 및 gdparse/Python compile/diff 통과. 실제 피해 엔진·전체 게임4.7/모바일/AI·시각·성능 미검증.
+- 기준 featureb16fe17df54361b3543c2ac9ea8d88dab4ad7864, main4122adb7 유지. docs/HERO_DOT_STATUS_RECEIPT.md에 예산 계약/재현/롤백. 신규 API 기술 호출자 미전환. 다음은 매혹·치유감소·받는피해증가 등 남은 상태와 기술 호출자 연결; 매칭·용사모드 확대 보류.
+
 ## 2026-10-11 — 용사 공포·마비·석화 결과
 
 - 공포/마비/석화에 기존 BattleStatusReceipt opt-in API와 공유 helper 추가. 기존 guard·저항/최소 지속시간·공포 source/fallback·마비 강도/타이머 교체·석화 tint/anchor/residue 유지. 파생 override/null receipt legacy1회 호출 및 revision 재진입 무효화 유지.

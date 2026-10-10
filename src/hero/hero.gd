@@ -17138,11 +17138,32 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 		_:
 			push_warning("Unknown Hero augment effect op: %s" % op)
 
+func apply_poison_with_result(duration: float, total_current_hp_ratio: float, receipt, tick_interval: float = 0.50, source: Node = null) -> bool:
+	if receipt == null:
+		apply_poison(duration, total_current_hp_ratio, tick_interval, source)
+		return false
+	var revision: int = receipt.begin(self, &"poison", duration, total_current_hp_ratio)
+	if not supports_status_receipt():
+		apply_poison(duration, total_current_hp_ratio, tick_interval, source)
+		return false
+	_apply_poison_status(duration, total_current_hp_ratio, tick_interval, source, receipt, revision)
+	return receipt.finish(revision)
+
 func apply_poison(
 	duration: float,
 	total_current_hp_ratio: float,
 	tick_interval: float = 0.50,
 	source: Node = null
+) -> void:
+	_apply_poison_status(duration, total_current_hp_ratio, tick_interval, source)
+
+func _apply_poison_status(
+	duration: float,
+	total_current_hp_ratio: float,
+	tick_interval: float = 0.50,
+	source: Node = null,
+	receipt = null,
+	receipt_revision: int = 0
 ) -> void:
 	if current_hp <= 0 or is_dying:
 		return
@@ -17171,10 +17192,27 @@ func apply_poison(
 		poison_tick_timer = poison_tick_interval
 	poison_source = source if is_instance_valid(source) else null
 	set_meta("poison_active", true)
+	if receipt != null:
+		receipt.record_application(poison_timer, float(poison_damage_remaining) / maxi(current_hp, 1), receipt_revision)
+		receipt.record_damage_budget(poison_damage_remaining, receipt_revision)
 
 
+
+func apply_bleed_with_result(duration: float, receipt, source: Node = null, total_max_hp_ratio: float = -1.0, refresh: bool = false) -> bool:
+	if receipt == null:
+		apply_bleed(duration, source, total_max_hp_ratio, refresh)
+		return false
+	var revision: int = receipt.begin(self, &"bleed", duration, total_max_hp_ratio)
+	if not supports_status_receipt():
+		apply_bleed(duration, source, total_max_hp_ratio, refresh)
+		return false
+	_apply_bleed_status(duration, source, total_max_hp_ratio, refresh, receipt, revision)
+	return receipt.finish(revision)
 
 func apply_bleed(duration: float = 5.0, source: Node = null, total_max_hp_ratio: float = -1.0, refresh: bool = false) -> bool:
+	return _apply_bleed_status(duration, source, total_max_hp_ratio, refresh)
+
+func _apply_bleed_status(duration: float = 5.0, source: Node = null, total_max_hp_ratio: float = -1.0, refresh: bool = false, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or (bleed_timer > 0.0 and not refresh) or duration <= 0.0:
 		return false
 	record_status_effect_event("bleed")
@@ -17186,6 +17224,9 @@ func apply_bleed(duration: float = 5.0, source: Node = null, total_max_hp_ratio:
 	bleed_damage_applied = 0
 	bleed_source = source if is_instance_valid(source) else null
 	set_meta("bleed_active", true)
+	if receipt != null:
+		receipt.record_application(bleed_timer, float(bleed_total_damage) / maxi(max_hp, 1), receipt_revision)
+		receipt.record_damage_budget(bleed_total_damage, receipt_revision)
 	COMBAT_STATUS_EFFECT_VISUAL.show_on(self, "bleed")
 	return true
 
@@ -17389,11 +17430,28 @@ func _tick_petrify(delta: float) -> void:
 			STATUS_ACTION_SCOPE.finish(self,previous_action)
 		petrify_status_action = null
 
+func apply_damage_poison_with_result(duration: float, total_damage: int, source: Node, receipt, channel: int = 0) -> bool:
+	if receipt == null:
+		apply_damage_poison(duration, total_damage, source, channel)
+		return false
+	var revision: int = receipt.begin(self, &"poison", duration, 1.0, total_damage)
+	if not supports_status_receipt():
+		apply_damage_poison(duration, total_damage, source, channel)
+		return false
+	_apply_damage_poison_status(duration, total_damage, source, channel, receipt, revision)
+	return receipt.finish(revision)
+
 func apply_damage_poison(duration: float, total_damage: int, source: Node, channel: int = 0) -> bool:
+	return _apply_damage_poison_status(duration, total_damage, source, channel)
+
+func _apply_damage_poison_status(duration: float, total_damage: int, source: Node, channel: int = 0, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying:
 		return false
 	if not damage_poison_tracker.apply(source,total_damage,duration,channel):
 		return false
+	if receipt != null:
+		receipt.record_application(duration, 1.0, receipt_revision)
+		receipt.record_damage_budget(total_damage, receipt_revision)
 	record_status_effect_event("poison")
 	set_meta("poison_active",true)
 	return true
@@ -21176,10 +21234,27 @@ func impose_all_skill_cooldowns(seconds: float) -> void:
 			set(property_name,maxf(float(get(property_name)),seconds))
 	queue_redraw()
 
+func apply_burn_with_result(duration: float, total_damage: int, receipt, source: Node = null) -> bool:
+	if receipt == null:
+		apply_burn(duration, total_damage, source)
+		return false
+	var revision: int = receipt.begin(self, &"burn", duration, 1.0, total_damage)
+	if not supports_status_receipt():
+		apply_burn(duration, total_damage, source)
+		return false
+	_apply_burn_status(duration, total_damage, source, receipt, revision)
+	return receipt.finish(revision)
+
 func apply_burn(duration: float, total_damage: int, source: Node = null) -> bool:
+	return _apply_burn_status(duration, total_damage, source)
+
+func _apply_burn_status(duration: float, total_damage: int, source: Node = null, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or not burn_runtime.apply(duration,total_damage,source):
 		return false
 	set_meta("burn_active",true)
+	if receipt != null:
+		receipt.record_application(burn_runtime.remaining, 1.0, receipt_revision)
+		receipt.record_damage_budget(burn_runtime.total, receipt_revision)
 	record_status_effect_event("burn")
 	COMBAT_STATUS_EFFECT_VISUAL.show_on(self,"burn")
 	return true

@@ -1,5 +1,10 @@
 # 용사 모드·대전 모드 확장 설계 및 단계별 실행 계획
 
+## 후속 내부 구조 개선 — 화상·독·출혈 (2026-10-11)
+
+네 DOT 적용 경로에 상태 receipt와 int64 예약 피해 예산을 연결했다. 기존 갱신/거절·source/channel dedupe·tick/신호 순서를 유지한다. 신규7,961+제어 상태32,450 =40,411검사 통과. [HERO_DOT_STATUS_RECEIPT.md](HERO_DOT_STATUS_RECEIPT.md). 실제 피해 엔진/전체 게임·모바일·성능 미검증. 다음은 남은 상태/기술 호출자 연결이며 매칭·용사모드 확대 보류.
+
+
 ## 후속 내부 구조 개선 — 공포·마비·석화 (2026-10-11)
 
 제어 상태 결과 API를 공포/마비/석화까지 연결했다. 기존 거절·갱신·source/시각 순서와 석화 잔여 둔화의 cast credit/ambient 복원을 유지한다. 신규12,988+기존 상태19,462 =32,450검사 통과. [HERO_EXTENDED_STATUS_RECEIPT.md](HERO_EXTENDED_STATUS_RECEIPT.md). 다음은 DOT·기타 상태와 호출자 연결. 전체 게임/모바일/성능 미검증, 매칭·용사모드 확대 보류.

@@ -10,10 +10,13 @@ var requested_duration := 0.0
 var requested_strength := 0.0
 var applied_duration := 0.0
 var applied_strength := 0.0
+# Scheduled DOT budget, never an assertion of HP damage already dealt.
+var requested_damage := 0
+var applied_damage_budget := 0
 var accepted := false
 var complete := false
 
-func begin(victim: Node, kind: StringName, duration: float, strength: float) -> int:
+func begin(victim: Node, kind: StringName, duration: float, strength: float, damage: int = 0) -> int:
 	revision += 1
 	victim_instance_id = victim.get_instance_id()
 	var scope := victim.get_parent()
@@ -22,6 +25,8 @@ func begin(victim: Node, kind: StringName, duration: float, strength: float) -> 
 	status_id = kind
 	requested_duration = duration
 	requested_strength = strength
+	requested_damage = damage
+	applied_damage_budget = 0
 	applied_duration = 0.0
 	applied_strength = 0.0
 	accepted = false
@@ -33,6 +38,10 @@ func record_application(duration: float, strength: float, expected_revision: int
 		applied_duration = duration
 		applied_strength = strength
 		accepted = true
+
+func record_damage_budget(damage: int, expected_revision: int) -> void:
+	if revision == expected_revision:
+		applied_damage_budget = damage
 
 func finish(expected_revision: int) -> bool:
 	if revision != expected_revision:

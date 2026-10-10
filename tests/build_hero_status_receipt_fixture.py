@@ -18,11 +18,12 @@ def fn(s,n):
 names=re.findall(r'^func ([^(]+)\(',old,re.M)
 for n in names:
     body=fn(new,n)
-    if n in ['apply_slow','apply_stun','apply_silence','apply_fear','apply_paralysis','apply_petrify']:
-        kind=n.split('_')[1]
+    if n in ['apply_slow','apply_stun','apply_silence','apply_fear','apply_paralysis','apply_petrify','apply_poison','apply_damage_poison','apply_bleed','apply_burn']:
+        kind=n[6:]
         body=fn(new,'_apply_'+kind+'_status').replace('_apply_'+kind+'_status',n,1).replace(', receipt = null, receipt_revision: int = 0','')
         body=body.replace('speed_multiplier: float = 1.50,\n\treceipt = null,\n\treceipt_revision: int = 0','speed_multiplier: float = 1.50')
-        body=re.sub(r'\tif receipt != null:\n\t\treceipt.record_application\([^\n]+\)\n','',body)
+        body=body.replace('source: Node = null,\n\treceipt = null,\n\treceipt_revision: int = 0','source: Node = null')
+        body=re.sub(r'\tif receipt != null:\n(?:\t\treceipt\.(?:record_application|record_damage_budget)\([^\n]+\)\n)+','',body)
     assert body==fn(old,n),n
 print('Hero original bodies preserved:',len(names))
 cat=a.monster_catalog_baseline.read_text();ids=re.findall(r'"([a-z_]+)"',cat.split('const ORDER := [',1)[1].split(']',1)[0])
