@@ -1,8 +1,9 @@
-"""Build an isolated Godot fixture from actual battle boundary/augment functions.
+"""Build an isolated Godot fixture from actual battle input and entity lifecycle functions.
 
 Game assets and effect application are replaced with explicit spies. This checks
 the real public wrappers, dispatch, candidate validation, queue and pause flow;
-it is not a complete battle scene or a test of real augment effects.
+pool lifecycle functions are real, with a spy projectile scene. This is not a
+complete battle scene or a test of real augment effects.
 Usage: python3 tests/build_battle_boundary_fixture.py /tmp/again-battle-fixture
 """
 from pathlib import Path
@@ -29,8 +30,10 @@ def function(name):
 
 
 for name in ["src/data/battle_session_catalog.gd", "src/systems/battle_command.gd",
-             "src/systems/battle_command_router.gd", "tests/battle_command_router_smoke.gd",
-             "tests/battle_augment_boundary_smoke.gd", "tests/battle_mutation_boundary_smoke.gd"]:
+             "src/systems/battle_command_router.gd", "src/systems/battle_entity_registry.gd",
+             "tests/battle_command_router_smoke.gd", "tests/battle_augment_boundary_smoke.gd",
+             "tests/battle_mutation_boundary_smoke.gd", "tests/battle_entity_registry_smoke.gd",
+             "tests/battle_entity_boundary_smoke.gd", "tests/pool_projectile_spy.gd"]:
     dest = TARGET / name
     dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(ROOT / name, dest)
@@ -45,7 +48,14 @@ functions = "".join(function(name) for name in [
     "_execute_reroll_demon_augments", "_execute_choose_demon_augment",
     "_open_next_demon_augment_if_needed", "spawn_selected_mutation",
     "try_choose_mutation", "get_mutation_choice_revision",
-    "_execute_selected_mutation", "_open_mutation_choice"])
+    "_execute_selected_mutation", "_open_mutation_choice", "_activate_battle_entity",
+    "_on_battle_entity_tree_exited", "get_battle_entity_handle", "resolve_battle_entity",
+    "get_battle_entity_diagnostics", "acquire_projectile", "recycle_projectile",
+    "_unregister_monster"])
+pool_limit = re.search(r"^const MAX_PROJECTILE_POOL_PER_TYPE[^\n]+", SOURCE, re.M)
+if pool_limit is None:
+    raise RuntimeError("Missing actual projectile pool limit")
+functions += pool_limit.group(0) + "\n"
 spies = '''
 class Augments:
 	const TYPE_NORMAL = "normal"
@@ -134,8 +144,17 @@ var mutation_spawns := 0
 var last_mutation_event: Dictionary = {}
 var announcements := 0
 var reinforcement_requests := 0
+var projectile_pools: Dictionary = {}
+var active_monsters: Dictionary = {}
+var direct_population_ids: Dictionary = {}
+var monster_population_ids: Dictionary = {}
+var monster_population_counts: Dictionary = {}
+var population_updates := 0
 func _ready() -> void:
 	battle_command_router.begin_session(_execute_battle_command)
+	battle_entity_registry.begin_session(battle_command_router.get_session_id())
+func _queue_population_update() -> void:
+	population_updates += 1
 func start_offer(levels: Array) -> void:
 	demon_pending_augment_levels.assign(levels)
 	demon_pending_augments = levels.size()

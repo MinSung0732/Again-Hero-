@@ -4,6 +4,7 @@ const RULES := preload("res://src/data/battle_session_catalog.gd")
 const REQUEST := preload("res://src/systems/battle_command.gd")
 enum Rejection { NONE, NOT_READY, UNSUPPORTED_MODE, WRONG_VERSION, WRONG_SESSION, WRONG_ACTOR, UNKNOWN_COMMAND, WRONG_ROLE, INVALID_SEQUENCE, INVALID_ARGUMENT, GAMEPLAY_REJECTED }
 const LOCAL_ACTOR := 1
+static var _next_session_id := 0
 var profiling_enabled := false
 var last_rejection: int = Rejection.NONE
 var accepted_count := 0
@@ -18,12 +19,17 @@ var _executor := Callable()
 var _actor_roles: Dictionary = {}
 var _last_sequences: Dictionary = {}
 
+func get_session_id() -> int:
+	return _session_id
+
 func supports_local_execution() -> bool:
 	return RULES.supports_local_execution(_mode)
 
 func begin_session(executor: Callable, mode: int = RULES.Mode.DEMON_SOLO) -> bool:
-	# Restart invalidates queued commands from the preceding run. No save writes.
-	_session_id += 1
+	# Process-wide epochs also invalidate commands when the battle Node is
+	# recreated. This is local identity; a server match ID remains separate.
+	_next_session_id += 1
+	_session_id = _next_session_id
 	_mode = mode
 	_executor = executor
 	_local_sequence = 0

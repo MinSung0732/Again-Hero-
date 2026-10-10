@@ -1,3 +1,7 @@
+## 2026-10-10 후속 — entity 수명 경계
+
+용사·battle 생성 몬스터·battle 풀 투사체의 등록/반납/사망/tree exit에 epoch/slot/generation 레지스트리를 연결했다. 기존 instance ID 기반 대상 탐색/피해는 유지하며, 지연 결과는 후속 단계에서 handle 검사를 적용한다. 새 battle Node에도 세션 epoch를 재사용하지 않게 router 번호를 프로세스 공용으로 변경. 독립 검증406검사 통과, 전체 게임 미검증. [ENTITY_ID_FOUNDATION.md](ENTITY_ID_FOUNDATION.md)에 적용 범위·복잡도·수명 계약·롤백 상세 기록. 남은 주요 작업은 용사 action port와 RNG/공유 시뮬레이션이며 서버는 미구현이다.
+
 # 전투 입력·시간 의존 경로 조사
 
 기준: feature/stage10-astra `a3b3b7efbd332a17e4b62556179ed40ca9e0f98c`.

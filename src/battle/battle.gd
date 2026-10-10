@@ -3,10 +3,12 @@ extends Node2D
 const BATTLE_SESSION := preload("res://src/data/battle_session_catalog.gd")
 const BATTLE_COMMAND := preload("res://src/systems/battle_command.gd")
 const BATTLE_COMMAND_ROUTER := preload("res://src/systems/battle_command_router.gd")
+const BATTLE_ENTITY_REGISTRY := preload("res://src/systems/battle_entity_registry.gd")
 # Offline compatibility switch for this migration. Future network modes must
 # never bypass their authority checks through this switch.
 @export var command_routing_enabled := true
 var battle_command_router = BATTLE_COMMAND_ROUTER.new()
+var battle_entity_registry = BATTLE_ENTITY_REGISTRY.new()
 var demon_augment_revision := 0
 var mutation_choice_revision := 0
 
@@ -770,6 +772,7 @@ func _cache_demon_ultimate_runtime_data() -> void:
 
 func _start_battle() -> void:
 	battle_command_router.begin_session(_execute_battle_command)
+	battle_entity_registry.begin_session(battle_command_router.get_session_id())
 	demon_augment_revision += 1
 	mutation_choice_revision += 1
 	var registered_id := TRANSCENDENCE_STORE.load_id()
@@ -933,6 +936,7 @@ func _start_battle() -> void:
 	hero.set("level", int(current_stage_data.get("hero_level_start", 1)))
 
 	add_child(hero)
+	_activate_battle_entity(hero)
 	hero.position = current_map_size * 0.5
 	# add_child() runs Hero._ready(), which reapplies the profile visual and
 	# restores HeroSprite.z_index. Normalize Demon Castle depth only after _ready()
@@ -1250,6 +1254,29 @@ func set_battle_command_profiling(enabled: bool) -> void:
 
 func get_run_clock_diagnostics() -> Dictionary:
 	return run_metrics.get_clock_snapshot()
+
+func _activate_battle_entity(node: Node) -> Vector3i:
+	var handle: Vector3i = battle_entity_registry.activate(node)
+	if handle == Vector3i.ZERO:
+		return handle
+	# One connection per node, including thousands of pool activations. Binding
+	# the local instance ID avoids keeping an extra Node reference in callbacks.
+	var on_exit := _on_battle_entity_tree_exited.bind(node.get_instance_id())
+	if not node.tree_exited.is_connected(on_exit):
+		node.tree_exited.connect(on_exit)
+	return handle
+
+func _on_battle_entity_tree_exited(instance_id: int) -> void:
+	battle_entity_registry.retire_instance(instance_id)
+
+func get_battle_entity_handle(node: Node) -> Vector3i:
+	return battle_entity_registry.get_handle(node)
+
+func resolve_battle_entity(handle: Vector3i) -> Node:
+	return battle_entity_registry.resolve(handle)
+
+func get_battle_entity_diagnostics() -> Dictionary:
+	return battle_entity_registry.snapshot()
 
 func _execute_summon(monster_type: String) -> bool:
 	if not _can_attempt_summon(monster_type):
@@ -2379,6 +2406,7 @@ func _spawn_monster(
 	var monster_instance_id := monster.get_instance_id()
 	monster_summon_costs[monster_instance_id] = summon_cost
 	active_monsters[monster_instance_id] = monster
+	_activate_battle_entity(monster)
 	monster.set_meta("query_registration_order", monster_query_registration_order)
 	monster_query_registration_order += 1
 	if bool(spawn_modifiers.get("counts_population", false)):
@@ -2422,6 +2450,7 @@ func is_population_full() -> bool:
 	return get_population_count() >= get_population_limit()
 
 func _unregister_monster(instance_id: int) -> void:
+	battle_entity_registry.retire_instance(instance_id)
 	if direct_population_ids.erase(instance_id):
 		_queue_population_update()
 	if monster_population_ids.has(instance_id):
@@ -3450,6 +3479,7 @@ func acquire_projectile(scene: PackedScene, pool_key: String) -> Node:
 		projectile = scene.instantiate()
 		add_child(projectile)
 
+	_activate_battle_entity(projectile)
 	return projectile
 
 
@@ -3461,6 +3491,8 @@ func recycle_projectile(projectile: Node, pool_key: String) -> void:
 	):
 		return
 
+	# Invalidate the old life before deactivation callbacks can schedule work.
+	battle_entity_registry.retire_instance(projectile.get_instance_id())
 	if projectile.has_method("deactivate_for_pool"):
 		projectile.call("deactivate_for_pool")
 
@@ -5184,6 +5216,8 @@ func get_debug_balance_summary() -> String:
 	return "%s\n%s\n%s" % [level_line, augment_line, sample_line]
 
 func _on_hero_died() -> void:
+	if is_instance_valid(hero):
+		battle_entity_registry.retire_instance(hero.get_instance_id())
 	if practice_mode or tutorial_mode:
 		return
 	if battle_over:

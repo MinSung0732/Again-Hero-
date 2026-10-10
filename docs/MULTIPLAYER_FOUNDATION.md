@@ -3,6 +3,10 @@
 작성: 2026-10-10. 기준 소스: `4122adb73e14552aae7c0aa7edefb2827f5d08d0`.
 작업 브랜치: `feature/stage10-astra`. main 병합은 별도 요청 후 수행한다.
 
+## 후속 진행 — entity ID/generation 첫 적용 (2026-10-10)
+
+용사·battle 생성 몬스터·battle 풀 투사체에 epoch/slot/generation 레지스트리를 연결했다. 풀 재사용은 새 수명, 반납/사망/tree exit는 무효화한다. 새 battle Node에서도 이전 명령/handle이 겹치지 않게 로컬 router epoch를 프로세스 공용으로 증가시킨다. 기존 탐색/피해 instance ID와 전투 tick은 유지한다. 독립 Godot4.5.1 검증406검사 통과. 범위·비용·한계·롤백은 [ENTITY_ID_FOUNDATION.md](ENTITY_ID_FOUNDATION.md). 전체 게임4.7/모바일 미검증, 서버·용사 action port·동기화는 아직 미구현이다.
+
 ## 후속 진행 — 엘리트 선택 명령 경계 (2026-10-10)
 
 엘리트/돌연변이 선택도 명령7과 독립 후보 revision에 연결했다. 기존 로컬 void API 유지, 표시 UI는 명시 revision 전달, 오래된 이벤트 선택은 거절한다. protocol v3. router130·증강79·엘리트 경계58검사 통과(독립 fixture, 실제 소환은 spy). 입력·시간 지도에 상세 기록. 다음 작업은 entity ID/generation 레지스트리 첫 적용이며 용사 action port/서버/동기화는 아직 미구현이다.
@@ -61,7 +65,7 @@
 | 필드 | 현재 의미 | 대전 전환 시 원칙 |
 |---|---|---|
 | protocol_version | 요청 구조 버전 1 | handshake 불일치 시 참가 거절 |
-| session_id | 로컬 전투 재시작마다 증가하는 epoch | 서버 match ID + epoch 별도 지정 |
+| session_id | 로컬 프로세스의 새 전투마다 증가하는 epoch | 서버 match ID + epoch 별도 지정 |
 | actor_id | 신뢰된 로컬 슬롯 1 | 인증된 연결에서 서버가 슬롯 지정 |
 | sequence | actor별 증가 순서 | 재전송 중복 처리 및 ACK 연결 |
 | kind | 고정 숫자 ID 1~4 | ID 재사용 금지, 미지원 명령 거절 |

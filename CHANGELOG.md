@@ -1,3 +1,9 @@
+## 2026-10-10 — 전투 entity ID/generation 레지스트리 첫 적용
+
+- 용사·battle 생성 몬스터·battle 풀 투사체에 Vector3i(epoch, slot, generation) identity sidecar 연결. 반납은 deactivate 이전 무효화, 죽음/tree exit 해제, 재사용 generation 증가. WeakRef + 재사용 슬롯, Node마다 신호 한 번, 프레임 스캔 없음. 기존 전투/탐색/피해/풀 정책 유지.
+- 새 battle Node의 epoch 충돌 방지를 위해 router의 로컬 세션 번호를 프로세스 공용 증가로 변경. 서버 match ID/동기화/용사 action port 미구현. docs/ENTITY_ID_FOUNDATION.md에 범위·한계·비용·롤백 기록.
+- Godot4.5.1 독립 registry76/실제 lifecycle 경계59/router134/증강79/엘리트58 총406검사 통과. 생성 fixture 없는 editor import, gdparse/Python compile/diff 검사 및 기존 battle7함수 본문 비교. 실제 게임4.7/모바일/FPS·로딩 미검증. 기준 feature3a56af81(엘리트 체크포인트), main4122adb7 유지.
+
 ## 2026-10-10 — 엘리트 선택 명령과 이벤트 후보 버전
 
 - protocol v3 명령7 MUTATION_CHOOSE와 mutation revision 적용. main 표시 버전 전달·오래된 카드 숨김 방지, try_choose_mutation bool 및 기존 spawn_selected_mutation void 호환. 기존 후보/거리/fallback/소환 결과/pause 해제/deferred 증강 흐름 유지.
