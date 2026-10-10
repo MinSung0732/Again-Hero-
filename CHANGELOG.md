@@ -1,3 +1,10 @@
+## 2026-10-10 — 광전사 파동 source/풀·피해 callback 수명 검증
+
+- berserker_wave setup에서 기존 source/self 참조를 캡처하고 이동/피해 전 및 take_damage·적중 회복·처치 보상 callback 뒤 수명을 재검증한다. 이전 콜백이 새 shot의 traveled를 덮거나 종료하지 못한다. 처치 결과는 적중 알림 전에 저장하여 callback 이후 다른 대상 수명의 HP를 보상 근거로 읽지 않는다.
+- 정상 직선/선분 capsule·적중 반경·instance ID별 1회 피해·적중 회복 알림·양수HP에서 실제 죽은 대상의 보상 유지. 정상 사망으로 handle이 ZERO인 경우와 queued lethal target의 처치 보상 유지, 새 nonzero generation은 이전 처치로 계산하지 않음. 기존 발사체 HP0 정책/형상/속도/피해/풀링 유지.
+- Godot4.5.1 독립 신규926 + 얼음/폭풍634 + 연쇄759 =2,319검사 실패0. 기준30함수 정확한 변경 역변환 비교 및 기존28/15본문 비교, gdparse/Pythoncompile/diff/독립 editor import 통과. 최종 wave verbose 스크립트 ERROR/WARNING/잔류 객체 없음. 전체 게임4.7·실제 충돌/시각/모바일·서버·실측 성능 미검증.
+- 기준 feature7739fa3d75c25e2fa13ee28e71c5659a7e77756b, main4122adb7 유지. docs/BERSERKER_WAVE_LIFETIME.md에 범위·비용·한계·롤백 기록. 다음 후보 Hero 얼음 impact 내부 범위 피해/기둥 생성 경계. 서버/플레이어 용사 입력/전체 행동 상태 직렬화는 미완료.
+
 ## 2026-10-10 — 얼음·폭풍 투사체 source/풀 수명 검증
 
 - ice_bolt/storm setup에 기존 재사용 source/self 참조를 연결하고 이동/충돌/피해 callback 뒤 epoch/slot/generation 및 local revision을 확인한다. 이전 피해/게이지/impact callback이 새 투사체의 traveled/return 상태를 바꾸거나 반납하지 못한다. 피해 후 대상 수명을 확인해 재사용된 적에게 이전 속박을 쓰지 않는다.

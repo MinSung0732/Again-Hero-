@@ -1,5 +1,10 @@
 # 용사 모드·대전 모드 확장 설계 및 단계별 실행 계획
 
+## 후속 진행 — 광전사 파동 수명 경계 (2026-10-10)
+
+berserker_wave의 source/self와 damage/hit/kill callback 뒤 수명을 확인하고 처치 결과를 적중 알림 전에 고정했다. 정상 관통·피해·보상 유지. 독립926+얼음/폭풍634+연쇄759검사 통과. 범위·비용·한계·롤백은 [BERSERKER_WAVE_LIFETIME.md](BERSERKER_WAVE_LIFETIME.md). 다음 후보 Hero 얼음 impact 내부 경계. 전체 게임/모바일/서버·실측 성능 미검증.
+
+
 ## 후속 진행 — 얼음·폭풍 투사체 수명 경계 (2026-10-10)
 
 ice_bolt/storm의 source/self 수명과 피해 후 대상 수명, reentrant callback revision을 검증한다. 정상 직선 충돌/왕복 피해/게이지는 유지한다. 신규634+연쇄 회귀759검사 통과. 범위·비용·후속·롤백은 [ELEMENTAL_PROJECTILE_LIFETIME.md](ELEMENTAL_PROJECTILE_LIFETIME.md). 전체 게임/모바일/서버·실측 성능 미검증. 다음 후보 berserker_wave이며 전체 PvP 동기화 완료 단계는 아니다.

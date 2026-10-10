@@ -8,6 +8,7 @@ import argparse
 import re
 import shutil
 from elemental_projectile_source import without_elemental_projectile_guards
+from wave_projectile_source import without_wave_projectile_guards
 ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser()
 p.add_argument('target', type=Path)
@@ -27,7 +28,7 @@ allowed = set()
 names = re.findall(r'^func ([^(]+)\(', before, re.M)
 for name in names:
     if name not in allowed:
-        assert function(before,name) == without_elemental_projectile_guards(function(after,name)), name
+        assert function(before,name) == without_elemental_projectile_guards(without_wave_projectile_guards(function(after,name))), name
 print('Untouched projectile bodies identical:',len(names)-len(allowed))
 out.mkdir(parents=True, exist_ok=True)
 (out/'project.godot').write_text('[application]\nconfig/name="Elemental projectile lifetime fixture"\n')

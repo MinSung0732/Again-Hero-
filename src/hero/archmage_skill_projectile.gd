@@ -85,7 +85,7 @@ func setup(
 		):
 			_finish()
 			return
-	elif skill_type == "ice_bolt" or skill_type == "storm":
+	elif skill_type == "ice_bolt" or skill_type == "storm" or skill_type == "berserker_wave":
 		var scope := get_parent()
 		if not _chain_source_reference.capture(source_hero, scope) or not _chain_projectile_reference.capture(self, scope):
 			_finish()
@@ -109,6 +109,9 @@ func _physics_process(delta: float) -> void:
 		current_target = null
 		_chain_target_reference.clear()
 	if skill_type == "berserker_wave":
+		if not _is_wave_life_current(life_revision):
+			_finish_elemental_revision(life_revision)
+			return
 		var previous_position: Vector2 = global_position
 		var wave_step: Vector2 = direction * speed * delta
 		global_position += wave_step
@@ -117,6 +120,9 @@ func _physics_process(delta: float) -> void:
 			previous_position,
 			global_position
 		)
+		if not _is_wave_life_current(life_revision):
+			_finish_elemental_revision(life_revision)
+			return
 		if traveled >= max_range:
 			_finish()
 		return
@@ -259,6 +265,11 @@ func _damage_berserker_wave_sweep(
 	from_position: Vector2,
 	to_position: Vector2
 ) -> void:
+	var life_revision := _chain_life_revision
+	if not _is_wave_life_current(life_revision):
+		return
+	var scope := get_parent()
+	var tracked_targets := scope.has_method("get_battle_entity_handle")
 	var hit_radius: float = maxf(
 		float(config.get("hit_radius", 64.0)),
 		1.0
@@ -270,6 +281,8 @@ func _damage_berserker_wave_sweep(
 		from_position.lerp(to_position, 0.5),
 		search_radius
 	):
+		if not _is_wave_life_current(life_revision):
+			return
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -300,32 +313,32 @@ func _damage_berserker_wave_sweep(
 			if hp_before_value != null
 			else -1
 		)
+		var victim_handle := Vector3i.ZERO
+		if tracked_targets:
+			victim_handle = scope.call("get_battle_entity_handle", monster)
 		monster.call("take_damage", damage)
-		if (
-			is_instance_valid(source_hero)
-			and source_hero.has_method(
-				"notify_berserker_blood_art_hit"
-			)
-		):
-			source_hero.call(
-				"notify_berserker_blood_art_hit"
-			)
+		if not _is_wave_life_current(life_revision):
+			return
 
-		if hp_before <= 0:
-			continue
-		var killed: bool = false
-		if not is_instance_valid(monster):
-			killed = true
-		else:
-			var hp_after_value = monster.get("current_hp")
-			if hp_after_value != null and int(hp_after_value) <= 0:
-				killed = true
-		if (
-			killed
-			and is_instance_valid(source_hero)
-			and source_hero.has_method("notify_berserker_skill_kill")
-		):
+		# Snapshot the result before hit-heal callbacks can recycle the victim.
+		var killed := hp_before > 0 and not is_instance_valid(monster)
+		if hp_before > 0 and is_instance_valid(monster):
+			var same_victim := not tracked_targets
+			if tracked_targets and victim_handle != Vector3i.ZERO:
+				var current_handle: Vector3i = scope.call("get_battle_entity_handle", monster)
+				# Normal death retires the handle; a new nonzero generation is another victim.
+				same_victim = current_handle == victim_handle or current_handle == Vector3i.ZERO
+			if same_victim:
+				var hp_after_value = monster.get("current_hp")
+				killed = hp_after_value != null and int(hp_after_value) <= 0
+		if source_hero.has_method("notify_berserker_blood_art_hit"):
+			source_hero.call("notify_berserker_blood_art_hit")
+			if not _is_wave_life_current(life_revision):
+				return
+		if killed and source_hero.has_method("notify_berserker_skill_kill"):
 			source_hero.call("notify_berserker_skill_kill")
+			if not _is_wave_life_current(life_revision):
+				return
 
 
 func _on_body_entered(body: Node) -> void:
@@ -1003,3 +1016,13 @@ func _disable_chain_monitoring(life_revision: int) -> void:
 	# Deferred property writes also belong to the life that scheduled them.
 	if active and skill_type == "chain_dagger" and _chain_life_revision == life_revision:
 		monitoring = false
+
+
+func _is_wave_life_current(life_revision: int) -> bool:
+	return (
+		active and skill_type == "berserker_wave"
+		and _chain_life_revision == life_revision and is_inside_tree()
+		and is_instance_valid(source_hero)
+		and _chain_projectile_reference.resolve(get_parent()) == self
+		and _chain_source_reference.resolve(get_parent()) == source_hero
+	)
