@@ -11524,6 +11524,10 @@ func _end_archmage_casting_sequence() -> void:
 
 
 func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
+	var source_life := _capture_delayed_skill_source()
+	if source_life.x < 0:
+		return
+	var source_scope_id := get_parent().get_instance_id()
 	_begin_archmage_casting_sequence()
 	_ensure_archmage_audio_runtime()
 	_play_archmage_player(archmage_combustion_charge_audio)
@@ -11537,6 +11541,7 @@ func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
 		"res://assets/art/heroes/stage5_archmage/frames/effect2",
 		"fire", 1, 7, 18.0, true, orb_position, Vector2(0.88, 0.88)
 	)
+	var charge_fx_revision := int(charge_fx.get_meta("archmage_cast_revision", 0)) if is_instance_valid(charge_fx) else 0
 	var duration := maxf(float(config.get("charge_duration", 0.90)), 0.05)
 	var tick_interval := maxf(float(config.get("charge_tick_interval", 0.18)), 0.05)
 	var radius := maxf(float(config.get("charge_radius", 95.0)), 1.0)
@@ -11546,14 +11551,17 @@ func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
 		* _skill_damage_multiplier(empowered)
 	)))
 	var elapsed := 0.0
-	while elapsed < duration and is_inside_tree() and current_hp > 0:
-		_damage_monsters_in_radius(orb_position, radius, tick_damage)
+	while elapsed < duration and _is_delayed_skill_source_current(source_life, source_scope_id):
+		_damage_monsters_in_radius(orb_position, radius, tick_damage, source_life, source_scope_id)
+		if not _is_delayed_skill_source_current(source_life, source_scope_id):
+			break
 		await get_tree().create_timer(tick_interval).timeout
 		elapsed += tick_interval
 	if is_instance_valid(charge_fx):
-		_recycle_archmage_fx(charge_fx)
-	if not is_inside_tree() or current_hp <= 0:
-		_end_archmage_casting_sequence()
+		_recycle_archmage_fx_if_current(charge_fx, charge_fx_revision, source_scope_id)
+	if not _is_delayed_skill_source_current(source_life, source_scope_id):
+		if _is_delayed_skill_life_current(source_life, source_scope_id):
+			_end_archmage_casting_sequence()
 		return
 
 	var thrust_direction := facing.normalized()
@@ -11579,11 +11587,15 @@ func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
 		orb_position,
 		thrust_end,
 		maxf(float(config.get("thrust_half_width", 92.0)), 1.0),
-		thrust_damage
+		thrust_damage,
+		source_life,
+		source_scope_id
 	)
-	_ensure_archmage_audio_runtime()
-	_play_archmage_player(archmage_combustion_release_audio)
-	_end_archmage_casting_sequence()
+	if _is_delayed_skill_source_current(source_life, source_scope_id):
+		_ensure_archmage_audio_runtime()
+		_play_archmage_player(archmage_combustion_release_audio)
+	if _is_delayed_skill_life_current(source_life, source_scope_id):
+		_end_archmage_casting_sequence()
 
 
 func _cast_archmage_ice_bolt(config: Dictionary, empowered: bool) -> void:
@@ -12442,6 +12454,8 @@ func _spawn_archmage_fx(
 		fx = AnimatedSprite2D.new()
 		parent.add_child(fx)
 
+	# A pooled sprite may now belong to another delayed cast.
+	fx.set_meta("archmage_cast_revision", int(fx.get_meta("archmage_cast_revision", 0)) + 1)
 	fx.stop()
 	fx.sprite_frames = frames
 	fx.animation = &"fx"
@@ -12474,6 +12488,20 @@ func _spawn_archmage_fx(
 	return fx
 
 
+func _recycle_archmage_fx_if_current(fx: AnimatedSprite2D, revision: int, scope_id: int) -> void:
+	# Recycle only this playback, through its original parent, even after reparenting Hero.
+	if not is_instance_valid(fx) or fx.is_queued_for_deletion() or not fx.visible:
+		return
+	if int(fx.get_meta("archmage_cast_revision", 0)) != revision:
+		return
+	var scope := fx.get_parent()
+	if not is_instance_valid(scope) or scope.is_queued_for_deletion() or scope.get_instance_id() != scope_id:
+		return
+	if scope.has_method("recycle_transient_fx"):
+		scope.call("recycle_transient_fx", fx, "archmage_cast_fx")
+	else:
+		fx.queue_free()
+
 func _recycle_archmage_fx(fx: AnimatedSprite2D) -> void:
 	if not is_instance_valid(fx):
 		return
@@ -12490,6 +12518,8 @@ func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int, sou
 	for node in _combat_monster_scratch:
 		if source_scope_id != 0 and not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
+		if not is_instance_valid(node):
+			continue
 		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
@@ -12528,7 +12558,9 @@ func _damage_monsters_in_corridor(
 	start: Vector2,
 	end: Vector2,
 	half_width: float,
-	damage: int
+	damage: int,
+	source_life: Vector3i = Vector3i.ZERO,
+	source_scope_id: int = 0
 ) -> void:
 	var segment := end - start
 	var length_sq := maxf(segment.length_squared(), 0.001)
@@ -12545,6 +12577,10 @@ func _damage_monsters_in_corridor(
 	_fill_monster_nodes_in_rect(query_rect, _combat_monster_scratch)
 
 	for node in _combat_monster_scratch:
+		if source_scope_id != 0 and not _is_delayed_skill_source_current(source_life, source_scope_id):
+			break
+		if not is_instance_valid(node):
+			continue
 		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D

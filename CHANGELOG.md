@@ -1,3 +1,10 @@
+## 2026-10-10 — 연소 지속 피해·방출·충전 FX 수명 검증
+
+- 실제 archmage 연소(combustion)의 충전 범위 tick와 마지막 corridor 방출에 source/battle scalar 수명 검증. 이전 문서의 fire field는 이 경로를 지칭했으며 별도 장판·둔화 추가 없음. callback 후 취소된 시전은 timer/방출/음향을 만들지 않고 cleanup은 같은 수명에만 적용. 범위·corridor의 freed 후보를 typed 탐지 정책 전에 제외한다.
+- 충전 FX는 재생 revision+원래 부모ID+valid/queued/visible 확인으로 반납. 같은 pool Sprite의 새 재생을 오래된 시전이 반납하지 않으며 Hero 부모가 바뀌어도 원래 FX 부모에 반납한다. 새 예약 객체/WeakRef 생성 없이 값만 저장. FX 키1개/개체, 평균 O(1) 수명 조회, 기존 pool/cache/피해/간격/Tween 유지.
+- 신규 실제 함수+실제 transient pool Godot4.5.1 독립234검사, 이전 회귀 포함14,495검사 실패0. 최종 연소 verbose ERROR/WARNING/잔류 객체 없음. 기준616함수 정확한 변경 문자열 역변환 비교 및 기존 기준616/613/611 비교, gdparse/Pythoncompile/diff/독립 editor import 확인. 전체 게임4.7·실제 자원/물리·모바일·서버/장기 RAM·실측 성능 미검증.
+- 기준 feature ca1fd6b4eb384f96eb667ca91ea3c1f4a5c0a671, main4122adb7 유지. docs/COMBUSTION_LIFETIME.md에 범위/비용/한계/재현/롤백 기록. 다음 후보 archmage multicast 지연 추가 시전 경계.
+
 ## 2026-10-10 — 성스러운 힘 수명 검증·지연 예약 값 형식 전환
 
 - holy burst pulse/피해/피해 callback/새 timer 직전 source와 battle 수명 검증, 동일 수명일 때만 casting cleanup. 피해 후 target generation/valid/queued 확인으로 재사용된 적에게 이전 둔화가 붙는 문제 차단. free된 배열 항목을 Node 타입 정책 호출 전에 걸러준다. 정상 피해·언데드 배율·RNG/순서·간격·둔화 clamp 유지.

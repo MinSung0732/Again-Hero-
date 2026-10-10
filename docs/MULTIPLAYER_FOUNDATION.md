@@ -1,5 +1,10 @@
 # 용사 모드·대전 모드 확장 설계 및 단계별 실행 계획
 
+## 후속 진행 — 연소 지속 피해·방출·충전 FX (2026-10-10)
+
+실제 combustion의 충전 범위 tick와 corridor 방출을 보호했다. 충전 FX 반납은 재생 revision/원래 부모를 확인한다. 별도 fire field/둔화 스킬을 추가한 것이 아니다. 범위·비용·검증14,495검사·한계·후속·롤백은 [COMBUSTION_LIFETIME.md](COMBUSTION_LIFETIME.md). 전체 게임/모바일/서버·실측 성능은 미검증이다.
+
+
 ## 후속 진행 — 성스러운 힘 및 scalar 수명 예약 (2026-10-10)
 
 holy power 지연 피해·후속 둔화에 source/target 수명 검증을 연결했다. ice/earth/holy 공통 source 예약은 시전당 RefCounted에서 Vector3i+부모ID 값으로 전환해 예약 객체 생성과 취소된 시전의 새 timer를 제거한다. 현재 비용·범위·검증14,261검사·한계·후속·롤백은 [HOLY_POWER_LIFETIME.md](HOLY_POWER_LIFETIME.md). 아래 이전 구현의 RefCounted/WeakRef 비용 설명은 이력이다. 전체 게임/모바일/서버·실측 성능 검증은 미완료다.

@@ -1,5 +1,10 @@
 # 성스러운 힘 지연 타격 수명 검증
 
+## 후속 진행 — 연소 지속 피해·방출·충전 FX (2026-10-10)
+
+실제 combustion의 충전 범위 tick와 corridor 방출을 보호했다. 충전 FX 반납은 재생 revision/원래 부모를 확인한다. 별도 fire field/둔화 스킬을 추가한 것이 아니다. 범위·비용·검증14,495검사·한계·후속·롤백은 [COMBUSTION_LIFETIME.md](COMBUSTION_LIFETIME.md). 전체 게임/모바일/서버·실측 성능은 미검증이다.
+
+
 2026-10-10. 기준 feature `b9714d4a806faba67a7ac49c1cb4590aecab0453`, 작업 `feature/stage10-astra`. main `4122adb73e14552aae7c0aa7edefb2827f5d08d0` 유지.
 
 ## 이번 변경
