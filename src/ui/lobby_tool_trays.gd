@@ -5,6 +5,8 @@ signal tool_requested(tool_id: StringName)
 const CATALOG := preload("res://src/data/lobby_tool_catalog.gd")
 const BUTTON_SIZE := Vector2(104, 108)
 const GAP := 8.0
+const EDGE_MARGIN := 8.0
+const TOP_OFFSET := 190.0
 const DIRECT_LIMIT := 3
 const BADGE_PATH := "res://assets/art/UI/lobby_tools/notification_dot.svg"
 
@@ -67,8 +69,12 @@ func register_action(tool_id: StringName, action: Callable) -> void:
 func _layout() -> void:
 	for side in _rails:
 		var rail: VBoxContainer = _rails[side]
-		rail.position = Vector2(8 if side == &"left" else size.x - BUTTON_SIZE.x - 8, 42)
-		rail.size = Vector2(BUTTON_SIZE.x, 3 * BUTTON_SIZE.y + 2 * GAP)
+		var count := rail.get_child_count()
+		var height := count * BUTTON_SIZE.y + maxi(count - 1, 0) * GAP
+		# Lower both trays into the side-panel tool area; clamp on resize only.
+		var top := minf(TOP_OFFSET, maxf(size.y - height - EDGE_MARGIN, EDGE_MARGIN))
+		rail.position = Vector2(EDGE_MARGIN if side == &"left" else size.x - BUTTON_SIZE.x - EDGE_MARGIN, top)
+		rail.size = Vector2(BUTTON_SIZE.x, height)
 
 func _style(fill: Color, edge: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
