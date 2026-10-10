@@ -1,5 +1,13 @@
 extends Node2D
 
+const BATTLE_SESSION := preload("res://src/data/battle_session_catalog.gd")
+const BATTLE_COMMAND := preload("res://src/systems/battle_command.gd")
+const BATTLE_COMMAND_ROUTER := preload("res://src/systems/battle_command_router.gd")
+# Offline compatibility switch for this migration. Future network modes must
+# never bypass their authority checks through this switch.
+@export var command_routing_enabled := true
+var battle_command_router = BATTLE_COMMAND_ROUTER.new()
+
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 const SPATIAL_BUCKET_POOL := preload("res://src/systems/spatial_bucket_pool.gd")
 
@@ -759,6 +767,7 @@ func _cache_demon_ultimate_runtime_data() -> void:
 
 
 func _start_battle() -> void:
+	battle_command_router.begin_session(_execute_battle_command)
 	var registered_id := TRANSCENDENCE_STORE.load_id()
 	transcendent_actor = null
 	raw_allied_summons = 0
@@ -1184,6 +1193,52 @@ func set_allowed_monster_ids(monster_ids: Array) -> void:
 	loadout_restriction_enabled = not allowed_monster_ids.is_empty()
 
 func try_summon(monster_type: String) -> bool:
+	if not battle_command_router.supports_local_execution():
+		return false
+	if not command_routing_enabled:
+		return _execute_summon(monster_type)
+	return battle_command_router.submit_local(BATTLE_SESSION.Command.SUMMON_AUTO, monster_type)
+
+func try_summon_at_position(monster_type: String, spawn_position: Vector2) -> bool:
+	if not battle_command_router.supports_local_execution():
+		return false
+	if not command_routing_enabled:
+		return _execute_summon_at_position(monster_type, spawn_position)
+	return battle_command_router.submit_local(BATTLE_SESSION.Command.SUMMON_AT, monster_type, spawn_position)
+
+func try_summon_transcendent() -> bool:
+	if not battle_command_router.supports_local_execution():
+		return false
+	if not command_routing_enabled:
+		return _execute_summon_transcendent()
+	return battle_command_router.submit_local(BATTLE_SESSION.Command.SUMMON_TRANSCENDENT)
+
+func try_use_demon_ultimate(skill_id: String, direction: String = "") -> bool:
+	if not battle_command_router.supports_local_execution():
+		return false
+	if not command_routing_enabled:
+		return _execute_demon_ultimate(skill_id, direction)
+	return battle_command_router.submit_local(BATTLE_SESSION.Command.DEMON_SKILL, skill_id, Vector2.ZERO, direction)
+
+func _execute_battle_command(request: BATTLE_COMMAND) -> bool:
+	match request.kind:
+		BATTLE_SESSION.Command.SUMMON_AUTO:
+			return _execute_summon(request.subject_id)
+		BATTLE_SESSION.Command.SUMMON_AT:
+			return _execute_summon_at_position(request.subject_id, request.position)
+		BATTLE_SESSION.Command.SUMMON_TRANSCENDENT:
+			return _execute_summon_transcendent()
+		BATTLE_SESSION.Command.DEMON_SKILL:
+			return _execute_demon_ultimate(request.subject_id, request.direction)
+	return false
+
+func get_battle_command_diagnostics() -> Dictionary:
+	return battle_command_router.snapshot()
+
+func set_battle_command_profiling(enabled: bool) -> void:
+	battle_command_router.profiling_enabled = enabled
+
+func _execute_summon(monster_type: String) -> bool:
 	if not _can_attempt_summon(monster_type):
 		return false
 
@@ -1198,7 +1253,7 @@ func try_summon(monster_type: String) -> bool:
 
 	return _perform_summon(monster_type, _get_auto_spawn_position(), cost, false)
 
-func try_summon_at_position(monster_type: String, spawn_position: Vector2) -> bool:
+func _execute_summon_at_position(monster_type: String, spawn_position: Vector2) -> bool:
 	if not _can_attempt_summon(monster_type):
 		return false
 
@@ -1228,7 +1283,7 @@ func debug_unlock_transcendence() -> bool:
 	return true
 
 
-func try_summon_transcendent() -> bool:
+func _execute_summon_transcendent() -> bool:
 	var id: String = transcendence.monster_id
 	if not _can_attempt_summon(id, true):
 		return false
@@ -3473,7 +3528,7 @@ func _add_demon_ultimate_charge(amount: float) -> void:
 	)
 	_emit_demon_ultimate_changed()
 
-func try_use_demon_ultimate(
+func _execute_demon_ultimate(
 	skill_id: String,
 	direction: String = ""
 ) -> bool:

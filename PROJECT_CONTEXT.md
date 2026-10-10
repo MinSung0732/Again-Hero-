@@ -1,3 +1,9 @@
+## Multiplayer foundation — command boundary (2026-10-10)
+- Detailed staged design: docs/MULTIPLAYER_FOUNDATION.md. Only step1 first slice implemented; hero/PvP/server remain unavailable. Preserve demon solo, existing AI policy and pooled/grid combat behavior. Full-game performance baseline pending.
+- BattleSessionCatalog stable mode/role/command IDs; BattleCommand typed transport-neutral request; BattleCommandRouter one per battle validates protocol/session/actor/role/sequence/finite args before unchanged gameplay executors. Four public try_* APIs remain compatible. Failed gameplay request consumes sequence; restart changes epoch. No network authentication/ACK/tick buffering yet.
+- Offline command_routing_enabled compatibility toggle, guarded by supported mode. Diagnostics are explicit pulls, profiling opt-in. Request allocated only on input; no per-frame scans or state copies. Future server must bind trusted actor slot, validate loadout/cost, and use bounded packet/queue limits; local router is not a network security boundary.
+- Godot4.5.1 isolated command tests97pass and extracted actual public/dispatch boundary30pass; original gameplay function bodies compared unchanged. Full battle/GPU/mobile and project4.7 runtime unverified. Next: remaining input call map and augmentation selection commands before shared simulation/time extraction. main unchanged; feature/stage10-astra only.
+
 ## Main side tools lower placement (2026-10-10)
 - Tool trays now start190 logicalpx from main content top (previous42), matching the supplied lower side-panel markings; approximately74px lower at540px-wide presentation. Existing104x108 cards/gap8/badges/actions preserved. Rail height reflects actual direct-card count; resize-only bottom clamp with8px margin. Mission standalone76checks pass; full game/GPU/mobile unverified.
 

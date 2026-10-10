@@ -1,3 +1,9 @@
+## 2026-10-10 — 용사·대전 확장 설계와 1단계 명령 경계
+
+- docs/MULTIPLAYER_FOUNDATION.md: 모드/역할, 서버 권한, 전투 시간/RNG, entity ID/generation, 상태/이벤트, 용사 action port, 재접속, 랭크 원장, 단계별 검증/롤백 상세 계획. 서버·용사모드·PvP는 아직 미구현.
+- 마왕 입력 4종을 transport-neutral command/router로 연결. 기존 public API·게임 실행 본문 유지, 버전/세션/역할/순서/유한 좌표 검증, 실패 명령 재실행 차단. 입력 시만 요청 객체 생성, 프레임 작업 없음. 솔플 롤백 스위치/선택적 진단 추가, 미래 모드는 실행 차단.
+- Godot4.5.1 독립 명령 fixture97검사 및 실제 public 경계 추출 fixture30검사 통과; 기존4개 실행 본문 동일 비교, gdparse 및 diff --check. 전체 게임4.7/실기기·FPS·로딩 성능 미검증. 기준 main/feature4122adb7, feature/stage10-astra에서만 작업.
+
 ## 2026-10-10 — 이벤트 빈 상태 안내
 
 - 이벤트 버튼 클릭 시 제목 이벤트/본문 “아직 진행 중인 이벤트가 없습니다.” 안내창 표시. 카탈로그 empty_message로 지정하여 추후 등록한 실제 이벤트 action을 우선 실행하는 구조 유지. 공통 안내창 재사용, 정적 검증 및 독립 Godot 안내 문구/재사용 확인. 전체 게임·모바일 실기기 미검증. 기준 feature/stage10-astra f30bd4a3, main 유지.
