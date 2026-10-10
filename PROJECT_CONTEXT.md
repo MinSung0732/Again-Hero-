@@ -1,3 +1,8 @@
+## Run clock foundation — step2 first slice (2026-10-10)
+- RunMetrics now owns BattleRunClock; elapsed_seconds compatibility getter/setter remains. Existing reset and tick APIs, RUN_TIMER gate, delta cadence and battle _process order unchanged. No wall-clock advance, timer allocation or per-frame snapshots. Finite positive deltas advance; count is not a physics/network tick. Explicit get_run_clock_diagnostics only.
+- Isolated Godot4.5.1 before/after actual RunMetrics + event buffer comparison1236checks pass: elapsed/deadlines/strategy windows/records/result and victory/defeat research rewards. Catalog display names only are spies. Full4.7 battle/GPU/mobile/performance baseline pending; no loading/FPS improvement claimed.
+- docs/RUN_CLOCK_FOUNDATION.md and updated design/audit. Separate commit allows reverting clock without losing prior augmentation boundary. Next: mutation choice revision/command, entity identity/generation and hero action port; full actor/fixed-tick/server migration remains gated by full-game regression.
+
 ## Augmentation command boundary and input/time audit (2026-10-10)
 - Six demon commands now include augmentation choose/reroll. Protocol v2 adds choice_revision; current offer version required by typed commands, main UI sends displayed revision. New/replaced/closed offers and battle restart invalidate old versions. Existing optional local API defaults to current revision; future network ingress must not use this convenience fallback.
 - Existing candidate/stack/special/reroll/effect/pause/queued-level rules preserved. Boundary on/off cannot bypass revision or unsupported mode. Remaining direct player input: mutation choice; hero action port not yet implemented. Internal skill/spawn/death results remain internal events.

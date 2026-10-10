@@ -3,11 +3,17 @@
 작성: 2026-10-10. 기준 소스: `4122adb73e14552aae7c0aa7edefb2827f5d08d0`.
 작업 브랜치: `feature/stage10-astra`. main 병합은 별도 요청 후 수행한다.
 
+## 후속 진행 — 2단계 Run 시계 첫 분리 (2026-10-10)
+
+증강 명령 경계 검증 통과 후 RunMetrics 경과 시간을 독립 BattleRunClock으로 분리했다. 기존 `_process` delta/실행 순서/RUN_TIMER pause gate는 유지한다. 전투 제한시간·기록·전략 분석·연구 보상의 기존/신규 비교 1,236검사 통과. 카탈로그 이름만 동일 spy를 사용한 독립 Godot4.5.1 검증이며 전체 게임4.7/모바일/성능은 미검증이다. [RUN_CLOCK_FOUNDATION.md](RUN_CLOCK_FOUNDATION.md)에 코드·검증·롤백 상세를 기록했다.
+
+이는 2단계의 첫 작은 작업이다. 전체 고정 tick/액터 공통 시간/ID 레지스트리/상태 직렬화/서버 권한은 아직 미구현이며, 모든 단계 완료로 표시하지 않는다. 다음은 엘리트 선택 명령과 entity ID/generation 계약이며 전체 전투 회귀 전 온라인 모드를 활성화하지 않는다.
+
 ## 후속 진행 — 증강 명령 경계 (2026-10-10)
 
 입력·시간 의존 지도는 [BATTLE_INPUT_TIME_AUDIT.md](BATTLE_INPUT_TIME_AUDIT.md)에 추가했다. 마왕 증강 선택/재뽑기를 명령 5/6으로 연결하고 protocol v2 choice_revision으로 재뽑기 전·이전 레벨 후보의 입력을 차단했다. 기존 public API 호출은 호환되며 main UI는 표시한 revision을 명시한다. router130검사·실제 경계/증강 함수 추출 fixture79검사 통과. 전체 전투/실기기는 미검증이다.
 
-1단계는 6개 마왕 명령까지 완료했다. 엘리트 선택 및 용사 action port는 남아 있다. 검증을 통과한 뒤 2단계 첫 작업인 RunMetrics 전투 시계 분리를 진행한다. 전체 고정 tick·액터 판정 분리는 아직 활성화하지 않는다.
+1단계는 6개 마왕 명령까지 완료했다. 엘리트 선택 및 용사 action port는 남아 있다. 검증을 통과하여 위 2단계 첫 작업인 RunMetrics 전투 시계 분리를 적용했다. 전체 고정 tick·액터 판정 분리는 아직 활성화하지 않는다.
 
 ## 1. 목표와 현재 완료 범위
 

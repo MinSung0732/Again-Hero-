@@ -1,3 +1,8 @@
+## 2026-10-10 — 2단계 Run 전투 시계 첫 분리
+
+- RunMetrics의 경과 시간 누적을 BattleRunClock으로 분리. 기존 elapsed_seconds 읽기/쓰기·시간 제한/전략/보상 API 호환, reset/기존 RUN_TIMER pause gate/delta/실행 순서 유지. 양수 유한 delta만 진행, explicit 진단. O(1), 매프레임 배열/Dictionary/타이머 생성 없음. 전체 고정 tick/액터 시간·서버·PvP 미구현.
+- docs/RUN_CLOCK_FOUNDATION.md에 변경 코드·후속/롤백 정리. Godot4.5.1 독립 기존/신규 RunMetrics 1,236검사 통과(시간·전략·기록·승패 연구 보상 비교; 카탈로그 표시 이름만 spy). 실제 battle _process 동일 비교. 전체 게임4.7/모바일·성능·로딩 미검증. 기준 feature56073706(증강 c02d96cc + 테스트 import 수정), main4122adb7 유지.
+
 ## 2026-10-10 — 독립 테스트 스크립트 import 안전성
 
 - 생성 fixture를 test const preload로 참조하던 경로를 실행 시 load로 변경하여 실제 게임 프로젝트의 import가 없는 fixture 파일을 요구하지 않게 수정. 동적 호출 fixture의 Array[int] 입력은 명시 assign으로 변환. 생성 fixture 없는 독립 프로젝트에서 테스트 스크립트3종 컴파일 확인, router130/증강79 회귀 통과. 전체 게임 미검증. 이 수정은 시계 분리와 별도 커밋하여 시계만 롤백해도 유지.

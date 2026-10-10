@@ -2,6 +2,7 @@ extends RefCounted
 class_name RunMetrics
 
 const TIMED_EVENT_BUFFER := preload("res://src/systems/timed_event_buffer.gd")
+const RUN_CLOCK := preload("res://src/systems/battle_run_clock.gd")
 
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
 
@@ -10,7 +11,14 @@ const STRATEGY_MIN_SPEND := 12.0
 const STRATEGY_DOMINANCE_RATIO := 0.60
 const STRATEGY_SWITCH_COOLDOWN := 6.0
 
-var elapsed_seconds: float = 0.0
+var run_clock = RUN_CLOCK.new()
+# Preserve existing consumers, including local debug writes. Network state
+# must use a validated snapshot path; this compatibility property is not one.
+var elapsed_seconds: float:
+	get:
+		return run_clock.elapsed_seconds
+	set(value):
+		run_clock.elapsed_seconds = value
 var duration_seconds: float = 0.0
 var total_damage_dealt: int = 0
 var peak_hero_max_hp: int = 1
@@ -36,7 +44,7 @@ func reset(
 	initial_hero_hp: int,
 	initial_hero_max_hp: int
 ) -> void:
-	elapsed_seconds = 0.0
+	run_clock.reset()
 	duration_seconds = maxf(new_duration_seconds, 0.0)
 	total_damage_dealt = 0
 	peak_hero_max_hp = maxi(initial_hero_max_hp, 1)
@@ -59,8 +67,11 @@ func reset(
 	)
 
 func tick(delta: float) -> void:
-	elapsed_seconds += maxf(delta, 0.0)
+	run_clock.advance(delta)
 	_prune_recent_summons()
+
+func get_clock_snapshot() -> Dictionary:
+	return run_clock.snapshot()
 
 func is_time_up() -> bool:
 	return duration_seconds > 0.0 and elapsed_seconds >= duration_seconds

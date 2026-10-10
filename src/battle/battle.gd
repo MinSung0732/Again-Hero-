@@ -1244,6 +1244,9 @@ func get_battle_command_diagnostics() -> Dictionary:
 func set_battle_command_profiling(enabled: bool) -> void:
 	battle_command_router.profiling_enabled = enabled
 
+func get_run_clock_diagnostics() -> Dictionary:
+	return run_metrics.get_clock_snapshot()
+
 func _execute_summon(monster_type: String) -> bool:
 	if not _can_attempt_summon(monster_type):
 		return false

@@ -37,7 +37,7 @@ revision은 새 후보 공개·재뽑기·선택 닫기·전투 재시작 때 �
 
 | 경로 | 현재 시간 기준 | 이주 정책 |
 |---|---|---|
-| RunMetrics / 제한시간 / stage director | battle `_process` delta, RUN_TIMER pause domain | 첫 분리 대상. 기존 업데이트 빈도·delta·pause gate 유지 |
+| RunMetrics / 제한시간 / stage director | battle `_process` delta, RUN_TIMER pause domain | BattleRunClock으로 경과 시간 분리 완료. 기존 업데이트 빈도·delta·pause gate 유지 |
 | 지휘력 회복 | `_process` delta, COMMAND_REGEN domain | 독립 도메인 유지, run timer 정지와 동일하다고 가정하지 않음 |
 | 마왕 스킬·아군 보조 runtime·소환 큐 | `_process` delta, DEMON_RUNTIME domain | 액터별 회귀 후 공통 시뮬레이션 driver로 이동 |
 | manual spawn 경고·HUD·선택 입력 가드 | 화면 delta / ticks_msec | 표시/입력 안전장치에 유지 |
