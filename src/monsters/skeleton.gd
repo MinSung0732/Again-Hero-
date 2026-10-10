@@ -375,6 +375,24 @@ func _get_bone_bond_value(key: String, fallback: float) -> float:
 
 
 func take_damage(amount: int) -> void:
+	_apply_skeleton_damage(amount)
+
+func supports_damage_receipt() -> bool:
+	# Inherited receipt code must not bypass a derived actor's take_damage override.
+	return get_script().resource_path == "res://src/monsters/skeleton.gd"
+
+func take_damage_with_result(amount: int, receipt) -> bool:
+	if receipt == null:
+		take_damage(amount)
+		return false
+	var receipt_revision: int = receipt.begin(self, amount)
+	if not supports_damage_receipt():
+		take_damage(amount)
+		return false
+	_apply_skeleton_damage(amount, receipt, receipt_revision)
+	return receipt.finish(receipt_revision)
+
+func _apply_skeleton_damage(amount: int, receipt = null, receipt_revision: int = 0) -> void:
 	if current_hp <= 0 or dying or reviving or amount <= 0:
 		return
 
@@ -409,12 +427,14 @@ func take_damage(amount: int) -> void:
 		int(round(float(amount) * damage_multiplier)),
 		1
 	)
-	reduced_damage = MONSTER_RUNTIME_COMMON.consume_support_shield(self,reduced_damage)
+	reduced_damage = MONSTER_RUNTIME_COMMON._consume_support_shield(self,reduced_damage,receipt,receipt_revision)
 	if reduced_damage <= 0:
 		return
 	var previous_hp := current_hp
 	current_hp = maxi(current_hp - reduced_damage, 0)
 	var applied_damage := previous_hp - current_hp
+	if receipt != null:
+		receipt.record_hp(applied_damage, receipt_revision)
 	DAMAGE_NUMBERS.show(self, applied_damage)
 	hit_flash_timer = 0.12
 	queue_redraw()
@@ -425,7 +445,7 @@ func take_damage(amount: int) -> void:
 		else:
 			_notify_elite_alive(false)
 			_break_ambush()
-			_begin_death()
+			_begin_death(receipt, receipt_revision)
 		return
 
 	_visual_call(&"play_hit")
@@ -592,11 +612,14 @@ func _update_visual_motion(direction_x: float, moving: bool) -> void:
 		_visual_call(&"play_locomotion", [moving])
 
 
-func _begin_death() -> void:
+func _begin_death(receipt = null, receipt_revision: int = 0) -> void:
 	MONSTER_RUNTIME_COMMON.begin_standard_death(
 		self,
 		visual,
-		collision_shape
+		collision_shape,
+		&"_on_death_animation_finished",
+		receipt,
+		receipt_revision
 	)
 
 

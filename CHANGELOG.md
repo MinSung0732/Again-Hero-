@@ -1,3 +1,10 @@
+## 2026-10-10 — 해골 피해 결과·부활/실제 사망 경계
+
+- skeleton opt-in receipt 추가, 기존 void API와 감소·보호막·HP·부활/사망 순서 유지. 첫 부활 치명타는 HP 피해 accepted=true/death_started=false, 부활 소진 뒤 common death guard에서만 실제 사망 기록. 파동 기존 capability로 자동 연결, 신규 처치 오인 방지.
+- 부활 대기 피해/회복 차단, 후속2연격 취소·매복/엘리트 알림, timer fallback/ONE_SHOT 역재생 완료·회복 비율·최초1회 제한 유지. receipt/common/projectile·네트워크 시제품 변경 없음, 매 피해 객체/배열 추가 없음.
+- Godot4.5.1 독립 skeleton1148+파동638+부활3469+기존 slime/파동1786 =7,041검사 실패0. 원래25함수 정확한 hook 역변환 비교, gdparse/Pythoncompile/import/staged diff 통과. 전체 게임4.7/모바일/실제 충돌·애니메이션·상태이상/성능 미검증.
+- 기준 feature9da63abaed1b79446aa8ead84e1169d1c95159c5, main4122adb7 유지. docs/SKELETON_DAMAGE_RECEIPT.md에 계약/검증/한계/롤백. 활성 작업은 솔플 내부 구조 개선, 매칭·용사모드 확대 보류. 다음은 다른 일반 몬스터 특수 피해/상태이상 결과 경계 적용 확대.
+
 ## 2026-10-10 — 내부 구조 개선 복귀·고블린/폭탄쥐 피해 결과 확대
 
 - 사용자 지시에 따라 매칭/용사모드/로컬 네트워크 시제품 확장을 보류하고 기존 마왕 솔플 내부 계약 개선에 집중. 기존 시제품은 분리 유지. 입력/판정/표시·개체 수명·피해/부활 계약을 순차 정리한다.
