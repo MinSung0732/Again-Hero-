@@ -118,11 +118,11 @@ func run():
 	check(a.effects.size() == 8 and other.hits.size() == 4, "independent concurrent casts hit newly available AoE victims")
 	var first = a._capture_delayed_skill_source()
 	var second = a._capture_delayed_skill_source()
-	check(first != second and a._is_delayed_skill_source_current(first), "per-cast reservations independent")
+	check(first == second and a._is_delayed_skill_source_current(first, scope.get_instance_id()), "per-cast value tokens preserve same live generation")
 	for i in range(200):
 		var life = a._capture_delayed_skill_source()
 		recycle(a)
-		check(not a._is_delayed_skill_source_current(life), "200 reuse generations reject previous cast")
+		check(not a._is_delayed_skill_source_current(life, scope.get_instance_id()), "200 reuse generations reject previous cast")
 	a.free()
 	# Queued scope, queued source and detached source invalidate immediately.
 	for mode in ["scope", "source", "detach"]:
@@ -136,7 +136,7 @@ func run():
 		if mode == "scope": holder.queue_free()
 		elif mode == "source": queued.queue_free()
 		else: holder.remove_child(queued)
-		check(not queued._is_delayed_skill_source_current(life), "queued/detached life rejected: " + mode)
+		check(not queued._is_delayed_skill_source_current(life, holder.get_instance_id()), "queued/detached life rejected: " + mode)
 		if mode == "detach": queued.free()
 		if mode != "scope": holder.queue_free()
 	await process_frame

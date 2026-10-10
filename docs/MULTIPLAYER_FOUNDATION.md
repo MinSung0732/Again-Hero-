@@ -1,5 +1,10 @@
 # 용사 모드·대전 모드 확장 설계 및 단계별 실행 계획
 
+## 후속 진행 — 성스러운 힘 및 scalar 수명 예약 (2026-10-10)
+
+holy power 지연 피해·후속 둔화에 source/target 수명 검증을 연결했다. ice/earth/holy 공통 source 예약은 시전당 RefCounted에서 Vector3i+부모ID 값으로 전환해 예약 객체 생성과 취소된 시전의 새 timer를 제거한다. 현재 비용·범위·검증14,261검사·한계·후속·롤백은 [HOLY_POWER_LIFETIME.md](HOLY_POWER_LIFETIME.md). 아래 이전 구현의 RefCounted/WeakRef 비용 설명은 이력이다. 전체 게임/모바일/서버·실측 성능 검증은 미완료다.
+
+
 ## 후속 진행 — 지연 얼음 기둥·대지 가시 (2026-10-10)
 
 던전 입장 수정 확인 후 작업 재개. 두 스킬의 시전별 source/battle 수명, pulse/피해/cleanup 검증을 연결했다. 신규239검사 및 기존 회귀 포함13,816검사 통과. 범위·비용·한계·후속·롤백은 [DELAYED_HERO_SKILL_LIFETIME.md](DELAYED_HERO_SKILL_LIFETIME.md). 아래 이전 단계는 이력이며 전체 게임/모바일/서버 검증은 미완료다.

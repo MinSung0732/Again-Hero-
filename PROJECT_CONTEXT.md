@@ -1,3 +1,10 @@
+## 2026-10-10 — 성스러운 힘 수명 검증·지연 예약 값 형식 전환
+
+- holy burst pulse/피해/피해 callback/새 timer 직전 source와 battle 수명 검증, 동일 수명일 때만 casting cleanup. 피해 후 target generation/valid/queued 확인으로 재사용된 적에게 이전 둔화가 붙는 문제 차단. free된 배열 항목을 Node 타입 정책 호출 전에 걸러준다. 정상 피해·언데드 배율·RNG/순서·간격·둔화 clamp 유지.
+- 테스트에서 callback 후 queued owner가 다음 await에 들어가면 RefCounted 예약이 남는 현상을 관측. ice/earth/holy source 예약을 Vector3i+부모ID 값으로 전환하고 취소 시 새 timer 생성 차단. 시전·피해 대상별 예약 객체/WeakRef 생성 없음, 평균 O(1) registry 조회. 외부 free 도중 엔진 await 취소/장기 RAM은 별도 검증 대상.
+- 신규 실제 함수 독립 Godot4.5.1 445검사, 이전 스킬/행동 회귀 포함14,261검사 실패0. 최종 holy verbose 종료 ERROR/WARNING/잔류 객체 없음. 신규 기준616함수와 이전 기준613/611함수 정확한 변경 문자열 역변환 비교, gdparse/Pythoncompile/diff/독립 editor import 확인. 전체 게임4.7·실제 물리·모바일·서버/실측 성능 미검증.
+- 기준 feature b9714d4a806faba67a7ac49c1cb4590aecab0453, main4122adb7 유지. docs/HOLY_POWER_LIFETIME.md에 비용·범위·한계·재현·롤백 기록. 다음 후보 fire field 지속 피해 수명 검증.
+
 ## 2026-10-10 — 확장 기반 재개: 얼음 기둥·대지 가시 수명 검증
 
 - 사용자 던전 입장 정상 확인 후 중단했던 작업 재개. 시전당 독립 source/battle 예약으로 pulse/피해 직전 epoch/slot/generation 및 HP/tree/queued 상태 검증. 오래된 타이머 생성·피해와 새 수명 casting counter 변경을 차단한다. 현재 AoE 대상, 정상 피해/순서/RNG/간격/중복 제거 유지.

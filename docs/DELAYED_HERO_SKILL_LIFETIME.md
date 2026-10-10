@@ -1,5 +1,10 @@
 # 용사 지연 범위 스킬 수명 검증
 
+## 후속 진행 — 성스러운 힘 및 scalar 수명 예약 (2026-10-10)
+
+holy power 지연 피해·후속 둔화에 source/target 수명 검증을 연결했다. ice/earth/holy 공통 source 예약은 시전당 RefCounted에서 Vector3i+부모ID 값으로 전환해 예약 객체 생성과 취소된 시전의 새 timer를 제거한다. 현재 비용·범위·검증14,261검사·한계·후속·롤백은 [HOLY_POWER_LIFETIME.md](HOLY_POWER_LIFETIME.md). 아래 이전 구현의 RefCounted/WeakRef 비용 설명은 이력이다. 전체 게임/모바일/서버·실측 성능 검증은 미완료다.
+
+
 2026-10-10. 기준 `cc5e6aed0cdfee9c4993c384cb624d5d62383bc1`, 작업 `feature/stage10-astra`. 사용자가 던전 입장 정상 동작을 확인해 중단했던 확장 기반 작업을 재개했다. main은 변경하지 않는다.
 
 ## 문제와 변경

@@ -11642,25 +11642,41 @@ func resolve_archmage_ice_bolt_hit(
 	_resolve_archmage_ice_pillars(hit_position, empowered)
 
 
-func _capture_delayed_skill_source() -> RefCounted:
-	# One immutable reservation per concurrent cast; no allocation on resolve/tick.
-	if not is_inside_tree() or current_hp <= 0:
-		return null
-	var source_life = BATTLE_TARGET_REFERENCE.new()
-	if not source_life.capture(self, get_parent()):
-		return null
-	return source_life
+func _capture_delayed_skill_source() -> Vector3i:
+	# Scalar reservation: no RefCounted locals retained by abandoned awaits.
+	if not is_inside_tree() or is_queued_for_deletion() or current_hp <= 0:
+		return Vector3i(-1, -1, -1)
+	var scope := get_parent()
+	if not is_instance_valid(scope) or scope.is_queued_for_deletion():
+		return Vector3i(-1, -1, -1)
+	var tracked := scope.has_method("get_battle_entity_handle") or scope.has_method("resolve_battle_entity")
+	if not tracked:
+		return Vector3i.ZERO
+	if not scope.has_method("get_battle_entity_handle") or not scope.has_method("resolve_battle_entity"):
+		return Vector3i(-1, -1, -1)
+	var handle: Vector3i = scope.call("get_battle_entity_handle", self)
+	if handle == Vector3i.ZERO or scope.call("resolve_battle_entity", handle) != self:
+		return Vector3i(-1, -1, -1)
+	return handle
 
-func _is_delayed_skill_life_current(source_life: RefCounted) -> bool:
-	return is_inside_tree() and source_life != null and source_life.resolve(get_parent()) == self
+func _is_delayed_skill_life_current(source_life: Vector3i, source_scope_id: int) -> bool:
+	if not is_inside_tree() or is_queued_for_deletion() or source_life.x < 0:
+		return false
+	var scope := get_parent()
+	if not is_instance_valid(scope) or scope.is_queued_for_deletion() or scope.get_instance_id() != source_scope_id:
+		return false
+	if source_life == Vector3i.ZERO:
+		return not scope.has_method("get_battle_entity_handle") and not scope.has_method("resolve_battle_entity")
+	return scope.has_method("resolve_battle_entity") and scope.call("resolve_battle_entity", source_life) == self
 
-func _is_delayed_skill_source_current(source_life: RefCounted) -> bool:
-	return current_hp > 0 and _is_delayed_skill_life_current(source_life)
+func _is_delayed_skill_source_current(source_life: Vector3i, source_scope_id: int) -> bool:
+	return current_hp > 0 and _is_delayed_skill_life_current(source_life, source_scope_id)
 
 func _resolve_archmage_ice_pillars(hit_position: Vector2, empowered: bool) -> void:
 	var source_life := _capture_delayed_skill_source()
-	if source_life == null:
+	if source_life.x < 0:
 		return
+	var source_scope_id := get_parent().get_instance_id()
 	var config: Dictionary = archmage_skill_config.get("ice_bolt", {})
 	_spawn_archmage_fx(
 		"res://assets/art/heroes/stage5_archmage/frames/effect4",
@@ -11675,7 +11691,7 @@ func _resolve_archmage_ice_pillars(hit_position: Vector2, empowered: bool) -> vo
 		* _skill_damage_multiplier(empowered)
 	)))
 	for index in range(count):
-		if not _is_delayed_skill_source_current(source_life):
+		if not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
 		var angle := randf_range(0.0, TAU)
 		var position := hit_position + Vector2.from_angle(angle) * randf_range(25.0, spawn_radius)
@@ -11683,14 +11699,17 @@ func _resolve_archmage_ice_pillars(hit_position: Vector2, empowered: bool) -> vo
 			"res://assets/art/heroes/stage5_archmage/frames/effect4",
 			"ice", 1, 6, 20.0, false, position, Vector2(0.70, 0.70)
 		)
-		_damage_monsters_in_radius(position, hit_radius, pillar_damage, source_life)
+		_damage_monsters_in_radius(position, hit_radius, pillar_damage, source_life, source_scope_id)
+		if not _is_delayed_skill_source_current(source_life, source_scope_id):
+			break
 		await get_tree().create_timer(0.045).timeout
 
 
 func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 	var source_life := _capture_delayed_skill_source()
-	if source_life == null:
+	if source_life.x < 0:
 		return
+	var source_scope_id := get_parent().get_instance_id()
 	_begin_archmage_casting_sequence()
 	var direction := Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	if is_instance_valid(target):
@@ -11710,7 +11729,7 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 	var hit_ids: Dictionary = {}
 
 	for index in range(count):
-		if not _is_delayed_skill_source_current(source_life):
+		if not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
 		var position: Vector2 = cast_origin + direction * spacing * float(index + 1)
 		_spawn_archmage_fx(
@@ -11718,10 +11737,12 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 			"earth", 1, 11, 22.0, false, position, Vector2(0.72, 0.72)
 		)
 		_play_archmage_earth_spike_audio()
-		_damage_monsters_in_radius_once(position, radius, spike_damage, hit_ids, source_life)
+		_damage_monsters_in_radius_once(position, radius, spike_damage, hit_ids, source_life, source_scope_id)
+		if not _is_delayed_skill_source_current(source_life, source_scope_id):
+			break
 		await get_tree().create_timer(spike_delay).timeout
 
-	if _is_delayed_skill_source_current(source_life):
+	if _is_delayed_skill_source_current(source_life, source_scope_id):
 		var original_distance: float = spacing * float(count)
 		var branch_distance: float = original_distance * clampf(
 			float(config.get("branch_distance_ratio", 0.50)),
@@ -11735,7 +11756,7 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 			var right_direction: Vector2 = direction.rotated(-PI * 0.5)
 
 			for branch_index in range(branch_count):
-				if not _is_delayed_skill_source_current(source_life):
+				if not _is_delayed_skill_source_current(source_life, source_scope_id):
 					break
 				var progress: float = float(branch_index + 1) / float(branch_count)
 				var left_position: Vector2 = (
@@ -11756,10 +11777,11 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 					radius,
 					spike_damage,
 					hit_ids,
-					source_life
+					source_life,
+					source_scope_id
 				)
 
-				if not _is_delayed_skill_source_current(source_life):
+				if not _is_delayed_skill_source_current(source_life, source_scope_id):
 					break
 				_spawn_archmage_fx(
 					"res://assets/art/heroes/stage5_archmage/frames/effect1",
@@ -11772,12 +11794,15 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 					radius,
 					spike_damage,
 					hit_ids,
-					source_life
+					source_life,
+					source_scope_id
 				)
+				if not _is_delayed_skill_source_current(source_life, source_scope_id):
+					break
 				await get_tree().create_timer(spike_delay).timeout
 
 	# Old tasks must not decrement a new life's casting counter.
-	if _is_delayed_skill_life_current(source_life):
+	if _is_delayed_skill_life_current(source_life, source_scope_id):
 		_end_archmage_casting_sequence()
 
 func _find_archmage_holy_cluster_target(config: Dictionary) -> Node2D:
@@ -11829,11 +11854,18 @@ func _find_archmage_holy_cluster_target(config: Dictionary) -> Node2D:
 
 
 func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
+	var source_life := _capture_delayed_skill_source()
+	if source_life.x < 0:
+		return
+	var source_scope_id := get_parent().get_instance_id()
+	var source_scope := get_parent()
+	var tracked_targets := source_scope.has_method("get_battle_entity_handle")
 	_begin_archmage_casting_sequence()
 
 	var cluster_target: Node2D = _find_archmage_holy_cluster_target(config)
 	if not is_instance_valid(cluster_target):
-		_end_archmage_casting_sequence()
+		if _is_delayed_skill_life_current(source_life, source_scope_id):
+			_end_archmage_casting_sequence()
 		return
 
 	var cast_center: Vector2 = cluster_target.global_position
@@ -11854,7 +11886,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 	var hit_radius_sq := hit_radius * hit_radius
 
 	for index in range(count):
-		if not is_inside_tree() or current_hp <= 0:
+		if not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
 
 		var angle: float = randf_range(0.0, TAU)
@@ -11874,6 +11906,10 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 			archmage_query_candidates
 		)
 		for node in archmage_query_candidates:
+			if not _is_delayed_skill_source_current(source_life, source_scope_id):
+				break
+			if not is_instance_valid(node):
+				continue
 			if not HERO_TARGET_POLICY.is_detectable(node):
 				continue
 			var monster := node as Node2D
@@ -11892,7 +11928,20 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 					))
 				)
 
+			# Capture a scalar handle only; damage callbacks may recycle this Node.
+			var victim_handle := Vector3i.ZERO
+			if tracked_targets:
+				victim_handle = source_scope.call("get_battle_entity_handle", monster)
 			monster.call("take_damage", dealt)
+			if not _is_delayed_skill_source_current(source_life, source_scope_id):
+				break
+			if not is_instance_valid(monster) or monster.is_queued_for_deletion():
+				continue
+			if tracked_targets and (
+				victim_handle == Vector3i.ZERO
+				or source_scope.call("resolve_battle_entity", victim_handle) != monster
+			):
+				continue
 			monster.set_meta(
 				"gunner_slow_multiplier",
 				clampf(
@@ -11913,11 +11962,14 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 			)
 		archmage_query_candidates.clear()
 
+		if not _is_delayed_skill_source_current(source_life, source_scope_id):
+			break
 		await get_tree().create_timer(
 			maxf(float(config.get("burst_delay", 0.09)), 0.02)
 		).timeout
 
-	_end_archmage_casting_sequence()
+	if _is_delayed_skill_life_current(source_life, source_scope_id):
+		_end_archmage_casting_sequence()
 
 func _get_archmage_chain_dagger_targets(
 	max_count: int,
@@ -12432,11 +12484,11 @@ func _recycle_archmage_fx(fx: AnimatedSprite2D) -> void:
 		fx.queue_free()
 
 
-func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int, source_life: RefCounted = null) -> void:
+func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int, source_life: Vector3i = Vector3i.ZERO, source_scope_id: int = 0) -> void:
 	var radius_sq := radius * radius
 	_fill_monster_nodes_near(origin, radius, _combat_monster_scratch)
 	for node in _combat_monster_scratch:
-		if source_life != null and not _is_delayed_skill_source_current(source_life):
+		if source_scope_id != 0 and not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
 		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
@@ -12452,12 +12504,12 @@ func _damage_monsters_in_radius_once(
 	radius: float,
 	damage: int,
 	hit_ids: Dictionary,
-	source_life: RefCounted = null
+	source_life: Vector3i = Vector3i.ZERO, source_scope_id: int = 0
 ) -> void:
 	var radius_sq := radius * radius
 	_fill_monster_nodes_near(origin, radius, _combat_monster_scratch)
 	for node in _combat_monster_scratch:
-		if source_life != null and not _is_delayed_skill_source_current(source_life):
+		if source_scope_id != 0 and not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
 		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
