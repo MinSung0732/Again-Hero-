@@ -1,3 +1,11 @@
+## 2026-10-10 — 광전사 파동의 opt-in 피해 결과 caller 연결
+
+- berserker_wave는 supports_damage_receipt와 take_damage_with_result를 모두 지원하는 actor에 결과 API를 1회 호출한다. source/shot 수명 검증 뒤 반환true/complete/예상 revision/원래 victim ID·handle/등록 신원 검증을 확인하고 accepted+death_started로 처치 판정. 미지원 actor는 기존 take_damage+관측 fallback 유지.
+- 결과 false/재진입 overwrite는 처치 보상만 거절하며 피해를 다시 호출하거나 legacy HP로 추론하지 않는다. 적중 알림/회복 시도는 기존 정책 유지. kill bool은 hit callback 전에 복사하므로 결과 buffer 재사용이 이미 확정한 처치를 바꾸지 않는다. capability callback 뒤 source/target을 재검증.
+- 결과 buffer는 Node의 첫 유효 wave setup에서1회 lazy 생성 후 pool 재사용, 다음 hit마다 begin revision으로 초기화. 매 피해 새 RefCounted/Array/Dictionary/WeakRef 없음. 기존 관통/피해/중복·source HP0·풀 경로 유지.
+- Godot4.5.1 실제 파동+슬라임/common 독립638, 기존 파동928/얼음폭풍634/chain759/slime1148 =4,107검사 실패0. 현재31 및 이전30/28/15·slime14/common27 본문 비교, gdparse/Pythoncompile/diff/독립 editor import 통과. 전체 게임4.7/실제 충돌·모바일/서버/성능 미검증.
+- 기준 feature e4221dfde1ed16f55f51e8fb134857a5659b1ec9, main4122adb7 유지. docs/WAVE_DAMAGE_RECEIPT.md에 API/비용/검증/한계/롤백 기록. 다음은 일반 몬스터(거미·오크) 결과 경계 확대. Hero/초월 부활·권한 서버/피해 sequence·직렬화는 미완료.
+
 ## 2026-10-10 — 일반 몬스터 슬라임의 재사용 피해 결과 버퍼 첫 적용
 
 - BattleDamageReceipt caller-owned 재사용 버퍼 도입: 원래 target handle/instance/request, HP 피해량, 보호막 흡수량, accepted/death_started/complete와 begin revision 기록. 피해마다 새 result/Array/Dictionary/WeakRef 생성 없음. 같은 버퍼를 중첩 begin하면 이전 writer/finish는 새 결과를 덮지 않고 API false 반환.

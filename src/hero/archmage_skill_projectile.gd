@@ -2,6 +2,9 @@ extends Area2D
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
+const DAMAGE_RECEIPT := preload("res://src/systems/battle_damage_receipt.gd")
+var _wave_damage_receipt
+
 const DAMAGE_OBSERVATION := preload("res://src/systems/battle_damage_observation.gd")
 
 const BATTLE_TARGET_REFERENCE := preload("res://src/systems/battle_target_reference.gd")
@@ -92,6 +95,8 @@ func setup(
 		if not _chain_source_reference.capture(source_hero, scope) or not _chain_projectile_reference.capture(self, scope):
 			_finish()
 			return
+	if skill_type == "berserker_wave" and _wave_damage_receipt == null:
+		_wave_damage_receipt = DAMAGE_RECEIPT.new()
 	_apply_visual()
 
 func _physics_process(delta: float) -> void:
@@ -318,15 +323,42 @@ func _damage_berserker_wave_sweep(
 		var victim_handle := Vector3i.ZERO
 		if tracked_targets:
 			victim_handle = scope.call("get_battle_entity_handle", monster)
-		monster.call("take_damage", damage)
+		var uses_receipt := (
+			monster.has_method("supports_damage_receipt")
+			and monster.has_method("take_damage_with_result")
+			and bool(monster.call("supports_damage_receipt"))
+		)
+		if not _is_wave_life_current(life_revision):
+			return
+		if not is_instance_valid(monster) or monster.is_queued_for_deletion():
+			continue
+		if tracked_targets and victim_handle != Vector3i.ZERO and scope.call("resolve_battle_entity", victim_handle) != monster:
+			continue
+		var receipt_ready := false
+		var receipt_revision: int = _wave_damage_receipt.revision + 1
+		if uses_receipt:
+			receipt_ready = bool(monster.call("take_damage_with_result", damage, _wave_damage_receipt))
+		else:
+			monster.call("take_damage", damage)
 		if not _is_wave_life_current(life_revision):
 			return
 
-		# Scalar result is fixed before hit-heal callbacks can recycle the victim.
-		var observation := DAMAGE_OBSERVATION.observe_legacy_hit(
-			monster if is_instance_valid(monster) else null, scope, victim_handle, hp_before
-		)
-		var killed := DAMAGE_OBSERVATION.is_legacy_kill_candidate(observation)
+		# Copy the result before hit-heal callbacks can overwrite this shared buffer.
+		var killed := false
+		if uses_receipt:
+			if (
+				receipt_ready and _wave_damage_receipt.complete
+				and _wave_damage_receipt.revision == receipt_revision
+				and _wave_damage_receipt.victim_instance_id == iid
+				and _wave_damage_receipt.victim_life == victim_handle
+				and (not tracked_targets or _wave_damage_receipt.identity_verified)
+			):
+				killed = _wave_damage_receipt.accepted and _wave_damage_receipt.death_started
+		else:
+			var observation := DAMAGE_OBSERVATION.observe_legacy_hit(
+				monster if is_instance_valid(monster) else null, scope, victim_handle, hp_before
+			)
+			killed = DAMAGE_OBSERVATION.is_legacy_kill_candidate(observation)
 		if source_hero.has_method("notify_berserker_blood_art_hit"):
 			source_hero.call("notify_berserker_blood_art_hit")
 			if not _is_wave_life_current(life_revision):

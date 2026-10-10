@@ -1,5 +1,7 @@
 # 슬라임 피해 결과 버퍼 — 첫 opt-in API
 
+후속: 광전사 파동 opt-in caller 연결은 [WAVE_DAMAGE_RECEIPT.md](WAVE_DAMAGE_RECEIPT.md)에 기록했다. 아래 caller 미연결/다음 단계 설명은 작성 당시 이력이다.
+
 2026-10-10. 기준 feature `4e50e15ce201d25025167d1da5410ee518af0801`. 작업 `feature/stage10-astra`. main `4122adb73e14552aae7c0aa7edefb2827f5d08d0` 유지.
 
 수정 전 blob: slime `b2713a409f13067aa8c5c9bb4ff4d7d69697bf7f`, common `47e5300c523542d073d7690f1f58dfb9b652ddab`. 다운로드 뒤 hash-object로 확인했다. 얇은 checkout에 없던 원격 파일 전체를 보존하고 해당 피해/사망 함수만 수정했다.

@@ -9,6 +9,7 @@ import re
 import shutil
 from wave_projectile_source import without_wave_projectile_guards
 from damage_observation_source import without_damage_observation
+from wave_receipt_source import without_wave_receipt
 ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser()
 p.add_argument('target', type=Path)
@@ -28,11 +29,11 @@ allowed = set()
 names = re.findall(r'^func ([^(]+)\(', before, re.M)
 for name in names:
     if name not in allowed:
-        assert function(before,name) == without_wave_projectile_guards(without_damage_observation(function(after,name))), name
+        assert function(before,name) == without_wave_projectile_guards(without_damage_observation(without_wave_receipt(function(after,name)))), name
 print('Untouched projectile bodies identical:',len(names)-len(allowed))
 out.mkdir(parents=True, exist_ok=True)
 (out/'project.godot').write_text('[application]\nconfig/name="Wave projectile lifetime fixture"\n')
-for path in ['src/systems/battle_entity_registry.gd','src/systems/battle_damage_observation.gd','src/systems/battle_target_reference.gd',
+for path in ['src/systems/battle_entity_registry.gd','src/systems/battle_damage_observation.gd','src/systems/battle_damage_receipt.gd','src/systems/battle_target_reference.gd',
              'tests/wave_projectile_smoke.gd','src/hero/archmage_skill_projectile.gd']:
     dest=out/path;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/path,dest)
 (out/'src/systems/hero_target_policy.gd').write_text('''extends RefCounted

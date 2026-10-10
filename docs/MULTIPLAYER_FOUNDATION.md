@@ -1,5 +1,10 @@
 # 용사 모드·대전 모드 확장 설계 및 단계별 실행 계획
 
+## 후속 진행 — 파동 피해 결과 opt-in caller (2026-10-10)
+
+파동이 receipt 지원 actor의 실제 death_started를 사용하며 결과 무효화 시 피해 재시도/legacy kill 추론을 하지 않는다. 미지원 actor와 기존 적중 회복 정책 유지. pool당 lazy buffer1개 재사용. 독립638+관련 회귀 합계4,107검사 통과. [WAVE_DAMAGE_RECEIPT.md](WAVE_DAMAGE_RECEIPT.md)에 비용/범위/검증/롤백 기록. 다음은 일반 거미·오크 결과 지원 확대. 전체 게임/모바일/서버 미검증.
+
+
 ## 후속 진행 — 슬라임의 확정 피해 결과 버퍼 (2026-10-10)
 
 일반 슬라임에 기존 void API와 공통 피해/사망 의미를 유지하는 opt-in 재사용 결과 버퍼를 추가했다. 피해/보호막은 계산 지점에서, death_started는 실제 death guard 통과 지점에서 기록한다. 중첩된 같은 buffer의 이전 writer는 거절. 독립1,148검사 통과. [SLIME_DAMAGE_RECEIPT.md](SLIME_DAMAGE_RECEIPT.md)에 API/비용/검증/한계/롤백 기록. 다음은 파동 opt-in caller 연결. 전체 게임/모바일/서버 미검증.
