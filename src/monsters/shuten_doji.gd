@@ -389,18 +389,41 @@ func _add_shield(amount: float) -> void:
 	set_meta("support_shield_hp",total)
 	set_meta("support_shield_capacity",total)
 func take_damage(amount: int) -> void:
+	_apply_shuten_damage(amount)
+func supports_damage_receipt() -> bool:
+	return get_script().resource_path == "res://src/monsters/shuten_doji.gd"
+func take_damage_with_result(amount: int, receipt) -> bool:
+	if receipt == null:
+		take_damage(amount)
+		return false
+	var receipt_revision: int = receipt.begin(self, amount)
+	if not supports_damage_receipt():
+		take_damage(amount)
+		return false
+	_apply_shuten_damage(amount, receipt, receipt_revision)
+	return receipt.finish(receipt_revision)
+func _apply_shuten_damage(amount: int, receipt = null, receipt_revision: int = 0) -> void:
 	if dying or amount <= 0 or revival_remaining > 0: return
 	var reduced := int(round(amount*(1-0.7*self_fog_power)*(0.7 if released and transcend_level >= 4 else 1)))
-	var damage := MONSTER_RUNTIME_COMMON.consume_support_shield(self,reduced)
+	var damage := MONSTER_RUNTIME_COMMON._consume_support_shield(self,reduced,receipt,receipt_revision)
 	if damage <= 0: return
 	var next_hp := maxi(current_hp-damage,0)
+	var previous_hp := current_hp
 	if not revival_used and (next_hp <= 0 or (transcend_level >= 5 and next_hp <= max_hp*0.5)):
 		current_hp = maxi(next_hp,1)
+		if receipt != null:
+			receipt.record_hp(maxi(previous_hp-current_hp,0), receipt_revision)
 		_start_revival()
 		return
 	current_hp = next_hp
+	if receipt != null:
+		receipt.record_hp(maxi(previous_hp-current_hp,0), receipt_revision)
 	DAMAGE_NUMBERS.show(self,damage)
-	if current_hp <= 0: _begin_death()
+	if current_hp <= 0:
+		if receipt == null:
+			_begin_death()
+		else:
+			_begin_death_with_result(receipt, receipt_revision)
 func _start_revival() -> void:
 	_audio("release")
 	revival_used = true
@@ -430,6 +453,10 @@ func _tick_revival(delta: float) -> void:
 		visual.show()
 		visual.play(&"idle")
 func _begin_death() -> void:
+	_begin_shuten_death()
+func _begin_death_with_result(receipt = null, receipt_revision: int = 0) -> void:
+	_begin_shuten_death(receipt, receipt_revision)
+func _begin_shuten_death(receipt = null, receipt_revision: int = 0) -> void:
 	if is_instance_valid(effect_layer): effect_layer.hide()
 	if is_instance_valid(status_layer): status_layer.hide()
 	if is_instance_valid(audio_bank): audio_bank.stop_all()
@@ -437,7 +464,7 @@ func _begin_death() -> void:
 	blast_age.fill(-1)
 	chain_state.fill(0)
 	visual.show()
-	super._begin_death()
+	super._begin_death_with_result(receipt, receipt_revision)
 func on_ally_death(_point: Vector2) -> void: pass
 func _draw() -> void:
 	if is_instance_valid(status_layer): status_layer.queue_redraw()

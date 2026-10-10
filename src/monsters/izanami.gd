@@ -481,6 +481,15 @@ func aura_modifier(actor: Node2D, kind: String) -> float:
 	return 1.0
 
 func _begin_death() -> void:
+	_begin_izanami_death()
+
+func supports_damage_receipt() -> bool:
+	return get_script().resource_path == "res://src/monsters/izanami.gd"
+
+func _begin_death_with_result(receipt = null, receipt_revision: int = 0) -> void:
+	_begin_izanami_death(receipt, receipt_revision)
+
+func _begin_izanami_death(receipt = null, receipt_revision: int = 0) -> void:
 	ghost_remaining = 0.0
 	fan_remaining = 0.0
 	fire_age.fill(-1.0)
@@ -492,7 +501,7 @@ func _begin_death() -> void:
 		hero.accepted_damage_hit.disconnect(_on_accepted_hit)
 	effect_layer.queue_redraw()
 	torii_layer.queue_redraw()
-	super._begin_death()
+	super._begin_death_with_result(receipt, receipt_revision)
 
 func _draw() -> void:
 	if is_instance_valid(status_layer):
