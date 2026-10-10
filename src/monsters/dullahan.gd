@@ -167,16 +167,36 @@ func _status_scoped_deal_hit(target: Node2D, amount: int, stun_duration: float =
 	return applied
 
 func take_damage(amount: int) -> void:
+	_apply_dullahan_damage(amount)
+
+func supports_damage_receipt() -> bool:
+	return get_script().resource_path == "res://src/monsters/dullahan.gd"
+
+func take_damage_with_result(amount: int, receipt) -> bool:
+	if receipt == null:
+		take_damage(amount)
+		return false
+	var receipt_revision: int = receipt.begin(self, amount)
+	if not supports_damage_receipt():
+		take_damage(amount)
+		return false
+	_apply_dullahan_damage(amount, receipt, receipt_revision)
+	return receipt.finish(receipt_revision)
+
+func _apply_dullahan_damage(amount: int, receipt = null, receipt_revision: int = 0) -> void:
 	_sync_wall_capacity()
 	if amount <= 0 or dying or reviving or current_hp <= 0:
 		return
-	amount = MONSTER_RUNTIME_COMMON.consume_support_shield(self,amount)
+	amount = MONSTER_RUNTIME_COMMON._consume_support_shield(self,amount,receipt,receipt_revision)
 	if amount <= 0:
 		return
 	var absorbed := mini(shield_hp, amount)
 	shield_hp -= absorbed
 	var applied := mini(current_hp, amount - absorbed)
 	current_hp -= applied
+	if receipt != null:
+		receipt.record_shield(absorbed, receipt_revision)
+		receipt.record_hp(applied, receipt_revision)
 	DAMAGE_NUMBERS.show(self, applied + absorbed)
 	if slam_state == 0:
 		_visual_call(&"play_hit")
@@ -193,7 +213,10 @@ func take_damage(amount: int) -> void:
 			collision_shape.set_deferred("disabled", true)
 			_visual_call(&"play_revival_death_pose")
 		else:
-			_begin_death()
+			if receipt == null:
+				_begin_death()
+			else:
+				_begin_death_with_result(receipt, receipt_revision)
 
 func _tick_revival() -> void:
 	velocity = Vector2.ZERO

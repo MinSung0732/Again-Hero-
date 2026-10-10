@@ -156,20 +156,42 @@ func _status_scoped_deal_attack_damage() -> int:
 	return damage
 
 func take_damage(amount: int) -> void:
+	_apply_banshee_damage(amount)
+
+func supports_damage_receipt() -> bool:
+	return get_script().resource_path == "res://src/monsters/banshee.gd"
+
+func take_damage_with_result(amount: int, receipt) -> bool:
+	if receipt == null:
+		take_damage(amount)
+		return false
+	var receipt_revision: int = receipt.begin(self, amount)
+	if not supports_damage_receipt():
+		take_damage(amount)
+		return false
+	_apply_banshee_damage(amount, receipt, receipt_revision)
+	return receipt.finish(receipt_revision)
+
+func _apply_banshee_damage(amount: int, receipt = null, receipt_revision: int = 0) -> void:
 	if current_hp <= 0 or dying:
 		return
 	var previous_hp := current_hp
 	if bool(get_meta("banshee_charge_stealth_active", false)):
 		var config: Dictionary = special_augment_configs.get("banshee_charge_stealth", {})
 		amount = maxi(int(round(float(amount) * float(config.get("damage_taken_multiplier", 0.50)))), 0)
-	amount = MONSTER_RUNTIME_COMMON.consume_support_shield(self,amount)
+	amount = MONSTER_RUNTIME_COMMON._consume_support_shield(self,amount,receipt,receipt_revision)
 	if amount <= 0:
 		return
 	current_hp = maxi(current_hp - amount, 0)
 	var applied_damage := previous_hp - current_hp
+	if receipt != null:
+		receipt.record_hp(applied_damage, receipt_revision)
 	DAMAGE_NUMBERS.show(self, applied_damage)
 	hit_flash_timer = 0.10
 	_visual_call(&"play_hit")
 	queue_redraw()
 	if current_hp <= 0:
-		_begin_death()
+		if receipt == null:
+			_begin_death()
+		else:
+			_begin_death(receipt, receipt_revision)

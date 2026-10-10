@@ -1,3 +1,10 @@
+## 2026-10-10 — 밴시 은신·듀라한 보호막/부활 피해 결과
+
+- 밴시/Bat와 듀라한/Orc의 실제 상속 구조에서 opt-in receipt 연결. 기존 void API/파생 override guard 유지. 밴시 은신 감소·최소0, 듀라한 지원/자체 보호막 실제 흡수량과 HP 기록. 부모/common/projectile·네트워크 시제품 변경 없음.
+- 듀라한 첫 치명타는 accepted=true/death_started=false; 최초 부활 소진 뒤 실제 사망 guard만 처치 기록. 보호막 비율 동기화가 입력 거절보다 먼저인 순서, 강타 상태/target/연결 신호 해제·행군/위기 상태 취소, 부활 준비·ONE_SHOT 역재생/시각 fallback 및 HP 비율 유지. 매 피해 객체/배열/그룹 스캔 추가 없음.
+- Godot4.5.1 신규 actor/파동3,572+부활/은신 특수3,729+기존 회귀10,462 =17,763검사 실패0. 원래 밴시6/듀라한20함수 hook 역변환 비교, gdparse/Python compile/독립 import/diff 검증. 전체 게임4.7/모바일/실제 AI·충돌·애니메이션·성능 미검증.
+- 기준 feature5a150a8f605f08bd17313ed22d74fc290d55255c, main4122adb7 유지. docs/REVIVING_TANK_DAMAGE_RECEIPT.md에 계약/재현/한계/롤백. 다음은 남은 상속 actor·초월 생존/상태이상 경계, 매칭·용사모드 확대 보류.
+
 ## 2026-10-10 — 상속 사망 호환성 복구·늑대/전갈 피해 결과
 
 - 이전 receipt 확장에서 Orc/GoblinThrower _begin_death 인자를 변경해 기존 zero-argument 자식 override와 Godot 시그니처 충돌이 생겼음을 실제 상속 fixture에서 확인. 기존 _begin_death() 복구, _begin_death_with_result/부모 표준 helper 분리. legacy 호출은0인자, receipt 호출은 별도 함수. 미라 caller와 기존 fixture builder 갱신.
