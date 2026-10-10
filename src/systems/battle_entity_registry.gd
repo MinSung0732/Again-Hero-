@@ -3,6 +3,7 @@ extends RefCounted
 # Handle: Vector3i(session epoch, slot ID, generation). Instance IDs are only
 # local lookup keys, never the transport identity. Metadata is bounded by peak
 # concurrent registrations rather than total spawns. No strong Node ownership.
+const LAST_LIFE_META := &"_battle_last_entity_handle"
 const MAX_COMPONENT := 2147483647
 var _epoch := 0
 var _nodes: Array[WeakRef] = []
@@ -49,7 +50,19 @@ func activate(node: Node) -> Vector3i:
 	_instance_ids[slot] = instance_id
 	_by_instance[instance_id] = slot
 	active_count += 1
-	return Vector3i(_epoch, slot + 1, _generations[slot])
+	var handle := Vector3i(_epoch, slot + 1, _generations[slot])
+	node.set_meta(LAST_LIFE_META, handle)
+	return handle
+
+func get_last_handle(node: Node) -> Vector3i:
+	# Observation only: this survives retire but never grants resolve/command authority.
+	if not is_instance_valid(node):
+		return Vector3i.ZERO
+	var value = node.get_meta(LAST_LIFE_META, Vector3i.ZERO)
+	if typeof(value) != TYPE_VECTOR3I:
+		return Vector3i.ZERO
+	var handle: Vector3i = value
+	return handle if handle.x == _epoch and handle.x > 0 and handle.y > 0 and handle.z > 0 else Vector3i.ZERO
 
 func get_handle(node: Node) -> Vector3i:
 	if not is_instance_valid(node):

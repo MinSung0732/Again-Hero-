@@ -1272,6 +1272,9 @@ func _on_battle_entity_tree_exited(instance_id: int) -> void:
 func get_battle_entity_handle(node: Node) -> Vector3i:
 	return battle_entity_registry.get_handle(node)
 
+func get_last_battle_entity_handle(node: Node) -> Vector3i:
+	return battle_entity_registry.get_last_handle(node)
+
 func resolve_battle_entity(handle: Vector3i) -> Node:
 	return battle_entity_registry.resolve(handle)
 

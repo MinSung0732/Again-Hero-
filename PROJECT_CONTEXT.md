@@ -1,3 +1,10 @@
+## 2026-10-10 — 공통 피해 관측 플래그·마지막 개체 수명 첫 적용
+
+- BattleDamageObservation static bit flags(HP_UNKNOWN/LIFE_CHANGED/TARGET_GONE/HP_DEPLETED/LEGACY_UNTRACKED/IDENTITY_UNVERIFIED) 도입. 실제 피해량/권한 사망 영수증과 구분하는 관측 계약이며 기존 take_damage void/bool API·신호/부활 순서는 변경하지 않는다. 광전사 파동의 기존 처치 후보 판정에 첫 연결.
+- registry.activate가 Node metadata1개에 마지막 handle 값을 저장, get_last_handle/battle adapter는 retire 후에도 같은 Node의 마지막 수명 관측을 제공. resolve/명령 권한은 그대로 무효화되며 epoch 변경은 이전 기록을 거절한다. 재사용→retire된 HP0 대상의 이전 처치 집계 차단, 다른 Node가 같은 슬롯을 써도 정상 처치 보존.
+- Godot4.5.1 독립 새 계약3,025 + registry76 + 파동928 + 얼음/폭풍634 + chain759 =5,422검사 실패0. registry9/battle209/투사체30 및 기존28/15 본문 비교, gdparse/Pythoncompile/diff/독립 editor import 통과. 최종 contract/wave verbose 스크립트 ERROR/WARNING/잔류 객체 없음. 전체 게임4.7·실제 충돌/부활/모바일·서버/장기RAM 미검증.
+- 기준 feature7a3ae7ecf044d862691953b8e2940904db268eea, main4122adb7 유지. docs/DAMAGE_OBSERVATION_FOUNDATION.md에 조사·플래그·권한 구분·비용·단계 계획·롤백 기록. 다음은 실제 피해 확정지점의 반환 영수증 계약 첫 연결(일반 몬스터부터); 전체 actor/공통 피해 API·서버 동기화는 미완료.
+
 ## 2026-10-10 — 얼음 충돌 범위 피해→기둥 source 수명 연결
 
 - resolve_archmage_ice_bolt_hit 시작 시 scalar source/battle 수명 캡처, 첫 범위 피해 후보별 검증 및 피해 종료 후 동일 수명 확인. damage callback에서 source 재사용/epoch/queued/retire 시 남은 피해와 새 수명으로 기둥을 재캡처하는 경로 차단. 현재 AoE 대상 조회/가로채기/null target·충돌 위치·피해·RNG·FX/음향 유지.

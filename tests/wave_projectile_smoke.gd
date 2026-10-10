@@ -5,6 +5,7 @@ class Scope extends Node2D:
 	var recycled := 0
 	func get_battle_entity_handle(node: Node) -> Vector3i:return registry.get_handle(node)
 	func resolve_battle_entity(handle: Vector3i) -> Node:return registry.resolve(handle)
+	func get_last_battle_entity_handle(node: Node) -> Vector3i:return registry.get_last_handle(node)
 	func recycle_projectile(node: Node,_key: String):
 		recycled += 1
 		registry.retire_instance(node.get_instance_id())
@@ -226,6 +227,26 @@ func run():
 	w.target.position = Vector2(0,64)
 	w.p._damage_berserker_wave_sweep(Vector2.ZERO,Vector2.ZERO)
 	check(w.target.hits == [100] and w.hero.hit_count == 2,"zero length capsule includes radius edge")
+	cleanup(w)
+	# Reused then retired victim at HP0 must never count as the old kill.
+	w = world(after)
+	start(w,250)
+	w.target.callback = func():
+		reuse(w,w.target)
+		w.scope.registry.retire_instance(w.target.get_instance_id())
+	sweep(w)
+	check(w.hero.kills == 2 and w.hero.hit_count == 3,"reuse then retire is a different victim even at HP0")
+	cleanup(w)
+	# Unrelated slot reuse must not discard an actual original kill.
+	w = world(after)
+	start(w,250)
+	var replacement = Monster.new()
+	w.scope.add_child(replacement)
+	w.target.callback = func():
+		w.scope.registry.retire_instance(w.target.get_instance_id())
+		w.scope.registry.activate(replacement)
+	sweep(w)
+	check(w.hero.kills == 3,"last life is per-node despite another node reusing its slot")
 	cleanup(w)
 	print("Wave projectile checks: ",checks,"; failures: ",failures)
 	quit(1 if failures else 0)

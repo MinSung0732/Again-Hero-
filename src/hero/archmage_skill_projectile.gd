@@ -2,6 +2,8 @@ extends Area2D
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
+const DAMAGE_OBSERVATION := preload("res://src/systems/battle_damage_observation.gd")
+
 const BATTLE_TARGET_REFERENCE := preload("res://src/systems/battle_target_reference.gd")
 # Reuse these objects; only setup/bounce captures allocate WeakRefs.
 var _chain_target_reference = BATTLE_TARGET_REFERENCE.new()
@@ -320,17 +322,11 @@ func _damage_berserker_wave_sweep(
 		if not _is_wave_life_current(life_revision):
 			return
 
-		# Snapshot the result before hit-heal callbacks can recycle the victim.
-		var killed := hp_before > 0 and not is_instance_valid(monster)
-		if hp_before > 0 and is_instance_valid(monster):
-			var same_victim := not tracked_targets
-			if tracked_targets and victim_handle != Vector3i.ZERO:
-				var current_handle: Vector3i = scope.call("get_battle_entity_handle", monster)
-				# Normal death retires the handle; a new nonzero generation is another victim.
-				same_victim = current_handle == victim_handle or current_handle == Vector3i.ZERO
-			if same_victim:
-				var hp_after_value = monster.get("current_hp")
-				killed = hp_after_value != null and int(hp_after_value) <= 0
+		# Scalar result is fixed before hit-heal callbacks can recycle the victim.
+		var observation := DAMAGE_OBSERVATION.observe_legacy_hit(
+			monster if is_instance_valid(monster) else null, scope, victim_handle, hp_before
+		)
+		var killed := DAMAGE_OBSERVATION.is_legacy_kill_candidate(observation)
 		if source_hero.has_method("notify_berserker_blood_art_hit"):
 			source_hero.call("notify_berserker_blood_art_hit")
 			if not _is_wave_life_current(life_revision):

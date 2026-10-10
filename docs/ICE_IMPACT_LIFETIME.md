@@ -1,5 +1,7 @@
 # 얼음 충돌 범위 피해와 기둥 시작 수명 연결
 
+후속: 피해 결과/identity 계약의 첫 적용은 [DAMAGE_OBSERVATION_FOUNDATION.md](DAMAGE_OBSERVATION_FOUNDATION.md)에 기록했다. 아래 다음 작업 설명은 작성 당시 이력이다.
+
 2026-10-10. 기준 feature `ce1da1b938a2bbc43b94ea3f5449a8ddd9ef2176`, Hero blob `01959c984f3b63af93b9348a2dc48c77e776982b`. 작업 `feature/stage10-astra`. main `4122adb73e14552aae7c0aa7edefb2827f5d08d0` 유지.
 
 ## 문제와 변경
