@@ -1,0 +1,36 @@
+extends RefCounted
+# Probe values only: these do not replace the game's combat catalogs.
+const VERSION := 1
+const MAGIC := 0x41485031
+const PORT := 24731
+const CAPACITY := 8
+const TICK_RATE := 60
+const SNAPSHOT_INTERVAL := 3
+const INPUT_BYTES := 24
+const HEADER_BYTES := 48
+const SNAPSHOT_BYTES := HEADER_BYTES + CAPACITY * 16
+const MAX_PACKETS_PER_TICK := 64
+const MAX_INPUTS_PER_ACTOR_TICK := 8
+const MAX_SEQUENCE := 2147483647
+const INPUT_TIMEOUT := 12
+const WIDTH := 1200.0
+const HEIGHT := 800.0
+const HERO_SPEED := 240.0
+const MONSTER_SPEED := 120.0
+const HERO_HP := 300
+const MONSTER_HP := 80
+const HERO_DAMAGE := 40
+const MONSTER_DAMAGE := 10
+const ATTACK_RANGE := 150.0
+const SUMMON_MIN_DISTANCE := 120.0
+const HERO_COOLDOWN := 30
+const MONSTER_COOLDOWN := 60
+const MANA_MAX := 100.0
+const MANA_RECOVERY := 3.0
+const SUMMON_COST := 10.0
+const WIN_KILLS := 6
+const HERO := 1
+const DEMON := 2
+const MOVE := 1
+const ATTACK := 2
+const SUMMON := 3

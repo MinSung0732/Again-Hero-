@@ -1,3 +1,10 @@
+## 2026-10-10 — 독립 로컬 서버·두 클라이언트 전투 통신 시제품
+
+- tools/network_probe 독립 Godot 프로젝트 추가(.gdignore로 상위 스캔 분리). 서버가 첫 연결 용사/두 번째 마왕 역할 배정, 이동·공격·소환·마력·HP·승패를 판정. 별도 테스트 수치·원형 표시이며 기존 솔플/실제 Hero·몬스터·저장/명령 router는 변경하지 않음.
+- loopback ENet,24byte 입력/176byte snapshot,epoch/sequence/role/범위 검증,고정8칸 풀+generation,60Hz판정/20Hz상태,처리량 한도·입력 만료·게임 실패 sequence 소비. sender peer로 권한 결정, Object decode 없음.
+- Godot4.5.1 unit144 실패0 및 실제 서버1+클라이언트2 OS프로세스 통신 통과. 이동/소환/피해/처치/불법 역할·이동 거절 확인, 서버·양쪽 최종 상태 정확히 일치. 독립 import/main headless/gdparse/Pythoncompile/diff 통과. 전체 게임4.7/GUI/모바일/인터넷/실제 disconnect·재접속/부하 미검증.
+- 기준 feature10e37e61bf0d350930e18362034b4b09d66ca493, main4122adb7 유지. docs/LOCAL_NETWORK_PROBE.md에 실행/한계/롤백. 실제 전투 서버화·일반 actor 결과 확대는 미완료; 다음은 tick/ACK·입력 유효 시간 뒤 기존 전투 adapter. 자동 매칭·랭크·온라인 서비스는 아직 불가.
+
 ## 2026-10-10 — 거미·오크 피해 결과 지원 확대
 
 - 두 actor에 opt-in 재사용 receipt API를 추가하고 기존 void take_damage 및 실제 shield/death 계산을 유지. 파동은 기존 capability 경로로 자동 연결, 결과 무효화 시 재시도 없음. 파생 override 우회 방지.

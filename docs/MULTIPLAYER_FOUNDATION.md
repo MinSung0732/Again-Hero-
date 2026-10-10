@@ -1,5 +1,10 @@
 # 용사 모드·대전 모드 확장 설계 및 단계별 실행 계획
 
+## 후속 진행 — 독립 로컬 서버·두 클라이언트 시제품 (2026-10-10)
+
+실제3개 OS프로세스 ENet loopback에서 서버 판정·역할 배정·이동/소환/공격/HP/승패와 최종 상태 일치를 확인했다. 기존 전투와 분리된8유닛 테스트 규칙이며 본게임 온라인 기능은 아니다. unit144검사 통과. [LOCAL_NETWORK_PROBE.md](LOCAL_NETWORK_PROBE.md)에 실행·비용·한계·롤백·다음 통합 순서 기록. 다음은 tick/ACK·입력 유효 시간과 실제 전투 adapter이며 일반 actor 결과 확대도 남아 있다.
+
+
 ## 후속 진행 — 거미·오크 피해 결과 (2026-10-10)
 
 두 일반 actor가 재사용 receipt를 지원하며 기존 파동 capability 경로로 자동 연결된다. 오크의 분노·마지막 돌진 순서와 기존 void API 유지. 독립 및 회귀6,560검사 통과. [SPIDER_ORC_DAMAGE_RECEIPT.md](SPIDER_ORC_DAMAGE_RECEIPT.md)에 비용/검증/롤백 기록. 다음은 다른 일반 actor 확대 조사. 전체 게임/모바일/서버 미검증.

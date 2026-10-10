@@ -1,0 +1,9 @@
+config_version=5
+[application]
+config/name="Again Hero - Local Network Probe"
+run/main_scene="res://main.tscn"
+[display]
+window/size/viewport_width=1200
+window/size/viewport_height=800
+[rendering]
+renderer/rendering_method="gl_compatibility"
