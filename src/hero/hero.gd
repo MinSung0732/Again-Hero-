@@ -2,7 +2,7 @@ extends CharacterBody2D
 
 const HERO_ACTION_INTENT := preload("res://src/hero/hero_action_intent.gd")
 const HERO_ACTION_PORT := preload("res://src/hero/hero_action_port.gd")
-var ranged_action_intent = HERO_ACTION_INTENT.new()
+var action_intent = HERO_ACTION_INTENT.new()
 
 const TIMED_EVENT_BUFFER := preload("res://src/systems/timed_event_buffer.gd")
 
@@ -1787,7 +1787,7 @@ func _physics_process(delta: float) -> void:
 
 func _physics_process_actions(delta: float) -> void:
 	# Discard stale intent even when death/status/skill gates return early.
-	ranged_action_intent.clear()
+	action_intent.clear()
 	# Drop cached targets before any archetype, skill or movement decision.
 	if is_instance_valid(target) and not HERO_TARGET_POLICY.is_detectable(target):
 		target = null
@@ -1901,8 +1901,16 @@ func _physics_process_actions(delta: float) -> void:
 
 	var distance := global_position.distance_to(target.global_position)
 	_prepare_ranged_ai_intent(delta, distance)
-	HERO_ACTION_PORT.execute_ranged(self, ranged_action_intent)
+	HERO_ACTION_PORT.execute_ranged(self, action_intent)
 	_update_stage1_pose_visual(delta)
+
+func _execute_ai_movement(movement: Vector2) -> void:
+	action_intent.prepare_movement(movement)
+	HERO_ACTION_PORT.execute_movement(self, action_intent)
+
+func _execute_ai_basic_attack(method: int, current_target: Node2D) -> void:
+	action_intent.prepare_basic_attack(method)
+	HERO_ACTION_PORT.execute_basic_attack(self, action_intent, current_target)
 
 func _prepare_ranged_ai_intent(delta: float, distance: float) -> void:
 	var move_direction := _choose_move_direction(target, distance)
@@ -1919,7 +1927,7 @@ func _prepare_ranged_ai_intent(delta: float, distance: float) -> void:
 		* _get_effective_move_multiplier()
 		* _get_purifier_move_speed_multiplier()
 	)
-	ranged_action_intent.prepare_ranged(movement_velocity, distance)
+	action_intent.prepare_ranged(movement_velocity, distance)
 
 
 func _get_summoner_slot_capacity() -> int:
@@ -2261,12 +2269,10 @@ func _physics_process_summoner(delta: float) -> void:
 	move_direction = _apply_chest_steering(move_direction, delta)
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	move_direction = _apply_ranged_boundary_escape(move_direction)
-	velocity = move_direction * move_speed * _get_effective_move_multiplier()
-	_move_and_slide_with_obstacle_escape()
-	_clamp_to_battlefield()
+	_execute_ai_movement(move_direction * move_speed * _get_effective_move_multiplier())
 
 	if distance <= attack_range and attack_timer <= 0.0:
-		_summoner_basic_attack(target)
+		_execute_ai_basic_attack(HERO_ACTION_INTENT.AttackKind.SUMMONER, target)
 
 	_update_summoner_pose_visual(delta)
 
@@ -3133,9 +3139,7 @@ func _physics_process_alchemist(delta: float) -> void:
 							+ escape_direction * 1.25
 						).normalized()
 			recovery_direction = _apply_ranged_boundary_escape(recovery_direction)
-			velocity = recovery_direction * alchemist_move_speed * _get_effective_move_multiplier()
-			_move_and_slide_with_obstacle_escape()
-			_clamp_to_battlefield()
+			_execute_ai_movement(recovery_direction * alchemist_move_speed * _get_effective_move_multiplier())
 			_update_alchemist_pose_visual(delta)
 			return
 
@@ -3158,16 +3162,14 @@ func _physics_process_alchemist(delta: float) -> void:
 	move_direction = _apply_chest_steering(move_direction, delta)
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	move_direction = _apply_ranged_boundary_escape(move_direction)
-	velocity = move_direction * alchemist_move_speed * _get_effective_move_multiplier()
-	_move_and_slide_with_obstacle_escape()
-	_clamp_to_battlefield()
+	_execute_ai_movement(move_direction * alchemist_move_speed * _get_effective_move_multiplier())
 
 	if (
 		distance <= attack_range
 		and attack_timer <= 0.0
 		and alchemist_throw_index >= alchemist_throw_positions.size()
 	):
-		_start_alchemist_basic_attack(_get_alchemist_chest_attack_target())
+		_execute_ai_basic_attack(HERO_ACTION_INTENT.AttackKind.ALCHEMIST, _get_alchemist_chest_attack_target())
 
 	_update_alchemist_pose_visual(delta)
 
@@ -5119,16 +5121,14 @@ func _physics_process_gunner(delta: float) -> void:
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	move_direction = _apply_gunner_boundary_steering(move_direction)
 	var gunner_speed_scale := 1.0 + (gunner_reload_move_speed_bonus if gunner_reloading else 0.0)
-	velocity = move_direction * move_speed * _get_effective_move_multiplier() * gunner_speed_scale
-	_move_and_slide_with_obstacle_escape()
-	_clamp_to_battlefield()
+	_execute_ai_movement(move_direction * move_speed * _get_effective_move_multiplier() * gunner_speed_scale)
 
 	if _gunner_should_start_deadeye():
 		_start_gunner_deadeye()
 		return
 
 	if not gunner_reloading and distance <= attack_range and attack_timer <= 0.0:
-		_gunner_attack(target)
+		_execute_ai_basic_attack(HERO_ACTION_INTENT.AttackKind.GUNNER, target)
 
 	_update_gunner_pose_visual(delta)
 
@@ -5857,14 +5857,12 @@ func _physics_process_rogue(delta: float) -> void:
 	move_direction = _apply_chest_steering(move_direction, delta)
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	if move_direction.length_squared() > 0.01:
-		velocity = (
+		_execute_ai_movement(
 			move_direction
 			* move_speed
 			* _get_effective_move_multiplier()
 			* speed_scale
 		)
-		_move_and_slide_with_obstacle_escape()
-		_clamp_to_battlefield()
 	else:
 		velocity = Vector2.ZERO
 
@@ -5873,7 +5871,7 @@ func _physics_process_rogue(delta: float) -> void:
 		and distance <= attack_range
 		and attack_timer <= 0.0
 	):
-		_rogue_combo_attack(target)
+		_execute_ai_basic_attack(HERO_ACTION_INTENT.AttackKind.ROGUE_COMBO, target)
 
 	_update_rogue_pose_visual(delta)
 
@@ -7845,9 +7843,7 @@ func _move_without_monsters() -> void:
 		var heal_direction := _apply_heal_item_steering(Vector2.ZERO, 0.016)
 		if heal_direction.length_squared() > 0.01:
 			heal_direction = _apply_ranged_boundary_escape(heal_direction)
-			velocity = heal_direction * current_move_speed * 0.90 * _get_effective_move_multiplier()
-			_move_and_slide_with_obstacle_escape()
-			_clamp_to_battlefield()
+			_execute_ai_movement(heal_direction * current_move_speed * 0.90 * _get_effective_move_multiplier())
 			return
 
 	if is_instance_valid(magnet_item_target):
@@ -7857,14 +7853,12 @@ func _move_without_monsters() -> void:
 		)
 		if magnet_direction.length_squared() > 0.01:
 			magnet_direction = _apply_ranged_boundary_escape(magnet_direction)
-			velocity = (
+			_execute_ai_movement(
 				magnet_direction
 				* current_move_speed
 				* 0.82
 				* _get_effective_move_multiplier()
 			)
-			_move_and_slide_with_obstacle_escape()
-			_clamp_to_battlefield()
 			return
 
 	if is_instance_valid(chest_target):
@@ -7877,24 +7871,20 @@ func _move_without_monsters() -> void:
 				var chest_direction := _apply_chest_steering(Vector2.ZERO, 0.016)
 				if chest_direction.length_squared() > 0.01:
 					chest_direction = _apply_ranged_boundary_escape(chest_direction)
-					velocity = chest_direction * current_move_speed * 0.72 * _get_effective_move_multiplier()
-					_move_and_slide_with_obstacle_escape()
-					_clamp_to_battlefield()
+					_execute_ai_movement(chest_direction * current_move_speed * 0.72 * _get_effective_move_multiplier())
 			else:
 				velocity = Vector2.ZERO
 				if (
 					attack_timer <= 0.0
 					and alchemist_throw_index >= alchemist_throw_positions.size()
 				):
-					_start_alchemist_basic_attack(chest_target)
+					_execute_ai_basic_attack(HERO_ACTION_INTENT.AttackKind.ALCHEMIST, chest_target)
 			return
 
 		var chest_direction := _apply_chest_steering(Vector2.ZERO, 0.016)
 		if chest_direction.length_squared() > 0.01:
 			chest_direction = _apply_ranged_boundary_escape(chest_direction)
-			velocity = chest_direction * current_move_speed * 0.72 * _get_effective_move_multiplier()
-			_move_and_slide_with_obstacle_escape()
-			_clamp_to_battlefield()
+			_execute_ai_movement(chest_direction * current_move_speed * 0.72 * _get_effective_move_multiplier())
 			if (
 				global_position.distance_squared_to(chest_target.global_position)
 				<= 90.0 * 90.0
@@ -7908,9 +7898,7 @@ func _move_without_monsters() -> void:
 	if is_instance_valid(nearest_exp_orb):
 		var exp_direction := global_position.direction_to(nearest_exp_orb.global_position)
 		exp_direction = _apply_ranged_boundary_escape(exp_direction)
-		velocity = exp_direction * current_move_speed * 0.90 * _get_effective_move_multiplier()
-		_move_and_slide_with_obstacle_escape()
-		_clamp_to_battlefield()
+		_execute_ai_movement(exp_direction * current_move_speed * 0.90 * _get_effective_move_multiplier())
 		return
 
 	if (
@@ -7922,9 +7910,7 @@ func _move_without_monsters() -> void:
 
 	var direction := position.direction_to(wander_target)
 	direction = _apply_ranged_boundary_escape(direction)
-	velocity = direction * current_move_speed * 0.72 * _get_effective_move_multiplier()
-	_move_and_slide_with_obstacle_escape()
-	_clamp_to_battlefield()
+	_execute_ai_movement(direction * current_move_speed * 0.72 * _get_effective_move_multiplier())
 
 func _find_nearest_exp_orb() -> Node2D:
 	var now_msec := Time.get_ticks_msec()
@@ -17649,9 +17635,7 @@ func _physics_process_berserker(delta: float) -> void:
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
 
 	if move_direction.length_squared() > 0.01:
-		velocity = move_direction * move_speed * _get_effective_move_multiplier()
-		_move_and_slide_with_obstacle_escape()
-		_clamp_to_battlefield()
+		_execute_ai_movement(move_direction * move_speed * _get_effective_move_multiplier())
 	else:
 		velocity = Vector2.ZERO
 
@@ -17670,7 +17654,7 @@ func _physics_process_berserker(delta: float) -> void:
 		and distance <= attack_trigger_range
 		and attack_timer <= 0.0
 	):
-		_berserker_basic_attack(target)
+		_execute_ai_basic_attack(HERO_ACTION_INTENT.AttackKind.BERSERKER, target)
 
 	_update_berserker_pose_visual(delta)
 
@@ -19348,14 +19332,12 @@ func _physics_process_fighter(delta: float) -> void:
 	move_direction = _apply_chest_steering(move_direction, delta)
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
 	if move_direction.length_squared() > 0.01:
-		velocity = (
+		_execute_ai_movement(
 			move_direction
 			* move_speed
 			* _get_effective_move_multiplier()
 			* guard_move_scale
 		)
-		_move_and_slide_with_obstacle_escape()
-		_clamp_to_battlefield()
 	else:
 		velocity = Vector2.ZERO
 
@@ -19367,7 +19349,7 @@ func _physics_process_fighter(delta: float) -> void:
 		return
 
 	if distance <= attack_range and attack_timer <= 0.0:
-		_fighter_basic_attack(target)
+		_execute_ai_basic_attack(HERO_ACTION_INTENT.AttackKind.FIGHTER, target)
 
 	_update_fighter_pose_visual(delta)
 
@@ -19649,15 +19631,13 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 	if is_instance_valid(heal_item_target):
 		var heal_direction := _apply_heal_item_steering(Vector2.ZERO, 0.016)
 		if heal_direction.length_squared() > 0.01:
-			velocity = (
+			_execute_ai_movement(
 				heal_direction
 				* move_speed
 				* 0.90
 				* _get_effective_move_multiplier()
 				* speed_scale
 			)
-			_move_and_slide_with_obstacle_escape()
-			_clamp_to_battlefield()
 			return
 
 	if is_instance_valid(magnet_item_target):
@@ -19666,29 +19646,25 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 			0.016
 		)
 		if magnet_direction.length_squared() > 0.01:
-			velocity = (
+			_execute_ai_movement(
 				magnet_direction
 				* move_speed
 				* 0.82
 				* _get_effective_move_multiplier()
 				* speed_scale
 			)
-			_move_and_slide_with_obstacle_escape()
-			_clamp_to_battlefield()
 			return
 
 	if is_instance_valid(chest_target):
 		var chest_direction := _apply_chest_steering(Vector2.ZERO, 0.016)
 		if chest_direction.length_squared() > 0.01:
-			velocity = (
+			_execute_ai_movement(
 				chest_direction
 				* move_speed
 				* 0.72
 				* _get_effective_move_multiplier()
 				* speed_scale
 			)
-			_move_and_slide_with_obstacle_escape()
-			_clamp_to_battlefield()
 			if (
 				global_position.distance_squared_to(chest_target.global_position)
 				<= 105.0 * 105.0
@@ -19701,15 +19677,13 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 	var nearest_exp_orb := _find_nearest_exp_orb()
 	if is_instance_valid(nearest_exp_orb):
 		var exp_direction := global_position.direction_to(nearest_exp_orb.global_position)
-		velocity = (
+		_execute_ai_movement(
 			exp_direction
 			* move_speed
 			* 0.90
 			* _get_effective_move_multiplier()
 			* speed_scale
 		)
-		_move_and_slide_with_obstacle_escape()
-		_clamp_to_battlefield()
 		return
 
 	if (
@@ -19720,15 +19694,13 @@ func _fighter_move_without_monsters(speed_scale: float) -> void:
 		_pick_new_wander_target()
 
 	var direction := position.direction_to(wander_target)
-	velocity = (
+	_execute_ai_movement(
 		direction
 		* move_speed
 		* 0.72
 		* _get_effective_move_multiplier()
 		* speed_scale
 	)
-	_move_and_slide_with_obstacle_escape()
-	_clamp_to_battlefield()
 
 func _update_fighter_pose_visual(delta: float) -> void:
 	if hero_archetype != "sword_shield" or not hero_sprite.visible or is_dying:

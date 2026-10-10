@@ -67,8 +67,8 @@ func compare_frame(before, after, delta: float, label: String) -> void:
 	after.events.clear()
 	# Simulate a leftover producer value before a gated/normal frame. The actual
 	# entry gate must discard it even when no action is prepared this frame.
-	after.ranged_action_intent.prepare_ranged(Vector2(999, 999), 0.0)
-	var buffer_id: int = after.ranged_action_intent.get_instance_id()
+	after.action_intent.prepare_ranged(Vector2(999, 999), 0.0)
+	var buffer_id: int = after.action_intent.get_instance_id()
 	before._physics_process(delta)
 	after._physics_process(delta)
 	check(before.events == after.events, label + " event order / targets")
@@ -80,15 +80,15 @@ func compare_frame(before, after, delta: float, label: String) -> void:
 			push_error(label + " field " + field)
 	check(same, label + " gameplay state / timers")
 	check(before.get_meta("silence_active") == after.get_meta("silence_active") and before.get_meta("burn_active", false) == after.get_meta("burn_active", false), label + " status metadata")
-	check(after.ranged_action_intent.get_instance_id() == buffer_id and not after.ranged_action_intent.pending and after.ranged_action_intent.movement_velocity == Vector2.ZERO, label + " reused / consumed buffer")
+	check(after.action_intent.get_instance_id() == buffer_id and not after.action_intent.pending and after.action_intent.movement_velocity == Vector2.ZERO, label + " reused / consumed buffer")
 	var event_count: int = after.events.size()
-	check(not PORT.execute_ranged(after, after.ranged_action_intent) and after.events.size() == event_count, label + " no replay")
+	check(not PORT.execute_ranged(after, after.action_intent) and after.events.size() == event_count, label + " no replay")
 
 func run() -> void:
 	# Generated fixture dependencies are loaded only on explicit test execution.
 	var old_script := load("res://tests/hero_action_before_fixture.gd") as Script
 	var new_script := load("res://tests/hero_action_after_fixture.gd") as Script
-	if old_script == null or new_script == null:
+	if old_script == null or new_script == null or not old_script.can_instantiate() or not new_script.can_instantiate():
 		push_error("Build isolated Hero action fixture first")
 		quit(1)
 		return

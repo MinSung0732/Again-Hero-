@@ -1,3 +1,9 @@
+## 2026-10-10 — 무타깃·직업별 일반 이동/기본공격 포트 연결
+
+- action_intent 이름 통일, 이동/기본공격 Kind와 6종 로컬 실행 연산 추가. 일반 이동18곳(직업/재료 회수7 + 무타깃11) 및 직업 기본공격·연금술사 상자 공격을 기존 함수에 위임. 타깃은 즉시 전달, 버퍼에 Node 보관 없음. 콜백 전 소비/종류 다른 executor 거절/unknown operation 안전 소비. 기존 아이템 우선순위·속도·공격 gate/스킬 우선순위·null alchemist 의미 유지.
+- 특수 이동/변신/스킬/증강/일반 상자 피해/상태·RNG는 기존 유지, 플레이어/서버 활성화 없음. Hero당 재사용 버퍼 하나, 새 프레임 객체/스캔 없음. docs/HERO_ACTION_PORT_FOUNDATION.md 후속/롤백 갱신.
+- Godot4.5.1 독립 실제 변경 tail/무타깃 before-after6,143 + 공통 원거리6,255 =12,398검사 통과(쿼리/충돌/효과/공격은 명시 spy, 직업 앞부분은 정적 비교). 원래611함수 전체 본문 복원 동일 확인, gdparse/Python compile/diff/import 확인. 전체 게임4.7/모바일/성능 미검증. 기준 feature51ebf2e, main4122adb7 유지.
+
 ## 2026-10-10 — 용사 공통 원거리 AI 의도·행동 포트 첫 분리
 
 - 공통 원거리 이동 판단 결과를 HeroActionIntent 재사용 버퍼에 기록하고 HeroActionPort에서 기존 move/clamp/기본공격 실행. 매 진입 stale intent clear, 콜백 이전 소비, 동일 버퍼 재실행 차단. 이동 전 관측 거리 + 이동 후 현재 사거리/쿨타임/대상 사용으로 기존 의미 유지. 새 프레임 배열/Dictionary/Node 생성 없음.

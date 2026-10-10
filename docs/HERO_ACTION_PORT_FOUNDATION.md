@@ -1,5 +1,35 @@
 # 용사 행동 포트 — 공통 원거리 첫 분리
 
+## 후속: 무타깃·직업별 일반 이동/기본공격 연결 (2026-10-10)
+
+기준 feature `51ebf2e426e4df88f27020a2f489fe9f9afd1030` 이후 별도 커밋.
+버퍼 이름은 범위를 반영해 `action_intent`로 통일했다. 이동 전용과 기본공격 전용 Kind를 추가하고 기존 조건을 통과한 실행을 포트로 전달한다. 종류가 다른 executor는 버퍼를 소비하지 않으며, 올바른 executor는 콜백 전에 소비한다. Node/Callable 참조를 버퍼에 저장하지 않는다. 기본공격 대상은 같은 호출에서 잠깐 전달하고 즉시 실행하며, 연금술사의 null 대상 의미를 유지한다.
+
+| 추가 연결 | 유지한 의미 |
+|---|---|
+| 직업별 일반 이동 7곳 | six specialized paths + 연금술사 가스 부족 재료 회수, 기존 속도/보정/경계/threshold |
+| 무타깃 이동 11곳 | 공통 6곳 / 근접 5곳, 회복→자석→상자→EXP→배회 우선순위 |
+| 직업별 기본공격 6종 | rogue combo/fighter/gunner/berserker/summoner/alchemist 원래 공격 함수에 위임 |
+| 무타깃 연금술사 상자 공격 | 기존 range/throw gate와 직접 상자 target 전달 |
+
+고정 AttackKind는 콘텐츠 ID가 아닌 로컬 실행 연산이다. 카탈로그나 프로토콜 버전을 바꾸지 않는다. 기본공격의 사거리/쿨타임/재장전/연격/가스·투척 제한 및 스킬 우선순위는 기존 판단 지점에 그대로 둔다. 새로운 공격 성공/피해 판정은 추가하지 않았으며 포트의 bool은 호출 소비 여부다.
+
+소환사의 무타깃 경로는 기존처럼 일반 배회를 호출한다. 정지 branch, 돌진/암살/콤보 진행·변신·긴급 이동 및 직업 스킬 활성화는 기존 런타임에 남는다. 일반 상자 접촉 피해도 기존 상호작용 경로를 유지한다. 모든 용사 행동을 플레이어 입력으로 교체할 준비가 완료된 것은 아니다.
+
+Godot4.5.1 독립 실제 변경 action tail·무타깃 함수 before/after **6,143검사**, 공통 physics/원거리 회귀 **6,255검사**, 총 **12,398검사 통과**. 전용 직업 tail19조건+각120반복 호출, 네 무타깃 family11조건, 이벤트/대상/좌표/속도/상자 피해/쿨타임/버퍼 재사용·콜백 재진입 차단, wrong executor/unknown operation/null alchemist target을 확인했다. 직업 timer/status/변신 앞부분은 fixture에서 실행하지 않는다. 쿼리/스티어링/충돌/스킬/공격 본문은 명시 spy다.
+
+원래 Hero **611함수** 전부에 대해 새 포트 호출을 원래 문장으로 복원한 본문 동일 비교를 통과했다(601함수는 직접 동일, 10함수는 호출 연결/필드명 변경). 실제 AI·RNG·직업 공격/스킬 본문은 변경하지 않았다. gdparse/Python compile/diff 및 생성 fixture 없는 editor import 확인. 실제 게임4.7/물리/GPU/모바일/성능은 미검증이다. 함수 호출·clear가 소수 추가되므로 FPS 향상을 주장하지 않는다. Hero당 버퍼 하나, per-frame 새 배열/Dictionary/Node·그룹 검색 없음.
+
+```sh
+python3 tests/build_hero_movement_fixture.py /tmp/hero-movement-fixture
+godot --headless --path /tmp/hero-movement-fixture --script res://tests/hero_movement_port_smoke.gd
+godot --headless --path /tmp/hero-movement-fixture --script res://tests/hero_action_port_smoke.gd
+```
+
+부분 체크아웃은 `--baseline-file`로 `51ebf2e`의 Hero 소스를 전달한다. 원거리 builder는 이전/신규 포트가 있는 기준 소스를 모두 지원하며, 없는 생성 fixture를 게임 import 시 요구하지 않는다.
+
+후속은 실제 게임 직업/아이템/상태 회귀 → 대상 handle·지연 결과 수명 검사 → 직업 스킬/증강 의도 → 입력 생성자 소유권 전환 순이다. 클라이언트 속도/거리/AttackKind를 직접 믿는 네트워크 API를 만들지 않는다. 이 후속 커밋만 revert하면 `51ebf2e`의 공통 원거리 포트로 복귀하며 이전 entity/명령/시계 기반을 유지한다. main 변경 없음.
+
 작성: 2026-10-10. 기준 feature `349513c0cc117f06df6228d84b08aced1340a54a`.
 브랜치 `feature/stage10-astra`, main `4122adb73e14552aae7c0aa7edefb2827f5d08d0` 유지.
 

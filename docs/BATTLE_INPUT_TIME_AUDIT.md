@@ -1,3 +1,7 @@
+## 2026-10-10 후속 — 무타깃·직업 일반 이동/공격 경계
+
+직업별 일반 이동/재료 회수7곳 + 무타깃11곳 및 six specialized basic attack과 무타깃 연금술사 상자 공격을 action_intent/port로 연결했다. 기존 gate/아이템 우선순위/스킬 선행/공격 본문 유지. 독립12,398검사와 원래611함수 본문 복원 비교 통과, 전체 게임 미검증. [HERO_ACTION_PORT_FOUNDATION.md](HERO_ACTION_PORT_FOUNDATION.md) 후속에 범위/롤백 기록. 남은 경계는 특수 이동·스킬/증강 의도·타깃 handle·플레이어 입력 소유권이며 서버는 미구현이다.
+
 ## 2026-10-10 후속 — 용사 공통 원거리 행동 포트
 
 기존 공통 원거리 방향/아이템/경계/속도 계산을 재사용 intent 생성으로 분리하고 move/clamp/기본공격을 action port에 연결했다. 상태이상·직업·스킬·무타깃 분기는 기존 유지, 전체 용사 AI 분리 완료는 아니다. 독립 기존/신규 비교6,255검사 통과. [HERO_ACTION_PORT_FOUNDATION.md](HERO_ACTION_PORT_FOUNDATION.md)에 적용 범위·실행 순서·검증 한계·후속/롤백 기록. 플레이어 입력·서버 권한·타깃 handle 전달은 아직 미구현이다.

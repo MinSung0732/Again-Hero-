@@ -38,9 +38,13 @@ def function(source, name):
 # target queries, AI scoring, wander, projectile and specialization bodies.
 names = re.findall(r"^func ([^(]+)\(", before, re.M)
 for name in names:
-    if name != "_physics_process_actions":
+    if name not in {"_physics_process_actions", "_prepare_ranged_ai_intent",
+                    "_physics_process_summoner", "_physics_process_alchemist",
+                    "_physics_process_gunner", "_physics_process_rogue",
+                    "_physics_process_berserker", "_physics_process_fighter",
+                    "_move_without_monsters", "_fighter_move_without_monsters"}:
         assert function(before, name) == function(after, name), name
-print("Unchanged actual Hero functions:", len(names) - 1)
+print("Unrelated Hero functions unchanged (movement paths checked by dedicated fixture)")
 target.mkdir(parents=True, exist_ok=True)
 (target / "project.godot").write_text('[application]\nconfig/name="Hero action fixture"\n')
 for path in ["src/hero/hero_action_intent.gd", "src/hero/hero_action_port.gd",
@@ -52,7 +56,9 @@ for path in ["src/hero/hero_action_intent.gd", "src/hero/hero_action_port.gd",
 header = '''extends CharacterBody2D
 const HERO_ACTION_INTENT := preload("res://src/hero/hero_action_intent.gd")
 const HERO_ACTION_PORT := preload("res://src/hero/hero_action_port.gd")
-var ranged_action_intent = HERO_ACTION_INTENT.new()
+var action_intent = HERO_ACTION_INTENT.new()
+# Baseline compatibility only; the real Hero owns one action_intent.
+var ranged_action_intent = action_intent
 class TargetPolicy:
 	static func is_detectable(node: Node) -> bool:
 		return is_instance_valid(node) and bool(node.get_meta("detectable", true))
@@ -195,7 +201,7 @@ for name in ["rogue", "fighter", "gunner", "berserker", "alchemist", "summoner"]
 
 for label, source in [("before", before), ("after", after)]:
     methods = function(source, "_physics_process") + function(source, "_physics_process_actions")
-    if label == "after":
+    if re.search(r"^func _prepare_ranged_ai_intent\(", source, re.M):
         methods += function(source, "_prepare_ranged_ai_intent")
     (target / f"tests/hero_action_{label}_fixture.gd").write_text(header + methods)
 print("Hero fixture created:", target)
