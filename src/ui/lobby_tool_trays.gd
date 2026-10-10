@@ -5,9 +5,12 @@ signal tool_requested(tool_id: StringName)
 const CATALOG := preload("res://src/data/lobby_tool_catalog.gd")
 const BUTTON_SIZE := Vector2(104, 108)
 const GAP := 8.0
-const DIRECT_LIMIT := 2
+const DIRECT_LIMIT := 3
+const BADGE_PATH := "res://assets/art/UI/lobby_tools/notification_dot.svg"
 
 var can_open: Callable
+var _badges := {}
+var _notifications := {}
 var _entries := {}
 var _textures := {}
 var _actions := {}
@@ -40,11 +43,14 @@ func install(parent: Control, permission: Callable, entries: Array = CATALOG.ENT
 				continue
 			_entries[id] = entry
 			matching.append(entry)
-		for index in range(mini(matching.size(), DIRECT_LIMIT)):
+		var visible_limit := DIRECT_LIMIT if matching.size() <= DIRECT_LIMIT else DIRECT_LIMIT - 1
+		for index in range(mini(matching.size(), visible_limit)):
 			var entry := matching[index]
 			rail.add_child(_button(entry))
 		if matching.size() > DIRECT_LIMIT:
 			var more := _button({"title": "더보기", "id": &"", "icon": ""})
+			more.name = "MoreTools"
+			_install_badge(more, StringName("__more_" + String(side)))
 			more.pressed.connect(_show_more.bind(side))
 			rail.add_child(more)
 	resized.connect(_layout)
@@ -105,6 +111,7 @@ func _button(entry: Dictionary) -> Button:
 	var id := StringName(entry.get("id", ""))
 	if id != &"":
 		button.pressed.connect(_activate.bind(id))
+		_install_badge(button, id)
 	else:
 		var dots := Label.new()
 		dots.text = "···"
@@ -189,3 +196,50 @@ func _on_visibility_changed() -> void:
 			_notice.hide()
 		if is_instance_valid(_overflow):
 			_overflow.hide()
+
+# Completion providers call this when unclaimed mission/event rewards change.
+# Multiple copies (rail/overflow) share one state; badges do not consume clicks.
+func set_notification(tool_id: StringName, active: bool) -> void:
+	_notifications[tool_id] = active
+	if not _badges.has(tool_id):
+		_update_more_notifications()
+		return
+	for weak in _badges[tool_id]:
+		var badge = weak.get_ref()
+		if is_instance_valid(badge):
+			badge.visible = active
+	_update_more_notifications()
+
+func _install_badge(button: Button, id: StringName) -> void:
+	var badge := TextureRect.new()
+	badge.name = "NotificationDot"
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	badge.position = Vector2(80, 1)
+	badge.size = Vector2(24, 24)
+	if not _textures.has(BADGE_PATH):
+		_textures[BADGE_PATH] = load(BADGE_PATH)
+	badge.texture = _textures[BADGE_PATH]
+	badge.visible = bool(_notifications.get(id, false))
+	button.add_child(badge)
+	if not _badges.has(id):
+		_badges[id] = []
+	# Remove dead weak refs when an overflow category is rebuilt.
+	var refs: Array = _badges[id]
+	for index in range(refs.size() - 1, -1, -1):
+		if refs[index].get_ref() == null:
+			refs.remove_at(index)
+	refs.append(weakref(badge))
+
+func _update_more_notifications() -> void:
+	for side in _rails:
+		var rail: VBoxContainer = _rails[side]
+		var more := rail.get_node_or_null("MoreTools") as Button
+		if more == null:
+			continue
+		var active := false
+		for id in _entries:
+			if _entries[id].get("side", &"left") == side and bool(_notifications.get(id, false)):
+				active = true
+				break
+		more.get_node("NotificationDot").visible = active

@@ -5,13 +5,14 @@ var allowed := true
 func _initialize() -> void:
 	call_deferred("run")
 func run() -> void:
+	root.size = Vector2i(1080, 1920)
 	var host := Control.new()
 	host.size = Vector2(1080, 1400)
 	root.add_child(host)
 	var tray = TRAYS.new()
 	tray.install(host, func(): return allowed)
 	await process_frame
-	assert(tray._rails[&"left"].get_child_count() == 2)
+	assert(tray._rails[&"left"].get_child_count() == 3)
 	assert(tray._rails[&"right"].get_child_count() == 1)
 	assert(tray._rails[&"right"].position.x == 968)
 	tray.register_action(&"daily", func(): fired += 1)

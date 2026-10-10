@@ -33,6 +33,7 @@ CloudStore="*res://src/network/cloud_store.gd"
 LocalTestMode="*res://src/systems/local_test_mode.gd"
 LoginGateway="*res://src/network/login_gateway.gd"
 TutorialFlow="*res://src/systems/tutorial_flow.gd"
+ExplorationRewards="*res://src/systems/exploration_rewards.gd"
 
 [display]
 
@@ -49,3 +50,4 @@ window/handheld/orientation=1
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 2d/snap/snap_2d_transforms_to_pixel=true
+

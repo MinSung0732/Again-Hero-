@@ -265,6 +265,7 @@ var _portrait_reference_image: Image
 var _portrait_reference_rect := Rect2i()
 var _presentation_ready := false
 var settings_view: RefCounted
+var exploration_rewards_view: Control
 var main_tools_view: Control
 var main_modes_view: RefCounted
 var gameplay_settings_path := "user://gameplay_settings.cfg"
@@ -372,6 +373,8 @@ func _ready() -> void:
 	stamina_view.install(self)
 	main_tools_view = preload("res://src/ui/lobby_tool_trays.gd").new()
 	main_tools_view.install(main_tab, _can_open_main_tool)
+	exploration_rewards_view = preload("res://src/ui/lobby_exploration_rewards_view.gd").new()
+	exploration_rewards_view.install(main_tab, main_tools_view, get_node("/root/ExplorationRewards"), _refresh_header)
 
 	_formation_card_cache.install(self)
 	_switch_tab("main")
@@ -2188,6 +2191,9 @@ func _input(event: InputEvent) -> void:
 	if TutorialFlow.blocks_input(event):
 		return
 	if TutorialFlow.modal_visible:
+		return
+	if exploration_rewards_view != null and exploration_rewards_view.blocks_stage_input():
+		_stage_swipe_active = false
 		return
 	if main_tools_view != null and main_tools_view.blocks_stage_input(event):
 		_stage_swipe_active = false

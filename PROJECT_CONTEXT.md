@@ -1,3 +1,7 @@
+## Exploration rewards and notifications (2026-10-10)
+- Main left tools: 도전과제(daily), 이벤트(weekly), 탐색보상(exploration); right friends. Generic set_notification API supports unclaimed mission/event rewards; those features remain pending. Chest full-only red dot at300%, clear after claim.
+- ExplorationRewards autoload: earn only app-closed/background time,180seconds/percent, max300/15hours, claim at51%, gold2+research1 per percent. Foreground lobby/combat do not accrue. Wallet+bank reset saved together in existing stage_progress.cfg/account namespace. Foreground60second checkpoint, no per-frame work. Same-account cloud revision refresh is read-only. See docs/EXPLORATION_REWARDS.md for tests, source provenance and local-clock/server-ledger limits.
+
 ## Main dungeon tool trays (2026-10-10)
 - MainTab owns bounded left mission/event and right community rails. Data: src/data/lobby_tool_catalog.gd; UI: src/ui/lobby_tool_trays.gd. register_action connects future screens; overflow uses a lazy scroll grid. Original daily/weekly/friends Other placeholders moved to main, still pending features. See docs/LOBBY_TOOL_TRAYS.md.
 
