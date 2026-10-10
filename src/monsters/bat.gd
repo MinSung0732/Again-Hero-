@@ -386,20 +386,40 @@ func _update_visual_motion(direction_x: float, moving: bool) -> void:
 
 
 func take_damage(amount: int) -> void:
+	_apply_bat_damage(amount)
+
+func supports_damage_receipt() -> bool:
+	# A derived actor must explicitly support its own damage implementation.
+	return get_script().resource_path == "res://src/monsters/bat.gd"
+
+func take_damage_with_result(amount: int, receipt) -> bool:
+	if receipt == null:
+		take_damage(amount)
+		return false
+	var receipt_revision: int = receipt.begin(self, amount)
+	if not supports_damage_receipt():
+		take_damage(amount)
+		return false
+	_apply_bat_damage(amount, receipt, receipt_revision)
+	return receipt.finish(receipt_revision)
+
+func _apply_bat_damage(amount: int, receipt = null, receipt_revision: int = 0) -> void:
 	if current_hp <= 0 or dying:
 		return
-	amount = MONSTER_RUNTIME_COMMON.consume_support_shield(self,amount)
+	amount = MONSTER_RUNTIME_COMMON._consume_support_shield(self,amount,receipt,receipt_revision)
 	if amount <= 0:
 		return
 	var previous_hp := current_hp
 	current_hp = maxi(current_hp - amount, 0)
 	var applied_damage := previous_hp - current_hp
+	if receipt != null:
+		receipt.record_hp(applied_damage, receipt_revision)
 	DAMAGE_NUMBERS.show(self, applied_damage)
 	hit_flash_timer = 0.10
 	_visual_call(&"play_hit")
 	queue_redraw()
 	if current_hp <= 0:
-		_begin_death()
+		_begin_death(receipt, receipt_revision)
 
 
 func heal_direct(amount: int) -> int:
@@ -414,11 +434,14 @@ func heal_direct(amount: int) -> int:
 	return recovered
 
 
-func _begin_death() -> void:
+func _begin_death(receipt = null, receipt_revision: int = 0) -> void:
 	MONSTER_RUNTIME_COMMON.begin_standard_death(
 		self,
 		visual,
-		collision_shape
+		collision_shape,
+		&"_on_death_animation_finished",
+		receipt,
+		receipt_revision
 	)
 
 

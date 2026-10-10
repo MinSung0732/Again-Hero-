@@ -91,16 +91,37 @@ func _status_scoped_deal_damage(target: Node2D, amount: int) -> int:
 	return applied
 
 func take_damage(amount: int) -> void:
+	_apply_mummy_damage(amount)
+
+func supports_damage_receipt() -> bool:
+	# A derived actor must explicitly support its own damage implementation.
+	return get_script().resource_path == "res://src/monsters/mummy.gd"
+
+func take_damage_with_result(amount: int, receipt) -> bool:
+	if receipt == null:
+		take_damage(amount)
+		return false
+	var receipt_revision: int = receipt.begin(self, amount)
+	if not supports_damage_receipt():
+		take_damage(amount)
+		return false
+	_apply_mummy_damage(amount, receipt, receipt_revision)
+	return receipt.finish(receipt_revision)
+
+func _apply_mummy_damage(amount: int, receipt = null, receipt_revision: int = 0) -> void:
 	if amount <= 0 or dying or current_hp <= 0:
 		return
 	_sync_shield_capacity()
-	amount = MONSTER_RUNTIME_COMMON.consume_support_shield(self,amount)
+	amount = MONSTER_RUNTIME_COMMON._consume_support_shield(self,amount,receipt,receipt_revision)
 	if amount <= 0:
 		return
 	var absorbed := mini(shield_hp,amount)
 	shield_hp -= absorbed
 	var health_damage := mini(current_hp,amount - absorbed)
 	current_hp -= health_damage
+	if receipt != null:
+		receipt.record_shield(absorbed, receipt_revision)
+		receipt.record_hp(health_damage, receipt_revision)
 	DAMAGE_NUMBERS.show(self,absorbed + health_damage)
 	_visual_call(&"play_hit")
 	queue_redraw()
@@ -111,7 +132,7 @@ func take_damage(amount: int) -> void:
 			if is_instance_valid(target) and target.has_method("take_damage"):
 				_deal_damage(target,shield_capacity)
 	if current_hp <= 0:
-		_begin_death()
+		_begin_death(receipt, receipt_revision)
 
 func _draw() -> void:
 	super._draw()

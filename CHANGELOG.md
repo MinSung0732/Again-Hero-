@@ -1,3 +1,10 @@
+## 2026-10-10 — 박쥐·유령·미라 피해 결과 경계
+
+- 세 actor에 opt-in receipt 추가, 기존 void 경로/지원 보호막/HP/사망 의미 유지. 미라는 지원+자체 보호막 실제 흡수량 합산, 기존 Orc 사망 helper 사용. 기존 파동 capability로 자동 연결, 파생 override 우회 방지. 공통 API/projectile/네트워크 시제품 변경 없음.
+- 미라 보호막 최대체력 비율 재조정→지원/자체 흡수→HP/표시→파괴 플래그→봉인 반격/기존 상태이상→사망 순서 보존. 유령 사망 시 phase 해제/색 복구 유지. callback 전 결과 기록, 버퍼 재진입 무효화·피해 재시도 없음. 매 피해 객체/배열/스캔 추가 없음.
+- Godot4.5.1 신규 actor/파동5,358+미라 보호막/유령 특수1,812+슬라임/파동 회귀1,786 =8,956검사 실패0. 원래 박쥐23/유령19/미라14함수 hook 역변환 비교, gdparse/Python compile/독립 import/실제 변경 diff 검증. 전체 게임4.7/모바일/실제 AI·충돌·애니메이션·성능 미검증.
+- 기준 feature469d20765196e45d5c9bf09c9803ee6a26523a2e, main4122adb7 유지. docs/SHIELD_DAMAGE_RECEIPT.md에 계약/재현/한계/롤백. 매칭·용사모드 확장 보류, 솔플 내부 구조 개선 지속. 다음은 늑대/전갈 등 상속 actor와 상태이상 경계 조사.
+
 ## 2026-10-10 — 원거리 일반 몬스터 피해 결과 확대
 
 - 해골 궁수·고블린 투척수·코볼트에 opt-in receipt API 추가. 기존 void API/지원 보호막/HP/실제 사망 순서 유지, 파생 override 우회 차단. 기존 파동 capability 경로로 자동 연결. receipt/common/projectile·네트워크 시제품 변경 없음.
