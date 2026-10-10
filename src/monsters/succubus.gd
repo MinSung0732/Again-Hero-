@@ -104,11 +104,28 @@ func _status_scoped_deal_hit(target: Node2D, amount: int) -> int:
 	return applied
 
 func take_damage(amount: int) -> void:
+	_apply_succubus_damage(amount)
+
+func supports_damage_receipt() -> bool:
+	return get_script().resource_path == "res://src/monsters/succubus.gd"
+
+func take_damage_with_result(amount: int, receipt) -> bool:
+	if receipt == null:
+		take_damage(amount)
+		return false
+	var receipt_revision: int = receipt.begin(self, amount)
+	if not supports_damage_receipt():
+		take_damage(amount)
+		return false
+	_apply_succubus_damage(amount, receipt, receipt_revision)
+	return receipt.finish(receipt_revision)
+
+func _apply_succubus_damage(amount: int, receipt = null, receipt_revision: int = 0) -> void:
 	if amount <= 0 or dying or current_hp <= 0 or infiltration_timer > 0.0:
 		return
 	if waltz_active:
 		amount = maxi(int(round(amount * float(waltz_config.get("damage_taken_multiplier", 0.5)))), 0)
-	amount = MONSTER_RUNTIME_COMMON.consume_support_shield(self, amount)
+	amount = MONSTER_RUNTIME_COMMON._consume_support_shield(self, amount, receipt, receipt_revision)
 	if amount <= 0:
 		return
 	var previous_hp := current_hp
@@ -116,11 +133,17 @@ func take_damage(amount: int) -> void:
 	var remaining := current_hp - amount
 	var can_infiltrate := not infiltration_used and (remaining <= 0 or (not threshold.is_empty() and remaining <= int(max_hp * float(threshold.hp_ratio))))
 	current_hp = maxi(remaining, 1 if can_infiltrate else 0)
+	# Record before popup callbacks and infiltration's optional recovery.
+	if receipt != null:
+		receipt.record_hp(previous_hp - current_hp, receipt_revision)
 	DAMAGE_NUMBERS.show(self, previous_hp - current_hp)
 	if can_infiltrate:
 		_start_infiltration()
 	elif current_hp <= 0:
-		_begin_death()
+		if receipt == null:
+			_begin_death()
+		else:
+			_begin_death_with_result(receipt, receipt_revision)
 	else:
 		_visual_call(&"play_hit")
 	queue_redraw()
@@ -261,6 +284,12 @@ func _cancel_waltz() -> void:
 	visual_moving_state = -1
 
 func _begin_death() -> void:
+	_begin_succubus_death()
+
+func _begin_death_with_result(receipt = null, receipt_revision: int = 0) -> void:
+	_begin_succubus_death(receipt, receipt_revision)
+
+func _begin_succubus_death(receipt = null, receipt_revision: int = 0) -> void:
 	_cancel_waltz()
-	super._begin_death()
+	super._begin_death_with_result(receipt, receipt_revision)
 	queue_redraw()

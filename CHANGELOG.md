@@ -1,3 +1,10 @@
+## 2026-10-10 — 서큐버스 잠입·회복·실제 사망 결과
+
+- 서큐버스 자체 incoming 피해에 opt-in receipt 연결. 최초 치명타/위험 감지는 HP1 제한 후 잠입이며 처치 아님. HP1에서 피해0인 전환과 회복 증강 직전 피해량을 구분. 왈츠 감소/최소0, 지원 보호막 완전 흡수, 잠입 중 피해 거절 및 종료 감지/충돌/separation/stat scaling 보존.
+- zero-argument legacy 사망과 결과용 helper 공유, 왈츠 취소→부모 사망 순서 유지. 기존 파동 자동 연결; callback 버퍼 overwrite 때 처치 추론/피해 재시도 없음. 부모/common/projectile·네트워크 시제품 변경 없음, 매 피해 객체/배열/스캔 추가 없음.
+- Godot4.5.1 신규3,795+기존 회귀8,166 =11,961검사 실패0. 원래 서큐버스18함수 hook 역변환 비교, gdparse/Python compile/독립 import/diff 통과. 전체 게임4.7/모바일/실제 AI·충돌·시각/성능 미검증.
+- 기준 featureeb5772753b5f797ffa5ca312b980e48cb3006b77, main4122adb7 유지. docs/SUCCUBUS_DAMAGE_RECEIPT.md에 범위/재현/롤백. 다음은 불가살 등 초월 incoming 피해·생존/상태이상 경계; 매칭·용사모드 확대 보류.
+
 ## 2026-10-10 — 메두사·설녀·주술 미라·크라켄 상속 피해 결과
 
 - 네 actor는 incoming 피해 본문을 변경하지 않고 부모 API capability를 명시한다. 기존 void/파생 guard 유지. 메두사/설녀/크라켄 사망은0인자 legacy 및 결과용 함수에서 공유 helper 사용. 주술 미라는 부모 사망 API 그대로 상속. 부모/common/projectile·네트워크 시제품 변경 없음.
