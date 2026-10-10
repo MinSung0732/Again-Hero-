@@ -1,3 +1,10 @@
+## 2026-10-10 — 메두사·설녀·주술 미라·크라켄 상속 피해 결과
+
+- 네 actor는 incoming 피해 본문을 변경하지 않고 부모 API capability를 명시한다. 기존 void/파생 guard 유지. 메두사/설녀/크라켄 사망은0인자 legacy 및 결과용 함수에서 공유 helper 사용. 주술 미라는 부모 사망 API 그대로 상속. 부모/common/projectile·네트워크 시제품 변경 없음.
+- 설녀 사망 runtime 알림→common guard, 메두사 redraw, 크라켄 연사 취소→기존8방향 FX/공격→common guard 순서 유지. 촉수 실제 _strike와 위치/scale/피해량·사망 공격 성장 제외 유지. callback guard 폐쇄/버퍼 overwrite 때 처치 오인·피해 재시도 없음, 매 피해 객체/배열/그룹 스캔 추가 없음.
+- Godot4.5.1 신규 actor/파동7,144+사망 특수652+기존 회귀8,166 =15,962검사 실패0. 원래 메두사10/설녀11/주술 미라9/크라켄11함수 hook 역변환 비교, gdparse/Python compile/독립 import/diff 검증. 전체 게임4.7/모바일/실제 AI·FX·충돌·성능 미검증.
+- 기준 featuref1670f15d79eaf530ac68327cb69b39517b15784, main4122adb7 유지. docs/REMAINING_INHERITED_DAMAGE_RECEIPT.md에 범위/재현/한계/롤백. 다음은 서큐버스 등 특수 incoming actor·초월 생존/상태이상 경계, 매칭·용사모드 확대 보류.
+
 ## 2026-10-10 — 밴시 은신·듀라한 보호막/부활 피해 결과
 
 - 밴시/Bat와 듀라한/Orc의 실제 상속 구조에서 opt-in receipt 연결. 기존 void API/파생 override guard 유지. 밴시 은신 감소·최소0, 듀라한 지원/자체 보호막 실제 흡수량과 HP 기록. 부모/common/projectile·네트워크 시제품 변경 없음.

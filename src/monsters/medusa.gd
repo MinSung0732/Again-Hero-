@@ -8,6 +8,10 @@ var elite_aura: Dictionary = {}
 var aura_timer := 0.0
 var aura_scratch: Array = []
 
+func supports_damage_receipt() -> bool:
+	# Incoming damage is unchanged; this actor explicitly opts into its parent API.
+	return get_script().resource_path == "res://src/monsters/medusa.gd"
+
 func _init() -> void:
 	monster_type = "medusa"
 	monster_role = "controller"
@@ -117,7 +121,13 @@ func _tick_aura(delta: float) -> void:
 	aura_scratch.clear()
 
 func _begin_death() -> void:
-	super._begin_death()
+	_begin_medusa_death()
+
+func _begin_death_with_result(receipt = null, receipt_revision: int = 0) -> void:
+	_begin_medusa_death(receipt, receipt_revision)
+
+func _begin_medusa_death(receipt = null, receipt_revision: int = 0) -> void:
+	super._begin_death_with_result(receipt, receipt_revision)
 	queue_redraw()
 
 func _draw() -> void:

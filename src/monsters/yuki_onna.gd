@@ -12,6 +12,10 @@ var chill_projectile_speed := 1.0
 var chill_slow_strength := 1.0
 var elite_snowflake := false
 
+func supports_damage_receipt() -> bool:
+	# Incoming damage is unchanged; this actor explicitly opts into its parent API.
+	return get_script().resource_path == "res://src/monsters/yuki_onna.gd"
+
 func _init() -> void:
 	monster_type = "yuki_onna"
 	monster_role = "control"
@@ -102,8 +106,14 @@ func _fire_projectile(offset_to_hero: Vector2) -> void:
 		projectile.slow_cap = max_slow_stacks
 
 func _begin_death() -> void:
+	_begin_yuki_onna_death()
+
+func _begin_death_with_result(receipt = null, receipt_revision: int = 0) -> void:
+	_begin_yuki_onna_death(receipt, receipt_revision)
+
+func _begin_yuki_onna_death(receipt = null, receipt_revision: int = 0) -> void:
 	if dying:
 		return
 	if is_instance_valid(combat_authority):
 		combat_authority.yuki_runtime.record_death(self)
-	super._begin_death()
+	super._begin_death_with_result(receipt, receipt_revision)

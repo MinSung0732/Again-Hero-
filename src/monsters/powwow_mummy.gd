@@ -9,6 +9,10 @@ var hit_cooldown_reduction := 0.0
 var buff_targets: Array[Node2D] = []
 var buff_order: Array[int] = [0,1,2]
 
+func supports_damage_receipt() -> bool:
+	# Incoming damage is unchanged; this actor explicitly opts into its parent API.
+	return get_script().resource_path == "res://src/monsters/powwow_mummy.gd"
+
 func _init() -> void:
 	monster_type = "powwow_mummy"
 	monster_role = "ranged"

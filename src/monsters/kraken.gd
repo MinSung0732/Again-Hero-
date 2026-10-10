@@ -13,6 +13,10 @@ var dodge_used := false
 var dodge_state := 0
 var dodge_destination := Vector2.ZERO
 
+func supports_damage_receipt() -> bool:
+	# Incoming damage is unchanged; this actor explicitly opts into its parent API.
+	return get_script().resource_path == "res://src/monsters/kraken.gd"
+
 func _init() -> void:
 	monster_type = "kraken"
 	monster_role = "ranged"
@@ -129,6 +133,12 @@ func _finish_dodge() -> void:
 		attack_timer = 0.0
 
 func _begin_death() -> void:
+	_begin_kraken_death()
+
+func _begin_death_with_result(receipt = null, receipt_revision: int = 0) -> void:
+	_begin_kraken_death(receipt, receipt_revision)
+
+func _begin_kraken_death(receipt = null, receipt_revision: int = 0) -> void:
 	if dying:
 		return
 	burst_count = 0
@@ -137,4 +147,4 @@ func _begin_death() -> void:
 		var spot := global_position + Vector2.from_angle(TAU * index / float(BEHAVIOR.DEATH.count)) * float(BEHAVIOR.DEATH.radius)
 		TENTACLE.show_at(combat_authority, spot, scale.x)
 		_strike(target, spot, int(round(attack_damage / float(BEHAVIOR.DEATH.damage_divisor))), false)
-	super._begin_death()
+	super._begin_death_with_result(receipt, receipt_revision)
