@@ -1,3 +1,10 @@
+## 2026-10-10 — 얼음·폭풍 투사체 source/풀 수명 검증
+
+- ice_bolt/storm setup에 기존 재사용 source/self 참조를 연결하고 이동/충돌/피해 callback 뒤 epoch/slot/generation 및 local revision을 확인한다. 이전 피해/게이지/impact callback이 새 투사체의 traveled/return 상태를 바꾸거나 반납하지 못한다. 피해 후 대상 수명을 확인해 재사용된 적에게 이전 속박을 쓰지 않는다.
+- 얼음 직선 가로채기와 lethal impact 위치/후속 AoE, 폭풍 왕복별 중복 제거·피해 배율·나가는 구간의 적중별 게이지 보상 유지. HP0 즉시 발사체 취소 정책은 추가하지 않는다. 기존 참조 재사용, setup에서만 WeakRef 캡처, 대상별 scalar handle, 평균 O(1) 조회이며 새 프레임 배열/그룹 스캔/예약 객체 없음.
+- Godot4.5.1 독립 신규634검사 + 연쇄단검 회귀759검사 =1,393검사 실패0. 기준 투사체28함수 정확한 변경 문자열 역변환 비교와 연쇄 기준15본문 비교, gdparse/Pythoncompile/diff/독립 editor import 확인. 최종 elemental verbose 스크립트 ERROR/WARNING/잔류 객체 없음. 전체 게임4.7·실제 충돌/시각/모바일·서버·실측 성능 미검증.
+- 기준 feature b537ee30f8b538c7e76187f4117bb7caf2fb4673, main4122adb7 유지. docs/ELEMENTAL_PROJECTILE_LIFETIME.md에 비용·범위·재현·롤백 기록. 다음 후보 berserker_wave source/피해 callback 경계. Hero impact 내부 전체 피해 경계·다른 직업/서버 적용은 미완료.
+
 ## 2026-10-10 — 다중시전 지연 예약·공유 목록 수명 검증
 
 - archmage multicast에 scalar source/battle 수명과 local reservation revision 연결. configure_profile reset/새 예약/정리는 cancel helper에서 revision 갱신+기존 배열 clear. timer 전후 검증으로 이전 작업이 새 목록 pop/active 해제/다음 timer 예약을 못하게 한다. 같은 HP0 수명 cleanup은 유지하고 새 개체/전투 상태는 건드리지 않는다.

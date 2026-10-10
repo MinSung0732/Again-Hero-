@@ -1,5 +1,10 @@
 # 용사 모드·대전 모드 확장 설계 및 단계별 실행 계획
 
+## 후속 진행 — 얼음·폭풍 투사체 수명 경계 (2026-10-10)
+
+ice_bolt/storm의 source/self 수명과 피해 후 대상 수명, reentrant callback revision을 검증한다. 정상 직선 충돌/왕복 피해/게이지는 유지한다. 신규634+연쇄 회귀759검사 통과. 범위·비용·후속·롤백은 [ELEMENTAL_PROJECTILE_LIFETIME.md](ELEMENTAL_PROJECTILE_LIFETIME.md). 전체 게임/모바일/서버·실측 성능 미검증. 다음 후보 berserker_wave이며 전체 PvP 동기화 완료 단계는 아니다.
+
+
 ## 후속 진행 — 다중시전 예약·공유 목록 경계 (2026-10-10)
 
 archmage multicast timer에 source/battle 수명과 local revision을 연결하고 configure_profile reset도 같은 cancel 경계로 연결했다. 새 예약의 목록·active를 이전 작업이 소비/정리하지 못한다. 정상 RNG/필터/성공 횟수/0.30초 유지. 범위·비용·검증14,735검사·한계·후속·롤백은 [MULTICAST_LIFETIME.md](MULTICAST_LIFETIME.md). 전체 게임/모바일/서버·실측 성능 미검증.

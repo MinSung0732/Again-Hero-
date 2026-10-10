@@ -85,10 +85,19 @@ func setup(
 		):
 			_finish()
 			return
+	elif skill_type == "ice_bolt" or skill_type == "storm":
+		var scope := get_parent()
+		if not _chain_source_reference.capture(source_hero, scope) or not _chain_projectile_reference.capture(self, scope):
+			_finish()
+			return
 	_apply_visual()
 
 func _physics_process(delta: float) -> void:
 	if not active:
+		return
+	var life_revision := _chain_life_revision
+	if (skill_type == "ice_bolt" or skill_type == "storm") and not _is_elemental_life_current(life_revision):
+		_finish_elemental_revision(life_revision)
 		return
 	if skill_type == "chain_dagger" and not _is_chain_life_current(_chain_life_revision):
 		_finish()
@@ -136,12 +145,17 @@ func _physics_process(delta: float) -> void:
 			var return_step: Vector2 = direction * speed * delta
 			global_position += return_step
 			_damage_storm_area(true)
+			if not _is_elemental_life_current(life_revision):
+				_finish_elemental_revision(life_revision)
 			return
 
 		var outward_step: Vector2 = direction * speed * delta
 		global_position += outward_step
 		traveled += speed * delta
 		_damage_storm_area(false)
+		if not _is_elemental_life_current(life_revision):
+			_finish_elemental_revision(life_revision)
+			return
 
 		if traveled >= max_range:
 			storm_returning = true
@@ -165,7 +179,8 @@ func _physics_process(delta: float) -> void:
 		_finish()
 
 func _damage_storm_area(returning: bool) -> void:
-	if not is_instance_valid(source_hero):
+	var life_revision := _chain_life_revision
+	if not _is_elemental_life_current(life_revision):
 		return
 
 	var radius: float = maxf(float(config.get("hit_radius", 125.0)), 1.0)
@@ -192,7 +207,11 @@ func _damage_storm_area(returning: bool) -> void:
 			))
 		)
 
+	var scope := get_parent()
+	var tracked_targets := scope.has_method("get_battle_entity_handle")
 	for node in _get_monster_nodes_near(global_position, radius):
+		if not _is_elemental_life_current(life_revision):
+			return
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -206,15 +225,23 @@ func _damage_storm_area(returning: bool) -> void:
 			continue
 		damaged_ids[iid] = true
 
+		var victim_handle := Vector3i.ZERO
+		if tracked_targets:
+			victim_handle = scope.call("get_battle_entity_handle", monster)
 		monster.call("take_damage", hit_damage)
-		monster.set_meta(
-			"archmage_root_until",
-			Time.get_ticks_msec()
-			+ int(
-				maxf(float(config.get("root_duration", 2.0)), 0.0)
-				* 1000.0
+		if not _is_elemental_life_current(life_revision):
+			return
+		if is_instance_valid(monster) and not monster.is_queued_for_deletion() and (
+			not tracked_targets or (victim_handle != Vector3i.ZERO and scope.call("resolve_battle_entity", victim_handle) == monster)
+		):
+			monster.set_meta(
+				"archmage_root_until",
+				Time.get_ticks_msec()
+				+ int(
+					maxf(float(config.get("root_duration", 2.0)), 0.0)
+					* 1000.0
+				)
 			)
-		)
 
 		if (
 			not returning
@@ -224,6 +251,8 @@ func _damage_storm_area(returning: bool) -> void:
 				"restore_archmage_gauge",
 				maxf(float(config.get("gauge_restore_per_hit", 4.0)), 0.0)
 			)
+			if not _is_elemental_life_current(life_revision):
+				return
 
 
 func _damage_berserker_wave_sweep(
@@ -308,6 +337,9 @@ func _on_body_entered(body: Node) -> void:
 	):
 		_finish()
 		return
+	if skill_type == "ice_bolt" and not _is_elemental_life_current(life_revision):
+		_finish_elemental_revision(life_revision)
+		return
 	if skill_type in ["storm", "berserker_wave"]:
 		return
 	if body == null or body.is_queued_for_deletion():
@@ -322,10 +354,24 @@ func _on_body_entered(body: Node) -> void:
 
 	match skill_type:
 		"ice_bolt":
+			var hit_position := global_position
+			var scope := get_parent()
+			var tracked_target := scope.has_method("get_battle_entity_handle")
+			var victim_handle := Vector3i.ZERO
+			if tracked_target:
+				victim_handle = scope.call("get_battle_entity_handle", monster)
 			monster.call("take_damage", damage)
-			if is_instance_valid(source_hero) and source_hero.has_method("resolve_archmage_ice_bolt_hit"):
-				source_hero.call("resolve_archmage_ice_bolt_hit", monster, global_position, empowered)
-			_finish()
+			if not _is_elemental_life_current(life_revision):
+				_finish_elemental_revision(life_revision)
+				return
+			var live_target: Node2D = null
+			if is_instance_valid(monster) and not monster.is_queued_for_deletion() and (
+				not tracked_target or (victim_handle != Vector3i.ZERO and scope.call("resolve_battle_entity", victim_handle) == monster)
+			):
+				live_target = monster
+			if source_hero.has_method("resolve_archmage_ice_bolt_hit"):
+				source_hero.call("resolve_archmage_ice_bolt_hit", live_target, hit_position, empowered)
+			_finish_elemental_revision(life_revision)
 		"chain_dagger":
 			# Keep the impact origin valid even if damage frees/reuses the victim.
 			var hit_position := monster.global_position
@@ -914,6 +960,20 @@ func _load_texture(path: String) -> Texture2D:
 			return ImageTexture.create_from_image(image)
 	return null
 
+
+func _is_elemental_life_current(life_revision: int) -> bool:
+	return (
+		active and (skill_type == "ice_bolt" or skill_type == "storm")
+		and _chain_life_revision == life_revision and is_inside_tree()
+		and is_instance_valid(source_hero)
+		and _chain_projectile_reference.resolve(get_parent()) == self
+		and _chain_source_reference.resolve(get_parent()) == source_hero
+	)
+
+func _finish_elemental_revision(life_revision: int) -> void:
+	# Source invalidation cancels this local shot; a reconfigured shot owns a new revision.
+	if active and _chain_life_revision == life_revision and is_inside_tree():
+		_finish()
 
 func _capture_chain_target() -> bool:
 	_chain_target_reference.clear()

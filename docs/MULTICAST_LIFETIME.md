@@ -1,5 +1,7 @@
 # 다중시전 지연 예약·공유 후보 목록 수명 검증
 
+후속: 얼음·폭풍 투사체 경계 적용은 [ELEMENTAL_PROJECTILE_LIFETIME.md](ELEMENTAL_PROJECTILE_LIFETIME.md)에 기록했다. 아래 다음 작업 설명은 작성 당시 이력이다.
+
 2026-10-10. 기준 feature `c2c1f38410dd2b97936913c834e0959fd787b402`. 작업 `feature/stage10-astra`. main `4122adb73e14552aae7c0aa7edefb2827f5d08d0` 유지.
 
 ## 문제와 변경

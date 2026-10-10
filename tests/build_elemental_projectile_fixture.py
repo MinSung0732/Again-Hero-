@@ -23,17 +23,16 @@ def function(s, name):
     tail = s[m.start():]
     end = re.search(r'\nfunc ',tail)
     return (tail[:end.start()] if end else tail).rstrip()
-allowed = {'setup','_physics_process','_on_body_entered','_finish_after_chain_ticks',
-           '_apply_chain_current_ticks','_damage_monsters_along_segment','_finish','deactivate_for_pool'}
+allowed = set()
 names = re.findall(r'^func ([^(]+)\(', before, re.M)
 for name in names:
     if name not in allowed:
         assert function(before,name) == without_elemental_projectile_guards(function(after,name)), name
 print('Untouched projectile bodies identical:',len(names)-len(allowed))
 out.mkdir(parents=True, exist_ok=True)
-(out/'project.godot').write_text('[application]\nconfig/name="Chain projectile lifetime fixture"\n')
+(out/'project.godot').write_text('[application]\nconfig/name="Elemental projectile lifetime fixture"\n')
 for path in ['src/systems/battle_entity_registry.gd','src/systems/battle_target_reference.gd',
-             'tests/chain_projectile_lifetime_smoke.gd','src/hero/archmage_skill_projectile.gd']:
+             'tests/elemental_projectile_smoke.gd','src/hero/archmage_skill_projectile.gd']:
     dest=out/path;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/path,dest)
 (out/'src/systems/hero_target_policy.gd').write_text('''extends RefCounted
 static func is_detectable(node: Node) -> bool:
@@ -48,5 +47,5 @@ for variant, source in [('before',before),('after',after)]:
         original=function(source,name)
         signature=original[:original.index(' -> ')+original[original.index(' -> '):].index(':')+1]
         source=source.replace(original,signature+'\n'+body)
-    dest=out/f'tests/chain_projectile_{variant}.gd';dest.write_text(source)
+    dest=out/f'tests/elemental_projectile_{variant}.gd';dest.write_text(source)
 print('Fixture created:',out)
