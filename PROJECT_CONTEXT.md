@@ -1,3 +1,7 @@
+## Mutation choice command boundary (2026-10-10)
+- Protocol v3 adds command7 MUTATION_CHOOSE using positive choice_revision. Separate mutation offer revision increments on open/consume/restart. Main captures displayed revision and does not hide stale cards. try_choose_mutation bool routes through validation; legacy spawn_selected_mutation void delegates locally.
+- Original candidate check, fallback values/distance, failure consumption/signals, pause release and deferred next augment preserved. Future modes rejected with routing on/off. Isolated Godot4.5.1 router130/augment79/actual mutation boundary58checks pass with explicit director/catalog/spawn spies. Full game4.7/GPU/mobile unverified. Entity identity/generation next; no server or hero/PvP activation.
+
 ## Run clock foundation — step2 first slice (2026-10-10)
 - RunMetrics now owns BattleRunClock; elapsed_seconds compatibility getter/setter remains. Existing reset and tick APIs, RUN_TIMER gate, delta cadence and battle _process order unchanged. No wall-clock advance, timer allocation or per-frame snapshots. Finite positive deltas advance; count is not a physics/network tick. Explicit get_run_clock_diagnostics only.
 - Isolated Godot4.5.1 before/after actual RunMetrics + event buffer comparison1236checks pass: elapsed/deadlines/strategy windows/records/result and victory/defeat research rewards. Catalog display names only are spies. Full4.7 battle/GPU/mobile/performance baseline pending; no loading/FPS improvement claimed.

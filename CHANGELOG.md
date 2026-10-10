@@ -1,3 +1,8 @@
+## 2026-10-10 — 엘리트 선택 명령과 이벤트 후보 버전
+
+- protocol v3 명령7 MUTATION_CHOOSE와 mutation revision 적용. main 표시 버전 전달·오래된 카드 숨김 방지, try_choose_mutation bool 및 기존 spawn_selected_mutation void 호환. 기존 후보/거리/fallback/소환 결과/pause 해제/deferred 증강 흐름 유지.
+- Godot4.5.1 독립 router130/증강79/실제 엘리트 경계58검사 통과(spy 카탈로그/director/소환). gdparse/diff 검사. 전체 게임4.7/엘리트 스탯/UI/모바일 미검증. 기준 feature63e6271e, main4122adb7 유지. 후속 entity ID/generation 적용 별도 커밋.
+
 ## 2026-10-10 — 2단계 Run 전투 시계 첫 분리
 
 - RunMetrics의 경과 시간 누적을 BattleRunClock으로 분리. 기존 elapsed_seconds 읽기/쓰기·시간 제한/전략/보상 API 호환, reset/기존 RUN_TIMER pause gate/delta/실행 순서 유지. 양수 유한 delta만 진행, explicit 진단. O(1), 매프레임 배열/Dictionary/타이머 생성 없음. 전체 고정 tick/액터 시간·서버·PvP 미구현.

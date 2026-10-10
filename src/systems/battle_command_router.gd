@@ -90,7 +90,7 @@ func _arguments_valid(request: REQUEST) -> bool:
 		return false
 	if request.direction not in RULES.DIRECTIONS or request.subject_id.length() > RULES.MAX_CONTENT_ID_LENGTH:
 		return false
-	if request.kind == RULES.Command.DEMON_AUGMENT_CHOOSE or request.kind == RULES.Command.DEMON_AUGMENT_REROLL:
+	if request.kind == RULES.Command.DEMON_AUGMENT_CHOOSE or request.kind == RULES.Command.DEMON_AUGMENT_REROLL or request.kind == RULES.Command.MUTATION_CHOOSE:
 		if request.choice_revision <= 0 or request.choice_revision > RULES.MAX_SEQUENCE:
 			return false
 		if request.position != Vector2.ZERO or not request.direction.is_empty():
@@ -98,7 +98,7 @@ func _arguments_valid(request: REQUEST) -> bool:
 	elif request.choice_revision != 0:
 		return false
 	match request.kind:
-		RULES.Command.SUMMON_AUTO, RULES.Command.SUMMON_AT, RULES.Command.DEMON_SKILL, RULES.Command.DEMON_AUGMENT_CHOOSE:
+		RULES.Command.SUMMON_AUTO, RULES.Command.SUMMON_AT, RULES.Command.DEMON_SKILL, RULES.Command.DEMON_AUGMENT_CHOOSE, RULES.Command.MUTATION_CHOOSE:
 			return not request.subject_id.is_empty()
 		RULES.Command.SUMMON_TRANSCENDENT, RULES.Command.DEMON_AUGMENT_REROLL:
 			return request.subject_id.is_empty()

@@ -3,6 +3,10 @@
 작성: 2026-10-10. 기준 소스: `4122adb73e14552aae7c0aa7edefb2827f5d08d0`.
 작업 브랜치: `feature/stage10-astra`. main 병합은 별도 요청 후 수행한다.
 
+## 후속 진행 — 엘리트 선택 명령 경계 (2026-10-10)
+
+엘리트/돌연변이 선택도 명령7과 독립 후보 revision에 연결했다. 기존 로컬 void API 유지, 표시 UI는 명시 revision 전달, 오래된 이벤트 선택은 거절한다. protocol v3. router130·증강79·엘리트 경계58검사 통과(독립 fixture, 실제 소환은 spy). 입력·시간 지도에 상세 기록. 다음 작업은 entity ID/generation 레지스트리 첫 적용이며 용사 action port/서버/동기화는 아직 미구현이다.
+
 ## 후속 진행 — 2단계 Run 시계 첫 분리 (2026-10-10)
 
 증강 명령 경계 검증 통과 후 RunMetrics 경과 시간을 독립 BattleRunClock으로 분리했다. 기존 `_process` delta/실행 순서/RUN_TIMER pause gate는 유지한다. 전투 제한시간·기록·전략 분석·연구 보상의 기존/신규 비교 1,236검사 통과. 카탈로그 이름만 동일 spy를 사용한 독립 Godot4.5.1 검증이며 전체 게임4.7/모바일/성능은 미검증이다. [RUN_CLOCK_FOUNDATION.md](RUN_CLOCK_FOUNDATION.md)에 코드·검증·롤백 상세를 기록했다.

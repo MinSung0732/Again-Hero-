@@ -196,6 +196,7 @@ var _blocked_choice_pointers: Dictionary = {}
 var _blocked_confirm_pointers: Dictionary = {}
 var _demon_choice_group := ButtonGroup.new()
 var current_mutation_candidates: Array = []
+var _mutation_candidate_revision := 0
 var debug_refresh_timer: float = 0.0
 var battle_loadout_ids: Array = []
 var summon_slot_buttons: Array[Button] = []
@@ -1563,6 +1564,7 @@ func _on_mutation_choice_ready(
 	event_data: Dictionary,
 	candidates: Array
 ) -> void:
+	_mutation_candidate_revision = battle.get_mutation_choice_revision()
 	current_mutation_candidates = candidates.duplicate()
 	mutation_panel.show()
 	for slot_index in range(summon_slot_buttons.size()):
@@ -1612,6 +1614,9 @@ func _on_mutation_choice_pressed(index: int) -> void:
 		return
 
 	var monster_id := String(current_mutation_candidates[index])
+	var revision := _mutation_candidate_revision
+	if revision != battle.get_mutation_choice_revision():
+		return
 	mutation_panel.hide()
 	current_mutation_candidates.clear()
 
@@ -1619,7 +1624,7 @@ func _on_mutation_choice_pressed(index: int) -> void:
 		var command_state: Vector2 = battle.call("get_command_hud_state")
 		_on_command_changed(command_state.x, command_state.y)
 
-	battle.spawn_selected_mutation(monster_id)
+	battle.try_choose_mutation(monster_id, revision)
 
 func _on_mutation_spawn_result(
 	success: bool,

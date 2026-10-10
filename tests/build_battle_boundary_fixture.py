@@ -30,7 +30,7 @@ def function(name):
 
 for name in ["src/data/battle_session_catalog.gd", "src/systems/battle_command.gd",
              "src/systems/battle_command_router.gd", "tests/battle_command_router_smoke.gd",
-             "tests/battle_augment_boundary_smoke.gd"]:
+             "tests/battle_augment_boundary_smoke.gd", "tests/battle_mutation_boundary_smoke.gd"]:
     dest = TARGET / name
     dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(ROOT / name, dest)
@@ -43,7 +43,9 @@ functions = "".join(function(name) for name in [
     "get_battle_command_diagnostics", "set_battle_command_profiling",
     "get_demon_augment_revision", "reroll_demon_augments", "choose_demon_augment",
     "_execute_reroll_demon_augments", "_execute_choose_demon_augment",
-    "_open_next_demon_augment_if_needed"])
+    "_open_next_demon_augment_if_needed", "spawn_selected_mutation",
+    "try_choose_mutation", "get_mutation_choice_revision",
+    "_execute_selected_mutation", "_open_mutation_choice"])
 spies = '''
 class Augments:
 	const TYPE_NORMAL = "normal"
@@ -67,17 +69,41 @@ class MetricsSpy:
 	func record_special_augment_acquired() -> void:
 		specials += 1
 class MutationSpy:
+	var active := false
+	var event: Dictionary = {}
+	var candidates: Array[String] = []
 	func is_active() -> bool:
-		return false
+		return active
+	func begin(next_event: Dictionary, ids: Array) -> bool:
+		event = next_event.duplicate(true)
+		candidates.assign(ids)
+		active = not candidates.is_empty()
+		return active
+	func get_event() -> Dictionary:
+		return event.duplicate(true)
+	func get_candidates() -> Array[String]:
+		return candidates.duplicate()
+	func reset() -> void:
+		active = false
+		event.clear()
+		candidates.clear()
 class MutationCatalog:
 	const SPECIAL_AUGMENT_EXHAUSTED_EVENT = {}
+class Monsters:
+	const ORDER = ["slime", "orc"]
+	const MONSTERS = {"slime": {"can_be_elite": true}, "orc": {"can_be_elite": true}}
 const DEMON_AUGMENTS = Augments
 const MUTATION_CATALOG = MutationCatalog
+const MONSTER_CATALOG = Monsters
 const PAUSE_REASON_DEMON_AUGMENT = "demon_augment"
+const PAUSE_REASON_MUTATION_CHOICE = "mutation_choice"
 const FULL_MODAL_PAUSE_DOMAINS = ["combat", "run_timer"]
 signal demon_augment_ready(candidates: Array, rerolls: int, level: int)
 signal demon_augment_applied(name: String, summary: String)
 signal command_changed(current: float, maximum: float)
+signal mutation_choice_ready(event: Dictionary, candidates: Array)
+signal mutation_selected(kind: String, name: String)
+signal mutation_spawn_result(success: bool, message: String)
 var flow_pause_manager = PauseSpy.new()
 var run_metrics = MetricsSpy.new()
 var mutation_director = MutationSpy.new()
@@ -102,6 +128,12 @@ var skill_calls := 0
 var last_position := Vector2.ZERO
 var last_direction := ""
 var gameplay_allowed := true
+var allowed_monster_ids: Array = ["slime", "orc"]
+var mutation_spawn_allowed := true
+var mutation_spawns := 0
+var last_mutation_event: Dictionary = {}
+var announcements := 0
+var reinforcement_requests := 0
 func _ready() -> void:
 	battle_command_router.begin_session(_execute_battle_command)
 func start_offer(levels: Array) -> void:
@@ -112,8 +144,16 @@ func _roll_demon_augment_candidates(_reroll: bool) -> Array:
 	return [DEMON_AUGMENTS.get_augment("fixture_a"), DEMON_AUGMENTS.get_augment("fixture_special")]
 func _sync_combat_pause_state() -> void:
 	pass
-func _open_mutation_choice(_event: Dictionary) -> void:
-	pass
+func _get_catalog_monster_display_name(id: String) -> String:
+	return id
+func spawn_special_monster(_id: String, event: Dictionary) -> bool:
+	mutation_spawns += 1
+	last_mutation_event = event.duplicate(true)
+	return mutation_spawn_allowed
+func _emit_stage_event_announcement(_event: Dictionary, _id: String) -> void:
+	announcements += 1
+func _queue_stage_event_reinforcements(_event: Dictionary) -> void:
+	reinforcement_requests += 1
 func _apply_demon_augment(_augment: Dictionary) -> void:
 	applied += 1
 func _refresh_monsters_for_selected_augment(_augment: Dictionary) -> void:

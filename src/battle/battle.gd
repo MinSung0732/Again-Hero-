@@ -8,6 +8,7 @@ const BATTLE_COMMAND_ROUTER := preload("res://src/systems/battle_command_router.
 @export var command_routing_enabled := true
 var battle_command_router = BATTLE_COMMAND_ROUTER.new()
 var demon_augment_revision := 0
+var mutation_choice_revision := 0
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 const SPATIAL_BUCKET_POOL := preload("res://src/systems/spatial_bucket_pool.gd")
@@ -770,6 +771,7 @@ func _cache_demon_ultimate_runtime_data() -> void:
 func _start_battle() -> void:
 	battle_command_router.begin_session(_execute_battle_command)
 	demon_augment_revision += 1
+	mutation_choice_revision += 1
 	var registered_id := TRANSCENDENCE_STORE.load_id()
 	transcendent_actor = null
 	raw_allied_summons = 0
@@ -1236,6 +1238,8 @@ func _execute_battle_command(request: BATTLE_COMMAND) -> bool:
 			return _execute_choose_demon_augment(request.subject_id, request.choice_revision)
 		BATTLE_SESSION.Command.DEMON_AUGMENT_REROLL:
 			return _execute_reroll_demon_augments(request.choice_revision)
+		BATTLE_SESSION.Command.MUTATION_CHOOSE:
+			return _execute_selected_mutation(request.subject_id, request.choice_revision)
 	return false
 
 func get_battle_command_diagnostics() -> Dictionary:
@@ -4074,6 +4078,7 @@ func _open_mutation_choice(event: Dictionary) -> void:
 
 	if not mutation_director.begin(event, candidates):
 		return
+	mutation_choice_revision += 1
 
 	flow_pause_manager.request_pause(
 		PAUSE_REASON_MUTATION_CHOICE,
@@ -4086,10 +4091,28 @@ func _open_mutation_choice(event: Dictionary) -> void:
 	)
 
 func spawn_selected_mutation(monster_id: String) -> void:
+	# Preserve the existing void API for local/tutorial callers.
+	try_choose_mutation(monster_id)
+
+func get_mutation_choice_revision() -> int:
+	return mutation_choice_revision
+
+func try_choose_mutation(monster_id: String, expected_revision: int = -1) -> bool:
+	if not battle_command_router.supports_local_execution():
+		return false
+	var revision := mutation_choice_revision if expected_revision == -1 else expected_revision
+	if not command_routing_enabled:
+		return _execute_selected_mutation(monster_id, revision)
+	return battle_command_router.submit_local(BATTLE_SESSION.Command.MUTATION_CHOOSE, monster_id, Vector2.ZERO, "", revision)
+
+func _execute_selected_mutation(monster_id: String, expected_revision: int) -> bool:
+	if expected_revision != mutation_choice_revision:
+		return false
 	if not mutation_director.is_active() or monster_id not in mutation_director.get_candidates():
-		return
+		return false
 	var event := mutation_director.get_event()
 	mutation_director.reset()
+	mutation_choice_revision += 1
 	flow_pause_manager.release_pause(PAUSE_REASON_MUTATION_CHOICE)
 	_sync_combat_pause_state()
 	# Resume queued level rewards after this choice and its UI callbacks finish.
@@ -4127,12 +4150,13 @@ func spawn_selected_mutation(monster_id: String) -> void:
 			false,
 			"돌연변이 소환 실패 · monster_id=%s" % monster_id
 		)
-		return
+		return false
 
 	_emit_stage_event_announcement(event, monster_id)
 	_queue_stage_event_reinforcements(event)
 	mutation_selected.emit(event_type, mutation_name)
 	mutation_spawn_result.emit(true, "%s 소환 완료" % mutation_name)
+	return true
 
 func spawn_special_monster(
 	monster_id: String,

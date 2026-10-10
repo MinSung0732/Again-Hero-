@@ -13,7 +13,7 @@
 | 마왕 포위 스킬 / 방향 | main 스킬/방향 확인 → `try_use_demon_ultimate` | 명령 4 유지 |
 | 마왕 증강 확인 | main 표시 후보 → `choose_demon_augment` | 신규 명령 5, 표시 후보 revision 전송 |
 | 마왕 증강 재뽑기 | main 버튼 → `reroll_demon_augments` | 신규 명령 6, 재뽑기 횟수와 revision 검증 |
-| 엘리트/돌연변이 선택 | main → `spawn_selected_mutation` | 직접 경로 남음. 별도 후보 revision·선택 명령화 예정 |
+| 엘리트/돌연변이 선택 | main → `spawn_selected_mutation` | 명령7로 연결. 표시 후보 revision 검사, legacy void API 유지 |
 | 용사 기본공격·스킬·증강 | hero 내부 AI 판단 | 플레이어 용사 action port 구축 후 명령 경계 연결 |
 | 마왕 스킬 연속 소환 | `_process_demon_ultimate_spawn_queue` | 확정 스킬의 내부 결과. 매 개체를 새 사용자 명령으로 만들지 않음 |
 | 스테이지 공세/변이 | stage director / reinforcement queue | 전투 내부 이벤트. 미래 서버에서만 발생 |
@@ -23,7 +23,7 @@
 | 일시정지·소개·상세창 | main → `set_external_pause` | 솔플 화면 제어. PvP에서는 로컬 화면만 처리하도록 추후 분리 |
 | 팀편성·카메라 조작 | loadout 초기 설정 / hero 카메라 메서드 | 세션 설정/표시 제어, 전투 액션과 분리 |
 
-현재 역할 표는 마왕 명령만 허용하며 용사·대전 모드는 실행 차단한다. 이번 6개 명령을 넣었다고 모든 입력이 명령화된 것은 아니다. 특히 엘리트 선택과 용사 액션이 남아 있다. 다른 모드 활성화 전에 직접 실행 경로 전체를 재조사한다.
+현재 역할 표는 마왕 명령만 허용하며 용사·대전 모드는 실행 차단한다. 현재 7개 마왕 명령을 구현했다. 용사 AI 액션·튜토리얼/디버그/내부 이벤트 경로는 별도로 남아 있다. 다른 모드 활성화 전에 직접 실행 경로 전체를 재조사한다.
 
 ## 후보 revision 계약
 
@@ -62,3 +62,9 @@ godot --headless --path /tmp/again-battle-fixture --script res://tests/battle_au
 fixture는 실제 battle public wrapper/dispatch와 증강 실행·다음 후보 공개 함수를 추출한다. 효과 적용/카탈로그/화면/실제 몬스터는 명시적 spy로 대체한다. 후보 ID가 같은 재뽑기와 연속 레벨, 오래된 선택·리롤, 최대 스택·특수 중복, pause 유지/해제, bool 실패 전파, on/off 및 미래 모드 차단을 검증한다. 실제 증강 수치나 몬스터 갱신 결과·전체 UI 렌더링은 이 테스트의 대상이 아니다.
 
 전체 게임 후속 확인: 증강 확인·취소/상세·재뽑기, 연속 레벨 후보, 특수 후보 소진→엘리트 대체, 튜토리얼 후보, 일시정지, 마왕 스킬·소환. 후보 업데이트 시 main의 표시 revision이 같이 바뀌는지 확인한다. 신규 저장 포맷·DB 변경은 없다.
+
+## 후속 — 엘리트 선택 명령 (2026-10-10)
+
+protocol v3 명령7 MUTATION_CHOOSE. `try_choose_mutation(id, revision)`은 bool 반환, 기존 `spawn_selected_mutation(id)` void는 로컬 호환 wrapper로 유지한다. 새 후보·소비·재시작마다 revision 증가. main은 표시 revision 저장/전송하며 오래된 이벤트 카드를 클릭하면 숨기지 않고 거절한다. router는 양수 revision/ID와 빈 좌표·방향을 요구한다. 후보 확인·fallback 스탯·스폰 거리·소환 실패 신호·pause 해제·deferred 다음 증강은 기존 흐름을 유지한다. 실패한 소환도 기존처럼 선택을 소비한다.
+
+독립 Godot4.5.1 router130/증강79/실제 엘리트 경계 함수58검사 통과. fixture는 actual public/선택/open 함수와 explicit 카탈로그·director·소환 spies를 사용한다. 전체 엘리트 몬스터 스탯/전투/UI/모바일은 미검증이다. 추가 실행: `godot --headless --path /tmp/again-battle-fixture --script res://tests/battle_mutation_boundary_smoke.gd`.
