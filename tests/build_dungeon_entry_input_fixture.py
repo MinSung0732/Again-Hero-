@@ -9,6 +9,7 @@ def function(s,name):
 before=a.lobby_baseline.read_text();after=(ROOT/'src/lobby/lobby.gd').read_text()
 for name in re.findall(r'^func ([^(]+)\(',before,re.M):
  new=function(after,name)
+ if name=='_ready':new=new.replace('\t# Entry validation needs saved selections even before the team tab is opened.\n\t_setup_team_preview()\n\t_setup_demon_skill_preview()\n','')
  if name=='_enter_selected_stage':new=new.replace('\tif stamina_view != null:\n\t\tstamina_view.close_info()\n','').replace('stamina_view.show_entry_notice(','stamina_view.show_info(')
  assert function(before,name)==new,name
 print('All original lobby bodies preserved except reviewed entry feedback hooks')

@@ -380,6 +380,9 @@ func _ready() -> void:
 	missions_view.install(main_tab, main_tools_view, get_node("/root/MissionProgress"), _refresh_header)
 
 	_formation_card_cache.install(self)
+	# Entry validation needs saved selections even before the team tab is opened.
+	_setup_team_preview()
+	_setup_demon_skill_preview()
 	_switch_tab("main")
 	_refresh_header()
 	_refresh_stage_card()

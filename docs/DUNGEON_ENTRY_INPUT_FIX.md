@@ -1,5 +1,22 @@
 # 던전 입장 입력·안내 수정
 
+## 후속 수정 — 시작 직후 편성 데이터 미초기화 (2026-10-10)
+
+사용자가 첫 로딩 직후에는 3+3 편성 안내가 나오고 팀편성 탭을 방문하면 정상 입장된다고 확인했다. 이 경로는 _ready에서 team_selected_ids/demon_skill_selected_ids를 로드하지 않아 빈 배열로 정책 검사가 이루어지는 문제다. 앞선 상세창 입력/안내 수정만으로 해결되는 문제는 아니었다.
+
+cache 설치 뒤, 메인 탭을 표시하기 전에 기존 _setup_team_preview/_setup_demon_skill_preview를 호출한다. 기존 저장 로더·선택 순서·해금/초월 필터·fallback·슬롯 수·실제 부족 편성 제한은 바꾸지 않는다. _setup 두 함수는 카드 목록 rebuild를 호출하지 않는다. 따라서 초기 로딩 때 카드 전체를 새로 instantiate하지 않으며 데이터만 읽는다. 같은 씬의 팀탭 재방문은 기존 새로 읽기/refresh 경로를 유지한다.
+
+독립 Godot4.5.1 fixture에서 실제 _ready의 cache.install~_switch_tab slice와 실제 setup/restore/clear 함수를 추출하여 실행했다. Catalog/컬렉션/저장/라벨/cache는 spy이고 정책은 실제 dungeon_entry_policy다. 기존 코드의 시작 빈 배열→정책 거절→팀탭 setup후 허용을 재현하고, 신규 시작 즉시 저장된3+3/순서/fallback/부분 편성 제한/필터/재방문을 확인했다. 35검사 + 앞선 입력/입장38검사 =73검사, 실패0·engine error0. 원래 모든 lobby 함수는 검토한 ready 추가행 외 동일 정적 확인. gdparse/Python compile/diff --check 통과. 실제 사용자 계정 파일·전체 로비/모바일/던전 전환은 미검증이다.
+
+```sh
+git show c23d20d0320069d9d28490074fc8f304f2659030:src/lobby/lobby.gd > /tmp/lobby-formation-before.gd
+python3 tests/build_lobby_formation_startup_fixture.py /tmp/lobby-formation-startup-fixture --baseline-file /tmp/lobby-formation-before.gd
+godot --headless --path /tmp/lobby-formation-startup-fixture --script tests/lobby_formation_startup_smoke.gd
+```
+
+thin checkout은 --policy-file로 원격 원본 정책 파일 위치를 지정할 수 있다. 문제 시 이번 후속 커밋만 git revert하면 c23d20d032의 입력/안내 수정은 유지하고 초기화 호출만 복원한다. pull 후 앱을 새로 시작하고 팀탭 방문 없이 입장을 확인한다. main은 변경하지 않는다.
+
+
 2026-10-10. 작업 feature/stage10-astra, 기준93a653a958b5cc8a649a46879cc359a4531fd3fb. main4122adb73e14552aae7c0aa7edefb2827f5d08d0 유지.
 
 ## 사용자 증상과 확인 범위
