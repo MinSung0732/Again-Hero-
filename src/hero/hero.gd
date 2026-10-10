@@ -434,6 +434,7 @@ var archmage_casting_sequence: bool = false
 var archmage_casting_sequence_count: int = 0
 var archmage_multicast_stacks: int = 0
 var archmage_multicast_active: bool = false
+var archmage_multicast_revision: int = 0
 var archmage_multicast_candidates: Array[String] = []
 var archmage_blink_stacks: int = 0
 var archmage_blink_cooldown_timer: float = 0.0
@@ -1312,8 +1313,7 @@ func configure_profile(profile: Dictionary) -> void:
 	archmage_casting_sequence = false
 	archmage_casting_sequence_count = 0
 	archmage_multicast_stacks = 0
-	archmage_multicast_active = false
-	archmage_multicast_candidates.clear()
+	_cancel_archmage_multicast()
 	archmage_blink_stacks = 0
 	archmage_blink_cooldown_timer = 0.0
 	archmage_cooldown_reduction = 0.0
@@ -11463,8 +11463,19 @@ func _cast_archmage_skill_internal(
 	return true
 
 
-func _start_archmage_multicast(origin_skill: String) -> void:
+func _cancel_archmage_multicast() -> void:
+	# Synchronous reset/start invalidates pending timers without copying the list.
+	archmage_multicast_revision += 1
 	archmage_multicast_candidates.clear()
+	archmage_multicast_active = false
+
+func _start_archmage_multicast(origin_skill: String) -> void:
+	var source_life := _capture_delayed_skill_source()
+	if source_life.x < 0:
+		return
+	var source_scope_id := get_parent().get_instance_id()
+	_cancel_archmage_multicast()
+	var reservation_revision := archmage_multicast_revision
 	for key in ARCHMAGE_OFFENSIVE_SKILL_KEYS:
 		if key == origin_skill:
 			continue
@@ -11489,8 +11500,10 @@ func _start_archmage_multicast(origin_skill: String) -> void:
 		casted < wanted
 		and not archmage_multicast_candidates.is_empty()
 	):
+		if reservation_revision != archmage_multicast_revision or not _is_delayed_skill_source_current(source_life, source_scope_id):
+			break
 		await get_tree().create_timer(0.30).timeout
-		if not is_inside_tree() or current_hp <= 0:
+		if reservation_revision != archmage_multicast_revision or not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
 
 		var extra_skill := String(
@@ -11499,8 +11512,9 @@ func _start_archmage_multicast(origin_skill: String) -> void:
 		if _cast_archmage_skill_internal(extra_skill, false, false):
 			casted += 1
 
-	archmage_multicast_candidates.clear()
-	archmage_multicast_active = false
+	# Do not clear candidates or active state owned by a newer reservation.
+	if reservation_revision == archmage_multicast_revision and _is_delayed_skill_life_current(source_life, source_scope_id):
+		_cancel_archmage_multicast()
 
 func _skill_damage_multiplier(empowered: bool) -> float:
 	return (

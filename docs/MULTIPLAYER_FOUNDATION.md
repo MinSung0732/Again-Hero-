@@ -1,5 +1,10 @@
 # 용사 모드·대전 모드 확장 설계 및 단계별 실행 계획
 
+## 후속 진행 — 다중시전 예약·공유 목록 경계 (2026-10-10)
+
+archmage multicast timer에 source/battle 수명과 local revision을 연결하고 configure_profile reset도 같은 cancel 경계로 연결했다. 새 예약의 목록·active를 이전 작업이 소비/정리하지 못한다. 정상 RNG/필터/성공 횟수/0.30초 유지. 범위·비용·검증14,735검사·한계·후속·롤백은 [MULTICAST_LIFETIME.md](MULTICAST_LIFETIME.md). 전체 게임/모바일/서버·실측 성능 미검증.
+
+
 ## 후속 진행 — 연소 지속 피해·방출·충전 FX (2026-10-10)
 
 실제 combustion의 충전 범위 tick와 corridor 방출을 보호했다. 충전 FX 반납은 재생 revision/원래 부모를 확인한다. 별도 fire field/둔화 스킬을 추가한 것이 아니다. 범위·비용·검증14,495검사·한계·후속·롤백은 [COMBUSTION_LIFETIME.md](COMBUSTION_LIFETIME.md). 전체 게임/모바일/서버·실측 성능은 미검증이다.

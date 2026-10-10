@@ -1,5 +1,6 @@
 """Reverse only exact reviewed delayed-source hooks in named original methods."""
 import re
+from multicast_source import without_multicast_guards
 from fire_skill_source import without_fire_skill_guards
 from scalar_skill_source import without_scalar_skill_guards
 REPLACEMENTS = {'_resolve_archmage_ice_pillars': [('\tvar source_life := _capture_delayed_skill_source()\n'
@@ -109,7 +110,7 @@ REPLACEMENTS = {'_resolve_archmage_ice_pillars': [('\tvar source_life := _captur
                                 '\t\t\tif not HERO_TARGET_POLICY.is_detectable(node):\n',
                                 '\t\t\tif not HERO_TARGET_POLICY.is_detectable(node):\n')]}
 def without_delayed_skill_guards(source, names=None):
-    source = without_scalar_skill_guards(without_fire_skill_guards(source))
+    source = without_scalar_skill_guards(without_fire_skill_guards(without_multicast_guards(source)))
     for name, pairs in REPLACEMENTS.items():
         if names is not None and name not in names:
             continue

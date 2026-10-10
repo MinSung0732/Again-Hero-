@@ -1,5 +1,10 @@
 # 연소 충전 지속 피해·방출·이펙트 수명 경계
 
+## 후속 진행 — 다중시전 예약·공유 목록 경계 (2026-10-10)
+
+archmage multicast timer에 source/battle 수명과 local revision을 연결하고 configure_profile reset도 같은 cancel 경계로 연결했다. 새 예약의 목록·active를 이전 작업이 소비/정리하지 못한다. 정상 RNG/필터/성공 횟수/0.30초 유지. 범위·비용·검증14,735검사·한계·후속·롤백은 [MULTICAST_LIFETIME.md](MULTICAST_LIFETIME.md). 전체 게임/모바일/서버·실측 성능 미검증.
+
+
 2026-10-10. 기준 feature `ca1fd6b4eb384f96eb667ca91ea3c1f4a5c0a671`. 작업 `feature/stage10-astra`, main `4122adb73e14552aae7c0aa7edefb2827f5d08d0` 유지.
 
 ## 실제 범위와 변경

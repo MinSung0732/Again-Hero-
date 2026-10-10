@@ -1,3 +1,10 @@
+## 2026-10-10 — 다중시전 지연 예약·공유 목록 수명 검증
+
+- archmage multicast에 scalar source/battle 수명과 local reservation revision 연결. configure_profile reset/새 예약/정리는 cancel helper에서 revision 갱신+기존 배열 clear. timer 전후 검증으로 이전 작업이 새 목록 pop/active 해제/다음 timer 예약을 못하게 한다. 같은 HP0 수명 cleanup은 유지하고 새 개체/전투 상태는 건드리지 않는다.
+- 후보 배열 재사용, 기존 원래스킬/미설정/활성 chain 제외·shuffle/pop RNG·성공 횟수 계산·false/false 추가 시전 인자·0.30초 간격 유지. per-cast 컨테이너/WeakRef/RefCounted 생성 없음, O(1) 값·평균 O(1) 수명 조회, 기존 후보 구성 O(k). 이미 생성된 timer는 timeout까지 남으나 실행/정리 권한을 잃는다.
+- 신규 실제 start/reset slice/registry Godot4.5.1 독립240검사 및 기존 회귀 포함14,735검사 실패0. 최종 multicast verbose ERROR/WARNING/잔류 객체 없음. 기준617함수 및 기존616/613/611 정확한 변경 문자열 역변환 비교, gdparse/Pythoncompile/diff/독립 editor import 확인. 전체 게임4.7·실제 스킬/profile loader·물리·모바일·서버/장기 RAM·실측 성능 미검증.
+- 기준 feature c2c1f38410dd2b97936913c834e0959fd787b402, main4122adb7 유지. docs/MULTICAST_LIFETIME.md에 범위·비용·한계·원래 버그·롤백 기록. 다음 후보 chain 외 ice bolt/storm 투사체 수명 경계.
+
 ## 2026-10-10 — 연소 지속 피해·방출·충전 FX 수명 검증
 
 - 실제 archmage 연소(combustion)의 충전 범위 tick와 마지막 corridor 방출에 source/battle scalar 수명 검증. 이전 문서의 fire field는 이 경로를 지칭했으며 별도 장판·둔화 추가 없음. callback 후 취소된 시전은 timer/방출/음향을 만들지 않고 cleanup은 같은 수명에만 적용. 범위·corridor의 freed 후보를 typed 탐지 정책 전에 제외한다.

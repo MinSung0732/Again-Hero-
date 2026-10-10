@@ -1,5 +1,6 @@
 """Reverse exact combustion/source/FX revision hooks; no function whitelist."""
 import re
+from multicast_source import without_multicast_guards
 REPLACEMENTS = {'_cast_archmage_combustion': [('\tvar source_life := _capture_delayed_skill_source()\n'
                                 '\tif source_life.x < 0:\n'
                                 '\t\treturn\n'
@@ -71,6 +72,7 @@ REPLACEMENTS = {'_cast_archmage_combustion': [('\tvar source_life := _capture_de
                                  '\t\tif not HERO_TARGET_POLICY.is_detectable(node):\n',
                                  '\t\tif not HERO_TARGET_POLICY.is_detectable(node):\n')]}
 def without_fire_skill_guards(source):
+    source = without_multicast_guards(source)
     for name, pairs in REPLACEMENTS.items():
         m = re.search(r"^func " + name + r"\(", source, re.M)
         if m is None: continue
