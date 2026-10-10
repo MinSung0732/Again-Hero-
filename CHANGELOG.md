@@ -1,3 +1,8 @@
+## 2026-10-10 — 증강 선택·재뽑기 명령과 후보 버전
+
+- 입력/시간 의존 호출 지도 docs/BATTLE_INPUT_TIME_AUDIT.md 추가. 기존 마왕 증강 선택/재뽑기를 명령5/6으로 연결, protocol v2 choice_revision으로 같은 ID의 재뽑기/연속 레벨에도 오래된 입력 차단. main은 표시 후보 revision 전달. 기존 효과·리롤 제한·동기 다음창·pause 유지, legacy 호출/솔플 rollback 호환.
+- Godot4.5.1 독립 router130검사·실제 public/증강 함수 추출 fixture79검사 통과. 효과/카탈로그 spy 사용, 전체 게임·모바일 미검증. gdparse/diff 검사. 기준 feature a3b3b7ef, main4122adb7 유지. 다음: 검증 후 RunMetrics 시계 분리 첫 작업.
+
 ## 2026-10-10 — 용사·대전 확장 설계와 1단계 명령 경계
 
 - docs/MULTIPLAYER_FOUNDATION.md: 모드/역할, 서버 권한, 전투 시간/RNG, entity ID/generation, 상태/이벤트, 용사 action port, 재접속, 랭크 원장, 단계별 검증/롤백 상세 계획. 서버·용사모드·PvP는 아직 미구현.

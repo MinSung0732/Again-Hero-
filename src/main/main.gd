@@ -190,6 +190,7 @@ var _demon_choice_guard_until: int = 0
 var _demon_confirm_guard_until: int = 0
 var _demon_selected_index: int = -1
 var _demon_rerolls_left: int = 0
+var _demon_candidate_revision: int = 0
 var _pressed_choice_pointers: Dictionary = {}
 var _blocked_choice_pointers: Dictionary = {}
 var _blocked_confirm_pointers: Dictionary = {}
@@ -3092,6 +3093,7 @@ func _on_demon_ultimate_used(
 	_set_default_battle_status()
 
 func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: int) -> void:
+	_demon_candidate_revision = battle.get_demon_augment_revision()
 	current_demon_candidates = candidates.duplicate(true)
 	_demon_selected_index = -1
 	_demon_rerolls_left = rerolls_left
@@ -3314,25 +3316,26 @@ func _on_demon_confirm_pressed() -> void:
 
 	var candidate: Dictionary = current_demon_candidates[index]
 	var augment_id: String = String(candidate.get("id", ""))
+	var expected_revision := _demon_candidate_revision
 	# Applying can synchronously open a queued level's next modal. Never hide it
 	# after choose_demon_augment returns, or erase its newly generated candidates.
 	var previous_candidates := current_demon_candidates
 	demon_augment_panel.hide()
 	current_demon_candidates = []
 	_demon_selected_index = -1
-	if battle.choose_demon_augment(augment_id):
+	if battle.choose_demon_augment(augment_id, expected_revision):
 		if battle.has_method("get_command_hud_state"):
 			var command_state: Vector2 = battle.call(
 				"get_command_hud_state"
 			)
 			_on_command_changed(command_state.x, command_state.y)
-	else:
+	elif battle.get_demon_augment_revision() == expected_revision:
 		_on_demon_augment_ready(previous_candidates, _demon_rerolls_left, battle.demon_level)
 
 func _on_demon_reroll_pressed() -> void:
 	if not _can_select_demon_choice() or _demon_rerolls_left <= 0:
 		return
-	battle.reroll_demon_augments()
+	battle.reroll_demon_augments(_demon_candidate_revision)
 
 func _can_select_demon_choice() -> bool:
 	return demon_augment_panel.visible and Time.get_ticks_msec() >= _demon_choice_guard_until and _blocked_choice_pointers.is_empty()
@@ -3589,3 +3592,4 @@ func _show_stamina_notice(message: String) -> void:
 		add_child(panel)
 	panel.dialog_text = message
 	panel.popup_centered(Vector2i(700, 230))
+

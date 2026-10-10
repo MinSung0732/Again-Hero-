@@ -7,6 +7,7 @@ const BATTLE_COMMAND_ROUTER := preload("res://src/systems/battle_command_router.
 # never bypass their authority checks through this switch.
 @export var command_routing_enabled := true
 var battle_command_router = BATTLE_COMMAND_ROUTER.new()
+var demon_augment_revision := 0
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 const SPATIAL_BUCKET_POOL := preload("res://src/systems/spatial_bucket_pool.gd")
@@ -768,6 +769,7 @@ func _cache_demon_ultimate_runtime_data() -> void:
 
 func _start_battle() -> void:
 	battle_command_router.begin_session(_execute_battle_command)
+	demon_augment_revision += 1
 	var registered_id := TRANSCENDENCE_STORE.load_id()
 	transcendent_actor = null
 	raw_allied_summons = 0
@@ -1230,6 +1232,10 @@ func _execute_battle_command(request: BATTLE_COMMAND) -> bool:
 			return _execute_summon_transcendent()
 		BATTLE_SESSION.Command.DEMON_SKILL:
 			return _execute_demon_ultimate(request.subject_id, request.direction)
+		BATTLE_SESSION.Command.DEMON_AUGMENT_CHOOSE:
+			return _execute_choose_demon_augment(request.subject_id, request.choice_revision)
+		BATTLE_SESSION.Command.DEMON_AUGMENT_REROLL:
+			return _execute_reroll_demon_augments(request.choice_revision)
 	return false
 
 func get_battle_command_diagnostics() -> Dictionary:
@@ -4470,6 +4476,7 @@ func _open_next_demon_augment_if_needed() -> void:
 		return
 
 	demon_augment_selection_active = true
+	demon_augment_revision += 1
 	flow_pause_manager.request_pause(
 		PAUSE_REASON_DEMON_AUGMENT,
 		FULL_MODAL_PAUSE_DOMAINS
@@ -4534,12 +4541,35 @@ func _roll_demon_augment_candidates(is_reroll: bool) -> Array:
 
 	return candidates
 
-func reroll_demon_augments() -> bool:
+func get_demon_augment_revision() -> int:
+	return demon_augment_revision
+
+func reroll_demon_augments(expected_revision: int = -1) -> bool:
+	if not battle_command_router.supports_local_execution():
+		return false
+	# Legacy callers use the current offer; UI supplies the revision it displayed.
+	var revision := demon_augment_revision if expected_revision == -1 else expected_revision
+	if not command_routing_enabled:
+		return _execute_reroll_demon_augments(revision)
+	return battle_command_router.submit_local(BATTLE_SESSION.Command.DEMON_AUGMENT_REROLL, "", Vector2.ZERO, "", revision)
+
+func choose_demon_augment(augment_id: String, expected_revision: int = -1) -> bool:
+	if not battle_command_router.supports_local_execution():
+		return false
+	var revision := demon_augment_revision if expected_revision == -1 else expected_revision
+	if not command_routing_enabled:
+		return _execute_choose_demon_augment(augment_id, revision)
+	return battle_command_router.submit_local(BATTLE_SESSION.Command.DEMON_AUGMENT_CHOOSE, augment_id, Vector2.ZERO, "", revision)
+
+func _execute_reroll_demon_augments(expected_revision: int) -> bool:
+	if expected_revision != demon_augment_revision:
+		return false
 	if not demon_augment_selection_active or demon_rerolls_left <= 0:
 		return false
 
 	demon_rerolls_left -= 1
 	demon_augment_candidates = _roll_demon_augment_candidates(true)
+	demon_augment_revision += 1
 	demon_augment_ready.emit(
 		demon_augment_candidates,
 		demon_rerolls_left,
@@ -4547,7 +4577,9 @@ func reroll_demon_augments() -> bool:
 	)
 	return true
 
-func choose_demon_augment(augment_id: String) -> bool:
+func _execute_choose_demon_augment(augment_id: String, expected_revision: int) -> bool:
+	if expected_revision != demon_augment_revision:
+		return false
 	if not demon_augment_selection_active:
 		return false
 
@@ -4590,6 +4622,7 @@ func choose_demon_augment(augment_id: String) -> bool:
 	demon_active_augment_level = 0
 	demon_augment_selection_active = false
 	demon_augment_candidates.clear()
+	demon_augment_revision += 1
 	demon_last_candidate_ids.clear()
 	flow_pause_manager.release_pause(PAUSE_REASON_DEMON_AUGMENT)
 	_sync_combat_pause_state()

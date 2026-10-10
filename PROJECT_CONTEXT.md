@@ -1,3 +1,8 @@
+## Augmentation command boundary and input/time audit (2026-10-10)
+- Six demon commands now include augmentation choose/reroll. Protocol v2 adds choice_revision; current offer version required by typed commands, main UI sends displayed revision. New/replaced/closed offers and battle restart invalidate old versions. Existing optional local API defaults to current revision; future network ingress must not use this convenience fallback.
+- Existing candidate/stack/special/reroll/effect/pause/queued-level rules preserved. Boundary on/off cannot bypass revision or unsupported mode. Remaining direct player input: mutation choice; hero action port not yet implemented. Internal skill/spawn/death results remain internal events.
+- docs/BATTLE_INPUT_TIME_AUDIT.md maps local input, internal events, wall-clock/audio/loading vs gameplay time. Godot4.5.1 isolated router130 + actual boundary/augment functions with explicit spies79checks pass. Full game4.7/GPU/mobile unverified. Proceed to narrow RunMetrics clock separation only; do not enable fixed tick/server/hero/PvP yet.
+
 ## Multiplayer foundation — command boundary (2026-10-10)
 - Detailed staged design: docs/MULTIPLAYER_FOUNDATION.md. Only step1 first slice implemented; hero/PvP/server remain unavailable. Preserve demon solo, existing AI policy and pooled/grid combat behavior. Full-game performance baseline pending.
 - BattleSessionCatalog stable mode/role/command IDs; BattleCommand typed transport-neutral request; BattleCommandRouter one per battle validates protocol/session/actor/role/sequence/finite args before unchanged gameplay executors. Four public try_* APIs remain compatible. Failed gameplay request consumes sequence; restart changes epoch. No network authentication/ACK/tick buffering yet.

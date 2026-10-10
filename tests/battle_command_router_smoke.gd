@@ -102,6 +102,37 @@ func run() -> void:
 	router.profiling_enabled = true
 	check(router.submit_local(RULES.Command.SUMMON_AUTO, "slime"), "profiled action")
 	check(router.execution_total_us >= router.execution_max_us, "profile totals")
+	check(router.begin_session(execute), "augmentation shape session")
+	wallet = 10
+	var choice := request(1, RULES.Command.DEMON_AUGMENT_CHOOSE, "fixture_a")
+	denied(choice, ROUTER.Rejection.INVALID_ARGUMENT, "choice requires revision")
+	choice.choice_revision = -1
+	denied(choice, ROUTER.Rejection.INVALID_ARGUMENT, "negative revision")
+	choice.choice_revision = RULES.MAX_SEQUENCE + 1
+	denied(choice, ROUTER.Rejection.INVALID_ARGUMENT, "overflow revision")
+	choice.choice_revision = 1
+	choice.direction = "east"
+	denied(choice, ROUTER.Rejection.INVALID_ARGUMENT, "choice rejects direction")
+	choice.direction = ""
+	choice.position = Vector2.ONE
+	denied(choice, ROUTER.Rejection.INVALID_ARGUMENT, "choice rejects position")
+	choice.position = Vector2.ZERO
+	choice.subject_id = ""
+	denied(choice, ROUTER.Rejection.INVALID_ARGUMENT, "choice requires id")
+	choice.subject_id = "fixture_a"
+	check(router.submit(choice), "choice typed request")
+	denied(choice, ROUTER.Rejection.INVALID_SEQUENCE, "choice duplicate")
+	var reroll := request(2, RULES.Command.DEMON_AUGMENT_REROLL, "fixture_a")
+	reroll.choice_revision = 1
+	denied(reroll, ROUTER.Rejection.INVALID_ARGUMENT, "reroll rejects subject")
+	reroll.subject_id = ""
+	check(router.submit(reroll), "reroll typed request")
+	var extra := request(3)
+	extra.choice_revision = 1
+	denied(extra, ROUTER.Rejection.INVALID_ARGUMENT, "summon rejects offer revision")
+	extra.choice_revision = 0
+	extra.protocol_version = 1
+	denied(extra, ROUTER.Rejection.WRONG_VERSION, "v1 rejected after schema upgrade")
 	for mode in [RULES.Mode.HERO_SOLO, RULES.Mode.PVP_CASUAL, RULES.Mode.PVP_RANKED, 999]:
 		check(not router.begin_session(execute, mode), "future mode unavailable")
 		denied(request(1), ROUTER.Rejection.UNSUPPORTED_MODE, "future mode cannot execute")

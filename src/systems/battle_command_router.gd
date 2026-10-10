@@ -38,9 +38,9 @@ func begin_session(executor: Callable, mode: int = RULES.Mode.DEMON_SOLO) -> boo
 	last_rejection = Rejection.NONE
 	return executor.is_valid() and RULES.supports_local_execution(mode)
 
-func submit_local(kind: int, subject: String = "", point: Vector2 = Vector2.ZERO, direction: String = "") -> bool:
+func submit_local(kind: int, subject: String = "", point: Vector2 = Vector2.ZERO, direction: String = "", revision: int = 0) -> bool:
 	_local_sequence += 1
-	var request := REQUEST.new(RULES.PROTOCOL_VERSION, _session_id, LOCAL_ACTOR, _local_sequence, kind, subject, point, direction)
+	var request := REQUEST.new(RULES.PROTOCOL_VERSION, _session_id, LOCAL_ACTOR, _local_sequence, kind, subject, point, direction, revision)
 	return submit(request)
 
 func _reject(reason: int) -> bool:
@@ -90,10 +90,17 @@ func _arguments_valid(request: REQUEST) -> bool:
 		return false
 	if request.direction not in RULES.DIRECTIONS or request.subject_id.length() > RULES.MAX_CONTENT_ID_LENGTH:
 		return false
+	if request.kind == RULES.Command.DEMON_AUGMENT_CHOOSE or request.kind == RULES.Command.DEMON_AUGMENT_REROLL:
+		if request.choice_revision <= 0 or request.choice_revision > RULES.MAX_SEQUENCE:
+			return false
+		if request.position != Vector2.ZERO or not request.direction.is_empty():
+			return false
+	elif request.choice_revision != 0:
+		return false
 	match request.kind:
-		RULES.Command.SUMMON_AUTO, RULES.Command.SUMMON_AT, RULES.Command.DEMON_SKILL:
+		RULES.Command.SUMMON_AUTO, RULES.Command.SUMMON_AT, RULES.Command.DEMON_SKILL, RULES.Command.DEMON_AUGMENT_CHOOSE:
 			return not request.subject_id.is_empty()
-		RULES.Command.SUMMON_TRANSCENDENT:
+		RULES.Command.SUMMON_TRANSCENDENT, RULES.Command.DEMON_AUGMENT_REROLL:
 			return request.subject_id.is_empty()
 	return false
 

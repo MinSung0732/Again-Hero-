@@ -12,9 +12,10 @@ var kind: int
 var subject_id: String
 var position: Vector2
 var direction: String
+var choice_revision: int
 
 func _init(version: int, session: int, actor: int, order: int, action: int,
-	subject: String = "", point: Vector2 = Vector2.ZERO, facing: String = "") -> void:
+	subject: String = "", point: Vector2 = Vector2.ZERO, facing: String = "", revision: int = 0) -> void:
 	protocol_version = version
 	session_id = session
 	actor_id = actor
@@ -23,3 +24,4 @@ func _init(version: int, session: int, actor: int, order: int, action: int,
 	subject_id = subject
 	position = point
 	direction = facing
+	choice_revision = revision
