@@ -33,3 +33,9 @@
 - 상자: 내장 image_gen으로 생성한 투명 PNG. 원본은 docs/resources/exploration_reward_source.zip. 게임용은 alpha 경계 crop 후 nearest-neighbor로 112×112에 fit, 128×128 투명 캔버스 중앙 배치.
 - 알림: 24×24 notification_dot.svg. 정수 좌표와 crispEdges로 작은 빨간 도트/테두리/하이라이트를 구성한 코드 기반 벡터 리소스. 배지 TextureRect는 nearest, mouse_filter IGNORE.
 - 팝업은 해상도에 맞는 Godot 기본 패널/StyleBoxFlat/ProgressBar를 사용하여 글자·게이지를 이미지에 굽지 않는다. 통화 아이콘은 기존 리소스를 공유한다.
+
+## 실제 폰트의 초기 최소 크기 회귀 수정
+
+- Galmuri11.ttf + 실제 GameFontManager/game_theme를 독립 fixture에 추가하자 이전 패널이 920×3432까지 커지는 현상이 재현되었다. 초기 열 너비가 0인 상태에서 자동 줄바꿈이 과도한 세로 최소 크기를 요청하고, 이후 최소 크기가 작아져도 실제 패널 높이가 유지되었다. 기존 containment 테스트는 거대한 패널 안에 내용이 포함된 것만 검사해 놓쳤다.
+- 고정형 모달 Label은 자동 줄바꿈을 끄고 필요한 줄바꿈을 명시한다. clip_text로 긴 텍스트가 폭을 강제로 늘리지 않게 한다. 컨테이너 최소 크기/뷰포트 변경 시 coalesced deferred layout으로 패널을 다시 920×560에 맞춘다. 비정상 크기에 대비한 축소 비율도 실제 패널 크기를 기준으로 계산한다. 프레임별 처리는 추가하지 않는다.
+- 회귀 테스트는 실제 게임 폰트 적용 여부, 20프레임 뒤 패널 자체의 920×560 크기·전체 뷰포트 안 포함·중앙 위치, 수령 문구 변경 뒤 크기 유지, 작은 창에서의 고정 크기·축소를 검사한다. GameFontManager/font/theme가 있어야 이 실제 폰트 회귀 테스트가 통과한다. 이번 실행은 전체 로비가 아닌 실제 폰트를 추가한 독립 fixture이고 GPU 렌더링/모바일 실기기는 미검증이다.

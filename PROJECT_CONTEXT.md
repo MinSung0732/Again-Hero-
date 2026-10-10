@@ -1,3 +1,6 @@
+## Exploration modal font/minimum-size regression (2026-10-10)
+- Reproduced920x3432 growth using actual Galmuri11 + GameFontManager/theme. Auto-wrap at initial zero container widths inflated minimum height, and PanelContainer retained the resulting size. Fixed labels now use explicit line breaks/clip_text; coalesced deferred layout on minimum-size changes restores920x560. Scaling uses actual panel size. Regression tests assert actual font and settled panel dimensions/viewport containment after20frames, not only child containment. Full lobby rendering/mobile remain unverified.
+
 ## Exploration fixed landscape modal (2026-10-10)
 - Exploration popup now uses an in-game CanvasLayer/Control overlay, centered on the full viewport with a920x560 landscape panel and32px safe margins when scaled down. No OS/embedded Window title bar or dragging. Left chest/gauge/time, right currencies/claim. Close/Esc/tab visibility lifecycle; existing reward rules and full-only notification unchanged. Independent geometry/behavior/reward tests pass; full game/mobile rendering remains unverified.
 

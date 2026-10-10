@@ -9,6 +9,7 @@ const DESIGN_SIZE := Vector2(920, 560)
 var _layer: CanvasLayer
 var _overlay: Control
 var _panel: PanelContainer
+var _layout_pending := false
 var _gauge: ProgressBar
 var _percent: Label
 var _elapsed: Label
@@ -44,7 +45,11 @@ func _label(parent: Node, text: String, font_size: int = 28) -> Label:
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", Color("fff0c9"))
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# Dynamic container widths start at zero. Auto-wrap can temporarily report
+	# thousands of pixels of minimum height, which a PanelContainer retains.
+	# This compact fixed layout uses explicit line breaks and bounded labels.
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.clip_text = true
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(label)
@@ -71,7 +76,7 @@ func _build() -> void:
 	_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	_layer.add_child(_overlay)
 	_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_overlay.resized.connect(_layout_modal)
+	_overlay.resized.connect(_queue_layout)
 	var dim := ColorRect.new()
 	dim.color = Color(0.02, 0.01, 0.05, 0.78)
 	dim.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -82,6 +87,7 @@ func _build() -> void:
 	_panel.add_theme_stylebox_override("panel", _style(Color("170e25"), Color("eac14d"), 28))
 	_overlay.add_child(_panel)
 	_panel.size = DESIGN_SIZE
+	_panel.minimum_size_changed.connect(_queue_layout)
 	_overlay.hide()
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 16)
@@ -138,7 +144,7 @@ func _build() -> void:
 			_gold = amount
 		else:
 			_research = amount
-	_status = _label(right, "51%부터 보상을 획득할 수 있습니다.", 24)
+	_status = _label(right, "51%부터 보상을\n획득할 수 있습니다.", 24)
 	_claim = Button.new()
 	_claim.text = "보상 획득"
 	_claim.custom_minimum_size.y = 76
@@ -156,18 +162,26 @@ func open() -> void:
 	refresh()
 	_overlay.show()
 	_layout_modal()
+	_queue_layout()
 	_claim.grab_focus()
 
 func close() -> void:
 	if is_instance_valid(_overlay):
 		_overlay.hide()
 
+func _queue_layout() -> void:
+	if _layout_pending:
+		return
+	_layout_pending = true
+	_layout_modal.call_deferred()
+
 func _layout_modal() -> void:
+	_layout_pending = false
 	if not is_instance_valid(_panel):
 		return
-	_panel.size = DESIGN_SIZE
+	_panel.size = DESIGN_SIZE.max(_panel.get_combined_minimum_size())
 	var available := _overlay.size - Vector2(64, 64)
-	var ratio := clampf(minf(available.x / DESIGN_SIZE.x, available.y / DESIGN_SIZE.y), 0.1, 1.0)
+	var ratio := clampf(minf(available.x / _panel.size.x, available.y / _panel.size.y), 0.1, 1.0)
 	_panel.scale = Vector2(ratio, ratio)
 	_panel.position = (_overlay.size - _panel.size * ratio) * 0.5
 
@@ -180,7 +194,7 @@ func refresh() -> void:
 		return
 	_claim.disabled = not valid or not bool(state.get("can_claim", false))
 	if not valid:
-		_status.text = "저장 상태를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요."
+		_status.text = "저장 상태를 확인하지 못했습니다.\n잠시 후 다시 시도해 주세요."
 		return
 	var percent := int(state.percent)
 	_gauge.value = percent
@@ -189,18 +203,18 @@ func refresh() -> void:
 	_elapsed.text = "적립 시간  %02d:%02d:%02d" % [int(seconds / 3600), int(seconds / 60) % 60, seconds % 60]
 	_gold.text = "+%d" % int(state.gold)
 	_research.text = "+%d" % int(state.research)
-	_status.text = "가득 찼습니다. 보상을 획득해 탐색을 다시 시작하세요." if state.full else ("보상을 획득할 수 있습니다." if state.can_claim else "51%부터 보상을 획득할 수 있습니다.")
+	_status.text = "가득 찼습니다.\n보상을 획득해 주세요." if state.full else ("보상을 획득할 수 있습니다." if state.can_claim else "51%부터 보상을\n획득할 수 있습니다.")
 
 func _claim_reward() -> void:
 	_claim.disabled = true
 	var result: Dictionary = service.claim()
 	refresh()
 	if bool(result.get("success", false)):
-		_status.text = "골드 +%d · 연구포인트 +%d 획득!" % [int(result.gold), int(result.research)]
+		_status.text = "골드 +%d · 연구포인트 +%d\n획득!" % [int(result.gold), int(result.research)]
 		if refresh_wallet.is_valid():
 			refresh_wallet.call()
 	else:
-		_status.text = "51%부터 획득 가능합니다." if result.get("reason", "") == "below_threshold" else "저장하지 못했습니다. 보상은 유지됩니다. 다시 시도해 주세요."
+		_status.text = "51%부터 획득 가능합니다." if result.get("reason", "") == "below_threshold" else "저장하지 못했습니다.\n보상은 유지됩니다. 다시 시도해 주세요."
 
 func blocks_stage_input() -> bool:
 	return is_instance_valid(_overlay) and _overlay.visible

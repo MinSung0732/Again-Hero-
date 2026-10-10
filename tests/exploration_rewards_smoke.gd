@@ -122,6 +122,15 @@ func run() -> void:
 	view.open()
 	await process_frame
 	check(trays._badges[&"exploration"][0].get_ref().visible, "chest 300 percent notification on")
+	var font_manager := root.get_node_or_null("GameFontManager")
+	check(font_manager != null and view._percent.get_theme_font("font").resource_path == "res://assets/fonts/Galmuri11.ttf", "regression uses actual game font")
+	# Container minimum sizes settle after deferred sorting/font assignment.
+	# Containment alone misses a panel that grew taller than the whole screen.
+	for i in range(20):
+		await process_frame
+	check(view._panel.size.is_equal_approx(VIEW.DESIGN_SIZE), "panel retains design size after deferred font/container layout")
+	check(Rect2(Vector2.ZERO, view._overlay.size).encloses(view._panel.get_global_rect()), "whole panel fits viewport after settling")
+	check(view._panel.get_global_rect().get_center().distance_to(view._overlay.size * 0.5) < 1.0, "settled panel centered")
 	check(view._panel.get_global_rect().encloses(view._claim.get_global_rect()), "claim button remains inside popup")
 	check(view._percent.text == "300% / 300%" and view._elapsed.text.contains("15:00:00"), "popup gauge and HH:MM:SS")
 	check(view._gold.text == "+600" and view._research.text == "+300", "reward amounts under icons")
@@ -129,9 +138,15 @@ func run() -> void:
 	view._claim_reward()
 	check(not trays._badges[&"exploration"][0].get_ref().visible, "claim clears full notification immediately")
 	check(view._claim.disabled and view._gauge.value == 0, "popup resets after claim")
+	for i in range(20):
+		await process_frame
+	check(view._panel.size.is_equal_approx(VIEW.DESIGN_SIZE), "claim status does not inflate panel")
 	root.size = Vector2i(540, 960)
 	view.open()
 	await process_frame
+	for i in range(20):
+		await process_frame
+	check(view._panel.size.is_equal_approx(VIEW.DESIGN_SIZE), "small-window layout does not grow panel")
 	check(view._panel.get_global_rect().size.x <= 477 and view._panel.get_global_rect().size.y <= 897, "popup fits smaller PC window")
 	check(view._panel.get_global_rect().encloses(view._claim.get_global_rect()), "scaled popup retains claim button")
 	var rect: Rect2 = view._panel.get_global_rect()
