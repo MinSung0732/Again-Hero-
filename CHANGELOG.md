@@ -1,3 +1,10 @@
+## 2026-10-10 — 상속 사망 호환성 복구·늑대/전갈 피해 결과
+
+- 이전 receipt 확장에서 Orc/GoblinThrower _begin_death 인자를 변경해 기존 zero-argument 자식 override와 Godot 시그니처 충돌이 생겼음을 실제 상속 fixture에서 확인. 기존 _begin_death() 복구, _begin_death_with_result/부모 표준 helper 분리. legacy 호출은0인자, receipt 호출은 별도 함수. 미라 caller와 기존 fixture builder 갱신.
+- 늑대의 울부짖기 감소를1회 적용한 뒤 실제 부모 피해 처리, 피격 모션 억제/분노/돌진/무리 사망 알림·연격 취소 보존. 전갈은 실제 부모 receipt API 상속, 사망 독장판/연격 취소/consume_without_rewards 경로 유지. 상태이상 기술·네트워크 시제품 변경 없음, 매 피해 객체/배열/스캔 추가 없음.
+- Godot4.5.1 실제 부모·자식 상속 독립/회귀17,760검사 실패0. 늑대13/전갈11 및 부모·투척수/미라 기존 함수 hook 역변환 비교, gdparse/Python compile/독립 import/실제 diff 검증. 전체 Godot4.7 게임/모바일/실제 AI·충돌·애니메이션·성능 미검증.
+- 기준 feature1f5458d1ec9d81d6b0b0165440eae90a4d6c3564, main4122adb7 유지. 호환성 복구와 새 actor 지원을 분리 커밋해 새 기능만 revert 가능. docs/INHERITED_DAMAGE_RECEIPT.md에 계약/검증/롤백. 다음은 남은 상속 actor·상태이상 경계, 매칭·용사모드 확대 보류.
+
 ## 2026-10-10 — 박쥐·유령·미라 피해 결과 경계
 
 - 세 actor에 opt-in receipt 추가, 기존 void 경로/지원 보호막/HP/사망 의미 유지. 미라는 지원+자체 보호막 실제 흡수량 합산, 기존 Orc 사망 helper 사용. 기존 파동 capability로 자동 연결, 파생 override 우회 방지. 공통 API/projectile/네트워크 시제품 변경 없음.

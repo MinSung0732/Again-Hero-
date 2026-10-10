@@ -137,9 +137,26 @@ func _status_scoped_deal_hit(target: Node2D, damage: int, followup: bool) -> boo
 	return accepted
 
 func take_damage(amount: int) -> void:
+	_apply_wolf_damage(amount)
+
+func supports_damage_receipt() -> bool:
+	return get_script().resource_path == "res://src/monsters/wolf.gd"
+
+func take_damage_with_result(amount: int, receipt) -> bool:
+	if receipt == null:
+		take_damage(amount)
+		return false
+	var receipt_revision: int = receipt.begin(self, amount)
+	if not supports_damage_receipt():
+		take_damage(amount)
+		return false
+	_apply_wolf_damage(amount, receipt, receipt_revision)
+	return receipt.finish(receipt_revision)
+
+func _apply_wolf_damage(amount: int, receipt = null, receipt_revision: int = 0) -> void:
 	if howl_timer > 0.0 and special_augment_configs.has("wolf_iron_howl"):
 		amount = maxi(int(round(float(amount) * 0.5)), 1) if amount > 0 else 0
-	super.take_damage(amount)
+	super._apply_orc_damage(amount, receipt, receipt_revision)
 
 func _visual_call(method: StringName, args: Array = []) -> void:
 	if method == &"play_hit" and (howl_timer > 0.0 or pack_cast_timer > 0.0):
@@ -147,6 +164,12 @@ func _visual_call(method: StringName, args: Array = []) -> void:
 	super._visual_call(method, args)
 
 func _begin_death() -> void:
+	_begin_wolf_death()
+
+func _begin_death_with_result(receipt = null, receipt_revision: int = 0) -> void:
+	_begin_wolf_death(receipt, receipt_revision)
+
+func _begin_wolf_death(receipt = null, receipt_revision: int = 0) -> void:
 	if dying:
 		return
 	followup_target = null
@@ -155,4 +178,4 @@ func _begin_death() -> void:
 	hit_counts.clear()
 	if is_instance_valid(combat_authority):
 		combat_authority.wolf_pack_runtime.record_death(self)
-	super._begin_death()
+	super._begin_death_with_result(receipt, receipt_revision)

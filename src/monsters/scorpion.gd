@@ -116,6 +116,10 @@ func try_cast_elite_skill(skill: Dictionary) -> bool:
 	queue_redraw()
 	return true
 
+func supports_damage_receipt() -> bool:
+	# Incoming damage is inherited unchanged; only death has actor-specific work.
+	return get_script().resource_path == "res://src/monsters/scorpion.gd"
+
 func consume_without_rewards() -> void:
 	if dying or current_hp <= 0:
 		return
@@ -124,11 +128,17 @@ func consume_without_rewards() -> void:
 	_begin_death()
 
 func _begin_death() -> void:
+	_begin_scorpion_death()
+
+func _begin_death_with_result(receipt = null, receipt_revision: int = 0) -> void:
+	_begin_scorpion_death(receipt, receipt_revision)
+
+func _begin_scorpion_death(receipt = null, receipt_revision: int = 0) -> void:
 	if dying:
 		return
 	followup_target = null
 	var swamp: Dictionary = special_augment_configs.get("scorpion_death_swamp", {})
 	if not swamp.is_empty() and is_instance_valid(combat_authority):
 		combat_authority.scorpion_swamp_runtime.spawn(global_position, attack_damage, swamp, self)
-	super._begin_death()
+	super._begin_death_with_result(receipt, receipt_revision)
 	queue_redraw()
