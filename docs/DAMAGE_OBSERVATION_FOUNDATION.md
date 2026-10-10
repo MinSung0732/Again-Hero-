@@ -1,5 +1,7 @@
 # 공통 피해 관측과 개체 수명 계약 — 첫 적용
 
+후속: 일반 슬라임의 실제 처리 지점 결과 기록과 재사용 버퍼는 [SLIME_DAMAGE_RECEIPT.md](SLIME_DAMAGE_RECEIPT.md)에 기록했다. 아래 다음 단계는 작성 당시 계획이다.
+
 2026-10-10. 기준 feature `7a3ae7ecf044d862691953b8e2940904db268eea`. 작업 `feature/stage10-astra`. main `4122adb73e14552aae7c0aa7edefb2827f5d08d0` 유지.
 
 기준 blob: registry `b6efba4b70a35fc97ff6f5f6029f9d2e5caca08c`, battle `8e2ba294185cea6df4913505e8e91346f2a08b14`, projectile `9a945b20fb235705d7a1d8f466e3f89bd1987111`.

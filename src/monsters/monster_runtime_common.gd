@@ -334,6 +334,9 @@ static func get_attack_stat(owner: Node) -> int:
 	return int(value) if value != null else int(owner.get("explosion_damage"))
 
 static func consume_support_shield(owner: Node2D, amount: int) -> int:
+	return _consume_support_shield(owner, amount)
+
+static func _consume_support_shield(owner: Node2D, amount: int, receipt = null, receipt_revision: int = 0) -> int:
 	var authority := owner.get_parent()
 	if amount > 0 and is_instance_valid(authority) and authority.has_method("get_transcendent_aura_modifier"):
 		amount = maxi(int(round(amount * float(authority.get_transcendent_aura_modifier(owner,"incoming")) * float(authority.get_transcendent_aura_modifier(authority.hero,"outgoing")))),1)
@@ -341,6 +344,8 @@ static func consume_support_shield(owner: Node2D, amount: int) -> int:
 	if shield <= 0 or amount <= 0:
 		return amount
 	var absorbed := mini(shield,amount)
+	if receipt != null:
+		receipt.record_shield(absorbed, receipt_revision)
 	owner.set_meta("support_shield_hp",shield - absorbed)
 	DAMAGE_NUMBERS.show(owner,absorbed)
 	owner.queue_redraw()
@@ -417,7 +422,9 @@ static func begin_standard_death(
 	owner: CharacterBody2D,
 	visual: Node,
 	collision_shape: CollisionShape2D,
-	finished_method: StringName = &"_on_death_animation_finished"
+	finished_method: StringName = &"_on_death_animation_finished",
+	receipt = null,
+	receipt_revision: int = 0
 ) -> bool:
 	if owner == null or not is_instance_valid(owner):
 		return false
@@ -425,6 +432,8 @@ static func begin_standard_death(
 		return false
 
 	owner.set("dying", true)
+	if receipt != null:
+		receipt.record_death_started(receipt_revision)
 	owner.set("visual_lod_suspended", false)
 	owner.set_meta("visual_lod_suspended", false)
 	owner.velocity = Vector2.ZERO

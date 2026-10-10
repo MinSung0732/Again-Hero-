@@ -1,5 +1,10 @@
 # 용사 모드·대전 모드 확장 설계 및 단계별 실행 계획
 
+## 후속 진행 — 슬라임의 확정 피해 결과 버퍼 (2026-10-10)
+
+일반 슬라임에 기존 void API와 공통 피해/사망 의미를 유지하는 opt-in 재사용 결과 버퍼를 추가했다. 피해/보호막은 계산 지점에서, death_started는 실제 death guard 통과 지점에서 기록한다. 중첩된 같은 buffer의 이전 writer는 거절. 독립1,148검사 통과. [SLIME_DAMAGE_RECEIPT.md](SLIME_DAMAGE_RECEIPT.md)에 API/비용/검증/한계/롤백 기록. 다음은 파동 opt-in caller 연결. 전체 게임/모바일/서버 미검증.
+
+
 ## 후속 진행 — 공통 피해 관측·개체 수명 계약 (2026-10-10)
 
 값 형식 피해 관측 플래그와 retire 후 마지막 Node 수명 조회를 도입하고 파동에 적용했다. 재사용→retire 처치 오인 차단, 실제 피해량/서버 사망 확정 영수증과는 구분한다. 독립5,422검사 통과. [DAMAGE_OBSERVATION_FOUNDATION.md](DAMAGE_OBSERVATION_FOUNDATION.md)에 API·비용·단계 계획/롤백 기록. 다음은 일반 몬스터의 실제 피해 확정 반환 경계. 전체 게임/모바일/서버 미검증.

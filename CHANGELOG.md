@@ -1,3 +1,10 @@
+## 2026-10-10 — 일반 몬스터 슬라임의 재사용 피해 결과 버퍼 첫 적용
+
+- BattleDamageReceipt caller-owned 재사용 버퍼 도입: 원래 target handle/instance/request, HP 피해량, 보호막 흡수량, accepted/death_started/complete와 begin revision 기록. 피해마다 새 result/Array/Dictionary/WeakRef 생성 없음. 같은 버퍼를 중첩 begin하면 이전 writer/finish는 새 결과를 덮지 않고 API false 반환.
+- slime.take_damage void는 기존 공통 본문으로 위임, opt-in take_damage_with_result(amount, receipt)->bool 추가. HP/보호막 값을 표시 callback 전 기록하고 실제 common death guard 통과 뒤 death_started 기록. 오라/감소·보호막 popup·hit·died/사망연출 순서 유지. 파생 script override는 기존 take_damage 1회 fallback+결과 false로 우회 방지.
+- Godot4.5.1 독립1,148검사 통과: Before/After216조건, legacy shield54조건, 중첩/재사용/queued death/64bit/override/null/등록 confidence. 원래 slime14/common27함수 정확한 분리 hook 역변환 비교, gdparse/Pythoncompile/diff/독립 editor import 통과. 전체 게임4.7/실제 시각·충돌·모바일/서버/성능 미검증.
+- 기준 feature4e50e15ce201d25025167d1da5410ee518af0801, main4122adb7 유지. docs/SLIME_DAMAGE_RECEIPT.md에 API·완료/accepted/신원 구분·비용·한계·롤백 기록. 현재 실전 기존 caller는 void API 유지, 다음은 광전사 파동 opt-in 호출 및 일반 몬스터 확대. Hero/초월 부활/서버 사망 확정은 미완료.
+
 ## 2026-10-10 — 공통 피해 관측 플래그·마지막 개체 수명 첫 적용
 
 - BattleDamageObservation static bit flags(HP_UNKNOWN/LIFE_CHANGED/TARGET_GONE/HP_DEPLETED/LEGACY_UNTRACKED/IDENTITY_UNVERIFIED) 도입. 실제 피해량/권한 사망 영수증과 구분하는 관측 계약이며 기존 take_damage void/bool API·신호/부활 순서는 변경하지 않는다. 광전사 파동의 기존 처치 후보 판정에 첫 연결.
