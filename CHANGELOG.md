@@ -1,3 +1,9 @@
+## 2026-10-10 — 용사 공통 원거리 AI 의도·행동 포트 첫 분리
+
+- 공통 원거리 이동 판단 결과를 HeroActionIntent 재사용 버퍼에 기록하고 HeroActionPort에서 기존 move/clamp/기본공격 실행. 매 진입 stale intent clear, 콜백 이전 소비, 동일 버퍼 재실행 차단. 이동 전 관측 거리 + 이동 후 현재 사거리/쿨타임/대상 사용으로 기존 의미 유지. 새 프레임 배열/Dictionary/Node 생성 없음.
+- 기존 status/직업/스킬/무타깃 배회·BuildAI 정책 유지. 전용 직업·스킬 의도, 플레이어 입력/서버/타깃 handle 적용은 남아 있음. docs/HERO_ACTION_PORT_FOUNDATION.md에 상세 범위/계약/검증/롤백 기록.
+- Godot4.5.1 독립 실제 이전/신규 physics/공통 경로 fixture6,255검사 통과(쿼리/충돌/효과/전용 직업은 명시 spy), 변경 대상 외 Hero609함수 동일. gdparse/Python compile/diff 및 생성 fixture 없는 editor import 확인. 전체 게임4.7/모바일/성능 미검증. 기준 feature349513c0, main4122adb7 유지.
+
 ## 2026-10-10 — 전투 entity ID/generation 레지스트리 첫 적용
 
 - 용사·battle 생성 몬스터·battle 풀 투사체에 Vector3i(epoch, slot, generation) identity sidecar 연결. 반납은 deactivate 이전 무효화, 죽음/tree exit 해제, 재사용 generation 증가. WeakRef + 재사용 슬롯, Node마다 신호 한 번, 프레임 스캔 없음. 기존 전투/탐색/피해/풀 정책 유지.

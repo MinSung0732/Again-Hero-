@@ -1,5 +1,9 @@
 extends CharacterBody2D
 
+const HERO_ACTION_INTENT := preload("res://src/hero/hero_action_intent.gd")
+const HERO_ACTION_PORT := preload("res://src/hero/hero_action_port.gd")
+var ranged_action_intent = HERO_ACTION_INTENT.new()
+
 const TIMED_EVENT_BUFFER := preload("res://src/systems/timed_event_buffer.gd")
 
 const LOCAL_GRID_MOVEMENT := preload("res://src/monsters/monster_runtime_common.gd")
@@ -1782,6 +1786,8 @@ func _physics_process(delta: float) -> void:
 	_clamp_to_battlefield()
 
 func _physics_process_actions(delta: float) -> void:
+	# Discard stale intent even when death/status/skill gates return early.
+	ranged_action_intent.clear()
 	# Drop cached targets before any archetype, skill or movement decision.
 	if is_instance_valid(target) and not HERO_TARGET_POLICY.is_detectable(target):
 		target = null
@@ -1894,6 +1900,11 @@ func _physics_process_actions(delta: float) -> void:
 		return
 
 	var distance := global_position.distance_to(target.global_position)
+	_prepare_ranged_ai_intent(delta, distance)
+	HERO_ACTION_PORT.execute_ranged(self, ranged_action_intent)
+	_update_stage1_pose_visual(delta)
+
+func _prepare_ranged_ai_intent(delta: float, distance: float) -> void:
 	var move_direction := _choose_move_direction(target, distance)
 	move_direction = _apply_heal_item_steering(move_direction, delta)
 	move_direction = _apply_chest_steering(move_direction, delta)
@@ -1902,20 +1913,13 @@ func _physics_process_actions(delta: float) -> void:
 		move_direction = _apply_archmage_boundary_steering(move_direction)
 	else:
 		move_direction = _apply_ranged_boundary_escape(move_direction)
-	velocity = (
+	var movement_velocity := (
 		move_direction
 		* move_speed
 		* _get_effective_move_multiplier()
 		* _get_purifier_move_speed_multiplier()
 	)
-	_move_and_slide_with_obstacle_escape()
-	_clamp_to_battlefield()
-
-	if distance <= attack_range and attack_timer <= 0.0:
-		_fire_projectile(target)
-
-	_update_stage1_pose_visual(delta)
-
+	ranged_action_intent.prepare_ranged(movement_velocity, distance)
 
 
 func _get_summoner_slot_capacity() -> int:

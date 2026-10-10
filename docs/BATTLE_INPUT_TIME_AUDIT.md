@@ -1,3 +1,7 @@
+## 2026-10-10 후속 — 용사 공통 원거리 행동 포트
+
+기존 공통 원거리 방향/아이템/경계/속도 계산을 재사용 intent 생성으로 분리하고 move/clamp/기본공격을 action port에 연결했다. 상태이상·직업·스킬·무타깃 분기는 기존 유지, 전체 용사 AI 분리 완료는 아니다. 독립 기존/신규 비교6,255검사 통과. [HERO_ACTION_PORT_FOUNDATION.md](HERO_ACTION_PORT_FOUNDATION.md)에 적용 범위·실행 순서·검증 한계·후속/롤백 기록. 플레이어 입력·서버 권한·타깃 handle 전달은 아직 미구현이다.
+
 ## 2026-10-10 후속 — entity 수명 경계
 
 용사·battle 생성 몬스터·battle 풀 투사체의 등록/반납/사망/tree exit에 epoch/slot/generation 레지스트리를 연결했다. 기존 instance ID 기반 대상 탐색/피해는 유지하며, 지연 결과는 후속 단계에서 handle 검사를 적용한다. 새 battle Node에도 세션 epoch를 재사용하지 않게 router 번호를 프로세스 공용으로 변경. 독립 검증406검사 통과, 전체 게임 미검증. [ENTITY_ID_FOUNDATION.md](ENTITY_ID_FOUNDATION.md)에 적용 범위·복잡도·수명 계약·롤백 상세 기록. 남은 주요 작업은 용사 action port와 RNG/공유 시뮬레이션이며 서버는 미구현이다.
