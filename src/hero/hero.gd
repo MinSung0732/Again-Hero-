@@ -11642,7 +11642,25 @@ func resolve_archmage_ice_bolt_hit(
 	_resolve_archmage_ice_pillars(hit_position, empowered)
 
 
+func _capture_delayed_skill_source() -> RefCounted:
+	# One immutable reservation per concurrent cast; no allocation on resolve/tick.
+	if not is_inside_tree() or current_hp <= 0:
+		return null
+	var source_life = BATTLE_TARGET_REFERENCE.new()
+	if not source_life.capture(self, get_parent()):
+		return null
+	return source_life
+
+func _is_delayed_skill_life_current(source_life: RefCounted) -> bool:
+	return is_inside_tree() and source_life != null and source_life.resolve(get_parent()) == self
+
+func _is_delayed_skill_source_current(source_life: RefCounted) -> bool:
+	return current_hp > 0 and _is_delayed_skill_life_current(source_life)
+
 func _resolve_archmage_ice_pillars(hit_position: Vector2, empowered: bool) -> void:
+	var source_life := _capture_delayed_skill_source()
+	if source_life == null:
+		return
 	var config: Dictionary = archmage_skill_config.get("ice_bolt", {})
 	_spawn_archmage_fx(
 		"res://assets/art/heroes/stage5_archmage/frames/effect4",
@@ -11657,17 +11675,22 @@ func _resolve_archmage_ice_pillars(hit_position: Vector2, empowered: bool) -> vo
 		* _skill_damage_multiplier(empowered)
 	)))
 	for index in range(count):
+		if not _is_delayed_skill_source_current(source_life):
+			break
 		var angle := randf_range(0.0, TAU)
 		var position := hit_position + Vector2.from_angle(angle) * randf_range(25.0, spawn_radius)
 		_spawn_archmage_fx(
 			"res://assets/art/heroes/stage5_archmage/frames/effect4",
 			"ice", 1, 6, 20.0, false, position, Vector2(0.70, 0.70)
 		)
-		_damage_monsters_in_radius(position, hit_radius, pillar_damage)
+		_damage_monsters_in_radius(position, hit_radius, pillar_damage, source_life)
 		await get_tree().create_timer(0.045).timeout
 
 
 func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
+	var source_life := _capture_delayed_skill_source()
+	if source_life == null:
+		return
 	_begin_archmage_casting_sequence()
 	var direction := Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
 	if is_instance_valid(target):
@@ -11687,7 +11710,7 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 	var hit_ids: Dictionary = {}
 
 	for index in range(count):
-		if not is_inside_tree() or current_hp <= 0:
+		if not _is_delayed_skill_source_current(source_life):
 			break
 		var position: Vector2 = cast_origin + direction * spacing * float(index + 1)
 		_spawn_archmage_fx(
@@ -11695,10 +11718,10 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 			"earth", 1, 11, 22.0, false, position, Vector2(0.72, 0.72)
 		)
 		_play_archmage_earth_spike_audio()
-		_damage_monsters_in_radius_once(position, radius, spike_damage, hit_ids)
+		_damage_monsters_in_radius_once(position, radius, spike_damage, hit_ids, source_life)
 		await get_tree().create_timer(spike_delay).timeout
 
-	if is_inside_tree() and current_hp > 0:
+	if _is_delayed_skill_source_current(source_life):
 		var original_distance: float = spacing * float(count)
 		var branch_distance: float = original_distance * clampf(
 			float(config.get("branch_distance_ratio", 0.50)),
@@ -11712,7 +11735,7 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 			var right_direction: Vector2 = direction.rotated(-PI * 0.5)
 
 			for branch_index in range(branch_count):
-				if not is_inside_tree() or current_hp <= 0:
+				if not _is_delayed_skill_source_current(source_life):
 					break
 				var progress: float = float(branch_index + 1) / float(branch_count)
 				var left_position: Vector2 = (
@@ -11732,9 +11755,12 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 					left_position,
 					radius,
 					spike_damage,
-					hit_ids
+					hit_ids,
+					source_life
 				)
 
+				if not _is_delayed_skill_source_current(source_life):
+					break
 				_spawn_archmage_fx(
 					"res://assets/art/heroes/stage5_archmage/frames/effect1",
 					"earth", 1, 11, 22.0, false,
@@ -11745,11 +11771,14 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 					right_position,
 					radius,
 					spike_damage,
-					hit_ids
+					hit_ids,
+					source_life
 				)
 				await get_tree().create_timer(spike_delay).timeout
 
-	_end_archmage_casting_sequence()
+	# Old tasks must not decrement a new life's casting counter.
+	if _is_delayed_skill_life_current(source_life):
+		_end_archmage_casting_sequence()
 
 func _find_archmage_holy_cluster_target(config: Dictionary) -> Node2D:
 	var search_radius: float = maxf(
@@ -12403,10 +12432,12 @@ func _recycle_archmage_fx(fx: AnimatedSprite2D) -> void:
 		fx.queue_free()
 
 
-func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int) -> void:
+func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int, source_life: RefCounted = null) -> void:
 	var radius_sq := radius * radius
 	_fill_monster_nodes_near(origin, radius, _combat_monster_scratch)
 	for node in _combat_monster_scratch:
+		if source_life != null and not _is_delayed_skill_source_current(source_life):
+			break
 		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D
@@ -12420,11 +12451,14 @@ func _damage_monsters_in_radius_once(
 	origin: Vector2,
 	radius: float,
 	damage: int,
-	hit_ids: Dictionary
+	hit_ids: Dictionary,
+	source_life: RefCounted = null
 ) -> void:
 	var radius_sq := radius * radius
 	_fill_monster_nodes_near(origin, radius, _combat_monster_scratch)
 	for node in _combat_monster_scratch:
+		if source_life != null and not _is_delayed_skill_source_current(source_life):
+			break
 		if not HERO_TARGET_POLICY.is_detectable(node):
 			continue
 		var monster := node as Node2D

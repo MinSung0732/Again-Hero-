@@ -10,6 +10,7 @@ import re
 import shutil
 import subprocess
 from charge_lifetime_source import without_charge_lifetime_guards
+from delayed_skill_source import without_delayed_skill_guards
 
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
@@ -44,7 +45,7 @@ for name in names:
                     "_physics_process_gunner", "_physics_process_rogue",
                     "_physics_process_berserker", "_physics_process_fighter",
                     "_move_without_monsters", "_fighter_move_without_monsters"}:
-        assert function(before, name) == without_charge_lifetime_guards(function(after, name)), name
+        assert function(before, name) == without_charge_lifetime_guards(without_delayed_skill_guards(function(after, name))), name
 print("Unrelated Hero functions unchanged (movement paths checked by dedicated fixture)")
 target.mkdir(parents=True, exist_ok=True)
 (target / "project.godot").write_text('[application]\nconfig/name="Hero action fixture"\n')

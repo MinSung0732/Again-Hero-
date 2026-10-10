@@ -9,6 +9,7 @@ import re
 import shutil
 import subprocess
 from charge_lifetime_source import without_charge_lifetime_guards
+from delayed_skill_source import without_delayed_skill_guards
 
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
@@ -74,7 +75,7 @@ names = re.findall(r"^func ([^(]+)\(", before, re.M)
 changed = 0
 for name in names:
     old, new = function(before, name), function(after, name)
-    assert old == expand_port_calls(without_charge_lifetime_guards(new)), "Original semantics changed in " + name
+    assert old == expand_port_calls(without_charge_lifetime_guards(without_delayed_skill_guards(new))), "Original semantics changed in " + name
     changed += old != new
 print("All original Hero bodies preserved after port expansion:", len(names))
 print("Unchanged functions:", len(names) - changed, "; routed/renamed functions:", changed)

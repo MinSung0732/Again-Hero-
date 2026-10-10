@@ -1,3 +1,10 @@
+## 2026-10-10 — 확장 기반 재개: 얼음 기둥·대지 가시 수명 검증
+
+- 사용자 던전 입장 정상 확인 후 중단했던 작업 재개. 시전당 독립 source/battle 예약으로 pulse/피해 직전 epoch/slot/generation 및 HP/tree/queued 상태 검증. 오래된 타이머 생성·피해와 새 수명 casting counter 변경을 차단한다. 현재 AoE 대상, 정상 피해/순서/RNG/간격/중복 제거 유지.
+- 새 컨테이너/그룹 스캔을 프레임에 추가하지 않는다. 시전당 예약1개+WeakRef 최대2개, resolve 평균 O(1). 범위 helper optional 인자로 다른 호출 의미 유지. registry 없는 fallback의 풀 수명 한계는 기존과 동일.
+- 실제 함수 추출 Godot4.5.1 독립 신규239검사 + 행동6255/이동6143/돌진420/체인759 =13,816검사 실패0. 기준 Hero613함수 정확한 변경 행 역변환 본문 비교. gdparse/Pythoncompile/diff/독립 editor import 확인. 전체 게임4.7·실제 물리·모바일·서버/성능 측정 미검증.
+- 기준 feature cc5e6aed0cdfee9c4993c384cb624d5d62383bc1, main4122adb7 유지. 상세 범위·후속 holy power·롤백은 docs/DELAYED_HERO_SKILL_LIFETIME.md. 다른 장판·최초 ice impact·서버 적용은 미완료.
+
 ## 2026-10-10 — 시작 직후 저장 편성 초기화 누락 수정
 
 - 사용자 재현(로딩 직후 입장 실패, 팀편성 탭 방문 후 성공)의 원인 확인: _ready는 메인으로 진입하지만 선택 배열을 읽는 _setup_team_preview/_setup_demon_skill_preview는 팀 탭 이벤트에만 있었다. cache 설치 후 같은 기존 로딩 함수를 초기화에서 호출하도록 추가. 기존 저장 순서/해금/초월 제외/기본 fallback 정책 유지.

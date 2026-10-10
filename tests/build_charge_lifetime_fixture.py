@@ -4,6 +4,7 @@ import argparse
 import re
 import shutil
 from charge_lifetime_source import without_charge_lifetime_guards
+from delayed_skill_source import without_delayed_skill_guards
 ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser()
 p.add_argument('target', type=Path)
@@ -20,7 +21,7 @@ def function(s, name):
     end = re.search(r'\nfunc ', tail)
     return (tail[:end.start()] if end else tail).rstrip()+'\n\n'
 for name in re.findall(r'^func ([^(]+)\(', before, re.M):
-    assert function(before, name) == without_charge_lifetime_guards(function(after, name)), name
+    assert function(before, name) == without_charge_lifetime_guards(without_delayed_skill_guards(function(after, name))), name
 print('All baseline Hero functions preserved except exact lifetime hooks')
 out.mkdir(parents=True, exist_ok=True)
 (out/'project.godot').write_text('[application]\nconfig/name="Charge lifetime fixture"\n')

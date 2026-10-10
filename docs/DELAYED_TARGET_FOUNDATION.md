@@ -1,5 +1,10 @@
 # 지연 대상 수명 검증 — 용사 돌진 첫 적용
 
+## 후속 진행 — 지연 얼음 기둥·대지 가시 (2026-10-10)
+
+던전 입장 수정 확인 후 작업 재개. 두 스킬의 시전별 source/battle 수명, pulse/피해/cleanup 검증을 연결했다. 신규239검사 및 기존 회귀 포함13,816검사 통과. 범위·비용·한계·후속·롤백은 [DELAYED_HERO_SKILL_LIFETIME.md](DELAYED_HERO_SKILL_LIFETIME.md). 아래 이전 단계는 이력이며 전체 게임/모바일/서버 검증은 미완료다.
+
+
 ## 후속 진행 — 체인 단검 수명 연결 (2026-10-10)
 
 체인 단검의 예약 타깃과 source/projectile 수명, await/deferred 작업 revision을 연결했다. 정상 충돌·피해·구간 tick을 유지하며 풀 재사용/전투 교체 후 오래된 작업을 차단한다. 새 독립759검사+돌진420검사 통과. 아래 이전 단계 설명은 구현 이력이다. 최신 범위·다음 작업·롤백은 [CHAIN_PROJECTILE_LIFETIME.md](CHAIN_PROJECTILE_LIFETIME.md). 전체 게임/모바일 미검증, 다른 스킬·서버 적용은 미완료.
