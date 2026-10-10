@@ -104,8 +104,8 @@ var last_direction := ""
 var gameplay_allowed := true
 func _ready() -> void:
 	battle_command_router.begin_session(_execute_battle_command)
-func start_offer(levels: Array[int]) -> void:
-	demon_pending_augment_levels = levels.duplicate()
+func start_offer(levels: Array) -> void:
+	demon_pending_augment_levels.assign(levels)
 	demon_pending_augments = levels.size()
 	_open_next_demon_augment_if_needed()
 func _roll_demon_augment_candidates(_reroll: bool) -> Array:

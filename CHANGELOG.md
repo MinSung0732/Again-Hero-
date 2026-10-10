@@ -1,3 +1,7 @@
+## 2026-10-10 — 독립 테스트 스크립트 import 안전성
+
+- 생성 fixture를 test const preload로 참조하던 경로를 실행 시 load로 변경하여 실제 게임 프로젝트의 import가 없는 fixture 파일을 요구하지 않게 수정. 동적 호출 fixture의 Array[int] 입력은 명시 assign으로 변환. 생성 fixture 없는 독립 프로젝트에서 테스트 스크립트3종 컴파일 확인, router130/증강79 회귀 통과. 전체 게임 미검증. 이 수정은 시계 분리와 별도 커밋하여 시계만 롤백해도 유지.
+
 ## 2026-10-10 — 증강 선택·재뽑기 명령과 후보 버전
 
 - 입력/시간 의존 호출 지도 docs/BATTLE_INPUT_TIME_AUDIT.md 추가. 기존 마왕 증강 선택/재뽑기를 명령5/6으로 연결, protocol v2 choice_revision으로 같은 ID의 재뽑기/연속 레벨에도 오래된 입력 차단. main은 표시 후보 revision 전달. 기존 효과·리롤 제한·동기 다음창·pause 유지, legacy 호출/솔플 rollback 호환.

@@ -1,7 +1,6 @@
 extends SceneTree
 
 # Run in the asset-free project created by build_battle_boundary_fixture.py.
-const BATTLE := preload("res://tests/battle_boundary_fixture.gd")
 const RULES := preload("res://src/data/battle_session_catalog.gd")
 const REQUEST := preload("res://src/systems/battle_command.gd")
 var checks := 0
@@ -27,8 +26,15 @@ func on_applied(_name: String, _summary: String) -> void:
 	applied_count += 1
 
 func run() -> void:
+	# Fixture scripts are generated outside the game repository. Runtime loading
+	# keeps the real project's editor/import from preloading nonexistent fixtures.
+	var battle_script := load("res://tests/battle_boundary_fixture.gd") as Script
+	if battle_script == null:
+		push_error("Build the isolated project with build_battle_boundary_fixture.py first")
+		quit(1)
+		return
 	for routed in [true, false]:
-		var battle = BATTLE.new()
+		var battle = battle_script.new()
 		root.add_child(battle)
 		battle.command_routing_enabled = routed
 		battle.demon_augment_ready.connect(on_ready.bind(battle))
