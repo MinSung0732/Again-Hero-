@@ -15,13 +15,13 @@
 - 수치/아이콘은 `src/data/exploration_reward_catalog.gd`에서 수정한다.
 - `src/systems/exploration_reward_store.gd`: 일정 시간마다 루프를 돌리지 않고 O(1) 계산. 기존 stage_progress.cfg에 exploration_rewards 섹션을 추가한다. 골드·연구와 적립량 차감은 같은 ConfigFile 저장에서 처리한다. 계정 bundle 원자 저장/게스트 저장 오류 처리를 기존 AccountSaveScope에 맡기며 스테미너·연구·클리어 데이터는 보존한다.
 - `src/systems/exploration_rewards.gd`: 앱 전체 autoload. 중복 focus/pause/resume 알림을 하나의 idle 전환으로 합치며 foreground 60초 체크포인트/종료 시 정확한 anchor를 저장한다. 프레임별 스캔/배열 생성 없음. 로그인 저장이 준비된 뒤 계정별 세션을 초기화하고 같은 계정의 클라우드 revision acknowledgement에는 쓰기를 하지 않아 재동기화 루프를 방지한다.
-- `src/ui/lobby_exploration_rewards_view.gd`: 한 번 만든 팝업을 재사용한다. 수령 시 헤더를 갱신하고 탭 전환 시 창을 닫는다. 가상 디자인 660×1040과 실제 화면 크기를 구분해 작은 PC 창에서도 전체 내용을 축소해서 표시한다.
+- `src/ui/lobby_exploration_rewards_view.gd`: 한 번 만든 팝업을 재사용한다. 수령 시 헤더를 갱신하고 탭 전환 시 창을 닫는다. 가로형 920×560 디자인의 CanvasLayer/Control 모달을 전체 게임 뷰포트 중앙에 고정한다. 왼쪽은 상자·게이지·시간, 오른쪽은 보상·획득 버튼. 운영체제/embedded Window 제목줄과 드래그 동작을 사용하지 않는다. 작은 논리 뷰포트에서는 32px 안전 여백을 두고 패널만 균일 축소한다. 루트 게임의 stretch 규칙과 별도 창 스케일이 충돌하지 않는다.
 - 공통 알림은 `main_tools_view.set_notification(&"daily", has_unclaimed_rewards)`로 호출한다. 완료 보상을 모두 받으면 false. 이벤트는 &"weekly". 배지는 클릭을 가로채지 않는다. 숨겨진 도구의 알림은 더보기로 전파되고, 더보기 안의 동일 도구도 같은 상태를 사용한다.
 - 현재 도전과제/이벤트 완료 판정·보상 시스템은 기존에도 준비 중이었다. 이번 변경은 명칭/아이콘/공통 완료 알림 API까지 제공하며 실제 미션 조건을 임의로 추가하지 않는다. 탐색보상은 실제 지급까지 구현되어 있다.
 
 ## 검증과 한계
 
-- Godot 4.5.1 독립 프로젝트에서 `tests/exploration_rewards_smoke.gd` 통과: 초기 생성, online 제외, offline/중복 resume, 50/51% 경계, 300% 상한, 시간 역행, 지갑/기존 섹션 보존, 동일 보상 재수령 금지, 계정 분리, 저장 실패/복구, revision 변경 시 읽기 전용, 팝업 수치/위치, 작은 PC 창 크기, 알림/수령/탭 정리/더보기.
+- Godot 4.5.1 독립 프로젝트에서 `tests/exploration_rewards_smoke.gd` 통과: 초기 생성, online 제외, offline/중복 resume, 50/51% 경계, 300% 상한, 시간 역행, 지갑/기존 섹션 보존, 동일 보상 재수령 금지, 계정 분리, 저장 실패/복구, revision 변경 시 읽기 전용, 팝업 수치/위치, 작은 PC 창 크기·모든 필드 패널 내부·중앙 고정·드래그 불가·Esc 닫기, 알림/수령/탭 정리/더보기.
 - 기존 `docs/tests/lobby_tool_trays_check.gd`도 현재 3개 도구에 맞춰 갱신하고 통과. gdparse 및 staged diff --check 확인.
 - 독립 테스트 프로젝트는 account_save_scope.gd + 탐색/도구 스크립트와 아이콘만 포함한 fixture로 구성했다. 전체 로비와 전투, 실제 PC 렌더링/Android/iOS 일시정지·강제 종료·온라인 Supabase 동기화는 실행하지 않았다.
 - 강제 종료는 종료 알림을 보장하지 않으므로 마지막 foreground 체크포인트 이후 최대 약 60초를 offline으로 간주할 수 있다. 정상 종료/일시정지에는 실제 anchor를 저장한다. 백그라운드 저장 자체가 실패한 경우에는 오류가 복구될 때 재시도하며 완벽한 앱 종료 시각 복원은 보장하지 않는다.

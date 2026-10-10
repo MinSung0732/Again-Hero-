@@ -1,3 +1,6 @@
+## Exploration fixed landscape modal (2026-10-10)
+- Exploration popup now uses an in-game CanvasLayer/Control overlay, centered on the full viewport with a920x560 landscape panel and32px safe margins when scaled down. No OS/embedded Window title bar or dragging. Left chest/gauge/time, right currencies/claim. Close/Esc/tab visibility lifecycle; existing reward rules and full-only notification unchanged. Independent geometry/behavior/reward tests pass; full game/mobile rendering remains unverified.
+
 ## Exploration rewards and notifications (2026-10-10)
 - Main left tools: 도전과제(daily), 이벤트(weekly), 탐색보상(exploration); right friends. Generic set_notification API supports unclaimed mission/event rewards; those features remain pending. Chest full-only red dot at300%, clear after claim.
 - ExplorationRewards autoload: earn only app-closed/background time,180seconds/percent, max300/15hours, claim at51%, gold2+research1 per percent. Foreground lobby/combat do not accrue. Wallet+bank reset saved together in existing stage_progress.cfg/account namespace. Foreground60second checkpoint, no per-frame work. Same-account cloud revision refresh is read-only. See docs/EXPLORATION_REWARDS.md for tests, source provenance and local-clock/server-ledger limits.

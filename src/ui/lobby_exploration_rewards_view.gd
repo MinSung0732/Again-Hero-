@@ -4,9 +4,11 @@ const RULES := preload("res://src/data/exploration_reward_catalog.gd")
 var service: Node
 var tools: Control
 var refresh_wallet: Callable
-const DESIGN_SIZE := Vector2i(660, 1040)
+const DESIGN_SIZE := Vector2(920, 560)
 
-var _window: Window
+var _layer: CanvasLayer
+var _overlay: Control
+var _panel: PanelContainer
 var _gauge: ProgressBar
 var _percent: Label
 var _elapsed: Label
@@ -59,50 +61,68 @@ func _icon(parent: Node, path: String, icon_size: Vector2) -> void:
 	parent.add_child(icon)
 
 func _build() -> void:
-	# One cached popup; contents never recreated when opening or claiming again.
-	_window = Window.new()
-	_window.title = "탐색보상"
-	_window.exclusive = true
-	_window.transient = true
-	_window.unresizable = true
-	_window.size = DESIGN_SIZE
-	_window.content_scale_size = DESIGN_SIZE
-	_window.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
-	_window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
-	_window.close_requested.connect(_window.hide)
-	_window.window_input.connect(_on_window_input)
-	add_child(_window)
-	_window.hide()
-	var panel := PanelContainer.new()
-	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	panel.add_theme_stylebox_override("panel", _style(Color("170e25"), Color("eac14d"), 30))
-	_window.add_child(panel)
+	# Use the game's canvas, not a native/embedded Window with a draggable title
+	# bar and its own stretch rules. Cache one fixed-center full-screen modal.
+	_layer = CanvasLayer.new()
+	_layer.layer = 120
+	add_child(_layer)
+	_overlay = Control.new()
+	_overlay.name = "ExplorationModal"
+	_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_layer.add_child(_overlay)
+	_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_overlay.resized.connect(_layout_modal)
+	var dim := ColorRect.new()
+	dim.color = Color(0.02, 0.01, 0.05, 0.78)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	_overlay.add_child(dim)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_panel = PanelContainer.new()
+	_panel.name = "RewardPanel"
+	_panel.add_theme_stylebox_override("panel", _style(Color("170e25"), Color("eac14d"), 28))
+	_overlay.add_child(_panel)
+	_panel.size = DESIGN_SIZE
+	_overlay.hide()
 	var stack := VBoxContainer.new()
-	stack.add_theme_constant_override("separation", 18)
-	panel.add_child(stack)
+	stack.add_theme_constant_override("separation", 16)
+	_panel.add_child(stack)
 	var header := HBoxContainer.new()
 	stack.add_child(header)
 	_label(header, "탐색보상", 38)
-	var close := Button.new()
-	close.text = "닫기"
-	close.custom_minimum_size = Vector2(90, 64)
-	close.add_theme_font_size_override("font_size", 24)
-	close.pressed.connect(_window.hide)
-	header.add_child(close)
-	_icon(stack, RULES.ICON_PATH, Vector2(160, 130))
-	_percent = _label(stack, "0% / 300%", 32)
+	var close_button := Button.new()
+	close_button.text = "닫기"
+	close_button.custom_minimum_size = Vector2(90, 64)
+	close_button.add_theme_font_size_override("font_size", 24)
+	close_button.pressed.connect(close)
+	header.add_child(close_button)
+	var body := HBoxContainer.new()
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 28)
+	stack.add_child(body)
+	var left := VBoxContainer.new()
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	left.add_theme_constant_override("separation", 12)
+	body.add_child(left)
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	right.add_theme_constant_override("separation", 14)
+	body.add_child(right)
+	_icon(left, RULES.ICON_PATH, Vector2(140, 112))
+	_percent = _label(left, "0% / 300%", 32)
 	_gauge = ProgressBar.new()
 	_gauge.max_value = RULES.MAX_PERCENT
-	_gauge.custom_minimum_size.y = 40
+	_gauge.custom_minimum_size.y = 32
 	_gauge.show_percentage = false
 	_gauge.add_theme_stylebox_override("background", _style(Color("2b1d3c"), Color("806143"), 4))
 	_gauge.add_theme_stylebox_override("fill", _style(Color("e9b951"), Color("ffeaa1"), 0))
-	stack.add_child(_gauge)
-	_elapsed = _label(stack, "적립 시간  00:00:00", 27)
-	_label(stack, "게임 종료·백그라운드 시간만 적립\n3분마다 1% · 최대 15시간", 24)
+	left.add_child(_gauge)
+	_elapsed = _label(left, "적립 시간  00:00:00", 27)
+	_label(left, "게임 종료·백그라운드 시간만 적립\n3분마다 1% · 최대 15시간", 24)
 	var rewards := HBoxContainer.new()
-	rewards.add_theme_constant_override("separation", 24)
-	stack.add_child(rewards)
+	rewards.add_theme_constant_override("separation", 12)
+	right.add_child(rewards)
 	for kind in [&"gold", &"research"]:
 		var plate := PanelContainer.new()
 		plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -111,41 +131,52 @@ func _build() -> void:
 		var column := VBoxContainer.new()
 		column.add_theme_constant_override("separation", 8)
 		plate.add_child(column)
-		_icon(column, RULES.GOLD_ICON_PATH if kind == &"gold" else RULES.RESEARCH_ICON_PATH, Vector2(82, 82))
+		_icon(column, RULES.GOLD_ICON_PATH if kind == &"gold" else RULES.RESEARCH_ICON_PATH, Vector2(72, 72))
 		_label(column, "골드" if kind == &"gold" else "연구포인트", 25)
 		var amount := _label(column, "+0", 34)
 		if kind == &"gold":
 			_gold = amount
 		else:
 			_research = amount
-	_status = _label(stack, "51%부터 보상을 획득할 수 있습니다.", 24)
+	_status = _label(right, "51%부터 보상을 획득할 수 있습니다.", 24)
 	_claim = Button.new()
 	_claim.text = "보상 획득"
-	_claim.custom_minimum_size.y = 88
+	_claim.custom_minimum_size.y = 76
 	_claim.add_theme_font_size_override("font_size", 30)
 	_claim.add_theme_stylebox_override("normal", _style(Color("654b26"), Color("f6d681"), 12))
 	_claim.add_theme_stylebox_override("hover", _style(Color("866330"), Color("fff1bb"), 12))
 	_claim.add_theme_stylebox_override("pressed", _style(Color("493519"), Color("f6d681"), 12))
 	_claim.add_theme_stylebox_override("disabled", _style(Color("30293a"), Color("6e607d"), 12))
 	_claim.pressed.connect(_claim_reward)
-	stack.add_child(_claim)
+	right.add_child(_claim)
 
 func open() -> void:
-	if not is_instance_valid(_window):
+	if not is_instance_valid(_overlay):
 		_build()
 	refresh()
-	# Keep the entire panel inside desktop window or mobile display, while
-	# retaining the same design coordinates and spacing on both platforms.
-	var available := Vector2(get_window().size) - Vector2(48, 96)
-	var scale := minf(1.0, minf(available.x / DESIGN_SIZE.x, available.y / DESIGN_SIZE.y))
-	_window.popup_centered(Vector2i(Vector2(DESIGN_SIZE) * maxf(scale, 0.1)))
+	_overlay.show()
+	_layout_modal()
+	_claim.grab_focus()
+
+func close() -> void:
+	if is_instance_valid(_overlay):
+		_overlay.hide()
+
+func _layout_modal() -> void:
+	if not is_instance_valid(_panel):
+		return
+	_panel.size = DESIGN_SIZE
+	var available := _overlay.size - Vector2(64, 64)
+	var ratio := clampf(minf(available.x / DESIGN_SIZE.x, available.y / DESIGN_SIZE.y), 0.1, 1.0)
+	_panel.scale = Vector2(ratio, ratio)
+	_panel.position = (_overlay.size - _panel.size * ratio) * 0.5
 
 func refresh() -> void:
 	var state: Dictionary = service.snapshot()
 	var valid := bool(state.get("success", false))
 	# Chest badge is full-only. Claim eligibility does not turn it on early.
 	tools.set_notification(&"exploration", valid and bool(state.get("full", false)))
-	if not is_instance_valid(_window):
+	if not is_instance_valid(_overlay):
 		return
 	_claim.disabled = not valid or not bool(state.get("can_claim", false))
 	if not valid:
@@ -172,12 +203,13 @@ func _claim_reward() -> void:
 		_status.text = "51%부터 획득 가능합니다." if result.get("reason", "") == "below_threshold" else "저장하지 못했습니다. 보상은 유지됩니다. 다시 시도해 주세요."
 
 func blocks_stage_input() -> bool:
-	return is_instance_valid(_window) and _window.visible
+	return is_instance_valid(_overlay) and _overlay.visible
 
-func _on_window_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		_window.hide()
+func _input(event: InputEvent) -> void:
+	if blocks_stage_input() and event.is_action_pressed("ui_cancel"):
+		close()
+		get_viewport().set_input_as_handled()
 
 func _on_parent_visibility() -> void:
-	if not get_parent().is_visible_in_tree() and is_instance_valid(_window):
-		_window.hide()
+	if not get_parent().is_visible_in_tree():
+		close()

@@ -122,7 +122,7 @@ func run() -> void:
 	view.open()
 	await process_frame
 	check(trays._badges[&"exploration"][0].get_ref().visible, "chest 300 percent notification on")
-	check(view._claim.get_global_rect().end.y <= VIEW.DESIGN_SIZE.y - 20, "claim button remains inside popup")
+	check(view._panel.get_global_rect().encloses(view._claim.get_global_rect()), "claim button remains inside popup")
 	check(view._percent.text == "300% / 300%" and view._elapsed.text.contains("15:00:00"), "popup gauge and HH:MM:SS")
 	check(view._gold.text == "+600" and view._research.text == "+300", "reward amounts under icons")
 	check(not view._claim.disabled and view.blocks_stage_input(), "claim enabled and stage swipe blocked")
@@ -132,10 +132,27 @@ func run() -> void:
 	root.size = Vector2i(540, 960)
 	view.open()
 	await process_frame
-	check(view._window.size.x <= 492 and view._window.size.y <= 864, "popup fits smaller PC window")
-	check(view._claim.get_global_rect().end.y <= VIEW.DESIGN_SIZE.y - 20, "scaled popup retains claim button")
+	check(view._panel.get_global_rect().size.x <= 477 and view._panel.get_global_rect().size.y <= 897, "popup fits smaller PC window")
+	check(view._panel.get_global_rect().encloses(view._claim.get_global_rect()), "scaled popup retains claim button")
+	var rect: Rect2 = view._panel.get_global_rect()
+	check(rect.size.x > rect.size.y, "popup is landscape")
+	check(rect.get_center().distance_to(view._overlay.size * 0.5) < 1.0, "popup fixed at viewport center")
+	check(view._panel.get_global_rect().encloses(view._research.get_global_rect()), "research amount stays inside popup")
+	for control in [view._gauge, view._percent, view._elapsed, view._gold, view._research, view._status, view._claim]:
+		check(view._panel.get_global_rect().encloses(control.get_global_rect()), "all reward fields fit inside panel")
+	var position: Vector2 = view._panel.position
+	var drag := InputEventMouseMotion.new()
+	drag.relative = Vector2(100, 100)
+	view._input(drag)
+	check(view._panel.position == position, "mouse motion cannot drag popup")
+	var cancel := InputEventAction.new()
+	cancel.action = &"ui_cancel"
+	cancel.pressed = true
+	view._input(cancel)
+	check(not view._overlay.visible, "escape closes canvas modal")
+	view.open()
 	host.hide()
-	check(not view._window.visible, "tab change closes popup")
+	check(not view._overlay.visible, "tab change closes popup")
 	# Hidden tools still forward completion notifications to the More button.
 	var extra: Array = []
 	for i in range(20):
