@@ -1,3 +1,10 @@
+## 2026-10-10 — 거미·오크 피해 결과 지원 확대
+
+- 두 actor에 opt-in 재사용 receipt API를 추가하고 기존 void take_damage 및 실제 shield/death 계산을 유지. 파동은 기존 capability 경로로 자동 연결, 결과 무효화 시 재시도 없음. 파생 override 우회 방지.
+- 오크 HP 변경→분노 증가→마지막 돌진→표시/사망 순서, 상한/체력 비율/치명타·shield-only 동작 보존. 이동·공격·증강 계산 변경 없음. 매 피해 객체/배열/전체 스캔 추가 없음.
+- Godot4.5.1 독립 거미1148/오크1148/각 파동638/오크 증강1202 + 기존 slime1148/파동638 =6,560검사 실패0. 원래 거미16/오크17 함수 정확한 역변환 비교, gdparse/Pythoncompile/diff/독립 editor import 통과. 전체 게임4.7/충돌·모바일/서버/성능 미검증.
+- 기준 feature e0f340f16869a12c0a03594f9d65de2dcbc50b7b, main4122adb7 유지. docs/SPIDER_ORC_DAMAGE_RECEIPT.md에 계약/비용/재현/롤백 기록. 다음은 다른 일반 몬스터의 특수 피해·상속 조사 후 지원 확대.
+
 ## 2026-10-10 — 광전사 파동의 opt-in 피해 결과 caller 연결
 
 - berserker_wave는 supports_damage_receipt와 take_damage_with_result를 모두 지원하는 actor에 결과 API를 1회 호출한다. source/shot 수명 검증 뒤 반환true/complete/예상 revision/원래 victim ID·handle/등록 신원 검증을 확인하고 accepted+death_started로 처치 판정. 미지원 actor는 기존 take_damage+관측 fallback 유지.

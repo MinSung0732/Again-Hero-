@@ -1,5 +1,7 @@
 # 광전사 파동 피해 결과 caller 연결
 
+후속: 거미·오크도 동일 capability 계약을 지원한다. [검증 및 범위](SPIDER_ORC_DAMAGE_RECEIPT.md). 아래 내용은 파동 caller 도입 시점의 기록이다.
+
 2026-10-10. 기준 feature `e4221dfde1ed16f55f51e8fb134857a5659b1ec9`, projectile blob `818d7deb399ab62936971313a365df0f87805eb6`. 작업 `feature/stage10-astra`, main `4122adb73e14552aae7c0aa7edefb2827f5d08d0` 유지.
 
 ## 처리 계약
