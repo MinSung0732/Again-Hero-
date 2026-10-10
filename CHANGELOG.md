@@ -1,3 +1,10 @@
+## 2026-10-10 — 원거리 일반 몬스터 피해 결과 확대
+
+- 해골 궁수·고블린 투척수·코볼트에 opt-in receipt API 추가. 기존 void API/지원 보호막/HP/실제 사망 순서 유지, 파생 override 우회 차단. 기존 파동 capability 경로로 자동 연결. receipt/common/projectile·네트워크 시제품 변경 없음.
+- 해골 궁수 첫 부활은 accepted=true/death_started=false. 부활 중 피해/회복 거절, 사망·부활 시 준비 중 연사 취소, timer fallback/ONE_SHOT 역재생·설정 HP 비율 및 공격 대기시간 재설정 유지. 피해 재시도·매 피해 객체/배열/그룹 스캔 추가 없음.
+- Godot4.5.1 독립 신규 actor/파동5,358+궁수 부활1,162+기존 회귀7,041 =13,561검사 실패0. 원래 궁수26/투척수18/코볼트19함수 hook 역변환 본문 비교 통과. gdparse/Python compile/import/diff 검증. 전체 게임4.7/모바일/실제 충돌·애니메이션·성능 미검증.
+- 기준 feature8ffdc50776d1f6db9a5a231d750329e634c95e38, main4122adb7 유지. docs/RANGED_DAMAGE_RECEIPT.md에 계약/재현/한계/롤백. 활성 작업은 기존 솔플 내부 구조 개선이며 매칭·용사모드 확장 보류. 다음은 남은 일반 actor와 상태이상 결과 경계 조사.
+
 ## 2026-10-10 — 해골 피해 결과·부활/실제 사망 경계
 
 - skeleton opt-in receipt 추가, 기존 void API와 감소·보호막·HP·부활/사망 순서 유지. 첫 부활 치명타는 HP 피해 accepted=true/death_started=false, 부활 소진 뒤 common death guard에서만 실제 사망 기록. 파동 기존 capability로 자동 연결, 신규 처치 오인 방지.
