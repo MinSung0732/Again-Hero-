@@ -1,3 +1,10 @@
+## 2026-10-11 — 몬스터 피해 연결 감사·용사 제어 상태 결과
+
+- Catalog26종 incoming canonical opt-in 누락 없음 확인. 용사 둔화/기절/침묵에 caller-owned BattleStatusReceipt와 opt-in API 추가. 기존 void/bool이 공유 helper를 사용하며 요청/registry life/적용 수락·결과 timer/strength/complete 기록.
+- 동일 상태 갱신도 기존 규칙상 수락이며 max timer snapshot으로 표현. 기존 guard·저항/최소 지속시간·signal 순서·AI raw memory 및 기술당1회 status_action credit 유지. 파생 override/null receipt는 legacy1회 호출 후 결과 미지원; 같은 버퍼 재진입은 revision으로 무효화, 상태 재시도 없음.
+- Godot4.5.1 신규19,462+피해 회귀29,473 =48,935검사 실패0. 원래 Hero618함수 hook 역변환 비교와 gdparse/Python compile/fixture import/diff 통과. 전체 게임4.7/모바일/실제 AI·시각·물리·성능 미검증.
+- 기준 feature972c8edda53ce09b879e10075c1360a6233bfd00, main4122adb7 유지. docs/HERO_STATUS_RECEIPT.md에 기존 예외/지원 범위/감사/재현/롤백. 아직 신규 상태 결과 API 호출자는 전환하지 않음. 다음은 공포·마비·석화 등 남은 상태 경계와 호출자 연결; 매칭·용사모드 확대 보류.
+
 ## 2026-10-11 — 제우스 피해·오디오·사망 결과
 
 - 제우스 void/result incoming을 공유 helper로 연결. 부모 Thrower aura/보호막/HP 처리 뒤 생존 HP 감소 시 hit cue, 사망 audio stop→부모 common→effect redraw 순서 유지. canonical opt-in/파생 override/0인자 사망 호환.

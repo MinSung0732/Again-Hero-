@@ -17407,17 +17407,51 @@ func can_receive_possession() -> bool:
 	return current_hp > 0 and not is_dying and fear_timer <= 0.0 and possession_immunity_timer <= 0.0
 
 
+func supports_status_receipt() -> bool:
+	# Do not bypass a derived Hero's legacy status overrides.
+	return get_script().resource_path == "res://src/hero/hero.gd"
+
+func apply_silence_with_result(duration: float, receipt) -> bool:
+	if receipt == null:
+		apply_silence(duration)
+		return false
+	var revision: int = receipt.begin(self, &"silence", duration, 1.0)
+	if not supports_status_receipt():
+		apply_silence(duration)
+		return false
+	_apply_silence_status(duration, receipt, revision)
+	return receipt.finish(revision)
+
 func apply_silence(duration: float) -> bool:
+	return _apply_silence_status(duration)
+
+func _apply_silence_status(duration: float, receipt = null, receipt_revision: int = 0) -> bool:
 	if duration <= 0.0 or current_hp <= 0 or is_dying:
 		return false
 	silence_timer = maxf(silence_timer,duration*(1.0-get_status_resistance("silence")))
 	set_meta("silence_active",silence_timer > 0.0)
 	if silence_timer <= 0.0:
 		return false
+	if receipt != null:
+		receipt.record_application(silence_timer, 1.0, receipt_revision)
 	record_status_effect_event("silence")
 	return true
 
+func apply_stun_with_result(duration: float, receipt) -> bool:
+	if receipt == null:
+		apply_stun(duration)
+		return false
+	var revision: int = receipt.begin(self, &"stun", duration, 1.0)
+	if not supports_status_receipt():
+		apply_stun(duration)
+		return false
+	_apply_stun_status(duration, receipt, revision)
+	return receipt.finish(revision)
+
 func apply_stun(duration: float) -> void:
+	_apply_stun_status(duration)
+
+func _apply_stun_status(duration: float, receipt = null, receipt_revision: int = 0) -> void:
 	if duration <= 0.0 or current_hp <= 0 or is_dying:
 		return
 	record_status_effect_event("stun")
@@ -17427,6 +17461,8 @@ func apply_stun(duration: float) -> void:
 	stun_timer = maxf(stun_timer, maxf(duration * (1.0 - get_status_resistance("stun")), 0.05))
 	velocity = Vector2.ZERO
 	set_meta("stun_active", true)
+	if receipt != null:
+		receipt.record_application(stun_timer, 1.0, receipt_revision)
 
 func _clear_stun() -> void:
 	if stun_timer > 0.0 and is_instance_valid(hero_sprite):
@@ -17653,7 +17689,21 @@ func _tick_fear_state(delta: float) -> bool:
 func _get_effective_move_multiplier() -> float:
 	return move_multiplier * float(get_meta("yuki_slow_multiplier",1.0))
 
+func apply_slow_with_result(multiplier: float, duration: float, receipt) -> bool:
+	if receipt == null:
+		apply_slow(multiplier, duration)
+		return false
+	var revision: int = receipt.begin(self, &"slow", duration, 1.0 - multiplier)
+	if not supports_status_receipt():
+		apply_slow(multiplier, duration)
+		return false
+	_apply_slow_status(multiplier, duration, receipt, revision)
+	return receipt.finish(revision)
+
 func apply_slow(multiplier: float, duration: float) -> void:
+	_apply_slow_status(multiplier, duration)
+
+func _apply_slow_status(multiplier: float, duration: float, receipt = null, receipt_revision: int = 0) -> void:
 	if current_hp <= 0:
 		return
 
@@ -17673,6 +17723,8 @@ func apply_slow(multiplier: float, duration: float) -> void:
 
 	move_multiplier = minf(move_multiplier, effective_multiplier)
 	slow_timer = maxf(slow_timer, effective_duration)
+	if receipt != null:
+		receipt.record_application(slow_timer, 1.0 - move_multiplier, receipt_revision)
 	queue_redraw()
 
 func get_build_summary() -> String:

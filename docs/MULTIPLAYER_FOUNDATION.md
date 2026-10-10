@@ -1,5 +1,10 @@
 # 용사 모드·대전 모드 확장 설계 및 단계별 실행 계획
 
+## 후속 내부 구조 개선 — 용사 제어 상태 결과 (2026-10-11)
+
+Catalog26종 incoming opt-in 누락 없음 감사 후 용사 둔화/기절/침묵에 재사용 상태 receipt를 추가했다. 기존 guard/신호 순서·기술당1회 집계·AI raw 기억을 유지했다. 신규19,462+피해 회귀29,473 =48,935검사 통과. [HERO_STATUS_RECEIPT.md](HERO_STATUS_RECEIPT.md). 신규 API 호출자는 아직 전환하지 않았으며 남은 상태·호출자 연결을 순차 조사한다. 전체 게임/모바일/성능 미검증, 매칭·용사모드 확대 보류.
+
+
 ## 후속 내부 구조 개선 — 제우스 (2026-10-11)
 
 제우스 부모 incoming 피해와 생존 피격음·사망 audio 정리 순서를 보존하며 결과 API에 연결했다. 파동 처치 결과와 callback revision을 검증했다. 신규/회귀29,473검사 통과. [ZEUS_DAMAGE_RECEIPT.md](ZEUS_DAMAGE_RECEIPT.md). 다음은 남은 incoming opt-in 누락·outgoing 상태이상 경계 조사. 전체 게임/모바일/성능 미검증, 매칭·용사모드 확대 보류.
