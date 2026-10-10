@@ -1,5 +1,7 @@
 extends Control
 # Fixed icon and two text lines; parent Button keeps all input/disabled handling.
+const UNAVAILABLE_ICON_SHADER := preload("res://src/ui/demon_skill_icon_disabled.gdshader")
+static var _unavailable_icon_material: ShaderMaterial
 var icon: TextureRect
 var title: Label
 var state: Label
@@ -37,8 +39,15 @@ func update_state(text: String, available: bool) -> void:
  if _state_initialized and available == _last_available: return
  _state_initialized = true
  _last_available = available
+ # Share one material across slots; only switch it on availability transitions.
+ icon.material = null if available else _get_unavailable_icon_material()
  icon.modulate = Color.WHITE if available else Color(0.85,0.85,0.85,1)
  state.add_theme_color_override("font_color",Color("f3da88") if available else Color("d5c8e4"))
+static func _get_unavailable_icon_material() -> ShaderMaterial:
+ if _unavailable_icon_material == null:
+  _unavailable_icon_material = ShaderMaterial.new()
+  _unavailable_icon_material.shader = UNAVAILABLE_ICON_SHADER
+ return _unavailable_icon_material
 func _layout() -> void:
  var extent := minf(60,maxf(0,size.y-20))
  icon.position = Vector2(16,(size.y-extent)*0.5)
