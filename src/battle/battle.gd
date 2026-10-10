@@ -23,6 +23,7 @@ var raw_statuses_applied := 0
 var raw_allied_deaths := 0
 var raw_tank_deaths := 0
 var practice_mode := false
+@onready var _mission_service: Node = get_node_or_null("/root/MissionProgress")
 const PRACTICE_HERO := preload("res://src/hero/practice_hero.gd")
 var transcendence = preload("res://src/systems/transcendence_runtime.gd").new()
 signal demon_progression_changed(level: int, current_exp: float, exp_to_next_level: float)
@@ -2328,6 +2329,8 @@ func _spawn_monster(
 		raw_allied_summons += 1
 	if not split_child and not TRANSCENDENCE_DATA.is_transcendent(monster_type) and transcendence.record_summon(MONSTER_CATALOG.get_role(monster_type) if bool(spawn_modifiers.get("counts_population", false)) else ""):
 		transcendence_changed.emit(transcendence.monster_id, true, false)
+	if bool(spawn_modifiers.get("counts_population", false)) or bool(spawn_modifiers.get("mission_summon", false)):
+		_record_mission_action("summon", 1.0)
 	return monster
 
 
@@ -3501,6 +3504,7 @@ func try_use_demon_ultimate(
 		return false
 
 	demon_ultimate_charge = maxf(demon_ultimate_charge - mana_cost, 0.0)
+	_record_mission_action("mana", mana_cost)
 	if transcendence.record_mana(mana_cost):
 		transcendence_changed.emit(transcendence.monster_id, true, false)
 	demon_ultimate_cooldowns[skill_id] = maxf(
@@ -3777,7 +3781,7 @@ func _process_demon_ultimate_spawn_queue(delta: float) -> void:
 		var spawn_position: Vector2 = entry.get("position", Vector2.ZERO)
 
 		if MONSTER_CATALOG.MONSTERS.has(monster_id):
-			_spawn_monster(monster_id, spawn_position, 0.0, false)
+			_spawn_monster(monster_id, spawn_position, 0.0, false, {"mission_summon": true})
 
 			if is_instance_valid(hero) and hero.has_method("record_offensive_event"):
 				hero.call(
@@ -4904,7 +4908,8 @@ func _spawn_extra_normal_summon_monsters(
 				"slime",
 				_clamp_manual_spawn_position(spawn_position + offset),
 				0.0,
-				true
+				true,
+				{"mission_summon": true}
 			)
 			if is_instance_valid(extra_slime):
 				extra_slime.set_meta("allow_special_death_split", true)
@@ -4932,7 +4937,8 @@ func _spawn_extra_normal_summon_monsters(
 			"bat",
 			_clamp_manual_spawn_position(spawn_position),
 			0.0,
-			true
+			true,
+			{"mission_summon": true}
 		)
 
 func is_combat_simulation_paused() -> bool:
@@ -5217,11 +5223,21 @@ func get_run_analysis_summary() -> String:
 	return "\n".join(lines)
 
 func _finish_battle(message: String, player_won: bool) -> void:
+	if _mission_service != null:
+		_mission_service.flush()
 	battle_over = true
 	demon_augment_selection_active = false
 	flow_pause_manager.reset()
 	_sync_combat_pause_state()
 	battle_finished.emit(message, player_won)
+
+func _record_mission_action(event: String, amount: float) -> void:
+	if _mission_service != null and not practice_mode and not tutorial_mode and not LocalTestMode.active:
+		_mission_service.record(event, amount)
+
+func _exit_tree() -> void:
+	if is_instance_valid(_mission_service):
+		_mission_service.flush()
 
 func _emit_stats(hero_hp_override: int = -1) -> void:
 	var hp := 0
@@ -5741,3 +5757,4 @@ func fill_active_enemy_summons(result: Array) -> void:
 		var actor: Node2D = active_hero_summons[id]
 		if is_instance_valid(actor) and not actor.is_queued_for_deletion() and bool(actor.get("active")) and int(actor.get("current_hp")) > 0:
 			result.append(actor)
+

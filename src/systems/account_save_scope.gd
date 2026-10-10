@@ -1,5 +1,7 @@
 extends RefCounted
 
+const MISSION_LEDGER := preload("res://src/systems/mission_ledger.gd")
+
 # Select namespace before progression reads; never migrate guest data silently.
 static var user_id := ""
 const FILES := ["stage_progress.cfg", "monster_collection.cfg", "team_loadout.cfg", "demon_skill_loadout.cfg", "shop_summon_history.cfg"]
@@ -69,6 +71,8 @@ static func load_config(config: ConfigFile, path: String) -> Error:
 	return OK
 
 static func save_config(config: ConfigFile, path: String) -> Error:
+	if path.get_file() == "stage_progress.cfg":
+		return save_configs({"stage_progress.cfg": config})
 	if user_id.is_empty():
 		var recovery := _recover_guest_transaction()
 		if recovery != OK:
@@ -93,7 +97,7 @@ static func save_config(config: ConfigFile, path: String) -> Error:
 
 # Award conversions change collection and research together. Account bundles
 # commit once; guest cfg files use a replayable write-ahead journal.
-static func save_configs(configs: Dictionary) -> Error:
+static func save_configs(configs: Dictionary, write_missions: bool = false) -> Error:
 	var data := {}
 	for name in configs:
 		if name not in FILES or not configs[name] is ConfigFile:
@@ -101,6 +105,21 @@ static func save_configs(configs: Dictionary) -> Error:
 		data[name] = _config_data(configs[name])
 	if not valid_payload(data):
 		return ERR_INVALID_DATA
+	if data.has("stage_progress.cfg"):
+		var previous_data: Dictionary
+		if user_id.is_empty():
+			var previous_progress := ConfigFile.new()
+			var read_error := load_config(previous_progress, "user://stage_progress.cfg")
+			if read_error not in [OK, ERR_FILE_NOT_FOUND]:
+				return read_error
+			previous_data = _config_data(previous_progress)
+		else:
+			previous_data = files.get("stage_progress.cfg", {})
+		# Work on serialized copies. Failed saves must not mutate the caller's
+		# ConfigFile or count its acquisition again when it retries.
+		MISSION_LEDGER.capture(data["stage_progress.cfg"], previous_data, int(Time.get_unix_time_from_system()), write_missions)
+		if not valid_payload(data):
+			return ERR_INVALID_DATA
 	if user_id.is_empty():
 		var recovery := _recover_guest_transaction()
 		if recovery != OK:
@@ -220,3 +239,4 @@ static func install(remote: Dictionary, version: int) -> bool:
 		dirty = old_dirty
 		return false
 	return true
+
