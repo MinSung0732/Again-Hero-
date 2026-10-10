@@ -1,3 +1,10 @@
+## 2026-10-10 — 체인 단검 타깃·공격자·타이머 수명 경계
+
+- archmage chain_dagger에 BattleTargetReference 재사용 객체3개(target/source/projectile) 연결. setup/연쇄 캡처, 이동·충돌·타격 callback·구간 tick에서 같은 epoch/slot/generation 확인. 미등록/반납/재사용/전투 교체는 거절하며 정상 가로채기 충돌과 매 tick 현재 구간 대상 조회는 유지.
+- setup/deactivate에서 로컬 life revision 증가. 이전 await 추가 타격/종료 및 deferred monitoring 해제가 재사용된 단검에 적용되지 않도록 차단. finish를 callback 전에 소비하고 callback 재설정 시 새 수명 보존. 종료 알림은 살아있는 동일 source 수명에만 전달. 피해 후 삭제된 대상 좌표 대신 저장한 충돌 위치를 연쇄 기점으로 사용.
+- Godot4.5.1 독립 실제 before/after projectile 함수759검사 + 이전 돌진420검사 =1,179검사 실패0. 예전 코드의 timer 재사용 버그 재현, 동일Node200회 재사용, 정상4종 이동/피해/연쇄, 실제SceneTreeTimer/보너스 tick, 삭제source, callback 재사용 및 deferred 충돌 확인. 무관한 원래15함수 동일, full projectile 독립editor import/gdparse/Pythoncompile/diff 통과.
+- 전체 게임4.7/GPU/모바일/실물리/FPS·메모리 미검증. 시각·대상조회·탐지·충돌 호출은 명시 spy. 모든 투사체/스킬 적용 완료가 아님. 기준 feature ededeedb50ceb783072fc0612dda1ac815ca8532, main4122adb7 유지. docs/CHAIN_PROJECTILE_LIFETIME.md에 계약/한계/재현/롤백 기록.
+
 ## Hero movement/basic-attack ports — specialized ordinary paths (2026-10-10)
 
 ## 2026-10-10 — 지연 타깃 수명 검증 첫 적용: 용사 돌진

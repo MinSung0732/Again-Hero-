@@ -2,6 +2,13 @@ extends Area2D
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
+const BATTLE_TARGET_REFERENCE := preload("res://src/systems/battle_target_reference.gd")
+# Reuse these objects; only setup/bounce captures allocate WeakRefs.
+var _chain_target_reference = BATTLE_TARGET_REFERENCE.new()
+var _chain_source_reference = BATTLE_TARGET_REFERENCE.new()
+var _chain_projectile_reference = BATTLE_TARGET_REFERENCE.new()
+var _chain_life_revision := 0
+
 static var _frames_cache: Dictionary = {}
 
 const DEFAULT_SPRITE_SCALE := Vector2(0.60, 0.60)
@@ -44,6 +51,8 @@ func setup(
 	is_empowered: bool = false,
 	initial_target: Node2D = null
 ) -> void:
+	_chain_life_revision += 1
+	_clear_chain_references()
 	skill_type = new_skill_type
 	direction = new_direction.normalized()
 	damage = maxi(new_damage, 1)
@@ -67,13 +76,29 @@ func setup(
 	monitoring = true
 	set_physics_process(true)
 	_reset_visual_state()
+	if skill_type == "chain_dagger":
+		var scope := get_parent()
+		if (
+			not _chain_source_reference.capture(source_hero, scope)
+			or not _chain_projectile_reference.capture(self, scope)
+			or not _capture_chain_target()
+		):
+			_finish()
+			return
 	_apply_visual()
 
 func _physics_process(delta: float) -> void:
 	if not active:
 		return
+	if skill_type == "chain_dagger" and not _is_chain_life_current(_chain_life_revision):
+		_finish()
+		return
+	if skill_type == "chain_dagger" and not _is_chain_target_current():
+		_finish()
+		return
 	if is_instance_valid(current_target) and not HERO_TARGET_POLICY.is_detectable(current_target):
 		current_target = null
+		_chain_target_reference.clear()
 	if skill_type == "berserker_wave":
 		var previous_position: Vector2 = global_position
 		var wave_step: Vector2 = direction * speed * delta
@@ -277,6 +302,12 @@ func _damage_berserker_wave_sweep(
 func _on_body_entered(body: Node) -> void:
 	if not active:
 		return
+	var life_revision := _chain_life_revision
+	if skill_type == "chain_dagger" and (
+		not _is_chain_life_current(life_revision) or not _is_chain_target_current()
+	):
+		_finish()
+		return
 	if skill_type in ["storm", "berserker_wave"]:
 		return
 	if body == null or body.is_queued_for_deletion():
@@ -296,6 +327,8 @@ func _on_body_entered(body: Node) -> void:
 				source_hero.call("resolve_archmage_ice_bolt_hit", monster, global_position, empowered)
 			_finish()
 		"chain_dagger":
+			# Keep the impact origin valid even if damage frees/reuses the victim.
+			var hit_position := monster.global_position
 			var growth := maxf(
 				float(config.get("damage_growth_per_bounce", 0.16)),
 				0.0
@@ -325,11 +358,16 @@ func _on_body_entered(body: Node) -> void:
 					)
 				)
 			monster.call("take_damage", hit_damage)
+			# Damage callbacks may retire/reuse this projectile or its source.
+			if not _is_chain_life_current(life_revision):
+				return
 			if (
 				is_instance_valid(source_hero)
 				and source_hero.has_method("play_archmage_chain_hit_audio")
 			):
 				source_hero.call("play_archmage_chain_hit_audio")
+			if not _is_chain_life_current(life_revision):
+				return
 			_spawn_hit_animation(
 				"res://assets/art/heroes/stage5_archmage/frames/effect5",
 				"light",
@@ -339,6 +377,8 @@ func _on_body_entered(body: Node) -> void:
 				global_position
 			)
 
+			if not _is_chain_life_current(life_revision):
+				return
 			# A chain link belongs to the bounce that has actually arrived.
 			# Do not preview the next link before the dagger reaches its target.
 			if has_previous_chain_hit:
@@ -346,6 +386,8 @@ func _on_body_entered(body: Node) -> void:
 					previous_chain_hit_position,
 					global_position
 				)
+			if not _is_chain_life_current(life_revision):
+				return
 			previous_chain_hit_position = global_position
 			has_previous_chain_hit = true
 
@@ -362,10 +404,10 @@ func _on_body_entered(body: Node) -> void:
 				return
 
 			current_target = _find_nearest_unhit(
-				monster.global_position,
+				hit_position,
 				float(config.get("bounce_range", 600.0))
 			)
-			if not is_instance_valid(current_target):
+			if not is_instance_valid(current_target) or not _capture_chain_target():
 				if bounce_count > 1:
 					_finish_after_chain_ticks()
 				else:
@@ -490,8 +532,9 @@ func _get_chain_tick_count() -> int:
 
 
 func _finish_after_chain_ticks() -> void:
+	var life_revision := _chain_life_revision
 	set_physics_process(false)
-	set_deferred("monitoring", false)
+	call_deferred("_disable_chain_monitoring", life_revision)
 	sprite.visible = false
 	tail.visible = false
 	var tick_count := _get_chain_tick_count()
@@ -505,13 +548,15 @@ func _finish_after_chain_ticks() -> void:
 		+ 0.04
 	)
 	await get_tree().create_timer(wait_time).timeout
-	if is_inside_tree():
+	# Only this local pool life may finish; a dead source still needs cleanup.
+	if active and _chain_life_revision == life_revision and is_inside_tree():
 		_finish()
 
 func _apply_chain_current_ticks(
 	from_position: Vector2,
 	to_position: Vector2
 ) -> void:
+	var life_revision := _chain_life_revision
 	var tick_count := _get_chain_tick_count()
 	var tick_interval := maxf(float(config.get("chain_tick_interval", 0.18)), 0.01)
 	var tick_ratio := maxf(float(config.get("chain_tick_damage_ratio", 0.11)), 0.0)
@@ -524,9 +569,11 @@ func _apply_chain_current_ticks(
 		)
 
 	for tick_index in range(tick_count):
-		if not is_inside_tree():
+		if not _is_chain_life_current(life_revision):
 			break
 		_damage_monsters_along_segment(from_position, to_position, width, tick_damage)
+		if not _is_chain_life_current(life_revision):
+			break
 		if tick_index < tick_count - 1:
 			await get_tree().create_timer(tick_interval).timeout
 
@@ -560,6 +607,7 @@ func _damage_monsters_along_segment(
 	half_width: float,
 	tick_damage: int
 ) -> void:
+	var life_revision := _chain_life_revision
 	var segment := to_position - from_position
 	var length_sq := maxf(segment.length_squared(), 0.001)
 	var min_point := Vector2(
@@ -572,6 +620,8 @@ func _damage_monsters_along_segment(
 	)
 	var query_rect := Rect2(min_point, max_point - min_point)
 	for node in _get_monster_nodes_in_rect(query_rect):
+		if not _is_chain_life_current(life_revision):
+			break
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		var monster := node as Node2D
@@ -606,12 +656,21 @@ func _finish() -> void:
 	if not active:
 		return
 
+	var life_revision := _chain_life_revision
 	var finished_skill_type := skill_type
-	if finished_skill_type == "chain_dagger" and is_instance_valid(source_hero):
-		if source_hero.has_method("notify_archmage_chain_dagger_finished"):
-			source_hero.call("notify_archmage_chain_dagger_finished")
-
+	var should_notify := (
+		finished_skill_type == "chain_dagger"
+		and _chain_source_reference.resolve(get_parent()) == source_hero
+		and is_instance_valid(source_hero)
+	)
+	# Consume before callbacks; a nested finish must not notify/recycle twice.
 	active = false
+	_clear_chain_references()
+	if should_notify and source_hero.has_method("notify_archmage_chain_dagger_finished"):
+		source_hero.call("notify_archmage_chain_dagger_finished")
+	if _chain_life_revision != life_revision:
+		return  # A callback has already recycled/reconfigured this Node.
+
 	var pool_key := _pool_key_for_skill(finished_skill_type)
 	var parent := get_parent()
 	if (
@@ -637,6 +696,8 @@ func _pool_key_for_skill(projectile_skill_type: String) -> String:
 
 
 func deactivate_for_pool() -> void:
+	_chain_life_revision += 1
+	_clear_chain_references()
 	active = false
 	skill_type = ""
 	direction = Vector2.RIGHT
@@ -852,3 +913,33 @@ func _load_texture(path: String) -> Texture2D:
 		if image.load(path) == OK:
 			return ImageTexture.create_from_image(image)
 	return null
+
+
+func _capture_chain_target() -> bool:
+	_chain_target_reference.clear()
+	if current_target == null:
+		return true  # Existing direction-only/undetectable-target behavior.
+	return _chain_target_reference.capture(current_target, get_parent())
+
+func _is_chain_target_current() -> bool:
+	return current_target == null or _chain_target_reference.resolve(get_parent()) == current_target
+
+func _is_chain_life_current(life_revision: int) -> bool:
+	return (
+		active and skill_type == "chain_dagger"
+		and _chain_life_revision == life_revision and is_inside_tree()
+		and is_instance_valid(source_hero)
+		and _chain_projectile_reference.resolve(get_parent()) == self
+		and _chain_source_reference.resolve(get_parent()) == source_hero
+	)
+
+func _clear_chain_references() -> void:
+	_chain_target_reference.clear()
+	_chain_source_reference.clear()
+	_chain_projectile_reference.clear()
+
+
+func _disable_chain_monitoring(life_revision: int) -> void:
+	# Deferred property writes also belong to the life that scheduled them.
+	if active and skill_type == "chain_dagger" and _chain_life_revision == life_revision:
+		monitoring = false

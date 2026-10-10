@@ -1,5 +1,10 @@
 # 지연 대상 수명 검증 — 용사 돌진 첫 적용
 
+## 후속 진행 — 체인 단검 수명 연결 (2026-10-10)
+
+체인 단검의 예약 타깃과 source/projectile 수명, await/deferred 작업 revision을 연결했다. 정상 충돌·피해·구간 tick을 유지하며 풀 재사용/전투 교체 후 오래된 작업을 차단한다. 새 독립759검사+돌진420검사 통과. 아래 이전 단계 설명은 구현 이력이다. 최신 범위·다음 작업·롤백은 [CHAIN_PROJECTILE_LIFETIME.md](CHAIN_PROJECTILE_LIFETIME.md). 전체 게임/모바일 미검증, 다른 스킬·서버 적용은 미완료.
+
+
 2026-10-10. 작업 feature/stage10-astra, 기준 e684443eb878f43bc438a8b95fdb1017ff37590b. main4122adb73e14552aae7c0aa7edefb2827f5d08d0 유지.
 
 ## 문제와 변경
