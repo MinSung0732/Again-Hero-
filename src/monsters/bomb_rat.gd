@@ -267,11 +267,29 @@ func _resume_visual_from_lod() -> void:
 
 
 func take_damage(amount: int) -> void:
+	_apply_bomb_rat_damage(amount)
+
+func supports_damage_receipt() -> bool:
+	# Inherited receipt code must not bypass a derived actor's take_damage override.
+	return get_script().resource_path == "res://src/monsters/bomb_rat.gd"
+
+func take_damage_with_result(amount: int, receipt) -> bool:
+	if receipt == null:
+		take_damage(amount)
+		return false
+	var receipt_revision: int = receipt.begin(self, amount)
+	if not supports_damage_receipt():
+		take_damage(amount)
+		return false
+	_apply_bomb_rat_damage(amount, receipt, receipt_revision)
+	return receipt.finish(receipt_revision)
+
+func _apply_bomb_rat_damage(amount: int, receipt = null, receipt_revision: int = 0) -> void:
 	if current_hp <= 0 or dying:
 		return
 
 	var remaining_damage := maxi(amount, 0)
-	remaining_damage = MONSTER_RUNTIME_COMMON.consume_support_shield(self,remaining_damage)
+	remaining_damage = MONSTER_RUNTIME_COMMON._consume_support_shield(self,remaining_damage,receipt,receipt_revision)
 	if remaining_damage <= 0:
 		return
 	var elite_shield_hp := maxi(
@@ -283,6 +301,8 @@ func take_damage(amount: int) -> void:
 		elite_shield_hp -= absorbed
 		remaining_damage -= absorbed
 		set_meta("elite_shield_hp", elite_shield_hp)
+		if receipt != null:
+			receipt.record_shield(absorbed, receipt_revision)
 		hit_flash_timer = 0.10
 		_ensure_hit_flash_material()
 		if hit_flash_material != null:
@@ -298,6 +318,8 @@ func take_damage(amount: int) -> void:
 	var previous_hp := current_hp
 	current_hp = maxi(current_hp - remaining_damage, 0)
 	var applied_damage := previous_hp - current_hp
+	if receipt != null:
+		receipt.record_hp(applied_damage, receipt_revision)
 	DAMAGE_NUMBERS.show(self, applied_damage)
 	hit_flash_timer = 0.10
 	_ensure_hit_flash_material()
@@ -309,7 +331,7 @@ func take_damage(amount: int) -> void:
 		hit_flash_material.set_shader_parameter("flash_strength", 1.0)
 
 	if current_hp <= 0:
-		_die_from_hero()
+		_die_from_hero(receipt, receipt_revision)
 		return
 
 	if not self_destructing:
@@ -378,12 +400,14 @@ func _complete_self_destruct() -> void:
 	died.emit()
 	_play_death_or_free()
 
-func _die_from_hero() -> void:
+func _die_from_hero(receipt = null, receipt_revision: int = 0) -> void:
 	if dying:
 		return
 
 	_resume_visual_from_lod()
 	dying = true
+	if receipt != null:
+		receipt.record_death_started(receipt_revision)
 	warning_layer.queue_redraw()
 	self_destructing = false
 	set_meta("death_type", "normal")
