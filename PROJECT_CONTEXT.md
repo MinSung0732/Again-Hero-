@@ -1,3 +1,10 @@
+## 2026-10-11 — 용사 공포·마비·석화 결과
+
+- 공포/마비/석화에 기존 BattleStatusReceipt opt-in API와 공유 helper 추가. 기존 guard·저항/최소 지속시간·공포 source/fallback·마비 강도/타이머 교체·석화 tint/anchor/residue 유지. 파생 override/null receipt legacy1회 호출 및 revision 재진입 무효화 유지.
+- 실제 상태 쓰기 뒤 결과 snapshot 기록. 마비/석화는 visual callback 전에 기록하여 후속 mutation과 구분. 석화 해제 둔화는 원래 cast token으로1회 집계, ambient scope 복구. 마비의 기존 raw status event 미발생 정책도 그대로 유지.
+- Godot4.5.1 신규12,988+기존 상태19,462 =32,450검사 실패0, 최종 로그 leak/error 없음. 초기 Hero618/직전625함수 hook 역변환 비교, gdparse/Python compile/import/diff 통과. 전체 게임4.7/모바일/실제 AI·시각·물리·성능 미검증.
+- 기준 feature5db316b133ec5fd4b49045ba2a933518ffb7617c, main4122adb7 유지. docs/HERO_EXTENDED_STATUS_RECEIPT.md에 경계/재현/롤백. 신규 API 기술 호출자 미전환. 다음은 화상·독·출혈 및 기타 상태 결과 경계/호출자 연결; 매칭·용사모드 확대 보류.
+
 ## 2026-10-11 — 몬스터 피해 연결 감사·용사 제어 상태 결과
 
 - Catalog26종 incoming canonical opt-in 누락 없음 확인. 용사 둔화/기절/침묵에 caller-owned BattleStatusReceipt와 opt-in API 추가. 기존 void/bool이 공유 helper를 사용하며 요청/registry life/적용 수락·결과 timer/strength/complete 기록.

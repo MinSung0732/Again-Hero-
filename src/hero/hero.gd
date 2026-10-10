@@ -17342,7 +17342,21 @@ func register_medusa_hit(duration: float, release_slow: float = 1.0, release_dur
 	medusa_stone_threshold += int(MEDUSA_BEHAVIOR.STONE.threshold_growth)
 	return true
 
+func apply_petrify_with_result(duration: float, receipt, release_slow: float = 1.0, release_duration: float = 0.0) -> bool:
+	if receipt == null:
+		apply_petrify(duration, release_slow, release_duration)
+		return false
+	var revision: int = receipt.begin(self, &"petrify", duration, 1.0)
+	if not supports_status_receipt():
+		apply_petrify(duration, release_slow, release_duration)
+		return false
+	_apply_petrify_status(duration, release_slow, release_duration, receipt, revision)
+	return receipt.finish(revision)
+
 func apply_petrify(duration: float, release_slow: float = 1.0, release_duration: float = 0.0) -> bool:
+	return _apply_petrify_status(duration, release_slow, release_duration)
+
+func _apply_petrify_status(duration: float, release_slow: float = 1.0, release_duration: float = 0.0, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or petrify_timer > 0.0 or duration <= 0.0:
 		return false
 	petrify_status_action = STATUS_ACTION_SCOPE.current(self)
@@ -17356,6 +17370,8 @@ func apply_petrify(duration: float, release_slow: float = 1.0, release_duration:
 		petrify_restore_tint = hero_sprite.self_modulate
 		hero_sprite.self_modulate = petrify_restore_tint * MEDUSA_BEHAVIOR.STONE.tint
 	set_meta("petrify_active",true)
+	if receipt != null:
+		receipt.record_application(petrify_timer, 1.0, receipt_revision)
 	COMBAT_STATUS_EFFECT_VISUAL.show_on(self, "petrify")
 	return true
 
@@ -17492,10 +17508,30 @@ func _tick_stun_state(delta: float) -> bool:
 	return true
 
 
+func apply_fear_with_result(source: Node2D, duration: float, receipt, speed_multiplier: float = 1.50) -> bool:
+	if receipt == null:
+		apply_fear(source, duration, speed_multiplier)
+		return false
+	var revision: int = receipt.begin(self, &"fear", duration, speed_multiplier)
+	if not supports_status_receipt():
+		apply_fear(source, duration, speed_multiplier)
+		return false
+	_apply_fear_status(source, duration, speed_multiplier, receipt, revision)
+	return receipt.finish(revision)
+
 func apply_fear(
 	source: Node2D,
 	duration: float,
 	speed_multiplier: float = 1.50
+) -> void:
+	_apply_fear_status(source, duration, speed_multiplier)
+
+func _apply_fear_status(
+	source: Node2D,
+	duration: float,
+	speed_multiplier: float = 1.50,
+	receipt = null,
+	receipt_revision: int = 0
 ) -> void:
 	if current_hp <= 0 or is_dying:
 		return
@@ -17516,6 +17552,8 @@ func apply_fear(
 		else global_position - Vector2.RIGHT
 	)
 	set_meta("fear_active", true)
+	if receipt != null:
+		receipt.record_application(fear_timer, fear_speed_multiplier, receipt_revision)
 	queue_redraw()
 
 
@@ -21092,7 +21130,21 @@ func _draw_combat_status_overlay() -> void:
 		)
 
 # Stronger paralysis replaces weaker; weaker applications cannot prolong it.
+func apply_paralysis_with_result(ratio: float, duration: float, receipt) -> bool:
+	if receipt == null:
+		apply_paralysis(ratio, duration)
+		return false
+	var revision: int = receipt.begin(self, &"paralysis", duration, ratio)
+	if not supports_status_receipt():
+		apply_paralysis(ratio, duration)
+		return false
+	_apply_paralysis_status(ratio, duration, receipt, revision)
+	return receipt.finish(revision)
+
 func apply_paralysis(ratio: float, duration: float) -> bool:
+	return _apply_paralysis_status(ratio, duration)
+
+func _apply_paralysis_status(ratio: float, duration: float, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or duration <= 0.0 or ratio <= 0.0:
 		return false
 	var strength := clampf(ratio,0.0,1.0)
@@ -21100,6 +21152,8 @@ func apply_paralysis(ratio: float, duration: float) -> bool:
 		return false
 	paralysis_ratio = strength
 	paralysis_timer = duration
+	if receipt != null:
+		receipt.record_application(paralysis_timer, paralysis_ratio, receipt_revision)
 	COMBAT_STATUS_EFFECT_VISUAL.show_on(self, "paralysis")
 	if strength >= 1.0:
 		attack_timer = maxf(attack_timer,0.0001)
