@@ -55,3 +55,11 @@ static func ids() -> Array[String]:
 
 static func display_name(id: String) -> String:
 	return String(MONSTER_REWARDS[id].get("name", id)) if MONSTER_REWARDS.has(id) else String(APPEARANCES.get_entry(id).get("name", id))
+
+static func icon_info(id: String) -> Dictionary:
+	if MONSTER_REWARDS.has(id):
+		var label := display_name(id)
+		return {"type": "초월", "name": label.get_slice("·", 1).strip_edges() if label.contains("·") else label, "source": "초월 몬스터 해금"}
+	var entry := APPEARANCES.get_entry(id)
+	if entry.is_empty(): return {}
+	return {"type": "기본", "name": String(entry.get("name", id)), "source": "초기 성별 선택"}

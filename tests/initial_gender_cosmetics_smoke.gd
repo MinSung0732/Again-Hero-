@@ -28,7 +28,7 @@ func run() -> void:
 	image.fill(Color.WHITE)
 	ResourceSaver.save(ImageTexture.create_from_image(image),art)
 	files.append(art)
-	var scope_path := fixture("scope", "extends RefCounted\nstatic var user_id := \"fixture-account\"\nstatic var guest_directory := \"fixture\"\nstatic var text := \"\"\nstatic var saves := 0\nstatic func load_config(config: ConfigFile, _path: String) -> int: return config.parse(text) if not text.is_empty() else ERR_FILE_NOT_FOUND\nstatic func save_config(config: ConfigFile, _path: String) -> int: text = config.encode_to_text(); saves += 1; return OK\n")
+	var scope_path := fixture("scope", "extends RefCounted\nstatic var user_id := \"fixture-account\"\nstatic var guest_directory := \"fixture\"\nstatic var text := \"\"\nstatic var saves := 0\nstatic var fail_save := false\nstatic func load_config(config: ConfigFile, _path: String) -> int: return config.parse(text) if not text.is_empty() else ERR_FILE_NOT_FOUND\nstatic func save_config(config: ConfigFile, _path: String) -> int:\n\tif fail_save: return ERR_CANT_CREATE\n\ttext = config.encode_to_text(); saves += 1; return OK\n")
 	var catalog_path := fixture("appearances", art_source("res://src/data/demon_appearance_catalog.gd",art))
 	var appearance_path := fixture("appearance", FileAccess.get_file_as_string("res://src/systems/demon_appearance_store.gd").replace("res://src/systems/account_save_scope.gd",scope_path).replace("res://src/data/demon_appearance_catalog.gd",catalog_path))
 	var profile_path := fixture("profile", "extends RefCounted\nconst SCOPE = preload(\""+scope_path+"\")\nconst APPEARANCE = preload(\""+appearance_path+"\")\nstatic func get_profile() -> Dictionary:\n\tvar config := ConfigFile.new()\n\tSCOPE.load_config(config,\"fixture\")\n\treturn config.get_value(\"player_profile\",\"value\",{})\nstatic func appearance_id() -> String: return APPEARANCE.equipped_id(String(get_profile().get(\"gender\",\"male\")))\n")
@@ -38,7 +38,12 @@ func run() -> void:
 	var store_path := fixture("store", FileAccess.get_file_as_string("res://src/systems/profile_cosmetic_store.gd").replace("res://src/systems/account_save_scope.gd",scope_path).replace("res://src/systems/player_profile.gd",profile_path).replace("res://src/systems/demon_appearance_store.gd",appearance_path).replace("res://src/systems/monster_collection_store.gd",collection_path).replace("res://src/data/monster_catalog.gd",monsters_path).replace("res://src/data/profile_cosmetic_catalog.gd",cosmetics_path))
 	var frames_path := fixture("frames", "extends RefCounted\nstatic func style(_name: String, _size: int, _color: Color = Color.WHITE) -> StyleBox: return StyleBoxFlat.new()\n")
 	var button_path := fixture("button", "extends Button\nsignal confirmed\n")
-	var view_path := fixture("view", FileAccess.get_file_as_string("res://src/ui/lobby_profile_view.gd").replace("res://src/systems/player_profile.gd",profile_path).replace("res://src/systems/profile_cosmetic_store.gd",store_path).replace("res://src/data/profile_cosmetic_catalog.gd",cosmetics_path).replace("res://src/systems/demon_appearance_store.gd",appearance_path).replace("res://src/data/demon_appearance_catalog.gd",catalog_path).replace("res://src/ui/commerce_frame_skin.gd",frames_path).replace("res://src/ui/drag_safe_button.gd",button_path))
+	var icon_path := fixture("icon-picker", FileAccess.get_file_as_string("res://src/ui/lobby_profile_icon_picker.gd").replace("res://src/systems/profile_cosmetic_store.gd",store_path).replace("res://src/data/profile_cosmetic_catalog.gd",cosmetics_path).replace("res://src/ui/commerce_frame_skin.gd",frames_path).replace("res://src/ui/drag_safe_button.gd",button_path))
+	var view_source := FileAccess.get_file_as_string("res://src/ui/lobby_profile_view.gd").replace("res://src/systems/player_profile.gd",profile_path).replace("res://src/systems/profile_cosmetic_store.gd",store_path).replace("res://src/data/profile_cosmetic_catalog.gd",cosmetics_path).replace("res://src/systems/demon_appearance_store.gd",appearance_path).replace("res://src/data/demon_appearance_catalog.gd",catalog_path).replace("res://src/ui/commerce_frame_skin.gd",frames_path).replace("res://src/ui/drag_safe_button.gd",button_path).replace("res://src/ui/lobby_profile_icon_picker.gd",icon_path)
+	var refresh_start := view_source.find("func refresh() -> void:")
+	var refresh_end := view_source.find("\nfunc show()", refresh_start)
+	view_source = view_source.substr(0, refresh_start) + "func refresh() -> void: test_refreshes += 1\n" + view_source.substr(refresh_end) + "\nvar test_refreshes := 0\n"
+	var view_path := fixture("view", view_source)
 	var scope: GDScript = load(scope_path)
 	var appearance: GDScript = load(appearance_path)
 	var store: GDScript = load(store_path)
@@ -71,6 +76,18 @@ func run() -> void:
 				if slot != "representative":
 					check(own in store.choices(slot) and other not in store.choices(slot), "cosmetic ownership follows gender")
 					check(store.selected_id(slot) == own and not store.select(slot,other), "old cosmetic falls back/direct choice blocked")
+				if slot == "avatar":
+					view.open_picker(slot)
+					var icons: RefCounted = view.icon_picker
+					check(icons.overlay.visible and icons.slots.size() == 10, "retained 5x2 icon gallery opens")
+					check(icons.ids.size() == 8, "only existing avatar resources listed")
+					var index: int = icons.ids.find(other)
+					icons._select_slot(index)
+					check(icons.confirm.disabled and icons.preview.texture == view._lock_texture(), "locked gender preview masked")
+					icons._confirm()
+					check(scope.saves == before, "locked confirm never saves")
+					view.close_picker()
+					continue
 				view.open_picker(slot)
 				var locked: Button = view.picker_buttons[other]
 				check(locked.visible and locked.disabled and locked.text.contains("잠김"), "other gender shown locked in "+slot)
@@ -82,6 +99,58 @@ func run() -> void:
 				view.close_picker()
 			check("zeus" in store.choices("avatar") and "zeus_plus_banner" in store.choices("banner"), "earned monster rewards unchanged")
 			check(appearance.equip(own), "owned representative still selectable")
+	# New confirmation workflow with real selection/save methods.
+	scope.user_id = "fixture-account"
+	var config := ConfigFile.new()
+	config.set_value("player_profile","value",{"gender":"male"})
+	scope.text = config.encode_to_text()
+	view.open_picker("avatar")
+	var icons: RefCounted = view.icon_picker
+	var before: int = scope.saves
+	icons._select_slot(icons.ids.find("zeus"))
+	check(not icons.confirm.disabled and store.selected_id("avatar") == "original_male", "preview does not equip")
+	view.close_picker()
+	check(scope.saves == before and store.selected_id("avatar") == "original_male", "close cancels pending selection")
+	view.open_picker("avatar")
+	check(icons.candidate == "original_male", "reopen starts at equipped icon")
+	icons._select_slot(icons.ids.find("zeus"))
+	scope.fail_save = true
+	icons._confirm()
+	check(icons.overlay.visible and scope.saves == before and icons.notice.text.contains("못했습니다"), "save failure retains preview")
+	scope.fail_save = false
+	icons._confirm()
+	check(not icons.overlay.visible and store.selected_id("avatar") == "zeus" and scope.saves == before+1 and view.test_refreshes == 1, "confirm equips once and refreshes profile")
+	view.open_picker("avatar")
+	check(icons.candidate == "zeus" and icons.confirm.disabled, "equipped icon restored/no duplicate save")
+	icons._select_slot(icons.ids.find("original_male"))
+	cloud.busy = true
+	icons._confirm()
+	check(not icons.overlay.visible and scope.saves == before+1, "busy guard prevents confirm")
+	cloud.busy = false
+	view.open_picker("avatar")
+	icons._select_slot(icons.ids.find("original_male"))
+	scope.user_id = "another-account"
+	icons._confirm()
+	check(not icons.overlay.visible and scope.saves == before+1, "account change invalidates pending selection")
+	scope.user_id = "fixture-account"
+	view.open_picker("avatar")
+	for bounds in [Vector2(1080,1920),Vector2(1920,1080),Vector2(360,640)]:
+		host.size = bounds
+		icons._layout()
+		await process_frame
+		await process_frame
+		var frame_end: Vector2 = icons.panel.position + icons.panel.size * icons.panel.scale
+		check(icons.panel.position.x >= 0 and icons.panel.position.y >= 0 and frame_end.x <= bounds.x+1 and frame_end.y <= bounds.y+1, "modal inside viewport "+str(bounds))
+		check(icons.panel.size.y <= icons.BASE.y+1, "content stays within logical modal height")
+	var fixed_count: int = icons.slots[0].button.get_parent().get_child_count()
+	for i in range(15): icons.ids.append("original_male")
+	icons._turn_page(1)
+	check(icons.page == 1 and icons.page_label.text == "2 / 3", "future icon pagination")
+	icons._turn_page(50)
+	check(icons.page == 2 and icons.next.disabled, "pagination clamps at last page")
+	icons._turn_page(-50)
+	check(icons.page == 0 and icons.previous.disabled and icons.slots[0].button.get_parent().get_child_count() == fixed_count, "pagination reuses ten cards")
+	view.close_picker()
 	scope.text = ""; scope.user_id = "fixture-account"
 	check(appearance.owned_ids() == ["original_male"], "legacy missing profile fallback")
 	check(view._lock_texture() == view._lock_texture(), "lock texture reused")

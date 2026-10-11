@@ -1,3 +1,9 @@
+## 2026-10-11 — 프로필 아이콘 선택/확정 전용 갤러리
+
+- 아바타 선택창은 첨부 예시의 상단미리보기/정보/확정, 하단5×2/페이지 구성. 기존8종 아이콘 리소스(Catalog 기준)를 표시하며 미보유는 자물쇠, 선택 미리보기와 확정 저장 분리. 배너/대표선택은 기존 UI 유지.
+- lobby_profile_icon_picker.gd에 10고정슬롯·WeakRef/기존텍스처캐시·중앙viewport축소·이벤트배치, 매프레임 처리없음. 저장 포맷/보유규칙 변경없음, 새 아이콘은 Catalog에서 자동 수집/페이지 처리.
+- Godot4.5.1 격리112검사PASS(실제전체 Store/Catalog/View/Picker, synthetic 아트/프레임/저장). 실제GPU화면/PC·Android/export 미검증.
+
 ## 2026-10-11 — 초기 성별의 기본 마왕만 보유
 
 - demon_appearance_catalog의 두 기본 마왕은 initial_gender 기반 최초 지급. player_profile.value.gender와 일치하는 기본 마왕만 보유하고 나머지 기본 성별은 초상화/배너/대표 변경창에서 자물쇠·미보유/선택불가.
