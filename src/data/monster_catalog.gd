@@ -1,6 +1,9 @@
 extends RefCounted
 class_name MonsterCatalog
 
+const BALANCE := preload("res://src/data/monster_balance_catalog.gd")
+static var balanced_stats_cache: Dictionary = {}
+
 const ORDER := [
 	"slime",
 	"spider",
@@ -66,7 +69,7 @@ const MONSTERS := {
 		"base_stats":preload("res://src/data/manticore_behavior_catalog.gd").BASE,"transcendence":preload("res://src/data/manticore_behavior_catalog.gd").RULES,
 		"card_icon_path":"res://assets/art/Transcendent_monster/manticore/frames/idle_01.png","ground_shadow":{"size":Vector2(78,20),"offset_y":0.0,"opacity":0.35},
 		"scene":preload("res://src/monsters/Manticore.tscn"),
-		"description":"누적 피해400 후 전투당1회. 2연격 각35+소환 전 피해×0.075, HP1550+피해×0.5. 이속235·지름650·580속도 사냥/추적·완료 후1.5초. 게이지100·지휘력회복100%/초당최대15. 등장 폭발135%는 본인 제외 아군도 피해. 불꽃50/60초·30초·접촉1초100%, 화상75%/1초·공격력절반. 유성35/35초·2초10발·175%·3초중독200%·2초현재HP6%독구름. 지각분쇄30/30초·5초·680거리/450속도·200%·3초30%둔화. 기본5적중 출혈10초/최대HP3%, 출혈대상3타50%·쉴드4%. 첫 치명상 후퇴2배·잃은HP15%회복. 일반/특수증강·엘리트·대형몹 제외.",
+		"description":"누적 피해400 후 전투당1회. 2연격 각42+소환 전 피해×0.075, HP1700+피해×0.5. 이속235·지름650·580속도 사냥/추적·완료 후1.5초. 게이지100·지휘력회복100%/초당최대15. 등장 폭발135%는 본인 제외 아군도 피해. 불꽃50/60초·30초·접촉1초100%, 화상75%/1초·공격력절반. 유성35/35초·2초10발·175%·3초중독200%·2초현재HP6%독구름. 지각분쇄30/30초·5초·680거리/450속도·200%·3초30%둔화. 기본5적중 출혈10초/최대HP3%, 출혈대상3타50%·쉴드4%. 첫 치명상 후퇴2배·잃은HP15%회복. 일반/특수증강·엘리트·대형몹 제외.",
 	},
 
 	"izanami": {
@@ -77,7 +80,7 @@ const MONSTERS := {
 		"base_stats":preload("res://src/data/izanami_behavior_catalog.gd").BASE,"transcendence":preload("res://src/data/izanami_behavior_catalog.gd").RULES,
 		"card_icon_path":"res://assets/art/Transcendent_monster/Izanami/frames/idle_01.png","ground_shadow":{"size":Vector2(78,20),"offset_y":0.0,"opacity":0.35},
 		"scene":preload("res://src/monsters/Izanami.tscn"),
-		"description":"제어형 실제50회 소환 및 상태이상3회 적중 후 전투당1회. 공격55+소환 전 상태이상 행동×1, HP1080+행동×1.5(한 공격·기술1회, 지속갱신·다중장판 중복 제외). 사거리 지름550 즉시타격·공격간격1.5초·이속250·거리 유지. 게이지100/증강 적용 지휘력회복100%, 초당최대15. 황천윤무20/30초:7초 받는피해+15%·둔화12%,12피격 시155%·3초99%둔화/침묵. 명계귀화10/8초:0.75초 예고·지름180·170%,3초 장판200%·갱신 둔화30%. 원혼추살30/20초:2초간8개,5초 배회·120%/1.5초기절. 피해12회 또는 상태4회마다 본인 최대HP4% 쉴드 중첩 및 토리이10초·지름350:아군 주는피해+15%/받는피해-20%,용사 주는피해-15%/받는피해+20%. 1초월:귀화CD절반·즉시.2초월:추살소모절반·인식+80%.3초월:귀화CD추가-2초·범위+30%.4초월:토리이15초·아군피감40%.5초월:통과 시이속+40%5초·피감70%1초. 일반/특수증강·엘리트·대형몹 제외.",
+		"description":"제어형 실제50회 소환 및 상태이상3회 적중 후 전투당1회. 공격55+소환 전 상태이상 행동×1, HP1400+행동×1.5(한 공격·기술1회, 지속갱신·다중장판 중복 제외). 사거리 지름550 즉시타격·공격간격1.5초·이속250·거리 유지. 게이지100/증강 적용 지휘력회복100%, 초당최대15. 황천윤무20/30초:7초 받는피해+15%·둔화12%,12피격 시155%·3초99%둔화/침묵. 명계귀화10/8초:0.75초 예고·지름180·170%,3초 장판200%·갱신 둔화30%. 원혼추살30/20초:2초간8개,5초 배회·120%/1.5초기절. 피해12회 또는 상태4회마다 본인 최대HP4% 쉴드 중첩 및 토리이10초·지름350:아군 주는피해+15%/받는피해-20%,용사 주는피해-15%/받는피해+20%. 1초월:귀화CD절반·즉시.2초월:추살소모절반·인식+80%.3초월:귀화CD추가-2초·범위+30%.4초월:토리이15초·아군피감40%.5초월:통과 시이속+40%5초·피감70%1초. 일반/특수증강·엘리트·대형몹 제외.",
 	},
 
 	"bulgasal": {
@@ -88,7 +91,7 @@ const MONSTERS := {
 		"attack_growth":{"metric":"tanks_died","multiplier":BULGASAL_BEHAVIOR.DAMAGE_PER_TANK_DEATH},
 		"default_unlocked":false,"combat_enabled":true,"base_cost":0.0,"summon_exp":0.0,
 		"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,"special_augment_ids":[],
-		"description":"탱커 실제20마리 소환 및 아군50마리 사망 후 전투당1회. HP1850+아군 누적 사망 수, 공격130+소환 전 탱커 사망 수×0.6(소환 시 고정), 공격 간격1.6초·이속270. 게이지60·증강 적용 지휘력 회복100%, 초당최대15. 바위던지기:15/20초, 지름300내300%·기절2초, 지름600내175%·둔화50%2초. 잠입:15/25초,7초 이속+50%·피해60%감소·도달135%/치유감소25%3초. 강철도약:20/20초,2초 정신집중(기절/침묵 취소),지름250 450%·기절3초/8갈래700거리130%·둔화30%2초(파동1회). 돌기둥 파괴150%여진/섭취HP5%쉴드.10피격마다 후퇴·기둥 교체·HP3%쉴드. 초월1: 바위 무적무시. 초월2: 폭발 후8방향 크기·피해·범위·상태효과50% 조각. 초월3: 기둥최대13개·섭취쉴드7%. 초월4: 돌진 무적·개체충돌/대상인식 제외·무적무시 타격. 초월5: 정신집중 행동제어 면역·찍기지름500. 돌진 경로 기둥도 파괴/여진. 일반/특수증강·엘리트·대형몹 제외.",
+		"description":"탱커 실제20마리 소환 및 아군50마리 사망 후 전투당1회. HP2100+아군 누적 사망 수, 공격130+소환 전 탱커 사망 수×0.6(소환 시 고정), 공격 간격1.6초·이속270. 게이지60·증강 적용 지휘력 회복100%, 초당최대15. 바위던지기:15/20초, 지름300내300%·기절2초, 지름600내175%·둔화50%2초. 잠입:15/25초,7초 이속+50%·피해60%감소·도달135%/치유감소25%3초. 강철도약:20/20초,2초 정신집중(기절/침묵 취소),지름250 450%·기절3초/8갈래700거리130%·둔화30%2초(파동1회). 돌기둥 파괴150%여진/섭취HP5%쉴드.10피격마다 후퇴·기둥 교체·HP3%쉴드. 초월1: 바위 무적무시. 초월2: 폭발 후8방향 크기·피해·범위·상태효과50% 조각. 초월3: 기둥최대13개·섭취쉴드7%. 초월4: 돌진 무적·개체충돌/대상인식 제외·무적무시 타격. 초월5: 정신집중 행동제어 면역·찍기지름500. 돌진 경로 기둥도 파괴/여진. 일반/특수증강·엘리트·대형몹 제외.",
 		"card_icon_path":"res://assets/art/Transcendent_monster/Bulgasal/frames/idle_01.png",
 
 		"base_stats":preload("res://src/data/bulgasal_behavior_catalog.gd").BASE,
@@ -104,7 +107,7 @@ const MONSTERS := {
 		"summon_growth":{"max_hp":preload("res://src/data/zeus_behavior_catalog.gd").HP_PER_SUMMON,"attack_damage":preload("res://src/data/zeus_behavior_catalog.gd").DAMAGE_PER_SUMMON},
 		"default_unlocked":false,"combat_enabled":true,"base_cost":0.0,"summon_exp":0.0,
 		"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,
-		"description":"지휘력300과 마력200 소모 후 전투당1회 무료 소환. 소환 전 실제 생성 수에 따라 HP1200+수×2.5 / 공격150+수×0.6. 심판: 지름475 즉시 번개, 50%확률2초75% 마비(공속 저하). 천둥구체:2초 정신집중 후 지름500 영역에서3초간 무작위12회 낙뢰·중심5회 추적. 각 낙뢰 지름120·200%(2초월235%·무적무시)·둔화/마비30%. 마비 대상 기본공격 적중 시 최대HP1% 중첩 쉴드. 왕관:15초,5초마다HP3%회복·마비효과50%증가(3초월 모든 기술CD최소10초). 천둥가르기:650속도·1500직선·150%(2초월175%·무적무시)·마비20%. 과전압:지름550 아군사망 구슬당 게이지0.01(4초월0.02),5초월 잃은HP0.07%회복. 게이지100·지휘력회복100%(증강 적용)·초당최대15. 일반/특수증강·엘리트·대형몹 제외.",
+		"description":"지휘력300과 마력200 소모 후 전투당1회 무료 소환. 소환 전 실제 생성 수에 따라 HP1450+수×2.5 / 공격150+수×0.6. 심판: 지름475 즉시 번개, 50%확률2초75% 마비(공속 저하). 천둥구체:2초 정신집중 후 지름500 영역에서3초간 무작위12회 낙뢰·중심5회 추적. 각 낙뢰 지름120·200%(2초월235%·무적무시)·둔화/마비30%. 마비 대상 기본공격 적중 시 최대HP1% 중첩 쉴드. 왕관:15초,5초마다HP3%회복·마비효과50%증가(3초월 모든 기술CD최소10초). 천둥가르기:650속도·1500직선·150%(2초월175%·무적무시)·마비20%. 과전압:지름550 아군사망 구슬당 게이지0.01(4초월0.02),5초월 잃은HP0.07%회복. 게이지100·지휘력회복100%(증강 적용)·초당최대15. 일반/특수증강·엘리트·대형몹 제외.",
 		"card_icon_path":"res://assets/art/Transcendent_monster/zeus/frames/idle_01.png",
 
 		"base_stats":preload("res://src/data/zeus_behavior_catalog.gd").BASE,
@@ -330,8 +333,8 @@ const MONSTERS := {
 		"species": "beast",
 		"grade": "normal",
 		"attack_type": "ranged",
-		"base_cost": 7.0,
-		"summon_exp": 7.0,
+		"base_cost": 5.0,
+		"summon_exp": 5.0,
 		"base_stats": {
 			"max_hp": 45,
 			"move_speed": 150.0,
@@ -389,8 +392,8 @@ const MONSTERS := {
 		"species": "beast",
 		"grade": "normal",
 		"attack_type": "melee",
-		"base_cost": 18.0,
-		"summon_exp": 18.0,
+		"base_cost": 10.0,
+		"summon_exp": 10.0,
 		"base_stats": {
 			"max_hp": 140,
 			"move_speed": 78.0,
@@ -866,8 +869,8 @@ const MONSTERS := {
 		"species": "beast",
 		"grade": "normal",
 		"attack_type": "self_destruct",
-		"base_cost": 12.0,
-		"summon_exp": 12.0,
+		"base_cost": 6.0,
+		"summon_exp": 6.0,
 		"base_stats": {
 			"max_hp": 36,
 			"move_speed": 175.0,
@@ -949,27 +952,7 @@ const GRADE_LABELS := {
 	"normal": "일반",
 }
 
-const RARITY_COMBAT_PROFILES := {
-	"uncommon": {"hp_multiplier": 1.0, "damage_multiplier": 1.0, "move_speed_multiplier": 1.0, "attack_cooldown_multiplier": 1.0},
-	"common": {
-		"hp_multiplier": 1.00,
-		"damage_multiplier": 1.00,
-		"move_speed_multiplier": 1.00,
-		"attack_cooldown_multiplier": 1.00,
-	},
-	"rare": {
-		"hp_multiplier": 1.10,
-		"damage_multiplier": 1.12,
-		"move_speed_multiplier": 1.03,
-		"attack_cooldown_multiplier": 0.96,
-	},
-	"legendary": {
-		"hp_multiplier": 1.22,
-		"damage_multiplier": 1.25,
-		"move_speed_multiplier": 1.05,
-		"attack_cooldown_multiplier": 0.92,
-	},
-}
+const RARITY_COMBAT_PROFILES := BALANCE.RARITY_COMBAT_PROFILES
 
 # Permanent growth remains additive and separate from base rarity combat stats.
 const MAX_UPGRADE_LEVEL := 30
@@ -1023,7 +1006,10 @@ const RARITY_UPGRADE_PROFILES := {
 
 static func get_monster(monster_id: String) -> Dictionary:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
-	return data.duplicate(true)
+	var result := data.duplicate(true)
+	if not data.is_empty():
+		result["base_stats"] = get_base_stats(monster_id)
+	return result
 
 static func get_elite_visual_profile(monster_id: String) -> Dictionary:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
@@ -1155,12 +1141,18 @@ static func get_summon_exp(monster_id: String) -> float:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
 	return maxf(float(data.get("summon_exp", 0.0)), 0.0)
 
+static func _cached_base_stats(monster_id: String) -> Dictionary:
+	if not balanced_stats_cache.has(monster_id):
+		balanced_stats_cache[monster_id] = BALANCE.resolve_base_stats(MONSTERS.get(monster_id, {}))
+	return balanced_stats_cache[monster_id]
+
 static func get_base_stats(monster_id: String) -> Dictionary:
-	var data: Dictionary = MONSTERS.get(monster_id, {})
-	var stats = data.get("base_stats", {})
-	if typeof(stats) != TYPE_DICTIONARY:
-		return {}
-	return Dictionary(stats).duplicate(true)
+	# UI callers keep an independent copy. Spawn uses the cached immutable view below.
+	return _cached_base_stats(monster_id).duplicate(true)
+
+static func apply_runtime_base_stats(actor: Node, monster_id: String) -> void:
+	BALANCE.apply_base_stats(actor, _cached_base_stats(monster_id))
+
 
 static func get_role_label(role_id: String) -> String:
 	return String(ROLE_LABELS.get(role_id, role_id))

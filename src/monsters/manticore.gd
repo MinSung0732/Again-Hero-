@@ -11,7 +11,7 @@ enum Motion { REST, FOCUS, HUNT, COMBO, TRACK }
 var motion := Motion.REST
 var transcend_level := 0
 var summon_snapshot := 0
-var gauge := 0.0
+var gauge := DATA.INITIAL_GAUGE
 var clock := 0.0
 var arrival := DATA.ARRIVAL_SECONDS
 var arrival_hit := false
@@ -81,8 +81,8 @@ func _init() -> void:
 func configure_transcendence(count: int, level: int) -> void:
 	summon_snapshot = maxi(count,0)
 	transcend_level = clampi(level,0,5)
-	max_hp = int(round(1550.0+summon_snapshot*0.5))
-	attack_damage = int(round(35.0+summon_snapshot*0.075))
+	max_hp = int(round(float(DATA.BASE.max_hp)+summon_snapshot*0.5))
+	attack_damage = int(round(float(DATA.BASE.attack_damage)+summon_snapshot*0.075))
 	current_hp = max_hp
 func _apply_normal_visual_profile() -> void:
 	visual.apply_visual_profile(DATA.PROFILE)

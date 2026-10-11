@@ -1,5 +1,7 @@
 extends RefCounted
-const BASE := {"max_hp":1200,"attack_damage":150,"move_speed":290.0,"attack_range":237.5,"attack_cooldown":1.3,"projectile_speed":0.0,"projectile_range":0.0,"exp_reward":0}
+# One opening skill opportunity; normal command regeneration/costs still apply.
+const INITIAL_GAUGE := 30.0
+const BASE := {"max_hp":1450,"attack_damage":150,"move_speed":290.0,"attack_range":237.5,"attack_cooldown":1.3,"projectile_speed":0.0,"projectile_range":0.0,"exp_reward":0}
 const HP_PER_SUMMON := 2.5
 const DAMAGE_PER_SUMMON := 0.6
 const COMBAT_STYLE := "ranged_harasser"

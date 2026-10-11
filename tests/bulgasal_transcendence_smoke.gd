@@ -60,7 +60,7 @@ func run() -> void:
 		check(is_equal_approx(actor.get_eat_shield_ratio(),0.07 if level>=3 else 0.05),"level%d eat ratio"%level)
 		actor.pillars.states[0]=2
 		actor.pillars.shatter(0,true,true)
-		check(int(actor.get_meta("support_shield_hp"))==int(round(1850*(0.07 if level>=3 else 0.05))),"level%d actual eaten shield"%level)
+		check(int(actor.get_meta("support_shield_hp"))==int(round(actor.max_hp*(0.07 if level>=3 else 0.05))),"level%d actual eaten shield"%level)
 		actor.set_meta("support_shield_hp",0)
 		actor.collision_layer=2
 		actor.collision_mask=15

@@ -78,13 +78,13 @@ func run() -> void:
 	authority.add_child(actor)
 	actor.set_physics_process(false)
 	actor.visual.set_physics_process(false)
-	check(actor.attack_damage == 65 and actor.max_hp == 1750,"snapshot per-hit15%/2 and HP50%")
+	check(actor.attack_damage == 72 and actor.max_hp == 1900,"snapshot per-hit15%/2 and HP50%")
 	check(actor.get_gauge_regen()==15.0 and actor.effective_range()==325.0,"regen cap and radius")
 	var ally := Ally.new()
 	authority.add_child(ally)
 	authority.allies = [ally,actor]
 	actor._arrival_explosion()
-	check(target.damage==88 and ally.current_hp==9912 and actor.current_hp==1750,"arrival135% friendly fire excludes self")
+	check(target.damage==97 and ally.current_hp==9903 and actor.current_hp==1900,"arrival135% friendly fire excludes self")
 	actor.arrival = 0.0
 	actor.visual.modulate.a = 1.0
 	target.position = Vector2(100,0)
@@ -96,7 +96,7 @@ func run() -> void:
 	var before := target.damage
 	actor._tick_motion(0.01)
 	actor._tick_motion(0.12)
-	check(target.damage-before==130 and actor.motion==actor.Motion.TRACK,"two65hits and retreat")
+	check(target.damage-before==144 and actor.motion==actor.Motion.TRACK,"two72hits and retreat")
 	var retreat_start: Vector2 = actor.position
 	var retreat_end: Vector2 = actor.destination
 	target.position += Vector2(80,100)
@@ -123,14 +123,14 @@ func run() -> void:
 	actor.triple_success = true
 	before = target.damage
 	for i in range(3): actor._tick_motion(0.12)
-	check(target.damage-before==163 and actor.get_meta("support_shield_hp",0)==70,"triple 50% and stacking4%shield")
+	check(target.damage-before==180 and actor.get_meta("support_shield_hp",0)==76,"triple 50% and stacking4%shield")
 	actor.position = Vector2.ZERO
 	target.position = actor._flame_point(0)+Vector2(100,0)
 	actor.flame_remaining = 30.0
 	before = target.damage
 	for i in range(100): actor._tick_flames(0.01)
 	actor._tick_flames(0.001)
-	check(target.damage-before==65 and target.burns==1,"contact1s exact100% and75%burn trigger")
+	check(target.damage-before==72 and target.burns==1,"contact1s exact100% and75%burn trigger")
 	target.position = Vector2(500,0)
 	actor._tick_flames(0.1)
 	check(actor.flame_contact[0]==0.0,"contact break resets burn progress")
@@ -154,7 +154,7 @@ func run() -> void:
 	before = target.damage
 	actor._tick_waves(0.1)
 	actor._tick_waves(0.1)
-	check(target.damage-before==130 and target.slow==0.7,"wave swept hit once200% and slow")
+	check(target.damage-before==144 and target.slow==0.7,"wave swept hit once200% and slow")
 	actor.wave_age[0] = actor.wave_length[0]/actor.wave_speed()+0.45
 	check(actor._wave_segment_frame(0,0)==-1 and actor._wave_segment_frame(0,3)>=4 and actor._wave_segment_frame(0,8)<4,"first pillars vanish while later pillars remain")
 	check(actor._wave_end_age(0)>actor.wave_age[0],"wave slot survives staggered disappearance")
@@ -177,11 +177,11 @@ func run() -> void:
 	actor.meteor_dest[0] = target.position
 	before = target.damage
 	actor._tick_meteors(0.01)
-	check(target.damage-before==114 and target.poison.entries.size()==1,"meteor175% and poison")
+	check(target.damage-before==126 and target.poison.entries.size()==1,"meteor175% and poison")
 	check(not target.apply_damage_poison(3.0,130,actor,70),"poison no stack or refresh")
 	before = target.damage
 	target.poison.tick(target,3.0)
-	check(target.damage-before==130,"poison total200%")
+	check(target.damage-before==144,"poison total200%")
 	actor.meteor_state.fill(0)
 	actor.meteor_state[0] = 2
 	actor.meteor_age[0] = 0.0
@@ -192,7 +192,7 @@ func run() -> void:
 	actor.current_hp = 100
 	actor.set_meta("support_shield_hp",0)
 	actor.take_damage(100000)
-	check(actor.escaped and actor.current_hp==263 and actor.guard_remaining==5.0 and actor.get_meta("support_shield_hp")==350,"T3 lethal escape lostHP15%, shield20%, DR5s")
+	check(actor.escaped and actor.current_hp==285 and actor.guard_remaining==5.0 and actor.get_meta("support_shield_hp")==380,"T3 lethal escape lostHP15%, shield20%, DR5s")
 	actor.guard_remaining = 0.0
 	actor.set_meta("support_shield_hp",0)
 	actor.take_damage(100000)
@@ -219,7 +219,7 @@ func run() -> void:
 	check(hunter.motion==hunter.Motion.COMBO,"tangential hero at body contact enters combo, no circular chase")
 	hunter._tick_motion(0.01)
 	hunter._tick_motion(0.12)
-	check(sideways.damage==70 and hunter.motion==hunter.Motion.TRACK,"contact still hits35x2 then retreats")
+	check(sideways.damage==84 and hunter.motion==hunter.Motion.TRACK,"contact still hits42x2 then retreats")
 	hunter._tick_motion(1.0)
 	check(hunter.collision_layer==2 and hunter.collision_mask==3,"flight restores both collision settings")
 	# A fast target crosses the flight path between samples without ending inside the contact radius.

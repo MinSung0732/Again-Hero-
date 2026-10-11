@@ -2116,6 +2116,9 @@ func _spawn_monster(
 	var monster := scene.instantiate() as Node2D
 	if monster == null:
 		return null
+	# Canonical role/grade stats must precede every spawn modifier and _ready().
+	if not TRANSCENDENCE_DATA.is_transcendent(monster_type):
+		MONSTER_CATALOG.apply_runtime_base_stats(monster, monster_type)
 	var fixed_base_stats := TRANSCENDENCE_DATA.is_transcendent(monster_type) or bool(spawn_modifiers.get("fixed_base_stats", false))
 	monster.set_meta("fixed_base_stats", fixed_base_stats)
 	monster.set_meta("exclude_all_augments", fixed_base_stats or bool(spawn_modifiers.get("exclude_all_augments", false)))

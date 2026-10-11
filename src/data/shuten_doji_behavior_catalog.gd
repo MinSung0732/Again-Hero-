@@ -1,4 +1,6 @@
 extends RefCounted
+# One opening skill opportunity; normal command regeneration/costs still apply.
+const INITIAL_GAUGE := 30.0
 const ROOT := "res://assets/art/Transcendent_monster/Shuten-doji/frames"
 const BASE := {"max_hp":2500,"attack_damage":220,"move_speed":310.0,"attack_range":70.0,"attack_cooldown":2.0,"projectile_speed":0.0,"projectile_range":0.0,"exp_reward":0}
 const STATUS_GROWTH := {"attack_damage":1.0,"max_hp":1.0}
@@ -15,7 +17,7 @@ const FOG_LIFE_MAX := 10.0
 const BLAST_RADIUS := 150.0
 const BLAST_THRESHOLD := 10.0
 const CHAIN_CAPACITY := 4
-const CHAIN_SPEED := 40.0 # Unspecified tuning: deliberately slow homing spirit.
+const CHAIN_SPEED := 100.0 # Slow homing; allies/fog must hold mobile heroes.
 const CHAIN_MAX_SECONDS := 40.0
 const CAST_RANGE := 600.0 # Unspecified acquisition range; flight may continue outside it.
 const REVIVAL_SECONDS := 3.0

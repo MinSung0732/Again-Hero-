@@ -1,4 +1,6 @@
 extends RefCounted
+# One opening skill opportunity; normal command regeneration/costs still apply.
+const INITIAL_GAUGE := 50.0
 const ROOT := "res://assets/art/Transcendent_monster/King_Arthur/frames"
 const BASE := {"max_hp":2000,"attack_damage":170,"move_speed":300.0,"attack_range":80.0,"attack_cooldown":1.75,"exp_reward":0}
 const GROWTH := {"attack_damage":1.5,"max_hp":15.0}

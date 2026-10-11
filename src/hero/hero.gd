@@ -20875,7 +20875,8 @@ func _take_damage_internal(
 	else:
 		if grant_invulnerability:
 			invulnerability_timer = invulnerability_duration
-		if hero_archetype == "pistol_gunner" and _gunner_should_backstep_on_hit():
+		# Evading ongoing poison/burn ticks repeatedly closes the intended counter window.
+		if grant_invulnerability and hero_archetype == "pistol_gunner" and _gunner_should_backstep_on_hit():
 			_start_gunner_backstep()
 		if grant_invulnerability:
 			_refresh_invulnerability_visual()

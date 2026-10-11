@@ -93,7 +93,7 @@ func run() -> void:
 	actor.set_physics_process(false)
 	actor.pillars.set_physics_process(false)
 	actor.position=battle.hero.position+Vector2(100,0)
-	check(actor.max_hp==1900 and actor.move_speed==270 and actor.attack_cooldown==1.6,"actual actor stats and death snapshot")
+	check(actor.max_hp==2150 and actor.move_speed==270 and actor.attack_cooldown==1.6,"actual actor stats and death snapshot")
 	check(not battle.try_summon_transcendent(),"once per battle")
 	battle.hero.invulnerability_timer=0
 	battle.hero.shield_hp=0

@@ -70,7 +70,7 @@ func run() -> void:
 	check(battle.try_summon_transcendent(),"real summon dispatch and condition consumption")
 	var actor = battle.transcendent_actor
 	actor.set_physics_process(false)
-	check(actor.summon_snapshot==3 and actor.max_hp==1085 and actor.attack_damage==58,"real spawn growth snapshot")
+	check(actor.summon_snapshot==3 and actor.max_hp==1405 and actor.attack_damage==58,"real spawn growth snapshot")
 	check(not battle.try_summon_transcendent(),"once per battle")
 	actor._create_torii()
 	var shield_step := int(round(actor.max_hp*0.04))

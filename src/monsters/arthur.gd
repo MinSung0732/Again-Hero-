@@ -10,7 +10,7 @@ const SFX := preload("res://src/audio/event_sfx_bank.gd")
 var audio_bank: Node
 var transcend_level := 0
 var summon_snapshot := 0
-var gauge := 0.0
+var gauge := DATA.INITIAL_GAUGE
 var cooldowns := PackedFloat32Array([0,0,0])
 var gate_boost_count := 0
 var channel = CHANNEL.new()

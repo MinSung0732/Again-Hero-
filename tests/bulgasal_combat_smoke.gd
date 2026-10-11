@@ -80,7 +80,8 @@ func run() -> void:
 	actor.set_physics_process(false)
 	actor.pillars.set_physics_process(false)
 	actor.position = Vector2(300,500)
-	check(actor.max_hp==1950 and actor.gauge==0 and DATA.GAUGE_MAX==60,"HP death snapshot and gauge")
+	check(actor.max_hp==2200 and actor.gauge==DATA.INITIAL_GAUGE and DATA.GAUGE_MAX==60,"HP death snapshot and gauge")
+	actor.gauge = 0 # Isolate pause/regen checks from the new opening skill budget.
 	check(actor.get_gauge_regen()==6,"regen100% augmented command")
 	authority.command_regen_per_second = 100
 	check(actor.get_gauge_regen()==15,"regen15cap")
@@ -92,7 +93,7 @@ func run() -> void:
 	check(actor.phase=="idle" and actor.pillars.bodies.size()==8,"fall landing and fixed pillar pool")
 	var hp_before: int = actor.current_hp
 	actor.on_ally_death(Vector2.ZERO)
-	check(actor.attack_damage==136 and actor.max_hp==1951 and actor.current_hp==hp_before,"future death adds max HP without heal")
+	check(actor.attack_damage==136 and actor.max_hp==2201 and actor.current_hp==hp_before,"future death adds max HP without heal")
 	target.position = Vector2(500,500)
 	actor.resolve_rock_impact(Vector2(500,500))
 	check(target.hits==1 and target.damage_taken==408 and target.stunned==2,"inner hit300%, only once")

@@ -1,6 +1,8 @@
 extends RefCounted
+# One opening skill opportunity; normal command regeneration/costs still apply.
+const INITIAL_GAUGE := 20.0
 # Unspecified design values are provisional and centrally adjustable.
-const BASE := {"max_hp":1850,"attack_damage":130,"move_speed":270.0,"attack_range":85.0,"attack_cooldown":1.6,"exp_reward":0}
+const BASE := {"max_hp":2100,"attack_damage":130,"move_speed":270.0,"attack_range":85.0,"attack_cooldown":1.6,"exp_reward":0}
 const DAMAGE_PER_TANK_DEATH := 0.6
 const RULES := {"mode":"all","conditions":[{"metric":"tanks_summoned","amount":20},{"metric":"allies_died","amount":50}]}
 const GAUGE_MAX := 60.0

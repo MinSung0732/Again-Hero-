@@ -58,7 +58,7 @@ func run() -> void:
 	check(battle.try_summon_transcendent(),"actual summon success")
 	var actor = battle.transcendent_actor
 	actor.set_physics_process(false)
-	check(actor.monster_type=="manticore" and actor.transcend_level==5 and actor.summon_snapshot==400 and actor.attack_damage==65 and actor.max_hp==1750,"actual scene level and damage snapshot")
+	check(actor.monster_type=="manticore" and actor.transcend_level==5 and actor.summon_snapshot==400 and actor.attack_damage==72 and actor.max_hp==1900,"actual scene level and damage snapshot")
 	check(battle.command_power==command_before and not battle.try_summon_transcendent(),"free once")
 	check(battle._spawn_monster("manticore",Vector2.ZERO)==null,"no normal spawn bypass")
 	hero.apply_burn(1.0,49,actor)
