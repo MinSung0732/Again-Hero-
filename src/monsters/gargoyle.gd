@@ -2,6 +2,10 @@ extends "res://src/monsters/orc.gd"
 const DATA := preload("res://src/data/gargoyle_behavior_catalog.gd")
 var status_bar_head_y := -82.0
 var stored_damage := 0.0
+var petrify_restore_tint := Color.WHITE
+var petrify_effect: Node
+var petrify_timer: float:
+	get: return petrify_remaining
 var petrify_used := false
 var petrify_remaining := 0.0
 var petrify_budget := 0
@@ -32,7 +36,9 @@ func apply_visual_profile(profile: Dictionary) -> void:
 	if not is_instance_valid(visual): return
 	if visual.apply_visual_profile(profile):
 		status_bar_head_y = visual.position.y-float(profile.get("target_height",140.0))*0.5-12.0
-		if petrify_remaining > 0.0: visual.speed_scale = 0.0
+		if petrify_remaining > 0.0:
+			visual.speed_scale = 0.0
+			visual.self_modulate = petrify_restore_tint*DATA.PETRIFY_TINT
 		queue_redraw()
 
 func configure_special_augments(configs: Dictionary) -> void:
@@ -61,7 +67,7 @@ func _physics_process(delta: float) -> void:
 		var cumulative := int(round(petrify_budget*minf(petrify_elapsed/DATA.PETRIFY_SECONDS,1.0)))
 		heal_direct(maxi(cumulative-petrify_paid,0))
 		petrify_paid = cumulative
-		if petrify_remaining <= 0.0 and is_instance_valid(visual): visual.speed_scale = 1.0
+		if petrify_remaining <= 0.0: _set_petrify_visual(false)
 		velocity = Vector2.ZERO
 		queue_redraw()
 		return
@@ -112,7 +118,31 @@ func _apply_gargoyle_damage(amount: int, receipt = null, revision: int = 0) -> v
 		petrify_budget = int(round((max_hp-current_hp)*DATA.PETRIFY_HEAL_RATIO))
 		petrify_elapsed = 0.0
 		petrify_paid = 0
-		if is_instance_valid(visual): visual.speed_scale = 0.0
+		_set_petrify_visual(true)
+
+func _set_petrify_visual(active: bool) -> void:
+	if not active and not bool(get_meta("petrify_active",false)): return
+	set_meta("petrify_active",active)
+	if is_instance_valid(visual):
+		if active: petrify_restore_tint = visual.self_modulate
+		visual.self_modulate = petrify_restore_tint*DATA.PETRIFY_TINT if active else petrify_restore_tint
+		visual.speed_scale = 0.0 if active else 1.0
+	if active:
+		petrify_effect = COMBAT_STATUS_EFFECT_VISUAL.show_on(self,"petrify")
+	elif is_instance_valid(petrify_effect):
+		petrify_effect.hide()
+		petrify_effect.stop()
+		petrify_effect.set_process(false)
+
+func _begin_death() -> void:
+	petrify_remaining = 0.0
+	_set_petrify_visual(false)
+	super._begin_death()
+
+func _begin_death_with_result(receipt = null, revision: int = 0) -> void:
+	petrify_remaining = 0.0
+	_set_petrify_visual(false)
+	super._begin_death_with_result(receipt,revision)
 
 func try_cast_elite_skill(skill: Dictionary) -> bool:
 	if dying or current_hp <= 0 or petrify_remaining > 0.0 or bool(get_meta("stun_active",false)) or bool(get_meta("silence_active",false)) or MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self): return false

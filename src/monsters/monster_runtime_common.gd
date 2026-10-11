@@ -424,10 +424,6 @@ static func attach_status_effect_visual(
 	effect_script: Script,
 	effect_type: String
 ) -> void:
-	if not owner.has_node("CombatBarRefresh"):
-		var refresh := CombatBarRefresh.new()
-		refresh.name = "CombatBarRefresh"
-		owner.add_child(refresh)
 	if effect_script == null:
 		return
 	var effect := effect_script.new() as Node
@@ -520,8 +516,9 @@ static func apply_direct_heal(
 	return recovered
 
 
-# Fixed screen-space rows: shield types / HP / yellow resource or attack readiness.
+# Fixed screen-space rows: shield types / HP / existing skill resource only.
 const BAR_HEIGHT := 6.0
+const YELLOW_BAR_HEIGHT := 4.0
 const BAR_GAP := 3.0
 const BAR_WIDTH := 70.0
 const BAR_COLORS := {"shield":Color("61ddff"),"ranged":Color("b490ff"),"melee":Color("ff9566")}
@@ -572,7 +569,8 @@ static func draw_status_bars(actor: Node2D, canvas: Node2D, hp_y: float, gauge_c
 	var step := (BAR_HEIGHT+BAR_GAP)/scale_y
 	_draw_bar(canvas,width,height,hp_y,float(actor.get("current_hp"))/maxf(float(actor.get("max_hp")),1.0),Color("4cd965"))
 	var yellow_ratio := get_yellow_ratio(actor,gauge_capacity)
-	_draw_bar(canvas,width,height,hp_y+step,yellow_ratio,Color("ffdb3b"))
+	if yellow_ratio >= 0.0:
+		_draw_bar(canvas,width,YELLOW_BAR_HEIGHT/scale_y,hp_y+step,yellow_ratio,Color("ffdb3b"))
 	var order := sync_bar_order(actor)
 	for index in range(order.size()):
 		var kind: String = order[index]
@@ -623,18 +621,9 @@ static func _redirect_ranged_damage(victim: Node2D, amount: int) -> int:
 	if is_instance_valid(guard): guard.remove_meta("guard_transfer")
 	return amount-shared
 
-class CombatBarRefresh extends Node:
-	var remaining := 0.0
-	func _process(delta: float) -> void:
-		remaining -= delta
-		if remaining > 0.0: return
-		remaining = 0.10
-		var actor := get_parent() as Node2D
-		if actor != null and actor.is_visible_in_tree() and not actor.is_queued_for_deletion(): actor.queue_redraw()
-
+# A negative ratio means no resource bar, including its background.
+# Attack cooldowns are not a skill gauge.
 static func get_yellow_ratio(actor: Node, gauge_capacity: float = 100.0) -> float:
 	var gauge = actor.get("gauge")
-	if gauge != null: return clampf(float(gauge)/maxf(gauge_capacity,1.0),0.0,1.0)
-	if actor.get("attack_timer") != null and actor.get("attack_cooldown") != null:
-		return clampf(1.0-float(actor.get("attack_timer"))/maxf(float(actor.get("attack_cooldown")),0.01),0.0,1.0)
-	return 0.0
+	if gauge == null: return -1.0
+	return clampf(float(gauge)/maxf(gauge_capacity,1.0),0.0,1.0)

@@ -25,6 +25,7 @@ const HERO_SCALE := 0.28
 
 # Fit visible pixels, not the large transparent asset canvas.
 const MONSTER_BUFF_LAYOUTS := {
+	"petrify":{"anchor":"body","width_ratio":1.20},
 	"yuki_chill":{"anchor":"body","width_ratio":1.20},
 	"wolf_howl": {"anchor":"feet", "width_ratio":1.45},
 	"wolf_pack_agility": {"anchor":"feet", "width_ratio":1.45},

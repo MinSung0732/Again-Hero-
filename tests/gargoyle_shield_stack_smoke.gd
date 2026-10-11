@@ -185,12 +185,19 @@ func run() -> void:
  check(C.get_yellow_ratio(gauge_actor,60.0) == 1.0,"Bulgasal60 gauge full")
  gauge_actor.gauge = 75.0
  check(C.get_yellow_ratio(gauge_actor,150.0) == 0.5,"Arthur150 gauge half")
+ gauge_actor.gauge = 0.0
+ check(C.get_yellow_ratio(gauge_actor) == 0.0,"real empty skill gauge remains visible")
+ gauge_actor.gauge = 999.0
+ check(C.get_yellow_ratio(gauge_actor) == 1.0,"overfilled skill gauge cannot exceed HP bar width")
  gauge_actor.free()
  ally.attack_timer = ally.attack_cooldown
- check(C.get_yellow_ratio(ally) == 0.0,"normal attack readiness starts empty")
+ check(C.get_yellow_ratio(ally) < 0.0,"ordinary monster has no yellow bar during cooldown")
  ally.attack_timer = 0.0
- check(C.get_yellow_ratio(ally) == 1.0,"normal attack readiness fills")
+ check(C.get_yellow_ratio(ally) < 0.0,"ordinary monster has no yellow bar when attack ready")
 
+ check(not ally.has_node("CombatBarRefresh"),"no periodic redraw node for unused gauges")
+ check(C.get_yellow_ratio(g) < 0.0,"Gargoyle has no invented skill gauge")
+ check(C.YELLOW_BAR_HEIGHT < C.BAR_HEIGHT,"yellow row thinner than HP")
  print("Gargoyle/shield stack: ",checks," checks, ",failures," failures")
  battle.free()
  quit(1 if failures else 0)

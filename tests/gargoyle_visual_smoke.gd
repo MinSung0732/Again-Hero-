@@ -41,12 +41,21 @@ func run() -> void:
  actor.configure_special_augments({"gargoyle_stone_slumber":{}})
  actor.take_damage(170)
  check(actor.petrify_remaining > 0.0 and actor.visual.speed_scale == 0.0,"petrification freezes sprite")
+ var fx = actor.get_node_or_null("StatusFX_petrify")
+ check(is_instance_valid(fx) and fx.visible,"stone status FX appears immediately")
+ check(fx.sprite_frames.get_frame_count("fx") == 8,"existing eight stone PNGs loaded")
+ check(actor.visual.self_modulate == D.PETRIFY_TINT and actor.get_meta("petrify_active",false),"body stone tint and active state")
+ check(fx.position != Vector2(0,18),"stone FX fits sprite body")
  actor._physics_process(3.0)
  check(actor.visual.speed_scale == 1.0,"petrification restores animation")
+ check(not fx.visible and not fx.is_processing(),"expired stone effect stops immediately")
+ check(actor.visual.self_modulate == Color.WHITE and not actor.get_meta("petrify_active",true),"stone body tint restores")
  actor.petrify_remaining = 1.0
+ actor._set_petrify_visual(true)
  actor.visual.speed_scale = 0.0
  actor.take_damage(9999)
  check(actor.visual.speed_scale == 1.0 and actor.visual.animation == &"death","petrified death plays")
+ check(not fx.visible and not actor.get_meta("petrify_active",true),"death clears stone status FX")
  await create_timer(0.6).timeout
  check(not is_instance_valid(actor),"death animation completes removal")
  print("GARGOYLE_VISUAL_CHECKS=",checks," FAILURES=",failures)
