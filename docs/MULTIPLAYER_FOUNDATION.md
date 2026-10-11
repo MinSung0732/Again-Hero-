@@ -1,5 +1,9 @@
 # 용사 모드·대전 모드 확장 설계 및 단계별 실행 계획
 
+## 후속 내부 구조 개선 — 이자나미 상태 호출자 (2026-10-11)
+
+실제 _status 경로4종을 Hero 결과 API로 연결했다. actor당 receipt1개를 재사용하며 현재 호출 가용성 플래그를 따로 둔다. 기존 raw/passive/기술당1회 scope 및 미지원 legacy1회·재시도 없음 유지. 신규32,295+상태 회귀56,159 =88,454검사 통과. [IZANAMI_STATUS_CALLER.md](IZANAMI_STATUS_CALLER.md). 다음은 공통 affliction/다른 기술·적중 bridge. 전체 게임·모바일·성능 미검증, 매칭·용사모드 확대 보류.
+
 ## 후속 내부 구조 개선 — 매혹·치유감소·받는피해증가 (2026-10-11)
 
 세 상태의 실제 적용 결과 snapshot을 재사용 receipt에 기록한다. 기존 거절·갱신/매혹 해제 면역·channel/신호 순서와 기술당1회 집계를 유지했다. 신규15,748+기존 상태40,411 =56,159검사 통과. [HERO_MODIFIER_STATUS_RECEIPT.md](HERO_MODIFIER_STATUS_RECEIPT.md). 다음은 기술 호출자·적중 bridge 연결. 전체 게임/모바일/성능 미검증, 매칭·용사모드 확대 보류.

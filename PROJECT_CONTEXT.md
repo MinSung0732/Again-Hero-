@@ -1,3 +1,10 @@
+## 2026-10-11 — 이자나미 기술 상태 결과 호출자
+
+- 실제 공통 _status 경로의 둔화/기절/침묵/받는피해증가를 Hero 결과 API에 연결. 이자나미 인스턴스당 scalar receipt1개 재사용, status_result_complete로 현재 호출 결과 가용성 구분. early guard/알 수 없는 상태/미지원·재진입 때 이전 payload를 현재 결과로 사용하지 않음.
+- 기존 raw status observer·passive_statuses/count_passive/반환값·action scope/AI 기억 유지. 능력 미지원 대상은 legacy1회, 결과 API false 후 재시도 없음. 동일 버퍼 중첩 결과가 complete여도 바깥 호출 결과는 미사용. 콘텐츠/피해/부모·공통 affliction/다른 actor 변경 없음, 매 적용 receipt/배열/스캔 추가 없음.
+- Godot4.5.1 신규32,295+상태 회귀56,159 =88,454검사 실패0. 이자나미 원래34함수 hook 역변환 비교 및 gdparse/Python compile/import/diff 검증. 실제 상태 적용/호출자 slice 검증이며 전체 actor 초기화·기술 타이밍/AI/렌더링·전체 게임4.7/모바일/성능 미검증.
+- 기준 feature8a61af1559b2c238745a438fb37a30e050b28672, main4122adb7 유지. docs/IZANAMI_STATUS_CALLER.md에 계약/재현/롤백. 다음은 슈텐도지 ReceivedAfflictions 및 다른 기술·적중 bridge 호출자 연결. 매칭·용사모드 확대 보류.
+
 ## 2026-10-11 — 용사 매혹·치유감소·받는피해증가 결과
 
 - 세 상태에 caller-owned 결과 API와 공유 helper 추가. 기존 bool/거절·갱신 규칙, 매혹 최소0.05/재적용 금지·해제 면역/약한 source 참조·channel 종료, 치유감소0~1/받는피해증가 하한0·타이머 max 유지.

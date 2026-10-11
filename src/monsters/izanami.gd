@@ -2,6 +2,9 @@ extends "res://src/monsters/goblin_thrower.gd"
 const DATA := preload("res://src/data/izanami_behavior_catalog.gd")
 const FX := preload("res://src/ui/izanami_combat_effects.gd")
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
+const STATUS_RECEIPT := preload("res://src/systems/battle_status_receipt.gd")
+var status_receipt = STATUS_RECEIPT.new()
+var status_result_complete := false
 var ghost_action: RefCounted
 var fan_action: RefCounted
 var fire_actions: Array[RefCounted] = []
@@ -246,6 +249,7 @@ func _on_accepted_hit(source: Node) -> void:
 			_status("silence",0.0,3.0,true,ghost_action)
 
 func _status(kind: String, strength: float, seconds: float, count_passive: bool = true, action: RefCounted = null) -> bool:
+	status_result_complete = false
 	if not is_instance_valid(hero) or hero.current_hp <= 0 or hero.is_dying:
 		return false
 	# Count only the authority's actual accepted events, not attempted casts.
@@ -253,11 +257,7 @@ func _status(kind: String, strength: float, seconds: float, count_passive: bool 
 	status_depth = 0
 	if not hero.status_applied.is_connected(_count_own_status):
 		hero.status_applied.connect(_count_own_status)
-	match kind:
-		"slow": hero.apply_slow(strength,seconds)
-		"stun": hero.apply_stun(seconds)
-		"silence": hero.apply_silence(seconds)
-		"vulnerability": hero.apply_damage_taken_increase(seconds,strength)
+	status_result_complete = _apply_hero_status(kind,strength,seconds)
 	hero.status_applied.disconnect(_count_own_status)
 	STATUS_SCOPE.finish(hero,previous_action)
 	if count_passive:
@@ -266,6 +266,28 @@ func _status(kind: String, strength: float, seconds: float, count_passive: bool 
 
 func _count_own_status(_kind: String) -> void:
 	status_depth += 1
+
+func _apply_hero_status(kind: String, strength: float, seconds: float) -> bool:
+	# Result availability is separate from the legacy raw-event passive counter.
+	# An unsupported/overwritten result already applied once; never retry it.
+	match kind:
+		"slow":
+			if hero.has_method("apply_slow_with_result"):
+				return hero.apply_slow_with_result(strength,seconds,status_receipt)
+			hero.apply_slow(strength,seconds)
+		"stun":
+			if hero.has_method("apply_stun_with_result"):
+				return hero.apply_stun_with_result(seconds,status_receipt)
+			hero.apply_stun(seconds)
+		"silence":
+			if hero.has_method("apply_silence_with_result"):
+				return hero.apply_silence_with_result(seconds,status_receipt)
+			hero.apply_silence(seconds)
+		"vulnerability":
+			if hero.has_method("apply_damage_taken_increase_with_result"):
+				return hero.apply_damage_taken_increase_with_result(seconds,strength,status_receipt)
+			hero.apply_damage_taken_increase(seconds,strength)
+	return false
 
 func _try_cast() -> void:
 	if bool(get_meta("silence_active",false)) or bool(get_meta("stun_active",false)):
