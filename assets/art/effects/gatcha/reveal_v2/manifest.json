@@ -105,7 +105,7 @@
       "file": "arthur_avalon_background.png",
       "prompt": "Use case: stylized-concept. Asset type: final game gacha background, portrait 1024x1536. Create magnificent Avalon cathedral interior for King Arthur reveal in a dark fantasy pixel-art mobile game. Symmetrical soaring gothic nave, blue midnight stone columns and silver-blue distant stained glass, sacred golden shafts and small suspended gold motes, round-table carvings at the bottom corners. Center 45 percent stays dark, quiet and empty for an existing full-body character overlay; brightest intricate gold ornament on outer sides and upper arch. Ground perspective leads toward center. Crisp deliberate pixel clusters, premium detailed pixel art, restrained blue/gold palette, NO blur, NO text, NO UI, NO people or characters, NO swords occupying center. Full opaque background, no borders.",
       "background": "opaque",
-      "scope": "gacha only; battle triangle retains shader",
+      "scope": "gacha and battle summon triangle; aspect-cover pixel UVs",
       "size": [
         1024,
         1536

@@ -1,5 +1,6 @@
 extends "res://src/monsters/orc.gd"
 const DATA := preload("res://src/data/arthur_behavior_catalog.gd")
+const TRAIL := preload("res://src/ui/arthur_dash_trail.gd")
 const FX := preload("res://src/ui/arthur_combat_effects.gd")
 const CHANNEL := preload("res://src/systems/channel_runtime.gd")
 const GATE := preload("res://src/monsters/arthur_avalon_gate.gd")
@@ -32,6 +33,7 @@ var shielded_arrival := false
 var fx_age := PackedFloat32Array([-1,-1,-1,-1])
 var clock := 0.0
 var head_y := -120.0
+var dash_trail: Node2D
 var front_effects: Node2D
 @onready var status_layer: Node2D = $StatusLayer
 func _init() -> void:
@@ -56,6 +58,10 @@ func _ready() -> void:
 	status_layer.z_as_relative = false
 	status_layer.z_index = 12
 	status_layer.draw.connect(_draw_status)
+	dash_trail = TRAIL.new()
+	dash_trail.name = "DashTrail"
+	add_child(dash_trail)
+	dash_trail.global_transform = Transform2D.IDENTITY
 	front_effects = Node2D.new()
 	front_effects.name = "CombatEffectsFront"
 	front_effects.z_as_relative = false
@@ -71,6 +77,7 @@ func get_gauge_regen() -> float:
 func _physics_process(delta: float) -> void:
 	if dying or current_hp <= 0: return
 	if not is_instance_valid(combat_authority) or combat_authority.battle_over or combat_authority.external_pause or combat_authority.demon_augment_selection_active: return
+	dash_trail.tick(delta)
 	clock += delta
 	gauge = minf(DATA.GAUGE_MAX,gauge+get_gauge_regen()*delta)
 	for i in range(3): cooldowns[i] = maxf(cooldowns[i]-delta,0)
@@ -196,6 +203,7 @@ func _begin_dash() -> void:
 	fx_age[0] = 0
 	visual.flip_h = dash_direction.x < 0
 	_hold_skill()
+	dash_trail.begin(visual)
 	_audio("dash")
 func _tick_dash(delta: float) -> void:
 	attack_timer = maxf(attack_timer-delta,0)
@@ -210,6 +218,7 @@ func _tick_dash(delta: float) -> void:
 	var distance := minf(dash_remaining,DATA.DASH_SPEED*delta*(DATA.DASH_FOLLOWUP_SPEED if dash_step>0 else 1.0))
 	# Clamp also guards accumulated Vector2 float rounding at the last boundary tick.
 	global_position = _clamp_dash_point(previous+dash_direction*distance)
+	dash_trail.advance_segment(visual,previous,global_position)
 	dash_remaining -= distance
 	MONSTER_RUNTIME_COMMON.notify_forced_position_change(self)
 	# A swept segment prevents tunneling. Each actor is touched once per rush.
@@ -341,6 +350,7 @@ func _begin_death() -> void: _begin_arthur_death()
 func _begin_death_with_result(receipt = null, revision: int = 0) -> void: _begin_arthur_death(receipt,revision)
 func _begin_arthur_death(receipt = null, revision: int = 0) -> void:
 	channel.cancel()
+	dash_trail.clear()
 	dash_remaining = 0
 	if is_instance_valid(audio_bank): audio_bank.stop_all()
 	_restore_dash_collision()

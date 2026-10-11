@@ -100,12 +100,22 @@ func run() -> void:
 		actor._finish_channel()
 		check(actor.collision_layer==0 and actor.collision_mask==0,"collision ignored")
 		check(actor.visual.animation==&"skill" and actor.fx_age[0]==0,"rush holds skill and starts effect")
+		check(actor.dash_trail.ages.size()==DATA.DASH_TRAIL_POOL and actor.dash_trail.ages.count(0.0)==1,"retained trail begins once")
+		var trail_children: int = actor.dash_trail.get_child_count()
 		check(actor.front_effects.z_as_relative==false and actor.front_effects.z_index==DATA.COMBAT_EFFECT_Z,"foreground effect layer")
 		target.damage = 0
 		secondary.damage = 0
 		secondary.position = Vector2(500,0)
 		target.invulnerable = false
 		actor._tick_dash(1000.0/900.0)
+		check(actor.dash_trail.ages.count(0.0)==DATA.DASH_TRAIL_POOL,"large tick trail work bounded to pool")
+		check(actor.dash_trail.get_child_count()==trail_children,"rush creates no trail nodes")
+		var first_trail: Vector2 = actor.dash_trail.poses[actor.dash_trail.next_slot].origin
+		var next_trail: Vector2 = actor.dash_trail.poses[(actor.dash_trail.next_slot+1)%DATA.DASH_TRAIL_POOL].origin
+		check(is_equal_approx(first_trail.distance_to(next_trail),DATA.DASH_TRAIL_SPACING),"spaced world trail snapshots")
+		check(actor.dash_trail.textures[0]==actor.visual.sprite_frames.get_frame_texture(&"skill",0),"trail shares actual skill texture")
+		actor.dash_trail.tick(DATA.DASH_TRAIL_LIFETIME)
+		check(actor.dash_trail.ages.count(-1.0)==DATA.DASH_TRAIL_POOL and actor.dash_trail.textures[0]==null,"trail fade expires and releases texture slots")
 		check(target.damage==575,"first swept hit")
 		check(secondary.damage==575,"all enemies on path are hit")
 		check(int(ally.get_meta("support_shield_hp",0))==910,"dash shields once")

@@ -61,6 +61,16 @@ func run() -> void:
 	var eyes: Texture2D = view.reveal.get_shader_parameter("closed_eyes_art")
 	check(eyes != null and eyes.resource_path == ART.ROOT+"arthur_closed_eyes_source.png","generated eyelid binding")
 	check(not view.stage.get_child(0).visible,"battle hides rectangular cathedral")
+	check(view.backdrop.texture == view.background_art.texture,"battle cathedral texture connected")
+	check(view.backdrop.material == null,"procedural shader cannot hide cathedral")
+	for panel_size in [Vector2(540,960),Vector2(1280,720)]:
+		view.size = panel_size
+		view._layout()
+		check(view.backdrop.polygon == PackedVector2Array([Vector2(panel_size.x,0),panel_size,Vector2(0,panel_size.y)]),"triangle clipping")
+		var uv_span: Vector2 = view.backdrop.uv[1]-view.backdrop.uv[2]
+		var uv_height: float = view.backdrop.uv[1].y-view.backdrop.uv[0].y
+		check(is_equal_approx(uv_span.x/uv_height,panel_size.x/panel_size.y),"cathedral cover preserves aspect")
+		check(view.backdrop.uv[0].x<=view.backdrop.texture.get_width() and view.backdrop.uv[2].y<=view.backdrop.texture.get_height(),"cover UV in texture bounds")
 	view.set_time(2.3)
 	check(float(view.reveal.get_shader_parameter("closed")) == 0.0,"Arthur original eyes restored")
 	view.free()
