@@ -1,3 +1,10 @@
+## 2026-10-11 — 이자나미 기술 효과음 무음 구간 교체
+
+- 실제 기술 호출은 연결돼 있었으나 bind/spirits/torii 파일 피크 -58.7~-58.9dBFS 및 RMS -87~-89dBFS로 사실상 무음이던 문제 수정. 기존 라이선스 확인된 haunt/뽑기 spirit_release의 유효 구간을 오프라인 재편집해 3개 WAV 교체, -3dBFS 피크·PCM16/44.1kHz 유지. 원본 출처/핀 SHA/가공/수치 manifest·SOURCES 기록.
+- haunt/fire/spirits -14dB, bind -13dB, torii -15dB로 기술별 음량 조정(기본공격 -24 유지). 장판 슬롯당 불꽃 사운드1회, 죽은 개체의 토리이 소리 방지, 사망 시 기존 고정 플레이어 정지. 전투 피해·상태/증강 의미와 SFX 버스 설정 유지.
+- Godot4.5.1 격리 실제 WAV 디코딩/PCM 피크·RMS/오디오뱅크 재생요청·반복/재사용·일시정지·정지·기술 hook61검사 PASS. 전체 전투 및 PC/모바일 실청취·export는 이번에 미검증, isolated ObjectDB 종료 경고 남음. diff/바이너리 SHA/소스 변경범위 정적 검증.
+- 기준 featureb763cc0befa896c64ca87cc8e98ecf177e9c9e4f, main4122adb7 유지.
+
 ## 2026-10-11 — 아서왕 찌르기 종료 후 방향 고정 수정
 
 - 찌르기/정신집중에서 직접 변경한 flip_h와 일반 Orc 이동의 visual_facing_sign 캐시가 어긋나 같은 방향 갱신을 생략하던 문제 수정. 복귀 시 방향 캐시를 무효화하고 현재 타겟 방향/idle을 기존 _update_visual_motion으로 동기화. 이동·공격·집중/돌진 종료 및 중단 공통 경로 적용, 피해·사거리·속도·잔상 판정 유지.

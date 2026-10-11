@@ -13,6 +13,12 @@
       "creator": "Yodguard",
       "sha256": "10817bd18c0dc06c2c66e80ce1a839f768e22c35822b000da1b3ae3cadd4baa0",
       "content_id": 378639
+    },
+    "whoosh": {
+      "url": "https://pixabay.com/sound-effects/film-special-effects-magical-whoosh-148459/",
+      "creator": "u_hyed0v3ux9",
+      "content_id": 148459,
+      "input": "existing licensed spirit_release.wav; gacha manifest.json provenance retained"
     }
   },
   "edits": {
@@ -32,10 +38,18 @@
     },
     "bind": {
       "source": "dark",
-      "cut_start": 2.2,
-      "duration_seconds": 1.0,
-      "peak_dbfs": -58.94,
-      "sha256": "96e69f2cbd5b7412fc15d9a57bf686577915b8ad71ee83f5a3a5e40b4bc2507b"
+      "derived_from": {
+        "path": "assets/audio/sfx/izanami/haunt.wav",
+        "ref": "b763cc0befa896c64ca87cc8e98ecf177e9c9e4f",
+        "sha256": "812ce0f0657c4e7000372b3dd5c146ace63f7da2e7950a270144e521b019bb9b"
+      },
+      "input_cut_start": 0.2,
+      "processing": "asetrate=47628,aresample=44100,highpass=f=150,lowpass=f=6500,afade=t=in:d=0.012,afade=t=out:st=0.54:d=0.20; offline peak normalization to -3dBFS with limiter, PCM16",
+      "duration_seconds": 0.8,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -17.88,
+      "sha256": "bec98611e9447238275d8b15172c95d08f1738bbc46cd0ad8e5f144a05820f2b",
+      "replaced_nearly_silent_peak_dbfs": -58.94
     },
     "fire": {
       "source": "fire",
@@ -45,18 +59,34 @@
       "sha256": "db8282e61bf2e004be8197e47b4ea7df2e9d145e74edba5991d53c04d0ec34f1"
     },
     "spirits": {
-      "source": "dark",
-      "cut_start": 3.4,
-      "duration_seconds": 1.55,
-      "peak_dbfs": -58.71,
-      "sha256": "05266cde435272ebe7a33e5a5de569e748c70c7011b90f87433860689996720b"
+      "source": "whoosh",
+      "derived_from": {
+        "path": "assets/audio/sfx/izanami/spirit_release.wav",
+        "ref": "b763cc0befa896c64ca87cc8e98ecf177e9c9e4f",
+        "sha256": "59cf11dd7b4ad59a11f7972723bdb554f2f29f3dfb212f175bb29d24fd8e6f09"
+      },
+      "input_cut_start": 0,
+      "processing": "asetrate=41454,aresample=44100,afade=t=in:d=0.02,afade=t=out:st=0.90:d=0.26; offline peak normalization to -3dBFS with limiter, PCM16",
+      "duration_seconds": 1.16,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -22.69,
+      "sha256": "d2f29bdd90aeb15c2863f6535970308cf199bb7426ae425ff41cced9974dc41f",
+      "replaced_nearly_silent_peak_dbfs": -58.71
     },
     "torii": {
       "source": "dark",
-      "cut_start": 5.1,
-      "duration_seconds": 1.7,
-      "peak_dbfs": -58.71,
-      "sha256": "aaef334968b26cc0517b21096b682d4e50cd5fc224ac9b7f6cba18305c969ce1"
+      "derived_from": {
+        "path": "assets/audio/sfx/izanami/haunt.wav",
+        "ref": "b763cc0befa896c64ca87cc8e98ecf177e9c9e4f",
+        "sha256": "812ce0f0657c4e7000372b3dd5c146ace63f7da2e7950a270144e521b019bb9b"
+      },
+      "input_cut_start": 0,
+      "processing": "asetrate=36162,aresample=44100,highpass=f=90,lowpass=f=3800,afade=t=in:d=0.06,afade=t=out:st=1.40:d=0.40; offline peak normalization to -3dBFS with limiter, PCM16",
+      "duration_seconds": 1.8,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -19.69,
+      "sha256": "7380d3e4fa77b630bf990a84a49b4ff7edb0d6e225f450eb3b15501fc959098a",
+      "replaced_nearly_silent_peak_dbfs": -58.71
     }
   },
   "format": "44.1kHz mono PCM16, peak capped -3dBFS, no runtime decode/base64"

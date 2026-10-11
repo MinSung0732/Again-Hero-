@@ -56,6 +56,7 @@ var target_visual: AnimatedSprite2D
 var target_body_center := Vector2.ZERO
 var fire_hit_counted := PackedByteArray([0,0,0,0])
 var fire_slow_counted := PackedByteArray([0,0,0,0])
+var fire_sound_started := PackedByteArray([0,0,0,0])
 var prune_tick := 0.0
 var stale_crossing_ids: Array[int] = []
 
@@ -347,6 +348,7 @@ func _create_fire() -> void:
 		fire_tick[i] = 0.0
 		fire_hit_counted[i] = 0
 		fire_slow_counted[i] = 0
+		fire_sound_started[i] = 0
 		return
 
 func _tick_fire(delta: float) -> void:
@@ -357,7 +359,9 @@ func _tick_fire(delta: float) -> void:
 		fire_age[i] += delta
 		var inside := is_instance_valid(hero) and hero.global_position.distance_squared_to(fire_points[i]) <= fire_radius()*fire_radius()
 		if before <= fire_delay[i] and fire_age[i] >= fire_delay[i]:
-			_audio("fire")
+			if fire_sound_started[i] == 0:
+				fire_sound_started[i] = 1
+				_audio("fire")
 			if inside:
 				if _deal_damage(maxi(int(round(attack_damage*1.7)),1),true,fire_hit_counted[i] == 0):
 					fire_hit_counted[i] = 1
@@ -424,9 +428,9 @@ func _tick_spirits(delta: float) -> void:
 					spirit_state[i] = 0
 
 func _create_torii() -> void:
-	_audio("torii")
 	if dying or current_hp <= 0:
 		return
+	_audio("torii")
 	var point := global_position
 	if is_instance_valid(combat_authority) and combat_authority.has_method("_ensure_monster_spatial_grid"):
 		combat_authority._ensure_monster_spatial_grid()
@@ -524,6 +528,7 @@ func _begin_death_with_result(receipt = null, receipt_revision: int = 0) -> void
 	_begin_izanami_death(receipt, receipt_revision)
 
 func _begin_izanami_death(receipt = null, receipt_revision: int = 0) -> void:
+	if is_instance_valid(audio_bank): audio_bank.stop_all()
 	ghost_remaining = 0.0
 	fan_remaining = 0.0
 	fire_age.fill(-1.0)
