@@ -8,28 +8,40 @@ const SECTION := "demon_appearance"
 static func owned_ids() -> Array[String]:
 	var config := ConfigFile.new()
 	SCOPE.load_config(config, PATH)
+	return _owned_from_config(config)
+
+static func _initial_id(config: ConfigFile) -> String:
+	# Read the registration gender directly to avoid PROFILE -> APPEARANCE cycles.
+	var profile: Variant = config.get_value("player_profile", "value", {})
+	return CATALOG.default_id(String(profile.get("gender", "male")) if profile is Dictionary else "male")
+
+static func _owned_from_config(config: ConfigFile) -> Array[String]:
 	var result: Array[String] = []
+	var initial_id := _initial_id(config)
 	var local_owned: Variant = config.get_value(SECTION, "local_owned", [])
 	for id in CATALOG.ORDER:
 		var entry := CATALOG.get_entry(id)
 		# Local unlocks are preview-only. Paid/social entitlements need a server
 		# ledger before a real cosmetic gacha is connected; snapshot data is not proof.
-		if bool(entry.get("default_owned", false)) or (SCOPE.user_id.is_empty() and local_owned is Array and id in local_owned):
+		var initial_gender := String(entry.get("initial_gender", ""))
+		if id == initial_id or (initial_gender.is_empty() and (bool(entry.get("default_owned", false)) or (SCOPE.user_id.is_empty() and local_owned is Array and id in local_owned))):
 			result.append(id)
 	return result
 
-static func equipped_id(gender: String) -> String:
+static func equipped_id(_gender: String) -> String:
 	var config := ConfigFile.new()
 	SCOPE.load_config(config, PATH)
 	var id := String(config.get_value(SECTION, "equipped_id", ""))
-	return id if id in owned_ids() else CATALOG.default_id(gender)
+	# Old saves may have equipped the other formerly-free default. Fall back
+	# without changing the immutable registration gender or writing on every read.
+	return id if id in _owned_from_config(config) else _initial_id(config)
 
 static func equip(id: String) -> bool:
-	if id not in owned_ids() or CATALOG.path(id, "avatar").is_empty() or CATALOG.path(id).is_empty():
-		return false
 	var config := ConfigFile.new()
 	var error := SCOPE.load_config(config, PATH)
 	if error not in [OK, ERR_FILE_NOT_FOUND]:
+		return false
+	if id not in _owned_from_config(config) or CATALOG.path(id, "avatar").is_empty() or CATALOG.path(id).is_empty():
 		return false
 	if config.get_value(SECTION, "equipped_id", "") == id:
 		return true
@@ -44,6 +56,8 @@ static func grant_local_preview(id: String) -> bool:
 	var error := SCOPE.load_config(config, PATH)
 	if error not in [OK, ERR_FILE_NOT_FOUND]:
 		return false
+	if not String(CATALOG.get_entry(id).get("initial_gender", "")).is_empty() and id != _initial_id(config):
+		return false # The other initial gender is not a preview entitlement.
 	var raw: Variant = config.get_value(SECTION, "local_owned", [])
 	var owned: Array = raw.duplicate() if raw is Array else []
 	if id not in owned:

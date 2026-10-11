@@ -5,13 +5,13 @@ const DEFAULTS := {"male": "original_male", "female": "original_female"}
 const ORDER := ["original_male", "original_female"]
 const ENTRIES := {
 	"original_male": {
-		"name": "기본 마왕 · 남성", "default_owned": true,
+		"name": "기본 마왕 · 남성", "initial_gender": "male",
 		"avatar": "res://assets/art/demonking/demonking_portrait_male.png",
 		"dialogue": "res://assets/art/demonking/demonking_portrait_male.png",
 		"expressions": {},
 	},
 	"original_female": {
-		"name": "기본 마왕 · 여성", "default_owned": true,
+		"name": "기본 마왕 · 여성", "initial_gender": "female",
 		"avatar": "res://assets/art/demonking/demonking_portrait_female.png",
 		"dialogue": "res://assets/art/demonking/demonking_portrait_female.png",
 		"expressions": {},

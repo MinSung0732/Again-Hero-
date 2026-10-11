@@ -31,6 +31,7 @@ var picker_slot := ""
 var picker_owner := ""
 var textures := {}
 var shade: GradientTexture2D
+var _locked_texture: Texture2D
 
 func install(owner: RefCounted, parent: Control) -> void:
 	settings_ref = weakref(owner)
@@ -209,12 +210,24 @@ func open_picker(slot: String) -> void:
 	var available := APPEARANCE.owned_ids() if slot == "representative" else STORE.choices(slot)
 	for id in picker_buttons:
 		var button: Button = picker_buttons[id]
-		button.visible = id in available
+		var initial := not String(APPEARANCES.get_entry(id).get("initial_gender", "")).is_empty()
+		var locked: bool = id not in available
+		button.visible = not locked or initial
+		if not button.visible:
+			continue
 		var display_name := String(APPEARANCES.get_entry(id).get("name",id)) if slot == "representative" else CATALOG.display_name(id)
-		button.text = display_name + ("\n사용 중" if id == selected else "\n선택")
-		button.icon = _texture(APPEARANCES.path(id,"avatar") if slot == "representative" else CATALOG.path(id, "banner" if slot == "banner" else "avatar"))
-		button.disabled = id == selected
+		button.text = display_name + ("\n잠김 · 미보유" if locked else ("\n사용 중" if id == selected else "\n선택"))
+		button.icon = _lock_texture() if locked else _texture(APPEARANCES.path(id,"avatar") if slot == "representative" else CATALOG.path(id, "banner" if slot == "banner" else "avatar"))
+		button.tooltip_text = "처음 선택한 성별의 기본 마왕만 보유합니다." if locked else ""
+		button.disabled = locked or id == selected
 	picker.show()
+
+func _lock_texture() -> Texture2D:
+	if _locked_texture == null:
+		var image := Image.new()
+		image.load_svg_from_string('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" shape-rendering="crispEdges"><path d="M24 44V20H36V8H60V20H72V44H60V20H36V44Z" fill="#cfb57b"/><path d="M12 40H84V88H12Z" fill="#cfb57b"/><path d="M40 52H56V68H52V80H44V68H40Z" fill="#37253e"/></svg>')
+		_locked_texture = ImageTexture.create_from_image(image)
+	return _locked_texture
 
 func _choose(id: String) -> void:
 	if picker_owner != _scope_key() or _blocked() or not picker.visible:

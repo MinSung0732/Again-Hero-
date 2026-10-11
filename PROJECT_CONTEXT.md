@@ -1,3 +1,9 @@
+## 2026-10-11 — 초기 성별의 기본 마왕만 보유
+
+- demon_appearance_catalog의 두 기본 마왕은 initial_gender 기반 최초 지급. player_profile.value.gender와 일치하는 기본 마왕만 보유하고 나머지 기본 성별은 초상화/배너/대표 변경창에서 자물쇠·미보유/선택불가.
+- 기존 반대 성별 장착/초상화/배너는 현재 계정의 초기 선택 성별로 읽기 fallback. 성별/닉네임은 유지하고 조회 시 저장하지 않음. local_owned가 반대 기본 성별을 해금하지 않음. 초월 몬스터 보상과 비기본 외형 preview 규칙 유지.
+- Godot4.5.1 실제 전체 Store/Catalog/ProfileView를 synthetic 리소스·저장·Cloud fixture로95검사 PASS. 실제PC/모바일화면/서버로그인/export 미검증.
+
 ## 2026-10-11 — 계정 생명주기 및 도감 5초월 보상 잠금
 
 - 계정 탈퇴는 즉시 비활성화, 서버720시간 보관 후 예약 영구삭제. 원본 Auth/게임행은 보관 중 유지, private.withdrawals PK 기록, 재접속으로 자동 취소/복구하지 않음. 실제세션+auth.uid 자기계정 RPC, ban/세션취소와 원자 처리, 기존7개 게임 테이블 restrictive RLS로 이전JWT 접근 차단. 서버 `account_private` schema이며 클라이언트/service-role키 추가 없음.
