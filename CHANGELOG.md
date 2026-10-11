@@ -1,3 +1,11 @@
+## 2026-10-11 — 계정 탈퇴 30일 보관 및 도감 5초월 배너 잠금
+
+- 설정/계정의 탈퇴 준비 중 버튼을 확인창에 연결. 일반 계정만 현재 진행 저장 후 서버 탈퇴 요청, 중복/테스트/늦은 인증/다른 계정 응답 방어. 성공 또는 서버 비활성 확인 시 보안 vault/토큰/클라우드 정리 후 시작 화면 복귀. 응답 유실 재확인, 로그인 및 거절된 저장 시 비활성 검사를 추가.
+- Supabase 서버에 private 비활성 계정 기록/정확히720시간 보관, 실제 세션 확인·자신의 계정만 탈퇴, 로그인 ban·세션/refresh 취소를 원자 처리. 현재7개 게임 테이블 restrictive RLS로 이전 JWT의 직접 REST/RPC 읽기/쓰기 차단. 10분마다 최대500개 만료 계정만 auth FK CASCADE 삭제하는 cron 배포 및 succeeded 확인. 즉시 사용자/게임 데이터 삭제 없음, 실제 사용자 탈퇴 테스트 없음.
+- 도감6종 5초월 배너에 해금+5초월 단계 조건, 재사용 픽셀 자물쇠/잠김 표시. 직접 preview도 최신 소유권 검사 후 이미지 로드/캐시 전 차단. 일반 일러/배너 미리보기는 유지.
+- 실제 서버 synthetic 계정 30검사(24assert+6권한 거절) PASS·전체ROLLBACK. Godot4.5.1 headless 실제 LoginGateway/CloudStore 전체 로직+확인창 생성 구간+도감 guard/preview를 네트워크/vault/scope fixture로75검사 PASS. gdparse/diff 통과, 서버 performance advisor0건. PC화면/Android실기기/실제소셜로그인/vault/실시간30일경과/export 미검증. 운영/Storage향후추가/롤백은 docs/ACCOUNT_WITHDRAWAL.md.
+- 기준 feature4f7e277419a16241f4e4a069e03776552f34145f, main4122adb7 유지. 서버 마이그레이션 적용 완료; 클라이언트 pull 필요.
+
 ## 2026-10-11 — 탐색 보상 획득 피드백 및 동전 효과음
 
 - 탐색 보상 실제 claim 성공 반환값으로 골드·연구포인트 +획득량 상승/팝/페이드 및 통화 아이콘 각5개 방사 애니메이션1.35초 연결. 기존 보상 아이콘 재사용, cached overlay/Label2개/고정 draw 루프, 유휴 _process 중지. 성공 후만 실행하며 실패·재지급 없음, 계정/적립/저장·보상량 변경 없음.

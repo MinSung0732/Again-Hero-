@@ -57,11 +57,20 @@ func initialize(choice: String = "") -> bool:
 	busy = true
 	var generation := _generation
 	status_changed.emit("계정의 클라우드 저장 확인 중…")
-	var remote := await request_rpc("read_game_save", {})
+	var lifecycle := await request_rpc("account_lifecycle_status", {})
+	var remote: Dictionary = {}
+	if generation == _generation and lifecycle.get("active") == true:
+		remote = await request_rpc("read_game_save", {})
 	busy = false
 	# Resume queued work after this response has applied revision/conflict state.
 	operation_released.emit.call_deferred()
 	if generation != _generation:
+		return false
+	if lifecycle.get("inactive") == true:
+		await get_node("/root/LoginGateway").clear_inactive_session()
+		return false
+	if lifecycle.get("active") != true:
+		status_changed.emit("계정 상태 확인 실패. 로그인 버튼으로 다시 시도해 주세요.")
 		return false
 	if remote.is_empty():
 		status_changed.emit("클라우드 저장 확인 실패. 로그인 버튼으로 다시 시도해 주세요.")
@@ -161,6 +170,12 @@ func flush() -> bool:
 		conflict_detected.emit()
 		return false
 	if not bool(result.get("ok", false)) or not _valid_revision(result.get("revision")):
+		var lifecycle := await request_rpc("account_lifecycle_status", {})
+		if generation != _generation:
+			return false
+		if lifecycle.get("inactive") == true:
+			await get_node("/root/LoginGateway").clear_inactive_session()
+			return false
 		status_changed.emit("클라우드 저장 실패 · 이 기기에 보관 중, 재시도합니다")
 		_timer.start(30.0)
 		return false
@@ -174,6 +189,38 @@ func flush() -> bool:
 	if SCOPE.dirty:
 		_queue_save()
 	return true
+
+
+func withdraw_account() -> Dictionary:
+	# Flush and serialize against snapshot/tutorial operations. Server state wins
+	# if the withdrawal response was lost after its transaction committed.
+	var generation := _generation
+	var owner := SCOPE.user_id
+	if owner.is_empty() or conflict or not await flush():
+		return {}
+	while busy:
+		await operation_released
+		if generation != _generation or owner != SCOPE.user_id:
+			return {}
+	if generation != _generation or owner != SCOPE.user_id or not ready_for_play:
+		return {}
+	busy = true
+	_timer.stop()
+	status_changed.emit("계정 탈퇴 처리 중…")
+	var result := await request_rpc("request_account_withdrawal", {})
+	if generation == _generation and not bool(result.get("ok", false)):
+		var lifecycle := await request_rpc("account_lifecycle_status", {})
+		if lifecycle.get("inactive") == true:
+			result = {"ok": true, "inactive": true, "delete_after": lifecycle.get("delete_after")}
+	busy = false
+	operation_released.emit.call_deferred()
+	if generation != _generation or owner != SCOPE.user_id:
+		return {}
+	if result.get("ok") == true and result.get("inactive") == true:
+		stop()
+	elif SCOPE.dirty:
+		_queue_save()
+	return result
 
 
 static func _valid_revision(value: Variant) -> bool:

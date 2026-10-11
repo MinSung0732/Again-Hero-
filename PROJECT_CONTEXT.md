@@ -1,3 +1,10 @@
+## 2026-10-11 — 계정 생명주기 및 도감 5초월 보상 잠금
+
+- 계정 탈퇴는 즉시 비활성화, 서버720시간 보관 후 예약 영구삭제. 원본 Auth/게임행은 보관 중 유지, private.withdrawals PK 기록, 재접속으로 자동 취소/복구하지 않음. 실제세션+auth.uid 자기계정 RPC, ban/세션취소와 원자 처리, 기존7개 게임 테이블 restrictive RLS로 이전JWT 접근 차단. 서버 `account_private` schema이며 클라이언트/service-role키 추가 없음.
+- `purge-withdrawn-accounts` pg_cron10분주기/최대500만료계정 CASCADE삭제 배포. 신규계정테이블·definerRPC는 활성계정가드 연결 필수. 사용자Storage가 도입되면 API바이너리삭제/소유자인덱스를 먼저 확장해야함(현재객체0, 소유파일계정은 purge보류).
+- 설정확인창→저장→탈퇴→vault/토큰/클라우드정리→시작화면. 응답유실/중복/계정generation 방어. 도감6종5초월배너는 몬스터해금&&upgrade>=5, 자물쇠표시/직접열기차단; 일반일러/배너예고는 유지.
+- 서버30체크ROLLBACK 및 Godot4.5.1 격리75체크PASS. 실제소셜로그인/플랫폼vault/PC화면/Android/30일실시간경과/export미검증. 자세한 운영·검증·롤백: docs/ACCOUNT_WITHDRAWAL.md.
+
 ## 2026-10-11 — 아서왕 및 초월 배너·Pixabay 효과음
 
 ## 2026-10-11 — 초월6종 신규 뽑기 아트 및 아서왕 실제 돌진 수정

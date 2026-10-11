@@ -7,6 +7,7 @@ signal login_requested(provider: String)
 signal login_unavailable(message: String)
 signal local_guest_started
 signal authenticated
+signal account_deactivated
 
 var local_guest_active := false
 var user_id := ""
@@ -21,6 +22,7 @@ var _session_generation := 0
 var _vault: Node
 var remember_session_enabled := true
 var _auth_busy := false
+var withdrawal_busy := false
 var _cloud: Node
 
 func _ready() -> void:
@@ -40,7 +42,7 @@ func _ready() -> void:
 	add_child(_refresh_timer)
 
 func _on_validated(session: Dictionary, user: Dictionary) -> void:
-	if get_node("/root/LocalTestMode").tutorial_preview:
+	if withdrawal_busy or get_node("/root/LocalTestMode").tutorial_preview:
 		return # A late OAuth callback must never leave the isolated preview.
 	_cloud.stop()
 	var id := String(user.get("id", ""))
@@ -155,6 +157,8 @@ func _refresh_if_needed() -> void:
 
 
 func begin_login(provider: String) -> void:
+	if withdrawal_busy:
+		return
 	if get_node("/root/LocalTestMode").tutorial_preview:
 		login_unavailable.emit("normaltest 쿠폰으로 첫 가입 테스트를 종료한 뒤 로그인해 주세요.")
 		return
@@ -171,6 +175,8 @@ func begin_login(provider: String) -> void:
 
 
 func begin_local_guest(preserve_session: bool = false) -> void:
+	if withdrawal_busy:
+		return
 	account_provider = ""
 	account_label = ""
 	_session_generation += 1
@@ -194,6 +200,8 @@ func reset_local_guest() -> void:
 	SCOPE.select_guest()
 
 func suspend_for_local_test() -> void:
+	if withdrawal_busy:
+		return
 	account_provider = ""
 	account_label = ""
 	_session_generation += 1
@@ -206,6 +214,8 @@ func suspend_for_local_test() -> void:
 	local_guest_active = false
 
 func logout() -> bool:
+	if withdrawal_busy:
+		return false
 	if not user_id.is_empty() and (_cloud.conflict or not await _cloud.flush()):
 		login_unavailable.emit("저장을 완료하지 못했습니다. 동기화 후 다시 시도해 주세요.")
 		return false
@@ -226,3 +236,45 @@ func logout() -> bool:
 	account_provider = ""
 	account_label = ""
 	return true
+
+
+func withdraw_account() -> bool:
+	var mode := get_node("/root/LocalTestMode")
+	if withdrawal_busy or _auth_busy or mode.active or mode.tutorial_preview or user_id.is_empty() or access_token.is_empty():
+		return false
+	withdrawal_busy = true
+	var generation := _session_generation
+	var result: Dictionary = await _cloud.withdraw_account()
+	if generation != _session_generation:
+		withdrawal_busy = false
+		return false
+	if result.get("ok") != true or result.get("inactive") != true:
+		withdrawal_busy = false
+		login_unavailable.emit("계정 탈퇴를 확인하지 못했습니다. 연결과 저장 상태를 확인한 뒤 다시 시도해 주세요.")
+		return false
+	await clear_inactive_session()
+	withdrawal_busy = false
+	return true
+
+
+func clear_inactive_session() -> void:
+	# Do not call logout(): inactive accounts cannot flush. Invalidate callbacks
+	# and clear memory before awaiting the platform vault operation.
+	_session_generation += 1
+	var generation := _session_generation
+	_cloud.stop()
+	_oauth.cancel()
+	_refresh_timer.stop()
+	user_id = ""
+	access_token = ""
+	_refresh_token = ""
+	_expires_at = 0.0
+	account_provider = ""
+	account_label = ""
+	local_guest_active = false
+	SCOPE.select_guest()
+	await _vault.clear_session()
+	if generation != _session_generation:
+		return
+	login_unavailable.emit("비활성화된 계정입니다. 탈퇴한 계정 데이터는 30일 보관 후 영구 삭제됩니다.")
+	account_deactivated.emit()

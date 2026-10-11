@@ -33,6 +33,8 @@ var game_checks := {}
 var notice_checks := {}
 var account_identity: Label
 var cloud_status: Label
+var withdrawal_button: Button
+var withdrawal_dialog: ConfirmationDialog
 var profile_label: Label
 var profile_portrait: TextureRect
 var profile_avatar_frame: PanelContainer
@@ -606,14 +608,52 @@ func _build_account() -> void:
 			button.add_theme_stylebox_override(state, _style(Color("28163e"), Color("b5964b")))
 	_info(page, "게스트 진행은 이 기기에만 저장됩니다.\n계정 변경 전에는 현재 진행도의 저장을 확인합니다.")
 	var withdrawal := Button.new()
+	withdrawal_button = withdrawal
 	withdrawal.name = "AccountWithdrawal"
-	withdrawal.text = "계정 탈퇴 · 준비 중"
+	withdrawal.text = "계정 탈퇴"
 	withdrawal.disabled = true
-	withdrawal.tooltip_text = "아직 탈퇴 기능이 연결되지 않았습니다. 계정이나 저장 데이터는 삭제되지 않습니다."
+	withdrawal.tooltip_text = "즉시 비활성화하고 30일 뒤 계정과 진행 데이터를 영구 삭제합니다."
 	withdrawal.custom_minimum_size.y = 88
 	withdrawal.add_theme_font_size_override("font_size", 28)
 	page.add_child(withdrawal)
 	SKIN.apply(withdrawal)
+	withdrawal.pressed.connect(_confirm_withdrawal)
+	withdrawal_dialog = ConfirmationDialog.new()
+	withdrawal_dialog.name = "AccountWithdrawalConfirmation"
+	withdrawal_dialog.title = "계정 탈퇴"
+	withdrawal_dialog.dialog_text = "계정을 탈퇴하시겠습니까?\n\n탈퇴 즉시 모든 기기에서 계정 이용이 중단됩니다.\n계정과 진행 데이터는 비활성 상태로 30일간 보관되며,\n30일이 지난 뒤 영구 삭제됩니다.\n보유 재화, 몬스터, 연구, 프로필도 함께 삭제됩니다.\n\n탈퇴 취소나 재활성화는 지원하지 않습니다."
+	withdrawal_dialog.ok_button_text = "탈퇴하기"
+	withdrawal_dialog.cancel_button_text = "취소"
+	withdrawal_dialog.get_label().add_theme_font_size_override("font_size", 24)
+	withdrawal_dialog.get_ok_button().custom_minimum_size.y = 64
+	withdrawal_dialog.get_cancel_button().custom_minimum_size.y = 64
+	lobby.add_child(withdrawal_dialog)
+	withdrawal_dialog.confirmed.connect(_withdraw_account)
+	var gateway := lobby.get_node("/root/LoginGateway")
+	gateway.account_deactivated.connect(_return_to_login, CONNECT_DEFERRED)
+	lobby.tree_exiting.connect(func():
+		if gateway.account_deactivated.is_connected(_return_to_login):
+			gateway.account_deactivated.disconnect(_return_to_login), CONNECT_ONE_SHOT)
+
+func _confirm_withdrawal() -> void:
+	_sync_account()
+	if withdrawal_button.disabled:
+		return
+	var viewport_size := lobby.get_viewport_rect().size
+	withdrawal_dialog.popup_centered(Vector2i(int(minf(760.0, viewport_size.x * 0.9)), 0))
+
+func _withdraw_account() -> void:
+	_sync_account()
+	if withdrawal_button.disabled:
+		return
+	withdrawal_button.disabled = true
+	await lobby.get_node("/root/LoginGateway").withdraw_account()
+	if is_instance_valid(lobby) and lobby.is_inside_tree():
+		_sync_account()
+
+func _return_to_login() -> void:
+	if lobby.get_tree().change_scene_to_file("res://src/startup/Startup.tscn") != OK:
+		pages.account.get_node("Guide").text = "계정이 비활성화되었습니다. 게임을 다시 실행해 주세요."
 
 func _open_profile() -> void:
 	var gateway := lobby.get_node("/root/LoginGateway")
@@ -643,7 +683,7 @@ func _sync_account() -> void:
 	profile_portrait.visible = not nickname.is_empty()
 	profile_avatar_frame.visible = not nickname.is_empty()
 	profile_setup.visible = nickname.is_empty() and not guest and not mode.active
-	profile_setup.disabled = cloud.busy or gateway.access_token.is_empty()
+	profile_setup.disabled = cloud.busy or gateway.withdrawal_busy or gateway.access_token.is_empty()
 	var testing: bool = mode.active or mode.tutorial_preview
 	account_identity.text = "첫 가입 테스트 · 로컬 전용" if mode.tutorial_preview else ("로컬 테스트 모드" if mode.active else gateway.get_account_display())
 	if mode.active or guest:
@@ -656,9 +696,10 @@ func _sync_account() -> void:
 		cloud_status.text = "인증 만료 · 다시 로그인 필요"
 	else:
 		cloud_status.text = "클라우드 저장 사용 중" if cloud.ready_for_play else "클라우드 연결 확인 필요"
-	pages.account.get_node("KakaoLogin").disabled = guest or mode.active or cloud.busy or gateway.access_token.is_empty()
+	pages.account.get_node("KakaoLogin").disabled = guest or testing or cloud.busy or gateway.withdrawal_busy or gateway.access_token.is_empty()
 	pages.account.get_node("GoogleLogin").text = "계정 로그인" if guest else "로그아웃 / 계정 변경"
-	pages.account.get_node("GoogleLogin").disabled = testing or cloud.busy
+	pages.account.get_node("GoogleLogin").disabled = testing or cloud.busy or gateway.withdrawal_busy
+	withdrawal_button.disabled = guest or testing or cloud.busy or gateway.withdrawal_busy or cloud.conflict or not cloud.ready_for_play or gateway.access_token.is_empty()
 	if testing:
 		pages.account.get_node("Guide").text = "일반 계정 로그인은 normaltest 쿠폰으로 테스트 모드 종료 후 가능합니다."
 	if profile_view != null:

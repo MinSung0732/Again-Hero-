@@ -5,6 +5,7 @@ const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
 const BUTTON := preload("res://src/ui/drag_safe_button.gd")
 const ICON := preload("res://src/ui/codex_skill_icon.gd")
 const COLLECTION := preload("res://src/systems/monster_collection_store.gd")
+var _banner_lock_icon: Texture2D
 var content_parent: BoxContainer
 var previous_separation := 28
 var root: VBoxContainer
@@ -419,8 +420,15 @@ func select_monster(category: String, id: String) -> void:
 		page.trans_view.present(id)
 		for kind in page.art_buttons:
 			var path := DATA.artwork(id, kind)
-			page.art_buttons[kind].disabled = path.is_empty() or not ResourceLoader.exists(path)
-			page.art_buttons[kind].tooltip_text = "보상 미리보기 · 장착/해금되지 않습니다." if not page.art_buttons[kind].disabled else "등록된 리소스가 없습니다."
+			var locked := not artwork_unlocked(id, kind, state)
+			var button: Button = page.art_buttons[kind]
+			button.disabled = locked or path.is_empty() or not ResourceLoader.exists(path)
+			if kind == "plus_banner":
+				button.text = "5초월 배너 · 잠김" if locked else "5초월 배너"
+				button.icon = _lock_icon() if locked else null
+				button.expand_icon = true
+				button.add_theme_constant_override("icon_max_width", 28)
+			button.tooltip_text = "이 몬스터를 해금하고 5초월을 달성하면 볼 수 있습니다." if locked else ("보상 미리보기 · 장착/해금되지 않습니다." if not button.disabled else "등록된 리소스가 없습니다.")
 	else:
 		if not page.detail_cache.has(id):
 			if page.detail_cache.size() >= DETAIL_CACHE_LIMIT:
@@ -665,6 +673,11 @@ func _art_texture(path: String, trim: bool) -> Texture2D:
 func preview(category: String, kind: String) -> void:
 	if not monster_pages.has(category): return
 	var id: String = monster_pages[category].selected
+	# Recheck current account ownership before loading/caching the actual image;
+	# a disabled button alone cannot guard direct calls or stale selection state.
+	if not artwork_unlocked(id, kind, COLLECTION.load_state()):
+		close_preview()
+		return
 	var texture := _art_texture(DATA.artwork(id,kind),kind == "illustration")
 	if texture == null: return
 	preview_title.text = DATA.MONSTERS.get_monster_name(id) + (" · 5초월 배너" if kind == "plus_banner" else (" · 일러스트" if kind == "illustration" else " · 배너"))
@@ -673,3 +686,14 @@ func preview(category: String, kind: String) -> void:
 	preview_background.texture = texture if kind != "illustration" else null
 	preview_root.show()
 	preview_root.grab_focus()
+
+func artwork_unlocked(id: String, kind: String, state: Dictionary) -> bool:
+	if kind != "plus_banner": return true
+	return COLLECTION.is_unlocked(id, state) and COLLECTION.get_upgrade_level(id, state) >= 5
+
+func _lock_icon() -> Texture2D:
+	if _banner_lock_icon == null:
+		var image := Image.new()
+		image.load_svg_from_string('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" shape-rendering="crispEdges"><path d="M6 11V5H9V2H15V5H18V11H15V5H9V11Z" fill="#cfb57b"/><path d="M3 10H21V22H3Z" fill="#cfb57b"/><path d="M10 13H14V17H13V20H11V17H10Z" fill="#37253e"/></svg>')
+		_banner_lock_icon = ImageTexture.create_from_image(image)
+	return _banner_lock_icon
