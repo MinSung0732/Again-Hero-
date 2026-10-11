@@ -144,7 +144,7 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
-	{"id":"hobgoblin_lord","monster_id":"hobgoblin","name":"군단의 군주","description":"기존 홉고블린 전부 제거 후 최대1마리. 기본HP·공격력20마리분, 범위 지름750 및 얇은 경계선 표시. 이동속도·공격간격 유지.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"hobgoblin_lord","effect_values":{"max_population":1,"remove_existing_on_select":true,"radius":375.0,"stat_multipliers":{"hp":20.0,"damage":20.0}}},
+	{"id":"hobgoblin_lord","monster_id":"hobgoblin","name":"군단의 군주","description":"기존 일반 홉고블린 제거 후 일반 최대1마리. 엘리트는 이 증강 제외. 기본HP·공격력20마리분, 범위 지름750 및 얇은 경계선 표시. 이동속도·공격간격 유지.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"hobgoblin_lord","effect_values":{"max_population":1,"exclude_elite":true,"remove_existing_on_select":true,"radius":375.0,"stat_multipliers":{"hp":20.0,"damage":20.0}}},
 	{"id":"hobgoblin_iron_bond","monster_id":"hobgoblin","name":"철벽의 결속","description":"범위 내 이름에 고블린이 포함된 아군이 받는 피해20% 감소. 같은 오라 중첩 없음.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"hobgoblin_iron_bond","effect_values":{"incoming_multiplier":0.80}},
 	{"id":"hobgoblin_shield_march","monster_id":"hobgoblin","name":"방패의 행진","description":"범위 내 이름에 고블린이 포함된 아군에게2초마다 근거리쉴드30 추가(중첩). 원거리 피해는 막지 못함.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"hobgoblin_shield_march","effect_values":{"interval":2.0,"shield_amount":30,"stack":true}},
 	{"id":"yuki_eternal_chill","monster_id":"yuki_onna","name":"영원의 한기","description":"한기 최대중첩5→8","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"yuki_eternal_chill","effect_values":{"extra_stacks":3}},

@@ -2114,7 +2114,7 @@ func _spawn_monster(
 		push_warning("Unknown monster id: %s" % monster_type)
 		return null
 
-	if _monster_population_limit_reached(monster_type):
+	if _monster_population_limit_reached(monster_type, bool(spawn_modifiers.get("elite_variant", false))):
 		return null
 	if bool(MONSTER_CATALOG.MONSTERS[monster_type].get("spawn_at_max_range", false)) and is_instance_valid(hero):
 		spawn_position = get_stationary_spawn_position(monster_type, hero.global_position, spawn_position)
@@ -2125,6 +2125,8 @@ func _spawn_monster(
 	var monster := scene.instantiate() as Node2D
 	if monster == null:
 		return null
+	if bool(spawn_modifiers.get("elite_variant", false)):
+		monster.set_meta("visual_variant", "elite")
 	# Canonical role/grade stats must precede every spawn modifier and _ready().
 	if not TRANSCENDENCE_DATA.is_transcendent(monster_type):
 		MONSTER_CATALOG.apply_runtime_base_stats(monster, monster_type)
@@ -2229,7 +2231,7 @@ func _spawn_monster(
 				float(attack_cooldown_value)
 				* rarity_attack_cooldown_multiplier
 				* monster_attack_speed_multiplier
-				* _get_special_stat_multiplier(monster_type, "attack_cooldown")
+				* _get_special_stat_multiplier(monster_type, "attack_cooldown", String(monster.get_meta("visual_variant", "")) == "elite")
 				* _get_monster_augment_multiplier(
 					monster_type,
 					"attack_cooldown"
@@ -2478,20 +2480,45 @@ func _unregister_monster(instance_id: int) -> void:
 		monster_population_ids.erase(instance_id)
 	active_monsters.erase(instance_id)
 
-func _monster_population_limit_reached(monster_id: String) -> bool:
+func _get_applicable_special_augment_config(monster_id: String, elite_variant: bool = false) -> Dictionary:
 	var configs := _get_special_augment_config(monster_id)
+	if not elite_variant:
+		return configs
+	var applicable := configs.duplicate(true)
+	for effect_type in configs:
+		if bool(configs[effect_type].get("exclude_elite", false)):
+			applicable.erase(effect_type)
+	return applicable
+
+func _monster_population_limit_reached(monster_id: String, elite_variant: bool = false) -> bool:
+	var configs := _get_applicable_special_augment_config(monster_id, elite_variant)
 	for effect_type in configs:
 		var config: Dictionary = configs[effect_type]
 		var limit := int(config.get("max_population", 0))
-		if limit > 0 and int(monster_population_counts.get(monster_id, 0)) >= limit:
+		var population := int(monster_population_counts.get(monster_id, 0))
+		if limit <= 0 or population < limit:
+			continue
+		if bool(config.get("exclude_elite", false)):
+			population = 0
+			for instance_id in active_monsters:
+				var actor = active_monsters[instance_id]
+				if not is_instance_valid(actor) or actor.is_queued_for_deletion():
+					continue
+				if String(actor.get("monster_type")) == monster_id and String(actor.get_meta("visual_variant", "")) != "elite":
+					population += 1
+					if population >= limit:
+						break
+		if population >= limit:
 			return true
 	return false
 
-func _get_special_stat_multiplier(monster_id: String, key: String) -> float:
+func _get_special_stat_multiplier(monster_id: String, key: String, elite_variant: bool = false) -> float:
 	var multiplier := 1.0
 	var configs := _get_special_augment_config(monster_id)
 	for effect_type in configs:
 		var config: Dictionary = configs[effect_type]
+		if elite_variant and bool(config.get("exclude_elite", false)):
+			continue
 		multiplier *= float(config.get("stat_multipliers", {}).get(key, 1.0))
 	return multiplier
 
@@ -2727,8 +2754,8 @@ func _apply_demon_level_scaling_to_monster(
 	var runtime_additions: Dictionary = monster.call("get_runtime_stat_additions") if monster.has_method("get_runtime_stat_additions") else {}
 	var content_id := String(monster.get("monster_type"))
 	var excluded := bool(monster.get_meta("exclude_all_augments", false))
-	var hp_special := 1.0 if excluded else _get_special_stat_multiplier(content_id, "hp")
-	var damage_special := 1.0 if excluded else _get_special_stat_multiplier(content_id, "damage")
+	var hp_special := 1.0 if excluded else _get_special_stat_multiplier(content_id, "hp", String(monster.get_meta("visual_variant", "")) == "elite")
+	var damage_special := 1.0 if excluded else _get_special_stat_multiplier(content_id, "damage", String(monster.get_meta("visual_variant", "")) == "elite")
 	var growth := float(monster.call("get_attack_growth_multiplier")) if monster.has_method("get_attack_growth_multiplier") else 1.0
 	var base_hp_value = monster.get_meta("demon_level_base_max_hp", null)
 	if base_hp_value != null:
@@ -4241,7 +4268,8 @@ func spawn_special_monster(
 		monster_id,
 		spawn_position,
 		0.0,
-		false
+		false,
+		{"elite_variant": true}
 	)
 	if not is_instance_valid(monster):
 		return false
@@ -4264,6 +4292,15 @@ func _apply_special_monster_modifiers(
 
 	if not bool(MONSTER_CATALOG.MONSTERS.get(monster_id, {}).get("can_be_elite", true)):
 		return
+
+	monster.set_meta("visual_variant", "elite")
+	# Direct conversions must discard excluded effects before recalculating stats.
+	# Event spawns already have filtered configs; retain their running timers.
+	var previous_configs: Dictionary = monster.get_meta("special_augment_configs", {})
+	for config in previous_configs.values():
+		if bool(config.get("exclude_elite", false)):
+			_apply_special_augments_to_monster(monster, monster_id)
+			break
 
 	var hp_multiplier := maxf(
 		float(special_data.get("hp_multiplier", 1.0)),
@@ -4864,7 +4901,7 @@ func _apply_special_augments_to_monster(
 ) -> void:
 	if not is_instance_valid(monster):
 		return
-	var configs := {} if bool(monster.get_meta("exclude_all_augments", false)) else _get_special_augment_config(monster_id).duplicate(true)
+	var configs := {} if bool(monster.get_meta("exclude_all_augments", false)) else _get_applicable_special_augment_config(monster_id, String(monster.get_meta("visual_variant", "")) == "elite").duplicate(true)
 	monster.set_meta("special_augment_configs", configs)
 	if monster.has_method("configure_special_augments"):
 		monster.call("configure_special_augments", configs)
@@ -4876,6 +4913,8 @@ func _refresh_monsters_for_selected_augment(augment: Dictionary) -> void:
 		var owner_id := String(augment.get("monster_id",""))
 		for actor in _get_active_monsters_snapshot():
 			if is_instance_valid(actor) and String(actor.get("monster_type")) == owner_id:
+				if bool(effect_values.get("exclude_elite", false)) and String(actor.get_meta("visual_variant", "")) == "elite":
+					continue
 				_consume_monster_for_fusion(actor as Node2D)
 	if String(augment.get("augment_type", "")) == DEMON_AUGMENTS.TYPE_SPECIAL:
 		var owner_id := String(augment.get("monster_id", ""))
@@ -5014,7 +5053,7 @@ func _apply_normal_augments_to_existing_monster(
 				float(raw_cooldown)
 				* rarity_attack_cooldown_multiplier
 				* monster_attack_speed_multiplier
-				* _get_special_stat_multiplier(monster_id, "attack_cooldown")
+				* _get_special_stat_multiplier(monster_id, "attack_cooldown", String(monster.get_meta("visual_variant", "")) == "elite")
 				* _get_monster_augment_multiplier(
 					monster_id,
 					"attack_cooldown"
