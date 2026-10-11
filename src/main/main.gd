@@ -3452,9 +3452,10 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 		status_label.text = "용사를 쓰러뜨렸습니다. 스테이지 클리어!"
 		next_stage_button.visible = battle.can_go_to_next_stage()
 	else:
-		result_title.text = "패배 · 실험 종료"
+		var abandoned := message.begins_with("전투 중단")
+		result_title.text = "전투 중단 · 기여 정산" if abandoned else "패배 · 실험 종료"
 		result_title.add_theme_color_override("font_color", Color("ffb2b8"))
-		status_label.text = "이번 실험이 종료되었습니다."
+		status_label.text = "전투를 중단했습니다. 결과창에서 보상을 확인하세요." if abandoned else "이번 실험이 종료되었습니다."
 		next_stage_button.visible = false
 
 	var copy := preload("res://src/ui/battle_result_copy.gd").format_message(message)
@@ -3511,6 +3512,11 @@ func _on_lobby_pressed() -> void:
 	var refund := STAMINA.refund_early_exit(_battle_stamina_entry, elapsed)
 	if not bool(refund.get("success", false)):
 		_show_stamina_notice("스테미너 반환을 저장하지 못했습니다. 다시 눌러 주세요.")
+		return
+	if is_instance_valid(battle) and not battle.battle_over and not battle.practice_mode and not battle.tutorial_mode:
+		# Show the existing result screen once; the next lobby press only navigates.
+		if not battle.finish_abandoned_run():
+			status_label.text = "기여 보상 저장 실패. 로비 버튼을 다시 눌러 주세요."
 		return
 	_lobby_exit_pending = true
 	TutorialFlow.returning_to_lobby()

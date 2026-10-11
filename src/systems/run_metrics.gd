@@ -207,21 +207,10 @@ func get_research_reward_breakdown(
 	)
 
 	var remaining_reward := 0
-	if victory:
-		var remaining_step := maxf(
-			float(reward_rules.get("remaining_time_step_seconds", 30.0)),
-			0.001
-		)
-		var remaining_steps := int(floor(
-			(get_remaining_seconds() + 0.0001) / remaining_step
-		))
-		remaining_reward = mini(
-			remaining_steps * maxi(
-				int(reward_rules.get("remaining_time_step_reward", 0)),
-				0
-			),
-			maxi(int(reward_rules.get("remaining_time_max", 0)), 0)
-		)
+	var clear_time_ratio := 0.0
+	if victory and duration_seconds > 0.0:
+		clear_time_ratio = clampf(get_remaining_seconds()/duration_seconds, 0.0, 1.0)
+		remaining_reward = int(floor(clear_time_ratio*maxi(int(reward_rules.get("remaining_time_max", 0)), 0)+0.0001))
 
 	var observation_reward := mini(
 		hero_augment_events.size()
@@ -241,11 +230,12 @@ func get_research_reward_breakdown(
 		+ demon_level_reward
 		+ hero_level_reward
 		+ summon_reward
-		+ remaining_reward
 		+ observation_reward
 		+ strategy_reward,
-		maxi(int(reward_rules.get("total_max", 0)), 0)
+		maxi(int(reward_rules.get("performance_total_max", reward_rules.get("total_max", 0))), 0)
 	)
+	# Speed remains meaningful even when all participation categories hit their caps.
+	total = mini(total+remaining_reward, maxi(int(reward_rules.get("total_max", 0)), 0))
 
 	return {
 		"base": base_reward,
@@ -255,6 +245,7 @@ func get_research_reward_breakdown(
 		"hero_level": hero_level_reward,
 		"summon": summon_reward,
 		"remaining_time": remaining_reward,
+		"clear_time_ratio": clear_time_ratio,
 		"observation": observation_reward,
 		"strategy": strategy_reward,
 		"total": total,
@@ -262,6 +253,16 @@ func get_research_reward_breakdown(
 		"total_damage_dealt": total_damage_dealt,
 		"total_summon_spend": total_summon_spend,
 	}
+
+func get_partial_reward_breakdown(demon_level: int, hero_level: int, reward_rules: Dictionary) -> Dictionary:
+	var result := get_research_reward_breakdown(false, demon_level, hero_level, reward_rules)
+	var eligible := elapsed_seconds >= maxf(float(reward_rules.get("partial_min_seconds", 30.0)), 0.0) and total_damage_dealt > 0 and float(result.total_summon_spend) >= maxf(float(reward_rules.get("partial_min_spend", 3.0)), 0.0)
+	var ratio := clampf(float(reward_rules.get("partial_reward_ratio", 0.35)), 0.0, 1.0)
+	result["total"] = mini(int(floor(float(result.total)*ratio)), maxi(int(reward_rules.get("partial_reward_max", 60)), 0)) if eligible else 0
+	result["partial"] = true
+	result["partial_ratio"] = ratio
+	result["eligible"] = eligible
+	return result
 
 func get_snapshot() -> Dictionary:
 	return {

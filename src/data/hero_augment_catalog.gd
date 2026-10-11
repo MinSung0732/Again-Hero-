@@ -83,12 +83,12 @@ const AUGMENTS = [
 	{
 		"id": "rapid_strikes",
 		"name": "속공 훈련",
-		"description": "공격속도 +2% (최대 20중첩)",
+		"description": "공격속도 +1.5% (최대 20중첩, 합계 +30%)",
 		"base_score": 6.8,
 		"max_stack": 20,
 		"tags": ["attack_speed", "damage"],
 		"effects": [
-			{"op": "advance_common_attack_speed"},
+			{"op": "advance_common_attack_speed", "value": 0.015, "max": 0.30},
 		],
 		"ai_rules": [
 			{"source": "nearby_linear", "weight": 0.35, "cap": 2.1},
@@ -101,12 +101,12 @@ const AUGMENTS = [
 	{
 		"id": "iron_body",
 		"name": "강인한 육체",
-		"description": "최대 HP +4% · 증가량만큼 HP 회복 (최대 10중첩)",
+		"description": "최대 HP +3% · 증가량만큼 HP 회복 (최대 10중첩)",
 		"base_score": 7.0,
 		"max_stack": 10,
 		"tags": ["durability", "survival"],
 		"effects": [
-			{"op": "grow_max_hp_ratio", "value": 0.04},
+			{"op": "grow_max_hp_ratio", "value": 0.03},
 		],
 		"ai_rules": [
 			{"source": "hp_missing", "weight": 5.0},
@@ -123,12 +123,12 @@ const AUGMENTS = [
 	{
 		"id": "healing_efficiency",
 		"name": "회복 증폭",
-		"description": "회복 아이템 회복량 +3% (최대 20중첩)",
+		"description": "회복 아이템 회복량 +2% (최대 20중첩, 합계 +40%)",
 		"base_score": 5.8,
 		"max_stack": 20,
 		"tags": ["recovery", "survival"],
 		"effects": [
-			{"op": "add_stat", "target": "heal_item_multiplier", "value": 0.03, "max": 1.60},
+			{"op": "add_stat", "target": "heal_item_multiplier", "value": 0.02, "max": 1.40},
 		],
 		"ai_rules": [
 			{"source": "hp_missing", "weight": 5.5},
@@ -143,12 +143,12 @@ const AUGMENTS = [
 	{
 		"id": "pursuit",
 		"name": "민첩한 발놀림",
-		"description": "이동속도 +10",
+		"description": "이동속도 +6 (최대 10중첩)",
 		"base_score": 6.0,
 		"max_stack": 10,
 		"tags": ["mobility", "kite"],
 		"effects": [
-			{"op": "add_stat", "target": "move_speed", "value": 10.0},
+			{"op": "add_stat", "target": "move_speed", "value": 6.0},
 		],
 		"ai_rules": [
 			{"source": "distance", "divisor": 220.0, "cap": 2.3},
@@ -166,12 +166,12 @@ const AUGMENTS = [
 	{
 		"id": "slow_resistance",
 		"name": "둔화 적응",
-		"description": "둔화 저항 +7% (최대 56%)",
+		"description": "둔화 저항 +5% (최대 8중첩, 40%)",
 		"base_score": 4.8,
-		"max_stack": 10,
+		"max_stack": 8,
 		"tags": ["resistance", "mobility", "survival"],
 		"effects": [
-			{"op": "add_status_resistance", "status": "slow", "value": 0.07, "max": 0.56},
+			{"op": "add_status_resistance", "status": "slow", "value": 0.05, "max": 0.40},
 		],
 		"ai_rules": [
 			{"source": "recent_status_weight", "key": "slow", "weight": 1.10, "cap": 6.6},
@@ -215,7 +215,7 @@ const AUGMENTS = [
 		"tags": ["area", "projectile"],
 		"effects": [
 			{"op": "add_stat", "target": "projectile_splash_radius", "value": 70.0, "max": 180.0},
-			{"op": "add_stat", "target": "projectile_splash_damage_ratio", "value": 0.28, "max": 0.70},
+			{"op": "add_stat", "target": "projectile_splash_damage_ratio", "value": 0.20, "max": 0.60},
 		],
 		"ai_rules": [
 			{"source": "nearby_linear", "weight": 0.70, "cap": 3.5},
@@ -703,11 +703,11 @@ const AUGMENTS = [
 	{
 		"id": "gunner_fugitive_instinct",
 		"name": "도망자의 본능",
-		"description": "HP 40% 이하 백스텝 발동 확률 +8% (최대 5중첩)",
+		"description": "HP 40% 이하 백스텝 발동 확률 +6% (최대 5중첩, 합계 +30%)",
 		"base_score": 6.3,
 		"max_stack": 5,
 		"tags": ["gunner", "evasion", "survival"],
-		"effects": [{"op": "gunner_low_hp_backstep"}],
+		"effects": [{"op": "gunner_low_hp_backstep", "value": 0.06, "max": 0.30}],
 		"ai_rules": [
 			{"source": "hp_missing", "weight": 4.2},
 			{"source": "hp_ratio_max", "value": 0.40, "bonus": 2.0},
@@ -751,11 +751,11 @@ const AUGMENTS = [
 	{
 		"id": "archmage_multicast",
 		"name": "다중시전",
-		"description": "기술 시전 시 중첩당 서로 다른 기술 1개를 0.3초 간격으로 추가 시전. 추가 시전은 쿨타임을 무시하고 게이지를 소모하지 않으며 재귀 발동하지 않음. 조화는 추가 시전 대상에서 제외. 최대 3중첩",
+		"description": "기술 시전 시 중첩당 서로 다른 기술 1개를 0.3초 간격으로 추가 시전. 추가 시전은 쿨타임을 무시하고 게이지를 소모하지 않으며 재귀 발동하지 않음. 조화는 추가 시전 대상에서 제외. 최대 2중첩",
 		"base_score": 8.2,
-		"max_stack": 3,
+		"max_stack": 2,
 		"tags": ["damage", "area", "growth"],
-		"effects": [{"op": "archmage_multicast"}],
+		"effects": [{"op": "archmage_multicast", "max": 2}],
 		"ai_rules": [
 			{"source": "nearby_linear", "weight": 0.55, "cap": 3.3},
 			{"source": "recent_events_linear", "weight": 0.07, "cap": 1.2}
@@ -777,11 +777,11 @@ const AUGMENTS = [
 	{
 		"id": "archmage_fast_cast",
 		"name": "고속영창",
-		"description": "대마법사 모든 기술 재사용 대기시간 -5%. 조화 포함. 최대 5중첩",
+		"description": "대마법사 모든 기술 재사용 대기시간 -4%. 조화 포함. 최대 5중첩, 합계 -20%",
 		"base_score": 7.5,
 		"max_stack": 5,
 		"tags": ["attack_speed", "growth", "damage"],
-		"effects": [{"op": "archmage_fast_cast"}],
+		"effects": [{"op": "archmage_fast_cast", "value": 0.04, "max": 0.20}],
 		"ai_rules": [
 			{"source": "recent_events_linear", "weight": 0.08, "cap": 1.4},
 			{"source": "total_count_min", "value": 4, "bonus": 0.8}

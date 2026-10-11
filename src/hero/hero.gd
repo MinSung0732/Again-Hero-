@@ -348,6 +348,7 @@ var fighter_slash_combo_timer: float = 0.0
 var fighter_slash_combo_direction: Vector2 = Vector2.ZERO
 var fighter_slash_combo_swing_index: int = 0
 var common_attack_speed_bonus: float = 0.0
+var common_attack_speed_augment_bonus: float = 0.0
 var projectile_count_bonus: int = 0
 var fighter_charge_config: Dictionary = {}
 var fighter_charge_cooldown_timer: float = 0.0
@@ -998,6 +999,7 @@ func configure_profile(profile: Dictionary) -> void:
 	fighter_slash_combo_direction = Vector2.ZERO
 	fighter_slash_combo_swing_index = 0
 	common_attack_speed_bonus = 0.0
+	common_attack_speed_augment_bonus = 0.0
 	projectile_count_bonus = 0
 	heal_item_target = null
 	heal_item_retarget_timer = 0.0
@@ -16841,10 +16843,13 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 			)
 
 		"advance_common_attack_speed":
-			common_attack_speed_bonus = minf(
-				common_attack_speed_bonus + 0.02,
-				0.40
+			# Only cap this augment's contribution; preserve Sage permanent growth.
+			var next_bonus := minf(
+				common_attack_speed_augment_bonus + maxf(float(effect.get("value", 0.015)), 0.0),
+				maxf(float(effect.get("max", 0.30)), 0.0)
 			)
+			common_attack_speed_bonus += next_bonus-common_attack_speed_augment_bonus
+			common_attack_speed_augment_bonus = next_bonus
 
 		"advance_fighter_slash_mastery":
 			fighter_slash_mastery_stacks = mini(
@@ -16949,7 +16954,7 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 			gunner_deadeye_shot_multiplier = minf(gunner_deadeye_shot_multiplier + 0.25, 3.0)
 
 		"gunner_low_hp_backstep":
-			gunner_low_hp_backstep_bonus = minf(gunner_low_hp_backstep_bonus + 0.08, 0.40)
+			gunner_low_hp_backstep_bonus = minf(gunner_low_hp_backstep_bonus + maxf(float(effect.get("value", 0.06)), 0.0), maxf(float(effect.get("max", 0.30)), 0.0))
 
 		"gunner_reload_cover":
 			gunner_reload_move_speed_bonus = minf(gunner_reload_move_speed_bonus + 0.06, 0.30)
@@ -16966,7 +16971,7 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 		"archmage_multicast":
 			archmage_multicast_stacks = mini(
 				archmage_multicast_stacks + 1,
-				3
+				maxi(int(effect.get("max", 2)), 0)
 			)
 
 		"archmage_emergency_escape":
@@ -16977,8 +16982,8 @@ func _apply_augment_effect(effect: Dictionary) -> void:
 
 		"archmage_fast_cast":
 			archmage_cooldown_reduction = minf(
-				archmage_cooldown_reduction + 0.05,
-				0.25
+				archmage_cooldown_reduction + maxf(float(effect.get("value", 0.04)), 0.0),
+				maxf(float(effect.get("max", 0.20)), 0.0)
 			)
 
 		"archmage_mana_overflow":

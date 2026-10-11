@@ -26,11 +26,11 @@ static func describe(config: Dictionary) -> String:
 		"radiance_singularity":
 			return "주변으로 10개의 광휘구체를 순차 방출합니다. 구체는 도착 1초 뒤 폭발해 범위 피해를 주고 2초 동안 적을 둔화합니다."
 		"mana_condensation":
-			return "8방향에 마력을 하나씩 응축합니다. 스택당 모든 스킬 재사용 대기시간이 2% 감소하며, 8스택 상태에서 다시 사용하면 전부 소모해 쿨감이 초기화되고 영구 스탯을 강화하며 10초간 모든 스킬 피해가 30% 증가합니다. 이 완성을 2회 달성하면 스킬 5·6이 해금됩니다."
+			return "%d방향에 마력을 하나씩 응축합니다. 스택당 모든 스킬 재사용 대기시간이 %.1f%% 감소하며, 최대 스택 상태에서 다시 사용하면 전부 소모해 쿨감이 초기화되고 영구 스탯을 강화하며 %.0f초간 모든 스킬 피해가 %.0f%% 증가합니다. 이 완성을 %d회 달성하면 스킬 5·6이 해금됩니다." % [int(config.get("max_stacks",8)),float(config.get("cooldown_reduction_per_stack",0.015))*100.0,float(config.get("skill_damage_buff_duration",10.0)),float(config.get("skill_damage_buff_ratio",0.25))*100.0,int(config.get("unlock_completion_count",2))]
 		"starlight":
-			return "8초 동안 별빛을 전개합니다. 0.75초마다 용사 주변 지름 1200 범위의 무작위 지점 3곳에 유성을 떨어뜨리며, 각 유성은 지름 200 범위에 공격력의 110% 피해를 줍니다."
+			return "%.0f초 동안 별빛을 전개합니다. %.2f초마다 용사 주변 지름 %.0f 범위의 무작위 지점 %d곳에 유성을 떨어뜨리며, 각 유성은 지름 %.0f 범위에 공격력의 %.0f%% 피해를 줍니다." % [float(config.get("duration",8.0)),float(config.get("spawn_interval",0.75)),float(config.get("spawn_diameter",1200.0)),int(config.get("meteors_per_volley",3)),float(config.get("impact_diameter",200.0)),float(config.get("damage_ratio",0.95))*100.0]
 		"annihilation":
-			return "자신의 위치에 15초 동안 소멸점을 생성합니다. 소멸점은 전장의 몬스터를 조금씩 끌어당기고, 지름 400 범위의 적에게 0.5초마다 공격력 70% 피해를 줍니다. 피해 시 체력이 10% 이하인 적은 소멸점에 먹혀 즉시 처형됩니다."
+			return "자신의 위치에 %.0f초 동안 소멸점을 생성합니다. 소멸점은 전장의 몬스터를 조금씩 끌어당기고, 지름 %.0f 범위의 적에게 %.2f초마다 공격력 %.0f%% 피해를 줍니다. 피해 시 체력이 %.0f%% 이하인 적은 소멸점에 먹혀 즉시 처형됩니다." % [float(config.get("duration",12.0)),float(config.get("effect_diameter",400.0)),float(config.get("damage_interval",0.50)),float(config.get("damage_ratio",0.55))*100.0,float(config.get("execution_hp_ratio",0.10))*100.0]
 		"arcane_piercer":
 			return "전방으로 강력한 마력 관통포를 발사해 일직선상의 적을 공격합니다."
 		"arcane_barrier":

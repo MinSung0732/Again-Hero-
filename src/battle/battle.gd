@@ -148,6 +148,8 @@ var run_time_limit_seconds: float = 0.0
 var run_time_emit_timer: float = 0.0
 var manual_spawn_warning_timer: float = 0.0
 var run_metrics = RUN_METRICS.new()
+var _run_reward_granted := false
+var _run_reward_save_failed := false
 var stage_director = STAGE_DIRECTOR.new()
 var mutation_director = MUTATION_DIRECTOR.new()
 var flow_pause_manager = FLOW_PAUSE_MANAGER.new()
@@ -786,6 +788,8 @@ func _start_battle() -> void:
 	transcendence.configure(registered_id, TRANSCENDENCE_DATA.get_rules(registered_id) if bool(MONSTER_CATALOG.MONSTERS.get(registered_id, {}).get("combat_enabled", true)) else {})
 	transcendence_changed.emit(registered_id, false, false)
 	battle_over = false
+	_run_reward_granted = false
+	_run_reward_save_failed = false
 	elite_monster_skill_runtime.reset()
 	wolf_pack_runtime.reset()
 	yuki_runtime.reset()
@@ -5288,18 +5292,31 @@ func _on_run_time_up() -> void:
 	result_text += _grant_run_research_reward(false)
 	_finish_battle(result_text, false)
 
+func finish_abandoned_run() -> bool:
+	if battle_over:
+		return true
+	var reward_text := _grant_run_research_reward(false)
+	if _run_reward_save_failed:
+		return false # Stay in the current run so a failed save can be retried.
+	if reward_text.is_empty() and not practice_mode and not tutorial_mode:
+		reward_text = "\n기여 보상 조건: 전투 30초 이상 · 소환 비용 3 이상 · 실제 피해 발생"
+	_finish_battle("전투 중단 · 기여 보상 정산"+reward_text, false)
+	return true
+
 func _grant_run_research_reward(apply_clear_multiplier: bool) -> String:
+	_run_reward_save_failed = false
+	if _run_reward_granted:
+		return ""
 	if practice_mode or tutorial_mode:
 		return ""
 	var hero_level := 1
 	if is_instance_valid(hero):
 		hero_level = maxi(int(hero.get("level")), 1)
-	var breakdown: Dictionary = run_metrics.get_research_reward_breakdown(
-		apply_clear_multiplier,
-		demon_level,
-		hero_level,
-		STAGE_CATALOG.RUN_REWARD_RULES
-	)
+	var breakdown: Dictionary
+	if apply_clear_multiplier:
+		breakdown = run_metrics.get_research_reward_breakdown(true, demon_level, hero_level, STAGE_CATALOG.RUN_REWARD_RULES)
+	else:
+		breakdown = run_metrics.get_partial_reward_breakdown(demon_level, hero_level, STAGE_CATALOG.RUN_REWARD_RULES)
 	var base_total := int(breakdown.get("total", 0))
 	if base_total <= 0:
 		return ""
@@ -5319,23 +5336,27 @@ func _grant_run_research_reward(apply_clear_multiplier: bool) -> String:
 	var grant_result: Dictionary = STAGE_PROGRESS.add_research_points(requested, gold_reward)
 	var granted := int(grant_result.get("granted", 0))
 	if granted <= 0:
+		_run_reward_save_failed = true
 		return "\nRun 연구 보상 저장 실패"
+	_run_reward_granted = true
 
 	if apply_clear_multiplier:
 		return (
 			"\nRun 연구 +%d · 산정 %d × Stage %.2f\nRun 골드 +%d · 전투 연구 보상의 60%%%s"
 			% [granted, base_total, stage_multiplier, int(grant_result.get("gold_granted", 0)), _format_run_reward_detail(breakdown)]
 		)
-	return "\nRun 연구 +%d\nRun 골드 +%d · 전투 연구 보상의 60%%%s" % [
+	return "\nRun 연구 +%d · 전투 기여 %.0f%% 정산\nRun 골드 +%d · 전투 연구 보상의 60%%%s" % [
 		granted,
+		float(breakdown.get("partial_ratio", 0.35))*100.0,
 		int(grant_result.get("gold_granted", 0)),
 		_format_run_reward_detail(breakdown),
 	]
 
 func _format_run_reward_detail(breakdown: Dictionary) -> String:
-	return (
+	var prefix := "\n아래 항목은 기여 비율 적용 전 산정입니다." if bool(breakdown.get("partial", false)) else ""
+	return prefix+(
 		"\n기본 +%d · 피해 +%d · 마왕Lv +%d · 용사Lv +%d"
-		+ " · 소환 +%d · 신속 +%d · 관찰/전환 +%d"
+		+ " · 소환 +%d · 신속 +%d (남은 시간 %.0f%%) · 관찰/전환 +%d"
 	) % [
 		int(breakdown.get("base", 0)) + int(breakdown.get("victory", 0)),
 		int(breakdown.get("damage", 0)),
@@ -5343,6 +5364,7 @@ func _format_run_reward_detail(breakdown: Dictionary) -> String:
 		int(breakdown.get("hero_level", 0)),
 		int(breakdown.get("summon", 0)),
 		int(breakdown.get("remaining_time", 0)),
+		float(breakdown.get("clear_time_ratio", 0.0))*100.0,
 		int(breakdown.get("observation", 0))
 		+ int(breakdown.get("strategy", 0)),
 	]
