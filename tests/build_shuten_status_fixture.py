@@ -1,6 +1,7 @@
 """Actual ReceivedAfflictions and Shuten status callers with Hero/generic regressions."""
 from pathlib import Path
 import argparse, re, shutil, subprocess, sys
+from status_receipt_source import normalize_component
 ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser(); p.add_argument('target', type=Path)
 base = ['hero','control-hero','extended-hero','dot-hero','action-scope','event-buffer','monster-catalog','medusa','burn','damage-poison','succubus','izanami']
@@ -15,9 +16,9 @@ def fn(s, n):
     tail = s[m.start():]; end = re.search(r'\n(?:static )?func ', tail)
     return (tail[:end.start()] if end else tail).rstrip() + '\n\n'
 old = a.afflictions_baseline.read_text(); new = (ROOT / 'src/systems/received_afflictions.gd').read_text()
-assert new.startswith(old.rstrip()), 'Existing component fields and methods changed'
+assert normalize_component(new).startswith(old.rstrip()), 'Existing component fields and methods changed'
 names = re.findall(r'^(?:static )?func ([^(]+)\(', old, re.M)
-for n in names: assert fn(old, n) == fn(new, n), n
+for n in names: assert fn(old, n) == normalize_component(fn(new, n)), n
 print('ReceivedAfflictions original bodies preserved:', len(names))
 shutil.copy2(a.afflictions_baseline, out / 'tests/afflictions_before.gd')
 shutil.copy2(ROOT / 'src/systems/received_afflictions.gd', out / 'src/systems/received_afflictions.gd')

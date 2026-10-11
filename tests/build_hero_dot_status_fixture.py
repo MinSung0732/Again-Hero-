@@ -1,6 +1,7 @@
 """Actual DOT application/tick slices with legacy state and budget comparison."""
 from pathlib import Path
 import argparse,re,shutil,subprocess,sys
+from status_receipt_source import normalize_legacy_status
 ROOT=Path(__file__).resolve().parents[1]
 p=argparse.ArgumentParser();p.add_argument('target',type=Path)
 base=['hero','control-hero','action-scope','event-buffer','monster-catalog','medusa']
@@ -17,7 +18,7 @@ def fn(s,n):
 old=a.extended_hero_baseline.read_text();new=(ROOT/'src/hero/hero.gd').read_text()
 names=re.findall(r'^func ([^(]+)\(',old,re.M)
 for n in names:
-    body=fn(new,n)
+    body=normalize_legacy_status(fn(new,n))
     if n in ['apply_poison','apply_damage_poison','apply_bleed','apply_burn','apply_healing_reduction','apply_damage_taken_increase','apply_charm']:
         kind=n[6:]
         body=fn(new,'_apply_'+kind+'_status').replace('_apply_'+kind+'_status',n,1).replace(', receipt = null, receipt_revision: int = 0','')

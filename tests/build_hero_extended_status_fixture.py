@@ -2,6 +2,7 @@
 from pathlib import Path
 import argparse
 import re
+from status_receipt_source import normalize_legacy_status
 import shutil
 import subprocess
 import sys
@@ -21,7 +22,7 @@ def fn(s,n):
 old=a.control_hero_baseline.read_text();new=(ROOT/'src/hero/hero.gd').read_text()
 names=re.findall(r'^func ([^(]+)\(',old,re.M)
 for n in names:
-    body=fn(new,n)
+    body=normalize_legacy_status(fn(new,n))
     if n in ['apply_fear','apply_paralysis','apply_petrify','apply_poison','apply_damage_poison','apply_bleed','apply_burn','apply_healing_reduction','apply_damage_taken_increase','apply_charm']:
         kind=n[6:]
         body=fn(new,'_apply_'+kind+'_status').replace('_apply_'+kind+'_status',n,1).replace(', receipt = null, receipt_revision: int = 0','')

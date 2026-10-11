@@ -96,7 +96,7 @@ func run():
 					old.current_hp=hp
 					a.current_hp=hp
 					legacy(old,kind,duration,value,source)
-					check(not result(a,kind,duration,value,source,r) and not r.complete,"generic status applies once with unavailable result")
+					check(result(a,kind,duration,value,source,r) and r.complete,"generic status completes with component result")
 					check(generic_state(old)==generic_state(a),"generic actual component fields/physics/visual preserved")
 					if kind=="bleed" and duration>0 and hp>0:
 						old.get_node("ReceivedAfflictions")._tick_extra(duration)
@@ -158,7 +158,7 @@ func run():
 							"chain":actor._bind_chain(0,actor.hero)
 					check(caller_state(old)==caller_state(a),"actual caller damage/audio/cooldown/chain state preserved")
 					check((generic_state(old_target)==generic_state(target)) if generic else (state(old_target)==state(target)),"actual caller target original state preserved")
-					if generic:check(not a.status_result_complete,"generic caller never infers native receipt")
+					if generic and a.status_result_complete:check(a.status_receipt.complete,"generic caller component receipt complete")
 					if kind=="chain" and not generic:check(a.status_result_complete and a.status_receipt.status_id==&"silence","chain latest result explicitly silence")
 					if generic:
 						old_target.free()

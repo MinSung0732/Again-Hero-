@@ -1,4 +1,7 @@
 extends "res://src/monsters/orc.gd"
+const STATUS_RECEIPT = preload("res://src/systems/battle_status_receipt.gd")
+var legacy_status_receipt = STATUS_RECEIPT.new()
+var legacy_status_result_complete := false
 const DATA := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const FX := preload("res://src/ui/bulgasal_combat_effects.gd")
 const PILLARS := preload("res://src/monsters/bulgasal_pillars.gd")
@@ -338,18 +341,54 @@ func _end_burrow() -> void:
 	_set_phase("idle")
 
 func apply_stun(seconds: float) -> void:
+	var revision: int = legacy_status_receipt.begin(self,&"stun",seconds,1.0)
+	_apply_stun_status(seconds,legacy_status_receipt,revision)
+	legacy_status_result_complete = legacy_status_receipt.finish(revision)
+
+func _apply_stun_status(seconds: float, receipt = null, revision: int = 0) -> void:
 	if is_action_control_immune(): return
 	stun_remaining = maxf(stun_remaining,seconds)
+	if receipt != null:
+		receipt.record_application(stun_remaining,1.0,revision)
 	if phase == "channel":
 		channel.cancel()
 		_set_phase("idle")
 
+func apply_stun_with_result(seconds: float, receipt) -> bool:
+	if receipt == null:
+		apply_stun(seconds)
+		return false
+	var revision: int = receipt.begin(self,&"stun",seconds,1.0)
+	if not supports_status_receipt():
+		apply_stun(seconds)
+		return false
+	_apply_stun_status(seconds,receipt,revision)
+	return receipt.finish(revision)
+
 func apply_silence(seconds: float) -> void:
+	var revision: int = legacy_status_receipt.begin(self,&"silence",seconds,1.0)
+	_apply_silence_status(seconds,legacy_status_receipt,revision)
+	legacy_status_result_complete = legacy_status_receipt.finish(revision)
+
+func _apply_silence_status(seconds: float, receipt = null, revision: int = 0) -> void:
 	if is_action_control_immune(): return
 	silence_remaining = maxf(silence_remaining,seconds)
+	if receipt != null:
+		receipt.record_application(silence_remaining,1.0,revision)
 	if phase == "channel":
 		channel.cancel()
 		_set_phase("idle")
+
+func apply_silence_with_result(seconds: float, receipt) -> bool:
+	if receipt == null:
+		apply_silence(seconds)
+		return false
+	var revision: int = receipt.begin(self,&"silence",seconds,1.0)
+	if not supports_status_receipt():
+		apply_silence(seconds)
+		return false
+	_apply_silence_status(seconds,receipt,revision)
+	return receipt.finish(revision)
 
 func _launch_rock(point: Vector2) -> void:
 	rock_origin = global_position
@@ -611,3 +650,6 @@ func draw_combat_overlay(target: Node2D) -> void:
 func get_burrow_frame() -> int:
 	var tick := int(phase_elapsed*DATA.BURROW_FPS)
 	return tick if tick<DATA.BURROW_LOOP_FIRST else DATA.BURROW_LOOP_FIRST+(tick-DATA.BURROW_LOOP_FIRST)%DATA.BURROW_LOOP_COUNT
+
+func supports_status_receipt() -> bool:
+	return get_script().resource_path == "res://src/monsters/bulgasal.gd"

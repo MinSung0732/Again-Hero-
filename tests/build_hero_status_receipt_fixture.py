@@ -2,6 +2,7 @@
 from pathlib import Path
 import argparse
 import re
+from status_receipt_source import normalize_legacy_status
 import shutil
 ROOT=Path(__file__).resolve().parents[1]
 p=argparse.ArgumentParser()
@@ -17,7 +18,7 @@ def fn(s,n):
     return (tail[:end.start()] if end else tail).rstrip()+'\n\n'
 names=re.findall(r'^func ([^(]+)\(',old,re.M)
 for n in names:
-    body=fn(new,n)
+    body=normalize_legacy_status(fn(new,n))
     if n in ['apply_slow','apply_stun','apply_silence','apply_fear','apply_paralysis','apply_petrify','apply_poison','apply_damage_poison','apply_bleed','apply_burn','apply_healing_reduction','apply_damage_taken_increase','apply_charm']:
         kind=n[6:]
         body=fn(new,'_apply_'+kind+'_status').replace('_apply_'+kind+'_status',n,1).replace(', receipt = null, receipt_revision: int = 0','')
@@ -38,6 +39,9 @@ shutil.copy2(a.action_scope_baseline,out/'src/systems/status_action_scope.gd')
 shutil.copy2(a.event_buffer_baseline,out/'src/systems/timed_event_buffer.gd')
 for n in ['battle_status_receipt','battle_entity_registry']:shutil.copy2(ROOT/f'src/systems/{n}.gd',out/f'src/systems/{n}.gd')
 header='''extends CharacterBody2D
+const LEGACY_STATUS_RECEIPT = preload("res://src/systems/battle_status_receipt.gd")
+var legacy_status_receipt = LEGACY_STATUS_RECEIPT.new()
+var legacy_status_result_complete := false
 const STATUS_ACTION_SCOPE = preload("res://src/systems/status_action_scope.gd")
 const TIMED_EVENT_BUFFER = preload("res://src/systems/timed_event_buffer.gd")
 signal status_applied(status_id: String)

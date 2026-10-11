@@ -1,4 +1,7 @@
 extends RefCounted
+const STATUS_RECEIPT = preload("res://src/systems/battle_status_receipt.gd")
+var status_receipt = STATUS_RECEIPT.new()
+var status_result_complete := false
 const BUCKET_POOL := preload("res://src/systems/spatial_bucket_pool.gd")
 const DATA := preload("res://src/data/yuki_onna_behavior_catalog.gd")
 const FX := preload("res://src/ui/combat_status_effect_visual.gd")
@@ -45,8 +48,10 @@ func record_death(actor: Node2D) -> void:
 	points.append(actor.global_position)
 
 func apply_hit(target: Node2D, slow_ratio: float, cap: int, source: Node) -> void:
+	status_result_complete = false
 	if not _alive(target):
 		return
+	var receipt_revision: int = status_receipt.begin(target,&"yuki_slow",float(DATA.SLOW.duration),slow_ratio)
 	var id := target.get_instance_id()
 	var generation := int(target.get_meta("yuki_status_generation",0))
 	if not targets.has(id) or int(targets[id].generation) != generation:
@@ -62,8 +67,10 @@ func apply_hit(target: Node2D, slow_ratio: float, cap: int, source: Node) -> voi
 		target.call("record_status_effect_event","slow")
 	_try_snowflake(target,entry,source,resistance)
 	_sync_target(target,entry)
+	status_receipt.record_application(maxf(float(entry.timer),float(entry.burst_timer)),1.0-float(target.get_meta("yuki_slow_multiplier",1.0)),receipt_revision)
 	if not target.is_in_group("hero"):
 		FX.show_on(target,"yuki_slow")
+	status_result_complete = status_receipt.finish(receipt_revision)
 
 func _try_snowflake(target: Node2D, entry: Dictionary, source: Node = null, resistance: float = -1.0) -> void:
 	if elites.is_empty() or int(entry.cap) <= 0 or int(entry.count) < int(entry.cap):
@@ -169,6 +176,7 @@ func _alive(actor: Node) -> bool:
 	return hp != null and int(hp) > 0 and actor.get("dying") != true and actor.get("is_dying") != true and actor.get("active") != false
 
 func reset() -> void:
+	status_result_complete = false
 	for id in targets:
 		var target: Node = targets[id].target.get_ref()
 		if is_instance_valid(target):

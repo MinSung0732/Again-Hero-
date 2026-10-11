@@ -1,6 +1,7 @@
 """Actual modifier/charm application and lifetime slices against the DOT-stage Hero."""
 from pathlib import Path
 import argparse, re, shutil, subprocess, sys
+from status_receipt_source import normalize_legacy_status
 ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser(); p.add_argument('target', type=Path)
 base = ['hero', 'control-hero', 'action-scope', 'event-buffer', 'monster-catalog', 'medusa', 'extended-hero', 'burn', 'damage-poison']
@@ -18,7 +19,7 @@ old = a.dot_hero_baseline.read_text(); new = (ROOT / 'src/hero/hero.gd').read_te
 kinds = ['healing_reduction', 'damage_taken_increase', 'charm']
 names = re.findall(r'^func ([^(]+)\(', old, re.M)
 for n in names:
-    body = fn(new, n)
+    body = normalize_legacy_status(fn(new, n))
     if n in ['apply_' + k for k in kinds]:
         body = fn(new, '_apply_' + n[6:] + '_status').replace('_apply_' + n[6:] + '_status', n, 1).replace(', receipt = null, receipt_revision: int = 0', '')
         body = re.sub(r'\tif receipt != null:\n\t\treceipt\.record_application\([^\n]+\)\n', '', body)

@@ -1,5 +1,10 @@
 extends CharacterBody2D
 
+# Compatibility boundary: every legacy status call records into one retained buffer.
+const LEGACY_STATUS_RECEIPT = preload("res://src/systems/battle_status_receipt.gd")
+var legacy_status_receipt = LEGACY_STATUS_RECEIPT.new()
+var legacy_status_result_complete := false
+
 const HERO_ACTION_INTENT := preload("res://src/hero/hero_action_intent.gd")
 const HERO_ACTION_PORT := preload("res://src/hero/hero_action_port.gd")
 var action_intent = HERO_ACTION_INTENT.new()
@@ -17155,7 +17160,9 @@ func apply_poison(
 	tick_interval: float = 0.50,
 	source: Node = null
 ) -> void:
-	_apply_poison_status(duration, total_current_hp_ratio, tick_interval, source)
+	var revision: int = legacy_status_receipt.begin(self, &"poison", duration, total_current_hp_ratio)
+	_apply_poison_status(duration, total_current_hp_ratio, tick_interval, source, legacy_status_receipt, revision)
+	legacy_status_result_complete = legacy_status_receipt.finish(revision)
 
 func _apply_poison_status(
 	duration: float,
@@ -17210,7 +17217,10 @@ func apply_bleed_with_result(duration: float, receipt, source: Node = null, tota
 	return receipt.finish(revision)
 
 func apply_bleed(duration: float = 5.0, source: Node = null, total_max_hp_ratio: float = -1.0, refresh: bool = false) -> bool:
-	return _apply_bleed_status(duration, source, total_max_hp_ratio, refresh)
+	var revision: int = legacy_status_receipt.begin(self, &"bleed", duration, total_max_hp_ratio)
+	var accepted: bool = _apply_bleed_status(duration, source, total_max_hp_ratio, refresh, legacy_status_receipt, revision)
+	legacy_status_result_complete = legacy_status_receipt.finish(revision)
+	return accepted
 
 func _apply_bleed_status(duration: float = 5.0, source: Node = null, total_max_hp_ratio: float = -1.0, refresh: bool = false, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or (bleed_timer > 0.0 and not refresh) or duration <= 0.0:
@@ -17271,7 +17281,10 @@ func apply_healing_reduction_with_result(duration: float, reduction: float, rece
 	return receipt.finish(revision)
 
 func apply_healing_reduction(duration: float, reduction: float) -> bool:
-	return _apply_healing_reduction_status(duration, reduction)
+	var revision: int = legacy_status_receipt.begin(self, &"healing_reduction", duration, reduction)
+	var accepted: bool = _apply_healing_reduction_status(duration, reduction, legacy_status_receipt, revision)
+	legacy_status_result_complete = legacy_status_receipt.finish(revision)
+	return accepted
 
 func _apply_healing_reduction_status(duration: float, reduction: float, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or duration <= 0.0:
@@ -17296,7 +17309,10 @@ func apply_damage_taken_increase_with_result(duration: float, increase: float, r
 	return receipt.finish(revision)
 
 func apply_damage_taken_increase(duration: float, increase: float) -> bool:
-	return _apply_damage_taken_increase_status(duration, increase)
+	var revision: int = legacy_status_receipt.begin(self, &"damage_taken_increase", duration, increase)
+	var accepted: bool = _apply_damage_taken_increase_status(duration, increase, legacy_status_receipt, revision)
+	legacy_status_result_complete = legacy_status_receipt.finish(revision)
+	return accepted
 
 func _apply_damage_taken_increase_status(duration: float, increase: float, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or duration <= 0.0:
@@ -17346,7 +17362,10 @@ func apply_charm_with_result(source: Node2D, duration: float, receipt) -> bool:
 	return receipt.finish(revision)
 
 func apply_charm(source: Node2D, duration: float) -> bool:
-	return _apply_charm_status(source, duration)
+	var revision: int = legacy_status_receipt.begin(self, &"charm", duration, 1.0)
+	var accepted: bool = _apply_charm_status(source, duration, legacy_status_receipt, revision)
+	legacy_status_result_complete = legacy_status_receipt.finish(revision)
+	return accepted
 
 func _apply_charm_status(source: Node2D, duration: float, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or charm_timer > 0.0 or charm_immunity_timer > 0.0 or not is_instance_valid(source):
@@ -17443,7 +17462,10 @@ func apply_petrify_with_result(duration: float, receipt, release_slow: float = 1
 	return receipt.finish(revision)
 
 func apply_petrify(duration: float, release_slow: float = 1.0, release_duration: float = 0.0) -> bool:
-	return _apply_petrify_status(duration, release_slow, release_duration)
+	var revision: int = legacy_status_receipt.begin(self, &"petrify", duration, 1.0)
+	var accepted: bool = _apply_petrify_status(duration, release_slow, release_duration, legacy_status_receipt, revision)
+	legacy_status_result_complete = legacy_status_receipt.finish(revision)
+	return accepted
 
 func _apply_petrify_status(duration: float, release_slow: float = 1.0, release_duration: float = 0.0, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or petrify_timer > 0.0 or duration <= 0.0:
@@ -17490,7 +17512,10 @@ func apply_damage_poison_with_result(duration: float, total_damage: int, source:
 	return receipt.finish(revision)
 
 func apply_damage_poison(duration: float, total_damage: int, source: Node, channel: int = 0) -> bool:
-	return _apply_damage_poison_status(duration, total_damage, source, channel)
+	var revision: int = legacy_status_receipt.begin(self, &"poison", duration, 1.0, total_damage)
+	var accepted: bool = _apply_damage_poison_status(duration, total_damage, source, channel, legacy_status_receipt, revision)
+	legacy_status_result_complete = legacy_status_receipt.finish(revision)
+	return accepted
 
 func _apply_damage_poison_status(duration: float, total_damage: int, source: Node, channel: int = 0, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying:
@@ -17545,7 +17570,10 @@ func apply_silence_with_result(duration: float, receipt) -> bool:
 	return receipt.finish(revision)
 
 func apply_silence(duration: float) -> bool:
-	return _apply_silence_status(duration)
+	var revision: int = legacy_status_receipt.begin(self, &"silence", duration, 1.0)
+	var accepted: bool = _apply_silence_status(duration, legacy_status_receipt, revision)
+	legacy_status_result_complete = legacy_status_receipt.finish(revision)
+	return accepted
 
 func _apply_silence_status(duration: float, receipt = null, receipt_revision: int = 0) -> bool:
 	if duration <= 0.0 or current_hp <= 0 or is_dying:
@@ -17571,7 +17599,9 @@ func apply_stun_with_result(duration: float, receipt) -> bool:
 	return receipt.finish(revision)
 
 func apply_stun(duration: float) -> void:
-	_apply_stun_status(duration)
+	var revision: int = legacy_status_receipt.begin(self, &"stun", duration, 1.0)
+	_apply_stun_status(duration, legacy_status_receipt, revision)
+	legacy_status_result_complete = legacy_status_receipt.finish(revision)
 
 func _apply_stun_status(duration: float, receipt = null, receipt_revision: int = 0) -> void:
 	if duration <= 0.0 or current_hp <= 0 or is_dying:
@@ -17630,7 +17660,9 @@ func apply_fear(
 	duration: float,
 	speed_multiplier: float = 1.50
 ) -> void:
-	_apply_fear_status(source, duration, speed_multiplier)
+	var revision: int = legacy_status_receipt.begin(self, &"fear", duration, speed_multiplier)
+	_apply_fear_status(source, duration, speed_multiplier, legacy_status_receipt, revision)
+	legacy_status_result_complete = legacy_status_receipt.finish(revision)
 
 func _apply_fear_status(
 	source: Node2D,
@@ -17845,7 +17877,9 @@ func apply_slow_with_result(multiplier: float, duration: float, receipt) -> bool
 	return receipt.finish(revision)
 
 func apply_slow(multiplier: float, duration: float) -> void:
-	_apply_slow_status(multiplier, duration)
+	var revision: int = legacy_status_receipt.begin(self, &"slow", duration, 1.0 - multiplier)
+	_apply_slow_status(multiplier, duration, legacy_status_receipt, revision)
+	legacy_status_result_complete = legacy_status_receipt.finish(revision)
 
 func _apply_slow_status(multiplier: float, duration: float, receipt = null, receipt_revision: int = 0) -> void:
 	if current_hp <= 0:
@@ -21248,7 +21282,10 @@ func apply_paralysis_with_result(ratio: float, duration: float, receipt) -> bool
 	return receipt.finish(revision)
 
 func apply_paralysis(ratio: float, duration: float) -> bool:
-	return _apply_paralysis_status(ratio, duration)
+	var revision: int = legacy_status_receipt.begin(self, &"paralysis", duration, ratio)
+	var accepted: bool = _apply_paralysis_status(ratio, duration, legacy_status_receipt, revision)
+	legacy_status_result_complete = legacy_status_receipt.finish(revision)
+	return accepted
 
 func _apply_paralysis_status(ratio: float, duration: float, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or duration <= 0.0 or ratio <= 0.0:
@@ -21294,7 +21331,10 @@ func apply_burn_with_result(duration: float, total_damage: int, receipt, source:
 	return receipt.finish(revision)
 
 func apply_burn(duration: float, total_damage: int, source: Node = null) -> bool:
-	return _apply_burn_status(duration, total_damage, source)
+	var revision: int = legacy_status_receipt.begin(self, &"burn", duration, 1.0, total_damage)
+	var accepted: bool = _apply_burn_status(duration, total_damage, source, legacy_status_receipt, revision)
+	legacy_status_result_complete = legacy_status_receipt.finish(revision)
+	return accepted
 
 func _apply_burn_status(duration: float, total_damage: int, source: Node = null, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or not burn_runtime.apply(duration,total_damage,source):

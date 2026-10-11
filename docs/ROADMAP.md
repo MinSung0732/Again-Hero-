@@ -1,5 +1,15 @@
 # ROADMAP
 
+## 내부 구조 개선 체크포인트 (2026-10-11)
+
+- [x] 남은 legacy/direct/dynamic 상태 수신 결과 경계 연결.
+- [x] 일반 상태 컴포넌트 결과 및 불가살/대마법/설녀 별도 규칙 보존.
+- [x] 전체 에셋 프로젝트 headless 통합 smoke, 상태 회귀, 소스 역변환/감사, 재현/롤백 문서.
+- [ ] 목표 Godot 버전 PC 실제 화면, Android 실기기 회귀·export·성능 실측.
+
+[3묶음 종료 기준](STRUCTURE_REFACTOR_COMPLETION.md). 코드·자동 검증 체크포인트 이후 새 콘텐츠/UI 작업 가능. 실제 매칭/용사모드 구현은 현재 완료 범위에 포함하지 않는다. 아래 마일스톤은 기존 기획 이력이며 이 체크포인트만으로 온라인 준비가 완료되는 것은 아니다.
+
+
 ## Milestone 0 — Project Bootstrap
 
 - [x] Repository 생성

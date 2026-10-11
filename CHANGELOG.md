@@ -1,3 +1,11 @@
+## 2026-10-11 — 내부 구조 개선 3묶음 종료 체크포인트
+
+- 남은 직접/동적 상태 호출을 Hero legacy13종 수신 경계에서 기록. 불가살 native제어2/대마법원소2/설녀 별도둔화 연결. 기존 호출 반환·저항·AI raw 관측·기술당1회 집계·캐스팅/틱 규칙 유지.
+- 일반 ReceivedAfflictions6종 retained 결과 및 generic adapter 지원, burn/poison 결과 adapter2개 추가. actor/component/runtime당 O(1) 버퍼 재사용; clear/reset/guard 무효화, 중첩 revision 보호·미지원 legacy1회·재시도 없음. 결과를 네트워크/journal로 송신하거나 매칭·용사모드 추가하지 않음.
+- Godot4.5.1 상태 fixture100,596검사+실제 프로젝트 경계62검사 실패0, 실제 Battle 집계/제우스·불가살·만티코어·슈텐 smoke PASS. 수신23함수+설녀 감사, 원래 gameplay728함수 역변환 동일. 전체 에셋 import/gdparse/Python/diff 검증.
+- 불가살 smoke의 기존 sampler/종료 RID·resources 오류 로그 및 PNG export 경고는 수정 전 격리 프로젝트에서도 재현됨. 로그 오류0/누수0라고 보고하지 않음. PC 그래픽 조작·Android 실기기·목표4.7·성능 실측은 미검증.
+- 기준 feature701a74134cf3873605185343de69cc3180049644, main4122adb7 유지. docs/STRUCTURE_REFACTOR_COMPLETION.md에 종료 범위/캐시 계약/재현/기기 확인/롤백. 코드 연결·자동검증 완료; 실기기 확인 후 출시/main 판단. 새 콘텐츠/UI 작업 시작 가능, 네트워크 확장 보류.
+
 ## 2026-10-11 — 슈텐도지 공통 상태 결과 연결
 
 - ReceivedAfflictions에 opt-in slow/stun/silence/current-HP bleed 결과 adapter 추가. 원래15함수/컴포넌트 전체 prefix 유지. native Hero에 기존 adapter duration/HP/bleed meta guard와 ratio 변환 적용 후 실제 결과 API 호출; 미지원/일반 몬스터는 legacy1회·결과 unavailable, 재시도 없음.
