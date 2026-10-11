@@ -88,7 +88,7 @@ func run() -> void:
 	zeus.position = hero.position+Vector2(180,0)
 	check(battle.command_power == cost_before and battle.transcendence.used,"free once")
 	check(not battle.try_summon_transcendent() and battle._spawn_monster("zeus",Vector2.ZERO) == null,"one per battle and bypass rejection")
-	check(zeus.summon_snapshot == 9 and zeus.max_hp == int(round(DATA.BASE.max_hp+9*2.5)) and zeus.attack_damage == int(round(150+9*0.6)),"raw snapshot formula")
+	check(zeus.summon_snapshot == 9 and zeus.max_hp == int(round(DATA.BASE.max_hp+9*DATA.HP_PER_SUMMON)) and zeus.attack_damage == int(round(150+9*DATA.DAMAGE_PER_SUMMON)),"raw snapshot formula")
 	check(zeus.move_speed == 290 and is_equal_approx(zeus.attack_range,237.5) and is_equal_approx(zeus.attack_cooldown,1.3),"movement/range/1.3-second interval")
 	var hp_before: int = zeus.max_hp
 	var attack_before: int = zeus.attack_damage

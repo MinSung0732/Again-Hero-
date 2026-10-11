@@ -1,9 +1,12 @@
 extends RefCounted
+const GROWTH_STANDARD := preload("res://src/data/transcendent_growth_catalog.gd")
 # One opening skill opportunity; normal command regeneration/costs still apply.
 const INITIAL_GAUGE := 20.0
 # Unspecified design values are provisional and centrally adjustable.
 const BASE := {"max_hp":2100,"attack_damage":130,"move_speed":270.0,"attack_range":85.0,"attack_cooldown":1.6,"exp_reward":0}
-const DAMAGE_PER_TANK_DEATH := 0.6
+const DAMAGE_PER_TANK_DEATH := GROWTH_STANDARD.TANK.attack_damage
+const HP_PER_ALLY_DEATH := GROWTH_STANDARD.TANK.max_hp
+const DEATH_GROWTH := {"max_hp":HP_PER_ALLY_DEATH}
 const RULES := {"mode":"all","conditions":[{"metric":"tanks_summoned","amount":20},{"metric":"allies_died","amount":50}]}
 const GAUGE_MAX := 60.0
 const REGEN_RATIO := 1.0

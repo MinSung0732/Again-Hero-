@@ -1,6 +1,8 @@
 extends RefCounted
+const GROWTH_STANDARD := preload("res://src/data/transcendent_growth_catalog.gd")
 # One opening skill opportunity; normal command regeneration/costs still apply.
 const INITIAL_GAUGE := 35.0
+const GROWTH := GROWTH_STANDARD.DAMAGE_GROWTH
 const BASE := {"max_hp":1700,"attack_damage":42,"move_speed":235.0,"attack_range":325.0,"attack_cooldown":1.5,"projectile_speed":580.0,"projectile_range":680.0,"exp_reward":0}
 const RULES := {"mode":"all","conditions":[{"metric":"damage_dealt","amount":400}]}
 const ROOT := "res://assets/art/Transcendent_monster/manticore/frames"

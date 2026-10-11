@@ -71,12 +71,12 @@ func run() -> void:
 	var actor = SCENE.instantiate()
 	actor.configure_combat_context(target,authority)
 	actor.configure_transcendence(3,0)
-	check(actor.max_hp==1405 and actor.attack_damage==58,"cumulative1.5 HP rounding")
+	check(actor.max_hp==1415 and actor.attack_damage==58,"role-fixed5 HP growth")
 	actor.configure_transcendence(10,0)
 	authority.add_child(actor)
 	actor.set_physics_process(false)
 	actor.visual.set_physics_process(false)
-	check(actor.max_hp==1415 and actor.attack_damage==65 and actor.summon_snapshot==10,"snapshot stats")
+	check(actor.max_hp==1450 and actor.attack_damage==65 and actor.summon_snapshot==10,"snapshot stats")
 	check(actor.get_gauge_regen()==15 and actor.attack_range==275,"regen/range diameter")
 	# A distant target must be approached, while close targets trigger sustained retreat.
 	actor.attack_timer = 100.0

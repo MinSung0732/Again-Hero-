@@ -80,7 +80,7 @@ func _init() -> void:
 func configure_transcendence(deaths: int, level: int) -> void:
 	summon_snapshot = maxi(deaths,0)
 	transcend_level = clampi(level,0,5)
-	max_hp = int(DATA.BASE.max_hp)+summon_snapshot
+	max_hp = int(round(DATA.BASE.max_hp+summon_snapshot*DATA.HP_PER_ALLY_DEATH))
 	current_hp = max_hp
 
 func configure_attack_snapshot(tank_deaths: int) -> void:
@@ -91,7 +91,7 @@ func on_ally_death(_point: Vector2) -> void:
 	if dying or current_hp <= 0:
 		return
 	summon_snapshot += 1
-	max_hp += 1 # Cumulative death growth; does not heal previous damage.
+	max_hp += int(DATA.HP_PER_ALLY_DEATH) # Role-fixed death growth; does not heal previous damage.
 
 func _ready() -> void:
 	super._ready()

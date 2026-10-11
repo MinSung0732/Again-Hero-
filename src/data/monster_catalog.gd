@@ -58,13 +58,13 @@ const MONSTERS := {
 		"base_stats":preload("res://src/data/shuten_doji_behavior_catalog.gd").BASE,"transcendence":preload("res://src/data/shuten_doji_behavior_catalog.gd").RULES,
 		"card_icon_path":"res://assets/art/Transcendent_monster/Shuten-doji/frames/idle_01.png","ground_shadow":{"size":Vector2(80,22),"offset_y":0.0,"opacity":0.35},
 		"scene":preload("res://src/monsters/ShutenDoji.tscn"),
-		"description":"제어형 실제40회 소환 및 상태이상3회 후 전투당1회. 인간형 근접 제어. 공격220/체력2500부터 소환 전 상태이상 행동당 각1 성장(한 공격·기술1회). 이속310·공격간격2초. 게이지100·지휘력회복100%/초당최대15. 혈주연무30/20초:2초12안개·지름600/각200·5~10초·본인외아군도피해·둔화50%,본인둔화80%/피감70%. 귀염지폭0/0:잔여시간합10초이하발화·지름300/175%·현재HP6%출혈7초·기존출혈기절2초·안개당CD2초환급. 쇄혼귀면20/60초:느린유도·3초99%둔화/침묵/250%·이후10초면역·지연도달CD환급. 귀왕해방:첫치명상3초무적/100%회복·강화공격후15초절반안개·적중CD1초/잃은HP1%회복·20적중기절2.5초. 일반/특수증강·엘리트·대형몹 제외.",
+		"description":"제어형 실제40회 소환 및 상태이상3회 후 전투당1회. 인간형 근접 제어. 공격220/체력2500부터 소환 전 상태이상 행동당 공격1/체력5 성장(한 공격·기술1회). 이속310·공격간격2초. 게이지100·지휘력회복100%/초당최대15. 혈주연무30/20초:2초12안개·지름600/각200·5~10초·본인외아군도피해·둔화50%,본인둔화80%/피감70%. 귀염지폭0/0:잔여시간합10초이하발화·지름300/175%·현재HP6%출혈7초·기존출혈기절2초·안개당CD2초환급. 쇄혼귀면20/60초:느린유도·3초99%둔화/침묵/250%·이후10초면역·지연도달CD환급. 귀왕해방:첫치명상3초무적/100%회복·강화공격후15초절반안개·적중CD1초/잃은HP1%회복·20적중기절2.5초. 일반/특수증강·엘리트·대형몹 제외.",
 	},
 
 	"manticore": {
 		"id":"manticore","name":"만티코어","rarity":"transcendent","grade":"transcendent","role":"exploder","species":"beast","family":"manticore","attack_type":"ranged","combat_style":"ranged_harasser",
 		"collection_card":{"style_label":"원거리(근접) 폭발형","identity":"살을 찢는 재앙","feature":"사냥 · 추적 · 불꽃 · 맹독유성"},
-		"growth_metric":"damage_dealt","summon_growth":{"attack_damage":0.075,"max_hp":0.5},
+		"growth_metric":"damage_dealt","summon_growth":preload("res://src/data/manticore_behavior_catalog.gd").GROWTH,
 		"default_unlocked":false,"combat_enabled":true,"base_cost":0.0,"summon_exp":0.0,"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,"special_augment_ids":[],
 		"base_stats":preload("res://src/data/manticore_behavior_catalog.gd").BASE,"transcendence":preload("res://src/data/manticore_behavior_catalog.gd").RULES,
 		"card_icon_path":"res://assets/art/Transcendent_monster/manticore/frames/idle_01.png","ground_shadow":{"size":Vector2(78,20),"offset_y":0.0,"opacity":0.35},
@@ -80,18 +80,18 @@ const MONSTERS := {
 		"base_stats":preload("res://src/data/izanami_behavior_catalog.gd").BASE,"transcendence":preload("res://src/data/izanami_behavior_catalog.gd").RULES,
 		"card_icon_path":"res://assets/art/Transcendent_monster/Izanami/frames/idle_01.png","ground_shadow":{"size":Vector2(78,20),"offset_y":0.0,"opacity":0.35},
 		"scene":preload("res://src/monsters/Izanami.tscn"),
-		"description":"제어형 실제50회 소환 및 상태이상3회 적중 후 전투당1회. 공격55+소환 전 상태이상 행동×1, HP1400+행동×1.5(한 공격·기술1회, 지속갱신·다중장판 중복 제외). 사거리 지름550 즉시타격·공격간격1.5초·이속250·거리 유지. 게이지100/증강 적용 지휘력회복100%, 초당최대15. 황천윤무20/30초:7초 받는피해+15%·둔화12%,12피격 시155%·3초99%둔화/침묵. 명계귀화10/8초:0.75초 예고·지름180·170%,3초 장판200%·갱신 둔화30%. 원혼추살30/20초:2초간8개,5초 배회·120%/1.5초기절. 피해12회 또는 상태4회마다 본인 최대HP4% 쉴드 중첩 및 토리이10초·지름350:아군 주는피해+15%/받는피해-20%,용사 주는피해-15%/받는피해+20%. 1초월:귀화CD절반·즉시.2초월:추살소모절반·인식+80%.3초월:귀화CD추가-2초·범위+30%.4초월:토리이15초·아군피감40%.5초월:통과 시이속+40%5초·피감70%1초. 일반/특수증강·엘리트·대형몹 제외.",
+		"description":"제어형 실제50회 소환 및 상태이상3회 적중 후 전투당1회. 공격55+소환 전 상태이상 행동×1, HP1400+행동×5(한 공격·기술1회, 지속갱신·다중장판 중복 제외). 사거리 지름550 즉시타격·공격간격1.5초·이속250·거리 유지. 게이지100/증강 적용 지휘력회복100%, 초당최대15. 황천윤무20/30초:7초 받는피해+15%·둔화12%,12피격 시155%·3초99%둔화/침묵. 명계귀화10/8초:0.75초 예고·지름180·170%,3초 장판200%·갱신 둔화30%. 원혼추살30/20초:2초간8개,5초 배회·120%/1.5초기절. 피해12회 또는 상태4회마다 본인 최대HP4% 쉴드 중첩 및 토리이10초·지름350:아군 주는피해+15%/받는피해-20%,용사 주는피해-15%/받는피해+20%. 1초월:귀화CD절반·즉시.2초월:추살소모절반·인식+80%.3초월:귀화CD추가-2초·범위+30%.4초월:토리이15초·아군피감40%.5초월:통과 시이속+40%5초·피감70%1초. 일반/특수증강·엘리트·대형몹 제외.",
 	},
 
 	"bulgasal": {
 		"id":"bulgasal","name":"불가살","rarity":"transcendent","grade":"transcendent",
 		"role":"tank","species":"beast","family":"bulgasal","attack_type":"melee",
 		"combat_style":"melee_tank","collection_card":{"style_label":"근접 탱커형","identity":"강철의 짐승","feature":"돌기둥 · 중첩 쉴드 · 강철도약"},
-		"growth_metric":"allies_died","summon_growth":{"max_hp":1.0},
+		"growth_metric":"allies_died","summon_growth":BULGASAL_BEHAVIOR.DEATH_GROWTH,
 		"attack_growth":{"metric":"tanks_died","multiplier":BULGASAL_BEHAVIOR.DAMAGE_PER_TANK_DEATH},
 		"default_unlocked":false,"combat_enabled":true,"base_cost":0.0,"summon_exp":0.0,
 		"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,"special_augment_ids":[],
-		"description":"탱커 실제20마리 소환 및 아군50마리 사망 후 전투당1회. HP2100+아군 누적 사망 수, 공격130+소환 전 탱커 사망 수×0.6(소환 시 고정), 공격 간격1.6초·이속270. 게이지60·증강 적용 지휘력 회복100%, 초당최대15. 바위던지기:15/20초, 지름300내300%·기절2초, 지름600내175%·둔화50%2초. 잠입:15/25초,7초 이속+50%·피해60%감소·도달135%/치유감소25%3초. 강철도약:20/20초,2초 정신집중(기절/침묵 취소),지름250 450%·기절3초/8갈래700거리130%·둔화30%2초(파동1회). 돌기둥 파괴150%여진/섭취HP5%쉴드.10피격마다 후퇴·기둥 교체·HP3%쉴드. 초월1: 바위 무적무시. 초월2: 폭발 후8방향 크기·피해·범위·상태효과50% 조각. 초월3: 기둥최대13개·섭취쉴드7%. 초월4: 돌진 무적·개체충돌/대상인식 제외·무적무시 타격. 초월5: 정신집중 행동제어 면역·찍기지름500. 돌진 경로 기둥도 파괴/여진. 일반/특수증강·엘리트·대형몹 제외.",
+		"description":"탱커 실제20마리 소환 및 아군50마리 사망 후 전투당1회. HP2100+아군 누적 사망 수×15, 공격130+소환 전 탱커 사망 수×1.5(소환 시 고정), 공격 간격1.6초·이속270. 게이지60·증강 적용 지휘력 회복100%, 초당최대15. 바위던지기:15/20초, 지름300내300%·기절2초, 지름600내175%·둔화50%2초. 잠입:15/25초,7초 이속+50%·피해60%감소·도달135%/치유감소25%3초. 강철도약:20/20초,2초 정신집중(기절/침묵 취소),지름250 450%·기절3초/8갈래700거리130%·둔화30%2초(파동1회). 돌기둥 파괴150%여진/섭취HP5%쉴드.10피격마다 후퇴·기둥 교체·HP3%쉴드. 초월1: 바위 무적무시. 초월2: 폭발 후8방향 크기·피해·범위·상태효과50% 조각. 초월3: 기둥최대13개·섭취쉴드7%. 초월4: 돌진 무적·개체충돌/대상인식 제외·무적무시 타격. 초월5: 정신집중 행동제어 면역·찍기지름500. 돌진 경로 기둥도 파괴/여진. 일반/특수증강·엘리트·대형몹 제외.",
 		"card_icon_path":"res://assets/art/Transcendent_monster/Bulgasal/frames/idle_01.png",
 
 		"base_stats":preload("res://src/data/bulgasal_behavior_catalog.gd").BASE,
@@ -107,7 +107,7 @@ const MONSTERS := {
 		"summon_growth":{"max_hp":preload("res://src/data/zeus_behavior_catalog.gd").HP_PER_SUMMON,"attack_damage":preload("res://src/data/zeus_behavior_catalog.gd").DAMAGE_PER_SUMMON},
 		"default_unlocked":false,"combat_enabled":true,"base_cost":0.0,"summon_exp":0.0,
 		"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,
-		"description":"지휘력300과 마력200 소모 후 전투당1회 무료 소환. 소환 전 실제 생성 수에 따라 HP1450+수×2.5 / 공격150+수×0.6. 심판: 지름475 즉시 번개, 50%확률2초75% 마비(공속 저하). 천둥구체:2초 정신집중 후 지름500 영역에서3초간 무작위12회 낙뢰·중심5회 추적. 각 낙뢰 지름120·200%(2초월235%·무적무시)·둔화/마비30%. 마비 대상 기본공격 적중 시 최대HP1% 중첩 쉴드. 왕관:15초,5초마다HP3%회복·마비효과50%증가(3초월 모든 기술CD최소10초). 천둥가르기:650속도·1500직선·150%(2초월175%·무적무시)·마비20%. 과전압:지름550 아군사망 구슬당 게이지0.01(4초월0.02),5초월 잃은HP0.07%회복. 게이지100·지휘력회복100%(증강 적용)·초당최대15. 일반/특수증강·엘리트·대형몹 제외.",
+		"description":"지휘력300과 마력200 소모 후 전투당1회 무료 소환. 소환 전 실제 생성 수에 따라 HP1450+수×5 / 공격150+수×1. 심판: 지름475 즉시 번개, 50%확률2초75% 마비(공속 저하). 천둥구체:2초 정신집중 후 지름500 영역에서3초간 무작위12회 낙뢰·중심5회 추적. 각 낙뢰 지름120·200%(2초월235%·무적무시)·둔화/마비30%. 마비 대상 기본공격 적중 시 최대HP1% 중첩 쉴드. 왕관:15초,5초마다HP3%회복·마비효과50%증가(3초월 모든 기술CD최소10초). 천둥가르기:650속도·1500직선·150%(2초월175%·무적무시)·마비20%. 과전압:지름550 아군사망 구슬당 게이지0.01(4초월0.02),5초월 잃은HP0.07%회복. 게이지100·지휘력회복100%(증강 적용)·초당최대15. 일반/특수증강·엘리트·대형몹 제외.",
 		"card_icon_path":"res://assets/art/Transcendent_monster/zeus/frames/idle_01.png",
 
 		"base_stats":preload("res://src/data/zeus_behavior_catalog.gd").BASE,

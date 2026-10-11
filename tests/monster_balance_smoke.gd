@@ -99,8 +99,8 @@ func _test_transcendents() -> void:
   check(text.contains("var gauge := DATA.INITIAL_GAUGE"),id+" live gauge wiring")
   # Execute the actual snapshot function in a minimal shell; no visuals/physics involved.
   var shell := GDScript.new()
-  shell.source_code = 'extends RefCounted\nconst DATA=preload("res://src/data/'+id+'_behavior_catalog.gd")\nvar max_hp=0\nvar current_hp=0\nvar attack_damage=0\nvar move_speed=0.0\nvar attack_range=0.0\nvar attack_cooldown=0.0\nvar exp_reward=0\nvar summon_snapshot=0\nvar attack_snapshot=0\nvar transcend_level=0\n'+function_source(text,"configure_transcendence")
-  if id=="bulgasal": shell.source_code += function_source(text,"configure_attack_snapshot")
+  shell.source_code = 'extends RefCounted\nconst DATA=preload("res://src/data/'+id+'_behavior_catalog.gd")\nvar max_hp=0\nvar current_hp=0\nvar attack_damage=0\nvar move_speed=0.0\nvar attack_range=0.0\nvar attack_cooldown=0.0\nvar exp_reward=0\nvar summon_snapshot=0\nvar attack_snapshot=0\nvar transcend_level=0\nvar dying=false\n'+function_source(text,"configure_transcendence")
+  if id=="bulgasal": shell.source_code += function_source(text,"configure_attack_snapshot")+function_source(text,"on_ally_death")
   var error := shell.reload()
   check(error == OK,id+" snapshot compiles")
   if error != OK: continue
@@ -108,14 +108,35 @@ func _test_transcendents() -> void:
   actor.configure_transcendence(-5,9)
   check(actor.max_hp == data.BASE.max_hp and actor.transcend_level==5,id+" negative count/level guard")
   actor.configure_transcendence(40,0)
-  var expected_hp: int = {"zeus":1550,"bulgasal":2140,"izanami":1460,"manticore":1720,"shuten_doji":2540,"arthur":2600}[id]
-  check(actor.max_hp == expected_hp and actor.current_hp==expected_hp,id+" snapshot growth preserved")
+  var expected_hp: int = {"zeus":1650,"bulgasal":2700,"izanami":1600,"manticore":1720,"shuten_doji":2700,"arthur":2600}[id]
+  check(actor.max_hp == expected_hp and actor.current_hp==expected_hp,id+" role-fixed snapshot growth")
+  var expected_atk: int = {"zeus":190,"izanami":95,"manticore":45,"shuten_doji":260,"arthur":230}.get(id,0)
+  if id != "bulgasal": check(actor.attack_damage==expected_atk,id+" role attack growth")
+  var growth: Dictionary = C.MONSTERS[id].summon_growth
+  for count in [0,1,3,99,400,1000]:
+   actor.configure_transcendence(count,0)
+   check(actor.max_hp==int(round(data.BASE.max_hp+count*growth.max_hp)),id+" Catalog/actor HP parity "+str(count))
+   if id != "bulgasal": check(actor.attack_damage==int(round(data.BASE.attack_damage+count*growth.attack_damage)),id+" Catalog/actor ATK parity "+str(count))
   if id=="manticore":
    actor.configure_transcendence(400,0)
    check(actor.attack_damage==72 and actor.max_hp==1900,"manticore unlock snapshot")
   if id=="bulgasal":
    actor.configure_attack_snapshot(50)
-   check(actor.attack_damage==160,"bulgasal separate attack metric")
+   check(actor.attack_damage==205,"bulgasal separate attack metric")
+   actor.configure_attack_snapshot(-1)
+   check(actor.attack_damage==130,"bulgasal negative attack metric")
+   actor.current_hp=100
+   var before: int=actor.max_hp
+   actor.on_ally_death(Vector2.ZERO)
+   check(actor.max_hp==before+15 and actor.current_hp==100,"bulgasal future death growth does not heal")
+   actor.dying=true
+   actor.on_ally_death(Vector2.ZERO)
+   check(actor.max_hp==before+15,"bulgasal death growth disabled when dying")
+ var standard=load("res://src/data/transcendent_growth_catalog.gd")
+ check(load("res://src/data/arthur_behavior_catalog.gd").GROWTH.attack_damage==standard.TANK.attack_damage,"tank attack shared standard")
+ check(load("res://src/data/bulgasal_behavior_catalog.gd").HP_PER_ALLY_DEATH==standard.TANK.max_hp,"tank HP shared standard")
+ check(load("res://src/data/izanami_behavior_catalog.gd").STATUS_GROWTH==load("res://src/data/shuten_doji_behavior_catalog.gd").STATUS_GROWTH,"control coefficients identical")
+ check(is_equal_approx(standard.DAMAGE_GROWTH.attack_damage*10*2,standard.BURST.attack_damage),"burst growth divided between two hits")
 
 func _test_gunner_damage() -> void:
  var source := FileAccess.get_file_as_string("res://src/hero/hero.gd")

@@ -1,9 +1,10 @@
 extends RefCounted
+const GROWTH_STANDARD := preload("res://src/data/transcendent_growth_catalog.gd")
 # One opening skill opportunity; normal command regeneration/costs still apply.
 const INITIAL_GAUGE := 50.0
 const ROOT := "res://assets/art/Transcendent_monster/King_Arthur/frames"
 const BASE := {"max_hp":2000,"attack_damage":170,"move_speed":300.0,"attack_range":80.0,"attack_cooldown":1.75,"exp_reward":0}
-const GROWTH := {"attack_damage":1.5,"max_hp":15.0}
+const GROWTH := GROWTH_STANDARD.TANK
 const RULES := {"mode":"all","conditions":[{"metric":"tanks_summoned","amount":40},{"metric":"allies_died","amount":50}]}
 const BODY_HEIGHT := 108.0 # Previous 120px combat body at 90%; feet anchor unchanged.
 const COMBAT_EFFECT_Z := 5

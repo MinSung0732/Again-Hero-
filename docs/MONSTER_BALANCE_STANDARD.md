@@ -96,3 +96,7 @@ Catalog 정규화 캐시 → 소환 직후 원본 적용 → 대형몹 → 원�
 ## 롤백
 
 이번 패치 커밋을 revert하면 종전 수치/소환 순서/회피 조건으로 돌아간다. 저장 데이터 스키마, 보유 몬스터, 조각/강화 단계, 서버 데이터 변경은 없다. main 병합은 사용자 지시 시 수행한다.
+
+## 초월 추가 성장 규격 갱신
+
+2026-10-11 역할별 고정 추가 성장 기준은 [TRANSCENDENT_GROWTH_STANDARD.md](TRANSCENDENT_GROWTH_STANDARD.md)를 따릅니다. 최소 BASE와 고유 집계는 유지하며 증가 계수는 `transcendent_growth_catalog.gd`에서 공통 관리합니다. 이전 패치 기록의 성장 유지 문구보다 이 규격이 최신입니다.
