@@ -215,6 +215,25 @@ func run() -> void:
 	check(banners.scroll.scroll_horizontal == 124, "banner selection preserves position")
 	banners._scroll_by(-1)
 	check(banners.scroll.scroll_horizontal == 0, "reverse arrow scroll")
+	# Face crops stay bounded and preserve aspect, without new image allocations.
+	var catalog: GDScript = load(cosmetics_path)
+	for id in banners.ids:
+		var focus: Vector2 = catalog.banner_focus(id)
+		var region: Rect2 = banners._face_region(Vector2(1536,1024),Vector2(92,280),focus)
+		check(region.has_point(focus * Vector2(1536,1024)), "face included: " + id)
+		check(region.position.x >= 0 and region.position.y >= 0 and region.end.x <= 1536.01 and region.end.y <= 1024.01, "crop inside source: " + id)
+		check(is_equal_approx(region.size.x/region.size.y,92.0/280.0), "crop aspect preserved: " + id)
+	var atlas: AtlasTexture = banners.slots[0].crop
+	check(banners.slots[0].art.texture == atlas and atlas.atlas != null, "owned banner uses cached crop")
+	check(banners.slots[locked_index].crop.atlas == null, "locked banner never populates crop source")
+	check(banners.preview.texture == banners.preview_crop and banners.preview.stretch_mode == TextureRect.STRETCH_SCALE, "current banner fills preview")
+	check(is_equal_approx(banners.preview_crop.region.size.x/banners.preview_crop.region.size.y, banners.preview.size.x/banners.preview.size.y), "filled preview preserves source aspect")
+	var preview_atlas: AtlasTexture = banners.preview_crop
+	banners._render()
+	check(banners.slots[0].crop == atlas and banners.preview_crop == preview_atlas, "selection reuses AtlasTexture")
+	check(banners._face_region(Vector2(100,200),Vector2.ZERO,Vector2.ONE) == Rect2(0,0,100,200), "unlaid-out viewport fallback")
+	var edge: Rect2 = banners._face_region(Vector2(100,200),Vector2(200,50),Vector2.ONE)
+	check(edge.end.is_equal_approx(Vector2(100,200)), "portrait source edge clamp")
 	cloud.busy = true
 	banners._confirm()
 	check(not banners.overlay.visible and scope.saves == saves_before + 1, "banner busy guard")

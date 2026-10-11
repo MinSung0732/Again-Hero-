@@ -5,6 +5,27 @@ const BANNERS := {
 	"original_male": "res://assets/art/UI/profile_v1/banner_male.png",
 	"original_female": "res://assets/art/UI/profile_v1/banner_female.png",
 }
+# Normalized face focus for narrow banner cards; keep full source artwork.
+const BANNER_FOCUS := {
+	"original_male": Vector2(0.25, 0.30),
+	"original_female": Vector2(0.32, 0.30),
+	"arthur": Vector2(0.31, 0.27),
+	"arthur_plus_banner": Vector2(0.39, 0.25),
+	"bulgasal": Vector2(0.47, 0.34),
+	"bulgasal_plus_banner": Vector2(0.40, 0.25),
+	"izanami": Vector2(0.35, 0.35),
+	"izanami_plus_banner": Vector2(0.38, 0.40),
+	"shuten_doji": Vector2(0.70, 0.38),
+	"shuten_doji_plus_banner": Vector2(0.43, 0.24),
+	"manticore": Vector2(0.44, 0.30),
+	"manticore_plus_banner": Vector2(0.49, 0.47),
+	"zeus": Vector2(0.34, 0.25),
+	"zeus_plus_banner": Vector2(0.40, 0.18),
+}
+
+static func banner_focus(id: String) -> Vector2:
+	return BANNER_FOCUS.get(id, Vector2(0.5, 0.5))
+
 const ACTIONS := [
 	["avatar", "초상화 변경", "portrait"],
 	["banner", "배너 변경", "banner"],

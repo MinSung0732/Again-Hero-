@@ -12,6 +12,7 @@ var owner_ref: WeakRef
 var overlay: ColorRect
 var panel: PanelContainer
 var preview: TextureRect
+var preview_crop: AtlasTexture
 var info := {}
 var confirm: Button
 var notice: Label
@@ -67,7 +68,11 @@ func install(owner: RefCounted, slot: String = "avatar") -> void:
 	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	preview.clip_contents = true
 	icon_frame.add_child(preview)
+	if cosmetic_slot == "banner":
+		preview_crop = AtlasTexture.new()
+		preview.resized.connect(_refresh_preview_crop)
 	var right := _section(top, noun + " 정보", 0)
 	right.add_theme_constant_override("separation", 12)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -234,10 +239,35 @@ func _sync_slots() -> void:
 			var caption := _label(content, "", 22)
 			caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			entry.art = art
+			entry.crop = AtlasTexture.new()
+			art.resized.connect(_refresh_banner_crop.bind(index))
 			entry.caption = caption
 		slots.append(entry)
 	for i in range(strip.get_child_count()):
 		strip.get_child(i).visible = i * rows < ids.size()
+
+static func _face_region(source: Vector2, target: Vector2, focus: Vector2) -> Rect2:
+	if source.x <= 0 or source.y <= 0 or target.x <= 0 or target.y <= 0:
+		return Rect2(Vector2.ZERO, source)
+	var scale_factor := maxf(target.x / source.x, target.y / source.y)
+	var extent := target / scale_factor
+	var origin := focus * source - extent * 0.5
+	origin.x = clampf(origin.x, 0.0, source.x - extent.x)
+	origin.y = clampf(origin.y, 0.0, source.y - extent.y)
+	return Rect2(origin, extent)
+
+func _refresh_preview_crop() -> void:
+	if not is_instance_valid(preview) or preview_crop == null or preview_crop.atlas == null: return
+	preview_crop.region = _face_region(preview_crop.atlas.get_size(), preview.size, CATALOG.banner_focus(candidate))
+
+func _refresh_banner_crop(index: int) -> void:
+	if index >= slots.size(): return
+	var entry := slots[index]
+	var art: TextureRect = entry.art
+	var crop: AtlasTexture = entry.crop
+	if not is_instance_valid(art) or crop.atlas == null or art.size.x <= 0 or art.size.y <= 0: return
+	# Reuse one AtlasTexture per card; resize only adjusts its source region.
+	crop.region = _face_region(crop.atlas.get_size(), art.size, CATALOG.banner_focus(entry.id))
 
 func _scroll_by(direction: int) -> void:
 	# Arrow buttons move within the same strip; they do not rebuild pages.
@@ -274,8 +304,10 @@ func _render() -> void:
 		var texture: Texture2D = owner._texture(CATALOG.path(id, cosmetic_slot)) if owned else owner._lock_texture()
 		var status := "미보유" if not owned else ("선택 중" if id == candidate else "보유")
 		if cosmetic_slot == "banner":
-			slots[i].art.texture = texture
-			slots[i].art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED if owned else TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			slots[i].crop.atlas = texture if owned else null
+			slots[i].art.texture = slots[i].crop if owned else texture
+			slots[i].art.stretch_mode = TextureRect.STRETCH_SCALE if owned else TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			if owned: _refresh_banner_crop(i)
 			slots[i].caption.text = status
 			slots[i].caption.add_theme_color_override("font_color", Color("ffe6a3") if id == candidate else Color("ead1f5"))
 		else:
@@ -284,7 +316,14 @@ func _render() -> void:
 		button.modulate = Color("ffe8a0") if id == candidate else Color.WHITE
 		button.tooltip_text = CATALOG.display_name(id)
 	var owned: bool = candidate in available
-	preview.texture = owner._texture(CATALOG.path(candidate, cosmetic_slot)) if owned else owner._lock_texture()
+	var selected_texture: Texture2D = owner._texture(CATALOG.path(candidate, cosmetic_slot)) if owned else owner._lock_texture()
+	if cosmetic_slot == "banner":
+		preview_crop.atlas = selected_texture if owned else null
+		preview.texture = preview_crop if owned else selected_texture
+		preview.stretch_mode = TextureRect.STRETCH_SCALE if owned else TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		if owned: _refresh_preview_crop()
+	else:
+		preview.texture = selected_texture
 	var details := CATALOG.icon_info(candidate)
 	for key in ["type", "name", "source"]: info[key].text = details.get(key, "—")
 	info.status.text = "보유 중" if owned else "미보유 · 잠김"
