@@ -181,6 +181,7 @@ func open() -> void:
 		var path := CATALOG.path(id, cosmetic_slot)
 		if not path.is_empty() and FileAccess.file_exists(path): ids.append(id)
 	available = STORE.choices(cosmetic_slot)
+	_prioritize_owned()
 	candidate = STORE.selected_id(cosmetic_slot)
 	_sync_slots()
 	_render()
@@ -199,8 +200,23 @@ func refresh_state() -> void:
 	if owner == null or owner._scope_key() != scope_key or owner._blocked():
 		close()
 		return
-	available = STORE.choices(cosmetic_slot)
+	var latest := STORE.choices(cosmetic_slot)
+	if latest != available:
+		available = latest
+		_prioritize_owned()
 	_render()
+
+func _prioritize_owned() -> void:
+	# Stable O(n + m) partition; only on open or ownership changes.
+	var owned := {}
+	for id in available: owned[id] = true
+	var first: Array[String] = []
+	var locked: Array[String] = []
+	for id in ids:
+		if owned.has(id): first.append(id)
+		else: locked.append(id)
+	first.append_array(locked)
+	ids = first
 
 func _sync_slots() -> void:
 	# Grow only when the catalog grows; reuse controls on open/selection.

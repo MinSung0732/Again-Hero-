@@ -82,6 +82,7 @@ func run() -> void:
 					var expected := 8 if slot == "avatar" else 14
 					check(icons.overlay.visible and icons.slots.size() == expected, "retained " + slot + " strip opens")
 					check(icons.ids.size() == expected, "only existing " + slot + " resources listed")
+					check(icons.ids[0] == own and icons.ids.find("zeus") < icons.ids.find(other), "owned " + slot + " items precede locked items")
 					var index: int = icons.ids.find(other)
 					icons._select_slot(index)
 					check(icons.confirm.disabled and icons.preview.texture == view._lock_texture(), "locked gender preview masked")
@@ -179,6 +180,10 @@ func run() -> void:
 	banners._select_slot(locked_index)
 	check(banners.slots[locked_index].art.texture == view._lock_texture() and banners.preview.texture == view._lock_texture() and banners.confirm.disabled, "locked five-transcendence art remains masked")
 	check(banners.info.type.text == "5초월" and banners.info.source.text.contains("5초월"), "five-transcendence requirements shown")
+	var ordered: Array[String] = banners.ids.duplicate()
+	banners._prioritize_owned()
+	check(banners.ids == ordered, "owned partition is stable on repeated refresh")
+	check(banners.ids.slice(0,3) == ["original_male", "zeus_plus_banner", "zeus"], "owned banner order preserved")
 	var saves_before: int = scope.saves
 	banners._confirm()
 	check(scope.saves == saves_before, "locked banner cannot confirm")
