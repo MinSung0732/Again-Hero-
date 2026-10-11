@@ -1,3 +1,10 @@
+## 2026-10-11 — 탐색 보상 획득 피드백 및 동전 효과음
+
+- 탐색 보상 실제 claim 성공 반환값으로 골드·연구포인트 +획득량 상승/팝/페이드 및 통화 아이콘 각5개 방사 애니메이션1.35초 연결. 기존 보상 아이콘 재사용, cached overlay/Label2개/고정 draw 루프, 유휴 _process 중지. 성공 후만 실행하며 실패·재지급 없음, 계정/적립/저장·보상량 변경 없음.
+- Pixabay Yodguard Coin Collect(1) ID540179 신규 다운로드·첫1.25초 filter/fade·-5dBFS 피크·mono PCM16/44.1kHz로 편집, SFX -13dB·고정 플레이어1개. 성공 시1회, 닫기/탭 이탈 중지, 기존 SFX 음소거 및 background 정책 유지. 출처/라이선스/AI표기/원본·출력SHA/가공 manifest 기록.
+- Godot4.5.1 격리 실제 popup UI+Mock 서비스23검사 PASS: 실패무연출, 성공 지급값/지갑refresh1회, 상승/페이드/종료, portrait/landscape/small360 정렬좌표, 재사용 노드수/닫기, 실제 PCM 디코딩/피크/버스. fixture 통화 텍스처는 synthetic이며 실제 게임 도트·GPU화면/기기청취/전체서비스 지급·모바일/export 미검증. ObjectDB/resources 종료 경고 남음. 새WAV Godot import 및 diff/경로/SHA 정적 검증.
+- 기준 featuree8384273b68f5e7dc82f5754b7376493db67c601, main4122adb7 유지.
+
 ## 2026-10-11 — 이자나미 기술 효과음 무음 구간 교체
 
 - 실제 기술 호출은 연결돼 있었으나 bind/spirits/torii 파일 피크 -58.7~-58.9dBFS 및 RMS -87~-89dBFS로 사실상 무음이던 문제 수정. 기존 라이선스 확인된 haunt/뽑기 spirit_release의 유효 구간을 오프라인 재편집해 3개 WAV 교체, -3dBFS 피크·PCM16/44.1kHz 유지. 원본 출처/핀 SHA/가공/수치 manifest·SOURCES 기록.

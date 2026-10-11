@@ -1,0 +1,25 @@
+{
+  "source": {
+    "url": "https://pixabay.com/sound-effects/film-special-effects-coin-collect-1-540179/",
+    "creator": "Yodguard",
+    "content_id": 540179,
+    "marked_ai_generated": true,
+    "download_url": "https://cdn.pixabay.com/download/audio/2026/05/24/audio_be0cdd88b8.mp3?filename=yodguard-coin-collect-1-540179.mp3",
+    "sha256": "8a2fa2fed13d979ecab59f52b884deb535cc818377e33acbd183dba07903e5f8"
+  },
+  "license": "Pixabay Content License",
+  "license_url": "https://pixabay.com/service/license-summary/",
+  "use": "Integrated exploration reward claim SFX in Again, Hero?; no standalone redistribution of source",
+  "output": {
+    "file": "exploration_coins.wav",
+    "sha256": "39833c8eb7aca1d96e5b88d5e66a946ca4b79390759f5406145220b0d142e507",
+    "duration_seconds": 1.25,
+    "peak_dbfs": -5.0,
+    "rms_dbfs": -24.23,
+    "format": "mono PCM16 44100Hz",
+    "processing": "first1.25s; highpass100Hz lowpass8500Hz; fadein0.012s fadeout1.00/0.25s; offline normalize/limiter peak-5dBFS",
+    "cue_volume_db": -13,
+    "success_only": true
+  },
+  "verification": "Waveform/decoding/playback request tested; subjective listening/mobile/full battle unverified"
+}

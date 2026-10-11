@@ -1,5 +1,7 @@
 extends Control
 
+const FEEDBACK := preload("res://src/ui/exploration_claim_feedback.gd")
+const SFX := preload("res://src/audio/event_sfx_bank.gd")
 const RULES := preload("res://src/data/exploration_reward_catalog.gd")
 var service: Node
 var tools: Control
@@ -17,6 +19,10 @@ var _gold: Label
 var _research: Label
 var _status: Label
 var _claim: Button
+var _gold_icon: TextureRect
+var _research_icon: TextureRect
+var _feedback: Control
+var _claim_audio: Node
 
 func install(parent: Control, tray: Control, reward_service: Node, wallet_refresh: Callable) -> void:
 	name = "ExplorationRewardsView"
@@ -55,7 +61,7 @@ func _label(parent: Node, text: String, font_size: int = 28) -> Label:
 	parent.add_child(label)
 	return label
 
-func _icon(parent: Node, path: String, icon_size: Vector2) -> void:
+func _icon(parent: Node, path: String, icon_size: Vector2) -> TextureRect:
 	var icon := TextureRect.new()
 	icon.custom_minimum_size = icon_size
 	icon.texture = load(path) if ResourceLoader.exists(path) else null
@@ -64,6 +70,7 @@ func _icon(parent: Node, path: String, icon_size: Vector2) -> void:
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(icon)
+	return icon
 
 func _build() -> void:
 	# Use the game's canvas, not a native/embedded Window with a draggable title
@@ -137,13 +144,15 @@ func _build() -> void:
 		var column := VBoxContainer.new()
 		column.add_theme_constant_override("separation", 8)
 		plate.add_child(column)
-		_icon(column, RULES.GOLD_ICON_PATH if kind == &"gold" else RULES.RESEARCH_ICON_PATH, Vector2(72, 72))
+		var reward_icon := _icon(column, RULES.GOLD_ICON_PATH if kind == &"gold" else RULES.RESEARCH_ICON_PATH, Vector2(72, 72))
 		_label(column, "골드" if kind == &"gold" else "연구포인트", 25)
 		var amount := _label(column, "+0", 34)
 		if kind == &"gold":
 			_gold = amount
+			_gold_icon = reward_icon
 		else:
 			_research = amount
+			_research_icon = reward_icon
 	_status = _label(right, "51%부터 보상을\n획득할 수 있습니다.", 24)
 	_claim = Button.new()
 	_claim.text = "보상 획득"
@@ -155,6 +164,13 @@ func _build() -> void:
 	_claim.add_theme_stylebox_override("disabled", _style(Color("30293a"), Color("6e607d"), 12))
 	_claim.pressed.connect(_claim_reward)
 	right.add_child(_claim)
+	_feedback = FEEDBACK.new()
+	_overlay.add_child(_feedback)
+	_feedback.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_feedback.configure(_gold_icon.texture,_research_icon.texture)
+	_claim_audio = SFX.new()
+	add_child(_claim_audio)
+	_claim_audio.configure(RULES.CLAIM_AUDIO)
 
 func open() -> void:
 	if not is_instance_valid(_overlay):
@@ -166,6 +182,8 @@ func open() -> void:
 	_claim.grab_focus()
 
 func close() -> void:
+	if is_instance_valid(_feedback): _feedback.stop()
+	if is_instance_valid(_claim_audio): _claim_audio.stop_all()
 	if is_instance_valid(_overlay):
 		_overlay.hide()
 
@@ -213,6 +231,8 @@ func _claim_reward() -> void:
 		_status.text = "골드 +%d · 연구포인트 +%d\n획득!" % [int(result.gold), int(result.research)]
 		if refresh_wallet.is_valid():
 			refresh_wallet.call()
+		_feedback.play(int(result.gold),int(result.research),_gold_icon,_research_icon,_panel.scale.x)
+		_claim_audio.play_cue("claim")
 	else:
 		_status.text = "51%부터 획득 가능합니다." if result.get("reason", "") == "below_threshold" else "저장하지 못했습니다.\n보상은 유지됩니다. 다시 시도해 주세요."
 

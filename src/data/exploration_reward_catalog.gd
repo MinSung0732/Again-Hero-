@@ -12,3 +12,8 @@ const ICON_PATH := "res://assets/art/UI/lobby_tools/exploration_reward.png"
 const BADGE_PATH := "res://assets/art/UI/lobby_tools/notification_dot.svg"
 const GOLD_ICON_PATH := "res://assets/art/UI/lobby_header/coin.svg"
 const RESEARCH_ICON_PATH := "res://assets/art/UI/lobby_footer/icon_research.svg"
+
+# Presentation only; earning rates/claim transaction stay unchanged.
+const CLAIM_FEEDBACK_SECONDS := 1.35
+const CLAIM_PARTICLES_PER_CURRENCY := 5
+const CLAIM_AUDIO := {"claim":{"path":"res://assets/audio/sfx/lobby/exploration_coins.wav","db":-13.0,"interval":0.8}}
