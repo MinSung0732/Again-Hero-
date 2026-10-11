@@ -310,7 +310,7 @@ func _apply_damage_tick() -> void:
 			_execute_monster(monster, current_hp, max_hp)
 			executed_any = true
 		else:
-			monster.call("take_damage", damage)
+			preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "ranged", caster)
 		if (
 			is_instance_valid(caster)
 			and caster.has_method("_on_sage_skill_hit")
@@ -343,7 +343,7 @@ func _execute_monster(monster: Node2D, current_hp: int, max_hp: int) -> void:
 		current_hp + max_hp * 4,
 		damage
 	)
-	monster.call("take_damage", execution_damage)
+	preload("res://src/systems/monster_hit_context.gd").hit(monster, execution_damage, "untyped", caster)
 
 
 func _build_attraction_wisps() -> void:

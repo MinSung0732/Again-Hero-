@@ -231,7 +231,7 @@ func _attack_target(current_target: Node2D) -> void:
 		attack_audio.stop()
 		attack_audio.play()
 	if current_target.has_method("take_damage"):
-		current_target.call("take_damage", maxi(int(round(float(attack_damage) * damage_multiplier * RECEIVED_STATUS.outgoing_multiplier(self))), 1))
+		preload("res://src/systems/monster_hit_context.gd").hit(current_target, maxi(int(round(float(attack_damage) * damage_multiplier * RECEIVED_STATUS.outgoing_multiplier(self))), 1), "melee", owner_hero)
 
 
 func take_damage(amount: int, _source: Node = null) -> bool:

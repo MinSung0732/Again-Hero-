@@ -72,7 +72,7 @@ func _on_body_entered(body: Node) -> void:
 		return
 
 	hit_ids[instance_id] = true
-	body.call("take_damage", damage)
+	preload("res://src/systems/monster_hit_context.gd").hit(body, damage, "ranged", self)
 
 func _finish() -> void:
 	if not active:

@@ -204,7 +204,7 @@ func _on_body_entered(body: Node) -> void:
 		"holy":
 			_apply_holy(body_2d)
 		_:
-			body.call("take_damage", base_damage)
+			preload("res://src/systems/monster_hit_context.gd").hit(body, base_damage, "ranged", source_hero)
 
 	_spawn_impact_feedback(body_2d.global_position)
 
@@ -215,7 +215,7 @@ func _apply_earth(body: Node2D) -> void:
 	var direct_multiplier := maxf(float(config.get("earth_direct_damage_multiplier", 1.45)), 1.0)
 	var splash_ratio := maxf(float(config.get("earth_splash_damage_ratio", 0.70)), 0.0)
 	var splash_radius := maxf(float(config.get("earth_splash_radius", 150.0)), 0.0)
-	body.call("take_damage", maxi(1, int(round(float(base_damage) * direct_multiplier))))
+	preload("res://src/systems/monster_hit_context.gd").hit(body, maxi(1, int(round(float(base_damage) * direct_multiplier))), "ranged", source_hero)
 
 	for node in _get_monster_nodes_near(global_position, splash_radius):
 		if not is_instance_valid(node) or node == body or node.is_queued_for_deletion():
@@ -225,10 +225,10 @@ func _apply_earth(body: Node2D) -> void:
 			continue
 		if global_position.distance_squared_to(monster.global_position) > splash_radius * splash_radius:
 			continue
-		monster.call("take_damage", maxi(1, int(round(float(base_damage) * splash_ratio))))
+		preload("res://src/systems/monster_hit_context.gd").hit(monster, maxi(1, int(round(float(base_damage) * splash_ratio))), "ranged", source_hero)
 
 func _apply_fire(body: Node2D) -> void:
-	body.call("take_damage", base_damage)
+	preload("res://src/systems/monster_hit_context.gd").hit(body, base_damage, "ranged", source_hero)
 	var duration := maxf(float(config.get("fire_burn_duration", 3.0)), 0.1)
 	var tick_interval := maxf(float(config.get("fire_burn_tick_interval", 0.5)), 0.1)
 	var damage_ratio := maxf(float(config.get("fire_burn_tick_damage_ratio", 0.18)), 0.0)
@@ -239,7 +239,7 @@ func _apply_fire(body: Node2D) -> void:
 	)
 
 func _apply_ice(body: Node2D) -> void:
-	body.call("take_damage", base_damage)
+	preload("res://src/systems/monster_hit_context.gd").hit(body, base_damage, "ranged", source_hero)
 	var freeze_chance := clampf(float(config.get("ice_freeze_chance", 0.10)), 0.0, 1.0)
 	if randf() <= freeze_chance:
 		_get_or_create_status(body).apply_freeze(
@@ -247,7 +247,7 @@ func _apply_ice(body: Node2D) -> void:
 		)
 
 func _apply_light(body: Node2D) -> void:
-	body.call("take_damage", base_damage)
+	preload("res://src/systems/monster_hit_context.gd").hit(body, base_damage, "ranged", source_hero)
 	var chain_range := maxf(float(config.get("light_chain_range", 260.0)), 1.0)
 	var chain_ratio := maxf(float(config.get("light_chain_damage_ratio", 0.72)), 0.0)
 	var nearest: Node2D = null
@@ -264,11 +264,11 @@ func _apply_light(body: Node2D) -> void:
 			nearest = monster
 
 	if is_instance_valid(nearest):
-		nearest.call("take_damage", maxi(1, int(round(float(base_damage) * chain_ratio))))
+		preload("res://src/systems/monster_hit_context.gd").hit(nearest, maxi(1, int(round(float(base_damage) * chain_ratio))), "ranged", source_hero)
 		_spawn_chain_line(body.global_position, nearest.global_position)
 
 func _apply_wind(body: Node2D) -> void:
-	body.call("take_damage", base_damage)
+	preload("res://src/systems/monster_hit_context.gd").hit(body, base_damage, "ranged", source_hero)
 	var knockback := maxf(float(config.get("wind_knockback_distance", 105.0)), 0.0)
 	var monster := body as Node2D
 	if monster != null and knockback > 0.0:
@@ -282,7 +282,7 @@ func _apply_holy(body: Node2D) -> void:
 			1,
 			int(round(float(base_damage) * maxf(float(config.get("holy_undead_damage_multiplier", 1.50)), 1.0)))
 		)
-	body.call("take_damage", holy_damage)
+	preload("res://src/systems/monster_hit_context.gd").hit(body, holy_damage, "ranged", source_hero)
 
 	var heal_chance := clampf(float(config.get("holy_heal_chance", 0.15)), 0.0, 1.0)
 	var heal_amount := maxi(int(config.get("holy_heal_amount", 25)), 0)

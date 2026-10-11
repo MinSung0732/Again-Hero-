@@ -645,7 +645,7 @@ func _apply_explosion() -> void:
 			int(round(raw_damage * holy_multiplier)),
 			1
 		)
-		monster.call("take_damage", hit_damage)
+		preload("res://src/systems/monster_hit_context.gd").hit(monster, hit_damage, "ranged", caster)
 
 		if (
 			slow_duration <= 0.0

@@ -157,7 +157,7 @@ func _on_body_entered(body: Node) -> void:
 				))
 			))
 		)
-	body.call("take_damage", dealt_damage)
+	preload("res://src/systems/monster_hit_context.gd").hit(body, dealt_damage, "ranged", source_hero)
 
 	if splash_radius > 0.0 and splash_damage_ratio > 0.0:
 		_apply_splash_damage(body)
@@ -259,7 +259,7 @@ func _apply_splash_damage(direct_target: Node) -> void:
 					))
 				))
 			)
-		monster.call("take_damage", dealt_damage)
+		preload("res://src/systems/monster_hit_context.gd").hit(monster, dealt_damage, "ranged", source_hero)
 
 func _apply_projectile_visual() -> void:
 	projectile_sprite.visible = false

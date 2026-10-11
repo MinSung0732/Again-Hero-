@@ -394,6 +394,7 @@ func _damage(target: Node2D, amount: int, followup: bool = true, dot: bool = fal
 func _add_shield(amount: float) -> void:
 	var total := int(get_meta("support_shield_hp",0))+int(round(amount))
 	set_meta("support_shield_hp",total)
+	preload("res://src/monsters/monster_runtime_common.gd").note_shield_grant(self,"shield")
 	set_meta("support_shield_capacity",total)
 func take_damage(amount: int) -> void:
 	_apply_shuten_damage(amount)
@@ -477,12 +478,8 @@ func _draw() -> void:
 	if is_instance_valid(status_layer): status_layer.queue_redraw()
 func _draw_status() -> void:
 	if dying: return
-	status_layer.draw_rect(Rect2(-29,head_y-16,58,6),Color("202027"))
-	status_layer.draw_rect(Rect2(-29,head_y-16,58*float(current_hp)/max_hp,6),Color("4de873"))
-	status_layer.draw_rect(Rect2(-29,head_y-23,58,4),Color("302511"))
-	status_layer.draw_rect(Rect2(-29,head_y-23,58*gauge/100,4),Color("ffdb3b"))
-	var shield := float(get_meta("support_shield_hp",0))
-	if shield > 0: status_layer.draw_rect(Rect2(-29,head_y-29,58*minf(shield/maxf(float(get_meta("support_shield_capacity",shield)),1),1),4),Color("61ddff"))
+	preload("res://src/monsters/monster_runtime_common.gd").draw_status_bars(self,status_layer,head_y-16.0)
+
 func _draw_effects() -> void:
 	if dying: return
 	for i in range(DATA.FOG_CAPACITY):

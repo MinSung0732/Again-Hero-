@@ -29,6 +29,7 @@ func _ready() -> void:
 	shield_basis_hp = max_hp
 	shield_capacity = int(round(max_hp * BEHAVIOR.SHIELD_RATIO))
 	shield_hp = shield_capacity
+	MONSTER_RUNTIME_COMMON.note_shield_grant(self,"shield")
 	visual.apply_visual_profile(BEHAVIOR.NORMAL_VISUAL)
 	MONSTER_RUNTIME_COMMON.attach_status_effect_visual(self, COMBAT_STATUS_EFFECT_VISUAL, "slow")
 	queue_redraw()
@@ -139,7 +140,3 @@ func _apply_mummy_damage(amount: int, receipt = null, receipt_revision: int = 0)
 
 func _draw() -> void:
 	super._draw()
-	if not dying and shield_hp > 0:
-		var ratio := clampf(float(shield_hp) / maxi(shield_capacity,1),0.0,1.0)
-		draw_rect(Rect2(-43,-72,86,5),Color(0.12,0.14,0.24),true)
-		draw_rect(Rect2(-43,-72,86 * ratio,5),Color(0.38,0.80,1.0),true)

@@ -150,7 +150,7 @@ func _apply_damage_tick() -> void:
 				0.0
 			)
 		var hit_damage := maxi(int(round(raw_damage * holy_multiplier)), 1)
-		monster.call("take_damage", hit_damage)
+		preload("res://src/systems/monster_hit_context.gd").hit(monster, hit_damage, "ranged", source_hero)
 
 	_query_scratch.clear()
 

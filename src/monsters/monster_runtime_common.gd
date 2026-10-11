@@ -338,8 +338,22 @@ static func consume_support_shield(owner: Node2D, amount: int) -> int:
 
 static func _consume_support_shield(owner: Node2D, amount: int, receipt = null, receipt_revision: int = 0) -> int:
 	var authority := owner.get_parent()
-	if amount > 0 and is_instance_valid(authority) and authority.has_method("get_transcendent_aura_modifier"):
+	if amount > 0 and not bool(owner.get_meta("guard_transfer",false)) and is_instance_valid(authority) and authority.has_method("get_transcendent_aura_modifier"):
 		amount = maxi(int(round(amount * float(authority.get_transcendent_aura_modifier(owner,"incoming")) * float(authority.get_transcendent_aura_modifier(authority.hero,"outgoing")))),1)
+	var kind := String(owner.get_meta("incoming_attack_kind","untyped"))
+	if amount > 0 and kind == "ranged" and owner.has_method("ranged_damage_multiplier"):
+		amount = maxi(int(round(amount*float(owner.call("ranged_damage_multiplier")))),1)
+	if amount > 0 and kind == "ranged" and not bool(owner.get_meta("guard_transfer",false)):
+		amount = _redirect_ranged_damage(owner,amount)
+	if kind in ["ranged","melee"] and amount > 0:
+		var key := kind+"_shield_hp"
+		var absorbed := mini(amount,maxi(int(owner.get_meta(key,0)),0))
+		if absorbed > 0:
+			owner.set_meta(key,int(owner.get_meta(key,0))-absorbed)
+			if receipt != null: receipt.record_shield(absorbed,receipt_revision)
+			DAMAGE_NUMBERS.show(owner,absorbed)
+			amount -= absorbed
+			owner.queue_redraw()
 	if amount > 0 and int(owner.get_meta("arthur_blessing_hp",0)) > 0:
 		var blessing := owner.get_node_or_null("ArthurBlessing")
 		if blessing != null: amount = blessing.absorb(amount,receipt,receipt_revision)
@@ -410,6 +424,10 @@ static func attach_status_effect_visual(
 	effect_script: Script,
 	effect_type: String
 ) -> void:
+	if not owner.has_node("CombatBarRefresh"):
+		var refresh := CombatBarRefresh.new()
+		refresh.name = "CombatBarRefresh"
+		owner.add_child(refresh)
 	if effect_script == null:
 		return
 	var effect := effect_script.new() as Node
@@ -502,31 +520,121 @@ static func apply_direct_heal(
 	return recovered
 
 
-static func draw_support_shield_bar(owner: Node2D, width: float, hp_bar_y: float) -> void:
-	var shield := int(owner.get_meta("support_shield_hp", 0))+int(owner.get_meta("arthur_blessing_hp",0))
-	if shield <= 0:
-		return
-	var capacity := maxi(int(owner.get_meta("support_shield_capacity", shield))+int(owner.get_meta("arthur_blessing_capacity",0)), 1)
-	var ratio := clampf(float(shield) / float(capacity), 0.0, 1.0)
-	# Separate row above innate shields; full received shield starts at full width.
-	var rect := Rect2(-width * 0.5, hp_bar_y - 23.0, width, 6.0)
-	owner.draw_rect(rect, Color("202c40"), true)
-	owner.draw_rect(Rect2(rect.position, Vector2(width * ratio, 6.0)), Color("61ddff"), true)
+# Fixed screen-space rows: shield types / HP / yellow resource or attack readiness.
+const BAR_HEIGHT := 6.0
+const BAR_GAP := 3.0
+const BAR_WIDTH := 70.0
+const BAR_COLORS := {"shield":Color("61ddff"),"ranged":Color("b490ff"),"melee":Color("ff9566")}
+
+static func _bar_order(actor: Node) -> Array:
+	if not actor.has_meta("combat_bar_order"): actor.set_meta("combat_bar_order", [])
+	return actor.get_meta("combat_bar_order")
+
+static func note_shield_grant(actor: Node, kind: String) -> void:
+	var order := _bar_order(actor)
+	order.erase(kind)
+	order.append(kind)
+	actor.set_meta("combat_bar_order",order)
+
+static func grant_typed_shield(actor: Node2D, kind: String, amount: int) -> void:
+	if kind not in ["ranged","melee"] or not is_instance_valid(actor) or actor.is_queued_for_deletion() or int(actor.get("current_hp")) <= 0 or amount <= 0: return
+	var key := kind+"_shield_hp"
+	var total := maxi(int(actor.get_meta(key,0)),amount) # Refresh; never stack.
+	actor.set_meta(key,total)
+	actor.set_meta(kind+"_shield_capacity",maxi(total,int(actor.get_meta(kind+"_shield_capacity",0))))
+	note_shield_grant(actor,kind)
+	actor.queue_redraw()
+
+static func shield_value(actor: Node, kind: String, capacity: bool = false) -> float:
+	if kind != "shield": return float(actor.get_meta(kind+("_shield_capacity" if capacity else "_shield_hp"),0))
+	var value := float(actor.get_meta("support_shield_capacity" if capacity else "support_shield_hp",0))+float(actor.get_meta("arthur_blessing_capacity" if capacity else "arthur_blessing_hp",0))+float(actor.get_meta("elite_shield_max_hp" if capacity else "elite_shield_hp",0))
+	var innate = actor.get("shield_capacity" if capacity else "shield_hp")
+	if innate != null:
+		value += float(innate)
+	elif capacity and actor.get("shield_hp") != null:
+		value += maxf(float(actor.get("max_hp"))*2.0,float(actor.get("shield_hp")))
+	return value
+
+static func sync_bar_order(actor: Node) -> Array:
+	var order := _bar_order(actor)
+	for kind in BAR_COLORS:
+		if shield_value(actor,kind) > 0.0:
+			if not order.has(kind): order.append(kind)
+		else: order.erase(kind)
+	actor.set_meta("combat_bar_order",order)
+	return order
+
+static func draw_status_bars(actor: Node2D, canvas: Node2D, hp_y: float, gauge_capacity: float = 100.0) -> void:
+	var scale_x := maxf(absf(canvas.global_scale.x),0.01)
+	var scale_y := maxf(absf(canvas.global_scale.y),0.01)
+	var width := BAR_WIDTH/scale_x
+	var height := BAR_HEIGHT/scale_y
+	var step := (BAR_HEIGHT+BAR_GAP)/scale_y
+	_draw_bar(canvas,width,height,hp_y,float(actor.get("current_hp"))/maxf(float(actor.get("max_hp")),1.0),Color("4cd965"))
+	var yellow_ratio := get_yellow_ratio(actor,gauge_capacity)
+	_draw_bar(canvas,width,height,hp_y+step,yellow_ratio,Color("ffdb3b"))
+	var order := sync_bar_order(actor)
+	for index in range(order.size()):
+		var kind: String = order[index]
+		_draw_bar(canvas,width,height,hp_y-step*(index+1),shield_value(actor,kind)/maxf(shield_value(actor,kind,true),1.0),BAR_COLORS[kind])
+
+static func _draw_bar(canvas: Node2D, width: float, height: float, y: float, ratio: float, color: Color) -> void:
+	canvas.draw_rect(Rect2(-width*0.5,y,width,height),Color("202024"))
+	canvas.draw_rect(Rect2(-width*0.5,y,width*clampf(ratio,0.0,1.0),height),color)
+
+static func draw_support_shield_bar(owner: Node2D, _width: float, hp_bar_y: float) -> void:
+	draw_status_bars(owner,owner,hp_bar_y)
 
 
 static func add_support_shield(actor: Node2D, amount: int) -> void:
 	if not is_instance_valid(actor) or actor.is_queued_for_deletion() or int(actor.get("current_hp")) <= 0: return
 	var shield := int(actor.get_meta("support_shield_hp",0))+maxi(amount,0)
 	actor.set_meta("support_shield_hp",shield)
+	note_shield_grant(actor,"shield")
 	actor.set_meta("support_shield_capacity",maxi(shield,int(actor.get_meta("support_shield_capacity",0))))
 	actor.queue_redraw()
 
 
-static func damage_monster_from(actor: Node2D, amount: int, source: Node) -> void:
-	# Legacy monsters accept one argument. Preserve the source for reflective shields.
-	var previous_source = actor.get_meta("_status_damage_source") if actor.has_meta("_status_damage_source") else null
-	actor.set_meta("_status_damage_source",source)
-	actor.take_damage(amount)
-	if not is_instance_valid(actor): return
-	if previous_source==null: actor.remove_meta("_status_damage_source")
-	else: actor.set_meta("_status_damage_source",previous_source)
+static func damage_monster_from(actor: Node2D, amount: int, source: Node, kind: String = "") -> void:
+	var context := preload("res://src/systems/monster_hit_context.gd")
+	context.hit(actor,amount,context.attack_kind(source) if kind.is_empty() else kind,source)
+
+
+static var _guard_scratch: Array = []
+static func _redirect_ranged_damage(victim: Node2D, amount: int) -> int:
+	var battle := victim.get_parent()
+	if not is_instance_valid(battle) or not battle.has_method("fill_monsters_near") or not victim.is_inside_tree() or not victim.get_tree().has_group("ranged_guards"): return amount
+	_guard_scratch.clear()
+	battle.call("fill_monsters_near",victim.global_position,200.0,_guard_scratch)
+	var guard: Node2D
+	var distance := INF
+	for candidate in _guard_scratch:
+		if not is_instance_valid(candidate) or candidate == victim or candidate.is_queued_for_deletion() or not bool(candidate.get_meta("ranged_guard",false)) or int(candidate.get("current_hp")) <= 0: continue
+		var d: float = victim.global_position.distance_squared_to(candidate.global_position)
+		if d <= 40000.0 and (d < distance or (d == distance and (guard == null or candidate.get_instance_id() < guard.get_instance_id()))):
+			guard = candidate
+			distance = d
+	_guard_scratch.clear() # Clear before re-entering damage processing.
+	if guard == null: return amount
+	var shared := int(round(amount*0.30))
+	if shared <= 0: return amount
+	guard.set_meta("guard_transfer",true)
+	preload("res://src/systems/monster_hit_context.gd").hit(guard,shared,"ranged",victim.get_meta("_status_damage_source") if victim.has_meta("_status_damage_source") else null)
+	if is_instance_valid(guard): guard.remove_meta("guard_transfer")
+	return amount-shared
+
+class CombatBarRefresh extends Node:
+	var remaining := 0.0
+	func _process(delta: float) -> void:
+		remaining -= delta
+		if remaining > 0.0: return
+		remaining = 0.10
+		var actor := get_parent() as Node2D
+		if actor != null and actor.is_visible_in_tree() and not actor.is_queued_for_deletion(): actor.queue_redraw()
+
+static func get_yellow_ratio(actor: Node, gauge_capacity: float = 100.0) -> float:
+	var gauge = actor.get("gauge")
+	if gauge != null: return clampf(float(gauge)/maxf(gauge_capacity,1.0),0.0,1.0)
+	if actor.get("attack_timer") != null and actor.get("attack_cooldown") != null:
+		return clampf(1.0-float(actor.get("attack_timer"))/maxf(float(actor.get("attack_cooldown")),0.01),0.0,1.0)
+	return 0.0

@@ -3022,7 +3022,7 @@ func _summoner_basic_attack(current_target: Node2D) -> void:
 	# Hitscan: damage is decided immediately; the summon_01~02 frames are
 	# feedback only, keeping combat state easy to make server-authoritative.
 	if current_target.has_method("take_damage"):
-		current_target.call("take_damage", maxi(attack_damage, 1))
+		preload("res://src/systems/monster_hit_context.gd").hit(current_target, maxi(attack_damage, 1), "ranged", self)
 
 
 func _on_summoner_basic_effect_finished() -> void:
@@ -3519,7 +3519,7 @@ func _deal_alchemist_dot_damage(monster: Node, base_damage: int) -> void:
 		* _get_alchemist_speed_gap_damage_multiplier(monster)
 	)
 	var final_damage := maxi(1, int(round(float(base_damage) * multiplier)))
-	monster.call("take_damage", final_damage)
+	preload("res://src/systems/monster_hit_context.gd").hit(monster, final_damage, "ranged", self)
 	if before_hp > 0:
 		var after_hp_value = monster.get("current_hp")
 		if after_hp_value != null and int(after_hp_value) <= 0:
@@ -4808,7 +4808,7 @@ func _cast_alchemist_emergency_escape(
 		monster.global_position += push_direction * knockback
 		LOCAL_GRID_MOVEMENT.notify_forced_position_change(monster)
 		if monster.has_method("take_damage"):
-			monster.call("take_damage", enemy_damage)
+			preload("res://src/systems/monster_hit_context.gd").hit(monster, enemy_damage, "ranged", self)
 		var current_until := int(monster.get_meta("gunner_slow_until", 0))
 		var current_multiplier := float(monster.get_meta("gunner_slow_multiplier", 1.0))
 		monster.set_meta("gunner_slow_until", maxi(current_until, slow_until))
@@ -4991,7 +4991,7 @@ func _on_alchemist_vial_landed(
 		and direct_target.is_in_group("treasure_chests")
 		and direct_target.has_method("take_damage")
 	):
-		direct_target.call("take_damage", maxi(attack_damage, 1))
+		preload("res://src/systems/monster_hit_context.gd").hit(direct_target, maxi(attack_damage, 1), "ranged", self)
 
 	var tick_damage := maxi(
 		1,
@@ -5589,7 +5589,7 @@ func _use_gunner_cylinder_strike() -> void:
 		LOCAL_GRID_MOVEMENT.notify_forced_position_change(monster)
 		var damage_ratio := maxf(float(gunner_config.get("cylinder_damage_ratio", 0.0)), 0.0)
 		if damage_ratio > 0.0 and monster.has_method("take_damage"):
-			monster.call("take_damage", maxi(1, int(round(float(attack_damage) * damage_ratio))))
+			preload("res://src/systems/monster_hit_context.gd").hit(monster, maxi(1, int(round(float(attack_damage) * damage_ratio))), "ranged", self)
 		monster.set_meta("gunner_slow_multiplier", slow_multiplier)
 		monster.set_meta("gunner_slow_until", Time.get_ticks_msec() + int(slow_duration * 1000.0))
 	gunner_query_candidates.clear()
@@ -6163,7 +6163,7 @@ func _rogue_damage_target(
 	if can_measure:
 		hp_before = maxi(int(hp_before_value), 0)
 
-	current_target.call("take_damage", damage)
+	preload("res://src/systems/monster_hit_context.gd").hit(current_target, damage, "melee", self)
 
 	if not can_measure:
 		return 0
@@ -11972,7 +11972,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 			var victim_handle := Vector3i.ZERO
 			if tracked_targets:
 				victim_handle = source_scope.call("get_battle_entity_handle", monster)
-			monster.call("take_damage", dealt)
+			preload("res://src/systems/monster_hit_context.gd").hit(monster, dealt, "ranged", self)
 			if not _is_delayed_skill_source_current(source_life, source_scope_id):
 				break
 			if not is_instance_valid(monster) or monster.is_queued_for_deletion():
@@ -12557,7 +12557,7 @@ func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int, sou
 		if monster == null or not monster.has_method("take_damage"):
 			continue
 		if origin.distance_squared_to(monster.global_position) <= radius_sq:
-			monster.call("take_damage", damage)
+			preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "ranged" if _is_ranged_ai_archetype() else "melee", self)
 	_combat_monster_scratch.clear()
 
 func _damage_monsters_in_radius_once(
@@ -12582,7 +12582,7 @@ func _damage_monsters_in_radius_once(
 			continue
 		if origin.distance_squared_to(monster.global_position) <= radius_sq:
 			hit_ids[iid] = true
-			monster.call("take_damage", damage)
+			preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "ranged" if _is_ranged_ai_archetype() else "melee", self)
 	_combat_monster_scratch.clear()
 
 func _damage_monsters_in_corridor(
@@ -12620,7 +12620,7 @@ func _damage_monsters_in_corridor(
 		var t := clampf((monster.global_position - start).dot(segment) / length_sq, 0.0, 1.0)
 		var closest := start + segment * t
 		if monster.global_position.distance_squared_to(closest) <= half_width_sq:
-			monster.call("take_damage", damage)
+			preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "ranged" if _is_ranged_ai_archetype() else "melee", self)
 	_combat_monster_scratch.clear()
 
 func _find_farthest_monster_from_point(origin: Vector2) -> Node2D:
@@ -12855,7 +12855,7 @@ func _apply_channel_damage() -> void:
 		):
 			continue
 
-		monster.call("take_damage", damage)
+		preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "ranged" if _is_ranged_ai_archetype() else "melee", self)
 	_combat_monster_scratch.clear()
 
 func _end_channel_skill() -> void:
@@ -14322,7 +14322,7 @@ func _detonate_purifier_orb(
 			int(round(raw_damage * holy_multiplier)),
 			1
 		)
-		monster.call("take_damage", hit_damage)
+		preload("res://src/systems/monster_hit_context.gd").hit(monster, hit_damage, "ranged", self)
 		if (
 			chain_cleansing_chance > 0.0
 			and randf() <= chain_cleansing_chance
@@ -14481,7 +14481,7 @@ func _detonate_purifier_prism_orb(entry: Dictionary) -> void:
 			int(round(raw_damage * get_purifier_holy_damage_multiplier(monster))),
 			1
 		)
-		monster.call("take_damage", hit_damage)
+		preload("res://src/systems/monster_hit_context.gd").hit(monster, hit_damage, "ranged", self)
 	_combat_monster_scratch.clear()
 
 	if orb.has_method("trigger_explosion"):
@@ -14587,7 +14587,7 @@ func _apply_purifier_cleansing_centers(centers: Array[Vector2]) -> int:
 				int(round(raw_damage * multiplier)),
 				1
 			)
-			monster.call("take_damage", hit_damage)
+			preload("res://src/systems/monster_hit_context.gd").hit(monster, hit_damage, "ranged", self)
 			total_damage += hit_damage
 
 	_try_purifier_o_lord_heal(total_damage)
@@ -15304,7 +15304,7 @@ func _use_area_burst_ultimate() -> void:
 		):
 			continue
 		if monster.has_method("take_damage"):
-			monster.call("take_damage", damage)
+			preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "ranged", self)
 	_combat_monster_scratch.clear()
 
 func collect_heal_item(base_amount: int) -> int:
@@ -18665,7 +18665,7 @@ func _damage_berserker_skill2_segment(
 			if hp_before_value != null
 			else -1
 		)
-		monster.call("take_damage", damage)
+		preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "melee", self)
 		_berserker_blood_art_eighth_heal_on_hit()
 
 		if hp_before <= 0:
@@ -19061,7 +19061,7 @@ func _start_berserker_skill4() -> void:
 			if hp_before_value != null
 			else -1
 		)
-		monster.call("take_damage", damage)
+		preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "melee", self)
 		_berserker_blood_art_eighth_heal_on_hit()
 
 		if (
@@ -19290,7 +19290,7 @@ func _berserker_basic_attack(current_target: Node2D) -> void:
 			if hp_before_value != null
 			else -1
 		)
-		monster.call("take_damage", damage)
+		preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "melee", self)
 
 		if hp_before <= 0:
 			continue
@@ -19920,7 +19920,7 @@ func _fighter_charge_damage_target(monster: Node2D, damage: int) -> void:
 
 	var hp_before_value = monster.get("current_hp")
 	var hp_before := int(hp_before_value) if hp_before_value != null else -1
-	monster.call("take_damage", maxi(damage, 1))
+	preload("res://src/systems/monster_hit_context.gd").hit(monster, maxi(damage, 1), "melee", self)
 
 	if fighter_charge_kill_heal <= 0.0 or hp_before <= 0:
 		return
@@ -20244,7 +20244,7 @@ func _fighter_apply_slash(direction: Vector2, bonus_hit: bool = false) -> int:
 
 		var hp_before_value = monster.get("current_hp")
 		var hp_before := int(hp_before_value) if hp_before_value != null else -1
-		monster.call("take_damage", damage)
+		preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "melee", self)
 		if not bonus_hit or hp_before <= 0:
 			continue
 		if not is_instance_valid(monster):
@@ -20301,7 +20301,7 @@ func _fighter_apply_thrust(direction: Vector2) -> void:
 		if forward < 0.0 or forward > length or lateral > half_width:
 			continue
 		if monster.has_method("take_damage"):
-			monster.call("take_damage", damage)
+			preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "melee", self)
 	fighter_combat_candidates.clear()
 
 func _update_fighter_guard(delta: float) -> void:
@@ -20415,7 +20415,7 @@ func _end_fighter_guard() -> void:
 			):
 				continue
 			if monster.has_method("take_damage"):
-				monster.call("take_damage", release_damage)
+				preload("res://src/systems/monster_hit_context.gd").hit(monster, release_damage, "ranged", self)
 		fighter_combat_candidates.clear()
 
 	_play_fighter_guard_release_effect()
@@ -20438,7 +20438,7 @@ func _fighter_reflect_damage(raw_damage: float, source: Node) -> void:
 		and source.is_in_group("monsters")
 		and source.has_method("take_damage")
 	):
-		source.call("take_damage", reflected)
+		preload("res://src/systems/monster_hit_context.gd").hit(source, reflected, "melee", self)
 		return
 
 	var reflect_radius := maxf(
@@ -20470,7 +20470,7 @@ func _fighter_reflect_damage(raw_damage: float, source: Node) -> void:
 			nearest_distance_sq = distance_sq
 	fighter_combat_candidates.clear()
 	if is_instance_valid(nearest) and nearest.has_method("take_damage"):
-		nearest.call("take_damage", reflected)
+		preload("res://src/systems/monster_hit_context.gd").hit(nearest, reflected, "melee", self)
 
 func _play_fighter_attack_effect(
 	animation_name: String,

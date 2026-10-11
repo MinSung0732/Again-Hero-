@@ -177,7 +177,7 @@ func _explode_on_target() -> void:
 		if not HERO_TARGET_POLICY.is_detectable(victim) or not victim.has_method("take_damage"):
 			continue
 		if global_position.distance_squared_to(victim.global_position) <= radius_sq:
-			victim.call("take_damage", maxi(int(round(attack_damage*RECEIVED_STATUS.outgoing_multiplier(self))),1))
+			preload("res://src/systems/monster_hit_context.gd").hit(victim, maxi(int(round(attack_damage*RECEIVED_STATUS.outgoing_multiplier(self))),1), "melee", owner_hero)
 	_blast_candidates.clear()
 
 	visual.visible = false

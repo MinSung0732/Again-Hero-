@@ -451,6 +451,7 @@ func _create_torii() -> void:
 	torii_next = (torii_next+1)%DATA.TORII_CAPACITY
 	var total := int(get_meta("support_shield_hp",0)) + int(round(max_hp*DATA.TORII_SHIELD_RATIO))
 	set_meta("support_shield_hp",total)
+	preload("res://src/monsters/monster_runtime_common.gd").note_shield_grant(self,"shield")
 	set_meta("support_shield_capacity",total)
 	status_layer.queue_redraw()
 	torii_layer.queue_redraw()
@@ -547,16 +548,8 @@ func _draw() -> void:
 		status_layer.queue_redraw()
 
 func _draw_status() -> void:
-	if dying:
-		return
-	var y := visual_head_y-17.0
-	var shield := float(get_meta("support_shield_hp",0))
-	if shield > 0.0:
-		status_layer.draw_rect(Rect2(-29,y-13,58*minf(shield/maxf(float(get_meta("support_shield_capacity",shield)),1.0),1.0),4),Color(0.35,0.75,1.0))
-	status_layer.draw_rect(Rect2(-29,y,58,6),Color(0.12,0.12,0.14))
-	status_layer.draw_rect(Rect2(-29,y,58*float(current_hp)/maxf(max_hp,1.0),6),Color(0.3,0.9,0.45))
-	status_layer.draw_rect(Rect2(-29,y-7,58,4),Color(0.15,0.12,0.03))
-	status_layer.draw_rect(Rect2(-29,y-7,58*gauge/100.0,4),Color(1.0,0.8,0.15))
+	if dying: return
+	preload("res://src/monsters/monster_runtime_common.gd").draw_status_bars(self,status_layer,visual_head_y-17.0)
 
 func _draw_effects() -> void:
 	if dying:

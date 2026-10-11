@@ -26,6 +26,7 @@ const ORDER := [
 	"succubus",
 	"wolf",
 	"yuki_onna",
+	"gargoyle",
 	"zeus",
 	"bulgasal",
 	"izanami",
@@ -40,6 +41,17 @@ const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const BULGASAL_BEHAVIOR := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const MONSTERS := {
+	"gargoyle": {
+		"id":"gargoyle","name":"가고일","role":"tank","family":"gargoyle","species":"rock","grade":"rare","rarity":"rare","attack_type":"melee",
+		"base_cost":14.0,"summon_exp":14.0,"default_unlocked":false,"combat_enabled":true,
+		"base_stats":preload("res://src/data/gargoyle_behavior_catalog.gd").BASE,
+		"balance":{"health_share":0.80174927,"damage_share":0.68204365,"note":"원거리 40~60% 피감·반경200 아군피해30% 인계. 느린 근접/낮은 추격·직접DPS로 기회비용 반영. 실전 승률 미검증"},
+		"description":"원거리 공격·기술 피해40% 감소. HP50%→15%에서 추가 감소0%→20%. 반경200 아군 원거리피해30% 대신 받음(가장 가까운1마리, 연쇄/중첩 제외). 느린 근접 탱커.",
+		"special_augment_ids":["gargoyle_recompense","gargoyle_sky_bastion","gargoyle_stone_slumber"],
+		"elite_skills":[{"runtime":"monster","id":"elite_gargoyle_boulder_guard","name":"거석의 보호","description":"선쿨2초/재사용10초. 지름400 아군에게 원거리 쉴드150 갱신(중첩 없음).","initial_cooldown":2.0,"cooldown":10.0,"radius":200.0,"shield_amount":150,"retry_interval":0.25}],
+		"scene":preload("res://src/monsters/Gargoyle.tscn"),
+	},
+
 	"arthur": {
 		"id":"arthur","name":"아서왕","rarity":"transcendent","grade":"transcendent","role":"tank","species":"humanoid","family":"arthur","attack_type":"melee","combat_style":"melee_tank",
 		"collection_card":{"style_label":"근접 탱커형","identity":"아발론의 성왕","feature":"엑스칼리버 · 원탁 · 축복 · 방어"},
@@ -930,6 +942,7 @@ const ROLE_LABELS := {
 }
 
 const SPECIES_LABELS := {
+	"rock":"암석",
 	"humanoid": "인간형",
 	"divine_humanoid": "신인형",
 	"beast": "짐승",

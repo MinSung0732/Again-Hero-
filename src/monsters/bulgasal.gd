@@ -518,6 +518,7 @@ func hit_aftershock(point: Vector2) -> void:
 func add_stacking_shield(ratio: float) -> void:
 	var total := int(get_meta("support_shield_hp",0))+int(round(max_hp*ratio))
 	set_meta("support_shield_hp",total)
+	preload("res://src/monsters/monster_runtime_common.gd").note_shield_grant(self,"shield")
 	set_meta("support_shield_capacity",total)
 
 func _hero_alive() -> bool:
@@ -592,18 +593,7 @@ func draw_status_overlay(target: Node2D) -> void:
 	if dying or not is_instance_valid(visual):
 		return
 	if phase != "air":
-		var hp_y := visual_head_y-17.0
-		var gauge_y := hp_y-6.0-DATA.BAR_GAP
-		target.draw_rect(Rect2(-35,hp_y,70,7),Color("202024"))
-		target.draw_rect(Rect2(-35,hp_y,70*float(current_hp)/maxi(max_hp,1),7),Color("4cd965"))
-		target.draw_rect(Rect2(-35,gauge_y,70,6),Color("332709"))
-		target.draw_rect(Rect2(-35,gauge_y,70*gauge/DATA.GAUGE_MAX,6),Color("ffdb3b"))
-		if int(get_meta("support_shield_hp",0)) > 0:
-			var shield: float = float(get_meta("support_shield_hp",0))
-			var capacity := maxf(float(get_meta("support_shield_capacity",shield)),1.0)
-			var shield_y := gauge_y-6.0-DATA.BAR_GAP
-			target.draw_rect(Rect2(-35,shield_y,70,6),Color("202c40"))
-			target.draw_rect(Rect2(-35,shield_y,70*clampf(shield/capacity,0.0,1.0),6),Color("61ddff"))
+		MONSTER_RUNTIME_COMMON.draw_status_bars(self,target,visual_head_y-17.0,DATA.GAUGE_MAX)
 	if phase == "channel":
 		var channel_x := (channel_left_extent if visual.flip_h else channel_right_extent)+DATA.CHANNEL_MARGIN
 		target.draw_rect(Rect2(channel_x,visual_head_y,6,DATA.VISIBLE_HEIGHT),Color("292426"))

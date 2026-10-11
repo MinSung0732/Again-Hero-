@@ -444,25 +444,3 @@ func _draw() -> void:
 		return
 	var bar_width := 58.0
 	MONSTER_RUNTIME_COMMON.draw_support_shield_bar(self, bar_width, -58.0)
-	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
-	draw_rect(Rect2(-bar_width / 2.0, -58.0, bar_width, 7.0), Color(0.12, 0.12, 0.14), true)
-	draw_rect(
-		Rect2(-bar_width / 2.0, -58.0, bar_width * hp_ratio, 7.0),
-		Color(0.3, 0.9, 0.45),
-		true
-	)
-
-	var shield_hp := maxf(float(get_meta("elite_shield_hp", 0.0)), 0.0)
-	var shield_max := maxf(float(get_meta("elite_shield_max_hp", 0.0)), 0.0)
-	if shield_hp > 0.0 and shield_max > 0.0:
-		var shield_ratio := clampf(shield_hp / shield_max, 0.0, 1.0)
-		draw_rect(
-			Rect2(-bar_width / 2.0, -67.0, bar_width, 5.0),
-			Color(0.10, 0.15, 0.20),
-			true
-		)
-		draw_rect(
-			Rect2(-bar_width / 2.0, -67.0, bar_width * shield_ratio, 5.0),
-			Color(0.35, 0.80, 1.0),
-			true
-		)

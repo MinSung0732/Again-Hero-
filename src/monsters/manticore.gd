@@ -343,6 +343,7 @@ func _register_basic_hit() -> void:
 func _add_shield(ratio: float) -> void:
 	var total := int(get_meta("support_shield_hp",0))+int(round(max_hp*ratio))
 	set_meta("support_shield_hp",total)
+	preload("res://src/monsters/monster_runtime_common.gd").note_shield_grant(self,"shield")
 	set_meta("support_shield_capacity",total)
 func take_damage(amount: int) -> void:
 	_apply_manticore_damage(amount)
@@ -524,14 +525,9 @@ func _draw() -> void:
 	if is_instance_valid(status_layer): status_layer.queue_redraw()
 func _draw_status() -> void:
 	if dying: return
-	var y := visual_head_y-17.0
-	status_layer.draw_rect(Rect2(-29,y,58,6),Color("202027"))
-	status_layer.draw_rect(Rect2(-29,y,58*float(current_hp)/maxf(max_hp,1.0),6),Color("4de873"))
-	status_layer.draw_rect(Rect2(-29,y-7,58,4),Color("302511"))
-	status_layer.draw_rect(Rect2(-29,y-7,58*gauge/100.0,4),Color("ffdb3b"))
-	var shield := float(get_meta("support_shield_hp",0))
-	if shield > 0.0: status_layer.draw_rect(Rect2(-29,y-13,58*minf(shield/maxf(float(get_meta("support_shield_capacity",shield)),1.0),1.0),4),Color("61ddff"))
+	preload("res://src/monsters/monster_runtime_common.gd").draw_status_bars(self,status_layer,visual_head_y-17.0)
 	if motion == Motion.FOCUS: CHANNEL.draw_on(status_layer,Vector2(channel_left if visual.flip_h else channel_right,visual_head_y+20),1.0-focus/DATA.CHANNEL_SECONDS)
+
 func _draw_effects() -> void:
 	if dying: return
 	if arrival > 0.0: FX.draw_frame(effect_layer,1,2+mini(5,int((DATA.ARRIVAL_SECONDS-arrival)*6.0/DATA.ARRIVAL_SECONDS)),Vector2.ZERO)

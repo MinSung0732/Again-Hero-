@@ -215,6 +215,7 @@ func _fire_projectile(_offset: Vector2) -> void:
 	if accepted and was_paralyzed:
 		var total := int(get_meta("support_shield_hp",0))+int(round(max_hp*DATA.BASIC_SHIELD_RATIO))
 		set_meta("support_shield_hp",total)
+		MONSTER_RUNTIME_COMMON.note_shield_grant(self,"shield")
 		set_meta("support_shield_capacity",total)
 	if accepted and randf() < chance:
 		apply_paralysis_to(hero,paralysis)
@@ -420,17 +421,7 @@ func _draw_crown_layer() -> void:
 	FX.draw_frame(crown_layer,"crown",frame,Vector2(0,visual_head_y))
 
 func _draw_status_layer() -> void:
-	if not dying and charge_remaining > 0.0:
+	if dying: return
+	preload("res://src/monsters/monster_runtime_common.gd").draw_status_bars(self,status_layer,visual_head_y-30.0)
+	if charge_remaining > 0.0:
 		preload("res://src/ui/channel_gauge.gd").draw_on(status_layer,Vector2(channel_left if visual.flip_h else channel_right,visual_head_y+20),1.0-charge_remaining/DATA.CHARGE_SECONDS)
-	if dying:
-		return
-	var hp_y := visual_head_y-30.0
-	status_layer.draw_rect(Rect2(-29,hp_y,58,7),Color(0.12,0.12,0.14))
-	status_layer.draw_rect(Rect2(-29,hp_y,58*float(current_hp)/maxi(max_hp,1),7),Color(0.3,0.9,0.45))
-	status_layer.draw_rect(Rect2(-29,visual_head_y-41.0,58,6),Color("241c13"))
-	status_layer.draw_rect(Rect2(-29,visual_head_y-41.0,58*gauge/DATA.GAUGE_MAX,6),Color("ffdb3b"))
-	var shield := int(get_meta("support_shield_hp",0))
-	if shield > 0:
-		var ratio := clampf(float(shield)/maxi(int(get_meta("support_shield_capacity",shield)),1),0.0,1.0)
-		status_layer.draw_rect(Rect2(-29,hp_y-23.0,58,6),Color("202c40"))
-		status_layer.draw_rect(Rect2(-29,hp_y-23.0,58*ratio,6),Color("61ddff"))

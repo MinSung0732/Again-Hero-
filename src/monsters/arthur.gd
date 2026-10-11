@@ -318,6 +318,7 @@ static func add_shield(actor: Node2D, amount: int) -> void:
 	if not _alive(actor): return
 	var shield := int(actor.get_meta("support_shield_hp",0))+maxi(amount,0)
 	actor.set_meta("support_shield_hp",shield)
+	preload("res://src/monsters/monster_runtime_common.gd").note_shield_grant(actor,"shield")
 	actor.set_meta("support_shield_capacity",maxi(shield,int(actor.get_meta("support_shield_capacity",0))))
 	actor.queue_redraw()
 func cast_blessing() -> void:
@@ -376,14 +377,9 @@ func _draw_combat_effects() -> void:
 			else: FX.draw_frame(front_effects,i,mini(7,int(fx_age[i]*10)),Vector2(0,-40))
 func _draw_status() -> void:
 	if dying: return
-	var width := 86.0
-	var shield := int(get_meta("support_shield_hp",0))+int(get_meta("arthur_blessing_hp",0))
-	if shield>0:
-		var capacity := maxi(int(get_meta("support_shield_capacity",0))+int(get_meta("arthur_blessing_capacity",0)),1)
-		draw_status_bar(Rect2(-width*0.5,head_y-25,width,6),float(shield)/capacity,Color("61ddff"))
-	draw_status_bar(Rect2(-width*0.5,head_y-15,width,8),float(current_hp)/maxi(max_hp,1),Color(0.3,0.9,0.45))
-	draw_status_bar(Rect2(-width*0.5,head_y-5,width,4),gauge/DATA.GAUGE_MAX,Color(1,0.86,0.18))
+	preload("res://src/monsters/monster_runtime_common.gd").draw_status_bars(self,status_layer,head_y-15.0,DATA.GAUGE_MAX)
 	if channel.active: draw_status_bar(Rect2(visual.position.x+45,head_y,5,80),channel.progress(),Color(0.9,0.9,1))
+
 func draw_status_bar(rect: Rect2, ratio: float, color: Color) -> void:
 	status_layer.draw_rect(rect,Color(0.1,0.1,0.14))
 	var fill := rect

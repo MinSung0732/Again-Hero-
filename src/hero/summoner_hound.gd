@@ -199,7 +199,7 @@ func _update_pending_hits(delta: float) -> void:
 			var hit_index := hits_per_attack - pending_hits + 1
 			if hit_index == 2 and second_hit_bonus_ratio > 0.0:
 				dealt_damage += float(owner_attack_damage) * second_hit_bonus_ratio
-			attack_target.call("take_damage", maxi(int(round(dealt_damage*RECEIVED_STATUS.outgoing_multiplier(self))), 1))
+			preload("res://src/systems/monster_hit_context.gd").hit(attack_target, maxi(int(round(dealt_damage*RECEIVED_STATUS.outgoing_multiplier(self))), 1), "melee", owner_hero)
 		if attack_audio.stream != null:
 			attack_audio.stop()
 			attack_audio.play()

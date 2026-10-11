@@ -504,6 +504,7 @@ func _tick_goblin_commander(
 				)
 				target.set_meta("elite_shield_max_hp", shield_amount)
 				target.set_meta("elite_shield_hp", shield_amount)
+				preload("res://src/monsters/monster_runtime_common.gd").note_shield_grant(target,"shield")
 				if target.has_method("queue_redraw"):
 					target.call("queue_redraw")
 	_monster_scratch.clear()
@@ -894,6 +895,7 @@ func _begin_bomb_rat_vibration(
 	)
 	monster.set_meta("elite_shield_max_hp", shield_max)
 	monster.set_meta("elite_shield_hp", shield_max)
+	preload("res://src/monsters/monster_runtime_common.gd").note_shield_grant(monster,"shield")
 	if monster.has_method("queue_redraw"):
 		monster.call("queue_redraw")
 

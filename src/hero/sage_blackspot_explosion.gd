@@ -151,7 +151,7 @@ func _apply_damage() -> void:
 
 		# Hard recursion barrier: this damage path never calls the caster's
 		# skill-hit hook, so Black Spot Explosion cannot re-ignite itself.
-		monster.call("take_damage", damage)
+		preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "ranged", caster)
 
 		if hp_before <= 0:
 			continue

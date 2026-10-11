@@ -17,6 +17,7 @@ static func grant(actor: Node2D, amount: int, seconds: float, battle: Node) -> v
 	node.capacity = maxi(amount,0)
 	node.remaining = seconds
 	actor.set_meta("arthur_blessing_hp",node.capacity)
+	preload("res://src/monsters/monster_runtime_common.gd").note_shield_grant(actor,"shield")
 	actor.set_meta("arthur_blessing_capacity",node.capacity)
 	node.set_physics_process(true)
 	actor.queue_redraw()

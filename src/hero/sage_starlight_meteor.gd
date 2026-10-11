@@ -172,7 +172,7 @@ func _apply_damage() -> void:
 		if hp_value != null and int(hp_value) <= 0:
 			continue
 		var hit_position := monster.global_position
-		monster.call("take_damage", damage)
+		preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "ranged", caster)
 		if (
 			is_instance_valid(caster)
 			and caster.has_method("_on_sage_skill_hit")

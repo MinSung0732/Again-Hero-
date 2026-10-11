@@ -133,7 +133,7 @@ func _on_body_entered(body: Node) -> void:
 	hit_ids[id] = true
 	if headshot and body.is_in_group("monsters"):
 		body.set_meta("damage_number_color_once", Color(1.0, 0.18, 0.12, 1.0))
-	body.call("take_damage", damage)
+	preload("res://src/systems/monster_hit_context.gd").hit(body, damage, "ranged", source_hero)
 
 	if body.is_in_group("monsters"):
 		_spawn_hit_impact()

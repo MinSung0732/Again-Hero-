@@ -69,7 +69,7 @@ func _process(delta: float) -> void:
 		burn_tick_timer -= delta
 		while burn_tick_timer <= 0.0 and burn_remaining > 0.0:
 			if target.has_method("take_damage"):
-				target.call("take_damage", burn_damage)
+				preload("res://src/systems/monster_hit_context.gd").hit(target, burn_damage, "ranged")
 			burn_tick_timer += burn_tick_interval
 
 	if freeze_remaining > 0.0:

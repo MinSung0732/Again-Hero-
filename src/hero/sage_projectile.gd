@@ -159,7 +159,7 @@ func _try_hit_target(body: Node) -> bool:
 		if body is Node2D
 		else global_position
 	)
-	body.call("take_damage", damage)
+	preload("res://src/systems/monster_hit_context.gd").hit(body, damage, "ranged", caster)
 	if (
 		projectile_mode == ProjectileMode.PIERCING
 		and body.is_in_group("monsters")

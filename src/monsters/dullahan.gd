@@ -55,6 +55,7 @@ func apply_visual_profile(profile: Dictionary) -> void:
 func _sync_wall_capacity() -> void:
 	if wall_max_hp > 0 and wall_max_hp != max_hp:
 		shield_hp = int(round(float(shield_hp) * max_hp / wall_max_hp))
+		MONSTER_RUNTIME_COMMON.note_shield_grant(self,"shield")
 		wall_max_hp = max_hp
 
 func configure_special_augments(configs: Dictionary) -> void:
@@ -64,6 +65,7 @@ func configure_special_augments(configs: Dictionary) -> void:
 		wall_granted = true
 		wall_max_hp = max_hp
 		shield_hp = int(round(max_hp * float(configs.dullahan_dead_wall.get("shield_hp_ratio", 2.0))))
+		MONSTER_RUNTIME_COMMON.note_shield_grant(self,"shield")
 	if not configs.has("dullahan_dead_wall"):
 		shield_hp = 0
 	queue_redraw()
@@ -379,8 +381,3 @@ func _draw() -> void:
 	var bar_y := -height * 0.5 - 12.0
 	var width := 120.0
 	MONSTER_RUNTIME_COMMON.draw_support_shield_bar(self, width, bar_y)
-	draw_rect(Rect2(-width * 0.5, bar_y, width, 8), Color("202024"), true)
-	draw_rect(Rect2(-width * 0.5, bar_y, width * clampf(float(current_hp) / maxi(max_hp, 1), 0.0, 1.0), 8), Color("4de673"), true)
-	if shield_hp > 0:
-		var ratio := minf(float(shield_hp) / float(max_hp * 2), 1.0)
-		draw_rect(Rect2(-width * 0.5, bar_y - 10, width * ratio, 6), Color("a4b8ff"), true)

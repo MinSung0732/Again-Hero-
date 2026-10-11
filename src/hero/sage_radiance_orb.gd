@@ -118,7 +118,7 @@ func _explode() -> void:
 				if body is Node2D
 				else global_position
 			)
-			body.call("take_damage", damage)
+			preload("res://src/systems/monster_hit_context.gd").hit(body, damage, "ranged", caster)
 			if (
 				is_instance_valid(caster)
 				and caster.has_method("_on_sage_skill_hit")

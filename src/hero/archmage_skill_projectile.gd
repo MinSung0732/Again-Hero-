@@ -241,7 +241,7 @@ func _damage_storm_area(returning: bool) -> void:
 		var victim_handle := Vector3i.ZERO
 		if tracked_targets:
 			victim_handle = scope.call("get_battle_entity_handle", monster)
-		monster.call("take_damage", hit_damage)
+		preload("res://src/systems/monster_hit_context.gd").hit(monster, hit_damage, "ranged", source_hero)
 		if not _is_elemental_life_current(life_revision):
 			return
 		if is_instance_valid(monster) and not monster.is_queued_for_deletion() and (
@@ -337,9 +337,9 @@ func _damage_berserker_wave_sweep(
 		var receipt_ready := false
 		var receipt_revision: int = _wave_damage_receipt.revision + 1
 		if uses_receipt:
-			receipt_ready = bool(monster.call("take_damage_with_result", damage, _wave_damage_receipt))
+			receipt_ready = preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "ranged", source_hero, _wave_damage_receipt)
 		else:
-			monster.call("take_damage", damage)
+			preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "ranged", source_hero)
 		if not _is_wave_life_current(life_revision):
 			return
 
@@ -402,7 +402,7 @@ func _on_body_entered(body: Node) -> void:
 			var victim_handle := Vector3i.ZERO
 			if tracked_target:
 				victim_handle = scope.call("get_battle_entity_handle", monster)
-			monster.call("take_damage", damage)
+			preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "ranged", source_hero)
 			if not _is_elemental_life_current(life_revision):
 				_finish_elemental_revision(life_revision)
 				return
@@ -445,7 +445,7 @@ func _on_body_entered(body: Node) -> void:
 						)
 					)
 				)
-			monster.call("take_damage", hit_damage)
+			preload("res://src/systems/monster_hit_context.gd").hit(monster, hit_damage, "ranged", source_hero)
 			# Damage callbacks may retire/reuse this projectile or its source.
 			if not _is_chain_life_current(life_revision):
 				return
@@ -722,7 +722,7 @@ func _damage_monsters_along_segment(
 		)
 		var closest := from_position + segment * t
 		if monster.global_position.distance_squared_to(closest) <= half_width * half_width:
-			monster.call("take_damage", tick_damage)
+			preload("res://src/systems/monster_hit_context.gd").hit(monster, tick_damage, "ranged", source_hero)
 
 
 func _find_nearest_unhit(origin: Vector2, radius: float) -> Node2D:
