@@ -27,6 +27,7 @@ const ORDER := [
 	"wolf",
 	"yuki_onna",
 	"gargoyle",
+	"hobgoblin",
 	"zeus",
 	"bulgasal",
 	"izanami",
@@ -41,6 +42,19 @@ const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const BULGASAL_BEHAVIOR := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const MONSTERS := {
+	"hobgoblin": {
+		"id":"hobgoblin","name":"홉고블린","role":"tank","family":"goblin","species":"beast","grade":"rare","rarity":"rare","attack_type":"melee",
+		"base_cost":18.0,"summon_exp":18.0,"default_unlocked":false,"combat_enabled":true,
+		"base_stats":preload("res://src/data/hobgoblin_behavior_catalog.gd").BASE,
+		"balance":{"health_share":0.58460884,"damage_share":0.57870370,"note":"좁은 반경175의 고블린 수당 고정 성장/공속,100마리HP4배,군단 지원의 기회비용. 기본 몸체·화력 할인. 실전 승률 미검증"},
+		"description":"지름350 내 살아있는 이름에 고블린이 포함된 아군(자신 포함)당 HP·공격·이속+2,공속+2%. 사망/이탈시 해당 증가분 제거.10마리 이상: 유효 공격3% 확률1초 기절.100마리 이상: 최대HP+300%(4배).",
+		"special_augment_ids":["hobgoblin_lord","hobgoblin_iron_bond","hobgoblin_shield_march"],
+		"elite_skills":[{"runtime":"monster","id":"elite_hobgoblin_command","name":"지휘","passive":true,"initial_cooldown":0.0,"cooldown":0.0,"refresh_interval":5.0,"description":"존재하는 동안 범위 내 고블린들을 주변으로 집결.5초마다 지휘 갱신. 순간이동 아님."}],
+		"card_icon_path":"res://assets/art/monsters/Hobgoblin_Commander/frames/idle_01.png",
+		"elite_visual":preload("res://src/data/hobgoblin_behavior_catalog.gd").ELITE_VISUAL,
+		"scene":preload("res://src/monsters/Hobgoblin.tscn"),
+	},
+
 	"gargoyle": {
 		"id":"gargoyle","name":"가고일","role":"tank","family":"gargoyle","species":"rock","grade":"rare","rarity":"rare","attack_type":"melee",
 		"base_cost":14.0,"summon_exp":14.0,"default_unlocked":false,"combat_enabled":true,

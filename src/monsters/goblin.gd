@@ -191,6 +191,7 @@ func _physics_process(delta: float) -> void:
 			_update_visual_motion(0.0, false)
 			return
 
+	if MONSTER_RUNTIME_COMMON.follow_goblin_command(self,delta): return
 	var offset_to_hero := hero.global_position - global_position
 	var distance_sq := offset_to_hero.length_squared()
 	_update_visual_lod(distance_sq)

@@ -55,6 +55,7 @@ signal battle_finished(message: String, player_won: bool)
 const HERO_SCENE := preload("res://src/hero/Hero.tscn")
 const SCORPION_SWAMP_RUNTIME := preload("res://src/systems/scorpion_swamp_runtime.gd")
 const SUPPORT_BUFF_RUNTIME := preload("res://src/systems/monster_support_buff_runtime.gd")
+const GOBLIN_FORMATION_RUNTIME := preload("res://src/systems/goblin_formation_runtime.gd")
 const WOLF_PACK_RUNTIME := preload("res://src/systems/wolf_pack_runtime.gd")
 const YUKI_RUNTIME := preload("res://src/systems/yuki_onna_runtime.gd")
 const MONSTER_SUPPORT_COMMON := preload("res://src/monsters/monster_runtime_common.gd")
@@ -172,6 +173,7 @@ const MONSTER_SPATIAL_CELL_SIZE := 256.0
 
 var active_monsters: Dictionary = {}
 var support_buff_runtime = SUPPORT_BUFF_RUNTIME.new()
+var goblin_formation_runtime = GOBLIN_FORMATION_RUNTIME.new()
 var wolf_pack_runtime = WOLF_PACK_RUNTIME.new()
 var yuki_runtime = YUKI_RUNTIME.new()
 var scorpion_swamp_runtime = SCORPION_SWAMP_RUNTIME.new()
@@ -636,6 +638,7 @@ func _ready() -> void:
 	elite_monster_skill_runtime.setup(self)
 	scorpion_swamp_runtime.setup(self)
 	wolf_pack_runtime.setup(self)
+	goblin_formation_runtime.setup(self,MONSTER_CATALOG.MONSTERS)
 	_cache_demon_ultimate_runtime_data()
 	_start_battle()
 
@@ -656,6 +659,7 @@ func _process(delta: float) -> void:
 		elite_monster_skill_runtime.tick(delta)
 		support_buff_runtime.tick(delta)
 		wolf_pack_runtime.tick(delta)
+		goblin_formation_runtime.tick(delta)
 		yuki_runtime.tick(delta)
 		scorpion_swamp_runtime.tick(delta)
 		_process_demon_ultimate_spawn_queue(delta)
@@ -792,6 +796,7 @@ func _start_battle() -> void:
 	_run_reward_save_failed = false
 	elite_monster_skill_runtime.reset()
 	wolf_pack_runtime.reset()
+	goblin_formation_runtime.reset()
 	yuki_runtime.reset()
 	active_heal_items.clear()
 	active_treasure_chests.clear()
@@ -2740,8 +2745,8 @@ func _apply_demon_level_scaling_to_monster(
 		var new_max_hp := maxi(
 			1,
 			int(round(
-				float(base_hp_value) * _get_demon_level_monster_hp_multiplier() * hp_special
-				+ float(runtime_additions.get("hp", 0.0))
+				(float(base_hp_value) * _get_demon_level_monster_hp_multiplier() * hp_special
+				+ float(runtime_additions.get("hp", 0.0))) * float(runtime_additions.get("hp_multiplier",1.0))
 			))
 		)
 		monster.set("max_hp", new_max_hp)
@@ -2788,10 +2793,17 @@ func _apply_demon_level_scaling_to_monster(
 		if not monster.has_meta("runtime_base_attack_cooldown"):
 			monster.set_meta("runtime_base_attack_cooldown", float(monster.get("attack_cooldown")))
 		var base_interval := maxf(float(monster.get_meta("runtime_base_attack_cooldown")), 0.01)
-		monster.set("attack_cooldown", 1.0 / (1.0 / base_interval + maxf(float(runtime_additions.get("attack_rate", 0.0)), 0.0)))
+		monster.set("attack_cooldown", 1.0 / (1.0 / base_interval + maxf(float(runtime_additions.get("attack_rate", 0.0)), 0.0)) / maxf(float(runtime_additions.get("attack_speed_multiplier",1.0)),0.01))
 
 	if preserve_hp_ratio and monster.has_method("queue_redraw"):
 		monster.call("queue_redraw")
+
+func refresh_monster_runtime_stats(monster: Node) -> void:
+	if not is_instance_valid(monster) or int(monster.get("current_hp")) <= 0: return
+	_apply_demon_level_scaling_to_monster(monster,true)
+
+func get_goblin_formation_damage_multiplier(monster: Node2D) -> float:
+	return goblin_formation_runtime.incoming_multiplier(monster)
 
 func _get_active_monsters_snapshot() -> Array:
 	var result: Array = []
@@ -4859,6 +4871,12 @@ func _apply_special_augments_to_monster(
 
 func _refresh_monsters_for_selected_augment(augment: Dictionary) -> void:
 	var affected_ids: Array[String] = []
+	var effect_values: Dictionary = augment.get("effect_values",{})
+	if bool(effect_values.get("remove_existing_on_select",false)):
+		var owner_id := String(augment.get("monster_id",""))
+		for actor in _get_active_monsters_snapshot():
+			if is_instance_valid(actor) and String(actor.get("monster_type")) == owner_id:
+				_consume_monster_for_fusion(actor as Node2D)
 	if String(augment.get("augment_type", "")) == DEMON_AUGMENTS.TYPE_SPECIAL:
 		var owner_id := String(augment.get("monster_id", ""))
 		if not owner_id.is_empty():

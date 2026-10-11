@@ -340,6 +340,8 @@ static func _consume_support_shield(owner: Node2D, amount: int, receipt = null, 
 	var authority := owner.get_parent()
 	if amount > 0 and not bool(owner.get_meta("guard_transfer",false)) and is_instance_valid(authority) and authority.has_method("get_transcendent_aura_modifier"):
 		amount = maxi(int(round(amount * float(authority.get_transcendent_aura_modifier(owner,"incoming")) * float(authority.get_transcendent_aura_modifier(authority.hero,"outgoing")))),1)
+	if amount > 0 and is_instance_valid(authority) and authority.has_method("get_goblin_formation_damage_multiplier"):
+		amount = maxi(int(round(amount*float(authority.get_goblin_formation_damage_multiplier(owner)))),1)
 	var kind := String(owner.get_meta("incoming_attack_kind","untyped"))
 	if amount > 0 and kind == "ranged" and owner.has_method("ranged_damage_multiplier"):
 		amount = maxi(int(round(amount*float(owner.call("ranged_damage_multiplier")))),1)
@@ -533,10 +535,10 @@ static func note_shield_grant(actor: Node, kind: String) -> void:
 	order.append(kind)
 	actor.set_meta("combat_bar_order",order)
 
-static func grant_typed_shield(actor: Node2D, kind: String, amount: int) -> void:
+static func grant_typed_shield(actor: Node2D, kind: String, amount: int, stack: bool = false) -> void:
 	if kind not in ["ranged","melee"] or not is_instance_valid(actor) or actor.is_queued_for_deletion() or int(actor.get("current_hp")) <= 0 or amount <= 0: return
 	var key := kind+"_shield_hp"
-	var total := maxi(int(actor.get_meta(key,0)),amount) # Refresh; never stack.
+	var total := int(actor.get_meta(key,0))+amount if stack else maxi(int(actor.get_meta(key,0)),amount) # Default refresh; explicit stacking only.
 	actor.set_meta(key,total)
 	actor.set_meta(kind+"_shield_capacity",maxi(total,int(actor.get_meta(kind+"_shield_capacity",0))))
 	note_shield_grant(actor,kind)
@@ -627,3 +629,34 @@ static func get_yellow_ratio(actor: Node, gauge_capacity: float = 100.0) -> floa
 	var gauge = actor.get("gauge")
 	if gauge == null: return -1.0
 	return clampf(float(gauge)/maxf(gauge_capacity,1.0),0.0,1.0)
+
+# Elite formation orders are a movement objective, never teleportation or forced movement.
+static func follow_goblin_command(actor: CharacterBody2D, delta: float) -> bool:
+	if not actor.has_meta("goblin_command_leader"): return false
+	var order: WeakRef = actor.get_meta("goblin_command_leader")
+	if order == null: return false
+	var leader = order.get_ref()
+	var authority = actor.get("combat_authority")
+	var runtime = authority.get("goblin_formation_runtime") if is_instance_valid(authority) else null
+	if runtime == null or not is_instance_valid(leader) or leader.is_queued_for_deletion() or int(leader.get("current_hp")) <= 0 or not bool(leader.get("command_active")) or float(actor.get_meta("goblin_command_until",0.0)) <= float(runtime.clock):
+		actor.remove_meta("goblin_command_leader")
+		return false
+	if is_forced_movement_locked(actor) or bool(actor.get_meta("stun_active",false)):
+		return false
+	var destination: Vector2 = leader.global_position+Vector2(actor.get_meta("goblin_command_offset",Vector2.ZERO))
+	var offset := destination-actor.global_position
+	if offset.length_squared() <= 16.0*16.0:
+		var enemy = actor.get("hero")
+		if is_instance_valid(enemy) and actor.global_position.distance_squared_to(enemy.global_position) <= pow(float(actor.get("attack_range")),2.0): return false
+		actor.velocity = Vector2.ZERO
+		if actor.has_method("_update_visual_motion"): actor.call("_update_visual_motion",0.0,false)
+		return true
+	var speed := float(actor.get("move_speed"))*get_external_movement_multiplier(actor)
+	var pack = actor.get("pack_multiplier")
+	if pack != null: speed *= float(pack)
+	var bonuses = actor.get("combat_bonus_cache")
+	if bonuses is Dictionary: speed *= float(bonuses.get("move_speed_multiplier",1.0))
+	actor.velocity = offset.normalized()*minf(speed,offset.length()/maxf(delta,0.001))
+	if actor.has_method("_update_visual_motion"): actor.call("_update_visual_motion",actor.velocity.x,true)
+	actor.move_and_slide()
+	return true
