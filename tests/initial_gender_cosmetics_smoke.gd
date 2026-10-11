@@ -76,11 +76,12 @@ func run() -> void:
 				if slot != "representative":
 					check(own in store.choices(slot) and other not in store.choices(slot), "cosmetic ownership follows gender")
 					check(store.selected_id(slot) == own and not store.select(slot,other), "old cosmetic falls back/direct choice blocked")
-				if slot == "avatar":
+				if slot in ["avatar", "banner"]:
 					view.open_picker(slot)
-					var icons: RefCounted = view.icon_picker
-					check(icons.overlay.visible and icons.slots.size() == 8, "retained two-row icon strip opens")
-					check(icons.ids.size() == 8, "only existing avatar resources listed")
+					var icons: RefCounted = view.icon_picker if slot == "avatar" else view.banner_picker
+					var expected := 8 if slot == "avatar" else 14
+					check(icons.overlay.visible and icons.slots.size() == expected, "retained " + slot + " strip opens")
+					check(icons.ids.size() == expected, "only existing " + slot + " resources listed")
 					var index: int = icons.ids.find(other)
 					icons._select_slot(index)
 					check(icons.confirm.disabled and icons.preview.texture == view._lock_texture(), "locked gender preview masked")
@@ -168,6 +169,64 @@ func run() -> void:
 	button._begin(button.get_global_rect().get_center())
 	button._finish_gesture(button.get_global_rect().get_center())
 	check(icons.candidate == "original_male", "completed tap selects card")
+	view.close_picker()
+	# Banner gallery uses the same transactional guards, with tall single-row art.
+	view.open_picker("banner")
+	var banners: RefCounted = view.banner_picker
+	check(banners.rows == 1 and banners.strip.get_child_count() == 14, "single-row tall banner cards")
+	check(not icons.overlay.visible and not view.picker.visible, "only banner overlay opens")
+	var locked_index: int = banners.ids.find("arthur_plus_banner")
+	banners._select_slot(locked_index)
+	check(banners.slots[locked_index].art.texture == view._lock_texture() and banners.preview.texture == view._lock_texture() and banners.confirm.disabled, "locked five-transcendence art remains masked")
+	check(banners.info.type.text == "5초월" and banners.info.source.text.contains("5초월"), "five-transcendence requirements shown")
+	var saves_before: int = scope.saves
+	banners._confirm()
+	check(scope.saves == saves_before, "locked banner cannot confirm")
+	banners._select_slot(banners.ids.find("zeus_plus_banner"))
+	check(not banners.confirm.disabled and store.selected_id("banner") == "original_male", "owned banner preview does not save")
+	view.close_picker()
+	check(store.selected_id("banner") == "original_male", "banner close cancels preview")
+	view.open_picker("banner")
+	banners._select_slot(banners.ids.find("zeus_plus_banner"))
+	scope.fail_save = true
+	banners._confirm()
+	check(banners.overlay.visible and banners.notice.text.contains("못했습니다"), "banner save failure keeps selection")
+	scope.fail_save = false
+	banners._confirm()
+	check(not banners.overlay.visible and store.selected_id("banner") == "zeus_plus_banner" and scope.saves == saves_before + 1, "banner confirms exactly once")
+	view.open_picker("banner")
+	check(banners.candidate == "zeus_plus_banner" and banners.confirm.disabled, "equipped banner restored")
+	for bounds in [Vector2(1080,1920),Vector2(1920,1080),Vector2(360,640)]:
+		host.size = bounds
+		banners._layout()
+		await process_frame
+		await process_frame
+		var frame_end: Vector2 = banners.panel.position + banners.panel.size * banners.panel.scale
+		check(banners.panel.position.x >= 0 and banners.panel.position.y >= 0 and frame_end.x <= bounds.x+1 and frame_end.y <= bounds.y+1, "banner modal inside viewport " + str(bounds))
+		check(banners.slots[0].art.get_rect().end.y <= banners.slots[0].button.size.y, "banner art stays inside card")
+	var equipped_button: Button = banners.slots[banners.ids.find(banners.candidate)].button
+	check(banners.scroll.get_global_rect().intersects(equipped_button.get_global_rect()), "equipped banner scrolled into view on open")
+	var banner_bar: HScrollBar = banners.scroll.get_h_scroll_bar()
+	check(banner_bar.max_value > banner_bar.page, "banner strip overflows horizontally")
+	banners.scroll.scroll_horizontal = 0
+	banners._scroll_by(1)
+	check(banners.scroll.scroll_horizontal == 124, "arrow scrolls within strip")
+	banners._select_slot(0)
+	check(banners.scroll.scroll_horizontal == 124, "banner selection preserves position")
+	banners._scroll_by(-1)
+	check(banners.scroll.scroll_horizontal == 0, "reverse arrow scroll")
+	cloud.busy = true
+	banners._confirm()
+	check(not banners.overlay.visible and scope.saves == saves_before + 1, "banner busy guard")
+	cloud.busy = false
+	view.open_picker("banner")
+	scope.user_id = "another-account"
+	banners._confirm()
+	check(not banners.overlay.visible and scope.saves == saves_before + 1, "banner stale account guard")
+	scope.user_id = "fixture-account"
+	view.open_picker("banner")
+	view.open_picker("avatar")
+	check(not banners.overlay.visible and icons.overlay.visible, "switching picker closes banner")
 	view.close_picker()
 	scope.text = ""; scope.user_id = "fixture-account"
 	check(appearance.owned_ids() == ["original_male"], "legacy missing profile fallback")

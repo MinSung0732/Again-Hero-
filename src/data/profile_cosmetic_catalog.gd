@@ -59,7 +59,8 @@ static func display_name(id: String) -> String:
 static func icon_info(id: String) -> Dictionary:
 	if MONSTER_REWARDS.has(id):
 		var label := display_name(id)
-		return {"type": "초월", "name": label.get_slice("·", 1).strip_edges() if label.contains("·") else label, "source": "초월 몬스터 해금"}
+		var upgraded := int(MONSTER_REWARDS[id].get("min_upgrade_level", 0)) > 0
+		return {"type": "5초월" if upgraded else "초월", "name": label.get_slice("·", 1).strip_edges() if label.contains("·") else label, "source": "몬스터 해금 · 5초월 달성" if upgraded else "초월 몬스터 해금"}
 	var entry := APPEARANCES.get_entry(id)
 	if entry.is_empty(): return {}
 	return {"type": "기본", "name": String(entry.get("name", id)), "source": "초기 성별 선택"}

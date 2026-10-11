@@ -33,6 +33,7 @@ var textures := {}
 var shade: GradientTexture2D
 var _locked_texture: Texture2D
 var icon_picker: RefCounted
+var banner_picker: RefCounted
 
 func install(owner: RefCounted, parent: Control) -> void:
 	settings_ref = weakref(owner)
@@ -162,6 +163,8 @@ func _build_card(parent: Control) -> void:
 func _build_picker() -> void:
 	icon_picker = preload("res://src/ui/lobby_profile_icon_picker.gd").new()
 	icon_picker.install(self)
+	banner_picker = preload("res://src/ui/lobby_profile_icon_picker.gd").new()
+	banner_picker.install(self, "banner")
 	picker = ColorRect.new()
 	picker.name = "ProfileCosmeticPicker"
 	picker.color = Color(0, 0, 0, 0.85)
@@ -207,9 +210,15 @@ func open_picker(slot: String) -> void:
 		return
 	if slot == "avatar":
 		picker.hide()
+		banner_picker.close()
 		icon_picker.open()
 		return
 	icon_picker.close()
+	if slot == "banner":
+		picker.hide()
+		banner_picker.open()
+		return
+	banner_picker.close()
 	picker_slot = slot
 	picker_owner = _scope_key()
 	picker_title.text = {"avatar": "초상화 변경", "banner": "배너 변경", "representative": "대표 캐릭터 변경"}[slot]
@@ -259,6 +268,7 @@ func close_picker() -> void:
 	picker.hide()
 	picker_slot = ""
 	if icon_picker != null: icon_picker.close()
+	if banner_picker != null: banner_picker.close()
 
 func _scope_key() -> String:
 	return PROFILE.SCOPE.user_id + ":" + PROFILE.SCOPE.guest_directory
@@ -280,6 +290,7 @@ func refresh() -> void:
 	if picker.visible and (picker_owner != _scope_key() or _blocked()):
 		close_picker()
 	if icon_picker != null: icon_picker.refresh_state()
+	if banner_picker != null: banner_picker.refresh_state()
 
 func show() -> void:
 	refresh()
