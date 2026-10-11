@@ -2,6 +2,7 @@ extends Control
 
 signal finished
 
+const REVEAL_ART := preload("res://src/ui/transcendent_reveal_art_layer.gd")
 const ENERGY := preload("res://src/ui/transcendent_cutscene_energy.gd")
 const CATALOG := preload("res://src/data/transcendent_cutscene_catalog.gd")
 const EFFECT_LAYER := preload("res://src/ui/transcendent_cutscene_effect_layer.gd")
@@ -23,6 +24,8 @@ var _generation := 0
 var _name_label: Label
 var _skip: Button
 var _views: Dictionary = {}
+var _reveal_layers: Dictionary = {}
+var _active_reveal_layer: Node2D
 var _active_view: Control
 var _impact_sound: AudioStreamPlayer
 var _impact_sound_path := ""
@@ -71,10 +74,11 @@ func _ready() -> void:
 
 func play(monster_id: String) -> void:
 	cancel()
-	_data = CATALOG.get_entry(monster_id)
+	_data = CATALOG.get_entry(monster_id).duplicate()
 	if _data.is_empty():
 		finished.emit()
 		return
+	_data["monster_id"] = monster_id
 	_effects.show()
 	_name_label.show()
 	var token := _generation
@@ -152,6 +156,14 @@ func _activate_view(path: String) -> bool:
 	_active_view._layout()
 	_active_view.show()
 	_active_view.set_time(0.0)
+	if not _reveal_layers.has(path):
+		var layer := REVEAL_ART.new()
+		layer.configure(String(_data.get("monster_id", "")))
+		layer.install(_active_view)
+		_reveal_layers[path] = layer
+	_active_reveal_layer = _reveal_layers[path]
+	_active_reveal_layer.refresh_layout()
+	_active_reveal_layer.set_time(0.0)
 	_effects.hide()
 	_name_label.hide()
 	_skip.move_to_front()
@@ -169,6 +181,7 @@ func cancel() -> void:
 	if is_instance_valid(_active_view):
 		_active_view.hide()
 	_active_view = null
+	_active_reveal_layer = null
 	if is_instance_valid(_impact_sound):
 		_impact_sound.stop()
 	_impact_played = false
@@ -207,6 +220,8 @@ func advance(delta: float) -> void:
 	_elapsed += maxf(delta, 0.0)
 	if is_instance_valid(_active_view):
 		_active_view.set_time(_elapsed)
+		if is_instance_valid(_active_reveal_layer):
+			_active_reveal_layer.set_time(_elapsed)
 		if not _charge_played and _elapsed >= float(_data.get("charge_sound_at", 0.0)):
 			_charge_played = true
 			if _charge_sound.stream != null and _elapsed < float(_data.get("impact_sound_at", 1.9)):
@@ -243,6 +258,8 @@ func _layout() -> void:
 	if is_instance_valid(_active_view):
 		_active_view.size = size
 		_active_view._layout()
+		if is_instance_valid(_active_reveal_layer):
+			_active_reveal_layer.refresh_layout()
 	var stage_size: Vector2 = _data.get("stage_size", STAGE_SIZE)
 	var stage := stage_rect(size, stage_size)
 	var factor := stage.size.x / stage_size.x

@@ -93,10 +93,14 @@ func run() -> void:
 		ally.position = Vector2(50,0)
 		if level>=5: actor.current_hp = 2100
 		actor._start_dash_channel()
-		check(actor.channel.active and actor.visual.animation==&"skill" and not actor.visual._one_shot_locked,"channel held skill")
+		check(actor.channel.active and actor.visual.animation==&"skill" and actor.visual._one_shot_locked,"channel held skill")
+		actor.visual._physics_process(0.1)
+		check(actor.visual.animation==&"skill" and actor.visual.frame==0,"pending locomotion cannot override held skill")
 		actor.channel.tick(0.5,false)
 		actor._finish_channel()
 		check(actor.collision_layer==0 and actor.collision_mask==0,"collision ignored")
+		check(actor.visual.animation==&"skill" and actor.fx_age[0]==0,"rush holds skill and starts effect")
+		check(actor.front_effects.z_as_relative==false and actor.front_effects.z_index==DATA.COMBAT_EFFECT_Z,"foreground effect layer")
 		target.damage = 0
 		secondary.damage = 0
 		secondary.position = Vector2(500,0)
@@ -112,6 +116,7 @@ func run() -> void:
 			check(target.damage==1495,"two 80percent rushes bypass invulnerability")
 		check(not actor.dash_collision_disabled and (level<5 or actor.current_hp==2175),"collision restored and three-hit missingHP heal")
 		check(actor.attack_timer==0,"haste cooldown advances during rush, no extra end delay")
+		check(not actor.visual._one_shot_locked,"rush restores locomotion lock")
 		actor.position = Vector2.ZERO
 		ally.position = Vector2.ZERO
 		target.invulnerable = false
@@ -133,6 +138,7 @@ func run() -> void:
 		gate.setup(authority,actor,40 if level>=3 else 30)
 		authority.add_child(gate)
 		gate.set_physics_process(false)
+		check(gate.z_index==0 and not gate is CollisionObject2D,"gate shares decor depth without collision")
 		ally.current_hp = 1000
 		gate._refresh_members()
 		check(is_equal_approx(ally.attack_cooldown,2.0/1.5),"gate haste")

@@ -88,7 +88,13 @@ func run() -> void:
 		host.battle.external_pause=false
 		host.battle.demon_augment_selection_active=false
 		actor.current_hp=100
-	check(cinematic.views.size()==2,"one cached view per transcendent")
+	# The original fixture predates four additional transcendent presentations.
+	# Verify catalog-driven unique prewarmed views instead of assuming two monsters.
+	var expected_views: Dictionary = {}
+	for entry in preload("res://src/data/battle_summon_cinematic_catalog.gd").ENTRIES.values():
+		if bool(entry.get("prewarm",true)):
+			expected_views[String(entry.view)] = true
+	check(cinematic.views.size()==expected_views.size(),"one cached view per transcendent")
 	Engine.time_scale=1.0
 	host.battle_viewport_container.size=Vector2(540,650)
 	cinematic.play("bulgasal",actor)

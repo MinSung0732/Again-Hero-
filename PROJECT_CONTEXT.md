@@ -1,5 +1,12 @@
 ## 2026-10-11 — 아서왕 및 초월 배너·Pixabay 효과음
 
+## 2026-10-11 — 초월6종 신규 뽑기 아트 및 아서왕 실제 돌진 수정
+
+- 내장 image_gen으로 오라6종·아서왕 성당 배경·눈감은 소스 PNG8개 생성/연결. 캐릭터 뒤 themed aura·방출파동3회·입자, nearest/cutout·기존 재사용/보상 경로 유지. 눈 부분만 새 이미지 샘플링, 원본 본체/리그 보존. assets/art/effects/gatcha/reveal_v2/manifest.json에 전체 프롬프트/SHA/규격 기록.
+- 실제 Hero의 is_dying을 dying으로 읽어 bool(null) 오류로 돌진이 시작되지 않던 문제 수정. 집중·돌진 skill_01 유지/복귀, foreground FX z5, body120→108(90%), 게이트 decor z0. 직선 돌진 맵 경계 제한·충돌무시·정적 footprint 밖 착지 후 충돌 복구.
+- Godot4.5.1 실제 headless 신규아트90/아서왕combat179/실제연결54 및 기존 초월 컷신·불가살 presentation PASS. 실제 Hero physics·맵4방향·StaticBody2D 착지 검사. import/경로/이미지SHA/diff 검증. 불가살의 오래된 초월2종 fixture를 catalog 기준으로 수정.
+- PC GPU화면/모바일/청취/4.7/export/성능 실측 미검증. 기존 raw PNG export 및 종료 RID/resources 경고는 남음. 기준 feature809f2497, main4122adb7 유지. docs/TRANSCENDENT_REVEAL_ART_V2.md에 상세/제한/수동검증/롤백.
+
 - 초월 인간형 탱커 아서왕: 실제 탱커40회/아군 사망50회 해금, 소환 전 탱커 성장 스냅샷, 등장 전체 보호막, 엑스칼리버 직선/5초월3돌진, 원탁 게이트·치유/공속/이속/피해 강화, 성왕의 축복 분리 보호막·파괴 반격, 가호 확률 방어.
 - 실제 뽑기·전투 삼각형 소환·공통 사망, 공유 메시 리그/눈감기·확대·눈뜨기/성광, 도감/팀 기술 아이콘4종, 프로필 보상 및 로컬 테스트 확정 뽑기 연결. 불가살/이자나미/슈텐도지/아서왕 추가5초월 배너 연결.
 - 아서왕3종/이자나미2종 Pixabay 원본에서 기술별 효과음15개 편집·연결,44.1kHz PCM16·피크-3dBFS·음량/재생간격 제한. 출처·라이선스·ID·SHA/구간 audio manifest 기록, 런타임 Base64 없음.

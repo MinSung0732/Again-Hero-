@@ -81,6 +81,77 @@ func run() -> void:
 	actor.gate_boost_count = 2
 	check(is_equal_approx(battle.get_transcendent_aura_modifier(actor,"outgoing"),1.5*1.009),"gate attack buff and Arthur count")
 	actor.set_meta("arthur_gate_active",false)
+	# Run the full Arthur physics state machine against the actual Hero, not a
+	# Target mock with a different death flag. This catches the original bool(null).
+	battle.external_pause = false
+	battle.demon_augment_selection_active = false
+	actor.transcend_level = 0
+	actor.arrival_remaining = 0
+	actor.shielded_arrival = true
+	actor.gauge = 50
+	actor.cooldowns[1] = 100
+	actor.cooldowns[2] = 100
+	actor.attack_timer = 0
+	actor.hero = battle.hero
+	battle.hero.current_hp = 1000000
+	actor.global_position = battle.to_global(battle.clamp_monster_wander_position(battle.current_map_size*0.5))
+	var dash_start: Vector2 = actor.global_position
+	battle.hero.global_position = dash_start+Vector2(200,0)
+	check(actor._alive(battle.hero),"actual Hero uses is_dying")
+	battle.hero.is_dying = true
+	check(not actor._alive(battle.hero),"actual Hero death flag rejected")
+	battle.hero.is_dying = false
+	for i in range(26): actor._physics_process(0.02)
+	check(actor.dash_remaining > 0 and actor.collision_mask == 0,"actual physics enters collision-free dash")
+	for i in range(10): actor._physics_process(0.02)
+	check(actor.global_position.x >= dash_start.x+179,"actual physics moves at 900px/sec")
+	check(actor.visual.animation == &"skill" and actor.visual.frame == 0,"actual rush skill_01 held")
+	check(actor.fx_age[0] >= 0 and actor.front_effects.z_index > actor.visual.z_index,"actual foreground dash FX")
+	actor._tick_dash(2)
+	check(battle._is_spawn_position_inside_bounds(actor.position),"rush stops inside map")
+	check(not actor.dash_collision_disabled and not actor.visual._one_shot_locked,"landing restores collision and idle")
+	var body_texture: Texture2D = actor.visual.sprite_frames.get_frame_texture(&"idle",0)
+	check(is_equal_approx(body_texture.get_image().get_used_rect().size.y*actor.visual.scale.y,108.0),"combat body at ninety percent")
+	# Put a real static decor footprint exactly at the next rush's terminal point.
+	actor.position = battle.clamp_monster_wander_position(battle.current_map_size*0.5)
+	battle.hero.global_position = actor.global_position+Vector2(100,0)
+	actor.dash_direction = Vector2.RIGHT
+	actor.dash_origin = actor.global_position
+	var landing: Vector2 = actor._clamp_dash_point(actor.global_position+Vector2(1000,0))
+	var decor := StaticBody2D.new()
+	decor.collision_layer = 1 << 2
+	decor.collision_mask = 0
+	decor.global_position = landing
+	var footprint := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = Vector2(160,160)
+	footprint.shape = rectangle
+	decor.add_child(footprint)
+	battle.add_child(decor)
+	await physics_frame
+	actor._start_dash_channel()
+	actor._physics_process(0.5)
+	actor._tick_dash(2)
+	check(actor.global_position.distance_to(landing) >= 96,"lands outside decor footprint")
+	check(battle._is_spawn_position_inside_bounds(actor.position),"decor escape remains inside map")
+	actor.collision_mask = 12
+	check(not actor._landing_blocked(actor.global_position),"restored landing not stuck in static collider")
+	actor.collision_mask = actor.saved_collision_mask
+	decor.free()
+	var minimum: Vector2 = battle.clamp_monster_wander_position(Vector2.ZERO)
+	var maximum: Vector2 = battle.clamp_monster_wander_position(battle.current_map_size)
+	var middle := (minimum+maximum)*0.5
+	for direction in [Vector2.RIGHT,Vector2.LEFT,Vector2.UP,Vector2.DOWN]:
+		actor.position = middle
+		if direction.x>0: actor.position.x = maximum.x-10
+		elif direction.x<0: actor.position.x = minimum.x+10
+		elif direction.y>0: actor.position.y = maximum.y-10
+		else: actor.position.y = minimum.y+10
+		battle.hero.global_position = actor.global_position+direction*100
+		actor._begin_dash()
+		check(actor.dash_remaining <= 10.1,"boundary shortens straight rush "+str(direction))
+		actor._tick_dash(2)
+		check(battle._is_spawn_position_inside_bounds(actor.position),"four map sides bounded "+str(direction))
 	var view = load("res://src/ui/arthur_battle_summon_view.gd").new()
 	root.add_child(view)
 	view.size = Vector2(540,960)

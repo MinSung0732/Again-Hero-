@@ -18,6 +18,7 @@ var excalibur_remaining := 0.0
 var dash_remaining := 0.0
 var dash_direction := Vector2.RIGHT
 var dash_origin := Vector2.ZERO
+var landing_collision := KinematicCollision2D.new()
 var saved_collision_layer := 0
 var saved_collision_mask := 0
 var dash_collision_disabled := false
@@ -31,6 +32,7 @@ var shielded_arrival := false
 var fx_age := PackedFloat32Array([-1,-1,-1,-1])
 var clock := 0.0
 var head_y := -120.0
+var front_effects: Node2D
 @onready var status_layer: Node2D = $StatusLayer
 func _init() -> void:
 	monster_type = "arthur"
@@ -47,13 +49,19 @@ func _ready() -> void:
 	visual.apply_visual_profile(DATA.PROFILE)
 	var texture: Texture2D = visual.sprite_frames.get_frame_texture(&"idle",0)
 	var bounds := texture.get_image().get_used_rect()
-	var factor := 120.0/maxf(bounds.size.y,1)
+	var factor := DATA.BODY_HEIGHT/maxf(bounds.size.y,1)
 	visual.scale = Vector2.ONE*factor
 	visual.position = -(Vector2(195,241)-texture.get_size()*0.5)*factor
 	head_y = visual.position.y+(bounds.position.y-texture.get_height()*0.5)*factor
 	status_layer.z_as_relative = false
 	status_layer.z_index = 12
 	status_layer.draw.connect(_draw_status)
+	front_effects = Node2D.new()
+	front_effects.name = "CombatEffectsFront"
+	front_effects.z_as_relative = false
+	front_effects.z_index = DATA.COMBAT_EFFECT_Z
+	add_child(front_effects)
+	front_effects.draw.connect(_draw_combat_effects)
 	audio_bank = SFX.new()
 	add_child(audio_bank)
 	audio_bank.configure(AUDIO.CUES,combat_authority,true)
@@ -85,7 +93,7 @@ func _physics_process(delta: float) -> void:
 		if channel.tick(delta,_blocked() or bool(get_meta("silence_active",false))): _finish_channel()
 		elif channel.interrupted:
 			channel_kind = -1
-			visual.play_locomotion(false)
+			_restore_combat_pose()
 	elif dash_remaining > 0:
 		_tick_dash(delta)
 	elif not _blocked():
@@ -105,6 +113,7 @@ func _physics_process(delta: float) -> void:
 	else: velocity = Vector2.ZERO
 	queue_redraw()
 	status_layer.queue_redraw()
+	front_effects.queue_redraw()
 func _blocked() -> bool:
 	return MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self) or bool(get_meta("stun_active",false))
 func _try_cast() -> void:
@@ -134,6 +143,14 @@ func _hold_skill() -> void:
 	visual.animation = &"skill"
 	visual.frame = 0
 	visual.stop()
+	# A pending locomotion transition on the Visual's own physics tick otherwise
+	# replaces this stopped skill pose with idle/move before the channel completes.
+	visual.set_physics_process(false)
+	visual._one_shot_locked = true
+func _restore_combat_pose() -> void:
+	visual._one_shot_locked = false
+	visual_moving_state = -1
+	visual.play_locomotion(false)
 func _start_dash_channel() -> void:
 	attack_timer = attack_cooldown/DATA.DASH_HASTE
 	channel_kind = 0
@@ -147,15 +164,18 @@ func _finish_channel() -> void:
 		gate.position = combat_authority.to_local(global_position)
 		combat_authority.add_child(gate)
 		_audio("gate")
-		visual_moving_state = -1
-		visual.play_locomotion(false)
+		_restore_combat_pose()
 	else:
 		dash_step = 0
 		dash_hits.fill(0)
 		_begin_dash()
 	channel_kind = -1
 func _begin_dash() -> void:
-	if not _alive(hero): return
+	if not _alive(hero):
+		dash_remaining = 0
+		_restore_dash_collision()
+		_restore_combat_pose()
+		return
 	if not dash_collision_disabled:
 		saved_collision_layer = collision_layer
 		saved_collision_mask = collision_mask
@@ -163,24 +183,33 @@ func _begin_dash() -> void:
 		collision_mask = 0
 		dash_collision_disabled = true
 	velocity = Vector2.ZERO
+	global_position = _clamp_dash_point(global_position)
 	dash_origin = global_position
 	dash_direction = global_position.direction_to(hero.global_position)
 	if dash_direction == Vector2.ZERO: dash_direction = Vector2.RIGHT
-	dash_remaining = DATA.DASH_DISTANCE
+	dash_remaining = _bounded_dash_distance()
+	if dash_remaining <= 0.001:
+		_restore_dash_collision()
+		_restore_combat_pose()
+		return
 	dash_hit_ids.clear()
 	fx_age[0] = 0
 	visual.flip_h = dash_direction.x < 0
-	visual.play_attack()
+	_hold_skill()
 	_audio("dash")
 func _tick_dash(delta: float) -> void:
 	attack_timer = maxf(attack_timer-delta,0)
 	if _blocked():
 		dash_remaining = 0
 		_restore_dash_collision()
+		velocity = Vector2.ZERO
+		_restore_combat_pose()
 		return
+	_hold_skill()
 	var previous := global_position
 	var distance := minf(dash_remaining,DATA.DASH_SPEED*delta*(DATA.DASH_FOLLOWUP_SPEED if dash_step>0 else 1.0))
-	global_position += dash_direction*distance
+	# Clamp also guards accumulated Vector2 float rounding at the last boundary tick.
+	global_position = _clamp_dash_point(previous+dash_direction*distance)
 	dash_remaining -= distance
 	MONSTER_RUNTIME_COMMON.notify_forced_position_change(self)
 	# A swept segment prevents tunneling. Each actor is touched once per rush.
@@ -203,7 +232,7 @@ func _tick_dash(delta: float) -> void:
 		else:
 			if dash_hits[0]>0 and dash_hits[1]>0 and dash_hits[2]>0: current_hp += int(round((max_hp-current_hp)*DATA.DASH_HEAL))
 			_restore_dash_collision()
-			visual.play_locomotion(false)
+			_restore_combat_pose()
 func _hit_dash_enemy(enemy: Node2D, previous: Vector2, point: Vector2) -> void:
 	if not _alive(enemy) or dash_hit_ids.has(enemy.get_instance_id()) or not _segment_hits(previous,point,enemy.global_position): return
 	dash_hit_ids[enemy.get_instance_id()] = true
@@ -217,11 +246,60 @@ func _segment_hits(a: Vector2, b: Vector2, p: Vector2) -> bool:
 	return Geometry2D.get_closest_point_to_segment(p,a,b).distance_squared_to(p) <= DATA.DASH_WIDTH*DATA.DASH_WIDTH
 func _restore_dash_collision() -> void:
 	if not dash_collision_disabled: return
+	# Check static footprints only, once at landing. Ignore crowded friendly bodies.
+	# Retained collision result avoids per-probe query arrays or global decor scans.
+	collision_mask = saved_collision_mask & DATA.DASH_STATIC_MASK
+	if collision_mask != 0 and _landing_blocked(global_position):
+		var end := global_position
+		var length := end.distance_to(dash_origin)
+		var found := false
+		for probe in range(1,DATA.DASH_LANDING_PROBES+1):
+			var candidate := _clamp_dash_point(end-dash_direction*minf(float(probe)*DATA.DASH_LANDING_STEP,length))
+			if not _landing_blocked(candidate):
+				global_position = candidate
+				found = true
+				break
+			if float(probe)*DATA.DASH_LANDING_STEP >= length: break
+		# Rare case: a manual summon already began inside a footprint. Bounded
+		# radial recovery also works at corners; every candidate stays in map bounds.
+		if not found:
+			for ring in range(DATA.DASH_ESCAPE_RINGS):
+				for direction in range(DATA.DASH_ESCAPE_DIRECTIONS):
+					var radius := DATA.DASH_LANDING_STEP*pow(2.0,ring+1)
+					var candidate := _clamp_dash_point(end+Vector2.RIGHT.rotated(TAU*direction/DATA.DASH_ESCAPE_DIRECTIONS)*radius)
+					if not _landing_blocked(candidate):
+						global_position = candidate
+						found = true
+						break
+				if found: break
+		MONSTER_RUNTIME_COMMON.notify_forced_position_change(self)
 	collision_layer = saved_collision_layer
 	collision_mask = saved_collision_mask
 	dash_collision_disabled = false
+func _landing_blocked(point: Vector2) -> bool:
+	var placement := global_transform
+	placement.origin = point
+	return test_move(placement,Vector2.ZERO,landing_collision,0.5,true)
+func _clamp_dash_point(point: Vector2) -> Vector2:
+	if is_instance_valid(combat_authority) and combat_authority.has_method("clamp_monster_wander_position"):
+		return combat_authority.to_global(combat_authority.clamp_monster_wander_position(combat_authority.to_local(point)))
+	return point
+func _bounded_dash_distance() -> float:
+	if not combat_authority.has_method("clamp_monster_wander_position"): return DATA.DASH_DISTANCE
+	var origin_local: Vector2 = combat_authority.to_local(dash_origin)
+	var direction_local: Vector2 = combat_authority.to_local(dash_origin+dash_direction)-origin_local
+	var end_local: Vector2 = combat_authority.to_local(_clamp_dash_point(dash_origin+dash_direction*DATA.DASH_DISTANCE))
+	var delta := end_local-origin_local
+	var limit := DATA.DASH_DISTANCE
+	if absf(direction_local.x)>0.0001: limit = minf(limit,maxf(delta.x/direction_local.x,0))
+	if absf(direction_local.y)>0.0001: limit = minf(limit,maxf(delta.y/direction_local.y,0))
+	return limit
 static func _alive(actor: Node) -> bool:
-	return is_instance_valid(actor) and not actor.is_queued_for_deletion() and int(actor.get("current_hp"))>0 and not bool(actor.get("dying"))
+	if not is_instance_valid(actor) or actor.is_queued_for_deletion(): return false
+	var hp = actor.get("current_hp")
+	# Hero uses is_dying; monsters use dying. bool(null) raises a runtime error
+	# on the real Hero and prevented _begin_dash despite the old mock passing.
+	return hp != null and int(hp)>0 and actor.get("dying") != true and actor.get("is_dying") != true
 static func add_shield(actor: Node2D, amount: int) -> void:
 	if not _alive(actor): return
 	var shield := int(actor.get_meta("support_shield_hp",0))+maxi(amount,0)
@@ -255,7 +333,7 @@ func _apply_arthur_damage(amount: int, receipt = null, revision: int = 0) -> voi
 		_audio("block")
 		return
 	_apply_orc_damage(amount,receipt,revision)
-	if channel.active and not dying: _hold_skill()
+	if (channel.active or dash_remaining > 0) and not dying: _hold_skill()
 func aura_modifier(actor: Node2D, kind: String) -> float:
 	return 1.0+gate_boost_count*DATA.GATE_CASTER_ATTACK_PER_ALLY if actor==self and kind=="outgoing" and not dying else 1.0
 func on_ally_death(_point: Vector2) -> void: pass
@@ -270,15 +348,17 @@ func _begin_arthur_death(receipt = null, revision: int = 0) -> void:
 func _audio(cue: String) -> void:
 	if is_instance_valid(audio_bank): audio_bank.play_cue(cue)
 func _draw() -> void:
+	pass # Skill art lives in its retained foreground layer, never below the body.
+func _draw_combat_effects() -> void:
 	if dying: return
 	for i in range(4):
 		if i == 1: continue
 		if fx_age[i]>=0:
 			if i==0:
-				draw_set_transform(Vector2(0,-55),dash_direction.angle(),Vector2.ONE)
-				FX.draw_frame(self,i,mini(7,int(fx_age[i]*10)),Vector2.ZERO)
-				draw_set_transform(Vector2.ZERO,0,Vector2.ONE)
-			else: FX.draw_frame(self,i,mini(7,int(fx_age[i]*10)),Vector2(0,-45))
+				front_effects.draw_set_transform(Vector2(0,-50),dash_direction.angle(),Vector2.ONE)
+				FX.draw_frame(front_effects,i,mini(7,int(fx_age[i]*10)),Vector2.ZERO)
+				front_effects.draw_set_transform(Vector2.ZERO,0,Vector2.ONE)
+			else: FX.draw_frame(front_effects,i,mini(7,int(fx_age[i]*10)),Vector2(0,-40))
 func _draw_status() -> void:
 	if dying: return
 	var width := 86.0

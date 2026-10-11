@@ -6,6 +6,7 @@ var stage: Node2D
 var rig: Node2D
 var reveal: ShaderMaterial
 var hall: ShaderMaterial
+var background_art: Sprite2D
 var effects: Node2D
 var label: Label
 var elapsed := 0.0
@@ -14,13 +15,21 @@ func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	stage = Node2D.new()
 	add_child(stage)
+	var background_root := Node2D.new()
+	stage.add_child(background_root)
+	background_art = Sprite2D.new()
+	background_art.texture = load("res://assets/art/effects/gatcha/reveal_v2/arthur_avalon_background.png")
+	background_art.position = Vector2(270,480)
+	background_art.scale = Vector2(540,960)/background_art.texture.get_size()
+	background_root.add_child(background_art)
 	var background := ColorRect.new()
 	background.size = Vector2(540,960)
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hall = ShaderMaterial.new()
 	hall.shader = preload("res://src/ui/arthur_holy_hall.gdshader")
 	background.material = hall
-	stage.add_child(background)
+	background.modulate.a = 0.16
+	background_root.add_child(background)
 	effects = Node2D.new()
 	stage.add_child(effects)
 	effects.draw.connect(_draw_effects)
@@ -29,6 +38,7 @@ func _ready() -> void:
 	stage.add_child(rig)
 	reveal = ShaderMaterial.new()
 	reveal.shader = preload("res://src/ui/arthur_holy_reveal.gdshader")
+	reveal.set_shader_parameter("closed_eyes_art",load("res://assets/art/effects/gatcha/reveal_v2/arthur_closed_eyes_source.png"))
 	rig.mesh.material = reveal
 	label = Label.new()
 	label.text = "초월 · 아서왕"
@@ -60,6 +70,8 @@ func set_time(seconds: float) -> void:
 	reveal.set_shader_parameter("revealed",wake)
 	reveal.set_shader_parameter("closed",1.0-smoothstep(2.0,2.25,seconds))
 	hall.set_shader_parameter("seconds",seconds)
+	var background_light := lerpf(0.24,0.78,smoothstep(0.5,2.4,seconds))
+	background_art.modulate = Color(background_light,background_light,background_light)
 	label.modulate.a = smoothstep(3.35,3.8,seconds)
 	effects.queue_redraw()
 func _draw_effects() -> void:

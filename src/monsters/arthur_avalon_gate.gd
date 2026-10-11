@@ -16,7 +16,8 @@ func setup(battle: Node, caster: Node, seconds: float) -> void:
 	source = weakref(caster)
 	duration = seconds
 func _ready() -> void:
-	z_index = 1
+	# Match CastleDepthProp roots: same-Z direct children are ordered by feet Y.
+	z_index = 0
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	FX.prepare(1)
 func _physics_process(delta: float) -> void:

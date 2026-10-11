@@ -1,0 +1,133 @@
+{
+  "generator": "built-in image_gen",
+  "created": "2026-10-11",
+  "base_commit": "809f24978df91743e0610c339415f64ffaa2d2b9",
+  "art_type": "single transparent aura animated by retained runtime layer; not frame sheets",
+  "entries": [
+    {
+      "id": "zeus",
+      "file": "zeus_aura.png",
+      "prompt": "Use case: stylized-concept. Asset type: production transparent pixel-art gacha reveal aura PNG for Godot. Theme Zeus: cobalt blue and pale golden divine thunder, branching electric bolts and ancient greek starburst. Make ONE centered large circular magical revelation halo with radiant rays, an expanding-energy wave rim, themed flames/lightning and scattered sparks around outer circumference. This is an overlay BEHIND an existing character. Leave central 45 percent diameter entirely EMPTY TRANSPARENT so the character face/body stay readable. Square 1024x1024 canvas, ring centered exactly (512,512), maximum effect fits within 80 percent of canvas, generous completely transparent margin. Detailed premium crisp PIXEL ART with hard-edged intentional pixel clusters and discrete shade bands, NO blur or smooth glow, no antialiasing, no opaque backdrop, actual alpha transparency. No character, no silhouette, no text, no UI, no labels, no ground, no logos. One integrated aura only, not a sprite sheet. Preserve highly readable negative space and vivid theme colors.",
+      "anchor": "canvas center",
+      "filter": "nearest",
+      "background": "transparent",
+      "clock": "existing real-time cutscene clock",
+      "release_wave_count": 3,
+      "size": [
+        1254,
+        1254
+      ],
+      "sha256": "3698a0d8819971b3ddff72c09d7ee5c8a838fbf0a9bbb4b95b340eebc4918ba7",
+      "bytes": 1848551
+    },
+    {
+      "id": "bulgasal",
+      "file": "bulgasal_aura.png",
+      "prompt": "Use case: stylized-concept. Asset type: production transparent pixel-art gacha reveal aura PNG for Godot. Theme Bulgasal iron-eating immortal beast: fierce molten orange crimson fire, jagged forged-iron sparks and shattered metal. Make ONE centered large circular magical revelation halo with radiant rays, an expanding-energy wave rim, themed flames/lightning and scattered sparks around outer circumference. This is an overlay BEHIND an existing character. Leave central 45 percent diameter entirely EMPTY TRANSPARENT so the character face/body stay readable. Square 1024x1024 canvas, ring centered exactly (512,512), maximum effect fits within 80 percent of canvas, generous completely transparent margin. Detailed premium crisp PIXEL ART with hard-edged intentional pixel clusters and discrete shade bands, NO blur or smooth glow, no antialiasing, no opaque backdrop, actual alpha transparency. No character, no silhouette, no text, no UI, no labels, no ground, no logos. One integrated aura only, not a sprite sheet. Preserve highly readable negative space and vivid theme colors.",
+      "anchor": "canvas center",
+      "filter": "nearest",
+      "background": "transparent",
+      "clock": "existing real-time cutscene clock",
+      "release_wave_count": 3,
+      "size": [
+        1254,
+        1254
+      ],
+      "sha256": "93b929ccf87442eed62830fc1d257709ef44bda46e15544315604cd9adae279e",
+      "bytes": 2027023
+    },
+    {
+      "id": "izanami",
+      "file": "izanami_aura.png",
+      "prompt": "Use case: stylized-concept. Asset type: production transparent pixel-art gacha reveal aura PNG for Godot. Theme Izanami underworld goddess: violet and ghostly cyan spirit flames, wisps of spectral smoke and delicate red spider-lily accents. Make ONE centered large circular magical revelation halo with radiant rays, an expanding-energy wave rim, themed flames/lightning and scattered sparks around outer circumference. This is an overlay BEHIND an existing character. Leave central 45 percent diameter entirely EMPTY TRANSPARENT so the character face/body stay readable. Square 1024x1024 canvas, ring centered exactly (512,512), maximum effect fits within 80 percent of canvas, generous completely transparent margin. Detailed premium crisp PIXEL ART with hard-edged intentional pixel clusters and discrete shade bands, NO blur or smooth glow, no antialiasing, no opaque backdrop, actual alpha transparency. No character, no silhouette, no text, no UI, no labels, no ground, no logos. One integrated aura only, not a sprite sheet. Preserve highly readable negative space and vivid theme colors.",
+      "anchor": "canvas center",
+      "filter": "nearest",
+      "background": "transparent",
+      "clock": "existing real-time cutscene clock",
+      "release_wave_count": 3,
+      "size": [
+        1254,
+        1254
+      ],
+      "sha256": "7cdb03565f4ee6e1a5743aed71997feb5fe83df2674ddf23f28deaee5fe80b66",
+      "bytes": 2032773
+    },
+    {
+      "id": "manticore",
+      "file": "manticore_aura.png",
+      "prompt": "Use case: stylized-concept. Asset type: production transparent pixel-art gacha reveal aura PNG for Godot. Theme Manticore calamity beast: poisonous emerald and purple explosive flames, sharp venom sparks and swirling dark toxic wisps. Make ONE centered large circular magical revelation halo with radiant rays, an expanding-energy wave rim, themed flames/lightning and scattered sparks around outer circumference. This is an overlay BEHIND an existing character. Leave central 45 percent diameter entirely EMPTY TRANSPARENT so the character face/body stay readable. Square 1024x1024 canvas, ring centered exactly (512,512), maximum effect fits within 80 percent of canvas, generous completely transparent margin. Detailed premium crisp PIXEL ART with hard-edged intentional pixel clusters and discrete shade bands, NO blur or smooth glow, no antialiasing, no opaque backdrop, actual alpha transparency. No character, no silhouette, no text, no UI, no labels, no ground, no logos. One integrated aura only, not a sprite sheet. Preserve highly readable negative space and vivid theme colors.",
+      "anchor": "canvas center",
+      "filter": "nearest",
+      "background": "transparent",
+      "clock": "existing real-time cutscene clock",
+      "release_wave_count": 3,
+      "size": [
+        1254,
+        1254
+      ],
+      "sha256": "c63ddb7bab189f3e1256312493802d398169384d87ce42ebc15b6527d75c5f45",
+      "bytes": 2004883
+    },
+    {
+      "id": "shuten_doji",
+      "file": "shuten_doji_aura.png",
+      "prompt": "Use case: stylized-concept. Asset type: production transparent pixel-art gacha reveal aura PNG for Godot. Theme Shuten-doji oni king: deep crimson and magenta demonic sake mist, ember-red chain motifs and wild spirit fire. Make ONE centered large circular magical revelation halo with radiant rays, an expanding-energy wave rim, themed flames/lightning and scattered sparks around outer circumference. This is an overlay BEHIND an existing character. Leave central 45 percent diameter entirely EMPTY TRANSPARENT so the character face/body stay readable. Square 1024x1024 canvas, ring centered exactly (512,512), maximum effect fits within 80 percent of canvas, generous completely transparent margin. Detailed premium crisp PIXEL ART with hard-edged intentional pixel clusters and discrete shade bands, NO blur or smooth glow, no antialiasing, no opaque backdrop, actual alpha transparency. No character, no silhouette, no text, no UI, no labels, no ground, no logos. One integrated aura only, not a sprite sheet. Preserve highly readable negative space and vivid theme colors.",
+      "anchor": "canvas center",
+      "filter": "nearest",
+      "background": "transparent",
+      "clock": "existing real-time cutscene clock",
+      "release_wave_count": 3,
+      "size": [
+        1254,
+        1254
+      ],
+      "sha256": "865ffd36153f6ba8750f0d700b3beef262486a99a12e5b48b20d6280fb6d4f50",
+      "bytes": 1996352
+    },
+    {
+      "id": "arthur",
+      "file": "arthur_aura.png",
+      "prompt": "Use case: stylized-concept. Asset type: production transparent pixel-art gacha reveal aura PNG for Godot. Theme King Arthur sacred protector: radiant gold and white-blue holy light, orderly twelve-seat round-table halo and crystalline rays. Make ONE centered large circular magical revelation halo with radiant rays, an expanding-energy wave rim, themed flames/lightning and scattered sparks around outer circumference. This is an overlay BEHIND an existing character. Leave central 45 percent diameter entirely EMPTY TRANSPARENT so the character face/body stay readable. Square 1024x1024 canvas, ring centered exactly (512,512), maximum effect fits within 80 percent of canvas, generous completely transparent margin. Detailed premium crisp PIXEL ART with hard-edged intentional pixel clusters and discrete shade bands, NO blur or smooth glow, no antialiasing, no opaque backdrop, actual alpha transparency. No character, no silhouette, no text, no UI, no labels, no ground, no logos. One integrated aura only, not a sprite sheet. Preserve highly readable negative space and vivid theme colors.",
+      "anchor": "canvas center",
+      "filter": "nearest",
+      "background": "transparent",
+      "clock": "existing real-time cutscene clock",
+      "release_wave_count": 3,
+      "size": [
+        1254,
+        1254
+      ],
+      "sha256": "1e8078ec82590c547a8d251c4a5cae0d8bb5fd6a9db1b09752f28894a13ff79f",
+      "bytes": 1923798
+    },
+    {
+      "id": "arthur_background",
+      "file": "arthur_avalon_background.png",
+      "prompt": "Use case: stylized-concept. Asset type: final game gacha background, portrait 1024x1536. Create magnificent Avalon cathedral interior for King Arthur reveal in a dark fantasy pixel-art mobile game. Symmetrical soaring gothic nave, blue midnight stone columns and silver-blue distant stained glass, sacred golden shafts and small suspended gold motes, round-table carvings at the bottom corners. Center 45 percent stays dark, quiet and empty for an existing full-body character overlay; brightest intricate gold ornament on outer sides and upper arch. Ground perspective leads toward center. Crisp deliberate pixel clusters, premium detailed pixel art, restrained blue/gold palette, NO blur, NO text, NO UI, NO people or characters, NO swords occupying center. Full opaque background, no borders.",
+      "background": "opaque",
+      "scope": "gacha only; battle triangle retains shader",
+      "size": [
+        1024,
+        1536
+      ],
+      "sha256": "c5e98e2ac6fe2e5e0160aa6769a72e37e411e9c3f30eee368bf48c7ed0c42c7d",
+      "bytes": 2871917
+    },
+    {
+      "id": "arthur_closed_eyes",
+      "file": "arthur_closed_eyes_source.png",
+      "prompt": "Use case: precise-object-edit. Edit target: attached original King Arthur full-body transparent PNG. Create production closed-eyes expression variant for the SAME character. CHANGE ONLY the two blue eyes to gently fully closed eyelids with natural thin brown lash arcs. Keep eyebrows, face shape, nose, lips, head angle and expression calm and resolute. Preserve EVERY other part: same gold hair, crown, silver armor, blue cape, sword, hands, pose, pixel detail, colors, dimensions, scale, transparent margin, and silhouette. Match the 768x1280 source coordinate layout exactly; do not move/zoom/redraw the character. Both eyes visibly fully shut, no visible blue irises. Real transparent alpha background. No text, no extra effects, no cropping. This asset will align over the original in a continuous blink.",
+      "source": "res://assets/art/Transcendent_monster/King_Arthur/King_Arthur_actual_reassembly.png",
+      "usage": "Shader samples only original eye rectangles at normalized UV. All other original pixels and rig vertices preserved.",
+      "background": "transparent",
+      "size": [
+        971,
+        1619
+      ],
+      "sha256": "4039d42af67e28f2e0f54baa5257767d54c0e81099277e0558e6dd5b171aea4b",
+      "bytes": 1442396
+    }
+  ],
+  "max_new_texture_bytes_uncompressed_rgba8": 50320036,
+  "texture_policy": "load on first selected reveal, retain with existing cached view; no startup all-asset preloads, no mipmaps"
+}
