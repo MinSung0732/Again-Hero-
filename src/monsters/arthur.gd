@@ -157,7 +157,12 @@ func _hold_skill() -> void:
 func _restore_combat_pose() -> void:
 	visual._one_shot_locked = false
 	visual_moving_state = -1
-	visual.play_locomotion(false)
+	# Rush/channel write flip_h directly, bypassing Orc's cached facing sign.
+	# Invalidate before normal motion so an unchanged target side still updates.
+	visual_facing_sign = 0
+	var direction_x := 0.0
+	if is_instance_valid(hero): direction_x = global_position.direction_to(hero.global_position).x
+	_update_visual_motion(direction_x,false)
 func _start_dash_channel() -> void:
 	attack_timer = attack_cooldown/DATA.DASH_HASTE
 	channel_kind = 0

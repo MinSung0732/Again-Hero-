@@ -127,6 +127,17 @@ func run() -> void:
 		check(not actor.dash_collision_disabled and (level<5 or actor.current_hp==2175),"collision restored and three-hit missingHP heal")
 		check(actor.attack_timer==0,"haste cooldown advances during rush, no extra end delay")
 		check(not actor.visual._one_shot_locked,"rush restores locomotion lock")
+		for side in [-1,1]:
+			target.global_position = actor.global_position+Vector2(side*100,0)
+			actor.visual_facing_sign = side # Cache before rush agrees with target.
+			actor.visual.flip_h = side>0 # Direct rush flip disagrees with cache.
+			actor._hold_skill()
+			actor._restore_combat_pose()
+			check(actor.visual.flip_h==(side<0) and actor.visual_facing_sign==side,"post-rush facing resync "+str(side))
+			check(not actor.visual._one_shot_locked and actor.visual_moving_state==0,"post-rush idle/unlock")
+			actor._update_visual_motion(-side,true)
+			check(actor.visual.flip_h==(side>0),"normal movement can reverse after rush")
+
 		actor.position = Vector2.ZERO
 		ally.position = Vector2.ZERO
 		target.invulnerable = false
