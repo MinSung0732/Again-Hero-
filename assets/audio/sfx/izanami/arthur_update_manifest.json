@@ -1,0 +1,63 @@
+{
+  "license": "Pixabay Content License",
+  "license_url": "https://pixabay.com/service/license-summary/",
+  "sources": {
+    "dark": {
+      "url": "https://pixabay.com/sound-effects/film-special-effects-dark-magic-5-378651/",
+      "creator": "Yodguard",
+      "sha256": "c6a717c4d6c61c22f45463509e4878481bec06631416b2f8b124a511af93236e",
+      "content_id": 378651
+    },
+    "fire": {
+      "url": "https://pixabay.com/sound-effects/film-special-effects-fire-magic-5-378639/",
+      "creator": "Yodguard",
+      "sha256": "10817bd18c0dc06c2c66e80ce1a839f768e22c35822b000da1b3ae3cadd4baa0",
+      "content_id": 378639
+    }
+  },
+  "edits": {
+    "attack": {
+      "source": "dark",
+      "cut_start": 0.15,
+      "duration_seconds": 0.7,
+      "peak_dbfs": -3.0,
+      "sha256": "058aeb9301907e4a2b37308bbf2fe522b661c44b16c65c43b09d5003a96d1ccd"
+    },
+    "haunt": {
+      "source": "dark",
+      "cut_start": 0,
+      "duration_seconds": 1.6,
+      "peak_dbfs": -3.0,
+      "sha256": "812ce0f0657c4e7000372b3dd5c146ace63f7da2e7950a270144e521b019bb9b"
+    },
+    "bind": {
+      "source": "dark",
+      "cut_start": 2.2,
+      "duration_seconds": 1.0,
+      "peak_dbfs": -58.94,
+      "sha256": "96e69f2cbd5b7412fc15d9a57bf686577915b8ad71ee83f5a3a5e40b4bc2507b"
+    },
+    "fire": {
+      "source": "fire",
+      "cut_start": 0.15,
+      "duration_seconds": 1.25,
+      "peak_dbfs": -3.0,
+      "sha256": "db8282e61bf2e004be8197e47b4ea7df2e9d145e74edba5991d53c04d0ec34f1"
+    },
+    "spirits": {
+      "source": "dark",
+      "cut_start": 3.4,
+      "duration_seconds": 1.55,
+      "peak_dbfs": -58.71,
+      "sha256": "05266cde435272ebe7a33e5a5de569e748c70c7011b90f87433860689996720b"
+    },
+    "torii": {
+      "source": "dark",
+      "cut_start": 5.1,
+      "duration_seconds": 1.7,
+      "peak_dbfs": -58.71,
+      "sha256": "aaef334968b26cc0517b21096b682d4e50cd5fc224ac9b7f6cba18305c969ce1"
+    }
+  },
+  "format": "44.1kHz mono PCM16, peak capped -3dBFS, no runtime decode/base64"
+}

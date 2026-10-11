@@ -1,3 +1,11 @@
+## 2026-10-11 — 아서왕 및 초월 배너·Pixabay 효과음
+
+- 초월 인간형 탱커 아서왕: 실제 탱커40회/아군 사망50회 해금, 소환 전 탱커 성장 스냅샷, 등장 전체 보호막, 엑스칼리버 직선/5초월3돌진, 원탁 게이트·치유/공속/이속/피해 강화, 성왕의 축복 분리 보호막·파괴 반격, 가호 확률 방어.
+- 실제 뽑기·전투 삼각형 소환·공통 사망, 공유 메시 리그/눈감기·확대·눈뜨기/성광, 도감/팀 기술 아이콘4종, 프로필 보상 및 로컬 테스트 확정 뽑기 연결. 불가살/이자나미/슈텐도지/아서왕 추가5초월 배너 연결.
+- 아서왕3종/이자나미2종 Pixabay 원본에서 기술별 효과음15개 편집·연결,44.1kHz PCM16·피크-3dBFS·음량/재생간격 제한. 출처·라이선스·ID·SHA/구간 audio manifest 기록, 런타임 Base64 없음.
+- Godot4.5.1 실제 헤드리스 아서왕149+연결34검사 및 기존 초월/이자나미 회귀 PASS, 상태23경계 감사/import/diff. 기존 raw PNG export·종료 RID/resource 경고는 남음. PC 그래픽/모바일/청취/4.7/export/성능 실측 미검증.
+- 기준 feature19be519ca65a1fb143af90983ef2c0a22e0ca749, main4122adb7 유지. docs/ARTHUR_IMPLEMENTATION.md에 해석·검증·수동확인·롤백 기록.
+
 ## 2026-10-11 — 내부 구조 개선 3묶음 종료 체크포인트
 
 - 남은 직접/동적 상태 호출을 Hero legacy13종 수신 경계에서 기록. 불가살 native제어2/대마법원소2/설녀 별도둔화 연결. 기존 호출 반환·저항·AI raw 관측·기술당1회 집계·캐스팅/틱 규칙 유지.
@@ -244,7 +252,7 @@
 
 - 재사용 BattleTargetReference를 추가하고 용사 fighter charge 시작/이동/완료/연쇄에 epoch-slot-generation 검증 연결. 풀 반납·같은 Node 재활성화·전투 epoch 교체·scope 교체·삭제 예약된 대상을 취소하며 종료 때 WeakRef/handle 해제. 등록 API가 없는 기존 독립 씬만 약한 참조 호환, 등록 API가 있는데 ZERO/불완전 인터페이스이면 거절.
 - 정상 직접 피해120%/착지 범위 피해170%, 이동 보간·연쇄·쿨타임·치유 유지. 착지 AoE는 현재 후보를 조회하므로 새로운 주변 몬스터도 기존대로 피해를 받는다. Hero당 참조 객체1개, 캡처 때 WeakRef 최대2개, 프레임 배열/Dictionary/전체 스캔 없음.
-- Godot4.5.1 독립 실제 돌진 함수+실제 registry/reference420검사 및 기존 행동6,255/이동6,143검사, 총12,818검사 실패0. 실제 Hero611함수는 정확히 검토한 guard 추가 외 동일 정적 확인. 효과/충돌/주변 조회는 spy. 전체 게임4.7·모바일·FPS/메모리 미검증.
+- Godot4.5.1 독립 실제 돌진 함수+실제 registry/reference420검사 및 기존 행동6,255/이동6,149검사, 총12,818검사 실패0. 실제 Hero611함수는 정확히 검토한 guard 추가 외 동일 정적 확인. 효과/충돌/주변 조회는 spy. 전체 게임4.7·모바일·FPS/메모리 미검증.
 - 기준 feature e684443eb878f43bc438a8b95fdb1017ff37590b, main4122adb7 유지. 상세/롤백 docs/DELAYED_TARGET_FOUNDATION.md. chain dagger/다른 예약 공격·source 수명·서버 권한·네트워크 동기화는 다음 작업.
 
 - Reused buffer renamed action_intent, typed local Kind for ranged/movement/basic attack and AttackKind for six original executor operations. 18 move+clamp blocks (ordinary specialized/material7 + no-target11), six specialized basic attacks and no-target alchemist chest attack route through the port. Same existing conditions, speed/thresholds, item priorities, skill-before-attack order and alchemist null-target semantics. Target borrowed synchronously, no Node/Callable stored in buffer.

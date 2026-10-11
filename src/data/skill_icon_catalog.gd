@@ -2,6 +2,11 @@ extends RefCounted
 ## Presentation-only registry. Keys: domain:owner_id:skill_id (or authored skill name).
 ## Domains: demon, elite, transcendent, hero. No guessed filenames or combat changes.
 const PATHS := {
+	"transcendent:arthur:엑스칼리버": "res://assets/art/Icon/monster/Transcendent/arthur/arthur_skill1_icon.png",
+	"transcendent:arthur:원탁의 기사": "res://assets/art/Icon/monster/Transcendent/arthur/arthur_skill2_icon.png",
+	"transcendent:arthur:성왕의 축복": "res://assets/art/Icon/monster/Transcendent/arthur/arthur_skill3_icon.png",
+	"transcendent:arthur:아발론의 가호": "res://assets/art/Icon/monster/Transcendent/arthur/arthur_skill4_icon.png",
+
 	"transcendent:bulgasal:전략후퇴": "res://assets/art/Icon/monster/Transcendent/bulgasal/devour.png",
 	"transcendent:bulgasal:강철도약": "res://assets/art/Icon/monster/Transcendent/bulgasal/immortal_rampage.png",
 	"transcendent:bulgasal:바위돌진": "res://assets/art/Icon/monster/Transcendent/bulgasal/thorn_charge.png",

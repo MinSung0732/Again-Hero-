@@ -18,7 +18,7 @@ func run() -> void:
 	SCOPE.guest_directory = "user://izanami_test_"+str(Time.get_ticks_usec())
 	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
 	SCOPE.select_guest()
-	check(SHOP.get_monster_pool("transcendent").size()==5 and "izanami" in SHOP.get_monster_pool("transcendent"),"five member pool")
+	check(SHOP.get_monster_pool("transcendent").size()==6 and "izanami" in SHOP.get_monster_pool("transcendent"),"six member pool includes Arthur")
 	check(is_equal_approx(SHOP.get_effective_probability("transcendent"),0.5),"rarity stays0.5%")
 	check(SHOP.weighted_id(["zeus","bulgasal","izanami"],0.59,"zeus")=="zeus" and SHOP.weighted_id(["zeus","bulgasal","izanami"],0.81,"zeus")=="izanami","pickup3:1:1")
 	check(not LOADOUT.save_id("izanami"),"locked registration rejected")

@@ -1,4 +1,7 @@
 extends "res://src/monsters/goblin_thrower.gd"
+const AUDIO := preload("res://src/data/izanami_audio_catalog.gd")
+const SFX := preload("res://src/audio/event_sfx_bank.gd")
+var audio_bank: Node
 const DATA := preload("res://src/data/izanami_behavior_catalog.gd")
 const FX := preload("res://src/ui/izanami_combat_effects.gd")
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
@@ -98,6 +101,9 @@ func _apply_normal_visual_profile() -> void:
 
 func _ready() -> void:
 	super._ready()
+	audio_bank = SFX.new()
+	add_child(audio_bank)
+	audio_bank.configure(AUDIO.CUES,combat_authority,true)
 	status_layer.z_as_relative = false
 	status_layer.z_index = 12
 	status_layer.draw.connect(_draw_status)
@@ -194,6 +200,7 @@ func _tick_retreat_and_heal(delta: float) -> bool:
 	return true
 
 func _fire_projectile(_offset: Vector2) -> void:
+	_audio("attack")
 	_hit(1.0)
 
 func _cache_target_body_center() -> void:
@@ -244,6 +251,7 @@ func _on_accepted_hit(source: Node) -> void:
 			# Clear before damage emits recursively: one bind per attachment.
 			ghost_remaining = 0.0
 			bind_remaining = 0.6
+			_audio("bind")
 			_hit(1.55,true)
 			_status("slow",0.01,3.0,true,ghost_action)
 			_status("silence",0.0,3.0,true,ghost_action)
@@ -303,6 +311,7 @@ func _try_cast() -> void:
 		_visual_call(&"play_attack")
 		match i:
 			0:
+				_audio("haunt")
 				ghost_action = STATUS_SCOPE.Token.new()
 				ghost_remaining = 7.0
 				ghost_hits = 0
@@ -310,6 +319,7 @@ func _try_cast() -> void:
 				_status("slow",0.88,7.0,true,ghost_action)
 			1: _create_fire()
 			2:
+				_audio("spirits")
 				fan_action = STATUS_SCOPE.Token.new()
 				fan_remaining = 2.0
 				fan_spawned = 0
@@ -347,6 +357,7 @@ func _tick_fire(delta: float) -> void:
 		fire_age[i] += delta
 		var inside := is_instance_valid(hero) and hero.global_position.distance_squared_to(fire_points[i]) <= fire_radius()*fire_radius()
 		if before <= fire_delay[i] and fire_age[i] >= fire_delay[i]:
+			_audio("fire")
 			if inside:
 				if _deal_damage(maxi(int(round(attack_damage*1.7)),1),true,fire_hit_counted[i] == 0):
 					fire_hit_counted[i] = 1
@@ -413,6 +424,7 @@ func _tick_spirits(delta: float) -> void:
 					spirit_state[i] = 0
 
 func _create_torii() -> void:
+	_audio("torii")
 	if dying or current_hp <= 0:
 		return
 	var point := global_position
@@ -586,3 +598,6 @@ func _draw_torii() -> void:
 		FX.draw_frame(torii_layer,3,frame,ground_aligned)
 		if torii_age[i] <= torii_duration():
 			torii_layer.draw_arc(point,175.0,0,TAU,64,Color(0.7,0.4,0.95,0.5),1.0,false)
+
+func _audio(cue: String) -> void:
+	if is_instance_valid(audio_bank): audio_bank.play_cue(cue)

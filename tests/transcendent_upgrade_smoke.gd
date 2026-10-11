@@ -107,7 +107,7 @@ func run() -> void:
 		quit(1)
 		return
 	var action: Button = card.find_child("TranscendButton", true, false)
-	check(action.text == "초월  ·  조각 1개" and not action.disabled, "transcend action enabled")
+	check(action.text == "초월 · 조각 1개" and not action.disabled, "transcend action enabled")
 	action.pressed.emit()
 	var effect: Node2D = view.feedback
 	check(is_instance_valid(effect) and effect.visible and effect.transcendent and effect.level == 1, "success effect on actual card")
@@ -143,7 +143,7 @@ func run() -> void:
 		if candidate.get_meta("monster_id","") == "zeus":
 			action = candidate.find_child("TranscendButton",true,false)
 			break
-	check(action.text == "최대 초월 완료" and action.disabled, "max cap disabled in UI")
+	check(action.text == "최대 초월" and action.disabled, "max cap disabled in UI")
 
 	# Registration must not steal height from the monster list or move mode tabs.
 	for viewport_size in [Vector2i(540, 960), Vector2i(360, 800)]:

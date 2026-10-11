@@ -31,6 +31,7 @@ const TRANSCENDENCE_DATA := preload("res://src/data/transcendence_catalog.gd")
 const TRANSCENDENCE_STORE := preload("res://src/systems/transcendence_loadout_store.gd")
 var transcendent_actor: Node2D
 var raw_allied_summons := 0
+var raw_real_tank_summons := 0
 var raw_statuses_applied := 0
 var raw_allied_deaths := 0
 var raw_tank_deaths := 0
@@ -778,6 +779,7 @@ func _start_battle() -> void:
 	var registered_id := TRANSCENDENCE_STORE.load_id()
 	transcendent_actor = null
 	raw_allied_summons = 0
+	raw_real_tank_summons = 0
 	raw_statuses_applied = 0
 	raw_allied_deaths = 0
 	raw_tank_deaths = 0
@@ -2426,6 +2428,8 @@ func _spawn_monster(
 	monsters_alive += 1
 	if not TRANSCENDENCE_DATA.is_transcendent(monster_type):
 		raw_allied_summons += 1
+	if not split_child and bool(spawn_modifiers.get("counts_population",false)) and not TRANSCENDENCE_DATA.is_transcendent(monster_type) and MONSTER_CATALOG.get_role(monster_type)=="tank":
+		raw_real_tank_summons += 1
 	if not split_child and not TRANSCENDENCE_DATA.is_transcendent(monster_type) and transcendence.record_summon(MONSTER_CATALOG.get_role(monster_type) if bool(spawn_modifiers.get("counts_population", false)) else ""):
 		transcendence_changed.emit(transcendence.monster_id, true, false)
 	if bool(spawn_modifiers.get("counts_population", false)) or bool(spawn_modifiers.get("mission_summon", false)):
@@ -2953,6 +2957,7 @@ func _on_enemy_status_applied(_status: String) -> void:
 
 func get_transcendent_aura_modifier(actor: Node2D, kind: String) -> float:
 	var burn := preload("res://src/data/status_effect_catalog.gd").outgoing_multiplier(actor) if kind == "outgoing" else 1.0
+	if kind=="outgoing" and is_instance_valid(actor) and bool(actor.get_meta("arthur_gate_active",false)): burn *= preload("res://src/data/arthur_behavior_catalog.gd").GATE_ATTACK
 	if is_instance_valid(transcendent_actor) and transcendent_actor.has_method("aura_modifier"):
 		return burn * float(transcendent_actor.aura_modifier(actor,kind))
 	return burn
@@ -2966,6 +2971,7 @@ func _transcendence_metric_count(metric: String) -> int:
 		"statuses_applied": return raw_statuses_applied
 		"allies_died": return raw_allied_deaths
 		"tanks_died": return raw_tank_deaths
+		"real_tanks_summoned": return raw_real_tank_summons
 	return raw_allied_summons
 
 func _on_monster_died(monster: Node) -> void:

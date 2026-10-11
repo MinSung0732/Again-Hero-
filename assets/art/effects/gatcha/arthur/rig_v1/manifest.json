@@ -1,0 +1,310 @@
+{
+  "status": "static_visible_partition_verified_not_complete_live2d_model",
+  "source_size": [
+    971,
+    1620
+  ],
+  "cell_size": [
+    768,
+    1280
+  ],
+  "sheet_size": [
+    3072,
+    5120
+  ],
+  "columns": 4,
+  "rows": 4,
+  "parts_count": 15,
+  "source_uniform_scale": 0.65,
+  "source_uniform_translation": [
+    40,
+    195
+  ],
+  "body_anchor_source": [
+    530,
+    750
+  ],
+  "different_rgba_pixels": 0,
+  "parts": [
+    {
+      "index": 1,
+      "name": "torso_remaining_visible",
+      "file": "parts/01_torso_remaining_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "sheet_cell": [
+        0,
+        0
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 2,
+      "name": "sword_visible",
+      "file": "parts/02_sword_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "sheet_cell": [
+        1,
+        0
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 3,
+      "name": "hands_visible",
+      "file": "parts/03_hands_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "sheet_cell": [
+        2,
+        0
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 4,
+      "name": "crown_visible",
+      "file": "parts/04_crown_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "sheet_cell": [
+        3,
+        0
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 5,
+      "name": "face_front_hair_visible",
+      "file": "parts/05_face_front_hair_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "sheet_cell": [
+        0,
+        1
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 6,
+      "name": "head_braid_ribbon_visible",
+      "file": "parts/06_head_braid_ribbon_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "sheet_cell": [
+        1,
+        1
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 7,
+      "name": "left_back_hair_visible",
+      "file": "parts/07_left_back_hair_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "sheet_cell": [
+        2,
+        1
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 8,
+      "name": "right_back_hair_visible",
+      "file": "parts/08_right_back_hair_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "sheet_cell": [
+        3,
+        1
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 9,
+      "name": "left_arm_armor_visible",
+      "file": "parts/09_left_arm_armor_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "sheet_cell": [
+        0,
+        2
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 10,
+      "name": "right_arm_armor_visible",
+      "file": "parts/10_right_arm_armor_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "sheet_cell": [
+        1,
+        2
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 11,
+      "name": "left_leg_visible",
+      "file": "parts/11_left_leg_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "sheet_cell": [
+        2,
+        2
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 12,
+      "name": "right_leg_visible",
+      "file": "parts/12_right_leg_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "sheet_cell": [
+        3,
+        2
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 13,
+      "name": "left_cape_visible",
+      "file": "parts/13_left_cape_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "sheet_cell": [
+        0,
+        3
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 14,
+      "name": "right_cape_visible",
+      "file": "parts/14_right_cape_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "sheet_cell": [
+        1,
+        3
+      ],
+      "occlusion_fill": false
+    },
+    {
+      "index": 15,
+      "name": "lower_robe_visible",
+      "file": "parts/15_lower_robe_visible.png",
+      "canvas": [
+        768,
+        1280
+      ],
+      "assembly_top_left": [
+        0,
+        0
+      ],
+      "sheet_cell": [
+        2,
+        3
+      ],
+      "occlusion_fill": false
+    }
+  ],
+  "runtime_extracted_parts": [
+    "08_right_back_hair_visible.png",
+    "15_lower_robe_visible.png",
+    "13_left_cape_visible.png",
+    "06_head_braid_ribbon_visible.png",
+    "07_left_back_hair_visible.png",
+    "14_right_cape_visible.png"
+  ],
+  "original_source_zip": "res://assets/art/Transcendent_monster/King_Arthur/arthur_parts_v1.zip",
+  "original_source_zip_sha256": "516c677e50b82e6259aa65452ed51d4663ac5997fd9862299f4b9b6eed8ac689"
+}

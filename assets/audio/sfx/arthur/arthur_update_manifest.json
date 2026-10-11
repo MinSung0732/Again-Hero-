@@ -1,0 +1,90 @@
+{
+  "license": "Pixabay Content License",
+  "license_url": "https://pixabay.com/service/license-summary/",
+  "sources": {
+    "sword": {
+      "url": "https://pixabay.com/sound-effects/film-special-effects-sword-schwing-40520/",
+      "creator": "freesound_community",
+      "sha256": "49e1a8bdb1167144d9ad5ef55a07e3f2b378745460983222b322182db0e7b3b1",
+      "content_id": 40520
+    },
+    "holy": {
+      "url": "https://pixabay.com/sound-effects/film-special-effects-holy-magic-short-3-534666/",
+      "creator": "Yodguard",
+      "sha256": "0bab4f7325a4ecfe051d0f4dfb4bf66e787f4b337e4c37e537a5bc9e092005b3",
+      "content_id": 534666
+    },
+    "gate": {
+      "url": "https://pixabay.com/sound-effects/musical-holy-spell-cast-450460/",
+      "creator": "DRAGON-STUDIO",
+      "sha256": "7827a9ecaeae030b4dfa5d0b5ee85b71805337486de7d22e3602165e24ebd11c",
+      "content_id": 450460
+    }
+  },
+  "edits": {
+    "swing": {
+      "source": "sword",
+      "cut_start": 0,
+      "duration_seconds": 0.85,
+      "peak_dbfs": -3.0,
+      "sha256": "881b271bbbf4bd9285750f3137b1c66fbe8153c8fa0e0cb03e10bfebf5932be9"
+    },
+    "charge": {
+      "source": "holy",
+      "cut_start": 0,
+      "duration_seconds": 0.5,
+      "peak_dbfs": -6.01,
+      "sha256": "c794bdd364f425410815ce92a9324372b0ed40172232d073774c17127e6a09be"
+    },
+    "dash": {
+      "source": "sword",
+      "cut_start": 0,
+      "duration_seconds": 1.1,
+      "peak_dbfs": -3.0,
+      "sha256": "b613aab716fbfc7a9f15aeca1f5be7e05fc67c85f3fc02aa73dedd5bfcbbc709"
+    },
+    "gate_charge": {
+      "source": "gate",
+      "cut_start": 0,
+      "duration_seconds": 1.0,
+      "peak_dbfs": -9.67,
+      "sha256": "ec5f0b1a040f7ffe45c1902b0735725e5b21d02d38ca19cf35bfe45e3617fe6e"
+    },
+    "gate": {
+      "source": "gate",
+      "cut_start": 0.6,
+      "duration_seconds": 2.1,
+      "peak_dbfs": -4.21,
+      "sha256": "d2f3eba3943e8283fb8c9dfc3765a5d98c80efb8d05bda9180f058e81f2aa160"
+    },
+    "blessing": {
+      "source": "holy",
+      "cut_start": 0.35,
+      "duration_seconds": 1.3,
+      "peak_dbfs": -3.0,
+      "sha256": "c4ef6ef5ed43a4cd2c5a28509f44de34056804a9ed6167056eaff931fb54b366"
+    },
+    "block": {
+      "source": "holy",
+      "cut_start": 0.1,
+      "duration_seconds": 0.45,
+      "peak_dbfs": -6.01,
+      "sha256": "77c299476bad393203b8de2eede932132a4b844e1095ab9e1808db647056073f"
+    },
+    "arrival": {
+      "source": "gate",
+      "cut_start": 1.0,
+      "duration_seconds": 1.3,
+      "peak_dbfs": -4.21,
+      "sha256": "b5deec6fc23605208e8949b912876f3860da24eecac7293aacf40cab744275bc"
+    },
+    "reveal": {
+      "source": "holy",
+      "cut_start": 0,
+      "duration_seconds": 2.0,
+      "peak_dbfs": -3.0,
+      "sha256": "c19e9571cb8261857774e1b8aabad5ea165547bef525777b1f82f8248ee70003"
+    }
+  },
+  "format": "44.1kHz mono PCM16, peak capped -3dBFS, no runtime decode/base64"
+}

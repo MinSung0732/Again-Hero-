@@ -388,7 +388,7 @@ func _damage(target: Node2D, amount: int, followup: bool = true, dot: bool = fal
 		if dot: return bool(target.take_status_damage(amount,self))
 		return bool(target.take_followup_damage(amount,self)) if followup else bool(target.take_damage(amount,self))
 	if "monster_type" in target:
-		target.take_damage(amount)
+		MONSTER_RUNTIME_COMMON.damage_monster_from(target,amount,self)
 		return true
 	return bool(target.take_damage(amount,self))
 func _add_shield(amount: float) -> void:

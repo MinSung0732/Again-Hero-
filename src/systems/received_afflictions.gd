@@ -191,7 +191,7 @@ func _tick_extra(delta: float) -> void:
 
 func _damage_fallback(amount: int, source: Node) -> bool:
 	if "monster_type" in target:
-		target.take_damage(amount)
+		preload("res://src/monsters/monster_runtime_common.gd").damage_monster_from(target,amount,source)
 		return true
 	return bool(target.take_damage(amount,source))
 

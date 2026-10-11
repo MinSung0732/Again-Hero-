@@ -28,6 +28,7 @@ const ORDER := [
 	"izanami",
 	"manticore",
 	"shuten_doji",
+	"arthur",
 ]
 
 const DULLAHAN_BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd")
@@ -36,6 +37,16 @@ const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const BULGASAL_BEHAVIOR := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const MONSTERS := {
+	"arthur": {
+		"id":"arthur","name":"아서왕","rarity":"transcendent","grade":"transcendent","role":"tank","species":"humanoid","family":"arthur","attack_type":"melee","combat_style":"melee_tank",
+		"collection_card":{"style_label":"근접 탱커형","identity":"아발론의 성왕","feature":"엑스칼리버 · 원탁 · 축복 · 방어"},
+		"default_unlocked":false,"combat_enabled":true,"base_cost":0.0,"summon_exp":0.0,"can_be_elite":false,"can_be_giant":false,"normal_augments_enabled":false,"special_augment_ids":[],
+		"growth_metric":"real_tanks_summoned","summon_growth":preload("res://src/data/arthur_behavior_catalog.gd").GROWTH,
+		"base_stats":preload("res://src/data/arthur_behavior_catalog.gd").BASE,"transcendence":preload("res://src/data/arthur_behavior_catalog.gd").RULES,
+		"card_icon_path":"res://assets/art/Transcendent_monster/King_Arthur/frames/idle_01.png","ground_shadow":{"size":Vector2(80,22),"offset_y":0.0,"opacity":0.35},
+		"scene":preload("res://src/monsters/Arthur.tscn"),
+		"description":"실제 탱커 40마리 소환 및 아군 사망 50회 후 전투당 1회. 소환 전 실제 탱커 수 × 공격력 1.5 / 체력 15 성장. 엑스칼리버 직선 돌진, 원탁의 기사 지원, 성왕의 축복 반격 보호막, 아발론의 가호 확률 방어. 일반/특수 증강·엘리트·대형몹 제외.",
+	},
 	"shuten_doji": {
 		"id":"shuten_doji","name":"슈텐-도지","rarity":"transcendent","grade":"transcendent","role":"control","species":"humanoid","family":"shuten_doji","attack_type":"melee","combat_style":"melee_control",
 		"collection_card":{"style_label":"근접 제어형","identity":"혈주의 귀왕","feature":"술안개 · 발화 · 사슬 · 귀왕해방"},

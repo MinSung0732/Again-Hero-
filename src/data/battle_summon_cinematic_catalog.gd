@@ -5,7 +5,9 @@ const BULGASAL_AUDIO := preload("res://src/data/bulgasal_audio_catalog.gd")
 const ZEUS_AUDIO := preload("res://src/data/zeus_audio_catalog.gd")
 
 # Presentation only; no skill, damage, summoning or reward authority.
+const ARTHUR_AUDIO := preload("res://src/data/arthur_audio_catalog.gd")
 const ENTRIES := {
+	"arthur":{"view":"res://src/ui/arthur_battle_summon_view.gd","duration":5.0,"zoom":1.3,"prewarm":true,"slow_motion":{"minimum":0.18,"approach_end":0.95,"recover_start":2.65,"recover_end":3.3},"world_effect":"res://src/ui/arthur_summon_holy.gd","audio_cues":ARTHUR_AUDIO.PRESENTATION_CUES,"audio_timeline":ARTHUR_AUDIO.SUMMON_TIMELINE},
 	"shuten_doji":{"view":"res://src/ui/shuten_doji_battle_summon_view.gd","duration":5.0,"zoom":1.3,"prewarm":true,
 		"slow_motion":{"minimum":0.18,"approach_end":0.95,"recover_start":2.65,"recover_end":3.3},
 		"world_effect":"res://src/ui/shuten_doji_summon_mist.gd",

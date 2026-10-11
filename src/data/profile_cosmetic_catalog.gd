@@ -21,6 +21,11 @@ static func path(id: String, slot: String) -> String:
 # Ownership follows the monster collection, so old saves and cloud restores
 # receive the cosmetics without a second grant transaction or duplicate flags.
 const MONSTER_REWARDS := {
+	"arthur":{"monster_id":"arthur","name":"초월 · 아서왕","avatar":"res://assets/art/Transcendent_monster/King_Arthur/King_Arthur_icon.png","banner":"res://assets/art/Transcendent_monster/King_Arthur/King_Arthur_banner.png"},
+	"arthur_plus_banner":{"monster_id":"arthur","name":"5초월 · 아서왕","min_upgrade_level":5,"banner":"res://assets/art/Transcendent_monster/King_Arthur/king_arthur_plus_banner.png"},
+	"bulgasal_plus_banner":{"monster_id":"bulgasal","name":"5초월 · 불가살","min_upgrade_level":5,"banner":"res://assets/art/Transcendent_monster/Bulgasal/bulgasal_plus_banner.png"},
+	"izanami_plus_banner":{"monster_id":"izanami","name":"5초월 · 이자나미","min_upgrade_level":5,"banner":"res://assets/art/Transcendent_monster/Izanami/izanami_plus_banner.png"},
+	"shuten_doji_plus_banner":{"monster_id":"shuten_doji","name":"5초월 · 슈텐-도지","min_upgrade_level":5,"banner":"res://assets/art/Transcendent_monster/Shuten-doji/Shuten-doji_plus_banner.png"},
 	"shuten_doji":{"monster_id":"shuten_doji","name":"초월 · 슈텐-도지","avatar":"res://assets/art/Transcendent_monster/Shuten-doji/shuten-doji_icon.png","banner":"res://assets/art/Transcendent_monster/Shuten-doji/shutendoji_banner.png"},
 	"manticore":{"monster_id":"manticore","name":"초월 · 만티코어","avatar":"res://assets/art/Transcendent_monster/manticore/manticore_icon.png","banner":"res://assets/art/Transcendent_monster/manticore/manticore_banner.png"},
 	"manticore_plus_banner":{"monster_id":"manticore","name":"5초월 · 만티코어","min_upgrade_level":5,"banner":"res://assets/art/Transcendent_monster/manticore/manticore_plus_banner.png"},

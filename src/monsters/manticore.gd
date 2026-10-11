@@ -399,7 +399,7 @@ func _arrival_explosion() -> void:
 		combat_authority.fill_local_monsters_in_rect(Rect2(global_position-Vector2.ONE*radius,Vector2.ONE*radius*2.0),local_allies)
 		for ally in local_allies:
 			if is_instance_valid(ally) and ally != self and ally.current_hp > 0 and global_position.distance_squared_to(ally.global_position) <= radius*radius:
-				ally.take_damage(maxi(int(round(attack_damage*1.35)),1))
+				MONSTER_RUNTIME_COMMON.damage_monster_from(ally,maxi(int(round(attack_damage*1.35)),1),self)
 func _flame_point(index: int) -> Vector2:
 	return global_position+Vector2(-DATA.FLAME_SIDE_OFFSET if index == 0 else DATA.FLAME_SIDE_OFFSET,-30.0)*DATA.BODY_SCALE
 func _flame_direction(index: int) -> Vector2:

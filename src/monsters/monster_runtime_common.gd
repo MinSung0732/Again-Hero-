@@ -322,7 +322,7 @@ static func get_external_movement_multiplier(owner: Node) -> float:
 	var authority := owner.get_parent()
 	if is_instance_valid(authority) and authority.has_method("get_transcendent_aura_modifier"):
 		multiplier *= float(authority.get_transcendent_aura_modifier(owner,"speed"))
-	return multiplier * maxf(float(owner.get_meta("support_speed_multiplier",1.0)),1.0)
+	return multiplier * maxf(float(owner.get_meta("support_speed_multiplier",1.0)),1.0) * float(owner.get_meta("arthur_gate_speed",1.0))
 
 static func set_unbuffed_attack_damage(owner: Node, amount: int) -> void:
 	owner.set_meta("support_base_damage",amount)
@@ -340,6 +340,9 @@ static func _consume_support_shield(owner: Node2D, amount: int, receipt = null, 
 	var authority := owner.get_parent()
 	if amount > 0 and is_instance_valid(authority) and authority.has_method("get_transcendent_aura_modifier"):
 		amount = maxi(int(round(amount * float(authority.get_transcendent_aura_modifier(owner,"incoming")) * float(authority.get_transcendent_aura_modifier(authority.hero,"outgoing")))),1)
+	if amount > 0 and int(owner.get_meta("arthur_blessing_hp",0)) > 0:
+		var blessing := owner.get_node_or_null("ArthurBlessing")
+		if blessing != null: amount = blessing.absorb(amount,receipt,receipt_revision)
 	var shield := int(owner.get_meta("support_shield_hp",0))
 	if shield <= 0 or amount <= 0:
 		return amount
@@ -500,12 +503,30 @@ static func apply_direct_heal(
 
 
 static func draw_support_shield_bar(owner: Node2D, width: float, hp_bar_y: float) -> void:
-	var shield := int(owner.get_meta("support_shield_hp", 0))
+	var shield := int(owner.get_meta("support_shield_hp", 0))+int(owner.get_meta("arthur_blessing_hp",0))
 	if shield <= 0:
 		return
-	var capacity := maxi(int(owner.get_meta("support_shield_capacity", shield)), 1)
+	var capacity := maxi(int(owner.get_meta("support_shield_capacity", shield))+int(owner.get_meta("arthur_blessing_capacity",0)), 1)
 	var ratio := clampf(float(shield) / float(capacity), 0.0, 1.0)
 	# Separate row above innate shields; full received shield starts at full width.
 	var rect := Rect2(-width * 0.5, hp_bar_y - 23.0, width, 6.0)
 	owner.draw_rect(rect, Color("202c40"), true)
 	owner.draw_rect(Rect2(rect.position, Vector2(width * ratio, 6.0)), Color("61ddff"), true)
+
+
+static func add_support_shield(actor: Node2D, amount: int) -> void:
+	if not is_instance_valid(actor) or actor.is_queued_for_deletion() or int(actor.get("current_hp")) <= 0: return
+	var shield := int(actor.get_meta("support_shield_hp",0))+maxi(amount,0)
+	actor.set_meta("support_shield_hp",shield)
+	actor.set_meta("support_shield_capacity",maxi(shield,int(actor.get_meta("support_shield_capacity",0))))
+	actor.queue_redraw()
+
+
+static func damage_monster_from(actor: Node2D, amount: int, source: Node) -> void:
+	# Legacy monsters accept one argument. Preserve the source for reflective shields.
+	var previous_source = actor.get_meta("_status_damage_source") if actor.has_meta("_status_damage_source") else null
+	actor.set_meta("_status_damage_source",source)
+	actor.take_damage(amount)
+	if not is_instance_valid(actor): return
+	if previous_source==null: actor.remove_meta("_status_damage_source")
+	else: actor.set_meta("_status_damage_source",previous_source)

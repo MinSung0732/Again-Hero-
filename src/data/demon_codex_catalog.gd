@@ -12,6 +12,7 @@ const CATEGORY_SHORT := {"skills":"스킬","monsters":"몬스터","augments":"�
 const ART := {
 	"zeus":{"illustration":"res://assets/art/effects/gatcha/zeus/portrait/idle_01.png"},
 	"bulgasal":{"illustration":"res://assets/art/Transcendent_monster/Bulgasal/bulgasal_illustration.png"},
+	"arthur":{"illustration":"res://assets/art/Transcendent_monster/King_Arthur/King_Arthur_illustration.png"},
 	"izanami":{"illustration":"res://assets/art/Transcendent_monster/Izanami/izanami_illustration.png"},
 	"shuten_doji":{"illustration":"res://assets/art/Transcendent_monster/Shuten-doji/shuten-doji_illustration.png"},
 	"manticore":{"illustration":"res://assets/art/Transcendent_monster/manticore/manticore_illustration.png"},
