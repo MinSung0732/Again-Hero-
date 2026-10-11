@@ -159,3 +159,73 @@ func _damage_fallback(amount: int, source: Node) -> bool:
 		target.take_damage(amount)
 		return true
 	return bool(target.take_damage(amount,source))
+
+static func _supports_result(actor: Node2D, method: StringName) -> bool:
+	# Hero's contract is opt-in; generic components retain legacy behavior.
+	# An unavailable result must never trigger another application.
+	return actor.has_method("supports_status_receipt") and actor.supports_status_receipt() and actor.has_method(method)
+
+static func _reject_result(actor: Node2D, kind: StringName, seconds: float, strength: float, receipt) -> bool:
+	return receipt.finish(receipt.begin(actor,kind,seconds,strength))
+
+static func apply_slow_with_result(actor: Node2D, multiplier: float, seconds: float, receipt, action: RefCounted = null) -> bool:
+	if receipt == null:
+		apply_slow(actor,multiplier,seconds,action)
+		return false
+	if not _supports_result(actor,&"apply_slow_with_result"):
+		receipt.begin(actor,&"slow",seconds,1.0-multiplier)
+		apply_slow(actor,multiplier,seconds,action)
+		return false
+	# The adapter's duration guard is stricter than native Hero's minimum time.
+	if seconds <= 0 or actor.current_hp <= 0:
+		return _reject_result(actor,&"slow",seconds,1.0-multiplier,receipt)
+	var previous := STATUS_SCOPE.begin(actor,action)
+	var completed: bool = actor.apply_slow_with_result(multiplier,seconds,receipt)
+	STATUS_SCOPE.finish(actor,previous)
+	return completed
+
+static func apply_stun_with_result(actor: Node2D, seconds: float, receipt, action: RefCounted = null) -> bool:
+	if receipt == null:
+		apply_stun(actor,seconds,action)
+		return false
+	if not _supports_result(actor,&"apply_stun_with_result"):
+		receipt.begin(actor,&"stun",seconds,1.0)
+		apply_stun(actor,seconds,action)
+		return false
+	if actor.current_hp <= 0 or seconds <= 0:
+		return _reject_result(actor,&"stun",seconds,1.0,receipt)
+	var previous := STATUS_SCOPE.begin(actor,action)
+	var completed: bool = actor.apply_stun_with_result(seconds,receipt)
+	STATUS_SCOPE.finish(actor,previous)
+	return completed
+
+static func apply_silence_with_result(actor: Node2D, seconds: float, receipt, action: RefCounted = null) -> bool:
+	if receipt == null:
+		apply_silence(actor,seconds,action)
+		return false
+	if not _supports_result(actor,&"apply_silence_with_result"):
+		receipt.begin(actor,&"silence",seconds,1.0)
+		apply_silence(actor,seconds,action)
+		return false
+	if actor.current_hp <= 0 or seconds <= 0:
+		return _reject_result(actor,&"silence",seconds,1.0,receipt)
+	var previous := STATUS_SCOPE.begin(actor,action)
+	var completed: bool = actor.apply_silence_with_result(seconds,receipt)
+	STATUS_SCOPE.finish(actor,previous)
+	return completed
+
+static func apply_bleed_current_with_result(actor: Node2D, seconds: float, ratio: float, source: Node, receipt, action: RefCounted = null) -> bool:
+	if receipt == null:
+		apply_bleed_current(actor,seconds,ratio,source,action)
+		return false
+	if not _supports_result(actor,&"apply_bleed_with_result"):
+		receipt.begin(actor,&"bleed",seconds,ratio)
+		apply_bleed_current(actor,seconds,ratio,source,action)
+		return false
+	var max_hp_ratio := float(actor.current_hp)*ratio/maxf(float(actor.max_hp),1)
+	if actor.current_hp <= 0 or bool(actor.get_meta("bleed_active",false)):
+		return _reject_result(actor,&"bleed",seconds,max_hp_ratio,receipt)
+	var previous := STATUS_SCOPE.begin(actor,action)
+	var completed: bool = actor.apply_bleed_with_result(seconds,receipt,source,max_hp_ratio,false)
+	STATUS_SCOPE.finish(actor,previous)
+	return completed

@@ -1,3 +1,10 @@
+## 2026-10-11 — 슈텐도지 공통 상태 결과 연결
+
+- ReceivedAfflictions에 opt-in slow/stun/silence/current-HP bleed 결과 adapter 추가. 원래15함수/컴포넌트 전체 prefix 유지. native Hero에 기존 adapter duration/HP/bleed meta guard와 ratio 변환 적용 후 실제 결과 API 호출; 미지원/일반 몬스터는 legacy1회·결과 unavailable, 재시도 없음.
+- 슈텐도지 안개/폭발 출혈·기절/사슬 둔화·침묵5호출 연결. actor당 receipt1개 재사용, 현재 status_result_complete 별도 관리; 사슬은 마지막 침묵 결과만 남음. 기존 피해·안개 분율/사슬 면역·환급·신호·action당1회 집계 유지. 일반 component의 duration/physics/출혈·시각/수명 정책 유지, 매 적용 배열/객체/스캔 추가 없음.
+- Godot4.5.1 신규12,159+기존 상태/이자나미88,454 =100,613검사 실패0. 원래 affliction15/Shuten39함수 및 Hero/Izanami 역변환 비교, gdparse/Python compile/import/diff 통과. 실제 component·상태/호출 slice 검증; 실제 피해 엔진/전체 actor 초기화/AI·연출·전체 게임4.7/모바일/성능 미검증.
+- 기준 featureb5672852717a9f0c957c60dcf2863aab38ff0c1b, main4122adb7 유지. docs/SHUTEN_STATUS_CALLER.md에 지원 범위/guard 예외/재현/롤백. 다음은 제우스·불가살 등 다른 기술·적중 bridge 및 generic component 결과 지원. 매칭·용사모드 확대 보류.
+
 ## 2026-10-11 — 이자나미 기술 상태 결과 호출자
 
 - 실제 공통 _status 경로의 둔화/기절/침묵/받는피해증가를 Hero 결과 API에 연결. 이자나미 인스턴스당 scalar receipt1개 재사용, status_result_complete로 현재 호출 결과 가용성 구분. early guard/알 수 없는 상태/미지원·재진입 때 이전 payload를 현재 결과로 사용하지 않음.

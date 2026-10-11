@@ -6,6 +6,9 @@ const AUDIO := preload("res://src/data/shuten_doji_audio_catalog.gd")
 const SFX_BANK := preload("res://src/audio/event_sfx_bank.gd")
 var audio_bank: Node
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
+const STATUS_RECEIPT := preload("res://src/systems/battle_status_receipt.gd")
+var status_receipt = STATUS_RECEIPT.new()
+var status_result_complete := false
 var summon_snapshot := 0
 var transcend_level := 0
 var gauge := 0.0
@@ -288,6 +291,7 @@ func _tick_fogs(delta: float) -> void:
 			shield_fraction -= amount
 			_add_shield(amount)
 func _apply_fog(target: Node2D, index: int, step: float) -> void:
+	status_result_complete = false
 	if not is_instance_valid(target) or target.current_hp <= 0 or ("active" in target and not target.active): return
 	if target.global_position.distance_squared_to(fog_points[index]) > DATA.FOG_RADIUS*DATA.FOG_RADIUS: return
 	var record := _record(target)
@@ -296,7 +300,7 @@ func _apply_fog(target: Node2D, index: int, step: float) -> void:
 	if amount > 0:
 		record.fractions[index] -= amount
 		_damage(target,amount,true,true)
-	if target.current_hp > 0: AFFLICTIONS.apply_slow(target,1-0.5*fog_power[index],0.3,_action_token(fog_action[index]))
+	if target.current_hp > 0: status_result_complete = AFFLICTIONS.apply_slow_with_result(target,1-0.5*fog_power[index],0.3,status_receipt,_action_token(fog_action[index]))
 func _ignite() -> void:
 	_audio("ignite")
 	var action := _next_action()
@@ -314,15 +318,17 @@ func _ignite() -> void:
 	cooldowns[0] = maxf(0,cooldowns[0]-count*2)
 	self_fog_power = 0
 func _blast_target(target: Node2D, point: Vector2, action: int) -> void:
+	status_result_complete = false
 	if not is_instance_valid(target) or target.current_hp <= 0 or ("active" in target and not target.active) or target.global_position.distance_squared_to(point) > DATA.BLAST_RADIUS*DATA.BLAST_RADIUS: return
 	var bleeding := bool(target.get_meta("bleed_active",false))
 	_damage(target,int(round(attack_damage*1.75)),true)
 	if bleeding: _apply_stun(target,2,action)
 	elif target.current_hp > 0:
-		AFFLICTIONS.apply_bleed_current(target,7,0.06,self,_action_token(action))
+		status_result_complete = AFFLICTIONS.apply_bleed_current_with_result(target,7,0.06,self,status_receipt,_action_token(action))
 func _apply_stun(target: Node2D, seconds: float, action: int) -> void:
+	status_result_complete = false
 	if target.current_hp <= 0: return
-	AFFLICTIONS.apply_stun(target,seconds,_action_token(action))
+	status_result_complete = AFFLICTIONS.apply_stun_with_result(target,seconds,status_receipt,_action_token(action))
 func _cast_chain(target: Node2D) -> bool:
 	for i in range(DATA.CHAIN_CAPACITY):
 		if chain_state[i] != 0: continue
@@ -361,6 +367,7 @@ func _tick_chains(delta: float) -> void:
 			if amount > 0: _damage(target,amount,true,true)
 			if chain_age[i] >= 3: chain_state[i] = 0
 func _bind_chain(index: int, target: Node2D) -> bool:
+	status_result_complete = false
 	var id := target.get_instance_id()
 	if float(chain_immunity.get(id,0)) > clock:
 		chain_state[index] = 0
@@ -372,8 +379,8 @@ func _bind_chain(index: int, target: Node2D) -> bool:
 	chain_immunity[id] = clock+13
 	chain_state[index] = 2
 	chain_age[index] = 0
-	AFFLICTIONS.apply_slow(target,0.01,3,_action_token(chain_action[index]))
-	AFFLICTIONS.apply_silence(target,3,_action_token(chain_action[index]))
+	status_result_complete = AFFLICTIONS.apply_slow_with_result(target,0.01,3,status_receipt,_action_token(chain_action[index]))
+	status_result_complete = AFFLICTIONS.apply_silence_with_result(target,3,status_receipt,_action_token(chain_action[index]))
 	return true
 func _damage(target: Node2D, amount: int, followup: bool = true, dot: bool = false) -> bool:
 	if not is_instance_valid(target) or target.current_hp <= 0: return false

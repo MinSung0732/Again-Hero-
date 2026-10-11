@@ -1,5 +1,9 @@
 # 용사 모드·대전 모드 확장 설계 및 단계별 실행 계획
 
+## 후속 내부 구조 개선 — 슈텐도지 공통 상태 호출자 (2026-10-11)
+
+ReceivedAfflictions 결과 adapter4종과 슈텐도지 실제 안개/폭발/사슬5호출을 연결했다. native Hero의 adapter guard·현재HP 출혈 변환/기술당1회 집계 유지, 일반 component·미지원 대상은 기존 처리1회와 결과 unavailable. actor당 buffer1개 재사용. 신규12,159+기존88,454 =100,613검사 통과. [SHUTEN_STATUS_CALLER.md](SHUTEN_STATUS_CALLER.md). 다음은 다른 기술/적중 bridge·generic 결과 지원. 전체 게임·모바일·성능 미검증, 매칭·용사모드 확대 보류.
+
 ## 후속 내부 구조 개선 — 이자나미 상태 호출자 (2026-10-11)
 
 실제 _status 경로4종을 Hero 결과 API로 연결했다. actor당 receipt1개를 재사용하며 현재 호출 가용성 플래그를 따로 둔다. 기존 raw/passive/기술당1회 scope 및 미지원 legacy1회·재시도 없음 유지. 신규32,295+상태 회귀56,159 =88,454검사 통과. [IZANAMI_STATUS_CALLER.md](IZANAMI_STATUS_CALLER.md). 다음은 공통 affliction/다른 기술·적중 bridge. 전체 게임·모바일·성능 미검증, 매칭·용사모드 확대 보류.
