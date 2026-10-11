@@ -5,7 +5,7 @@ const S=preload("res://src/data/stage_catalog.gd")
 const A=preload("res://src/data/hero_augment_catalog.gd")
 const C=preload("res://src/data/hero_codex_catalog.gd")
 const M=preload("res://src/systems/run_metrics.gd")
-const EXPECTED={1:[360,32,220.0,0.70],2:[600,42,255.0,1.20],3:[1100,50,205.0,1.0],4:[2000,81,285.0,0.44],5:[2625,132,245.0,1.20],6:[3875,173,230.0,1.20],7:[4750,173,270.0,2.50],8:[4250,126,255.0,1.10],9:[4500,144,245.0,1.40],10:[6250,195,225.0,1.25]}
+const EXPECTED={1:[360,32,220.0,0.70],2:[600,42,255.0,1.20],3:[1100,50,205.0,1.0],4:[2400,94,285.0,0.38],5:[3000,144,245.0,1.05],6:[3875,173,230.0,1.20],7:[4750,173,270.0,2.50],8:[4250,126,255.0,1.10],9:[4500,144,245.0,1.40],10:[6250,195,225.0,1.25]}
 var checks:=0
 var failures:=0
 func check(ok: bool,message: String)->void:
@@ -51,6 +51,7 @@ func _init()->void:
   check(grow.attack_damage==actual.attack_damage+expected_growth,"stage%d Lv30 additive growth"%n)
  check(EXPECTED[4][0]>EXPECTED[3][0]*1.7,"stage4 health difficulty step")
  check(float(EXPECTED[4][1])/EXPECTED[4][3]>float(EXPECTED[3][1])/EXPECTED[3][3]*3.0,"stage4 burst firepower step; excludes reload")
+ _test_swarm_response(hero)
  _test_augments(hero)
  _test_rewards()
  _test_settlement(battle)
@@ -204,3 +205,39 @@ func _finish_battle(message,won):
   exempt.run_metrics.summon_spend={"slime":60.0}
   check(exempt._grant_run_research_reward(true).is_empty() and exempt.STAGE_PROGRESS.calls==0,exemption+" no rewards")
   exempt.free()
+
+func _test_swarm_response(hero:String)->void:
+ # Production decision gates: density changes eligibility, not guaranteed accuracy.
+ var g:Dictionary=P.get_profile("pistol_hero").gunner
+ var gunner=shell("extends RefCounted\nvar silence_timer=0.0\nvar gunner_reloading=false\nvar gunner_deadeye_cooldown=0.0\nvar gunner_ammo=12\nvar gunner_config={}\nvar gunner_deadeye_analysis_score:=0.0\nfunc _update_gunner_deadeye_aim_analysis():pass\n"+function_source(hero,"_gunner_should_start_deadeye")).new()
+ gunner.gunner_config=g
+ gunner.gunner_deadeye_analysis_score=4.6
+ check(gunner._gunner_should_start_deadeye(),"dense corridor reaches decisive fire threshold")
+ gunner.gunner_deadeye_analysis_score=2.3
+ check(not gunner._gunner_should_start_deadeye(),"scattered targets remain below density threshold")
+ gunner.gunner_deadeye_analysis_score=4.6
+ gunner.gunner_ammo=2
+ check(not gunner._gunner_should_start_deadeye(),"too little ammunition cannot trigger deadeye")
+ gunner.gunner_ammo=12
+ gunner.gunner_reloading=true
+ check(not gunner._gunner_should_start_deadeye(),"reload remains punishable")
+ gunner.gunner_reloading=false
+ gunner.silence_timer=1.0
+ check(not gunner._gunner_should_start_deadeye(),"silence still counters deadeye")
+ check(g.reload_seconds==2.0 and g.backstep_invulnerability==0.6 and g.backstep_cooldown==5.5,"no defensive invulnerability rollback")
+ var p:Dictionary=P.get_profile("archmage_hero")
+ var a:Dictionary=p.archmage_skills
+ # Gauge estimate excludes casting/movement/misses/refunds; not measured combat frequency.
+ var generation:=float(a.gauge_per_second)+float(a.gauge_per_basic_attack)/float(p.attack_cooldown)
+ check(100.0/generation<14.0 and 100.0/generation>13.0,"sustained basic casts generate one gauge in about13.7s")
+ var gauge=shell("extends Node\nvar hero_archetype='archmage_elementalist'\nvar archmage_skill_config={}\nvar ultimate_charge=0.0\nfunc queue_redraw():pass\n"+function_source(hero,"_add_archmage_gauge")).new()
+ gauge.archmage_skill_config=a
+ gauge._add_archmage_gauge(3.5)
+ check(is_equal_approx(gauge.ultimate_charge,3.5),"actual gauge function accepts restored regeneration")
+ gauge._add_archmage_gauge(200.0)
+ check(gauge.ultimate_charge==100.0,"gauge still caps at100")
+ gauge._add_archmage_gauge(-5.0)
+ check(gauge.ultimate_charge==100.0,"negative restoration cannot reduce gauge")
+ gauge.free()
+ check(a.ice_bolt.pillar_count==10 and a.holy_power.burst_count==12 and a.earth_spikes.spike_count==7,"area effect object counts unchanged")
+ check(a.harmony.cooldown==110.0 and A.get_augment("archmage_multicast").max_stack==2,"reset and multicast limits preserved")
