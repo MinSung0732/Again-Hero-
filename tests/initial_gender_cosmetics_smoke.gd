@@ -37,7 +37,7 @@ func run() -> void:
 	var cosmetics_path := fixture("cosmetics", art_source("res://src/data/profile_cosmetic_catalog.gd",art).replace("res://src/data/demon_appearance_catalog.gd",catalog_path))
 	var store_path := fixture("store", FileAccess.get_file_as_string("res://src/systems/profile_cosmetic_store.gd").replace("res://src/systems/account_save_scope.gd",scope_path).replace("res://src/systems/player_profile.gd",profile_path).replace("res://src/systems/demon_appearance_store.gd",appearance_path).replace("res://src/systems/monster_collection_store.gd",collection_path).replace("res://src/data/monster_catalog.gd",monsters_path).replace("res://src/data/profile_cosmetic_catalog.gd",cosmetics_path))
 	var frames_path := fixture("frames", "extends RefCounted\nstatic func style(_name: String, _size: int, _color: Color = Color.WHITE) -> StyleBox: return StyleBoxFlat.new()\n")
-	var button_path := fixture("button", "extends Button\nsignal confirmed\n")
+	var button_path := fixture("button", FileAccess.get_file_as_string("res://src/ui/drag_safe_button.gd"))
 	var icon_path := fixture("icon-picker", FileAccess.get_file_as_string("res://src/ui/lobby_profile_icon_picker.gd").replace("res://src/systems/profile_cosmetic_store.gd",store_path).replace("res://src/data/profile_cosmetic_catalog.gd",cosmetics_path).replace("res://src/ui/commerce_frame_skin.gd",frames_path).replace("res://src/ui/drag_safe_button.gd",button_path))
 	var view_source := FileAccess.get_file_as_string("res://src/ui/lobby_profile_view.gd").replace("res://src/systems/player_profile.gd",profile_path).replace("res://src/systems/profile_cosmetic_store.gd",store_path).replace("res://src/data/profile_cosmetic_catalog.gd",cosmetics_path).replace("res://src/systems/demon_appearance_store.gd",appearance_path).replace("res://src/data/demon_appearance_catalog.gd",catalog_path).replace("res://src/ui/commerce_frame_skin.gd",frames_path).replace("res://src/ui/drag_safe_button.gd",button_path).replace("res://src/ui/lobby_profile_icon_picker.gd",icon_path)
 	var refresh_start := view_source.find("func refresh() -> void:")
@@ -79,7 +79,7 @@ func run() -> void:
 				if slot == "avatar":
 					view.open_picker(slot)
 					var icons: RefCounted = view.icon_picker
-					check(icons.overlay.visible and icons.slots.size() == 10, "retained 5x2 icon gallery opens")
+					check(icons.overlay.visible and icons.slots.size() == 8, "retained two-row icon strip opens")
 					check(icons.ids.size() == 8, "only existing avatar resources listed")
 					var index: int = icons.ids.find(other)
 					icons._select_slot(index)
@@ -142,14 +142,32 @@ func run() -> void:
 		var frame_end: Vector2 = icons.panel.position + icons.panel.size * icons.panel.scale
 		check(icons.panel.position.x >= 0 and icons.panel.position.y >= 0 and frame_end.x <= bounds.x+1 and frame_end.y <= bounds.y+1, "modal inside viewport "+str(bounds))
 		check(icons.panel.size.y <= icons.BASE.y+1, "content stays within logical modal height")
-	var fixed_count: int = icons.slots[0].button.get_parent().get_child_count()
 	for i in range(15): icons.ids.append("original_male")
-	icons._turn_page(1)
-	check(icons.page == 1 and icons.page_label.text == "2 / 3", "future icon pagination")
-	icons._turn_page(50)
-	check(icons.page == 2 and icons.next.disabled, "pagination clamps at last page")
-	icons._turn_page(-50)
-	check(icons.page == 0 and icons.previous.disabled and icons.slots[0].button.get_parent().get_child_count() == fixed_count, "pagination reuses ten cards")
+	icons._sync_slots()
+	icons._render()
+	await process_frame
+	await process_frame
+	check(icons.slots.size() == 23 and icons.strip.get_child_count() == 12, "future icons extend two-row strip")
+	var bar: HScrollBar = icons.scroll.get_h_scroll_bar()
+	check(bar.max_value > bar.page and icons.scroll.get_v_scroll_bar().visible == false, "only horizontal overflow")
+	icons.scroll.scroll_horizontal = 300
+	var offset: int = icons.scroll.scroll_horizontal
+	icons._select_slot(0)
+	check(icons.scroll.scroll_horizontal == offset, "selection preserves scroll offset")
+	icons._sync_slots()
+	check(icons.slots.size() == 23 and icons.strip.get_child_count() == 12, "refresh reuses strip controls")
+	var button: Button = icons.slots[0].button
+	var saved_candidate: String = icons.candidate
+	button._begin(button.get_global_rect().get_center())
+	button._finish_gesture(button.get_global_rect().get_center() + Vector2(80, 0))
+	check(icons.candidate == saved_candidate, "drag does not select card")
+	button._begin(button.get_global_rect().get_center())
+	icons.scroll.scroll_started.emit()
+	check(button._cancelled, "native scroll takeover cancels pending tap")
+	icons.candidate = "zeus"
+	button._begin(button.get_global_rect().get_center())
+	button._finish_gesture(button.get_global_rect().get_center())
+	check(icons.candidate == "original_male", "completed tap selects card")
 	view.close_picker()
 	scope.text = ""; scope.user_id = "fixture-account"
 	check(appearance.owned_ids() == ["original_male"], "legacy missing profile fallback")

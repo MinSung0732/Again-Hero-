@@ -1,11 +1,10 @@
 extends RefCounted
-## Retained ten-slot gallery. Navigation and selection never write the save.
+## Retained two-row strip. Scrolling and selection never write the save.
 const STORE := preload("res://src/systems/profile_cosmetic_store.gd")
 const CATALOG := preload("res://src/data/profile_cosmetic_catalog.gd")
 const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
 const BUTTON := preload("res://src/ui/drag_safe_button.gd")
 const BASE := Vector2(900, 1200)
-const PAGE_SIZE := 10
 var owner_ref: WeakRef
 var overlay: ColorRect
 var panel: PanelContainer
@@ -13,15 +12,13 @@ var preview: TextureRect
 var info := {}
 var confirm: Button
 var notice: Label
-var previous: Button
-var next: Button
-var page_label: Label
+var scroll: ScrollContainer
+var strip: HBoxContainer
 var slots: Array[Dictionary] = []
 var ids: Array[String] = []
 var available: Array[String] = []
 var candidate := ""
 var scope_key := ""
-var page := 0
 
 func install(owner: RefCounted) -> void:
 	owner_ref = weakref(owner)
@@ -84,29 +81,20 @@ func install(owner: RefCounted) -> void:
 	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var bottom := _section(column, "보유 아이콘", 0)
 	bottom.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var grid := GridContainer.new()
-	grid.columns = 5
-	grid.add_theme_constant_override("h_separation", 12)
-	grid.add_theme_constant_override("v_separation", 12)
-	bottom.add_child(grid)
-	for i in range(PAGE_SIZE):
-		var button := _button(grid, "", _select_slot.bind(i))
-		button.custom_minimum_size = Vector2(142, 164)
-		button.expand_icon = true
-		button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
-		button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		button.add_theme_constant_override("icon_max_width", 116)
-		button.add_theme_font_size_override("font_size", 20)
-		slots.append({"button": button, "id": ""})
-	var pager := HBoxContainer.new()
-	column.add_child(pager)
-	previous = _button(pager, "‹", _turn_page.bind(-1))
-	previous.custom_minimum_size = Vector2(84, 64)
-	page_label = _label(pager, "", 26)
-	page_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	page_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	next = _button(pager, "›", _turn_page.bind(1))
-	next.custom_minimum_size = Vector2(84, 64)
+	scroll = ScrollContainer.new()
+	scroll.name = "IconHorizontalScroll"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.custom_minimum_size.y = 368
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.scroll_deadzone = 16
+	scroll.scroll_started.connect(_cancel_scroll_taps)
+	bottom.add_child(scroll)
+	strip = HBoxContainer.new()
+	strip.add_theme_constant_override("separation", 12)
+	scroll.add_child(strip)
+	var hint := _label(bottom, "좌우로 스크롤하여 아이콘을 확인하세요.", 21)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	overlay.resized.connect(_layout)
 	# Wrapped labels initially measure before container widths are assigned.
 	# Reset the logical size once their real minimum settles, not every frame.
@@ -170,10 +158,11 @@ func open() -> void:
 		if not path.is_empty() and FileAccess.file_exists(path): ids.append(id)
 	available = STORE.choices("avatar")
 	candidate = STORE.selected_id("avatar")
-	page = maxi(0, ids.find(candidate)) / PAGE_SIZE
+	_sync_slots()
 	_render()
 	overlay.show()
 	overlay.grab_focus()
+	_reveal_equipped.call_deferred()
 
 func close() -> void:
 	if overlay != null: overlay.hide()
@@ -189,23 +178,48 @@ func refresh_state() -> void:
 	available = STORE.choices("avatar")
 	_render()
 
-func _turn_page(direction: int) -> void:
-	page = clampi(page + direction, 0, maxi(0, (ids.size() - 1) / PAGE_SIZE))
-	_render()
+func _sync_slots() -> void:
+	# Grow only when the catalog grows; reuse controls on open/selection.
+	while slots.size() < ids.size():
+		var index := slots.size()
+		if index % 2 == 0:
+			var pair := VBoxContainer.new()
+			pair.add_theme_constant_override("separation", 12)
+			strip.add_child(pair)
+		var pair: VBoxContainer = strip.get_child(index / 2)
+		var button := _button(pair, "", _select_slot.bind(index))
+		button.custom_minimum_size = Vector2(142, 164)
+		button.expand_icon = true
+		button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+		button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		button.add_theme_constant_override("icon_max_width", 116)
+		button.add_theme_font_size_override("font_size", 20)
+		slots.append({"button": button, "id": ""})
+	for i in range(strip.get_child_count()):
+		strip.get_child(i).visible = i * 2 < ids.size()
+
+func _cancel_scroll_taps() -> void:
+	# Native scrolling can start before the button drag threshold is reached.
+	for slot in slots: slot.button._reset_gesture()
+
+func _reveal_equipped() -> void:
+	if not overlay.visible: return
+	var index := ids.find(candidate)
+	if index >= 0: scroll.ensure_control_visible(slots[index].button)
 
 func _select_slot(index: int) -> void:
-	if slots[index].id.is_empty(): return
+	if index < 0 or index >= slots.size() or slots[index].id.is_empty(): return
 	candidate = slots[index].id
 	refresh_state()
 
 func _render() -> void:
 	var owner: RefCounted = owner_ref.get_ref()
 	if owner == null: return
-	for i in range(PAGE_SIZE):
-		var offset := page * PAGE_SIZE + i
-		var id := ids[offset] if offset < ids.size() else ""
+	for i in range(slots.size()):
+		var id := ids[i] if i < ids.size() else ""
 		slots[i].id = id
 		var button: Button = slots[i].button
+		button.visible = not id.is_empty()
 		button.disabled = id.is_empty()
 		button.icon = null
 		button.text = ""
@@ -223,10 +237,6 @@ func _render() -> void:
 	info.status.add_theme_color_override("font_color", Color("a5eb68") if owned else Color("bcaccb"))
 	confirm.disabled = not owned or candidate == STORE.selected_id("avatar")
 	notice.text = "확정하기 전에는 변경 내용이 저장되지 않습니다."
-	var count := maxi(1, ceili(float(ids.size()) / PAGE_SIZE))
-	page_label.text = "%d / %d" % [page + 1, count]
-	previous.disabled = page <= 0
-	next.disabled = page + 1 >= count
 
 func _confirm() -> void:
 	var owner: RefCounted = owner_ref.get_ref()
