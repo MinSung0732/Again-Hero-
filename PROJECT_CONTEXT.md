@@ -1,3 +1,10 @@
+## 2026-10-11 — 용사 매혹·치유감소·받는피해증가 결과
+
+- 세 상태에 caller-owned 결과 API와 공유 helper 추가. 기존 bool/거절·갱신 규칙, 매혹 최소0.05/재적용 금지·해제 면역/약한 source 참조·channel 종료, 치유감소0~1/받는피해증가 하한0·타이머 max 유지.
+- 상태 쓰기 뒤 신호/visual 전 snapshot 기록. 동일 receipt 재진입 시 이전 결과 무효화, null/파생 override legacy1회, 비DOT budget reset 및 기술당1회 집계 유지. 실제 tick/회복 계산·기술 호출자/receipt 클래스 변경 없음, 매 적용 객체/배열/그룹 스캔 추가 없음.
+- Godot4.5.1 신규15,748+기존 상태40,411 =56,159검사 실패0, import/4실행 로그 error/leak 없음. 초기618/이전625·631/직전639 Hero함수 hook 역변환 비교, gdparse/Python compile/diff 통과. 전체 게임4.7/모바일/실제 이동·channel·피해 엔진/성능 미검증.
+- 기준 feature3ff333cb733c45ecdda4b595999791fca5ef6394, main4122adb7 유지. docs/HERO_MODIFIER_STATUS_RECEIPT.md에 기존 예외/재현/롤백. 다음은 실제 기술 호출자와 적중 횟수 bridge 연결; 매칭·용사모드 확대 보류.
+
 ## 2026-10-11 — 용사 화상·두 독 경로·출혈 결과
 
 - 화상/현재체력 비례 독/출처·채널 피해량 독/출혈에 재사용 상태 receipt API 추가. 기존 helper 공유, 최소 poison 시간·피해·tick/갱신, bleed default 비율·refresh 거절, burn refresh, damage poison dedupe 유지.

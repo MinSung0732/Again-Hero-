@@ -17259,20 +17259,52 @@ func _clear_bleed() -> void:
 	set_meta("bleed_active", false)
 
 
+func apply_healing_reduction_with_result(duration: float, reduction: float, receipt) -> bool:
+	if receipt == null:
+		apply_healing_reduction(duration, reduction)
+		return false
+	var revision: int = receipt.begin(self, &"healing_reduction", duration, reduction)
+	if not supports_status_receipt():
+		apply_healing_reduction(duration, reduction)
+		return false
+	_apply_healing_reduction_status(duration, reduction, receipt, revision)
+	return receipt.finish(revision)
+
 func apply_healing_reduction(duration: float, reduction: float) -> bool:
+	return _apply_healing_reduction_status(duration, reduction)
+
+func _apply_healing_reduction_status(duration: float, reduction: float, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or duration <= 0.0:
 		return false
 	healing_reduction_ratio = maxf(healing_reduction_ratio,clampf(reduction,0.0,1.0))
 	healing_reduction_timer = maxf(healing_reduction_timer,duration)
+	if receipt != null:
+		receipt.record_application(healing_reduction_timer, healing_reduction_ratio, receipt_revision)
 	record_status_effect_event("healing_reduction")
 	COMBAT_STATUS_EFFECT_VISUAL.show_on(self, "healing_reduction")
 	return true
 
+func apply_damage_taken_increase_with_result(duration: float, increase: float, receipt) -> bool:
+	if receipt == null:
+		apply_damage_taken_increase(duration, increase)
+		return false
+	var revision: int = receipt.begin(self, &"damage_taken_increase", duration, increase)
+	if not supports_status_receipt():
+		apply_damage_taken_increase(duration, increase)
+		return false
+	_apply_damage_taken_increase_status(duration, increase, receipt, revision)
+	return receipt.finish(revision)
+
 func apply_damage_taken_increase(duration: float, increase: float) -> bool:
+	return _apply_damage_taken_increase_status(duration, increase)
+
+func _apply_damage_taken_increase_status(duration: float, increase: float, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or duration <= 0.0:
 		return false
 	damage_taken_increase_ratio = maxf(damage_taken_increase_ratio,maxf(increase,0.0))
 	damage_taken_increase_timer = maxf(damage_taken_increase_timer,duration)
+	if receipt != null:
+		receipt.record_application(damage_taken_increase_timer, damage_taken_increase_ratio, receipt_revision)
 	record_status_effect_event("damage_taken_increase")
 	return true
 
@@ -17302,7 +17334,21 @@ func register_succubus_hit(source: Node2D) -> bool:
 		return false
 	return apply_charm(source, float(SUCCUBUS_BEHAVIOR.CHARM.duration))
 
+func apply_charm_with_result(source: Node2D, duration: float, receipt) -> bool:
+	if receipt == null:
+		apply_charm(source, duration)
+		return false
+	var revision: int = receipt.begin(self, &"charm", duration, 1.0)
+	if not supports_status_receipt():
+		apply_charm(source, duration)
+		return false
+	_apply_charm_status(source, duration, receipt, revision)
+	return receipt.finish(revision)
+
 func apply_charm(source: Node2D, duration: float) -> bool:
+	return _apply_charm_status(source, duration)
+
+func _apply_charm_status(source: Node2D, duration: float, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or charm_timer > 0.0 or charm_immunity_timer > 0.0 or not is_instance_valid(source):
 		return false
 	charm_stacks = 0
@@ -17310,6 +17356,8 @@ func apply_charm(source: Node2D, duration: float) -> bool:
 	charm_source = weakref(source)
 	charm_cooldown_properties = _get_external_skill_cooldown_properties()
 	set_meta("charm_active", true)
+	if receipt != null:
+		receipt.record_application(charm_timer, 1.0, receipt_revision)
 	COMBAT_STATUS_EFFECT_VISUAL.show_on(self, "charm")
 	record_status_effect_event("charm")
 	if channeling:
