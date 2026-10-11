@@ -343,6 +343,8 @@ static func _consume_support_shield(owner: Node2D, amount: int, receipt = null, 
 	if amount > 0 and is_instance_valid(authority) and authority.has_method("get_goblin_formation_damage_multiplier"):
 		amount = maxi(int(round(amount*float(authority.get_goblin_formation_damage_multiplier(owner)))),1)
 	var kind := String(owner.get_meta("incoming_attack_kind","untyped"))
+	if amount > 0 and kind == "melee" and owner.has_method("modify_melee_damage"):
+		amount = maxi(int(owner.call("modify_melee_damage",amount)),0)
 	if amount > 0 and kind == "ranged" and owner.has_method("ranged_damage_multiplier"):
 		amount = maxi(int(round(amount*float(owner.call("ranged_damage_multiplier")))),1)
 	if amount > 0 and kind == "ranged" and not bool(owner.get_meta("guard_transfer",false)):

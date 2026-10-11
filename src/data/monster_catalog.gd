@@ -28,6 +28,7 @@ const ORDER := [
 	"yuki_onna",
 	"gargoyle",
 	"hobgoblin",
+	"ogre",
 	"zeus",
 	"bulgasal",
 	"izanami",
@@ -42,6 +43,19 @@ const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const BULGASAL_BEHAVIOR := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const MONSTERS := {
+ "ogre": {
+  "id":"ogre","name":"오우거","role":"tank","family":"ogre","species":"beast","grade":"uncommon","rarity":"uncommon","attack_type":"melee",
+  "base_cost":20.0,"summon_exp":20.0,"default_unlocked":false,"combat_enabled":true,
+  "base_stats":preload("res://src/data/ogre_behavior_catalog.gd").BASE,
+  "balance":{"health_share":0.71428571,"damage_share":0.27472527,"note":"등장100%근거리쉴드·매3번째피격 근거리30%피감, 원거리 취약/느린 추격. 낮은 직접화력으로 생존기여 비용 반영. 실전승률 미검증"},
+  "description":"소환 시 최대HP100% 근거리쉴드. 매3번째 피격이 근거리이면 그 피해30% 감소. 느린 이동·공격, 매우 높은 체력의 짐승 탱커.",
+  "special_augment_ids":["ogre_great_blood","ogre_war_fury","ogre_mass_production"],
+  "elite_skills":[{"runtime":"monster","id":"elite_ogre_thick_fat","name":"두꺼운 지방","passive":true,"initial_cooldown":0.0,"cooldown":0.0,"description":"근거리 피격마다5% 무효화 또는5% 확률로 감소 적용 피해80% 반사(서로 배타적). 쉴드 피해 포함, 반사는 원래 피격도 받음."}],
+  "card_icon_path":"res://assets/art/monsters/ogre/frames/idle_01.png",
+  "elite_visual":preload("res://src/data/ogre_behavior_catalog.gd").ELITE_VISUAL,
+  "scene":preload("res://src/monsters/Ogre.tscn"),
+ },
+
 	"hobgoblin": {
 		"id":"hobgoblin","name":"홉고블린","role":"tank","family":"goblin","species":"beast","grade":"rare","rarity":"rare","attack_type":"melee",
 		"base_cost":18.0,"summon_exp":18.0,"default_unlocked":false,"combat_enabled":true,

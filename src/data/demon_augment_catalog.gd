@@ -26,6 +26,7 @@ const MONSTER_NAMES := {
 	"orc": "오크",
 	"gargoyle":"가고일",
 	"hobgoblin":"홉고블린",
+	"ogre":"오우거",
 	"bomb_rat": "폭탄쥐",
 	"skeleton": "해골 전사",
 	"skeleton_archer": "해골 궁병",
@@ -144,6 +145,9 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+ {"id":"ogre_great_blood","monster_id":"ogre","name":"거인의 혈통","description":"선택 이후 일반 오우거10회 소환마다 중형1마리로 대체. 크기15%·HP/공격50%·이속/공속10% 증가, 받는 근거리피해20% 감소. 엘리트/분열 제외.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"ogre_great_blood","effect_values":{"summon_every":10,"exclude_elite":true}},
+ {"id":"ogre_war_fury","monster_id":"ogre","name":"전장의 광기","description":"폭발 역할로 변경. 기본HP50%, 공격력350%, 이속200%, 공속250%. 기본 오우거HP210/공격63/이속130/공격간격1.04초. 기존 쉴드는 재지급하지 않음.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"ogre_war_fury","effect_values":{"role_override":"exploder","runtime_stat_multipliers":preload("res://src/data/ogre_behavior_catalog.gd").FURY_STATS}},
+ {"id":"ogre_mass_production","monster_id":"ogre","name":"대량 동원","description":"오우거 생산비용25% 감소.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"ogre_mass_production","effect_values":{"stat_multipliers":{"cost":0.75}}},
 	{"id":"hobgoblin_lord","monster_id":"hobgoblin","name":"군단의 군주","description":"기존 일반 홉고블린 제거 후 일반 최대1마리. 엘리트는 이 증강 제외. 기본HP·공격력20마리분, 범위 지름750 및 얇은 경계선 표시. 이동속도·공격간격 유지.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"hobgoblin_lord","effect_values":{"max_population":1,"exclude_elite":true,"remove_existing_on_select":true,"radius":375.0,"stat_multipliers":{"hp":20.0,"damage":20.0}}},
 	{"id":"hobgoblin_iron_bond","monster_id":"hobgoblin","name":"철벽의 결속","description":"범위 내 이름에 고블린이 포함된 아군이 받는 피해20% 감소. 같은 오라 중첩 없음.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"hobgoblin_iron_bond","effect_values":{"incoming_multiplier":0.80}},
 	{"id":"hobgoblin_shield_march","monster_id":"hobgoblin","name":"방패의 행진","description":"범위 내 이름에 고블린이 포함된 아군에게2초마다 근거리쉴드30 추가(중첩). 원거리 피해는 막지 못함.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"hobgoblin_shield_march","effect_values":{"interval":2.0,"shield_amount":30,"stack":true}},

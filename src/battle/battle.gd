@@ -263,6 +263,7 @@ var special_augment_cache_ids: Array[String] = []
 var special_augment_config_cache: Dictionary = {}
 
 var monster_summon_costs: Dictionary = {}
+var special_summon_counts: Dictionary = {}
 var permanent_research_levels: Dictionary = {}
 var monster_collection_upgrade_levels: Dictionary = {}
 
@@ -884,6 +885,7 @@ func _start_battle() -> void:
 	special_augment_config_cache.clear()
 	mutation_director.reset()
 	monster_summon_costs.clear()
+	special_summon_counts.clear()
 	_load_monster_collection_upgrades()
 
 	_apply_permanent_research()
@@ -1550,7 +1552,7 @@ func get_monster_cost(monster_type: String) -> float:
 		"cost"
 	)
 	return snappedf(
-		base_cost * summon_cost_multiplier * monster_cost_multiplier,
+		base_cost * summon_cost_multiplier * monster_cost_multiplier * _get_special_stat_multiplier(monster_type,"cost"),
 		0.1
 	)
 
@@ -1738,6 +1740,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 		})
 	detail["special_augments"] = special_augments
 
+	_apply_special_runtime_preview(detail,monster_id)
 	return detail
 
 
@@ -2420,6 +2423,10 @@ func _spawn_monster(
 	if bool(monster.get_meta("exclude_all_augments", false)):
 		_apply_augment_free_base_stats(monster, monster_type)
 	_apply_special_augments_to_monster(monster, monster_type)
+	if not split_child and not bool(monster.get_meta("exclude_all_augments", false)) and String(monster.get_meta("visual_variant", "")) != "elite":
+		_configure_summon_cadence(monster, monster_type)
+		if monster.has_method("on_spawn_stats_finalized"):
+			monster.call("on_spawn_stats_finalized")
 	monster.connect("died", Callable(self, "_on_monster_died").bind(monster))
 
 	var monster_instance_id := monster.get_instance_id()
@@ -2442,9 +2449,10 @@ func _spawn_monster(
 	monsters_alive += 1
 	if not TRANSCENDENCE_DATA.is_transcendent(monster_type):
 		raw_allied_summons += 1
-	if not split_child and bool(spawn_modifiers.get("counts_population",false)) and not TRANSCENDENCE_DATA.is_transcendent(monster_type) and MONSTER_CATALOG.get_role(monster_type)=="tank":
+	var effective_role := String(monster.get("monster_role")) if monster.get("monster_role") != null else MONSTER_CATALOG.get_role(monster_type)
+	if not split_child and bool(spawn_modifiers.get("counts_population",false)) and not TRANSCENDENCE_DATA.is_transcendent(monster_type) and effective_role == "tank":
 		raw_real_tank_summons += 1
-	if not split_child and not TRANSCENDENCE_DATA.is_transcendent(monster_type) and transcendence.record_summon(MONSTER_CATALOG.get_role(monster_type) if bool(spawn_modifiers.get("counts_population", false)) else ""):
+	if not split_child and not TRANSCENDENCE_DATA.is_transcendent(monster_type) and transcendence.record_summon(effective_role if bool(spawn_modifiers.get("counts_population", false)) else ""):
 		transcendence_changed.emit(transcendence.monster_id, true, false)
 	if bool(spawn_modifiers.get("counts_population", false)) or bool(spawn_modifiers.get("mission_summon", false)):
 		_record_mission_action("summon", 1.0)
@@ -2479,6 +2487,33 @@ func _unregister_monster(instance_id: int) -> void:
 		monster_population_counts[monster_id] = maxi(int(monster_population_counts.get(monster_id, 0)) - 1, 0)
 		monster_population_ids.erase(instance_id)
 	active_monsters.erase(instance_id)
+
+func _apply_special_runtime_preview(detail: Dictionary, monster_id: String) -> void:
+	for config in _get_special_augment_config(monster_id).values():
+		var stats: Dictionary = config.get("runtime_stat_multipliers",{})
+		for pair in [["max_hp","hp_multiplier"],["attack_damage","damage_multiplier"],["move_speed","speed_multiplier"],["attack_cooldown","attack_speed_multiplier"]]:
+			if not detail.has(pair[0]): continue
+			var value := float(detail[pair[0]])
+			var multiplier := maxf(float(stats.get(pair[1],1.0)),0.01)
+			value = value/multiplier if pair[0] == "attack_cooldown" else value*multiplier
+			detail[pair[0]] = maxi(1,int(round(value))) if pair[0] in ["max_hp","attack_damage"] else value
+		if config.has("role_override"):
+			detail["role"] = String(config.role_override)
+			detail["role_label"] = MONSTER_CATALOG.get_role_label(String(config.role_override))
+
+func _configure_summon_cadence(monster: Node, monster_id: String) -> void:
+	if bool(monster.get_meta("split_child",false)) or bool(monster.get_meta("exclude_all_augments",false)) or String(monster.get_meta("visual_variant","")) == "elite":
+		return
+	if not monster.has_method("configure_summon_variant"):
+		return
+	var configs := _get_special_augment_config(monster_id)
+	for effect_type in configs:
+		var every := int(configs[effect_type].get("summon_every",0))
+		if every <= 0: continue
+		var key := monster_id+":"+String(effect_type)
+		var count := int(special_summon_counts.get(key,0))+1
+		special_summon_counts[key] = count
+		monster.call("configure_summon_variant",effect_type,count % every == 0)
 
 func _get_applicable_special_augment_config(monster_id: String, elite_variant: bool = false) -> Dictionary:
 	var configs := _get_special_augment_config(monster_id)
@@ -2793,17 +2828,9 @@ func _apply_demon_level_scaling_to_monster(
 		null
 	) if monster.has_meta("demon_level_base_attack_damage") else null
 	if base_damage_value != null:
-		MONSTER_SUPPORT_COMMON.set_unbuffed_attack_damage(
-			monster,
-			maxi(
-				1,
-				int(round(
-					float(base_damage_value)
-					* _get_demon_level_monster_damage_multiplier() * damage_special * growth
-					+ float(runtime_additions.get("damage", 0.0))
-				))
-			)
-		)
+		var runtime_damage := (float(base_damage_value) * _get_demon_level_monster_damage_multiplier() * damage_special * growth
+			+ float(runtime_additions.get("damage",0.0))) * float(runtime_additions.get("damage_multiplier",1.0))
+		MONSTER_SUPPORT_COMMON.set_unbuffed_attack_damage(monster,maxi(1,int(round(runtime_damage))))
 
 	var base_speed_value = monster.get_meta(
 		"demon_level_base_move_speed",
@@ -2812,8 +2839,8 @@ func _apply_demon_level_scaling_to_monster(
 	if base_speed_value != null:
 		monster.set(
 			"move_speed",
-			float(base_speed_value) * _get_demon_level_monster_speed_multiplier()
-			+ float(runtime_additions.get("speed", 0.0))
+			(float(base_speed_value) * _get_demon_level_monster_speed_multiplier()
+			+ float(runtime_additions.get("speed", 0.0))) * float(runtime_additions.get("speed_multiplier",1.0))
 		)
 
 	if monster.has_method("get_runtime_stat_additions"):
@@ -4442,6 +4469,9 @@ func _apply_special_monster_modifiers(
 			monster_id,
 			elite_skills
 		)
+
+	if monster.has_method("on_spawn_stats_finalized"):
+		monster.call("on_spawn_stats_finalized")
 
 	if monster.has_method("queue_redraw"):
 		monster.call("queue_redraw")
