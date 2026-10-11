@@ -11,3 +11,20 @@ const STORAGE_HEAL_RATIO := 0.50
 const RANGED_SHIELD_RATIO := 0.70
 const PETRIFY_SECONDS := 3.0
 const PETRIFY_HEAL_RATIO := 0.30
+
+# Existing normal/elite art shares the same five motions; keep original PNG pixels.
+const ANIMATIONS := {
+	"idle": {"prefix":"idle", "count":4, "fps":6.0, "loop":true},
+	"move": {"prefix":"walk", "count":6, "fps":8.0, "loop":true},
+	"attack": {"prefix":"attack", "count":6, "fps":12.0, "loop":false},
+	"hit": {"prefix":"hit", "count":3, "fps":12.0, "loop":false},
+	"death": {"prefix":"death", "count":4, "fps":10.0, "loop":false},
+}
+const NORMAL_VISUAL := {
+	"mode":"frames", "asset_dir":"res://assets/art/monsters/Gargoyle/frames",
+	"target_height":140.0, "animations":ANIMATIONS,
+}
+const ELITE_VISUAL := {
+	"mode":"frames", "asset_dir":"res://assets/art/elitemonster/gargoyle/frames",
+	"target_height":160.0, "animations":ANIMATIONS,
+}

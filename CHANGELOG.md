@@ -1,3 +1,9 @@
+## 2026-10-11 — 기존 일반·엘리트 가고일 도트 연결 수정
+
+- 이전 가고일 패치의 에셋 미제공 판단은 저장소 확인 누락. 이미 있는 `monsters/Gargoyle/frames` 및 `elitemonster/gargoyle/frames` 각각23개 PNG를 공통 MonsterVisual에 연결하고 석상 임시 도형 제거. idle4/walk6/attack6/hit3/death4, nearest 필터, 일반140/엘리트160 높이. 원본 PNG 변경 없음.
+- 일반 idle_01 카드 아이콘 및 Catalog elite_visual 등록. 비주얼 높이에 맞춰 체력바 기준점 이동, 기존 게이지 공통 간격 유지. 석화 중 애니메이션 정지, 종료/사망 시 재개.
+- Godot4.5.1 headless 격리에서 실제 PNG/MonsterVisual/가고일 씬 검사83개 및 기존 가고일 전투·게이지51개 통과. 데미지숫자/상태효과 표시는 fixture adapter, 전체 게임 화면·Android·실전 승률 미검증. `git diff --check` 통과. 기준 feature b6c3dcfd, main4122adb7 유지. 롤백은 이번 수정 커밋 revert.
+
 ## 2026-10-11 — 가고일 등록 및 공통 몬스터 게이지 적재
 
 - 희귀/암석/근접 탱커 가고일: 비용14, 원본HP320/공격22/이속78/간격2초. 등급 적용HP352/공격25/이속80.34/간격1.92초. 공통 비용예산에서 원거리피감40~60%·반경200 아군피해30% 인계의 몸체/화력 기회비용 반영. Catalog 등록으로 도감/편성/희귀 뽑기풀·증강 후보 자동 포함.

@@ -45,6 +45,8 @@ const MONSTERS := {
 		"id":"gargoyle","name":"가고일","role":"tank","family":"gargoyle","species":"rock","grade":"rare","rarity":"rare","attack_type":"melee",
 		"base_cost":14.0,"summon_exp":14.0,"default_unlocked":false,"combat_enabled":true,
 		"base_stats":preload("res://src/data/gargoyle_behavior_catalog.gd").BASE,
+		"card_icon_path":"res://assets/art/monsters/Gargoyle/frames/idle_01.png",
+		"elite_visual":preload("res://src/data/gargoyle_behavior_catalog.gd").ELITE_VISUAL,
 		"balance":{"health_share":0.80174927,"damage_share":0.68204365,"note":"원거리 40~60% 피감·반경200 아군피해30% 인계. 느린 근접/낮은 추격·직접DPS로 기회비용 반영. 실전 승률 미검증"},
 		"description":"원거리 공격·기술 피해40% 감소. HP50%→15%에서 추가 감소0%→20%. 반경200 아군 원거리피해30% 대신 받음(가장 가까운1마리, 연쇄/중첩 제외). 느린 근접 탱커.",
 		"special_augment_ids":["gargoyle_recompense","gargoyle_sky_bastion","gargoyle_stone_slumber"],

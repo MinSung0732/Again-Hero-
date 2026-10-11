@@ -1,5 +1,6 @@
 extends "res://src/monsters/orc.gd"
 const DATA := preload("res://src/data/gargoyle_behavior_catalog.gd")
+var status_bar_head_y := -82.0
 var stored_damage := 0.0
 var petrify_used := false
 var petrify_remaining := 0.0
@@ -22,9 +23,17 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
+	apply_visual_profile(DATA.NORMAL_VISUAL)
 	add_to_group("ranged_guards")
 	set_meta("ranged_guard", true)
 	_grant_augmented_shield()
+
+func apply_visual_profile(profile: Dictionary) -> void:
+	if not is_instance_valid(visual): return
+	if visual.apply_visual_profile(profile):
+		status_bar_head_y = visual.position.y-float(profile.get("target_height",140.0))*0.5-12.0
+		if petrify_remaining > 0.0: visual.speed_scale = 0.0
+		queue_redraw()
 
 func configure_special_augments(configs: Dictionary) -> void:
 	super.configure_special_augments(configs)
@@ -52,6 +61,7 @@ func _physics_process(delta: float) -> void:
 		var cumulative := int(round(petrify_budget*minf(petrify_elapsed/DATA.PETRIFY_SECONDS,1.0)))
 		heal_direct(maxi(cumulative-petrify_paid,0))
 		petrify_paid = cumulative
+		if petrify_remaining <= 0.0 and is_instance_valid(visual): visual.speed_scale = 1.0
 		velocity = Vector2.ZERO
 		queue_redraw()
 		return
@@ -90,9 +100,11 @@ func _apply_gargoyle_damage(amount: int, receipt = null, revision: int = 0) -> v
 	if receipt != null: receipt.record_hp(paid,revision)
 	if special_augment_configs.has("gargoyle_recompense"):
 		stored_damage += paid*DATA.STORAGE_RATIO
+	if petrify_remaining <= 0.0: _visual_call(&"play_hit")
 	DAMAGE_NUMBERS.show(self,paid)
 	queue_redraw()
 	if current_hp <= 0:
+		if is_instance_valid(visual): visual.speed_scale = 1.0
 		_begin_death_with_result(receipt,revision)
 	elif not petrify_used and special_augment_configs.has("gargoyle_stone_slumber") and float(current_hp)/maxi(max_hp,1) <= DATA.LOW_HP_START:
 		petrify_used = true
@@ -100,6 +112,7 @@ func _apply_gargoyle_damage(amount: int, receipt = null, revision: int = 0) -> v
 		petrify_budget = int(round((max_hp-current_hp)*DATA.PETRIFY_HEAL_RATIO))
 		petrify_elapsed = 0.0
 		petrify_paid = 0
+		if is_instance_valid(visual): visual.speed_scale = 0.0
 
 func try_cast_elite_skill(skill: Dictionary) -> bool:
 	if dying or current_hp <= 0 or petrify_remaining > 0.0 or bool(get_meta("stun_active",false)) or bool(get_meta("silence_active",false)) or MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self): return false
@@ -115,14 +128,4 @@ func try_cast_elite_skill(skill: Dictionary) -> bool:
 
 func _draw() -> void:
 	if dying: return
-	# Explicit stone placeholder until approved sprite frames are provided.
-	var color := Color("858894") if petrify_remaining <= 0.0 else Color("b2bac7")
-	draw_colored_polygon(PackedVector2Array([Vector2(-22,-18),Vector2(-65,-46),Vector2(-48,4),Vector2(-20,18)]),color)
-	draw_colored_polygon(PackedVector2Array([Vector2(22,-18),Vector2(65,-46),Vector2(48,4),Vector2(20,18)]),color)
-	draw_rect(Rect2(-24,-27,48,58),color)
-	draw_circle(Vector2(0,-34),22,color)
-	draw_line(Vector2(-14,-46),Vector2(-18,-64),color,7)
-	draw_line(Vector2(14,-46),Vector2(18,-64),color,7)
-	draw_circle(Vector2(-8,-36),3,Color("dcbf64"))
-	draw_circle(Vector2(8,-36),3,Color("dcbf64"))
-	MONSTER_RUNTIME_COMMON.draw_status_bars(self,self,-80.0)
+	MONSTER_RUNTIME_COMMON.draw_status_bars(self,self,status_bar_head_y)
