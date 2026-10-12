@@ -1,4 +1,5 @@
 extends Control
+const BACKGROUND_LAYOUT := preload("res://src/ui/cutscene_background_layout.gd")
 # Sword oath: dark cathedral -> twelve-seat halo -> golden revelation.
 const RIG := preload("res://src/ui/arthur_portrait_rig.gd")
 const FX := preload("res://src/ui/arthur_combat_effects.gd")
@@ -7,6 +8,7 @@ var rig: Node2D
 var reveal: ShaderMaterial
 var hall: ShaderMaterial
 var background_art: Sprite2D
+var background_overlay: ColorRect
 var effects: Node2D
 var label: Label
 var elapsed := 0.0
@@ -22,14 +24,14 @@ func _ready() -> void:
 	background_art.position = Vector2(270,480)
 	background_art.scale = Vector2(540,960)/background_art.texture.get_size()
 	background_root.add_child(background_art)
-	var background := ColorRect.new()
-	background.size = Vector2(540,960)
-	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	background_overlay = ColorRect.new()
+	background_overlay.size = Vector2(540,960)
+	background_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hall = ShaderMaterial.new()
 	hall.shader = preload("res://src/ui/arthur_holy_hall.gdshader")
-	background.material = hall
-	background.modulate.a = 0.16
-	background_root.add_child(background)
+	background_overlay.material = hall
+	background_overlay.modulate.a = 0.16
+	background_root.add_child(background_overlay)
 	effects = Node2D.new()
 	stage.add_child(effects)
 	effects.draw.connect(_draw_effects)
@@ -60,6 +62,9 @@ func _layout() -> void:
 	var factor := minf(size.x/540,size.y/960)
 	stage.scale = Vector2.ONE*factor
 	stage.position = (size-Vector2(540,960)*factor)*0.5
+	BACKGROUND_LAYOUT.cover_sprite(background_art,size,stage.position,factor)
+	BACKGROUND_LAYOUT.cover_overlay(background_overlay,size,stage.position,factor)
+
 func set_time(seconds: float) -> void:
 	elapsed = seconds
 	rig.set_time(seconds)

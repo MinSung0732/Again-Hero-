@@ -1,4 +1,5 @@
 extends Control
+const BACKGROUND_LAYOUT := preload("res://src/ui/cutscene_background_layout.gd")
 ## Presentation only. Never rolls, pays, awards or changes battle state.
 const RIG := preload("res://src/ui/izanami_portrait_rig.gd")
 const REVEAL := preload("res://src/ui/zeus_silhouette_reveal.gdshader")
@@ -82,6 +83,8 @@ func _layout() -> void:
 	var factor := minf(size.x/540.0,size.y/960.0)
 	stage.scale = Vector2.ONE*factor
 	stage.position = (size-Vector2(540,960)*factor)*0.5
+	BACKGROUND_LAYOUT.cover_sprite(background,size,stage.position,factor)
+
 func set_time(seconds: float) -> void:
 	elapsed = maxf(0.0,seconds)
 	rig.set_time(elapsed)
