@@ -36,7 +36,7 @@ WeakRef 엘리트 레지스트리와 활성 꼬리 Dictionary를 쓰므로 프�
 
 - 일반 `assets/art/monsters/lizardmanfighter/frames`: idle4/walk6/attack6/hit3/death4,23PNG, 높이130.
 - 엘리트 `assets/art/elitemonster/lizardmanfighter/frames`: idle3/walk6/attack6/hit3/death4,22PNG, 높이150. 실제 idle04가 없어3개로 연결.
-- 꼬리 `assets/art/monsters/lizardmanfighter/frames/effect1/tail_01~08.png`:8PNG, 높이36.
+- 꼬리 `assets/art/monsters/lizardmanfighter/frames/effect1/tail_01~08.png`:8PNG, 높이79.2(2026-10-12 사용자 요청으로 기존36의2.2배).
 - nearest 필터 및 기존 MonsterVisual 캐시. 원본 파일 수정·생성·복제 없음. 체력·쉴드 폭70/높이6/간격3/최신순 적재 규칙 유지, 노란게이지 없음.
 
 ## 등록·검증

@@ -25,4 +25,4 @@ const ELITE_ANIMATIONS := {
 }
 const NORMAL_VISUAL := {"mode":"frames","asset_dir":"res://assets/art/monsters/lizardmanfighter/frames","target_height":130.0,"animations":NORMAL_ANIMATIONS}
 const ELITE_VISUAL := {"mode":"frames","asset_dir":"res://assets/art/elitemonster/lizardmanfighter/frames","target_height":150.0,"animations":ELITE_ANIMATIONS}
-const TAIL_VISUAL := {"mode":"frames","asset_dir":"res://assets/art/monsters/lizardmanfighter/frames/effect1","target_height":36.0,"animations":{"idle":{"prefix":"tail","count":8,"fps":12.0,"loop":false}}}
+const TAIL_VISUAL := {"mode":"frames","asset_dir":"res://assets/art/monsters/lizardmanfighter/frames/effect1","target_height":79.2,"animations":{"idle":{"prefix":"tail","count":8,"fps":12.0,"loop":false}}}

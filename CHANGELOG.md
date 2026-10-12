@@ -1,3 +1,8 @@
+## 2026-10-12 — 리자드맨 꼬리 크기 2.2배 조정
+
+- effect1 꼬리 표시 높이36→79.2. MonsterVisual의 균일 스케일 경로로 가로·세로 모두2.2배 확대, 원본PNG/nearest 유지.
+- 크기 비율·설정 확인 및 diff 검사 통과. 실제 게임 화면·Android 미검증. 기준 feature38e7e3d, 롤백은 이번커밋revert.
+
 ## 2026-10-12 — 고급 폭발형 리자드맨 전사 추가
 
 - 고급/짐승/근접 폭발(exploder), 비용12, HP150/공격22/이속180/간격0.8초. Catalog·고급 뽑기·도감·증강·엘리트 등록. 실제 ShopCatalog 고급 풀/확률/추첨 확인. `noncollision_family=lizardman` 데이터로 최적화 로컬그리드 및 fallback 밀어내기에서 같은 리자드맨 제외, 기존 physicalmask1/다른 종 분리 보존.
