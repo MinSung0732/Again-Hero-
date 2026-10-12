@@ -911,6 +911,8 @@ func _start_battle() -> void:
 		current_stage_data = STAGE_CATALOG.get_stage(current_stage_id)
 		STAGE_PROGRESS.set_current_stage(current_stage_id)
 
+	if not practice_mode and not tutorial_mode:
+		command_power = clampf(float(current_stage_data.get("opening_command",START_COMMAND)),0.0,max_command)
 	current_map_size = Vector2(
 		float(current_stage_data.get("map_width", int(DEFAULT_MAP_SIZE.x))),
 		float(current_stage_data.get("map_height", int(DEFAULT_MAP_SIZE.y)))
@@ -1834,7 +1836,7 @@ func _get_auto_spawn_position() -> Vector2:
 		origin = hero.position
 
 	var angle := randf_range(0.0, TAU)
-	var distance := randf_range(AUTO_SPAWN_MIN_DISTANCE, AUTO_SPAWN_MAX_DISTANCE)
+	var distance := randf_range(float(current_stage_data.get("auto_spawn_min_distance",AUTO_SPAWN_MIN_DISTANCE)),float(current_stage_data.get("auto_spawn_max_distance",AUTO_SPAWN_MAX_DISTANCE)))
 	var candidate := origin + Vector2.from_angle(angle) * distance
 	return _clamp_manual_spawn_position(candidate)
 
@@ -2063,19 +2065,19 @@ func promote_monster_to_giant(
 	monster.set_meta("giant_hp_multiplier", GIANT_MONSTER_HP_MULTIPLIER)
 	monster.set_meta("giant_size_multiplier", GIANT_MONSTER_SIZE_MULTIPLIER)
 
-	var raw_hp = monster.get_meta("augment_raw_max_hp", null)
+	var raw_hp = monster.get_meta("augment_raw_max_hp") if monster.has_meta("augment_raw_max_hp") else null
 	if raw_hp != null:
 		monster.set_meta(
 			"augment_raw_max_hp",
 			maxf(float(raw_hp) * GIANT_MONSTER_HP_MULTIPLIER, 1.0)
 		)
-	var raw_speed = monster.get_meta("augment_raw_move_speed", null)
+	var raw_speed = monster.get_meta("augment_raw_move_speed") if monster.has_meta("augment_raw_move_speed") else null
 	if raw_speed != null:
 		monster.set_meta(
 			"augment_raw_move_speed",
 			maxf(float(raw_speed) * GIANT_MONSTER_STAT_MULTIPLIER, 1.0)
 		)
-	var raw_damage = monster.get_meta("augment_raw_attack_damage", null)
+	var raw_damage = monster.get_meta("augment_raw_attack_damage") if monster.has_meta("augment_raw_attack_damage") else null
 	if raw_damage != null:
 		monster.set_meta(
 			"augment_raw_attack_damage",
@@ -3271,8 +3273,11 @@ func _try_spawn_chest_from_kills() -> void:
 		return
 
 	hero_kills_toward_chest = 0
-	_spawn_random_treasure_chest()
+	_spawn_chest_for_session.call_deferred(battle_command_router.get_session_id())
 
+func _spawn_chest_for_session(session: int) -> void:
+	if battle_over or session != battle_command_router.get_session_id(): return
+	_spawn_random_treasure_chest()
 
 func _spawn_random_treasure_chest() -> void:
 	if _active_registry_size(active_treasure_chests) >= MAX_ACTIVE_CHESTS:
@@ -5048,7 +5053,7 @@ func _apply_normal_augments_to_existing_monster(
 	var collection_hp_multiplier := float(shared_profile["collection_hp"])
 	var collection_damage_multiplier := float(shared_profile["collection_damage"])
 
-	var raw_speed = monster.get_meta("augment_raw_move_speed", null)
+	var raw_speed = monster.get_meta("augment_raw_move_speed") if monster.has_meta("augment_raw_move_speed") else null
 	if raw_speed != null:
 		monster.set_meta(
 			"demon_level_base_move_speed",
@@ -5059,7 +5064,7 @@ func _apply_normal_augments_to_existing_monster(
 			* float(runtime_variant.get("speed", 1.0))
 		)
 
-	var raw_damage = monster.get_meta("augment_raw_attack_damage", null)
+	var raw_damage = monster.get_meta("augment_raw_attack_damage") if monster.has_meta("augment_raw_attack_damage") else null
 	if raw_damage != null:
 		monster.set_meta(
 			"demon_level_base_attack_damage",
@@ -5074,7 +5079,7 @@ func _apply_normal_augments_to_existing_monster(
 			)
 		)
 
-	var raw_hp = monster.get_meta("augment_raw_max_hp", null)
+	var raw_hp = monster.get_meta("augment_raw_max_hp") if monster.has_meta("augment_raw_max_hp") else null
 	if raw_hp != null:
 		var base_hp := (
 			float(raw_hp)
@@ -5091,10 +5096,7 @@ func _apply_normal_augments_to_existing_monster(
 			maxf(base_hp, 1.0)
 		)
 
-	var raw_cooldown = monster.get_meta(
-		"augment_raw_attack_cooldown",
-		null
-	)
+	var raw_cooldown = monster.get_meta("augment_raw_attack_cooldown") if monster.has_meta("augment_raw_attack_cooldown") else null
 	if raw_cooldown != null:
 		monster.set(
 			"attack_cooldown",
@@ -5385,6 +5387,11 @@ func _on_hero_died() -> void:
 	if all_clear_gold > 0:
 		result_text += "\n쉬움 전체 클리어 골드 +%d" % all_clear_gold
 
+	var campaign_reward: Dictionary = clear_result.get("campaign_reward",{})
+	if not campaign_reward.is_empty():
+		if bool(campaign_reward.get("unlocked",false)): result_text += "\n군단 해금 · %s\n팀편성에서 바로 사용할 수 있습니다." % String(campaign_reward.name)
+		elif int(campaign_reward.get("research",0)) > 0: result_text += "\n군단 보상 · %s → 연구 포인트 +%d" % [String(campaign_reward.name),int(campaign_reward.research)]
+		else: result_text += "\n군단 보상 · %s 조각 +%d" % [String(campaign_reward.name),int(campaign_reward.get("shards",0))]
 	result_text += _grant_run_research_reward(true)
 	_finish_battle(result_text, true)
 

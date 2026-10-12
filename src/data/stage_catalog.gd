@@ -1,5 +1,6 @@
 extends RefCounted
 class_name StageCatalog
+const EXPERIENCE := preload("res://src/data/campaign_experience_catalog.gd")
 
 const ORDER := ["stage_1", "stage_2", "stage_3", "stage_4", "stage_5", "stage_6", "stage_7", "stage_8", "stage_9", "stage_10"]
 
@@ -736,7 +737,7 @@ const STAGES = {
 
 static func get_stage(stage_id: String) -> Dictionary:
 	var stage: Dictionary = STAGES.get(stage_id, {})
-	return stage.duplicate(true)
+	return EXPERIENCE.apply(stage.duplicate(true))
 
 static func get_ordered_stage_ids() -> Array[String]:
 	var result: Array[String] = []

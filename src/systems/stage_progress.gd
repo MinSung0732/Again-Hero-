@@ -3,6 +3,9 @@ class_name StageProgress
 const ACCOUNT_SCOPE := preload("res://src/systems/account_save_scope.gd")
 
 const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
+const EXPERIENCE := preload("res://src/data/campaign_experience_catalog.gd")
+const COLLECTION := preload("res://src/systems/monster_collection_store.gd")
+const MONSTERS := preload("res://src/data/monster_catalog.gd")
 const TESTER_UNLOCK_ALL_STAGES := false
 
 const SAVE_PATH := "user://stage_progress.cfg"
@@ -105,16 +108,23 @@ static func complete_stage(
 		"research_points",
 		int(state.get("research_points", 0))
 	)
-	var save_error := ACCOUNT_SCOPE.save_config(config, SAVE_PATH)
+	var campaign_reward := _prepare_campaign_reward(config,stage_id)
+	if not bool(campaign_reward.get("success",true)):
+		return {"success":false,"reward":0,"gold_reward":0,"easy_all_clear_gold":0,"campaign_reward":{}}
+	var configs := {SAVE_PATH.get_file():config}
+	if campaign_reward.has("collection"):
+		configs[COLLECTION.SAVE_PATH.get_file()] = campaign_reward.collection
+	var save_error := ACCOUNT_SCOPE.save_configs(configs)
 
 	return {
+		"campaign_reward": campaign_reward.get("presentation",{}) if save_error == OK else {},
 		"success": save_error == OK,
 		"was_cleared": was_cleared,
 		"first_clear": not was_cleared and save_error == OK,
 		"reward": granted_reward if save_error == OK else 0,
 		"gold_reward": gold_reward if save_error == OK else 0,
 		"easy_all_clear_gold": all_clear_gold if save_error == OK else 0,
-		"research_points": int(state.get("research_points", 0)),
+		"research_points": int(config.get_value("meta","research_points",state.get("research_points",0))),
 		"highest_unlocked_stage": int(state.get("highest_unlocked_stage", 1)),
 	}
 
@@ -440,3 +450,30 @@ static func _save_state(state: Dictionary) -> void:
 		int(state.get("research_points", 0))
 	)
 	ACCOUNT_SCOPE.save_config(config, SAVE_PATH)
+
+static func _prepare_campaign_reward(progress: ConfigFile,stage_id: String) -> Dictionary:
+	var rules := EXPERIENCE.profile(stage_id)
+	var id := String(rules.get("reward_monster",""))
+	var key := "campaign_"+stage_id
+	if id.is_empty() or bool(progress.get_value("milestone_reward_claimed",key,false)): return {}
+	if not MONSTERS.MONSTERS.has(id): return {"success":false}
+	var raw := ConfigFile.new()
+	var error := ACCOUNT_SCOPE.load_config(raw,COLLECTION.SAVE_PATH)
+	if error not in [OK,ERR_FILE_NOT_FOUND]: return {"success":false}
+	var state := COLLECTION.load_state()
+	var entry: Dictionary = state[id]
+	var already_owned := bool(entry.get("unlocked",false))
+	var converted := 0
+	entry["unlocked"] = true
+	if already_owned:
+		if COLLECTION.is_maxed(id,state): converted = EXPERIENCE.OWNED_REWARD_SHARDS*MONSTERS.get_shard_research_points(id)
+		else: entry["shards"] = int(entry.get("shards",0))+EXPERIENCE.OWNED_REWARD_SHARDS
+	state[id] = entry
+	progress.set_value("meta","research_points",int(progress.get_value("meta","research_points",0))+converted)
+	progress.set_value("milestone_reward_claimed",key,true)
+	return {"collection":COLLECTION._state_config(state),"presentation":{"monster_id":id,"name":MONSTERS.get_monster_name(id),"unlocked":not already_owned,"shards":EXPERIENCE.OWNED_REWARD_SHARDS if already_owned and converted == 0 else 0,"research":converted}}
+
+static func is_campaign_reward_claimed(stage_id: String) -> bool:
+	var config := ConfigFile.new()
+	if ACCOUNT_SCOPE.load_config(config,SAVE_PATH) != OK: return false
+	return bool(config.get_value("milestone_reward_claimed","campaign_"+stage_id,false))

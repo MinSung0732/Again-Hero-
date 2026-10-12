@@ -69,7 +69,7 @@ func setup(
 	splash_radius = maxf(new_splash_radius, 0.0)
 	splash_damage_ratio = clampf(new_splash_damage_ratio, 0.0, 1.0)
 	rotation = direction.angle()
-	monitoring = true
+	_sync_monitoring.call_deferred()
 	_apply_projectile_visual()
 
 func _physics_process(delta: float) -> void:
@@ -174,7 +174,7 @@ func _play_stage9_impact() -> void:
 	if not active:
 		return
 	set_physics_process(false)
-	monitoring = false
+	_sync_monitoring.call_deferred()
 	rotation = 0.0
 	if (
 		projectile_sprite.sprite_frames != null
@@ -219,7 +219,7 @@ func deactivate_for_pool() -> void:
 	if is_in_group("hero_projectiles"):
 		remove_from_group("hero_projectiles")
 	set_physics_process(false)
-	monitoring = false
+	_sync_monitoring.call_deferred()
 	visible = false
 	projectile_sprite.stop()
 
@@ -365,3 +365,7 @@ func _draw() -> void:
 
 	draw_circle(Vector2.ZERO, 9.0, Color(0.95, 0.86, 0.32))
 	draw_circle(Vector2.ZERO, 4.0, Color(1.0, 1.0, 0.82))
+
+func _sync_monitoring() -> void:
+	# Read the current pooled life so an old deferred disable cannot affect reuse.
+	monitoring = active and not has_impacted

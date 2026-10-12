@@ -86,10 +86,13 @@ static func apply_visibility(main: Node, enabled: bool) -> void:
 	var chrome: Control = main.hud_layer.get_node_or_null("CastleBattleChrome")
 	if chrome != null:
 		chrome.visible = enabled
-	main.battle_viewport_container.offset_top = PLAY_TOP if enabled else 350.0
+	var insight := main.hud_layer.get_node_or_null("CombatInsight") as Control
+	var has_insight := insight != null and insight.visible
+	var play_top := PLAY_TOP if enabled or has_insight else 350.0
+	main.battle_viewport_container.offset_top = play_top
 	main.battle_viewport_container.offset_left = SIDE_INSET if enabled else 0.0
 	main.battle_viewport_container.offset_right = -SIDE_INSET if enabled else 0.0
-	place(main.get_node("HUD/HeroSkillCooldownBar"), Rect2(130 if enabled else 30, PLAY_TOP+10 if enabled else 360, 470, 68))
+	place(main.get_node("HUD/HeroSkillCooldownBar"), Rect2(130 if enabled else 30, play_top+10, 470, 68))
 	main._sync_skill_unlock_cutscene_frame()
 
 static func place(control: Control, rect: Rect2, font_size: int = 0) -> void:

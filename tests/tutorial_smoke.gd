@@ -62,6 +62,7 @@ func run() -> void:
 	var bytes := Crypto.new().generate_random_bytes(16).hex_encode()
 	var id := "%s-%s-%s-%s-%s" % [bytes.substr(0,8),bytes.substr(8,4),bytes.substr(12,4),bytes.substr(16,4),bytes.substr(20,12)]
 	SCOPE.select_account(id)
+	root.get_node("LoginGateway").user_id = id
 	SCOPE.install({"stage_progress.cfg": {"meta": {"gold": 23}, "progress": {"current_stage_id": "stage_1", "highest_unlocked_stage": 1}, "player_profile": {"value": {"nickname": "새벽군주", "gender": "male"}}}}, 1)
 	var fake := FakeCloud.new()
 	root.add_child(fake)
@@ -210,6 +211,7 @@ func run() -> void:
 	var second := Crypto.new().generate_random_bytes(16).hex_encode()
 	var second_id := "%s-%s-%s-%s-%s" % [second.substr(0,8),second.substr(8,4),second.substr(12,4),second.substr(16,4),second.substr(20,12)]
 	SCOPE.select_account(second_id)
+	root.get_node("LoginGateway").user_id = second_id
 	SCOPE.install({"stage_progress.cfg": {"meta": {"gold": 0}}}, 1)
 	fake.tutorial_status = "pending"
 	fake.awarded = false

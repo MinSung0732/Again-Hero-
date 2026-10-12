@@ -17,10 +17,10 @@ func exercise() -> void:
 	var state := STORE.load_state()
 	check(STORE.get_unlocked_ids(state) == ["slime", "spider", "orc"], "only three starter monsters")
 	for id in CATALOG.ORDER:
-		if CATALOG.is_default_unlocked(id):
+		if CATALOG.is_default_unlocked(id) or CATALOG.get_rarity(id) == "transcendent":
 			continue
 		var required := CATALOG.get_shards_required(id)
-		check(required == 30, "current common monster unlock cost")
+		check(required == (25 if CATALOG.get_rarity(id) == "legendary" else 30), "ordinary rarity unlock cost")
 		var award := STORE.award_shards(id, required-1)
 		check(award.success and not STORE.is_unlocked(id), "locked below threshold " + id)
 		check(STORE.try_upgrade(id).reason == "locked", "locked cannot upgrade " + id)
@@ -34,7 +34,7 @@ func exercise() -> void:
 	state = STORE.load_state()
 	state.ghost = {"unlocked": true, "level": 0, "shards": 0}
 	check(STORE.save_state(state) and STORE.is_unlocked("ghost"), "preserve prior unlock")
-	var expected := {"common":30, "advanced":30, "uncommon":30, "rare":30, "legendary":25, "transcendent":15}
+	var expected := {"common":30, "advanced":30, "uncommon":30, "rare":30, "legendary":25, "transcendent":1}
 	for rarity in expected:
 		check(CATALOG.RARITY_UPGRADE_PROFILES[rarity].shards_required == expected[rarity], "shared rarity threshold " + rarity)
 

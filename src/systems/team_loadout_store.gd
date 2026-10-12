@@ -61,3 +61,12 @@ static func _normalize_ids(raw_ids: Array, valid_ids: Array) -> Array:
 			break
 
 	return result
+
+static func default_ids(valid_ids: Array) -> Array:
+	var defaults: Array = []
+	for raw_id in MONSTERS.ORDER:
+		var id := String(raw_id)
+		if id in valid_ids and MONSTERS.is_default_unlocked(id) and MONSTERS.get_rarity(id) != "transcendent":
+			defaults.append(id)
+			if defaults.size() >= MAX_SLOTS: break
+	return defaults if not defaults.is_empty() else _normalize_ids(valid_ids,valid_ids)

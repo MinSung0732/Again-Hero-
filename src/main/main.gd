@@ -370,7 +370,7 @@ func _ready() -> void:
 	mutation_choice_1.pressed.connect(_on_mutation_choice_pressed.bind(1))
 	mutation_choice_2.pressed.connect(_on_mutation_choice_pressed.bind(2))
 	next_stage_button.pressed.connect(_on_next_stage_pressed)
-	stage_select_result_button.pressed.connect(_on_lobby_pressed)
+	stage_select_result_button.pressed.connect(_on_result_formation_pressed)
 	restart_button.pressed.connect(_on_restart_pressed)
 
 	var snapshot: Dictionary = battle.get_snapshot()
@@ -408,6 +408,7 @@ func _ready() -> void:
 		float(snapshot.get("run_remaining_seconds", 0.0))
 	)
 
+	_install_combat_insight()
 	build_label.text = ""
 	debug_balance_label.text = String(snapshot.get("debug_balance_summary", "[DEBUG]"))
 	placement_toggle.button_pressed = true
@@ -1645,6 +1646,7 @@ func _on_mutation_selected(
 		status_label.text = "%s 출현!" % mutation_name
 
 func _on_run_time_changed(_elapsed_seconds: float, remaining_seconds: float) -> void:
+	_refresh_combat_insight(_elapsed_seconds)
 	run_timer_label.text = "연습전투 · 제한 없음" if battle.practice_mode else "남은 시간 %s" % _format_run_time(remaining_seconds)
 
 func _format_run_time(seconds: float) -> String:
@@ -1762,17 +1764,11 @@ func _apply_summon_slot_availability(
 
 func _load_battle_loadout() -> void:
 	var valid_ids: Array = []
-	for raw_id in MONSTER_CATALOG.ORDER:
-		var monster_id := String(raw_id)
-		if MONSTER_CATALOG.MONSTERS.has(monster_id):
-			if MONSTER_CATALOG.get_rarity(monster_id) != "transcendent":
-				valid_ids.append(monster_id)
-
-	var fallback_ids: Array = []
-	for monster_id in valid_ids:
-		fallback_ids.append(monster_id)
-		if fallback_ids.size() >= TEAM_LOADOUT_STORE.MAX_SLOTS:
-			break
+	var owned: Array = preload("res://src/systems/monster_collection_store.gd").get_unlocked_ids()
+	for raw_id in owned:
+		var id := String(raw_id)
+		if MONSTER_CATALOG.MONSTERS.has(id) and MONSTER_CATALOG.get_rarity(id) != "transcendent": valid_ids.append(id)
+	var fallback_ids := TEAM_LOADOUT_STORE.default_ids(valid_ids)
 
 	battle_loadout_ids = TEAM_LOADOUT_STORE.load_ids(
 		valid_ids,
@@ -3418,13 +3414,19 @@ func _on_hero_augment_selected(
 	_reason: String,
 	_build_summary: String
 ) -> void:
-	# 용사 증강 선택은 AI가 백그라운드에서 처리한다.
-	# 마왕의 소환/스킬 상태 영역에는 후보나 선택 이유를 출력하지 않는다.
+	_insight.record_choice(_chosen_name,battle.run_metrics.elapsed_seconds)
+	_refresh_combat_insight(battle.run_metrics.elapsed_seconds,true)
 	build_label.text = ""
 	if hero_info_panel.visible:
 		_refresh_hero_info_panel()
 
+var _insight = preload("res://src/systems/combat_insight_model.gd").new()
+var _insight_view: Control
+var _result_won := false
+
 func _on_battle_finished(message: String, player_won: bool) -> void:
+	_result_won = player_won
+	if is_instance_valid(_insight_view): _insight_view.hide()
 	hero_bgm_manager.stop_bgm()
 	GameAudio.battle_result(self, player_won)
 	settings_overlay.hide()
@@ -3465,6 +3467,8 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	_result_reward_details = copy.details
 	result_analysis.text = "전투 분석 불러오는 중..."
 	$HUD/ResultBackdrop.show()
+	stage_select_result_button.text = "새 군단 편성" if player_won else "군단 바꿔 재도전"
+	if next_stage_button.visible: next_stage_button.text = "다음 용사 도전 · Stage %d" % (int(battle.current_stage_data.get("number",1))+1)
 	_style_result_actions()
 	result_panel.show()
 	result_panel.move_to_front()
@@ -3472,7 +3476,7 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	call_deferred("_populate_run_result_analysis")
 
 func _style_result_actions() -> void:
-	var primary: Button = next_stage_button if next_stage_button.visible else restart_button
+	var primary: Button = stage_select_result_button if result_reward.text.contains("군단 해금") else (next_stage_button if next_stage_button.visible else restart_button)
 	for button in [next_stage_button, stage_select_result_button, restart_button]:
 		var emphasized: bool = button == primary
 		button.add_theme_color_override("font_color", Color("fff0c9") if emphasized else Color("eee8f5"))
@@ -3493,7 +3497,7 @@ func _populate_run_result_analysis() -> void:
 	if battle != null and battle.has_method("get_run_analysis_summary"):
 		var summary = battle.call("get_run_analysis_summary")
 		if summary != null:
-			result_analysis.text = preload("res://src/ui/battle_result_copy.gd").format_analysis(String(summary), _result_reward_details)
+			result_analysis.text = preload("res://src/ui/battle_result_copy.gd").format_analysis(String(summary), _result_reward_details)+"\n\n"+_insight.result_note(_result_won)
 			return
 
 	result_analysis.text = "Run 분석을 불러오지 못했습니다."
@@ -3604,3 +3608,21 @@ func _show_stamina_notice(message: String) -> void:
 	panel.dialog_text = message
 	panel.popup_centered(Vector2i(700, 230))
 
+
+func _install_combat_insight() -> void:
+	_insight.reset(String(battle.current_stage_id))
+	if battle.tutorial_mode or battle.practice_mode: return
+	if is_instance_valid(_insight_view): _insight_view.queue_free()
+	_insight_view = preload("res://src/ui/combat_insight_view.gd").new()
+	_insight_view.install(hud_layer,_open_hero_info)
+	_refresh_combat_insight(battle.run_metrics.elapsed_seconds,true)
+func _refresh_combat_insight(elapsed: float,force: bool = false) -> void:
+	if not is_instance_valid(_insight_view) or battle.battle_over or not is_instance_valid(battle.hero): return
+	if battle.tutorial_mode or battle.practice_mode: _insight_view.hide(); return
+	if _insight.sample(elapsed,battle.run_metrics.total_damage_dealt,int(battle.hero.get("current_hp")),int(battle.hero.get("max_hp"))) or force:
+		_insight_view.update_copy(_insight.headline(elapsed),_insight.hint(elapsed))
+func _on_result_formation_pressed() -> void:
+	if not battle.battle_over or _scene_load_pending or _lobby_exit_pending: return
+	get_tree().set_meta("campaign_team_return",String(battle.current_stage_data.get("next_stage_id","")) if _result_won else String(battle.current_stage_id))
+	_on_lobby_pressed()
+	if not _scene_load_pending: get_tree().remove_meta("campaign_team_return")

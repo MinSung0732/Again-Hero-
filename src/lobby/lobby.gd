@@ -387,6 +387,7 @@ func _ready() -> void:
 	_refresh_header()
 	_refresh_stage_card()
 	TutorialFlow.call_deferred("install_lobby", self)
+	call_deferred("_consume_campaign_team_return")
 
 func _setup_cloud_account() -> void:
 	var guide := other_account_panel.get_node("Guide") as Label
@@ -3157,7 +3158,7 @@ func _setup_team_preview() -> void:
 		team_catalog_ids.append(monster_id)
 		team_available_ids.append(monster_id)
 
-		if team_selected_ids.size() < TEAM_MAX_SLOTS:
+		if MONSTER_CATALOG.is_default_unlocked(monster_id) and team_selected_ids.size() < TEAM_MAX_SLOTS:
 			team_selected_ids.append(monster_id)
 
 	team_status_label.text = "Catalog %d종 확인" % team_catalog_ids.size()
@@ -4773,6 +4774,9 @@ func _refresh_stage_card() -> void:
 		)
 	)
 
+	var experience := preload("res://src/data/campaign_experience_catalog.gd").profile(stage_id)
+	if not experience.is_empty() and unlocked:
+		stage_description_label.text = String(experience.preview)
 	var entry_state := (
 		"클리어 완료"
 		if cleared
@@ -4791,6 +4795,9 @@ func _refresh_stage_card() -> void:
 		stage_reward_label.text = "최초 보상\n연구 +%d" % reward
 	else:
 		stage_reward_label.text = "최초 보상\n-"
+
+	if not experience.is_empty() and not STAGE_PROGRESS.is_campaign_reward_claimed(stage_id):
+		stage_reward_label.text += " · "+MONSTER_CATALOG.get_monster_name(String(experience.reward_monster))
 
 	var repeat_label := stage_description_label.get_parent().get_node_or_null(
 		"RepeatReward"
@@ -5462,3 +5469,12 @@ func _enter_practice_battle() -> void:
 
 func _can_open_main_tool() -> bool:
 	return current_tab == "main" and not _battle_entry_pending and not TutorialFlow.locks_lobby()
+
+func _consume_campaign_team_return() -> void:
+	if not get_tree().has_meta("campaign_team_return"): return
+	var stage_id := String(get_tree().get_meta("campaign_team_return"))
+	get_tree().remove_meta("campaign_team_return")
+	var index := stage_ids.find(stage_id)
+	if index >= 0 and STAGE_PROGRESS.is_stage_unlocked(index+1):
+		selected_stage_index = index; STAGE_PROGRESS.set_current_stage(stage_id); _refresh_stage_card()
+	_switch_tab("team")

@@ -75,6 +75,8 @@ func run() -> void:
 		root.get_texture().get_image().save_png("res://coupon-modal-preview.png")
 	lobby.get_node("CouponOverlay").hide()
 	check(not await mode.apply_coupon("invalid"), "unknown coupon rejected")
+	var normal_monsters := COLLECTION.get_unlocked_ids()
+	check("bomb_rat" in normal_monsters, "campaign unlock remains in normal save")
 	var normal_gold := PROGRESS.get_gold()
 	var normal_points := PROGRESS.get_research_points()
 	var normal_stage := int(PROGRESS.load_state().highest_unlocked_stage)
@@ -96,7 +98,7 @@ func run() -> void:
 	mode.tutorial_preview = false
 	check(await mode.apply_coupon("normaltest"), "return normal without reset")
 	check(not mode.active and PROGRESS.get_gold() == normal_gold and PROGRESS.get_research_points() == normal_points and int(PROGRESS.load_state().highest_unlocked_stage) == normal_stage, "normal progress preserved")
-	check(COLLECTION.get_unlocked_ids() == ["slime","spider","orc"], "normal starter monsters")
+	check(COLLECTION.get_unlocked_ids() == normal_monsters, "normal unlocked monsters preserved")
 	check(mode.reset_progress(), "isolate following economy fixtures")
 	var grant := PROGRESS.add_research_points(141, 84)
 	check(grant.success and grant.gold_granted == 84 and PROGRESS.get_gold() == 84, "research/gold same save")

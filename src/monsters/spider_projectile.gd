@@ -61,7 +61,7 @@ func setup(
 	if not is_in_group("monster_projectiles"):
 		add_to_group("monster_projectiles")
 	visible = true
-	monitoring = true
+	_sync_monitoring.call_deferred()
 	set_physics_process(true)
 	_apply_projectile_visual()
 
@@ -137,7 +137,7 @@ func deactivate_for_pool() -> void:
 	scale = Vector2.ONE
 	if is_in_group("monster_projectiles"):
 		remove_from_group("monster_projectiles")
-	monitoring = false
+	_sync_monitoring.call_deferred()
 	set_physics_process(false)
 	visible = false
 	if is_instance_valid(projectile_sprite):
@@ -256,3 +256,7 @@ func _load_texture(path: String) -> Texture2D:
 func _combat_source() -> Node:
 	var reference = get_meta("combat_source",null)
 	return reference.get_ref() if reference is WeakRef else null
+
+func _sync_monitoring() -> void:
+	# Read the current pooled life so an old deferred disable cannot affect reuse.
+	monitoring = active and not has_impacted
