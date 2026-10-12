@@ -6,6 +6,9 @@ var _host: Control
 var _panel: PanelContainer
 var _message: Label
 var _confirm: Button
+var _title: Label
+var _cancel: Button
+var _action := Callable()
 var _previous_focus: WeakRef
 
 func install(host: Control) -> void:
@@ -38,6 +41,7 @@ func install(host: Control) -> void:
 	box.add_theme_constant_override("separation", 28)
 	_panel.add_child(box)
 	var title := Label.new()
+	_title = title
 	title.name = "Title"
 	title.text = "던전 입장 안내"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -56,9 +60,21 @@ func install(host: Control) -> void:
 	_confirm.name = "Confirm"
 	_confirm.text = "확인"
 	_confirm.custom_minimum_size.y = 82
-	box.add_child(_confirm)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 20)
+	box.add_child(row)
+	_cancel = Button.new()
+	_cancel.text = "취소"
+	_cancel.custom_minimum_size.y = 82
+	_cancel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(_cancel)
+	host._apply_lobby_button_skin(_cancel, false, 28)
+	_cancel.pressed.connect(close)
+	_cancel.hide()
+	_confirm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(_confirm)
 	host._apply_lobby_button_skin(_confirm, true, 28)
-	_confirm.pressed.connect(close)
+	_confirm.pressed.connect(_on_confirm)
 	SKIN.apply(_panel)
 	host.resized.connect(_resize)
 	_resize()
@@ -67,20 +83,37 @@ func install(host: Control) -> void:
 func _resize() -> void:
 	_panel.custom_minimum_size.x = minf(760, maxf(0, _host.get_viewport_rect().size.x - 48))
 
-func open(message: String) -> void:
+func open(message: String, title: String = "던전 입장 안내") -> void:
 	if not visible:
 		_previous_focus = weakref(get_viewport().gui_get_focus_owner())
 	_message.text = message
+	_title.text = title
+	_confirm.text = "확인"
+	_cancel.hide()
+	_action = Callable()
 	_resize()
 	show()
 	_confirm.grab_focus()
 
 func close() -> void:
 	hide()
+	_action = Callable()
 	var previous = _previous_focus.get_ref() if _previous_focus != null else null
 	if is_instance_valid(previous) and previous is Control and previous.is_visible_in_tree():
 		previous.grab_focus()
 	_previous_focus = null
+
+func open_confirmation(message: String, title: String, action: Callable) -> void:
+	open(message, title)
+	_action = action
+	_cancel.show()
+	_confirm.text = "초기화"
+	_cancel.grab_focus()
+
+func _on_confirm() -> void:
+	var action := _action
+	close()
+	if action.is_valid(): action.call()
 
 func blocks_lobby_input(event: InputEvent) -> bool:
 	if not visible:

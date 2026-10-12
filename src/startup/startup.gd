@@ -209,7 +209,7 @@ func _enter_lobby() -> void:
 	_entering = true
 	phase = Phase.ENTERING
 	login_screen.hide()
-	if not LoginGateway.user_id.is_empty() or LocalTestMode.is_tutorial_preview():
+	if not LoginGateway.user_id.is_empty() or LocalTestMode.is_tutorial_preview() or preload("res://src/systems/guest_progress_store.gd").is_guest():
 		loading_view.configure("마왕의 기록 확인 중", "계정의 프로필을 불러옵니다.")
 		loading_view.show()
 		var owner: String = LoginGateway.user_id

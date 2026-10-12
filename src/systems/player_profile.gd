@@ -116,4 +116,4 @@ static func complete(cloud: Node) -> bool:
 static func _preview() -> bool:
 	var tree := Engine.get_main_loop() as SceneTree
 	var mode := tree.root.get_node_or_null("LocalTestMode") if tree != null else null
-	return mode != null and mode.is_tutorial_preview()
+	return mode != null and (mode.is_tutorial_preview() or preload("res://src/systems/guest_progress_store.gd").is_guest())

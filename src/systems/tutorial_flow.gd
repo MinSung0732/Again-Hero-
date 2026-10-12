@@ -34,12 +34,16 @@ func active() -> bool:
 
 func _owner() -> String:
 	var mode := get_node("/root/LocalTestMode")
-	return "preview:" + mode.preview_directory if mode.is_tutorial_preview() else SCOPE.user_id
+	if mode.is_tutorial_preview(): return "preview:" + mode.preview_directory
+	if preload("res://src/systems/guest_progress_store.gd").is_guest(): return "guest:" + preload("res://src/systems/guest_progress_store.gd").guest_id()
+	return SCOPE.user_id
 
 func _rpc(action: String) -> Dictionary:
 	var mode := get_node("/root/LocalTestMode")
 	if mode.is_tutorial_preview():
 		return mode.tutorial_operation(action)
+	if preload("res://src/systems/guest_progress_store.gd").is_guest():
+		return preload("res://src/systems/guest_progress_store.gd").tutorial_operation(action)
 	var cloud: Node = transport if transport != null else get_node("/root/CloudStore")
 	return await cloud.tutorial_operation(action)
 
@@ -245,14 +249,15 @@ func advance(next_step: String, praise: String, action: Callable, result_target:
 
 func install_lobby(lobby: Node) -> void:
 	var preview: bool = get_node("/root/LocalTestMode").is_tutorial_preview()
-	if not preview and (SCOPE.user_id.is_empty() or get_node("/root/LocalTestMode").active):
+	var guest := preload("res://src/systems/guest_progress_store.gd").is_guest()
+	if not preview and not guest and (SCOPE.user_id.is_empty() or get_node("/root/LocalTestMode").active):
 		account_owner = ""
 		step = ""
 		status = ""
 		pending_exit = false
 		return
 	var cloud: Node = transport if transport != null else get_node("/root/CloudStore")
-	if not preview and transport == null and not cloud.ready_for_play:
+	if not preview and not guest and transport == null and not cloud.ready_for_play:
 		return
 	if account_owner != _owner():
 		pending_exit = false

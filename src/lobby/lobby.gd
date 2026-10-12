@@ -2188,6 +2188,9 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 
 
 func _input(event: InputEvent) -> void:
+	if settings_view != null and settings_view.guest_account_view != null and settings_view.guest_account_view.blocks_input(event):
+		_stage_swipe_active = false
+		return
 	if stamina_view != null and stamina_view.blocks_entry_notice_input(event):
 		_stage_swipe_active = false
 		return

@@ -34,11 +34,21 @@ func request_rpc(method: String, data: Dictionary) -> Dictionary:
 	var gateway := get_node("/root/LoginGateway")
 	if gateway.access_token.is_empty() or not _account_context_matches():
 		return {}
+	return await _request_with_token(method, data, gateway.access_token)
+
+func link_guest(session: Dictionary, guest: Dictionary) -> Dictionary:
+	# Use the newly validated OAuth token without switching the local save owner.
+	var mode := get_node("/root/LocalTestMode")
+	if mode.active or mode.tutorial_preview or not SCOPE.user_id.is_empty(): return {}
+	return await _request_with_token("link_guest_save", {"guest_id": guest.guest_id, "guest_payload": guest.payload}, String(session.get("access_token", "")))
+
+func _request_with_token(method: String, data: Dictionary, token: String) -> Dictionary:
+	if token.is_empty(): return {}
 	var request := HTTPRequest.new()
 	request.timeout = 20
 	request.body_size_limit = 2000000
 	add_child(request)
-	var headers := PackedStringArray(["apikey: " + CONFIG.PUBLISHABLE_KEY, "Authorization: Bearer " + gateway.access_token, "Content-Type: application/json"])
+	var headers := PackedStringArray(["apikey: " + CONFIG.PUBLISHABLE_KEY, "Authorization: Bearer " + token, "Content-Type: application/json"])
 	if request.request(CONFIG.PROJECT_URL + "/rest/v1/rpc/" + method, headers, HTTPClient.METHOD_POST, JSON.stringify(data)) != OK:
 		request.queue_free()
 		return {}

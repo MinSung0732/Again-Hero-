@@ -1,4 +1,5 @@
 extends RefCounted
+var guest_account_view: RefCounted
 
 const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
 const OTHER_ENTRIES := [["profile", "프로필"], ["demon_book", "마왕도감"], ["hero_book", "용사도감"], ["rank_history", "랭킹기록"], ["practice", "연습전투"], ["settings", "설정"]]
@@ -630,6 +631,8 @@ func _build_account() -> void:
 	lobby.add_child(withdrawal_dialog)
 	withdrawal_dialog.confirmed.connect(_withdraw_account)
 	var gateway := lobby.get_node("/root/LoginGateway")
+	guest_account_view = preload("res://src/ui/guest_account_view.gd").new()
+	guest_account_view.install(lobby, page)
 	gateway.account_deactivated.connect(_return_to_login, CONNECT_DEFERRED)
 	lobby.tree_exiting.connect(func():
 		if gateway.account_deactivated.is_connected(_return_to_login):
@@ -676,6 +679,7 @@ func _sync_account() -> void:
 	var cloud := lobby.get_node("/root/CloudStore")
 	var mode := lobby.get_node("/root/LocalTestMode")
 	var guest: bool = gateway.user_id.is_empty()
+	if guest_account_view != null: guest_account_view.refresh()
 	var profile := PROFILE.get_profile()
 	var nickname := String(profile.get("nickname", ""))
 	profile_label.text = "내 마왕 프로필\n%s\n%s" % [PROFILE.display_name(), "여성" if profile.get("gender", "male") == "female" else "남성"] if not nickname.is_empty() else "내 마왕 프로필\n미설정"
@@ -697,8 +701,8 @@ func _sync_account() -> void:
 	else:
 		cloud_status.text = "클라우드 저장 사용 중" if cloud.ready_for_play else "클라우드 연결 확인 필요"
 	pages.account.get_node("KakaoLogin").disabled = guest or testing or cloud.busy or gateway.withdrawal_busy or gateway.access_token.is_empty()
-	pages.account.get_node("GoogleLogin").text = "계정 로그인" if guest else "로그아웃 / 계정 변경"
-	pages.account.get_node("GoogleLogin").disabled = testing or cloud.busy or gateway.withdrawal_busy
+	pages.account.get_node("GoogleLogin").text = "기존 계정 로그인" if guest else "로그아웃 / 계정 변경"
+	pages.account.get_node("GoogleLogin").disabled = testing or cloud.busy or gateway.withdrawal_busy or gateway.guest_link_busy
 	withdrawal_button.disabled = guest or testing or cloud.busy or gateway.withdrawal_busy or cloud.conflict or not cloud.ready_for_play or gateway.access_token.is_empty()
 	if testing:
 		pages.account.get_node("Guide").text = "일반 계정 로그인은 normaltest 쿠폰으로 테스트 모드 종료 후 가능합니다."
@@ -743,4 +747,3 @@ func show_page(id: String) -> void:
 	_sync_account()
 	for check in game_checks.values() + [lobby.bgm_mute_check, lobby.sfx_mute_check]:
 		check.resized.emit()
-
