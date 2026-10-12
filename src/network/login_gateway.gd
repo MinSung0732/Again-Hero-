@@ -24,6 +24,7 @@ var remember_session_enabled := true
 var _auth_busy := false
 var withdrawal_busy := false
 var _cloud: Node
+var _guest_vault_clears := 0
 
 func _ready() -> void:
 	# Windows DPAPI and AndroidKeyStore store refresh tokens without plaintext.
@@ -44,6 +45,9 @@ func _ready() -> void:
 func _on_validated(session: Dictionary, user: Dictionary) -> void:
 	if withdrawal_busy or get_node("/root/LocalTestMode").tutorial_preview:
 		return # A late OAuth callback must never leave the isolated preview.
+	if not get_node("/root/LocalTestMode").exit_local_test():
+		login_unavailable.emit("테스트 모드 종료 상태를 저장하지 못했습니다. 다시 시도해 주세요.")
+		return
 	_cloud.stop()
 	var id := String(user.get("id", ""))
 	if not SCOPE.select_account(id):
@@ -57,6 +61,12 @@ func _on_validated(session: Dictionary, user: Dictionary) -> void:
 	_refresh_timer.start()
 	var generation := _session_generation
 	if remember_session_enabled:
+		# A pending guest logout must finish deleting the old credential before
+		# a newer OAuth login saves its rotated refresh token.
+		while _guest_vault_clears > 0:
+			await get_tree().process_frame
+			if generation != _session_generation:
+				return
 		if not await _vault.save_session(user_id, _refresh_token):
 			login_unavailable.emit("자동 로그인 정보를 보관하지 못했습니다. 이번 로그인은 유지됩니다.")
 	if generation != _session_generation:
@@ -64,18 +74,14 @@ func _on_validated(session: Dictionary, user: Dictionary) -> void:
 	await retry_cloud()
 
 func retry_cloud(choice: String = "") -> void:
+	if user_id.is_empty():
+		return
 	var generation := _session_generation
 	var mode := get_node("/root/LocalTestMode")
-	var resetting: bool = mode.pending_reset_id == user_id and not user_id.is_empty()
-	if resetting and not mode.reset_progress():
-		login_unavailable.emit("일반 플레이 초기화 저장 실패. 다시 시도해 주세요.")
+	if not mode.exit_local_test():
+		login_unavailable.emit("테스트 모드 종료 상태를 저장하지 못했습니다. 다시 시도해 주세요.")
 		return
-	if await _cloud.initialize("local" if resetting else choice) and generation == _session_generation:
-		if resetting:
-			mode.pending_reset_id = ""
-			if not mode.persist():
-				login_unavailable.emit("초기화 상태 기록 실패. 저장 공간을 확인해 주세요.")
-				return
+	if await _cloud.initialize(choice) and generation == _session_generation:
 		authenticated.emit()
 
 func try_auto_login() -> void:
@@ -170,6 +176,9 @@ func begin_login(provider: String) -> void:
 	if provider not in ["google", "kakao"]:
 		login_unavailable.emit("지원하지 않는 로그인 방식입니다.")
 		return
+	if not get_node("/root/LocalTestMode").exit_local_test():
+		login_unavailable.emit("테스트 모드 종료 상태를 저장하지 못했습니다. 다시 시도해 주세요.")
+		return
 	login_requested.emit(provider)
 	_oauth.begin(provider)
 
@@ -180,15 +189,20 @@ func begin_local_guest(preserve_session: bool = false) -> void:
 	account_provider = ""
 	account_label = ""
 	_session_generation += 1
+	var generation := _session_generation
 	_cloud.stop()
-	if remember_session_enabled and not preserve_session:
-		await _vault.clear_session()
 	_oauth.cancel()
 	_refresh_timer.stop()
 	user_id = ""
 	access_token = ""
 	_refresh_token = ""
 	SCOPE.select_guest()
+	if remember_session_enabled and not preserve_session:
+		_guest_vault_clears += 1
+		await _vault.clear_session()
+		_guest_vault_clears -= 1
+	if generation != _session_generation:
+		return
 	if local_guest_active:
 		return
 	local_guest_active = true

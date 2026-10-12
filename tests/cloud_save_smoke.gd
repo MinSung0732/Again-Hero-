@@ -34,6 +34,8 @@ class FakeCloud extends "res://src/network/cloud_store.gd":
 		await get_tree().process_frame
 		if unavailable:
 			return {}
+		if method == "account_lifecycle_status":
+			return {"active": true}
 		if method == "read_game_save":
 			return server.duplicate(true)
 		if data.expected_revision != server.revision:
@@ -56,6 +58,8 @@ func run() -> void:
 	var hex := Crypto.new().generate_random_bytes(16).hex_encode()
 	var id := "%s-%s-%s-%s-%s" % [hex.substr(0,8),hex.substr(8,4),hex.substr(12,4),hex.substr(16,4),hex.substr(20,12)]
 	check(SCOPE.select_account(id), "isolated UUID")
+	root.get_node("LoginGateway").user_id = id
+	root.get_node("LocalTestMode").tutorial_preview = false
 	var folder := SCOPE.resolve("user://save_bundle.json").get_base_dir()
 	var cloud := FakeCloud.new()
 	root.add_child(cloud)

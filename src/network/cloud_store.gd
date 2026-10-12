@@ -32,7 +32,7 @@ func _queue_save() -> void:
 
 func request_rpc(method: String, data: Dictionary) -> Dictionary:
 	var gateway := get_node("/root/LoginGateway")
-	if gateway.access_token.is_empty():
+	if gateway.access_token.is_empty() or not _account_context_matches():
 		return {}
 	var request := HTTPRequest.new()
 	request.timeout = 20
@@ -52,10 +52,11 @@ func request_rpc(method: String, data: Dictionary) -> Dictionary:
 	return parser.data if parser.data is Dictionary else {}
 
 func initialize(choice: String = "") -> bool:
-	if busy:
+	if busy or not _account_context_matches():
 		return false
 	busy = true
 	var generation := _generation
+	var owner := SCOPE.user_id
 	status_changed.emit("계정의 클라우드 저장 확인 중…")
 	var lifecycle := await request_rpc("account_lifecycle_status", {})
 	var remote: Dictionary = {}
@@ -64,7 +65,7 @@ func initialize(choice: String = "") -> bool:
 	busy = false
 	# Resume queued work after this response has applied revision/conflict state.
 	operation_released.emit.call_deferred()
-	if generation != _generation:
+	if generation != _generation or owner != SCOPE.user_id or not _account_context_matches():
 		return false
 	if lifecycle.get("inactive") == true:
 		await get_node("/root/LoginGateway").clear_inactive_session()
@@ -148,6 +149,8 @@ func flush() -> bool:
 	# Capture before waiting: an old account waiter must not flush a new one.
 	var generation := _generation
 	var owner := SCOPE.user_id
+	if not _account_context_matches():
+		return false
 	while busy:
 		await operation_released
 		if generation != _generation or owner != SCOPE.user_id:
@@ -162,7 +165,7 @@ func flush() -> bool:
 	busy = false
 	# Resume queued work after this response has applied revision/conflict state.
 	operation_released.emit.call_deferred()
-	if generation != _generation:
+	if generation != _generation or owner != SCOPE.user_id or not _account_context_matches():
 		return false
 	if bool(result.get("conflict", false)):
 		conflict = true
@@ -231,3 +234,8 @@ static func _valid_revision(value: Variant) -> bool:
 	if value is float:
 		return is_finite(value) and value >= 0.0 and value == floor(value) and value <= 9007199254740991.0
 	return false
+
+func _account_context_matches() -> bool:
+	var gateway := get_node("/root/LoginGateway")
+	var mode := get_node("/root/LocalTestMode")
+	return not SCOPE.user_id.is_empty() and SCOPE.user_id == gateway.user_id and not mode.active and not mode.tutorial_preview

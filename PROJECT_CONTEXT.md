@@ -1,3 +1,10 @@
+## 2026-10-12 — 계정 전환 로컬 테스트 격리·normaltest 초기화 제거
+
+- normaltest의 일반 게스트 초기화 및 pending_reset_id를 통한 계정 초기화/강제local 클라우드 업로드 제거. 이제 테스트 종료는 기존 일반 저장으로 복귀하며, 옛 예약은 실행하지 않고 폐기. OAuth 시작·검증/재시도에서 테스트 상태 종료, marker 저장 실패시 상태보존·수락거부. 쿠폰 설명 수정.
+- CloudStore 요청/초기화/업로드에서 로그인 계정=저장 소유자·비테스트/미리보기 경계 확인, 늦은 응답의 소유자 검사. 게스트 전환 인증/네임스페이스를 vault await전에 해제, 옛 완료가 새 로그인 취소하지 않도록 generation 검사. 새 refresh-token 저장은 기존 삭제 완료 후 진행. 정상 동일계정 오프라인 변경/충돌 정책 유지.
+- 서버 읽기 전용 점검: 탈퇴30일(720시간) 보관 중 같은OAuth 로그인 차단/10분 purge 활성. Google 최신snapshot0골드·최대1스테이지, 별도 과거이력 테이블 없음. 서버/계정/탈퇴 정책 수정 및 사용자 데이터 복구는 하지 않음. 기기 before_cloud.bak 검사 필요, 이전 진행 임의생성 금지.
+- Godot4.5.1 격리 실제 인증/클라우드/테스트/AccountSaveScope+fake transport의 계정전환33검사·기존cloud_save_smoke·쿠폰 계정구간 추출 PASS. 변경7GDScript 구문/diff 통과. 실제 OAuth/WindowsDPAPI/Android/전체Startup·Lobby/복구 미검증. docs/ACCOUNT_TRANSITION_FIX.md 참고. 기준 feature219500d1/main4122adb7 유지, 롤백 이번커밋revert(normaltest 초기화 재활성 유의).
+
 ## 2026-10-12 — 리자드맨 창병 표시 크기 84%
 
 - 일반 target_height 140→117.6, 엘리트160→134.4. MonsterVisual 기존 균일 스케일 경로로 가로·세로 모두 이전의84% 적용. 원본 PNG·애니메이션·투사체·꼬리·충돌·스탯 변경 없음.

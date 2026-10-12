@@ -11,6 +11,8 @@ class FakeCloud:
 	var remote_revision := 7
 	var uploads := 0
 	func request_rpc(method: String, data: Dictionary) -> Dictionary:
+		if method == "account_lifecycle_status":
+			return {"active":true}
 		if method == "read_game_save":
 			return {"found":true,"revision":remote_revision,"payload":payload.duplicate(true)}
 		if int(data.get("expected_revision", -1)) != remote_revision:
@@ -73,6 +75,9 @@ func run() -> void:
 		root.get_texture().get_image().save_png("res://coupon-modal-preview.png")
 	lobby.get_node("CouponOverlay").hide()
 	check(not await mode.apply_coupon("invalid"), "unknown coupon rejected")
+	var normal_gold := PROGRESS.get_gold()
+	var normal_points := PROGRESS.get_research_points()
+	var normal_stage := int(PROGRESS.load_state().highest_unlocked_stage)
 	check(await mode.apply_coupon("localtest"), "enter isolated local test")
 	check(SCOPE.user_id.is_empty() and SCOPE.guest_directory == mode.test_directory, "test isolated namespace")
 	check(PROGRESS.is_stage_unlocked(10) and PROGRESS.get_gold() == 99999 and PROGRESS.get_research_points() == 99999, "test funds/all stages")
@@ -89,9 +94,10 @@ func run() -> void:
 	mode.tutorial_preview = true
 	check(not mode.has_all_monsters_unlocked() and not COLLECTION.is_unlocked("banshee"), "tutorial preview excluded")
 	mode.tutorial_preview = false
-	check(await mode.apply_coupon("normaltest"), "return normal/reset")
-	check(not mode.active and PROGRESS.get_gold() == 0 and PROGRESS.get_research_points() == 0 and not PROGRESS.is_stage_unlocked(2), "normal values reset")
+	check(await mode.apply_coupon("normaltest"), "return normal without reset")
+	check(not mode.active and PROGRESS.get_gold() == normal_gold and PROGRESS.get_research_points() == normal_points and int(PROGRESS.load_state().highest_unlocked_stage) == normal_stage, "normal progress preserved")
 	check(COLLECTION.get_unlocked_ids() == ["slime","spider","orc"], "normal starter monsters")
+	check(mode.reset_progress(), "isolate following economy fixtures")
 	var grant := PROGRESS.add_research_points(141, 84)
 	check(grant.success and grant.gold_granted == 84 and PROGRESS.get_gold() == 84, "research/gold same save")
 	PROGRESS.complete_stage("stage_1",1,"stage_2",2,450)
@@ -103,7 +109,7 @@ func run() -> void:
 	check(COLLECTION.award_shard_batch([{"monster_id":"slime","shards":1}],100).success and PROGRESS.get_gold() == 0, "normal gold spent atomically")
 	check(not COLLECTION.award_shard_batch([{"monster_id":"slime","shards":1}],100).success and COLLECTION.get_shards("slime") == 1, "no funds grants nothing")
 	lobby.free()
-	# Revalidate the original account before a normaltest reset is uploaded.
+	# Revalidate the original account without uploading test or reset progress.
 	var old_cloud := root.get_node("CloudStore")
 	root.remove_child(old_cloud)
 	old_cloud.free()
@@ -125,11 +131,11 @@ func run() -> void:
 	gateway.access_token = "fixture"
 	check(await mode.apply_coupon("localtest"), "account enters localtest")
 	check(cloud.uploads == 0 and cloud.payload["stage_progress.cfg"].meta.gold == 500, "test funds never reach cloud")
-	check(await mode.apply_coupon("normaltest") and mode.pending_reset_id == id, "account reset awaits validated identity")
+	check(await mode.apply_coupon("normaltest") and mode.pending_reset_id.is_empty(), "account return never queues reset")
 	await gateway._on_validated({"access_token":"fixture","expires_in":3600}, {"id":id})
-	check(mode.pending_reset_id.is_empty() and cloud.uploads == 1, "validated reset uploaded once")
-	check(cloud.payload["stage_progress.cfg"].meta.gold == 0 and cloud.payload["stage_progress.cfg"].progress.highest_unlocked_stage == 1, "cloud normal reset excludes test progress")
-	check(PROGRESS.get_gold() == 0 and PROGRESS.get_research_points() == 0, "account normal reset persisted")
+	check(mode.pending_reset_id.is_empty() and cloud.uploads == 0, "validated login never uploads reset")
+	check(cloud.payload["stage_progress.cfg"].meta.gold == 500 and cloud.payload["stage_progress.cfg"].progress.highest_unlocked_stage == 3, "cloud normal progress preserved")
+	check(PROGRESS.get_gold() == 500 and PROGRESS.get_research_points() == 20, "account normal progress restored")
 	for file in DirAccess.get_files_at(account_folder):
 		DirAccess.remove_absolute(account_folder.path_join(file))
 	DirAccess.remove_absolute(account_folder)

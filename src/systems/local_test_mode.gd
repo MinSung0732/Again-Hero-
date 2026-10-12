@@ -105,24 +105,34 @@ func apply_coupon(code: String) -> bool:
 			return false
 		gateway.suspend_for_local_test()
 		return true
-	if not active:
-		if not reset_progress():
-			return false
-		return SCOPE.user_id.is_empty() or await cloud.flush()
-	# Discard test progress, then reset the authenticated normal account only
-	# after its saved identity is validated again; never upload test files.
-	if not reset_progress():
-		return false
-	active = false
-	pending_reset_id = original_user_id
-	if not persist():
-		active = true
-		return false
-	SCOPE.guest_directory = normal_guest_directory
-	SCOPE.select_guest()
-	if pending_reset_id.is_empty() and not reset_progress():
+	# normaltest exits the isolated test save; it never resets a real account.
+	if not active or not exit_local_test():
 		return false
 	gateway.local_guest_active = false
+	return true
+
+func exit_local_test() -> bool:
+	if tutorial_preview:
+		return false
+	if not active and pending_reset_id.is_empty() and original_user_id.is_empty() and not practice_requested:
+		return true
+	var was_active := active
+	var previous_original := original_user_id
+	var previous_pending := pending_reset_id
+	var previous_practice := practice_requested
+	active = false
+	original_user_id = ""
+	pending_reset_id = "" # Retire legacy auto-reset requests without executing them.
+	practice_requested = false
+	if not persist():
+		active = was_active
+		original_user_id = previous_original
+		pending_reset_id = previous_pending
+		practice_requested = previous_practice
+		return false
+	if was_active:
+		SCOPE.guest_directory = normal_guest_directory
+		SCOPE.select_guest()
 	return true
 
 func is_tutorial_preview() -> bool:
