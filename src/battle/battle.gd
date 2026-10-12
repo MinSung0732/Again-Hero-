@@ -2503,6 +2503,10 @@ func _apply_special_runtime_preview(detail: Dictionary, monster_id: String) -> v
 			var multiplier := maxf(float(stats.get(pair[1],1.0)),0.01)
 			value = value/multiplier if pair[0] == "attack_cooldown" else value*multiplier
 			detail[pair[0]] = maxi(1,int(round(value))) if pair[0] in ["max_hp","attack_damage"] else value
+		detail.merge(Dictionary(config.get("stat_overrides",{})),true)
+		if config.has("attack_type_override"):
+			detail["attack_type"] = String(config.attack_type_override)
+			detail["attack_type_label"] = MONSTER_CATALOG.get_attack_type_label(String(config.attack_type_override))
 		if config.has("role_override"):
 			detail["role"] = String(config.role_override)
 			detail["role_label"] = MONSTER_CATALOG.get_role_label(String(config.role_override))

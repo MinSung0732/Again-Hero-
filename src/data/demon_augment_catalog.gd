@@ -28,6 +28,7 @@ const MONSTER_NAMES := {
 	"hobgoblin":"홉고블린",
 	"ogre":"오우거",
 	"lizardman_fighter":"리자드맨 전사",
+	"lizardman_spearman":"리자드맨 창병",
 	"bomb_rat": "폭탄쥐",
 	"skeleton": "해골 전사",
 	"skeleton_archer": "해골 궁병",
@@ -146,6 +147,9 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+ {"id":"lizard_spear_throw","monster_id":"lizardman_spearman","name":"투창의 전환","description":"역할/공격종류 원거리 전환. HP60%,공격135%,공속160%. 사거리 반경185(지름370),투사체속도280.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"lizard_spear_throw","effect_values":{"role_override":"ranged","attack_type_override":"ranged","runtime_stat_multipliers":preload("res://src/data/lizardman_spearman_behavior_catalog.gd").RANGED_STATS,"stat_overrides":{"attack_range":185.0,"projectile_speed":280.0,"projectile_range":185.0}}},
+ {"id":"lizard_spear_footwork","monster_id":"lizardman_spearman","name":"유연한 발놀림","description":"공격 후 자신의 공격 사거리 내 다른 위치로 실제 이동.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"lizard_spear_footwork","effect_values":{}},
+ {"id":"lizard_spear_repulse","monster_id":"lizardman_spearman","name":"밀쳐내는 창끝","description":"거리130 이내 유효 타격 시 약한 넉백35. 근접/투창 적중 적용, 면역/벽 충돌 보존.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"lizard_spear_repulse","effect_values":{}},
  {"id":"lizard_tail_regrowth","monster_id":"lizardman_fighter","name":"재생의 탈피","description":"꼬리자르기 후퇴 완료 후 잃은HP35% 회복(1회).","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"lizard_tail_regrowth","effect_values":{}},
  {"id":"lizard_sharp_blade","monster_id":"lizardman_fighter","name":"날선 비늘칼","description":"공격력35% 증가.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"lizard_sharp_blade","effect_values":{"stat_multipliers":{"damage":1.35}}},
  {"id":"lizard_clutch_mobilization","monster_id":"lizardman_fighter","name":"무리 동원","description":"생산비용20% 감소.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"lizard_clutch_mobilization","effect_values":{"stat_multipliers":{"cost":0.80}}},

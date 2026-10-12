@@ -1,3 +1,12 @@
+## 2026-10-12 — 고급 리자드맨 창병 추가·고급 등급 한글 표시 수정
+
+- 고급/짐승/근접 폭발형, 비용12,HP150/공격28/이속180/간격1.2초/사거리130(전사보다50). 전사의1회 꼬리자르기·400 직선 후퇴·79.2 크기 꼬리·리자드맨 충돌 제외 공유. 기존 일반/엘리트 도트 각각22PNG/실제attack5 및effect1/projectitle_01.png 연결. 원본 변경 없음/노란게이지 없음.
+- 투창의 전환: 실제 역할·공격종류 원거리,HP90/공격38/간격0.75초,반경185(지름370),투사체속도280. 기존 성장/엘리트/대형 사거리 배율 보존,체력비율 유지. 유연한 발놀림: 공격 후 사거리 내 다른 위치로 실제 이동,쿨타임은 이동 중에도 진행. 밀쳐내는 창끝: 거리130 내 유효타격 넉백35(면역/벽 보존).
+- 엘리트 역할 분기: 폭발일때 돌진(선쿨1/재사용15),속도750 접근 후 공격250%1회. 원거리 전환시 돌진/남은강타 취소,공격마다 공속2%·최대20스택/40%(빠른 준비0/0). 창병은 전사 영양섭취를 받지 않음. 투사체 기존Battle pool/WeakRef/생명주기revision 사용,지연 회수 콜백이 새 발사를 제거하지 못하도록 보호.
+- MonsterCatalog GRADE_LABELS의 uncommon→고급/common→일반 추가,advanced/normal 기존alias 유지. 로비/전투 상세정보가 실제 공통함수를 사용하는 경로 확인. 고급6종 모두 한글 표시 검증. 뽑기·도감·팀편성·증강·엘리트 등록,등급 확률 유지.
+- Godot4.5.1 headless 격리 실제 창병/투사체/공통/원본PNG 및 Battle 함수추출110/전사106/기존밸런스411/실제ShopCatalog3 총630 PASS.32종 감사0이슈,7개 변경GDScript 구문/diff 검사. 생성/성장/맵/레지스트리·데미지숫자 fixture adapter. 전체Battle씬·Android·실전승률 미검증. docs/LIZARDMAN_SPEARMAN_IMPLEMENTATION.md 참고.
+- 기준 feature1845978c/main4122adb7 유지. 롤백은 이번커밋revert.
+
 ## 2026-10-12 — 날렵한 용사 찌르기 금속 타격음 교체
 
 - Stage2 기본 찌르기/연속공격의 바람형 rogue_combo_short 대신 새 Pixabay Metal Dagger Hit(DavidDumaisAudio/185444) 녹음을 연결. https://pixabay.com/sound-effects/film-special-effects-metal-dagger-hit-185444/ / Pixabay Content License 확인.

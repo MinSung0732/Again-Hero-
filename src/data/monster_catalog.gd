@@ -30,6 +30,7 @@ const ORDER := [
 	"hobgoblin",
 	"ogre",
 	"lizardman_fighter",
+	"lizardman_spearman",
 	"zeus",
 	"bulgasal",
 	"izanami",
@@ -44,6 +45,18 @@ const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const BULGASAL_BEHAVIOR := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const MONSTERS := {
+ "lizardman_spearman": {
+  "id":"lizardman_spearman","name":"리자드맨 창병","role":"exploder","family":"lizardman","species":"beast","grade":"uncommon","rarity":"uncommon","attack_type":"melee","noncollision_family":"lizardman",
+  "base_cost":12.0,"summon_exp":12.0,"default_unlocked":false,"combat_enabled":true,
+  "base_stats":preload("res://src/data/lizardman_spearman_behavior_catalog.gd").BASE,
+  "balance":{"health_share":1.19047619,"damage_share":0.77160494,"note":"빠른 근접 반복 폭발형. 사거리130/1회 꼬리후퇴, 직접DPS·몸체 기회비용 반영. 원거리 전환/누적 공속은 실전 승률 미검증"},
+  "description":"HP30% 이하1회 꼬리자르기(직선최대400). 근접 사거리130, 리자드맨끼리 충돌 없음. 증강으로 원거리 전환 시 반경185(지름370), 투사체속도280.",
+  "special_augment_ids":["lizard_spear_throw","lizard_spear_footwork","lizard_spear_repulse"],
+  "elite_skills":[{"runtime":"monster","id":"elite_lizard_spear_charge","name":"돌진","passive":true,"initial_cooldown":1.0,"cooldown":15.0,"description":"폭발 역할에서만 활성. 빠르게 접근 후1회 공격250%."},{"runtime":"monster","id":"elite_lizard_spear_ready","name":"빠른 준비","passive":true,"initial_cooldown":0.0,"cooldown":0.0,"description":"원거리 역할에서만 활성. 공격마다공속2%,최대20스택(40%)."}],
+  "card_icon_path":"res://assets/art/monsters/lizardmanspearman/frames/idle_01.png",
+  "elite_visual":preload("res://src/data/lizardman_spearman_behavior_catalog.gd").ELITE_VISUAL,
+  "scene":preload("res://src/monsters/LizardmanSpearman.tscn"),
+ },
  "lizardman_fighter": {
   "id":"lizardman_fighter","name":"리자드맨 전사","role":"exploder","family":"lizardman","species":"beast","grade":"uncommon","rarity":"uncommon","attack_type":"melee","noncollision_family":"lizardman",
   "base_cost":12.0,"summon_exp":12.0,"default_unlocked":false,"combat_enabled":true,
@@ -1001,6 +1014,8 @@ const ATTACK_TYPE_LABELS := {
 }
 
 const GRADE_LABELS := {
+	"uncommon":"고급",
+	"common":"일반",
 	"transcendent": "초월",
 	"rare": "희귀",
 	"legendary": "전설",
