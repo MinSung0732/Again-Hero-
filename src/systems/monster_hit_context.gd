@@ -19,3 +19,7 @@ static func attack_kind(source: Node) -> String:
 	if is_instance_valid(source) and source.has_method("_is_ranged_ai_archetype"):
 		return "ranged" if bool(source.call("_is_ranged_ai_archetype")) else "melee"
 	return "untyped"
+
+static func reflect_projectile(target: Node, amount: int, source: Node, projectile: Node2D) -> bool:
+	if not is_instance_valid(target) or not target.has_method("try_reflect_projectile"): return false
+	return bool(target.call("try_reflect_projectile",projectile,amount,source))

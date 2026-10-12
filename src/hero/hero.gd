@@ -853,11 +853,14 @@ var petrify_restore_tint := Color.WHITE
 var charm_stacks := 0
 var charm_timer := 0.0
 var charm_immunity_timer := 0.0
+var charm_recovery_immunity := 7.0
 var charm_source: WeakRef
 var charm_cooldown_properties: Array = []
 var stun_timer: float = 0.0
 var stun_sprite_speed: float = 1.0
 var fear_timer: float = 0.0
+var fear_immunity_timer := 0.0
+var fear_recovery_immunity := 0.0
 var fear_source: Node2D
 var fear_origin: Vector2 = Vector2.ZERO
 var fear_speed_multiplier: float = 1.0
@@ -936,6 +939,8 @@ func configure_profile(profile: Dictionary) -> void:
 	set_meta("dullahan_soul_stacks", 0)
 	possession_immunity_timer = 0.0
 	fear_timer = 0.0
+	fear_immunity_timer = 0.0
+	fear_recovery_immunity = 0.0
 	fear_source = null
 	fear_origin = Vector2.ZERO
 	fear_speed_multiplier = 1.0
@@ -17375,6 +17380,7 @@ func apply_charm(source: Node2D, duration: float) -> bool:
 func _apply_charm_status(source: Node2D, duration: float, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or charm_timer > 0.0 or charm_immunity_timer > 0.0 or not is_instance_valid(source):
 		return false
+	charm_recovery_immunity = maxf(float(get_meta("incoming_charm_immunity",SUCCUBUS_BEHAVIOR.CHARM.immunity)),0.0)
 	charm_stacks = 0
 	charm_timer = maxf(duration * (1.0 - get_status_resistance("charm")), 0.05)
 	charm_source = weakref(source)
@@ -17399,7 +17405,7 @@ func _tick_charm_timers(delta: float) -> bool:
 	if charm_timer <= 0.0 or not is_instance_valid(source) or bool(source.get("dying")):
 		charm_timer = 0.0
 		charm_source = null
-		charm_immunity_timer = maxf(float(SUCCUBUS_BEHAVIOR.CHARM.immunity) - maxf(delta - previous, 0.0), 0.0)
+		charm_immunity_timer = maxf(charm_recovery_immunity - maxf(delta - previous, 0.0), 0.0)
 		set_meta("charm_active", false)
 	return true
 
@@ -17676,9 +17682,10 @@ func _apply_fear_status(
 	receipt = null,
 	receipt_revision: int = 0
 ) -> void:
-	if current_hp <= 0 or is_dying:
+	if current_hp <= 0 or is_dying or fear_immunity_timer > 0.0:
 		return
 
+	fear_recovery_immunity = maxf(fear_recovery_immunity,float(get_meta("incoming_fear_immunity",0.0)))
 	record_status_effect_event("fear")
 	var resistance := get_status_resistance("fear")
 	var effective_duration := maxf(
@@ -17826,6 +17833,8 @@ func _tick_fear_skill_cooldowns(delta: float) -> void:
 
 
 func _tick_fear_state(delta: float) -> bool:
+	fear_immunity_timer = maxf(fear_immunity_timer-delta,0.0)
+	var previous_fear := fear_timer
 	if fear_timer <= 0.0:
 		return false
 
@@ -17861,6 +17870,8 @@ func _tick_fear_state(delta: float) -> bool:
 	_clamp_to_battlefield()
 
 	if fear_timer <= 0.0:
+		fear_immunity_timer = maxf(fear_recovery_immunity-maxf(delta-previous_fear,0.0),0.0)
+		fear_recovery_immunity = 0.0
 		fear_source = null
 		fear_speed_multiplier = 1.0
 		set_meta("fear_active", false)
@@ -21034,6 +21045,8 @@ func _begin_death_sequence() -> void:
 	set_meta("dullahan_soul_stacks", 0)
 	possession_immunity_timer = 0.0
 	fear_timer = 0.0
+	fear_immunity_timer = 0.0
+	fear_recovery_immunity = 0.0
 	fear_source = null
 	fear_speed_multiplier = 1.0
 	set_meta("fear_active", false)

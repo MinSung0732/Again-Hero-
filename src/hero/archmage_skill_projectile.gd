@@ -402,6 +402,9 @@ func _on_body_entered(body: Node) -> void:
 			var victim_handle := Vector3i.ZERO
 			if tracked_target:
 				victim_handle = scope.call("get_battle_entity_handle", monster)
+			if preload("res://src/systems/monster_hit_context.gd").reflect_projectile(monster,damage,source_hero,self):
+				_finish()
+				return
 			preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "ranged", source_hero)
 			if not _is_elemental_life_current(life_revision):
 				_finish_elemental_revision(life_revision)
@@ -445,6 +448,9 @@ func _on_body_entered(body: Node) -> void:
 						)
 					)
 				)
+			if preload("res://src/systems/monster_hit_context.gd").reflect_projectile(monster,hit_damage,source_hero,self):
+				_finish()
+				return
 			preload("res://src/systems/monster_hit_context.gd").hit(monster, hit_damage, "ranged", source_hero)
 			# Damage callbacks may retire/reuse this projectile or its source.
 			if not _is_chain_life_current(life_revision):

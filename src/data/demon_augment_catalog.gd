@@ -11,6 +11,8 @@ const SPECIAL_MAX_LEVEL := 1
 static var augment_lookup: Dictionary = {}
 
 const MONSTER_NAMES := {
+	"fanatic":"광신도",
+	"gumiho":"구미호",
 	"dark_elf_rogue":"흑요정 도적",
 	"boar":"멧돼지",
 	"dark_elf_archer":"흑요정 궁수",
@@ -151,6 +153,13 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{"id": "fanatic_suicide", "monster_id": "fanatic", "name": "광기의 순교", "description": "이속50% 증가, 공격 대신 접근 즉시 자폭.", "augment_type": "special", "max_stack": 1, "icon": "", "effect_type": "fanatic_suicide", "effect_values": {}},
+	{"id": "fanatic_dagger", "monster_id": "fanatic", "name": "의식용 칼날", "description": "단검1타 피해30% 증가.", "augment_type": "special", "max_stack": 1, "icon": "", "effect_type": "fanatic_dagger", "effect_values": {}},
+	{"id": "fanatic_vitality", "monster_id": "fanatic", "name": "질긴 신앙", "description": "최대체력30% 증가.", "augment_type": "special", "max_stack": 1, "icon": "", "effect_type": "fanatic_vitality", "effect_values": {"stat_multipliers": {"hp": 1.3}}},
+	{"id": "gumiho_universal", "monster_id": "gumiho", "name": "영혼의 장막", "description": "소환쉴드를 공용쉴드로 변경.", "augment_type": "special", "max_stack": 1, "icon": "", "effect_type": "gumiho_universal", "effect_values": {}},
+	{"id": "gumiho_fascination", "monster_id": "gumiho", "name": "홀린 사냥감", "description": "대상이 매혹 중이면 공격속도70% 증가.", "augment_type": "special", "max_stack": 1, "icon": "", "effect_type": "gumiho_fascination", "effect_values": {}},
+	{"id": "gumiho_last_shadow", "monster_id": "gumiho", "name": "위기의 둔갑", "description": "체력30% 이하에서1회5초 은신·받는피해50% 감소.", "augment_type": "special", "max_stack": 1, "icon": "", "effect_type": "gumiho_last_shadow", "effect_values": {}},
+
 	{"id":"dark_elf_rogue_assassinate","monster_id":"dark_elf_rogue","name":"암살자의 일격","description":"일반 은신 첫타 피해150%→300%. 엘리트225% 해제타와 중복하지 않음.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","effect_type":"dark_elf_rogue_assassinate","effect_values":{}},
 	{"id":"dark_elf_rogue_blades","monster_id":"dark_elf_rogue","name":"날선 쌍검","description":"공격력30% 증가(두 타격 모두 적용).","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","effect_type":"dark_elf_rogue_blades","effect_values":{"stat_multipliers":{"damage":1.3}}},
 	{"id":"dark_elf_rogue_backstab","monster_id":"dark_elf_rogue","name":"배후 급습","description":"용사가 보는 방향의 뒤쪽에서 타격 시133% 피해/빨간 피해숫자. 일반은신/엘리트 해제타에도 적용.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","effect_type":"dark_elf_rogue_backstab","effect_values":{}},

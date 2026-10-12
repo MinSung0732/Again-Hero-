@@ -85,6 +85,9 @@ func _physics_process(delta: float) -> void:
 
 func _impact_target() -> void:
 	if HERO_TARGET_POLICY.is_detectable(target) and target.has_method("take_damage"):
+		if preload("res://src/systems/monster_hit_context.gd").reflect_projectile(target,damage,self,self):
+			deactivate()
+			return
 		preload("res://src/systems/monster_hit_context.gd").hit(target, damage, "ranged", self)
 	sprite.texture = hit_texture
 	sprite.scale = Vector2(0.48, 0.48)

@@ -159,6 +159,9 @@ func _try_hit_target(body: Node) -> bool:
 		if body is Node2D
 		else global_position
 	)
+	if preload("res://src/systems/monster_hit_context.gd").reflect_projectile(body,damage,caster,self):
+		_finish_projectile()
+		return true
 	preload("res://src/systems/monster_hit_context.gd").hit(body, damage, "ranged", caster)
 	if (
 		projectile_mode == ProjectileMode.PIERCING

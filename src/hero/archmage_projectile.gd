@@ -190,6 +190,11 @@ func _on_body_entered(body: Node) -> void:
 		return
 	hit_ids[instance_id] = true
 
+	var reflected_damage := base_damage
+	if element == "earth": reflected_damage = maxi(1,roundi(base_damage*maxf(float(config.get("earth_direct_damage_multiplier",1.45)),1.0)))
+	if preload("res://src/systems/monster_hit_context.gd").reflect_projectile(body,reflected_damage,source_hero,self):
+		_finish_projectile()
+		return
 	match element:
 		"earth":
 			_apply_earth(body_2d)

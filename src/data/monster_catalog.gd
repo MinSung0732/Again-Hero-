@@ -5,6 +5,8 @@ const BALANCE := preload("res://src/data/monster_balance_catalog.gd")
 static var balanced_stats_cache: Dictionary = {}
 
 const ORDER := [
+	"fanatic",
+	"gumiho",
 	"slime",
 	"spider",
 	"orc",
@@ -49,6 +51,9 @@ const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const BULGASAL_BEHAVIOR := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const MONSTERS := {
+	"fanatic":{"id": "fanatic", "name": "광신도", "role": "exploder", "family": "fanatic", "species": "humanoid", "grade": "uncommon", "rarity": "uncommon", "attack_type": "melee", "base_cost": 10.0, "summon_exp": 10.0, "balance": {"health_share": 1.5, "damage_share": 0.5, "cycle_damage_multiplier": 2.0, "burst_share": 0.75, "note": "특수 효과 기여는 별도, 승률 미검증"}, "card_icon_path": "res://assets/art/monsters/fanatic/frames/idle_01.png", "description": "단검·어둠구체2연격(엘리트1타). 사망 위치에서1.5초 깜빡인 후 지름175 폭발. 엘리트는1.5초간 무증강 광신도10명 소환.", "special_augment_ids": ["fanatic_suicide", "fanatic_dagger", "fanatic_vitality"], "elite_skills": [{"runtime": "monster", "id": "elite_fanatic_ritual", "name": "의식집도", "description": "1.5초간 모든 증강이 제외된 일반 광신도10명을 순차 소환.", "initial_cooldown": 2.0, "cooldown": 20.0}],"scene":preload("res://src/monsters/Fanatic.tscn"),"base_stats":preload("res://src/data/fanatic_behavior_catalog.gd").BASE,"elite_visual":preload("res://src/data/fanatic_behavior_catalog.gd").ELITE_VISUAL},
+	"gumiho":{"id": "gumiho", "name": "구미호", "role": "exploder", "family": "gumiho", "species": "beast", "grade": "legendary", "rarity": "legendary", "attack_type": "melee", "base_cost": 24.0, "summon_exp": 24.0, "balance": {"health_share": 1.5, "damage_share": 1.0, "cycle_damage_multiplier": 1.0, "note": "특수 효과 기여는 별도, 승률 미검증"}, "card_icon_path": "res://assets/art/monsters/gumiho/frames/idle_01.png", "description": "소환 후5초 최대체력55% 원거리쉴드. 투사체10% 반사. 공유 공격20스택 매혹1.5초·종료후면역5초. 변신20초 모든능력치50% 증가, 여우모드 전용 여우불2초150%·화상3초 최대체력5%.", "special_augment_ids": ["gumiho_universal", "gumiho_fascination", "gumiho_last_shadow"], "elite_skills": [{"runtime": "monster", "id": "elite_gumiho_fear", "name": "원한의 공포", "description": "대상에게 공포2초·도주속도70% 증가. 종료후공포면역5초.", "initial_cooldown": 2.0, "cooldown": 20.0}, {"runtime": "monster", "id": "elite_gumiho_transform", "name": "변신", "description": "20초 여우형태·체력/공격/이속/공속50% 증가.1초 무피격 은신.", "initial_cooldown": 5.0, "cooldown": 60.0}, {"runtime": "monster", "id": "elite_gumiho_foxfire", "name": "여우 불", "description": "여우형태에서만 사용.2초간 공격력150% 피해와3초간 대상 최대체력5% 화상(갱신/중첩불가).", "initial_cooldown": 2.0, "cooldown": 10.0}],"scene":preload("res://src/monsters/Gumiho.tscn"),"base_stats":preload("res://src/data/gumiho_behavior_catalog.gd").BASE,"elite_visual":preload("res://src/data/gumiho_behavior_catalog.gd").ELITE_VISUAL},
+
 	"dark_elf_rogue": {
 		"id":"dark_elf_rogue","name":"흑요정 도적","role":"exploder","family":"dark_elf","species":"humanoid","grade":"uncommon","rarity":"uncommon","attack_type":"melee",
 		"scene":preload("res://src/monsters/DarkElfRogue.tscn"),"base_cost":9.0,"summon_exp":9.0,"base_stats":preload("res://src/data/dark_elf_rogue_behavior_catalog.gd").BASE,

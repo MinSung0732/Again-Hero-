@@ -354,6 +354,14 @@ static func _consume_support_shield(owner: Node2D, amount: int, receipt = null, 
 		amount = maxi(int(round(amount*float(owner.call("ranged_damage_multiplier")))),1)
 	if amount > 0 and kind == "ranged" and not bool(owner.get_meta("guard_transfer",false)):
 		amount = _redirect_ranged_damage(owner,amount)
+	var temporary_kind := String(owner.get_meta("temporary_shield_kind",""))
+	if amount > 0 and (temporary_kind == "shield" or temporary_kind == kind):
+		var temporary_absorbed := mini(amount,maxi(int(owner.get_meta("temporary_shield_hp",0)),0))
+		if temporary_absorbed > 0:
+			owner.set_meta("temporary_shield_hp",int(owner.get_meta("temporary_shield_hp",0))-temporary_absorbed)
+			if receipt != null: receipt.record_shield(temporary_absorbed,receipt_revision)
+			DAMAGE_NUMBERS.show(owner,temporary_absorbed)
+			amount -= temporary_absorbed; owner.queue_redraw()
 	if kind in ["ranged","melee"] and amount > 0:
 		var key := kind+"_shield_hp"
 		var absorbed := mini(amount,maxi(int(owner.get_meta(key,0)),0))
@@ -552,14 +560,15 @@ static func grant_typed_shield(actor: Node2D, kind: String, amount: int, stack: 
 	actor.queue_redraw()
 
 static func shield_value(actor: Node, kind: String, capacity: bool = false) -> float:
-	if kind != "shield": return float(actor.get_meta(kind+("_shield_capacity" if capacity else "_shield_hp"),0))
+	var temporary := float(actor.get_meta("temporary_shield_capacity" if capacity else "temporary_shield_hp",0)) if String(actor.get_meta("temporary_shield_kind","")) == kind else 0.0
+	if kind != "shield": return temporary+float(actor.get_meta(kind+("_shield_capacity" if capacity else "_shield_hp"),0))
 	var value := float(actor.get_meta("support_shield_capacity" if capacity else "support_shield_hp",0))+float(actor.get_meta("arthur_blessing_capacity" if capacity else "arthur_blessing_hp",0))+float(actor.get_meta("elite_shield_max_hp" if capacity else "elite_shield_hp",0))
 	var innate = actor.get("shield_capacity" if capacity else "shield_hp")
 	if innate != null:
 		value += float(innate)
 	elif capacity and actor.get("shield_hp") != null:
 		value += maxf(float(actor.get("max_hp"))*2.0,float(actor.get("shield_hp")))
-	return value
+	return value+temporary
 
 static func sync_bar_order(actor: Node) -> Array:
 	var order := _bar_order(actor)

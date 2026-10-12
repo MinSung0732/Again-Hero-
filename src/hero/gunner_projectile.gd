@@ -131,6 +131,9 @@ func _on_body_entered(body: Node) -> void:
 	if hit_ids.has(id):
 		return
 	hit_ids[id] = true
+	if preload("res://src/systems/monster_hit_context.gd").reflect_projectile(body,damage,source_hero,self):
+		_finish_projectile()
+		return
 	if headshot and body.is_in_group("monsters"):
 		body.set_meta("damage_number_color_once", Color(1.0, 0.18, 0.12, 1.0))
 	preload("res://src/systems/monster_hit_context.gd").hit(body, damage, "ranged", source_hero)

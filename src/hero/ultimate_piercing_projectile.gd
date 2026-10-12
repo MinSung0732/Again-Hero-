@@ -72,6 +72,9 @@ func _on_body_entered(body: Node) -> void:
 		return
 
 	hit_ids[instance_id] = true
+	if preload("res://src/systems/monster_hit_context.gd").reflect_projectile(body,damage,self,self):
+		_finish()
+		return
 	preload("res://src/systems/monster_hit_context.gd").hit(body, damage, "ranged", self)
 
 func _finish() -> void:

@@ -157,6 +157,9 @@ func _on_body_entered(body: Node) -> void:
 				))
 			))
 		)
+	if preload("res://src/systems/monster_hit_context.gd").reflect_projectile(body,dealt_damage,source_hero,self):
+		_finish_projectile()
+		return
 	preload("res://src/systems/monster_hit_context.gd").hit(body, dealt_damage, "ranged", source_hero)
 
 	if splash_radius > 0.0 and splash_damage_ratio > 0.0:

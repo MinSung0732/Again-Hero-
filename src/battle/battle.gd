@@ -176,6 +176,7 @@ const MONSTER_SPATIAL_CELL_SIZE := 256.0
 var active_monsters: Dictionary = {}
 var support_buff_runtime = SUPPORT_BUFF_RUNTIME.new()
 var lizard_tail_runtime = LIZARD_TAIL_RUNTIME.new()
+var gumiho_shared_runtime = preload("res://src/systems/gumiho_shared_runtime.gd").new()
 var anubis_army_runtime = ANUBIS_ARMY_RUNTIME.new()
 var goblin_formation_runtime = GOBLIN_FORMATION_RUNTIME.new()
 var wolf_pack_runtime = WOLF_PACK_RUNTIME.new()
@@ -807,6 +808,7 @@ func _start_battle() -> void:
 	wolf_pack_runtime.reset()
 	goblin_formation_runtime.reset()
 	anubis_army_runtime.reset()
+	gumiho_shared_runtime.reset()
 	lizard_tail_runtime.reset()
 	yuki_runtime.reset()
 	active_heal_items.clear()
