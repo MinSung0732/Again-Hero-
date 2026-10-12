@@ -1,3 +1,9 @@
+## 2026-10-12 — 날렵한 용사 찌르기 금속 타격음 교체
+
+- Stage2 기본 찌르기/연속공격의 바람형 rogue_combo_short 대신 새 Pixabay Metal Dagger Hit(DavidDumaisAudio/185444) 녹음을 연결. https://pixabay.com/sound-effects/film-special-effects-metal-dagger-hit-185444/ / Pixabay Content License 확인.
+- 무음 제거·0.24초 mono44.1k PCM16 WAV·마지막0.05초 fade·peak-9dBFS. 기존 player3개/280ms 간격/runtime-22dB/pitch1.0 유지. 다른 기술·피격음 경로 유지. source JSON 및 contextual/SOURCES.md에 출처·편집·hash 기록.
+- Godot4.5.1 headless 실제 Hero SFX factory의 WAV 로딩/길이/loop off/SFX bus/음량·pitch 검사, WAV 해석·구문/diff 검사 통과. 실제 전투 청취·Android 미검증. 기준 feature0be090d1, 롤백은 이번커밋revert.
+
 ## 2026-10-12 — 리자드맨 꼬리 크기 2.2배 조정
 
 - effect1 꼬리 표시 높이36→79.2. MonsterVisual의 균일 스케일 경로로 가로·세로 모두2.2배 확대, 원본PNG/nearest 유지.

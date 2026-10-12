@@ -1,0 +1,17 @@
+{
+  "source_title": "Metal Dagger Hit",
+  "creator": "DavidDumaisAudio",
+  "source_id": 185444,
+  "source_url": "https://pixabay.com/sound-effects/film-special-effects-metal-dagger-hit-185444/",
+  "license_url": "https://pixabay.com/service/license-summary/",
+  "source_sha256": "e2337654ef79fe22b82b208c53434014ddbebfe71a3ed657f97d146e9e3d3465",
+  "output_sha256": "703efb34bfaad539d2d20b2f1c7f6ea16cd2f4b017a0d6a798326e211306e38e",
+  "output": "assets/audio/sfx/contextual/rogue_dagger_contact.wav",
+  "duration_seconds": 0.24,
+  "sample_rate": 44100,
+  "channels": 1,
+  "format": "PCM16 WAV",
+  "edits": "initial silence removed at -55dB, trim0.24s, last0.05s fade, peak-9dBFS; no pitch change",
+  "runtime_gain_db": -22,
+  "runtime_cadence_ms": 280
+}
