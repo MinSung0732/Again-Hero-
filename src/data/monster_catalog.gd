@@ -50,7 +50,7 @@ const BULGASAL_BEHAVIOR := preload("res://src/data/bulgasal_behavior_catalog.gd"
 const MONSTERS := {
 	"boar": {
 		"id":"boar","name":"멧돼지","role":"exploder","family":"boar","species":"beast","grade":"common","rarity":"common","attack_type":"melee",
-		"scene":preload("res://src/monsters/Boar.tscn"),"base_cost":8.0,"base_stats":preload("res://src/data/boar_behavior_catalog.gd").BASE,
+		"scene":preload("res://src/monsters/Boar.tscn"),"base_cost":8.0,"summon_exp":8.0,"base_stats":preload("res://src/data/boar_behavior_catalog.gd").BASE,
 		"balance":{"health_share":1.5,"damage_share":0.9,"cycle_extra_seconds":2.8588235294,"note":"직선900 돌진50→425를1초 가속(총2.559초)+정신집중0.3, 종료후간격1.4. 돌진당대상1회, 회피가능. 즉시/3번째가속·엘리트10초연결은별도기여, 승률미검증"},
 		"card_icon_path":"res://assets/art/monsters/boar/frames/idle_01.png","description":"사거리 지름550. 공격 전0.3초 정신집중 후 방향을 고정하여 직선900 돌진. 속도50부터425까지 점차 증가(기본1초 가속). 돌진당 대상1회 근접피해, 벽/몸체 충돌 시 종료. 종료 후 공격간격 적용.",
 		"special_augment_ids":["boar_tusk","boar_instant","boar_third_charge"],"elite_visual":preload("res://src/data/boar_behavior_catalog.gd").ELITE_VISUAL,
@@ -58,15 +58,15 @@ const MONSTERS := {
 	},
 	"dark_elf_archer": {
 		"id":"dark_elf_archer","name":"흑요정 궁수","role":"ranged","family":"dark_elf","species":"humanoid","grade":"uncommon","rarity":"uncommon","attack_type":"ranged",
-		"scene":preload("res://src/monsters/DarkElfArcher.tscn"),"base_cost":12.0,"base_stats":preload("res://src/data/dark_elf_archer_behavior_catalog.gd").BASE,
+		"scene":preload("res://src/monsters/DarkElfArcher.tscn"),"base_cost":12.0,"summon_exp":12.0,"base_stats":preload("res://src/data/dark_elf_archer_behavior_catalog.gd").BASE,
 		"balance":{"health_share":0.55,"damage_share":0.8,"note":"3초 은신50%피감/첫사격150%, 사격후재준비3초·2배속85후퇴. 낮은몸체, 엘리트125%4연사15초·무적무시/피감쉴드유지 별도기여, 승률미검증"},
-		"card_icon_path":"res://assets/art/monsters/dark_elf_archer/frames/idle_01.png","description":"사거리 지름400, 투사체속도400. 사격 후 안전한 자리로 빠르게 이동.3초 피격 없이 은신 진입(반투명 표시, 받는피해50% 감소). 은신 사격150% 피해 후 즉시 해제, 다시3초 준비. 피격은 준비시간을 초기화하며 이미 진입한 은신의 피감은 다음 사격까지 유지.",
+		"card_icon_path":"res://assets/art/monsters/dark_elf_archer/frames/idle_01.png","description":"사거리 지름750, 투사체속도280, 투사체크기109%. 사격 후 안전한 자리로 빠르게 이동.3초 피격 없이 은신 진입(반투명 표시, 받는피해50% 감소). 은신 사격150% 피해 후 즉시 해제, 다시3초 준비. 피격은 준비시간을 초기화하며 이미 진입한 은신의 피감은 다음 사격까지 유지.",
 		"special_augment_ids":["dark_elf_far_sight","dark_elf_economy","dark_elf_shadow_shield"],"elite_visual":preload("res://src/data/dark_elf_archer_behavior_catalog.gd").ELITE_VISUAL,
 		"elite_skills":[{"runtime":"monster","id":"elite_dark_elf_burst","name":"4연사","initial_cooldown":2.0,"cooldown":15.0,"description":"공격력125%의 화살4발을0.18초 간격으로 연사. 피격무적 무시, 쉴드/피해감소 유지. 은신150%와 중복하지 않음. 기절/침묵 시 남은 연사 취소."}],
 	},
 	"anubis": {
 		"id":"anubis","name":"아누비스","role":"exploder","family":"anubis","species":"divine_humanoid","grade":"legendary","rarity":"legendary","attack_type":"melee",
-		"scene":preload("res://src/monsters/Anubis.tscn"),"base_cost":24.0,"base_stats":preload("res://src/data/anubis_behavior_catalog.gd").BASE,
+		"scene":preload("res://src/monsters/Anubis.tscn"),"base_cost":24.0,"summon_exp":24.0,"base_stats":preload("res://src/data/anubis_behavior_catalog.gd").BASE,
 		"balance":{"role":"tank","health_share":0.7142857143,"damage_share":0.25,"note":"매우높은 체력472·낮은공격25 유지: 비용24/방어형 예산으로 계산, 게임역할폭발 유지. 미라성장/죽음쉴드/희생영구성장·분노30%는 조합기여, 군집 페널티, 승률미검증"},
 		"card_icon_path":"res://assets/art/monsters/anubis/frames/idle_01.png","description":"기본 표시크기137%, 매우높은 기본체력. 미라 이름을 가진 생존 아군마다 체력·공격·이속·공속 +5%, 표시크기 +0.3%(표시3배 상한). 미라 사망마다 근거리쉴드15/원거리쉴드20 중첩. 아누비스10/20/30마리 이상이면 전체 전투스탯10/20/50% 감소(대체형). 미라 주술사·엘리트 포함, 범위 제한 없음.",
 		"special_augment_ids":["anubis_ranged","anubis_melee","anubis_universal"],"elite_visual":preload("res://src/data/anubis_behavior_catalog.gd").ELITE_VISUAL,
@@ -1238,7 +1238,7 @@ static func get_base_cost(monster_id: String) -> float:
 
 static func get_summon_exp(monster_id: String) -> float:
 	var data: Dictionary = MONSTERS.get(monster_id, {})
-	return maxf(float(data.get("summon_exp", 0.0)), 0.0)
+	return maxf(float(data.get("summon_exp", data.get("base_cost", 0.0))), 0.0)
 
 static func _cached_base_stats(monster_id: String) -> Dictionary:
 	if not balanced_stats_cache.has(monster_id):
