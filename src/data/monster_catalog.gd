@@ -9,6 +9,8 @@ const ORDER := [
 	"spider",
 	"orc",
 	"bomb_rat",
+	"boar",
+	"dark_elf_archer",
 	"skeleton",
 	"skeleton_archer",
 	"kobolt",
@@ -46,6 +48,22 @@ const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const BULGASAL_BEHAVIOR := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const MONSTERS := {
+	"boar": {
+		"id":"boar","name":"멧돼지","role":"exploder","family":"boar","species":"beast","grade":"common","rarity":"common","attack_type":"melee",
+		"scene":preload("res://src/monsters/Boar.tscn"),"base_cost":8.0,"base_stats":preload("res://src/data/boar_behavior_catalog.gd").BASE,
+		"balance":{"health_share":1.5,"damage_share":0.9,"cycle_extra_seconds":2.8588235294,"note":"직선900 돌진50→425를1초 가속(총2.559초)+정신집중0.3, 종료후간격1.4. 돌진당대상1회, 회피가능. 즉시/3번째가속·엘리트10초연결은별도기여, 승률미검증"},
+		"card_icon_path":"res://assets/art/monsters/boar/frames/idle_01.png","description":"사거리 지름550. 공격 전0.3초 정신집중 후 방향을 고정하여 직선900 돌진. 속도50부터425까지 점차 증가(기본1초 가속). 돌진당 대상1회 근접피해, 벽/몸체 충돌 시 종료. 종료 후 공격간격 적용.",
+		"special_augment_ids":["boar_tusk","boar_instant","boar_third_charge"],"elite_visual":preload("res://src/data/boar_behavior_catalog.gd").ELITE_VISUAL,
+		"elite_skills":[{"runtime":"monster","id":"elite_boar_frenzy","name":"저돌맹진","initial_cooldown":3.0,"cooldown":20.0,"duration":10.0,"description":"10초간 일반 돌진 종료 후 공격간격/정신집중 없이 추가 돌진1회. 추가 돌진 종료 후 정상 공격간격 적용. 지속 중 일반돌진마다 반복."}],
+	},
+	"dark_elf_archer": {
+		"id":"dark_elf_archer","name":"흑요정 궁수","role":"ranged","family":"dark_elf","species":"humanoid","grade":"uncommon","rarity":"uncommon","attack_type":"ranged",
+		"scene":preload("res://src/monsters/DarkElfArcher.tscn"),"base_cost":12.0,"base_stats":preload("res://src/data/dark_elf_archer_behavior_catalog.gd").BASE,
+		"balance":{"health_share":0.55,"damage_share":0.8,"note":"3초 은신50%피감/첫사격150%, 사격후재준비3초·2배속85후퇴. 낮은몸체, 엘리트125%4연사15초·무적무시/피감쉴드유지 별도기여, 승률미검증"},
+		"card_icon_path":"res://assets/art/monsters/dark_elf_archer/frames/idle_01.png","description":"사거리 지름400, 투사체속도400. 사격 후 안전한 자리로 빠르게 이동.3초 피격 없이 은신 진입(반투명 표시, 받는피해50% 감소). 은신 사격150% 피해 후 즉시 해제, 다시3초 준비. 피격은 준비시간을 초기화하며 이미 진입한 은신의 피감은 다음 사격까지 유지.",
+		"special_augment_ids":["dark_elf_far_sight","dark_elf_economy","dark_elf_shadow_shield"],"elite_visual":preload("res://src/data/dark_elf_archer_behavior_catalog.gd").ELITE_VISUAL,
+		"elite_skills":[{"runtime":"monster","id":"elite_dark_elf_burst","name":"4연사","initial_cooldown":2.0,"cooldown":15.0,"description":"공격력125%의 화살4발을0.18초 간격으로 연사. 피격무적 무시, 쉴드/피해감소 유지. 은신150%와 중복하지 않음. 기절/침묵 시 남은 연사 취소."}],
+	},
 	"anubis": {
 		"id":"anubis","name":"아누비스","role":"exploder","family":"anubis","species":"divine_humanoid","grade":"legendary","rarity":"legendary","attack_type":"melee",
 		"scene":preload("res://src/monsters/Anubis.tscn"),"base_cost":12.0,"base_stats":preload("res://src/data/anubis_behavior_catalog.gd").BASE,

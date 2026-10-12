@@ -11,6 +11,8 @@ const SPECIAL_MAX_LEVEL := 1
 static var augment_lookup: Dictionary = {}
 
 const MONSTER_NAMES := {
+	"boar":"멧돼지",
+	"dark_elf_archer":"흑요정 궁수",
 	"anubis":"아누비스",
 	"yuki_onna":"설녀",
 	"wolf":"늑대",
@@ -148,6 +150,12 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{"id":"boar_tusk","monster_id":"boar","name":"분쇄의 엄니","description":"공격력30% 증가.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","effect_type":"boar_tusk","effect_values":{"stat_multipliers":{"damage":1.3}}},
+	{"id":"boar_instant","monster_id":"boar","name":"본능의 돌격","description":"정신집중0.3초를 없애고 즉시 돌진.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","effect_type":"boar_instant","effect_values":{}},
+	{"id":"boar_third_charge","monster_id":"boar","name":"세 번째 격노","description":"3번째·6번째·9번째... 돌진은 시작 속도가200으로 증가(최대425 유지).","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","effect_type":"boar_third_charge","effect_values":{}},
+	{"id":"dark_elf_far_sight","monster_id":"dark_elf_archer","name":"어둠을 꿰뚫는 눈","description":"사거리50% 증가(지름400→600), 투사체 이동거리도 증가.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","effect_type":"dark_elf_far_sight","effect_values":{"range_multiplier":1.5,"stat_overrides":{"attack_range":300.0,"attack_range_diameter":600.0,"projectile_range":300.0}}},
+	{"id":"dark_elf_economy","monster_id":"dark_elf_archer","name":"그림자 징집","description":"생산비용25% 감소.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","effect_type":"dark_elf_economy","effect_values":{"stat_multipliers":{"cost":0.75}}},
+	{"id":"dark_elf_shadow_shield","monster_id":"dark_elf_archer","name":"그림자 장막","description":"은신 진입 때 최대체력10% 원거리쉴드 획득(갱신형).","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","effect_type":"dark_elf_shadow_shield","effect_values":{}},
 	{"id":"anubis_ranged","monster_id":"anubis","name":"사막의 장막","description":"미라 사망 쉴드를 원거리35로 통합. 현재 원거리쉴드300 이상이면 체력·공격·이속·공속 +25%. 다른 아누비스 증강과 배타적.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","exclusive_group":"anubis_shield","effect_type":"anubis_ranged","effect_values":{}},
 	{"id":"anubis_melee","monster_id":"anubis","name":"수호자의 갑주","description":"미라 사망 쉴드를 근거리35로 통합. 현재 근거리쉴드300 이상이면 체력·공격·이속·공속 +25%. 다른 아누비스 증강과 배타적.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","exclusive_group":"anubis_shield","effect_type":"anubis_melee","effect_values":{}},
 	{"id":"anubis_universal","monster_id":"anubis","name":"영혼의 결계","description":"미라 사망 쉴드를 일반17.5로 통합(생산50% 감소·소수량 누적). 현재 일반쉴드200 이상이면 체력·공격·이속·공속 +25%. 다른 아누비스 증강과 배타적.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","exclusive_group":"anubis_shield","effect_type":"anubis_universal","effect_values":{}},
