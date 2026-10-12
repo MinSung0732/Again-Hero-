@@ -21,7 +21,7 @@ const ANIMATIONS := {
  "hit":{"prefix":"hit","count":3,"fps":12.0,"loop":false},
  "death":{"prefix":"death","count":4,"fps":10.0,"loop":false},
 }
-const NORMAL_VISUAL := {"mode":"frames","asset_dir":"res://assets/art/monsters/lizardmanspearman/frames","target_height":140.0,"animations":ANIMATIONS}
-const ELITE_VISUAL := {"mode":"frames","asset_dir":"res://assets/art/elitemonster/lizardmanspearman/frames","target_height":160.0,"animations":ANIMATIONS}
+const NORMAL_VISUAL := {"mode":"frames","asset_dir":"res://assets/art/monsters/lizardmanspearman/frames","target_height":117.6,"animations":ANIMATIONS}
+const ELITE_VISUAL := {"mode":"frames","asset_dir":"res://assets/art/elitemonster/lizardmanspearman/frames","target_height":134.4,"animations":ANIMATIONS}
 const PROJECTILE_NORMAL := {"mode":"frames","asset_dir":"res://assets/art/monsters/lizardmanspearman/frames/effect1","target_height":100.0,"animations":{"idle":{"prefix":"projectitle","count":1,"fps":1.0,"loop":true}}}
 const PROJECTILE_ELITE := {"mode":"frames","asset_dir":"res://assets/art/elitemonster/lizardmanspearman/frames/effect1","target_height":100.0,"animations":{"idle":{"prefix":"projectitle","count":1,"fps":1.0,"loop":true}}}
