@@ -8,6 +8,10 @@ var shield_fraction := 0.0
 var shield_mode := ""
 var _last_multiplier := -1.0
 var _profile: Dictionary = {}
+var _base_visual_scale := Vector2.ONE
+var rage_remaining := 0.0
+var sacrifice_stat_bonus := 0.0
+var sacrifice_size_bonus := 0.0
 var status_bar_head_y := -85.0
 var runtime_additions := {"hp_multiplier":1.0,"damage_multiplier":1.0,"speed_multiplier":1.0,"attack_speed_multiplier":1.0}
 
@@ -53,7 +57,7 @@ func _refresh_synergy() -> void:
 	if DATA.MODES.has(shield_mode):
 		var mode: Dictionary = DATA.MODES[shield_mode]
 		threshold_active = MONSTER_RUNTIME_COMMON.shield_value(self,mode.kind) >= float(mode.threshold)
-	var multiplier := (1.0+mummy_count*DATA.MUMMY_STAT_STEP)*DATA.crowd_multiplier(anubis_count)*(1.0+DATA.SHIELD_STAT_BONUS if threshold_active else 1.0)
+	var multiplier := (1.0+mummy_count*DATA.MUMMY_STAT_STEP)*(1.0+sacrifice_stat_bonus)*DATA.crowd_multiplier(anubis_count)*(1.0+DATA.SHIELD_STAT_BONUS if threshold_active else 1.0)*(DATA.RAGE_STAT_MULTIPLIER if rage_remaining > 0.0 else 1.0)
 	var attack_speed := multiplier*(1.0+mummy_count*DATA.ELITE_MUMMY_SPEED_STEP if elite_active else 1.0)
 	if is_equal_approx(multiplier,_last_multiplier) and is_equal_approx(attack_speed,float(runtime_additions.attack_speed_multiplier)): return
 	_last_multiplier = multiplier
@@ -84,15 +88,47 @@ func _attack_target(target: Node2D) -> void:
 
 func apply_visual_profile(profile: Dictionary) -> void:
 	_profile = profile.duplicate(true)
+	if is_instance_valid(visual) and visual.apply_visual_profile(_profile): _base_visual_scale = visual.scale
 	_apply_size()
 
 func _apply_size() -> void:
 	if not is_instance_valid(visual): return
-	var profile := _profile.duplicate(true)
-	profile.target_height = float(profile.get("target_height",140.0))*minf(1.0+mummy_count*DATA.MUMMY_SIZE_STEP,DATA.MAX_VISUAL_MULTIPLIER)
-	if visual.apply_visual_profile(profile):
-		status_bar_head_y = visual.position.y-float(profile.target_height)*0.5-12.0
-		queue_redraw()
+	var multiplier := minf(1.0+mummy_count*DATA.MUMMY_SIZE_STEP,DATA.MAX_VISUAL_MULTIPLIER)*(1.0+sacrifice_size_bonus)*(DATA.RAGE_SIZE_MULTIPLIER if rage_remaining > 0.0 else 1.0)
+	# Scale only: preserve attack/death animation and the cached original SpriteFrames.
+	visual.scale = _base_visual_scale*multiplier
+	status_bar_head_y = visual.position.y-float(_profile.get("target_height",191.8))*multiplier*0.5-12.0
+	visual.self_modulate = Color("ffd1a1") if rage_remaining > 0.0 else Color.WHITE
+	queue_redraw()
+
+func _can_cast() -> bool:
+	return current_hp > 0 and not dying and not bool(get_meta("stun_active",false)) and not bool(get_meta("silence_active",false)) and not MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self)
+
+func try_cast_elite_skill(skill: Dictionary) -> bool:
+	if not _can_cast(): return false
+	match String(skill.get("id","")):
+		"elite_anubis_rage":
+			if rage_remaining > 0.0: return false
+			rage_remaining = DATA.RAGE_DURATION
+			_refresh_synergy(); _apply_size()
+			return true
+		"elite_anubis_sacrifice":
+			if not is_instance_valid(combat_authority): return false
+			var army = combat_authority.get("anubis_army_runtime")
+			if army == null: return false
+			var kind: String = army.sacrifice(self)
+			if not DATA.SACRIFICE_STATS.has(kind): return false
+			sacrifice_stat_bonus += float(DATA.SACRIFICE_STATS[kind])
+			sacrifice_size_bonus += float(DATA.SACRIFICE_SIZE[kind])
+			_refresh_synergy(); _apply_size()
+			return true
+	return false
+
+func _physics_process(delta: float) -> void:
+	if dying or current_hp <= 0: return
+	if rage_remaining > 0.0:
+		rage_remaining = maxf(rage_remaining-delta,0.0)
+		if rage_remaining <= 0.0: _refresh_synergy(); _apply_size()
+	super._physics_process(delta)
 
 func _draw() -> void:
 	if not dying: MONSTER_RUNTIME_COMMON.draw_status_bars(self,self,status_bar_head_y)

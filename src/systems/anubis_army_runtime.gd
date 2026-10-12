@@ -5,6 +5,9 @@ var anubis_ids: Dictionary = {}
 var registrations: Dictionary = {}
 var leaders: Dictionary = {}
 var leader_ids: Array[int] = []
+var candidates: Dictionary = {}
+var candidate_ids: Array[int] = []
+var sacrifice_cursor := 0
 var mummy_count := 0
 var anubis_count := 0
 var cursor := 0
@@ -18,6 +21,7 @@ func setup(catalog: Dictionary) -> void:
 
 func reset() -> void:
 	registrations.clear(); leaders.clear(); leader_ids.clear()
+	candidates.clear(); candidate_ids.clear(); sacrifice_cursor = 0
 	mummy_count = 0; anubis_count = 0; cursor = 0
 
 func register(actor: Node) -> void:
@@ -26,6 +30,7 @@ func register(actor: Node) -> void:
 	var kind := String(actor.get("monster_type"))
 	if not mummy_ids.has(kind) and not anubis_ids.has(kind): return
 	registrations[id] = kind
+	candidates[id] = weakref(actor); candidate_ids.append(id)
 	if mummy_ids.has(kind): mummy_count += 1
 	if anubis_ids.has(kind):
 		anubis_count += 1
@@ -38,6 +43,7 @@ func retire(id: int, actual_death: bool = false) -> void:
 	if not registrations.has(id): return
 	var kind: String = registrations[id]
 	registrations.erase(id)
+	candidates.erase(id); candidate_ids.erase(id)
 	var was_mummy := mummy_ids.has(kind)
 	if was_mummy: mummy_count = maxi(mummy_count-1,0)
 	if anubis_ids.has(kind): anubis_count = maxi(anubis_count-1,0)
@@ -62,3 +68,24 @@ func tick() -> void:
 		if not _alive(actor): continue
 		# Also checks consumed shield thresholds; only changed multipliers refresh stats.
 		actor.update_army_counts(mummy_count,anubis_count)
+
+func sacrifice(caster: Node) -> String:
+	# Event-only registry walk, never a SceneTree group scan or a per-frame candidate array.
+	var remaining := candidate_ids.size()
+	while remaining > 0:
+		remaining -= 1
+		sacrifice_cursor %= candidate_ids.size()
+		var id := candidate_ids[sacrifice_cursor]
+		sacrifice_cursor += 1
+		var victim = candidates[id].get_ref()
+		if victim == caster or not _alive(victim) or not victim.has_method("_begin_death") or bool(victim.get_meta("anubis_sacrifice_claimed",false)): continue
+		var kind: String = "anubis" if anubis_ids.has(String(registrations[id])) else "mummy"
+		victim.set_meta("anubis_sacrifice_claimed",true)
+		victim.set("current_hp",0)
+		victim.call("_begin_death")
+		# Normal died signal delivers Battle rewards/death effects; fallback is idempotent.
+		retire(id,true)
+		if _alive(caster) and caster.has_method("update_army_counts"):
+			caster.update_army_counts(mummy_count,anubis_count)
+		return kind
+	return ""

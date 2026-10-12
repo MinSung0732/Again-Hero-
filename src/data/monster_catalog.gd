@@ -66,11 +66,11 @@ const MONSTERS := {
 	},
 	"anubis": {
 		"id":"anubis","name":"아누비스","role":"exploder","family":"anubis","species":"divine_humanoid","grade":"legendary","rarity":"legendary","attack_type":"melee",
-		"scene":preload("res://src/monsters/Anubis.tscn"),"base_cost":12.0,"base_stats":preload("res://src/data/anubis_behavior_catalog.gd").BASE,
-		"balance":{"health_share":0.25,"damage_share":0.25,"note":"최저 몸체/화력 예산. 미라5% 군단성장·죽음쉴드와 엘리트7 고정누적은 조합 의존, 아누비스10/20/30 군집 페널티. 승률미검증"},
-		"card_icon_path":"res://assets/art/monsters/anubis/frames/idle_01.png","description":"미라 이름을 가진 생존 아군마다 체력·공격·이속·공속 +5%, 표시크기 +0.3%(표시3배 상한). 미라 사망마다 근거리쉴드15/원거리쉴드20 중첩. 아누비스10/20/30마리 이상이면 전체 전투스탯10/20/50% 감소(대체형). 미라 주술사·엘리트 포함, 범위 제한 없음.",
+		"scene":preload("res://src/monsters/Anubis.tscn"),"base_cost":24.0,"base_stats":preload("res://src/data/anubis_behavior_catalog.gd").BASE,
+		"balance":{"role":"tank","health_share":0.7142857143,"damage_share":0.25,"note":"매우높은 체력472·낮은공격25 유지: 비용24/방어형 예산으로 계산, 게임역할폭발 유지. 미라성장/죽음쉴드/희생영구성장·분노30%는 조합기여, 군집 페널티, 승률미검증"},
+		"card_icon_path":"res://assets/art/monsters/anubis/frames/idle_01.png","description":"기본 표시크기137%, 매우높은 기본체력. 미라 이름을 가진 생존 아군마다 체력·공격·이속·공속 +5%, 표시크기 +0.3%(표시3배 상한). 미라 사망마다 근거리쉴드15/원거리쉴드20 중첩. 아누비스10/20/30마리 이상이면 전체 전투스탯10/20/50% 감소(대체형). 미라 주술사·엘리트 포함, 범위 제한 없음.",
 		"special_augment_ids":["anubis_ranged","anubis_melee","anubis_universal"],"elite_visual":preload("res://src/data/anubis_behavior_catalog.gd").ELITE_VISUAL,
-		"elite_skills":[{"runtime":"monster","id":"elite_anubis_thoughts","name":"사념 중첩","passive":true,"initial_cooldown":0.0,"cooldown":0.0,"description":"기본공격마다 고정 추가피해7 누적(첫공격7/다음14...). 생존 미라1마리마다 추가 공속3%. 추가피해는 기본타격과 합산된 근거리피해이며 무적/피감 유지."}],
+		"elite_skills":[{"runtime":"monster","id":"elite_anubis_thoughts","name":"사념 중첩","passive":true,"initial_cooldown":0.0,"cooldown":0.0,"description":"기본공격마다 고정 추가피해7 누적(첫공격7/다음14...). 생존 미라1마리마다 추가 공속3%. 추가피해는 기본타격과 합산된 근거리피해이며 무적/피감 유지."},{"runtime":"monster","id":"elite_anubis_rage","name":"아누비스의 분노","initial_cooldown":10.0,"cooldown":30.0,"description":"7초간 표시크기15% 증가, 체력·공격·이속·공속30% 상승. 종료 시 임시효과만 해제."},{"runtime":"monster","id":"elite_anubis_sacrifice","name":"희생하거라","initial_cooldown":3.0,"cooldown":3.0,"retry_interval":0.5,"description":"전장 내 자신 제외 아누비스 또는 미라1마리 희생. 아누비스 흡수: 영구전투스탯12%/크기5%, 미라 흡수:9%/3% 가산 누적. 희생은 정상사망으로 처리하여 미라사망쉴드/EXP 유지. 대상 없으면 대기."}],
 	},
 
  "lizardman_spearman": {
