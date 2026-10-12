@@ -73,6 +73,7 @@ func separation_bias(owner: Node2D, radius: float) -> Vector2:
 				var other = bucket[(sample_start + sample) % bucket.size()]
 				if other == owner or not is_instance_valid(other) or other.is_queued_for_deletion() or bool(other.get_meta("ignore_monster_separation", false)):
 					continue
+				if COMMON.ignores_separation_pair(owner,other): continue
 				var offset: Vector2 = origin - other.global_position
 				var distance_sq := offset.length_squared()
 				if distance_sq >= radius_sq:
@@ -126,3 +127,4 @@ func fill_rect(rect: Rect2, result: Array) -> void:
 				# Include both ends, matching the legacy capsule's <= radius.
 				if point.x >= rect.position.x and point.y >= rect.position.y and point.x <= rect.end.x and point.y <= rect.end.y:
 					result.append(actor)
+

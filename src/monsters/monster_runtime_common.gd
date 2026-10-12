@@ -88,6 +88,10 @@ static func next_soft_separation_delay() -> float:
 	)
 
 
+static func ignores_separation_pair(owner: Node, other: Node) -> bool:
+	var family := String(owner.get_meta("noncollision_family",""))
+	return not family.is_empty() and family == String(other.get_meta("noncollision_family",""))
+
 static func compute_soft_separation_bias(
 	owner: CharacterBody2D,
 	combat_authority: Node
@@ -147,6 +151,7 @@ static func compute_soft_separation_bias(
 		if other == null:
 			continue
 
+		if ignores_separation_pair(owner,other): continue
 		var offset := owner.global_position - other.global_position
 		var distance_sq := offset.length_squared()
 		if distance_sq >= separation_radius_sq:

@@ -29,6 +29,7 @@ const ORDER := [
 	"gargoyle",
 	"hobgoblin",
 	"ogre",
+	"lizardman_fighter",
 	"zeus",
 	"bulgasal",
 	"izanami",
@@ -43,6 +44,18 @@ const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const BULGASAL_BEHAVIOR := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const MONSTERS := {
+ "lizardman_fighter": {
+  "id":"lizardman_fighter","name":"리자드맨 전사","role":"exploder","family":"lizardman","species":"beast","grade":"uncommon","rarity":"uncommon","attack_type":"melee","noncollision_family":"lizardman",
+  "base_cost":12.0,"summon_exp":12.0,"default_unlocked":false,"combat_enabled":true,
+  "base_stats":preload("res://src/data/lizardman_fighter_behavior_catalog.gd").BASE,
+  "balance":{"health_share":1.19047619,"damage_share":0.90939153,"note":"반복 근접 폭발형. 빠른 접근/공격,HP30% 1회 후퇴로 공격 시간 손실.1회 생존·낮은 기본HP, 엘리트 영구성장 실전승률 미검증"},
+  "description":"리자드맨끼리 충돌·밀어내기 없음. HP30% 이하에서1회 꼬리를 남기고 공격자 반대 방향으로 직선 최대400 후퇴. 꼬리는3초간 남고 마지막1초 깜박임. 치명타격은 생존시키지 않음.",
+  "special_augment_ids":["lizard_tail_regrowth","lizard_sharp_blade","lizard_clutch_mobilization"],
+  "elite_skills":[{"runtime":"monster","id":"elite_lizard_nutrition","name":"영양섭취","passive":true,"initial_cooldown":0.0,"cooldown":0.0,"description":"맵의 꼬리를 즉시 섭취. 꼬리당 최대HP·공격·이속·공속 기본치의2% 영구 증가(전투 내). 가장 가까운 살아있는 엘리트1마리만 섭취."}],
+  "card_icon_path":"res://assets/art/monsters/lizardmanfighter/frames/idle_01.png",
+  "elite_visual":preload("res://src/data/lizardman_fighter_behavior_catalog.gd").ELITE_VISUAL,
+  "scene":preload("res://src/monsters/LizardmanFighter.tscn"),
+ },
  "ogre": {
   "id":"ogre","name":"오우거","role":"tank","family":"ogre","species":"beast","grade":"uncommon","rarity":"uncommon","attack_type":"melee",
   "base_cost":20.0,"summon_exp":20.0,"default_unlocked":false,"combat_enabled":true,

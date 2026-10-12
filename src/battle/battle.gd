@@ -55,6 +55,7 @@ signal battle_finished(message: String, player_won: bool)
 const HERO_SCENE := preload("res://src/hero/Hero.tscn")
 const SCORPION_SWAMP_RUNTIME := preload("res://src/systems/scorpion_swamp_runtime.gd")
 const SUPPORT_BUFF_RUNTIME := preload("res://src/systems/monster_support_buff_runtime.gd")
+const LIZARD_TAIL_RUNTIME := preload("res://src/systems/lizard_tail_runtime.gd")
 const GOBLIN_FORMATION_RUNTIME := preload("res://src/systems/goblin_formation_runtime.gd")
 const WOLF_PACK_RUNTIME := preload("res://src/systems/wolf_pack_runtime.gd")
 const YUKI_RUNTIME := preload("res://src/systems/yuki_onna_runtime.gd")
@@ -173,6 +174,7 @@ const MONSTER_SPATIAL_CELL_SIZE := 256.0
 
 var active_monsters: Dictionary = {}
 var support_buff_runtime = SUPPORT_BUFF_RUNTIME.new()
+var lizard_tail_runtime = LIZARD_TAIL_RUNTIME.new()
 var goblin_formation_runtime = GOBLIN_FORMATION_RUNTIME.new()
 var wolf_pack_runtime = WOLF_PACK_RUNTIME.new()
 var yuki_runtime = YUKI_RUNTIME.new()
@@ -640,6 +642,7 @@ func _ready() -> void:
 	scorpion_swamp_runtime.setup(self)
 	wolf_pack_runtime.setup(self)
 	goblin_formation_runtime.setup(self,MONSTER_CATALOG.MONSTERS)
+	lizard_tail_runtime.setup(self)
 	_cache_demon_ultimate_runtime_data()
 	_start_battle()
 
@@ -661,6 +664,7 @@ func _process(delta: float) -> void:
 		support_buff_runtime.tick(delta)
 		wolf_pack_runtime.tick(delta)
 		goblin_formation_runtime.tick(delta)
+		lizard_tail_runtime.tick(delta)
 		yuki_runtime.tick(delta)
 		scorpion_swamp_runtime.tick(delta)
 		_process_demon_ultimate_spawn_queue(delta)
@@ -798,6 +802,7 @@ func _start_battle() -> void:
 	elite_monster_skill_runtime.reset()
 	wolf_pack_runtime.reset()
 	goblin_formation_runtime.reset()
+	lizard_tail_runtime.reset()
 	yuki_runtime.reset()
 	active_heal_items.clear()
 	active_treasure_chests.clear()
@@ -2138,6 +2143,7 @@ func _spawn_monster(
 	monster.set_meta("exclude_all_augments", fixed_base_stats or bool(spawn_modifiers.get("exclude_all_augments", false)))
 	var monster_species := MONSTER_CATALOG.get_species(monster_type)
 	monster.set_meta("monster_species", monster_species)
+	monster.set_meta("noncollision_family",String(MONSTER_CATALOG.MONSTERS[monster_type].get("noncollision_family","")))
 	monster.set_meta(
 		"monster_family",
 		MONSTER_CATALOG.get_family(monster_type)

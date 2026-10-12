@@ -27,6 +27,7 @@ const MONSTER_NAMES := {
 	"gargoyle":"가고일",
 	"hobgoblin":"홉고블린",
 	"ogre":"오우거",
+	"lizardman_fighter":"리자드맨 전사",
 	"bomb_rat": "폭탄쥐",
 	"skeleton": "해골 전사",
 	"skeleton_archer": "해골 궁병",
@@ -145,6 +146,9 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+ {"id":"lizard_tail_regrowth","monster_id":"lizardman_fighter","name":"재생의 탈피","description":"꼬리자르기 후퇴 완료 후 잃은HP35% 회복(1회).","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"lizard_tail_regrowth","effect_values":{}},
+ {"id":"lizard_sharp_blade","monster_id":"lizardman_fighter","name":"날선 비늘칼","description":"공격력35% 증가.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"lizard_sharp_blade","effect_values":{"stat_multipliers":{"damage":1.35}}},
+ {"id":"lizard_clutch_mobilization","monster_id":"lizardman_fighter","name":"무리 동원","description":"생산비용20% 감소.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"lizard_clutch_mobilization","effect_values":{"stat_multipliers":{"cost":0.80}}},
  {"id":"ogre_great_blood","monster_id":"ogre","name":"거인의 혈통","description":"선택 이후 일반 오우거10회 소환마다 중형1마리로 대체. 크기15%·HP/공격50%·이속/공속10% 증가, 받는 근거리피해20% 감소. 엘리트/분열 제외.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"ogre_great_blood","effect_values":{"summon_every":10,"exclude_elite":true}},
  {"id":"ogre_war_fury","monster_id":"ogre","name":"전장의 광기","description":"폭발 역할로 변경. 기본HP50%, 공격력350%, 이속200%, 공속250%. 기본 오우거HP210/공격63/이속130/공격간격1.04초. 기존 쉴드는 재지급하지 않음.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"ogre_war_fury","effect_values":{"role_override":"exploder","runtime_stat_multipliers":preload("res://src/data/ogre_behavior_catalog.gd").FURY_STATS}},
  {"id":"ogre_mass_production","monster_id":"ogre","name":"대량 동원","description":"오우거 생산비용25% 감소.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"ogre_mass_production","effect_values":{"stat_multipliers":{"cost":0.75}}},
