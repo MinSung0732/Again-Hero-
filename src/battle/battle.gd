@@ -56,6 +56,7 @@ const HERO_SCENE := preload("res://src/hero/Hero.tscn")
 const SCORPION_SWAMP_RUNTIME := preload("res://src/systems/scorpion_swamp_runtime.gd")
 const SUPPORT_BUFF_RUNTIME := preload("res://src/systems/monster_support_buff_runtime.gd")
 const LIZARD_TAIL_RUNTIME := preload("res://src/systems/lizard_tail_runtime.gd")
+const ANUBIS_ARMY_RUNTIME := preload("res://src/systems/anubis_army_runtime.gd")
 const GOBLIN_FORMATION_RUNTIME := preload("res://src/systems/goblin_formation_runtime.gd")
 const WOLF_PACK_RUNTIME := preload("res://src/systems/wolf_pack_runtime.gd")
 const YUKI_RUNTIME := preload("res://src/systems/yuki_onna_runtime.gd")
@@ -175,6 +176,7 @@ const MONSTER_SPATIAL_CELL_SIZE := 256.0
 var active_monsters: Dictionary = {}
 var support_buff_runtime = SUPPORT_BUFF_RUNTIME.new()
 var lizard_tail_runtime = LIZARD_TAIL_RUNTIME.new()
+var anubis_army_runtime = ANUBIS_ARMY_RUNTIME.new()
 var goblin_formation_runtime = GOBLIN_FORMATION_RUNTIME.new()
 var wolf_pack_runtime = WOLF_PACK_RUNTIME.new()
 var yuki_runtime = YUKI_RUNTIME.new()
@@ -642,6 +644,7 @@ func _ready() -> void:
 	scorpion_swamp_runtime.setup(self)
 	wolf_pack_runtime.setup(self)
 	goblin_formation_runtime.setup(self,MONSTER_CATALOG.MONSTERS)
+	anubis_army_runtime.setup(MONSTER_CATALOG.MONSTERS)
 	lizard_tail_runtime.setup(self)
 	_cache_demon_ultimate_runtime_data()
 	_start_battle()
@@ -664,6 +667,7 @@ func _process(delta: float) -> void:
 		support_buff_runtime.tick(delta)
 		wolf_pack_runtime.tick(delta)
 		goblin_formation_runtime.tick(delta)
+		anubis_army_runtime.tick()
 		lizard_tail_runtime.tick(delta)
 		yuki_runtime.tick(delta)
 		scorpion_swamp_runtime.tick(delta)
@@ -802,6 +806,7 @@ func _start_battle() -> void:
 	elite_monster_skill_runtime.reset()
 	wolf_pack_runtime.reset()
 	goblin_formation_runtime.reset()
+	anubis_army_runtime.reset()
 	lizard_tail_runtime.reset()
 	yuki_runtime.reset()
 	active_heal_items.clear()
@@ -2450,6 +2455,7 @@ func _spawn_monster(
 		monster.set("hero_target_refresh_timer", fmod(float(monster_query_registration_order) * 0.0954915, 0.25))
 	monster_population_ids[monster_instance_id] = monster_type
 	monster_population_counts[monster_type] = int(monster_population_counts.get(monster_type, 0)) + 1
+	anubis_army_runtime.register(monster)
 	monster.tree_exited.connect(_unregister_monster.bind(monster_instance_id), CONNECT_ONE_SHOT)
 	monster_spatial_grid_physics_frame = -1
 	monsters_alive += 1
@@ -2485,6 +2491,7 @@ func is_population_full() -> bool:
 	return get_population_count() >= get_population_limit()
 
 func _unregister_monster(instance_id: int) -> void:
+	anubis_army_runtime.retire(instance_id)
 	battle_entity_registry.retire_instance(instance_id)
 	if direct_population_ids.erase(instance_id):
 		_queue_population_update()
@@ -3066,6 +3073,7 @@ func _on_monster_died(monster: Node) -> void:
 		monster.set_meta("transcendent_death_handled", true)
 	if is_instance_valid(monster) and not bool(monster.get_meta("allied_death_recorded", false)):
 		monster.set_meta("allied_death_recorded", true)
+		anubis_army_runtime.retire(monster.get_instance_id(),true)
 		raw_allied_deaths += 1
 		if MONSTER_CATALOG.get_role(String(monster.get("monster_type"))) == "tank":
 			raw_tank_deaths += 1
@@ -4764,7 +4772,7 @@ func _execute_choose_demon_augment(augment_id: String, expected_revision: int) -
 		augment.get("augment_type", DEMON_AUGMENTS.TYPE_NORMAL)
 	)
 	if augment_type == DEMON_AUGMENTS.TYPE_SPECIAL:
-		if augment_id in demon_special_augments:
+		if not DEMON_AUGMENTS.can_acquire_special(augment_id,demon_special_augments):
 			return false
 		demon_special_augments.append(augment_id)
 		run_metrics.record_special_augment_acquired()

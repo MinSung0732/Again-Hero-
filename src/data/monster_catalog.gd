@@ -20,6 +20,7 @@ const ORDER := [
 	"dullahan",
 	"kraken",
 	"medusa",
+	"anubis",
 	"mummy",
 	"powwow_mummy",
 	"scorpion",
@@ -45,6 +46,15 @@ const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const BULGASAL_BEHAVIOR := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const MONSTERS := {
+	"anubis": {
+		"id":"anubis","name":"아누비스","role":"exploder","family":"anubis","species":"divine_humanoid","grade":"legendary","rarity":"legendary","attack_type":"melee",
+		"scene":preload("res://src/monsters/Anubis.tscn"),"base_cost":12.0,"base_stats":preload("res://src/data/anubis_behavior_catalog.gd").BASE,
+		"balance":{"health_share":0.25,"damage_share":0.25,"note":"최저 몸체/화력 예산. 미라5% 군단성장·죽음쉴드와 엘리트7 고정누적은 조합 의존, 아누비스10/20/30 군집 페널티. 승률미검증"},
+		"card_icon_path":"res://assets/art/monsters/anubis/frames/idle_01.png","description":"미라 이름을 가진 생존 아군마다 체력·공격·이속·공속 +5%, 표시크기 +0.3%(표시3배 상한). 미라 사망마다 근거리쉴드15/원거리쉴드20 중첩. 아누비스10/20/30마리 이상이면 전체 전투스탯10/20/50% 감소(대체형). 미라 주술사·엘리트 포함, 범위 제한 없음.",
+		"special_augment_ids":["anubis_ranged","anubis_melee","anubis_universal"],"elite_visual":preload("res://src/data/anubis_behavior_catalog.gd").ELITE_VISUAL,
+		"elite_skills":[{"runtime":"monster","id":"elite_anubis_thoughts","name":"사념 중첩","passive":true,"initial_cooldown":0.0,"cooldown":0.0,"description":"기본공격마다 고정 추가피해7 누적(첫공격7/다음14...). 생존 미라1마리마다 추가 공속3%. 추가피해는 기본타격과 합산된 근거리피해이며 무적/피감 유지."}],
+	},
+
  "lizardman_spearman": {
   "id":"lizardman_spearman","name":"리자드맨 창병","role":"exploder","family":"lizardman","species":"beast","grade":"uncommon","rarity":"uncommon","attack_type":"melee","noncollision_family":"lizardman",
   "base_cost":12.0,"summon_exp":12.0,"default_unlocked":false,"combat_enabled":true,

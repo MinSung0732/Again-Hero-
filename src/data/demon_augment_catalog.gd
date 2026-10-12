@@ -11,6 +11,7 @@ const SPECIAL_MAX_LEVEL := 1
 static var augment_lookup: Dictionary = {}
 
 const MONSTER_NAMES := {
+	"anubis":"아누비스",
 	"yuki_onna":"설녀",
 	"wolf":"늑대",
 	"succubus":"서큐버스",
@@ -147,6 +148,9 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{"id":"anubis_ranged","monster_id":"anubis","name":"사막의 장막","description":"미라 사망 쉴드를 원거리35로 통합. 현재 원거리쉴드300 이상이면 체력·공격·이속·공속 +25%. 다른 아누비스 증강과 배타적.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","exclusive_group":"anubis_shield","effect_type":"anubis_ranged","effect_values":{}},
+	{"id":"anubis_melee","monster_id":"anubis","name":"수호자의 갑주","description":"미라 사망 쉴드를 근거리35로 통합. 현재 근거리쉴드300 이상이면 체력·공격·이속·공속 +25%. 다른 아누비스 증강과 배타적.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","exclusive_group":"anubis_shield","effect_type":"anubis_melee","effect_values":{}},
+	{"id":"anubis_universal","monster_id":"anubis","name":"영혼의 결계","description":"미라 사망 쉴드를 일반17.5로 통합(생산50% 감소·소수량 누적). 현재 일반쉴드200 이상이면 체력·공격·이속·공속 +25%. 다른 아누비스 증강과 배타적.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","exclusive_group":"anubis_shield","effect_type":"anubis_universal","effect_values":{}},
  {"id":"lizard_spear_throw","monster_id":"lizardman_spearman","name":"투창의 전환","description":"역할/공격종류 원거리 전환. HP60%,공격135%,공속160%. 사거리 반경185(지름370),투사체속도280.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"lizard_spear_throw","effect_values":{"role_override":"ranged","attack_type_override":"ranged","runtime_stat_multipliers":preload("res://src/data/lizardman_spearman_behavior_catalog.gd").RANGED_STATS,"stat_overrides":{"attack_range":185.0,"projectile_speed":280.0,"projectile_range":185.0}}},
  {"id":"lizard_spear_footwork","monster_id":"lizardman_spearman","name":"유연한 발놀림","description":"공격 후 자신의 공격 사거리 내 다른 위치로 실제 이동.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"lizard_spear_footwork","effect_values":{}},
  {"id":"lizard_spear_repulse","monster_id":"lizardman_spearman","name":"밀쳐내는 창끝","description":"거리130 이내 유효 타격 시 약한 넉백35. 근접/투창 적중 적용, 면역/벽 충돌 보존.","augment_type":TYPE_SPECIAL,"max_stack":SPECIAL_MAX_LEVEL,"icon":"","effect_type":"lizard_spear_repulse","effect_values":{}},
@@ -822,7 +826,7 @@ static func roll_special_candidates(
 			var augment_id := String(augment.get("id", ""))
 			if String(augment.get("monster_id", "")) != monster_id:
 				continue
-			if augment_id in acquired_special_ids or augment_id in exclude_ids:
+			if not can_acquire_special(augment_id,acquired_special_ids) or augment_id in exclude_ids:
 				continue
 			options.append(augment.duplicate(true))
 		if not options.is_empty():
@@ -865,3 +869,12 @@ static func _append_normal_candidate(
 	var candidate := augment.duplicate(true)
 	candidate["current_stack"] = current_stack
 	pool.append(candidate)
+
+static func can_acquire_special(augment_id: String, acquired: Array) -> bool:
+	if augment_id in acquired: return false
+	var candidate := get_augment(augment_id)
+	var group := String(candidate.get("exclusive_group",""))
+	if group.is_empty(): return true
+	for id in acquired:
+		if String(get_augment(String(id)).get("exclusive_group","")) == group: return false
+	return true
