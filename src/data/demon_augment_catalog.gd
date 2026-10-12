@@ -11,6 +11,7 @@ const SPECIAL_MAX_LEVEL := 1
 static var augment_lookup: Dictionary = {}
 
 const MONSTER_NAMES := {
+	"dark_elf_rogue":"흑요정 도적",
 	"boar":"멧돼지",
 	"dark_elf_archer":"흑요정 궁수",
 	"anubis":"아누비스",
@@ -150,6 +151,9 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	{"id":"dark_elf_rogue_assassinate","monster_id":"dark_elf_rogue","name":"암살자의 일격","description":"일반 은신 첫타 피해150%→300%. 엘리트225% 해제타와 중복하지 않음.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","effect_type":"dark_elf_rogue_assassinate","effect_values":{}},
+	{"id":"dark_elf_rogue_blades","monster_id":"dark_elf_rogue","name":"날선 쌍검","description":"공격력30% 증가(두 타격 모두 적용).","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","effect_type":"dark_elf_rogue_blades","effect_values":{"stat_multipliers":{"damage":1.3}}},
+	{"id":"dark_elf_rogue_backstab","monster_id":"dark_elf_rogue","name":"배후 급습","description":"용사가 보는 방향의 뒤쪽에서 타격 시133% 피해/빨간 피해숫자. 일반은신/엘리트 해제타에도 적용.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","effect_type":"dark_elf_rogue_backstab","effect_values":{}},
 	{"id":"boar_tusk","monster_id":"boar","name":"분쇄의 엄니","description":"공격력30% 증가.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","effect_type":"boar_tusk","effect_values":{"stat_multipliers":{"damage":1.3}}},
 	{"id":"boar_instant","monster_id":"boar","name":"본능의 돌격","description":"정신집중0.3초를 없애고 즉시 돌진.","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","effect_type":"boar_instant","effect_values":{}},
 	{"id":"boar_third_charge","monster_id":"boar","name":"세 번째 격노","description":"3번째·6번째·9번째... 돌진은 시작 속도가200으로 증가(최대425 유지).","augment_type":TYPE_SPECIAL,"max_stack":1,"icon":"","effect_type":"boar_third_charge","effect_values":{}},

@@ -11,6 +11,7 @@ const ORDER := [
 	"bomb_rat",
 	"boar",
 	"dark_elf_archer",
+	"dark_elf_rogue",
 	"skeleton",
 	"skeleton_archer",
 	"kobolt",
@@ -48,6 +49,14 @@ const KRAKEN_BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const MEDUSA_BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 const BULGASAL_BEHAVIOR := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const MONSTERS := {
+	"dark_elf_rogue": {
+		"id":"dark_elf_rogue","name":"흑요정 도적","role":"exploder","family":"dark_elf","species":"humanoid","grade":"uncommon","rarity":"uncommon","attack_type":"melee",
+		"scene":preload("res://src/monsters/DarkElfRogue.tscn"),"base_cost":9.0,"summon_exp":9.0,"base_stats":preload("res://src/data/dark_elf_rogue_behavior_catalog.gd").BASE,
+		"balance":{"health_share":1.5,"damage_share":0.8,"cycle_damage_multiplier":2.0,"note":"각100%2연격, 낮은공격13/중간몸체142.3초은신50%피감/첫타150%·공격후사거리내2배속재배치.300%/후방133%·엘리트225%단일해제타와피해취약70%·대상제외는별도기여. 승률미검증"},
+		"card_icon_path":"res://assets/art/monsters/dark_elf_rogue/frames/idle_01.png","description":"근접2연격(각공격력100%, 두번째0.14초 후).3초 무피격 은신(피해50% 감소), 은신 첫타150%후해제·재준비3초. 공격 후 자신의 사거리 내 다른 위치로 빠르게 이동. 강화 은신/엘리트 배율은 첫타에만 적용하며 후방 판정은 각 타격 시점의 용사 시선 기준.",
+		"special_augment_ids":["dark_elf_rogue_assassinate","dark_elf_rogue_blades","dark_elf_rogue_backstab"],"elite_visual":preload("res://src/data/dark_elf_rogue_behavior_catalog.gd").ELITE_VISUAL,
+		"elite_skills":[{"runtime":"monster","id":"elite_dark_elf_rogue_darkness","name":"어둠속으로","initial_cooldown":3.0,"cooldown":20.0,"description":"5초 완전투명·용사표적에서제외, 받는피해70% 증가/이속30% 증가. 일반은신 비적용. 유효 첫타225%후해제(일반은신150/300%와중복없음), 후방133%는적용. 기존 충돌/광역·비표적피해 유지."}],
+	},
 	"boar": {
 		"id":"boar","name":"멧돼지","role":"exploder","family":"boar","species":"beast","grade":"common","rarity":"common","attack_type":"melee",
 		"scene":preload("res://src/monsters/Boar.tscn"),"base_cost":8.0,"summon_exp":8.0,"base_stats":preload("res://src/data/boar_behavior_catalog.gd").BASE,
