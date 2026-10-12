@@ -19,7 +19,7 @@ var _entry_center: CenterContainer
 var _entry_title: Label
 var _entry_cost: HBoxContainer
 var _entry_amount: Label
-var _entry_notice: AcceptDialog
+var _entry_notice: Control
 var _entry_blocker: Control
 var _spend_label: Label
 var _spend_tween: Tween
@@ -412,13 +412,9 @@ func show_entry_notice(message: String) -> void:
 	# Entry failures are not stamina tooltips (formation/save failure included).
 	close_info()
 	if not is_instance_valid(_entry_notice):
-		_entry_notice = AcceptDialog.new()
-		_entry_notice.name = "DungeonEntryNotice"
-		_entry_notice.title = "던전 입장 안내"
-		_entry_notice.dialog_autowrap = true
-		_entry_notice.get_ok_button().text = "확인"
-		_entry_notice.add_theme_font_size_override("font_size", 26)
-		lobby.add_child(_entry_notice)
-	_entry_notice.dialog_text = message
-	var width := mini(650, maxi(240, int(lobby.get_viewport_rect().size.x) - 48))
-	_entry_notice.popup_centered(Vector2i(width, 0))
+		_entry_notice = preload("res://src/ui/dungeon_entry_notice.gd").new()
+		_entry_notice.install(lobby)
+	_entry_notice.open(message)
+
+func blocks_entry_notice_input(event: InputEvent) -> bool:
+	return is_instance_valid(_entry_notice) and _entry_notice.blocks_lobby_input(event)

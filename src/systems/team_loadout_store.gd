@@ -10,7 +10,9 @@ static func load_ids(valid_ids: Array, fallback_ids: Array) -> Array:
 	var raw_ids: Array = []
 	var config := ConfigFile.new()
 
+	var has_saved_selection := false
 	if ACCOUNT_SCOPE.load_config(config, SAVE_PATH) == OK:
+		has_saved_selection = config.has_section_key("team", "monster_ids")
 		var encoded := String(
 			config.get_value("team", "monster_ids", "")
 		)
@@ -19,15 +21,13 @@ static func load_ids(valid_ids: Array, fallback_ids: Array) -> Array:
 				raw_ids.append(String(raw_id))
 
 	var normalized := _normalize_ids(raw_ids, valid_ids)
-	if normalized.is_empty():
+	if normalized.is_empty() and not has_saved_selection:
 		normalized = _normalize_ids(fallback_ids, valid_ids)
 
 	return normalized
 
 static func save_ids(monster_ids: Array, valid_ids: Array) -> bool:
 	var normalized := _normalize_ids(monster_ids, valid_ids)
-	if normalized.is_empty():
-		return false
 
 	var encoded := ""
 	for monster_id in normalized:

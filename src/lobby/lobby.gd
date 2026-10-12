@@ -2188,6 +2188,9 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 
 
 func _input(event: InputEvent) -> void:
+	if stamina_view != null and stamina_view.blocks_entry_notice_input(event):
+		_stage_swipe_active = false
+		return
 	if is_instance_valid(_transcendence_entry_confirm) and _transcendence_entry_confirm.visible:
 		_stage_swipe_active = false
 		if event.is_action_pressed("ui_cancel"):
@@ -3513,7 +3516,6 @@ func _create_team_monster_card(monster_id: String) -> Control:
 	team_button.clip_text = true
 	team_button.disabled = (
 		not available
-		or (selected and team_selected_ids.size() <= 1)
 		or (not selected and team_selected_ids.size() >= TEAM_MAX_SLOTS)
 	)
 	team_button.add_theme_stylebox_override(
@@ -3641,7 +3643,7 @@ func _refresh_team_slot(button: Button, slot_index: int) -> void:
 		]
 		_team_formation_view.refresh_slot(
 			button, _team_monster_card_icon(monster_id), _team_monster_name(monster_id),
-			info, team_selected_ids.size() > 1, MONSTER_CATALOG.get_rarity(monster_id)
+			info, true, MONSTER_CATALOG.get_rarity(monster_id)
 		)
 	else:
 		button.icon = null
@@ -4269,10 +4271,6 @@ func _load_elite_preview(monster_id: String) -> Texture2D:
 
 func _remove_team_monster(monster_id: String) -> void:
 	if monster_id not in team_selected_ids:
-		return
-
-	if team_selected_ids.size() <= 1:
-		team_status_label.text = "최소 1종은 편성해야 합니다."
 		return
 
 	team_selected_ids.erase(monster_id)
