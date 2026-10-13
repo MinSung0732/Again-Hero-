@@ -288,6 +288,9 @@ func deactivate_for_pool() -> void:
 func _draw() -> void:
 	if not active:
 		return
+	if bool(get_meta("survival_geometry",false)):
+		draw_circle(Vector2.ZERO,effect_radius,Color(0.35,0.75,1.0,0.08))
+		draw_arc(Vector2.ZERO,collision_radius,0,TAU,32,Color(0.85,0.95,1,0.85),2.0)
 	draw_arc(
 		Vector2.ZERO,
 		effect_radius,

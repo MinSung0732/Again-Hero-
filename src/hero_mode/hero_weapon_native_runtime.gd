@@ -7,6 +7,7 @@ const SCENES := {
 	"singularity":[preload("res://src/hero/SageAnnihilationPoint.tscn"),"sage_annihilation_point",2],
 }
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
+const FIT := preload("res://src/ui/hero_weapon_visual_fit.gd")
 var hero
 var authority
 var summon_configs: Dictionary = {}
@@ -20,8 +21,20 @@ func install(host) -> void:
 		if not SCENES.has(pattern) or prepared.has(pattern): continue
 		prepared[pattern] = true
 		var spec: Array = SCENES[pattern]
+		var paths := PackedStringArray()
+		if pattern == "piercer":
+			for frame in range(1,7): paths.append("res://assets/art/heroes/stage1_mage/frames/effect_01/frame_%02d.png" % frame)
+		elif pattern == "meteor":
+			for frame in range(5,9): paths.append("res://assets/art/heroes/stage10_sage/frames/effect7/stage10_effect2_%02d.png" % frame)
+		elif pattern == "singularity":
+			for frame in range(1,9): paths.append("res://assets/art/heroes/stage10_sage/frames/effect8/stage10_effect3_%02d.png" % frame)
+		var bounds := FIT.warm(paths) if not paths.is_empty() else Rect2()
 		var actors: Array = []
-		for index in int(spec[2]): actors.append(hero._acquire_projectile(spec[0],spec[1]))
+		for index in int(spec[2]):
+			var actor = hero._acquire_projectile(spec[0],spec[1])
+			if not is_instance_valid(actor): continue
+			actor.set_meta("survival_geometry",true); actor.set_meta("survival_visual_bounds",bounds)
+			actors.append(actor)
 		actors_by_pattern[pattern] = actors
 		for actor in actors:
 			if is_instance_valid(actor): authority.recycle_projectile(actor,spec[1])

@@ -11,6 +11,8 @@ const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const ICONS := preload("res://src/ui/hero_augment_icons.gd")
 const DIRECTOR := preload("res://src/hero_mode/ai_demon_director.gd")
 const SETTINGS := preload("res://src/ui/BattleSettings.tscn")
+const HUD := preload("res://src/ui/hero_survival_hud.gd")
+const REEL := preload("res://src/ui/hero_chest_reel.gd")
 var settings_panel: Control
 var battle_frame: Control
 var battle_frame_enabled := true
@@ -86,7 +88,7 @@ func _ready() -> void:
 	viewport.add_child(battle)
 	_install_battle_settings()
 	GameAudio.attach_battle(battle)
-	$HeroBGMManager.start_stage(stage)
+	$HeroBGMManager.start_hero_loop(player_hero_id)
 	$HeroBGMManager.set_user_bgm_level(AudioSettings.bgm_level)
 	$HeroBGMManager.set_user_bgm_muted(AudioSettings.bgm_muted)
 	battle.hero.set_camera_view_locked(true)
@@ -109,22 +111,25 @@ func _build_ui() -> void:
 	var header := PanelContainer.new(); header.name = "HeroHUD"; add_child(header)
 	header.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	header.offset_left = 20; header.offset_right = -20; header.offset_top = 20; header.offset_bottom = 310
-	var frame := StyleBoxFlat.new(); frame.bg_color = Color("192633"); frame.border_color = Color("c9a45e"); frame.set_border_width_all(3); frame.set_content_margin_all(18)
+	var frame := StyleBoxFlat.new(); frame.bg_color = Color("192633"); frame.border_color = Color("c9a45e"); frame.set_border_width_all(3); frame.set_content_margin_all(14)
 	header.add_theme_stylebox_override("panel",SKIN.skin_style(frame))
-	var top := VBoxContainer.new(); top.add_theme_constant_override("separation",6); header.add_child(top)
+	var top := VBoxContainer.new(); top.add_theme_constant_override("separation",4); header.add_child(top)
 	var title_row := HBoxContainer.new(); top.add_child(title_row)
-	timer = _label(title_row,"용사 모드 · 15분 생존",26); timer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	HUD.logo(title_row)
+	timer = _label(title_row,"용사 모드 · 15분 생존",23); timer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var menu := Button.new(); menu.text = "설정"; menu.custom_minimum_size = Vector2(120,50); title_row.add_child(menu)
 	menu.add_theme_font_size_override("font_size",23); _skin_action_button(menu); menu.pressed.connect(_pause)
-	hp = ProgressBar.new(); hp.custom_minimum_size.y = 26; hp.show_percentage = false; top.add_child(hp)
-	xp = ProgressBar.new(); xp.custom_minimum_size.y = 14; xp.show_percentage = false; top.add_child(xp)
+	hp = HUD.bar(top,"HP",Color(0.08,0.92,0.25,1),32)
+	xp = HUD.bar(top,"EXP",Color(0.08,0.55,1,1),24)
 	status = _label(top,"이동 직접 · 공격 자동 · Lv.10 무기 + 상자 = 진화",20)
 	var row := HBoxContainer.new(); row.add_theme_constant_override("separation",10); top.add_child(row)
 	for index in range(WEAPONS.WEAPON_SLOTS):
-		var button := Button.new(); button.custom_minimum_size.y = 68; button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		var button := Button.new(); button.custom_minimum_size.y = 64; button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button.expand_icon = true; button.add_theme_constant_override("icon_max_width",40); button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		button.add_theme_font_size_override("font_size",21); _skin_action_button(button); row.add_child(button); button.pressed.connect(_show_weapon_info.bind(index)); weapon_buttons.append(button)
 	build = _label(top,"보조 증강 없음",19)
+	build.autowrap_mode = TextServer.AUTOWRAP_OFF; build.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	build.clip_text = true
 	pad = MOVE_PAD.new(); pad.name = "MovePad"; add_child(pad)
 	pad.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	pad.offset_left = 30; pad.offset_right = 300; pad.offset_top = -315; pad.offset_bottom = -45
@@ -145,6 +150,7 @@ func _button(text: String,action: Callable) -> Button:
 	_skin_action_button(button)
 	overlay_rows.add_child(button); button.pressed.connect(action); return button
 func _clear_overlay() -> void:
+	overlay_rows.add_theme_constant_override("separation",22)
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.offset_left = 65; overlay.offset_right = -65; overlay.offset_top = 390; overlay.offset_bottom = -150
 	for child in overlay_rows.get_children(): overlay_rows.remove_child(child); child.queue_free()
@@ -169,10 +175,12 @@ func _refresh_hud() -> void:
 	if not is_instance_valid(battle) or not is_instance_valid(battle.hero): return
 	var hero = battle.hero
 	hp.max_value = hero.max_hp; hp.value = hero.current_hp
+	hp.get_node("Caption").text = "HP %d / %d" % [hero.current_hp,hero.max_hp]
 	$HeroBGMManager.update_hero_hp(hero.current_hp,hero.max_hp)
 	xp.max_value = hero.exp_to_next_level; xp.value = hero.current_exp
-	timer.text = "Stage %d · %s Lv.%d · %02d:%02d" % [int(battle.current_stage_data.get("number",1)),String(battle.current_hero_profile.get("display_name","용사")),hero.level,int(battle.run_metrics.get_remaining_seconds())/60,int(battle.run_metrics.get_remaining_seconds())%60]
-	status.text = "HP %d/%d · 처치 %d · %s" % [hero.current_hp,hero.max_hp,_kill_count(),String(DATA.phase_at(battle.run_metrics.elapsed_seconds).name)]
+	xp.get_node("Caption").text = "EXP %d / %d" % [hero.current_exp,hero.exp_to_next_level]
+	timer.text = "Stage %d · %s Lv.%d\n남은 시간 %02d:%02d" % [int(battle.current_stage_data.get("number",1)),String(battle.current_hero_profile.get("display_name","용사")),hero.level,int(battle.run_metrics.get_remaining_seconds())/60,int(battle.run_metrics.get_remaining_seconds())%60]
+	status.text = "처치 %d · %s · 공격 자동" % [_kill_count(),String(DATA.phase_at(battle.run_metrics.elapsed_seconds).name)]
 	if hero.player_weapons != null:
 		var runtime = hero.player_weapons
 		for index in weapon_buttons.size():
@@ -184,6 +192,7 @@ func _refresh_hud() -> void:
 		var parts: PackedStringArray = []
 		for id in runtime.passives: parts.append(String(WEAPONS.PASSIVES[id].name)+" %d" % int(runtime.passives[id]))
 		build.text = "보조 %d/%d · " % [runtime.passives.size(),WEAPONS.PASSIVE_SLOTS]+("없음 / 이동: 패드·WASD" if parts.is_empty() else " · ".join(parts))
+		build.tooltip_text = build.text
 func _show_choices(candidates: Array) -> void:
 	if battle.battle_over: return
 	choosing = true; choice_generation += 1
@@ -330,41 +339,39 @@ func _begin_roulette() -> void:
 	roulette_receipt = battle.hero.player_weapons.roll_chest()
 	roulette_pool = battle.hero.player_weapons.weapon_ids.duplicate()
 	roulette_index = -1
-	_clear_overlay(); _label(overlay_rows,"보물상자 · 무기 진화" if bool(roulette_receipt.evolution) else "보물상자 · 무기 강화",34)
-	_label(overlay_rows,"▼  보유 무기 중 하나가 강화됩니다  ▼",24)
-	roulette_reel = Control.new(); roulette_reel.custom_minimum_size.y = 200; roulette_reel.clip_contents = true; overlay_rows.add_child(roulette_reel)
-	roulette_label = _label(roulette_reel,"",36)
-	roulette_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	roulette_label.add_theme_constant_override("line_spacing",4)
+	_clear_overlay()
+	overlay.name = "HeroChestOverlay"
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	overlay.offset_left = -450; overlay.offset_right = 450; overlay.offset_top = -310; overlay.offset_bottom = 310
+	overlay_rows.add_theme_constant_override("separation",14)
+	var title := _label(overlay_rows,"보물상자 · 무기 진화" if bool(roulette_receipt.evolution) else "보물상자 · 무기 강화",34)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var guide := _label(overlay_rows,"빛나는 중앙 칸에 멈춘 보상이 적용됩니다",23)
+	guide.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	roulette_reel = REEL.new(); overlay_rows.add_child(roulette_reel)
+	roulette_reel.configure(roulette_pool,roulette_receipt)
+	roulette_label = roulette_reel.center_label
 	GameAudio.play_battle("chest",self)
 	roulette_tween = create_tween()
 	roulette_tween.tween_method(_roulette_tick,0.0,1.0,2.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	roulette_tween.tween_callback(_finish_roulette)
 
 func _roulette_tick(progress: float) -> void:
-	var turns := progress*35.0
-	var index := int(turns)
-	if not is_instance_valid(roulette_label): return
-	roulette_label.size.x = roulette_reel.size.x
-	roulette_label.position.y = 24.0-(turns-index)*48.0
-	if index == roulette_index: return
-	roulette_index = index
-	if roulette_pool.is_empty(): roulette_label.text = "생명의 축복"; return
-	var id := String(roulette_pool[index%roulette_pool.size()])
-	var before := String(roulette_pool[(index+roulette_pool.size()-1)%roulette_pool.size()])
-	var after := String(roulette_pool[(index+1)%roulette_pool.size()])
-	roulette_label.text = "%s\n▶ %s ◀\n%s" % [WEAPONS.WEAPONS[before].name,WEAPONS.WEAPONS[id].name,WEAPONS.WEAPONS[after].name]
+	if is_instance_valid(roulette_reel):
+		roulette_reel.advance(progress)
+		roulette_index = roulette_reel.last_index
 
 func _finish_roulette() -> void:
 	if not rolling or battle.battle_over: return
+	if bool(roulette_receipt.get("applied",false)): return
+	_roulette_tick(1.0)
 	if not battle.hero.player_weapons.apply_chest(roulette_receipt):
 		roulette_label.text = "무기 강화 적용 실패"; _button("계속 플레이",_close_roulette); return
-	roulette_label.position.y = 45.0
-	roulette_label.text = String(roulette_receipt.name)
 	roulette_label.modulate = Color("ffe09a")
-	_label(overlay_rows,String(roulette_receipt.description),26)
+	var description := _label(overlay_rows,String(roulette_receipt.description),25)
+	description.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	GameAudio.play_battle("chest",self)
-	_refresh_hud(); _button("계속 플레이",_close_roulette)
+	_refresh_hud(); _button("계속 플레이",_close_roulette).custom_minimum_size.y = 76
 
 func _close_roulette() -> void:
 	rolling = false; overlay.hide(); pad.reset(); pad.enabled = true

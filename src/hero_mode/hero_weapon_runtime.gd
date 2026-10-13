@@ -8,6 +8,7 @@ const MODE := preload("res://src/data/hero_mode_catalog.gd")
 const AFFLICTIONS := preload("res://src/systems/received_afflictions.gd")
 const ART := preload("res://src/ui/hero_weapon_art.gd")
 const NATIVE := preload("res://src/hero_mode/hero_weapon_native_runtime.gd")
+const GEOMETRY := preload("res://src/hero_mode/hero_weapon_geometry.gd")
 const EMPTY_ART: Array[Texture2D] = []
 var native_skills: RefCounted
 var art: Dictionary = {}
@@ -47,7 +48,7 @@ func install(host) -> void:
 	base_max_hp = int(hero.max_hp); base_move_speed = float(hero.move_speed)
 	base_pickup_radius = float(hero.exp_pickup_radius); base_exp_multiplier = float(hero.exp_gain_multiplier)
 	for index in range(PROJECTILE_LIMIT):
-		projectiles.append({"active":false,"handle":Vector3i.ZERO,"position":Vector2.ZERO,"damage":0,"rank":1,"color":Color.WHITE,"age":0.0,"delay":0.0,"data":{},"melee":false,"reach":0.0})
+		projectiles.append({"active":false,"handle":Vector3i.ZERO,"position":Vector2.ZERO,"damage":0,"rank":1,"color":Color.WHITE,"age":0.0,"delay":0.0,"data":{},"melee":false,"reach":0.0,"traveled":0.0})
 	available_weapons = DATA.weapon_pool(String(hero.hero_id))
 	if hero.has_method("_acquire_projectile"):
 		native_skills = NATIVE.new(); native_skills.install(hero)
@@ -176,6 +177,7 @@ func tick(delta: float) -> void:
 	if hero.silence_timer > 0.0 or hero.imposed_skill_cooldown > 0.0 or hero.petrify_timer > 0.0: return
 	for field in fields:
 		if float(field.left) <= 0.0: continue
+		hero.queue_redraw()
 		field.left = maxf(0.0,float(field.left)-delta)
 		if bool(field.follow): field.origin = hero.global_position
 		field.tick = float(field.tick)-delta
@@ -202,7 +204,7 @@ func _cast(id: String) -> void:
 	var rank := int(levels[id])
 	var awakened := evolved.has(id)
 	var origin: Vector2 = hero.global_position
-	var reach: float = float(data.range)*(1.0+0.035*(rank-1))*(1.25 if awakened else 1.0)
+	var reach: float = GEOMETRY.reach(data,rank,awakened)
 	var damage: int = maxi(1,roundi(hero.attack_damage*float(data.power)*power*(1.0+0.18*(rank-1))*(1.8 if awakened else 1.0)))
 	damage = maxi(1,roundi(damage*(1.0+float(data.get("low_hp_bonus",0.0))*(1.0-float(hero.current_hp)/maxf(hero.max_hp,1)))))
 	var hits := int(data.get("base_hits",1))+int(rank/5)+(2 if awakened else 0)
@@ -237,7 +239,6 @@ func _cast(id: String) -> void:
 		if int(data.get("magazine",0)) > 0:
 			shots = mini(shots,int(magazines[id])); magazines[id] = int(magazines[id])-shots
 		for index in shots: _launch_projectile(closest,origin,damage,rank,color,data,index*float(data.get("hit_interval",0.14)),pattern == "combo",reach)
-		_effect(origin,origin+direction*reach,reach,"slash" if pattern == "combo" else "beam",color,data)
 		hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
 		hero.attack_pose_timer = 0.25
 		return
@@ -247,7 +248,9 @@ func _cast(id: String) -> void:
 		field.left = float(data.get("field_duration",3.0)); field.tick = 0.0; field.interval = float(data.get("field_interval",0.5)); field.radius = reach*float(data.get("field_radius_ratio",0.45)); field.damage = maxi(1,roundi(damage*float(data.get("field_power",0.25)))); field.cap = mini(24,4+hits*5)
 		field.follow = bool(data.get("field_follow",false)); field.data = data; field.rank = rank
 		if bool(field.follow): field.origin = origin
-		_effect(field.origin,field.origin,float(field.radius),pattern,color,data)
+		field["frames"] = ART.cache.get(String(data.get("effect_dir","")),EMPTY_ART)
+		field["color"] = color
+		hero.queue_redraw()
 		hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
 		return
 	if pattern == "heal": hero.heal_direct(roundi(hero.max_hp*(float(data.get("heal_ratio",0.015))+rank*0.002)))
@@ -258,7 +261,7 @@ func _cast(id: String) -> void:
 	var cap := mini(24,4+hits*5) if pattern in ["nova","frost","guard","heal"] else mini(int(data.get("hit_cap",hits)),hits+4) if pattern in ["slash","beam","orbit"] else hits
 	var struck := 0
 	if pattern in ["bolt","chain"] and is_instance_valid(closest):
-		if pattern == "bolt": _launch_projectile(closest,origin,damage,rank,color,data)
+		if pattern == "bolt": _launch_projectile(closest,origin,damage,rank,color,data,0.0,false,reach)
 		else:
 			_hit(closest,damage,pattern,rank,data)
 			_effect(origin,closest.global_position,22.0,pattern,color,data)
@@ -270,14 +273,12 @@ func _cast(id: String) -> void:
 		if actor == closest and pattern in ["bolt","chain"]: continue
 		if pattern == "chain" and is_instance_valid(closest) and actor.global_position.distance_squared_to(closest.global_position) > pow(float(data.get("chain_radius",200.0)),2): continue
 		var offset: Vector2 = actor.global_position-origin
-		if pattern == "slash" and offset.normalized().dot(direction) < 0.35: continue
-		if pattern == "beam" and (offset.dot(direction) < 0.0 or absf(offset.cross(direction)) > 40.0+rank*5.0): continue
-		if pattern == "orbit" and absf(offset.length()-reach*float(data.get("orbit_ratio",0.7))) > 100.0: continue
-		if pattern == "bolt": _launch_projectile(actor,origin,damage,rank,color,data)
+		if not GEOMETRY.contains(pattern,offset,direction,reach,rank,data): continue
+		if pattern == "bolt": _launch_projectile(actor,origin,damage,rank,color,data,0.0,false,reach)
 		else: _hit(actor,damage,pattern,rank,data)
 		struck += 1
-		if pattern == "chain": _effect(origin,actor.global_position,20.0,pattern,color,data)
-	if pattern == "beam": _effect(origin,origin+direction*reach,28.0+rank*3.0,pattern,color,data)
+		if pattern == "chain": _effect(closest.global_position if is_instance_valid(closest) else origin,actor.global_position,20.0,pattern,color,data)
+	if pattern == "beam": _effect(origin,origin+direction*reach,GEOMETRY.beam_half_width(rank),pattern,color,data)
 	elif pattern not in ["bolt","chain"]: _effect(origin,origin+direction*reach,reach,pattern,color,data)
 	hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
 func _pose(direction: Vector2) -> void:
@@ -297,7 +298,7 @@ func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, 
 		projectile_cursor = (index+1)%PROJECTILE_LIMIT
 		shot.active = true; shot.handle = handle; shot.position = origin
 		shot.damage = damage; shot.rank = rank; shot.color = color; shot.age = 0.0
-		shot.data = data; shot.delay = delay; shot.melee = melee; shot.reach = reach
+		shot.data = data; shot.delay = delay; shot.melee = melee; shot.reach = reach if reach > 0 else float(data.get("range",900.0)); shot.traveled = 0.0
 		hero.queue_redraw()
 		return
 
@@ -314,14 +315,18 @@ func _tick_projectiles(delta: float) -> void:
 		if bool(shot.melee):
 			shot.active = false
 			if hero.global_position.distance_squared_to(actor.global_position) <= pow(float(shot.reach),2) and hero.silence_timer <= 0.0:
+				_effect(hero.global_position,actor.global_position,12.0,"chain",shot.color,shot.data)
 				_hit(actor,int(shot.damage),"slash",int(shot.rank),shot.data)
 			continue
-		var step := MODE.PROJECTILE_SPEED*projectile_speed*delta
+		var remaining := maxf(0.0,float(shot.reach)-float(shot.traveled))
+		var step := minf(MODE.PROJECTILE_SPEED*projectile_speed*delta,remaining)
 		var position: Vector2 = shot.position
 		shot.position = position.move_toward(actor.global_position,step)
-		if position.distance_to(actor.global_position) <= step+12.0:
+		shot.traveled = float(shot.traveled)+position.distance_to(shot.position)
+		if position.distance_to(actor.global_position) <= step+GEOMETRY.PROJECTILE_RADIUS:
 			shot.active = false
 			_hit(actor,int(shot.damage),"bolt",int(shot.rank),shot.data)
+		elif float(shot.traveled) >= float(shot.reach): shot.active = false
 	if redraw: hero.queue_redraw()
 
 func _hit(actor: Node2D, damage: int, pattern: String, rank: int, data: Dictionary = {}) -> void:
@@ -342,14 +347,18 @@ func _effect(a: Vector2,b: Vector2,radius: float,pattern: String,color: Color,da
 	effect["frames"] = ART.cache.get(String(data.get("effect_dir","")),EMPTY_ART)
 	effect["follow"] = bool(data.get("field_follow",false))
 	effect.orbit_count = int(data.get("orbit_count",4)); effect.orbit_speed = float(data.get("orbit_speed",3.0)); effect.orbit_ratio = float(data.get("orbit_ratio",0.7))
-	effect.duration = float(data.get("field_duration",3.0)) if pattern == "poison" else 1.5 if pattern == "orbit" else 0.28
+	effect["shape"] = GEOMETRY.sector(radius) if pattern == "slash" else GEOMETRY.beam(a.distance_to(b),radius) if pattern == "beam" else PackedVector2Array()
+	effect.duration = 0.28
 	effect.left = effect.duration; hero.queue_redraw()
 
 func draw() -> void:
+	for field in fields:
+		if float(field.left) > 0.0:
+			_draw_area(hero.to_local(field.origin),float(field.radius),field.get("color",Color.WHITE),field.get("frames",EMPTY_ART),fmod(visual_clock,1.0))
 	for shot in projectiles:
 		if bool(shot.active) and not bool(shot.melee) and float(shot.delay) <= 0.0:
 			var position: Vector2 = hero.to_local(shot.position)
-			hero.draw_circle(position,12.0,shot.color)
+			hero.draw_circle(position,GEOMETRY.PROJECTILE_RADIUS,shot.color)
 			hero.draw_circle(position,5.0,Color.WHITE)
 	for effect in effects:
 		if float(effect.left) <= 0.0: continue
@@ -360,18 +369,34 @@ func draw() -> void:
 		var color: Color = effect.color; color.a = ratio*0.8
 		var radius: float = effect.radius
 		var frames: Array = effect.get("frames",EMPTY_ART)
-		if not frames.is_empty():
-			var texture: Texture2D = frames[mini(int((1.0-ratio)*frames.size()),frames.size()-1)]
-			var diameter := clampf(radius*1.4,80.0,420.0)
-			hero.draw_texture_rect(texture,Rect2(a-Vector2.ONE*diameter*0.5,Vector2.ONE*diameter),false,Color(1,1,1,ratio*0.85))
 		match String(effect.pattern):
-			"beam","chain": hero.draw_line(a,b,color,maxf(3.0,radius*ratio*0.25))
+			"beam","slash":
+				hero.draw_set_transform(a,(b-a).angle())
+				hero.draw_colored_polygon(effect.shape,Color(color,ratio*0.13))
+				hero.draw_polyline(effect.shape,color,3.0)
+				if not frames.is_empty():
+					var texture: Texture2D = frames[mini(int((1-ratio)*frames.size()),frames.size()-1)]
+					var length := a.distance_to(b)
+					var rect := Rect2(Vector2(length*0.2,-length*0.3),Vector2.ONE*length*0.6) if effect.pattern == "slash" else Rect2(Vector2(0,-radius),Vector2(sqrt(maxf(0,length*length-radius*radius)),radius*2))
+					hero.draw_texture_rect(texture,rect,false,Color(1,1,1,ratio*0.85))
+				hero.draw_set_transform(Vector2.ZERO)
+			"chain": hero.draw_line(a,b,color,5.0)
 			"bolt":
 				hero.draw_line(a,b,Color(color,ratio*0.3),3.0)
 				hero.draw_circle(a.lerp(b,1.0-ratio),12.0,color)
-			"slash": hero.draw_arc(a,radius,(b-a).angle()-1.0,(b-a).angle()+1.0,16,color,9.0*ratio+2.0)
 			"orbit":
-				for index in int(effect.orbit_count): hero.draw_circle(a+Vector2.from_angle(visual_clock*float(effect.orbit_speed)+index*TAU/float(effect.orbit_count))*radius*float(effect.orbit_ratio),18.0,color)
+				var inner := GEOMETRY.orbit_inner(radius,float(effect.orbit_ratio))
+				var outer := GEOMETRY.orbit_outer(radius,float(effect.orbit_ratio))
+				hero.draw_arc(a,(inner+outer)*0.5,0,TAU,48,Color(color,ratio*0.14),outer-inner)
+				hero.draw_arc(a,inner,0,TAU,48,color,3.0); hero.draw_arc(a,outer,0,TAU,48,color,3.0)
+				for index in int(effect.orbit_count): hero.draw_circle(a+Vector2.from_angle(visual_clock*float(effect.orbit_speed)+index*TAU/float(effect.orbit_count))*(inner+outer)*0.5,minf(18,(outer-inner)*0.5),color)
 			_:
-				hero.draw_circle(a,radius*(1.0-ratio*0.4),Color(color,ratio*0.10))
-				hero.draw_arc(a,radius*(1.0-ratio*0.4),0.0,TAU,32,color,4.0)
+				_draw_area(a,radius,Color(color,ratio),frames,1.0-ratio)
+
+func _draw_area(center: Vector2, radius: float, color: Color, frames: Array, progress: float) -> void:
+	if not frames.is_empty():
+		var texture: Texture2D = frames[mini(int(progress*frames.size()),frames.size()-1)]
+		var diameter := radius*sqrt(2.0)
+		hero.draw_texture_rect(texture,Rect2(center-Vector2.ONE*diameter*0.5,Vector2.ONE*diameter),false,Color(1,1,1,color.a*0.75))
+	hero.draw_circle(center,radius,Color(color,color.a*0.10))
+	hero.draw_arc(center,radius,0.0,TAU,48,color,3.0)

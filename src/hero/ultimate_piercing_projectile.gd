@@ -51,7 +51,7 @@ func setup(
 func _physics_process(delta: float) -> void:
 	if not active:
 		return
-	var step := direction * speed * delta
+	var step := direction * (minf(speed*delta,maxf(0.0,max_range-traveled_distance)) if bool(get_meta("survival_geometry",false)) else speed*delta)
 	global_position += step
 	traveled_distance += step.length()
 
@@ -141,6 +141,8 @@ func _apply_visual() -> void:
 	visual.sprite_frames = frames
 	var uniform_scale := EFFECT_TARGET_HEIGHT / EFFECT_FRAME_SIZE.y
 	visual.scale = Vector2(uniform_scale, uniform_scale)
+	if bool(get_meta("survival_geometry",false)):
+		preload("res://src/ui/hero_weapon_visual_fit.gd").projectile(visual,get_meta("survival_visual_bounds",Rect2()),$CollisionShape2D.shape.size)
 	visual.frame = 0
 	visual.frame_progress = 0.0
 	visual.visible = true
@@ -162,6 +164,9 @@ func _load_texture(path: String) -> Texture2D:
 	return null
 
 func _draw() -> void:
+	if active and bool(get_meta("survival_geometry",false)):
+		draw_rect(Rect2(-$CollisionShape2D.shape.size*0.5,$CollisionShape2D.shape.size),Color(0.35,0.75,1,0.15),true)
+		draw_rect(Rect2(-$CollisionShape2D.shape.size*0.5,$CollisionShape2D.shape.size),Color(0.65,0.85,1,0.8),false,2)
 	if visual.visible:
 		return
 

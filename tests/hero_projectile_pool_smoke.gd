@@ -3,9 +3,10 @@ const RUNTIME := preload("res://src/hero_mode/hero_weapon_runtime.gd")
 var checks := 0
 var failures := 0
 class Actor extends Node2D:
-	var hp := 100
+	var current_hp := 100
+	var max_hp := 100
 	func take_damage(amount: int) -> bool:
-		hp -= amount
+		current_hp -= amount
 		return true
 class Authority extends Node2D:
 	var actor: Actor
@@ -32,16 +33,16 @@ func run() -> void:
 	var hero := Hero.new(); authority.add_child(hero)
 	var runtime := RUNTIME.new(); runtime.install(hero)
 	runtime._launch_projectile(authority.actor,Vector2.ZERO,10,1,Color.WHITE)
-	check(authority.actor.hp == 100,"launch does not deal instant damage")
+	check(authority.actor.current_hp == 100,"launch does not deal instant damage")
 	runtime._tick_projectiles(0.1)
-	check(authority.actor.hp == 100,"base-speed shot still in flight")
+	check(authority.actor.current_hp == 100,"base-speed shot still in flight")
 	authority.generation += 1
 	runtime._tick_projectiles(0.1)
-	check(authority.actor.hp == 100,"retired generation cannot receive pending hit")
+	check(authority.actor.current_hp == 100,"retired generation cannot receive pending hit")
 	for rank in range(10): runtime.add("survival_projectile")
 	runtime._launch_projectile(authority.actor,Vector2.ZERO,10,1,Color.WHITE)
 	runtime._tick_projectiles(0.1)
-	check(authority.actor.hp == 90,"double-speed shot arrives in half the time")
+	check(authority.actor.current_hp == 90,"double-speed shot arrives in half the time")
 	for shot in range(100): runtime._launch_projectile(authority.actor,Vector2.ZERO,1,1,Color.WHITE)
 	var active := 0
 	for shot in runtime.projectiles:

@@ -118,6 +118,13 @@ func run() -> void:
 				for actor in runtime.native_skills.actors_by_pattern[String(weapon.pattern)]:
 					var active: bool = bool(actor.active) if String(weapon.pattern) == "piercer" or String(weapon.pattern) == "ice_pillar" else int(actor.state) != 0
 					if not active: continue
+					check(bool(actor.get_meta("survival_geometry",false)),"survival-only geometry cannot affect demon actors")
+					if String(weapon.pattern) != "ice_pillar":
+						var bounds: Rect2 = actor.get_meta("survival_visual_bounds",Rect2())
+						check(bounds.has_area(),"native alpha bounds warmed before combat")
+						if String(weapon.pattern) == "piercer":
+							var size: Vector2 = bounds.size*actor.visual.scale
+							check(size.x <= 116.001 and size.y <= 56.001,"piercing visual inside real collision rectangle")
 					if actor.visual is AnimatedSprite2D: check(actor.visual.sprite_frames.get_frame_count(actor.visual.animation) > 0,"native animation has real textures: "+String(id))
 					else: check(actor.visual.texture != null,"native effect has real texture: "+String(id))
 				await create_timer(0.1).timeout

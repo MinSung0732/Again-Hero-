@@ -376,7 +376,7 @@ func _set_wisps_visible(show_wisps: bool) -> void:
 func _update_attraction_wisps() -> void:
 	if _wisps.is_empty():
 		return
-	var outer_radius := effect_radius * 1.72
+	var outer_radius := effect_radius * (0.65 if bool(get_meta("survival_geometry",false)) else 1.72)
 	var inner_radius := effect_radius * 0.30
 	for index in range(_wisps.size()):
 		var sprite := _wisps[index]
@@ -395,6 +395,7 @@ func _update_attraction_wisps() -> void:
 		sprite.position = Vector2.from_angle(angle) * radius
 		sprite.rotation = angle + PI * 0.5
 		sprite.scale = Vector2.ONE * visual_scale * lerpf(0.16, 0.07, phase)
+		if bool(get_meta("survival_geometry",false)): sprite.scale = Vector2.ONE * (effect_radius/400.0) * lerpf(0.16,0.07,phase)
 		sprite.modulate.a = lerpf(0.16, 0.48, phase)
 		sprite.visible = true
 
@@ -415,7 +416,7 @@ func _draw() -> void:
 	if state == State.ACTIVE:
 		var pulse := 0.5 + sin(active_elapsed * 4.0) * 0.08
 		for ring_index in range(3):
-			var ring_radius := effect_radius * (1.12 + float(ring_index) * 0.15)
+			var ring_radius := effect_radius * ((0.60 + float(ring_index) * 0.15) if bool(get_meta("survival_geometry",false)) else (1.12 + float(ring_index) * 0.15))
 			draw_arc(
 				Vector2.ZERO,
 				ring_radius,
@@ -436,6 +437,8 @@ func _set_frame(frame_index: int) -> void:
 	var texture := _load_texture_cached(path)
 	if texture != null:
 		visual.texture = texture
+		if bool(get_meta("survival_geometry",false)):
+			preload("res://src/ui/hero_weapon_visual_fit.gd").circle(visual,get_meta("survival_visual_bounds",Rect2()),effect_radius)
 
 
 static func _load_texture_cached(path: String) -> Texture2D:

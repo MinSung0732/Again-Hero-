@@ -1,8 +1,8 @@
 extends RefCounted
 ## One-time atlas regions; selection/HUD reuse textures without disk loads.
 const DATA := preload("res://src/data/hero_weapon_catalog.gd")
-const WEAPONS := preload("res://assets/art/ui/hero_augments/weapons.png")
-const PASSIVES := preload("res://assets/art/ui/hero_augments/passives.png")
+const WEAPONS := preload("res://assets/art/ui/hero_augments/weapons_normalized.png")
+const PASSIVES := preload("res://assets/art/ui/hero_augments/passives_normalized.png")
 const PASSIVE_ORDER := ["survival_power","survival_mobility","survival_projectile","survival_haste","survival_learning","survival_magnet","survival_vitality","survival_armor"]
 static var cache: Dictionary = {}
 static func texture(id: String) -> Texture2D:

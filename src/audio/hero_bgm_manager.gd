@@ -92,6 +92,7 @@ var _fade_tween: Tween
 var _stopping: bool = false
 var _user_volume_db: float = PLAY_DB
 var _user_muted: bool = false
+var hero_loop_only := false
 
 
 func _ready() -> void:
@@ -125,8 +126,17 @@ func start_stage(stage_id: String) -> void:
 	change_phase(Phase.INTRO, false)
 
 
+func start_hero_loop(hero_id: String) -> void:
+	_reset_runtime_state()
+	hero_loop_only = true
+	current_stage_id = preload("res://src/data/hero_character_catalog.gd").stage_for_hero(hero_id)
+	var stage_data: Dictionary = STAGE_BGM.get(current_stage_id,{})
+	_cache_stage_streams({"battle":stage_data.get("battle","")})
+	change_phase(Phase.BATTLE,false)
+
+
 func update_hero_hp(current_hp: int, max_hp: int) -> void:
-	if current_phase == Phase.NONE or _stopping or max_hp <= 0:
+	if hero_loop_only or current_phase == Phase.NONE or _stopping or max_hp <= 0:
 		return
 
 	var hp_ratio := clampf(float(current_hp) / float(max_hp), 0.0, 1.0)
@@ -451,6 +461,7 @@ func _phase_key(phase: int) -> String:
 
 
 func _reset_runtime_state() -> void:
+	hero_loop_only = false
 	_kill_fade_tween()
 	_stop_players()
 	_stage_streams.clear()

@@ -64,6 +64,7 @@ func setup(
 	set_physics_process(true)
 	visual.visible = true
 	visual.position = fall_origin
+	visual.offset = Vector2.ZERO
 	visual.scale = Vector2.ONE * maxf(new_visual_scale, 0.05)
 	_set_texture(FALL_FIRST_FRAME)
 
@@ -182,7 +183,7 @@ func _apply_damage() -> void:
 
 
 func _draw() -> void:
-	if state != MeteorState.FALLING:
+	if state != MeteorState.FALLING and not (bool(get_meta("survival_geometry",false)) and state == MeteorState.EXPLODING):
 		return
 	var progress := clampf(fall_elapsed / fall_duration, 0.0, 1.0)
 	draw_arc(
@@ -202,6 +203,8 @@ func _set_texture(frame_index: int) -> void:
 	var texture := _load_texture_cached(path)
 	if texture != null:
 		visual.texture = texture
+		if bool(get_meta("survival_geometry",false)) and state == MeteorState.EXPLODING:
+			preload("res://src/ui/hero_weapon_visual_fit.gd").circle(visual,get_meta("survival_visual_bounds",Rect2()),impact_radius)
 
 
 static func _load_texture_cached(path: String) -> Texture2D:
