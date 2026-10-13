@@ -21,17 +21,17 @@ func run() -> void:
 	SCOPE.guest_directory = "user://hero_startup_smoke_" + str(Time.get_ticks_usec())
 	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
 	var progress := ConfigFile.new()
-	progress.set_value("progress", "highest_unlocked_stage", 10)
-	progress.set_value("cleared", "stage_10", true)
+	progress.set_value("progress", "highest_unlocked_stage", 1)
+	progress.set_value("progress", "current_stage_id", "stage_1")
 	check(SCOPE.save_config(progress, "user://stage_progress.cfg") == OK, "isolated fixture")
 	var pad_script: Script = load("res://src/hero_mode/hero_move_pad.gd")
 	check(pad_script != null and pad_script.can_instantiate(), "pad compiles without native method collision")
 	if pad_script == null or not pad_script.can_instantiate():
 		quit(1)
 		return
-	var ticket := STAMINA.try_enter("stage_1", true)
+	var ticket := STAMINA.try_enter("stage_10", true,-1,false)
 	check(bool(ticket.get("success", false)), "entry receipt created")
-	root.get_node("SceneTransition").set("_entry_options", {"stage_id":"stage_1", "hero_entry":ticket})
+	root.get_node("SceneTransition").set("_entry_options", {"stage_id":"stage_10","hero_id":"ranged_rookie", "hero_entry":ticket})
 	var scene = load("res://src/hero_mode/HeroMode.tscn").instantiate()
 	root.add_child(scene)
 	check(is_instance_valid(scene.pad) and is_instance_valid(scene.build) and is_instance_valid(scene.overlay), "all UI creation completes")
@@ -41,6 +41,9 @@ func run() -> void:
 		return
 	check(scene.battle.run_time_limit_seconds == 900.0 and scene.battle.hero.player_weapons != null, "15 minute weapon survival configured")
 	check(scene.get_node("HeroHUD") != null and scene.weapon_buttons.size() == 3, "top HUD weapon slots")
+	check(scene.battle.current_stage_id == "stage_10" and String(scene.battle.current_hero_profile.id) == "ranged_rookie", "apprentice plays high-stage map without changing character")
+	var saved := ConfigFile.new(); SCOPE.load_config(saved,"user://stage_progress.cfg")
+	check(saved.get_value("progress","current_stage_id","") == "stage_1", "hero entry does not change demon campaign selection")
 	check(scene.is_processing() and scene.battle.hero.player_controlled, "player simulation starts after setup")
 	var background := scene.get_node("HeroBackground") as ColorRect
 	var view := scene.get_node("BattleView") as SubViewportContainer

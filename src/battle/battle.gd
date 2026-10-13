@@ -215,6 +215,7 @@ signal hero_chest_opened
 var campaign_difficulty := "easy"
 var hero_player_mode := false
 var hero_player_stage := "stage_1"
+var hero_player_hero_id := "ranged_rookie"
 var external_pause: bool = false
 
 var max_command: float = BASE_MAX_COMMAND
@@ -945,7 +946,7 @@ func _start_battle() -> void:
 		run_time_limit_seconds = preload("res://src/data/hero_mode_catalog.gd").DURATION
 		command_power = preload("res://src/data/hero_mode_catalog.gd").STARTING_COMMAND
 
-	var hero_id: String = String(current_stage_data.get("hero_id", "ranged_rookie"))
+	var hero_id: String = hero_player_hero_id if hero_player_mode else String(current_stage_data.get("hero_id", "ranged_rookie"))
 	current_hero_profile = _apply_stage_hero_balance(
 		HERO_PROFILES.get_profile(hero_id),
 		current_stage_data
@@ -959,7 +960,8 @@ func _start_battle() -> void:
 		current_hero_profile["ai_settings"] = hero_ai_settings
 	if hero_player_mode:
 		current_hero_profile = preload("res://src/data/hero_weapon_catalog.gd").profile_for_survival(current_hero_profile)
-		preload("res://src/systems/hero_mode_store.gd").apply_growth(current_stage_id,current_hero_profile)
+		current_hero_profile["display_name"] = String(preload("res://src/data/hero_character_catalog.gd").get_character(hero_player_hero_id).get("name","용사"))
+		preload("res://src/systems/hero_mode_store.gd").apply_growth(hero_player_hero_id,current_hero_profile)
 
 	if practice_mode:
 		current_hero_profile = HERO_PROFILES.get_profile("ranged_rookie").duplicate(true)

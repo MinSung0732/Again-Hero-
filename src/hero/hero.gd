@@ -16439,7 +16439,7 @@ func _level_up() -> void:
 	level_flash_timer = 0.45
 	_play_level_up_feedback()
 	_apply_level_growth()
-	if hero_archetype == "summoner_gatekeeper" and level % 5 == 0:
+	if not player_controlled and hero_archetype == "summoner_gatekeeper" and level % 5 == 0:
 		# Stage 8 gains one shared summon slot every five levels. Expand the
 		# fixed pools only at the milestone instead of instantiating during combat.
 		_ensure_summoner_pool_capacity()

@@ -1,82 +1,56 @@
 extends SceneTree
-
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
+const STORE := preload("res://src/systems/hero_mode_store.gd")
+const CHARACTERS := preload("res://src/data/hero_character_catalog.gd")
+const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
+const PROGRESS := preload("res://src/systems/stage_progress.gd")
 var checks := 0
 var failures := 0
-
-func _initialize() -> void:
-	call_deferred("run")
-
-func check(ok: bool, message: String) -> void:
+func _initialize() -> void: call_deferred("run")
+func check(ok: bool,message: String) -> void:
 	checks += 1
-	if not ok:
-		failures += 1
-		push_error("HERO_LOBBY: " + message)
-
+	if not ok: failures += 1; push_error("HERO_LOBBY: "+message)
 func run() -> void:
-	root.get_node("CloudStore").stop()
-	root.get_node("LoginGateway").remember_session_enabled = false
-	SCOPE.select_guest()
-	SCOPE.guest_directory = "user://hero_lobby_smoke_" + str(Time.get_ticks_usec())
-	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
-	var progress := ConfigFile.new()
-	progress.set_value("progress", "highest_unlocked_stage", 10)
-	progress.set_value("cleared", "stage_10", true)
-	for key in ["hard:stage_1", "hero", "rank"]:
-		progress.set_value("mode_unlock_seen", key, true)
-	check(SCOPE.save_config(progress, "user://stage_progress.cfg") == OK, "isolated unlock fixture")
+	root.get_node("CloudStore").stop(); root.get_node("LoginGateway").remember_session_enabled = false
+	SCOPE.select_guest(); SCOPE.guest_directory = "user://hero_lobby_smoke_"+str(Time.get_ticks_usec()); DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
+	var progress := ConfigFile.new(); progress.set_value("progress","highest_unlocked_stage",1); progress.set_value("cleared","stage_2",true)
+	for key in ["hard:stage_1","hero","rank"]: progress.set_value("mode_unlock_seen",key,true)
+	check(SCOPE.save_config(progress,"user://stage_progress.cfg") == OK,"isolated fixture")
 	var script: Script = load("res://src/ui/hero_lobby_view.gd")
-	check(script != null and script.can_instantiate(), "Godot compiles hero lobby extension")
-	if script == null or not script.can_instantiate():
-		quit(1)
-		return
-	var lobby = load("res://src/lobby/Lobby.tscn").instantiate()
-	root.add_child(lobby)
-	check(lobby.current_tab == "main" and lobby.main_tab.visible, "startup main tab initialized")
-	check(not lobby.team_tab.visible and not lobby.shop_tab.visible and not lobby.research_tab.visible and not lobby.other_tab.visible, "startup shows one tab without extra click")
-	check(lobby.stamina_view != null, "stamina installed")
-	check(lobby.main_tools_view != null, "friend and event trays installed")
-	check(lobby.exploration_rewards_view != null and lobby.missions_view != null, "exploration and missions installed")
-	check(lobby.hero_lobby_view != null, "hero extension installed after shared UI")
-	var backdrop := lobby.get_node("LobbyBackground") as TextureRect
-	var original_texture: Texture2D = backdrop.texture
-	var original_shop: String = lobby.shop_button.text
+	check(script != null and script.can_instantiate(),"hero view compiles")
+	if script == null or not script.can_instantiate(): quit(1); return
+	var lobby = load("res://src/lobby/Lobby.tscn").instantiate(); root.add_child(lobby)
+	check(lobby.current_tab == "main" and not lobby.team_tab.visible,"startup main only")
+	check(lobby.stamina_view != null and lobby.main_tools_view != null and lobby.exploration_rewards_view != null and lobby.missions_view != null,"shared lobby UI installed")
+	var backdrop := lobby.get_node("LobbyBackground") as TextureRect; var original_texture: Texture2D = backdrop.texture
 	var original_team: String = lobby.team_button.text
-	var original_research: String = lobby.research_button.text
-	for cycle in range(2):
-		lobby.main_modes_view.choose_perspective("hero")
-		check(lobby.hero_lobby_view.active, "hero perspective active %d" % cycle)
-		check(lobby.shop_button.text == "용사상점" and lobby.team_button.text == "팀편성 🔒" and lobby.team_button.disabled and lobby.research_button.text == "성장", "hero navigation labels")
-		check(backdrop.texture != null and backdrop.texture != original_texture, "hero guild background loaded")
-		for tab in ["shop", "research"]:
-			lobby._switch_tab(tab)
-			check(lobby.hero_lobby_view.panels[tab].is_visible_in_tree(), "hero content visible: " + tab)
-		for child in lobby.hero_lobby_view.original_visibility:
-			check(not child.visible, "demon content hidden: " + String(child.name))
-		var before_team: String = lobby.current_tab
-		lobby._switch_tab("team")
-		check(lobby.current_tab == before_team, "locked team tab rejects direct navigation")
-		lobby._on_team_tab_pressed()
-		check(lobby.current_tab == before_team and not lobby.team_tab.visible, "actual team click handler rejects hero mode")
-		lobby.team_button.pressed.emit()
-		check(lobby.current_tab == before_team and not lobby.team_tab.visible, "connected button signal cannot bypass lock")
-		lobby.hero_lobby_view.active = false
-		lobby._on_team_tab_pressed(); lobby._switch_tab("team")
-		check(lobby.current_tab == before_team, "selected hero mode blocks entry with stale visual state")
-		lobby.hero_lobby_view.active = true
-		lobby.team_button.disabled = false
-		lobby.main_modes_view.refresh()
-		check(lobby.team_button.disabled, "same-mode refresh reasserts team lock")
-		lobby._switch_tab("main")
-		check(lobby.main_tools_view.is_visible_in_tree(), "shared tools remain in hero mode")
-		lobby.main_modes_view.choose_perspective("demon")
-		check(not lobby.hero_lobby_view.active and backdrop.texture == original_texture, "demon background restored")
-		check(lobby.shop_button.text == original_shop and lobby.team_button.text == original_team and lobby.research_button.text == original_research, "demon labels restored")
-		check(not lobby.team_button.disabled, "demon team navigation restored")
-		lobby._on_team_tab_pressed()
-		check(lobby.current_tab == "team" and lobby.team_tab.visible, "demon team click remains functional")
-		lobby._switch_tab("main")
-		for child in lobby.hero_lobby_view.original_visibility:
-			check(child.visible == lobby.hero_lobby_view.original_visibility[child], "demon visibility restored: " + String(child.name))
-	print("HERO_LOBBY_STARTUP_SMOKE checks=", checks, " failures=", failures)
+	lobby.main_modes_view.choose_perspective("hero")
+	check(lobby.team_button.text == "캐릭터 편성" and not lobby.team_button.disabled,"hero formation tab available")
+	check(lobby.main_modes_view.character_button == null,"main character selector removed")
+	check(lobby._get_max_browsable_stage_index() == 9,"hero maps have no character or campaign lock")
+	check(lobby.hero_name_label.text == "견습마도사","main portrait name follows selected hero")
+	lobby.team_button.pressed.emit()
+	check(lobby.current_tab == "team" and lobby.hero_lobby_view.panels.team.is_visible_in_tree(),"actual navigation opens character formation")
+	check(lobby.hero_lobby_view.hero_cards.size() == 10,"all ten hero cards displayed")
+	for id in CHARACTERS.ORDER: check(lobby.hero_lobby_view.hero_cards[id].disabled == (id != CHARACTERS.DEFAULT_HERO),"default roster lock: "+id)
+	check(lobby.hero_lobby_view.selected_hero_panel.get_index() < lobby.hero_lobby_view.hero_roster_panel.get_index(),"selected hero above scrollable roster")
+	check(lobby.hero_lobby_view.selected_hero_label.text.contains("견습마도사"),"top selected hero summary")
+	lobby.hero_lobby_view.hero_cards.swift_hunter.pressed.emit()
+	check(STORE.selected_hero() == CHARACTERS.DEFAULT_HERO,"locked card signal cannot select hero")
+	check(PROGRESS.complete_hard_stage("stage_2").success,"hard clear unlock fixture")
+	lobby.hero_lobby_view.rebuild("team")
+	check(not lobby.hero_lobby_view.hero_cards.swift_hunter.disabled,"hard clear unlock appears in roster")
+	lobby.selected_stage_index = 9; lobby._refresh_stage_card()
+	lobby.hero_lobby_view._select_character("swift_hunter")
+	check(STORE.selected_hero() == "swift_hunter" and lobby.selected_stage_index == 9,"character selection leaves map unchanged")
+	check(lobby.hero_name_label.text == "날렵한 용사" and not lobby.portrait_badge.visible,"main selected hero stays visible on Stage10 map")
+	check(STORE.selected_battle_stage() == "stage_10","map selection saved separately")
+	check(WEAPONS.weapon_pool(STORE.selected_hero()).size() == 6,"selected hero has six weapons")
+	lobby._switch_tab("main")
+	check(not lobby.enter_stage_button.disabled and not lobby.stage_selector_buttons[9].disabled,"Stage10 remains selectable with low campaign progress")
+	check(backdrop.texture != original_texture and lobby.main_tools_view.is_visible_in_tree(),"hero backdrop and shared tools preserved")
+	lobby.main_modes_view.choose_perspective("demon")
+	check(lobby.team_button.text == original_team and not lobby.team_button.disabled and backdrop.texture == original_texture,"demon navigation and background restored")
+	lobby._on_team_tab_pressed(); check(lobby.current_tab == "team" and lobby.team_tab.visible,"demon formation still works")
+	print("HERO_LOBBY_STARTUP_SMOKE checks=",checks," failures=",failures)
 	quit(1 if failures else 0)

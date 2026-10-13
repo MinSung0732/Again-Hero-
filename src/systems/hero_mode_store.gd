@@ -2,7 +2,7 @@ extends RefCounted
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
 const PROFILES := preload("res://src/data/hero_profiles.gd")
-const AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
+const CHARACTERS := preload("res://src/data/hero_character_catalog.gd")
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const DATA := preload("res://src/data/hero_mode_catalog.gd")
 const PATH := "user://team_loadout.cfg"
@@ -11,20 +11,39 @@ static func owner() -> String:
 static func _load(config: ConfigFile,path: String = PATH) -> bool:
 	var error := SCOPE.load_config(config,path)
 	return error == OK or error == ERR_FILE_NOT_FOUND
-static func selected_stage(fallback: String = "stage_1") -> String:
+static func selected_hero() -> String:
 	var config := ConfigFile.new()
-	if not _load(config): return fallback
-	var id := String(config.get_value("hero_loadout","stage",fallback))
-	return id if character_unlocked(id) else "stage_1"
-static func select_stage(id: String) -> bool:
+	if not _load(config): return CHARACTERS.DEFAULT_HERO
+	var id := String(config.get_value("hero_loadout","hero_id",""))
+	if id.is_empty(): id = CHARACTERS.hero_for_stage(String(config.get_value("hero_loadout","stage","stage_1")))
+	return id if character_unlocked(id) else CHARACTERS.DEFAULT_HERO
+static func select_hero(id: String) -> bool:
 	if not character_unlocked(id): return false
 	var config := ConfigFile.new()
 	if not _load(config): return false
-	if String(config.get_value("hero_loadout","stage","")) == id: return true
-	config.set_value("hero_loadout","stage",id)
+	if String(config.get_value("hero_loadout","hero_id","")) == id: return true
+	config.set_value("hero_loadout","hero_id",id)
 	return SCOPE.save_config(config,PATH) == OK
+static func selected_battle_stage() -> String:
+	var config := ConfigFile.new()
+	if not _load(config): return "stage_1"
+	var id := String(config.get_value("hero_loadout","battle_stage","stage_1"))
+	return id if not STAGES.get_stage(id).is_empty() else "stage_1"
+static func select_battle_stage(id: String) -> bool:
+	if STAGES.get_stage(id).is_empty(): return false
+	var config := ConfigFile.new()
+	if not _load(config): return false
+	if String(config.get_value("hero_loadout","battle_stage","")) == id: return true
+	config.set_value("hero_loadout","battle_stage",id)
+	return SCOPE.save_config(config,PATH) == OK
+# Legacy calls refer to character origin, never the selected battlefield.
+static func selected_stage(_fallback: String = "stage_1") -> String:
+	return CHARACTERS.stage_for_hero(selected_hero())
+static func select_stage(id: String) -> bool:
+	return select_hero(CHARACTERS.hero_for_stage(id))
 static func skill_pool(stage: String) -> Array:
-	return WEAPONS.weapon_pool() if not STAGES.get_stage(stage).is_empty() else []
+	var hero_id := CHARACTERS.hero_for_stage(stage) if stage.begins_with("stage_") else stage
+	return WEAPONS.weapon_pool(hero_id) if not CHARACTERS.get_character(hero_id).is_empty() else []
 static func skills(stage: String) -> Array:
 	var config := ConfigFile.new()
 	if not _load(config): return []
@@ -49,17 +68,17 @@ static func set_skills(stage: String,ids: Array) -> bool:
 static func growth_level(stage: String,id: String) -> int:
 	var config := ConfigFile.new()
 	if not DATA.GROWTH.has(id) or not _load(config): return 0
-	return clampi(int(config.get_value("hero_growth",stage+"_"+id,0)),0,int(DATA.GROWTH[id].max))
+	return clampi(int(config.get_value("hero_growth",_growth_key(stage)+"_"+id,0)),0,int(DATA.GROWTH[id].max))
 static func purchase_growth(stage: String,id: String) -> bool:
-	if not DATA.GROWTH.has(id) or STAGES.get_stage(stage).is_empty(): return false
+	if not DATA.GROWTH.has(id) or not character_unlocked(stage): return false
 	var config := ConfigFile.new(); var progress := ConfigFile.new()
 	if not _load(config) or not _load(progress,"user://stage_progress.cfg"): return false
-	var level := clampi(int(config.get_value("hero_growth",stage+"_"+id,0)),0,int(DATA.GROWTH[id].max))
+	var level := clampi(int(config.get_value("hero_growth",_growth_key(stage)+"_"+id,0)),0,int(DATA.GROWTH[id].max))
 	var cost := DATA.growth_cost(id,level)
 	var points := int(progress.get_value("meta","research_points",0))
 	if level >= int(DATA.GROWTH[id].max) or cost > points: return false
 	progress.set_value("meta","research_points",points-cost)
-	config.set_value("hero_growth",stage+"_"+id,level+1)
+	config.set_value("hero_growth",_growth_key(stage)+"_"+id,level+1)
 	return SCOPE.save_configs({"stage_progress.cfg":progress,"team_loadout.cfg":config}) == OK
 static func apply_growth(stage: String,profile: Dictionary) -> void:
 	var hp := 1.0; var damage := 1.0
@@ -88,9 +107,23 @@ static func award_run(stage: String,entry: Dictionary,elapsed: float,kills: int,
 	var success := SCOPE.save_configs({"stage_progress.cfg":progress,"team_loadout.cfg":config}) == OK
 	return {"success":success,"research":points if success else 0,"gold":gold if success else 0}
 
-static func character_unlocked(stage: String) -> bool:
-	if STAGES.get_stage(stage).is_empty(): return false
-	if stage == "stage_1": return true
+static func character_unlocked(subject: String) -> bool:
+	var id := CHARACTERS.hero_for_stage(subject) if subject.begins_with("stage_") else subject
+	var data: Dictionary = CHARACTERS.get_character(id)
+	if data.is_empty(): return false
+	if id == CHARACTERS.DEFAULT_HERO: return true
+	var collection := ConfigFile.new()
+	if not _load(collection): return false
+	if bool(collection.get_value("hero_collection",id,false)): return true
 	var config := ConfigFile.new()
 	if not _load(config,"user://stage_progress.cfg"): return false
-	return bool(config.get_value("hard_cleared",stage,false))
+	return bool(config.get_value("hard_cleared",String(data.stage),false))
+static func set_character_owned_in_config(config: ConfigFile,id: String) -> bool:
+	# Future summon transactions can debit currency and grant ownership atomically.
+	if CHARACTERS.get_character(id).is_empty(): return false
+	config.set_value("hero_collection",id,true)
+	return true
+static func _growth_key(subject: String) -> String:
+	if subject.begins_with("stage_"): return subject
+	var stage := CHARACTERS.stage_for_hero(subject)
+	return stage if not stage.is_empty() else subject

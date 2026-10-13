@@ -5,6 +5,8 @@ const PROFILE := preload("res://src/systems/player_profile.gd")
 const UNLOCKS := preload("res://src/systems/mode_unlock_store.gd")
 const UNLOCK_DATA := preload("res://src/data/mode_unlock_catalog.gd")
 const UNLOCK_FEEDBACK := preload("res://src/ui/mode_unlock_feedback.gd")
+const HERO_STORE := preload("res://src/systems/hero_mode_store.gd")
+const CHARACTERS := preload("res://src/data/hero_character_catalog.gd")
 const ART := "res://assets/art/UI/main_modes/"
 var idle_style: StyleBoxTexture
 var active_style: StyleBoxTexture
@@ -55,14 +57,6 @@ func install(host) -> void:
 	demon_button = button(sides, "마왕", func(): choose_perspective("demon"))
 	hero_button = button(sides, "용사", func(): choose_perspective("hero"))
 	ranked_button = button(mode_row, "랭킹 매칭", toggle_ranked)
-	character_button = Button.new()
-	character_button.name = "CharacterSelector"
-	character_button.text = "캐릭터 선택  ›"
-	character_button.z_index = 4
-	top.add_child(character_button)
-	place(character_button, 0.52, 0.45, 0.86, 0.51)
-	style_button(character_button, false, "hero", 22)
-	character_button.pressed.connect(open_characters)
 	notice = AcceptDialog.new()
 	notice.title = "준비 중"
 	skin_dialog(notice)
@@ -148,8 +142,12 @@ func choose_perspective(value: String) -> void:
 		return
 	perspective = value
 	if value == "hero":
-		var selected := preload("res://src/systems/hero_mode_store.gd").selected_stage(current_stage())
+		var selected := HERO_STORE.selected_battle_stage()
 		lobby.selected_stage_index = maxi(lobby.stage_ids.find(selected),0)
+	else:
+		var state: Dictionary = lobby.STAGE_PROGRESS.load_state()
+		var saved := String(state.get("current_stage_id","stage_1"))
+		lobby.selected_stage_index = clampi(lobby.stage_ids.find(saved),0,maxi(0,int(state.get("highest_unlocked_stage",1))-1))
 	lobby._refresh_stage_card()
 
 func toggle_ranked() -> void:
@@ -163,48 +161,11 @@ func toggle_ranked() -> void:
 	lobby._close_stage_selector()
 	lobby._refresh_stage_card()
 
-func change_character(direction: int) -> void:
-	if perspective != "hero" or lobby.stage_ids.is_empty(): return
-	for offset in range(1,lobby.stage_ids.size()+1):
-		var index: int = posmod(lobby.selected_stage_index+direction*offset,lobby.stage_ids.size())
-		var id := String(lobby.stage_ids[index])
-		if not preload("res://src/systems/hero_mode_store.gd").character_unlocked(id): continue
-		lobby.selected_stage_index = index
-		hero_index = index
-		lobby._refresh_stage_card()
-		return
-
+func change_character(_direction: int) -> void:
+	# Character selection belongs to the formation tab, including ranked previews.
+	pass
 func open_characters() -> void:
-	if not UNLOCKS.unlocked("hero", current_stage()):
-		return
-	var picker := AcceptDialog.new()
-	picker.title = "플레이할 용사 선택"
-	picker.min_size = Vector2i(650, 440)
-	skin_dialog(picker)
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(600, 320)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
-	picker.add_child(scroll)
-	var list := VBoxContainer.new()
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(list)
-	for index in heroes.size():
-		var stage := heroes[index]
-		var profile: Dictionary = lobby.HERO_PROFILES.get_profile(String(stage.hero_id))
-		var option := button(list, String(profile.get("display_name", "용사")), func():
-			if not preload("res://src/systems/hero_mode_store.gd").character_unlocked(String(stage.get("id",""))): return
-			hero_index = index
-			if not ranked: lobby.selected_stage_index = maxi(lobby.stage_ids.find(String(stage.get("id","stage_1"))),0)
-			lobby._refresh_stage_card()
-			picker.queue_free())
-		option.disabled = not preload("res://src/systems/hero_mode_store.gd").character_unlocked(String(stage.get("id","")))
-		if option.disabled: option.text += " 🔒\n해당 스테이지 어려움 클리어"
-		style_button(option, index == hero_index, "hero", 24)
-	picker.confirmed.connect(picker.queue_free)
-	picker.canceled.connect(picker.queue_free)
-	lobby.add_child(picker)
-	picker.popup_centered()
+	lobby._on_team_tab_pressed()
 
 func skin_dialog(dialog: AcceptDialog) -> void:
 	dialog.add_theme_stylebox_override("panel", lobby._make_style(Color("170e25"), Color("eac14d"), 3, 8))
@@ -214,7 +175,7 @@ func skin_dialog(dialog: AcceptDialog) -> void:
 func request_data() -> Dictionary:
 	return {"page": "ranked" if ranked else "stage", "perspective": perspective,
 		"difficulty": difficulty, "stage_id": lobby.stage_ids[lobby.selected_stage_index],
-		"hero_id": String(heroes[hero_index].hero_id) if not heroes.is_empty() else ""}
+		"hero_id": HERO_STORE.selected_hero()}
 
 func blocks_entry() -> bool:
 	if (ranked and not UNLOCKS.unlocked("rank", current_stage())) or (perspective == "hero" and not UNLOCKS.unlocked("hero", current_stage())) or (not ranked and difficulty == "hard" and not UNLOCKS.unlocked("hard", current_stage())):
@@ -248,23 +209,24 @@ func refresh() -> void:
 			item[0].icon = icons.lock
 	schedule_unlock()
 	difficulty_row.visible = not ranked
-	character_button.visible = perspective == "hero"
 	var section: Control = lobby.get_node("SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox")
 	section.get_node("SectionTitle").text = "랭킹 매칭" if ranked else "침입자 기록"
 	section.get_node("SectionSubtitle").text = "시점과 캐릭터를 선택하세요 · 매칭 기능 준비 중" if ranked else "대상 용사를 선택하고, 던전에 입장하세요."
 	if not ranked:
 		if perspective == "hero":
 			var stage := current_stage()
-			preload("res://src/systems/hero_mode_store.gd").select_stage(stage)
+			HERO_STORE.select_battle_stage(stage)
 			lobby.enter_stage_button.text = "용사 도전 · 15분 생존"
 			lobby.stage_description_label.text = "이동·증강 직접 선택 / 공격 자동\nAI 마왕의 군단을 피해 15분 동안 생존하세요."
 			lobby.stage_status_label.text = "AI 마왕\n15분 생존 도전"
 			lobby.stage_reward_label.text = "승리 보상\n연구 %d · 골드 %d" % [preload("res://src/data/hero_mode_catalog.gd").WIN_RESEARCH,preload("res://src/data/hero_mode_catalog.gd").WIN_GOLD]
 			lobby.stage_description_label.get_parent().get_node("RepeatReward").text = "무기 증강\n전투 중 습득 · Lv.10 상자 진화"
 			section.get_node("SectionTitle").text = "용사 원정"
-			section.get_node("SectionSubtitle").text = "플레이할 용사를 선택하세요."
+			section.get_node("SectionSubtitle").text = "스테이지는 마왕 공세와 맵 붕괴를 결정합니다. 용사는 캐릭터 편성에서 선택하세요."
+			_apply_selected_hero_portrait()
+			lobby.stage_name_label.text = "마왕의 성 · 붕괴 %d단계" % int(lobby.STAGE_CATALOG.get_stage(stage).get("number",1))
+			lobby.enter_stage_button.disabled = false
 			hard_button.disabled = true
-			character_button.text = "용사 선택  ›"
 		elif difficulty == "hard":
 			lobby.enter_stage_button.text = "어려움 도전 · 용사 해금"
 			lobby.stage_description_label.text = "강화된 용사를 처치하세요.\n클리어하면 이 스테이지 용사가 플레이 캐릭터로 해금됩니다."
@@ -279,8 +241,8 @@ func refresh() -> void:
 	lobby.hero_name_label.text = nickname if not nickname.is_empty() else "게스트"
 	if perspective == "demon":
 		lobby._apply_portrait(PROFILE.portrait_path(), PROFILE.display_name())
-	elif not heroes.is_empty():
-		lobby._apply_portrait(String(heroes[hero_index].portrait_path), "용사")
+	else:
+		_apply_selected_hero_portrait()
 	lobby.portrait_texture.self_modulate = Color.WHITE
 	lobby.portrait_badge.visible = false
 	lobby.portrait_texture.get_node("StageLock").visible = false
@@ -290,7 +252,7 @@ func refresh() -> void:
 	lobby.stage_description_label.get_parent().get_node("RepeatReward").text = "닉네임\n" + lobby.hero_name_label.text
 	lobby.enter_stage_button.text = "매칭 시작"
 	lobby.enter_stage_button.disabled = false
-	var navigable := perspective == "hero" and heroes.size() > 1
+	var navigable := false
 	lobby.prev_stage_button.disabled = not navigable
 	lobby.next_stage_button.disabled = not navigable
 	lobby._set_stage_arrow_visual(lobby.prev_stage_button, navigable)
@@ -331,3 +293,14 @@ func show_pending_unlock() -> void:
 			description = "쉬움 Stage %d 클리어 완료" % int(stage_id.trim_prefix("stage_"))
 		unlock_feedback.present(String(UNLOCK_DATA.RULES[key].name), description)
 		return
+
+func _apply_selected_hero_portrait() -> void:
+	var id := HERO_STORE.selected_hero()
+	var data: Dictionary = CHARACTERS.get_character(id)
+	var origin: Dictionary = lobby.STAGE_CATALOG.get_stage(String(data.stage))
+	lobby._apply_portrait(String(origin.get("portrait_path","")),String(data.name))
+	lobby.hero_name_label.text = String(data.name)
+	lobby.portrait_texture.self_modulate = Color.WHITE
+	lobby.portrait_badge.visible = false
+	var lock := lobby.portrait_texture.get_node_or_null("StageLock") as CanvasItem
+	if lock != null: lock.hide()

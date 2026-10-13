@@ -43,6 +43,7 @@ func run() -> void:
 	for starter in DATA.STARTERS.values(): check(DATA.WEAPONS.has(starter),"starter exists")
 	var fixture := HeroFixture.new(); root.add_child(fixture)
 	for id in DATA.WEAPONS:
+		fixture.hero_id = String(DATA.WEAPONS[id].owner)
 		var runtime := RUNTIME.new(); runtime.install(fixture)
 		while int(runtime.levels.get(id,0)) < DATA.MAX_LEVEL: check(runtime.add(id),"weapon rank advances: "+id)
 		check(not runtime.add(id),"weapon stops at level 10: "+id)
@@ -51,6 +52,7 @@ func run() -> void:
 		check(runtime.apply_chest(chest) and runtime.evolved.has(id),"evolution applies: "+id)
 		var clone := chest.duplicate(); clone.applied = false
 		check(not runtime.apply_chest(clone),"receipt cannot replay through a cloned dictionary")
+	fixture.hero_id = "ranged_rookie"
 	var runtime := RUNTIME.new(); runtime.install(fixture)
 	var pool := DATA.weapon_pool()
 	check(runtime.add(String(pool[1])) and runtime.add(String(pool[2])) and not runtime.add(String(pool[3])),"three weapon slots")

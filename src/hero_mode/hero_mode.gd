@@ -26,6 +26,7 @@ var settled := false
 var leaving := false
 var entry: Dictionary = {}
 var stage := "stage_1"
+var player_hero_id := "ranged_rookie"
 var initial_owner := ""
 var account_invalid := false
 var hud_remaining := 0.0
@@ -45,12 +46,13 @@ var finished_message := ""
 func _ready() -> void:
 	set_process(false)
 	GameAudio.enter_frontend(self,"lobby")
-	stage = STORE.selected_stage()
+	stage = STORE.selected_battle_stage()
 	initial_owner = STORE.owner()
 	var options: Dictionary = SceneTransition.consume_entry_options()
 	stage = String(options.get("stage_id",stage))
+	player_hero_id = String(options.get("hero_id",STORE.selected_hero()))
 	_build_ui()
-	if not STORE.character_unlocked(stage):
+	if not STORE.character_unlocked(player_hero_id) or STAGES.get_stage(stage).is_empty():
 		var original_ticket: Dictionary = options.get("hero_entry",{})
 		var refunded := original_ticket.is_empty() or STAMINA.refund_failed_entry(original_ticket)
 		_show_blocked("이 용사는 해당 스테이지 어려움 클리어 후 개방됩니다." if refunded else "잠긴 용사 입장 실패 · 스테미너 반환 저장을 확인하세요.")
@@ -74,7 +76,7 @@ func _ready() -> void:
 	viewport.handle_input_locally = false
 	view.add_child(viewport)
 	battle = BATTLE_SCENE.instantiate()
-	battle.hero_player_mode = true; battle.hero_player_stage = stage
+	battle.hero_player_mode = true; battle.hero_player_stage = stage; battle.hero_player_hero_id = player_hero_id
 	viewport.add_child(battle)
 	GameAudio.attach_battle(battle)
 	$HeroBGMManager.start_stage(stage)
@@ -241,11 +243,11 @@ func _show_result() -> void:
 	_button("같은 용사로 다시 도전",_retry); _button("로비로",_leave)
 func _retry() -> void:
 	if leaving or not settled: return
-	var ticket := STAMINA.try_enter(stage,LocalTestMode.active)
+	var ticket := STAMINA.try_enter(stage,LocalTestMode.active,-1,false)
 	if not bool(ticket.get("success",false)):
 		_label(overlay_rows,"스테미너 또는 저장 상태를 확인하세요.",23); return
 	leaving = true
-	if not SceneTransition.change_scene(DATA.SCENE,"용사 도전 준비 중...",{"stage_id":stage,"hero_entry":ticket}):
+	if not SceneTransition.change_scene(DATA.SCENE,"용사 도전 준비 중...",{"stage_id":stage,"hero_id":player_hero_id,"hero_entry":ticket}):
 		STAMINA.refund_failed_entry(ticket); leaving = false
 		_label(overlay_rows,"입장 실패 · 스테미너 반환을 확인하세요.",23)
 func _leave() -> void:

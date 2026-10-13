@@ -70,7 +70,7 @@ static func _commit(config: ConfigFile, state: Dictionary) -> bool:
 	return success
 
 # All ordinary lobby/retry/next-stage entries use the same atomic debit + stage write.
-static func try_enter(stage_id: String, exempt: bool = false, at: int = -1) -> Dictionary:
+static func try_enter(stage_id: String, exempt: bool = false, at: int = -1, update_campaign_stage: bool = true) -> Dictionary:
 	if stage_id.is_empty():
 		return {"success": false, "reason": "invalid"}
 	var config := ConfigFile.new()
@@ -89,7 +89,7 @@ static func try_enter(stage_id: String, exempt: bool = false, at: int = -1) -> D
 	config.set_value(SECTION, "active_charged", cost)
 	config.set_value(SECTION, "active_stage", stage_id)
 	config.set_value(SECTION, "active_claimed", false)
-	config.set_value("progress", "current_stage_id", stage_id)
+	if update_campaign_stage: config.set_value("progress", "current_stage_id", stage_id)
 	if not _commit(config, state):
 		return {"success": false, "reason": "save_failed"}
 	return {"success": true, "amount": state.amount, "charged": cost, "owner": _owner(),

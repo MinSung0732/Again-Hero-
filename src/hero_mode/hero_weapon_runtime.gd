@@ -8,6 +8,7 @@ var levels: Dictionary = {}
 var passives: Dictionary = {}
 var evolved: Dictionary = {}
 var weapon_ids: Array[String] = []
+var available_weapons: Array = []
 var cooldowns: Dictionary = {}
 var scratch: Array = []
 var effects: Array[Dictionary] = []
@@ -24,13 +25,15 @@ var owned_shield := 0.0
 
 func install(host) -> void:
 	hero = host
+	available_weapons = DATA.weapon_pool(String(hero.hero_id))
 	for index in range(EFFECT_LIMIT):
-		effects.append({"left":0.0,"duration":0.0,"a":Vector2.ZERO,"b":Vector2.ZERO,"radius":0.0,"pattern":"","color":Color.WHITE})
-	for index in range(8): fields.append({"left":0.0,"tick":0.0,"origin":Vector2.ZERO,"radius":0.0,"damage":0,"cap":9})
-	add(String(DATA.STARTERS.get(hero.hero_id,"weapon_basic_ranged_rookie")))
+		effects.append({"left":0.0,"duration":0.0,"a":Vector2.ZERO,"b":Vector2.ZERO,"radius":0.0,"pattern":"","color":Color.WHITE,"orbit_count":4,"orbit_speed":3.0,"orbit_ratio":0.7})
+	for index in range(8): fields.append({"left":0.0,"tick":0.0,"origin":Vector2.ZERO,"radius":0.0,"damage":0,"cap":9,"interval":0.5})
+	add(String(DATA.STARTERS.get(hero.hero_id,"ranged_rookie_arcane_bolt")))
 
 func add(id: String) -> bool:
 	if DATA.is_weapon(id):
+		if id not in available_weapons: return false
 		if int(levels.get(id,0)) >= DATA.MAX_LEVEL: return false
 		if not levels.has(id):
 			if weapon_ids.size() >= DATA.WEAPON_SLOTS: return false
@@ -54,7 +57,7 @@ func add(id: String) -> bool:
 
 func candidates() -> Array:
 	var options: Array = []
-	for id in DATA.WEAPONS:
+	for id in available_weapons:
 		if int(levels.get(id,0)) >= DATA.MAX_LEVEL: continue
 		if not levels.has(id) and weapon_ids.size() >= DATA.WEAPON_SLOTS: continue
 		options.append(_card(id,int(levels.get(id,0))+1))
@@ -139,7 +142,7 @@ func tick(delta: float) -> void:
 		field.left = maxf(0.0,float(field.left)-delta)
 		field.tick = float(field.tick)-delta
 		if float(field.tick) > 0.0: continue
-		field.tick = 0.5
+		field.tick = float(field.interval)
 		hero._fill_monster_nodes_near(field.origin,float(field.radius),scratch)
 		var count := 0
 		for raw in scratch:
@@ -160,7 +163,7 @@ func _cast(id: String) -> void:
 	var origin: Vector2 = hero.global_position
 	var reach: float = float(data.range)*(1.0+0.035*(rank-1))*(1.25 if awakened else 1.0)
 	var damage: int = maxi(1,roundi(hero.attack_damage*float(data.power)*power*(1.0+0.18*(rank-1))*(1.8 if awakened else 1.0)))
-	var hits := 1+int(rank/5)+(2 if awakened else 0)
+	var hits := int(data.get("base_hits",1))+int(rank/5)+(2 if awakened else 0)
 	var pattern := String(data.pattern)
 	var color := Color(String(data.color))
 	hero._fill_monster_nodes_near(origin,reach,scratch)
@@ -178,8 +181,8 @@ func _cast(id: String) -> void:
 	if pattern == "poison":
 		var field: Dictionary = fields[field_cursor]; field_cursor = (field_cursor+1)%fields.size()
 		field.origin = closest.global_position if is_instance_valid(closest) else origin
-		field.left = 3.0; field.tick = 0.0; field.radius = reach*0.45; field.damage = maxi(1,roundi(damage*0.25)); field.cap = mini(24,4+hits*5)
-		_effect(field.origin,field.origin,float(field.radius),pattern,color)
+		field.left = float(data.get("field_duration",3.0)); field.tick = 0.0; field.interval = float(data.get("field_interval",0.5)); field.radius = reach*float(data.get("field_radius_ratio",0.45)); field.damage = maxi(1,roundi(damage*0.25)); field.cap = mini(24,4+hits*5)
+		_effect(field.origin,field.origin,float(field.radius),pattern,color,data)
 		hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
 		return
 	if pattern == "heal": hero.heal_direct(roundi(hero.max_hp*(0.015+rank*0.002)))
@@ -190,7 +193,7 @@ func _cast(id: String) -> void:
 	var struck := 0
 	if pattern in ["bolt","chain"] and is_instance_valid(closest):
 		_hit(closest,damage,pattern,rank)
-		_effect(origin,closest.global_position,22.0,pattern,color); struck = 1
+		_effect(origin,closest.global_position,22.0,pattern,color,data); struck = 1
 	for raw in scratch:
 		if struck >= cap: break
 		var actor := raw as Node2D
@@ -199,11 +202,11 @@ func _cast(id: String) -> void:
 		var offset: Vector2 = actor.global_position-origin
 		if pattern == "slash" and offset.normalized().dot(direction) < 0.35: continue
 		if pattern == "beam" and (offset.dot(direction) < 0.0 or absf(offset.cross(direction)) > 40.0+rank*5.0): continue
-		if pattern == "orbit" and absf(offset.length()-reach*0.7) > 100.0: continue
+		if pattern == "orbit" and absf(offset.length()-reach*float(data.get("orbit_ratio",0.7))) > 100.0: continue
 		_hit(actor,damage,pattern,rank); struck += 1
-		if pattern in ["chain","bolt"]: _effect(origin,actor.global_position,20.0,pattern,color)
-	if pattern == "beam": _effect(origin,origin+direction*reach,28.0+rank*3.0,pattern,color)
-	elif pattern not in ["bolt","chain"]: _effect(origin,origin+direction*reach,reach,pattern,color)
+		if pattern in ["chain","bolt"]: _effect(origin,actor.global_position,20.0,pattern,color,data)
+	if pattern == "beam": _effect(origin,origin+direction*reach,28.0+rank*3.0,pattern,color,data)
+	elif pattern not in ["bolt","chain"]: _effect(origin,origin+direction*reach,reach,pattern,color,data)
 	hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
 	hero.attack_pose_timer = 0.25
 	if is_instance_valid(hero.hero_sprite) and hero.hero_sprite.sprite_frames.has_animation(&"attack"):
@@ -216,11 +219,12 @@ func _hit(actor: Node2D, damage: int, pattern: String, rank: int) -> void:
 	if pattern == "frost" and actor.has_method("apply_slow"): actor.call("apply_slow",maxf(0.35,0.85-rank*0.04),2.0)
 	# Poison uses frequent damage pulses; it does not reuse hero-target poison APIs.
 
-func _effect(a: Vector2,b: Vector2,radius: float,pattern: String,color: Color) -> void:
+func _effect(a: Vector2,b: Vector2,radius: float,pattern: String,color: Color,data: Dictionary = {}) -> void:
 	var effect: Dictionary = effects[effect_cursor]
 	effect_cursor = (effect_cursor+1)%EFFECT_LIMIT
 	effect.a = a; effect.b = b; effect.radius = radius; effect.pattern = pattern; effect.color = color
-	effect.duration = 3.0 if pattern == "poison" else 1.5 if pattern == "orbit" else 0.28
+	effect.orbit_count = int(data.get("orbit_count",4)); effect.orbit_speed = float(data.get("orbit_speed",3.0)); effect.orbit_ratio = float(data.get("orbit_ratio",0.7))
+	effect.duration = float(data.get("field_duration",3.0)) if pattern == "poison" else 1.5 if pattern == "orbit" else 0.28
 	effect.left = effect.duration; hero.queue_redraw()
 
 func draw() -> void:
@@ -238,7 +242,7 @@ func draw() -> void:
 				hero.draw_circle(a.lerp(b,1.0-ratio),12.0,color)
 			"slash": hero.draw_arc(a,radius,(b-a).angle()-1.0,(b-a).angle()+1.0,16,color,9.0*ratio+2.0)
 			"orbit":
-				for index in range(4): hero.draw_circle(a+Vector2.from_angle(visual_clock*3.0+index*TAU/4.0)*radius*0.7,18.0,color)
+				for index in int(effect.orbit_count): hero.draw_circle(a+Vector2.from_angle(visual_clock*float(effect.orbit_speed)+index*TAU/float(effect.orbit_count))*radius*float(effect.orbit_ratio),18.0,color)
 			_:
 				hero.draw_circle(a,radius*(1.0-ratio*0.4),Color(color,ratio*0.10))
 				hero.draw_arc(a,radius*(1.0-ratio*0.4),0.0,TAU,32,color,4.0)
