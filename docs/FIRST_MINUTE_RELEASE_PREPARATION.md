@@ -26,9 +26,9 @@
 
 ## Android 배포 설정
 
-새 export_presets.cfg의 Android Release는 Gradle AAB·targetSdk36·ARM64·버전0.1.0/code1·패키지com.minsung.againhero. 테스트/개발문서/SQL 등을 배포에서 제외한다. 앱 인증에 필요한 기존 OAuth export plugin은 project.godot에서 유지한다. API36 기준 출처: https://developer.android.com/google/play/requirements/target-sdk (2026-10-13 확인).
+참고용 tools/android_release/export_presets.template.cfg의 Android Release는 Gradle AAB·targetSdk36·ARM64·버전0.1.0/code1·패키지com.minsung.againhero. 테스트/개발문서/SQL 등을 배포에서 제외한다. 앱 인증에 필요한 기존 OAuth export plugin은 project.godot에서 유지한다. API36 기준 출처: https://developer.android.com/google/play/requirements/target-sdk (2026-10-13 확인).
 
-패키지/서명은 영구 배포 식별자다. 이미 Play Console에 등록된 앱이나 Google Android OAuth 클라이언트가 있으면 그 패키지와 서명을 사용해야 하며 versionCode도 기존 업로드보다 커야 한다. 이번 preset은 저장소에 기존 preset이 없어서 만든 시작 구성이다. 기존 등록 여부나 OAuth 일치는 검증되지 않았다.
+패키지/서명은 영구 배포 식별자다. 이미 Play Console에 등록된 앱이나 Google Android OAuth 클라이언트가 있으면 그 패키지와 서명을 사용해야 하며 versionCode도 기존 업로드보다 커야 한다. 이 템플릿은 저장소에 기존 preset이 없어서 만든 시작 구성이다. 루트 export_presets.cfg는 PC의 기존 설정을 보존하기 위해 Git 추적에서 제외한다. 템플릿을 자동 복사하거나 기존 설정 전체를 덮어쓰지 않는다. 필요한 API/AAB/ARM64 항목만 기존 설정에 반영한다. 기존 등록 여부나 OAuth 일치는 검증되지 않았다.
 
 서명 키를 새로 만들거나 기존 키를 바꾸지 않는다. 비밀은 Git에 넣지 않는다. Godot의 GODOT_ANDROID_KEYSTORE_RELEASE_PATH / GODOT_ANDROID_KEYSTORE_RELEASE_USER / GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD 환경변수를 사용한다. 출처: https://docs.godotengine.org/en/4.4/classes/class_editorexportplatformandroid.html
 

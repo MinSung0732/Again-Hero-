@@ -14,3 +14,6 @@ Thumbs.db
 # Temporary / logs
 *.tmp
 *.log
+
+# Machine-specific Android package / signing / export configuration
+/export_presets.cfg
