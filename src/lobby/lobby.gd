@@ -2447,7 +2447,14 @@ func _setup_gacha_reveal_overlay() -> void:
 			TutorialFlow.draw_presented())
 
 
+func _is_hero_lobby_mode() -> bool:
+	if main_modes_view != null:
+		return main_modes_view.perspective == "hero"
+	return hero_lobby_view != null and hero_lobby_view.active
+
 func _on_team_tab_pressed() -> void:
+	if _is_hero_lobby_mode():
+		return
 	if not TutorialFlow.permits_tab("team"):
 		return
 	current_tab = "team"
@@ -2474,7 +2481,7 @@ func _on_team_tab_pressed() -> void:
 	_refresh_nav_button(other_button, false)
 
 func _switch_tab(tab_id: String) -> void:
-	if tab_id == "team" and hero_lobby_view != null and hero_lobby_view.active: return
+	if tab_id == "team" and _is_hero_lobby_mode(): return
 	if stamina_view != null:
 		stamina_view.close_info()
 	if not TutorialFlow.permits_tab(tab_id):
@@ -4423,6 +4430,8 @@ func _team_monster_cost(monster_id: String) -> float:
 	return float(data.get("base_cost", 0.0))
 
 func _refresh_header() -> void:
+	# Navigation authorization follows the selected mode, even if its view is stale.
+	if _is_hero_lobby_mode(): team_button.disabled = true
 	_refresh_shop_summon_buttons()
 	if stamina_view != null:
 		stamina_view.refresh()

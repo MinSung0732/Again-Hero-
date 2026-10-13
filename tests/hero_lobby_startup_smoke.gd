@@ -56,11 +56,26 @@ func run() -> void:
 		var before_team: String = lobby.current_tab
 		lobby._switch_tab("team")
 		check(lobby.current_tab == before_team, "locked team tab rejects direct navigation")
+		lobby._on_team_tab_pressed()
+		check(lobby.current_tab == before_team and not lobby.team_tab.visible, "actual team click handler rejects hero mode")
+		lobby.team_button.pressed.emit()
+		check(lobby.current_tab == before_team and not lobby.team_tab.visible, "connected button signal cannot bypass lock")
+		lobby.hero_lobby_view.active = false
+		lobby._on_team_tab_pressed(); lobby._switch_tab("team")
+		check(lobby.current_tab == before_team, "selected hero mode blocks entry with stale visual state")
+		lobby.hero_lobby_view.active = true
+		lobby.team_button.disabled = false
+		lobby.main_modes_view.refresh()
+		check(lobby.team_button.disabled, "same-mode refresh reasserts team lock")
 		lobby._switch_tab("main")
 		check(lobby.main_tools_view.is_visible_in_tree(), "shared tools remain in hero mode")
 		lobby.main_modes_view.choose_perspective("demon")
 		check(not lobby.hero_lobby_view.active and backdrop.texture == original_texture, "demon background restored")
 		check(lobby.shop_button.text == original_shop and lobby.team_button.text == original_team and lobby.research_button.text == original_research, "demon labels restored")
+		check(not lobby.team_button.disabled, "demon team navigation restored")
+		lobby._on_team_tab_pressed()
+		check(lobby.current_tab == "team" and lobby.team_tab.visible, "demon team click remains functional")
+		lobby._switch_tab("main")
 		for child in lobby.hero_lobby_view.original_visibility:
 			check(child.visible == lobby.hero_lobby_view.original_visibility[child], "demon visibility restored: " + String(child.name))
 	print("HERO_LOBBY_STARTUP_SMOKE checks=", checks, " failures=", failures)

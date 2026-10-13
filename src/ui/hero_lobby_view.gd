@@ -42,6 +42,9 @@ func install(host) -> void:
 		var body := VBoxContainer.new(); body.size_flags_horizontal = Control.SIZE_EXPAND_FILL; body.add_theme_constant_override("separation",20); scroll.add_child(body)
 		panels[pair[0]] = panel; bodies[pair[0]] = body; panel.hide()
 func set_active(enabled: bool) -> void:
+	# Refresh must reassert the lock even when the perspective did not change.
+	lobby.team_button.disabled = enabled or original_team_disabled
+	if enabled and lobby.current_tab == "team": lobby._switch_tab("main")
 	if active == enabled: return
 	active = enabled
 	lobby.title_label.text = "용사 원정대" if enabled else "용사, 또 너야?"
