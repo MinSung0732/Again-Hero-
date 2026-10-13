@@ -1,6 +1,5 @@
 extends Area2D
 
-const STAGE1_VFX := preload("res://src/ui/stage1_mage_vfx.gd")
 const STAGE1_PROJECTILE_FRAME_PATHS := [
 	"res://assets/art/projectiles/stage1_mage/projectile_01.png",
 	"res://assets/art/projectiles/stage1_mage/projectile_02.png",
@@ -317,10 +316,8 @@ func _apply_projectile_visual() -> void:
 		frames.set_animation_loop("fly", true)
 		frames.set_animation_speed("fly", STAGE1_PROJECTILE_FPS)
 
-		for frame_index in range(STAGE1_PROJECTILE_FRAME_PATHS.size()):
-			var texture := STAGE1_VFX.frame("projectile", frame_index + 1)
-			if texture == null:
-				texture = _load_texture_direct(STAGE1_PROJECTILE_FRAME_PATHS[frame_index])
+		for frame_path in STAGE1_PROJECTILE_FRAME_PATHS:
+			var texture := _load_texture_direct(frame_path)
 			if texture == null:
 				continue
 			frames.add_frame("fly", texture)

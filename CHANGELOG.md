@@ -1,3 +1,8 @@
+## 2026-10-13 — Stage 1 기본 마법탄 원본 복원
+- 견습 마법용사(`ranged_rookie`) 기본 공격 투사체만 신규 `vfx_v2/projectile_spritesheet.png` 경유를 해제하고 원본 `assets/art/projectiles/stage1_mage/projectile_01~04.png` 4프레임/12fps로 복구.
+- 마력 장벽·비전 집중·마력 관통포 리메이크 및 캐시 경로는 변경하지 않음. 원본/신규 PNG 파일은 모두 보존. 전투 수치·충돌·AI·SFX 수정 없음.
+- 원본 PNG 4개 GitHub 존재·SHA 확인, GDScript 경로/참조 정적 검증. Godot 런타임은 미실행.
+
 ## 2026-10-13 — Stage 1 견습 마법용사 실제 기술 픽셀 이펙트 리메이크
 - HeroProfiles.ranged_rookie에서 기술 확인: 기본공격 마법탄(4프레임/12fps), 마력 장벽(6/10), 비전 집중(6/10), 마력 관통포(6/12). 기본 이미지 재해석이 아니라 해당 4가지 동작을 표현한 신규 청색·보라색 비전 마법 스프라이트시트 4장/128px 셀/투명 PNG/고정 앵커.
 - Stage1MageVfx 공유 캐시가 시트당 ImageTexture1회, 개별 AtlasTexture 최대22개 생성 후 재사용. 로비·전투 UI 스캔 추가 없음. 기존 PNG는 폴백으로 남겨 Android 에셋 로드 실패 시 전투 진행 방해 방지.
