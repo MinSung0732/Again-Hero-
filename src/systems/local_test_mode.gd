@@ -14,6 +14,8 @@ var marker_path := "user://local_test_mode.cfg"
 var test_directory := "user://local_test"
 
 func _ready() -> void:
+	# Store releases must never resume a developer coupon save namespace.
+	if not OS.is_debug_build(): return
 	var config := ConfigFile.new()
 	if config.load(marker_path) == OK:
 		active = bool(config.get_value("mode", "active", false))
@@ -54,6 +56,7 @@ func reset_progress(test: bool = false) -> bool:
 	return SCOPE.save_configs(configs) == OK
 
 func apply_coupon(code: String) -> bool:
+	if not OS.is_debug_build(): return false
 	if code not in ["localtest", "normaltest", "tutorialtest"]:
 		return false
 	var cloud := get_node("/root/CloudStore")

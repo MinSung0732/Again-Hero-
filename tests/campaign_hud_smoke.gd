@@ -31,7 +31,7 @@ func run() -> void:
 		main._insight_view.update_copy("용사 선택 · 민첩한 발놀림  › 상세",hint); await process_frame
 		check(fits(main._insight_view.title) and fits(main._insight_view.advice),"real font copy fits:"+hint)
 	main._on_hero_augment_selected(2,[],"민첩한 발놀림","","")
-	check(main._insight_view.title.text.contains("민첩한 발놀림") and main._insight_view.advice.text == C.COUNTERS.mobility,"choice is visible in actual Main")
+	check(main._insight_view.title.text.contains("민첩한 발놀림") and main._insight_view.advice.text.contains("자동 배치"),"choice is visible in actual Main")
 	main.settings_battle_frame.button_pressed = false; await process_frame
 	check(not main._insight_view.get_global_rect().intersects(main.hero_skill_cooldown_bar.get_global_rect()),"frame-off cooldown/insight separated")
 	check(main.battle_viewport_container.offset_top >= main._insight_view.get_rect().end.y,"frame-off board below insight")

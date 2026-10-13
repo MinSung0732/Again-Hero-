@@ -2,6 +2,7 @@ extends PanelContainer
 const PIXEL := preload("res://src/ui/pixel_panel_skin.gd")
 var title := Label.new()
 var advice := Label.new()
+var detail_button: Button
 func install(hud: Node,open_details: Callable) -> void:
 	name = "CombatInsight"
 	hud.add_child(self)
@@ -23,6 +24,7 @@ func install(hud: Node,open_details: Callable) -> void:
 		label.add_theme_color_override("font_color",Color("ffe09a") if label == title else Color("eee8f5"))
 		rows.add_child(label)
 	var tap := Button.new(); tap.flat = true; tap.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND; add_child(tap)
+	detail_button = tap
 	tap.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	tap.tooltip_text = "용사의 선택과 현재 빌드 보기"
 	for state in ["normal","hover","pressed","focus"]: tap.add_theme_stylebox_override(state,StyleBoxEmpty.new())
@@ -30,3 +32,5 @@ func install(hud: Node,open_details: Callable) -> void:
 func update_copy(headline: String,hint: String) -> void:
 	if title.text != headline: title.text = headline
 	if advice.text != hint: advice.text = hint
+func update_details(copy: String) -> void:
+	if is_instance_valid(detail_button): detail_button.tooltip_text = copy+"\n눌러서 현재 용사 빌드 보기"

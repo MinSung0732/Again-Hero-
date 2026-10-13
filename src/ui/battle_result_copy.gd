@@ -32,6 +32,7 @@ static func format_analysis(summary: String, _reward_details: String) -> String:
 	# Keep the result bounded; detailed metrics remain available to reward logic.
 	var lines: PackedStringArray = ["◆ 전투 기록", ""]
 	for line in summary.split("\n", false):
-		if line.begins_with("Run ") or line.begins_with("Hero 최저 HP:") or line.begins_with("Hero 누적 HP 피해:") or line.begins_with("마왕 EXP 기여:"):
+		if line.begins_with("Run ") or line.begins_with("Hero 최저 HP:") or line.begins_with("Hero 누적 HP 피해:") or line.begins_with("마왕 EXP 기여:") or line.begins_with("직접 소환:") or line.begins_with("전략 전환:") or line.begins_with("Hero 증강"):
+			line = line.left(180)
 			lines.append(line.replace("Hero", "용사").replace("Run ", "전투 시간 "))
 	return "\n".join(lines)

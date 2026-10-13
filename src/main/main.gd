@@ -1724,7 +1724,7 @@ func _on_command_changed(current_value: float, max_value: float) -> void:
 				_get_catalog_monster_name(monster_id)
 			)
 		if slot_index < summon_slot_cost_labels.size():
-			summon_slot_cost_labels[slot_index].text = "코스트 %.1f" % cost
+			summon_slot_cost_labels[slot_index].text = "%s · %.1f" % [MONSTER_CATALOG.get_role_label(MONSTER_CATALOG.get_role(monster_id)),cost]
 		var cannot_summon: bool = (
 			mutation_panel.visible
 			or battle.is_population_full()
@@ -1801,7 +1801,8 @@ func _configure_battle_loadout_buttons() -> void:
 			var base_cost := 0.0
 			if typeof(catalog_data) == TYPE_DICTIONARY:
 				base_cost = float(catalog_data.get("base_cost", 0.0))
-			summon_slot_cost_labels[slot_index].text = "코스트 %.1f" % base_cost
+			summon_slot_cost_labels[slot_index].text = "%s · %.1f" % [MONSTER_CATALOG.get_role_label(MONSTER_CATALOG.get_role(monster_id)),base_cost]
+		button.tooltip_text = preload("res://src/data/first_minute_strategy_catalog.gd").role_tip(MONSTER_CATALOG.get_role(monster_id))
 		button.pressed.connect(
 			_on_summon_slot_pressed.bind(slot_index)
 		)
@@ -2693,6 +2694,7 @@ func _flash_button_feedback(button: BaseButton) -> void:
 func _on_placement_mode_toggled(auto_enabled: bool) -> void:
 	auto_placement = auto_enabled
 	_set_default_battle_status()
+	_refresh_combat_insight(battle.run_metrics.elapsed_seconds,true)
 
 func _on_summon_pressed(monster_type: String) -> void:
 	if mutation_panel.visible:
@@ -2711,6 +2713,9 @@ func _on_summon_pressed(monster_type: String) -> void:
 	status_label.text = "수동 배치: %s 선택됨 · 현재 보이는 전장을 터치해 연속 배치하세요." % _get_monster_name(monster_type)
 
 func _on_summon_result(_monster_type: String, success: bool, message: String) -> void:
+	if success:
+		_insight.record_summon(_monster_type)
+		_refresh_combat_insight(battle.run_metrics.elapsed_seconds,true)
 	_show_battle_toast(message, 1.2 if success else 1.8)
 	_set_default_battle_status()
 
@@ -3394,13 +3399,7 @@ func _on_demon_augment_applied(augment_name: String, _build_summary: String) -> 
 		_refresh_monster_info_panel()
 
 func _get_monster_name(monster_type: String) -> String:
-	match monster_type:
-		"spider":
-			return "거미"
-		"orc":
-			return "오크"
-		_:
-			return "슬라임"
+	return MONSTER_CATALOG.get_monster_name(monster_type)
 
 func _on_hero_leveled_up(_new_level: int) -> void:
 	# 용사 레벨은 상단 HUD와 용사정보 패널에서만 확인한다.
@@ -3414,7 +3413,12 @@ func _on_hero_augment_selected(
 	_reason: String,
 	_build_summary: String
 ) -> void:
-	_insight.record_choice(_chosen_name,battle.run_metrics.elapsed_seconds)
+	var chosen_tags: Array = []
+	for candidate in _candidates:
+		if candidate is Dictionary and String(candidate.get("name","")) == _chosen_name:
+			chosen_tags = candidate.get("tags",[])
+			break
+	_insight.record_choice(_chosen_name,battle.run_metrics.elapsed_seconds,_reason,chosen_tags)
 	_refresh_combat_insight(battle.run_metrics.elapsed_seconds,true)
 	build_label.text = ""
 	if hero_info_panel.visible:
@@ -3422,6 +3426,7 @@ func _on_hero_augment_selected(
 
 var _insight = preload("res://src/systems/combat_insight_model.gd").new()
 var _insight_view: Control
+var _last_strategy_recommendation := ""
 var _result_won := false
 
 func _on_battle_finished(message: String, player_won: bool) -> void:
@@ -3611,6 +3616,8 @@ func _show_stamina_notice(message: String) -> void:
 
 func _install_combat_insight() -> void:
 	_insight.reset(String(battle.current_stage_id))
+	_insight.configure_roster(battle_loadout_ids)
+	_last_strategy_recommendation = ""
 	if battle.tutorial_mode or battle.practice_mode: return
 	if is_instance_valid(_insight_view): _insight_view.queue_free()
 	_insight_view = preload("res://src/ui/combat_insight_view.gd").new()
@@ -3627,7 +3634,23 @@ func _refresh_combat_insight(elapsed: float,force: bool = false) -> void:
 	if not is_instance_valid(_insight_view) or battle.battle_over or not is_instance_valid(battle.hero): return
 	if battle.tutorial_mode or battle.practice_mode: _insight_view.hide(); return
 	if _insight.sample(elapsed,battle.run_metrics.total_damage_dealt,int(battle.hero.get("current_hp")),int(battle.hero.get("max_hp"))) or force:
+		_insight.auto_placement = auto_placement
+		_insight.available_command = battle.command_power
+		_insight.population_full = battle.is_population_full()
+		_insight.recommended_cost = battle.get_monster_cost(_insight.recommended_id) if not _insight.recommended_id.is_empty() else 0.0
 		_insight_view.update_copy(_insight.headline(elapsed),_insight.hint(elapsed))
+		_insight_view.update_details(_insight.detail_copy())
+		_refresh_strategy_recommendation()
+func _refresh_strategy_recommendation() -> void:
+	var id: String = "" if _insight.switched_after_choice else _insight.recommended_id
+	if id == _last_strategy_recommendation: return
+	_last_strategy_recommendation = id
+	for index in mini(summon_slot_name_labels.size(),battle_loadout_ids.size()):
+		var label: Label = summon_slot_name_labels[index]
+		if String(battle_loadout_ids[index]) == id:
+			label.add_theme_color_override("font_color",Color("ffe09a"))
+		else:
+			label.remove_theme_color_override("font_color")
 func _on_result_formation_pressed() -> void:
 	if not battle.battle_over or _scene_load_pending or _lobby_exit_pending: return
 	get_tree().set_meta("campaign_team_return",String(battle.current_stage_data.get("next_stage_id","")) if _result_won else String(battle.current_stage_id))

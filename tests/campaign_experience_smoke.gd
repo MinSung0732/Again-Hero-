@@ -45,7 +45,9 @@ func run() -> void:
 	model.sample(11,60,190,1000); check(model.result_note(false).contains("19%"),"near win realHP evidence")
 	check(model.result_note(true).contains("폭탄쥐"),"next opponent/newtool hook")
 	check(TEAM.default_ids(MC.ORDER) == ["slime","spider","orc"],"starter defaults independent of new monster order")
-	model.reset("stage_1"); model.record_choice("민첩한 발놀림",1); check(model.hint(1) == E.COUNTERS.mobility,"early choice replaces opening hint")
+	model.reset("stage_1"); model.record_choice("민첩한 발놀림",1); model.configure_roster(["slime","spider","orc"]); model.record_summon("slime"); model.record_choice("민첩한 발놀림",1)
+	model.available_command = 24; model.recommended_cost = 7
+	check(model.hint(1).contains("거미"),"early choice recommends an equipped counter")
 	check(TEAM.save_ids([],COLLECTION.get_unlocked_ids()) and TEAM.load_ids(COLLECTION.get_unlocked_ids(),TEAM.default_ids(COLLECTION.get_unlocked_ids())).is_empty(),"intentionally empty formation preserved")
 	check(TEAM.save_ids(["orc","spider"],COLLECTION.get_unlocked_ids()) and TEAM.load_ids(COLLECTION.get_unlocked_ids(),[] ) == ["orc","spider"],"saved order/partial formation preserved")
 	check(E.counter_hint(["area","mobility"],"fallback") == E.COUNTERS.area,"priority hint")
