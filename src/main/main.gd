@@ -1875,7 +1875,7 @@ func _toggle_hero_info() -> void:
 		_open_hero_info()
 
 func _open_hero_info() -> void:
-	if hero_info_animating:
+	if hero_info_animating or hero_info_panel.visible:
 		return
 	_hide_monster_info_immediate()
 	_refresh_hero_info_panel()
@@ -3615,7 +3615,14 @@ func _install_combat_insight() -> void:
 	if is_instance_valid(_insight_view): _insight_view.queue_free()
 	_insight_view = preload("res://src/ui/combat_insight_view.gd").new()
 	_insight_view.install(hud_layer,_open_hero_info)
+	for panel in [hero_info_panel,monster_info_panel]:
+		if not panel.visibility_changed.is_connected(_sync_combat_insight_visibility):
+			panel.visibility_changed.connect(_sync_combat_insight_visibility)
+	_sync_combat_insight_visibility()
 	_refresh_combat_insight(battle.run_metrics.elapsed_seconds,true)
+func _sync_combat_insight_visibility() -> void:
+	if not is_instance_valid(_insight_view): return
+	_insight_view.visible = not (battle.battle_over or battle.tutorial_mode or battle.practice_mode or hero_info_panel.visible or monster_info_panel.visible)
 func _refresh_combat_insight(elapsed: float,force: bool = false) -> void:
 	if not is_instance_valid(_insight_view) or battle.battle_over or not is_instance_valid(battle.hero): return
 	if battle.tutorial_mode or battle.practice_mode: _insight_view.hide(); return

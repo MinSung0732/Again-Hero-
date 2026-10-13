@@ -5,6 +5,9 @@ var advice := Label.new()
 func install(hud: Node,open_details: Callable) -> void:
 	name = "CombatInsight"
 	hud.add_child(self)
+	# GUI hit testing follows sibling order, independently of drawing z_index.
+	# Keep this background shortcut behind the existing detail panels and modals.
+	hud.move_child(self,0)
 	set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	offset_left = 18; offset_right = -18; offset_top = 343; offset_bottom = 414
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
