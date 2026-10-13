@@ -40,7 +40,7 @@ static func frame(kind: String, index: int) -> Texture2D:
 	atlas.atlas = sheet
 	atlas.region = Rect2i(
 		((index - 1) % columns) * CELL,
-		((index - 1) / columns) * CELL,
+		floori(float(index - 1) / float(columns)) * CELL,
 		CELL,
 		CELL
 	)
