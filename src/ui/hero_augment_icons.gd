@@ -19,6 +19,9 @@ static func texture(id: String) -> Texture2D:
 			if not source.is_empty() and cache.has(source): cache[weapon_id] = cache[source]
 		for index in PASSIVE_ORDER.size():
 			cache[PASSIVE_ORDER[index]] = _region(PASSIVES,index%4,int(index/4),4,2)
+		for passive_id in DATA.PASSIVES:
+			var source := String(DATA.PASSIVES[passive_id].get("icon_source",""))
+			if cache.has(source): cache[passive_id] = cache[source]
 		cache["survival_restore"] = cache["survival_vitality"]
 	return cache.get(id,cache["survival_restore"]) as Texture2D
 static func _region(atlas: Texture2D,column: int,row: int,columns: int,rows: int) -> AtlasTexture:

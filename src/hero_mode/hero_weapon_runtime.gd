@@ -45,12 +45,21 @@ var authority: Node
 var visual_clock := 0.0
 var chest_serial := 0
 var last_applied_chest := 0
+var passive_siphon := 0.0
+var siphon_bank := 0.0
+var reach_bonus := 1.0
+var area_bonus := 1.0
+var duration_bonus := 1.0
+var projectile_power := 1.0
+var projectile_bonus := 0
+var base_slow_resistance := 0.0
 var shield_left := 0.0
 var owned_shield := 0.0
 
 func install(host) -> void:
 	hero = host
 	authority = hero.get_parent()
+	if "status_resistances" in hero: base_slow_resistance = float(hero.status_resistances.get("slow",0))
 	base_max_hp = int(hero.max_hp); base_move_speed = float(hero.move_speed)
 	base_pickup_radius = float(hero.exp_pickup_radius); base_exp_multiplier = float(hero.exp_gain_multiplier)
 	for index in range(PROJECTILE_LIMIT):
@@ -82,7 +91,11 @@ func add(id: String) -> bool:
 		resolved.erase(id)
 		hero.build_counts[id] = levels[id]
 		return true
-	if not DATA.PASSIVES.has(id) or int(passives.get(id,0)) >= DATA.MAX_LEVEL: return false
+	if not DATA.PASSIVES.has(id) or not DATA.passive_allowed(id,String(hero.hero_id),weapon_ids): return false
+	if bool(DATA.PASSIVES[id].get("one_shot",false)):
+		if hero.current_hp <= 0 or hero.current_hp >= hero.max_hp: return false
+		hero.heal_direct(roundi(hero.max_hp*float(DATA.PASSIVES[id].value))); return true
+	if int(passives.get(id,0)) >= DATA.passive_limit(id): return false
 	if not passives.has(id) and passives.size() >= DATA.PASSIVE_SLOTS: return false
 	passives[id] = int(passives.get(id,0))+1
 	hero.build_counts[id] = passives[id]
@@ -90,6 +103,13 @@ func add(id: String) -> bool:
 	var rank := int(passives[id])
 	var bonus := float(data.value)*rank
 	match String(data.stat):
+		"siphon": passive_siphon = bonus
+		"slow_resist": hero.status_resistances["slow"] = minf(0.85,base_slow_resistance+bonus)
+		"reach": reach_bonus = 1.0+bonus
+		"area": area_bonus = 1.0+bonus
+		"duration": duration_bonus = 1.0+bonus
+		"projectile_power": projectile_power = 1.0+bonus
+		"multishot": projectile_bonus = mini(2,rank)
 		"power": power = 1.0+bonus
 		"haste": haste = 1.0/(1.0+bonus)
 		"projectile": projectile_speed = 1.0+bonus
@@ -100,6 +120,7 @@ func add(id: String) -> bool:
 		"mobility": hero.move_speed = base_move_speed*(1.0+bonus)
 		"magnet": hero.exp_pickup_radius = base_pickup_radius*(1.0+bonus)
 		"learning": hero.exp_gain_multiplier = base_exp_multiplier*(1.0+bonus)
+	resolved.clear()
 	return true
 
 func candidates() -> Array:
@@ -109,7 +130,11 @@ func candidates() -> Array:
 		if not levels.has(id) and weapon_ids.size() >= DATA.WEAPON_SLOTS: continue
 		options.append(_card(id,int(levels.get(id,0))+1))
 	for id in DATA.PASSIVES:
-		if int(passives.get(id,0)) >= DATA.MAX_LEVEL: continue
+		if not DATA.passive_allowed(id,String(hero.hero_id),weapon_ids): continue
+		if bool(DATA.PASSIVES[id].get("one_shot",false)):
+			if hero.current_hp > 0 and hero.current_hp < hero.max_hp: options.append(_card(id,1))
+			continue
+		if int(passives.get(id,0)) >= DATA.passive_limit(id): continue
 		if not passives.has(id) and passives.size() >= DATA.PASSIVE_SLOTS: continue
 		options.append(_card(id,int(passives.get(id,0))+1))
 	# Guarantee an owned upgrade when available; two other choices still explore.
@@ -127,6 +152,7 @@ func candidates() -> Array:
 
 func _card(id: String, next_level: int) -> Dictionary:
 	var data: Dictionary = DATA.WEAPONS.get(id,DATA.PASSIVES.get(id,{}))
+	if bool(data.get("one_shot",false)): return {"id":id,"name":String(data.name),"description":DATA.description(id,1)}
 	return {"id":id,"name":("무기" if DATA.is_weapon(id) else "보조")+" · "+String(data.name)+" Lv.%d" % next_level,"description":DATA.description(id,next_level)}
 
 func choose(id: String) -> bool:
@@ -225,7 +251,31 @@ func stats_for(id: String) -> Dictionary:
 		if stats.has("summon_patch"):
 			config.merge(stats.summon_patch,true)
 			config["survival_overrides"] = stats.summon_patch
+		for key in ["attack_range","range"]:
+			if config.has(key) and reach_bonus != 1.0:
+				config[key] = float(config[key])*reach_bonus
+				if not config.has("survival_overrides"): config["survival_overrides"] = {}
+				else: config["survival_overrides"] = config.survival_overrides.duplicate()
+				config.survival_overrides[key] = config[key]
 		stats["summon_config"] = config
+		if String(stats.summon_kind) in ["watcher","gatekeeper"]: stats["power"] = float(stats.power)*projectile_power
+	stats["reach_scale"] = float(stats.reach_scale)*reach_bonus
+	var pattern := String(stats.pattern)
+	stats["area_scale"] = area_bonus
+	for key in ["splash_radius","finish_radius"]:
+		if stats.has(key): stats[key] = float(stats[key])*area_bonus
+	if pattern not in DATA.AREA_PATTERNS and stats.has("pulse_count"):
+		stats["pulse_radius_ratio"] = float(stats.get("pulse_radius_ratio",0.6))*area_bonus
+	if pattern in DATA.AREA_PATTERNS:
+		stats["area_scale"] = area_bonus
+		if pattern not in ["beam","capsule"]: stats["reach_scale"] *= area_bonus
+		stats["native_radius_scale"] = float(stats.get("native_radius_scale",1.0))*area_bonus
+	if pattern == "guard": stats["shield_duration"] = float(stats.get("shield_duration",3.0))
+	for key in ["field_duration","summon_duration","shield_duration"]:
+		if stats.has(key): stats[key] = float(stats[key])*duration_bonus
+	if pattern in DATA.PROJECTILE_PATTERNS:
+		stats["power"] = float(stats.power)*projectile_power
+		stats["bonus_hits"] = int(stats.get("bonus_hits",0))+projectile_bonus
 	resolved[id] = stats
 	return stats
 
@@ -259,7 +309,10 @@ func _cast(id: String) -> void:
 	if is_instance_valid(closest): direction = origin.direction_to(closest.global_position)
 	if direction.length_squared() < 0.01: direction = Vector2.RIGHT
 	if identity != null and identity.native_basic(id,closest,damage,reach):
-		if identity.native_cast_succeeded: _after_cast(data,origin,direction,closest,damage,reach,rank)
+		if identity.native_cast_succeeded:
+			for extra in projectile_bonus if pattern in DATA.PROJECTILE_PATTERNS else 0:
+				_launch_projectile(closest,origin,damage,rank,color,data,float(extra+1)*0.06,false,reach)
+			_after_cast(data,origin,direction,closest,damage,reach,rank)
 		return
 	if is_instance_valid(closest) or pattern == "summon" or pattern == "guard" or pattern == "heal": _pose(direction)
 	if identity != null and (is_instance_valid(closest) or pattern in ["summon","guard","heal"]): identity.on_cast(id)
@@ -330,7 +383,7 @@ func _cast(id: String) -> void:
 		else: _hit(actor,roundi(damage*(1.0+struck*float(data.get("chain_growth",0.0)))) if pattern == "chain" else damage,pattern,rank,data)
 		struck += 1
 		if pattern == "chain": _effect(closest.global_position if is_instance_valid(closest) else origin,actor.global_position,20.0,pattern,color,data)
-	if pattern == "beam": _effect(origin,origin+direction*reach,GEOMETRY.beam_half_width(rank),pattern,color,data)
+	if pattern == "beam": _effect(origin,origin+direction*reach,GEOMETRY.beam_half_width(rank)*float(data.get("area_scale",1.0)),pattern,color,data)
 	elif pattern not in ["bolt","chain"]: _effect(origin,origin+direction*reach,reach,pattern,color,data)
 	hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
 
@@ -374,13 +427,13 @@ func _tick_pulses(delta: float) -> void:
 			var actor := raw as Node2D
 			if not TARGETS.is_detectable(actor) or not GEOMETRY.contains(pattern,actor.global_position-Vector2(pulse.origin),pulse.direction,float(pulse.radius),int(pulse.rank),data): continue
 			_hit(actor,int(pulse.damage),pattern,int(pulse.rank),data)
-		_effect(pulse.origin,Vector2(pulse.origin)+Vector2(pulse.direction)*float(pulse.radius),GEOMETRY.beam_half_width(int(pulse.rank)) if pattern == "beam" else float(pulse.radius),pattern,Color(String(data.color)),data)
+		_effect(pulse.origin,Vector2(pulse.origin)+Vector2(pulse.direction)*float(pulse.radius),GEOMETRY.beam_half_width(int(pulse.rank))*float(data.get("area_scale",1.0)) if pattern == "beam" else float(pulse.radius),pattern,Color(String(data.color)),data)
 
 func _cast_fan(data: Dictionary, origin: Vector2, direction: Vector2, reach: float, rank: int, damage: int) -> void:
 	var lines := mini(5,int(data.fan_lines))
 	for index in lines:
 		var aim := direction.rotated((index-(lines-1)*0.5)*0.32)
-		_effect(origin,origin+aim*reach,GEOMETRY.beam_half_width(rank),"beam",Color(String(data.color)),data)
+		_effect(origin,origin+aim*reach,GEOMETRY.beam_half_width(rank)*float(data.get("area_scale",1.0)),"beam",Color(String(data.color)),data)
 	for raw in scratch:
 		var actor := raw as Node2D
 		if not TARGETS.is_detectable(actor): continue
@@ -455,6 +508,13 @@ func _tick_projectiles(delta: float) -> void:
 		elif float(shot.traveled) >= float(shot.reach): shot.active = false
 	if redraw: hero.queue_redraw()
 
+func absorb_damage(amount: int) -> void:
+	if passive_siphon <= 0.0 or amount <= 0 or hero.current_hp <= 0: return
+	if hero.current_hp >= hero.max_hp: siphon_bank = 0.0; return
+	siphon_bank += amount*passive_siphon
+	var recovered := floori(siphon_bank)
+	if recovered > 0: hero.heal_direct(recovered); siphon_bank -= recovered
+
 func _hit(actor: Node2D, damage: int, pattern: String, rank: int, data: Dictionary = {}) -> void:
 	var before := int(actor.get("current_hp"))
 	if before > 0 and float(data.get("execute_ratio",0.0)) > 0.0 and before <= float(actor.get("max_hp"))*float(data.execute_ratio): damage = maxi(damage,before)
@@ -475,6 +535,7 @@ func _effect(a: Vector2,b: Vector2,radius: float,pattern: String,color: Color,da
 	effect.a = a; effect.b = b; effect.radius = radius; effect.pattern = pattern; effect.color = color
 	effect["frames"] = ART.cache.get(String(data.get("effect_dir","")),EMPTY_ART)
 	effect["follow"] = bool(data.get("field_follow",false))
+	effect["area_scale"] = float(data.get("area_scale",1.0))
 	effect.orbit_count = int(data.get("orbit_count",4)); effect.orbit_speed = float(data.get("orbit_speed",3.0)); effect.orbit_ratio = float(data.get("orbit_ratio",0.7))
 	effect["shape"] = GEOMETRY.sector(radius) if pattern == "slash" else GEOMETRY.beam(a.distance_to(b),radius) if pattern == "beam" else GEOMETRY.capsule(a.distance_to(b),radius) if pattern == "capsule" else PackedVector2Array()
 	effect.duration = 0.28
@@ -514,8 +575,8 @@ func draw() -> void:
 				hero.draw_line(a,b,Color(color,ratio*0.3),3.0)
 				hero.draw_circle(a.lerp(b,1.0-ratio),12.0,color)
 			"orbit":
-				var inner := GEOMETRY.orbit_inner(radius,float(effect.orbit_ratio))
-				var outer := GEOMETRY.orbit_outer(radius,float(effect.orbit_ratio))
+				var inner := GEOMETRY.orbit_inner(radius,float(effect.orbit_ratio),float(effect.get("area_scale",1.0)))
+				var outer := GEOMETRY.orbit_outer(radius,float(effect.orbit_ratio),float(effect.get("area_scale",1.0)))
 				hero.draw_arc(a,(inner+outer)*0.5,0,TAU,48,Color(color,ratio*0.14),outer-inner)
 				hero.draw_arc(a,inner,0,TAU,48,color,3.0); hero.draw_arc(a,outer,0,TAU,48,color,3.0)
 				for index in int(effect.orbit_count): hero.draw_circle(a+Vector2.from_angle(visual_clock*float(effect.orbit_speed)+index*TAU/float(effect.orbit_count))*(inner+outer)*0.5,minf(18,(outer-inner)*0.5),color)

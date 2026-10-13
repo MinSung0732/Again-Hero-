@@ -2186,7 +2186,8 @@ const PASSIVES := {
     "name": "투사체속도 증가",
     "description": "발사체 이동속도 +10% / 레벨\n즉시 타격·장판·검격에는 적용되지 않습니다.",
     "stat": "projectile",
-    "value": 0.1
+    "value": 0.1,
+    "restriction": "ranged"
   },
   "survival_haste": {
     "name": "공격속도 증가",
@@ -2217,19 +2218,101 @@ const PASSIVES := {
     "description": "받는 피해 -3% / 레벨 · 최대 30%",
     "stat": "armor",
     "value": 0.03
+  },
+  "survival_siphon": {
+    "name": "피해량 흡수 (피흡)",
+    "description": "피해량 흡수 (피흡)",
+    "stat": "siphon",
+    "value": 0.005,
+    "icon_source": "survival_vitality"
+  },
+  "survival_slow_resist": {
+    "name": "둔화 저항",
+    "description": "둔화 저항",
+    "stat": "slow_resist",
+    "value": 0.04,
+    "icon_source": "survival_armor"
+  },
+  "survival_reach": {
+    "name": "사거리 증가",
+    "description": "사거리 증가",
+    "stat": "reach",
+    "value": 0.04,
+    "icon_source": "survival_magnet",
+    "restriction": "ranged"
+  },
+  "survival_recovery": {
+    "name": "즉시 회복",
+    "description": "즉시 회복",
+    "stat": "recovery",
+    "value": 0.25,
+    "icon_source": "survival_vitality",
+    "one_shot": true
+  },
+  "survival_projectile_power": {
+    "name": "투사체 피해량",
+    "description": "투사체 피해량",
+    "stat": "projectile_power",
+    "value": 0.06,
+    "icon_source": "survival_power",
+    "restriction": "ranged"
+  },
+  "survival_area": {
+    "name": "공격 범위",
+    "description": "공격 범위",
+    "stat": "area",
+    "value": 0.05,
+    "icon_source": "survival_magnet"
+  },
+  "survival_multishot": {
+    "name": "투사체 개수",
+    "description": "투사체 개수",
+    "stat": "multishot",
+    "value": 1.0,
+    "icon_source": "survival_projectile",
+    "restriction": "projectile_weapon",
+    "max_level": 2
+  },
+  "survival_duration": {
+    "name": "무기 지속시간",
+    "description": "무기 지속시간",
+    "stat": "duration",
+    "value": 0.05,
+    "icon_source": "survival_learning"
   }
 }
+const MELEE_HEROES := ["swift_hunter","sword_shield_hero","madness_hero"]
+const PROJECTILE_PATTERNS := ["bolt","burst","piercer","meteor"]
+const AREA_PATTERNS := ["combo","slash","beam","capsule","orbit","nova","frost","poison","guard","heal","ice_pillar","meteor","singularity"]
+static func passive_limit(id: String) -> int:
+	return int(PASSIVES.get(id,{}).get("max_level",MAX_LEVEL))
+static func passive_allowed(id: String, owner: String, owned: Array) -> bool:
+	var restriction := String(PASSIVES[id].get("restriction",""))
+	if restriction == "ranged": return owner not in MELEE_HEROES
+	if restriction == "projectile_weapon":
+		for weapon in owned:
+			if String(WEAPONS[weapon].pattern) in PROJECTILE_PATTERNS: return true
+		return false
+	return true
 static func is_weapon(id: String) -> bool:
 	return WEAPONS.has(id)
 static func weapon_pool(hero_id: String = "") -> Array:
 	return HERO_WEAPONS.get(hero_id,[]) if not hero_id.is_empty() else WEAPONS.keys()
 static func description(id: String, next_level: int) -> String:
-	var rank := clampi(next_level,1,MAX_LEVEL)
+	var rank := clampi(next_level,1,passive_limit(id) if PASSIVES.has(id) else MAX_LEVEL)
 	if PASSIVES.has(id):
 		var passive: Dictionary = PASSIVES[id]
 		var gain := float(passive.value)*100.0
 		var total := gain*rank
 		match String(passive.stat):
+			"recovery": return "최대 HP의 25% 즉시 회복\n보조 장착 칸을 사용하지 않습니다."
+			"multishot": return "발사체 +1개 (누적 +%d개)\n최대 추가 2개 · 투사체 무기에 적용" % rank
+			"siphon": return "실제로 준 피해의 0.5%% 추가 흡수\n총 피흡 %.1f%% · 최대 5%%" % total
+			"slow_resist": return "둔화 강도·지속시간 저항 +4%%\n추가 저항 총 %.0f%%" % total
+			"projectile_power": return "투사체 무기 피해 보너스 +6%%\n총 +%.0f%%" % total
+			"reach": return "무기 사거리 보너스 +4%%\n총 +%.0f%%" % total
+			"area": return "범위 공격의 반경·폭 +5%%\n총 +%.0f%%" % total
+			"duration": return "장판·소환·보호막 지속 +5%%\n총 +%.0f%%" % total
 			"vitality": return "시작 최대 HP의 %.0f%%만큼 최대 체력 증가\n증가한 체력만큼 즉시 회복" % gain
 			"armor": return "받는 피해 감소 +%.0f%%p\n총 피해 감소 %.0f%%" % [gain,minf(total,30.0)]
 			"projectile": return "발사체 속도 보너스 +%.0f%%\n총 +%.0f%% · 즉시 타격·장판 제외" % [gain,total]

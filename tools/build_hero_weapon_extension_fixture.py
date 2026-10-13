@@ -8,6 +8,7 @@ import shutil
 
 parser = argparse.ArgumentParser()
 parser.add_argument('destination', type=Path)
+parser.add_argument('--script', default='tests/hero_weapon_extension_smoke.gd')
 args = parser.parse_args()
 repo = Path(__file__).resolve().parents[1]
 output = args.destination.resolve()
@@ -15,7 +16,7 @@ if output == repo or repo in output.parents:
     raise SystemExit('Fixture must be outside the repository')
 output.mkdir(parents=True, exist_ok=True)
 (output / 'project.godot').write_text('config_version=5\n[application]\nconfig/name="Hero weapon extension fixture"\n[rendering]\nrenderer/rendering_method="gl_compatibility"\n')
-queue = ['tests/hero_weapon_extension_smoke.gd']
+queue = [args.script]
 seen = set()
 while queue:
     path = queue.pop()
