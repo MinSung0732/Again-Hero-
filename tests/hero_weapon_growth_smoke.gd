@@ -169,7 +169,9 @@ func presentation() -> void:
 	var stamina := preload("res://src/systems/stamina_store.gd")
 	var paid := stamina.try_enter("stage_1",true,-1,false)
 	root.get_node("SceneTransition").set("_entry_options",{"stage_id":"stage_1","hero_id":"chemical_hero","hero_entry":paid})
-	var scene = load("res://src/hero_mode/HeroMode.tscn").instantiate(); root.add_child(scene); scene._pause()
+	var scene = load("res://src/hero_mode/HeroMode.tscn").instantiate(); root.add_child(scene)
+	if not scene.entry_ready: await scene.entry_started
+	scene._pause()
 	check(is_instance_valid(scene.battle),"isolated unlocked visual fixture enters HeroMode")
 	if not is_instance_valid(scene.battle): scene.queue_free(); return
 	var runtime = scene.battle.hero.player_weapons

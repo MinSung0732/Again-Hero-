@@ -213,6 +213,7 @@ func ui_capture() -> void:
 		var paid := STAMINA.try_enter("stage_1",true,-1,false)
 		root.get_node("SceneTransition").set("_entry_options",{"stage_id":"stage_1","hero_id":id,"hero_entry":paid})
 		var scene = load("res://src/hero_mode/HeroMode.tscn").instantiate(); root.add_child(scene)
+		if not scene.entry_ready: await scene.entry_started
 		scene._pause(); scene.overlay.hide()
 		var hero = scene.battle.hero; hero.shield_hp = 90; hero.shield_max_hp = 180
 		hero.current_hp = hero.max_hp*3/4

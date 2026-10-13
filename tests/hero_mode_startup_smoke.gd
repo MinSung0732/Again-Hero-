@@ -38,6 +38,11 @@ func run() -> void:
 	var scene = load("res://src/hero_mode/HeroMode.tscn").instantiate()
 	root.add_child(scene)
 	check(is_instance_valid(scene.pad) and is_instance_valid(scene.build) and is_instance_valid(scene.overlay), "all UI creation completes")
+	check(not scene.entry_ready and not scene.is_processing() and not scene.pad.enabled, "loading gates simulation and input")
+	var deadline := Time.get_ticks_msec()+45000
+	while not scene.entry_ready and Time.get_ticks_msec() < deadline:
+		await process_frame
+	check(scene.presentation_ready and scene.entry_ready, "warmup completes before entry")
 	check(is_instance_valid(scene.battle) and scene.director != null, "battle and director initialize")
 	if not is_instance_valid(scene.battle) or scene.director == null:
 		quit(1)

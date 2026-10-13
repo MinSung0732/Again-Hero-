@@ -93,7 +93,7 @@ func _warm_destination() -> void:
 	_view.detail.text = "이미지와 화면 표시 리소스를 미리 준비합니다."
 	PresentationWarmup.progress_changed.connect(_on_warmup_progress)
 	await PresentationWarmup.prepare_common()
-	await PresentationWarmup.prepare_scene(_scene_path)
+	await PresentationWarmup.prepare_scene(_scene_path, _entry_options)
 	PresentationWarmup.progress_changed.disconnect(_on_warmup_progress)
 	_destination_ready = true
 	_destination_warming = false
@@ -120,7 +120,7 @@ func _finish_after_scene_change() -> void:
 	await get_tree().process_frame
 	var scene := get_tree().current_scene
 	if scene != null and scene.has_method("prepare_presentation"):
-		_view.detail.text = "카드와 연출의 첫 화면 표시를 준비합니다."
+		_view.detail.text = "전투 리소스와 첫 화면 표시를 준비합니다."
 		await scene.call("prepare_presentation")
 	await get_tree().process_frame
 	_view.set_progress(1.0)

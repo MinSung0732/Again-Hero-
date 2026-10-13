@@ -13,6 +13,12 @@ const DIRECTOR := preload("res://src/hero_mode/ai_demon_director.gd")
 const SETTINGS := preload("res://src/ui/BattleSettings.tscn")
 const HUD := preload("res://src/ui/hero_survival_hud.gd")
 const REEL := preload("res://src/ui/hero_chest_reel.gd")
+const LOADING := preload("res://src/ui/startup_loading_view.gd")
+signal presentation_prepared
+signal entry_started
+var presentation_ready := false
+var presentation_preparing := false
+var entry_ready := false
 var settings_panel: Control
 var battle_frame: Control
 var battle_frame_enabled := true
@@ -71,7 +77,53 @@ func _ready() -> void:
 		var refunded := original_entry.is_empty() or STAMINA.refund_failed_entry(original_entry)
 		_show_blocked("입장 기록을 확인하지 못했습니다. 로비에서 다시 입장하세요." if refunded else "입장 실패 · 스테미너 반환 저장도 실패했습니다. 로비에서 저장 상태를 확인하세요.")
 		return
+	pad.enabled = false
+	call_deferred("_begin_prepared_entry")
+
+func prepare_presentation() -> void:
+	if presentation_ready or entry.is_empty(): return
+	if presentation_preparing:
+		await presentation_prepared
+		return
+	presentation_preparing = true
+	await PresentationWarmup.prepare_common()
+	await PresentationWarmup.prepare_scene("res://src/hero_mode/HeroMode.tscn", {"hero_id":player_hero_id,"stage_id":stage})
+	if not is_inside_tree(): return
+	_create_battle()
+	await battle.prepare_spawn_resources()
+	# Layout/animation frame preparation stays under the loading overlay.
+	await get_tree().process_frame
+	if not is_inside_tree(): return
+	presentation_ready = true
+	presentation_preparing = false
+	presentation_prepared.emit()
+
+func _begin_prepared_entry() -> void:
+	var local_loading: CanvasLayer
+	if SceneTransition.is_transitioning():
+		await SceneTransition.transition_completed
+	else:
+		# Editor/direct-scene entry has the same loading gate as lobby entry.
+		local_loading = CanvasLayer.new(); local_loading.layer = 10000
+		add_child(local_loading)
+		var loading_view := LOADING.new(); local_loading.add_child(loading_view)
+		loading_view.configure("던전 준비 중", "용사와 몬스터의 전투 리소스를 미리 준비합니다.")
+		var update_progress := func(done: int, total: int): loading_view.set_progress(0.9*float(done)/maxi(total,1))
+		PresentationWarmup.progress_changed.connect(update_progress)
+		await get_tree().process_frame
+		await prepare_presentation()
+		PresentationWarmup.progress_changed.disconnect(update_progress)
+		loading_view.set_progress(1.0)
+		local_loading.queue_free()
+	if not is_inside_tree() or not presentation_ready or not is_instance_valid(battle): return
+	entry_ready = true
 	entry_started_ms = Time.get_ticks_msec(); entry_started_unix = Time.get_unix_time_from_system()
+	pad.enabled = true
+	battle.set_external_pause(false)
+	set_process(true)
+	entry_started.emit()
+
+func _create_battle() -> void:
 	var view := SubViewportContainer.new()
 	view.name = "BattleView"
 	view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -86,6 +138,7 @@ func _ready() -> void:
 	battle = BATTLE_SCENE.instantiate()
 	battle.hero_player_mode = true; battle.hero_player_stage = stage; battle.hero_player_hero_id = player_hero_id
 	viewport.add_child(battle)
+	battle.set_external_pause(true)
 	_install_battle_settings()
 	GameAudio.attach_battle(battle)
 	$HeroBGMManager.start_hero_loop(player_hero_id)
@@ -100,7 +153,6 @@ func _ready() -> void:
 	pad.movement_changed.connect(func(value: Vector2):
 		if is_instance_valid(battle) and is_instance_valid(battle.hero): battle.hero.set_player_move_input(value))
 	_refresh_hud()
-	set_process(true)
 func _build_ui() -> void:
 	var background := ColorRect.new(); background.color = Color("101e2c")
 	background.name = "HeroBackground"
@@ -250,7 +302,7 @@ func _choose(id: String,revision: int) -> void:
 		_show_choices(battle.hero.player_augment_candidates); return
 	pad.enabled = not choosing and not paused
 func _pause() -> void:
-	if not is_instance_valid(battle) or battle.battle_over or choosing or rolling: return
+	if not entry_ready or not is_instance_valid(battle) or battle.battle_over or choosing or rolling: return
 	paused = true; battle.set_external_pause(true); pad.enabled = false; pad.reset()
 	_clear_overlay(); _label(overlay_rows,"일시정지 · 용사 모드",32)
 	_label(overlay_rows,"생존 %.1f초 · 처치 %d · Lv.%d\n%s" % [battle.run_metrics.elapsed_seconds,_kill_count(),battle.hero.level,battle.hero.get_build_summary()],23)

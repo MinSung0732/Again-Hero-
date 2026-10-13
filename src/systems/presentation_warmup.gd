@@ -41,7 +41,7 @@ func prepare_common() -> bool:
 	return await _prepare(paths, true)
 
 
-func prepare_scene(scene_path: String) -> bool:
+func prepare_scene(scene_path: String, entry_options: Dictionary = {}) -> bool:
 	if _busy:
 		return false
 	var paths: Array[String] = []
@@ -82,6 +82,19 @@ func prepare_scene(scene_path: String) -> bool:
 		# Shared height reference used by every hero profile during _ready().
 		paths.append("res://assets/art/heroes/stage1_mage/stage1_mage_spritesheet.png")
 		dirs.assign(["ui_gagebar_frames", "01_large_left_panel", "02_top_right_panel", "03_middle_right_panel", "05_right_bars", "battle_castle_v3"])
+	elif scene_path == "res://src/hero_mode/HeroMode.tscn":
+		var store := preload("res://src/systems/hero_mode_store.gd")
+		var hero_id := String(entry_options.get("hero_id", store.selected_hero()))
+		var profile := HEROES.get_profile(hero_id)
+		# Only the selected character and their six weapons, never all ten kits.
+		_append_texture_directory(String(profile.get("sprite_frame_dir", "")), paths)
+		paths.append(String(profile.get("sprite_sheet_path", "")))
+		paths.append("res://assets/art/heroes/stage1_mage/stage1_mage_spritesheet.png")
+		_append_texture_directory("res://assets/art/effects/levelup/frames", paths)
+		var weapons := preload("res://src/data/hero_weapon_catalog.gd")
+		for weapon_id in weapons.weapon_pool(hero_id):
+			_append_texture_directory(String(weapons.WEAPONS[weapon_id].get("effect_dir", "")), paths)
+		dirs.assign(["01_large_left_panel", "02_top_right_panel", "03_middle_right_panel", "05_right_bars", "battle_castle_v3"])
 	else:
 		return true
 	for dir_name in dirs:
@@ -101,7 +114,7 @@ func prepare_scene(scene_path: String) -> bool:
 	var stage_id := String(state.get("current_stage_id", "stage_1"))
 	var stage := STAGES.get_stage(stage_id)
 	var portrait := String(stage.get("portrait_path", ""))
-	if not portrait.is_empty():
+	if not portrait.is_empty() and scene_path != "res://src/hero_mode/HeroMode.tscn":
 		paths.append(portrait)
 	if scene_path == "res://src/main/Main.tscn":
 		var profile := HEROES.get_profile(String(stage.get("hero_id", "")))

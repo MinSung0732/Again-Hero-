@@ -166,6 +166,7 @@ func actual_ui() -> void:
 	var paid := STAMINA.try_enter("stage_1",true,-1,false)
 	root.get_node("SceneTransition").set("_entry_options",{"stage_id":"stage_1","hero_id":"ranged_rookie","hero_entry":paid})
 	var scene = load("res://src/hero_mode/HeroMode.tscn").instantiate(); root.add_child(scene)
+	if not scene.entry_ready: await scene.entry_started
 	scene._pause()
 	var manager = scene.get_node("HeroBGMManager")
 	for id in CHARACTERS.ORDER:

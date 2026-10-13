@@ -45,6 +45,7 @@ func run() -> void:
 	check(ticket.success,"local sage entry receipt")
 	root.get_node("SceneTransition").set("_entry_options",{"stage_id":"stage_1","hero_id":"sage_astra","hero_entry":ticket})
 	var scene = load("res://src/hero_mode/HeroMode.tscn").instantiate(); root.add_child(scene)
+	if not scene.entry_ready: await scene.entry_started
 	check(is_instance_valid(scene.battle) and scene.battle.hero.hero_id == "sage_astra","actual hero entry accepts locally unlocked sage")
 	scene.queue_free(); await process_frame
 	check(await mode.apply_coupon("normaltest"),"real normaltest coupon exits test save")
