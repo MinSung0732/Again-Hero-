@@ -6,6 +6,8 @@ const UNLOCKS := preload("res://src/systems/mode_unlock_store.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const BATTLE_SCENE := preload("res://src/battle/Battle.tscn")
+const MOVE_PAD := preload("res://src/hero_mode/hero_move_pad.gd")
+const DIRECTOR := preload("res://src/hero_mode/ai_demon_director.gd")
 var battle
 var director
 var pad
@@ -31,6 +33,7 @@ var entry_started_unix := 0.0
 var finished_won := false
 var finished_message := ""
 func _ready() -> void:
+	set_process(false)
 	GameAudio.enter_frontend(self,"lobby")
 	stage = STORE.selected_stage()
 	initial_owner = STORE.owner()
@@ -48,6 +51,7 @@ func _ready() -> void:
 		return
 	entry_started_ms = Time.get_ticks_msec(); entry_started_unix = Time.get_unix_time_from_system()
 	var view := SubViewportContainer.new()
+	view.name = "BattleView"
 	view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	view.offset_top = 225; view.offset_bottom = -360
 	view.stretch = true
@@ -67,15 +71,19 @@ func _ready() -> void:
 	battle.hero.set_camera_view_locked(true)
 	battle.hero.player_augment_requested.connect(_show_choices)
 	battle.battle_finished.connect(_on_finished)
-	director = preload("res://src/hero_mode/ai_demon_director.gd").new()
+	director = DIRECTOR.new()
 	director.install(battle)
 	pad.movement_changed.connect(func(value: Vector2):
 		if is_instance_valid(battle) and is_instance_valid(battle.hero): battle.hero.set_player_move_input(value))
 	_refresh_hud()
+	set_process(true)
 func _build_ui() -> void:
 	var background := ColorRect.new(); background.color = Color("101e2c")
+	background.name = "HeroBackground"
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(background)
+	# HeroBGMManager is already a child: index 1 must stay above this backdrop.
+	move_child(background,0)
 	var top := VBoxContainer.new(); add_child(top)
 	top.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	top.offset_left = 30; top.offset_right = -30; top.offset_top = 24; top.offset_bottom = 220
@@ -87,7 +95,7 @@ func _build_ui() -> void:
 	menu.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	menu.offset_left = -275; menu.offset_right = -25; menu.offset_top = 24; menu.offset_bottom = 90
 	menu.pressed.connect(_pause)
-	pad = preload("res://src/hero_mode/hero_move_pad.gd").new(); add_child(pad)
+	pad = MOVE_PAD.new(); pad.name = "MovePad"; add_child(pad)
 	pad.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	pad.offset_left = 30; pad.offset_right = 300; pad.offset_top = -315; pad.offset_bottom = -45
 	build = _label(self,"이동 · 왼쪽 패드 / WASD / 방향키\n공격·고유 기술은 자동 발동",23)

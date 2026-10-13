@@ -11,30 +11,30 @@ func _ready() -> void:
 func reset() -> void:
 	touch_id = -1; mouse_owned = false; direction = Vector2.ZERO
 	movement_changed.emit(direction); queue_redraw()
-func _set_position(point: Vector2) -> void:
+func _update_direction(point: Vector2) -> void:
 	direction = ((point-size*0.5)/RADIUS).limit_length(1.0)
 	if direction.length() < 0.12: direction = Vector2.ZERO
 	movement_changed.emit(direction); queue_redraw()
 func _gui_input(event: InputEvent) -> void:
 	if not enabled: return
 	if event is InputEventScreenTouch and event.pressed and touch_id == -1:
-		touch_id = event.index; _set_position(event.position); accept_event()
+		touch_id = event.index; _update_direction(event.position); accept_event()
 	elif event is InputEventMouseButton and touch_id == -1 and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed: mouse_owned = true; _set_position(event.position)
+		if event.pressed: mouse_owned = true; _update_direction(event.position)
 		else: reset()
 		accept_event()
 	elif event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and touch_id == -1:
-		_set_position(event.position); accept_event()
+		_update_direction(event.position); accept_event()
 func _input(event: InputEvent) -> void:
 	if mouse_owned:
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 			reset(); get_viewport().set_input_as_handled()
 		elif event is InputEventMouseMotion:
-			_set_position(get_global_transform_with_canvas().affine_inverse()*event.position)
+			_update_direction(get_global_transform_with_canvas().affine_inverse()*event.position)
 			get_viewport().set_input_as_handled()
 	if touch_id < 0: return
 	if event is InputEventScreenDrag and event.index == touch_id:
-		_set_position(get_global_transform_with_canvas().affine_inverse()*event.position)
+		_update_direction(get_global_transform_with_canvas().affine_inverse()*event.position)
 		get_viewport().set_input_as_handled()
 	elif event is InputEventScreenTouch and event.index == touch_id and not event.pressed:
 		reset(); get_viewport().set_input_as_handled()
