@@ -21,7 +21,7 @@ func run() -> void:
 	DirAccess.make_dir_recursive_absolute(folder); S.select_guest(); S.guest_directory = folder
 	var mode := root.get_node_or_null("LocalTestMode")
 	if mode != null: mode.active = false; mode.tutorial_preview = false; mode.test_directory = folder.path_join("isolated")
-	check(GDAT.NORMAL_VISUAL.target_height == 177.8 and GDAT.ELITE_VISUAL.target_height == 203.2 and GDAT.FOX_VISUAL.target_height == 222.25,"all forms127percent")
+	check(GDAT.NORMAL_VISUAL.target_height == 240.03 and GDAT.ELITE_VISUAL.target_height == 203.2 and GDAT.FOX_VISUAL.target_height == 222.25,"normal gumiho additional135percent; elite/fox preserved")
 	var total := 0.0
 	for id in ["stage_1","stage_2","stage_3"]:
 		var stage := C.get_stage(id); total += float(stage.run_duration_seconds)
