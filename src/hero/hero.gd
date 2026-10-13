@@ -156,10 +156,10 @@ const STAGE8_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames"
 const STAGE9_FRAME_DIR := "res://assets/art/heroes/stage9_prist/frames"
 const STAGE10_FRAME_DIR := "res://assets/art/heroes/stage10_sage/frames"
 const CONTEXT_AUDIO := preload("res://src/data/contextual_audio_catalog.gd")
-const STAGE1_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_basic_attack_pixabay.mp3"
-const STAGE1_BARRIER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_barrier_pixabay.mp3"
-const STAGE1_ARCANE_FIELD_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_arcane_field_pixabay.mp3"
-const STAGE1_ARCANE_PIERCER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_arcane_piercer_clean.wav"
+const STAGE1_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_v4_basic.wav"
+const STAGE1_BARRIER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_v4_barrier.wav"
+const STAGE1_ARCANE_FIELD_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_v4_focus.wav"
+const STAGE1_ARCANE_PIERCER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_v4_piercer.wav"
 const STAGE1_HIT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"mage_hit.wav"
 const STAGE1_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_death_pixabay.mp3"
 const STAGE1_LEVEL_UP_AUDIO_PATH := "res://assets/audio/sfx/level_up_rise07_cc0.mp3"
@@ -9305,19 +9305,19 @@ func _ensure_stage1_audio_runtime() -> void:
 		return
 	if not is_instance_valid(stage1_basic_audio):
 		stage1_basic_audio = _create_stage1_audio_player(
-			STAGE1_BASIC_ATTACK_AUDIO_PATH, HERO_SFX_DB_PRIMARY_ATTACK, 1.35
+			STAGE1_BASIC_ATTACK_AUDIO_PATH, HERO_SFX_DB_PRIMARY_ATTACK, 1.0
 		)
 	if not is_instance_valid(stage1_barrier_audio):
 		stage1_barrier_audio = _create_stage1_audio_player(
-			STAGE1_BARRIER_AUDIO_PATH, HERO_SFX_DB_REGULAR_SKILL, 1.08
+			STAGE1_BARRIER_AUDIO_PATH, HERO_SFX_DB_REGULAR_SKILL, 1.0
 		)
 	if not is_instance_valid(stage1_arcane_field_audio):
 		stage1_arcane_field_audio = _create_stage1_audio_player(
-			STAGE1_ARCANE_FIELD_AUDIO_PATH, HERO_SFX_DB_REGULAR_SKILL, 0.96
+			STAGE1_ARCANE_FIELD_AUDIO_PATH, HERO_SFX_DB_REGULAR_SKILL, 1.0
 		)
 	if not is_instance_valid(stage1_arcane_piercer_audio):
 		stage1_arcane_piercer_audio = _create_stage1_audio_player(
-			STAGE1_ARCANE_PIERCER_AUDIO_PATH, HERO_SFX_DB_HEAVY_SKILL, 1.08
+			STAGE1_ARCANE_PIERCER_AUDIO_PATH, HERO_SFX_DB_HEAVY_SKILL, 1.0
 		)
 	if not is_instance_valid(stage1_hit_audio):
 		stage1_hit_audio = _create_stage1_audio_player(
