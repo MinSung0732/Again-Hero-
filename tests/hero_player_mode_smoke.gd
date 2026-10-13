@@ -1,0 +1,71 @@
+extends SceneTree
+const SCOPE := preload("res://src/systems/account_save_scope.gd")
+const STORE := preload("res://src/systems/hero_mode_store.gd")
+const STAMINA := preload("res://src/systems/stamina_store.gd")
+const DATA := preload("res://src/data/hero_mode_catalog.gd")
+const PROFILES := preload("res://src/data/hero_profiles.gd")
+const STAGES := preload("res://src/data/stage_catalog.gd")
+const AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
+var checks := 0
+var failures := 0
+var selected_events := 0
+func _initialize() -> void: call_deferred("run")
+func check(ok: bool,label: String) -> void:
+	checks += 1
+	if not ok: failures += 1; push_error("HERO_MODE: "+label)
+func run() -> void:
+	root.get_node("CloudStore").stop(); root.get_node("LoginGateway").remember_session_enabled = false
+	SCOPE.select_guest(); SCOPE.guest_directory = "user://hero_mode_"+str(Time.get_ticks_usec()); DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
+	var config := ConfigFile.new(); config.set_value("team","monster_ids","orc,spider")
+	check(SCOPE.save_config(config,"user://team_loadout.cfg") == OK,"starter fixture")
+	check(STORE.select_stage("stage_1") and STORE.selected_stage() == "stage_1","character saves")
+	check(not STORE.select_stage("invalid"),"invalid character refused")
+	var pool := STORE.skill_pool("stage_1")
+	check(pool.size() >= 2,"authored skill pool")
+	check(STORE.set_skills("stage_1",[pool[0],pool[1]]) and STORE.skills("stage_1").size() == 2,"two starting augments")
+	check(not STORE.set_skills("stage_1",[pool[0],pool[0]]),"duplicate skill refused")
+	check(not STORE.set_skills("stage_1",["unknown"]),"unknown skill refused")
+	check(not STORE.set_skills("stage_1",[pool[0],pool[1],pool[2]]),"three skills refused")
+	check(SCOPE.load_config(config,"user://team_loadout.cfg") == OK and config.get_value("team","monster_ids","") == "orc,spider","demon loadout preserved")
+	var progress := ConfigFile.new(); progress.set_value("meta","research_points",1000)
+	check(SCOPE.save_config(progress,"user://stage_progress.cfg") == OK,"growth funds fixture")
+	check(STORE.purchase_growth("stage_1","vitality") and STORE.growth_level("stage_1","vitality") == 1,"growth atomic purchase")
+	SCOPE.load_config(progress,"user://stage_progress.cfg")
+	check(int(progress.get_value("meta","research_points",0)) == 800,"exact growth debit")
+	var profile := PROFILES.get_profile(String(STAGES.get_stage("stage_1").hero_id)); var old_hp: int = profile.max_hp
+	STORE.apply_growth("stage_1",profile); check(profile.max_hp == roundi(old_hp*1.02),"growth affects hero")
+	check(STORE.growth_level("stage_2","vitality") == 0,"growth per character")
+	var ticket := STAMINA.try_enter("stage_1",true)
+	var entry := STAMINA.claim_battle_entry("stage_1")
+	check(ticket.success and not entry.is_empty(),"real entry receipt")
+	check(not STORE.award_run("stage_1",entry,5.0,1,true).success,"premature victory refused")
+	var grant := STORE.award_run("stage_1",entry,DATA.DURATION,20,true)
+	check(grant.success and grant.research == DATA.WIN_RESEARCH,"survival reward")
+	var repeated := STORE.award_run("stage_1",entry,DATA.DURATION,20,true)
+	check(repeated.success and repeated.research == 0,"receipt duplicate protected")
+	var wrong := entry.duplicate(); wrong.owner = "wrong"
+	check(not STORE.award_run("stage_1",wrong,DATA.DURATION,20,true).success,"account boundary")
+	var hero = load("res://src/hero/Hero.tscn").instantiate()
+	hero.player_controlled = true; hero.configure_profile(PROFILES.get_profile(String(STAGES.get_stage("stage_1").hero_id)))
+	root.add_child(hero); hero.set_physics_process(false)
+	hero.set_player_move_input(Vector2(99,99)); check(hero.player_move_input.length() <= 1.0001,"movement bounded")
+	hero.set_player_move_input(Vector2(NAN,0)); check(hero.player_move_input == Vector2.ZERO,"nonfinite movement rejected")
+	hero.set_player_move_input(Vector2.ZERO); check(hero._player_move_velocity() == Vector2.ZERO,"no idle AI wander")
+	hero.augment_selected.connect(func(_l,_c,_n,_r,_b): selected_events += 1)
+	hero.gain_exp(hero.exp_to_next_level)
+	check(not hero.player_augment_candidates.is_empty() and selected_events == 0,"level up waits for player")
+	check(not hero.choose_player_augment("invalid"),"out-of-candidate selection refused")
+	var id := String(hero.player_augment_candidates[0].id)
+	check(hero.choose_player_augment(id) and hero.build_counts.has(id),"authored augment applies")
+	check(not hero.choose_player_augment(id),"no double application")
+	hero.set_camera_view_locked(true)
+	hero.set_camera_view_locked(false)
+	check(not hero.follow_camera.top_level,"hero tracking cannot be unlocked")
+	hero.queue_free(); await process_frame
+	var original_scope := SCOPE.guest_directory
+	SCOPE.guest_directory = original_scope+"_other"; DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
+	check(STORE.growth_level("stage_1","vitality") == 0 and STORE.skills("stage_1").is_empty(),"other guest has no hero loadout or growth")
+	check(not STORE.award_run("stage_1",entry,DATA.DURATION,20,true).success,"old guest receipt refused")
+	SCOPE.guest_directory = original_scope
+	print("HERO_PLAYER_MODE_SMOKE checks=",checks," failures=",failures)
+	quit(1 if failures else 0)

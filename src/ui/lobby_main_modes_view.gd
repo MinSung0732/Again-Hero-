@@ -91,7 +91,10 @@ func install(host) -> void:
 func style_button(target: Button, selected: bool, icon_id: String = "", font_size: int = 25) -> void:
 	var style: StyleBoxTexture = active_style if selected else idle_style
 	var frame := preload("res://src/ui/pixel_panel_skin.gd").button_style(style) as StyleBoxFlat
-	frame.bg_color = Color("523068") if selected else Color("281832")
+	if perspective == "hero":
+		frame.bg_color = Color("24556b") if selected else Color("162f42")
+	else:
+		frame.bg_color = Color("523068") if selected else Color("281832")
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		target.add_theme_stylebox_override(state, frame)
 	target.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
@@ -145,6 +148,9 @@ func choose_perspective(value: String) -> void:
 		refresh()
 		return
 	perspective = value
+	if value == "hero":
+		var selected := preload("res://src/systems/hero_mode_store.gd").selected_stage(current_stage())
+		lobby.selected_stage_index = maxi(lobby.stage_ids.find(selected),0)
 	lobby._refresh_stage_card()
 
 func toggle_ranked() -> void:
@@ -165,6 +171,9 @@ func change_character(direction: int) -> void:
 
 func open_characters() -> void:
 	if not UNLOCKS.unlocked("hero", current_stage()):
+		return
+	if not ranked:
+		lobby._switch_tab("team")
 		return
 	var picker := AcceptDialog.new()
 	picker.title = "용사 선택 · 미리보기"
@@ -206,6 +215,7 @@ func blocks_entry() -> bool:
 		return true
 	if not ranked and perspective == "demon" and difficulty == "easy":
 		return false
+	if not ranked and perspective == "hero" and difficulty == "easy": return false
 	notice.dialog_text = "랭킹 매칭은 준비 중입니다. 실제 매칭은 아직 시작되지 않습니다." if ranked else "용사 시점과 어려움 난이도는 준비 중입니다. 현재는 마왕 · 쉬움으로 입장할 수 있습니다."
 	notice.popup_centered(Vector2i(640, 180))
 	return true
@@ -219,6 +229,8 @@ func refresh() -> void:
 		perspective = "demon"
 	if not UNLOCKS.unlocked("hard", current_stage()):
 		difficulty = "easy"
+	if perspective == "hero": difficulty = "easy"
+	if lobby.hero_lobby_view != null: lobby.hero_lobby_view.set_active(perspective == "hero")
 	for item in [[demon_button, perspective == "demon", "demon"], [hero_button, perspective == "hero", "hero"], [ranked_button, ranked, "rank"], [easy_button, difficulty == "easy", "easy"], [hard_button, difficulty == "hard", "hard"]]:
 		item[0].set_pressed_no_signal(item[1])
 		style_button(item[0], item[1], item[2])
@@ -230,12 +242,24 @@ func refresh() -> void:
 			item[0].icon = icons.lock
 	schedule_unlock()
 	difficulty_row.visible = not ranked
-	character_button.visible = ranked and perspective == "hero"
+	character_button.visible = perspective == "hero"
 	var section: Control = lobby.get_node("SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox")
 	section.get_node("SectionTitle").text = "랭킹 매칭" if ranked else "침입자 기록"
 	section.get_node("SectionSubtitle").text = "시점과 캐릭터를 선택하세요 · 매칭 기능 준비 중" if ranked else "대상 용사를 선택하고, 던전에 입장하세요."
 	if not ranked:
-		if perspective == "hero" or difficulty == "hard":
+		if perspective == "hero":
+			var stage := current_stage()
+			preload("res://src/systems/hero_mode_store.gd").select_stage(stage)
+			lobby.enter_stage_button.text = "용사 도전 · 3분 생존"
+			lobby.stage_description_label.text = "이동·증강 직접 선택 / 공격 자동\nAI 마왕의 군단을 피해 3분 동안 생존하세요."
+			lobby.stage_status_label.text = "AI 마왕\n3분 생존 도전"
+			lobby.stage_reward_label.text = "승리 보상\n연구 20 · 골드 12"
+			lobby.stage_description_label.get_parent().get_node("RepeatReward").text = "시작 스킬\n캐릭 편성에서 2개 선택"
+			section.get_node("SectionTitle").text = "용사 원정"
+			section.get_node("SectionSubtitle").text = "플레이할 용사를 선택하세요."
+			hard_button.disabled = true
+			character_button.text = "캐릭 편성  ›"
+		elif difficulty == "hard":
 			lobby.enter_stage_button.text = "던전 입장 · 준비 중"
 		return
 	lobby.stage_selector_button.text = "SEASON · 준비 중"

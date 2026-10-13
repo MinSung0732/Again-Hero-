@@ -26,6 +26,34 @@ signal combat_damage_received(hp_damage: int)
 signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
 signal leveled_up(new_level: int)
 signal augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String)
+signal player_augment_requested(candidates: Array)
+var player_controlled := false
+var player_move_input := Vector2.ZERO
+var player_input_suspended := true
+var player_moved_this_frame := false
+var player_augment_candidates: Array = []
+func set_player_move_input(value: Vector2) -> void:
+	player_move_input = value.limit_length(1.0) if value.is_finite() else Vector2.ZERO
+func _player_move_velocity() -> Vector2:
+	var speed := move_speed*_get_effective_move_multiplier()*_get_purifier_move_speed_multiplier()
+	if hero_archetype == "alchemist_chemical": speed *= _get_alchemist_field_speed_multiplier()
+	if fighter_guard_active: speed *= clampf(float(ultimate_config.get("move_speed_multiplier",0.62))+fighter_guard_move_multiplier_bonus,0.25,1.0)
+	return player_move_input*speed
+func choose_player_augment(id: String) -> bool:
+	if not player_controlled or current_hp <= 0 or player_augment_candidates.is_empty(): return false
+	var chosen: Dictionary = {}
+	for candidate in player_augment_candidates:
+		if String(candidate.get("id","")) == id: chosen = candidate; break
+	if chosen.is_empty(): return false
+	var candidates := player_augment_candidates
+	player_augment_candidates = []
+	_apply_augment(chosen)
+	augment_selected.emit(level,candidates,String(chosen.get("name",id)),"플레이어 선택",get_build_summary())
+	while current_exp >= exp_to_next_level and player_augment_candidates.is_empty():
+		current_exp -= exp_to_next_level
+		_level_up()
+	progression_changed.emit(level,current_exp,exp_to_next_level)
+	return true
 signal ultimate_used(ultimate_id: String, ultimate_name: String)
 signal conditional_skill_unlocked(skill_id: String, skill_name: String, payload: Dictionary)
 
@@ -913,6 +941,8 @@ var status_overlay: Node2D
 @onready var alchemist_philosopher_audio: AudioStreamPlayer = $AlchemistPhilosopherAudio
 
 func configure_profile(profile: Dictionary) -> void:
+	player_move_input = Vector2.ZERO
+	player_augment_candidates.clear()
 	if profile.is_empty():
 		return
 
@@ -1784,6 +1814,7 @@ func _attach_status_effect_visual(effect_type: String) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	player_moved_this_frame = false
 	silence_timer = maxf(silence_timer-delta,0.0)
 	set_meta("silence_active", silence_timer > 0.0)
 	imposed_skill_cooldown = maxf(imposed_skill_cooldown-delta,0.0)
@@ -1793,6 +1824,8 @@ func _physics_process(delta: float) -> void:
 	var immobilized := petrify_timer > 0.0
 	var anchor := global_position
 	_physics_process_actions(delta)
+	if player_controlled and not player_input_suspended and not player_moved_this_frame and current_hp > 0 and not is_dying and not channeling and not purifier_gungnir_casting and not fighter_charge_active and not rogue_assassination_active:
+		_move_and_slide_with_obstacle_escape()
 	if immobilized and current_hp > 0 and not is_dying:
 		global_position = anchor
 		velocity = Vector2.ZERO
@@ -1800,6 +1833,7 @@ func _physics_process(delta: float) -> void:
 	_clamp_to_battlefield()
 
 func _physics_process_actions(delta: float) -> void:
+	player_input_suspended = true
 	# Discard stale intent even when death/status/skill gates return early.
 	action_intent.clear()
 	# Drop cached targets before any archetype, skill or movement decision.
@@ -1832,7 +1866,8 @@ func _physics_process_actions(delta: float) -> void:
 	if charm_was_active:
 		_tick_charm_state(delta)
 		return
-	_update_combat_reposition(delta)
+	player_input_suspended = false
+	if not player_controlled: _update_combat_reposition(delta)
 
 	if hero_archetype == "rogue_combo":
 		_physics_process_rogue(delta)
@@ -7778,6 +7813,7 @@ func _apply_camera_limits() -> void:
 
 
 func set_camera_view_locked(locked: bool) -> void:
+	if player_controlled: locked = true
 	if not is_instance_valid(follow_camera):
 		return
 
@@ -7803,6 +7839,7 @@ func center_camera_on_hero() -> void:
 	follow_camera.force_update_scroll()
 
 func pan_camera_by_screen_delta(screen_delta: Vector2) -> void:
+	if player_controlled: return
 	if (
 		not is_instance_valid(follow_camera)
 		or not follow_camera.top_level
@@ -7849,6 +7886,9 @@ func _clamp_manual_camera_center(center: Vector2) -> Vector2:
 	return center
 
 func _move_without_monsters() -> void:
+	if player_controlled:
+		_execute_ai_movement(_player_move_velocity())
+		return
 	var current_move_speed := move_speed * _get_purifier_move_speed_multiplier()
 	if hero_archetype == "alchemist_chemical":
 		current_move_speed *= _get_alchemist_field_speed_multiplier()
@@ -8266,8 +8306,13 @@ func _apply_ranged_boundary_escape(
 
 
 func _move_and_slide_with_obstacle_escape() -> void:
+	if player_controlled: player_moved_this_frame = true
 	if petrify_timer > 0.0:
 		velocity = Vector2.ZERO
+		return
+	if player_controlled and not player_input_suspended and not fighter_charge_active and not rogue_assassination_active:
+		velocity = _player_move_velocity()
+		move_and_slide()
 		return
 	var intended_velocity := velocity
 	var intended_speed := intended_velocity.length()
@@ -15341,7 +15386,7 @@ func gain_exp(amount: int) -> void:
 	)
 	current_exp += gained_exp
 
-	while current_exp >= exp_to_next_level:
+	while current_exp >= exp_to_next_level and (not player_controlled or player_augment_candidates.is_empty()):
 		current_exp -= exp_to_next_level
 		_level_up()
 
@@ -16390,6 +16435,14 @@ func _level_up() -> void:
 			"모든 Hero 증강이 최대 중첩에 도달",
 			get_build_summary()
 		)
+		queue_redraw()
+		return
+
+	if player_controlled:
+		player_augment_candidates = candidates
+		health_changed.emit(current_hp,max_hp)
+		leveled_up.emit(level)
+		player_augment_requested.emit(candidates)
 		queue_redraw()
 		return
 

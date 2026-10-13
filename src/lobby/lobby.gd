@@ -269,6 +269,7 @@ var exploration_rewards_view: Control
 var missions_view: Control
 var main_tools_view: Control
 var main_modes_view: RefCounted
+var hero_lobby_view: RefCounted
 var gameplay_settings_path := "user://gameplay_settings.cfg"
 var _portrait_normalization_count := 0
 var _monster_icon_texture_cache: Dictionary = {}
@@ -370,6 +371,12 @@ func _ready() -> void:
 	PIXEL_PANEL_SKIN.apply_tree(self)
 	main_modes_view = load("res://src/ui/lobby_main_modes_view.gd").new()
 	main_modes_view.install(self)
+	hero_lobby_view = preload("res://src/ui/hero_lobby_view.gd").new()
+	hero_lobby_view.install(self)
+	if get_tree().has_meta("hero_lobby_return"):
+		get_tree().remove_meta("hero_lobby_return")
+		main_modes_view.perspective = "hero"
+		selected_stage_index = maxi(stage_ids.find(preload("res://src/systems/hero_mode_store.gd").selected_stage()),0)
 	stamina_view = load("res://src/ui/lobby_stamina_view.gd").new()
 	stamina_view.install(self)
 	main_tools_view = preload("res://src/ui/lobby_tool_trays.gd").new()
@@ -2475,9 +2482,9 @@ func _switch_tab(tab_id: String) -> void:
 	research_tab.visible = tab_id == "research"
 	other_tab.visible = tab_id == "other"
 
-	if tab_id == "shop":
+	if tab_id == "shop" and not (hero_lobby_view != null and hero_lobby_view.active):
 		_rebuild_shop_list()
-	elif tab_id == "research":
+	elif tab_id == "research" and not (hero_lobby_view != null and hero_lobby_view.active):
 		_rebuild_research_list()
 	elif tab_id == "other":
 		_sync_audio_settings_ui()
@@ -2492,6 +2499,7 @@ func _switch_tab(tab_id: String) -> void:
 	_refresh_nav_button(research_button, tab_id == "research")
 	_refresh_nav_button(other_button, tab_id == "other")
 	_refresh_header()
+	if hero_lobby_view != null and hero_lobby_view.active: hero_lobby_view.rebuild(tab_id)
 
 func _show_other_settings() -> void:
 	if settings_view != null:
@@ -2554,7 +2562,11 @@ func _on_sfx_mute_toggled(enabled: bool) -> void:
 func _refresh_nav_button(button: Button, selected: bool) -> void:
 	var style := PIXEL_PANEL_SKIN.button_style(nav_button_active_style if selected else nav_button_style)
 	if style is StyleBoxFlat:
-		style.bg_color = Color("523068") if selected else Color("281832")
+		if hero_lobby_view != null and hero_lobby_view.active:
+			style.bg_color = Color("24556b") if selected else Color("162f42")
+			style.border_color = Color("edcf7b") if selected else Color("608b9b")
+		else:
+			style.bg_color = Color("523068") if selected else Color("281832")
 	button.add_theme_stylebox_override("normal", style)
 	button.add_theme_stylebox_override("hover", style)
 	button.add_theme_stylebox_override("pressed", style)
@@ -4410,7 +4422,7 @@ func _refresh_header() -> void:
 	var highest := int(state.get("highest_unlocked_stage", 1))
 	var gold_text := _format_shop_number(_get_shop_gold())
 
-	title_label.text = "용사, 또 너야?"
+	title_label.text = "용사 원정대" if hero_lobby_view != null and hero_lobby_view.active else "용사, 또 너야?"
 	resource_label.text = "골드  %s" % gold_text
 	progress_label.text = "최고 해금  Stage %d" % highest
 
@@ -5058,6 +5070,9 @@ func _enter_selected_stage(allow_unregistered: bool = false) -> void:
 	var stage_number := int(stage.get("number", 999))
 	if not STAGE_PROGRESS.is_stage_unlocked(stage_number):
 		return
+	if main_modes_view != null and main_modes_view.perspective == "hero":
+		_enter_hero_stage(stage_id)
+		return
 
 	if not ResourceLoader.exists(BATTLE_SCENE_PATH):
 		return
@@ -5083,6 +5098,19 @@ func _enter_selected_stage(allow_unregistered: bool = false) -> void:
 		_begin_threaded_scene_change(BATTLE_SCENE_PATH)
 
 
+func _enter_hero_stage(stage_id: String) -> void:
+	var scene := preload("res://src/data/hero_mode_catalog.gd").SCENE
+	if not ResourceLoader.exists(scene): return
+	_stamina_entry = STAMINA.try_enter(stage_id,LocalTestMode.active)
+	if not bool(_stamina_entry.get("success",false)):
+		stamina_view.show_entry_notice("스테미너 또는 저장 상태를 확인하세요.")
+		return
+	_battle_entry_pending = true
+	enter_stage_button.disabled = true
+	await stamina_view.play_entry_cost(int(_stamina_entry.get("charged",0)))
+	if not is_inside_tree(): return
+	if not SceneTransition.change_scene(scene,"용사 도전 준비 중...",{"stage_id":stage_id,"hero_entry":_stamina_entry}):
+		_refund_failed_stamina_entry()
 func _begin_threaded_scene_change(path: String) -> void:
 	if _scene_load_pending or path.is_empty():
 		return

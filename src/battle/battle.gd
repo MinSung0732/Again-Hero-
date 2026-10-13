@@ -211,6 +211,8 @@ var active_treasure_chests: Dictionary = {}
 var active_magnet_items: Dictionary = {}
 var exp_magnet_until_msec: int = 0
 var battle_over: bool = false
+var hero_player_mode := false
+var hero_player_stage := "stage_1"
 var external_pause: bool = false
 
 var max_command: float = BASE_MAX_COMMAND
@@ -792,7 +794,7 @@ func _start_battle() -> void:
 	battle_entity_registry.begin_session(battle_command_router.get_session_id())
 	demon_augment_revision += 1
 	mutation_choice_revision += 1
-	var registered_id := TRANSCENDENCE_STORE.load_id()
+	var registered_id := "" if hero_player_mode else TRANSCENDENCE_STORE.load_id()
 	transcendent_actor = null
 	raw_allied_summons = 0
 	raw_real_tank_summons = 0
@@ -898,12 +900,13 @@ func _start_battle() -> void:
 	mutation_director.reset()
 	monster_summon_costs.clear()
 	special_summon_counts.clear()
-	_load_monster_collection_upgrades()
+	if not hero_player_mode: _load_monster_collection_upgrades()
 
-	_apply_permanent_research()
+	if not hero_player_mode: _apply_permanent_research()
 
 	var progress_state: Dictionary = STAGE_PROGRESS.load_state()
 	current_stage_id = "stage_1" if practice_mode else String(progress_state.get("current_stage_id", "stage_1"))
+	if hero_player_mode: current_stage_id = hero_player_stage
 	current_stage_data = STAGE_CATALOG.get_stage(current_stage_id)
 
 	if current_stage_data.is_empty():
@@ -936,6 +939,9 @@ func _start_battle() -> void:
 		60.0
 	)
 	stage_director.reset(current_stage_data)
+	if hero_player_mode:
+		run_time_limit_seconds = preload("res://src/data/hero_mode_catalog.gd").DURATION
+		command_power = preload("res://src/data/hero_mode_catalog.gd").STARTING_COMMAND
 
 	var hero_id: String = String(current_stage_data.get("hero_id", "ranged_rookie"))
 	current_hero_profile = _apply_stage_hero_balance(
@@ -949,11 +955,13 @@ func _start_battle() -> void:
 	var hero_ai_settings := HERO_AI_PROFILES.get_profile(hero_ai_profile_id)
 	if not hero_ai_settings.is_empty():
 		current_hero_profile["ai_settings"] = hero_ai_settings
+	if hero_player_mode: preload("res://src/systems/hero_mode_store.gd").apply_growth(current_stage_id,current_hero_profile)
 
 	if practice_mode:
 		current_hero_profile = HERO_PROFILES.get_profile("ranged_rookie").duplicate(true)
 		current_hero_profile["display_name"] = "연습 더미 · HP ∞"
 	hero = HERO_SCENE.instantiate() as Node2D
+	if hero_player_mode: hero.set("player_controlled",true)
 	if practice_mode:
 		hero.set_script(PRACTICE_HERO)
 	if hero.has_method("configure_profile"):
@@ -965,6 +973,9 @@ func _start_battle() -> void:
 	add_child(hero)
 	_activate_battle_entity(hero)
 	hero.position = current_map_size * 0.5
+	if hero_player_mode:
+		for id in preload("res://src/systems/hero_mode_store.gd").skills(current_stage_id):
+			hero.call("_apply_augment",preload("res://src/data/hero_augment_catalog.gd").get_augment(String(id)))
 	# add_child() runs Hero._ready(), which reapplies the profile visual and
 	# restores HeroSprite.z_index. Normalize Demon Castle depth only after _ready()
 	# so the hero participates in Battle's Y-sort just like monsters/props.
@@ -5347,6 +5358,9 @@ func _on_hero_died() -> void:
 		return
 	if battle_over:
 		return
+	if hero_player_mode:
+		_finish_battle("용사 패배 · 군단의 포위를 뚫지 못했습니다.",false)
+		return
 
 	_emit_stats(0)
 
@@ -5400,6 +5414,9 @@ func _on_run_time_up() -> void:
 		return
 	if battle_over:
 		return
+	if hero_player_mode:
+		_finish_battle("용사 승리 · AI 마왕의 3분 공세를 버텨냈습니다!",true)
+		return
 
 	var hero_name := String(current_hero_profile.get("display_name", "용사"))
 	var result_text := "시간 초과!\n%s가 제한시간을 버텨냈습니다." % hero_name
@@ -5408,6 +5425,9 @@ func _on_run_time_up() -> void:
 
 func finish_abandoned_run() -> bool:
 	if battle_over:
+		return true
+	if hero_player_mode:
+		_finish_battle("용사 도전 중단",false)
 		return true
 	var reward_text := _grant_run_research_reward(false)
 	if _run_reward_save_failed:
@@ -5529,7 +5549,7 @@ func _finish_battle(message: String, player_won: bool) -> void:
 	battle_finished.emit(message, player_won)
 
 func _record_mission_action(event: String, amount: float) -> void:
-	if _mission_service != null and not practice_mode and not tutorial_mode and not LocalTestMode.active:
+	if _mission_service != null and not hero_player_mode and not practice_mode and not tutorial_mode and not LocalTestMode.active:
 		_mission_service.record(event, amount)
 
 func _exit_tree() -> void:
