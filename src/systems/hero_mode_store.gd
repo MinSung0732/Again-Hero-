@@ -112,12 +112,17 @@ static func character_unlocked(subject: String) -> bool:
 	var data: Dictionary = CHARACTERS.get_character(id)
 	if data.is_empty(): return false
 	if id == CHARACTERS.DEFAULT_HERO: return true
+	if all_characters_unlocked_for_test(): return true
 	var collection := ConfigFile.new()
 	if not _load(collection): return false
 	if bool(collection.get_value("hero_collection",id,false)): return true
 	var config := ConfigFile.new()
 	if not _load(config,"user://stage_progress.cfg"): return false
 	return bool(config.get_value("hard_cleared",String(data.stage),false))
+static func all_characters_unlocked_for_test() -> bool:
+	var tree := Engine.get_main_loop() as SceneTree
+	var mode := tree.root.get_node_or_null("LocalTestMode") if tree != null else null
+	return mode != null and bool(mode.call("has_all_heroes_unlocked"))
 static func set_character_owned_in_config(config: ConfigFile,id: String) -> bool:
 	# Future summon transactions can debit currency and grant ownership atomically.
 	if CHARACTERS.get_character(id).is_empty(): return false

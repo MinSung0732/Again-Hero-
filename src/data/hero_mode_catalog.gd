@@ -7,6 +7,27 @@ const MONSTER_LIMIT := 72
 const STARTING_COMMAND := 48.0
 const EXP_REWARD_RATIO := 0.25
 const PROJECTILE_SPEED := 720.0
+# Role/rarity stats stay canonical; survival applies a spawn-time envelope.
+# Hold the opening 30 seconds, then interpolate without phase-boundary jumps.
+const MONSTER_SCALE_FIELDS := {"max_hp":"hp","attack_damage":"damage","explosion_damage":"damage","move_speed":"speed"}
+const MONSTER_GROWTH := [
+	{"time":0.0,"hp":0.18,"damage":0.45,"speed":0.80},
+	{"time":30.0,"hp":0.18,"damage":0.45,"speed":0.80},
+	{"time":120.0,"hp":0.50,"damage":0.65,"speed":0.85},
+	{"time":300.0,"hp":1.10,"damage":0.95,"speed":0.95},
+	{"time":600.0,"hp":2.10,"damage":1.25,"speed":1.05},
+	{"time":900.0,"hp":3.20,"damage":1.60,"speed":1.15},
+]
+static func monster_multiplier(stat: String, elapsed: float) -> float:
+	if not MONSTER_GROWTH[0].has(stat) or stat == "time": return 1.0
+	var clock := clampf(elapsed,0.0,DURATION) if is_finite(elapsed) else 0.0
+	for index in range(1,MONSTER_GROWTH.size()):
+		var next: Dictionary = MONSTER_GROWTH[index]
+		if clock <= float(next.time):
+			var previous: Dictionary = MONSTER_GROWTH[index-1]
+			var ratio := (clock-float(previous.time))/(float(next.time)-float(previous.time))
+			return lerpf(float(previous[stat]),float(next[stat]),ratio)
+	return float(MONSTER_GROWTH[-1][stat])
 static func required_exp(target_level: int) -> int:
 	var rank := maxi(target_level-1,0)
 	return roundi(20.0+10.0*rank+0.5*rank*rank)

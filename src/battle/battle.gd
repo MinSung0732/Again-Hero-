@@ -1,6 +1,7 @@
 extends Node2D
 
 const BATTLE_SESSION := preload("res://src/data/battle_session_catalog.gd")
+const HERO_SURVIVAL := preload("res://src/data/hero_mode_catalog.gd")
 const BATTLE_COMMAND := preload("res://src/systems/battle_command.gd")
 const BATTLE_COMMAND_ROUTER := preload("res://src/systems/battle_command_router.gd")
 const BATTLE_ENTITY_REGISTRY := preload("res://src/systems/battle_entity_registry.gd")
@@ -1858,6 +1859,7 @@ func _get_auto_spawn_position() -> Vector2:
 	return _clamp_manual_spawn_position(candidate)
 
 func _get_giant_monster_summon_chance() -> float:
+	if hero_player_mode: return 0.0 # Survival has scheduled elite/giant encounters.
 	if demon_level < GIANT_MONSTER_UNLOCK_LEVEL:
 		return 0.0
 	var level_steps := floori(
@@ -2164,6 +2166,8 @@ func _spawn_monster(
 	# Canonical role/grade stats must precede every spawn modifier and _ready().
 	if not TRANSCENDENCE_DATA.is_transcendent(monster_type):
 		MONSTER_CATALOG.apply_runtime_base_stats(monster, monster_type)
+	if hero_player_mode:
+		monster.set_meta("hero_survival_spawn_seconds",run_metrics.elapsed_seconds)
 	var fixed_base_stats := TRANSCENDENCE_DATA.is_transcendent(monster_type) or bool(spawn_modifiers.get("fixed_base_stats", false))
 	monster.set_meta("fixed_base_stats", fixed_base_stats)
 	monster.set_meta("exclude_all_augments", fixed_base_stats or bool(spawn_modifiers.get("exclude_all_augments", false)))
@@ -2789,14 +2793,18 @@ func _ensure_monster_ground_shadow(
 	monster.add_child(shadow)
 
 
-func _get_demon_level_monster_hp_multiplier() -> float:
+func _get_demon_level_monster_hp_multiplier(spawn_seconds: float = -1.0) -> float:
+	if hero_player_mode:
+		return HERO_SURVIVAL.monster_multiplier("hp",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)
 	var growth_steps := maxi(demon_level - 1, 0)
 	return minf(
 		pow(DEMON_LEVEL_MONSTER_HP_GROWTH, float(growth_steps)),
 		DEMON_LEVEL_MONSTER_HP_MAX_MULTIPLIER
 	)
 
-func _get_demon_level_monster_damage_multiplier() -> float:
+func _get_demon_level_monster_damage_multiplier(spawn_seconds: float = -1.0) -> float:
+	if hero_player_mode:
+		return HERO_SURVIVAL.monster_multiplier("damage",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)
 	var growth_steps := maxi(demon_level - 1, 0)
 	return minf(
 		pow(DEMON_LEVEL_MONSTER_DAMAGE_GROWTH, float(growth_steps)),
@@ -2804,13 +2812,16 @@ func _get_demon_level_monster_damage_multiplier() -> float:
 	)
 
 func _get_demon_level_monster_exp_multiplier() -> float:
+	if hero_player_mode: return 1.0
 	var growth_steps := maxi(demon_level - 1, 0)
 	return minf(
 		pow(DEMON_LEVEL_MONSTER_EXP_GROWTH, float(growth_steps)),
 		DEMON_LEVEL_MONSTER_EXP_MAX_MULTIPLIER
 	)
 
-func _get_demon_level_monster_speed_multiplier() -> float:
+func _get_demon_level_monster_speed_multiplier(spawn_seconds: float = -1.0) -> float:
+	if hero_player_mode:
+		return HERO_SURVIVAL.monster_multiplier("speed",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)
 	var growth_steps := maxi(demon_level - 1, 0)
 	return minf(
 		pow(DEMON_LEVEL_MONSTER_SPEED_GROWTH, float(growth_steps)),
@@ -2824,6 +2835,7 @@ func _apply_demon_level_scaling_to_monster(
 	if not is_instance_valid(monster) or bool(monster.get_meta("fixed_base_stats", false)):
 		return
 
+	var spawn_seconds := float(monster.get_meta("hero_survival_spawn_seconds",-1.0))
 	var runtime_additions: Dictionary = monster.call("get_runtime_stat_additions") if monster.has_method("get_runtime_stat_additions") else {}
 	var content_id := String(monster.get("monster_type"))
 	var excluded := bool(monster.get_meta("exclude_all_augments", false))
@@ -2845,7 +2857,7 @@ func _apply_demon_level_scaling_to_monster(
 		var new_max_hp := maxi(
 			1,
 			int(round(
-				(float(base_hp_value) * _get_demon_level_monster_hp_multiplier() * hp_special
+				(float(base_hp_value) * _get_demon_level_monster_hp_multiplier(spawn_seconds) * hp_special
 				+ float(runtime_additions.get("hp", 0.0))) * float(runtime_additions.get("hp_multiplier",1.0))
 			))
 		)
@@ -2866,7 +2878,7 @@ func _apply_demon_level_scaling_to_monster(
 		null
 	) if monster.has_meta("demon_level_base_attack_damage") else null
 	if base_damage_value != null:
-		var runtime_damage := (float(base_damage_value) * _get_demon_level_monster_damage_multiplier() * damage_special * growth
+		var runtime_damage := (float(base_damage_value) * _get_demon_level_monster_damage_multiplier(spawn_seconds) * damage_special * growth
 			+ float(runtime_additions.get("damage",0.0))) * float(runtime_additions.get("damage_multiplier",1.0))
 		MONSTER_SUPPORT_COMMON.set_unbuffed_attack_damage(monster,maxi(1,int(round(runtime_damage))))
 
@@ -2877,7 +2889,7 @@ func _apply_demon_level_scaling_to_monster(
 	if base_speed_value != null:
 		monster.set(
 			"move_speed",
-			(float(base_speed_value) * _get_demon_level_monster_speed_multiplier()
+			(float(base_speed_value) * _get_demon_level_monster_speed_multiplier(spawn_seconds)
 			+ float(runtime_additions.get("speed", 0.0))) * float(runtime_additions.get("speed_multiplier",1.0))
 		)
 
@@ -4457,8 +4469,9 @@ func _apply_special_monster_modifiers(
 				)
 			)
 
-	if monster.has_method("get_runtime_stat_additions"):
+	if hero_player_mode or monster.has_method("get_runtime_stat_additions"):
 		monster.set_meta("runtime_variant_stats", {"hp":hp_multiplier, "damage":damage_multiplier, "speed":speed_multiplier, "attack_speed":attack_speed_multiplier})
+	if monster.has_method("get_runtime_stat_additions"):
 		var base_interval := float(monster.get_meta("runtime_base_attack_cooldown", monster.get("attack_cooldown")))
 		monster.set_meta("runtime_base_attack_cooldown", base_interval / attack_speed_multiplier)
 
@@ -5162,12 +5175,13 @@ func _apply_normal_augments_to_existing_monster(
 			null
 		)
 		if raw_explosion != null:
+			var survival_damage := HERO_SURVIVAL.monster_multiplier("damage",float(monster.get_meta("hero_survival_spawn_seconds",0.0))) if hero_player_mode else 1.0
 			monster.set(
 				"explosion_damage",
 				maxi(
 					1,
 					int(round(
-						float(raw_explosion)
+						float(raw_explosion)*survival_damage
 						* rarity_damage_multiplier
 						* collection_damage_multiplier
 						* monster_damage_multiplier
@@ -6046,7 +6060,11 @@ func _apply_augment_free_base_stats(monster: Node, monster_id: String) -> void:
 		var base_stats := MONSTER_CATALOG.get_base_stats(monster_id)
 		for stat in base_stats:
 			if stat != "exp_reward" and monster.get(stat) != null:
-				monster.set(stat, base_stats[stat])
+				var value = base_stats[stat]
+				if hero_player_mode and HERO_SURVIVAL.MONSTER_SCALE_FIELDS.has(stat):
+					value = float(value)*HERO_SURVIVAL.monster_multiplier(String(HERO_SURVIVAL.MONSTER_SCALE_FIELDS[stat]),float(monster.get_meta("hero_survival_spawn_seconds",0.0)))
+					if stat != "move_speed": value = maxi(1,roundi(value))
+				monster.set(stat, value)
 		monster.set_meta("monster_collection_upgrade_level", 0)
 		monster.set("current_hp", int(monster.get("max_hp")))
 		return

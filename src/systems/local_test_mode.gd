@@ -210,6 +210,9 @@ func has_all_monsters_unlocked() -> bool:
 		and SCOPE.guest_directory == test_directory
 	)
 
+func has_all_heroes_unlocked() -> bool:
+	return OS.is_debug_build() and has_all_monsters_unlocked()
+
 
 # Revalidate at draw time: a stale UI selection must never affect real saves.
 func forced_gacha_monster(selected_id: String) -> String:

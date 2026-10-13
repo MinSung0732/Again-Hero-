@@ -132,7 +132,7 @@ func _build_formation(body: VBoxContainer,id: String) -> void:
 	hero_roster_panel = PanelContainer.new(); hero_roster_panel.name = "HeroRosterPanel"; hero_roster_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL; body.add_child(hero_roster_panel); _skin(hero_roster_panel)
 	var bottom := VBoxContainer.new(); bottom.add_theme_constant_override("separation",10); hero_roster_panel.add_child(bottom)
 	_label(bottom,"용사 목록 · 10종",28)
-	_label(bottom,"견습마도사 기본 개방 · 나머지는 해당 스테이지 어려움 클리어",20)
+	_label(bottom,"로컬 테스트 · 모든 용사 선택 가능" if STORE.all_characters_unlocked_for_test() else "견습마도사 기본 개방 · 나머지는 해당 스테이지 어려움 클리어",20)
 	var scroll := ScrollContainer.new(); scroll.name = "RosterScroll"; scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL; scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; bottom.add_child(scroll)
 	var grid := GridContainer.new(); grid.name = "HeroRosterGrid"; grid.columns = 3; grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL; grid.add_theme_constant_override("h_separation",12); grid.add_theme_constant_override("v_separation",12); scroll.add_child(grid)
 	for hero_id in CHARACTERS.ORDER:
