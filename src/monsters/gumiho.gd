@@ -2,6 +2,7 @@ extends "res://src/monsters/orc.gd"
 const DATA := preload("res://src/data/gumiho_behavior_catalog.gd")
 const SHARED := preload("res://src/systems/gumiho_shared_runtime.gd")
 const RETURN_BOLT := preload("res://src/monsters/GumihoReflectedProjectile.tscn")
+static var _status_bar_top_cache: Dictionary = {}
 var shield_remaining := 5.0
 var quiet_time := 0.0
 var stealth_remaining := 0.0
@@ -32,8 +33,22 @@ func _ready() -> void:
 func apply_visual_profile(profile: Dictionary) -> void:
 	if profile != DATA.FOX_VISUAL: human_profile = profile
 	if is_instance_valid(visual) and visual.apply_visual_profile(profile):
-		status_bar_head_y = visual.position.y-float(profile.get("target_height",140.0))*0.5-12.0
+		_update_status_bar_height()
 	if profile != DATA.FOX_VISUAL and shield_remaining >= DATA.SHIELD_DURATION and is_inside_tree(): _grant_spawn_shield()
+func _update_status_bar_height() -> void:
+	var texture: Texture2D = visual.sprite_frames.get_frame_texture(&"idle",0)
+	if texture == null: return
+	if not _status_bar_top_cache.has(texture):
+		var image := texture.get_image()
+		var source_top := 0.0
+		if image != null and not image.is_empty():
+			var used := image.get_used_rect()
+			if used.has_area(): source_top = float(used.position.y)
+		_status_bar_top_cache[texture] = source_top
+	var top: float = _status_bar_top_cache[texture]
+	if visual.centered: top -= float(texture.get_height())*0.5
+	var head_position: Vector2 = visual.transform * (visual.offset+Vector2(0.0,top))
+	status_bar_head_y = head_position.y-12.0
 func _grant_spawn_shield() -> void:
 	var kind := "shield" if special_augment_configs.has("gumiho_universal") else "ranged"
 	set_meta("temporary_shield_kind",kind)
