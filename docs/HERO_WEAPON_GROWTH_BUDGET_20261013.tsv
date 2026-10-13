@@ -1,0 +1,301 @@
+id	name	rank	evolved	pattern	per_hit_atk_ratio	cooldown_seconds	hits_or_native_actors	fields	field_seconds	field_interval	pulses	pulse_damage_ratio	summon_seconds	nominal_pattern_damage_units_excluding_area_target_count
+ranged_rookie_arcane_bolt	마력탄	1	false	bolt	1.0	1.0	1	1	0	0	0	0	0	1.0
+ranged_rookie_arcane_bolt	마력탄	3	false	bolt	1.36	0.93	2	1	0	0	0	0	0	2.72
+ranged_rookie_arcane_bolt	마력탄	6	false	bolt	1.9	0.825	2	1	0	0	0	0	0	3.8
+ranged_rookie_arcane_bolt	마력탄	10	false	bolt	2.62	0.685	3	1	0	0	0	0	0	7.86
+ranged_rookie_arcane_bolt	유성우 마도포	10	true	bolt	3.406	0.6165	5	1	0	0	0	0	0	17.03
+ranged_rookie_star_wand	별빛 지팡이	1	false	chain	0.85	2.27	3	1	0	0	0	0	0	2.55
+ranged_rookie_star_wand	별빛 지팡이	3	false	chain	1.156	2.1111	4	1	0	0	0	0	0	4.624
+ranged_rookie_star_wand	별빛 지팡이	6	false	chain	1.615	1.87275	4	1	0	0	0	0	0	7.6228
+ranged_rookie_star_wand	별빛 지팡이	10	false	chain	2.227	1.55495	6	1	0	0	0	0	0	17.3706
+ranged_rookie_star_wand	은하 연결 지팡이	10	true	chain	2.8951	1.399455	9	1	0	0	0	0	0	48.985092
+ranged_rookie_magic_lance	마력 관통포	1	false	piercer	1.8	4.8	1	1	0	0	0	0	0	1.8
+ranged_rookie_magic_lance	마력 관통포	3	false	piercer	2.448	4.464	2	1	0	0	0	0	0	4.896
+ranged_rookie_magic_lance	마력 관통포	6	false	piercer	3.42	3.96	2	1	0	0	0	0	0	6.84
+ranged_rookie_magic_lance	마력 관통포	10	false	piercer	4.716	3.288	3	1	0	0	0	0	0	14.148
+ranged_rookie_magic_lance	삼중 비전 관통포	10	true	piercer	6.1308	2.9592	4	1	0	0	1	0.6	0	28.20168
+ranged_rookie_rune_ring	비전 집중	1	false	poison	1.36	6.5	1	1	2.5	0.25	0	0	0	3.808
+ranged_rookie_rune_ring	비전 집중	3	false	poison	1.8496	6.045	1	1	3.2	0.25	0	0	0	6.732544
+ranged_rookie_rune_ring	비전 집중	6	false	poison	2.584	5.3625	1	1	3.2	0.25	0	0	0	9.40576
+ranged_rookie_rune_ring	비전 집중	10	false	poison	3.5632	4.4525	1	1	3.2	0.18	0	0	0	17.958528
+ranged_rookie_rune_ring	이동 비전 성역	10	true	poison	4.63216	4.00725	1	1	4.0	0.15	0	0	0	35.0191296
+ranged_rookie_pulse_staff	파동 지팡이	1	false	nova	1.48	3.46	1	1	0	0	0	0	0	1.48
+ranged_rookie_pulse_staff	파동 지팡이	3	false	nova	2.0128	3.2178	1	1	0	0	1	0.35	0	2.71728
+ranged_rookie_pulse_staff	파동 지팡이	6	false	nova	2.812	2.8545	1	1	0	0	1	0.35	0	3.7962
+ranged_rookie_pulse_staff	파동 지팡이	10	false	nova	3.8776	2.3701	1	1	0	0	2	0.35	0	6.59192
+ranged_rookie_pulse_staff	삼중 공명 지팡이	10	true	nova	5.04088	2.13309	1	1	0	0	3	0.65	0	14.870596
+ranged_rookie_barrier_book	마력 장벽	1	false	guard	1.6	12.0	1	1	0	0	0	0	0	1.6
+ranged_rookie_barrier_book	마력 장벽	3	false	guard	2.176	11.16	1	1	0	0	0	0	0	2.176
+ranged_rookie_barrier_book	마력 장벽	6	false	guard	3.04	9.9	1	1	0	0	1	0.4	0	4.256
+ranged_rookie_barrier_book	마력 장벽	10	false	guard	4.192	8.22	1	1	0	0	1	0.4	0	5.8688
+ranged_rookie_barrier_book	비전 반격 성전	10	true	guard	5.4496	7.398	1	1	0	0	2	0.8	0	14.16896
+swift_hunter_dagger	쌍단검	1	false	combo	0.62	0.9	2	1	0	0	0	0	0	1.24
+swift_hunter_dagger	쌍단검	3	false	combo	0.8432	0.837	2	1	0	0	0	0	0	1.6864
+swift_hunter_dagger	쌍단검	6	false	combo	1.178	0.7425	2	1	0	0	1	0.35	0	2.7683
+swift_hunter_dagger	쌍단검	10	false	combo	1.6244	0.6165	2	1	0	0	1	0.35	0	3.81734
+swift_hunter_dagger	그림자 육연검	10	true	combo	2.11172	0.55485	2	1	0	0	2	0.55	0	6.546332
+swift_hunter_throwing_knife	투척 단검	1	false	bolt	1.12	1.08	1	1	0	0	0	0	0	1.12
+swift_hunter_throwing_knife	투척 단검	3	false	bolt	1.5232	1.0044	2	1	0	0	0	0	0	3.0464
+swift_hunter_throwing_knife	투척 단검	6	false	bolt	2.128	0.891	2	1	0	0	0	0	0	4.256
+swift_hunter_throwing_knife	투척 단검	10	false	bolt	2.9344	0.7398	3	1	0	0	0	0	0	8.8032
+swift_hunter_throwing_knife	폭우 암살 단검	10	true	bolt	3.81472	0.66582	5	1	0	0	0	0	0	19.0736
+swift_hunter_shadow_wire	급습-암살	1	false	combo	0.7	4.2	3	1	0	0	0	0	0	2.1
+swift_hunter_shadow_wire	급습-암살	3	false	combo	0.952	3.906	4	1	0	0	0	0	0	3.808
+swift_hunter_shadow_wire	급습-암살	6	false	combo	1.33	3.465	4	1	0	0	0	0	0	6.118
+swift_hunter_shadow_wire	급습-암살	10	false	combo	1.834	2.877	4	1	0	0	0	0	0	8.4364
+swift_hunter_shadow_wire	처형자의 그림자	10	true	combo	2.3842	2.5893	6	1	0	0	0	0	0	17.64308
+swift_hunter_poison_needle	독침	1	false	poison	1.36	2.2	1	1	2.0	0.4	0	0	0	1.904
+swift_hunter_poison_needle	독침	3	false	poison	1.8496	2.046	1	1	3.0	0.4	0	0	0	4.143104
+swift_hunter_poison_needle	독침	6	false	poison	2.584	1.815	1	1	3.0	0.4	0	0	0	5.78816
+swift_hunter_poison_needle	독침	10	false	poison	3.5632	1.507	1	2	3.0	0.4	0	0	0	15.963136
+swift_hunter_poison_needle	만독 암살진	10	true	poison	4.63216	1.3563	1	3	3.0	0.25	0	0	0	46.6921728
+swift_hunter_moon_blade	난도질	1	false	poison	1.48	5.0	1	1	1.2	0.24	0	0	0	3.33
+swift_hunter_moon_blade	난도질	3	false	poison	2.0128	4.65	1	1	1.8	0.24	0	0	0	7.24608
+swift_hunter_moon_blade	난도질	6	false	poison	2.812	4.125	1	1	1.8	0.24	0	0	0	10.1232
+swift_hunter_moon_blade	난도질	10	false	poison	3.8776	3.425	1	1	1.8	0.18	0	0	0	17.4492
+swift_hunter_moon_blade	월식 난도질	10	true	poison	5.04088	3.0825	1	1	2.5	0.14	0	0	0	40.831128
+swift_hunter_shadow_bomb	그림자 폭탄	1	false	nova	1.6	3.71	1	1	0	0	0	0	0	1.6
+swift_hunter_shadow_bomb	그림자 폭탄	3	false	nova	2.176	3.4503	1	1	0	0	0	0	0	2.176
+swift_hunter_shadow_bomb	그림자 폭탄	6	false	nova	3.04	3.06075	1	1	0	0	1	0.5	0	4.56
+swift_hunter_shadow_bomb	그림자 폭탄	10	false	nova	4.192	2.54135	1	1	0	0	1	0.5	0	6.288
+swift_hunter_shadow_bomb	삼중 그림자 붕괴	10	true	nova	5.4496	2.287215	1	1	0	0	2	0.8	0	14.16896
+sword_shield_hero_longsword	수호 장검	1	false	slash	1.2	1.3	1	1	0	0	0	0	0	1.2
+sword_shield_hero_longsword	수호 장검	3	false	slash	1.632	1.209	3	1	0	0	0	0	0	1.632
+sword_shield_hero_longsword	수호 장검	6	false	slash	2.28	1.0725	3	1	0	0	0	0	0	2.28
+sword_shield_hero_longsword	수호 장검	10	false	slash	3.144	0.8905	3	1	0	0	1	0.45	0	4.5588
+sword_shield_hero_longsword	왕국 수호검	10	true	slash	4.0872	0.80145	6	1	0	0	2	0.8	0	10.62672
+sword_shield_hero_piercing_spear	검방 돌격 · 창격	1	false	beam	2.0	3.5	1	1	0	0	0	0	0	2.0
+sword_shield_hero_piercing_spear	검방 돌격 · 창격	3	false	beam	2.72	3.255	1	1	0	0	0	0	0	2.72
+sword_shield_hero_piercing_spear	검방 돌격 · 창격	6	false	beam	3.8	2.8875	1	1	0	0	0	0	0	3.8
+sword_shield_hero_piercing_spear	검방 돌격 · 창격	10	false	beam	5.24	2.3975	1	1	0	0	0	0	0	5.24
+sword_shield_hero_piercing_spear	성벽 관통창	10	true	beam	6.812	2.15775	1	1	0	0	1	0.7	0	11.5804
+sword_shield_hero_aegis	막기	1	false	guard	1.24	8.0	1	1	0	0	0	0	0	1.24
+sword_shield_hero_aegis	막기	3	false	guard	1.6864	7.44	1	1	0	0	0	0	0	1.6864
+sword_shield_hero_aegis	막기	6	false	guard	2.356	6.6	1	1	0	0	0	0	0	2.356
+sword_shield_hero_aegis	막기	10	false	guard	3.2488	5.48	1	1	0	0	1	0.5	0	4.8732
+sword_shield_hero_aegis	절대 방벽 아이기스	10	true	guard	4.22344	4.932	1	1	0	0	2	0.8	0	10.980944
+sword_shield_hero_shield_hammer	방패 망치	1	false	nova	1.36	3.2	1	1	0	0	0	0	0	1.36
+sword_shield_hero_shield_hammer	방패 망치	3	false	nova	1.8496	2.976	1	1	0	0	0	0	0	1.8496
+sword_shield_hero_shield_hammer	방패 망치	6	false	nova	2.584	2.64	1	1	0	0	1	0.5	0	3.876
+sword_shield_hero_shield_hammer	방패 망치	10	false	nova	3.5632	2.192	1	1	0	0	1	0.5	0	5.3448
+sword_shield_hero_shield_hammer	대지 분쇄 방패	10	true	nova	4.63216	1.9728	1	1	0	0	3	0.65	0	13.664872
+sword_shield_hero_blade_ring	회전 검륜	1	false	orbit	1.48	1.62	1	1	0	0	0	0	0	1.48
+sword_shield_hero_blade_ring	회전 검륜	3	false	orbit	2.0128	1.5066	3	1	0	0	0	0	0	2.0128
+sword_shield_hero_blade_ring	회전 검륜	6	false	orbit	2.812	1.3365	3	1	0	0	1	0.4	0	3.9368
+sword_shield_hero_blade_ring	회전 검륜	10	false	orbit	3.8776	1.1097	3	1	0	0	1	0.4	0	5.42864
+sword_shield_hero_blade_ring	철벽 회전검진	10	true	orbit	5.04088	0.99873	3	1	0	0	3	0.6	0	14.114464
+sword_shield_hero_battle_banner	전장의 깃발	1	false	heal	1.6	13.92	1	1	0	0	0	0	0	1.6
+sword_shield_hero_battle_banner	전장의 깃발	3	false	heal	2.176	12.9456	1	1	0	0	0	0	0	2.176
+sword_shield_hero_battle_banner	전장의 깃발	6	false	heal	3.04	11.484	1	1	0	0	0	0	0	3.04
+sword_shield_hero_battle_banner	전장의 깃발	10	false	heal	4.192	9.5352	1	1	0	0	1	0.4	0	5.8688
+sword_shield_hero_battle_banner	불굴의 승전기	10	true	heal	5.4496	8.58168	1	1	0	0	2	0.7	0	13.07904
+pistol_hero_revolver	육연발 권총	1	false	burst	0.5	0.9	3	1	0	0	0	0	0	1.5
+pistol_hero_revolver	육연발 권총	3	false	burst	0.68	0.837	4	1	0	0	0	0	0	2.72
+pistol_hero_revolver	육연발 권총	6	false	burst	0.95	0.7425	4	1	0	0	0	0	0	4.465
+pistol_hero_revolver	육연발 권총	10	false	burst	1.31	0.6165	6	1	0	0	0	0	0	8.777
+pistol_hero_revolver	황혼의 육연발	10	true	burst	1.703	0.55485	6	1	0	0	0	0	0	12.7725
+pistol_hero_shotgun	실린더 스트라이크	1	false	nova	1.4	5.5	2	1	0	0	0	0	0	1.4
+pistol_hero_shotgun	실린더 스트라이크	3	false	nova	1.904	5.115	2	1	0	0	1	0.35	0	2.5704
+pistol_hero_shotgun	실린더 스트라이크	6	false	nova	2.66	4.5375	2	1	0	0	1	0.35	0	3.591
+pistol_hero_shotgun	실린더 스트라이크	10	false	nova	3.668	3.7675	2	1	0	0	2	0.35	0	6.2356
+pistol_hero_shotgun	심판의 실린더	10	true	nova	4.7684	3.39075	2	1	0	0	3	0.75	0	15.4973
+pistol_hero_rifle	데드아이	1	false	burst	0.65	5.5	5	1	0	0	0	0	0	3.25
+pistol_hero_rifle	데드아이	3	false	burst	0.884	5.115	5	1	0	0	0	0	0	4.42
+pistol_hero_rifle	데드아이	6	false	burst	1.235	4.5375	5	1	0	0	0	0	0	7.163
+pistol_hero_rifle	데드아이	10	false	burst	1.703	3.7675	6	1	0	0	0	0	0	11.5804
+pistol_hero_rifle	종결자 데드아이	10	true	burst	2.2139	3.39075	6	1	0	0	0	0	0	17.26842
+pistol_hero_ricochet	도탄 권총	1	false	chain	0.75	2.1	4	1	0	0	0	0	0	3.0
+pistol_hero_ricochet	도탄 권총	3	false	chain	1.02	1.953	6	1	0	0	0	0	0	6.12
+pistol_hero_ricochet	도탄 권총	6	false	chain	1.425	1.7325	6	1	0	0	0	0	0	10.6875
+pistol_hero_ricochet	도탄 권총	10	false	chain	1.965	1.4385	8	1	0	0	0	0	0	21.222
+pistol_hero_ricochet	무한 도탄 황금총	10	true	chain	2.5545	1.29465	12	1	0	0	0	0	0	61.00146
+pistol_hero_grenade	충격 수류탄	1	false	nova	1.48	3.46	1	1	0	0	0	0	0	1.48
+pistol_hero_grenade	충격 수류탄	3	false	nova	2.0128	3.2178	1	1	0	0	0	0	0	2.0128
+pistol_hero_grenade	충격 수류탄	6	false	nova	2.812	2.8545	1	1	0	0	1	0.5	0	4.218
+pistol_hero_grenade	충격 수류탄	10	false	nova	3.8776	2.3701	1	1	0	0	2	0.5	0	7.7552
+pistol_hero_grenade	연쇄 진동 수류탄	10	true	nova	5.04088	2.13309	1	1	0	0	3	0.85	0	17.895124
+pistol_hero_powder_bomb	화약 폭탄	1	false	poison	1.6	2.55	1	1	2.0	0.25	0	0	0	3.2
+pistol_hero_powder_bomb	화약 폭탄	3	false	poison	2.176	2.3715	1	1	3.0	0.25	0	0	0	6.528
+pistol_hero_powder_bomb	화약 폭탄	6	false	poison	3.04	2.10375	1	1	3.0	0.25	0	0	0	9.12
+pistol_hero_powder_bomb	화약 폭탄	10	false	poison	4.192	1.74675	1	2	3.0	0.25	0	0	0	25.152
+pistol_hero_powder_bomb	종말의 화약지대	10	true	poison	5.4496	1.572075	1	3	4.0	0.2	0	0	0	81.744
+archmage_hero_fire_staff	원소 지팡이	1	false	bolt	1.0	2.2	1	1	2.0	0.35	0	0	0	1.0
+archmage_hero_fire_staff	원소 지팡이	3	false	bolt	1.36	2.046	1	1	2.0	0.35	1	0.3	0	1.768
+archmage_hero_fire_staff	원소 지팡이	6	false	bolt	1.9	1.815	1	1	2.0	0.35	1	0.3	0	2.47
+archmage_hero_fire_staff	원소 지팡이	10	false	bolt	2.62	1.507	1	1	2.0	0.35	2	0.3	0	4.192
+archmage_hero_fire_staff	육원소 공명 지팡이	10	true	bolt	3.406	1.3563	1	1	2.0	0.35	3	0.65	0	10.0477
+archmage_hero_ice_scepter	아이스볼트	1	false	frost	1.12	2.7	1	1	0	0	0	0	0	1.12
+archmage_hero_ice_scepter	아이스볼트	3	false	frost	1.5232	2.511	1	1	0	0	0	0	0	1.5232
+archmage_hero_ice_scepter	아이스볼트	6	false	frost	2.128	2.2275	1	1	0	0	1	0.45	0	3.0856
+archmage_hero_ice_scepter	아이스볼트	10	false	frost	2.9344	1.8495	1	1	0	0	1	0.45	0	4.25488
+archmage_hero_ice_scepter	영구동토의 왕홀	10	true	frost	3.81472	1.66455	1	1	0	0	3	0.7	0	11.825632
+archmage_hero_lightning_rod	체인대거	1	false	chain	0.8	2.44	4	1	0	0	0	0	0	3.2
+archmage_hero_lightning_rod	체인대거	3	false	chain	1.088	2.2692	6	1	0	0	0	0	0	6.528
+archmage_hero_lightning_rod	체인대거	6	false	chain	1.52	2.013	6	1	0	0	0	0	0	12.312
+archmage_hero_lightning_rod	체인대거	10	false	chain	2.096	1.6714	8	1	0	0	0	0	0	24.98432
+archmage_hero_lightning_rod	천뢰 연쇄대거	10	true	chain	2.7248	1.50426	12	1	0	0	0	0	0	75.858432
+archmage_hero_earth_staff	땅의 가시	1	false	nova	2.0	5.0	1	1	0	0	0	0	0	2.0
+archmage_hero_earth_staff	땅의 가시	3	false	nova	2.72	4.65	1	1	0	0	1	0.4	0	3.808
+archmage_hero_earth_staff	땅의 가시	6	false	nova	3.8	4.125	1	1	0	0	1	0.4	0	5.32
+archmage_hero_earth_staff	땅의 가시	10	false	nova	5.24	3.425	1	1	0	0	2	0.4	0	9.432
+archmage_hero_earth_staff	대륙 파쇄 지팡이	10	true	nova	6.812	3.0825	1	1	0	0	3	0.8	0	23.1608
+archmage_hero_storm_orb	폭풍	1	false	orbit	1.48	1.62	1	1	0	0	0	0	0	1.48
+archmage_hero_storm_orb	폭풍	3	false	orbit	2.0128	1.5066	3	1	0	0	0	0	0	2.0128
+archmage_hero_storm_orb	폭풍	6	false	orbit	2.812	1.3365	3	1	0	0	0	0	0	2.812
+archmage_hero_storm_orb	폭풍	10	false	orbit	3.8776	1.1097	3	1	0	0	1	0.5	0	5.8164
+archmage_hero_storm_orb	영겁의 폭풍핵	10	true	orbit	5.04088	0.99873	3	1	0	0	3	0.7	0	15.626728
+archmage_hero_prism_wand	신성력	1	false	poison	1.6	5.5	1	1	3.0	0.5	0	0	0	3.072
+archmage_hero_prism_wand	신성력	3	false	poison	2.176	5.115	1	1	4.0	0.5	0	0	0	5.57056
+archmage_hero_prism_wand	신성력	6	false	poison	3.04	4.5375	1	2	4.0	0.5	0	0	0	15.5648
+archmage_hero_prism_wand	신성력	10	false	poison	4.192	3.7675	1	2	4.0	0.35	0	0	0	32.19456
+archmage_hero_prism_wand	천상의 신성력	10	true	poison	5.4496	3.39075	1	3	5.0	0.3	0	0	0	88.937472
+madness_hero_blood_sword	혈검술 제1식	1	false	combo	0.55	1.5	3	1	0	0	0	0	0	1.65
+madness_hero_blood_sword	혈검술 제1식	3	false	combo	0.748	1.395	4	1	0	0	0	0	0	2.992
+madness_hero_blood_sword	혈검술 제1식	6	false	combo	1.045	1.2375	4	1	0	0	0	0	0	4.9115
+madness_hero_blood_sword	혈검술 제1식	10	false	combo	1.441	1.0275	6	1	0	0	0	0	0	9.6547
+madness_hero_blood_sword	마혈 육연식	10	true	combo	1.8733	0.92475	6	1	0	0	0	0	0	14.04975
+madness_hero_blood_lance	혈검술 제2식	1	false	poison	1.12	4.5	1	1	2.0	0.4	0	0	0	1.68
+madness_hero_blood_lance	혈검술 제2식	3	false	poison	1.5232	4.185	1	1	3.0	0.4	0	0	0	3.65568
+madness_hero_blood_lance	혈검술 제2식	6	false	poison	2.128	3.7125	1	2	3.0	0.4	0	0	0	10.2144
+madness_hero_blood_lance	혈검술 제2식	10	false	poison	2.9344	3.0825	1	2	3.0	0.4	0	0	0	14.08512
+madness_hero_blood_lance	흡혈 혈해창	10	true	poison	3.81472	2.77425	1	3	3.0	0.28	0	0	0	37.765728
+madness_hero_blood_wheel	핏빛 검륜	1	false	orbit	1.24	1.74	1	1	0	0	0	0	0	1.24
+madness_hero_blood_wheel	핏빛 검륜	3	false	orbit	1.6864	1.6182	3	1	0	0	0	0	0	1.6864
+madness_hero_blood_wheel	핏빛 검륜	6	false	orbit	2.356	1.4355	3	1	0	0	0	0	0	2.356
+madness_hero_blood_wheel	핏빛 검륜	10	false	orbit	3.2488	1.1919	3	1	0	0	1	0.5	0	4.8732
+madness_hero_blood_wheel	혈월 회전검	10	true	orbit	4.22344	1.07271	3	1	0	0	3	0.65	0	12.459148
+madness_hero_blood_burst	혈검술 제4식	1	false	nova	2.2	5.0	1	1	0	0	0	0	0	2.2
+madness_hero_blood_burst	혈검술 제4식	3	false	nova	2.992	4.65	1	1	0	0	1	0.4	0	4.1888
+madness_hero_blood_burst	혈검술 제4식	6	false	nova	4.18	4.125	1	1	0	0	1	0.4	0	5.852
+madness_hero_blood_burst	혈검술 제4식	10	false	nova	5.764	3.425	1	1	0	0	2	0.4	0	10.3752
+madness_hero_blood_burst	심장 파열 혈폭	10	true	nova	7.4932	3.0825	1	1	0	0	3	0.8	0	25.47688
+madness_hero_drain_blade	흡혈 검	1	false	slash	0.8	2.6	1	1	0	0	0	0	0	0.8
+madness_hero_drain_blade	흡혈 검	3	false	slash	1.088	2.418	3	1	0	0	0	0	0	1.088
+madness_hero_drain_blade	흡혈 검	6	false	slash	1.52	2.145	3	1	0	0	1	0.5	0	2.28
+madness_hero_drain_blade	흡혈 검	10	false	slash	2.096	1.781	3	1	0	0	1	0.5	0	3.144
+madness_hero_drain_blade	불멸의 포식검	10	true	slash	2.7248	1.6029	3	1	0	0	2	0.8	0	7.08448
+madness_hero_heart_chain	심장 사슬	1	false	chain	1.6	2.44	1	1	0	0	0	0	0	1.6
+madness_hero_heart_chain	심장 사슬	3	false	chain	2.176	2.2692	3	1	0	0	0	0	0	6.528
+madness_hero_heart_chain	심장 사슬	6	false	chain	3.04	2.013	3	1	0	0	0	0	0	10.488
+madness_hero_heart_chain	심장 사슬	10	false	chain	4.192	1.6714	5	1	0	0	0	0	0	27.248
+madness_hero_heart_chain	심장 수확 사슬	10	true	chain	5.4496	1.50426	8	1	0	0	0	0	0	66.48512
+chemical_hero_acid_vial	산성 약병	1	false	poison	1.0	2.2	1	1	3.0	0.5	0	0	0	2.7
+chemical_hero_acid_vial	산성 약병	3	false	poison	1.36	2.046	1	1	4.0	0.5	0	0	0	4.896
+chemical_hero_acid_vial	산성 약병	6	false	poison	1.9	1.815	1	2	4.0	0.5	0	0	0	13.68
+chemical_hero_acid_vial	산성 약병	10	false	poison	2.62	1.507	1	2	4.0	0.35	0	0	0	28.296
+chemical_hero_acid_vial	왕수 살포기	10	true	poison	3.406	1.3563	1	3	5.0	0.25	0	0	0	91.962
+chemical_hero_poison_flask	촉매 혼합장	1	false	poison	1.12	2.38	1	1	5.0	1.0	0	0	0	2.128
+chemical_hero_poison_flask	촉매 혼합장	3	false	poison	1.5232	2.2134	1	1	5.0	0.8	0	0	0	4.051712
+chemical_hero_poison_flask	촉매 혼합장	6	false	poison	2.128	1.9635	1	1	6.0	0.8	0	0	0	6.46912
+chemical_hero_poison_flask	촉매 혼합장	10	false	poison	2.9344	1.6303	1	2	6.0	0.8	0	0	0	17.841152
+chemical_hero_poison_flask	대연금 촉매로	10	true	poison	3.81472	1.46727	1	3	6.0	0.5	0	0	0	52.1853696
+chemical_hero_cryo_vial	냉각 약병	1	false	frost	1.24	2.9	1	1	0	0	0	0	0	1.24
+chemical_hero_cryo_vial	냉각 약병	3	false	frost	1.6864	2.697	1	1	0	0	0	0	0	1.6864
+chemical_hero_cryo_vial	냉각 약병	6	false	frost	2.356	2.3925	1	1	0	0	1	0.5	0	3.534
+chemical_hero_cryo_vial	냉각 약병	10	false	frost	3.2488	1.9865	1	1	0	0	1	0.5	0	4.8732
+chemical_hero_cryo_vial	절대영도 앰플	10	true	frost	4.22344	1.78785	1	1	0	0	3	0.7	0	13.092664
+chemical_hero_reaction_bomb	오늘도 실팬가!	1	false	poison	1.36	5.5	1	1	2.0	0.5	0	0	0	2.72
+chemical_hero_reaction_bomb	오늘도 실팬가!	3	false	poison	1.8496	5.115	1	1	3.0	0.5	0	0	0	5.5488
+chemical_hero_reaction_bomb	오늘도 실팬가!	6	false	poison	2.584	4.5375	1	1	3.0	0.5	0	0	0	7.752
+chemical_hero_reaction_bomb	오늘도 실팬가!	10	false	poison	3.5632	3.7675	1	1	3.0	0.3	0	0	0	17.816
+chemical_hero_reaction_bomb	성공한 종말 실험	10	true	poison	4.63216	3.39075	1	1	4.0	0.2	0	0	0	46.3216
+chemical_hero_acid_cannon	압축 산성포	1	false	beam	1.48	3.24	1	1	0	0	0	0	0	1.48
+chemical_hero_acid_cannon	압축 산성포	3	false	beam	2.0128	3.0132	1	1	0	0	0	0	0	2.0128
+chemical_hero_acid_cannon	압축 산성포	6	false	beam	2.812	2.673	1	1	0	0	0	0	0	2.812
+chemical_hero_acid_cannon	압축 산성포	10	false	beam	3.8776	2.2194	1	1	0	0	0	0	0	3.8776
+chemical_hero_acid_cannon	삼중 왕수 분사포	10	true	beam	5.04088	1.99746	1	1	0	0	1	0.8	0	9.073584
+chemical_hero_life_elixir	현자의 비약	1	false	heal	1.6	14.0	1	1	0	0	0	0	0	1.6
+chemical_hero_life_elixir	현자의 비약	3	false	heal	2.176	13.02	1	1	0	0	0	0	0	2.176
+chemical_hero_life_elixir	현자의 비약	6	false	heal	3.04	11.55	1	1	0	0	0	0	0	3.04
+chemical_hero_life_elixir	현자의 비약	10	false	heal	4.192	9.59	1	1	0	0	1	0.4	0	5.8688
+chemical_hero_life_elixir	불사의 현자 비약	10	true	heal	5.4496	8.631	1	1	0	0	2	0.75	0	13.624
+summoner_hero_gate_hound	이계의 문 - 투견	1	false	summon	0.65	8.0	1	1	0	0	0	0	14.0	0.0
+summoner_hero_gate_hound	이계의 문 - 투견	3	false	summon	0.884	7.44	1	1	0	0	0	0	14.0	0.0
+summoner_hero_gate_hound	이계의 문 - 투견	6	false	summon	1.235	6.6	1	1	0	0	0	0	14.0	0.0
+summoner_hero_gate_hound	이계의 문 - 투견	10	false	summon	1.703	5.48	1	1	0	0	0	0	18.0	0.0
+summoner_hero_gate_hound	지옥문 사냥개	10	true	summon	2.2139	4.932	1	1	0	0	0	0	22.0	0.0
+summoner_hero_watcher	이계의 문 - 감시자	1	false	summon	0.65	8.0	1	1	0	0	0	0	14.0	0.0
+summoner_hero_watcher	이계의 문 - 감시자	3	false	summon	0.884	7.44	1	1	0	0	0	0	14.0	0.0
+summoner_hero_watcher	이계의 문 - 감시자	6	false	summon	1.235	6.6	1	1	0	0	0	0	14.0	0.0
+summoner_hero_watcher	이계의 문 - 감시자	10	false	summon	1.703	5.48	1	1	0	0	0	0	18.0	0.0
+summoner_hero_watcher	차원 감시 군주	10	true	summon	2.2139	4.932	1	1	0	0	0	0	22.0	0.0
+summoner_hero_scout	이계의 문 - 정찰병	1	false	summon	0.65	8.0	2	1	0	0	0	0	14.0	0.0
+summoner_hero_scout	이계의 문 - 정찰병	3	false	summon	0.884	7.44	2	1	0	0	0	0	14.0	0.0
+summoner_hero_scout	이계의 문 - 정찰병	6	false	summon	1.235	6.6	2	1	0	0	0	0	14.0	0.0
+summoner_hero_scout	이계의 문 - 정찰병	10	false	summon	1.703	5.48	2	1	0	0	0	0	18.0	0.0
+summoner_hero_scout	차원 선봉대장	10	true	summon	2.2139	4.932	2	1	0	0	0	0	22.0	0.0
+summoner_hero_gate_laser	차원 관통문	1	false	beam	1.36	3.0	1	1	0	0	0	0	0	1.36
+summoner_hero_gate_laser	차원 관통문	3	false	beam	1.8496	2.79	1	1	0	0	0	0	0	1.8496
+summoner_hero_gate_laser	차원 관통문	6	false	beam	2.584	2.475	1	1	0	0	1	0.4	0	3.6176
+summoner_hero_gate_laser	차원 관통문	10	false	beam	3.5632	2.055	1	1	0	0	1	0.4	0	4.98848
+summoner_hero_gate_laser	오중 차원 절단문	10	true	beam	4.63216	1.8495	1	1	0	0	2	0.7	0	11.117184
+summoner_hero_gatekeeper	이계의 문 - 문지기	1	false	summon	0.65	8.0	1	1	0	0	0	0	14.0	0.0
+summoner_hero_gatekeeper	이계의 문 - 문지기	3	false	summon	0.884	7.44	1	1	0	0	0	0	14.0	0.0
+summoner_hero_gatekeeper	이계의 문 - 문지기	6	false	summon	1.235	6.6	1	1	0	0	0	0	14.0	0.0
+summoner_hero_gatekeeper	이계의 문 - 문지기	10	false	summon	1.703	5.48	1	1	0	0	0	0	18.0	0.0
+summoner_hero_gatekeeper	심연의 문지기	10	true	summon	2.2139	4.932	1	1	0	0	0	0	22.0	0.0
+summoner_hero_rift_pulse	균열 파동	1	false	nova	1.6	3.71	1	1	0	0	0	0	0	1.6
+summoner_hero_rift_pulse	균열 파동	3	false	nova	2.176	3.4503	1	1	0	0	1	0.4	0	3.0464
+summoner_hero_rift_pulse	균열 파동	6	false	nova	3.04	3.06075	1	1	0	0	1	0.4	0	4.256
+summoner_hero_rift_pulse	균열 파동	10	false	nova	4.192	2.54135	1	1	0	0	2	0.4	0	7.5456
+summoner_hero_rift_pulse	심연 균열 연쇄	10	true	nova	5.4496	2.287215	1	1	0	0	3	0.8	0	18.52864
+purifier_hero_holy_bolt	성광탄	1	false	bolt	1.0	1.0	1	1	0	0	0	0	0	1.0
+purifier_hero_holy_bolt	성광탄	3	false	bolt	1.36	0.93	2	1	0	0	0	0	0	2.72
+purifier_hero_holy_bolt	성광탄	6	false	bolt	1.9	0.825	2	1	0	0	0	0	0	3.8
+purifier_hero_holy_bolt	성광탄	10	false	bolt	2.62	0.685	3	1	0	0	0	0	0	7.86
+purifier_hero_holy_bolt	천벌의 성광포	10	true	bolt	3.406	0.6165	5	1	0	0	0	0	0	17.03
+purifier_hero_holy_lance	궁그닐	1	false	beam	2.4	5.5	1	1	0	0	0	0	0	2.4
+purifier_hero_holy_lance	궁그닐	3	false	beam	3.264	5.115	1	1	0	0	0	0	0	3.264
+purifier_hero_holy_lance	궁그닐	6	false	beam	4.56	4.5375	1	1	0	0	1	0.45	0	6.612
+purifier_hero_holy_lance	궁그닐	10	false	beam	6.288	3.7675	1	1	0	0	1	0.45	0	9.1176
+purifier_hero_holy_lance	천공의 궁그닐	10	true	beam	8.1744	3.39075	1	1	0	0	2	0.75	0	20.436
+purifier_hero_purification	정화	1	false	nova	1.24	9.0	1	1	0	0	0	0	0	1.24
+purifier_hero_purification	정화	3	false	nova	1.6864	8.37	1	1	0	0	0	0	0	1.6864
+purifier_hero_purification	정화	6	false	nova	2.356	7.425	1	1	0	0	1	0.5	0	3.534
+purifier_hero_purification	정화	10	false	nova	3.2488	6.165	1	1	0	0	1	0.5	0	4.8732
+purifier_hero_purification	대정화의 심판	10	true	nova	4.22344	5.5485	1	1	0	0	3	0.8	0	14.359696
+purifier_hero_sacred_orb	정화의 구체	1	false	orbit	1.36	1.5	4	1	0	0	0	0	0	1.36
+purifier_hero_sacred_orb	정화의 구체	3	false	orbit	1.8496	1.395	5	1	0	0	0	0	0	1.8496
+purifier_hero_sacred_orb	정화의 구체	6	false	orbit	2.584	1.2375	5	1	0	0	1	0.4	0	3.6176
+purifier_hero_sacred_orb	정화의 구체	10	false	orbit	3.5632	1.0275	6	1	0	0	1	0.4	0	4.98848
+purifier_hero_sacred_orb	천상의 팔광륜	10	true	orbit	4.63216	0.92475	8	1	0	0	3	0.65	0	13.664872
+purifier_hero_blessing	신성보호	1	false	guard	1.48	11.0	1	1	0	0	0	0	0	1.48
+purifier_hero_blessing	신성보호	3	false	guard	2.0128	10.23	1	1	0	0	0	0	0	2.0128
+purifier_hero_blessing	신성보호	6	false	guard	2.812	9.075	1	1	0	0	0	0	0	2.812
+purifier_hero_blessing	신성보호	10	false	guard	3.8776	7.535	1	1	0	0	0	0	0	3.8776
+purifier_hero_blessing	불멸의 신성보호	10	true	guard	5.04088	6.7815	1	1	0	0	2	0.65	0	11.594024
+purifier_hero_prayer	회복의 성배	1	false	heal	1.6	13.92	1	1	0	0	0	0	0	1.6
+purifier_hero_prayer	회복의 성배	3	false	heal	2.176	12.9456	1	1	0	0	0	0	0	2.176
+purifier_hero_prayer	회복의 성배	6	false	heal	3.04	11.484	1	1	0	0	0	0	0	3.04
+purifier_hero_prayer	회복의 성배	10	false	heal	4.192	9.5352	1	1	0	0	1	0.5	0	6.288
+purifier_hero_prayer	성배의 대기적	10	true	heal	5.4496	8.58168	1	1	0	0	2	0.8	0	14.16896
+sage_astra_starlight	별빛 지팡이	1	false	bolt	0.7	1.0	2	1	0	0	0	0	0	1.4
+sage_astra_starlight	별빛 지팡이	3	false	bolt	0.952	0.93	2	1	0	0	0	0	0	1.904
+sage_astra_starlight	별빛 지팡이	6	false	bolt	1.33	0.825	2	1	0	0	1	0.35	0	3.1255
+sage_astra_starlight	별빛 지팡이	10	false	bolt	1.834	0.685	2	1	0	0	2	0.35	0	4.9518
+sage_astra_starlight	쌍성 관통 지팡이	10	true	bolt	2.3842	0.6165	2	1	0	0	3	0.65	0	9.41759
+sage_astra_comet	스타라이트	1	false	meteor	1.2	4.5	2	1	0	0	0	0	0	2.4
+sage_astra_comet	스타라이트	3	false	meteor	1.632	4.185	3	1	0	0	0	0	0	4.896
+sage_astra_comet	스타라이트	6	false	meteor	2.28	3.7125	3	1	0	0	0	0	0	6.84
+sage_astra_comet	스타라이트	10	false	meteor	3.144	3.0825	4	1	0	0	0	0	0	12.576
+sage_astra_comet	은하 붕괴 유성우	10	true	meteor	4.0872	2.77425	6	1	0	0	2	0.65	0	29.83656
+sage_astra_astral_chain	천체 사슬	1	false	chain	0.8	2.44	4	1	0	0	0	0	0	3.2
+sage_astra_astral_chain	천체 사슬	3	false	chain	1.088	2.2692	6	1	0	0	0	0	0	6.528
+sage_astra_astral_chain	천체 사슬	6	false	chain	1.52	2.013	6	1	0	0	0	0	0	11.856
+sage_astra_astral_chain	천체 사슬	10	false	chain	2.096	1.6714	8	1	0	0	0	0	0	23.81056
+sage_astra_astral_chain	은하 성좌 사슬	10	true	chain	2.7248	1.50426	12	1	0	0	0	0	0	72.261696
+sage_astra_absolute_zero	빙점폭발	1	false	ice_pillar	1.1	6.0	1	1	3.0	0	0	0	0	1.1
+sage_astra_absolute_zero	빙점폭발	3	false	ice_pillar	1.496	5.58	1	1	4.0	0	0	0	0	1.496
+sage_astra_absolute_zero	빙점폭발	6	false	ice_pillar	2.09	4.95	2	1	4.0	0	0	0	0	4.18
+sage_astra_absolute_zero	빙점폭발	10	false	ice_pillar	2.882	4.11	2	1	4.0	0	0	0	0	5.764
+sage_astra_absolute_zero	영원의 빙점 감옥	10	true	ice_pillar	3.7466	3.699	3	1	5.5	0	0	0	0	11.2398
+sage_astra_singularity	소멸	1	false	singularity	0.7	9.0	1	1	3.0	0.5	0	0	0	1.47
+sage_astra_singularity	소멸	3	false	singularity	0.952	8.37	1	1	3.0	0.5	0	0	0	1.9992
+sage_astra_singularity	소멸	6	false	singularity	1.33	7.425	1	1	4.0	0.5	0	0	0	3.724
+sage_astra_singularity	소멸	10	false	singularity	1.834	6.165	1	1	4.0	0.35	0	0	0	7.7028
+sage_astra_singularity	사건의 지평선	10	true	singularity	2.3842	5.5485	1	1	5.0	0.25	0	0	0	16.6894
+sage_astra_binary_stars	쌍성의 고리	1	false	orbit	1.6	1.74	1	1	0	0	0	0	0	1.6
+sage_astra_binary_stars	쌍성의 고리	3	false	orbit	2.176	1.6182	3	1	0	0	0	0	0	2.176
+sage_astra_binary_stars	쌍성의 고리	6	false	orbit	3.04	1.4355	3	1	0	0	1	0.5	0	4.56
+sage_astra_binary_stars	쌍성의 고리	10	false	orbit	4.192	1.1919	3	1	0	0	1	0.5	0	6.288
+sage_astra_binary_stars	초신성 쌍성환	10	true	orbit	5.4496	1.07271	3	1	0	0	3	0.8	0	18.52864

@@ -4,6 +4,7 @@ const SLASH_DOT := 0.35
 const ORBIT_HALF_WIDTH := 100.0
 const PROJECTILE_RADIUS := 12.0
 static func reach(data: Dictionary, rank: int, awakened: bool) -> float:
+	if data.has("reach_scale"): return float(data.range)*float(data.reach_scale)
 	return float(data.range)*(1.0+0.035*(rank-1))*(1.25 if awakened else 1.0)
 static func beam_half_width(rank: int) -> float:
 	return 40.0+rank*5.0

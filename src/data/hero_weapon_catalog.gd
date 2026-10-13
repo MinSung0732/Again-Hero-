@@ -1,4 +1,5 @@
 extends RefCounted
+const GROWTH := preload("res://src/data/hero_weapon_growth_catalog.gd")
 const MAX_LEVEL := 10
 const WEAPON_SLOTS := 3
 const PASSIVE_SLOTS := 6
@@ -110,7 +111,7 @@ const WEAPONS := {
     "power": 1.0,
     "base_hits": 1,
     "effect": "표적 마력 타격",
-    "evolution": "마력탄 · 각성",
+    "evolution": "유성우 마도포",
     "tags": [
       "damage"
     ],
@@ -128,7 +129,7 @@ const WEAPONS := {
     "power": 0.85,
     "base_hits": 3,
     "effect": "가까운 적 사이로 최대 3회 연쇄",
-    "evolution": "별빛 지팡이 · 각성",
+    "evolution": "은하 연결 지팡이",
     "tags": [
       "damage"
     ],
@@ -147,7 +148,7 @@ const WEAPONS := {
     "power": 1.8,
     "base_hits": 1,
     "effect": "실제 마력 관통탄 · 직선의 적 관통",
-    "evolution": "마력 관통포 · 각성",
+    "evolution": "삼중 비전 관통포",
     "tags": [
       "damage"
     ],
@@ -166,7 +167,7 @@ const WEAPONS := {
     "power": 1.36,
     "base_hits": 1,
     "effect": "이동을 따라오는 비전 집중 · 2.5초간 주변 연속 타격",
-    "evolution": "비전 집중 · 각성",
+    "evolution": "이동 비전 성역",
     "tags": [
       "area"
     ],
@@ -188,7 +189,7 @@ const WEAPONS := {
     "power": 1.48,
     "base_hits": 1,
     "effect": "광역 폭발",
-    "evolution": "파동 지팡이 · 각성",
+    "evolution": "삼중 공명 지팡이",
     "tags": [
       "area"
     ],
@@ -206,7 +207,7 @@ const WEAPONS := {
     "power": 1.6,
     "base_hits": 1,
     "effect": "마력 보호막 · 주변 충격파",
-    "evolution": "마력 장벽 · 각성",
+    "evolution": "비전 반격 성전",
     "tags": [
       "durability"
     ],
@@ -225,7 +226,7 @@ const WEAPONS := {
     "power": 0.62,
     "base_hits": 2,
     "effect": "같은 표적을 짧은 간격으로 2연속 찌르기",
-    "evolution": "쌍단검 · 각성",
+    "evolution": "그림자 육연검",
     "tags": [
       "damage"
     ],
@@ -244,7 +245,7 @@ const WEAPONS := {
     "power": 1.12,
     "base_hits": 1,
     "effect": "표적 마력 타격",
-    "evolution": "투척 단검 · 각성",
+    "evolution": "폭우 암살 단검",
     "tags": [
       "damage"
     ],
@@ -262,7 +263,7 @@ const WEAPONS := {
     "power": 0.7,
     "base_hits": 3,
     "effect": "근접 표적 3연격 · 체력 10% 이하 마무리",
-    "evolution": "급습-암살 · 각성",
+    "evolution": "처형자의 그림자",
     "tags": [
       "damage"
     ],
@@ -282,7 +283,7 @@ const WEAPONS := {
     "power": 1.36,
     "base_hits": 1,
     "effect": "독침이 남기는 작은 독 영역 · 2초 지속",
-    "evolution": "독침 · 각성",
+    "evolution": "만독 암살진",
     "tags": [
       "area"
     ],
@@ -303,7 +304,7 @@ const WEAPONS := {
     "power": 1.48,
     "base_hits": 1,
     "effect": "1.2초 이동형 검무 · 가까운 적 연속 타격",
-    "evolution": "난도질 · 각성",
+    "evolution": "월식 난도질",
     "tags": [
       "area"
     ],
@@ -325,7 +326,7 @@ const WEAPONS := {
     "power": 1.6,
     "base_hits": 1,
     "effect": "광역 폭발",
-    "evolution": "그림자 폭탄 · 각성",
+    "evolution": "삼중 그림자 붕괴",
     "tags": [
       "area"
     ],
@@ -343,7 +344,7 @@ const WEAPONS := {
     "power": 1.2,
     "base_hits": 1,
     "effect": "넓은 검격 · 최대 6명의 전방 적 타격",
-    "evolution": "수호 장검 · 각성",
+    "evolution": "왕국 수호검",
     "tags": [
       "damage"
     ],
@@ -361,7 +362,7 @@ const WEAPONS := {
     "power": 2.0,
     "base_hits": 1,
     "effect": "이동 방향을 유지하는 관통 창격 · 최대 8명",
-    "evolution": "검방 돌격 · 창격 · 각성",
+    "evolution": "성벽 관통창",
     "tags": [
       "damage"
     ],
@@ -379,7 +380,7 @@ const WEAPONS := {
     "power": 1.24,
     "base_hits": 1,
     "effect": "3초 수호 방패 · 근접 적을 밀어내는 둔화 충격파",
-    "evolution": "막기 · 각성",
+    "evolution": "절대 방벽 아이기스",
     "tags": [
       "durability"
     ],
@@ -401,7 +402,7 @@ const WEAPONS := {
     "power": 1.36,
     "base_hits": 1,
     "effect": "광역 폭발",
-    "evolution": "방패 망치 · 각성",
+    "evolution": "대지 분쇄 방패",
     "tags": [
       "area"
     ],
@@ -419,7 +420,7 @@ const WEAPONS := {
     "power": 1.48,
     "base_hits": 1,
     "effect": "회전 수호체 타격",
-    "evolution": "회전 검륜 · 각성",
+    "evolution": "철벽 회전검진",
     "tags": [
       "area"
     ],
@@ -437,7 +438,7 @@ const WEAPONS := {
     "power": 1.6,
     "base_hits": 1,
     "effect": "회복·주변 파동",
-    "evolution": "전장의 깃발 · 각성",
+    "evolution": "불굴의 승전기",
     "tags": [
       "durability"
     ],
@@ -455,7 +456,7 @@ const WEAPONS := {
     "power": 0.5,
     "base_hits": 3,
     "effect": "3발 속사 · 6발마다 1.6초 장전",
-    "evolution": "육연발 권총 · 각성",
+    "evolution": "황혼의 육연발",
     "tags": [
       "damage"
     ],
@@ -476,7 +477,7 @@ const WEAPONS := {
     "power": 1.4,
     "base_hits": 2,
     "effect": "근접 전방위 사격 · 2초 둔화",
-    "evolution": "실린더 스트라이크 · 각성",
+    "evolution": "심판의 실린더",
     "tags": [
       "damage"
     ],
@@ -496,7 +497,7 @@ const WEAPONS := {
     "power": 0.65,
     "base_hits": 5,
     "effect": "단일 표적을 겨냥한 5발 집중 속사",
-    "evolution": "데드아이 · 각성",
+    "evolution": "종결자 데드아이",
     "tags": [
       "damage"
     ],
@@ -515,7 +516,7 @@ const WEAPONS := {
     "power": 0.75,
     "base_hits": 4,
     "effect": "적 사이를 튕기는 최대 4회 도탄",
-    "evolution": "도탄 권총 · 각성",
+    "evolution": "무한 도탄 황금총",
     "tags": [
       "damage"
     ],
@@ -534,7 +535,7 @@ const WEAPONS := {
     "power": 1.48,
     "base_hits": 1,
     "effect": "광역 폭발",
-    "evolution": "충격 수류탄 · 각성",
+    "evolution": "연쇄 진동 수류탄",
     "tags": [
       "area"
     ],
@@ -552,7 +553,7 @@ const WEAPONS := {
     "power": 1.6,
     "base_hits": 1,
     "effect": "화약 장판 · 짧은 폭발 연속 피해",
-    "evolution": "화약 폭탄 · 각성",
+    "evolution": "종말의 화약지대",
     "tags": [
       "area"
     ],
@@ -573,7 +574,7 @@ const WEAPONS := {
     "power": 1.0,
     "base_hits": 1,
     "effect": "6원소 평타 · 대지/화염/빙결/빛/바람/신성의 원래 효과",
-    "evolution": "원소 지팡이 · 각성",
+    "evolution": "육원소 공명 지팡이",
     "tags": [
       "area"
     ],
@@ -594,7 +595,7 @@ const WEAPONS := {
     "power": 1.12,
     "base_hits": 1,
     "effect": "냉기 폭발 · 2초 35% 둔화",
-    "evolution": "아이스볼트 · 각성",
+    "evolution": "영구동토의 왕홀",
     "tags": [
       "damage"
     ],
@@ -614,7 +615,7 @@ const WEAPONS := {
     "power": 0.8,
     "base_hits": 4,
     "effect": "가까운 적을 순차 연결하는 4회 연쇄 단검",
-    "evolution": "체인대거 · 각성",
+    "evolution": "천뢰 연쇄대거",
     "tags": [
       "damage"
     ],
@@ -633,7 +634,7 @@ const WEAPONS := {
     "power": 2.0,
     "base_hits": 1,
     "effect": "대지 가시 · 큰 단발 광역 타격",
-    "evolution": "땅의 가시 · 각성",
+    "evolution": "대륙 파쇄 지팡이",
     "tags": [
       "area"
     ],
@@ -651,7 +652,7 @@ const WEAPONS := {
     "power": 1.48,
     "base_hits": 1,
     "effect": "폭풍 수호체 · 회전 궤도의 적 타격",
-    "evolution": "폭풍 · 각성",
+    "evolution": "영겁의 폭풍핵",
     "tags": [
       "area"
     ],
@@ -670,7 +671,7 @@ const WEAPONS := {
     "power": 1.6,
     "base_hits": 1,
     "effect": "신성력 장판 · 넓은 범위 연속 타격",
-    "evolution": "신성력 · 각성",
+    "evolution": "천상의 신성력",
     "tags": [
       "damage"
     ],
@@ -691,7 +692,7 @@ const WEAPONS := {
     "power": 0.55,
     "base_hits": 3,
     "effect": "혈검 3연격 · 체력이 낮을수록 피해 증가",
-    "evolution": "혈검술 제1식 · 각성",
+    "evolution": "마혈 육연식",
     "tags": [
       "damage"
     ],
@@ -711,7 +712,7 @@ const WEAPONS := {
     "power": 1.12,
     "base_hits": 1,
     "effect": "피의 흔적 · 유효 피해의 4% 흡혈",
-    "evolution": "혈검술 제2식 · 각성",
+    "evolution": "흡혈 혈해창",
     "tags": [
       "damage"
     ],
@@ -733,7 +734,7 @@ const WEAPONS := {
     "power": 1.24,
     "base_hits": 1,
     "effect": "회전 수호체 타격",
-    "evolution": "핏빛 검륜 · 각성",
+    "evolution": "혈월 회전검",
     "tags": [
       "area"
     ],
@@ -751,7 +752,7 @@ const WEAPONS := {
     "power": 2.2,
     "base_hits": 1,
     "effect": "현재 HP 2% 소모 · 빈사일수록 강한 혈폭",
-    "evolution": "혈검술 제4식 · 각성",
+    "evolution": "심장 파열 혈폭",
     "tags": [
       "area"
     ],
@@ -771,7 +772,7 @@ const WEAPONS := {
     "power": 0.8,
     "base_hits": 1,
     "effect": "유효 검격 피해의 8% 회복 · 허공 회복 없음",
-    "evolution": "흡혈 검 · 각성",
+    "evolution": "불멸의 포식검",
     "tags": [
       "durability"
     ],
@@ -790,7 +791,7 @@ const WEAPONS := {
     "power": 1.6,
     "base_hits": 1,
     "effect": "다수 표적 연쇄 타격",
-    "evolution": "심장 사슬 · 각성",
+    "evolution": "심장 수확 사슬",
     "tags": [
       "damage"
     ],
@@ -808,7 +809,7 @@ const WEAPONS := {
     "power": 1.0,
     "base_hits": 1,
     "effect": "산성 장판 · 빠른 연속 피해",
-    "evolution": "산성 약병 · 각성",
+    "evolution": "왕수 살포기",
     "tags": [
       "area"
     ],
@@ -830,7 +831,7 @@ const WEAPONS := {
     "power": 1.12,
     "base_hits": 1,
     "effect": "5초 혼합장 · 지속 피해와 둔화",
-    "evolution": "촉매 혼합장 · 각성",
+    "evolution": "대연금 촉매로",
     "tags": [
       "area"
     ],
@@ -854,7 +855,7 @@ const WEAPONS := {
     "power": 1.24,
     "base_hits": 1,
     "effect": "냉기 폭발·둔화",
-    "evolution": "냉각 약병 · 각성",
+    "evolution": "절대영도 앰플",
     "tags": [
       "damage"
     ],
@@ -872,7 +873,7 @@ const WEAPONS := {
     "power": 1.36,
     "base_hits": 1,
     "effect": "이동 경로를 따라 독 가스를 남기는 2초 반응",
-    "evolution": "오늘도 실팬가! · 각성",
+    "evolution": "성공한 종말 실험",
     "tags": [
       "area"
     ],
@@ -894,7 +895,7 @@ const WEAPONS := {
     "power": 1.48,
     "base_hits": 1,
     "effect": "직선 관통",
-    "evolution": "압축 산성포 · 각성",
+    "evolution": "삼중 왕수 분사포",
     "tags": [
       "damage"
     ],
@@ -912,7 +913,7 @@ const WEAPONS := {
     "power": 1.6,
     "base_hits": 1,
     "effect": "최대 HP 3.5% 회복 · 주변 파동",
-    "evolution": "현자의 비약 · 각성",
+    "evolution": "불사의 현자 비약",
     "tags": [
       "durability"
     ],
@@ -931,7 +932,7 @@ const WEAPONS := {
     "power": 0.65,
     "base_hits": 1,
     "effect": "기존 이계 소환수 실제 소환 · 총 3체 제한 · 14초 유지",
-    "evolution": "이계의 문 - 투견 · 각성",
+    "evolution": "지옥문 사냥개",
     "tags": [
       "area"
     ],
@@ -954,7 +955,7 @@ const WEAPONS := {
     "power": 0.65,
     "base_hits": 1,
     "effect": "기존 이계 소환수 실제 소환 · 총 3체 제한 · 14초 유지",
-    "evolution": "이계의 문 - 감시자 · 각성",
+    "evolution": "차원 감시 군주",
     "tags": [
       "area"
     ],
@@ -977,7 +978,7 @@ const WEAPONS := {
     "power": 0.65,
     "base_hits": 2,
     "effect": "기존 이계 소환수 실제 소환 · 총 3체 제한 · 14초 유지",
-    "evolution": "이계의 문 - 정찰병 · 각성",
+    "evolution": "차원 선봉대장",
     "tags": [
       "damage"
     ],
@@ -997,7 +998,7 @@ const WEAPONS := {
     "power": 1.36,
     "base_hits": 1,
     "effect": "직선 관통",
-    "evolution": "차원 관통문 · 각성",
+    "evolution": "오중 차원 절단문",
     "tags": [
       "damage"
     ],
@@ -1015,7 +1016,7 @@ const WEAPONS := {
     "power": 0.65,
     "base_hits": 1,
     "effect": "기존 이계 소환수 실제 소환 · 총 3체 제한 · 14초 유지",
-    "evolution": "이계의 문 - 문지기 · 각성",
+    "evolution": "심연의 문지기",
     "tags": [
       "durability"
     ],
@@ -1035,7 +1036,7 @@ const WEAPONS := {
     "power": 1.6,
     "base_hits": 1,
     "effect": "광역 폭발",
-    "evolution": "균열 파동 · 각성",
+    "evolution": "심연 균열 연쇄",
     "tags": [
       "area"
     ],
@@ -1053,7 +1054,7 @@ const WEAPONS := {
     "power": 1.0,
     "base_hits": 1,
     "effect": "표적 마력 타격",
-    "evolution": "성광탄 · 각성",
+    "evolution": "천벌의 성광포",
     "tags": [
       "damage"
     ],
@@ -1071,7 +1072,7 @@ const WEAPONS := {
     "power": 2.4,
     "base_hits": 1,
     "effect": "긴 성창으로 직선 관통 · 최대 10명",
-    "evolution": "궁그닐 · 각성",
+    "evolution": "천공의 궁그닐",
     "tags": [
       "damage"
     ],
@@ -1089,7 +1090,7 @@ const WEAPONS := {
     "power": 1.24,
     "base_hits": 1,
     "effect": "자신의 독·화상·둔화 해제 · 주변 정화 파동",
-    "evolution": "정화 · 각성",
+    "evolution": "대정화의 심판",
     "tags": [
       "area"
     ],
@@ -1108,7 +1109,7 @@ const WEAPONS := {
     "power": 1.36,
     "base_hits": 4,
     "effect": "주변을 도는 정화 구체 · 최대 8명 타격",
-    "evolution": "정화의 구체 · 각성",
+    "evolution": "천상의 팔광륜",
     "tags": [
       "area"
     ],
@@ -1127,7 +1128,7 @@ const WEAPONS := {
     "power": 1.48,
     "base_hits": 1,
     "effect": "4초 신성 보호막 · 주변 성광",
-    "evolution": "신성보호 · 각성",
+    "evolution": "불멸의 신성보호",
     "tags": [
       "durability"
     ],
@@ -1147,7 +1148,7 @@ const WEAPONS := {
     "power": 1.6,
     "base_hits": 1,
     "effect": "회복·주변 파동",
-    "evolution": "회복의 성배 · 각성",
+    "evolution": "성배의 대기적",
     "tags": [
       "durability"
     ],
@@ -1165,7 +1166,7 @@ const WEAPONS := {
     "power": 0.7,
     "base_hits": 2,
     "effect": "2개의 별빛 탄 · 집중 표적 추적",
-    "evolution": "별빛 지팡이 · 각성",
+    "evolution": "쌍성 관통 지팡이",
     "tags": [
       "damage"
     ],
@@ -1183,7 +1184,7 @@ const WEAPONS := {
     "power": 1.2,
     "base_hits": 2,
     "effect": "기존 운석 실제 낙하 · 착탄 범위 피해",
-    "evolution": "스타라이트 · 각성",
+    "evolution": "은하 붕괴 유성우",
     "tags": [
       "damage"
     ],
@@ -1208,7 +1209,7 @@ const WEAPONS := {
     "power": 0.8,
     "base_hits": 4,
     "effect": "가까운 적 사이 천체 연쇄 · 최대 4회",
-    "evolution": "천체 사슬 · 각성",
+    "evolution": "은하 성좌 사슬",
     "tags": [
       "damage"
     ],
@@ -1227,7 +1228,7 @@ const WEAPONS := {
     "power": 1.1,
     "base_hits": 1,
     "effect": "기존 얼음 기둥 실제 생성 · 둔화·길목 차단",
-    "evolution": "빙점폭발 · 각성",
+    "evolution": "영원의 빙점 감옥",
     "tags": [
       "damage"
     ],
@@ -1250,7 +1251,7 @@ const WEAPONS := {
     "power": 0.7,
     "base_hits": 1,
     "effect": "기존 소멸 영역 · 끌어당김·반복 피해·체력 10% 마무리",
-    "evolution": "소멸 · 각성",
+    "evolution": "사건의 지평선",
     "tags": [
       "area"
     ],
@@ -1280,7 +1281,7 @@ const WEAPONS := {
     "power": 1.6,
     "base_hits": 1,
     "effect": "회전 수호체 타격",
-    "evolution": "쌍성의 고리 · 각성",
+    "evolution": "초신성 쌍성환",
     "tags": [
       "area"
     ],
@@ -1346,7 +1347,7 @@ static func weapon_pool(hero_id: String = "") -> Array:
 static func description(id: String, next_level: int) -> String:
 	if PASSIVES.has(id): return String(PASSIVES[id].description)
 	var data: Dictionary = WEAPONS.get(id,{})
-	return "%s\n피해·범위·빈도 성장 / Lv.5 타격 수 증가 / Lv.10 상자 진화\n선택 후 Lv.%d / 10" % [String(data.get("effect","무기 공격"))+"\n원형 기술: "+String(data.get("source_skill","고유 기본공격")),next_level]
+	return "%s\n%s\nLv.%d / 10" % [String(data.get("effect","무기 공격")),GROWTH.description(id,next_level),next_level]
 static func profile_for_survival(source: Dictionary) -> Dictionary:
 	var result := source.duplicate(true)
 	result["max_hp"] = 1200

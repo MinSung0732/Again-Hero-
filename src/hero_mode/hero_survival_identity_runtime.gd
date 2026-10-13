@@ -222,25 +222,36 @@ func cooldown_multiplier() -> float:
 	return result
 func cooldown_for(id: String, base: float) -> float:
 	if archetype == "rogue_combo" and id == starter:
-		return hero.attack_timer*weapons.haste*(1.0-0.035*(int(weapons.levels[id])-1))*(0.8 if weapons.evolved.has(id) else 1.0)
+		return hero.attack_timer*weapons.haste*float(weapons.stats_for(id).cooldown_scale)
 	return base*cooldown_multiplier()
+var native_cast_succeeded := false
 func native_basic(id: String, target: Node2D, damage: int, reach: float) -> bool:
+	native_cast_succeeded = false
 	if id != starter or not spec.has("native_basic"): return false
 	if not is_instance_valid(target): return true
-	var key := "archmage_projectile" if archetype == "archmage_elementalist" else "sage_piercing_projectile" if (hero.sage_attack_serial+1)%maxi(int(hero.sage_config.get("third_attack_interval",3)),1) == 0 else "sage_basic_projectile"
+	var growth: Dictionary = weapons.stats_for(id)
+	var sage_interval := maxi(int(growth.get("sage_interval",hero.sage_config.get("third_attack_interval",3))),1)
+	var key := "archmage_projectile" if archetype == "archmage_elementalist" else "sage_piercing_projectile" if (hero.sage_attack_serial+1)%sage_interval == 0 else "sage_basic_projectile"
 	var authority = hero.get_parent()
 	if spec.has("pools") and (not authority.projectile_pools.has(key) or authority.projectile_pools[key].is_empty()): return true
 	var old_damage: int = hero.attack_damage; var old_range: float = hero.attack_range; var old_speed: float = hero.projectile_speed
 	var basic_range := 0.0; var basic_speed := 0.0; var piercing_speed := 0.0
+	var old_combo: int = hero.rogue_bonus_combo_hits
+	var old_sage_interval: int = int(hero.sage_config.get("third_attack_interval",3))
+	if archetype == "rogue_combo": hero.rogue_bonus_combo_hits = old_combo+int(growth.get("native_combo_bonus",0))
 	if archetype == "grand_sage_astra":
+		hero.sage_config["third_attack_interval"] = sage_interval
 		basic_range = float(hero.sage_config.get("basic_range",650))
 		basic_speed = float(hero.sage_config.get("basic_projectile_speed",800)); piercing_speed = float(hero.sage_config.get("piercing_projectile_speed",800))
 		hero.sage_config.basic_range = reach
 		hero.sage_config.basic_projectile_speed = basic_speed*weapons.projectile_speed; hero.sage_config.piercing_projectile_speed = piercing_speed*weapons.projectile_speed
 	hero.attack_damage = damage; hero.attack_range = reach; hero.projectile_speed = old_speed*weapons.projectile_speed
 	hero.call(String(spec.native_basic),target)
+	native_cast_succeeded = true
 	hero.attack_damage = old_damage; hero.attack_range = old_range; hero.projectile_speed = old_speed
+	hero.rogue_bonus_combo_hits = old_combo
 	if archetype == "grand_sage_astra":
+		hero.sage_config.third_attack_interval = old_sage_interval
 		hero.sage_config.basic_range = basic_range; hero.sage_config.basic_projectile_speed = basic_speed; hero.sage_config.piercing_projectile_speed = piercing_speed
 	# Original helper already plays the appropriate element/third-shot sound.
 	on_cast(id,false,false); audio_serial += 1

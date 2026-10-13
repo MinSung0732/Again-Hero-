@@ -334,6 +334,10 @@ static func activate_summon(
 		or not summon.has_method("activate")
 	):
 		return false
+	# Survival growth is applied after original augment builders, which derive
+	# several fields from zero. Main configs have no overrides and keep their path.
+	if runtime_config.has("survival_overrides"):
+		runtime_config.merge(runtime_config.survival_overrides,true)
 	summon.call(
 		"activate",
 		spawn_position,

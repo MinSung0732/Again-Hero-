@@ -50,10 +50,11 @@ func cast(data: Dictionary, origin: Vector2, direction: Vector2, target: Node2D,
 		if hero._get_active_summon_count() >= WEAPONS.SUMMON_LIMIT: return true
 		var kind := String(data.summon_kind)
 		if not summon_configs.has(kind): return true
-		var config: Dictionary = summon_configs[kind]
+		# Cached on upgrade. Actors snapshot scalars in setup; no per-cast deep copy.
+		var config: Dictionary = data.get("summon_config",summon_configs[kind])
 		config["damage_ratio"] = float(damage)*WEAPONS.SUMMON_DAMAGE_RATIO/maxf(hero.attack_damage,1)
 		config["duration"] = float(data.get("summon_duration",14.0))
-		config["max_hp"] = roundi(hero.max_hp*WEAPONS.SUMMON_HP_RATIO)
+		config["max_hp"] = roundi(hero.max_hp*float(data.get("summon_hp_ratio",WEAPONS.SUMMON_HP_RATIO)))
 		hero.set("summoner_"+kind+"_config",config)
 		hero.set("summoner_"+kind+"_cooldown",0.0)
 		hero.call("_try_cast_summoner_"+kind)
@@ -63,7 +64,7 @@ func cast(data: Dictionary, origin: Vector2, direction: Vector2, target: Node2D,
 	if not is_instance_valid(target): return true
 	var spec: Array = SCENES[pattern]
 	var count := mini(hits,int(spec[2]))
-	var radius_scale := 1.25 if awakened else 1.0
+	var radius_scale := float(data.get("native_radius_scale",1.25 if awakened else 1.0))
 	for index in count:
 		# Only use the startup pool. Saturation skips a cast rather than allocating.
 		if not authority.projectile_pools.has(spec[1]) or authority.projectile_pools[spec[1]].is_empty(): break

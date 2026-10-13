@@ -190,7 +190,7 @@ func _refresh_hud() -> void:
 			if index >= runtime.weapon_ids.size(): button.text = "빈 무기 슬롯"; button.disabled = true; continue
 			var id := String(runtime.weapon_ids[index]); button.disabled = false
 			button.icon = ICONS.texture(id)
-			button.text = String(WEAPONS.WEAPONS[id].name)+(" · 진화" if runtime.evolved.has(id) else " Lv.%d/10" % int(runtime.levels[id]))
+			button.text = WEAPONS.GROWTH.evolution_name(id) if runtime.evolved.has(id) else String(WEAPONS.WEAPONS[id].name)+" Lv.%d/10" % int(runtime.levels[id])
 		var parts: PackedStringArray = []
 		for id in runtime.passives: parts.append(String(WEAPONS.PASSIVES[id].name)+" %d" % int(runtime.passives[id]))
 		build.text = "보조 %d/%d · " % [runtime.passives.size(),WEAPONS.PASSIVE_SLOTS]+("없음 / 이동: 패드·WASD" if parts.is_empty() else " · ".join(parts))
@@ -327,8 +327,8 @@ func _show_weapon_info(index: int) -> void:
 	if index >= runtime.weapon_ids.size(): return
 	_pause(); _clear_overlay()
 	var id := String(runtime.weapon_ids[index])
-	_label(overlay_rows,String(WEAPONS.WEAPONS[id].name),32)
-	_label(overlay_rows,WEAPONS.description(id,int(runtime.levels[id])),24)
+	_label(overlay_rows,WEAPONS.GROWTH.evolution_name(id) if runtime.evolved.has(id) else String(WEAPONS.WEAPONS[id].name),32)
+	_label(overlay_rows,WEAPONS.GROWTH.description(id,int(runtime.levels[id]),runtime.evolved.has(id)),24)
 	_label(overlay_rows,"상자: Lv.10 무기 중 하나 진화 → 없으면 보유 무기 +1레벨",23)
 	_button("계속 플레이",_resume)
 

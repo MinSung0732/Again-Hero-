@@ -23,6 +23,10 @@ var weapon_ids: Array[String] = []
 var available_weapons: Array = []
 var cooldowns: Dictionary = {}
 var scratch: Array = []
+var pulse_scratch: Array = []
+var splash_scratch: Array = []
+var resolved: Dictionary = {}
+var pulses: Array[Dictionary] = []
 var effects: Array[Dictionary] = []
 var fields: Array[Dictionary] = []
 var field_cursor := 0
@@ -61,6 +65,7 @@ func install(host) -> void:
 	for index in range(EFFECT_LIMIT):
 		effects.append({"left":0.0,"duration":0.0,"a":Vector2.ZERO,"b":Vector2.ZERO,"radius":0.0,"pattern":"","color":Color.WHITE,"orbit_count":4,"orbit_speed":3.0,"orbit_ratio":0.7})
 	for index in range(8): fields.append({"left":0.0,"tick":0.0,"origin":Vector2.ZERO,"radius":0.0,"damage":0,"cap":9,"interval":0.5,"follow":false,"data":{},"rank":1})
+	for index in 24: pulses.append({"active":false,"left":0.0,"origin":Vector2.ZERO,"direction":Vector2.RIGHT,"radius":0.0,"damage":0,"rank":1,"data":{}})
 	add(String(DATA.STARTERS.get(hero.hero_id,"ranged_rookie_arcane_bolt")))
 	if hero.has_method("_draw_combat_status_overlay"):
 		identity = IDENTITY.new(); identity.install(hero,self)
@@ -74,6 +79,7 @@ func add(id: String) -> bool:
 			weapon_ids.append(id); cooldowns[id] = 0.0
 			magazines[id] = int(DATA.WEAPONS[id].get("magazine",0))
 		levels[id] = int(levels.get(id,0))+1
+		resolved.erase(id)
 		hero.build_counts[id] = levels[id]
 		return true
 	if not DATA.PASSIVES.has(id) or int(passives.get(id,0)) >= DATA.MAX_LEVEL: return false
@@ -138,7 +144,7 @@ func roll_chest() -> Dictionary:
 	chest_serial += 1
 	if eligible.is_empty(): return {"serial":chest_serial,"id":"survival_restore","evolution":false,"name":"생명의 축복","description":"모든 무기가 완성됐습니다. 최대 HP 25% 회복","applied":false}
 	var id := eligible[randi_range(0,eligible.size()-1)]
-	return {"serial":chest_serial,"id":id,"evolution":evolution,"name":String(DATA.WEAPONS[id].evolution) if evolution else String(DATA.WEAPONS[id].name)+" Lv.%d" % (int(levels[id])+1),"description":"피해 ×1.8 · 타격 수 +2 · 범위 +25% · 재사용 대기시간 -20%" if evolution else "보유 무기 +1레벨","applied":false}
+	return {"serial":chest_serial,"id":id,"evolution":evolution,"name":DATA.GROWTH.evolution_name(id) if evolution else String(DATA.WEAPONS[id].name)+" Lv.%d" % (int(levels[id])+1),"description":DATA.GROWTH.evolution_description(id) if evolution else DATA.GROWTH.upgrade_description(id,int(levels[id])+1),"applied":false}
 
 func apply_chest(receipt: Dictionary) -> bool:
 	if bool(receipt.get("applied",false)) or int(receipt.get("serial",-1)) != chest_serial or chest_serial <= last_applied_chest: return false
@@ -147,6 +153,7 @@ func apply_chest(receipt: Dictionary) -> bool:
 	elif bool(receipt.get("evolution",false)):
 		if int(levels.get(id,0)) != DATA.MAX_LEVEL or evolved.has(id): return false
 		evolved[id] = true
+		resolved.erase(id)
 	else:
 		if not levels.has(id) or not add(id): return false
 	receipt["applied"] = true
@@ -163,13 +170,14 @@ func build_tags() -> Dictionary:
 func summary() -> String:
 	var parts: PackedStringArray = []
 	for id in weapon_ids:
-		parts.append(String(DATA.WEAPONS[id].evolution) if evolved.has(id) else String(DATA.WEAPONS[id].name)+" Lv.%d/10" % int(levels[id]))
+		parts.append(DATA.GROWTH.evolution_name(id) if evolved.has(id) else String(DATA.WEAPONS[id].name)+" Lv.%d/10" % int(levels[id]))
 	return " · ".join(parts)
 
 func tick(delta: float) -> void:
 	visual_clock += delta
 	var identity_blocked: bool = identity != null and identity.tick(delta)
 	_tick_projectiles(delta)
+	_tick_pulses(delta)
 	var redraw := false
 	for effect in effects:
 		if float(effect.left) <= 0.0: continue
@@ -202,14 +210,29 @@ func tick(delta: float) -> void:
 		cooldowns[id] = maxf(0.0,float(cooldowns[id])-delta*hero.get_paralysis_attack_multiplier())
 		if float(cooldowns[id]) > 0.0: continue
 		_cast(id)
-		cooldowns[id] = float(DATA.WEAPONS[id].cooldown)*haste*(1.0-0.035*(int(levels[id])-1))*(0.8 if evolved.has(id) else 1.0)
+		var stats := stats_for(id)
+		cooldowns[id] = float(stats.cooldown)*haste*float(stats.cooldown_scale)
 		if identity != null: cooldowns[id] = identity.cooldown_for(id,float(cooldowns[id]))
 		if (identity == null or identity.archetype != "pistol_gunner") and int(DATA.WEAPONS[id].get("magazine",0)) > 0 and int(magazines[id]) <= 0:
 			cooldowns[id] += float(DATA.WEAPONS[id].get("reload",1.6))
 			magazines[id] = int(DATA.WEAPONS[id].magazine)
 
+func stats_for(id: String) -> Dictionary:
+	if resolved.has(id):
+		var cached: Dictionary = resolved[id]
+		if int(cached.growth_rank) == int(levels[id]) and bool(cached.growth_evolved) == evolved.has(id): return cached
+	var stats := DATA.GROWTH.resolve(id,DATA.WEAPONS[id],int(levels[id]),evolved.has(id))
+	if native_skills != null and String(stats.pattern) == "summon":
+		var config: Dictionary = native_skills.summon_configs[String(stats.summon_kind)].duplicate(true)
+		if stats.has("summon_patch"):
+			config.merge(stats.summon_patch,true)
+			config["survival_overrides"] = stats.summon_patch
+		stats["summon_config"] = config
+	resolved[id] = stats
+	return stats
+
 func _cast(id: String) -> void:
-	var data: Dictionary = DATA.WEAPONS[id]
+	var data := stats_for(id)
 	var rank := int(levels[id])
 	var awakened := evolved.has(id)
 	if identity != null and not identity.can_cast(id,String(data.pattern)): return
@@ -217,10 +240,10 @@ func _cast(id: String) -> void:
 	var origin: Vector2 = hero.global_position
 	var reach: float = GEOMETRY.reach(data,rank,awakened)
 	var base_damage: float = identity.attack_damage() if identity != null else float(hero.attack_damage)
-	var damage: int = maxi(1,roundi(base_damage*float(data.power)*power*(1.0+0.18*(rank-1))*(1.8 if awakened else 1.0)))
+	var damage: int = maxi(1,roundi(base_damage*float(data.power)*power*float(data.damage_scale)))
 	damage = maxi(1,roundi(damage*(1.0+float(data.get("low_hp_bonus",0.0))*(1.0-float(hero.current_hp)/maxf(hero.max_hp,1)))))
 	if identity != null: damage = identity.modify_damage(id,damage)
-	var hits := int(data.get("base_hits",1))+int(rank/5)+(2 if awakened else 0)
+	var hits := int(data.get("base_hits",1))+int(data.get("bonus_hits",0))
 	var pattern := String(data.pattern)
 	var color := Color(String(data.color))
 	hero._fill_monster_nodes_near(origin,reach,scratch)
@@ -236,12 +259,16 @@ func _cast(id: String) -> void:
 	var direction: Vector2 = hero.player_move_input.normalized()
 	if is_instance_valid(closest): direction = origin.direction_to(closest.global_position)
 	if direction.length_squared() < 0.01: direction = Vector2.RIGHT
-	if identity != null and identity.native_basic(id,closest,damage,reach): return
+	if identity != null and identity.native_basic(id,closest,damage,reach):
+		if identity.native_cast_succeeded: _after_cast(data,origin,direction,closest,damage,reach,rank)
+		return
 	if is_instance_valid(closest) or pattern == "summon" or pattern == "guard" or pattern == "heal": _pose(direction)
 	if identity != null and (is_instance_valid(closest) or pattern in ["summon","guard","heal"]): identity.on_cast(id)
 	if native_skills != null and native_skills.cast(data,origin,direction,closest,damage,reach,hits,rank,projectile_speed,awakened):
+		if is_instance_valid(closest) or pattern == "summon": _after_cast(data,origin,direction,closest,damage,reach,rank)
 		hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
 		return
+	if is_instance_valid(closest) or pattern in ["guard","heal"]: _after_cast(data,origin,direction,closest,damage,reach,rank)
 	if bool(data.get("cleanse",false)):
 		hero.poison_timer = 0.0; hero.poison_tick_timer = 0.0; hero.poison_damage_remaining = 0; hero.poison_ticks_remaining = 0; hero.poison_source = null
 		hero.damage_poison_tracker.clear(); hero.burn_runtime.clear(); hero.slow_timer = 0.0; hero.move_multiplier = 1.0
@@ -255,28 +282,36 @@ func _cast(id: String) -> void:
 		if identity != null and identity.archetype == "pistol_gunner" and pattern == "burst": shots = identity.consume_ammo(shots)
 		elif int(data.get("magazine",0)) > 0:
 			shots = mini(shots,int(magazines[id])); magazines[id] = int(magazines[id])-shots
-		for index in shots: _launch_projectile(closest,origin,damage,rank,color,data,index*float(data.get("hit_interval",0.14)),pattern == "combo",reach)
+		for index in shots: _launch_projectile(closest,origin,damage,rank,color,data,index*float(data.get("hit_interval",0.14)),pattern == "combo",reach,index == shots-1)
 		hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
 		hero.attack_pose_timer = 0.25
 		return
 	if pattern == "poison":
-		var field: Dictionary = fields[field_cursor]; field_cursor = (field_cursor+1)%fields.size()
-		field.origin = closest.global_position if is_instance_valid(closest) else origin
-		field.left = float(data.get("field_duration",3.0)); field.tick = 0.0; field.interval = float(data.get("field_interval",0.5)); field.radius = reach*float(data.get("field_radius_ratio",0.45)); field.damage = maxi(1,roundi(damage*float(data.get("field_power",0.25)))); field.cap = mini(24,4+hits*5)
-		field.follow = bool(data.get("field_follow",false)); field.data = data; field.rank = rank
-		if bool(field.follow): field.origin = origin
-		field["frames"] = ART.cache.get(String(data.get("effect_dir","")),EMPTY_ART)
-		field["color"] = color
+		for index in mini(3,int(data.get("field_count",1))):
+			var field := _free_field()
+			if field.is_empty(): break
+			field.origin = closest.global_position if is_instance_valid(closest) else origin
+			field.left = float(data.get("field_duration",3.0)); field.tick = 0.0; field.interval = float(data.get("field_interval",0.5)); field.radius = reach*float(data.get("field_radius_ratio",0.45)); field.damage = maxi(1,roundi(damage*float(data.get("field_power",0.25)))); field.cap = mini(24,4+hits*5)
+			# Secondary circles cover flanks, each with its own visible/actual footprint.
+			if index > 0: field.origin += direction.orthogonal()*float(field.radius)*1.25*(1.0 if index == 1 else -1.0)
+			field.follow = bool(data.get("field_follow",false)); field.data = data; field.rank = rank
+			if bool(field.follow): field.origin = origin
+			field["frames"] = ART.cache.get(String(data.get("effect_dir","")),EMPTY_ART)
+			field["color"] = color
 		hero.queue_redraw()
 		hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
 		return
 	if pattern == "heal": hero.heal_direct(roundi(hero.max_hp*(float(data.get("heal_ratio",0.015))+rank*0.002)))
 	if pattern == "guard":
-		var shield: float = hero.max_hp*(float(data.get("shield_ratio",0.04))+rank*0.006)*(1.5 if awakened else 1.0)
+		var shield: float = hero.max_hp*(float(data.get("shield_ratio",0.04))+rank*0.006)
 		# Replace only this runtime's grant; preserve other shield sources.
 		hero.shield_hp = maxf(0.0,hero.shield_hp-owned_shield)+shield; owned_shield = shield; shield_left = float(data.get("shield_duration",3.0))
 		if identity != null: hero.shield_max_hp = maxf(hero.shield_max_hp,hero.shield_hp)
 	var cap := mini(24,4+hits*5) if pattern in ["nova","frost","guard","heal"] else mini(int(data.get("hit_cap",hits)),hits+4) if pattern in ["slash","beam","orbit"] else hits
+	if pattern == "beam" and int(data.get("fan_lines",1)) > 1:
+		_cast_fan(data,origin,direction,reach,rank,damage,cap)
+		hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
+		return
 	var struck := 0
 	if pattern in ["bolt","chain"] and is_instance_valid(closest):
 		if pattern == "bolt": _launch_projectile(closest,origin,damage,rank,color,data,0.0,false,reach)
@@ -293,19 +328,96 @@ func _cast(id: String) -> void:
 		var offset: Vector2 = actor.global_position-origin
 		if not GEOMETRY.contains(pattern,offset,direction,reach,rank,data): continue
 		if pattern == "bolt": _launch_projectile(actor,origin,damage,rank,color,data,0.0,false,reach)
-		else: _hit(actor,damage,pattern,rank,data)
+		else: _hit(actor,roundi(damage*(1.0+struck*float(data.get("chain_growth",0.0)))) if pattern == "chain" else damage,pattern,rank,data)
 		struck += 1
 		if pattern == "chain": _effect(closest.global_position if is_instance_valid(closest) else origin,actor.global_position,20.0,pattern,color,data)
 	if pattern == "beam": _effect(origin,origin+direction*reach,GEOMETRY.beam_half_width(rank),pattern,color,data)
 	elif pattern not in ["bolt","chain"]: _effect(origin,origin+direction*reach,reach,pattern,color,data)
 	hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
+
+func _free_field() -> Dictionary:
+	for offset in fields.size():
+		var index := (field_cursor+offset)%fields.size()
+		if float(fields[index].left) <= 0.0:
+			field_cursor = (index+1)%fields.size()
+			return fields[index]
+	return {} # Saturation never overwrites a still-visible damage circle.
+
+func _after_cast(data: Dictionary, origin: Vector2, direction: Vector2, target: Node2D, damage: int, reach: float, rank: int) -> void:
+	if float(data.get("cast_heal",0.0)) > 0.0: hero.heal_direct(roundi(hero.max_hp*float(data.cast_heal)))
+	if float(data.get("cast_shield",0.0)) > 0.0:
+		var grant: float = hero.max_hp*float(data.cast_shield)
+		hero.shield_hp = maxf(0.0,hero.shield_hp-owned_shield)+grant
+		owned_shield = grant; shield_left = 3.0
+		if identity != null: hero.shield_max_hp = maxf(hero.shield_max_hp,hero.shield_hp)
+	var count := mini(3,int(data.get("pulse_count",0)))
+	var center: Vector2 = target.global_position if bool(data.get("pulse_target",false)) and is_instance_valid(target) else origin
+	var scheduled := 0
+	for pulse in pulses:
+		if scheduled >= count: break
+		if bool(pulse.active): continue
+		pulse.active = true; scheduled += 1
+		pulse.left = scheduled*float(data.get("pulse_interval",0.24)); pulse.origin = center; pulse.direction = direction
+		pulse.radius = reach*float(data.get("pulse_radius_ratio",0.6)); pulse.damage = maxi(1,roundi(damage*float(data.get("pulse_ratio",0.4))))
+		pulse.rank = rank; pulse.data = data
+
+func _tick_pulses(delta: float) -> void:
+	for pulse in pulses:
+		if not bool(pulse.active): continue
+		pulse.left = float(pulse.left)-delta
+		if float(pulse.left) > 0.0: continue
+		pulse.active = false
+		if hero.current_hp <= 0: continue
+		var data: Dictionary = pulse.data
+		var pattern := String(data.get("pulse_pattern","nova"))
+		hero._fill_monster_nodes_near(pulse.origin,float(pulse.radius),pulse_scratch)
+		var struck := 0
+		for raw in pulse_scratch:
+			var actor := raw as Node2D
+			if not TARGETS.is_detectable(actor) or not GEOMETRY.contains(pattern,actor.global_position-Vector2(pulse.origin),pulse.direction,float(pulse.radius),int(pulse.rank),data): continue
+			_hit(actor,int(pulse.damage),pattern,int(pulse.rank),data); struck += 1
+			if struck >= 16: break
+		_effect(pulse.origin,Vector2(pulse.origin)+Vector2(pulse.direction)*float(pulse.radius),GEOMETRY.beam_half_width(int(pulse.rank)) if pattern == "beam" else float(pulse.radius),pattern,Color(String(data.color)),data)
+
+func _cast_fan(data: Dictionary, origin: Vector2, direction: Vector2, reach: float, rank: int, damage: int, cap: int) -> void:
+	var lines := mini(5,int(data.fan_lines))
+	for index in lines:
+		var aim := direction.rotated((index-(lines-1)*0.5)*0.32)
+		_effect(origin,origin+aim*reach,GEOMETRY.beam_half_width(rank),"beam",Color(String(data.color)),data)
+	var struck := 0
+	for raw in scratch:
+		var actor := raw as Node2D
+		if not TARGETS.is_detectable(actor): continue
+		for index in lines:
+			var aim := direction.rotated((index-(lines-1)*0.5)*0.32)
+			if not GEOMETRY.contains("beam",actor.global_position-origin,aim,reach,rank,data): continue
+			_hit(actor,damage,"beam",rank,data); struck += 1
+			break # Overlapping rays never multiply damage on one actor.
+		if struck >= cap: break
+
+func _finish_shot(shot: Dictionary, actor: Node2D) -> void:
+	var data: Dictionary = shot.data
+	if not bool(shot.get("finisher",false)) or float(data.get("finish_ratio",0.0)) <= 0.0 or not is_instance_valid(actor): return
+	_splash(actor.global_position,maxi(1,roundi(int(shot.damage)*float(data.finish_ratio))),float(data.finish_radius),null,data)
+
+func _splash(center: Vector2, damage: int, radius: float, excluded: Node2D, data: Dictionary) -> void:
+	hero._fill_monster_nodes_near(center,radius,splash_scratch)
+	var struck := 0
+	for raw in splash_scratch:
+		var actor := raw as Node2D
+		if actor == excluded or not TARGETS.is_detectable(actor) or actor.global_position.distance_squared_to(center) > radius*radius: continue
+		# A splash cannot recursively create another splash.
+		_hit(actor,damage,"nova",int(data.get("growth_rank",1)),data); struck += 1
+		if struck >= 12: break
+	_effect(center,center,radius,"nova",Color(String(data.color)),data)
+
 func _pose(direction: Vector2) -> void:
 	hero.attack_pose_timer = 0.25
 	if is_instance_valid(hero.hero_sprite) and hero.hero_sprite.sprite_frames.has_animation(&"attack"): hero.hero_sprite.play(&"attack")
 	if direction.x != 0.0: hero._face_attack_direction(direction.x)
 
 # Generation handles prevent a recycled monster instance from receiving an old shot.
-func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, color: Color, data: Dictionary = {}, delay: float = 0.0, melee: bool = false, reach: float = 0.0) -> void:
+func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, color: Color, data: Dictionary = {}, delay: float = 0.0, melee: bool = false, reach: float = 0.0, finisher: bool = false) -> void:
 	if not is_instance_valid(authority) or not authority.has_method("get_battle_entity_handle"): return
 	var handle: Vector3i = authority.call("get_battle_entity_handle",actor)
 	if handle == Vector3i.ZERO: return
@@ -317,6 +429,7 @@ func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, 
 		shot.active = true; shot.handle = handle; shot.position = origin
 		shot.damage = damage; shot.rank = rank; shot.color = color; shot.age = 0.0
 		shot.data = data; shot.delay = delay; shot.melee = melee; shot.reach = reach if reach > 0 else float(data.get("range",900.0)); shot.traveled = 0.0
+		shot["finisher"] = finisher
 		hero.queue_redraw()
 		return
 
@@ -335,6 +448,7 @@ func _tick_projectiles(delta: float) -> void:
 			if hero.global_position.distance_squared_to(actor.global_position) <= pow(float(shot.reach),2) and hero.silence_timer <= 0.0:
 				_effect(hero.global_position,actor.global_position,12.0,"chain",shot.color,shot.data)
 				_hit(actor,int(shot.damage),"slash",int(shot.rank),shot.data)
+				_finish_shot(shot,actor)
 			continue
 		var remaining := maxf(0.0,float(shot.reach)-float(shot.traveled))
 		var step := minf(MODE.PROJECTILE_SPEED*projectile_speed*delta,remaining)
@@ -344,6 +458,7 @@ func _tick_projectiles(delta: float) -> void:
 		if position.distance_to(actor.global_position) <= step+GEOMETRY.PROJECTILE_RADIUS:
 			shot.active = false
 			_hit(actor,int(shot.damage),"bolt",int(shot.rank),shot.data)
+			_finish_shot(shot,actor)
 		elif float(shot.traveled) >= float(shot.reach): shot.active = false
 	if redraw: hero.queue_redraw()
 
@@ -354,6 +469,8 @@ func _hit(actor: Node2D, damage: int, pattern: String, rank: int, data: Dictiona
 	if identity != null and identity.archetype == "alchemist_chemical" and pattern == "field": identity.impact()
 	var lost := maxi(0,before-int(actor.get("current_hp"))) if is_instance_valid(actor) else 0
 	if lost > 0 and float(data.get("lifesteal",0.0)) > 0.0: hero.heal_direct(roundi(lost*float(data.lifesteal)))
+	if lost > 0 and pattern == "bolt" and float(data.get("splash_ratio",0.0)) > 0.0 and is_instance_valid(actor):
+		_splash(actor.global_position,roundi(damage*float(data.splash_ratio)),float(data.splash_radius),actor,data)
 	if not TARGETS.is_detectable(actor): return
 	if lost > 0 and (pattern == "frost" or data.has("slow_multiplier")):
 		AFFLICTIONS.apply_slow(actor,float(data.get("slow_multiplier",maxf(0.35,0.85-rank*0.04))),float(data.get("slow_duration",2.0)))
