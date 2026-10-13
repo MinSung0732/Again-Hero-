@@ -3,6 +3,7 @@ const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
 const PROFILES := preload("res://src/data/hero_profiles.gd")
 const AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
+const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const DATA := preload("res://src/data/hero_mode_catalog.gd")
 const PATH := "user://team_loadout.cfg"
 static func owner() -> String:
@@ -14,24 +15,23 @@ static func selected_stage(fallback: String = "stage_1") -> String:
 	var config := ConfigFile.new()
 	if not _load(config): return fallback
 	var id := String(config.get_value("hero_loadout","stage",fallback))
-	return id if not STAGES.get_stage(id).is_empty() else fallback
+	return id if character_unlocked(id) else "stage_1"
 static func select_stage(id: String) -> bool:
-	if STAGES.get_stage(id).is_empty(): return false
+	if not character_unlocked(id): return false
 	var config := ConfigFile.new()
 	if not _load(config): return false
 	if String(config.get_value("hero_loadout","stage","")) == id: return true
 	config.set_value("hero_loadout","stage",id)
 	return SCOPE.save_config(config,PATH) == OK
 static func skill_pool(stage: String) -> Array:
-	var profile := PROFILES.get_profile(String(STAGES.get_stage(stage).get("hero_id","")))
-	return profile.get("augment_pool_ids",[])
+	return WEAPONS.weapon_pool() if not STAGES.get_stage(stage).is_empty() else []
 static func skills(stage: String) -> Array:
 	var config := ConfigFile.new()
 	if not _load(config): return []
 	var result: Array = []
 	for raw in String(config.get_value("hero_loadout",stage+"_skills","")).split(",",false):
 		var id := String(raw)
-		if id in skill_pool(stage) and id not in result and not AUGMENTS.get_augment(id).is_empty(): result.append(id)
+		if id in skill_pool(stage) and id not in result and WEAPONS.is_weapon(id): result.append(id)
 		if result.size() == DATA.SKILL_SLOTS: break
 	return result
 static func set_skills(stage: String,ids: Array) -> bool:
@@ -40,16 +40,8 @@ static func set_skills(stage: String,ids: Array) -> bool:
 	var unique: Array = []
 	var pool := skill_pool(stage)
 	for id in ids:
-		if id not in pool or id in unique or AUGMENTS.get_augment(id).is_empty(): return false
+		if id not in pool or id in unique or not WEAPONS.is_weapon(id): return false
 		unique.append(id)
-	for id in unique:
-		var data := AUGMENTS.get_augment(String(id))
-		for other in unique:
-			if other == id: continue
-			if other in data.get("blocked_by_augments",[]): return false
-			var other_data := AUGMENTS.get_augment(String(other))
-			for tag in other_data.get("tags",[]):
-				if tag in data.get("blocks_augment_tags",[]): return false
 	var config := ConfigFile.new()
 	if not _load(config): return false
 	config.set_value("hero_loadout",stage+"_skills",",".join(unique))
@@ -95,3 +87,10 @@ static func award_run(stage: String,entry: Dictionary,elapsed: float,kills: int,
 	progress.set_value("meta","gold",int(progress.get_value("meta","gold",0))+gold)
 	var success := SCOPE.save_configs({"stage_progress.cfg":progress,"team_loadout.cfg":config}) == OK
 	return {"success":success,"research":points if success else 0,"gold":gold if success else 0}
+
+static func character_unlocked(stage: String) -> bool:
+	if STAGES.get_stage(stage).is_empty(): return false
+	if stage == "stage_1": return true
+	var config := ConfigFile.new()
+	if not _load(config,"user://stage_progress.cfg"): return false
+	return bool(config.get_value("hard_cleared",stage,false))

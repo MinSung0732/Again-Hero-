@@ -9,6 +9,7 @@ static func is_test_override() -> bool:
 	return tree != null and bool(tree.root.get_node("LocalTestMode").active)
 
 static func unlocked(mode: String, stage_id: String) -> bool:
+	if mode == "hero": return true # The apprentice is available from the start.
 	if not DATA.RULES.has(mode):
 		return false
 	if is_test_override():

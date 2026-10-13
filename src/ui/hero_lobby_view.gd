@@ -1,7 +1,7 @@
 extends RefCounted
 const STORE := preload("res://src/systems/hero_mode_store.gd")
 const DATA := preload("res://src/data/hero_mode_catalog.gd")
-const AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
+const AUGMENTS := preload("res://src/data/hero_weapon_catalog.gd")
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const PROFILES := preload("res://src/data/hero_profiles.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
@@ -12,6 +12,8 @@ var panels: Dictionary = {}
 var bodies: Dictionary = {}
 var original_visibility: Dictionary = {}
 var original_nav_text: Dictionary = {}
+var original_team_disabled := false
+var original_team_icon: Texture2D
 var original_background: Texture2D
 var original_background_modulate := Color.WHITE
 var original_dim := Color.WHITE
@@ -20,6 +22,9 @@ var subtab := "character"
 var message := ""
 func install(host) -> void:
 	lobby = host
+	original_team_disabled = lobby.team_button.disabled
+	var team_icon := lobby.team_button.get_node_or_null("NavIcon") as TextureRect
+	if team_icon != null: original_team_icon = team_icon.texture
 	for button in [lobby.shop_button,lobby.team_button,lobby.research_button]: original_nav_text[button] = button.text
 	var backdrop := lobby.get_node_or_null("LobbyBackground") as TextureRect
 	if backdrop != null: original_background = backdrop.texture; original_background_modulate = backdrop.modulate
@@ -46,7 +51,11 @@ func set_active(enabled: bool) -> void:
 	for button in original_nav_text:
 		button.text = original_nav_text[button]
 	if enabled:
-		lobby.shop_button.text = "용사상점"; lobby.team_button.text = "캐릭 편성"; lobby.research_button.text = "성장"
+		lobby.shop_button.text = "용사상점"; lobby.team_button.text = "팀편성 🔒"; lobby.research_button.text = "성장"
+	var team_icon := lobby.team_button.get_node_or_null("NavIcon") as TextureRect
+	if team_icon != null: team_icon.texture = lobby.main_modes_view.icons.get("lock",original_team_icon) if enabled else original_team_icon
+	lobby.team_button.disabled = enabled or original_team_disabled
+	lobby.team_button.tooltip_text = "용사 모드에서는 팀편성을 사용할 수 없습니다. 용사는 메인 화면에서 선택하세요." if enabled else ""
 	for pair in [[lobby.shop_button,"shop"],[lobby.team_button,"team"],[lobby.main_button,"main"],[lobby.research_button,"research"],[lobby.other_button,"other"]]:
 		lobby._refresh_nav_button(pair[0],lobby.current_tab == pair[1])
 	var backdrop := lobby.get_node_or_null("LobbyBackground") as TextureRect
@@ -74,7 +83,7 @@ func rebuild(tab: String) -> void:
 	var name := String(profile.get("display_name","용사"))
 	if tab == "shop":
 		_label(body,"용사상점",40); _label(body,"준비 중",32)
-		_label(body,"용사 전용 상품을 준비하고 있습니다.\n현재는 캐릭 편성에서 용사와 시작 스킬을 고르고, 성장에서 능력을 강화할 수 있습니다.")
+		_label(body,"용사 전용 상품을 준비하고 있습니다.\n용사는 메인 화면에서 선택하고, 무기와 보조 증강은 전투 중 레벨업으로 습득합니다. 성장에서 능력을 강화할 수 있습니다.")
 		return
 	if tab == "team":
 		_label(body,"용사 편성",40)
@@ -88,15 +97,15 @@ func rebuild(tab: String) -> void:
 				var data: Dictionary = lobby.STAGE_CATALOG.get_stage(id)
 				if not lobby.STAGE_PROGRESS.is_stage_unlocked(int(data.number)): continue
 				var hero: Dictionary = lobby.HERO_PROFILES.get_profile(String(data.hero_id))
-				var card := _button(body,String(hero.get("display_name","용사"))+"\n기본 공격·고유 기술 자동 / 이동·증강 직접",_select.bind(String(id)),id == stage)
+				var card := _button(body,String(hero.get("display_name","용사"))+"\n15분 생존 / 이동·무기 선택 직접 / 무기 자동 공격",_select.bind(String(id)),id == stage)
 				card.icon = lobby._load_texture(String(data.get("portrait_path","")))
 				card.expand_icon = true; card.add_theme_constant_override("icon_max_width",85)
 		else:
 			var selected := STORE.skills(stage)
-			_label(body,"시작 스킬(증강) · %d / %d\n편성한 증강을 Lv.1에 적용합니다. 고유 기술은 자동 발동합니다." % [selected.size(),DATA.SKILL_SLOTS],24)
+			_label(body,"시작 무기 · %d / %d\n기본 무기 + 편성 무기를 Lv.1에 습득합니다. 무기 3칸 · 보조 3칸 · 무기별 Lv.10 상자 진화." % [selected.size(),DATA.SKILL_SLOTS],24)
 			for raw in STORE.skill_pool(stage):
-				var id := String(raw); var skill := AUGMENTS.get_augment(id)
-				_button(body,("✓ " if id in selected else "")+String(skill.get("name",id))+"\n"+String(skill.get("description","")),_toggle_skill.bind(stage,id),id in selected)
+				var id := String(raw); var skill := AUGMENTS.WEAPONS.get(id,{})
+				_button(body,("✓ " if id in selected else "")+String(skill.get("name",id))+"\n"+AUGMENTS.description(id,1),_toggle_skill.bind(stage,id),id in selected)
 		return
 	_label(body,"성장 · "+name,40)
 	_label(body,"연구 포인트 %d\n캐릭터별 성장 · 다음 용사 도전부터 적용" % lobby.STAGE_PROGRESS.get_research_points(),25)
@@ -121,8 +130,8 @@ func _toggle_skill(stage: String,id: String) -> void:
 	var selected := STORE.skills(stage)
 	if id in selected: selected.erase(id)
 	elif selected.size() < DATA.SKILL_SLOTS: selected.append(id)
-	else: message = "시작 스킬은 2개까지 편성할 수 있습니다. 기존 스킬을 먼저 해제하세요."; rebuild("team"); return
-	message = "스킬 편성 저장 완료" if STORE.set_skills(stage,selected) else "편성을 저장하지 못했습니다. 배타적인 증강 조합도 확인하세요."
+	else: message = "시작 무기는 2개까지 편성할 수 있습니다. 기존 스킬을 먼저 해제하세요."; rebuild("team"); return
+	message = "스킬 편성 저장 완료" if STORE.set_skills(stage,selected) else "편성을 저장하지 못했습니다. 선택한 무기를 확인하세요."
 	rebuild("team")
 func _grow(stage: String,id: String) -> void:
 	message = "성장 완료 · 다음 도전부터 적용" if STORE.purchase_growth(stage,id) else "성장 저장 실패 또는 연구 포인트 부족"

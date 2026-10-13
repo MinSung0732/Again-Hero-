@@ -46,15 +46,16 @@ func run() -> void:
 	for cycle in range(2):
 		lobby.main_modes_view.choose_perspective("hero")
 		check(lobby.hero_lobby_view.active, "hero perspective active %d" % cycle)
-		check(lobby.shop_button.text == "용사상점" and lobby.team_button.text == "캐릭 편성" and lobby.research_button.text == "성장", "hero navigation labels")
+		check(lobby.shop_button.text == "용사상점" and lobby.team_button.text == "팀편성 🔒" and lobby.team_button.disabled and lobby.research_button.text == "성장", "hero navigation labels")
 		check(backdrop.texture != null and backdrop.texture != original_texture, "hero guild background loaded")
-		for tab in ["shop", "team", "research"]:
+		for tab in ["shop", "research"]:
 			lobby._switch_tab(tab)
 			check(lobby.hero_lobby_view.panels[tab].is_visible_in_tree(), "hero content visible: " + tab)
 		for child in lobby.hero_lobby_view.original_visibility:
 			check(not child.visible, "demon content hidden: " + String(child.name))
-		lobby.hero_lobby_view._set_subtab("skill")
-		check(lobby.hero_lobby_view.subtab == "skill" and lobby.hero_lobby_view.bodies.team.get_child_count() > 3, "starting skill list rebuilds")
+		var before_team: String = lobby.current_tab
+		lobby._switch_tab("team")
+		check(lobby.current_tab == before_team, "locked team tab rejects direct navigation")
 		lobby._switch_tab("main")
 		check(lobby.main_tools_view.is_visible_in_tree(), "shared tools remain in hero mode")
 		lobby.main_modes_view.choose_perspective("demon")

@@ -39,6 +39,8 @@ func run() -> void:
 	if not is_instance_valid(scene.battle) or scene.director == null:
 		quit(1)
 		return
+	check(scene.battle.run_time_limit_seconds == 900.0 and scene.battle.hero.player_weapons != null, "15 minute weapon survival configured")
+	check(scene.get_node("HeroHUD") != null and scene.weapon_buttons.size() == 3, "top HUD weapon slots")
 	check(scene.is_processing() and scene.battle.hero.player_controlled, "player simulation starts after setup")
 	var background := scene.get_node("HeroBackground") as ColorRect
 	var view := scene.get_node("BattleView") as SubViewportContainer
@@ -58,6 +60,13 @@ func run() -> void:
 	check(scene.battle.run_metrics.elapsed_seconds > elapsed, "battle clock advances")
 	check(scene.battle.get_population_count() > 0, "AI demon sends first monsters")
 	check(not scene.hp.max_value <= 0 and not scene.status.text.is_empty(), "HUD updated")
+	scene._queue_chest()
+	scene._begin_roulette()
+	check(scene.rolling and scene.battle.external_pause, "chest pauses combat for roulette")
+	await create_timer(2.7).timeout
+	check(bool(scene.roulette_receipt.get("applied",false)), "roulette applies one weapon reward")
+	scene._close_roulette()
+	check(not scene.rolling and not scene.battle.external_pause, "roulette resumes combat")
 	scene._pause()
 	check(scene.paused and scene.battle.external_pause, "pause works")
 	scene._resume()

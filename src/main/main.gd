@@ -260,6 +260,7 @@ func _ready() -> void:
 	# Stage entry begins frozen and silent. The intro sequence owns the handoff
 	# to gameplay so combat AI, cooldowns and the run timer cannot advance early.
 	var entry_options := SceneTransition.consume_entry_options()
+	battle.configure_campaign_difficulty(String(entry_options.get("difficulty","easy")))
 	_skip_entry_dialogue = (
 		bool(entry_options.get("skip_stage_dialogue", false))
 		and String(entry_options.get("stage_id", "")) == String(battle.current_stage_id)
@@ -3582,7 +3583,7 @@ func _restart_with_stamina(stage_id: String, skip_dialogue: bool = false) -> voi
 	_stamina_entry_pending = true
 	var accepted := SceneTransition.change_scene(
 		"res://src/main/Main.tscn", "전투 불러오는 중...",
-		{"stage_id": stage_id, "skip_stage_dialogue": skip_dialogue}
+		{"stage_id": stage_id, "skip_stage_dialogue": skip_dialogue,"difficulty":battle.campaign_difficulty}
 	)
 	if not accepted:
 		STAMINA.refund_failed_entry(entry)

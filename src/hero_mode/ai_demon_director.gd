@@ -5,14 +5,23 @@ var battle
 var think_remaining := 0.0
 var observation_remaining := 0.0
 var rotation := 0
+var next_elite := DATA.ELITE_FIRST
+var giant_index := 0
+var special_retry := 0.0
+var stage_number := 1
+var pressure := 1.0
+var roster: Array = []
 var preferred: Array = []
 var plan := "탐색 공세 · 용사 빌드를 관찰 중"
 func install(host) -> void:
 	battle = host
-	battle.set_allowed_monster_ids(DATA.ROSTER)
+	stage_number = int(battle.current_stage_data.get("number",1))
+	pressure = DATA.stage_pressure(stage_number)
+	roster = DATA.roster_for(stage_number)
+	battle.set_allowed_monster_ids(roster)
 func _observe() -> void:
 	preferred.clear()
-	var tags := AUGMENTS.get_build_tag_counts(battle.hero.build_counts)
+	var tags: Dictionary = battle.hero.player_weapons.build_tags() if battle.hero.player_weapons != null else AUGMENTS.get_build_tag_counts(battle.hero.build_counts)
 	for tag in DATA.COUNTERS:
 		if int(tags.get(tag,0)) > 0:
 			preferred = DATA.COUNTERS[tag].duplicate()
@@ -37,16 +46,30 @@ func tick(delta: float) -> void:
 	if observation_remaining <= 0.0:
 		observation_remaining = DATA.OBSERVE_INTERVAL
 		_observe()
+	var elapsed: float = battle.run_metrics.elapsed_seconds
+	var phase: Dictionary = DATA.phase_at(elapsed)
+	battle.command_regen_per_second = float(phase.regen)*pressure
+	special_retry = maxf(0.0,special_retry-delta)
+	if special_retry <= 0.0 and battle.get_population_count() < mini(DATA.MONSTER_LIMIT,int(phase.limit*pressure)):
+		if giant_index < DATA.GIANT_TIMES.size() and elapsed >= float(DATA.GIANT_TIMES[giant_index]):
+			if _special("ogre",true,elapsed): giant_index += 1
+			special_retry = 5.0
+		elif elapsed >= next_elite:
+			if _special("orc" if rotation%2 == 0 else "skeleton_archer",false,elapsed): next_elite += DATA.ELITE_INTERVAL/pressure
+			special_retry = 5.0
 	think_remaining -= delta
 	if think_remaining > 0.0: return
-	think_remaining = DATA.THINK_INTERVAL
-	if battle.get_population_count() >= DATA.MONSTER_LIMIT: return
-	var elapsed: float = battle.run_metrics.elapsed_seconds
-	var pool: Array = DATA.ROSTER
-	var available := mini(3+int(elapsed/35.0),pool.size())
-	var id := String(pool[rotation%available])
-	rotation += 1
-	# Partial observation and inertia: keep exploring rather than perfect countering.
-	if elapsed > 25.0 and not preferred.is_empty() and randf() < 0.55:
-		id = String(preferred[rotation%preferred.size()])
-	if battle.command_power >= battle.get_monster_cost(id): battle.try_summon(id)
+	think_remaining = float(phase.interval)/pressure
+	var available := int(phase.roster)
+	for index in range(int(phase.batch)):
+		if battle.get_population_count() >= mini(DATA.MONSTER_LIMIT,int(phase.limit*pressure))-2: break
+		var id := String(roster[rotation%available])
+		rotation += 1
+		if elapsed > 25.0 and not preferred.is_empty() and randf() < 0.55:
+			var counter := String(preferred[rotation%preferred.size()])
+			if counter in roster: id = counter
+		if battle.command_power >= battle.get_monster_cost(id): battle.try_summon(id)
+
+func _special(id: String,giant: bool,elapsed: float) -> bool:
+	var scale := (1.0+elapsed/900.0)*pressure
+	return battle.spawn_special_monster(id,{"type":"giant" if giant else "elite","name":"대형 오우거" if giant else "엘리트 공세","hp_multiplier":(4.0 if giant else 2.0)*scale,"damage_multiplier":1.2*scale,"speed_multiplier":0.75 if giant else 1.1,"attack_speed_multiplier":1.0,"exp_multiplier":8.0 if giant else 4.0,"visual_scale":1.8 if giant else 1.2,"spawn_distance":650.0})

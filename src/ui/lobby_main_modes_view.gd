@@ -69,8 +69,7 @@ func install(host) -> void:
 	lobby.add_child(notice)
 	for id in lobby.stage_ids:
 		var stage: Dictionary = lobby.STAGE_CATALOG.get_stage(id)
-		if lobby.STAGE_PROGRESS.is_stage_unlocked(int(stage.get("number", 999))):
-			heroes.append(stage)
+		heroes.append(stage)
 	for label in [lobby.stage_description_label, lobby.stage_status_label, lobby.stage_reward_label, bottom.get_node("RepeatReward")]:
 		label.add_theme_font_size_override("font_size", 21 if label == lobby.stage_description_label else 20)
 	# A single framed tray visually groups the two perspectives and ranked toggle.
@@ -165,18 +164,21 @@ func toggle_ranked() -> void:
 	lobby._refresh_stage_card()
 
 func change_character(direction: int) -> void:
-	if perspective == "hero" and not heroes.is_empty():
-		hero_index = posmod(hero_index + direction, heroes.size())
-	lobby._refresh_stage_card()
+	if perspective != "hero" or lobby.stage_ids.is_empty(): return
+	for offset in range(1,lobby.stage_ids.size()+1):
+		var index: int = posmod(lobby.selected_stage_index+direction*offset,lobby.stage_ids.size())
+		var id := String(lobby.stage_ids[index])
+		if not preload("res://src/systems/hero_mode_store.gd").character_unlocked(id): continue
+		lobby.selected_stage_index = index
+		hero_index = index
+		lobby._refresh_stage_card()
+		return
 
 func open_characters() -> void:
 	if not UNLOCKS.unlocked("hero", current_stage()):
 		return
-	if not ranked:
-		lobby._switch_tab("team")
-		return
 	var picker := AcceptDialog.new()
-	picker.title = "용사 선택 · 미리보기"
+	picker.title = "플레이할 용사 선택"
 	picker.min_size = Vector2i(650, 440)
 	skin_dialog(picker)
 	var scroll := ScrollContainer.new()
@@ -191,9 +193,13 @@ func open_characters() -> void:
 		var stage := heroes[index]
 		var profile: Dictionary = lobby.HERO_PROFILES.get_profile(String(stage.hero_id))
 		var option := button(list, String(profile.get("display_name", "용사")), func():
+			if not preload("res://src/systems/hero_mode_store.gd").character_unlocked(String(stage.get("id",""))): return
 			hero_index = index
+			if not ranked: lobby.selected_stage_index = maxi(lobby.stage_ids.find(String(stage.get("id","stage_1"))),0)
 			lobby._refresh_stage_card()
 			picker.queue_free())
+		option.disabled = not preload("res://src/systems/hero_mode_store.gd").character_unlocked(String(stage.get("id","")))
+		if option.disabled: option.text += " 🔒\n해당 스테이지 어려움 클리어"
 		style_button(option, index == hero_index, "hero", 24)
 	picker.confirmed.connect(picker.queue_free)
 	picker.canceled.connect(picker.queue_free)
@@ -213,7 +219,7 @@ func request_data() -> Dictionary:
 func blocks_entry() -> bool:
 	if (ranked and not UNLOCKS.unlocked("rank", current_stage())) or (perspective == "hero" and not UNLOCKS.unlocked("hero", current_stage())) or (not ranked and difficulty == "hard" and not UNLOCKS.unlocked("hard", current_stage())):
 		return true
-	if not ranked and perspective == "demon" and difficulty == "easy":
+	if not ranked and perspective == "demon":
 		return false
 	if not ranked and perspective == "hero" and difficulty == "easy": return false
 	notice.dialog_text = "랭킹 매칭은 준비 중입니다. 실제 매칭은 아직 시작되지 않습니다." if ranked else "용사 시점과 어려움 난이도는 준비 중입니다. 현재는 마왕 · 쉬움으로 입장할 수 있습니다."
@@ -250,17 +256,21 @@ func refresh() -> void:
 		if perspective == "hero":
 			var stage := current_stage()
 			preload("res://src/systems/hero_mode_store.gd").select_stage(stage)
-			lobby.enter_stage_button.text = "용사 도전 · 3분 생존"
-			lobby.stage_description_label.text = "이동·증강 직접 선택 / 공격 자동\nAI 마왕의 군단을 피해 3분 동안 생존하세요."
-			lobby.stage_status_label.text = "AI 마왕\n3분 생존 도전"
-			lobby.stage_reward_label.text = "승리 보상\n연구 20 · 골드 12"
-			lobby.stage_description_label.get_parent().get_node("RepeatReward").text = "시작 스킬\n캐릭 편성에서 2개 선택"
+			lobby.enter_stage_button.text = "용사 도전 · 15분 생존"
+			lobby.stage_description_label.text = "이동·증강 직접 선택 / 공격 자동\nAI 마왕의 군단을 피해 15분 동안 생존하세요."
+			lobby.stage_status_label.text = "AI 마왕\n15분 생존 도전"
+			lobby.stage_reward_label.text = "승리 보상\n연구 %d · 골드 %d" % [preload("res://src/data/hero_mode_catalog.gd").WIN_RESEARCH,preload("res://src/data/hero_mode_catalog.gd").WIN_GOLD]
+			lobby.stage_description_label.get_parent().get_node("RepeatReward").text = "무기 증강\n전투 중 습득 · Lv.10 상자 진화"
 			section.get_node("SectionTitle").text = "용사 원정"
 			section.get_node("SectionSubtitle").text = "플레이할 용사를 선택하세요."
 			hard_button.disabled = true
-			character_button.text = "캐릭 편성  ›"
+			character_button.text = "용사 선택  ›"
 		elif difficulty == "hard":
-			lobby.enter_stage_button.text = "던전 입장 · 준비 중"
+			lobby.enter_stage_button.text = "어려움 도전 · 용사 해금"
+			lobby.stage_description_label.text = "강화된 용사를 처치하세요.\n클리어하면 이 스테이지 용사가 플레이 캐릭터로 해금됩니다."
+			lobby.stage_status_label.text = "어려움\n강화 용사 도전"
+			lobby.stage_reward_label.text = "최초 어려움\n연구 30 · 용사 해금"
+			lobby.stage_description_label.get_parent().get_node("RepeatReward").text = "반복 도전\n추가 용사 해금 없음"
 		return
 	lobby.stage_selector_button.text = "SEASON · 준비 중"
 	lobby.stage_selector_button.disabled = true

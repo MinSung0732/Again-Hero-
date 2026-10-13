@@ -48,6 +48,7 @@ func run() -> void:
 	var hero = load("res://src/hero/Hero.tscn").instantiate()
 	hero.player_controlled = true; hero.configure_profile(PROFILES.get_profile(String(STAGES.get_stage("stage_1").hero_id)))
 	root.add_child(hero); hero.set_physics_process(false)
+	hero.player_weapons = preload("res://src/hero_mode/hero_weapon_runtime.gd").new(); hero.player_weapons.install(hero)
 	hero.set_player_move_input(Vector2(99,99)); check(hero.player_move_input.length() <= 1.0001,"movement bounded")
 	hero.set_player_move_input(Vector2(NAN,0)); check(hero.player_move_input == Vector2.ZERO,"nonfinite movement rejected")
 	hero.set_player_move_input(Vector2.ZERO); check(hero._player_move_velocity() == Vector2.ZERO,"no idle AI wander")

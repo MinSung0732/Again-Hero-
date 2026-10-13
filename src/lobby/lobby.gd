@@ -2474,6 +2474,7 @@ func _on_team_tab_pressed() -> void:
 	_refresh_nav_button(other_button, false)
 
 func _switch_tab(tab_id: String) -> void:
+	if tab_id == "team" and hero_lobby_view != null and hero_lobby_view.active: return
 	if stamina_view != null:
 		stamina_view.close_info()
 	if not TutorialFlow.permits_tab(tab_id):
@@ -4456,7 +4457,7 @@ func _refresh_header() -> void:
 		progress_title.text = "연구 포인트" if current_tab == "shop" else "최고 해금"
 
 func _change_stage(direction: int) -> void:
-	if main_modes_view != null and main_modes_view.ranked:
+	if main_modes_view != null and (main_modes_view.ranked or main_modes_view.perspective == "hero"):
 		main_modes_view.change_character(direction)
 		return
 	if stage_ids.is_empty() or _stage_transition_running:
@@ -4500,6 +4501,7 @@ func _on_stage_selected(target_index: int) -> void:
 	var max_browsable_index := _get_max_browsable_stage_index()
 	if target_index < 0 or target_index > max_browsable_index:
 		return
+	if main_modes_view != null and main_modes_view.perspective == "hero" and not preload("res://src/systems/hero_mode_store.gd").character_unlocked(String(stage_ids[target_index])): return
 	_close_stage_selector()
 	if target_index == selected_stage_index:
 		return
@@ -5108,6 +5110,9 @@ func _enter_selected_stage(allow_unregistered: bool = false) -> void:
 
 
 func _enter_hero_stage(stage_id: String) -> void:
+	if not preload("res://src/systems/hero_mode_store.gd").character_unlocked(stage_id):
+		stamina_view.show_entry_notice("이 용사는 해당 스테이지 어려움 클리어 후 개방됩니다.")
+		return
 	var scene := preload("res://src/data/hero_mode_catalog.gd").SCENE
 	if not ResourceLoader.exists(scene): return
 	_stamina_entry = STAMINA.try_enter(stage_id,LocalTestMode.active)
@@ -5131,7 +5136,8 @@ func _begin_threaded_scene_change(path: String) -> void:
 		and bool(transition.call(
 			"change_scene",
 			path,
-			"던전 불러오는 중..."
+			"던전 불러오는 중...",
+			{"difficulty":main_modes_view.difficulty if main_modes_view != null else "easy"}
 		))
 	):
 		enter_stage_button.disabled = true

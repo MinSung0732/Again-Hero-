@@ -211,6 +211,8 @@ var active_treasure_chests: Dictionary = {}
 var active_magnet_items: Dictionary = {}
 var exp_magnet_until_msec: int = 0
 var battle_over: bool = false
+signal hero_chest_opened
+var campaign_difficulty := "easy"
 var hero_player_mode := false
 var hero_player_stage := "stage_1"
 var external_pause: bool = false
@@ -707,7 +709,7 @@ func _process(delta: float) -> void:
 		if not flow_pause_manager.is_paused(
 			FLOW_PAUSE_MANAGER.DOMAIN_STAGE_EVENTS
 		):
-			if not practice_mode:
+			if not practice_mode and not hero_player_mode:
 				_process_stage_director_events()
 
 		run_time_emit_timer -= delta
@@ -955,7 +957,9 @@ func _start_battle() -> void:
 	var hero_ai_settings := HERO_AI_PROFILES.get_profile(hero_ai_profile_id)
 	if not hero_ai_settings.is_empty():
 		current_hero_profile["ai_settings"] = hero_ai_settings
-	if hero_player_mode: preload("res://src/systems/hero_mode_store.gd").apply_growth(current_stage_id,current_hero_profile)
+	if hero_player_mode:
+		current_hero_profile = preload("res://src/data/hero_weapon_catalog.gd").profile_for_survival(current_hero_profile)
+		preload("res://src/systems/hero_mode_store.gd").apply_growth(current_stage_id,current_hero_profile)
 
 	if practice_mode:
 		current_hero_profile = HERO_PROFILES.get_profile("ranged_rookie").duplicate(true)
@@ -968,14 +972,14 @@ func _start_battle() -> void:
 		hero.call("configure_profile", current_hero_profile)
 	if hero.has_method("configure_battlefield"):
 		hero.call("configure_battlefield", current_map_size)
-	hero.set("level", int(current_stage_data.get("hero_level_start", 1)))
+	hero.set("level", 1 if hero_player_mode else int(current_stage_data.get("hero_level_start", 1)))
 
 	add_child(hero)
 	_activate_battle_entity(hero)
 	hero.position = current_map_size * 0.5
 	if hero_player_mode:
-		for id in preload("res://src/systems/hero_mode_store.gd").skills(current_stage_id):
-			hero.call("_apply_augment",preload("res://src/data/hero_augment_catalog.gd").get_augment(String(id)))
+		hero.set("player_weapons",preload("res://src/hero_mode/hero_weapon_runtime.gd").new())
+		hero.player_weapons.install(hero)
 	# add_child() runs Hero._ready(), which reapplies the profile visual and
 	# restores HeroSprite.z_index. Normalize Demon Castle depth only after _ready()
 	# so the hero participates in Battle's Y-sort just like monsters/props.
@@ -3080,6 +3084,8 @@ func _transcendence_metric_count(metric: String) -> int:
 	return raw_allied_summons
 
 func _on_monster_died(monster: Node) -> void:
+	if hero_player_mode and not battle_over and is_instance_valid(monster) and String(monster.get_meta("stage_event_type","")) in ["elite","giant"]:
+		_spawn_chest_for_session.call_deferred(battle_command_router.get_session_id())
 	if battle_over:
 		return
 	if is_instance_valid(monster) and TRANSCENDENCE_DATA.is_transcendent(String(monster.get("monster_type"))):
@@ -3298,6 +3304,8 @@ func _spawn_random_treasure_chest() -> void:
 		randf_range(margin, maxf(current_map_size.x - margin, margin)),
 		randf_range(margin, maxf(current_map_size.y - margin, margin))
 	)
+	if hero_player_mode and is_instance_valid(hero):
+		spawn_position = _clamp_manual_spawn_position(hero.global_position+Vector2.from_angle(randf()*TAU)*260.0)
 	var chest := TREASURE_CHEST_SCENE.instantiate() as Node2D
 	add_child(chest)
 	chest.global_position = spawn_position
@@ -3316,6 +3324,10 @@ func _on_treasure_chest_destroyed(
 	GameAudio.play_battle("chest", self)
 	if is_instance_valid(chest):
 		active_treasure_chests.erase(chest.get_instance_id())
+
+	if hero_player_mode:
+		hero_chest_opened.emit()
+		return
 
 	var bundle_count := randi_range(CHEST_EXP_BUNDLE_MIN, CHEST_EXP_BUNDLE_MAX)
 	for index in range(bundle_count):
@@ -5376,7 +5388,7 @@ func _on_hero_died() -> void:
 	var first_clear_reward: int = int(
 		current_stage_data.get("first_clear_reward", 0)
 	)
-	var clear_result: Dictionary = STAGE_PROGRESS.complete_stage(
+	var clear_result: Dictionary = STAGE_PROGRESS.complete_hard_stage(current_stage_id) if campaign_difficulty == "hard" else STAGE_PROGRESS.complete_stage(
 		current_stage_id,
 		stage_number,
 		next_stage_id,
@@ -5389,6 +5401,7 @@ func _on_hero_died() -> void:
 		stage_name,
 		hero_name,
 	]
+	if campaign_difficulty == "hard": result_text += "\n어려움 클리어 · 플레이 용사 해금" if bool(clear_result.get("success",false)) else "\n어려움 클리어 저장 실패 · 용사 미해금"
 	var granted_reward: int = int(clear_result.get("reward", 0))
 	if granted_reward > 0:
 		result_text += "\n최초 클리어 보상 · 연구 포인트 +%d" % granted_reward
@@ -5415,7 +5428,7 @@ func _on_run_time_up() -> void:
 	if battle_over:
 		return
 	if hero_player_mode:
-		_finish_battle("용사 승리 · AI 마왕의 3분 공세를 버텨냈습니다!",true)
+		_finish_battle("용사 승리 · AI 마왕의 15분 공세를 버텨냈습니다!",true)
 		return
 
 	var hero_name := String(current_hero_profile.get("display_name", "용사"))
@@ -6075,3 +6088,13 @@ func fill_active_enemy_summons(result: Array) -> void:
 		if is_instance_valid(actor) and not actor.is_queued_for_deletion() and bool(actor.get("active")) and int(actor.get("current_hp")) > 0:
 			result.append(actor)
 
+
+func configure_campaign_difficulty(difficulty: String) -> void:
+	if difficulty != "hard" or campaign_difficulty == "hard" or hero_player_mode or practice_mode or tutorial_mode: return
+	if not STAGE_PROGRESS.is_stage_cleared(current_stage_id): return
+	campaign_difficulty = "hard"
+	if is_instance_valid(hero):
+		hero.max_hp = roundi(hero.max_hp*1.6); hero.current_hp = hero.max_hp
+		hero.attack_damage = roundi(hero.attack_damage*1.35); hero.move_speed *= 1.08
+		hero.health_changed.emit(hero.current_hp,hero.max_hp)
+		run_metrics.reset(run_time_limit_seconds,hero.current_hp,hero.max_hp)

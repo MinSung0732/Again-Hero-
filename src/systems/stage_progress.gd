@@ -477,3 +477,14 @@ static func is_campaign_reward_claimed(stage_id: String) -> bool:
 	var config := ConfigFile.new()
 	if ACCOUNT_SCOPE.load_config(config,SAVE_PATH) != OK: return false
 	return bool(config.get_value("milestone_reward_claimed","campaign_"+stage_id,false))
+
+static func complete_hard_stage(stage_id: String) -> Dictionary:
+	if not is_stage_cleared(stage_id): return {"success":false,"reward":0}
+	var config := ConfigFile.new()
+	if ACCOUNT_SCOPE.load_config(config,SAVE_PATH) != OK: return {"success":false,"reward":0}
+	var first := not bool(config.get_value("hard_cleared",stage_id,false))
+	config.set_value("hard_cleared",stage_id,true)
+	var points := 30 if first else 0
+	config.set_value("meta","research_points",int(config.get_value("meta","research_points",0))+points)
+	var error := ACCOUNT_SCOPE.save_config(config,SAVE_PATH)
+	return {"success":error == OK,"reward":points if error == OK else 0,"gold_reward":0,"hero_unlocked":first and error == OK}

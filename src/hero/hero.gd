@@ -28,6 +28,7 @@ signal leveled_up(new_level: int)
 signal augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String)
 signal player_augment_requested(candidates: Array)
 var player_controlled := false
+var player_weapons: RefCounted
 var player_move_input := Vector2.ZERO
 var player_input_suspended := true
 var player_moved_this_frame := false
@@ -47,7 +48,9 @@ func choose_player_augment(id: String) -> bool:
 	if chosen.is_empty(): return false
 	var candidates := player_augment_candidates
 	player_augment_candidates = []
-	_apply_augment(chosen)
+	if player_weapons != null:
+		if not player_weapons.choose(id): player_augment_candidates = candidates; return false
+	else: _apply_augment(chosen)
 	augment_selected.emit(level,candidates,String(chosen.get("name",id)),"플레이어 선택",get_build_summary())
 	while current_exp >= exp_to_next_level and player_augment_candidates.is_empty():
 		current_exp -= exp_to_next_level
@@ -943,6 +946,7 @@ var status_overlay: Node2D
 func configure_profile(profile: Dictionary) -> void:
 	player_move_input = Vector2.ZERO
 	player_augment_candidates.clear()
+	player_weapons = null
 	if profile.is_empty():
 		return
 
@@ -1867,6 +1871,24 @@ func _physics_process_actions(delta: float) -> void:
 		_tick_charm_state(delta)
 		return
 	player_input_suspended = false
+	if player_controlled and player_weapons != null:
+		_update_invulnerability(delta)
+		slow_timer = maxf(slow_timer-delta,0.0)
+		if slow_timer <= 0.0: move_multiplier = 1.0
+		attack_pose_timer = maxf(attack_pose_timer-delta,0.0)
+		hit_pose_timer = maxf(hit_pose_timer-delta,0.0)
+		player_weapons.tick(delta)
+		velocity = _player_move_velocity()
+		_move_and_slide_with_obstacle_escape()
+		match hero_archetype:
+			"rogue_combo": _update_rogue_pose_visual(delta)
+			"sword_shield": _update_fighter_pose_visual(delta)
+			"pistol_gunner": _update_gunner_pose_visual(delta)
+			"berserker_madness": _update_berserker_pose_visual(delta)
+			"alchemist_chemical": _update_alchemist_pose_visual(delta)
+			"summoner_gatekeeper": _update_summoner_pose_visual(delta)
+			_: _update_stage1_pose_visual(delta)
+		return
 	if not player_controlled: _update_combat_reposition(delta)
 
 	if hero_archetype == "rogue_combo":
@@ -13372,6 +13394,7 @@ func get_purifier_holy_damage_multiplier(target_node: Node = null) -> float:
 	return multiplier
 
 func notify_monster_kill(_monster_type: String = "") -> void:
+	if player_controlled and player_weapons != null: return
 	if is_dying or current_hp <= 0:
 		return
 	if hero_archetype == "grand_sage_astra":
@@ -15135,6 +15158,7 @@ func _update_ultimate(delta: float) -> void:
 	_try_use_charged_skill()
 
 func _add_ultimate_charge(amount: float) -> void:
+	if player_controlled and player_weapons != null: return
 	if amount <= 0.0 or ultimate_config.is_empty() or is_dying:
 		return
 
@@ -16420,7 +16444,7 @@ func _level_up() -> void:
 		# fixed pools only at the milestone instead of instantiating during combat.
 		_ensure_summoner_pool_capacity()
 
-	var candidates: Array = AUGMENT_CATALOG.roll_candidates(
+	var candidates: Array = player_weapons.candidates() if player_controlled and player_weapons != null else AUGMENT_CATALOG.roll_candidates(
 		3,
 		_get_augment_roll_build_counts(),
 		augment_pool_ids
@@ -17975,6 +17999,7 @@ func _apply_slow_status(multiplier: float, duration: float, receipt = null, rece
 	queue_redraw()
 
 func get_build_summary() -> String:
+	if player_controlled and player_weapons != null: return player_weapons.summary()
 	if build_counts.is_empty():
 		return "아직 선택 없음"
 
@@ -20810,6 +20835,7 @@ func _add_prefixed_effect_animation(
 	return true
 
 func _required_exp_for_level(target_level: int) -> int:
+	if player_controlled: return 12+maxi(target_level-1,0)*4
 	return 50 + maxi(target_level - 1, 0) * 25
 
 func take_damage(amount: int, source: Node = null) -> bool:
@@ -20867,7 +20893,7 @@ func _take_damage_internal(
 				0.0,
 				0.90
 			)
-	if not damage_already_mitigated and hero_archetype == "grand_sage_astra":
+	if not player_controlled and not damage_already_mitigated and hero_archetype == "grand_sage_astra":
 		raw_damage = _apply_sage_mana_conversion(raw_damage)
 	var remaining_damage := raw_damage
 	var absorbed_damage := 0
@@ -20935,6 +20961,7 @@ func _take_damage_internal(
 	if current_hp <= 0:
 		if (
 			hero_archetype == "berserker_madness"
+			and not player_controlled
 			and not berserker_revive_used
 			and not berserker_reviving
 		):
@@ -20945,7 +20972,7 @@ func _take_damage_internal(
 		if grant_invulnerability:
 			invulnerability_timer = invulnerability_duration
 		# Evading ongoing poison/burn ticks repeatedly closes the intended counter window.
-		if grant_invulnerability and hero_archetype == "pistol_gunner" and _gunner_should_backstep_on_hit():
+		if not player_controlled and grant_invulnerability and hero_archetype == "pistol_gunner" and _gunner_should_backstep_on_hit():
 			_start_gunner_backstep()
 		if grant_invulnerability:
 			_refresh_invulnerability_visual()
@@ -21150,6 +21177,7 @@ func _begin_death_sequence() -> void:
 	queue_free()
 
 func _draw() -> void:
+	if player_controlled and player_weapons != null: player_weapons.draw()
 	if is_instance_valid(status_overlay):
 		status_overlay.queue_redraw()
 	if ultimate_flash_timer > 0.0:
@@ -21181,6 +21209,7 @@ func _draw() -> void:
 		draw_circle(Vector2(49, -17), 8.0, Color(0.95, 0.86, 0.32))
 
 func _draw_combat_status_overlay() -> void:
+	if player_controlled and player_weapons != null: return # Survival resources live in the top HUD.
 	if is_dying:
 		return
 	var bar_width := 92.0
