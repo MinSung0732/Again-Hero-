@@ -145,7 +145,7 @@ func exact_effects() -> void:
 	reset(runtime,hero); runtime.scratch.clear(); runtime.scratch.append(a)
 	a.current_hp = 1000000; relocate(a,hero.position+Vector2(50,0))
 	data = GROWTH.resolve("purifier_hero_holy_lance",DATA.WEAPONS.purifier_hero_holy_lance,10,true)
-	runtime._cast_fan(data,hero.position,Vector2.RIGHT,500,10,100,8)
+	runtime._cast_fan(data,hero.position,Vector2.RIGHT,500,10,100)
 	check(a.current_hp == 999900,"overlapping five-ray fan hits one actor once")
 	# Final shot explodes only on the last live, actually landed shot.
 	a.current_hp = 1000000; b.current_hp = 1000000; relocate(b,a.position+Vector2(80,0)); await physics_frame

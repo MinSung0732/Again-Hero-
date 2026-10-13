@@ -64,7 +64,7 @@ func install(host) -> void:
 			art[id] = EMPTY_ART if NATIVE.SCENES.has(pattern) or pattern == "summon" else ART.sequence(String(DATA.WEAPONS[id].get("effect_dir","")))
 	for index in range(EFFECT_LIMIT):
 		effects.append({"left":0.0,"duration":0.0,"a":Vector2.ZERO,"b":Vector2.ZERO,"radius":0.0,"pattern":"","color":Color.WHITE,"orbit_count":4,"orbit_speed":3.0,"orbit_ratio":0.7})
-	for index in range(8): fields.append({"left":0.0,"tick":0.0,"origin":Vector2.ZERO,"radius":0.0,"damage":0,"cap":9,"interval":0.5,"follow":false,"data":{},"rank":1})
+	for index in range(8): fields.append({"left":0.0,"tick":0.0,"origin":Vector2.ZERO,"radius":0.0,"damage":0,"interval":0.5,"follow":false,"data":{},"rank":1})
 	for index in 24: pulses.append({"active":false,"left":0.0,"origin":Vector2.ZERO,"direction":Vector2.RIGHT,"radius":0.0,"damage":0,"rank":1,"data":{}})
 	add(String(DATA.STARTERS.get(hero.hero_id,"ranged_rookie_arcane_bolt")))
 	if hero.has_method("_draw_combat_status_overlay"):
@@ -197,14 +197,12 @@ func tick(delta: float) -> void:
 		if float(field.tick) > 0.0: continue
 		field.tick = float(field.interval)
 		hero._fill_monster_nodes_near(field.origin,float(field.radius),scratch)
-		var count := 0
 		for raw in scratch:
 			var actor := raw as Node2D
 			if not TARGETS.is_detectable(actor): continue
 			# Grid queries return padded cells, not an exact circle.
 			if actor.global_position.distance_squared_to(field.origin) > float(field.radius)*float(field.radius): continue
-			_hit(actor,int(field.damage),"field",int(field.rank),field.data); count += 1
-			if count >= int(field.cap): break
+			_hit(actor,int(field.damage),"field",int(field.rank),field.data)
 	if identity_blocked or hero.silence_timer > 0.0 or hero.imposed_skill_cooldown > 0.0 or hero.petrify_timer > 0.0: return
 	for id in weapon_ids:
 		cooldowns[id] = maxf(0.0,float(cooldowns[id])-delta*hero.get_paralysis_attack_multiplier())
@@ -291,7 +289,7 @@ func _cast(id: String) -> void:
 			var field := _free_field()
 			if field.is_empty(): break
 			field.origin = closest.global_position if is_instance_valid(closest) else origin
-			field.left = float(data.get("field_duration",3.0)); field.tick = 0.0; field.interval = float(data.get("field_interval",0.5)); field.radius = reach*float(data.get("field_radius_ratio",0.45)); field.damage = maxi(1,roundi(damage*float(data.get("field_power",0.25)))); field.cap = mini(24,4+hits*5)
+			field.left = float(data.get("field_duration",3.0)); field.tick = 0.0; field.interval = float(data.get("field_interval",0.5)); field.radius = reach*float(data.get("field_radius_ratio",0.45)); field.damage = maxi(1,roundi(damage*float(data.get("field_power",0.25))))
 			# Secondary circles cover flanks, each with its own visible/actual footprint.
 			if index > 0: field.origin += direction.orthogonal()*float(field.radius)*1.25*(1.0 if index == 1 else -1.0)
 			field.follow = bool(data.get("field_follow",false)); field.data = data; field.rank = rank
@@ -307,9 +305,8 @@ func _cast(id: String) -> void:
 		# Replace only this runtime's grant; preserve other shield sources.
 		hero.shield_hp = maxf(0.0,hero.shield_hp-owned_shield)+shield; owned_shield = shield; shield_left = float(data.get("shield_duration",3.0))
 		if identity != null: hero.shield_max_hp = maxf(hero.shield_max_hp,hero.shield_hp)
-	var cap := mini(24,4+hits*5) if pattern in ["nova","frost","guard","heal"] else mini(int(data.get("hit_cap",hits)),hits+4) if pattern in ["slash","beam","orbit"] else hits
 	if pattern == "beam" and int(data.get("fan_lines",1)) > 1:
-		_cast_fan(data,origin,direction,reach,rank,damage,cap)
+		_cast_fan(data,origin,direction,reach,rank,damage)
 		hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
 		return
 	var struck := 0
@@ -320,7 +317,8 @@ func _cast(id: String) -> void:
 			_effect(origin,closest.global_position,22.0,pattern,color,data)
 		struck = 1
 	for raw in scratch:
-		if struck >= cap: break
+		# Shot/chain counts limit targeted attacks, never a visible damage area.
+		if pattern in ["bolt","chain"] and struck >= hits: break
 		var actor := raw as Node2D
 		if not TARGETS.is_detectable(actor): continue
 		if actor == closest and pattern in ["bolt","chain"]: continue
@@ -371,29 +369,25 @@ func _tick_pulses(delta: float) -> void:
 		var data: Dictionary = pulse.data
 		var pattern := String(data.get("pulse_pattern","nova"))
 		hero._fill_monster_nodes_near(pulse.origin,float(pulse.radius),pulse_scratch)
-		var struck := 0
 		for raw in pulse_scratch:
 			var actor := raw as Node2D
 			if not TARGETS.is_detectable(actor) or not GEOMETRY.contains(pattern,actor.global_position-Vector2(pulse.origin),pulse.direction,float(pulse.radius),int(pulse.rank),data): continue
-			_hit(actor,int(pulse.damage),pattern,int(pulse.rank),data); struck += 1
-			if struck >= 16: break
+			_hit(actor,int(pulse.damage),pattern,int(pulse.rank),data)
 		_effect(pulse.origin,Vector2(pulse.origin)+Vector2(pulse.direction)*float(pulse.radius),GEOMETRY.beam_half_width(int(pulse.rank)) if pattern == "beam" else float(pulse.radius),pattern,Color(String(data.color)),data)
 
-func _cast_fan(data: Dictionary, origin: Vector2, direction: Vector2, reach: float, rank: int, damage: int, cap: int) -> void:
+func _cast_fan(data: Dictionary, origin: Vector2, direction: Vector2, reach: float, rank: int, damage: int) -> void:
 	var lines := mini(5,int(data.fan_lines))
 	for index in lines:
 		var aim := direction.rotated((index-(lines-1)*0.5)*0.32)
 		_effect(origin,origin+aim*reach,GEOMETRY.beam_half_width(rank),"beam",Color(String(data.color)),data)
-	var struck := 0
 	for raw in scratch:
 		var actor := raw as Node2D
 		if not TARGETS.is_detectable(actor): continue
 		for index in lines:
 			var aim := direction.rotated((index-(lines-1)*0.5)*0.32)
 			if not GEOMETRY.contains("beam",actor.global_position-origin,aim,reach,rank,data): continue
-			_hit(actor,damage,"beam",rank,data); struck += 1
+			_hit(actor,damage,"beam",rank,data)
 			break # Overlapping rays never multiply damage on one actor.
-		if struck >= cap: break
 
 func _finish_shot(shot: Dictionary, actor: Node2D) -> void:
 	var data: Dictionary = shot.data
@@ -402,13 +396,11 @@ func _finish_shot(shot: Dictionary, actor: Node2D) -> void:
 
 func _splash(center: Vector2, damage: int, radius: float, excluded: Node2D, data: Dictionary) -> void:
 	hero._fill_monster_nodes_near(center,radius,splash_scratch)
-	var struck := 0
 	for raw in splash_scratch:
 		var actor := raw as Node2D
 		if actor == excluded or not TARGETS.is_detectable(actor) or actor.global_position.distance_squared_to(center) > radius*radius: continue
 		# A splash cannot recursively create another splash.
-		_hit(actor,damage,"nova",int(data.get("growth_rank",1)),data); struck += 1
-		if struck >= 12: break
+		_hit(actor,damage,"nova",int(data.get("growth_rank",1)),data)
 	_effect(center,center,radius,"nova",Color(String(data.color)),data)
 
 func _pose(direction: Vector2) -> void:
