@@ -90,13 +90,14 @@ const HERO_WORLD_QUERY_RUNTIME := preload("res://src/hero/hero_world_query_runti
 const HERO_SUMMONER_RUNTIME := preload("res://src/hero/hero_summoner_runtime.gd")
 const HERO_FIGHTER_RUNTIME := preload("res://src/hero/hero_fighter_runtime.gd")
 const STAGE1_FRAME_DIR := "res://assets/art/heroes/stage1_mage/frames"
+const STAGE1_VFX := preload("res://src/ui/stage1_mage_vfx.gd")
 const STAGE1_SHIELD_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_02"
 const STAGE1_SHIELD_EFFECT_FRAME_COUNT := 6
 const STAGE1_SHIELD_EFFECT_FRAME_SIZE := Vector2(512, 512)
 const STAGE1_SHIELD_EFFECT_TARGET_SIZE := 180.0
 const STAGE1_CHANNEL_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_03"
 const STAGE1_CHANNEL_EFFECT_FRAME_COUNT := 6
-const STAGE1_CHANNEL_EFFECT_TARGET_SIZE := 300.0
+const STAGE1_CHANNEL_EFFECT_TARGET_SIZE := 420.0
 const STAGE2_FRAME_DIR := "res://assets/art/heroes/stage2_rogue/frames"
 const STAGE2_EFFECT1_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_01"
 const STAGE2_EFFECT2_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_02"
@@ -7434,7 +7435,9 @@ func _apply_stage1_shield_visual() -> void:
 			STAGE1_SHIELD_EFFECT_BASE_PATH,
 			index,
 		]
-		var texture := _load_stage1_texture(path)
+		var texture := STAGE1_VFX.frame("effect_02", index)
+		if texture == null:
+			texture = _load_stage1_texture(path)
 		if texture == null:
 			push_warning("Stage 1 shield effect frame load failed: %s" % path)
 			shield_effect.sprite_frames = null
@@ -7444,7 +7447,7 @@ func _apply_stage1_shield_visual() -> void:
 	shield_effect.sprite_frames = frames
 	var uniform_scale := (
 		STAGE1_SHIELD_EFFECT_TARGET_SIZE
-		/ STAGE1_SHIELD_EFFECT_FRAME_SIZE.x
+		/ maxf(frames.get_frame_texture(&"shield", 0).get_width(), 1.0)
 	)
 	shield_effect.scale = Vector2(uniform_scale, uniform_scale)
 
@@ -7472,7 +7475,9 @@ func _apply_stage1_channel_visual() -> void:
 			STAGE1_CHANNEL_EFFECT_BASE_PATH,
 			index,
 		]
-		var texture := _load_stage1_texture(path)
+		var texture := STAGE1_VFX.frame("effect_03", index)
+		if texture == null:
+			texture = _load_stage1_texture(path)
 		if texture == null:
 			push_warning("Stage 1 channel effect frame load failed: %s" % path)
 			channel_effect.sprite_frames = null
