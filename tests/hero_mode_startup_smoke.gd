@@ -24,6 +24,9 @@ func run() -> void:
 	progress.set_value("progress", "highest_unlocked_stage", 1)
 	progress.set_value("progress", "current_stage_id", "stage_1")
 	check(SCOPE.save_config(progress, "user://stage_progress.cfg") == OK, "isolated fixture")
+	var hero_progress := ConfigFile.new()
+	for number in range(1,10): hero_progress.set_value("hero_progress","stage_%d_wins" % number,1)
+	check(SCOPE.save_config(hero_progress,"user://team_loadout.cfg") == OK,"prior hero stage clears, independent of campaign")
 	var pad_script: Script = load("res://src/hero_mode/hero_move_pad.gd")
 	check(pad_script != null and pad_script.can_instantiate(), "pad compiles without native method collision")
 	if pad_script == null or not pad_script.can_instantiate():
@@ -63,7 +66,7 @@ func run() -> void:
 	check(scene.battle.run_metrics.elapsed_seconds > elapsed, "battle clock advances")
 	check(scene.battle.get_population_count() > 0, "AI demon sends first monsters")
 	check(not scene.hp.max_value <= 0 and not scene.status.text.is_empty(), "HUD updated")
-	scene.battle.hero.gain_exp(80)
+	scene.battle.hero.gain_exp(scene.battle.hero.exp_to_next_level*4)
 	await create_timer(0.3).timeout
 	var cards := scene.overlay_rows.get_node("HorizontalAugmentCards") as HBoxContainer
 	check(scene.choosing and scene.battle.external_pause and cards.get_child_count() == 3,"three horizontal choices pause combat")

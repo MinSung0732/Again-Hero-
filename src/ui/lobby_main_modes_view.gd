@@ -222,10 +222,16 @@ func refresh() -> void:
 			lobby.stage_reward_label.text = "승리 보상\n연구 %d · 골드 %d" % [preload("res://src/data/hero_mode_catalog.gd").WIN_RESEARCH,preload("res://src/data/hero_mode_catalog.gd").WIN_GOLD]
 			lobby.stage_description_label.get_parent().get_node("RepeatReward").text = "무기 증강\n전투 중 습득 · Lv.10 상자 진화"
 			section.get_node("SectionTitle").text = "용사 원정"
-			section.get_node("SectionSubtitle").text = "스테이지는 마왕 공세와 맵 붕괴를 결정합니다. 용사는 캐릭터 편성에서 선택하세요."
+			section.get_node("SectionSubtitle").text = "이전 단계 생존 성공 시 다음 단계 개방 · 용사는 캐릭터 편성에서 선택하세요."
 			_apply_selected_hero_portrait()
 			lobby.stage_name_label.text = "마왕의 성 · 붕괴 %d단계" % int(lobby.STAGE_CATALOG.get_stage(stage).get("number",1))
-			lobby.enter_stage_button.disabled = false
+			var unlocked := HERO_STORE.battle_stage_unlocked(stage)
+			lobby.enter_stage_button.disabled = not unlocked
+			if lobby.stamina_view != null: lobby.stamina_view.configure_entry(unlocked,0 if LocalTestMode.active else preload("res://src/data/stamina_catalog.gd").ENTRY_COST)
+			if not unlocked:
+				lobby.enter_stage_button.text = "이전 용사 스테이지 클리어 필요"
+				lobby.stage_status_label.text = "잠김 · 이전 단계 클리어 필요"
+			elif HERO_STORE.battle_stage_cleared(stage): lobby.stage_status_label.text = "클리어 완료 · 15분 생존"
 			hard_button.disabled = true
 		elif difficulty == "hard":
 			lobby.enter_stage_button.text = "어려움 도전 · 용사 해금"

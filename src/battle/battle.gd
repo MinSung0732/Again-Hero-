@@ -5272,6 +5272,8 @@ func _sync_combat_pause_state() -> void:
 
 func _set_combat_physics_enabled(enabled: bool) -> void:
 	if is_instance_valid(hero):
+		if hero_player_mode and hero.player_weapons != null and hero.player_weapons.native_skills != null:
+			hero.player_weapons.native_skills.set_paused(not enabled)
 		hero.set_physics_process(enabled)
 		if hero.has_method("set_alchemist_cauldron_runtime_paused"):
 			hero.call(

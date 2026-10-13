@@ -23,6 +23,7 @@ var effect_end_msec: int = 0
 var initial_damage_ids: Dictionary = {}
 var slowed_bodies: Dictionary = {}
 var slow_refresh_timer: float = 0.0
+var life_revision := 0
 var caster: Node2D
 
 @onready var visual: AnimatedSprite2D = $Visual
@@ -50,6 +51,7 @@ func setup(
 	new_collision_radius: float,
 	caster_node: Node2D
 ) -> void:
+	life_revision += 1
 	_build_frames()
 	active = true
 	pillar_active = false
@@ -116,9 +118,17 @@ func _activate_pillar() -> void:
 
 
 func _apply_initial_overlaps_after_physics() -> void:
+	var revision := life_revision
+	# Deferred monitoring is applied after physics_frame resumes. Sample after
+	# the next broadphase update, and never resume work on a recycled pillar.
 	await get_tree().physics_frame
-	if not active or not pillar_active:
+	await get_tree().physics_frame
+	if revision != life_revision or not active or not pillar_active:
 		return
+	var battle := get_parent()
+	while is_instance_valid(battle) and battle.has_method("is_combat_simulation_paused") and battle.is_combat_simulation_paused():
+		await get_tree().physics_frame
+		if revision != life_revision or not active: return
 	for body in effect_area.get_overlapping_bodies():
 		_track_slow_target(body)
 		_apply_initial_damage(body)
@@ -251,6 +261,7 @@ func _finish_pillar() -> void:
 
 
 func deactivate_for_pool() -> void:
+	life_revision += 1
 	caster = null
 	active = false
 	pillar_active = false

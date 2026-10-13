@@ -414,6 +414,7 @@ func _build_game() -> void:
 	_info(page, "게임 옵션은 자동 저장되며 다음 전투에도 적용됩니다.")
 
 func _save_game(value: bool, key: String) -> void:
+	if key == "camera_view_locked" and lobby._is_hero_lobby_mode(): _sync_game(); return
 	var config := ConfigFile.new()
 	config.load(lobby.gameplay_settings_path)
 	config.set_value("gameplay", key, value)
@@ -424,7 +425,10 @@ func _sync_game() -> void:
 	var config := ConfigFile.new()
 	config.load(lobby.gameplay_settings_path)
 	for option in GAME_OPTIONS:
-		game_checks[option.key].set_pressed_no_signal(bool(config.get_value("gameplay", option.key, option["default"])))
+		var hero_mode: bool = lobby._is_hero_lobby_mode() and option.key == "camera_view_locked"
+		game_checks[option.key].disabled = hero_mode
+		game_checks[option.key].set_pressed_no_signal(hero_mode or bool(config.get_value("gameplay", option.key, option["default"])))
+		game_checks[option.key].resized.emit()
 
 func _build_sound() -> void:
 	var page: VBoxContainer = pages.sound

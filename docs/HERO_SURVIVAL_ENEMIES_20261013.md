@@ -1,5 +1,7 @@
 # 용사 모드 몬스터 성장 / 로컬 테스트 용사 해제 — 2026-10-13
 
+> 이 문서는 이전 수치/검증 이력이다. 최신 EXP·적 성장·무기·전장 규칙은 [후속 변경](HERO_SURVIVAL_REVISION_20261013.md)을 따른다.
+
 기준 `feature/stage10-astra` b23977b4224da4b4579d7f3668c61ef6d71093a0. main 4122adb73e14552aae7c0aa7edefb2827f5d08d0 보존.
 
 ## 문제와 변경

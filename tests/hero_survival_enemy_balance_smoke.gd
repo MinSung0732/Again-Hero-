@@ -73,7 +73,7 @@ func run() -> void:
 	battle._apply_special_monster_modifiers(elite,"orc",{"type":"elite","hp_multiplier":2.0,"damage_multiplier":1.2})
 	var elite_hp: int = elite.max_hp
 	battle._apply_normal_augments_to_existing_monster(elite,"orc")
-	check(elite_hp == 260 and elite.max_hp == elite_hp,"elite ratio survives AI augment refresh")
+	check(elite_hp == 442 and elite.max_hp == elite_hp,"elite ratio survives AI augment refresh")
 	battle.hero_player_mode = false; battle.demon_level = 1
 	check(battle._get_demon_level_monster_hp_multiplier() == 1.0 and battle._get_demon_level_monster_damage_multiplier() == 1.0,"normal demon mode stays canonical at level one")
 	var normal = spawn("orc",0.0)

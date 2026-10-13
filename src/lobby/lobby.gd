@@ -4649,10 +4649,20 @@ func _on_stage_slide_finished() -> void:
 	_stage_pending_direction = 0
 
 
+func _stage_highest_unlocked() -> int:
+	if _is_hero_lobby_mode(): return preload("res://src/systems/hero_mode_store.gd").highest_battle_stage()
+	return int(STAGE_PROGRESS.load_state().get("highest_unlocked_stage",1))
+func _stage_unlocked(number: int) -> bool:
+	return number >= 1 and number <= _stage_highest_unlocked()
+func _stage_cleared(id: String) -> bool:
+	if _is_hero_lobby_mode(): return preload("res://src/systems/hero_mode_store.gd").battle_stage_cleared(id)
+	return STAGE_PROGRESS.is_stage_cleared(id)
+
+
 func _get_max_browsable_stage_index() -> int:
 	if stage_ids.is_empty():
 		return 0
-	if _is_hero_lobby_mode(): return stage_ids.size()-1
+	if _is_hero_lobby_mode(): return mini(preload("res://src/systems/hero_mode_store.gd").highest_battle_stage()+1,stage_ids.size()-1)
 
 	var progress_state := STAGE_PROGRESS.load_state()
 	var highest_unlocked := int(
@@ -4715,11 +4725,11 @@ func _refresh_stage_selector_buttons(max_browsable_index: int) -> void:
 		var stage := STAGE_CATALOG.get_stage(stage_ids[index])
 		var stage_number := int(stage.get("number", index + 1))
 		var display_name := String(stage.get("display_name", "미지의 침입자"))
-		if not _is_hero_lobby_mode() and stage_number > int(STAGE_PROGRESS.load_state().get("highest_unlocked_stage", 1)) + 1:
+		if stage_number > _stage_highest_unlocked() + 1:
 			display_name = "???"
 		var button := stage_selector_buttons[index]
-		var unlocked := _is_hero_lobby_mode() or STAGE_PROGRESS.is_stage_unlocked(stage_number)
-		var cleared := STAGE_PROGRESS.is_stage_cleared(stage_ids[index])
+		var unlocked := _stage_unlocked(stage_number)
+		var cleared := _stage_cleared(stage_ids[index])
 		var selectable := index <= max_browsable_index
 		var selected := index == selected_stage_index
 		if _is_hero_lobby_mode(): display_name = "마왕의 성 · 붕괴 %d단계" % stage_number
@@ -4791,8 +4801,8 @@ func _refresh_stage_card() -> void:
 		String(stage.get("hero_id", ""))
 	)
 	var hero_name := String(hero_profile.get("display_name", "정체불명의 용사"))
-	var unlocked := _is_hero_lobby_mode() or STAGE_PROGRESS.is_stage_unlocked(stage_number)
-	var cleared := STAGE_PROGRESS.is_stage_cleared(stage_id)
+	var unlocked := _stage_unlocked(stage_number)
+	var cleared := _stage_cleared(stage_id)
 	var reward_claimed := STAGE_PROGRESS.is_reward_claimed(stage_id)
 	var reward := int(stage.get("first_clear_reward", 0))
 	var run_reward_multiplier := float(stage.get("run_reward_multiplier", 1.0))
@@ -4850,7 +4860,7 @@ func _refresh_stage_card() -> void:
 
 	portrait_badge.visible = false
 	_apply_portrait(String(stage.get("portrait_path", "")), hero_name)
-	var highest := int(STAGE_PROGRESS.load_state().get("highest_unlocked_stage", 1))
+	var highest := _stage_highest_unlocked()
 	var silhouette := stage_number > highest + 1
 	portrait_texture.self_modulate = Color.BLACK if silhouette else (Color(0.28,0.25,0.33,1) if not unlocked else Color.WHITE)
 	portrait_badge.visible = not unlocked
@@ -5124,6 +5134,9 @@ func _enter_selected_stage(allow_unregistered: bool = false) -> void:
 func _enter_hero_stage(stage_id: String) -> void:
 	var hero_store := preload("res://src/systems/hero_mode_store.gd")
 	var selected_hero: String = hero_store.selected_hero()
+	if not hero_store.battle_stage_unlocked(stage_id):
+		stamina_view.show_entry_notice("이전 용사 스테이지를 먼저 클리어하세요.")
+		return
 	if not hero_store.character_unlocked(selected_hero):
 		stamina_view.show_entry_notice("이 용사는 해당 스테이지 어려움 클리어 후 개방됩니다.")
 		return

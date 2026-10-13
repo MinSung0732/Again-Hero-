@@ -5,6 +5,13 @@ const TARGETS := preload("res://src/systems/hero_target_policy.gd")
 const EFFECT_LIMIT := 48
 const PROJECTILE_LIMIT := 64
 const MODE := preload("res://src/data/hero_mode_catalog.gd")
+const AFFLICTIONS := preload("res://src/systems/received_afflictions.gd")
+const ART := preload("res://src/ui/hero_weapon_art.gd")
+const NATIVE := preload("res://src/hero_mode/hero_weapon_native_runtime.gd")
+const EMPTY_ART: Array[Texture2D] = []
+var native_skills: RefCounted
+var art: Dictionary = {}
+var magazines: Dictionary = {}
 var hero
 var levels: Dictionary = {}
 var passives: Dictionary = {}
@@ -40,11 +47,17 @@ func install(host) -> void:
 	base_max_hp = int(hero.max_hp); base_move_speed = float(hero.move_speed)
 	base_pickup_radius = float(hero.exp_pickup_radius); base_exp_multiplier = float(hero.exp_gain_multiplier)
 	for index in range(PROJECTILE_LIMIT):
-		projectiles.append({"active":false,"handle":Vector3i.ZERO,"position":Vector2.ZERO,"damage":0,"rank":1,"color":Color.WHITE,"age":0.0})
+		projectiles.append({"active":false,"handle":Vector3i.ZERO,"position":Vector2.ZERO,"damage":0,"rank":1,"color":Color.WHITE,"age":0.0,"delay":0.0,"data":{},"melee":false,"reach":0.0})
 	available_weapons = DATA.weapon_pool(String(hero.hero_id))
+	if hero.has_method("_acquire_projectile"):
+		native_skills = NATIVE.new(); native_skills.install(hero)
+		for id in available_weapons:
+			var pattern := String(DATA.WEAPONS[id].pattern)
+			# Native actors own their cached textures; do not duplicate their bitmaps.
+			art[id] = EMPTY_ART if NATIVE.SCENES.has(pattern) or pattern == "summon" else ART.sequence(String(DATA.WEAPONS[id].get("effect_dir","")))
 	for index in range(EFFECT_LIMIT):
 		effects.append({"left":0.0,"duration":0.0,"a":Vector2.ZERO,"b":Vector2.ZERO,"radius":0.0,"pattern":"","color":Color.WHITE,"orbit_count":4,"orbit_speed":3.0,"orbit_ratio":0.7})
-	for index in range(8): fields.append({"left":0.0,"tick":0.0,"origin":Vector2.ZERO,"radius":0.0,"damage":0,"cap":9,"interval":0.5})
+	for index in range(8): fields.append({"left":0.0,"tick":0.0,"origin":Vector2.ZERO,"radius":0.0,"damage":0,"cap":9,"interval":0.5,"follow":false,"data":{},"rank":1})
 	add(String(DATA.STARTERS.get(hero.hero_id,"ranged_rookie_arcane_bolt")))
 
 func add(id: String) -> bool:
@@ -54,6 +67,7 @@ func add(id: String) -> bool:
 		if not levels.has(id):
 			if weapon_ids.size() >= DATA.WEAPON_SLOTS: return false
 			weapon_ids.append(id); cooldowns[id] = 0.0
+			magazines[id] = int(DATA.WEAPONS[id].get("magazine",0))
 		levels[id] = int(levels.get(id,0))+1
 		hero.build_counts[id] = levels[id]
 		return true
@@ -163,6 +177,7 @@ func tick(delta: float) -> void:
 	for field in fields:
 		if float(field.left) <= 0.0: continue
 		field.left = maxf(0.0,float(field.left)-delta)
+		if bool(field.follow): field.origin = hero.global_position
 		field.tick = float(field.tick)-delta
 		if float(field.tick) > 0.0: continue
 		field.tick = float(field.interval)
@@ -171,13 +186,16 @@ func tick(delta: float) -> void:
 		for raw in scratch:
 			var actor := raw as Node2D
 			if not TARGETS.is_detectable(actor): continue
-			HIT.hit(actor,int(field.damage),"ranged",hero); count += 1
+			_hit(actor,int(field.damage),"field",int(field.rank),field.data); count += 1
 			if count >= int(field.cap): break
 	for id in weapon_ids:
 		cooldowns[id] = maxf(0.0,float(cooldowns[id])-delta*hero.get_paralysis_attack_multiplier())
 		if float(cooldowns[id]) > 0.0: continue
 		_cast(id)
 		cooldowns[id] = float(DATA.WEAPONS[id].cooldown)*haste*(1.0-0.035*(int(levels[id])-1))*(0.8 if evolved.has(id) else 1.0)
+		if int(DATA.WEAPONS[id].get("magazine",0)) > 0 and int(magazines[id]) <= 0:
+			cooldowns[id] += float(DATA.WEAPONS[id].get("reload",1.6))
+			magazines[id] = int(DATA.WEAPONS[id].magazine)
 
 func _cast(id: String) -> void:
 	var data: Dictionary = DATA.WEAPONS[id]
@@ -186,6 +204,7 @@ func _cast(id: String) -> void:
 	var origin: Vector2 = hero.global_position
 	var reach: float = float(data.range)*(1.0+0.035*(rank-1))*(1.25 if awakened else 1.0)
 	var damage: int = maxi(1,roundi(hero.attack_damage*float(data.power)*power*(1.0+0.18*(rank-1))*(1.8 if awakened else 1.0)))
+	damage = maxi(1,roundi(damage*(1.0+float(data.get("low_hp_bonus",0.0))*(1.0-float(hero.current_hp)/maxf(hero.max_hp,1)))))
 	var hits := int(data.get("base_hits",1))+int(rank/5)+(2 if awakened else 0)
 	var pattern := String(data.pattern)
 	var color := Color(String(data.color))
@@ -201,23 +220,47 @@ func _cast(id: String) -> void:
 	var direction: Vector2 = hero.player_move_input.normalized()
 	if is_instance_valid(closest): direction = origin.direction_to(closest.global_position)
 	if direction.length_squared() < 0.01: direction = Vector2.RIGHT
+	if is_instance_valid(closest) or pattern == "summon" or pattern == "guard" or pattern == "heal": _pose(direction)
+	if native_skills != null and native_skills.cast(data,origin,direction,closest,damage,reach,hits,rank,projectile_speed,awakened):
+		hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
+		return
+	if bool(data.get("cleanse",false)):
+		hero.poison_timer = 0.0; hero.poison_tick_timer = 0.0; hero.poison_damage_remaining = 0; hero.poison_ticks_remaining = 0; hero.poison_source = null
+		hero.damage_poison_tracker.clear(); hero.burn_runtime.clear(); hero.slow_timer = 0.0; hero.move_multiplier = 1.0
+		hero.set_meta("poison_active",false); hero.set_meta("burn_active",false); hero._set_poison_flash(false)
+	if is_instance_valid(closest) and float(data.get("hp_cost",0.0)) > 0.0:
+		hero.current_hp = maxi(1,hero.current_hp-maxi(1,roundi(hero.current_hp*float(data.hp_cost))))
+		hero.health_changed.emit(hero.current_hp,hero.max_hp)
+	if pattern in ["combo","burst"]:
+		if not is_instance_valid(closest): return
+		var shots := mini(hits,6)
+		if int(data.get("magazine",0)) > 0:
+			shots = mini(shots,int(magazines[id])); magazines[id] = int(magazines[id])-shots
+		for index in shots: _launch_projectile(closest,origin,damage,rank,color,data,index*float(data.get("hit_interval",0.14)),pattern == "combo",reach)
+		_effect(origin,origin+direction*reach,reach,"slash" if pattern == "combo" else "beam",color,data)
+		hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
+		hero.attack_pose_timer = 0.25
+		return
 	if pattern == "poison":
 		var field: Dictionary = fields[field_cursor]; field_cursor = (field_cursor+1)%fields.size()
 		field.origin = closest.global_position if is_instance_valid(closest) else origin
-		field.left = float(data.get("field_duration",3.0)); field.tick = 0.0; field.interval = float(data.get("field_interval",0.5)); field.radius = reach*float(data.get("field_radius_ratio",0.45)); field.damage = maxi(1,roundi(damage*0.25)); field.cap = mini(24,4+hits*5)
+		field.left = float(data.get("field_duration",3.0)); field.tick = 0.0; field.interval = float(data.get("field_interval",0.5)); field.radius = reach*float(data.get("field_radius_ratio",0.45)); field.damage = maxi(1,roundi(damage*float(data.get("field_power",0.25)))); field.cap = mini(24,4+hits*5)
+		field.follow = bool(data.get("field_follow",false)); field.data = data; field.rank = rank
+		if bool(field.follow): field.origin = origin
 		_effect(field.origin,field.origin,float(field.radius),pattern,color,data)
 		hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
 		return
-	if pattern == "heal": hero.heal_direct(roundi(hero.max_hp*(0.015+rank*0.002)))
+	if pattern == "heal": hero.heal_direct(roundi(hero.max_hp*(float(data.get("heal_ratio",0.015))+rank*0.002)))
 	if pattern == "guard":
-		var shield: float = hero.max_hp*(0.04+rank*0.006)*(1.5 if awakened else 1.0)
-		hero.shield_hp = maxf(hero.shield_hp,shield); owned_shield = shield; shield_left = 3.0
-	var cap := mini(24,4+hits*5) if pattern in ["nova","frost","poison","guard","heal"] else hits
+		var shield: float = hero.max_hp*(float(data.get("shield_ratio",0.04))+rank*0.006)*(1.5 if awakened else 1.0)
+		# Replace only this runtime's grant; preserve other shield sources.
+		hero.shield_hp = maxf(0.0,hero.shield_hp-owned_shield)+shield; owned_shield = shield; shield_left = float(data.get("shield_duration",3.0))
+	var cap := mini(24,4+hits*5) if pattern in ["nova","frost","guard","heal"] else mini(int(data.get("hit_cap",hits)),hits+4) if pattern in ["slash","beam","orbit"] else hits
 	var struck := 0
 	if pattern in ["bolt","chain"] and is_instance_valid(closest):
-		if pattern == "bolt": _launch_projectile(closest,origin,damage,rank,color)
+		if pattern == "bolt": _launch_projectile(closest,origin,damage,rank,color,data)
 		else:
-			_hit(closest,damage,pattern,rank)
+			_hit(closest,damage,pattern,rank,data)
 			_effect(origin,closest.global_position,22.0,pattern,color,data)
 		struck = 1
 	for raw in scratch:
@@ -225,24 +268,25 @@ func _cast(id: String) -> void:
 		var actor := raw as Node2D
 		if not TARGETS.is_detectable(actor): continue
 		if actor == closest and pattern in ["bolt","chain"]: continue
+		if pattern == "chain" and is_instance_valid(closest) and actor.global_position.distance_squared_to(closest.global_position) > pow(float(data.get("chain_radius",200.0)),2): continue
 		var offset: Vector2 = actor.global_position-origin
 		if pattern == "slash" and offset.normalized().dot(direction) < 0.35: continue
 		if pattern == "beam" and (offset.dot(direction) < 0.0 or absf(offset.cross(direction)) > 40.0+rank*5.0): continue
 		if pattern == "orbit" and absf(offset.length()-reach*float(data.get("orbit_ratio",0.7))) > 100.0: continue
-		if pattern == "bolt": _launch_projectile(actor,origin,damage,rank,color)
-		else: _hit(actor,damage,pattern,rank)
+		if pattern == "bolt": _launch_projectile(actor,origin,damage,rank,color,data)
+		else: _hit(actor,damage,pattern,rank,data)
 		struck += 1
 		if pattern == "chain": _effect(origin,actor.global_position,20.0,pattern,color,data)
 	if pattern == "beam": _effect(origin,origin+direction*reach,28.0+rank*3.0,pattern,color,data)
 	elif pattern not in ["bolt","chain"]: _effect(origin,origin+direction*reach,reach,pattern,color,data)
 	hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
+func _pose(direction: Vector2) -> void:
 	hero.attack_pose_timer = 0.25
-	if is_instance_valid(hero.hero_sprite) and hero.hero_sprite.sprite_frames.has_animation(&"attack"):
-		hero.hero_sprite.play(&"attack")
+	if is_instance_valid(hero.hero_sprite) and hero.hero_sprite.sprite_frames.has_animation(&"attack"): hero.hero_sprite.play(&"attack")
 	if direction.x != 0.0: hero._face_attack_direction(direction.x)
 
 # Generation handles prevent a recycled monster instance from receiving an old shot.
-func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, color: Color) -> void:
+func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, color: Color, data: Dictionary = {}, delay: float = 0.0, melee: bool = false, reach: float = 0.0) -> void:
 	if not is_instance_valid(authority) or not authority.has_method("get_battle_entity_handle"): return
 	var handle: Vector3i = authority.call("get_battle_entity_handle",actor)
 	if handle == Vector3i.ZERO: return
@@ -253,6 +297,7 @@ func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, 
 		projectile_cursor = (index+1)%PROJECTILE_LIMIT
 		shot.active = true; shot.handle = handle; shot.position = origin
 		shot.damage = damage; shot.rank = rank; shot.color = color; shot.age = 0.0
+		shot.data = data; shot.delay = delay; shot.melee = melee; shot.reach = reach
 		hero.queue_redraw()
 		return
 
@@ -260,35 +305,49 @@ func _tick_projectiles(delta: float) -> void:
 	var redraw := false
 	for shot in projectiles:
 		if not bool(shot.active): continue
+		shot.delay = maxf(0.0,float(shot.delay)-delta)
+		if float(shot.delay) > 0.0: continue
 		redraw = true; shot.age = float(shot.age)+delta
 		var actor: Node2D = authority.call("resolve_battle_entity",shot.handle) as Node2D if is_instance_valid(authority) else null
 		if not TARGETS.is_detectable(actor) or float(shot.age) > 3.0:
 			shot.active = false; continue
+		if bool(shot.melee):
+			shot.active = false
+			if hero.global_position.distance_squared_to(actor.global_position) <= pow(float(shot.reach),2) and hero.silence_timer <= 0.0:
+				_hit(actor,int(shot.damage),"slash",int(shot.rank),shot.data)
+			continue
 		var step := MODE.PROJECTILE_SPEED*projectile_speed*delta
 		var position: Vector2 = shot.position
 		shot.position = position.move_toward(actor.global_position,step)
 		if position.distance_to(actor.global_position) <= step+12.0:
 			shot.active = false
-			_hit(actor,int(shot.damage),"bolt",int(shot.rank))
+			_hit(actor,int(shot.damage),"bolt",int(shot.rank),shot.data)
 	if redraw: hero.queue_redraw()
 
-func _hit(actor: Node2D, damage: int, pattern: String, rank: int) -> void:
+func _hit(actor: Node2D, damage: int, pattern: String, rank: int, data: Dictionary = {}) -> void:
+	var before := int(actor.get("current_hp"))
+	if before > 0 and float(data.get("execute_ratio",0.0)) > 0.0 and before <= float(actor.get("max_hp"))*float(data.execute_ratio): damage = maxi(damage,before)
 	HIT.hit(actor,damage,"melee" if pattern == "slash" else "ranged",hero)
+	var lost := maxi(0,before-int(actor.get("current_hp"))) if is_instance_valid(actor) else 0
+	if lost > 0 and float(data.get("lifesteal",0.0)) > 0.0: hero.heal_direct(roundi(lost*float(data.lifesteal)))
 	if not TARGETS.is_detectable(actor): return
-	if pattern == "frost" and actor.has_method("apply_slow"): actor.call("apply_slow",maxf(0.35,0.85-rank*0.04),2.0)
+	if lost > 0 and (pattern == "frost" or data.has("slow_multiplier")):
+		AFFLICTIONS.apply_slow(actor,float(data.get("slow_multiplier",maxf(0.35,0.85-rank*0.04))),float(data.get("slow_duration",2.0)))
 	# Poison uses frequent damage pulses; it does not reuse hero-target poison APIs.
 
 func _effect(a: Vector2,b: Vector2,radius: float,pattern: String,color: Color,data: Dictionary = {}) -> void:
 	var effect: Dictionary = effects[effect_cursor]
 	effect_cursor = (effect_cursor+1)%EFFECT_LIMIT
 	effect.a = a; effect.b = b; effect.radius = radius; effect.pattern = pattern; effect.color = color
+	effect["frames"] = ART.cache.get(String(data.get("effect_dir","")),EMPTY_ART)
+	effect["follow"] = bool(data.get("field_follow",false))
 	effect.orbit_count = int(data.get("orbit_count",4)); effect.orbit_speed = float(data.get("orbit_speed",3.0)); effect.orbit_ratio = float(data.get("orbit_ratio",0.7))
 	effect.duration = float(data.get("field_duration",3.0)) if pattern == "poison" else 1.5 if pattern == "orbit" else 0.28
 	effect.left = effect.duration; hero.queue_redraw()
 
 func draw() -> void:
 	for shot in projectiles:
-		if bool(shot.active):
+		if bool(shot.active) and not bool(shot.melee) and float(shot.delay) <= 0.0:
 			var position: Vector2 = hero.to_local(shot.position)
 			hero.draw_circle(position,12.0,shot.color)
 			hero.draw_circle(position,5.0,Color.WHITE)
@@ -296,9 +355,15 @@ func draw() -> void:
 		if float(effect.left) <= 0.0: continue
 		var ratio: float = float(effect.left)/float(effect.duration)
 		var a: Vector2 = hero.to_local(effect.a)
+		if bool(effect.get("follow",false)): a = Vector2.ZERO
 		var b: Vector2 = hero.to_local(effect.b)
 		var color: Color = effect.color; color.a = ratio*0.8
 		var radius: float = effect.radius
+		var frames: Array = effect.get("frames",EMPTY_ART)
+		if not frames.is_empty():
+			var texture: Texture2D = frames[mini(int((1.0-ratio)*frames.size()),frames.size()-1)]
+			var diameter := clampf(radius*1.4,80.0,420.0)
+			hero.draw_texture_rect(texture,Rect2(a-Vector2.ONE*diameter*0.5,Vector2.ONE*diameter),false,Color(1,1,1,ratio*0.85))
 		match String(effect.pattern):
 			"beam","chain": hero.draw_line(a,b,color,maxf(3.0,radius*ratio*0.25))
 			"bolt":

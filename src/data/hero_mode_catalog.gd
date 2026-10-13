@@ -13,10 +13,10 @@ const MONSTER_SCALE_FIELDS := {"max_hp":"hp","attack_damage":"damage","explosion
 const MONSTER_GROWTH := [
 	{"time":0.0,"hp":0.18,"damage":0.45,"speed":0.80},
 	{"time":30.0,"hp":0.18,"damage":0.45,"speed":0.80},
-	{"time":120.0,"hp":0.50,"damage":0.65,"speed":0.85},
-	{"time":300.0,"hp":1.10,"damage":0.95,"speed":0.95},
-	{"time":600.0,"hp":2.10,"damage":1.25,"speed":1.05},
-	{"time":900.0,"hp":3.20,"damage":1.60,"speed":1.15},
+	{"time":120.0,"hp":0.85,"damage":0.65,"speed":0.90},
+	{"time":300.0,"hp":2.80,"damage":0.95,"speed":1.00},
+	{"time":600.0,"hp":6.00,"damage":1.30,"speed":1.10},
+	{"time":900.0,"hp":10.00,"damage":1.70,"speed":1.20},
 ]
 static func monster_multiplier(stat: String, elapsed: float) -> float:
 	if not MONSTER_GROWTH[0].has(stat) or stat == "time": return 1.0
@@ -30,7 +30,8 @@ static func monster_multiplier(stat: String, elapsed: float) -> float:
 	return float(MONSTER_GROWTH[-1][stat])
 static func required_exp(target_level: int) -> int:
 	var rank := maxi(target_level-1,0)
-	return roundi(20.0+10.0*rank+0.5*rank*rank)
+	# About 22k / 48k collected EXP to reach Lv.30 / 40; no level cap.
+	return roundi(60.0+18.0*rank+1.6*rank*rank)
 const ROSTER := ["slime","spider","orc","bomb_rat","skeleton_archer","ghost","ogre"]
 const COUNTERS := {"area":["orc","skeleton_archer"],"mobility":["spider","ghost"],"durability":["bomb_rat","ghost"],"damage":["slime","spider"]}
 const PHASES := [

@@ -88,9 +88,9 @@ func run() -> void:
 	for id in ["survival_power","survival_learning"]:
 		for rank in DATA.MAX_LEVEL: check(learning_runtime.add(id),"power and XP passive advance: "+id)
 	check(is_equal_approx(learning_runtime.power,1.8),"all weapon damage increases eighty percent")
-	check(is_equal_approx(learning_fixture.exp_gain_multiplier,2.25),"XP passive preserves the starting multiplier")
+	check(is_equal_approx(learning_fixture.exp_gain_multiplier,1.625),"XP passive preserves the starting multiplier with thirty-percent cap")
 	learning_fixture.queue_free()
-	check(MODE.required_exp(1) == 20 and MODE.required_exp(10) == 151 and MODE.required_exp(30) == 731,"new XP curve")
+	check(MODE.required_exp(1) == 60 and MODE.required_exp(10) == 352 and MODE.required_exp(30) == 1928,"fifteen minute XP curve")
 	check(float(MODE.phase_at(0).interval) == 0.9 and int(MODE.phase_at(0).batch) == 2 and int(MODE.phase_at(0).limit) == 36,"denser first wave")
 	stats_fixture.queue_free()
 	var original_scope := SCOPE.guest_directory

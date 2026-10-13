@@ -10,6 +10,11 @@ const MOVE_PAD := preload("res://src/hero_mode/hero_move_pad.gd")
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const ICONS := preload("res://src/ui/hero_augment_icons.gd")
 const DIRECTOR := preload("res://src/hero_mode/ai_demon_director.gd")
+const SETTINGS := preload("res://src/ui/BattleSettings.tscn")
+var settings_panel: Control
+var battle_frame: Control
+var battle_frame_enabled := true
+var gameplay_settings_path := "user://gameplay_settings.cfg"
 var battle
 var director
 var pad
@@ -53,10 +58,10 @@ func _ready() -> void:
 	stage = String(options.get("stage_id",stage))
 	player_hero_id = String(options.get("hero_id",STORE.selected_hero()))
 	_build_ui()
-	if not STORE.character_unlocked(player_hero_id) or STAGES.get_stage(stage).is_empty():
+	if not STORE.character_unlocked(player_hero_id) or not STORE.battle_stage_unlocked(stage):
 		var original_ticket: Dictionary = options.get("hero_entry",{})
 		var refunded := original_ticket.is_empty() or STAMINA.refund_failed_entry(original_ticket)
-		_show_blocked("이 용사는 해당 스테이지 어려움 클리어 후 개방됩니다." if refunded else "잠긴 용사 입장 실패 · 스테미너 반환 저장을 확인하세요.")
+		_show_blocked("용사 해금 조건 또는 이전 용사 스테이지 클리어를 확인하세요." if refunded else "잠긴 입장 실패 · 스테미너 반환 저장을 확인하세요.")
 		return
 	entry = STAMINA.claim_battle_entry(stage)
 	if entry.is_empty():
@@ -79,6 +84,7 @@ func _ready() -> void:
 	battle = BATTLE_SCENE.instantiate()
 	battle.hero_player_mode = true; battle.hero_player_stage = stage; battle.hero_player_hero_id = player_hero_id
 	viewport.add_child(battle)
+	_install_battle_settings()
 	GameAudio.attach_battle(battle)
 	$HeroBGMManager.start_stage(stage)
 	$HeroBGMManager.set_user_bgm_level(AudioSettings.bgm_level)
@@ -235,12 +241,12 @@ func _choose(id: String,revision: int) -> void:
 func _pause() -> void:
 	if not is_instance_valid(battle) or battle.battle_over or choosing or rolling: return
 	paused = true; battle.set_external_pause(true); pad.enabled = false; pad.reset()
-	_clear_overlay(); _label(overlay_rows,"게임 설정 · 용사 모드",32)
-	var camera := CheckBox.new(); camera.text = "화면 고정 · 용사 추적 (필수)"; camera.button_pressed = true; camera.disabled = true
-	camera.tooltip_text = "용사 모드에서는 시야 고정을 해제할 수 없습니다."
-	camera.add_theme_font_size_override("font_size",25); overlay_rows.add_child(camera)
-	_button("계속 플레이",_resume); _button("로비로 돌아가기",_leave)
+	_clear_overlay(); _label(overlay_rows,"일시정지 · 용사 모드",32)
+	_label(overlay_rows,"생존 %.1f초 · 처치 %d · Lv.%d\n%s" % [battle.run_metrics.elapsed_seconds,_kill_count(),battle.hero.level,battle.hero.get_build_summary()],23)
+	_button("계속 플레이",_resume); _button("다시 시작",_restart_from_pause)
+	_button("설정",_open_settings); _button("로비로 돌아가기",_leave)
 func _resume() -> void:
+	if is_instance_valid(settings_panel): settings_panel.hide()
 	paused = false; overlay.hide(); pad.reset(); pad.enabled = true
 	battle.hero.set_camera_view_locked(true); battle.set_external_pause(false)
 func _notification(what: int) -> void:
@@ -249,7 +255,8 @@ func _notification(what: int) -> void:
 		else: _pause()
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		if paused: _resume()
+		if is_instance_valid(settings_panel) and settings_panel.visible: settings_panel.hide()
+		elif paused: _resume()
 		else: _pause()
 		get_viewport().set_input_as_handled()
 func _kill_count() -> int:
@@ -276,6 +283,8 @@ func _show_result() -> void:
 		_label(overlay_rows,"보상 저장에 실패했습니다. 재시도 후 이동하세요.",24)
 		_button("보상 저장 재시도",_show_result); return
 	_label(overlay_rows,"연구 포인트 +%d · 골드 +%d\n다른 증강 조합과 이동 경로를 시험하세요." % [int(reward.get("research",0)),int(reward.get("gold",0))],24)
+	var next_stage := String(STAGES.get_stage(stage).get("next_stage_id",""))
+	if finished_won and STORE.battle_stage_unlocked(next_stage): _button("다음 스테이지 도전",_next_stage.bind(next_stage))
 	_button("같은 용사로 다시 도전",_retry); _button("로비로",_leave)
 func _retry() -> void:
 	if leaving or not settled: return
@@ -360,6 +369,70 @@ func _finish_roulette() -> void:
 func _close_roulette() -> void:
 	rolling = false; overlay.hide(); pad.reset(); pad.enabled = true
 	battle.set_external_pause(false)
+
+func _install_battle_settings() -> void:
+	battle_frame = preload("res://src/ui/hero_battle_frame.gd").new()
+	battle_frame.name = "HeroBattleFrame"; add_child(battle_frame); move_child(battle_frame,2)
+	battle_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	settings_panel = SETTINGS.instantiate(); add_child(settings_panel)
+	var rows := settings_panel.get_node("Panel/Margin/VBox")
+	var tabs: TabContainer = rows.get_node("SettingsTabs")
+	tabs.set_tab_title(0,"사운드"); tabs.set_tab_title(1,"게임플레이")
+	rows.get_node("CloseButton").pressed.connect(settings_panel.hide)
+	var camera: CheckBox = tabs.get_node("Gameplay/CameraLock")
+	camera.set_pressed_no_signal(true); camera.disabled = true
+	camera.tooltip_text = "용사 모드에서는 시야 고정이 필수입니다."
+	tabs.get_node("Gameplay/CameraGuide").text = "용사 모드에서는 항상 용사를 추적합니다. 시야 고정을 해제할 수 없습니다."
+	tabs.get_node("Gameplay/BattleFrame").toggled.connect(_set_battle_frame)
+	for pair in [["BGMRow",true],["SFXRow",false]]:
+		tabs.get_node("Sound/"+String(pair[0])+"/Slider").value_changed.connect(_set_audio_level.bind(bool(pair[1])))
+	tabs.get_node("Sound/BGMMute").toggled.connect(_set_audio_mute.bind(true))
+	tabs.get_node("Sound/SFXMute").toggled.connect(_set_audio_mute.bind(false))
+	var config := ConfigFile.new(); config.load(gameplay_settings_path)
+	battle_frame_enabled = bool(config.get_value("gameplay","battle_frame_enabled",true))
+	_apply_battle_frame(); _sync_settings()
+func _open_settings() -> void:
+	_sync_settings(); settings_panel.show(); settings_panel.move_to_front()
+func _sync_settings() -> void:
+	var tabs := settings_panel.get_node("Panel/Margin/VBox/SettingsTabs")
+	for pair in [["BGMRow",AudioSettings.bgm_level],["SFXRow",AudioSettings.sfx_level]]:
+		tabs.get_node("Sound/"+String(pair[0])+"/Slider").set_value_no_signal(float(pair[1]))
+		tabs.get_node("Sound/"+String(pair[0])+"/Value").text = str(pair[1])
+	tabs.get_node("Sound/BGMMute").set_pressed_no_signal(AudioSettings.bgm_muted)
+	tabs.get_node("Sound/SFXMute").set_pressed_no_signal(AudioSettings.sfx_muted)
+	tabs.get_node("Gameplay/CameraLock").set_pressed_no_signal(true)
+	tabs.get_node("Gameplay/BattleFrame").set_pressed_no_signal(battle_frame_enabled)
+func _set_audio_level(value: float,bgm: bool) -> void:
+	if bgm:
+		AudioSettings.set_bgm_level(roundi(value)); $HeroBGMManager.set_user_bgm_level(roundi(value))
+	else: AudioSettings.set_sfx_level(roundi(value))
+	_sync_settings()
+func _set_audio_mute(value: bool,bgm: bool) -> void:
+	if bgm:
+		AudioSettings.set_bgm_muted(value); $HeroBGMManager.set_user_bgm_muted(value)
+	else: AudioSettings.set_sfx_muted(value)
+func _set_battle_frame(enabled: bool) -> void:
+	var config := ConfigFile.new(); config.load(gameplay_settings_path)
+	config.set_value("gameplay","battle_frame_enabled",enabled)
+	if config.save(gameplay_settings_path) != OK: _sync_settings(); return
+	battle_frame_enabled = enabled; _apply_battle_frame()
+func _apply_battle_frame() -> void:
+	battle_frame.visible = battle_frame_enabled
+	var view: SubViewportContainer = get_node("BattleView")
+	view.offset_left = 90 if battle_frame_enabled else 0
+	view.offset_right = -90 if battle_frame_enabled else 0
+func _restart_from_pause() -> void:
+	if leaving or not paused or battle.battle_over: return
+	var elapsed := maxi(Time.get_ticks_msec()-entry_started_ms,int((Time.get_unix_time_from_system()-entry_started_unix)*1000.0))
+	if not bool(STAMINA.refund_early_exit(entry,elapsed).get("success",false)):
+		_label(overlay_rows,"스테미너 반환 저장 실패 · 다시 시도하세요.",23); return
+	battle.finish_abandoned_run()
+	if settled: _retry()
+func _next_stage(id: String) -> void:
+	if leaving or not settled or not finished_won or not STORE.battle_stage_unlocked(id): return
+	var previous := stage
+	stage = id; _retry()
+	if not leaving: stage = previous
 
 func _skin_action_button(button: Button) -> void:
 	var style := StyleBoxFlat.new(); style.bg_color = Color("223d50"); style.border_color = Color("c9a45e"); style.set_border_width_all(2); style.set_content_margin_all(10)

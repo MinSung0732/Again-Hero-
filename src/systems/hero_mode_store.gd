@@ -28,14 +28,32 @@ static func selected_battle_stage() -> String:
 	var config := ConfigFile.new()
 	if not _load(config): return "stage_1"
 	var id := String(config.get_value("hero_loadout","battle_stage","stage_1"))
-	return id if not STAGES.get_stage(id).is_empty() else "stage_1"
+	return id if battle_stage_unlocked(id) else "stage_1"
 static func select_battle_stage(id: String) -> bool:
-	if STAGES.get_stage(id).is_empty(): return false
+	if not battle_stage_unlocked(id): return false
 	var config := ConfigFile.new()
 	if not _load(config): return false
 	if String(config.get_value("hero_loadout","battle_stage","")) == id: return true
 	config.set_value("hero_loadout","battle_stage",id)
 	return SCOPE.save_config(config,PATH) == OK
+static func highest_battle_stage() -> int:
+	var config := ConfigFile.new()
+	if not _load(config): return 1
+	return _highest_battle_stage_in_config(config)
+static func _highest_battle_stage_in_config(config: ConfigFile) -> int:
+	# Migrate existing wins, but never infer clears from an old free selection.
+	var highest := 1
+	var order := STAGES.get_ordered_stage_ids()
+	for id in order:
+		if int(config.get_value("hero_progress",String(id)+"_wins",0)) <= 0: break
+		highest = mini(highest+1,order.size())
+	return highest
+static func battle_stage_unlocked(id: String) -> bool:
+	var stage: Dictionary = STAGES.get_stage(id)
+	return not stage.is_empty() and int(stage.get("number",0)) <= highest_battle_stage()
+static func battle_stage_cleared(id: String) -> bool:
+	var config := ConfigFile.new()
+	return _load(config) and int(config.get_value("hero_progress",id+"_wins",0)) > 0
 # Legacy calls refer to character origin, never the selected battlefield.
 static func selected_stage(_fallback: String = "stage_1") -> String:
 	return CHARACTERS.stage_for_hero(selected_hero())
@@ -96,6 +114,7 @@ static func award_run(stage: String,entry: Dictionary,elapsed: float,kills: int,
 	if not _load(config) or not _load(progress,"user://stage_progress.cfg"): return {"success":false}
 	if serial != int(progress.get_value("stamina","active_entry",0)) or not bool(progress.get_value("stamina","active_claimed",false)) or String(progress.get_value("stamina","active_stage","")) != stage: return {"success":false}
 	if serial <= int(config.get_value("hero_progress","last_reward_entry",0)): return {"success":true,"research":0,"gold":0}
+	if int(STAGES.get_stage(stage).get("number",0)) > _highest_battle_stage_in_config(config): return {"success":false}
 	var eligible := elapsed >= 30.0 and kills > 0
 	var points: int = DATA.WIN_RESEARCH if won else (DATA.PARTIAL_RESEARCH if eligible else 0)
 	var gold: int = DATA.WIN_GOLD if won else (DATA.PARTIAL_GOLD if eligible else 0)
