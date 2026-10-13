@@ -22,6 +22,8 @@ var entry_ready := false
 var settings_panel: Control
 var battle_frame: Control
 var battle_frame_enabled := true
+var pad_mode := MOVE_PAD.MODE_FIXED
+var pad_mode_selector: OptionButton
 var gameplay_settings_path := "user://gameplay_settings.cfg"
 var battle
 var director
@@ -137,6 +139,7 @@ func _create_battle() -> void:
 	view.add_child(viewport)
 	battle = BATTLE_SCENE.instantiate()
 	battle.hero_player_mode = true; battle.hero_player_stage = stage; battle.hero_player_hero_id = player_hero_id
+	pad.input_surface = view
 	viewport.add_child(battle)
 	battle.set_external_pause(true)
 	_install_battle_settings()
@@ -183,8 +186,7 @@ func _build_ui() -> void:
 	build.autowrap_mode = TextServer.AUTOWRAP_OFF; build.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	build.clip_text = true
 	pad = MOVE_PAD.new(); pad.name = "MovePad"; add_child(pad)
-	pad.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	pad.offset_left = 30; pad.offset_right = 300; pad.offset_top = -315; pad.offset_bottom = -45
+	pad.set_mode(pad_mode)
 	overlay = PanelContainer.new(); add_child(overlay)
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.offset_left = 65; overlay.offset_right = -65; overlay.offset_top = 390; overlay.offset_bottom = -150
@@ -213,7 +215,7 @@ func _process(delta: float) -> void:
 	if not is_instance_valid(battle): return
 	if STORE.owner() != initial_owner:
 		account_invalid = true
-		battle.set_external_pause(true); pad.reset(); _show_blocked("계정이 변경되었습니다. 로비로 돌아가세요.")
+		battle.set_external_pause(true); pad.enabled = false; pad.reset(); _show_blocked("계정이 변경되었습니다. 로비로 돌아가세요.")
 		set_process(false); return
 	if pending_chests > 0 and not paused and not choosing and not rolling and not battle.battle_over: _begin_roulette()
 	if not paused and not choosing and not rolling and not battle.battle_over:
@@ -445,12 +447,28 @@ func _install_battle_settings() -> void:
 	camera.tooltip_text = "용사 모드에서는 시야 고정이 필수입니다."
 	tabs.get_node("Gameplay/CameraGuide").text = "용사 모드에서는 항상 용사를 추적합니다. 시야 고정을 해제할 수 없습니다."
 	tabs.get_node("Gameplay/BattleFrame").toggled.connect(_set_battle_frame)
+	var pad_row := HBoxContainer.new(); pad_row.name = "PadModeRow"
+	pad_row.add_theme_constant_override("separation",16)
+	tabs.get_node("Gameplay").add_child(pad_row)
+	_label(pad_row,"이동 패드",23).custom_minimum_size.x = 165
+	pad_mode_selector = OptionButton.new(); pad_mode_selector.name = "PadMode"
+	pad_mode_selector.custom_minimum_size.y = 58
+	pad_mode_selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pad_mode_selector.add_theme_font_size_override("font_size",23)
+	pad_mode_selector.add_item("고정형 패드",0); pad_mode_selector.add_item("자유형 패드",1)
+	_skin_action_button(pad_mode_selector); pad_row.add_child(pad_mode_selector)
+	pad_mode_selector.item_selected.connect(_set_pad_mode)
+	var pad_guide := _label(tabs.get_node("Gameplay"),"고정형: 하단 중앙 · 자유형: 전투 화면 터치 위치\n변경 즉시 적용 · 자동 저장",18)
+	pad_guide.name = "PadGuide"
 	for pair in [["BGMRow",true],["SFXRow",false]]:
 		tabs.get_node("Sound/"+String(pair[0])+"/Slider").value_changed.connect(_set_audio_level.bind(bool(pair[1])))
 	tabs.get_node("Sound/BGMMute").toggled.connect(_set_audio_mute.bind(true))
 	tabs.get_node("Sound/SFXMute").toggled.connect(_set_audio_mute.bind(false))
 	var config := ConfigFile.new(); config.load(gameplay_settings_path)
 	battle_frame_enabled = bool(config.get_value("gameplay","battle_frame_enabled",true))
+	pad_mode = String(config.get_value("gameplay","hero_pad_mode",MOVE_PAD.MODE_FIXED))
+	if pad_mode not in MOVE_PAD.MODES: pad_mode = MOVE_PAD.MODE_FIXED
+	pad.set_mode(pad_mode)
 	_apply_battle_frame(); _sync_settings()
 func _open_settings() -> void:
 	_sync_settings(); settings_panel.show(); settings_panel.move_to_front()
@@ -463,6 +481,15 @@ func _sync_settings() -> void:
 	tabs.get_node("Sound/SFXMute").set_pressed_no_signal(AudioSettings.sfx_muted)
 	tabs.get_node("Gameplay/CameraLock").set_pressed_no_signal(true)
 	tabs.get_node("Gameplay/BattleFrame").set_pressed_no_signal(battle_frame_enabled)
+	pad_mode_selector.select(MOVE_PAD.MODES.find(pad_mode))
+func _set_pad_mode(index: int) -> void:
+	if index < 0 or index >= MOVE_PAD.MODES.size(): return
+	var value: String = MOVE_PAD.MODES[index]
+	var config := ConfigFile.new(); config.load(gameplay_settings_path)
+	config.set_value("gameplay","hero_pad_mode",value)
+	if config.save(gameplay_settings_path) != OK: _sync_settings(); return
+	pad_mode = value; pad.set_mode(value)
+	_sync_settings()
 func _set_audio_level(value: float,bgm: bool) -> void:
 	if bgm:
 		AudioSettings.set_bgm_level(roundi(value)); $HeroBGMManager.set_user_bgm_level(roundi(value))
