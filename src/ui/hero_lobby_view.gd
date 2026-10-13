@@ -3,6 +3,8 @@ const STORE := preload("res://src/systems/hero_mode_store.gd")
 const DATA := preload("res://src/data/hero_mode_catalog.gd")
 const AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
+const PROFILES := preload("res://src/data/hero_profiles.gd")
+const STAGES := preload("res://src/data/stage_catalog.gd")
 const ART := "res://assets/art/UI/hero_mode/hero_guild_lobby.png"
 var lobby
 var active := false
@@ -67,7 +69,8 @@ func rebuild(tab: String) -> void:
 	var body: VBoxContainer = bodies[tab]
 	for child in body.get_children(): body.remove_child(child); child.queue_free()
 	var stage := STORE.selected_stage(String(lobby.stage_ids[lobby.selected_stage_index]))
-	var profile := lobby.HERO_PROFILES.get_profile(String(lobby.STAGE_CATALOG.get_stage(stage).get("hero_id","")))
+	# The host is dynamic; its method return cannot be inferred by Godot's compiler.
+	var profile: Dictionary = PROFILES.get_profile(String(STAGES.get_stage(stage).get("hero_id","")))
 	var name := String(profile.get("display_name","용사"))
 	if tab == "shop":
 		_label(body,"용사상점",40); _label(body,"준비 중",32)
@@ -77,7 +80,7 @@ func rebuild(tab: String) -> void:
 		_label(body,"용사 편성",40)
 		var tabs := HBoxContainer.new(); body.add_child(tabs)
 		for pair in [["character","캐릭 편성"],["skill","스킬 편성"]]:
-			var id := String(pair[0]); _button(tabs,String(pair[1]),func(): subtab = id; message = ""; rebuild("team"),subtab == id).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var id := String(pair[0]); _button(tabs,String(pair[1]),_set_subtab.bind(id),subtab == id).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_label(body,"선택 용사 · "+name,28)
 		if not message.is_empty(): _label(body,message,23)
 		if subtab == "character":
@@ -109,6 +112,10 @@ func _select(id: String) -> void:
 	if message == "캐릭터 편성 저장 완료":
 		lobby.selected_stage_index = maxi(lobby.stage_ids.find(id),0)
 		lobby._refresh_stage_card()
+	rebuild("team")
+func _set_subtab(id: String) -> void:
+	subtab = id
+	message = ""
 	rebuild("team")
 func _toggle_skill(stage: String,id: String) -> void:
 	var selected := STORE.skills(stage)

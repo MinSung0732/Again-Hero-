@@ -371,12 +371,6 @@ func _ready() -> void:
 	PIXEL_PANEL_SKIN.apply_tree(self)
 	main_modes_view = load("res://src/ui/lobby_main_modes_view.gd").new()
 	main_modes_view.install(self)
-	hero_lobby_view = preload("res://src/ui/hero_lobby_view.gd").new()
-	hero_lobby_view.install(self)
-	if get_tree().has_meta("hero_lobby_return"):
-		get_tree().remove_meta("hero_lobby_return")
-		main_modes_view.perspective = "hero"
-		selected_stage_index = maxi(stage_ids.find(preload("res://src/systems/hero_mode_store.gd").selected_stage()),0)
 	stamina_view = load("res://src/ui/lobby_stamina_view.gd").new()
 	stamina_view.install(self)
 	main_tools_view = preload("res://src/ui/lobby_tool_trays.gd").new()
@@ -390,11 +384,26 @@ func _ready() -> void:
 	# Entry validation needs saved selections even before the team tab is opened.
 	_setup_team_preview()
 	_setup_demon_skill_preview()
+	# Finish the shared lobby before installing the perspective-specific extension.
 	_switch_tab("main")
 	_refresh_header()
 	_refresh_stage_card()
+	_install_hero_lobby_view()
+	_refresh_stage_card()
 	TutorialFlow.call_deferred("install_lobby", self)
 	call_deferred("_consume_campaign_team_return")
+
+func _install_hero_lobby_view() -> void:
+	var script: Script = load("res://src/ui/hero_lobby_view.gd")
+	if script == null or not script.can_instantiate():
+		push_error("용사 로비를 초기화하지 못했습니다. 기존 로비 기능은 유지합니다.")
+		return
+	hero_lobby_view = script.new()
+	hero_lobby_view.install(self)
+	if get_tree().has_meta("hero_lobby_return"):
+		get_tree().remove_meta("hero_lobby_return")
+		main_modes_view.perspective = "hero"
+		selected_stage_index = maxi(stage_ids.find(preload("res://src/systems/hero_mode_store.gd").selected_stage()),0)
 
 func _setup_cloud_account() -> void:
 	var guide := other_account_panel.get_node("Guide") as Label
