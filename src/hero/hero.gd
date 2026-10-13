@@ -12917,7 +12917,9 @@ func _activate_channel_skill() -> void:
 	attack_pose_timer = 0.0
 
 	channel_hid_hero_sprite = hero_sprite.visible
-	if channel_hid_hero_sprite:
+	# Stage 1 v2 field is a transparent rune layer, not a replacement body.
+	# Keep the caster visible inside the field; other heroes are unchanged.
+	if channel_hid_hero_sprite and hero_id != "ranged_rookie":
 		hero_sprite.visible = false
 
 	if channel_effect.sprite_frames != null:
