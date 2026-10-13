@@ -1,3 +1,10 @@
+## 2026-10-13 — Stage 1 견습 마법용사 전 기술 이펙트 원본 복원
+- 사용자 요청에 따라 마력 장벽(`effect_02`), 비전 집중(`effect_03`), 마력 관통포(`effect_01`)를 리메이크 이전 버전으로 복원. `src/hero/hero.gd` 및 `src/hero/ultimate_piercing_projectile.gd`는 재작업 전 원본 `a44b115f`와 파일 SHA가 완전히 같도록 복구.
+- 비전 집중 표시 지름 300 및 기존 마법사 숨김/복귀 방식, 장벽 512px 소스·180 화면 표시, 관통포 512px 소스·128 화면 표시 등 애니메이션 표현 설정 복원. 원래 6프레임 PNG는 변경 없음.
+- 이미 복원한 기본 마법탄도 원본 `assets/art/projectiles/stage1_mage/projectile_01~04.png` (4프레임/12fps) 유지. 공격·스킬 데이터, 판정·피해·쿨타임·AI·오디오, 나머지 용사 파일은 변경하지 않음.
+- 사용하지 않는 임시 `stage1_mage/vfx_v2` 스프라이트시트 4종·manifest 및 전용 로더/테스트/문서를 제거. 필요 시 기존 Git 기록에서 참고 가능. 신규 이펙트 재제작은 별도 작업.
+- GitHub 원본 이펙트 PNG 18장과 기본 마법탄 원본 4장 확인, 원본 소스 SHA 및 참조 경로 정적 비교. Godot 런타임/Android 실기기 실행, 로컬 `git diff --check` 미진행.
+
 ## 2026-10-13 — Stage 1 기본 마법탄 원본 복원
 - 견습 마법용사(`ranged_rookie`) 기본 공격 투사체만 신규 `vfx_v2/projectile_spritesheet.png` 경유를 해제하고 원본 `assets/art/projectiles/stage1_mage/projectile_01~04.png` 4프레임/12fps로 복구.
 - 마력 장벽·비전 집중·마력 관통포 리메이크 및 캐시 경로는 변경하지 않음. 원본/신규 PNG 파일은 모두 보존. 전투 수치·충돌·AI·SFX 수정 없음.

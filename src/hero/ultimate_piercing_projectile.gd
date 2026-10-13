@@ -5,7 +5,6 @@ const EFFECT_TARGET_HEIGHT := 128.0
 const EFFECT_FRAME_SIZE := Vector2(512, 512)
 const EFFECT_FPS := 12.0
 const EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_01"
-const STAGE1_VFX := preload("res://src/ui/stage1_mage_vfx.gd")
 const POOL_KEY := "ultimate_piercing_projectile"
 
 static var _visual_frames_cache: SpriteFrames
@@ -130,9 +129,7 @@ func _apply_visual() -> void:
 
 		for index in range(1, EFFECT_FRAME_COUNT + 1):
 			var path := "%s/frame_%02d.png" % [EFFECT_BASE_PATH, index]
-			var texture := STAGE1_VFX.frame("effect_01", index)
-			if texture == null:
-				texture = _load_texture(path)
+			var texture := _load_texture(path)
 			if texture == null:
 				push_warning("Ultimate projectile frame load failed: %s" % path)
 				visual.sprite_frames = null
@@ -142,7 +139,7 @@ func _apply_visual() -> void:
 		_visual_frames_cache = frames
 
 	visual.sprite_frames = frames
-	var uniform_scale := EFFECT_TARGET_HEIGHT / maxf(frames.get_frame_texture(&"fly", 0).get_height(), 1.0)
+	var uniform_scale := EFFECT_TARGET_HEIGHT / EFFECT_FRAME_SIZE.y
 	visual.scale = Vector2(uniform_scale, uniform_scale)
 	if bool(get_meta("survival_geometry",false)):
 		preload("res://src/ui/hero_weapon_visual_fit.gd").projectile(visual,get_meta("survival_visual_bounds",Rect2()),$CollisionShape2D.shape.size)
