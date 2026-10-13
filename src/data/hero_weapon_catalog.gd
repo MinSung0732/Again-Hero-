@@ -25,7 +25,11 @@ const HERO_WEAPONS := {
     "ranged_rookie_magic_lance",
     "ranged_rookie_rune_ring",
     "ranged_rookie_pulse_staff",
-    "ranged_rookie_barrier_book"
+    "ranged_rookie_barrier_book",
+    "ranged_rookie_sealing_bolt",
+    "ranged_rookie_satellite_orbs",
+    "ranged_rookie_rune_ray",
+    "ranged_rookie_restoration_codex"
   ],
   "swift_hunter": [
     "swift_hunter_dagger",
@@ -33,7 +37,11 @@ const HERO_WEAPONS := {
     "swift_hunter_shadow_wire",
     "swift_hunter_poison_needle",
     "swift_hunter_moon_blade",
-    "swift_hunter_shadow_bomb"
+    "swift_hunter_shadow_bomb",
+    "swift_hunter_execution_stiletto",
+    "swift_hunter_binding_wire",
+    "swift_hunter_smoke_mantle",
+    "swift_hunter_venom_steps"
   ],
   "sword_shield_hero": [
     "sword_shield_hero_longsword",
@@ -41,7 +49,11 @@ const HERO_WEAPONS := {
     "sword_shield_hero_aegis",
     "sword_shield_hero_shield_hammer",
     "sword_shield_hero_blade_ring",
-    "sword_shield_hero_battle_banner"
+    "sword_shield_hero_battle_banner",
+    "sword_shield_hero_oath_blade",
+    "sword_shield_hero_ward_crossbow",
+    "sword_shield_hero_sanctuary_shield",
+    "sword_shield_hero_rally_standard"
   ],
   "pistol_hero": [
     "pistol_hero_revolver",
@@ -49,7 +61,11 @@ const HERO_WEAPONS := {
     "pistol_hero_rifle",
     "pistol_hero_ricochet",
     "pistol_hero_grenade",
-    "pistol_hero_powder_bomb"
+    "pistol_hero_powder_bomb",
+    "pistol_hero_twin_pistols",
+    "pistol_hero_shrapnel_round",
+    "pistol_hero_suppressor",
+    "pistol_hero_smoke_canister"
   ],
   "archmage_hero": [
     "archmage_hero_fire_staff",
@@ -57,7 +73,11 @@ const HERO_WEAPONS := {
     "archmage_hero_lightning_rod",
     "archmage_hero_earth_staff",
     "archmage_hero_storm_orb",
-    "archmage_hero_prism_wand"
+    "archmage_hero_prism_wand",
+    "archmage_hero_lava_focus",
+    "archmage_hero_frost_moons",
+    "archmage_hero_gale_prism",
+    "archmage_hero_sunfire_tome"
   ],
   "madness_hero": [
     "madness_hero_blood_sword",
@@ -65,7 +85,11 @@ const HERO_WEAPONS := {
     "madness_hero_blood_wheel",
     "madness_hero_blood_burst",
     "madness_hero_drain_blade",
-    "madness_hero_heart_chain"
+    "madness_hero_heart_chain",
+    "madness_hero_desperate_cleaver",
+    "madness_hero_vampire_fang",
+    "madness_hero_blood_thorns",
+    "madness_hero_blood_aegis"
   ],
   "chemical_hero": [
     "chemical_hero_acid_vial",
@@ -73,7 +97,11 @@ const HERO_WEAPONS := {
     "chemical_hero_cryo_vial",
     "chemical_hero_reaction_bomb",
     "chemical_hero_acid_cannon",
-    "chemical_hero_life_elixir"
+    "chemical_hero_life_elixir",
+    "chemical_hero_caustic_boots",
+    "chemical_hero_catalyst_wire",
+    "chemical_hero_toxic_dart",
+    "chemical_hero_antidote_capsule"
   ],
   "summoner_hero": [
     "summoner_hero_gate_hound",
@@ -81,7 +109,11 @@ const HERO_WEAPONS := {
     "summoner_hero_scout",
     "summoner_hero_gate_laser",
     "summoner_hero_gatekeeper",
-    "summoner_hero_rift_pulse"
+    "summoner_hero_rift_pulse",
+    "summoner_hero_rift_orbit",
+    "summoner_hero_collapse_glyph",
+    "summoner_hero_gate_shard",
+    "summoner_hero_binding_gate"
   ],
   "purifier_hero": [
     "purifier_hero_holy_bolt",
@@ -89,7 +121,11 @@ const HERO_WEAPONS := {
     "purifier_hero_purification",
     "purifier_hero_sacred_orb",
     "purifier_hero_blessing",
-    "purifier_hero_prayer"
+    "purifier_hero_prayer",
+    "purifier_hero_mercy_chain",
+    "purifier_hero_judgment_seal",
+    "purifier_hero_saint_reliquary",
+    "purifier_hero_martyr_blade"
   ],
   "sage_astra": [
     "sage_astra_starlight",
@@ -97,7 +133,11 @@ const HERO_WEAPONS := {
     "sage_astra_astral_chain",
     "sage_astra_absolute_zero",
     "sage_astra_singularity",
-    "sage_astra_binary_stars"
+    "sage_astra_binary_stars",
+    "sage_astra_gravity_lance",
+    "sage_astra_frozen_stars",
+    "sage_astra_supernova_core",
+    "sage_astra_collapsed_seed"
   ]
 }
 const WEAPONS := {
@@ -343,7 +383,7 @@ const WEAPONS := {
     "range": 200,
     "power": 1.2,
     "base_hits": 1,
-    "effect": "넓은 검격 · 최대 6명의 전방 적 타격",
+    "effect": "전방 검격 범위 안의 적 타격",
     "evolution": "왕국 수호검",
     "tags": [
       "damage"
@@ -361,7 +401,7 @@ const WEAPONS := {
     "range": 390,
     "power": 2.0,
     "base_hits": 1,
-    "effect": "이동 방향을 유지하는 관통 창격 · 최대 8명",
+    "effect": "전방 직선의 적을 관통하는 창격",
     "evolution": "성벽 관통창",
     "tags": [
       "damage"
@@ -1071,7 +1111,7 @@ const WEAPONS := {
     "range": 825,
     "power": 2.4,
     "base_hits": 1,
-    "effect": "긴 성창으로 직선 관통 · 최대 10명",
+    "effect": "긴 성창으로 직선 범위의 적 관통",
     "evolution": "천공의 궁그닐",
     "tags": [
       "damage"
@@ -1108,7 +1148,7 @@ const WEAPONS := {
     "range": 325,
     "power": 1.36,
     "base_hits": 4,
-    "effect": "주변을 도는 정화 구체 · 최대 8명 타격",
+    "effect": "주변 정화 구체의 궤도 안에 있는 적 타격",
     "evolution": "천상의 팔광륜",
     "tags": [
       "area"
@@ -1288,6 +1328,845 @@ const WEAPONS := {
     "effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect1",
     "source_skill": "고유 기본공격",
     "hit_cap": 8
+  },
+  "ranged_rookie_sealing_bolt": {
+    "name": "봉인 마법구",
+    "owner": "ranged_rookie",
+    "pattern": "bolt",
+    "color": "85dcff",
+    "cooldown": 2,
+    "range": 600,
+    "power": 1.1,
+    "base_hits": 1,
+    "effect": "마법구 적중 시 25% 둔화 1.2초",
+    "evolution": "대봉인 마법구",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_01",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "ranged_rookie_arcane_bolt",
+    "slow_multiplier": 0.75,
+    "slow_duration": 1.2
+  },
+  "ranged_rookie_satellite_orbs": {
+    "name": "위성 마력구",
+    "owner": "ranged_rookie",
+    "pattern": "orbit",
+    "color": "85dcff",
+    "cooldown": 2.4,
+    "range": 250,
+    "power": 0.8,
+    "base_hits": 1,
+    "effect": "주변 마력구 궤도 안의 적 타격",
+    "evolution": "비전 위성군",
+    "tags": [
+      "area"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_03",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "ranged_rookie_rune_ring",
+    "orbit_count": 3,
+    "orbit_ratio": 0.65
+  },
+  "ranged_rookie_rune_ray": {
+    "name": "룬 분광봉",
+    "owner": "ranged_rookie",
+    "pattern": "beam",
+    "color": "85dcff",
+    "cooldown": 4,
+    "range": 680,
+    "power": 1.3,
+    "base_hits": 1,
+    "effect": "일직선의 적을 관통하는 룬 광선",
+    "evolution": "삼색 룬 분광봉",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_01",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "ranged_rookie_magic_lance"
+  },
+  "ranged_rookie_restoration_codex": {
+    "name": "안식의 마도서",
+    "owner": "ranged_rookie",
+    "pattern": "guard",
+    "color": "85dcff",
+    "cooldown": 14,
+    "range": 210,
+    "power": 0.65,
+    "base_hits": 1,
+    "effect": "3초 보호막과 주변 충격파",
+    "evolution": "안식의 대마도서",
+    "tags": [
+      "durability"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_02",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "ranged_rookie_barrier_book",
+    "shield_ratio": 0.055,
+    "shield_duration": 3,
+    "cast_heal": 0.01
+  },
+  "swift_hunter_execution_stiletto": {
+    "name": "처형 단도",
+    "owner": "swift_hunter",
+    "pattern": "combo",
+    "color": "bc9eee",
+    "cooldown": 3.2,
+    "range": 220,
+    "power": 0.72,
+    "base_hits": 2,
+    "effect": "근접 표적 2연격 · HP 6% 이하 마무리",
+    "evolution": "그림자 처형식",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_02",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "swift_hunter_shadow_wire",
+    "hit_interval": 0.12,
+    "execute_ratio": 0.06
+  },
+  "swift_hunter_binding_wire": {
+    "name": "그림자 결박줄",
+    "owner": "swift_hunter",
+    "pattern": "chain",
+    "color": "bc9eee",
+    "cooldown": 3.1,
+    "range": 470,
+    "power": 0.55,
+    "base_hits": 3,
+    "effect": "3대상 연결 · 35% 둔화 1초",
+    "evolution": "월영 결박망",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "swift_hunter_throwing_knife",
+    "chain_radius": 165,
+    "slow_multiplier": 0.65,
+    "slow_duration": 1
+  },
+  "swift_hunter_smoke_mantle": {
+    "name": "연막 망토",
+    "owner": "swift_hunter",
+    "pattern": "guard",
+    "color": "bc9eee",
+    "cooldown": 13,
+    "range": 180,
+    "power": 0.5,
+    "base_hits": 1,
+    "effect": "2초 보호막 · 주변 30% 둔화",
+    "evolution": "무영의 망토",
+    "tags": [
+      "durability"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "swift_hunter_shadow_bomb",
+    "shield_ratio": 0.045,
+    "shield_duration": 2,
+    "slow_multiplier": 0.7,
+    "slow_duration": 1
+  },
+  "swift_hunter_venom_steps": {
+    "name": "독무 발톱",
+    "owner": "swift_hunter",
+    "pattern": "poison",
+    "color": "bc9eee",
+    "cooldown": 4.6,
+    "range": 240,
+    "power": 0.9,
+    "base_hits": 1,
+    "effect": "2초 이동형 독무 · 0.4초마다 주변 피해",
+    "evolution": "만독 그림자 발톱",
+    "tags": [
+      "area"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "swift_hunter_poison_needle",
+    "field_follow": true,
+    "field_duration": 2,
+    "field_interval": 0.4,
+    "field_power": 0.25,
+    "field_radius_ratio": 0.5
+  },
+  "sword_shield_hero_oath_blade": {
+    "name": "맹세의 검",
+    "owner": "sword_shield_hero",
+    "pattern": "slash",
+    "color": "e6c372",
+    "cooldown": 2.7,
+    "range": 230,
+    "power": 1.2,
+    "base_hits": 1,
+    "effect": "전방 검격 · 시전 보호막 2%",
+    "evolution": "왕가의 맹세검",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect2",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "sword_shield_hero_longsword",
+    "cast_shield": 0.02
+  },
+  "sword_shield_hero_ward_crossbow": {
+    "name": "수호 쇠뇌",
+    "owner": "sword_shield_hero",
+    "pattern": "bolt",
+    "color": "e6c372",
+    "cooldown": 2.1,
+    "range": 580,
+    "power": 0.95,
+    "base_hits": 1,
+    "effect": "원거리 쇠뇌 사격 · 20% 둔화 1초",
+    "evolution": "성벽 파수 쇠뇌",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect3",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "sword_shield_hero_piercing_spear",
+    "slow_multiplier": 0.8,
+    "slow_duration": 1
+  },
+  "sword_shield_hero_sanctuary_shield": {
+    "name": "성역 방패",
+    "owner": "sword_shield_hero",
+    "pattern": "guard",
+    "color": "e6c372",
+    "cooldown": 14,
+    "range": 220,
+    "power": 0.6,
+    "base_hits": 1,
+    "effect": "4초 보호막 · 독·화상·둔화 해제",
+    "evolution": "성역의 대방패",
+    "tags": [
+      "durability"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect1",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "sword_shield_hero_aegis",
+    "shield_ratio": 0.06,
+    "shield_duration": 4,
+    "cleanse": true
+  },
+  "sword_shield_hero_rally_standard": {
+    "name": "결집 군기",
+    "owner": "sword_shield_hero",
+    "pattern": "heal",
+    "color": "e6c372",
+    "cooldown": 16,
+    "range": 270,
+    "power": 0.8,
+    "base_hits": 1,
+    "effect": "최대 HP 회복과 주변 둔화 파동",
+    "evolution": "불굴의 결집 군기",
+    "tags": [
+      "durability"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect1",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "sword_shield_hero_battle_banner",
+    "heal_ratio": 0.015,
+    "slow_multiplier": 0.75,
+    "slow_duration": 1.5
+  },
+  "pistol_hero_twin_pistols": {
+    "name": "쌍열 권총",
+    "owner": "pistol_hero",
+    "pattern": "burst",
+    "color": "ffcc72",
+    "cooldown": 2,
+    "range": 570,
+    "power": 0.5,
+    "base_hits": 3,
+    "effect": "3발 교차 속사 · 공유 탄약 사용",
+    "evolution": "황금 쌍열 권총",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "pistol_hero_revolver",
+    "hit_interval": 0.12,
+    "uses_ammo": true
+  },
+  "pistol_hero_shrapnel_round": {
+    "name": "파쇄 탄환",
+    "owner": "pistol_hero",
+    "pattern": "bolt",
+    "color": "ffcc72",
+    "cooldown": 3.3,
+    "range": 630,
+    "power": 1.05,
+    "base_hits": 1,
+    "effect": "탄환 적중 시 주변에 35% 파편 피해",
+    "evolution": "중량 파쇄 탄환",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "pistol_hero_grenade",
+    "splash_ratio": 0.35,
+    "splash_radius": 70,
+    "uses_ammo": true
+  },
+  "pistol_hero_suppressor": {
+    "name": "제압 기관권총",
+    "owner": "pistol_hero",
+    "pattern": "burst",
+    "color": "ffcc72",
+    "cooldown": 3.6,
+    "range": 700,
+    "power": 0.4,
+    "base_hits": 4,
+    "effect": "4발 제압 사격 · 25% 둔화 1초",
+    "evolution": "황혼의 제압사격",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "pistol_hero_rifle",
+    "hit_interval": 0.15,
+    "slow_multiplier": 0.75,
+    "slow_duration": 1,
+    "uses_ammo": true
+  },
+  "pistol_hero_smoke_canister": {
+    "name": "연막 유탄",
+    "owner": "pistol_hero",
+    "pattern": "poison",
+    "color": "ffcc72",
+    "cooldown": 6,
+    "range": 420,
+    "power": 0.85,
+    "base_hits": 1,
+    "effect": "3초 연막 지대 · 0.6초마다 피해와 30% 둔화",
+    "evolution": "검은 화약 연막탄",
+    "tags": [
+      "area"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "pistol_hero_powder_bomb",
+    "field_duration": 3,
+    "field_interval": 0.6,
+    "field_power": 0.3,
+    "field_radius_ratio": 0.4,
+    "slow_multiplier": 0.7,
+    "slow_duration": 0.8
+  },
+  "archmage_hero_lava_focus": {
+    "name": "용암 촉매봉",
+    "owner": "archmage_hero",
+    "pattern": "poison",
+    "color": "f9a95b",
+    "cooldown": 6,
+    "range": 420,
+    "power": 0.95,
+    "base_hits": 1,
+    "effect": "3초 용암 지대 · 0.5초마다 피해",
+    "evolution": "화산심장 촉매봉",
+    "tags": [
+      "area"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect4",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "archmage_hero_earth_staff",
+    "field_duration": 3,
+    "field_interval": 0.5,
+    "field_power": 0.28,
+    "field_radius_ratio": 0.45
+  },
+  "archmage_hero_frost_moons": {
+    "name": "빙결 위성",
+    "owner": "archmage_hero",
+    "pattern": "orbit",
+    "color": "f9a95b",
+    "cooldown": 2.8,
+    "range": 260,
+    "power": 0.7,
+    "base_hits": 1,
+    "effect": "냉기 궤도 타격 · 30% 둔화 1.2초",
+    "evolution": "영원의 빙결 위성",
+    "tags": [
+      "area"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect3",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "archmage_hero_ice_scepter",
+    "orbit_count": 3,
+    "orbit_ratio": 0.7,
+    "slow_multiplier": 0.7,
+    "slow_duration": 1.2
+  },
+  "archmage_hero_gale_prism": {
+    "name": "질풍 프리즘",
+    "owner": "archmage_hero",
+    "pattern": "beam",
+    "color": "f9a95b",
+    "cooldown": 4.5,
+    "range": 650,
+    "power": 1.1,
+    "base_hits": 1,
+    "effect": "2방향 관통 바람 칼날",
+    "evolution": "오중 질풍 프리즘",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect6",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "archmage_hero_lightning_rod",
+    "fan_lines": 2
+  },
+  "archmage_hero_sunfire_tome": {
+    "name": "태양화염서",
+    "owner": "archmage_hero",
+    "pattern": "nova",
+    "color": "f9a95b",
+    "cooldown": 8,
+    "range": 290,
+    "power": 1.5,
+    "base_hits": 1,
+    "effect": "주변 화염 폭발 · 시전 HP 1% 회복",
+    "evolution": "백야의 태양화염서",
+    "tags": [
+      "area"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect2",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "archmage_hero_fire_staff",
+    "cast_heal": 0.01
+  },
+  "madness_hero_desperate_cleaver": {
+    "name": "결사의 참수검",
+    "owner": "madness_hero",
+    "pattern": "slash",
+    "color": "e05e75",
+    "cooldown": 3.2,
+    "range": 260,
+    "power": 1.2,
+    "base_hits": 1,
+    "effect": "넓은 검격 · 체력이 낮을수록 피해 최대 +50%",
+    "evolution": "결사의 혈왕검",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect1",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "madness_hero_drain_blade",
+    "low_hp_bonus": 0.5,
+    "hp_cost": 0.005
+  },
+  "madness_hero_vampire_fang": {
+    "name": "흡혈 송곳니",
+    "owner": "madness_hero",
+    "pattern": "bolt",
+    "color": "e05e75",
+    "cooldown": 2.2,
+    "range": 520,
+    "power": 0.9,
+    "base_hits": 1,
+    "effect": "추적 송곳니 · 실제 준 피해의 3% 회복",
+    "evolution": "혈월의 송곳니",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect1",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "madness_hero_heart_chain",
+    "lifesteal": 0.03
+  },
+  "madness_hero_blood_thorns": {
+    "name": "혈흔 가시",
+    "owner": "madness_hero",
+    "pattern": "poison",
+    "color": "e05e75",
+    "cooldown": 5.5,
+    "range": 400,
+    "power": 0.85,
+    "base_hits": 1,
+    "effect": "2.4초 혈흔 지대 · 0.4초마다 흡혈 피해",
+    "evolution": "혈해 가시밭",
+    "tags": [
+      "area"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect2",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "madness_hero_blood_lance",
+    "field_duration": 2.4,
+    "field_interval": 0.4,
+    "field_power": 0.3,
+    "field_radius_ratio": 0.4,
+    "lifesteal": 0.02
+  },
+  "madness_hero_blood_aegis": {
+    "name": "핏빛 수호구",
+    "owner": "madness_hero",
+    "pattern": "guard",
+    "color": "e05e75",
+    "cooldown": 13,
+    "range": 200,
+    "power": 0.6,
+    "base_hits": 1,
+    "effect": "3초 보호막 · 주변 흡혈 충격파",
+    "evolution": "마혈 수호핵",
+    "tags": [
+      "durability"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect3",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "madness_hero_blood_burst",
+    "shield_ratio": 0.045,
+    "shield_duration": 3,
+    "lifesteal": 0.03,
+    "hp_cost": 0.005
+  },
+  "chemical_hero_caustic_boots": {
+    "name": "부식 분무기",
+    "owner": "chemical_hero",
+    "pattern": "poison",
+    "color": "a4dc63",
+    "cooldown": 5,
+    "range": 260,
+    "power": 0.9,
+    "base_hits": 1,
+    "effect": "2.4초 이동 산성 지대 · 0.4초마다 피해",
+    "evolution": "왕수 분무기",
+    "tags": [
+      "area"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect1",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "chemical_hero_acid_vial",
+    "field_follow": true,
+    "field_duration": 2.4,
+    "field_interval": 0.4,
+    "field_power": 0.25,
+    "field_radius_ratio": 0.5,
+    "gas_cost": 6
+  },
+  "chemical_hero_catalyst_wire": {
+    "name": "촉매 도선",
+    "owner": "chemical_hero",
+    "pattern": "chain",
+    "color": "a4dc63",
+    "cooldown": 4,
+    "range": 540,
+    "power": 0.55,
+    "base_hits": 3,
+    "effect": "3대상 촉매 연결 · 20% 둔화 1초",
+    "evolution": "연금 촉매 회로",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect1",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "chemical_hero_acid_cannon",
+    "chain_radius": 180,
+    "slow_multiplier": 0.8,
+    "slow_duration": 1,
+    "gas_cost": 5
+  },
+  "chemical_hero_toxic_dart": {
+    "name": "독성 주사총",
+    "owner": "chemical_hero",
+    "pattern": "bolt",
+    "color": "a4dc63",
+    "cooldown": 2.5,
+    "range": 600,
+    "power": 0.85,
+    "base_hits": 1,
+    "effect": "독성 주사탄 · 적중 시 35% 둔화 1.5초",
+    "evolution": "만독 주사총",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect3",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "chemical_hero_poison_flask",
+    "slow_multiplier": 0.65,
+    "slow_duration": 1.5,
+    "gas_cost": 3
+  },
+  "chemical_hero_antidote_capsule": {
+    "name": "해독 캡슐",
+    "owner": "chemical_hero",
+    "pattern": "guard",
+    "color": "a4dc63",
+    "cooldown": 16,
+    "range": 210,
+    "power": 0.5,
+    "base_hits": 1,
+    "effect": "독·화상·둔화 해제 · 3초 보호막",
+    "evolution": "완전해독 캡슐",
+    "tags": [
+      "durability"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect6",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "chemical_hero_life_elixir",
+    "shield_ratio": 0.055,
+    "shield_duration": 3,
+    "cleanse": true,
+    "cast_heal": 0.01,
+    "gas_cost": 10
+  },
+  "summoner_hero_rift_orbit": {
+    "name": "균열 톱니",
+    "owner": "summoner_hero",
+    "pattern": "orbit",
+    "color": "86cbb8",
+    "cooldown": 2.6,
+    "range": 290,
+    "power": 0.75,
+    "base_hits": 1,
+    "effect": "주변 차원 톱니 궤도 타격",
+    "evolution": "심연의 톱니환",
+    "tags": [
+      "area"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "summoner_hero_rift_pulse",
+    "orbit_count": 3,
+    "orbit_ratio": 0.7
+  },
+  "summoner_hero_collapse_glyph": {
+    "name": "붕괴 문양",
+    "owner": "summoner_hero",
+    "pattern": "poison",
+    "color": "86cbb8",
+    "cooldown": 6,
+    "range": 430,
+    "power": 0.9,
+    "base_hits": 1,
+    "effect": "3초 차원 지대 · 0.5초마다 피해",
+    "evolution": "심연 붕괴 문양",
+    "tags": [
+      "area"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "summoner_hero_gate_laser",
+    "field_duration": 3,
+    "field_interval": 0.5,
+    "field_power": 0.25,
+    "field_radius_ratio": 0.45
+  },
+  "summoner_hero_gate_shard": {
+    "name": "차원 파편구",
+    "owner": "summoner_hero",
+    "pattern": "bolt",
+    "color": "86cbb8",
+    "cooldown": 2.4,
+    "range": 650,
+    "power": 0.9,
+    "base_hits": 1,
+    "effect": "차원 파편 적중 시 25% 주변 폭발",
+    "evolution": "심연 파편핵",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "summoner_hero_watcher",
+    "splash_radius": 65,
+    "splash_ratio": 0.25
+  },
+  "summoner_hero_binding_gate": {
+    "name": "결박의 문",
+    "owner": "summoner_hero",
+    "pattern": "frost",
+    "color": "86cbb8",
+    "cooldown": 6,
+    "range": 340,
+    "power": 0.8,
+    "base_hits": 1,
+    "effect": "차원 충격파 · 40% 둔화 2초",
+    "evolution": "심연 결박문",
+    "tags": [
+      "area"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "summoner_hero_gatekeeper",
+    "slow_multiplier": 0.6,
+    "slow_duration": 2
+  },
+  "purifier_hero_mercy_chain": {
+    "name": "자비의 사슬",
+    "owner": "purifier_hero",
+    "pattern": "chain",
+    "color": "fff0b1",
+    "cooldown": 4.5,
+    "range": 530,
+    "power": 0.65,
+    "base_hits": 3,
+    "effect": "3대상 성광 연결 · 시전 HP 1% 회복",
+    "evolution": "대자비 성광사슬",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect6",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "purifier_hero_holy_lance",
+    "chain_radius": 180,
+    "cast_heal": 0.01
+  },
+  "purifier_hero_judgment_seal": {
+    "name": "심판 낙인",
+    "owner": "purifier_hero",
+    "pattern": "poison",
+    "color": "fff0b1",
+    "cooldown": 6,
+    "range": 400,
+    "power": 0.95,
+    "base_hits": 1,
+    "effect": "3초 성광 지대 · 0.5초마다 피해와 20% 둔화",
+    "evolution": "대심판 성인",
+    "tags": [
+      "area"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect5",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "purifier_hero_purification",
+    "field_duration": 3,
+    "field_interval": 0.5,
+    "field_power": 0.25,
+    "field_radius_ratio": 0.45,
+    "slow_multiplier": 0.8,
+    "slow_duration": 0.8
+  },
+  "purifier_hero_saint_reliquary": {
+    "name": "성인의 유골함",
+    "owner": "purifier_hero",
+    "pattern": "guard",
+    "color": "fff0b1",
+    "cooldown": 15,
+    "range": 220,
+    "power": 0.5,
+    "base_hits": 1,
+    "effect": "4초 보호막 · 독·화상·둔화 해제",
+    "evolution": "대성인의 성물함",
+    "tags": [
+      "durability"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect4",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "purifier_hero_blessing",
+    "shield_ratio": 0.06,
+    "shield_duration": 4,
+    "cleanse": true
+  },
+  "purifier_hero_martyr_blade": {
+    "name": "순교자의 검",
+    "owner": "purifier_hero",
+    "pattern": "slash",
+    "color": "fff0b1",
+    "cooldown": 3.4,
+    "range": 270,
+    "power": 1.25,
+    "base_hits": 1,
+    "effect": "전방 성검 타격 · 흡혈 2% · HP 5% 마무리",
+    "evolution": "성혈 순교검",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect2",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "purifier_hero_sacred_orb",
+    "lifesteal": 0.02,
+    "execute_ratio": 0.05
+  },
+  "sage_astra_gravity_lance": {
+    "name": "중력 성창",
+    "owner": "sage_astra",
+    "pattern": "beam",
+    "color": "c6abff",
+    "cooldown": 4.8,
+    "range": 730,
+    "power": 1.2,
+    "base_hits": 1,
+    "effect": "2방향 천체 광선 · 20% 둔화 1.2초",
+    "evolution": "중력 오중성창",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect3",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "sage_astra_astral_chain",
+    "fan_lines": 2,
+    "slow_multiplier": 0.8,
+    "slow_duration": 1.2
+  },
+  "sage_astra_frozen_stars": {
+    "name": "빙성의 고리",
+    "owner": "sage_astra",
+    "pattern": "orbit",
+    "color": "c6abff",
+    "cooldown": 3.2,
+    "range": 280,
+    "power": 0.75,
+    "base_hits": 1,
+    "effect": "빙성 궤도 타격 · 35% 둔화 1.5초",
+    "evolution": "영겁의 빙성환",
+    "tags": [
+      "area"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect1",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "sage_astra_absolute_zero",
+    "orbit_count": 3,
+    "orbit_ratio": 0.7,
+    "slow_multiplier": 0.65,
+    "slow_duration": 1.5
+  },
+  "sage_astra_supernova_core": {
+    "name": "초신성 핵",
+    "owner": "sage_astra",
+    "pattern": "nova",
+    "color": "c6abff",
+    "cooldown": 8.5,
+    "range": 320,
+    "power": 1.7,
+    "base_hits": 1,
+    "effect": "주변 초신성 폭발 · 25% 후속 폭발 1회",
+    "evolution": "은하 초신성 핵",
+    "tags": [
+      "area"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect1",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "sage_astra_comet",
+    "pulse_count": 1,
+    "pulse_ratio": 0.25
+  },
+  "sage_astra_collapsed_seed": {
+    "name": "붕괴 별씨",
+    "owner": "sage_astra",
+    "pattern": "bolt",
+    "color": "c6abff",
+    "cooldown": 3.2,
+    "range": 740,
+    "power": 1.1,
+    "base_hits": 1,
+    "effect": "별씨 적중 시 30% 주변 붕괴 피해",
+    "evolution": "사건의 별씨",
+    "tags": [
+      "damage"
+    ],
+    "effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect2",
+    "source_skill": "전용 확장 무기",
+    "icon_source": "sage_astra_starlight",
+    "splash_ratio": 0.3,
+    "splash_radius": 75
   }
 }
 const PASSIVES := {
@@ -1345,9 +2224,57 @@ static func is_weapon(id: String) -> bool:
 static func weapon_pool(hero_id: String = "") -> Array:
 	return HERO_WEAPONS.get(hero_id,[]) if not hero_id.is_empty() else WEAPONS.keys()
 static func description(id: String, next_level: int) -> String:
-	if PASSIVES.has(id): return String(PASSIVES[id].description)
-	var data: Dictionary = WEAPONS.get(id,{})
-	return "%s\n%s\nLv.%d / 10" % [String(data.get("effect","무기 공격")),GROWTH.description(id,next_level),next_level]
+	var rank := clampi(next_level,1,MAX_LEVEL)
+	if PASSIVES.has(id):
+		var passive: Dictionary = PASSIVES[id]
+		var gain := float(passive.value)*100.0
+		var total := gain*rank
+		match String(passive.stat):
+			"vitality": return "시작 최대 HP의 %.0f%%만큼 최대 체력 증가\n증가한 체력만큼 즉시 회복" % gain
+			"armor": return "받는 피해 감소 +%.0f%%p\n총 피해 감소 %.0f%%" % [gain,minf(total,30.0)]
+			"projectile": return "발사체 속도 보너스 +%.0f%%\n총 +%.0f%% · 즉시 타격·장판 제외" % [gain,total]
+			_: return "%s 보너스 +%.0f%%\n총 +%.0f%%" % [String(passive.name).trim_suffix(" 증가"),gain,total]
+	if not WEAPONS.has(id): return ""
+	var data: Dictionary = WEAPONS[id]
+	if rank == 1:
+		var details := String(data.effect)
+		if String(data.pattern) == "guard":
+			details += "\n보호막 최대 HP의 %.1f%%" % ((float(data.get("shield_ratio",0.04))+0.006)*100.0)
+		if String(data.pattern) == "heal":
+			details += "\n최대 HP의 %.1f%% 회복" % ((float(data.get("heal_ratio",0.015))+0.002)*100.0)
+		if float(data.get("cast_heal",0.0)) > 0.0:
+			details += "\n시전 회복 %.1f%%" % (float(data.cast_heal)*100.0)
+		if float(data.get("hp_cost",0.0)) > 0.0:
+			details += "\n표적 공격 시 현재 HP %.1f%% 소모" % (float(data.hp_cost)*100.0)
+		if bool(data.get("uses_ammo",false)):
+			details += "\n발사한 탄환 수만큼 공유 탄약 소모" if String(data.pattern) == "burst" else "\n발동마다 공유 탄약 1발 소모"
+		if float(data.get("gas_cost",0.0)) > 0.0:
+			details += "\n발동 시 가스 %.0f 소모" % float(data.gas_cost)
+		return details+"\n기본 발동 간격 %.2f초" % float(data.cooldown)
+	var before := GROWTH.resolve(id,data,rank-1,false)
+	var after := GROWTH.resolve(id,data,rank,false)
+	var damage_gain := (float(after.damage_scale)/float(before.damage_scale)-1.0)*100.0
+	var reach_gain := (float(after.reach_scale)/float(before.reach_scale)-1.0)*100.0
+	var cooldown_gain := (1.0-float(after.cooldown_scale)/float(before.cooldown_scale))*100.0
+	var summary := "피해 +%.1f%% · 사거리 +%.1f%%\n재사용 대기시간 -%.1f%%" % [damage_gain,reach_gain,cooldown_gain]
+	if String(data.pattern) == "guard":
+		var shield_gain := (float(after.get("shield_ratio",0.04))-float(before.get("shield_ratio",0.04))+0.006)*100.0
+		summary += "\n보호막 +최대 HP의 %.1f%%" % shield_gain
+	elif String(data.pattern) == "heal":
+		var heal_gain := (float(after.get("heal_ratio",0.015))-float(before.get("heal_ratio",0.015))+0.002)*100.0
+		summary += "\n회복량 +최대 HP의 %.1f%%" % heal_gain
+	if rank in [3,6,10]:
+		var special := String(GROWTH.PROFILES[id][5][[3,6,10].find(rank)])
+		if String(data.pattern) in ["slash","orbit","nova","frost","beam","guard","heal","poison"]:
+			# Area attacks already hit all eligible targets; legacy target-count
+			# growth labels no longer represent an extra mechanical benefit.
+			var relevant := PackedStringArray()
+			for part in special.split(" · "):
+				if part.contains("대상") and part.contains("+"): continue
+				relevant.append(part)
+			special = " · ".join(relevant)
+		if not special.is_empty(): summary += "\n"+special
+	return summary
 static func profile_for_survival(source: Dictionary) -> Dictionary:
 	var result := source.duplicate(true)
 	result["max_hp"] = 1200

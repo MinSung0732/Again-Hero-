@@ -10,10 +10,13 @@ static func texture(id: String) -> Texture2D:
 		var row := 0
 		for hero_id in DATA.HERO_WEAPONS:
 			var column := 0
-			for weapon in DATA.HERO_WEAPONS[hero_id]:
+			for weapon in DATA.HERO_WEAPONS[hero_id].slice(0,6):
 				cache[weapon] = _region(WEAPONS,column,row,6,10)
 				column += 1
 			row += 1
+		for weapon_id in DATA.WEAPONS:
+			var source := String(DATA.WEAPONS[weapon_id].get("icon_source",""))
+			if not source.is_empty() and cache.has(source): cache[weapon_id] = cache[source]
 		for index in PASSIVE_ORDER.size():
 			cache[PASSIVE_ORDER[index]] = _region(PASSIVES,index%4,int(index/4),4,2)
 		cache["survival_restore"] = cache["survival_vitality"]

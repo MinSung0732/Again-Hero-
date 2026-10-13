@@ -57,7 +57,7 @@ func run() -> void:
 	check(STORE.selected_hero() == "swift_hunter" and lobby.selected_stage_index == 9,"character selection leaves map unchanged")
 	check(lobby.hero_name_label.text == "날렵한 용사" and not lobby.portrait_badge.visible,"main selected hero stays visible on Stage10 map")
 	check(STORE.selected_battle_stage() == "stage_10","map selection saved separately")
-	check(WEAPONS.weapon_pool(STORE.selected_hero()).size() == 6,"selected hero has six weapons")
+	check(WEAPONS.weapon_pool(STORE.selected_hero()).size() == 10,"selected hero has ten weapons")
 	lobby._switch_tab("main")
 	check(not lobby.enter_stage_button.disabled and not lobby.stage_selector_buttons[9].disabled,"Stage10 remains selectable with low campaign progress")
 	check(backdrop.texture != original_texture and lobby.main_tools_view.is_visible_in_tree(),"hero backdrop and shared tools preserved")

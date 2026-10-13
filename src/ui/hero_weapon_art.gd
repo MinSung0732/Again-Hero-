@@ -1,5 +1,5 @@
 extends RefCounted
-# Load six equipped-kit effect sequences once; drawing never reads the disk.
+# Load the selected kit effect sequences once; drawing never reads the disk.
 static var cache: Dictionary = {}
 static func sequence(directory: String) -> Array[Texture2D]:
 	if cache.has(directory): return cache[directory]

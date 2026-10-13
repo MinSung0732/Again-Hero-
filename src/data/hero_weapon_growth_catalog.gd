@@ -62,6 +62,46 @@ const PROFILES := {
 	"sage_astra_absolute_zero": ["영원의 빙점 감옥", {"field_duration":4.0}, {"bonus_hits":1}, {"slow_multiplier":0.5}, {"bonus_hits":2,"field_duration":5.5,"native_radius_scale":1.25,"slow_multiplier":0.3}, ["기둥 지속4초", "얼음 기둥2개", "냉기 둔화50%", "얼음 기둥3개/5.5초 · 반경 +25% · 둔화70%"]],
 	"sage_astra_singularity": ["사건의 지평선", {"pull_step":11.0}, {"field_duration":4.0}, {"field_interval":0.35}, {"field_duration":5.0,"field_interval":0.25,"pull_step":16.0,"native_radius_scale":1.25,"execute_ratio":0.18}, ["흡인 간격당11 이동", "소멸 지속4초", "소멸 피해간격0.35초", "5초 소멸/간격0.25초 · 흡인16 · HP18% 마무리"]],
 	"sage_astra_binary_stars": ["초신성 쌍성환", {"orbit_count":4,"bonus_hits":2}, {"pulse_count":1,"pulse_pattern":"orbit","pulse_ratio":0.5,"pulse_radius_ratio":1.0}, {"orbit_count":6,"slow_multiplier":0.7,"slow_duration":1.2}, {"orbit_count":8,"pulse_count":3,"pulse_ratio":0.8,"execute_ratio":0.12}, ["쌍성4개 · 대상 +2", "50% 별고리 재타격", "쌍성6개 · 30% 둔화", "쌍성8개 · 80% 별고리3회 · HP12% 마무리"]],
+	"ranged_rookie_sealing_bolt": ["대봉인 마법구",{"bonus_hits":1},{"slow_duration":2},{"splash_radius":75,"splash_ratio":0.3},{"bonus_hits":2,"slow_multiplier":0.55,"splash_radius":100,"splash_ratio":0.5},["마법구 2발","둔화 지속 2초","적중 폭발 30%/반경75","마법구3발 · 45% 둔화 · 폭발50%"]],
+	"ranged_rookie_satellite_orbs": ["비전 위성군",{"orbit_count":4},{"slow_multiplier":0.8,"slow_duration":1},{"pulse_count":1,"pulse_pattern":"orbit","pulse_ratio":0.35,"pulse_radius_ratio":1},{"orbit_count":6,"pulse_count":2,"pulse_ratio":0.5},["마력구 4개","20% 둔화 1초","35% 궤도 재타격","마력구6개 · 50% 궤도 재타격2회"]],
+	"ranged_rookie_rune_ray": ["삼색 룬 분광봉",{"fan_lines":2},{"slow_multiplier":0.8,"slow_duration":1.2},{"fan_lines":3},{"fan_lines":4,"pulse_count":1,"pulse_pattern":"beam","pulse_ratio":0.5,"pulse_radius_ratio":1},["룬 광선 2방향","20% 둔화 1.2초","룬 광선 3방향","룬 광선4방향 · 50% 잔광"]],
+	"ranged_rookie_restoration_codex": ["안식의 대마도서",{"shield_duration":4},{"cleanse":true},{"cast_heal":0.02},{"shield_ratio":0.1,"shield_duration":5,"cast_heal":0.025},["보호막 지속4초","시전 시 독·화상·둔화 해제","시전 회복2%","보호막 기본10%/5초 · 회복2.5%"]],
+	"swift_hunter_execution_stiletto": ["그림자 처형식",{"bonus_hits":1},{"execute_ratio":0.09},{"bonus_hits":2},{"bonus_hits":3,"execute_ratio":0.13,"finish_ratio":0.5,"finish_radius":75},["3연격","HP9% 이하 마무리","4연격","5연격 · HP13% 마무리 · 마지막50% 폭발"]],
+	"swift_hunter_binding_wire": ["월영 결박망",{"bonus_hits":1},{"slow_duration":1.7},{"chain_radius":220,"bonus_hits":2},{"bonus_hits":4,"slow_multiplier":0.5,"chain_growth":0.1},["연결4대상","둔화1.7초","연결5대상 · 거리220","연결7대상 · 50% 둔화 · 후속피해+10%"]],
+	"swift_hunter_smoke_mantle": ["무영의 망토",{"shield_duration":3},{"cleanse":true},{"pulse_count":1,"pulse_pattern":"slash","pulse_ratio":0.4,"pulse_radius_ratio":1},{"shield_ratio":0.085,"shield_duration":4,"pulse_count":2,"pulse_ratio":0.55},["보호막3초","시전 시 독·화상·둔화 해제","40% 잔영 검격","보호막 기본8.5%/4초 · 잔영 검격2회"]],
+	"swift_hunter_venom_steps": ["만독 그림자 발톱",{"field_duration":2.6},{"slow_multiplier":0.8,"slow_duration":0.8},{"field_interval":0.3},{"field_duration":3.4,"field_interval":0.25,"lifesteal":0.015},["독무2.6초","20% 둔화0.8초","독무 간격0.3초","독무3.4초/간격0.25초 · 흡혈1.5%"]],
+	"sword_shield_hero_oath_blade": ["왕가의 맹세검",{"cast_shield":0.025},{"slow_multiplier":0.8,"slow_duration":1},{"pulse_count":1,"pulse_pattern":"slash","pulse_ratio":0.35,"pulse_radius_ratio":1},{"cast_shield":0.04,"pulse_count":2,"pulse_ratio":0.5},["보호막2.5%","20% 둔화1초","35% 후속 검격","보호막4% · 50% 후속 검격2회"]],
+	"sword_shield_hero_ward_crossbow": ["성벽 파수 쇠뇌",{"bonus_hits":1},{"slow_duration":1.8},{"splash_radius":60,"splash_ratio":0.3},{"bonus_hits":2,"splash_radius":85,"splash_ratio":0.5},["쇠뇌2발","둔화1.8초","적중 파편30%/반경60","쇠뇌3발 · 파편50%/반경85"]],
+	"sword_shield_hero_sanctuary_shield": ["성역의 대방패",{"shield_duration":4.5},{"cast_heal":0.01},{"shield_ratio":0.085},{"shield_ratio":0.12,"shield_duration":5,"cast_heal":0.02},["보호막4.5초","시전 회복1%","보호막 기본8.5%","보호막 기본12%/5초 · 회복2%"]],
+	"sword_shield_hero_rally_standard": ["불굴의 결집 군기",{"cast_shield":0.02},{"slow_duration":2},{"pulse_count":1,"pulse_ratio":0.35},{"heal_ratio":0.03,"cast_shield":0.035,"pulse_count":2,"pulse_ratio":0.5},["시전 보호막2%","둔화2초","35% 후속 파동","회복 기본3% · 보호막3.5% · 파동2회"]],
+	"pistol_hero_twin_pistols": ["황금 쌍열 권총",{"hit_interval":0.1},{"finish_ratio":0.35,"finish_radius":60},{"bonus_hits":1},{"bonus_hits":2,"hit_interval":0.075,"finish_ratio":0.6,"finish_radius":90},["사격 간격0.1초","마지막35% 파편","속사4발","속사5발 · 마지막60% 파편"]],
+	"pistol_hero_shrapnel_round": ["중량 파쇄 탄환",{"splash_radius":85},{"splash_ratio":0.45},{"slow_multiplier":0.75,"slow_duration":1},{"splash_ratio":0.7,"splash_radius":120,"bonus_hits":1},["파편 반경85","파편 피해45%","25% 둔화1초","탄환2발 · 파편70%/반경120"]],
+	"pistol_hero_suppressor": ["황혼의 제압사격",{"slow_duration":1.5},{"hit_interval":0.12},{"bonus_hits":1},{"bonus_hits":2,"hit_interval":0.1,"slow_multiplier":0.6},["둔화1.5초","사격 간격0.12초","속사5발","속사6발 · 40% 둔화"]],
+	"pistol_hero_smoke_canister": ["검은 화약 연막탄",{"field_duration":3.6},{"slow_multiplier":0.6},{"field_count":2},{"field_count":3,"field_interval":0.5,"field_duration":4},["연막3.6초","40% 둔화","연막2개","연막3개/4초 · 간격0.5초"]],
+	"archmage_hero_lava_focus": ["화산심장 촉매봉",{"field_duration":3.5},{"slow_multiplier":0.85,"slow_duration":0.8},{"field_count":2},{"field_count":3,"field_duration":4,"field_interval":0.4},["용암3.5초","15% 둔화","용암2개","용암3개/4초 · 간격0.4초"]],
+	"archmage_hero_frost_moons": ["영원의 빙결 위성",{"orbit_count":4},{"slow_duration":2},{"pulse_count":1,"pulse_pattern":"orbit","pulse_ratio":0.35,"pulse_radius_ratio":1},{"orbit_count":6,"pulse_count":2,"pulse_ratio":0.5,"slow_multiplier":0.5},["위성4개","둔화2초","35% 냉기 재타격","위성6개 · 50% 둔화 · 재타격2회"]],
+	"archmage_hero_gale_prism": ["오중 질풍 프리즘",{"slow_multiplier":0.85,"slow_duration":1},{"fan_lines":3},{"pulse_count":1,"pulse_pattern":"beam","pulse_ratio":0.3,"pulse_radius_ratio":1},{"fan_lines":5,"pulse_count":1,"pulse_ratio":0.5},["15% 둔화","바람3방향","30% 잔류 칼날","바람5방향 · 50% 잔류 칼날"]],
+	"archmage_hero_sunfire_tome": ["백야의 태양화염서",{"pulse_count":1,"pulse_ratio":0.25},{"cast_heal":0.015},{"pulse_count":2},{"pulse_count":3,"pulse_ratio":0.45,"cast_heal":0.02},["25% 후속 화염","회복1.5%","후속 화염2회","45% 후속 화염3회 · 회복2%"]],
+	"madness_hero_desperate_cleaver": ["결사의 혈왕검",{"low_hp_bonus":0.65},{"lifesteal":0.02},{"pulse_count":1,"pulse_pattern":"slash","pulse_ratio":0.3,"pulse_radius_ratio":1},{"low_hp_bonus":0.9,"lifesteal":0.04,"pulse_count":2,"pulse_ratio":0.45},["빈사 추가피해 최대65%","흡혈2%","30% 후속 검격","빈사 최대90% · 흡혈4% · 후속 검격2회"]],
+	"madness_hero_vampire_fang": ["혈월의 송곳니",{"bonus_hits":1},{"lifesteal":0.045},{"slow_multiplier":0.8,"slow_duration":1},{"bonus_hits":2,"lifesteal":0.07,"execute_ratio":0.08},["송곳니2발","흡혈4.5%","20% 둔화","송곳니3발 · 흡혈7% · HP8% 마무리"]],
+	"madness_hero_blood_thorns": ["혈해 가시밭",{"field_duration":3},{"lifesteal":0.03},{"field_count":2},{"field_count":3,"field_interval":0.3,"lifesteal":0.05},["혈흔3초","흡혈3%","혈흔2개","혈흔3개 · 간격0.3초 · 흡혈5%"]],
+	"madness_hero_blood_aegis": ["마혈 수호핵",{"shield_duration":4},{"lifesteal":0.04},{"pulse_count":1,"pulse_ratio":0.3},{"shield_ratio":0.09,"pulse_count":2,"pulse_ratio":0.5,"lifesteal":0.06},["보호막4초","흡혈4%","30% 혈파","보호막 기본9% · 혈파2회 · 흡혈6%"]],
+	"chemical_hero_caustic_boots": ["왕수 분무기",{"field_duration":3},{"slow_multiplier":0.8,"slow_duration":0.8},{"field_interval":0.3},{"field_duration":3.6,"field_interval":0.25,"field_radius_ratio":0.6},["산성3초","20% 둔화","산성 간격0.3초","산성3.6초/간격0.25초 · 범위비율60%"]],
+	"chemical_hero_catalyst_wire": ["연금 촉매 회로",{"bonus_hits":1},{"chain_growth":0.08},{"chain_radius":230},{"bonus_hits":3,"chain_growth":0.15,"slow_multiplier":0.65},["연결4대상","후속 연결피해+8%","연결거리230","연결6대상 · 후속피해+15% · 35% 둔화"]],
+	"chemical_hero_toxic_dart": ["만독 주사총",{"bonus_hits":1},{"slow_duration":2.2},{"splash_radius":65,"splash_ratio":0.25},{"bonus_hits":2,"splash_radius":100,"splash_ratio":0.45,"slow_multiplier":0.5},["주사탄2발","둔화2.2초","적중 확산25%/반경65","주사탄3발 · 확산45% · 50% 둔화"]],
+	"chemical_hero_antidote_capsule": ["완전해독 캡슐",{"shield_duration":4},{"cast_heal":0.02},{"shield_ratio":0.08},{"shield_ratio":0.11,"shield_duration":5,"cast_heal":0.03},["보호막4초","회복2%","보호막 기본8%","보호막 기본11%/5초 · 회복3%"]],
+	"summoner_hero_rift_orbit": ["심연의 톱니환",{"orbit_count":4},{"slow_multiplier":0.8,"slow_duration":1},{"pulse_count":1,"pulse_pattern":"orbit","pulse_ratio":0.3,"pulse_radius_ratio":1},{"orbit_count":6,"pulse_count":2,"pulse_ratio":0.5},["톱니4개","20% 둔화","30% 궤도 재타격","톱니6개 · 50% 재타격2회"]],
+	"summoner_hero_collapse_glyph": ["심연 붕괴 문양",{"field_duration":3.5},{"slow_multiplier":0.75,"slow_duration":0.8},{"field_count":2},{"field_count":3,"field_duration":4.5,"field_interval":0.4},["지대3.5초","25% 둔화","차원 지대2개","차원 지대3개/4.5초 · 간격0.4초"]],
+	"summoner_hero_gate_shard": ["심연 파편핵",{"bonus_hits":1},{"splash_ratio":0.35},{"splash_radius":90},{"bonus_hits":2,"splash_radius":115,"splash_ratio":0.5},["파편구2발","폭발35%","폭발 반경90","파편구3발 · 폭발50%/반경115"]],
+	"summoner_hero_binding_gate": ["심연 결박문",{"slow_duration":2.6},{"pulse_count":1,"pulse_ratio":0.3},{"cast_shield":0.02},{"pulse_count":2,"pulse_ratio":0.45,"slow_multiplier":0.4,"cast_shield":0.035},["둔화2.6초","30% 후속 충격","시전 보호막2%","60% 둔화 · 충격2회 · 보호막3.5%"]],
+	"purifier_hero_mercy_chain": ["대자비 성광사슬",{"bonus_hits":1},{"cast_heal":0.015},{"chain_radius":240},{"bonus_hits":3,"chain_growth":0.12,"cast_heal":0.02},["연결4대상","회복1.5%","연결거리240","연결6대상 · 후속피해+12% · 회복2%"]],
+	"purifier_hero_judgment_seal": ["대심판 성인",{"field_duration":3.6},{"slow_multiplier":0.7},{"field_count":2},{"field_count":3,"field_interval":0.4,"execute_ratio":0.08},["성광3.6초","30% 둔화","성광 지대2개","성광 지대3개 · 간격0.4초 · HP8% 마무리"]],
+	"purifier_hero_saint_reliquary": ["대성인의 성물함",{"shield_duration":4.5},{"cast_heal":0.015},{"pulse_count":1,"pulse_ratio":0.3},{"shield_ratio":0.12,"shield_duration":5,"cast_heal":0.025,"pulse_count":2,"pulse_ratio":0.5},["보호막4.5초","회복1.5%","30% 성광 파동","보호막 기본12%/5초 · 회복2.5% · 파동2회"]],
+	"purifier_hero_martyr_blade": ["성혈 순교검",{"execute_ratio":0.07},{"lifesteal":0.03},{"pulse_count":1,"pulse_pattern":"slash","pulse_ratio":0.35,"pulse_radius_ratio":1},{"execute_ratio":0.1,"lifesteal":0.05,"pulse_count":2,"pulse_ratio":0.5},["HP7% 마무리","흡혈3%","35% 후속 성검","HP10% 마무리 · 흡혈5% · 성검2회"]],
+	"sage_astra_gravity_lance": ["중력 오중성창",{"slow_duration":2},{"fan_lines":3},{"pulse_count":1,"pulse_pattern":"beam","pulse_ratio":0.35,"pulse_radius_ratio":1},{"fan_lines":5,"pulse_count":1,"pulse_ratio":0.55,"slow_multiplier":0.65},["둔화2초","광선3방향","35% 천체 잔광","광선5방향 · 55% 잔광 · 35% 둔화"]],
+	"sage_astra_frozen_stars": ["영겁의 빙성환",{"orbit_count":4},{"slow_duration":2.2},{"pulse_count":1,"pulse_pattern":"orbit","pulse_ratio":0.35,"pulse_radius_ratio":1},{"orbit_count":6,"slow_multiplier":0.45,"pulse_count":2,"pulse_ratio":0.5},["빙성4개","둔화2.2초","35% 빙성 재타격","빙성6개 · 55% 둔화 · 재타격2회"]],
+	"sage_astra_supernova_core": ["은하 초신성 핵",{"pulse_ratio":0.35},{"slow_multiplier":0.8,"slow_duration":1.5},{"pulse_count":2},{"pulse_count":3,"pulse_ratio":0.55,"pulse_radius_ratio":1},["후속 폭발35%","20% 둔화1.5초","후속 폭발2회","55% 후속 폭발3회 · 전 범위"]],
+	"sage_astra_collapsed_seed": ["사건의 별씨",{"bonus_hits":1},{"splash_ratio":0.4},{"splash_radius":100},{"bonus_hits":2,"splash_ratio":0.6,"splash_radius":130,"execute_ratio":0.08},["별씨2발","붕괴 피해40%","붕괴 반경100","별씨3발 · 붕괴60%/반경130 · HP8% 마무리"]],
 }
 
 static func resolve(id: String, source: Dictionary, rank: int, awakened: bool) -> Dictionary:
@@ -91,12 +131,10 @@ static func evolution_description(id: String) -> String:
 	return String(PROFILES[id][5][3])+"\nLv.10 대비 피해 +30% · 재사용 -10%" if PROFILES.has(id) else ""
 static func upgrade_description(id: String, rank: int) -> String:
 	if not PROFILES.has(id): return "보유 무기 +1레벨"
-	var row: Array = PROFILES[id]
-	for index in 3:
-		var milestone: int = [3,6,10][index]
-		if rank == milestone: return "Lv.%d · %s" % [rank,String(row[5][index])]
-		if rank < milestone: return "Lv.%d 기본 피해·사거리·주기 성장\n다음 Lv.%d · %s" % [rank,milestone,String(row[5][index])]
-	return "Lv.10 · 상자로 "+String(row[0])+" 진화 가능"
+	var summary := "기본 피해·사거리 증가 · 재사용 대기시간 감소"
+	if rank in [3,6,10]:
+		summary += "\n"+String(PROFILES[id][5][[3,6,10].find(rank)])
+	return summary
 static func description(id: String, rank: int, awakened: bool = false) -> String:
 	if not PROFILES.has(id): return ""
 	if awakened: return evolution_name(id)+"\n"+evolution_description(id)

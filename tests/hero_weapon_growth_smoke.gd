@@ -31,7 +31,7 @@ func reset(runtime, hero) -> void:
 func run() -> void:
 	root.get_node("CloudStore").stop(); root.get_node("LoginGateway").remember_session_enabled = false
 	SCOPE.select_guest(); SCOPE.guest_directory = "user://weapon_growth_"+str(Time.get_ticks_usec()); DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
-	check(GROWTH.PROFILES.size() == 60 and DATA.WEAPONS.size() == 60,"all existing IDs have growth profiles")
+	check(GROWTH.PROFILES.size() == 100 and DATA.WEAPONS.size() == 100,"all existing IDs have growth profiles")
 	var names: Dictionary = {}
 	for id in DATA.WEAPONS:
 		check(GROWTH.PROFILES.has(id),"profile present "+id)
@@ -41,7 +41,7 @@ func run() -> void:
 			check(not GROWTH.PROFILES[id][[3,6,10].find(rank)+1].is_empty(),"mechanical milestone "+id+str(rank))
 		var base := GROWTH.resolve(id,DATA.WEAPONS[id],1,false)
 		check(is_equal_approx(base.damage_scale,1.0) and not base.has("bonus_hits"),"Lv1 preserved "+id)
-		check(not GROWTH.evolution_description(id).is_empty() and "Lv.10" in DATA.description(id,10),"player-facing progression "+id)
+		check(not GROWTH.evolution_description(id).is_empty() and not DATA.description(id,10).contains("상자") and not DATA.description(id,10).contains("진화"),"player-facing progression "+id)
 	for hero_id in DATA.HERO_WEAPONS:
 		var battle = load("res://src/battle/Battle.tscn").instantiate()
 		battle.hero_player_mode = true; battle.hero_player_stage = "stage_1"; battle.hero_player_hero_id = String(hero_id)

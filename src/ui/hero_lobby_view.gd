@@ -101,7 +101,7 @@ func rebuild(tab: String) -> void:
 	if tab == "team": _build_formation(body,id); return
 	if tab == "shop":
 		_label(body,"용사상점",40); _label(body,"준비 중",32)
-		_label(body,"캐릭터 편성에서 플레이할 용사를 선택하세요.\n용사별 전용 무기 6종은 전투 중 레벨업으로 습득합니다.")
+		_label(body,"캐릭터 편성에서 플레이할 용사를 선택하세요.\n용사별 전용 무기는 전투 중 레벨업으로 습득합니다.")
 		return
 	_label(body,"성장 · "+String(character.name),36)
 	_label(body,"연구 포인트 %d\n편성한 용사의 성장 · 다음 도전부터 적용" % lobby.STAGE_PROGRESS.get_research_points(),24)
@@ -123,7 +123,7 @@ func _build_formation(body: VBoxContainer,id: String) -> void:
 	var character: Dictionary = CHARACTERS.get_character(id)
 	selected_hero_label = _label(details,"편성 중 · "+String(character.name),30)
 	_label(details,String(character.style),22)
-	_label(details,"전용 무기 6종 · 전투에서 최대 3개 습득",22)
+	_label(details,"전용 무기 %d종 · 전투에서 최대 %d개 습득" % [WEAPONS.weapon_pool(id).size(),WEAPONS.WEAPON_SLOTS],22)
 	var weapons := GridContainer.new(); weapons.columns = 2; weapons.add_theme_constant_override("h_separation",12); weapons.add_theme_constant_override("v_separation",8); details.add_child(weapons)
 	for weapon_id in WEAPONS.weapon_pool(id):
 		var data: Dictionary = WEAPONS.WEAPONS[weapon_id]

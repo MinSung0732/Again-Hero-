@@ -48,7 +48,7 @@ func run() -> void:
 	var seen: Dictionary = {}
 	for hero_id in CHARACTERS.ORDER:
 		var pool := WEAPONS.weapon_pool(hero_id)
-		check(pool.size() == 6,"six weapons: "+hero_id)
+		check(pool.size() == 10,"ten weapons: "+hero_id)
 		check(String(WEAPONS.STARTERS[hero_id]) in pool,"starter belongs to own kit")
 		fixture.hero_id = hero_id; fixture.build_counts.clear()
 		var runtime := RUNTIME.new(); runtime.install(fixture)
@@ -58,7 +58,7 @@ func run() -> void:
 			if WEAPONS.is_weapon(candidate.id): check(String(candidate.id) in pool,"level-up only offers own weapons")
 		var foreign := "swift_hunter_dagger" if hero_id == CHARACTERS.DEFAULT_HERO else "ranged_rookie_arcane_bolt"
 		check(not runtime.add(foreign),"foreign weapon rejected")
-	check(seen.size() == 60,"sixty weapons total")
+	check(seen.size() == 100,"one hundred weapons total")
 	var original := SCOPE.guest_directory; SCOPE.guest_directory += "_other"; DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
 	check(STORE.selected_hero() == CHARACTERS.DEFAULT_HERO and STORE.selected_battle_stage() == "stage_1" and not STORE.character_unlocked("sage_astra"),"character map and collection ownership are account scoped")
 	SCOPE.guest_directory = original; fixture.queue_free()

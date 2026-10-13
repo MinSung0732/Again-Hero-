@@ -254,6 +254,7 @@ func _cast(id: String) -> void:
 		var distance: float = origin.distance_squared_to(actor.global_position)
 		if distance > reach*reach: continue
 		if distance < closest_distance: closest_distance = distance; closest = actor
+	if not is_instance_valid(closest) and float(data.get("gas_cost",0.0)) > 0.0 and pattern == "poison": return
 	var direction: Vector2 = hero.player_move_input.normalized()
 	if is_instance_valid(closest): direction = origin.direction_to(closest.global_position)
 	if direction.length_squared() < 0.01: direction = Vector2.RIGHT
