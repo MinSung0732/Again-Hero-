@@ -1,2 +1,7 @@
 # Patch context contains intentional space prefixes before GDScript tabs.
 docs/optimization/20261010/changes.patch -whitespace
+
+# Godot writes these files with LF; keep Windows checkouts consistent.
+*.import text eol=lf
+*.uid text eol=lf
+project.godot text eol=lf

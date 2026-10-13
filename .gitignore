@@ -17,3 +17,6 @@ Thumbs.db
 
 # Machine-specific Android package / signing / export configuration
 /export_presets.cfg
+
+# Godot CSV importer output from documentation tables (not game translations).
+/docs/*.translation
