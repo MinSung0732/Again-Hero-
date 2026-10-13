@@ -48,7 +48,8 @@ class Fighter extends Node2D:
 	func _fill_monster_nodes_near(origin: Vector2, radius: float, output: Array) -> void:
 		output.clear()
 		for actor in get_parent().actors:
-			if origin.distance_squared_to(actor.global_position) <= radius*radius: output.append(actor)
+			# Deliberately broad, like Battle's padded spatial grid.
+			output.append(actor)
 	func heal_direct(amount: int) -> int: current_hp = mini(current_hp+amount,max_hp); return amount
 	func _damage_treasure_chests(_origin: Vector2, _radius: float, _damage: int) -> void: pass
 	func _face_attack_direction(_x: float) -> void: pass

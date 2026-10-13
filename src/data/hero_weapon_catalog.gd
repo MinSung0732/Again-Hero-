@@ -564,23 +564,23 @@ const WEAPONS := {
     "hit_cap": 16
   },
   "archmage_hero_fire_staff": {
-    "name": "연소",
+    "name": "원소 지팡이",
     "owner": "archmage_hero",
-    "pattern": "poison",
+    "pattern": "bolt",
     "color": "f9a95b",
     "cooldown": 2.2,
     "range": 350,
     "power": 1.0,
     "base_hits": 1,
-    "effect": "연소 화염 · 좁은 범위에 빠른 지속 피해",
-    "evolution": "연소 · 각성",
+    "effect": "6원소 평타 · 대지/화염/빙결/빛/바람/신성의 원래 효과",
+    "evolution": "원소 지팡이 · 각성",
     "tags": [
       "area"
     ],
     "field_duration": 2.0,
     "field_interval": 0.35,
     "effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect2",
-    "source_skill": "연소",
+    "source_skill": "6원소 기본공격",
     "hit_cap": 16,
     "field_power": 0.35
   },

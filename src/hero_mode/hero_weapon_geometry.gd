@@ -32,3 +32,10 @@ static func beam(radius: float, half_width: float) -> PackedVector2Array:
 	points[26] = Vector2(0,width)
 	points[27] = points[0]
 	return points
+static func capsule(length: float, radius: float) -> PackedVector2Array:
+	var points := PackedVector2Array(); points.resize(35)
+	for index in 17:
+		points[index] = Vector2(length,0)+Vector2.from_angle(lerpf(-PI*0.5,PI*0.5,index/16.0))*radius
+		points[index+17] = Vector2.from_angle(lerpf(PI*0.5,PI*1.5,index/16.0))*radius
+	points[34] = points[0]
+	return points

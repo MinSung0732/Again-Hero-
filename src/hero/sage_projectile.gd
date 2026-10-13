@@ -19,6 +19,7 @@ static var _basic_frames_cache: SpriteFrames
 static var _piercing_frames_cache: SpriteFrames
 static var _chest_nodes_cache: Array = []
 static var _chest_nodes_cache_physics_frame: int = -1
+static var _chest_nodes_cache_owner := 0
 
 var direction: Vector2 = Vector2.RIGHT
 var damage: int = 1
@@ -27,6 +28,7 @@ var max_range: float = 650.0
 var traveled_distance: float = 0.0
 var projectile_mode: int = ProjectileMode.BASIC
 var active: bool = false
+var flight_active := false
 var expiring: bool = false
 var visual_diameter: float = 44.0
 var hit_ids: Dictionary = {}
@@ -59,10 +61,11 @@ func setup(
 	new_volley: VOLLEY = null
 ) -> void:
 	active = true
+	flight_active = true
 	expiring = false
 	visible = true
 	set_physics_process(true)
-	monitoring = true
+	call_deferred("_sync_monitoring")
 	if not is_in_group("hero_projectiles"):
 		add_to_group("hero_projectiles")
 	direction = new_direction.normalized() if new_direction.length_squared() > 0.001 else Vector2.RIGHT
@@ -84,7 +87,7 @@ func _physics_process(delta: float) -> void:
 	if not active:
 		return
 	var previous_position := global_position
-	var travel_step := speed * delta
+	var travel_step := minf(speed*delta,maxf(0,max_range-traveled_distance)) if bool(get_meta("survival_geometry",false)) else speed*delta
 	global_position += direction * travel_step
 	traveled_distance += travel_step
 	if _check_chest_sweep(previous_position, global_position):
@@ -96,7 +99,7 @@ func _physics_process(delta: float) -> void:
 			_begin_piercing_expire()
 		if traveled_distance >= max_range:
 			set_physics_process(false)
-			monitoring = false
+			flight_active = false; call_deferred("_sync_monitoring")
 			if not expiring:
 				_begin_piercing_expire()
 		return
@@ -106,9 +109,12 @@ func _physics_process(delta: float) -> void:
 
 func _get_chest_nodes_cached() -> Array:
 	var physics_frame := Engine.get_physics_frames()
-	if physics_frame != _chest_nodes_cache_physics_frame:
-		_chest_nodes_cache = get_tree().get_nodes_in_group("treasure_chests")
+	var authority := get_parent()
+	if physics_frame != _chest_nodes_cache_physics_frame or _chest_nodes_cache_owner != authority.get_instance_id():
+		if authority.has_method("fill_active_treasure_chests"): authority.fill_active_treasure_chests(_chest_nodes_cache)
+		else: _chest_nodes_cache = get_tree().get_nodes_in_group("treasure_chests")
 		_chest_nodes_cache_physics_frame = physics_frame
+		_chest_nodes_cache_owner = authority.get_instance_id()
 	return _chest_nodes_cache
 
 
@@ -144,7 +150,7 @@ func _on_body_entered(body: Node) -> void:
 
 
 func _try_hit_target(body: Node) -> bool:
-	if not active or body == null or body.is_queued_for_deletion():
+	if not active or not flight_active or body == null or body.is_queued_for_deletion() or _survival_paused():
 		return false
 	if not (body.is_in_group("monsters") or body.is_in_group("treasure_chests")) or not body.has_method("take_damage"):
 		return false
@@ -172,7 +178,7 @@ func _try_hit_target(body: Node) -> bool:
 		caster.call("_on_sage_skill_hit", hit_position)
 	if projectile_mode == ProjectileMode.BASIC:
 		set_physics_process(false)
-		monitoring = false
+		flight_active = false; call_deferred("_sync_monitoring")
 		projectile_sprite.stop()
 		projectile_sprite.play(&"impact")
 	return true
@@ -215,13 +221,14 @@ func _finish_projectile() -> void:
 
 func deactivate_for_pool() -> void:
 	active = false
+	flight_active = false
 	volley = null
 	expiring = false
 	traveled_distance = 0.0
 	hit_ids.clear()
 	direction = Vector2.RIGHT
 	caster = null
-	monitoring = false
+	call_deferred("_sync_monitoring")
 	set_physics_process(false)
 	visible = false
 	projectile_sprite.stop()
@@ -245,7 +252,14 @@ func _apply_visual() -> void:
 		_fit_piercing_visual(visual_diameter * 1.50)
 	else:
 		projectile_sprite.scale = Vector2.ONE * 0.60
+	if bool(get_meta("survival_geometry",false)):
+		preload("res://src/ui/hero_weapon_visual_fit.gd").animated_circle(projectile_sprite,get_meta("survival_visual_bounds",Rect2()),visual_diameter*0.5)
 	projectile_sprite.play(&"launch")
+
+func _survival_paused() -> bool:
+	return bool(get_meta("survival_geometry",false)) and get_parent().has_method("is_combat_simulation_paused") and get_parent().is_combat_simulation_paused()
+func _sync_monitoring() -> void:
+	monitoring = active and flight_active and not _survival_paused()
 
 
 func _fit_piercing_visual(target_diameter: float) -> void:

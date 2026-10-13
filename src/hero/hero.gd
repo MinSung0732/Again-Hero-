@@ -30,6 +30,7 @@ signal player_augment_requested(candidates: Array)
 var player_controlled := false
 var player_exp_remainder := 0.0
 var player_weapons: RefCounted
+var sage_blackspot_effects: Array[Node2D] = []
 var player_move_input := Vector2.ZERO
 var player_input_suspended := true
 var player_moved_this_frame := false
@@ -1840,6 +1841,9 @@ func _physics_process(delta: float) -> void:
 
 func _physics_process_actions(delta: float) -> void:
 	player_input_suspended = true
+	if player_controlled and player_weapons != null and player_weapons.identity != null and berserker_reviving:
+		player_weapons.identity.tick_revive(delta)
+		if berserker_reviving: return
 	# Discard stale intent even when death/status/skill gates return early.
 	action_intent.clear()
 	# Drop cached targets before any archetype, skill or movement decision.
@@ -1880,6 +1884,8 @@ func _physics_process_actions(delta: float) -> void:
 		attack_pose_timer = maxf(attack_pose_timer-delta,0.0)
 		hit_pose_timer = maxf(hit_pose_timer-delta,0.0)
 		player_weapons.tick(delta)
+		if alchemist_philosopher_channeling or alchemist_philosopher_unlock_pending or berserker_reviving:
+			player_input_suspended = true; velocity = Vector2.ZERO; return
 		velocity = _player_move_velocity()
 		_move_and_slide_with_obstacle_escape()
 		match hero_archetype:
@@ -3925,6 +3931,8 @@ func _activate_alchemist_philosopher_form() -> void:
 	)
 	base_attack_damage_for_level_growth *= attack_multiplier
 	move_speed *= speed_multiplier
+	if player_controlled and player_weapons != null and player_weapons.identity != null:
+		player_weapons.identity.permanent_growth(hp_multiplier,speed_multiplier)
 
 	var cooldown_multiplier := clampf(
 		float(alchemist_philosopher_config.get(
@@ -6054,6 +6062,8 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 		aoe_offset = float(aoe_offsets[offset_index])
 
 	var corridor_end := lunge_end + direction * aoe_offset
+	if player_controlled and player_weapons != null:
+		player_weapons._effect(lunge_start,corridor_end,aoe_radius,"capsule",Color("bc9eee"))
 	var corridor_vector := corridor_end - lunge_start
 	var corridor_length_squared := corridor_vector.length_squared()
 	var main_id := current_target.get_instance_id()
@@ -9141,6 +9151,7 @@ func _ensure_sage_runtime() -> void:
 		sage_condensation_release_audio = _create_sage_audio_player(SAGE_CONDENSATION_RELEASE_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 0.96)
 	_ensure_sage_condensation_visuals()
 	_ensure_sage_starlight_aura()
+	_ensure_sage_blackspot_pool()
 	if not sage_afterimage_pool.is_empty():
 		return
 	if _sage_afterimage_frames_cache == null:
@@ -10823,6 +10834,8 @@ func _consume_sage_condensation(skill: Dictionary) -> void:
 	base_attack_damage_for_level_growth *= attack_multiplier
 	move_speed *= move_multiplier
 	common_attack_speed_bonus += attack_speed_gain
+	if player_controlled and player_weapons != null and player_weapons.identity != null:
+		player_weapons.identity.permanent_growth(hp_multiplier,move_multiplier)
 	sage_condensation_skill_damage_buff_timer = maxf(
 		float(skill.get("skill_damage_buff_duration", 10.0)),
 		0.0
@@ -10839,7 +10852,7 @@ func _get_sage_condensation_cooldown_reduction() -> float:
 		or sage_condensation_stacks <= 0
 	):
 		return 0.0
-	var skill_value = sage_config.get("skill_3", {})
+	var skill_value = sage_config.get("skill_3")
 	var skill: Dictionary = (
 		skill_value if typeof(skill_value) == TYPE_DICTIONARY else {}
 	)
@@ -10895,6 +10908,17 @@ func _get_sage_skill_damage_multiplier() -> float:
 	return 1.0 + bonus_ratio
 
 
+func _ensure_sage_blackspot_pool() -> void:
+	if not sage_blackspot_effects.is_empty(): return
+	var world := get_parent()
+	if not is_instance_valid(world) or not world.has_method("acquire_projectile"): return
+	var skill: Dictionary = sage_config.get("skill_6",{})
+	for index in maxi(int(skill.get("max_active",8)),1):
+		var effect := world.acquire_projectile(SAGE_BLACKSPOT_EXPLOSION_SCENE,"sage_blackspot_explosion") as Node2D
+		if effect != null: sage_blackspot_effects.append(effect)
+	for effect in sage_blackspot_effects:
+		world.recycle_projectile(effect,"sage_blackspot_explosion")
+
 func _on_sage_skill_hit(hit_position: Vector2) -> void:
 	if (
 		hero_archetype != "grand_sage_astra"
@@ -10917,10 +10941,18 @@ func _on_sage_skill_hit(hit_position: Vector2) -> void:
 	):
 		return
 
-	var explosion := _acquire_projectile(
-		SAGE_BLACKSPOT_EXPLOSION_SCENE,
-		"sage_blackspot_explosion"
-	)
+	var authority := get_parent()
+	if authority.has_method("acquire_projectile"):
+		if not authority.projectile_pools.has("sage_blackspot_explosion") or authority.projectile_pools["sage_blackspot_explosion"].is_empty(): return
+	# This effect is Node2D, not Area2D; the projectile-only helper rejected it
+	# after allocating a pooled actor and then an unparented fallback instance.
+	var explosion: Node2D
+	var world := get_parent()
+	if is_instance_valid(world) and world.has_method("acquire_projectile"):
+		explosion = world.acquire_projectile(SAGE_BLACKSPOT_EXPLOSION_SCENE,"sage_blackspot_explosion") as Node2D
+	elif is_instance_valid(world):
+		explosion = SAGE_BLACKSPOT_EXPLOSION_SCENE.instantiate() as Node2D
+		world.add_child(explosion)
 	if explosion == null:
 		return
 
@@ -13396,7 +13428,9 @@ func get_purifier_holy_damage_multiplier(target_node: Node = null) -> float:
 	return multiplier
 
 func notify_monster_kill(_monster_type: String = "") -> void:
-	if player_controlled and player_weapons != null: return
+	if player_controlled and player_weapons != null:
+		if player_weapons.identity != null and not is_dying and current_hp > 0: player_weapons.identity.notify_kill()
+		return
 	if is_dying or current_hp <= 0:
 		return
 	if hero_archetype == "grand_sage_astra":
@@ -15160,7 +15194,6 @@ func _update_ultimate(delta: float) -> void:
 	_try_use_charged_skill()
 
 func _add_ultimate_charge(amount: float) -> void:
-	if player_controlled and player_weapons != null: return
 	if amount <= 0.0 or ultimate_config.is_empty() or is_dying:
 		return
 
@@ -18913,10 +18946,10 @@ func _execute_berserker_skill3(
 	_ensure_berserker_audio_runtime()
 	_play_berserker_player(berserker_skill3_audio)
 
-	_spawn_berserker_blood_dash_trail(
-		start_position,
-		destination
-	)
+	if player_controlled and player_weapons != null:
+		player_weapons._effect(start_position,destination,12,"chain",Color(0.82,0.05,0.03,0.82))
+	else:
+		_spawn_berserker_blood_dash_trail(start_position,destination)
 
 	var dash_duration: float = maxf(
 		float(skill_config.get("dash_duration", 0.20)),
@@ -19715,9 +19748,15 @@ func _begin_berserker_revive() -> void:
 		float(berserker_config.get("revive_delay", 3.0)),
 		0.1
 	)
+	if player_controlled and player_weapons != null and player_weapons.identity != null:
+		player_weapons.identity.revive_left = revive_delay
+		return
 	await get_tree().create_timer(revive_delay).timeout
 	if not is_inside_tree() or is_dying:
 		return
+	_finish_berserker_revive()
+
+func _finish_berserker_revive() -> void:
 
 	var revive_ratio: float = clampf(
 		float(berserker_config.get("revive_hp_ratio", 0.50)),
@@ -20969,7 +21008,6 @@ func _take_damage_internal(
 	if current_hp <= 0:
 		if (
 			hero_archetype == "berserker_madness"
-			and not player_controlled
 			and not berserker_revive_used
 			and not berserker_reviving
 		):
@@ -20980,7 +21018,7 @@ func _take_damage_internal(
 		if grant_invulnerability:
 			invulnerability_timer = invulnerability_duration
 		# Evading ongoing poison/burn ticks repeatedly closes the intended counter window.
-		if not player_controlled and grant_invulnerability and hero_archetype == "pistol_gunner" and _gunner_should_backstep_on_hit():
+		if grant_invulnerability and hero_archetype == "pistol_gunner" and _gunner_should_backstep_on_hit():
 			_start_gunner_backstep()
 		if grant_invulnerability:
 			_refresh_invulnerability_visual()
@@ -21217,7 +21255,6 @@ func _draw() -> void:
 		draw_circle(Vector2(49, -17), 8.0, Color(0.95, 0.86, 0.32))
 
 func _draw_combat_status_overlay() -> void:
-	if player_controlled and player_weapons != null: return # Survival resources live in the top HUD.
 	if is_dying:
 		return
 	var bar_width := 92.0
@@ -21246,6 +21283,10 @@ func _draw_combat_status_overlay() -> void:
 		# Astra can gain a temporary post-phase shield. Put that bar above the
 		# yellow gauge and HP bar so it never crosses the Stage 10 sprite.
 		shield_bar_y = -94.0
+	if player_controlled and player_weapons != null and player_weapons.identity != null:
+		resource_bar_y = player_weapons.identity.status_resource_y
+		hp_bar_y = player_weapons.identity.status_hp_y
+		shield_bar_y = player_weapons.identity.status_shield_y
 	var bar_left_x := -bar_width / 2.0 + bar_x_offset
 	if hero_archetype == "pistol_gunner":
 		var gap := 2.0
@@ -21284,7 +21325,7 @@ func _draw_combat_status_overlay() -> void:
 		var gas_ratio := clampf(alchemist_gas / maxf(alchemist_gas_max, 1.0), 0.0, 1.0)
 		status_overlay.draw_rect(Rect2(-bar_width / 2.0, resource_bar_y, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
 		status_overlay.draw_rect(
-			Rect2(-bar_width / 2.0, -79.0, bar_width * gas_ratio, 8.0),
+			Rect2(-bar_width / 2.0, resource_bar_y, bar_width * gas_ratio, 8.0),
 			Color(0.68, 0.28, 0.92),
 			true
 		)

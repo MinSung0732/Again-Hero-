@@ -93,6 +93,7 @@ func _physics_process(delta: float) -> void:
 		visual.visible = false
 		if is_instance_valid(explosion_audio) and explosion_audio.playing:
 			state = State.AUDIO_TAIL
+			queue_redraw()
 		else:
 			_finish()
 
@@ -183,6 +184,14 @@ func _set_frame(frame_index: int) -> void:
 	var texture := _load_texture_cached(path)
 	if texture != null:
 		visual.texture = texture
+		if bool(get_meta("survival_geometry",false)):
+			preload("res://src/ui/hero_weapon_visual_fit.gd").circle(visual,get_meta("survival_visual_bounds",Rect2()),explosion_radius)
+			queue_redraw()
+
+func _draw() -> void:
+	if bool(get_meta("survival_geometry",false)) and state == State.ANIMATING:
+		draw_circle(Vector2.ZERO,explosion_radius,Color(0.65,0.5,1,0.08))
+		draw_arc(Vector2.ZERO,explosion_radius,0,TAU,32,Color(0.8,0.7,1,0.7),2)
 
 
 static func _load_texture_cached(path: String) -> Texture2D:

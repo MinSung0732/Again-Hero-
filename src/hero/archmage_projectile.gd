@@ -4,6 +4,8 @@ const LOCAL_GRID_MOVEMENT := preload("res://src/monsters/monster_runtime_common.
 static var _orb_frames_cache: SpriteFrames
 static var _chest_nodes_cache: Array = []
 static var _chest_nodes_cache_physics_frame: int = -1
+static var _chest_nodes_cache_owner := 0
+var query_candidates: Array = []
 
 const STATUS_SCRIPT := preload("res://src/hero/archmage_element_status.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
@@ -78,14 +80,16 @@ func setup(
 
 	rotation = direction.angle()
 	_apply_orb_visual()
+	call_deferred("_sync_monitoring")
 
 func _physics_process(delta: float) -> void:
 	if not active:
 		return
 	var previous_position := global_position
-	var step := direction * speed * delta
+	var distance := minf(speed*delta,maxf(0,max_range-traveled_distance)) if bool(get_meta("survival_geometry",false)) else speed*delta
+	var step := direction * distance
 	global_position += step
-	traveled_distance += speed * delta
+	traveled_distance += distance
 	_check_chest_sweep(previous_position, global_position)
 
 	if traveled_distance >= max_range:
@@ -104,6 +108,7 @@ func _finish_projectile() -> void:
 
 func deactivate_for_pool() -> void:
 	active = false
+	call_deferred("_sync_monitoring")
 	traveled_distance = 0.0
 	hit_ids.clear()
 	config = {}
@@ -125,6 +130,9 @@ func _get_monster_nodes() -> Array:
 
 
 func _get_monster_nodes_near(origin: Vector2, radius: float) -> Array:
+	if is_instance_valid(source_hero) and source_hero.has_method("_fill_monster_nodes_near"):
+		source_hero._fill_monster_nodes_near(origin,radius,query_candidates)
+		return query_candidates
 	if is_instance_valid(source_hero) and source_hero.has_method("_get_monster_nodes_near"):
 		var nearby = source_hero.call("_get_monster_nodes_near", origin, radius)
 		if nearby is Array:
@@ -142,9 +150,12 @@ func _get_monster_nodes_in_rect(world_rect: Rect2) -> Array:
 
 func _get_chest_nodes_cached() -> Array:
 	var physics_frame := Engine.get_physics_frames()
-	if physics_frame != _chest_nodes_cache_physics_frame:
-		_chest_nodes_cache = get_tree().get_nodes_in_group("treasure_chests")
+	var authority := get_parent()
+	if physics_frame != _chest_nodes_cache_physics_frame or _chest_nodes_cache_owner != authority.get_instance_id():
+		if authority.has_method("fill_active_treasure_chests"): authority.fill_active_treasure_chests(_chest_nodes_cache)
+		else: _chest_nodes_cache = get_tree().get_nodes_in_group("treasure_chests")
 		_chest_nodes_cache_physics_frame = physics_frame
+		_chest_nodes_cache_owner = authority.get_instance_id()
 	return _chest_nodes_cache
 
 
@@ -177,6 +188,7 @@ func _distance_squared_to_segment(point: Vector2, a: Vector2, b: Vector2) -> flo
 func _on_body_entered(body: Node) -> void:
 	if not active:
 		return
+	if _survival_paused(): return
 	if body == null or body.is_queued_for_deletion():
 		return
 	if not body.is_in_group("monsters") or not body.has_method("take_damage"):
@@ -237,6 +249,9 @@ func _apply_fire(body: Node2D) -> void:
 	var duration := maxf(float(config.get("fire_burn_duration", 3.0)), 0.1)
 	var tick_interval := maxf(float(config.get("fire_burn_tick_interval", 0.5)), 0.1)
 	var damage_ratio := maxf(float(config.get("fire_burn_tick_damage_ratio", 0.18)), 0.0)
+	if bool(get_meta("survival_geometry",false)):
+		preload("res://src/systems/received_afflictions.gd").apply_burn(body,duration,maxi(1,roundi(base_damage*damage_ratio))*maxi(1,ceili(duration/tick_interval)),source_hero)
+		return
 	_get_or_create_status(body).apply_burn(
 		maxi(1, int(round(float(base_damage) * damage_ratio))),
 		duration,
@@ -247,6 +262,9 @@ func _apply_ice(body: Node2D) -> void:
 	preload("res://src/systems/monster_hit_context.gd").hit(body, base_damage, "ranged", source_hero)
 	var freeze_chance := clampf(float(config.get("ice_freeze_chance", 0.10)), 0.0, 1.0)
 	if randf() <= freeze_chance:
+		if bool(get_meta("survival_geometry",false)):
+			preload("res://src/systems/received_afflictions.gd").apply_stun(body,maxf(float(config.get("ice_freeze_duration",1)),0.05))
+			return
 		_get_or_create_status(body).apply_freeze(
 			maxf(float(config.get("ice_freeze_duration", 1.0)), 0.05)
 		)
@@ -308,6 +326,7 @@ func _spawn_chain_line(from_position: Vector2, to_position: Vector2) -> void:
 	var parent := get_parent()
 	if not is_instance_valid(parent):
 		return
+	if bool(get_meta("survival_geometry",false)) and (not parent.transient_fx_pools.has("archmage_basic_chain_line") or parent.transient_fx_pools["archmage_basic_chain_line"].is_empty()): return
 	var line: Line2D = null
 	if parent.has_method("acquire_transient_fx"):
 		line = parent.call(
@@ -345,6 +364,7 @@ func _spawn_impact_feedback(world_position: Vector2) -> void:
 	var parent := get_parent()
 	if not is_instance_valid(parent):
 		return
+	if bool(get_meta("survival_geometry",false)) and (not parent.transient_fx_pools.has("archmage_basic_impact_ring") or parent.transient_fx_pools["archmage_basic_impact_ring"].is_empty()): return
 	var ring: Line2D = null
 	if parent.has_method("acquire_transient_fx"):
 		ring = parent.call(
@@ -405,7 +425,14 @@ func _apply_orb_visual() -> void:
 	projectile_sprite.sprite_frames = frames
 	projectile_sprite.modulate = ELEMENT_COLORS.get(element, Color.WHITE)
 	projectile_sprite.visible = true
+	if bool(get_meta("survival_geometry",false)):
+		preload("res://src/ui/hero_weapon_visual_fit.gd").animated_circle(projectile_sprite,get_meta("survival_visual_bounds",Rect2()),$CollisionShape2D.shape.radius)
 	projectile_sprite.play("fly")
+
+func _survival_paused() -> bool:
+	return bool(get_meta("survival_geometry",false)) and get_parent().has_method("is_combat_simulation_paused") and get_parent().is_combat_simulation_paused()
+func _sync_monitoring() -> void:
+	monitoring = active and not _survival_paused()
 
 func _load_texture_direct(path: String) -> Texture2D:
 	if ResourceLoader.exists(path):

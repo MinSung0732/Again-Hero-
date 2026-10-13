@@ -181,6 +181,8 @@ func _refresh_hud() -> void:
 	xp.get_node("Caption").text = "EXP %d / %d" % [hero.current_exp,hero.exp_to_next_level]
 	timer.text = "Stage %d · %s Lv.%d\n남은 시간 %02d:%02d" % [int(battle.current_stage_data.get("number",1)),String(battle.current_hero_profile.get("display_name","용사")),hero.level,int(battle.run_metrics.get_remaining_seconds())/60,int(battle.run_metrics.get_remaining_seconds())%60]
 	status.text = "처치 %d · %s · 공격 자동" % [_kill_count(),String(DATA.phase_at(battle.run_metrics.elapsed_seconds).name)]
+	if hero.player_weapons != null and hero.player_weapons.identity != null:
+		status.text = "처치 %d · %s" % [_kill_count(),hero.player_weapons.identity.summary()]
 	if hero.player_weapons != null:
 		var runtime = hero.player_weapons
 		for index in weapon_buttons.size():

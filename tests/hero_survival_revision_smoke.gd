@@ -95,6 +95,10 @@ func run() -> void:
 		await physics_frame
 		var patterns: Dictionary = {}
 		for id in WEAPONS.weapon_pool(hero_id):
+			if runtime.identity != null:
+				if runtime.identity.archetype == "pistol_gunner": hero.gunner_ammo = hero.gunner_magazine_size; hero.gunner_reloading = false; hero.gunner_reload_timer = 0
+				for actor in runtime.identity.native_actors:
+					if is_instance_valid(actor) and actor.active: battle.recycle_projectile(actor,String(actor.get_meta("identity_pool_key","")))
 			runtime.weapon_ids.clear(); runtime.levels.clear(); runtime.cooldowns.clear()
 			for field in runtime.fields: field.left = 0.0
 			for shot in runtime.projectiles: shot.active = false
@@ -102,6 +106,7 @@ func run() -> void:
 			patterns[WEAPONS.WEAPONS[id].pattern] = true
 			var weapon: Dictionary = WEAPONS.WEAPONS[id]
 			var distance: float = float(weapon.range)*float(weapon.get("orbit_ratio",0.7)) if String(weapon.pattern) == "orbit" else 120.0
+			if String(weapon.pattern) == "poison" and bool(weapon.get("field_follow",false)): distance = minf(distance,float(weapon.range)*float(weapon.get("field_radius_ratio",0.45))*0.5)
 			target.position = hero.position+Vector2(distance,0)
 			preload("res://src/monsters/monster_runtime_common.gd").notify_forced_position_change(target)
 			await physics_frame
@@ -110,8 +115,14 @@ func run() -> void:
 			var before: int = target.current_hp
 			runtime.tick(0.01)
 			for step in 12: runtime.tick(0.1)
-			var native: bool = String(WEAPONS.WEAPONS[id].pattern) in ["piercer","meteor","ice_pillar","singularity","summon"]
-			if native and String(weapon.pattern) != "summon":
+			var native_basic: bool = runtime.identity != null and runtime.identity.spec.has("native_basic") and id == runtime.identity.starter
+			var native: bool = native_basic or String(WEAPONS.WEAPONS[id].pattern) in ["piercer","meteor","ice_pillar","singularity","summon"]
+			if native_basic:
+				battle.set_external_pause(false); hero.set_physics_process(false); target.set_physics_process(false)
+				await create_timer(1.0).timeout
+				battle.set_external_pause(true)
+				check(target.current_hp < before,"original native basic attack actually hits")
+			if native and not native_basic and String(weapon.pattern) != "summon":
 				var pool_key: String = runtime.native_skills.SCENES[String(weapon.pattern)][1]
 				var capacity: int = runtime.native_skills.SCENES[String(weapon.pattern)][2]
 				check(battle.projectile_pools[pool_key].size() < capacity,"original native skill activates: "+String(id))

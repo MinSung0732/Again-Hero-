@@ -412,7 +412,7 @@
       ]
     },
     "archmage_hero_fire_staff": {
-      "name": "화염 지팡이",
+      "name": "원소 지팡이",
       "sheet": "weapons_normalized.png",
       "region": [
         0,

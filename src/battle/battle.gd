@@ -315,6 +315,12 @@ func _register_treasure_chest(chest: Node) -> void:
 func _on_treasure_chest_tree_exited(instance_id: int) -> void:
 	active_treasure_chests.erase(instance_id)
 
+func fill_active_treasure_chests(result: Array) -> void:
+	result.clear()
+	for instance_id in active_treasure_chests:
+		var chest = active_treasure_chests[instance_id]
+		if is_instance_valid(chest) and not chest.is_queued_for_deletion(): result.append(chest)
+
 
 func _register_magnet_item(item: Node) -> void:
 	if not is_instance_valid(item):
@@ -5274,6 +5280,8 @@ func _set_combat_physics_enabled(enabled: bool) -> void:
 	if is_instance_valid(hero):
 		if hero_player_mode and hero.player_weapons != null and hero.player_weapons.native_skills != null:
 			hero.player_weapons.native_skills.set_paused(not enabled)
+		if hero_player_mode and hero.player_weapons != null and hero.player_weapons.identity != null:
+			hero.player_weapons.identity.set_paused(not enabled)
 		hero.set_physics_process(enabled)
 		if hero.has_method("set_alchemist_cauldron_runtime_paused"):
 			hero.call(
