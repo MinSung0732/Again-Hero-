@@ -15,6 +15,7 @@ class HeroFixture extends Node2D:
 	var current_hp := 600
 	var move_speed := 270.0
 	var exp_gain_multiplier := 1.0
+	var exp_pickup_radius := 150.0
 	func heal_direct(amount: int) -> int:
 		var before := current_hp; current_hp = mini(max_hp,current_hp+amount); return current_hp-before
 
@@ -58,8 +59,8 @@ func run() -> void:
 	check(runtime.add(String(pool[1])) and runtime.add(String(pool[2])) and not runtime.add(String(pool[3])),"three weapon slots")
 	var chest := runtime.roll_chest(); var old: int = runtime.levels[chest.id]
 	check(not chest.evolution and runtime.apply_chest(chest) and int(runtime.levels[chest.id]) == old+1,"non-max chest upgrades owned weapon")
-	for index in range(3): check(runtime.add(String(DATA.PASSIVES.keys()[index])),"passive slot")
-	check(not runtime.add(String(DATA.PASSIVES.keys()[3])),"three passive slots")
+	for index in range(6): check(runtime.add(String(DATA.PASSIVES.keys()[index])),"passive slot")
+	check(not runtime.add(String(DATA.PASSIVES.keys()[6])),"six passive slots")
 	for repeat in range(20):
 		var candidates := runtime.candidates(); check(not candidates.is_empty() and candidates.size() <= 3,"bounded choices")
 		for card in candidates: check(runtime.levels.has(card.id) or runtime.passives.has(card.id),"full slots exclude unowned choices")
@@ -68,6 +69,30 @@ func run() -> void:
 		var receipt := runtime.roll_chest(); runtime.apply_chest(receipt)
 	var blessing := runtime.roll_chest()
 	check(blessing.id == "survival_restore" and runtime.apply_chest(blessing),"all evolved gives recovery")
+	check(DATA.PASSIVES.size() == 8 and DATA.PASSIVE_SLOTS == 6,"eight passive types, six equipped")
+	var stats_fixture := HeroFixture.new(); root.add_child(stats_fixture)
+	var stats_runtime := RUNTIME.new(); stats_runtime.install(stats_fixture)
+	for id in ["survival_projectile","survival_magnet","survival_armor","survival_haste","survival_vitality","survival_mobility"]:
+		for rank in DATA.MAX_LEVEL: check(stats_runtime.add(id),"new passive advances: "+id)
+		check(not stats_runtime.add(id),"passive max rank")
+	check(is_equal_approx(stats_runtime.projectile_speed,2.0),"projectiles travel twice as fast at rank ten")
+	check(is_equal_approx(stats_fixture.exp_pickup_radius,375.0),"pickup radius affects hero property")
+	check(is_equal_approx(stats_runtime.damage_multiplier,0.70),"incoming damage capped at thirty percent reduction")
+	check(is_equal_approx(stats_runtime.haste,1.0/1.5),"attack frequency increases fifty percent")
+	check(stats_fixture.max_hp == 1800 and stats_fixture.current_hp == 1200,"vitality adds fixed starting-hp share and heals")
+	check(is_equal_approx(stats_fixture.move_speed,351.0),"mobility uses starting speed")
+	check(stats_runtime.projectiles.size() == 64,"bounded projectile pool")
+	var learning_fixture := HeroFixture.new(); root.add_child(learning_fixture)
+	learning_fixture.exp_gain_multiplier = 1.25
+	var learning_runtime := RUNTIME.new(); learning_runtime.install(learning_fixture)
+	for id in ["survival_power","survival_learning"]:
+		for rank in DATA.MAX_LEVEL: check(learning_runtime.add(id),"power and XP passive advance: "+id)
+	check(is_equal_approx(learning_runtime.power,1.8),"all weapon damage increases eighty percent")
+	check(is_equal_approx(learning_fixture.exp_gain_multiplier,2.25),"XP passive preserves the starting multiplier")
+	learning_fixture.queue_free()
+	check(MODE.required_exp(1) == 20 and MODE.required_exp(10) == 151 and MODE.required_exp(30) == 731,"new XP curve")
+	check(float(MODE.phase_at(0).interval) == 0.9 and int(MODE.phase_at(0).batch) == 2 and int(MODE.phase_at(0).limit) == 36,"denser first wave")
+	stats_fixture.queue_free()
 	var original_scope := SCOPE.guest_directory
 	SCOPE.guest_directory += "_other"; DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
 	check(not STORE.character_unlocked("stage_2"),"hard unlock is account scoped")

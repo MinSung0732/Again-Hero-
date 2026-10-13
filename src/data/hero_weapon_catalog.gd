@@ -1,7 +1,7 @@
 extends RefCounted
 const MAX_LEVEL := 10
 const WEAPON_SLOTS := 3
-const PASSIVE_SLOTS := 3
+const PASSIVE_SLOTS := 6
 const STARTERS := {
   "ranged_rookie": "ranged_rookie_arcane_bolt",
   "swift_hunter": "swift_hunter_dagger",
@@ -1017,24 +1017,52 @@ const WEAPONS := {
 }
 const PASSIVES := {
   "survival_power": {
-    "name": "전투 숙련",
-    "description": "전체 무기 피해 +8% / 레벨"
-  },
-  "survival_haste": {
-    "name": "속사 훈련",
-    "description": "전체 무기 재사용 대기시간 -4% / 레벨"
-  },
-  "survival_vitality": {
-    "name": "생명력",
-    "description": "최대 HP +5% · 증가분 회복 / 레벨"
+    "name": "공격력 증가",
+    "description": "전체 무기 피해 +8% / 레벨",
+    "stat": "power",
+    "value": 0.08
   },
   "survival_mobility": {
-    "name": "기동력",
-    "description": "이동속도 +3% / 레벨"
+    "name": "이동속도 증가",
+    "description": "기본 이동속도 +3% / 레벨",
+    "stat": "mobility",
+    "value": 0.03
+  },
+  "survival_projectile": {
+    "name": "투사체속도 증가",
+    "description": "발사체 이동속도 +10% / 레벨\n즉시 타격·장판·검격에는 적용되지 않습니다.",
+    "stat": "projectile",
+    "value": 0.1
+  },
+  "survival_haste": {
+    "name": "공격속도 증가",
+    "description": "전체 무기 공격 빈도 +5% / 레벨",
+    "stat": "haste",
+    "value": 0.05
   },
   "survival_learning": {
-    "name": "경험치 수련",
-    "description": "획득 경험치 +8% / 레벨"
+    "name": "경험치 증가",
+    "description": "획득 경험치 +8% / 레벨",
+    "stat": "learning",
+    "value": 0.08
+  },
+  "survival_magnet": {
+    "name": "경험치 범위 증가",
+    "description": "경험치 획득 반경 +15% / 레벨",
+    "stat": "magnet",
+    "value": 0.15
+  },
+  "survival_vitality": {
+    "name": "최대체력 증가",
+    "description": "시작 최대 HP +5% · 증가분 회복 / 레벨",
+    "stat": "vitality",
+    "value": 0.05
+  },
+  "survival_armor": {
+    "name": "받는피해 감소",
+    "description": "받는 피해 -3% / 레벨 · 최대 30%",
+    "stat": "armor",
+    "value": 0.03
   }
 }
 static func is_weapon(id: String) -> bool:

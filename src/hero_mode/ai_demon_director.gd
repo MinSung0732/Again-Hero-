@@ -72,4 +72,4 @@ func tick(delta: float) -> void:
 
 func _special(id: String,giant: bool,elapsed: float) -> bool:
 	var scale := (1.0+elapsed/900.0)*pressure
-	return battle.spawn_special_monster(id,{"type":"giant" if giant else "elite","name":"대형 오우거" if giant else "엘리트 공세","hp_multiplier":(4.0 if giant else 2.0)*scale,"damage_multiplier":1.2*scale,"speed_multiplier":0.75 if giant else 1.1,"attack_speed_multiplier":1.0,"exp_multiplier":8.0 if giant else 4.0,"visual_scale":1.8 if giant else 1.2,"spawn_distance":650.0})
+	return battle.spawn_special_monster(id,{"type":"giant" if giant else "elite","name":"대형 오우거" if giant else "엘리트 공세","hp_multiplier":(4.0 if giant else 2.0)*scale,"damage_multiplier":1.2*scale,"speed_multiplier":0.75 if giant else 1.1,"attack_speed_multiplier":1.0,"exp_multiplier":4.0 if giant else 2.0,"visual_scale":1.8 if giant else 1.2,"spawn_distance":650.0})

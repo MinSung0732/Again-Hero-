@@ -1,0 +1,687 @@
+{
+  "generated_on": "2026-10-13",
+  "generator": "image_gen",
+  "filter": "nearest",
+  "icons": {
+    "ranged_rookie_arcane_bolt": {
+      "name": "마력탄",
+      "sheet": "weapons.png",
+      "region": [
+        0,
+        0,
+        162,
+        162
+      ]
+    },
+    "ranged_rookie_star_wand": {
+      "name": "별빛 지팡이",
+      "sheet": "weapons.png",
+      "region": [
+        162,
+        0,
+        162,
+        162
+      ]
+    },
+    "ranged_rookie_magic_lance": {
+      "name": "마력 창",
+      "sheet": "weapons.png",
+      "region": [
+        324,
+        0,
+        162,
+        162
+      ]
+    },
+    "ranged_rookie_rune_ring": {
+      "name": "룬 고리",
+      "sheet": "weapons.png",
+      "region": [
+        486,
+        0,
+        161,
+        162
+      ]
+    },
+    "ranged_rookie_pulse_staff": {
+      "name": "파동 지팡이",
+      "sheet": "weapons.png",
+      "region": [
+        647,
+        0,
+        162,
+        162
+      ]
+    },
+    "ranged_rookie_barrier_book": {
+      "name": "결계의 서",
+      "sheet": "weapons.png",
+      "region": [
+        809,
+        0,
+        162,
+        162
+      ]
+    },
+    "swift_hunter_dagger": {
+      "name": "쌍단검",
+      "sheet": "weapons.png",
+      "region": [
+        0,
+        162,
+        162,
+        162
+      ]
+    },
+    "swift_hunter_throwing_knife": {
+      "name": "투척 단검",
+      "sheet": "weapons.png",
+      "region": [
+        162,
+        162,
+        162,
+        162
+      ]
+    },
+    "swift_hunter_shadow_wire": {
+      "name": "그림자 와이어",
+      "sheet": "weapons.png",
+      "region": [
+        324,
+        162,
+        162,
+        162
+      ]
+    },
+    "swift_hunter_poison_needle": {
+      "name": "독침",
+      "sheet": "weapons.png",
+      "region": [
+        486,
+        162,
+        161,
+        162
+      ]
+    },
+    "swift_hunter_moon_blade": {
+      "name": "초승달 칼날",
+      "sheet": "weapons.png",
+      "region": [
+        647,
+        162,
+        162,
+        162
+      ]
+    },
+    "swift_hunter_shadow_bomb": {
+      "name": "그림자 폭탄",
+      "sheet": "weapons.png",
+      "region": [
+        809,
+        162,
+        162,
+        162
+      ]
+    },
+    "sword_shield_hero_longsword": {
+      "name": "수호 장검",
+      "sheet": "weapons.png",
+      "region": [
+        0,
+        324,
+        162,
+        162
+      ]
+    },
+    "sword_shield_hero_piercing_spear": {
+      "name": "돌파 창",
+      "sheet": "weapons.png",
+      "region": [
+        162,
+        324,
+        162,
+        162
+      ]
+    },
+    "sword_shield_hero_aegis": {
+      "name": "수호 방패",
+      "sheet": "weapons.png",
+      "region": [
+        324,
+        324,
+        162,
+        162
+      ]
+    },
+    "sword_shield_hero_shield_hammer": {
+      "name": "방패 망치",
+      "sheet": "weapons.png",
+      "region": [
+        486,
+        324,
+        161,
+        162
+      ]
+    },
+    "sword_shield_hero_blade_ring": {
+      "name": "회전 검륜",
+      "sheet": "weapons.png",
+      "region": [
+        647,
+        324,
+        162,
+        162
+      ]
+    },
+    "sword_shield_hero_battle_banner": {
+      "name": "전장의 깃발",
+      "sheet": "weapons.png",
+      "region": [
+        809,
+        324,
+        162,
+        162
+      ]
+    },
+    "pistol_hero_revolver": {
+      "name": "육연발 권총",
+      "sheet": "weapons.png",
+      "region": [
+        0,
+        486,
+        162,
+        162
+      ]
+    },
+    "pistol_hero_shotgun": {
+      "name": "확산 산탄총",
+      "sheet": "weapons.png",
+      "region": [
+        162,
+        486,
+        162,
+        162
+      ]
+    },
+    "pistol_hero_rifle": {
+      "name": "관통 소총",
+      "sheet": "weapons.png",
+      "region": [
+        324,
+        486,
+        162,
+        162
+      ]
+    },
+    "pistol_hero_ricochet": {
+      "name": "도탄 권총",
+      "sheet": "weapons.png",
+      "region": [
+        486,
+        486,
+        161,
+        162
+      ]
+    },
+    "pistol_hero_grenade": {
+      "name": "충격 수류탄",
+      "sheet": "weapons.png",
+      "region": [
+        647,
+        486,
+        162,
+        162
+      ]
+    },
+    "pistol_hero_powder_bomb": {
+      "name": "화약 폭탄",
+      "sheet": "weapons.png",
+      "region": [
+        809,
+        486,
+        162,
+        162
+      ]
+    },
+    "archmage_hero_fire_staff": {
+      "name": "화염 지팡이",
+      "sheet": "weapons.png",
+      "region": [
+        0,
+        648,
+        162,
+        162
+      ]
+    },
+    "archmage_hero_ice_scepter": {
+      "name": "빙결 홀",
+      "sheet": "weapons.png",
+      "region": [
+        162,
+        648,
+        162,
+        162
+      ]
+    },
+    "archmage_hero_lightning_rod": {
+      "name": "뇌전 지팡이",
+      "sheet": "weapons.png",
+      "region": [
+        324,
+        648,
+        162,
+        162
+      ]
+    },
+    "archmage_hero_earth_staff": {
+      "name": "대지 지팡이",
+      "sheet": "weapons.png",
+      "region": [
+        486,
+        648,
+        161,
+        162
+      ]
+    },
+    "archmage_hero_storm_orb": {
+      "name": "폭풍 구체",
+      "sheet": "weapons.png",
+      "region": [
+        647,
+        648,
+        162,
+        162
+      ]
+    },
+    "archmage_hero_prism_wand": {
+      "name": "프리즘 완드",
+      "sheet": "weapons.png",
+      "region": [
+        809,
+        648,
+        162,
+        162
+      ]
+    },
+    "madness_hero_blood_sword": {
+      "name": "혈검",
+      "sheet": "weapons.png",
+      "region": [
+        0,
+        810,
+        162,
+        161
+      ]
+    },
+    "madness_hero_blood_lance": {
+      "name": "혈창",
+      "sheet": "weapons.png",
+      "region": [
+        162,
+        810,
+        162,
+        161
+      ]
+    },
+    "madness_hero_blood_wheel": {
+      "name": "핏빛 검륜",
+      "sheet": "weapons.png",
+      "region": [
+        324,
+        810,
+        162,
+        161
+      ]
+    },
+    "madness_hero_blood_burst": {
+      "name": "혈폭",
+      "sheet": "weapons.png",
+      "region": [
+        486,
+        810,
+        161,
+        161
+      ]
+    },
+    "madness_hero_drain_blade": {
+      "name": "흡혈 검",
+      "sheet": "weapons.png",
+      "region": [
+        647,
+        810,
+        162,
+        161
+      ]
+    },
+    "madness_hero_heart_chain": {
+      "name": "심장 사슬",
+      "sheet": "weapons.png",
+      "region": [
+        809,
+        810,
+        162,
+        161
+      ]
+    },
+    "chemical_hero_acid_vial": {
+      "name": "산성 약병",
+      "sheet": "weapons.png",
+      "region": [
+        0,
+        971,
+        162,
+        162
+      ]
+    },
+    "chemical_hero_poison_flask": {
+      "name": "독성 플라스크",
+      "sheet": "weapons.png",
+      "region": [
+        162,
+        971,
+        162,
+        162
+      ]
+    },
+    "chemical_hero_cryo_vial": {
+      "name": "냉각 약병",
+      "sheet": "weapons.png",
+      "region": [
+        324,
+        971,
+        162,
+        162
+      ]
+    },
+    "chemical_hero_reaction_bomb": {
+      "name": "반응 폭탄",
+      "sheet": "weapons.png",
+      "region": [
+        486,
+        971,
+        161,
+        162
+      ]
+    },
+    "chemical_hero_acid_cannon": {
+      "name": "압축 산성포",
+      "sheet": "weapons.png",
+      "region": [
+        647,
+        971,
+        162,
+        162
+      ]
+    },
+    "chemical_hero_life_elixir": {
+      "name": "생명 비약",
+      "sheet": "weapons.png",
+      "region": [
+        809,
+        971,
+        162,
+        162
+      ]
+    },
+    "summoner_hero_gate_hound": {
+      "name": "이계 투견 수호체",
+      "sheet": "weapons.png",
+      "region": [
+        0,
+        1133,
+        162,
+        162
+      ]
+    },
+    "summoner_hero_watcher": {
+      "name": "감시자 수호체",
+      "sheet": "weapons.png",
+      "region": [
+        162,
+        1133,
+        162,
+        162
+      ]
+    },
+    "summoner_hero_scout": {
+      "name": "정찰병 발사체",
+      "sheet": "weapons.png",
+      "region": [
+        324,
+        1133,
+        162,
+        162
+      ]
+    },
+    "summoner_hero_gate_laser": {
+      "name": "차원 관통문",
+      "sheet": "weapons.png",
+      "region": [
+        486,
+        1133,
+        161,
+        162
+      ]
+    },
+    "summoner_hero_gatekeeper": {
+      "name": "문지기 방벽",
+      "sheet": "weapons.png",
+      "region": [
+        647,
+        1133,
+        162,
+        162
+      ]
+    },
+    "summoner_hero_rift_pulse": {
+      "name": "균열 파동",
+      "sheet": "weapons.png",
+      "region": [
+        809,
+        1133,
+        162,
+        162
+      ]
+    },
+    "purifier_hero_holy_bolt": {
+      "name": "성광탄",
+      "sheet": "weapons.png",
+      "region": [
+        0,
+        1295,
+        162,
+        162
+      ]
+    },
+    "purifier_hero_holy_lance": {
+      "name": "정화의 성창",
+      "sheet": "weapons.png",
+      "region": [
+        162,
+        1295,
+        162,
+        162
+      ]
+    },
+    "purifier_hero_purification": {
+      "name": "정화 향로",
+      "sheet": "weapons.png",
+      "region": [
+        324,
+        1295,
+        162,
+        162
+      ]
+    },
+    "purifier_hero_sacred_orb": {
+      "name": "성스러운 구체",
+      "sheet": "weapons.png",
+      "region": [
+        486,
+        1295,
+        161,
+        162
+      ]
+    },
+    "purifier_hero_blessing": {
+      "name": "축복의 성서",
+      "sheet": "weapons.png",
+      "region": [
+        647,
+        1295,
+        162,
+        162
+      ]
+    },
+    "purifier_hero_prayer": {
+      "name": "회복의 성배",
+      "sheet": "weapons.png",
+      "region": [
+        809,
+        1295,
+        162,
+        162
+      ]
+    },
+    "sage_astra_starlight": {
+      "name": "별빛 지팡이",
+      "sheet": "weapons.png",
+      "region": [
+        0,
+        1457,
+        162,
+        162
+      ]
+    },
+    "sage_astra_comet": {
+      "name": "혜성의 창",
+      "sheet": "weapons.png",
+      "region": [
+        162,
+        1457,
+        162,
+        162
+      ]
+    },
+    "sage_astra_astral_chain": {
+      "name": "천체 사슬",
+      "sheet": "weapons.png",
+      "region": [
+        324,
+        1457,
+        162,
+        162
+      ]
+    },
+    "sage_astra_absolute_zero": {
+      "name": "빙점의 구체",
+      "sheet": "weapons.png",
+      "region": [
+        486,
+        1457,
+        161,
+        162
+      ]
+    },
+    "sage_astra_singularity": {
+      "name": "중력 특이점",
+      "sheet": "weapons.png",
+      "region": [
+        647,
+        1457,
+        162,
+        162
+      ]
+    },
+    "sage_astra_binary_stars": {
+      "name": "쌍성의 고리",
+      "sheet": "weapons.png",
+      "region": [
+        809,
+        1457,
+        162,
+        162
+      ]
+    },
+    "survival_power": {
+      "name": "공격력 증가",
+      "sheet": "passives.png",
+      "region": [
+        0,
+        0,
+        444,
+        444
+      ]
+    },
+    "survival_mobility": {
+      "name": "이동속도 증가",
+      "sheet": "passives.png",
+      "region": [
+        444,
+        0,
+        443,
+        444
+      ]
+    },
+    "survival_projectile": {
+      "name": "투사체속도 증가",
+      "sheet": "passives.png",
+      "region": [
+        887,
+        0,
+        444,
+        444
+      ]
+    },
+    "survival_haste": {
+      "name": "공격속도 증가",
+      "sheet": "passives.png",
+      "region": [
+        1331,
+        0,
+        443,
+        444
+      ]
+    },
+    "survival_learning": {
+      "name": "경험치 증가",
+      "sheet": "passives.png",
+      "region": [
+        0,
+        444,
+        444,
+        443
+      ]
+    },
+    "survival_magnet": {
+      "name": "경험치 범위 증가",
+      "sheet": "passives.png",
+      "region": [
+        444,
+        444,
+        443,
+        443
+      ]
+    },
+    "survival_vitality": {
+      "name": "최대체력 증가",
+      "sheet": "passives.png",
+      "region": [
+        887,
+        444,
+        444,
+        443
+      ]
+    },
+    "survival_armor": {
+      "name": "받는피해 감소",
+      "sheet": "passives.png",
+      "region": [
+        1331,
+        444,
+        443,
+        443
+      ]
+    }
+  }
+}

@@ -11,6 +11,10 @@ var failures := 0
 class HeroFixture extends Node2D:
 	var hero_id := "ranged_rookie"
 	var build_counts: Dictionary = {}
+	var max_hp := 1200
+	var move_speed := 270.0
+	var exp_pickup_radius := 150.0
+	var exp_gain_multiplier := 1.0
 func _initialize() -> void: call_deferred("run")
 func check(ok: bool,label: String) -> void:
 	checks += 1

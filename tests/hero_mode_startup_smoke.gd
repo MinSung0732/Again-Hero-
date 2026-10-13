@@ -63,6 +63,20 @@ func run() -> void:
 	check(scene.battle.run_metrics.elapsed_seconds > elapsed, "battle clock advances")
 	check(scene.battle.get_population_count() > 0, "AI demon sends first monsters")
 	check(not scene.hp.max_value <= 0 and not scene.status.text.is_empty(), "HUD updated")
+	scene.battle.hero.gain_exp(80)
+	await create_timer(0.3).timeout
+	var cards := scene.overlay_rows.get_node("HorizontalAugmentCards") as HBoxContainer
+	check(scene.choosing and scene.battle.external_pause and cards.get_child_count() == 3,"three horizontal choices pause combat")
+	check(scene.overlay.anchor_left == 0.5 and scene.overlay.anchor_top == 0.5,"choice overlay centered")
+	check(scene.get_global_rect().encloses(scene.overlay.get_global_rect()),"choice overlay stays inside the viewport")
+	var last_x := -INF
+	for card in cards.get_children():
+		check(card.position.x > last_x,"choice cards arranged left to right"); last_x = card.position.x
+		check(scene.overlay.get_global_rect().encloses(card.get_global_rect()),"each card stays inside the choice overlay")
+		var icon := card.find_child("AugmentIcon",true,false) as TextureRect
+		check(icon != null and icon.texture != null and icon.texture_filter == CanvasItem.TEXTURE_FILTER_NEAREST,"each choice has a pixel icon")
+	scene._choose(String(scene.battle.hero.player_augment_candidates[0].id),scene.choice_generation)
+	check(not scene.choosing and not scene.battle.external_pause,"choice resumes combat")
 	scene._queue_chest()
 	scene._begin_roulette()
 	check(scene.rolling and scene.battle.external_pause, "chest pauses combat for roulette")

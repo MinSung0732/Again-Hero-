@@ -8,6 +8,7 @@ const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const BATTLE_SCENE := preload("res://src/battle/Battle.tscn")
 const MOVE_PAD := preload("res://src/hero_mode/hero_move_pad.gd")
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
+const ICONS := preload("res://src/ui/hero_augment_icons.gd")
 const DIRECTOR := preload("res://src/hero_mode/ai_demon_director.gd")
 var battle
 var director
@@ -115,6 +116,7 @@ func _build_ui() -> void:
 	var row := HBoxContainer.new(); row.add_theme_constant_override("separation",10); top.add_child(row)
 	for index in range(WEAPONS.WEAPON_SLOTS):
 		var button := Button.new(); button.custom_minimum_size.y = 68; button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		button.expand_icon = true; button.add_theme_constant_override("icon_max_width",40); button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		button.add_theme_font_size_override("font_size",21); _skin_action_button(button); row.add_child(button); button.pressed.connect(_show_weapon_info.bind(index)); weapon_buttons.append(button)
 	build = _label(top,"보조 증강 없음",19)
 	pad = MOVE_PAD.new(); pad.name = "MovePad"; add_child(pad)
@@ -137,6 +139,8 @@ func _button(text: String,action: Callable) -> Button:
 	_skin_action_button(button)
 	overlay_rows.add_child(button); button.pressed.connect(action); return button
 func _clear_overlay() -> void:
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.offset_left = 65; overlay.offset_right = -65; overlay.offset_top = 390; overlay.offset_bottom = -150
 	for child in overlay_rows.get_children(): overlay_rows.remove_child(child); child.queue_free()
 	overlay.show(); overlay.move_to_front()
 func _show_blocked(message: String) -> void:
@@ -169,26 +173,58 @@ func _refresh_hud() -> void:
 			var button: Button = weapon_buttons[index]
 			if index >= runtime.weapon_ids.size(): button.text = "빈 무기 슬롯"; button.disabled = true; continue
 			var id := String(runtime.weapon_ids[index]); button.disabled = false
+			button.icon = ICONS.texture(id)
 			button.text = String(WEAPONS.WEAPONS[id].name)+(" · 진화" if runtime.evolved.has(id) else " Lv.%d/10" % int(runtime.levels[id]))
 		var parts: PackedStringArray = []
 		for id in runtime.passives: parts.append(String(WEAPONS.PASSIVES[id].name)+" %d" % int(runtime.passives[id]))
-		build.text = "보조 · "+("없음 / 이동: 패드·WASD" if parts.is_empty() else " · ".join(parts))
+		build.text = "보조 %d/%d · " % [runtime.passives.size(),WEAPONS.PASSIVE_SLOTS]+("없음 / 이동: 패드·WASD" if parts.is_empty() else " · ".join(parts))
 func _show_choices(candidates: Array) -> void:
 	if battle.battle_over: return
 	choosing = true; choice_generation += 1
 	var revision := choice_generation
 	battle.set_external_pause(true); pad.enabled = false; pad.reset()
-	_clear_overlay(); _label(overlay_rows,"레벨업 · 증강을 직접 선택하세요",32)
+	_clear_overlay()
+	overlay.name = "HeroAugmentOverlay"
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	overlay.offset_left = -480; overlay.offset_right = 480; overlay.offset_top = -365; overlay.offset_bottom = 365
+	var title := _label(overlay_rows,"레벨업 · 증강을 선택하세요",32)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var slots := _label(overlay_rows,"무기 %d/%d · 보조 %d/%d · 선택 후 전투 재개" % [battle.hero.player_weapons.weapon_ids.size(),WEAPONS.WEAPON_SLOTS,battle.hero.player_weapons.passives.size(),WEAPONS.PASSIVE_SLOTS],20)
+	slots.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var choices := HBoxContainer.new(); choices.name = "HorizontalAugmentCards"
+	choices.add_theme_constant_override("separation",16); choices.alignment = BoxContainer.ALIGNMENT_CENTER
+	choices.size_flags_vertical = Control.SIZE_EXPAND_FILL; overlay_rows.add_child(choices)
 	var buttons: Array[Button] = []
 	for candidate in candidates:
 		var id := String(candidate.get("id",""))
-		var description := String(candidate.get("description",""))
-		var button := _button(String(candidate.get("name",id))+"\n"+description,_choose.bind(id,revision))
+		var button := _choice_card(choices,candidate,_choose.bind(id,revision))
 		button.disabled = true; buttons.append(button)
 	await get_tree().create_timer(0.25).timeout
 	if revision != choice_generation or not choosing or battle.battle_over: return
 	for button in buttons:
 		if is_instance_valid(button): button.disabled = false
+func _choice_card(parent: HBoxContainer, candidate: Dictionary, action: Callable) -> Button:
+	var id := String(candidate.get("id",""))
+	var button := Button.new(); button.name = id; button.custom_minimum_size = Vector2(280,500)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_skin_action_button(button); parent.add_child(button); button.pressed.connect(action)
+	var margin := MarginContainer.new(); margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	for side in ["left","right","top","bottom"]: margin.add_theme_constant_override("margin_"+side,16)
+	button.add_child(margin)
+	var rows := VBoxContainer.new(); rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rows.add_theme_constant_override("separation",18); margin.add_child(rows)
+	var icon := TextureRect.new(); icon.name = "AugmentIcon"; icon.texture = ICONS.texture(id)
+	icon.custom_minimum_size = Vector2(120,120); icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE; rows.add_child(icon)
+	var name_label := _label(rows,String(candidate.get("name",id)),26)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var description := _label(rows,String(candidate.get("description","")),22)
+	description.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var hint := _label(rows,"탭하여 선택",20); hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	return button
+
 func _choose(id: String,revision: int) -> void:
 	if not choosing or revision != choice_generation or battle.battle_over: return
 	choosing = false; overlay.hide(); pad.reset()

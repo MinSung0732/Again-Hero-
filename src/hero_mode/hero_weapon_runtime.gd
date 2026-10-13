@@ -3,6 +3,8 @@ const DATA := preload("res://src/data/hero_weapon_catalog.gd")
 const HIT := preload("res://src/systems/monster_hit_context.gd")
 const TARGETS := preload("res://src/systems/hero_target_policy.gd")
 const EFFECT_LIMIT := 48
+const PROJECTILE_LIMIT := 64
+const MODE := preload("res://src/data/hero_mode_catalog.gd")
 var hero
 var levels: Dictionary = {}
 var passives: Dictionary = {}
@@ -17,6 +19,15 @@ var field_cursor := 0
 var effect_cursor := 0
 var power := 1.0
 var haste := 1.0
+var projectile_speed := 1.0
+var damage_multiplier := 1.0
+var base_max_hp := 1200
+var base_move_speed := 270.0
+var base_pickup_radius := 150.0
+var base_exp_multiplier := 1.0
+var projectiles: Array[Dictionary] = []
+var projectile_cursor := 0
+var authority: Node
 var visual_clock := 0.0
 var chest_serial := 0
 var last_applied_chest := 0
@@ -25,6 +36,11 @@ var owned_shield := 0.0
 
 func install(host) -> void:
 	hero = host
+	authority = hero.get_parent()
+	base_max_hp = int(hero.max_hp); base_move_speed = float(hero.move_speed)
+	base_pickup_radius = float(hero.exp_pickup_radius); base_exp_multiplier = float(hero.exp_gain_multiplier)
+	for index in range(PROJECTILE_LIMIT):
+		projectiles.append({"active":false,"handle":Vector3i.ZERO,"position":Vector2.ZERO,"damage":0,"rank":1,"color":Color.WHITE,"age":0.0})
 	available_weapons = DATA.weapon_pool(String(hero.hero_id))
 	for index in range(EFFECT_LIMIT):
 		effects.append({"left":0.0,"duration":0.0,"a":Vector2.ZERO,"b":Vector2.ZERO,"radius":0.0,"pattern":"","color":Color.WHITE,"orbit_count":4,"orbit_speed":3.0,"orbit_ratio":0.7})
@@ -45,14 +61,20 @@ func add(id: String) -> bool:
 	if not passives.has(id) and passives.size() >= DATA.PASSIVE_SLOTS: return false
 	passives[id] = int(passives.get(id,0))+1
 	hero.build_counts[id] = passives[id]
-	match id:
-		"survival_power": power = 1.0+0.08*int(passives[id])
-		"survival_haste": haste = 1.0-0.04*int(passives[id])
-		"survival_vitality":
-			var increase: int = 60
+	var data: Dictionary = DATA.PASSIVES[id]
+	var rank := int(passives[id])
+	var bonus := float(data.value)*rank
+	match String(data.stat):
+		"power": power = 1.0+bonus
+		"haste": haste = 1.0/(1.0+bonus)
+		"projectile": projectile_speed = 1.0+bonus
+		"armor": damage_multiplier = 1.0-minf(bonus,0.30)
+		"vitality":
+			var increase: int = roundi(base_max_hp*float(data.value)*rank)-roundi(base_max_hp*float(data.value)*(rank-1))
 			hero.max_hp += increase; hero.heal_direct(increase)
-		"survival_mobility": hero.move_speed += 8.1
-		"survival_learning": hero.exp_gain_multiplier = 1.0+0.08*int(passives[id])
+		"mobility": hero.move_speed = base_move_speed*(1.0+bonus)
+		"magnet": hero.exp_pickup_radius = base_pickup_radius*(1.0+bonus)
+		"learning": hero.exp_gain_multiplier = base_exp_multiplier*(1.0+bonus)
 	return true
 
 func candidates() -> Array:
@@ -127,6 +149,7 @@ func summary() -> String:
 
 func tick(delta: float) -> void:
 	visual_clock += delta
+	_tick_projectiles(delta)
 	var redraw := false
 	for effect in effects:
 		if float(effect.left) <= 0.0: continue
@@ -192,8 +215,11 @@ func _cast(id: String) -> void:
 	var cap := mini(24,4+hits*5) if pattern in ["nova","frost","poison","guard","heal"] else hits
 	var struck := 0
 	if pattern in ["bolt","chain"] and is_instance_valid(closest):
-		_hit(closest,damage,pattern,rank)
-		_effect(origin,closest.global_position,22.0,pattern,color,data); struck = 1
+		if pattern == "bolt": _launch_projectile(closest,origin,damage,rank,color)
+		else:
+			_hit(closest,damage,pattern,rank)
+			_effect(origin,closest.global_position,22.0,pattern,color,data)
+		struck = 1
 	for raw in scratch:
 		if struck >= cap: break
 		var actor := raw as Node2D
@@ -203,8 +229,10 @@ func _cast(id: String) -> void:
 		if pattern == "slash" and offset.normalized().dot(direction) < 0.35: continue
 		if pattern == "beam" and (offset.dot(direction) < 0.0 or absf(offset.cross(direction)) > 40.0+rank*5.0): continue
 		if pattern == "orbit" and absf(offset.length()-reach*float(data.get("orbit_ratio",0.7))) > 100.0: continue
-		_hit(actor,damage,pattern,rank); struck += 1
-		if pattern in ["chain","bolt"]: _effect(origin,actor.global_position,20.0,pattern,color,data)
+		if pattern == "bolt": _launch_projectile(actor,origin,damage,rank,color)
+		else: _hit(actor,damage,pattern,rank)
+		struck += 1
+		if pattern == "chain": _effect(origin,actor.global_position,20.0,pattern,color,data)
 	if pattern == "beam": _effect(origin,origin+direction*reach,28.0+rank*3.0,pattern,color,data)
 	elif pattern not in ["bolt","chain"]: _effect(origin,origin+direction*reach,reach,pattern,color,data)
 	hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
@@ -212,6 +240,37 @@ func _cast(id: String) -> void:
 	if is_instance_valid(hero.hero_sprite) and hero.hero_sprite.sprite_frames.has_animation(&"attack"):
 		hero.hero_sprite.play(&"attack")
 	if direction.x != 0.0: hero._face_attack_direction(direction.x)
+
+# Generation handles prevent a recycled monster instance from receiving an old shot.
+func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, color: Color) -> void:
+	if not is_instance_valid(authority) or not authority.has_method("get_battle_entity_handle"): return
+	var handle: Vector3i = authority.call("get_battle_entity_handle",actor)
+	if handle == Vector3i.ZERO: return
+	for offset in range(PROJECTILE_LIMIT):
+		var index := (projectile_cursor+offset)%PROJECTILE_LIMIT
+		var shot: Dictionary = projectiles[index]
+		if bool(shot.active): continue
+		projectile_cursor = (index+1)%PROJECTILE_LIMIT
+		shot.active = true; shot.handle = handle; shot.position = origin
+		shot.damage = damage; shot.rank = rank; shot.color = color; shot.age = 0.0
+		hero.queue_redraw()
+		return
+
+func _tick_projectiles(delta: float) -> void:
+	var redraw := false
+	for shot in projectiles:
+		if not bool(shot.active): continue
+		redraw = true; shot.age = float(shot.age)+delta
+		var actor: Node2D = authority.call("resolve_battle_entity",shot.handle) as Node2D if is_instance_valid(authority) else null
+		if not TARGETS.is_detectable(actor) or float(shot.age) > 3.0:
+			shot.active = false; continue
+		var step := MODE.PROJECTILE_SPEED*projectile_speed*delta
+		var position: Vector2 = shot.position
+		shot.position = position.move_toward(actor.global_position,step)
+		if position.distance_to(actor.global_position) <= step+12.0:
+			shot.active = false
+			_hit(actor,int(shot.damage),"bolt",int(shot.rank))
+	if redraw: hero.queue_redraw()
 
 func _hit(actor: Node2D, damage: int, pattern: String, rank: int) -> void:
 	HIT.hit(actor,damage,"melee" if pattern == "slash" else "ranged",hero)
@@ -228,6 +287,11 @@ func _effect(a: Vector2,b: Vector2,radius: float,pattern: String,color: Color,da
 	effect.left = effect.duration; hero.queue_redraw()
 
 func draw() -> void:
+	for shot in projectiles:
+		if bool(shot.active):
+			var position: Vector2 = hero.to_local(shot.position)
+			hero.draw_circle(position,12.0,shot.color)
+			hero.draw_circle(position,5.0,Color.WHITE)
 	for effect in effects:
 		if float(effect.left) <= 0.0: continue
 		var ratio: float = float(effect.left)/float(effect.duration)

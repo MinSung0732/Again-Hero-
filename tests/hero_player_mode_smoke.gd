@@ -53,12 +53,26 @@ func run() -> void:
 	hero.set_player_move_input(Vector2(NAN,0)); check(hero.player_move_input == Vector2.ZERO,"nonfinite movement rejected")
 	hero.set_player_move_input(Vector2.ZERO); check(hero._player_move_velocity() == Vector2.ZERO,"no idle AI wander")
 	hero.augment_selected.connect(func(_l,_c,_n,_r,_b): selected_events += 1)
-	hero.gain_exp(hero.exp_to_next_level)
+	for rank in range(10): check(hero.player_weapons.add("survival_armor"),"armor upgrade applies")
+	hero.shield_hp = 0.0; hero.current_hp = hero.max_hp
+	var before_hit: int = hero.current_hp
+	check(hero.take_status_damage(100) and hero.current_hp == before_hit-70,"incoming status damage receives armor once")
+	before_hit = hero.current_hp
+	check(hero._take_damage_internal(70,null,true,false,true) and hero.current_hp == before_hit-70,"already mitigated damage is not reduced twice")
+	for orb in range(4): hero.gain_exp(1)
+	check(hero.current_exp == 1 and is_zero_approx(hero.player_exp_remainder),"small orbs accumulate fractional hero XP")
+	hero.current_exp = 0
+	hero.gain_exp(roundi(hero.exp_to_next_level/DATA.EXP_REWARD_RATIO))
 	check(not hero.player_augment_candidates.is_empty() and selected_events == 0,"level up waits for player")
 	check(not hero.choose_player_augment("invalid"),"out-of-candidate selection refused")
 	var id := String(hero.player_augment_candidates[0].id)
 	check(hero.choose_player_augment(id) and hero.build_counts.has(id),"authored augment applies")
 	check(not hero.choose_player_augment(id),"no double application")
+	var queued_exp: int = DATA.required_exp(hero.level)+DATA.required_exp(hero.level+1)
+	var before_level: int = hero.level
+	hero.gain_exp(roundi(queued_exp/DATA.EXP_REWARD_RATIO))
+	check(hero.level == before_level+1 and not hero.player_augment_candidates.is_empty(),"large XP gain waits after one level")
+	check(hero.choose_player_augment(String(hero.player_augment_candidates[0].id)) and hero.level == before_level+2 and not hero.player_augment_candidates.is_empty(),"remaining XP opens the next choice after selection")
 	hero.set_camera_view_locked(true)
 	hero.set_camera_view_locked(false)
 	check(not hero.follow_camera.top_level,"hero tracking cannot be unlocked")

@@ -28,6 +28,7 @@ signal leveled_up(new_level: int)
 signal augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String)
 signal player_augment_requested(candidates: Array)
 var player_controlled := false
+var player_exp_remainder := 0.0
 var player_weapons: RefCounted
 var player_move_input := Vector2.ZERO
 var player_input_suspended := true
@@ -944,6 +945,7 @@ var status_overlay: Node2D
 @onready var alchemist_philosopher_audio: AudioStreamPlayer = $AlchemistPhilosopherAudio
 
 func configure_profile(profile: Dictionary) -> void:
+	player_exp_remainder = 0.0
 	player_move_input = Vector2.ZERO
 	player_augment_candidates.clear()
 	player_weapons = null
@@ -15404,10 +15406,14 @@ func gain_exp(amount: int) -> void:
 	if amount <= 0 or current_hp <= 0:
 		return
 
-	var gained_exp := maxi(
-		1,
-		int(round(float(amount) * maxf(exp_gain_multiplier, 0.0)))
-	)
+	var gained_exp := 0
+	if player_controlled:
+		# Preserve fractional XP: many one-point orbs must not bypass the reduction.
+		var scaled_exp := float(amount)*maxf(exp_gain_multiplier,0.0)*preload("res://src/data/hero_mode_catalog.gd").EXP_REWARD_RATIO+player_exp_remainder
+		gained_exp = floori(scaled_exp+0.000000001)
+		player_exp_remainder = maxf(0.0,scaled_exp-gained_exp)
+	else:
+		gained_exp = maxi(1,int(round(float(amount)*maxf(exp_gain_multiplier,0.0))))
 	current_exp += gained_exp
 
 	while current_exp >= exp_to_next_level and (not player_controlled or player_augment_candidates.is_empty()):
@@ -20835,7 +20841,7 @@ func _add_prefixed_effect_animation(
 	return true
 
 func _required_exp_for_level(target_level: int) -> int:
-	if player_controlled: return 12+maxi(target_level-1,0)*4
+	if player_controlled: return preload("res://src/data/hero_mode_catalog.gd").required_exp(target_level)
 	return 50 + maxi(target_level - 1, 0) * 25
 
 func take_damage(amount: int, source: Node = null) -> bool:
@@ -20895,6 +20901,8 @@ func _take_damage_internal(
 			)
 	if not player_controlled and not damage_already_mitigated and hero_archetype == "grand_sage_astra":
 		raw_damage = _apply_sage_mana_conversion(raw_damage)
+	if player_controlled and player_weapons != null and not damage_already_mitigated:
+		raw_damage *= player_weapons.damage_multiplier
 	var remaining_damage := raw_damage
 	var absorbed_damage := 0
 
