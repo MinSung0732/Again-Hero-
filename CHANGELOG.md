@@ -1,3 +1,9 @@
+## 2026-10-15 — 배포 무기 이펙트의 폴더·원본 PNG 의존 제거
+
+- HeroWeaponArt와PresentationWarmup가원본디렉터리존재를먼저검사해가져온리소스만있는PCK에서프레임로딩을건너뛸수있던순서수정.신규91폴더728프레임은명시8경로,기존7폴더97프레임은추적PNG파일명카탈로그로직접ResourceLoader조회.총98폴더825프레임·무기100종연결유지.
+- 알수없는후속폴더목록은.png.remap/.png.import정규화·중복제거.원본PNGfallback은FileAccess.exists시에만,완전미로딩시폴더별캐시경고1회.기존프레임공유크롭의압축이미지decompress보강.프레임축/판정/피해/풀/캐시변경없음.
+- 배포fixture원본PNGinclude_filter제거,기존7폴더도포함,가져온825프레임존재+원본PNG부재회귀추가.카탈로그생성/재생성일치·Git825경로·GDScript구문4파일·fixturePython·diff정적검사PASS.Godot바이너리없어실제PCK/EXE/Android/GPU검사미실행.
+
 ## 2026-10-15 — 목록 카드의 마지막 몬스터 해제 제한 제거
 
 - 카드생성/상단X는마지막몬스터해제를허용했지만FormationCardCache가목록갱신시에만1마리최소조건으로비활성화하던잔여규칙제거.캐시재사용/목록재진입도마지막몬스터편성해제가능.

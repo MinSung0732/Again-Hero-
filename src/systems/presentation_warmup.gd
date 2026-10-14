@@ -184,15 +184,16 @@ func prepare_scene(scene_path: String, entry_options: Dictionary = {}) -> bool:
 
 
 func _append_texture_directory(directory: String, paths: Array[String]) -> void:
-	if directory.is_empty() or not DirAccess.dir_exists_absolute(directory):
+	if directory.is_empty(): return
+	var names := preload("res://src/data/hero_effect_frame_catalog.gd").files(directory)
+	if not names.is_empty():
+		for name in names: paths.append(directory.path_join(name))
 		return
-	if EFFECT_LAYOUTS.REGIONS.has(directory):
-		for index in range(1, EFFECT_LAYOUTS.FRAME_COUNT+1):
-			paths.append(directory.path_join("effect_%02d.png" % index))
-		return
+	if not DirAccess.dir_exists_absolute(directory): return
 	for filename in DirAccess.get_files_at(directory):
-		if filename.get_extension().to_lower() in ["png", "svg"]:
-			paths.append(directory.path_join(filename))
+		var name := String(filename).trim_suffix(".remap").trim_suffix(".import")
+		if name.get_extension().to_lower() in ["png","svg"]:
+			paths.append(directory.path_join(name))
 	for child in DirAccess.get_directories_at(directory):
 		_append_texture_directory(directory.path_join(child), paths)
 

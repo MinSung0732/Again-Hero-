@@ -1,5 +1,6 @@
 extends RefCounted
 # Load the selected kit effect sequences once; drawing never reads the disk.
+const FRAME_FILES := preload("res://src/data/hero_effect_frame_catalog.gd")
 const LAYOUTS := preload("res://src/data/hero_effect_layout_catalog.gd")
 static var cache: Dictionary = {}
 static func sequence(directory: String) -> Array[Texture2D]:
@@ -7,25 +8,26 @@ static func sequence(directory: String) -> Array[Texture2D]:
 	var result: Array[Texture2D] = []
 	var tree := Engine.get_main_loop() as SceneTree
 	var warmup := tree.root.get_node_or_null("PresentationWarmup") if tree != null else null
-	if directory.is_empty() or not DirAccess.dir_exists_absolute(directory):
-		cache[directory] = result; return result
-	var files: PackedStringArray = []
-	if LAYOUTS.REGIONS.has(directory):
-		for index in range(1, LAYOUTS.FRAME_COUNT+1): files.append("effect_%02d.png" % index)
-	else:
-		files = DirAccess.get_files_at(directory)
+	if directory.is_empty(): return result
+	var files := FRAME_FILES.files(directory)
+	# Future unregistered art may scan; authored weapon kits never need a folder.
+	if files.is_empty():
+		for file in DirAccess.get_files_at(directory):
+			var name := String(file).trim_suffix(".remap").trim_suffix(".import").trim_suffix(".import")
+			if name.ends_with(".png") and name not in files: files.append(name)
 	files.sort()
 	for file in files:
-		var name := String(file).trim_suffix(".remap")
+		var name := String(file).trim_suffix(".remap").trim_suffix(".import")
 		if not name.ends_with(".png"): continue
 		var path := directory+"/"+name
 		var texture: Texture2D = warmup.get_texture(path) if warmup != null else null
 		if texture == null:
 			if ResourceLoader.exists(path): texture = load(path) as Texture2D
-			else:
+			elif FileAccess.file_exists(path):
 				var bitmap := Image.load_from_file(path)
 				if bitmap != null and not bitmap.is_empty(): texture = ImageTexture.create_from_image(bitmap)
 		if texture != null: result.append(texture)
+	if result.is_empty(): push_warning("Weapon effect frames unavailable: " + directory)
 	if LAYOUTS.REGIONS.has(directory):
 		result = _apply_region(result, LAYOUTS.REGIONS[directory])
 	else:
@@ -42,6 +44,7 @@ static func _trim_common_margin(frames: Array[Texture2D]) -> Array[Texture2D]:
 		if texture.get_size() != dimensions: return frames
 		var bitmap := texture.get_image()
 		if bitmap == null or bitmap.is_empty(): return frames
+		if bitmap.is_compressed() and bitmap.decompress() != OK: return frames
 		var bounds := Rect2(bitmap.get_used_rect())
 		if not bounds.has_area(): continue
 		extent = maxf(extent,maxf(maxf(absf(bounds.position.x-center.x),absf(bounds.end.x-center.x)),maxf(absf(bounds.position.y-center.y),absf(bounds.end.y-center.y))))

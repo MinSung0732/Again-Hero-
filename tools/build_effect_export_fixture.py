@@ -11,12 +11,17 @@ subprocess.run([sys.executable,str(repo/'tools/build_hero_weapon_art_fixture.py'
 shutil.copytree(repo/'assets/art/UI/hero_augments',out/'assets/art/UI/hero_augments',dirs_exist_ok=True)
 shutil.copytree(repo/'addons/againhero_oauth',out/'addons/againhero_oauth',dirs_exist_ok=True)
 shutil.copyfile(repo/'tests/hero_effect_export_smoke.gd',out/'PackTest.gd')
+# Include every legacy weapon effect, too; production uses imported textures.
+import re
+for directory in re.findall(r'"(res://[^\"]+)": PackedStringArray', (repo/'src/data/hero_effect_frame_catalog.gd').read_text()):
+    relative = directory.removeprefix('res://')
+    shutil.copytree(repo/relative,out/relative,dirs_exist_ok=True)
 (out/'export_presets.cfg').write_text('''[preset.0]
 name="Pack"
 platform="Linux"
 runnable=true
 export_filter="all_resources"
-include_filter="*.png,*.json"
+include_filter=""
 exclude_filter=""
 [preset.0.options]
 binary_format/architecture="x86_64"
