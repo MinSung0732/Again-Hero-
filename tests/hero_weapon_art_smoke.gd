@@ -54,6 +54,19 @@ func run() -> void:
 		check(hashes.size() >= 4,"animated phases "+id)
 		check(ART.sequence(data.effect_dir) == frames,"sequence reuse "+id)
 	check(count == 91 and icon_count == 40 and icon_hashes.size() == 100,"complete art scope")
+	for directory in ART.LAYOUTS.REGIONS:
+		var baked := ART.sequence(directory)
+		var raw_frames: Array[Texture2D] = []
+		for index in range(1,9): raw_frames.append(load(directory+"/effect_%02d.png" % index) as Texture2D)
+		var previous := ART._trim_common_margin(raw_frames)
+		for index in range(8):
+			check(hash_image(baked[index]) == hash_image(previous[index]),"baked crop pixel parity "+directory)
+	var retained_path: String = DATA.WEAPONS.ranged_rookie_arcane_bolt.effect_dir
+	var live_frames := ART.sequence(retained_path)
+	ART.retain_sequences({retained_path:true})
+	check(ART.cache.size() == 1 and ART.sequence(retained_path) == live_frames,"entry cache limited to selected kit")
+	ART.retain_sequences({})
+	check(ART.cache.is_empty() and live_frames.size() == 8 and hash_image(live_frames[0]) != "","live frame references survive eviction")
 	var spy := Spy.new(); root.add_child(spy)
 	var harness = load("res://tests/weapon_art_draw_harness.gd").new(); harness.hero = spy
 	var frames := ART.sequence(DATA.WEAPONS.ranged_rookie_arcane_bolt.effect_dir)

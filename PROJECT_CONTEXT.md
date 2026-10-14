@@ -1,3 +1,10 @@
+## 2026-10-14 — 이펙트 리소스 배포·캐시 정책
+
+- 91종 무기 이펙트의 frames/effect_01~08.png만 전투에 사용. source.png/sprite_sheet.png/icon.png/manifest.json과 증강 weapons.png/passives.png는제작자료로Git보존하되활성OAuth export plugin에서배포제외. 실normalized/unique atlas 유지.
+- src/data/hero_effect_layout_catalog.gd는공통대칭crop사전계산. 이미지수정후 tools/build_hero_effect_layouts.py 실행(--check로최신검사). prepare_hero_weapon_art.py --finalize는자동갱신. 런타임이미지변경없음.
+- HeroWeaponArt 캐시는현재선택용사디렉터리만유지,liveactor frame참조는entryeviction에도유효. 레거시이펙트fallback보존.
+- 15.61→5.49MiB는이펙트/아이콘격리묶음측정. 전체APK수치·실기기FPS/메모리측정은아직없음.
+
 ## 2026-10-14 — 배포 리소스 경로 원칙
 
 - UI 에셋은 assets/art/UI로 통일. Windows에서 대소문자만 다른 ui 폴더를 추가하지 않는다. hero_augments/hero_hud 경로도 UI 아래로 이동.

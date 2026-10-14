@@ -1,3 +1,10 @@
+## 2026-10-14 — 배포 용량·무기 이펙트 준비 최적화
+
+- OAuth export plugin의 _export_file에서 사용하지 않는 무기 이펙트 source/sprite_sheet/icon/manifest와 증강 원본2PNG·제우스 제작ZIP만 제외. 원본은 Git 보존, 실프레임/normalized/unique atlas 유지. 사용자 기존 Windows/Android preset에도 활성 plugin을 통해 적용하며 전체 PNG include는 legacy raw-loader 호환 때문에 유지.
+- 91이펙트/728프레임의 공통중심 crop을 생성단계에서 hero_effect_layout_catalog.gd에 bake. 알려진 sequence는8정규파일로 직접로드하고 기존 GPU get_image/get_used_rect/directory scan 제거. 레거시/미등록경로 기존계산 fallback 유지. 728프레임 기존crop 픽셀동일 검증. 아트 finalize에 layout 재생성 연결, --check stale 검사.
+- 캐시는 입장시 선택용사 무기 디렉터리만 유지. 다른용사 cache 참조 제거, 현재전투의frames 강한참조는유지. AI/피해·판정·상태/풀/성장·보상·해금·저장 스키마 변경없음.
+- 동일에셋 격리 export-pack 비교16,365,084→5,759,400bytes(15.61→5.49MiB,64.8%,10.12MiB절감). 전체APK/Windows제품용량절감률이아님. Godot4.7.2 headless 아트3547+PCK572+무기2193=6312검사PASS,Python compile/layout/source참조/diff PASS. 실제Windows/Android GPU·FPS·메모리·전체배포미검증. docs/EXPORT_OPTIMIZATION_20261014.md참조.
+
 ## 2026-10-14 — OAuth 내보내기 플러그인 필수 이름 추가
 
 - AgainHero OAuth EditorExportPlugin에 누락된 _get_name() 구현 추가. 내보내기 시작시 Required virtual method 오류 제거, 기존 Android 복귀 intent-filter/인증/PC 동작 유지.

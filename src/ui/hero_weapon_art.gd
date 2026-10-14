@@ -1,5 +1,6 @@
 extends RefCounted
 # Load the selected kit effect sequences once; drawing never reads the disk.
+const LAYOUTS := preload("res://src/data/hero_effect_layout_catalog.gd")
 static var cache: Dictionary = {}
 static func sequence(directory: String) -> Array[Texture2D]:
 	if cache.has(directory): return cache[directory]
@@ -8,7 +9,11 @@ static func sequence(directory: String) -> Array[Texture2D]:
 	var warmup := tree.root.get_node_or_null("PresentationWarmup") if tree != null else null
 	if directory.is_empty() or not DirAccess.dir_exists_absolute(directory):
 		cache[directory] = result; return result
-	var files := DirAccess.get_files_at(directory)
+	var files: PackedStringArray = []
+	if LAYOUTS.REGIONS.has(directory):
+		for index in range(1, LAYOUTS.FRAME_COUNT+1): files.append("effect_%02d.png" % index)
+	else:
+		files = DirAccess.get_files_at(directory)
 	files.sort()
 	for file in files:
 		var name := String(file).trim_suffix(".remap")
@@ -21,7 +26,10 @@ static func sequence(directory: String) -> Array[Texture2D]:
 				var bitmap := Image.load_from_file(path)
 				if bitmap != null and not bitmap.is_empty(): texture = ImageTexture.create_from_image(bitmap)
 		if texture != null: result.append(texture)
-	result = _trim_common_margin(result)
+	if LAYOUTS.REGIONS.has(directory):
+		result = _apply_region(result, LAYOUTS.REGIONS[directory])
+	else:
+		result = _trim_common_margin(result)
 	cache[directory] = result
 	return result
 
@@ -47,3 +55,16 @@ static func _trim_common_margin(frames: Array[Texture2D]) -> Array[Texture2D]:
 		var atlas := AtlasTexture.new(); atlas.atlas = texture; atlas.region = region; atlas.filter_clip = true
 		result.append(atlas)
 	return result
+
+static func _apply_region(frames: Array[Texture2D], region: Rect2) -> Array[Texture2D]:
+	if region == Rect2(0,0,128,128): return frames
+	var result: Array[Texture2D] = []
+	for texture in frames:
+		var atlas := AtlasTexture.new(); atlas.atlas = texture; atlas.region = region; atlas.filter_clip = true
+		result.append(atlas)
+	return result
+
+static func retain_sequences(directories: Dictionary) -> void:
+	# Entry-only eviction. Live actors keep their own frame references.
+	for directory in cache.keys():
+		if not directories.has(directory): cache.erase(directory)

@@ -94,6 +94,10 @@ func install(host, research_bonus: int = 0, starting_research: Dictionary = {}) 
 	for index in range(PROJECTILE_LIMIT):
 		projectiles.append({"active":false,"handle":Vector3i.ZERO,"position":Vector2.ZERO,"damage":0,"rank":1,"color":Color.WHITE,"age":0.0,"delay":0.0,"data":{},"melee":false,"reach":0.0,"traveled":0.0,"frames":EMPTY_ART,"direction":Vector2.RIGHT})
 	available_weapons = DATA.weapon_pool(String(hero.hero_id))
+	var effect_directories := {}
+	for id in available_weapons:
+		effect_directories[String(DATA.WEAPONS[id].get("effect_dir",""))] = true
+	ART.retain_sequences(effect_directories)
 	if hero.has_method("_acquire_projectile"):
 		native_skills = NATIVE.new(); native_skills.install(hero)
 	# Generic effects are required even when the host has no native actor pool.

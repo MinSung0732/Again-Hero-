@@ -4,7 +4,7 @@ crop/scale is used across all eight frames; transparent frame canvases stay equa
 """
 from pathlib import Path
 from PIL import Image
-import argparse,hashlib,json,re
+import argparse,hashlib,json,re,subprocess,sys
 p=argparse.ArgumentParser(); p.add_argument('raw',type=Path); p.add_argument('--finalize',action='store_true'); args=p.parse_args()
 repo=Path(__file__).resolve().parents[1]
 source=(repo/'src/data/hero_weapon_catalog.gd').read_text()
@@ -67,4 +67,5 @@ if args.finalize:
  atlas=Image.new('RGBA',(512,320))
  for index,id in enumerate(extras): atlas.paste(Image.open(root/id/'icon.png'),(index%8*64,index//8*64))
  atlas_path=repo/'assets/art/UI/hero_augments/weapons_unique_v2.png'; atlas.save(atlas_path)
+ subprocess.run([sys.executable,str(repo/'tools/build_hero_effect_layouts.py')],check=True)
 print(json.dumps({'processed':len(report),'entries':report},ensure_ascii=False))

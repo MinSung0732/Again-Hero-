@@ -12,6 +12,7 @@ const REVEAL := preload("res://src/data/hero_reveal_catalog.gd")
 const HEROES := preload("res://src/data/hero_profiles.gd")
 const SHOP := preload("res://src/data/shop_catalog.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
+const EFFECT_LAYOUTS := preload("res://src/data/hero_effect_layout_catalog.gd")
 const LOAD_BATCH_SIZE := 4
 const MAIN_THREAD_BUDGET_US := 4000
 const LOADING_DIR := "res://assets/art/UI/loading/loadingframes"
@@ -184,6 +185,10 @@ func prepare_scene(scene_path: String, entry_options: Dictionary = {}) -> bool:
 
 func _append_texture_directory(directory: String, paths: Array[String]) -> void:
 	if directory.is_empty() or not DirAccess.dir_exists_absolute(directory):
+		return
+	if EFFECT_LAYOUTS.REGIONS.has(directory):
+		for index in range(1, EFFECT_LAYOUTS.FRAME_COUNT+1):
+			paths.append(directory.path_join("effect_%02d.png" % index))
 		return
 	for filename in DirAccess.get_files_at(directory):
 		if filename.get_extension().to_lower() in ["png", "svg"]:
