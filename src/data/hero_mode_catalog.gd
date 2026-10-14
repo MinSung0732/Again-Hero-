@@ -9,6 +9,10 @@ const OBSERVE_INTERVAL := 4.0
 const MONSTER_LIMIT := 72
 const STARTING_COMMAND := 48.0
 const EXP_REWARD_RATIO := 0.25
+const CHEST_KILLS := 200
+const CHEST_ELITE_KILLS := 4
+const CHEST_RUN_LIMIT := 3
+const CHEST_INTERVAL := 180.0
 const PROJECTILE_SPEED := 720.0
 # Role/rarity stats stay canonical; survival applies a spawn-time envelope.
 # HP/damage keep their opening budget; pursuit ramps after 12 seconds.

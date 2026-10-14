@@ -248,6 +248,9 @@ var stage_reinforcement_interval: float = 0.12
 var stage_reinforcement_batch_size: int = 2
 var hero_kills_toward_heal_item: int = 0
 var hero_kills_toward_chest: int = 0
+var hero_chests_spawned := 0
+var hero_elite_kills_toward_chest := 0
+var hero_next_chest_seconds := 0.0
 var hero_kills_toward_magnet: int = 0
 
 var summon_cost_multiplier: float = 1.0
@@ -883,6 +886,9 @@ func _start_battle() -> void:
 	stage_reinforcement_batch_size = 2
 	hero_kills_toward_heal_item = 0
 	hero_kills_toward_chest = 0
+	hero_chests_spawned = 0
+	hero_elite_kills_toward_chest = 0
+	hero_next_chest_seconds = 0.0
 	hero_kills_toward_magnet = 0
 
 	summon_cost_multiplier = 1.0
@@ -3109,7 +3115,8 @@ func _on_monster_died(monster: Node) -> void:
 	if hero_player_mode and is_instance_valid(monster) and bool(monster.get_meta("hero_final_boss",false)):
 		_finish_hero_boss_victory.call_deferred()
 	if hero_player_mode and not battle_over and is_instance_valid(monster) and String(monster.get_meta("stage_event_type","")) in ["elite","giant"]:
-		_spawn_chest_for_session.call_deferred(battle_command_router.get_session_id())
+		hero_elite_kills_toward_chest = mini(hero_elite_kills_toward_chest+1,HERO_SURVIVAL.CHEST_ELITE_KILLS)
+		if _hero_chest_eligible("elite"): _spawn_chest_for_session.call_deferred(battle_command_router.get_session_id(),"elite")
 	if battle_over:
 		return
 	if is_instance_valid(monster) and TRANSCENDENCE_DATA.is_transcendent(String(monster.get("monster_type"))):
@@ -3200,7 +3207,7 @@ func _on_monster_died(monster: Node) -> void:
 		_try_spawn_heal_item_from_kills()
 		hero_kills_toward_chest = mini(
 			hero_kills_toward_chest + 1,
-			CHEST_KILLS_REQUIRED
+			_chest_kill_requirement()
 		)
 		_try_spawn_chest_from_kills()
 		hero_kills_toward_magnet = mini(
@@ -3307,22 +3314,39 @@ func _process_special_death_spawn(
 				}
 			)
 
+func _chest_kill_requirement() -> int:
+	return HERO_SURVIVAL.CHEST_KILLS if hero_player_mode else CHEST_KILLS_REQUIRED
+
+func _hero_chest_eligible(source: String) -> bool:
+	if source != "kills" and source != "elite": return false
+	if hero_chests_spawned >= HERO_SURVIVAL.CHEST_RUN_LIMIT: return false
+	if hero_chests_spawned == 0: return source == "elite"
+	if run_metrics.elapsed_seconds < hero_next_chest_seconds: return false
+	return hero_elite_kills_toward_chest >= HERO_SURVIVAL.CHEST_ELITE_KILLS if source == "elite" else hero_kills_toward_chest >= HERO_SURVIVAL.CHEST_KILLS
+
 func _try_spawn_chest_from_kills() -> void:
-	if hero_kills_toward_chest < CHEST_KILLS_REQUIRED:
+	if hero_player_mode and not _hero_chest_eligible("kills"): return
+	if hero_kills_toward_chest < _chest_kill_requirement():
 		return
 	if _active_registry_size(active_treasure_chests) >= MAX_ACTIVE_CHESTS:
 		return
 
-	hero_kills_toward_chest = 0
+	if not hero_player_mode: hero_kills_toward_chest = 0
 	_spawn_chest_for_session.call_deferred(battle_command_router.get_session_id())
 
-func _spawn_chest_for_session(session: int) -> void:
+func _spawn_chest_for_session(session: int, source: String = "kills") -> void:
 	if battle_over or session != battle_command_router.get_session_id(): return
-	_spawn_random_treasure_chest()
+	if hero_player_mode and not _hero_chest_eligible(source): return
+	if not _spawn_random_treasure_chest(): return
+	if hero_player_mode:
+		hero_chests_spawned += 1
+		hero_next_chest_seconds = run_metrics.elapsed_seconds+HERO_SURVIVAL.CHEST_INTERVAL
+		hero_kills_toward_chest = 0
+		hero_elite_kills_toward_chest = 0
 
-func _spawn_random_treasure_chest() -> void:
+func _spawn_random_treasure_chest() -> bool:
 	if _active_registry_size(active_treasure_chests) >= MAX_ACTIVE_CHESTS:
-		return
+		return false
 	var margin := 180.0
 	var spawn_position := Vector2(
 		randf_range(margin, maxf(current_map_size.x - margin, margin)),
@@ -3331,6 +3355,7 @@ func _spawn_random_treasure_chest() -> void:
 	if hero_player_mode and is_instance_valid(hero):
 		spawn_position = _clamp_manual_spawn_position(hero.global_position+Vector2.from_angle(randf()*TAU)*260.0)
 	var chest := TREASURE_CHEST_SCENE.instantiate() as Node2D
+	if chest == null: return false
 	add_child(chest)
 	chest.global_position = spawn_position
 	_register_treasure_chest(chest)
@@ -3339,6 +3364,7 @@ func _spawn_random_treasure_chest() -> void:
 			"destroyed",
 			Callable(self, "_on_treasure_chest_destroyed").bind(chest)
 		)
+	return true
 
 
 func _on_treasure_chest_destroyed(
