@@ -5080,7 +5080,7 @@ func _enter_hero_stage(stage_id: String) -> void:
 		stamina_view.show_entry_notice("스테이지 선택을 저장하지 못했습니다."); return
 	_stamina_entry = STAMINA.try_enter(stage_id,LocalTestMode.active,-1,false)
 	if not bool(_stamina_entry.get("success",false)):
-		stamina_view.show_entry_notice("스테미너 또는 저장 상태를 확인하세요.")
+		stamina_view.show_entry_notice("스테미너가 부족합니다." if _stamina_entry.get("reason") == "insufficient" else "저장을 확인하고 다시 시도해 주세요.")
 		return
 	_battle_entry_pending = true
 	enter_stage_button.disabled = true
