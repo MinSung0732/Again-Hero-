@@ -1,3 +1,9 @@
+## 2026-10-15 — 이미지 배포 경로 추가 감사·제우스 복구
+
+- src의파일/이미지접근44스크립트점검. 일반몬스터/용사/투사체/아이템/로비/도감/전장경로는대부분imported ResourceLoader와rawfallback을이미함께사용. 원본PNG만읽는위험경로2곳추가확인: zeus_combat_effects와zeus_portrait_rig.
+- 제우스전투37프레임은importedTexture2D를우선읽고그이미지로기존union/anchor/scale계산,압축이미지bounds는decompress후사용. sourcePNG는미import개발fallback으로유지. 소환portrait rig도importedtexture우선으로메시를생성. 현재텍스처캐시·본/메시/연출시간·판정/스탯불변.
+- GDScript구문2파일/git diff --check와37이펙트+1rig이미지Git경로정적검사PASS. Godot/PCK/Windows/Android실행은현재엔진실행파일없어미검증. docs/IMAGE_EXPORT_AUDIT_20261015.md참조.
+
 ## 2026-10-15 — 배포본 프로필·픽업 이미지 복구
 
 - EXE/APK에서초상화·배너가빈칸이되는원인수정. profile_cosmetic_store.choices와프로필선택창이FileAccess로PNG원본유무를검사해imported-only PCK에서선택목록을비우던문제를ResourceLoader.exists로교체. 실제소유/성별/초월보상/저장ID정책유지.
