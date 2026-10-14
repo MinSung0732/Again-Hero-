@@ -2,6 +2,7 @@ extends RefCounted
 ## One-time atlas regions; selection/HUD reuse textures without disk loads.
 const DATA := preload("res://src/data/hero_weapon_catalog.gd")
 const WEAPONS := preload("res://assets/art/ui/hero_augments/weapons_normalized.png")
+const UNIQUE_WEAPONS := preload("res://assets/art/ui/hero_augments/weapons_unique_v2.png")
 const PASSIVES := preload("res://assets/art/ui/hero_augments/passives_normalized.png")
 const PASSIVE_ORDER := ["survival_power","survival_mobility","survival_projectile","survival_haste","survival_learning","survival_magnet","survival_vitality","survival_armor"]
 static var cache: Dictionary = {}
@@ -15,8 +16,10 @@ static func texture(id: String) -> Texture2D:
 				column += 1
 			row += 1
 		for weapon_id in DATA.WEAPONS:
-			var source := String(DATA.WEAPONS[weapon_id].get("icon_source",""))
-			if not source.is_empty() and cache.has(source): cache[weapon_id] = cache[source]
+			if DATA.WEAPONS[weapon_id].has("icon_index_v2"):
+				var index := int(DATA.WEAPONS[weapon_id].icon_index_v2)
+				var columns := maxi(1,int(UNIQUE_WEAPONS.get_width()/64))
+				cache[weapon_id] = _region(UNIQUE_WEAPONS,index%columns,int(index/columns),columns,maxi(1,int(UNIQUE_WEAPONS.get_height()/64)))
 		for index in PASSIVE_ORDER.size():
 			cache[PASSIVE_ORDER[index]] = _region(PASSIVES,index%4,int(index/4),4,2)
 		for passive_id in DATA.PASSIVES:

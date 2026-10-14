@@ -6,6 +6,8 @@ static func sequence(directory: String) -> Array[Texture2D]:
 	var result: Array[Texture2D] = []
 	var tree := Engine.get_main_loop() as SceneTree
 	var warmup := tree.root.get_node_or_null("PresentationWarmup") if tree != null else null
+	if directory.is_empty() or not DirAccess.dir_exists_absolute(directory):
+		cache[directory] = result; return result
 	var files := DirAccess.get_files_at(directory)
 	files.sort()
 	for file in files:

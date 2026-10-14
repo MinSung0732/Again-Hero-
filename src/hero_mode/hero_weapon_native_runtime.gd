@@ -9,6 +9,7 @@ const SCENES := {
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const FIT := preload("res://src/ui/hero_weapon_visual_fit.gd")
 var hero
+var last_cast_succeeded := false
 var authority
 var summon_configs: Dictionary = {}
 var actors_by_pattern: Dictionary = {}
@@ -44,6 +45,7 @@ func install(host) -> void:
 		for kind in ["hound","scout","watcher","gatekeeper"]:
 			summon_configs[kind] = hero.get("summoner_"+kind+"_config").duplicate(true)
 func cast(data: Dictionary, origin: Vector2, direction: Vector2, target: Node2D, damage: int, reach: float, hits: int, rank: int, speed: float, awakened: bool = false) -> bool:
+	last_cast_succeeded = false
 	var pattern := String(data.pattern)
 	if pattern == "summon":
 		if not hero.has_method("_get_active_summon_count"): return true
@@ -57,7 +59,7 @@ func cast(data: Dictionary, origin: Vector2, direction: Vector2, target: Node2D,
 		config["max_hp"] = roundi(hero.max_hp*float(data.get("summon_hp_ratio",WEAPONS.SUMMON_HP_RATIO)))
 		hero.set("summoner_"+kind+"_config",config)
 		hero.set("summoner_"+kind+"_cooldown",0.0)
-		hero.call("_try_cast_summoner_"+kind)
+		last_cast_succeeded = bool(hero.call("_try_cast_summoner_"+kind))
 		return true
 	if not SCENES.has(pattern): return false
 	if not is_instance_valid(authority) or not authority.has_method("recycle_projectile"): return true

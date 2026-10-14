@@ -77,19 +77,20 @@ func install(host, research_bonus: int = 0) -> void:
 	reroll_limit = MODE.augment_reroll_limit(research_bonus)
 	rerolls_used = 0
 	hero = host
+	hero.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	authority = hero.get_parent()
 	if "status_resistances" in hero: base_slow_resistance = float(hero.status_resistances.get("slow",0))
 	base_max_hp = int(hero.max_hp); base_move_speed = float(hero.move_speed)
 	base_pickup_radius = float(hero.exp_pickup_radius); base_exp_multiplier = float(hero.exp_gain_multiplier)
 	for index in range(PROJECTILE_LIMIT):
-		projectiles.append({"active":false,"handle":Vector3i.ZERO,"position":Vector2.ZERO,"damage":0,"rank":1,"color":Color.WHITE,"age":0.0,"delay":0.0,"data":{},"melee":false,"reach":0.0,"traveled":0.0})
+		projectiles.append({"active":false,"handle":Vector3i.ZERO,"position":Vector2.ZERO,"damage":0,"rank":1,"color":Color.WHITE,"age":0.0,"delay":0.0,"data":{},"melee":false,"reach":0.0,"traveled":0.0,"frames":EMPTY_ART,"direction":Vector2.RIGHT})
 	available_weapons = DATA.weapon_pool(String(hero.hero_id))
 	if hero.has_method("_acquire_projectile"):
 		native_skills = NATIVE.new(); native_skills.install(hero)
 		for id in available_weapons:
 			var pattern := String(DATA.WEAPONS[id].pattern)
 			# Native actors own their cached textures; do not duplicate their bitmaps.
-			art[id] = EMPTY_ART if NATIVE.SCENES.has(pattern) or pattern == "summon" else ART.sequence(String(DATA.WEAPONS[id].get("effect_dir","")))
+			art[id] = EMPTY_ART if NATIVE.SCENES.has(pattern) else ART.sequence(String(DATA.WEAPONS[id].get("effect_dir","")))
 	for index in range(EFFECT_LIMIT):
 		effects.append({"left":0.0,"duration":0.0,"a":Vector2.ZERO,"b":Vector2.ZERO,"radius":0.0,"pattern":"","color":Color.WHITE,"orbit_count":4,"orbit_speed":3.0,"orbit_ratio":0.7})
 	for index in range(8): fields.append({"left":0.0,"tick":0.0,"origin":Vector2.ZERO,"radius":0.0,"damage":0,"interval":0.5,"follow":false,"data":{},"rank":1})
@@ -348,6 +349,8 @@ func _cast(id: String) -> void:
 	if direction.length_squared() < 0.01: direction = Vector2.RIGHT
 	if identity != null and identity.native_basic(id,closest,damage,reach):
 		if identity.native_cast_succeeded:
+			if identity.archetype == "rogue_combo" and bool(data.get("visual_effect_unique",false)):
+				_effect(origin,closest.global_position,24.0,"combo",color,data)
 			for extra in projectile_bonus if pattern in DATA.PROJECTILE_PATTERNS else 0:
 				_launch_projectile(closest,origin,damage,rank,color,data,float(extra+1)*0.06,false,reach)
 			_after_cast(data,origin,direction,closest,damage,reach,rank)
@@ -355,6 +358,8 @@ func _cast(id: String) -> void:
 	if is_instance_valid(closest) or pattern == "summon" or pattern == "guard" or pattern == "heal": _pose(direction)
 	if identity != null and (is_instance_valid(closest) or pattern in ["summon","guard","heal"]): identity.on_cast(id)
 	if native_skills != null and native_skills.cast(data,origin,direction,closest,damage,reach,hits,rank,projectile_speed,awakened):
+		if pattern == "summon" and native_skills.last_cast_succeeded:
+			_effect(origin,origin,minf(reach,90.0),"summon",color,data)
 		if is_instance_valid(closest) or pattern == "summon": _after_cast(data,origin,direction,closest,damage,reach,rank)
 		hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
 		return
@@ -514,6 +519,8 @@ func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, 
 		shot.damage = damage; shot.rank = rank; shot.color = color; shot.age = 0.0
 		shot.data = data; shot.delay = delay; shot.melee = melee; shot.reach = reach if reach > 0 else float(data.get("range",900.0)); shot.traveled = 0.0
 		shot["finisher"] = finisher
+		shot["frames"] = ART.cache.get(String(data.get("effect_dir","")),EMPTY_ART)
+		shot["direction"] = origin.direction_to(actor.global_position)
 		hero.queue_redraw()
 		return
 
@@ -530,13 +537,14 @@ func _tick_projectiles(delta: float) -> void:
 		if bool(shot.melee):
 			shot.active = false
 			if hero.global_position.distance_squared_to(actor.global_position) <= pow(float(shot.reach),2) and hero.silence_timer <= 0.0:
-				_effect(hero.global_position,actor.global_position,12.0,"chain",shot.color,shot.data)
+				_effect(hero.global_position,actor.global_position,24.0,"combo",shot.color,shot.data)
 				_hit(actor,int(shot.damage),"slash",int(shot.rank),shot.data)
 				_finish_shot(shot,actor)
 			continue
 		var remaining := maxf(0.0,float(shot.reach)-float(shot.traveled))
 		var step := minf(MODE.PROJECTILE_SPEED*projectile_speed*delta,remaining)
 		var position: Vector2 = shot.position
+		shot["direction"] = position.direction_to(actor.global_position)
 		shot.position = position.move_toward(actor.global_position,step)
 		shot.traveled = float(shot.traveled)+position.distance_to(shot.position)
 		if position.distance_to(actor.global_position) <= step+GEOMETRY.PROJECTILE_RADIUS:
@@ -582,12 +590,18 @@ func _effect(a: Vector2,b: Vector2,radius: float,pattern: String,color: Color,da
 func draw() -> void:
 	for field in fields:
 		if float(field.left) > 0.0:
-			_draw_area(hero.to_local(field.origin),float(field.radius),field.get("color",Color.WHITE),field.get("frames",EMPTY_ART),fmod(visual_clock,1.0))
+			_draw_area(hero.to_local(field.origin),float(field.radius),field.get("color",Color.WHITE),field.get("frames",EMPTY_ART),_loop_progress(field.get("frames",EMPTY_ART),visual_clock))
 	for shot in projectiles:
 		if bool(shot.active) and not bool(shot.melee) and float(shot.delay) <= 0.0:
 			var position: Vector2 = hero.to_local(shot.position)
-			hero.draw_circle(position,GEOMETRY.PROJECTILE_RADIUS,shot.color)
-			hero.draw_circle(position,5.0,Color.WHITE)
+			var frames: Array = shot.get("frames",EMPTY_ART)
+			if not frames.is_empty():
+				hero.draw_set_transform(position,Vector2(shot.direction).angle())
+				hero.draw_texture_rect(_loop_frame(frames,float(shot.age)),Rect2(Vector2.ONE*-GEOMETRY.PROJECTILE_RADIUS,Vector2.ONE*GEOMETRY.PROJECTILE_RADIUS*2.0),false)
+				hero.draw_set_transform(Vector2.ZERO)
+			else:
+				hero.draw_circle(position,GEOMETRY.PROJECTILE_RADIUS,shot.color)
+				hero.draw_circle(position,5.0,Color.WHITE)
 	for effect in effects:
 		if float(effect.left) <= 0.0: continue
 		var ratio: float = float(effect.left)/float(effect.duration)
@@ -608,7 +622,19 @@ func draw() -> void:
 					var rect := Rect2(Vector2(length*0.2,-length*0.3),Vector2.ONE*length*0.6) if effect.pattern == "slash" else Rect2(Vector2(0,-radius),Vector2(sqrt(maxf(0,length*length-radius*radius)),radius*2))
 					hero.draw_texture_rect(texture,rect,false,Color(1,1,1,ratio*0.85))
 				hero.draw_set_transform(Vector2.ZERO)
-			"chain": hero.draw_line(a,b,color,5.0)
+			"combo":
+				if not frames.is_empty():
+					hero.draw_set_transform(b,(b-a).angle())
+					hero.draw_texture_rect(_frame(frames,1.0-ratio),Rect2(Vector2.ONE*-radius,Vector2.ONE*radius*2),false,Color(1,1,1,ratio))
+					hero.draw_set_transform(Vector2.ZERO)
+				else: hero.draw_line(a,b,color,3.0)
+			"chain":
+				hero.draw_line(a,b,Color(color,ratio*0.25),3.0)
+				if not frames.is_empty():
+					hero.draw_set_transform(a,(b-a).angle())
+					hero.draw_texture_rect(_frame(frames,1.0-ratio),Rect2(Vector2(0,-16),Vector2(a.distance_to(b),32)),false,Color(1,1,1,ratio))
+					hero.draw_set_transform(Vector2.ZERO)
+				else: hero.draw_line(a,b,color,5.0)
 			"bolt":
 				hero.draw_line(a,b,Color(color,ratio*0.3),3.0)
 				hero.draw_circle(a.lerp(b,1.0-ratio),12.0,color)
@@ -617,9 +643,32 @@ func draw() -> void:
 				var outer := GEOMETRY.orbit_outer(radius,float(effect.orbit_ratio),float(effect.get("area_scale",1.0)))
 				hero.draw_arc(a,(inner+outer)*0.5,0,TAU,48,Color(color,ratio*0.14),outer-inner)
 				hero.draw_arc(a,inner,0,TAU,48,color,3.0); hero.draw_arc(a,outer,0,TAU,48,color,3.0)
-				for index in int(effect.orbit_count): hero.draw_circle(a+Vector2.from_angle(visual_clock*float(effect.orbit_speed)+index*TAU/float(effect.orbit_count))*(inner+outer)*0.5,minf(18,(outer-inner)*0.5),color)
+				for index in int(effect.orbit_count):
+					var angle := visual_clock*float(effect.orbit_speed)+index*TAU/float(effect.orbit_count)
+					var position := a+Vector2.from_angle(angle)*(inner+outer)*0.5
+					var extent := minf(18,(outer-inner)*0.5/sqrt(2.0))
+					if not frames.is_empty():
+						hero.draw_set_transform(position,angle+PI*0.5)
+						hero.draw_texture_rect(_loop_frame(frames,visual_clock),Rect2(Vector2.ONE*-extent,Vector2.ONE*extent*2),false,Color(1,1,1,ratio))
+						hero.draw_set_transform(Vector2.ZERO)
+					else: hero.draw_circle(position,extent,color)
 			_:
 				_draw_area(a,radius,Color(color,ratio),frames,1.0-ratio)
+
+func _loop_index(frames: Array, time: float) -> int:
+	if frames.size() <= 1: return 0
+	var cycle := frames.size()*2-2
+	var index := posmod(floori(time*12.0),cycle)
+	return index if index < frames.size() else cycle-index
+
+func _loop_progress(frames: Array, time: float) -> float:
+	return float(_loop_index(frames,time))/maxi(1,frames.size())
+
+func _loop_frame(frames: Array, time: float) -> Texture2D:
+	return frames[_loop_index(frames,time)] as Texture2D
+
+func _frame(frames: Array, progress: float) -> Texture2D:
+	return frames[clampi(int(progress*frames.size()),0,frames.size()-1)] as Texture2D
 
 func _draw_area(center: Vector2, radius: float, color: Color, frames: Array, progress: float) -> void:
 	if not frames.is_empty():

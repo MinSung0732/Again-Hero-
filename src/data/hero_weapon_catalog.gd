@@ -155,7 +155,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_01",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/ranged_rookie_arcane_bolt/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16
   },
@@ -173,7 +174,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_01",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/ranged_rookie_star_wand/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16,
     "chain_radius": 180
@@ -211,7 +213,8 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_03",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/ranged_rookie_rune_ring/frames",
     "source_skill": "비전 집중",
     "hit_cap": 8,
     "field_follow": true,
@@ -233,7 +236,8 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_01",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/ranged_rookie_pulse_staff/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16
   },
@@ -251,7 +255,8 @@ const WEAPONS := {
     "tags": [
       "durability"
     ],
-    "effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_02",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/ranged_rookie_barrier_book/frames",
     "source_skill": "마력 장벽",
     "hit_cap": 16,
     "shield_ratio": 0.07
@@ -270,7 +275,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/swift_hunter_dagger/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 8,
     "hit_interval": 0.14
@@ -289,7 +295,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/swift_hunter_throwing_knife/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16
   },
@@ -307,7 +314,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_02",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/swift_hunter_shadow_wire/frames",
     "source_skill": "급습-암살",
     "hit_cap": 16,
     "hit_interval": 0.18,
@@ -317,7 +325,7 @@ const WEAPONS := {
     "name": "독침",
     "owner": "swift_hunter",
     "pattern": "poison",
-    "color": "bc9eee",
+    "color": "a4dc63",
     "cooldown": 2.2,
     "range": 375,
     "power": 1.36,
@@ -327,7 +335,8 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/swift_hunter_poison_needle/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16,
     "field_duration": 2.0,
@@ -370,7 +379,8 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/swift_hunter_shadow_bomb/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16
   },
@@ -388,7 +398,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect2",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sword_shield_hero_longsword/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 6
   },
@@ -406,7 +417,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect3",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sword_shield_hero_piercing_spear/frames",
     "source_skill": "검방 돌격 · 창격",
     "hit_cap": 8
   },
@@ -424,7 +436,8 @@ const WEAPONS := {
     "tags": [
       "durability"
     ],
-    "effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sword_shield_hero_aegis/frames",
     "source_skill": "막기",
     "hit_cap": 16,
     "shield_ratio": 0.12,
@@ -446,7 +459,8 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sword_shield_hero_shield_hammer/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16
   },
@@ -482,7 +496,8 @@ const WEAPONS := {
     "tags": [
       "durability"
     ],
-    "effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sword_shield_hero_battle_banner/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16
   },
@@ -500,7 +515,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/pistol_hero_revolver/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16,
     "hit_interval": 0.1,
@@ -521,7 +537,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect5",
+    "visual_effect_unique": true,
+    "effect_dir": "res://assets/art/effects/hero_weapon_v2/pistol_hero_shotgun/frames",
     "source_skill": "실린더 스트라이크",
     "hit_cap": 8,
     "slow_multiplier": 0.5,
@@ -541,7 +558,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/pistol_hero_rifle/frames",
     "source_skill": "데드아이",
     "hit_cap": 8,
     "hit_interval": 0.08
@@ -560,7 +578,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/pistol_hero_ricochet/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16,
     "chain_radius": 220
@@ -579,7 +598,8 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/pistol_hero_grenade/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16
   },
@@ -600,7 +620,8 @@ const WEAPONS := {
     "field_duration": 2.0,
     "field_interval": 0.25,
     "field_radius_ratio": 0.5,
-    "effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/pistol_hero_powder_bomb/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16
   },
@@ -620,7 +641,8 @@ const WEAPONS := {
     ],
     "field_duration": 2.0,
     "field_interval": 0.35,
-    "effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect2",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/archmage_hero_fire_staff/frames",
     "source_skill": "6원소 기본공격",
     "hit_cap": 16,
     "field_power": 0.35
@@ -629,7 +651,7 @@ const WEAPONS := {
     "name": "아이스볼트",
     "owner": "archmage_hero",
     "pattern": "frost",
-    "color": "f9a95b",
+    "color": "81dcff",
     "cooldown": 2.7,
     "range": 445,
     "power": 1.12,
@@ -639,7 +661,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect3",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/archmage_hero_ice_scepter/frames",
     "source_skill": "아이스볼트",
     "hit_cap": 16,
     "slow_multiplier": 0.65,
@@ -659,7 +682,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect6",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/archmage_hero_lightning_rod/frames",
     "source_skill": "체인대거",
     "hit_cap": 16,
     "chain_radius": 200
@@ -678,7 +702,8 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect4",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/archmage_hero_earth_staff/frames",
     "source_skill": "땅의 가시",
     "hit_cap": 16
   },
@@ -736,7 +761,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/madness_hero_blood_sword/frames",
     "source_skill": "혈검술 제1식",
     "hit_cap": 8,
     "hit_interval": 0.25,
@@ -756,7 +782,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect2",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/madness_hero_blood_lance/frames",
     "source_skill": "혈검술 제2식",
     "hit_cap": 8,
     "field_duration": 2.0,
@@ -778,7 +805,8 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/madness_hero_blood_wheel/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 8
   },
@@ -796,7 +824,8 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect3",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/madness_hero_blood_burst/frames",
     "source_skill": "혈검술 제4식",
     "hit_cap": 16,
     "hp_cost": 0.02,
@@ -816,7 +845,8 @@ const WEAPONS := {
     "tags": [
       "durability"
     ],
-    "effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/madness_hero_drain_blade/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16,
     "lifesteal": 0.08
@@ -835,7 +865,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/madness_hero_heart_chain/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16
   },
@@ -856,7 +887,8 @@ const WEAPONS := {
     "field_duration": 3.0,
     "field_interval": 0.5,
     "field_radius_ratio": 0.45,
-    "effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/chemical_hero_acid_vial/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16,
     "field_power": 0.45
@@ -878,7 +910,8 @@ const WEAPONS := {
     "field_duration": 5.0,
     "field_interval": 1.0,
     "field_radius_ratio": 0.6,
-    "effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect3",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/chemical_hero_poison_flask/frames",
     "source_skill": "촉매 혼합장",
     "hit_cap": 16,
     "field_power": 0.38,
@@ -889,7 +922,7 @@ const WEAPONS := {
     "name": "냉각 약병",
     "owner": "chemical_hero",
     "pattern": "frost",
-    "color": "a4dc63",
+    "color": "81dcff",
     "cooldown": 2.9,
     "range": 420,
     "power": 1.24,
@@ -899,7 +932,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/chemical_hero_cryo_vial/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16
   },
@@ -939,7 +973,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/chemical_hero_acid_cannon/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 8
   },
@@ -957,7 +992,8 @@ const WEAPONS := {
     "tags": [
       "durability"
     ],
-    "effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect6",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/chemical_hero_life_elixir/frames",
     "source_skill": "현자의 비약",
     "hit_cap": 16,
     "heal_ratio": 0.035
@@ -979,7 +1015,8 @@ const WEAPONS := {
     "orbit_count": 2,
     "orbit_speed": 4.5,
     "orbit_ratio": 0.5,
-    "effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/summoner_hero_gate_hound/frames",
     "source_skill": "이계의 문 - 투견",
     "hit_cap": 8,
     "summon_kind": "hound",
@@ -1002,7 +1039,8 @@ const WEAPONS := {
     "orbit_count": 4,
     "orbit_speed": 2.5,
     "orbit_ratio": 0.85,
-    "effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/summoner_hero_watcher/frames",
     "source_skill": "이계의 문 - 감시자",
     "hit_cap": 8,
     "summon_kind": "watcher",
@@ -1022,7 +1060,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/summoner_hero_scout/frames",
     "source_skill": "이계의 문 - 정찰병",
     "hit_cap": 16,
     "summon_kind": "scout",
@@ -1042,7 +1081,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/summoner_hero_gate_laser/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 8
   },
@@ -1060,7 +1100,8 @@ const WEAPONS := {
     "tags": [
       "durability"
     ],
-    "effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/summoner_hero_gatekeeper/frames",
     "source_skill": "이계의 문 - 문지기",
     "hit_cap": 16,
     "summon_kind": "gatekeeper",
@@ -1080,7 +1121,8 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/summoner_hero_rift_pulse/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16
   },
@@ -1098,7 +1140,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/purifier_hero_holy_bolt/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16
   },
@@ -1116,7 +1159,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect6",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/purifier_hero_holy_lance/frames",
     "source_skill": "궁그닐",
     "hit_cap": 10
   },
@@ -1134,7 +1178,8 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect5",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/purifier_hero_purification/frames",
     "source_skill": "정화",
     "hit_cap": 16,
     "cleanse": true
@@ -1153,7 +1198,8 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect2",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/purifier_hero_sacred_orb/frames",
     "source_skill": "정화의 구체",
     "hit_cap": 8,
     "orbit_count": 4
@@ -1172,7 +1218,8 @@ const WEAPONS := {
     "tags": [
       "durability"
     ],
-    "effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect4",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/purifier_hero_blessing/frames",
     "source_skill": "신성보호",
     "hit_cap": 16,
     "shield_ratio": 0.1,
@@ -1192,7 +1239,8 @@ const WEAPONS := {
     "tags": [
       "durability"
     ],
-    "effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/purifier_hero_prayer/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16
   },
@@ -1210,7 +1258,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect2",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sage_astra_starlight/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16
   },
@@ -1253,7 +1302,8 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect3",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sage_astra_astral_chain/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 16,
     "chain_radius": 240
@@ -1262,7 +1312,7 @@ const WEAPONS := {
     "name": "빙점폭발",
     "owner": "sage_astra",
     "pattern": "ice_pillar",
-    "color": "c6abff",
+    "color": "81dcff",
     "cooldown": 6.0,
     "range": 445,
     "power": 1.1,
@@ -1325,7 +1375,8 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sage_astra_binary_stars/frames",
     "source_skill": "고유 기본공격",
     "hit_cap": 8
   },
@@ -1343,9 +1394,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_01",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/ranged_rookie_sealing_bolt/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "ranged_rookie_arcane_bolt",
+    "icon_index_v2": 0,
     "slow_multiplier": 0.75,
     "slow_duration": 1.2
   },
@@ -1363,9 +1415,10 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_03",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/ranged_rookie_satellite_orbs/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "ranged_rookie_rune_ring",
+    "icon_index_v2": 1,
     "orbit_count": 3,
     "orbit_ratio": 0.65
   },
@@ -1383,9 +1436,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_01",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/ranged_rookie_rune_ray/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "ranged_rookie_magic_lance"
+    "icon_index_v2": 2
   },
   "ranged_rookie_restoration_codex": {
     "name": "안식의 마도서",
@@ -1401,9 +1455,10 @@ const WEAPONS := {
     "tags": [
       "durability"
     ],
-    "effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_02",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/ranged_rookie_restoration_codex/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "ranged_rookie_barrier_book",
+    "icon_index_v2": 3,
     "shield_ratio": 0.055,
     "shield_duration": 3,
     "cast_heal": 0.01
@@ -1422,9 +1477,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_02",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/swift_hunter_execution_stiletto/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "swift_hunter_shadow_wire",
+    "icon_index_v2": 4,
     "hit_interval": 0.12,
     "execute_ratio": 0.06
   },
@@ -1442,9 +1498,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/swift_hunter_binding_wire/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "swift_hunter_throwing_knife",
+    "icon_index_v2": 5,
     "chain_radius": 165,
     "slow_multiplier": 0.65,
     "slow_duration": 1
@@ -1463,9 +1520,10 @@ const WEAPONS := {
     "tags": [
       "durability"
     ],
-    "effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/swift_hunter_smoke_mantle/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "swift_hunter_shadow_bomb",
+    "icon_index_v2": 6,
     "shield_ratio": 0.045,
     "shield_duration": 2,
     "slow_multiplier": 0.7,
@@ -1475,7 +1533,7 @@ const WEAPONS := {
     "name": "독무 발톱",
     "owner": "swift_hunter",
     "pattern": "poison",
-    "color": "bc9eee",
+    "color": "a4dc63",
     "cooldown": 4.6,
     "range": 240,
     "power": 0.9,
@@ -1485,9 +1543,10 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/swift_hunter_venom_steps/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "swift_hunter_poison_needle",
+    "icon_index_v2": 7,
     "field_follow": true,
     "field_duration": 2,
     "field_interval": 0.4,
@@ -1508,9 +1567,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect2",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sword_shield_hero_oath_blade/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "sword_shield_hero_longsword",
+    "icon_index_v2": 8,
     "cast_shield": 0.02
   },
   "sword_shield_hero_ward_crossbow": {
@@ -1527,9 +1587,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect3",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sword_shield_hero_ward_crossbow/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "sword_shield_hero_piercing_spear",
+    "icon_index_v2": 9,
     "slow_multiplier": 0.8,
     "slow_duration": 1
   },
@@ -1547,9 +1608,10 @@ const WEAPONS := {
     "tags": [
       "durability"
     ],
-    "effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sword_shield_hero_sanctuary_shield/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "sword_shield_hero_aegis",
+    "icon_index_v2": 10,
     "shield_ratio": 0.06,
     "shield_duration": 4,
     "cleanse": true
@@ -1568,9 +1630,10 @@ const WEAPONS := {
     "tags": [
       "durability"
     ],
-    "effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sword_shield_hero_rally_standard/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "sword_shield_hero_battle_banner",
+    "icon_index_v2": 11,
     "heal_ratio": 0.015,
     "slow_multiplier": 0.75,
     "slow_duration": 1.5
@@ -1589,9 +1652,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/pistol_hero_twin_pistols/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "pistol_hero_revolver",
+    "icon_index_v2": 12,
     "hit_interval": 0.12,
     "uses_ammo": true
   },
@@ -1609,9 +1673,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/pistol_hero_shrapnel_round/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "pistol_hero_grenade",
+    "icon_index_v2": 13,
     "splash_ratio": 0.35,
     "splash_radius": 70,
     "uses_ammo": true
@@ -1630,9 +1695,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/pistol_hero_suppressor/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "pistol_hero_rifle",
+    "icon_index_v2": 14,
     "hit_interval": 0.15,
     "slow_multiplier": 0.75,
     "slow_duration": 1,
@@ -1652,9 +1718,10 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/pistol_hero_smoke_canister/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "pistol_hero_powder_bomb",
+    "icon_index_v2": 15,
     "field_duration": 3,
     "field_interval": 0.6,
     "field_power": 0.3,
@@ -1666,7 +1733,7 @@ const WEAPONS := {
     "name": "용암 촉매봉",
     "owner": "archmage_hero",
     "pattern": "poison",
-    "color": "f9a95b",
+    "color": "a4dc63",
     "cooldown": 6,
     "range": 420,
     "power": 0.95,
@@ -1676,9 +1743,10 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect4",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/archmage_hero_lava_focus/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "archmage_hero_earth_staff",
+    "icon_index_v2": 16,
     "field_duration": 3,
     "field_interval": 0.5,
     "field_power": 0.28,
@@ -1688,7 +1756,7 @@ const WEAPONS := {
     "name": "빙결 위성",
     "owner": "archmage_hero",
     "pattern": "orbit",
-    "color": "f9a95b",
+    "color": "81dcff",
     "cooldown": 2.8,
     "range": 260,
     "power": 0.7,
@@ -1698,9 +1766,10 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect3",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/archmage_hero_frost_moons/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "archmage_hero_ice_scepter",
+    "icon_index_v2": 17,
     "orbit_count": 3,
     "orbit_ratio": 0.7,
     "slow_multiplier": 0.7,
@@ -1720,9 +1789,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect6",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/archmage_hero_gale_prism/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "archmage_hero_lightning_rod",
+    "icon_index_v2": 18,
     "fan_lines": 2
   },
   "archmage_hero_sunfire_tome": {
@@ -1739,9 +1809,10 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect2",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/archmage_hero_sunfire_tome/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "archmage_hero_fire_staff",
+    "icon_index_v2": 19,
     "cast_heal": 0.01
   },
   "madness_hero_desperate_cleaver": {
@@ -1758,9 +1829,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/madness_hero_desperate_cleaver/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "madness_hero_drain_blade",
+    "icon_index_v2": 20,
     "low_hp_bonus": 0.5,
     "hp_cost": 0.005
   },
@@ -1778,9 +1850,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/madness_hero_vampire_fang/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "madness_hero_heart_chain",
+    "icon_index_v2": 21,
     "lifesteal": 0.03
   },
   "madness_hero_blood_thorns": {
@@ -1797,9 +1870,10 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect2",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/madness_hero_blood_thorns/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "madness_hero_blood_lance",
+    "icon_index_v2": 22,
     "field_duration": 2.4,
     "field_interval": 0.4,
     "field_power": 0.3,
@@ -1820,9 +1894,10 @@ const WEAPONS := {
     "tags": [
       "durability"
     ],
-    "effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect3",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/madness_hero_blood_aegis/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "madness_hero_blood_burst",
+    "icon_index_v2": 23,
     "shield_ratio": 0.045,
     "shield_duration": 3,
     "lifesteal": 0.03,
@@ -1842,9 +1917,10 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/chemical_hero_caustic_boots/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "chemical_hero_acid_vial",
+    "icon_index_v2": 24,
     "field_follow": true,
     "field_duration": 2.4,
     "field_interval": 0.4,
@@ -1866,9 +1942,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/chemical_hero_catalyst_wire/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "chemical_hero_acid_cannon",
+    "icon_index_v2": 25,
     "chain_radius": 180,
     "slow_multiplier": 0.8,
     "slow_duration": 1,
@@ -1888,9 +1965,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect3",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/chemical_hero_toxic_dart/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "chemical_hero_poison_flask",
+    "icon_index_v2": 26,
     "slow_multiplier": 0.65,
     "slow_duration": 1.5,
     "gas_cost": 3
@@ -1909,9 +1987,10 @@ const WEAPONS := {
     "tags": [
       "durability"
     ],
-    "effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect6",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/chemical_hero_antidote_capsule/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "chemical_hero_life_elixir",
+    "icon_index_v2": 27,
     "shield_ratio": 0.055,
     "shield_duration": 3,
     "cleanse": true,
@@ -1932,9 +2011,10 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/summoner_hero_rift_orbit/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "summoner_hero_rift_pulse",
+    "icon_index_v2": 28,
     "orbit_count": 3,
     "orbit_ratio": 0.7
   },
@@ -1952,9 +2032,10 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/summoner_hero_collapse_glyph/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "summoner_hero_gate_laser",
+    "icon_index_v2": 29,
     "field_duration": 3,
     "field_interval": 0.5,
     "field_power": 0.25,
@@ -1974,9 +2055,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/summoner_hero_gate_shard/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "summoner_hero_watcher",
+    "icon_index_v2": 30,
     "splash_radius": 65,
     "splash_ratio": 0.25
   },
@@ -1994,9 +2076,10 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/summoner_hero_binding_gate/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "summoner_hero_gatekeeper",
+    "icon_index_v2": 31,
     "slow_multiplier": 0.6,
     "slow_duration": 2
   },
@@ -2014,9 +2097,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect6",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/purifier_hero_mercy_chain/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "purifier_hero_holy_lance",
+    "icon_index_v2": 32,
     "chain_radius": 180,
     "cast_heal": 0.01
   },
@@ -2034,9 +2118,10 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect5",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/purifier_hero_judgment_seal/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "purifier_hero_purification",
+    "icon_index_v2": 33,
     "field_duration": 3,
     "field_interval": 0.5,
     "field_power": 0.25,
@@ -2058,9 +2143,10 @@ const WEAPONS := {
     "tags": [
       "durability"
     ],
-    "effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect4",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/purifier_hero_saint_reliquary/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "purifier_hero_blessing",
+    "icon_index_v2": 34,
     "shield_ratio": 0.06,
     "shield_duration": 4,
     "cleanse": true
@@ -2079,9 +2165,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect2",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/purifier_hero_martyr_blade/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "purifier_hero_sacred_orb",
+    "icon_index_v2": 35,
     "lifesteal": 0.02,
     "execute_ratio": 0.05
   },
@@ -2099,9 +2186,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect3",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sage_astra_gravity_lance/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "sage_astra_astral_chain",
+    "icon_index_v2": 36,
     "fan_lines": 2,
     "slow_multiplier": 0.8,
     "slow_duration": 1.2
@@ -2110,7 +2198,7 @@ const WEAPONS := {
     "name": "빙성의 고리",
     "owner": "sage_astra",
     "pattern": "orbit",
-    "color": "c6abff",
+    "color": "81dcff",
     "cooldown": 3.2,
     "range": 280,
     "power": 0.75,
@@ -2120,9 +2208,10 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sage_astra_frozen_stars/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "sage_astra_absolute_zero",
+    "icon_index_v2": 37,
     "orbit_count": 3,
     "orbit_ratio": 0.7,
     "slow_multiplier": 0.65,
@@ -2142,9 +2231,10 @@ const WEAPONS := {
     "tags": [
       "area"
     ],
-    "effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect1",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sage_astra_supernova_core/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "sage_astra_comet",
+    "icon_index_v2": 38,
     "pulse_count": 1,
     "pulse_ratio": 0.25
   },
@@ -2162,9 +2252,10 @@ const WEAPONS := {
     "tags": [
       "damage"
     ],
-    "effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect2",
+    "visual_effect_unique": true,
+		"effect_dir": "res://assets/art/effects/hero_weapon_v2/sage_astra_collapsed_seed/frames",
     "source_skill": "전용 확장 무기",
-    "icon_source": "sage_astra_starlight",
+    "icon_index_v2": 39,
     "splash_ratio": 0.3,
     "splash_radius": 75
   }

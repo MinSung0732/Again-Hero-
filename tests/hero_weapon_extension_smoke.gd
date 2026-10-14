@@ -83,9 +83,9 @@ func run() -> void:
 				check(not text.is_empty() and not text.contains("진화") and not text.contains("다음") and not text.contains("Lv."),"current selection only "+id+str(rank))
 			var evolved := DATA.GROWTH.resolve(id,data,10,true)
 			check(evolved.damage_scale > 2.62 and evolved.cooldown_scale < 0.685,"chest evolution preserved "+id)
-			if not data.has("icon_source"): continue
+			if not data.has("icon_index_v2"): continue
 			extra_count += 1
-			check(data.icon_source in pool.slice(0,6),"new icon reuses own hero atlas "+id)
+			check(int(data.icon_index_v2) in range(40) and ICONS.texture(id).atlas == ICONS.UNIQUE_WEAPONS,"new icon uses own generated atlas cell "+id)
 			var arena := Arena.new(); root.add_child(arena)
 			var hero := Hero.new(); hero.hero_id = owner; hero.damage_poison_tracker = Clearable.new(); hero.burn_runtime = Clearable.new(); arena.add_child(hero)
 			for index in 3:

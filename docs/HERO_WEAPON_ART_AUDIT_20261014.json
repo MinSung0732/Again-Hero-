@@ -1,0 +1,1006 @@
+[
+  {
+    "id": "ranged_rookie_arcane_bolt",
+    "name": "마력탄",
+    "owner": "ranged_rookie",
+    "pattern": "bolt",
+    "old_effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_01",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "ranged_rookie_star_wand",
+    "name": "별빛 지팡이",
+    "owner": "ranged_rookie",
+    "pattern": "chain",
+    "old_effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_01",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "ranged_rookie_magic_lance",
+    "name": "마력 관통포",
+    "owner": "ranged_rookie",
+    "pattern": "piercer",
+    "old_effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_01",
+    "new_effect": false,
+    "new_icon_index": null,
+    "retained_reason": "native actors already use exclusive original animations"
+  },
+  {
+    "id": "ranged_rookie_rune_ring",
+    "name": "비전 집중",
+    "owner": "ranged_rookie",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_03",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "ranged_rookie_pulse_staff",
+    "name": "파동 지팡이",
+    "owner": "ranged_rookie",
+    "pattern": "nova",
+    "old_effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_01",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "ranged_rookie_barrier_book",
+    "name": "마력 장벽",
+    "owner": "ranged_rookie",
+    "pattern": "guard",
+    "old_effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_02",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "swift_hunter_dagger",
+    "name": "쌍단검",
+    "owner": "swift_hunter",
+    "pattern": "combo",
+    "old_effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": "",
+    "native_basic_note": "Original combo damage and pose remain; new compact cut animation overlays the selected target."
+  },
+  {
+    "id": "swift_hunter_throwing_knife",
+    "name": "투척 단검",
+    "owner": "swift_hunter",
+    "pattern": "bolt",
+    "old_effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "swift_hunter_shadow_wire",
+    "name": "급습-암살",
+    "owner": "swift_hunter",
+    "pattern": "combo",
+    "old_effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_02",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "swift_hunter_poison_needle",
+    "name": "독침",
+    "owner": "swift_hunter",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "swift_hunter_moon_blade",
+    "name": "난도질",
+    "owner": "swift_hunter",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_03",
+    "new_effect": false,
+    "new_icon_index": null,
+    "retained_reason": "dedicated original directory"
+  },
+  {
+    "id": "swift_hunter_shadow_bomb",
+    "name": "그림자 폭탄",
+    "owner": "swift_hunter",
+    "pattern": "nova",
+    "old_effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "sword_shield_hero_longsword",
+    "name": "수호 장검",
+    "owner": "sword_shield_hero",
+    "pattern": "slash",
+    "old_effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect2",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "sword_shield_hero_piercing_spear",
+    "name": "검방 돌격 · 창격",
+    "owner": "sword_shield_hero",
+    "pattern": "beam",
+    "old_effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect3",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "sword_shield_hero_aegis",
+    "name": "막기",
+    "owner": "sword_shield_hero",
+    "pattern": "guard",
+    "old_effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "sword_shield_hero_shield_hammer",
+    "name": "방패 망치",
+    "owner": "sword_shield_hero",
+    "pattern": "nova",
+    "old_effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "sword_shield_hero_blade_ring",
+    "name": "회전 검륜",
+    "owner": "sword_shield_hero",
+    "pattern": "orbit",
+    "old_effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect4",
+    "new_effect": false,
+    "new_icon_index": null,
+    "retained_reason": "dedicated original directory"
+  },
+  {
+    "id": "sword_shield_hero_battle_banner",
+    "name": "전장의 깃발",
+    "owner": "sword_shield_hero",
+    "pattern": "heal",
+    "old_effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "pistol_hero_revolver",
+    "name": "육연발 권총",
+    "owner": "pistol_hero",
+    "pattern": "burst",
+    "old_effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "pistol_hero_shotgun",
+    "name": "실린더 스트라이크",
+    "owner": "pistol_hero",
+    "pattern": "nova",
+    "old_effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect5",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": "",
+    "replacement_reason": "gunshot skill referenced fighter effects; replace with radial cylinder firing"
+  },
+  {
+    "id": "pistol_hero_rifle",
+    "name": "데드아이",
+    "owner": "pistol_hero",
+    "pattern": "burst",
+    "old_effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "pistol_hero_ricochet",
+    "name": "도탄 권총",
+    "owner": "pistol_hero",
+    "pattern": "chain",
+    "old_effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "pistol_hero_grenade",
+    "name": "충격 수류탄",
+    "owner": "pistol_hero",
+    "pattern": "nova",
+    "old_effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "pistol_hero_powder_bomb",
+    "name": "화약 폭탄",
+    "owner": "pistol_hero",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "archmage_hero_fire_staff",
+    "name": "원소 지팡이",
+    "owner": "archmage_hero",
+    "pattern": "bolt",
+    "old_effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect2",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": "",
+    "native_basic_note": "Preserve original element/third-shot actors; new frames also cover bonus projectiles. Native mechanics are not replaced by generic shots."
+  },
+  {
+    "id": "archmage_hero_ice_scepter",
+    "name": "아이스볼트",
+    "owner": "archmage_hero",
+    "pattern": "frost",
+    "old_effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect3",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "archmage_hero_lightning_rod",
+    "name": "체인대거",
+    "owner": "archmage_hero",
+    "pattern": "chain",
+    "old_effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect6",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "archmage_hero_earth_staff",
+    "name": "땅의 가시",
+    "owner": "archmage_hero",
+    "pattern": "nova",
+    "old_effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect4",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "archmage_hero_storm_orb",
+    "name": "폭풍",
+    "owner": "archmage_hero",
+    "pattern": "orbit",
+    "old_effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect8",
+    "new_effect": false,
+    "new_icon_index": null,
+    "retained_reason": "dedicated original directory"
+  },
+  {
+    "id": "archmage_hero_prism_wand",
+    "name": "신성력",
+    "owner": "archmage_hero",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect5",
+    "new_effect": false,
+    "new_icon_index": null,
+    "retained_reason": "dedicated original directory"
+  },
+  {
+    "id": "madness_hero_blood_sword",
+    "name": "혈검술 제1식",
+    "owner": "madness_hero",
+    "pattern": "combo",
+    "old_effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "madness_hero_blood_lance",
+    "name": "혈검술 제2식",
+    "owner": "madness_hero",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect2",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "madness_hero_blood_wheel",
+    "name": "핏빛 검륜",
+    "owner": "madness_hero",
+    "pattern": "orbit",
+    "old_effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "madness_hero_blood_burst",
+    "name": "혈검술 제4식",
+    "owner": "madness_hero",
+    "pattern": "nova",
+    "old_effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect3",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "madness_hero_drain_blade",
+    "name": "흡혈 검",
+    "owner": "madness_hero",
+    "pattern": "slash",
+    "old_effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "madness_hero_heart_chain",
+    "name": "심장 사슬",
+    "owner": "madness_hero",
+    "pattern": "chain",
+    "old_effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "chemical_hero_acid_vial",
+    "name": "산성 약병",
+    "owner": "chemical_hero",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "chemical_hero_poison_flask",
+    "name": "촉매 혼합장",
+    "owner": "chemical_hero",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect3",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "chemical_hero_cryo_vial",
+    "name": "냉각 약병",
+    "owner": "chemical_hero",
+    "pattern": "frost",
+    "old_effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "chemical_hero_reaction_bomb",
+    "name": "오늘도 실팬가!",
+    "owner": "chemical_hero",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect4",
+    "new_effect": false,
+    "new_icon_index": null,
+    "retained_reason": "dedicated original directory"
+  },
+  {
+    "id": "chemical_hero_acid_cannon",
+    "name": "압축 산성포",
+    "owner": "chemical_hero",
+    "pattern": "beam",
+    "old_effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "chemical_hero_life_elixir",
+    "name": "현자의 비약",
+    "owner": "chemical_hero",
+    "pattern": "heal",
+    "old_effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect6",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "summoner_hero_gate_hound",
+    "name": "이계의 문 - 투견",
+    "owner": "summoner_hero",
+    "pattern": "summon",
+    "old_effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "summoner_hero_watcher",
+    "name": "이계의 문 - 감시자",
+    "owner": "summoner_hero",
+    "pattern": "summon",
+    "old_effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "summoner_hero_scout",
+    "name": "이계의 문 - 정찰병",
+    "owner": "summoner_hero",
+    "pattern": "summon",
+    "old_effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "summoner_hero_gate_laser",
+    "name": "차원 관통문",
+    "owner": "summoner_hero",
+    "pattern": "beam",
+    "old_effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "summoner_hero_gatekeeper",
+    "name": "이계의 문 - 문지기",
+    "owner": "summoner_hero",
+    "pattern": "summon",
+    "old_effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "summoner_hero_rift_pulse",
+    "name": "균열 파동",
+    "owner": "summoner_hero",
+    "pattern": "nova",
+    "old_effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "purifier_hero_holy_bolt",
+    "name": "성광탄",
+    "owner": "purifier_hero",
+    "pattern": "bolt",
+    "old_effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "purifier_hero_holy_lance",
+    "name": "궁그닐",
+    "owner": "purifier_hero",
+    "pattern": "beam",
+    "old_effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect6",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "purifier_hero_purification",
+    "name": "정화",
+    "owner": "purifier_hero",
+    "pattern": "nova",
+    "old_effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect5",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "purifier_hero_sacred_orb",
+    "name": "정화의 구체",
+    "owner": "purifier_hero",
+    "pattern": "orbit",
+    "old_effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect2",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "purifier_hero_blessing",
+    "name": "신성보호",
+    "owner": "purifier_hero",
+    "pattern": "guard",
+    "old_effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect4",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "purifier_hero_prayer",
+    "name": "회복의 성배",
+    "owner": "purifier_hero",
+    "pattern": "heal",
+    "old_effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "sage_astra_starlight",
+    "name": "별빛 지팡이",
+    "owner": "sage_astra",
+    "pattern": "bolt",
+    "old_effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect2",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": "",
+    "native_basic_note": "Preserve original element/third-shot actors; new frames also cover bonus projectiles. Native mechanics are not replaced by generic shots."
+  },
+  {
+    "id": "sage_astra_comet",
+    "name": "스타라이트",
+    "owner": "sage_astra",
+    "pattern": "meteor",
+    "old_effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect1",
+    "new_effect": false,
+    "new_icon_index": null,
+    "retained_reason": "native actors already use exclusive original animations"
+  },
+  {
+    "id": "sage_astra_astral_chain",
+    "name": "천체 사슬",
+    "owner": "sage_astra",
+    "pattern": "chain",
+    "old_effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect3",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "sage_astra_absolute_zero",
+    "name": "빙점폭발",
+    "owner": "sage_astra",
+    "pattern": "ice_pillar",
+    "old_effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect1",
+    "new_effect": false,
+    "new_icon_index": null,
+    "retained_reason": "native actors already use exclusive original animations"
+  },
+  {
+    "id": "sage_astra_singularity",
+    "name": "소멸",
+    "owner": "sage_astra",
+    "pattern": "singularity",
+    "old_effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect1",
+    "new_effect": false,
+    "new_icon_index": null,
+    "retained_reason": "native actors already use exclusive original animations"
+  },
+  {
+    "id": "sage_astra_binary_stars",
+    "name": "쌍성의 고리",
+    "owner": "sage_astra",
+    "pattern": "orbit",
+    "old_effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": null,
+    "retained_reason": ""
+  },
+  {
+    "id": "ranged_rookie_sealing_bolt",
+    "name": "봉인 마법구",
+    "owner": "ranged_rookie",
+    "pattern": "bolt",
+    "old_effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_01",
+    "new_effect": true,
+    "new_icon_index": 0,
+    "retained_reason": ""
+  },
+  {
+    "id": "ranged_rookie_satellite_orbs",
+    "name": "위성 마력구",
+    "owner": "ranged_rookie",
+    "pattern": "orbit",
+    "old_effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_03",
+    "new_effect": true,
+    "new_icon_index": 1,
+    "retained_reason": ""
+  },
+  {
+    "id": "ranged_rookie_rune_ray",
+    "name": "룬 분광봉",
+    "owner": "ranged_rookie",
+    "pattern": "beam",
+    "old_effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_01",
+    "new_effect": true,
+    "new_icon_index": 2,
+    "retained_reason": ""
+  },
+  {
+    "id": "ranged_rookie_restoration_codex",
+    "name": "안식의 마도서",
+    "owner": "ranged_rookie",
+    "pattern": "guard",
+    "old_effect_dir": "res://assets/art/heroes/stage1_mage/frames/effect_02",
+    "new_effect": true,
+    "new_icon_index": 3,
+    "retained_reason": ""
+  },
+  {
+    "id": "swift_hunter_execution_stiletto",
+    "name": "처형 단도",
+    "owner": "swift_hunter",
+    "pattern": "combo",
+    "old_effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_02",
+    "new_effect": true,
+    "new_icon_index": 4,
+    "retained_reason": ""
+  },
+  {
+    "id": "swift_hunter_binding_wire",
+    "name": "그림자 결박줄",
+    "owner": "swift_hunter",
+    "pattern": "chain",
+    "old_effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "new_effect": true,
+    "new_icon_index": 5,
+    "retained_reason": ""
+  },
+  {
+    "id": "swift_hunter_smoke_mantle",
+    "name": "연막 망토",
+    "owner": "swift_hunter",
+    "pattern": "guard",
+    "old_effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "new_effect": true,
+    "new_icon_index": 6,
+    "retained_reason": ""
+  },
+  {
+    "id": "swift_hunter_venom_steps",
+    "name": "독무 발톱",
+    "owner": "swift_hunter",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage2_rogue/frames/effect_01",
+    "new_effect": true,
+    "new_icon_index": 7,
+    "retained_reason": ""
+  },
+  {
+    "id": "sword_shield_hero_oath_blade",
+    "name": "맹세의 검",
+    "owner": "sword_shield_hero",
+    "pattern": "slash",
+    "old_effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect2",
+    "new_effect": true,
+    "new_icon_index": 8,
+    "retained_reason": ""
+  },
+  {
+    "id": "sword_shield_hero_ward_crossbow",
+    "name": "수호 쇠뇌",
+    "owner": "sword_shield_hero",
+    "pattern": "bolt",
+    "old_effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect3",
+    "new_effect": true,
+    "new_icon_index": 9,
+    "retained_reason": ""
+  },
+  {
+    "id": "sword_shield_hero_sanctuary_shield",
+    "name": "성역 방패",
+    "owner": "sword_shield_hero",
+    "pattern": "guard",
+    "old_effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": 10,
+    "retained_reason": ""
+  },
+  {
+    "id": "sword_shield_hero_rally_standard",
+    "name": "결집 군기",
+    "owner": "sword_shield_hero",
+    "pattern": "heal",
+    "old_effect_dir": "res://assets/art/heroes/stage3_fighter/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": 11,
+    "retained_reason": ""
+  },
+  {
+    "id": "pistol_hero_twin_pistols",
+    "name": "쌍열 권총",
+    "owner": "pistol_hero",
+    "pattern": "burst",
+    "old_effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "new_effect": true,
+    "new_icon_index": 12,
+    "retained_reason": ""
+  },
+  {
+    "id": "pistol_hero_shrapnel_round",
+    "name": "파쇄 탄환",
+    "owner": "pistol_hero",
+    "pattern": "bolt",
+    "old_effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "new_effect": true,
+    "new_icon_index": 13,
+    "retained_reason": ""
+  },
+  {
+    "id": "pistol_hero_suppressor",
+    "name": "제압 기관권총",
+    "owner": "pistol_hero",
+    "pattern": "burst",
+    "old_effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "new_effect": true,
+    "new_icon_index": 14,
+    "retained_reason": ""
+  },
+  {
+    "id": "pistol_hero_smoke_canister",
+    "name": "연막 유탄",
+    "owner": "pistol_hero",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage4_gunner/frames/effect",
+    "new_effect": true,
+    "new_icon_index": 15,
+    "retained_reason": ""
+  },
+  {
+    "id": "archmage_hero_lava_focus",
+    "name": "용암 촉매봉",
+    "owner": "archmage_hero",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect4",
+    "new_effect": true,
+    "new_icon_index": 16,
+    "retained_reason": ""
+  },
+  {
+    "id": "archmage_hero_frost_moons",
+    "name": "빙결 위성",
+    "owner": "archmage_hero",
+    "pattern": "orbit",
+    "old_effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect3",
+    "new_effect": true,
+    "new_icon_index": 17,
+    "retained_reason": ""
+  },
+  {
+    "id": "archmage_hero_gale_prism",
+    "name": "질풍 프리즘",
+    "owner": "archmage_hero",
+    "pattern": "beam",
+    "old_effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect6",
+    "new_effect": true,
+    "new_icon_index": 18,
+    "retained_reason": ""
+  },
+  {
+    "id": "archmage_hero_sunfire_tome",
+    "name": "태양화염서",
+    "owner": "archmage_hero",
+    "pattern": "nova",
+    "old_effect_dir": "res://assets/art/heroes/stage5_archmage/frames/effect2",
+    "new_effect": true,
+    "new_icon_index": 19,
+    "retained_reason": ""
+  },
+  {
+    "id": "madness_hero_desperate_cleaver",
+    "name": "결사의 참수검",
+    "owner": "madness_hero",
+    "pattern": "slash",
+    "old_effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": 20,
+    "retained_reason": ""
+  },
+  {
+    "id": "madness_hero_vampire_fang",
+    "name": "흡혈 송곳니",
+    "owner": "madness_hero",
+    "pattern": "bolt",
+    "old_effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": 21,
+    "retained_reason": ""
+  },
+  {
+    "id": "madness_hero_blood_thorns",
+    "name": "혈흔 가시",
+    "owner": "madness_hero",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect2",
+    "new_effect": true,
+    "new_icon_index": 22,
+    "retained_reason": ""
+  },
+  {
+    "id": "madness_hero_blood_aegis",
+    "name": "핏빛 수호구",
+    "owner": "madness_hero",
+    "pattern": "guard",
+    "old_effect_dir": "res://assets/art/heroes/stage6_berserker/frames/effect3",
+    "new_effect": true,
+    "new_icon_index": 23,
+    "retained_reason": ""
+  },
+  {
+    "id": "chemical_hero_caustic_boots",
+    "name": "부식 분무기",
+    "owner": "chemical_hero",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": 24,
+    "retained_reason": ""
+  },
+  {
+    "id": "chemical_hero_catalyst_wire",
+    "name": "촉매 도선",
+    "owner": "chemical_hero",
+    "pattern": "chain",
+    "old_effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": 25,
+    "retained_reason": ""
+  },
+  {
+    "id": "chemical_hero_toxic_dart",
+    "name": "독성 주사총",
+    "owner": "chemical_hero",
+    "pattern": "bolt",
+    "old_effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect3",
+    "new_effect": true,
+    "new_icon_index": 26,
+    "retained_reason": ""
+  },
+  {
+    "id": "chemical_hero_antidote_capsule",
+    "name": "해독 캡슐",
+    "owner": "chemical_hero",
+    "pattern": "guard",
+    "old_effect_dir": "res://assets/art/heroes/stage7_alchemist/frames/effect6",
+    "new_effect": true,
+    "new_icon_index": 27,
+    "retained_reason": ""
+  },
+  {
+    "id": "summoner_hero_rift_orbit",
+    "name": "균열 톱니",
+    "owner": "summoner_hero",
+    "pattern": "orbit",
+    "old_effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": 28,
+    "retained_reason": ""
+  },
+  {
+    "id": "summoner_hero_collapse_glyph",
+    "name": "붕괴 문양",
+    "owner": "summoner_hero",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": 29,
+    "retained_reason": ""
+  },
+  {
+    "id": "summoner_hero_gate_shard",
+    "name": "차원 파편구",
+    "owner": "summoner_hero",
+    "pattern": "bolt",
+    "old_effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": 30,
+    "retained_reason": ""
+  },
+  {
+    "id": "summoner_hero_binding_gate",
+    "name": "결박의 문",
+    "owner": "summoner_hero",
+    "pattern": "frost",
+    "old_effect_dir": "res://assets/art/heroes/stage8_summoner/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": 31,
+    "retained_reason": ""
+  },
+  {
+    "id": "purifier_hero_mercy_chain",
+    "name": "자비의 사슬",
+    "owner": "purifier_hero",
+    "pattern": "chain",
+    "old_effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect6",
+    "new_effect": true,
+    "new_icon_index": 32,
+    "retained_reason": ""
+  },
+  {
+    "id": "purifier_hero_judgment_seal",
+    "name": "심판 낙인",
+    "owner": "purifier_hero",
+    "pattern": "poison",
+    "old_effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect5",
+    "new_effect": true,
+    "new_icon_index": 33,
+    "retained_reason": ""
+  },
+  {
+    "id": "purifier_hero_saint_reliquary",
+    "name": "성인의 유골함",
+    "owner": "purifier_hero",
+    "pattern": "guard",
+    "old_effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect4",
+    "new_effect": true,
+    "new_icon_index": 34,
+    "retained_reason": ""
+  },
+  {
+    "id": "purifier_hero_martyr_blade",
+    "name": "순교자의 검",
+    "owner": "purifier_hero",
+    "pattern": "slash",
+    "old_effect_dir": "res://assets/art/heroes/stage9_prist/frames/effect2",
+    "new_effect": true,
+    "new_icon_index": 35,
+    "retained_reason": ""
+  },
+  {
+    "id": "sage_astra_gravity_lance",
+    "name": "중력 성창",
+    "owner": "sage_astra",
+    "pattern": "beam",
+    "old_effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect3",
+    "new_effect": true,
+    "new_icon_index": 36,
+    "retained_reason": ""
+  },
+  {
+    "id": "sage_astra_frozen_stars",
+    "name": "빙성의 고리",
+    "owner": "sage_astra",
+    "pattern": "orbit",
+    "old_effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": 37,
+    "retained_reason": ""
+  },
+  {
+    "id": "sage_astra_supernova_core",
+    "name": "초신성 핵",
+    "owner": "sage_astra",
+    "pattern": "nova",
+    "old_effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect1",
+    "new_effect": true,
+    "new_icon_index": 38,
+    "retained_reason": ""
+  },
+  {
+    "id": "sage_astra_collapsed_seed",
+    "name": "붕괴 별씨",
+    "owner": "sage_astra",
+    "pattern": "bolt",
+    "old_effect_dir": "res://assets/art/heroes/stage10_sage/frames/effect2",
+    "new_effect": true,
+    "new_icon_index": 39,
+    "retained_reason": ""
+  }
+]
