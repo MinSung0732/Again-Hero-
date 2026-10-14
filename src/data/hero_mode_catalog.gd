@@ -7,6 +7,9 @@ const DURATION := 900.0
 const THINK_INTERVAL := 0.75
 const OBSERVE_INTERVAL := 4.0
 const MONSTER_LIMIT := 72
+const MONSTER_LIMIT_PER_STAGE := 4
+static func monster_limit(stage_number: int) -> int:
+	return MONSTER_LIMIT+MONSTER_LIMIT_PER_STAGE*(clampi(stage_number,1,10)-1)
 const STARTING_COMMAND := 48.0
 const EXP_REWARD_RATIO := 0.25
 const CHEST_KILLS := 200

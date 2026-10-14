@@ -22,6 +22,7 @@ var current_stage_data := {"number":1}
 var current_hero_profile := {"display_name":"mock"}
 var campaign_difficulty := "easy"
 var active_monsters := {}
+var max_command := 100.0
 var finish_count := 0
 var won := false
 func _finish_battle(_text: String, victory: bool) -> void:
@@ -35,7 +36,7 @@ func _apply_special_monster_modifiers(_node: Node,_id: String,_data: Dictionary)
 '''
 spawn_prefix = method('_spawn_monster').split('\tif bool(spawn_modifiers.get("counts_population", false))')[0]
 factory = '\tvar actor = preload("res://tests/hero_encounters_smoke.gd").Actor.new(); add_child(actor); return actor\n\n'
-(output/'tests/hero_finale_harness.gd').write_text(base.replace('    ','\t')+spawn_prefix+factory+method('_on_run_time_up')+method('spawn_hero_encounter')+method('_finish_hero_boss_victory'))
+(output/'tests/hero_finale_harness.gd').write_text(base.replace('    ','\t')+spawn_prefix+factory+method('get_population_limit')+method('_on_run_time_up')+method('spawn_hero_encounter')+method('_finish_hero_boss_victory'))
 
 # Compile and exercise the actual difficulty-selector binding with a save stub.
 lobby = (repo/'src/ui/hero_lobby_view.gd').read_text()

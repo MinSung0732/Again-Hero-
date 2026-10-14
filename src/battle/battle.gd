@@ -2149,7 +2149,7 @@ func _spawn_monster(
 	spawn_modifiers: Dictionary = {}
 ):
 	if hero_player_mode and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and not bool(spawn_modifiers.get("hero_final_boss_spawn",false)): return null
-	if hero_player_mode and (active_monsters.size() >= HERO_SURVIVAL.MONSTER_LIMIT or not HERO_SURVIVAL.monster_allowed(monster_type,int(current_stage_data.get("number",1)),campaign_difficulty)): return null
+	if hero_player_mode and (active_monsters.size() >= HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1))) or not HERO_SURVIVAL.monster_allowed(monster_type,int(current_stage_data.get("number",1)),campaign_difficulty)): return null
 	if bool(spawn_modifiers.get("counts_population", false)) and is_population_full():
 		return null
 	if not bool(MONSTER_CATALOG.MONSTERS.get(monster_type, {}).get("combat_enabled", true)):
@@ -2522,6 +2522,7 @@ func get_population_count() -> int:
 	return direct_population_ids.size()
 
 func get_population_limit() -> int:
+	if hero_player_mode: return HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1)))
 	return maxi(floori(max_command), 0)
 
 func is_population_full() -> bool:
@@ -6158,7 +6159,7 @@ func configure_campaign_difficulty(difficulty: String) -> void:
 func spawn_hero_encounter(id: String, point: Vector2, modifiers: Dictionary) -> Node2D:
 	if not hero_player_mode or battle_over or not HERO_SURVIVAL.monster_allowed(id,int(current_stage_data.get("number",1)),campaign_difficulty): return null
 	point = _clamp_manual_spawn_position(point)
-	if active_monsters.size() >= HERO_SURVIVAL.MONSTER_LIMIT or point.distance_squared_to(hero.position) < 180.0*180.0: return null
+	if active_monsters.size() >= HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1))) or point.distance_squared_to(hero.position) < 180.0*180.0: return null
 	var monster = _spawn_monster(id,point,0.0,false,{"elite_variant":true,"counts_population":true,"hero_encounter_position_locked":true,"hero_final_boss_spawn":String(modifiers.get("type","")) == "boss"})
 	if not is_instance_valid(monster): return null
 	_apply_special_monster_modifiers(monster,id,modifiers)

@@ -60,6 +60,8 @@ var rolling := false
 var pending_chests := 0
 var opening_chest_claimed := false
 var roulette_tween: Tween
+var roulette_details: VBoxContainer
+var roulette_continue: Button
 var roulette_label: Label
 var roulette_reel: Control
 var roulette_pool: Array = []
@@ -468,16 +470,36 @@ func _begin_roulette() -> void:
 	roulette_index = -1
 	_clear_overlay()
 	overlay.name = "HeroChestOverlay"
+	inventory_dim.show(); inventory_dim.move_to_front(); overlay.move_to_front()
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	overlay.offset_left = -450; overlay.offset_right = 450; overlay.offset_top = -310; overlay.offset_bottom = 310
+	var half_width := minf(460,maxf(1,(size.x-48)*0.5))
+	var half_height := minf(370,maxf(1,(size.y-48)*0.5))
+	overlay.offset_left = -half_width; overlay.offset_right = half_width
+	overlay.offset_top = -half_height; overlay.offset_bottom = half_height
+	overlay.add_theme_stylebox_override("panel",INVENTORY_DETAIL.style(Color("111322"),Color("e3bc69"),24))
 	overlay_rows.add_theme_constant_override("separation",14)
-	var title := _label(overlay_rows,"보물상자 · 무기 진화" if bool(roulette_receipt.evolution) else "보물상자 · 보조 강화" if String(roulette_receipt.kind) == "passive" else "보물상자 · 회복" if String(roulette_receipt.kind) == "recovery" else "보물상자 · 무기 강화",34)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var guide := _label(overlay_rows,"빛나는 중앙 칸에 멈춘 보상이 적용됩니다",23)
+	var scroll := ScrollContainer.new(); scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	overlay_rows.add_child(scroll)
+	roulette_details = VBoxContainer.new(); roulette_details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	roulette_details.add_theme_constant_override("separation",14); scroll.add_child(roulette_details)
+	var title := _label(roulette_details,"보물상자 · 무기 진화" if bool(roulette_receipt.evolution) else "보물상자 · 보조 강화" if String(roulette_receipt.kind) == "passive" else "보물상자 · 회복" if String(roulette_receipt.kind) == "recovery" else "보물상자 · 무기 강화",34)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; title.add_theme_color_override("font_color",Color("ffce78"))
+	var guide := _label(roulette_details,"빛나는 중앙 칸에 멈춘 보상이 적용됩니다",23)
 	guide.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	roulette_reel = REEL.new(); overlay_rows.add_child(roulette_reel)
-	roulette_reel.configure(roulette_pool,roulette_receipt)
+	roulette_reel = REEL.new(); roulette_details.add_child(roulette_reel)
+	var ranks := {}
+	var runtime = battle.hero.player_weapons
+	for id in roulette_pool:
+		ranks[id] = "MAX" if runtime.evolved.has(id) else "Lv.%d" % int(runtime.levels.get(id,runtime.passives.get(id,0))) if id != "survival_restore" else "회복"
+	roulette_reel.configure(roulette_pool,roulette_receipt,ranks)
 	roulette_label = roulette_reel.center_label
+	roulette_continue = _button("보상 확인 중…",_close_roulette)
+	roulette_continue.name = "ChestContinue"; roulette_continue.custom_minimum_size.y = 76; roulette_continue.disabled = true
+	roulette_continue.add_theme_font_size_override("font_size",30)
+	var button_skin := StyleBoxFlat.new(); button_skin.bg_color = Color("39234f"); button_skin.border_color = Color("edc16c")
+	button_skin.set_border_width_all(3); button_skin.set_content_margin_all(18)
+	roulette_continue.add_theme_stylebox_override("normal",SKIN.skin_style(button_skin))
 	GameAudio.play_battle("chest",self)
 	roulette_tween = create_tween()
 	roulette_tween.tween_method(_roulette_tick,0.0,1.0,2.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
@@ -493,15 +515,20 @@ func _finish_roulette() -> void:
 	if bool(roulette_receipt.get("applied",false)): return
 	_roulette_tick(1.0)
 	if not battle.hero.player_weapons.apply_chest(roulette_receipt):
-		roulette_label.text = "상자 보상 적용 실패"; _button("계속 플레이",_close_roulette); return
+		roulette_label.text = "상자 보상 적용 실패"; roulette_continue.text = "계속 플레이"; roulette_continue.disabled = false; return
 	opening_chest_claimed = true
 	roulette_label.modulate = Color("ffe09a")
-	var description := _label(overlay_rows,String(roulette_receipt.description),25)
+	_roulette_tick(1.0)
+	var reward_name := _label(roulette_details,String(roulette_receipt.name),28)
+	reward_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; reward_name.add_theme_color_override("font_color",Color("ffce78"))
+	var description := _label(roulette_details,String(roulette_receipt.description),25)
 	description.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	GameAudio.play_battle("chest",self)
-	_refresh_hud(); _button("계속 플레이",_close_roulette).custom_minimum_size.y = 76
+	_refresh_hud(); roulette_continue.text = "계속 플레이"; roulette_continue.disabled = false
 
 func _close_roulette() -> void:
+	if not rolling or not is_instance_valid(roulette_continue) or roulette_continue.disabled: return
+	if is_instance_valid(inventory_dim): inventory_dim.hide()
 	rolling = false; overlay.hide(); pad.reset(); pad.enabled = true
 	battle.set_external_pause(false)
 

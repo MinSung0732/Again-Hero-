@@ -30,6 +30,9 @@ func check(ok: bool, label: String) -> void:
 	checks += 1
 	if not ok: failures += 1; push_error(label)
 func run() -> void:
+	for stage in range(1,11):
+		check(DATA.monster_limit(stage) == 72+4*(stage-1),"stage population progression")
+	check(DATA.monster_limit(-1) == 72 and DATA.monster_limit(99) == 108,"bounded stage cap")
 	for stat in ["hp","damage","speed"]:
 		var previous := 0.0
 		for tick in range(901):
@@ -74,7 +77,7 @@ func run() -> void:
 			check(DATA.monster_allowed(arena.specials[0].id,stage,difficulty),"elite respects grade")
 			var before := arena.normal.size(); arena.external_pause = true; director.tick(100)
 			check(arena.normal.size() == before,"paused director freezes schedule")
-			arena.external_pause = false; arena.population = DATA.MONSTER_LIMIT
+			arena.external_pause = false; arena.population = DATA.monster_limit(stage)
 			arena.run_metrics.elapsed_seconds = director.next_elite
 			director.tick(1)
 			check(arena.specials.size() == 1 and arena.normal.size() == before,"population saturation cannot bypass caps")
