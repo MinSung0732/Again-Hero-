@@ -81,6 +81,8 @@ static func rebuild(main: Node) -> void:
 		main.get_node("HUD/DemonUltimatePanel/UltimateLabel"), main.get_node("HUD/BottomBar/CommandLabel")]:
 		label.add_theme_font_size_override("font_size", 24)
 	apply_visibility(main, main.battle_frame_enabled)
+	main.battle_responsive_layout = preload("res://src/ui/battle_responsive_layout.gd").new()
+	main.battle_responsive_layout.install(main)
 
 static func apply_visibility(main: Node, enabled: bool) -> void:
 	var chrome: Control = main.hud_layer.get_node_or_null("CastleBattleChrome")
@@ -93,6 +95,7 @@ static func apply_visibility(main: Node, enabled: bool) -> void:
 	main.battle_viewport_container.offset_left = SIDE_INSET if enabled else 0.0
 	main.battle_viewport_container.offset_right = -SIDE_INSET if enabled else 0.0
 	place(main.get_node("HUD/HeroSkillCooldownBar"), Rect2(130 if enabled else 30, play_top+10, 470, 68))
+	if main.battle_responsive_layout != null: main.battle_responsive_layout.refresh()
 	main._sync_skill_unlock_cutscene_frame()
 
 static func place(control: Control, rect: Rect2, font_size: int = 0) -> void:

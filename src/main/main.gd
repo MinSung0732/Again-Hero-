@@ -1,5 +1,7 @@
 extends Control
 
+var battle_responsive_layout
+
 const STAMINA_NOTICE := preload("res://src/ui/stamina_notice.gd")
 const STAMINA := preload("res://src/systems/stamina_store.gd")
 var _stamina_entry_pending := false
