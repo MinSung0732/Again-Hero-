@@ -241,7 +241,7 @@ func refresh() -> void:
 			lobby.stage_reward_label.text = "승리 보상\n연구 %d · 골드 %d" % [preload("res://src/data/hero_mode_catalog.gd").WIN_RESEARCH,preload("res://src/data/hero_mode_catalog.gd").WIN_GOLD]
 			lobby.stage_description_label.get_parent().get_node("RepeatReward").text = "무기 증강\n전투 중 습득 · Lv.10 상자 진화"
 			section.get_node("SectionTitle").text = "용사 원정"
-			section.get_node("SectionSubtitle").text = "용사·쉬움 전장 전체 개방 · 어려움은 해당 용사 전장 쉬움 클리어 필요"
+			section.get_node("SectionSubtitle").text = "쉬움 클리어 시 다음 전장 해금 · 어려움은 해당 전장 쉬움 클리어 필요"
 			_apply_selected_hero_portrait()
 			lobby.stage_name_label.text = "마왕의 성 · 붕괴 %d단계" % int(lobby.STAGE_CATALOG.get_stage(stage).get("number",1))
 			var unlocked := HERO_STORE.can_enter(stage,difficulty)

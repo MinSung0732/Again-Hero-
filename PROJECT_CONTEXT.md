@@ -1,3 +1,9 @@
+## 2026-10-15 — 용사 전장 순차 해금(최신 규칙)
+
+- 용사모드 진입은마왕쉬움3클리어. 진입후용사쉬움전장은1만열리고1~9의각쉬움승리가저장되면다음전장해금. 앞단계부터연속으로완료한기록만유효,전체전장자동개방정책폐기.
+- 캐릭터는해당마왕쉬움클리어,용사어려움은해당용사쉬움클리어,랭킹은마왕/용사쉬움10모두클리어유지. 기존성장/clear기록보존,뒤전장저장선택이잠기면stage1로표시. 로컬테스트명시적override유지.
+- real store/UI headless229검사PASS. 실제GPU/Windows/Android미검증.
+
 ## 2026-10-14 — 이펙트 리소스 배포·캐시 정책
 
 - 91종 무기 이펙트의 frames/effect_01~08.png만 전투에 사용. source.png/sprite_sheet.png/icon.png/manifest.json과 증강 weapons.png/passives.png는제작자료로Git보존하되활성OAuth export plugin에서배포제외. 실normalized/unique atlas 유지.

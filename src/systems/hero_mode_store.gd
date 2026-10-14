@@ -51,10 +51,19 @@ static func hard_stage_unlocked(id: String) -> bool:
 static func can_enter(id: String, value: String) -> bool:
 	return value in ["easy","hard"] and battle_stage_unlocked(id) and (value == "easy" or hard_stage_unlocked(id))
 static func highest_battle_stage() -> int:
-	return STAGES.get_ordered_stage_ids().size() if mode_unlocked() else 0
-static func _highest_battle_stage_in_config(_config: ConfigFile) -> int:
-	# Kept for legacy callers: battlefield availability follows the mode gate.
-	return highest_battle_stage()
+	var config := ConfigFile.new()
+	return _highest_battle_stage_in_config(config) if _load(config) else 0
+static func _highest_battle_stage_in_config(config: ConfigFile) -> int:
+	var stages := STAGES.get_ordered_stage_ids()
+	if test_override(): return stages.size()
+	if not mode_unlocked() or stages.is_empty(): return 0
+	var highest := 1
+	# Only contiguous easy victories advance the expedition. Browsing, character
+	# ownership, hard victories and legacy aggregate wins never grant stages.
+	for index in range(stages.size()-1):
+		if int(config.get_value("hero_progress",String(stages[index])+"_easy_wins",0)) <= 0: break
+		highest = index+2
+	return highest
 static func battle_stage_unlocked(id: String) -> bool:
 	var stage: Dictionary = STAGES.get_stage(id)
 	return not stage.is_empty() and int(stage.get("number",0)) <= highest_battle_stage()

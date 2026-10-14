@@ -1,3 +1,9 @@
+## 2026-10-15 — 용사 쉬움 전장 순차 해금
+
+- 용사모드 해금시 쉬움1전장만선택가능. 해당전장의쉬움클리어가저장되면다음전장을하나씩해금(1→2→…→10). 전장선택·입장·보상검증모두동일store gate사용. 기존선택이잠기면stage1fallback,비연속후반클리어/레거시aggregate/hard기록으로건너뛰기차단. 저장된클리어·연구·골드·캐릭터정보보존.
+- 모드진입=마왕쉬움3,캐릭터=해당마왕쉬움클리어,어려움=해당용사전장쉬움클리어,랭킹=마왕/용사쉬움10 모두클리어유지. 명시적로컬테스트override는유지. 로비부제순차해금으로수정.
+- Godot4.7.2 headless 격리실저장/UI gate229검사PASS:신규/10단계순차/패배/저장실패/중복보상/비연속과legacy/계정분리/캐릭터/어려움/랭킹/테스트override. git diff --check PASS. Windows/Android전체플레이·실제화면미검증.
+
 ## 2026-10-14 — 배포 용량·무기 이펙트 준비 최적화
 
 - OAuth export plugin의 _export_file에서 사용하지 않는 무기 이펙트 source/sprite_sheet/icon/manifest와 증강 원본2PNG·제우스 제작ZIP만 제외. 원본은 Git 보존, 실프레임/normalized/unique atlas 유지. 사용자 기존 Windows/Android preset에도 활성 plugin을 통해 적용하며 전체 PNG include는 legacy raw-loader 호환 때문에 유지.
