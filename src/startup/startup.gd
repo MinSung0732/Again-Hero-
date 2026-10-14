@@ -4,6 +4,7 @@ const CATALOG := preload("res://src/data/startup_catalog.gd")
 const VIEW := preload("res://src/ui/startup_loading_view.gd")
 const PIXEL_FRAME := preload("res://src/ui/battle_pixel_frame_assembler.gd")
 const PROFILE := preload("res://src/systems/player_profile.gd")
+const OPTIONS_ICON := preload("res://assets/art/UI/startup/options_gear.svg")
 const OPTIONS := preload("res://src/ui/startup_options.gd")
 const PROLOGUE := preload("res://src/ui/player_prologue.gd")
 enum Phase { TITLE, RESOURCES, LOADING, LOGIN, ENTERING, ERROR, PROLOGUE }
@@ -34,8 +35,13 @@ func _ready() -> void:
 	loading_view.hide()
 	_build_login()
 	login_screen.hide()
-	options_button = _button(self,"옵션",Rect2(0.76,0.025,0.21,0.055),Color("432354"))
+	options_button = _button(self,"",Rect2(0.76,0.025,0.21,0.055),Color("432354"))
 	options_button.name = "StartupOptions"
+	options_button.icon = OPTIONS_ICON
+	options_button.expand_icon = true
+	options_button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	options_button.add_theme_constant_override("icon_max_width",64)
+	options_button.tooltip_text = "옵션"
 	options = OPTIONS.new(); add_child(options); options.install(self,_options_login)
 	options_button.pressed.connect(options.open)
 	LoginGateway.login_unavailable.connect(_show_auth_notice)
