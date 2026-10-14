@@ -1,6 +1,6 @@
 extends RefCounted
 ## Authored hero-only atlas; cache regions once. No bitmap work during battle.
-const ATLAS := preload("res://assets/art/ui/hero_hud/hero_hud_atlas.png")
+const ATLAS := preload("res://assets/art/UI/hero_hud/hero_hud_atlas.png")
 const ICON_KEYS := ["damage","armor","speed","haste","hp","siphon","area","reach","count","projectile","duration","xp"]
 static var cache: Dictionary = {}
 static func region(index: int) -> AtlasTexture:

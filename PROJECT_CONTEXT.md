@@ -1,3 +1,9 @@
+## 2026-10-14 — 배포 리소스 경로 원칙
+
+- UI 에셋은 assets/art/UI로 통일. Windows에서 대소문자만 다른 ui 폴더를 추가하지 않는다. hero_augments/hero_hud 경로도 UI 아래로 이동.
+- 배포 PCK에서 PNG/SVG 원본은 없어도 정상이다. 로비는 ResourceLoader imported texture를 사용하고 FileAccess 원본 로딩은 미import 개발 파일의 fallback만 허용한다.
+- Windows guest 진입90% 로그의 HUD atlas 누락/PresentationWarmup 컴파일 오류와 raw SVG 경고를 수정. 실제 Windows 종료 해결 여부는 업데이트→재가져오기→재내보내기로 확인해야 한다.
+
 ## 2026-10-14 — 상자 골드 누적·공통 연구12종
 
 - 상자 보상 적용시 기본8골드 누적, 승리100%/패배40%/로비복귀·재시작 중단30% 정산. 입장/소유자/chest serial 저장으로중복누적차단, 지갑·clear·단회정산표식을기존트랜잭션에동시저장. 1/1000고정소수점누적·최종버림. 기존고정골드와상자분은골드연구가각1번적용. 상자저장실패는강화재적용없이골드만재시도. 룰렛/일시정지/결과에누적·지급비율표시, 상자빈도/강화기회한도는미변경.

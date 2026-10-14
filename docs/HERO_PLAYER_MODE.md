@@ -52,7 +52,7 @@ Godot4.5.1 전체에셋 프로젝트에서 `hero_character_formation_smoke.gd`12
 
 기존 rawPNG fallback/종료 ObjectDB·리소스 경고는 남아 있다. 실제 화면렌더/10종15분생존/터치/난이도·승률/Android성능·export/클라우드 저장은 미검증이다.
 
-[이번 공세/EXP 전후표와 정적 수치 검증](HERO_SURVIVAL_BALANCE_20261013.md). [68개 아이콘 출처·원본 프롬프트·셀 매핑](../assets/art/ui/hero_augments/SOURCES.md).
+[이번 공세/EXP 전후표와 정적 수치 검증](HERO_SURVIVAL_BALANCE_20261013.md). [68개 아이콘 출처·원본 프롬프트·셀 매핑](../assets/art/UI/hero_augments/SOURCES.md).
 
 
 최신 초반몬스터/테스트해제 후 Godot headless1550검사 PASS 및38종 감사issues0. 상세는 [최신 검증](HERO_SURVIVAL_ENEMIES_20261013.md).

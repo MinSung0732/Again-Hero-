@@ -43,7 +43,7 @@ for id,data in current.items():
   assert manifest['animation']['loop_playback']=='ping_pong'
   if overlap<0.25: warnings.append({'id':id,'raw_endpoint_iou':round(overlap,3),'resolved_by':'adjacent-frame ping-pong cycle; no last-to-first cut'})
 assert count==91
-atlas=Image.open(repo/'assets/art/ui/hero_augments/weapons_unique_v2.png'); assert atlas.size==(512,320)
+atlas=Image.open(repo/'assets/art/UI/hero_augments/weapons_unique_v2.png'); assert atlas.size==(512,320)
 icons={}
 for id,data in current.items():
  if 'icon_index_v2' not in data: continue

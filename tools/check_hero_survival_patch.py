@@ -68,10 +68,10 @@ assert "HorizontalAugmentCards" in ui and "Control.PRESET_CENTER" in ui
 assert "MOUSE_FILTER_IGNORE" in ui and "TEXTURE_FILTER_NEAREST" in ui
 order = constant(icons, "PASSIVE_ORDER")
 assert len(order) == 8 and set(order) == set(passives)
-manifest = json.loads(source("assets/art/ui/hero_augments/manifest.json"))
+manifest = json.loads(source("assets/art/UI/hero_augments/manifest.json"))
 assert set(manifest["icons"]) == set(weapons) | set(passives)
 for sheet, grid in (("weapons.png", (6, 10)), ("passives.png", (4, 2))):
-    data = (ROOT / "assets/art/ui/hero_augments" / sheet).read_bytes()
+    data = (ROOT / "assets/art/UI/hero_augments" / sheet).read_bytes()
     assert data[:8] == b'\x89PNG\r\n\x1a\n'
     width, height = struct.unpack('>II', data[16:24])
     assert data[25] == 6  # RGBA transparency

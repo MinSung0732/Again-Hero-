@@ -953,81 +953,67 @@ func _add_frame_piece_stretched(
 	parent.add_child(piece)
 
 func _load_png_texture_direct(path: String) -> Texture2D:
-	var cached := PresentationWarmup.get_texture(path)
-	if cached != null:
-		return cached
-	var image := Image.new()
-	var load_error := image.load(path)
-	if load_error != OK or image.is_empty():
-		push_warning("UI PNG load failed: %s / error=%s" % [path, load_error])
-		return null
-	return ImageTexture.create_from_image(image)
+	return _load_ui_texture_resource(path)
 
 
 func _load_ui_texture_resource(path: String) -> Texture2D:
-	var resource := load(path)
-	if resource is Texture2D:
-		return resource as Texture2D
-	if path.get_extension().to_lower() == "svg":
-		return _load_svg_texture_direct(path)
-	push_warning("UI texture resource load failed: %s" % path)
+	if path.is_empty():
+		return null
+	var cached := PresentationWarmup.get_texture(path)
+	if cached != null:
+		return cached
+	# Exported sources are remapped to imported textures in the PCK.
+	if ResourceLoader.exists(path):
+		var resource := load(path)
+		if resource is Texture2D:
+			return resource as Texture2D
+	# Raw fallback is needed only before editor import has completed.
+	if FileAccess.file_exists(path):
+		var image := Image.load_from_file(path)
+		if image != null and not image.is_empty():
+			return ImageTexture.create_from_image(image)
+	push_warning("UI texture resource missing: %s" % path)
 	return null
 
 
 func _load_svg_texture_direct(path: String) -> Texture2D:
-	var cached := PresentationWarmup.get_texture(path)
-	if cached != null:
-		return cached
-	if not FileAccess.file_exists(path):
-		push_warning("UI SVG file missing: %s" % path)
-		return null
-	var svg_text := FileAccess.get_file_as_string(path)
-	if svg_text.is_empty():
-		push_warning("UI SVG file empty: %s" % path)
-		return null
-	var image := Image.new()
-	var load_error := image.load_svg_from_string(svg_text, 1.0)
-	if load_error != OK or image.is_empty():
-		push_warning("UI SVG load failed: %s / error=%s" % [path, load_error])
-		return null
-	return ImageTexture.create_from_image(image)
+	return _load_ui_texture_resource(path)
+
+
+func _ui_texture_used_rect(texture: Texture2D) -> Rect2:
+	var image := texture.get_image()
+	if image != null:
+		if image.is_compressed() and image.decompress() != OK:
+			return Rect2(Vector2.ZERO, texture.get_size())
+		var used := image.get_used_rect()
+		if used.has_area():
+			return Rect2(used)
+	return Rect2(Vector2.ZERO, texture.get_size())
 
 
 func _load_png_texture_cropped(path: String) -> Texture2D:
 	var cached := PresentationWarmup.get_cropped(path)
 	if cached != null:
 		return cached
-	var image := Image.new()
-	var load_error := image.load(path)
-	if load_error != OK or image.is_empty():
-		push_warning("UI PNG crop load failed: %s / error=%s" % [path, load_error])
+	var texture := _load_ui_texture_resource(path)
+	if texture == null:
 		return null
-
-	var used_rect := image.get_used_rect()
-	if used_rect.size.x <= 0 or used_rect.size.y <= 0:
-		return ImageTexture.create_from_image(image)
-
-	var cropped := image.get_region(used_rect)
-	return ImageTexture.create_from_image(cropped)
+	var cropped := AtlasTexture.new()
+	cropped.atlas = texture
+	cropped.region = _ui_texture_used_rect(texture)
+	return cropped
 
 
 func _load_png_texture_top_region(path: String, height_ratio: float) -> Texture2D:
-	var image := Image.new()
-	var load_error := image.load(path)
-	if load_error != OK or image.is_empty():
-		push_warning("UI PNG region load failed: %s / error=%s" % [path, load_error])
+	var texture := _load_ui_texture_resource(path)
+	if texture == null:
 		return null
-
-	var used_rect := image.get_used_rect()
-	if used_rect.size.x <= 0 or used_rect.size.y <= 0:
-		return ImageTexture.create_from_image(image)
-
-	var cropped_used := image.get_region(used_rect)
-	var region_height := maxi(1, int(round(cropped_used.get_height() * clampf(height_ratio, 0.1, 1.0))))
-	var top_region := cropped_used.get_region(
-		Rect2i(0, 0, cropped_used.get_width(), region_height)
-	)
-	return ImageTexture.create_from_image(top_region)
+	var region := _ui_texture_used_rect(texture)
+	region.size.y = maxi(1, int(round(region.size.y * clampf(height_ratio, 0.1, 1.0))))
+	var cropped := AtlasTexture.new()
+	cropped.atlas = texture
+	cropped.region = region
+	return cropped
 
 
 func _apply_content_card_skin(content_frame: PanelContainer) -> void:

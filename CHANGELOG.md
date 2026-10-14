@@ -1,3 +1,9 @@
+## 2026-10-14 — Windows 로비 진입 리소스 오류 수정
+
+- 사용자 Windows 출시 로그에서 hero_hud_atlas.png preload 누락→hero_survival_hud→PresentationWarmup 컴파일 실패 확인. 함께 존재하던 assets/art/UI와 assets/art/ui를 UI 하나로 통일하고 HUD/증강8파일 이동, 런타임·제작/검사 도구·문서 경로 갱신. 에셋 픽셀 변경 없음.
+- 로비 PNG/SVG는 FileAccess 원본 대신 ResourceLoader의 imported Texture2D 우선 사용. crop/top region은 기존 텍스처 AtlasTexture 재사용, 압축 get_image의 decompression 실패는 전체범위 fallback. 게스트 빈 avatar 경로를 load("")→res://로 읽지 않도록 보호.
+- Godot4.7.2 headless 격리 실제 export-pack/PCK 실행133검사 PASS: 원본 PNG/SVG 없음 확인, imported texture/region 로딩·HUD/100무기/16보조 atlas. Python 구문 및 git diff --check PASS. 전체 로비·Windows exe/GPU·Android 종료 재현/해결은 미검증. 원인 확정 범위는 로그의 리소스/컴파일 오류이며 네이티브 종료 원인은 추가 실행 확인 필요.
+
 ## 2026-10-14 — 배포용 쿠폰 입력 안내 제거
 
 - 쿠폰 입력 초기 tutorialtest/normaltest 안내를 숨기고, 재진입 시 이전 안내/오류도 초기화. 테스트 모드 충돌 오류는 구체적인 개발 쿠폰명을 노출하지 않는 문구로 변경. 쿠폰 입력·검증·적용·저장 재시도·취소 동작 유지.

@@ -93,7 +93,7 @@ func prepare_scene(scene_path: String, entry_options: Dictionary = {}) -> bool:
 		dirs.assign(["ui_gagebar_frames", "01_large_left_panel", "02_top_right_panel", "03_middle_right_panel", "05_right_bars", "battle_castle_v3"])
 	elif scene_path == "res://src/hero_mode/HeroMode.tscn":
 		var store := preload("res://src/systems/hero_mode_store.gd")
-		paths.append("res://assets/art/ui/hero_hud/hero_hud_atlas.png")
+		paths.append("res://assets/art/UI/hero_hud/hero_hud_atlas.png")
 		var hero_id := String(entry_options.get("hero_id", store.selected_hero()))
 		paths.append(preload("res://src/ui/hero_survival_hud.gd").portrait_path(hero_id))
 		var profile := HEROES.get_profile(hero_id)

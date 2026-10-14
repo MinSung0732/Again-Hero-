@@ -66,5 +66,5 @@ if args.finalize:
  if missing: raise SystemExit('Missing extra icons '+str(missing))
  atlas=Image.new('RGBA',(512,320))
  for index,id in enumerate(extras): atlas.paste(Image.open(root/id/'icon.png'),(index%8*64,index//8*64))
- atlas_path=repo/'assets/art/ui/hero_augments/weapons_unique_v2.png'; atlas.save(atlas_path)
+ atlas_path=repo/'assets/art/UI/hero_augments/weapons_unique_v2.png'; atlas.save(atlas_path)
 print(json.dumps({'processed':len(report),'entries':report},ensure_ascii=False))

@@ -13,4 +13,4 @@
 `assets/art/effects/hero_weapon_v2/<weapon_id>/sprite_sheet.png`: 분리정규화된시트.
 `frames/effect_01.png`~`effect_08.png`: 실제인게임프레임.
 `manifest.json`: crop/공통중심등메타데이터.
-Git에는91시트/728프레임이있으며100무기전체새생성이아니라공유90종+실린더스트라이크1종을생성했다. 일부원본네이티브연출은유지한다. 40개새인벤토리아이콘atlas는`assets/art/ui/hero_augments/weapons_unique_v2.png`. 상세연결/보존정책은HERO_WEAPON_ART_20261014.md와HERO_WEAPON_ART_AUDIT_20261014.json에있다. feature/stage10-astra 최신브랜치를확인해야하며main에자동병합하지않는다.
+Git에는91시트/728프레임이있으며100무기전체새생성이아니라공유90종+실린더스트라이크1종을생성했다. 일부원본네이티브연출은유지한다. 40개새인벤토리아이콘atlas는`assets/art/UI/hero_augments/weapons_unique_v2.png`. 상세연결/보존정책은HERO_WEAPON_ART_20261014.md와HERO_WEAPON_ART_AUDIT_20261014.json에있다. feature/stage10-astra 최신브랜치를확인해야하며main에자동병합하지않는다.
