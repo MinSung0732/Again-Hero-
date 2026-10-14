@@ -1,4 +1,5 @@
 extends SceneTree
+const REEL := preload("res://src/ui/hero_chest_reel.gd")
 const HUD := preload("res://src/ui/hero_survival_hud.gd")
 const STATS := preload("res://src/ui/hero_compact_stats.gd")
 const FRAME := preload("res://src/ui/hero_battle_frame.gd")
@@ -42,6 +43,10 @@ func run() -> void:
 	check(harness.timer.get_theme_font_size("font_size") >= 26,"mobile hero/time text enlarged")
 	check(harness.weapon_buttons[0].custom_minimum_size.y >= 76,"mobile inventory target enlarged")
 	check(harness.hp.custom_minimum_size.y >= 36 and harness.xp.custom_minimum_size.y >= 32,"mobile status bars enlarged")
+	var portrait = harness.find_child("HeroPortrait",true,false)
+	check(portrait.custom_minimum_size.x >= 188 and portrait.get_parent().name == "HeroPortraitFrame","large framed portrait")
+	check(harness.hp.position.x >= 0 and harness.hp.size.x < harness.get_node("HeroHUD").size.x-150,"bars confined beside portrait")
+	check(harness.find_children("CounterIcon","TextureRect",true,false).size() == 2,"kill and alive icons present")
 	check(harness.weapon_buttons.size() == 6 and harness.passive_buttons.size() == 6,"two rows of six actual HUD slots")
 	check(harness.get_node("HeroHUD").get_global_rect().end.y <= HUD.BATTLE_TOP,"header remains above battle")
 	for slot in harness.weapon_buttons+harness.passive_buttons:
@@ -122,6 +127,33 @@ func run() -> void:
 	check(is_equal_approx(stats.position.x,10) and not stats.expanded,"collapsed button follows frame off")
 	harness.battle_frame_enabled = true; harness._apply_battle_frame()
 	check(is_equal_approx(stats.position.x,100),"collapsed button restored with frame")
+	var weapon_chest := runtime.roll_chest()
+	check(weapon_chest.kind == "weapon" and not weapon_chest.evolution,"weapon upgrades retain priority")
+	for id in runtime.weapon_ids: runtime.levels[id] = 10
+	var evolve_chest := runtime.roll_chest()
+	check(evolve_chest.kind == "weapon" and evolve_chest.evolution,"evolution retains highest priority")
+	for id in runtime.weapon_ids: runtime.evolved[id] = true
+	for id in runtime.passives: runtime.passives[id] = DATA.passive_limit(id)
+	runtime.passives["survival_power"] = 9
+	var passive_chest := runtime.roll_chest()
+	check(passive_chest.kind == "passive" and passive_chest.id == "survival_power" and passive_chest.pool == ["survival_power"],"completed weapons roll only upgradable owned passives")
+	check(runtime.apply_chest(passive_chest) and runtime.passives.survival_power == 10,"passive reward applies actual rank and effect")
+	var replay := passive_chest.duplicate(); replay.applied = false
+	check(not runtime.apply_chest(replay),"passive receipt cannot replay")
+	var reel := REEL.new(); root.add_child(reel); reel.configure(passive_chest.pool,passive_chest)
+	reel.advance(0); check(reel.center_label.text == DATA.PASSIVES.survival_power.name,"reel spin uses passive name")
+	reel.advance(1); check(reel.displayed_id == passive_chest.id and reel.center_label.text == passive_chest.name,"reel lands on passive rank")
+	reel.queue_free()
+	runtime.passives.survival_multishot = 1
+	var multishot_chest := runtime.roll_chest()
+	check(multishot_chest.id == "survival_multishot" and runtime.apply_chest(multishot_chest) and runtime.passives.survival_multishot == 2,"two-rank passive chest respects cap")
+	var blessing := runtime.roll_chest(); hero.current_hp = 100
+	check(blessing.kind == "recovery" and runtime.apply_chest(blessing) and hero.current_hp == 350,"all equipped augments max fall back to recovery")
+	var stale := runtime.roll_chest(); var latest := runtime.roll_chest()
+	check(not runtime.apply_chest(stale) and runtime.apply_chest(latest),"superseded chest receipt rejected")
+	var solo := BASE.Hero.new(); arena.add_child(solo); var solo_runtime := RUNTIME.new(); solo_runtime.install(solo)
+	var solo_id := String(solo_runtime.weapon_ids[0]); solo_runtime.levels[solo_id] = 10; solo_runtime.evolved[solo_id] = true
+	check(solo_runtime.roll_chest().kind == "recovery" and solo_runtime.passives.is_empty(),"chest does not equip unowned passives")
 	print("HERO_HUD_INVENTORY checks=%d failures=%d" % [checks,failures])
 	frame.queue_free(); arena.queue_free(); harness.queue_free()
 	await process_frame

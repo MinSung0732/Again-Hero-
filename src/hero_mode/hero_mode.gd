@@ -173,25 +173,25 @@ func _build_ui() -> void:
 	var frame := StyleBoxFlat.new(); frame.bg_color = Color("171b29"); frame.border_color = Color("c9a45e"); frame.set_border_width_all(3); frame.set_content_margin_all(12)
 	header.add_theme_stylebox_override("panel",SKIN.skin_style(frame))
 	var top := VBoxContainer.new(); top.add_theme_constant_override("separation",6); header.add_child(top)
-	var title_row := HBoxContainer.new(); top.add_child(title_row)
-	title_row.add_theme_constant_override("separation",12)
-	HUD.portrait(title_row,player_hero_id)
-	hero_title = _label(title_row,"용사\nLv.1",32); hero_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hero_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	hero_title.add_theme_color_override("font_color",Color("f4f1e9"))
-	timer = _label(title_row,"남은 시간\n15:00",28); timer.custom_minimum_size.x = 190
+	var summary := HBoxContainer.new(); summary.name = "HeroSummary"; summary.add_theme_constant_override("separation",14); top.add_child(summary)
+	HUD.portrait(summary,player_hero_id)
+	var vitals := VBoxContainer.new(); vitals.name = "HeroVitals"; vitals.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vitals.add_theme_constant_override("separation",6); summary.add_child(vitals)
+	var title_row := HBoxContainer.new(); title_row.add_theme_constant_override("separation",12); vitals.add_child(title_row)
+	hero_title = _label(title_row,"용사\nLv.1",30); hero_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hero_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER; hero_title.add_theme_color_override("font_color",Color("f4f1e9"))
+	timer = _label(title_row,"남은 시간\n15:00",26); timer.custom_minimum_size.x = 160
 	timer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; timer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	timer.add_theme_color_override("font_color",Color("add5ff"))
-	var menu := Button.new(); menu.text = "설정"; menu.custom_minimum_size = Vector2(100,80); title_row.add_child(menu)
+	var menu := Button.new(); menu.text = "설정"; menu.custom_minimum_size = Vector2(90,72); title_row.add_child(menu)
 	menu.add_theme_font_size_override("font_size",26); _skin_action_button(menu); menu.pressed.connect(_pause)
-	hp = HUD.bar(top,"HP",Color("29cf79"),40)
-	xp = HUD.bar(top,"EXP",Color("6b9aef"),32)
-	var situation := HBoxContainer.new(); situation.name = "BattleCounters"; situation.add_theme_constant_override("separation",10); top.add_child(situation)
-	kills_label = HUD.counter(situation,"처치",Color("f6d68c"))
-	population_label = HUD.counter(situation,"현재 적",Color("d8e6ff"))
-	status = _label(situation,"전투 준비",24); status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	status.add_theme_color_override("font_color",Color("aab4c9"))
+	hp = HUD.bar(vitals,"HP",Color("29cf79"),40)
+	xp = HUD.bar(vitals,"EXP",Color("6b9aef"),32)
+	var situation := HBoxContainer.new(); situation.name = "BattleCounters"; situation.add_theme_constant_override("separation",10); vitals.add_child(situation)
+	kills_label = HUD.counter(situation,"처치",Color("f6d68c"),HUD.ART.icon("damage"))
+	population_label = HUD.counter(situation,"현재 적",Color("d8e6ff"),HUD.MONSTER_ICON)
+	status = _label(situation,"전투 준비",23); status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER; status.add_theme_color_override("font_color",Color("aab4c9"))
 	status.autowrap_mode = TextServer.AUTOWRAP_OFF; status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS; status.clip_text = true
 	weapon_buttons = HUD.inventory_row(top,"무기",WEAPONS.WEAPON_SLOTS)
 	for index in weapon_buttons.size(): weapon_buttons[index].pressed.connect(_show_weapon_info.bind(index))
@@ -419,7 +419,7 @@ func _show_weapon_info(index: int) -> void:
 	var id := String(runtime.weapon_ids[index])
 	_label(overlay_rows,WEAPONS.GROWTH.evolution_name(id) if runtime.evolved.has(id) else String(WEAPONS.WEAPONS[id].name),32)
 	_label(overlay_rows,WEAPONS.GROWTH.description(id,int(runtime.levels[id]),runtime.evolved.has(id)),24)
-	_label(overlay_rows,"상자: Lv.10 무기 중 하나 진화 → 없으면 보유 무기 +1레벨",23)
+	_label(overlay_rows,"상자: 무기 진화 → 무기 강화 → 보조 강화",23)
 	_button("계속 플레이",_resume)
 
 func _queue_chest() -> void:
@@ -429,14 +429,14 @@ func _begin_roulette() -> void:
 	pending_chests -= 1; rolling = true
 	battle.set_external_pause(true); pad.enabled = false; pad.reset()
 	roulette_receipt = battle.hero.player_weapons.roll_chest()
-	roulette_pool = battle.hero.player_weapons.weapon_ids.duplicate()
+	roulette_pool = roulette_receipt.pool.duplicate()
 	roulette_index = -1
 	_clear_overlay()
 	overlay.name = "HeroChestOverlay"
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	overlay.offset_left = -450; overlay.offset_right = 450; overlay.offset_top = -310; overlay.offset_bottom = 310
 	overlay_rows.add_theme_constant_override("separation",14)
-	var title := _label(overlay_rows,"보물상자 · 무기 진화" if bool(roulette_receipt.evolution) else "보물상자 · 무기 강화",34)
+	var title := _label(overlay_rows,"보물상자 · 무기 진화" if bool(roulette_receipt.evolution) else "보물상자 · 보조 강화" if String(roulette_receipt.kind) == "passive" else "보물상자 · 회복" if String(roulette_receipt.kind) == "recovery" else "보물상자 · 무기 강화",34)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var guide := _label(overlay_rows,"빛나는 중앙 칸에 멈춘 보상이 적용됩니다",23)
 	guide.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -458,7 +458,7 @@ func _finish_roulette() -> void:
 	if bool(roulette_receipt.get("applied",false)): return
 	_roulette_tick(1.0)
 	if not battle.hero.player_weapons.apply_chest(roulette_receipt):
-		roulette_label.text = "무기 강화 적용 실패"; _button("계속 플레이",_close_roulette); return
+		roulette_label.text = "상자 보상 적용 실패"; _button("계속 플레이",_close_roulette); return
 	roulette_label.modulate = Color("ffe09a")
 	var description := _label(overlay_rows,String(roulette_receipt.description),25)
 	description.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

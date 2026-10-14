@@ -167,10 +167,18 @@ func roll_chest() -> Dictionary:
 	if not evolution:
 		for id in weapon_ids:
 			if int(levels[id]) < DATA.MAX_LEVEL: eligible.append(id)
+	var passive_reward := false
+	if eligible.is_empty():
+		for id in passives:
+			if int(passives[id]) < DATA.passive_limit(id) and not bool(DATA.PASSIVES[id].get("one_shot",false)) and DATA.passive_allowed(id,String(hero.hero_id),weapon_ids): eligible.append(String(id))
+		passive_reward = not eligible.is_empty()
 	chest_serial += 1
-	if eligible.is_empty(): return {"serial":chest_serial,"id":"survival_restore","evolution":false,"name":"생명의 축복","description":"모든 무기가 완성됐습니다. 최대 HP 25% 회복","applied":false}
+	if eligible.is_empty(): return {"serial":chest_serial,"id":"survival_restore","evolution":false,"name":"생명의 축복","description":"장착 증강이 모두 완성됐습니다. 최대 HP 25% 회복","kind":"recovery","pool":["survival_restore"],"applied":false}
 	var id := eligible[randi_range(0,eligible.size()-1)]
-	return {"serial":chest_serial,"id":id,"evolution":evolution,"name":DATA.GROWTH.evolution_name(id) if evolution else String(DATA.WEAPONS[id].name)+" Lv.%d" % (int(levels[id])+1),"description":DATA.GROWTH.evolution_description(id) if evolution else DATA.GROWTH.upgrade_description(id,int(levels[id])+1),"applied":false}
+	if passive_reward:
+		var next_level := int(passives[id])+1
+		return {"serial":chest_serial,"id":id,"evolution":false,"kind":"passive","pool":eligible,"name":String(DATA.PASSIVES[id].name)+" Lv.%d" % next_level,"description":DATA.description(id,next_level),"applied":false}
+	return {"serial":chest_serial,"id":id,"evolution":evolution,"kind":"weapon","pool":eligible,"name":DATA.GROWTH.evolution_name(id) if evolution else String(DATA.WEAPONS[id].name)+" Lv.%d" % (int(levels[id])+1),"description":DATA.GROWTH.evolution_description(id) if evolution else DATA.GROWTH.upgrade_description(id,int(levels[id])+1),"applied":false}
 
 func apply_chest(receipt: Dictionary) -> bool:
 	if bool(receipt.get("applied",false)) or int(receipt.get("serial",-1)) != chest_serial or chest_serial <= last_applied_chest: return false
@@ -181,7 +189,8 @@ func apply_chest(receipt: Dictionary) -> bool:
 		evolved[id] = true
 		resolved.erase(id)
 	else:
-		if not levels.has(id) or not add(id): return false
+		if not levels.has(id) and not passives.has(id): return false
+		if not add(id): return false
 	receipt["applied"] = true
 	last_applied_chest = chest_serial
 	return true

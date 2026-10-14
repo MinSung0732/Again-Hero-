@@ -2,6 +2,8 @@ extends RefCounted
 ## Shared castle assets/colors; the battle mode owns the values and callbacks.
 const BATTLE_TOP := 470.0
 const FRAME_WIDTH := 90.0
+const ART := preload("res://src/ui/hero_hud_art.gd")
+const MONSTER_ICON := preload("res://assets/art/monsters/slime/frames/idle_01.png")
 const CHARACTERS := preload("res://src/data/hero_character_catalog.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
 static var portraits: Dictionary = {}
@@ -82,19 +84,27 @@ static func portrait_texture(hero_id: String) -> Texture2D:
 	return portraits[path] as Texture2D
 static func portrait(parent: Control, hero_id: String) -> TextureRect:
 	var result := TextureRect.new(); result.name = "HeroPortrait"; result.texture = portrait_texture(hero_id)
-	result.custom_minimum_size = Vector2(96,96); result.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	result.custom_minimum_size = Vector2(188,188); result.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	result.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; result.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	result.mouse_filter = Control.MOUSE_FILTER_IGNORE; parent.add_child(result); return result
+	result.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var frame := PanelContainer.new(); frame.name = "HeroPortraitFrame"; frame.custom_minimum_size = Vector2(204,204)
+	var style := StyleBoxFlat.new(); style.bg_color = Color("0e1220"); style.border_color = Color("d5b46d")
+	style.set_border_width_all(3); style.set_content_margin_all(8); frame.add_theme_stylebox_override("panel",style)
+	parent.add_child(frame); frame.add_child(result); return result
 
 static func panel(parent: Control, color: Color, margin: int = 8) -> PanelContainer:
 	var result := PanelContainer.new()
 	var style := StyleBoxFlat.new(); style.bg_color = color; style.set_content_margin_all(margin)
 	style.border_color = Color("484055"); style.set_border_width_all(1)
 	result.add_theme_stylebox_override("panel",style); parent.add_child(result); return result
-static func counter(parent: Control, title: String, tint: Color) -> Label:
+static func counter(parent: Control, title: String, tint: Color, texture: Texture2D) -> Label:
 	var plate := panel(parent,Color("242333"),6)
-	plate.custom_minimum_size = Vector2(220,52)
-	var result := Label.new(); result.name = title; result.text = title+" 0"
+	plate.custom_minimum_size = Vector2(208,52)
+	var row := HBoxContainer.new(); row.add_theme_constant_override("separation",8); plate.add_child(row)
+	var icon := TextureRect.new(); icon.name = "CounterIcon"; icon.texture = texture; icon.custom_minimum_size = Vector2(36,36)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST; icon.mouse_filter = Control.MOUSE_FILTER_IGNORE; row.add_child(icon)
+	var result := Label.new(); result.size_flags_horizontal = Control.SIZE_EXPAND_FILL; result.name = title; result.text = title+" 0"
 	result.add_theme_font_size_override("font_size",28); result.add_theme_color_override("font_color",tint)
 	result.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; result.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	result.mouse_filter = Control.MOUSE_FILTER_IGNORE; plate.add_child(result); return result
+	result.mouse_filter = Control.MOUSE_FILTER_IGNORE; row.add_child(result); return result

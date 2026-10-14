@@ -39,7 +39,7 @@ func advance(value: float) -> void:
 		for slot in 3:
 			var id := String(pool[posmod(index+slot-1,pool.size())])
 			icons[slot].texture = ICONS.texture(id)
-			labels[slot].text = String(DATA.WEAPONS[id].name) if DATA.WEAPONS.has(id) else "생명의 축복"
+			labels[slot].text = String(DATA.WEAPONS[id].name) if DATA.WEAPONS.has(id) else String(DATA.PASSIVES[id].name) if DATA.PASSIVES.has(id) else "생명의 축복"
 		displayed_id = String(pool[index%pool.size()])
 	if progress >= 1.0: center_label.text = String(receipt.name)
 	_layout(); queue_redraw()
