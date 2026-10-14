@@ -77,11 +77,9 @@ func install(lobby: Control) -> void:
 		if COUPONS.STAMINA.has(code):
 			submit.disabled = true
 			var coupon: Dictionary = COUPONS.STAMINA[code]
-			var result := STAMINA.grant(int(coupon.amount),String(coupon.grant_id))
+			var result := STAMINA.grant_repeatable(int(coupon.amount),String(coupon.source_id))
 			if not bool(result.get("success",false)):
 				notice.text = "지급 내역을 저장하지 못했습니다. 다시 시도해 주세요."
-			elif String(result.get("reason","")) == "already_granted":
-				notice.text = "이미 사용한 쿠폰입니다."
 			else:
 				notice.text = "스테미너 +%d 지급 완료!" % int(result.granted)
 				if lobby.stamina_view != null: lobby.stamina_view.refresh()

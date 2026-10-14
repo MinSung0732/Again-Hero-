@@ -93,11 +93,11 @@ func run() -> void:
 	check(STORE.read_state(T+40364).amount == 30, "reload recovers from persisted anchor")
 	var coupon: Dictionary = COUPONS.STAMINA["addtest"]
 	check(int(coupon.amount) == 100, "addtest catalog credits 100")
-	var coupon_result := STORE.grant(int(coupon.amount),String(coupon.grant_id),T+40364)
+	var coupon_result := STORE.grant_repeatable(int(coupon.amount),String(coupon.source_id),T+40364)
 	check(coupon_result.success and coupon_result.granted == 100 and STORE.read_state(T+40364).amount == 130, "addtest exceeds natural cap")
-	check(STORE.grant(int(coupon.amount),String(coupon.grant_id),T+40364).granted == 0, "addtest cannot be redeemed twice")
+	check(STORE.grant_repeatable(int(coupon.amount),String(coupon.source_id),T+40364).granted == 100 and STORE.read_state(T+40364).amount == 230, "addtest credits every use")
 	STORE.invalidate()
-	check(STORE.read_state(T+40364).amount == 130, "addtest wallet survives reload")
+	check(STORE.read_state(T+40364).amount == 230, "addtest wallet survives reload")
 	check(PROGRESS.get_gold() == 1000 and PROGRESS.get_research_points() == 73, "addtest preserves other rewards")
 	# A paid ticket is bound to exactly one destination battle. Real elapsed time
 	# includes pauses; full-load refunds and partial exits share one receipt.

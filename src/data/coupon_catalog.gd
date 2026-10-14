@@ -1,5 +1,5 @@
 extends RefCounted
-# Stable IDs are saved with the wallet credit; each save account redeems once.
+# Test coupon rewards are repeatable on every explicit submission.
 const STAMINA := {
-	"addtest": {"amount":100,"grant_id":"coupon:addtest"},
+	"addtest": {"amount":100,"source_id":"coupon:addtest"},
 }
