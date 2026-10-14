@@ -2373,6 +2373,7 @@ const PASSIVES := {
   }
 }
 const MELEE_HEROES := ["swift_hunter","sword_shield_hero","madness_hero"]
+const RANGED_RESEARCH_PATTERNS := ["bolt","burst","piercer","beam","chain","meteor","poison","ice_pillar","singularity"]
 const PROJECTILE_PATTERNS := ["bolt","burst","piercer","meteor"]
 const AREA_PATTERNS := ["combo","slash","beam","capsule","orbit","nova","frost","poison","guard","heal","ice_pillar","meteor","singularity"]
 static func passive_limit(id: String) -> int:

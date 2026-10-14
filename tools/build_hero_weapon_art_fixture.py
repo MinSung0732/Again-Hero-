@@ -13,5 +13,6 @@ var hero
 var effects: Array = []
 var projectiles: Array = []
 var fields: Array = []
+var research := {}
 var visual_clock := 0.25
 '''+draw)

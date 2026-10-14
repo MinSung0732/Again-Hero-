@@ -47,6 +47,9 @@ var overlay_rows: VBoxContainer
 var choice_generation := 0
 var choosing := false
 var paused := false
+var run_abandoned := false
+var run_chest_gold := 0
+var chest_gold_saved := false
 var settled := false
 var leaving := false
 var entry: Dictionary = {}
@@ -375,7 +378,7 @@ func _pause() -> void:
 	overlay.add_theme_stylebox_override("panel",INVENTORY_DETAIL.style(Color("171226"),Color("e3bc69"),24))
 	var runtime = battle.hero.player_weapons
 	var equipped: Array = runtime.weapon_ids.slice(0,4) if runtime != null else []
-	PAUSE_VIEW.build(overlay_rows,{"seconds":battle.run_metrics.elapsed_seconds,"kills":_kill_count(),"level":battle.hero.level,"weapons":equipped},{"resume":_resume,"restart":_restart_from_pause,"settings":_open_settings,"leave":_leave})
+	PAUSE_VIEW.build(overlay_rows,{"seconds":battle.run_metrics.elapsed_seconds,"kills":_kill_count(),"level":battle.hero.level,"weapons":equipped,"chest_gold":run_chest_gold},{"resume":_resume,"restart":_restart_from_pause,"settings":_open_settings,"leave":_leave})
 
 func _resume() -> void:
 	if is_instance_valid(inventory_dim): inventory_dim.hide()
@@ -413,7 +416,7 @@ func _show_result() -> void:
 	overlay.offset_top = -initial_half_height; overlay.offset_bottom = initial_half_height
 	overlay.add_theme_stylebox_override("panel",INVENTORY_DETAIL.style(Color("171226"),Color("e3bc69") if finished_won else Color("d7828d"),24))
 	if not settled:
-		result_reward = STORE.award_run(stage,entry,battle.run_metrics.elapsed_seconds,_kill_count(),finished_won,run_difficulty)
+		result_reward = STORE.award_run(stage,entry,battle.run_metrics.elapsed_seconds,_kill_count(),finished_won,run_difficulty,"abandon" if run_abandoned else "victory" if finished_won else "defeat",float(battle.hero.player_weapons.gold_bonus))
 		settled = bool(result_reward.get("success",false))
 	var equipped: Array = []
 	var runtime = battle.hero.player_weapons
@@ -421,7 +424,7 @@ func _show_result() -> void:
 		for id in runtime.weapon_ids:
 			equipped.append({"id":id,"rank":"MAX" if runtime.evolved.has(id) else "Lv.%d" % int(runtime.levels.get(id,1))})
 	var next_stage := String(STAGES.get_stage(stage).get("next_stage_id",""))
-	var model := {"won":finished_won,"message":finished_message,"seconds":battle.run_metrics.elapsed_seconds,"kills":_kill_count(),"level":battle.hero.level,"weapons":equipped,"settled":settled,"research":int(result_reward.get("research",0)),"gold":int(result_reward.get("gold",0)),"next_available":finished_won and STORE.can_enter(next_stage,run_difficulty)}
+	var model := {"won":finished_won,"message":finished_message,"seconds":battle.run_metrics.elapsed_seconds,"kills":_kill_count(),"level":battle.hero.level,"weapons":equipped,"settled":settled,"research":int(result_reward.get("research",0)),"gold":int(result_reward.get("gold",0)),"chest_earned":int(result_reward.get("chest_earned",0)),"chest_paid":int(result_reward.get("chest_paid",0)),"chest_rate":float(result_reward.get("chest_rate",0)),"next_available":finished_won and STORE.can_enter(next_stage,run_difficulty)}
 	RESULT_VIEW.build(overlay_rows,model,{"settle":_show_result,"next":_next_stage.bind(next_stage),"retry":_retry,"leave":_leave})
 
 func _retry() -> void:
@@ -441,6 +444,7 @@ func _leave() -> void:
 			var refund := STAMINA.refund_early_exit(entry,elapsed)
 			if not bool(refund.get("success",false)):
 				_label(overlay_rows,"스테미너 반환 저장에 실패했습니다. 다시 눌러 주세요.",23); return
+			run_abandoned = true
 			battle.finish_abandoned_run()
 		if not settled: return
 	leaving = true
@@ -476,7 +480,7 @@ func _queue_chest() -> void:
 	if not battle.battle_over: pending_chests = mini(pending_chests+1,4)
 
 func _begin_roulette() -> void:
-	pending_chests -= 1; rolling = true
+	pending_chests -= 1; rolling = true; chest_gold_saved = false
 	battle.set_external_pause(true); pad.enabled = false; pad.reset()
 	roulette_receipt = battle.hero.player_weapons.roll_chest()
 	roulette_pool = roulette_receipt.pool.duplicate()
@@ -525,10 +529,15 @@ func _roulette_tick(progress: float) -> void:
 
 func _finish_roulette() -> void:
 	if not rolling or battle.battle_over: return
-	if bool(roulette_receipt.get("applied",false)): return
+	if chest_gold_saved: return
 	_roulette_tick(1.0)
-	if not battle.hero.player_weapons.apply_chest(roulette_receipt):
+	if not bool(roulette_receipt.get("applied",false)) and not battle.hero.player_weapons.apply_chest(roulette_receipt):
+		chest_gold_saved = true
 		roulette_label.text = "상자 보상 적용 실패"; roulette_continue.text = "계속 플레이"; roulette_continue.disabled = false; return
+	var saved: Dictionary = STORE.record_chest(entry,int(roulette_receipt.get("serial",0)),float(battle.hero.player_weapons.gold_bonus))
+	if not bool(saved.get("success",false)):
+		roulette_label.text = "상자 골드 저장 실패"; roulette_continue.text = "골드 저장 재시도"; roulette_continue.disabled = false; return
+	chest_gold_saved = true; run_chest_gold = int(saved.pending)
 	opening_chest_claimed = true
 	roulette_label.modulate = Color("ffe09a")
 	_roulette_tick(1.0)
@@ -536,11 +545,14 @@ func _finish_roulette() -> void:
 	reward_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; reward_name.add_theme_color_override("font_color",Color("ffce78"))
 	var description := _label(roulette_details,String(roulette_receipt.description),25)
 	description.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var gold_note := _label(roulette_details,"상자 골드 누적 %d · 승리100%% / 패배40%% / 중단30%%" % run_chest_gold,22)
+	gold_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	GameAudio.play_battle("chest",self)
 	_refresh_hud(); roulette_continue.text = "계속 플레이"; roulette_continue.disabled = false
 
 func _close_roulette() -> void:
 	if not rolling or not is_instance_valid(roulette_continue) or roulette_continue.disabled: return
+	if not chest_gold_saved: _finish_roulette(); return
 	if is_instance_valid(inventory_dim): inventory_dim.hide()
 	rolling = false; overlay.hide(); pad.reset(); pad.enabled = true
 	battle.set_external_pause(false)
@@ -633,6 +645,7 @@ func _restart_from_pause() -> void:
 	var elapsed := maxi(Time.get_ticks_msec()-entry_started_ms,int((Time.get_unix_time_from_system()-entry_started_unix)*1000.0))
 	if not bool(STAMINA.refund_early_exit(entry,elapsed).get("success",false)):
 		_label(overlay_rows,"스테미너 반환 저장 실패 · 다시 시도하세요.",23); return
+	run_abandoned = true
 	battle.finish_abandoned_run()
 	if settled: _retry()
 func _next_stage(id: String) -> void:

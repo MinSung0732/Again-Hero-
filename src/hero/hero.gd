@@ -2725,8 +2725,8 @@ func _update_summoner_full_slot_shield(delta: float) -> void:
 		return
 
 	# Refresh-type passive: replace remaining shield amount and duration.
-	shield_max_hp = refreshed_shield
-	shield_hp = refreshed_shield
+	shield_max_hp = _player_shield_amount(refreshed_shield)
+	shield_hp = shield_max_hp
 	shield_duration_timer = maxf(
 		float(summoner_full_slot_shield_config.get("duration", 8.0))
 		+ float(shield_fortify_stacks) * 0.4,
@@ -5351,8 +5351,8 @@ func _refresh_gunner_empty_magazine_shield() -> void:
 		return
 
 	# 갱신형: 기존 실드에 더하지 않고 항상 새 10% 값으로 덮어쓴다.
-	shield_max_hp = refreshed_shield
-	shield_hp = refreshed_shield
+	shield_max_hp = _player_shield_amount(refreshed_shield)
+	shield_hp = shield_max_hp
 	queue_redraw()
 
 
@@ -6364,7 +6364,7 @@ func _start_rogue_slash() -> void:
 		+ rogue_slash_shield_ratio_bonus,
 		0.0
 	)
-	shield_max_hp = float(max_hp) * shield_ratio
+	shield_max_hp = _player_shield_amount(float(max_hp) * shield_ratio)
 	shield_hp = shield_max_hp
 
 	_play_rogue_blade_storm_audio()
@@ -11158,7 +11158,7 @@ func _end_sage_phase() -> void:
 	var duration := maxf(float(sage_config.get("phase_duration", 7.0)), 0.0)
 	sage_phase_cooldown_timer = maxf(interval - duration, 0.1)
 	var shield_ratio := maxf(float(sage_config.get("post_phase_shield_ratio", 0.10)), 0.0)
-	shield_max_hp = float(max_hp) * shield_ratio
+	shield_max_hp = _player_shield_amount(float(max_hp) * shield_ratio)
 	shield_hp = shield_max_hp
 	sage_post_phase_shield_timer = maxf(float(sage_config.get("post_phase_shield_duration", 3.0)), 0.0)
 	queue_redraw()
@@ -13059,8 +13059,8 @@ func _activate_shield() -> void:
 	if configured_hp <= 0.0:
 		return
 
-	shield_max_hp = configured_hp
-	shield_hp = configured_hp
+	shield_max_hp = _player_shield_amount(configured_hp)
+	shield_hp = shield_max_hp
 	shield_duration_timer = maxf(
 		float(shield_skill_config.get("duration", 8.0)),
 		0.01
@@ -13474,6 +13474,7 @@ func _add_purifier_shield_layer() -> void:
 		),
 		1.0
 	)
+	layer_amount = _player_shield_amount(layer_amount)
 	shield_max_hp += layer_amount
 	shield_hp += layer_amount
 	queue_redraw()
@@ -20515,7 +20516,7 @@ func _start_fighter_guard() -> void:
 		+ fighter_guard_shield_ratio_bonus,
 		0.0
 	)
-	shield_max_hp = float(max_hp) * shield_ratio
+	shield_max_hp = _player_shield_amount(float(max_hp) * shield_ratio)
 	shield_hp = shield_max_hp
 
 	_play_fighter_guard_start_audio()
@@ -21523,3 +21524,6 @@ func _apply_burn_status(duration: float, total_damage: int, source: Node = null,
 func _clear_burn() -> void:
 	burn_runtime.clear()
 	set_meta("burn_active",false)
+
+func _player_shield_amount(amount: float) -> float:
+	return player_weapons.shield_amount(amount) if player_controlled and player_weapons != null else amount

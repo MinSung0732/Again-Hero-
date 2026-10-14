@@ -45,6 +45,9 @@ var authority: Node
 var visual_clock := 0.0
 var chest_serial := 0
 var last_applied_chest := 0
+var research: Dictionary = {}
+var gold_bonus := 0.0
+var regen_bank := 0.0
 var passive_siphon := 0.0
 var siphon_bank := 0.0
 var reach_bonus := 1.0
@@ -73,10 +76,16 @@ func reroll(previous: Array) -> Array:
 	rerolls_used += 1
 	return next
 
-func install(host, research_bonus: int = 0) -> void:
+func install(host, research_bonus: int = 0, starting_research: Dictionary = {}) -> void:
 	reroll_limit = MODE.augment_reroll_limit(research_bonus)
 	rerolls_used = 0
+	research = starting_research.duplicate()
+	gold_bonus = float(research.get("gold",0))
+	haste = 1.0/(1.0+float(research.get("haste",0)))
+	passive_siphon = float(research.get("siphon",0))
+	area_bonus = 1.0+float(research.get("area",0))
 	hero = host
+	hero.exp_gain_multiplier *= 1.0+float(research.get("learning",0))
 	hero.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	authority = hero.get_parent()
 	if "status_resistances" in hero: base_slow_resistance = float(hero.status_resistances.get("slow",0))
@@ -124,15 +133,15 @@ func add(id: String) -> bool:
 	var rank := int(passives[id])
 	var bonus := float(data.value)*rank
 	match String(data.stat):
-		"siphon": passive_siphon = bonus
+		"siphon": passive_siphon = bonus+float(research.get("siphon",0))
 		"slow_resist": hero.status_resistances["slow"] = minf(0.85,base_slow_resistance+bonus)
 		"reach": reach_bonus = 1.0+bonus
-		"area": area_bonus = 1.0+bonus
+		"area": area_bonus = 1.0+bonus+float(research.get("area",0))
 		"duration": duration_bonus = 1.0+bonus
 		"projectile_power": projectile_power = 1.0+bonus
 		"multishot": projectile_bonus = mini(2,rank)
 		"power": power = 1.0+bonus
-		"haste": haste = 1.0/(1.0+bonus)
+		"haste": haste = 1.0/(1.0+bonus+float(research.get("haste",0)))
 		"projectile": projectile_speed = 1.0+bonus
 		"armor": damage_multiplier = 1.0-minf(bonus,0.30)
 		"vitality":
@@ -241,6 +250,11 @@ func summary() -> String:
 
 func tick(delta: float, allow_casts: bool = true) -> void:
 	visual_clock += delta
+	if hero.current_hp > 0 and hero.current_hp < hero.max_hp:
+		regen_bank += hero.max_hp*float(research.get("regeneration",0))*delta
+		var recovered := floori(regen_bank)
+		if recovered > 0: hero.heal_direct(recovered); regen_bank -= recovered
+	else: regen_bank = 0.0
 	var identity_blocked: bool = allow_casts and identity != null and identity.tick(delta)
 	_tick_projectiles(delta)
 	_tick_pulses(delta)
@@ -292,8 +306,9 @@ func stats_for(id: String) -> Dictionary:
 			config.merge(stats.summon_patch,true)
 			config["survival_overrides"] = stats.summon_patch
 		for key in ["attack_range","range"]:
-			if config.has(key) and reach_bonus != 1.0:
-				config[key] = float(config[key])*reach_bonus
+			var summon_reach := reach_bonus*(1.0+float(research.get("ranged_reach",0)) if String(stats.summon_kind) in ["watcher","gatekeeper"] else 1.0)
+			if config.has(key) and summon_reach != 1.0:
+				config[key] = float(config[key])*summon_reach
 				if not config.has("survival_overrides"): config["survival_overrides"] = {}
 				else: config["survival_overrides"] = config.survival_overrides.duplicate()
 				config.survival_overrides[key] = config[key]
@@ -301,6 +316,7 @@ func stats_for(id: String) -> Dictionary:
 		if String(stats.summon_kind) in ["watcher","gatekeeper"]: stats["power"] = float(stats.power)*projectile_power
 	stats["reach_scale"] = float(stats.reach_scale)*reach_bonus
 	var pattern := String(stats.pattern)
+	if pattern in DATA.RANGED_RESEARCH_PATTERNS: stats["reach_scale"] *= 1.0+float(research.get("ranged_reach",0))
 	stats["area_scale"] = area_bonus
 	for key in ["splash_radius","finish_radius"]:
 		if stats.has(key): stats[key] = float(stats[key])*area_bonus
@@ -399,7 +415,7 @@ func _cast(id: String) -> void:
 		return
 	if pattern == "heal": hero.heal_direct(roundi(hero.max_hp*(float(data.get("heal_ratio",0.015))+rank*0.002)))
 	if pattern == "guard":
-		var shield: float = hero.max_hp*(float(data.get("shield_ratio",0.04))+rank*0.006)
+		var shield: float = shield_amount(hero.max_hp*(float(data.get("shield_ratio",0.04))+rank*0.006))
 		# Replace only this runtime's grant; preserve other shield sources.
 		hero.shield_hp = maxf(0.0,hero.shield_hp-owned_shield)+shield; owned_shield = shield; shield_left = float(data.get("shield_duration",3.0))
 		if identity != null: hero.shield_max_hp = maxf(hero.shield_max_hp,hero.shield_hp)
@@ -678,3 +694,6 @@ func _draw_area(center: Vector2, radius: float, color: Color, frames: Array, pro
 		hero.draw_texture_rect(texture,Rect2(center-Vector2.ONE*diameter*0.5,Vector2.ONE*diameter),false,Color(1,1,1,color.a*0.75))
 	hero.draw_circle(center,radius,Color(color,color.a*0.10))
 	hero.draw_arc(center,radius,0.0,TAU,48,color,3.0)
+
+func shield_amount(amount: float) -> float:
+	return amount*(1.0+float(research.get("shield",0)))

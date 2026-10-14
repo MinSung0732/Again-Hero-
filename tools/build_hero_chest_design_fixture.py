@@ -14,6 +14,12 @@ base='''extends Control
 const REEL := preload("res://src/ui/hero_chest_reel.gd")
 const INVENTORY_DETAIL := preload("res://src/ui/hero_inventory_detail.gd")
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
+class STORE extends RefCounted:
+	static var fail := false
+	static var calls := 0
+	static func record_chest(_entry,_serial,_bonus):
+		calls += 1
+		return {"success":not fail,"pending":8}
 class GameAudio extends RefCounted:
 	static func play_battle(_id,_node): pass
 class Pad extends RefCounted:
@@ -21,6 +27,9 @@ class Pad extends RefCounted:
 	func reset(): pass
 var pad := Pad.new()
 var battle
+var entry := {}
+var chest_gold_saved := false
+var run_chest_gold := 0
 var rolling := false
 var pending_chests := 1
 var opening_chest_claimed := false

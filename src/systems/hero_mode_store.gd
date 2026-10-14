@@ -7,6 +7,7 @@ const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const PROGRESS := preload("res://src/systems/stage_progress.gd")
 const UNLOCK_DATA := preload("res://src/data/mode_unlock_catalog.gd")
 const DATA := preload("res://src/data/hero_mode_catalog.gd")
+const RESEARCH_PROFILE_FIELDS := {"max_hp":"vitality","attack_damage":"power","move_speed":"mobility","exp_pickup_radius":"magnet"}
 const PATH := "user://team_loadout.cfg"
 static func augment_reroll_bonus() -> int:
 	# Future account-scoped research hook; no research upgrade is sold yet.
@@ -106,14 +107,31 @@ static func purchase_growth(stage: String,id: String) -> bool:
 	progress.set_value("meta","research_points",points-cost)
 	config.set_value("hero_growth","shared_"+id,level+1)
 	return SCOPE.save_configs({"stage_progress.cfg":progress,"team_loadout.cfg":config}) == OK
+static func growth_bonuses(subject: String) -> Dictionary:
+	var config := ConfigFile.new(); var result := {}
+	if not _load(config): return result
+	for id in DATA.GROWTH: result[id] = _shared_growth(config,id)*float(DATA.GROWTH[id].value)
+	return result
 static func apply_growth(stage: String,profile: Dictionary) -> void:
-	var hp := 1.0; var damage := 1.0
-	for id in DATA.GROWTH:
-		var level := growth_level(stage,id)
-		hp += level*float(DATA.GROWTH[id].hp); damage += level*float(DATA.GROWTH[id].damage)
-	profile["max_hp"] = maxi(1,roundi(float(profile.get("max_hp",1))*hp))
-	profile["attack_damage"] = maxi(1,roundi(float(profile.get("attack_damage",1))*damage))
-static func award_run(stage: String,entry: Dictionary,elapsed: float,kills: int,won: bool,value: String = "easy") -> Dictionary:
+	var bonus := growth_bonuses(stage)
+	for field in RESEARCH_PROFILE_FIELDS:
+		var amount := float(profile.get(field,1))*(1.0+float(bonus.get(RESEARCH_PROFILE_FIELDS[field],0)))
+		profile[field] = maxi(1,roundi(amount)) if field in ["max_hp","attack_damage"] else amount
+	profile["hero_research_bonuses"] = bonus
+static func record_chest(entry: Dictionary, chest_serial: int, gold_bonus: float = 0.0) -> Dictionary:
+	var serial := int(entry.get("entry_id",0)); var config := ConfigFile.new(); var progress := ConfigFile.new()
+	if not is_finite(gold_bonus) or serial <= 0 or chest_serial <= 0 or not _load(config) or not _load(progress,"user://stage_progress.cfg"): return {"success":false}
+	if String(entry.get("owner","")) != (SCOPE.user_id if not SCOPE.user_id.is_empty() else "guest:"+SCOPE.guest_directory): return {"success":false}
+	if serial != int(progress.get_value("stamina","active_entry",0)) or not bool(progress.get_value("stamina","active_claimed",false)) or serial <= int(config.get_value("hero_progress","last_reward_entry",0)): return {"success":false}
+	var same := int(config.get_value("hero_run_gold","entry",0)) == serial
+	var previous := int(config.get_value("hero_run_gold","chest",0)) if same else 0
+	var units := int(config.get_value("hero_run_gold","units",0)) if same else 0
+	if chest_serial <= previous: return {"success":true,"pending":floori(units/1000.0)}
+	units += roundi(DATA.CHEST_GOLD*1000*(1.0+clampf(gold_bonus,0,0.15)))
+	config.set_value("hero_run_gold","entry",serial); config.set_value("hero_run_gold","chest",chest_serial); config.set_value("hero_run_gold","units",units)
+	return {"success":SCOPE.save_config(config,PATH) == OK,"pending":floori(units/1000.0)}
+static func award_run(stage: String,entry: Dictionary,elapsed: float,kills: int,won: bool,value: String = "easy", outcome: String = "", gold_bonus: float = -1.0) -> Dictionary:
+	if not is_finite(gold_bonus) or outcome not in ["","victory","defeat","abandon"] or (won and outcome in ["defeat","abandon"]) or (not won and outcome == "victory"): return {"success":false}
 	if not can_enter(stage,value): return {"success":false}
 	if STAGES.get_stage(stage).is_empty() or not is_finite(elapsed) or elapsed < 0.0 or kills < 0 or (won and elapsed < DATA.DURATION): return {"success":false}
 	if String(entry.get("owner","")) != (SCOPE.user_id if not SCOPE.user_id.is_empty() else "guest:"+SCOPE.guest_directory): return {"success":false}
@@ -127,6 +145,11 @@ static func award_run(stage: String,entry: Dictionary,elapsed: float,kills: int,
 	var eligible := elapsed >= 30.0 and kills > 0
 	var points: int = DATA.WIN_RESEARCH if won else (DATA.PARTIAL_RESEARCH if eligible else 0)
 	var gold: int = DATA.WIN_GOLD if won else (DATA.PARTIAL_GOLD if eligible else 0)
+	var ratio := float(DATA.CHEST_GOLD_RATES["victory" if won else "abandon" if outcome == "abandon" else "defeat"])
+	var units := int(config.get_value("hero_run_gold","units",0)) if int(config.get_value("hero_run_gold","entry",0)) == serial else 0
+	var chest_paid := floori(maxi(0,units)*ratio/1000.0)
+	var bonus := clampf(gold_bonus if gold_bonus >= 0.0 else _shared_growth(config,"gold")*float(DATA.GROWTH.gold.value),0,0.15)
+	gold = floori(gold*(1.0+bonus))+chest_paid
 	config.set_value("hero_progress","last_reward_entry",serial)
 	config.set_value("hero_progress",stage+"_best_seconds",maxf(elapsed,float(config.get_value("hero_progress",stage+"_best_seconds",0.0))))
 	if won:
@@ -136,7 +159,7 @@ static func award_run(stage: String,entry: Dictionary,elapsed: float,kills: int,
 	progress.set_value("meta","research_points",int(progress.get_value("meta","research_points",0))+points)
 	progress.set_value("meta","gold",int(progress.get_value("meta","gold",0))+gold)
 	var success := SCOPE.save_configs({"stage_progress.cfg":progress,"team_loadout.cfg":config}) == OK
-	return {"success":success,"research":points if success else 0,"gold":gold if success else 0}
+	return {"success":success,"research":points if success else 0,"gold":gold if success else 0,"chest_earned":floori(maxi(0,units)/1000.0),"chest_paid":chest_paid if success else 0,"chest_rate":ratio}
 
 static func character_unlocked(subject: String) -> bool:
 	var id := CHARACTERS.hero_for_stage(subject) if subject.begins_with("stage_") else subject

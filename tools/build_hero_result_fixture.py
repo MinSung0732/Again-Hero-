@@ -19,11 +19,12 @@ class STAGES extends RefCounted:
 class STORE extends RefCounted:
 	static var calls := 0
 	static var fail := false
-	static func award_run(_stage,_entry,_seconds,_kills,won,_difficulty):
+	static func award_run(_stage,_entry,_seconds,_kills,won,_difficulty,_outcome,_gold_bonus):
 		calls += 1
-		return {"success":not fail,"research":100 if won else 5,"gold":60 if won else 3}
+		return {"success":not fail,"research":100 if won else 5,"gold":76 if won else 9,"chest_earned":16,"chest_paid":16 if won else 6,"chest_rate":1.0 if won else 0.4}
 	static func can_enter(id,_difficulty): return id == "stage_2"
 var battle
+var run_abandoned := false
 var settled := false
 var result_reward := {}
 var finished_won := true

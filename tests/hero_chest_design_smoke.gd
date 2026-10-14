@@ -1,6 +1,7 @@
 extends SceneTree
 const DATA := preload("res://src/data/hero_weapon_catalog.gd")
 class Rewards extends RefCounted:
+	var gold_bonus := 0.0
 	var levels := {}
 	var passives := {}
 	var evolved := {}
@@ -46,7 +47,10 @@ func run():
 		check(reel.cards[1].size.y > reel.cards[0].size.y,"center reward emphasized")
 		for card in reel.cards:
 			check(card.position.x >= 0 and card.position.x+card.size.x <= reel.size.x,"card inside reel")
-		host._finish_roulette(); host._finish_roulette()
+		host.STORE.calls = 0; host.STORE.fail = true; host._finish_roulette()
+		check(host.battle.hero.player_weapons.count == 1 and not host.chest_gold_saved,"gold save failure retains one applied upgrade")
+		host.STORE.fail = false; host._close_roulette(); host._finish_roulette()
+		check(host.STORE.calls == 2 and host.run_chest_gold == 8 and host.chest_gold_saved,"gold retry succeeds without duplicate reward")
 		await process_frame; await process_frame
 		check(host.battle.hero.player_weapons.count == 1 and host.refresh_count == 1,"reward applies and refreshes exactly once")
 		check(reel.displayed_id == String(host.roulette_receipt.id) and reel.center_label.text == String(host.roulette_receipt.name),"center matches actual reward")

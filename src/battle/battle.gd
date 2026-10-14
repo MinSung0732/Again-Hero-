@@ -992,7 +992,7 @@ func _start_battle() -> void:
 	hero.position = current_map_size * 0.5
 	if hero_player_mode:
 		hero.set("player_weapons",preload("res://src/hero_mode/hero_weapon_runtime.gd").new())
-		hero.player_weapons.install(hero,preload("res://src/systems/hero_mode_store.gd").augment_reroll_bonus())
+		hero.player_weapons.install(hero,preload("res://src/systems/hero_mode_store.gd").augment_reroll_bonus(),current_hero_profile.get("hero_research_bonuses",{}))
 	# add_child() runs Hero._ready(), which reapplies the profile visual and
 	# restores HeroSprite.z_index. Normalize Demon Castle depth only after _ready()
 	# so the hero participates in Battle's Y-sort just like monsters/props.

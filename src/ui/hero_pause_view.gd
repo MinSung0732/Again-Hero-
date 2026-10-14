@@ -25,6 +25,7 @@ static func build(parent: VBoxContainer, model: Dictionary, actions: Dictionary)
 		var icon := TextureRect.new(); icon.texture = ICONS.texture(String(id)); icon.custom_minimum_size = Vector2(48,48)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST; icon.mouse_filter = Control.MOUSE_FILTER_IGNORE; slots.add_child(icon)
 	if model.weapons.is_empty(): DETAIL.label(gear,"장비 없음",22)
+	if int(model.get("chest_gold",0)) > 0: DETAIL.label(body,"상자 골드 누적 %d · 종료 시 정산" % int(model.chest_gold),23,Color("ffcf77"))
 	for entry in [["계속 플레이","resume"],["다시 시작","restart"],["설정","settings"],["로비로 돌아가기","leave"]]:
 		var button := DETAIL.button(body,String(entry[0]),actions[String(entry[1])]); button.name = "Pause_"+String(entry[1]); button.custom_minimum_size.y = 96
 		if entry[1] == "resume": button.grab_focus()

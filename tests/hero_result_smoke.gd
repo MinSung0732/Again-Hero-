@@ -1,6 +1,7 @@
 extends SceneTree
 const VIEW := preload("res://src/ui/hero_result_view.gd")
 class Weapons extends RefCounted:
+	var gold_bonus := 0.0
 	var weapon_ids: Array = VIEW.DETAIL.DATA.weapon_pool("ranged_rookie").slice(0,6)
 	var evolved := {}
 	var levels := {}
@@ -40,7 +41,8 @@ func run():
 			await process_frame; await process_frame; await process_frame
 			check(host.STORE.calls == 2 and host.settled,"redraw preserves award and does not re-award")
 			var amounts = host.overlay_rows.find_children("RewardAmount","Label",true,false)
-			check(amounts.size() == 2 and amounts[0].text == ("+100" if won else "+5") and amounts[1].text == ("+60" if won else "+3"),"actual reward retained after redraw")
+			check(amounts.size() == 2 and amounts[0].text == ("+100" if won else "+5") and amounts[1].text == ("+76" if won else "+9"),"actual reward retained after redraw")
+			check(host.overlay_rows.find_child("ResultChestGold",true,false).text.contains("100%" if won else "40%"),"chest payout ratio visible")
 			check(host.overlay_rows.get_child(0).text == ("용사 승리!" if won else "용사 패배"),"victory and defeat distinct")
 			check(host.overlay_rows.find_child("ResultWeapons",true,false).get_child_count() == 6,"six real equipped weapon icons")
 			check((host.overlay_rows.find_child("ResultNext",true,false) != null) == won,"next stage only for victory")

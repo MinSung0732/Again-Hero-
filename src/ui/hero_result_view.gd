@@ -33,6 +33,8 @@ static func build(parent: VBoxContainer, model: Dictionary, actions: Dictionary)
 	if not bool(model.settled):
 		DETAIL.label(rewards,"보상 저장에 실패했습니다. 재시도 후 이동하세요.",24,Color("ee929b"))
 		var retry := DETAIL.button(parent,"보상 저장 재시도",actions.settle); retry.name = "ResultSettle"; retry.grab_focus(); return
+	if int(model.get("chest_earned",0)) > 0:
+		DETAIL.label(rewards,"상자 누적 %d → 지급 %d골드 (%d%%)" % [int(model.chest_earned),int(model.chest_paid),roundi(float(model.chest_rate)*100)],22,Color("ffcf77")).name = "ResultChestGold"
 	var reward_grid := GridContainer.new(); reward_grid.columns = 2; reward_grid.add_theme_constant_override("h_separation",20); rewards.add_child(reward_grid)
 	for pair in [["연구 포인트",int(model.research),Color("dc9af6")],["골드",int(model.gold),Color("ffcf77")]]:
 		var cell := VBoxContainer.new(); cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL; reward_grid.add_child(cell)

@@ -22,6 +22,7 @@ class Pad extends RefCounted:
 	var enabled := true
 	func reset() -> void: pass
 var pad := Pad.new()
+var run_chest_gold := 0
 var choosing := false
 var rolling := false
 var entry_ready := true
