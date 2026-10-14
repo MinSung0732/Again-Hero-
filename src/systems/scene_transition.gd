@@ -37,6 +37,20 @@ func is_transitioning() -> bool:
 	return _pending or visible
 
 
+func prepare_in_place(action: Callable, message: String = "화면 준비 중...") -> bool:
+	if is_transitioning() or not action.is_valid(): return false
+	_view.configure(message,"초상화와 캐릭터 편성 화면을 준비하고 있습니다.")
+	_retry.hide(); visible = true; _view.show()
+	# Two frame boundaries let the loading overlay reach the renderer first.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var ready: bool = bool(await action.call()) if action.is_valid() else false
+	await get_tree().process_frame
+	_view.set_progress(1.0); visible = false; _view.hide()
+	transition_completed.emit()
+	return ready
+
+
 func consume_entry_options() -> Dictionary:
 	var options := _entry_options
 	_entry_options = {}

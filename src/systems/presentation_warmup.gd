@@ -41,6 +41,15 @@ func prepare_common() -> bool:
 	return await _prepare(paths, true)
 
 
+func prepare_hero_lobby() -> bool:
+	while _busy and is_inside_tree(): await get_tree().process_frame
+	if not is_inside_tree(): return false
+	var paths: Array[String] = ["res://assets/art/UI/hero_mode/hero_guild_lobby.png"]
+	for id in preload("res://src/data/hero_character_catalog.gd").ORDER:
+		paths.append(String(STAGES.get_stage(preload("res://src/data/hero_character_catalog.gd").stage_for_hero(id)).get("portrait_path","")))
+	return await _prepare(paths,false)
+
+
 func prepare_scene(scene_path: String, entry_options: Dictionary = {}) -> bool:
 	if _busy:
 		return false

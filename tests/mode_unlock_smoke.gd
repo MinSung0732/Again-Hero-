@@ -45,7 +45,7 @@ func run() -> void:
 	check(view.hard_button.icon == view.icons.lock and view.hero_button.icon == view.icons.lock, "lock icons")
 	check(view.hero_button.tooltip_text.contains("10"), "unlock condition explained")
 	view.choose_difficulty("hard")
-	view.choose_perspective("hero")
+	await view.choose_perspective("hero")
 	view.toggle_ranked()
 	check(view.difficulty == "easy" and view.perspective == "demon" and not view.ranked, "direct handlers cannot bypass locks")
 	await shot("locked")
@@ -94,13 +94,13 @@ func run() -> void:
 	if is_instance_valid(view.unlock_feedback): view.unlock_feedback.close()
 	await process_frame
 	await process_frame
-	view.choose_perspective("hero")
+	await view.choose_perspective("hero")
 	view.toggle_ranked()
 	check(view.ranked and view.perspective == "hero", "unlocked navigation works")
 	check(view.blocks_entry(), "not-yet-implemented modes remain preview only")
 	view.notice.hide()
 	view.toggle_ranked()
-	view.choose_perspective("demon")
+	await view.choose_perspective("demon")
 	UNLOCKS.mark_announced("hard", "stage_10")
 	check(PROGRESS.get_gold() == 777, "unlock feedback never changes rewards")
 	# Actual tutorial buttons keep the same callbacks, only presentation changes.

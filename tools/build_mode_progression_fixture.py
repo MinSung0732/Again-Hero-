@@ -21,6 +21,7 @@ class Lobby extends RefCounted:
 var lobby := Lobby.new()
 var perspective := "demon"
 var difficulty := "easy"
+var switching_perspective := false
 var ranked := false
 var stage := "stage_1"
 var notice := AcceptDialog.new()

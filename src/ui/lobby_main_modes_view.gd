@@ -28,6 +28,7 @@ var character_button: Button
 var notice: AcceptDialog
 var unlock_feedback: CanvasLayer
 var _unlock_scheduled := false
+var switching_perspective := false
 var _announced_this_session: Dictionary = {}
 
 func install(host) -> void:
@@ -124,7 +125,7 @@ func button(parent: Control, text: String, action: Callable) -> Button:
 	return result
 
 func choose_difficulty(value: String) -> void:
-	if value not in ["easy", "hard"] or (value == "hard" and not UNLOCKS.unlocked("hard", current_stage(),perspective)):
+	if switching_perspective or value not in ["easy", "hard"] or (value == "hard" and not UNLOCKS.unlocked("hard", current_stage(),perspective)):
 		refresh()
 		return
 	if lobby._stage_transition_running:
@@ -136,12 +137,23 @@ func choose_difficulty(value: String) -> void:
 	lobby._refresh_stage_card()
 
 func choose_perspective(value: String) -> void:
+	if switching_perspective or value == perspective: return
 	if value not in ["demon", "hero"] or (value == "hero" and not UNLOCKS.unlocked("hero", current_stage())):
-		refresh()
-		return
-	if lobby._stage_transition_running:
-		refresh()
-		return
+		refresh(); return
+	if lobby._stage_transition_running: return
+	var transition: Node = lobby.get_node("/root/SceneTransition")
+	if transition.is_transitioning(): return
+	switching_perspective = true
+	var owner := HERO_STORE.owner()
+	await transition.prepare_in_place(_prepare_perspective.bind(value,owner),"용사 모드 준비 중..." if value == "hero" else "마왕 모드 준비 중...")
+	switching_perspective = false
+
+func _prepare_perspective(value: String, owner: String) -> bool:
+	if not is_instance_valid(lobby) or not lobby.is_inside_tree(): return false
+	if value == "hero" and lobby.hero_lobby_view != null:
+		await lobby.hero_lobby_view.prepare_mode()
+	if not is_instance_valid(lobby) or not lobby.is_inside_tree() or owner != HERO_STORE.owner(): return false
+	if value == "hero" and not UNLOCKS.unlocked("hero",current_stage()): return false
 	perspective = value
 	if value == "hero":
 		var selected := HERO_STORE.selected_battle_stage()
@@ -152,7 +164,10 @@ func choose_perspective(value: String) -> void:
 		lobby.selected_stage_index = clampi(lobby.stage_ids.find(saved),0,maxi(0,int(state.get("highest_unlocked_stage",1))-1))
 	lobby._refresh_stage_card()
 
+	return true
+
 func toggle_ranked() -> void:
+	if switching_perspective: return
 	if not UNLOCKS.unlocked("rank", current_stage()):
 		refresh()
 		return
