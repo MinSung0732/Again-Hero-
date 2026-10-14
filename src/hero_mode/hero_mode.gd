@@ -14,6 +14,9 @@ const SETTINGS := preload("res://src/ui/BattleSettings.tscn")
 const HUD := preload("res://src/ui/hero_survival_hud.gd")
 const REEL := preload("res://src/ui/hero_chest_reel.gd")
 const LOADING := preload("res://src/ui/startup_loading_view.gd")
+const INVENTORY_DETAIL := preload("res://src/ui/hero_inventory_detail.gd")
+var inventory_dim: ColorRect
+var overlay_default_style: StyleBox
 signal presentation_prepared
 signal entry_started
 var presentation_ready := false
@@ -206,11 +209,14 @@ func _build_ui() -> void:
 	pad = MOVE_PAD.new(); pad.name = "MovePad"; add_child(pad)
 	pad.set_mode(pad_mode)
 	pad.input_exclusions.append(stats_panel)
+	inventory_dim = ColorRect.new(); inventory_dim.name = "InventoryModalDim"; inventory_dim.color = Color(0,0,0,0.58)
+	inventory_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); inventory_dim.mouse_filter = Control.MOUSE_FILTER_STOP; add_child(inventory_dim); inventory_dim.hide()
 	overlay = PanelContainer.new(); add_child(overlay)
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.offset_left = 65; overlay.offset_right = -65; overlay.offset_top = 390; overlay.offset_bottom = -150
 	var style := StyleBoxFlat.new(); style.bg_color = Color("122b3a"); style.border_color = Color("d9c77c"); style.set_border_width_all(3); style.set_content_margin_all(28)
-	overlay.add_theme_stylebox_override("panel",SKIN.skin_style(style))
+	overlay_default_style = SKIN.skin_style(style)
+	overlay.add_theme_stylebox_override("panel",overlay_default_style)
 	overlay_rows = VBoxContainer.new(); overlay_rows.add_theme_constant_override("separation",22); overlay.add_child(overlay_rows)
 	overlay.hide()
 func _label(parent: Node,text: String,size_px: int) -> Label:
@@ -223,6 +229,8 @@ func _button(text: String,action: Callable) -> Button:
 	_skin_action_button(button)
 	overlay_rows.add_child(button); button.pressed.connect(action); return button
 func _clear_overlay() -> void:
+	if is_instance_valid(inventory_dim): inventory_dim.hide()
+	if overlay_default_style != null: overlay.add_theme_stylebox_override("panel",overlay_default_style)
 	overlay_rows.add_theme_constant_override("separation",22)
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.offset_left = 65; overlay.offset_right = -65; overlay.offset_top = 390; overlay.offset_bottom = -150
@@ -360,6 +368,7 @@ func _pause() -> void:
 	_button("계속 플레이",_resume); _button("다시 시작",_restart_from_pause)
 	_button("설정",_open_settings); _button("로비로 돌아가기",_leave)
 func _resume() -> void:
+	if is_instance_valid(inventory_dim): inventory_dim.hide()
 	if is_instance_valid(settings_panel): settings_panel.hide()
 	paused = false; overlay.hide(); pad.reset(); pad.enabled = true
 	battle.hero.set_camera_view_locked(true); battle.set_external_pause(false)
@@ -427,23 +436,26 @@ func _leave() -> void:
 func _show_passive_info(index: int) -> void:
 	if choosing or rolling or not is_instance_valid(battle) or battle.battle_over: return
 	var runtime = battle.hero.player_weapons
-	if index >= runtime.passives.size(): return
+	if index < 0 or index >= runtime.passives.size(): return
 	var id := String(runtime.passives.keys()[index])
-	_pause(); _clear_overlay()
-	_label(overlay_rows,String(WEAPONS.PASSIVES[id].name)+" · Lv.%d" % int(runtime.passives[id]),32)
-	_label(overlay_rows,WEAPONS.description(id,int(runtime.passives[id])),24)
-	_button("계속 플레이",_resume)
+	_show_inventory_detail(INVENTORY_DETAIL.passive_model(runtime,id))
 
 func _show_weapon_info(index: int) -> void:
 	if choosing or rolling or not is_instance_valid(battle) or battle.battle_over: return
 	var runtime = battle.hero.player_weapons
-	if index >= runtime.weapon_ids.size(): return
-	_pause(); _clear_overlay()
+	if index < 0 or index >= runtime.weapon_ids.size(): return
 	var id := String(runtime.weapon_ids[index])
-	_label(overlay_rows,WEAPONS.GROWTH.evolution_name(id) if runtime.evolved.has(id) else String(WEAPONS.WEAPONS[id].name),32)
-	_label(overlay_rows,WEAPONS.GROWTH.description(id,int(runtime.levels[id]),runtime.evolved.has(id)),24)
-	_label(overlay_rows,"상자: 무기 진화 → 무기 강화 → 보조 강화",23)
-	_button("계속 플레이",_resume)
+	_show_inventory_detail(INVENTORY_DETAIL.weapon_model(runtime,battle.hero,id))
+
+func _show_inventory_detail(model: Dictionary) -> void:
+	if not entry_ready or account_invalid or not is_instance_valid(battle) or battle.battle_over: return
+	paused = true; battle.set_external_pause(true); pad.enabled = false; pad.reset()
+	_clear_overlay()
+	inventory_dim.show(); inventory_dim.move_to_front(); overlay.move_to_front()
+	overlay.offset_left = maxf(24,(size.x-920)*0.5); overlay.offset_right = -overlay.offset_left
+	overlay.offset_top = minf(HUD.BATTLE_TOP+12,size.y*0.30); overlay.offset_bottom = -40
+	overlay.add_theme_stylebox_override("panel",INVENTORY_DETAIL.style(Color("111322"),Color("e3bc69"),24))
+	INVENTORY_DETAIL.build(overlay_rows,model,_resume)
 
 func _queue_chest() -> void:
 	if not battle.battle_over: pending_chests = mini(pending_chests+1,4)

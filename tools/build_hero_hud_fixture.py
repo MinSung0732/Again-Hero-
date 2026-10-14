@@ -43,6 +43,8 @@ var pad_mode := "fixed"
 var weapon_buttons: Array[Button] = []
 var passive_buttons: Array[Button] = []
 var overlay: PanelContainer
+var inventory_dim: ColorRect
+var overlay_default_style: StyleBox
 var overlay_rows: VBoxContainer
 func _pause() -> void: pass
 func _show_weapon_info(_index: int) -> void: pass
