@@ -5134,40 +5134,29 @@ func _rebuild_research_list() -> void:
 	if selected_research_id.is_empty() and not research_ids.is_empty():
 		selected_research_id = research_ids[0]
 
+	var grid := GridContainer.new()
+	grid.name = "ResearchGrid"
+	research_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.columns = 4
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation",12)
+	grid.add_theme_constant_override("v_separation",12)
+	research_list.add_child(grid)
+	var icons := preload("res://src/data/research_icon_catalog.gd")
+	var art := preload("res://src/ui/hero_augment_icons.gd")
+	var card_view := preload("res://src/ui/research_grid_card.gd")
 	for research_id in research_ids:
 		var data := RESEARCH_CATALOG.get_research(research_id)
-		if data.is_empty():
-			continue
-
+		if data.is_empty(): continue
 		var level := STAGE_PROGRESS.get_research_level(research_id)
-		var max_level := int(data.get("max_level", 0))
-		var button := Button.new()
-		button.custom_minimum_size = Vector2(0, 112)
-		button.focus_mode = Control.FOCUS_NONE
-		button.mouse_filter = Control.MOUSE_FILTER_PASS
-		var selected := research_id == selected_research_id
-		_apply_lobby_button_skin(button, selected, 21)
-
-		if level >= max_level:
-			button.text = "%s    Lv.%d / %d\n%s    ·    연구 완료" % [
-				String(data.get("name", research_id)),
-				level,
-				max_level,
-				RESEARCH_CATALOG.get_effect_summary(research_id, level),
-			]
-		else:
-			var cost := RESEARCH_CATALOG.get_cost(research_id, level)
-			button.text = "%s    Lv.%d / %d\n%s    ·    비용 %s" % [
-				String(data.get("name", research_id)),
-				level,
-				max_level,
-				RESEARCH_CATALOG.get_effect_summary(research_id, level),
-				_format_shop_number(cost),
-			]
-		button.set_meta("audio_cue", "click")
+		var max_level := int(data.get("max_level",0))
+		var texture: Texture2D = art.texture(String(icons.SOURCES.get(research_id,"survival_learning")))
+		var button := card_view.create(texture,level,max_level)
+		button.name = research_id
+		_apply_lobby_button_skin(button,research_id == selected_research_id,21)
+		button.set_meta("audio_cue","click")
 		button.pressed.connect(_select_research.bind(research_id))
-
-		research_list.add_child(button)
+		grid.add_child(button)
 		research_buttons_by_id[research_id] = button
 
 	_refresh_research_detail()

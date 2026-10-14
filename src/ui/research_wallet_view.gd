@@ -19,6 +19,7 @@ static func install(balance: Label, cost: Label) -> void:
 	panel.add_child(rows)
 	var caption := Label.new()
 	caption.text = "보유 연구 포인트"
+	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	caption.add_theme_font_size_override("font_size",22)
 	caption.add_theme_color_override("font_color",Color("d8cadf"))
 	rows.add_child(caption)
@@ -26,7 +27,7 @@ static func install(balance: Label, cost: Label) -> void:
 		label.get_parent().remove_child(label)
 		rows.add_child(label)
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.clip_text = false
 	balance.add_theme_font_size_override("font_size",36)
