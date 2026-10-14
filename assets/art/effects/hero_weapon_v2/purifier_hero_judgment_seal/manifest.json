@@ -2,10 +2,10 @@
   "weapon_id": "purifier_hero_judgment_seal",
   "name": "심판 낙인",
   "source_size": [
-    1536,
-    1024
+    1254,
+    1254
   ],
-  "source_sha256": "c36fc752eae6fbd9532aeaee049b38263566827aa3c0e77a59b2cd86a455292c",
+  "source_sha256": "ad7c30710e19abdb5965e04693cc106bf58e3a1a9f013fa8d1c70482c206f67d",
   "sheet": "sprite_sheet.png",
   "sheet_size": [
     384,
@@ -20,13 +20,7 @@
     64
   ],
   "alpha": "binary; existing transparency only; black foreground retained",
-  "common_source_crop": [
-    0,
-    0,
-    128,
-    128
-  ],
-  "normalization": "one common crop and nearest scale; identical frame canvases",
+  "normalization": "whole alpha components; reviewed core anchors; one common nearest scale; no source crop loss",
   "animation": {
     "fps": 12,
     "loop_playback": "ping_pong",
@@ -44,5 +38,93 @@
       "frames/effect_08.png"
     ]
   },
-  "unique_frames": 8
+  "unique_frames": 8,
+  "source_file": "source.png",
+  "source_anchors": [
+    [
+      627,
+      290
+    ],
+    [
+      1038,
+      290
+    ],
+    [
+      209,
+      678
+    ],
+    [
+      628,
+      675
+    ],
+    [
+      1043,
+      678
+    ],
+    [
+      211,
+      1055
+    ],
+    [
+      627,
+      1055
+    ],
+    [
+      1040,
+      1056
+    ]
+  ],
+  "source_component_bounds": [
+    [
+      460,
+      171,
+      794,
+      391
+    ],
+    [
+      873,
+      126,
+      1201,
+      391
+    ],
+    [
+      38,
+      507,
+      380,
+      782
+    ],
+    [
+      451,
+      461,
+      803,
+      783
+    ],
+    [
+      873,
+      517,
+      1215,
+      782
+    ],
+    [
+      37,
+      909,
+      385,
+      1161
+    ],
+    [
+      450,
+      919,
+      803,
+      1162
+    ],
+    [
+      872,
+      939,
+      1215,
+      1162
+    ]
+  ],
+  "common_source_extent": 216,
+  "source_opaque_pixels": 345789,
+  "assigned_opaque_pixels": 345789
 }

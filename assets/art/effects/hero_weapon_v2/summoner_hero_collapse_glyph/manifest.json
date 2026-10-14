@@ -5,7 +5,7 @@
     1254,
     1254
   ],
-  "source_sha256": "4db8035ddd8232c8aae37d2331d362311240186faf841d1d1519fe2b9b68864a",
+  "source_sha256": "d2fef1f1cac0fac0c9df72c5b121d344321ea6ff91c2dfdfd994f6e56fa70af5",
   "sheet": "sprite_sheet.png",
   "sheet_size": [
     384,
@@ -20,13 +20,7 @@
     64
   ],
   "alpha": "binary; existing transparency only; black foreground retained",
-  "common_source_crop": [
-    0,
-    0,
-    128,
-    128
-  ],
-  "normalization": "one common crop and nearest scale; identical frame canvases",
+  "normalization": "whole alpha components; reviewed core anchors; one common nearest scale; no source crop loss",
   "animation": {
     "fps": 12,
     "loop_playback": "ping_pong",
@@ -44,5 +38,93 @@
       "frames/effect_08.png"
     ]
   },
-  "unique_frames": 8
+  "unique_frames": 8,
+  "source_file": "source.png",
+  "source_anchors": [
+    [
+      630,
+      320
+    ],
+    [
+      1020,
+      320
+    ],
+    [
+      230,
+      700
+    ],
+    [
+      630,
+      700
+    ],
+    [
+      1020,
+      700
+    ],
+    [
+      230,
+      1080
+    ],
+    [
+      630,
+      1080
+    ],
+    [
+      1020,
+      1080
+    ]
+  ],
+  "source_component_bounds": [
+    [
+      462,
+      163,
+      785,
+      532
+    ],
+    [
+      863,
+      180,
+      1181,
+      406
+    ],
+    [
+      73,
+      513,
+      394,
+      799
+    ],
+    [
+      462,
+      513,
+      788,
+      799
+    ],
+    [
+      857,
+      505,
+      1188,
+      799
+    ],
+    [
+      74,
+      921,
+      388,
+      1167
+    ],
+    [
+      467,
+      952,
+      786,
+      1164
+    ],
+    [
+      863,
+      924,
+      1181,
+      1167
+    ]
+  ],
+  "common_source_extent": 214,
+  "source_opaque_pixels": 433247,
+  "assigned_opaque_pixels": 433247
 }

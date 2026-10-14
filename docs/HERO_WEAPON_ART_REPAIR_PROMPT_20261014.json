@@ -1,0 +1,11 @@
+{
+  "tool": "built-in imagegen",
+  "prompt": "Use case: precise-object-edit. Edit target: attached game pixel-art sprite sheet for Again, Hero? Preserve the existing weapon icon design, effect palette, material, and style. Repair the sprite-sheet layout and transparency: square PNG, exactly 3 columns x 3 rows of EQUAL square cells. Cell 0 is the icon; cells 1 through 8 are successive VFX frames in row-major order. Center every VFX core on exactly the same position in its cell. Lock size of persistent core objects, let ONLY particles/aura/slash evolve. Keep all content including glow inside central 65% of EACH cell with at least 15% fully transparent gutters on all four sides. Nothing may cross any cell boundary. Fully transparent RGBA background, NO black background, NO residual noisy matte, NO soft haze between cells, NO antialiasing or blur; crisp hard pixels only. No text, grid, numbers, border, UI, characters. Eight distinct but smoothly consecutive frames. Reconstruct full uncut effects from the reference where they touched boundaries. For circles/dom es keep floor/core center fixed; for slash keep swing origin fixed. Keep each cell's assigned effect, not a collage. Do not change icon design.",
+  "asset_ids": [
+    "summoner_hero_collapse_glyph",
+    "purifier_hero_purification",
+    "madness_hero_desperate_cleaver",
+    "purifier_hero_judgment_seal",
+    "ranged_rookie_restoration_codex"
+  ]
+}

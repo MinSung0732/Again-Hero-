@@ -15,6 +15,14 @@ for id,data in current.items():
  if not data.get('visual_effect_unique'): continue
  count+=1; folder=root/id; manifest=json.loads((folder/'manifest.json').read_text())
  assert manifest['weapon_id']==id and manifest['anchor']==[64,64] and len(manifest['animation']['frames'])==8
+ if manifest.get('source_file'):
+  source=folder/manifest['source_file']
+  assert hashlib.sha256(source.read_bytes()).hexdigest()==manifest['source_sha256'],'Repaired source changed: '+id
+  assert len(manifest['source_anchors'])==8 and len(manifest['source_component_bounds'])==8
+  assert manifest['assigned_opaque_pixels']==manifest['source_opaque_pixels'],'Lost or duplicated source pixels: '+id
+  extent=manifest['common_source_extent']
+  for anchor,box in zip(manifest['source_anchors'],manifest['source_component_bounds']):
+   assert box[0]>anchor[0]-extent and box[2]<anchor[0]+extent and box[1]>anchor[1]-extent and box[3]<anchor[1]+extent,'Source crop clips effect: '+id
  sheet=Image.open(folder/'sprite_sheet.png').convert('RGBA'); assert sheet.size==(384,384)
  hashes=[]
  for index,path in enumerate(manifest['animation']['frames'],1):

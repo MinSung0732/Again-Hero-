@@ -14,6 +14,10 @@ for path in sorted(args.raw.glob('*.png')):
  id=path.stem
  if id not in data: continue
  output=root/id; output.mkdir(parents=True,exist_ok=True)
+ # Reviewed component-separated sources cannot safely use nominal grid crops.
+ existing=output/'manifest.json'
+ if existing.exists() and json.loads(existing.read_text()).get('source_file'):
+  continue
  src=Image.open(path).convert('RGBA'); width,height=src.size
  alpha=src.getchannel('A')
  if alpha.getextrema()[0] != 0: raise SystemExit('Not transparent: '+id)
@@ -21,6 +25,9 @@ for path in sorted(args.raw.glob('*.png')):
  for index in range(9):
   x=index%3; y=index//3
   cell=src.crop((round(width*x/3),round(height*y/3),round(width*(x+1)/3),round(height*(y+1)/3)))
+  source_box=cell.getchannel('A').point(lambda n:255 if n>=128 else 0).getbbox()
+  if not source_box or min(source_box[:2])<=0 or source_box[2]>=cell.width or source_box[3]>=cell.height:
+   raise SystemExit('Source touches cell boundary; review whole components before splitting: '+id+':'+str(index))
   # Project source explicitly requires nearest-only pixel normalization.
   cell=cell.resize((128,128),Image.Resampling.NEAREST)
   a=cell.getchannel('A').point(lambda n: 255 if n>=128 else 0)
