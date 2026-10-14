@@ -175,6 +175,7 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var hero_name_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/HeroName
 @onready var stage_description_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel/StageDescription
 @onready var stage_status_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel/StageStatus
+var stage_entry_mode_host: PanelContainer
 var stage_repeat_reward_label: Label
 @onready var stage_reward_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel/StageReward
 @onready var enter_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel/EnterButton
@@ -1789,16 +1790,11 @@ func _install_stage_entry_hud() -> void:
 	stage_repeat_reward_label = Label.new()
 	stage_repeat_reward_label.name = "RepeatReward"
 	stage_repeat_reward_label.add_theme_color_override("font_color",Color("d7c8df"))
-	preload("res://src/ui/stage_entry_info_view.gd").install(
-		bottom_panel,stage_reward_label,stage_status_label,stage_repeat_reward_label,enter_stage_button)
-	info_backing.anchor_top = 0.27
-	info_backing.anchor_bottom = 0.61
-
-	enter_stage_button.anchor_left = 0.090
-	enter_stage_button.anchor_top = 0.640
-	enter_stage_button.anchor_right = 0.910
-	enter_stage_button.anchor_bottom = 0.790
-	enter_stage_button.custom_minimum_size = Vector2(0.0, 76.0)
+	description_backing.hide()
+	info_backing.hide()
+	stage_entry_mode_host = preload("res://src/ui/stage_entry_info_view.gd").install(
+		bottom_panel,stage_description_label,stage_reward_label,stage_status_label,
+		stage_repeat_reward_label,enter_stage_button)
 
 	stage_description_label.add_theme_font_size_override("font_size", 18)
 	stage_status_label.add_theme_font_size_override("font_size", 22)

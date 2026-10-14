@@ -3,37 +3,41 @@ const VIEW := preload("res://src/ui/stage_entry_info_view.gd")
 func _initialize() -> void:
 	run.call_deferred()
 func run() -> void:
-	for width in [280,360,640,900]:
+	for dimensions in [Vector2(280,220),Vector2(360,300),Vector2(640,480),Vector2(900,600)]:
 		var host := Control.new()
-		host.size = Vector2(width,480)
+		host.size = dimensions
 		root.add_child(host)
+		var description := Label.new()
 		var reward := Label.new()
 		var status := Label.new()
 		var repeat := Label.new()
-		host.add_child(reward)
-		host.add_child(status)
+		for label in [description,reward,status]:
+			host.add_child(label)
+			label.grow_vertical = Control.GROW_DIRECTION_BOTH
 		var button := Button.new()
-		button.position = Vector2(16,330)
-		button.size = Vector2(width-32,76)
 		host.add_child(button)
-		VIEW.install(host,reward,status,repeat,button)
+		var modes := VIEW.install(host,description,reward,status,repeat,button)
+		var selector := Button.new()
+		selector.text = "마왕 · 용사 · 랭킹"
+		modes.add_child(selector)
+		description.text = "원거리 마법탄 · 레벨업마다 전투 기회 획득\n긴 설명도 아래 보상과 겹치지 않아야 합니다."
 		reward.text = "최초 보상\n골드 +1000\n연구 +4500\n몬스터 · 사티로스 주술사"
 		status.text = "클리어 완료\n시간 제한 없음"
 		repeat.text = "반복 도전\n최초 보상은 1회 지급"
-		await process_frame
-		await process_frame
-		var original := button.get_rect()
-		var scroll := host.get_node("StageEntryInfo") as ScrollContainer
-		assert(button.get_rect() == original)
-		assert(scroll.get_rect().end.y < button.position.y)
+		for tick in 4: await process_frame
+		var scroll := host.get_node("StageEntryLayout").get_child(0).get_child(0) as ScrollContainer
+		assert(scroll.get_global_rect().end.y <= button.global_position.y)
+		assert(button.get_global_rect().end.y <= modes.global_position.y)
+		assert(modes.get_global_rect().end.y <= host.get_global_rect().end.y+1)
+		assert(description.get_global_rect().end.y <= reward.global_position.y)
 		for label in [reward,status,repeat]:
-			assert(not label.clip_text)
-			assert(label.max_lines_visible == -1)
+			assert(not label.clip_text and label.max_lines_visible == -1)
 			assert(label.get_global_rect().position.x >= scroll.global_position.x)
 			assert(label.get_global_rect().end.x <= scroll.get_global_rect().end.x+1)
+		var fixed_button := button.get_global_rect()
 		scroll.scroll_vertical = 10000
-		await process_frame
-		assert(button.get_rect() == original)
+		for tick in 2: await process_frame
+		assert(button.get_global_rect() == fixed_button)
 		host.queue_free()
 		await process_frame
 	print("PASS stage entry info layout")

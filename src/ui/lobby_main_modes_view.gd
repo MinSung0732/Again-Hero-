@@ -38,7 +38,7 @@ func install(host) -> void:
 	for id in ["demon", "hero", "rank", "easy", "hard", "lock"]:
 		icons[id] = lobby._load_svg_texture_direct(ART + "icon_" + id + ".svg")
 	var top: Control = lobby.hero_name_label.get_parent()
-	var bottom: Control = lobby.stage_description_label.get_parent()
+	var bottom: PanelContainer = lobby.stage_entry_mode_host
 	difficulty_row = HBoxContainer.new()
 	difficulty_row.name = "DifficultySelector"
 	top.add_child(difficulty_row)
@@ -50,7 +50,7 @@ func install(host) -> void:
 	mode_row.name = "MainModeSelector"
 	mode_row.add_theme_constant_override("separation", 12)
 	bottom.add_child(mode_row)
-	place(mode_row, 0.03, 0.81, 0.97, 1.02)
+	mode_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sides := HBoxContainer.new()
 	sides.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sides.add_theme_constant_override("separation", 6)
@@ -67,14 +67,7 @@ func install(host) -> void:
 		heroes.append(stage)
 	for label in [lobby.stage_description_label, lobby.stage_status_label, lobby.stage_reward_label, lobby.stage_repeat_reward_label]:
 		label.add_theme_font_size_override("font_size", 21 if label == lobby.stage_description_label else 22)
-	# A single framed tray visually groups the two perspectives and ranked toggle.
-	var tray := Panel.new()
-	tray.name = "ModeSelectorTray"
-	tray.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bottom.add_child(tray)
-	bottom.move_child(tray, 0)
-	place(tray, 0.01, 0.78, 0.99, 1.05)
-	tray.add_theme_stylebox_override("panel", idle_style)
+	bottom.add_theme_stylebox_override("panel",preload("res://src/ui/pixel_panel_skin.gd").button_style(idle_style))
 	var transition: Node = lobby.get_node("/root/SceneTransition")
 	var on_complete := Callable(self, "schedule_unlock")
 	transition.transition_completed.connect(on_complete)
