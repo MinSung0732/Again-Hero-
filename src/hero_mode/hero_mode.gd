@@ -32,7 +32,8 @@ var status: Label
 var hp: ProgressBar
 var xp: ProgressBar
 var timer: Label
-var build: Label
+var stats_panel: PanelContainer
+var passive_buttons: Array[Button] = []
 var overlay: PanelContainer
 var overlay_rows: VBoxContainer
 var choice_generation := 0
@@ -166,27 +167,27 @@ func _build_ui() -> void:
 	var header := PanelContainer.new(); header.name = "HeroHUD"; add_child(header)
 	header.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	header.offset_left = 20; header.offset_right = -20; header.offset_top = 20; header.offset_bottom = 310
-	var frame := StyleBoxFlat.new(); frame.bg_color = Color("192633"); frame.border_color = Color("c9a45e"); frame.set_border_width_all(3); frame.set_content_margin_all(14)
+	var frame := StyleBoxFlat.new(); frame.bg_color = Color("192633"); frame.border_color = Color("c9a45e"); frame.set_border_width_all(3); frame.set_content_margin_all(10)
 	header.add_theme_stylebox_override("panel",SKIN.skin_style(frame))
 	var top := VBoxContainer.new(); top.add_theme_constant_override("separation",4); header.add_child(top)
 	var title_row := HBoxContainer.new(); top.add_child(title_row)
 	HUD.logo(title_row)
-	timer = _label(title_row,"용사 모드 · 15분 생존",23); timer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var menu := Button.new(); menu.text = "설정"; menu.custom_minimum_size = Vector2(120,50); title_row.add_child(menu)
+	timer = _label(title_row,"용사 모드 · 15분 생존",20); timer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var menu := Button.new(); menu.text = "설정"; menu.custom_minimum_size = Vector2(100,50); title_row.add_child(menu)
 	menu.add_theme_font_size_override("font_size",23); _skin_action_button(menu); menu.pressed.connect(_pause)
-	hp = HUD.bar(top,"HP",Color(0.08,0.92,0.25,1),32)
-	xp = HUD.bar(top,"EXP",Color(0.08,0.55,1,1),24)
+	hp = HUD.bar(top,"HP",Color(0.08,0.92,0.25,1),26)
+	xp = HUD.bar(top,"EXP",Color(0.08,0.55,1,1),20)
 	status = _label(top,"이동 직접 · 공격 자동 · Lv.10 무기 + 상자 = 진화",20)
-	var row := HBoxContainer.new(); row.add_theme_constant_override("separation",10); top.add_child(row)
-	for index in range(WEAPONS.WEAPON_SLOTS):
-		var button := Button.new(); button.custom_minimum_size.y = 64; button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		button.expand_icon = true; button.add_theme_constant_override("icon_max_width",40); button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		button.add_theme_font_size_override("font_size",21); _skin_action_button(button); row.add_child(button); button.pressed.connect(_show_weapon_info.bind(index)); weapon_buttons.append(button)
-	build = _label(top,"보조 증강 없음",19)
-	build.autowrap_mode = TextServer.AUTOWRAP_OFF; build.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	build.clip_text = true
+	status.autowrap_mode = TextServer.AUTOWRAP_OFF; status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS; status.clip_text = true
+	weapon_buttons = HUD.inventory_row(top,"무기",WEAPONS.WEAPON_SLOTS)
+	for index in weapon_buttons.size(): weapon_buttons[index].pressed.connect(_show_weapon_info.bind(index))
+	passive_buttons = HUD.inventory_row(top,"보조",WEAPONS.PASSIVE_SLOTS)
+	for index in passive_buttons.size(): passive_buttons[index].pressed.connect(_show_passive_info.bind(index))
+	stats_panel = preload("res://src/ui/hero_compact_stats.gd").new(); add_child(stats_panel)
+	stats_panel.position = Vector2(100,342)
 	pad = MOVE_PAD.new(); pad.name = "MovePad"; add_child(pad)
 	pad.set_mode(pad_mode)
+	pad.input_exclusions.append(stats_panel)
 	overlay = PanelContainer.new(); add_child(overlay)
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.offset_left = 65; overlay.offset_right = -65; overlay.offset_top = 390; overlay.offset_bottom = -150
@@ -241,14 +242,20 @@ func _refresh_hud() -> void:
 		var runtime = hero.player_weapons
 		for index in weapon_buttons.size():
 			var button: Button = weapon_buttons[index]
-			if index >= runtime.weapon_ids.size(): button.text = "빈 무기 슬롯"; button.disabled = true; continue
+			if index >= runtime.weapon_ids.size():
+				HUD.update_slot(button,null,"—","빈 무기 슬롯"); button.disabled = true; continue
 			var id := String(runtime.weapon_ids[index]); button.disabled = false
-			button.icon = ICONS.texture(id)
-			button.text = WEAPONS.GROWTH.evolution_name(id) if runtime.evolved.has(id) else String(WEAPONS.WEAPONS[id].name)+" Lv.%d/10" % int(runtime.levels[id])
-		var parts: PackedStringArray = []
-		for id in runtime.passives: parts.append(String(WEAPONS.PASSIVES[id].name)+" %d" % int(runtime.passives[id]))
-		build.text = "보조 %d/%d · " % [runtime.passives.size(),WEAPONS.PASSIVE_SLOTS]+("없음 / 이동: 패드·WASD" if parts.is_empty() else " · ".join(parts))
-		build.tooltip_text = build.text
+			HUD.update_slot(button,ICONS.texture(id),"MAX" if runtime.evolved.has(id) else "Lv.%d" % int(runtime.levels[id]),WEAPONS.GROWTH.evolution_name(id) if runtime.evolved.has(id) else String(WEAPONS.WEAPONS[id].name))
+		var index := 0
+		for id in runtime.passives:
+			var rank := int(runtime.passives[id])
+			passive_buttons[index].disabled = false
+			HUD.update_slot(passive_buttons[index],ICONS.texture(id),"MAX" if rank >= WEAPONS.passive_limit(id) else "Lv.%d" % rank,String(WEAPONS.PASSIVES[id].name)+"\n"+WEAPONS.description(id,rank))
+			index += 1
+		while index < passive_buttons.size():
+			HUD.update_slot(passive_buttons[index],null,"—","빈 보조 슬롯"); passive_buttons[index].disabled = true; index += 1
+		stats_panel.refresh(hero,runtime)
+
 func _show_choices(candidates: Array) -> void:
 	if battle.battle_over: return
 	choosing = true; choice_generation += 1
@@ -374,6 +381,16 @@ func _leave() -> void:
 	get_tree().set_meta("hero_lobby_return",true)
 	if not SceneTransition.change_scene("res://src/lobby/Lobby.tscn","용사 로비로..."):
 		leaving = false
+
+func _show_passive_info(index: int) -> void:
+	if choosing or rolling or not is_instance_valid(battle) or battle.battle_over: return
+	var runtime = battle.hero.player_weapons
+	if index >= runtime.passives.size(): return
+	var id := String(runtime.passives.keys()[index])
+	_pause(); _clear_overlay()
+	_label(overlay_rows,String(WEAPONS.PASSIVES[id].name)+" · Lv.%d" % int(runtime.passives[id]),32)
+	_label(overlay_rows,WEAPONS.description(id,int(runtime.passives[id])),24)
+	_button("계속 플레이",_resume)
 
 func _show_weapon_info(index: int) -> void:
 	if choosing or rolling or not is_instance_valid(battle) or battle.battle_over: return

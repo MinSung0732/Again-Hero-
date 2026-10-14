@@ -68,7 +68,7 @@ func check(ok: bool, message: String) -> void:
 	if not ok: failures += 1; push_error("WEAPON_EXTENSION: "+message)
 func run() -> void:
 	check(DATA.WEAPONS.size() == 100 and DATA.GROWTH.PROFILES.size() == 100,"100 weapon and growth entries")
-	check(DATA.WEAPON_SLOTS == 3 and DATA.PASSIVE_SLOTS == 6,"equipment limits preserved")
+	check(DATA.WEAPON_SLOTS == 6 and DATA.PASSIVE_SLOTS == 6,"equipment limits preserved")
 	var ids: Dictionary = {}; var names: Dictionary = {}; var extra_count := 0
 	for owner in DATA.HERO_WEAPONS:
 		var pool: Array = DATA.weapon_pool(owner)

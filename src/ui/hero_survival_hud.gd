@@ -5,7 +5,7 @@ const LOGO := preload("res://assets/art/UI/logo/AgainHeroLogo.png")
 static func logo(parent: Control) -> void:
 	var image := TextureRect.new()
 	image.name = "AgainHeroLogo"; image.texture = LOGO
-	image.custom_minimum_size = Vector2(280,70)
+	image.custom_minimum_size = Vector2(200,50)
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	image.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -30,3 +30,31 @@ static func bar(parent: Control, title: String, color: Color, height: float) -> 
 	caption.add_theme_color_override("font_outline_color",Color("111623")); caption.add_theme_constant_override("outline_size",5)
 	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE; result.add_child(caption)
 	return result
+
+static func inventory_row(parent: Control, title: String, count: int) -> Array[Button]:
+	var row := HBoxContainer.new(); row.name = title+"Inventory"; row.add_theme_constant_override("separation",8); parent.add_child(row)
+	var caption := Label.new(); caption.text = title; caption.custom_minimum_size.x = 64; caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	caption.add_theme_font_size_override("font_size",21); caption.mouse_filter = Control.MOUSE_FILTER_IGNORE; row.add_child(caption)
+	var buttons: Array[Button] = []
+	for index in count:
+		var button := Button.new(); button.name = "Slot"+str(index); button.custom_minimum_size = Vector2(0,64)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var style := StyleBoxFlat.new(); style.bg_color = Color("171726"); style.border_color = Color("887048"); style.set_border_width_all(2)
+		button.add_theme_stylebox_override("normal",style); button.add_theme_stylebox_override("disabled",style)
+		var hover := style.duplicate(); hover.border_color = Color("ffda82")
+		button.add_theme_stylebox_override("hover",hover); button.add_theme_stylebox_override("pressed",hover)
+		row.add_child(button)
+		var icon := TextureRect.new(); icon.name = "Icon"; icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		icon.offset_left = 8; icon.offset_right = -8; icon.offset_top = 4; icon.offset_bottom = -8
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE; button.add_child(icon)
+		var rank := Label.new(); rank.name = "Rank"; rank.text = "—"; rank.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; rank.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		rank.offset_right = -5; rank.offset_bottom = -2; rank.add_theme_font_size_override("font_size",19)
+		rank.add_theme_color_override("font_outline_color",Color("0d0a18")); rank.add_theme_constant_override("outline_size",5)
+		rank.mouse_filter = Control.MOUSE_FILTER_IGNORE; button.add_child(rank); buttons.append(button)
+	return buttons
+static func update_slot(button: Button, texture: Texture2D, rank: String, tooltip: String) -> void:
+	button.get_node("Icon").texture = texture; button.get_node("Rank").text = rank
+	button.get_node("Rank").modulate = Color("ffdb7a") if rank == "MAX" else Color.WHITE
+	button.tooltip_text = tooltip

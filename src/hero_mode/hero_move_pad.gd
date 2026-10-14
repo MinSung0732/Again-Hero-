@@ -12,6 +12,7 @@ var direction := Vector2.ZERO
 var mouse_owned := false
 var mode := MODE_FIXED
 var input_surface: Control
+var input_exclusions: Array[Control] = []
 var enabled := true:
 	set(value):
 		enabled = value
@@ -49,6 +50,10 @@ func _update_direction(point: Vector2) -> void:
 func _can_start_free(point: Vector2) -> bool:
 	if mode != MODE_FREE or not enabled or touch_id >= 0 or mouse_owned: return false
 	if not is_instance_valid(input_surface) or not input_surface.is_visible_in_tree(): return false
+	for control in input_exclusions:
+		if is_instance_valid(control) and control.is_visible_in_tree():
+			var excluded_point := control.get_global_transform_with_canvas().affine_inverse()*point
+			if Rect2(Vector2.ZERO,control.size).has_point(excluded_point): return false
 	var local := input_surface.get_global_transform_with_canvas().affine_inverse()*point
 	return Rect2(Vector2.ZERO,input_surface.size).has_point(local)
 

@@ -1,16 +1,25 @@
 extends Control
-const ART := preload("res://src/ui/castle_battle_chrome.gd")
-var surround: Texture2D
-var floor_backing: Texture2D
+## Repeat hero-only pillar tiles at a uniform scale instead of stretching demon art.
+const ART := preload("res://src/ui/hero_hud_art.gd")
+const TOP := 330.0
+const WIDTH := 90.0
+var tiles: Array[Texture2D] = []
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	surround = ART.texture(self,ART.ROOT+"castle_surround.png")
-	floor_backing = ART.texture(self,ART.ROOT+"flagstone_floor.png")
+	for index in 4: tiles.append(ART.region(index))
 	resized.connect(queue_redraw)
 func _draw() -> void:
-	if surround == null: return
-	for side in [0.0,size.x-90.0]:
-		if floor_backing != null: draw_texture_rect_region(floor_backing,Rect2(side,330,90,maxf(1,size.y-330)),Rect2(0,0,180,1254))
-	draw_texture_rect_region(surround,Rect2(0,330,90,maxf(1,size.y-330)),Rect2(0,550,196,920))
-	draw_texture_rect_region(surround,Rect2(size.x-90,330,90,maxf(1,size.y-330)),Rect2(828,550,196,920))
+	if tiles.is_empty(): return
+	var height := maxf(0.0,size.y-TOP)
+	for side in 2:
+		var left := 0.0 if side == 0 else size.x-WIDTH
+		draw_rect(Rect2(left,TOP,WIDTH,height),Color("171020"))
+		var y := TOP; var index := 0
+		while y < size.y:
+			var texture: Texture2D = tiles[(index%2)+side*2]
+			var tile_height := WIDTH*texture.get_height()/texture.get_width()
+			var visible_height := minf(tile_height,size.y-y)
+			# Last tile is cropped at the bottom, never distorted.
+			draw_texture_rect_region(texture,Rect2(left,y,WIDTH,visible_height),Rect2(0,0,texture.get_width(),texture.get_height()*visible_height/tile_height))
+			y += tile_height; index += 1

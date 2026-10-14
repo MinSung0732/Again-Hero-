@@ -1,7 +1,7 @@
 extends RefCounted
 const GROWTH := preload("res://src/data/hero_weapon_growth_catalog.gd")
 const MAX_LEVEL := 10
-const WEAPON_SLOTS := 3
+const WEAPON_SLOTS := 6
 const PASSIVE_SLOTS := 6
 const SUMMON_LIMIT := 3
 const SUMMON_DAMAGE_RATIO := 0.30
