@@ -1,0 +1,11 @@
+hero	unlock_stage	hp	attack	speed	pickup	starter_period	starter_range
+ranged_rookie	stage_1	1200	26	270	165	1.00	620
+swift_hunter	stage_2	980	25	315	140	0.90	200
+sword_shield_hero	stage_3	1500	24	245	155	1.30	200
+pistol_hero	stage_4	1080	27	290	150	0.90	620
+archmage_hero	stage_5	1050	30	255	175	2.20	350
+madness_hero	stage_6	1150	28	280	135	1.50	200
+chemical_hero	stage_7	1200	25	255	165	2.20	350
+summoner_hero	stage_8	1100	23	250	180	8.00	250
+purifier_hero	stage_9	1250	22	260	160	1.00	620
+sage_astra	stage_10	1100	24	265	175	1.00	620

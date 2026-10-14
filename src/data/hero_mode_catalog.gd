@@ -109,6 +109,10 @@ const BARRIER_SECONDS := 15.0
 const TIER_ADDITIONS := {1:["ogre","wolf"],2:["hobgoblin","gargoyle"],3:["gumiho","succubus"]}
 const BOSS_CANDIDATES := ["orc","ogre","hobgoblin","gargoyle","gumiho"]
 const BASE_HERO_STATS := {"max_hp":1200,"attack_damage":26,"move_speed":270.0,"attack_range":430.0,"attack_cooldown":0.62,"projectile_speed":720.0,"exp_pickup_radius":150.0}
+static func starting_stats(hero_id: String) -> Dictionary:
+	var stats := BASE_HERO_STATS.duplicate()
+	stats.merge(preload("res://src/data/hero_character_catalog.gd").STARTING_STATS.get(hero_id,{}),true)
+	return stats
 static func rarity_limit(stage: int, difficulty: String) -> int:
 	return int((HARD_TIERS if difficulty == "hard" else EASY_TIERS)[clampi(stage,1,10)-1])
 static func monster_allowed(id: String, stage: int, difficulty: String) -> bool:

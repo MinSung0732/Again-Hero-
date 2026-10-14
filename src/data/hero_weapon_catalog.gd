@@ -2451,6 +2451,7 @@ static func description(id: String, next_level: int) -> String:
 	return summary
 static func profile_for_survival(source: Dictionary) -> Dictionary:
 	var result := source.duplicate(true)
-	for key in preload("res://src/data/hero_mode_catalog.gd").BASE_HERO_STATS: result[key] = preload("res://src/data/hero_mode_catalog.gd").BASE_HERO_STATS[key]
+	var stats := preload("res://src/data/hero_mode_catalog.gd").starting_stats(String(source.get("id","ranged_rookie")))
+	for key in stats: result[key] = stats[key]
 	result["level_growth"] = {}
 	return result

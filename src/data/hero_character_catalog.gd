@@ -15,6 +15,20 @@ const CHARACTERS := {
 	"purifier_hero":{"name":"정화의 용사","stage":"stage_9","style":"성광·정화·성창과 축복으로 생존하는 성직자"},
 	"sage_astra":{"name":"대현자 아스트라","stage":"stage_10","style":"별빛·혜성·중력·빙점으로 전장을 다루는 대현자"},
 }
+# Lv.1, no permanent research/passives. Unlock order grants kit options,
+# not unconditional upgrades; weapon periods/ranges remain weapon-owned.
+const STARTING_STATS := {
+	"ranged_rookie":{"max_hp":1200,"attack_damage":26,"move_speed":270.0,"exp_pickup_radius":165.0},
+	"swift_hunter":{"max_hp":980,"attack_damage":25,"move_speed":315.0,"exp_pickup_radius":140.0},
+	"sword_shield_hero":{"max_hp":1500,"attack_damage":24,"move_speed":245.0,"exp_pickup_radius":155.0},
+	"pistol_hero":{"max_hp":1080,"attack_damage":27,"move_speed":290.0,"exp_pickup_radius":150.0},
+	"archmage_hero":{"max_hp":1050,"attack_damage":30,"move_speed":255.0,"exp_pickup_radius":175.0},
+	"madness_hero":{"max_hp":1150,"attack_damage":28,"move_speed":280.0,"exp_pickup_radius":135.0},
+	"chemical_hero":{"max_hp":1200,"attack_damage":25,"move_speed":255.0,"exp_pickup_radius":165.0},
+	"summoner_hero":{"max_hp":1100,"attack_damage":23,"move_speed":250.0,"exp_pickup_radius":180.0},
+	"purifier_hero":{"max_hp":1250,"attack_damage":22,"move_speed":260.0,"exp_pickup_radius":160.0},
+	"sage_astra":{"max_hp":1100,"attack_damage":24,"move_speed":265.0,"exp_pickup_radius":175.0},
+}
 static func get_character(id: String) -> Dictionary:
 	return CHARACTERS.get(id,{})
 static func hero_for_stage(stage: String) -> String:

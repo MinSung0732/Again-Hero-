@@ -168,7 +168,7 @@ func _build_formation(body: VBoxContainer,id: String) -> void:
 	selected_hero_label = _label(details,"",32)
 	selected_style = _label(details,"",21)
 	var stats := GridContainer.new(); stats.name = "HeroStartingStats"; stats.columns = 2; stats.add_theme_constant_override("h_separation",14); stats.add_theme_constant_override("v_separation",6); details.add_child(stats)
-	for item in [["hp","최대 체력"],["damage","공격력"],["haste","공격속도"],["speed","이동속도"],["reach","기본 사거리"],["xp","경험치 흡수"]]:
+	for item in [["hp","최대 체력"],["damage","공격력"],["haste","무기 기본 간격"],["speed","이동속도"],["reach","시작 무기 범위"],["xp","경험치 흡수"]]:
 		var caption := HBoxContainer.new(); caption.add_theme_constant_override("separation",8); stats.add_child(caption)
 		var icon := TextureRect.new(); icon.texture = HUD_ART.icon(item[0]); icon.custom_minimum_size = Vector2(30,30); icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST; caption.add_child(icon)
 		_label(caption,item[1],23).autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -198,9 +198,10 @@ func _refresh_formation(id: String) -> void:
 	var path := String(STAGES.get_stage(CHARACTERS.stage_for_hero(id)).get("portrait_path",""))
 	selected_portrait.texture = lobby._portrait_texture_cache.get(path)
 	var profile := WEAPONS.profile_for_survival(PROFILES.get_profile(id)); STORE.apply_growth(id,profile)
-	var values := [str(int(profile.max_hp)),str(int(profile.attack_damage)),"%.2f회/초" % (1.0/float(profile.attack_cooldown)),"%d" % int(profile.move_speed),"%d" % int(profile.attack_range),"%d" % int(profile.exp_pickup_radius)]
+	var starter: Dictionary = WEAPONS.WEAPONS[WEAPONS.STARTERS[id]]
+	var values := [str(int(profile.max_hp)),str(int(profile.attack_damage)),"%.2f초" % float(starter.cooldown),"%d" % int(profile.move_speed),"%d" % int(starter.range),"%d" % int(profile.exp_pickup_radius)]
 	for index in stat_values.size(): stat_values[index].text = values[index]
-	formation_message.text = message if not message.is_empty() else "전용 무기 10종 · 무기 6칸 / 보조 6칸 · 능력치는 공통 영구 성장 포함"
+	formation_message.text = message if not message.is_empty() else "전용 무기 10종 · 무기 6칸 / 보조 6칸 · 캐릭터 능력치는 공통 연구 포함 · 무기 간격/범위는 기본값"
 	difficulty_selector.set_item_disabled(1,not STORE.hard_stage_unlocked(STORE.selected_battle_stage()))
 	difficulty_selector.select(1 if STORE.difficulty() == "hard" else 0)
 	for hero_id in hero_cards:

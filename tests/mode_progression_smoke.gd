@@ -90,6 +90,13 @@ func run() -> void:
 	check(UNLOCKS.unlocked("rank","stage_1") and UNLOCKS.unlocked("rank","stage_10"),"both easy10 records unlock rank globally")
 	cfg = progress_config(); cfg.set_value("cleared","stage_10",false); SCOPE.save_config(cfg,PROGRESS.SAVE_PATH)
 	check(not UNLOCKS.unlocked("rank","stage_10") and STORE.mode_unlocked(),"ranking still needs demon easy10; hero mode uses easy3")
+	saved = hero_config(); saved.set_value("hero_growth","shared_vitality",10); saved.set_value("hero_growth","shared_power",10)
+	SCOPE.save_config(saved,STORE.PATH)
+	for id in CHARACTERS.ORDER:
+		var profile := HERO_UI.WEAPONS.profile_for_survival(HERO_UI.PROFILES.get_profile(id))
+		var base := profile.duplicate(true); STORE.apply_growth(id,profile)
+		check(profile.max_hp == roundi(float(base.max_hp)*1.2) and profile.attack_damage == roundi(float(base.attack_damage)*1.1),"shared max research applies once to character base "+id)
+		check(profile.move_speed == base.move_speed and profile.exp_pickup_radius == base.exp_pickup_radius,"research preserves mobility/pickup role "+id)
 	SCOPE.guest_directory = directory+"_other"; DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory); SCOPE.select_guest()
 	check(not STORE.mode_unlocked() and not UNLOCKS.unlocked("rank","stage_1") and not STORE.battle_stage_cleared("stage_10"),"account namespace isolation")
 	check(not STORE.can_enter("invalid","easy") and not STORE.set_difficulty("invalid"),"invalid stage/difficulty denied")

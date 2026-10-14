@@ -42,7 +42,7 @@ func run() -> void:
 			check(not DATA.monster_allowed("zeus",stage,difficulty),"transcendent excluded")
 	for id in CHARACTERS.ORDER:
 		var profile := WEAPONS.profile_for_survival(PROFILES.get_profile(id))
-		for key in DATA.BASE_HERO_STATS: check(profile[key] == DATA.BASE_HERO_STATS[key],"equal base "+id+key)
+		for key in DATA.BASE_HERO_STATS: check(profile[key] == DATA.starting_stats(id)[key],"character base "+id+key)
 	DirAccess.make_dir_recursive_absolute("res://docs")
 	var output := FileAccess.open("res://docs/HERO_ENCOUNTER_MATRIX_20261014.tsv",FileAccess.WRITE); output.store_string(matrix); output.close()
 	var config := ConfigFile.new(); config.set_value("hero_growth","stage_5_vitality",7)
