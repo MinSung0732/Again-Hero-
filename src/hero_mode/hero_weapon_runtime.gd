@@ -87,10 +87,11 @@ func install(host, research_bonus: int = 0) -> void:
 	available_weapons = DATA.weapon_pool(String(hero.hero_id))
 	if hero.has_method("_acquire_projectile"):
 		native_skills = NATIVE.new(); native_skills.install(hero)
-		for id in available_weapons:
-			var pattern := String(DATA.WEAPONS[id].pattern)
-			# Native actors own their cached textures; do not duplicate their bitmaps.
-			art[id] = EMPTY_ART if NATIVE.SCENES.has(pattern) else ART.sequence(String(DATA.WEAPONS[id].get("effect_dir","")))
+	# Generic effects are required even when the host has no native actor pool.
+	for id in available_weapons:
+		var pattern := String(DATA.WEAPONS[id].pattern)
+		# Native actors own their cached textures; do not duplicate their bitmaps.
+		art[id] = EMPTY_ART if native_skills != null and NATIVE.SCENES.has(pattern) else ART.sequence(String(DATA.WEAPONS[id].get("effect_dir","")))
 	for index in range(EFFECT_LIMIT):
 		effects.append({"left":0.0,"duration":0.0,"a":Vector2.ZERO,"b":Vector2.ZERO,"radius":0.0,"pattern":"","color":Color.WHITE,"orbit_count":4,"orbit_speed":3.0,"orbit_ratio":0.7})
 	for index in range(8): fields.append({"left":0.0,"tick":0.0,"origin":Vector2.ZERO,"radius":0.0,"damage":0,"interval":0.5,"follow":false,"data":{},"rank":1})

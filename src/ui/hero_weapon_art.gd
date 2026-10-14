@@ -21,5 +21,29 @@ static func sequence(directory: String) -> Array[Texture2D]:
 				var bitmap := Image.load_from_file(path)
 				if bitmap != null and not bitmap.is_empty(): texture = ImageTexture.create_from_image(bitmap)
 		if texture != null: result.append(texture)
+	result = _trim_common_margin(result)
 	cache[directory] = result
+	return result
+
+static func _trim_common_margin(frames: Array[Texture2D]) -> Array[Texture2D]:
+	if frames.is_empty(): return frames
+	var dimensions := frames[0].get_size()
+	var center := dimensions*0.5
+	var extent := 0.0
+	for texture in frames:
+		if texture.get_size() != dimensions: return frames
+		var bitmap := texture.get_image()
+		if bitmap == null or bitmap.is_empty(): return frames
+		var bounds := Rect2(bitmap.get_used_rect())
+		if not bounds.has_area(): continue
+		extent = maxf(extent,maxf(maxf(absf(bounds.position.x-center.x),absf(bounds.end.x-center.x)),maxf(absf(bounds.position.y-center.y),absf(bounds.end.y-center.y))))
+	# One symmetric crop for the whole animation: retain authored center, phases
+	# and two transparent pixels. Never resize or center each frame separately.
+	extent = minf(ceilf(extent)+2.0,minf(center.x,center.y))
+	if extent <= 2.0 or extent*2 >= minf(dimensions.x,dimensions.y): return frames
+	var region := Rect2(center-Vector2.ONE*extent,Vector2.ONE*extent*2)
+	var result: Array[Texture2D] = []
+	for texture in frames:
+		var atlas := AtlasTexture.new(); atlas.atlas = texture; atlas.region = region; atlas.filter_clip = true
+		result.append(atlas)
 	return result

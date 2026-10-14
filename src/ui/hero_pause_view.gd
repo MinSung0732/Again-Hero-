@@ -29,3 +29,20 @@ static func build(parent: VBoxContainer, model: Dictionary, actions: Dictionary)
 		var button := DETAIL.button(body,String(entry[0]),actions[String(entry[1])]); button.name = "Pause_"+String(entry[1]); button.custom_minimum_size.y = 96
 		if entry[1] == "resume": button.grab_focus()
 		else: button.add_theme_stylebox_override("normal",DETAIL.style(Color("1a1729"),Color("d9b363"),16))
+	if not parent.resized.is_connected(fit.bind(parent)):
+		parent.resized.connect(fit.bind(parent),CONNECT_DEFERRED)
+	body.minimum_size_changed.connect(fit.bind(parent),CONNECT_DEFERRED)
+	fit.call_deferred(parent)
+
+static func fit(parent: VBoxContainer) -> void:
+	if not is_instance_valid(parent) or not parent.is_inside_tree(): return
+	var panel := parent.get_parent() as PanelContainer
+	var root := panel.get_parent() as Control if panel != null else null
+	var scroll := parent.get_node_or_null("PauseScroll") as ScrollContainer
+	if root == null or scroll == null or scroll.get_child_count() == 0: return
+	var content := scroll.get_child(0) as Control
+	var needed: float = parent.get_node("PauseHeader").get_combined_minimum_size().y+content.get_combined_minimum_size().y+20+48
+	var available := maxf(180,root.size.y-panel.offset_top-24)
+	var height := minf(needed,available)
+	panel.anchor_bottom = 0.0
+	if not is_equal_approx(panel.offset_bottom,panel.offset_top+height): panel.offset_bottom = panel.offset_top+height

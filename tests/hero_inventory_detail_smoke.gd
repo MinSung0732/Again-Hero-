@@ -100,6 +100,7 @@ func run() -> void:
 			var target = host.overlay_rows.find_child("Pause_"+action,true,false)
 			check(target != null and target.size.y >= 96,"pause action touch target "+action)
 		var scroll = host.overlay_rows.get_node("PauseScroll")
+		check(scroll.size.y <= scroll.get_child(0).get_combined_minimum_size().y+4,"pause removes unused bottom space")
 		scroll.scroll_vertical = 10000; await process_frame
 		var leave = host.overlay_rows.find_child("Pause_leave",true,false)
 		click(leave.get_global_rect().get_center()); await process_frame

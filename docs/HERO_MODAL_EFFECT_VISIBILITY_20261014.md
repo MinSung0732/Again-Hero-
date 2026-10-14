@@ -1,0 +1,13 @@
+# 용사 여백·드롭다운·이펙트 가시성 — 2026-10-14
+
+114958시안의일시정지창하단빈공간은fullscreen overlay끝점과확장ScrollContainer때문이다. 현재 header/본문최소높이+separation+panelmargin을계산해패널을줄이며가용화면높이가작으면기존스크롤을사용한다. 크기변경/내용최소크기변경이벤트에서만fit하고매프레임측정은없다. 재진입signal중복방지,다른overlay내용에는미적용한다.
+
+115025의이동패드목록은OptionButton만스타일링하고PopupMenu는기본작은폰트로남아있었다. 버튼높이88/폰트30,실제PopupMenu폰트32/세로간격64/금색보라패널을적용한다. 항목2개의실popup높이192이상검사. 옵션/저장동작은유지한다.
+
+새91종/728프레임은카탈로그effect_dir→선택키트준비→runtime고정풀frames→hero._draw의player_weapons.draw로연결되어있다. 일부대마법용사/아스트라평타는identity.native_basic에서원본속성/3타배우를재생하고,추가범용투사체는새프레임을쓴다. 관통포/운석/얼음기둥/소멸의원본고유배우도유지한다. 이경로를모두새일반그림으로덮어쓰지는않는다.
+
+이번보정은큰투명여백때문에실그림이가시적으로작아지는문제를다룬다. hero_weapon_art.sequence가로딩때8프레임get_used_rect의최대공통대칭crop을계산한다. 원본128×128의중심64,64와양쪽2px투명여백을보존한AtlasTexture를동일region으로만들어캐시한다. 전체불투명영역누락이없으며프레임별재중심/재배율을하지않으므로축이흔들리지않는다. 원본PNG/manifest·게임판정/피해/재사용·슬롯/풀수치는유지한다. 전투그리기는이미준비된Texture참조만사용하며새스캔/배열생성을하지않는다.
+
+무기runtime의범용캐시준비가native actor pool존재검사안에있던것도분리했다. 현재실Hero에는pool이있지만pool없는host/향후분리배우에서도새프레임이빈원으로떨어지지않도록선택무기캐시를준비한다.
+
+검증: hero_weapon_art_smoke.gd2817(91종/728프레임·중심64/동일region·원본bounds포함·실draw dispatch·캐시/풀·비nativehost),hero_weapon_extension_smoke.gd2193,hero_inventory_detail_smoke.gd747,hero_dropdown_smoke.gd5. 총5762 headless격리PASS, diff검사PASS. ART dispatch는production그리기를추출해GPU명령만기록하며모바일실제화면검증과구분한다. 전체GPU/Android시각과FPS는미검증이다.

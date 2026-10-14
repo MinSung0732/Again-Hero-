@@ -562,11 +562,17 @@ func _install_battle_settings() -> void:
 	tabs.get_node("Gameplay").add_child(pad_row)
 	_label(pad_row,"이동 패드",23).custom_minimum_size.x = 165
 	pad_mode_selector = OptionButton.new(); pad_mode_selector.name = "PadMode"
-	pad_mode_selector.custom_minimum_size.y = 58
+	pad_mode_selector.custom_minimum_size.y = 88
 	pad_mode_selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	pad_mode_selector.add_theme_font_size_override("font_size",23)
+	pad_mode_selector.add_theme_font_size_override("font_size",30)
 	pad_mode_selector.add_item("고정형 패드",0); pad_mode_selector.add_item("자유형 패드",1)
 	_skin_action_button(pad_mode_selector); pad_row.add_child(pad_mode_selector)
+	var pad_popup := pad_mode_selector.get_popup()
+	pad_popup.add_theme_font_size_override("font_size",32)
+	pad_popup.add_theme_constant_override("v_separation",64)
+	pad_popup.add_theme_stylebox_override("panel",INVENTORY_DETAIL.style(Color("20192e"),Color("dfb86a"),16))
+	pad_popup.add_theme_color_override("font_color",Color("efe5ce"))
+	pad_popup.add_theme_color_override("font_hover_color",Color("ffda86"))
 	pad_mode_selector.item_selected.connect(_set_pad_mode)
 	var pad_guide := _label(tabs.get_node("Gameplay"),"고정형: 하단 중앙 · 자유형: 전투 화면 터치 위치\n변경 즉시 적용 · 자동 저장",18)
 	pad_guide.name = "PadGuide"

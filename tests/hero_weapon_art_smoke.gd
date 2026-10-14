@@ -45,7 +45,11 @@ func run() -> void:
 		check(frames.size() == 8,"eight frames "+id)
 		var hashes := {}
 		for frame in frames:
-			check(frame.get_size() == Vector2(128,128),"fixed frame canvas "+id)
+			check(frame.get_size() == frames[0].get_size() and frame.get_width() <= 128 and frame.get_width() == frame.get_height(),"common centered animation canvas "+id)
+			if frame is AtlasTexture:
+				check(frame.region.get_center() == Vector2(64,64) and frame.region == (frames[0] as AtlasTexture).region,"fixed original anchor and common crop "+id)
+				var raw: Rect2i = frame.atlas.get_image().get_used_rect()
+				check(frame.region.encloses(Rect2(raw)),"crop retains entire original effect "+id)
 			hashes[hash_image(frame)] = true
 		check(hashes.size() >= 4,"animated phases "+id)
 		check(ART.sequence(data.effect_dir) == frames,"sequence reuse "+id)
@@ -76,5 +80,10 @@ func run() -> void:
 	check(native.last_cast_succeeded,"successful summon visual gate")
 	hero.summon_ok = false; native.cast(data,Vector2.ZERO,Vector2.RIGHT,target,20,100,1,1,1.0)
 	check(not native.last_cast_succeeded,"failed summon cannot show a false portal")
+	ART.cache.clear()
+	var generic := BASE.Hero.new(); arena.add_child(generic)
+	var generic_runtime := RUNTIME.new(); generic_runtime.install(generic)
+	check(generic_runtime.native_skills == null and generic_runtime.art[DATA.STARTERS.ranged_rookie].size() == 8,"generic host warms weapon frames without native pool")
+	check(ART.cache.has(DATA.WEAPONS.ranged_rookie_arcane_bolt.effect_dir),"generic launch has prepared frame cache")
 	spy.queue_free(); arena.queue_free(); await process_frame
 	print("HERO_WEAPON_ART checks=%d failures=%d" % [checks,failures]); quit(1 if failures else 0)
