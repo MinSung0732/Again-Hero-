@@ -9,7 +9,11 @@ static func build(parent: VBoxContainer, model: Dictionary, actions: Dictionary)
 	var subtitle := DETAIL.label(parent,String(model.message),24,Color("d0c6df")); subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var scroll := ScrollContainer.new(); scroll.name = "ResultScroll"; scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; parent.add_child(scroll)
-	var body := VBoxContainer.new(); body.size_flags_horizontal = Control.SIZE_EXPAND_FILL; body.add_theme_constant_override("separation",18); scroll.add_child(body)
+	var body := VBoxContainer.new(); body.size_flags_horizontal = Control.SIZE_EXPAND_FILL; body.add_theme_constant_override("separation",12); scroll.add_child(body)
+	if not parent.resized.is_connected(fit.bind(parent)):
+		parent.resized.connect(fit.bind(parent),CONNECT_DEFERRED)
+	body.minimum_size_changed.connect(fit.bind(parent),CONNECT_DEFERRED)
+	fit.call_deferred(parent)
 	var stats := DETAIL.section(body,"전투 기록",accent)
 	var seconds := maxi(0,floori(float(model.seconds)))
 	for pair in [["생존 시간","%02d분 %02d초" % [seconds/60,seconds%60]],["처치 수",str(model.kills)],["용사 Lv.","Lv.%d" % int(model.level)]]:
@@ -21,7 +25,7 @@ static func build(parent: VBoxContainer, model: Dictionary, actions: Dictionary)
 	for weapon in model.weapons:
 		var frame := PanelContainer.new(); frame.add_theme_stylebox_override("panel",DETAIL.style(Color("111322"),Color("cba763"),8)); gear.add_child(frame)
 		var slot := VBoxContainer.new(); frame.add_child(slot)
-		var icon := TextureRect.new(); icon.texture = ICONS.texture(String(weapon.id)); icon.custom_minimum_size = Vector2(88,88)
+		var icon := TextureRect.new(); icon.texture = ICONS.texture(String(weapon.id)); icon.custom_minimum_size = Vector2(72,72)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST; icon.mouse_filter = Control.MOUSE_FILTER_IGNORE; slot.add_child(icon)
 		var rank := DETAIL.label(slot,String(weapon.rank),22,Color("ffda86")); rank.autowrap_mode = TextServer.AUTOWRAP_OFF; rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if model.weapons.is_empty(): DETAIL.label(stats,"장착 무기 없음",23)
@@ -41,3 +45,18 @@ static func build(parent: VBoxContainer, model: Dictionary, actions: Dictionary)
 	if not bool(model.next_available): retry.grab_focus()
 	var lobby := DETAIL.button(footer,"로비로",actions.leave); lobby.size_flags_horizontal = Control.SIZE_EXPAND_FILL; lobby.name = "ResultLobby"
 	lobby.add_theme_stylebox_override("normal",DETAIL.style(Color("1d283b"),Color("d9b363"),16))
+
+static func fit(parent: VBoxContainer) -> void:
+	if not is_instance_valid(parent) or not parent.is_inside_tree(): return
+	var panel := parent.get_parent() as PanelContainer
+	var root := panel.get_parent() as Control if panel != null else null
+	var scroll := parent.get_node_or_null("ResultScroll") as ScrollContainer
+	if root == null or scroll == null or scroll.get_child_count() == 0: return
+	var body := scroll.get_child(0) as Control
+	# Scroll's minimum excludes its scrolling child. Add its actual content once;
+	# retain fixed buttons and only scroll when the screen cannot fit the content.
+	var needed: float = parent.get_combined_minimum_size().y+body.get_combined_minimum_size().y+48
+	var height := minf(ceilf(needed),maxf(180,root.size.y-48))
+	panel.anchor_top = 0.5; panel.anchor_bottom = 0.5
+	if not is_equal_approx(panel.offset_top,-height*0.5): panel.offset_top = -height*0.5
+	if not is_equal_approx(panel.offset_bottom,height*0.5): panel.offset_bottom = height*0.5

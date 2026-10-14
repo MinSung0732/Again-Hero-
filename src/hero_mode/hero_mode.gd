@@ -408,7 +408,9 @@ func _show_result() -> void:
 	_clear_overlay()
 	inventory_dim.show(); inventory_dim.move_to_front(); overlay.move_to_front()
 	overlay.offset_left = maxf(24,(size.x-920)*0.5); overlay.offset_right = -overlay.offset_left
-	overlay.offset_top = minf(HUD.BATTLE_TOP+12,size.y*0.12); overlay.offset_bottom = -24
+	overlay.anchor_top = 0.5; overlay.anchor_bottom = 0.5
+	var initial_half_height := minf(460,maxf(1,(size.y-48)*0.5))
+	overlay.offset_top = -initial_half_height; overlay.offset_bottom = initial_half_height
 	overlay.add_theme_stylebox_override("panel",INVENTORY_DETAIL.style(Color("171226"),Color("e3bc69") if finished_won else Color("d7828d"),24))
 	if not settled:
 		result_reward = STORE.award_run(stage,entry,battle.run_metrics.elapsed_seconds,_kill_count(),finished_won,run_difficulty)

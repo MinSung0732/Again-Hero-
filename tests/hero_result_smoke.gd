@@ -33,6 +33,7 @@ func run():
 			await process_frame
 			host.STORE.calls = 0; host.STORE.fail = true; host._show_result()
 			await process_frame; await process_frame
+			check(absf(host.overlay.get_global_rect().get_center().y-viewport.y*0.5) < 1.0,"save failure centered too")
 			check(not host.settled and host.overlay_rows.find_child("ResultSettle",true,false) != null,"save failure offers retry")
 			check(host.overlay_rows.find_child("ResultLobby",true,false) == null and host.overlay_rows.find_child("ResultRetry",true,false) == null,"failed settlement blocks navigation")
 			host.STORE.fail = false; host._show_result(); host._show_result()
@@ -46,6 +47,10 @@ func run():
 			var rect: Rect2 = host.overlay.get_global_rect()
 			check(rect.position.x >= 0 and rect.end.x <= viewport.x and rect.position.y >= 0 and rect.end.y <= viewport.y,"result stays inside viewport")
 			check(host.overlay_rows.get_node("ResultScroll").size.y >= 30,"result scroll remains usable")
+			check(absf(rect.get_center().y-viewport.y*0.5) < 1.0,"result vertically centered")
+			var scroll = host.overlay_rows.get_node("ResultScroll")
+			check(scroll.size.y <= scroll.get_child(0).get_combined_minimum_size().y+2,"result removes empty body space")
+			if viewport.y == 1920: check(rect.size.y < 1200,"portrait result compact")
 			for name in ["ResultRetry","ResultLobby"]:
 				var target = host.overlay_rows.find_child(name,true,false)
 				check(target.get_global_rect().end.y <= viewport.y and target.size.y >= 76,"action accessible "+name)
