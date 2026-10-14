@@ -66,7 +66,7 @@ func install(host) -> void:
 		var stage: Dictionary = lobby.STAGE_CATALOG.get_stage(id)
 		heroes.append(stage)
 	for label in [lobby.stage_description_label, lobby.stage_status_label, lobby.stage_reward_label, lobby.stage_repeat_reward_label]:
-		label.add_theme_font_size_override("font_size", 21 if label == lobby.stage_description_label else 22)
+		label.add_theme_font_size_override("font_size", 18 if label != lobby.stage_reward_label else 22)
 	bottom.add_theme_stylebox_override("panel",preload("res://src/ui/pixel_panel_skin.gd").button_style(idle_style))
 	var transition: Node = lobby.get_node("/root/SceneTransition")
 	var on_complete := Callable(self, "schedule_unlock")
@@ -230,9 +230,9 @@ func refresh() -> void:
 			HERO_STORE.select_battle_stage(stage)
 			lobby.enter_stage_button.text = "용사 도전 · 15분 생존"
 			lobby.stage_description_label.text = "이동·증강 직접 선택 / 공격 자동\nAI 마왕의 군단을 피해 15분 동안 생존하세요."
-			lobby.stage_status_label.text = "AI 마왕\n15분 생존 도전"
-			lobby.stage_reward_label.text = "승리 보상\n연구 +%d\n골드 +%d" % [preload("res://src/data/hero_mode_catalog.gd").WIN_RESEARCH,preload("res://src/data/hero_mode_catalog.gd").WIN_GOLD]
-			lobby.stage_repeat_reward_label.text = "무기 증강\n전투 중 습득\nLv.10 상자 진화"
+			lobby.stage_status_label.text = "AI 마왕 · 15분 생존"
+			lobby.stage_reward_label.text = "승리 보상\n연구 +%d · 골드 +%d" % [preload("res://src/data/hero_mode_catalog.gd").WIN_RESEARCH,preload("res://src/data/hero_mode_catalog.gd").WIN_GOLD]
+			lobby.stage_repeat_reward_label.text = "Lv.10 상자 진화"
 			section.get_node("SectionTitle").text = "용사 원정"
 			section.get_node("SectionSubtitle").text = "쉬움 클리어 시 다음 전장 해금 · 어려움은 해당 전장 쉬움 클리어 필요"
 			_apply_selected_hero_portrait()
@@ -248,9 +248,9 @@ func refresh() -> void:
 		elif difficulty == "hard":
 			lobby.enter_stage_button.text = "어려움 도전"
 			lobby.stage_description_label.text = "강화된 용사를 처치하세요.\n해당 스테이지 쉬움 클리어 후 도전할 수 있습니다."
-			lobby.stage_status_label.text = "어려움\n강화 용사 도전"
+			lobby.stage_status_label.text = "어려움 · 강화 용사"
 			lobby.stage_reward_label.text = "최초 어려움\n연구 30"
-			lobby.stage_repeat_reward_label.text = "반복 도전\n최초 보상은 1회 지급"
+			lobby.stage_repeat_reward_label.text = "최초 보상 1회 지급"
 		return
 	lobby.stage_selector_button.text = "SEASON · 준비 중"
 	lobby.stage_selector_button.disabled = true

@@ -21,9 +21,10 @@ static func install(host: Control, description: Label, reward: Label, status: La
 	layout.add_child(scroll)
 	var rows := VBoxContainer.new()
 	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rows.add_theme_constant_override("separation",12)
+	rows.add_theme_constant_override("separation",6)
 	scroll.add_child(rows)
 	move_label(description,card(rows))
+	description.add_theme_font_size_override("font_size",18)
 	var rewards := card(rows)
 	move_label(reward,rewards)
 	var details := HBoxContainer.new()
@@ -32,6 +33,8 @@ static func install(host: Control, description: Label, reward: Label, status: La
 	rewards.add_child(details)
 	move_label(status,details)
 	move_label(repeat,details)
+	status.add_theme_font_size_override("font_size",18)
+	repeat.add_theme_font_size_override("font_size",18)
 	reward.add_theme_color_override("font_color",Color("ffe399"))
 	if entry.get_parent() != null: entry.get_parent().remove_child(entry)
 	layout.add_child(entry)
@@ -55,12 +58,12 @@ static func card(parent: VBoxContainer) -> VBoxContainer:
 	style.set_corner_radius_all(8)
 	style.content_margin_left = 14
 	style.content_margin_right = 14
-	style.content_margin_top = 12
-	style.content_margin_bottom = 12
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
 	panel.add_theme_stylebox_override("panel",style)
 	parent.add_child(panel)
 	var rows := VBoxContainer.new()
-	rows.add_theme_constant_override("separation",10)
+	rows.add_theme_constant_override("separation",6)
 	panel.add_child(rows)
 	return rows
 
