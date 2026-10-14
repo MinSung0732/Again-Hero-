@@ -130,11 +130,11 @@ func _create_battle() -> void:
 	var view := SubViewportContainer.new()
 	view.name = "BattleView"
 	view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	view.offset_top = 330; view.offset_bottom = 0
+	view.offset_top = HUD.BATTLE_TOP; view.offset_bottom = 0
 	view.stretch = true
 	add_child(view); move_child(view,1)
 	var viewport := SubViewport.new()
-	viewport.size = Vector2i(1080,1590)
+	viewport.size = Vector2i(1080,1920-int(HUD.BATTLE_TOP))
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	viewport.handle_input_locally = false
 	view.add_child(viewport)
@@ -166,25 +166,27 @@ func _build_ui() -> void:
 	move_child(background,0)
 	var header := PanelContainer.new(); header.name = "HeroHUD"; add_child(header)
 	header.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	header.offset_left = 20; header.offset_right = -20; header.offset_top = 20; header.offset_bottom = 310
+	header.offset_left = 20; header.offset_right = -20; header.offset_top = 20; header.offset_bottom = HUD.BATTLE_TOP-20
 	var frame := StyleBoxFlat.new(); frame.bg_color = Color("192633"); frame.border_color = Color("c9a45e"); frame.set_border_width_all(3); frame.set_content_margin_all(10)
 	header.add_theme_stylebox_override("panel",SKIN.skin_style(frame))
 	var top := VBoxContainer.new(); top.add_theme_constant_override("separation",4); header.add_child(top)
 	var title_row := HBoxContainer.new(); top.add_child(title_row)
+	title_row.add_theme_constant_override("separation",12)
 	HUD.logo(title_row)
-	timer = _label(title_row,"용사 모드 · 15분 생존",20); timer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var menu := Button.new(); menu.text = "설정"; menu.custom_minimum_size = Vector2(100,50); title_row.add_child(menu)
-	menu.add_theme_font_size_override("font_size",23); _skin_action_button(menu); menu.pressed.connect(_pause)
-	hp = HUD.bar(top,"HP",Color(0.08,0.92,0.25,1),26)
-	xp = HUD.bar(top,"EXP",Color(0.08,0.55,1,1),20)
-	status = _label(top,"이동 직접 · 공격 자동 · Lv.10 무기 + 상자 = 진화",20)
+	HUD.portrait(title_row,player_hero_id)
+	timer = _label(title_row,"용사 모드 · 15분 생존",26); timer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var menu := Button.new(); menu.text = "설정"; menu.custom_minimum_size = Vector2(116,72); title_row.add_child(menu)
+	menu.add_theme_font_size_override("font_size",26); _skin_action_button(menu); menu.pressed.connect(_pause)
+	hp = HUD.bar(top,"HP",Color(0.08,0.92,0.25,1),36)
+	xp = HUD.bar(top,"EXP",Color(0.08,0.55,1,1),32)
+	status = _label(top,"이동 직접 · 공격 자동 · Lv.10 무기 + 상자 = 진화",26)
 	status.autowrap_mode = TextServer.AUTOWRAP_OFF; status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS; status.clip_text = true
 	weapon_buttons = HUD.inventory_row(top,"무기",WEAPONS.WEAPON_SLOTS)
 	for index in weapon_buttons.size(): weapon_buttons[index].pressed.connect(_show_weapon_info.bind(index))
 	passive_buttons = HUD.inventory_row(top,"보조",WEAPONS.PASSIVE_SLOTS)
 	for index in passive_buttons.size(): passive_buttons[index].pressed.connect(_show_passive_info.bind(index))
 	stats_panel = preload("res://src/ui/hero_compact_stats.gd").new(); add_child(stats_panel)
-	stats_panel.position = Vector2(100,342)
+	stats_panel.position = Vector2(100,HUD.BATTLE_TOP+12)
 	pad = MOVE_PAD.new(); pad.name = "MovePad"; add_child(pad)
 	pad.set_mode(pad_mode)
 	pad.input_exclusions.append(stats_panel)
@@ -235,9 +237,9 @@ func _refresh_hud() -> void:
 	xp.max_value = hero.exp_to_next_level; xp.value = hero.current_exp
 	xp.get_node("Caption").text = "EXP %d / %d" % [hero.current_exp,hero.exp_to_next_level]
 	timer.text = "Stage %d · %s Lv.%d\n남은 시간 %02d:%02d" % [int(battle.current_stage_data.get("number",1)),String(battle.current_hero_profile.get("display_name","용사")),hero.level,int(battle.run_metrics.get_remaining_seconds())/60,int(battle.run_metrics.get_remaining_seconds())%60]
-	status.text = "처치 %d · %s · 공격 자동" % [_kill_count(),String(DATA.phase_at(battle.run_metrics.elapsed_seconds).name)]
+	status.text = "처치 %d · 현재 몬스터 %d · %s" % [_kill_count(),battle.active_monsters.size(),String(DATA.phase_at(battle.run_metrics.elapsed_seconds).name)]
 	if hero.player_weapons != null and hero.player_weapons.identity != null:
-		status.text = "처치 %d · %s" % [_kill_count(),hero.player_weapons.identity.summary()]
+		status.text = "처치 %d · 현재 몬스터 %d · %s" % [_kill_count(),battle.active_monsters.size(),hero.player_weapons.identity.summary()]
 	if hero.player_weapons != null:
 		var runtime = hero.player_weapons
 		for index in weapon_buttons.size():

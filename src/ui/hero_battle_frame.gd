@@ -1,7 +1,8 @@
 extends Control
 ## Repeat hero-only pillar tiles at a uniform scale instead of stretching demon art.
 const ART := preload("res://src/ui/hero_hud_art.gd")
-const TOP := 330.0
+const HUD := preload("res://src/ui/hero_survival_hud.gd")
+const TOP := HUD.BATTLE_TOP
 const WIDTH := 90.0
 var tiles: Array[Texture2D] = []
 func _ready() -> void:

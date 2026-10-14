@@ -14,12 +14,14 @@ class TestHero extends BASE.Hero:
 	var current_exp := 0
 	var level := 1
 class Metrics extends RefCounted:
+	var monster_death_counts := {}
 	var elapsed_seconds := 0.0
 	func get_remaining_seconds() -> float: return 900.0
 class Battle extends RefCounted:
 	var hero
+	var active_monsters: Dictionary = {}
 	var current_stage_data := {"number":1}
-	var current_hero_profile := {"display_name":"견습 마도사"}
+	var current_hero_profile := {"display_name":"대현자 아스트라"}
 	var run_metrics := Metrics.new()
 var checks := 0
 var failures := 0
@@ -32,11 +34,19 @@ func run() -> void:
 	var harness = load("res://tests/hero_hud_harness.gd").new()
 	root.add_child(harness); harness.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); harness._build_ui()
 	await process_frame; await process_frame
+	check(harness.find_child("HeroPortrait",true,false).texture != null,"selected hero portrait is visible")
+	for id in HUD.CHARACTERS.ORDER:
+		check(HUD.portrait_texture(id) != null and not HUD.portrait_path(id).is_empty(),"real portrait "+id)
+	check(HUD.portrait_path("sage_astra").contains("stage10"),"portrait uses selected hero, not stage1 battlefield")
+	check(HUD.portrait_texture("sage_astra") == HUD.portrait_texture("sage_astra"),"portrait texture cached")
+	check(harness.timer.get_theme_font_size("font_size") >= 26,"mobile hero/time text enlarged")
+	check(harness.weapon_buttons[0].custom_minimum_size.y >= 76,"mobile inventory target enlarged")
+	check(harness.hp.custom_minimum_size.y >= 36 and harness.xp.custom_minimum_size.y >= 32,"mobile status bars enlarged")
 	check(harness.weapon_buttons.size() == 6 and harness.passive_buttons.size() == 6,"two rows of six actual HUD slots")
-	check(harness.get_node("HeroHUD").get_global_rect().end.y <= 330,"header remains above battle")
+	check(harness.get_node("HeroHUD").get_global_rect().end.y <= HUD.BATTLE_TOP,"header remains above battle")
 	for slot in harness.weapon_buttons+harness.passive_buttons:
 		check(slot.get_global_rect().end.x <= 1060 and slot.get_global_rect().position.x >= 20,"slot stays in header")
-		check(slot.get_global_rect().end.y <= 330,"slot does not cover battlefield")
+		check(slot.get_global_rect().end.y <= HUD.BATTLE_TOP,"slot does not cover battlefield")
 	HUD.update_slot(harness.weapon_buttons[0],ICONS.texture(DATA.STARTERS.ranged_rookie),"Lv.10","test")
 	check(harness.weapon_buttons[0].get_node("Rank").text == "Lv.10","rank ten remains pending evolution")
 	HUD.update_slot(harness.weapon_buttons[0],ICONS.texture(DATA.STARTERS.ranged_rookie),"MAX","test")
@@ -44,7 +54,7 @@ func run() -> void:
 	var stats = harness.stats_panel
 	check(not stats.expanded and not stats.rows.visible,"stats starts folded")
 	stats.toggle.pressed.emit(); await process_frame; await process_frame
-	check(stats.expanded and stats.rows.visible and stats.size.x <= 290,"readable compact expanded panel")
+	check(stats.expanded and stats.rows.visible and stats.size.x <= 320,"readable compact expanded panel")
 	var arena := BASE.Arena.new(); root.add_child(arena)
 	var hero := TestHero.new(); arena.add_child(hero)
 	var runtime := RUNTIME.new(); runtime.install(hero); hero.player_weapons = runtime
@@ -66,9 +76,18 @@ func run() -> void:
 	runtime.evolved[starter] = true; harness._refresh_hud()
 	check(harness.weapon_buttons[0].get_node("Rank").text == "MAX","actual HUD shows completed evolution")
 	check(harness.passive_buttons[1].get_node("Rank").text == "MAX","actual HUD uses two-level passive cap")
+	battle.run_metrics.monster_death_counts = {"slime":7,"orc":3}
+	battle.active_monsters[123] = true; battle.active_monsters[456] = true
+	harness._refresh_hud(); check(harness.status.text.contains("처치 10"),"actual kill total from metrics")
+	check(harness.status.text.contains("현재 몬스터 2"),"live count from active registry")
+	battle.active_monsters.erase(123); harness._refresh_hud()
+	check(harness.status.text.contains("현재 몬스터 1"),"despawn updates live count")
+	await process_frame; await process_frame
+	check(harness.get_node("HeroHUD").get_global_rect().end.y <= HUD.BATTLE_TOP,"refreshed long hero name stays above battle")
+	check(harness.find_child("HeroPortrait",true,false).size.y >= 88,"portrait maintains mobile footprint")
 	var frame := FRAME.new(); frame.size = Vector2(1080,1920); root.add_child(frame)
 	check(frame.tiles.size() == 4 and frame.tiles[0].get_height() > frame.tiles[0].get_width()*2,"tall cropped pillar tiles preserve aspect")
-	var surface := Control.new(); surface.position = Vector2(90,330); surface.size = Vector2(900,1590); root.add_child(surface)
+	var surface := Control.new(); surface.position = Vector2(90,HUD.BATTLE_TOP); surface.size = Vector2(900,1920-HUD.BATTLE_TOP); root.add_child(surface)
 	harness.pad.input_surface = surface; harness.pad.set_mode(PAD.MODE_FREE)
 	check(not harness.pad._can_start_free(stats.get_global_rect().get_center()),"stats excludes free pad origin")
 	check(harness.pad._can_start_free(Vector2(700,700)),"battle still accepts free pad origin")

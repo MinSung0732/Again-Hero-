@@ -86,6 +86,7 @@ func prepare_scene(scene_path: String, entry_options: Dictionary = {}) -> bool:
 		var store := preload("res://src/systems/hero_mode_store.gd")
 		paths.append("res://assets/art/ui/hero_hud/hero_hud_atlas.png")
 		var hero_id := String(entry_options.get("hero_id", store.selected_hero()))
+		paths.append(preload("res://src/ui/hero_survival_hud.gd").portrait_path(hero_id))
 		var profile := HEROES.get_profile(hero_id)
 		# Only the selected character and their weapons, never all ten kits.
 		_append_texture_directory(String(profile.get("sprite_frame_dir", "")), paths)
