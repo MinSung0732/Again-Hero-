@@ -234,16 +234,15 @@ func refresh() -> void:
 			lobby.stage_reward_label.text = "승리 보상\n연구 +%d\n골드 +%d" % [preload("res://src/data/hero_mode_catalog.gd").WIN_RESEARCH,preload("res://src/data/hero_mode_catalog.gd").WIN_GOLD]
 			lobby.stage_repeat_reward_label.text = "무기 진화\nLv.10 상자"
 			section.get_node("SectionTitle").text = "용사 원정"
-			section.get_node("SectionSubtitle").text = "쉬움 클리어 시 다음 전장 해금 · 어려움은 해당 전장 쉬움 클리어 필요"
+			section.get_node("SectionSubtitle").text = "쉬움 클리어 → 다음 전장 해금"
 			_apply_selected_hero_portrait()
 			lobby.stage_name_label.text = "마왕의 성 · 붕괴 %d단계" % int(lobby.STAGE_CATALOG.get_stage(stage).get("number",1))
 			var unlocked := HERO_STORE.can_enter(stage,difficulty)
 			lobby.enter_stage_button.disabled = not unlocked
 			if lobby.stamina_view != null: lobby.stamina_view.configure_entry(unlocked,0 if UNLOCKS.is_test_override() else preload("res://src/data/stamina_catalog.gd").ENTRY_COST)
-			if not unlocked:
-				lobby.enter_stage_button.text = "해당 용사 스테이지 쉬움 클리어 필요"
-				lobby.stage_status_label.text = "잠김\n쉬움 클리어"
-			elif HERO_STORE.battle_stage_cleared(stage,difficulty): lobby.stage_status_label.text = "클리어 완료\n15분 생존"
+			_set_hero_entry_lock(unlocked,int(lobby.STAGE_CATALOG.get_stage(stage).get("number",1)),HERO_STORE.battle_stage_unlocked(stage))
+			if unlocked and HERO_STORE.battle_stage_cleared(stage,difficulty): lobby.stage_status_label.text = "클리어 완료\n15분 생존"
+
 
 		elif difficulty == "hard":
 			lobby.enter_stage_button.text = "어려움 도전"
@@ -323,3 +322,22 @@ func _apply_selected_hero_portrait() -> void:
 	lobby.portrait_badge.visible = false
 	var lock := lobby.portrait_texture.get_node_or_null("StageLock") as CanvasItem
 	if lock != null: lock.hide()
+
+func _set_hero_entry_lock(unlocked: bool, stage_number: int, stage_unlocked: bool) -> void:
+	# Lock the displayed battlefield, independently of the selected character.
+	lobby.enter_stage_button.disabled = not unlocked
+	lobby.enter_stage_button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	lobby.portrait_texture.self_modulate = Color.WHITE if unlocked else Color(0.28,0.25,0.33,1)
+	lobby.portrait_badge.visible = not unlocked
+	var lock := lobby.portrait_texture.get_node_or_null("StageLock") as CanvasItem
+	if lock != null: lock.visible = not unlocked
+	if unlocked:
+		lobby.portrait_badge.text = ""
+		lobby.enter_stage_button.tooltip_text = ""
+		return
+	var required_stage := stage_number if difficulty == "hard" and stage_unlocked else maxi(stage_number-1,1)
+	var condition := "Stage %d 클리어 필요" % required_stage
+	lobby.enter_stage_button.text = condition
+	lobby.enter_stage_button.tooltip_text = "용사 모드 쉬움 " + condition
+	lobby.portrait_badge.text = "잠김 · " + condition
+	lobby.stage_status_label.text = "잠김\nStage %d 필요" % required_stage
