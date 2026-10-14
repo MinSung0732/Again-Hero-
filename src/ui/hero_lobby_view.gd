@@ -137,13 +137,17 @@ func rebuild(tab: String) -> void:
 		_label(body,"캐릭터 편성에서 플레이할 용사를 선택하세요.\n용사별 전용 무기는 전투 중 레벨업으로 습득합니다.")
 		return
 	_label(body,"공통 성장 · 모든 용사",36)
-	_label(body,"연구 포인트 %d\n모든 용사 공통 성장 · 다음 도전부터 적용" % lobby.STAGE_PROGRESS.get_research_points(),24)
+	_label(body,"모든 용사 공통 성장 · 다음 도전부터 적용",24)
 	if not message.is_empty(): _label(body,message,23)
 	for growth_id in DATA.GROWTH:
 		var level := STORE.growth_level(id,growth_id); var data: Dictionary = DATA.GROWTH[growth_id]
 		var cost := DATA.growth_cost(growth_id,level)
-		var text := "%s · %d / %d\n%s\n%s" % [data.name,level,int(data.max),data.description,"최대 성장" if level >= int(data.max) else "연구 포인트 %d" % cost]
+		var wallet := "보유 %s P" % lobby._format_shop_number(lobby.STAGE_PROGRESS.get_research_points())
+		var expense := "최대 성장" if level >= int(data.max) else "필요 %s P" % lobby._format_shop_number(cost)
+		var text := "%s · %d / %d\n%s\n%s  ·  %s" % [data.name,level,int(data.max),data.description,wallet,expense]
 		var button := _button(body,text,_grow.bind(id,String(growth_id)))
+		button.add_theme_font_size_override("font_size",28)
+		button.add_theme_color_override("font_disabled_color",Color("c6bccb"))
 		button.disabled = level >= int(data.max) or cost > lobby.STAGE_PROGRESS.get_research_points()
 
 func _build_formation(body: VBoxContainer,id: String) -> void:

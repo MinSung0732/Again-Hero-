@@ -2027,6 +2027,7 @@ func _apply_lobby_visual_polish() -> void:
 	_apply_lobby_button_skin(research_mode_button, true, 22)
 	_apply_lobby_button_skin(relic_mode_button, false, 22)
 	_apply_lobby_button_skin(research_upgrade_button, true, 22)
+	preload("res://src/ui/research_wallet_view.gd").install(research_points_label,research_detail_cost)
 	_apply_lobby_button_skin(relic_upgrade_button, true, 21)
 	for filter_button in relic_filter_buttons:
 		_apply_lobby_button_skin(filter_button, false, 18)
@@ -5125,7 +5126,7 @@ func _rebuild_research_list() -> void:
 	research_buttons_by_id.clear()
 
 	var research_points := STAGE_PROGRESS.get_research_points()
-	research_points_label.text = "보유 연구 포인트  %s" % _format_shop_number(
+	research_points_label.text = "%s P" % _format_shop_number(
 		research_points
 	)
 

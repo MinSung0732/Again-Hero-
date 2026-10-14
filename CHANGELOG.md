@@ -1,3 +1,9 @@
+## 2026-10-15 — 강화 패널 안의 연구 포인트 가독성
+
+- 마왕연구의상단Points Label을강화ActionRow의ResearchWallet패널로이동.강화버튼옆보유포인트금색36px/필요비용24px·구분caption22px,긴수량자동줄바꿈.기존Label참조/연구목록재빌드잔액갱신유지,중복잔액노드없음.
+- 용사공통성장의상단잔액문구대신각강화항목에보유P·필요P함께표시,천단위콤마와28px본문.스크롤중에도해당강화의잔액/비용확인가능,최대성장도잔액표시.강화비용/레벨/차감/저장/완료·부족비활성조건유지.
+- GDScript구문3파일/기존잔액업데이트·강화항목잔액cost연결/diff정적검사PASS.Godot실행/PC·모바일가독성미검증.
+
 ## 2026-10-15 — 테스트 배포 쿠폰·게스트 연동 상태 보강
 
 - localtest/normaltest/tutorialtest가릴리스EXE에서OS.is_debug_build로차단되던정책에testing/allow_coupons옵트인추가.현재테스트프로젝트true,재실행marker복원·용사전체해금도동일정책.기존분리user://local_test/튜토리얼미리보기·원본게스트복귀·클라우드격리유지.정식배포시setting false로제한가능.
