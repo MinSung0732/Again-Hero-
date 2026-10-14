@@ -10,6 +10,7 @@ method = source[source.index('func _build_ui()'):source.index('func _label(')]
 label = source[source.index('func _label('):source.index('func _button(')]
 refresh = source[source.index('func _refresh_hud('):source.index('func _show_choices(')]
 kills = source[source.index('func _kill_count('):source.index('func _on_finished(')]
+frame = source[source.index('func _apply_battle_frame('):source.index('func _restart_from_pause(')]
 method = method.replace('SKIN.skin_style(frame)','frame').replace('SKIN.skin_style(style)','style')
 base = '''extends Control
 const DATA := preload("res://src/data/hero_mode_catalog.gd")
@@ -24,6 +25,11 @@ const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const MOVE_PAD := preload("res://src/hero_mode/hero_move_pad.gd")
 var player_hero_id := "sage_astra"
 var timer: Label
+var hero_title: Label
+var kills_label: Label
+var population_label: Label
+var battle_frame: Control
+var battle_frame_enabled := true
 var hp: ProgressBar
 var xp: ProgressBar
 var status: Label
@@ -39,7 +45,7 @@ func _show_weapon_info(_index: int) -> void: pass
 func _show_passive_info(_index: int) -> void: pass
 func _skin_action_button(_button: Button) -> void: pass
 '''
-(output/'tests/hero_hud_harness.gd').write_text(base+method+label+refresh+kills)
+(output/'tests/hero_hud_harness.gd').write_text(base+method+label+refresh+kills+frame)
 # Harness reference in test uses load(), so dependencies are explicitly queued there.
 
 # Stage portrait paths are dynamic load() references: fetch only these exact

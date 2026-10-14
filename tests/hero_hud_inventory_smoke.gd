@@ -54,7 +54,7 @@ func run() -> void:
 	var stats = harness.stats_panel
 	check(not stats.expanded and not stats.rows.visible,"stats starts folded")
 	stats.toggle.pressed.emit(); await process_frame; await process_frame
-	check(stats.expanded and stats.rows.visible and stats.size.x <= 320,"readable compact expanded panel")
+	check(stats.expanded and stats.rows.visible and stats.size.x <= 400,"readable compact expanded panel")
 	var arena := BASE.Arena.new(); root.add_child(arena)
 	var hero := TestHero.new(); arena.add_child(hero)
 	var runtime := RUNTIME.new(); runtime.install(hero); hero.player_weapons = runtime
@@ -78,16 +78,34 @@ func run() -> void:
 	check(harness.passive_buttons[1].get_node("Rank").text == "MAX","actual HUD uses two-level passive cap")
 	battle.run_metrics.monster_death_counts = {"slime":7,"orc":3}
 	battle.active_monsters[123] = true; battle.active_monsters[456] = true
-	harness._refresh_hud(); check(harness.status.text.contains("처치 10"),"actual kill total from metrics")
-	check(harness.status.text.contains("현재 몬스터 2"),"live count from active registry")
+	harness._refresh_hud(); check(harness.kills_label.text == "처치 10","actual kill total from metrics")
+	check(harness.population_label.text == "현재 적 2","live count from active registry")
 	battle.active_monsters.erase(123); harness._refresh_hud()
-	check(harness.status.text.contains("현재 몬스터 1"),"despawn updates live count")
+	check(harness.population_label.text == "현재 적 1","despawn updates live count")
+	hero.current_hp = 100; harness._refresh_hud()
+	check(harness.hp.get_theme_stylebox("fill").bg_color == Color("ec6464"),"danger HP visibly red")
+	hero.current_hp = 400; harness._refresh_hud()
+	check(harness.hp.get_theme_stylebox("fill").bg_color == Color("e4b84f"),"caution HP amber")
+	hero.current_hp = 800; harness._refresh_hud()
+	check(harness.hp.get_theme_stylebox("fill").bg_color == Color("29cf79"),"healthy HP green")
+	check(harness.hp.get_node("Caption").text.begins_with("체력") and harness.xp.get_node("Caption").text.begins_with("경험치"),"plain Korean health and experience")
 	await process_frame; await process_frame
 	check(harness.get_node("HeroHUD").get_global_rect().end.y <= HUD.BATTLE_TOP,"refreshed long hero name stays above battle")
 	check(harness.find_child("HeroPortrait",true,false).size.y >= 88,"portrait maintains mobile footprint")
 	var frame := FRAME.new(); frame.size = Vector2(1080,1920); root.add_child(frame)
 	check(frame.tiles.size() == 4 and frame.tiles[0].get_height() > frame.tiles[0].get_width()*2,"tall cropped pillar tiles preserve aspect")
-	var surface := Control.new(); surface.position = Vector2(90,HUD.BATTLE_TOP); surface.size = Vector2(900,1920-HUD.BATTLE_TOP); root.add_child(surface)
+	harness.battle_frame = frame
+	var surface := SubViewportContainer.new(); surface.name = "BattleView"; harness.add_child(surface); surface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); surface.offset_top = HUD.BATTLE_TOP
+	harness.battle_frame_enabled = false; harness._apply_battle_frame()
+	check(is_equal_approx(stats.position.x,10) and not frame.visible,"frame off moves stats left")
+	check(stats.expanded,"frame change retains expanded stats")
+	harness.battle_frame_enabled = true; harness._apply_battle_frame()
+	check(is_equal_approx(stats.position.x,100) and frame.visible,"frame on restores stats position")
+	check(is_equal_approx(surface.offset_left,90),"stats and battle share frame margin")
+	check(STATS.GROUPS.size() == 3 and STATS.GROUPS[0].indices == [0,3,6],"attack survival mobility groups")
+	check(stats.values[2].text.ends_with("%"),"movement uses understandable percentage")
+	runtime.add("survival_mobility"); stats.refresh(hero,runtime)
+	check(stats.values[2].text == "+%.0f%%" % (float(DATA.PASSIVES.survival_mobility.value)*100),"movement bonus matches equipped passive")
 	harness.pad.input_surface = surface; harness.pad.set_mode(PAD.MODE_FREE)
 	check(not harness.pad._can_start_free(stats.get_global_rect().get_center()),"stats excludes free pad origin")
 	check(harness.pad._can_start_free(Vector2(700,700)),"battle still accepts free pad origin")
@@ -99,8 +117,12 @@ func run() -> void:
 	touch = touch.duplicate(); touch.pressed = false; Input.parse_input_event(touch); Input.flush_buffered_events()
 	check(harness.pad.touch_id == -1,"free pad releases after battle gesture")
 	stats.toggle.pressed.emit(); await process_frame; await process_frame
-	check(not stats.rows.visible and stats.size.x < 150,"stats folds back to small button")
+	check(not stats.rows.visible and stats.size.x < 170,"stats folds back to small button")
+	harness.battle_frame_enabled = false; harness._apply_battle_frame()
+	check(is_equal_approx(stats.position.x,10) and not stats.expanded,"collapsed button follows frame off")
+	harness.battle_frame_enabled = true; harness._apply_battle_frame()
+	check(is_equal_approx(stats.position.x,100),"collapsed button restored with frame")
 	print("HERO_HUD_INVENTORY checks=%d failures=%d" % [checks,failures])
-	frame.queue_free(); surface.queue_free(); arena.queue_free(); harness.queue_free()
+	frame.queue_free(); arena.queue_free(); harness.queue_free()
 	await process_frame
 	quit(1 if failures else 0)

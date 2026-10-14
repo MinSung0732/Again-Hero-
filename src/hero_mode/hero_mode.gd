@@ -32,6 +32,9 @@ var status: Label
 var hp: ProgressBar
 var xp: ProgressBar
 var timer: Label
+var hero_title: Label
+var kills_label: Label
+var population_label: Label
 var stats_panel: PanelContainer
 var passive_buttons: Array[Button] = []
 var overlay: PanelContainer
@@ -166,27 +169,36 @@ func _build_ui() -> void:
 	move_child(background,0)
 	var header := PanelContainer.new(); header.name = "HeroHUD"; add_child(header)
 	header.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	header.offset_left = 20; header.offset_right = -20; header.offset_top = 20; header.offset_bottom = HUD.BATTLE_TOP-20
-	var frame := StyleBoxFlat.new(); frame.bg_color = Color("192633"); frame.border_color = Color("c9a45e"); frame.set_border_width_all(3); frame.set_content_margin_all(10)
+	header.offset_left = 20; header.offset_right = -20; header.offset_top = 16; header.offset_bottom = HUD.BATTLE_TOP-20
+	var frame := StyleBoxFlat.new(); frame.bg_color = Color("171b29"); frame.border_color = Color("c9a45e"); frame.set_border_width_all(3); frame.set_content_margin_all(12)
 	header.add_theme_stylebox_override("panel",SKIN.skin_style(frame))
-	var top := VBoxContainer.new(); top.add_theme_constant_override("separation",4); header.add_child(top)
+	var top := VBoxContainer.new(); top.add_theme_constant_override("separation",6); header.add_child(top)
 	var title_row := HBoxContainer.new(); top.add_child(title_row)
 	title_row.add_theme_constant_override("separation",12)
-	HUD.logo(title_row)
 	HUD.portrait(title_row,player_hero_id)
-	timer = _label(title_row,"용사 모드 · 15분 생존",26); timer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var menu := Button.new(); menu.text = "설정"; menu.custom_minimum_size = Vector2(116,72); title_row.add_child(menu)
+	hero_title = _label(title_row,"용사\nLv.1",32); hero_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hero_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hero_title.add_theme_color_override("font_color",Color("f4f1e9"))
+	timer = _label(title_row,"남은 시간\n15:00",28); timer.custom_minimum_size.x = 190
+	timer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; timer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	timer.add_theme_color_override("font_color",Color("add5ff"))
+	var menu := Button.new(); menu.text = "설정"; menu.custom_minimum_size = Vector2(100,80); title_row.add_child(menu)
 	menu.add_theme_font_size_override("font_size",26); _skin_action_button(menu); menu.pressed.connect(_pause)
-	hp = HUD.bar(top,"HP",Color(0.08,0.92,0.25,1),36)
-	xp = HUD.bar(top,"EXP",Color(0.08,0.55,1,1),32)
-	status = _label(top,"이동 직접 · 공격 자동 · Lv.10 무기 + 상자 = 진화",26)
+	hp = HUD.bar(top,"HP",Color("29cf79"),40)
+	xp = HUD.bar(top,"EXP",Color("6b9aef"),32)
+	var situation := HBoxContainer.new(); situation.name = "BattleCounters"; situation.add_theme_constant_override("separation",10); top.add_child(situation)
+	kills_label = HUD.counter(situation,"처치",Color("f6d68c"))
+	population_label = HUD.counter(situation,"현재 적",Color("d8e6ff"))
+	status = _label(situation,"전투 준비",24); status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	status.add_theme_color_override("font_color",Color("aab4c9"))
 	status.autowrap_mode = TextServer.AUTOWRAP_OFF; status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS; status.clip_text = true
 	weapon_buttons = HUD.inventory_row(top,"무기",WEAPONS.WEAPON_SLOTS)
 	for index in weapon_buttons.size(): weapon_buttons[index].pressed.connect(_show_weapon_info.bind(index))
 	passive_buttons = HUD.inventory_row(top,"보조",WEAPONS.PASSIVE_SLOTS)
 	for index in passive_buttons.size(): passive_buttons[index].pressed.connect(_show_passive_info.bind(index))
 	stats_panel = preload("res://src/ui/hero_compact_stats.gd").new(); add_child(stats_panel)
-	stats_panel.position = Vector2(100,HUD.BATTLE_TOP+12)
+	stats_panel.position = Vector2(HUD.FRAME_WIDTH+10,HUD.BATTLE_TOP+12)
 	pad = MOVE_PAD.new(); pad.name = "MovePad"; add_child(pad)
 	pad.set_mode(pad_mode)
 	pad.input_exclusions.append(stats_panel)
@@ -232,20 +244,25 @@ func _refresh_hud() -> void:
 	if not is_instance_valid(battle) or not is_instance_valid(battle.hero): return
 	var hero = battle.hero
 	hp.max_value = hero.max_hp; hp.value = hero.current_hp
-	hp.get_node("Caption").text = "HP %d / %d" % [hero.current_hp,hero.max_hp]
+	hp.get_node("Caption").text = "체력 %d / %d" % [hero.current_hp,hero.max_hp]
 	$HeroBGMManager.update_hero_hp(hero.current_hp,hero.max_hp)
 	xp.max_value = hero.exp_to_next_level; xp.value = hero.current_exp
-	xp.get_node("Caption").text = "EXP %d / %d" % [hero.current_exp,hero.exp_to_next_level]
-	timer.text = "Stage %d · %s Lv.%d\n남은 시간 %02d:%02d" % [int(battle.current_stage_data.get("number",1)),String(battle.current_hero_profile.get("display_name","용사")),hero.level,int(battle.run_metrics.get_remaining_seconds())/60,int(battle.run_metrics.get_remaining_seconds())%60]
-	status.text = "처치 %d · 현재 몬스터 %d · %s" % [_kill_count(),battle.active_monsters.size(),String(DATA.phase_at(battle.run_metrics.elapsed_seconds).name)]
+	xp.get_node("Caption").text = "경험치 %d / %d" % [hero.current_exp,hero.exp_to_next_level]
+	hero_title.text = "%s\nLv.%d · Stage %d" % [String(battle.current_hero_profile.get("display_name","용사")),hero.level,int(battle.current_stage_data.get("number",1))]
+	timer.text = "남은 시간\n%02d:%02d" % [int(battle.run_metrics.get_remaining_seconds())/60,int(battle.run_metrics.get_remaining_seconds())%60]
+	kills_label.text = "처치 %d" % _kill_count()
+	population_label.text = "현재 적 %d" % battle.active_monsters.size()
+	status.text = "공세 · "+String(DATA.phase_at(battle.run_metrics.elapsed_seconds).name)
 	if hero.player_weapons != null and hero.player_weapons.identity != null:
-		status.text = "처치 %d · 현재 몬스터 %d · %s" % [_kill_count(),battle.active_monsters.size(),hero.player_weapons.identity.summary()]
+		status.text = "자원 · "+hero.player_weapons.identity.summary()
+	var hp_ratio := float(hero.current_hp)/maxf(1.0,hero.max_hp)
+	hp.get_theme_stylebox("fill").bg_color = Color("ec6464") if hp_ratio <= 0.25 else Color("e4b84f") if hp_ratio <= 0.5 else Color("29cf79")
 	if hero.player_weapons != null:
 		var runtime = hero.player_weapons
 		for index in weapon_buttons.size():
 			var button: Button = weapon_buttons[index]
 			if index >= runtime.weapon_ids.size():
-				HUD.update_slot(button,null,"—","빈 무기 슬롯"); button.disabled = true; continue
+				HUD.update_slot(button,null,"+","빈 무기 슬롯"); button.disabled = true; continue
 			var id := String(runtime.weapon_ids[index]); button.disabled = false
 			HUD.update_slot(button,ICONS.texture(id),"MAX" if runtime.evolved.has(id) else "Lv.%d" % int(runtime.levels[id]),WEAPONS.GROWTH.evolution_name(id) if runtime.evolved.has(id) else String(WEAPONS.WEAPONS[id].name))
 		var index := 0
@@ -255,7 +272,7 @@ func _refresh_hud() -> void:
 			HUD.update_slot(passive_buttons[index],ICONS.texture(id),"MAX" if rank >= WEAPONS.passive_limit(id) else "Lv.%d" % rank,String(WEAPONS.PASSIVES[id].name)+"\n"+WEAPONS.description(id,rank))
 			index += 1
 		while index < passive_buttons.size():
-			HUD.update_slot(passive_buttons[index],null,"—","빈 보조 슬롯"); passive_buttons[index].disabled = true; index += 1
+			HUD.update_slot(passive_buttons[index],null,"+","빈 보조 슬롯"); passive_buttons[index].disabled = true; index += 1
 		stats_panel.refresh(hero,runtime)
 
 func _show_choices(candidates: Array) -> void:
@@ -526,8 +543,9 @@ func _set_battle_frame(enabled: bool) -> void:
 func _apply_battle_frame() -> void:
 	battle_frame.visible = battle_frame_enabled
 	var view: SubViewportContainer = get_node("BattleView")
-	view.offset_left = 90 if battle_frame_enabled else 0
-	view.offset_right = -90 if battle_frame_enabled else 0
+	view.offset_left = HUD.FRAME_WIDTH if battle_frame_enabled else 0
+	view.offset_right = -HUD.FRAME_WIDTH if battle_frame_enabled else 0
+	stats_panel.position.x = view.offset_left+10
 func _restart_from_pause() -> void:
 	if leaving or not paused or battle.battle_over: return
 	var elapsed := maxi(Time.get_ticks_msec()-entry_started_ms,int((Time.get_unix_time_from_system()-entry_started_unix)*1000.0))

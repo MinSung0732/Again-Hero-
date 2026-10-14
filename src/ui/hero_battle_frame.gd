@@ -3,7 +3,7 @@ extends Control
 const ART := preload("res://src/ui/hero_hud_art.gd")
 const HUD := preload("res://src/ui/hero_survival_hud.gd")
 const TOP := HUD.BATTLE_TOP
-const WIDTH := 90.0
+const WIDTH := HUD.FRAME_WIDTH
 var tiles: Array[Texture2D] = []
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
