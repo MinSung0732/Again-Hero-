@@ -207,7 +207,7 @@ func _refresh_formation(id: String) -> void:
 		var unlocked := STORE.character_unlocked(hero_id); var selected: bool = hero_id == id
 		hero_cards[hero_id].disabled = not unlocked
 		hero_cards[hero_id].modulate = Color.WHITE if unlocked else Color(0.45,0.45,0.5)
-		roster_states[hero_id].text = "◆ 편성 중" if selected else "선택 가능" if unlocked else "잠김 · 마왕 쉬움 10클리어"
+		roster_states[hero_id].text = "◆ 편성 중" if selected else "선택 가능" if unlocked else "잠김 · 마왕 쉬움 %s클리어" % CHARACTERS.stage_for_hero(hero_id).trim_prefix("stage_")
 		var style := StyleBoxFlat.new(); style.bg_color = Color("24556b") if selected else Color("162f42"); style.border_color = Color("edcf7b") if selected else Color("608b9b"); style.set_border_width_all(3 if selected else 2)
 		for state in ["normal","hover","pressed","disabled"]: hero_cards[hero_id].add_theme_stylebox_override(state,SKIN.skin_style(style))
 

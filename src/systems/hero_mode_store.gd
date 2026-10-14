@@ -142,7 +142,7 @@ static func character_unlocked(subject: String) -> bool:
 	var id := CHARACTERS.hero_for_stage(subject) if subject.begins_with("stage_") else subject
 	var data: Dictionary = CHARACTERS.get_character(id)
 	if data.is_empty(): return false
-	return all_characters_unlocked_for_test() or mode_unlocked()
+	return all_characters_unlocked_for_test() or (mode_unlocked() and PROGRESS.is_stage_cleared(String(data.stage)))
 static func all_characters_unlocked_for_test() -> bool:
 	var tree := Engine.get_main_loop() as SceneTree
 	var mode := tree.root.get_node_or_null("LocalTestMode") if tree != null else null

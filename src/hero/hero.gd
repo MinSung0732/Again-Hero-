@@ -897,6 +897,8 @@ var charm_recovery_immunity := 7.0
 var charm_source: WeakRef
 var charm_cooldown_properties: Array = []
 var stun_timer: float = 0.0
+var player_control_gauge := preload("res://src/hero_mode/hero_control_gauge.gd").new()
+var player_weapon_tick_done := false
 var stun_sprite_speed: float = 1.0
 var fear_timer: float = 0.0
 var fear_immunity_timer := 0.0
@@ -1837,7 +1839,16 @@ func _physics_process(delta: float) -> void:
 		paralysis_ratio = 0.0
 	var immobilized := petrify_timer > 0.0
 	var anchor := global_position
+	player_weapon_tick_done = false
+	if player_controlled: player_control_gauge.sample(self)
 	_physics_process_actions(delta)
+	if player_controlled and player_weapons != null and not player_weapon_tick_done and player_input_suspended and current_hp > 0 and not is_dying:
+		# Existing world-space attacks keep moving/expiring during control locks.
+		# Redraw after forced movement so cached local draw commands do not follow.
+		player_weapons.tick(delta,false)
+	if player_controlled:
+		player_control_gauge.commit(self)
+		if is_instance_valid(status_overlay): status_overlay.queue_redraw()
 	if player_controlled and not player_input_suspended and not player_moved_this_frame and current_hp > 0 and not is_dying and not channeling and not purifier_gungnir_casting and not fighter_charge_active and not rogue_assassination_active:
 		_move_and_slide_with_obstacle_escape()
 	if immobilized and current_hp > 0 and not is_dying:
@@ -1890,6 +1901,7 @@ func _physics_process_actions(delta: float) -> void:
 		if slow_timer <= 0.0: move_multiplier = 1.0
 		attack_pose_timer = maxf(attack_pose_timer-delta,0.0)
 		hit_pose_timer = maxf(hit_pose_timer-delta,0.0)
+		player_weapon_tick_done = true
 		player_weapons.tick(delta)
 		if alchemist_philosopher_channeling or alchemist_philosopher_unlock_pending or berserker_reviving:
 			player_input_suspended = true; velocity = Vector2.ZERO; return
@@ -18028,6 +18040,8 @@ func _apply_slow_status(multiplier: float, duration: float, receipt = null, rece
 
 	var resistance := get_status_resistance("slow")
 	var raw_multiplier := clampf(multiplier, 0.01, 1.0)
+	if player_controlled and (raw_multiplier <= 0.05 or slow_timer <= 0.0):
+		set_meta("root_like_slow",raw_multiplier <= 0.05)
 	var effective_multiplier := lerpf(
 		raw_multiplier,
 		1.0,
@@ -21295,6 +21309,8 @@ func _draw_combat_status_overlay() -> void:
 		hp_bar_y = player_weapons.identity.status_hp_y
 		shield_bar_y = player_weapons.identity.status_shield_y
 	var bar_left_x := -bar_width / 2.0 + bar_x_offset
+	if player_controlled:
+		player_control_gauge.draw_on(status_overlay,self,minf(resource_bar_y,minf(hp_bar_y,shield_bar_y))-24.0,bar_width)
 	if hero_archetype == "pistol_gunner":
 		var gap := 2.0
 		var cell_width := (bar_width - gap * float(gunner_magazine_size - 1)) / float(gunner_magazine_size)

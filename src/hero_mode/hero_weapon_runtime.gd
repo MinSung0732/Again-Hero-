@@ -238,9 +238,9 @@ func summary() -> String:
 		parts.append(DATA.GROWTH.evolution_name(id) if evolved.has(id) else String(DATA.WEAPONS[id].name)+" Lv.%d/10" % int(levels[id]))
 	return " · ".join(parts)
 
-func tick(delta: float) -> void:
+func tick(delta: float, allow_casts: bool = true) -> void:
 	visual_clock += delta
-	var identity_blocked: bool = identity != null and identity.tick(delta)
+	var identity_blocked: bool = allow_casts and identity != null and identity.tick(delta)
 	_tick_projectiles(delta)
 	_tick_pulses(delta)
 	var redraw := false
@@ -268,7 +268,7 @@ func tick(delta: float) -> void:
 			# Grid queries return padded cells, not an exact circle.
 			if actor.global_position.distance_squared_to(field.origin) > float(field.radius)*float(field.radius): continue
 			_hit(actor,int(field.damage),"field",int(field.rank),field.data)
-	if identity_blocked or hero.silence_timer > 0.0 or hero.imposed_skill_cooldown > 0.0 or hero.petrify_timer > 0.0: return
+	if not allow_casts or identity_blocked or hero.silence_timer > 0.0 or hero.imposed_skill_cooldown > 0.0 or hero.petrify_timer > 0.0: return
 	for id in weapon_ids:
 		cooldowns[id] = maxf(0.0,float(cooldowns[id])-delta*hero.get_paralysis_attack_multiplier())
 		if float(cooldowns[id]) > 0.0: continue
