@@ -14,6 +14,7 @@ const SETTINGS := preload("res://src/ui/BattleSettings.tscn")
 const HUD := preload("res://src/ui/hero_survival_hud.gd")
 const REEL := preload("res://src/ui/hero_chest_reel.gd")
 const LOADING := preload("res://src/ui/startup_loading_view.gd")
+const RESULT_VIEW := preload("res://src/ui/hero_result_view.gd")
 const PAUSE_VIEW := preload("res://src/ui/hero_pause_view.gd")
 const INVENTORY_DETAIL := preload("res://src/ui/hero_inventory_detail.gd")
 var inventory_dim: ColorRect
@@ -69,6 +70,7 @@ var roulette_pool: Array = []
 var roulette_receipt: Dictionary = {}
 var roulette_index := -1
 var finished_won := false
+var result_reward: Dictionary = {}
 var finished_message := ""
 var run_difficulty := "easy"
 func _ready() -> void:
@@ -396,7 +398,7 @@ func _kill_count() -> int:
 	return total
 func _on_finished(message: String,won: bool) -> void:
 	if roulette_tween != null: roulette_tween.kill()
-	rolling = false; pending_chests = 0
+	rolling = false; pending_chests = 0; paused = false
 	$HeroBGMManager.stop_bgm()
 	GameAudio.battle_result(self,won)
 	finished_message = message; finished_won = won; pad.enabled = false; pad.reset()
@@ -404,19 +406,22 @@ func _on_finished(message: String,won: bool) -> void:
 	_show_result()
 func _show_result() -> void:
 	_clear_overlay()
-	var reward := {"success":true,"research":0,"gold":0}
+	inventory_dim.show(); inventory_dim.move_to_front(); overlay.move_to_front()
+	overlay.offset_left = maxf(24,(size.x-920)*0.5); overlay.offset_right = -overlay.offset_left
+	overlay.offset_top = minf(HUD.BATTLE_TOP+12,size.y*0.12); overlay.offset_bottom = -24
+	overlay.add_theme_stylebox_override("panel",INVENTORY_DETAIL.style(Color("171226"),Color("e3bc69") if finished_won else Color("d7828d"),24))
 	if not settled:
-		reward = STORE.award_run(stage,entry,battle.run_metrics.elapsed_seconds,_kill_count(),finished_won,run_difficulty)
-		settled = bool(reward.get("success",false))
-	_label(overlay_rows,finished_message,30)
-	_label(overlay_rows,"생존 %.1f초 · 처치 %d · 용사 Lv.%d\n%s" % [battle.run_metrics.elapsed_seconds,_kill_count(),battle.hero.level,battle.hero.get_build_summary()],24)
-	if not settled:
-		_label(overlay_rows,"보상 저장에 실패했습니다. 재시도 후 이동하세요.",24)
-		_button("보상 저장 재시도",_show_result); return
-	_label(overlay_rows,"연구 포인트 +%d · 골드 +%d\n다른 증강 조합과 이동 경로를 시험하세요." % [int(reward.get("research",0)),int(reward.get("gold",0))],24)
+		result_reward = STORE.award_run(stage,entry,battle.run_metrics.elapsed_seconds,_kill_count(),finished_won,run_difficulty)
+		settled = bool(result_reward.get("success",false))
+	var equipped: Array = []
+	var runtime = battle.hero.player_weapons
+	if runtime != null:
+		for id in runtime.weapon_ids:
+			equipped.append({"id":id,"rank":"MAX" if runtime.evolved.has(id) else "Lv.%d" % int(runtime.levels.get(id,1))})
 	var next_stage := String(STAGES.get_stage(stage).get("next_stage_id",""))
-	if finished_won and STORE.can_enter(next_stage,run_difficulty): _button("다음 스테이지 도전",_next_stage.bind(next_stage))
-	_button("같은 용사로 다시 도전",_retry); _button("로비로",_leave)
+	var model := {"won":finished_won,"message":finished_message,"seconds":battle.run_metrics.elapsed_seconds,"kills":_kill_count(),"level":battle.hero.level,"weapons":equipped,"settled":settled,"research":int(result_reward.get("research",0)),"gold":int(result_reward.get("gold",0)),"next_available":finished_won and STORE.can_enter(next_stage,run_difficulty)}
+	RESULT_VIEW.build(overlay_rows,model,{"settle":_show_result,"next":_next_stage.bind(next_stage),"retry":_retry,"leave":_leave})
+
 func _retry() -> void:
 	if leaving or not settled or not STORE.can_enter(stage,run_difficulty): return
 	var ticket := STAMINA.try_enter(stage,LocalTestMode.active,-1,false)
