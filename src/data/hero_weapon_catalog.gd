@@ -2360,8 +2360,6 @@ static func description(id: String, next_level: int) -> String:
 	return summary
 static func profile_for_survival(source: Dictionary) -> Dictionary:
 	var result := source.duplicate(true)
-	result["max_hp"] = 1200
-	result["attack_damage"] = 26
-	result["move_speed"] = 270.0
+	for key in preload("res://src/data/hero_mode_catalog.gd").BASE_HERO_STATS: result[key] = preload("res://src/data/hero_mode_catalog.gd").BASE_HERO_STATS[key]
 	result["level_growth"] = {}
 	return result

@@ -16,6 +16,9 @@ base = '''extends Control
 const DATA := preload("res://src/data/hero_mode_catalog.gd")
 const ICONS := preload("res://src/ui/hero_augment_icons.gd")
 var battle
+class Director extends RefCounted:
+	var encounters: Node
+var director := Director.new()
 class BGM extends Node:
 	func update_hero_hp(_hp: int, _max: int) -> void: pass
 func _ready() -> void:

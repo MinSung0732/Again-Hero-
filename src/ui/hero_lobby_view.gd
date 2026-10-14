@@ -103,8 +103,8 @@ func rebuild(tab: String) -> void:
 		_label(body,"용사상점",40); _label(body,"준비 중",32)
 		_label(body,"캐릭터 편성에서 플레이할 용사를 선택하세요.\n용사별 전용 무기는 전투 중 레벨업으로 습득합니다.")
 		return
-	_label(body,"성장 · "+String(character.name),36)
-	_label(body,"연구 포인트 %d\n편성한 용사의 성장 · 다음 도전부터 적용" % lobby.STAGE_PROGRESS.get_research_points(),24)
+	_label(body,"공통 성장 · 모든 용사",36)
+	_label(body,"연구 포인트 %d\n모든 용사 공통 성장 · 다음 도전부터 적용" % lobby.STAGE_PROGRESS.get_research_points(),24)
 	if not message.is_empty(): _label(body,message,23)
 	for growth_id in DATA.GROWTH:
 		var level := STORE.growth_level(id,growth_id); var data: Dictionary = DATA.GROWTH[growth_id]
@@ -116,6 +116,12 @@ func rebuild(tab: String) -> void:
 func _build_formation(body: VBoxContainer,id: String) -> void:
 	hero_cards.clear()
 	_label(body,"캐릭터 편성",36)
+	var difficulty := OptionButton.new(); difficulty.name = "HeroDifficulty"; difficulty.custom_minimum_size.y = 64
+	difficulty.add_theme_font_size_override("font_size",26)
+	difficulty.add_item("쉬움"); difficulty.add_item("어려움"); difficulty.select(1 if STORE.difficulty() == "hard" else 0)
+	difficulty.item_selected.connect(func(index: int):
+		if not STORE.set_difficulty("hard" if index == 1 else "easy"): difficulty.select(1 if STORE.difficulty() == "hard" else 0))
+	body.add_child(difficulty)
 	selected_hero_panel = PanelContainer.new(); selected_hero_panel.name = "SelectedHeroPanel"; selected_hero_panel.custom_minimum_size.y = 360; body.add_child(selected_hero_panel); _skin(selected_hero_panel)
 	var top := HBoxContainer.new(); top.add_theme_constant_override("separation",18); selected_hero_panel.add_child(top)
 	_portrait(top,id,Vector2(190,250))

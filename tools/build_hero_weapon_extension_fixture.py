@@ -5,6 +5,7 @@ from pathlib import Path
 import argparse
 import re
 import shutil
+import subprocess
 
 parser = argparse.ArgumentParser()
 parser.add_argument('destination', type=Path)
@@ -24,14 +25,19 @@ while queue:
         continue
     seen.add(path)
     source = repo / path
-    if not source.is_file():
-        raise SystemExit('Missing fixture dependency: ' + path)
     destination = output / path
     destination.parent.mkdir(parents=True, exist_ok=True)
+    if not source.is_file():
+        if source.suffix in ['.png','.svg','.wav','.ogg']:
+            destination.write_bytes(subprocess.check_output(['git','show','HEAD:'+path],cwd=repo))
+            continue
+        raise SystemExit('Missing fixture dependency: ' + path)
     if source.suffix not in ['.gd', '.tscn', '.tres']:
         shutil.copyfile(source, destination)
         continue
     content = source.read_text()
+    if path == 'src/data/monster_catalog.gd':
+        content = re.sub(r'preload\("res://src/monsters/[^"]+\.tscn"\)', 'null', content)
     if path == 'src/hero_mode/hero_weapon_native_runtime.gd':
         content = re.sub(r'const SCENES := \{.*?\n\}', 'const SCENES := {}', content, count=1, flags=re.S)
     if path == 'src/hero_mode/hero_survival_identity_runtime.gd':

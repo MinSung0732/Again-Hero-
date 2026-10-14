@@ -730,7 +730,7 @@ func _process(delta: float) -> void:
 
 		if not practice_mode and run_metrics.is_time_up():
 			_on_run_time_up()
-			return
+			if not hero_player_mode: return
 
 	if (
 		not flow_pause_manager.is_paused(
@@ -2144,6 +2144,8 @@ func _spawn_monster(
 	split_child: bool = false,
 	spawn_modifiers: Dictionary = {}
 ):
+	if hero_player_mode and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and not bool(spawn_modifiers.get("hero_final_boss_spawn",false)): return null
+	if hero_player_mode and (active_monsters.size() >= HERO_SURVIVAL.MONSTER_LIMIT or not HERO_SURVIVAL.monster_allowed(monster_type,int(current_stage_data.get("number",1)),campaign_difficulty)): return null
 	if bool(spawn_modifiers.get("counts_population", false)) and is_population_full():
 		return null
 	if not bool(MONSTER_CATALOG.MONSTERS.get(monster_type, {}).get("combat_enabled", true)):
@@ -2158,7 +2160,7 @@ func _spawn_monster(
 
 	if _monster_population_limit_reached(monster_type, bool(spawn_modifiers.get("elite_variant", false))):
 		return null
-	if bool(MONSTER_CATALOG.MONSTERS[monster_type].get("spawn_at_max_range", false)) and is_instance_valid(hero):
+	if bool(MONSTER_CATALOG.MONSTERS[monster_type].get("spawn_at_max_range", false)) and is_instance_valid(hero) and not bool(spawn_modifiers.get("hero_encounter_position_locked",false)):
 		spawn_position = get_stationary_spawn_position(monster_type, hero.global_position, spawn_position)
 	# Never instantiate a monster inside the solid upper castle wall. This is
 	# also the catch-all for queued ultimates/reinforcements that precomputed
@@ -2801,7 +2803,7 @@ func _ensure_monster_ground_shadow(
 
 func _get_demon_level_monster_hp_multiplier(spawn_seconds: float = -1.0) -> float:
 	if hero_player_mode:
-		return HERO_SURVIVAL.monster_multiplier("hp",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)
+		return HERO_SURVIVAL.monster_multiplier("hp",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)*(1.25 if campaign_difficulty == "hard" else 1.0)
 	var growth_steps := maxi(demon_level - 1, 0)
 	return minf(
 		pow(DEMON_LEVEL_MONSTER_HP_GROWTH, float(growth_steps)),
@@ -2810,7 +2812,7 @@ func _get_demon_level_monster_hp_multiplier(spawn_seconds: float = -1.0) -> floa
 
 func _get_demon_level_monster_damage_multiplier(spawn_seconds: float = -1.0) -> float:
 	if hero_player_mode:
-		return HERO_SURVIVAL.monster_multiplier("damage",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)
+		return HERO_SURVIVAL.monster_multiplier("damage",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)*(1.15 if campaign_difficulty == "hard" else 1.0)
 	var growth_steps := maxi(demon_level - 1, 0)
 	return minf(
 		pow(DEMON_LEVEL_MONSTER_DAMAGE_GROWTH, float(growth_steps)),
@@ -2827,7 +2829,7 @@ func _get_demon_level_monster_exp_multiplier() -> float:
 
 func _get_demon_level_monster_speed_multiplier(spawn_seconds: float = -1.0) -> float:
 	if hero_player_mode:
-		return HERO_SURVIVAL.monster_multiplier("speed",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)
+		return HERO_SURVIVAL.monster_multiplier("speed",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)*(1.05 if campaign_difficulty == "hard" else 1.0)
 	var growth_steps := maxi(demon_level - 1, 0)
 	return minf(
 		pow(DEMON_LEVEL_MONSTER_SPEED_GROWTH, float(growth_steps)),
@@ -3104,6 +3106,8 @@ func _transcendence_metric_count(metric: String) -> int:
 	return raw_allied_summons
 
 func _on_monster_died(monster: Node) -> void:
+	if hero_player_mode and is_instance_valid(monster) and bool(monster.get_meta("hero_final_boss",false)):
+		_finish_hero_boss_victory.call_deferred()
 	if hero_player_mode and not battle_over and is_instance_valid(monster) and String(monster.get_meta("stage_event_type","")) in ["elite","giant"]:
 		_spawn_chest_for_session.call_deferred(battle_command_router.get_session_id())
 	if battle_over:
@@ -4348,6 +4352,7 @@ func spawn_special_monster(
 		return false
 	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
 		return false
+	if hero_player_mode and not HERO_SURVIVAL.monster_allowed(monster_id,int(current_stage_data.get("number",1)),campaign_difficulty): return false
 
 	if not bool(MONSTER_CATALOG.MONSTERS[monster_id].get("can_be_elite", true)):
 		return false
@@ -5454,7 +5459,7 @@ func _on_run_time_up() -> void:
 	if battle_over:
 		return
 	if hero_player_mode:
-		_finish_battle("용사 승리 · AI 마왕의 15분 공세를 버텨냈습니다!",true)
+		pass # The hero director spawns a final boss; time alone never clears.
 		return
 
 	var hero_name := String(current_hero_profile.get("display_name", "용사"))
@@ -6128,3 +6133,23 @@ func configure_campaign_difficulty(difficulty: String) -> void:
 		hero.attack_damage = roundi(hero.attack_damage*1.35); hero.move_speed *= 1.08
 		hero.health_changed.emit(hero.current_hp,hero.max_hp)
 		run_metrics.reset(run_time_limit_seconds,hero.current_hp,hero.max_hp)
+
+func spawn_hero_encounter(id: String, point: Vector2, modifiers: Dictionary) -> Node2D:
+	if not hero_player_mode or battle_over or not HERO_SURVIVAL.monster_allowed(id,int(current_stage_data.get("number",1)),campaign_difficulty): return null
+	point = _clamp_manual_spawn_position(point)
+	if active_monsters.size() >= HERO_SURVIVAL.MONSTER_LIMIT or point.distance_squared_to(hero.position) < 180.0*180.0: return null
+	var monster = _spawn_monster(id,point,0.0,false,{"elite_variant":true,"counts_population":true,"hero_encounter_position_locked":true,"hero_final_boss_spawn":String(modifiers.get("type","")) == "boss"})
+	if not is_instance_valid(monster): return null
+	_apply_special_monster_modifiers(monster,id,modifiers)
+	if String(modifiers.get("type","")) == "boss":
+		monster.set_meta("hero_final_boss",true)
+		if modifiers.has("target_hp"):
+			monster.max_hp = int(modifiers.target_hp); monster.current_hp = monster.max_hp
+			monster.set_meta("demon_level_base_max_hp",float(monster.max_hp)/_get_demon_level_monster_hp_multiplier(run_metrics.elapsed_seconds))
+		if modifiers.has("target_damage"):
+			monster.attack_damage = int(modifiers.target_damage)
+			monster.set_meta("demon_level_base_attack_damage",float(monster.attack_damage)/_get_demon_level_monster_damage_multiplier(run_metrics.elapsed_seconds))
+	return monster
+func _finish_hero_boss_victory() -> void:
+	if hero_player_mode and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and not battle_over and is_instance_valid(hero) and hero.current_hp > 0:
+		_finish_battle("용사 승리 · 최종 보스를 처치했습니다!",true)

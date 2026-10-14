@@ -86,17 +86,17 @@ static func set_skills(stage: String,ids: Array) -> bool:
 static func growth_level(stage: String,id: String) -> int:
 	var config := ConfigFile.new()
 	if not DATA.GROWTH.has(id) or not _load(config): return 0
-	return clampi(int(config.get_value("hero_growth",_growth_key(stage)+"_"+id,0)),0,int(DATA.GROWTH[id].max))
+	return _shared_growth(config,id)
 static func purchase_growth(stage: String,id: String) -> bool:
 	if not DATA.GROWTH.has(id) or not character_unlocked(stage): return false
 	var config := ConfigFile.new(); var progress := ConfigFile.new()
 	if not _load(config) or not _load(progress,"user://stage_progress.cfg"): return false
-	var level := clampi(int(config.get_value("hero_growth",_growth_key(stage)+"_"+id,0)),0,int(DATA.GROWTH[id].max))
+	var level := _shared_growth(config,id)
 	var cost := DATA.growth_cost(id,level)
 	var points := int(progress.get_value("meta","research_points",0))
 	if level >= int(DATA.GROWTH[id].max) or cost > points: return false
 	progress.set_value("meta","research_points",points-cost)
-	config.set_value("hero_growth",_growth_key(stage)+"_"+id,level+1)
+	config.set_value("hero_growth","shared_"+id,level+1)
 	return SCOPE.save_configs({"stage_progress.cfg":progress,"team_loadout.cfg":config}) == OK
 static func apply_growth(stage: String,profile: Dictionary) -> void:
 	var hp := 1.0; var damage := 1.0
@@ -151,3 +151,19 @@ static func _growth_key(subject: String) -> String:
 	if subject.begins_with("stage_"): return subject
 	var stage := CHARACTERS.stage_for_hero(subject)
 	return stage if not stage.is_empty() else subject
+
+static func _shared_growth(config: ConfigFile,id: String) -> int:
+	var level := int(config.get_value("hero_growth","shared_"+id,0))
+	for hero_id in CHARACTERS.ORDER:
+		level = maxi(level,int(config.get_value("hero_growth",_growth_key(String(hero_id))+"_"+id,0)))
+	return clampi(level,0,int(DATA.GROWTH[id].max))
+static func difficulty() -> String:
+	var config := ConfigFile.new()
+	if not _load(config): return "easy"
+	return "hard" if String(config.get_value("hero_loadout","difficulty","easy")) == "hard" else "easy"
+static func set_difficulty(value: String) -> bool:
+	if value not in ["easy","hard"]: return false
+	var config := ConfigFile.new()
+	if not _load(config): return false
+	config.set_value("hero_loadout","difficulty",value)
+	return SCOPE.save_config(config,PATH) == OK

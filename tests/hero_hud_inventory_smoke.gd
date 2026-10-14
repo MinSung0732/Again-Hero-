@@ -14,6 +14,10 @@ class TestHero extends BASE.Hero:
 	var exp_to_next_level := 60
 	var current_exp := 0
 	var level := 1
+class EncounterView extends Node:
+	var finale := true
+	var boss: Node2D
+	var notice := "보스 출현 대기"
 class Metrics extends RefCounted:
 	var monster_death_counts := {}
 	var elapsed_seconds := 0.0
@@ -127,6 +131,13 @@ func run() -> void:
 	check(is_equal_approx(stats.position.x,10) and not stats.expanded,"collapsed button follows frame off")
 	harness.battle_frame_enabled = true; harness._apply_battle_frame()
 	check(is_equal_approx(stats.position.x,100),"collapsed button restored with frame")
+	var boss_view := EncounterView.new(); harness.add_child(boss_view); boss_view.boss = hero; harness.director.encounters = boss_view
+	harness._refresh_hud(); await process_frame; await process_frame
+	check(harness.timer.text.contains("최종 보스") and harness.status.text.contains("보스 체력"),"boss phase HUD replaces timer and shows HP")
+	check(harness.get_node("HeroHUD").get_global_rect().end.y <= HUD.BATTLE_TOP,"boss HUD fits above battle")
+	boss_view.boss = null; harness._refresh_hud()
+	check(harness.status.text == boss_view.notice,"boss retry notice shown without stale reference")
+	harness.director.encounters = null; boss_view.queue_free()
 	var weapon_chest := runtime.roll_chest()
 	check(weapon_chest.kind == "weapon" and not weapon_chest.evolution,"weapon upgrades retain priority")
 	for id in runtime.weapon_ids: runtime.levels[id] = 10

@@ -1,6 +1,7 @@
 extends RefCounted
 const DATA := preload("res://src/data/hero_mode_catalog.gd")
 const AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
+var encounters
 var battle
 var think_remaining := 0.0
 var observation_remaining := 0.0
@@ -16,8 +17,9 @@ var plan := "탐색 공세 · 용사 빌드를 관찰 중"
 func install(host) -> void:
 	battle = host
 	stage_number = int(battle.current_stage_data.get("number",1))
-	pressure = DATA.stage_pressure(stage_number)
-	roster = DATA.roster_for(stage_number)
+	pressure = DATA.stage_pressure(stage_number)*(1.2 if battle.campaign_difficulty == "hard" else 1.0)
+	roster = DATA.roster_for(stage_number,battle.campaign_difficulty)
+	encounters = preload("res://src/hero_mode/hero_encounter_runtime.gd").new(); battle.add_child(encounters); encounters.install(battle)
 	battle.set_allowed_monster_ids(roster)
 func _observe() -> void:
 	preferred.clear()
@@ -42,6 +44,8 @@ func _select_ai_reward() -> bool:
 func tick(delta: float) -> void:
 	if battle.battle_over or battle.external_pause or not is_instance_valid(battle.hero): return
 	if _select_ai_reward() or battle.is_combat_simulation_paused(): return
+	encounters.tick(delta)
+	if encounters.finale: plan = encounters.notice; return
 	observation_remaining -= delta
 	if observation_remaining <= 0.0:
 		observation_remaining = DATA.OBSERVE_INTERVAL
@@ -60,7 +64,7 @@ func tick(delta: float) -> void:
 	think_remaining -= delta
 	if think_remaining > 0.0: return
 	think_remaining = float(phase.interval)/pressure
-	var available := int(phase.roster)
+	var available := mini(roster.size(),int(phase.roster)+(maxi(0,roster.size()-7) if elapsed >= 300 else 0))
 	for index in range(int(phase.batch)):
 		if battle.get_population_count() >= mini(DATA.MONSTER_LIMIT,int(phase.limit*pressure))-2: break
 		var id := String(roster[rotation%available])
@@ -71,5 +75,6 @@ func tick(delta: float) -> void:
 		if battle.command_power >= battle.get_monster_cost(id): battle.try_summon(id)
 
 func _special(id: String,giant: bool,elapsed: float) -> bool:
+	if id not in roster or not bool(DATA.MONSTERS.get_monster(id).get("can_be_elite",true)): id = DATA.boss_for(stage_number,battle.campaign_difficulty)
 	var scale := (1.0+elapsed/900.0)*pressure
-	return battle.spawn_special_monster(id,{"type":"giant" if giant else "elite","name":"대형 오우거" if giant else "엘리트 공세","hp_multiplier":(4.0 if giant else 2.0)*scale,"damage_multiplier":1.2*scale,"speed_multiplier":0.75 if giant else 1.1,"attack_speed_multiplier":1.0,"exp_multiplier":4.0 if giant else 2.0,"visual_scale":1.8 if giant else 1.2,"spawn_distance":650.0})
+	return battle.spawn_special_monster(id,{"type":"giant" if giant else "elite","name":"대형 군단장" if giant else "엘리트 공세","hp_multiplier":(4.0 if giant else 2.0)*scale,"damage_multiplier":1.2*scale,"speed_multiplier":0.75 if giant else 1.1,"attack_speed_multiplier":1.0,"exp_multiplier":4.0 if giant else 2.0,"visual_scale":1.8 if giant else 1.2,"spawn_distance":650.0})

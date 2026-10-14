@@ -142,6 +142,7 @@ func _create_battle() -> void:
 	viewport.handle_input_locally = false
 	view.add_child(viewport)
 	battle = BATTLE_SCENE.instantiate()
+	battle.campaign_difficulty = STORE.difficulty()
 	battle.hero_player_mode = true; battle.hero_player_stage = stage; battle.hero_player_hero_id = player_hero_id
 	pad.input_surface = view
 	viewport.add_child(battle)
@@ -255,6 +256,11 @@ func _refresh_hud() -> void:
 	status.text = "공세 · "+String(DATA.phase_at(battle.run_metrics.elapsed_seconds).name)
 	if hero.player_weapons != null and hero.player_weapons.identity != null:
 		status.text = "자원 · "+hero.player_weapons.identity.summary()
+	if is_instance_valid(director.encounters):
+		if director.encounters.finale:
+			timer.text = "최종 보스\n격파 시 클리어"
+			status.text = "보스 체력 %d / %d" % [director.encounters.boss.current_hp,director.encounters.boss.max_hp] if is_instance_valid(director.encounters.boss) else director.encounters.notice
+		elif not director.encounters.notice.is_empty(): status.text = director.encounters.notice
 	var hp_ratio := float(hero.current_hp)/maxf(1.0,hero.max_hp)
 	hp.get_theme_stylebox("fill").bg_color = Color("ec6464") if hp_ratio <= 0.25 else Color("e4b84f") if hp_ratio <= 0.5 else Color("29cf79")
 	if hero.player_weapons != null:
