@@ -27,7 +27,6 @@ var battle_over := false
 var hero_kills_toward_chest := 0
 var hero_chests_spawned := 0
 var hero_elite_kills_toward_chest := 0
-var hero_next_chest_seconds := 0.0
 var active_treasure_chests := {}
 var current_map_size := Vector2(2400,2400)
 var hero: Node2D

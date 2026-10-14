@@ -250,7 +250,6 @@ var hero_kills_toward_heal_item: int = 0
 var hero_kills_toward_chest: int = 0
 var hero_chests_spawned := 0
 var hero_elite_kills_toward_chest := 0
-var hero_next_chest_seconds := 0.0
 var hero_kills_toward_magnet: int = 0
 
 var summon_cost_multiplier: float = 1.0
@@ -888,7 +887,6 @@ func _start_battle() -> void:
 	hero_kills_toward_chest = 0
 	hero_chests_spawned = 0
 	hero_elite_kills_toward_chest = 0
-	hero_next_chest_seconds = 0.0
 	hero_kills_toward_magnet = 0
 
 	summon_cost_multiplier = 1.0
@@ -3319,9 +3317,7 @@ func _chest_kill_requirement() -> int:
 
 func _hero_chest_eligible(source: String) -> bool:
 	if source != "kills" and source != "elite": return false
-	if hero_chests_spawned >= HERO_SURVIVAL.CHEST_RUN_LIMIT: return false
 	if hero_chests_spawned == 0: return source == "elite"
-	if run_metrics.elapsed_seconds < hero_next_chest_seconds: return false
 	return hero_elite_kills_toward_chest >= HERO_SURVIVAL.CHEST_ELITE_KILLS if source == "elite" else hero_kills_toward_chest >= HERO_SURVIVAL.CHEST_KILLS
 
 func _try_spawn_chest_from_kills() -> void:
@@ -3340,9 +3336,8 @@ func _spawn_chest_for_session(session: int, source: String = "kills") -> void:
 	if not _spawn_random_treasure_chest(): return
 	if hero_player_mode:
 		hero_chests_spawned += 1
-		hero_next_chest_seconds = run_metrics.elapsed_seconds+HERO_SURVIVAL.CHEST_INTERVAL
-		hero_kills_toward_chest = 0
-		hero_elite_kills_toward_chest = 0
+		if source == "elite": hero_elite_kills_toward_chest = 0
+		else: hero_kills_toward_chest = 0
 
 func _spawn_random_treasure_chest() -> bool:
 	if _active_registry_size(active_treasure_chests) >= MAX_ACTIVE_CHESTS:
