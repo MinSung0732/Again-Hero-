@@ -487,4 +487,4 @@ static func complete_hard_stage(stage_id: String) -> Dictionary:
 	var points := 30 if first else 0
 	config.set_value("meta","research_points",int(config.get_value("meta","research_points",0))+points)
 	var error := ACCOUNT_SCOPE.save_config(config,SAVE_PATH)
-	return {"success":error == OK,"reward":points if error == OK else 0,"gold_reward":0,"hero_unlocked":first and error == OK}
+	return {"success":error == OK,"reward":points if error == OK else 0,"gold_reward":0,"hero_unlocked":false}

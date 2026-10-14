@@ -5432,7 +5432,7 @@ func _on_hero_died() -> void:
 		stage_name,
 		hero_name,
 	]
-	if campaign_difficulty == "hard": result_text += "\n어려움 클리어 · 플레이 용사 해금" if bool(clear_result.get("success",false)) else "\n어려움 클리어 저장 실패 · 용사 미해금"
+	if campaign_difficulty == "hard": result_text += "\n어려움 클리어 완료" if bool(clear_result.get("success",false)) else "\n어려움 클리어 저장 실패"
 	var granted_reward: int = int(clear_result.get("reward", 0))
 	if granted_reward > 0:
 		result_text += "\n최초 클리어 보상 · 연구 포인트 +%d" % granted_reward

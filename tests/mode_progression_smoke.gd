@@ -1,0 +1,98 @@
+extends SceneTree
+const SCOPE := preload("res://src/systems/account_save_scope.gd")
+const STORE := preload("res://src/systems/hero_mode_store.gd")
+const UNLOCKS := preload("res://src/systems/mode_unlock_store.gd")
+const STAGES := preload("res://src/data/stage_catalog.gd")
+const CHARACTERS := preload("res://src/data/hero_character_catalog.gd")
+const STAMINA := preload("res://src/systems/stamina_store.gd")
+const PROGRESS := preload("res://src/systems/stage_progress.gd")
+const MAIN_UI := preload("res://src/ui/lobby_main_modes_view.gd")
+const HERO_UI := preload("res://src/ui/hero_lobby_view.gd")
+var checks := 0
+var failures := 0
+func _initialize() -> void: call_deferred("run")
+func check(ok: bool,message: String) -> void:
+	checks += 1
+	if not ok: failures += 1; push_error("MODE_PROGRESSION: "+message)
+func progress_config() -> ConfigFile:
+	var cfg := ConfigFile.new(); SCOPE.load_config(cfg,PROGRESS.SAVE_PATH); return cfg
+func hero_config() -> ConfigFile:
+	var cfg := ConfigFile.new(); SCOPE.load_config(cfg,STORE.PATH); return cfg
+func enter(stage: String) -> Dictionary:
+	var ticket := STAMINA.try_enter(stage,true,-1,false)
+	check(bool(ticket.get("success",false)),"create entry "+stage)
+	var claim := STAMINA.claim_battle_entry(stage)
+	check(not claim.is_empty(),"claim entry "+stage); return claim
+func run() -> void:
+	var mode = root.get_node("LocalTestMode")
+	var directory := "user://mode_progression_"+str(Time.get_ticks_usec())
+	DirAccess.make_dir_recursive_absolute(directory); SCOPE.guest_directory = directory; SCOPE.select_guest()
+	check(not UNLOCKS.unlocked("hero","stage_1") and not UNLOCKS.unlocked("rank","stage_10"),"fresh mode locks")
+	check(STORE.highest_battle_stage() == 0 and not STORE.select_hero(CHARACTERS.DEFAULT_HERO),"fresh hero selection denied")
+	for stage in STAGES.ORDER:
+		check(not UNLOCKS.unlocked("hard",stage) and not UNLOCKS.unlocked("hard",stage,"hero"),"fresh matching hard locked "+stage)
+	var cfg := progress_config(); cfg.set_value("progress","highest_unlocked_stage",10)
+	cfg.set_value("hard_cleared","stage_10",true); SCOPE.save_config(cfg,PROGRESS.SAVE_PATH)
+	check(not STORE.mode_unlocked(),"browsing10 and hard record do not open hero")
+	var saved := hero_config(); saved.set_value("hero_collection",CHARACTERS.ORDER[-1],true)
+	saved.set_value("hero_progress","stage_10_wins",9); saved.set_value("hero_progress","stage_10_hard_wins",1)
+	SCOPE.save_config(saved,STORE.PATH)
+	check(not STORE.character_unlocked(CHARACTERS.ORDER[-1]) and not STORE.battle_stage_cleared("stage_10"),"legacy ownership and ambiguous wins cannot bypass")
+	cfg.set_value("cleared","stage_1",true); SCOPE.save_config(cfg,PROGRESS.SAVE_PATH)
+	check(UNLOCKS.unlocked("hard","stage_1") and not UNLOCKS.unlocked("hard","stage_2"),"demon per-stage hard")
+	check(not UNLOCKS.unlocked("hard","stage_1","hero"),"demon clear does not unlock hero hard")
+	cfg.set_value("cleared","stage_10",true); SCOPE.save_config(cfg,PROGRESS.SAVE_PATH)
+	check(STORE.mode_unlocked() and STORE.highest_battle_stage() == 10,"demon easy10 opens full hero mode")
+	for id in CHARACTERS.ORDER: check(STORE.character_unlocked(id),"all heroes open "+id)
+	for stage in STAGES.ORDER: check(STORE.can_enter(stage,"easy"),"all easy hero stages open "+stage)
+	check(not UNLOCKS.unlocked("rank","stage_1"),"demon easy10 alone cannot unlock rank")
+	check(not STORE.set_difficulty("hard") and not STORE.can_enter("stage_10","hard"),"hero hard requires own easy clear")
+	var entry := enter("stage_1")
+	check(not STORE.award_run("stage_1",entry,900,10,true,"hard").get("success",false),"locked hard reward denied")
+	check(not STORE.award_run("stage_1",entry,899,10,true).get("success",false),"premature victory denied")
+	check(STORE.award_run("stage_1",entry,900,10,true).get("success",false),"easy1 real transaction")
+	check(STORE.battle_stage_cleared("stage_1","easy") and not STORE.battle_stage_cleared("stage_1","hard"),"separate easy/hard records")
+	check(UNLOCKS.unlocked("hard","stage_1","hero") and not UNLOCKS.unlocked("hard","stage_2","hero"),"hero per-stage hard")
+	for stage in STAGES.ORDER: check(STORE.hard_stage_unlocked(stage) == (stage == "stage_1"),"ten-stage hero hard matrix "+stage)
+	var before := int(hero_config().get_value("hero_progress","stage_1_easy_wins",0))
+	check(STORE.award_run("stage_1",entry,900,10,true).get("research",-1) == 0 and int(hero_config().get_value("hero_progress","stage_1_easy_wins",0)) == before,"duplicate award does not add clear/reward")
+	check(STORE.select_battle_stage("stage_1") and STORE.set_difficulty("hard"),"unlocked hard stored")
+	entry = enter("stage_1")
+	check(STORE.award_run("stage_1",entry,900,10,true,"hard").get("success",false) and STORE.battle_stage_cleared("stage_1","hard"),"hard transaction only own key")
+	check(int(hero_config().get_value("hero_progress","stage_1_easy_wins",0)) == before,"hard win does not increment easy")
+	check(STORE.select_battle_stage("stage_2") and STORE.difficulty() == "easy","stage change corrects saved hard preference")
+	var ui = load("res://tests/mode_progression_ui.gd").new(); ui.perspective = "hero"; ui.stage = "stage_2"
+	ui.choose_difficulty("hard"); check(ui.difficulty == "easy","UI direct hard handler rejects locked stage")
+	ui.stage = "stage_1"; ui.refresh(); ui.choose_difficulty("hard")
+	check(ui.difficulty == "hard" and not ui.blocks_entry(),"hero hard no longer preview blocked")
+	ui.stage = "stage_2"; ui.refresh(); check(ui.difficulty == "easy" and not ui.blocks_entry(),"UI new stage normalized before entry")
+	var selector_harness = load("res://tests/mode_progression_selector.gd").new()
+	var body := VBoxContainer.new(); root.add_child(body); selector_harness.build(body)
+	var selector: OptionButton = body.get_node("HeroDifficulty")
+	check(selector.is_item_disabled(1),"formation hard option locked")
+	selector.item_selected.emit(1); check(STORE.difficulty() == "easy" and selector.selected == 0,"formation direct callback blocked")
+	body.queue_free()
+	STORE.select_battle_stage("stage_1"); body = VBoxContainer.new(); root.add_child(body); selector_harness.build(body)
+	selector = body.get_node("HeroDifficulty"); check(not selector.is_item_disabled(1),"formation hard option opens")
+	selector.select(1); selector.item_selected.emit(1); check(STORE.difficulty() == "hard","formation actual binding saves hard")
+	check(UNLOCKS.mark_announced("hard","stage_1","hero") and UNLOCKS.announcement_seen("hard","stage_1","hero") and not UNLOCKS.announcement_seen("hard","stage_1"),"mode-specific hard announcement")
+	entry = enter("stage_10")
+	var journal := SCOPE.guest_directory.path_join("gameplay_transaction.json.tmp")
+	check(DirAccess.make_dir_recursive_absolute(journal) == OK,"isolate blocked transaction target")
+	check(not STORE.award_run("stage_10",entry,900,10,true,"easy").get("success",false) and not STORE.battle_stage_cleared("stage_10") and not UNLOCKS.unlocked("rank","stage_1"),"failed award never unlocks hard or rank")
+	check(DirAccess.remove_absolute(journal) == OK,"restore save target")
+	check(STORE.award_run("stage_10",entry,900,10,true,"easy").get("success",false),"easy10 award transaction retry")
+	check(UNLOCKS.unlocked("rank","stage_1") and UNLOCKS.unlocked("rank","stage_10"),"both easy10 records unlock rank globally")
+	cfg = progress_config(); cfg.set_value("cleared","stage_10",false); SCOPE.save_config(cfg,PROGRESS.SAVE_PATH)
+	check(not UNLOCKS.unlocked("rank","stage_10") and not STORE.mode_unlocked(),"hero easy10 alone insufficient")
+	SCOPE.guest_directory = directory+"_other"; DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory); SCOPE.select_guest()
+	check(not STORE.mode_unlocked() and not UNLOCKS.unlocked("rank","stage_1") and not STORE.battle_stage_cleared("stage_10"),"account namespace isolation")
+	check(not STORE.can_enter("invalid","easy") and not STORE.set_difficulty("invalid"),"invalid stage/difficulty denied")
+	mode.test_directory = SCOPE.guest_directory
+	mode.active = true
+	check(STORE.mode_unlocked() and STORE.can_enter("stage_10","hard") and UNLOCKS.unlocked("rank","stage_1"),"local test override preserved")
+	SCOPE.guest_directory += "_stale"
+	check(not STORE.mode_unlocked() and not UNLOCKS.unlocked("rank","stage_1"),"stale local active flag cannot cross namespace")
+	mode.active = false; check(not STORE.mode_unlocked(),"test override never persists a clear")
+	ui.notice.free(); body.queue_free(); mode.queue_free(); await process_frame
+	print("MODE_PROGRESSION checks=%d failures=%d" % [checks,failures]); quit(1 if failures else 0)

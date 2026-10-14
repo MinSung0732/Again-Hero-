@@ -119,8 +119,11 @@ func _build_formation(body: VBoxContainer,id: String) -> void:
 	var difficulty := OptionButton.new(); difficulty.name = "HeroDifficulty"; difficulty.custom_minimum_size.y = 64
 	difficulty.add_theme_font_size_override("font_size",26)
 	difficulty.add_item("쉬움"); difficulty.add_item("어려움"); difficulty.select(1 if STORE.difficulty() == "hard" else 0)
+	difficulty.set_item_disabled(1,not STORE.hard_stage_unlocked(STORE.selected_battle_stage()))
+	difficulty.tooltip_text = "어려움은 현재 용사 전장 쉬움 클리어 후 개방"
 	difficulty.item_selected.connect(func(index: int):
-		if not STORE.set_difficulty("hard" if index == 1 else "easy"): difficulty.select(1 if STORE.difficulty() == "hard" else 0))
+		if not STORE.set_difficulty("hard" if index == 1 else "easy"): difficulty.select(1 if STORE.difficulty() == "hard" else 0)
+		lobby._refresh_stage_card())
 	body.add_child(difficulty)
 	selected_hero_panel = PanelContainer.new(); selected_hero_panel.name = "SelectedHeroPanel"; selected_hero_panel.custom_minimum_size.y = 360; body.add_child(selected_hero_panel); _skin(selected_hero_panel)
 	var top := HBoxContainer.new(); top.add_theme_constant_override("separation",18); selected_hero_panel.add_child(top)
@@ -138,7 +141,7 @@ func _build_formation(body: VBoxContainer,id: String) -> void:
 	hero_roster_panel = PanelContainer.new(); hero_roster_panel.name = "HeroRosterPanel"; hero_roster_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL; body.add_child(hero_roster_panel); _skin(hero_roster_panel)
 	var bottom := VBoxContainer.new(); bottom.add_theme_constant_override("separation",10); hero_roster_panel.add_child(bottom)
 	_label(bottom,"용사 목록 · 10종",28)
-	_label(bottom,"로컬 테스트 · 모든 용사 선택 가능" if STORE.all_characters_unlocked_for_test() else "견습마도사 기본 개방 · 나머지는 해당 스테이지 어려움 클리어",20)
+	_label(bottom,"로컬 테스트 · 모든 용사 선택 가능" if STORE.all_characters_unlocked_for_test() else "마왕 쉬움 10스테이지 클리어 · 모든 용사 선택 가능",20)
 	var scroll := ScrollContainer.new(); scroll.name = "RosterScroll"; scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL; scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; bottom.add_child(scroll)
 	var grid := GridContainer.new(); grid.name = "HeroRosterGrid"; grid.columns = 3; grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL; grid.add_theme_constant_override("h_separation",12); grid.add_theme_constant_override("v_separation",12); scroll.add_child(grid)
 	for hero_id in CHARACTERS.ORDER:
@@ -151,7 +154,7 @@ func _build_formation(body: VBoxContainer,id: String) -> void:
 		var portrait := _portrait(rows,hero_id,Vector2(128,132))
 		portrait.self_modulate = Color.WHITE if unlocked else Color(0.35,0.35,0.40,1.0)
 		var name := _label(rows,String(data.name),22); name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		var condition := "◆ 편성 중" if hero_id == id else "선택 가능" if unlocked else "잠김 · Stage %s\n어려움 클리어" % String(data.stage).trim_prefix("stage_")
+		var condition := "◆ 편성 중" if hero_id == id else "선택 가능" if unlocked else "잠김 · 마왕 쉬움\n10스테이지 클리어"
 		var state := _label(rows,condition,19); state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		if not unlocked:
 			var lock := TextureRect.new(); lock.texture = lobby.main_modes_view.icons.get("lock"); lock.mouse_filter = Control.MOUSE_FILTER_IGNORE; portrait.add_child(lock); lock.set_anchors_and_offsets_preset(Control.PRESET_CENTER); lock.offset_left = -20; lock.offset_right = 20; lock.offset_top = -20; lock.offset_bottom = 20; lock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE

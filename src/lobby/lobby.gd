@@ -5134,11 +5134,12 @@ func _enter_selected_stage(allow_unregistered: bool = false) -> void:
 func _enter_hero_stage(stage_id: String) -> void:
 	var hero_store := preload("res://src/systems/hero_mode_store.gd")
 	var selected_hero: String = hero_store.selected_hero()
-	if not hero_store.battle_stage_unlocked(stage_id):
-		stamina_view.show_entry_notice("이전 용사 스테이지를 먼저 클리어하세요.")
+	var selected_difficulty := hero_store.difficulty()
+	if not hero_store.can_enter(stage_id,selected_difficulty):
+		stamina_view.show_entry_notice("마왕 쉬움 10스테이지 또는 해당 용사 스테이지 쉬움을 먼저 클리어하세요.")
 		return
 	if not hero_store.character_unlocked(selected_hero):
-		stamina_view.show_entry_notice("이 용사는 해당 스테이지 어려움 클리어 후 개방됩니다.")
+		stamina_view.show_entry_notice("용사는 마왕 모드 쉬움 10스테이지 클리어 후 전체 개방됩니다.")
 		return
 	var scene := preload("res://src/data/hero_mode_catalog.gd").SCENE
 	if not ResourceLoader.exists(scene): return
@@ -5152,7 +5153,7 @@ func _enter_hero_stage(stage_id: String) -> void:
 	enter_stage_button.disabled = true
 	await stamina_view.play_entry_cost(int(_stamina_entry.get("charged",0)))
 	if not is_inside_tree(): return
-	if not SceneTransition.change_scene(scene,"용사 도전 준비 중...",{"stage_id":stage_id,"hero_id":selected_hero,"hero_entry":_stamina_entry}):
+	if not SceneTransition.change_scene(scene,"용사 도전 준비 중...",{"stage_id":stage_id,"hero_id":selected_hero,"hero_entry":_stamina_entry,"difficulty":selected_difficulty}):
 		_refund_failed_stamina_entry()
 func _begin_threaded_scene_change(path: String) -> void:
 	if _scene_load_pending or path.is_empty():

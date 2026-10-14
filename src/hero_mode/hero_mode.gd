@@ -63,6 +63,7 @@ var roulette_receipt: Dictionary = {}
 var roulette_index := -1
 var finished_won := false
 var finished_message := ""
+var run_difficulty := "easy"
 func _ready() -> void:
 	set_process(false)
 	GameAudio.enter_frontend(self,"lobby")
@@ -71,11 +72,12 @@ func _ready() -> void:
 	var options: Dictionary = SceneTransition.consume_entry_options()
 	stage = String(options.get("stage_id",stage))
 	player_hero_id = String(options.get("hero_id",STORE.selected_hero()))
+	run_difficulty = String(options.get("difficulty",STORE.difficulty()))
 	_build_ui()
-	if not STORE.character_unlocked(player_hero_id) or not STORE.battle_stage_unlocked(stage):
+	if not STORE.character_unlocked(player_hero_id) or not STORE.can_enter(stage,run_difficulty):
 		var original_ticket: Dictionary = options.get("hero_entry",{})
 		var refunded := original_ticket.is_empty() or STAMINA.refund_failed_entry(original_ticket)
-		_show_blocked("용사 해금 조건 또는 이전 용사 스테이지 클리어를 확인하세요." if refunded else "잠긴 입장 실패 · 스테미너 반환 저장을 확인하세요.")
+		_show_blocked("마왕 쉬움 10스테이지 또는 해당 용사 스테이지 쉬움 클리어를 확인하세요." if refunded else "잠긴 입장 실패 · 스테미너 반환 저장을 확인하세요.")
 		return
 	entry = STAMINA.claim_battle_entry(stage)
 	if entry.is_empty():
@@ -142,7 +144,7 @@ func _create_battle() -> void:
 	viewport.handle_input_locally = false
 	view.add_child(viewport)
 	battle = BATTLE_SCENE.instantiate()
-	battle.campaign_difficulty = STORE.difficulty()
+	battle.campaign_difficulty = run_difficulty
 	battle.hero_player_mode = true; battle.hero_player_stage = stage; battle.hero_player_hero_id = player_hero_id
 	pad.input_surface = view
 	viewport.add_child(battle)
@@ -384,7 +386,7 @@ func _show_result() -> void:
 	_clear_overlay()
 	var reward := {"success":true,"research":0,"gold":0}
 	if not settled:
-		reward = STORE.award_run(stage,entry,battle.run_metrics.elapsed_seconds,_kill_count(),finished_won)
+		reward = STORE.award_run(stage,entry,battle.run_metrics.elapsed_seconds,_kill_count(),finished_won,run_difficulty)
 		settled = bool(reward.get("success",false))
 	_label(overlay_rows,finished_message,30)
 	_label(overlay_rows,"생존 %.1f초 · 처치 %d · 용사 Lv.%d\n%s" % [battle.run_metrics.elapsed_seconds,_kill_count(),battle.hero.level,battle.hero.get_build_summary()],24)
@@ -393,15 +395,15 @@ func _show_result() -> void:
 		_button("보상 저장 재시도",_show_result); return
 	_label(overlay_rows,"연구 포인트 +%d · 골드 +%d\n다른 증강 조합과 이동 경로를 시험하세요." % [int(reward.get("research",0)),int(reward.get("gold",0))],24)
 	var next_stage := String(STAGES.get_stage(stage).get("next_stage_id",""))
-	if finished_won and STORE.battle_stage_unlocked(next_stage): _button("다음 스테이지 도전",_next_stage.bind(next_stage))
+	if finished_won and STORE.can_enter(next_stage,run_difficulty): _button("다음 스테이지 도전",_next_stage.bind(next_stage))
 	_button("같은 용사로 다시 도전",_retry); _button("로비로",_leave)
 func _retry() -> void:
-	if leaving or not settled: return
+	if leaving or not settled or not STORE.can_enter(stage,run_difficulty): return
 	var ticket := STAMINA.try_enter(stage,LocalTestMode.active,-1,false)
 	if not bool(ticket.get("success",false)):
 		_label(overlay_rows,"스테미너 또는 저장 상태를 확인하세요.",23); return
 	leaving = true
-	if not SceneTransition.change_scene(DATA.SCENE,"용사 도전 준비 중...",{"stage_id":stage,"hero_id":player_hero_id,"hero_entry":ticket}):
+	if not SceneTransition.change_scene(DATA.SCENE,"용사 도전 준비 중...",{"stage_id":stage,"hero_id":player_hero_id,"hero_entry":ticket,"difficulty":run_difficulty}):
 		STAMINA.refund_failed_entry(ticket); leaving = false
 		_label(overlay_rows,"입장 실패 · 스테미너 반환을 확인하세요.",23)
 func _leave() -> void:
@@ -572,7 +574,7 @@ func _restart_from_pause() -> void:
 	battle.finish_abandoned_run()
 	if settled: _retry()
 func _next_stage(id: String) -> void:
-	if leaving or not settled or not finished_won or not STORE.battle_stage_unlocked(id): return
+	if leaving or not settled or not finished_won or not STORE.can_enter(id,run_difficulty): return
 	var previous := stage
 	stage = id; _retry()
 	if not leaving: stage = previous

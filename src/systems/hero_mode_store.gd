@@ -4,6 +4,8 @@ const STAGES := preload("res://src/data/stage_catalog.gd")
 const PROFILES := preload("res://src/data/hero_profiles.gd")
 const CHARACTERS := preload("res://src/data/hero_character_catalog.gd")
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
+const PROGRESS := preload("res://src/systems/stage_progress.gd")
+const UNLOCK_DATA := preload("res://src/data/mode_unlock_catalog.gd")
 const DATA := preload("res://src/data/hero_mode_catalog.gd")
 const PATH := "user://team_loadout.cfg"
 static func augment_reroll_bonus() -> int:
@@ -39,24 +41,27 @@ static func select_battle_stage(id: String) -> bool:
 	if String(config.get_value("hero_loadout","battle_stage","")) == id: return true
 	config.set_value("hero_loadout","battle_stage",id)
 	return SCOPE.save_config(config,PATH) == OK
+static func test_override() -> bool:
+	return all_characters_unlocked_for_test()
+static func mode_unlocked() -> bool:
+	return test_override() or PROGRESS.is_stage_cleared(String(UNLOCK_DATA.RULES.hero.required_stage))
+static func hard_stage_unlocked(id: String) -> bool:
+	return battle_stage_unlocked(id) and (test_override() or battle_stage_cleared(id,"easy"))
+static func can_enter(id: String, value: String) -> bool:
+	return value in ["easy","hard"] and battle_stage_unlocked(id) and (value == "easy" or hard_stage_unlocked(id))
 static func highest_battle_stage() -> int:
-	var config := ConfigFile.new()
-	if not _load(config): return 1
-	return _highest_battle_stage_in_config(config)
-static func _highest_battle_stage_in_config(config: ConfigFile) -> int:
-	# Migrate existing wins, but never infer clears from an old free selection.
-	var highest := 1
-	var order := STAGES.get_ordered_stage_ids()
-	for id in order:
-		if int(config.get_value("hero_progress",String(id)+"_wins",0)) <= 0: break
-		highest = mini(highest+1,order.size())
-	return highest
+	return STAGES.get_ordered_stage_ids().size() if mode_unlocked() else 0
+static func _highest_battle_stage_in_config(_config: ConfigFile) -> int:
+	# Kept for legacy callers: battlefield availability follows the mode gate.
+	return highest_battle_stage()
 static func battle_stage_unlocked(id: String) -> bool:
 	var stage: Dictionary = STAGES.get_stage(id)
 	return not stage.is_empty() and int(stage.get("number",0)) <= highest_battle_stage()
-static func battle_stage_cleared(id: String) -> bool:
+static func battle_stage_cleared(id: String, value: String = "easy") -> bool:
+	if value not in ["easy","hard"] or STAGES.get_stage(id).is_empty(): return false
 	var config := ConfigFile.new()
-	return _load(config) and int(config.get_value("hero_progress",id+"_wins",0)) > 0
+	# Legacy aggregate wins may include hard runs; never fabricate easy clears.
+	return _load(config) and int(config.get_value("hero_progress",id+"_"+value+"_wins",0)) > 0
 # Legacy calls refer to character origin, never the selected battlefield.
 static func selected_stage(_fallback: String = "stage_1") -> String:
 	return CHARACTERS.stage_for_hero(selected_hero())
@@ -108,7 +113,8 @@ static func apply_growth(stage: String,profile: Dictionary) -> void:
 		hp += level*float(DATA.GROWTH[id].hp); damage += level*float(DATA.GROWTH[id].damage)
 	profile["max_hp"] = maxi(1,roundi(float(profile.get("max_hp",1))*hp))
 	profile["attack_damage"] = maxi(1,roundi(float(profile.get("attack_damage",1))*damage))
-static func award_run(stage: String,entry: Dictionary,elapsed: float,kills: int,won: bool) -> Dictionary:
+static func award_run(stage: String,entry: Dictionary,elapsed: float,kills: int,won: bool,value: String = "easy") -> Dictionary:
+	if not can_enter(stage,value): return {"success":false}
 	if STAGES.get_stage(stage).is_empty() or not is_finite(elapsed) or elapsed < 0.0 or kills < 0 or (won and elapsed < DATA.DURATION): return {"success":false}
 	if String(entry.get("owner","")) != (SCOPE.user_id if not SCOPE.user_id.is_empty() else "guest:"+SCOPE.guest_directory): return {"success":false}
 	var serial := int(entry.get("entry_id",0))
@@ -123,7 +129,10 @@ static func award_run(stage: String,entry: Dictionary,elapsed: float,kills: int,
 	var gold: int = DATA.WIN_GOLD if won else (DATA.PARTIAL_GOLD if eligible else 0)
 	config.set_value("hero_progress","last_reward_entry",serial)
 	config.set_value("hero_progress",stage+"_best_seconds",maxf(elapsed,float(config.get_value("hero_progress",stage+"_best_seconds",0.0))))
-	if won: config.set_value("hero_progress",stage+"_wins",int(config.get_value("hero_progress",stage+"_wins",0))+1)
+	if won:
+		config.set_value("hero_progress",stage+"_wins",int(config.get_value("hero_progress",stage+"_wins",0))+1)
+		var wins_key := stage+"_"+value+"_wins"
+		config.set_value("hero_progress",wins_key,int(config.get_value("hero_progress",wins_key,0))+1)
 	progress.set_value("meta","research_points",int(progress.get_value("meta","research_points",0))+points)
 	progress.set_value("meta","gold",int(progress.get_value("meta","gold",0))+gold)
 	var success := SCOPE.save_configs({"stage_progress.cfg":progress,"team_loadout.cfg":config}) == OK
@@ -133,14 +142,7 @@ static func character_unlocked(subject: String) -> bool:
 	var id := CHARACTERS.hero_for_stage(subject) if subject.begins_with("stage_") else subject
 	var data: Dictionary = CHARACTERS.get_character(id)
 	if data.is_empty(): return false
-	if id == CHARACTERS.DEFAULT_HERO: return true
-	if all_characters_unlocked_for_test(): return true
-	var collection := ConfigFile.new()
-	if not _load(collection): return false
-	if bool(collection.get_value("hero_collection",id,false)): return true
-	var config := ConfigFile.new()
-	if not _load(config,"user://stage_progress.cfg"): return false
-	return bool(config.get_value("hard_cleared",String(data.stage),false))
+	return all_characters_unlocked_for_test() or mode_unlocked()
 static func all_characters_unlocked_for_test() -> bool:
 	var tree := Engine.get_main_loop() as SceneTree
 	var mode := tree.root.get_node_or_null("LocalTestMode") if tree != null else null
@@ -163,9 +165,11 @@ static func _shared_growth(config: ConfigFile,id: String) -> int:
 static func difficulty() -> String:
 	var config := ConfigFile.new()
 	if not _load(config): return "easy"
-	return "hard" if String(config.get_value("hero_loadout","difficulty","easy")) == "hard" else "easy"
-static func set_difficulty(value: String) -> bool:
-	if value not in ["easy","hard"]: return false
+	var value := String(config.get_value("hero_loadout","difficulty","easy"))
+	return "hard" if value == "hard" and hard_stage_unlocked(selected_battle_stage()) else "easy"
+static func set_difficulty(value: String, stage_id: String = "") -> bool:
+	var target := selected_battle_stage() if stage_id.is_empty() else stage_id
+	if not can_enter(target,value): return false
 	var config := ConfigFile.new()
 	if not _load(config): return false
 	config.set_value("hero_loadout","difficulty",value)

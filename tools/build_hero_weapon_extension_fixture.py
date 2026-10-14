@@ -31,11 +31,14 @@ while queue:
         if source.suffix in ['.png','.svg','.wav','.ogg']:
             destination.write_bytes(subprocess.check_output(['git','show','HEAD:'+path],cwd=repo))
             continue
-        raise SystemExit('Missing fixture dependency: ' + path)
+        if source.suffix == '.tres':
+            source_content = subprocess.check_output(['git','show','HEAD:'+path],cwd=repo).decode()
+        else:
+            raise SystemExit('Missing fixture dependency: ' + path)
     if source.suffix not in ['.gd', '.tscn', '.tres']:
         shutil.copyfile(source, destination)
         continue
-    content = source.read_text()
+    content = source.read_text() if source.is_file() else source_content
     if path == 'src/data/monster_catalog.gd':
         content = re.sub(r'preload\("res://src/monsters/[^"]+\.tscn"\)', 'null', content)
     if path == 'src/hero_mode/hero_weapon_native_runtime.gd':

@@ -74,8 +74,8 @@ func run() -> void:
 	PROGRESS.complete_stage("stage_10", 10, "", 0, 0)
 	lobby._refresh_stage_card()
 	await process_frame
-	check(not view.hero_button.disabled and not view.ranked_button.disabled, "stage10 clear unlocks hero and ranked")
-	for key in ["hero", "rank"]:
+	check(not view.hero_button.disabled and view.ranked_button.disabled, "demon stage10 opens hero but rank requires hero easy10")
+	for key in ["hero"]:
 		check(is_instance_valid(view.unlock_feedback), "global opening focus " + key)
 		await create_timer(1.2).timeout
 		await shot(key + "-open")
@@ -83,6 +83,17 @@ func run() -> void:
 		await process_frame
 		await process_frame
 		check(UNLOCKS.announcement_seen(key, "stage_2"), "global seen " + key)
+	var hero_progress := ConfigFile.new()
+	SCOPE.load_config(hero_progress,"user://team_loadout.cfg")
+	hero_progress.set_value("hero_progress","stage_10_easy_wins",1)
+	SCOPE.save_config(hero_progress,"user://team_loadout.cfg")
+	lobby._refresh_stage_card()
+	await process_frame
+	await create_timer(1.2).timeout
+	check(not view.ranked_button.disabled,"both easy10 clears open rank")
+	if is_instance_valid(view.unlock_feedback): view.unlock_feedback.close()
+	await process_frame
+	await process_frame
 	view.choose_perspective("hero")
 	view.toggle_ranked()
 	check(view.ranked and view.perspective == "hero", "unlocked navigation works")
@@ -117,6 +128,7 @@ func run() -> void:
 	SCOPE.select_guest()
 	lobby._refresh_stage_card()
 	check(lobby.main_modes_view.hero_button.disabled and not UNLOCKS.announcement_seen("hero", "stage_1"), "namespace isolation")
+	root.get_node("LocalTestMode").test_directory = SCOPE.guest_directory
 	root.get_node("LocalTestMode").active = true
 	lobby._refresh_stage_card()
 	check(not lobby.main_modes_view.hero_button.disabled and not lobby.main_modes_view.hard_button.disabled, "localtest keeps all-mode preview override")
