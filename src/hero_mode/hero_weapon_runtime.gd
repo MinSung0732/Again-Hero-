@@ -55,8 +55,27 @@ var projectile_bonus := 0
 var base_slow_resistance := 0.0
 var shield_left := 0.0
 var owned_shield := 0.0
+var reroll_limit := MODE.AUGMENT_REROLLS
+var rerolls_used := 0
 
-func install(host) -> void:
+func rerolls_remaining() -> int:
+	return maxi(0,reroll_limit-rerolls_used)
+
+func reroll(previous: Array) -> Array:
+	if previous.is_empty() or rerolls_remaining() <= 0 or hero.current_hp <= 0: return []
+	var old_ids: Array = []
+	for card in previous: old_ids.append(String(card.id))
+	var next := candidates(old_ids)
+	var changed := next.size() != previous.size()
+	for card in next:
+		if String(card.id) not in old_ids: changed = true
+	if not changed: return []
+	rerolls_used += 1
+	return next
+
+func install(host, research_bonus: int = 0) -> void:
+	reroll_limit = MODE.augment_reroll_limit(research_bonus)
+	rerolls_used = 0
 	hero = host
 	authority = hero.get_parent()
 	if "status_resistances" in hero: base_slow_resistance = float(hero.status_resistances.get("slow",0))
@@ -123,7 +142,7 @@ func add(id: String) -> bool:
 	resolved.clear()
 	return true
 
-func candidates() -> Array:
+func candidates(previous_ids: Array = []) -> Array:
 	var options: Array = []
 	for id in available_weapons:
 		if int(levels.get(id,0)) >= DATA.MAX_LEVEL: continue
@@ -142,11 +161,21 @@ func candidates() -> Array:
 	var owned: Array = []
 	for card in options:
 		if levels.has(card.id): owned.append(card)
+	var fresh_owned: Array = []
+	for card in owned:
+		if String(card.id) not in previous_ids: fresh_owned.append(card)
+	if not fresh_owned.is_empty(): owned = fresh_owned
 	if not owned.is_empty():
 		var chosen: Dictionary = owned[randi_range(0,owned.size()-1)]
 		result.append(chosen); options.erase(chosen)
 	options.shuffle()
-	while result.size() < 3 and not options.is_empty(): result.append(options.pop_back())
+	var fresh: Array = []
+	var repeated: Array = []
+	for card in options:
+		if String(card.id) in previous_ids: repeated.append(card)
+		else: fresh.append(card)
+	while result.size() < 3 and not fresh.is_empty(): result.append(fresh.pop_back())
+	while result.size() < 3 and not repeated.is_empty(): result.append(repeated.pop_back())
 	if result.is_empty(): result.append({"id":"survival_restore","name":"완성된 빌드 · 회복","description":"모든 선택이 최대 레벨입니다. 최대 HP의 15%를 회복합니다."})
 	return result
 

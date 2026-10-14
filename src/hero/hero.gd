@@ -42,6 +42,13 @@ func _player_move_velocity() -> Vector2:
 	if hero_archetype == "alchemist_chemical": speed *= _get_alchemist_field_speed_multiplier()
 	if fighter_guard_active: speed *= clampf(float(ultimate_config.get("move_speed_multiplier",0.62))+fighter_guard_move_multiplier_bonus,0.25,1.0)
 	return player_move_input*speed
+func reroll_player_augment() -> bool:
+	if not player_controlled or current_hp <= 0 or player_weapons == null or player_augment_candidates.is_empty(): return false
+	var next: Array = player_weapons.reroll(player_augment_candidates)
+	if next.is_empty(): return false
+	player_augment_candidates = next
+	player_augment_requested.emit(next)
+	return true
 func choose_player_augment(id: String) -> bool:
 	if not player_controlled or current_hp <= 0 or player_augment_candidates.is_empty(): return false
 	var chosen: Dictionary = {}

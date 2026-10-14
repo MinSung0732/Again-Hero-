@@ -1,5 +1,8 @@
 extends RefCounted
 const SCENE := "res://src/hero_mode/HeroMode.tscn"
+const AUGMENT_REROLLS := 3
+static func augment_reroll_limit(research_bonus: int = 0) -> int:
+	return AUGMENT_REROLLS+maxi(0,research_bonus)
 const DURATION := 900.0
 const THINK_INTERVAL := 0.75
 const OBSERVE_INTERVAL := 4.0

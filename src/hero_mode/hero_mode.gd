@@ -302,10 +302,16 @@ func _show_choices(candidates: Array) -> void:
 		var id := String(candidate.get("id",""))
 		var button := _choice_card(choices,candidate,_choose.bind(id,revision))
 		button.disabled = true; buttons.append(button)
+	var refresh := Button.new(); refresh.name = "AugmentReroll"
+	refresh.text = "새로고침 · 남은 %d/%d회" % [battle.hero.player_weapons.rerolls_remaining(),battle.hero.player_weapons.reroll_limit]
+	refresh.custom_minimum_size = Vector2(0,64); refresh.add_theme_font_size_override("font_size",26)
+	_skin_action_button(refresh); overlay_rows.add_child(refresh)
+	refresh.disabled = true; refresh.pressed.connect(_reroll_choices.bind(revision))
 	await get_tree().create_timer(0.25).timeout
 	if revision != choice_generation or not choosing or battle.battle_over: return
 	for button in buttons:
 		if is_instance_valid(button): button.disabled = false
+	if is_instance_valid(refresh): refresh.disabled = battle.hero.player_weapons.rerolls_remaining() <= 0
 func _choice_card(parent: HBoxContainer, candidate: Dictionary, action: Callable) -> Button:
 	var id := String(candidate.get("id",""))
 	var button := Button.new(); button.name = id; button.custom_minimum_size = Vector2(280,500)
@@ -328,6 +334,12 @@ func _choice_card(parent: HBoxContainer, candidate: Dictionary, action: Callable
 	var hint := _label(rows,"탭하여 선택",20); hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	return button
 
+func _reroll_choices(revision: int) -> void:
+	if not choosing or revision != choice_generation or battle.battle_over: return
+	if not battle.hero.reroll_player_augment():
+		var refresh := overlay_rows.get_node_or_null("AugmentReroll") as Button
+		if refresh != null:
+			refresh.disabled = true; refresh.text = "새로고침 불가 · 다른 후보 없음"
 func _choose(id: String,revision: int) -> void:
 	if not choosing or revision != choice_generation or battle.battle_over: return
 	choosing = false; overlay.hide(); pad.reset()

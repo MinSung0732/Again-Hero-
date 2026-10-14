@@ -6,6 +6,9 @@ const CHARACTERS := preload("res://src/data/hero_character_catalog.gd")
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const DATA := preload("res://src/data/hero_mode_catalog.gd")
 const PATH := "user://team_loadout.cfg"
+static func augment_reroll_bonus() -> int:
+	# Future account-scoped research hook; no research upgrade is sold yet.
+	return 0
 static func owner() -> String:
 	return SCOPE.user_id+":"+SCOPE.guest_directory
 static func _load(config: ConfigFile,path: String = PATH) -> bool:
