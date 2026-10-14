@@ -1,6 +1,9 @@
 @tool
 extends EditorExportPlugin
 
+func _get_name() -> String:
+	return "AgainHeroOAuth"
+
 # Only the browser-return hint is delivered here. OAuth code and PKCE verifier
 # stay on the existing authenticated loopback channel, never in the deep link.
 func _get_android_manifest_activity_element_contents(_platform: EditorExportPlatform, _debug: bool) -> String:

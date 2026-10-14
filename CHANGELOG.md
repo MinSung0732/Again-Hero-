@@ -1,3 +1,8 @@
+## 2026-10-14 — OAuth 내보내기 플러그인 필수 이름 추가
+
+- AgainHero OAuth EditorExportPlugin에 누락된 _get_name() 구현 추가. 내보내기 시작시 Required virtual method 오류 제거, 기존 Android 복귀 intent-filter/인증/PC 동작 유지.
+- Godot4.7.2 headless 격리 editor plugin 실제 등록 후 export-pack 성공, ERROR/SCRIPT ERROR/_get_name 오류 없음. git diff --check PASS. 실제 Windows APK/exe 내보내기·OAuth 로그인은 미검증.
+
 ## 2026-10-14 — Windows 로비 진입 리소스 오류 수정
 
 - 사용자 Windows 출시 로그에서 hero_hud_atlas.png preload 누락→hero_survival_hud→PresentationWarmup 컴파일 실패 확인. 함께 존재하던 assets/art/UI와 assets/art/ui를 UI 하나로 통일하고 HUD/증강8파일 이동, 런타임·제작/검사 도구·문서 경로 갱신. 에셋 픽셀 변경 없음.
