@@ -1,3 +1,9 @@
+## 2026-10-15 — 배포본 프로필·픽업 이미지 복구
+
+- EXE/APK에서초상화·배너가빈칸이되는원인수정. profile_cosmetic_store.choices와프로필선택창이FileAccess로PNG원본유무를검사해imported-only PCK에서선택목록을비우던문제를ResourceLoader.exists로교체. 실제소유/성별/초월보상/저장ID정책유지.
+- 픽업배너는원본image.load만읽던경로를PresentationWarmup캐시→ResourceLoader imported Texture2D→미import개발원본fallback 순서로변경. 계정미리보기/프로필은기존importedloader를그대로사용하며정상선택ID를받도록수정. 기존최적화의제작원본제외목록변경없음.
+- git diff --check,GDScript구문4파일,Python builder구문,격리45스크립트 preload의존성/실제7PNG무결성/수정resource경로정적검사PASS. imported-only PCK용회귀테스트·builder추가. 현재Godot실행파일소실및다운로드접속실패로이번Godot/PCK실행은못함; Windows/Android화면미검증.
+
 ## 2026-10-15 — 용사 쉬움 전장 순차 해금
 
 - 용사모드 해금시 쉬움1전장만선택가능. 해당전장의쉬움클리어가저장되면다음전장을하나씩해금(1→2→…→10). 전장선택·입장·보상검증모두동일store gate사용. 기존선택이잠기면stage1fallback,비연속후반클리어/레거시aggregate/hard기록으로건너뛰기차단. 저장된클리어·연구·골드·캐릭터정보보존.

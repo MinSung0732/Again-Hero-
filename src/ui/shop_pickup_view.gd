@@ -23,9 +23,18 @@ func _label(parent: Control, text: String, font_size: int) -> Label:
 	return label
 
 func _texture(path: String) -> Texture2D:
+	if path.is_empty(): return null
 	if not textures.has(path):
-		var image := Image.new()
-		textures[path] = ImageTexture.create_from_image(image) if FileAccess.file_exists(path) and image.load(path) == OK else null
+		var texture: Texture2D
+		var warmup := lobby.get_node_or_null("/root/PresentationWarmup") if is_instance_valid(lobby) else null
+		if warmup != null: texture = warmup.get_texture(path)
+		if texture == null and ResourceLoader.exists(path):
+			texture = load(path) as Texture2D
+		# Unimported editor source fallback; exported builds use imported resources.
+		if texture == null and FileAccess.file_exists(path):
+			var image := Image.load_from_file(path)
+			if image != null and not image.is_empty(): texture = ImageTexture.create_from_image(image)
+		textures[path] = texture
 	return textures[path] as Texture2D
 
 func install(host: Control) -> void:

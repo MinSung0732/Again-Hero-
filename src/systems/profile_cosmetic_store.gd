@@ -16,7 +16,7 @@ static func choices(slot: String) -> Array[String]:
 		return result
 	for id in APPEARANCE.owned_ids():
 		var path := CATALOG.path(id, slot)
-		if not path.is_empty() and FileAccess.file_exists(path):
+		if not path.is_empty() and ResourceLoader.exists(path):
 			result.append(id)
 	var state := COLLECTION.load_state()
 	for id in CATALOG.MONSTER_REWARDS:
@@ -27,7 +27,7 @@ static func choices(slot: String) -> Array[String]:
 		if COLLECTION.get_upgrade_level(monster_id,state) < int(reward.get("min_upgrade_level",0)):
 			continue
 		var path := CATALOG.path(String(id), slot)
-		if not path.is_empty() and FileAccess.file_exists(path) and String(id) not in result:
+		if not path.is_empty() and ResourceLoader.exists(path) and String(id) not in result:
 			result.append(String(id))
 	return result
 
