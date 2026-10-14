@@ -20,7 +20,7 @@ static func install(balance: Label, cost: Label) -> void:
 	var caption := Label.new()
 	caption.text = "보유 연구 포인트"
 	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	caption.add_theme_font_size_override("font_size",22)
+	caption.add_theme_font_size_override("font_size",24)
 	caption.add_theme_color_override("font_color",Color("d8cadf"))
 	rows.add_child(caption)
 	for label in [balance,cost]:
@@ -30,7 +30,7 @@ static func install(balance: Label, cost: Label) -> void:
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.clip_text = false
-	balance.add_theme_font_size_override("font_size",36)
+	balance.add_theme_font_size_override("font_size",40)
 	balance.add_theme_color_override("font_color",Color("ffe399"))
-	cost.add_theme_font_size_override("font_size",24)
+	cost.add_theme_font_size_override("font_size",26)
 	cost.add_theme_color_override("font_color",Color("e8dcec"))

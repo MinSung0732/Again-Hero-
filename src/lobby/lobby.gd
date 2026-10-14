@@ -2026,7 +2026,7 @@ func _apply_lobby_visual_polish() -> void:
 	)
 	_apply_lobby_button_skin(research_mode_button, true, 22)
 	_apply_lobby_button_skin(relic_mode_button, false, 22)
-	_apply_lobby_button_skin(research_upgrade_button, true, 22)
+	_apply_lobby_button_skin(research_upgrade_button, true, 28)
 	preload("res://src/ui/research_wallet_view.gd").install(research_points_label,research_detail_cost)
 	_apply_lobby_button_skin(relic_upgrade_button, true, 21)
 	for filter_button in relic_filter_buttons:

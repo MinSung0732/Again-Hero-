@@ -1069,7 +1069,7 @@ size_flags_vertical = 3
 theme_override_constants/separation = 10
 
 [node name="DetailPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent"]
-custom_minimum_size = Vector2(0, 310)
+custom_minimum_size = Vector2(0, 520)
 layout_mode = 2
 
 [node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel"]
@@ -1081,26 +1081,26 @@ theme_override_constants/margin_bottom = 20
 
 [node name="VBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 7
+theme_override_constants/separation = 10
 
 [node name="Name" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.86, 0.48, 1)
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 36
 text = "연구를 선택하세요"
 horizontal_alignment = 1
 
 [node name="Level" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.78, 0.7, 0.82, 1)
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 26
 text = "Lv.0 / 0"
 horizontal_alignment = 1
 
 [node name="Effect" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.93, 0.76, 1)
-theme_override_font_sizes/font_size = 23
+theme_override_font_sizes/font_size = 30
 text = "현재 효과를 표시합니다."
 horizontal_alignment = 1
 autowrap_mode = 2
@@ -1109,7 +1109,7 @@ autowrap_mode = 2
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.78, 0.73, 0.82, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 26
 text = "연구 상세 설명"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -1129,10 +1129,10 @@ text = "필요 포인트  -"
 vertical_alignment = 1
 
 [node name="UpgradeButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox/ActionRow"]
-custom_minimum_size = Vector2(230, 62)
+custom_minimum_size = Vector2(250, 104)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 28
 text = "강화하기"
 disabled = true
 
