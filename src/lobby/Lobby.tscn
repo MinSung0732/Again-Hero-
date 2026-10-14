@@ -1,20 +1,20 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://bavxpha0ii6w3"]
 
-[ext_resource type="Script" path="res://src/lobby/lobby.gd" id="1_lobby"]
+[ext_resource type="Script" uid="uid://dmawngols4l5r" path="res://src/lobby/lobby.gd" id="1_lobby"]
 [ext_resource type="Theme" path="res://src/ui/game_theme.tres" id="3_game_theme"]
-[ext_resource type="Script" path="res://src/ui/formation_drop_slot.gd" id="4_formation_drop_slot"]
+[ext_resource type="Script" uid="uid://2eyg4ihrt2nv" path="res://src/ui/formation_drop_slot.gd" id="4_formation_drop_slot"]
 
-[node name="Lobby" type="Control"]
-theme = ExtResource("3_game_theme")
+[node name="Lobby" type="Control" unique_id=1609600125]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("3_game_theme")
 script = ExtResource("1_lobby")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=1218694147]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -23,65 +23,64 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.035, 0.027, 0.055, 1)
 
-[node name="BackdropGlow" type="ColorRect" parent="."]
+[node name="BackdropGlow" type="ColorRect" parent="." unique_id=1861464812]
 layout_mode = 1
-anchors_preset = 15
+anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 0.56
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.115, 0.075, 0.16, 1)
 
-[node name="SafeArea" type="MarginContainer" parent="."]
+[node name="SafeArea" type="MarginContainer" parent="." unique_id=1607771586]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 24.0
-offset_top = 0.0
 offset_right = -24.0
 offset_bottom = -196.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Layout" type="VBoxContainer" parent="SafeArea"]
+[node name="Layout" type="VBoxContainer" parent="SafeArea" unique_id=1968095469]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Header" type="PanelContainer" parent="SafeArea/Layout"]
+[node name="Header" type="PanelContainer" parent="SafeArea/Layout" unique_id=1131898862]
 custom_minimum_size = Vector2(0, 212)
 layout_mode = 2
 
-[node name="HeaderMargin" type="MarginContainer" parent="SafeArea/Layout/Header"]
+[node name="HeaderMargin" type="MarginContainer" parent="SafeArea/Layout/Header" unique_id=877334679]
 layout_mode = 2
 theme_override_constants/margin_left = 54
 theme_override_constants/margin_top = 96
 theme_override_constants/margin_right = 54
 theme_override_constants/margin_bottom = 10
 
-[node name="HeaderVBox" type="VBoxContainer" parent="SafeArea/Layout/Header/HeaderMargin"]
+[node name="HeaderVBox" type="VBoxContainer" parent="SafeArea/Layout/Header/HeaderMargin" unique_id=256197411]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Title" type="Label" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox"]
+[node name="Title" type="Label" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox" unique_id=362223473]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.88, 0.62, 1)
 theme_override_font_sizes/font_size = 42
 text = "용사, 또 너야?"
 horizontal_alignment = 1
 
-[node name="ResourceRow" type="HBoxContainer" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox"]
+[node name="ResourceRow" type="HBoxContainer" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox" unique_id=682216054]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="ResourceLabel" type="Label" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow"]
+[node name="ResourceLabel" type="Label" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow" unique_id=504448432]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.86, 0.81, 0.9, 1)
 theme_override_font_sizes/font_size = 24
 text = "연구 포인트  0"
 
-[node name="ProgressLabel" type="Label" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow"]
+[node name="ProgressLabel" type="Label" parent="SafeArea/Layout/Header/HeaderMargin/HeaderVBox/ResourceRow" unique_id=1899410842]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.86, 0.81, 0.9, 1)
@@ -89,11 +88,11 @@ theme_override_font_sizes/font_size = 24
 text = "최고 해금  Stage 1"
 horizontal_alignment = 2
 
-[node name="Content" type="Control" parent="SafeArea/Layout"]
+[node name="Content" type="Control" parent="SafeArea/Layout" unique_id=1521727375]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ContentFrame" type="PanelContainer" parent="SafeArea/Layout/Content"]
+[node name="ContentFrame" type="PanelContainer" parent="SafeArea/Layout/Content" unique_id=592523865]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -102,18 +101,19 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="ShopTab" type="Control" parent="SafeArea/Layout/Content"]
+[node name="ShopTab" type="Control" parent="SafeArea/Layout/Content" unique_id=743278617]
 visible = false
+clip_contents = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-clip_contents = true
 
-[node name="TitlePlate" type="Panel" parent="SafeArea/Layout/Content/ShopTab"]
+[node name="TitlePlate" type="Panel" parent="SafeArea/Layout/Content/ShopTab" unique_id=1811633854]
 layout_mode = 1
+anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -250.0
@@ -123,7 +123,7 @@ offset_bottom = 82.0
 grow_horizontal = 2
 mouse_filter = 2
 
-[node name="ShopMargin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab"]
+[node name="ShopMargin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab" unique_id=1858935299]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -137,11 +137,11 @@ grow_vertical = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_right = 24
 
-[node name="ShopLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin"]
+[node name="ShopLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin" unique_id=507848260]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout"]
+[node name="Title" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout" unique_id=553512775]
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.98, 0.93, 0.84, 1)
@@ -150,7 +150,7 @@ text = "마왕 상점"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Guide" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout"]
+[node name="Guide" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout" unique_id=1673292681]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.67, 0.61, 0.71, 1)
@@ -160,35 +160,35 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="ShopScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout"]
+[node name="ShopScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout" unique_id=1608830477]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 3
 scroll_deadzone = 14
 
-[node name="ShopContent" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll"]
+[node name="ShopContent" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll" unique_id=348072425]
 custom_minimum_size = Vector2(0, 1800)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 18
 
-[node name="BalancePanel" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent"]
+[node name="BalancePanel" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent" unique_id=56331867]
 custom_minimum_size = Vector2(0, 78)
 layout_mode = 2
 
-[node name="BalanceMargin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel"]
+[node name="BalanceMargin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel" unique_id=1279185929]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 10
 
-[node name="BalanceRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel/BalanceMargin"]
+[node name="BalanceRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel/BalanceMargin" unique_id=1351142290]
 layout_mode = 2
 theme_override_constants/separation = 18
 
-[node name="Gold" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel/BalanceMargin/BalanceRow"]
+[node name="Gold" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel/BalanceMargin/BalanceRow" unique_id=1838344542]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.96, 0.79, 0.34, 1)
@@ -196,7 +196,7 @@ theme_override_font_sizes/font_size = 24
 text = "골드  99,999"
 vertical_alignment = 1
 
-[node name="ResearchPoints" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel/BalanceMargin/BalanceRow"]
+[node name="ResearchPoints" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BalancePanel/BalanceMargin/BalanceRow" unique_id=366406121]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.82, 0.67, 0.95, 1)
@@ -205,16 +205,16 @@ text = "연구 포인트  0"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="BannerPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent"]
+[node name="BannerPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent" unique_id=398747476]
 custom_minimum_size = Vector2(0, 455)
-layout_mode = 2
 clip_contents = true
-
-[node name="BannerViewport" type="Control" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel"]
 layout_mode = 2
-clip_contents = true
 
-[node name="BannerSlide" type="Control" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport"]
+[node name="BannerViewport" type="Control" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel" unique_id=177332385]
+clip_contents = true
+layout_mode = 2
+
+[node name="BannerSlide" type="Control" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport" unique_id=1565362462]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -222,7 +222,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="BannerMargin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide"]
+[node name="BannerMargin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide" unique_id=792342941]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -234,15 +234,15 @@ theme_override_constants/margin_top = 24
 theme_override_constants/margin_right = 30
 theme_override_constants/margin_bottom = 22
 
-[node name="BannerVBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin"]
+[node name="BannerVBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin" unique_id=1224785848]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="BannerTop" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox"]
+[node name="BannerTop" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox" unique_id=395947404]
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 
-[node name="Badge" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerTop"]
+[node name="Badge" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerTop" unique_id=1277212492]
 custom_minimum_size = Vector2(122, 34)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.9, 0.58, 1)
@@ -251,11 +251,11 @@ text = "EVENT"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Spacer" type="Control" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerTop"]
+[node name="Spacer" type="Control" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerTop" unique_id=1102318104]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Dots" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerTop"]
+[node name="Dots" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerTop" unique_id=968414372]
 custom_minimum_size = Vector2(160, 34)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.89, 0.72, 0.35, 1)
@@ -264,7 +264,7 @@ text = "◆  ◇  ◇"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="BannerTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox"]
+[node name="BannerTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox" unique_id=740592460]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.95, 0.83, 1)
@@ -272,7 +272,7 @@ theme_override_font_sizes/font_size = 31
 text = "신규 몬스터 전력 보급"
 vertical_alignment = 1
 
-[node name="BannerDescription" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox"]
+[node name="BannerDescription" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox" unique_id=1341344536]
 custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_vertical = 3
@@ -282,19 +282,19 @@ text = "몬스터 소환에서 전력을 확충하고 새로운 편성을 준비
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="BannerFooter" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox"]
+[node name="BannerFooter" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox" unique_id=1364126910]
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="PrevButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerFooter"]
+[node name="PrevButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerFooter" unique_id=1048101532]
 custom_minimum_size = Vector2(76, 50)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 26
 text = "‹"
 
-[node name="FooterText" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerFooter"]
+[node name="FooterText" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerFooter" unique_id=352443316]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.72, 0.64, 0.77, 1)
@@ -303,132 +303,136 @@ text = "마왕군 확장 이벤트"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="NextButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerFooter"]
+[node name="NextButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/BannerPanel/BannerViewport/BannerSlide/BannerMargin/BannerVBox/BannerFooter" unique_id=1901430527]
 custom_minimum_size = Vector2(76, 50)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 26
 text = "›"
 
-[node name="MonsterSection" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent"]
+[node name="MonsterSection" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent" unique_id=939730390]
 custom_minimum_size = Vector2(0, 390)
 layout_mode = 2
 
-[node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection"]
+[node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection" unique_id=815343685]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 20
 
-[node name="VBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin"]
+[node name="VBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin" unique_id=1970655153]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
+[node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox" unique_id=1073474099]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.97, 0.88, 0.66, 1)
 theme_override_font_sizes/font_size = 30
 text = "몬스터 소환"
 
-[node name="SectionDesc" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
+[node name="SectionDesc" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox" unique_id=339213664]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
 theme_override_font_sizes/font_size = 19
 text = "무작위 몬스터 조각을 획득해 전투 편성을 확장합니다."
 autowrap_mode = 2
 
-[node name="BuyRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
+[node name="BuyRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox" unique_id=1399481605]
 custom_minimum_size = Vector2(0, 142)
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="SingleButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/BuyRow"]
+[node name="SingleButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/BuyRow" unique_id=1281778192]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 24
-text = "몬스터 소환 1회\n100 골드"
+text = "몬스터 소환 1회
+100 골드"
 
-[node name="MultiButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/BuyRow"]
+[node name="MultiButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/BuyRow" unique_id=84225759]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 24
-text = "몬스터 소환 10+1회\n1,000 골드"
+text = "몬스터 소환 10+1회
+1,000 골드"
 
-[node name="InfoRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox"]
+[node name="InfoRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox" unique_id=798660929]
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="HistoryButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/InfoRow"]
+[node name="HistoryButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/InfoRow" unique_id=307023943]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 20
-text = "소환 내역"
 disabled = true
+text = "소환 내역"
 
-[node name="RatesButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/InfoRow"]
+[node name="RatesButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/MonsterSection/Margin/VBox/InfoRow" unique_id=942955432]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 20
 text = "상품 확률"
 
-[node name="RelicSection" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent"]
+[node name="RelicSection" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent" unique_id=1838647708]
 custom_minimum_size = Vector2(0, 300)
 layout_mode = 2
 
-[node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection"]
+[node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection" unique_id=184113164]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 20
 
-[node name="VBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin"]
+[node name="VBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin" unique_id=1066126937]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox"]
+[node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox" unique_id=1593984618]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.86, 0.72, 0.98, 1)
 theme_override_font_sizes/font_size = 30
 text = "유물 소환"
 
-[node name="SectionDesc" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox"]
+[node name="SectionDesc" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox" unique_id=736902418]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
 theme_override_font_sizes/font_size = 19
 text = "마왕군 전체 빌드를 보조하는 유물 소환 영역입니다."
 autowrap_mode = 2
 
-[node name="BuyRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox"]
+[node name="BuyRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox" unique_id=1909798238]
 custom_minimum_size = Vector2(0, 142)
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="SingleButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox/BuyRow"]
-mouse_filter = 2
+[node name="SingleButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox/BuyRow" unique_id=260207738]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
-theme_override_font_sizes/font_size = 24
-text = "유물 소환 1회\n준비 중"
-disabled = true
-
-[node name="MultiButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox/BuyRow"]
 mouse_filter = 2
+theme_override_font_sizes/font_size = 24
+disabled = true
+text = "유물 소환 1회
+준비 중"
+
+[node name="MultiButton" type="Button" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox/BuyRow" unique_id=2076616153]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
+mouse_filter = 2
 theme_override_font_sizes/font_size = 24
-text = "유물 소환 10+1회\n준비 중"
 disabled = true
+text = "유물 소환 10+1회
+준비 중"
 
-[node name="Notice" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox"]
+[node name="Notice" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/RelicSection/Margin/VBox" unique_id=1941452951]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.58, 0.52, 0.63, 1)
 theme_override_font_sizes/font_size = 18
@@ -436,43 +440,43 @@ text = "유물 데이터/확률/재화가 확정되면 이 버튼에 바로 연�
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="PackageSection" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent"]
+[node name="PackageSection" type="PanelContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent" unique_id=989813178]
 custom_minimum_size = Vector2(0, 455)
 layout_mode = 2
 
-[node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection"]
+[node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection" unique_id=11286711]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 20
 
-[node name="VBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin"]
+[node name="VBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin" unique_id=213373848]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin/VBox"]
+[node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin/VBox" unique_id=717098894]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.97, 0.88, 0.66, 1)
 theme_override_font_sizes/font_size = 30
 text = "성장 재화 · 패키지"
 
-[node name="SectionDesc" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin/VBox"]
+[node name="SectionDesc" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin/VBox" unique_id=612770773]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
 theme_override_font_sizes/font_size = 19
 text = "골드와 연구 포인트 상품을 추가할 수 있도록 확장형 카드 영역으로 구성했습니다."
 autowrap_mode = 2
 
-[node name="PackageGrid" type="GridContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin/VBox"]
+[node name="PackageGrid" type="GridContainer" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin/VBox" unique_id=1492126423]
 custom_minimum_size = Vector2(0, 320)
 layout_mode = 2
 size_flags_horizontal = 3
-columns = 2
 theme_override_constants/h_separation = 14
 theme_override_constants/v_separation = 14
+columns = 2
 
-[node name="PackageNotice" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin/VBox"]
+[node name="PackageNotice" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/PackageSection/Margin/VBox" unique_id=1941151494]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.58, 0.52, 0.63, 1)
 theme_override_font_sizes/font_size = 17
@@ -480,7 +484,7 @@ text = "결제/프리미엄 재화 정책 확정 전에는 실제 구매가 발�
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="Status" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent"]
+[node name="Status" type="Label" parent="SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent" unique_id=119672067]
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.58, 0.53, 0.62, 1)
@@ -490,18 +494,19 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="TeamTab" type="Control" parent="SafeArea/Layout/Content"]
+[node name="TeamTab" type="Control" parent="SafeArea/Layout/Content" unique_id=199683743]
 visible = false
+clip_contents = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-clip_contents = true
 
-[node name="TitlePlate" type="Panel" parent="SafeArea/Layout/Content/TeamTab"]
+[node name="TitlePlate" type="Panel" parent="SafeArea/Layout/Content/TeamTab" unique_id=1145843660]
 layout_mode = 1
+anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -230.0
@@ -511,7 +516,7 @@ offset_bottom = 84.0
 grow_horizontal = 2
 mouse_filter = 2
 
-[node name="TeamLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/TeamTab"]
+[node name="TeamLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/TeamTab" unique_id=350164976]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -524,14 +529,14 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+[node name="Title" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout" unique_id=1535243772]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.87, 1, 1)
 theme_override_font_sizes/font_size = 38
 text = "전투 편성"
 horizontal_alignment = 1
 
-[node name="Guide" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+[node name="Guide" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout" unique_id=1072306813]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.68, 0.62, 0.73, 1)
 theme_override_font_sizes/font_size = 20
@@ -539,145 +544,147 @@ text = "몬스터와 마왕 스킬을 각각 최대 3종까지 편성합니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="Summary" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+[node name="Summary" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout" unique_id=1084481360]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
 theme_override_font_sizes/font_size = 24
 text = "팀 탭을 열어 편성을 표시합니다."
 horizontal_alignment = 1
 
-[node name="SlotRow" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+[node name="SlotRow" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout" unique_id=1360643646]
 custom_minimum_size = Vector2(0, 146)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Slot1Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+[node name="Slot1Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow" unique_id=1854422107]
 custom_minimum_size = Vector2(0, 146)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
-theme_override_font_sizes/font_size = 20
-expand_icon = true
 theme_override_constants/icon_max_width = 48
-text = "1\n빈 슬롯"
+theme_override_font_sizes/font_size = 20
+text = "1
+빈 슬롯"
+expand_icon = true
 script = ExtResource("4_formation_drop_slot")
-slot_index = 0
 
-[node name="Slot2Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+[node name="Slot2Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow" unique_id=2130918140]
 custom_minimum_size = Vector2(0, 146)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
-theme_override_font_sizes/font_size = 20
-expand_icon = true
 theme_override_constants/icon_max_width = 48
-text = "2\n빈 슬롯"
+theme_override_font_sizes/font_size = 20
+text = "2
+빈 슬롯"
+expand_icon = true
 script = ExtResource("4_formation_drop_slot")
 slot_index = 1
 
-[node name="Slot3Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow"]
+[node name="Slot3Button" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/SlotRow" unique_id=1690078772]
 custom_minimum_size = Vector2(0, 146)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
-theme_override_font_sizes/font_size = 20
-expand_icon = true
 theme_override_constants/icon_max_width = 48
-text = "3\n빈 슬롯"
+theme_override_font_sizes/font_size = 20
+text = "3
+빈 슬롯"
+expand_icon = true
 script = ExtResource("4_formation_drop_slot")
 slot_index = 2
 
-[node name="ModeTabs" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+[node name="ModeTabs" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout" unique_id=237523150]
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="TeamModeButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ModeTabs"]
+[node name="TeamModeButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ModeTabs" unique_id=948464763]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 23
 text = "팀 편성"
 
-[node name="SkillModeButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ModeTabs"]
+[node name="SkillModeButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ModeTabs" unique_id=889857080]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 23
 text = "스킬 편성"
 
-[node name="ListHeader" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+[node name="ListHeader" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout" unique_id=1375463858]
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ListTitle" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader"]
+[node name="ListTitle" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader" unique_id=1307523689]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
 text = "몬스터 컬렉션"
 vertical_alignment = 1
 
-[node name="SortCriteria" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader"]
+[node name="SortCriteria" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader" unique_id=781855138]
 custom_minimum_size = Vector2(216, 54)
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="CostButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/SortCriteria"]
+[node name="CostButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/SortCriteria" unique_id=1008272136]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 text = "코스트"
 
-[node name="RarityButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/SortCriteria"]
+[node name="RarityButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/SortCriteria" unique_id=887210061]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 text = "등급"
 
-[node name="CostSortButtons" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader"]
+[node name="CostSortButtons" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader" unique_id=981078875]
 custom_minimum_size = Vector2(300, 54)
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="LowButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/CostSortButtons"]
+[node name="LowButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/CostSortButtons" unique_id=380634494]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 19
 text = "낮은순"
 
-[node name="HighButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/CostSortButtons"]
+[node name="HighButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/CostSortButtons" unique_id=1319247262]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 19
 text = "높은순"
 
-[node name="UnlockFilters" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+[node name="UnlockFilters" type="HBoxContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout" unique_id=2099649372]
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="AllButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/UnlockFilters"]
+[node name="AllButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/UnlockFilters" unique_id=1614754795]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 text = "전체"
 
-[node name="UnlockedButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/UnlockFilters"]
+[node name="UnlockedButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/UnlockFilters" unique_id=2132274203]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 text = "해금"
 
-[node name="LockedButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/UnlockFilters"]
+[node name="LockedButton" type="Button" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/UnlockFilters" unique_id=1777401819]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 text = "미해금"
 
-[node name="EmptyCollection" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+[node name="EmptyCollection" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout" unique_id=587786692]
 visible = false
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
@@ -686,20 +693,20 @@ text = "조건에 맞는 몬스터가 없습니다."
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="MonsterScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+[node name="MonsterScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout" unique_id=809357853]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 3
 
-[node name="MonsterGrid" type="GridContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterScroll"]
+[node name="MonsterGrid" type="GridContainer" parent="SafeArea/Layout/Content/TeamTab/TeamLayout/MonsterScroll" unique_id=82882814]
 layout_mode = 2
 size_flags_horizontal = 3
-columns = 3
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 10
+columns = 3
 
-[node name="Status" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout"]
+[node name="Status" type="Label" parent="SafeArea/Layout/Content/TeamTab/TeamLayout" unique_id=2047659192]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
@@ -709,7 +716,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="MainTab" type="Control" parent="SafeArea/Layout/Content"]
+[node name="MainTab" type="Control" parent="SafeArea/Layout/Content" unique_id=796100454]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -717,7 +724,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="StageLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab"]
+[node name="StageLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/MainTab" unique_id=234844726]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -729,14 +736,14 @@ offset_bottom = -34.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 12
-alignment = 0
 
-[node name="SectionHeaderBox" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
+[node name="SectionHeaderBox" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout" unique_id=1016093818]
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 
-[node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox"]
+[node name="SectionTitle" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox" unique_id=15008448]
 layout_mode = 1
+anchors_preset = 10
 anchor_right = 1.0
 offset_top = 42.0
 offset_bottom = 82.0
@@ -747,8 +754,9 @@ text = "침입자 기록"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SectionSubtitle" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox"]
+[node name="SectionSubtitle" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox" unique_id=241882944]
 layout_mode = 1
+anchors_preset = 10
 anchor_right = 1.0
 offset_top = 82.0
 offset_bottom = 116.0
@@ -759,29 +767,30 @@ text = "대상 용사를 선택하고 던전에 입장하세요."
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="StageTopSpacer" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
+[node name="StageTopSpacer" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout" unique_id=1037827824]
 custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
 
-[node name="StageMetaBox" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
+[node name="StageMetaBox" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout" unique_id=1470130895]
 custom_minimum_size = Vector2(0, 92)
 layout_mode = 2
 
-[node name="StageNumber" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
+[node name="StageNumber" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox" unique_id=2033280221]
 layout_mode = 1
+anchors_preset = 10
 anchor_right = 1.0
 offset_top = 72.0
 offset_bottom = 96.0
 grow_horizontal = 2
+tooltip_text = "스테이지 바로 선택"
+mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
 theme_override_font_sizes/font_size = 24
-mouse_default_cursor_shape = 2
-tooltip_text = "스테이지 바로 선택"
 text = "STAGE 01  ·  목록 선택"
-alignment = 1
 
-[node name="StageName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox"]
+[node name="StageName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StageMetaBox" unique_id=1610380815]
 layout_mode = 1
+anchors_preset = 10
 anchor_right = 1.0
 offset_top = 96.0
 offset_bottom = 132.0
@@ -792,27 +801,27 @@ text = "첫 번째 침입자"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="StagePicker" type="HBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout"]
+[node name="StagePicker" type="HBoxContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout" unique_id=480249068]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="PrevButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
+[node name="PrevButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker" unique_id=657163118]
 custom_minimum_size = Vector2(82, 160)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 42
 text = "‹"
 
-[node name="StageCardSlot" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
+[node name="StageCardSlot" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker" unique_id=1859103328]
 custom_minimum_size = Vector2(780, 1115)
+clip_contents = true
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
-clip_contents = true
 
-[node name="StageCard" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot"]
+[node name="StageCard" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot" unique_id=734357786]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -820,17 +829,17 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="CardMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard"]
+[node name="CardMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard" unique_id=1992661443]
 layout_mode = 2
 theme_override_constants/margin_left = 46
 theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 46
 theme_override_constants/margin_bottom = 60
 
-[node name="CardVBox" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin"]
+[node name="CardVBox" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin" unique_id=909702781]
 layout_mode = 2
 
-[node name="TopPanel" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox"]
+[node name="TopPanel" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox" unique_id=1794824411]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -838,13 +847,14 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="UpperFrameGap" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel"]
+[node name="UpperFrameGap" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel" unique_id=1963754875]
 visible = false
 layout_mode = 1
 anchors_preset = 0
 
-[node name="PortraitFrame" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel"]
+[node name="PortraitFrame" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel" unique_id=2100115304]
 layout_mode = 1
+anchors_preset = -1
 anchor_left = 0.04
 anchor_top = 0.225
 anchor_right = 0.96
@@ -852,63 +862,42 @@ anchor_bottom = 0.565
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="FrameMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame"]
+[node name="FrameMargin" type="MarginContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame" unique_id=25819570]
 layout_mode = 2
 theme_override_constants/margin_left = 4
 theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 4
 theme_override_constants/margin_bottom = 4
 
-[node name="PortraitInner" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin"]
+[node name="PortraitInner" type="PanelContainer" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin" unique_id=1659807755]
 layout_mode = 2
 
-[node name="PortraitTexture" type="TextureRect" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 6.0
-offset_right = -6.0
-offset_bottom = -6.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="PortraitTexture" type="TextureRect" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner" unique_id=1685069613]
+texture_filter = 1
+layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
-texture_filter = 1
 
-[node name="PortraitPlaceholder" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="PortraitPlaceholder" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner" unique_id=1390750471]
+layout_mode = 2
 theme_override_colors/font_color = Color(0.58, 0.52, 0.64, 1)
 theme_override_font_sizes/font_size = 36
 text = "초상화 준비 중"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="PortraitBadge" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner"]
+[node name="PortraitBadge" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/PortraitFrame/FrameMargin/PortraitInner" unique_id=577014934]
 visible = false
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -62.0
-grow_horizontal = 2
-grow_vertical = 0
+layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.89, 0.64, 1)
 theme_override_font_sizes/font_size = 24
 text = "침입자"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="HeroName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel"]
+[node name="HeroName" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel" unique_id=969318025]
 layout_mode = 1
-anchor_left = 0.0
+anchors_preset = -1
 anchor_top = 0.575
 anchor_right = 1.0
 anchor_bottom = 0.625
@@ -920,7 +909,7 @@ text = "견습 마도사"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="BottomPanel" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox"]
+[node name="BottomPanel" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox" unique_id=2028605625]
 layout_mode = 1
 anchor_left = 0.08
 anchor_top = 0.715
@@ -929,10 +918,9 @@ anchor_bottom = 0.925
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="StageDescription" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel"]
+[node name="StageDescription" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel" unique_id=1082405296]
 layout_mode = 1
-anchor_left = 0.0
-anchor_top = 0.0
+anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 0.24
 grow_horizontal = 2
@@ -944,12 +932,12 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="StageStatus" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel"]
+[node name="StageStatus" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel" unique_id=509882937]
 layout_mode = 1
-anchor_left = 0.0
+anchors_preset = -1
 anchor_top = 0.29
 anchor_right = 1.0
-anchor_bottom = 0.40
+anchor_bottom = 0.4
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.75, 0.69, 0.8, 1)
@@ -958,9 +946,9 @@ text = "입장 가능 · 제한 6분"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="StageReward" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel"]
+[node name="StageReward" type="Label" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel" unique_id=356885674]
 layout_mode = 1
-anchor_left = 0.0
+anchors_preset = -1
 anchor_top = 0.43
 anchor_right = 1.0
 anchor_bottom = 0.54
@@ -972,13 +960,14 @@ text = "최초 클리어 연구 포인트 +100"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ActionSpacer" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel"]
+[node name="ActionSpacer" type="Control" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel" unique_id=2137773726]
 visible = false
 layout_mode = 1
 anchors_preset = 0
 
-[node name="EnterButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel"]
+[node name="EnterButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel" unique_id=620361089]
 layout_mode = 1
+anchors_preset = -1
 anchor_left = 0.08
 anchor_top = 0.68
 anchor_right = 0.92
@@ -989,25 +978,26 @@ theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
 theme_override_font_sizes/font_size = 36
 text = "던전 입장"
 
-[node name="NextButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker"]
+[node name="NextButton" type="Button" parent="SafeArea/Layout/Content/MainTab/StageLayout/StagePicker" unique_id=1983198950]
 custom_minimum_size = Vector2(82, 160)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 42
 text = "›"
 
-[node name="ResearchTab" type="Control" parent="SafeArea/Layout/Content"]
+[node name="ResearchTab" type="Control" parent="SafeArea/Layout/Content" unique_id=144579207]
 visible = false
+clip_contents = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-clip_contents = true
 
-[node name="TitlePlate" type="Panel" parent="SafeArea/Layout/Content/ResearchTab"]
+[node name="TitlePlate" type="Panel" parent="SafeArea/Layout/Content/ResearchTab" unique_id=1698193169]
 layout_mode = 1
+anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -230.0
@@ -1017,7 +1007,7 @@ offset_bottom = 84.0
 grow_horizontal = 2
 mouse_filter = 2
 
-[node name="ResearchLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab"]
+[node name="ResearchLayout" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab" unique_id=1631647391]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -1030,74 +1020,74 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
+[node name="Title" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout" unique_id=2018356544]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.87, 1, 1)
 theme_override_font_sizes/font_size = 38
 text = "마왕 연구실"
 horizontal_alignment = 1
 
-[node name="Points" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
+[node name="Points" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout" unique_id=83620638]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.72, 0.31, 1)
 theme_override_font_sizes/font_size = 25
 text = "보유 연구 포인트  0"
 horizontal_alignment = 1
 
-[node name="ModeTabs" type="HBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
+[node name="ModeTabs" type="HBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout" unique_id=468179794]
 custom_minimum_size = Vector2(0, 58)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ResearchModeButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ModeTabs"]
+[node name="ResearchModeButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ModeTabs" unique_id=503520805]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 22
 text = "군단 연구"
 
-[node name="RelicModeButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ModeTabs"]
+[node name="RelicModeButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ModeTabs" unique_id=968456736]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 22
 text = "유물"
 
-[node name="ResearchContent" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
+[node name="ResearchContent" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout" unique_id=1749812314]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 
-[node name="DetailPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent"]
+[node name="DetailPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent" unique_id=1614152643]
 custom_minimum_size = Vector2(0, 520)
 layout_mode = 2
 
-[node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel"]
+[node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel" unique_id=967724695]
 layout_mode = 2
 theme_override_constants/margin_left = 26
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 26
 theme_override_constants/margin_bottom = 20
 
-[node name="VBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin" unique_id=1407864530]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Name" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox"]
+[node name="Name" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox" unique_id=1743543534]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.86, 0.48, 1)
 theme_override_font_sizes/font_size = 36
 text = "연구를 선택하세요"
 horizontal_alignment = 1
 
-[node name="Level" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox"]
+[node name="Level" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox" unique_id=206058554]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.78, 0.7, 0.82, 1)
 theme_override_font_sizes/font_size = 26
 text = "Lv.0 / 0"
 horizontal_alignment = 1
 
-[node name="Effect" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox"]
+[node name="Effect" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox" unique_id=469984232]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.93, 0.76, 1)
 theme_override_font_sizes/font_size = 30
@@ -1105,7 +1095,7 @@ text = "현재 효과를 표시합니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="Description" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox"]
+[node name="Description" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox" unique_id=1709978497]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.78, 0.73, 0.82, 1)
@@ -1115,12 +1105,12 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="ActionRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox"]
+[node name="ActionRow" type="HBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox" unique_id=231200945]
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Cost" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox/ActionRow"]
+[node name="Cost" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox/ActionRow" unique_id=1865400806]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.95, 0.79, 0.35, 1)
@@ -1128,58 +1118,58 @@ theme_override_font_sizes/font_size = 22
 text = "필요 포인트  -"
 vertical_alignment = 1
 
-[node name="UpgradeButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox/ActionRow"]
+[node name="UpgradeButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/DetailPanel/Margin/VBox/ActionRow" unique_id=1872761536]
 custom_minimum_size = Vector2(250, 104)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 28
-text = "강화하기"
 disabled = true
+text = "강화하기"
 
-[node name="ResearchScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent"]
+[node name="ResearchScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent" unique_id=1922815803]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 3
 scroll_deadzone = 14
 
-[node name="ResearchList" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/ResearchScroll"]
+[node name="ResearchList" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/ResearchContent/ResearchScroll" unique_id=937025012]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="RelicContent" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
+[node name="RelicContent" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout" unique_id=1519644040]
 visible = false
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 
-[node name="DetailPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent"]
+[node name="DetailPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent" unique_id=1487396912]
 custom_minimum_size = Vector2(0, 310)
 layout_mode = 2
 
-[node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel"]
+[node name="Margin" type="MarginContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel" unique_id=817379358]
 layout_mode = 2
 theme_override_constants/margin_left = 26
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 26
 theme_override_constants/margin_bottom = 20
 
-[node name="HBox" type="HBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin"]
+[node name="HBox" type="HBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin" unique_id=1462472270]
 layout_mode = 2
 theme_override_constants/separation = 22
 
-[node name="IconPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox"]
+[node name="IconPanel" type="PanelContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox" unique_id=1116599705]
 custom_minimum_size = Vector2(174, 174)
 layout_mode = 2
 size_flags_vertical = 4
 
-[node name="Icon" type="TextureRect" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/IconPanel"]
+[node name="Icon" type="TextureRect" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/IconPanel" unique_id=35982078]
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Placeholder" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/IconPanel"]
+[node name="Placeholder" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/IconPanel" unique_id=81492551]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.48, 0.6, 1)
 theme_override_font_sizes/font_size = 56
@@ -1187,24 +1177,24 @@ text = "?"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Info" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox"]
+[node name="Info" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox" unique_id=1706743486]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 7
 
-[node name="Name" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info"]
+[node name="Name" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info" unique_id=97794193]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.86, 0.48, 1)
 theme_override_font_sizes/font_size = 30
 text = "유물을 선택하세요"
 
-[node name="Level" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info"]
+[node name="Level" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info" unique_id=1314726865]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.78, 0.7, 0.82, 1)
 theme_override_font_sizes/font_size = 21
 text = "Lv.0"
 
-[node name="Effect" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info"]
+[node name="Effect" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info" unique_id=1623069198]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.55, 0.93, 0.76, 1)
@@ -1213,83 +1203,84 @@ text = "유물 소환에서 조각을 획득하면 효과를 확인할 수 있�
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="GaugeText" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info"]
+[node name="GaugeText" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info" unique_id=279387306]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.78, 0.73, 0.82, 1)
 theme_override_font_sizes/font_size = 19
 text = "[ 0 / 30 ]"
 
-[node name="UpgradeButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info"]
+[node name="UpgradeButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/DetailPanel/Margin/HBox/Info" unique_id=1265422710]
 custom_minimum_size = Vector2(0, 58)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 21
-text = "조각 부족"
 disabled = true
+text = "조각 부족"
 
-[node name="FilterTabs" type="HBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent"]
+[node name="FilterTabs" type="HBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent" unique_id=1376339217]
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 theme_override_constants/separation = 7
 
-[node name="AllButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs"]
+[node name="AllButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs" unique_id=534274606]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 18
 text = "전체"
 
-[node name="AttackButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs"]
+[node name="AttackButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs" unique_id=423134764]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 18
 text = "공격"
 
-[node name="DefenseButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs"]
+[node name="DefenseButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs" unique_id=1879898495]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 18
 text = "방어"
 
-[node name="UtilityButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs"]
+[node name="UtilityButton" type="Button" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/FilterTabs" unique_id=1249210897]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 18
 text = "보조"
 
-[node name="RelicScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent"]
+[node name="RelicScroll" type="ScrollContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent" unique_id=1287408693]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 3
 scroll_deadzone = 14
 
-[node name="RelicList" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/RelicScroll"]
+[node name="RelicList" type="VBoxContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/RelicScroll" unique_id=1396206573]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
-[node name="RelicGrid" type="GridContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/RelicScroll/RelicList"]
+[node name="RelicGrid" type="GridContainer" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/RelicScroll/RelicList" unique_id=985536642]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 10
 columns = 4
 
-[node name="Empty" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/RelicScroll/RelicList"]
+[node name="Empty" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout/RelicContent/RelicScroll/RelicList" unique_id=814658146]
 custom_minimum_size = Vector2(0, 250)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.58, 0.53, 0.62, 1)
 theme_override_font_sizes/font_size = 22
-text = "등록된 유물이 없습니다.\n상점 유물 소환 시스템 추가 후 이곳에 표시됩니다."
+text = "등록된 유물이 없습니다.
+상점 유물 소환 시스템 추가 후 이곳에 표시됩니다."
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="Status" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout"]
+[node name="Status" type="Label" parent="SafeArea/Layout/Content/ResearchTab/ResearchLayout" unique_id=649144595]
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.73, 0.67, 0.78, 1)
@@ -1299,7 +1290,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="OtherTab" type="Control" parent="SafeArea/Layout/Content"]
+[node name="OtherTab" type="Control" parent="SafeArea/Layout/Content" unique_id=819026511]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -1308,7 +1299,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="OtherMargin" type="MarginContainer" parent="SafeArea/Layout/Content/OtherTab"]
+[node name="OtherMargin" type="MarginContainer" parent="SafeArea/Layout/Content/OtherTab" unique_id=1706607946]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -1320,157 +1311,153 @@ theme_override_constants/margin_top = 36
 theme_override_constants/margin_right = 42
 theme_override_constants/margin_bottom = 36
 
-[node name="VBox" type="VBoxContainer" parent="SafeArea/Layout/Content/OtherTab/OtherMargin"]
+[node name="VBox" type="VBoxContainer" parent="SafeArea/Layout/Content/OtherTab/OtherMargin" unique_id=701241761]
 layout_mode = 2
 theme_override_constants/separation = 24
 
-[node name="Title" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox"]
+[node name="Title" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox" unique_id=1646235652]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
 theme_override_font_sizes/font_size = 48
 text = "기타"
 horizontal_alignment = 1
 
-[node name="Tabs" type="HBoxContainer" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox"]
+[node name="Tabs" type="HBoxContainer" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox" unique_id=1323779013]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="SettingsTabButton" type="Button" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/Tabs"]
+[node name="SettingsTabButton" type="Button" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/Tabs" unique_id=2011507828]
 custom_minimum_size = Vector2(0, 86)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
 text = "설정"
 
-[node name="AccountTabButton" type="Button" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/Tabs"]
+[node name="AccountTabButton" type="Button" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/Tabs" unique_id=1506383738]
 custom_minimum_size = Vector2(0, 86)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
 text = "계정"
 
-[node name="SettingsPanel" type="VBoxContainer" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox"]
+[node name="SettingsPanel" type="VBoxContainer" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox" unique_id=1518803514]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 28
 
-[node name="AudioTitle" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel"]
+[node name="AudioTitle" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel" unique_id=689018537]
 layout_mode = 2
 theme_override_font_sizes/font_size = 38
 text = "오디오"
 
-[node name="BGMRow" type="HBoxContainer" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel"]
+[node name="BGMRow" type="HBoxContainer" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel" unique_id=246438612]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Label" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/BGMRow"]
+[node name="Label" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/BGMRow" unique_id=1666456600]
 custom_minimum_size = Vector2(210, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "배경음"
 
-[node name="Slider" type="HSlider" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/BGMRow"]
+[node name="Slider" type="HSlider" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/BGMRow" unique_id=1466014343]
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 1.0
 max_value = 10.0
-step = 1.0
 value = 10.0
 
-[node name="Value" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/BGMRow"]
+[node name="Value" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/BGMRow" unique_id=1264501561]
 custom_minimum_size = Vector2(72, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "10"
 horizontal_alignment = 1
 
-[node name="BGMMute" type="CheckBox" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel"]
+[node name="BGMMute" type="CheckBox" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel" unique_id=202435983]
 custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "배경음 끄기"
 
-[node name="SFXRow" type="HBoxContainer" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel"]
+[node name="SFXRow" type="HBoxContainer" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel" unique_id=1264697740]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Label" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/SFXRow"]
+[node name="Label" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/SFXRow" unique_id=2087194432]
 custom_minimum_size = Vector2(210, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "효과음"
 
-[node name="Slider" type="HSlider" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/SFXRow"]
+[node name="Slider" type="HSlider" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/SFXRow" unique_id=1586559414]
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 1.0
 max_value = 10.0
-step = 1.0
 value = 10.0
 
-[node name="Value" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/SFXRow"]
+[node name="Value" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel/SFXRow" unique_id=1241010322]
 custom_minimum_size = Vector2(72, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "10"
 horizontal_alignment = 1
 
-[node name="SFXMute" type="CheckBox" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel"]
+[node name="SFXMute" type="CheckBox" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel" unique_id=1192809765]
 custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "효과음 끄기"
 
-[node name="AudioGuide" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel"]
+[node name="AudioGuide" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/SettingsPanel" unique_id=2145000444]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.67, 0.63, 0.72, 1)
 theme_override_font_sizes/font_size = 24
 text = "음량은 1~10 단계로 저장되며 전투에도 즉시 적용됩니다."
 autowrap_mode = 2
 
-[node name="AccountPanel" type="VBoxContainer" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox"]
+[node name="AccountPanel" type="VBoxContainer" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox" unique_id=2009681873]
 visible = false
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 22
 
-[node name="AccountTitle" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/AccountPanel"]
+[node name="AccountTitle" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/AccountPanel" unique_id=221297060]
 layout_mode = 2
 theme_override_font_sizes/font_size = 38
 text = "계정"
 horizontal_alignment = 1
 
-[node name="Guide" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/AccountPanel"]
+[node name="Guide" type="Label" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/AccountPanel" unique_id=1340711026]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.67, 0.77, 1)
 theme_override_font_sizes/font_size = 26
 text = "로그인 연동은 추후 연결 예정입니다."
 horizontal_alignment = 1
 
-[node name="KakaoLogin" type="Button" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/AccountPanel"]
+[node name="KakaoLogin" type="Button" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/AccountPanel" unique_id=1232350852]
 custom_minimum_size = Vector2(0, 112)
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
+disabled = true
 text = "카카오 로그인 · 준비 중"
-disabled = true
 
-[node name="GoogleLogin" type="Button" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/AccountPanel"]
+[node name="GoogleLogin" type="Button" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/AccountPanel" unique_id=625338763]
 custom_minimum_size = Vector2(0, 112)
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
+disabled = true
 text = "구글 로그인 · 준비 중"
-disabled = true
 
-[node name="AppLogin" type="Button" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/AccountPanel"]
+[node name="AppLogin" type="Button" parent="SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/AccountPanel" unique_id=1127619681]
 custom_minimum_size = Vector2(0, 112)
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-text = "앱 로그인 · 준비 중"
 disabled = true
+text = "앱 로그인 · 준비 중"
 
-
-
-[node name="ShopResultOverlay" type="Control" parent="."]
+[node name="ShopResultOverlay" type="Control" parent="." unique_id=366762745]
 visible = false
 z_index = 105
 layout_mode = 1
@@ -1479,9 +1466,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 0
 
-[node name="Dim" type="ColorRect" parent="ShopResultOverlay"]
+[node name="Dim" type="ColorRect" parent="ShopResultOverlay" unique_id=2054525858]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -1489,9 +1475,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.01, 0.008, 0.015, 0.88)
-mouse_filter = 0
 
-[node name="Panel" type="PanelContainer" parent="ShopResultOverlay"]
+[node name="Panel" type="PanelContainer" parent="ShopResultOverlay" unique_id=1846399274]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -1505,22 +1490,22 @@ offset_bottom = 390.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Margin" type="MarginContainer" parent="ShopResultOverlay/Panel"]
+[node name="Margin" type="MarginContainer" parent="ShopResultOverlay/Panel" unique_id=692071902]
 layout_mode = 2
 theme_override_constants/margin_left = 44
 theme_override_constants/margin_top = 38
 theme_override_constants/margin_right = 44
 theme_override_constants/margin_bottom = 34
 
-[node name="VBox" type="VBoxContainer" parent="ShopResultOverlay/Panel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="ShopResultOverlay/Panel/Margin" unique_id=498268861]
 layout_mode = 2
 theme_override_constants/separation = 18
 
-[node name="Header" type="HBoxContainer" parent="ShopResultOverlay/Panel/Margin/VBox"]
+[node name="Header" type="HBoxContainer" parent="ShopResultOverlay/Panel/Margin/VBox" unique_id=1651709199]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="ShopResultOverlay/Panel/Margin/VBox/Header"]
+[node name="Title" type="Label" parent="ShopResultOverlay/Panel/Margin/VBox/Header" unique_id=175906896]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.9, 0.66, 1)
@@ -1528,28 +1513,28 @@ theme_override_font_sizes/font_size = 38
 text = "최근 소환 내역"
 vertical_alignment = 1
 
-[node name="CloseButton" type="Button" parent="ShopResultOverlay/Panel/Margin/VBox/Header"]
+[node name="CloseButton" type="Button" parent="ShopResultOverlay/Panel/Margin/VBox/Header" unique_id=1828496167]
 custom_minimum_size = Vector2(112, 66)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 26
 text = "닫기"
 
-[node name="Guide" type="Label" parent="ShopResultOverlay/Panel/Margin/VBox"]
+[node name="Guide" type="Label" parent="ShopResultOverlay/Panel/Margin/VBox" unique_id=928568390]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.65, 0.75, 1)
 theme_override_font_sizes/font_size = 21
 text = "현재 계정의 최근 몬스터 소환 최대 100회를 표시합니다."
 horizontal_alignment = 1
 
-[node name="ResultScroll" type="ScrollContainer" parent="ShopResultOverlay/Panel/Margin/VBox"]
+[node name="ResultScroll" type="ScrollContainer" parent="ShopResultOverlay/Panel/Margin/VBox" unique_id=795068807]
 custom_minimum_size = Vector2(0, 500)
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 3
 
-[node name="Result" type="Label" parent="ShopResultOverlay/Panel/Margin/VBox/ResultScroll"]
+[node name="Result" type="Label" parent="ShopResultOverlay/Panel/Margin/VBox/ResultScroll" unique_id=1229355912]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.86, 0.93, 1)
@@ -1558,7 +1543,7 @@ text = "아직 소환 내역이 없습니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="Footer" type="Label" parent="ShopResultOverlay/Panel/Margin/VBox"]
+[node name="Footer" type="Label" parent="ShopResultOverlay/Panel/Margin/VBox" unique_id=1181375074]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.55, 0.64, 1)
 theme_override_font_sizes/font_size = 18
@@ -1566,7 +1551,7 @@ text = "최신 순 · 최대 100회 저장 · 획득 조각은 즉시 컬렉션�
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="ShopRatesOverlay" type="Control" parent="."]
+[node name="ShopRatesOverlay" type="Control" parent="." unique_id=963860138]
 visible = false
 z_index = 106
 layout_mode = 1
@@ -1575,9 +1560,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 0
 
-[node name="Dim" type="ColorRect" parent="ShopRatesOverlay"]
+[node name="Dim" type="ColorRect" parent="ShopRatesOverlay" unique_id=53683941]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -1585,9 +1569,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.01, 0.008, 0.015, 0.88)
-mouse_filter = 0
 
-[node name="Panel" type="PanelContainer" parent="ShopRatesOverlay"]
+[node name="Panel" type="PanelContainer" parent="ShopRatesOverlay" unique_id=544932015]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -1601,22 +1584,22 @@ offset_bottom = 330.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Margin" type="MarginContainer" parent="ShopRatesOverlay/Panel"]
+[node name="Margin" type="MarginContainer" parent="ShopRatesOverlay/Panel" unique_id=1474506128]
 layout_mode = 2
 theme_override_constants/margin_left = 44
 theme_override_constants/margin_top = 38
 theme_override_constants/margin_right = 44
 theme_override_constants/margin_bottom = 34
 
-[node name="VBox" type="VBoxContainer" parent="ShopRatesOverlay/Panel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="ShopRatesOverlay/Panel/Margin" unique_id=1498417646]
 layout_mode = 2
 theme_override_constants/separation = 18
 
-[node name="Header" type="HBoxContainer" parent="ShopRatesOverlay/Panel/Margin/VBox"]
+[node name="Header" type="HBoxContainer" parent="ShopRatesOverlay/Panel/Margin/VBox" unique_id=696355833]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="ShopRatesOverlay/Panel/Margin/VBox/Header"]
+[node name="Title" type="Label" parent="ShopRatesOverlay/Panel/Margin/VBox/Header" unique_id=640732790]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.9, 0.66, 1)
@@ -1624,48 +1607,49 @@ theme_override_font_sizes/font_size = 38
 text = "상품 확률"
 vertical_alignment = 1
 
-[node name="CloseButton" type="Button" parent="ShopRatesOverlay/Panel/Margin/VBox/Header"]
+[node name="CloseButton" type="Button" parent="ShopRatesOverlay/Panel/Margin/VBox/Header" unique_id=1786570645]
 custom_minimum_size = Vector2(112, 66)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 26
 text = "닫기"
 
-[node name="Guide" type="Label" parent="ShopRatesOverlay/Panel/Margin/VBox"]
+[node name="Guide" type="Label" parent="ShopRatesOverlay/Panel/Margin/VBox" unique_id=2071410937]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.65, 0.75, 1)
 theme_override_font_sizes/font_size = 21
 text = "몬스터 소환 상품의 등급별 확률과 조각 수량입니다."
 horizontal_alignment = 1
 
-[node name="RatesPanel" type="PanelContainer" parent="ShopRatesOverlay/Panel/Margin/VBox"]
+[node name="RatesPanel" type="PanelContainer" parent="ShopRatesOverlay/Panel/Margin/VBox" unique_id=1552381798]
 custom_minimum_size = Vector2(0, 360)
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Margin" type="MarginContainer" parent="ShopRatesOverlay/Panel/Margin/VBox/RatesPanel"]
+[node name="Margin" type="MarginContainer" parent="ShopRatesOverlay/Panel/Margin/VBox/RatesPanel" unique_id=477633253]
 layout_mode = 2
 theme_override_constants/margin_left = 28
 theme_override_constants/margin_top = 24
 theme_override_constants/margin_right = 28
 theme_override_constants/margin_bottom = 24
 
-[node name="Scroll" type="ScrollContainer" parent="ShopRatesOverlay/Panel/Margin/VBox/RatesPanel/Margin"]
+[node name="Scroll" type="ScrollContainer" parent="ShopRatesOverlay/Panel/Margin/VBox/RatesPanel/Margin" unique_id=1005204007]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Rates" type="Label" parent="ShopRatesOverlay/Panel/Margin/VBox/RatesPanel/Margin/Scroll"]
+[node name="Rates" type="Label" parent="ShopRatesOverlay/Panel/Margin/VBox/RatesPanel/Margin/Scroll" unique_id=1854493103]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.86, 0.93, 1)
 theme_override_font_sizes/font_size = 25
-text = "일반        70%        조각 10~30\n희귀        25%        조각 3~8\n최고등급     5%        조각 1"
+text = "일반        70%        조각 10~30
+희귀        25%        조각 3~8
+최고등급     5%        조각 1"
 horizontal_alignment = 1
-vertical_alignment = 0
 autowrap_mode = 2
 
-[node name="Notice" type="Label" parent="ShopRatesOverlay/Panel/Margin/VBox"]
+[node name="Notice" type="Label" parent="ShopRatesOverlay/Panel/Margin/VBox" unique_id=1867890354]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.55, 0.64, 1)
 theme_override_font_sizes/font_size = 18
@@ -1673,7 +1657,7 @@ text = "각 소환의 등급 추첨은 독립적으로 적용됩니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="MonsterDetailOverlay" type="Control" parent="."]
+[node name="MonsterDetailOverlay" type="Control" parent="." unique_id=358938714]
 visible = false
 z_index = 100
 layout_mode = 1
@@ -1682,9 +1666,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 0
 
-[node name="Dim" type="ColorRect" parent="MonsterDetailOverlay"]
+[node name="Dim" type="ColorRect" parent="MonsterDetailOverlay" unique_id=2089457002]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -1692,9 +1675,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.01, 0.008, 0.015, 0.88)
-mouse_filter = 0
 
-[node name="Panel" type="PanelContainer" parent="MonsterDetailOverlay"]
+[node name="Panel" type="PanelContainer" parent="MonsterDetailOverlay" unique_id=1827727749]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -1708,25 +1690,25 @@ offset_bottom = 650.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Margin" type="MarginContainer" parent="MonsterDetailOverlay/Panel"]
+[node name="Margin" type="MarginContainer" parent="MonsterDetailOverlay/Panel" unique_id=1901277019]
 layout_mode = 2
 theme_override_constants/margin_left = 46
 theme_override_constants/margin_top = 34
 theme_override_constants/margin_right = 46
 theme_override_constants/margin_bottom = 30
 
-[node name="VBox" type="VBoxContainer" parent="MonsterDetailOverlay/Panel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="MonsterDetailOverlay/Panel/Margin" unique_id=1993655653]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="Header" type="HBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox"]
+[node name="Header" type="HBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox" unique_id=470141076]
 layout_mode = 2
 
-[node name="LeftSpacer" type="Control" parent="MonsterDetailOverlay/Panel/Margin/VBox/Header"]
+[node name="LeftSpacer" type="Control" parent="MonsterDetailOverlay/Panel/Margin/VBox/Header" unique_id=74449116]
 custom_minimum_size = Vector2(120, 74)
 layout_mode = 2
 
-[node name="Title" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Header"]
+[node name="Title" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/Header" unique_id=264318314]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.88, 0.62, 1)
@@ -1735,13 +1717,13 @@ text = "몬스터 상세"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="CloseButton" type="Button" parent="MonsterDetailOverlay/Panel/Margin/VBox/Header"]
+[node name="CloseButton" type="Button" parent="MonsterDetailOverlay/Panel/Margin/VBox/Header" unique_id=1690456854]
 custom_minimum_size = Vector2(120, 74)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "닫기"
 
-[node name="Guide" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox"]
+[node name="Guide" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox" unique_id=535594348]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.65, 0.75, 1)
 theme_override_font_sizes/font_size = 24
@@ -1749,33 +1731,33 @@ text = "일반과 엘리트의 전투 능력을 한눈에 비교합니다."
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="DetailScroll" type="ScrollContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox"]
+[node name="DetailScroll" type="ScrollContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox" unique_id=1946038091]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 3
 
-[node name="Compare" type="HBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll"]
+[node name="Compare" type="HBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll" unique_id=255438048]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 18
 
-[node name="NormalPanel" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare"]
+[node name="NormalPanel" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare" unique_id=1543634884]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Margin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel"]
+[node name="Margin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel" unique_id=624581864]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 22
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 22
 
-[node name="VBox" type="VBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin" unique_id=1321092262]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Badge" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox"]
+[node name="Badge" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox" unique_id=1336801037]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.9, 1, 1)
 theme_override_font_sizes/font_size = 24
@@ -1783,36 +1765,35 @@ text = "일반"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="PortraitFrame" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox"]
+[node name="PortraitFrame" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox" unique_id=2119951263]
 custom_minimum_size = Vector2(0, 190)
-layout_mode = 2
 clip_contents = true
+layout_mode = 2
 
-[node name="PortraitMargin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox/PortraitFrame"]
+[node name="PortraitMargin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox/PortraitFrame" unique_id=1171529145]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 18
 
-[node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox/PortraitFrame/PortraitMargin"]
+[node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox/PortraitFrame/PortraitMargin" unique_id=1154464549]
+texture_filter = 1
 custom_minimum_size = Vector2(0, 154)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
-texture_filter = 1
 
-[node name="Name" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox"]
+[node name="Name" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox" unique_id=390202285]
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
 text = "몬스터"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Stats" type="RichTextLabel" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox"]
+[node name="Stats" type="RichTextLabel" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox" unique_id=1839331826]
 custom_minimum_size = Vector2(0, 310)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.86, 0.93, 1)
 theme_override_font_sizes/normal_font_size = 24
 theme_override_font_sizes/bold_font_size = 24
 bbcode_enabled = true
@@ -1820,35 +1801,35 @@ text = "기본 스탯"
 fit_content = true
 scroll_active = false
 
-[node name="SpecialTitle" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox"]
+[node name="SpecialTitle" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox" unique_id=878970570]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
 theme_override_font_sizes/font_size = 24
 text = "획득 가능한 특수증강"
 
-[node name="Specials" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox"]
+[node name="Specials" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/NormalPanel/Margin/VBox" unique_id=1895863081]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.82, 0.77, 0.86, 1)
 theme_override_font_sizes/font_size = 24
 text = "특수증강"
 autowrap_mode = 2
 
-[node name="ElitePanel" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare"]
+[node name="ElitePanel" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare" unique_id=2121966271]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Margin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel"]
+[node name="Margin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel" unique_id=461725755]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 22
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 22
 
-[node name="VBox" type="VBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin" unique_id=438309490]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Badge" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox"]
+[node name="Badge" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox" unique_id=60940495]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.7, 0.36, 1)
 theme_override_font_sizes/font_size = 24
@@ -1856,36 +1837,35 @@ text = "엘리트 · 기본 돌연변이"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="PortraitFrame" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox"]
+[node name="PortraitFrame" type="PanelContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox" unique_id=1239971337]
 custom_minimum_size = Vector2(0, 190)
-layout_mode = 2
 clip_contents = true
+layout_mode = 2
 
-[node name="PortraitMargin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox/PortraitFrame"]
+[node name="PortraitMargin" type="MarginContainer" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox/PortraitFrame" unique_id=33494192]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 18
 
-[node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox/PortraitFrame/PortraitMargin"]
+[node name="Portrait" type="TextureRect" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox/PortraitFrame/PortraitMargin" unique_id=812516729]
+texture_filter = 1
 custom_minimum_size = Vector2(0, 154)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
-texture_filter = 1
 
-[node name="Name" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox"]
+[node name="Name" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox" unique_id=142506628]
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
 text = "돌연변이 몬스터"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Stats" type="RichTextLabel" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox"]
+[node name="Stats" type="RichTextLabel" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox" unique_id=865936019]
 custom_minimum_size = Vector2(0, 310)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.92, 0.86, 0.76, 1)
 theme_override_font_sizes/normal_font_size = 24
 theme_override_font_sizes/bold_font_size = 24
 bbcode_enabled = true
@@ -1893,16 +1873,15 @@ text = "엘리트 스탯"
 fit_content = true
 scroll_active = false
 
-[node name="SkillTitle" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox"]
+[node name="SkillTitle" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox" unique_id=1669940323]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.76, 0.36, 1)
 theme_override_font_sizes/font_size = 24
 text = "엘리트 기술"
 
-[node name="Skills" type="RichTextLabel" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox"]
+[node name="Skills" type="RichTextLabel" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox" unique_id=1233270567]
 custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.82, 0.77, 0.86, 1)
 theme_override_font_sizes/normal_font_size = 24
 theme_override_font_sizes/bold_font_size = 24
 bbcode_enabled = true
@@ -1910,14 +1889,14 @@ text = "엘리트 기술"
 fit_content = true
 scroll_active = false
 
-[node name="Note" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox"]
+[node name="Note" type="Label" parent="MonsterDetailOverlay/Panel/Margin/VBox/DetailScroll/Compare/ElitePanel/Margin/VBox" unique_id=2144171062]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.6, 0.69, 1)
 theme_override_font_sizes/font_size = 24
 text = "실제 돌연변이/대돌연변이/보스 이벤트에 따라 배율은 달라질 수 있습니다."
 autowrap_mode = 2
 
-[node name="StageSelectOverlay" type="Control" parent="."]
+[node name="StageSelectOverlay" type="Control" parent="." unique_id=1104206386]
 visible = false
 z_index = 110
 layout_mode = 1
@@ -1926,9 +1905,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 0
 
-[node name="Dim" type="ColorRect" parent="StageSelectOverlay"]
+[node name="Dim" type="ColorRect" parent="StageSelectOverlay" unique_id=1146253323]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -1936,9 +1914,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.01, 0.008, 0.015, 0.9)
-mouse_filter = 0
 
-[node name="Panel" type="PanelContainer" parent="StageSelectOverlay"]
+[node name="Panel" type="PanelContainer" parent="StageSelectOverlay" unique_id=1057225767]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -1952,22 +1929,22 @@ offset_bottom = 590.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Margin" type="MarginContainer" parent="StageSelectOverlay/Panel"]
+[node name="Margin" type="MarginContainer" parent="StageSelectOverlay/Panel" unique_id=239791163]
 layout_mode = 2
 theme_override_constants/margin_left = 54
 theme_override_constants/margin_top = 54
 theme_override_constants/margin_right = 54
 theme_override_constants/margin_bottom = 48
 
-[node name="VBox" type="VBoxContainer" parent="StageSelectOverlay/Panel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="StageSelectOverlay/Panel/Margin" unique_id=660404153]
 layout_mode = 2
 theme_override_constants/separation = 18
 
-[node name="Header" type="HBoxContainer" parent="StageSelectOverlay/Panel/Margin/VBox"]
+[node name="Header" type="HBoxContainer" parent="StageSelectOverlay/Panel/Margin/VBox" unique_id=970579261]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="Title" type="Label" parent="StageSelectOverlay/Panel/Margin/VBox/Header"]
+[node name="Title" type="Label" parent="StageSelectOverlay/Panel/Margin/VBox/Header" unique_id=1013845655]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.86, 0.4, 1)
@@ -1975,34 +1952,34 @@ theme_override_font_sizes/font_size = 42
 text = "스테이지 선택"
 vertical_alignment = 1
 
-[node name="CloseButton" type="Button" parent="StageSelectOverlay/Panel/Margin/VBox/Header"]
+[node name="CloseButton" type="Button" parent="StageSelectOverlay/Panel/Margin/VBox/Header" unique_id=1815669589]
 custom_minimum_size = Vector2(112, 70)
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "닫기"
 
-[node name="Guide" type="Label" parent="StageSelectOverlay/Panel/Margin/VBox"]
+[node name="Guide" type="Label" parent="StageSelectOverlay/Panel/Margin/VBox" unique_id=365725124]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.76, 0.69, 0.8, 1)
 theme_override_font_sizes/font_size = 24
 text = "이동할 침입자 기록을 선택하세요."
 horizontal_alignment = 1
 
-[node name="Ornament" type="Label" parent="StageSelectOverlay/Panel/Margin/VBox"]
+[node name="Ornament" type="Label" parent="StageSelectOverlay/Panel/Margin/VBox" unique_id=1569292136]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.31, 0.82, 1)
 theme_override_font_sizes/font_size = 22
 text = "◆ ───────── ◆"
 horizontal_alignment = 1
 
-[node name="StageGrid" type="GridContainer" parent="StageSelectOverlay/Panel/Margin/VBox"]
+[node name="StageGrid" type="GridContainer" parent="StageSelectOverlay/Panel/Margin/VBox" unique_id=1146045872]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/h_separation = 16
 theme_override_constants/v_separation = 16
 columns = 2
 
-[node name="Footer" type="Label" parent="StageSelectOverlay/Panel/Margin/VBox"]
+[node name="Footer" type="Label" parent="StageSelectOverlay/Panel/Margin/VBox" unique_id=933419247]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.58, 0.52, 0.62, 1)
 theme_override_font_sizes/font_size = 20
@@ -2010,7 +1987,7 @@ text = "잠긴 스테이지는 이전 스테이지 토벌 후 선택할 수 있�
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="BottomNav" type="PanelContainer" parent="."]
+[node name="BottomNav" type="PanelContainer" parent="." unique_id=285614331]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -2020,46 +1997,46 @@ offset_top = -180.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="NavMargin" type="MarginContainer" parent="BottomNav"]
+[node name="NavMargin" type="MarginContainer" parent="BottomNav" unique_id=2003089642]
 layout_mode = 2
 theme_override_constants/margin_left = 14
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 14
 theme_override_constants/margin_bottom = 12
 
-[node name="NavButtons" type="HBoxContainer" parent="BottomNav/NavMargin"]
+[node name="NavButtons" type="HBoxContainer" parent="BottomNav/NavMargin" unique_id=1052478612]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ShopButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
+[node name="ShopButton" type="Button" parent="BottomNav/NavMargin/NavButtons" unique_id=579337388]
 custom_minimum_size = Vector2(0, 124)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
 text = "상점"
 
-[node name="TeamButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
+[node name="TeamButton" type="Button" parent="BottomNav/NavMargin/NavButtons" unique_id=1887217061]
 custom_minimum_size = Vector2(0, 124)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
 text = "팀 편성"
 
-[node name="MainButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
+[node name="MainButton" type="Button" parent="BottomNav/NavMargin/NavButtons" unique_id=456869370]
 custom_minimum_size = Vector2(0, 124)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
 text = "메인"
 
-[node name="ResearchButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
+[node name="ResearchButton" type="Button" parent="BottomNav/NavMargin/NavButtons" unique_id=246100285]
 custom_minimum_size = Vector2(0, 124)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
 text = "연구"
 
-[node name="OtherButton" type="Button" parent="BottomNav/NavMargin/NavButtons"]
+[node name="OtherButton" type="Button" parent="BottomNav/NavMargin/NavButtons" unique_id=408960428]
 custom_minimum_size = Vector2(0, 124)
 layout_mode = 2
 size_flags_horizontal = 3
