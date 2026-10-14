@@ -55,3 +55,7 @@ renderer/rendering_method.mobile="gl_compatibility"
 [input_devices]
 
 pointing/emulate_mouse_from_touch=true
+
+[testing]
+
+allow_coupons=true

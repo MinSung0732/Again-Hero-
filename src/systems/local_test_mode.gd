@@ -13,9 +13,12 @@ var normal_guest_directory := "user://"
 var marker_path := "user://local_test_mode.cfg"
 var test_directory := "user://local_test"
 
+static func coupons_enabled() -> bool:
+	return OS.is_debug_build() or bool(ProjectSettings.get_setting("testing/allow_coupons",false))
+
 func _ready() -> void:
-	# Store releases must never resume a developer coupon save namespace.
-	if not OS.is_debug_build(): return
+	# Test distribution builds may opt into the same isolated coupon namespace.
+	if not coupons_enabled(): return
 	var config := ConfigFile.new()
 	if config.load(marker_path) == OK:
 		active = bool(config.get_value("mode", "active", false))
@@ -56,7 +59,7 @@ func reset_progress(test: bool = false) -> bool:
 	return SCOPE.save_configs(configs) == OK
 
 func apply_coupon(code: String) -> bool:
-	if not OS.is_debug_build(): return false
+	if not coupons_enabled(): return false
 	if code not in ["localtest", "normaltest", "tutorialtest"]:
 		return false
 	var cloud := get_node("/root/CloudStore")
@@ -211,7 +214,7 @@ func has_all_monsters_unlocked() -> bool:
 	)
 
 func has_all_heroes_unlocked() -> bool:
-	return OS.is_debug_build() and has_all_monsters_unlocked()
+	return coupons_enabled() and has_all_monsters_unlocked()
 
 
 # Revalidate at draw time: a stale UI selection must never affect real saves.

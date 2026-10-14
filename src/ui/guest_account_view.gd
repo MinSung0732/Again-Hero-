@@ -5,6 +5,8 @@ var lobby: Control
 var panel: VBoxContainer
 var buttons: Array[Button] = []
 var notice: Control
+var link_status: Label
+var cancel_button: Button
 
 func install(host: Control, parent: Control) -> void:
 	lobby = host
@@ -28,9 +30,20 @@ func install(host: Control, parent: Control) -> void:
 		lobby._apply_lobby_button_skin(button, item[1] != "reset", 30)
 		buttons.append(button)
 		button.pressed.connect(_reset_notice if item[1] == "reset" else gateway.begin_guest_link.bind(String(item[1])))
+	link_status = Label.new(); link_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	link_status.add_theme_font_size_override("font_size",24); panel.add_child(link_status)
+	cancel_button = Button.new(); cancel_button.text = "연동 취소"; cancel_button.custom_minimum_size.y = 88
+	panel.add_child(cancel_button); lobby._apply_lobby_button_skin(cancel_button,false,28)
+	cancel_button.pressed.connect(func():
+		if gateway.guest_link_busy: return
+		gateway.cancel_guest_link(); link_status.text = "연동을 취소했습니다.")
+	gateway.guest_link_state_changed.connect(refresh)
+	gateway.guest_link_status.connect(_status)
 	gateway.guest_link_failed.connect(_failed)
 	gateway.authenticated.connect(_linked)
 	lobby.tree_exiting.connect(func():
+		if gateway.guest_link_state_changed.is_connected(refresh): gateway.guest_link_state_changed.disconnect(refresh)
+		if gateway.guest_link_status.is_connected(_status): gateway.guest_link_status.disconnect(_status)
 		if gateway.guest_link_failed.is_connected(_failed): gateway.guest_link_failed.disconnect(_failed)
 		if gateway.authenticated.is_connected(_linked): gateway.authenticated.disconnect(_linked), CONNECT_ONE_SHOT)
 	refresh()
@@ -38,7 +51,14 @@ func install(host: Control, parent: Control) -> void:
 func refresh() -> void:
 	panel.visible = GUEST.is_guest()
 	var gateway := lobby.get_node("/root/LoginGateway")
-	for button in buttons: button.disabled = gateway.guest_link_busy or gateway.withdrawal_busy
+	var pending: bool = gateway.is_guest_link_pending()
+	for button in buttons: button.disabled = pending or gateway.withdrawal_busy
+	cancel_button.visible = pending
+	cancel_button.disabled = gateway.guest_link_busy
+
+func _status(message: String) -> void:
+	link_status.text = message
+	refresh()
 
 func _modal() -> Control:
 	if not is_instance_valid(notice):

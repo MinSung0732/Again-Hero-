@@ -187,10 +187,10 @@ func _android_package_name() -> String:
 # Focus is requested only after the loopback callback has passed Host/nonce
 # checks. This transports no code/token and does not change OAuth verification.
 func _focus_windows_game() -> void:
-	var command := "$w=New-Object -ComObject WScript.Shell;[void]$w.AppActivate(%d)" % OS.get_process_id()
-	OS.create_process("powershell.exe", PackedStringArray([
-		"-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", command
-	]), false)
+	var window := get_window()
+	if window != null:
+		window.grab_focus()
+		window.request_attention()
 
 func _drop_peer() -> void:
 	if _peer != null:

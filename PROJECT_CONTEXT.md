@@ -1,3 +1,10 @@
+## 2026-10-15 — 테스트 배포 쿠폰·게스트 연동 상태 보강
+
+- localtest/normaltest/tutorialtest가릴리스EXE에서OS.is_debug_build로차단되던정책에testing/allow_coupons옵트인추가.현재테스트프로젝트true,재실행marker복원·용사전체해금도동일정책.기존분리user://local_test/튜토리얼미리보기·원본게스트복귀·클라우드격리유지.정식배포시setting false로제한가능.
+- 게스트Google/카카오연동의조용한busy/계정상태반환을안내로변경.브라우저대기·취소·실패·이관중상태신호,대기중두provider중복요청방지/연동취소버튼/실패후재시도.이관중취소차단,게스트-신규계정RPC/보상/서버인증변경없음.
+- Windows로그인후포커스를PowerShell/WScript실행대신Window.grab_focus/request_attention으로변경.세션DPAPI암호화는보존.악성코드/SmartScreen탐지재현·해제확인은미실행,서명/탐지명/파일샘플없어오탐단정불가.
+- GDScript구문4파일·옵트인/PKCE/loopback/DPAPI보존·상태신호/diff정적검사PASS.Godot실행/WindowsGoogle·Kakao실계정/Defender/정식서명/클라우드RPC검증미실행.
+
 ## 2026-10-15 — 뽑기 스킵 후 초월 연출 유지
 
 - SKIP/ESC는일반문열기·일반등장카드만생략,결과중아직보지않은초월컷신을뽑기순서대로재생후전체결과표시.동일초월이여러번나오면결과index별각1회,이미재생한초월은중복재생없음.

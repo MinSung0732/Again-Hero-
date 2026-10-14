@@ -5,6 +5,8 @@ const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const VAULT := preload("res://src/network/session_vault.gd")
 const GUEST := preload("res://src/systems/guest_progress_store.gd")
 signal guest_link_failed(message: String)
+signal guest_link_state_changed
+signal guest_link_status(message: String)
 var guest_link_busy := false
 var _guest_link_intent: Dictionary = {}
 signal login_requested(provider: String)
@@ -38,7 +40,7 @@ func _ready() -> void:
 	add_child(_vault)
 	_cloud.status_changed.connect(func(message: String): login_unavailable.emit(message))
 	_oauth = OAUTH.new()
-	_oauth.notice.connect(func(message: String): login_unavailable.emit(message))
+	_oauth.notice.connect(_on_oauth_notice)
 	_oauth.validated.connect(_on_validated)
 	add_child(_oauth)
 	_refresh_timer = Timer.new()
@@ -220,8 +222,29 @@ func begin_local_guest(preserve_session: bool = false) -> void:
 	local_guest_active = true
 	local_guest_started.emit()
 
+func is_guest_link_pending() -> bool:
+	return guest_link_busy or (not _guest_link_intent.is_empty() and is_instance_valid(_oauth) and _oauth.busy)
+
+func _on_oauth_notice(message: String) -> void:
+	login_unavailable.emit(message)
+	if _guest_link_intent.is_empty(): return
+	if _oauth.busy:
+		guest_link_status.emit(message)
+	else:
+		_guest_link_intent.clear()
+		guest_link_failed.emit(message)
+	guest_link_state_changed.emit()
+
 func begin_guest_link(provider: String) -> void:
-	if guest_link_busy or withdrawal_busy or _auth_busy or not user_id.is_empty() or provider not in ["google", "kakao"] or not GUEST.is_guest(): return
+	if is_guest_link_pending():
+		guest_link_status.emit("브라우저에서 연동을 완료하거나 연동 취소 후 다시 선택해 주세요.")
+		return
+	if withdrawal_busy or _auth_busy:
+		guest_link_failed.emit("계정 상태를 확인 중입니다. 잠시 후 다시 시도해 주세요.")
+		return
+	if not user_id.is_empty() or provider not in ["google","kakao"] or not GUEST.is_guest():
+		guest_link_failed.emit("게스트 계정에서 사용할 수 있습니다.")
+		return
 	var guest := GUEST.capture()
 	if guest.is_empty():
 		guest_link_failed.emit("게스트 저장을 확인하지 못했습니다. 진행도를 유지한 채 연동을 중단했습니다.")
@@ -229,11 +252,13 @@ func begin_guest_link(provider: String) -> void:
 	_session_generation += 1
 	_guest_link_intent = guest
 	_oauth.begin(provider)
+	guest_link_state_changed.emit()
 
 func cancel_guest_link() -> void:
 	_guest_link_intent.clear()
 	guest_link_busy = false
 	if is_instance_valid(_oauth): _oauth.cancel()
+	guest_link_state_changed.emit()
 
 func _link_validated_guest(session: Dictionary, user: Dictionary) -> void:
 	if guest_link_busy: return
@@ -244,6 +269,7 @@ func _link_validated_guest(session: Dictionary, user: Dictionary) -> void:
 		guest_link_failed.emit("게스트 저장이 변경되어 연동을 중단했습니다. 다시 시도해 주세요.")
 		return
 	guest_link_busy = true
+	guest_link_state_changed.emit()
 	login_unavailable.emit("게스트 계정 연동 확인 중…")
 	var result: Dictionary = await _cloud.link_guest(session, guest)
 	if generation != _session_generation or _guest_link_intent.is_empty(): return
