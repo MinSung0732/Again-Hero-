@@ -42,7 +42,7 @@ func install(lobby: Control) -> void:
 	box.add_child(entry)
 	var notice := Label.new()
 	notice.name = "Notice"
-	notice.text = "tutorialtest: 첫 가입 테스트\nnormaltest: 테스트 종료 · 기존 일반 저장으로 복귀"
+	notice.hide()
 	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	notice.add_theme_font_size_override("font_size",25)
 	box.add_child(notice)
@@ -66,19 +66,20 @@ func install(lobby: Control) -> void:
 	submit.custom_minimum_size.y = 80
 	submit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(submit)
-	button.pressed.connect(func(): overlay.show(); entry.clear(); entry.grab_focus())
+	button.pressed.connect(func(): overlay.show(); entry.clear(); notice.text = ""; notice.hide(); entry.grab_focus())
 	close.pressed.connect(overlay.hide)
 	submit.pressed.connect(func():
 		var code := entry.text.strip_edges().to_lower()
+		notice.show()
 		if code not in ["localtest","normaltest","tutorialtest"]:
 			notice.text = "사용할 수 없는 쿠폰입니다."
 			return
 		var mode := lobby.get_node("/root/LocalTestMode")
 		if code == "tutorialtest" and (mode.active or not mode.pending_reset_id.is_empty()):
-			notice.text = "normaltest로 로컬 테스트를 종료해 주세요.\n기존 저장으로 복귀한 뒤 사용할 수 있습니다."
+			notice.text = "현재 테스트 모드를 종료한 뒤 사용할 수 있습니다."
 			return
 		if code == "localtest" and mode.tutorial_preview:
-			notice.text = "normaltest로 첫 가입 테스트를 종료한 뒤 사용할 수 있습니다."
+			notice.text = "현재 테스트 모드를 종료한 뒤 사용할 수 있습니다."
 			return
 		submit.disabled = true
 		close.disabled = true
