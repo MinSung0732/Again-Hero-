@@ -1,3 +1,8 @@
+## 2026-10-15 — 프로필 배포 검증 스크립트의 임시 preload 수정
+
+- profile_export_smoke.gd가검증fixture에만생성되는pickup/profile texture harness를상수preload해일반에디터import에서구문오류를만들던문제수정. 경로상수와ResourceLoader.exists guard뒤동적Script load로변경. 일반프로젝트는fixture실행요청시skip안내,생성PCKfixture에서는원래검증유지. 실제프로필/픽업/옵션게임코드는변경없음.
+- GDScript구문·누락harness preload제거·builder재생성43script의존성/동적harness2파일존재·git diff --checkPASS. Godot바이너리없어실제에디터import미검증.
+
 ## 2026-10-15 — 시작화면 옵션 톱니바퀴 아이콘
 
 - 로그인전옵션버튼의글자를금색8톱니SVG아이콘으로교체. 기존터치영역/입력guard/모달/사운드저장유지,툴팁옵션유지. SVG직접preload로배포import의존성포함.

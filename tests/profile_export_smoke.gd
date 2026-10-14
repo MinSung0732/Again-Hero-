@@ -2,19 +2,26 @@ extends Node
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const STORE := preload("res://src/systems/profile_cosmetic_store.gd")
 const CATALOG := preload("res://src/data/profile_cosmetic_catalog.gd")
-const PICKUP := preload("res://tests/pickup_texture_harness.gd")
-const PROFILE_VIEW := preload("res://tests/profile_texture_harness.gd")
+const PICKUP_PATH := "res://tests/pickup_texture_harness.gd"
+const PROFILE_PATH := "res://tests/profile_texture_harness.gd"
 var checks := 0
 var failures := 0
 func check(ok: bool, message: String) -> void:
 	checks += 1
 	if not ok: failures += 1; push_error(message)
 func _ready() -> void:
+	# Harnesses exist only in the generated fixture, never the main project.
+	if not ResourceLoader.exists(PICKUP_PATH) or not ResourceLoader.exists(PROFILE_PATH):
+		print("PROFILE_EXPORT skipped: run tools/build_profile_export_fixture.py first")
+		get_tree().quit()
+		return
+	var pickup_script := load(PICKUP_PATH) as Script
+	var profile_script := load(PROFILE_PATH) as Script
 	var directory := "user://profile_export_"+str(Time.get_ticks_usec())
 	DirAccess.make_dir_recursive_absolute(directory); SCOPE.guest_directory = directory; SCOPE.select_guest()
 	var host := Control.new(); add_child(host)
-	var profile = PROFILE_VIEW.new(); profile.lobby = host
-	var pickup = PICKUP.new(); pickup.lobby = host
+	var profile = profile_script.new(); profile.lobby = host
+	var pickup = pickup_script.new(); pickup.lobby = host
 	for gender in ["male","female"]:
 		var config := ConfigFile.new(); config.set_value("player_profile","value",{"gender":gender,"nickname":"test"})
 		SCOPE.save_config(config,"user://stage_progress.cfg")
