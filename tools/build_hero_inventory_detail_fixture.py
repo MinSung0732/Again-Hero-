@@ -14,6 +14,7 @@ def method(name):
     start = source.index('func '+name+'('); end = source.find('\nfunc ',start+1)
     return source[start:end]+'\n'
 base = '''extends Control
+const PAUSE_VIEW := preload("res://src/ui/hero_pause_view.gd")
 const INVENTORY_DETAIL := preload("res://src/ui/hero_inventory_detail.gd")
 class HUD extends RefCounted:
 	const BATTLE_TOP := 470.0
@@ -35,6 +36,10 @@ var overlay_default_style: StyleBox
 func _ready() -> void:
 	add_child(inventory_dim); inventory_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); inventory_dim.hide()
 	add_child(overlay); overlay.add_child(overlay_rows); overlay.hide()
-func _pause() -> void: pass
+var last_action := ""
+func _kill_count() -> int: return 2238
+func _restart_from_pause(): last_action = "restart"
+func _open_settings(): last_action = "settings"
+func _leave(): last_action = "leave"
 '''
-(out/'tests/hero_inventory_binding_harness.gd').write_text(base+''.join(method(n) for n in ['_show_weapon_info','_show_passive_info','_show_inventory_detail','_clear_overlay','_resume','_unhandled_input']))
+(out/'tests/hero_inventory_binding_harness.gd').write_text(base+''.join(method(n) for n in ['_pause','_show_weapon_info','_show_passive_info','_show_inventory_detail','_clear_overlay','_resume','_unhandled_input']))

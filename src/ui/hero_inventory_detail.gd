@@ -48,25 +48,25 @@ static func build(parent: VBoxContainer, model: Dictionary, close: Callable) -> 
 	var x := button(bar,"×",close); x.name = "DetailClose"; x.custom_minimum_size = Vector2(76,76)
 	var scroll := ScrollContainer.new(); scroll.name = "DetailScroll"; scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL; scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; parent.add_child(scroll)
 	var body := VBoxContainer.new(); body.size_flags_horizontal = Control.SIZE_EXPAND_FILL; body.add_theme_constant_override("separation",18); scroll.add_child(body)
-	var head := HBoxContainer.new(); head.add_theme_constant_override("separation",20); body.add_child(head)
-	var frame := PanelContainer.new(); frame.add_theme_stylebox_override("panel",style(Color("0e101a"),Color("e2b958"),10)); head.add_child(frame)
+	var head := VBoxContainer.new(); head.name = "DetailIdentity"; head.add_theme_constant_override("separation",12); body.add_child(head)
+	var frame := PanelContainer.new(); frame.add_theme_stylebox_override("panel",style(Color("0e101a"),Color("e2b958"),10)); frame.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; head.add_child(frame)
 	var icon := TextureRect.new(); icon.name = "DetailIcon"; icon.texture = ICONS.texture(model.id); icon.custom_minimum_size = Vector2(160,160)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST; icon.mouse_filter = Control.MOUSE_FILTER_IGNORE; frame.add_child(icon)
 	var title := VBoxContainer.new(); title.size_flags_horizontal = Control.SIZE_EXPAND_FILL; title.add_theme_constant_override("separation",12); head.add_child(title)
-	label(title,String(model.name),34).name = "DetailTitle"
-	var badges := HBoxContainer.new(); badges.add_theme_constant_override("separation",8); title.add_child(badges)
+	var name_label := label(title,String(model.name),34); name_label.name = "DetailTitle"; name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var badges := HBoxContainer.new(); badges.name = "DetailBadges"; badges.alignment = BoxContainer.ALIGNMENT_CENTER; badges.add_theme_constant_override("separation",8); title.add_child(badges)
 	for text in [String(model.kind),"진화" if model.evolved else "",String(model.rank)]:
 		if text.is_empty(): continue
-		var badge := PanelContainer.new(); badge.add_theme_stylebox_override("panel",style(Color("292237"),Color("dabd73"),8)); badges.add_child(badge); label(badge,text,22,Color("ffe190"))
+		var badge := PanelContainer.new(); badge.add_theme_stylebox_override("panel",style(Color("292237"),Color("dabd73"),8)); badges.add_child(badge); var badge_text := label(badge,text,22,Color("ffe190")); badge_text.autowrap_mode = TextServer.AUTOWRAP_OFF
 	label(body,String(model.description),24,Color("acb4c9"))
 	var stats := section(body,"기본 능력치",Color("f1ca67")); stats.name = "DetailStats"
 	for row in model.rows:
-		var line := HBoxContainer.new(); stats.add_child(line)
+		var line := HBoxContainer.new(); line.name = "StatRow"; line.custom_minimum_size.y = 48; stats.add_child(line)
 		line.add_theme_constant_override("separation",14)
 		var glyph := TextureRect.new(); glyph.texture = ICONS.texture(String(ROW_ICONS.get(String(row[0]),model.id))); glyph.custom_minimum_size = Vector2(32,32)
 		glyph.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; glyph.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; glyph.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST; glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE; line.add_child(glyph)
 		var key := label(line,String(row[0]),24); key.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var value := label(line,String(row[1]),26,Color("aee3fa")); value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		var value := label(line,String(row[1]),26,Color("aee3fa")); value.name = "StatValue"; value.autowrap_mode = TextServer.AUTOWRAP_OFF; value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label(body,String(model.note),20,Color("8994ac"))
 	var effects := section(body,"무기 효과" if model.kind == "무기" else "보조 효과",Color("ce92ea")); label(effects,String(model.effects),24)
 	label(body,"연관 콘텐츠",27,Color("ce92ea")); label(body,String(model.flow),23,Color("c2c6da"))

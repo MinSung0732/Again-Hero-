@@ -14,6 +14,7 @@ const SETTINGS := preload("res://src/ui/BattleSettings.tscn")
 const HUD := preload("res://src/ui/hero_survival_hud.gd")
 const REEL := preload("res://src/ui/hero_chest_reel.gd")
 const LOADING := preload("res://src/ui/startup_loading_view.gd")
+const PAUSE_VIEW := preload("res://src/ui/hero_pause_view.gd")
 const INVENTORY_DETAIL := preload("res://src/ui/hero_inventory_detail.gd")
 var inventory_dim: ColorRect
 var overlay_default_style: StyleBox
@@ -365,10 +366,15 @@ func _choose(id: String,revision: int) -> void:
 func _pause() -> void:
 	if not entry_ready or not is_instance_valid(battle) or battle.battle_over or choosing or rolling: return
 	paused = true; battle.set_external_pause(true); pad.enabled = false; pad.reset()
-	_clear_overlay(); _label(overlay_rows,"일시정지 · 용사 모드",32)
-	_label(overlay_rows,"생존 %.1f초 · 처치 %d · Lv.%d\n%s" % [battle.run_metrics.elapsed_seconds,_kill_count(),battle.hero.level,battle.hero.get_build_summary()],23)
-	_button("계속 플레이",_resume); _button("다시 시작",_restart_from_pause)
-	_button("설정",_open_settings); _button("로비로 돌아가기",_leave)
+	_clear_overlay()
+	inventory_dim.show(); inventory_dim.move_to_front(); overlay.move_to_front()
+	overlay.offset_left = maxf(24,(size.x-920)*0.5); overlay.offset_right = -overlay.offset_left
+	overlay.offset_top = minf(HUD.BATTLE_TOP+12,size.y*0.24); overlay.offset_bottom = -24
+	overlay.add_theme_stylebox_override("panel",INVENTORY_DETAIL.style(Color("171226"),Color("e3bc69"),24))
+	var runtime = battle.hero.player_weapons
+	var equipped: Array = runtime.weapon_ids.slice(0,4) if runtime != null else []
+	PAUSE_VIEW.build(overlay_rows,{"seconds":battle.run_metrics.elapsed_seconds,"kills":_kill_count(),"level":battle.hero.level,"weapons":equipped},{"resume":_resume,"restart":_restart_from_pause,"settings":_open_settings,"leave":_leave})
+
 func _resume() -> void:
 	if is_instance_valid(inventory_dim): inventory_dim.hide()
 	if is_instance_valid(settings_panel): settings_panel.hide()

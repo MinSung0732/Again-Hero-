@@ -1,4 +1,5 @@
 extends SceneTree
+const PAUSE_VIEW := preload("res://src/ui/hero_pause_view.gd")
 const DETAIL := preload("res://src/ui/hero_inventory_detail.gd")
 const BASE := preload("res://tests/hero_weapon_extension_smoke.gd")
 const RUNTIME := preload("res://src/hero_mode/hero_weapon_runtime.gd")
@@ -6,9 +7,13 @@ var checks := 0
 var failures := 0
 var closed := 0
 class Hero extends BASE.Hero:
+	var level := 25
 	var player_weapons
 	func set_camera_view_locked(_value: bool) -> void: pass
+class Metrics extends RefCounted:
+	var elapsed_seconds := 417.0
 class Battle extends Node:
+	var run_metrics := Metrics.new()
 	var battle_over := false
 	var hero
 	var external_pause := false
@@ -39,7 +44,7 @@ func run() -> void:
 		runtime.passives[id] = DETAIL.DATA.passive_limit(id)
 		var model := DETAIL.passive_model(runtime,id)
 		check(model.kind == "보조 증강" and model.rank == "MAX" and not model.effects.is_empty(),"actual passive model "+id)
-	for viewport_size in [Vector2i(1080,1920),Vector2i(540,960),Vector2i(1920,1080)]:
+	for viewport_size in [Vector2i(1080,1920),Vector2i(540,960),Vector2i(1920,1080),Vector2i(960,540)]:
 		root.size = viewport_size
 		var panel := PanelContainer.new(); root.add_child(panel); panel.position = Vector2(24,80); panel.size = Vector2(minf(920,viewport_size.x-48),viewport_size.y-120)
 		panel.add_theme_stylebox_override("panel",DETAIL.style(Color("111322"),Color("e3bc69"),24))
@@ -50,6 +55,12 @@ func run() -> void:
 		check(resume.get_global_rect().end.y <= viewport_size.y and x.get_global_rect().end.x <= viewport_size.x,"controls fit viewport")
 		check(resume.size.y >= 76 and x.size.x >= 76,"mobile target size")
 		check((rows.get_node("DetailScroll") as ScrollContainer).size.y > 100,"body scroll retains footer")
+		for stat in rows.find_children("StatValue","Label",true,false):
+			check(stat.autowrap_mode == TextServer.AUTOWRAP_OFF and stat.get_line_count() == 1,"numeric stat must stay on one line")
+			check(stat.size.x >= stat.get_minimum_size().x and stat.get_global_rect().end.x <= panel.get_global_rect().end.x-24,"numeric stat retains intrinsic width inside panel")
+		var badges = rows.find_child("DetailBadges",true,false)
+		for badge in badges.get_children():
+			check(badge.get_child(0).get_line_count() == 1,"badge stays horizontal")
 		var before := closed; click(resume.get_global_rect().get_center()); await process_frame
 		check(closed == before+1,"actual PC mouse click resumes")
 		before = closed; click(x.get_global_rect().get_center()); await process_frame
@@ -77,5 +88,23 @@ func run() -> void:
 	check(not host.paused and not host.overlay.visible,"Escape/back resumes detail popup")
 	host.choosing = true; host._show_weapon_info(0)
 	check(not host.overlay.visible,"augment choice cannot be replaced by inventory popup")
+	host.choosing = false
+	for viewport in [Vector2i(1080,1920),Vector2i(540,960),Vector2i(1920,1080),Vector2i(960,540)]:
+		root.size = viewport; host.size = viewport
+		host._pause(); await process_frame; await process_frame
+		check(host.paused and battle.external_pause and host.inventory_dim.visible,"real pause handler stops battle with backdrop")
+		check(host.overlay.get_global_rect().position.x >= 0 and host.overlay.get_global_rect().end.x <= viewport.x and host.overlay.get_global_rect().end.y <= viewport.y,"pause modal fits viewport")
+		var summary = host.overlay_rows.find_child("PauseSummary",true,false)
+		check(summary != null and summary.find_child("SummaryGrid",true,false).columns == (4 if summary.size.x-40 >= 760 else 2),"pause summary uses responsive readable columns")
+		for action in ["resume","restart","settings","leave"]:
+			var target = host.overlay_rows.find_child("Pause_"+action,true,false)
+			check(target != null and target.size.y >= 96,"pause action touch target "+action)
+		var scroll = host.overlay_rows.get_node("PauseScroll")
+		scroll.scroll_vertical = 10000; await process_frame
+		var leave = host.overlay_rows.find_child("Pause_leave",true,false)
+		click(leave.get_global_rect().get_center()); await process_frame
+		check(host.last_action == "leave","scroll reaches bottom action and mouse invokes callback")
+		host.last_action = ""; host._resume()
+		check(not host.inventory_dim.visible and not battle.external_pause,"pause resume clears backdrop")
 	host.queue_free(); battle.queue_free(); arena.queue_free(); await process_frame
 	print("HERO_INVENTORY_DETAIL checks=%d failures=%d" % [checks,failures]); quit(1 if failures else 0)
