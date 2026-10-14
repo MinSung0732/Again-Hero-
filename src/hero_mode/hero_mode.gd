@@ -1,6 +1,7 @@
 extends Control
 const DATA := preload("res://src/data/hero_mode_catalog.gd")
 const STORE := preload("res://src/systems/hero_mode_store.gd")
+const STAMINA_NOTICE := preload("res://src/ui/stamina_notice.gd")
 const STAMINA := preload("res://src/systems/stamina_store.gd")
 const UNLOCKS := preload("res://src/systems/mode_unlock_store.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
@@ -431,11 +432,11 @@ func _retry() -> void:
 	if leaving or not settled or not STORE.can_enter(stage,run_difficulty): return
 	var ticket := STAMINA.try_enter(stage,LocalTestMode.active,-1,false)
 	if not bool(ticket.get("success",false)):
-		_label(overlay_rows,"스테미너 또는 저장 상태를 확인하세요.",23); return
+		_show_stamina_notice(STAMINA_NOTICE.INSUFFICIENT if ticket.get("reason") == "insufficient" else "저장을 완료하지 못했습니다. 다시 시도해 주세요."); return
 	leaving = true
 	if not SceneTransition.change_scene(DATA.SCENE,"용사 도전 준비 중...",{"stage_id":stage,"hero_id":player_hero_id,"hero_entry":ticket,"difficulty":run_difficulty}):
 		STAMINA.refund_failed_entry(ticket); leaving = false
-		_label(overlay_rows,"입장 실패 · 스테미너 반환을 확인하세요.",23)
+		_show_stamina_notice("입장 실패 · 스테미너 반환을 확인하세요.")
 func _leave() -> void:
 	if leaving: return
 	if is_instance_valid(battle) and not account_invalid:
@@ -443,7 +444,7 @@ func _leave() -> void:
 			var elapsed := maxi(Time.get_ticks_msec()-entry_started_ms,int((Time.get_unix_time_from_system()-entry_started_unix)*1000.0))
 			var refund := STAMINA.refund_early_exit(entry,elapsed)
 			if not bool(refund.get("success",false)):
-				_label(overlay_rows,"스테미너 반환 저장에 실패했습니다. 다시 눌러 주세요.",23); return
+				_show_stamina_notice("스테미너 반환 저장에 실패했습니다. 다시 눌러 주세요."); return
 			run_abandoned = true
 			battle.finish_abandoned_run()
 		if not settled: return
@@ -644,7 +645,7 @@ func _restart_from_pause() -> void:
 	if leaving or not paused or battle.battle_over: return
 	var elapsed := maxi(Time.get_ticks_msec()-entry_started_ms,int((Time.get_unix_time_from_system()-entry_started_unix)*1000.0))
 	if not bool(STAMINA.refund_early_exit(entry,elapsed).get("success",false)):
-		_label(overlay_rows,"스테미너 반환 저장 실패 · 다시 시도하세요.",23); return
+		_show_stamina_notice("스테미너 반환 저장 실패 · 다시 시도하세요."); return
 	run_abandoned = true
 	battle.finish_abandoned_run()
 	if settled: _retry()
@@ -659,3 +660,6 @@ func _skin_action_button(button: Button) -> void:
 	for state in ["normal","hover","pressed","disabled"]: button.add_theme_stylebox_override(state,SKIN.skin_style(style))
 	button.add_theme_stylebox_override("focus",StyleBoxEmpty.new())
 	button.add_theme_color_override("font_color",Color("efe5c9"))
+
+func _show_stamina_notice(message: String) -> void:
+	STAMINA_NOTICE.show_notice(self,message)

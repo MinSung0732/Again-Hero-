@@ -1,3 +1,9 @@
+## 2026-10-15 — 결과 재도전 실패 알림 누적·레이아웃 수정
+
+- 용사재도전실패마다overlay_rows에Label을추가하던경로제거. 재도전/입장실패/조기복귀·재시작환급저장실패안내를결과그리드밖공유AcceptDialog1개로재사용. 마왕기존팝업도동일helper로통일. 메시지만교체,이미열려있으면popup재호출없음,exclusive입력차단.
+- 부족안내는스테미너부족과로비충전/회복행동을2줄로표시. 저장실패는별도문구,결과본문·보상·버튼배치재생성/추가없음. 큰28글자/84px확인버튼/화면폭에맞는중앙popup. 스테미너소모/환급/보상단회정산·재도전가드유지.
+- GDScript구문4파일/양모드dispatch/누적Label경로제거정적검사및diffPASS. popup100회재사용/결과childcount·버튼좌표/텍스트갱신회귀스크립트추가. 현재Godot바이너리없어이실행검사와Windows/Android화면은미검증.
+
 ## 2026-10-15 — 프로필 배포 검증 스크립트의 임시 preload 수정
 
 - profile_export_smoke.gd가검증fixture에만생성되는pickup/profile texture harness를상수preload해일반에디터import에서구문오류를만들던문제수정. 경로상수와ResourceLoader.exists guard뒤동적Script load로변경. 일반프로젝트는fixture실행요청시skip안내,생성PCKfixture에서는원래검증유지. 실제프로필/픽업/옵션게임코드는변경없음.
