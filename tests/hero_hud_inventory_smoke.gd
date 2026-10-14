@@ -16,6 +16,7 @@ class TestHero extends BASE.Hero:
 	var level := 1
 class EncounterView extends Node:
 	var finale := true
+	var next_event := 64.0
 	var boss: Node2D
 	var notice := "보스 출현 대기"
 class Metrics extends RefCounted:
@@ -132,6 +133,15 @@ func run() -> void:
 	harness.battle_frame_enabled = true; harness._apply_battle_frame()
 	check(is_equal_approx(stats.position.x,100),"collapsed button restored with frame")
 	var boss_view := EncounterView.new(); harness.add_child(boss_view); boss_view.boss = hero; harness.director.encounters = boss_view
+	boss_view.finale = false; battle.run_metrics.elapsed_seconds = 30; harness._refresh_hud()
+	check(harness.timer.text.contains("첫 정예") and harness.timer.text.contains("05초"),"actual opening timer shows near elite challenge")
+	battle.run_metrics.elapsed_seconds = 40; harness._refresh_hud()
+	check(harness.timer.text.contains("강화 상자"),"actual opening HUD directs player to reward")
+	harness.opening_chest_claimed = true; harness._refresh_hud()
+	check(harness.timer.text.contains("다음 공세") and harness.timer.text.contains("24초"),"applied reward advances HUD goal")
+	battle.run_metrics.elapsed_seconds = 120; harness._refresh_hud()
+	check(harness.timer.text.contains("남은 시간"),"normal survival timer restores after opening")
+	boss_view.finale = true
 	harness._refresh_hud(); await process_frame; await process_frame
 	check(harness.timer.text.contains("최종 보스") and harness.status.text.contains("보스 체력"),"boss phase HUD replaces timer and shows HP")
 	check(harness.get_node("HeroHUD").get_global_rect().end.y <= HUD.BATTLE_TOP,"boss HUD fits above battle")

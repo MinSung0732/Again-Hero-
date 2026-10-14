@@ -55,6 +55,7 @@ var entry_started_unix := 0.0
 var weapon_buttons: Array[Button] = []
 var rolling := false
 var pending_chests := 0
+var opening_chest_claimed := false
 var roulette_tween: Tween
 var roulette_label: Label
 var roulette_reel: Control
@@ -259,6 +260,8 @@ func _refresh_hud() -> void:
 	if hero.player_weapons != null and hero.player_weapons.identity != null:
 		status.text = "자원 · "+hero.player_weapons.identity.summary()
 	if is_instance_valid(director.encounters):
+		var objective := DATA.opening_objective(battle.run_metrics.elapsed_seconds,opening_chest_claimed,director.encounters.next_event)
+		if not objective.is_empty(): timer.text = objective
 		if director.encounters.finale:
 			timer.text = "최종 보스\n격파 시 클리어"
 			status.text = "보스 체력 %d / %d" % [director.encounters.boss.current_hp,director.encounters.boss.max_hp] if is_instance_valid(director.encounters.boss) else director.encounters.notice
@@ -479,6 +482,7 @@ func _finish_roulette() -> void:
 	_roulette_tick(1.0)
 	if not battle.hero.player_weapons.apply_chest(roulette_receipt):
 		roulette_label.text = "상자 보상 적용 실패"; _button("계속 플레이",_close_roulette); return
+	opening_chest_claimed = true
 	roulette_label.modulate = Color("ffe09a")
 	var description := _label(overlay_rows,String(roulette_receipt.description),25)
 	description.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

@@ -54,7 +54,9 @@ func tick(delta: float) -> void:
 	var phase: Dictionary = DATA.phase_at(elapsed)
 	battle.command_regen_per_second = float(phase.regen)*pressure
 	special_retry = maxf(0.0,special_retry-delta)
-	if special_retry <= 0.0 and battle.get_population_count() < mini(DATA.MONSTER_LIMIT,int(phase.limit*pressure)):
+	# Telegraph waves may temporarily exceed the ordinary phase cap. Keep the
+	# reserved special slot usable while still respecting the global actor cap.
+	if special_retry <= 0.0 and battle.get_population_count() < DATA.MONSTER_LIMIT:
 		if giant_index < DATA.GIANT_TIMES.size() and elapsed >= float(DATA.GIANT_TIMES[giant_index]):
 			if _special("ogre",true,elapsed): giant_index += 1
 			special_retry = 5.0
@@ -77,4 +79,4 @@ func tick(delta: float) -> void:
 func _special(id: String,giant: bool,elapsed: float) -> bool:
 	if id not in roster or not bool(DATA.MONSTERS.get_monster(id).get("can_be_elite",true)): id = DATA.boss_for(stage_number,battle.campaign_difficulty)
 	var scale := (1.0+elapsed/900.0)*pressure
-	return battle.spawn_special_monster(id,{"type":"giant" if giant else "elite","name":"대형 군단장" if giant else "엘리트 공세","hp_multiplier":(4.0 if giant else 2.0)*scale,"damage_multiplier":1.2*scale,"speed_multiplier":0.75 if giant else 1.1,"attack_speed_multiplier":1.0,"exp_multiplier":4.0 if giant else 2.0,"visual_scale":1.8 if giant else 1.2,"spawn_distance":650.0})
+	return battle.spawn_special_monster(id,{"type":"giant" if giant else "elite","name":"대형 군단장" if giant else "엘리트 공세","hp_multiplier":(4.0 if giant else 2.0)*scale,"damage_multiplier":1.2*scale,"speed_multiplier":0.75 if giant else 1.1,"attack_speed_multiplier":1.0,"exp_multiplier":4.0 if giant else 2.0,"visual_scale":1.8 if giant else 1.2,"spawn_distance":DATA.OPENING_ELITE_DISTANCE if not giant and next_elite == DATA.ELITE_FIRST else 650.0})

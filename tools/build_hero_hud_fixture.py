@@ -28,6 +28,7 @@ const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const MOVE_PAD := preload("res://src/hero_mode/hero_move_pad.gd")
 var player_hero_id := "sage_astra"
 var timer: Label
+var opening_chest_claimed := false
 var hero_title: Label
 var kills_label: Label
 var population_label: Label

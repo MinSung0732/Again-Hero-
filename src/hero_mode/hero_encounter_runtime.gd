@@ -43,8 +43,11 @@ func tick(delta: float) -> void:
 		wall_time -= delta
 		if wall_time <= 0: _clear_walls()
 	if points.is_empty() and clock >= next_event:
-		kind = String(DATA.EVENT_KINDS[event_index%DATA.EVENT_KINDS.size()]); event_index += 1; next_event = clock+DATA.EVENT_INTERVAL
-		points = DATA.encounter_points(kind,battle.hero.position,battle.current_map_size)
+		kind = String(DATA.EVENT_KINDS[event_index%DATA.EVENT_KINDS.size()])
+		var gap_angle := float(event_index)*PI*0.5
+		event_index += 1
+		next_event = clock+(DATA.OPENING_EVENT_INTERVAL if clock < DATA.OPENING_END else DATA.EVENT_INTERVAL)
+		points = DATA.encounter_points(kind,battle.hero.position,battle.current_map_size,DATA.OPENING_EVENT_RADIUS if clock < DATA.OPENING_END else 430.0,gap_angle)
 		if battle.has_method("_clamp_manual_spawn_position"):
 			var filtered: Array[Vector2] = []
 			for point in points:
