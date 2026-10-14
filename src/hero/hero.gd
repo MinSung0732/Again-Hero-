@@ -27,6 +27,10 @@ signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
 signal leveled_up(new_level: int)
 signal augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String)
 signal player_augment_requested(candidates: Array)
+const PLAYER_CONTROL_POLICY := preload("res://src/hero_mode/hero_control_policy.gd")
+var player_control_policy := PLAYER_CONTROL_POLICY.new()
+var player_root_timer := 0.0
+var player_root_multiplier := 1.0
 var player_controlled := false
 var player_exp_remainder := 0.0
 var player_weapons: RefCounted
@@ -979,6 +983,9 @@ func configure_profile(profile: Dictionary) -> void:
 	_clear_bleed()
 	_clear_burn()
 	_clear_stun()
+	player_control_policy.reset()
+	player_root_timer = 0.0
+	player_root_multiplier = 1.0
 	_clear_medusa_statuses()
 	_clear_charm()
 	_clear_received_modifiers()
@@ -1831,6 +1838,9 @@ func _attach_status_effect_visual(effect_type: String) -> void:
 
 func _physics_process(delta: float) -> void:
 	player_moved_this_frame = false
+	if player_controlled:
+		player_control_policy.tick(delta)
+		player_root_timer = maxf(player_root_timer-delta,0.0)
 	silence_timer = maxf(silence_timer-delta,0.0)
 	set_meta("silence_active", silence_timer > 0.0)
 	imposed_skill_cooldown = maxf(imposed_skill_cooldown-delta,0.0)
@@ -17516,6 +17526,9 @@ func apply_charm(source: Node2D, duration: float) -> bool:
 func _apply_charm_status(source: Node2D, duration: float, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or charm_timer > 0.0 or charm_immunity_timer > 0.0 or not is_instance_valid(source):
 		return false
+	if player_controlled:
+		duration = player_control_policy.accept(duration, get_status_resistance("charm"))
+		if duration <= 0.0: return false
 	charm_recovery_immunity = maxf(float(get_meta("incoming_charm_immunity",SUCCUBUS_BEHAVIOR.CHARM.immunity)),0.0)
 	charm_stacks = 0
 	charm_timer = maxf(duration * (1.0 - get_status_resistance("charm")), 0.05)
@@ -17617,6 +17630,9 @@ func apply_petrify(duration: float, release_slow: float = 1.0, release_duration:
 func _apply_petrify_status(duration: float, release_slow: float = 1.0, release_duration: float = 0.0, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or petrify_timer > 0.0 or duration <= 0.0:
 		return false
+	if player_controlled:
+		duration = player_control_policy.accept(duration, get_status_resistance("petrify"))
+		if duration <= 0.0: return false
 	petrify_status_action = STATUS_ACTION_SCOPE.current(self)
 	record_status_effect_event("petrify")
 	petrify_timer = maxf(duration * (1.0 - get_status_resistance("petrify")),0.05)
@@ -17753,6 +17769,9 @@ func apply_stun(duration: float) -> void:
 func _apply_stun_status(duration: float, receipt = null, receipt_revision: int = 0) -> void:
 	if duration <= 0.0 or current_hp <= 0 or is_dying:
 		return
+	if player_controlled:
+		duration = player_control_policy.accept(duration, get_status_resistance("stun"))
+		if duration <= 0.0: return
 	record_status_effect_event("stun")
 	if stun_timer <= 0.0 and is_instance_valid(hero_sprite):
 		stun_sprite_speed = hero_sprite.speed_scale
@@ -17821,6 +17840,9 @@ func _apply_fear_status(
 	if current_hp <= 0 or is_dying or fear_immunity_timer > 0.0:
 		return
 
+	if player_controlled:
+		duration = player_control_policy.accept(duration, get_status_resistance("fear"))
+		if duration <= 0.0: return
 	fear_recovery_immunity = maxf(fear_recovery_immunity,float(get_meta("incoming_fear_immunity",0.0)))
 	record_status_effect_event("fear")
 	var resistance := get_status_resistance("fear")
@@ -18015,7 +18037,11 @@ func _tick_fear_state(delta: float) -> bool:
 	return true
 
 func _get_effective_move_multiplier() -> float:
-	return move_multiplier * float(get_meta("yuki_slow_multiplier",1.0))
+	var multiplier := move_multiplier * float(get_meta("yuki_slow_multiplier",1.0))
+	if player_controlled:
+		multiplier = maxf(multiplier, PLAYER_CONTROL_POLICY.DATA.SLOW_SPEED_FLOOR)
+		if player_root_timer > 0.0: multiplier = minf(multiplier, player_root_multiplier)
+	return multiplier
 
 func apply_slow_with_result(multiplier: float, duration: float, receipt) -> bool:
 	if receipt == null:
@@ -18034,29 +18060,29 @@ func apply_slow(multiplier: float, duration: float) -> void:
 	legacy_status_result_complete = legacy_status_receipt.finish(revision)
 
 func _apply_slow_status(multiplier: float, duration: float, receipt = null, receipt_revision: int = 0) -> void:
-	if current_hp <= 0:
+	if current_hp <= 0 or duration <= 0.0:
 		return
-
-	record_status_effect_event("slow")
-
 	var resistance := get_status_resistance("slow")
 	var raw_multiplier := clampf(multiplier, 0.01, 1.0)
-	if player_controlled and (raw_multiplier <= 0.05 or slow_timer <= 0.0):
-		set_meta("root_like_slow",raw_multiplier <= 0.05)
-	var effective_multiplier := lerpf(
-		raw_multiplier,
-		1.0,
-		resistance
-	)
-	var effective_duration := maxf(
-		duration * (1.0 - resistance),
-		0.05
-	)
-
-	move_multiplier = minf(move_multiplier, effective_multiplier)
-	slow_timer = maxf(slow_timer, effective_duration)
+	var effective_multiplier := lerpf(raw_multiplier, 1.0, resistance)
+	if player_controlled and raw_multiplier <= 0.05:
+		var accepted := player_control_policy.accept(duration, resistance)
+		if accepted <= 0.0: return
+		player_root_timer = maxf(accepted*(1.0-resistance),0.05)
+		player_root_multiplier = effective_multiplier
+		record_status_effect_event("slow")
+		if receipt != null:
+			receipt.record_application(player_root_timer,1.0-player_root_multiplier,receipt_revision)
+		queue_redraw()
+		return
+	var effective_duration := maxf(duration*(1.0-resistance),0.05)
+	if player_controlled:
+		effective_multiplier = maxf(effective_multiplier,PLAYER_CONTROL_POLICY.DATA.SLOW_SPEED_FLOOR)
+	record_status_effect_event("slow")
+	move_multiplier = minf(move_multiplier,effective_multiplier)
+	slow_timer = maxf(slow_timer,effective_duration)
 	if receipt != null:
-		receipt.record_application(slow_timer, 1.0 - move_multiplier, receipt_revision)
+		receipt.record_application(slow_timer,1.0-move_multiplier,receipt_revision)
 	queue_redraw()
 
 func get_build_summary() -> String:

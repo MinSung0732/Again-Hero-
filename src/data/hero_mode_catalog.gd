@@ -3,6 +3,9 @@ const SCENE := "res://src/hero_mode/HeroMode.tscn"
 const AUGMENT_REROLLS := 3
 static func augment_reroll_limit(research_bonus: int = 0) -> int:
 	return AUGMENT_REROLLS+maxi(0,research_bonus)
+const CONTROL_MAX_DURATION := 2.0
+const CONTROL_RECOVERY := 1.5
+const SLOW_SPEED_FLOOR := 0.35
 const DURATION := 900.0
 const THINK_INTERVAL := 0.75
 const OBSERVE_INTERVAL := 4.0

@@ -7,7 +7,7 @@ func remaining(hero, index: int) -> float:
 	match index:
 		0: return maxf(0,hero.fear_timer)
 		1: return maxf(0,hero.stun_timer)
-		2: return maxf(0,hero.slow_timer)
+		2: return maxf(0,hero.player_root_timer) if hero.player_root_timer > 0.0 else maxf(0,hero.slow_timer)
 		3: return maxf(0,hero.petrify_timer)
 		4: return maxf(0,hero.charm_timer)
 	return 0.0
@@ -25,6 +25,6 @@ func draw_on(canvas: CanvasItem, hero, y: float, width: float) -> void:
 		var ratio := clampf(left/maxf(totals[index],left),0,1)
 		canvas.draw_rect(Rect2(-width*0.5,y,width,6),Color(0.08,0.08,0.10,0.9))
 		canvas.draw_rect(Rect2(-width*0.5,y,width*ratio,6),Color.WHITE)
-		var label := "둔화" if index == 2 and not bool(hero.get_meta("root_like_slow",false)) else String(NAMES[index])
+		var label := "둔화" if index == 2 and hero.player_root_timer <= 0.0 else String(NAMES[index])
 		canvas.draw_string(ThemeDB.fallback_font,Vector2(-width*0.5,y-3),"%s %.1f초" % [label,left],HORIZONTAL_ALIGNMENT_LEFT,width,14,Color.WHITE)
 		y -= 24.0
