@@ -4,9 +4,12 @@ const CATALOG := preload("res://src/data/startup_catalog.gd")
 const VIEW := preload("res://src/ui/startup_loading_view.gd")
 const PIXEL_FRAME := preload("res://src/ui/battle_pixel_frame_assembler.gd")
 const PROFILE := preload("res://src/systems/player_profile.gd")
+const OPTIONS := preload("res://src/ui/startup_options.gd")
 const PROLOGUE := preload("res://src/ui/player_prologue.gd")
 enum Phase { TITLE, RESOURCES, LOADING, LOGIN, ENTERING, ERROR, PROLOGUE }
 
+var options_button: Button
+var options: Control
 var phase := Phase.TITLE
 var title_screen: Control
 var login_screen: Control
@@ -31,6 +34,10 @@ func _ready() -> void:
 	loading_view.hide()
 	_build_login()
 	login_screen.hide()
+	options_button = _button(self,"옵션",Rect2(0.76,0.025,0.21,0.055),Color("432354"))
+	options_button.name = "StartupOptions"
+	options = OPTIONS.new(); add_child(options); options.install(self,_options_login)
+	options_button.pressed.connect(options.open)
 	LoginGateway.login_unavailable.connect(_show_auth_notice)
 	LoginGateway.local_guest_started.connect(_enter_lobby)
 	LoginGateway.authenticated.connect(_enter_lobby)
@@ -72,7 +79,9 @@ func _build_title() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if phase != Phase.TITLE:
+	if phase != Phase.TITLE or (is_instance_valid(options) and options.visible):
+		return
+	if (event is InputEventMouseButton or event is InputEventScreenTouch) and is_instance_valid(options_button) and options_button.get_global_rect().has_point(event.position):
 		return
 	if (event is InputEventScreenTouch and not event.pressed and not event.canceled) or (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed):
 		begin_startup()
@@ -82,6 +91,7 @@ func _input(event: InputEvent) -> void:
 func begin_startup() -> void:
 	if phase != Phase.TITLE and phase != Phase.ERROR:
 		return
+	options.hide(); options_button.hide()
 	phase = Phase.RESOURCES
 	if _pulse:
 		_pulse.kill()
@@ -117,6 +127,7 @@ func begin_startup() -> void:
 	await get_tree().process_frame
 	loading_view.hide()
 	phase = Phase.LOGIN
+	options_button.show()
 	login_screen.show()
 	if not LoginGateway.user_id.is_empty():
 		await LoginGateway.retry_cloud()
@@ -207,6 +218,7 @@ func _enter_lobby() -> void:
 	if _entering or phase != Phase.LOGIN or _lobby == null:
 		return
 	_entering = true
+	options.hide(); options_button.hide()
 	phase = Phase.ENTERING
 	login_screen.hide()
 	if not LoginGateway.user_id.is_empty() or LocalTestMode.is_tutorial_preview() or preload("res://src/systems/guest_progress_store.gd").is_guest():
@@ -218,12 +230,14 @@ func _enter_lobby() -> void:
 		if owner != LoginGateway.user_id:
 			_entering = false
 			phase = Phase.LOGIN
+			options_button.show()
 			loading_view.hide()
 			login_screen.show()
 			return
 		if not bool(result.get("ok", false)):
 			_entering = false
 			phase = Phase.LOGIN
+			options_button.show()
 			loading_view.hide()
 			login_screen.show()
 			guest_button.disabled = false
@@ -254,6 +268,7 @@ func _transition_lobby() -> void:
 
 
 func _fail(message: String) -> void:
+	options_button.show()
 	phase = Phase.ERROR
 	loading_view.detail.text = message
 	retry_button.show()
@@ -274,3 +289,6 @@ func _button(parent: Node, text: String, rect: Rect2, fill: Color, ink: Color = 
 	button.mouse_filter = Control.MOUSE_FILTER_STOP
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	return button
+
+func _options_login() -> void:
+	if phase in [Phase.TITLE,Phase.ERROR]: begin_startup()

@@ -6,7 +6,7 @@ const CONFIG_PATH := "user://audio_settings.cfg"
 const BGM_BUS := &"BGM"
 const SFX_BUS := &"SFX"
 
-const DEFAULT_LEVEL := 8
+const DEFAULT_LEVEL := 5
 const MIN_LEVEL := 1
 const MAX_LEVEL := 10
 
