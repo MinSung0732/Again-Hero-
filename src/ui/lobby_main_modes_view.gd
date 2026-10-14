@@ -66,7 +66,7 @@ func install(host) -> void:
 		var stage: Dictionary = lobby.STAGE_CATALOG.get_stage(id)
 		heroes.append(stage)
 	for label in [lobby.stage_description_label, lobby.stage_status_label, lobby.stage_reward_label, lobby.stage_repeat_reward_label]:
-		label.add_theme_font_size_override("font_size", 18 if label != lobby.stage_reward_label else 22)
+		label.add_theme_font_size_override("font_size", 20 if label in [lobby.stage_status_label,lobby.stage_repeat_reward_label] else 22)
 	bottom.add_theme_stylebox_override("panel",preload("res://src/ui/pixel_panel_skin.gd").button_style(idle_style))
 	var transition: Node = lobby.get_node("/root/SceneTransition")
 	var on_complete := Callable(self, "schedule_unlock")
@@ -229,10 +229,10 @@ func refresh() -> void:
 			var stage := current_stage()
 			HERO_STORE.select_battle_stage(stage)
 			lobby.enter_stage_button.text = "용사 도전 · 15분 생존"
-			lobby.stage_description_label.text = "이동·증강 직접 선택 / 공격 자동\nAI 마왕의 군단을 피해 15분 동안 생존하세요."
-			lobby.stage_status_label.text = "AI 마왕 · 15분 생존"
-			lobby.stage_reward_label.text = "승리 보상\n연구 +%d · 골드 +%d" % [preload("res://src/data/hero_mode_catalog.gd").WIN_RESEARCH,preload("res://src/data/hero_mode_catalog.gd").WIN_GOLD]
-			lobby.stage_repeat_reward_label.text = "Lv.10 상자 진화"
+			lobby.stage_description_label.text = "직접 이동 · 자동 공격 · 15분 생존"
+			lobby.stage_status_label.text = "AI 마왕\n15분 생존"
+			lobby.stage_reward_label.text = "승리 보상\n연구 +%d\n골드 +%d" % [preload("res://src/data/hero_mode_catalog.gd").WIN_RESEARCH,preload("res://src/data/hero_mode_catalog.gd").WIN_GOLD]
+			lobby.stage_repeat_reward_label.text = "무기 진화\nLv.10 상자"
 			section.get_node("SectionTitle").text = "용사 원정"
 			section.get_node("SectionSubtitle").text = "쉬움 클리어 시 다음 전장 해금 · 어려움은 해당 전장 쉬움 클리어 필요"
 			_apply_selected_hero_portrait()
@@ -242,15 +242,15 @@ func refresh() -> void:
 			if lobby.stamina_view != null: lobby.stamina_view.configure_entry(unlocked,0 if UNLOCKS.is_test_override() else preload("res://src/data/stamina_catalog.gd").ENTRY_COST)
 			if not unlocked:
 				lobby.enter_stage_button.text = "해당 용사 스테이지 쉬움 클리어 필요"
-				lobby.stage_status_label.text = "잠김 · 해당 용사 쉬움 클리어 필요"
-			elif HERO_STORE.battle_stage_cleared(stage,difficulty): lobby.stage_status_label.text = "클리어 완료 · 15분 생존"
+				lobby.stage_status_label.text = "잠김\n쉬움 클리어"
+			elif HERO_STORE.battle_stage_cleared(stage,difficulty): lobby.stage_status_label.text = "클리어 완료\n15분 생존"
 
 		elif difficulty == "hard":
 			lobby.enter_stage_button.text = "어려움 도전"
-			lobby.stage_description_label.text = "강화된 용사를 처치하세요.\n해당 스테이지 쉬움 클리어 후 도전할 수 있습니다."
-			lobby.stage_status_label.text = "어려움 · 강화 용사"
+			lobby.stage_description_label.text = "강화 용사 · 쉬움 클리어 후 도전"
+			lobby.stage_status_label.text = "어려움\n강화 용사"
 			lobby.stage_reward_label.text = "최초 어려움\n연구 30"
-			lobby.stage_repeat_reward_label.text = "최초 보상 1회 지급"
+			lobby.stage_repeat_reward_label.text = "반복 도전\n추가 지급 없음"
 		return
 	lobby.stage_selector_button.text = "SEASON · 준비 중"
 	lobby.stage_selector_button.disabled = true
@@ -264,10 +264,10 @@ func refresh() -> void:
 	lobby.portrait_texture.self_modulate = Color.WHITE
 	lobby.portrait_badge.visible = false
 	lobby.portrait_texture.get_node("StageLock").visible = false
-	lobby.stage_description_label.text = "마왕이 되어 상대 용사를 막아내세요.\n실시간 대전 · 시즌 점수는 준비 중입니다." if perspective == "demon" else "선택한 용사로 상대 마왕의 성에 도전하세요.\n실시간 대전 · 시즌 점수는 준비 중입니다."
+	lobby.stage_description_label.text = "실시간 대전 · 준비 중"
 	lobby.stage_status_label.text = "랭킹 점수\n미배치"
 	lobby.stage_reward_label.text = "랭킹 등급\n미배치"
-	lobby.stage_repeat_reward_label.text = "닉네임\n" + lobby.hero_name_label.text
+	lobby.stage_repeat_reward_label.text = "매칭\n준비 중"
 	lobby.enter_stage_button.text = "매칭 시작"
 	lobby.enter_stage_button.disabled = false
 	var navigable := false

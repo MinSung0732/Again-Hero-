@@ -1796,8 +1796,8 @@ func _install_stage_entry_hud() -> void:
 		bottom_panel,stage_description_label,stage_reward_label,stage_status_label,
 		stage_repeat_reward_label,enter_stage_button)
 
-	stage_description_label.add_theme_font_size_override("font_size", 18)
-	stage_status_label.add_theme_font_size_override("font_size", 18)
+	stage_description_label.add_theme_font_size_override("font_size", 22)
+	stage_status_label.add_theme_font_size_override("font_size", 20)
 	stage_reward_label.add_theme_font_size_override("font_size", 22)
 	stage_status_label.add_theme_color_override("font_color", Color("ded3e4"))
 	stage_reward_label.add_theme_color_override("font_color", Color("f0cb68"))
@@ -1947,9 +1947,9 @@ func _apply_lobby_visual_polish() -> void:
 	stage_name_label.add_theme_color_override("font_color", Color("fff6e5"))
 	hero_name_label.add_theme_font_size_override("font_size", 30)
 	hero_name_label.add_theme_color_override("font_color", Color("f2d486"))
-	stage_description_label.add_theme_font_size_override("font_size", 18)
+	stage_description_label.add_theme_font_size_override("font_size", 22)
 	stage_description_label.add_theme_color_override("font_color", Color("eee7f0"))
-	stage_status_label.add_theme_font_size_override("font_size", 18)
+	stage_status_label.add_theme_font_size_override("font_size", 20)
 	stage_status_label.add_theme_color_override("font_color", Color("d6cadc"))
 	stage_reward_label.add_theme_font_size_override("font_size", 22)
 	stage_reward_label.add_theme_color_override("font_color", Color("e6c66d"))
@@ -4754,28 +4754,21 @@ func _refresh_stage_card() -> void:
 	stage_selector_button.text = "STAGE %02d  ·  목록 선택" % stage_number
 	stage_name_label.text = String(stage.get("display_name", "미지의 침입자"))
 	hero_name_label.text = hero_name
-	stage_description_label.text = String(
-		stage.get(
-			"lobby_description",
-			"이 침입자의 전투 패턴을 관찰하고 카운터를 준비하세요."
-		)
-	)
-
+	stage_description_label.tooltip_text = String(stage.get("lobby_description",""))
+	stage_description_label.text = preload("res://src/data/stage_entry_copy_catalog.gd").summary(stage_id)
 	var experience := preload("res://src/data/campaign_experience_catalog.gd").profile(stage_id)
-	if not experience.is_empty() and unlocked:
-		stage_description_label.text = String(experience.preview)
 	var entry_state := (
 		"클리어 완료"
 		if cleared
 		else ("입장 가능" if unlocked else "잠김")
 	)
-	var time_text := "제한 %d분" % minutes if minutes > 0 else "시간 제한 없음"
-	stage_status_label.text = "%s · %s" % [entry_state, time_text]
+	var time_text := "%d분 도전" % minutes if minutes > 0 else "시간 제한 없음"
+	stage_status_label.text = "%s\n%s" % [entry_state, time_text]
 
 	if not STAGE_PROGRESS.is_gold_reward_claimed(stage_id):
 		stage_reward_label.text = "최초 보상\n골드 +%d" % int(STAGE_CATALOG.CLEAR_GOLD_REWARDS.stage_first_clear)
 		if not reward_claimed and reward > 0:
-			stage_reward_label.text += " · 연구 +%d" % reward
+			stage_reward_label.text += "\n연구 +%d" % reward
 	elif reward_claimed:
 		stage_reward_label.text = "최초 보상\n획득 완료"
 	elif reward > 0:
@@ -4784,11 +4777,11 @@ func _refresh_stage_card() -> void:
 		stage_reward_label.text = "최초 보상\n-"
 
 	if not experience.is_empty() and not STAGE_PROGRESS.is_campaign_reward_claimed(stage_id):
-		stage_reward_label.text += "\n몬스터 · "+MONSTER_CATALOG.get_monster_name(String(experience.reward_monster))
+		stage_reward_label.text += "\n"+MONSTER_CATALOG.get_monster_name(String(experience.reward_monster))
 
 	var repeat_label := stage_repeat_reward_label
 	if repeat_label != null:
-		repeat_label.text = "반복 보상 ×%.2f" % run_reward_multiplier
+		repeat_label.text = "반복 보상\n×%.2f" % run_reward_multiplier
 
 	enter_stage_button.disabled = not unlocked
 	var entry_cost: int = 0 if LocalTestMode.active or TutorialFlow.active() else STAMINA_RULES.ENTRY_COST
@@ -4822,7 +4815,7 @@ func _refresh_stage_card() -> void:
 	if silhouette:
 		hero_name_label.text = "???"
 		stage_name_label.text = "미지의 침입자"
-		stage_description_label.text = "앞선 스테이지를 클리어하면 정체가 밝혀집니다."
+		stage_description_label.text = "앞선 스테이지 클리어 필요"
 	if main_modes_view != null:
 		main_modes_view.refresh()
 
