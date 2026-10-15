@@ -140,7 +140,7 @@ static func record_chest(entry: Dictionary, chest_serial: int, gold_bonus: float
 	var previous := int(config.get_value("hero_run_gold","chest",0)) if same else 0
 	var units := int(config.get_value("hero_run_gold","units",0)) if same else 0
 	if chest_serial <= previous: return {"success":true,"pending":floori(units/1000.0)}
-	units += roundi(DATA.CHEST_GOLD*1000*(1.0+clampf(gold_bonus,0,0.15)))
+	units += roundi(DATA.CHEST_GOLD*1000*(1.0+clampf(gold_bonus,0,DATA.growth_max_bonus("gold"))))
 	config.set_value("hero_run_gold","entry",serial); config.set_value("hero_run_gold","chest",chest_serial); config.set_value("hero_run_gold","units",units)
 	return {"success":SCOPE.save_config(config,PATH) == OK,"pending":floori(units/1000.0)}
 static func award_run(stage: String,entry: Dictionary,elapsed: float,kills: int,won: bool,value: String = "easy", outcome: String = "", gold_bonus: float = -1.0) -> Dictionary:
@@ -161,7 +161,7 @@ static func award_run(stage: String,entry: Dictionary,elapsed: float,kills: int,
 	var ratio := float(DATA.CHEST_GOLD_RATES["victory" if won else "abandon" if outcome == "abandon" else "defeat"])
 	var units := int(config.get_value("hero_run_gold","units",0)) if int(config.get_value("hero_run_gold","entry",0)) == serial else 0
 	var chest_paid := floori(maxi(0,units)*ratio/1000.0)
-	var bonus := clampf(gold_bonus if gold_bonus >= 0.0 else _shared_growth(config,"gold")*float(DATA.GROWTH.gold.value),0,0.15)
+	var bonus := clampf(gold_bonus if gold_bonus >= 0.0 else _shared_growth(config,"gold")*float(DATA.GROWTH.gold.value),0,DATA.growth_max_bonus("gold"))
 	gold = floori(gold*(1.0+bonus))+chest_paid
 	config.set_value("hero_progress","last_reward_entry",serial)
 	config.set_value("hero_progress",stage+"_best_seconds",maxf(elapsed,float(config.get_value("hero_progress",stage+"_best_seconds",0.0))))

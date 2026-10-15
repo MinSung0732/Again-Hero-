@@ -98,19 +98,23 @@ const PARTIAL_GOLD := 3
 const CHEST_GOLD := 8
 const CHEST_GOLD_RATES := {"victory":1.0,"defeat":0.4,"abandon":0.3}
 const GROWTH := {
-	"vitality":{"name":"생명력","description":"최대 체력 +2% / 단계 · 최대20%","max":10,"cost":200,"value":0.02,"hp":0.02,"damage":0.0},
-	"regeneration":{"name":"재생력","description":"매초 최대 체력의0.01% 회복 / 단계 · 최대0.1%/초","max":10,"cost":150,"value":0.0001},
-	"power":{"name":"전투 숙련","description":"공격력 +1% / 단계 · 최대10%","max":10,"cost":200,"value":0.01,"hp":0.0,"damage":0.01},
-	"shield":{"name":"보호막 강화","description":"생성되는 보호막 +2% / 단계 · 최대20%","max":10,"cost":150,"value":0.02},
-	"mobility":{"name":"기동력","description":"이동속도 +1% / 단계 · 최대10%","max":10,"cost":200,"value":0.01},
-	"haste":{"name":"공격 숙련","description":"무기 공격속도 +1% / 단계 · 최대10%","max":10,"cost":200,"value":0.01},
-	"siphon":{"name":"피해 흡수","description":"실제 준 피해의0.2% 흡혈 / 단계 · 최대1%","max":5,"cost":200,"value":0.002},
-	"gold":{"name":"금화 수집","description":"용사 전투 골드 +1.5% / 단계 · 최대15%","max":10,"cost":100,"value":0.015},
-	"learning":{"name":"전투 학습","description":"경험치 획득 +1.5% / 단계 · 최대15%","max":10,"cost":150,"value":0.015},
-	"magnet":{"name":"경험치 회수","description":"경험치 흡수 범위 +2% / 단계 · 최대20%","max":10,"cost":100,"value":0.02},
-	"area":{"name":"무기 범위","description":"광역·근접 무기 범위 +2% / 단계 · 최대10%","max":5,"cost":200,"value":0.02},
-	"ranged_reach":{"name":"원거리 사거리","description":"원거리 무기 사거리 +3% / 단계 · 최대15%","max":5,"cost":150,"value":0.03},
+	"vitality":{"name":"생명력","description":"최대 체력 +5% / 단계 · 최대50%","max":10,"cost":200,"value":0.05,"hp":0.05,"damage":0.0},
+	"regeneration":{"name":"재생력","description":"매초 최대 체력의0.03% 회복 / 단계 · 최대0.3%/초","max":10,"cost":150,"value":0.0003},
+	"power":{"name":"전투 숙련","description":"공격력 +3% / 단계 · 최대30%","max":10,"cost":200,"value":0.03,"hp":0.0,"damage":0.03},
+	"shield":{"name":"보호막 강화","description":"생성되는 보호막 +5% / 단계 · 최대50%","max":10,"cost":150,"value":0.05},
+	"mobility":{"name":"기동력","description":"이동속도 +1.5% / 단계 · 최대15%","max":10,"cost":200,"value":0.015},
+	"haste":{"name":"공격 숙련","description":"무기 공격속도 +2% / 단계 · 최대20%","max":10,"cost":200,"value":0.02},
+	"siphon":{"name":"피해 흡수","description":"실제 준 피해의0.3% 흡혈 / 단계 · 최대1.5%","max":5,"cost":200,"value":0.003},
+	"gold":{"name":"금화 수집","description":"용사 전투 골드 +3% / 단계 · 최대30%","max":10,"cost":100,"value":0.03},
+	"learning":{"name":"전투 학습","description":"경험치 획득 +3% / 단계 · 최대30%","max":10,"cost":150,"value":0.03},
+	"magnet":{"name":"경험치 회수","description":"경험치 흡수 범위 +5% / 단계 · 최대50%","max":10,"cost":100,"value":0.05},
+	"area":{"name":"무기 범위","description":"광역·근접 무기 범위 +4% / 단계 · 최대20%","max":5,"cost":200,"value":0.04},
+	"ranged_reach":{"name":"원거리 사거리","description":"원거리 무기 사거리 +5% / 단계 · 최대25%","max":5,"cost":150,"value":0.05},
 }
+# Shared reward cap follows the research definition, including run snapshots.
+static func growth_max_bonus(id: String) -> float:
+	var data: Dictionary = GROWTH.get(id,{})
+	return float(data.get("value",0.0))*int(data.get("max",0))
 static func growth_cost(id: String,level: int) -> int:
 	return int(GROWTH.get(id,{}).get("cost",0))*(level+1)
 

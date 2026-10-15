@@ -115,7 +115,7 @@ func run() -> void:
 	for id in CHARACTERS.ORDER:
 		var profile := HERO_UI.WEAPONS.profile_for_survival(HERO_UI.PROFILES.get_profile(id))
 		var base := profile.duplicate(true); STORE.apply_growth(id,profile)
-		check(profile.max_hp == roundi(float(base.max_hp)*1.2) and profile.attack_damage == roundi(float(base.attack_damage)*1.1),"shared max research applies once to character base "+id)
+		check(profile.max_hp == roundi(float(base.max_hp)*1.5) and profile.attack_damage == roundi(float(base.attack_damage)*1.3),"shared max research applies once to character base "+id)
 		check(profile.move_speed == base.move_speed and profile.exp_pickup_radius == base.exp_pickup_radius,"research preserves mobility/pickup role "+id)
 	check(STORE.DATA.GROWTH.size() == 12,"twelve account research tracks")
 	for outcome in ["victory","defeat","abandon"]:
@@ -138,6 +138,19 @@ func run() -> void:
 	var bonus_reward := STORE.award_run("stage_1",entry,900,10,true,"easy","victory",0.15)
 	check(bonus_reward.gold == 87 and bonus_reward.chest_paid == 18,"gold research affects base and chests once")
 	check(not STORE.award_run("stage_1",entry,900,10,true,"easy","abandon").success,"outcome mismatch rejected")
+	# Updated gold cap applies to the snapshot and current-save fallback; old 15% snapshots remain valid.
+	for outcome in ["victory","defeat","abandon"]:
+		entry = enter("stage_1")
+		check(STORE.record_chest(entry,1,0.3).pending == 10 and STORE.record_chest(entry,2,0.3).pending == 20,"new gold cap retains fractional units")
+		check(STORE.record_chest(entry,2,0.3).pending == 20,"new cap receipt replay unchanged")
+		var reward := STORE.award_run("stage_1",entry,900 if outcome == "victory" else 60,10,outcome == "victory","easy",outcome,0.3)
+		var chest_paid := 20 if outcome == "victory" else 8 if outcome == "defeat" else 6
+		check(reward.success and reward.chest_paid == chest_paid and reward.gold == (78 if outcome == "victory" else 3)+chest_paid,"new bonus settles once "+outcome)
+		check(STORE.award_run("stage_1",entry,900 if outcome == "victory" else 60,10,outcome == "victory","easy",outcome,0.3).gold == 0,"new cap no repeated payout")
+	saved = hero_config(); saved.set_value("hero_growth","shared_gold",10); SCOPE.save_config(saved,STORE.PATH)
+	entry = enter("stage_1")
+	check(STORE.record_chest(entry,1,99.0).pending == 10,"oversized snapshot capped by catalog")
+	check(STORE.award_run("stage_1",entry,900,10,true).gold == 88,"saved maximum gold fallback applies 30 percent")
 	cfg = progress_config(); cfg.set_value("meta","research_points",100000); SCOPE.save_config(cfg,PROGRESS.SAVE_PATH)
 	for id in STORE.DATA.GROWTH:
 		var old := STORE.growth_level("ranged_rookie",id); var points := int(progress_config().get_value("meta","research_points",0))
@@ -153,6 +166,11 @@ func run() -> void:
 	for id in STORE.DATA.GROWTH:
 		check(STORE.growth_level("ranged_rookie",id) == int(STORE.DATA.GROWTH[id].max) and not STORE.purchase_growth("ranged_rookie",id),"all research cap oversized save "+id)
 		check(is_equal_approx(float(all_max[id]),float(STORE.DATA.GROWTH[id].value)*int(STORE.DATA.GROWTH[id].max)),"all bounded bonuses "+id)
+	for id in CHARACTERS.ORDER:
+		var profile := HERO_UI.WEAPONS.profile_for_survival(HERO_UI.PROFILES.get_profile(id))
+		var base := profile.duplicate(true); STORE.apply_growth(id,profile)
+		check(profile.max_hp == roundi(float(base.max_hp)*1.5) and profile.attack_damage == roundi(float(base.attack_damage)*1.3),"max HP/power applied once on every kit "+id)
+		check(is_equal_approx(profile.move_speed,float(base.move_speed)*1.15) and is_equal_approx(profile.exp_pickup_radius,float(base.exp_pickup_radius)*1.5),"mobility/pickup applied once on every kit "+id)
 	SCOPE.guest_directory = directory+"_other"; DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory); SCOPE.select_guest()
 	check(not STORE.mode_unlocked() and not UNLOCKS.unlocked("rank","stage_1") and not STORE.battle_stage_cleared("stage_10"),"account namespace isolation")
 	check(not STORE.can_enter("invalid","easy") and not STORE.set_difficulty("invalid"),"invalid stage/difficulty denied")
