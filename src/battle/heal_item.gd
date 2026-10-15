@@ -1,5 +1,8 @@
 extends Node2D
 
+const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
+var _placement_pending := true
+
 const HEAL_FRAME_DIR := "res://assets/art/heroes/item/heal_frames"
 const HEAL_AMOUNT := 70
 const FRAME_COUNT := 4
@@ -23,6 +26,9 @@ func _ready() -> void:
 	_apply_visual()
 
 func _physics_process(delta: float) -> void:
+	if _placement_pending:
+		PICKUP_PLACEMENT.ensure_reachable(self)
+		_placement_pending = false
 	if collected:
 		return
 

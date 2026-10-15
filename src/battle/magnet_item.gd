@@ -1,5 +1,8 @@
 extends Node2D
 
+const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
+var _placement_pending := true
+
 const FRAME_COUNT := 4
 const FRAME_SIZE := Vector2(627.0, 627.0)
 const TARGET_HEIGHT := 82.0
@@ -20,6 +23,9 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	if _placement_pending:
+		PICKUP_PLACEMENT.ensure_reachable(self)
+		_placement_pending = false
 	if picked_up:
 		return
 	if not is_instance_valid(hero):

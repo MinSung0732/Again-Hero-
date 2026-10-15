@@ -1,5 +1,8 @@
 extends Node2D
 
+const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
+var _placement_pending := true
+
 const FRAME_COUNT := 6
 const FRAME_SIZE := Vector2(64, 56)
 const TARGET_HEIGHT := 42.0
@@ -74,6 +77,7 @@ func _ready() -> void:
 	queue_redraw()
 
 func setup(value: int, initial_velocity: Vector2 = Vector2.ZERO, pickup_delay: float = 0.0) -> void:
+	_placement_pending = true
 	if not is_in_group("exp_orbs"):
 		add_to_group("exp_orbs")
 	visible = true
@@ -95,9 +99,13 @@ func setup(value: int, initial_velocity: Vector2 = Vector2.ZERO, pickup_delay: f
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
+	if _placement_pending:
+		PICKUP_PLACEMENT.ensure_reachable(self)
+		_placement_pending = false
 	pulse_time += delta
 	if burst_time > 0.0:
 		global_position += burst_velocity * delta
+		PICKUP_PLACEMENT.ensure_reachable(self)
 		burst_velocity = burst_velocity.lerp(
 			Vector2.ZERO,
 			clampf(delta * 8.0, 0.0, 1.0)
@@ -157,6 +165,7 @@ func _physics_process(delta: float) -> void:
 				* global_speed
 				* delta
 			)
+			PICKUP_PLACEMENT.ensure_reachable(self)
 
 		if global_magnet_time_left <= 0.0:
 			global_magnet_elapsed = 0.0
@@ -216,6 +225,7 @@ func _physics_process(delta: float) -> void:
 			* speed_scale
 			* delta
 		)
+		PICKUP_PLACEMENT.ensure_reachable(self)
 
 
 func activate_global_magnet(

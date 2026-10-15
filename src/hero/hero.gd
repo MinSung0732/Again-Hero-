@@ -4654,6 +4654,7 @@ func _execute_alchemist_cauldron_success(origin: Vector2) -> void:
 			battlefield_size.y - 64.0
 		)
 		item.global_position = heal_position
+		preload("res://src/systems/pickup_placement.gd").ensure_reachable(item)
 		if item.has_method("set_temporary_lifetime"):
 			item.call("set_temporary_lifetime", lifetime)
 

@@ -1,5 +1,6 @@
 extends Node2D
 
+const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
 const BATTLE_SESSION := preload("res://src/data/battle_session_catalog.gd")
 const HERO_SURVIVAL := preload("res://src/data/hero_mode_catalog.gd")
 const BATTLE_COMMAND := preload("res://src/systems/battle_command.gd")
@@ -3377,7 +3378,7 @@ func _spawn_random_treasure_chest() -> bool:
 	var chest := TREASURE_CHEST_SCENE.instantiate() as Node2D
 	if chest == null: return false
 	add_child(chest)
-	chest.global_position = spawn_position
+	chest.position = PICKUP_PLACEMENT.clamp_local(self,to_local(spawn_position))
 	_register_treasure_chest(chest)
 	if chest.has_signal("destroyed"):
 		chest.connect(
@@ -3446,6 +3447,7 @@ func _spawn_random_magnet_item() -> void:
 		randf_range(min_x, max_x),
 		randf_range(min_y, max_y)
 	)
+	PICKUP_PLACEMENT.ensure_reachable(item)
 	_register_magnet_item(item)
 
 
@@ -3515,7 +3517,7 @@ func _spawn_random_heal_item() -> void:
 
 	var item := HEAL_ITEM_SCENE.instantiate() as Node2D
 	add_child(item)
-	item.global_position = spawn_position
+	item.position = PICKUP_PLACEMENT.clamp_local(self,to_local(spawn_position))
 	_register_heal_item(item)
 
 func _warm_transcendent_exp_drop() -> void:
@@ -3564,7 +3566,7 @@ func _spawn_exp_orb(
 		orb = EXP_ORB_SCENE.instantiate() as Node2D
 		add_child(orb)
 
-	orb.global_position = drop_position
+	orb.position = PICKUP_PLACEMENT.clamp_local(self,to_local(drop_position))
 	orb.call("setup", exp_value, initial_velocity, pickup_delay)
 	var magnet_remaining := _remaining_exp_magnet_seconds()
 	if (
