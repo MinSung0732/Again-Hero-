@@ -16,6 +16,7 @@ const LOCAL_GRID_MOVEMENT := preload("res://src/monsters/monster_runtime_common.
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
 signal died
+signal death_started
 signal health_changed(current_hp: int, max_hp_value: int)
 signal status_applied(status_id: String)
 signal status_action_applied(status_id: String)
@@ -21212,6 +21213,7 @@ func _begin_death_sequence() -> void:
 		return
 
 	is_dying = true
+	death_started.emit()
 	_clear_bleed()
 	_clear_burn()
 	_clear_stun()

@@ -3437,7 +3437,6 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	_result_won = player_won
 	if is_instance_valid(_insight_view): _insight_view.hide()
 	hero_bgm_manager.stop_bgm()
-	GameAudio.battle_result(self, player_won)
 	settings_overlay.hide()
 	pause_menu.hide()
 	hero_skill_cooldown_bar.hide()
@@ -3456,6 +3455,12 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	demon_ultimate_3.disabled = true
 	_hide_demon_action_choices()
 	placement_toggle.disabled = true
+
+	# Death/rewards settle normally; only the result presentation waits for focus.
+	if player_won and summon_cinematic.active and summon_cinematic.hero_defeat_focus:
+		await summon_cinematic.focus_finished
+		if not is_inside_tree() or is_queued_for_deletion(): return
+	GameAudio.battle_result(self, player_won)
 
 	if player_won:
 		result_title.text = "승리 · 스테이지 클리어"

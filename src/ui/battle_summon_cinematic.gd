@@ -2,6 +2,8 @@ extends Control
 
 const CATALOG := preload("res://src/data/battle_summon_cinematic_catalog.gd")
 const SFX_BANK := preload("res://src/audio/event_sfx_bank.gd")
+signal focus_finished
+var hero_defeat_focus := false
 var sound_banks: Dictionary = {}
 var sound_bank: Node
 var audio_timeline: Array = []
@@ -53,6 +55,9 @@ func install(main: Control, preview_ids: Array[String] = []) -> void:
 	host.battle.transcendent_summoned.connect(play)
 	host.battle.transcendent_died.connect(play_death)
 	host.battle.battle_finished.connect(_finished)
+	var dying_hero := host.battle.get("hero") as Node2D
+	if is_instance_valid(dying_hero) and dying_hero.has_signal("death_started"):
+		dying_hero.connect("death_started",play_hero_defeat)
 	hide()
 	set_process(false)
 	# Prewarm once during installation; successful summon never allocates a new view.
@@ -70,6 +75,7 @@ func install(main: Control, preview_ids: Array[String] = []) -> void:
 		_cached_sound_bank(id)
 
 func play(monster_id: String, summoned: Node2D) -> void:
+	if hero_defeat_focus: return
 	cancel()
 	if not CATALOG.ENTRIES.has(monster_id) or not is_instance_valid(summoned):
 		return
@@ -83,6 +89,7 @@ func play(monster_id: String, summoned: Node2D) -> void:
 	_begin_focus(summoned, entry)
 
 func play_death(monster_id: String, dying_actor: Node2D) -> void:
+	if hero_defeat_focus: return
 	if active and death_mode and actor == dying_actor:
 		return
 	cancel()
@@ -95,6 +102,16 @@ func play_death(monster_id: String, dying_actor: Node2D) -> void:
 	sound_bank = _cached_sound_bank(monster_id)
 	audio_timeline = CATALOG.ENTRIES.get(monster_id, {}).get("death_audio_timeline", [])
 	_begin_focus(dying_actor, entry)
+
+func play_hero_defeat() -> void:
+	if host.battle.battle_over or bool(host.battle.get("hero_player_mode")) or bool(host.battle.get("practice_mode")) or bool(host.battle.get("tutorial_mode")): return
+	if hero_defeat_focus: return
+	var dying_hero := host.battle.get("hero") as Node2D
+	if not is_instance_valid(dying_hero): return
+	cancel()
+	death_mode = true; hero_defeat_focus = true
+	view = null
+	_begin_focus(dying_hero,CATALOG.DEATH_DEFAULT)
 
 func _begin_focus(summoned: Node2D, entry: Dictionary) -> void:
 	original = host.battle_viewport.get_camera_2d()
@@ -161,7 +178,7 @@ func _process(_delta: float) -> void:
 func advance(real_delta: float) -> void:
 	if not active:
 		return
-	if host.battle.battle_over or not host.battle_viewport_container.is_visible_in_tree():
+	if (host.battle.battle_over and not hero_defeat_focus) or not host.battle_viewport_container.is_visible_in_tree():
 		cancel()
 		return
 	var target_present := is_instance_valid(actor) and actor.is_inside_tree()
@@ -221,6 +238,7 @@ func advance(real_delta: float) -> void:
 		cancel()
 
 func cancel() -> void:
+	var was_active := active
 	if is_instance_valid(sound_bank):
 		sound_bank.stop_all()
 	sound_bank = null
@@ -234,6 +252,7 @@ func cancel() -> void:
 	world_effect = null
 	active = false
 	death_mode = false
+	hero_defeat_focus = false
 	set_process(false)
 	if is_instance_valid(camera):
 		camera.enabled = false
@@ -248,6 +267,7 @@ func cancel() -> void:
 	actor = null
 	original = null
 	hide()
+	if was_active: focus_finished.emit()
 
 func _advance_audio() -> void:
 	if not is_instance_valid(sound_bank):
@@ -259,6 +279,7 @@ func _advance_audio() -> void:
 		next_audio_cue += 1
 
 func _finished(_message: String, _won: bool) -> void:
+	if _won and active and hero_defeat_focus: return
 	cancel()
 
 func _exit_tree() -> void:
