@@ -1,5 +1,16 @@
 extends RefCounted
 
+# Unlock progress is permanent; release availability is a separate product gate.
+const HARD_AVAILABLE := false
+const HARD_NOTICE := "어려움 난이도는 전용 패턴 준비 중입니다. 쉬움 난이도를 이용해 주세요."
+
+static func difficulty_available(value: String) -> bool:
+	return value == "easy" or (value == "hard" and HARD_AVAILABLE)
+
+static func scene_entry_available(path: String, options: Dictionary) -> bool:
+	if path not in ["res://src/main/Main.tscn","res://src/hero_mode/HeroMode.tscn"]: return true
+	return difficulty_available(String(options.get("difficulty","easy")))
+
 const ORDER := ["hard", "hero", "rank"]
 const RULES := {
 	"hard": {"name": "어려움 난이도", "required_stage": "", "condition": "해당 스테이지 쉬움 클리어 후 개방"},

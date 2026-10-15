@@ -3569,6 +3569,9 @@ func _on_restart_pressed() -> void:
 	_restart_with_stamina(String(battle.current_stage_id), true)
 
 func _restart_with_stamina(stage_id: String, skip_dialogue: bool = false) -> void:
+	if not preload("res://src/data/mode_unlock_catalog.gd").difficulty_available(battle.campaign_difficulty):
+		_show_stamina_notice(preload("res://src/data/mode_unlock_catalog.gd").HARD_NOTICE)
+		return
 	if _stamina_entry_pending or _scene_load_pending or SceneTransition.is_transitioning():
 		return
 	if battle.practice_mode:

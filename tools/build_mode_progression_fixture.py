@@ -12,6 +12,7 @@ def method(source,name):
 source=(repo/'src/ui/lobby_main_modes_view.gd').read_text()
 refresh=method(source,'refresh').split('\tif lobby.hero_lobby_view')[0]
 base='''extends RefCounted
+const UNLOCK_DATA := preload("res://src/data/mode_unlock_catalog.gd")
 const UNLOCKS := preload("res://src/systems/mode_unlock_store.gd")
 const HERO_STORE := preload("res://src/systems/hero_mode_store.gd")
 class Transition extends RefCounted:

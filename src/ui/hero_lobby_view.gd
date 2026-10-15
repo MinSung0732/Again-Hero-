@@ -151,9 +151,9 @@ func _build_formation(body: VBoxContainer,id: String) -> void:
 	_label(body,"용사 상세 정보",34)
 	var difficulty := OptionButton.new(); difficulty.name = "HeroDifficulty"; difficulty.custom_minimum_size.y = 64
 	difficulty.add_theme_font_size_override("font_size",26)
-	difficulty.add_item("쉬움"); difficulty.add_item("어려움"); difficulty.select(1 if STORE.difficulty() == "hard" else 0)
-	difficulty.set_item_disabled(1,not STORE.hard_stage_unlocked(STORE.selected_battle_stage()))
-	difficulty.tooltip_text = "어려움은 현재 용사 전장 쉬움 클리어 후 개방"
+	difficulty.add_item("쉬움"); difficulty.add_item("어려움 · 준비 중" if not STORE.UNLOCK_DATA.HARD_AVAILABLE else "어려움"); difficulty.select(1 if STORE.difficulty() == "hard" else 0)
+	difficulty.set_item_disabled(1,not STORE.can_start(STORE.selected_battle_stage(),"hard"))
+	difficulty.tooltip_text = STORE.UNLOCK_DATA.HARD_NOTICE if not STORE.UNLOCK_DATA.HARD_AVAILABLE else "어려움은 현재 용사 전장 쉬움 클리어 후 개방"
 	difficulty.item_selected.connect(func(index: int):
 		if not STORE.set_difficulty("hard" if index == 1 else "easy"): difficulty.select(1 if STORE.difficulty() == "hard" else 0)
 		lobby._refresh_stage_card())
@@ -202,7 +202,7 @@ func _refresh_formation(id: String) -> void:
 	var values := [str(int(profile.max_hp)),str(int(profile.attack_damage)),"%.2f초" % float(starter.cooldown),"%d" % int(profile.move_speed),"%d" % int(starter.range),"%d" % int(profile.exp_pickup_radius)]
 	for index in stat_values.size(): stat_values[index].text = values[index]
 	formation_message.text = message if not message.is_empty() else "전용 무기 10종 · 무기 6칸 / 보조 6칸 · 캐릭터 능력치는 공통 연구 포함 · 무기 간격/범위는 기본값"
-	difficulty_selector.set_item_disabled(1,not STORE.hard_stage_unlocked(STORE.selected_battle_stage()))
+	difficulty_selector.set_item_disabled(1,not STORE.can_start(STORE.selected_battle_stage(),"hard"))
 	difficulty_selector.select(1 if STORE.difficulty() == "hard" else 0)
 	for hero_id in hero_cards:
 		var unlocked := STORE.character_unlocked(hero_id); var selected: bool = hero_id == id

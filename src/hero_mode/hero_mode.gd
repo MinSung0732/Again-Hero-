@@ -87,10 +87,10 @@ func _ready() -> void:
 	player_hero_id = String(options.get("hero_id",STORE.selected_hero()))
 	run_difficulty = String(options.get("difficulty",STORE.difficulty()))
 	_build_ui()
-	if not STORE.character_unlocked(player_hero_id) or not STORE.can_enter(stage,run_difficulty):
+	if not STORE.character_unlocked(player_hero_id) or not STORE.can_start(stage,run_difficulty):
 		var original_ticket: Dictionary = options.get("hero_entry",{})
 		var refunded := original_ticket.is_empty() or STAMINA.refund_failed_entry(original_ticket)
-		_show_blocked("마왕 쉬움 10스테이지 또는 해당 용사 스테이지 쉬움 클리어를 확인하세요." if refunded else "잠긴 입장 실패 · 스테미너 반환 저장을 확인하세요.")
+		_show_blocked((STORE.UNLOCK_DATA.HARD_NOTICE if not STORE.UNLOCK_DATA.difficulty_available(run_difficulty) else "모드와 해당 스테이지 해금 조건을 확인하세요.") if refunded else "잠긴 입장 실패 · 스테미너 반환 저장을 확인하세요.")
 		return
 	entry = STAMINA.claim_battle_entry(stage)
 	if entry.is_empty():
@@ -425,11 +425,14 @@ func _show_result() -> void:
 		for id in runtime.weapon_ids:
 			equipped.append({"id":id,"rank":"MAX" if runtime.evolved.has(id) else "Lv.%d" % int(runtime.levels.get(id,1))})
 	var next_stage := String(STAGES.get_stage(stage).get("next_stage_id",""))
-	var model := {"won":finished_won,"message":finished_message,"seconds":battle.run_metrics.elapsed_seconds,"kills":_kill_count(),"level":battle.hero.level,"weapons":equipped,"settled":settled,"research":int(result_reward.get("research",0)),"gold":int(result_reward.get("gold",0)),"chest_earned":int(result_reward.get("chest_earned",0)),"chest_paid":int(result_reward.get("chest_paid",0)),"chest_rate":float(result_reward.get("chest_rate",0)),"next_available":finished_won and STORE.can_enter(next_stage,run_difficulty)}
+	var model := {"won":finished_won,"message":finished_message,"seconds":battle.run_metrics.elapsed_seconds,"kills":_kill_count(),"level":battle.hero.level,"weapons":equipped,"settled":settled,"research":int(result_reward.get("research",0)),"gold":int(result_reward.get("gold",0)),"chest_earned":int(result_reward.get("chest_earned",0)),"chest_paid":int(result_reward.get("chest_paid",0)),"chest_rate":float(result_reward.get("chest_rate",0)),"next_available":finished_won and STORE.can_start(next_stage,run_difficulty)}
 	RESULT_VIEW.build(overlay_rows,model,{"settle":_show_result,"next":_next_stage.bind(next_stage),"retry":_retry,"leave":_leave})
 
 func _retry() -> void:
-	if leaving or not settled or not STORE.can_enter(stage,run_difficulty): return
+	if not STORE.UNLOCK_DATA.difficulty_available(run_difficulty):
+		_show_stamina_notice(STORE.UNLOCK_DATA.HARD_NOTICE)
+		return
+	if leaving or not settled or not STORE.can_start(stage,run_difficulty): return
 	var ticket := STAMINA.try_enter(stage,LocalTestMode.active,-1,false)
 	if not bool(ticket.get("success",false)):
 		_show_stamina_notice(STAMINA_NOTICE.INSUFFICIENT if ticket.get("reason") == "insufficient" else "저장을 완료하지 못했습니다. 다시 시도해 주세요."); return
@@ -650,7 +653,7 @@ func _restart_from_pause() -> void:
 	battle.finish_abandoned_run()
 	if settled: _retry()
 func _next_stage(id: String) -> void:
-	if leaving or not settled or not finished_won or not STORE.can_enter(id,run_difficulty): return
+	if leaving or not settled or not finished_won or not STORE.can_start(id,run_difficulty): return
 	var previous := stage
 	stage = id; _retry()
 	if not leaving: stage = previous

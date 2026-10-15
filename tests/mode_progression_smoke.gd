@@ -66,7 +66,7 @@ func run() -> void:
 	for stage in STAGES.ORDER: check(STORE.hard_stage_unlocked(stage) == (stage == "stage_1"),"ten-stage hero hard matrix "+stage)
 	var before := int(hero_config().get_value("hero_progress","stage_1_easy_wins",0))
 	check(STORE.award_run("stage_1",entry,900,10,true).get("research",-1) == 0 and int(hero_config().get_value("hero_progress","stage_1_easy_wins",0)) == before,"duplicate award does not add clear/reward")
-	check(STORE.select_battle_stage("stage_1") and STORE.set_difficulty("hard"),"unlocked hard stored")
+	check(STORE.select_battle_stage("stage_1") and not STORE.set_difficulty("hard") and STORE.hard_stage_unlocked("stage_1"),"hard unlocked but release entry disabled")
 	entry = enter("stage_1")
 	check(STORE.award_run("stage_1",entry,900,10,true,"hard").get("success",false) and STORE.battle_stage_cleared("stage_1","hard"),"hard transaction only own key")
 	check(int(hero_config().get_value("hero_progress","stage_1_easy_wins",0)) == before,"hard win does not increment easy")
@@ -74,7 +74,7 @@ func run() -> void:
 	var ui = load("res://tests/mode_progression_ui.gd").new(); ui.perspective = "hero"; ui.stage = "stage_2"
 	ui.choose_difficulty("hard"); check(ui.difficulty == "easy","UI direct hard handler rejects locked stage")
 	ui.stage = "stage_1"; ui.refresh(); ui.choose_difficulty("hard")
-	check(ui.difficulty == "hard" and not ui.blocks_entry(),"hero hard no longer preview blocked")
+	check(ui.difficulty == "easy" and not ui.blocks_entry(),"hero hard unavailable despite unlock")
 	ui.stage = "stage_2"; ui.refresh(); check(ui.difficulty == "easy" and not ui.blocks_entry(),"UI new stage normalized before entry")
 	var selector_harness = load("res://tests/mode_progression_selector.gd").new()
 	var body := VBoxContainer.new(); root.add_child(body); selector_harness.build(body)
@@ -83,8 +83,8 @@ func run() -> void:
 	selector.item_selected.emit(1); check(STORE.difficulty() == "easy" and selector.selected == 0,"formation direct callback blocked")
 	body.queue_free()
 	STORE.select_battle_stage("stage_1"); body = VBoxContainer.new(); root.add_child(body); selector_harness.build(body)
-	selector = body.get_node("HeroDifficulty"); check(not selector.is_item_disabled(1),"formation hard option opens")
-	selector.select(1); selector.item_selected.emit(1); check(STORE.difficulty() == "hard","formation actual binding saves hard")
+	selector = body.get_node("HeroDifficulty"); check(selector.is_item_disabled(1),"formation hard remains preparing after unlock")
+	selector.select(1); selector.item_selected.emit(1); check(STORE.difficulty() == "easy","formation direct hard callback rejected")
 	check(UNLOCKS.mark_announced("hard","stage_1","hero") and UNLOCKS.announcement_seen("hard","stage_1","hero") and not UNLOCKS.announcement_seen("hard","stage_1"),"mode-specific hard announcement")
 	entry = enter("stage_2")
 	check(STORE.award_run("stage_2",entry,50,10,false,"easy").get("success",false) and STORE.highest_battle_stage() == 2,"defeat cannot unlock next stage")
@@ -159,6 +159,7 @@ func run() -> void:
 	mode.test_directory = SCOPE.guest_directory
 	mode.active = true
 	check(STORE.mode_unlocked() and STORE.can_enter("stage_10","hard") and UNLOCKS.unlocked("rank","stage_1"),"local test override preserved")
+	check(not STORE.can_start("stage_10","hard"),"localtest cannot bypass release gate")
 	SCOPE.guest_directory += "_stale"
 	check(not STORE.mode_unlocked() and not UNLOCKS.unlocked("rank","stage_1"),"stale local active flag cannot cross namespace")
 	mode.active = false; check(not STORE.mode_unlocked(),"test override never persists a clear")

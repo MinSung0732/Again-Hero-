@@ -5079,7 +5079,7 @@ func _enter_hero_stage(stage_id: String) -> void:
 	var hero_store := preload("res://src/systems/hero_mode_store.gd")
 	var selected_hero: String = hero_store.selected_hero()
 	var selected_difficulty := hero_store.difficulty()
-	if not hero_store.can_enter(stage_id,selected_difficulty):
+	if not hero_store.can_start(stage_id,selected_difficulty):
 		stamina_view.show_entry_notice("마왕 쉬움 10스테이지 또는 해당 용사 스테이지 쉬움을 먼저 클리어하세요.")
 		return
 	if not hero_store.character_unlocked(selected_hero):

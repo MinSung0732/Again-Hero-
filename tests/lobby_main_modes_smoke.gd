@@ -57,7 +57,7 @@ func run() -> void:
 	check(view.mode_row.get_global_rect().end.y < 1720, "mode controls above navigation")
 	check(view.difficulty_row.get_global_rect().end.y <= lobby.portrait_texture.global_position.y, "difficulty above portrait")
 	view.choose_difficulty("hard")
-	check(view.blocks_entry() and not lobby._scene_load_pending, "hard is UI only")
+	check(view.difficulty == "easy" and not lobby._scene_load_pending, "hard preparation rejects selection")
 	view.notice.hide()
 	view.choose_difficulty("easy")
 	view.choose_perspective("hero")

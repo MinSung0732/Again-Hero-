@@ -58,6 +58,7 @@ func consume_entry_options() -> Dictionary:
 
 
 func change_scene(path: String, message: String = "불러오는 중...", entry_options: Dictionary = {}) -> bool:
+	if not preload("res://src/data/mode_unlock_catalog.gd").scene_entry_available(path,entry_options): return false
 	if is_transitioning() or path.is_empty() or not ResourceLoader.exists(path):
 		return false
 	_entry_options = entry_options.duplicate()

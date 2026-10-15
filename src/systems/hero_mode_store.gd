@@ -51,6 +51,8 @@ static func hard_stage_unlocked(id: String) -> bool:
 	return battle_stage_unlocked(id) and (test_override() or battle_stage_cleared(id,"easy"))
 static func can_enter(id: String, value: String) -> bool:
 	return value in ["easy","hard"] and battle_stage_unlocked(id) and (value == "easy" or hard_stage_unlocked(id))
+static func can_start(id: String, value: String) -> bool:
+	return UNLOCK_DATA.difficulty_available(value) and can_enter(id,value)
 static func highest_battle_stage() -> int:
 	var config := ConfigFile.new()
 	return _highest_battle_stage_in_config(config) if _load(config) else 0
@@ -200,10 +202,10 @@ static func difficulty() -> String:
 	var config := ConfigFile.new()
 	if not _load(config): return "easy"
 	var value := String(config.get_value("hero_loadout","difficulty","easy"))
-	return "hard" if value == "hard" and hard_stage_unlocked(selected_battle_stage()) else "easy"
+	return "hard" if UNLOCK_DATA.difficulty_available(value) and value == "hard" and hard_stage_unlocked(selected_battle_stage()) else "easy"
 static func set_difficulty(value: String, stage_id: String = "") -> bool:
 	var target := selected_battle_stage() if stage_id.is_empty() else stage_id
-	if not can_enter(target,value): return false
+	if not can_start(target,value): return false
 	var config := ConfigFile.new()
 	if not _load(config): return false
 	config.set_value("hero_loadout","difficulty",value)
