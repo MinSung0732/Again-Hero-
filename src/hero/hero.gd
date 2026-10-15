@@ -6027,8 +6027,10 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 		maxf(target_distance - lunge_stop_distance, 0.0)
 	)
 	var lunge_start := global_position
-	global_position += direction * lunge_distance
-	_clamp_to_battlefield()
+	# Player movement stays on the pad; only the AI rogue lunges on attack.
+	if not player_controlled:
+		global_position += direction * lunge_distance
+		_clamp_to_battlefield()
 	var lunge_end := global_position
 
 	_start_rogue_attack_collision_ignore(
