@@ -128,6 +128,14 @@ static func roster_for(stage_number: int, difficulty: String = "easy") -> Array:
 		for id in TIER_ADDITIONS[tier]:
 			if id not in result and monster_allowed(id,stage_number,difficulty): result.append(id)
 	return result
+# Content additions join ordinary rotation only after their authored unlock time.
+static func late_recruits(stage: int, difficulty: String, elapsed: float) -> Array:
+	var result: Array = []
+	for id in MONSTERS.ORDER:
+		var data: Dictionary = MONSTERS.MONSTERS[id]
+		if data.has("hero_survival_after") and elapsed >= float(data.hero_survival_after) and monster_allowed(id,stage,difficulty): result.append(id)
+	return result
+
 static func stage_pressure(stage_number: int) -> float:
 	return 1.0+0.055*(clampi(stage_number,1,10)-1)
 

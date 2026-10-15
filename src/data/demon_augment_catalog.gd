@@ -1,6 +1,8 @@
 extends RefCounted
 class_name DemonAugmentCatalog
 
+const FRONTIER := preload("res://src/data/frontier_monster_catalog.gd")
+
 const TYPE_NORMAL := "normal"
 const TYPE_SPECIAL := "special"
 
@@ -11,6 +13,15 @@ const SPECIAL_MAX_LEVEL := 1
 static var augment_lookup: Dictionary = {}
 
 const MONSTER_NAMES := {
+	"harpy":"하피",
+	"imp":"임프",
+	"mimic":"미믹",
+	"mud_golem":"머드골렘",
+	"satyr_rogue":"사티로스 도적",
+	"satyr_shaman":"사티로스 주술사",
+	"skeleton_shield":"해골방패병",
+	"toxic_slime":"맹독슬라임",
+
 	"fanatic":"광신도",
 	"gumiho":"구미호",
 	"dark_elf_rogue":"흑요정 도적",
@@ -153,6 +164,31 @@ const MONSTER_NORMAL_TEMPLATES := [
 ]
 
 const SPECIAL_AUGMENTS := [
+	FRONTIER.AUGMENTS[0],
+	FRONTIER.AUGMENTS[1],
+	FRONTIER.AUGMENTS[2],
+	FRONTIER.AUGMENTS[3],
+	FRONTIER.AUGMENTS[4],
+	FRONTIER.AUGMENTS[5],
+	FRONTIER.AUGMENTS[6],
+	FRONTIER.AUGMENTS[7],
+	FRONTIER.AUGMENTS[8],
+	FRONTIER.AUGMENTS[9],
+	FRONTIER.AUGMENTS[10],
+	FRONTIER.AUGMENTS[11],
+	FRONTIER.AUGMENTS[12],
+	FRONTIER.AUGMENTS[13],
+	FRONTIER.AUGMENTS[14],
+	FRONTIER.AUGMENTS[15],
+	FRONTIER.AUGMENTS[16],
+	FRONTIER.AUGMENTS[17],
+	FRONTIER.AUGMENTS[18],
+	FRONTIER.AUGMENTS[19],
+	FRONTIER.AUGMENTS[20],
+	FRONTIER.AUGMENTS[21],
+	FRONTIER.AUGMENTS[22],
+	FRONTIER.AUGMENTS[23],
+
 	{"id": "fanatic_suicide", "monster_id": "fanatic", "name": "광기의 순교", "description": "이속50% 증가, 공격 대신 접근 즉시 자폭.", "augment_type": "special", "max_stack": 1, "icon": "", "effect_type": "fanatic_suicide", "effect_values": {}},
 	{"id": "fanatic_dagger", "monster_id": "fanatic", "name": "의식용 칼날", "description": "단검1타 피해30% 증가.", "augment_type": "special", "max_stack": 1, "icon": "", "effect_type": "fanatic_dagger", "effect_values": {}},
 	{"id": "fanatic_vitality", "monster_id": "fanatic", "name": "질긴 신앙", "description": "최대체력30% 증가.", "augment_type": "special", "max_stack": 1, "icon": "", "effect_type": "fanatic_vitality", "effect_values": {"stat_multipliers": {"hp": 1.3}}},

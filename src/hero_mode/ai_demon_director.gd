@@ -16,10 +16,12 @@ var pressure := 1.0
 var supply_scale := 1.0
 var population_limit := DATA.MONSTER_LIMIT
 var roster: Array = []
+var reinforcements_installed := false
 var preferred: Array = []
 var plan := "탐색 공세 · 용사 빌드를 관찰 중"
 func install(host) -> void:
 	battle = host
+	reinforcements_installed = false
 	stage_number = int(battle.current_stage_data.get("number",1))
 	population_limit = DATA.monster_limit(stage_number)
 	supply_scale = DATA.pacing_value("supply",stage_number,battle.campaign_difficulty)
@@ -58,6 +60,11 @@ func tick(delta: float) -> void:
 		observation_remaining = DATA.OBSERVE_INTERVAL
 		_observe()
 	var elapsed: float = battle.run_metrics.elapsed_seconds
+	if not reinforcements_installed and elapsed >= 300.0:
+		reinforcements_installed = true
+		for id in DATA.late_recruits(stage_number,battle.campaign_difficulty,elapsed):
+			if id not in roster: roster.append(id)
+		battle.set_allowed_monster_ids(roster)
 	var phase: Dictionary = DATA.phase_at(elapsed)
 	battle.command_regen_per_second = float(phase.regen)*pressure*supply_scale
 	special_retry = maxf(0.0,special_retry-delta)

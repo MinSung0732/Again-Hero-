@@ -19,7 +19,7 @@
 
 생성은 내장 imagegen 사용. 원본은 보존하고 알파만128기준 이진화한 후 공통 배율 nearest 축소·정렬했다. 검은 입/짙은 목재 RGB로 배경을 제거하지 않는다. 파일명의 move는 프로젝트 MonsterVisual 규격이며 walk에 해당한다.
 
-현재 미믹 자체는 MonsterCatalog/전투 배우에 아직 등록되지 않았다. 이 폴더는 신규8종 구현에 사용할 아트 납품이며 전투 연결 완료를 뜻하지 않는다. MonsterVisual frames 프로필은 아래 값을 사용한다(미리보기는 원본 셀, 실제 전투 체급은 배우 등록 시 확정).
+미믹은 `src/monsters/FrontierMimic.tscn`과 MonsterCatalog에 등록되어 일반 소환·엘리트 전환 모두 연결됐다. 실제 체급·축 값은 `src/data/frontier_monster_catalog.gd`의 mimic normal_visual/elite_visual을 사용한다. 아래는 프레임 목록 예시이며 실제 target_height는 원본 알파 높이에서 정규화한다.
 
 ```gdscript
 {"mode":"frames", "asset_dir":"res://assets/art/elitemonster/mimic/frames",
