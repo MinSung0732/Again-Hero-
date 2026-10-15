@@ -287,7 +287,7 @@ var loadout_restriction_enabled: bool = false
 
 # First instances build monster SpriteFrames/status-effect caches synchronously.
 # Warm them once, spread across frames, before the first real mass summon.
-static var _monster_spawn_resources_warmed: bool = false
+var _monster_spawn_resources_warmed: bool = false
 var _monster_spawn_warmup_running: bool = false
 
 func _register_heal_item(item: Node) -> void:
@@ -1043,6 +1043,16 @@ func prepare_spawn_resources() -> void:
 		await get_tree().process_frame
 
 
+func spawn_warmup_ids() -> Array:
+	if online_match_mode: return []
+	if hero_player_mode:
+		return HERO_SURVIVAL.entry_monster_ids(int(current_stage_data.get("number",1)),campaign_difficulty)
+	var ids: Array = allowed_monster_ids.duplicate()
+	var registered := String(transcendence.monster_id)
+	if not registered.is_empty() and registered not in ids: ids.append(registered)
+	return ids
+
+
 func _warm_monster_spawn_resources() -> void:
 	if online_match_mode:
 		_monster_spawn_resources_warmed = true
@@ -1052,7 +1062,7 @@ func _warm_monster_spawn_resources() -> void:
 	_monster_spawn_warmup_running = true
 	var slice_start := Time.get_ticks_usec()
 
-	for raw_id in MONSTER_CATALOG.ORDER:
+	for raw_id in spawn_warmup_ids():
 		if not is_inside_tree() or battle_over:
 			_monster_spawn_warmup_running = false
 			return
@@ -1073,7 +1083,7 @@ func _warm_monster_spawn_resources() -> void:
 		warmup.position = Vector2(-10000.0, -10000.0)
 		add_child(warmup)
 
-		# Keep every normal/elite cache ready before combat, yielding by work
+		# Keep this encounter's normal/elite cache ready, yielding by work
 		# budget instead of paying two display frames for each monster type.
 		if Time.get_ticks_usec() - slice_start >= PresentationWarmup.MAIN_THREAD_BUDGET_US:
 			await get_tree().process_frame

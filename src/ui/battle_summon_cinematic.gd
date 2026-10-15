@@ -60,14 +60,15 @@ func install(main: Control, preview_ids: Array[String] = []) -> void:
 		dying_hero.connect("death_started",play_hero_defeat)
 	hide()
 	set_process(false)
-	# Prewarm once during installation; successful summon never allocates a new view.
-	for id in CATALOG.ENTRIES:
+	# Only the equipped summon can appear in this battle. Explicit previews
+	# retain their requested set without loading all six cinematic kits.
+	var warm_ids: Array[String] = preview_ids.duplicate()
+	if warm_ids.is_empty():
+		var registered := String(host.battle.transcendence.monster_id)
+		if not registered.is_empty(): warm_ids.append(registered)
+	for id in warm_ids:
+		if not CATALOG.ENTRIES.has(id): continue
 		var entry: Dictionary = CATALOG.ENTRIES[id]
-		if not preview_ids.is_empty():
-			if not id in preview_ids:
-				continue
-		elif not bool(entry.get("prewarm",true)):
-			continue # Unregistered preview content must not tax every real battle.
 		var effect_path := String(entry.get("world_effect", ""))
 		if not effect_path.is_empty():
 			_cached_world_effect(effect_path)

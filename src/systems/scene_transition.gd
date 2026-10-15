@@ -73,17 +73,34 @@ func _start_load() -> bool:
 	_retry.hide()
 	visible = true
 	_view.show()
+	_pending = true
+	# Keep the overlay alive, but never overlap a whole lobby and battle in RAM.
+	call_deferred("_begin_resource_load")
+	return true
+
+
+func _begin_resource_load() -> void:
+	if _scene_path in ["res://src/main/Main.tscn", "res://src/hero_mode/HeroMode.tscn"]:
+		_view.detail.text = "이전 화면을 정리하고 전투를 준비합니다."
+		await get_tree().process_frame
+		var previous := get_tree().current_scene
+		if previous != null:
+			get_tree().current_scene = null
+			previous.queue_free()
+		# Flush deferred node deletion and renderer resource releases first.
+		await get_tree().process_frame
+		await get_tree().process_frame
+		PresentationWarmup.release_destination()
+		preload("res://src/monsters/monster_visual.gd").clear_cached_frames()
+		preload("res://src/ui/hero_weapon_art.gd").retain_sequences({})
 	var error := ResourceLoader.load_threaded_request(_scene_path, "PackedScene")
 	if error != OK:
 		_fail_transition(error)
-		return true # Accepted: keep retry UI instead of triggering caller's fallback.
-	_pending = true
+		return
 	set_process(true)
-	# Texture requests can run while the PackedScene is being read.
 	if not _destination_ready and not _destination_warming:
 		_destination_warming = true
 		call_deferred("_warm_destination")
-	return true
 
 
 func _process(_delta: float) -> void:

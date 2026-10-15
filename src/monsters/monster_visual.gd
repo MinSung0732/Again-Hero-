@@ -23,6 +23,11 @@ signal revival_animation_finished
 static var _frames_cache: Dictionary = {}
 static var _hit_flash_shader: Shader
 
+# Strong frame references belong to a battle, not the lifetime of the app.
+static func clear_cached_frames() -> void:
+	_frames_cache.clear()
+
+
 var _visual_ready: bool = false
 var _one_shot_locked: bool = false
 var _death_playing: bool = false

@@ -128,6 +128,13 @@ static func roster_for(stage_number: int, difficulty: String = "easy") -> Array:
 		for id in TIER_ADDITIONS[tier]:
 			if id not in result and monster_allowed(id,stage_number,difficulty): result.append(id)
 	return result
+# Entry includes scheduled elites/giants and the final boss, not all content.
+static func entry_monster_ids(stage_number: int, difficulty: String) -> Array:
+	var result := roster_for(stage_number,difficulty)
+	for id in ["orc","skeleton_archer","ogre",boss_for(stage_number,difficulty)]:
+		if id not in result and monster_allowed(id,stage_number,difficulty): result.append(id)
+	return result
+
 # Content additions join ordinary rotation only after their authored unlock time.
 static func late_recruits(stage: int, difficulty: String, elapsed: float) -> Array:
 	var result: Array = []

@@ -24,6 +24,12 @@ var _busy := false
 var texture_load_count := 0
 
 
+func release_destination() -> void:
+	# Entry boundary only. Textures still used by live nodes remain referenced.
+	_destination.clear()
+	_cropped.clear()
+
+
 func get_texture(path: String) -> Texture2D:
 	return _common.get(path, _destination.get(path)) as Texture2D
 
@@ -219,7 +225,7 @@ func _prepare(paths: Array[String], shared: bool) -> bool:
 	progress_changed.emit(0, unique.size())
 	# Bound in-flight reads and GPU work. Preserve every previously warmed path.
 	# The headless dummy texture backend cannot initialize concurrent Images.
-	var batch_size := 1 if DisplayServer.get_name() == "headless" else LOAD_BATCH_SIZE
+	var batch_size := 1 if OS.has_feature("mobile") or DisplayServer.get_name() == "headless" else LOAD_BATCH_SIZE
 	for batch_start in range(0, unique.size(), batch_size):
 		var batch_end := mini(batch_start + batch_size, unique.size())
 		var requested: Dictionary = {}

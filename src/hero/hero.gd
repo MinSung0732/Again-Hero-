@@ -7538,22 +7538,16 @@ func _load_stage1_texture(path: String) -> Texture2D:
 	if prepared != null:
 		return prepared
 
-	# Stage 1 art is intentionally loaded from the source PNG first.
-	# Some moved effect PNGs still carry stale .import metadata pointing at
-	# their pre-frames/ paths, which can make ResourceLoader return the old
-	# cached .ctex even after the PNG itself was replaced.
-	if FileAccess.file_exists(path):
-		var image := Image.new()
-		var error := image.load(path)
-		if error == OK:
-			return ImageTexture.create_from_image(image)
-
-	# Fallback to Godot's imported resource only when the raw source cannot
-	# be read (for example, on a packaged platform).
+	# Reuse imported resources across actors/pools. Raw PNGs packaged alongside
+	# imports must not create another GPU texture for every projectile instance.
 	if ResourceLoader.exists(path):
 		var imported_texture = load(path)
 		if imported_texture is Texture2D:
 			return imported_texture
+	if FileAccess.file_exists(path):
+		var image := Image.load_from_file(path)
+		if image != null and not image.is_empty():
+			return ImageTexture.create_from_image(image)
 
 	return null
 
