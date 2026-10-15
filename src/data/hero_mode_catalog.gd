@@ -41,10 +41,30 @@ static func monster_multiplier(stat: String, elapsed: float) -> float:
 			var ratio := (clock-float(previous.time))/(float(next.time)-float(previous.time))
 			return lerpf(float(previous[stat]),float(next[stat]),ratio)
 	return float(MONSTER_GROWTH[-1][stat])
-static func required_exp(target_level: int) -> int:
+# Ordered stage1..10. HP advances on a slower clock; pursuit/damage keep their
+# existing clocks. Supply changes the ordinary director only, not special stats.
+const DIFFICULTY_PACING := {
+	"easy": {
+		"hp_clock":[0.40,0.44,0.48,0.55,0.60,0.65,0.70,0.74,0.78,0.82],
+		"supply":[0.50,0.54,0.58,0.65,0.69,0.73,0.76,0.79,0.82,0.85],
+		"learning":[0.65,0.68,0.71,0.76,0.80,0.84,0.87,0.90,0.93,0.95],
+	},
+	"hard": {
+		"hp_clock":[0.52,0.57,0.62,0.68,0.73,0.78,0.83,0.88,0.93,0.98],
+		"supply":[0.62,0.66,0.70,0.76,0.80,0.84,0.88,0.92,0.96,1.00],
+		"learning":[0.75,0.78,0.81,0.85,0.88,0.91,0.94,0.96,0.98,1.00],
+	},
+}
+static func pacing_value(field: String,stage: int,difficulty: String) -> float:
+	var values: Dictionary = DIFFICULTY_PACING.get(difficulty,DIFFICULTY_PACING.easy)
+	return float(values[field][clampi(stage,1,10)-1]) if values.has(field) else 1.0
+static func monster_multiplier_for_stage(stat: String,elapsed: float,stage: int,difficulty: String) -> float:
+	return monster_multiplier(stat,elapsed*pacing_value("hp_clock",stage,difficulty) if stat == "hp" else elapsed)
+static func required_exp(target_level: int,opening_scale: float = 1.0) -> int:
 	var rank := maxi(target_level-1,0)
 	# About 22k / 48k collected EXP to reach Lv.30 / 40; no level cap.
-	return roundi(60.0+18.0*rank+1.6*rank*rank)
+	var fade := clampf(float(rank)/9.0,0.0,1.0)
+	return roundi((60.0+18.0*rank+1.6*rank*rank)*lerpf(clampf(opening_scale,0.1,1.0),1.0,fade))
 const ROSTER := ["slime","spider","orc","bomb_rat","skeleton_archer","ghost","ogre"]
 const COUNTERS := {"area":["orc","skeleton_archer"],"mobility":["spider","ghost"],"durability":["bomb_rat","ghost"],"damage":["slime","spider"]}
 const PHASES := [
@@ -146,7 +166,7 @@ static func boss_data(stage: int, difficulty: String) -> Dictionary:
 	var hard := difficulty == "hard"
 	var hp := (10000.0+clampi(stage,1,10)*1800.0)*(1.35 if hard else 1.0)
 	var damage := (28.0+clampi(stage,1,10)*4.0)*(1.2 if hard else 1.0)
-	return {"type":"boss","name":"최종 수문장","hp_multiplier":hp/(maxf(1,float(base.get("max_hp",1)))*monster_multiplier("hp",DURATION)*(1.25 if hard else 1.0)),"damage_multiplier":damage/(maxf(1,float(base.get("attack_damage",1)))*monster_multiplier("damage",DURATION)*(1.15 if hard else 1.0)),"speed_multiplier":0.8,"visual_scale":2.2,"exp_multiplier":0.0,"target_hp":roundi(hp),"target_damage":roundi(damage)}
+	return {"type":"boss","name":"최종 수문장","hp_multiplier":hp/(maxf(1,float(base.get("max_hp",1)))*monster_multiplier_for_stage("hp",DURATION,stage,difficulty)*(1.25 if hard else 1.0)),"damage_multiplier":damage/(maxf(1,float(base.get("attack_damage",1)))*monster_multiplier("damage",DURATION)*(1.15 if hard else 1.0)),"speed_multiplier":0.8,"visual_scale":2.2,"exp_multiplier":0.0,"target_hp":roundi(hp),"target_damage":roundi(damage)}
 static func encounter_points(kind: String, center: Vector2, bounds: Vector2, radius: float = 430.0, gap_angle: float = 0.0) -> Array[Vector2]:
 	var points: Array[Vector2] = []
 	var count := 12 if kind == "ring" else 16 if kind == "square" else 8

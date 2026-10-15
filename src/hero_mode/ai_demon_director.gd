@@ -13,6 +13,7 @@ var giant_index := 0
 var special_retry := 0.0
 var stage_number := 1
 var pressure := 1.0
+var supply_scale := 1.0
 var population_limit := DATA.MONSTER_LIMIT
 var roster: Array = []
 var preferred: Array = []
@@ -21,6 +22,7 @@ func install(host) -> void:
 	battle = host
 	stage_number = int(battle.current_stage_data.get("number",1))
 	population_limit = DATA.monster_limit(stage_number)
+	supply_scale = DATA.pacing_value("supply",stage_number,battle.campaign_difficulty)
 	pressure = DATA.stage_pressure(stage_number)*(1.2 if battle.campaign_difficulty == "hard" else 1.0)
 	roster = DATA.roster_for(stage_number,battle.campaign_difficulty)
 	encounters = preload("res://src/hero_mode/hero_encounter_runtime.gd").new(); battle.add_child(encounters); encounters.install(battle)
@@ -57,7 +59,7 @@ func tick(delta: float) -> void:
 		_observe()
 	var elapsed: float = battle.run_metrics.elapsed_seconds
 	var phase: Dictionary = DATA.phase_at(elapsed)
-	battle.command_regen_per_second = float(phase.regen)*pressure
+	battle.command_regen_per_second = float(phase.regen)*pressure*supply_scale
 	special_retry = maxf(0.0,special_retry-delta)
 	# Telegraph waves may temporarily exceed the ordinary phase cap. Keep the
 	# reserved special slot usable while still respecting the global actor cap.
@@ -70,10 +72,10 @@ func tick(delta: float) -> void:
 			special_retry = 5.0
 	think_remaining -= delta
 	if think_remaining > 0.0: return
-	think_remaining = float(phase.interval)/pressure
+	think_remaining = float(phase.interval)/(pressure*supply_scale)
 	var available := mini(roster.size(),int(phase.roster)+(maxi(0,roster.size()-7) if elapsed >= 300 else 0))
 	for index in range(int(phase.batch)):
-		if battle.get_population_count() >= mini(population_limit,int(phase.limit*pressure))-2: break
+		if battle.get_population_count() >= mini(population_limit,int(phase.limit*pressure*supply_scale))-2: break
 		var id := String(roster[rotation%available])
 		rotation += 1
 		if elapsed > 25.0 and not preferred.is_empty() and randf() < 0.55:

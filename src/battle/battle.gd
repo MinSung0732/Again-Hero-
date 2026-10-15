@@ -976,6 +976,7 @@ func _start_battle() -> void:
 		current_hero_profile = preload("res://src/data/hero_weapon_catalog.gd").profile_for_survival(current_hero_profile)
 		current_hero_profile["display_name"] = String(preload("res://src/data/hero_character_catalog.gd").get_character(hero_player_hero_id).get("name","용사"))
 		if not online_match_mode: preload("res://src/systems/hero_mode_store.gd").apply_growth(hero_player_hero_id,current_hero_profile)
+		if not online_match_mode: current_hero_profile["survival_learning"] = HERO_SURVIVAL.pacing_value("learning",int(current_stage_data.get("number",1)),campaign_difficulty)
 
 	if practice_mode:
 		current_hero_profile = HERO_PROFILES.get_profile("ranged_rookie").duplicate(true)
@@ -2814,9 +2815,13 @@ func _ensure_monster_ground_shadow(
 	monster.add_child(shadow)
 
 
+func _hero_survival_multiplier(stat: String,elapsed: float) -> float:
+	if online_match_mode: return HERO_SURVIVAL.monster_multiplier(stat,elapsed)
+	return HERO_SURVIVAL.monster_multiplier_for_stage(stat,elapsed,int(current_stage_data.get("number",1)),campaign_difficulty)
+
 func _get_demon_level_monster_hp_multiplier(spawn_seconds: float = -1.0) -> float:
 	if hero_player_mode:
-		return HERO_SURVIVAL.monster_multiplier("hp",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)*(1.25 if campaign_difficulty == "hard" else 1.0)
+		return _hero_survival_multiplier("hp",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)*(1.25 if campaign_difficulty == "hard" else 1.0)
 	var growth_steps := maxi(demon_level - 1, 0)
 	return minf(
 		pow(DEMON_LEVEL_MONSTER_HP_GROWTH, float(growth_steps)),
@@ -2825,7 +2830,7 @@ func _get_demon_level_monster_hp_multiplier(spawn_seconds: float = -1.0) -> floa
 
 func _get_demon_level_monster_damage_multiplier(spawn_seconds: float = -1.0) -> float:
 	if hero_player_mode:
-		return HERO_SURVIVAL.monster_multiplier("damage",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)*(1.15 if campaign_difficulty == "hard" else 1.0)
+		return _hero_survival_multiplier("damage",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)*(1.15 if campaign_difficulty == "hard" else 1.0)
 	var growth_steps := maxi(demon_level - 1, 0)
 	return minf(
 		pow(DEMON_LEVEL_MONSTER_DAMAGE_GROWTH, float(growth_steps)),
@@ -2842,7 +2847,7 @@ func _get_demon_level_monster_exp_multiplier() -> float:
 
 func _get_demon_level_monster_speed_multiplier(spawn_seconds: float = -1.0) -> float:
 	if hero_player_mode:
-		return HERO_SURVIVAL.monster_multiplier("speed",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)*(1.05 if campaign_difficulty == "hard" else 1.0)
+		return _hero_survival_multiplier("speed",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)*(1.05 if campaign_difficulty == "hard" else 1.0)
 	var growth_steps := maxi(demon_level - 1, 0)
 	return minf(
 		pow(DEMON_LEVEL_MONSTER_SPEED_GROWTH, float(growth_steps)),
@@ -5218,7 +5223,7 @@ func _apply_normal_augments_to_existing_monster(
 			null
 		)
 		if raw_explosion != null:
-			var survival_damage := HERO_SURVIVAL.monster_multiplier("damage",float(monster.get_meta("hero_survival_spawn_seconds",0.0))) if hero_player_mode else 1.0
+			var survival_damage := _hero_survival_multiplier("damage",float(monster.get_meta("hero_survival_spawn_seconds",0.0))) if hero_player_mode else 1.0
 			monster.set(
 				"explosion_damage",
 				maxi(
@@ -6116,7 +6121,7 @@ func _apply_augment_free_base_stats(monster: Node, monster_id: String) -> void:
 			if stat != "exp_reward" and monster.get(stat) != null:
 				var value = base_stats[stat]
 				if hero_player_mode and HERO_SURVIVAL.MONSTER_SCALE_FIELDS.has(stat):
-					value = float(value)*HERO_SURVIVAL.monster_multiplier(String(HERO_SURVIVAL.MONSTER_SCALE_FIELDS[stat]),float(monster.get_meta("hero_survival_spawn_seconds",0.0)))
+					value = float(value)*_hero_survival_multiplier(String(HERO_SURVIVAL.MONSTER_SCALE_FIELDS[stat]),float(monster.get_meta("hero_survival_spawn_seconds",0.0)))
 					if stat != "move_speed": value = maxi(1,roundi(value))
 				monster.set(stat, value)
 		monster.set_meta("monster_collection_upgrade_level", 0)

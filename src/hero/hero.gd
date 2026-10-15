@@ -34,6 +34,7 @@ var player_root_timer := 0.0
 var player_root_multiplier := 1.0
 var player_controlled := false
 var player_exp_remainder := 0.0
+var player_exp_requirement_scale := 1.0
 var player_weapons: RefCounted
 var sage_blackspot_effects: Array[Node2D] = []
 var player_move_input := Vector2.ZERO
@@ -960,6 +961,7 @@ var status_overlay: Node2D
 @onready var alchemist_philosopher_audio: AudioStreamPlayer = $AlchemistPhilosopherAudio
 
 func configure_profile(profile: Dictionary) -> void:
+	player_exp_requirement_scale = float(profile.get("survival_learning",1.0))
 	player_exp_remainder = 0.0
 	player_move_input = Vector2.ZERO
 	player_augment_candidates.clear()
@@ -20932,7 +20934,7 @@ func _add_prefixed_effect_animation(
 	return true
 
 func _required_exp_for_level(target_level: int) -> int:
-	if player_controlled: return preload("res://src/data/hero_mode_catalog.gd").required_exp(target_level)
+	if player_controlled: return preload("res://src/data/hero_mode_catalog.gd").required_exp(target_level,player_exp_requirement_scale)
 	return 50 + maxi(target_level - 1, 0) * 25
 
 func take_damage(amount: int, source: Node = null) -> bool:
