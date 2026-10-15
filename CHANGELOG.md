@@ -1,3 +1,8 @@
+## 2026-10-15 — 날렵한 용사 기본공격에 검과 방패 베기음 공유
+
+- 사용자 지정대로 Stage2 기본 연격의 AudioStream 경로를 Stage3 검과 방패 기본 베기음(stage3_fighter_slash_pixabay.mp3)과 동일하게 변경. 양 모드 공통 Hero 경로에 적용. 기존 날렵한 용사 음량·재생 간격·풀, 암살/검무 및 전투 로직 유지. 신규 에셋·런타임 변환 없음.
+- 전체 GDScript 구문/두 기본공격 경로 일치/기존 MP3 Git 추적/이외 Hero 코드 동일성/diff 정적 검사 PASS. 이번 변경의 Godot 실행·실제 청취/실기 검증은 미실행.
+
 ## 2026-10-15 — 날렵한 용사 베기·암살 효과음 교체
 
 - 금속 단검 충돌/짧은 기존 공통음/포털 시작음을 실제 베기·찌르기 녹음 기반 4개 전용 큐로 교체. Pixabay Sword Slash 01 — u_xjrmmgxfru(266296), Knife Stab — Universfield(121084); 출처/라이선스/원본·편집본 SHA/필터는 assets/audio/sfx/rogue_blades_v2/sources.json.
