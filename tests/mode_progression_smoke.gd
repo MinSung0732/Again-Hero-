@@ -105,6 +105,9 @@ func run() -> void:
 	check(DirAccess.remove_absolute(journal) == OK,"restore save target")
 	check(STORE.award_run("stage_10",entry,900,10,true,"easy").get("success",false),"easy10 award transaction retry")
 	check(UNLOCKS.unlocked("rank","stage_1") and UNLOCKS.unlocked("rank","stage_10"),"both easy10 records unlock rank globally")
+	ui.ranked = true
+	check(ui.blocks_entry() and ui.lobby.transition.path == "res://src/online/OnlineMatch.tscn" and ui.lobby.transition.options.role == "hero","ranked entry routes role and consumes solo entry")
+	ui.ranked = false
 	cfg = progress_config(); cfg.set_value("cleared","stage_10",false); SCOPE.save_config(cfg,PROGRESS.SAVE_PATH)
 	check(not UNLOCKS.unlocked("rank","stage_10") and STORE.mode_unlocked(),"ranking still needs demon easy10; hero mode uses easy3")
 	saved = hero_config(); saved.set_value("hero_growth","shared_vitality",10); saved.set_value("hero_growth","shared_power",10)

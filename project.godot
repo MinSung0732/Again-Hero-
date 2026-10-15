@@ -55,3 +55,7 @@ renderer/rendering_method.mobile="gl_compatibility"
 [testing]
 
 allow_coupons=true
+
+[online]
+
+match_endpoint=""

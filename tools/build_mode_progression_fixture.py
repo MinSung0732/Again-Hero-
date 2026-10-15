@@ -14,7 +14,14 @@ refresh=method(source,'refresh').split('\tif lobby.hero_lobby_view')[0]
 base='''extends RefCounted
 const UNLOCKS := preload("res://src/systems/mode_unlock_store.gd")
 const HERO_STORE := preload("res://src/systems/hero_mode_store.gd")
+class Transition extends RefCounted:
+	var path := ""
+	var options := {}
+	func change_scene(destination: String,_message: String,entry: Dictionary) -> bool:
+		path = destination; options = entry; return true
 class Lobby extends RefCounted:
+	var transition := Transition.new()
+	func get_node(_path: String) -> RefCounted: return transition
 	var _stage_transition_running := false
 	var refreshes := 0
 	func _refresh_stage_card() -> void: refreshes += 1

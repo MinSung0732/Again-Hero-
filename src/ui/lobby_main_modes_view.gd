@@ -198,10 +198,13 @@ func request_data() -> Dictionary:
 func blocks_entry() -> bool:
 	if (ranked and not UNLOCKS.unlocked("rank", current_stage())) or (perspective == "hero" and not UNLOCKS.unlocked("hero", current_stage())) or (not ranked and difficulty == "hard" and not UNLOCKS.unlocked("hard", current_stage(),perspective)):
 		return true
+	if ranked:
+		lobby.get_node("/root/SceneTransition").change_scene("res://src/online/OnlineMatch.tscn","대전 준비 중...",{"role":perspective})
+		return true # Consume entry before solo stamina/account writes.
 	if not ranked and perspective == "demon":
 		return false
 	if not ranked and perspective == "hero" and HERO_STORE.can_enter(current_stage(),difficulty): return false
-	notice.dialog_text = "랭킹 매칭은 준비 중입니다. 실제 매칭은 아직 시작되지 않습니다." if ranked else "용사 시점과 어려움 난이도는 준비 중입니다. 현재는 마왕 · 쉬움으로 입장할 수 있습니다."
+	notice.dialog_text = "용사 시점과 어려움 난이도는 준비 중입니다. 현재는 마왕 · 쉬움으로 입장할 수 있습니다."
 	notice.popup_centered(Vector2i(640, 180))
 	return true
 
@@ -231,7 +234,7 @@ func refresh() -> void:
 	difficulty_row.visible = not ranked
 	var section: Control = lobby.get_node("SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox")
 	section.get_node("SectionTitle").text = "랭킹 매칭" if ranked else "침입자 기록"
-	section.get_node("SectionSubtitle").text = "시점과 캐릭터를 선택하세요 · 매칭 기능 준비 중" if ranked else "대상 용사를 선택하고, 던전에 입장하세요."
+	section.get_node("SectionSubtitle").text = "역할을 선택하세요 · 견습마도사 고정 연결 테스트" if ranked else "대상 용사를 선택하고, 던전에 입장하세요."
 	if not ranked:
 		if perspective == "hero":
 			var stage := current_stage()
@@ -259,7 +262,7 @@ func refresh() -> void:
 			lobby.stage_reward_label.text = "최초 어려움\n연구 30"
 			lobby.stage_repeat_reward_label.text = "반복 도전\n추가 지급 없음"
 		return
-	lobby.stage_selector_button.text = "SEASON · 준비 중"
+	lobby.stage_selector_button.text = "연결 테스트 · v1"
 	lobby.stage_selector_button.disabled = true
 	lobby.stage_name_label.text = "마왕 매칭 대기실" if perspective == "demon" else "용사 매칭 대기실"
 	var nickname := String(PROFILE.get_profile().get("nickname", ""))
@@ -271,11 +274,12 @@ func refresh() -> void:
 	lobby.portrait_texture.self_modulate = Color.WHITE
 	lobby.portrait_badge.visible = false
 	lobby.portrait_texture.get_node("StageLock").visible = false
-	lobby.stage_description_label.text = "실시간 대전 · 준비 중"
-	lobby.stage_status_label.text = "랭킹 점수\n미배치"
-	lobby.stage_reward_label.text = "랭킹 등급\n미배치"
-	lobby.stage_repeat_reward_label.text = "매칭\n준비 중"
-	lobby.enter_stage_button.text = "매칭 시작"
+	lobby.stage_description_label.text = "견습마도사 고정 · 3분 생존 · 서버 연결 필요"
+	lobby.stage_status_label.text = "랭킹 점수\n변동 없음"
+	lobby.stage_reward_label.text = "테스트 보상\n없음"
+	lobby.stage_repeat_reward_label.text = "대전 방식\n1 vs 1"
+	if lobby.stamina_view != null: lobby.stamina_view.configure_entry(true,0)
+	lobby.enter_stage_button.text = "매칭 연결 테스트"
 	lobby.enter_stage_button.disabled = false
 	var navigable := false
 	lobby.prev_stage_button.disabled = not navigable

@@ -9002,6 +9002,7 @@ func _find_nearest_monster() -> Node2D:
 		)
 		if registered_target is Node2D:
 			return registered_target as Node2D
+		if bool(battle.get("online_match_mode")): return null # Never scan another match.
 
 	# Compatibility fallback for isolated scenes/tests without Battle.
 	var nearest: Node2D = null

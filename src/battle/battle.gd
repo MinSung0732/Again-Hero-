@@ -215,6 +215,8 @@ var battle_over: bool = false
 signal hero_chest_opened
 var campaign_difficulty := "easy"
 var hero_player_mode := false
+var online_match_mode := false
+var online_match_rules: Dictionary = {}
 var hero_player_stage := "stage_1"
 var hero_player_hero_id := "ranged_rookie"
 var external_pause: bool = false
@@ -653,7 +655,8 @@ func query_monsters_in_rect(world_rect: Rect2) -> Array:
 
 func _ready() -> void:
 	var test_mode := get_node_or_null("/root/LocalTestMode")
-	practice_mode = test_mode != null and test_mode.consume_practice_request()
+	practice_mode = not online_match_mode and test_mode != null and test_mode.consume_practice_request()
+	if online_match_mode: _mission_service = null
 	queue_redraw()
 	elite_monster_skill_runtime.setup(self)
 	scorpion_swamp_runtime.setup(self)
@@ -661,7 +664,7 @@ func _ready() -> void:
 	goblin_formation_runtime.setup(self,MONSTER_CATALOG.MONSTERS)
 	anubis_army_runtime.setup(MONSTER_CATALOG.MONSTERS)
 	lizard_tail_runtime.setup(self)
-	_cache_demon_ultimate_runtime_data()
+	if not online_match_mode: _cache_demon_ultimate_runtime_data()
 	_start_battle()
 
 func _process(delta: float) -> void:
@@ -918,7 +921,7 @@ func _start_battle() -> void:
 
 	if not hero_player_mode: _apply_permanent_research()
 
-	var progress_state: Dictionary = STAGE_PROGRESS.load_state()
+	var progress_state: Dictionary = {} if online_match_mode else STAGE_PROGRESS.load_state()
 	current_stage_id = "stage_1" if practice_mode else String(progress_state.get("current_stage_id", "stage_1"))
 	if hero_player_mode: current_stage_id = hero_player_stage
 	current_stage_data = STAGE_CATALOG.get_stage(current_stage_id)
@@ -926,7 +929,7 @@ func _start_battle() -> void:
 	if current_stage_data.is_empty():
 		current_stage_id = "stage_1"
 		current_stage_data = STAGE_CATALOG.get_stage(current_stage_id)
-		STAGE_PROGRESS.set_current_stage(current_stage_id)
+		if not online_match_mode: STAGE_PROGRESS.set_current_stage(current_stage_id)
 
 	if not practice_mode and not tutorial_mode:
 		command_power = clampf(float(current_stage_data.get("opening_command",START_COMMAND)),0.0,max_command)
@@ -972,7 +975,7 @@ func _start_battle() -> void:
 	if hero_player_mode:
 		current_hero_profile = preload("res://src/data/hero_weapon_catalog.gd").profile_for_survival(current_hero_profile)
 		current_hero_profile["display_name"] = String(preload("res://src/data/hero_character_catalog.gd").get_character(hero_player_hero_id).get("name","용사"))
-		preload("res://src/systems/hero_mode_store.gd").apply_growth(hero_player_hero_id,current_hero_profile)
+		if not online_match_mode: preload("res://src/systems/hero_mode_store.gd").apply_growth(hero_player_hero_id,current_hero_profile)
 
 	if practice_mode:
 		current_hero_profile = HERO_PROFILES.get_profile("ranged_rookie").duplicate(true)
@@ -992,7 +995,7 @@ func _start_battle() -> void:
 	hero.position = current_map_size * 0.5
 	if hero_player_mode:
 		hero.set("player_weapons",preload("res://src/hero_mode/hero_weapon_runtime.gd").new())
-		hero.player_weapons.install(hero,preload("res://src/systems/hero_mode_store.gd").augment_reroll_bonus(),current_hero_profile.get("hero_research_bonuses",{}))
+		hero.player_weapons.install(hero,0 if online_match_mode else preload("res://src/systems/hero_mode_store.gd").augment_reroll_bonus(),current_hero_profile.get("hero_research_bonuses",{}))
 	# add_child() runs Hero._ready(), which reapplies the profile visual and
 	# restores HeroSprite.z_index. Normalize Demon Castle depth only after _ready()
 	# so the hero participates in Battle's Y-sort just like monsters/props.
@@ -1040,6 +1043,9 @@ func prepare_spawn_resources() -> void:
 
 
 func _warm_monster_spawn_resources() -> void:
+	if online_match_mode:
+		_monster_spawn_resources_warmed = true
+		return # Dedicated rooms do not warm unused solo presentation actors.
 	if _monster_spawn_resources_warmed or _monster_spawn_warmup_running:
 		return
 	_monster_spawn_warmup_running = true
@@ -2148,6 +2154,7 @@ func _spawn_monster(
 	split_child: bool = false,
 	spawn_modifiers: Dictionary = {}
 ):
+	if online_match_mode and (active_monsters.size() >= get_population_limit() or monster_type not in online_match_rules.get("roster",[])): return null
 	if hero_player_mode and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and not bool(spawn_modifiers.get("hero_final_boss_spawn",false)): return null
 	if hero_player_mode and (active_monsters.size() >= HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1))) or not HERO_SURVIVAL.monster_allowed(monster_type,int(current_stage_data.get("number",1)),campaign_difficulty)): return null
 	if bool(spawn_modifiers.get("counts_population", false)) and is_population_full():
@@ -2522,6 +2529,7 @@ func get_population_count() -> int:
 	return direct_population_ids.size()
 
 func get_population_limit() -> int:
+	if online_match_mode: return int(online_match_rules.get("population",48))
 	if hero_player_mode: return HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1)))
 	return maxi(floori(max_command), 0)
 
@@ -3317,6 +3325,7 @@ func _chest_kill_requirement() -> int:
 	return HERO_SURVIVAL.CHEST_KILLS if hero_player_mode else CHEST_KILLS_REQUIRED
 
 func _hero_chest_eligible(source: String) -> bool:
+	if online_match_mode: return false
 	if source != "kills" and source != "elite": return false
 	if hero_chests_spawned == 0: return source == "elite"
 	return hero_elite_kills_toward_chest >= HERO_SURVIVAL.CHEST_ELITE_KILLS if source == "elite" else hero_kills_toward_chest >= HERO_SURVIVAL.CHEST_KILLS
@@ -3440,6 +3449,7 @@ func activate_exp_magnet(duration: float = EXP_MAGNET_DURATION) -> void:
 		0.0
 	)
 	for node in get_tree().get_nodes_in_group("exp_orbs"):
+		if online_match_mode and is_instance_valid(node) and node.get_viewport() != get_viewport(): continue
 		if (
 			not is_instance_valid(node)
 			or node.is_queued_for_deletion()
@@ -5325,7 +5335,7 @@ func _set_combat_physics_enabled(enabled: bool) -> void:
 		"hero_summon_projectiles",
 	]:
 		for node in get_tree().get_nodes_in_group(group_name):
-			if is_instance_valid(node):
+			if is_instance_valid(node) and (not online_match_mode or node.get_viewport() == get_viewport()):
 				node.set_physics_process(enabled)
 
 	for summon_id in active_hero_summons:
@@ -5419,6 +5429,9 @@ func get_debug_balance_summary() -> String:
 func _on_hero_died() -> void:
 	if is_instance_valid(hero):
 		battle_entity_registry.retire_instance(hero.get_instance_id())
+	if online_match_mode:
+		if not battle_over: _finish_battle("마왕 승리 · 용사 처치",true)
+		return
 	if practice_mode or tutorial_mode:
 		return
 	if battle_over:
@@ -5476,6 +5489,9 @@ func _on_hero_died() -> void:
 	_finish_battle(result_text, true)
 
 func _on_run_time_up() -> void:
+	if online_match_mode:
+		if not battle_over: _finish_battle("용사 승리 · 제한시간 생존",false)
+		return
 	if practice_mode or tutorial_mode:
 		return
 	if battle_over:
@@ -5504,6 +5520,7 @@ func finish_abandoned_run() -> bool:
 	return true
 
 func _grant_run_research_reward(apply_clear_multiplier: bool) -> String:
+	if online_match_mode: return ""
 	_run_reward_save_failed = false
 	if _run_reward_granted:
 		return ""

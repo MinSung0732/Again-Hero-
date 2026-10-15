@@ -1,0 +1,17 @@
+.git
+.godot
+.env
+**/.env
+**/.env.*
+*.apk
+*.aab
+*.exe
+*.pck
+*.keystore
+*.jks
+*.log
+**/__pycache__
+project_sources
+export_presets.cfg
+*.pem
+*.key
