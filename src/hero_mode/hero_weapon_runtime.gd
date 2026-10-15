@@ -320,6 +320,7 @@ func stats_for(id: String) -> Dictionary:
 				if not config.has("survival_overrides"): config["survival_overrides"] = {}
 				else: config["survival_overrides"] = config.survival_overrides.duplicate()
 				config.survival_overrides[key] = config[key]
+		config["survival_weapon_id"] = id
 		stats["summon_config"] = config
 		if String(stats.summon_kind) in ["watcher","gatekeeper"]: stats["power"] = float(stats.power)*projectile_power
 	stats["reach_scale"] = float(stats.reach_scale)*reach_bonus
@@ -339,7 +340,9 @@ func stats_for(id: String) -> Dictionary:
 		if stats.has(key): stats[key] = float(stats[key])*duration_bonus
 	if pattern in DATA.PROJECTILE_PATTERNS:
 		stats["power"] = float(stats.power)*projectile_power
-		stats["bonus_hits"] = int(stats.get("bonus_hits",0))+projectile_bonus
+	stats["extra_projectiles"] = projectile_bonus if DATA.projectile_quantity_kind(id) != "" else 0
+	if DATA.projectile_quantity_kind(id) == "orbit":
+		stats["orbit_count"] = mini(10,int(stats.get("orbit_count",4))+int(stats.extra_projectiles))
 	resolved[id] = stats
 	return stats
 
@@ -376,13 +379,13 @@ func _cast(id: String) -> void:
 		if identity.native_cast_succeeded:
 			if identity.archetype == "rogue_combo" and bool(data.get("visual_effect_unique",false)):
 				_effect(origin,closest.global_position,24.0,"combo",color,data)
-			for extra in projectile_bonus if pattern in DATA.PROJECTILE_PATTERNS else 0:
+			for extra in int(data.get("extra_projectiles",0)):
 				_launch_projectile(closest,origin,damage,rank,color,data,float(extra+1)*0.06,false,reach)
 			_after_cast(data,origin,direction,closest,damage,reach,rank)
 		return
 	if is_instance_valid(closest) or pattern == "summon" or pattern == "guard" or pattern == "heal": _pose(direction)
 	if identity != null and (is_instance_valid(closest) or pattern in ["summon","guard","heal"] or not DELIVERY.RULES.spec(id,data).is_empty()): identity.on_cast(id)
-	if native_skills != null and native_skills.cast(data,origin,direction,closest,damage,reach,hits,rank,projectile_speed,awakened):
+	if native_skills != null and native_skills.cast(data,origin,direction,closest,damage,reach,hits+int(data.get("extra_projectiles",0)),rank,projectile_speed,awakened):
 		if pattern == "summon" and native_skills.last_cast_succeeded:
 			_effect(origin,origin,minf(reach,90.0),"summon",color,data)
 		if is_instance_valid(closest) or pattern == "summon": _after_cast(data,origin,direction,closest,damage,reach,rank)
@@ -407,6 +410,7 @@ func _cast(id: String) -> void:
 		if identity != null and identity.archetype == "pistol_gunner" and pattern == "burst": shots = identity.consume_ammo(shots)
 		elif int(data.get("magazine",0)) > 0:
 			shots = mini(shots,int(magazines[id])); magazines[id] = int(magazines[id])-shots
+		if shots > 0 and pattern == "burst": shots += int(data.get("extra_projectiles",0))
 		for index in shots: _launch_projectile(closest,origin,damage,rank,color,data,index*float(data.get("hit_interval",0.14)),pattern == "combo",reach,index == shots-1)
 		hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
 		hero.attack_pose_timer = 0.25
@@ -456,6 +460,9 @@ func _cast(id: String) -> void:
 		else: _hit(actor,roundi(damage*(1.0+struck*float(data.get("chain_growth",0.0)))) if pattern == "chain" else damage,pattern,rank,data)
 		struck += 1
 		if pattern == "chain": _effect(closest.global_position if is_instance_valid(closest) else origin,actor.global_position,20.0,pattern,color,data)
+	if pattern == "bolt" and is_instance_valid(closest):
+		for extra in int(data.get("extra_projectiles",0)):
+			_launch_projectile(closest,origin,damage,rank,color,data,float(extra+1)*0.08,false,reach)
 	if pattern == "beam": _effect(origin,origin+direction*reach,GEOMETRY.beam_half_width(rank)*float(data.get("area_scale",1.0)),pattern,color,data)
 	elif pattern not in ["bolt","chain"]: _effect(origin,origin+direction*reach,reach,pattern,color,data)
 	hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
@@ -549,10 +556,17 @@ func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, 
 		shot.damage = damage; shot.rank = rank; shot.color = color; shot.age = 0.0
 		shot.data = data; shot.delay = delay; shot.melee = melee; shot.reach = reach if reach > 0 else float(data.get("range",900.0)); shot.traveled = 0.0
 		shot["finisher"] = finisher
+		shot["visual_radius"] = DATA.projectile_visual_radius(data)
 		shot["frames"] = ART.cache.get(String(data.get("effect_dir","")),EMPTY_ART)
 		shot["direction"] = origin.direction_to(actor.global_position)
 		hero.queue_redraw()
 		return
+
+func launch_summon_extras(id: String, target: Node2D, origin: Vector2, damage: int, reach: float) -> void:
+	if not levels.has(id) or not is_instance_valid(target): return
+	var data := stats_for(id)
+	for extra in mini(2,projectile_bonus):
+		_launch_projectile(target,origin,damage,int(levels[id]),Color(String(data.color)),data,float(extra+1)*0.08,false,reach)
 
 func _tick_projectiles(delta: float) -> void:
 	var redraw := false
@@ -626,13 +640,14 @@ func draw() -> void:
 		if bool(shot.active) and not bool(shot.melee) and float(shot.delay) <= 0.0:
 			var position: Vector2 = hero.to_local(shot.position)
 			var frames: Array = shot.get("frames",EMPTY_ART)
+			var visual_radius := float(shot.get("visual_radius",28.0))
 			if not frames.is_empty():
 				hero.draw_set_transform(position,Vector2(shot.direction).angle())
-				hero.draw_texture_rect(_loop_frame(frames,float(shot.age)),Rect2(Vector2.ONE*-GEOMETRY.PROJECTILE_RADIUS,Vector2.ONE*GEOMETRY.PROJECTILE_RADIUS*2.0),false)
+				hero.draw_texture_rect(_loop_frame(frames,float(shot.age)),Rect2(Vector2.ONE*-visual_radius,Vector2.ONE*visual_radius*2.0),false)
 				hero.draw_set_transform(Vector2.ZERO)
 			else:
-				hero.draw_circle(position,GEOMETRY.PROJECTILE_RADIUS,shot.color)
-				hero.draw_circle(position,5.0,Color.WHITE)
+				hero.draw_circle(position,visual_radius,shot.color)
+				hero.draw_circle(position,7.0,Color.WHITE)
 	for effect in effects:
 		if float(effect.left) <= 0.0: continue
 		var ratio: float = float(effect.left)/float(effect.duration)

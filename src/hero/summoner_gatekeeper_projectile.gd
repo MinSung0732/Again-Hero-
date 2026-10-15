@@ -6,6 +6,10 @@ signal released(projectile: Node2D)
 
 const FLY_TEXTURE_PATH := "res://assets/art/heroes/stage8_summoner/frames/effect1/projectile_01.png"
 const HIT_TEXTURE_PATH := "res://assets/art/heroes/stage8_summoner/frames/effect1/projectile_02.png"
+const FIT := preload("res://src/ui/hero_weapon_visual_fit.gd")
+var fly_bounds := Rect2()
+var hit_bounds := Rect2()
+
 const HIT_RADIUS := 30.0
 const IMPACT_SECONDS := 0.10
 
@@ -26,6 +30,8 @@ var hit_texture: Texture2D
 func _ready() -> void:
 	fly_texture = _load_texture(FLY_TEXTURE_PATH)
 	hit_texture = _load_texture(HIT_TEXTURE_PATH)
+	fly_bounds = FIT.warm(PackedStringArray([FLY_TEXTURE_PATH]))
+	hit_bounds = FIT.warm(PackedStringArray([HIT_TEXTURE_PATH]))
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	deactivate()
 
@@ -51,12 +57,20 @@ func activate(
 		direction = Vector2.RIGHT
 	sprite.texture = fly_texture
 	sprite.scale = Vector2(0.42, 0.42)
+	sprite.offset = Vector2.ZERO
+	_fit_survival_sprite(fly_bounds,52.0)
 	sprite.rotation = direction.angle()
 	active = true
 	visible = true
 	if not is_in_group("hero_summon_projectiles"):
 		add_to_group("hero_summon_projectiles")
 	set_physics_process(true)
+
+
+func _fit_survival_sprite(bounds: Rect2, size: float) -> void:
+	if not bool(get_meta("survival_presentation",false)) or not bounds.has_area(): return
+	sprite.scale = Vector2.ONE*size/maxf(bounds.size.x,bounds.size.y)
+	sprite.offset = -bounds.get_center()
 
 
 func _physics_process(delta: float) -> void:
@@ -91,6 +105,8 @@ func _impact_target() -> void:
 		preload("res://src/systems/monster_hit_context.gd").hit(target, damage, "ranged", self)
 	sprite.texture = hit_texture
 	sprite.scale = Vector2(0.48, 0.48)
+	sprite.offset = Vector2.ZERO
+	_fit_survival_sprite(hit_bounds,56.0)
 	sprite.rotation = 0.0
 	impact_timer = IMPACT_SECONDS
 

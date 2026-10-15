@@ -13,6 +13,7 @@ static func warm(paths: PackedStringArray) -> Rect2:
 		texture_cache[path] = texture
 		var image := texture.get_image()
 		if image == null or image.is_empty(): continue
+		if image.is_compressed() and image.decompress() != OK: continue
 		var used := Rect2(image.get_used_rect())
 		used.position -= texture.get_size()*0.5
 		bounds = used if not bounds.has_area() else bounds.merge(used)

@@ -2377,6 +2377,22 @@ const MELEE_HEROES := ["swift_hunter","sword_shield_hero","madness_hero"]
 const RANGED_RESEARCH_PATTERNS := ["bolt","burst","piercer","beam","chain","meteor","poison","ice_pillar","singularity"]
 const PROJECTILE_PATTERNS := ["bolt","burst","piercer","meteor"]
 const AREA_PATTERNS := ["combo","slash","beam","capsule","orbit","nova","frost","poison","guard","heal","ice_pillar","meteor","singularity"]
+# Counts apply to actual delivery, including non-starter emitters and summons.
+# Ground fields, beams, healing, shields and melee swings are not projectiles.
+static func projectile_quantity_kind(id: String) -> String:
+	var data: Dictionary = WEAPONS.get(id,{})
+	if data.is_empty(): return ""
+	var rule := DELIVERY.spec(id,data)
+	if String(rule.get("mode","")) == "sentry": return "sentry"
+	if String(data.get("pattern","")) == "orbit": return "orbit"
+	if not rule.is_empty(): return ""
+	if String(data.get("pattern","")) in PROJECTILE_PATTERNS: return "shots"
+	if String(data.get("summon_kind","")) in ["watcher","gatekeeper"]: return "summon"
+	return ""
+
+static func projectile_visual_radius(data: Dictionary) -> float:
+	return 22.0 if String(data.get("pattern","")) == "burst" else 28.0
+
 static func passive_limit(id: String) -> int:
 	return int(PASSIVES.get(id,{}).get("max_level",MAX_LEVEL))
 static func passive_allowed(id: String, owner: String, owned: Array) -> bool:
@@ -2384,7 +2400,9 @@ static func passive_allowed(id: String, owner: String, owned: Array) -> bool:
 	if restriction == "ranged": return owner not in MELEE_HEROES
 	if restriction == "projectile_weapon":
 		for weapon in owned:
-			if String(WEAPONS[weapon].pattern) in PROJECTILE_PATTERNS: return true
+			if String(PASSIVES[id].stat) == "multishot":
+				if projectile_quantity_kind(String(weapon)) != "": return true
+			elif String(WEAPONS[weapon].pattern) in PROJECTILE_PATTERNS: return true
 		return false
 	return true
 static func is_weapon(id: String) -> bool:
@@ -2399,7 +2417,7 @@ static func description(id: String, next_level: int) -> String:
 		var total := gain*rank
 		match String(passive.stat):
 			"recovery": return "최대 HP의 25% 즉시 회복\n보조 장착 칸을 사용하지 않습니다."
-			"multishot": return "발사체 +1개 (누적 +%d개)\n최대 추가 2개 · 투사체 무기에 적용" % rank
+			"multishot": return "발사체 +1개 (누적 +%d개)\n최대 추가 2개 · 보유 투사체/회전 무기·설치체·원거리 소환수에 적용" % rank
 			"siphon": return "실제로 준 피해의 0.5%% 추가 흡수\n총 피흡 %.1f%% · 최대 5%%" % total
 			"slow_resist": return "둔화 강도·지속시간 저항 +4%%\n추가 저항 총 %.0f%%" % total
 			"projectile_power": return "투사체 무기 피해 보너스 +6%%\n총 +%.0f%%" % total

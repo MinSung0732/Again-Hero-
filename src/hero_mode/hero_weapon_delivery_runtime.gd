@@ -38,7 +38,7 @@ func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,r
 		slot.id = id; slot.mode = mode; slot.data = data; slot.rank = rank
 		slot.left = duration; slot.duration = duration; slot.age = 0.0; slot.tick = 0.0
 		slot.interval = interval; slot.warning = WARNING if mode == "random" else index*0.4 if mode == "trail" else 0.0
-		slot.phase = TAU*index/count; slot.count = clampi(int(data.get("orbit_count",4)),2,8)
+		slot.phase = TAU*index/count; slot.count = clampi(int(data.get("orbit_count",4)),2,10)
 		slot.origin = origin
 		slot.radius = clampf(reach*0.32,45.0,180.0)
 		slot.orbit_radius = reach*float(data.get("orbit_ratio",0.7))
@@ -105,7 +105,8 @@ func tick(delta: float) -> void:
 			if mode == "orbit" and not orbit_contact(slot,actor.global_position): continue
 			host._hit(actor,int(slot.damage),"field",int(slot.rank),slot.data)
 		if mode == "sentry" and is_instance_valid(nearest):
-			host._launch_projectile(nearest,slot.origin,int(slot.damage),int(slot.rank),slot.color,slot.data,0.0,false,float(slot.radius))
+			for extra in 1+mini(2,int(slot.data.get("extra_projectiles",0))):
+				host._launch_projectile(nearest,slot.origin,int(slot.damage),int(slot.rank),slot.color,slot.data,float(extra)*0.08,false,float(slot.radius))
 func orbit_point(slot: Dictionary,index: int) -> Vector2:
 	return Vector2(slot.origin)+Vector2.from_angle(clock*float(slot.data.get("orbit_speed",2.4))+TAU*index/int(slot.count))*float(slot.orbit_radius)
 func orbit_contact(slot: Dictionary,point: Vector2) -> bool:

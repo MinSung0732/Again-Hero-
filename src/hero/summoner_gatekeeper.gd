@@ -21,6 +21,7 @@ static var _frames_cache: SpriteFrames
 @onready var attack_audio: AudioStreamPlayer = $AttackAudio
 @onready var summon_audio: AudioStreamPlayer = $SummonAudio
 
+var survival_weapon_id := ""
 var active: bool = false
 var owner_hero: Node2D = null
 var current_hp: int = 1
@@ -52,6 +53,7 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 	preload("res://src/systems/yuki_onna_runtime.gd").start_target_life(self)
 	global_position = world_position
 	owner_hero = new_owner
+	survival_weapon_id = String(config.get("survival_weapon_id",""))
 	max_hp = maxi(int(config.get("max_hp", 650)), 1)
 	current_hp = max_hp
 	duration_total = maxf(float(config.get("duration", 60.0)), 0.1)
@@ -179,6 +181,7 @@ func _fire_at(target: Node2D) -> void:
 	var bonus_steps := maxi(consecutive_target_steps - 1, 0)
 	var shot_damage := maxi(int(round(float(attack_damage) * (1.0 + consecutive_damage_bonus_per_step * float(bonus_steps)))), 1)
 	shot_damage = maxi(int(round(shot_damage*RECEIVED_STATUS.outgoing_multiplier(self))),1)
+	projectile.set_meta("survival_presentation",not survival_weapon_id.is_empty())
 	projectile.call(
 		"activate",
 		global_position + Vector2(0.0, -18.0),
@@ -187,6 +190,10 @@ func _fire_at(target: Node2D) -> void:
 		projectile_speed,
 		attack_range + 80.0
 	)
+	if not survival_weapon_id.is_empty() and is_instance_valid(owner_hero):
+		var runtime = owner_hero.get("player_weapons")
+		if runtime != null: runtime.launch_summon_extras(survival_weapon_id,target,global_position+Vector2(0.0,-18.0),shot_damage,attack_range)
+
 
 
 func _acquire_projectile() -> Node2D:

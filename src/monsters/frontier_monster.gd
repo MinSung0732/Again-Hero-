@@ -33,6 +33,8 @@ var pending_target: WeakRef
 var pending_handle := Vector3i.ZERO
 var pending_action: RefCounted
 var ally_scratch: Array = []
+var status_bar_y := -78.0
+var visible_body_height := 0.0
 
 func _ready() -> void:
 	super._ready()
@@ -49,6 +51,26 @@ func apply_visual_profile(profile: Dictionary) -> bool:
 	if ok:
 		var origin: Array = profile.get("offset",[0.0,0.0])
 		sprite.offset = Vector2(float(origin[0]),float(origin[1]))
+		# Actor scale belongs to combat geometry. Normalize presentation separately
+		# so elite profile + variant scale cannot multiply body size twice.
+		var parent_x := maxf(absf(global_scale.x),0.01)
+		var parent_y := maxf(absf(global_scale.y),0.01)
+		var giant := float(get_meta("giant_size_multiplier",1.0))
+		sprite.scale = Vector2(sprite.scale.x/parent_x,sprite.scale.y/parent_y)*giant
+		var floor_y := float(profile.get("ground_y",30.0))
+		sprite.position = Vector2(0.0,floor_y)
+		var texture: Texture2D = sprite.sprite_frames.get_frame_texture(&"idle",0)
+		var source: Array = profile.get("source_idle_bounds",[0,0,texture.get_width(),texture.get_height()])
+		visible_body_height = (float(source[3])-float(source[1]))*sprite.scale.y*parent_y
+		var top: float = float(profile.get("source_animation_top",source[1]))-texture.get_height()*0.5+sprite.offset.y
+		status_bar_y = floor_y+top*sprite.scale.y-12.0/parent_y
+		var shadow := get_node_or_null("GroundShadow")
+		if shadow != null:
+			shadow.position = Vector2(0.0,floor_y)
+			var body_width: float = (float(source[2])-float(source[0]))*sprite.scale.x*parent_x
+			var width := clampf(body_width*0.58,34.0,86.0)
+			shadow.configure(Vector2(width/parent_x,maxf(10.0,width*.25)/parent_y),0.42)
+		queue_redraw()
 	return ok
 
 func configure_special_augments(configs: Dictionary) -> void:
@@ -235,7 +257,12 @@ func _begin_death_with_result(receipt = null, receipt_revision: int = 0) -> void
 	super._begin_death_with_result(receipt,receipt_revision)
 
 func _draw() -> void:
-	super._draw()
+	# Old Orc's -59 bar line intersects our taller, floor-aligned bodies.
+	# The common bar renderer keeps world pixel dimensions under variant scaling.
+	if dying: return
+	if is_instance_valid(visual) and not visual.is_visual_ready():
+		draw_circle(Vector2(0,0),25.0,Color("9b866a"))
+	MONSTER_RUNTIME_COMMON.draw_status_bars(self,self,status_bar_y)
 	if not pending.is_empty():
 		# World-fixed target warning: actor movement/knockback never drags it along.
 		var center := to_local(pending_position)

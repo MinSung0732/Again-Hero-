@@ -157,6 +157,7 @@ func run() -> void:
 	await _test_reinforcements()
 	await _test_actual_battle()
 	print("FRONTIER_MONSTERS checks=",checks," failures=",failures)
+	await create_timer(.15).timeout
 	quit(0 if failures == 0 else 1)
 
 func _test_mechanics(arena: Arena,target: Target) -> void:
@@ -241,6 +242,7 @@ func _test_actual_battle() -> void:
 		var normal = battle._spawn_monster(id,battle.hero.position+Vector2(300,0))
 		check(is_instance_valid(normal) and normal.hero == battle.hero,id+" actual Battle spawn")
 		check(normal.visual.is_visual_ready(),id+" actual Battle real normal frames")
+		_check_layout(normal,D.DEFINITIONS[id].normal_visual,id+" normal")
 		var detail: Dictionary = battle.get_monster_run_detail(id)
 		check(normal.max_hp == detail.max_hp and normal.attack_damage == detail.attack_damage,id+" runtime-detail stat parity")
 		for aug in A.get_special_augments_for_monster(id): battle.demon_special_augments.append(aug.id)
@@ -259,10 +261,15 @@ func _test_actual_battle() -> void:
 		if boosted.behavior.has("slow_duration"): check(battle.hero.slow_timer > 0.0,id+" actual Hero slow")
 		if boosted.behavior.has("poison_ratio"): check(battle.hero.poison_timer > 0.0,id+" actual Hero poison")
 		if boosted.behavior.has("burn_ratio"): check(battle.hero.burn_runtime.remaining > 0.0,id+" actual Hero burn")
-		battle._apply_special_monster_modifiers(boosted,id,{"type":"elite","hp_multiplier":2.0})
+		battle._apply_special_monster_modifiers(boosted,id,{"type":"elite","hp_multiplier":2.0,"visual_scale":1.5})
 		check(String(boosted.get_meta("visual_variant")) == "elite",id+" actual elite conversion")
+		_check_layout(boosted,D.DEFINITIONS[id].elite_visual,id+" elite")
 		check(boosted.visual.sprite_frames.get_frame_count(&"death") == D.DEFINITIONS[id].elite_visual.animations.death.count,id+" actual elite frames")
 		check(int(boosted.get_meta("elite_skill_count")) == D.DEFINITIONS[id].elite_skills.size(),id+" actual elite registration")
+	# Stop audio before freeing its scene in the dummy audio backend.
+	for host in [battle,root.get_node("GameAudio")]:
+		for player in host.find_children("*","AudioStreamPlayer",true,false): player.stop()
+		for player in host.find_children("*","AudioStreamPlayer2D",true,false): player.stop()
 	battle.queue_free()
 	await process_frame
 	SCOPE.guest_directory = old_directory
@@ -305,3 +312,17 @@ func _test_reinforcements() -> void:
 			for id in expected: check(id in arena.normal,"late recruit actually spawned")
 			arena.queue_free()
 			await process_frame
+
+func _check_layout(actor,profile: Dictionary,label: String) -> void:
+	var sprite: AnimatedSprite2D = actor.visual
+	var texture := sprite.sprite_frames.get_frame_texture(&"idle",0)
+	var b: Array = profile.source_idle_bounds
+	var foot := sprite.to_global(Vector2((float(b[0])+float(b[2]))*.5,float(b[3]))-texture.get_size()*.5+sprite.offset)
+	var shadow: Sprite2D = actor.get_node("GroundShadow")
+	check(foot.distance_to(shadow.global_position) < .1,label+" foot touches shadow")
+	check(absf(foot.x-actor.global_position.x) < .1,label+" body center aligned")
+	check(is_equal_approx(actor.visible_body_height,float(profile.body_height)),label+" hero-relative visible height")
+	var top := sprite.to_global(Vector2(0,float(profile.source_animation_top)-texture.get_height()*.5)+sprite.offset)
+	var bar: Vector2 = actor.to_global(Vector2(0,actor.status_bar_y))
+	check(bar.y <= top.y-11.9,label+" bars clear all active animation tops")
+	check(shadow.display_size.x*absf(actor.global_scale.x) <= 86.1,label+" bounded shadow width")

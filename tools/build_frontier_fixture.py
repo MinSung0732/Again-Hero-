@@ -17,3 +17,18 @@ for d in definitions.values():
 for name in ['monster_balance_audit.gd','pack_frontier_art_fixture.gd']:
  shutil.copyfile(r/'tools'/name,out/'tools'/name)
 print('Real 8-species normal/elite frames copied; other missing presentation is fixture-only.')
+# Record exact production drawing commands without requiring a GPU backend.
+text=(r/'src/hero_mode/hero_weapon_runtime.gd').read_text()
+draw=text[text.index('func draw()'):].replace('hero.draw_','hero.record_draw_')
+(out/'tests/projectile_draw_harness.gd').write_text('''extends RefCounted
+const DATA := preload("res://src/data/hero_weapon_catalog.gd")
+const GEOMETRY := preload("res://src/hero_mode/hero_weapon_geometry.gd")
+const EMPTY_ART: Array[Texture2D] = []
+var hero
+var delivery = null
+var effects: Array = []
+var projectiles: Array = []
+var fields: Array = []
+var research := {}
+var visual_clock := 0.25
+'''+draw)

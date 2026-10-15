@@ -1,9 +1,9 @@
 extends RefCounted
 # Reuse shipped skill actors and their existing damage/status/audio paths.
 const SCENES := {
-	"piercer":[preload("res://src/hero/UltimatePiercingProjectile.tscn"),"ultimate_piercing_projectile",4],
+	"piercer":[preload("res://src/hero/UltimatePiercingProjectile.tscn"),"ultimate_piercing_projectile",6],
 	"ice_pillar":[preload("res://src/hero/SageIcePillar.tscn"),"sage_ice_pillar",3],
-	"meteor":[preload("res://src/hero/SageStarlightMeteor.tscn"),"sage_starlight_meteor",6],
+	"meteor":[preload("res://src/hero/SageStarlightMeteor.tscn"),"sage_starlight_meteor",8],
 	"singularity":[preload("res://src/hero/SageAnnihilationPoint.tscn"),"sage_annihilation_point",2],
 }
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")

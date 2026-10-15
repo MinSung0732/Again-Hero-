@@ -7,9 +7,11 @@ shutil.copytree(repo/'assets/art/effects/hero_weapon_v2',out/'assets/art/effects
 s=(repo/'src/hero_mode/hero_weapon_runtime.gd').read_text(); draw=s[s.index('func draw()'):]
 draw=draw.replace('hero.draw_','hero.record_draw_')
 (out/'tests/weapon_art_draw_harness.gd').write_text('''extends RefCounted
+const DATA := preload("res://src/data/hero_weapon_catalog.gd")
 const GEOMETRY := preload("res://src/hero_mode/hero_weapon_geometry.gd")
 const EMPTY_ART: Array[Texture2D] = []
 var hero
+var delivery = null
 var effects: Array = []
 var projectiles: Array = []
 var fields: Array = []

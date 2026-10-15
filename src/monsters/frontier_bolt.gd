@@ -85,6 +85,7 @@ func deactivate_for_pool() -> void:
 	if is_in_group("monster_projectiles"): remove_from_group("monster_projectiles")
 
 func _draw() -> void:
+	draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE*1.5)
 	# Small pixel shapes: flame tail vs purple curse diamond; no raster dependency.
 	if fire:
 		draw_rect(Rect2(-18,-3,24,6),Color("963745"))

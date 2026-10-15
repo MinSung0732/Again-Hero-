@@ -19,6 +19,7 @@ static var _frames_cache_by_dir: Dictionary = {}
 @onready var attack_audio: AudioStreamPlayer = $AttackAudio
 @onready var summon_audio: AudioStreamPlayer = $SummonAudio
 
+var survival_weapon_id := ""
 var active: bool = false
 var owner_hero: Node2D = null
 var duration_total: float = 20.0
@@ -50,6 +51,7 @@ func _ready() -> void:
 
 func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) -> void:
 	owner_hero = new_owner
+	survival_weapon_id = String(config.get("survival_weapon_id",""))
 	follow_slot = maxi(int(config.get("follow_slot", 0)), 0)
 	duration_total = maxf(float(config.get("duration", 20.0)), 0.1)
 	duration_remaining = duration_total
@@ -214,6 +216,7 @@ func _fire_at_target(current_target: Node2D) -> void:
 	attack_timer = attack_cooldown / maxf(attack_speed_multiplier, 0.1)
 	var shot_damage := maxi(int(round(float(attack_damage) * (1.0 + (focus_damage_bonus if focus_active else 0.0)))), 1)
 	shot_damage = maxi(int(round(shot_damage*RECEIVED_STATUS.outgoing_multiplier(self))),1)
+	projectile.set_meta("survival_presentation",not survival_weapon_id.is_empty())
 	projectile.call(
 		"activate",
 		global_position,
@@ -222,6 +225,10 @@ func _fire_at_target(current_target: Node2D) -> void:
 		projectile_speed,
 		attack_range
 	)
+	if not survival_weapon_id.is_empty() and is_instance_valid(owner_hero):
+		var runtime = owner_hero.get("player_weapons")
+		if runtime != null: runtime.launch_summon_extras(survival_weapon_id,current_target,global_position,shot_damage,attack_range)
+
 	if attack_audio.stream != null:
 		attack_audio.stop()
 		attack_audio.play()

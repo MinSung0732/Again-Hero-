@@ -61,7 +61,7 @@ const DEFINITIONS := {
     "normal_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/monsters/harpy/frames",
-      "target_height": 169.76842,
+      "target_height": 192.080842,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -104,12 +104,15 @@ const DEFINITIONS := {
         340,
         303
       ],
-      "body_height": 84
+      "body_height": 95.04,
+      "hero_height_ratio": 0.88,
+      "ground_y": 30.0,
+      "source_animation_top": 113
     },
     "elite_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/elitemonster/harpy/frames",
-      "target_height": 166.58028,
+      "target_height": 191.900485,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -152,9 +155,16 @@ const DEFINITIONS := {
         359,
         320
       ],
-      "body_height": 92.4
+      "body_height": 106.4448,
+      "hero_height_ratio": 0.88,
+      "ground_y": 30.0,
+      "source_animation_top": 99
     },
-    "hero_survival_after": 300.0
+    "hero_survival_after": 300.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
   },
   "imp": {
     "id": "imp",
@@ -213,7 +223,7 @@ const DEFINITIONS := {
     "normal_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/monsters/imp/frames",
-      "target_height": 126.33766,
+      "target_height": 143.625974,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -256,12 +266,15 @@ const DEFINITIONS := {
         308,
         200
       ],
-      "body_height": 76
+      "body_height": 86.4,
+      "hero_height_ratio": 0.8,
+      "ground_y": 30.0,
+      "source_animation_top": 36
     },
     "elite_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/elitemonster/imp/frames",
-      "target_height": 159.71343,
+      "target_height": 184.870209,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -304,9 +317,16 @@ const DEFINITIONS := {
         248,
         221
       ],
-      "body_height": 83.60000000000001
+      "body_height": 96.768,
+      "hero_height_ratio": 0.8,
+      "ground_y": 30.0,
+      "source_animation_top": 82
     },
-    "hero_survival_after": 300.0
+    "hero_survival_after": 300.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
   },
   "mimic": {
     "id": "mimic",
@@ -365,7 +385,7 @@ const DEFINITIONS := {
     "normal_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/monsters/mimic/frames",
-      "target_height": 191.56463,
+      "target_height": 211.591837,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -408,12 +428,15 @@ const DEFINITIONS := {
         272,
         222
       ],
-      "body_height": 88
+      "body_height": 97.2,
+      "hero_height_ratio": 0.9,
+      "ground_y": 30.0,
+      "source_animation_top": 36
     },
     "elite_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/elitemonster/mimic/frames",
-      "target_height": 224.82581,
+      "target_height": 252.845419,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -456,9 +479,16 @@ const DEFINITIONS := {
         64,
         60
       ],
-      "body_height": 96.80000000000001
+      "body_height": 108.864,
+      "hero_height_ratio": 0.9,
+      "ground_y": 30.0,
+      "source_animation_top": 25
     },
-    "hero_survival_after": 300.0
+    "hero_survival_after": 300.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
   },
   "mud_golem": {
     "id": "mud_golem",
@@ -531,7 +561,7 @@ const DEFINITIONS := {
     "normal_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/monsters/mud_golem/frames",
-      "target_height": 271.05882,
+      "target_height": 292.743529,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -581,12 +611,15 @@ const DEFINITIONS := {
         362,
         350
       ],
-      "body_height": 120
+      "body_height": 129.6,
+      "hero_height_ratio": 1.2,
+      "ground_y": 30.0,
+      "source_animation_top": 122
     },
     "elite_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/elitemonster/mud-golem/frames",
-      "target_height": 278.50549,
+      "target_height": 306.254769,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -629,9 +662,16 @@ const DEFINITIONS := {
         366,
         351
       ],
-      "body_height": 132.0
+      "body_height": 145.152,
+      "hero_height_ratio": 1.2,
+      "ground_y": 30.0,
+      "source_animation_top": 110
     },
-    "hero_survival_after": 300.0
+    "hero_survival_after": 300.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
   },
   "satyr_rogue": {
     "id": "satyr_rogue",
@@ -692,7 +732,7 @@ const DEFINITIONS := {
     "normal_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/monsters/satyr_rogue/frames",
-      "target_height": 143.28358,
+      "target_height": 163.343284,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -735,12 +775,15 @@ const DEFINITIONS := {
         322,
         233
       ],
-      "body_height": 90
+      "body_height": 102.6,
+      "hero_height_ratio": 0.95,
+      "ground_y": 30.0,
+      "source_animation_top": 32
     },
     "elite_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/elitemonster/satyr_rouge/frames",
-      "target_height": 189.13433,
+      "target_height": 219.533373,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -783,9 +826,16 @@ const DEFINITIONS := {
         219,
         220
       ],
-      "body_height": 99.00000000000001
+      "body_height": 114.912,
+      "hero_height_ratio": 0.95,
+      "ground_y": 30.0,
+      "source_animation_top": 86
     },
-    "hero_survival_after": 300.0
+    "hero_survival_after": 300.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
   },
   "satyr_shaman": {
     "id": "satyr_shaman",
@@ -862,7 +912,7 @@ const DEFINITIONS := {
     "normal_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/monsters/satyr_shaman/frames",
-      "target_height": 147.2,
+      "target_height": 172.8,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -905,12 +955,15 @@ const DEFINITIONS := {
         251,
         222
       ],
-      "body_height": 92
+      "body_height": 108.0,
+      "hero_height_ratio": 1.0,
+      "ground_y": 30.0,
+      "source_animation_top": 42
     },
     "elite_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/elitemonster/satyr_shaman/frames",
-      "target_height": 147.87215,
+      "target_height": 176.745205,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -953,9 +1006,16 @@ const DEFINITIONS := {
         376,
         272
       ],
-      "body_height": 101.2
+      "body_height": 120.96,
+      "hero_height_ratio": 1.0,
+      "ground_y": 30.0,
+      "source_animation_top": 38
     },
-    "hero_survival_after": 300.0
+    "hero_survival_after": 300.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
   },
   "skeleton_shield": {
     "id": "skeleton_shield",
@@ -1009,7 +1069,7 @@ const DEFINITIONS := {
     "normal_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/monsters/skeleton_shield/frames",
-      "target_height": 173.91304,
+      "target_height": 197.217391,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -1052,12 +1112,15 @@ const DEFINITIONS := {
         282,
         267
       ],
-      "body_height": 100
+      "body_height": 113.4,
+      "hero_height_ratio": 1.05,
+      "ground_y": 30.0,
+      "source_animation_top": 36
     },
     "elite_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/elitemonster/skeleton_shield/frames",
-      "target_height": 176.0,
+      "target_height": 203.2128,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -1100,9 +1163,16 @@ const DEFINITIONS := {
         330,
         266
       ],
-      "body_height": 110.00000000000001
+      "body_height": 127.008,
+      "hero_height_ratio": 1.05,
+      "ground_y": 30.0,
+      "source_animation_top": 32
     },
-    "hero_survival_after": 300.0
+    "hero_survival_after": 300.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
   },
   "toxic_slime": {
     "id": "toxic_slime",
@@ -1167,7 +1237,7 @@ const DEFINITIONS := {
     "normal_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/monsters/toxic_slime/frames",
-      "target_height": 157.53846,
+      "target_height": 170.141538,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -1210,12 +1280,15 @@ const DEFINITIONS := {
         467,
         178
       ],
-      "body_height": 72
+      "body_height": 77.76,
+      "hero_height_ratio": 0.72,
+      "ground_y": 30.0,
+      "source_animation_top": 32
     },
     "elite_visual": {
       "mode": "frames",
       "asset_dir": "res://assets/art/elitemonster/toxic_slime/frames",
-      "target_height": 137.92653,
+      "target_height": 151.669029,
       "animations": {
         "idle": {
           "prefix": "idle",
@@ -1258,9 +1331,16 @@ const DEFINITIONS := {
         548,
         181
       ],
-      "body_height": 79.2
+      "body_height": 87.0912,
+      "hero_height_ratio": 0.72,
+      "ground_y": 30.0,
+      "source_animation_top": 32
     },
-    "hero_survival_after": 300.0
+    "hero_survival_after": 300.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
   }
 }
 const AUGMENTS := [
