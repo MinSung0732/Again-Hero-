@@ -2,6 +2,9 @@ extends Node2D
 
 const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
 const BATTLE_SESSION := preload("res://src/data/battle_session_catalog.gd")
+const CONTROL_SPAWNS := preload("res://src/hero_mode/hero_control_spawn_budget.gd")
+var hero_control_spawns = CONTROL_SPAWNS.new()
+var hero_control_roster: Array = []
 const HERO_SURVIVAL := preload("res://src/data/hero_mode_catalog.gd")
 const BATTLE_COMMAND := preload("res://src/systems/battle_command.gd")
 const BATTLE_COMMAND_ROUTER := preload("res://src/systems/battle_command_router.gd")
@@ -839,6 +842,8 @@ func _start_battle() -> void:
 			valid_orb_pool.append(pooled_orb)
 	exp_orb_pool = valid_orb_pool
 	active_monsters.clear()
+	hero_control_spawns.reset()
+	hero_control_roster.clear()
 	monster_query_registration_order = 0
 	monster_population_counts.clear()
 	monster_population_ids.clear()
@@ -940,6 +945,7 @@ func _start_battle() -> void:
 	)
 	# Stages 1~10 share the Demon Castle map, progressively destroyed per stage.
 	# Keep actor/prop depth rules consistent across the whole castle arc.
+	if hero_player_mode: hero_control_roster = HERO_SURVIVAL.roster_for(int(current_stage_data.get("number",1)),campaign_difficulty)
 	y_sort_enabled = _uses_castle_battlefield(current_stage_id)
 	var castle_battlefield := get_node_or_null("Stage1Battlefield")
 	if (
@@ -2159,6 +2165,11 @@ func promote_monster_to_giant(
 	return true
 
 
+func hero_spawn_candidate(id: String,roster: Array,elite: bool = false) -> String:
+	if not hero_player_mode: return id
+	return hero_control_spawns.choose(id,roster,elite,int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds),active_monsters.size())
+
+
 func _spawn_monster(
 	monster_type: String,
 	spawn_position: Vector2,
@@ -2169,6 +2180,7 @@ func _spawn_monster(
 	if online_match_mode and (active_monsters.size() >= get_population_limit() or monster_type not in online_match_rules.get("roster",[])): return null
 	if hero_player_mode and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and not bool(spawn_modifiers.get("hero_final_boss_spawn",false)): return null
 	if hero_player_mode and (active_monsters.size() >= HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1))) or not HERO_SURVIVAL.monster_allowed(monster_type,int(current_stage_data.get("number",1)),campaign_difficulty)): return null
+	if hero_player_mode and not bool(spawn_modifiers.get("hero_final_boss_spawn",false)) and not hero_control_spawns.allows(monster_type,bool(spawn_modifiers.get("elite_variant",false)),int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds),active_monsters.size()): return null
 	if bool(spawn_modifiers.get("counts_population", false)) and is_population_full():
 		return null
 	if not bool(MONSTER_CATALOG.MONSTERS.get(monster_type, {}).get("combat_enabled", true)):
@@ -2499,6 +2511,7 @@ func _spawn_monster(
 	var monster_instance_id := monster.get_instance_id()
 	monster_summon_costs[monster_instance_id] = summon_cost
 	active_monsters[monster_instance_id] = monster
+	if hero_player_mode: hero_control_spawns.register(monster_instance_id,monster_type,bool(spawn_modifiers.get("elite_variant",false)),int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds))
 	_activate_battle_entity(monster)
 	monster.set_meta("query_registration_order", monster_query_registration_order)
 	monster_query_registration_order += 1
@@ -2549,6 +2562,7 @@ func is_population_full() -> bool:
 	return get_population_count() >= get_population_limit()
 
 func _unregister_monster(instance_id: int) -> void:
+	hero_control_spawns.retire(instance_id)
 	anubis_army_runtime.retire(instance_id)
 	battle_entity_registry.retire_instance(instance_id)
 	if direct_population_ids.erase(instance_id):
@@ -4403,6 +4417,9 @@ func spawn_special_monster(
 		return false
 	if hero_player_mode and not HERO_SURVIVAL.monster_allowed(monster_id,int(current_stage_data.get("number",1)),campaign_difficulty): return false
 
+	if hero_player_mode:
+		monster_id = hero_spawn_candidate(monster_id,hero_control_roster,true)
+		if monster_id.is_empty(): return false
 	if not bool(MONSTER_CATALOG.MONSTERS[monster_id].get("can_be_elite", true)):
 		return false
 
@@ -4442,6 +4459,7 @@ func _apply_special_monster_modifiers(
 	if not bool(MONSTER_CATALOG.MONSTERS.get(monster_id, {}).get("can_be_elite", true)):
 		return
 
+	if hero_player_mode: hero_control_spawns.register(monster.get_instance_id(),monster_id,true,int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds))
 	monster.set_meta("visual_variant", "elite")
 	# Direct conversions must discard excluded effects before recalculating stats.
 	# Event spawns already have filtered configs; retain their running timers.
@@ -4489,7 +4507,7 @@ func _apply_special_monster_modifiers(
 	var base_damage_meta = monster.get_meta(
 		"demon_level_base_attack_damage",
 		null
-	)
+	) if monster.has_meta("demon_level_base_attack_damage") else null
 	if base_damage_meta != null:
 		monster.set_meta(
 			"demon_level_base_attack_damage",
@@ -6192,6 +6210,9 @@ func configure_campaign_difficulty(difficulty: String) -> void:
 
 func spawn_hero_encounter(id: String, point: Vector2, modifiers: Dictionary) -> Node2D:
 	if not hero_player_mode or battle_over or not HERO_SURVIVAL.monster_allowed(id,int(current_stage_data.get("number",1)),campaign_difficulty): return null
+	if String(modifiers.get("type","")) != "boss":
+		id = hero_spawn_candidate(id,hero_control_roster,true)
+		if id.is_empty(): return null
 	point = _clamp_manual_spawn_position(point)
 	if active_monsters.size() >= HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1))) or point.distance_squared_to(hero.position) < 180.0*180.0: return null
 	var monster = _spawn_monster(id,point,0.0,false,{"elite_variant":true,"counts_population":true,"hero_encounter_position_locked":true,"hero_final_boss_spawn":String(modifiers.get("type","")) == "boss"})

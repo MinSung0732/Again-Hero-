@@ -91,6 +91,9 @@ func tick(delta: float) -> void:
 		if battle.command_power >= battle.get_monster_cost(id): _summon_on_map(id,elapsed)
 
 func _summon_on_map(id: String,elapsed: float) -> bool:
+	if battle.has_method("hero_spawn_candidate"):
+		id = battle.hero_spawn_candidate(id,roster,false)
+		if id.is_empty() or battle.command_power < battle.get_monster_cost(id): return false
 	var pattern := MAP_ASSAULT.plan_at(elapsed,stage_number)
 	# Bounded retries avoid edge clamping beside the hero. No enemy relocation.
 	for attempt in 8:
