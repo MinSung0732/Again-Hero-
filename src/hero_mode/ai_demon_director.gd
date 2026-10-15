@@ -1,6 +1,8 @@
 extends RefCounted
 const DATA := preload("res://src/data/hero_mode_catalog.gd")
 const AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
+const MAP_ASSAULT := preload("res://src/data/hero_map_assault_catalog.gd")
+var spawn_sequence := 0
 var encounters
 var battle
 var think_remaining := 0.0
@@ -25,13 +27,14 @@ func install(host) -> void:
 	battle.set_allowed_monster_ids(roster)
 func _observe() -> void:
 	preferred.clear()
+	plan = "탐색 공세 · 여러 역할로 압박"
 	var tags: Dictionary = battle.hero.player_weapons.build_tags() if battle.hero.player_weapons != null else AUGMENTS.get_build_tag_counts(battle.hero.build_counts)
 	for tag in DATA.COUNTERS:
 		if int(tags.get(tag,0)) > 0:
 			preferred = DATA.COUNTERS[tag].duplicate()
 			plan = "빌드 관측 · "+AUGMENTS.get_tag_label(tag)+"에 대응하는 공세"
-			return
-	plan = "탐색 공세 · 여러 역할로 압박"
+			break
+	plan += " · "+String(MAP_ASSAULT.NAMES[MAP_ASSAULT.plan_at(float(battle.run_metrics.elapsed_seconds),stage_number)])
 func _select_ai_reward() -> bool:
 	if battle.demon_augment_selection_active:
 		var candidates: Array = battle.demon_augment_candidates
@@ -76,7 +79,18 @@ func tick(delta: float) -> void:
 		if elapsed > 25.0 and not preferred.is_empty() and randf() < 0.55:
 			var counter := String(preferred[rotation%preferred.size()])
 			if counter in roster: id = counter
-		if battle.command_power >= battle.get_monster_cost(id): battle.try_summon(id)
+		if battle.command_power >= battle.get_monster_cost(id): _summon_on_map(id,elapsed)
+
+func _summon_on_map(id: String,elapsed: float) -> bool:
+	var pattern := MAP_ASSAULT.plan_at(elapsed,stage_number)
+	# Bounded retries avoid edge clamping beside the hero. No enemy relocation.
+	for attempt in 8:
+		spawn_sequence += 1
+		var point := MAP_ASSAULT.point(pattern,spawn_sequence,battle.hero.position,battle.hero.player_move_input,battle.current_map_size)
+		point = battle._clamp_manual_spawn_position(point)
+		if point.distance_squared_to(battle.hero.position) < MAP_ASSAULT.MIN_DISTANCE*MAP_ASSAULT.MIN_DISTANCE: continue
+		return battle.try_summon_at_position(id,point)
+	return false
 
 func _special(id: String,giant: bool,elapsed: float) -> bool:
 	if id not in roster or not bool(DATA.MONSTERS.get_monster(id).get("can_be_elite",true)): id = DATA.boss_for(stage_number,battle.campaign_difficulty)

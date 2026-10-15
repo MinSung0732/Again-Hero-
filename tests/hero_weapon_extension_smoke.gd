@@ -13,6 +13,8 @@ class Target extends Node2D:
 	func apply_slow(value: float, _seconds: float) -> void: slow_multiplier = value
 class Arena extends Node2D:
 	var targets: Array = []
+	var current_map_size := Vector2(1800,2400)
+	func _clamp_manual_spawn_position(point: Vector2) -> Vector2: return point.clamp(Vector2(70,70),current_map_size-Vector2(70,70))
 	func get_battle_entity_handle(actor: Node) -> Vector3i: return Vector3i(targets.find(actor)+1,1,1)
 	func resolve_battle_entity(handle: Vector3i) -> Node:
 		return targets[handle.x-1] if handle.x > 0 and handle.x <= targets.size() else null
@@ -102,6 +104,7 @@ func run() -> void:
 					runtime.levels[id] = rank; runtime.weapon_ids.append(id); runtime.cooldowns[id] = 1000
 					if awakened: runtime.evolved[id] = true
 					for field in runtime.fields: field.left = 0
+					for emitter in runtime.delivery.slots: emitter.left = 0
 					for shot in runtime.projectiles: shot.active = false
 					for pulse in runtime.pulses: pulse.active = false
 					var stats := runtime.stats_for(id)
@@ -114,6 +117,12 @@ func run() -> void:
 						target.position = Vector2(distance+index*5,index*3)
 					hero.current_hp = 500; hero.shield_hp = 0
 					runtime._cast(id)
+					# Persistent/map-random weapons hit their actual visible footprint.
+					for emitter in runtime.delivery.slots:
+						if emitter.left <= 0.0: continue
+						var point: Vector2 = runtime.delivery.orbit_point(emitter,0) if emitter.mode == "orbit" else emitter.origin
+						for actor in arena.targets: actor.position = point
+						break
 					if data.pattern == "guard": check(hero.shield_hp > 0,"new protection really granted "+id)
 					if data.pattern == "heal": check(hero.current_hp > 500,"new recovery really applied "+id)
 					for step in 20: runtime.tick(0.1)

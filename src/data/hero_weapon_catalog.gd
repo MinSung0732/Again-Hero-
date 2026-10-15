@@ -1,5 +1,6 @@
 extends RefCounted
 const GROWTH := preload("res://src/data/hero_weapon_growth_catalog.gd")
+const DELIVERY := preload("res://src/data/hero_weapon_delivery_catalog.gd")
 const MAX_LEVEL := 10
 const WEAPON_SLOTS := 6
 const PASSIVE_SLOTS := 6
@@ -2413,6 +2414,8 @@ static func description(id: String, next_level: int) -> String:
 	var data: Dictionary = WEAPONS[id]
 	if rank == 1:
 		var details := String(data.effect)
+		var delivery_text := DELIVERY.description(id,data)
+		if not delivery_text.is_empty(): details = delivery_text
 		if String(data.pattern) == "guard":
 			details += "\n보호막 최대 HP의 %.1f%%" % ((float(data.get("shield_ratio",0.04))+0.006)*100.0)
 		if String(data.pattern) == "heal":

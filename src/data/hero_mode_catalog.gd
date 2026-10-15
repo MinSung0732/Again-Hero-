@@ -9,8 +9,8 @@ const SLOW_SPEED_FLOOR := 0.35
 const DURATION := 900.0
 const THINK_INTERVAL := 0.75
 const OBSERVE_INTERVAL := 4.0
-const MONSTER_LIMIT := 72
-const MONSTER_LIMIT_PER_STAGE := 4
+const MONSTER_LIMIT := 144
+const MONSTER_LIMIT_PER_STAGE := 8
 static func monster_limit(stage_number: int) -> int:
 	return MONSTER_LIMIT+MONSTER_LIMIT_PER_STAGE*(clampi(stage_number,1,10)-1)
 const STARTING_COMMAND := 48.0
@@ -48,12 +48,12 @@ static func required_exp(target_level: int) -> int:
 const ROSTER := ["slime","spider","orc","bomb_rat","skeleton_archer","ghost","ogre"]
 const COUNTERS := {"area":["orc","skeleton_archer"],"mobility":["spider","ghost"],"durability":["bomb_rat","ghost"],"damage":["slime","spider"]}
 const PHASES := [
-	{"start":0.0,"interval":0.9,"batch":2,"limit":36,"regen":20.0,"roster":3,"name":"탐색 공세"},
-	{"start":40.0,"interval":0.85,"batch":2,"limit":40,"regen":24.0,"roster":5,"name":"원거리 협공"},
-	{"start":120.0,"interval":0.8,"batch":3,"limit":48,"regen":30.0,"roster":5,"name":"협공 시작"},
-	{"start":300.0,"interval":0.7,"batch":4,"limit":60,"regen":40.0,"roster":6,"name":"혼합 군단"},
-	{"start":600.0,"interval":0.6,"batch":5,"limit":68,"regen":50.0,"roster":7,"name":"포위 공세"},
-	{"start":780.0,"interval":0.5,"batch":6,"limit":72,"regen":60.0,"roster":7,"name":"최후의 공세"},
+	{"start":0.0,"interval":0.9,"batch":3,"limit":72,"regen":30.0,"roster":3,"name":"탐색 공세"},
+	{"start":40.0,"interval":0.85,"batch":3,"limit":84,"regen":36.0,"roster":5,"name":"원거리 협공"},
+	{"start":120.0,"interval":0.8,"batch":4,"limit":100,"regen":42.0,"roster":5,"name":"협공 시작"},
+	{"start":300.0,"interval":0.7,"batch":5,"limit":120,"regen":52.0,"roster":6,"name":"혼합 군단"},
+	{"start":600.0,"interval":0.6,"batch":6,"limit":136,"regen":64.0,"roster":7,"name":"포위 공세"},
+	{"start":780.0,"interval":0.5,"batch":6,"limit":144,"regen":72.0,"roster":7,"name":"최후의 공세"},
 ]
 const ELITE_FIRST := 35.0
 const OPENING_ELITE_DISTANCE := 450.0

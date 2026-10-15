@@ -7,6 +7,7 @@ var failures := 0
 class Hero extends BASE.Actor:
 	var player_weapons = null
 	var build_counts := {}
+	var player_move_input := Vector2.RIGHT
 class Mutation extends RefCounted:
 	func is_active() -> bool: return false
 class Arena extends BASE.Arena:
@@ -22,7 +23,9 @@ class Arena extends BASE.Arena:
 	func is_combat_simulation_paused() -> bool: return false
 	func get_population_count() -> int: return population
 	func get_monster_cost(_id: String) -> float: return 1.0
-	func try_summon(id: String) -> bool: normal.append(id); return true
+	var normal_points: Array[Vector2] = []
+	func try_summon_at_position(id: String,point: Vector2) -> bool:
+		normal.append(id); normal_points.append(point); population += 1; return true
 	func spawn_special_monster(id: String, data: Dictionary) -> bool:
 		specials.append({"id":id,"data":data,"time":run_metrics.elapsed_seconds}); return true
 func _initialize() -> void: call_deferred("run")
@@ -31,8 +34,8 @@ func check(ok: bool, label: String) -> void:
 	if not ok: failures += 1; push_error(label)
 func run() -> void:
 	for stage in range(1,11):
-		check(DATA.monster_limit(stage) == 72+4*(stage-1),"stage population progression")
-	check(DATA.monster_limit(-1) == 72 and DATA.monster_limit(99) == 108,"bounded stage cap")
+		check(DATA.monster_limit(stage) == 144+8*(stage-1),"stage population progression")
+	check(DATA.monster_limit(-1) == 144 and DATA.monster_limit(99) == 216,"bounded stage cap")
 	for stat in ["hp","damage","speed"]:
 		var previous := 0.0
 		for tick in range(901):
@@ -72,6 +75,9 @@ func run() -> void:
 				check(arena.spawned.size()-before <= 4,"bounded opening event batch")
 				if tick == 240: check(director.encounters.warning > 0 and arena.spawned.is_empty(),"24s warning before any event spawn")
 			check(not arena.spawned.is_empty(),"encounter reaches opening40")
+			check(not arena.normal_points.is_empty(),"normal director uses explicit map positions")
+			for point in arena.normal_points:
+				check(point.distance_to(arena.hero.position) >= 360.0,"normal spawn safety distance")
 			check(arena.specials.size() == 1 and arena.specials[0].time >= 35 and arena.specials[0].time <= 35.1,"first elite at35 across stages/difficulties")
 			check(arena.specials[0].data.spawn_distance == DATA.OPENING_ELITE_DISTANCE,"opening elite closes travel distance")
 			check(DATA.monster_allowed(arena.specials[0].id,stage,difficulty),"elite respects grade")

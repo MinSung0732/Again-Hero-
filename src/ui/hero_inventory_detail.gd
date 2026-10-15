@@ -10,10 +10,12 @@ static func weapon_model(runtime, hero, id: String) -> Dictionary:
 	var base: float = runtime.identity.attack_damage() if runtime.identity != null else float(hero.attack_damage)
 	var damage := maxi(1,roundi(base*float(data.power)*runtime.power*float(data.damage_scale)))
 	var rows: Array = [["기본 타격 피해",str(damage)],["피해 계수","%.0f%%" % (float(data.power)*100)],["기본 재사용","%.2f초" % (float(data.cooldown)*runtime.haste*float(data.cooldown_scale))],["공격 범위","%.0f" % GEOMETRY.reach(data,rank,evolved)]]
+	var delivery := DATA.DELIVERY.spec(id,data)
+	if not delivery.is_empty(): rows[0][0] = "시전 피해 기준"
 	var hits := int(data.get("base_hits",1))+int(data.get("bonus_hits",0))
 	if hits > 1: rows.append(["발동 수",str(hits)+"회"])
 	if float(data.get("lifesteal",0)) > 0: rows.append(["무기 흡혈","%.1f%%" % (float(data.lifesteal)*100)])
-	return {"id":id,"name":DATA.GROWTH.evolution_name(id) if evolved else String(data.name),"kind":"무기","rank":"MAX" if evolved else "Lv.%d" % rank,"evolved":evolved,"maxed":evolved,"description":String(DATA.WEAPONS[id].get("description",DATA.description(id,1))),"rows":rows,"effects":DATA.GROWTH.description(id,rank,evolved),"flow":"상자  ›  무기 진화  ›  무기 강화  ›  보조 강화","note":"피해·재사용은 기본 수치입니다. 조건부 기술·치명타·적 방어에 따라 달라집니다."}
+	return {"id":id,"name":DATA.GROWTH.evolution_name(id) if evolved else String(data.name),"kind":"무기","rank":"MAX" if evolved else "Lv.%d" % rank,"evolved":evolved,"maxed":evolved,"description":DATA.description(id,1),"rows":rows,"effects":DATA.GROWTH.description(id,rank,evolved),"flow":"상자  ›  무기 진화  ›  무기 강화  ›  보조 강화","note":"시전 피해 기준을 지속 틱·접촉 타격·자동 사격에 나누어 적용합니다." if not delivery.is_empty() else "피해·재사용은 기본 수치입니다. 조건부 기술·치명타·적 방어에 따라 달라집니다."}
 static func passive_model(runtime, id: String) -> Dictionary:
 	var rank := int(runtime.passives[id]); var limit := DATA.passive_limit(id)
 	var passive: Dictionary = DATA.PASSIVES[id]

@@ -92,17 +92,17 @@ func run() -> void:
 	check(not finale.battle_over,"actual Battle timeout no longer wins")
 	check(finale._spawn_monster("slime",Vector2(600,600)) == null,"actual factory stops ordinary spawns after 900")
 	check(finale.spawn_hero_encounter("zeus",Vector2(600,600),{}) == null,"actual spawn rejects disallowed grade")
-	for index in 72: finale.active_monsters[index] = true
+	for index in 144: finale.active_monsters[index] = true
 	check(finale.spawn_hero_encounter("orc",Vector2(600,600),{}) == null,"actual spawn respects entity cap")
 	finale.current_stage_data.number = 10
-	check(finale.get_population_limit() == 108,"hero population bypasses demon command cap100")
+	check(finale.get_population_limit() == 216,"hero population bypasses demon command cap100")
 	finale.run_metrics.elapsed_seconds = 800
-	var above72 = finale._spawn_monster("orc",Vector2(600,600))
-	check(is_instance_valid(above72),"stage10 ordinary factory accepts above72")
-	var event_above72 = finale.spawn_hero_encounter("orc",Vector2(600,600),{})
-	check(is_instance_valid(event_above72),"stage10 event accepts above72")
-	for index in 108: finale.active_monsters[index] = true
-	check(finale._spawn_monster("orc",Vector2(600,600)) == null and finale.spawn_hero_encounter("orc",Vector2(600,600),{}) == null,"stage10 all factory paths stop at108")
+	var above144 = finale._spawn_monster("orc",Vector2(600,600))
+	check(is_instance_valid(above144),"stage10 ordinary factory accepts above144")
+	var event_above144 = finale.spawn_hero_encounter("orc",Vector2(600,600),{})
+	check(is_instance_valid(event_above144),"stage10 event accepts above144")
+	for index in 216: finale.active_monsters[index] = true
+	check(finale._spawn_monster("orc",Vector2(600,600)) == null and finale.spawn_hero_encounter("orc",Vector2(600,600),{}) == null,"stage10 all factory paths stop at216")
 	finale.hero_player_mode = false
 	check(finale.get_population_limit() == 100,"demon command population unchanged")
 	finale.hero_player_mode = true; finale.current_stage_data.number = 1; finale.run_metrics.elapsed_seconds = 900

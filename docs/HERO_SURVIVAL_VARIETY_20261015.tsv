@@ -1,0 +1,101 @@
+owner	id	name	before	after	base_power	base_cooldown	note
+ranged_rookie	ranged_rookie_arcane_bolt	마력탄	bolt	bolt	1.0	1.0	retained
+ranged_rookie	ranged_rookie_star_wand	별빛 지팡이	chain	sentry	0.85	2.27	delivery reworked
+ranged_rookie	ranged_rookie_magic_lance	마력 관통포	piercer	piercer	1.8	4.8	retained
+ranged_rookie	ranged_rookie_rune_ring	비전 집중	poison	aura	1.36	6.5	delivery reworked
+ranged_rookie	ranged_rookie_pulse_staff	파동 지팡이	nova	random	1.48	3.46	delivery reworked
+ranged_rookie	ranged_rookie_barrier_book	마력 장벽	guard	guard	1.6	12.0	retained
+swift_hunter	swift_hunter_dagger	쌍단검	combo	combo	0.62	0.9	retained
+swift_hunter	swift_hunter_throwing_knife	투척 단검	bolt	bolt	1.12	1.08	retained
+swift_hunter	swift_hunter_shadow_wire	급습-암살	combo	combo	0.7	4.2	retained
+swift_hunter	swift_hunter_poison_needle	독침	poison	random	1.36	2.2	delivery reworked
+swift_hunter	swift_hunter_moon_blade	난도질	poison	orbit	1.48	5.0	delivery reworked
+swift_hunter	swift_hunter_shadow_bomb	그림자 폭탄	nova	nova	1.6	3.71	retained
+sword_shield_hero	sword_shield_hero_longsword	수호 장검	slash	slash	1.2	1.3	retained
+sword_shield_hero	sword_shield_hero_piercing_spear	검방 돌격 · 창격	beam	beam	2.0	3.5	retained
+sword_shield_hero	sword_shield_hero_aegis	막기	guard	guard	1.24	8.0	retained
+sword_shield_hero	sword_shield_hero_shield_hammer	방패 망치	nova	random	1.36	3.2	delivery reworked
+sword_shield_hero	sword_shield_hero_blade_ring	회전 검륜	orbit	orbit	1.48	1.62	delivery reworked
+sword_shield_hero	sword_shield_hero_battle_banner	전장의 깃발	heal	heal	1.6	13.92	retained
+pistol_hero	pistol_hero_revolver	육연발 권총	burst	burst	0.5	0.9	retained
+pistol_hero	pistol_hero_shotgun	실린더 스트라이크	nova	nova	1.4	5.5	retained
+pistol_hero	pistol_hero_rifle	데드아이	burst	burst	0.65	5.5	retained
+pistol_hero	pistol_hero_ricochet	도탄 권총	chain	chain	0.75	2.1	retained
+pistol_hero	pistol_hero_grenade	충격 수류탄	nova	random	1.48	3.46	delivery reworked
+pistol_hero	pistol_hero_powder_bomb	화약 폭탄	poison	trail	1.6	2.55	delivery reworked
+archmage_hero	archmage_hero_fire_staff	원소 지팡이	bolt	bolt	1.0	2.2	retained
+archmage_hero	archmage_hero_ice_scepter	아이스볼트	frost	frost	1.12	2.7	retained
+archmage_hero	archmage_hero_lightning_rod	체인대거	chain	chain	0.8	2.44	retained
+archmage_hero	archmage_hero_earth_staff	땅의 가시	nova	random	2.0	5.0	delivery reworked
+archmage_hero	archmage_hero_storm_orb	폭풍	orbit	orbit	1.48	1.62	delivery reworked
+archmage_hero	archmage_hero_prism_wand	신성력	poison	poison	1.6	5.5	retained
+madness_hero	madness_hero_blood_sword	혈검술 제1식	combo	combo	0.55	1.5	retained
+madness_hero	madness_hero_blood_lance	혈검술 제2식	poison	poison	1.12	4.5	retained
+madness_hero	madness_hero_blood_wheel	핏빛 검륜	orbit	orbit	1.24	1.74	delivery reworked
+madness_hero	madness_hero_blood_burst	혈검술 제4식	nova	nova	2.2	5.0	retained
+madness_hero	madness_hero_drain_blade	흡혈 검	slash	slash	0.8	2.6	retained
+madness_hero	madness_hero_heart_chain	심장 사슬	chain	sentry	1.6	2.44	delivery reworked
+chemical_hero	chemical_hero_acid_vial	산성 약병	poison	poison	1.0	2.2	retained
+chemical_hero	chemical_hero_poison_flask	촉매 혼합장	poison	random	1.12	2.38	delivery reworked
+chemical_hero	chemical_hero_cryo_vial	냉각 약병	frost	frost	1.24	2.9	retained
+chemical_hero	chemical_hero_reaction_bomb	오늘도 실팬가!	poison	poison	1.36	5.5	retained
+chemical_hero	chemical_hero_acid_cannon	압축 산성포	beam	beam	1.48	3.24	retained
+chemical_hero	chemical_hero_life_elixir	현자의 비약	heal	heal	1.6	14.0	retained
+summoner_hero	summoner_hero_gate_hound	이계의 문 - 투견	summon	summon	0.65	8.0	retained
+summoner_hero	summoner_hero_watcher	이계의 문 - 감시자	summon	summon	0.65	8.0	retained
+summoner_hero	summoner_hero_scout	이계의 문 - 정찰병	summon	summon	0.65	8.0	retained
+summoner_hero	summoner_hero_gate_laser	차원 관통문	beam	beam	1.36	3.0	retained
+summoner_hero	summoner_hero_gatekeeper	이계의 문 - 문지기	summon	summon	0.65	8.0	retained
+summoner_hero	summoner_hero_rift_pulse	균열 파동	nova	nova	1.6	3.71	retained
+purifier_hero	purifier_hero_holy_bolt	성광탄	bolt	bolt	1.0	1.0	retained
+purifier_hero	purifier_hero_holy_lance	궁그닐	beam	beam	2.4	5.5	retained
+purifier_hero	purifier_hero_purification	정화	nova	nova	1.24	9.0	retained
+purifier_hero	purifier_hero_sacred_orb	정화의 구체	orbit	orbit	1.36	1.5	delivery reworked
+purifier_hero	purifier_hero_blessing	신성보호	guard	guard	1.48	11.0	retained
+purifier_hero	purifier_hero_prayer	회복의 성배	heal	heal	1.6	13.92	retained
+sage_astra	sage_astra_starlight	별빛 지팡이	bolt	bolt	0.7	1.0	retained
+sage_astra	sage_astra_comet	스타라이트	meteor	meteor	1.2	4.5	retained
+sage_astra	sage_astra_astral_chain	천체 사슬	chain	chain	0.8	2.44	retained
+sage_astra	sage_astra_absolute_zero	빙점폭발	ice_pillar	ice_pillar	1.1	6.0	retained
+sage_astra	sage_astra_singularity	소멸	singularity	singularity	0.7	9.0	retained
+sage_astra	sage_astra_binary_stars	쌍성의 고리	orbit	orbit	1.6	1.74	delivery reworked
+ranged_rookie	ranged_rookie_sealing_bolt	봉인 마법구	bolt	bolt	1.1	2	retained
+ranged_rookie	ranged_rookie_satellite_orbs	위성 마력구	orbit	orbit	0.8	2.4	delivery reworked
+ranged_rookie	ranged_rookie_rune_ray	룬 분광봉	beam	beam	1.3	4	retained
+ranged_rookie	ranged_rookie_restoration_codex	안식의 마도서	guard	guard	0.65	14	retained
+swift_hunter	swift_hunter_execution_stiletto	처형 단도	combo	combo	0.72	3.2	retained
+swift_hunter	swift_hunter_binding_wire	그림자 결박줄	chain	chain	0.55	3.1	retained
+swift_hunter	swift_hunter_smoke_mantle	연막 망토	guard	guard	0.5	13	retained
+swift_hunter	swift_hunter_venom_steps	독무 발톱	poison	trail	0.9	4.6	delivery reworked
+sword_shield_hero	sword_shield_hero_oath_blade	맹세의 검	slash	slash	1.2	2.7	retained
+sword_shield_hero	sword_shield_hero_ward_crossbow	수호 쇠뇌	bolt	sentry	0.95	2.1	delivery reworked
+sword_shield_hero	sword_shield_hero_sanctuary_shield	성역 방패	guard	guard	0.6	14	retained
+sword_shield_hero	sword_shield_hero_rally_standard	결집 군기	heal	heal	0.8	16	retained
+pistol_hero	pistol_hero_twin_pistols	쌍열 권총	burst	burst	0.5	2	retained
+pistol_hero	pistol_hero_shrapnel_round	파쇄 탄환	bolt	bolt	1.05	3.3	retained
+pistol_hero	pistol_hero_suppressor	제압 기관권총	burst	sentry	0.4	3.6	delivery reworked
+pistol_hero	pistol_hero_smoke_canister	연막 유탄	poison	poison	0.85	6	retained
+archmage_hero	archmage_hero_lava_focus	용암 촉매봉	poison	trail	0.95	6	delivery reworked
+archmage_hero	archmage_hero_frost_moons	빙결 위성	orbit	orbit	0.7	2.8	delivery reworked
+archmage_hero	archmage_hero_gale_prism	질풍 프리즘	beam	beam	1.1	4.5	retained
+archmage_hero	archmage_hero_sunfire_tome	태양화염서	nova	sentry	1.5	8	delivery reworked
+madness_hero	madness_hero_desperate_cleaver	결사의 참수검	slash	slash	1.2	3.2	retained
+madness_hero	madness_hero_vampire_fang	흡혈 송곳니	bolt	bolt	0.9	2.2	retained
+madness_hero	madness_hero_blood_thorns	혈흔 가시	poison	trail	0.85	5.5	delivery reworked
+madness_hero	madness_hero_blood_aegis	핏빛 수호구	guard	guard	0.6	13	retained
+chemical_hero	chemical_hero_caustic_boots	부식 분무기	poison	trail	0.9	5	delivery reworked
+chemical_hero	chemical_hero_catalyst_wire	촉매 도선	chain	chain	0.55	4	retained
+chemical_hero	chemical_hero_toxic_dart	독성 주사총	bolt	bolt	0.85	2.5	retained
+chemical_hero	chemical_hero_antidote_capsule	해독 캡슐	guard	guard	0.5	16	retained
+summoner_hero	summoner_hero_rift_orbit	균열 톱니	orbit	orbit	0.75	2.6	delivery reworked
+summoner_hero	summoner_hero_collapse_glyph	붕괴 문양	poison	random	0.9	6	delivery reworked
+summoner_hero	summoner_hero_gate_shard	차원 파편구	bolt	bolt	0.9	2.4	retained
+summoner_hero	summoner_hero_binding_gate	결박의 문	frost	frost	0.8	6	retained
+purifier_hero	purifier_hero_mercy_chain	자비의 사슬	chain	chain	0.65	4.5	retained
+purifier_hero	purifier_hero_judgment_seal	심판 낙인	poison	random	0.95	6	delivery reworked
+purifier_hero	purifier_hero_saint_reliquary	성인의 유골함	guard	guard	0.5	15	retained
+purifier_hero	purifier_hero_martyr_blade	순교자의 검	slash	slash	1.25	3.4	retained
+sage_astra	sage_astra_gravity_lance	중력 성창	beam	beam	1.2	4.8	retained
+sage_astra	sage_astra_frozen_stars	빙성의 고리	orbit	orbit	0.75	3.2	delivery reworked
+sage_astra	sage_astra_supernova_core	초신성 핵	nova	random	1.7	8.5	delivery reworked
+sage_astra	sage_astra_collapsed_seed	붕괴 별씨	bolt	sentry	1.1	3.2	delivery reworked

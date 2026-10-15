@@ -10,9 +10,11 @@ const ART := preload("res://src/ui/hero_weapon_art.gd")
 const NATIVE := preload("res://src/hero_mode/hero_weapon_native_runtime.gd")
 const GEOMETRY := preload("res://src/hero_mode/hero_weapon_geometry.gd")
 const IDENTITY := preload("res://src/hero_mode/hero_survival_identity_runtime.gd")
+const DELIVERY := preload("res://src/hero_mode/hero_weapon_delivery_runtime.gd")
 const EMPTY_ART: Array[Texture2D] = []
 var native_skills: RefCounted
 var identity: RefCounted
+var delivery: RefCounted
 var art: Dictionary = {}
 var magazines: Dictionary = {}
 var hero
@@ -88,6 +90,7 @@ func install(host, research_bonus: int = 0, starting_research: Dictionary = {}) 
 	hero.exp_gain_multiplier *= 1.0+float(research.get("learning",0))
 	hero.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	authority = hero.get_parent()
+	delivery = DELIVERY.new(); delivery.install(self)
 	if "status_resistances" in hero: base_slow_resistance = float(hero.status_resistances.get("slow",0))
 	base_max_hp = int(hero.max_hp); base_move_speed = float(hero.move_speed)
 	base_pickup_radius = float(hero.exp_pickup_radius); base_exp_multiplier = float(hero.exp_gain_multiplier)
@@ -254,6 +257,7 @@ func summary() -> String:
 
 func tick(delta: float, allow_casts: bool = true) -> void:
 	visual_clock += delta
+	if delivery != null: delivery.tick(delta)
 	if hero.current_hp > 0 and hero.current_hp < hero.max_hp:
 		regen_bank += hero.max_hp*float(research.get("regeneration",0))*delta
 		var recovered := floori(regen_bank)
@@ -364,7 +368,7 @@ func _cast(id: String) -> void:
 		var distance: float = origin.distance_squared_to(actor.global_position)
 		if distance > reach*reach: continue
 		if distance < closest_distance: closest_distance = distance; closest = actor
-	if not is_instance_valid(closest) and float(data.get("gas_cost",0.0)) > 0.0 and pattern == "poison": return
+	if not is_instance_valid(closest) and float(data.get("gas_cost",0.0)) > 0.0 and pattern == "poison" and DELIVERY.RULES.spec(id,data).is_empty(): return
 	var direction: Vector2 = hero.player_move_input.normalized()
 	if is_instance_valid(closest): direction = origin.direction_to(closest.global_position)
 	if direction.length_squared() < 0.01: direction = Vector2.RIGHT
@@ -377,7 +381,7 @@ func _cast(id: String) -> void:
 			_after_cast(data,origin,direction,closest,damage,reach,rank)
 		return
 	if is_instance_valid(closest) or pattern == "summon" or pattern == "guard" or pattern == "heal": _pose(direction)
-	if identity != null and (is_instance_valid(closest) or pattern in ["summon","guard","heal"]): identity.on_cast(id)
+	if identity != null and (is_instance_valid(closest) or pattern in ["summon","guard","heal"] or not DELIVERY.RULES.spec(id,data).is_empty()): identity.on_cast(id)
 	if native_skills != null and native_skills.cast(data,origin,direction,closest,damage,reach,hits,rank,projectile_speed,awakened):
 		if pattern == "summon" and native_skills.last_cast_succeeded:
 			_effect(origin,origin,minf(reach,90.0),"summon",color,data)
@@ -392,6 +396,11 @@ func _cast(id: String) -> void:
 	if is_instance_valid(closest) and float(data.get("hp_cost",0.0)) > 0.0:
 		hero.current_hp = maxi(1,hero.current_hp-maxi(1,roundi(hero.current_hp*float(data.hp_cost))))
 		hero.health_changed.emit(hero.current_hp,hero.max_hp)
+	if delivery != null and delivery.cast(id,data,origin,damage,reach,rank):
+		if pattern == "burst":
+			if identity != null and identity.uses_ammo(id): identity.consume_ammo(1)
+			elif int(data.get("magazine",0)) > 0: magazines[id] = maxi(0,int(magazines[id])-1)
+		return
 	if pattern in ["combo","burst"]:
 		if not is_instance_valid(closest): return
 		var shots := mini(hits,6)
@@ -609,6 +618,7 @@ func _effect(a: Vector2,b: Vector2,radius: float,pattern: String,color: Color,da
 	effect.left = effect.duration; hero.queue_redraw()
 
 func draw() -> void:
+	if delivery != null: delivery.draw()
 	for field in fields:
 		if float(field.left) > 0.0:
 			_draw_area(hero.to_local(field.origin),float(field.radius),field.get("color",Color.WHITE),field.get("frames",EMPTY_ART),_loop_progress(field.get("frames",EMPTY_ART),visual_clock))
