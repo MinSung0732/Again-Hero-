@@ -139,8 +139,7 @@ func rebuild(tab: String) -> void:
 	var character: Dictionary = CHARACTERS.get_character(id)
 	if tab == "team": _build_formation(body,id); return
 	if tab == "shop":
-		_label(body,"용사상점",40); _label(body,"준비 중",32)
-		_label(body,"캐릭터 편성에서 플레이할 용사를 선택하세요.\n용사별 전용 무기는 전투 중 레벨업으로 습득합니다.")
+		preload("res://src/ui/hero_shop_placeholder.gd").build(body,self)
 		return
 	_build_research(body)
 
