@@ -276,7 +276,8 @@ func _refresh_growth_detail() -> void:
 	if not DATA.GROWTH.has(selected_growth): selected_growth = "vitality"
 	var data: Dictionary = DATA.GROWTH[selected_growth]
 	var level := STORE.growth_level(STORE.selected_hero(),selected_growth)
-	var points := lobby.STAGE_PROGRESS.get_research_points()
+	# lobby is a dynamic host; its properties cannot provide a compile-time type.
+	var points: int = lobby.STAGE_PROGRESS.get_research_points()
 	var cost := DATA.growth_cost(selected_growth,level)
 	growth_labels.name.text = String(data.name)
 	growth_labels.level.text = "Lv.%d / %d" % [level,int(data.max)]

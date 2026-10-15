@@ -143,7 +143,15 @@ func choose_perspective(value: String) -> void:
 
 func _prepare_perspective(value: String, owner: String) -> bool:
 	if not is_instance_valid(lobby) or not lobby.is_inside_tree(): return false
-	if value == "hero" and lobby.hero_lobby_view != null:
+	# Never commit hero entry rules while its lobby extension failed to load.
+	if value == "hero":
+		if lobby.hero_lobby_view == null:
+			push_error("용사 로비를 불러오지 못해 모드 전환을 취소했습니다.")
+			if is_instance_valid(notice):
+				notice.title = "모드 전환 실패"
+				notice.dialog_text = "용사 로비를 불러오지 못했습니다. 게임을 업데이트한 뒤 다시 실행해 주세요."
+				notice.popup_centered(Vector2i(640,240))
+			return false
 		await lobby.hero_lobby_view.prepare_mode()
 	if not is_instance_valid(lobby) or not lobby.is_inside_tree() or owner != HERO_STORE.owner(): return false
 	if value == "hero" and not UNLOCKS.unlocked("hero",current_stage()): return false

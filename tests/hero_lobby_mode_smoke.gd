@@ -1,0 +1,67 @@
+extends SceneTree
+const VIEW := preload("res://src/ui/hero_lobby_view.gd")
+const MODES := preload("res://src/ui/lobby_main_modes_view.gd")
+const SCOPE := preload("res://src/systems/account_save_scope.gd")
+const STORE := preload("res://src/systems/hero_mode_store.gd")
+class TestMode extends Node:
+	func has_all_heroes_unlocked() -> bool: return true
+class Warmup extends Node:
+	func prepare_hero_lobby() -> void: await get_tree().process_frame
+class Host extends Control:
+	const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
+	var hero_lobby_view
+	var main_modes_view
+	var shop_button := Button.new()
+	var team_button := Button.new()
+	var research_button := Button.new()
+	var main_button := Button.new()
+	var other_button := Button.new()
+	var title_label := Label.new()
+	var shop_tab := Control.new()
+	var team_tab := Control.new()
+	var research_tab := Control.new()
+	var current_tab := "main"
+	var stage_ids := ["stage_1"]
+	var selected_stage_index := 0
+	var _portrait_texture_cache := {}
+	func _refresh_nav_button(_button: Button,_selected: bool) -> void: pass
+	func _apply_lobby_button_skin(_button: Button,_selected: bool,_size: int) -> void: pass
+	func _format_shop_number(value: int) -> String: return str(value)
+	func _refresh_header() -> void: pass
+	func _refresh_stage_card() -> void: hero_lobby_view.set_active(main_modes_view.perspective == "hero")
+	func _load_png_texture_direct(_path: String) -> Texture2D: return PlaceholderTexture2D.new()
+	func _load_texture(_path: String) -> Texture2D: return PlaceholderTexture2D.new()
+	func _normalize_hero_portrait_texture(texture: Texture2D) -> Texture2D: return texture
+func _initialize() -> void: call_deferred("run")
+func run() -> void:
+	SCOPE.select_guest(); SCOPE.guest_directory = "user://lobby_mode_"+str(Time.get_ticks_usec())
+	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
+	var test_mode := TestMode.new(); test_mode.name = "LocalTestMode"; root.add_child(test_mode)
+	var warmup := Warmup.new(); warmup.name = "PresentationWarmup"; root.add_child(warmup)
+	var host := Host.new(); root.add_child(host)
+	var backdrop := TextureRect.new(); backdrop.name = "LobbyBackground"; backdrop.texture = PlaceholderTexture2D.new(); host.add_child(backdrop)
+	var original := backdrop.texture
+	var dim := ColorRect.new(); dim.name = "Background"; host.add_child(dim)
+	for tab in [host.shop_tab,host.team_tab,host.research_tab]:
+		host.add_child(tab); var label := Label.new(); label.text = "Demon original"; tab.add_child(label)
+	for button in [host.shop_button,host.team_button,host.research_button,host.main_button,host.other_button]: host.add_child(button)
+	host.add_child(host.title_label)
+	var view := VIEW.new(); var modes := MODES.new()
+	host.hero_lobby_view = view; host.main_modes_view = modes; modes.lobby = host; view.install(host)
+	assert(await modes._prepare_perspective("hero",STORE.owner()))
+	assert(view.active and modes.perspective == "hero" and backdrop.texture != original)
+	assert(host.shop_button.text == "용사상점" and host.team_button.text == "캐릭터 편성")
+	assert(not host.team_tab.get_child(0).visible and view.panels.team.visible)
+	host.current_tab = "shop"; view.rebuild("shop")
+	assert(view.bodies.shop.get_child(0).text == "용사상점")
+	host.current_tab = "research"; view.rebuild("research")
+	assert(view.growth_cards.size() == 12 and view.growth_labels.balance.text.ends_with(" P"))
+	assert(view.bodies.research.find_child("HeroResearchGrid",true,false).columns == 4)
+	view._select_growth("power"); assert(view.selected_growth == "power")
+	assert(await modes._prepare_perspective("demon",STORE.owner()))
+	assert(not view.active and backdrop.texture == original and host.team_tab.get_child(0).visible)
+	host.hero_lobby_view = null
+	assert(not await modes._prepare_perspective("hero",STORE.owner()) and modes.perspective == "demon")
+	host.queue_free(); warmup.queue_free(); test_mode.queue_free(); await process_frame
+	print("HERO_LOBBY_MODE_SMOKE PASS: actual mode preparation, theme/nav/panels/research and missing-extension gate")
+	quit()
