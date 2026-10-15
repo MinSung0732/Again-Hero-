@@ -185,6 +185,7 @@ var stage_repeat_reward_label: Label
 @onready var stage_select_close_button: Button = $StageSelectOverlay/Panel/Margin/VBox/Header/CloseButton
 @onready var stage_select_grid: GridContainer = $StageSelectOverlay/Panel/Margin/VBox/StageGrid
 
+var research_reset_button
 @onready var research_points_label: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/Points
 @onready var research_status_label: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/Status
 @onready var research_mode_button: Button = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/ModeTabs/ResearchModeButton
@@ -2028,6 +2029,15 @@ func _apply_lobby_visual_polish() -> void:
 	_apply_lobby_button_skin(relic_mode_button, false, 22)
 	_apply_lobby_button_skin(research_upgrade_button, true, 28)
 	preload("res://src/ui/research_wallet_view.gd").install(research_points_label,research_detail_cost)
+	var research_heading := HBoxContainer.new()
+	var detail_rows := research_detail_name.get_parent()
+	detail_rows.add_child(research_heading); detail_rows.move_child(research_heading,0)
+	research_detail_name.reparent(research_heading)
+	research_detail_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	research_reset_button = preload("res://src/ui/research_reset_button.gd").create("demon",_on_research_reset)
+	research_heading.add_child(research_reset_button)
+	_apply_lobby_button_skin(research_reset_button,false,24)
+
 	_apply_lobby_button_skin(relic_upgrade_button, true, 21)
 	for filter_button in relic_filter_buttons:
 		_apply_lobby_button_skin(filter_button, false, 18)
@@ -5125,6 +5135,7 @@ func _rebuild_research_list() -> void:
 		child.free()
 	research_buttons_by_id.clear()
 
+	if is_instance_valid(research_reset_button): research_reset_button.refresh()
 	var research_points := STAGE_PROGRESS.get_research_points()
 	research_points_label.text = "%s P" % _format_shop_number(
 		research_points
@@ -5276,6 +5287,12 @@ func _purchase_selected_research() -> void:
 
 	_refresh_header()
 	_rebuild_research_list.call_deferred()
+
+
+func _on_research_reset(result: Dictionary) -> void:
+	research_status_label.text = "연구 초기화 · %s P 환급" % _format_shop_number(int(result.get("refunded",0))) if bool(result.get("success",false)) else "초기화를 저장하지 못했습니다. 다시 시도해 주세요."
+	_refresh_header()
+	_rebuild_research_list()
 
 
 func _select_relic_category(category_id: String) -> void:

@@ -34,6 +34,12 @@ var roster_states: Dictionary = {}
 var difficulty_selector: OptionButton
 var formation_owner := ""
 var modal: Control
+var selected_growth := "vitality"
+var growth_labels := {}
+var growth_cards := {}
+var growth_upgrade: Button
+var growth_reset
+
 
 func prepare_mode() -> void:
 	var warmup: Node = lobby.get_node("/root/PresentationWarmup")
@@ -72,7 +78,7 @@ func install(host) -> void:
 		panel.offset_left = 40; panel.offset_right = -40; panel.offset_top = 20; panel.offset_bottom = -20
 		_skin(panel)
 		var body := VBoxContainer.new(); body.size_flags_horizontal = Control.SIZE_EXPAND_FILL; body.size_flags_vertical = Control.SIZE_EXPAND_FILL; body.add_theme_constant_override("separation",16)
-		if pair[0] == "team": panel.add_child(body)
+		if pair[0] in ["team","research"]: panel.add_child(body)
 		else:
 			var scroll := ScrollContainer.new(); scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; panel.add_child(scroll); scroll.add_child(body)
 		panels[pair[0]] = panel; bodies[pair[0]] = body; panel.hide()
@@ -136,19 +142,7 @@ func rebuild(tab: String) -> void:
 		_label(body,"용사상점",40); _label(body,"준비 중",32)
 		_label(body,"캐릭터 편성에서 플레이할 용사를 선택하세요.\n용사별 전용 무기는 전투 중 레벨업으로 습득합니다.")
 		return
-	_label(body,"공통 성장 · 모든 용사",36)
-	_label(body,"모든 용사 공통 성장 · 다음 도전부터 적용",24)
-	if not message.is_empty(): _label(body,message,23)
-	for growth_id in DATA.GROWTH:
-		var level := STORE.growth_level(id,growth_id); var data: Dictionary = DATA.GROWTH[growth_id]
-		var cost := DATA.growth_cost(growth_id,level)
-		var wallet := "보유 %s P" % lobby._format_shop_number(lobby.STAGE_PROGRESS.get_research_points())
-		var expense := "최대 성장" if level >= int(data.max) else "필요 %s P" % lobby._format_shop_number(cost)
-		var text := "%s · %d / %d\n%s\n%s  ·  %s" % [data.name,level,int(data.max),data.description,wallet,expense]
-		var button := _button(body,text,_grow.bind(id,String(growth_id)))
-		button.add_theme_font_size_override("font_size",28)
-		button.add_theme_color_override("font_disabled_color",Color("c6bccb"))
-		button.disabled = level >= int(data.max) or cost > lobby.STAGE_PROGRESS.get_research_points()
+	_build_research(body)
 
 func _build_formation(body: VBoxContainer,id: String) -> void:
 	hero_cards.clear(); roster_states.clear(); stat_values.clear(); formation_owner = STORE.owner()
@@ -232,4 +226,71 @@ func _select_character(id: String) -> void:
 	rebuild("team")
 func _grow(id: String,growth_id: String) -> void:
 	message = "성장 완료 · 다음 도전부터 적용" if STORE.purchase_growth(id,growth_id) else "성장 저장 실패 또는 연구 포인트 부족"
+	lobby._refresh_header(); rebuild("research")
+
+func _build_research(body: VBoxContainer) -> void:
+	growth_labels.clear(); growth_cards.clear()
+	_label(body,"용사 연구 · 공통 성장",36)
+	var detail := PanelContainer.new(); detail.name = "HeroResearchDetail"; detail.custom_minimum_size.y = 520
+	body.add_child(detail); _skin(detail)
+	var rows := VBoxContainer.new(); rows.add_theme_constant_override("separation",10); detail.add_child(rows)
+	var heading := HBoxContainer.new(); rows.add_child(heading)
+	growth_labels.name = _label(heading,"",36); growth_labels.name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	growth_reset = preload("res://src/ui/research_reset_button.gd").create("hero",_growth_reset_finished)
+	heading.add_child(growth_reset); lobby._apply_lobby_button_skin(growth_reset,false,24)
+	growth_labels.level = _label(rows,"",26)
+	growth_labels.effect = _label(rows,"",30); growth_labels.effect.add_theme_color_override("font_color",Color("8ce6bd"))
+	growth_labels.description = _label(rows,"",26); growth_labels.description.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	for key in ["name","level","effect","description"]: growth_labels[key].horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	growth_labels.balance = _label(rows,"",40)
+	var action := HBoxContainer.new(); action.add_theme_constant_override("separation",12); rows.add_child(action)
+	growth_labels.cost = _label(action,"",26)
+	growth_upgrade = _button(action,"강화하기",_grow_selected)
+	growth_upgrade.custom_minimum_size = Vector2(250,104)
+	growth_upgrade.add_theme_font_size_override("font_size",28)
+	preload("res://src/ui/research_wallet_view.gd").install(growth_labels.balance,growth_labels.cost)
+	growth_labels.message = _label(body,message,23)
+	var scroll := ScrollContainer.new(); scroll.name = "HeroResearchScroll"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL; body.add_child(scroll)
+	var grid := GridContainer.new(); grid.name = "HeroResearchGrid"; grid.columns = 4
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation",12); grid.add_theme_constant_override("v_separation",12)
+	scroll.add_child(grid)
+	var art := preload("res://src/ui/hero_augment_icons.gd")
+	var icons := preload("res://src/data/research_icon_catalog.gd")
+	var card := preload("res://src/ui/research_grid_card.gd")
+	var hero := STORE.selected_hero()
+	for growth_id in DATA.GROWTH:
+		var level := STORE.growth_level(hero,growth_id)
+		var button := card.create(art.texture(String(icons.HERO_SOURCES[growth_id])),level,int(DATA.GROWTH[growth_id].max))
+		grid.add_child(button); growth_cards[growth_id] = button
+		button.pressed.connect(_select_growth.bind(String(growth_id)))
+	_refresh_growth_detail()
+func _select_growth(id: String) -> void:
+	selected_growth = id
+	_refresh_growth_detail()
+func _growth_effect(id: String,level: int) -> String:
+	return "+%s%%%s" % [String.num(float(DATA.GROWTH[id].value)*level*100,2),"/초" if id == "regeneration" else ""]
+func _refresh_growth_detail() -> void:
+	if not DATA.GROWTH.has(selected_growth): selected_growth = "vitality"
+	var data: Dictionary = DATA.GROWTH[selected_growth]
+	var level := STORE.growth_level(STORE.selected_hero(),selected_growth)
+	var points := lobby.STAGE_PROGRESS.get_research_points()
+	var cost := DATA.growth_cost(selected_growth,level)
+	growth_labels.name.text = String(data.name)
+	growth_labels.level.text = "Lv.%d / %d" % [level,int(data.max)]
+	growth_labels.effect.text = "현재  %s" % _growth_effect(selected_growth,level)
+	if level < int(data.max): growth_labels.effect.text += "\n다음  %s" % _growth_effect(selected_growth,level+1)
+	growth_labels.description.text = String(data.description)+"\n모든 용사 공통 · 다음 도전부터 적용"
+	growth_labels.balance.text = "%s P" % lobby._format_shop_number(points)
+	growth_labels.cost.text = "최대 레벨 달성" if level >= int(data.max) else "필요 포인트  %s" % lobby._format_shop_number(cost)
+	growth_upgrade.text = "연구 완료" if level >= int(data.max) else "강화하기"
+	growth_upgrade.disabled = level >= int(data.max) or cost > points
+	for id in growth_cards: lobby._apply_lobby_button_skin(growth_cards[id],id == selected_growth,21)
+	growth_reset.refresh()
+func _grow_selected() -> void:
+	_grow(STORE.selected_hero(),selected_growth)
+func _growth_reset_finished(result: Dictionary) -> void:
+	message = "연구 초기화 · %s P 환급" % lobby._format_shop_number(int(result.get("refunded",0))) if bool(result.get("success",false)) else "초기화를 저장하지 못했습니다. 다시 시도해 주세요."
 	lobby._refresh_header(); rebuild("research")

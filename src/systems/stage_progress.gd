@@ -1,5 +1,6 @@
 extends RefCounted
 class_name StageProgress
+const RESPEC := preload("res://src/systems/research_respec_store.gd")
 const ACCOUNT_SCOPE := preload("res://src/systems/account_save_scope.gd")
 
 const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
@@ -396,7 +397,9 @@ static func try_purchase_research(
 		}
 
 	var config := ConfigFile.new()
-	ACCOUNT_SCOPE.load_config(config, SAVE_PATH)
+	var load_error := ACCOUNT_SCOPE.load_config(config,SAVE_PATH)
+	if load_error != OK and load_error != ERR_FILE_NOT_FOUND:
+		return {"success":false,"reason":"save_failed"}
 
 	var current_level := int(config.get_value("research", research_id, 0))
 	var research_points := int(config.get_value("meta", "research_points", 0))
@@ -417,12 +420,14 @@ static func try_purchase_research(
 			"research_points": research_points,
 		}
 
+	config.set_value("research_spending","demon",RESPEC.invested(config,"demon")+cost)
 	current_level += 1
 	research_points -= cost
 
 	config.set_value("research", research_id, current_level)
 	config.set_value("meta", "research_points", research_points)
-	ACCOUNT_SCOPE.save_config(config, SAVE_PATH)
+	if ACCOUNT_SCOPE.save_config(config,SAVE_PATH) != OK:
+		return {"success":false,"reason":"save_failed","level":current_level-1,"research_points":research_points+cost}
 
 	return {
 		"success": true,

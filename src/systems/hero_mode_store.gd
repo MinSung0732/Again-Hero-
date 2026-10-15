@@ -1,4 +1,5 @@
 extends RefCounted
+const RESPEC := preload("res://src/systems/research_respec_store.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
 const PROFILES := preload("res://src/data/hero_profiles.gd")
@@ -114,6 +115,7 @@ static func purchase_growth(stage: String,id: String) -> bool:
 	var points := int(progress.get_value("meta","research_points",0))
 	if level >= int(DATA.GROWTH[id].max) or cost > points: return false
 	progress.set_value("meta","research_points",points-cost)
+	config.set_value("research_spending","hero",RESPEC.invested(config,"hero")+cost)
 	config.set_value("hero_growth","shared_"+id,level+1)
 	return SCOPE.save_configs({"stage_progress.cfg":progress,"team_loadout.cfg":config}) == OK
 static func growth_bonuses(subject: String) -> Dictionary:

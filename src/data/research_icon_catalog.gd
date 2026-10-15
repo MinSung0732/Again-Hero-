@@ -11,3 +11,12 @@ const SOURCES := {
 	"rapid_experiment":"chemical_hero_antidote_capsule",
 	"tactical_notebook":"survival_learning",
 }
+
+const HERO_SOURCES := {
+	"vitality":"survival_vitality", "regeneration":"survival_recovery",
+	"power":"survival_power", "shield":"survival_armor",
+	"mobility":"survival_mobility", "haste":"survival_haste",
+	"siphon":"survival_siphon", "gold":"purifier_hero_saint_reliquary",
+	"learning":"survival_learning", "magnet":"survival_magnet",
+	"area":"survival_area", "ranged_reach":"survival_reach",
+}
