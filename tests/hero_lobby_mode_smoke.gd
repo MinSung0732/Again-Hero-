@@ -59,6 +59,15 @@ func run() -> void:
 	var shop_buttons: Array[Node] = view.bodies.shop.find_children("*","Button",true,false)
 	assert(shop_buttons.size() == 5)
 	for button in shop_buttons: assert(button.disabled and button.pressed.get_connections().is_empty())
+	var single := view.bodies.shop.find_child("SingleSummonArt",true,false) as TextureRect
+	var multi := view.bodies.shop.find_child("MultiSummonArt",true,false) as TextureRect
+	assert(single.texture != null and multi.texture != null and single.texture != multi.texture)
+	assert(single.texture.resource_path.contains("hero_shop_v2") and multi.texture.resource_path.contains("hero_shop_v2"))
+	assert(view.panels.shop.get_theme_stylebox("panel") is StyleBoxTexture)
+	for width in [1080,1536]:
+		host.shop_tab.size = Vector2(width,1700); await process_frame; await process_frame
+		assert(single.size.x > 0 and multi.size.x > 0)
+		assert(view.bodies.shop.find_child("HeroSummonCards",true,false).size.x < width)
 	host.current_tab = "research"; view.rebuild("research")
 	assert(view.growth_cards.size() == 12 and view.growth_labels.balance.text.ends_with(" P"))
 	assert(view.bodies.research.find_child("HeroResearchGrid",true,false).columns == 4)

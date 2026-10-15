@@ -1,13 +1,11 @@
 extends RefCounted
 ## Presentation only. No purchase callbacks or store writes.
-const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
-const CHARACTERS := preload("res://src/data/hero_character_catalog.gd")
+const ART := preload("res://src/ui/hero_shop_art.gd")
 static func panel(parent: Node,name: String) -> VBoxContainer:
 	var frame := PanelContainer.new(); frame.name = name
 	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL; parent.add_child(frame)
-	var box := StyleBoxFlat.new(); box.bg_color = Color("191326")
-	box.border_color = Color("d7b56d"); box.set_border_width_all(2); box.set_content_margin_all(20)
-	frame.add_theme_stylebox_override("panel",SKIN.skin_style(box))
+	frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	frame.add_theme_stylebox_override("panel",ART.panel_style())
 	var rows := VBoxContainer.new(); rows.add_theme_constant_override("separation",14)
 	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL; frame.add_child(rows); return rows
 static func text(parent: Node,value: String,font: int,color: Color = Color("e8e0cd")) -> Label:
@@ -20,10 +18,9 @@ static func coming_button(parent: Node,value: String) -> Button:
 	var button := Button.new(); button.text = value; button.disabled = true
 	button.custom_minimum_size.y = 76; button.add_theme_font_size_override("font_size",26)
 	button.add_theme_color_override("font_disabled_color",Color("d2c4dd"))
-	var box := StyleBoxFlat.new(); box.bg_color = Color("352244"); box.border_color = Color("927950")
-	box.set_border_width_all(2); box.set_content_margin_all(10)
-	button.add_theme_stylebox_override("disabled",SKIN.skin_style(box)); parent.add_child(button); return button
-static func build(body: VBoxContainer,view) -> void:
+	button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	button.add_theme_stylebox_override("disabled",ART.panel_style(true)); parent.add_child(button); return button
+static func build(body: VBoxContainer,_view) -> void:
 	text(body,"◆  용사 상점  ◆",40,Color("f0d18e"))
 	text(body,"새로운 용사와의 만남을 준비하고 있습니다.",23,Color("b9abc5"))
 	var banner := panel(body,"HeroShopBanner")
@@ -39,9 +36,7 @@ static func build(body: VBoxContainer,view) -> void:
 		var card := panel(cards,"HeroSummonSingle" if index == 0 else "HeroSummonMulti")
 		card.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		text(card,"기본 소환" if index == 0 else "10+1회 소환",26,Color("e8ca84"))
-		var portrait: TextureRect = view._portrait(card,String(CHARACTERS.ORDER[index]),Vector2(140,170))
-		portrait.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		portrait.modulate = Color(0.64,0.58,0.76,0.8)
+		ART.illustration(card,index == 1)
 		text(card,"용사 뽑기\n준비 중",28)
 		coming_button(card,"준비 중")
 	var info := HBoxContainer.new(); info.add_theme_constant_override("separation",18); summon.add_child(info)

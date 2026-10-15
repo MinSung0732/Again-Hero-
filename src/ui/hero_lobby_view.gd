@@ -76,7 +76,10 @@ func install(host) -> void:
 		var panel := PanelContainer.new(); panel.name = "HeroContent"; root.add_child(panel)
 		panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		panel.offset_left = 40; panel.offset_right = -40; panel.offset_top = 20; panel.offset_bottom = -20
-		_skin(panel)
+		if pair[0] == "shop":
+			panel.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			panel.add_theme_stylebox_override("panel",preload("res://src/ui/hero_shop_art.gd").panel_style())
+		else: _skin(panel)
 		var body := VBoxContainer.new(); body.size_flags_horizontal = Control.SIZE_EXPAND_FILL; body.size_flags_vertical = Control.SIZE_EXPAND_FILL; body.add_theme_constant_override("separation",16)
 		if pair[0] in ["team","research"]: panel.add_child(body)
 		else:

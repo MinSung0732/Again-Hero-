@@ -1,0 +1,37 @@
+{
+  "created": "2026-10-15",
+  "generator": "built-in imagegen",
+  "style": "original hero guild pixel shop; ivory silver gold teal navy",
+  "prompts": {
+    "guild_frame": "Single transparent square 9-slice heroic guild frame, silver/gold edges with teal sapphire corner insets and navy center; no text or figures.",
+    "summon_single": "One ivory teal hero-guild invitation tablet, sword-shaped star and silver-gold rune pedestal; transparent, pixel art, no text.",
+    "summon_multi": "Fan-shaped hero-guild invitation bundle with a special golden bonus invitation, silver-gold rune pedestal; transparent pixel art, no text."
+  },
+  "runtime": "Original PNGs retained. Frame alpha used bounds cropped then nearest resized to256 once; fixed42px nine-slice corners; illustrations KEEP_ASPECT_CENTERED/nearest.",
+  "assets": [
+    {
+      "file": "guild_frame.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "sha256": "c1bcbe60dd82499a83fc39758fda79e8763ca3d4e067bca7504dd9dd6d44b4c4"
+    },
+    {
+      "file": "summon_multi.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "sha256": "8f5ddcff9efac6435619ee3fb636bdea99d0e7054f064934db2e7afabd2181b3"
+    },
+    {
+      "file": "summon_single.png",
+      "size": [
+        1216,
+        1294
+      ],
+      "sha256": "11b88571162f6ed51927585683abb9365882310b39f3404595b76311063134f8"
+    }
+  ]
+}
