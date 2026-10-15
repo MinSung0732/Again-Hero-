@@ -174,10 +174,10 @@ const STAGE1_ARCANE_PIERCER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_v4
 const STAGE1_HIT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"mage_hit.wav"
 const STAGE1_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_death_pixabay.mp3"
 const STAGE1_LEVEL_UP_AUDIO_PATH := "res://assets/audio/sfx/level_up_rise07_cc0.mp3"
-const STAGE2_COMBO_SLASH_AUDIO_PATH := "res://assets/audio/sfx/contextual/rogue_dagger_contact.wav"
-const STAGE2_BLADE_STORM_AUDIO_PATH := "res://assets/audio/sfx/contextual/rogue_storm_short.wav"
-const STAGE2_ASSASSINATION_START_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_assassination_start_pixabay.mp3"
-const STAGE2_ASSASSINATION_HIT_AUDIO_PATH := "res://assets/audio/sfx/contextual/rogue_assassination_short.wav"
+const STAGE2_COMBO_SLASH_AUDIO_PATH := "res://assets/audio/sfx/rogue_blades_v2/combo_slash.wav"
+const STAGE2_BLADE_STORM_AUDIO_PATH := "res://assets/audio/sfx/rogue_blades_v2/blade_storm.wav"
+const STAGE2_ASSASSINATION_START_AUDIO_PATH := "res://assets/audio/sfx/rogue_blades_v2/assassination_start.wav"
+const STAGE2_ASSASSINATION_HIT_AUDIO_PATH := "res://assets/audio/sfx/rogue_blades_v2/assassination_hit.wav"
 const STAGE2_HIT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"rogue_hit.wav"
 const STAGE2_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_death_pixabay.mp3"
 const STAGE3_SLASH_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_slash_pixabay.mp3"
@@ -9429,8 +9429,8 @@ func _ensure_rogue_audio_runtime() -> void:
 	if not is_instance_valid(rogue_assassination_start_audio):
 		rogue_assassination_start_audio = _create_hero_sfx_player(
 			STAGE2_ASSASSINATION_START_AUDIO_PATH,
-			HERO_SFX_DB_HEAVY_SKILL,
-			0.82
+			HERO_SFX_DB_REGULAR_SKILL,
+			1.0
 		)
 
 	if rogue_assassination_hit_audio_pool.is_empty():

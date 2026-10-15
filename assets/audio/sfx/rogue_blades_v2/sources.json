@@ -1,0 +1,46 @@
+{
+  "license": "https://pixabay.com/service/license-summary/",
+  "usage": "Edited game-integrated cues; no raw source redistribution",
+  "files": [
+    {
+      "file": "assets/audio/sfx/rogue_blades_v2/combo_slash.wav",
+      "source_id": 266296,
+      "creator": "u_xjrmmgxfru",
+      "source_url": "https://pixabay.com/sound-effects/film-special-effects-sword-slash-01-266296/",
+      "source_sha256": "5b1676f82c0cbea448b0c338762b2492d921f54d60529c04b26cacc5e6b06f4f",
+      "output_sha256": "2f451eb0915a8ad4ca42bfc1e1ab61a2e4b6227cea2b95a204b3f463fb06ed85",
+      "duration": 0.24,
+      "edits": "HP100Hz/LP5800Hz, silence trim -48dB, peak-7dBFS, fade-in3ms/fade-out35ms, mono PCM16 44100Hz"
+    },
+    {
+      "file": "assets/audio/sfx/rogue_blades_v2/blade_storm.wav",
+      "source_id": 266296,
+      "creator": "u_xjrmmgxfru",
+      "source_url": "https://pixabay.com/sound-effects/film-special-effects-sword-slash-01-266296/",
+      "source_sha256": "5b1676f82c0cbea448b0c338762b2492d921f54d60529c04b26cacc5e6b06f4f",
+      "output_sha256": "bc51373fa45c8f169d329c427f25e0ea530730db2b2fecd877298e8fc16b541f",
+      "duration": 0.29,
+      "edits": "HP80Hz/LP5500Hz, silence trim -48dB, peak-9dBFS, fade-in3ms/fade-out35ms, mono PCM16 44100Hz"
+    },
+    {
+      "file": "assets/audio/sfx/rogue_blades_v2/assassination_start.wav",
+      "source_id": 266296,
+      "creator": "u_xjrmmgxfru",
+      "source_url": "https://pixabay.com/sound-effects/film-special-effects-sword-slash-01-266296/",
+      "source_sha256": "5b1676f82c0cbea448b0c338762b2492d921f54d60529c04b26cacc5e6b06f4f",
+      "output_sha256": "b78f437a679b9dc5fdcc7a1ee9e5e5fceccf871bdf8afb3dde43391634f9b33c",
+      "duration": 0.18,
+      "edits": "HP180Hz/LP3200Hz, silence trim -48dB, peak-11dBFS, fade-in3ms/fade-out35ms, mono PCM16 44100Hz"
+    },
+    {
+      "file": "assets/audio/sfx/rogue_blades_v2/assassination_hit.wav",
+      "source_id": 121084,
+      "creator": "Universfield",
+      "source_url": "https://pixabay.com/sound-effects/film-special-effects-knife-stab-121084/",
+      "source_sha256": "e74ea33bc38e9aab6abc6b1e4068016b912b4afe4cf0dea0bfacbe94b863c7e7",
+      "output_sha256": "035755aff9b70637079a0b73ba3746d125b449aa9bd0be1aa0693728a7f0fb5a",
+      "duration": 0.32,
+      "edits": "HP65Hz/LP4800Hz, silence trim -48dB, peak-7dBFS, fade-in3ms/fade-out35ms, mono PCM16 44100Hz"
+    }
+  ]
+}

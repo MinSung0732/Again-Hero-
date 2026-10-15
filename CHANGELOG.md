@@ -1,3 +1,9 @@
+## 2026-10-15 — 날렵한 용사 베기·암살 효과음 교체
+
+- 금속 단검 충돌/짧은 기존 공통음/포털 시작음을 실제 베기·찌르기 녹음 기반 4개 전용 큐로 교체. Pixabay Sword Slash 01 — u_xjrmmgxfru(266296), Knife Stab — Universfield(121084); 출처/라이선스/원본·편집본 SHA/필터는 assets/audio/sfx/rogue_blades_v2/sources.json.
+- 기본0.24초/검무0.29초/암살시작0.18초/적중0.32초, 무음·고주파 잔향 정리·페이드·피크 제한한 mono PCM16 44.1kHz WAV. 런타임 합성/Base64 디코딩 없이 import AudioStream 사용. 기존 SFX bus/3개 풀/280·220ms 제한 유지, 암살 시작은 일반 기술 음량/피치1.0. 공통 Hero 함수로 마왕 AI와 용사 플레이어 양쪽 적용.
+- Godot4.5.1 headless import 및 실제 공통 재생 함수 추출 실행으로 4큐 로딩/길이/SFX bus/양쪽 설정·100회 재생의 풀 크기 유지 검사 PASS. WAV 채널·샘플/클리핑·구문/diff 검사 PASS. 실제 청취/모바일·PC 전체 전투 믹스는 미검증.
+
 ## 2026-10-15 — 날렵한 용사 수동 조작 중 기본공격 전진 제거
 
 - `_rogue_combo_attack`의 본체 전진·전진 후 경계 보정은 AI 전용으로 제한. 용사 모드 player_controlled 기본 연격은 패드 이동을 유지하며 자동 전진하지 않는다. 적 넉백·피해·타격/연격·고유 성장 코드는 그대로 유지하고 마왕 모드 AI 전진은 유지.
