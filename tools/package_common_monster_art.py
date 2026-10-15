@@ -16,8 +16,6 @@ from scipy import ndimage
 ROOT = Path(__file__).resolve().parents[1]
 ANIMS = [('idle', 4, 6, True), ('move', 6, 10, True),
          ('attack', 6, 14, False), ('hit', 3, 12, False), ('death', 4, 10, False)]
-CELL = (96, 80)
-ANCHOR = (48, 68)
 
 
 def boundaries(projection, count):
@@ -110,24 +108,32 @@ def package(record):
             frames.append(dict(key=key, anim=anim, col=col, row=row, crop=crop,
                                region=region, body_center=center, foot=bbox[3], bbox=bbox,
                                isolation='connected_components' if isolated else 'transparent_gutters'))
-    scale = record['height']/float(np.median([f['bbox'][3]-f['bbox'][1] for f in frames[:4]]))
+    # Preserve native source pixels; grow the canvas instead of shrinking artwork.
+    scale = 1.0
+    left = max(round(f['body_center'])-f['bbox'][0] for f in frames)
+    right = max(f['bbox'][2]-round(f['body_center']) for f in frames)
+    top = max(f['bbox'][3]-f['bbox'][1] for f in frames)
+    half_width = int(max(left, right))+12
+    cell = (2*half_width, int(top)+24)
+    anchor = (half_width, int(top)+12)
+    native_idle_height = float(np.median([f['bbox'][3]-f['bbox'][1] for f in frames[:4]]))
+    preview_scale = record['height']*3/native_idle_height
     folder = ROOT/'assets/art'/('monsters' if record['form']=='normal' else 'elitemonster')/record['id']
     (folder/'frames').mkdir(parents=True, exist_ok=True)
     stem = record['id']+('_elite' if record['form']=='elite' else '')
     (folder/(stem+'_source.png')).write_bytes(source.read_bytes())
-    sheet = Image.new('RGBA', (CELL[0]*6, CELL[1]*5))
+    sheet = Image.new('RGBA', (cell[0]*6, cell[1]*5))
     animations = {}
     measurements = []
     hashes = set()
     for f in frames:
-        size = tuple(max(1, round(n*scale)) for n in f['crop'].size)
-        resized = f['crop'].resize(size, Image.Resampling.NEAREST)
+        resized = f['crop'].copy()  # No resampling, even when constructing the sheet.
         resized_bbox = resized.getbbox()
-        xy = (round(ANCHOR[0]-f['body_center']*scale), ANCHOR[1]-resized_bbox[3])
-        out = Image.new('RGBA', CELL)
+        xy = (round(anchor[0]-f['body_center']*scale), anchor[1]-resized_bbox[3])
+        out = Image.new('RGBA', cell)
         out.paste(resized, xy)
         bbox = out.getbbox()
-        if bbox is None or bbox[0]<4 or bbox[1]<4 or bbox[2]>CELL[0]-4 or bbox[3]>CELL[1]-4:
+        if bbox is None or bbox[0]<4 or bbox[1]<4 or bbox[2]>cell[0]-4 or bbox[3]>cell[1]-4:
             raise ValueError(f'{stem}/{f["key"]}: insufficient final padding')
         # No silently clipped pixels at the destination.
         if sum(out.getchannel('A').histogram()[1:]) != sum(resized.getchannel('A').histogram()[1:]):
@@ -138,20 +144,22 @@ def package(record):
         hashes.add(digest)
         filename = 'frames/'+f['key']+'.png'
         out.save(folder/filename, optimize=True)
-        sheet.paste(out, (f['col']*CELL[0], f['row']*CELL[1]))
+        sheet.paste(out, (f['col']*cell[0], f['row']*cell[1]))
         animations.setdefault(f['anim'], {'fps':next(x[2] for x in ANIMS if x[0]==f['anim']),
                                           'loop':f['anim'] in ['idle','move'], 'frames':[]})['frames'].append(filename)
         measurements.append({'file':filename, 'source_crop':f['region'], 'source_body_center_x':f['body_center'],
-                             'source_foot_y':f['foot'], 'source_isolation':f['isolation'], 'bbox':bbox, 'sha256':digest})
+                             'source_foot_y':f['foot'], 'destination_offset':xy, 'source_isolation':f['isolation'], 'bbox':bbox, 'sha256':digest})
     sheet.save(folder/(stem+'_spritesheet.png'), optimize=True)
     manifest = dict(character_id=stem, name_ko=record['name'], form=record['form'], intended_rarity='common',
-                    status='assets_only_unregistered', direction='right', cell_size=CELL, sheet_size=sheet.size,
-                    anchor={'center_x':ANCHOR[0], 'foot_y':ANCHOR[1]}, columns=6, rows=5, animations=animations,
+                    status='assets_only_unregistered', direction='right', cell_size=cell, sheet_size=sheet.size,
+                    anchor={'center_x':anchor[0], 'foot_y':anchor[1]}, columns=6, rows=5, animations=animations,
                     source=stem+'_source.png', sheet=stem+'_spritesheet.png', portrait=None,
                     source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(), design=record['design'],
                     generation={'tool':'image_gen', 'prompt':record['prompt']},
                     normalization={'alpha_threshold':128, 'resampling':'nearest', 'uniform_scale':scale,
-                                   'rgb_keying':False, 'body_height_target':record['height']}, frames=measurements)
+                                   'rgb_keying':False, 'body_height_target':record['height'],
+                                   'native_resolution':True, 'native_idle_height':native_idle_height,
+                                   'preview_scale':preview_scale}, frames=measurements)
     (folder/'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2)+'\n')
     lines = ['[gd_resource type="SpriteFrames" load_steps=24 format=3]', '']
     for i,f in enumerate(frames):
@@ -176,8 +184,8 @@ sprite_frames = ExtResource("1")
 animation = &"idle"
 autoplay = "idle"
 centered = false
-offset = Vector2(-48, -68)
-scale = Vector2(3, 3)
+offset = Vector2(-{anchor[0]}, -{anchor[1]})
+scale = Vector2({preview_scale:.8f}, {preview_scale:.8f})
 '''
     (folder/(stem+'_preview.tscn')).write_text(preview)
     print(stem, '23 frames', 'scale', round(scale,4), 'sheet', sheet.size)
