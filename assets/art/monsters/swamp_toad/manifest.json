@@ -1,0 +1,532 @@
+{
+  "character_id": "swamp_toad",
+  "name_ko": "늪지두꺼비",
+  "form": "normal",
+  "intended_rarity": "common",
+  "status": "assets_only_unregistered",
+  "direction": "right",
+  "cell_size": [
+    96,
+    80
+  ],
+  "sheet_size": [
+    576,
+    400
+  ],
+  "anchor": {
+    "center_x": 48,
+    "foot_y": 68
+  },
+  "columns": 6,
+  "rows": 5,
+  "animations": {
+    "idle": {
+      "fps": 6,
+      "loop": true,
+      "frames": [
+        "frames/idle_01.png",
+        "frames/idle_02.png",
+        "frames/idle_03.png",
+        "frames/idle_04.png"
+      ]
+    },
+    "move": {
+      "fps": 10,
+      "loop": true,
+      "frames": [
+        "frames/move_01.png",
+        "frames/move_02.png",
+        "frames/move_03.png",
+        "frames/move_04.png",
+        "frames/move_05.png",
+        "frames/move_06.png"
+      ]
+    },
+    "attack": {
+      "fps": 14,
+      "loop": false,
+      "frames": [
+        "frames/attack_01.png",
+        "frames/attack_02.png",
+        "frames/attack_03.png",
+        "frames/attack_04.png",
+        "frames/attack_05.png",
+        "frames/attack_06.png"
+      ]
+    },
+    "hit": {
+      "fps": 12,
+      "loop": false,
+      "frames": [
+        "frames/hit_01.png",
+        "frames/hit_02.png",
+        "frames/hit_03.png"
+      ]
+    },
+    "death": {
+      "fps": 10,
+      "loop": false,
+      "frames": [
+        "frames/death_01.png",
+        "frames/death_02.png",
+        "frames/death_03.png",
+        "frames/death_04.png"
+      ]
+    }
+  },
+  "source": "swamp_toad_source.png",
+  "sheet": "swamp_toad_spritesheet.png",
+  "portrait": null,
+  "source_sha256": "fe361cf977c34a7e365f708ab42d5014109f9abbe4e070b2d7d3c27f5fd47766",
+  "design": "a squat olive-green swamp toad with a pale ochre belly, lumpy dark back, four splayed webbed feet and orange eyes. No clothes or weapon.",
+  "generation": {
+    "tool": "image_gen",
+    "prompt": "Use case: stylized-concept. Asset type: production pixel-art animation spritesheet for Godot game Again Hero. Create ONE complete character animation sheet, transparent background. A perfectly regular grid of 6 columns and 5 rows, no lines. Recommended canvas 1536x1280. Each invisible equal cell has substantial empty transparent padding. Every character faces RIGHT in 3/4 side view. Maintain identical body size, head size, anatomy, colors and accessories across all frames, no camera zoom. Body central axis exactly at horizontal 45% of each cell; sole ground line 82% cell height. Character body occupies only about 45% cell height, leave wide margins for attack. True crisp low-resolution pixel art with approx32px body, solid colored pixel clusters, 3-tone shading, dark colored outlines, top-left light, no smooth painting, no antialiasing, no gradient, no ground shadow. Same visual language as the style reference, different character design. Draw only sprites, no labels/text/numbers/borders/UI.\nEXACT pose order: row1 columns1-4 IDLE 4 subtle breathing frames; columns5-6 EMPTY transparent. Row2 all6 MOVE in-place walking cycle, forward/back feet alternating and returning smoothly, never horizontal translation. Row3 all6 ATTACK anticipation, windup, peak strike toward RIGHT, follow through, recoil, return to stance; body and feet anchored, restrained local slash/spore/projectile effect only if appropriate, never extends outside cell. Row4 columns1-3 HIT subtle flinch then recover; columns4-6 EMPTY. Row5 columns1-4 DEATH progressive collapse to ground from standing to crumpled; ground stays same, final corpse remains visible; columns5-6 EMPTY. Exactly23 readable distinct frames, not 30. No duplicated identical frames. No separate portrait. Every cell isolated from all neighbors by generous fully transparent gutters. Preserve dark internal pixels, genuine alpha transparency.\nCHARACTER NORMAL FORM: a squat olive-green swamp toad with a pale ochre belly, lumpy dark back, four splayed webbed feet and orange eyes. No clothes or weapon."
+  },
+  "normalization": {
+    "alpha_threshold": 128,
+    "resampling": "nearest",
+    "uniform_scale": 0.183206106870229,
+    "rgb_keying": false,
+    "body_height_target": 24
+  },
+  "frames": [
+    {
+      "file": "frames/idle_01.png",
+      "source_crop": [
+        0,
+        0,
+        240,
+        290
+      ],
+      "source_body_center_x": 130.0,
+      "source_foot_y": 271,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        44,
+        63,
+        68
+      ],
+      "sha256": "dc4a30685dcac4852be48e620b9da0ecfcc05e00715eb96ae563bf51a67e5fd6"
+    },
+    {
+      "file": "frames/idle_02.png",
+      "source_crop": [
+        240,
+        0,
+        460,
+        290
+      ],
+      "source_body_center_x": 108.0,
+      "source_foot_y": 271,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        44,
+        64,
+        68
+      ],
+      "sha256": "0deb43b1ec3b7e8529662189f5b682efb6c924ee7e639a633fdce9253a087634"
+    },
+    {
+      "file": "frames/idle_03.png",
+      "source_crop": [
+        460,
+        0,
+        684,
+        290
+      ],
+      "source_body_center_x": 110.0,
+      "source_foot_y": 271,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        44,
+        65,
+        68
+      ],
+      "sha256": "7be67eaf9f36293db0365f04b732603aa5fb940489a89b11413c498014c1ecab"
+    },
+    {
+      "file": "frames/idle_04.png",
+      "source_crop": [
+        684,
+        0,
+        935,
+        290
+      ],
+      "source_body_center_x": 103.0,
+      "source_foot_y": 271,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        44,
+        64,
+        68
+      ],
+      "sha256": "aa21692f176b55edc0f2fb2acd98bdb3a8bbbd8aabd55a187ac82a0eb96c6a18"
+    },
+    {
+      "file": "frames/move_01.png",
+      "source_crop": [
+        0,
+        290,
+        237,
+        507
+      ],
+      "source_body_center_x": 128.0,
+      "source_foot_y": 181,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        45,
+        64,
+        68
+      ],
+      "sha256": "3d42ec6427b105dc769c82a3c4edb8d72723bc75e4861cf89d8396772e9360b0"
+    },
+    {
+      "file": "frames/move_02.png",
+      "source_crop": [
+        237,
+        290,
+        469,
+        507
+      ],
+      "source_body_center_x": 118.0,
+      "source_foot_y": 182,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        30,
+        43,
+        66,
+        68
+      ],
+      "sha256": "0ff96b64941cf751fd167210d52cbaac80d05261a53b84b3cf2e24f58a0714b2"
+    },
+    {
+      "file": "frames/move_03.png",
+      "source_crop": [
+        469,
+        290,
+        690,
+        507
+      ],
+      "source_body_center_x": 108.0,
+      "source_foot_y": 181,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        31,
+        45,
+        65,
+        68
+      ],
+      "sha256": "e599a7d04cbe630fa81dee32d6e509147df29d35a9f1e4f4ec800a3e73cc85b4"
+    },
+    {
+      "file": "frames/move_04.png",
+      "source_crop": [
+        690,
+        290,
+        902,
+        507
+      ],
+      "source_body_center_x": 106.0,
+      "source_foot_y": 182,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        45,
+        64,
+        68
+      ],
+      "sha256": "626b4d09542cade374d1ea55efb05c814b55983fd7b2b25b8d4c0bd34449cb80"
+    },
+    {
+      "file": "frames/move_05.png",
+      "source_crop": [
+        902,
+        290,
+        1141,
+        507
+      ],
+      "source_body_center_x": 123.0,
+      "source_foot_y": 186,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        29,
+        45,
+        66,
+        68
+      ],
+      "sha256": "afb92036fab2881f63db91880e61794a39620819ace95288cac48b3aae108bd9"
+    },
+    {
+      "file": "frames/move_06.png",
+      "source_crop": [
+        1141,
+        290,
+        1374,
+        507
+      ],
+      "source_body_center_x": 109.0,
+      "source_foot_y": 181,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        45,
+        64,
+        68
+      ],
+      "sha256": "152c8866c26a24c621b9698c851e385951abb386cf77da995fd55f3c3e9f6f0c"
+    },
+    {
+      "file": "frames/attack_01.png",
+      "source_crop": [
+        32,
+        578,
+        232,
+        697
+      ],
+      "source_body_center_x": 101.0,
+      "source_foot_y": 115,
+      "source_isolation": "connected_components",
+      "bbox": [
+        30,
+        48,
+        65,
+        68
+      ],
+      "sha256": "faa4965c85a9ebff0e6d8dff90fb5b10aba1975812f48c2a93e0ba3134bb5a07"
+    },
+    {
+      "file": "frames/attack_02.png",
+      "source_crop": [
+        241,
+        557,
+        428,
+        702
+      ],
+      "source_body_center_x": 99.0,
+      "source_foot_y": 141,
+      "source_isolation": "connected_components",
+      "bbox": [
+        31,
+        43,
+        63,
+        68
+      ],
+      "sha256": "b666bd9ad422919df1a8edbba9539f87a9eb1aff7c06ff31073b3de49fe9a41a"
+    },
+    {
+      "file": "frames/attack_03.png",
+      "source_crop": [
+        440,
+        559,
+        718,
+        702
+      ],
+      "source_body_center_x": 105.0,
+      "source_foot_y": 139,
+      "source_isolation": "connected_components",
+      "bbox": [
+        30,
+        44,
+        79,
+        68
+      ],
+      "sha256": "9cf3adc519cdc16fd25ac199051b6c92b5f4afc912acff325e6f90082de084f7"
+    },
+    {
+      "file": "frames/attack_04.png",
+      "source_crop": [
+        702,
+        557,
+        916,
+        700
+      ],
+      "source_body_center_x": 103.0,
+      "source_foot_y": 139,
+      "source_isolation": "connected_components",
+      "bbox": [
+        30,
+        44,
+        67,
+        68
+      ],
+      "sha256": "b6d54e1535183134b50734225f4f7f5134ebd406bdf87a624f10d995ba0daacd"
+    },
+    {
+      "file": "frames/attack_05.png",
+      "source_crop": [
+        928,
+        579,
+        1129,
+        700
+      ],
+      "source_body_center_x": 103.0,
+      "source_foot_y": 117,
+      "source_isolation": "connected_components",
+      "bbox": [
+        30,
+        48,
+        65,
+        68
+      ],
+      "sha256": "1f7051349f76f78407ffac2b0fd4d5e67682bbd739bb3ae401f4e6634b622e24"
+    },
+    {
+      "file": "frames/attack_06.png",
+      "source_crop": [
+        1161,
+        565,
+        1337,
+        698
+      ],
+      "source_body_center_x": 85.0,
+      "source_foot_y": 129,
+      "source_isolation": "connected_components",
+      "bbox": [
+        33,
+        46,
+        63,
+        68
+      ],
+      "sha256": "e1ae222dd72390bb825eb7b1867282494314b5c6e036d05cf2290ab5609b8802"
+    },
+    {
+      "file": "frames/hit_01.png",
+      "source_crop": [
+        0,
+        722,
+        236,
+        953
+      ],
+      "source_body_center_x": 121.0,
+      "source_foot_y": 190,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        34,
+        37,
+        66,
+        68
+      ],
+      "sha256": "6098246791b3fd31029bccddaed943333c58f119cb67aa96a5fbddcbd5a14ec7"
+    },
+    {
+      "file": "frames/hit_02.png",
+      "source_crop": [
+        236,
+        722,
+        464,
+        953
+      ],
+      "source_body_center_x": 111.0,
+      "source_foot_y": 195,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        31,
+        47,
+        66,
+        68
+      ],
+      "sha256": "b7e80739386c46a68be494bb7618dcd1ddfd171bb456899b1edcd552afdf590e"
+    },
+    {
+      "file": "frames/hit_03.png",
+      "source_crop": [
+        464,
+        722,
+        712,
+        953
+      ],
+      "source_body_center_x": 104.0,
+      "source_foot_y": 193,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        46,
+        64,
+        68
+      ],
+      "sha256": "9dfd2f7409cadda6aed90f37310a66b6f59f9466544faf3d927298cafdc1d449"
+    },
+    {
+      "file": "frames/death_01.png",
+      "source_crop": [
+        0,
+        953,
+        238,
+        1145
+      ],
+      "source_body_center_x": 134.0,
+      "source_foot_y": 145,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        31,
+        49,
+        64,
+        68
+      ],
+      "sha256": "ffebc256093be5a686a27c0621dae67a40d6f419ef7b9865a6fff947e40c1307"
+    },
+    {
+      "file": "frames/death_02.png",
+      "source_crop": [
+        238,
+        953,
+        466,
+        1145
+      ],
+      "source_body_center_x": 121.0,
+      "source_foot_y": 142,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        29,
+        52,
+        67,
+        68
+      ],
+      "sha256": "2741a6e77d754b00fa9de2faec14995befe47245514b64f3a9e25b4e989cf183"
+    },
+    {
+      "file": "frames/death_03.png",
+      "source_crop": [
+        466,
+        953,
+        691,
+        1145
+      ],
+      "source_body_center_x": 113.0,
+      "source_foot_y": 142,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        29,
+        54,
+        66,
+        68
+      ],
+      "sha256": "838bdbd598bde4752a01b5039219a223a9c0e2819a94f89a832483be3b682c6f"
+    },
+    {
+      "file": "frames/death_04.png",
+      "source_crop": [
+        691,
+        953,
+        957,
+        1145
+      ],
+      "source_body_center_x": 118.0,
+      "source_foot_y": 139,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        28,
+        56,
+        68,
+        68
+      ],
+      "sha256": "fe250c64857c41eb3f04c35e0b0181652d02840b9786d6591dc1f7cfec22aff0"
+    }
+  ]
+}

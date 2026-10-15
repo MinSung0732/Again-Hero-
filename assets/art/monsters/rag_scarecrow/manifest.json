@@ -1,0 +1,532 @@
+{
+  "character_id": "rag_scarecrow",
+  "name_ko": "누더기허수아비",
+  "form": "normal",
+  "intended_rarity": "common",
+  "status": "assets_only_unregistered",
+  "direction": "right",
+  "cell_size": [
+    96,
+    80
+  ],
+  "sheet_size": [
+    576,
+    400
+  ],
+  "anchor": {
+    "center_x": 48,
+    "foot_y": 68
+  },
+  "columns": 6,
+  "rows": 5,
+  "animations": {
+    "idle": {
+      "fps": 6,
+      "loop": true,
+      "frames": [
+        "frames/idle_01.png",
+        "frames/idle_02.png",
+        "frames/idle_03.png",
+        "frames/idle_04.png"
+      ]
+    },
+    "move": {
+      "fps": 10,
+      "loop": true,
+      "frames": [
+        "frames/move_01.png",
+        "frames/move_02.png",
+        "frames/move_03.png",
+        "frames/move_04.png",
+        "frames/move_05.png",
+        "frames/move_06.png"
+      ]
+    },
+    "attack": {
+      "fps": 14,
+      "loop": false,
+      "frames": [
+        "frames/attack_01.png",
+        "frames/attack_02.png",
+        "frames/attack_03.png",
+        "frames/attack_04.png",
+        "frames/attack_05.png",
+        "frames/attack_06.png"
+      ]
+    },
+    "hit": {
+      "fps": 12,
+      "loop": false,
+      "frames": [
+        "frames/hit_01.png",
+        "frames/hit_02.png",
+        "frames/hit_03.png"
+      ]
+    },
+    "death": {
+      "fps": 10,
+      "loop": false,
+      "frames": [
+        "frames/death_01.png",
+        "frames/death_02.png",
+        "frames/death_03.png",
+        "frames/death_04.png"
+      ]
+    }
+  },
+  "source": "rag_scarecrow_source.png",
+  "sheet": "rag_scarecrow_spritesheet.png",
+  "portrait": null,
+  "source_sha256": "487897be86613dc19fd282539f953fa86d9cefcc1c736cda99c7579907bcffb1",
+  "design": "a squat two-head-tall animated scarecrow, stitched beige burlap sack head with two dark eye holes, floppy straw hat, faded blue ragged tunic, straw wrists and feet, small wooden hooked sickle.",
+  "generation": {
+    "tool": "image_gen",
+    "prompt": "Use case: stylized-concept. Asset type: production pixel-art animation spritesheet for Godot game Again Hero. Create ONE complete character animation sheet, transparent background. A perfectly regular grid of 6 columns and 5 rows, no lines. Recommended canvas 1536x1280. Each invisible equal cell has substantial empty transparent padding. Every character faces RIGHT in 3/4 side view. Maintain identical body size, head size, anatomy, colors and accessories across all frames, no camera zoom. Body central axis exactly at horizontal 45% of each cell; sole ground line 82% cell height. Character body occupies only about 45% cell height, leave wide margins for attack. True crisp low-resolution pixel art with approx32px body, solid colored pixel clusters, 3-tone shading, dark colored outlines, top-left light, no smooth painting, no antialiasing, no gradient, no ground shadow. Same visual language as the style reference, different character design. Draw only sprites, no labels/text/numbers/borders/UI.\nEXACT pose order: row1 columns1-4 IDLE 4 subtle breathing frames; columns5-6 EMPTY transparent. Row2 all6 MOVE in-place walking cycle, forward/back feet alternating and returning smoothly, never horizontal translation. Row3 all6 ATTACK anticipation, windup, peak strike toward RIGHT, follow through, recoil, return to stance; body and feet anchored, restrained local slash/spore/projectile effect only if appropriate, never extends outside cell. Row4 columns1-3 HIT subtle flinch then recover; columns4-6 EMPTY. Row5 columns1-4 DEATH progressive collapse to ground from standing to crumpled; ground stays same, final corpse remains visible; columns5-6 EMPTY. Exactly23 readable distinct frames, not 30. No duplicated identical frames. No separate portrait. Every cell isolated from all neighbors by generous fully transparent gutters. Preserve dark internal pixels, genuine alpha transparency.\nCHARACTER NORMAL FORM: a squat two-head-tall animated scarecrow, stitched beige burlap sack head with two dark eye holes, floppy straw hat, faded blue ragged tunic, straw wrists and feet, small wooden hooked sickle."
+  },
+  "normalization": {
+    "alpha_threshold": 128,
+    "resampling": "nearest",
+    "uniform_scale": 0.18478260869565216,
+    "rgb_keying": false,
+    "body_height_target": 34
+  },
+  "frames": [
+    {
+      "file": "frames/idle_01.png",
+      "source_crop": [
+        0,
+        0,
+        231,
+        280
+      ],
+      "source_body_center_x": 117.0,
+      "source_foot_y": 256,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        33,
+        65,
+        68
+      ],
+      "sha256": "02eeb79cc1482b35fcdf4717642f27bd763085e3dd8e24fb2fa830268c2be962"
+    },
+    {
+      "file": "frames/idle_02.png",
+      "source_crop": [
+        231,
+        0,
+        456,
+        280
+      ],
+      "source_body_center_x": 109.0,
+      "source_foot_y": 256,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        33,
+        66,
+        68
+      ],
+      "sha256": "4e0c161387554cf73608f2bfedffedcb813b27561be9106160ce8304cda2caef"
+    },
+    {
+      "file": "frames/idle_03.png",
+      "source_crop": [
+        456,
+        0,
+        679,
+        280
+      ],
+      "source_body_center_x": 109.0,
+      "source_foot_y": 256,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        34,
+        65,
+        68
+      ],
+      "sha256": "9f5c03386ea4bfba98cc7530e06b0f112f0579358f2fd07569e38be5e791ca77"
+    },
+    {
+      "file": "frames/idle_04.png",
+      "source_crop": [
+        679,
+        0,
+        938,
+        280
+      ],
+      "source_body_center_x": 106.0,
+      "source_foot_y": 256,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        34,
+        65,
+        68
+      ],
+      "sha256": "34fbe91bb58ac029753d5fbc85f0be2a97a0722aa535011eb016727ad2f80273"
+    },
+    {
+      "file": "frames/move_01.png",
+      "source_crop": [
+        0,
+        280,
+        236,
+        513
+      ],
+      "source_body_center_x": 122.0,
+      "source_foot_y": 207,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        35,
+        65,
+        68
+      ],
+      "sha256": "8e500123cef848c7374013da06879bbdd591cb933a62a5f9a3f01ce1a6e0b7f0"
+    },
+    {
+      "file": "frames/move_02.png",
+      "source_crop": [
+        236,
+        280,
+        456,
+        513
+      ],
+      "source_body_center_x": 107.0,
+      "source_foot_y": 209,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        34,
+        65,
+        68
+      ],
+      "sha256": "e1d2a665885feb6cc6a84804dc1e533db6482cc77e291677d1ef878cc475285a"
+    },
+    {
+      "file": "frames/move_03.png",
+      "source_crop": [
+        456,
+        280,
+        686,
+        513
+      ],
+      "source_body_center_x": 111.0,
+      "source_foot_y": 209,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        31,
+        33,
+        65,
+        68
+      ],
+      "sha256": "318fcfd3a34b5cd26478da63d95be417c9bf8f5483c75fde08b6d013240d5f71"
+    },
+    {
+      "file": "frames/move_04.png",
+      "source_crop": [
+        686,
+        280,
+        920,
+        513
+      ],
+      "source_body_center_x": 112.0,
+      "source_foot_y": 209,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        31,
+        34,
+        66,
+        68
+      ],
+      "sha256": "9b4a79527d81e19aec94472fbc0c771caf5fb568837d51086287a3425c501c9f"
+    },
+    {
+      "file": "frames/move_05.png",
+      "source_crop": [
+        920,
+        280,
+        1142,
+        513
+      ],
+      "source_body_center_x": 109.0,
+      "source_foot_y": 209,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        33,
+        66,
+        68
+      ],
+      "sha256": "eeb5776e581ea848b61cf81d56cb5662562ce2c6bcc45f7ebb0b8dbc50247112"
+    },
+    {
+      "file": "frames/move_06.png",
+      "source_crop": [
+        1142,
+        280,
+        1374,
+        513
+      ],
+      "source_body_center_x": 108.0,
+      "source_foot_y": 209,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        31,
+        34,
+        65,
+        68
+      ],
+      "sha256": "f445e63b6d5924af0b4e2791e6bc30cd98057eeab172b6d24197062a74e726a3"
+    },
+    {
+      "file": "frames/attack_01.png",
+      "source_crop": [
+        21,
+        548,
+        230,
+        725
+      ],
+      "source_body_center_x": 105.0,
+      "source_foot_y": 173,
+      "source_isolation": "connected_components",
+      "bbox": [
+        30,
+        37,
+        67,
+        68
+      ],
+      "sha256": "44a6ba9e60d698c835953853638c30a10b94db0ae30220d88b14be0ad84e418a"
+    },
+    {
+      "file": "frames/attack_02.png",
+      "source_crop": [
+        262,
+        533,
+        461,
+        725
+      ],
+      "source_body_center_x": 97.0,
+      "source_foot_y": 188,
+      "source_isolation": "connected_components",
+      "bbox": [
+        31,
+        35,
+        66,
+        68
+      ],
+      "sha256": "78698ea0a0e8d064495a4ca5f87b22c13e4f54b62302e0853f0e40735239c4a6"
+    },
+    {
+      "file": "frames/attack_03.png",
+      "source_crop": [
+        472,
+        554,
+        707,
+        725
+      ],
+      "source_body_center_x": 102.0,
+      "source_foot_y": 167,
+      "source_isolation": "connected_components",
+      "bbox": [
+        30,
+        38,
+        71,
+        68
+      ],
+      "sha256": "fb7d3d2097a930afefd01f43bdca9b95f9bbad5c0a8e74ff8ca08c5c5957bfad"
+    },
+    {
+      "file": "frames/attack_04.png",
+      "source_crop": [
+        715,
+        544,
+        947,
+        725
+      ],
+      "source_body_center_x": 99.0,
+      "source_foot_y": 177,
+      "source_isolation": "connected_components",
+      "bbox": [
+        31,
+        37,
+        72,
+        68
+      ],
+      "sha256": "7e7828b7b8b5d17c751cdf8fbf142295492c711c4fa3b042d099e09d20a0d534"
+    },
+    {
+      "file": "frames/attack_05.png",
+      "source_crop": [
+        932,
+        544,
+        1120,
+        725
+      ],
+      "source_body_center_x": 99.0,
+      "source_foot_y": 177,
+      "source_isolation": "connected_components",
+      "bbox": [
+        31,
+        37,
+        64,
+        68
+      ],
+      "sha256": "ccd37945d42a8ffffd0cfc3374c1f538bf01bce0a2bf0dc71976b2b0ffe8225d"
+    },
+    {
+      "file": "frames/attack_06.png",
+      "source_crop": [
+        1156,
+        544,
+        1346,
+        726
+      ],
+      "source_body_center_x": 93.0,
+      "source_foot_y": 178,
+      "source_isolation": "connected_components",
+      "bbox": [
+        32,
+        36,
+        65,
+        68
+      ],
+      "sha256": "9d064f44b5cd0243a8024893cdd2393c1c45d496f10202c5888c39c541d865ca"
+    },
+    {
+      "file": "frames/hit_01.png",
+      "source_crop": [
+        0,
+        741,
+        247,
+        958
+      ],
+      "source_body_center_x": 128.0,
+      "source_foot_y": 203,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        30,
+        35,
+        66,
+        68
+      ],
+      "sha256": "fb9ce03bdc6ec459597c3295d3f15af132b684d3e4917a1a301ca8234c8152f5"
+    },
+    {
+      "file": "frames/hit_02.png",
+      "source_crop": [
+        247,
+        741,
+        466,
+        958
+      ],
+      "source_body_center_x": 108.0,
+      "source_foot_y": 203,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        40,
+        65,
+        68
+      ],
+      "sha256": "e4679cc6340c98d81844af9dd19aa6754dc7f9e4a9bb781d01c00c408e3f91a2"
+    },
+    {
+      "file": "frames/hit_03.png",
+      "source_crop": [
+        466,
+        741,
+        716,
+        958
+      ],
+      "source_body_center_x": 99.0,
+      "source_foot_y": 203,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        38,
+        66,
+        68
+      ],
+      "sha256": "b2788b675a53c5dd3e095d8b43efb9973631676fa81ed0eee599f523430acbd7"
+    },
+    {
+      "file": "frames/death_01.png",
+      "source_crop": [
+        0,
+        958,
+        233,
+        1145
+      ],
+      "source_body_center_x": 124.0,
+      "source_foot_y": 159,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        41,
+        64,
+        68
+      ],
+      "sha256": "c6cb8b8c7c2f73bb52bf4ada89b48eddbab99cfcbfb80795164808e44edda989"
+    },
+    {
+      "file": "frames/death_02.png",
+      "source_crop": [
+        233,
+        958,
+        454,
+        1145
+      ],
+      "source_body_center_x": 125.0,
+      "source_foot_y": 167,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        29,
+        44,
+        64,
+        68
+      ],
+      "sha256": "0901144394349aea23c0b338095ad25cf37511e9412880ae51e59f6e8308b146"
+    },
+    {
+      "file": "frames/death_03.png",
+      "source_crop": [
+        454,
+        958,
+        692,
+        1145
+      ],
+      "source_body_center_x": 116.0,
+      "source_foot_y": 167,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        29,
+        52,
+        70,
+        68
+      ],
+      "sha256": "182ca5c40a3ecaedee624f19684e9826abb042f72dfe763bbb519fc612bad8fd"
+    },
+    {
+      "file": "frames/death_04.png",
+      "source_crop": [
+        692,
+        958,
+        979,
+        1145
+      ],
+      "source_body_center_x": 122.0,
+      "source_foot_y": 157,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        54,
+        75,
+        68
+      ],
+      "sha256": "87e7cbcc3335863b0b08feeb7a5b811e560ab3fbf7d3ee629c3bc76325ae44ee"
+    }
+  ]
+}

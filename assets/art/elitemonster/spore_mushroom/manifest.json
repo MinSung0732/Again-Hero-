@@ -1,0 +1,532 @@
+{
+  "character_id": "spore_mushroom_elite",
+  "name_ko": "포자버섯",
+  "form": "elite",
+  "intended_rarity": "common",
+  "status": "assets_only_unregistered",
+  "direction": "right",
+  "cell_size": [
+    96,
+    80
+  ],
+  "sheet_size": [
+    576,
+    400
+  ],
+  "anchor": {
+    "center_x": 48,
+    "foot_y": 68
+  },
+  "columns": 6,
+  "rows": 5,
+  "animations": {
+    "idle": {
+      "fps": 6,
+      "loop": true,
+      "frames": [
+        "frames/idle_01.png",
+        "frames/idle_02.png",
+        "frames/idle_03.png",
+        "frames/idle_04.png"
+      ]
+    },
+    "move": {
+      "fps": 10,
+      "loop": true,
+      "frames": [
+        "frames/move_01.png",
+        "frames/move_02.png",
+        "frames/move_03.png",
+        "frames/move_04.png",
+        "frames/move_05.png",
+        "frames/move_06.png"
+      ]
+    },
+    "attack": {
+      "fps": 14,
+      "loop": false,
+      "frames": [
+        "frames/attack_01.png",
+        "frames/attack_02.png",
+        "frames/attack_03.png",
+        "frames/attack_04.png",
+        "frames/attack_05.png",
+        "frames/attack_06.png"
+      ]
+    },
+    "hit": {
+      "fps": 12,
+      "loop": false,
+      "frames": [
+        "frames/hit_01.png",
+        "frames/hit_02.png",
+        "frames/hit_03.png"
+      ]
+    },
+    "death": {
+      "fps": 10,
+      "loop": false,
+      "frames": [
+        "frames/death_01.png",
+        "frames/death_02.png",
+        "frames/death_03.png",
+        "frames/death_04.png"
+      ]
+    }
+  },
+  "source": "spore_mushroom_elite_source.png",
+  "sheet": "spore_mushroom_elite_spritesheet.png",
+  "portrait": null,
+  "source_sha256": "1e4921e9eb414fad7ef51a2504513e439c2c2c99a5781f5c60acd8ea583422ed",
+  "design": "Broad layered deep violet cap, pale turquoise luminous spots, amber fungal collar, small clustered mushrooms growing on cap. Same walking mushroom anatomy.",
+  "generation": {
+    "tool": "image_gen",
+    "prompt": "Use case: stylized-concept. Asset type: production pixel-art animation spritesheet for Godot game Again Hero. Create ONE complete character animation sheet, transparent background. A perfectly regular grid of 6 columns and 5 rows, no lines. Recommended canvas 1536x1280. Each invisible equal cell has substantial empty transparent padding. Every character faces RIGHT in 3/4 side view. Maintain identical body size, head size, anatomy, colors and accessories across all frames, no camera zoom. Body central axis exactly at horizontal 45% of each cell; sole ground line 82% cell height. Character body occupies only about 45% cell height, leave wide margins for attack. True crisp low-resolution pixel art with approx32px body, solid colored pixel clusters, 3-tone shading, dark colored outlines, top-left light, no smooth painting, no antialiasing, no gradient, no ground shadow. Same visual language as the style reference, different character design. Draw only sprites, no labels/text/numbers/borders/UI.\nEXACT pose order: row1 columns1-4 IDLE 4 subtle breathing frames; columns5-6 EMPTY transparent. Row2 all6 MOVE in-place walking cycle, forward/back feet alternating and returning smoothly, never horizontal translation. Row3 all6 ATTACK anticipation, windup, peak strike toward RIGHT, follow through, recoil, return to stance; body and feet anchored, restrained local slash/spore/projectile effect only if appropriate, never extends outside cell. Row4 columns1-3 HIT subtle flinch then recover; columns4-6 EMPTY. Row5 columns1-4 DEATH progressive collapse to ground from standing to crumpled; ground stays same, final corpse remains visible; columns5-6 EMPTY. Exactly23 readable distinct frames, not 30. No duplicated identical frames. No separate portrait. Every cell isolated from all neighbors by generous fully transparent gutters. Preserve dark internal pixels, genuine alpha transparency.\nReference is NORMAL identity and animation layout. Create ELITE form, same anatomy, same size, new armor details. NORMAL: a walking ivory mushroom creature with a broad brick-red cap and large cream spots, two stubby feet, tiny dark eyes in the stem, short stubby arms. No mouth of teeth or weapons.\nELITE: Broad layered deep violet cap, pale turquoise luminous spots, amber fungal collar, small clustered mushrooms growing on cap. Same walking mushroom anatomy."
+  },
+  "normalization": {
+    "alpha_threshold": 128,
+    "resampling": "nearest",
+    "uniform_scale": 0.17391304347826086,
+    "rgb_keying": false,
+    "body_height_target": 32
+  },
+  "frames": [
+    {
+      "file": "frames/idle_01.png",
+      "source_crop": [
+        0,
+        0,
+        242,
+        272
+      ],
+      "source_body_center_x": 125.0,
+      "source_foot_y": 248,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        33,
+        65,
+        68
+      ],
+      "sha256": "e4e4b996e798f42dbe42e77d618bf9f427df17c33291b22c69e33012f4d087a8"
+    },
+    {
+      "file": "frames/idle_02.png",
+      "source_crop": [
+        242,
+        0,
+        464,
+        272
+      ],
+      "source_body_center_x": 105.0,
+      "source_foot_y": 248,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        34,
+        36,
+        66,
+        68
+      ],
+      "sha256": "a698bc690412ae19d801b45df6b5b0bfaa3930e27a831c99567f4c949ca75279"
+    },
+    {
+      "file": "frames/idle_03.png",
+      "source_crop": [
+        464,
+        0,
+        687,
+        272
+      ],
+      "source_body_center_x": 108.0,
+      "source_foot_y": 248,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        36,
+        65,
+        68
+      ],
+      "sha256": "b807bafbf3162c8072e866d73ccabe4cb7867d87e41a37a86df24a56700719db"
+    },
+    {
+      "file": "frames/idle_04.png",
+      "source_crop": [
+        687,
+        0,
+        944,
+        272
+      ],
+      "source_body_center_x": 104.0,
+      "source_foot_y": 248,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        38,
+        66,
+        68
+      ],
+      "sha256": "8a6cb67c136819b9d4be82415be98419d30a6a12d1b9be3574618578c380efdd"
+    },
+    {
+      "file": "frames/move_01.png",
+      "source_crop": [
+        0,
+        272,
+        244,
+        498
+      ],
+      "source_body_center_x": 125.0,
+      "source_foot_y": 208,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        36,
+        64,
+        68
+      ],
+      "sha256": "e317333da129d6900421239ce6fbcd8d04875e5a3320f47ab06e6eaa953d56fd"
+    },
+    {
+      "file": "frames/move_02.png",
+      "source_crop": [
+        244,
+        272,
+        471,
+        498
+      ],
+      "source_body_center_x": 109.0,
+      "source_foot_y": 207,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        37,
+        64,
+        68
+      ],
+      "sha256": "c71cb883e155d77996849590bc6480683e608229909073e0565062d03b232e8b"
+    },
+    {
+      "file": "frames/move_03.png",
+      "source_crop": [
+        471,
+        272,
+        693,
+        498
+      ],
+      "source_body_center_x": 107.0,
+      "source_foot_y": 208,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        36,
+        65,
+        68
+      ],
+      "sha256": "92b83d7fc1513794d482805f70356657f4d9923f0c0c4fa3c58551b28acca08b"
+    },
+    {
+      "file": "frames/move_04.png",
+      "source_crop": [
+        693,
+        272,
+        918,
+        498
+      ],
+      "source_body_center_x": 107.0,
+      "source_foot_y": 208,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        36,
+        64,
+        68
+      ],
+      "sha256": "60651e0ea6c8c03b6a338ce5d528d1f06135beefc2c9c6a7a6470ad1cbd8e9de"
+    },
+    {
+      "file": "frames/move_05.png",
+      "source_crop": [
+        918,
+        272,
+        1145,
+        498
+      ],
+      "source_body_center_x": 110.0,
+      "source_foot_y": 207,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        37,
+        65,
+        68
+      ],
+      "sha256": "f9d02b4bd1710e9a7aa5ac69530364cf6525ef21e97ed518aa20d6d516ada50a"
+    },
+    {
+      "file": "frames/move_06.png",
+      "source_crop": [
+        1145,
+        272,
+        1374,
+        498
+      ],
+      "source_body_center_x": 104.0,
+      "source_foot_y": 207,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        36,
+        65,
+        68
+      ],
+      "sha256": "24be02d332e8250e989b185a6cd9a1f7d0f785672cad489f4f82c6321e68a289"
+    },
+    {
+      "file": "frames/attack_01.png",
+      "source_crop": [
+        0,
+        498,
+        248,
+        737
+      ],
+      "source_body_center_x": 136.0,
+      "source_foot_y": 216,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        31,
+        37,
+        65,
+        68
+      ],
+      "sha256": "43e19ce51c38c7690a72e6c618b7dbc915bf244934f5a3dffec01277473ef537"
+    },
+    {
+      "file": "frames/attack_02.png",
+      "source_crop": [
+        248,
+        498,
+        455,
+        737
+      ],
+      "source_body_center_x": 101.0,
+      "source_foot_y": 216,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        33,
+        63,
+        68
+      ],
+      "sha256": "fcc36db938210199331cd7824f00a3d8feb91a655ac938772cb521a0ab7cc7c6"
+    },
+    {
+      "file": "frames/attack_03.png",
+      "source_crop": [
+        455,
+        498,
+        721,
+        737
+      ],
+      "source_body_center_x": 122.0,
+      "source_foot_y": 216,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        30,
+        38,
+        72,
+        68
+      ],
+      "sha256": "6d62be6179e22a6fe27c23c018322e3d558df4c7ceabf2970719ccbca290f224"
+    },
+    {
+      "file": "frames/attack_04.png",
+      "source_crop": [
+        721,
+        498,
+        935,
+        737
+      ],
+      "source_body_center_x": 95.0,
+      "source_foot_y": 219,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        35,
+        66,
+        68
+      ],
+      "sha256": "1a41467cdd722be891dd88310be2501f5eb732ab2d0d3ab55d17d35a93b29ae3"
+    },
+    {
+      "file": "frames/attack_05.png",
+      "source_crop": [
+        935,
+        498,
+        1148,
+        737
+      ],
+      "source_body_center_x": 101.0,
+      "source_foot_y": 219,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        36,
+        64,
+        68
+      ],
+      "sha256": "940e5490885f9abc224f935592ce52cf5c7973047fd8c2b9290e60295f8808e3"
+    },
+    {
+      "file": "frames/attack_06.png",
+      "source_crop": [
+        1148,
+        498,
+        1374,
+        737
+      ],
+      "source_body_center_x": 103.0,
+      "source_foot_y": 219,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        38,
+        64,
+        68
+      ],
+      "sha256": "f36a047a6754522846a406317d75171b0c6ddbe8d4aeeb8efac80b13cc3348eb"
+    },
+    {
+      "file": "frames/hit_01.png",
+      "source_crop": [
+        0,
+        737,
+        246,
+        948
+      ],
+      "source_body_center_x": 136.0,
+      "source_foot_y": 195,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        38,
+        64,
+        68
+      ],
+      "sha256": "cefcd7c1e22286b8731d77399f7dab3539e537e9d9e0c037250cf62eaab281a4"
+    },
+    {
+      "file": "frames/hit_02.png",
+      "source_crop": [
+        246,
+        737,
+        470,
+        948
+      ],
+      "source_body_center_x": 108.0,
+      "source_foot_y": 196,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        39,
+        64,
+        68
+      ],
+      "sha256": "a165ce9775abe9421884a834ddfbc253bb36025479cc1c7f3047a0f5f919dda2"
+    },
+    {
+      "file": "frames/hit_03.png",
+      "source_crop": [
+        470,
+        737,
+        720,
+        948
+      ],
+      "source_body_center_x": 106.0,
+      "source_foot_y": 198,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        34,
+        37,
+        65,
+        68
+      ],
+      "sha256": "02d8bfda2f68cb2f0d94b4a92c7865b2dc32deba632033ace668f08e87cff3d1"
+    },
+    {
+      "file": "frames/death_01.png",
+      "source_crop": [
+        0,
+        948,
+        247,
+        1145
+      ],
+      "source_body_center_x": 137.0,
+      "source_foot_y": 179,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        39,
+        64,
+        68
+      ],
+      "sha256": "fb1ee4443a943c29726c97008f89ecac66f9bcfbea40773a37888fc007ac0a8b"
+    },
+    {
+      "file": "frames/death_02.png",
+      "source_crop": [
+        247,
+        948,
+        481,
+        1145
+      ],
+      "source_body_center_x": 130.0,
+      "source_foot_y": 179,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        28,
+        44,
+        64,
+        68
+      ],
+      "sha256": "a9414597b320d3d7f88ccdeb0475a3da130d8c164908c48c0226fbaf7f1ffd1a"
+    },
+    {
+      "file": "frames/death_03.png",
+      "source_crop": [
+        481,
+        948,
+        711,
+        1145
+      ],
+      "source_body_center_x": 120.0,
+      "source_foot_y": 179,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        29,
+        49,
+        65,
+        68
+      ],
+      "sha256": "2bf25836760939429d334d958a13d48bc510808cfd0d1c9ac9010c8246443631"
+    },
+    {
+      "file": "frames/death_04.png",
+      "source_crop": [
+        711,
+        948,
+        967,
+        1145
+      ],
+      "source_body_center_x": 122.0,
+      "source_foot_y": 179,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        29,
+        53,
+        67,
+        68
+      ],
+      "sha256": "2558534d177d78ea46c0f339cf26c708b82181b3d8ede00c7ec86d87b9540518"
+    }
+  ]
+}

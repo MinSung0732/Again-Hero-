@@ -1,0 +1,532 @@
+{
+  "character_id": "rust_automaton",
+  "name_ko": "녹슨태엽병",
+  "form": "normal",
+  "intended_rarity": "common",
+  "status": "assets_only_unregistered",
+  "direction": "right",
+  "cell_size": [
+    96,
+    80
+  ],
+  "sheet_size": [
+    576,
+    400
+  ],
+  "anchor": {
+    "center_x": 48,
+    "foot_y": 68
+  },
+  "columns": 6,
+  "rows": 5,
+  "animations": {
+    "idle": {
+      "fps": 6,
+      "loop": true,
+      "frames": [
+        "frames/idle_01.png",
+        "frames/idle_02.png",
+        "frames/idle_03.png",
+        "frames/idle_04.png"
+      ]
+    },
+    "move": {
+      "fps": 10,
+      "loop": true,
+      "frames": [
+        "frames/move_01.png",
+        "frames/move_02.png",
+        "frames/move_03.png",
+        "frames/move_04.png",
+        "frames/move_05.png",
+        "frames/move_06.png"
+      ]
+    },
+    "attack": {
+      "fps": 14,
+      "loop": false,
+      "frames": [
+        "frames/attack_01.png",
+        "frames/attack_02.png",
+        "frames/attack_03.png",
+        "frames/attack_04.png",
+        "frames/attack_05.png",
+        "frames/attack_06.png"
+      ]
+    },
+    "hit": {
+      "fps": 12,
+      "loop": false,
+      "frames": [
+        "frames/hit_01.png",
+        "frames/hit_02.png",
+        "frames/hit_03.png"
+      ]
+    },
+    "death": {
+      "fps": 10,
+      "loop": false,
+      "frames": [
+        "frames/death_01.png",
+        "frames/death_02.png",
+        "frames/death_03.png",
+        "frames/death_04.png"
+      ]
+    }
+  },
+  "source": "rust_automaton_source.png",
+  "sheet": "rust_automaton_spritesheet.png",
+  "portrait": null,
+  "source_sha256": "150198fcd3881a61525e09b2e1c0e7aa4d784f62b5e9545762a8b50bd64b6327",
+  "design": "a squat two-head-tall round windup clockwork sentry with rusty orange tin torso, one pale cyan round eye, stout riveted metal legs, winding key on back, small wrench-shaped right arm.",
+  "generation": {
+    "tool": "image_gen",
+    "prompt": "Use case: stylized-concept. Asset type: production pixel-art animation spritesheet for Godot game Again Hero. Create ONE complete character animation sheet, transparent background. A perfectly regular grid of 6 columns and 5 rows, no lines. Recommended canvas 1536x1280. Each invisible equal cell has substantial empty transparent padding. Every character faces RIGHT in 3/4 side view. Maintain identical body size, head size, anatomy, colors and accessories across all frames, no camera zoom. Body central axis exactly at horizontal 45% of each cell; sole ground line 82% cell height. Character body occupies only about 45% cell height, leave wide margins for attack. True crisp low-resolution pixel art with approx32px body, solid colored pixel clusters, 3-tone shading, dark colored outlines, top-left light, no smooth painting, no antialiasing, no gradient, no ground shadow. Same visual language as the style reference, different character design. Draw only sprites, no labels/text/numbers/borders/UI.\nEXACT pose order: row1 columns1-4 IDLE 4 subtle breathing frames; columns5-6 EMPTY transparent. Row2 all6 MOVE in-place walking cycle, forward/back feet alternating and returning smoothly, never horizontal translation. Row3 all6 ATTACK anticipation, windup, peak strike toward RIGHT, follow through, recoil, return to stance; body and feet anchored, restrained local slash/spore/projectile effect only if appropriate, never extends outside cell. Row4 columns1-3 HIT subtle flinch then recover; columns4-6 EMPTY. Row5 columns1-4 DEATH progressive collapse to ground from standing to crumpled; ground stays same, final corpse remains visible; columns5-6 EMPTY. Exactly23 readable distinct frames, not 30. No duplicated identical frames. No separate portrait. Every cell isolated from all neighbors by generous fully transparent gutters. Preserve dark internal pixels, genuine alpha transparency.\nCHARACTER NORMAL FORM: a squat two-head-tall round windup clockwork sentry with rusty orange tin torso, one pale cyan round eye, stout riveted metal legs, winding key on back, small wrench-shaped right arm."
+  },
+  "normalization": {
+    "alpha_threshold": 128,
+    "resampling": "nearest",
+    "uniform_scale": 0.23129251700680273,
+    "rgb_keying": false,
+    "body_height_target": 34
+  },
+  "frames": [
+    {
+      "file": "frames/idle_01.png",
+      "source_crop": [
+        0,
+        0,
+        254,
+        229
+      ],
+      "source_body_center_x": 134.0,
+      "source_foot_y": 201,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        28,
+        34,
+        67,
+        68
+      ],
+      "sha256": "1134ee5550915e679d6fa055aa172e41962724e9c2b46c36ed581336c765bec0"
+    },
+    {
+      "file": "frames/idle_02.png",
+      "source_crop": [
+        254,
+        0,
+        509,
+        229
+      ],
+      "source_body_center_x": 132.0,
+      "source_foot_y": 202,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        26,
+        33,
+        67,
+        68
+      ],
+      "sha256": "cc09e3a13d8b64e34ca632c343908b4d1f92fae6b3e12a2b41ca7a42fa7226b6"
+    },
+    {
+      "file": "frames/idle_03.png",
+      "source_crop": [
+        509,
+        0,
+        766,
+        229
+      ],
+      "source_body_center_x": 134.0,
+      "source_foot_y": 201,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        26,
+        34,
+        67,
+        68
+      ],
+      "sha256": "35dd48eabe16c9113ccc2448f6594ffdb2de5a53a1efbb7014f2efc828745203"
+    },
+    {
+      "file": "frames/idle_04.png",
+      "source_crop": [
+        766,
+        0,
+        1051,
+        229
+      ],
+      "source_body_center_x": 137.0,
+      "source_foot_y": 202,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        26,
+        33,
+        67,
+        68
+      ],
+      "sha256": "582e254ee715778b9746a824a7b9fa420f617c9ece55cbe96cb4d144b3041a59"
+    },
+    {
+      "file": "frames/move_01.png",
+      "source_crop": [
+        0,
+        229,
+        263,
+        427
+      ],
+      "source_body_center_x": 140.0,
+      "source_foot_y": 180,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        33,
+        68,
+        68
+      ],
+      "sha256": "c99d14718df3fd757694204cec4a2761f540e2b2ec2ec76f843ecb1e153a67e8"
+    },
+    {
+      "file": "frames/move_02.png",
+      "source_crop": [
+        263,
+        229,
+        520,
+        427
+      ],
+      "source_body_center_x": 134.0,
+      "source_foot_y": 180,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        26,
+        32,
+        67,
+        68
+      ],
+      "sha256": "4964104f59a086dd8a312aa35f822acc7b286747f8f4795be23f4780e47f33bf"
+    },
+    {
+      "file": "frames/move_03.png",
+      "source_crop": [
+        520,
+        229,
+        765,
+        427
+      ],
+      "source_body_center_x": 130.0,
+      "source_foot_y": 180,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        33,
+        65,
+        68
+      ],
+      "sha256": "385fe882b704fa3086a02eadaddaca4a995eb86e6a3961081ed6b1644dbb2fe9"
+    },
+    {
+      "file": "frames/move_04.png",
+      "source_crop": [
+        765,
+        229,
+        1023,
+        427
+      ],
+      "source_body_center_x": 138.0,
+      "source_foot_y": 181,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        26,
+        33,
+        66,
+        68
+      ],
+      "sha256": "7163b455ffedb0cb9370bf8aa3abf81ca69b963087a76181ffbecdb6b25c1bc9"
+    },
+    {
+      "file": "frames/move_05.png",
+      "source_crop": [
+        1023,
+        229,
+        1276,
+        427
+      ],
+      "source_body_center_x": 137.0,
+      "source_foot_y": 181,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        26,
+        33,
+        67,
+        68
+      ],
+      "sha256": "a04524a91dc3e9b16630d50cf91678ab0af0c172635feca85e0641b359ab21bc"
+    },
+    {
+      "file": "frames/move_06.png",
+      "source_crop": [
+        1276,
+        229,
+        1536,
+        427
+      ],
+      "source_body_center_x": 132.0,
+      "source_foot_y": 180,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        26,
+        33,
+        68,
+        68
+      ],
+      "sha256": "900e500a238d8457421a8d1481813ea8caa3665a0fe38efd78faf433cc030f5c"
+    },
+    {
+      "file": "frames/attack_01.png",
+      "source_crop": [
+        0,
+        427,
+        267,
+        642
+      ],
+      "source_body_center_x": 140.0,
+      "source_foot_y": 191,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        28,
+        35,
+        71,
+        68
+      ],
+      "sha256": "595bd6e542aa849892edadd175afd09d9a2a223081167e3623bd3faa0bfe148d"
+    },
+    {
+      "file": "frames/attack_02.png",
+      "source_crop": [
+        267,
+        427,
+        499,
+        642
+      ],
+      "source_body_center_x": 118.0,
+      "source_foot_y": 191,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        28,
+        28,
+        66,
+        68
+      ],
+      "sha256": "5e150d24837a0f77a4a6ff224e67be4036da0b547fc981d414891b2925414f0b"
+    },
+    {
+      "file": "frames/attack_03.png",
+      "source_crop": [
+        499,
+        427,
+        794,
+        642
+      ],
+      "source_body_center_x": 152.0,
+      "source_foot_y": 191,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        22,
+        32,
+        78,
+        68
+      ],
+      "sha256": "2dafaa82bfeb5df92d0462d4ed6d4f24f08b093e4dd2e4d15537221136bee822"
+    },
+    {
+      "file": "frames/attack_04.png",
+      "source_crop": [
+        794,
+        427,
+        1045,
+        642
+      ],
+      "source_body_center_x": 114.0,
+      "source_foot_y": 191,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        25,
+        36,
+        75,
+        68
+      ],
+      "sha256": "9a0a2c566ec98b8a4d83eaf568d00b79aaeff1a38b2c6b01c427a215efb1e40c"
+    },
+    {
+      "file": "frames/attack_05.png",
+      "source_crop": [
+        1045,
+        427,
+        1297,
+        642
+      ],
+      "source_body_center_x": 115.0,
+      "source_foot_y": 191,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        26,
+        35,
+        72,
+        68
+      ],
+      "sha256": "58d94e91f5f4b12e704e4b212dab9caeea0ddf0367a14b96519a6e4b3684ca1e"
+    },
+    {
+      "file": "frames/attack_06.png",
+      "source_crop": [
+        1297,
+        427,
+        1536,
+        642
+      ],
+      "source_body_center_x": 119.0,
+      "source_foot_y": 191,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        33,
+        67,
+        68
+      ],
+      "sha256": "a87caa9444d5f5647a13ca8125d9da5b20214cd8b87a7c58fc2e2c2ff3cb8ece"
+    },
+    {
+      "file": "frames/hit_01.png",
+      "source_crop": [
+        0,
+        642,
+        280,
+        837
+      ],
+      "source_body_center_x": 149.0,
+      "source_foot_y": 174,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        34,
+        69,
+        68
+      ],
+      "sha256": "1d8004020ce300aafed02a85a6fb5f54699d840ad2c359c5eea595da89dd5de2"
+    },
+    {
+      "file": "frames/hit_02.png",
+      "source_crop": [
+        280,
+        642,
+        513,
+        837
+      ],
+      "source_body_center_x": 119.0,
+      "source_foot_y": 174,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        30,
+        38,
+        64,
+        68
+      ],
+      "sha256": "38cdaab935cbf20af8d59769e954da3fb0f0d850828217ef1b371d7f8eb950bf"
+    },
+    {
+      "file": "frames/hit_03.png",
+      "source_crop": [
+        513,
+        642,
+        793,
+        837
+      ],
+      "source_body_center_x": 131.0,
+      "source_foot_y": 174,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        28,
+        35,
+        68,
+        68
+      ],
+      "sha256": "a210641a2b62533942c33dd41438a38429657b2e6a641aacc27e2ae68e96ccee"
+    },
+    {
+      "file": "frames/death_01.png",
+      "source_crop": [
+        0,
+        837,
+        269,
+        1024
+      ],
+      "source_body_center_x": 150.0,
+      "source_foot_y": 160,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        29,
+        36,
+        65,
+        68
+      ],
+      "sha256": "3b1221552fa85bb40dbc7424be6016458de5835e365a052eed69f694643fd789"
+    },
+    {
+      "file": "frames/death_02.png",
+      "source_crop": [
+        269,
+        837,
+        516,
+        1024
+      ],
+      "source_body_center_x": 136.0,
+      "source_foot_y": 159,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        28,
+        39,
+        64,
+        68
+      ],
+      "sha256": "6057a39427d11ac282e4e74b4fa50f048a371ab15db0b6617110653743cbbfc2"
+    },
+    {
+      "file": "frames/death_03.png",
+      "source_crop": [
+        516,
+        837,
+        769,
+        1024
+      ],
+      "source_body_center_x": 135.0,
+      "source_foot_y": 159,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        42,
+        71,
+        68
+      ],
+      "sha256": "45fe01bb63492450d147c532a88c9426be0a8f9a0b842977b6565cf5afcc4894"
+    },
+    {
+      "file": "frames/death_04.png",
+      "source_crop": [
+        769,
+        837,
+        1061,
+        1024
+      ],
+      "source_body_center_x": 126.0,
+      "source_foot_y": 159,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        24,
+        44,
+        74,
+        68
+      ],
+      "sha256": "e0fc7346c119f8cfa4eb976c7ba403cfa28dfa201430962e8bde940c48417094"
+    }
+  ]
+}

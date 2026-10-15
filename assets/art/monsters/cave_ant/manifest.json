@@ -1,0 +1,532 @@
+{
+  "character_id": "cave_ant",
+  "name_ko": "동굴개미",
+  "form": "normal",
+  "intended_rarity": "common",
+  "status": "assets_only_unregistered",
+  "direction": "right",
+  "cell_size": [
+    96,
+    80
+  ],
+  "sheet_size": [
+    576,
+    400
+  ],
+  "anchor": {
+    "center_x": 48,
+    "foot_y": 68
+  },
+  "columns": 6,
+  "rows": 5,
+  "animations": {
+    "idle": {
+      "fps": 6,
+      "loop": true,
+      "frames": [
+        "frames/idle_01.png",
+        "frames/idle_02.png",
+        "frames/idle_03.png",
+        "frames/idle_04.png"
+      ]
+    },
+    "move": {
+      "fps": 10,
+      "loop": true,
+      "frames": [
+        "frames/move_01.png",
+        "frames/move_02.png",
+        "frames/move_03.png",
+        "frames/move_04.png",
+        "frames/move_05.png",
+        "frames/move_06.png"
+      ]
+    },
+    "attack": {
+      "fps": 14,
+      "loop": false,
+      "frames": [
+        "frames/attack_01.png",
+        "frames/attack_02.png",
+        "frames/attack_03.png",
+        "frames/attack_04.png",
+        "frames/attack_05.png",
+        "frames/attack_06.png"
+      ]
+    },
+    "hit": {
+      "fps": 12,
+      "loop": false,
+      "frames": [
+        "frames/hit_01.png",
+        "frames/hit_02.png",
+        "frames/hit_03.png"
+      ]
+    },
+    "death": {
+      "fps": 10,
+      "loop": false,
+      "frames": [
+        "frames/death_01.png",
+        "frames/death_02.png",
+        "frames/death_03.png",
+        "frames/death_04.png"
+      ]
+    }
+  },
+  "source": "cave_ant_source.png",
+  "sheet": "cave_ant_spritesheet.png",
+  "portrait": null,
+  "source_sha256": "ad67bb7e4048bd70b7f6f4aace8798630e914649faf334ee842db08c829114c9",
+  "design": "a squat indigo cave soldier ant, six legs, amber segmented abdomen, small ivory mandibles, two antennae, three clearly separated body segments. No weapons or clothes.",
+  "generation": {
+    "tool": "image_gen",
+    "prompt": "Use case: stylized-concept. Asset type: production pixel-art animation spritesheet for Godot game Again Hero. Create ONE complete character animation sheet, transparent background. A perfectly regular grid of 6 columns and 5 rows, no lines. Recommended canvas 1536x1280. Each invisible equal cell has substantial empty transparent padding. Every character faces RIGHT in 3/4 side view. Maintain identical body size, head size, anatomy, colors and accessories across all frames, no camera zoom. Body central axis exactly at horizontal 45% of each cell; sole ground line 82% cell height. Character body occupies only about 45% cell height, leave wide margins for attack. True crisp low-resolution pixel art with approx32px body, solid colored pixel clusters, 3-tone shading, dark colored outlines, top-left light, no smooth painting, no antialiasing, no gradient, no ground shadow. Same visual language as the style reference, different character design. Draw only sprites, no labels/text/numbers/borders/UI.\nEXACT pose order: row1 columns1-4 IDLE 4 subtle breathing frames; columns5-6 EMPTY transparent. Row2 all6 MOVE in-place walking cycle, forward/back feet alternating and returning smoothly, never horizontal translation. Row3 all6 ATTACK anticipation, windup, peak strike toward RIGHT, follow through, recoil, return to stance; body and feet anchored, restrained local slash/spore/projectile effect only if appropriate, never extends outside cell. Row4 columns1-3 HIT subtle flinch then recover; columns4-6 EMPTY. Row5 columns1-4 DEATH progressive collapse to ground from standing to crumpled; ground stays same, final corpse remains visible; columns5-6 EMPTY. Exactly23 readable distinct frames, not 30. No duplicated identical frames. No separate portrait. Every cell isolated from all neighbors by generous fully transparent gutters. Preserve dark internal pixels, genuine alpha transparency.\nCHARACTER NORMAL FORM: a squat indigo cave soldier ant, six legs, amber segmented abdomen, small ivory mandibles, two antennae, three clearly separated body segments. No weapons or clothes."
+  },
+  "normalization": {
+    "alpha_threshold": 128,
+    "resampling": "nearest",
+    "uniform_scale": 0.1935483870967742,
+    "rgb_keying": false,
+    "body_height_target": 24
+  },
+  "frames": [
+    {
+      "file": "frames/idle_01.png",
+      "source_crop": [
+        0,
+        0,
+        272,
+        244
+      ],
+      "source_body_center_x": 126.0,
+      "source_foot_y": 212,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        44,
+        71,
+        68
+      ],
+      "sha256": "881862765aa7e91531695d98a0ec6a40e868d9b55d0cd49bf40160c66c7ee5a1"
+    },
+    {
+      "file": "frames/idle_02.png",
+      "source_crop": [
+        272,
+        0,
+        527,
+        244
+      ],
+      "source_body_center_x": 111.0,
+      "source_foot_y": 212,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        44,
+        69,
+        68
+      ],
+      "sha256": "899fb3dfcf9153169c876a8b09d0d8d2b2de8ea4b6e00722fa7eff61f7daf02f"
+    },
+    {
+      "file": "frames/idle_03.png",
+      "source_crop": [
+        527,
+        0,
+        783,
+        244
+      ],
+      "source_body_center_x": 112.0,
+      "source_foot_y": 212,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        44,
+        70,
+        68
+      ],
+      "sha256": "e71ddbd19e1c3910eedf766da7225f426f81972abbb200256a9f5d77eb2f2d61"
+    },
+    {
+      "file": "frames/idle_04.png",
+      "source_crop": [
+        783,
+        0,
+        1063,
+        244
+      ],
+      "source_body_center_x": 112.0,
+      "source_foot_y": 212,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        44,
+        70,
+        68
+      ],
+      "sha256": "abb5c004724c45c88df35896f19ad0268a27e57f550bf1eb2d15984190cab5fb"
+    },
+    {
+      "file": "frames/move_01.png",
+      "source_crop": [
+        0,
+        244,
+        274,
+        434
+      ],
+      "source_body_center_x": 130.0,
+      "source_foot_y": 167,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        43,
+        71,
+        68
+      ],
+      "sha256": "d05ebbb39ae5ccc5a14c6ab020ab378b320735d32af862122aefdc387530d0c7"
+    },
+    {
+      "file": "frames/move_02.png",
+      "source_crop": [
+        274,
+        244,
+        537,
+        434
+      ],
+      "source_body_center_x": 114.0,
+      "source_foot_y": 167,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        31,
+        41,
+        72,
+        68
+      ],
+      "sha256": "f5f518f8cecfb75b79b5a4b8c8dc4f921ef2fd30abdc51aa7048901ed3ceca6b"
+    },
+    {
+      "file": "frames/move_03.png",
+      "source_crop": [
+        537,
+        244,
+        786,
+        434
+      ],
+      "source_body_center_x": 108.0,
+      "source_foot_y": 167,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        43,
+        70,
+        68
+      ],
+      "sha256": "16bb147ef87f64020784f0f79c3f0df1a50844487acc249c0a82ce3b3160d4ba"
+    },
+    {
+      "file": "frames/move_04.png",
+      "source_crop": [
+        786,
+        244,
+        1040,
+        434
+      ],
+      "source_body_center_x": 108.0,
+      "source_foot_y": 167,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        41,
+        70,
+        68
+      ],
+      "sha256": "1f7ac8e6285df066337ee5d06491f4c906997240253a3bc7f296a89508b29802"
+    },
+    {
+      "file": "frames/move_05.png",
+      "source_crop": [
+        1040,
+        244,
+        1295,
+        434
+      ],
+      "source_body_center_x": 110.0,
+      "source_foot_y": 167,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        41,
+        70,
+        68
+      ],
+      "sha256": "94dd906a98a067e3f38d4d4b0ca6025e49d7d17f1b138407b254d94be2a7aa03"
+    },
+    {
+      "file": "frames/move_06.png",
+      "source_crop": [
+        1295,
+        244,
+        1536,
+        434
+      ],
+      "source_body_center_x": 110.0,
+      "source_foot_y": 167,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        41,
+        70,
+        68
+      ],
+      "sha256": "4f30d070608610b73590b77296049b116d80afcbd231cef354a00ff69e222914"
+    },
+    {
+      "file": "frames/attack_01.png",
+      "source_crop": [
+        0,
+        434,
+        286,
+        637
+      ],
+      "source_body_center_x": 145.0,
+      "source_foot_y": 176,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        30,
+        45,
+        70,
+        68
+      ],
+      "sha256": "ecfe89e5b93873f4f0c427021ee8bdccaa798614fb6619c8dc87e5731eac97d4"
+    },
+    {
+      "file": "frames/attack_02.png",
+      "source_crop": [
+        286,
+        434,
+        524,
+        637
+      ],
+      "source_body_center_x": 104.0,
+      "source_foot_y": 177,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        40,
+        69,
+        68
+      ],
+      "sha256": "daf8c03d0c3eb3fc8fa07b4987bc6e2100c69979960f1f1224ae36a78336f739"
+    },
+    {
+      "file": "frames/attack_03.png",
+      "source_crop": [
+        524,
+        434,
+        798,
+        637
+      ],
+      "source_body_center_x": 135.0,
+      "source_foot_y": 177,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        41,
+        73,
+        68
+      ],
+      "sha256": "d1c7d09a7e9fd878030f46e6d9697987716dcd2eb8474b8a7d65c0385822a1aa"
+    },
+    {
+      "file": "frames/attack_04.png",
+      "source_crop": [
+        798,
+        434,
+        1048,
+        637
+      ],
+      "source_body_center_x": 94.0,
+      "source_foot_y": 177,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        43,
+        74,
+        68
+      ],
+      "sha256": "b7ca4becd6a07fb5672dcdfb674e8e840b6c65797739164a5bc1962b427cdf02"
+    },
+    {
+      "file": "frames/attack_05.png",
+      "source_crop": [
+        1048,
+        434,
+        1298,
+        637
+      ],
+      "source_body_center_x": 104.0,
+      "source_foot_y": 179,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        38,
+        70,
+        68
+      ],
+      "sha256": "8f8d20846742859f6c5b8d76a36060ac374b9d88f9a04e89a0b90d14637357e3"
+    },
+    {
+      "file": "frames/attack_06.png",
+      "source_crop": [
+        1298,
+        434,
+        1536,
+        637
+      ],
+      "source_body_center_x": 108.0,
+      "source_foot_y": 177,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        43,
+        69,
+        68
+      ],
+      "sha256": "7890607056462f52f317c492cca1556678b153d766469931579c15842a6b6c62"
+    },
+    {
+      "file": "frames/hit_01.png",
+      "source_crop": [
+        0,
+        637,
+        260,
+        843
+      ],
+      "source_body_center_x": 135.0,
+      "source_foot_y": 172,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        40,
+        63,
+        68
+      ],
+      "sha256": "6dec7bce06547069fc08f9c7fc38c9a23287de9b9831fc5ee6f057c40275d1dd"
+    },
+    {
+      "file": "frames/hit_02.png",
+      "source_crop": [
+        260,
+        637,
+        531,
+        843
+      ],
+      "source_body_center_x": 134.0,
+      "source_foot_y": 172,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        31,
+        49,
+        68,
+        68
+      ],
+      "sha256": "a023b545042ec9893cbd5fd44e0c78c810e0c82872410dd614fe80729548e70e"
+    },
+    {
+      "file": "frames/hit_03.png",
+      "source_crop": [
+        531,
+        637,
+        806,
+        843
+      ],
+      "source_body_center_x": 108.0,
+      "source_foot_y": 172,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        33,
+        44,
+        70,
+        68
+      ],
+      "sha256": "e0f9b1e91cba640d2162b0d5ab4a191e744db05ca6dc25afdcdb63a85728020d"
+    },
+    {
+      "file": "frames/death_01.png",
+      "source_crop": [
+        0,
+        843,
+        276,
+        1024
+      ],
+      "source_body_center_x": 134.0,
+      "source_foot_y": 150,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        32,
+        46,
+        70,
+        68
+      ],
+      "sha256": "1a56e4cdb218eaf49b661fe9109f607b0a0c6887b323ade8dd6fba0897c6788e"
+    },
+    {
+      "file": "frames/death_02.png",
+      "source_crop": [
+        276,
+        843,
+        524,
+        1024
+      ],
+      "source_body_center_x": 117.0,
+      "source_foot_y": 150,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        30,
+        51,
+        67,
+        68
+      ],
+      "sha256": "b6b06bda5b84a488858f9d2a7dcd0cffcbd6138ed4d6f75c0381d1de328af549"
+    },
+    {
+      "file": "frames/death_03.png",
+      "source_crop": [
+        524,
+        843,
+        775,
+        1024
+      ],
+      "source_body_center_x": 128.0,
+      "source_foot_y": 150,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        29,
+        54,
+        69,
+        68
+      ],
+      "sha256": "07ac7412edc2a605fdbb8facac0cb51466f40a3838819088e84c95488d44b56f"
+    },
+    {
+      "file": "frames/death_04.png",
+      "source_crop": [
+        775,
+        843,
+        1064,
+        1024
+      ],
+      "source_body_center_x": 122.0,
+      "source_foot_y": 150,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        55,
+        70,
+        68
+      ],
+      "sha256": "0484c7f2f4ced4fc93daf90d0996e1b06a9c776eef23db0ae08f503a468dfc8f"
+    }
+  ]
+}

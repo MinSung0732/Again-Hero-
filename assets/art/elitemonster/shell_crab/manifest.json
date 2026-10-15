@@ -1,0 +1,532 @@
+{
+  "character_id": "shell_crab_elite",
+  "name_ko": "돌껍질소라게",
+  "form": "elite",
+  "intended_rarity": "common",
+  "status": "assets_only_unregistered",
+  "direction": "right",
+  "cell_size": [
+    96,
+    80
+  ],
+  "sheet_size": [
+    576,
+    400
+  ],
+  "anchor": {
+    "center_x": 48,
+    "foot_y": 68
+  },
+  "columns": 6,
+  "rows": 5,
+  "animations": {
+    "idle": {
+      "fps": 6,
+      "loop": true,
+      "frames": [
+        "frames/idle_01.png",
+        "frames/idle_02.png",
+        "frames/idle_03.png",
+        "frames/idle_04.png"
+      ]
+    },
+    "move": {
+      "fps": 10,
+      "loop": true,
+      "frames": [
+        "frames/move_01.png",
+        "frames/move_02.png",
+        "frames/move_03.png",
+        "frames/move_04.png",
+        "frames/move_05.png",
+        "frames/move_06.png"
+      ]
+    },
+    "attack": {
+      "fps": 14,
+      "loop": false,
+      "frames": [
+        "frames/attack_01.png",
+        "frames/attack_02.png",
+        "frames/attack_03.png",
+        "frames/attack_04.png",
+        "frames/attack_05.png",
+        "frames/attack_06.png"
+      ]
+    },
+    "hit": {
+      "fps": 12,
+      "loop": false,
+      "frames": [
+        "frames/hit_01.png",
+        "frames/hit_02.png",
+        "frames/hit_03.png"
+      ]
+    },
+    "death": {
+      "fps": 10,
+      "loop": false,
+      "frames": [
+        "frames/death_01.png",
+        "frames/death_02.png",
+        "frames/death_03.png",
+        "frames/death_04.png"
+      ]
+    }
+  },
+  "source": "shell_crab_elite_source.png",
+  "sheet": "shell_crab_elite_spritesheet.png",
+  "portrait": null,
+  "source_sha256": "6a20f0efb1348ea1ff81be2124c6124d6c6ee2ac4b79d028ad51c8e76d2c7cb1",
+  "design": "Dark basalt spiral shell with copper ore seams and three blunt stone spikes, one oversized brass-orange claw. Same hermit crab anatomy.",
+  "generation": {
+    "tool": "image_gen",
+    "prompt": "Use case: stylized-concept. Asset type: production pixel-art animation spritesheet for Godot game Again Hero. Create ONE complete character animation sheet, transparent background. A perfectly regular grid of 6 columns and 5 rows, no lines. Recommended canvas 1536x1280. Each invisible equal cell has substantial empty transparent padding. Every character faces RIGHT in 3/4 side view. Maintain identical body size, head size, anatomy, colors and accessories across all frames, no camera zoom. Body central axis exactly at horizontal 45% of each cell; sole ground line 82% cell height. Character body occupies only about 45% cell height, leave wide margins for attack. True crisp low-resolution pixel art with approx32px body, solid colored pixel clusters, 3-tone shading, dark colored outlines, top-left light, no smooth painting, no antialiasing, no gradient, no ground shadow. Same visual language as the style reference, different character design. Draw only sprites, no labels/text/numbers/borders/UI.\nEXACT pose order: row1 columns1-4 IDLE 4 subtle breathing frames; columns5-6 EMPTY transparent. Row2 all6 MOVE in-place walking cycle, forward/back feet alternating and returning smoothly, never horizontal translation. Row3 all6 ATTACK anticipation, windup, peak strike toward RIGHT, follow through, recoil, return to stance; body and feet anchored, restrained local slash/spore/projectile effect only if appropriate, never extends outside cell. Row4 columns1-3 HIT subtle flinch then recover; columns4-6 EMPTY. Row5 columns1-4 DEATH progressive collapse to ground from standing to crumpled; ground stays same, final corpse remains visible; columns5-6 EMPTY. Exactly23 readable distinct frames, not 30. No duplicated identical frames. No separate portrait. Every cell isolated from all neighbors by generous fully transparent gutters. Preserve dark internal pixels, genuine alpha transparency.\nReference is NORMAL identity and animation layout. Create ELITE form, same anatomy, same size, new armor details. NORMAL: a small orange hermit crab with two asymmetrical pincers, four visible short legs and a chunky gray stone spiral shell with moss patches, two eye stalks.\nELITE: Dark basalt spiral shell with copper ore seams and three blunt stone spikes, one oversized brass-orange claw. Same hermit crab anatomy."
+  },
+  "normalization": {
+    "alpha_threshold": 128,
+    "resampling": "nearest",
+    "uniform_scale": 0.2153846153846154,
+    "rgb_keying": false,
+    "body_height_target": 28
+  },
+  "frames": [
+    {
+      "file": "frames/idle_01.png",
+      "source_crop": [
+        0,
+        0,
+        270,
+        238
+      ],
+      "source_body_center_x": 139.0,
+      "source_foot_y": 210,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        41,
+        70,
+        68
+      ],
+      "sha256": "ffd007af15d014b94328198d70dd2e38f5639c409f8d3e29e8269c4ff2fa81b8"
+    },
+    {
+      "file": "frames/idle_02.png",
+      "source_crop": [
+        270,
+        0,
+        525,
+        238
+      ],
+      "source_body_center_x": 125.0,
+      "source_foot_y": 210,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        40,
+        71,
+        68
+      ],
+      "sha256": "95cb80cb50e4e4dea5d59b57a1d0d74bfebea306a3c48ad10db798060ca1173a"
+    },
+    {
+      "file": "frames/idle_03.png",
+      "source_crop": [
+        525,
+        0,
+        777,
+        238
+      ],
+      "source_body_center_x": 119.0,
+      "source_foot_y": 210,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        40,
+        70,
+        68
+      ],
+      "sha256": "f7e95e173dee5e7ca50b91c5f490ee2a4f5b0fa01b20d9e648daf131e44d066c"
+    },
+    {
+      "file": "frames/idle_04.png",
+      "source_crop": [
+        777,
+        0,
+        1060,
+        238
+      ],
+      "source_body_center_x": 125.0,
+      "source_foot_y": 210,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        28,
+        40,
+        70,
+        68
+      ],
+      "sha256": "4c0ef70b5ea00561474093b6f6240bc866bc2046c6ef8009dabe050914a274d4"
+    },
+    {
+      "file": "frames/move_01.png",
+      "source_crop": [
+        0,
+        238,
+        271,
+        427
+      ],
+      "source_body_center_x": 139.0,
+      "source_foot_y": 163,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        39,
+        70,
+        68
+      ],
+      "sha256": "719bdeb22c0ae40871c425427f6939db2586a97ff17b7e1bb634da7099cd2fa3"
+    },
+    {
+      "file": "frames/move_02.png",
+      "source_crop": [
+        271,
+        238,
+        527,
+        427
+      ],
+      "source_body_center_x": 124.0,
+      "source_foot_y": 162,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        40,
+        70,
+        68
+      ],
+      "sha256": "784c1aec2d09bcd6d45aa91db0955ea35e72a2a6128f54cfbc168e257c21cb50"
+    },
+    {
+      "file": "frames/move_03.png",
+      "source_crop": [
+        527,
+        238,
+        778,
+        427
+      ],
+      "source_body_center_x": 122.0,
+      "source_foot_y": 163,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        28,
+        39,
+        70,
+        68
+      ],
+      "sha256": "1b05567ab5b308c2401fea38aa5f5fb0a8a1a0b68b3e10037252b51d75866f93"
+    },
+    {
+      "file": "frames/move_04.png",
+      "source_crop": [
+        778,
+        238,
+        1027,
+        427
+      ],
+      "source_body_center_x": 122.0,
+      "source_foot_y": 164,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        28,
+        38,
+        71,
+        68
+      ],
+      "sha256": "5f89fbacc0a12fd97e21951a71a8ca77593993a93432b987aac2860e11cd2cb7"
+    },
+    {
+      "file": "frames/move_05.png",
+      "source_crop": [
+        1027,
+        238,
+        1281,
+        427
+      ],
+      "source_body_center_x": 121.0,
+      "source_foot_y": 161,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        40,
+        71,
+        68
+      ],
+      "sha256": "bfaae216cad81dd2e342318a082779492feecb248cbd4ee26d414e2f2587e773"
+    },
+    {
+      "file": "frames/move_06.png",
+      "source_crop": [
+        1281,
+        238,
+        1536,
+        427
+      ],
+      "source_body_center_x": 125.0,
+      "source_foot_y": 163,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        40,
+        70,
+        68
+      ],
+      "sha256": "1d3b30411fa9264ed8dfdd8cf61adc44e5b2d339126c3aff1f3311f0218697cc"
+    },
+    {
+      "file": "frames/attack_01.png",
+      "source_crop": [
+        0,
+        427,
+        267,
+        632
+      ],
+      "source_body_center_x": 142.0,
+      "source_foot_y": 170,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        42,
+        70,
+        68
+      ],
+      "sha256": "1c7a10eaa15b8589a21da2f4bf3e6667251dd57d839b41dd5ea80560933b36e1"
+    },
+    {
+      "file": "frames/attack_02.png",
+      "source_crop": [
+        267,
+        427,
+        502,
+        632
+      ],
+      "source_body_center_x": 115.0,
+      "source_foot_y": 170,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        28,
+        37,
+        69,
+        68
+      ],
+      "sha256": "c7388637ab95304f8a50538f4dc214689fa5ab64f78defa05ffd02e91a3e3ef1"
+    },
+    {
+      "file": "frames/attack_03.png",
+      "source_crop": [
+        502,
+        427,
+        785,
+        632
+      ],
+      "source_body_center_x": 133.0,
+      "source_foot_y": 169,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        24,
+        39,
+        77,
+        68
+      ],
+      "sha256": "1a8cfc5117fed72652a0de67ff90e6306a9a0e0d382baf5dd62618a1fbf261f1"
+    },
+    {
+      "file": "frames/attack_04.png",
+      "source_crop": [
+        785,
+        427,
+        1042,
+        632
+      ],
+      "source_body_center_x": 115.0,
+      "source_foot_y": 176,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        26,
+        38,
+        75,
+        68
+      ],
+      "sha256": "3db3127b0b0638794bfeb1f6255be203192d968118d48b2f3cb3c9fcf6b45dd3"
+    },
+    {
+      "file": "frames/attack_05.png",
+      "source_crop": [
+        1042,
+        427,
+        1281,
+        632
+      ],
+      "source_body_center_x": 110.0,
+      "source_foot_y": 182,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        38,
+        71,
+        68
+      ],
+      "sha256": "537331ea4b114f5463dac901320cb0fd3499d3e1c1fb6318c347c970778bdc5b"
+    },
+    {
+      "file": "frames/attack_06.png",
+      "source_crop": [
+        1281,
+        427,
+        1536,
+        632
+      ],
+      "source_body_center_x": 114.0,
+      "source_foot_y": 169,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        28,
+        41,
+        70,
+        68
+      ],
+      "sha256": "6c07a61414ff12c441ea5a9a4a0ed40639b931629dd84acb01c0982c214cac8d"
+    },
+    {
+      "file": "frames/hit_01.png",
+      "source_crop": [
+        0,
+        632,
+        275,
+        821
+      ],
+      "source_body_center_x": 144.0,
+      "source_foot_y": 157,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        26,
+        39,
+        71,
+        68
+      ],
+      "sha256": "86a6dcdc7ec0708857a53a6a0ee606cf1a0c3b2c2f43a34e873fa33f2a4bf0d8"
+    },
+    {
+      "file": "frames/hit_02.png",
+      "source_crop": [
+        275,
+        632,
+        515,
+        821
+      ],
+      "source_body_center_x": 112.0,
+      "source_foot_y": 158,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        29,
+        42,
+        71,
+        68
+      ],
+      "sha256": "e9aa00996e72566ecb8c865ceed375c0aabd5bef0b91ed7f7b723a59e1709216"
+    },
+    {
+      "file": "frames/hit_03.png",
+      "source_crop": [
+        515,
+        632,
+        799,
+        821
+      ],
+      "source_body_center_x": 121.0,
+      "source_foot_y": 157,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        27,
+        40,
+        70,
+        68
+      ],
+      "sha256": "da9bdd676a64e25aba8826612f641a81cb6687872257f7f70cd42de7a57cd838"
+    },
+    {
+      "file": "frames/death_01.png",
+      "source_crop": [
+        0,
+        821,
+        270,
+        1024
+      ],
+      "source_body_center_x": 140.0,
+      "source_foot_y": 164,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        28,
+        39,
+        70,
+        68
+      ],
+      "sha256": "6c499b9df9806c357e2078f22da3aeeb0cdbe43313973f5a917964c2af485f5a"
+    },
+    {
+      "file": "frames/death_02.png",
+      "source_crop": [
+        270,
+        821,
+        525,
+        1024
+      ],
+      "source_body_center_x": 117.0,
+      "source_foot_y": 164,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        29,
+        42,
+        75,
+        68
+      ],
+      "sha256": "b2fb22debb0751fd9cee5d024a2d76d68c562f29b99645b90f0742c7b4468710"
+    },
+    {
+      "file": "frames/death_03.png",
+      "source_crop": [
+        525,
+        821,
+        770,
+        1024
+      ],
+      "source_body_center_x": 108.0,
+      "source_foot_y": 165,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        28,
+        44,
+        74,
+        68
+      ],
+      "sha256": "43300b20558c09f5a38dbc16e736dbe2bbf35c3ca4e7e395f913b8633c2cf3c2"
+    },
+    {
+      "file": "frames/death_04.png",
+      "source_crop": [
+        770,
+        821,
+        1064,
+        1024
+      ],
+      "source_body_center_x": 101.0,
+      "source_foot_y": 164,
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        30,
+        44,
+        78,
+        68
+      ],
+      "sha256": "81834de49f79ba9613b255dfcc632b39ea79bb818b6c4a2b8624ac67575085ef"
+    }
+  ]
+}
