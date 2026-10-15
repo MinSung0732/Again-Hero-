@@ -1,0 +1,101 @@
+hero	weapon_id	weapon	MAX_name	mechanic	description	secondary_ratio
+견습마도사	ranged_rookie_arcane_bolt	마력탄	왕복 유성포	return	마력포가 적을 관통한 뒤 용사에게 귀환하며 다시 벱니다.	0.55
+견습마도사	ranged_rookie_star_wand	별빛 지팡이	천체 순행진	relay_turret	설치한 별빛 정령이 2초마다 용사 곁으로 전이해 전선을 따라옵니다.	0.6
+견습마도사	ranged_rookie_magic_lance	마력 관통포	비전 십자포	cross	관통포 뒤 적의 위치에 십자 잔광이 예고 후 교차 타격합니다.	0.65
+견습마도사	ranged_rookie_rune_ring	비전 집중	별의 안식처	sanctuary	이동 성역과 별도로 시전 지점에 안식처를 남겨 안에서 회복하며 적을 공격합니다.	0.12
+견습마도사	ranged_rookie_pulse_staff	파동 지팡이	붕괴 공명진	reactive_zone	무작위 파동 지대가 적 접근 또는 소멸 시 한 번 더 붕괴합니다.	0.65
+견습마도사	ranged_rookie_barrier_book	마력 장벽	비전 역장 성전	counter	보호막이 피해를 흡수해 충전되면 적을 가르는 십자 반격을 방출합니다.	0.9
+견습마도사	ranged_rookie_sealing_bolt	봉인 마법구	삼중 봉인 핵	mark	동일 적에게 피해를 3회 주면 봉인 표식이 터져 주변 적까지 타격합니다.	0.75
+견습마도사	ranged_rookie_satellite_orbs	위성 마력구	공전과 역행의 위성계	orbit	안쪽과 바깥쪽 위성이 서로 반대로 공전해 접근 경로를 이중으로 막습니다.	0.6
+견습마도사	ranged_rookie_rune_ray	룬 분광봉	칠색 반사경	cross	룬 광선이 적 뒤에 남긴 거울에서 대각선 교차광이 발사됩니다.	0.65
+견습마도사	ranged_rookie_restoration_codex	안식의 마도서	안식의 귀환문	counter	보호막 흡수로 충전한 반격이 폭발하며 체력을 회복합니다.	0.9
+날렵한 용사	swift_hunter_dagger	쌍단검	왕복 그림자 육연검	return	연격과 함께 그림자 칼날을 보내 관통 후 귀환시키며 용사는 이동하지 않습니다.	0.55
+날렵한 용사	swift_hunter_throwing_knife	투척 단검	무한궤도 암살침	fork	단검 적중 시 주변 다른 적에게 추적 파편이 갈라져 날아갑니다.	0.45
+날렵한 용사	swift_hunter_shadow_wire	급습-암살	처형자의 잔영	reap	이 무기로 적을 처치하면 잔영 칼날이 다음 표적을 추격합니다.	0.65
+날렵한 용사	swift_hunter_poison_needle	독침	잠복한 만독진	reactive_zone	독침 지대가 적 접근에 반응해 한 번 독성 폭발을 일으킵니다.	0.65
+날렵한 용사	swift_hunter_moon_blade	난도질	월식의 나선검무	orbit	회전 칼날이 서로 다른 나선 반경을 오가며 안팎을 쓸어냅니다.	0.6
+날렵한 용사	swift_hunter_shadow_bomb	그림자 폭탄	추적 그림자 지뢰	mine	폭탄이 적 주변 두 지점에 잠복해 적 접근 또는 2.4초 뒤 폭발합니다.	0.6
+날렵한 용사	swift_hunter_execution_stiletto	처형 단도	죽음의 연쇄각인	mark	연격 3회 적중으로 처형 각인을 터뜨려 밀집 적을 함께 베어냅니다.	0.75
+날렵한 용사	swift_hunter_binding_wire	그림자 결박줄	교차하는 처형선	cross	결박한 적 위치를 두 그림자 선이 예고 후 교차 절단합니다.	0.65
+날렵한 용사	swift_hunter_smoke_mantle	연막 망토	반격하는 그림자막	counter	보호막 흡수로 충전하면 잔영 칼날이 전진·귀환하며 반격합니다.	0.9
+날렵한 용사	swift_hunter_venom_steps	독무 발톱	독무 매설길	detonating_trail	남겨둔 독무가 갱신되거나 소멸할 때 폭발해 추격하는 적을 벌합니다.	0.65
+검과 방패의 용사	sword_shield_hero_longsword	수호 장검	왕의 귀환검	return	검격과 함께 날린 수호검이 관통 후 귀환하며 퇴로까지 지킵니다.	0.55
+검과 방패의 용사	sword_shield_hero_piercing_spear	검방 돌격 · 창격	십자 성벽 관통창	cross	창격의 종착점에서 수직으로 교차하는 후속 성창이 펼쳐집니다.	0.65
+검과 방패의 용사	sword_shield_hero_aegis	막기	불굴의 반격성채	counter	막아낸 피해로 충전한 보호막이 십자 반격을 방출합니다.	0.9
+검과 방패의 용사	sword_shield_hero_shield_hammer	방패 망치	지각 파열진	reactive_zone	대지 충격 지대가 적의 접근에 반응해 파열됩니다.	0.65
+검과 방패의 용사	sword_shield_hero_blade_ring	회전 검륜	성곽의 이중 검륜	orbit	내측·외측 검륜이 반대로 돌아 가까운 적과 바깥 적을 나눠 막습니다.	0.6
+검과 방패의 용사	sword_shield_hero_battle_banner	전장의 깃발	왕국의 전진거점	sanctuary	시전 위치에 고정 거점을 남겨 그 안에서 회복하며 주변 적을 공격합니다.	0.12
+검과 방패의 용사	sword_shield_hero_oath_blade	맹세의 검	끝나지 않는 맹세	mark	같은 적을 3회 베면 맹세의 문장이 폭발해 주변 적에게 전해집니다.	0.75
+검과 방패의 용사	sword_shield_hero_ward_crossbow	수호 쇠뇌	호위하는 성벽쇠뇌	relay_turret	쇠뇌가 2초마다 용사 곁으로 재배치되어 이동 중에도 화망을 유지합니다.	0.6
+검과 방패의 용사	sword_shield_hero_sanctuary_shield	성역 방패	공성 반격성역	counter	보호막 흡수로 충전한 성역이 주변 적에게 반격 파동을 방출합니다.	0.9
+검과 방패의 용사	sword_shield_hero_rally_standard	결집 군기	집결의 성역로	sanctuary	회복 후 남은 군기 거점 안에 머무르면 회복과 교차 사격을 받습니다.	0.12
+권총의 용사	pistol_hero_revolver	육연발 권총	현상금 사냥꾼의 귀환탄	return	육연발과 함께 발사한 회전 탄환이 전진·귀환하며 사선을 왕복합니다.	0.55
+권총의 용사	pistol_hero_shotgun	실린더 스트라이크	교차 사선	cross	산탄 공격 뒤 표적 위치에 교차 사격을 예고해 도주로를 압박합니다.	0.65
+권총의 용사	pistol_hero_rifle	데드아이	데드아이 사냥표식	mark	동일 표적 3회 적중 시 조준 표식이 폭발하여 주변까지 파쇄합니다.	0.75
+권총의 용사	pistol_hero_ricochet	도탄 권총	무한도약 도탄쌍권총	fork	연결 사격의 적중점에서 다른 표적을 노리는 추적탄이 갈라집니다.	0.45
+권총의 용사	pistol_hero_grenade	충격 수류탄	접근 감지 융단폭격	reactive_zone	폭격 지대마다 접근 감지 신관이 추가되어 한 번 더 폭발합니다.	0.65
+권총의 용사	pistol_hero_powder_bomb	화약 폭탄	연쇄 점화 화약로	detonating_trail	이동 경로에 남긴 화약이 갱신·소멸 시 폭발합니다.	0.65
+권총의 용사	pistol_hero_twin_pistols	쌍열 권총	쌍성 추적탄	fork	쌍열 사격 적중점에서 두 추적탄이 주변 적을 나눠 쫓습니다.	0.45
+권총의 용사	pistol_hero_shrapnel_round	파쇄 탄환	파열 탄흔	mark	3회 적중한 표적의 탄흔이 터져 주변 적까지 파쇄합니다.	0.75
+권총의 용사	pistol_hero_suppressor	제압 기관권총	기동 기관포대	relay_turret	거치 기관포가 2초마다 용사 곁으로 전이해 전진 사격을 지원합니다.	0.6
+권총의 용사	pistol_hero_smoke_canister	연막 유탄	연막의 매복지뢰	mine	연막 공격과 함께 지뢰를 남겨 접근한 적을 기습합니다.	0.6
+대마법 용사	archmage_hero_fire_staff	원소 지팡이	삼중 화염낙인	mark	기본 공격에 각인탄이 함께 발사되며, 각인탄 3회 적중으로 주변까지 폭발합니다.	0.75
+대마법 용사	archmage_hero_ice_scepter	아이스볼트	서리 봉쇄진	mine	냉기 공격과 함께 표적 주변에 잠복 빙결폭뢰를 배치합니다.	0.6
+대마법 용사	archmage_hero_lightning_rod	체인대거	도약하는 폭뢰	fork	번개 적중점에서 추적 전격탄이 다른 적에게 분열합니다.	0.45
+대마법 용사	archmage_hero_earth_staff	땅의 가시	분출하는 지각핵	reactive_zone	대지 가시 지대가 적 접근 또는 소멸 시 다시 분출합니다.	0.65
+대마법 용사	archmage_hero_storm_orb	폭풍	태풍의 눈	orbit	폭풍 반경이 주기적으로 팽창·수축해 주변을 쓸어냅니다.	0.6
+대마법 용사	archmage_hero_prism_wand	신성력	신성 분광격자	cross	신성 지대와 함께 표적 위에 대각선 분광격자가 펼쳐집니다.	0.65
+대마법 용사	archmage_hero_lava_focus	용암 촉매봉	용암 붕괴로	detonating_trail	남겨둔 용암이 갱신·소멸할 때 분출해 추격자를 폭격합니다.	0.65
+대마법 용사	archmage_hero_frost_moons	빙결 위성	빙월의 이중 공전	orbit	두 궤도의 빙월이 반대로 회전하며 안팎의 적을 막습니다.	0.6
+대마법 용사	archmage_hero_gale_prism	질풍 프리즘	회절하는 폭풍거울	cross	질풍 광선의 종착점에서 대각선 교차광이 재발사됩니다.	0.65
+대마법 용사	archmage_hero_sunfire_tome	태양화염서	따라오는 태양제단	relay_turret	태양 설치체가 2초마다 용사 곁으로 전이하며 적을 추적 사격합니다.	0.6
+광기의 용사	madness_hero_blood_sword	혈검술 제1식	귀환하는 혈월검	return	혈검 연격에 관통·귀환하는 혈월 칼날이 더해집니다.	0.55
+광기의 용사	madness_hero_blood_lance	혈검술 제2식	핏빛 잠복송곳	mine	혈검 지대와 함께 표적 양옆에 잠복 혈흔폭뢰를 배치합니다.	0.6
+광기의 용사	madness_hero_blood_wheel	핏빛 검륜	혈해 나선검륜	orbit	혈륜이 각기 다른 나선 반경을 오가며 적을 베어냅니다.	0.6
+광기의 용사	madness_hero_blood_burst	혈검술 제4식	혈흔 추격폭뢰	mine	폭발 뒤 잠복 혈흔을 남겨 뒤늦게 접근하는 적을 다시 공격합니다.	0.6
+광기의 용사	madness_hero_drain_blade	흡혈 검	피의 처형연쇄	reap	흡혈검으로 적을 처치하면 잔영이 다음 적을 왕복 추격합니다.	0.65
+광기의 용사	madness_hero_heart_chain	심장 사슬	살아있는 심장포대	relay_turret	심장 설치체가 용사 곁으로 전이해 이동 중에도 공격을 이어갑니다.	0.6
+광기의 용사	madness_hero_desperate_cleaver	결사의 참수검	참수의 연쇄표식	mark	3회 타격으로 참수 각인을 폭발시켜 주위 적까지 베어냅니다.	0.75
+광기의 용사	madness_hero_vampire_fang	흡혈 송곳니	포식자의 추적송곳	fork	적중한 송곳니에서 다른 적을 쫓는 추적 송곳이 갈라집니다.	0.45
+광기의 용사	madness_hero_blood_thorns	혈흔 가시	폭주하는 혈흔지뢰	detonating_trail	혈흔 가시가 갱신·소멸할 때 폭발해 퇴로를 지킵니다.	0.65
+광기의 용사	madness_hero_blood_aegis	핏빛 수호구	파열하는 마혈갑주	counter	보호막 흡수로 충전하면 십자 혈검 반격과 회복이 발동합니다.	0.9
+화학의 용사	chemical_hero_acid_vial	산성 약병	반응성 왕수지뢰	mine	산성 지대와 함께 접근 감지 왕수폭뢰를 배치합니다.	0.6
+화학의 용사	chemical_hero_poison_flask	촉매 혼합장	삼중 촉매폭주장	reactive_zone	촉매 지대가 적 접근·소멸에 반응해 한 번 더 폭주합니다.	0.65
+화학의 용사	chemical_hero_cryo_vial	냉각 약병	역상 빙결폭뢰	mine	냉각 공격과 함께 잠복 폭뢰를 남겨 뒤늦은 접근을 막습니다.	0.6
+화학의 용사	chemical_hero_reaction_bomb	오늘도 실팬가!	시한부 연금폭발	cross	실패한 혼합장 위에서 지연 교차 폭발이 일어납니다.	0.65
+화학의 용사	chemical_hero_acid_cannon	압축 산성포	회절 왕수포	cross	산성포 뒤 표적 위치에 수직 교차하는 산성 광선이 발사됩니다.	0.65
+화학의 용사	chemical_hero_life_elixir	현자의 비약	현자의 연금거점	sanctuary	비약이 고정 회복 거점을 남겨 그 안에서 싸우는 동안 회복합니다.	0.12
+화학의 용사	chemical_hero_caustic_boots	부식 분무기	부식성 연쇄기폭로	detonating_trail	분무 경로가 갱신·소멸 시 폭발하며 추격자를 공격합니다.	0.65
+화학의 용사	chemical_hero_catalyst_wire	촉매 도선	연쇄 촉매각인	mark	동일 적 3회 적중으로 촉매 표식을 폭발시킵니다.	0.75
+화학의 용사	chemical_hero_toxic_dart	독성 주사총	분열하는 독성추적침	fork	주사침 적중점에서 다른 적에게 추적 독침이 갈라집니다.	0.45
+화학의 용사	chemical_hero_antidote_capsule	해독 캡슐	해독 반격실험실	counter	보호막 흡수로 충전하면 반격 파동과 응급 회복을 발동합니다.	0.9
+이계의 용사	summoner_hero_gate_hound	이계의 문 - 투견	군단의 그림자 사냥	command	활성 소환수 위치에서 관통·귀환하는 사냥 잔영이 협공합니다.	0.9
+이계의 용사	summoner_hero_watcher	이계의 문 - 감시자	차원 협공 포대	command	활성 소환수들이 각자의 위치에서 추가 추적탄으로 협공합니다.	0.9
+이계의 용사	summoner_hero_scout	이계의 문 - 정찰병	이계 선봉의 섬멸진	command	활성 소환수 주변에서 협공 충격파를 발동합니다.	0.9
+이계의 용사	summoner_hero_gate_laser	차원 관통문	차원 십자절단문	cross	관통문 뒤 표적 위치에 직교 차원문이 열려 교차 공격합니다.	0.65
+이계의 용사	summoner_hero_gatekeeper	이계의 문 - 문지기	군단장의 차원포화	command	활성 소환수 위치에 협공 차원문을 열어 십자 포화를 발동합니다.	0.9
+이계의 용사	summoner_hero_rift_pulse	균열 파동	잠복하는 차원균열	mine	균열 파동과 함께 접근 감지 균열폭뢰를 배치합니다.	0.6
+이계의 용사	summoner_hero_rift_orbit	균열 톱니	뒤틀린 이중 차원륜	orbit	안팎 차원륜이 반대로 돌아 서로 다른 접근 경로를 차단합니다.	0.6
+이계의 용사	summoner_hero_collapse_glyph	붕괴 문양	붕괴하는 차원지뢰	reactive_zone	붕괴 문양이 적 접근·소멸에 반응해 다시 붕괴합니다.	0.65
+이계의 용사	summoner_hero_gate_shard	차원 파편구	차원을 뛰는 분열구	fork	파편 적중점에서 다른 적을 쫓는 차원 파편이 갈라집니다.	0.45
+이계의 용사	summoner_hero_binding_gate	결박의 문	교차 차원감옥	cross	결박 공격 후 적 위치에 대각선 차원 격자가 펼쳐집니다.	0.65
+정화의 용사	purifier_hero_holy_bolt	성광탄	심판의 삼중각인	mark	기본 공격에 각인탄이 함께 발사되며, 각인탄 3회 적중으로 주변까지 정화합니다.	0.75
+정화의 용사	purifier_hero_holy_lance	궁그닐	회절 성창 궁그닐	cross	궁그닐 뒤 표적 위치에 직교 성창이 추가로 관통합니다.	0.65
+정화의 용사	purifier_hero_purification	정화	지연 심판성역	mine	정화 공격 뒤 잠복 성역을 남겨 접근한 적을 심판합니다.	0.6
+정화의 용사	purifier_hero_sacred_orb	정화의 구체	성광의 이중 순례	orbit	성광 구체가 안팎의 반대 궤도를 돌아 접근로를 지킵니다.	0.6
+정화의 용사	purifier_hero_blessing	신성보호	순교자의 반격성소	counter	보호막 흡수로 충전하면 주변을 정화하는 반격 파동이 발동합니다.	0.9
+정화의 용사	purifier_hero_prayer	회복의 성배	성배의 고정안식처	sanctuary	기도가 고정 성배 거점을 남겨 그 안에서 지속 회복합니다.	0.12
+정화의 용사	purifier_hero_mercy_chain	자비의 사슬	자비의 속죄연쇄	fork	사슬 적중점에서 주변 다른 적을 쫓는 성광탄이 분열합니다.	0.45
+정화의 용사	purifier_hero_judgment_seal	심판 낙인	발걸음을 읽는 심판진	reactive_zone	심판 지대가 적의 접근·소멸 시 한 번 더 폭발합니다.	0.65
+정화의 용사	purifier_hero_saint_reliquary	성인의 유골함	성자의 보복성전	counter	보호막 흡수로 충전하면 십자 반격과 회복이 발동합니다.	0.9
+정화의 용사	purifier_hero_martyr_blade	순교자의 검	순교자의 처형연쇄	reap	성검으로 적을 처치하면 다음 적을 추격하는 잔영이 발동합니다.	0.65
+대현자 아스트라	sage_astra_starlight	별빛 지팡이	별을 잇는 분열항로	fork	기본 공격에 분열탄이 함께 발사되며, 적중점에서 다른 적을 쫓는 별 조각이 갈라집니다.	0.45
+대현자 아스트라	sage_astra_comet	스타라이트	낙성의 십자충돌	cross	운석 낙하 지점에서 지연 십자 충돌파가 펼쳐집니다.	0.65
+대현자 아스트라	sage_astra_astral_chain	천체 사슬	천체 붕괴각인	mark	동일 적 3회 적중으로 천체 각인을 폭발시킵니다.	0.75
+대현자 아스트라	sage_astra_absolute_zero	빙점폭발	빙점의 매복성운	mine	얼음 기둥과 함께 잠복 빙점폭뢰를 남겨 후속 접근을 막습니다.	0.6
+대현자 아스트라	sage_astra_singularity	소멸	사건의 지평선	cross	소멸 지점에서 지연 교차 붕괴파가 펼쳐집니다.	0.65
+대현자 아스트라	sage_astra_binary_stars	쌍성의 고리	쌍성의 공전과 역행	orbit	안팎의 별이 반대 방향으로 돌아 넓은 접근로를 동시에 베어냅니다.	0.6
+대현자 아스트라	sage_astra_gravity_lance	중력 성창	일그러진 중력거울	cross	중력 성창 뒤 적 위치에 대각선 교차 성창을 발사합니다.	0.65
+대현자 아스트라	sage_astra_frozen_stars	빙성의 고리	영겁의 호흡성환	orbit	빙성 궤도가 주기적으로 팽창·수축해 접근 중인 적을 쓸어냅니다.	0.6
+대현자 아스트라	sage_astra_supernova_core	초신성 핵	연쇄 초신성 씨앗	reactive_zone	초신성 지대가 적 접근·소멸에 반응해 한 번 더 폭발합니다.	0.65
+대현자 아스트라	sage_astra_collapsed_seed	붕괴 별씨	전이하는 붕괴별씨	relay_turret	별씨 설치체가 용사 곁으로 전이해 전진 중에도 붕괴탄을 발사합니다.	0.6

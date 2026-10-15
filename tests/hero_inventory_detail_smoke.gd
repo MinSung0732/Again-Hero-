@@ -38,7 +38,7 @@ func run() -> void:
 			else: runtime.evolved.erase(id)
 			var model := DETAIL.weapon_model(runtime,hero,id)
 			check(not model.name.is_empty() and not model.effects.is_empty(),"real weapon description "+id)
-			check(model.rank == ("MAX" if evolved else "Lv.10"),"pending versus completed evolution "+id)
+			check(model.rank == ("Lv.11 MAX" if evolved else "Lv.10"),"pending versus completed evolution "+id)
 			check(model.rows.size() >= 4 and not model.rows[0][1].is_empty(),"actual current stat rows "+id)
 	for id in DETAIL.DATA.PASSIVES:
 		runtime.passives[id] = DETAIL.DATA.passive_limit(id)

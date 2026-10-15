@@ -15,7 +15,7 @@ static func weapon_model(runtime, hero, id: String) -> Dictionary:
 	var hits := int(data.get("base_hits",1))+int(data.get("bonus_hits",0))
 	if hits > 1: rows.append(["발동 수",str(hits)+"회"])
 	if float(data.get("lifesteal",0)) > 0: rows.append(["무기 흡혈","%.1f%%" % (float(data.lifesteal)*100)])
-	return {"id":id,"name":DATA.GROWTH.evolution_name(id) if evolved else String(data.name),"kind":"무기","rank":"MAX" if evolved else "Lv.%d" % rank,"evolved":evolved,"maxed":evolved,"description":DATA.description(id,1),"rows":rows,"effects":DATA.GROWTH.description(id,rank,evolved),"flow":"상자  ›  무기 진화  ›  무기 강화  ›  보조 강화","note":"시전 피해 기준을 지속 틱·접촉 타격·자동 사격에 나누어 적용합니다." if not delivery.is_empty() else "피해·재사용은 기본 수치입니다. 조건부 기술·치명타·적 방어에 따라 달라집니다."}
+	return {"id":id,"name":DATA.GROWTH.evolution_name(id) if evolved else String(data.name),"kind":"무기","rank":"Lv.11 MAX" if evolved else "Lv.%d" % rank,"evolved":evolved,"maxed":evolved,"description":DATA.description(id,1),"rows":rows,"effects":DATA.GROWTH.description(id,rank,evolved),"flow":"상자  ›  무기 진화  ›  무기 강화  ›  보조 강화","note":"MAX 추가 기믹 피해는 아래 설명의 비율을 별도로 적용합니다." if evolved else "시전 피해 기준을 지속 틱·접촉 타격·자동 사격에 나누어 적용합니다." if not delivery.is_empty() else "피해·재사용은 기본 수치입니다. 조건부 기술·치명타·적 방어에 따라 달라집니다."}
 static func passive_model(runtime, id: String) -> Dictionary:
 	var rank := int(runtime.passives[id]); var limit := DATA.passive_limit(id)
 	var passive: Dictionary = DATA.PASSIVES[id]

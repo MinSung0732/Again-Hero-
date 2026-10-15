@@ -1,6 +1,7 @@
 extends RefCounted
 ## Survival only. Each row: evolution name, Lv3/Lv6/Lv10/evolution patches, their descriptions.
 ## Patches replace values cumulatively; resolving happens only when a weapon is upgraded.
+const EVOLUTION := preload("res://src/data/hero_weapon_evolution_catalog.gd")
 const PROFILES := {
 	"ranged_rookie_arcane_bolt": ["유성우 마도포", {"bonus_hits":1}, {"splash_radius":65.0,"splash_ratio":0.3}, {"bonus_hits":2}, {"bonus_hits":4,"splash_radius":110.0,"splash_ratio":0.65}, ["마력탄 2발", "적중 시 작은 폭발 30%", "마력탄 3발", "마력탄 5발 · 적중 폭발 65%/반경110"]],
 	"ranged_rookie_star_wand": ["은하 연결 지팡이", {"bonus_hits":1}, {"chain_growth":0.12}, {"bonus_hits":3,"chain_radius":250.0}, {"bonus_hits":6,"chain_growth":0.22,"chain_radius":330.0}, ["연결 대상 +1", "후속 연결마다 피해 +12%", "연결 대상 +3 · 연결거리250", "최대9대상 · 연결마다 +22% · 연결거리330"]],
@@ -116,6 +117,9 @@ static func resolve(id: String, source: Dictionary, rank: int, awakened: bool) -
 			if rank >= [3,6,10][index]: _merge(result,row[index+1])
 		if awakened:
 			_merge(result,row[4]); result["damage_scale"] *= 1.3; result["cooldown_scale"] *= 0.9
+	if awakened:
+		result["max_mechanic"] = EVOLUTION.design(id)
+		result["weapon_id"] = id
 	return result
 
 static func _merge(result: Dictionary, patch: Dictionary) -> void:
@@ -126,9 +130,9 @@ static func _merge(result: Dictionary, patch: Dictionary) -> void:
 		else: result[key] = patch[key]
 
 static func evolution_name(id: String) -> String:
-	return String(PROFILES[id][0]) if PROFILES.has(id) else "무기 진화"
+	return String(EVOLUTION.DESIGNS[id].name) if EVOLUTION.DESIGNS.has(id) else String(PROFILES[id][0]) if PROFILES.has(id) else "무기 진화"
 static func evolution_description(id: String) -> String:
-	return String(PROFILES[id][5][3])+"\nLv.10 대비 피해 +30% · 재사용 -10%" if PROFILES.has(id) else ""
+	return "Lv.11 MAX · "+EVOLUTION.description(id)+"\nLv.10 대비 기본 피해 +30% · 재사용 -10%" if PROFILES.has(id) else ""
 static func upgrade_description(id: String, rank: int) -> String:
 	if not PROFILES.has(id): return "보유 무기 +1레벨"
 	var summary := "기본 피해·사거리 증가 · 재사용 대기시간 감소"
@@ -143,5 +147,6 @@ static func description(id: String, rank: int, awakened: bool = false) -> String
 	for index in 3:
 		var milestone: int = [3,6,10][index]
 		lines.append("%s Lv.%d %s" % ["✓" if rank >= milestone else "▷",milestone,String(row[5][index])])
-	lines.append("Lv.10 + 상자 → "+String(row[0]))
+	lines.append("Lv.10 + 상자 → "+evolution_name(id))
+	lines.append("MAX 기믹: "+String(EVOLUTION.DESIGNS[id].description))
 	return "\n".join(lines)

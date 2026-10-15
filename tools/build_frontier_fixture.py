@@ -26,6 +26,7 @@ const GEOMETRY := preload("res://src/hero_mode/hero_weapon_geometry.gd")
 const EMPTY_ART: Array[Texture2D] = []
 var hero
 var delivery = null
+var evolution = null
 var effects: Array = []
 var projectiles: Array = []
 var fields: Array = []

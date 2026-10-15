@@ -13,7 +13,7 @@ var clock := 0.0
 func install(runtime) -> void:
 	_runtime = weakref(runtime)
 	for index in LIMIT:
-		slots.append({"left":0.0,"mode":"","id":"","origin":Vector2.ZERO,"radius":0.0,"orbit_radius":0.0,"count":1,"tick":0.0,"interval":0.5,"damage":0,"rank":1,"data":{},"frames":[],"color":Color.WHITE,"warning":0.0,"age":0.0,"duration":1.0,"phase":0.0})
+		slots.append({"left":0.0,"mode":"","id":"","origin":Vector2.ZERO,"radius":0.0,"orbit_radius":0.0,"count":1,"tick":0.0,"interval":0.5,"damage":0,"rank":1,"data":{},"frames":[],"color":Color.WHITE,"warning":0.0,"age":0.0,"duration":1.0,"phase":0.0,"detonated":false,"evolution_damage":0,"relay_phase":0,"max_kind":"","orbit_shape":""})
 func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,rank: int) -> bool:
 	var rule := RULES.spec(id,data)
 	if rule.is_empty(): return false
@@ -23,7 +23,9 @@ func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,r
 	if mode == "sentry": count = clampi(int(rule.get("count",1))+int(data.get("bonus_hits",0))/3,1,2)
 	# Refresh the existing weapon's emitters. Recasting never stacks indefinitely.
 	for slot in slots:
-		if slot.id == id: slot.left = 0.0
+		if slot.id == id:
+			if float(slot.left) > 0 and ((slot.max_kind == "detonating_trail" and float(slot.age) >= .65) or (slot.max_kind == "reactive_zone" and float(slot.warning) <= 0)): _detonate(slot)
+			slot.left = 0.0
 	var cooldown := maxf(0.25,float(data.cooldown)*float(data.cooldown_scale)*host.haste)
 	var duration := clampf(maxf(float(rule.get("duration",3.5)),float(data.get("field_duration",0.0)))*host.duration_bonus,1.0,10.0)
 	var interval := maxf(0.12,float(data.get("field_interval",rule.get("interval",0.55))))
@@ -55,6 +57,9 @@ func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,r
 		var budget := float(rule.get("budget",2.0))
 		slot.damage = maxi(1,roundi(damage*budget*budget_interval/(cooldown if mode == "orbit" else float(rule.get("duration",3.5))*count)))
 		slot.frames = host.art.get(id,[]); slot.color = Color(String(data.color))
+		slot.max_kind = String(data.get("max_mechanic",{}).get("mechanic","")); slot.orbit_shape = String(data.get("max_mechanic",{}).get("shape",""))
+		slot.detonated = false; slot.relay_phase = floori(clock/2.0)
+		slot.evolution_damage = maxi(1,roundi(damage*float(data.get("max_mechanic",{}).get("ratio",0.0))/count))
 	host.hero.queue_redraw()
 	return true
 func _free() -> Dictionary:
@@ -81,8 +86,15 @@ func tick(delta: float) -> void:
 			if slot.mode == "trail": slot.origin = _clamp(host.hero.global_position)
 			slot.warning = maxf(0.0,float(slot.warning)-delta); continue
 		slot.left = maxf(0.0,float(slot.left)-delta)
-		if float(slot.left) <= 0.0: continue
+		if float(slot.left) <= 0.0:
+			if String(slot.max_kind) in ["detonating_trail","reactive_zone"]: _detonate(slot)
+			continue
 		var mode := String(slot.mode)
+		if mode == "sentry" and String(slot.max_kind) == "relay_turret" and int(slot.relay_phase) != floori(clock/2.0):
+			slot.relay_phase = floori(clock/2.0)
+			var previous: Vector2 = slot.origin
+			slot.origin = _clamp(host.hero.global_position+Vector2.from_angle(float(slot.phase)+clock)*90.0)
+			host._effect(previous,slot.origin,18.0,"chain",slot.color,slot.data)
 		if mode in ["orbit","aura"]: slot.origin = host.hero.global_position
 		slot.tick = float(slot.tick)-delta
 		if float(slot.tick) > 0.0: continue
@@ -90,7 +102,7 @@ func tick(delta: float) -> void:
 		if mode == "orbit":
 			for index in int(slot.count): host.hero._damage_treasure_chests(orbit_point(slot,index),float(slot.radius),int(slot.damage))
 		elif mode != "sentry": host.hero._damage_treasure_chests(slot.origin,float(slot.radius),int(slot.damage))
-		var query_radius := float(slot.orbit_radius)+float(slot.radius) if mode == "orbit" else float(slot.radius)
+		var query_radius := float(slot.orbit_radius)*(1.45 if not String(slot.max_kind).is_empty() else 1.0)+float(slot.radius) if mode == "orbit" else float(slot.radius)
 		host.hero._fill_monster_nodes_near(slot.origin,query_radius,scratch)
 		var nearest: Node2D = null
 		var distance := INF
@@ -103,12 +115,25 @@ func tick(delta: float) -> void:
 				if offset.length_squared() < distance: nearest = actor; distance = offset.length_squared()
 				continue
 			if mode == "orbit" and not orbit_contact(slot,actor.global_position): continue
+			if String(slot.max_kind) == "reactive_zone" and not bool(slot.detonated): _detonate(slot)
 			host._hit(actor,int(slot.damage),"field",int(slot.rank),slot.data)
 		if mode == "sentry" and is_instance_valid(nearest):
 			for extra in 1+mini(2,int(slot.data.get("extra_projectiles",0))):
 				host._launch_projectile(nearest,slot.origin,int(slot.damage),int(slot.rank),slot.color,slot.data,float(extra)*0.08,false,float(slot.radius))
+func _detonate(slot: Dictionary) -> void:
+	if bool(slot.detonated) or int(slot.evolution_damage) <= 0: return
+	slot.detonated = true
+	host._splash(slot.origin,int(slot.evolution_damage),float(slot.radius)*1.25,null,slot.data.evolution_secondary_data)
 func orbit_point(slot: Dictionary,index: int) -> Vector2:
-	return Vector2(slot.origin)+Vector2.from_angle(clock*float(slot.data.get("orbit_speed",2.4))+TAU*index/int(slot.count))*float(slot.orbit_radius)
+	var radius := float(slot.orbit_radius)
+	var spin := clock*float(slot.data.get("orbit_speed",2.4))
+	var shape := String(slot.orbit_shape)
+	if not String(slot.max_kind).is_empty():
+		if shape == "counter":
+			if index%2 == 0: radius *= .65; spin = -spin
+		elif shape == "spiral": radius *= 1.0+.35*sin(clock*1.8+index*.9)
+		elif shape == "breathing": radius *= 1.0+.4*sin(clock*1.8)
+	return Vector2(slot.origin)+Vector2.from_angle(spin+TAU*index/int(slot.count))*radius
 func orbit_contact(slot: Dictionary,point: Vector2) -> bool:
 	for index in int(slot.count):
 		if orbit_point(slot,index).distance_squared_to(point) <= float(slot.radius)*float(slot.radius): return true

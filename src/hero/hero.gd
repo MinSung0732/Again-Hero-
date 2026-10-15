@@ -21013,6 +21013,7 @@ func _take_damage_internal(
 		)
 		var absorbed := minf(shield_hp, remaining_damage)
 		shield_hp = maxf(shield_hp - absorbed, 0.0)
+		if player_weapons != null and player_weapons.has_method("on_shield_absorbed"): player_weapons.on_shield_absorbed(absorbed)
 		remaining_damage = maxf(remaining_damage - absorbed, 0.0)
 		if shield_hp <= 0.0:
 			if hero_archetype == "sword_shield" and fighter_guard_active:

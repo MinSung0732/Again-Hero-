@@ -10,11 +10,13 @@ const ART := preload("res://src/ui/hero_weapon_art.gd")
 const NATIVE := preload("res://src/hero_mode/hero_weapon_native_runtime.gd")
 const GEOMETRY := preload("res://src/hero_mode/hero_weapon_geometry.gd")
 const IDENTITY := preload("res://src/hero_mode/hero_survival_identity_runtime.gd")
+const EVOLUTION := preload("res://src/hero_mode/hero_weapon_evolution_runtime.gd")
 const DELIVERY := preload("res://src/hero_mode/hero_weapon_delivery_runtime.gd")
 const EMPTY_ART: Array[Texture2D] = []
 var native_skills: RefCounted
 var identity: RefCounted
 var delivery: RefCounted
+var evolution: RefCounted
 var art: Dictionary = {}
 var magazines: Dictionary = {}
 var hero
@@ -91,6 +93,7 @@ func install(host, research_bonus: int = 0, starting_research: Dictionary = {}) 
 	hero.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	authority = hero.get_parent()
 	delivery = DELIVERY.new(); delivery.install(self)
+	evolution = EVOLUTION.new(); evolution.install(self)
 	if "status_resistances" in hero: base_slow_resistance = float(hero.status_resistances.get("slow",0))
 	base_max_hp = int(hero.max_hp); base_move_speed = float(hero.move_speed)
 	base_pickup_radius = float(hero.exp_pickup_radius); base_exp_multiplier = float(hero.exp_gain_multiplier)
@@ -235,6 +238,7 @@ func apply_chest(receipt: Dictionary) -> bool:
 		if int(levels.get(id,0)) != DATA.MAX_LEVEL or evolved.has(id): return false
 		evolved[id] = true
 		resolved.erase(id)
+		cooldowns[id] = 0.0 # MAX is ready immediately after the chest closes.
 	else:
 		if not levels.has(id) and not passives.has(id): return false
 		if not add(id): return false
@@ -258,6 +262,7 @@ func summary() -> String:
 func tick(delta: float, allow_casts: bool = true) -> void:
 	visual_clock += delta
 	if delivery != null: delivery.tick(delta)
+	if evolution != null: evolution.tick(delta)
 	if hero.current_hp > 0 and hero.current_hp < hero.max_hp:
 		regen_bank += hero.max_hp*float(research.get("regeneration",0))*delta
 		var recovered := floori(regen_bank)
@@ -343,6 +348,10 @@ func stats_for(id: String) -> Dictionary:
 	stats["extra_projectiles"] = projectile_bonus if DATA.projectile_quantity_kind(id) != "" else 0
 	if DATA.projectile_quantity_kind(id) == "orbit":
 		stats["orbit_count"] = mini(10,int(stats.get("orbit_count",4))+int(stats.extra_projectiles))
+	if evolved.has(id):
+		var secondary := stats.duplicate()
+		secondary["evolution_secondary"] = true
+		stats["evolution_secondary_data"] = secondary
 	resolved[id] = stats
 	return stats
 
@@ -377,6 +386,7 @@ func _cast(id: String) -> void:
 	if direction.length_squared() < 0.01: direction = Vector2.RIGHT
 	if identity != null and identity.native_basic(id,closest,damage,reach):
 		if identity.native_cast_succeeded:
+			if evolution != null: evolution.on_native_basic(data,origin,closest,damage,reach)
 			if identity.archetype == "rogue_combo" and bool(data.get("visual_effect_unique",false)):
 				_effect(origin,closest.global_position,24.0,"combo",color,data)
 			for extra in int(data.get("extra_projectiles",0)):
@@ -476,6 +486,7 @@ func _free_field() -> Dictionary:
 	return {} # Saturation never overwrites a still-visible damage circle.
 
 func _after_cast(data: Dictionary, origin: Vector2, direction: Vector2, target: Node2D, damage: int, reach: float, rank: int) -> void:
+	if evolution != null: evolution.on_cast(data,origin,direction,target,damage,reach)
 	if float(data.get("cast_heal",0.0)) > 0.0: hero.heal_direct(roundi(hero.max_hp*float(data.cast_heal)))
 	if float(data.get("cast_shield",0.0)) > 0.0:
 		var grant: float = hero.max_hp*float(data.cast_shield)
@@ -598,6 +609,9 @@ func _tick_projectiles(delta: float) -> void:
 		elif float(shot.traveled) >= float(shot.reach): shot.active = false
 	if redraw: hero.queue_redraw()
 
+func on_shield_absorbed(amount: float) -> void:
+	if evolution != null: evolution.on_shield_absorbed(amount)
+
 func absorb_damage(amount: int) -> void:
 	if passive_siphon <= 0.0 or amount <= 0 or hero.current_hp <= 0: return
 	if hero.current_hp >= hero.max_hp: siphon_bank = 0.0; return
@@ -606,11 +620,15 @@ func absorb_damage(amount: int) -> void:
 	if recovered > 0: hero.heal_direct(recovered); siphon_bank -= recovered
 
 func _hit(actor: Node2D, damage: int, pattern: String, rank: int, data: Dictionary = {}) -> void:
+	var point := actor.global_position
+	var max_primary := data.has("max_mechanic") and not bool(data.get("evolution_secondary",false))
+	var handle: Vector3i = authority.get_battle_entity_handle(actor) if max_primary and String(data.max_mechanic.mechanic) == "mark" and is_instance_valid(authority) and authority.has_method("get_battle_entity_handle") else Vector3i.ZERO
 	var before := int(actor.get("current_hp"))
 	if before > 0 and float(data.get("execute_ratio",0.0)) > 0.0 and before <= float(actor.get("max_hp"))*float(data.execute_ratio): damage = maxi(damage,before)
 	HIT.hit(actor,damage,"melee" if pattern == "slash" else "ranged",hero)
 	if identity != null and identity.archetype == "alchemist_chemical" and pattern == "field": identity.impact()
 	var lost := maxi(0,before-int(actor.get("current_hp"))) if is_instance_valid(actor) else 0
+	if max_primary and evolution != null: evolution.on_hit(actor,handle,point,lost,not is_instance_valid(actor) or int(actor.get("current_hp")) <= 0,data,damage)
 	if lost > 0 and float(data.get("lifesteal",0.0)) > 0.0: hero.heal_direct(roundi(lost*float(data.lifesteal)))
 	if lost > 0 and pattern == "bolt" and float(data.get("splash_ratio",0.0)) > 0.0 and is_instance_valid(actor):
 		_splash(actor.global_position,roundi(damage*float(data.splash_ratio)),float(data.splash_radius),actor,data)
@@ -632,6 +650,7 @@ func _effect(a: Vector2,b: Vector2,radius: float,pattern: String,color: Color,da
 	effect.left = effect.duration; hero.queue_redraw()
 
 func draw() -> void:
+	if evolution != null: evolution.draw()
 	if delivery != null: delivery.draw()
 	for field in fields:
 		if float(field.left) > 0.0:
