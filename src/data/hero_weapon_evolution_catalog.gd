@@ -732,8 +732,8 @@ const DESIGNS := {
   },
   "chemical_hero_acid_vial": {
     "name": "대연금 · 산성 약병",
-    "mechanic": "cross",
-    "description": "표적 위치에 예고된 교차 타격이 추가됩니다.",
+    "mechanic": "reactive_zone",
+    "description": "착지한 산성 지대에 적이 닿으면 한 번 추가 반응 폭발합니다.",
     "index": 60,
     "ratio": 0.6,
     "radius": 110.0,

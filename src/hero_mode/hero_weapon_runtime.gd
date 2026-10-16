@@ -13,12 +13,14 @@ const IDENTITY := preload("res://src/hero_mode/hero_survival_identity_runtime.gd
 const EVOLUTION := preload("res://src/hero_mode/hero_weapon_evolution_runtime.gd")
 const DELIVERY := preload("res://src/hero_mode/hero_weapon_delivery_runtime.gd")
 const KIT := preload("res://src/hero_mode/hero_weapon_kit_runtime.gd")
+const FLIGHT := preload("res://src/hero_mode/hero_weapon_flight_runtime.gd")
 const EMPTY_ART: Array[Texture2D] = []
 var native_skills: RefCounted
 var identity: RefCounted
 var delivery: RefCounted
 var evolution: RefCounted
 var kit: RefCounted
+var flight: RefCounted
 var art: Dictionary = {}
 var magazines: Dictionary = {}
 var hero
@@ -96,12 +98,13 @@ func install(host, research_bonus: int = 0, starting_research: Dictionary = {}) 
 	authority = hero.get_parent()
 	delivery = DELIVERY.new(); delivery.install(self)
 	kit = KIT.new(); kit.install(self)
+	flight = FLIGHT.new(); flight.install(self)
 	evolution = EVOLUTION.new(); evolution.install(self)
 	if "status_resistances" in hero: base_slow_resistance = float(hero.status_resistances.get("slow",0))
 	base_max_hp = int(hero.max_hp); base_move_speed = float(hero.move_speed)
 	base_pickup_radius = float(hero.exp_pickup_radius); base_exp_multiplier = float(hero.exp_gain_multiplier)
 	for index in range(PROJECTILE_LIMIT):
-		projectiles.append({"active":false,"handle":Vector3i.ZERO,"position":Vector2.ZERO,"damage":0,"rank":1,"color":Color.WHITE,"age":0.0,"delay":0.0,"data":{},"melee":false,"reach":0.0,"traveled":0.0,"frames":EMPTY_ART,"direction":Vector2.RIGHT})
+		projectiles.append({"active":false,"handle":Vector3i.ZERO,"position":Vector2.ZERO,"damage":0,"rank":1,"color":Color.WHITE,"age":0.0,"delay":0.0,"data":{},"melee":false,"reach":0.0,"traveled":0.0,"frames":EMPTY_ART,"direction":Vector2.RIGHT,"flight":"homing","phase":0,"victims":{},"start":Vector2.ZERO,"strikes":0,"pierces":1,"bounces":0,"serial":0})
 	available_weapons = DATA.weapon_pool(String(hero.hero_id))
 	var effect_directories := {}
 	for id in available_weapons:
@@ -583,6 +586,8 @@ func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, 
 		shot["visual_radius"] = DATA.projectile_visual_radius(data)
 		shot["frames"] = ART.cache.get(String(data.get("effect_dir","")),EMPTY_ART)
 		shot["direction"] = origin.direction_to(actor.global_position)
+		shot.serial = index
+		flight.configure(shot)
 		hero.queue_redraw()
 		return
 
@@ -599,6 +604,9 @@ func _tick_projectiles(delta: float) -> void:
 		shot.delay = maxf(0.0,float(shot.delay)-delta)
 		if float(shot.delay) > 0.0: continue
 		redraw = true; shot.age = float(shot.age)+delta
+		if float(shot.age)>3.0: shot.active=false;continue
+		if flight.handles(shot):
+			flight.tick(shot,delta);continue
 		var actor: Node2D = authority.call("resolve_battle_entity",shot.handle) as Node2D if is_instance_valid(authority) else null
 		if not TARGETS.is_detectable(actor) or float(shot.age) > 3.0:
 			shot.active = false; continue
@@ -613,7 +621,10 @@ func _tick_projectiles(delta: float) -> void:
 		var step := minf(MODE.PROJECTILE_SPEED*projectile_speed*delta,remaining)
 		var position: Vector2 = shot.position
 		shot["direction"] = position.direction_to(actor.global_position)
-		shot.position = position.move_toward(actor.global_position,step)
+		if String(shot.flight)=="curve":
+			shot.direction = Vector2(shot.direction).rotated(sin(float(shot.age)*6.0)*.35)
+			shot.position = position+Vector2(shot.direction)*step
+		else: shot.position = position.move_toward(actor.global_position,step)
 		shot.traveled = float(shot.traveled)+position.distance_to(shot.position)
 		if position.distance_to(actor.global_position) <= step+GEOMETRY.PROJECTILE_RADIUS:
 			shot.active = false

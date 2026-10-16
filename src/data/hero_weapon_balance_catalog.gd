@@ -547,10 +547,10 @@ const PROFILES := {
 static func apply(id: String,data: Dictionary,rank: int,awakened: bool) -> void:
 	var profile: Dictionary = PROFILES[id]
 	data["weapon_id"] = id; data["kit_element"] = profile.element
-	data["damage_scale"] = 1.0+0.16*(rank-1)
+	data["damage_scale"] = 1.0+0.40*(rank-1)
 	data["reach_scale"] = 1.0+0.018*(rank-1)
 	data["cooldown_scale"] = 1.0-0.022*(rank-1)
-	if awakened: data.damage_scale *= 1.25; data.cooldown_scale *= 0.95
+	if awakened: data.damage_scale *= 1.6; data.cooldown_scale *= 0.95
 	# Prevent damage/count/tick/area stacking from multiplying every growth axis.
 	data["bonus_hits"] = mini(int(data.get("bonus_hits",0)),3 if awakened else 2)
 	data["chain_growth"] = minf(float(data.get("chain_growth",0.0)),0.06)
@@ -573,15 +573,13 @@ static func apply(id: String,data: Dictionary,rank: int,awakened: bool) -> void:
 		data["cast_heal"] = minf(float(data.get("cast_heal",0.0)),0.02)
 		data["cast_shield"] = minf(float(data.get("cast_shield",0.0)),0.04)
 	if String(data.pattern) == "orbit": data["pulse_count"] = 0
-	# Budget all rounds in a cast, including combo finishers. Quantity is coverage/frequency,
-	# not permission to multiply full unbounded per-shot damage at every milestone.
+	# A per-hit cadence ceiling preserves rising hit damage when a milestone adds rounds.
+	# The former cast-wide division could make Lv10 hit damage LOWER than Lv9.
 	if String(profile.role) == "duelist":
-		var rounds := maxi(1,int(data.get("base_hits",1))+int(data.get("bonus_hits",0)))
-		if String(data.pattern) in ["combo","burst"]: rounds = mini(rounds,6)
 		var cadence := float(data.cooldown)*float(data.cooldown_scale)
-		var budget := (2.0+rank*.25) if String(data.pattern) == "combo" else (1.5+rank*.22)
-		if awakened: budget *= 1.2
-		var nominal := float(data.power)*float(data.damage_scale)*(rounds+float(data.get("finish_ratio",0.0)))/cadence
+		var budget := (1.5+rank*.5) if String(data.pattern) == "combo" else (1.2+rank*.45)
+		if awakened: budget *= 1.6/0.95
+		var nominal := float(data.power)*float(data.damage_scale)/cadence
 		if nominal > budget: data.power *= budget/nominal
 	data["kit_description"] = String(IDENTITIES[profile.owner][1])
 static func description(id: String) -> String:

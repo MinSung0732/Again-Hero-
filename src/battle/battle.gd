@@ -6230,3 +6230,7 @@ func spawn_hero_encounter(id: String, point: Vector2, modifiers: Dictionary) -> 
 func _finish_hero_boss_victory() -> void:
 	if hero_player_mode and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and not battle_over and is_instance_valid(hero) and hero.current_hp > 0:
 		_finish_battle("용사 승리 · 최종 보스를 처치했습니다!",true)
+
+func finish_hero_boss_timeout() -> void:
+	if not hero_player_mode or battle_over: return
+	_finish_battle("패배 · 최종 보스 제한시간 5분을 초과했습니다.",false)

@@ -134,7 +134,7 @@ static func _merge(result: Dictionary, patch: Dictionary) -> void:
 static func evolution_name(id: String) -> String:
 	return String(EVOLUTION.DESIGNS[id].name) if EVOLUTION.DESIGNS.has(id) else String(PROFILES[id][0]) if PROFILES.has(id) else "무기 진화"
 static func evolution_description(id: String) -> String:
-	return "Lv.11 MAX · "+EVOLUTION.description(id)+"\nLv.10 대비 기본 피해 +25% · 재사용 -5%" if PROFILES.has(id) else ""
+	return "Lv.11 MAX · "+EVOLUTION.description(id)+"\nLv.10 대비 기본 피해 +60% · 재사용 -5%" if PROFILES.has(id) else ""
 static func upgrade_description(id: String, rank: int) -> String:
 	return "무기 성장 · Lv.%d\n" % rank+BALANCE.description(id)
 static func description(id: String, rank: int, awakened: bool = false) -> String:

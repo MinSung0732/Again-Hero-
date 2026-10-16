@@ -60,7 +60,7 @@ func run():
     if float(slot.left) > 0:
      first_slot = slot
      if mode in ["reactive_zone","detonating_trail"]:
-      for actor in arena.targets: actor.position = slot.origin
+      for actor in arena.targets: actor.position = slot.get("landing",slot.origin) if slot.mode in ["lob","lob_burst"] else slot.origin
      if mode == "orbit":
       runtime.delivery.clock = .35
       original_orbit = runtime.delivery.orbit_point(slot,0)

@@ -280,7 +280,8 @@ func _refresh_hud() -> void:
 		var objective := DATA.opening_objective(battle.run_metrics.elapsed_seconds,opening_chest_claimed,director.encounters.next_event)
 		if not objective.is_empty(): timer.text = objective
 		if director.encounters.finale:
-			timer.text = "최종 보스\n격파 시 클리어"
+			var boss_seconds: int = ceili(director.encounters.boss_remaining())
+			timer.text = "보스 제한시간\n%02d:%02d" % [boss_seconds/60,boss_seconds%60] if director.encounters.boss_started else "최종 보스\n출현 대기"
 			status.text = "보스 체력 %d / %d" % [director.encounters.boss.current_hp,director.encounters.boss.max_hp] if is_instance_valid(director.encounters.boss) else director.encounters.notice
 		elif not director.encounters.notice.is_empty(): status.text = director.encounters.notice
 	var hp_ratio := float(hero.current_hp)/maxf(1.0,hero.max_hp)

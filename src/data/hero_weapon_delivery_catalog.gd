@@ -78,8 +78,8 @@ const MODES := {
     "budget": 1.4
   },
   "chemical_hero_poison_flask": {
-    "mode": "sigil",
-    "label": "표적 시약 혼합장",
+    "mode": "lob",
+    "label": "포물선 시약 병 · 착지 후 혼합장",
     "duration": 4,
     "count": 1,
     "budget": 1.8
@@ -138,6 +138,27 @@ const MODES := {
     "duration": 2.8,
     "count": 1,
     "budget": 1.8
+  },
+  "chemical_hero_acid_vial": {
+    "mode": "lob",
+    "label": "포물선 산성 약병 · 착지 후 산성 지대",
+    "duration": 3.5,
+    "count": 1,
+    "budget": 2.0
+  },
+  "chemical_hero_reaction_bomb": {
+    "mode": "lob_burst",
+    "label": "촉매 폭탄 투척 · 착지 시 폭발",
+    "duration": 1.1,
+    "count": 1,
+    "budget": 1.3
+  },
+  "pistol_hero_smoke_canister": {
+    "mode": "lob",
+    "label": "연막 유탄 곡사 · 착지 후 연막",
+    "duration": 3.5,
+    "count": 1,
+    "budget": 1.0
   }
 }
 static func spec(id: String, _data: Dictionary) -> Dictionary:

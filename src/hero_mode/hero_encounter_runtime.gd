@@ -14,6 +14,10 @@ var wall_time := 0.0
 var finale := false
 var boss: Node2D
 var boss_retry := 0.0
+var boss_started := false
+var boss_elapsed := 0.0
+func boss_remaining() -> float:
+	return maxf(0.0,DATA.BOSS_TIME_LIMIT-boss_elapsed)
 var notice := ""
 func install(host) -> void:
 	battle = host
@@ -28,15 +32,23 @@ func _clear_walls() -> void:
 	queue_redraw()
 func tick(delta: float) -> void:
 	if battle.battle_over or battle.external_pause: return
+	if battle.has_method("is_combat_simulation_paused") and battle.is_combat_simulation_paused(): return
 	var clock: float = battle.run_metrics.elapsed_seconds
 	if clock >= DATA.DURATION:
 		if not finale: finale = true; points.clear(); _clear_walls()
+		if boss_started:
+			# A lethal hit can queue victory until end-of-frame; it wins over timeout.
+			if is_instance_valid(boss) and int(boss.get("current_hp"))<=0: return
+			boss_elapsed += maxf(0.0,delta)
+			if boss_elapsed >= DATA.BOSS_TIME_LIMIT:
+				battle.finish_hero_boss_timeout(); return
 		boss_retry -= delta
 		if not is_instance_valid(boss) and boss_retry <= 0:
 			boss_retry = 3.0
 			var stage := int(battle.current_stage_data.get("number",1))
 			var spawn_point: Vector2 = DATA.boss_position(battle.hero.position,battle.current_map_size)
 			boss = battle.spawn_hero_encounter(DATA.boss_for(stage,battle.campaign_difficulty),spawn_point,DATA.boss_data(stage,battle.campaign_difficulty))
+			if is_instance_valid(boss): boss_started = true
 			notice = "최종 보스 · 처치하면 클리어" if is_instance_valid(boss) else "보스 출현 대기 · 남은 적을 처치하세요"
 		return
 	if wall_time > 0:

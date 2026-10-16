@@ -120,7 +120,7 @@ func run() -> void:
 					# Persistent/map-random weapons hit their actual visible footprint.
 					for emitter in runtime.delivery.slots:
 						if emitter.left <= 0.0: continue
-						var point: Vector2 = runtime.delivery.orbit_point(emitter,0) if emitter.mode == "orbit" else emitter.origin
+						var point: Vector2 = runtime.delivery.orbit_point(emitter,0) if emitter.mode == "orbit" else emitter.landing if emitter.mode in ["lob","lob_burst"] else emitter.origin
 						for actor in arena.targets: actor.position = point
 						break
 					if data.pattern == "guard": check(hero.shield_hp > 0,"new protection really granted "+id)

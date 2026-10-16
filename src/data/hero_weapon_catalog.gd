@@ -1,4 +1,5 @@
 extends RefCounted
+const ATTACKS := preload("res://src/data/hero_weapon_attack_catalog.gd")
 const GROWTH := preload("res://src/data/hero_weapon_growth_catalog.gd")
 const DELIVERY := preload("res://src/data/hero_weapon_delivery_catalog.gd")
 const MAX_LEVEL := 10
@@ -598,13 +599,13 @@ const WEAPONS := {
   "pistol_hero_ricochet": {
     "name": "도탄 권총",
     "owner": "pistol_hero",
-    "pattern": "chain",
+    "pattern": "bolt",
     "color": "ffcc72",
     "cooldown": 2.6,
     "range": 530,
-    "power": 0.75,
-    "base_hits": 4,
-    "effect": "적 사이를 튕기는 최대 4회 도탄",
+    "power": 1.8,
+    "base_hits": 1,
+    "effect": "실제 적중 지점에서 다음 적으로 튀는 도탄",
     "evolution": "무한 도탄 황금총",
     "tags": [
       "damage"
@@ -2385,46 +2386,46 @@ const WEAPONS := {
 const PASSIVES := {
   "survival_power": {
     "name": "공격력 증가",
-    "description": "전체 무기 피해 +8% / 레벨",
+    "description": "전체 무기 피해 +10% / 레벨",
     "stat": "power",
-    "value": 0.08
+    "value": 0.1
   },
   "survival_mobility": {
     "name": "이동속도 증가",
-    "description": "기본 이동속도 +3% / 레벨",
+    "description": "기본 이동속도 +3.5% / 레벨",
     "stat": "mobility",
-    "value": 0.03
+    "value": 0.035
   },
   "survival_projectile": {
     "name": "투사체속도 증가",
-    "description": "발사체 이동속도 +10% / 레벨\n즉시 타격·장판·검격에는 적용되지 않습니다.",
+    "description": "발사체 이동속도 +12% / 레벨\n즉시 타격·장판·검격에는 적용되지 않습니다.",
     "stat": "projectile",
-    "value": 0.1,
+    "value": 0.12,
     "restriction": "ranged"
   },
   "survival_haste": {
     "name": "공격속도 증가",
-    "description": "전체 무기 공격 빈도 +5% / 레벨",
+    "description": "전체 무기 공격 빈도 +6% / 레벨",
     "stat": "haste",
-    "value": 0.05
+    "value": 0.06
   },
   "survival_learning": {
     "name": "경험치 증가",
-    "description": "획득 경험치 +3% / 레벨",
+    "description": "획득 경험치 +4% / 레벨",
     "stat": "learning",
-    "value": 0.03
+    "value": 0.04
   },
   "survival_magnet": {
     "name": "경험치 범위 증가",
-    "description": "경험치 획득 반경 +15% / 레벨",
+    "description": "경험치 획득 반경 +18% / 레벨",
     "stat": "magnet",
-    "value": 0.15
+    "value": 0.18
   },
   "survival_vitality": {
     "name": "최대체력 증가",
-    "description": "시작 최대 HP +5% · 증가분 회복 / 레벨",
+    "description": "시작 최대 HP +6% · 증가분 회복 / 레벨",
     "stat": "vitality",
-    "value": 0.05
+    "value": 0.06
   },
   "survival_armor": {
     "name": "받는피해 감소",
@@ -2436,21 +2437,21 @@ const PASSIVES := {
     "name": "피해량 흡수 (피흡)",
     "description": "피해량 흡수 (피흡)",
     "stat": "siphon",
-    "value": 0.005,
+    "value": 0.006,
     "icon_source": "survival_vitality"
   },
   "survival_slow_resist": {
     "name": "둔화 저항",
     "description": "둔화 저항",
     "stat": "slow_resist",
-    "value": 0.04,
+    "value": 0.05,
     "icon_source": "survival_armor"
   },
   "survival_reach": {
     "name": "사거리 증가",
     "description": "사거리 증가",
     "stat": "reach",
-    "value": 0.04,
+    "value": 0.05,
     "icon_source": "survival_magnet",
     "restriction": "ranged"
   },
@@ -2458,7 +2459,7 @@ const PASSIVES := {
     "name": "즉시 회복",
     "description": "즉시 회복",
     "stat": "recovery",
-    "value": 0.25,
+    "value": 0.3,
     "icon_source": "survival_vitality",
     "one_shot": true
   },
@@ -2466,7 +2467,7 @@ const PASSIVES := {
     "name": "투사체 피해량",
     "description": "투사체 피해량",
     "stat": "projectile_power",
-    "value": 0.06,
+    "value": 0.08,
     "icon_source": "survival_power",
     "restriction": "ranged"
   },
@@ -2474,7 +2475,7 @@ const PASSIVES := {
     "name": "공격 범위",
     "description": "공격 범위",
     "stat": "area",
-    "value": 0.05,
+    "value": 0.06,
     "icon_source": "survival_magnet"
   },
   "survival_multishot": {
@@ -2490,7 +2491,7 @@ const PASSIVES := {
     "name": "무기 지속시간",
     "description": "무기 지속시간",
     "stat": "duration",
-    "value": 0.05,
+    "value": 0.06,
     "icon_source": "survival_learning"
   }
 }
@@ -2537,12 +2538,12 @@ static func description(id: String, next_level: int) -> String:
 		var gain := float(passive.value)*100.0
 		var total := gain*rank
 		match String(passive.stat):
-			"recovery": return "최대 HP의 25% 즉시 회복\n보조 장착 칸을 사용하지 않습니다."
+			"recovery": return "최대 HP의 30% 즉시 회복\n보조 장착 칸을 사용하지 않습니다."
 			"multishot": return "발사체 +1개 (누적 +%d개)\n최대 추가 2개 · 보유 투사체/회전 무기·설치체·원거리 소환수에 적용" % rank
-			"siphon": return "실제로 준 피해의 0.5%% 추가 흡수\n총 피흡 %.1f%% · 최대 5%%" % total
-			"slow_resist": return "둔화 강도·지속시간 저항 +4%%\n추가 저항 총 %.0f%%" % total
-			"projectile_power": return "투사체 무기 피해 보너스 +6%%\n총 +%.0f%%" % total
-			"reach": return "무기 사거리 보너스 +4%%\n총 +%.0f%%" % total
+			"siphon": return "실제로 준 피해의 0.6%% 추가 흡수\n총 피흡 %.1f%% · 최대 6%%" % total
+			"slow_resist": return "둔화 강도·지속시간 저항 +5%%\n추가 저항 총 %.0f%%" % total
+			"projectile_power": return "투사체 무기 피해 보너스 +8%%\n총 +%.0f%%" % total
+			"reach": return "무기 사거리 보너스 +5%%\n총 +%.0f%%" % total
 			"area": return "범위 공격의 반경·폭 +5%%\n총 +%.0f%%" % total
 			"duration": return "장판·소환·보호막 지속 +5%%\n총 +%.0f%%" % total
 			"vitality": return "시작 최대 HP의 %.0f%%만큼 최대 체력 증가\n증가한 체력만큼 즉시 회복" % gain
@@ -2556,6 +2557,8 @@ static func description(id: String, next_level: int) -> String:
 		var details := String(patterns.get(String(data.pattern),data.effect))
 		var delivery_text := DELIVERY.description(id,data)
 		if not delivery_text.is_empty(): details = delivery_text
+		var flight_text := ATTACKS.description(id)
+		if not flight_text.is_empty(): details = flight_text
 		if String(data.pattern) == "guard":
 			details += "\n보호막 최대 HP의 %.1f%%" % ((float(data.get("shield_ratio",0.04))+0.006)*100.0)
 		if String(data.pattern) == "heal":
@@ -2571,7 +2574,7 @@ static func description(id: String, next_level: int) -> String:
 		return details+"\n"+GROWTH.BALANCE.description(id)+"\n기본 발동 간격 %.2f초" % float(data.cooldown)
 	var before := GROWTH.resolve(id,data,rank-1,false)
 	var after := GROWTH.resolve(id,data,rank,false)
-	var damage_gain := (float(after.damage_scale)/float(before.damage_scale)-1.0)*100.0
+	var damage_gain := ((float(after.power)*float(after.damage_scale))/(float(before.power)*float(before.damage_scale))-1.0)*100.0
 	var reach_gain := (float(after.reach_scale)/float(before.reach_scale)-1.0)*100.0
 	var cooldown_gain := (1.0-float(after.cooldown_scale)/float(before.cooldown_scale))*100.0
 	var summary := "피해 +%.1f%% · 사거리 +%.1f%%\n재사용 대기시간 -%.1f%%" % [damage_gain,reach_gain,cooldown_gain]

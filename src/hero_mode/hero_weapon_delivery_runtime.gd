@@ -27,7 +27,7 @@ func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,r
 			if float(slot.left) > 0 and ((slot.max_kind == "detonating_trail" and float(slot.age) >= .65) or (slot.max_kind == "reactive_zone" and float(slot.warning) <= 0)): _detonate(slot)
 			slot.left = 0.0
 	var cooldown := maxf(0.25,float(data.cooldown)*float(data.cooldown_scale)*host.haste)
-	var duration := clampf(maxf(float(rule.get("duration",3.5)),float(data.get("field_duration",0.0)))*host.duration_bonus,1.0,10.0)
+	var duration := clampf(maxf(float(rule.get("duration",3.5))*host.duration_bonus,float(data.get("field_duration",0.0))),1.0,10.0)
 	var interval := maxf(0.12,float(data.get("field_interval",rule.get("interval",0.55))))
 	var budget_interval := float(rule.get("interval",0.55))
 	if mode == "sentry":
@@ -40,6 +40,8 @@ func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,r
 		slot.id = id; slot.mode = mode; slot.data = data; slot.rank = rank
 		slot.left = duration; slot.duration = duration; slot.age = 0.0; slot.tick = 0.0
 		slot.interval = interval; slot.warning = float(rule.get("duration",1.0)) if mode == "bombard" else WARNING+index*0.18 if mode == "fault" else WARNING if mode in ["random","sigil"] else index*0.4 if mode == "trail" else 0.0
+		if mode in ["lob","lob_burst"]: slot.warning = .7
+		slot["launch"] = origin; slot["landing"] = _clamp(target.global_position if TARGETS.is_detectable(target) else origin)
 		slot.phase = TAU*index/count; slot.count = clampi(int(data.get("orbit_count",4)),2,10)
 		slot.origin = origin
 		slot.radius = clampf(reach*0.32,45.0,180.0)
@@ -60,7 +62,7 @@ func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,r
 		# Nominal per-target budget per cast, shared across zones; orbit pays for contact gaps.
 		var budget := float(rule.get("budget",2.0))
 		slot.damage = maxi(1,roundi(damage*budget*interval/(cooldown if mode == "orbit" else duration*count)))
-		if mode in ["bombard","trap","fault"]: slot.damage = maxi(1,roundi(damage*budget/count))
+		if mode in ["bombard","trap","fault","lob_burst"]: slot.damage = maxi(1,roundi(damage*budget/count))
 		slot.frames = host.art.get(id,[]); slot.color = Color(String(data.color))
 		slot.max_kind = String(data.get("max_mechanic",{}).get("mechanic","")); slot.orbit_shape = String(data.get("max_mechanic",{}).get("shape",""))
 		slot.detonated = false; slot.relay_phase = floori(clock/2.0)
@@ -90,7 +92,8 @@ func tick(delta: float) -> void:
 		if float(slot.warning) > 0.0:
 			if slot.mode == "trail": slot.origin = _clamp(host.hero.global_position)
 			slot.warning = maxf(0.0,float(slot.warning)-delta)
-			if float(slot.warning) <= 0.0 and slot.mode in ["bombard","fault"]:
+			if float(slot.warning)<=0.0 and slot.mode in ["lob","lob_burst"]: slot.origin = slot.landing
+			if float(slot.warning) <= 0.0 and slot.mode in ["bombard","fault","lob_burst"]:
 				host._splash(slot.origin,int(slot.damage),float(slot.radius),null,slot.data)
 				slot.left = 0.0
 			continue
@@ -160,6 +163,12 @@ func draw() -> void:
 	for slot in slots:
 		if float(slot.left) <= 0.0: continue
 		var color: Color = slot.color
+		if float(slot.warning)>0.0 and slot.mode in ["lob","lob_burst"]:
+			var progress := clampf(1.0-float(slot.warning)/.7,0.0,1.0)
+			var point: Vector2 = Vector2(slot.launch).lerp(slot.landing,progress)+Vector2(0,-sin(progress*PI)*85.0)
+			_draw(slot,point,22.0)
+			host.hero.draw_arc(host.hero.to_local(slot.landing),float(slot.radius),0,TAU,24,Color(color,.4),2.0)
+			continue
 		if float(slot.warning) > 0.0:
 			host.hero.draw_arc(host.hero.to_local(slot.origin),float(slot.radius),0,TAU,32,Color(color,0.5),2.0)
 			continue
