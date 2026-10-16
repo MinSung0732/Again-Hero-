@@ -29,7 +29,7 @@ for record in records:
     ax,ay = manifest['anchor']['center_x'],manifest['anchor']['foot_y']
     check(sheet.mode == 'RGBA' and sheet.size == (w*6, h*5), 'RGBA sheet dimensions')
     check(manifest['normalization']['uniform_scale'] == 1.0 and manifest['normalization']['native_resolution'], 'common pivot')
-    check(manifest['status'] == 'assets_only_unregistered', 'not gameplay registered')
+    check(manifest['status'] == 'gameplay_registered', 'gameplay registration metadata')
     check(manifest['normalization']['rgb_keying'] is False, 'no black pixel removal')
     check(len(manifest['frames']) == 23, '23 frames')
     unique = set()

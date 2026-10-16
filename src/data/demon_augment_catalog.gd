@@ -13,6 +13,14 @@ const SPECIAL_MAX_LEVEL := 1
 static var augment_lookup: Dictionary = {}
 
 const MONSTER_NAMES := {
+	"cave_ant":"동굴개미",
+	"thorn_hedgehog":"밤가시고슴도치",
+	"spore_mushroom":"포자버섯",
+	"shell_crab":"돌껍질소라게",
+	"swamp_toad":"늪지두꺼비",
+	"rag_scarecrow":"누더기허수아비",
+	"rust_automaton":"녹슨태엽병",
+
 	"harpy":"하피",
 	"imp":"임프",
 	"mimic":"미믹",
@@ -188,6 +196,28 @@ const SPECIAL_AUGMENTS := [
 	FRONTIER.AUGMENTS[21],
 	FRONTIER.AUGMENTS[22],
 	FRONTIER.AUGMENTS[23],
+	FRONTIER.AUGMENTS[24],
+	FRONTIER.AUGMENTS[25],
+	FRONTIER.AUGMENTS[26],
+	FRONTIER.AUGMENTS[27],
+	FRONTIER.AUGMENTS[28],
+	FRONTIER.AUGMENTS[29],
+	FRONTIER.AUGMENTS[30],
+	FRONTIER.AUGMENTS[31],
+	FRONTIER.AUGMENTS[32],
+	FRONTIER.AUGMENTS[33],
+	FRONTIER.AUGMENTS[34],
+	FRONTIER.AUGMENTS[35],
+	FRONTIER.AUGMENTS[36],
+	FRONTIER.AUGMENTS[37],
+	FRONTIER.AUGMENTS[38],
+	FRONTIER.AUGMENTS[39],
+	FRONTIER.AUGMENTS[40],
+	FRONTIER.AUGMENTS[41],
+	FRONTIER.AUGMENTS[42],
+	FRONTIER.AUGMENTS[43],
+	FRONTIER.AUGMENTS[44],
+
 
 	{"id": "fanatic_suicide", "monster_id": "fanatic", "name": "광기의 순교", "description": "이속50% 증가, 공격 대신 접근 즉시 자폭.", "augment_type": "special", "max_stack": 1, "icon": "", "effect_type": "fanatic_suicide", "effect_values": {}},
 	{"id": "fanatic_dagger", "monster_id": "fanatic", "name": "의식용 칼날", "description": "단검1타 피해30% 증가.", "augment_type": "special", "max_stack": 1, "icon": "", "effect_type": "fanatic_dagger", "effect_values": {}},

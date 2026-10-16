@@ -16,7 +16,7 @@ for d in definitions.values():
 (out/'tools').mkdir(exist_ok=True)
 for name in ['monster_balance_audit.gd','pack_frontier_art_fixture.gd']:
  shutil.copyfile(r/'tools'/name,out/'tools'/name)
-print('Real 8-species normal/elite frames copied; other missing presentation is fixture-only.')
+print('Real catalog species normal/elite frames copied; other missing presentation is fixture-only.')
 # Record exact production drawing commands without requiring a GPU backend.
 text=(r/'src/hero_mode/hero_weapon_runtime.gd').read_text()
 draw=text[text.index('func draw()'):].replace('hero.draw_','hero.record_draw_')
@@ -31,5 +31,6 @@ var effects: Array = []
 var projectiles: Array = []
 var fields: Array = []
 var research := {}
+var awakening_flash := 0.0
 var visual_clock := 0.25
 '''+draw)

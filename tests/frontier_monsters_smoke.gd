@@ -1,5 +1,5 @@
 extends SceneTree
-## Run after imports. Exercises real 8 scenes/MonsterVisual, pooled hits and casts;
+## Run after imports. Exercises real catalog scenes/MonsterVisual, pooled hits and casts;
 ## isolated target used for exact status/heal accounting, then actual Battle spawn.
 const C := preload("res://src/data/monster_catalog.gd")
 const D := preload("res://src/data/frontier_monster_catalog.gd")
@@ -150,7 +150,7 @@ func run() -> void:
 		actor.set_meta("silence_active",true)
 		check(not actor.try_cast_elite_skill(data.elite_skills[0]),id+" silence blocks elite")
 		actor.set_meta("silence_active",false)
-	check(elite_count == 10,"ten elite skills")
+	check(elite_count == 17,"seventeen elite skills")
 	_test_mechanics(arena,target)
 	arena.queue_free()
 	await process_frame

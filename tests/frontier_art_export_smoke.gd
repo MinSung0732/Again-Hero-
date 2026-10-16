@@ -24,5 +24,5 @@ func run() -> void:
 					assert(texture != null and texture.get_width() > 0)
 					count += 1
 			sprite.queue_free()
-	print("FRONTIER_ART_EXPORT real imported frames=",count," profiles=16")
+	print("FRONTIER_ART_EXPORT real imported frames=",count," profiles=",D.DEFINITIONS.size()*2)
 	quit()

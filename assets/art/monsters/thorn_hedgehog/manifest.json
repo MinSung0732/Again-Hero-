@@ -3,7 +3,7 @@
   "name_ko": "밤가시고슴도치",
   "form": "normal",
   "intended_rarity": "common",
-  "status": "assets_only_unregistered",
+  "status": "gameplay_registered",
   "direction": "right",
   "cell_size": [
     266,
