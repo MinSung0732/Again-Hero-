@@ -150,7 +150,7 @@ func run() -> void:
 		actor.set_meta("silence_active",true)
 		check(not actor.try_cast_elite_skill(data.elite_skills[0]),id+" silence blocks elite")
 		actor.set_meta("silence_active",false)
-	check(elite_count == 17,"seventeen elite skills")
+	check(elite_count == 21,"twenty-one elite skills")
 	_test_mechanics(arena,target)
 	arena.queue_free()
 	await process_frame
@@ -200,6 +200,8 @@ func _test_mechanics(arena: Arena,target: Target) -> void:
 	check(before-target.current_hp == roundi(rogue.attack_damage*1.65),"satyr rogue execute augment")
 	var shaman = arena.actors[5]
 	shaman.position = Vector2.ZERO
+	# Isolate this caster from shields granted by earlier support elite tests.
+	for actor in arena.actors: actor.set_meta("support_shield_hp",0)
 	shaman.attack_count = 3
 	shaman._attack_target(target)
 	settle_bolts(arena)

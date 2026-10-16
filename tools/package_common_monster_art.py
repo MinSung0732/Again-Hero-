@@ -150,8 +150,8 @@ def package(record):
         measurements.append({'file':filename, 'source_crop':f['region'], 'source_body_center_x':f['body_center'],
                              'source_foot_y':f['foot'], 'destination_offset':xy, 'source_isolation':f['isolation'], 'bbox':bbox, 'sha256':digest})
     sheet.save(folder/(stem+'_spritesheet.png'), optimize=True)
-    manifest = dict(character_id=stem, name_ko=record['name'], form=record['form'], intended_rarity='common',
-                    status='gameplay_registered' if ('FRONTIER.DEFINITIONS.'+stem+'.id') in (ROOT/'src/data/monster_catalog.gd').read_text() else 'assets_only_unregistered', direction='right', cell_size=cell, sheet_size=sheet.size,
+    manifest = dict(character_id=stem, name_ko=record['name'], form=record['form'], intended_rarity=record.get('rarity','common'),
+                    status='gameplay_registered' if ('FRONTIER.DEFINITIONS.'+record['id']+'.id') in (ROOT/'src/data/monster_catalog.gd').read_text() else 'assets_only_unregistered', direction='right', cell_size=cell, sheet_size=sheet.size,
                     anchor={'center_x':anchor[0], 'foot_y':anchor[1]}, columns=6, rows=5, animations=animations,
                     source=stem+'_source.png', sheet=stem+'_spritesheet.png', portrait=None,
                     source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(), design=record['design'],

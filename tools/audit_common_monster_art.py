@@ -3,12 +3,13 @@ from pathlib import Path
 import hashlib
 import json
 import re
+import sys
 
 import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-records = json.loads((ROOT/'docs/COMMON_MONSTER_ART_SOURCES_20261015.json').read_text())
+records = json.loads((ROOT/(sys.argv[1] if len(sys.argv)>1 else 'docs/COMMON_MONSTER_ART_SOURCES_20261015.json')).read_text())
 checks = 0
 
 
@@ -18,7 +19,7 @@ def check(condition, message):
     assert condition, message
 
 
-check(len(records) == 14, 'seven normal plus seven elite forms')
+check(len(records)>0 and len(records)%2==0, 'paired normal plus elite forms')
 for record in records:
     folder = (ROOT/record['source']).parent
     manifest = json.loads((folder/'manifest.json').read_text())
@@ -30,6 +31,8 @@ for record in records:
     check(sheet.mode == 'RGBA' and sheet.size == (w*6, h*5), 'RGBA sheet dimensions')
     check(manifest['normalization']['uniform_scale'] == 1.0 and manifest['normalization']['native_resolution'], 'common pivot')
     check(manifest['status'] == 'gameplay_registered', 'gameplay registration metadata')
+    if 'rarity' in record:
+        check(manifest['intended_rarity']==record['rarity'],'authored rarity metadata')
     check(manifest['normalization']['rgb_keying'] is False, 'no black pixel removal')
     check(len(manifest['frames']) == 23, '23 frames')
     unique = set()

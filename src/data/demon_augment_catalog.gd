@@ -13,6 +13,11 @@ const SPECIAL_MAX_LEVEL := 1
 static var augment_lookup: Dictionary = {}
 
 const MONSTER_NAMES := {
+	"iron_beetle":"철갑장수풍뎅이",
+	"lantern_wisp":"등불도깨비",
+	"blade_mantis":"쌍낫사마귀",
+	"moss_deer":"이끼뿔사슴",
+
 	"cave_ant":"동굴개미",
 	"thorn_hedgehog":"밤가시고슴도치",
 	"spore_mushroom":"포자버섯",
@@ -217,6 +222,19 @@ const SPECIAL_AUGMENTS := [
 	FRONTIER.AUGMENTS[42],
 	FRONTIER.AUGMENTS[43],
 	FRONTIER.AUGMENTS[44],
+	FRONTIER.AUGMENTS[45],
+	FRONTIER.AUGMENTS[46],
+	FRONTIER.AUGMENTS[47],
+	FRONTIER.AUGMENTS[48],
+	FRONTIER.AUGMENTS[49],
+	FRONTIER.AUGMENTS[50],
+	FRONTIER.AUGMENTS[51],
+	FRONTIER.AUGMENTS[52],
+	FRONTIER.AUGMENTS[53],
+	FRONTIER.AUGMENTS[54],
+	FRONTIER.AUGMENTS[55],
+	FRONTIER.AUGMENTS[56],
+
 
 
 	{"id": "fanatic_suicide", "monster_id": "fanatic", "name": "광기의 순교", "description": "이속50% 증가, 공격 대신 접근 즉시 자폭.", "augment_type": "special", "max_stack": 1, "icon": "", "effect_type": "fanatic_suicide", "effect_values": {}},

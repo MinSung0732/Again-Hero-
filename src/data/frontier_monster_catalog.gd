@@ -2480,6 +2480,657 @@ const DEFINITIONS := {
       "ground_y": 30.0,
       "source_animation_top": 12
     }
+  },
+  "iron_beetle": {
+    "id": "iron_beetle",
+    "name": "철갑장수풍뎅이",
+    "grade": "uncommon",
+    "rarity": "uncommon",
+    "role": "tank",
+    "family": "iron_beetle",
+    "species": "beast",
+    "base_cost": 11.0,
+    "summon_exp": 11.0,
+    "attack_type": "melee",
+    "base_stats": {
+      "max_hp": 1,
+      "attack_damage": 1,
+      "move_speed": 72.0,
+      "attack_range": 90.0,
+      "attack_cooldown": 2.2,
+      "exp_reward": 11,
+      "projectile_speed": 0.0
+    },
+    "balance": {
+      "health_share": 0.7,
+      "damage_share": 0.85,
+      "cycle_damage_multiplier": 1.0,
+      "note": "첫 기본공격140% 피해. 등장 시 최대체력40% 보호막을 얻는 전선 탱커. 느린 접근과 긴 공격 간격이 약점. 고유 생존/화상/연격/지원 기여를 HP·직접DPS 예산에 반영. 실전 승률 미검증."
+    },
+    "description": "첫 기본공격140% 피해. 등장 시 최대체력40% 보호막을 얻는 전선 탱커. 느린 접근과 긴 공격 간격이 약점.",
+    "special_augment_ids": [
+      "iron_beetle_special_1",
+      "iron_beetle_special_2",
+      "iron_beetle_special_3"
+    ],
+    "elite_skills": [
+      {
+        "id": "elite_iron_beetle",
+        "name": "철옹의 등딱지",
+        "description": "최대체력65% 보호막을 생성. 남은 보호막과 합산하지 않고 큰 값으로 갱신.",
+        "runtime": "monster",
+        "kind": "self_ward",
+        "initial_cooldown": 4.0,
+        "cooldown": 18.0,
+        "retry_interval": 0.35,
+        "shield_ratio": 0.65
+      }
+    ],
+    "card_icon_path": "res://assets/art/monsters/iron_beetle/frames/idle_01.png",
+    "behavior": {
+      "shield_ratio": 0.4,
+      "first_multiplier": 1.4
+    },
+    "hero_survival_after": 420.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    },
+    "normal_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/monsters/iron_beetle/frames",
+      "target_height": 149.625,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        -4.0,
+        -73.5
+      ],
+      "source_idle_bounds": [
+        45,
+        39,
+        241,
+        159
+      ],
+      "body_height": 105,
+      "hero_height_ratio": 0.9722222222222222,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "elite_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/elitemonster/iron_beetle/frames",
+      "target_height": 156.00547445255472,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        -6.5,
+        -76.5
+      ],
+      "source_idle_bounds": [
+        46,
+        28,
+        261,
+        165
+      ],
+      "body_height": 120.74999999999999,
+      "hero_height_ratio": 1.1180555555555554,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    }
+  },
+  "lantern_wisp": {
+    "id": "lantern_wisp",
+    "name": "등불도깨비",
+    "grade": "uncommon",
+    "rarity": "uncommon",
+    "role": "ranged",
+    "family": "lantern_wisp",
+    "species": "gas",
+    "base_cost": 9.0,
+    "summon_exp": 9.0,
+    "attack_type": "ranged",
+    "base_stats": {
+      "max_hp": 1,
+      "attack_damage": 1,
+      "move_speed": 94.0,
+      "attack_range": 360.0,
+      "attack_cooldown": 1.7,
+      "exp_reward": 9,
+      "projectile_speed": 315.0
+    },
+    "balance": {
+      "health_share": 0.8,
+      "damage_share": 0.9,
+      "cycle_damage_multiplier": 1.3,
+      "note": "회피 가능한 불씨탄 적중 시 해당 공격력30%를2초간 추가 화상 피해. 낮은 몸체 체력으로 중거리 화력을 지원. 고유 생존/화상/연격/지원 기여를 HP·직접DPS 예산에 반영. 실전 승률 미검증."
+    },
+    "description": "회피 가능한 불씨탄 적중 시 해당 공격력30%를2초간 추가 화상 피해. 낮은 몸체 체력으로 중거리 화력을 지원.",
+    "special_augment_ids": [
+      "lantern_wisp_special_1",
+      "lantern_wisp_special_2",
+      "lantern_wisp_special_3"
+    ],
+    "elite_skills": [
+      {
+        "id": "elite_lantern_wisp",
+        "name": "삼도천 길잡이",
+        "description": "전방3방향으로 각 공격력65% 불씨탄을 발사. 탄마다 회피 가능하며 현재 불씨 화상 증강을 적용.",
+        "runtime": "monster",
+        "kind": "fan",
+        "initial_cooldown": 3.0,
+        "cooldown": 15.0,
+        "retry_interval": 0.35,
+        "cast_range": 430.0,
+        "damage_multiplier": 0.65,
+        "spread": 0.2,
+        "color": "80decf"
+      }
+    ],
+    "card_icon_path": "res://assets/art/monsters/lantern_wisp/frames/idle_01.png",
+    "behavior": {
+      "projectile": true,
+      "burn_ratio": 0.3,
+      "burn_duration": 2.0,
+      "color": "f6ae45"
+    },
+    "hero_survival_after": 420.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    },
+    "normal_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/monsters/lantern_wisp/frames",
+      "target_height": 107.13924050632912,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        3.0,
+        -80.0
+      ],
+      "source_idle_bounds": [
+        82,
+        14,
+        210,
+        172
+      ],
+      "body_height": 92,
+      "hero_height_ratio": 0.8518518518518519,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "elite_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/elitemonster/lantern_wisp/frames",
+      "target_height": 121.92804878048781,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        4.0,
+        -82.5
+      ],
+      "source_idle_bounds": [
+        80,
+        13,
+        214,
+        177
+      ],
+      "body_height": 105.8,
+      "hero_height_ratio": 0.9796296296296296,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    }
+  },
+  "blade_mantis": {
+    "id": "blade_mantis",
+    "name": "쌍낫사마귀",
+    "grade": "uncommon",
+    "rarity": "uncommon",
+    "role": "burst",
+    "family": "blade_mantis",
+    "species": "beast",
+    "base_cost": 10.0,
+    "summon_exp": 10.0,
+    "attack_type": "melee",
+    "base_stats": {
+      "max_hp": 1,
+      "attack_damage": 1,
+      "move_speed": 133.0,
+      "attack_range": 96.0,
+      "attack_cooldown": 1.15,
+      "exp_reward": 10,
+      "projectile_speed": 0.0
+    },
+    "balance": {
+      "health_share": 0.9,
+      "damage_share": 0.88,
+      "cycle_damage_multiplier": 1.2666666666666666,
+      "note": "빠른 근접 낫 공격. 매3번째 공격180% 피해와1.2초 이속15% 증가. 광역 공격에 취약한 돌파 딜러. 고유 생존/화상/연격/지원 기여를 HP·직접DPS 예산에 반영. 실전 승률 미검증."
+    },
+    "description": "빠른 근접 낫 공격. 매3번째 공격180% 피해와1.2초 이속15% 증가. 광역 공격에 취약한 돌파 딜러.",
+    "special_augment_ids": [
+      "blade_mantis_special_1",
+      "blade_mantis_special_2",
+      "blade_mantis_special_3"
+    ],
+    "elite_skills": [
+      {
+        "id": "elite_blade_mantis",
+        "name": "초승달 가르기",
+        "description": "대상 위치를0.5초 예고 후 반경110px 안 대상1명에 공격력210% 피해. 원 밖으로 피하면 불발. 시전 종료 후1.5초 이속20% 증가.",
+        "runtime": "monster",
+        "kind": "strike",
+        "initial_cooldown": 3.0,
+        "cooldown": 15.0,
+        "retry_interval": 0.35,
+        "windup": 0.5,
+        "cast_range": 240.0,
+        "radius": 110.0,
+        "damage_multiplier": 2.1,
+        "speed_multiplier": 1.2,
+        "speed_duration": 1.5,
+        "color": "c9df82"
+      }
+    ],
+    "card_icon_path": "res://assets/art/monsters/blade_mantis/frames/idle_01.png",
+    "behavior": {
+      "third_bonus": 0.8,
+      "third_speed": 1.15,
+      "speed_duration": 1.2
+    },
+    "hero_survival_after": 420.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    },
+    "normal_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/monsters/blade_mantis/frames",
+      "target_height": 131.625,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        4.5,
+        -85.5
+      ],
+      "source_idle_bounds": [
+        75,
+        23,
+        240,
+        183
+      ],
+      "body_height": 108,
+      "hero_height_ratio": 1.0,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "elite_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/elitemonster/blade_mantis/frames",
+      "target_height": 152.14499999999998,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        2.5,
+        -86.0
+      ],
+      "source_idle_bounds": [
+        76,
+        24,
+        243,
+        184
+      ],
+      "body_height": 124.19999999999999,
+      "hero_height_ratio": 1.15,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    }
+  },
+  "moss_deer": {
+    "id": "moss_deer",
+    "name": "이끼뿔사슴",
+    "grade": "uncommon",
+    "rarity": "uncommon",
+    "role": "ranged",
+    "family": "moss_deer",
+    "species": "beast",
+    "base_cost": 10.0,
+    "summon_exp": 10.0,
+    "attack_type": "ranged",
+    "base_stats": {
+      "max_hp": 1,
+      "attack_damage": 1,
+      "move_speed": 100.0,
+      "attack_range": 300.0,
+      "attack_cooldown": 1.9,
+      "exp_reward": 10,
+      "projectile_speed": 310.0
+    },
+    "balance": {
+      "health_share": 0.9,
+      "damage_share": 0.7,
+      "cycle_damage_multiplier": 1.0,
+      "note": "씨앗탄을 발사하며 매3회 공격마다200px 내 아군 최대3명에게 각 최대체력6% 보호막. 자신은 제외, 같은 계열 보호막은 합산 없이 큰 잔량으로 갱신. 고유 생존/화상/연격/지원 기여를 HP·직접DPS 예산에 반영. 실전 승률 미검증.",
+      "role": "buffer"
+    },
+    "description": "씨앗탄을 발사하며 매3회 공격마다200px 내 아군 최대3명에게 각 최대체력6% 보호막. 자신은 제외, 같은 계열 보호막은 합산 없이 큰 잔량으로 갱신.",
+    "special_augment_ids": [
+      "moss_deer_special_1",
+      "moss_deer_special_2",
+      "moss_deer_special_3"
+    ],
+    "elite_skills": [
+      {
+        "id": "elite_moss_deer",
+        "name": "고목의 축복",
+        "description": "260px 내 아군 최대4명에게 각 최대체력16% 보호막. 자신은 제외, 같은 계열 보호막은 합산 없이 큰 잔량으로 갱신.",
+        "runtime": "monster",
+        "kind": "ally_ward",
+        "initial_cooldown": 4.0,
+        "cooldown": 18.0,
+        "retry_interval": 0.5,
+        "ward_radius": 260.0,
+        "ward_ratio": 0.16,
+        "ward_count": 4
+      }
+    ],
+    "card_icon_path": "res://assets/art/monsters/moss_deer/frames/idle_01.png",
+    "behavior": {
+      "projectile": true,
+      "ward_every": 3,
+      "ward_radius": 200.0,
+      "ward_ratio": 0.06,
+      "ward_count": 3,
+      "color": "9acb7b"
+    },
+    "hero_survival_after": 420.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    },
+    "normal_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/monsters/moss_deer/frames",
+      "target_height": 126.7843137254902,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        1.0,
+        -79.5
+      ],
+      "source_idle_bounds": [
+        91,
+        18,
+        235,
+        171
+      ],
+      "body_height": 106,
+      "hero_height_ratio": 0.9814814814814815,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "elite_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/elitemonster/moss_deer/frames",
+      "target_height": 137.71405405405406,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        -1.0,
+        -92.5
+      ],
+      "source_idle_bounds": [
+        85,
+        12,
+        239,
+        197
+      ],
+      "body_height": 121.89999999999999,
+      "hero_height_ratio": 1.1287037037037035,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    }
   }
 }
 const AUGMENTS := [
@@ -3174,6 +3825,192 @@ const AUGMENTS := [
     "effect_values": {
       "stat_multipliers": {
         "hp": 1.25
+      }
+    }
+  },
+  {
+    "id": "iron_beetle_special_1",
+    "monster_id": "iron_beetle",
+    "name": "겹철 외피",
+    "description": "등장 보호막40%→60%. 기존 개체는 증가분만1회 지급.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "iron_beetle_special_1",
+    "effect_values": {
+      "behavior": {
+        "shield_ratio": 0.6
+      }
+    }
+  },
+  {
+    "id": "iron_beetle_special_2",
+    "monster_id": "iron_beetle",
+    "name": "공성 뿔",
+    "description": "첫 기본공격 피해140%→200%. 이미 소모한 첫 공격은 재충전하지 않음.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "iron_beetle_special_2",
+    "effect_values": {
+      "behavior": {
+        "first_multiplier": 2.0
+      }
+    }
+  },
+  {
+    "id": "iron_beetle_special_3",
+    "monster_id": "iron_beetle",
+    "name": "유연한 철관절",
+    "description": "이동속도25% 증가.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "iron_beetle_special_3",
+    "effect_values": {
+      "runtime_stat_multipliers": {
+        "speed_multiplier": 1.25
+      }
+    }
+  },
+  {
+    "id": "lantern_wisp_special_1",
+    "monster_id": "lantern_wisp",
+    "name": "길 잃은 불씨",
+    "description": "불씨탄의 추가 화상 피해30%→50%.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "lantern_wisp_special_1",
+    "effect_values": {
+      "behavior": {
+        "burn_ratio": 0.5
+      }
+    }
+  },
+  {
+    "id": "lantern_wisp_special_2",
+    "monster_id": "lantern_wisp",
+    "name": "긴 등불길",
+    "description": "사거리360→460px·투사체속도315→420px/초.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "lantern_wisp_special_2",
+    "effect_values": {
+      "stat_overrides": {
+        "attack_range": 460.0,
+        "projectile_speed": 420.0
+      }
+    }
+  },
+  {
+    "id": "lantern_wisp_special_3",
+    "monster_id": "lantern_wisp",
+    "name": "도깨비 심지",
+    "description": "공격력25% 증가.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "lantern_wisp_special_3",
+    "effect_values": {
+      "stat_multipliers": {
+        "damage": 1.25
+      }
+    }
+  },
+  {
+    "id": "blade_mantis_special_1",
+    "monster_id": "blade_mantis",
+    "name": "월아 겹낫",
+    "description": "매3번째 기본공격 피해180%→240%.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "blade_mantis_special_1",
+    "effect_values": {
+      "behavior": {
+        "third_bonus": 1.4
+      }
+    }
+  },
+  {
+    "id": "blade_mantis_special_2",
+    "monster_id": "blade_mantis",
+    "name": "사냥꾼의 본능",
+    "description": "대상 체력이30% 이하이면 기본공격 피해25% 증가.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "blade_mantis_special_2",
+    "effect_values": {
+      "behavior": {
+        "execute_threshold": 0.3,
+        "execute_multiplier": 1.25
+      }
+    }
+  },
+  {
+    "id": "blade_mantis_special_3",
+    "monster_id": "blade_mantis",
+    "name": "날선 관절",
+    "description": "공격 간격15% 감소.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "blade_mantis_special_3",
+    "effect_values": {
+      "stat_multipliers": {
+        "attack_cooldown": 0.85
+      }
+    }
+  },
+  {
+    "id": "moss_deer_special_1",
+    "monster_id": "moss_deer",
+    "name": "무성한 녹각",
+    "description": "기본 보호막6%→10%·보호 범위200→260px.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "moss_deer_special_1",
+    "effect_values": {
+      "behavior": {
+        "ward_ratio": 0.1,
+        "ward_radius": 260.0
+      }
+    }
+  },
+  {
+    "id": "moss_deer_special_2",
+    "monster_id": "moss_deer",
+    "name": "신록의 맥동",
+    "description": "보호막 발동이 매3회→2회 공격.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "moss_deer_special_2",
+    "effect_values": {
+      "behavior": {
+        "ward_every": 2
+      }
+    }
+  },
+  {
+    "id": "moss_deer_special_3",
+    "monster_id": "moss_deer",
+    "name": "숲길 걸음",
+    "description": "이동속도20% 증가·최대체력15% 증가.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "moss_deer_special_3",
+    "effect_values": {
+      "runtime_stat_multipliers": {
+        "speed_multiplier": 1.2
+      },
+      "stat_multipliers": {
+        "hp": 1.15
       }
     }
   }
