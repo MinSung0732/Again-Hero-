@@ -16,17 +16,26 @@ var pressure := 1.0
 var supply_scale := 1.0
 var population_limit := DATA.MONSTER_LIMIT
 var roster: Array = []
-var reinforcements_installed := false
+var reinforcement_times: Array[float] = []
+var next_reinforcement := 0
 var preferred: Array = []
 var plan := "탐색 공세 · 용사 빌드를 관찰 중"
 func install(host) -> void:
 	battle = host
-	reinforcements_installed = false
+	reinforcement_times.clear()
+	next_reinforcement = 0
 	stage_number = int(battle.current_stage_data.get("number",1))
 	population_limit = DATA.monster_limit(stage_number)
 	supply_scale = DATA.pacing_value("supply",stage_number,battle.campaign_difficulty)
 	pressure = DATA.stage_pressure(stage_number)*(1.2 if battle.campaign_difficulty == "hard" else 1.0)
 	roster = DATA.roster_for(stage_number,battle.campaign_difficulty)
+	# Build checkpoints once; no catalog scan or temporary array on ordinary ticks.
+	for id in DATA.MONSTERS.ORDER:
+		var data: Dictionary = DATA.MONSTERS.MONSTERS[id]
+		if data.has("hero_survival_after") and DATA.monster_allowed(id,stage_number,battle.campaign_difficulty):
+			var at := float(data.hero_survival_after)
+			if at not in reinforcement_times: reinforcement_times.append(at)
+	reinforcement_times.sort()
 	encounters = preload("res://src/hero_mode/hero_encounter_runtime.gd").new(); battle.add_child(encounters); encounters.install(battle)
 	battle.set_allowed_monster_ids(roster)
 func _observe() -> void:
@@ -60,8 +69,9 @@ func tick(delta: float) -> void:
 		observation_remaining = DATA.OBSERVE_INTERVAL
 		_observe()
 	var elapsed: float = battle.run_metrics.elapsed_seconds
-	if not reinforcements_installed and elapsed >= 300.0:
-		reinforcements_installed = true
+	if next_reinforcement < reinforcement_times.size() and elapsed >= reinforcement_times[next_reinforcement]:
+		while next_reinforcement < reinforcement_times.size() and elapsed >= reinforcement_times[next_reinforcement]:
+			next_reinforcement += 1
 		for id in DATA.late_recruits(stage_number,battle.campaign_difficulty,elapsed):
 			if id not in roster: roster.append(id)
 		battle.set_allowed_monster_ids(roster)

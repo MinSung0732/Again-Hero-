@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="SpriteFrames" path="res://assets/art/elitemonster/dusk_panther/dusk_panther_elite_animations.tres" id="1"]
+
+[node name="dusk_panther_elite" type="Node2D"]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+sprite_frames = ExtResource("1")
+animation = &"idle"
+autoplay = "idle"
+centered = false
+offset = Vector2(-150, -188)
+scale = Vector2(0.71375465, 0.71375465)

@@ -150,8 +150,9 @@ func run() -> void:
 		actor.set_meta("silence_active",true)
 		check(not actor.try_cast_elite_skill(data.elite_skills[0]),id+" silence blocks elite")
 		actor.set_meta("silence_active",false)
-	check(elite_count == 21,"twenty-one elite skills")
+	check(elite_count == 37,"thirty-seven elite skills")
 	_test_mechanics(arena,target)
+	_test_rare_mechanics(arena,target)
 	arena.queue_free()
 	await process_frame
 	await _test_reinforcements()
@@ -159,6 +160,58 @@ func run() -> void:
 	print("FRONTIER_MONSTERS checks=",checks," failures=",failures)
 	await create_timer(.15).timeout
 	quit(0 if failures == 0 else 1)
+
+func _test_rare_mechanics(arena: Arena,target: Target) -> void:
+	var by_id := {}
+	for actor in arena.actors: by_id[actor.species_id] = actor
+	target.current_hp = target.max_hp
+	target.position = Vector2(50,0)
+	var panther = by_id.dusk_panther
+	panther.position = Vector2.ZERO
+	panther.current_hp = panther.max_hp
+	panther.first_attack_spent = false
+	var before: int = target.current_hp
+	panther._attack_target(target)
+	check(before-target.current_hp == int(round(panther.attack_damage*2.3)),"rare panther augmented first hit")
+	panther.configure_special_augments(config_for("dusk_panther"))
+	before = target.current_hp
+	panther._attack_target(target)
+	check(before-target.current_hp == panther.attack_damage,"rare panther no first hit recharge")
+	target.current_hp = int(target.max_hp*.3)
+	before = target.current_hp
+	panther._attack_target(target)
+	check(before-target.current_hp == int(round(panther.attack_damage*1.3)),"rare panther execute threshold and damage")
+	target.current_hp = target.max_hp
+	for pair in [["frost_owl",.73],["thorn_dryad",.68]]:
+		var actor = by_id[pair[0]]
+		actor.position = Vector2.ZERO
+		target.slow = 1.0
+		actor._attack_target(target)
+		settle_bolts(arena)
+		check(is_equal_approx(target.slow,float(pair[1])),String(pair[0])+" augmented slow on real hit")
+	var salamander = by_id.ember_salamander
+	salamander.position = Vector2.ZERO
+	target.burn = 0
+	salamander._attack_target(target)
+	settle_bolts(arena)
+	check(target.burn == int(round(salamander.attack_damage*.45)),"rare salamander augmented burn payload")
+	var scorpion = by_id.venom_scorpion
+	scorpion.position = Vector2.ZERO
+	target.poison = 0.0
+	scorpion._attack_target(target)
+	settle_bolts(arena)
+	check(is_equal_approx(target.poison,.0035),"rare scorpion augmented current hp poison")
+	var moth = by_id.moon_moth
+	moth.position = Vector2.ZERO
+	for actor in arena.actors: actor.set_meta("support_shield_hp",0)
+	moth.attack_count = 1
+	moth._attack_target(target)
+	var protected := 0
+	for actor in arena.actors:
+		if int(actor.get_meta("support_shield_hp",0))>0: protected+=1
+	check(protected == 3,"rare moth augmented two-attack ward caps three allies")
+	check(int(moth.get_meta("support_shield_hp",0)) == 0,"rare moth ward excludes self")
+	target.current_hp = target.max_hp
 
 func _test_mechanics(arena: Arena,target: Target) -> void:
 	var harpy = arena.actors[0]
@@ -270,8 +323,13 @@ func _test_actual_battle() -> void:
 		check(int(boosted.get_meta("elite_skill_count")) == D.DEFINITIONS[id].elite_skills.size(),id+" actual elite registration")
 	# Stop audio before freeing its scene in the dummy audio backend.
 	for host in [battle,root.get_node("GameAudio")]:
-		for player in host.find_children("*","AudioStreamPlayer",true,false): player.stop()
-		for player in host.find_children("*","AudioStreamPlayer2D",true,false): player.stop()
+		for player in host.find_children("*","AudioStreamPlayer",true,false):
+			player.stop()
+			player.stream = null
+		for player in host.find_children("*","AudioStreamPlayer2D",true,false):
+			player.stop()
+			player.stream = null
+	await process_frame
 	battle.queue_free()
 	await process_frame
 	SCOPE.guest_directory = old_directory
@@ -305,13 +363,47 @@ func _test_reinforcements() -> void:
 			var size: int = director.roster.size()
 			for i in 10: director.tick(.1)
 			check(director.roster.size() == size,"late roster never duplicates")
+			arena.run_metrics.elapsed_seconds = 419.9
+			director.tick(.1)
+			for id in preload("res://tests/uncommon_monsters_4_smoke.gd").IDS:
+				check(id not in director.roster,"uncommon waits until420s")
+			arena.run_metrics.elapsed_seconds = 420.0
+			director.tick(.1)
+			for id in preload("res://tests/uncommon_monsters_4_smoke.gd").IDS:
+				check((id in director.roster) == SURVIVAL.monster_allowed(id,stage,difficulty),"director installs eligible uncommon at420s")
+			arena.run_metrics.elapsed_seconds = 539.9
+			director.tick(.1)
+			for id in preload("res://tests/rare_monsters_8_smoke.gd").IDS:
+				check(id not in director.roster,"rare not installed at539.9s")
+			arena.run_metrics.elapsed_seconds = 540.0
+			director.tick(.1)
+			var size_after_rare: int = director.roster.size()
+			var checkpoint_after_rare: int = director.next_reinforcement
+			for i in 10: director.tick(.1)
+			check(director.roster.size() == size_after_rare and director.next_reinforcement == checkpoint_after_rare,"late checkpoints consumed once without duplicate roster")
 			arena.population = 0
 			arena.run_metrics.elapsed_seconds = 610.0
+			var rare_ids: Array = preload("res://tests/rare_monsters_8_smoke.gd").IDS
+			var before_rare := SURVIVAL.late_recruits(stage,difficulty,539.9)
+			var after_rare := SURVIVAL.late_recruits(stage,difficulty,540.0)
+			for id in rare_ids:
+				check(id not in before_rare,"rare reinforcement waits until540s")
+				check((id in after_rare) == SURVIVAL.monster_allowed(id,stage,difficulty),"rare reinforcement respects stage grade")
 			for i in range(20):
 				arena.population = 0
 				director.think_remaining = 0.0
 				director.tick(.1)
+			for id in rare_ids:
+				check((id in director.roster) == SURVIVAL.monster_allowed(id,stage,difficulty),"director installs eligible rare recruit")
 			for id in expected: check(id in arena.normal,"late recruit actually spawned")
+			var skipped := DIRECTOR.new()
+			skipped.install(arena)
+			skipped.next_elite = 10000.0
+			skipped.giant_index = SURVIVAL.GIANT_TIMES.size()
+			skipped.encounters.next_event = 10000.0
+			skipped.tick(.1)
+			check(skipped.next_reinforcement == skipped.reinforcement_times.size(),"time jump consumes all due checkpoints")
+			for id in after_rare: check(id in skipped.roster,"time jump installs every eligible recruit")
 			arena.queue_free()
 			await process_frame
 

@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="SpriteFrames" path="res://assets/art/monsters/ember_salamander/ember_salamander_animations.tres" id="1"]
+
+[node name="ember_salamander" type="Node2D"]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+sprite_frames = ExtResource("1")
+animation = &"idle"
+autoplay = "idle"
+centered = false
+offset = Vector2(-164, -159)
+scale = Vector2(0.70588235, 0.70588235)

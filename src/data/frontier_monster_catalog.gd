@@ -1,5 +1,5 @@
 extends RefCounted
-## Cost-budgeted frontier monsters; shared declarative runtime.
+## Declarative species, visuals, named augments and generic elite payloads.
 const DEFINITIONS := {
   "harpy": {
     "id": "harpy",
@@ -3131,6 +3131,1425 @@ const DEFINITIONS := {
       "ground_y": 30.0,
       "source_animation_top": 12
     }
+  },
+  "crystal_tortoise": {
+    "id": "crystal_tortoise",
+    "name": "수정등거북",
+    "grade": "rare",
+    "rarity": "rare",
+    "role": "tank",
+    "family": "crystal_tortoise",
+    "species": "beast",
+    "base_cost": 17.0,
+    "summon_exp": 17.0,
+    "attack_type": "melee",
+    "base_stats": {
+      "max_hp": 1,
+      "attack_damage": 1,
+      "move_speed": 58.0,
+      "attack_range": 92.0,
+      "attack_cooldown": 2.5,
+      "exp_reward": 17,
+      "projectile_speed": 0.0
+    },
+    "balance": {
+      "health_share": 0.76,
+      "damage_share": 0.87,
+      "cycle_damage_multiplier": 1.0,
+      "note": "등장 시 최대체력30% 보호막. 느린 근접 탱커로 원거리 추격이 약하다. 고유 능력·엘리트 기여를 몸체/직접DPS 예산에서 할인. 실전 승률 미검증."
+    },
+    "description": "등장 시 최대체력30% 보호막. 느린 근접 탱커로 원거리 추격이 약하다.",
+    "special_augment_ids": [
+      "crystal_tortoise_special_1",
+      "crystal_tortoise_special_2",
+      "crystal_tortoise_special_3"
+    ],
+    "elite_skills": [
+      {
+        "name": "수정 재결정",
+        "description": "자신의 보호막을 최대체력40%까지 보충. 남은 잔량과 합산하지 않고 큰 값으로 갱신.",
+        "runtime": "monster",
+        "kind": "self_ward",
+        "initial_cooldown": 4.0,
+        "cooldown": 20.0,
+        "retry_interval": 0.35,
+        "shield_ratio": 0.4,
+        "id": "elite_crystal_tortoise_1"
+      },
+      {
+        "name": "등갑 내려찍기",
+        "description": "대상 위치를0.65초 예고 후 반경115px 안 대상1명에 공격력150% 피해·1초25% 둔화. 원 밖으로 피하면 불발.",
+        "runtime": "monster",
+        "kind": "strike",
+        "initial_cooldown": 4.0,
+        "cooldown": 18.0,
+        "retry_interval": 0.35,
+        "windup": 0.65,
+        "cast_range": 240.0,
+        "radius": 115.0,
+        "damage_multiplier": 1.5,
+        "color": "94dbea",
+        "slow_multiplier": 0.75,
+        "slow_duration": 1.0,
+        "id": "elite_crystal_tortoise_2"
+      }
+    ],
+    "card_icon_path": "res://assets/art/monsters/crystal_tortoise/frames/idle_01.png",
+    "behavior": {
+      "shield_ratio": 0.3
+    },
+    "normal_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/monsters/crystal_tortoise/frames",
+      "target_height": 140.43076923076924,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        -1.5,
+        -69.5
+      ],
+      "source_idle_bounds": [
+        53,
+        21,
+        244,
+        151
+      ],
+      "body_height": 112.0,
+      "hero_height_ratio": 1.037037037037037,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "elite_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/elitemonster/crystal_tortoise/frames",
+      "target_height": 159.98144927536234,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        -2.5,
+        -76.0
+      ],
+      "source_idle_bounds": [
+        50,
+        26,
+        247,
+        164
+      ],
+      "body_height": 125.44000000000001,
+      "hero_height_ratio": 1.1614814814814816,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "hero_survival_after": 540.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
+  },
+  "ember_salamander": {
+    "id": "ember_salamander",
+    "name": "잿불도롱뇽",
+    "grade": "rare",
+    "rarity": "rare",
+    "role": "ranged",
+    "family": "ember_salamander",
+    "species": "beast",
+    "base_cost": 15.0,
+    "summon_exp": 15.0,
+    "attack_type": "ranged",
+    "base_stats": {
+      "max_hp": 1,
+      "attack_damage": 1,
+      "move_speed": 90.0,
+      "attack_range": 355.0,
+      "attack_cooldown": 1.65,
+      "exp_reward": 15,
+      "projectile_speed": 340.0
+    },
+    "balance": {
+      "health_share": 0.88,
+      "damage_share": 0.76,
+      "cycle_damage_multiplier": 1.0,
+      "note": "직선 불씨탄에 공격력25%의2초 화상. 접근당하면 취약하다. 고유 능력·엘리트 기여를 몸체/직접DPS 예산에서 할인. 실전 승률 미검증."
+    },
+    "description": "직선 불씨탄에 공격력25%의2초 화상. 접근당하면 취약하다.",
+    "special_augment_ids": [
+      "ember_salamander_special_1",
+      "ember_salamander_special_2",
+      "ember_salamander_special_3"
+    ],
+    "elite_skills": [
+      {
+        "name": "세갈래 잿불",
+        "description": "지정 방향으로 3갈래 직선탄. 각 공격력65% 피해, 회피 가능. 기본 공격의 상태효과를 계승.",
+        "runtime": "monster",
+        "kind": "fan",
+        "initial_cooldown": 4.0,
+        "cooldown": 18.0,
+        "retry_interval": 0.35,
+        "cast_range": 415.0,
+        "spread": 0.22,
+        "damage_multiplier": 0.65,
+        "color": "f58d51",
+        "id": "elite_ember_salamander_1"
+      },
+      {
+        "name": "화염 낙인",
+        "description": "대상 위치를0.65초 예고 후 반경115px 안 대상1명에 공격력140% 피해와 해당 피해40%의2초 화상. 피하면 불발.",
+        "runtime": "monster",
+        "kind": "strike",
+        "initial_cooldown": 4.0,
+        "cooldown": 20.0,
+        "retry_interval": 0.35,
+        "windup": 0.65,
+        "cast_range": 240.0,
+        "radius": 115.0,
+        "damage_multiplier": 1.4,
+        "color": "f58d51",
+        "burn_ratio": 0.4,
+        "burn_duration": 2.0,
+        "id": "elite_ember_salamander_2"
+      }
+    ],
+    "card_icon_path": "res://assets/art/monsters/ember_salamander/frames/idle_01.png",
+    "behavior": {
+      "projectile": true,
+      "color": "f58d51",
+      "burn_ratio": 0.25,
+      "burn_duration": 2.0
+    },
+    "normal_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/monsters/ember_salamander/frames",
+      "target_height": 135.7941176470588,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        -3.0,
+        -73.5
+      ],
+      "source_idle_bounds": [
+        76,
+        23,
+        258,
+        159
+      ],
+      "body_height": 108.0,
+      "hero_height_ratio": 1.0,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "elite_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/elitemonster/ember_salamander/frames",
+      "target_height": 147.744,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        -2.0,
+        -73.5
+      ],
+      "source_idle_bounds": [
+        77,
+        19,
+        267,
+        159
+      ],
+      "body_height": 120.96000000000001,
+      "hero_height_ratio": 1.12,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "hero_survival_after": 540.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
+  },
+  "frost_owl": {
+    "id": "frost_owl",
+    "name": "서리깃올빼미",
+    "grade": "rare",
+    "rarity": "rare",
+    "role": "controller",
+    "family": "frost_owl",
+    "species": "beast",
+    "base_cost": 14.0,
+    "summon_exp": 14.0,
+    "attack_type": "ranged",
+    "base_stats": {
+      "max_hp": 1,
+      "attack_damage": 1,
+      "move_speed": 85.0,
+      "attack_range": 335.0,
+      "attack_cooldown": 1.9,
+      "exp_reward": 14,
+      "projectile_speed": 310.0
+    },
+    "balance": {
+      "health_share": 0.9,
+      "damage_share": 0.72,
+      "cycle_damage_multiplier": 1.0,
+      "note": "얼음깃 직선탄이1초18% 둔화. 직접 화력보다 아군의 접근을 돕는다. 고유 능력·엘리트 기여를 몸체/직접DPS 예산에서 할인. 실전 승률 미검증."
+    },
+    "description": "얼음깃 직선탄이1초18% 둔화. 직접 화력보다 아군의 접근을 돕는다.",
+    "special_augment_ids": [
+      "frost_owl_special_1",
+      "frost_owl_special_2",
+      "frost_owl_special_3"
+    ],
+    "elite_skills": [
+      {
+        "name": "서리깃 부채",
+        "description": "지정 방향으로 3갈래 직선탄. 각 공격력55% 피해, 회피 가능. 기본 공격의 상태효과를 계승.",
+        "runtime": "monster",
+        "kind": "fan",
+        "initial_cooldown": 4.0,
+        "cooldown": 18.0,
+        "retry_interval": 0.35,
+        "cast_range": 395.0,
+        "spread": 0.22,
+        "damage_multiplier": 0.55,
+        "color": "a4e5ef",
+        "id": "elite_frost_owl_1"
+      },
+      {
+        "name": "동결 표식",
+        "description": "대상 위치를0.65초 예고 후 반경115px 안 대상1명에 공격력100% 피해·1.3초35% 둔화. 피하면 불발.",
+        "runtime": "monster",
+        "kind": "strike",
+        "initial_cooldown": 4.0,
+        "cooldown": 19.0,
+        "retry_interval": 0.35,
+        "windup": 0.65,
+        "cast_range": 240.0,
+        "radius": 115.0,
+        "damage_multiplier": 1.0,
+        "color": "a4e5ef",
+        "slow_multiplier": 0.65,
+        "slow_duration": 1.3,
+        "id": "elite_frost_owl_2"
+      }
+    ],
+    "card_icon_path": "res://assets/art/monsters/frost_owl/frames/idle_01.png",
+    "behavior": {
+      "projectile": true,
+      "color": "a4e5ef",
+      "slow_multiplier": 0.82,
+      "slow_duration": 1.0
+    },
+    "normal_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/monsters/frost_owl/frames",
+      "target_height": 123.0326797385621,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        6.0,
+        -78.5
+      ],
+      "source_idle_bounds": [
+        79,
+        16,
+        237,
+        169
+      ],
+      "body_height": 104.0,
+      "hero_height_ratio": 0.9629629629629629,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "elite_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/elitemonster/frost_owl/frames",
+      "target_height": 134.56695652173914,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        6.0,
+        -81.0
+      ],
+      "source_idle_bounds": [
+        81,
+        13,
+        241,
+        174
+      ],
+      "body_height": 116.48000000000002,
+      "hero_height_ratio": 1.0785185185185187,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "hero_survival_after": 540.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
+  },
+  "thorn_dryad": {
+    "id": "thorn_dryad",
+    "name": "가시덩굴드리아드",
+    "grade": "rare",
+    "rarity": "rare",
+    "role": "controller",
+    "family": "thorn_dryad",
+    "species": "plant",
+    "base_cost": 16.0,
+    "summon_exp": 16.0,
+    "attack_type": "melee",
+    "base_stats": {
+      "max_hp": 1,
+      "attack_damage": 1,
+      "move_speed": 76.0,
+      "attack_range": 130.0,
+      "attack_cooldown": 2.0,
+      "exp_reward": 16,
+      "projectile_speed": 0.0
+    },
+    "balance": {
+      "health_share": 0.93,
+      "damage_share": 0.73,
+      "cycle_damage_multiplier": 1.0,
+      "note": "근접 가시채찍에1.1초22% 둔화. 전선 뒤에서 묶으며 원거리 견제에 약하다. 고유 능력·엘리트 기여를 몸체/직접DPS 예산에서 할인. 실전 승률 미검증."
+    },
+    "description": "근접 가시채찍에1.1초22% 둔화. 전선 뒤에서 묶으며 원거리 견제에 약하다.",
+    "special_augment_ids": [
+      "thorn_dryad_special_1",
+      "thorn_dryad_special_2",
+      "thorn_dryad_special_3"
+    ],
+    "elite_skills": [
+      {
+        "name": "뿌리 얽기",
+        "description": "대상 위치를0.65초 예고 후 반경115px 안 대상1명에 공격력110% 피해·1.5초40% 둔화. 피하면 불발.",
+        "runtime": "monster",
+        "kind": "strike",
+        "initial_cooldown": 4.0,
+        "cooldown": 18.0,
+        "retry_interval": 0.35,
+        "windup": 0.65,
+        "cast_range": 240.0,
+        "radius": 115.0,
+        "damage_multiplier": 1.1,
+        "color": "91b957",
+        "slow_multiplier": 0.6,
+        "slow_duration": 1.5,
+        "id": "elite_thorn_dryad_1"
+      },
+      {
+        "name": "숲의 가시울타리",
+        "description": "주변240px 내 자신을 제외한 아군 최대3명에 각 최대체력12% 보호막. 중첩 없이 큰 잔량으로 갱신.",
+        "runtime": "monster",
+        "kind": "ally_ward",
+        "initial_cooldown": 4.0,
+        "cooldown": 20.0,
+        "retry_interval": 0.35,
+        "ward_radius": 240.0,
+        "ward_count": 3,
+        "ward_ratio": 0.12,
+        "id": "elite_thorn_dryad_2"
+      }
+    ],
+    "card_icon_path": "res://assets/art/monsters/thorn_dryad/frames/idle_01.png",
+    "behavior": {
+      "slow_multiplier": 0.78,
+      "slow_duration": 1.1
+    },
+    "normal_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/monsters/thorn_dryad/frames",
+      "target_height": 134.97435897435898,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        -4.5,
+        -82.0
+      ],
+      "source_idle_bounds": [
+        98,
+        20,
+        257,
+        176
+      ],
+      "body_height": 112.0,
+      "hero_height_ratio": 1.037037037037037,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "elite_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/elitemonster/thorn_dryad/frames",
+      "target_height": 152.88000000000002,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        -5.5,
+        -85.5
+      ],
+      "source_idle_bounds": [
+        100,
+        23,
+        261,
+        183
+      ],
+      "body_height": 125.44000000000001,
+      "hero_height_ratio": 1.1614814814814816,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "hero_survival_after": 540.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
+  },
+  "dusk_panther": {
+    "id": "dusk_panther",
+    "name": "황혼표범",
+    "grade": "rare",
+    "rarity": "rare",
+    "role": "burst",
+    "family": "dusk_panther",
+    "species": "beast",
+    "base_cost": 14.0,
+    "summon_exp": 14.0,
+    "attack_type": "melee",
+    "base_stats": {
+      "max_hp": 1,
+      "attack_damage": 1,
+      "move_speed": 132.0,
+      "attack_range": 85.0,
+      "attack_cooldown": 1.05,
+      "exp_reward": 14,
+      "projectile_speed": 0.0
+    },
+    "balance": {
+      "health_share": 0.9,
+      "damage_share": 0.84,
+      "cycle_damage_multiplier": 1.0,
+      "note": "생애 첫 기본공격180%, 체력25% 이하 대상에 피해20% 추가. 몸체가 약한 근접 마무리 딜러. 고유 능력·엘리트 기여를 몸체/직접DPS 예산에서 할인. 실전 승률 미검증."
+    },
+    "description": "생애 첫 기본공격180%, 체력25% 이하 대상에 피해20% 추가. 몸체가 약한 근접 마무리 딜러.",
+    "special_augment_ids": [
+      "dusk_panther_special_1",
+      "dusk_panther_special_2",
+      "dusk_panther_special_3"
+    ],
+    "elite_skills": [
+      {
+        "name": "달그림자 도약",
+        "description": "대상 위치를0.65초 예고 후 반경115px 안 대상1명에 공격력180% 피해. 피하면 불발. 종료 후1.5초 이속20% 증가.",
+        "runtime": "monster",
+        "kind": "strike",
+        "initial_cooldown": 4.0,
+        "cooldown": 16.0,
+        "retry_interval": 0.35,
+        "windup": 0.65,
+        "cast_range": 240.0,
+        "radius": 115.0,
+        "damage_multiplier": 1.8,
+        "color": "a48add",
+        "speed_multiplier": 1.2,
+        "speed_duration": 1.5,
+        "id": "elite_dusk_panther_1"
+      },
+      {
+        "name": "황혼의 포식",
+        "description": "대상 위치를0.65초 예고 후 반경115px 안 대상1명에 공격력120% 피해, 실제 체력피해의20% 회복. 피하면 불발.",
+        "runtime": "monster",
+        "kind": "strike",
+        "initial_cooldown": 4.0,
+        "cooldown": 22.0,
+        "retry_interval": 0.35,
+        "windup": 0.65,
+        "cast_range": 240.0,
+        "radius": 115.0,
+        "damage_multiplier": 1.2,
+        "color": "a48add",
+        "lifesteal": 0.2,
+        "id": "elite_dusk_panther_2"
+      }
+    ],
+    "card_icon_path": "res://assets/art/monsters/dusk_panther/frames/idle_01.png",
+    "behavior": {
+      "first_multiplier": 1.8,
+      "execute_threshold": 0.25,
+      "execute_multiplier": 1.2
+    },
+    "normal_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/monsters/dusk_panther/frames",
+      "target_height": 164.6551724137931,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        13.0,
+        -83.5
+      ],
+      "source_idle_bounds": [
+        33,
+        63,
+        237,
+        179
+      ],
+      "body_height": 100.0,
+      "hero_height_ratio": 0.9259259259259259,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "elite_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/elitemonster/dusk_panther/frames",
+      "target_height": 169.69696969696972,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        14.5,
+        -88.0
+      ],
+      "source_idle_bounds": [
+        31,
+        56,
+        240,
+        188
+      ],
+      "body_height": 112.00000000000001,
+      "hero_height_ratio": 1.0370370370370372,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "hero_survival_after": 540.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
+  },
+  "rune_sentinel": {
+    "id": "rune_sentinel",
+    "name": "룬방패수호병",
+    "grade": "rare",
+    "rarity": "rare",
+    "role": "tank",
+    "family": "rune_sentinel",
+    "species": "construct",
+    "base_cost": 18.0,
+    "summon_exp": 18.0,
+    "attack_type": "melee",
+    "base_stats": {
+      "max_hp": 1,
+      "attack_damage": 1,
+      "move_speed": 70.0,
+      "attack_range": 100.0,
+      "attack_cooldown": 2.2,
+      "exp_reward": 18,
+      "projectile_speed": 0.0
+    },
+    "balance": {
+      "health_share": 0.83,
+      "damage_share": 0.74,
+      "cycle_damage_multiplier": 1.0,
+      "note": "등장 보호막20%, 매3회 공격마다 주변200px 아군2명에6% 갱신형 보호막. 낮은 단독 화력. 고유 능력·엘리트 기여를 몸체/직접DPS 예산에서 할인. 실전 승률 미검증."
+    },
+    "description": "등장 보호막20%, 매3회 공격마다 주변200px 아군2명에6% 갱신형 보호막. 낮은 단독 화력.",
+    "special_augment_ids": [
+      "rune_sentinel_special_1",
+      "rune_sentinel_special_2",
+      "rune_sentinel_special_3"
+    ],
+    "elite_skills": [
+      {
+        "name": "룬의 방벽",
+        "description": "주변240px 내 자신을 제외한 아군 최대3명에 각 최대체력15% 보호막. 중첩 없이 큰 잔량으로 갱신.",
+        "runtime": "monster",
+        "kind": "ally_ward",
+        "initial_cooldown": 4.0,
+        "cooldown": 20.0,
+        "retry_interval": 0.35,
+        "ward_radius": 240.0,
+        "ward_count": 3,
+        "ward_ratio": 0.15,
+        "id": "elite_rune_sentinel_1"
+      },
+      {
+        "name": "수호핵 재충전",
+        "description": "자신의 보호막을 최대체력35%까지 보충. 남은 잔량과 합산하지 않고 큰 값으로 갱신.",
+        "runtime": "monster",
+        "kind": "self_ward",
+        "initial_cooldown": 4.0,
+        "cooldown": 22.0,
+        "retry_interval": 0.35,
+        "shield_ratio": 0.35,
+        "id": "elite_rune_sentinel_2"
+      }
+    ],
+    "card_icon_path": "res://assets/art/monsters/rune_sentinel/frames/idle_01.png",
+    "behavior": {
+      "shield_ratio": 0.2,
+      "ward_every": 3,
+      "ward_radius": 200.0,
+      "ward_ratio": 0.06,
+      "ward_count": 2
+    },
+    "normal_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/monsters/rune_sentinel/frames",
+      "target_height": 183.0,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        -5.0,
+        -84.0
+      ],
+      "source_idle_bounds": [
+        60,
+        52,
+        248,
+        180
+      ],
+      "body_height": 122.0,
+      "hero_height_ratio": 1.1296296296296295,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "elite_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/elitemonster/rune_sentinel/frames",
+      "target_height": 198.84179104477613,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        -5.5,
+        -85.5
+      ],
+      "source_idle_bounds": [
+        62,
+        49,
+        249,
+        183
+      ],
+      "body_height": 136.64000000000001,
+      "hero_height_ratio": 1.2651851851851854,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "hero_survival_after": 540.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
+  },
+  "venom_scorpion": {
+    "id": "venom_scorpion",
+    "name": "독침전갈",
+    "grade": "rare",
+    "rarity": "rare",
+    "role": "ranged",
+    "family": "venom_scorpion",
+    "species": "beast",
+    "base_cost": 16.0,
+    "summon_exp": 16.0,
+    "attack_type": "ranged",
+    "base_stats": {
+      "max_hp": 1,
+      "attack_damage": 1,
+      "move_speed": 80.0,
+      "attack_range": 300.0,
+      "attack_cooldown": 2.1,
+      "exp_reward": 16,
+      "projectile_speed": 285.0
+    },
+    "balance": {
+      "health_share": 0.85,
+      "damage_share": 0.7,
+      "cycle_damage_multiplier": 1.0,
+      "note": "직선 독침 적중 시 현재체력0.2%를3초간 독 피해. 짧은 사거리·느린 공격과 낮은 직접 피해. 고유 능력·엘리트 기여를 몸체/직접DPS 예산에서 할인. 실전 승률 미검증."
+    },
+    "description": "직선 독침 적중 시 현재체력0.2%를3초간 독 피해. 짧은 사거리·느린 공격과 낮은 직접 피해.",
+    "special_augment_ids": [
+      "venom_scorpion_special_1",
+      "venom_scorpion_special_2",
+      "venom_scorpion_special_3"
+    ],
+    "elite_skills": [
+      {
+        "name": "독침 삼연사",
+        "description": "지정 방향으로 3갈래 직선탄. 각 공격력60% 피해, 회피 가능. 기본 공격의 상태효과를 계승.",
+        "runtime": "monster",
+        "kind": "fan",
+        "initial_cooldown": 4.0,
+        "cooldown": 18.0,
+        "retry_interval": 0.35,
+        "cast_range": 360.0,
+        "spread": 0.22,
+        "damage_multiplier": 0.6,
+        "color": "b0d96c",
+        "id": "elite_venom_scorpion_1"
+      },
+      {
+        "name": "비취 탈피",
+        "description": "자신의 보호막을 최대체력25%까지 보충. 남은 잔량과 합산하지 않고 큰 값으로 갱신.",
+        "runtime": "monster",
+        "kind": "self_ward",
+        "initial_cooldown": 4.0,
+        "cooldown": 24.0,
+        "retry_interval": 0.35,
+        "shield_ratio": 0.25,
+        "id": "elite_venom_scorpion_2"
+      }
+    ],
+    "card_icon_path": "res://assets/art/monsters/venom_scorpion/frames/idle_01.png",
+    "behavior": {
+      "projectile": true,
+      "color": "b0d96c",
+      "poison_ratio": 0.002,
+      "poison_duration": 3.0
+    },
+    "normal_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/monsters/venom_scorpion/frames",
+      "target_height": 127.46478873239437,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        -11.0,
+        -78.5
+      ],
+      "source_idle_bounds": [
+        61,
+        27,
+        255,
+        169
+      ],
+      "body_height": 100.0,
+      "hero_height_ratio": 0.9259259259259259,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "elite_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/elitemonster/venom_scorpion/frames",
+      "target_height": 137.5570469798658,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        -13.5,
+        -79.5
+      ],
+      "source_idle_bounds": [
+        64,
+        22,
+        267,
+        171
+      ],
+      "body_height": 112.00000000000001,
+      "hero_height_ratio": 1.0370370370370372,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "hero_survival_after": 540.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
+  },
+  "moon_moth": {
+    "id": "moon_moth",
+    "name": "달가루나방",
+    "grade": "rare",
+    "rarity": "rare",
+    "role": "ranged",
+    "family": "moon_moth",
+    "species": "beast",
+    "base_cost": 16.0,
+    "summon_exp": 16.0,
+    "attack_type": "ranged",
+    "base_stats": {
+      "max_hp": 1,
+      "attack_damage": 1,
+      "move_speed": 92.0,
+      "attack_range": 320.0,
+      "attack_cooldown": 1.7,
+      "exp_reward": 16,
+      "projectile_speed": 300.0
+    },
+    "balance": {
+      "health_share": 0.88,
+      "damage_share": 0.72,
+      "cycle_damage_multiplier": 1.0,
+      "note": "매3회 공격마다 주변240px 아군3명에 최대체력8% 갱신형 보호막. 사격을 지속해야 지원 가능. 고유 능력·엘리트 기여를 몸체/직접DPS 예산에서 할인. 실전 승률 미검증.",
+      "role": "buffer"
+    },
+    "description": "매3회 공격마다 주변240px 아군3명에 최대체력8% 갱신형 보호막. 사격을 지속해야 지원 가능.",
+    "special_augment_ids": [
+      "moon_moth_special_1",
+      "moon_moth_special_2",
+      "moon_moth_special_3"
+    ],
+    "elite_skills": [
+      {
+        "name": "달빛 장막",
+        "description": "주변240px 내 자신을 제외한 아군 최대3명에 각 최대체력16% 보호막. 중첩 없이 큰 잔량으로 갱신.",
+        "runtime": "monster",
+        "kind": "ally_ward",
+        "initial_cooldown": 4.0,
+        "cooldown": 20.0,
+        "retry_interval": 0.35,
+        "ward_radius": 240.0,
+        "ward_count": 3,
+        "ward_ratio": 0.16,
+        "id": "elite_moon_moth_1"
+      },
+      {
+        "name": "초승달 날갯짓",
+        "description": "지정 방향으로 3갈래 직선탄. 각 공격력55% 피해, 회피 가능. 기본 공격의 상태효과를 계승.",
+        "runtime": "monster",
+        "kind": "fan",
+        "initial_cooldown": 4.0,
+        "cooldown": 18.0,
+        "retry_interval": 0.35,
+        "cast_range": 380.0,
+        "spread": 0.22,
+        "damage_multiplier": 0.55,
+        "color": "cfb0ec",
+        "id": "elite_moon_moth_2"
+      }
+    ],
+    "card_icon_path": "res://assets/art/monsters/moon_moth/frames/idle_01.png",
+    "behavior": {
+      "projectile": true,
+      "color": "cfb0ec",
+      "ward_every": 3,
+      "ward_radius": 240.0,
+      "ward_ratio": 0.08,
+      "ward_count": 3
+    },
+    "normal_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/monsters/moon_moth/frames",
+      "target_height": 142.68115942028984,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        -2.5,
+        -77.5
+      ],
+      "source_idle_bounds": [
+        64,
+        29,
+        243,
+        167
+      ],
+      "body_height": 110.0,
+      "hero_height_ratio": 1.0185185185185186,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "elite_visual": {
+      "mode": "frames",
+      "asset_dir": "res://assets/art/elitemonster/moon_moth/frames",
+      "target_height": 157.42222222222225,
+      "animations": {
+        "idle": {
+          "prefix": "idle",
+          "count": 4,
+          "fps": 6.0,
+          "loop": true
+        },
+        "move": {
+          "prefix": "move",
+          "count": 6,
+          "fps": 10.0,
+          "loop": true
+        },
+        "attack": {
+          "prefix": "attack",
+          "count": 6,
+          "fps": 14.0,
+          "loop": false
+        },
+        "hit": {
+          "prefix": "hit",
+          "count": 3,
+          "fps": 12.0,
+          "loop": false
+        },
+        "death": {
+          "prefix": "death",
+          "count": 4,
+          "fps": 10.0,
+          "loop": false
+        }
+      },
+      "offset": [
+        -2.0,
+        -80.0
+      ],
+      "source_idle_bounds": [
+        76,
+        28,
+        258,
+        172
+      ],
+      "body_height": 123.20000000000002,
+      "hero_height_ratio": 1.1407407407407408,
+      "ground_y": 30.0,
+      "source_animation_top": 12
+    },
+    "hero_survival_after": 540.0,
+    "ground_shadow": {
+      "offset_y": 30.0,
+      "opacity": 0.42
+    }
   }
 }
 const AUGMENTS := [
@@ -4011,6 +5430,376 @@ const AUGMENTS := [
       },
       "stat_multipliers": {
         "hp": 1.15
+      }
+    }
+  },
+  {
+    "id": "crystal_tortoise_special_1",
+    "monster_id": "crystal_tortoise",
+    "name": "겹수정 등딱지",
+    "description": "등장 보호막30%→45%. 기존 개체는 증가분만1회 지급.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "crystal_tortoise_special_1",
+    "effect_values": {
+      "behavior": {
+        "shield_ratio": 0.45
+      }
+    }
+  },
+  {
+    "id": "crystal_tortoise_special_2",
+    "monster_id": "crystal_tortoise",
+    "name": "단단한 결정핵",
+    "description": "최대체력20% 증가.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "crystal_tortoise_special_2",
+    "effect_values": {
+      "stat_multipliers": {
+        "hp": 1.2
+      }
+    }
+  },
+  {
+    "id": "crystal_tortoise_special_3",
+    "monster_id": "crystal_tortoise",
+    "name": "구르는 수정발",
+    "description": "이동속도20% 증가.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "crystal_tortoise_special_3",
+    "effect_values": {
+      "runtime_stat_multipliers": {
+        "speed_multiplier": 1.2
+      }
+    }
+  },
+  {
+    "id": "ember_salamander_special_1",
+    "monster_id": "ember_salamander",
+    "name": "살아있는 잿불",
+    "description": "화상 총피해 공격력25%→45%.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "ember_salamander_special_1",
+    "effect_values": {
+      "behavior": {
+        "burn_ratio": 0.45
+      }
+    }
+  },
+  {
+    "id": "ember_salamander_special_2",
+    "monster_id": "ember_salamander",
+    "name": "긴 불숨",
+    "description": "사거리355→435·투사체속도340→420.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "ember_salamander_special_2",
+    "effect_values": {
+      "stat_overrides": {
+        "attack_range": 435.0,
+        "projectile_speed": 420.0
+      }
+    }
+  },
+  {
+    "id": "ember_salamander_special_3",
+    "monster_id": "ember_salamander",
+    "name": "뜨거운 박동",
+    "description": "공격 간격12% 감소.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "ember_salamander_special_3",
+    "effect_values": {
+      "stat_multipliers": {
+        "attack_cooldown": 0.88
+      }
+    }
+  },
+  {
+    "id": "frost_owl_special_1",
+    "monster_id": "frost_owl",
+    "name": "매서운 서리깃",
+    "description": "기본탄 둔화18%→27%.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "frost_owl_special_1",
+    "effect_values": {
+      "behavior": {
+        "slow_multiplier": 0.73
+      }
+    }
+  },
+  {
+    "id": "frost_owl_special_2",
+    "monster_id": "frost_owl",
+    "name": "늦겨울의 숨",
+    "description": "기본탄 둔화1초→1.4초.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "frost_owl_special_2",
+    "effect_values": {
+      "behavior": {
+        "slow_duration": 1.4
+      }
+    }
+  },
+  {
+    "id": "frost_owl_special_3",
+    "monster_id": "frost_owl",
+    "name": "찬바람 활공",
+    "description": "이동속도15%·투사체속도310→390.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "frost_owl_special_3",
+    "effect_values": {
+      "runtime_stat_multipliers": {
+        "speed_multiplier": 1.15
+      },
+      "stat_overrides": {
+        "projectile_speed": 390.0
+      }
+    }
+  },
+  {
+    "id": "thorn_dryad_special_1",
+    "monster_id": "thorn_dryad",
+    "name": "휘감는 가시",
+    "description": "기본공격 둔화22%→32%.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "thorn_dryad_special_1",
+    "effect_values": {
+      "behavior": {
+        "slow_multiplier": 0.68
+      }
+    }
+  },
+  {
+    "id": "thorn_dryad_special_2",
+    "monster_id": "thorn_dryad",
+    "name": "깊은 뿌리",
+    "description": "최대체력25% 증가.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "thorn_dryad_special_2",
+    "effect_values": {
+      "stat_multipliers": {
+        "hp": 1.25
+      }
+    }
+  },
+  {
+    "id": "thorn_dryad_special_3",
+    "monster_id": "thorn_dryad",
+    "name": "뻗어가는 덩굴",
+    "description": "공격 사거리130→180.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "thorn_dryad_special_3",
+    "effect_values": {
+      "stat_overrides": {
+        "attack_range": 180.0
+      }
+    }
+  },
+  {
+    "id": "dusk_panther_special_1",
+    "monster_id": "dusk_panther",
+    "name": "황혼의 기습",
+    "description": "첫 기본공격180%→230%. 이미 소모한 첫 공격은 복구하지 않음.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "dusk_panther_special_1",
+    "effect_values": {
+      "behavior": {
+        "first_multiplier": 2.3
+      }
+    }
+  },
+  {
+    "id": "dusk_panther_special_2",
+    "monster_id": "dusk_panther",
+    "name": "끝장을 보는 발톱",
+    "description": "처형 발동 체력25%→35%, 추가피해20%→30%.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "dusk_panther_special_2",
+    "effect_values": {
+      "behavior": {
+        "execute_threshold": 0.35,
+        "execute_multiplier": 1.3
+      }
+    }
+  },
+  {
+    "id": "dusk_panther_special_3",
+    "monster_id": "dusk_panther",
+    "name": "포식의 숨결",
+    "description": "실제 감소시킨 체력의12% 회복.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "dusk_panther_special_3",
+    "effect_values": {
+      "behavior": {
+        "lifesteal": 0.12
+      }
+    }
+  },
+  {
+    "id": "rune_sentinel_special_1",
+    "monster_id": "rune_sentinel",
+    "name": "이중 방호룬",
+    "description": "등장 보호막20%→35%. 기존 개체는 증가분만1회 지급.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "rune_sentinel_special_1",
+    "effect_values": {
+      "behavior": {
+        "shield_ratio": 0.35
+      }
+    }
+  },
+  {
+    "id": "rune_sentinel_special_2",
+    "monster_id": "rune_sentinel",
+    "name": "공명 각인",
+    "description": "공격 연동 아군 보호막6%→10%.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "rune_sentinel_special_2",
+    "effect_values": {
+      "behavior": {
+        "ward_ratio": 0.1
+      }
+    }
+  },
+  {
+    "id": "rune_sentinel_special_3",
+    "monster_id": "rune_sentinel",
+    "name": "넓은 수호진",
+    "description": "공격 연동 보호 범위200→270px·대상2→3명.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "rune_sentinel_special_3",
+    "effect_values": {
+      "behavior": {
+        "ward_radius": 270.0,
+        "ward_count": 3
+      }
+    }
+  },
+  {
+    "id": "venom_scorpion_special_1",
+    "monster_id": "venom_scorpion",
+    "name": "농축 독낭",
+    "description": "독 총피해 현재체력0.2%→0.35%.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "venom_scorpion_special_1",
+    "effect_values": {
+      "behavior": {
+        "poison_ratio": 0.0035
+      }
+    }
+  },
+  {
+    "id": "venom_scorpion_special_2",
+    "monster_id": "venom_scorpion",
+    "name": "가벼운 독침",
+    "description": "사거리300→390·투사체속도285→390.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "venom_scorpion_special_2",
+    "effect_values": {
+      "stat_overrides": {
+        "attack_range": 390.0,
+        "projectile_speed": 390.0
+      }
+    }
+  },
+  {
+    "id": "venom_scorpion_special_3",
+    "monster_id": "venom_scorpion",
+    "name": "탈피 갑각",
+    "description": "최대체력20% 증가.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "venom_scorpion_special_3",
+    "effect_values": {
+      "stat_multipliers": {
+        "hp": 1.2
+      }
+    }
+  },
+  {
+    "id": "moon_moth_special_1",
+    "monster_id": "moon_moth",
+    "name": "짙은 달가루",
+    "description": "공격 연동 아군 보호막8%→12%.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "moon_moth_special_1",
+    "effect_values": {
+      "behavior": {
+        "ward_ratio": 0.12
+      }
+    }
+  },
+  {
+    "id": "moon_moth_special_2",
+    "monster_id": "moon_moth",
+    "name": "만월의 박동",
+    "description": "아군 보호막 발동 매3회→2회 공격.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "moon_moth_special_2",
+    "effect_values": {
+      "behavior": {
+        "ward_every": 2
+      }
+    }
+  },
+  {
+    "id": "moon_moth_special_3",
+    "monster_id": "moon_moth",
+    "name": "은빛 비늘날개",
+    "description": "최대체력15%·이동속도15% 증가.",
+    "augment_type": "special",
+    "max_stack": 1,
+    "icon": "",
+    "effect_type": "moon_moth_special_3",
+    "effect_values": {
+      "stat_multipliers": {
+        "hp": 1.15
+      },
+      "runtime_stat_multipliers": {
+        "speed_multiplier": 1.15
       }
     }
   }

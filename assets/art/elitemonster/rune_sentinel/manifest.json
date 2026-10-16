@@ -1,0 +1,627 @@
+{
+  "character_id": "rune_sentinel_elite",
+  "name_ko": "룬방패수호병",
+  "form": "elite",
+  "intended_rarity": "rare",
+  "status": "gameplay_registered",
+  "direction": "right",
+  "cell_size": [
+    300,
+    195
+  ],
+  "sheet_size": [
+    1800,
+    975
+  ],
+  "anchor": {
+    "center_x": 150,
+    "foot_y": 183
+  },
+  "columns": 6,
+  "rows": 5,
+  "animations": {
+    "idle": {
+      "fps": 6,
+      "loop": true,
+      "frames": [
+        "frames/idle_01.png",
+        "frames/idle_02.png",
+        "frames/idle_03.png",
+        "frames/idle_04.png"
+      ]
+    },
+    "move": {
+      "fps": 10,
+      "loop": true,
+      "frames": [
+        "frames/move_01.png",
+        "frames/move_02.png",
+        "frames/move_03.png",
+        "frames/move_04.png",
+        "frames/move_05.png",
+        "frames/move_06.png"
+      ]
+    },
+    "attack": {
+      "fps": 14,
+      "loop": false,
+      "frames": [
+        "frames/attack_01.png",
+        "frames/attack_02.png",
+        "frames/attack_03.png",
+        "frames/attack_04.png",
+        "frames/attack_05.png",
+        "frames/attack_06.png"
+      ]
+    },
+    "hit": {
+      "fps": 12,
+      "loop": false,
+      "frames": [
+        "frames/hit_01.png",
+        "frames/hit_02.png",
+        "frames/hit_03.png"
+      ]
+    },
+    "death": {
+      "fps": 10,
+      "loop": false,
+      "frames": [
+        "frames/death_01.png",
+        "frames/death_02.png",
+        "frames/death_03.png",
+        "frames/death_04.png"
+      ]
+    }
+  },
+  "source": "rune_sentinel_elite_source.png",
+  "sheet": "rune_sentinel_elite_spritesheet.png",
+  "portrait": null,
+  "source_sha256": "0bd045e69c91263f5209531c8f82e4a5a1fd7f5ef71d90d4d998cf5e7a74325f",
+  "design": "Small hollow bronze armored construct, cyan rune face in helmet, square shield left arm, mace right hand. Shield bash.",
+  "generation": {
+    "tool": "image_gen",
+    "prompt": "Use case: identity-preserve. Edit this normal monster animation sheet into its ELITE variant for Godot. Preserve exact character identity, anatomy, body size, facing RIGHT, all23 poses and6column5row layout: idle4 first4cells row1; walk6 row2; attack6 row3; hit3 first3 row4; death4 first4row5. Other cellsEMPTY. Change ONLY palette and minor armor details: dark steel armored plates with silver edges, violet rune face and shield rune, small gold crest, no change to shield and mace shapes. Preserve crisp colored pixel clusters and three-tone shading, fully isolated sprites, wide empty gutters. NO backdrop, fog, vignette, gradient, shadow, floor, external glow, grid or text. Background actual fully transparent alpha. All body/effects inside cells."
+  },
+  "normalization": {
+    "alpha_threshold": 128,
+    "resampling": "nearest",
+    "uniform_scale": 1.0,
+    "rgb_keying": false,
+    "body_height_target": 32,
+    "native_resolution": true,
+    "native_idle_height": 134.0,
+    "preview_scale": 0.7164179104477612
+  },
+  "frames": [
+    {
+      "file": "frames/idle_01.png",
+      "source_crop": [
+        0,
+        0,
+        265,
+        236
+      ],
+      "source_body_center_x": 142.0,
+      "source_foot_y": 212,
+      "destination_offset": [
+        8,
+        -29
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        62,
+        49,
+        249,
+        183
+      ],
+      "sha256": "0c5c601209a31a83e55701d28ca0e11983e1f009fbc27bd61afff0d3364864c1"
+    },
+    {
+      "file": "frames/idle_02.png",
+      "source_crop": [
+        265,
+        0,
+        505,
+        236
+      ],
+      "source_body_center_x": 112.0,
+      "source_foot_y": 212,
+      "destination_offset": [
+        38,
+        -29
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        62,
+        48,
+        251,
+        183
+      ],
+      "sha256": "5b111e01a38d8a819514ca1b5fc3ae38599730512fa980dd2938381efdc7091c"
+    },
+    {
+      "file": "frames/idle_03.png",
+      "source_crop": [
+        505,
+        0,
+        752,
+        236
+      ],
+      "source_body_center_x": 113.0,
+      "source_foot_y": 212,
+      "destination_offset": [
+        37,
+        -29
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        65,
+        49,
+        253,
+        183
+      ],
+      "sha256": "93eea120f7784d15e059ee6c3e4b6561d568633e58044af603611872631460d5"
+    },
+    {
+      "file": "frames/idle_04.png",
+      "source_crop": [
+        752,
+        0,
+        1042,
+        236
+      ],
+      "source_body_center_x": 119.0,
+      "source_foot_y": 212,
+      "destination_offset": [
+        31,
+        -29
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        62,
+        49,
+        249,
+        183
+      ],
+      "sha256": "5fb1faf263235f5654e3e7a54f7b422d2eb705c2b8adc79314b515b2bc6ec51e"
+    },
+    {
+      "file": "frames/move_01.png",
+      "source_crop": [
+        0,
+        236,
+        275,
+        414
+      ],
+      "source_body_center_x": 140.0,
+      "source_foot_y": 164,
+      "destination_offset": [
+        10,
+        19
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        64,
+        44,
+        254,
+        183
+      ],
+      "sha256": "d4d188c1f79410ffb6747ad770780df441a22561ba9e62128ee092ecf5eef2fc"
+    },
+    {
+      "file": "frames/move_02.png",
+      "source_crop": [
+        275,
+        236,
+        524,
+        414
+      ],
+      "source_body_center_x": 116.0,
+      "source_foot_y": 161,
+      "destination_offset": [
+        34,
+        22
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        66,
+        46,
+        251,
+        183
+      ],
+      "sha256": "c06d2691cf5f4b4114175ba3370ad385242664bea8fd32a0aeb0c6981875d3b2"
+    },
+    {
+      "file": "frames/move_03.png",
+      "source_crop": [
+        524,
+        236,
+        778,
+        414
+      ],
+      "source_body_center_x": 117.0,
+      "source_foot_y": 164,
+      "destination_offset": [
+        33,
+        19
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        65,
+        44,
+        255,
+        183
+      ],
+      "sha256": "7427c49300519b9e99297f4390c4ab66cea1abdc5877fd698fbd8fbdce53ed26"
+    },
+    {
+      "file": "frames/move_04.png",
+      "source_crop": [
+        778,
+        236,
+        1028,
+        414
+      ],
+      "source_body_center_x": 118.0,
+      "source_foot_y": 164,
+      "destination_offset": [
+        32,
+        19
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        65,
+        45,
+        251,
+        183
+      ],
+      "sha256": "d759ec9aec1cbe53e3c655f81668cfcbe25685a20178b5d1bbc24f1228d61220"
+    },
+    {
+      "file": "frames/move_05.png",
+      "source_crop": [
+        1028,
+        236,
+        1277,
+        414
+      ],
+      "source_body_center_x": 115.0,
+      "source_foot_y": 164,
+      "destination_offset": [
+        35,
+        19
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        66,
+        43,
+        251,
+        183
+      ],
+      "sha256": "9fcda5b194d49585c420661e65e19f628b9ad10d2997e6026adf726a3e0ae07f"
+    },
+    {
+      "file": "frames/move_06.png",
+      "source_crop": [
+        1277,
+        236,
+        1536,
+        414
+      ],
+      "source_body_center_x": 121.0,
+      "source_foot_y": 164,
+      "destination_offset": [
+        29,
+        19
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        63,
+        44,
+        254,
+        183
+      ],
+      "sha256": "32c4ff291be5adb9bffaade68fc31d583a8655a32f6f9295cc4da4c078257db7"
+    },
+    {
+      "file": "frames/attack_01.png",
+      "source_crop": [
+        0,
+        414,
+        270,
+        621
+      ],
+      "source_body_center_x": 153.0,
+      "source_foot_y": 185,
+      "destination_offset": [
+        -3,
+        -2
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        43,
+        50,
+        238,
+        183
+      ],
+      "sha256": "63d665cae3b43e0ea0296b1d7c5ceb8cf2759d8f6a8a113c772bacb49f82ae69"
+    },
+    {
+      "file": "frames/attack_02.png",
+      "source_crop": [
+        270,
+        414,
+        511,
+        621
+      ],
+      "source_body_center_x": 135.0,
+      "source_foot_y": 185,
+      "destination_offset": [
+        15,
+        -2
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        44,
+        12,
+        224,
+        183
+      ],
+      "sha256": "1ec40cd82b83195ac4d5a58d711650767d20f07117f37874d153b43d5fe13ecb"
+    },
+    {
+      "file": "frames/attack_03.png",
+      "source_crop": [
+        511,
+        414,
+        778,
+        621
+      ],
+      "source_body_center_x": 142.0,
+      "source_foot_y": 185,
+      "destination_offset": [
+        8,
+        -2
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        41,
+        44,
+        271,
+        183
+      ],
+      "sha256": "f7a963ff94052d7d154971b90ee38004d055913471f1ca9166a40b226641afb8"
+    },
+    {
+      "file": "frames/attack_04.png",
+      "source_crop": [
+        778,
+        414,
+        1038,
+        621
+      ],
+      "source_body_center_x": 107.0,
+      "source_foot_y": 187,
+      "destination_offset": [
+        43,
+        -4
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        47,
+        59,
+        288,
+        183
+      ],
+      "sha256": "31fee91cd26a39e3e20b397a23037e67c209283bbe91feafc5ab86ccff6c626b"
+    },
+    {
+      "file": "frames/attack_05.png",
+      "source_crop": [
+        1038,
+        414,
+        1288,
+        621
+      ],
+      "source_body_center_x": 132.0,
+      "source_foot_y": 187,
+      "destination_offset": [
+        18,
+        -4
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        34,
+        51,
+        251,
+        183
+      ],
+      "sha256": "4aa61c3088c27d5cc0845983b1851e9ea677aea265f2857e8d13cf1f6f68f83a"
+    },
+    {
+      "file": "frames/attack_06.png",
+      "source_crop": [
+        1288,
+        414,
+        1536,
+        621
+      ],
+      "source_body_center_x": 121.0,
+      "source_foot_y": 186,
+      "destination_offset": [
+        29,
+        -3
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        47,
+        46,
+        237,
+        183
+      ],
+      "sha256": "ee09f84bbd63adc89091a447e347b8cb955533de78e3ca308be12afee07df819"
+    },
+    {
+      "file": "frames/hit_01.png",
+      "source_crop": [
+        0,
+        621,
+        260,
+        818
+      ],
+      "source_body_center_x": 125.0,
+      "source_foot_y": 178,
+      "destination_offset": [
+        25,
+        5
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        72,
+        25,
+        250,
+        183
+      ],
+      "sha256": "51685b64524a79b84c9953f6d9a2bac7de3f4adac3e304b86c19f825af3b4c54"
+    },
+    {
+      "file": "frames/hit_02.png",
+      "source_crop": [
+        260,
+        621,
+        505,
+        818
+      ],
+      "source_body_center_x": 127.0,
+      "source_foot_y": 178,
+      "destination_offset": [
+        23,
+        5
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        59,
+        42,
+        235,
+        183
+      ],
+      "sha256": "3bb459ec3298c67719b3e6fda356c5c1404a6186b1be9d42277fa5e7669b0564"
+    },
+    {
+      "file": "frames/hit_03.png",
+      "source_crop": [
+        505,
+        621,
+        775,
+        818
+      ],
+      "source_body_center_x": 111.0,
+      "source_foot_y": 178,
+      "destination_offset": [
+        39,
+        5
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        72,
+        46,
+        226,
+        183
+      ],
+      "sha256": "cb4ce2eaaae1f594245bad9b9d1e1420c4d6e7238f612e171c3e54b6fb0e7cb0"
+    },
+    {
+      "file": "frames/death_01.png",
+      "source_crop": [
+        0,
+        818,
+        252,
+        1024
+      ],
+      "source_body_center_x": 134.0,
+      "source_foot_y": 167,
+      "destination_offset": [
+        16,
+        16
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        64,
+        36,
+        255,
+        183
+      ],
+      "sha256": "6bd5cb433676065c3ea0ba4e141d9d117aef0a001f1e298bb4dc01ea6d5af264"
+    },
+    {
+      "file": "frames/death_02.png",
+      "source_crop": [
+        252,
+        818,
+        510,
+        1024
+      ],
+      "source_body_center_x": 128.0,
+      "source_foot_y": 169,
+      "destination_offset": [
+        22,
+        14
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        35,
+        58,
+        266,
+        183
+      ],
+      "sha256": "01369b6d76d58e817e8847439ef6835cb1632a8f71601ef432c39027e774c3a0"
+    },
+    {
+      "file": "frames/death_03.png",
+      "source_crop": [
+        510,
+        818,
+        758,
+        1024
+      ],
+      "source_body_center_x": 125.0,
+      "source_foot_y": 169,
+      "destination_offset": [
+        25,
+        14
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        40,
+        96,
+        256,
+        183
+      ],
+      "sha256": "6dc2c3c576cc1441530972002f0b14cbb2aba97324f0d349b8471843adf453eb"
+    },
+    {
+      "file": "frames/death_04.png",
+      "source_crop": [
+        758,
+        818,
+        1058,
+        1024
+      ],
+      "source_body_center_x": 126.0,
+      "source_foot_y": 169,
+      "destination_offset": [
+        24,
+        14
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        41,
+        89,
+        267,
+        183
+      ],
+      "sha256": "f558a8e5aaa20a52000555a587eb95602065b556a510b5a4088666d04ee94920"
+    }
+  ]
+}
