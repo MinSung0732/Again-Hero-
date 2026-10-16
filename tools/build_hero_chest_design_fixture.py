@@ -52,5 +52,5 @@ func _ready():
 func _refresh_hud(): refresh_count += 1
 func _skin_action_button(_button): pass
 '''
-(out/'tests/hero_chest_binding_harness.gd').write_text(base+''.join(method(n) for n in ['_label','_button','_clear_overlay','_begin_roulette','_roulette_tick','_finish_roulette','_close_roulette']))
+(out/'tests/hero_chest_binding_harness.gd').write_text(base+''.join(method(n) for n in ['_label','_button','_clear_overlay','_begin_roulette','_roulette_tick','_finish_roulette','_close_roulette','_show_awakening_banner']))
 (out/'tests/hero_chest_design_smoke.gd').write_text((repo/'tests/hero_chest_design_smoke.gd').read_text())

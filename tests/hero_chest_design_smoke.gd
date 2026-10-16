@@ -34,6 +34,8 @@ func run():
 		var host = load("res://tests/hero_chest_binding_harness.gd").new(); root.add_child(host)
 		host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		host.battle = Battle.new(); host.add_child(host.battle)
+		if viewport.x in [540,960]:
+			host.battle.hero.player_weapons.receipt.pool = [host.battle.hero.player_weapons.receipt.id]
 		await process_frame
 		host._begin_roulette(); host.roulette_tween.kill()
 		await process_frame; await process_frame; await process_frame
@@ -44,9 +46,18 @@ func run():
 		check(rect.position.x >= 0 and rect.end.x <= viewport.x and rect.position.y >= 0 and rect.end.y <= viewport.y,"popup stays in viewport")
 		var reel = host.roulette_reel
 		check(reel.cards[0].position.x < reel.cards[1].position.x and reel.cards[1].position.x < reel.cards[2].position.x,"three horizontal cards")
-		check(reel.cards[1].size.y > reel.cards[0].size.y,"center reward emphasized")
-		for card in reel.cards:
-			check(card.position.x >= 0 and card.position.x+card.size.x <= reel.size.x,"card inside reel")
+		check(reel.cards[2].size.y > reel.cards[1].size.y,"center reward emphasized")
+		check(reel.clip_contents and reel.cards.size() == 5,"offscreen recycled cards stay clipped")
+		for slot in [1,2,3]:
+			var card = reel.cards[slot]
+			check(card.position.x >= 0 and card.position.x+card.size.x <= reel.size.x,"three resting cards inside reel")
+		var before: Vector2 = reel.cards[2].position
+		reel.advance(.5/float(reel.final_turns))
+		check(reel.cards[2].position.x < before.x,"whole slot scrolls between reward changes")
+		check(reel.icons[2].get_parent() == reel.cards[2],"icon travels with its card")
+		if reel.pool.size() == 1:
+			check(reel.labels[1].text == reel.labels[2].text and reel.cards[2].position.x != before.x,"single reward visibly scrolls identical item slots")
+		reel.advance(0.0)
 		host.STORE.calls = 0; host.STORE.fail = true; host._finish_roulette()
 		check(host.battle.hero.player_weapons.count == 1 and not host.chest_gold_saved,"gold save failure retains one applied upgrade")
 		host.STORE.fail = false; host._close_roulette(); host._finish_roulette()
