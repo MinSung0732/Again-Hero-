@@ -12,11 +12,13 @@ const GEOMETRY := preload("res://src/hero_mode/hero_weapon_geometry.gd")
 const IDENTITY := preload("res://src/hero_mode/hero_survival_identity_runtime.gd")
 const EVOLUTION := preload("res://src/hero_mode/hero_weapon_evolution_runtime.gd")
 const DELIVERY := preload("res://src/hero_mode/hero_weapon_delivery_runtime.gd")
+const KIT := preload("res://src/hero_mode/hero_weapon_kit_runtime.gd")
 const EMPTY_ART: Array[Texture2D] = []
 var native_skills: RefCounted
 var identity: RefCounted
 var delivery: RefCounted
 var evolution: RefCounted
+var kit: RefCounted
 var art: Dictionary = {}
 var magazines: Dictionary = {}
 var hero
@@ -93,6 +95,7 @@ func install(host, research_bonus: int = 0, starting_research: Dictionary = {}) 
 	hero.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	authority = hero.get_parent()
 	delivery = DELIVERY.new(); delivery.install(self)
+	kit = KIT.new(); kit.install(self)
 	evolution = EVOLUTION.new(); evolution.install(self)
 	if "status_resistances" in hero: base_slow_resistance = float(hero.status_resistances.get("slow",0))
 	base_max_hp = int(hero.max_hp); base_move_speed = float(hero.move_speed)
@@ -261,6 +264,7 @@ func summary() -> String:
 
 func tick(delta: float, allow_casts: bool = true) -> void:
 	visual_clock += delta
+	if kit != null: kit.tick(delta)
 	if delivery != null: delivery.tick(delta)
 	if evolution != null: evolution.tick(delta)
 	if hero.current_hp > 0 and hero.current_hp < hero.max_hp:
@@ -348,10 +352,9 @@ func stats_for(id: String) -> Dictionary:
 	stats["extra_projectiles"] = projectile_bonus if DATA.projectile_quantity_kind(id) != "" else 0
 	if DATA.projectile_quantity_kind(id) == "orbit":
 		stats["orbit_count"] = mini(10,int(stats.get("orbit_count",4))+int(stats.extra_projectiles))
-	if evolved.has(id):
-		var secondary := stats.duplicate()
-		secondary["evolution_secondary"] = true
-		stats["evolution_secondary_data"] = secondary
+	var secondary := stats.duplicate()
+	secondary["evolution_secondary"] = true
+	stats["evolution_secondary_data"] = secondary
 	resolved[id] = stats
 	return stats
 
@@ -361,7 +364,7 @@ func _cast(id: String) -> void:
 	var awakened := evolved.has(id)
 	if identity != null and not identity.can_cast(id,String(data.pattern)): return
 	if identity != null: identity.prepare_cast(id)
-	var origin: Vector2 = hero.global_position
+	var origin: Vector2 = kit.origin(data,hero.global_position) if kit != null else hero.global_position
 	var reach: float = GEOMETRY.reach(data,rank,awakened)
 	var base_damage: float = identity.attack_damage() if identity != null else float(hero.attack_damage)
 	var damage: int = maxi(1,roundi(base_damage*float(data.power)*power*float(data.damage_scale)))
@@ -381,6 +384,10 @@ func _cast(id: String) -> void:
 		if distance > reach*reach: continue
 		if distance < closest_distance: closest_distance = distance; closest = actor
 	if not is_instance_valid(closest) and float(data.get("gas_cost",0.0)) > 0.0 and pattern == "poison" and DELIVERY.RULES.spec(id,data).is_empty(): return
+	if kit != null and is_instance_valid(closest):
+		var ambush: float = kit.cast_factor(data)
+		damage = maxi(1,roundi(damage*ambush))
+		if ambush > 1.0: _effect(origin,closest.global_position,34.0,"combo",color,data)
 	var direction: Vector2 = hero.player_move_input.normalized()
 	if is_instance_valid(closest): direction = origin.direction_to(closest.global_position)
 	if direction.length_squared() < 0.01: direction = Vector2.RIGHT
@@ -409,7 +416,7 @@ func _cast(id: String) -> void:
 	if is_instance_valid(closest) and float(data.get("hp_cost",0.0)) > 0.0:
 		hero.current_hp = maxi(1,hero.current_hp-maxi(1,roundi(hero.current_hp*float(data.hp_cost))))
 		hero.health_changed.emit(hero.current_hp,hero.max_hp)
-	if delivery != null and delivery.cast(id,data,origin,damage,reach,rank):
+	if delivery != null and delivery.cast(id,data,origin,damage,reach,rank,closest):
 		if pattern == "burst":
 			if identity != null and identity.uses_ammo(id): identity.consume_ammo(1)
 			elif int(data.get("magazine",0)) > 0: magazines[id] = maxi(0,int(magazines[id])-1)
@@ -426,11 +433,14 @@ func _cast(id: String) -> void:
 		hero.attack_pose_timer = 0.25
 		return
 	if pattern == "poison":
+		# Replace only this weapon's old zones rather than stacking infinite recasts.
+		for old_field in fields:
+			if String(old_field.data.get("weapon_id","")) == id: old_field.left = 0.0
 		for index in mini(3,int(data.get("field_count",1))):
 			var field := _free_field()
 			if field.is_empty(): break
 			field.origin = closest.global_position if is_instance_valid(closest) else origin
-			field.left = float(data.get("field_duration",3.0)); field.tick = 0.0; field.interval = float(data.get("field_interval",0.5)); field.radius = reach*float(data.get("field_radius_ratio",0.45)); field.damage = maxi(1,roundi(damage*float(data.get("field_power",0.25))))
+			field.left = float(data.get("field_duration",3.0)); field.tick = 0.0; field.interval = float(data.get("field_interval",0.5)); field.radius = reach*float(data.get("field_radius_ratio",0.45)); field.damage = maxi(1,roundi(damage*1.6*float(field.interval)/(float(field.left)*maxi(1,int(data.get("field_count",1))))))
 			# Secondary circles cover flanks, each with its own visible/actual footprint.
 			if index > 0: field.origin += direction.orthogonal()*float(field.radius)*1.25*(1.0 if index == 1 else -1.0)
 			field.follow = bool(data.get("field_follow",false)); field.data = data; field.rank = rank
@@ -467,10 +477,12 @@ func _cast(id: String) -> void:
 		var offset: Vector2 = actor.global_position-origin
 		if not GEOMETRY.contains(pattern,offset,direction,reach,rank,data): continue
 		if pattern == "bolt": _launch_projectile(actor,origin,damage,rank,color,data,0.0,false,reach)
-		else: _hit(actor,roundi(damage*(1.0+struck*float(data.get("chain_growth",0.0)))) if pattern == "chain" else damage,pattern,rank,data)
+		else: _hit(actor,roundi(damage*(1.0+minf(0.5,struck*float(data.get("chain_growth",0.0))))) if pattern == "chain" else damage,pattern,rank,data)
 		struck += 1
 		if pattern == "chain": _effect(closest.global_position if is_instance_valid(closest) else origin,actor.global_position,20.0,pattern,color,data)
 	if pattern == "bolt" and is_instance_valid(closest):
+		for remaining in maxi(0,hits-struck):
+			_launch_projectile(closest,origin,damage,rank,color,data,float(remaining+1)*0.08,false,reach)
 		for extra in int(data.get("extra_projectiles",0)):
 			_launch_projectile(closest,origin,damage,rank,color,data,float(extra+1)*0.08,false,reach)
 	if pattern == "beam": _effect(origin,origin+direction*reach,GEOMETRY.beam_half_width(rank)*float(data.get("area_scale",1.0)),pattern,color,data)
@@ -487,13 +499,14 @@ func _free_field() -> Dictionary:
 
 func _after_cast(data: Dictionary, origin: Vector2, direction: Vector2, target: Node2D, damage: int, reach: float, rank: int) -> void:
 	if evolution != null: evolution.on_cast(data,origin,direction,target,damage,reach)
+	if kit != null: kit.after_cast(data,origin,direction,target,damage,reach)
 	if float(data.get("cast_heal",0.0)) > 0.0: hero.heal_direct(roundi(hero.max_hp*float(data.cast_heal)))
 	if float(data.get("cast_shield",0.0)) > 0.0:
 		var grant: float = hero.max_hp*float(data.cast_shield)
 		hero.shield_hp = maxf(0.0,hero.shield_hp-owned_shield)+grant
 		owned_shield = grant; shield_left = 3.0
 		if identity != null: hero.shield_max_hp = maxf(hero.shield_max_hp,hero.shield_hp)
-	var count := mini(3,int(data.get("pulse_count",0)))
+	var count := 0 if not DELIVERY.RULES.spec(String(data.get("weapon_id","")),data).is_empty() else mini(1,int(data.get("pulse_count",0)))
 	var center: Vector2 = target.global_position if bool(data.get("pulse_target",false)) and is_instance_valid(target) else origin
 	var scheduled := 0
 	for pulse in pulses:
@@ -517,7 +530,7 @@ func _tick_pulses(delta: float) -> void:
 		for raw in pulse_scratch:
 			var actor := raw as Node2D
 			if not TARGETS.is_detectable(actor) or not GEOMETRY.contains(pattern,actor.global_position-Vector2(pulse.origin),pulse.direction,float(pulse.radius),int(pulse.rank),data): continue
-			_hit(actor,int(pulse.damage),pattern,int(pulse.rank),data)
+			_hit(actor,int(pulse.damage),pattern,int(pulse.rank),data.get("evolution_secondary_data",data))
 		_effect(pulse.origin,Vector2(pulse.origin)+Vector2(pulse.direction)*float(pulse.radius),GEOMETRY.beam_half_width(int(pulse.rank))*float(data.get("area_scale",1.0)) if pattern == "beam" else float(pulse.radius),pattern,Color(String(data.color)),data)
 
 func _cast_fan(data: Dictionary, origin: Vector2, direction: Vector2, reach: float, rank: int, damage: int) -> void:
@@ -545,7 +558,7 @@ func _splash(center: Vector2, damage: int, radius: float, excluded: Node2D, data
 		var actor := raw as Node2D
 		if actor == excluded or not TARGETS.is_detectable(actor) or actor.global_position.distance_squared_to(center) > radius*radius: continue
 		# A splash cannot recursively create another splash.
-		_hit(actor,damage,"nova",int(data.get("growth_rank",1)),data)
+		_hit(actor,damage,"nova",int(data.get("growth_rank",1)),data.get("evolution_secondary_data",data))
 	_effect(center,center,radius,"nova",Color(String(data.color)),data)
 
 func _pose(direction: Vector2) -> void:
@@ -623,11 +636,16 @@ func _hit(actor: Node2D, damage: int, pattern: String, rank: int, data: Dictiona
 	var point := actor.global_position
 	var max_primary := data.has("max_mechanic") and not bool(data.get("evolution_secondary",false))
 	var handle: Vector3i = authority.get_battle_entity_handle(actor) if max_primary and String(data.max_mechanic.mechanic) == "mark" and is_instance_valid(authority) and authority.has_method("get_battle_entity_handle") else Vector3i.ZERO
+	var reaction: float = kit.factor(actor,data) if kit != null else 1.0
+	damage = maxi(1,roundi(damage*reaction))
 	var before := int(actor.get("current_hp"))
 	if before > 0 and float(data.get("execute_ratio",0.0)) > 0.0 and before <= float(actor.get("max_hp"))*float(data.execute_ratio): damage = maxi(damage,before)
 	HIT.hit(actor,damage,"melee" if pattern == "slash" else "ranged",hero)
 	if identity != null and identity.archetype == "alchemist_chemical" and pattern == "field": identity.impact()
 	var lost := maxi(0,before-int(actor.get("current_hp"))) if is_instance_valid(actor) else 0
+	if lost > 0 and kit != null:
+		kit.landed(actor,data,reaction > 1.0)
+		if reaction > 1.0: _effect(point,point,55.0,"nova",Color(String(data.get("color","ffffff"))),data)
 	if max_primary and evolution != null: evolution.on_hit(actor,handle,point,lost,not is_instance_valid(actor) or int(actor.get("current_hp")) <= 0,data,damage)
 	if lost > 0 and float(data.get("lifesteal",0.0)) > 0.0: hero.heal_direct(roundi(lost*float(data.lifesteal)))
 	if lost > 0 and pattern == "bolt" and float(data.get("splash_ratio",0.0)) > 0.0 and is_instance_valid(actor):

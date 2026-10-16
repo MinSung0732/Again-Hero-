@@ -67,6 +67,8 @@ func cast(data: Dictionary, origin: Vector2, direction: Vector2, target: Node2D,
 	var spec: Array = SCENES[pattern]
 	var count := mini(hits,int(spec[2]))
 	var radius_scale := float(data.get("native_radius_scale",1.25 if awakened else 1.0))
+	# Overlapping native copies share a cast budget rather than multiplying it.
+	damage = maxi(1,roundi(damage/sqrt(float(maxi(1,count)))))
 	for index in count:
 		# Only use the startup pool. Saturation skips a cast rather than allocating.
 		if not authority.projectile_pools.has(spec[1]) or authority.projectile_pools[spec[1]].is_empty(): break

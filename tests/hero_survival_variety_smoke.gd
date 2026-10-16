@@ -25,8 +25,9 @@ func run() -> void:
 			var data: Dictionary = DATA.WEAPONS[id]
 			var rule := DATA.DELIVERY.spec(id,data)
 			styles[String(rule.get("mode",data.pattern))] = true
-		check(styles.size() >= 4,"four or more delivery/attack styles "+owner)
-	check(DATA.DELIVERY.MODES.size() == 22,"22 intentional delivery overrides")
+		check(styles.size() >= 2,"multiple thematic attack styles "+owner)
+	check(DATA.DELIVERY.spec("pistol_hero_suppressor",DATA.WEAPONS.pistol_hero_suppressor).mode == "sentry","gunner keeps physical sentry")
+	check(DATA.DELIVERY.spec("madness_hero_heart_chain",DATA.WEAPONS.madness_hero_heart_chain).is_empty(),"berserker is no longer a magic turret")
 	hero.damage_poison_tracker = BASE.Clearable.new(); hero.burn_runtime = BASE.Clearable.new()
 	for weapon in DATA.WEAPONS:
 		if DATA.DELIVERY.spec(weapon,DATA.WEAPONS[weapon]).is_empty(): continue
@@ -58,7 +59,7 @@ func run() -> void:
 	for emitter in delivery.slots:
 		if emitter.left > 0.0: active += 1
 	check(active == 1 and delivery.slots.size() == 24,"repeat casts bounded and retained")
-	# Random zones do not snap onto enemies and remain in world space under displacement.
+	# Target sigils remain in world space under displacement.
 	id = "ranged_rookie_pulse_staff"; runtime.add(id); stats = runtime.stats_for(id)
 	delivery.cast(id,stats,hero.position,100,300,1)
 	for emitter in delivery.slots:

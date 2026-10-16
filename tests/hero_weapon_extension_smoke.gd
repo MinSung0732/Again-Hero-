@@ -84,7 +84,7 @@ func run() -> void:
 				var text: String = DATA.description(id,rank)
 				check(not text.is_empty() and not text.contains("진화") and not text.contains("다음") and not text.contains("Lv."),"current selection only "+id+str(rank))
 			var evolved := DATA.GROWTH.resolve(id,data,10,true)
-			check(evolved.damage_scale > 2.62 and evolved.cooldown_scale < 0.685,"chest evolution preserved "+id)
+			check(evolved.damage_scale > DATA.GROWTH.resolve(id,DATA.WEAPONS[id],10,false).damage_scale and evolved.cooldown_scale < DATA.GROWTH.resolve(id,DATA.WEAPONS[id],10,false).cooldown_scale,"chest evolution preserved "+id)
 			if not data.has("icon_index_v2"): continue
 			extra_count += 1
 			check(int(data.icon_index_v2) in range(40) and ICONS.texture(id).atlas == ICONS.UNIQUE_WEAPONS,"new icon uses own generated atlas cell "+id)

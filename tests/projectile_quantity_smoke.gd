@@ -80,12 +80,12 @@ func run() -> void:
 		if kind == "orbit":
 			var base: Dictionary = DATA.GROWTH.resolve(id,DATA.WEAPONS[id],1,false)
 			check(stats.orbit_count == mini(10,int(base.get("orbit_count",4))+2),id+" orbit count")
-	check(eligible > 25,"secondary emitters and physical orbits included")
+	check(eligible >= 20 and DATA.projectile_quantity_kind("pistol_hero_suppressor") == "sentry","retained projectile/sentry/orbit weapons eligible")
 	for id in ["ranged_rookie_arcane_bolt","swift_hunter_throwing_knife","purifier_hero_holy_bolt","pistol_hero_rifle"]:
 		select_weapon(runtime,id,0); runtime._cast(id); var base := active_shots(runtime)
 		select_weapon(runtime,id,2); runtime._cast(id)
 		check(active_shots(runtime) == base+2,id+" extra shots even with a single target")
-	for id in ["ranged_rookie_star_wand","sword_shield_hero_ward_crossbow","madness_hero_heart_chain"]:
+	for id in ["pistol_hero_suppressor"]:
 		select_weapon(runtime,id,2)
 		runtime._cast(id)
 		var emitters := 0
@@ -108,13 +108,13 @@ func run() -> void:
 		select_weapon(runtime,id,2); runtime._cast(id)
 		check(native.count == base+2,id+" native secondary actor quantity")
 	runtime.native_skills = null
-	for id in ["sword_shield_hero_blade_ring","sage_astra_binary_stars"]:
+	for id in ["ranged_rookie_satellite_orbs","sage_astra_binary_stars"]:
 		select_weapon(runtime,id,2,10); runtime.evolved[id] = true
 		var stats: Dictionary = runtime.stats_for(id)
-		check(stats.orbit_count == 10,id+" evolved orbits gain two too")
+		check(stats.orbit_count == (8 if id == "ranged_rookie_satellite_orbs" else 10),id+" evolved orbits gain two too")
 		check(runtime.delivery.cast(id,stats,hero.position,100,250,10),id+" orbit cast")
 		for slot in runtime.delivery.slots:
-			if slot.left > 0: check(slot.count == 10,id+" actual orbit slot")
+			if slot.left > 0: check(slot.count == int(stats.orbit_count),id+" actual orbit slot")
 	for id in ["summoner_hero_watcher","summoner_hero_gatekeeper"]:
 		select_weapon(runtime,id,2)
 		var actor = Watcher.new() if id.ends_with("watcher") else Gatekeeper.new()

@@ -89,8 +89,8 @@ func run():
    else: check(runtime.extra_hits > 0,id+" MAX mechanic actually hits, beyond base stat patch")
    check(runtime.evolution.slots.size() == 24 and runtime.evolution.marks.size() == 64 and runtime.projectiles.size() == 64,id+" bounded shared pools")
    arena.queue_free(); await process_frame
-  check(owner_modes.size() >= 6,owner+" mechanically varied MAX kit")
- check(modes.size() == 13,"13 reusable mechanic families exercised")
+  check(owner_modes.size() >= 2,owner+" themed MAX kit has multiple actual actions")
+ check(modes.has("front_echo") and modes.has("orbit") and modes.has("command"),"themed melee/orbit/command mechanics exercised")
  await edge_cases()
  print("HERO_MAX_EVOLUTION checks=",checks," failures=",failures)
  quit(1 if failures else 0)

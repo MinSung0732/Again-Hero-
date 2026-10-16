@@ -52,9 +52,9 @@ func on_cast(data: Dictionary,origin: Vector2,direction: Vector2,target: Node2D,
 		"return":
 			if not TARGETS.is_detectable(target): return
 			_queue(kind,data,origin,center+direction*70.0,extra,radius,rule,2.4)
-		"cross":
+		"cross", "front_echo":
 			if not TARGETS.is_detectable(target): return
-			_queue(kind,data,center,center+direction,extra,radius,rule,1.5)
+			_queue(kind,data,origin if kind == "front_echo" else center,(origin if kind == "front_echo" else center)+direction,extra,radius,rule,1.5)
 		"mine":
 			if not TARGETS.is_detectable(target): return
 			for index in int(rule.count):
@@ -143,7 +143,7 @@ func tick(delta: float) -> void:
 		if host.hero.current_hp <= 0: slot.left = 0.0; continue
 		var kind := String(slot.kind)
 		if kind == "return": _travel(slot,delta)
-		elif kind == "cross" or kind == "command_nova":
+		elif kind in ["cross","front_echo","command_nova"]:
 			if float(slot.age) >= float(slot.rule.get("delay",.35)):
 				_burst(slot); slot.left = 0.0
 		elif kind == "mine":
@@ -192,6 +192,15 @@ func _travel(slot: Dictionary,delta: float) -> void:
 func _burst(slot: Dictionary) -> void:
 	var center: Vector2 = slot.origin
 	var radius := float(slot.radius)
+	if slot.kind == "front_echo":
+		var forward: Vector2 = slot.direction
+		host.hero._fill_monster_nodes_near(center,radius,query)
+		for actor in query:
+			if not TARGETS.is_detectable(actor): continue
+			var offset: Vector2 = actor.global_position-center
+			if offset.length_squared() <= radius*radius and (offset.is_zero_approx() or offset.normalized().dot(forward) >= .35): host._hit(actor,int(slot.damage),"slash",10,slot.data)
+		host._effect(center,center+forward*radius,radius,"slash",Color(String(slot.data.color)),slot.data)
+		return
 	var cross: bool = slot.kind == "cross" or String(slot.rule.get("shape","")) == "cross" and slot.kind != "mine"
 	if not cross:
 		host._splash(center,int(slot.damage),radius,null,slot.data)

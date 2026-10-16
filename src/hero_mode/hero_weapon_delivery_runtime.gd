@@ -14,7 +14,7 @@ func install(runtime) -> void:
 	_runtime = weakref(runtime)
 	for index in LIMIT:
 		slots.append({"left":0.0,"mode":"","id":"","origin":Vector2.ZERO,"radius":0.0,"orbit_radius":0.0,"count":1,"tick":0.0,"interval":0.5,"damage":0,"rank":1,"data":{},"frames":[],"color":Color.WHITE,"warning":0.0,"age":0.0,"duration":1.0,"phase":0.0,"detonated":false,"evolution_damage":0,"relay_phase":0,"max_kind":"","orbit_shape":""})
-func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,rank: int) -> bool:
+func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,rank: int,target: Node2D = null) -> bool:
 	var rule := RULES.spec(id,data)
 	if rule.is_empty(): return false
 	var mode := String(rule.mode)
@@ -39,7 +39,7 @@ func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,r
 		if slot.is_empty(): break
 		slot.id = id; slot.mode = mode; slot.data = data; slot.rank = rank
 		slot.left = duration; slot.duration = duration; slot.age = 0.0; slot.tick = 0.0
-		slot.interval = interval; slot.warning = WARNING if mode == "random" else index*0.4 if mode == "trail" else 0.0
+		slot.interval = interval; slot.warning = float(rule.get("duration",1.0)) if mode == "bombard" else WARNING+index*0.18 if mode == "fault" else WARNING if mode in ["random","sigil"] else index*0.4 if mode == "trail" else 0.0
 		slot.phase = TAU*index/count; slot.count = clampi(int(data.get("orbit_count",4)),2,10)
 		slot.origin = origin
 		slot.radius = clampf(reach*0.32,45.0,180.0)
@@ -49,13 +49,18 @@ func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,r
 			slot.origin = _clamp(origin+Vector2.from_angle(TAU*index/count)*90.0)
 			slot.radius = minf(reach,750.0)
 		elif mode == "random": slot.origin = _random_map_point(origin,reach,index,count)
+		elif mode in ["sigil","bombard"]: slot.origin = _clamp(target.global_position if TARGETS.is_detectable(target) else origin)
+		elif mode == "fault":
+			var aim := origin.direction_to(target.global_position) if TARGETS.is_detectable(target) else Vector2.RIGHT
+			slot.origin = _clamp(origin+aim*reach*float(index+1)/float(count))
 		elif mode == "trail":
 			var move: Vector2 = host.hero.player_move_input.normalized()
 			if move.is_zero_approx(): move = Vector2.RIGHT.rotated(index*TAU/count)
 			slot.origin = _clamp(origin-move*index*float(slot.radius)*1.1)
 		# Nominal per-target budget per cast, shared across zones; orbit pays for contact gaps.
 		var budget := float(rule.get("budget",2.0))
-		slot.damage = maxi(1,roundi(damage*budget*budget_interval/(cooldown if mode == "orbit" else float(rule.get("duration",3.5))*count)))
+		slot.damage = maxi(1,roundi(damage*budget*interval/(cooldown if mode == "orbit" else duration*count)))
+		if mode in ["bombard","trap","fault"]: slot.damage = maxi(1,roundi(damage*budget/count))
 		slot.frames = host.art.get(id,[]); slot.color = Color(String(data.color))
 		slot.max_kind = String(data.get("max_mechanic",{}).get("mechanic","")); slot.orbit_shape = String(data.get("max_mechanic",{}).get("shape",""))
 		slot.detonated = false; slot.relay_phase = floori(clock/2.0)
@@ -84,12 +89,23 @@ func tick(delta: float) -> void:
 		slot.age = float(slot.age)+delta
 		if float(slot.warning) > 0.0:
 			if slot.mode == "trail": slot.origin = _clamp(host.hero.global_position)
-			slot.warning = maxf(0.0,float(slot.warning)-delta); continue
+			slot.warning = maxf(0.0,float(slot.warning)-delta)
+			if float(slot.warning) <= 0.0 and slot.mode in ["bombard","fault"]:
+				host._splash(slot.origin,int(slot.damage),float(slot.radius),null,slot.data)
+				slot.left = 0.0
+			continue
 		slot.left = maxf(0.0,float(slot.left)-delta)
 		if float(slot.left) <= 0.0:
 			if String(slot.max_kind) in ["detonating_trail","reactive_zone"]: _detonate(slot)
 			continue
 		var mode := String(slot.mode)
+		if mode == "trap":
+			host.hero._fill_monster_nodes_near(slot.origin,float(slot.radius),scratch)
+			for actor in scratch:
+				if TARGETS.is_detectable(actor) and actor.global_position.distance_squared_to(slot.origin) <= float(slot.radius)*float(slot.radius):
+					host._splash(slot.origin,int(slot.damage),float(slot.radius),null,slot.data)
+					slot.left = 0.0; break
+			continue
 		if mode == "sentry" and String(slot.max_kind) == "relay_turret" and int(slot.relay_phase) != floori(clock/2.0):
 			slot.relay_phase = floori(clock/2.0)
 			var previous: Vector2 = slot.origin
@@ -99,6 +115,8 @@ func tick(delta: float) -> void:
 		slot.tick = float(slot.tick)-delta
 		if float(slot.tick) > 0.0: continue
 		slot.tick = float(slot.interval)
+		if mode == "consecrate" and host.hero.global_position.distance_squared_to(slot.origin) <= float(slot.radius)*float(slot.radius):
+			host.hero.heal_direct(maxi(1,roundi(host.hero.max_hp*.001)))
 		if mode == "orbit":
 			for index in int(slot.count): host.hero._damage_treasure_chests(orbit_point(slot,index),float(slot.radius),int(slot.damage))
 		elif mode != "sentry": host.hero._damage_treasure_chests(slot.origin,float(slot.radius),int(slot.damage))
