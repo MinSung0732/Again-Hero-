@@ -51,7 +51,7 @@ func run():
    check(data.growth_evolved and data.evolution_secondary_data.evolution_secondary,id+" nonrecursive secondary snapshot")
    var name := DATA.GROWTH.evolution_name(id)
    check(not names.has(name) and not name.is_empty(),id+" unique MAX identity"); names[name] = true
-   check(receipt.description.contains("Lv.11 MAX") and receipt.description.contains(DESIGNS.DESIGNS[id].description),id+" receipt explains actual mechanic")
+   check(receipt.description.contains("Lv.11 MAX") and receipt.description.contains(String(DESIGNS.DESIGNS[id].description).replace("3회 적중","2회 적중") if int(data.get("awakening_mark_hits",3))==2 else DESIGNS.DESIGNS[id].description),id+" receipt explains actual mechanic")
    runtime.cooldowns[id] = 999
    runtime._cast(id)
    var original_orbit := Vector2.ZERO
@@ -106,8 +106,8 @@ func edge_cases():
  data.splash_ratio = 0.0
  data.evolution_secondary_data = data.evolution_secondary_data.duplicate()
  data.evolution_secondary_data.splash_ratio = 0.0
- for index in 2: runtime._hit(arena.targets[0],10,"bolt",10,data)
- check(runtime.evolution.mark_lookup.size() == 1 and runtime.extra_hits == 0,"two marks do not burst early")
+ for index in 1: runtime._hit(arena.targets[0],10,"bolt",10,data)
+ check(runtime.evolution.mark_lookup.size() == 1 and runtime.extra_hits == 0,"one mark waits for the second hit")
  arena.generation += 1
  runtime._hit(arena.targets[0],10,"bolt",10,data)
  check(runtime.extra_hits == 0,"new monster generation cannot inherit old marks")

@@ -53,7 +53,7 @@ func run():
   var carriers := 0
   for shot in weapons.projectiles:
    if shot.active and shot.data.has("max_mechanic"): carriers += 1
-  check(fake.native_calls == 1 and carriers == 1,owner+" genuine native dispatch also launches one MAX carrier")
+  check(fake.native_calls == 1 and carriers == 3,owner+" genuine native dispatch also launches MAX carrier plus two wings")
   fake.queue_free(); target.queue_free()
  # Drain all playing dummy audio before freeing the scene.
  for host in [battle,root.get_node("GameAudio")]:

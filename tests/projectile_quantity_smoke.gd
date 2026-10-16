@@ -111,7 +111,7 @@ func run() -> void:
 	for id in ["ranged_rookie_satellite_orbs","sage_astra_binary_stars"]:
 		select_weapon(runtime,id,2,10); runtime.evolved[id] = true
 		var stats: Dictionary = runtime.stats_for(id)
-		check(stats.orbit_count == (8 if id == "ranged_rookie_satellite_orbs" else 10),id+" evolved orbits gain two too")
+		check(stats.orbit_count == 10,id+" MAX orbit reaches ten satellites")
 		check(runtime.delivery.cast(id,stats,hero.position,100,250,10),id+" orbit cast")
 		for slot in runtime.delivery.slots:
 			if slot.left > 0: check(slot.count == int(stats.orbit_count),id+" actual orbit slot")

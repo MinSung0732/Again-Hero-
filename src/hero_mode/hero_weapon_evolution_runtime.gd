@@ -23,7 +23,7 @@ func install(runtime) -> void:
 		marks.append({"index":index,"left":0.0,"key":Vector4i.ZERO,"handle":Vector3i.ZERO,"count":0,"data":{}})
 func _free(kind: String,id: String) -> Dictionary:
 	# Recast replaces only persistent support from this weapon, never duplicates it.
-	if kind in ["counter","sanctuary"]:
+	if kind in ["counter","sanctuary","awakening_halo"]:
 		for slot in slots:
 			if slot.kind == kind and slot.id == id: slot.left = 0.0
 	for slot in slots:
@@ -39,7 +39,8 @@ func _queue(kind: String,data: Dictionary,origin: Vector2,target: Vector2,damage
 	slot.direction = origin.direction_to(target) if origin != target else Vector2.RIGHT
 	slot.damage = damage; slot.radius = radius; slot.rule = rule
 	slot.data = data.get("evolution_secondary_data",data)
-	slot.threshold = maxf(1.0,host.shield_amount(host.hero.max_hp*(float(data.get("shield_ratio",.04))+int(data.get("growth_rank",10))*.006))*.65)
+	var shield_base: float = host.hero.max_hp*(float(data.get("shield_ratio",.04))+int(data.get("growth_rank",10))*.006)
+	slot.threshold = maxf(1.0,host.shield_amount(shield_base)*float(data.get("awakening_counter_threshold",.65)))
 func on_cast(data: Dictionary,origin: Vector2,direction: Vector2,target: Node2D,damage: int,reach: float) -> void:
 	var rule: Dictionary = data.get("max_mechanic",{})
 	if rule.is_empty(): return
@@ -63,6 +64,23 @@ func on_cast(data: Dictionary,origin: Vector2,direction: Vector2,target: Node2D,
 		"sanctuary": _queue(kind,data,origin,origin,extra,radius,rule,3.0)
 		"counter": _queue(kind,data,origin,origin,extra,radius,rule,minf(float(data.get("shield_duration",3.0)),5.0))
 		"command": _command(data,center,extra,radius,rule)
+func awakening_cast(data: Dictionary,origin: Vector2,direction: Vector2,target: Node2D,damage: int,reach: float) -> void:
+	if not bool(data.get("awakening",false)): return
+	var secondary: Dictionary = data.get("evolution_secondary_data",data)
+	if TARGETS.is_detectable(target):
+		for index in mini(2,int(data.get("awakening_wings",0))):
+			var shot_index: int = host._launch_projectile(target,origin,maxi(1,roundi(damage*float(data.get("awakening_wing_ratio",.45)))),10,Color(String(data.color)),secondary,0.0,false,reach)
+			if shot_index >= 0:
+				var acquired: Dictionary = host.projectiles[shot_index]
+				acquired.flight = "return" if String(data.owner)=="swift_hunter" else "lance"
+				acquired.pierces=5
+				acquired.direction=direction.rotated(-.34 if index==0 else .34)
+	if bool(data.get("awakening_wave",false)):
+		var center: Vector2 = target.global_position if TARGETS.is_detectable(target) and String(data.owner) in ["archmage_hero","sage_astra"] else origin
+		_queue("awakening_wave",data,center,center,maxi(1,roundi(damage*float(data.get("awakening_wave_ratio",.4)))),minf(reach,420.0),{"delay":.2},1.3)
+	if bool(data.get("awakening_halo",false)):
+		_queue("awakening_halo",data,origin,origin,maxi(1,roundi(damage*float(data.get("awakening_halo_ratio",.22)))),minf(reach,340.0),{"requires_shield":String(data.pattern)=="guard"},minf(6.0,float(data.get("shield_duration",5.0))))
+
 func on_native_basic(data: Dictionary,origin: Vector2,target: Node2D,damage: int,reach: float) -> void:
 	# Native starter actors retain their original hit path. A visible, bounded
 	# companion round carries MAX mark/fork behavior without relabeling skills.
@@ -79,8 +97,14 @@ func _command(data: Dictionary,target: Vector2,damage: int,radius: float,rule: D
 		var shape := String(rule.shape)
 		if shape == "shots":
 			var nearest := _nearest(target,280.0,null)
-			if nearest != null: host._launch_projectile(nearest,actor.global_position,maxi(1,damage/3),10,Color(String(data.color)),data.evolution_secondary_data,count*.08,false,750.0)
-		else: _queue("return" if shape == "return" else "cross" if shape == "cross" else "command_nova",data,actor.global_position,target,maxi(1,damage/3),28.0 if shape == "return" else radius,rule,2.4)
+			if nearest != null:
+				for round in mini(3,int(data.get("awakening_command_rounds",1))):
+					host._launch_projectile(nearest,actor.global_position,maxi(1,damage/3),10,Color(String(data.color)),data.evolution_secondary_data,count*.08+round*.12,false,750.0)
+		else:
+			for round in mini(3,int(data.get("awakening_command_rounds",1))):
+				var volley := rule.duplicate()
+				volley["delay"] = float(rule.get("delay",.35))+round*.18
+				_queue("cross" if shape == "cross" else "command_nova",data,actor.global_position,target,maxi(1,damage/3),radius,volley,2.4)
 		count += 1
 func on_hit(actor: Node2D,handle: Vector3i,point: Vector2,lost: int,killed: bool,data: Dictionary,damage: int) -> void:
 	if lost <= 0 or bool(data.get("evolution_secondary",false)): return
@@ -97,7 +121,7 @@ func on_hit(actor: Node2D,handle: Vector3i,point: Vector2,lost: int,killed: bool
 			var old: Dictionary = marks[index]
 			old.key = key; old.handle = handle; old.count = 0; old.data = data; mark_lookup[key] = index
 		var mark: Dictionary = marks[index]; mark.count = int(mark.count)+1; mark.left = 3.0
-		if int(mark.count) >= 3:
+		if int(mark.count) >= int(data.get("awakening_mark_hits",3)):
 			mark_lookup.erase(key); mark.left = 0.0; free_marks.append(index)
 			host._splash(point,maxi(1,roundi(damage*float(rule.ratio))),float(rule.radius)*float(data.get("area_scale",1.0)),null,data.evolution_secondary_data)
 	elif (kind == "fork" or kind == "reap" and killed) and clock >= float(proc_ready.get(data.weapon_id,0.0)):
@@ -142,7 +166,19 @@ func tick(delta: float) -> void:
 		slot.left = maxf(0.0,float(slot.left)-delta); slot.age = float(slot.age)+delta
 		if host.hero.current_hp <= 0: slot.left = 0.0; continue
 		var kind := String(slot.kind)
-		if kind == "return": _travel(slot,delta)
+		if kind == "awakening_wave":
+			if float(slot.age)>=.2+int(slot.phase)*.28 and int(slot.phase)<2:
+				var original:float=slot.radius
+				slot.radius=original*(.6 if int(slot.phase)==0 else 1.0)
+				_burst(slot);slot.radius=original;slot.phase=int(slot.phase)+1
+				if int(slot.phase)>=2:slot.left=0.0
+		elif kind == "awakening_halo":
+			if float(slot.left)<=0: continue
+			if bool(slot.rule.requires_shield) and (host.hero.shield_hp<=0 or host.shield_left<=0):slot.left=0.0;continue
+			slot.origin=host.hero.global_position
+			slot.tick=float(slot.tick)-delta
+			if float(slot.tick)<=0:slot.tick=.7;_burst(slot)
+		elif kind == "return": _travel(slot,delta)
 		elif kind in ["cross","front_echo","command_nova"]:
 			if float(slot.age) >= float(slot.rule.get("delay",.35)):
 				_burst(slot); slot.left = 0.0
@@ -225,6 +261,7 @@ func draw() -> void:
 		if float(slot.left) <= 0 or slot.kind == "counter": continue
 		var point: Vector2 = slot.position if slot.kind == "return" else slot.origin
 		var radius: float = float(slot.radius)
+		if slot.kind == "awakening_wave": radius *= .6 if int(slot.phase)==0 else 1.0
 		if slot.kind == "return":
 			host._draw_area(host.hero.to_local(point),radius,Color(String(slot.data.color)),host.art.get(slot.id,[]),fmod(float(slot.age)*8,1.0))
 		else:
@@ -238,4 +275,4 @@ func draw() -> void:
 		if float(mark.left) <= 0: continue
 		var actor: Node2D = host.authority.resolve_battle_entity(mark.handle)
 		if not TARGETS.is_detectable(actor): continue
-		host.hero.draw_arc(host.hero.to_local(actor.global_position),20.0,0,TAU*int(mark.count)/3.0,16,Color("ffe8a3"),3.0)
+		host.hero.draw_arc(host.hero.to_local(actor.global_position),20.0,0,TAU*int(mark.count)/float(mark.data.get("awakening_mark_hits",3)),16,Color("ffe8a3"),3.0)

@@ -505,7 +505,7 @@ func _begin_roulette() -> void:
 	overlay_rows.add_child(scroll)
 	roulette_details = VBoxContainer.new(); roulette_details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	roulette_details.add_theme_constant_override("separation",14); scroll.add_child(roulette_details)
-	var title := _label(roulette_details,"보물상자 · 무기 진화" if bool(roulette_receipt.evolution) else "보물상자 · 보조 강화" if String(roulette_receipt.kind) == "passive" else "보물상자 · 회복" if String(roulette_receipt.kind) == "recovery" else "보물상자 · 무기 강화",34)
+	var title := _label(roulette_details,"Lv.11 MAX · 궁극 진화!" if bool(roulette_receipt.evolution) else "보물상자 · 보조 강화" if String(roulette_receipt.kind) == "passive" else "보물상자 · 회복" if String(roulette_receipt.kind) == "recovery" else "보물상자 · 무기 강화",34)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; title.add_theme_color_override("font_color",Color("ffce78"))
 	var guide := _label(roulette_details,"빛나는 중앙 칸에 멈춘 보상이 적용됩니다",23)
 	guide.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -561,6 +561,25 @@ func _close_roulette() -> void:
 	if is_instance_valid(inventory_dim): inventory_dim.hide()
 	rolling = false; overlay.hide(); pad.reset(); pad.enabled = true
 	battle.set_external_pause(false)
+	if bool(roulette_receipt.get("evolution",false)): _show_awakening_banner(String(roulette_receipt.name))
+
+func _show_awakening_banner(weapon_name: String) -> void:
+	var banner := PanelContainer.new()
+	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(banner)
+	banner.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	banner.offset_top = 180; banner.offset_bottom = 300
+	var label := Label.new()
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.text = "궁극 진화 · MAX\n"+weapon_name
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size",32)
+	label.add_theme_color_override("font_color",Color("ffdc8a"))
+	banner.add_child(label)
+	var tween := create_tween()
+	tween.tween_interval(2.0)
+	tween.tween_property(banner,"modulate:a",0.0,.5)
+	tween.tween_callback(banner.queue_free)
 
 func _install_battle_settings() -> void:
 	battle_frame = preload("res://src/ui/hero_battle_frame.gd").new()

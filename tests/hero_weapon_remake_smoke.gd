@@ -53,13 +53,18 @@ func run() -> void:
 			for step in 80:
 				for slot in runtime.delivery.slots:
 					if float(slot.left)>0:
-						enemy.position = runtime.delivery.orbit_point(slot,0) if slot.mode == "orbit" else Vector2(slot.origin)
+						if slot.mode == "orbit":
+							runtime.delivery.clock += .1
+							enemy.position = runtime.delivery.orbit_point(slot,0)
+							runtime.delivery.clock -= .1
+						else: enemy.position = Vector2(slot.origin)
 				runtime.tick(.1,false)
 			if String(DATA.WEAPONS[id].pattern) not in ["guard","heal"]:
 				check(enemy.current_hp < 100000,"actual attack causes damage "+id+str(level))
 			enemy.position = hero.position+Vector2(80,0)
 	# Single-target bolt growth may concentrate every advertised projectile on one boss.
 	clear(runtime); var id := "swift_hunter_throwing_knife"
+	runtime.evolved.erase(id)
 	runtime.levels[id] = 10;runtime._cast(id)
 	var active := 0
 	for shot in runtime.projectiles:

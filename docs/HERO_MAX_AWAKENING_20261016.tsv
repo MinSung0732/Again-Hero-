@@ -1,0 +1,101 @@
+weapon_id	max_name	mechanic	patch
+ranged_rookie_arcane_bolt	천공을 가르는 비전포	다중 관통·두 겹 비전 각인 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2,"awakening_pierces":6}
+ranged_rookie_star_wand	비전 종극 · 별빛 지팡이	다중 관통·두 겹 비전 각인 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2,"awakening_pierces":6}
+ranged_rookie_magic_lance	비전 종극 · 마력 관통포	전용 기술의 대형화·폭 넓은 다중 전개 · 시전 후 확대되는 천체 충격파	{"native_radius_scale":1.65,"bonus_hits":4,"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_wave":true,"awakening_wave_ratio":0.35}
+ranged_rookie_rune_ring	비전 종극 · 비전 집중	3곳으로 분산되는 대형 지대 · 착지·소멸 반응 폭발과 긴 지속시간	{"field_count":3,"field_duration":6.0,"field_radius_ratio":0.65,"awakening_lob_spread":145.0,"awakening_budget":2.5}
+ranged_rookie_pulse_staff	비전 종극 · 파동 지팡이	기본 파동 뒤 이중 확장 충격파 · 더 넓은 범위로 시간차 연속 타격	{"awakening_wave":true,"awakening_wave_ratio":0.45}
+ranged_rookie_barrier_book	비전 종극 · 마력 장벽	보호·회복 시 큰 수호 광륜이 주기적으로 맥동 · 실제 보호막 흡수25%에 반격	{"awakening_halo":true,"awakening_halo_ratio":0.22,"awakening_counter_threshold":0.25,"shield_duration":6.0}
+swift_hunter_dagger	월영의 끝없는 칼춤	근접 연격과 다방향 잔영 칼날 동시 전개	{"awakening_wave":true,"awakening_wave_ratio":0.4,"awakening_wings":2,"awakening_wing_ratio":0.45}
+swift_hunter_throwing_knife	월영 해방 · 투척 단검	5적을 가르는 왕복 칼날 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2,"awakening_flight":"return","awakening_pierces":5}
+swift_hunter_shadow_wire	월영 해방 · 급습-암살	근접 연격과 다방향 잔영 칼날 동시 전개	{"awakening_wave":true,"awakening_wave_ratio":0.4,"awakening_wings":2,"awakening_wing_ratio":0.45}
+swift_hunter_poison_needle	월영 해방 · 독침	5적을 가르는 왕복 칼날 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2,"awakening_flight":"return","awakening_pierces":5}
+swift_hunter_moon_blade	월영 해방 · 난도질	근접 연격과 다방향 잔영 칼날 동시 전개	{"awakening_wave":true,"awakening_wave_ratio":0.4,"awakening_wings":2,"awakening_wing_ratio":0.45}
+swift_hunter_shadow_bomb	월영 해방 · 그림자 폭탄	기본 파동 뒤 이중 확장 충격파 · 더 넓은 범위로 시간차 연속 타격	{"awakening_wave":true,"awakening_wave_ratio":0.45}
+sword_shield_hero_longsword	불멸의 성왕검	정면 검격이 전방위 성검 파동으로 전환	{"awakening_wave":true,"awakening_wave_ratio":0.4,"pattern":"nova","attack_kind":"melee"}
+sword_shield_hero_piercing_spear	성왕의 서약 · 검방 돌격 · 창격	직선 공격이 5방향 광선망으로 확장 · 후속 확대 충격파 전개	{"fan_lines":5,"awakening_wave":true,"awakening_wave_ratio":0.3}
+sword_shield_hero_aegis	성왕의 서약 · 막기	보호·회복 시 큰 수호 광륜이 주기적으로 맥동 · 실제 보호막 흡수25%에 반격	{"awakening_halo":true,"awakening_halo_ratio":0.22,"awakening_counter_threshold":0.25,"shield_duration":6.0}
+sword_shield_hero_shield_hammer	성왕의 서약 · 방패 망치	정면 검격이 전방위 성검 파동으로 전환	{"awakening_wave":true,"awakening_wave_ratio":0.4,"pattern":"nova","attack_kind":"melee"}
+sword_shield_hero_blade_ring	성왕의 서약 · 검막 방진	정면 검격이 전방위 성검 파동으로 전환	{"awakening_wave":true,"awakening_wave_ratio":0.4,"pattern":"nova","attack_kind":"melee"}
+sword_shield_hero_battle_banner	성왕의 서약 · 전장의 깃발	회복과 함께 대형 성역이 맥동	{"awakening_halo":true,"awakening_halo_ratio":0.22,"awakening_counter_threshold":0.25,"shield_duration":6.0}
+pistol_hero_revolver	최후통첩 · 도탄폭풍	실탄이 최대7적을 잇는 도탄으로 진화 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2,"awakening_flight":"bounce","awakening_bounces":6}
+pistol_hero_shotgun	결전 병기 · 실린더 스트라이크	근접 연격과 다방향 잔영 칼날 동시 전개	{"awakening_wave":true,"awakening_wave_ratio":0.4,"awakening_wings":2,"awakening_wing_ratio":0.45}
+pistol_hero_rifle	결전 병기 · 데드아이	실탄이 최대7적을 잇는 도탄으로 진화 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2,"awakening_flight":"bounce","awakening_bounces":6}
+pistol_hero_ricochet	결전 병기 · 도탄 권총	실탄이 최대7적을 잇는 도탄으로 진화 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2,"awakening_flight":"bounce","awakening_bounces":6}
+pistol_hero_grenade	결전 병기 · 충격 수류탄	기본 파동 뒤 이중 확장 충격파 · 더 넓은 범위로 시간차 연속 타격	{"awakening_wave":true,"awakening_wave_ratio":0.45}
+pistol_hero_powder_bomb	결전 병기 · 화약 폭탄	3곳으로 분산되는 대형 지대 · 착지·소멸 반응 폭발과 긴 지속시간	{"field_count":3,"field_duration":6.0,"field_radius_ratio":0.65,"awakening_lob_spread":145.0,"awakening_budget":2.5}
+archmage_hero_fire_staff	삼원소 대재앙	주력 공격과 양옆 추가탄 동시 전개 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2}
+archmage_hero_ice_scepter	원소 재앙 · 아이스볼트	기본 파동 뒤 이중 확장 충격파 · 더 넓은 범위로 시간차 연속 타격	{"awakening_wave":true,"awakening_wave_ratio":0.45}
+archmage_hero_lightning_rod	원소 재앙 · 체인대거	주력 공격과 양옆 추가탄 동시 전개 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2}
+archmage_hero_earth_staff	원소 재앙 · 땅의 가시	기본 파동 뒤 이중 확장 충격파 · 더 넓은 범위로 시간차 연속 타격	{"awakening_wave":true,"awakening_wave_ratio":0.45}
+archmage_hero_storm_orb	원소 재앙 · 폭풍	기본 파동 뒤 이중 확장 충격파 · 더 넓은 범위로 시간차 연속 타격	{"awakening_wave":true,"awakening_wave_ratio":0.45}
+archmage_hero_prism_wand	원소 재앙 · 신성력	직선 공격이 5방향 광선망으로 확장 · 후속 확대 충격파 전개	{"fan_lines":5,"awakening_wave":true,"awakening_wave_ratio":0.3}
+madness_hero_blood_sword	혈왕의 육연참	연격 뒤 이중 혈월 충격파가 연속 확장	{"awakening_wave":true,"awakening_wave_ratio":0.4,"finish_radius":230.0,"finish_ratio":1.2}
+madness_hero_blood_lance	혈왕 강림 · 혈검술 제2식	직선 공격이 5방향 광선망으로 확장 · 후속 확대 충격파 전개	{"fan_lines":5,"awakening_wave":true,"awakening_wave_ratio":0.3}
+madness_hero_blood_wheel	혈왕 강림 · 핏빛 검륜	연격 뒤 이중 혈월 충격파가 연속 확장	{"awakening_wave":true,"awakening_wave_ratio":0.4,"finish_radius":230.0,"finish_ratio":1.2}
+madness_hero_blood_burst	혈왕 강림 · 혈검술 제4식	기본 파동 뒤 이중 확장 충격파 · 더 넓은 범위로 시간차 연속 타격	{"awakening_wave":true,"awakening_wave_ratio":0.45}
+madness_hero_drain_blade	혈왕 강림 · 흡혈 검	연격 뒤 이중 혈월 충격파가 연속 확장	{"awakening_wave":true,"awakening_wave_ratio":0.4,"finish_radius":230.0,"finish_ratio":1.2}
+madness_hero_heart_chain	혈왕 강림 · 심장 사슬	주력 공격과 양옆 추가탄 동시 전개 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2}
+chemical_hero_acid_vial	금단연성 · 왕수폭우	3곳으로 분산되는 대형 지대 · 착지·소멸 반응 폭발과 긴 지속시간	{"field_count":3,"field_duration":6.0,"field_radius_ratio":0.65,"awakening_lob_spread":145.0,"awakening_budget":2.5}
+chemical_hero_poison_flask	금단 연성 · 촉매 혼합장	3곳으로 분산되는 대형 지대 · 착지·소멸 반응 폭발과 긴 지속시간	{"field_count":3,"field_duration":6.0,"field_radius_ratio":0.65,"awakening_lob_spread":145.0,"awakening_budget":2.5}
+chemical_hero_cryo_vial	금단 연성 · 냉각 약병	기본 파동 뒤 이중 확장 충격파 · 더 넓은 범위로 시간차 연속 타격	{"awakening_wave":true,"awakening_wave_ratio":0.45}
+chemical_hero_reaction_bomb	금단 연성 · 오늘도 실팬가!	기본 파동 뒤 이중 확장 충격파 · 더 넓은 범위로 시간차 연속 타격	{"awakening_wave":true,"awakening_wave_ratio":0.45}
+chemical_hero_acid_cannon	금단 연성 · 압축 산성포	직선 공격이 5방향 광선망으로 확장 · 후속 확대 충격파 전개	{"fan_lines":5,"awakening_wave":true,"awakening_wave_ratio":0.3}
+chemical_hero_life_elixir	금단 연성 · 현자의 비약	회복과 함께 대형 성역이 맥동	{"awakening_halo":true,"awakening_halo_ratio":0.22,"awakening_counter_threshold":0.25,"shield_duration":6.0}
+summoner_hero_gate_hound	심연개방 · 군단강습	활성 소환수 전원이 3연속 차원 협공 · 소환 지속28초·용사HP65%의 내구	{"awakening_command_rounds":3,"summon_duration":28.0,"summon_hp_ratio":0.65}
+summoner_hero_watcher	심연 개방 · 이계의 문 - 감시자	활성 소환수 전원이 3연속 차원 협공 · 소환 지속28초·용사HP65%의 내구	{"awakening_command_rounds":3,"summon_duration":28.0,"summon_hp_ratio":0.65}
+summoner_hero_scout	심연 개방 · 이계의 문 - 정찰병	활성 소환수 전원이 3연속 차원 협공 · 소환 지속28초·용사HP65%의 내구	{"awakening_command_rounds":3,"summon_duration":28.0,"summon_hp_ratio":0.65}
+summoner_hero_gate_laser	심연 개방 · 차원 관통문	직선 공격이 5방향 광선망으로 확장 · 후속 확대 충격파 전개	{"fan_lines":5,"awakening_wave":true,"awakening_wave_ratio":0.3}
+summoner_hero_gatekeeper	심연 개방 · 이계의 문 - 문지기	활성 소환수 전원이 3연속 차원 협공 · 소환 지속28초·용사HP65%의 내구	{"awakening_command_rounds":3,"summon_duration":28.0,"summon_hp_ratio":0.65}
+summoner_hero_rift_pulse	심연 개방 · 균열 파동	기본 파동 뒤 이중 확장 충격파 · 더 넓은 범위로 시간차 연속 타격	{"awakening_wave":true,"awakening_wave_ratio":0.45}
+purifier_hero_holy_bolt	대성인의 천벌	주력 공격과 양옆 추가탄 동시 전개 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2}
+purifier_hero_holy_lance	대성인의 기적 · 궁그닐	직선 공격이 5방향 광선망으로 확장 · 후속 확대 충격파 전개	{"fan_lines":5,"awakening_wave":true,"awakening_wave_ratio":0.3}
+purifier_hero_purification	대성인의 기적 · 정화	기본 파동 뒤 이중 확장 충격파 · 더 넓은 범위로 시간차 연속 타격	{"awakening_wave":true,"awakening_wave_ratio":0.45}
+purifier_hero_sacred_orb	대성인의 기적 · 순례의 성역	3곳으로 분산되는 대형 지대 · 착지·소멸 반응 폭발과 긴 지속시간	{"field_count":3,"field_duration":6.0,"field_radius_ratio":0.65,"awakening_lob_spread":145.0,"awakening_budget":2.5}
+purifier_hero_blessing	대성인의 기적 · 신성보호	보호·회복 시 큰 수호 광륜이 주기적으로 맥동 · 실제 보호막 흡수25%에 반격	{"awakening_halo":true,"awakening_halo_ratio":0.22,"awakening_counter_threshold":0.25,"shield_duration":6.0}
+purifier_hero_prayer	대성인의 기적 · 회복의 성배	회복과 함께 대형 성역이 맥동	{"awakening_halo":true,"awakening_halo_ratio":0.22,"awakening_counter_threshold":0.25,"shield_duration":6.0}
+sage_astra_starlight	은하종말 · 성좌붕괴	주력 공격과 양옆 추가탄 동시 전개 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2}
+sage_astra_comet	은하 붕괴 · 스타라이트	전용 기술의 대형화·폭 넓은 다중 전개 · 시전 후 확대되는 천체 충격파	{"native_radius_scale":1.65,"bonus_hits":4,"awakening_wave":true,"awakening_wave_ratio":0.35}
+sage_astra_astral_chain	은하 붕괴 · 천체 사슬	주력 공격과 양옆 추가탄 동시 전개 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2}
+sage_astra_absolute_zero	은하 붕괴 · 빙점폭발	전용 기술의 대형화·폭 넓은 다중 전개 · 시전 후 확대되는 천체 충격파	{"native_radius_scale":1.65,"field_duration":6.5,"awakening_wave":true,"awakening_wave_ratio":0.35}
+sage_astra_singularity	은하 붕괴 · 소멸	전용 기술의 대형화·폭 넓은 다중 전개 · 시전 후 확대되는 천체 충격파	{"native_radius_scale":1.65,"field_duration":6.5,"awakening_wave":true,"awakening_wave_ratio":0.35}
+sage_astra_binary_stars	은하 붕괴 · 쌍성의 고리	10개의 대형 위성이 안팎 궤도를 교차 · 공전 반경과 접촉 범위 확대	{"orbit_count":10,"orbit_ratio":0.9,"orbit_speed":3.4,"awakening_budget":1.65}
+ranged_rookie_sealing_bolt	비전 종극 · 봉인 마법구	다중 관통·두 겹 비전 각인 · 양옆45% 추가탄 · 각인2회 적중으로 폭발	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2,"awakening_pierces":6}
+ranged_rookie_satellite_orbs	비전 종극 · 위성 마력구	10개의 대형 위성이 안팎 궤도를 교차 · 공전 반경과 접촉 범위 확대	{"orbit_count":10,"orbit_ratio":0.9,"orbit_speed":3.4,"awakening_budget":1.65}
+ranged_rookie_rune_ray	비전 종극 · 룬 분광봉	직선 공격이 5방향 광선망으로 확장 · 후속 확대 충격파 전개	{"fan_lines":5,"awakening_wave":true,"awakening_wave_ratio":0.3}
+ranged_rookie_restoration_codex	비전 종극 · 안식의 마도서	보호·회복 시 큰 수호 광륜이 주기적으로 맥동 · 실제 보호막 흡수25%에 반격	{"awakening_halo":true,"awakening_halo_ratio":0.22,"awakening_counter_threshold":0.25,"shield_duration":6.0}
+swift_hunter_execution_stiletto	월영 해방 · 처형 단도	근접 연격과 다방향 잔영 칼날 동시 전개	{"awakening_wave":true,"awakening_wave_ratio":0.4,"awakening_wings":2,"awakening_wing_ratio":0.45}
+swift_hunter_binding_wire	월영 해방 · 그림자 결박줄	5적을 가르는 왕복 칼날 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2,"awakening_flight":"return","awakening_pierces":5}
+swift_hunter_smoke_mantle	월영 해방 · 연막 망토	보호·회복 시 큰 수호 광륜이 주기적으로 맥동 · 실제 보호막 흡수25%에 반격	{"awakening_halo":true,"awakening_halo_ratio":0.22,"awakening_counter_threshold":0.25,"shield_duration":6.0}
+swift_hunter_venom_steps	월영 해방 · 독무 발톱	이동 경로에 남기는 3중 독성 지대 · 지속6초·지대 피해 예산2.5배	{"field_count":3,"field_duration":6.0,"field_radius_ratio":0.65,"awakening_lob_spread":145.0,"awakening_budget":2.5}
+sword_shield_hero_oath_blade	성왕의 서약 · 맹세의 검	정면 검격이 전방위 성검 파동으로 전환	{"awakening_wave":true,"awakening_wave_ratio":0.4,"pattern":"nova","attack_kind":"melee"}
+sword_shield_hero_ward_crossbow	성왕의 서약 · 수호 쇠뇌	주력 공격과 양옆 추가탄 동시 전개 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2}
+sword_shield_hero_sanctuary_shield	성왕의 서약 · 성역 방패	보호·회복 시 큰 수호 광륜이 주기적으로 맥동 · 실제 보호막 흡수25%에 반격	{"awakening_halo":true,"awakening_halo_ratio":0.22,"awakening_counter_threshold":0.25,"shield_duration":6.0}
+sword_shield_hero_rally_standard	성왕의 서약 · 결집 군기	회복과 함께 대형 성역이 맥동	{"awakening_halo":true,"awakening_halo_ratio":0.22,"awakening_counter_threshold":0.25,"shield_duration":6.0}
+pistol_hero_twin_pistols	결전 병기 · 쌍열 권총	실탄이 최대7적을 잇는 도탄으로 진화 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2,"awakening_flight":"bounce","awakening_bounces":6}
+pistol_hero_shrapnel_round	결전 병기 · 파쇄 탄환	실탄이 최대7적을 잇는 도탄으로 진화 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2,"awakening_flight":"bounce","awakening_bounces":6}
+pistol_hero_suppressor	결전 병기 · 제압 기관권총	실탄이 최대7적을 잇는 도탄으로 진화 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2,"awakening_flight":"bounce","awakening_bounces":6}
+pistol_hero_smoke_canister	결전 병기 · 연막 유탄	3곳으로 분산되는 대형 지대 · 착지·소멸 반응 폭발과 긴 지속시간	{"field_count":3,"field_duration":6.0,"field_radius_ratio":0.65,"awakening_lob_spread":145.0,"awakening_budget":2.5}
+archmage_hero_lava_focus	원소 재앙 · 용암 촉매봉	3곳으로 분산되는 대형 지대 · 착지·소멸 반응 폭발과 긴 지속시간	{"field_count":3,"field_duration":6.0,"field_radius_ratio":0.65,"awakening_lob_spread":145.0,"awakening_budget":2.5}
+archmage_hero_frost_moons	원소 재앙 · 빙결 위성	기본 파동 뒤 이중 확장 충격파 · 더 넓은 범위로 시간차 연속 타격	{"awakening_wave":true,"awakening_wave_ratio":0.45}
+archmage_hero_gale_prism	원소 재앙 · 질풍 프리즘	직선 공격이 5방향 광선망으로 확장 · 후속 확대 충격파 전개	{"fan_lines":5,"awakening_wave":true,"awakening_wave_ratio":0.3}
+archmage_hero_sunfire_tome	원소 재앙 · 태양화염서	기본 파동 뒤 이중 확장 충격파 · 더 넓은 범위로 시간차 연속 타격	{"awakening_wave":true,"awakening_wave_ratio":0.45}
+madness_hero_desperate_cleaver	혈왕 강림 · 결사의 참수검	연격 뒤 이중 혈월 충격파가 연속 확장	{"awakening_wave":true,"awakening_wave_ratio":0.4,"finish_radius":230.0,"finish_ratio":1.2}
+madness_hero_vampire_fang	혈왕 강림 · 흡혈 송곳니	연격 뒤 이중 혈월 충격파가 연속 확장	{"awakening_wave":true,"awakening_wave_ratio":0.4,"finish_radius":230.0,"finish_ratio":1.2}
+madness_hero_blood_thorns	혈왕 강림 · 혈흔 가시	대형 혈독 오라와 이중 혈월 충격파 · 지속 피해 강화	{"field_count":1,"field_duration":6.0,"field_radius_ratio":0.65,"awakening_lob_spread":145.0,"awakening_budget":2.5,"awakening_wave":true,"awakening_wave_ratio":0.4}
+madness_hero_blood_aegis	혈왕 강림 · 핏빛 수호구	보호·회복 시 큰 수호 광륜이 주기적으로 맥동 · 실제 보호막 흡수25%에 반격	{"awakening_halo":true,"awakening_halo_ratio":0.22,"awakening_counter_threshold":0.25,"shield_duration":6.0}
+chemical_hero_caustic_boots	금단 연성 · 부식 분무기	이동 경로에 남기는 3중 독성 지대 · 지속6초·지대 피해 예산2.5배	{"field_count":3,"field_duration":6.0,"field_radius_ratio":0.65,"awakening_lob_spread":145.0,"awakening_budget":2.5}
+chemical_hero_catalyst_wire	금단 연성 · 촉매 도선	주력 공격과 양옆 추가탄 동시 전개 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2}
+chemical_hero_toxic_dart	금단 연성 · 독성 주사총	주력 공격과 양옆 추가탄 동시 전개 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2}
+chemical_hero_antidote_capsule	금단 연성 · 해독 캡슐	보호·회복 시 큰 수호 광륜이 주기적으로 맥동 · 실제 보호막 흡수25%에 반격	{"awakening_halo":true,"awakening_halo_ratio":0.22,"awakening_counter_threshold":0.25,"shield_duration":6.0}
+summoner_hero_rift_orbit	심연 개방 · 차원 협공검	근접 연격과 다방향 잔영 칼날 동시 전개	{"awakening_wave":true,"awakening_wave_ratio":0.4,"awakening_wings":2,"awakening_wing_ratio":0.45}
+summoner_hero_collapse_glyph	심연 개방 · 붕괴 문양	3곳으로 분산되는 대형 지대 · 착지·소멸 반응 폭발과 긴 지속시간	{"field_count":3,"field_duration":6.0,"field_radius_ratio":0.65,"awakening_lob_spread":145.0,"awakening_budget":2.5}
+summoner_hero_gate_shard	심연 개방 · 차원 파편구	주력 공격과 양옆 추가탄 동시 전개 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2}
+summoner_hero_binding_gate	심연 개방 · 결박의 문	기본 파동 뒤 이중 확장 충격파 · 더 넓은 범위로 시간차 연속 타격	{"awakening_wave":true,"awakening_wave_ratio":0.45}
+purifier_hero_mercy_chain	대성인의 기적 · 자비의 사슬	주력 공격과 양옆 추가탄 동시 전개 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2}
+purifier_hero_judgment_seal	대성인의 기적 · 심판 낙인	3곳으로 분산되는 대형 지대 · 착지·소멸 반응 폭발과 긴 지속시간	{"field_count":3,"field_duration":6.0,"field_radius_ratio":0.65,"awakening_lob_spread":145.0,"awakening_budget":2.5}
+purifier_hero_saint_reliquary	대성인의 기적 · 성인의 유골함	보호·회복 시 큰 수호 광륜이 주기적으로 맥동 · 실제 보호막 흡수25%에 반격	{"awakening_halo":true,"awakening_halo_ratio":0.22,"awakening_counter_threshold":0.25,"shield_duration":6.0}
+purifier_hero_martyr_blade	대성인의 기적 · 순교자의 검	근접 연격과 다방향 잔영 칼날 동시 전개	{"awakening_wave":true,"awakening_wave_ratio":0.4,"awakening_wings":2,"awakening_wing_ratio":0.45}
+sage_astra_gravity_lance	은하 붕괴 · 중력 성창	직선 공격이 5방향 광선망으로 확장 · 후속 확대 충격파 전개	{"fan_lines":5,"awakening_wave":true,"awakening_wave_ratio":0.3}
+sage_astra_frozen_stars	은하 붕괴 · 빙성 결계	3곳으로 분산되는 대형 지대 · 착지·소멸 반응 폭발과 긴 지속시간	{"field_count":3,"field_duration":6.0,"field_radius_ratio":0.65,"awakening_lob_spread":145.0,"awakening_budget":2.5}
+sage_astra_supernova_core	은하 붕괴 · 초신성 핵	기본 파동 뒤 이중 확장 충격파 · 더 넓은 범위로 시간차 연속 타격	{"awakening_wave":true,"awakening_wave_ratio":0.45}
+sage_astra_collapsed_seed	은하 붕괴 · 붕괴 별씨	주력 공격과 양옆 추가탄 동시 전개 · 양옆45% 추가탄	{"awakening_wings":2,"awakening_wing_ratio":0.45,"awakening_mark_hits":2}

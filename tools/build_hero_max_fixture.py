@@ -31,5 +31,6 @@ var effects: Array = []
 var projectiles: Array = []
 var fields: Array = []
 var research := {}
+var awakening_flash := 0.0
 var visual_clock := 0.25
 '''+draw)

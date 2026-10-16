@@ -1,6 +1,7 @@
 extends RefCounted
 ## Survival only. Each row: evolution name, Lv3/Lv6/Lv10/evolution patches, their descriptions.
 ## Patches replace values cumulatively; resolving happens only when a weapon is upgraded.
+const AWAKENING := preload("res://src/data/hero_weapon_awakening_catalog.gd")
 const BALANCE := preload("res://src/data/hero_weapon_balance_catalog.gd")
 const EVOLUTION := preload("res://src/data/hero_weapon_evolution_catalog.gd")
 const PROFILES := {
@@ -121,6 +122,7 @@ static func resolve(id: String, source: Dictionary, rank: int, awakened: bool) -
 	BALANCE.apply(id,result,rank,awakened)
 	if awakened:
 		result["max_mechanic"] = EVOLUTION.design(id)
+		AWAKENING.apply(id,result)
 		result["weapon_id"] = id
 	return result
 
@@ -132,13 +134,15 @@ static func _merge(result: Dictionary, patch: Dictionary) -> void:
 		else: result[key] = patch[key]
 
 static func evolution_name(id: String) -> String:
-	return String(EVOLUTION.DESIGNS[id].name) if EVOLUTION.DESIGNS.has(id) else String(PROFILES[id][0]) if PROFILES.has(id) else "무기 진화"
+	return String(AWAKENING.PROFILES[id].name) if AWAKENING.PROFILES.has(id) else "무기 진화"
 static func evolution_description(id: String) -> String:
-	return "Lv.11 MAX · "+EVOLUTION.description(id)+"\nLv.10 대비 기본 피해 +60% · 재사용 -5%" if PROFILES.has(id) else ""
+	var detail := EVOLUTION.description(id)
+	if int(AWAKENING.PROFILES[id].patch.get("awakening_mark_hits",3)) == 2: detail = detail.replace("3회 적중","2회 적중")
+	return "Lv.11 MAX · "+AWAKENING.description(id)+"\n"+detail+"\n기본 피해 +60% · 진화 사거리 +30%"
 static func upgrade_description(id: String, rank: int) -> String:
 	return "무기 성장 · Lv.%d\n" % rank+BALANCE.description(id)
 static func description(id: String, rank: int, awakened: bool = false) -> String:
 	if not PROFILES.has(id): return ""
 	var text := BALANCE.description(id)
 	if awakened: return text+"\n"+evolution_name(id)+"\n"+evolution_description(id)
-	return text+"\nLv.10 + 상자 → "+evolution_name(id)+"\nMAX: "+String(EVOLUTION.DESIGNS[id].description)
+	return text+"\nLv.10 + 상자 → "+evolution_name(id)+"\nMAX: "+evolution_description(id)

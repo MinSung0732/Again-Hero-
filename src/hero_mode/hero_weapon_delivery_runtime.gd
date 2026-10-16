@@ -60,9 +60,13 @@ func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,r
 			if move.is_zero_approx(): move = Vector2.RIGHT.rotated(index*TAU/count)
 			slot.origin = _clamp(origin-move*index*float(slot.radius)*1.1)
 		# Nominal per-target budget per cast, shared across zones; orbit pays for contact gaps.
-		var budget := float(rule.get("budget",2.0))
+		var budget := float(rule.get("budget",2.0))*float(data.get("awakening_budget",1.0))
 		slot.damage = maxi(1,roundi(damage*budget*interval/(cooldown if mode == "orbit" else duration*count)))
 		if mode in ["bombard","trap","fault","lob_burst"]: slot.damage = maxi(1,roundi(damage*budget/count))
+		if float(data.get("awakening_lob_spread",0))>0 and count>1 and mode in ["lob","lob_burst","sigil","random","consecrate"]:
+			var spread:=Vector2.RIGHT.rotated(TAU*index/count)*float(data.awakening_lob_spread)
+			slot.landing=_clamp(Vector2(slot.landing)+spread)
+			if mode not in ["lob","lob_burst"]:slot.origin=slot.landing
 		slot.frames = host.art.get(id,[]); slot.color = Color(String(data.color))
 		slot.max_kind = String(data.get("max_mechanic",{}).get("mechanic","")); slot.orbit_shape = String(data.get("max_mechanic",{}).get("shape",""))
 		slot.detonated = false; slot.relay_phase = floori(clock/2.0)

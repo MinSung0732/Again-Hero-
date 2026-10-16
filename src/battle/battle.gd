@@ -153,6 +153,8 @@ var current_stage_data: Dictionary = {}
 var current_hero_profile: Dictionary = {}
 var current_map_size: Vector2 = DEFAULT_MAP_SIZE
 var run_time_limit_seconds: float = 0.0
+var hero_final_boss_spawned := false
+var _hero_boss_spawn_pending := false
 var run_time_emit_timer: float = 0.0
 var manual_spawn_warning_timer: float = 0.0
 var run_metrics = RUN_METRICS.new()
@@ -823,6 +825,8 @@ func _start_battle() -> void:
 	transcendence.configure(registered_id, TRANSCENDENCE_DATA.get_rules(registered_id) if bool(MONSTER_CATALOG.MONSTERS.get(registered_id, {}).get("combat_enabled", true)) else {})
 	transcendence_changed.emit(registered_id, false, false)
 	battle_over = false
+	hero_final_boss_spawned = false
+	_hero_boss_spawn_pending = false
 	_run_reward_granted = false
 	_run_reward_save_failed = false
 	elite_monster_skill_runtime.reset()
@@ -2177,11 +2181,12 @@ func _spawn_monster(
 	split_child: bool = false,
 	spawn_modifiers: Dictionary = {}
 ):
+	var reserved_boss := _is_reserved_hero_boss_request(monster_type,spawn_modifiers)
 	if online_match_mode and (active_monsters.size() >= get_population_limit() or monster_type not in online_match_rules.get("roster",[])): return null
-	if hero_player_mode and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and not bool(spawn_modifiers.get("hero_final_boss_spawn",false)): return null
-	if hero_player_mode and (active_monsters.size() >= HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1))) or not HERO_SURVIVAL.monster_allowed(monster_type,int(current_stage_data.get("number",1)),campaign_difficulty)): return null
-	if hero_player_mode and not bool(spawn_modifiers.get("hero_final_boss_spawn",false)) and not hero_control_spawns.allows(monster_type,bool(spawn_modifiers.get("elite_variant",false)),int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds),active_monsters.size()): return null
-	if bool(spawn_modifiers.get("counts_population", false)) and is_population_full():
+	if hero_player_mode and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and not reserved_boss: return null
+	if hero_player_mode and (active_monsters.size() >= HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1)))+(1 if reserved_boss else 0) or not HERO_SURVIVAL.monster_allowed(monster_type,int(current_stage_data.get("number",1)),campaign_difficulty)): return null
+	if hero_player_mode and not reserved_boss and not hero_control_spawns.allows(monster_type,bool(spawn_modifiers.get("elite_variant",false)),int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds),active_monsters.size()): return null
+	if not reserved_boss and bool(spawn_modifiers.get("counts_population", false)) and is_population_full():
 		return null
 	if not bool(MONSTER_CATALOG.MONSTERS.get(monster_type, {}).get("combat_enabled", true)):
 		return null
@@ -2193,7 +2198,7 @@ func _spawn_monster(
 		push_warning("Unknown monster id: %s" % monster_type)
 		return null
 
-	if _monster_population_limit_reached(monster_type, bool(spawn_modifiers.get("elite_variant", false))):
+	if not reserved_boss and _monster_population_limit_reached(monster_type, bool(spawn_modifiers.get("elite_variant", false))):
 		return null
 	if bool(MONSTER_CATALOG.MONSTERS[monster_type].get("spawn_at_max_range", false)) and is_instance_valid(hero) and not bool(spawn_modifiers.get("hero_encounter_position_locked",false)):
 		spawn_position = get_stationary_spawn_position(monster_type, hero.global_position, spawn_position)
@@ -6208,17 +6213,25 @@ func configure_campaign_difficulty(difficulty: String) -> void:
 		hero.health_changed.emit(hero.current_hp,hero.max_hp)
 		run_metrics.reset(run_time_limit_seconds,hero.current_hp,hero.max_hp)
 
+func _is_reserved_hero_boss_request(_id: String,modifiers: Dictionary) -> bool:
+	return hero_player_mode and not online_match_mode and _hero_boss_spawn_pending and not hero_final_boss_spawned and not battle_over and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and bool(modifiers.get("hero_final_boss_spawn",false))
+
 func spawn_hero_encounter(id: String, point: Vector2, modifiers: Dictionary) -> Node2D:
 	if not hero_player_mode or battle_over or not HERO_SURVIVAL.monster_allowed(id,int(current_stage_data.get("number",1)),campaign_difficulty): return null
-	if String(modifiers.get("type","")) != "boss":
+	var is_boss := String(modifiers.get("type","")) == "boss"
+	if is_boss and (hero_final_boss_spawned or _hero_boss_spawn_pending or run_metrics.elapsed_seconds < HERO_SURVIVAL.DURATION): return null
+	if not is_boss:
 		id = hero_spawn_candidate(id,hero_control_roster,true)
 		if id.is_empty(): return null
 	point = _clamp_manual_spawn_position(point)
-	if active_monsters.size() >= HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1))) or point.distance_squared_to(hero.position) < 180.0*180.0: return null
-	var monster = _spawn_monster(id,point,0.0,false,{"elite_variant":true,"counts_population":true,"hero_encounter_position_locked":true,"hero_final_boss_spawn":String(modifiers.get("type","")) == "boss"})
+	if active_monsters.size() >= HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1)))+(1 if is_boss else 0) or point.distance_squared_to(hero.position) < 180.0*180.0: return null
+	_hero_boss_spawn_pending = is_boss
+	var monster = _spawn_monster(id,point,0.0,false,{"elite_variant":true,"counts_population":true,"hero_encounter_position_locked":true,"hero_final_boss_spawn":is_boss})
+	_hero_boss_spawn_pending = false
 	if not is_instance_valid(monster): return null
 	_apply_special_monster_modifiers(monster,id,modifiers)
-	if String(modifiers.get("type","")) == "boss":
+	if is_boss:
+		hero_final_boss_spawned = true
 		monster.set_meta("hero_final_boss",true)
 		if modifiers.has("target_hp"):
 			monster.max_hp = int(modifiers.target_hp); monster.current_hp = monster.max_hp

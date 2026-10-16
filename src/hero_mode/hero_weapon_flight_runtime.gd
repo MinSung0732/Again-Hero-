@@ -7,9 +7,9 @@ var query: Array = []
 func install(runtime) -> void: owner_ref = weakref(runtime)
 func configure(shot: Dictionary) -> void:
  var rule := RULES.spec(String(shot.data.get("weapon_id","")))
- shot.flight = String(rule.get("kind","homing"))
+ shot.flight = String(shot.data.get("awakening_flight",rule.get("kind","homing")))
  shot.phase = 0; shot.victims.clear(); shot.strikes = 0; shot.start = shot.position
- shot.pierces = int(rule.get("pierce",1)); shot.bounces = int(rule.get("bounces",0))
+ shot.pierces = int(shot.data.get("awakening_pierces",rule.get("pierce",1))); shot.bounces = int(shot.data.get("awakening_bounces",rule.get("bounces",0)))
  if shot.flight == "fan": shot.direction = Vector2(shot.direction).rotated(-.085 if int(shot.get("serial",0))%2 == 0 else .085)
 func handles(shot: Dictionary) -> bool:
  return not bool(shot.melee) and String(shot.flight) not in ["homing","curve"]
@@ -26,7 +26,8 @@ func tick(shot: Dictionary,delta: float) -> void:
  shot.traveled = float(shot.traveled)+step
  # Swept collision prevents fast rounds tunnelling through targets.
  var center: Vector2 = (previous+Vector2(shot.position))*.5
- var radius: float = step*.5+12.0
+ var hit_radius: float = 12.0*float(shot.data.get("awakening_visual_scale",1.0))
+ var radius: float = step*.5+hit_radius
  host.hero._fill_monster_nodes_near(center,radius,query)
  var first: Node2D = null
  var nearest := INF
@@ -35,7 +36,7 @@ func tick(shot: Dictionary,delta: float) -> void:
   var handle: Vector3i = host.authority.get_battle_entity_handle(actor)
   if handle == Vector3i.ZERO or shot.victims.has(handle): continue
   var point := Geometry2D.get_closest_point_to_segment(actor.global_position,previous,shot.position)
-  if point.distance_squared_to(actor.global_position)>12.0*12.0: continue
+  if point.distance_squared_to(actor.global_position)>hit_radius*hit_radius: continue
   var distance: float = previous.distance_squared_to(actor.global_position)
   if distance<nearest: nearest=distance;first=actor
  if first != null:

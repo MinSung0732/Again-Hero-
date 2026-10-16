@@ -66,6 +66,7 @@ var projectile_bonus := 0
 var base_slow_resistance := 0.0
 var shield_left := 0.0
 var owned_shield := 0.0
+var awakening_flash := 0.0
 var reroll_limit := MODE.AUGMENT_REROLLS
 var rerolls_used := 0
 
@@ -245,6 +246,8 @@ func apply_chest(receipt: Dictionary) -> bool:
 		evolved[id] = true
 		resolved.erase(id)
 		cooldowns[id] = 0.0 # MAX is ready immediately after the chest closes.
+		awakening_flash = 1.6
+		hero.queue_redraw()
 	else:
 		if not levels.has(id) and not passives.has(id): return false
 		if not add(id): return false
@@ -267,6 +270,8 @@ func summary() -> String:
 
 func tick(delta: float, allow_casts: bool = true) -> void:
 	visual_clock += delta
+	if awakening_flash>0.0:
+		awakening_flash=maxf(0.0,awakening_flash-delta);hero.queue_redraw()
 	if kit != null: kit.tick(delta)
 	if delivery != null: delivery.tick(delta)
 	if evolution != null: evolution.tick(delta)
@@ -501,7 +506,9 @@ func _free_field() -> Dictionary:
 	return {} # Saturation never overwrites a still-visible damage circle.
 
 func _after_cast(data: Dictionary, origin: Vector2, direction: Vector2, target: Node2D, damage: int, reach: float, rank: int) -> void:
-	if evolution != null: evolution.on_cast(data,origin,direction,target,damage,reach)
+	if evolution != null:
+		evolution.on_cast(data,origin,direction,target,damage,reach)
+		evolution.awakening_cast(data,origin,direction,target,damage,reach)
 	if kit != null: kit.after_cast(data,origin,direction,target,damage,reach)
 	if float(data.get("cast_heal",0.0)) > 0.0: hero.heal_direct(roundi(hero.max_hp*float(data.cast_heal)))
 	if float(data.get("cast_shield",0.0)) > 0.0:
@@ -570,10 +577,10 @@ func _pose(direction: Vector2) -> void:
 	if direction.x != 0.0: hero._face_attack_direction(direction.x)
 
 # Generation handles prevent a recycled monster instance from receiving an old shot.
-func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, color: Color, data: Dictionary = {}, delay: float = 0.0, melee: bool = false, reach: float = 0.0, finisher: bool = false) -> void:
-	if not is_instance_valid(authority) or not authority.has_method("get_battle_entity_handle"): return
+func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, color: Color, data: Dictionary = {}, delay: float = 0.0, melee: bool = false, reach: float = 0.0, finisher: bool = false) -> int:
+	if not is_instance_valid(authority) or not authority.has_method("get_battle_entity_handle"): return -1
 	var handle: Vector3i = authority.call("get_battle_entity_handle",actor)
-	if handle == Vector3i.ZERO: return
+	if handle == Vector3i.ZERO: return -1
 	for offset in range(PROJECTILE_LIMIT):
 		var index := (projectile_cursor+offset)%PROJECTILE_LIMIT
 		var shot: Dictionary = projectiles[index]
@@ -583,13 +590,15 @@ func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, 
 		shot.damage = damage; shot.rank = rank; shot.color = color; shot.age = 0.0
 		shot.data = data; shot.delay = delay; shot.melee = melee; shot.reach = reach if reach > 0 else float(data.get("range",900.0)); shot.traveled = 0.0
 		shot["finisher"] = finisher
-		shot["visual_radius"] = DATA.projectile_visual_radius(data)
+		shot["visual_radius"] = DATA.projectile_visual_radius(data)*float(data.get("awakening_visual_scale",1.0))
 		shot["frames"] = ART.cache.get(String(data.get("effect_dir","")),EMPTY_ART)
 		shot["direction"] = origin.direction_to(actor.global_position)
 		shot.serial = index
 		flight.configure(shot)
 		hero.queue_redraw()
-		return
+		return index
+
+	return -1
 
 func launch_summon_extras(id: String, target: Node2D, origin: Vector2, damage: int, reach: float) -> void:
 	if not levels.has(id) or not is_instance_valid(target): return
@@ -626,7 +635,7 @@ func _tick_projectiles(delta: float) -> void:
 			shot.position = position+Vector2(shot.direction)*step
 		else: shot.position = position.move_toward(actor.global_position,step)
 		shot.traveled = float(shot.traveled)+position.distance_to(shot.position)
-		if position.distance_to(actor.global_position) <= step+GEOMETRY.PROJECTILE_RADIUS:
+		if position.distance_to(actor.global_position) <= step+GEOMETRY.PROJECTILE_RADIUS*float(shot.data.get("awakening_visual_scale",1.0)):
 			shot.active = false
 			_hit(actor,int(shot.damage),"bolt",int(shot.rank),shot.data)
 			_finish_shot(shot,actor)
@@ -651,7 +660,7 @@ func _hit(actor: Node2D, damage: int, pattern: String, rank: int, data: Dictiona
 	damage = maxi(1,roundi(damage*reaction))
 	var before := int(actor.get("current_hp"))
 	if before > 0 and float(data.get("execute_ratio",0.0)) > 0.0 and before <= float(actor.get("max_hp"))*float(data.execute_ratio): damage = maxi(damage,before)
-	HIT.hit(actor,damage,"melee" if pattern == "slash" else "ranged",hero)
+	HIT.hit(actor,damage,String(data.get("attack_kind","melee" if pattern == "slash" else "ranged")),hero)
 	if identity != null and identity.archetype == "alchemist_chemical" and pattern == "field": identity.impact()
 	var lost := maxi(0,before-int(actor.get("current_hp"))) if is_instance_valid(actor) else 0
 	if lost > 0 and kit != null:
@@ -679,6 +688,9 @@ func _effect(a: Vector2,b: Vector2,radius: float,pattern: String,color: Color,da
 	effect.left = effect.duration; hero.queue_redraw()
 
 func draw() -> void:
+	if awakening_flash>0.0:
+		var progress:float=1.0-awakening_flash/1.6
+		hero.draw_arc(Vector2.ZERO,45.0+progress*260,0,TAU,48,Color(1.0,.8,.3,(1.0-progress)*.8),5.0)
 	if evolution != null: evolution.draw()
 	if delivery != null: delivery.draw()
 	for field in fields:
