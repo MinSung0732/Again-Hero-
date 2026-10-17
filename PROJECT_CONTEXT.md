@@ -1,3 +1,8 @@
+## 2026-10-17 — 단계별 하드코딩 정리3차
+
+- 기타 메뉴/설정 탭 바인딩·하위 View/옵션 정책은 lobby_ui_policy_catalog, 사이드 도구함 표시/안내는 lobby_tool_catalog. 콘텐츠별 연결 목록/숨김 분기 중복 제거, 사운드·계정 기존 노드/신호 유지. 용사 강제 카메라 설정은 옵션 metadata이며 마왕 선호 저장을 덮어쓰지 않음. 해금/전투/DB 변경 없음.
+- Godot309검사+키보드 smoke·정적/import 통과, 실제 전체 로비/GPU·PC/Android 터치·계정통합 미검증. 다음4차 전투 콘텐츠 분기·반복 조회는 별도 진행. docs/LOBBY_UI_POLICY_REFACTOR_PHASE3_20261017.md.
+
 ## 2026-10-17 — 단계별 하드코딩 정리2차
 
 - 성별 기본값/선택지/표시명은 profile_gender_catalog, 기본 경로/Texture는 demon_appearance_catalog, 저장 키·초기 프로필/게스트 기본 플래그는 player_profile_catalog. runtime 성별 분기/경로 중복 제거, 프롤로그 선택 데이터 순회. 기존기본male·저장/추가필드·1글자계정·독립변경권/진행·대사타이밍 유지. DB 변경 없음.

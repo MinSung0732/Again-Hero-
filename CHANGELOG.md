@@ -1,3 +1,8 @@
+## 2026-10-17 — 하드코딩 정리3차: 로비 메뉴·설정·도구함
+
+- lobby_ui_policy_catalog로 기타6메뉴/5설정탭·노드 바인딩/하위 View·뒤로가기 높이/게임 옵션·용사 강제 설정을 통합. 등록 action 기반 연결·공용 화면 숨김/전환, 기존 sound/account 노드·신호 재사용. lobby_tool_catalog에 표시 한도/배치·기본 안내 이동. 기존순서·문구·노출/해금·저장/통화·서버 유지.
+- Godot headless 로비88+기존221=309검사·키보드 smoke·정적 동등성/import 통과.100도구 더보기 controls 재사용·알림/권한 확인. 전체원본 Lobby/GPU·실기PC/Android 터치·계정통합/FPS 미검증. docs/LOBBY_UI_POLICY_REFACTOR_PHASE3_20261017.md.
+
 ## 2026-10-17 — 하드코딩 정리2차: 성별·초상화·프로필 기본값
 
 - profile_gender_catalog의 기본값/유효성/표시명/선택 배치, demon_appearance_catalog의 경로/Texture, player_profile_catalog의 초기 프로필·게스트 플래그/저장 키로 책임 통합. runtime5파일 성별·초상화 literal 제거, 프롤로그 데이터 순회/공유 art 적용. 기존 기본 male·1글자 계정·추가 저장 필드·변경권/통화·대사/타이밍·PORTRAITS API 유지. DB 변경 없음.

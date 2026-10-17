@@ -2,19 +2,17 @@ extends RefCounted
 var guest_account_view: RefCounted
 
 const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
-const OTHER_ENTRIES := [["profile", "프로필"], ["demon_book", "마왕도감"], ["hero_book", "용사도감"], ["rank_history", "랭킹기록"], ["practice", "연습전투"], ["settings", "설정"]]
+const POLICY := preload("res://src/data/lobby_ui_policy_catalog.gd")
+const OTHER_ENTRIES := POLICY.OTHER_ENTRIES
 
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const PROFILE := preload("res://src/systems/player_profile.gd")
 const PROFILE_COSMETICS := preload("res://src/systems/profile_cosmetic_store.gd")
 const PROFILE_CATALOG := preload("res://src/data/profile_cosmetic_catalog.gd")
 const PROLOGUE := preload("res://src/ui/player_prologue.gd")
-const NOTICE_PATH := "user://notification_settings.cfg"
-const TABS := [["game", "게임"], ["sound", "소리"], ["notice", "알림"], ["account", "계정"], ["misc", "기타"]]
-const GAME_OPTIONS := [
-	{"key": "camera_view_locked", "title": "화면 고정", "description": "켜면 용사를 따라갑니다. 끄면 드래그로 화면을 이동합니다.", "default": true},
-	{"key": "battle_frame_enabled", "title": "배틀 프레임", "description": "전장 주변의 마왕성 장식 프레임을 표시합니다.", "default": true},
-]
+const NOTICE_PATH := POLICY.NOTICE_PATH
+const TABS := POLICY.TABS
+const GAME_OPTIONS := POLICY.GAME_OPTIONS
 var other_menu: VBoxContainer
 var other_menu_buttons := {}
 var settings_root: VBoxContainer
@@ -29,7 +27,7 @@ var menu_title_plate: PanelContainer
 var lobby: Control
 var buttons := {}
 var pages := {}
-var selected := "game"
+var selected := POLICY.DEFAULT_SETTINGS_TAB
 var game_checks := {}
 var notice_checks := {}
 var account_identity: Label
@@ -60,20 +58,7 @@ func install(target: Control) -> void:
 	box.get_node("Title").text = "설정"
 	var tabs := box.get_node("Tabs") as HBoxContainer
 	tabs.add_theme_constant_override("separation", 12)
-	lobby.other_settings_tab_button.text = "소리"
-	buttons.sound = lobby.other_settings_tab_button
-	buttons.account = lobby.other_account_tab_button
-	for entry in TABS:
-		if not buttons.has(entry[0]):
-			var button := Button.new()
-			button.text = entry[1]
-			button.custom_minimum_size.y = 102
-			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			tabs.add_child(button)
-			buttons[entry[0]] = button
-			button.pressed.connect(show_page.bind(entry[0]))
-		tabs.move_child(buttons[entry[0]], TABS.find(entry))
-		buttons[entry[0]].custom_minimum_size.y = 102
+	_bind_settings_tabs(tabs)
 	scroll = ScrollContainer.new()
 	scroll.name = "SettingsScroll"
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -84,14 +69,7 @@ func install(target: Control) -> void:
 	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(stack)
 	for entry in TABS:
-		var page: VBoxContainer
-		if entry[0] == "sound":
-			page = lobby.other_settings_panel
-		elif entry[0] == "account":
-			page = lobby.other_account_panel
-		else:
-			page = VBoxContainer.new()
-			page.name = String(entry[0]).capitalize() + "Panel"
+		var page := _settings_page(String(entry[0]))
 		if page.get_parent() != null:
 			page.reparent(stack)
 		else:
@@ -109,7 +87,7 @@ func install(target: Control) -> void:
 	lobby.get_node("/root/CloudStore").status_changed.connect(_on_cloud_status)
 	lobby.get_node("/root/LoginGateway").login_unavailable.connect(_on_cloud_status)
 	lobby.tree_exiting.connect(_disconnect_cloud_status, CONNECT_ONE_SHOT)
-	show_page("game")
+	show_page(POLICY.DEFAULT_SETTINGS_TAB)
 	_build_other_menu(box)
 	profile_view = preload("res://src/ui/lobby_profile_view.gd").new()
 	profile_view.install(self, box)
@@ -118,6 +96,36 @@ func install(target: Control) -> void:
 	demon_codex_view = preload("res://src/ui/lobby_demon_codex_view.gd").new()
 	demon_codex_view.install(self,box)
 	show_menu()
+
+func _bind_settings_tabs(tabs: HBoxContainer) -> void:
+	for id in POLICY.TAB_HOSTS:
+		var binding: Dictionary = POLICY.TAB_HOSTS[id]
+		var button: Button = lobby.get(String(binding.button))
+		if binding.get("override_label", false): button.text = _tab_label(id)
+		buttons[id] = button
+	for index in TABS.size():
+		var entry: Array = TABS[index]
+		if not buttons.has(entry[0]):
+			var button := Button.new()
+			button.text = entry[1]
+			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			tabs.add_child(button)
+			buttons[entry[0]] = button
+			button.pressed.connect(show_page.bind(entry[0]))
+		tabs.move_child(buttons[entry[0]], index)
+		buttons[entry[0]].custom_minimum_size.y = POLICY.TAB_BUTTON_HEIGHT
+
+func _tab_label(id: String) -> String:
+	for entry in TABS:
+		if entry[0] == id: return String(entry[1])
+	return ""
+
+func _settings_page(id: String) -> VBoxContainer:
+	var binding: Dictionary = POLICY.TAB_HOSTS.get(id, {})
+	if binding.has("page"): return lobby.get(String(binding.page)) as VBoxContainer
+	var page := VBoxContainer.new()
+	page.name = id.capitalize() + "Panel"
+	return page
 
 func _install_tab_backdrops() -> void:
 	# The same passive backing belongs to each tab and stays inside its outer rails.
@@ -186,7 +194,7 @@ func _build_other_menu(box: VBoxContainer) -> void:
 	other_back_button.name = "BackToOther"
 	other_back_button.text = "‹"
 	other_back_button.tooltip_text = "기타 목록으로 돌아가기"
-	other_back_button.custom_minimum_size = Vector2(80, 88)
+	other_back_button.custom_minimum_size = Vector2(80, POLICY.DEFAULT_BACK_HEIGHT)
 	other_back_button.add_theme_font_size_override("font_size", 54)
 	other_back_button.add_theme_color_override("font_color", Color("ffe298"))
 	other_back_button.add_theme_color_override("font_hover_color", Color("fff8df"))
@@ -221,11 +229,13 @@ func _build_other_menu(box: VBoxContainer) -> void:
 	for entry in OTHER_ENTRIES:
 		var button := Button.new()
 		button.name = String(entry[0]).to_pascal_case()
-		button.text = String(entry[1]) + ("  ›" if entry[0] in ["settings", "profile", "practice", "hero_book", "demon_book"] else "\n준비 중")
-		button.custom_minimum_size.y = 132
+		var rule: Dictionary = POLICY.OTHER_ACTIONS.get(entry[0], {})
+		var action := _menu_action(rule)
+		button.text = String(rule.get("text", String(entry[1]) + (POLICY.MENU_ARROW if action.is_valid() else POLICY.COMING_SOON)))
+		button.custom_minimum_size.y = POLICY.MENU_BUTTON_HEIGHT
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		button.disabled = entry[0] not in ["settings", "profile", "practice", "hero_book", "demon_book"]
+		button.disabled = not action.is_valid()
 		button.add_theme_font_size_override("font_size", 30)
 		button.add_theme_color_override("font_color", Color("fff0c2"))
 		button.add_theme_color_override("font_disabled_color", Color("b9a7c6"))
@@ -234,65 +244,58 @@ func _build_other_menu(box: VBoxContainer) -> void:
 		button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 		rows.add_child(button)
 		other_menu_buttons[entry[0]] = button
-		if entry[0] == "settings":
-			button.pressed.connect(_open_settings)
-		elif entry[0] == "practice":
-			button.visible = LocalTestMode.is_practice_allowed()
-			button.text = "연습전투  ›\n무한 체력 도망 더미 · 등록한 초월 기술 확인"
-			button.pressed.connect(lobby._enter_practice_battle)
-		elif entry[0] == "demon_book":
-			button.pressed.connect(show_demon_codex)
-		elif entry[0] == "hero_book":
-			button.pressed.connect(show_hero_codex)
-		elif entry[0] == "profile":
-			button.pressed.connect(show_profile)
+		button.visible = _menu_visible(rule)
+		if action.is_valid(): button.pressed.connect(action)
+
+func _menu_action(rule: Dictionary) -> Callable:
+	var method := String(rule.get("method", ""))
+	if method.is_empty(): return Callable()
+	var target: Object = lobby if rule.get("target", "settings") == "lobby" else self
+	return Callable(target, method)
+
+func _menu_visible(rule: Dictionary) -> bool:
+	var method := String(rule.get("visible_if", ""))
+	if method.is_empty(): return true
+	var mode := lobby.get_node("/root/LocalTestMode")
+	return mode.has_method(method) and bool(mode.call(method))
+
+func _hide_other_views(except_property: String = "") -> void:
+	for rule in POLICY.OTHER_VIEWS.values():
+		var property := String(rule.property)
+		var view: Variant = get(property)
+		if property != except_property and view != null: view.hide()
+
+func _show_other_view(id: String) -> void:
+	var rule: Dictionary = POLICY.OTHER_VIEWS.get(id, {})
+	if rule.is_empty(): return
+	if other_back_button != null: other_back_button.custom_minimum_size.y = float(rule.back_height)
+	_hide_other_views(String(rule.property))
+	other_navigation.show()
+	settings_root.hide()
+	settings_title_plate.hide()
+	other_menu.hide()
+	menu_title_plate.hide()
+	var view: Variant = get(String(rule.property))
+	if view != null: view.show()
 
 func show_hero_codex() -> void:
-	if other_back_button != null: other_back_button.custom_minimum_size.y = 88
-	if demon_codex_view != null: demon_codex_view.hide()
-	other_navigation.show()
-	settings_root.hide()
-	settings_title_plate.hide()
-	other_menu.hide()
-	menu_title_plate.hide()
-	profile_view.hide()
-	hero_codex_view.show()
+	_show_other_view("hero_book")
 
 func show_demon_codex() -> void:
-	other_back_button.custom_minimum_size.y = 56
-	other_navigation.show()
-	settings_root.hide()
-	settings_title_plate.hide()
-	other_menu.hide()
-	menu_title_plate.hide()
-	profile_view.hide()
-	hero_codex_view.hide()
-	demon_codex_view.show()
+	_show_other_view("demon_book")
 
 func show_profile() -> void:
-	if other_back_button != null: other_back_button.custom_minimum_size.y = 88
-	if hero_codex_view != null: hero_codex_view.hide()
-	if demon_codex_view != null: demon_codex_view.hide()
-	other_navigation.show()
-	settings_root.hide()
-	settings_title_plate.hide()
-	other_menu.hide()
-	menu_title_plate.hide()
-	profile_view.show()
+	_show_other_view("profile")
 
 func _open_settings() -> void:
 	show_page(selected)
 
 func show_menu() -> void:
-	if other_back_button != null: other_back_button.custom_minimum_size.y = 88
-	if hero_codex_view != null: hero_codex_view.hide()
-	if demon_codex_view != null: demon_codex_view.hide()
-	if other_menu_buttons.has("practice"):
-		other_menu_buttons.practice.visible = LocalTestMode.is_practice_allowed()
-	if other_menu == null:
-		return
-	if profile_view != null:
-		profile_view.hide()
+	if other_back_button != null: other_back_button.custom_minimum_size.y = POLICY.DEFAULT_BACK_HEIGHT
+	_hide_other_views()
+	for id in other_menu_buttons:
+		other_menu_buttons[id].visible = _menu_visible(POLICY.OTHER_ACTIONS.get(id, {}))
+	if other_menu == null: return
 	settings_root.hide()
 	settings_title_plate.hide()
 	menu_title_plate.show()
@@ -415,10 +418,10 @@ func _build_game() -> void:
 	_info(page, "게임 옵션은 자동 저장되며 다음 전투에도 적용됩니다.")
 
 func _save_game(value: bool, key: String) -> void:
-	if key == "camera_view_locked" and lobby._is_hero_lobby_mode(): _sync_game(); return
+	if bool(POLICY.game_option(key).get("force_in_hero", false)) and lobby._is_hero_lobby_mode(): _sync_game(); return
 	var config := ConfigFile.new()
 	config.load(lobby.gameplay_settings_path)
-	config.set_value("gameplay", key, value)
+	config.set_value(POLICY.GAMEPLAY_SECTION, key, value)
 	if config.save(lobby.gameplay_settings_path) != OK:
 		_sync_game()
 
@@ -426,9 +429,9 @@ func _sync_game() -> void:
 	var config := ConfigFile.new()
 	config.load(lobby.gameplay_settings_path)
 	for option in GAME_OPTIONS:
-		var hero_mode: bool = lobby._is_hero_lobby_mode() and option.key == "camera_view_locked"
+		var hero_mode: bool = lobby._is_hero_lobby_mode() and bool(option.get("force_in_hero", false))
 		game_checks[option.key].disabled = hero_mode
-		game_checks[option.key].set_pressed_no_signal(hero_mode or bool(config.get_value("gameplay", option.key, option["default"])))
+		game_checks[option.key].set_pressed_no_signal(hero_mode or bool(config.get_value(POLICY.GAMEPLAY_SECTION, option.key, option["default"])))
 		game_checks[option.key].resized.emit()
 
 func _build_sound() -> void:
@@ -724,13 +727,10 @@ func _sync_account() -> void:
 		profile_view.refresh()
 
 func show_page(id: String) -> void:
-	if other_back_button != null: other_back_button.custom_minimum_size.y = 88
+	if other_back_button != null: other_back_button.custom_minimum_size.y = POLICY.DEFAULT_BACK_HEIGHT
 	if not pages.has(id):
 		return
-	if hero_codex_view != null: hero_codex_view.hide()
-	if demon_codex_view != null: demon_codex_view.hide()
-	if profile_view != null:
-		profile_view.hide()
+	_hide_other_views()
 	if settings_root != null:
 		other_menu.hide()
 		menu_title_plate.hide()
@@ -739,8 +739,9 @@ func show_page(id: String) -> void:
 		other_navigation.show()
 	var changing := selected != id
 	selected = id
-	account_heading.visible = id == "account"
-	account_inset.visible = id == "account"
+	var tab_policy: Dictionary = POLICY.TAB_HOSTS.get(id, {})
+	account_heading.visible = bool(tab_policy.get("account_header", false))
+	account_inset.visible = bool(tab_policy.get("account_header", false))
 	for key in pages:
 		pages[key].visible = key == id
 		var button: Button = buttons[key]
