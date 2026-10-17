@@ -1,5 +1,17 @@
 extends Node2D
 
+const PERFORMANCE_PROBE := preload("res://src/systems/combat_performance_probe.gd")
+const CANDIDATE_CACHE := preload("res://src/systems/spatial_candidate_cache.gd")
+var combat_profile = PERFORMANCE_PROBE.new()
+# Set before _ready by non-rendered authoritative rooms; gameplay is unchanged.
+var combat_popup_visuals_enabled := true
+var monster_candidate_cache = CANDIDATE_CACHE.new()
+@export var combat_profiling_enabled := false:
+	set(value):
+		combat_profiling_enabled = value
+		if value: combat_profile.start()
+		else: combat_profile.stop()
+
 const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
 const BATTLE_SESSION := preload("res://src/data/battle_session_catalog.gd")
 const CONTROL_SPAWNS := preload("res://src/hero_mode/hero_control_spawn_budget.gd")
@@ -366,6 +378,7 @@ func _spatial_cell_for_position(world_position: Vector2) -> Vector2i:
 
 
 func _rebuild_monster_spatial_grid() -> void:
+	var profile_start: int = Time.get_ticks_usec() if combat_profile.enabled else 0
 	# Keep cell Arrays alive and only clear buckets used by the previous
 	# physics frame. This avoids rebuilding Dictionary/Array storage every
 	# frame when large monster waves are active.
@@ -412,6 +425,7 @@ func _rebuild_monster_spatial_grid() -> void:
 
 	monster_spatial_grid_physics_frame = Engine.get_physics_frames()
 	monster_spatial_snapshot_revision += 1
+	if combat_profile.enabled: combat_profile.record(PERFORMANCE_PROBE.Scope.GRID,profile_start)
 
 
 func _ensure_monster_spatial_grid() -> void:
@@ -425,9 +439,12 @@ func invalidate_monster_spatial_snapshot() -> void:
 
 
 func get_monster_separation_bias(owner: Node2D, radius: float) -> Vector2:
+	var profile_start := Time.get_ticks_usec() if combat_profile.enabled else 0
 	_ensure_monster_spatial_grid()
 	monster_local_grid.ensure(active_monsters, monster_spatial_snapshot_revision)
-	return monster_local_grid.separation_bias(owner, radius)
+	var result := monster_local_grid.separation_bias(owner, radius)
+	if combat_profile.enabled: combat_profile.record(PERFORMANCE_PROBE.Scope.SEPARATION,profile_start)
+	return result
 
 
 func count_monster_group_near(origin: Vector2, radius: float, group: StringName, excluded: Node, stop_after: int) -> int:
@@ -465,6 +482,7 @@ func fill_monsters_near(
 	radius: float,
 	result: Array
 ) -> void:
+	var profile_start: int = Time.get_ticks_usec() if combat_profile.enabled else 0
 	result.clear()
 	_ensure_monster_spatial_grid()
 
@@ -481,16 +499,8 @@ func fill_monsters_near(
 	min_cell -= Vector2i.ONE
 	max_cell += Vector2i.ONE
 
-	for cell_x in range(min_cell.x, max_cell.x + 1):
-		for cell_y in range(min_cell.y, max_cell.y + 1):
-			var cell := Vector2i(cell_x, cell_y)
-			var bucket = monster_spatial_grid.get(cell, null)
-			if typeof(bucket) != TYPE_ARRAY:
-				continue
-			for node in bucket:
-				if is_instance_valid(node) and not node.is_queued_for_deletion():
-					result.append(node)
-
+	monster_candidate_cache.fill(monster_spatial_grid,min_cell,max_cell,monster_spatial_snapshot_revision,result)
+	if combat_profile.enabled: combat_profile.record(PERFORMANCE_PROBE.Scope.QUERY,profile_start)
 
 func query_monsters_near(origin: Vector2, radius: float) -> Array:
 	var result: Array = []
@@ -634,6 +644,7 @@ func get_nearest_monster_target(
 
 
 func fill_monsters_in_rect(world_rect: Rect2, result: Array) -> void:
+	var profile_start: int = Time.get_ticks_usec() if combat_profile.enabled else 0
 	result.clear()
 	_ensure_monster_spatial_grid()
 
@@ -642,16 +653,8 @@ func fill_monsters_in_rect(world_rect: Rect2, result: Array) -> void:
 	min_cell -= Vector2i.ONE
 	max_cell += Vector2i.ONE
 
-	for cell_x in range(min_cell.x, max_cell.x + 1):
-		for cell_y in range(min_cell.y, max_cell.y + 1):
-			var cell := Vector2i(cell_x, cell_y)
-			var bucket = monster_spatial_grid.get(cell, null)
-			if typeof(bucket) != TYPE_ARRAY:
-				continue
-			for node in bucket:
-				if is_instance_valid(node) and not node.is_queued_for_deletion():
-					result.append(node)
-
+	monster_candidate_cache.fill(monster_spatial_grid,min_cell,max_cell,monster_spatial_snapshot_revision,result)
+	if combat_profile.enabled: combat_profile.record(PERFORMANCE_PROBE.Scope.QUERY,profile_start)
 
 func query_monsters_in_rect(world_rect: Rect2) -> Array:
 	var result: Array = []
@@ -674,6 +677,15 @@ func _ready() -> void:
 	_start_battle()
 
 func _process(delta: float) -> void:
+	if not combat_profile.enabled:
+		_process_battle(delta)
+		return
+	var started := Time.get_ticks_usec()
+	_process_battle(delta)
+	combat_profile.record(PERFORMANCE_PROBE.Scope.BATTLE,started)
+	combat_profile.frame(delta)
+
+func _process_battle(delta: float) -> void:
 	if manual_spawn_warning_timer > 0.0:
 		manual_spawn_warning_timer = maxf(
 			manual_spawn_warning_timer - delta,
@@ -811,6 +823,7 @@ func _cache_demon_ultimate_runtime_data() -> void:
 
 
 func _start_battle() -> void:
+	monster_candidate_cache.reset()
 	if _hero_subtree_paused: process_mode = _hero_subtree_previous_mode
 	_hero_subtree_paused = false
 	_hero_paused_total_msec = 0

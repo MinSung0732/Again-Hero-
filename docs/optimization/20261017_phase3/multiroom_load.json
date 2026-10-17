@@ -1,0 +1,1343 @@
+{
+	"cpu_only": true,
+	"engine": "4.5.1-stable (official)",
+	"rows": [
+		{
+			"actors_per_room": 48,
+			"global_physics_monitor_ms": [
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				8.972,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				11.719,
+				16.743,
+				16.743,
+				16.743,
+				16.743,
+				16.743,
+				16.743,
+				16.743,
+				16.743,
+				16.743,
+				16.743,
+				16.743,
+				16.743
+			],
+			"max_weapons_per_room": 6,
+			"process_frames": 289,
+			"reports": [
+				{
+					"actors": 48,
+					"display": "headless",
+					"engine": "4.5.1-stable (official)",
+					"frame_intervals_ms": {
+						"p95": 6.94444444444444,
+						"samples": 289
+					},
+					"nested_scopes_overlap": true,
+					"scopes": {
+						"battle_process": {
+							"calls": 289,
+							"max_us": 344,
+							"mean_us": 38.4948096885813,
+							"p95_us": 80,
+							"retained_samples": 289,
+							"total_us": 11125
+						},
+						"grid_rebuild": {
+							"calls": 120,
+							"max_us": 619,
+							"mean_us": 108.358333333333,
+							"p95_us": 182,
+							"retained_samples": 120,
+							"total_us": 13003
+						},
+						"hero_physics": {
+							"calls": 120,
+							"max_us": 9892,
+							"mean_us": 1998.13333333333,
+							"p95_us": 7714,
+							"retained_samples": 120,
+							"total_us": 239776
+						},
+						"monster_base_physics": {
+							"calls": 5760,
+							"max_us": 1504,
+							"mean_us": 26.71875,
+							"p95_us": 82,
+							"retained_samples": 512,
+							"total_us": 153900
+						},
+						"monster_move_and_slide": {
+							"calls": 5730,
+							"max_us": 394,
+							"mean_us": 4.90122164048866,
+							"p95_us": 12,
+							"retained_samples": 512,
+							"total_us": 28084
+						},
+						"monster_separation": {
+							"calls": 735,
+							"max_us": 598,
+							"mean_us": 52.0857142857143,
+							"p95_us": 250,
+							"retained_samples": 512,
+							"total_us": 38283
+						},
+						"network_snapshot": {
+							"calls": 20,
+							"max_us": 483,
+							"mean_us": 320.8,
+							"p95_us": 394,
+							"retained_samples": 20,
+							"total_us": 6416
+						},
+						"spatial_query": {
+							"calls": 405,
+							"max_us": 701,
+							"mean_us": 44.0543209876543,
+							"p95_us": 155,
+							"retained_samples": 405,
+							"total_us": 17842
+						},
+						"weapon_tick": {
+							"calls": 120,
+							"max_us": 9624,
+							"mean_us": 1827.76666666667,
+							"p95_us": 7535,
+							"retained_samples": 120,
+							"total_us": 219332
+						}
+					},
+					"tick": 239
+				}
+			],
+			"rooms": 1,
+			"sample_physics_ticks": 120,
+			"scope": "headless actual server step + 10Hz state encoding; no socket clients; nested scopes overlap",
+			"wall_elapsed_ms": 1999.975,
+			"warmup_physics_ticks": 120
+		},
+		{
+			"actors_per_room": 48,
+			"global_physics_monitor_ms": [
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				19.943,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.425,
+				23.448,
+				23.448,
+				23.448,
+				23.448,
+				23.448,
+				23.448,
+				23.448,
+				23.448,
+				23.448,
+				23.448,
+				23.448,
+				23.448
+			],
+			"max_weapons_per_room": 6,
+			"process_frames": 259,
+			"reports": [
+				{
+					"actors": 48,
+					"display": "headless",
+					"engine": "4.5.1-stable (official)",
+					"frame_intervals_ms": {
+						"p95": 15.6573333333333,
+						"samples": 259
+					},
+					"nested_scopes_overlap": true,
+					"scopes": {
+						"battle_process": {
+							"calls": 259,
+							"max_us": 226,
+							"mean_us": 35.9150579150579,
+							"p95_us": 80,
+							"retained_samples": 259,
+							"total_us": 9302
+						},
+						"grid_rebuild": {
+							"calls": 120,
+							"max_us": 1396,
+							"mean_us": 110.766666666667,
+							"p95_us": 202,
+							"retained_samples": 120,
+							"total_us": 13292
+						},
+						"hero_physics": {
+							"calls": 120,
+							"max_us": 9685,
+							"mean_us": 1819.24166666667,
+							"p95_us": 7028,
+							"retained_samples": 120,
+							"total_us": 218309
+						},
+						"monster_base_physics": {
+							"calls": 5760,
+							"max_us": 1762,
+							"mean_us": 24.5479166666667,
+							"p95_us": 71,
+							"retained_samples": 512,
+							"total_us": 141396
+						},
+						"monster_move_and_slide": {
+							"calls": 5760,
+							"max_us": 214,
+							"mean_us": 4.43940972222222,
+							"p95_us": 11,
+							"retained_samples": 512,
+							"total_us": 25571
+						},
+						"monster_separation": {
+							"calls": 743,
+							"max_us": 1621,
+							"mean_us": 48.8384925975774,
+							"p95_us": 216,
+							"retained_samples": 512,
+							"total_us": 36287
+						},
+						"network_snapshot": {
+							"calls": 19,
+							"max_us": 536,
+							"mean_us": 327.631578947368,
+							"p95_us": 536,
+							"retained_samples": 19,
+							"total_us": 6225
+						},
+						"spatial_query": {
+							"calls": 413,
+							"max_us": 809,
+							"mean_us": 41.4479418886199,
+							"p95_us": 132,
+							"retained_samples": 413,
+							"total_us": 17118
+						},
+						"weapon_tick": {
+							"calls": 120,
+							"max_us": 9542,
+							"mean_us": 1685.175,
+							"p95_us": 6894,
+							"retained_samples": 120,
+							"total_us": 202221
+						}
+					},
+					"tick": 239
+				},
+				{
+					"actors": 48,
+					"display": "headless",
+					"engine": "4.5.1-stable (official)",
+					"frame_intervals_ms": {
+						"p95": 15.6573333333333,
+						"samples": 259
+					},
+					"nested_scopes_overlap": true,
+					"scopes": {
+						"battle_process": {
+							"calls": 259,
+							"max_us": 165,
+							"mean_us": 20.3861003861004,
+							"p95_us": 38,
+							"retained_samples": 259,
+							"total_us": 5280
+						},
+						"grid_rebuild": {
+							"calls": 120,
+							"max_us": 313,
+							"mean_us": 87.7166666666667,
+							"p95_us": 143,
+							"retained_samples": 120,
+							"total_us": 10526
+						},
+						"hero_physics": {
+							"calls": 120,
+							"max_us": 9556,
+							"mean_us": 1739.08333333333,
+							"p95_us": 7293,
+							"retained_samples": 120,
+							"total_us": 208690
+						},
+						"monster_base_physics": {
+							"calls": 5760,
+							"max_us": 1370,
+							"mean_us": 22.9571180555556,
+							"p95_us": 46,
+							"retained_samples": 512,
+							"total_us": 132233
+						},
+						"monster_move_and_slide": {
+							"calls": 5760,
+							"max_us": 486,
+							"mean_us": 4.3640625,
+							"p95_us": 11,
+							"retained_samples": 512,
+							"total_us": 25137
+						},
+						"monster_separation": {
+							"calls": 750,
+							"max_us": 1328,
+							"mean_us": 44.796,
+							"p95_us": 195,
+							"retained_samples": 512,
+							"total_us": 33597
+						},
+						"network_snapshot": {
+							"calls": 19,
+							"max_us": 375,
+							"mean_us": 282.157894736842,
+							"p95_us": 375,
+							"retained_samples": 19,
+							"total_us": 5361
+						},
+						"spatial_query": {
+							"calls": 403,
+							"max_us": 345,
+							"mean_us": 36.3846153846154,
+							"p95_us": 116,
+							"retained_samples": 403,
+							"total_us": 14663
+						},
+						"weapon_tick": {
+							"calls": 120,
+							"max_us": 9368,
+							"mean_us": 1642.6,
+							"p95_us": 7142,
+							"retained_samples": 120,
+							"total_us": 197112
+						}
+					},
+					"tick": 239
+				}
+			],
+			"rooms": 2,
+			"sample_physics_ticks": 120,
+			"scope": "headless actual server step + 10Hz state encoding; no socket clients; nested scopes overlap",
+			"wall_elapsed_ms": 1995.827,
+			"warmup_physics_ticks": 120
+		},
+		{
+			"actors_per_room": 48,
+			"global_physics_monitor_ms": [
+				82.788,
+				82.788,
+				82.788,
+				82.788,
+				82.788,
+				82.788,
+				82.788,
+				82.788,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				78.636,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				115.471,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				83.061,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63,
+				42.63
+			],
+			"max_weapons_per_room": 6,
+			"process_frames": 15,
+			"reports": [
+				{
+					"actors": 48,
+					"display": "headless",
+					"engine": "4.5.1-stable (official)",
+					"frame_intervals_ms": {
+						"p95": 148.079666666667,
+						"samples": 15
+					},
+					"nested_scopes_overlap": true,
+					"scopes": {
+						"battle_process": {
+							"calls": 15,
+							"max_us": 119,
+							"mean_us": 78.7333333333333,
+							"p95_us": 119,
+							"retained_samples": 15,
+							"total_us": 1181
+						},
+						"grid_rebuild": {
+							"calls": 120,
+							"max_us": 270,
+							"mean_us": 99.1083333333333,
+							"p95_us": 151,
+							"retained_samples": 120,
+							"total_us": 11893
+						},
+						"hero_physics": {
+							"calls": 120,
+							"max_us": 11978,
+							"mean_us": 2125.15,
+							"p95_us": 8106,
+							"retained_samples": 120,
+							"total_us": 255018
+						},
+						"monster_base_physics": {
+							"calls": 5760,
+							"max_us": 433,
+							"mean_us": 22.9041666666667,
+							"p95_us": 54,
+							"retained_samples": 512,
+							"total_us": 131928
+						},
+						"monster_move_and_slide": {
+							"calls": 5760,
+							"max_us": 190,
+							"mean_us": 4.39756944444444,
+							"p95_us": 11,
+							"retained_samples": 512,
+							"total_us": 25330
+						},
+						"monster_separation": {
+							"calls": 741,
+							"max_us": 393,
+							"mean_us": 40.7165991902834,
+							"p95_us": 147,
+							"retained_samples": 512,
+							"total_us": 30171
+						},
+						"network_snapshot": {
+							"calls": 15,
+							"max_us": 594,
+							"mean_us": 394.0,
+							"p95_us": 594,
+							"retained_samples": 15,
+							"total_us": 5910
+						},
+						"spatial_query": {
+							"calls": 641,
+							"max_us": 340,
+							"mean_us": 38.8814352574103,
+							"p95_us": 143,
+							"retained_samples": 512,
+							"total_us": 24923
+						},
+						"weapon_tick": {
+							"calls": 120,
+							"max_us": 11785,
+							"mean_us": 1995.225,
+							"p95_us": 7983,
+							"retained_samples": 120,
+							"total_us": 239427
+						}
+					},
+					"tick": 239
+				},
+				{
+					"actors": 48,
+					"display": "headless",
+					"engine": "4.5.1-stable (official)",
+					"frame_intervals_ms": {
+						"p95": 148.079666666667,
+						"samples": 15
+					},
+					"nested_scopes_overlap": true,
+					"scopes": {
+						"battle_process": {
+							"calls": 15,
+							"max_us": 142,
+							"mean_us": 37.0,
+							"p95_us": 142,
+							"retained_samples": 15,
+							"total_us": 555
+						},
+						"grid_rebuild": {
+							"calls": 120,
+							"max_us": 298,
+							"mean_us": 101.375,
+							"p95_us": 181,
+							"retained_samples": 120,
+							"total_us": 12165
+						},
+						"hero_physics": {
+							"calls": 120,
+							"max_us": 13659,
+							"mean_us": 1959.24166666667,
+							"p95_us": 8178,
+							"retained_samples": 120,
+							"total_us": 235109
+						},
+						"monster_base_physics": {
+							"calls": 5760,
+							"max_us": 469,
+							"mean_us": 21.8189236111111,
+							"p95_us": 38,
+							"retained_samples": 512,
+							"total_us": 125677
+						},
+						"monster_move_and_slide": {
+							"calls": 5760,
+							"max_us": 289,
+							"mean_us": 4.48697916666667,
+							"p95_us": 11,
+							"retained_samples": 512,
+							"total_us": 25845
+						},
+						"monster_separation": {
+							"calls": 742,
+							"max_us": 372,
+							"mean_us": 40.4204851752022,
+							"p95_us": 187,
+							"retained_samples": 512,
+							"total_us": 29992
+						},
+						"network_snapshot": {
+							"calls": 15,
+							"max_us": 467,
+							"mean_us": 314.866666666667,
+							"p95_us": 467,
+							"retained_samples": 15,
+							"total_us": 4723
+						},
+						"spatial_query": {
+							"calls": 454,
+							"max_us": 312,
+							"mean_us": 41.3678414096916,
+							"p95_us": 142,
+							"retained_samples": 454,
+							"total_us": 18781
+						},
+						"weapon_tick": {
+							"calls": 120,
+							"max_us": 13453,
+							"mean_us": 1852.98333333333,
+							"p95_us": 7999,
+							"retained_samples": 120,
+							"total_us": 222358
+						}
+					},
+					"tick": 239
+				},
+				{
+					"actors": 48,
+					"display": "headless",
+					"engine": "4.5.1-stable (official)",
+					"frame_intervals_ms": {
+						"p95": 148.079666666667,
+						"samples": 15
+					},
+					"nested_scopes_overlap": true,
+					"scopes": {
+						"battle_process": {
+							"calls": 15,
+							"max_us": 33,
+							"mean_us": 27.4666666666667,
+							"p95_us": 33,
+							"retained_samples": 15,
+							"total_us": 412
+						},
+						"grid_rebuild": {
+							"calls": 120,
+							"max_us": 374,
+							"mean_us": 105.991666666667,
+							"p95_us": 181,
+							"retained_samples": 120,
+							"total_us": 12719
+						},
+						"hero_physics": {
+							"calls": 120,
+							"max_us": 12336,
+							"mean_us": 1918.84166666667,
+							"p95_us": 7862,
+							"retained_samples": 120,
+							"total_us": 230261
+						},
+						"monster_base_physics": {
+							"calls": 5760,
+							"max_us": 439,
+							"mean_us": 22.2026041666667,
+							"p95_us": 40,
+							"retained_samples": 512,
+							"total_us": 127887
+						},
+						"monster_move_and_slide": {
+							"calls": 5760,
+							"max_us": 127,
+							"mean_us": 4.39895833333333,
+							"p95_us": 11,
+							"retained_samples": 512,
+							"total_us": 25338
+						},
+						"monster_separation": {
+							"calls": 741,
+							"max_us": 409,
+							"mean_us": 39.8272604588394,
+							"p95_us": 194,
+							"retained_samples": 512,
+							"total_us": 29512
+						},
+						"network_snapshot": {
+							"calls": 15,
+							"max_us": 461,
+							"mean_us": 345.933333333333,
+							"p95_us": 461,
+							"retained_samples": 15,
+							"total_us": 5189
+						},
+						"spatial_query": {
+							"calls": 456,
+							"max_us": 387,
+							"mean_us": 41.1359649122807,
+							"p95_us": 137,
+							"retained_samples": 456,
+							"total_us": 18758
+						},
+						"weapon_tick": {
+							"calls": 120,
+							"max_us": 12181,
+							"mean_us": 1826.34166666667,
+							"p95_us": 7629,
+							"retained_samples": 120,
+							"total_us": 219161
+						}
+					},
+					"tick": 239
+				},
+				{
+					"actors": 48,
+					"display": "headless",
+					"engine": "4.5.1-stable (official)",
+					"frame_intervals_ms": {
+						"p95": 148.079666666667,
+						"samples": 15
+					},
+					"nested_scopes_overlap": true,
+					"scopes": {
+						"battle_process": {
+							"calls": 15,
+							"max_us": 69,
+							"mean_us": 33.2,
+							"p95_us": 69,
+							"retained_samples": 15,
+							"total_us": 498
+						},
+						"grid_rebuild": {
+							"calls": 120,
+							"max_us": 270,
+							"mean_us": 101.258333333333,
+							"p95_us": 171,
+							"retained_samples": 120,
+							"total_us": 12151
+						},
+						"hero_physics": {
+							"calls": 120,
+							"max_us": 11517,
+							"mean_us": 1970.0,
+							"p95_us": 7743,
+							"retained_samples": 120,
+							"total_us": 236400
+						},
+						"monster_base_physics": {
+							"calls": 5760,
+							"max_us": 1809,
+							"mean_us": 22.0597222222222,
+							"p95_us": 40,
+							"retained_samples": 512,
+							"total_us": 127064
+						},
+						"monster_move_and_slide": {
+							"calls": 5760,
+							"max_us": 200,
+							"mean_us": 4.4671875,
+							"p95_us": 11,
+							"retained_samples": 512,
+							"total_us": 25731
+						},
+						"monster_separation": {
+							"calls": 742,
+							"max_us": 1755,
+							"mean_us": 40.7237196765499,
+							"p95_us": 136,
+							"retained_samples": 512,
+							"total_us": 30217
+						},
+						"network_snapshot": {
+							"calls": 15,
+							"max_us": 1079,
+							"mean_us": 400.8,
+							"p95_us": 1079,
+							"retained_samples": 15,
+							"total_us": 6012
+						},
+						"spatial_query": {
+							"calls": 519,
+							"max_us": 301,
+							"mean_us": 42.6127167630058,
+							"p95_us": 136,
+							"retained_samples": 512,
+							"total_us": 22116
+						},
+						"weapon_tick": {
+							"calls": 120,
+							"max_us": 11401,
+							"mean_us": 1880.31666666667,
+							"p95_us": 7599,
+							"retained_samples": 120,
+							"total_us": 225638
+						}
+					},
+					"tick": 239
+				},
+				{
+					"actors": 48,
+					"display": "headless",
+					"engine": "4.5.1-stable (official)",
+					"frame_intervals_ms": {
+						"p95": 148.079666666667,
+						"samples": 15
+					},
+					"nested_scopes_overlap": true,
+					"scopes": {
+						"battle_process": {
+							"calls": 15,
+							"max_us": 50,
+							"mean_us": 28.7333333333333,
+							"p95_us": 50,
+							"retained_samples": 15,
+							"total_us": 431
+						},
+						"grid_rebuild": {
+							"calls": 120,
+							"max_us": 333,
+							"mean_us": 98.7333333333333,
+							"p95_us": 139,
+							"retained_samples": 120,
+							"total_us": 11848
+						},
+						"hero_physics": {
+							"calls": 120,
+							"max_us": 13547,
+							"mean_us": 2058.69166666667,
+							"p95_us": 7445,
+							"retained_samples": 120,
+							"total_us": 247043
+						},
+						"monster_base_physics": {
+							"calls": 5760,
+							"max_us": 599,
+							"mean_us": 21.9571180555556,
+							"p95_us": 42,
+							"retained_samples": 512,
+							"total_us": 126473
+						},
+						"monster_move_and_slide": {
+							"calls": 5760,
+							"max_us": 268,
+							"mean_us": 4.64322916666667,
+							"p95_us": 10,
+							"retained_samples": 512,
+							"total_us": 26745
+						},
+						"monster_separation": {
+							"calls": 741,
+							"max_us": 400,
+							"mean_us": 37.5195681511471,
+							"p95_us": 129,
+							"retained_samples": 512,
+							"total_us": 27802
+						},
+						"network_snapshot": {
+							"calls": 15,
+							"max_us": 383,
+							"mean_us": 294.0,
+							"p95_us": 383,
+							"retained_samples": 15,
+							"total_us": 4410
+						},
+						"spatial_query": {
+							"calls": 584,
+							"max_us": 465,
+							"mean_us": 40.5496575342466,
+							"p95_us": 134,
+							"retained_samples": 512,
+							"total_us": 23681
+						},
+						"weapon_tick": {
+							"calls": 120,
+							"max_us": 13432,
+							"mean_us": 1971.375,
+							"p95_us": 7346,
+							"retained_samples": 120,
+							"total_us": 236565
+						}
+					},
+					"tick": 239
+				},
+				{
+					"actors": 48,
+					"display": "headless",
+					"engine": "4.5.1-stable (official)",
+					"frame_intervals_ms": {
+						"p95": 148.079666666667,
+						"samples": 15
+					},
+					"nested_scopes_overlap": true,
+					"scopes": {
+						"battle_process": {
+							"calls": 15,
+							"max_us": 29,
+							"mean_us": 24.2,
+							"p95_us": 29,
+							"retained_samples": 15,
+							"total_us": 363
+						},
+						"grid_rebuild": {
+							"calls": 120,
+							"max_us": 762,
+							"mean_us": 104.925,
+							"p95_us": 175,
+							"retained_samples": 120,
+							"total_us": 12591
+						},
+						"hero_physics": {
+							"calls": 120,
+							"max_us": 10959,
+							"mean_us": 1942.33333333333,
+							"p95_us": 7365,
+							"retained_samples": 120,
+							"total_us": 233080
+						},
+						"monster_base_physics": {
+							"calls": 5760,
+							"max_us": 365,
+							"mean_us": 21.6086805555556,
+							"p95_us": 38,
+							"retained_samples": 512,
+							"total_us": 124466
+						},
+						"monster_move_and_slide": {
+							"calls": 5760,
+							"max_us": 213,
+							"mean_us": 4.37274305555556,
+							"p95_us": 10,
+							"retained_samples": 512,
+							"total_us": 25187
+						},
+						"monster_separation": {
+							"calls": 752,
+							"max_us": 337,
+							"mean_us": 38.8882978723404,
+							"p95_us": 183,
+							"retained_samples": 512,
+							"total_us": 29244
+						},
+						"network_snapshot": {
+							"calls": 15,
+							"max_us": 386,
+							"mean_us": 277.666666666667,
+							"p95_us": 386,
+							"retained_samples": 15,
+							"total_us": 4165
+						},
+						"spatial_query": {
+							"calls": 509,
+							"max_us": 778,
+							"mean_us": 38.6935166994106,
+							"p95_us": 134,
+							"retained_samples": 509,
+							"total_us": 19695
+						},
+						"weapon_tick": {
+							"calls": 120,
+							"max_us": 10741,
+							"mean_us": 1849.9,
+							"p95_us": 7272,
+							"retained_samples": 120,
+							"total_us": 221988
+						}
+					},
+					"tick": 239
+				},
+				{
+					"actors": 48,
+					"display": "headless",
+					"engine": "4.5.1-stable (official)",
+					"frame_intervals_ms": {
+						"p95": 148.079666666667,
+						"samples": 15
+					},
+					"nested_scopes_overlap": true,
+					"scopes": {
+						"battle_process": {
+							"calls": 15,
+							"max_us": 29,
+							"mean_us": 23.2,
+							"p95_us": 29,
+							"retained_samples": 15,
+							"total_us": 348
+						},
+						"grid_rebuild": {
+							"calls": 120,
+							"max_us": 360,
+							"mean_us": 108.191666666667,
+							"p95_us": 182,
+							"retained_samples": 120,
+							"total_us": 12983
+						},
+						"hero_physics": {
+							"calls": 120,
+							"max_us": 11093,
+							"mean_us": 2042.51666666667,
+							"p95_us": 7387,
+							"retained_samples": 120,
+							"total_us": 245102
+						},
+						"monster_base_physics": {
+							"calls": 5760,
+							"max_us": 556,
+							"mean_us": 20.9899305555556,
+							"p95_us": 40,
+							"retained_samples": 512,
+							"total_us": 120902
+						},
+						"monster_move_and_slide": {
+							"calls": 5760,
+							"max_us": 223,
+							"mean_us": 4.14982638888889,
+							"p95_us": 11,
+							"retained_samples": 512,
+							"total_us": 23903
+						},
+						"monster_separation": {
+							"calls": 749,
+							"max_us": 385,
+							"mean_us": 36.2469959946595,
+							"p95_us": 128,
+							"retained_samples": 512,
+							"total_us": 27149
+						},
+						"network_snapshot": {
+							"calls": 15,
+							"max_us": 626,
+							"mean_us": 291.4,
+							"p95_us": 626,
+							"retained_samples": 15,
+							"total_us": 4371
+						},
+						"spatial_query": {
+							"calls": 652,
+							"max_us": 375,
+							"mean_us": 37.4141104294479,
+							"p95_us": 136,
+							"retained_samples": 512,
+							"total_us": 24394
+						},
+						"weapon_tick": {
+							"calls": 120,
+							"max_us": 10949,
+							"mean_us": 1949.175,
+							"p95_us": 7279,
+							"retained_samples": 120,
+							"total_us": 233901
+						}
+					},
+					"tick": 239
+				},
+				{
+					"actors": 48,
+					"display": "headless",
+					"engine": "4.5.1-stable (official)",
+					"frame_intervals_ms": {
+						"p95": 148.079666666667,
+						"samples": 15
+					},
+					"nested_scopes_overlap": true,
+					"scopes": {
+						"battle_process": {
+							"calls": 15,
+							"max_us": 42,
+							"mean_us": 25.8666666666667,
+							"p95_us": 42,
+							"retained_samples": 15,
+							"total_us": 388
+						},
+						"grid_rebuild": {
+							"calls": 120,
+							"max_us": 333,
+							"mean_us": 110.05,
+							"p95_us": 195,
+							"retained_samples": 120,
+							"total_us": 13206
+						},
+						"hero_physics": {
+							"calls": 120,
+							"max_us": 9659,
+							"mean_us": 1908.75,
+							"p95_us": 7707,
+							"retained_samples": 120,
+							"total_us": 229050
+						},
+						"monster_base_physics": {
+							"calls": 5760,
+							"max_us": 404,
+							"mean_us": 21.4579861111111,
+							"p95_us": 39,
+							"retained_samples": 512,
+							"total_us": 123598
+						},
+						"monster_move_and_slide": {
+							"calls": 5760,
+							"max_us": 192,
+							"mean_us": 4.43715277777778,
+							"p95_us": 11,
+							"retained_samples": 512,
+							"total_us": 25558
+						},
+						"monster_separation": {
+							"calls": 750,
+							"max_us": 369,
+							"mean_us": 37.3453333333333,
+							"p95_us": 137,
+							"retained_samples": 512,
+							"total_us": 28009
+						},
+						"network_snapshot": {
+							"calls": 15,
+							"max_us": 339,
+							"mean_us": 265.866666666667,
+							"p95_us": 339,
+							"retained_samples": 15,
+							"total_us": 3988
+						},
+						"spatial_query": {
+							"calls": 471,
+							"max_us": 367,
+							"mean_us": 44.6645435244161,
+							"p95_us": 144,
+							"retained_samples": 471,
+							"total_us": 21037
+						},
+						"weapon_tick": {
+							"calls": 120,
+							"max_us": 9549,
+							"mean_us": 1811.0,
+							"p95_us": 7567,
+							"retained_samples": 120,
+							"total_us": 217320
+						}
+					},
+					"tick": 239
+				}
+			],
+			"rooms": 8,
+			"sample_physics_ticks": 120,
+			"scope": "headless actual server step + 10Hz state encoding; no socket clients; nested scopes overlap",
+			"wall_elapsed_ms": 4132.934,
+			"warmup_physics_ticks": 120
+		}
+	]
+}

@@ -1,0 +1,1289 @@
+{
+  "cpu_only": true,
+  "rows": [
+    {
+      "cache_enabled": false,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 8.14666666666666,
+        "samples": 144
+      },
+      "global_physics_mean_ms": 1120.50093333333,
+      "global_physics_p95_ms": 1290.314,
+      "nested_scopes_overlap": true,
+      "population": 48,
+      "query_cache": {
+        "bucket_reads": 2919,
+        "hits": 0,
+        "requests": 259
+      },
+      "requested_population": 48,
+      "scopes": {
+        "battle_process": {
+          "calls": 144,
+          "max_us": 146,
+          "mean_us": 39.8402777777778,
+          "p95_us": 69,
+          "retained_samples": 144,
+          "total_us": 5737
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 203,
+          "mean_us": 101.966666666667,
+          "p95_us": 128,
+          "retained_samples": 60,
+          "total_us": 6118
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 8612,
+          "mean_us": 1574.33333333333,
+          "p95_us": 5005,
+          "retained_samples": 60,
+          "total_us": 94460
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 259,
+          "max_us": 639,
+          "mean_us": 43.6061776061776,
+          "p95_us": 150,
+          "retained_samples": 259,
+          "total_us": 11294
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 8448,
+          "mean_us": 1432.81666666667,
+          "p95_us": 4912,
+          "retained_samples": 60,
+          "total_us": 85969
+        }
+      },
+      "trial": 0
+    },
+    {
+      "cache_enabled": true,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 6.936,
+        "samples": 145
+      },
+      "global_physics_mean_ms": 17.1910666666667,
+      "global_physics_p95_ms": 17.734,
+      "nested_scopes_overlap": true,
+      "population": 48,
+      "query_cache": {
+        "bucket_reads": 2050,
+        "hits": 86,
+        "requests": 259
+      },
+      "requested_population": 48,
+      "scopes": {
+        "battle_process": {
+          "calls": 145,
+          "max_us": 252,
+          "mean_us": 35.5241379310345,
+          "p95_us": 72,
+          "retained_samples": 145,
+          "total_us": 5151
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 185,
+          "mean_us": 92.15,
+          "p95_us": 122,
+          "retained_samples": 60,
+          "total_us": 5529
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 7384,
+          "mean_us": 1377.45,
+          "p95_us": 4360,
+          "retained_samples": 60,
+          "total_us": 82647
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 259,
+          "max_us": 217,
+          "mean_us": 39.5830115830116,
+          "p95_us": 134,
+          "retained_samples": 259,
+          "total_us": 10252
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 7269,
+          "mean_us": 1255.61666666667,
+          "p95_us": 4255,
+          "retained_samples": 60,
+          "total_us": 75337
+        }
+      },
+      "trial": 0
+    },
+    {
+      "cache_enabled": true,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 6.927,
+        "samples": 146
+      },
+      "global_physics_mean_ms": 19.494,
+      "global_physics_p95_ms": 19.934,
+      "nested_scopes_overlap": true,
+      "population": 48,
+      "query_cache": {
+        "bucket_reads": 2050,
+        "hits": 86,
+        "requests": 259
+      },
+      "requested_population": 48,
+      "scopes": {
+        "battle_process": {
+          "calls": 146,
+          "max_us": 142,
+          "mean_us": 34.0068493150685,
+          "p95_us": 58,
+          "retained_samples": 146,
+          "total_us": 4965
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 242,
+          "mean_us": 97.95,
+          "p95_us": 156,
+          "retained_samples": 60,
+          "total_us": 5877
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 7155,
+          "mean_us": 1377.98333333333,
+          "p95_us": 4459,
+          "retained_samples": 60,
+          "total_us": 82679
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 259,
+          "max_us": 291,
+          "mean_us": 41.4169884169884,
+          "p95_us": 142,
+          "retained_samples": 259,
+          "total_us": 10727
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 6999,
+          "mean_us": 1259.53333333333,
+          "p95_us": 4351,
+          "retained_samples": 60,
+          "total_us": 75572
+        }
+      },
+      "trial": 1
+    },
+    {
+      "cache_enabled": false,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 6.94444444444444,
+        "samples": 146
+      },
+      "global_physics_mean_ms": 18.8903333333333,
+      "global_physics_p95_ms": 20.351,
+      "nested_scopes_overlap": true,
+      "population": 48,
+      "query_cache": {
+        "bucket_reads": 2919,
+        "hits": 0,
+        "requests": 259
+      },
+      "requested_population": 48,
+      "scopes": {
+        "battle_process": {
+          "calls": 146,
+          "max_us": 124,
+          "mean_us": 35.2260273972603,
+          "p95_us": 63,
+          "retained_samples": 146,
+          "total_us": 5143
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 200,
+          "mean_us": 104.8,
+          "p95_us": 185,
+          "retained_samples": 60,
+          "total_us": 6288
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 7129,
+          "mean_us": 1482.61666666667,
+          "p95_us": 4850,
+          "retained_samples": 60,
+          "total_us": 88957
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 259,
+          "max_us": 355,
+          "mean_us": 43.6718146718147,
+          "p95_us": 164,
+          "retained_samples": 259,
+          "total_us": 11311
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 6971,
+          "mean_us": 1365.28333333333,
+          "p95_us": 4749,
+          "retained_samples": 60,
+          "total_us": 81917
+        }
+      },
+      "trial": 1
+    },
+    {
+      "cache_enabled": false,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 6.94444444444444,
+        "samples": 145
+      },
+      "global_physics_mean_ms": 14.6637333333333,
+      "global_physics_p95_ms": 20.684,
+      "nested_scopes_overlap": true,
+      "population": 48,
+      "query_cache": {
+        "bucket_reads": 2919,
+        "hits": 0,
+        "requests": 259
+      },
+      "requested_population": 48,
+      "scopes": {
+        "battle_process": {
+          "calls": 145,
+          "max_us": 207,
+          "mean_us": 38.848275862069,
+          "p95_us": 76,
+          "retained_samples": 145,
+          "total_us": 5633
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 664,
+          "mean_us": 111.583333333333,
+          "p95_us": 190,
+          "retained_samples": 60,
+          "total_us": 6695
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 7482,
+          "mean_us": 1462.68333333333,
+          "p95_us": 4665,
+          "retained_samples": 60,
+          "total_us": 87761
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 259,
+          "max_us": 684,
+          "mean_us": 42.9420849420849,
+          "p95_us": 143,
+          "retained_samples": 259,
+          "total_us": 11122
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 7354,
+          "mean_us": 1335.41666666667,
+          "p95_us": 4533,
+          "retained_samples": 60,
+          "total_us": 80125
+        }
+      },
+      "trial": 2
+    },
+    {
+      "cache_enabled": true,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 6.94444444444444,
+        "samples": 147
+      },
+      "global_physics_mean_ms": 18.7792,
+      "global_physics_p95_ms": 20.684,
+      "nested_scopes_overlap": true,
+      "population": 48,
+      "query_cache": {
+        "bucket_reads": 2050,
+        "hits": 86,
+        "requests": 259
+      },
+      "requested_population": 48,
+      "scopes": {
+        "battle_process": {
+          "calls": 147,
+          "max_us": 227,
+          "mean_us": 40.4625850340136,
+          "p95_us": 72,
+          "retained_samples": 147,
+          "total_us": 5948
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 267,
+          "mean_us": 107.05,
+          "p95_us": 181,
+          "retained_samples": 60,
+          "total_us": 6423
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 8055,
+          "mean_us": 1532.65,
+          "p95_us": 5165,
+          "retained_samples": 60,
+          "total_us": 91959
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 259,
+          "max_us": 381,
+          "mean_us": 45.4285714285714,
+          "p95_us": 146,
+          "retained_samples": 259,
+          "total_us": 11766
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 7926,
+          "mean_us": 1394.1,
+          "p95_us": 5009,
+          "retained_samples": 60,
+          "total_us": 83646
+        }
+      },
+      "trial": 2
+    },
+    {
+      "cache_enabled": false,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 8.33333333333333,
+        "samples": 143
+      },
+      "global_physics_mean_ms": 32.7082666666666,
+      "global_physics_p95_ms": 34.572,
+      "nested_scopes_overlap": true,
+      "population": 120,
+      "query_cache": {
+        "bucket_reads": 833,
+        "hits": 0,
+        "requests": 53
+      },
+      "requested_population": 120,
+      "scopes": {
+        "battle_process": {
+          "calls": 143,
+          "max_us": 157,
+          "mean_us": 39.5734265734266,
+          "p95_us": 69,
+          "retained_samples": 143,
+          "total_us": 5659
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 364,
+          "mean_us": 221.283333333333,
+          "p95_us": 325,
+          "retained_samples": 60,
+          "total_us": 13277
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 15707,
+          "mean_us": 1822.03333333333,
+          "p95_us": 7991,
+          "retained_samples": 60,
+          "total_us": 109322
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 53,
+          "max_us": 385,
+          "mean_us": 122.716981132075,
+          "p95_us": 345,
+          "retained_samples": 53,
+          "total_us": 6504
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 15558,
+          "mean_us": 1674.03333333333,
+          "p95_us": 7807,
+          "retained_samples": 60,
+          "total_us": 100442
+        }
+      },
+      "trial": 0
+    },
+    {
+      "cache_enabled": true,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 7.14285714285714,
+        "samples": 144
+      },
+      "global_physics_mean_ms": 25.781,
+      "global_physics_p95_ms": 31.709,
+      "nested_scopes_overlap": true,
+      "population": 120,
+      "query_cache": {
+        "bucket_reads": 667,
+        "hits": 15,
+        "requests": 53
+      },
+      "requested_population": 120,
+      "scopes": {
+        "battle_process": {
+          "calls": 144,
+          "max_us": 210,
+          "mean_us": 40.0,
+          "p95_us": 72,
+          "retained_samples": 144,
+          "total_us": 5760
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 370,
+          "mean_us": 218.633333333333,
+          "p95_us": 293,
+          "retained_samples": 60,
+          "total_us": 13118
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 16614,
+          "mean_us": 1812.21666666667,
+          "p95_us": 8013,
+          "retained_samples": 60,
+          "total_us": 108733
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 53,
+          "max_us": 428,
+          "mean_us": 129.358490566038,
+          "p95_us": 362,
+          "retained_samples": 53,
+          "total_us": 6856
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 16473,
+          "mean_us": 1669.18333333333,
+          "p95_us": 7845,
+          "retained_samples": 60,
+          "total_us": 100151
+        }
+      },
+      "trial": 0
+    },
+    {
+      "cache_enabled": true,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 10.1326666666666,
+        "samples": 139
+      },
+      "global_physics_mean_ms": 34.8858,
+      "global_physics_p95_ms": 35.68,
+      "nested_scopes_overlap": true,
+      "population": 120,
+      "query_cache": {
+        "bucket_reads": 679,
+        "hits": 14,
+        "requests": 53
+      },
+      "requested_population": 120,
+      "scopes": {
+        "battle_process": {
+          "calls": 139,
+          "max_us": 880,
+          "mean_us": 59.7841726618705,
+          "p95_us": 121,
+          "retained_samples": 139,
+          "total_us": 8310
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 1402,
+          "mean_us": 265.583333333333,
+          "p95_us": 363,
+          "retained_samples": 60,
+          "total_us": 15935
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 24052,
+          "mean_us": 2271.73333333333,
+          "p95_us": 11374,
+          "retained_samples": 60,
+          "total_us": 136304
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 53,
+          "max_us": 1736,
+          "mean_us": 188.264150943396,
+          "p95_us": 602,
+          "retained_samples": 53,
+          "total_us": 9978
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 23895,
+          "mean_us": 2108.71666666667,
+          "p95_us": 11185,
+          "retained_samples": 60,
+          "total_us": 126523
+        }
+      },
+      "trial": 1
+    },
+    {
+      "cache_enabled": false,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 7.14285714285714,
+        "samples": 142
+      },
+      "global_physics_mean_ms": 36.2967333333333,
+      "global_physics_p95_ms": 38.205,
+      "nested_scopes_overlap": true,
+      "population": 120,
+      "query_cache": {
+        "bucket_reads": 830,
+        "hits": 0,
+        "requests": 53
+      },
+      "requested_population": 120,
+      "scopes": {
+        "battle_process": {
+          "calls": 142,
+          "max_us": 131,
+          "mean_us": 42.5704225352113,
+          "p95_us": 83,
+          "retained_samples": 142,
+          "total_us": 6045
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 408,
+          "mean_us": 234.55,
+          "p95_us": 353,
+          "retained_samples": 60,
+          "total_us": 14073
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 17758,
+          "mean_us": 2002.1,
+          "p95_us": 8645,
+          "retained_samples": 60,
+          "total_us": 120126
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 53,
+          "max_us": 462,
+          "mean_us": 134.981132075472,
+          "p95_us": 431,
+          "retained_samples": 53,
+          "total_us": 7154
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 17533,
+          "mean_us": 1851.66666666667,
+          "p95_us": 8476,
+          "retained_samples": 60,
+          "total_us": 111100
+        }
+      },
+      "trial": 1
+    },
+    {
+      "cache_enabled": false,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 8.33333333333333,
+        "samples": 142
+      },
+      "global_physics_mean_ms": 28.5396,
+      "global_physics_p95_ms": 33.85,
+      "nested_scopes_overlap": true,
+      "population": 120,
+      "query_cache": {
+        "bucket_reads": 830,
+        "hits": 0,
+        "requests": 53
+      },
+      "requested_population": 120,
+      "scopes": {
+        "battle_process": {
+          "calls": 142,
+          "max_us": 197,
+          "mean_us": 36.0633802816901,
+          "p95_us": 70,
+          "retained_samples": 142,
+          "total_us": 5121
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 383,
+          "mean_us": 204.0,
+          "p95_us": 269,
+          "retained_samples": 60,
+          "total_us": 12240
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 15984,
+          "mean_us": 1943.63333333333,
+          "p95_us": 8647,
+          "retained_samples": 60,
+          "total_us": 116618
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 53,
+          "max_us": 375,
+          "mean_us": 128.320754716981,
+          "p95_us": 332,
+          "retained_samples": 53,
+          "total_us": 6801
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 15825,
+          "mean_us": 1808.35,
+          "p95_us": 8324,
+          "retained_samples": 60,
+          "total_us": 108501
+        }
+      },
+      "trial": 2
+    },
+    {
+      "cache_enabled": true,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 8.33333333333333,
+        "samples": 141
+      },
+      "global_physics_mean_ms": 32.7956,
+      "global_physics_p95_ms": 33.85,
+      "nested_scopes_overlap": true,
+      "population": 120,
+      "query_cache": {
+        "bucket_reads": 679,
+        "hits": 14,
+        "requests": 53
+      },
+      "requested_population": 120,
+      "scopes": {
+        "battle_process": {
+          "calls": 141,
+          "max_us": 659,
+          "mean_us": 38.9645390070922,
+          "p95_us": 65,
+          "retained_samples": 141,
+          "total_us": 5494
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 528,
+          "mean_us": 206.583333333333,
+          "p95_us": 271,
+          "retained_samples": 60,
+          "total_us": 12395
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 17695,
+          "mean_us": 1864.28333333333,
+          "p95_us": 8241,
+          "retained_samples": 60,
+          "total_us": 111857
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 53,
+          "max_us": 379,
+          "mean_us": 124.698113207547,
+          "p95_us": 309,
+          "retained_samples": 53,
+          "total_us": 6609
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 17557,
+          "mean_us": 1739.61666666667,
+          "p95_us": 8094,
+          "retained_samples": 60,
+          "total_us": 104377
+        }
+      },
+      "trial": 2
+    },
+    {
+      "cache_enabled": false,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 13.9675555555556,
+        "samples": 132
+      },
+      "global_physics_mean_ms": 47.4532333333334,
+      "global_physics_p95_ms": 49.882,
+      "nested_scopes_overlap": true,
+      "population": 208,
+      "query_cache": {
+        "bucket_reads": 833,
+        "hits": 0,
+        "requests": 53
+      },
+      "requested_population": 208,
+      "scopes": {
+        "battle_process": {
+          "calls": 132,
+          "max_us": 256,
+          "mean_us": 42.7121212121212,
+          "p95_us": 68,
+          "retained_samples": 132,
+          "total_us": 5638
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 490,
+          "mean_us": 326.983333333333,
+          "p95_us": 464,
+          "retained_samples": 60,
+          "total_us": 19619
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 20783,
+          "mean_us": 2604.26666666667,
+          "p95_us": 13014,
+          "retained_samples": 60,
+          "total_us": 156256
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 53,
+          "max_us": 442,
+          "mean_us": 175.622641509434,
+          "p95_us": 423,
+          "retained_samples": 53,
+          "total_us": 9308
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 20654,
+          "mean_us": 2473.9,
+          "p95_us": 12888,
+          "retained_samples": 60,
+          "total_us": 148434
+        }
+      },
+      "trial": 0
+    },
+    {
+      "cache_enabled": true,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 16.6666666666667,
+        "samples": 124
+      },
+      "global_physics_mean_ms": 39.4576,
+      "global_physics_p95_ms": 51.336,
+      "nested_scopes_overlap": true,
+      "population": 208,
+      "query_cache": {
+        "bucket_reads": 683,
+        "hits": 14,
+        "requests": 53
+      },
+      "requested_population": 208,
+      "scopes": {
+        "battle_process": {
+          "calls": 124,
+          "max_us": 101,
+          "mean_us": 36.241935483871,
+          "p95_us": 78,
+          "retained_samples": 124,
+          "total_us": 4494
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 530,
+          "mean_us": 303.033333333333,
+          "p95_us": 398,
+          "retained_samples": 60,
+          "total_us": 18182
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 21610,
+          "mean_us": 2439.78333333333,
+          "p95_us": 12285,
+          "retained_samples": 60,
+          "total_us": 146387
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 53,
+          "max_us": 422,
+          "mean_us": 171.981132075472,
+          "p95_us": 404,
+          "retained_samples": 53,
+          "total_us": 9115
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 21480,
+          "mean_us": 2320.93333333333,
+          "p95_us": 12156,
+          "retained_samples": 60,
+          "total_us": 139256
+        }
+      },
+      "trial": 0
+    },
+    {
+      "cache_enabled": true,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 15.582,
+        "samples": 126
+      },
+      "global_physics_mean_ms": 50.9591999999999,
+      "global_physics_p95_ms": 51.336,
+      "nested_scopes_overlap": true,
+      "population": 208,
+      "query_cache": {
+        "bucket_reads": 683,
+        "hits": 14,
+        "requests": 53
+      },
+      "requested_population": 208,
+      "scopes": {
+        "battle_process": {
+          "calls": 126,
+          "max_us": 183,
+          "mean_us": 37.1111111111111,
+          "p95_us": 74,
+          "retained_samples": 126,
+          "total_us": 4676
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 611,
+          "mean_us": 318.783333333333,
+          "p95_us": 441,
+          "retained_samples": 60,
+          "total_us": 19127
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 21458,
+          "mean_us": 2473.11666666667,
+          "p95_us": 12283,
+          "retained_samples": 60,
+          "total_us": 148387
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 53,
+          "max_us": 715,
+          "mean_us": 185.320754716981,
+          "p95_us": 522,
+          "retained_samples": 53,
+          "total_us": 9822
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 21270,
+          "mean_us": 2352.3,
+          "p95_us": 12152,
+          "retained_samples": 60,
+          "total_us": 141138
+        }
+      },
+      "trial": 1
+    },
+    {
+      "cache_enabled": false,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 14.383,
+        "samples": 131
+      },
+      "global_physics_mean_ms": 45.6149333333333,
+      "global_physics_p95_ms": 47.553,
+      "nested_scopes_overlap": true,
+      "population": 208,
+      "query_cache": {
+        "bucket_reads": 836,
+        "hits": 0,
+        "requests": 53
+      },
+      "requested_population": 208,
+      "scopes": {
+        "battle_process": {
+          "calls": 131,
+          "max_us": 221,
+          "mean_us": 34.5343511450382,
+          "p95_us": 68,
+          "retained_samples": 131,
+          "total_us": 4524
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 605,
+          "mean_us": 327.55,
+          "p95_us": 528,
+          "retained_samples": 60,
+          "total_us": 19653
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 21817,
+          "mean_us": 2510.36666666667,
+          "p95_us": 12207,
+          "retained_samples": 60,
+          "total_us": 150622
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 53,
+          "max_us": 677,
+          "mean_us": 177.075471698113,
+          "p95_us": 412,
+          "retained_samples": 53,
+          "total_us": 9385
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 21677,
+          "mean_us": 2382.28333333333,
+          "p95_us": 12066,
+          "retained_samples": 60,
+          "total_us": 142937
+        }
+      },
+      "trial": 1
+    },
+    {
+      "cache_enabled": false,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 17.885,
+        "samples": 119
+      },
+      "global_physics_mean_ms": 39.63995,
+      "global_physics_p95_ms": 50.272,
+      "nested_scopes_overlap": true,
+      "population": 208,
+      "query_cache": {
+        "bucket_reads": 832,
+        "hits": 0,
+        "requests": 53
+      },
+      "requested_population": 208,
+      "scopes": {
+        "battle_process": {
+          "calls": 119,
+          "max_us": 244,
+          "mean_us": 43.453781512605,
+          "p95_us": 111,
+          "retained_samples": 119,
+          "total_us": 5171
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 724,
+          "mean_us": 332.883333333333,
+          "p95_us": 496,
+          "retained_samples": 60,
+          "total_us": 19973
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 29065,
+          "mean_us": 2906.03333333333,
+          "p95_us": 15266,
+          "retained_samples": 60,
+          "total_us": 174362
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 53,
+          "max_us": 795,
+          "mean_us": 190.981132075472,
+          "p95_us": 466,
+          "retained_samples": 53,
+          "total_us": 10122
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 28926,
+          "mean_us": 2771.26666666667,
+          "p95_us": 15132,
+          "retained_samples": 60,
+          "total_us": 166276
+        }
+      },
+      "trial": 2
+    },
+    {
+      "cache_enabled": true,
+      "cpu_only": true,
+      "display": "headless",
+      "engine": "4.5.1-stable (official)",
+      "frame_intervals_ms": {
+        "p95": 20.8313333333333,
+        "samples": 102
+      },
+      "global_physics_mean_ms": 63.6474166666668,
+      "global_physics_p95_ms": 67.347,
+      "nested_scopes_overlap": true,
+      "population": 208,
+      "query_cache": {
+        "bucket_reads": 715,
+        "hits": 12,
+        "requests": 53
+      },
+      "requested_population": 208,
+      "scopes": {
+        "battle_process": {
+          "calls": 102,
+          "max_us": 177,
+          "mean_us": 42.9313725490196,
+          "p95_us": 74,
+          "retained_samples": 102,
+          "total_us": 4379
+        },
+        "grid_rebuild": {
+          "calls": 60,
+          "max_us": 767,
+          "mean_us": 340.3,
+          "p95_us": 535,
+          "retained_samples": 60,
+          "total_us": 20418
+        },
+        "hero_physics": {
+          "calls": 60,
+          "max_us": 22606,
+          "mean_us": 2650.03333333333,
+          "p95_us": 14355,
+          "retained_samples": 60,
+          "total_us": 159002
+        },
+        "network_snapshot": {
+          "calls": 0,
+          "max_us": 0,
+          "mean_us": 0.0,
+          "p95_us": 0,
+          "retained_samples": 0,
+          "total_us": 0
+        },
+        "spatial_query": {
+          "calls": 53,
+          "max_us": 675,
+          "mean_us": 199.716981132075,
+          "p95_us": 485,
+          "retained_samples": 53,
+          "total_us": 10585
+        },
+        "weapon_tick": {
+          "calls": 60,
+          "max_us": 22290,
+          "mean_us": 2515.35,
+          "p95_us": 14198,
+          "retained_samples": 60,
+          "total_us": 150921
+        }
+      },
+      "trial": 2
+    }
+  ],
+  "limitations": [
+    "Linux headless CPU; presentation substitutes; not Android/GPU/FPS validation",
+    "Stage9 uses actual Battle/Hero and orc actors; no full roster performance claim",
+    "Spatial query benchmark preserves original ordered candidate contract",
+    "Independent physics captures differ by runtime instance IDs; they do not establish a causal whole-frame speedup"
+  ]
+}

@@ -1,0 +1,91 @@
+{
+	"cpu_only": true,
+	"engine": "4.5.1-stable (official)",
+	"excludes_socket_io": true,
+	"rows": [
+		{
+			"actors_per_room": 48,
+			"after_median_ms": 19.472,
+			"after_samples_ms": [
+				17.503,
+				17.918,
+				19.093,
+				19.472,
+				19.769,
+				19.961,
+				20.16
+			],
+			"before_median_ms": 24.047,
+			"before_samples_ms": [
+				23.756,
+				23.896,
+				24.022,
+				24.047,
+				24.152,
+				24.33,
+				24.418
+			],
+			"payload_bytes": 1763,
+			"recipients_per_room": 2,
+			"rooms": 1,
+			"runs": 7,
+			"snapshots_per_room_trial": 80
+		},
+		{
+			"actors_per_room": 48,
+			"after_median_ms": 38.871,
+			"after_samples_ms": [
+				37.273,
+				38.071,
+				38.51,
+				38.871,
+				38.936,
+				39.995,
+				40.024
+			],
+			"before_median_ms": 49.6,
+			"before_samples_ms": [
+				48.698,
+				49.086,
+				49.333,
+				49.6,
+				51.045,
+				52.466,
+				54.69
+			],
+			"payload_bytes": 1763,
+			"recipients_per_room": 2,
+			"rooms": 2,
+			"runs": 7,
+			"snapshots_per_room_trial": 80
+		},
+		{
+			"actors_per_room": 48,
+			"after_median_ms": 178.292,
+			"after_samples_ms": [
+				155.276,
+				163.15,
+				163.33,
+				178.292,
+				180.193,
+				182.9,
+				188.557
+			],
+			"before_median_ms": 221.181,
+			"before_samples_ms": [
+				190.798,
+				199.403,
+				200.495,
+				221.181,
+				222.989,
+				223.632,
+				232.442
+			],
+			"payload_bytes": 1763,
+			"recipients_per_room": 2,
+			"rooms": 8,
+			"runs": 7,
+			"snapshots_per_room_trial": 80
+		}
+	]
+}

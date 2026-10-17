@@ -15,6 +15,7 @@ const DELIVERY := preload("res://src/hero_mode/hero_weapon_delivery_runtime.gd")
 const KIT := preload("res://src/hero_mode/hero_weapon_kit_runtime.gd")
 const FLIGHT := preload("res://src/hero_mode/hero_weapon_flight_runtime.gd")
 const EMPTY_ART: Array[Texture2D] = []
+var combat_profile: RefCounted
 var native_skills: RefCounted
 var identity: RefCounted
 var delivery: RefCounted
@@ -97,6 +98,7 @@ func install(host, research_bonus: int = 0, starting_research: Dictionary = {}) 
 	hero.exp_gain_multiplier *= 1.0+float(research.get("learning",0))
 	hero.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	authority = hero.get_parent()
+	combat_profile = authority.get("combat_profile") if is_instance_valid(authority) else null
 	delivery = DELIVERY.new(); delivery.install(self)
 	kit = KIT.new(); kit.install(self)
 	flight = FLIGHT.new(); flight.install(self)
@@ -278,6 +280,11 @@ func summary() -> String:
 	return " · ".join(parts)
 
 func tick(delta: float, allow_casts: bool = true) -> void:
+	var started: int = Time.get_ticks_usec() if combat_profile != null and combat_profile.enabled else 0
+	_tick_weapons(delta,allow_casts)
+	if started: combat_profile.record(combat_profile.Scope.WEAPONS,started)
+
+func _tick_weapons(delta: float, allow_casts: bool = true) -> void:
 	visual_clock += delta
 	if awakening_flash>0.0:
 		awakening_flash=maxf(0.0,awakening_flash-delta);hero.queue_redraw()

@@ -41,6 +41,7 @@ signal died
 var current_hp: int
 var hero: Node2D
 var combat_authority: Node
+var _combat_profile: RefCounted
 var hero_target_refresh_timer: float = 0.0
 var hit_flash_timer: float = 0.0
 var hit_flash_material: ShaderMaterial
@@ -70,6 +71,7 @@ func _ready() -> void:
 		hero = get_tree().get_first_node_in_group("hero") as Node2D
 	if not is_instance_valid(combat_authority):
 		combat_authority = get_parent()
+	_combat_profile = combat_authority.get("combat_profile") if is_instance_valid(combat_authority) else null
 	hero_target_refresh_timer = 0.0
 	MONSTER_RUNTIME_COMMON.attach_status_effect_visual(
 		self,
@@ -92,6 +94,7 @@ func configure_combat_context(
 ) -> void:
 	hero = primary_hero
 	combat_authority = authority
+	_combat_profile = authority.get("combat_profile") if is_instance_valid(authority) else null
 
 
 func _refresh_combat_target() -> void:
@@ -100,6 +103,7 @@ func _refresh_combat_target() -> void:
 	)
 	if not is_instance_valid(combat_authority):
 		combat_authority = get_parent()
+	_combat_profile = combat_authority.get("combat_profile") if is_instance_valid(combat_authority) else null
 	hero = MONSTER_RUNTIME_COMMON.resolve_combat_target(
 		self,
 		hero,
@@ -111,6 +115,15 @@ func _refresh_combat_target() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _combat_profile == null or not _combat_profile.enabled:
+		_physics_process_monster(delta)
+		return
+	var started := Time.get_ticks_usec()
+	_physics_process_monster(delta)
+	_combat_profile.record(MONSTER_RUNTIME_COMMON.PERFORMANCE_PROBE.Scope.MONSTER_PHYSICS,started)
+
+
+func _physics_process_monster(delta: float) -> void:
 	hero_target_refresh_timer = MONSTER_RUNTIME_COMMON.tick_countdown(
 		hero_target_refresh_timer,
 		delta
@@ -208,7 +221,7 @@ func _physics_process(delta: float) -> void:
 		if distance_sq > far_nav_sq:
 			global_position += velocity * delta
 		else:
-			move_and_slide()
+			MONSTER_RUNTIME_COMMON.move_and_slide_profiled(self,_combat_profile)
 	else:
 		_begin_self_destruct()
 

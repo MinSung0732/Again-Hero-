@@ -22,6 +22,9 @@ func run() -> void:
 	b._monster_spawn_resources_warmed = true; root.add_child(b); b.set_external_pause(true)
 	await process_frame
 	var hero = b.hero; var r = hero.player_weapons
+	# Slot logic only: repeated play/stop on a paused MP3 leaves dummy-driver
+	# playback references at shutdown. Audio behavior has separate smoke tests.
+	hero.level_up_audio.stop(); hero.level_up_audio.stream = null
 	# Follow the real level-up entry point, including pool growth at each milestone.
 	for rank in range(1,31):
 		if rank > 1: hero._level_up()

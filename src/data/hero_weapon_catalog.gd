@@ -3,6 +3,12 @@ const CARD_TEXT := preload("res://src/data/hero_weapon_card_text.gd")
 const ATTACKS := preload("res://src/data/hero_weapon_attack_catalog.gd")
 const GROWTH := preload("res://src/data/hero_weapon_growth_catalog.gd")
 const DELIVERY := preload("res://src/data/hero_weapon_delivery_catalog.gd")
+const INVENTORY_SUMMON_TEXT := {
+	"hound":"이계의 사냥개를 불러 적을 추적하고 근접 연격으로 몰아붙입니다.",
+	"scout":"차원 정찰병을 불러 전선을 누비며 가까운 적을 베게 합니다.",
+	"watcher":"용사를 따라다니는 차원의 감시자가 적에게 빠르게 원거리 사격을 합니다. 감시자는 피해를 받지 않고 시간이 지나면 귀환합니다.",
+	"gatekeeper":"차원의 문지기가 적을 향해 무거운 투사체를 발사합니다.",
+}
 const MAX_LEVEL := 10
 const WEAPON_SLOTS := 6
 const PASSIVE_SLOTS := 6
@@ -2536,6 +2542,20 @@ static func card_tags(id: String, data: Dictionary = {}) -> String:
 	if not WEAPONS.has(id): return "#보조"
 	var stats: Dictionary = WEAPONS[id] if data.is_empty() else data
 	return CARD_TEXT.tags(stats,DELIVERY.spec(id,stats),ATTACKS.spec(id))
+
+## Owned inventory copy, independent of offered-rank upgrade deltas.
+static func inventory_description(id: String, stats: Dictionary) -> String:
+	if not WEAPONS.has(id): return String(PASSIVES.get(id,{}).get("description",""))
+	var delivery := DELIVERY.spec(id,stats)
+	var flight := ATTACKS.description(id)
+	var text := String(delivery.label) if not delivery.is_empty() else flight if not flight.is_empty() else String(WEAPONS[id].get("effect",""))
+	if String(stats.get("pattern","")) == "summon":
+		text = String(INVENTORY_SUMMON_TEXT.get(String(stats.get("summon_kind","")),text))
+		if float(stats.get("summon_area_radius",0.0)) > 0.0:
+			text += "\n현재 소환수의 공격에 "+String(stats.summon_area_label)+" 광역 타격이 적용됩니다."
+	if stats.has("max_mechanic"):
+		text += "\n"+String(stats.max_mechanic.description)
+	return text
 
 static func description(id: String, next_level: int, with_tags: bool = true) -> String:
 	if PASSIVES.has(id):

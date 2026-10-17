@@ -61,7 +61,8 @@ func _process(delta: float) -> void:
 			var room = rooms[key].node
 			if not room.is_prepared: continue
 			var state: Dictionary = room.snapshot(); state["match"] = key
-			for id in rooms[key].members: _send(id,state)
+			var encoded := _encode(state)
+			for id in rooms[key].members: _send_encoded(id,encoded)
 	for id in queue.members:
 		if peers.has(id) and Time.get_ticks_msec()-int(peers[id].get("queue_ping",0)) > 5000:
 			peers[id]["queue_ping"] = Time.get_ticks_msec(); _send(id,{"op":"queued","role":peers[id].role})
@@ -131,13 +132,19 @@ func _completed(winner: String,reason: String,key: String) -> void:
 	if not rooms.has(key): return
 	rooms[key].ended = Time.get_ticks_msec()
 	for id in rooms[key].members: _send(id,{"op":"result","match":key,"winner":winner,"reason":reason,"rated":false})
+static func _encode(message: Dictionary) -> String:
+	var encoded := JSON.stringify(message)
+	return encoded if encoded.to_utf8_buffer().size() <= RULES.MAX_SNAPSHOT else ""
+
 func _send(id: int,message: Dictionary) -> void:
+	_send_encoded(id,_encode(message))
+
+func _send_encoded(id: int,encoded: String) -> void:
 	if not peers.has(id): return
 	var socket: WebSocketPeer = peers[id].socket
 	if socket.get_ready_state() != WebSocketPeer.STATE_OPEN: return
 	if socket.get_current_outbound_buffered_amount() > RULES.MAX_SNAPSHOT*2: socket.close(1008,"slow consumer"); return
-	var encoded := JSON.stringify(message)
-	if encoded.to_utf8_buffer().size() <= RULES.MAX_SNAPSHOT: socket.send_text(encoded)
+	if not encoded.is_empty(): socket.send_text(encoded)
 func _reject(id: int,reason: String) -> void:
 	_send(id,{"op":"error","reason":reason})
 	if peers.has(id): peers[id].socket.close(1008,reason)

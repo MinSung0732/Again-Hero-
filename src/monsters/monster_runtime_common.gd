@@ -1,5 +1,6 @@
 extends RefCounted
 class_name MonsterRuntimeCommon
+const PERFORMANCE_PROBE := preload("res://src/systems/combat_performance_probe.gd")
 const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
@@ -18,6 +19,15 @@ const SOFT_SEPARATION_IDLE_SPEED_RATIO := 0.18
 const SOFT_SEPARATION_IDLE_SPEED_MAX := 26.0
 
 static var _soft_separation_scratch: Array = []
+
+
+## Preserve the engine movement operation; opt-in timing only.
+static func move_and_slide_profiled(actor: CharacterBody2D, profile: RefCounted = null) -> bool:
+	if profile == null or not profile.enabled: return actor.move_and_slide()
+	var started := Time.get_ticks_usec()
+	var collided := actor.move_and_slide()
+	profile.record(PERFORMANCE_PROBE.Scope.MONSTER_MOVE,started)
+	return collided
 
 
 static func notify_forced_position_change(actor: Node2D) -> void:
@@ -675,5 +685,5 @@ static func follow_goblin_command(actor: CharacterBody2D, delta: float) -> bool:
 	if bonuses is Dictionary: speed *= float(bonuses.get("move_speed_multiplier",1.0))
 	actor.velocity = offset.normalized()*minf(speed,offset.length()/maxf(delta,0.001))
 	if actor.has_method("_update_visual_motion"): actor.call("_update_visual_motion",actor.velocity.x,true)
-	actor.move_and_slide()
+	move_and_slide_profiled(actor,actor.get("_combat_profile"))
 	return true

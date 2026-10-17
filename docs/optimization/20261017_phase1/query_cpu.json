@@ -1,0 +1,220 @@
+{
+  "cpu_only": true,
+  "display": "headless",
+  "engine": "4.5.1-stable (official)",
+  "rows": [
+    {
+      "actors": 100,
+      "after_median_ms": 0.839,
+      "after_samples_ms": [
+        0.808,
+        0.809,
+        0.826,
+        0.839,
+        0.845,
+        0.908,
+        1.363
+      ],
+      "before_median_ms": 2.467,
+      "before_samples_ms": [
+        2.402,
+        2.443,
+        2.463,
+        2.467,
+        2.488,
+        2.578,
+        2.994
+      ],
+      "bucket_reads": 1896,
+      "cache_hits": 516,
+      "dense": false,
+      "kind": "query_cpu",
+      "queries_per_trial": 576,
+      "requests": 576,
+      "runs": 7
+    },
+    {
+      "actors": 300,
+      "after_median_ms": 9.968,
+      "after_samples_ms": [
+        9.55,
+        9.683,
+        9.764,
+        9.968,
+        10.002,
+        10.149,
+        11.711
+      ],
+      "before_median_ms": 13.591,
+      "before_samples_ms": [
+        12.352,
+        12.682,
+        13.149,
+        13.591,
+        13.762,
+        14.1,
+        15.379
+      ],
+      "bucket_reads": 1896,
+      "cache_hits": 516,
+      "dense": false,
+      "kind": "query_cpu",
+      "queries_per_trial": 576,
+      "requests": 576,
+      "runs": 7
+    },
+    {
+      "actors": 600,
+      "after_median_ms": 19.61,
+      "after_samples_ms": [
+        18.515,
+        19.313,
+        19.609,
+        19.61,
+        20.275,
+        20.882,
+        23.288
+      ],
+      "before_median_ms": 23.509,
+      "before_samples_ms": [
+        22.826,
+        23.155,
+        23.228,
+        23.509,
+        23.908,
+        24.017,
+        24.188
+      ],
+      "bucket_reads": 1896,
+      "cache_hits": 516,
+      "dense": false,
+      "kind": "query_cpu",
+      "queries_per_trial": 576,
+      "requests": 576,
+      "runs": 7
+    },
+    {
+      "actors": 100,
+      "after_median_ms": 13.752,
+      "after_samples_ms": [
+        12.913,
+        13.219,
+        13.541,
+        13.752,
+        14.061,
+        14.278,
+        14.589
+      ],
+      "before_median_ms": 16.143,
+      "before_samples_ms": [
+        15.283,
+        15.963,
+        16.035,
+        16.143,
+        16.508,
+        17.064,
+        17.767
+      ],
+      "bucket_reads": 1896,
+      "cache_hits": 516,
+      "dense": true,
+      "kind": "query_cpu",
+      "queries_per_trial": 576,
+      "requests": 576,
+      "runs": 7
+    },
+    {
+      "actors": 300,
+      "after_median_ms": 37.28,
+      "after_samples_ms": [
+        36.167,
+        37.086,
+        37.213,
+        37.28,
+        37.56,
+        38.328,
+        41.085
+      ],
+      "before_median_ms": 40.937,
+      "before_samples_ms": [
+        39.838,
+        39.881,
+        40.762,
+        40.937,
+        41.015,
+        42.577,
+        43.876
+      ],
+      "bucket_reads": 1896,
+      "cache_hits": 516,
+      "dense": true,
+      "kind": "query_cpu",
+      "queries_per_trial": 576,
+      "requests": 576,
+      "runs": 7
+    },
+    {
+      "actors": 600,
+      "after_median_ms": 76.971,
+      "after_samples_ms": [
+        72.573,
+        73.159,
+        73.2,
+        76.971,
+        77.008,
+        87.035,
+        88.254
+      ],
+      "before_median_ms": 78.731,
+      "before_samples_ms": [
+        75.939,
+        76.375,
+        77.015,
+        78.731,
+        78.818,
+        86.364,
+        86.783
+      ],
+      "bucket_reads": 1896,
+      "cache_hits": 516,
+      "dense": true,
+      "kind": "query_cpu",
+      "queries_per_trial": 576,
+      "requests": 576,
+      "runs": 7
+    },
+    {
+      "after_median_ms": 2.577,
+      "after_samples_ms": [
+        2.469,
+        2.491,
+        2.539,
+        2.577,
+        2.631,
+        2.693,
+        2.738
+      ],
+      "before_median_ms": 2.328,
+      "before_samples_ms": [
+        2.265,
+        2.273,
+        2.285,
+        2.328,
+        2.378,
+        2.528,
+        2.59
+      ],
+      "cache_hits": 0,
+      "kind": "unique_empty_queries",
+      "queries_per_trial": 576,
+      "requests": 576,
+      "runs": 7
+    }
+  ],
+  "limitations": [
+    "Linux headless CPU; presentation substitutes; not Android/GPU/FPS validation",
+    "Stage9 uses actual Battle/Hero and orc actors; no full roster performance claim",
+    "Spatial query benchmark preserves original ordered candidate contract",
+    "Independent physics captures differ by runtime instance IDs; they do not establish a causal whole-frame speedup"
+  ]
+}

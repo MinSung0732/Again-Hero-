@@ -779,6 +779,7 @@ var battlefield_size: Vector2 = Vector2(3200, 3200)
 
 # World-query cache state lives outside this giant facade. Keep these method
 # names stable because hero projectiles and skills already call them.
+var _combat_profile: RefCounted
 var _world_query_runtime: RefCounted
 var _movement_monster_scratch: Array = []
 var _combat_monster_scratch: Array = []
@@ -1675,6 +1676,7 @@ func configure_battlefield(size: Vector2) -> void:
 	)
 
 func _ready() -> void:
+	_combat_profile = get_parent().get("combat_profile")
 	status_overlay = Node2D.new()
 	status_overlay.name = "CombatStatusOverlay"
 	status_overlay.z_as_relative = false
@@ -1842,6 +1844,11 @@ func _attach_status_effect_visual(effect_type: String) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	var started: int = Time.get_ticks_usec() if _combat_profile != null and _combat_profile.enabled else 0
+	_physics_process_hero(delta)
+	if started: _combat_profile.record(_combat_profile.Scope.HERO,started)
+
+func _physics_process_hero(delta: float) -> void:
 	player_moved_this_frame = false
 	if player_controlled:
 		player_control_policy.tick(delta)

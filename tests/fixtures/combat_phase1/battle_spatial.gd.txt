@@ -1,0 +1,60 @@
+extends RefCounted
+const MONSTER_SPATIAL_CELL_SIZE := 256.0
+var monster_spatial_grid: Dictionary = {}
+func _ensure_monster_spatial_grid() -> void: pass
+
+func _spatial_cell_for_position(world_position: Vector2) -> Vector2i:
+	return Vector2i(
+		floori(world_position.x / MONSTER_SPATIAL_CELL_SIZE),
+		floori(world_position.y / MONSTER_SPATIAL_CELL_SIZE)
+	)
+
+func fill_monsters_near(
+	origin: Vector2,
+	radius: float,
+	result: Array
+) -> void:
+	result.clear()
+	_ensure_monster_spatial_grid()
+
+	var safe_radius := maxf(radius, 0.0)
+	var min_cell := _spatial_cell_for_position(
+		origin - Vector2(safe_radius, safe_radius)
+	)
+	var max_cell := _spatial_cell_for_position(
+		origin + Vector2(safe_radius, safe_radius)
+	)
+
+	# One-cell padding prevents misses if a monster crossed a cell boundary
+	# after the grid snapshot earlier in the same physics frame.
+	min_cell -= Vector2i.ONE
+	max_cell += Vector2i.ONE
+
+	for cell_x in range(min_cell.x, max_cell.x + 1):
+		for cell_y in range(min_cell.y, max_cell.y + 1):
+			var cell := Vector2i(cell_x, cell_y)
+			var bucket = monster_spatial_grid.get(cell, null)
+			if typeof(bucket) != TYPE_ARRAY:
+				continue
+			for node in bucket:
+				if is_instance_valid(node) and not node.is_queued_for_deletion():
+					result.append(node)
+
+func fill_monsters_in_rect(world_rect: Rect2, result: Array) -> void:
+	result.clear()
+	_ensure_monster_spatial_grid()
+
+	var min_cell := _spatial_cell_for_position(world_rect.position)
+	var max_cell := _spatial_cell_for_position(world_rect.end)
+	min_cell -= Vector2i.ONE
+	max_cell += Vector2i.ONE
+
+	for cell_x in range(min_cell.x, max_cell.x + 1):
+		for cell_y in range(min_cell.y, max_cell.y + 1):
+			var cell := Vector2i(cell_x, cell_y)
+			var bucket = monster_spatial_grid.get(cell, null)
+			if typeof(bucket) != TYPE_ARRAY:
+				continue
+			for node in bucket:
+				if is_instance_valid(node) and not node.is_queued_for_deletion():
+					result.append(node)

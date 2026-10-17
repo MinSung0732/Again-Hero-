@@ -1,0 +1,84 @@
+{
+	"cpu_only": true,
+	"engine": "4.5.1-stable (official)",
+	"rows": [
+		{
+			"after_median_ms": 7.604,
+			"after_samples_ms": [
+				7.047,
+				7.104,
+				7.364,
+				7.604,
+				8.035,
+				8.207,
+				8.498
+			],
+			"before_median_ms": 200.76,
+			"before_samples_ms": [
+				192.105,
+				195.945,
+				198.209,
+				200.76,
+				201.863,
+				207.062,
+				214.649
+			],
+			"merges_after_setup": 1,
+			"popups": 48,
+			"runs": 7,
+			"synthetic_frames": 120
+		},
+		{
+			"after_median_ms": 15.499,
+			"after_samples_ms": [
+				13.724,
+				13.987,
+				14.66,
+				15.499,
+				15.729,
+				16.002,
+				23.178
+			],
+			"before_median_ms": 214.417,
+			"before_samples_ms": [
+				198.363,
+				201.543,
+				212.578,
+				214.417,
+				216.81,
+				223.866,
+				228.952
+			],
+			"merges_after_setup": 4,
+			"popups": 48,
+			"runs": 7,
+			"synthetic_frames": 120
+		},
+		{
+			"after_median_ms": 30.128,
+			"after_samples_ms": [
+				29.377,
+				29.501,
+				29.739,
+				30.128,
+				31.42,
+				31.452,
+				31.948
+			],
+			"before_median_ms": 218.219,
+			"before_samples_ms": [
+				214.325,
+				216.455,
+				216.932,
+				218.219,
+				226.672,
+				230.042,
+				232.966
+			],
+			"merges_after_setup": 12,
+			"popups": 48,
+			"runs": 7,
+			"synthetic_frames": 120
+		}
+	]
+}

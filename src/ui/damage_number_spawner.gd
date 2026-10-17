@@ -2,6 +2,7 @@ extends RefCounted
 class_name DamageNumberSpawner
 
 const DAMAGE_NUMBER_SCENE := preload("res://src/ui/DamageNumber.tscn")
+const DAMAGE_NUMBER_LOGIC := preload("res://src/ui/damage_number.gd")
 const WORLD_OFFSET := Vector2(0.0, -56.0)
 const MAX_ACTIVE_POPUPS := 48
 const OWNER_META: StringName = &"_damage_number_owner_id"
@@ -147,7 +148,9 @@ static func _acquire_popup(parent: Node2D) -> Node2D:
 	if active_count >= MAX_ACTIVE_POPUPS:
 		return null
 
-	var popup := DAMAGE_NUMBER_SCENE.instantiate() as Node2D
+	# The authoritative SubViewport is never drawn. Keep identical pool state,
+	# merge windows and random draws, but omit Label/font/layout work there.
+	var popup: Node2D = DAMAGE_NUMBER_LOGIC.new() if parent.get("combat_popup_visuals_enabled") == false else DAMAGE_NUMBER_SCENE.instantiate() as Node2D
 	if popup == null:
 		return null
 

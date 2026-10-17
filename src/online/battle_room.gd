@@ -17,6 +17,8 @@ var tick := 0
 var hero_last := Vector2.ZERO
 var ids := {}
 var next_id := 0
+var snapshot_revision := 0
+var stale_wire_ids: Array[int] = []
 var last_action_message := ""
 func prepare() -> void:
 	world = SubViewport.new(); world.world_2d = World2D.new(); world.size = Vector2i(1080,1600)
@@ -24,6 +26,7 @@ func prepare() -> void:
 	var scene: PackedScene = load("res://src/battle/Battle.tscn")
 	if scene == null: finish("","battle_load_failed"); return
 	battle = scene.instantiate(); battle.online_match_mode = true
+	battle.combat_popup_visuals_enabled = false
 	battle.online_match_rules = {"population":RULES.POPULATION,"roster":RULES.ROSTER}
 	battle.hero_player_mode = true; battle.hero_player_stage = "stage_1"; battle.hero_player_hero_id = RULES.HERO
 	world.add_child(battle); battle.set_external_pause(true)
@@ -75,6 +78,13 @@ func finish(won: String,why: String) -> void:
 	if is_instance_valid(battle): battle.set_external_pause(true)
 	completed.emit(winner,reason)
 func snapshot() -> Dictionary:
+	var profile = battle.get("combat_profile")
+	var started: int = Time.get_ticks_usec() if profile != null and profile.enabled else 0
+	var state := _build_snapshot()
+	if started: profile.record(profile.Scope.NETWORK_SNAPSHOT,started)
+	return state
+
+func _build_snapshot() -> Dictionary:
 	var actors: Array = []; var shots: Array = []
 	var hp := 0; var maximum := 1; var level := 1
 	if is_instance_valid(battle.hero):
@@ -83,17 +93,20 @@ func snapshot() -> Dictionary:
 		if weapons != null:
 			for shot in weapons.projectiles:
 				if shot.active: shots.append([snappedf(shot.position.x,0.1),snappedf(shot.position.y,0.1)])
-	var living := {}
-	for raw in battle.active_monsters.values():
+	snapshot_revision += 1
+	for raw_id in battle.active_monsters:
+		var raw = battle.active_monsters[raw_id]
 		var actor := raw as Node2D
 		if not is_instance_valid(actor) or actor.is_queued_for_deletion(): continue
 		var instance := actor.get_instance_id()
 		var generation: Vector3i = battle.get_battle_entity_handle(actor)
-		living[instance] = true
 		if not ids.has(instance) or ids[instance].generation != generation:
-			next_id += 1; ids[instance] = {"wire":next_id,"generation":generation}
+			next_id += 1; ids[instance] = {"wire":next_id,"generation":generation,"seen":snapshot_revision}
+		else: ids[instance].seen = snapshot_revision
 		actors.append([ids[instance].wire,String(actor.get("monster_type")),snappedf(actor.position.x,0.1),snappedf(actor.position.y,0.1),int(actor.get("current_hp")),int(actor.get("max_hp"))])
-	for instance in ids.keys():
-		if not living.has(instance): ids.erase(instance)
+	stale_wire_ids.clear()
+	for instance in ids:
+		if int(ids[instance].seen) != snapshot_revision: stale_wire_ids.append(instance)
+	for instance in stale_wire_ids: ids.erase(instance)
 	# Bounded O(n) serialization at10Hz, outside the combat hot frame.
 	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"actors":actors,"shots":shots,"choice_revision":choice_revision,"choices":choice,"winner":winner,"reason":reason}

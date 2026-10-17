@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "rows": [
+    {
+      "mode": "before",
+      "scenarios": 300,
+      "frames": 24000,
+      "sha256": "aa9c858c3851a98d94c51c377997fbd2edc8cfd8976b477bb8ee810e88918b0c"
+    },
+    {
+      "mode": "after",
+      "scenarios": 300,
+      "frames": 24000,
+      "sha256": "aa9c858c3851a98d94c51c377997fbd2edc8cfd8976b477bb8ee810e88918b0c"
+    }
+  ],
+  "scope": "100 weapons x Lv1/Lv10/MAX; mock targets, HP/heal/shield/RNG every tick"
+}

@@ -44,6 +44,22 @@ func run() -> void:
 		runtime.passives[id] = DETAIL.DATA.passive_limit(id)
 		var model := DETAIL.passive_model(runtime,id)
 		check(model.kind == "보조 증강" and model.rank == "MAX" and not model.effects.is_empty(),"actual passive model "+id)
+	# Inventory describes owned mechanics; upgrade offers retain their deltas.
+	var bolt := "ranged_rookie_arcane_bolt"
+	for rank in [1,3,6,9,10]:
+		runtime.evolved.erase(bolt); runtime.levels[bolt] = rank
+		var model := DETAIL.weapon_model(runtime,hero,bolt)
+		check(model.effects.contains("직진 관통 마력탄") and not model.effects.contains("귀환"),"no future MAX effect in owned inventory")
+		check(model.effects != DETAIL.DATA.description(bolt,rank+1,false),"inventory is not next offered upgrade")
+	runtime.evolved[bolt] = true
+	check(DETAIL.weapon_model(runtime,hero,bolt).effects.contains("귀환"),"owned MAX explains active mechanic")
+	var hound := "summoner_hero_gate_hound"; runtime.levels[hound] = 1; runtime.evolved.erase(hound)
+	check(not DETAIL.weapon_model(runtime,hero,hound).effects.contains("휩쓸기"),"level1 does not preview future summon AoE")
+	runtime.levels[hound] = 3
+	check(DETAIL.weapon_model(runtime,hero,hound).effects.contains("전방 휩쓸기"),"owned summon AoE explained")
+	for id in DETAIL.DATA.PASSIVES:
+		runtime.passives[id] = 1
+		check(DETAIL.passive_model(runtime,id).effects == DETAIL.DATA.PASSIVES[id].description,"passive shows explanation, not next-rank delta")
 	for viewport_size in [Vector2i(1080,1920),Vector2i(540,960),Vector2i(1920,1080),Vector2i(960,540)]:
 		root.size = viewport_size
 		var panel := PanelContainer.new(); root.add_child(panel); panel.position = Vector2(24,80); panel.size = Vector2(minf(920,viewport_size.x-48),viewport_size.y-120)
@@ -55,6 +71,9 @@ func run() -> void:
 		check(resume.get_global_rect().end.y <= viewport_size.y and x.get_global_rect().end.x <= viewport_size.x,"controls fit viewport")
 		check(resume.size.y >= 76 and x.size.x >= 76,"mobile target size")
 		check((rows.get_node("DetailScroll") as ScrollContainer).size.y > 100,"body scroll retains footer")
+		var explanation = rows.find_child("DetailDescription",true,false)
+		check(explanation != null and not String(explanation.get_child(0).text).is_empty(),"description occupies remaining section")
+		check(rows.find_children("*","Label",true,false).all(func(item): return item.text != "다음 강화" and item.text != "강화 완료"),"no next-enhancement panel on inventory")
 		for stat in rows.find_children("StatValue","Label",true,false):
 			check(stat.autowrap_mode == TextServer.AUTOWRAP_OFF and stat.get_line_count() == 1,"numeric stat must stay on one line")
 			check(stat.size.x >= stat.get_minimum_size().x and stat.get_global_rect().end.x <= panel.get_global_rect().end.x-24,"numeric stat retains intrinsic width inside panel")

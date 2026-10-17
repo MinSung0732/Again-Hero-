@@ -1,0 +1,84 @@
+{
+	"cpu_only": true,
+	"engine": "4.5.1-stable (official)",
+	"rows": [
+		{
+			"after_median_ms": 81.712,
+			"after_samples_ms": [
+				77.041,
+				78.983,
+				81.186,
+				81.712,
+				84.76,
+				90.85,
+				99.218
+			],
+			"before_median_ms": 88.868,
+			"before_samples_ms": [
+				79.194,
+				81.668,
+				81.786,
+				88.868,
+				89.071,
+				90.984,
+				124.898
+			],
+			"hits_per_popup_frame": 1,
+			"popups": 48,
+			"runs": 7,
+			"synthetic_render_frames": 120
+		},
+		{
+			"after_median_ms": 94.099,
+			"after_samples_ms": [
+				82.755,
+				89.917,
+				94.065,
+				94.099,
+				94.186,
+				94.547,
+				95.372
+			],
+			"before_median_ms": 326.404,
+			"before_samples_ms": [
+				294.333,
+				298.594,
+				318.101,
+				326.404,
+				332.444,
+				341.195,
+				342.703
+			],
+			"hits_per_popup_frame": 4,
+			"popups": 48,
+			"runs": 7,
+			"synthetic_render_frames": 120
+		},
+		{
+			"after_median_ms": 97.843,
+			"after_samples_ms": [
+				94.284,
+				95.158,
+				97.588,
+				97.843,
+				105.997,
+				109.975,
+				113.834
+			],
+			"before_median_ms": 929.043,
+			"before_samples_ms": [
+				796.621,
+				834.757,
+				879.949,
+				929.043,
+				930.099,
+				963.613,
+				968.674
+			],
+			"hits_per_popup_frame": 12,
+			"popups": 48,
+			"runs": 7,
+			"synthetic_render_frames": 120
+		}
+	]
+}
