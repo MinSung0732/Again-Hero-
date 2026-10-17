@@ -159,7 +159,7 @@ func request_rpc(method: String, data: Dictionary) -> Dictionary:
 	var generation := _generation
 	var waiting := false
 	var delay := 1.0
-	var retry_safe := method in ["read_player_profile", "register_player_profile", "complete_player_prologue", "check_player_nickname", "rename_player_nickname"]
+	var retry_safe := method in ["read_player_profile", "register_player_profile", "complete_player_prologue", "check_player_nickname", "rename_player_nickname", "change_player_gender"]
 	if retry_safe:
 		while busy:
 			await operation_released

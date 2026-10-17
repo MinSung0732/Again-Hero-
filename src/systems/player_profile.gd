@@ -4,6 +4,7 @@ const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const PATH := "user://stage_progress.cfg"
 const APPEARANCE := preload("res://src/systems/demon_appearance_store.gd")
 const APPEARANCE_CATALOG := preload("res://src/data/demon_appearance_catalog.gd")
+const GENDERS := preload("res://src/data/profile_gender_catalog.gd")
 const NAMES := preload("res://src/data/nickname_catalog.gd")
 const PORTRAITS := {
 	"male": "res://assets/art/demonking/demonking_portrait_male.png",
@@ -75,6 +76,7 @@ static func refresh(cloud: Node) -> Dictionary:
 		profile["required"] = false
 		profile["completed"] = true
 		profile["nickname_changes_remaining"] = 0
+		profile["gender_changes_remaining"] = 0
 		return _store_response({"ok": true, "profile": profile})
 	if _preview():
 		var profile := get_profile()
@@ -116,6 +118,17 @@ static func rename(cloud: Node, nickname: String, operation_id: String) -> Dicti
 	if not valid_name(nickname) or SCOPE.user_id.is_empty(): return {"ok": false, "error": "invalid"}
 	var owner := SCOPE.user_id
 	var result: Dictionary = await cloud.request_rpc("rename_player_nickname", {"chosen_name": nickname, "operation_id": operation_id})
+	if owner != SCOPE.user_id: return {"ok": false, "error": "account_changed"}
+	return _store_response(result)
+
+static func can_change_gender() -> bool:
+	return not SCOPE.user_id.is_empty() and int(get_profile().get("gender_changes_remaining", 0)) > 0
+
+static func change_gender(cloud: Node, gender: String, operation_id: String) -> Dictionary:
+	if not GENDERS.OPTIONS.has(gender) or SCOPE.user_id.is_empty() or operation_id.is_empty():
+		return {"ok": false, "error": "invalid"}
+	var owner := SCOPE.user_id
+	var result: Dictionary = await cloud.request_rpc("change_player_gender", {"chosen_gender": gender, "operation_id": operation_id})
 	if owner != SCOPE.user_id: return {"ok": false, "error": "account_changed"}
 	return _store_response(result)
 

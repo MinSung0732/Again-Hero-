@@ -1,3 +1,8 @@
+## 2026-10-17 — 연동 계정 성별 변경 1회
+
+- 프로필에 성별 변경 확정 화면 추가. 닉네임과 독립된 1회 혜택, 기존/신규 게스트 연동 계정에 서버 지급. 같은 성별/취소는 무차감, 재연동은 재지급 없음. Catalog·서버 policy 관리, 새 성별 기본 외형/프로필/대화 fallback 적용.
+- 실제 Auth session/device fence/행 잠금·고정 UUID 재시도·계정 변경 응답 차단. 서버 migration 배포 및83검사, 기존 backfill2검사, Godot 성별17/이름132/RPC10/HTTP34·키보드 레이아웃·정적 검증 통과. 실제 Windows/Android OAuth/화면 미검증. docs/LINKED_GENDER_CHANGE_20261017.md.
+
 ## 2026-10-17 — 로그인 후 서버 연결 대기 반복 수정
 
 - pending 캐시의 정수 저장 버전이 JSON 복원 후1.0으로 전송돼 PostgreSQL bigint22P02/HTTP400을 반복하던 경계 수정. 검증한 pending 정수 복원 및 Catalog 기반 RPC 인자 codec으로 정수 토큰 보장, 실제 소수 payload·요청 UUID/저장/백업 보존.

@@ -32,9 +32,10 @@ func run() -> void:
 	var cloud := Transport.new(); root.add_child(cloud)
 	cloud.ready_for_play = true; cloud._initialized=true
 	var operation := CLOUD.new_operation_id()
-	for method in ["check_player_nickname","rename_player_nickname"]:
+	for method in ["check_player_nickname","rename_player_nickname","change_player_gender"]:
 		var params := {"chosen_name":"별빛마왕"}
 		if method == "rename_player_nickname": params["operation_id"] = operation
+		if method == "change_player_gender": params = {"chosen_gender":"female", "operation_id":operation}
 		var result := await cloud.request_rpc(method,params)
 		check(result.get("ok")==true,"transient "+method+" recovery")
 		var entries := cloud.calls.filter(func(c):return c.method==method)

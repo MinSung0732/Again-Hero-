@@ -33,7 +33,7 @@ static func equipped_id(_gender: String) -> String:
 	SCOPE.load_config(config, PATH)
 	var id := String(config.get_value(SECTION, "equipped_id", ""))
 	# Old saves may have equipped the other formerly-free default. Fall back
-	# without changing the immutable registration gender or writing on every read.
+	# without changing the server-confirmed profile gender or writing on every read.
 	return id if id in _owned_from_config(config) else _initial_id(config)
 
 static func equip(id: String) -> bool:

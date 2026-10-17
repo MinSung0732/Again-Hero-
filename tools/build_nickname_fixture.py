@@ -6,7 +6,7 @@ p=argparse.ArgumentParser();p.add_argument('destination',type=Path);a=p.parse_ar
 repo=Path(__file__).resolve().parents[1];out=a.destination.resolve()
 if out==repo or repo in out.parents: raise SystemExit('Use a directory outside the repository')
 out.mkdir(parents=True,exist_ok=True)
-queue=['tests/nickname_input_smoke.gd','tests/nickname_rpc_retry_smoke.gd','tests/player_prologue_keyboard_smoke.gd'];seen=set()
+queue=['tests/profile_gender_smoke.gd','tests/nickname_input_smoke.gd','tests/nickname_rpc_retry_smoke.gd','tests/player_prologue_keyboard_smoke.gd'];seen=set()
 while queue:
  path=queue.pop()
  if path in seen: continue

@@ -1,3 +1,8 @@
+## 2026-10-17 — 연동 후 성별 재설정
+
+- 게스트→계정 연동 후 프로필에서 성별 1회 변경. 닉네임 변경권과 독립, 기존 연동 계정 소급 지급. 서버 잔여 횟수/고정 요청 UUID·행 잠금·Auth session/device fence로 재연동·재전송 중복 차감/재지급 방지. 같은 성별/취소 무차감.
+- profile_gender_catalog/private.profile_gender_policy 관리. 새 성별 기본 마왕/아바타/대화 외형 fallback, 기존 진행/튜토리얼 유지. 이전 기본 성별 불변 정책보다 우선. 서버 배포/83+backfill2, Godot17+132+10+34/키보드·정적 검사 통과. 실기 미검증. docs/LINKED_GENDER_CHANGE_20261017.md.
+
 ## 2026-10-17 — 로그인 pending 버전 형식 수정
 
 - JSON 캐시가 pending.expected_revision을float로 복원해 HTTP에1.0을 보내고 bigint22P02/400을 반복하는 경계를 수정. 캐시 expected_revision/serial int 복원, rpc_contract_catalog/rpc_request_codec에서 정수 인자만 전송 형식 보장. payload 실제 소수·operation UUID/CAS/백업 유지.

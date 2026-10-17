@@ -21,6 +21,8 @@ var banner: TextureRect
 var portrait: TextureRect
 var nickname: Label
 var rename_button: Button
+var gender_button: Button
+var gender_dialog: Control
 var actions := {}
 var gallery: Button
 var reserved: Control
@@ -70,6 +72,10 @@ func install(owner: RefCounted, parent: Control) -> void:
 	rename_button.name = "NicknameChange"
 	rename_button.custom_minimum_size.y = 96
 	rename_button.connect("confirmed", _open_name_change)
+	gender_button = _button(column, PROFILE.GENDERS.ACTION % PROFILE.GENDERS.LINKED_CHANGES, false)
+	gender_button.name = "GenderChange"
+	gender_button.custom_minimum_size.y = 96
+	gender_button.connect("confirmed", _open_gender_change)
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -283,6 +289,8 @@ func _blocked() -> bool:
 	return cloud.busy or cloud.conflict
 
 func refresh() -> void:
+	gender_button.visible = PROFILE.can_change_gender()
+	gender_button.disabled = _blocked() or is_instance_valid(gender_dialog)
 	rename_button.visible = PROFILE.can_rename()
 	rename_button.disabled = _blocked()
 	nickname.text = String(PROFILE.get_profile().get("nickname", ""))
@@ -305,6 +313,19 @@ func _open_name_change() -> void:
 	view.rename_only = true
 	lobby.add_child(view)
 	view.finished.connect(func(): view.queue_free(); refresh())
+
+func _open_gender_change() -> void:
+	if _blocked() or not PROFILE.can_change_gender() or is_instance_valid(gender_dialog): return
+	var view := preload("res://src/ui/profile_gender_dialog.gd").new()
+	gender_dialog = view
+	lobby.add_child(view)
+	view.finished.connect(func():
+		view.queue_free()
+		gender_dialog = null
+		refresh()
+		if settings.has_method("_sync_account"): settings._sync_account()
+	)
+	refresh()
 
 func show() -> void:
 	refresh()
