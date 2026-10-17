@@ -1,3 +1,8 @@
+## 2026-10-17 — 단계별 하드코딩 정리2차
+
+- 성별 기본값/선택지/표시명은 profile_gender_catalog, 기본 경로/Texture는 demon_appearance_catalog, 저장 키·초기 프로필/게스트 기본 플래그는 player_profile_catalog. runtime 성별 분기/경로 중복 제거, 프롤로그 선택 데이터 순회. 기존기본male·저장/추가필드·1글자계정·독립변경권/진행·대사타이밍 유지. DB 변경 없음.
+- Godot221검사+키보드 smoke·PCK2검사·정적/import 통과, 실기 미검증. 다음3차 로비 분기/UI 정책은 별도 진행. docs/PROFILE_DEFAULTS_REFACTOR_PHASE2_20261017.md.
+
 ## 2026-10-17 — 단계별 하드코딩 정리1차
 
 - 클라우드 시간/상한/안내18문구는 cloud_connection_catalog, 직렬 재시도 허용6종/HTTP 분류는 rpc_contract_catalog에서 관리. 기존 수치·분기·저장/요청UUID·권한/기기 fence/일시정지 유지,401 refresh와408/429 재시도 구분. DB 변경 없음.

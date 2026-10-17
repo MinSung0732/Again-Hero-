@@ -1,19 +1,30 @@
 extends RefCounted
 
+const GENDERS := preload("res://src/data/profile_gender_catalog.gd")
+const PORTRAITS := {
+	"male": "res://assets/art/demonking/demonking_portrait_male.png",
+	"female": "res://assets/art/demonking/demonking_portrait_female.png",
+}
+# Explicit resource dependencies preserve export/preload behavior.
+const PORTRAIT_TEXTURES := {
+	"male": preload(PORTRAITS.male),
+	"female": preload(PORTRAITS.female),
+}
+
 # Stable IDs, not file paths, are saved. Avatar/dialogue art may diverge later.
 const DEFAULTS := {"male": "original_male", "female": "original_female"}
 const ORDER := ["original_male", "original_female"]
 const ENTRIES := {
 	"original_male": {
 		"name": "기본 마왕 · 남성", "initial_gender": "male",
-		"avatar": "res://assets/art/demonking/demonking_portrait_male.png",
-		"dialogue": "res://assets/art/demonking/demonking_portrait_male.png",
+		"avatar": PORTRAITS.male,
+		"dialogue": PORTRAITS.male,
 		"expressions": {},
 	},
 	"original_female": {
 		"name": "기본 마왕 · 여성", "initial_gender": "female",
-		"avatar": "res://assets/art/demonking/demonking_portrait_female.png",
-		"dialogue": "res://assets/art/demonking/demonking_portrait_female.png",
+		"avatar": PORTRAITS.female,
+		"dialogue": PORTRAITS.female,
 		"expressions": {},
 	},
 }
@@ -22,7 +33,7 @@ static func get_entry(id: String) -> Dictionary:
 	return ENTRIES.get(id, {}).duplicate(true)
 
 static func default_id(gender: String) -> String:
-	return DEFAULTS.get(gender, DEFAULTS.male)
+	return DEFAULTS.get(gender, DEFAULTS[GENDERS.DEFAULT_ID])
 
 static func path(id: String, purpose: String = "dialogue", expression: String = "neutral") -> String:
 	var entry := get_entry(id)
@@ -40,3 +51,9 @@ static func resource_paths(id: String) -> Array[String]:
 		if value is String and not value.is_empty() and ResourceLoader.exists(value) and value not in result:
 			result.append(value)
 	return result
+
+static func base_portrait_path(gender: String) -> String:
+	return PORTRAITS.get(gender, PORTRAITS[GENDERS.DEFAULT_ID])
+
+static func base_portrait(gender: String) -> Texture2D:
+	return PORTRAIT_TEXTURES.get(gender, PORTRAIT_TEXTURES[GENDERS.DEFAULT_ID])

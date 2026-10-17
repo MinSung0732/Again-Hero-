@@ -1,3 +1,8 @@
+## 2026-10-17 — 하드코딩 정리2차: 성별·초상화·프로필 기본값
+
+- profile_gender_catalog의 기본값/유효성/표시명/선택 배치, demon_appearance_catalog의 경로/Texture, player_profile_catalog의 초기 프로필·게스트 플래그/저장 키로 책임 통합. runtime5파일 성별·초상화 literal 제거, 프롤로그 데이터 순회/공유 art 적용. 기존 기본 male·1글자 계정·추가 저장 필드·변경권/통화·대사/타이밍·PORTRAITS API 유지. DB 변경 없음.
+- Godot headless221검사+키보드 smoke, source PNG 없는 PCK 초상화2검사·import/parse/정적 검증 통과. 실제PC/Android IME/OAuth/터치·전체원본아트/GPU·FPS 미검증. docs/PROFILE_DEFAULTS_REFACTOR_PHASE2_20261017.md.
+
 ## 2026-10-17 — 하드코딩 정리1차: 클라우드 통신 정책
 
 - cloud_connection_catalog로 재시도 시간/배수·연결 확인·HTTP 제한·저장 병합·대기 화면 지연 및 안내18문구 통합. rpc_contract_catalog에서 직렬 재시도6종/HTTP 분류 관리, 미등록 mutation 자동재시도 차단 유지.401 refresh와408/429 지연 재시도의 기존 의미 구분. 문구/수치/저장·권한·서버 동작 유지.

@@ -6,7 +6,7 @@ p=argparse.ArgumentParser();p.add_argument('destination',type=Path);a=p.parse_ar
 repo=Path(__file__).resolve().parents[1];out=a.destination.resolve()
 if out==repo or repo in out.parents: raise SystemExit('Use a directory outside the repository')
 out.mkdir(parents=True,exist_ok=True)
-queue=['tests/profile_gender_smoke.gd','tests/nickname_input_smoke.gd','tests/nickname_rpc_retry_smoke.gd','tests/player_prologue_keyboard_smoke.gd'];seen=set()
+queue=['src/ui/lobby_settings_view.gd','tests/profile_defaults_smoke.gd','tests/profile_gender_smoke.gd','tests/nickname_input_smoke.gd','tests/nickname_rpc_retry_smoke.gd','tests/player_prologue_keyboard_smoke.gd'];seen=set()
 while queue:
  path=queue.pop()
  if path in seen: continue
@@ -17,6 +17,8 @@ while queue:
  else: raise SystemExit('Missing dependency: '+path)
  if path=='src/data/monster_catalog.gd':
   dest.write_text(re.sub(r'preload\("res://src/monsters/[^"\n]+\.tscn"\)','null',dest.read_text()))
+ if path=='src/data/demon_appearance_catalog.gd':
+  queue.extend(re.findall(r'"res://([^"\n]+\.png)"',dest.read_text()))
  if dest.suffix in ['.gd','.tres']:
   queue.extend(re.findall(r'preload\("res://([^"\n]+)"\)',dest.read_text()))
 # Dynamic frame load used by real pixel-panel skin.
@@ -30,6 +32,7 @@ var tutorial_preview := false
 var test_directory := "user://localtest"
 func is_tutorial_preview() -> bool: return tutorial_preview
 func has_all_monsters_unlocked() -> bool: return false
+func is_practice_allowed() -> bool: return false
 ''')
 write('fixture_cloud.gd','extends Node\nvar busy := false\nvar conflict := false\nfunc stop(): pass\n')
 write('fixture_gateway.gd','extends Node\nvar remember_session_enabled := false\nvar user_id := ""\nvar access_token := "fixture"\n')

@@ -693,7 +693,7 @@ func _sync_account() -> void:
 	if guest_account_view != null: guest_account_view.refresh()
 	var profile := PROFILE.get_profile()
 	var nickname := String(profile.get("nickname", ""))
-	profile_label.text = "내 마왕 프로필\n%s\n%s" % [PROFILE.display_name(), "여성" if profile.get("gender", "male") == "female" else "남성"] if not nickname.is_empty() else "내 마왕 프로필\n미설정"
+	profile_label.text = "내 마왕 프로필\n%s\n%s" % [PROFILE.display_name(), PROFILE.GENDERS.label(PROFILE.DATA.gender_id(profile))] if not nickname.is_empty() else "내 마왕 프로필\n미설정"
 	var avatar_path := PROFILE_CATALOG.path(PROFILE_COSMETICS.selected_id("avatar"), "avatar")
 	set_profile_avatar(load(avatar_path) as Texture2D if not avatar_path.is_empty() else null)
 	profile_portrait.visible = not nickname.is_empty()

@@ -21,7 +21,7 @@ var portrait: TextureRect
 
 func _ready() -> void:
 	owner_id = PROFILE.SCOPE.user_id
-	selected = String(PROFILE.get_profile().get("gender", "male"))
+	selected = PROFILE.gender_id()
 	if cloud == null: cloud = get_node("/root/CloudStore")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	z_index = 100
@@ -93,9 +93,9 @@ func _update() -> void:
 	for value in choices:
 		choices[value].set_pressed_no_signal(value == selected)
 		choices[value].disabled = busy or submitted
-	portrait.texture = load(PROFILE.PORTRAITS[selected])
+	portrait.texture = PROFILE.APPEARANCE_CATALOG.base_portrait(selected)
 	confirm.text = DATA.CONFIRM % DATA.OPTIONS[selected]
-	confirm.disabled = busy or owner_id != PROFILE.SCOPE.user_id or not PROFILE.can_change_gender() or selected == String(PROFILE.get_profile().get("gender", "male"))
+	confirm.disabled = busy or owner_id != PROFILE.SCOPE.user_id or not PROFILE.can_change_gender() or selected == PROFILE.gender_id()
 	cancel.disabled = busy
 
 func _submit() -> void:

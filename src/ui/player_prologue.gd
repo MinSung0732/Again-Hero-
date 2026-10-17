@@ -6,8 +6,7 @@ const PROFILE := preload("res://src/systems/player_profile.gd")
 const VIEW := preload("res://src/ui/startup_loading_view.gd")
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const CHAMBER := preload("res://assets/art/UI/prologue/ruined_throne.png")
-const MALE := preload("res://assets/art/demonking/demonking_portrait_male.png")
-const FEMALE := preload("res://assets/art/demonking/demonking_portrait_female.png")
+const APPEARANCES := preload("res://src/data/demon_appearance_catalog.gd")
 var cloud: Node
 var background: TextureRect
 var portrait: TextureRect
@@ -31,7 +30,7 @@ var _name_layout_size := Vector2.ZERO
 var _name_layout_height := -1.0
 var _name_keyboard_seen := false
 const NAME_CONTENT_HEIGHT := 460.0
-var gender := "male"
+var gender := PROFILE.GENDERS.DEFAULT_ID
 var nickname := ""
 var index := 0
 var busy := false
@@ -49,7 +48,7 @@ func _ready() -> void:
 	VIEW.place(self, black, Rect2(0, 0, 1, 1))
 	background = VIEW.texture(self, CHAMBER, Rect2(0, 0, 1, 1), true)
 	background.modulate.a = 0
-	portrait = VIEW.texture(self, MALE, Rect2(0.06, 0.16, 0.88, 0.62))
+	portrait = VIEW.texture(self, APPEARANCES.base_portrait(PROFILE.GENDERS.DEFAULT_ID), Rect2(0.06, 0.16, 0.88, 0.62))
 	portrait.hide()
 	var panel := Panel.new()
 	panel.add_theme_stylebox_override("panel", VIEW.plate(Color(0.035, 0.018, 0.065, 0.97)))
@@ -64,7 +63,7 @@ func _ready() -> void:
 	gui_input.connect(_on_input)
 	var saved := PROFILE.get_profile()
 	nickname = String(saved.get("nickname", ""))
-	gender = String(saved.get("gender", "male"))
+	gender = PROFILE.DATA.gender_id(saved)
 	if rename_only:
 		background.modulate.a = 0.55
 		text_label.text = "계정 연동 후 마왕 이름을 %d회 변경할 수 있습니다." % PROFILE.NAMES.LINKED_RENAMES
@@ -152,8 +151,8 @@ func _build_choice(kind: String) -> void:
 	SKIN.apply(choice)
 	if kind == "gender":
 		VIEW.label(choice, "마왕의 성별을 선택하세요", 37, Rect2(0.07, 0.07, 0.86, 0.18), Color("ffdf8a"))
-		_button(choice, "남성", Rect2(0.08, 0.40, 0.40, 0.28)).pressed.connect(_select_gender.bind("male"))
-		_button(choice, "여성", Rect2(0.52, 0.40, 0.40, 0.28)).pressed.connect(_select_gender.bind("female"))
+		for id in PROFILE.GENDERS.OPTIONS:
+			_button(choice, PROFILE.GENDERS.label(id), PROFILE.GENDERS.PROLOGUE_CHOICE_RECTS[id]).pressed.connect(_select_gender.bind(id))
 		VIEW.label(choice, "선택한 모습으로 이후 대사에 등장합니다.", 25, Rect2(0.05, 0.76, 0.90, 0.13), Color("cbb6df"))
 		return
 	# Keep a readable content height; only the viewport shrinks for tall keyboards.
@@ -287,7 +286,7 @@ func _select_gender(value: String) -> void:
 func _reveal_portrait() -> void:
 	# Before registration the explicit gender choice owns the reveal. On resume
 	# the saved cosmetic owns it, just like every later dialogue.
-	portrait.texture = load(PROFILE.portrait_path()) if not nickname.is_empty() else (FEMALE if gender == "female" else MALE)
+	portrait.texture = load(PROFILE.portrait_path()) if not nickname.is_empty() else APPEARANCES.base_portrait(gender)
 	portrait.show()
 	portrait.modulate.a = 0
 	create_tween().tween_property(portrait, "modulate:a", 1.0, 0.8)

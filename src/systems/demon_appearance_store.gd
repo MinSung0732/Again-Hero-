@@ -2,7 +2,8 @@ extends RefCounted
 
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const CATALOG := preload("res://src/data/demon_appearance_catalog.gd")
-const PATH := "user://stage_progress.cfg"
+const PROFILE_DATA := preload("res://src/data/player_profile_catalog.gd")
+const PATH := PROFILE_DATA.PATH
 const SECTION := "demon_appearance"
 
 static func owned_ids() -> Array[String]:
@@ -12,8 +13,8 @@ static func owned_ids() -> Array[String]:
 
 static func _initial_id(config: ConfigFile) -> String:
 	# Read the registration gender directly to avoid PROFILE -> APPEARANCE cycles.
-	var profile: Variant = config.get_value("player_profile", "value", {})
-	return CATALOG.default_id(String(profile.get("gender", "male")) if profile is Dictionary else "male")
+	var profile: Variant = config.get_value(PROFILE_DATA.SECTION, PROFILE_DATA.VALUE_KEY, {})
+	return CATALOG.default_id(PROFILE_DATA.gender_id(profile) if profile is Dictionary else PROFILE_DATA.GENDERS.DEFAULT_ID)
 
 static func _owned_from_config(config: ConfigFile) -> Array[String]:
 	var result: Array[String] = []
@@ -28,7 +29,7 @@ static func _owned_from_config(config: ConfigFile) -> Array[String]:
 			result.append(id)
 	return result
 
-static func equipped_id(_gender: String) -> String:
+static func equipped_id(_gender: String = "") -> String:
 	var config := ConfigFile.new()
 	SCOPE.load_config(config, PATH)
 	var id := String(config.get_value(SECTION, "equipped_id", ""))
