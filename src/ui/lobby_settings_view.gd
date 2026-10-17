@@ -108,6 +108,7 @@ func install(target: Control) -> void:
 	_info(pages.misc, "추가 설정을 위한 공간입니다.\n새 기능은 이곳에 순차적으로 추가됩니다.")
 	lobby.get_node("/root/CloudStore").status_changed.connect(_on_cloud_status)
 	lobby.get_node("/root/LoginGateway").login_unavailable.connect(_on_cloud_status)
+	lobby.tree_exiting.connect(_disconnect_cloud_status, CONNECT_ONE_SHOT)
 	show_page("game")
 	_build_other_menu(box)
 	profile_view = preload("res://src/ui/lobby_profile_view.gd").new()
@@ -671,8 +672,14 @@ func _open_profile() -> void:
 	lobby.add_child(view)
 	view.finished.connect(func(): view.queue_free(); _sync_account())
 
+func _disconnect_cloud_status() -> void:
+	var cloud := lobby.get_node("/root/CloudStore")
+	var gateway := lobby.get_node("/root/LoginGateway")
+	if cloud.status_changed.is_connected(_on_cloud_status): cloud.status_changed.disconnect(_on_cloud_status)
+	if gateway.login_unavailable.is_connected(_on_cloud_status): gateway.login_unavailable.disconnect(_on_cloud_status)
+
 func _on_cloud_status(_message: String) -> void:
-	_sync_account()
+	if is_instance_valid(lobby) and lobby.is_inside_tree(): _sync_account()
 
 func set_profile_avatar(texture: Texture2D) -> void:
 	# Display-only preview hook. Profile view owns saved representative selection.
@@ -698,7 +705,9 @@ func _sync_account() -> void:
 	if mode.active or guest:
 		cloud_status.text = "클라우드 연결 안 됨 · 기기 저장"
 	elif cloud.conflict:
-		cloud_status.text = "클라우드 저장 충돌 · 확인 필요"
+		cloud_status.text = "서버 저장 확인 중…"
+	elif cloud.connection_blocked:
+		cloud_status.text = cloud.connection_message
 	elif cloud.busy:
 		cloud_status.text = "클라우드 동기화 중…"
 	elif gateway.access_token.is_empty():

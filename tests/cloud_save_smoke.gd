@@ -30,17 +30,29 @@ class FakeGateway extends "res://src/network/login_gateway.gd":
 class FakeCloud extends "res://src/network/cloud_store.gd":
 	var server := {"found": false, "revision": 0}
 	var unavailable := false
+	var lose_ack := false
+	var replaced := false
+	var receipts := {}
+	var commits := 0
 	func request_rpc(method: String, data: Dictionary) -> Dictionary:
 		await get_tree().process_frame
-		if unavailable:
-			return {}
-		if method == "account_lifecycle_status":
-			return {"active": true}
-		if method == "read_game_save":
-			return server.duplicate(true)
-		if data.expected_revision != server.revision:
-			return {"conflict": true}
+		if unavailable: return {}
+		if method == "account_lifecycle_status": return {"active": true}
+		if method != "cloud_sync": return {}
+		if replaced: return {"session_replaced": true}
+		if data.action in ["claim", "check"]: return {"ok": true}
+		if data.action == "read":
+			var result := server.duplicate(true)
+			result["acknowledged_revision"] = receipts.get(data.get("operation_id"))
+			return result
+		if receipts.has(data.operation_id): return {"ok": true, "revision": receipts[data.operation_id]}
+		if data.expected_revision != server.revision: return {"conflict": true}
 		server = {"found": true, "revision": int(server.revision) + 1, "payload": data.new_payload.duplicate(true)}
+		commits += 1
+		receipts[data.operation_id] = server.revision
+		if lose_ack:
+			lose_ack = false
+			return {}
 		return {"ok": true, "revision": server.revision}
 
 func _initialize() -> void:
@@ -52,6 +64,8 @@ func check(condition: bool, message: String) -> void:
 		push_error("CLOUD_TEST: " + message)
 
 func run() -> void:
+	root.get_node("CloudConnectionOverlay").queue_free()
+	await process_frame
 	root.get_node("LoginGateway").remember_session_enabled = false
 	# A human tester's persisted localtest marker must not replace fixture OAuth.
 	root.get_node("LocalTestMode").active = false
@@ -63,6 +77,7 @@ func run() -> void:
 	var folder := SCOPE.resolve("user://save_bundle.json").get_base_dir()
 	var cloud := FakeCloud.new()
 	root.add_child(cloud)
+	SCOPE.write_allowed = Callable() # Seed a pre-cloud account cache.
 	var config := ConfigFile.new()
 	config.set_value("meta", "research_points", 321)
 	for name in SCOPE.FILES:
@@ -70,16 +85,36 @@ func run() -> void:
 	check(SCOPE.select_account(id) and SCOPE.files.size() == 5 and SCOPE.dirty, "restart pending recovery")
 	check(await cloud.initialize(), "first cloud upload")
 	check(SCOPE.revision == 1 and not SCOPE.dirty, "upload acknowledgement")
+	SCOPE.write_allowed = cloud.can_write
 	config.set_value("meta", "research_points", 999)
 	SCOPE.save_config(config, "user://stage_progress.cfg")
 	cloud.unavailable = true
 	check(not await cloud.flush() and SCOPE.dirty, "offline progress retained")
+	check(SCOPE.save_config(config, "user://stage_progress.cfg") == ERR_BUSY, "writes blocked during connection failure")
 	cloud.unavailable = false
-	cloud.server.revision = 2
-	check(not await cloud.flush() and cloud.conflict, "stale version blocked")
-	check(await cloud.initialize("remote"), "explicit remote resolution")
-	check(SCOPE.files["stage_progress.cfg"].meta.research_points == 321, "remote installed")
-	check(FileAccess.file_exists(folder.path_join("save_bundle.json.before_cloud.bak")), "local backup preserved")
+	var operation: String = SCOPE.pending_cloud.operation_id
+	check(SCOPE.select_account(id) and SCOPE.pending_cloud.get("operation_id") == operation, "pending request survives restart")
+	cloud._timer.stop()
+	cloud.lose_ack = true
+	check(not await cloud.flush() and cloud.server.revision == 2, "server committed but acknowledgement lost")
+	check(SCOPE.pending_cloud.operation_id == operation, "retry retains operation identity")
+	check(await cloud.flush() and cloud.server.revision == 2 and cloud.commits == 2, "lost acknowledgement does not duplicate")
+	check(not cloud.connection_blocked and SCOPE.pending_cloud.is_empty(), "successful sync releases block")
+	config.set_value("meta", "research_points", 13)
+	check(SCOPE.save_config(config, "user://stage_progress.cfg") == OK, "next action accepted after ack")
+	check(SCOPE.save_config(config, "user://stage_progress.cfg") == OK and SCOPE.pending_cloud.serial == SCOPE.serial, "related writes coalesce before dispatch")
+	cloud.server.revision = 3
+	cloud.server.payload["stage_progress.cfg"].meta.research_points = 777
+	check(await cloud.flush() and not cloud.conflict, "conflict automatically recovers cloud")
+	check(SCOPE.files["stage_progress.cfg"].meta.research_points == 777, "server canonical value installed")
+	check(FileAccess.file_exists(folder.path_join("save_bundle.json.before_cloud.bak")), "pre-cloud backup preserved")
+	cloud._reload_after_sync = false
+	cloud._set_connection(false)
+	config.set_value("meta", "research_points", 42)
+	check(SCOPE.save_config(config, "user://stage_progress.cfg") == OK, "terminal test pending change")
+	cloud.replaced = true
+	check(not await cloud.flush() and cloud.terminal and not cloud.ready_for_play, "replaced device cannot write or resume")
+	check(SCOPE.dirty, "replaced device cache retained")
 	check(not SCOPE.install({"unknown.cfg": {}}, 9), "invalid payload rejected")
 	var vault := VAULT.new()
 	vault.PATH = "user://cloud_test_" + hex + ".dpapi"
@@ -115,7 +150,7 @@ func run() -> void:
 	check(not gateway.accepted, "automatic login rejects a mismatched account")
 	gateway.queue_free()
 	cloud.stop()
-	for name in ["save_bundle.json", "save_bundle.json.tmp", "save_bundle.json.before_cloud.bak"]:
+	for name in DirAccess.get_files_at(folder):
 		if FileAccess.file_exists(folder.path_join(name)):
 			DirAccess.remove_absolute(folder.path_join(name))
 	DirAccess.remove_absolute(folder)

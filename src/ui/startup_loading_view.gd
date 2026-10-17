@@ -3,6 +3,9 @@ extends Control
 const CATALOG := preload("res://src/data/startup_catalog.gd")
 const CASTLE := preload("res://assets/art/UI/startup/moon_castle.png")
 const CAMP := preload("res://assets/art/UI/startup/moon_camp.png")
+const PORTAL := preload("res://assets/art/UI/cloud_loading/castle_portal.png")
+const CONNECTION := preload("res://assets/art/UI/cloud_loading/connection_archive.png")
+const INDICATOR := preload("res://src/ui/cloud_wait_indicator.gd")
 const LOGO := preload("res://assets/art/UI/logo/AgainHeroLogo.png")
 const PIXEL_PANEL_SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 
@@ -14,12 +17,14 @@ var progress_label: Label
 var tip_label: Label
 var _tip_index := 0
 var _tip_timer: Timer
+var _indicator: Control
+var _tip_panel: Panel
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	background = texture(self, CAMP, Rect2(0, 0, 1, 1), true)
+	background = texture(self, PORTAL, Rect2(0, 0, 1, 1), true)
 	var shade := ColorRect.new()
 	shade.color = Color(0.025, 0.015, 0.065, 0.15)
 	place(self, shade, Rect2(0, 0, 1, 1))
@@ -34,6 +39,7 @@ func _ready() -> void:
 	place(self, progress_bar, Rect2(0.1, 0.735, 0.8, 0.035))
 	progress_label = label(self, "0%", 28, Rect2(0.1, 0.735, 0.8, 0.035))
 	var tip_panel := Panel.new()
+	_tip_panel = tip_panel
 	tip_panel.add_theme_stylebox_override("panel", plate(Color(0.05, 0.03, 0.1, 0.93)))
 	place(self, tip_panel, Rect2(0.1, 0.8, 0.8, 0.115))
 	label(tip_panel, "◆  TIP  ◆", 27, Rect2(0.07, 0.10, 0.86, 0.28), Color("e8c2ff"))
@@ -43,15 +49,33 @@ func _ready() -> void:
 	_tip_timer.wait_time = 4.0
 	_tip_timer.timeout.connect(_next_tip)
 	add_child(_tip_timer)
+	_indicator = INDICATOR.new()
+	place(self, _indicator, Rect2(0.43, 0.69, 0.14, 0.055))
 	visibility_changed.connect(_sync_tip_timer)
 	_sync_tip_timer()
 
 
-func configure(title: String, description: String, resource_screen: bool = false) -> void:
+func configure(title: String, description: String, _resource_screen: bool = false) -> void:
 	heading.text = title
 	detail.text = description
-	background.texture = CASTLE if resource_screen else CAMP
+	background.texture = PORTAL
+	progress_bar.show()
+	progress_label.show()
+	_tip_panel.show()
+	_indicator.show()
+	_sync_tip_timer()
 	set_progress(0.0)
+
+
+func configure_connection(message: String, final_state: bool = false) -> void:
+	heading.text = "연결을 확인해 주세요" if final_state else "서버에 연결 중입니다"
+	detail.text = message if final_state else "잠시만 기다려 주세요. 연결되면 자동으로 계속됩니다."
+	background.texture = CONNECTION
+	progress_bar.hide()
+	progress_label.hide()
+	_tip_panel.hide()
+	_tip_timer.stop()
+	_indicator.visible = not final_state
 
 
 func set_progress(value: float) -> void:

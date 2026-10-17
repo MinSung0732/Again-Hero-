@@ -5,6 +5,7 @@ signal destination_prepared
 
 const LOADING_VIEW := preload("res://src/ui/startup_loading_view.gd")
 
+var _generation := 0
 var _pending := false
 var _scene_path := ""
 var _view: Control
@@ -37,15 +38,36 @@ func is_transitioning() -> bool:
 	return _pending or visible
 
 
+func cancel() -> void:
+	_generation += 1
+	_pending = false
+	set_process(false)
+	visible = false
+	_view.hide()
+	_scene_path = ""
+	_entry_options = {}
+	_progress.clear()
+	_destination_ready = false
+	_destination_warming = false
+	if PresentationWarmup.progress_changed.is_connected(_on_warmup_progress):
+		PresentationWarmup.progress_changed.disconnect(_on_warmup_progress)
+	destination_prepared.emit() # Wake, then reject, old generation waiters.
+	transition_completed.emit()
+
+
 func prepare_in_place(action: Callable, message: String = "화면 준비 중...") -> bool:
 	if is_transitioning() or not action.is_valid(): return false
+	_generation += 1
+	var generation := _generation
 	_view.configure(message,"초상화와 캐릭터 편성 화면을 준비하고 있습니다.")
 	_retry.hide(); visible = true; _view.show()
 	# Two frame boundaries let the loading overlay reach the renderer first.
 	await get_tree().process_frame
 	await get_tree().process_frame
+	if generation != _generation: return false
 	var ready: bool = bool(await action.call()) if action.is_valid() else false
 	await get_tree().process_frame
+	if generation != _generation: return false
 	_view.set_progress(1.0); visible = false; _view.hide()
 	transition_completed.emit()
 	return ready
@@ -69,20 +91,23 @@ func change_scene(path: String, message: String = "불러오는 중...", entry_o
 
 
 func _start_load() -> bool:
+	_generation += 1
 	_view.configure(_message, "필요한 화면과 리소스를 불러오고 있습니다.")
 	_retry.hide()
 	visible = true
 	_view.show()
 	_pending = true
 	# Keep the overlay alive, but never overlap a whole lobby and battle in RAM.
-	call_deferred("_begin_resource_load")
+	call_deferred("_begin_resource_load", _generation)
 	return true
 
 
-func _begin_resource_load() -> void:
+func _begin_resource_load(generation: int) -> void:
+	if generation != _generation: return
 	if _scene_path in ["res://src/main/Main.tscn", "res://src/hero_mode/HeroMode.tscn"]:
 		_view.detail.text = "이전 화면을 정리하고 전투를 준비합니다."
 		await get_tree().process_frame
+		if generation != _generation: return
 		var previous := get_tree().current_scene
 		if previous != null:
 			get_tree().current_scene = null
@@ -90,6 +115,7 @@ func _begin_resource_load() -> void:
 		# Flush deferred node deletion and renderer resource releases first.
 		await get_tree().process_frame
 		await get_tree().process_frame
+		if generation != _generation: return
 		PresentationWarmup.release_destination()
 		preload("res://src/monsters/monster_visual.gd").clear_cached_frames()
 		preload("res://src/ui/hero_weapon_art.gd").retain_sequences({})
@@ -100,7 +126,7 @@ func _begin_resource_load() -> void:
 	set_process(true)
 	if not _destination_ready and not _destination_warming:
 		_destination_warming = true
-		call_deferred("_warm_destination")
+		call_deferred("_warm_destination", generation)
 
 
 func _process(_delta: float) -> void:
@@ -116,29 +142,34 @@ func _process(_delta: float) -> void:
 		if packed == null:
 			_fail_transition(ERR_INVALID_DATA)
 			return
-		call_deferred("_prepare_destination_and_change", packed)
+		call_deferred("_prepare_destination_and_change", packed, _generation)
 	elif status == ResourceLoader.THREAD_LOAD_FAILED or status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
 		_fail_transition(ERR_CANT_OPEN)
 
 
-func _warm_destination() -> void:
+func _warm_destination(generation: int) -> void:
+	if generation != _generation: return
 	_view.detail.text = "이미지와 화면 표시 리소스를 미리 준비합니다."
 	PresentationWarmup.progress_changed.connect(_on_warmup_progress)
 	await PresentationWarmup.prepare_common()
+	if generation != _generation: return
 	await PresentationWarmup.prepare_scene(_scene_path, _entry_options)
+	if generation != _generation: return
 	PresentationWarmup.progress_changed.disconnect(_on_warmup_progress)
 	_destination_ready = true
 	_destination_warming = false
 	destination_prepared.emit()
 
 
-func _prepare_destination_and_change(packed: PackedScene) -> void:
+func _prepare_destination_and_change(packed: PackedScene, generation: int) -> void:
+	if generation != _generation: return
 	if not _destination_ready:
 		await destination_prepared
+	if generation != _generation: return
 	_view.set_progress(0.9)
 	var error := get_tree().change_scene_to_packed(packed)
 	if error == OK:
-		call_deferred("_finish_after_scene_change")
+		call_deferred("_finish_after_scene_change", generation)
 	else:
 		_fail_transition(error)
 
@@ -147,14 +178,17 @@ func _on_warmup_progress(completed: int, total: int) -> void:
 	_view.set_progress(0.5 + 0.4 * float(completed) / maxi(total, 1))
 
 
-func _finish_after_scene_change() -> void:
+func _finish_after_scene_change(generation: int) -> void:
+	if generation != _generation: return
 	# New scene _ready() finishes beneath this persistent full-screen overlay.
 	await get_tree().process_frame
+	if generation != _generation: return
 	var scene := get_tree().current_scene
 	if scene != null and scene.has_method("prepare_presentation"):
 		_view.detail.text = "전투 리소스와 첫 화면 표시를 준비합니다."
 		await scene.call("prepare_presentation")
 	await get_tree().process_frame
+	if generation != _generation: return
 	_view.set_progress(1.0)
 	visible = false
 	_view.hide()

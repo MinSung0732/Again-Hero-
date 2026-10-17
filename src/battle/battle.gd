@@ -5353,7 +5353,9 @@ func _spawn_extra_normal_summon_monsters(
 		)
 
 func combat_time_msec() -> int:
-	if not hero_player_mode: return Time.get_ticks_msec()
+	if not hero_player_mode:
+		var now := _network_pause_started_msec if _network_paused else Time.get_ticks_msec()
+		return now - _network_paused_total_msec
 	var now := _hero_pause_started_msec if _hero_subtree_paused else Time.get_ticks_msec()
 	return now-_hero_paused_total_msec
 
@@ -6034,6 +6036,23 @@ func get_snapshot() -> Dictionary:
 		"next_stage_id": String(current_stage_data.get("next_stage_id", "")),
 		"battle_over": battle_over,
 	}
+
+var _network_pause_started_msec := 0
+var _network_paused_total_msec := 0
+var _network_paused := false
+
+func set_network_pause(paused: bool) -> void:
+	if paused and not _network_paused:
+		_network_pause_started_msec = Time.get_ticks_msec()
+	elif not paused and _network_paused:
+		_network_paused_total_msec += Time.get_ticks_msec() - _network_pause_started_msec
+	_network_paused = paused
+	if paused:
+		flow_pause_manager.request_pause("cloud_connection", FULL_MODAL_PAUSE_DOMAINS)
+	else:
+		flow_pause_manager.release_pause("cloud_connection")
+	_sync_combat_pause_state()
+
 
 func set_external_pause(paused: bool) -> void:
 	external_pause = paused

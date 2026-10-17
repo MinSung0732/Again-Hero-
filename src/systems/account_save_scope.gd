@@ -10,6 +10,8 @@ static var revision := 0
 static var dirty := false
 static var serial := 0
 static var saved_callback := Callable()
+static var write_allowed := Callable()
+static var pending_cloud: Dictionary = {}
 const GUEST_TRANSACTION := "user://gameplay_transaction.json"
 static var guest_directory := "user://" # Tests use an isolated directory.
 
@@ -28,6 +30,7 @@ static func select_account(id: String) -> bool:
 	revision = 0
 	dirty = false
 	serial = 0
+	pending_cloud = {}
 	var cache: Variant = JSON.parse_string(FileAccess.get_file_as_string(resolve("user://save_bundle.json"))) if FileAccess.file_exists(resolve("user://save_bundle.json")) else null
 	if FileAccess.file_exists(resolve("user://save_bundle.json")) and (not cache is Dictionary or not valid_payload(cache.get("files"))):
 		return false # Never silently replace a corrupt save with older/default data.
@@ -36,6 +39,11 @@ static func select_account(id: String) -> bool:
 		revision = int(cache.get("revision", 0))
 		dirty = bool(cache.get("dirty", false))
 		serial = int(cache.get("serial", 0))
+		var pending: Variant = cache.get("pending_cloud", {})
+		if _valid_pending(pending):
+			pending_cloud = pending
+			pending_cloud["sent"] = bool(pending.get("sent", true))
+			dirty = true
 	else:
 		# Import only this verified UUID's existing files, never legacy guest data.
 		for name in FILES:
@@ -51,6 +59,7 @@ static func select_guest() -> void:
 	revision = 0
 	dirty = false
 	serial = 0
+	pending_cloud = {}
 
 static func resolve(legacy_path: String) -> String:
 	return legacy_path if user_id.is_empty() else "user://accounts/%s/%s" % [user_id, legacy_path.get_file()]
@@ -71,6 +80,8 @@ static func load_config(config: ConfigFile, path: String) -> Error:
 	return OK
 
 static func save_config(config: ConfigFile, path: String) -> Error:
+	if not user_id.is_empty() and write_allowed.is_valid() and not write_allowed.call():
+		return ERR_BUSY
 	if path.get_file() == "stage_progress.cfg":
 		return save_configs({"stage_progress.cfg": config})
 	if user_id.is_empty():
@@ -84,12 +95,15 @@ static func save_config(config: ConfigFile, path: String) -> Error:
 	var previous := files.duplicate(true)
 	files[name] = _config_data(config)
 	var was_dirty := dirty
+	var old_pending := pending_cloud
 	dirty = true
 	serial += 1
+	_stage_cloud_request()
 	var error := persist()
 	if error != OK:
 		files = previous
 		dirty = was_dirty
+		pending_cloud = old_pending
 		serial -= 1
 	elif saved_callback.is_valid():
 		saved_callback.call()
@@ -98,6 +112,8 @@ static func save_config(config: ConfigFile, path: String) -> Error:
 # Award conversions change collection and research together. Account bundles
 # commit once; guest cfg files use a replayable write-ahead journal.
 static func save_configs(configs: Dictionary, write_missions: bool = false) -> Error:
+	if not user_id.is_empty() and write_allowed.is_valid() and not write_allowed.call():
+		return ERR_BUSY
 	var data := {}
 	for name in configs:
 		if name not in FILES or not configs[name] is ConfigFile:
@@ -135,13 +151,16 @@ static func save_configs(configs: Dictionary, write_missions: bool = false) -> E
 		return _recover_guest_transaction() if error == OK else error
 	var previous := files.duplicate(true)
 	var was_dirty := dirty
+	var old_pending := pending_cloud
 	files.merge(data, true)
 	dirty = true
 	serial += 1
+	_stage_cloud_request()
 	var error := persist()
 	if error != OK:
 		files = previous
 		dirty = was_dirty
+		pending_cloud = old_pending
 		serial -= 1
 	elif saved_callback.is_valid():
 		saved_callback.call()
@@ -205,6 +224,26 @@ static func _json_safe(value: Variant, depth: int = 0) -> bool:
 			return false
 	return true
 
+static func _stage_cloud_request() -> void:
+	if not pending_cloud.is_empty():
+		if not bool(pending_cloud.get("sent", true)):
+			pending_cloud["new_payload"] = files.duplicate(true)
+			pending_cloud["serial"] = serial
+		return
+	var hex := Crypto.new().generate_random_bytes(16).hex_encode()
+	var operation := "%s-%s-%s-%s-%s" % [hex.substr(0,8),hex.substr(8,4),hex.substr(12,4),hex.substr(16,4),hex.substr(20,12)]
+	pending_cloud = {"operation_id": operation, "expected_revision": revision,
+		"new_payload": files.duplicate(true), "serial": serial, "sent": false}
+
+static func _valid_pending(value: Variant) -> bool:
+	if not value is Dictionary or not valid_payload(value.get("new_payload")): return false
+	if value.get("expected_revision") != revision or not value.get("operation_id") is String: return false
+	var number: Variant = value.get("serial")
+	if not (number is int or number is float) or not is_finite(float(number)) or float(number) != floor(float(number)) or number < 0 or number > serial: return false
+	var pattern := RegEx.new()
+	pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+	return pattern.search(value.operation_id) != null
+
 static func persist() -> Error:
 	if user_id.is_empty():
 		return ERR_UNCONFIGURED
@@ -215,7 +254,7 @@ static func persist() -> Error:
 	var file := FileAccess.open(temporary, FileAccess.WRITE)
 	if file == null:
 		return FileAccess.get_open_error()
-	file.store_string(JSON.stringify({"files": files, "revision": revision, "dirty": dirty, "serial": serial}))
+	file.store_string(JSON.stringify({"files": files, "revision": revision, "dirty": dirty, "serial": serial, "pending_cloud": pending_cloud}))
 	file.flush()
 	file.close()
 	return DirAccess.rename_absolute(temporary, target)
@@ -223,13 +262,17 @@ static func persist() -> Error:
 static func install(remote: Dictionary, version: int) -> bool:
 	if not valid_payload(remote):
 		return false
-	# Keep a recoverable snapshot before an explicit remote replacement.
+	# Preserve the first pre-cloud copy permanently, including unsent progress.
 	var target := resolve("user://save_bundle.json")
-	if FileAccess.file_exists(target) and DirAccess.copy_absolute(target, target + ".before_cloud.bak") != OK:
+	if FileAccess.file_exists(target) and not FileAccess.file_exists(target + ".before_cloud.bak") and DirAccess.copy_absolute(target, target + ".before_cloud.bak") != OK:
 		return false
+	if (dirty or not pending_cloud.is_empty()) and FileAccess.file_exists(target):
+		if DirAccess.copy_absolute(target, target + ".unsent_before_cloud.bak") != OK: return false
 	var old_files := files
 	var old_revision := revision
 	var old_dirty := dirty
+	var old_pending := pending_cloud
+	pending_cloud = {}
 	files = remote.duplicate(true)
 	revision = version
 	dirty = false
@@ -237,6 +280,7 @@ static func install(remote: Dictionary, version: int) -> bool:
 		files = old_files
 		revision = old_revision
 		dirty = old_dirty
+		pending_cloud = old_pending
 		return false
 	return true
 

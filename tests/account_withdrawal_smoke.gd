@@ -6,6 +6,8 @@ var cloud: Node
 var gateway: Node
 var scope: GDScript
 var fixture_paths: Array[String] = []
+class Transition extends Node:
+	func cancel() -> void: pass
 class TestMode extends Node:
 	var active := false
 	var tutorial_preview := false
@@ -34,6 +36,8 @@ func method(source: String, name: String) -> String:
 	var end := source.find("\nfunc ", start + 1)
 	return source.substr(start) if end < 0 else source.substr(start, end-start) + "\n"
 func set_account() -> void:
+	cloud.stop()
+	scope.pending_cloud = {}
 	gateway.user_id = "fixture-account"
 	gateway.access_token = "fixture-token"
 	gateway._refresh_token = "fixture-refresh"
@@ -46,7 +50,7 @@ func set_account() -> void:
 	cloud.calls.clear()
 	cloud.replies.clear()
 func run() -> void:
-	var scope_path := fixture("scope", "extends RefCounted\nstatic var user_id := \"\"\nstatic var dirty := false\nstatic var revision := 1\nstatic var serial := 0\nstatic var files := {}\nstatic var saved_callback: Callable\nstatic func select_account(id: String) -> bool: user_id = id; return true\nstatic func select_guest() -> void: user_id = \"\"\nstatic func valid_payload(_value: Variant) -> bool: return true\nstatic func install(_value: Variant, version: int) -> bool: revision = version; dirty = false; return true\nstatic func persist() -> int: return OK\n")
+	var scope_path := fixture("scope", "extends RefCounted\nstatic var user_id := \"\"\nstatic var dirty := false\nstatic var revision := 1\nstatic var serial := 0\nstatic var files := {}\nstatic var saved_callback: Callable\nstatic var write_allowed: Callable\nstatic var pending_cloud := {}\nstatic var guest_directory := String()\nstatic func select_account(id: String) -> bool: user_id = id; return true\nstatic func select_guest() -> void: user_id = \"\"\nstatic func valid_payload(_value: Variant) -> bool: return true\nstatic func install(_value: Variant, version: int) -> bool: revision = version; dirty = false; return true\nstatic func persist() -> int: return OK\n")
 	var oauth_path := fixture("oauth", "extends Node\nsignal notice(message: String)\nsignal validated(session: Dictionary, user: Dictionary)\nvar cancelled := false\nfunc cancel() -> void: cancelled = true\nfunc begin(_provider: String) -> void: pass\nfunc request_json(_path: String, _data: Variant, _token: String = \"\") -> Dictionary: return {}\n")
 	var vault_path := fixture("vault", "extends Node\nvar clears := 0\nfunc clear_session() -> bool: clears += 1; return true\nfunc save_session(_id: String, _token: String) -> bool: return true\nfunc read_session() -> Dictionary: return {}\n")
 	var config_path := fixture("config", "extends RefCounted\nconst PROJECT_URL := \"https://fixture.invalid\"\nconst PUBLISHABLE_KEY := \"fixture-public-key\"\n")
@@ -56,9 +60,13 @@ func run() -> void:
 	cloud_source = cloud_source.replace(method(cloud_source, "request_rpc"), "func request_rpc(name: String, _data: Dictionary) -> Dictionary:\n\tcalls.append(name)\n\tif slow_reply: await get_tree().process_frame\n\treturn replies.pop_front() if not replies.is_empty() else {}\n\n")
 	cloud_source += "\nvar calls: Array[String] = []\nvar replies: Array[Dictionary] = []\nvar slow_reply := false\n"
 	var cloud_script := script(cloud_source, "complete cloud logic compiles")
-	var login_source := FileAccess.get_file_as_string("res://src/network/login_gateway.gd").replace("res://src/systems/account_save_scope.gd",scope_path).replace("res://src/network/windows_oauth.gd",oauth_path).replace("res://src/network/session_vault.gd",vault_path)
+	var guest_path := fixture("guest", "extends RefCounted\nstatic func ensure_available() -> bool: return true\nstatic func is_guest() -> bool: return false\nstatic func capture() -> Dictionary: return {}\nstatic func reset() -> bool: return true\nstatic func mark_consumed(_folder: String, _guest: String, _account: String) -> bool: return true\n")
+	var login_source := FileAccess.get_file_as_string("res://src/network/login_gateway.gd").replace("res://src/systems/account_save_scope.gd",scope_path).replace("res://src/network/windows_oauth.gd",oauth_path).replace("res://src/network/session_vault.gd",vault_path).replace("res://src/systems/guest_progress_store.gd",guest_path)
 	var login_script := script(login_source, "complete login logic compiles")
 	if failures > 0: quit(1); return
+	var transition := Transition.new()
+	transition.name = "SceneTransition"
+	root.add_child(transition)
 	var mode := TestMode.new()
 	mode.name = "LocalTestMode"
 	root.add_child(mode)
@@ -90,7 +98,7 @@ func run() -> void:
 	gateway.remember_session_enabled = false
 	var clears: int = gateway._vault.clears
 	check(await gateway.withdraw_account(), "successful withdrawal")
-	check(cloud.calls == ["save_game_snapshot", "request_account_withdrawal"], "save precedes withdrawal")
+	check(cloud.calls == ["cloud_sync", "request_account_withdrawal"], "save precedes withdrawal")
 	check(gateway.user_id.is_empty() and gateway.access_token.is_empty() and gateway._refresh_token.is_empty(), "memory session cleared")
 	check(gateway._vault.clears == clears+1, "vault cleared even when remember disabled")
 	check(not cloud.ready_for_play and cloud._timer.is_stopped() and scope.user_id.is_empty(), "cloud stopped and guest scope selected")
@@ -98,18 +106,18 @@ func run() -> void:
 	cloud.replies.assign([{}, {"active":false,"inactive":true,"delete_after":"fixture"}])
 	check(await gateway.withdraw_account() and gateway.user_id.is_empty(), "lost commit response resolved by server status")
 	set_account()
-	cloud.replies.assign([{"active":false,"inactive":true}])
+	cloud.replies.assign([{"inactive":true}])
 	check(not await cloud.initialize() and gateway.user_id.is_empty(), "inactive login cleared")
-	check(cloud.calls == ["account_lifecycle_status"], "inactive login never reads game save")
+	check(cloud.calls == ["cloud_sync"], "inactive login never reads game save")
 	set_account()
 	cloud.replies.assign([{}])
 	check(not await cloud.initialize() and cloud.calls.size() == 1, "unknown lifecycle fails closed")
 	set_account()
-	cloud.replies.assign([{"active":true,"inactive":false}, {"found":true,"revision":2,"payload":{}}])
+	cloud.replies.assign([{"ok":true}, {"found":true,"revision":2,"payload":{}}])
 	check(await cloud.initialize() and cloud.ready_for_play, "active login still loads normally")
 	set_account()
 	scope.dirty = true
-	cloud.replies.assign([{}, {"inactive":true}])
+	cloud.replies.assign([{"inactive":true}])
 	check(not await cloud.flush() and gateway.user_id.is_empty(), "another device withdrawal clears failed save session")
 	set_account()
 	cloud.slow_reply = true
@@ -152,8 +160,10 @@ func run() -> void:
 	var settings_source := FileAccess.get_file_as_string("res://src/ui/lobby_settings_view.gd")
 	var section := method(settings_source,"_build_account")
 	section = section.substr(section.find("\tvar withdrawal := Button.new()"))
+	# Guest-link UI has its own suite; avoid loading the full presentation tree.
+	section = section.replace('\tguest_account_view = preload("res://src/ui/guest_account_view.gd").new()\n\tguest_account_view.install(lobby, page)\n', "")
 	var skin_path := fixture("skin", "extends RefCounted\nstatic func apply(_node: Node) -> void: pass\n")
-	var settings_script := script("extends RefCounted\nconst SKIN = preload(\""+skin_path+"\")\nvar lobby: Control\nvar pages := {}\nvar withdrawal_button: Button\nvar withdrawal_dialog: ConfirmationDialog\nvar returns := 0\nfunc install(host: Control) -> void:\n\tlobby = host\n\tvar page := VBoxContainer.new()\n\thost.add_child(page)\n\tpages.account = page\n"+section+"\nfunc _sync_account() -> void:\n\twithdrawal_button.disabled = lobby.get_node(\"/root/LoginGateway\").withdrawal_busy\nfunc _return_to_login() -> void: returns += 1\n"+method(settings_source,"_confirm_withdrawal")+method(settings_source,"_withdraw_account"), "actual withdrawal UI section compiles")
+	var settings_script := script("extends RefCounted\nconst SKIN = preload(\""+skin_path+"\")\nvar lobby: Control\nvar pages := {}\nvar withdrawal_button: Button\nvar withdrawal_dialog: ConfirmationDialog\nvar returns := 0\nvar guest_account_view = null\nfunc install(host: Control) -> void:\n\tlobby = host\n\tvar page := VBoxContainer.new()\n\thost.add_child(page)\n\tpages.account = page\n"+section+"\nfunc _sync_account() -> void:\n\twithdrawal_button.disabled = lobby.get_node(\"/root/LoginGateway\").withdrawal_busy\nfunc _return_to_login() -> void: returns += 1\n"+method(settings_source,"_confirm_withdrawal")+method(settings_source,"_withdraw_account"), "actual withdrawal UI section compiles")
 	if failures == 0:
 		var host := Control.new()
 		root.add_child(host)
@@ -171,7 +181,7 @@ func run() -> void:
 		var connections: int = gateway.account_deactivated.get_connections().size()
 		host.free()
 		check(gateway.account_deactivated.get_connections().size() == connections-1, "modal navigation callback disconnected on scene exit")
-	gateway.free(); cloud.free(); mode.free()
+	gateway.free(); cloud.free(); mode.free(); transition.free()
 	for path in fixture_paths: DirAccess.remove_absolute(path)
 	await process_frame
 	print("ACCOUNT_WITHDRAWAL_AND_BANNER: %s (%d checks)" % ["PASS" if failures==0 else "FAIL",checks])

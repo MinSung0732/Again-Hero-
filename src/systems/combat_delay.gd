@@ -6,7 +6,7 @@ static func wait(owner: Node, seconds: float) -> void:
 		battle = battle.get_parent()
 	var tree := owner.get_tree()
 	if not is_instance_valid(battle) or not bool(battle.get("hero_player_mode")):
-		await tree.create_timer(seconds).timeout
+		await tree.create_timer(seconds, false).timeout
 		return
 	var owner_ref: WeakRef = weakref(owner)
 	var battle_ref: WeakRef = weakref(battle)

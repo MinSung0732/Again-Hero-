@@ -408,12 +408,17 @@ func _install_hero_lobby_view() -> void:
 		main_modes_view.perspective = "hero"
 		selected_stage_index = maxi(stage_ids.find(preload("res://src/systems/hero_mode_store.gd").selected_battle_stage()),0)
 
+func _on_cloud_account_notice(message: String) -> void:
+	if is_instance_valid(other_account_panel):
+		var guide := other_account_panel.get_node_or_null("Guide") as Label
+		if guide != null: guide.text = message
+
 func _setup_cloud_account() -> void:
 	var guide := other_account_panel.get_node("Guide") as Label
 	guide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	guide.text = "게스트 저장은 이 기기에만 보관됩니다." if LoginGateway.user_id.is_empty() else "계정 저장 · 변경 후 자동 동기화됩니다."
-	CloudStore.status_changed.connect(func(message: String): guide.text = message)
-	LoginGateway.login_unavailable.connect(func(message: String): guide.text = message)
+	CloudStore.status_changed.connect(_on_cloud_account_notice)
+	LoginGateway.login_unavailable.connect(_on_cloud_account_notice)
 	var sync := other_account_panel.get_node("KakaoLogin") as Button
 	sync.text = "클라우드 저장 동기화"
 	sync.disabled = LoginGateway.local_guest_active
@@ -423,7 +428,7 @@ func _setup_cloud_account() -> void:
 			get_tree().change_scene_to_file("res://src/startup/Startup.tscn")
 		else:
 			await CloudStore.flush()
-			sync.disabled = false
+			if is_instance_valid(sync): sync.disabled = false
 	)
 	var logout_button := other_account_panel.get_node("GoogleLogin") as Button
 	logout_button.text = "계정 로그인" if LoginGateway.local_guest_active else "로그아웃 / 계정 변경"
