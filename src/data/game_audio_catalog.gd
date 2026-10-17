@@ -2,6 +2,12 @@ extends RefCounted
 const ROOT := "res://assets/audio/sfx/interface/"
 const FRONTEND_BGM := "res://assets/audio/bgm/frontend_loop.ogg"
 const FRONTEND_DB := {"title": -3.0, "lobby": -3.0, "result": -8.0}
+# Initial dialogue mix; the BGM bus still owns the user's volume/mute setting.
+const DIALOGUE_BGM := {
+	"path": "res://assets/audio/bgm/talk_background.wav",
+	"db": -20.0,
+	"fade_out_seconds": 1.0,
+}
 const CONTEXT := preload("res://src/data/contextual_audio_catalog.gd")
 static func ui_cues() -> Dictionary:
 	var cues := CONTEXT.UI_CUES.duplicate(true)

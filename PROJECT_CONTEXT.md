@@ -1,3 +1,7 @@
+## 2026-10-17 — 대화 컷신 BGM
+
+- 용사·마왕 대화는 공용 StageIntroCutscene→GameAudio 기존 BGM 플레이어로 talk_background.wav 0초1회 재생, 페이지/곡 자연 종료 뒤 재시작 없음. 정상종료·스킵·트리 이탈1초 페이드, 이전 소유자의 종료가 다음 BGM에 영향 없음. 로비 복귀 시 기존 루프 복구. 경로/초기 -20dB/1초는 game_audio_catalog.DIALOGUE_BGM, 사용자 버스/정지 정책 유지. 초기값은 로비 -3dB보다17dB 낮으며 청감 조정은 실기 후속. 대사/연출/진행 불변. 실제 음원/컷신 headless51검사, 실기/청감 미검증. docs/DIALOGUE_BGM_20261017.md.
+
 ## 2026-10-17 — 계정 저장은 서버 기준·자동 재접속
 
 - 최신 정책: 계정 로그인은 서버 snapshot 자동 설치. 과거 로컬/서버 선택 정책보다 우선한다. 기존 로컬 최초/미전송 백업을 보존하고, 전송 중 요청은 atomic journal+operation UUID/receipt/CAS로 복구. 게스트·로컬 테스트·사운드/조작 설정은 기기 전용.

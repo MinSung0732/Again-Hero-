@@ -5,6 +5,8 @@ const MONSTERS := preload("res://src/data/monster_catalog.gd")
 var ui_bank: Node
 var battle_bank: Node
 var music: AudioStreamPlayer
+var frontend_stream: AudioStream
+var dialogue_stream: AudioStreamWAV
 var music_owner: WeakRef
 var battle_owner: WeakRef
 var music_mode := ""
@@ -31,6 +33,7 @@ func _ready() -> void:
 		if stream != null:
 			music.stream = stream.duplicate()
 			music.stream.loop = true
+			frontend_stream = music.stream
 	get_tree().node_added.connect(_watch_button)
 
 func _watch_button(node: Node) -> void:
@@ -64,6 +67,10 @@ func feedback(cue: String) -> void:
 		ui_bank.play_cue(cue)
 
 func enter_frontend(owner: Node, mode: String) -> void:
+	if music.stream != frontend_stream:
+		_cancel_music_fade()
+		music.stop()
+		music.stream = frontend_stream
 	music_owner = weakref(owner)
 	music_mode = mode
 	if music.stream == null:
@@ -73,11 +80,46 @@ func enter_frontend(owner: Node, mode: String) -> void:
 		music.play()
 	_fade_music(float(DATA.FRONTEND_DB.get(mode, -3.0)), false)
 
-func _fade_music(db: float, stop_when_finished: bool) -> void:
+func _cancel_music_fade() -> void:
 	if is_instance_valid(fade):
 		fade.kill()
+		fade = null
+
+func play_dialogue_bgm(owner: Node) -> void:
+	# Ownership lasts until the cutscene ends, even if the one-shot song ends.
+	# Repeated calls/pages must never restart an already owned dialogue track.
+	if music_mode == "dialogue" and music_owner != null and music_owner.get_ref() == owner:
+		return
+	if dialogue_stream == null:
+		var path := String(DATA.DIALOGUE_BGM.path)
+		if not ResourceLoader.exists(path):
+			return
+		var source := load(path) as AudioStreamWAV
+		if source == null:
+			return
+		dialogue_stream = source.duplicate()
+		dialogue_stream.loop_mode = AudioStreamWAV.LOOP_DISABLED
+	_cancel_music_fade()
+	music.stop()
+	music.stream = dialogue_stream
+	music_owner = weakref(owner)
+	music_mode = "dialogue"
+	music.volume_db = float(DATA.DIALOGUE_BGM.db)
+	music.stream_paused = backgrounded or get_tree().paused
+	music.play(0.0)
+
+func stop_dialogue_bgm(owner: Node) -> void:
+	# A removed old cutscene cannot fade a new scene's music.
+	if music_mode != "dialogue" or music_owner == null or music_owner.get_ref() != owner:
+		return
+	music_owner = null
+	music_mode = ""
+	_fade_music(-80.0, true, float(DATA.DIALOGUE_BGM.fade_out_seconds))
+
+func _fade_music(db: float, stop_when_finished: bool, seconds: float = 0.45) -> void:
+	_cancel_music_fade()
 	fade = create_tween().set_ignore_time_scale(true)
-	fade.tween_property(music, "volume_db", db, 0.45)
+	fade.tween_property(music, "volume_db", db, seconds)
 	if stop_when_finished:
 		fade.tween_callback(music.stop)
 
@@ -148,7 +190,12 @@ func _process(_delta: float) -> void:
 	if is_instance_valid(music):
 		music.stream_paused = backgrounded or get_tree().paused
 		if music_owner != null and not is_instance_valid(music_owner.get_ref()):
-			stop_frontend()
+			if music_mode == "dialogue":
+				music_owner = null
+				music_mode = ""
+				_fade_music(-80.0, true, float(DATA.DIALOGUE_BGM.fade_out_seconds))
+			else:
+				stop_frontend()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED:
