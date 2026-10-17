@@ -6,6 +6,7 @@ const SCENES := {
 	"meteor":[preload("res://src/hero/SageStarlightMeteor.tscn"),"sage_starlight_meteor",8],
 	"singularity":[preload("res://src/hero/SageAnnihilationPoint.tscn"),"sage_annihilation_point",2],
 }
+const SUMMONER := preload("res://src/hero/hero_summoner_runtime.gd")
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const FIT := preload("res://src/ui/hero_weapon_visual_fit.gd")
 var hero
@@ -83,7 +84,7 @@ func summon_capacity() -> int:
 	var kinds := 0
 	for id in hero.player_weapons.weapon_ids:
 		if String(WEAPONS.WEAPONS[id].pattern) == "summon": kinds += 1
-	return maxi(WEAPONS.SUMMON_LIMIT,kinds)
+	return SUMMONER.get_slot_capacity(maxi(int(hero.summoner_slot_base),kinds),int(hero.summoner_slot_bonus),int(hero.level))
 
 func _active_kind(kind: String) -> int:
 	return int(hero.get("summoner_active_"+kind+"s"))
