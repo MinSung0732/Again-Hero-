@@ -13,6 +13,36 @@ var last_cast_succeeded := false
 var authority
 var summon_configs: Dictionary = {}
 var actors_by_pattern: Dictionary = {}
+const SUMMON_LIVE_FIELDS := ["attack_range","attack_cooldown","move_speed","sense_range","hits_per_attack","hit_interval","second_hit_bonus_ratio","high_hp_damage_bonus","elite_move_speed_bonus","projectile_speed","consecutive_damage_bonus_per_step","focus_damage_bonus","focus_attack_speed_bonus"]
+
+func _prepare_summon(data: Dictionary, damage: int) -> Dictionary:
+	var kind := String(data.summon_kind)
+	var config: Dictionary = data.get("summon_config",summon_configs[kind])
+	config["damage_ratio"] = float(damage)*WEAPONS.SUMMON_DAMAGE_RATIO/maxf(hero.attack_damage,1)
+	config["duration"] = float(data.get("summon_duration",14.0))
+	config["max_hp"] = roundi(hero.max_hp*float(data.get("summon_hp_ratio",WEAPONS.SUMMON_HP_RATIO)))
+	return config
+
+func refresh_summons(data: Dictionary, damage: int) -> void:
+	# Upgrade events only; bounded owned pools, no reactivation or entity-life reset.
+	var kind := String(data.get("summon_kind",""))
+	if not summon_configs.has(kind): return
+	var config := _prepare_summon(data,damage)
+	for actor in hero.get("summoner_"+kind+"_pool"):
+		if not is_instance_valid(actor) or not actor.active or actor.dying or actor.is_queued_for_deletion() or actor.owner_hero != hero: continue
+		if float(actor.duration_remaining) <= 0.0 or (actor.get("current_hp") != null and int(actor.current_hp) <= 0): continue
+		var elapsed := maxf(0.0,float(actor.duration_total)-float(actor.duration_remaining))
+		actor.duration_total = float(config.duration)
+		actor.duration_remaining = maxf(0.0,float(config.duration)-elapsed)
+		if actor.get("max_hp") != null:
+			var health_ratio := float(actor.current_hp)/maxf(float(actor.max_hp),1.0)
+			actor.max_hp = maxi(1,int(config.max_hp))
+			actor.current_hp = maxi(1,roundi(actor.max_hp*health_ratio))
+		actor.attack_damage = maxi(1,roundi(hero.attack_damage*float(config.damage_ratio)))
+		if actor.get("owner_attack_damage") != null: actor.owner_attack_damage = hero.attack_damage
+		for field in SUMMON_LIVE_FIELDS:
+			if config.has(field) and actor.get(field) != null: actor.set(field,config[field])
+		actor.queue_redraw()
 func install(host) -> void:
 	hero = host; authority = hero.get_parent()
 	if not hero.has_method("_acquire_projectile") or not is_instance_valid(authority) or not authority.has_method("recycle_projectile"): return
@@ -53,10 +83,7 @@ func cast(data: Dictionary, origin: Vector2, direction: Vector2, target: Node2D,
 		var kind := String(data.summon_kind)
 		if not summon_configs.has(kind): return true
 		# Cached on upgrade. Actors snapshot scalars in setup; no per-cast deep copy.
-		var config: Dictionary = data.get("summon_config",summon_configs[kind])
-		config["damage_ratio"] = float(damage)*WEAPONS.SUMMON_DAMAGE_RATIO/maxf(hero.attack_damage,1)
-		config["duration"] = float(data.get("summon_duration",14.0))
-		config["max_hp"] = roundi(hero.max_hp*float(data.get("summon_hp_ratio",WEAPONS.SUMMON_HP_RATIO)))
+		var config := _prepare_summon(data,damage)
 		hero.set("summoner_"+kind+"_config",config)
 		hero.set("summoner_"+kind+"_cooldown",0.0)
 		last_cast_succeeded = bool(hero.call("_try_cast_summoner_"+kind))

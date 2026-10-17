@@ -137,6 +137,7 @@ func add(id: String) -> bool:
 		levels[id] = int(levels.get(id,0))+1
 		resolved.erase(id)
 		hero.build_counts[id] = levels[id]
+		for weapon in weapon_ids: _refresh_owned_summons(weapon)
 		return true
 	if not DATA.PASSIVES.has(id) or not DATA.passive_allowed(id,String(hero.hero_id),weapon_ids): return false
 	if bool(DATA.PASSIVES[id].get("one_shot",false)):
@@ -168,7 +169,14 @@ func add(id: String) -> bool:
 		"magnet": hero.exp_pickup_radius = base_pickup_radius*(1.0+bonus)
 		"learning": hero.exp_gain_multiplier = base_exp_multiplier*(1.0+bonus)
 	resolved.clear()
+	for weapon in weapon_ids: _refresh_owned_summons(weapon)
 	return true
+
+func _refresh_owned_summons(id: String) -> void:
+	if native_skills == null or String(DATA.WEAPONS[id].pattern) != "summon": return
+	if not native_skills.summon_configs.has(String(DATA.WEAPONS[id].summon_kind)): return
+	var data := stats_for(id)
+	native_skills.refresh_summons(data,_cast_damage(id,data))
 
 func candidates(previous_ids: Array = []) -> Array:
 	var options: Array = []
@@ -245,6 +253,7 @@ func apply_chest(receipt: Dictionary) -> bool:
 		if int(levels.get(id,0)) != DATA.MAX_LEVEL or evolved.has(id): return false
 		evolved[id] = true
 		resolved.erase(id)
+		_refresh_owned_summons(id)
 		cooldowns[id] = 0.0 # MAX is ready immediately after the chest closes.
 		awakening_flash = 1.6
 		hero.queue_redraw()
@@ -366,6 +375,13 @@ func stats_for(id: String) -> Dictionary:
 	resolved[id] = stats
 	return stats
 
+func _cast_damage(id: String, data: Dictionary) -> int:
+	var base_damage: float = identity.attack_damage() if identity != null else float(hero.attack_damage)
+	var damage: int = maxi(1,roundi(base_damage*float(data.power)*power*float(data.damage_scale)))
+	damage = maxi(1,roundi(damage*(1.0+float(data.get("low_hp_bonus",0.0))*(1.0-float(hero.current_hp)/maxf(hero.max_hp,1)))))
+	if identity != null: damage = identity.modify_damage(id,damage)
+	return damage
+
 func _cast(id: String) -> void:
 	var data := stats_for(id)
 	var rank := int(levels[id])
@@ -374,10 +390,7 @@ func _cast(id: String) -> void:
 	if identity != null: identity.prepare_cast(id)
 	var origin: Vector2 = kit.origin(data,hero.global_position) if kit != null else hero.global_position
 	var reach: float = GEOMETRY.reach(data,rank,awakened)
-	var base_damage: float = identity.attack_damage() if identity != null else float(hero.attack_damage)
-	var damage: int = maxi(1,roundi(base_damage*float(data.power)*power*float(data.damage_scale)))
-	damage = maxi(1,roundi(damage*(1.0+float(data.get("low_hp_bonus",0.0))*(1.0-float(hero.current_hp)/maxf(hero.max_hp,1)))))
-	if identity != null: damage = identity.modify_damage(id,damage)
+	var damage := _cast_damage(id,data)
 	var hits := int(data.get("base_hits",1))+int(data.get("bonus_hits",0))
 	var pattern := String(data.pattern)
 	var color := Color(String(data.color))

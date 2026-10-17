@@ -4,6 +4,7 @@ extends RefCounted
 const AWAKENING := preload("res://src/data/hero_weapon_awakening_catalog.gd")
 const BALANCE := preload("res://src/data/hero_weapon_balance_catalog.gd")
 const EVOLUTION := preload("res://src/data/hero_weapon_evolution_catalog.gd")
+const SUMMON_GROWTH := preload("res://src/data/hero_summon_growth_catalog.gd")
 const PROFILES := {
 	"ranged_rookie_arcane_bolt": ["유성우 마도포", {"bonus_hits":1}, {"splash_radius":65.0,"splash_ratio":0.3}, {"bonus_hits":2}, {"bonus_hits":4,"splash_radius":110.0,"splash_ratio":0.65}, ["마력탄 2발", "적중 시 작은 폭발 30%", "마력탄 3발", "마력탄 5발 · 적중 폭발 65%/반경110"]],
 	"ranged_rookie_star_wand": ["은하 연결 지팡이", {"bonus_hits":1}, {"chain_growth":0.12}, {"bonus_hits":3,"chain_radius":250.0}, {"bonus_hits":6,"chain_growth":0.22,"chain_radius":330.0}, ["연결 대상 +1", "후속 연결마다 피해 +12%", "연결 대상 +3 · 연결거리250", "최대9대상 · 연결마다 +22% · 연결거리330"]],
@@ -47,11 +48,11 @@ const PROFILES := {
 	"chemical_hero_reaction_bomb": ["성공한 종말 실험", {"field_duration":3.0}, {"slow_multiplier":0.7,"slow_duration":0.8}, {"field_interval":0.3}, {"field_duration":4.0,"field_interval":0.2,"field_radius_ratio":0.7,"lifesteal":0.025}, ["가스 지속3초", "가스 30% 둔화", "반응 간격0.3초", "4초 이동 가스 · 간격0.2초 · 흡혈2.5%"]],
 	"chemical_hero_acid_cannon": ["삼중 왕수 분사포", {"fan_lines":2}, {"slow_multiplier":0.7,"slow_duration":1.3}, {"fan_lines":3}, {"fan_lines":5,"pulse_count":1,"pulse_pattern":"beam","pulse_ratio":0.8,"pulse_radius_ratio":1.0}, ["산성포2방향", "적중 30% 둔화", "산성포3방향", "왕수5방향 · 80% 잔류 직선 타격"]],
 	"chemical_hero_life_elixir": ["불사의 현자 비약", {"cleanse":true}, {"cast_shield":0.04}, {"pulse_count":1,"pulse_ratio":0.4}, {"heal_ratio":0.065,"cast_shield":0.08,"pulse_count":2,"pulse_ratio":0.75}, ["복용 시 상태이상 정화", "복용 보호막4%", "40% 연금 파동", "회복 기본6.5% · 보호막8% · 75% 파동2회"]],
-	"summoner_hero_gate_hound": ["지옥문 사냥개", {"summon_patch":{"hits_per_attack":3}}, {"summon_patch":{"move_speed":360.0}}, {"summon_duration":18.0,"summon_patch":{"second_hit_bonus_ratio":0.3}}, {"summon_duration":22.0,"summon_patch":{"hits_per_attack":4,"hit_interval":0.1,"second_hit_bonus_ratio":0.6}}, ["투견 연격3타", "투견 이동속도360", "소환18초 · 후속타 +30%", "투견4연격 · 후속타 +60% · 소환22초"]],
-	"summoner_hero_watcher": ["차원 감시 군주", {"summon_patch":{"attack_cooldown":0.28}}, {"summon_patch":{"projectile_speed":1100.0}}, {"summon_duration":18.0,"summon_patch":{"focus_damage_bonus":0.3}}, {"summon_duration":22.0,"summon_patch":{"attack_cooldown":0.2,"focus_damage_bonus":0.6,"focus_attack_speed_bonus":0.35}}, ["감시자 사격간격0.28초", "감시탄 속도1100", "소환18초 · 집중피해 +30%", "사격0.2초 · 집중피해 +60%/공속 +35% · 22초"]],
-	"summoner_hero_scout": ["차원 선봉대장", {"summon_patch":{"move_speed":300.0}}, {"summon_patch":{"attack_cooldown":0.5}}, {"summon_duration":18.0,"summon_patch":{"attack_range":190.0}}, {"summon_duration":22.0,"summon_patch":{"move_speed":380.0,"attack_cooldown":0.32,"attack_range":240.0},"summon_hp_ratio":0.5}, ["정찰병 이동속도300", "공격간격0.5초", "소환18초 · 근접거리190", "돌격속도380/공격0.32초 · HP50% · 소환22초"]],
+	"summoner_hero_gate_hound": ["지옥문 사냥개", {"summon_patch":{"hits_per_attack":3}}, {"summon_patch":{"move_speed":360.0}}, {"summon_patch":{"second_hit_bonus_ratio":0.3}}, {"summon_patch":{"hits_per_attack":4,"hit_interval":0.1,"second_hit_bonus_ratio":0.6}}, ["투견 연격3타", "투견 이동속도360", "소환32초 · 후속타 +30%", "투견4연격 · 후속타 +60% · 소환40초"]],
+	"summoner_hero_watcher": ["차원 감시 군주", {"summon_patch":{"attack_cooldown":0.28}}, {"summon_patch":{"projectile_speed":1100.0}}, {"summon_patch":{"focus_damage_bonus":0.3}}, {"summon_patch":{"attack_cooldown":0.2,"focus_damage_bonus":0.6,"focus_attack_speed_bonus":0.35}}, ["감시자 사격간격0.28초", "감시탄 속도1100", "소환32초 · 집중피해 +30%", "사격0.2초 · 집중피해 +60%/공속 +35% · 40초"]],
+	"summoner_hero_scout": ["차원 선봉대장", {"summon_patch":{"move_speed":300.0}}, {"summon_patch":{"attack_cooldown":0.5}}, {"summon_patch":{"attack_range":190.0}}, {"summon_patch":{"move_speed":380.0,"attack_cooldown":0.32,"attack_range":240.0}}, ["정찰병 이동속도300", "공격간격0.5초", "소환32초 · 근접거리190", "돌격속도380/공격0.32초 · HP200% · 소환40초"]],
 	"summoner_hero_gate_laser": ["오중 차원 절단문", {"fan_lines":2}, {"pulse_count":1,"pulse_pattern":"beam","pulse_ratio":0.4,"pulse_radius_ratio":1.0}, {"fan_lines":3}, {"fan_lines":5,"pulse_count":2,"pulse_ratio":0.7}, ["차원 광선2방향", "40% 잔광 재타격", "차원 광선3방향", "차원 광선5방향 · 70% 잔광2회"]],
-	"summoner_hero_gatekeeper": ["심연의 문지기", {"summon_patch":{"consecutive_damage_bonus_per_step":0.15}}, {"summon_patch":{"projectile_speed":800.0}}, {"summon_duration":18.0,"summon_patch":{"attack_cooldown":1.2}}, {"summon_duration":22.0,"summon_patch":{"consecutive_damage_bonus_per_step":0.3,"attack_cooldown":0.8},"summon_hp_ratio":0.6}, ["연속 타격 단계당 +15%", "문지기탄 속도800", "소환18초 · 사격1.2초", "연속 단계 +30% · 사격0.8초 · HP60%/22초"]],
+	"summoner_hero_gatekeeper": ["심연의 문지기", {"summon_patch":{"consecutive_damage_bonus_per_step":0.15}}, {"summon_patch":{"projectile_speed":800.0}}, {"summon_patch":{"attack_cooldown":1.2}}, {"summon_patch":{"consecutive_damage_bonus_per_step":0.3,"attack_cooldown":0.8}}, ["연속 타격 단계당 +15%", "문지기탄 속도800", "소환32초 · 사격1.2초", "연속 단계 +30% · 사격0.8초 · HP150%/40초"]],
 	"summoner_hero_rift_pulse": ["심연 균열 연쇄", {"pulse_count":1,"pulse_ratio":0.4}, {"slow_multiplier":0.65,"slow_duration":1.5}, {"pulse_count":2}, {"pulse_count":3,"pulse_ratio":0.8,"pulse_radius_ratio":1.0,"cast_shield":0.04}, ["40% 균열 여진", "35% 균열 둔화", "여진2회", "80% 균열 여진3회 · 보호막4%"]],
 	"purifier_hero_holy_bolt": ["천벌의 성광포", {"bonus_hits":1}, {"splash_radius":75.0,"splash_ratio":0.35}, {"bonus_hits":2}, {"bonus_hits":4,"splash_radius":125.0,"splash_ratio":0.7,"lifesteal":0.025}, ["성광탄2발", "성광 폭발35%/반경75", "성광탄3발", "성광탄5발 · 폭발70%/반경125 · 흡혈2.5%"]],
 	"purifier_hero_holy_lance": ["천공의 궁그닐", {"fan_lines":2}, {"pulse_count":1,"pulse_pattern":"beam","pulse_ratio":0.45,"pulse_radius_ratio":1.0}, {"fan_lines":3}, {"fan_lines":5,"pulse_count":2,"pulse_ratio":0.75,"execute_ratio":0.12}, ["궁그닐2방향", "45% 성창 잔광", "궁그닐3방향", "궁그닐5방향 · 75% 잔광2회 · HP12% 마무리"]],
@@ -124,6 +125,7 @@ static func resolve(id: String, source: Dictionary, rank: int, awakened: bool) -
 		result["max_mechanic"] = EVOLUTION.design(id)
 		AWAKENING.apply(id,result)
 		result["weapon_id"] = id
+	SUMMON_GROWTH.apply(result,rank,awakened)
 	return result
 
 static func _merge(result: Dictionary, patch: Dictionary) -> void:
@@ -140,9 +142,13 @@ static func evolution_description(id: String) -> String:
 	if int(AWAKENING.PROFILES[id].patch.get("awakening_mark_hits",3)) == 2: detail = detail.replace("3회 적중","2회 적중")
 	return "Lv.11 MAX · "+AWAKENING.description(id)+"\n"+detail+"\n기본 피해 +60% · 진화 사거리 +30%"
 static func upgrade_description(id: String, rank: int) -> String:
-	return "무기 성장 · Lv.%d\n" % rank+BALANCE.description(id)
+	var text := "무기 성장 · Lv.%d\n" % rank+BALANCE.description(id)
+	var details := SUMMON_GROWTH.description(id,rank)
+	return text+("\n"+details if not details.is_empty() else "")
 static func description(id: String, rank: int, awakened: bool = false) -> String:
 	if not PROFILES.has(id): return ""
 	var text := BALANCE.description(id)
+	var details := SUMMON_GROWTH.description(id,rank,awakened)
+	if not details.is_empty(): text += "\n"+details
 	if awakened: return text+"\n"+evolution_name(id)+"\n"+evolution_description(id)
 	return text+"\nLv.10 + 상자 → "+evolution_name(id)+"\nMAX: "+evolution_description(id)

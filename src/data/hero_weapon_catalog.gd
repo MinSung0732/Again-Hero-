@@ -2545,7 +2545,7 @@ static func description(id: String, next_level: int) -> String:
 			"projectile_power": return "투사체 무기 피해 보너스 +8%%\n총 +%.0f%%" % total
 			"reach": return "무기 사거리 보너스 +5%%\n총 +%.0f%%" % total
 			"area": return "범위 공격의 반경·폭 +5%%\n총 +%.0f%%" % total
-			"duration": return "장판·소환·보호막 지속 +5%%\n총 +%.0f%%" % total
+			"duration": return "장판·소환·보호막 지속 +%.0f%%\n총 +%.0f%%" % [gain,total]
 			"vitality": return "시작 최대 HP의 %.0f%%만큼 최대 체력 증가\n증가한 체력만큼 즉시 회복" % gain
 			"armor": return "받는 피해 감소 +%.0f%%p\n총 피해 감소 %.0f%%" % [gain,minf(total,30.0)]
 			"projectile": return "발사체 속도 보너스 +%.0f%%\n총 +%.0f%% · 즉시 타격·장판 제외" % [gain,total]
@@ -2555,6 +2555,7 @@ static func description(id: String, next_level: int) -> String:
 	if rank == 1:
 		var patterns := {"bolt":"단일 집중 투사체 · 다른 적이 없어도 성장 발수 모두 발사", "burst":"시간차 집중 연사 · 탄약과 재장전 적용", "combo":"근접 연격 · 사거리 밖에서는 적중하지 않음", "slash":"정면 부채꼴 타격 · 후방은 적중하지 않음", "beam":"정면 관통 직선 · 겹친 광선은 중복 피해 없음", "chain":"제한된 적에게 연쇄 · 후속 피해 증가는 최대50%", "poison":"고정 지속 지대 · 틱/개수에 총 피해를 나누어 적용", "nova":"주변 광역 파동 · 낮은 빈도 대신 다수 대응", "frost":"주변 냉기 제어 · 낮은 피해와 둔화", "orbit":"궤도 개체 접촉 시 피해 · 중심과 빈틈은 안전", "guard":"주기적 보호막 · 직접 화력보다 생존 지원", "heal":"주기적 회복 · 직접 화력보다 생존 지원"}
 		var details := String(patterns.get(String(data.pattern),data.effect))
+		if String(data.pattern) == "summon": details += "\n"+GROWTH.SUMMON_GROWTH.description(id,rank)
 		var delivery_text := DELIVERY.description(id,data)
 		if not delivery_text.is_empty(): details = delivery_text
 		var flight_text := ATTACKS.description(id)
@@ -2584,6 +2585,12 @@ static func description(id: String, next_level: int) -> String:
 	elif String(data.pattern) == "heal":
 		var heal_gain := (float(after.get("heal_ratio",0.015))-float(before.get("heal_ratio",0.015))+0.002)*100.0
 		summary += "\n회복량 +최대 HP의 %.1f%%" % heal_gain
+	elif String(data.pattern) == "summon":
+		summary += "\n소환 유지 %.0f → %.0f초" % [float(before.summon_duration),float(after.summon_duration)]
+		if bool(after.get("summon_invulnerable",false)):
+			summary += "\n감시자는 무적 · 시간 만료 시 귀환"
+		else:
+			summary += "\n소환수 HP 용사 최대 HP의 %.0f%% → %.0f%%" % [float(before.summon_hp_ratio)*100.0,float(after.summon_hp_ratio)*100.0]
 	summary += "\n"+GROWTH.BALANCE.description(id)
 	return summary
 static func profile_for_survival(source: Dictionary) -> Dictionary:

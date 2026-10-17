@@ -451,31 +451,31 @@ const PROFILES := {
   },
   "summoner_hero_gate_hound": {
     "name": "심연개방 · 군단강습",
-    "description": "활성 소환수 전원이 3연속 차원 협공 · 소환 지속28초·용사HP65%의 내구",
+    "description": "활성 소환수 전원이 3연속 차원 협공 · 소환 유지40초·용사HP170%의 내구",
     "patch": {
       "awakening_command_rounds": 3,
-      "summon_duration": 28.0,
-      "summon_hp_ratio": 0.65
+      "summon_duration": 40.0,
+      "summon_hp_ratio": 1.7
     },
     "role": "assault"
   },
   "summoner_hero_watcher": {
     "name": "심연 개방 · 이계의 문 - 감시자",
-    "description": "활성 소환수 전원이 3연속 차원 협공 · 소환 지속28초·용사HP65%의 내구",
+    "description": "활성 소환수 전원이 3연속 차원 협공 · 소환 유지40초·감시자는 무적",
     "patch": {
       "awakening_command_rounds": 3,
-      "summon_duration": 28.0,
-      "summon_hp_ratio": 0.65
+      "summon_duration": 40.0,
+      "summon_hp_ratio": 0.0
     },
     "role": "assault"
   },
   "summoner_hero_scout": {
     "name": "심연 개방 · 이계의 문 - 정찰병",
-    "description": "활성 소환수 전원이 3연속 차원 협공 · 소환 지속28초·용사HP65%의 내구",
+    "description": "활성 소환수 전원이 3연속 차원 협공 · 소환 유지40초·용사HP200%의 내구",
     "patch": {
       "awakening_command_rounds": 3,
-      "summon_duration": 28.0,
-      "summon_hp_ratio": 0.65
+      "summon_duration": 40.0,
+      "summon_hp_ratio": 2.0
     },
     "role": "assault"
   },
@@ -491,11 +491,11 @@ const PROFILES := {
   },
   "summoner_hero_gatekeeper": {
     "name": "심연 개방 · 이계의 문 - 문지기",
-    "description": "활성 소환수 전원이 3연속 차원 협공 · 소환 지속28초·용사HP65%의 내구",
+    "description": "활성 소환수 전원이 3연속 차원 협공 · 소환 유지40초·용사HP150%의 내구",
     "patch": {
       "awakening_command_rounds": 3,
-      "summon_duration": 28.0,
-      "summon_hp_ratio": 0.65
+      "summon_duration": 40.0,
+      "summon_hp_ratio": 1.5
     },
     "role": "assault"
   },

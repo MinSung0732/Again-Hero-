@@ -26,7 +26,7 @@ func run() -> void:
 	check(not runtime.add("survival_multishot"),"no projectile weapon blocks count")
 	check(runtime.add("swift_hunter_throwing_knife"),"melee obtains projectile weapon")
 	check(runtime.add("survival_multishot") and runtime.add("survival_multishot") and not runtime.add("survival_multishot"),"additional projectiles capped at two")
-	check(int(runtime.stats_for("swift_hunter_throwing_knife").bonus_hits) == 2,"actual projectile stats increment")
+	check(int(runtime.stats_for("swift_hunter_throwing_knife").extra_projectiles) == 2,"actual additional projectile stats increment")
 	check(runtime.add("survival_siphon"),"lifesteal equipped")
 	var target := FIXTURE.Target.new(); arena.add_child(target); target.current_hp = 1000
 	hero.current_hp = 500
@@ -37,7 +37,7 @@ func run() -> void:
 	check(hero.current_hp == before,"overkill is not healing income")
 	HIT.hit(hero,100,"ranged",hero)
 	check(hero.current_hp == before-100,"self-reflected damage never grants lifesteal")
-	check(runtime.add("survival_slow_resist") and is_equal_approx(hero.status_resistances.slow,0.14),"resistance preserves base and adds four percent")
+	check(runtime.add("survival_slow_resist") and is_equal_approx(hero.status_resistances.slow,0.15),"resistance preserves base and adds five percent")
 	check(runtime.add("survival_area"),"area equipped")
 	check(float(runtime.stats_for("swift_hunter_dagger").area_scale) > 1,"actual area stat")
 	check(GEO.contains("beam",Vector2(100,60),Vector2.RIGHT,300,1,{"area_scale":1.5}) and not GEO.contains("beam",Vector2(100,60),Vector2.RIGHT,300,1,{}),"area width matches hit geometry")
@@ -47,7 +47,7 @@ func run() -> void:
 	check(runtime.add("survival_power") and runtime.passives.size() == 6,"six-slot limit maintained")
 	check(not runtime.add("survival_armor"),"seventh persistent passive rejected")
 	var slots := runtime.passives.size(); hero.current_hp = 100
-	check(runtime.add("survival_recovery") and hero.current_hp == 350 and runtime.passives.size() == slots,"instant recovery uses no slot")
+	check(runtime.add("survival_recovery") and hero.current_hp == 400 and runtime.passives.size() == slots,"thirty percent instant recovery uses no slot")
 	hero.current_hp = hero.max_hp; check(not runtime.add("survival_recovery"),"full health recovery rejected")
 	for iteration in 30:
 		for card in runtime.candidates(): check(card.id not in ["survival_projectile","survival_reach","survival_projectile_power","survival_recovery"],"ineligible candidates omitted")
@@ -60,7 +60,7 @@ func run() -> void:
 	other.native_skills = NativeSkills.new()
 	other.levels["summoner_hero_watcher"] = 1
 	var summon := other.stats_for("summoner_hero_watcher")
-	check(is_equal_approx(summon.summon_config.attack_range,728.0),"summon range snapshot scaled")
+	check(is_equal_approx(summon.summon_config.attack_range,735.0),"summon range snapshot scaled")
 	check(summon.summon_config.survival_overrides.attack_range == summon.summon_config.attack_range,"summon spawn override retains range")
 	check(float(summon.power) > float(DATA.WEAPONS.summoner_hero_watcher.power),"ranged summon projectile damage boosted")
 	print("HERO_EXTRA_PASSIVES checks=",checks," failures=",failures)
