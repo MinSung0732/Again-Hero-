@@ -218,7 +218,8 @@ const DEFINITIONS := {
     "behavior": {
       "projectile": true,
       "projectile_speed": 310.0,
-      "color": "ff8844"
+      "color": "ff8844",
+      "projectile_art": "imp"
     },
     "normal_visual": {
       "mode": "frames",
@@ -907,7 +908,8 @@ const DEFINITIONS := {
       "projectile_speed": 245.0,
       "color": "b875ef",
       "slow_multiplier": 0.85,
-      "slow_duration": 1.0
+      "slow_duration": 1.0,
+      "projectile_art": "satyr_shaman"
     },
     "normal_visual": {
       "mode": "frames",
@@ -1559,7 +1561,8 @@ const DEFINITIONS := {
     "behavior": {
       "projectile": true,
       "third_bonus": 0.5,
-      "color": "a4be57"
+      "color": "a4be57",
+      "projectile_art": "thorn_hedgehog"
     },
     "hero_survival_after": 300.0,
     "ground_shadow": {
@@ -1724,7 +1727,8 @@ const DEFINITIONS := {
       "projectile": true,
       "slow_multiplier": 0.8,
       "slow_duration": 1.0,
-      "color": "dba598"
+      "color": "dba598",
+      "projectile_art": "spore_mushroom"
     },
     "hero_survival_after": 300.0,
     "ground_shadow": {
@@ -2692,7 +2696,8 @@ const DEFINITIONS := {
       "projectile": true,
       "burn_ratio": 0.3,
       "burn_duration": 2.0,
-      "color": "f6ae45"
+      "color": "f6ae45",
+      "projectile_art": "lantern_wisp"
     },
     "hero_survival_after": 420.0,
     "ground_shadow": {
@@ -3022,7 +3027,8 @@ const DEFINITIONS := {
       "ward_radius": 200.0,
       "ward_ratio": 0.06,
       "ward_count": 3,
-      "color": "9acb7b"
+      "color": "9acb7b",
+      "projectile_art": "moss_deer"
     },
     "hero_survival_after": 420.0,
     "ground_shadow": {
@@ -3376,7 +3382,8 @@ const DEFINITIONS := {
       "projectile": true,
       "color": "f58d51",
       "burn_ratio": 0.25,
-      "burn_duration": 2.0
+      "burn_duration": 2.0,
+      "projectile_art": "ember_salamander"
     },
     "normal_visual": {
       "mode": "frames",
@@ -3556,7 +3563,8 @@ const DEFINITIONS := {
       "projectile": true,
       "color": "a4e5ef",
       "slow_multiplier": 0.82,
-      "slow_duration": 1.0
+      "slow_duration": 1.0,
+      "projectile_art": "frost_owl"
     },
     "normal_visual": {
       "mode": "frames",
@@ -4262,7 +4270,8 @@ const DEFINITIONS := {
       "projectile": true,
       "color": "b0d96c",
       "poison_ratio": 0.002,
-      "poison_duration": 3.0
+      "poison_duration": 3.0,
+      "projectile_art": "venom_scorpion"
     },
     "normal_visual": {
       "mode": "frames",
@@ -4441,7 +4450,8 @@ const DEFINITIONS := {
       "ward_every": 3,
       "ward_radius": 240.0,
       "ward_ratio": 0.08,
-      "ward_count": 3
+      "ward_count": 3,
+      "projectile_art": "moon_moth"
     },
     "normal_visual": {
       "mode": "frames",

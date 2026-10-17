@@ -1,3 +1,8 @@
+## 2026-10-17 — 신규 원거리10종 전용 투사체
+
+- Frontier의 원거리10종은 behavior.projectile_art → frontier_projectile_art_catalog.gd → 기존 풀 FrontierBolt의4프레임 비행PNG(12fps/nearest)를 사용한다. 일반/엘리트 공통, 기존 전투 수치·판정·상태·풀 수명 유지. assets/art/projectiles/frontier/<id>에 원본/시트/개별프레임·manifest 보존. 정리 과정은 원본RGB1:1·alpha128 경계 정리·정수 코어정렬이며 축소/보간 없음.
+- 신규215+기존3796실행/PNG300검사 및 source-PNG 없는 PCK40신규프레임 로드 통과. 실제Android/GPU/FPS 미검증. 상세 docs/FRONTIER_PROJECTILE_ART_20261017.md / 생성프롬프트 FRONTIER_PROJECTILE_ART_SOURCES_20261017.json.
+
 ## 2026-10-17 — 용사 모드 이계 소환수 매레벨 유지력·기존 개체 강화
 
 - 소환4무기 Lv1(14초/용사HP35%) 유지, 매레벨 지속+2초(Lv10 32초/MAX40초). 투견/정찰병/문지기 HP는 매레벨+용사최대HP10/12/8%p, Lv10 125/143/107%·MAX170/200/150%. 감시자는 기존 무적·시간만료이며 HP 강화 대신 지속시간 성장. 성장값은 hero_summon_growth_catalog.gd에서 관리, 이전 고정18/22초 패치 제거 및 MAX/카드 설명 동기화.

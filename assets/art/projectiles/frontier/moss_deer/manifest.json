@@ -1,0 +1,91 @@
+{
+  "species_id": "moss_deer",
+  "direction": "right",
+  "cell_size": [
+    888,
+    262
+  ],
+  "sheet_size": [
+    1776,
+    524
+  ],
+  "source_cell_size": [
+    627,
+    627
+  ],
+  "source_anchors": [
+    [
+      530,
+      369
+    ],
+    [
+      470,
+      365
+    ],
+    [
+      518,
+      340
+    ],
+    [
+      474,
+      339
+    ]
+  ],
+  "layout": [
+    2,
+    2
+  ],
+  "anchor": [
+    444.0,
+    131.0
+  ],
+  "source_file": "moss_deer_source.png",
+  "source_sha256": "1bccd80220084effab2fdcc7e5d0913c511c685017d5a31b0f65fb671c14088a",
+  "packaging": "Native 1:1 crop and integer core-anchor alignment; alpha>=128 boundary cleanup; no RGB keying or resampling",
+  "bounds": [
+    [
+      16,
+      16,
+      483,
+      212
+    ],
+    [
+      69,
+      20,
+      495,
+      216
+    ],
+    [
+      118,
+      17,
+      495,
+      213
+    ],
+    [
+      131,
+      19,
+      491,
+      215
+    ]
+  ],
+  "display_scale": 0.05607477,
+  "animations": {
+    "projectile": {
+      "fps": 12,
+      "loop": true,
+      "frames": [
+        "frames/projectile_01.png",
+        "frames/projectile_02.png",
+        "frames/projectile_03.png",
+        "frames/projectile_04.png"
+      ]
+    }
+  },
+  "generation": {
+    "id": "moss_deer",
+    "tool": "built-in imagegen",
+    "source": "/workspace/scratch/86f0991835d6/generated_images/exec-262edefd-050f-4e25-99bb-8cda55c5932a.png",
+    "reference": "/workspace/scratch/86f0991835d6/export-image-fix/assets/art/monsters/moss_deer/frames/idle_01.png",
+    "prompt": "Use case: stylized-concept. Asset type: production pixel-art game projectile animation sheet for Godot mobile RPG Again, Hero?.\nReference image role: ONLY the monster's palette/theme and pixel-art material style. Do NOT draw the monster.\nSubject: Moss deer: a brown acorn-like seed dart wrapped in two fresh green pointed leaves, a tiny mint spark and short botanical wake. Leafy seed, not an orb.\nCreate ONE sprite sheet on a genuinely transparent RGBA background, exactly FOUR consecutive FLIGHT LOOP frames in a strict 2-column by 2-row grid, equal cells. Reading order upper-left, upper-right, lower-left, lower-right. All projectiles point exactly RIGHT, zero tilt, side view. Each core sits at exactly the center of its cell; identical core size, orientation and anchor across all four. Subtle changing tail/spark arrangement makes a seamless loop frame4-to-frame1. Keep overall silhouette readable in a 40px-wide in-game display.\nStyle: crisp handmade retro pixel art, large clear pixel clusters, colored dark outline, restrained 3-tone material shading, NO antialiasing, NO blur, NO smooth gradients, NO soft bloom, NO semitransparent glow. All drawn pixels opaque. Leave very wide transparent gutters: each complete projectile including tail should occupy ONLY the middle 55 percent of its cell width and middle 35 percent height. Do not overlap cells, no cropped parts. Final contains exactly 4 separated sprites, no extra icons, characters, backgrounds, text, labels, grids, frame numbers, borders or UI. Square sheet."
+  }
+}

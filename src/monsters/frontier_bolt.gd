@@ -2,6 +2,7 @@ extends Node2D
 ## Pooled, aim-at-cast projectile. Swept collision only against the intended life;
 ## no global groups, homing, room-crossing physics or per-frame allocations.
 const HIT := preload("res://src/monsters/frontier_attack.gd")
+const ART := preload("res://src/data/frontier_projectile_art_catalog.gd")
 const POOL_KEY := "frontier_bolt"
 var active := false
 var direction := Vector2.RIGHT
@@ -17,6 +18,10 @@ var authority: WeakRef
 var target_handle := Vector3i.ZERO
 var payload: Dictionary = {}
 var action: RefCounted
+var visual_frames: SpriteFrames
+var visual_rect := Rect2()
+var visual_clock := 0.0
+var visual_frame := 0
 
 func _ready() -> void:
 	set_meta("combat_attack_type","ranged")
@@ -37,6 +42,16 @@ func setup(owner: Node2D, target: Node2D, aim: Vector2, amount: int, config: Dic
 	action = token
 	tint = Color(String(config.get("color","ff8844")))
 	fire = String(config.get("color","")) == "ff8844"
+	# Content selects art; pooled bolts may change species on every acquisition.
+	var profile: Dictionary = ART.PROFILES.get(String(config.get("projectile_art","")),{})
+	visual_frames = profile.get("frames")
+	visual_clock = 0.0
+	visual_frame = 0
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	if visual_frames != null:
+		var texture := visual_frames.get_frame_texture(&"projectile",0)
+		var size := texture.get_size()*float(profile.scale)
+		visual_rect = Rect2(-size*0.5,size)
 	rotation = direction.angle()
 	active = true
 	show()
@@ -46,6 +61,12 @@ func setup(owner: Node2D, target: Node2D, aim: Vector2, amount: int, config: Dic
 
 func _physics_process(delta: float) -> void:
 	if not active: return
+	if visual_frames != null:
+		visual_clock += delta
+		var next_frame := int(visual_clock*visual_frames.get_animation_speed(&"projectile")) % visual_frames.get_frame_count(&"projectile")
+		if next_frame != visual_frame:
+			visual_frame = next_frame
+			queue_redraw()
 	var battle = authority.get_ref() if authority != null else null
 	var target = intended.get_ref() if intended != null else null
 	if target_handle != Vector3i.ZERO and (not is_instance_valid(battle) or battle.resolve_battle_entity(target_handle) != target):
@@ -80,13 +101,21 @@ func deactivate_for_pool() -> void:
 	target_handle = Vector3i.ZERO
 	payload.clear()
 	action = null
+	visual_frames = null
+	visual_rect = Rect2()
+	visual_clock = 0.0
+	visual_frame = 0
 	hide()
 	set_physics_process(false)
 	if is_in_group("monster_projectiles"): remove_from_group("monster_projectiles")
 
 func _draw() -> void:
+	if not active: return
+	if visual_frames != null:
+		draw_texture_rect(visual_frames.get_frame_texture(&"projectile",visual_frame),visual_rect,false)
+		return
 	draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE*1.5)
-	# Small pixel shapes: flame tail vs purple curse diamond; no raster dependency.
+	# Fail-soft fallback only for missing/unknown art profiles.
 	if fire:
 		draw_rect(Rect2(-18,-3,24,6),Color("963745"))
 		draw_rect(Rect2(-10,-6,18,12),tint)

@@ -1,5 +1,6 @@
 extends SceneTree
 const D := preload("res://src/data/frontier_monster_catalog.gd")
+const ART := preload("res://src/data/frontier_projectile_art_catalog.gd")
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	if args.size() != 1:
@@ -15,6 +16,18 @@ func _initialize() -> void:
 	assert(pack.add_file("res://project.godot",config) == OK)
 	for path in ["src/data/frontier_monster_catalog.gd","src/monsters/monster_visual.gd","tests/frontier_art_export_smoke.gd"]:
 		assert(pack.add_file("res://"+path,ProjectSettings.globalize_path("res://"+path)) == OK)
+	assert(pack.add_file("res://src/data/frontier_projectile_art_catalog.gd",ProjectSettings.globalize_path("res://src/data/frontier_projectile_art_catalog.gd")) == OK)
+	for id in ART.PROFILES:
+		var base: String = "res://assets/art/projectiles/frontier/"+id+"/"
+		var resource: String = base+id+"_animations.tres"
+		assert(pack.add_file(resource,ProjectSettings.globalize_path(resource)) == OK)
+		for index in 4:
+			var path: String = base+"frames/projectile_%02d.png.import" % (index+1)
+			var imported := ConfigFile.new()
+			assert(imported.load(path) == OK)
+			var ctex: String = imported.get_value("remap","path")
+			assert(pack.add_file(path,ProjectSettings.globalize_path(path)) == OK)
+			assert(pack.add_file(ctex,ProjectSettings.globalize_path(ctex)) == OK)
 	for data in D.DEFINITIONS.values():
 		for key in ["normal_visual","elite_visual"]:
 			var pro: Dictionary = data[key]
