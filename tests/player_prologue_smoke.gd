@@ -16,6 +16,8 @@ class FakeCloud extends Node:
 		await get_tree().process_frame
 		if offline:
 			return {}
+		if method == "check_player_nickname":
+			return {"ok": true, "available": true}
 		if method == "register_player_profile":
 			writes += 1
 			if duplicate:
@@ -95,19 +97,21 @@ func run() -> void:
 	for i in range(21, 29):
 		view.index = i
 		view._show_line()
-	check(view.name_input.max_length == 6 and view.confirm.disabled, "empty name disabled, six-character limit")
-	for bad in ["", "일곱글자이름임", "a b", " 이름", "이름!", "ㄱ", "ab\n"]:
+	check(view.name_input.max_length == 0 and view.confirm.disabled, "IME buffer is untruncated; committed policy gates confirmation")
+	for bad in ["", "왕", "일곱글자이름임", "a b", " 이름", "이름!", "ㄱ", "ab\n"]:
 		check(not PROFILE.valid_name(bad), "reject invalid name " + bad)
-	for good in ["왕", "마왕테스트6", "Hero12"]:
+	for good in ["마왕", "마왕테스트6", "Hero12"]:
 		check(PROFILE.valid_name(good), "accept valid name " + good)
 	for i in range(100):
 		var generated := PROFILE.random_name("새벽군주1")
 		check(PROFILE.valid_name(generated) and generated != "새벽군주1", "dice valid and changes")
 	view.name_input.text = "새벽군주1"
 	view._validate_name(view.name_input.text)
+	await view._check_name()
 	await view._register_name()
 	check(view.index == 28 and view.error_label.text.contains("이미 사용"), "duplicate remains editable")
 	cloud.offline = true
+	await view._check_name()
 	await view._register_name()
 	check(view.name_input.editable and not view.dice.disabled, "offline name remains editable")
 	cloud.offline = false
@@ -116,6 +120,7 @@ func run() -> void:
 	check(view.name_input.text != "새벽군주1", "dice button updates input")
 	view.name_input.text = "달빛마왕7"
 	view._validate_name(view.name_input.text)
+	await view._check_name()
 	await shot("nickname")
 	await view._register_name()
 	check(view.index == DATA.AFTER_REGISTRATION and PROFILE.display_name() == "마왕(달빛마왕7)", "confirmed profile stored")

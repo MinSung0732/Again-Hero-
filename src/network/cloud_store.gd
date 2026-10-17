@@ -151,7 +151,7 @@ func request_rpc(method: String, data: Dictionary) -> Dictionary:
 	var generation := _generation
 	var waiting := false
 	var delay := 1.0
-	var retry_safe := method in ["read_player_profile", "register_player_profile", "complete_player_prologue"]
+	var retry_safe := method in ["read_player_profile", "register_player_profile", "complete_player_prologue", "check_player_nickname", "rename_player_nickname"]
 	if retry_safe:
 		while busy:
 			await operation_released
@@ -177,7 +177,7 @@ func request_rpc(method: String, data: Dictionary) -> Dictionary:
 			waiting = true
 			_rpc_waiters += 1
 		_set_connection(true)
-		# These three profile commands are idempotent on the server. Do not
+		# Profile commands (rename via operation UUID) are idempotent. Do not
 		# blanket-retry other mutation RPCs without their own recovery contract.
 		await get_tree().create_timer(delay).timeout
 		delay = minf(delay * 2.0, 15.0)

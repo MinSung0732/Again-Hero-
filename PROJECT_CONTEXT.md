@@ -1,3 +1,9 @@
+## 2026-10-17 — 마왕 이름 정책/한글 입력
+
+- 신규 이름은 한글·영문·숫자2~6글자/영어 대소문자 중복, 명시적 중복 확인 후 결정 및 서버 unique 최종 검사. Catalog/서버 policy 단일 관리. nickname_line_edit는 IME 조합 비절단·확인 직전 apply_ime/초점 유지·확정 삽입 뒤 정지 커서만 보정. 신규등록/개명 UI 공통, 실제 OS IME 미검증.
+- 게스트는 로컬 랜덤 이름으로 시작, 이름/프로필 프롤로그 게이트 없음. 기존 유효 이름·진행도/튜토리얼 지급 유지. 계정 연동 시 충돌은 서버 랜덤 이름 재배정, 연동 후 프로필에서1회 개명. 서버 횟수/고정 operation UUID·기기 fence/행 잠금·재연동 replay로 기회 중복 불가. 기존1글자는 보존/교정1회 부여. 일반 직접가입 임의개명 없음.
+- 서버 migration 적용65+기존26검사, Godot 입력/프로필132+RPC7/모바일 키보드 레이아웃/import/diff 통과. 실기Windows/Android IME·OAuth·전체아트 통합 미검증. docs/NICKNAME_IME_POLICY_20261017.md.
+
 ## 2026-10-17 — 대화 컷신 BGM
 
 - 용사·마왕 대화는 공용 StageIntroCutscene→GameAudio 기존 BGM 플레이어로 talk_background.wav 0초1회 재생, 페이지/곡 자연 종료 뒤 재시작 없음. 정상종료·스킵·트리 이탈1초 페이드, 이전 소유자의 종료가 다음 BGM에 영향 없음. 로비 복귀 시 기존 루프 복구. 경로/초기 -20dB/1초는 game_audio_catalog.DIALOGUE_BGM, 사용자 버스/정지 정책 유지. 초기값은 로비 -3dB보다17dB 낮으며 청감 조정은 실기 후속. 대사/연출/진행 불변. 실제 음원/컷신 headless51검사, 실기/청감 미검증. docs/DIALOGUE_BGM_20261017.md.

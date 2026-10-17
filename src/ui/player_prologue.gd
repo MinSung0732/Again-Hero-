@@ -18,6 +18,11 @@ var choice: Panel
 var name_input: LineEdit
 var dice: Button
 var confirm: Button
+var duplicate_check: Button
+var rename_only := false
+var _checked_name := ""
+var _rename_operation_id := ""
+const NAME_INPUT := preload("res://src/ui/nickname_line_edit.gd")
 var error_label: Label
 var _name_scroll: ScrollContainer
 var _name_content: Control
@@ -60,6 +65,15 @@ func _ready() -> void:
 	var saved := PROFILE.get_profile()
 	nickname = String(saved.get("nickname", ""))
 	gender = String(saved.get("gender", "male"))
+	if rename_only:
+		background.modulate.a = 0.55
+		text_label.text = "계정 연동 후 마왕 이름을 %d회 변경할 수 있습니다." % PROFILE.NAMES.LINKED_RENAMES
+		text_label.visible_characters = -1
+		_build_choice("name")
+		var cancel := _button(self, "닫기", Rect2(0.67, 0.05, 0.25, 0.055))
+		cancel.pressed.connect(func():
+			if not busy: finished.emit())
+		return
 	if not nickname.is_empty():
 		index = DATA.AFTER_REGISTRATION
 		background.modulate.a = 0.55
@@ -158,22 +172,27 @@ func _build_choice(kind: String) -> void:
 	_name_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_name_scroll.add_child(_name_content)
 	VIEW.label(_name_content, "마왕의 이름을 입력하세요", 37, Rect2(0.07, 0.07, 0.86, 0.18), Color("ffdf8a"))
-	name_input = LineEdit.new()
-	name_input.max_length = 6
-	name_input.placeholder_text = "최대 6글자"
+	name_input = NAME_INPUT.new()
 	name_input.add_theme_font_size_override("font_size", 36)
 	VIEW.place(_name_content, name_input, Rect2(0.08, 0.31, 0.68, 0.19))
 	SKIN.apply(name_input)
 	name_input.mouse_filter = Control.MOUSE_FILTER_STOP
 	dice = _button(_name_content, "⚄", Rect2(0.79, 0.31, 0.13, 0.19))
 	dice.tooltip_text = "무작위 테스트 이름 (서버 등록 없음)" if PROFILE._preview() else "무작위 닉네임 (결정 시 중복 검사)"
-	dice.pressed.connect(func(): name_input.text = PROFILE.random_name(name_input.text); _validate_name(name_input.text))
-	confirm = _button(_name_content, "결정", Rect2(0.25, 0.70, 0.50, 0.19))
+	dice.pressed.connect(func(): name_input.set_generated_name(PROFILE.random_name(name_input.text)))
+	duplicate_check = _button(_name_content, "중복 확인", Rect2(0.06, 0.72, 0.43, 0.19))
+	duplicate_check.focus_mode = Control.FOCUS_NONE
+	duplicate_check.pressed.connect(_check_name)
+	dice.focus_mode = Control.FOCUS_NONE
+	confirm = _button(_name_content, "변경" if rename_only else "결정", Rect2(0.53, 0.72, 0.41, 0.19))
+	confirm.focus_mode = Control.FOCUS_NONE
 	confirm.disabled = true
 	confirm.pressed.connect(_register_name)
-	error_label = VIEW.label(_name_content, "한글·영문·숫자 1~6글자 · 중복 불가", 24, Rect2(0.04, 0.52, 0.92, 0.16), Color("cbb6df"))
+	error_label = VIEW.label(_name_content, PROFILE.NAMES.guide(), 24, Rect2(0.04, 0.52, 0.92, 0.16), Color("cbb6df"))
 	name_input.text_changed.connect(_validate_name)
-	name_input.text_submitted.connect(func(_text: String): _register_name())
+	name_input.text_submitted.connect(func(_text: String):
+		if _checked_name == name_input.text and not _checked_name.is_empty(): _register_name()
+		else: _check_name())
 	name_input.focus_entered.connect(func(): _name_keyboard_seen = false)
 	# Capture the unobscured bottom before focus can resize the Android window.
 	_name_screen_bottom = (get_viewport().get_screen_transform() * (get_global_transform_with_canvas() * Vector2(0, size.y))).y
@@ -225,10 +244,36 @@ func _apply_name_layout(available_height: float, editing: bool) -> void:
 		_name_scroll.call_deferred("ensure_control_visible", name_input)
 
 func _validate_name(value: String) -> void:
-	confirm.disabled = busy or not PROFILE.valid_name(value)
-	error_label.text = "한글·영문·숫자 1~6글자 · 결정 시 중복 검사"
+	if value != _checked_name: _checked_name = ""
+	confirm.disabled = busy or _checked_name != value or not PROFILE.valid_name(value)
+	duplicate_check.disabled = busy or value.is_empty()
+	error_label.text = PROFILE.NAMES.guide()
 	if PROFILE._preview():
-		error_label.text = "로컬 테스트 이름 · 서버 등록/중복 검사 없음"
+		error_label.text = "로컬 테스트 이름 · 확인 후 결정 (서버 등록 없음)"
+
+func _check_name() -> void:
+	if busy: return
+	var candidate: String = name_input.committed_name()
+	_checked_name = ""
+	_validate_name(candidate)
+	if not PROFILE.valid_name(candidate): return
+	busy = true
+	confirm.disabled = true
+	duplicate_check.disabled = true
+	error_label.text = "중복 확인 중…"
+	var result := await PROFILE.check_name(cloud, candidate)
+	if not is_inside_tree() or not is_instance_valid(choice): return
+	busy = false
+	if candidate != name_input.text:
+		_validate_name(name_input.text)
+		return
+	if result.get("ok") == true and result.get("available") == true:
+		_checked_name = candidate
+		_validate_name(candidate)
+		error_label.text = "사용 가능한 이름입니다. 결정할 때 한 번 더 확인합니다."
+	else:
+		_validate_name(candidate)
+		error_label.text = "이미 사용 중인 이름입니다." if result.get("ok") == true else "중복 확인 실패 · 연결 확인 후 다시 시도해 주세요."
 
 func _select_gender(value: String) -> void:
 	if busy or not is_instance_valid(choice) or String(DATA.LINES[index].get("kind", "")) != "gender":
@@ -263,23 +308,35 @@ func _close_choice() -> void:
 func _register_name() -> void:
 	if busy or not is_instance_valid(choice) or not is_instance_valid(confirm) or confirm.disabled:
 		return
+	var candidate: String = name_input.committed_name()
+	if candidate != _checked_name or not PROFILE.valid_name(candidate):
+		_validate_name(candidate)
+		return
 	busy = true
 	confirm.disabled = true
 	dice.disabled = true
+	duplicate_check.disabled = true
 	name_input.editable = false
 	error_label.text = "테스트 프로필 로컬 저장 중…" if PROFILE._preview() else "중복 확인 및 프로필 저장 중…"
-	var result := await PROFILE.register(cloud, name_input.text, gender)
+	if rename_only and _rename_operation_id.is_empty():
+		var hex := Crypto.new().generate_random_bytes(16).hex_encode()
+		_rename_operation_id = "%s-%s-%s-%s-%s" % [hex.substr(0,8),hex.substr(8,4),hex.substr(12,4),hex.substr(16,4),hex.substr(20,12)]
+	var result := await PROFILE.rename(cloud, candidate, _rename_operation_id) if rename_only else await PROFILE.register(cloud, candidate, gender)
 	if not is_inside_tree():
 		return
 	busy = false
 	if not bool(result.get("ok", false)):
 		dice.disabled = false
 		name_input.editable = true
-		confirm.disabled = not PROFILE.valid_name(name_input.text)
+		_checked_name = ""
+		_validate_name(name_input.text)
 		error_label.text = "이미 사용 중인 이름입니다. 다른 이름을 골라 주세요." if result.get("error") == "duplicate" else "저장하지 못했습니다. 연결 확인 후 다시 결정해 주세요."
 		return
 	nickname = String(result.profile.nickname)
 	_close_choice()
+	if rename_only:
+		finished.emit()
+		return
 	index += 1
 	_show_line()
 

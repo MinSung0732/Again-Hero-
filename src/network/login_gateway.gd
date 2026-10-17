@@ -332,7 +332,7 @@ func _link_validated_guest(session: Dictionary, user: Dictionary) -> void:
 	if result.get("ok") != true:
 		_guest_link_intent.clear()
 		var error := String(result.get("error", ""))
-		var message := "이미 가입된 계정입니다.\n다른 구글·카카오 계정으로 연동해 주세요.\n현재 게스트 진행도는 유지됩니다." if error == "already_registered" else ("이미 다른 계정으로 이전한 게스트 진행도입니다.\n기존 계정 로그인으로 이용해 주세요." if error == "guest_already_linked" else ("이미 사용 중인 마왕 이름입니다.\n게스트 프로필 이름을 변경한 뒤 다시 연동해 주세요." if error == "nickname_taken" else "계정 연동을 완료하지 못했습니다.\n게스트 진행도는 유지됩니다. 같은 계정으로 다시 시도해 주세요."))
+		var message := "이미 가입된 계정입니다.\n다른 구글·카카오 계정으로 연동해 주세요.\n현재 게스트 진행도는 유지됩니다." if error == "already_registered" else ("이미 다른 계정으로 이전한 게스트 진행도입니다.\n기존 계정 로그인으로 이용해 주세요." if error == "guest_already_linked" else ("연동용 이름을 준비하지 못했습니다.\n게스트 진행도는 유지됩니다. 다시 시도해 주세요." if error == "nickname_taken" else "계정 연동을 완료하지 못했습니다.\n게스트 진행도는 유지됩니다. 같은 계정으로 다시 시도해 주세요."))
 		guest_link_failed.emit(message)
 		return
 	var id := String(user.get("id", ""))

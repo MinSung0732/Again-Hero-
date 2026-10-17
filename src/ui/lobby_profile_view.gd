@@ -20,6 +20,7 @@ var card: Control
 var banner: TextureRect
 var portrait: TextureRect
 var nickname: Label
+var rename_button: Button
 var actions := {}
 var gallery: Button
 var reserved: Control
@@ -65,6 +66,10 @@ func install(owner: RefCounted, parent: Control) -> void:
 	column.add_theme_constant_override("separation", 22)
 	scroll.add_child(column)
 	_build_card(column)
+	rename_button = _button(column, "마왕 이름 변경 (계정 연동 %d회)" % PROFILE.NAMES.LINKED_RENAMES, false)
+	rename_button.name = "NicknameChange"
+	rename_button.custom_minimum_size.y = 96
+	rename_button.connect("confirmed", _open_name_change)
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -278,6 +283,8 @@ func _blocked() -> bool:
 	return cloud.busy or cloud.conflict
 
 func refresh() -> void:
+	rename_button.visible = PROFILE.can_rename()
+	rename_button.disabled = _blocked()
 	nickname.text = String(PROFILE.get_profile().get("nickname", ""))
 	if nickname.text.is_empty():
 		nickname.text = "마왕"
@@ -291,6 +298,13 @@ func refresh() -> void:
 		close_picker()
 	if icon_picker != null: icon_picker.refresh_state()
 	if banner_picker != null: banner_picker.refresh_state()
+
+func _open_name_change() -> void:
+	if _blocked() or not PROFILE.can_rename(): return
+	var view := preload("res://src/ui/player_prologue.gd").new()
+	view.rename_only = true
+	lobby.add_child(view)
+	view.finished.connect(func(): view.queue_free(); refresh())
 
 func show() -> void:
 	refresh()

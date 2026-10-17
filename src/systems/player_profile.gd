@@ -4,23 +4,17 @@ const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const PATH := "user://stage_progress.cfg"
 const APPEARANCE := preload("res://src/systems/demon_appearance_store.gd")
 const APPEARANCE_CATALOG := preload("res://src/data/demon_appearance_catalog.gd")
+const NAMES := preload("res://src/data/nickname_catalog.gd")
 const PORTRAITS := {
 	"male": "res://assets/art/demonking/demonking_portrait_male.png",
 	"female": "res://assets/art/demonking/demonking_portrait_female.png",
 }
-const RANDOM_PREFIXES := ["새벽", "붉은", "검은", "달빛", "별빛", "고요", "은빛", "심연", "황혼", "푸른"]
-const RANDOM_SUFFIXES := ["군주", "마왕", "왕관", "그림자", "불꽃", "루나", "아르", "카인", "밤", "별"]
 
 static func valid_name(value: String) -> bool:
-	var pattern := RegEx.new()
-	pattern.compile("\\A[가-힣A-Za-z0-9]{1,6}\\z")
-	return pattern.search(value) != null
+	return NAMES.valid(value)
 
 static func random_name(previous: String = "") -> String:
-	var candidate := previous
-	while candidate == previous:
-		candidate = String(RANDOM_PREFIXES.pick_random()) + String(RANDOM_SUFFIXES.pick_random()) + str(randi_range(0, 9))
-	return candidate
+	return NAMES.random_name(previous)
 
 static func get_profile() -> Dictionary:
 	var config := ConfigFile.new()
@@ -30,7 +24,7 @@ static func get_profile() -> Dictionary:
 
 static func display_name() -> String:
 	var nickname := String(get_profile().get("nickname", ""))
-	return "마왕(%s)" % nickname if valid_name(nickname) else "마왕"
+	return "마왕(%s)" % nickname if NAMES.valid(nickname, NAMES.LEGACY_MIN_LENGTH) else "마왕"
 
 static func appearance_id() -> String:
 	return APPEARANCE.equipped_id(String(get_profile().get("gender", "male")))
@@ -58,7 +52,8 @@ static func _store_response(result: Dictionary) -> Dictionary:
 	if not value is Dictionary or not PORTRAITS.has(String(value.get("gender", ""))) or not value.get("nickname") is String or not value.get("required") is bool or not value.get("completed") is bool:
 		return {"ok": false, "error": "invalid_response"}
 	var nickname := String(value.get("nickname", ""))
-	if not nickname.is_empty() and not valid_name(nickname):
+	# Existing one-character accounts remain readable; new submissions require 2+.
+	if not nickname.is_empty() and not NAMES.valid(nickname, NAMES.LEGACY_MIN_LENGTH):
 		return {"ok": false, "error": "invalid_response"}
 	if bool(value.required) and bool(value.completed) and nickname.is_empty():
 		return {"ok": false, "error": "invalid_response"}
@@ -72,6 +67,15 @@ static func _store_response(result: Dictionary) -> Dictionary:
 	return result
 
 static func refresh(cloud: Node) -> Dictionary:
+	if preload("res://src/systems/guest_progress_store.gd").is_guest():
+		var profile := get_profile()
+		if not valid_name(String(profile.get("nickname", ""))):
+			profile["nickname"] = random_name()
+		profile["gender"] = profile.get("gender", "male")
+		profile["required"] = false
+		profile["completed"] = true
+		profile["nickname_changes_remaining"] = 0
+		return _store_response({"ok": true, "profile": profile})
 	if _preview():
 		var profile := get_profile()
 		if profile.is_empty():
@@ -96,6 +100,23 @@ static func register(cloud: Node, nickname: String, gender: String) -> Dictionar
 	var result: Dictionary = await cloud.request_rpc("register_player_profile", {"chosen_name": nickname, "chosen_gender": gender})
 	if owner.is_empty() or owner != SCOPE.user_id:
 		return {"ok": false, "error": "account_changed"}
+	return _store_response(result)
+
+static func check_name(cloud: Node, nickname: String) -> Dictionary:
+	if not valid_name(nickname): return {"ok": false, "error": "invalid"}
+	if _preview(): return {"ok": true, "available": true, "local_only": true}
+	var owner := SCOPE.user_id
+	var result: Dictionary = await cloud.request_rpc("check_player_nickname", {"chosen_name": nickname})
+	return result if not owner.is_empty() and owner == SCOPE.user_id else {"ok": false, "error": "account_changed"}
+
+static func can_rename() -> bool:
+	return not SCOPE.user_id.is_empty() and int(get_profile().get("nickname_changes_remaining", 0)) > 0
+
+static func rename(cloud: Node, nickname: String, operation_id: String) -> Dictionary:
+	if not valid_name(nickname) or SCOPE.user_id.is_empty(): return {"ok": false, "error": "invalid"}
+	var owner := SCOPE.user_id
+	var result: Dictionary = await cloud.request_rpc("rename_player_nickname", {"chosen_name": nickname, "operation_id": operation_id})
+	if owner != SCOPE.user_id: return {"ok": false, "error": "account_changed"}
 	return _store_response(result)
 
 static func complete(cloud: Node) -> bool:
