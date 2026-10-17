@@ -19,4 +19,4 @@ static func encode(method: String, parameters: Dictionary) -> Dictionary:
 	return {"ok": true, "body": JSON.stringify(wire)}
 
 static func is_permanent_http_error(status: int) -> bool:
-	return status >= CONTRACT.CLIENT_ERROR_MIN and status <= CONTRACT.CLIENT_ERROR_MAX and status not in CONTRACT.RETRYABLE_CLIENT_STATUSES
+	return status >= CONTRACT.CLIENT_ERROR_MIN and status <= CONTRACT.CLIENT_ERROR_MAX and not CONTRACT.is_retryable_client_status(status)

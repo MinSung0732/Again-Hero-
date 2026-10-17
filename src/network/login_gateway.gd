@@ -1,4 +1,5 @@
 extends Node
+const CONNECTION_POLICY := preload("res://src/data/cloud_connection_catalog.gd")
 
 const OAUTH := preload("res://src/network/windows_oauth.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
@@ -122,7 +123,7 @@ func try_auto_login() -> void:
 	if String(session.get("access_token", "")).is_empty():
 		_auth_busy = false
 		if _oauth.get("last_http_status") in [400, 401, 403]:
-			_cloud._set_connection(true, "로그인이 만료되었습니다. 다시 로그인해 주세요.", true)
+			_cloud._set_connection(true, CONNECTION_POLICY.SESSION_EXPIRED, true)
 		else:
 			_auto_login_pending = true
 			_cloud._set_connection(true)
@@ -145,7 +146,7 @@ func try_auto_login() -> void:
 		_auto_login_pending = true
 		_cloud._set_connection(true)
 		_refresh_timer.start(3.0)
-		login_unavailable.emit("서버에 연결 중입니다")
+		login_unavailable.emit(CONNECTION_POLICY.CONNECTING)
 
 func _set_session(session: Dictionary) -> void:
 	access_token = String(session.get("access_token", ""))
@@ -196,7 +197,7 @@ func refresh_session() -> bool:
 		_set_session(session)
 		if remember_session_enabled: await _vault.save_session(user_id, _refresh_token)
 	elif _oauth.get("last_http_status") in [400, 401, 403]:
-		_cloud._set_connection(true, "로그인이 만료되었습니다. 다시 로그인해 주세요.", true)
+		_cloud._set_connection(true, CONNECTION_POLICY.SESSION_EXPIRED, true)
 	else:
 		# Transient offline must not destroy a still recoverable refresh token.
 		_cloud._retry_later()

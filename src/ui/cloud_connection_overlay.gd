@@ -1,4 +1,5 @@
 extends CanvasLayer
+const CONNECTION_POLICY := preload("res://src/data/cloud_connection_catalog.gd")
 ## Own only our pause reason; settings/augment pauses survive reconnection.
 const VIEW := preload("res://src/ui/startup_loading_view.gd")
 const STARTUP := "res://src/startup/Startup.tscn"
@@ -17,7 +18,7 @@ func _ready() -> void:
 	_view = VIEW.new()
 	add_child(_view)
 	_return = Button.new()
-	_return.text = "로그인 화면으로"
+	_return.text = CONNECTION_POLICY.RETURN_TO_LOGIN
 	_return.add_theme_font_size_override("font_size",30)
 	_return.add_theme_stylebox_override("normal", VIEW.plate(Color("432354")))
 	VIEW.place(_view, _return, Rect2(0.20,0.77,0.60,0.065))
@@ -67,9 +68,9 @@ func _connection_changed(blocked: bool, message: String, terminal: bool) -> void
 			visible = true
 			_view.show()
 			_view.modulate.a = 0.0
-			_delay.start(0.8)
+			_delay.start(CONNECTION_POLICY.WAIT_SCREEN_DELAY_SECONDS)
 		# Short normal writes block repeat UI actions without freezing combat.
-		# Confirmed outages/auth work pause immediately; slow saves pause at 0.8s.
+		# Confirmed outages/auth work pause immediately; slow saves pause after the catalog delay.
 		if CloudStore.writes_suspended or terminal: _acquire_pause()
 		_view.configure_connection(message, terminal)
 		_return.visible = terminal
@@ -93,7 +94,7 @@ func _reload_lobby() -> void:
 	# Release the tree pause for destination setup; the connection modal keeps
 	# input blocked and new battles hold their independent network pause reason.
 	if _owns_pause: get_tree().paused = _paused_tree
-	if SceneTransition.change_scene(LOBBY, "서버의 기록을 불러오는 중"):
+	if SceneTransition.change_scene(LOBBY, CONNECTION_POLICY.RELOADING_LOBBY):
 		await SceneTransition.transition_completed
 		if generation != CloudStore._generation: return
 		var synchronized: bool = await CloudStore.flush()
@@ -102,7 +103,7 @@ func _reload_lobby() -> void:
 		if synchronized: CloudStore._set_connection(false)
 	else:
 		_reload_pending = false
-		CloudStore._set_connection(true, "화면을 다시 준비하지 못했습니다. 다시 로그인해 주세요.", true)
+		CloudStore._set_connection(true, CONNECTION_POLICY.LOBBY_RELOAD_FAILED, true)
 func _return_to_login() -> void:
 	_reload_pending = false
 	_return.disabled = true

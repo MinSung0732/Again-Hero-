@@ -1,3 +1,8 @@
+## 2026-10-17 — 단계별 하드코딩 정리1차
+
+- 클라우드 시간/상한/안내18문구는 cloud_connection_catalog, 직렬 재시도 허용6종/HTTP 분류는 rpc_contract_catalog에서 관리. 기존 수치·분기·저장/요청UUID·권한/기기 fence/일시정지 유지,401 refresh와408/429 재시도 구분. DB 변경 없음.
+- 변경 전61/변경 후255검사+저장·키보드 smoke·정적/import 통과. 실제PC/Android OAuth·망전환/보안저장소/GPU 미검증. 다음2차 프로필 기본값은 별도 진행. docs/CLOUD_POLICY_REFACTOR_PHASE1_20261017.md.
+
 ## 2026-10-17 — 연동 후 성별 재설정
 
 - 게스트→계정 연동 후 프로필에서 성별 1회 변경. 닉네임 변경권과 독립, 기존 연동 계정 소급 지급. 서버 잔여 횟수/고정 요청 UUID·행 잠금·Auth session/device fence로 재연동·재전송 중복 차감/재지급 방지. 같은 성별/취소 무차감.

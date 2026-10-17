@@ -1,3 +1,8 @@
+## 2026-10-17 — 하드코딩 정리1차: 클라우드 통신 정책
+
+- cloud_connection_catalog로 재시도 시간/배수·연결 확인·HTTP 제한·저장 병합·대기 화면 지연 및 안내18문구 통합. rpc_contract_catalog에서 직렬 재시도6종/HTTP 분류 관리, 미등록 mutation 자동재시도 차단 유지.401 refresh와408/429 지연 재시도의 기존 의미 구분. 문구/수치/저장·권한·서버 동작 유지.
+- 변경 전61검사, 변경 후 Godot headless 명시255검사+저장/키보드 smoke, 최종 import/parse·diff·문구 동등성 검증 통과. Windows DPAPI는Linux SKIP, 실제Windows/Android OAuth/망전환·전체아트/GPU·FPS 미검증. docs/CLOUD_POLICY_REFACTOR_PHASE1_20261017.md.
+
 ## 2026-10-17 — 연동 계정 성별 변경 1회
 
 - 프로필에 성별 변경 확정 화면 추가. 닉네임과 독립된 1회 혜택, 기존/신규 게스트 연동 계정에 서버 지급. 같은 성별/취소는 무차감, 재연동은 재지급 없음. Catalog·서버 policy 관리, 새 성별 기본 외형/프로필/대화 fallback 적용.

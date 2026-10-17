@@ -1,5 +1,7 @@
 extends Control
 
+const CONNECTION_POLICY := preload("res://src/data/cloud_connection_catalog.gd")
+
 const CATALOG := preload("res://src/data/startup_catalog.gd")
 const CASTLE := preload("res://assets/art/UI/startup/moon_castle.png")
 const CAMP := preload("res://assets/art/UI/startup/moon_camp.png")
@@ -68,8 +70,8 @@ func configure(title: String, description: String, _resource_screen: bool = fals
 
 
 func configure_connection(message: String, final_state: bool = false) -> void:
-	heading.text = "연결을 확인해 주세요" if final_state else "서버에 연결 중입니다"
-	detail.text = message if final_state else "잠시만 기다려 주세요. 연결되면 자동으로 계속됩니다."
+	heading.text = CONNECTION_POLICY.CONNECTION_CHECK_TITLE if final_state else CONNECTION_POLICY.CONNECTING
+	detail.text = message if final_state else CONNECTION_POLICY.CONNECTION_WAIT_DETAIL
 	background.texture = CONNECTION
 	progress_bar.hide()
 	progress_label.hide()
