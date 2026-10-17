@@ -1,4 +1,5 @@
 extends RefCounted
+const CARD_TEXT := preload("res://src/data/hero_weapon_card_text.gd")
 const ATTACKS := preload("res://src/data/hero_weapon_attack_catalog.gd")
 const GROWTH := preload("res://src/data/hero_weapon_growth_catalog.gd")
 const DELIVERY := preload("res://src/data/hero_weapon_delivery_catalog.gd")
@@ -2531,68 +2532,43 @@ static func is_weapon(id: String) -> bool:
 	return WEAPONS.has(id)
 static func weapon_pool(hero_id: String = "") -> Array:
 	return HERO_WEAPONS.get(hero_id,[]) if not hero_id.is_empty() else WEAPONS.keys()
-static func description(id: String, next_level: int) -> String:
-	var rank := clampi(next_level,1,passive_limit(id) if PASSIVES.has(id) else MAX_LEVEL)
+static func card_tags(id: String, data: Dictionary = {}) -> String:
+	if not WEAPONS.has(id): return "#보조"
+	var stats: Dictionary = WEAPONS[id] if data.is_empty() else data
+	return CARD_TEXT.tags(stats,DELIVERY.spec(id,stats),ATTACKS.spec(id))
+
+static func description(id: String, next_level: int, with_tags: bool = true) -> String:
 	if PASSIVES.has(id):
 		var passive: Dictionary = PASSIVES[id]
+		var rank := clampi(next_level,1,passive_limit(id))
 		var gain := float(passive.value)*100.0
 		var total := gain*rank
+		var text := ""
 		match String(passive.stat):
-			"recovery": return "최대 HP의 30% 즉시 회복\n보조 장착 칸을 사용하지 않습니다."
-			"multishot": return "발사체 +1개 (누적 +%d개)\n최대 추가 2개 · 보유 투사체/회전 무기·설치체·원거리 소환수에 적용" % rank
-			"siphon": return "실제로 준 피해의 0.6%% 추가 흡수\n총 피흡 %.1f%% · 최대 6%%" % total
-			"slow_resist": return "둔화 강도·지속시간 저항 +5%%\n추가 저항 총 %.0f%%" % total
-			"projectile_power": return "투사체 무기 피해 보너스 +8%%\n총 +%.0f%%" % total
-			"reach": return "무기 사거리 보너스 +5%%\n총 +%.0f%%" % total
-			"area": return "범위 공격의 반경·폭 +5%%\n총 +%.0f%%" % total
-			"duration": return "장판·소환·보호막 지속 +%.0f%%\n총 +%.0f%%" % [gain,total]
-			"vitality": return "시작 최대 HP의 %.0f%%만큼 최대 체력 증가\n증가한 체력만큼 즉시 회복" % gain
-			"armor": return "받는 피해 감소 +%.0f%%p\n총 피해 감소 %.0f%%" % [gain,minf(total,30.0)]
-			"projectile": return "발사체 속도 보너스 +%.0f%%\n총 +%.0f%% · 즉시 타격·장판 제외" % [gain,total]
-			_: return "%s 보너스 +%.0f%%\n총 +%.0f%%" % [String(passive.name).trim_suffix(" 증가"),gain,total]
+			"recovery": text = "최대 HP 30% 즉시 회복"
+			"multishot": text = "발사체 +1개 · 누적 +%d개" % rank
+			"siphon": text = "피흡 +0.6%% · 누적 %.1f%%" % total
+			"slow_resist": text = "둔화 저항 +5%% · 누적 %.0f%%" % total
+			"projectile_power": text = "투사체 피해 +%.0f%% · 누적 %.0f%%" % [gain,total]
+			"reach": text = "사거리 +%.0f%% · 누적 %.0f%%" % [gain,total]
+			"area": text = "공격 반경·폭 +%.0f%% · 누적 %.0f%%" % [gain,total]
+			"duration": text = "무기 지속 +%.0f%% · 누적 %.0f%%" % [gain,total]
+			"vitality": text = "최대 HP +%.0f%% · 증가분 회복" % gain
+			"armor": text = "피해 감소 +%.0f%%p · 누적 %.0f%%" % [gain,minf(total,30.0)]
+			"projectile": text = "탄속 +%.0f%% · 누적 %.0f%%" % [gain,total]
+			_: text = "%s +%s%% · 누적 %s%%" % [String(passive.name).trim_suffix(" 증가"),CARD_TEXT.number(gain),CARD_TEXT.number(total)]
+		return text+("\n#보조" if with_tags else "")
 	if not WEAPONS.has(id): return ""
-	var data: Dictionary = WEAPONS[id]
+	var awakened := next_level > MAX_LEVEL
+	var rank := clampi(next_level,1,MAX_LEVEL)
+	var after := GROWTH.resolve(id,WEAPONS[id],rank,awakened)
+	var text := "신규 무기 획득"
 	if rank == 1:
-		var patterns := {"bolt":"단일 집중 투사체 · 다른 적이 없어도 성장 발수 모두 발사", "burst":"시간차 집중 연사 · 탄약과 재장전 적용", "combo":"근접 연격 · 사거리 밖에서는 적중하지 않음", "slash":"정면 부채꼴 타격 · 후방은 적중하지 않음", "beam":"정면 관통 직선 · 겹친 광선은 중복 피해 없음", "chain":"제한된 적에게 연쇄 · 후속 피해 증가는 최대50%", "poison":"고정 지속 지대 · 틱/개수에 총 피해를 나누어 적용", "nova":"주변 광역 파동 · 낮은 빈도 대신 다수 대응", "frost":"주변 냉기 제어 · 낮은 피해와 둔화", "orbit":"궤도 개체 접촉 시 피해 · 중심과 빈틈은 안전", "guard":"주기적 보호막 · 직접 화력보다 생존 지원", "heal":"주기적 회복 · 직접 화력보다 생존 지원"}
-		var details := String(patterns.get(String(data.pattern),data.effect))
-		if String(data.pattern) == "summon": details += "\n"+GROWTH.SUMMON_GROWTH.description(id,rank)
-		var delivery_text := DELIVERY.description(id,data)
-		if not delivery_text.is_empty(): details = delivery_text
-		var flight_text := ATTACKS.description(id)
-		if not flight_text.is_empty(): details = flight_text
-		if String(data.pattern) == "guard":
-			details += "\n보호막 최대 HP의 %.1f%%" % ((float(data.get("shield_ratio",0.04))+0.006)*100.0)
-		if String(data.pattern) == "heal":
-			details += "\n최대 HP의 %.1f%% 회복" % ((float(data.get("heal_ratio",0.015))+0.002)*100.0)
-		if float(data.get("cast_heal",0.0)) > 0.0:
-			details += "\n시전 회복 %.1f%%" % (float(data.cast_heal)*100.0)
-		if float(data.get("hp_cost",0.0)) > 0.0:
-			details += "\n표적 공격 시 현재 HP %.1f%% 소모" % (float(data.hp_cost)*100.0)
-		if bool(data.get("uses_ammo",false)):
-			details += "\n발사한 탄환 수만큼 공유 탄약 소모" if String(data.pattern) == "burst" else "\n발동마다 공유 탄약 1발 소모"
-		if float(data.get("gas_cost",0.0)) > 0.0:
-			details += "\n발동 시 가스 %.0f 소모" % float(data.gas_cost)
-		return details+"\n"+GROWTH.BALANCE.description(id)+"\n기본 발동 간격 %.2f초" % float(data.cooldown)
-	var before := GROWTH.resolve(id,data,rank-1,false)
-	var after := GROWTH.resolve(id,data,rank,false)
-	var damage_gain := ((float(after.power)*float(after.damage_scale))/(float(before.power)*float(before.damage_scale))-1.0)*100.0
-	var reach_gain := (float(after.reach_scale)/float(before.reach_scale)-1.0)*100.0
-	var cooldown_gain := (1.0-float(after.cooldown_scale)/float(before.cooldown_scale))*100.0
-	var summary := "피해 +%.1f%% · 사거리 +%.1f%%\n재사용 대기시간 -%.1f%%" % [damage_gain,reach_gain,cooldown_gain]
-	if String(data.pattern) == "guard":
-		var shield_gain := (float(after.get("shield_ratio",0.04))-float(before.get("shield_ratio",0.04))+0.006)*100.0
-		summary += "\n보호막 +최대 HP의 %.1f%%" % shield_gain
-	elif String(data.pattern) == "heal":
-		var heal_gain := (float(after.get("heal_ratio",0.015))-float(before.get("heal_ratio",0.015))+0.002)*100.0
-		summary += "\n회복량 +최대 HP의 %.1f%%" % heal_gain
-	elif String(data.pattern) == "summon":
-		summary += "\n소환 유지 %.0f → %.0f초" % [float(before.summon_duration),float(after.summon_duration)]
-		if bool(after.get("summon_invulnerable",false)):
-			summary += "\n감시자는 무적 · 시간 만료 시 귀환"
-		else:
-			summary += "\n소환수 HP 용사 최대 HP의 %.0f%% → %.0f%%" % [float(before.summon_hp_ratio)*100.0,float(after.summon_hp_ratio)*100.0]
-	summary += "\n"+GROWTH.BALANCE.description(id)
-	return summary
+		if String(after.pattern) == "summon": text += " · 소환 유지 %s초" % CARD_TEXT.number(after.summon_duration)
+	else:
+		var before := GROWTH.resolve(id,WEAPONS[id],rank if awakened else rank-1,false)
+		text = CARD_TEXT.changes(before,after,rank)
+	return text+("\n"+card_tags(id,after) if with_tags else "")
 static func profile_for_survival(source: Dictionary) -> Dictionary:
 	var result := source.duplicate(true)
 	var stats := preload("res://src/data/hero_mode_catalog.gd").starting_stats(String(source.get("id","ranged_rookie")))

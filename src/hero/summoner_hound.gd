@@ -1,4 +1,5 @@
 extends CharacterBody2D
+var area_attack = preload("res://src/hero/summon_area_attack.gd").new()
 const RECEIVED_STATUS := preload("res://src/data/status_effect_catalog.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
@@ -55,6 +56,7 @@ func _ready() -> void:
 
 
 func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) -> void:
+	area_attack.configure(config)
 	preload("res://src/systems/yuki_onna_runtime.gd").start_target_life(self)
 	global_position = world_position
 	owner_hero = new_owner
@@ -115,6 +117,7 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 func _physics_process(delta: float) -> void:
 	if not active:
 		return
+	area_attack.tick(delta)
 
 	duration_remaining = maxf(duration_remaining - delta, 0.0)
 	if duration_remaining <= 0.0:
@@ -199,7 +202,11 @@ func _update_pending_hits(delta: float) -> void:
 			var hit_index := hits_per_attack - pending_hits + 1
 			if hit_index == 2 and second_hit_bonus_ratio > 0.0:
 				dealt_damage += float(owner_attack_damage) * second_hit_bonus_ratio
-			preload("res://src/systems/monster_hit_context.gd").hit(attack_target, maxi(int(round(dealt_damage*RECEIVED_STATUS.outgoing_multiplier(self))), 1), "melee", owner_hero)
+			var area_origin: Vector2 = attack_target.global_position
+			var area_primary_id: int = attack_target.get_instance_id()
+			var dealt: int = maxi(int(round(dealt_damage*RECEIVED_STATUS.outgoing_multiplier(self))), 1)
+			preload("res://src/systems/monster_hit_context.gd").hit(attack_target, dealt, "melee", owner_hero)
+			area_attack.strike(self,area_primary_id,area_origin,dealt,"melee",owner_hero)
 		if attack_audio.stream != null:
 			attack_audio.stop()
 			attack_audio.play()
@@ -298,6 +305,7 @@ func _begin_release() -> void:
 
 
 func deactivate(emit_signal: bool = true) -> void:
+	area_attack.reset()
 	preload("res://src/systems/received_afflictions.gd").reset_on(self)
 	var was_active := active
 	active = false
@@ -397,6 +405,7 @@ func _load_audio(attack_path: String, summon_path: String) -> void:
 func _draw() -> void:
 	if not active:
 		return
+	area_attack.draw(self)
 	var bar_width := 72.0
 	var bar_center_x := 0.0
 	var duration_bar_y := -102.0

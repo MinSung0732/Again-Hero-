@@ -1,3 +1,9 @@
+## 2026-10-17 — 용사 증강 간결한 설명·소환물 광역
+
+- 선택 카드/상자/MAX/장착 상세는 다음 단계 수치 변화+짧은 무기 태그. HeroWeaponCardText가 공통 계산·태그를 담당하며 기존 BALANCE/공격 방식/미래MAX 장문은 선택 UI에 넣지 않는다. 피해 power×damage_scale 비교·소수 간격과 %p 유지·범위 보조 실제6% 일치.
+- HeroSummonGrowthCatalog의 AREA_PROFILES:4종 Lv3/6/9/10/11. 투견 전방 휩쓸기, 정찰병 자기중심 베기, 감시자/문지기 탄착 광역. SummonAreaAttack 공유 구현·종별/단계별 반경/비율/추가 적 상한, 주 대상 제외·공간쿼리·피격분류·고정풀·짧은 범위 파동. 기존 소환물 즉시 강화·범위 보조1회, 기존HP/유지/3체상한/AI 원본·MAX해금 방식 유지.
+- 실제 전투/카드/기존 무기·소환·UI 총13348검사 통과, Android/GPU/실전 승률 미검증. 최신 표/검증: docs/HERO_SUMMON_AREA_CARDS_20261017.md.
+
 ## 2026-10-17 — 신규 원거리10종 전용 투사체
 
 - Frontier의 원거리10종은 behavior.projectile_art → frontier_projectile_art_catalog.gd → 기존 풀 FrontierBolt의4프레임 비행PNG(12fps/nearest)를 사용한다. 일반/엘리트 공통, 기존 전투 수치·판정·상태·풀 수명 유지. assets/art/projectiles/frontier/<id>에 원본/시트/개별프레임·manifest 보존. 정리 과정은 원본RGB1:1·alpha128 경계 정리·정수 코어정렬이며 축소/보간 없음.

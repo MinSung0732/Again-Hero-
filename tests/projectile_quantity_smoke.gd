@@ -34,6 +34,7 @@ class DrawSpy extends Node2D:
 	func record_draw_texture_rect(_texture: Texture2D,value: Rect2,_tile: bool,_color: Color=Color.WHITE) -> void: rect = value
 	func record_draw_set_transform(_a: Vector2,_b: float=0.0) -> void: pass
 class Primary extends Node2D:
+	var area_attack = preload("res://src/hero/summon_area_attack.gd").new()
 	var calls := 0
 	func activate(_a,_b,_c,_d,_e) -> void: calls += 1
 class Watcher extends WATCHER:

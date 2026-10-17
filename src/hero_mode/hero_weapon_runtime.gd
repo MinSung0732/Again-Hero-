@@ -243,7 +243,7 @@ func roll_chest() -> Dictionary:
 	if passive_reward:
 		var next_level := int(passives[id])+1
 		return {"serial":chest_serial,"id":id,"evolution":false,"kind":"passive","pool":eligible,"name":String(DATA.PASSIVES[id].name)+" Lv.%d" % next_level,"description":DATA.description(id,next_level),"applied":false}
-	return {"serial":chest_serial,"id":id,"evolution":evolution,"kind":"weapon","pool":eligible,"name":DATA.GROWTH.evolution_name(id) if evolution else String(DATA.WEAPONS[id].name)+" Lv.%d" % (int(levels[id])+1),"description":DATA.GROWTH.evolution_description(id) if evolution else DATA.GROWTH.upgrade_description(id,int(levels[id])+1),"applied":false}
+	return {"serial":chest_serial,"id":id,"evolution":evolution,"kind":"weapon","pool":eligible,"name":DATA.GROWTH.evolution_name(id) if evolution else String(DATA.WEAPONS[id].name)+" Lv.%d" % (int(levels[id])+1),"description":DATA.description(id,11 if evolution else int(levels[id])+1),"applied":false}
 
 func apply_chest(receipt: Dictionary) -> bool:
 	if bool(receipt.get("applied",false)) or int(receipt.get("serial",-1)) != chest_serial or chest_serial <= last_applied_chest: return false

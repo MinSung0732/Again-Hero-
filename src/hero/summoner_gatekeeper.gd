@@ -1,4 +1,5 @@
 extends CharacterBody2D
+var area_attack = preload("res://src/hero/summon_area_attack.gd").new()
 const RECEIVED_STATUS := preload("res://src/data/status_effect_catalog.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
@@ -50,6 +51,7 @@ func _ready() -> void:
 
 
 func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) -> void:
+	area_attack.configure(config)
 	preload("res://src/systems/yuki_onna_runtime.gd").start_target_life(self)
 	global_position = world_position
 	owner_hero = new_owner
@@ -89,6 +91,7 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 func _physics_process(delta: float) -> void:
 	if not active:
 		return
+	area_attack.tick(delta)
 
 	duration_remaining = maxf(duration_remaining - delta, 0.0)
 	if duration_remaining <= 0.0:
@@ -190,6 +193,7 @@ func _fire_at(target: Node2D) -> void:
 		projectile_speed,
 		attack_range + 80.0
 	)
+	projectile.area_attack.copy_from(area_attack)
 	if not survival_weapon_id.is_empty() and is_instance_valid(owner_hero):
 		var runtime = owner_hero.get("player_weapons")
 		if runtime != null: runtime.launch_summon_extras(survival_weapon_id,target,global_position+Vector2(0.0,-18.0),shot_damage,attack_range)
@@ -232,6 +236,7 @@ func _begin_release() -> void:
 
 
 func deactivate(emit_signal: bool = true) -> void:
+	area_attack.reset()
 	preload("res://src/systems/received_afflictions.gd").reset_on(self)
 	var was_active := active
 	active = false
@@ -337,6 +342,7 @@ func _load_optional_audio() -> void:
 func _draw() -> void:
 	if not active:
 		return
+	area_attack.draw(self)
 	var bar_width := 78.0
 	var hp_ratio := clampf(float(current_hp) / float(maxi(max_hp, 1)), 0.0, 1.0)
 	var duration_ratio := clampf(duration_remaining / maxf(duration_total, 0.1), 0.0, 1.0)

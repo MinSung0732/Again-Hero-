@@ -47,7 +47,7 @@ func _clear() -> void:
 func _show_weapons() -> void:
 	selected_tab = "weapon"; _clear()
 	if weapon_tab != null: weapon_tab.set_pressed_no_signal(true); passive_tab.set_pressed_no_signal(false)
-	for id in WEAPONS.weapon_pool(owner_id): _entry(id,String(WEAPONS.WEAPONS[id].name),WEAPONS.description(id,1))
+	for id in WEAPONS.weapon_pool(owner_id): _entry(id,String(WEAPONS.WEAPONS[id].name),WEAPONS.card_tags(id))
 func _show_passives() -> void:
 	selected_tab = "passive"; _clear(); weapon_tab.set_pressed_no_signal(false); passive_tab.set_pressed_no_signal(true)
 	label(content,"실제 선택 가능 여부는 용사와 현재 장착한 무기에 따라 달라집니다.",21)

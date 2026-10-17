@@ -51,7 +51,7 @@ func run():
    check(data.growth_evolved and data.evolution_secondary_data.evolution_secondary,id+" nonrecursive secondary snapshot")
    var name := DATA.GROWTH.evolution_name(id)
    check(not names.has(name) and not name.is_empty(),id+" unique MAX identity"); names[name] = true
-   check(receipt.description.contains("Lv.11 MAX") and receipt.description.contains(String(DESIGNS.DESIGNS[id].description).replace("3회 적중","2회 적중") if int(data.get("awakening_mark_hits",3))==2 else DESIGNS.DESIGNS[id].description),id+" receipt explains actual mechanic")
+   check(receipt.description == DATA.description(id,11) and receipt.description.contains("#"+String(DATA.CARD_TEXT.MAX_TAGS[mode])),id+" receipt shows compact delta and actual mechanic tag")
    runtime.cooldowns[id] = 999
    runtime._cast(id)
    var original_orbit := Vector2.ZERO

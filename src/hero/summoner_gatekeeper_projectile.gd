@@ -1,4 +1,5 @@
 extends Node2D
+var area_attack = preload("res://src/hero/summon_area_attack.gd").new()
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
@@ -43,6 +44,7 @@ func activate(
 	new_speed: float,
 	new_max_range: float
 ) -> void:
+	area_attack.reset()
 	global_position = world_position
 	target = new_target
 	damage = maxi(new_damage, 1)
@@ -76,6 +78,8 @@ func _fit_survival_sprite(bounds: Rect2, size: float) -> void:
 func _physics_process(delta: float) -> void:
 	if not active:
 		return
+	area_attack.tick(delta)
+	if area_attack.flash_left > 0.0: queue_redraw()
 	if is_instance_valid(target) and not HERO_TARGET_POLICY.is_detectable(target):
 		target = null
 
@@ -102,7 +106,10 @@ func _impact_target() -> void:
 		if preload("res://src/systems/monster_hit_context.gd").reflect_projectile(target,damage,self,self):
 			deactivate()
 			return
+		var area_origin: Vector2 = target.global_position
+		var area_primary_id: int = target.get_instance_id()
 		preload("res://src/systems/monster_hit_context.gd").hit(target, damage, "ranged", self)
+		area_attack.strike(self,area_primary_id,area_origin,damage,"ranged",self)
 	sprite.texture = hit_texture
 	sprite.scale = Vector2(0.48, 0.48)
 	sprite.offset = Vector2.ZERO
@@ -112,6 +119,7 @@ func _impact_target() -> void:
 
 
 func deactivate() -> void:
+	area_attack.reset()
 	if not active and not visible:
 		return
 	active = false
@@ -133,3 +141,6 @@ func _load_texture(path: String) -> Texture2D:
 		if resource is Texture2D:
 			return resource
 	return null
+
+func _draw() -> void:
+	if active: area_attack.draw(self)

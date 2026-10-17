@@ -17,7 +17,7 @@ static func weapon_model(runtime, hero, id: String) -> Dictionary:
 	if String(data.pattern) == "orbit": rows.append(["발동 수",str(data.get("orbit_count",4))+"개 접촉 궤도"])
 	if not delivery.is_empty(): rows.append(["전달 방식",String(delivery.label)])
 	if float(data.get("lifesteal",0)) > 0: rows.append(["무기 흡혈","%.1f%%" % (float(data.lifesteal)*100)])
-	return {"id":id,"name":DATA.GROWTH.evolution_name(id) if evolved else String(data.name),"kind":"무기","rank":"Lv.11 MAX" if evolved else "Lv.%d" % rank,"evolved":evolved,"maxed":evolved,"description":DATA.description(id,1),"rows":rows,"effects":DATA.GROWTH.description(id,rank,evolved),"flow":"상자  ›  무기 진화  ›  무기 강화  ›  보조 강화","note":"MAX 추가 기믹 피해는 아래 설명의 비율을 별도로 적용합니다." if evolved else "시전 피해 기준을 지속 틱·접촉 타격·자동 사격에 나누어 적용합니다." if not delivery.is_empty() else "피해·재사용은 기본 수치입니다. 조건부 기술·치명타·적 방어에 따라 달라집니다."}
+	return {"id":id,"name":DATA.GROWTH.evolution_name(id) if evolved else String(data.name),"kind":"무기","rank":"Lv.11 MAX" if evolved else "Lv.%d" % rank,"evolved":evolved,"maxed":evolved,"description":DATA.card_tags(id,data),"rows":rows,"effects":"MAX 강화 완료" if evolved else DATA.description(id,rank+1,false),"flow":"","note":""}
 static func passive_model(runtime, id: String) -> Dictionary:
 	var rank := int(runtime.passives[id]); var limit := DATA.passive_limit(id)
 	var passive: Dictionary = DATA.PASSIVES[id]
@@ -25,11 +25,8 @@ static func passive_model(runtime, id: String) -> Dictionary:
 	if String(passive.stat) == "armor": total = minf(30,total)
 	if String(passive.stat) == "slow_resist": total = (minf(0.85,runtime.base_slow_resistance+total/100)-runtime.base_slow_resistance)*100
 	var bonus := "+%d개" % mini(rank,2) if String(passive.stat) == "multishot" else "+%.1f%%" % total
-	var effects := "현재 누적 효과 · "+String(passive.name)+" "+bonus
-	if String(passive.stat) == "vitality": effects = "시작 최대 체력 대비 +%.1f%%\n획득 시 증가한 체력만큼 회복" % total
-	if String(passive.stat) == "siphon": effects = "실제로 준 피해의 %.1f%%를 체력으로 흡수" % total
-	if String(passive.stat) == "multishot": effects += "\n투사체 무기에 적용 · 최대 추가 2개"
-	return {"id":id,"name":String(passive.name),"kind":"보조 증강","rank":"MAX" if rank >= limit else "Lv.%d" % rank,"evolved":false,"maxed":rank >= limit,"description":String(passive.description),"rows":[["현재 레벨","%d / %d" % [rank,limit]],["누적 효과",bonus]],"effects":effects,"flow":"레벨업 선택  ›  보조 강화  ·  상자는 보유 증강만 강화","note":"현재 보유 레벨의 누적 효과를 표시합니다."}
+	var effects := "MAX 강화 완료" if rank >= limit else DATA.description(id,rank+1,false)
+	return {"id":id,"name":String(passive.name),"kind":"보조 증강","rank":"MAX" if rank >= limit else "Lv.%d" % rank,"evolved":false,"maxed":rank >= limit,"description":"#보조","rows":[["현재 레벨","%d / %d" % [rank,limit]],["누적 효과",bonus]],"effects":effects,"flow":"","note":""}
 static func label(parent: Node, text: String, font_size: int, color: Color = Color.WHITE) -> Label:
 	var node := Label.new(); node.text = text; node.add_theme_font_size_override("font_size",font_size); node.add_theme_color_override("font_color",color)
 	node.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; node.mouse_filter = Control.MOUSE_FILTER_IGNORE; parent.add_child(node); return node
@@ -71,7 +68,8 @@ static func build(parent: VBoxContainer, model: Dictionary, close: Callable) -> 
 		glyph.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; glyph.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; glyph.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST; glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE; line.add_child(glyph)
 		var key := label(line,String(row[0]),24); key.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var value := label(line,String(row[1]),26,Color("aee3fa")); value.name = "StatValue"; value.autowrap_mode = TextServer.AUTOWRAP_OFF; value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label(body,String(model.note),20,Color("8994ac"))
-	var effects := section(body,"무기 효과" if model.kind == "무기" else "보조 효과",Color("ce92ea")); label(effects,String(model.effects),24)
-	label(body,"연관 콘텐츠",27,Color("ce92ea")); label(body,String(model.flow),23,Color("c2c6da"))
+	if not String(model.note).is_empty(): label(body,String(model.note),20,Color("8994ac"))
+	var effects := section(body,"강화 완료" if model.maxed else "다음 강화",Color("ce92ea")); label(effects,String(model.effects),24)
+	if not String(model.flow).is_empty():
+		label(body,"연관 콘텐츠",27,Color("ce92ea")); label(body,String(model.flow),23,Color("c2c6da"))
 	var resume := button(parent,"계속 플레이",close); resume.name = "DetailResume"; resume.grab_focus()

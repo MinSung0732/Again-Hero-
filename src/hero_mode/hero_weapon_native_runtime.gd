@@ -14,6 +14,7 @@ var authority
 var summon_configs: Dictionary = {}
 var actors_by_pattern: Dictionary = {}
 const SUMMON_LIVE_FIELDS := ["attack_range","attack_cooldown","move_speed","sense_range","hits_per_attack","hit_interval","second_hit_bonus_ratio","high_hp_damage_bonus","elite_move_speed_bonus","projectile_speed","consecutive_damage_bonus_per_step","focus_damage_bonus","focus_attack_speed_bonus"]
+const SUMMON_AREA_FIELDS := ["summon_area_radius","summon_area_ratio","summon_area_targets","summon_area_mode"]
 
 func _prepare_summon(data: Dictionary, damage: int) -> Dictionary:
 	var kind := String(data.summon_kind)
@@ -21,6 +22,9 @@ func _prepare_summon(data: Dictionary, damage: int) -> Dictionary:
 	config["damage_ratio"] = float(damage)*WEAPONS.SUMMON_DAMAGE_RATIO/maxf(hero.attack_damage,1)
 	config["duration"] = float(data.get("summon_duration",14.0))
 	config["max_hp"] = roundi(hero.max_hp*float(data.get("summon_hp_ratio",WEAPONS.SUMMON_HP_RATIO)))
+	for field in SUMMON_AREA_FIELDS:
+		config[field] = data.get(field,0.0 if field != "summon_area_mode" else "")
+	config.summon_area_radius = float(config.summon_area_radius)*float(data.get("area_scale",1.0))
 	return config
 
 func refresh_summons(data: Dictionary, damage: int) -> void:
@@ -40,6 +44,7 @@ func refresh_summons(data: Dictionary, damage: int) -> void:
 			actor.current_hp = maxi(1,roundi(actor.max_hp*health_ratio))
 		actor.attack_damage = maxi(1,roundi(hero.attack_damage*float(config.damage_ratio)))
 		if actor.get("owner_attack_damage") != null: actor.owner_attack_damage = hero.attack_damage
+		actor.area_attack.configure(config)
 		for field in SUMMON_LIVE_FIELDS:
 			if config.has(field) and actor.get(field) != null: actor.set(field,config[field])
 		actor.queue_redraw()
