@@ -366,10 +366,12 @@ func _reroll_choices(revision: int) -> void:
 func _choose(id: String,revision: int) -> void:
 	if not choosing or revision != choice_generation or battle.battle_over: return
 	choosing = false; overlay.hide(); pad.reset()
-	battle.set_external_pause(paused)
+	# Applying EXP may synchronously open the next choice. Keep combat stopped
+	# until that selection, its live summon updates and any queued choice finish.
 	if not battle.hero.choose_player_augment(id):
 		_show_choices(battle.hero.player_augment_candidates); return
-	pad.enabled = not choosing and not paused
+	battle.set_external_pause(paused or choosing or rolling)
+	pad.enabled = not choosing and not paused and not rolling
 func _pause() -> void:
 	if not entry_ready or not is_instance_valid(battle) or battle.battle_over or choosing or rolling: return
 	paused = true; battle.set_external_pause(true); pad.enabled = false; pad.reset()
@@ -625,6 +627,8 @@ func _install_battle_settings() -> void:
 	pad.set_mode(pad_mode)
 	_apply_battle_frame(); _sync_settings()
 func _open_settings() -> void:
+	if not paused: _pause()
+	if not paused: return
 	_sync_settings(); settings_panel.show(); settings_panel.move_to_front()
 func _sync_settings() -> void:
 	var tabs := settings_panel.get_node("Panel/Margin/VBox/SettingsTabs")

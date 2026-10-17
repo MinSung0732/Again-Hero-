@@ -257,7 +257,7 @@ func native_basic(id: String, target: Node2D, damage: int, reach: float) -> bool
 		hero.sage_config.basic_range = basic_range; hero.sage_config.basic_projectile_speed = basic_speed; hero.sage_config.piercing_projectile_speed = piercing_speed
 	# Original helper already plays the appropriate element/third-shot sound.
 	on_cast(id,false,false); audio_serial += 1
-	if authority.is_combat_simulation_paused(): set_paused(true)
+	if authority.is_combat_simulation_paused() and not (authority.has_method("uses_hero_subtree_pause") and authority.uses_hero_subtree_pause()): set_paused(true)
 	return true
 func tick_revive(delta: float) -> void:
 	if not hero.berserker_reviving: return

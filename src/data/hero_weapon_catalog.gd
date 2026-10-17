@@ -1065,7 +1065,7 @@ const WEAPONS := {
     "range": 250,
     "power": 0.72,
     "base_hits": 1,
-    "effect": "기존 이계 소환수 실제 소환 · 총 3체 제한 · 14초 유지",
+    "effect": "기존 이계 소환수 실제 소환 · 기본 3칸 · 종류별 자리 확보 · 4종 보유 시 4칸 · 14초 유지",
     "evolution": "지옥문 사냥개",
     "tags": [
       "area"
@@ -1090,7 +1090,7 @@ const WEAPONS := {
     "range": 350,
     "power": 0.55,
     "base_hits": 1,
-    "effect": "기존 이계 소환수 실제 소환 · 총 3체 제한 · 14초 유지",
+    "effect": "기존 이계 소환수 실제 소환 · 기본 3칸 · 종류별 자리 확보 · 4종 보유 시 4칸 · 14초 유지",
     "evolution": "차원 감시 군주",
     "tags": [
       "area"
@@ -1115,7 +1115,7 @@ const WEAPONS := {
     "range": 620,
     "power": 0.8,
     "base_hits": 2,
-    "effect": "기존 이계 소환수 실제 소환 · 총 3체 제한 · 14초 유지",
+    "effect": "기존 이계 소환수 실제 소환 · 기본 3칸 · 종류별 자리 확보 · 4종 보유 시 4칸 · 14초 유지",
     "evolution": "차원 선봉대장",
     "tags": [
       "damage"
@@ -1157,7 +1157,7 @@ const WEAPONS := {
     "range": 250,
     "power": 0.7,
     "base_hits": 1,
-    "effect": "기존 이계 소환수 실제 소환 · 총 3체 제한 · 14초 유지",
+    "effect": "기존 이계 소환수 실제 소환 · 기본 3칸 · 종류별 자리 확보 · 4종 보유 시 4칸 · 14초 유지",
     "evolution": "심연의 문지기",
     "tags": [
       "durability"

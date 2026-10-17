@@ -1,4 +1,5 @@
 extends Node2D
+const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 
 signal launched
 signal impacted
@@ -565,7 +566,7 @@ func _drag_captured(movement: Vector2) -> void:
 func _lock_captured_monster(monster: Node2D) -> void:
 	monster.set_meta(
 		"forced_movement_lock_until",
-		Time.get_ticks_msec() + 180
+		COMBAT_DELAY.now_msec(self) + 180
 	)
 	monster.set_meta("forced_movement_source", get_instance_id())
 
@@ -612,7 +613,7 @@ func _apply_explosion() -> void:
 			base_attack = maxf(float(attack_value), 1.0)
 	var raw_damage := maxf(base_attack * damage_ratio, 1.0)
 	var radius_sq := explosion_radius * explosion_radius
-	var slow_until := Time.get_ticks_msec() + int(round(slow_duration * 1000.0))
+	var slow_until := COMBAT_DELAY.now_msec(self) + int(round(slow_duration * 1000.0))
 
 	for raw_node in _query_scratch:
 		if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():

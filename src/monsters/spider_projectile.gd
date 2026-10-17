@@ -1,4 +1,5 @@
 extends Area2D
+const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const NORMAL_EFFECT_DIR := "res://assets/art/monsters/spider/frames/effect"
@@ -159,7 +160,7 @@ func _apply_binding_hit(body: Node) -> void:
 		maxf(float(binding_config.get("cooldown", 0.0)), 0.0)
 		* 1000.0
 	)
-	var now_ms := Time.get_ticks_msec()
+	var now_ms := COMBAT_DELAY.now_msec(self)
 	var cooldown_until := int(
 		body.get_meta("spider_binding_cooldown_until_ms", 0)
 	)

@@ -1,5 +1,6 @@
 extends AnimatedSprite2D
 class_name CombatStatusEffectVisual
+const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 
 const CATALOG := preload("res://src/data/combat_effect_catalog.gd")
 
@@ -324,7 +325,7 @@ func _is_slow_active() -> bool:
 	if slow_value != null and float(slow_value) > 0.0:
 		return true
 
-	var now := Time.get_ticks_msec()
+	var now := COMBAT_DELAY.now_msec(target)
 	if int(target.get_meta("gunner_slow_until", 0)) > now:
 		return true
 	if int(target.get_meta("archmage_root_until", 0)) > now:

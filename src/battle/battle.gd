@@ -811,6 +811,10 @@ func _cache_demon_ultimate_runtime_data() -> void:
 
 
 func _start_battle() -> void:
+	if _hero_subtree_paused: process_mode = _hero_subtree_previous_mode
+	_hero_subtree_paused = false
+	_hero_paused_total_msec = 0
+	_hero_pause_started_msec = 0
 	battle_command_router.begin_session(_execute_battle_command)
 	battle_entity_registry.begin_session(battle_command_router.get_session_id())
 	demon_augment_revision += 1
@@ -5335,6 +5339,14 @@ func _spawn_extra_normal_summon_monsters(
 			{"mission_summon": true}
 		)
 
+func combat_time_msec() -> int:
+	if not hero_player_mode: return Time.get_ticks_msec()
+	var now := _hero_pause_started_msec if _hero_subtree_paused else Time.get_ticks_msec()
+	return now-_hero_paused_total_msec
+
+func uses_hero_subtree_pause() -> bool:
+	return hero_player_mode
+
 func is_combat_simulation_paused() -> bool:
 	return (
 		battle_over
@@ -5344,6 +5356,11 @@ func is_combat_simulation_paused() -> bool:
 	)
 
 
+var _hero_pause_started_msec := 0
+var _hero_paused_total_msec := 0
+var _hero_subtree_paused := false
+var _hero_subtree_previous_mode: ProcessMode = Node.PROCESS_MODE_INHERIT
+
 func _sync_combat_pause_state() -> void:
 	var should_enable := (
 		not battle_over
@@ -5351,6 +5368,20 @@ func _sync_combat_pause_state() -> void:
 			FLOW_PAUSE_MANAGER.DOMAIN_COMBAT
 		)
 	)
+	if hero_player_mode:
+		# Pause the owned simulation, including animations, timers, tweens and
+		# actors activated during the modal. Do not overwrite pooled actor flags.
+		var modal_paused := not should_enable and not battle_over
+		if modal_paused and not _hero_subtree_paused:
+			_hero_subtree_previous_mode = process_mode
+			_hero_pause_started_msec = Time.get_ticks_msec()
+			_hero_subtree_paused = true
+			process_mode = Node.PROCESS_MODE_DISABLED
+		elif not modal_paused and _hero_subtree_paused:
+			_hero_paused_total_msec += Time.get_ticks_msec()-_hero_pause_started_msec
+			process_mode = _hero_subtree_previous_mode
+			_hero_subtree_paused = false
+		if not battle_over: return
 	_set_combat_physics_enabled(should_enable)
 
 func _set_combat_physics_enabled(enabled: bool) -> void:

@@ -79,14 +79,43 @@ func install(host) -> void:
 		hero._ensure_summoner_runtime()
 		for kind in ["hound","scout","watcher","gatekeeper"]:
 			summon_configs[kind] = hero.get("summoner_"+kind+"_config").duplicate(true)
+func summon_capacity() -> int:
+	var kinds := 0
+	for id in hero.player_weapons.weapon_ids:
+		if String(WEAPONS.WEAPONS[id].pattern) == "summon": kinds += 1
+	return maxi(WEAPONS.SUMMON_LIMIT,kinds)
+
+func _active_kind(kind: String) -> int:
+	return int(hero.get("summoner_active_"+kind+"s"))
+
+func _reserve_summon_slot(kind: String) -> bool:
+	var missing := 0
+	for id in hero.player_weapons.weapon_ids:
+		var data: Dictionary = WEAPONS.WEAPONS[id]
+		if String(data.pattern) == "summon" and _active_kind(String(data.summon_kind)) == 0: missing += 1
+	var total: int = hero._get_active_summon_count()
+	var capacity := summon_capacity()
+	if _active_kind(kind) > 0:
+		return total < capacity-missing
+	if total < capacity: return true
+	# A newly learned species replaces one duplicate from an existing pool.
+	# This is bounded by the four owned pools, only on a due summon cast.
+	for other_kind in summon_configs:
+		if _active_kind(other_kind) < 2: continue
+		for actor in hero.get("summoner_"+String(other_kind)+"_pool"):
+			if is_instance_valid(actor) and actor.active and actor.owner_hero == hero:
+				actor.deactivate()
+				return true
+	return false
+
 func cast(data: Dictionary, origin: Vector2, direction: Vector2, target: Node2D, damage: int, reach: float, hits: int, rank: int, speed: float, awakened: bool = false) -> bool:
 	last_cast_succeeded = false
 	var pattern := String(data.pattern)
 	if pattern == "summon":
 		if not hero.has_method("_get_active_summon_count"): return true
-		if hero._get_active_summon_count() >= WEAPONS.SUMMON_LIMIT: return true
 		var kind := String(data.summon_kind)
 		if not summon_configs.has(kind): return true
+		if not _reserve_summon_slot(kind): return true
 		# Cached on upgrade. Actors snapshot scalars in setup; no per-cast deep copy.
 		var config := _prepare_summon(data,damage)
 		hero.set("summoner_"+kind+"_config",config)
@@ -112,7 +141,7 @@ func cast(data: Dictionary, origin: Vector2, direction: Vector2, target: Node2D,
 			"ice_pillar": actor.setup(damage,float(data.field_duration),(float(data.native_radius)+rank*float(data.native_radius_per_level))*radius_scale,float(data.slow_multiplier),float(data.collision_radius),hero)
 			"meteor": actor.setup(damage,(float(data.native_radius)+rank*float(data.native_radius_per_level))*radius_scale,float(data.fall_duration),float(data.visual_scale)*radius_scale,float(data.fall_height),float(data.fall_side_offset),float(data.explosion_fps),hero)
 			"singularity": actor.setup(hero,float(data.field_duration),(float(data.native_radius)+rank*float(data.native_radius_per_level))*radius_scale,maxi(1,roundi(damage*float(data.field_power))),float(data.pull_interval),float(data.pull_step),float(data.field_interval),float(data.execute_ratio),float(data.visual_scale)*radius_scale,float(data.create_fps),float(data.active_fps),float(data.disappear_fps))
-	if authority.is_combat_simulation_paused(): set_paused(true)
+	if authority.is_combat_simulation_paused() and not (authority.has_method("uses_hero_subtree_pause") and authority.uses_hero_subtree_pause()): set_paused(true)
 	return true
 func set_paused(paused: bool) -> void:
 	for pattern in actors_by_pattern:

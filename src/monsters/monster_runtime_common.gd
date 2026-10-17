@@ -1,5 +1,6 @@
 extends RefCounted
 class_name MonsterRuntimeCommon
+const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 
@@ -261,7 +262,7 @@ static func apply_standard_visual_lod(
 
 
 static func get_external_movement_multiplier(owner: Node) -> float:
-	var now_msec := Time.get_ticks_msec()
+	var now_msec := COMBAT_DELAY.now_msec(owner)
 	if int(owner.get_meta("archmage_root_until", 0)) > now_msec:
 		return 0.0
 	if int(owner.get_meta("sage_ice_root_until", 0)) > now_msec:
@@ -407,7 +408,7 @@ static func is_forced_movement_locked(owner: Node) -> bool:
 		return false
 	if bool(owner.get_meta("elite_skill_movement_lock", false)):
 		return true
-	return int(owner.get_meta("forced_movement_lock_until", 0)) > Time.get_ticks_msec()
+	return int(owner.get_meta("forced_movement_lock_until", 0)) > COMBAT_DELAY.now_msec(owner)
 
 
 static func can_be_forced_moved(owner: Node) -> bool:

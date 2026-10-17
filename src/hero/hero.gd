@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
+
 # Compatibility boundary: every legacy status call records into one retained buffer.
 const LEGACY_STATUS_RECEIPT = preload("res://src/systems/battle_status_receipt.gd")
 var legacy_status_receipt = LEGACY_STATUS_RECEIPT.new()
@@ -2042,6 +2044,8 @@ func _prepare_ranged_ai_intent(delta: float, distance: float) -> void:
 
 
 func _get_summoner_slot_capacity() -> int:
+	if player_controlled and player_weapons != null and player_weapons.native_skills != null:
+		return player_weapons.native_skills.summon_capacity()
 	return HERO_SUMMONER_RUNTIME.get_slot_capacity(
 		summoner_slot_base,
 		summoner_slot_bonus,
@@ -3116,9 +3120,9 @@ func _summoner_basic_attack(current_target: Node2D) -> void:
 		is_instance_valid(summoner_basic_audio)
 		and summoner_basic_audio.stream != null
 		and not summoner_basic_audio.playing
-		and Time.get_ticks_msec() >= summoner_basic_audio_next_ms
+		and COMBAT_DELAY.now_msec(self) >= summoner_basic_audio_next_ms
 	):
-		summoner_basic_audio_next_ms = Time.get_ticks_msec()+SUMMONER_AUDIO.BASIC_INTERVAL_MS
+		summoner_basic_audio_next_ms = COMBAT_DELAY.now_msec(self)+SUMMONER_AUDIO.BASIC_INTERVAL_MS
 		summoner_basic_audio.play()
 
 	# Hitscan: damage is decided immediately; the summon_01~02 frames are
@@ -4405,7 +4409,7 @@ func _on_alchemist_cauldron_completed(
 			alchemist_mystery_cauldron_cooldown = 0.0
 		cauldron.call("play_result_sound", "great_success")
 		await _execute_alchemist_cauldron_great_success(origin)
-		await get_tree().create_timer(0.50).timeout
+		await COMBAT_DELAY.wait(self,0.50)
 	elif roll < great_chance + fail_chance:
 		# Failure should feel instantaneous: hide/deactivate the cauldron
 		# immediately, but let its child AudioStreamPlayer finish the boom.
@@ -4416,7 +4420,7 @@ func _on_alchemist_cauldron_completed(
 	else:
 		cauldron.call("play_result_sound", "success")
 		_execute_alchemist_cauldron_success(origin)
-		await get_tree().create_timer(0.65).timeout
+		await COMBAT_DELAY.wait(self,0.65)
 
 	if is_instance_valid(cauldron):
 		cauldron.call("deactivate")
@@ -4459,7 +4463,7 @@ func _execute_alchemist_cauldron_great_success(origin: Vector2) -> void:
 		for vial_index in range(vial_count):
 			_spawn_alchemist_mystery_vial(origin)
 		if batch_index + 1 < batch_count:
-			await get_tree().create_timer(batch_interval).timeout
+			await COMBAT_DELAY.wait(self,batch_interval)
 
 
 func _acquire_alchemist_mystery_vial() -> Node2D:
@@ -4693,7 +4697,7 @@ func _on_alchemist_mixture_field_tick(origin: Vector2, radius: float) -> void:
 		0.1,
 		1.0
 	)
-	var slow_until := Time.get_ticks_msec() + int(round(
+	var slow_until := COMBAT_DELAY.now_msec(self) + int(round(
 		maxf(
 			float(alchemist_mixture_field_config.get("slow_refresh_seconds", 0.75)),
 			0.05
@@ -4890,7 +4894,7 @@ func _cast_alchemist_emergency_escape(
 	)
 	var effect_radius_sq := effect_radius * effect_radius
 	var enemy_damage := maxi(1, int(round(float(attack_damage) * damage_ratio)))
-	var slow_until := Time.get_ticks_msec() + int(round(slow_duration * 1000.0))
+	var slow_until := COMBAT_DELAY.now_msec(self) + int(round(slow_duration * 1000.0))
 
 	for monster in threats:
 		if not is_instance_valid(monster) or monster.is_queued_for_deletion():
@@ -5696,7 +5700,7 @@ func _use_gunner_cylinder_strike() -> void:
 		if damage_ratio > 0.0 and monster.has_method("take_damage"):
 			preload("res://src/systems/monster_hit_context.gd").hit(monster, maxi(1, int(round(float(attack_damage) * damage_ratio))), "ranged", self)
 		monster.set_meta("gunner_slow_multiplier", slow_multiplier)
-		monster.set_meta("gunner_slow_until", Time.get_ticks_msec() + int(slow_duration * 1000.0))
+		monster.set_meta("gunner_slow_until", COMBAT_DELAY.now_msec(self) + int(slow_duration * 1000.0))
 	gunner_query_candidates.clear()
 
 
@@ -7634,7 +7638,7 @@ func _restart_stage1_animation(animation_name: String, speed_scale: float = 1.0)
 	if _is_current_hero_animation_protected(requested_animation):
 		return
 
-	var now_msec := Time.get_ticks_msec()
+	var now_msec := COMBAT_DELAY.now_msec(self)
 	if (
 		hero_sprite.animation == requested_animation
 		and hero_sprite.is_playing()
@@ -8030,7 +8034,7 @@ func _move_without_monsters() -> void:
 	_execute_ai_movement(direction * current_move_speed * 0.72 * _get_effective_move_multiplier())
 
 func _find_nearest_exp_orb() -> Node2D:
-	var now_msec := Time.get_ticks_msec()
+	var now_msec := COMBAT_DELAY.now_msec(self)
 	if (
 		now_msec < exp_orb_retarget_until_msec
 		and is_instance_valid(exp_orb_target)
@@ -9456,7 +9460,7 @@ func _ensure_rogue_audio_runtime() -> void:
 
 
 func _play_rogue_combo_audio(_combo_index: int) -> void:
-	if Time.get_ticks_msec() < rogue_combo_audio_next_ms:
+	if COMBAT_DELAY.now_msec(self) < rogue_combo_audio_next_ms:
 		return
 	_ensure_rogue_audio_runtime()
 	if rogue_combo_audio_pool.is_empty():
@@ -9469,7 +9473,7 @@ func _play_rogue_combo_audio(_combo_index: int) -> void:
 	) % rogue_combo_audio_pool.size()
 	if not is_instance_valid(player) or player.stream == null:
 		return
-	rogue_combo_audio_next_ms = Time.get_ticks_msec()+CONTEXT_AUDIO.ROGUE_ATTACK_INTERVAL_MS
+	rogue_combo_audio_next_ms = COMBAT_DELAY.now_msec(self)+CONTEXT_AUDIO.ROGUE_ATTACK_INTERVAL_MS
 	player.pitch_scale = 1.0
 	player.stop()
 	player.play()
@@ -9493,7 +9497,7 @@ func _play_rogue_assassination_start_audio() -> void:
 
 
 func _play_rogue_assassination_hit_audio() -> void:
-	if Time.get_ticks_msec() < rogue_assassination_audio_next_ms:
+	if COMBAT_DELAY.now_msec(self) < rogue_assassination_audio_next_ms:
 		return
 	_ensure_rogue_audio_runtime()
 	if rogue_assassination_hit_audio_pool.is_empty():
@@ -9505,7 +9509,7 @@ func _play_rogue_assassination_hit_audio() -> void:
 	rogue_assassination_hit_audio_cursor = (
 		rogue_assassination_hit_audio_cursor + 1
 	) % rogue_assassination_hit_audio_pool.size()
-	rogue_assassination_audio_next_ms = Time.get_ticks_msec()+CONTEXT_AUDIO.ROGUE_ASSASSINATION_INTERVAL_MS
+	rogue_assassination_audio_next_ms = COMBAT_DELAY.now_msec(self)+CONTEXT_AUDIO.ROGUE_ASSASSINATION_INTERVAL_MS
 	if not is_instance_valid(player) or player.stream == null:
 		return
 	player.stop()
@@ -11645,7 +11649,7 @@ func _start_archmage_multicast(origin_skill: String) -> void:
 	):
 		if reservation_revision != archmage_multicast_revision or not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
-		await get_tree().create_timer(0.30).timeout
+		await COMBAT_DELAY.wait(self,0.30)
 		if reservation_revision != archmage_multicast_revision or not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
 
@@ -11712,7 +11716,7 @@ func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
 		_damage_monsters_in_radius(orb_position, radius, tick_damage, source_life, source_scope_id)
 		if not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
-		await get_tree().create_timer(tick_interval).timeout
+		await COMBAT_DELAY.wait(self,tick_interval)
 		elapsed += tick_interval
 	if is_instance_valid(charge_fx):
 		_recycle_archmage_fx_if_current(charge_fx, charge_fx_revision, source_scope_id)
@@ -11878,7 +11882,7 @@ func _resolve_archmage_ice_pillars(hit_position: Vector2, empowered: bool) -> vo
 		_damage_monsters_in_radius(position, hit_radius, pillar_damage, source_life, source_scope_id)
 		if not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
-		await get_tree().create_timer(0.045).timeout
+		await COMBAT_DELAY.wait(self,0.045)
 
 
 func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
@@ -11916,7 +11920,7 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 		_damage_monsters_in_radius_once(position, radius, spike_damage, hit_ids, source_life, source_scope_id)
 		if not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
-		await get_tree().create_timer(spike_delay).timeout
+		await COMBAT_DELAY.wait(self,spike_delay)
 
 	if _is_delayed_skill_source_current(source_life, source_scope_id):
 		var original_distance: float = spacing * float(count)
@@ -11975,7 +11979,7 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 				)
 				if not _is_delayed_skill_source_current(source_life, source_scope_id):
 					break
-				await get_tree().create_timer(spike_delay).timeout
+				await COMBAT_DELAY.wait(self,spike_delay)
 
 	# Old tasks must not decrement a new life's casting counter.
 	if _is_delayed_skill_life_current(source_life, source_scope_id):
@@ -12128,7 +12132,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 			)
 			monster.set_meta(
 				"gunner_slow_until",
-				Time.get_ticks_msec()
+				COMBAT_DELAY.now_msec(self)
 				+ int(
 					maxf(
 						float(config.get("slow_duration", 2.0)),
@@ -12140,9 +12144,9 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 
 		if not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
-		await get_tree().create_timer(
+		await COMBAT_DELAY.wait(self,
 			maxf(float(config.get("burst_delay", 0.09)), 0.02)
-		).timeout
+		)
 
 	if _is_delayed_skill_life_current(source_life, source_scope_id):
 		_end_archmage_casting_sequence()
@@ -13550,7 +13554,7 @@ func _trigger_purifier_protection_break_pulse() -> void:
 		0.1,
 		1.0
 	)
-	var slow_until := Time.get_ticks_msec() + int(round(
+	var slow_until := COMBAT_DELAY.now_msec(self) + int(round(
 		maxf(
 			float(purifier_protection_config.get("break_slow_duration", 1.5)),
 			0.05
@@ -18743,9 +18747,9 @@ func _run_berserker_skill2_wave(
 		current_position = next_position
 
 		var step_time: float = cell_length / wave_speed
-		await get_tree().create_timer(
+		await COMBAT_DELAY.wait(self,
 			maxf(step_time, 0.03)
-		).timeout
+		)
 
 	var blood_duration: float = maxf(
 		float(skill_config.get("blood_duration", 2.0)),
@@ -18767,7 +18771,7 @@ func _run_berserker_skill2_wave(
 			heal_per_touch,
 			healed_ids
 		)
-		await get_tree().create_timer(tick_interval).timeout
+		await COMBAT_DELAY.wait(self,tick_interval)
 		elapsed += tick_interval
 
 	for blood_fx in blood_visuals:
@@ -19057,11 +19061,11 @@ func _execute_berserker_skill3(
 		0.08
 	)
 	if orb_count > 0:
-		await get_tree().create_timer(
+		await COMBAT_DELAY.wait(self,
 			pickup_duration + 0.10
-		).timeout
+		)
 	else:
-		await get_tree().create_timer(0.16).timeout
+		await COMBAT_DELAY.wait(self,0.16)
 
 	if not is_inside_tree():
 		return
@@ -19800,7 +19804,7 @@ func _begin_berserker_revive() -> void:
 	if player_controlled and player_weapons != null and player_weapons.identity != null:
 		player_weapons.identity.revive_left = revive_delay
 		return
-	await get_tree().create_timer(revive_delay).timeout
+	await COMBAT_DELAY.wait(self,revive_delay)
 	if not is_inside_tree() or is_dying:
 		return
 	_finish_berserker_revive()
@@ -21086,7 +21090,7 @@ func _prepare_contextual_damage_audio() -> void:
 
 
 func _play_contextual_damage_audio(physical_block: bool, magical_block: bool) -> void:
-	if Time.get_ticks_msec() < contextual_hit_next_ms or not CONTEXT_AUDIO.HITS.has(hero_archetype):
+	if COMBAT_DELAY.now_msec(self) < contextual_hit_next_ms or not CONTEXT_AUDIO.HITS.has(hero_archetype):
 		return
 	var player: AudioStreamPlayer
 	if physical_block:
@@ -21102,7 +21106,7 @@ func _play_contextual_damage_audio(physical_block: bool, magical_block: bool) ->
 		call(String(cue.ensure))
 		player = get(String(cue.player)) as AudioStreamPlayer
 	if is_instance_valid(player) and player.stream != null:
-		contextual_hit_next_ms = Time.get_ticks_msec()+CONTEXT_AUDIO.HIT_INTERVAL_MS
+		contextual_hit_next_ms = COMBAT_DELAY.now_msec(self)+CONTEXT_AUDIO.HIT_INTERVAL_MS
 		player.stop()
 		player.play()
 
