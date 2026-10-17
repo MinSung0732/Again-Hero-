@@ -42,6 +42,9 @@ static func select_account(id: String) -> bool:
 		var pending: Variant = cache.get("pending_cloud", {})
 		if _valid_pending(pending):
 			pending_cloud = pending
+			# JSON cache numbers are floats, including bigint RPC arguments.
+			pending_cloud["expected_revision"] = int(pending_cloud.expected_revision)
+			pending_cloud["serial"] = int(pending_cloud.serial)
 			pending_cloud["sent"] = bool(pending.get("sent", true))
 			dirty = true
 	else:

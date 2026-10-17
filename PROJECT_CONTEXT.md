@@ -1,3 +1,8 @@
+## 2026-10-17 — 로그인 pending 버전 형식 수정
+
+- JSON 캐시가 pending.expected_revision을float로 복원해 HTTP에1.0을 보내고 bigint22P02/400을 반복하는 경계를 수정. 캐시 expected_revision/serial int 복원, rpc_contract_catalog/rpc_request_codec에서 정수 인자만 전송 형식 보장. payload 실제 소수·operation UUID/CAS/백업 유지.
+- 영구4xx는 로그인 복귀 안내로 종료하고 transient/401/408/429·5xx는 기존 재시도. 토큰/본문 없는 상태·오류 코드 진단. 서버/계정 데이터 변경 없음. 실제 HTTP/복원34, 기존 이름132/RPC7/키보드 레이아웃 회귀·정적검사 PASS, 실제사용자 OAuth·기기 로그인 미검증. docs/CLOUD_RPC_INTEGER_FIX_20261017.md.
+
 ## 2026-10-17 — 마왕 이름 정책/한글 입력
 
 - 신규 이름은 한글·영문·숫자2~6글자/영어 대소문자 중복, 명시적 중복 확인 후 결정 및 서버 unique 최종 검사. Catalog/서버 policy 단일 관리. nickname_line_edit는 IME 조합 비절단·확인 직전 apply_ime/초점 유지·확정 삽입 뒤 정지 커서만 보정. 신규등록/개명 UI 공통, 실제 OS IME 미검증.

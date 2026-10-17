@@ -2,6 +2,7 @@ extends Node
 
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const CONFIG := preload("res://src/network/supabase_config.gd")
+const RPC_CODEC := preload("res://src/network/rpc_request_codec.gd")
 signal status_changed(message: String)
 signal conflict_detected
 signal connection_changed(blocked: bool, message: String, terminal: bool)
@@ -103,6 +104,13 @@ func _retry_later(message: String = "서버에 연결 중입니다") -> void:
 	_retry_delay = minf(_retry_delay * 2.0, 15.0)
 
 func _handle_terminal(result: Dictionary) -> bool:
+	if result.get("request_rejected") == true:
+		ready_for_play = false
+		_timer.stop()
+		_heartbeat.stop()
+		# Preserve the pending save; retrying an invalid request cannot fix it.
+		_set_connection(true, RPC_CODEC.CONTRACT.REJECTED_MESSAGE, true)
+		return true
 	if result.get("session_replaced") == true or result.get("reauthenticate") == true:
 		ready_for_play = false
 		_timer.stop()
@@ -200,24 +208,36 @@ func link_guest(session: Dictionary, guest: Dictionary) -> Dictionary:
 func _request_with_token(method: String, data: Dictionary, token: String) -> Dictionary:
 	_last_http_status = 0
 	if token.is_empty(): return {}
+	var encoded := RPC_CODEC.encode(method, data)
+	if not encoded.get("ok", false):
+		return {"request_rejected": true, "error_code": "invalid_rpc_argument"}
 	var request := HTTPRequest.new()
 	request.timeout = 20
 	request.body_size_limit = 2000000
 	add_child(request)
 	var headers := PackedStringArray(["apikey: " + CONFIG.PUBLISHABLE_KEY, "Authorization: Bearer " + token, "Content-Type: application/json"])
 	if not _nonce.is_empty(): headers.append("x-game-session: " + _nonce)
-	if request.request(CONFIG.PROJECT_URL + "/rest/v1/rpc/" + method, headers, HTTPClient.METHOD_POST, JSON.stringify(data)) != OK:
+	if request.request(_rpc_endpoint(method), headers, HTTPClient.METHOD_POST, String(encoded.body)) != OK:
 		request.queue_free()
 		return {}
 	var response: Array = await request.request_completed
 	request.queue_free()
 	_last_http_status = int(response[1]) if response[0] == HTTPRequest.RESULT_SUCCESS else 0
+	if RPC_CODEC.is_permanent_http_error(_last_http_status):
+		# Log only status/code, never JWTs, request payloads, names or server detail.
+		var error_body: Variant = JSON.parse_string((response[3] as PackedByteArray).get_string_from_utf8())
+		var code := String(error_body.get("code", "")) if error_body is Dictionary else ""
+		push_warning("Cloud RPC rejected: HTTP %d, code %s" % [_last_http_status, code])
+		return {"request_rejected": true, "http_status": _last_http_status, "error_code": code}
 	if response[0] != HTTPRequest.RESULT_SUCCESS or response[1] != 200:
 		return {}
 	var parser := JSON.new()
 	if parser.parse((response[3] as PackedByteArray).get_string_from_utf8()) != OK:
 		return {} # Malformed server bodies follow the existing retry path.
 	return parser.data if parser.data is Dictionary else {}
+
+func _rpc_endpoint(method: String) -> String:
+	return CONFIG.PROJECT_URL + "/rest/v1/rpc/" + method
 
 func initialize(_choice: String = "") -> bool:
 	# Retained argument for callers; clients cannot choose to overwrite cloud.
